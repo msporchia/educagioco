@@ -23,6 +23,7 @@
 //   npm run sotterraneo -- --tara 2.spinta=5|6|7             # con più valori separati da | prova ogni combinazione, una tabella l'una
 //   npm run sotterraneo -- --senza-abilita       # il banco di prima: solo attacco, nessun albero
 //   npm run sotterraneo -- --contro <commit>     # le stesse misure sul commit, e «prima → dopo» nelle celle
+//   npm run sotterraneo -- --contro <commit> --banco-di-adesso   # idem, ma col giocatore finto di adesso (le abilità) anche sul commit
 //
 // `--contro` prepara da sé un `git worktree` in tmp/ sul commit chiesto, lo misura con questo stesso strumento (le cose che il
 // commit non ha, come l'interruttore delle abilità, si ignorano) e lo toglie. `--processi N` limita i processi (di difetto
@@ -31,7 +32,7 @@ import { spawn, execFileSync } from 'node:child_process'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { dirname, resolve, join } from 'node:path'
 import { availableParallelism } from 'node:os'
-import { existsSync, rmSync } from 'node:fs'
+import { existsSync, rmSync, copyFileSync } from 'node:fs'
 
 const QUI = fileURLToPath(import.meta.url)
 const RADICE = resolve(dirname(QUI), '..')
@@ -346,7 +347,11 @@ try {
     tmp = join(RADICE, 'tmp', `banco-${hash}`)
     if (existsSync(tmp)) execFileSync('git', ['worktree', 'remove', '--force', tmp], { cwd: RADICE })
     execFileSync('git', ['worktree', 'add', '--detach', tmp, contro], { cwd: RADICE, stdio: 'ignore' })
-    console.log(`prima = ${hash}, dopo = la copia di lavoro`)
+    // `--banco-di-adesso`: il giocatore finto di adesso (che usa le abilità) sui mostri e sui numeri di quel commit: quanto è più
+    // facile un gioco già tarato per un banco che non le usava, a chi le usa
+    if (argv.includes('--banco-di-adesso'))
+      for (const f of ['motore/banco.js', 'motore/abilita.js', 'motore/forza.js']) copyFileSync(join(RADICE, SRC, f), join(tmp, SRC, f))
+    console.log(`prima = ${hash}${argv.includes('--banco-di-adesso') ? ' (col banco di adesso)' : ''}, dopo = la copia di lavoro`)
     prima = await misura(tmp)
   }
   // `--tara 1.forza=0.6|0.8,1.spinta=3|5`: con più valori separati da | si prova ogni combinazione, una tabella l'una

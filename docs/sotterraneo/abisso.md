@@ -44,7 +44,7 @@ quella di sempre.
 
 - **`L_ABISSO`** in `dati/campagna.js`: `abisso: true`, `piani: Infinity`
   (così `allaScala()` e `scendi()` non chiudono mai la discesa), `dif`,
-  `guardiani`, `capo`, `attOgni`, `forme`. **`INDICE_ABISSO` = −1** è il suo
+  `forza`, `spinta`, `ossaPerPiano`, `capo`, `attOgni`, `forme`. **`INDICE_ABISSO` = −1** è il suo
   indice, e **`tappaDi(indice)`** è l'unico posto che lo traduce:
   `CAMPAGNA[-1]` è `undefined`, e un `undefined` dentro una `Corsa` dà una
   discesa senza numeri e nessun errore.
@@ -92,10 +92,16 @@ difficile da sopravvivere**: la progressione sta tutta sulle altre leve.
 ## Come crescono i mostri
 
 ```
-ossa = base.ossa × (1 + p · 0,22)     OSSA_PER_PIANO
-att  = base.att  + floor(p / 3)       attOgni: 3 (la campagna resta a 2)
-dif  = base.dif                       ferma per sempre
+ossa = base.ossa × forza × (1 + p · 0,12)     forza 5, ossaPerPiano 0,12
+att  = base.att  + spinta + floor(p / 3)      spinta 12, attOgni 3 (la campagna resta a 2)
+dif  = base.dif                               ferma per sempre
 ```
+
+I mostri dell'abisso sono quelli di una zona, un po' più deboli ([zone.md](zone.md)): le specie hanno tutte le stesse ossa e la
+forza viene dal livello ([mostri.md](mostri.md#le-coppie-12-ottobre-2026)), quindi `forza` e `spinta` sono quelle di una zona
+verso il livello 12 (l'abisso si apre a chi esce dalla storia) e il piano le fa crescere. Tarate col banco sull'eroe che esce dalla
+storia ([scontro-bilancio.md](scontro-bilancio.md)). Prima (fino al 12 ottobre) i mostri partivano deboli e la fascia saliva con la
+profondità, e si poteva scendere nudi; adesso nudi non è più un modo di entrare.
 
 **Il costo di un mostro in domande è una costante; quello che cresce è il
 prezzo di restare indietro.** Era il mestiere che il Dungeon, tolto il 6
@@ -110,20 +116,10 @@ raggiunge.
 
 ## I guardiani
 
-**`guardiani: ['scheletro', 'scheletro', 'orco', 'granchio', 'orco', 'golem',
-'golem']`, poi il gigante per sempre** (`guardianoDi` ripiega su `capo`).
-
-- **I primi due piani li guarda lo scheletro**: misurato quando si entrava
-  nudi, e con l'orco si sveniva due volte sul primo piano prima di aver
-  trovato un'arma.
-- Spostare **da quale piano compare il gigante** non cambia quasi niente
-  (media 5,2 → 6,0 fra il piano 3 e il 9): a fermare la discesa è il non
-  avere un'arma, non il capo.
-- Il bestiario a cinque fasce (vedi [regole.md](regole.md)) fa sì che per
-  strada, fra una scala e l'altra, si incontri qualcosa di diverso per tutta
-  la discesa; il golem, quinta fascia, si vede solo quaggiù. Col bestiario il
-  patto della campagna non si è mosso: venti su venti su cinque tappe,
-  diciannove su venti sul labirinto.
+**Il guardiano di ogni piano è la specie più dura della coppia del tratto, fatta caporale** (`guardianoDi`: ossa ×1,25 e un colpo
+in più), e ogni cinque piani c'è un mostro grosso (`GROSSO_OGNI`). Prima c'era una scaletta fissa (`guardiani: ['scheletro',
+'scheletro', 'orco', …]`, poi il gigante) misurata a mano: spostare dove compare il gigante cambiava poco, a fermare la discesa
+era il non avere un'arma, non il capo. Adesso ogni piano ha il guardiano del posto in cui è.
 
 ## Il posto cambia scendendo
 
@@ -132,27 +128,18 @@ raggiunge.
 dal 5° all'8°, la fornace dal 9° in poi, **e l'ultimo posto resta per sempre**:
 un abisso senza fondo non ha un giro da rifare, e la fornace è l'ultima
 tappa visiva. Un posto è **uno scenario**
-(come si disegna, `SCENARI` in `dati/tessere.js`) **e un branco** (chi si
-incontra per strada, `BRANCHI` in `dati/mostri.js`); la riga sotto il campo
-dice dove si è («la cripta · piano 7»).
+(come si disegna, `SCENARI` in `dati/tessere.js`) **e una coppia di mostri** (chi si incontra per strada, `mostri` del tratto in
+`dati/campagna.js`: ratti e melme nelle cantine, scheletri e fantasmi nella cripta, golem e pipistrelli nella fornace); la riga
+sotto il campo dice dove si è («la cripta · piano 7»).
 
 - **Un abisso solo, non uno per posto**: due abissi vorrebbero due record,
   due soste e due corredi, e ognuno mostrerebbe metà dei mostri. Scendendo
   invece il posto nuovo è un traguardo che si vede.
-- **Un branco ha le cinque fasce di `BRANCO`, e ogni mostro sta nella fascia
-  che ha lì** (`guastiDeiMostri` lo pretende): cambiare posto cambia le
-  facce, non la fatica. Le cantine hanno le bestie (ratto, goblin, melma,
-  fungo, vespone, granchio, serpente), la cripta i morti e la notte
-  (pipistrello, fantasma, scheletro, orco, lupo), la fornace i diavoletti e le
-  bestie del fuoco (pipistrello, goblin, melma, scheletro, vespone, orco,
-  serpente). Il golem sta in tutti e tre
-  finché la quinta fascia ha un mostro solo.
-- **La campagna incontra tutto il bestiario**: le sette discese sono dove i
-  mostri si imparano, e cambiarne il branco ritarerebbe tappe misurate.
-- **I guardiani restano quelli della scaletta**, che è misurata: lo scheletro
-  a guardia delle cantine è un mostro della cripta.
-- **Un posto nuovo** è una voce in `SCENARI`, una in `BRANCHI` e una riga in
-  `TRATTI_DELL_ABISSO`; `guastiDelleTessere` e `guastiDellAbisso` dicono se
+- **Un posto cambia le facce, non la fatica**: la forza dipende dal piano, non dalla coppia (un golem della fornace al piano 9
+  costa quanto un ratto delle cantine al piano 9, a meno della forma).
+- **Le discese della campagna hanno la loro coppia**, per ambientazione ([mostri.md](mostri.md)).
+- **Un posto nuovo** è una voce in `SCENARI` e una riga in
+  `TRATTI_DELL_ABISSO` (con la sua coppia); `guastiDelleTessere` e `guastiDellAbisso` dicono se
   ne manca un pezzo. Il piano resta una funzione del numero: rientrando si
   ritrova lo stesso posto.
 
@@ -251,8 +238,8 @@ come l'arma, il divario si allarga.
 
 - `dati/campagna.js` — `L_ABISSO`, `INDICE_ABISSO`, `tappaDi`, `durezzaDi`,
   `guardianoDi`, `formaDi`, `crescitaDi`, `svenimentiDi`, `guastiDellAbisso`,
-  `TRATTI_DELL_ABISSO`, `trattoDi`, `scenarioDi`, `brancoDi`.
-- `dati/mostri.js` — `BRANCHI`, i branchi dei posti.
+  `TRATTI_DELL_ABISSO`, `trattoDi`, `scenarioDi`, `brancoDi`, `tettoDelBrancoDi`.
+- `dati/mostri.js` — le specie e `duraDellaCoppia` (la coppia sta nel tratto).
 - `motore/corsa.js` — `senzaFondo`, `svenimentiSpesi`, `rimettiInPiedi`.
 - `motore/banco.js` — `gioca({ fino })`, `costoDeiPiani`, `finoADove`.
 - `test/unita/sotterraneo-abisso.test.mjs` (pesante, `tempo: 300`): il tetto

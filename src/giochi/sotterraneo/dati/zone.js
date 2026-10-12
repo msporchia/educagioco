@@ -122,10 +122,10 @@ export const DIF_DELLA_ZONA = [0.92, 1]
 // attacco, come nelle discese della storia (dati/campagna.js). Crescono in linea retta col livello, mai esponenziali,
 // tarati col banco sull'eroe atteso a quel livello (misure/sotterraneo, docs/sotterraneo/zone.md «Le misure»)
 // (un oggetto e non quattro costanti: `npm run sotterraneo -- --tara zona.forzaA12=5` ne prova un valore senza toccare il file)
-export const CURVA_DELLE_ZONE = { forzaA12: 4, forzaPerLivello: 0.9, spintaA12: 13, spintaPerLivello: 0.8 }
+export const CURVA_DELLE_ZONE = { forzaA12: 4, forzaPerLivello: 0.6, spintaA12: 13, spintaPerLivello: 1.0 }
 // a pari livello le zone non vengono uguali: la cripta ha piani di quattro stanze e pochi mostri prima della chiave,
 // la botola sedici. Questo numero corregge la forza zona per zona (1 di difetto), misurato col banco
-export const FORMA_DELLA_ZONA = { altare: 1.7, cantine: 0.8, torre: 0.8, gallerie: 1.2, cisterna: 0.95, labirinto: 0.85, fondo: 1.3 }
+export const FORMA_DELLA_ZONA = { altare: 1.7, cantine: 0.8, torre: 0.8, gallerie: 1.4, cisterna: 0.95, labirinto: 0.85, fondo: 1.3 }
 
 export const forzaDellaZona = (L, chiave) =>
   Math.round(Math.max(1, CURVA_DELLE_ZONE.forzaA12 + CURVA_DELLE_ZONE.forzaPerLivello * (L - 12)) * (FORMA_DELLA_ZONA[chiave] || 1) * 100) / 100

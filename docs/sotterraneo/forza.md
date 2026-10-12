@@ -2,8 +2,8 @@
 
 Il colore delle discese (grigio, verde, arancio, rosso, e la sentinella sulla
 rossa) confrontava solo il **livello** dell'eroe con la fascia della zona, e i
-mostri sono tarati sulla roba *attesa*, senza abilità: un bambino con roba
-buona e abilità forti abbatteva tutto con un colpo anche nelle verdi.
+mostri erano tarati sulla roba *attesa*, senza abilità: un bambino con roba
+buona e abilità forti abbatteva tutto con un colpo anche nelle verdi (adesso sono tarati anche sulle abilità).
 L'utente, 12 ottobre 2026: *«un calcolo che tenga conto dei danni medi che
 può fare questo personaggio, equipaggiato come è equipaggiato in quel
 momento, considerando di usare almeno 2 abilità forti a scontro; su quello
@@ -64,10 +64,14 @@ eroe atteso). Niente caso: due chiamate danno lo stesso numero.
 4. **Il rapporto** `R = TTD / TTK`: quanti mostri così regge per ogni mostro
    che ci mette a battere.
 5. **L'eroe atteso a L** (`eroeAtteso`): la roba con cui il gioco lo aspetta e la
-   crescita come la dà il banco, **senza abilità** (è così che i mostri sono
-   tarati). Nella storia la roba con cui si entra nella discesa del livello atteso
-   (`robaAttesa`, `LIVELLI_ATTESI`), dal 12 `robaAttesaA` e `crescitaAttesaA`
-   («Oltre la storia» in [zone.md](zone.md)).
+   crescita come la dà il banco, **con le abilità della strada della sua classe**
+   (`STRADA` in `motore/abilita.js`, `conLaStrada`: i punti dell'albero spesi in
+   fila, le caselle vuote, quindi vale tutto quello che sa fare). Dal 12 ottobre i
+   mostri sono tarati sul giocatore finto che usa le abilità ([scontro-bilancio.md](scontro-bilancio.md)),
+   e l'eroe atteso le ha: un eroe senza albero vale meno del suo livello, uno che
+   sceglie bene vale di più. Nella storia la roba con cui si entra nella discesa del
+   livello atteso (`robaAttesa`, `LIVELLI_ATTESI`), dal 12 `robaAttesaA` e
+   `crescitaAttesaA` («Oltre la storia» in [zone.md](zone.md)).
 6. **Il livello di forza** (`livelloDiForza`): si sale da 2 e si tiene il più alto L
    con `R(eroe, L) ≥ R(eroe atteso a L, L)`; si smette quando `R(eroe, L)` scende
    sotto 1 (non regge nemmeno un mostro: più su non può andare meglio), o al
@@ -83,8 +87,8 @@ chiede la mappa a ogni disegno.
 ### Il controllo di sanità
 
 L'eroe atteso a ogni livello, per ciascuno dei quattro eroi, ha forza uguale al
-suo livello, al più uno di scarto (`unita/sotterraneo-forza` lo prova da 1 a 45):
-oggi è esatto dappertutto tranne il mago al 9, che vale 10. Se si ritocca la
+suo livello, al più uno di scarto (`unita/sotterraneo-forza` lo prova da 1 a 45).
+`npm run sotterraneo -- --forza 1,5,12,20,30` lo stampa, e con `--rapporti` o `--dettagli` mostra le gobbe del suo rapporto. Se si ritocca la
 formula o il mostro e il controllo si rompe, è la formula da sistemare, non il
 test.
 
@@ -113,21 +117,21 @@ le trova al loro posto.
 
 ## Esempi misurati
 
-Livello di forza, calcolato dal test (`nota`), con la roba attesa del livello,
-a mani nude, con la roba di dodici livelli più su, e con tutto l'albero delle
-abilità imparato (le tre caselle riempite a mano con le più forti, con l'arma
-che hanno in mano: senza la lama giusta le abilità della lama non contano):
+Livello di forza, calcolato dal test (`nota`), tutti con i punti dell'albero spesi sulla strada del banco come l'eroe atteso:
+con la roba attesa del livello, a mani nude, con la sola arma di dodici livelli più su, con tutta la roba di dodici livelli più su, e
+(ultima colonna) con i punti spesi a caso nei rami in ordine, senza guardare l'arma in mano, e le tre caselle riempite con le più
+forti: un albero scelto male vale molto meno dell'atteso, che è proprio il punto della strada:
 
-| eroe, livello | atteso | nudo | roba +12 livelli | con abilità |
-|---|---|---|---|---|
-| cavaliere 12 | 12 | 5 | 16 | 14 |
-| cavaliere 20 | 20 | 9 | 27 | 26 |
-| elfa 12 | 12 | 4 | 16 | 14 |
-| elfa 20 | 20 | 8 | 28 | 26 |
-| mago 12 | 12 | 5 | 16 | 15 |
-| mago 20 | 20 | 7 | 28 | 27 |
-| nano 12 | 12 | 6 | 16 | 14 |
-| nano 20 | 20 | 11 | 28 | 27 |
+| eroe, livello | atteso | nudo | arma +12 livelli | roba +12 livelli | albero a caso |
+|---|---|---|---|---|---|
+| cavaliere 12 | 12 | 5 | 12 | 15 | 10 |
+| cavaliere 20 | 20 | 12 | 21 | 25 | 16 |
+| elfa 12 | 12 | 5 | 12 | 16 | 7 |
+| elfa 20 | 20 | 10 | 23 | 26 | 16 |
+| mago 12 | 12 | 6 | 12 | 16 | 8 |
+| mago 20 | 20 | 8 | 22 | 26 | 19 |
+| nano 12 | 12 | 8 | 12 | 14 | 7 |
+| nano 20 | 20 | 11 | 23 | 26 | 14 |
 
 Un conto intero, il mago del 20 con lo scettro in mano contro il mostro di
 riferimento del 20 (106 ossa, attacco 24, difesa 1):
@@ -154,12 +158,10 @@ così per ogni mostro che batte, ed è il livello 20.
 ## Cosa non fa ancora
 
 - **Le misure col giocatore finto.** La formula non è stata confrontata con
-  partite vere: ha come unica taratura che l'eroe atteso valga il suo livello.
-  Il peso di ogni pezzo (le due abilità, le risposte giuste a 8/10, il mostro
-  tipico) si controlla quando si misura.
-- **Lo scontro a gruppi.** Il mostro di riferimento è uno; quando arriveranno gli
-  scontri con più mostri cambieranno gli ingressi (quanti mostri, quanto
-  picchiano insieme, il colpo a tutta la stanza), non la forma della formula.
+  partite vere: ha come unica taratura che l'eroe atteso valga il suo livello. Il giocatore finto, però, usa le stesse
+  abilità (due forti a scontro, la cura sotto la metà) e i mostri sono tarati su di lui: l'eroe atteso e il banco sono lo stesso eroe.
+- **Lo scontro a gruppi.** Il mostro di riferimento è uno; il banco combatte gruppi veri (l'area con tre mostri), la formula no.
+  Contare quanti mostri e quanto picchiano insieme cambierebbe gli ingressi, non la forma della formula.
 - **L'energia** non è un limite: si supponga che le due abilità siano sempre
   pagate (ne servono 10–18, l'eroe parte da 9–13 e la ricarica con le risposte
   giuste). Gli effetti che non fanno danno (stordire, gelare, parare) non
@@ -168,9 +170,8 @@ così per ogni mostro che batte, ed è il livello 20.
   e la formula conta il colpo senza elemento. Un eroe che vive di veleno non vale meno solo perché lo scheletro non si
   avvelena; nel gioco la scelta fra le abilità è di chi ha il mostro davanti. Il sangue, le spine e il furto di vita
   ([abilita-rami.md](abilita-rami.md#le-passive-nuove)) non entrano nel conto; la velocità sì (`c.velocita`).
-- **Le abilità non sono nelle misure** della storia
-  ([abilita.md](abilita.md), «Cosa non è ancora fatto»): la forza le conta, i mostri
-  no.
+- **Le abilità sono nelle misure** dal 12 ottobre (il banco ha una strada per classe, [abilita.md](abilita.md)), ma solo quella
+  strada: un bambino che sceglie altri rami vale quello che il suo albero dà.
 
 ## Nei test
 

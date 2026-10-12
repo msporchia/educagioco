@@ -60,14 +60,14 @@ Il codice: `motore/scontro.js` (i metodi dello scontro, attaccati a `Corsa`),
 
   | velocità | mostri |
   |---|---|
-  | 12–13 | ratto, pipistrello, vespone |
-  | 9–10 | goblin, scheletro, fantasma, lupo, serpente |
-  | 7–8 | orco, gigante, troll, fungo, granchio |
-  | 5–6 | melma, golem |
+  | 12–13 | pipistrello, vespone |
+  | 9–11 | ratto, goblin, scheletro, fantasma, lupo, serpente |
+  | 7–8 | orco, gigante, troll, fungo, granchio, melma |
+  | 5 | golem |
 
   L'eroe parte **più veloce della media dei mostri** (l'utente: «l'eroe è alto
-  come iniziativa»); il lupo e il serpente a 9 e non a 11 perché con loro la
-  grotta non reggeva (vedi «Il bilancio»).
+  come iniziativa»). Le velocità sono la **forma** di una specie: colpo per velocità circa uguale dentro la coppia di una discesa
+  ([mostri.md](mostri.md)), così il ratto veloce e la melma lenta fanno più o meno lo stesso male nel tempo.
 - **Una fila di turni alla Final Fantasy X** (`motore/turni.js`): ogni azione
   fa aspettare `100 / velocita`, agisce chi ha aspettato di meno, a parità
   l'eroe. Niente tempo che scorre, mai: la fila si muove solo agendo.
@@ -134,7 +134,7 @@ solito è «uno».
 - **Il colpo**: `COLPO_DEL_MOSTRO` × (attacco − difesa), almeno 1, con gli
   effetti (`danno`, `botta`). La protezione (parato, o i primi colpi di Testa
   dura) lo dimezza una volta sola, il gelo ancora; la Parata ne toglie qualcuno;
-  la schivata vale per ogni colpo. Il valore è **0,8**: vedi «Il bilancio».
+  la schivata vale per ogni colpo. Il valore è **1,1**: vedi «Il bilancio».
 - **Sotto il mostro**: «ti colpisce 3» (`foglio.minaccia`). Spariscono «se
   sbagli» e il graffio.
 - **Uno alla volta, in ordine**, con la sua animazione corta; un tocco la
@@ -206,7 +206,7 @@ volte prima del mostro, la somma è zero.
 
 ## Il bilancio
 
-`COLPO_DEL_MOSTRO` vale **0,8** e le velocità sono quelle della tabella qui sopra; come ci si è arrivati, le
+`COLPO_DEL_MOSTRO` vale **1,1** e le velocità sono quelle della tabella qui sopra; come ci si è arrivati, le
 misure e cosa resta da guardare: [scontro-bilancio.md](scontro-bilancio.md).
 
 ## L'interfaccia e la vista
@@ -219,7 +219,9 @@ o due file, il grosso al centro, la fila dei turni, il racconto un'azione alla v
 
 Il tetto resta: **85 risposte obbligate a seduta** (`unita/sotterraneo`): i mostri in gruppo picchiano di più, ma un colpo
 ad area ne prende tanti con una domanda sola. Il giocatore finto (`motore/banco.js`) attacca il bersaglio che il motore
-sceglie finché non cadono tutti; non usa le abilità, non beve né scappa dentro uno scontro.
+sceglie finché non cadono tutti, con le abilità delle sue caselle (due forti a scontro, l'area con tre mostri, la cura sotto la
+metà della vita); non beve né scappa dentro uno scontro (provato a bere quando il giro dopo lo farebbe cadere: costa il turno e il
+banco peggiora).
 
 ## Cosa resta fuori (per dopo)
 

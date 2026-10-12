@@ -6,7 +6,7 @@ sviene, cosa ci si porta dietro, il portale e come si lascia una discesa a metà
 il fondo senza fine in [abisso.md](abisso.md).
 
 Il codice: `src/giochi/sotterraneo/` — `dati/campagna.js` (le sette discese, [la-grande-storia.md](la-grande-storia.md)),
-`dati/mondo.js` (passi e tempi), `dati/mostri.js` (`BRANCO`),
+`dati/mondo.js` (passi e tempi), `dati/mostri.js` (le specie e la loro coppia: `mostri` in `dati/campagna.js`),
 `motore/corsa.js` (la discesa), `motore/livello.js` (il piano),
 `motore/corredo.js` (la roba che resta), `motore/banco.js` (il giocatore
 finto che scende davvero, e fa la spesa sopra).
@@ -19,7 +19,8 @@ finto che scende davvero, e fa la spesa sopra).
   facoltativo. La scala ha una grata col lucchetto finché la chiave non è
   presa.
 - **Chi porta la chiave lo dichiara la tappa, non il caso** (`guardianoDi`):
-  è l'unica cosa del sotterraneo che non si può aggirare.
+  è la specie più dura della coppia di mostri della discesa, fatta caporale
+  ([mostri.md](mostri.md)). È l'unica cosa del sotterraneo che non si può aggirare.
 - **I segni sopra le porte non mentono mai** (`SEGNI` in `dati/cose.js`):
   💀 guardia, 💎 roba buona, ⛲ acqua. La pelle della porta
   ripete il segno col disegno (`dati/tessere.js`). Un segno che promette a
@@ -97,40 +98,19 @@ Un cono davanti all'eroe, un alone corto attorno, l'ombra alle spalle; la
 torcia allunga il cono, i mostri nell'ombra arrivano alle spalle:
 [luce.md](luce.md).
 
-## Chi ci abita: il branco a fasce
+## Chi ci abita: le coppie
 
-`BRANCO` è una **scaletta di fasce**: la profondità sceglie la fascia, il
-caso la faccia. Dentro una fascia i mostri costano le stesse risposte e
-picchiano quasi uguale; scendendo cambia *quanto è dura*, fra una stanza e
-l'altra *chi trovi*. Come stanno nelle stanze (a branchi nelle sale, uno
-appostato in un angolo, i caporali davanti al grosso): [piani.md](piani.md).
+Ogni discesa ha la sua **coppia di specie** (la scalinata è ratti e melme, la grotta lupi e funghi), scelta per ambientazione:
+per strada, nei branchi, appostati e come caporali ci sono solo quei due, e la forza viene dal livello (`forza` e `spinta` della
+discesa) e non dalla specie. La tabella, le specie normalizzate e il perché: [mostri.md](mostri.md#le-coppie-12-ottobre-2026).
+Prima c'era una scaletta di cinque fasce (il piano pescava da tutto il bestiario). Come stanno nelle stanze (a branchi nelle sale,
+uno appostato in un angolo, i caporali davanti al grosso): [piani.md](piani.md).
 
-| fascia | chi | a mani nude |
-|---|---|---|
-| 1 | ratto · pipistrello | una risposta |
-| 2 | goblin · melma · fantasma | due |
-| 3 | scheletro · fungo · vespone | tre o quattro |
-| 4 | orco · lupo · serpente · granchio | da quattro a sei |
-| 5 | golem | sette — solo nell'abisso |
-
-Fuori dalla scaletta i due **capi**, gigante e troll: li mette la tappa.
-Nell'abisso ogni posto ha un branco suo, preso da queste fasce (vedi
-[abisso.md](abisso.md#il-posto-cambia-scendendo)).
-
-- **Dentro una fascia si cambia forma, non quantità**: il serpente ha poche
-  ossa e morde forte, il granchio para e lascia scudi, la melma è lenta e fa
-  poco male. Due costi diversi nella stessa fascia sarebbero una lotteria.
-- **Il passo di discesa è una costante** (`PASSO_DEL_BRANCO`, con un `min`
-  sulla lunghezza). Provato a derivarlo da `BRANCO.length`: aggiungere una
-  fascia in fondo ricalibrava anche la scalinata, e la scala sommersa passava da 36 a
-  58 risposte obbligate.
-- **La faccia si sceglie dallo stesso tiro della fascia** (cifre alte la
-  fascia, basse la faccia). Un `rnd()` in più sposta stanze, porte e forzieri
-  di tutto il piano, e il banco confronterebbe due sotterranei.
-- **Il bottino è della fascia, non della faccia**: cambia cosa si trova, non
-  quanto spesso.
+- **Il tiro è uno solo**: la specie del primo del branco sta nel tiro del piano, le altre un tiro l'una. Un `rnd()` in più sposta
+  stanze, porte e forzieri di tutto il piano, e il banco confronterebbe due sotterranei.
+- **Il bottino è della specie, non del posto**: cambia cosa si trova, non quanto spesso.
 - **Ogni mostro ha le sue difese** (cosa resiste, cosa teme, a quali stati non è sensibile) e le abilità elementali le
-  usano: [mostri.md](mostri.md). Ratto e goblin sono neutri.
+  usano: [mostri.md](mostri.md#le-difese). Ratto e goblin sono neutri.
 
 ## Camminare col dito
 

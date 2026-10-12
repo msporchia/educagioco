@@ -1,35 +1,78 @@
-# Le difese dei mostri
+# I mostri: le coppie e le difese
 
-Il bestiario ([regole.md](regole.md#chi-ci-abita-il-branco-a-fasce)) dice chi sono, quanto costano e dove stanno; qui cosa
-**resistono**, cosa **temono** e a quali **stati** non sono sensibili. Il perché (le parole dell'utente, 12 ottobre 2026) e come
-funziona il conto: [abilita-elementi.md](abilita-elementi.md). I dati: `dati/mostri.js` (`resiste`, `teme`, `immune` sulla
-scheda), `dati/grossi.js` (`difese` del grosso e `difeseDi`), `dati/elementi.js` (il vocabolario).
+Il bestiario è fatto di **coppie**: ogni discesa ha la sua, scelta per ambientazione, e per strada, nei branchi, appostati e come
+caporali ci sono solo quei due. Poi cosa **resistono** i mostri, cosa **temono** e a quali **stati** non sono sensibili. I dati:
+`dati/mostri.js` (la scheda: ossa, attacco, difesa, velocità, `resiste`, `teme`, `immune`; `duraDellaCoppia`, `CAPORALE`),
+`dati/campagna.js` (`mostri` di ogni discesa e di ogni tratto dell'abisso, `brancoDi`, `guardianoDi`), `dati/grossi.js` (le difese
+del grosso e `difeseDi`), `dati/elementi.js` (il vocabolario). Il perché delle difese, con le parole dell'utente, e come funziona
+il conto: [abilita-elementi.md](abilita-elementi.md).
+
+## Le coppie (12 ottobre 2026)
+
+L'utente: «in un dungeon ce ne sono più o meno sempre solo di 1 tipo, massimo 2; c'è troppa varianza all'interno dello stesso
+livello» (un piano pescava da cinque fasce: ratti, fantasmi e scheletri insieme), e poi: «farei più una questione di
+ambientazione, come in Diablo: in una zona trovi quel tipo di mostro, in un'altra un altro, così sai bene o male cosa aspettarsi;
+ci sono zone dove due mostri convivono, ma sono due mostri della stessa zona».
+
+| discesa | scenario | coppia | la più dura (il guardiano) |
+|---|---|---|---|
+| la cripta dell'altare | cripta | scheletro · fantasma | fantasma |
+| la scalinata antica | cantine | ratto · melma | melma |
+| la torre in rovina | fornace | pipistrello · vespone | pipistrello |
+| la grotta della scaletta | cantine | lupo · fungo | fungo |
+| la scala sommersa | cripta | granchio · serpente | granchio |
+| la botola segreta | cantine | orco · goblin | orco |
+| la miniera abbandonata | fornace | golem · ratto | golem |
+| l'abisso, tratto delle cantine · della cripta · della fornace | | ratto · melma · scheletro · fantasma · golem · pipistrello | |
+
+- **La coppia è della discesa, non del livello.** Una zona (la discesa dopo la storia, con un volto nuovo) ha sempre la sua: la
+  scalinata è ratti e melme, sempre più forti ([zone.md](zone.md)). Una specie può stare in due discese (il ratto sta nella
+  scalinata e nella miniera, dove fa da sciame ai golem). Il dato sta accanto allo scenario e al grosso (`mostri` e `tettoBranco`,
+  il branco più grande, in `dati/campagna.js`); l'abisso ha la coppia del suo tratto (`TRATTI_DELL_ABISSO`).
+- **La forza viene dal livello, non dalla specie.** Tutte le specie di strada hanno le stesse ossa (8) e cambiano **forma**:
+  velocità (da 5 a 13), colpo (da 2 a 6), difesa (0 o 1) e le difese qui sotto. Quanto sono forti lo dicono `forza` (le ossa di tutti)
+  e `spinta` (il loro attacco) della discesa e, dopo la storia, la curva delle zone ([zone.md](zone.md#le-misure)); nell'abisso
+  quelle dell'abisso. Il ratto della miniera è molto più forte del ratto della scalinata, e il golem sta sempre in cima.
+- **Dentro una discesa si costa uguale**: le due specie costano in risposte (ossa diviso quello che passa della difesa) entro il
+  15% una dall'altra, con la roba attesa di ogni eroe (`unita/sotterraneo-coppie`, `guastiDellaCoppia`). Le due si distinguono
+  per come picchiano (colpo per velocità circa uguale: `minacciaDi`) e per cosa resistono, non per quanto resistono.
+- **I picchi sono pochi**: il guardiano della chiave (la specie più dura della coppia, fatta **caporale**: ossa ×1,25 e un colpo
+  in più, `CAPORALE`), i caporali dell'anticamera ([piani.md](piani.md)) e il mostro grosso. I capi (gigante, troll) non stanno per
+  strada: sono le basi dei grossi ([grossi.md](grossi.md)).
+- **Il vantaggio per chi gioca**: ogni discesa ha un'identità («la grotta dei lupi e dei funghi»), e con gli elementi si prepara
+  l'albero per quella discesa: il fuoco alla scalinata (la melma lo teme), il gelo alla cisterna (il serpente lo teme), la luce
+  sacra nella cripta.
+- Provato: sette coppie a cicli di quattordici livelli, scelte dal livello come le zone. Scartato dall'utente: la scalinata non
+  sarebbe più sempre la scalinata dei ratti.
+
+## Le difese
 
 - **Resiste**: l'abilità di quell'elemento fa metà. **Teme**: un danno e mezzo. **Non prende**: lo stato non parte (il colpo fa il
   suo danno). L'attacco solito non ha elemento, quindi non si dimezza mai e non si raddoppia mai.
 - **Poche per mostro e sensate**, al più sei righe in tutto (`guastiDelleDifese`): quello che un bambino indovina guardando la
   figura (lo scheletro non si avvelena, la melma resiste al veleno, il lupo teme il fuoco). **I primi due, ratto e goblin,
-  sono neutri**: al livello 2 non c'è niente da sapere. A ogni elemento qualcuno è sensibile e qualcuno resiste, e a ogni stato
-  qualcuno è immune (lo controlla `unita/sotterraneo-elementi`).
+  sono neutri**: al livello 2 non c'è niente da sapere. A ogni elemento qualcuno è sensibile e
+  qualcuno resiste, e a ogni stato qualcuno è immune (lo controlla `unita/sotterraneo-elementi`).
 - **Il grosso porta le sue**: `difese` al posto di quelle della specie. Fiammetta è un troll, ma di fuoco: lo resiste e non
   brucia. Senza `difese` (Re Ossuto, Grumo) ha quelle della specie.
-- **Le difese non cambiano le ossa**, né le misure della storia (il banco attacca soltanto): cambiano cosa conviene scegliere.
+- **Le difese non cambiano le ossa**: cambiano cosa conviene scegliere. Il banco di prova sceglie, fra le abilità delle sue caselle,
+  quella che contro questi mostri toglie di più, difese comprese.
 
-| mostro | fascia | resiste | teme | non prende |
+| mostro | coppia | resiste | teme | non prende |
 |---|---|---|---|---|
-| ratto | 1 | — | — | — |
-| pipistrello | 1 | — | fulmine | — |
-| goblin | 2 | — | — | — |
-| melma | 2 | veleno, fulmine | fuoco | non si avvelena, non sanguina |
-| fantasma | 2 | fisico | luce sacra | non si avvelena, non sanguina, non gela |
-| scheletro | 3 | veleno | luce sacra, fisico | non si avvelena, non sanguina |
-| fungo che morde | 3 | veleno | fuoco | non si avvelena |
-| vespone | 3 | — | gelo, veleno | — |
-| orco | 4 | — | fulmine | — |
-| lupo | 4 | gelo | fuoco | — |
-| granchio | 4 | fisico | fulmine | — |
-| serpente | 4 | veleno | gelo | non si avvelena |
-| golem | 5 | fisico, luce sacra | gelo | non si stordisce, non si avvelena, non sanguina |
+| ratto | scalinata, miniera | — | — | — |
+| pipistrello | torre | — | fulmine | — |
+| goblin | botola | — | — | — |
+| melma | scalinata | veleno, fulmine | fuoco | non si avvelena, non sanguina |
+| fantasma | cripta | fisico | luce sacra | non si avvelena, non sanguina, non gela |
+| scheletro | cripta | veleno | luce sacra, fisico | non si avvelena, non sanguina |
+| fungo che morde | grotta | veleno | fuoco | non si avvelena |
+| vespone | torre | — | gelo, veleno | — |
+| orco | botola | — | fulmine | — |
+| lupo | grotta | gelo | fuoco | — |
+| granchio | cisterna | fisico | fulmine | — |
+| serpente | cisterna | veleno | gelo | non si avvelena |
+| golem | miniera | fisico, luce sacra | gelo | non si stordisce, non si avvelena, non sanguina |
 | gigante (capo) | — | gelo | fulmine | — |
 | troll (capo) | — | veleno | fuoco | — |
 
