@@ -899,7 +899,7 @@
 
 /* ═══════════ la bottega e lo zaino (viste/Cornice.vue, Bottega.vue, Zaino.vue) ═══════════
    Una finestra da gioco di ruolo stretta in un telefono: legno scuro e oro, l'eroe con le caselle intorno, la
-   griglia dei pezzi col bordo della loro rarità, il pannello col confronto (docs/sotterraneo/bottega.md) */
+   griglia dei pezzi col bordo della loro rarità, il pannello col confronto (docs/sotterraneo/bottega-finestra.md) */
 .sot-sipario {
   position: absolute; inset: 0; z-index: 14; display: flex; align-items: center; justify-content: center;
   padding: 10px 8px; background: #05060ad6; animation: sot-appare .14s ease-out;

@@ -1,8 +1,9 @@
 // I mercanti di sopra: la roba dell'avventuriero (Corredo) davanti a un banco. Ogni mercante pesca il suo
-// banco una volta per giro (fra una discesa finita e l'altra) e quello che si compra se ne va; le cose che non
-// finiscono (le cure, la torcia) stanno in cima. L'armaiolo e il rigattiere portano la riga della storia con cui
+// banco una volta e quello che si compra se ne va; al giro nuovo (una discesa finita) il banco di chi veste cambia
+// poco alla volta (`prepara`: i tre pezzi più deboli via, tre nuovi dentro); le cose che non finiscono (le cure,
+// la torcia) stanno in cima. L'armaiolo e il rigattiere portano la riga della storia con cui
 // si entra nella prossima discesa (motore/storia.js). Gira in Node: il giocatore finto ci fa la spesa (banco.js).
-// Le regole: docs/sotterraneo/bottega.md, "I mercanti di sopra".
+// Le regole: docs/sotterraneo/bottega.md.
 import { Corredo, ABILITA_CONFRONTATE } from './corredo.js'
 import { COSE, A_SORTE, pescaMerce, aLivello, chiaveDelPezzo, baseDi } from '../dati/cose.js'
 import { mercanteDi, vendeLa, righeDi, profonditaDelBanco, prezzoAvanti, schedaDi } from '../dati/mercanti.js'
@@ -11,7 +12,7 @@ import { pescaAbilita } from './bottino.js'
 import { LIVELLI_PER_REQUISITO } from '../dati/eroi.js'
 
 // quanti pezzi ha ogni linguetta di un mercante che veste quando il banco si riempie (docs/sotterraneo/bottega.md,
-// «Più scelta»), e fin dove si spinge il livello dei pezzi in più per trovarne che migliorano
+// «Dieci pezzi per linguetta»), e fin dove si spinge il livello dei pezzi in più per trovarne che migliorano
 export const PEZZI_PER_LINGUETTA = 10
 // sotto questi (comprati, o non più utili al nuovo livello) una linguetta si rimette in piedi anche a metà giro
 export const MINIMO_PER_LINGUETTA = 3
@@ -48,8 +49,8 @@ export function alGiroNuovo(botteghe) {
 export class Bottega extends Corredo {
   // `finite`: discese finite (avanza.tappa). `banchi`: quello che è già stato pescato in questo giro
   // ({ armaiolo: ['spada', …] }, le botteghe dell'avventura); senza, si pesca alla prima apertura. `scaffali`: i pezzi
-  // in più che stanno in mostra accanto al banco, scritti anch'essi; `ruota`: i mercanti il cui banco cambia a metà
-  // (il giro nuovo, alGiroNuovo). `venduti`: gli ultimi pezzi che l'eroe ha venduto al rigattiere, [{ k, prezzo }]
+  // in più che stanno in mostra accanto al banco, scritti anch'essi; `ruota`: i mercanti il cui banco deve cambiare
+  // al giro nuovo (alGiroNuovo). `venduti`: gli ultimi pezzi che l'eroe ha venduto al rigattiere, [{ k, prezzo }]
   constructor({ eroe, roba = null, finite = 0, banchi = null, scaffali = null, ruota = null, venduti = null,
                 rnd = Math.random, crescita = null } = {}) {
     super({ eroe, roba, crescita })

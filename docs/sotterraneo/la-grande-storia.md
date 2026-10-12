@@ -253,4 +253,4 @@ mai la riga dopo, sei semi d'equilibrio), `unita/sotterraneo-terra` (la
 partenza nel villaggio, le discese in fila per strada),
 `misure/sotterraneo` (la tabella qui sopra). Nel fumetto di una discesa
 `[data-sotto-livello]` con `data-manca` (`livello`, `arma` o `difesa`); i pezzi avanti nella
-bottega: [bottega.md](bottega.md#la-bottega-e-lo-zaino).
+bottega: [bottega-finestra.md](bottega-finestra.md#la-bottega-e-lo-zaino).

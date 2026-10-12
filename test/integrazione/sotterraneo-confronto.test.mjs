@@ -3,7 +3,7 @@
 
    Il pannello di un pezzo che si può indossare mette «Addosso» a sinistra
    e «Questo» a destra, una riga per ogni abilità che almeno uno dei due
-   ha (docs/sotterraneo/bottega.md, «La bottega e lo zaino»). Il caso con una
+   ha (docs/sotterraneo/bottega-finestra.md, «La bottega e lo zaino»). Il caso con una
    riga sola lo copre `sotterraneo-mercanti`; qui un eroe vestito (spada e
    scudo, un amuleto al dito) davanti al banco dell'armaiolo: lo spadone
    prende il posto di arma e scudo insieme, e uno scudo con più abilità

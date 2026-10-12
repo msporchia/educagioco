@@ -4,7 +4,7 @@
 // della sua rarità, il livello, che cos'è, e i suoi numeri e le sue abilità. Sopra, una riga sola col risultato netto
 // se lo indossi («⚔️ +4 · 🛡️ −2»), e quando cambiano le mani lo si dice chiaro. Provato: una tabella riga per riga
 // (attacco|attacco, difesa|difesa); con le abilità due pezzi con effetti diversi non si confrontavano più.
-// I numeri li dà il motore (seLoMetto.cambio), le parole pezzo.js; il perché: docs/sotterraneo/bottega.md
+// I numeri li dà il motore (seLoMetto.cambio), le parole pezzo.js; il perché: docs/sotterraneo/bottega-finestra.md
 import { computed } from 'vue'
 import Icona from './Icona.vue'
 import { PEZZI } from '../dati/atlante.js'

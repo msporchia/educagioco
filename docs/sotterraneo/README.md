@@ -26,7 +26,8 @@ senza fondo sotto le sette discese. Il codice sta in `src/giochi/sotterraneo/`.
 - [avventure.md](avventure.md) — un'avventura per eroe: cosa ha ognuno e dove sta nel salvataggio, cosa è in comune (monete, il massimo per medaglie ed esperienza), i salvataggi di prima, azzerati e poi riordinati
 - [roba.md](roba.md) — gli eroi e cosa portano, due mani, la torcia, per terra e nello zaino, curiosità e arredo
 - [figure.md](figure.md) — le 244 figure da indossare dei fogli dipinti, descritte una per una (elemento, materia, a chi sta bene): il catalogo, `roba.py` per guardarle e ritagliarle, i pezzi col nome con la figura loro
-- [bottega.md](bottega.md) — i mercanti di sopra, i pezzi avanti a sovrapprezzo, la bottega e lo zaino da gioco di ruolo, il confronto affiancato
+- [bottega.md](bottega.md) — i mercanti di sopra, i pezzi avanti a sovrapprezzo, il tetto di rarità, i dieci pezzi per linguetta, il banco che cambia poco alla volta, comprare senza le caratteristiche, il riacquisto degli ultimi cinque venduti
+- [bottega-finestra.md](bottega-finestra.md) — la finestra da gioco di ruolo dove si compra, si vende e si riprende, lo zaino nella stessa finestra, il confronto affiancato, i bersagli dei test
 - [scenari.md](scenari.md) — come è disegnato: lo scenario generato da un prompt, il muro alto una cella, i fogli e l'atlante
 - [abisso.md](abisso.md) — l'abisso com'è oggi: perché, formule della crescita, svenimenti, record, fin dove regge
 - [abisso-progetto.md](abisso-progetto.md) — la parte decisa e non ancora costruita: `cosa(k)`, bottino graduato, scala che risale, monete

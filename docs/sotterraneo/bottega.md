@@ -1,12 +1,15 @@
 # I mercanti e la bottega
 
 Le tre botteghe sulla terra di sopra, cosa portano, i pezzi delle righe dopo
-a sovrapprezzo, la finestra da gioco di ruolo dove si compra e si vende, e
-lo zaino nella stessa finestra. Divisa da [roba.md](roba.md) quando ha
-passato le 250 righe. I banchi sono a tono col livello dell'eroe
-([rarita.md](rarita.md#i-mercanti-a-tono)). Il codice: `dati/mercanti.js`,
-`motore/bottega.js`, `motore/storia.js` (`bancoDelPasso`, `vetrinaDelPasso`),
-`viste/Bottega.vue`, `viste/Zaino.vue` e i pezzi comuni.
+a sovrapprezzo, quanta scelta c'è sul banco e come cambia da un giro all'altro
+(il tetto di rarità, i dieci pezzi, il banco che ruota, comprare senza le
+caratteristiche, il riacquisto). La finestra da gioco di ruolo dove si compra e
+si vende, e lo zaino nella stessa finestra: [bottega-finestra.md](bottega-finestra.md).
+Divisa da [roba.md](roba.md) quando ha passato le 250 righe. I banchi sono a
+tono col livello dell'eroe ([rarita.md](rarita.md#i-mercanti-a-tono)). Il
+codice: `dati/mercanti.js`, `motore/bottega.js`, `motore/storia.js`
+(`bancoDelPasso`, `vetrinaDelPasso`, `delPassoDi`), `viste/Bottega.vue` e
+`Gioco.vue` (dove i banchi si scrivono nell'avventura).
 
 ## I mercanti di sopra
 
@@ -19,7 +22,7 @@ più nessuno.
 |---|---|---|
 | ⚒️ l'armaiolo, davanti alla casa di sinistra | armi, scudi, armature | — |
 | 🌿 l'erborista, davanti alla casa di destra | l'elisir del toro (dalla seconda discesa finita) | boccetta, pozione, ampolla, torcia |
-| 🧺 il rigattiere, accanto al carro | anelli, amuleti, chiavi | — e **compra** quello che hai in tasca |
+| 🧺 il rigattiere, accanto al carro | anelli, amuleti, chiavi | — e **compra** quello che hai in tasca, e te lo ridà (sotto) |
 
 - **Il posto senza domande**: qui si spende quello che le domande hanno
   fruttato. Quello che non ci si può permettere resta visibile e spento, col
@@ -28,7 +31,8 @@ più nessuno.
 - **Compra solo il rigattiere, a metà prezzo** (`quantoVale`): comprare e
   rivendere perde metà, quindi non è un modo di fare gemme, ma libera le
   tasche. Tre botteghe che comprano farebbero di ogni banco un posto dove
-  svuotare le tasche; chi non compra dice chi lo fa.
+  svuotare le tasche; chi non compra dice chi lo fa. Quello che compra lo
+  tiene da parte (**Riacquista**, sotto).
 - **L'armaiolo e il rigattiere portano il passo dopo della storia**
   (`passo` in `dati/mercanti.js`, `bancoDelPasso` in `motore/storia.js`):
   i pezzi della riga con cui si entra nella prossima discesa che mancano,
@@ -57,28 +61,85 @@ più nessuno.
   di livello, quindi costa molto di più): al banco un pezzo costa base × livello × `acq` della
   rarità (comune 1, magico 2,6, raro 6, leggendario 14, `dati/pezzi.js`); rivendendo si incassa
   ancora la metà del vecchio valore (`molt`), così la roba che cade non gonfia le gemme.
-  Le varianti sono tre per ogni rarità, con abilità diverse. **I pezzi da meritare**
-  (`daMeritare`, `DA_MERITARE` = 2 per linguetta): quelli che la classe porta ma che chiedono più
-  caratteristica di quella che ha («Serve Intelligenza 6 (hai 5)»), più forti di quello che ha
-  addosso; si vedono spenti e non si comprano, sono il traguardo.
-- **Mai una linguetta vuota** (`rialzi` in `motore/bottega.js`): ogni
-  linguetta che veste (armi, scudi e armature, gioielli) ha sempre almeno
-  sei pezzi (`PEZZI_PER_LINGUETTA`, prima tre: l'utente voleva più scelta), tutti che migliorano quello che l'eroe
-  ha addosso in quel posto. Se fra quelli del suo livello (il passo e la
-  vetrina) non bastano, il mercante ne propone di livello o rarità più alti
-  dello stesso tipo — comune al livello dopo, magico e raro con le abilità
-  che nascono in quella casella — dal meno caro, uno per base diversa, e solo
-  quelli che alzano il punteggio. Costano più delle gemme che l'eroe ha? Restano
-  lì, spenti, col prezzo vero (e il sovrapprezzo, se la base è delle righe
-  dopo). Nessun caso: stessa roba addosso, stessi pezzi. Il livello è senza
-  tetto e numeri e punteggio crescono con lui, quindi un pezzo che migliora
-  c'è sempre: «Hai già il meglio che ho» non serve più ed è stato tolto.
-  **Provato: solo i migliorativi lasciava il banco vuoto** — con boss e
-  rari addosso (o a fine storia) l'armaiolo non aveva niente da mostrare, e
-  l'utente: «l'armaiolo dovrebbe sempre avere armi, in caso costano troppo».
-  I pezzi in più non entrano nel banco pescato (`mercanzia`): li vede solo
-  chi apre la bottega (`mercanziaVista`), così il giocatore finto delle
-  misure non li compra e l'equilibrio non cambia.
+  Le varianti sono tre per ogni rarità, con abilità diverse.
+- **Il tetto di rarità** (l'utente, 12 ottobre 2026: *«il fabbro non venda
+  roba leggendaria/epica, quella è appannaggio dei drop: ti permette di
+  prendere sempre un'arma tosta per quel livello, ma non super tosta»*): dai
+  mercanti **mai un leggendario**, né un pezzo col nome dei mostri grossi
+  (`consentito`), **il magico sempre** e **al più un raro per linguetta**
+  (`RARI_PER_LINGUETTA`). I rari e i leggendari migliori restano dei drop e dei
+  mostri grossi. Vale per ogni strada che mette un pezzo sul banco: il pescato
+  (comune o magico, `aTono`), la vetrina dei pezzi avanti (comuni), lo scaffale
+  (sotto); uno scaffale riletto con un pezzo vietato lo butta. Chi ha già roba
+  rara addosso trova pezzi di livello più alto, non di rarità più alta.
+- **Dieci pezzi per linguetta** (`PEZZI_PER_LINGUETTA`; prima sei, prima ancora
+  tre; l'utente, 12 ottobre: *«la varietà è minima, ti propone tipo 5 armi, danne
+  di più»*): ogni linguetta che veste (armi; scudi e armature; gioielli) si
+  riempie fino a dieci pezzi in vista, **tutti che migliorano** quello che
+  l'eroe ha addosso in quel posto, uno per base prima e poi il resto, a caso. Il
+  pescato (il passo e le `altre`) e la vetrina contano fra i dieci; il resto sta
+  sullo **scaffale** (`scaffali` in `botteghe`, scritto come i banchi):
+  comuni e magici a tono col livello dell'eroe (quello a cui regge l'arma e il
+  suo) e, solo se non bastano, di livello più alto, un livello dopo l'altro, fino
+  a trovarne che migliorano: con boss e rari addosso il banco non resta mai vuoto
+  (l'utente: *«l'armaiolo dovrebbe sempre avere armi, in caso costano troppo»*).
+  Sotto `MINIMO_PER_LINGUETTA` (3) una linguetta si rimette in piedi anche a metà
+  giro. **Lo scaffale sta fuori da `mercanzia`** (banco e vetrina) **e dentro
+  `mercanziaVista`**: lo vede chi apre la bottega, e il giocatore finto delle
+  misure (`motore/banco.js`) non lo compra, quindi l'equilibrio non cambia. Un
+  pezzo che col livello nuovo non migliora più niente non si mostra, ma resta
+  sullo scaffale (e al giro dopo se ne va per primo).
+- **Il banco cambia poco alla volta** (l'utente, 12 ottobre: *«vedo un'arma
+  super carina ma non ho ancora i soldi, entro, passo di livello, torno su e non
+  c'è più: elimina le 3 più deboli e ne spawna 3 nuove, ma non elimina le
+  altre»*): il banco si pesca una volta e si scrive nell'avventura (`botteghe`:
+  `banchi`, `scaffali`, `ruota`); **riaprire la bottega non lo cambia** (niente
+  slot machine, né uscire a metà per ripescarlo). Cambia solo al giro: finita una
+  discesa (vinta, persa o finita la sera nell'abisso) `alGiroNuovo` segna chi deve
+  cambiare, e la prima volta che si riapre (`prepara`) per ogni linguetta che
+  veste **se ne vanno i tre pezzi più deboli** (`SE_NE_VANNO`) e ne entrano almeno
+  tre nuovi, a tono col livello di adesso; gli altri restano, e un pezzo
+  desiderato aspetta. **Più debole** è col numero con cui il gioco dice che un
+  pezzo migliora (`confronto().meglio`, i `PESI` di `motore/corredo.js`); **per
+  primi se ne vanno i pezzi che col livello dell'eroe non migliorano più niente**
+  (o che si hanno già), e i pezzi appena andati via non tornano nello stesso giro.
+  I pezzi del passo della storia (`delPassoDi`) non si toccano e quelli del giro
+  nuovo entrano: chi arriva senza la riga la trova. Se gli acquisti hanno
+  lasciato la linguetta sotto i dieci, il giro la riporta a dieci. Un salvataggio
+  di prima (solo `banchi`, nessuno scaffale) si rilegge, si riempie, e al giro
+  dopo ruota come uno nuovo. L'erborista non veste: il suo banco si ripesca
+  intero a ogni giro, come sempre. La vetrina dei pezzi avanti non ruota: si
+  ricalcola dal passo e dal livello. **Provato: il banco ripescato intero a
+  ogni giro, e i pezzi in più ricalcolati a ogni apertura** (un pezzo diverso a
+  ogni livello): il pezzo desiderato spariva.
+- **Si compra anche senza le caratteristiche** (l'utente, 12 ottobre: *«anche se
+  non ho le stats dovrei poter comunque comprare un oggetto, giusto non te lo
+  faccio equipaggiare»*): un pezzo che la classe porta ma di cui manca la
+  caratteristica (le armi hanno il requisito, scudi e armature no) si vede col
+  lucchetto 🔒, il pannello dice «Serve Intelligenza 6 (hai 5)», e **si compra come
+  gli altri e va nello zaino invece che addosso** (`Corredo.prendi`; `compra`
+  ferma solo quello che la classe non porta, la verga al cavaliere). Nello zaino
+  ha il 🔒 e niente «Indossa» (`Zaino.vue`): si indossa quando la caratteristica
+  c'è. Zaino pieno, non si compra, come per tutto. Prima erano «da meritare»
+  (9 ottobre) e spenti; ora si comprano, uno per linguetta almeno se ce n'è
+  (`DA_MERITARE` = 2 al più). **Il traguardo sta a due punti di caratteristica**
+  (`FINESTRA_DEL_TRAGUARDO`, otto livelli sopra quello che l'eroe regge):
+  provato senza tetto, un mago di livello 8 vedeva bacchette di livello 37.
+- **Riacquista: gli ultimi cinque pezzi venduti** (l'utente, 12 ottobre: *«se
+  vendo qualcosa dovrebbe darmi la possibilità di riacquistarlo, mi tiene gli
+  ultimi 5 che ho venduto allo stesso prezzo»*): il rigattiere (l'unico che
+  compra) tiene da parte i pezzi che l'eroe gli vende e li ridà **allo stesso
+  prezzo a cui li ha pagati** (la metà), non a quello del banco: riprendere una
+  cosa venduta per sbaglio non costa niente, e non è un modo di fare gemme. Il
+  sesto fa uscire il più vecchio (`ULTIMI_VENDUTI`). Stanno nell'avventura
+  dell'eroe (`venduti`: `[{ k, prezzo }]`, fuori da `botteghe`, quindi
+  sopravvivono al giro) e si vedono nella **linguetta «Riacquista»**, la più
+  recente per prima. Riprendere è come comprare: va addosso se è meglio, se no
+  in tasca; zaino pieno o gemme che non bastano, niente. **Perché una linguetta
+  e non una fila in cima a «Vendi»**: cinque caselle in una griglia da tre per
+  riga sono due righe e mezzo sopra le tasche; la linguetta ha le stesse
+  caselle e lo stesso pannello col confronto, e a 390 px le tre linguette
+  stanno ([bottega-finestra.md](bottega-finestra.md)).
 - **Solo roba per l'eroe** (`posso` in `Bottega.banco`, `bancoDelPasso`): né
   in vendita né in vetrina ci sono pezzi di famiglie che l'eroe non porta (la
   verga al cavaliere, l'ascia al mago). Un banco già pescato con roba altrui
@@ -86,14 +147,10 @@ più nessuno.
   (stesso grado d'arma o stessa fascia di prezzo), o senza (`soloRobaMia`).
 - **Quello che non alza niente non si mostra** (`siMostra` e `sottoAddosso`
   in `motore/bottega.js`), **nemmeno fra i pezzi avanti**: resta pescato ma
-  non si vede. Né uno scudo con un'arma a due mani in pugno: non si può portare. Una seconda arma leggera con la mano libera alza il braccio, e
+  non si vede (un pezzo non ancora reggibile si giudica sul punteggio che darebbe). Né uno scudo con un'arma a due mani in pugno: non si può portare. Una seconda arma leggera con la mano libera alza il braccio, e
   quindi si vede. Regola dell'utente, 8 ottobre: lo scettro accanto al
   bastone magico (⚔️ 3 tutti e due, e più caro perché avanti) «non sembra
   molto interessante»; contano livello, rarità e abilità.
-- **Il banco si pesca una volta per giro** e si scrive in
-  nell'avventura (`botteghe`); il giro cambia quando finisce una discesa (vinta, persa o
-  finita la sera nell'abisso). Un banco che cambiasse a ogni apertura sarebbe
-  una slot machine, e uscire a metà per ripescarlo un trucco.
 - **Quello che si ha già non si offre**, tranne quello che si consuma; il
   pescato è pezzo unico e se ne va comprandolo, le cure e la torcia no.
 - **Comprato = messo**, come per terra: una cosa migliore va addosso da sé e
@@ -109,101 +166,13 @@ più nessuno.
   possono uscire magiche o rare, e allora hanno anche le loro abilità.
 - **Le gemme non diventano monete, mai**: la roba si vende solo in gemme.
 
-## La bottega e lo zaino
-
-`viste/Bottega.vue` e `viste/Zaino.vue`, coi pezzi comuni `Cornice.vue`,
-`Addosso.vue`, `Casella.vue`, `Pannello.vue` e `pezzo.js` (gradini, numeri).
-
-- **Una finestra da gioco di ruolo stretta in un telefono**: legno scuro e
-  bordo d'oro con quattro angoli, disegnati in CSS e SVG. Dall'alto il
-  mercante (ritratto e nome), l'eroe armato con le quattro caselle intorno e
-  i numeri accanto (vita, braccio, difesa e le gemme, sempre in vista), le
-  linguette, la griglia, il pannello. Scorre solo la griglia. Provato: un
-  elenco di voci col bordino, sembrava un modulo da compilare.
-- **Le linguette sono del mercante** (`schede` in `dati/mercanti.js`):
-  l'armaiolo «Armi» e «Scudi e armature», l'erborista «Pozioni» e «Torce»,
-  il rigattiere «Gioielli» e «Vendi». «Vendi» ce l'ha solo chi compra; gli
-  altri lo dicono con una battuta. `guastiDeiMercanti` pretende che ogni
-  cosa del banco stia sotto una linguetta.
-- **Caselle grandi, tre per riga**, col pezzo disegnato e il prezzo sotto. Il
-  bordo e l'aura dicono la rarità, coi colori di Diablo: bianco comune, blu
-  magico, giallo raro, arancio-oro leggendario ([rarita.md](rarita.md)).
-  Provato prima: il bordo diceva il gradino letto dal prezzo (grigio,
-  azzurro, oro, arancio le quattro armi col nome); con la rarità i colori
-  sono suoi.
-- **Un tocco sceglie, il secondo compra** (o il tasto «Compra 💎 N»): il dito
-  sbaglia, e un acquisto al primo tocco non si disfa. Un secondo tocco entro
-  400 ms (`RIPENSO`) è un dito che ha premuto due volte, e non compra.
-- **Il pannello dice numeri, non frasi**: «⚔️ +4 attacco», «❤️ +6 vita». Un
-  pezzo che si indossa non ha più la riga sola «⚔️ 3 → 5», che bastava finché
-  un pezzo era solo attacco e non regge con più abilità: ha **il confronto
-  affiancato**, come in Diablo (`viste/Confronto.vue`).
-  - **Due cartellini affiancati, come in Diablo**: «Addosso» (il pezzo, o i
-    due pezzi, che occupano lo stesso posto; «niente» se il posto è vuoto,
-    «mano libera» se un'arma va nella mano debole) e «Questo» (il pezzo
-    guardato). Ognuno col disegno piccolo, il nome del colore della sua
-    rarità, che cos'è, il livello e la rarità, e sotto i suoi numeri e le sue
-    abilità («⚔️ +4 attacco», «🌀 9% schivata»). **Provato: una tabella riga
-    per riga** (attacco|attacco, difesa|difesa, con ▲▼ e la sintesi «meglio in
-    2, peggio in 1»): con le abilità due pezzi con effetti diversi non si
-    confrontavano più, e l'utente ha chiesto i cartellini.
-  - **Sopra, una riga sola: il netto se lo metti** («SE LO METTI ⚔️ +2 🛡️ −1
-    ❤️ −3»), verde dove sale e rosso dove scende; senza cambi, «se lo metti,
-    non cambia niente».
-  - **Una mano o due si dice chiaro quando cambiano**: «A due mani: lo scudo
-    borchiato torna nello zaino» (e la sua difesa si perde nel netto), «A una
-    mano: l'altra mano resta libera per uno scudo».
-  - **Il posto giusto**: un anello si confronta col gioiello che hai; un pezzo a
-    due mani con arma **e** scudo insieme; un'arma nella mano debole vale
-    metà braccio, e lo dice il numero. Un pezzo che l'eroe non porta, o che
-    lo scudo non può affiancare a un'arma a due mani, non ha confronto: il
-    pannello dice il perché.
-  - **I numeri li dà il motore** (`seLoMetto().cambio` in `motore/corredo.js`):
-    `toglie` sono i pezzi mandati via, `vecchi` e `nuovi` quanto danno le
-    caselle toccate, con le altre a fare da base. Le parole, le icone e come
-    si scrive il valore stanno in `ABILITA` di `viste/pezzo.js`. **Per
-    aggiungere un'abilità**: [rarita.md](rarita.md#le-abilità). A 390 px i due
-    cartellini stanno, col testo piccolo ma leggibile.
-  La casella dell'eroe dove andrebbe si accende. Sotto, solo quello che non
-  si vede già: il perché di chi non lo porta (solo nello zaino: la bottega
-  non lo offre) e lo scudo che non si imbraccia con un'arma a due mani in
-  pugno. Niente «Finisce nello zaino», «Costa di più», «Ne hai 2»: lo dicono
-  il confronto, il cartellino e la casella ([dialoghi.md](dialoghi.md#le-scritte)).
-- **Si arriva al banco parlando**: toccando il mercante l'eroe ci va e si
-  apre il dialogo; la prima domanda («Fammi vedere le armi», «Mi servono pozioni», «Fammi vedere») apre il banco, «Ho roba da vendere» (solo
-  il mercante, chiave `rigattiere`) lo apre sulla linguetta delle tasche
-  ([dialoghi.md](dialoghi.md)).
-- **Niente di scelto: parla il mercante**, su una pergamena, con la sua
-  battuta (`dice`): voce sua, corta, parole da sette anni, non istruzioni.
-  Toccando una casella dell'eroe il pannello dice il pezzo che ha addosso.
-- **Lo zaino è la stessa finestra senza mercante**: l'eroe e le caselle, la
-  torcia, le sei tasche in griglia, il pannello col confronto e i tasti
-  «Indossa» (o «Impugna», «Imbraccia»), «Bevi», «Butta»; su una casella
-  addosso «Togli». Si chiude con la ✕ o toccando il campo fuori dalla cornice (e l'eroe ci va). Le regole dello zaino sono quelle di
-  prima.
-
-Nei test: `[data-bottega]` (con `data-mercante-aperto`),
-`[data-scheda="<linguetta>"]` (con `aria-selected`),
-`[data-casella-pezzo="<cosa>"]` (con `data-posso`, `data-rarita` e
-`data-avanti`: le righe avanti, dove il prezzo è alto), `[data-vendo="<cosa>"]`, `[data-pannello]` (con
-`data-cosa`), `[data-confronto="att|dif|vita|gemme|luce"]` (con
-`data-verso`: il netto sull'eroe, dentro `[data-confronto-tutto]`), `[data-affianca]`,
-`[data-colonna="addosso|questo"]` (i cartellini; dentro, `[data-pezzo="<cosa>"]` o
-`[data-niente]`, e i numeri `[data-valore="<campo>-addosso|<campo>-questo"]` col
-valore in `data-n`), `[data-due-mani]`, `[data-storia]`,
-`[data-non-puoi]`, `[data-azione="compra"]`,
-`[data-azione="vendi"]`, `[data-detto-banco]`, `[data-battuta]`,
-`[data-chi-compra]`, `[data-tasche-vuote]`,
-`[data-gemme-bottega]`; nello zaino `[data-zaino]`, `[data-tasca]` (con
-`data-cosa`), `[data-azione="usa|butta|riponi|chiudi"]`, `[data-torcia-zaino]`;
-in tutte e due `[data-casella="<dove>"]` (con `data-cosa`) e `[data-chiudi]`.
-`compraNellaBottega`, `vendiNellaBottega` e `allaLinguettaDi` in
-`test/aiuto/browser.mjs`; `unita/sotterraneo-roba` (i numeri del confronto abilità per abilità, la
-sovrapprezzo dei pezzi avanti, nessun pezzo di famiglie non portate, ogni linguetta con almeno tre pezzi che migliorano, per i quattro eroi, a ogni discesa e a vari livelli, anche con roba rara addosso;
-quello che non si mostra, le linguette),
-`integrazione/sotterraneo-mercanti` (col dito: si sceglie, si compra, si
-vende, il confronto affiancato, lo zaino che indossa e fa bere),
-`integrazione/sotterraneo-confronto` (più abilità: lo spadone contro spada e
-scudo, le colonne a 390 px),
-`integrazione/sotterraneo-bottega-avanti` (lo scettro una riga avanti: si compra al doppio, e il mago non vede
-roba che non porta), `misure/sotterraneo` (chi spende avanti nelle ultime due discese).
+Nei test: `unita/sotterraneo-roba` (il banco porta il passo dopo; sovrapprezzo
+dei pezzi avanti; nessun pezzo di famiglie non portate; ogni linguetta con
+dieci pezzi che migliorano, mai un leggendario, al più un raro, per i quattro
+eroi a ogni discesa e a vari livelli, anche con roba rara addosso; comprare
+senza le caratteristiche e finire nello zaino; il banco che ruota — tre via,
+tre dentro, gli altri restano, i più deboli se ne vanno, il banco riaperto o
+riletto è lo stesso, il salvataggio di prima; gli ultimi cinque venduti, allo
+stesso prezzo, riletti dall'avventura) e `misure/sotterraneo` (chi spende avanti
+nelle ultime due discese); i bersagli della finestra stanno in
+[bottega-finestra.md](bottega-finestra.md).

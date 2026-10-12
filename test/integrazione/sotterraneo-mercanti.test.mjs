@@ -7,7 +7,7 @@
    vedere l'eroe andarci e il banco aprirsi, comprare, vendere al
    rigattiere, scendere con la roba comprata, risalire e ritrovarla, e
    alla discesa dopo ritrovarla nello zaino. La bottega è quella da gioco
-   di ruolo (docs/sotterraneo/bottega.md, «La bottega e lo zaino»): le
+   di ruolo (docs/sotterraneo/bottega-finestra.md, «La bottega e lo zaino»): le
    linguette, un tocco che sceglie e il tasto che compra, il confronto coi
    numeri giusti, i pezzi più su che si vedono spenti; e lo zaino che
    indossa e fa bere.

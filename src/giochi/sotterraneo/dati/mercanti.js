@@ -10,7 +10,7 @@ import { CAMPAGNA, QUANTE_TAPPE } from './campagna.js'
 // per discese finite; `compra`: chi si prende la roba a metà prezzo. `dice` è la sua battuta, in voce sua.
 // `schede`: le linguette in cima alla bottega (viste/Bottega.vue), ognuna coi posti (`dove`) o gli usi (`usa`) che
 // raccoglie; `vendi` è quella delle tasche e `riacquista` quella delle ultime cose vendute, solo per chi compra
-// (docs/sotterraneo/bottega.md, "La bottega e lo zaino")
+// (docs/sotterraneo/bottega-finestra.md, "La bottega e lo zaino")
 export const MERCANTI = [
   // la roba del passo dopo, non quella della miniera: chi ha le gemme non scende col meglio
   // le chiavi restano quelle di prima (salvataggi, sprite); i nomi sono parole che un bambino conosce

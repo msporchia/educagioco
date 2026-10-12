@@ -590,7 +590,7 @@ import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiut
 
 /* ══════════ 7c. il confronto affiancato, riga per riga ══════════
    «Addosso» a sinistra, «Questo» a destra, una riga per ogni abilità che
-   almeno uno dei due ha (docs/sotterraneo/bottega.md, «La bottega e lo zaino»):
+   almeno uno dei due ha (docs/sotterraneo/bottega-finestra.md, «La bottega e lo zaino»):
    il motore dà i numeri di ogni lato (seLoMetto().cambio), pezzo.js li mette
    in riga con il verso e la sintesi. */
 {

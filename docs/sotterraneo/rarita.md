@@ -82,7 +82,7 @@ dalla rarità, sempre uguali, così una chiave salvata non può mentire.
   (`baseDi`): una chiave composta non è nell'elenco.
 - **Il confronto** (`viste/Confronto.vue`) sono due cartellini affiancati,
   quello addosso e quello guardato, ognuno col nome nel colore della
-  rarità, livello e numeri ([bottega.md](bottega.md)). Un pezzo che si
+  rarità, livello e numeri ([bottega-finestra.md](bottega-finestra.md)). Un pezzo che si
   mette da sé si giudica su tutto quello che dà (`confronto().meglio`, i
   `PESI` di `motore/corredo.js`: un punto di difesa vale due di attacco, uno
   di vita un quinto di un punto d'attacco); fra due gioielli sceglie chi
@@ -135,7 +135,7 @@ L'armaiolo e il rigattiere portano la riga della storia (com'era,
 [bottega.md](bottega.md)) **al livello dell'eroe**, e anche i pezzi della
 vetrina avanti; le cose in più (`altre`) sono a tono e una su tre magica
 (`MAGICI_SUL_BANCO`). Il resto della bottega non cambia: pezzi avanti a
-sovrapprezzo, solo roba che l'eroe porta, ogni linguetta con almeno tre pezzi ([bottega.md](bottega.md)). Il rigattiere
+sovrapprezzo, solo roba che l'eroe porta, dieci pezzi per linguetta, mai un leggendario e al più un raro per linguetta ([bottega.md](bottega.md)). Il rigattiere
 compra a metà del prezzo vero (livello e rarità compresi). Un pezzo
 magico, raro o col nome si giudica sui numeri, non sul posto della sua base
 nella riga (`migliora`).
