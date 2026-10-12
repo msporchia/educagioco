@@ -20,9 +20,7 @@ import Domanda from '../../quiz/Domanda.vue'
 
 import { CAMPAGNA, QUANTE_TAPPE, stelleDella, L_ABISSO, INDICE_ABISSO } from './dati/campagna.js'
 import { COSE, SEGNI } from './dati/cose.js'
-import { MOSTRI } from './dati/mostri.js'
 import { CURIOSITA_DI } from './dati/curiosita.js'
-import { pezzoAndante, SCENARI, SCENARIO } from './dati/tessere.js'
 import { EROI, DI_PARTENZA, eroeDi } from './dati/eroi.js'
 import { TASCHE, VITA_PER_PIANO } from './dati/mondo.js'
 import { Corsa } from './motore/corsa.js'
@@ -53,6 +51,8 @@ import Foglio from './viste/Foglio.vue'
 import Icona from './viste/Icona.vue'
 import { occhio } from './viste/occhio.js'
 import Scontro from './viste/Scontro.vue'
+import { nuovoRacconto } from './viste/racconto.js'
+import { vistaDelloScontro } from './viste/campo.js'
 import Zaino from './viste/Zaino.vue'
 import Diario from './viste/Diario.vue'
 import BarraDiSotto from './viste/BarraDiSotto.vue'
@@ -67,6 +67,7 @@ import LaBottega from './viste/Bottega.vue'   // la bottega dei mercanti di sopr
 import Fine from './viste/Fine.vue'
 import LascioPerdere from './viste/LascioPerdere.vue'   // la frase chiara prima di buttare una discesa
 import './stile.css'
+import './stile-scontro.css'
 
 defineOptions({ name: 'IlSotterraneo' })
 const emit = defineEmits(['vai'])
@@ -90,7 +91,6 @@ const zainoAperto = ref(false)
 const diarioGiu = ref(false)       // il diario delle missioni aperto dalla barra in basso
 const mappaGrande = ref(false)     // la mappina aperta grande dalla barra (scena/tela.js, minimappa)
 const colpito = ref(false)         // il globo della vita sobbalza a un colpo
-const scosso = ref(0)
 const tic = ref(0)                 // batte quando cambia qualcosa che si vede
 // la corsa è uno shallowRef: niente computed a mano su quello che sta dentro (vedi viste/occhio.js)
 const dallaCorsa = occhio(corsa, tic)
@@ -664,7 +664,7 @@ function festeggia(e, c) {
 // il globo della vita sobbalza quando cala: un colpo preso si vede anche con gli occhi sul mostro
 let colpitoFino = 0
 watch(() => eroe.value && eroe.value.vita, (ora, prima) => {
-  if (ora == null || prima == null || ora >= prima) return
+  if (ora == null || prima == null || ora >= prima || racconto.fx.attivo) return   // in uno scontro il globo sobbalza a ogni colpo raccontato
   colpito.value = true
   clearTimeout(colpitoFino)
   colpitoFino = setTimeout(() => { colpito.value = false }, 380)
@@ -681,78 +681,88 @@ const dovEravamo = dallaCorsa(c => `🕳️ piano ${c.piano + 1}`
 // il foglio aperto è sempre lo stesso oggetto: si guarda `c.foglio` per conto proprio, per svegliarsi quando cambia dentro
 const foglio = dallaCorsa(c => c.foglio || null)
 
-// il graffio esiste da sempre ma non si vedeva (suono di botta indistinguibile da uno sbaglio): il motore dice dato/preso
-const scambio = ref(null)
-let scambioFinoA = 0
+// Lo scontro com'è adesso (viste/campo.js) e il suo racconto (viste/racconto.js). Il motore risolve un turno intero dentro
+// `rispondi`; la vista lo rifà un'azione alla volta, e tiene lo scontro a schermo finché l'ultimo colpo non è raccontato
+// (anche se intanto è finito, o l'eroe è svenuto). La domanda e la scelta dopo compaiono a racconto finito.
+const racconto = nuovoRacconto({
+  suono: n => ({ colpo: () => suoni.colpo(), graffio: () => suoni.graffio(), bottino: () => suoni.bottino(),
+                 ahia: () => suoni.ahia(), bevuto: () => suoni.tesoro() })[n]?.(),
+  colpitoEroe: () => {
+    colpito.value = true
+    clearTimeout(colpitoFino)
+    colpitoFino = setTimeout(() => { colpito.value = false }, 380)
+  },
+  finito: () => {
+    const dopo = alFinire
+    alFinire = null
+    tic.value++
+    if (dopo) dopo()
+  },
+})
+const animando = computed(() => racconto.fx.attivo)
+let alFinire = null
+let ultimaVista = null     // lo scontro com'era l'ultima volta che c'era: resta lì mentre si racconta l'ultimo colpo
+let ultimaScelta = null
+const nemicoVivo = dallaCorsa(vistaDelloScontro)
+const nemico = computed(() => {
+  const v = nemicoVivo.value
+  if (v) ultimaVista = v
+  return v || (racconto.fx.attivo ? ultimaVista : null)
+})
 
-// cambia a ogni risposta (le ossa restanti erano fatte una volta all'inizio, e restavano ferme)
-const nemico = dallaCorsa(c => {
+// com'era lo scontro prima di rispondere: i posti, le ossa di ognuno e la fila dei turni (il racconto parte da lì)
+function fotoPrima(c) {
   const f = c.foglio
   if (!f || f.che !== 'scontro') return null
-  const scheda = MOSTRI[f.chi.tipo] || {}
-  return {
-    mostro: f.chi,
-    sprite: scheda.sprite ? pezzoAndante(scheda.sprite, 'fermo', 0) : null,   // la stessa faccia del campo
-    palco: palcoDi(c),
-    eroe: { sprite: c.io.sprite ? pezzoAndante(c.io.sprite, 'fermo', 0) : null, em: c.io.em, vita: c.vita, vitaMax: c.vitaMax },
-    grosso: f.chi.grosso || null,                                               // il mostro grosso: la sua chiave, la figura la sceglie viste/Grosso.vue
-    // detti PRIMA di rispondere: con questi si decide restare o scappare. Con gli effetti delle abilità (Corsa.botta)
-    puoiScappare: c.puoScappare(),
-    stati: statiDel(f.chi), mie: statiMiei(f.io || {}),
-  }
-})
-// il fondale del duello: la parete e il pavimento dello scenario in cui si combatte (viste/Palco.vue)
-function palcoDi(c) {
-  const sc = SCENARI[c.scenario] || SCENARI[SCENARIO]
-  return { pavimento: sc.pavimento.stanza, faccia: sc.faccia, roccia: sc.colori && sc.colori.roccia }
+  const v = vistaDelloScontro(c)
+  return { campo: [...f.campo], ossa: f.campo.map(m => Math.max(0, m.ossa)), morti: f.campo.map(m => !!m.morto), turni: v.turni }
 }
-// come colpisce l'eroe in questo scambio, per la grafica del duello (viste/Scontro.vue): da lontano (arco, bacchetta) vola il
-// colpo, da vicino l'eroe si fa sotto; un'abilità che non colpisce (scudo, cura) non fa né l'uno né l'altro
-function comeColpisce(esito) {
+// come colpisce l'eroe in un'azione, per il racconto: da lontano (arco, bacchetta) vola il colpo, da vicino l'eroe si fa sotto;
+// un'abilità che non colpisce (scudo, cura) non fa né l'uno né l'altro
+function comeColpisce(a) {
   const c = corsa.value
-  const nodo = esito.usata ? NODI[esito.usata.id] : null
+  const nodo = a.usata ? NODI[a.usata.id] : null
   const fa = !nodo || colpisce(nodo)
   const famiglia = c && c.mano && COSE[c.mano] ? COSE[c.mano].famiglia : null
   const lontano = famiglia === 'archi' || famiglia === 'bacchette' || !!(nodo && nodo.arma && nodo.arma.famiglie && nodo.arma.famiglie.some(f => f === 'archi' || f === 'bacchette'))
+  const tinta = nodo ? tintaDi(nodo.id) : '#ffe39a'
   let volo = null
-  if (fa && lontano) volo = nodo ? { glifo: nodo.glifo, tinta: tintaDi(nodo.id) } : { glifo: famiglia === 'archi' ? 'freccia' : 'fulmine', tinta: '#ffe39a' }
-  return { colpisce: fa, lontano, volo }
+  if (fa && lontano) volo = nodo ? { glifo: nodo.glifo, tinta } : { glifo: famiglia === 'archi' ? 'freccia' : 'fulmine', tinta }
+  return { colpisce: fa, lontano, volo, tinta }
 }
-// il colore del ramo di un'abilità: il dardo che vola verso il mostro è di quel colore (viste/Scontro.vue)
+// il colore del ramo di un'abilità: il glifo che vola verso il mostro è di quel colore
 function tintaDi(id) {
   const nodo = NODI[id], c = corsa.value
   const ramo = nodo && c && (RAMI[c.io.chiave] || []).find(r => r.chiave === nodo.ramo)
   return ramo ? ramo.tinta : '#ffd23f'
 }
-// «2 turni»: una risposta è un turno (le righe dell'albero parlano così, dati/abilita.js)
-const turniDi = n => `${n} ${n === 1 ? 'turno' : 'turni'}`
-// cosa sta succedendo al mostro e all'eroe in questo scontro (docs/sotterraneo/abilita.md): le pastiglie sotto la vita
-function statiDel(m) {
-  const st = m.stati || {}
-  return [
-    st.veleno && st.veleno.scambi > 0 ? { chiave: 'veleno', fuoco: !!st.veleno.fuoco, glifo: st.veleno.fuoco ? 'fiamma' : 'veleno', n: `${st.veleno.quanto} di danno · ${turniDi(st.veleno.scambi)}`, dice: `subisce ${st.veleno.quanto} di danno a ogni turno` } : null,
-    st.sanguina && st.sanguina.scambi > 0 ? { chiave: 'sanguina', glifo: 'sangue', n: `${st.sanguina.quanto * st.sanguina.pile} di danno · ${turniDi(st.sanguina.scambi)}`, dice: `sanguina: ${st.sanguina.quanto * st.sanguina.pile} di danno a ogni turno` } : null,
-    st.debole > 0 ? { chiave: 'debole', glifo: 'fiocco', n: `fa metà danno · ${turniDi(st.debole)}`, dice: 'i suoi colpi fanno la metà del danno' } : null,
-    st.esposto && st.esposto.scambi > 0 ? { chiave: 'esposto', glifo: 'radici', n: `+${st.esposto.piu}% danno · ${turniDi(st.esposto.scambi)}`, dice: 'bloccato: subisce più danno' } : null,
-    st.fermo > 0 ? { chiave: 'fermo', glifo: 'stelle', n: `stordito · ${turniDi(st.fermo)}`, dice: 'stordito: non può attaccare' } : null,
-    st.rotto && m.dif ? { chiave: 'rotto', glifo: 'scudo-rotto', n: 'difesa spezzata', dice: 'senza difesa fino a fine scontro' } : null,
-  ].filter(Boolean)
+// racconta le azioni di un turno (le sue o quelle dell'apertura); `dopo` parte a racconto finito
+function raccontaLoScontro(prima, azioni, { riga = null, dopo = null } = {}) {
+  alFinire = dopo
+  racconto.racconta({ campo: prima.campo, prima, azioni, modo: comeColpisce, riga })
 }
-function statiMiei(io) {
-  return [
-    io.parato > 0 ? { chiave: 'parato', glifo: 'scudo', dice: `protetto dai danni · ${turniDi(io.parato)}` } : null,
-    io.scudo > 0 ? { chiave: 'scudo', glifo: 'sfera', dice: `barriera: para ${io.scudo} danni` } : null,
-    io.intoccabile > 0 ? { chiave: 'intoccabile', glifo: 'montagna', dice: `invulnerabile · ${turniDi(io.intoccabile)}` } : null,
-    io.specchio ? { chiave: 'specchio', glifo: 'specchio', dice: 'il prossimo colpo torna al mostro' } : null,
-    io.linfa && io.linfa.scambi > 0 ? { chiave: 'linfa', glifo: 'germoglio', dice: `guarisci di ${io.linfa.quanto} · ${turniDi(io.linfa.scambi)}` } : null,
-  ].filter(Boolean)
+// l'apertura: l'agguato, la sorpresa e i mostri più veloci che colpiscono prima del primo turno dell'eroe
+watch(() => { tic.value; const f = corsa.value?.foglio; return f && f.che === 'scontro' ? f : null }, f => {
+  if (!f || !(f.apertura.length || f.agguato || f.sorpresa)) return
+  const prima = fotoPrima(corsa.value)
+  const molti = f.campo.length > 1
+  raccontaLoScontro(prima, f.apertura, { riga: f.agguato ? 'Alle spalle!' : f.sorpresa ? (molti ? 'Li hai sorpresi!' : 'Lo hai sorpreso!') : null })
+})
+// toccare un mostro lo fa bersaglio: la scelta qui sotto si rifà coi numeri contro di lui
+function scegliIlBersaglio(i) {
+  const c = corsa.value
+  const f = c && c.foglio
+  if (!f || f.che !== 'scontro' || animando.value || !f.campo[i]) return
+  if (!c.scegliBersaglio(f.campo[i])) return
+  tic.value++
+  suoni.passo()
 }
 
 // La scelta dello scontro in due fasi (viste/CaselleAbilita.vue, docs/sotterraneo/abilita.md): prima cosa fare, poi la
 // domanda per quel colpo. `colpoPer` è la domanda per cui si è già scelto: a ogni domanda nuova si torna alla scelta
 const colpoPer = ref(0)
 const sceltaFatta = dallaCorsa(c => !!c.chiesta && colpoPer.value === c.chiesta.id)
-const abilitaScontro = dallaCorsa(c => {
+const abilitaViva = dallaCorsa(c => {
   const f = c.foglio
   if (!f || f.che !== 'scontro') return null
   const m = f.chi
@@ -778,12 +788,17 @@ const abilitaScontro = dallaCorsa(c => {
     scelta: c.pronta ? voce(c.pronta) : null,
   }
 })
+const abilitaScontro = computed(() => {
+  const a = abilitaViva.value
+  if (a) ultimaScelta = a
+  return a || (racconto.fx.attivo ? ultimaScelta : null)
+})
 // il tocco sulla riga: sceglie il colpo (null: l'attacco solito) e fa partire la domanda. Se il mostro aveva ringhiato,
 // scegliere vuol dire riprendere: lo stop della corsa si chiude da sé (docs/sotterraneo/pericolo.md)
 function scegliColpo(id) {
   const c = corsa.value
   const f = c && c.foglio
-  if (!f || f.che !== 'scontro') return
+  if (!f || f.che !== 'scontro' || animando.value) return
   if (f.pericolo) c.continua()
   c.prepara(null)
   if (id && !c.prepara(id)) return
@@ -814,13 +829,14 @@ function beviNelloScontro() {
 // la pozione rossa costa il turno (docs/sotterraneo/scontro.md): tocca ai mostri, e l'esito si racconta come una risposta
 function bevutaNelloScontro() {
   const c = corsa.value
+  const prima = fotoPrima(c)
   const e = c.beviNelloScontro()
   if (!e) return
   domanda.value = null
   togli()
   tic.value++
   salva()
-  mostra(e)
+  mostra(e, prima)
 }
 
 const pieni = dallaCorsa(c => c.postiUsati(), 0)   // sei su sei vuol dire che la prossima cosa resta per terra
@@ -901,6 +917,35 @@ function leggendarioDaProva(c) {
   c.posaPezzo(k, { x: Math.floor(c.eroe.x) + 1, y: Math.floor(c.eroe.y) })
 }
 
+// `#sotterraneo=branco&mostri=6` apre subito uno scontro con quei mostri attorno all'eroe (`&grosso=ossuto` mette al centro un
+// mostro grosso, `&agguato=1` fa colpire alle spalle, `&sorpresa=1` lo fa dormire), per guardare lo scontro a gruppi senza
+// cercare una stanza piena (docs/sotterraneo/scontro.md, «Nei test»)
+const BRANCO = ['goblin', 'scheletro', 'ratto', 'orco', 'pipistrello', 'lupo']
+function brancoDaProva(c) {
+  const h = new URLSearchParams(location.hash.slice(1))
+  if (h.get('sotterraneo') !== 'branco') return
+  const n = Math.max(1, Math.min(6, Number(h.get('mostri')) || 3))
+  const ex = Math.floor(c.eroe.x), ey = Math.floor(c.eroe.y)
+  const stanza = c.livello.stanzaDi(ex, ey)
+  const libere = []
+  for (let y = ey - 4; y <= ey + 4; y++) for (let x = ex - 4; x <= ex + 4; x++) {
+    if ((x === ex && y === ey) || !c.livello.calpestabile(x, y) || c.livello.robeSu(x, y).length) continue
+    if (c.livello.stanzaDi(x, y) !== stanza || Math.hypot(x + 0.5 - c.eroe.x, y + 0.5 - c.eroe.y) > 4.4) continue
+    libere.push({ x, y, d: Math.hypot(x - ex, y - ey) })
+  }
+  // l'agguato viene da dietro (l'eroe guarda a destra); se no, davanti
+  const dietro = h.get('agguato') ? -1 : 1
+  libere.sort((a, b) => (a.d - b.d) || (dietro * (b.x - a.x)))
+  const grosso = h.get('grosso')
+  const fatti = libere.slice(0, n).map(({ x, y }, k) => grosso && k === 0
+    ? c.livello.mostroGrosso(grosso, x, y) : c.livello.mostro(h.get('tipo') || BRANCO[k % BRANCO.length], x, y))
+  if (!fatti.length) return
+  c.livello.robe.push(...fatti)
+  if (h.get('agguato')) fatti.sort((a, b) => a.x - b.x)
+  fatti.forEach(m => { m.sveglio = !h.get('sorpresa') })
+  c.scontro(fatti[0], { tocco: !!h.get('sorpresa') })
+}
+
 function avvia(i) {
   // una discesa rossa non si scende: la guardia sta davanti all'ingresso (viste/Terra.vue, docs/sotterraneo/zone.md)
   const z = tappe.value[i]
@@ -919,6 +964,7 @@ function avvia(i) {
   corredoDaProva(corsa.value)
   pianoDaProva(corsa.value)
   leggendarioDaProva(corsa.value)
+  brancoDaProva(corsa.value)
   suono.nota(180, 90, 0.4, 'sawtooth', 0.12)
   nextTick(() => accendi())
 }
@@ -1009,7 +1055,6 @@ function guarda(c) {
     avviso.value = typeof a === 'string' ? { testo: a } : { ...a, ...(COSE[a.cosa] || {}) }
     ultimoAvviso = orologio
   } else if (avviso.value && orologio - ultimoAvviso > 1.8) avviso.value = null
-  if (scambio.value && orologio > scambioFinoA) scambio.value = null
 }
 
 // `tic` è la dipendenza: la corsa è uno shallowRef, e senza il tic in cima questo watcher scatterebbe solo
@@ -1042,26 +1087,24 @@ function risposto({ giusto, saltata }) {
 function risolvi(giusto, saltata = false) {
   const c = corsa.value
   if (!c) return
+  const prima = fotoPrima(c)
   const esito = c.rispondi(giusto, { saltata })
   tic.value++
   salva()
   if (!esito) return
-  mostra(esito)
+  mostra(esito, prima)
 }
 
-// quello che si vede e si sente di un turno: lo scambio sotto il duello, il ringhio, il suono giusto
-function mostra(esito) {
-  scosso.value++
-  // resta a schermo un paio di secondi: il tempo di leggerlo mentre la domanda dopo si sta già montando
-  if (esito.dato != null || esito.preso != null) {
-    scambio.value = { dato: esito.dato || 0, preso: esito.preso || 0, caduto: esito.che === 'caduto',
-                      usata: esito.usata ? { ...esito.usata, tinta: tintaDi(esito.usata.id) } : null, veleno: esito.veleno || 0, colpiti: esito.colpiti || 0,
-                      rimandato: esito.rimandato || 0, base: esito.base || 0, volte: esito.volte || 1, primoTiro: !!esito.primoTiro,
-                      salvo: esito.salvo || null, gelato: !!esito.gelato, assorbito: esito.assorbito || 0,
-                      schivato: !!esito.schivato, ...comeColpisce(esito) }
-    scambioFinoA = orologio + 2.4
+// quello che si vede e si sente di un turno: lo scontro si racconta (viste/racconto.js) e i suoni li dà lui; il resto fa il suo
+// suono giusto
+function mostra(esito, prima) {
+  if (esito.azioni && prima) {
+    raccontaLoScontro(prima, esito.azioni, { dopo: () => {
+      if (esito.ringhia) suono.nota(110, 60, 0.45, 'sawtooth', 0.1)   // il mostro ringhia
+      if (esito.che === 'svenuto') suono.fine()
+    } })
+    return
   }
-  if (esito.ringhia) setTimeout(() => suono.nota(110, 60, 0.45, 'sawtooth', 0.1), 420)   // il mostro ringhia
   switch (esito.che) {
     case 'colpo': suoni.colpo(); if (esito.male) setTimeout(() => suoni.graffio(), 200); break
     case 'caduto': suoni.colpo(); setTimeout(() => suoni.bottino(), 260); break
@@ -1405,6 +1448,7 @@ onUnmounted(() => {
   document.removeEventListener('visibilitychange', seSparisce)
   removeEventListener('pagehide', seSparisce)
   cancelAnimationFrame(raf)
+  racconto.ferma()
   if (pittore) pittore.ferma()
 })
 function ridimensiona() { if (pittore) pittore.misura() }
@@ -1516,12 +1560,13 @@ function ridimensiona() { if (pittore) pittore.misura() }
         <!-- lo scontro sta al centro, non sale dal basso: un mostro addosso arriva mentre si cammina, e in
              fondo allo schermo chi guarda il proprio eroe non lo vedrebbe. Niente classe `sot-foglio`
              apposta: `misuraFoglio()` cerca quella, e non trovandola la telecamera non fa spazio a un pannello -->
-        <Cornice v-if="foglio && foglio.che === 'scontro'" scontro>
+        <Cornice v-if="nemico" scontro>
           <div class="sot-modale sot-modale-cornice">
-            <Scontro v-bind="nemico" :scosso="scosso" :scambio="scambio" />
+            <Scontro v-bind="nemico" :fx="racconto.fx" @bersaglio="scegliIlBersaglio" @accorcia="racconto.accorcia" />
             <!-- prima si sceglie cosa fare (attacco, abilità, bere, scappare), poi compare la domanda per quel colpo
                  (docs/sotterraneo/abilita.md). Il pericolo non ha più un menu suo: è una riga sopra la stessa scelta -->
-            <CaselleAbilita v-if="abilitaScontro && !sceltaFatta" :key="foglio.chiesta ? 0 : 'stop'" v-bind="abilitaScontro"
+            <CaselleAbilita v-if="abilitaScontro && (!sceltaFatta || animando)" :key="animando ? 'racconto' : 'scelta'" v-bind="abilitaScontro"
+                            :ferma="animando" :pericolo="animando ? null : abilitaScontro.pericolo"
                             @scegli="scegliColpo" @bevi="beviNelloScontro" @bevi-energia="beviEnergiaNelloScontro" @scappa="scappa" />
             <template v-else-if="domanda">
               <div v-if="abilitaScontro && abilitaScontro.scelta" class="sot-scelta sot-pronta sot-scelta-fatta" data-scelta-fatta>

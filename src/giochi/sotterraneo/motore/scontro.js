@@ -276,7 +276,7 @@ export const MetodiDelloScontro = {
   rispostaScontro(_m, giusto) {
     const f = this.foglio
     const bersaglio = f.chi
-    return this.finisciIlTurno(f, [giusto ? this.colpoDelEroe(f) : { chi: 'eroe', che: 'sbaglia' }], bersaglio)
+    return this.finisciIlTurno(f, [giusto ? this.colpoDelEroe(f) : { chi: 'eroe', che: 'sbaglia', bersaglio }], bersaglio)
   },
 
   // l'eroe ha fatto la sua azione: tocca ai mostri, uno alla volta, finché non torna a lui

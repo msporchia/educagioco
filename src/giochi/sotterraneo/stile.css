@@ -535,98 +535,6 @@
   font-size: 11.5px; font-weight: 600; opacity: .72;
 }
 
-/* il duello (viste/Scontro.vue): i due uno di fronte all'altro su un palco scuro, grandi; chi colpisce scatta in avanti */
-.sot-duello {
-  position: relative; display: flex; justify-content: space-between; align-items: flex-end; gap: 8px;
-  min-height: 190px; padding: 14px 10px 8px; margin: -4px -4px 6px; overflow: hidden;
-  background: #0e0b16;
-  border-radius: 14px; box-shadow: inset 0 0 0 1px #c9a24a55, inset 0 -30px 40px -20px #000;
-  animation: sot-entra .35s ease-out;
-}
-.sot-palco { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; z-index: 0 }
-.sot-duello::after {   /* la penombra ai bordi: il palco è la scena vera, ma non deve rubare l'occhio ai due */
-  content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
-  background: radial-gradient(ellipse at 50% 70%, transparent 35%, #000000b0 100%);
-}
-.sot-lato { position: relative; z-index: 1; flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 4px }
-.sot-lato-eroe { align-items: flex-start; padding-left: 4px }
-.sot-lato-mostro { align-items: flex-end; padding-right: 4px }
-/* nome e vita del mostro in alto a destra: sotto i due stanno alla stessa altezza, e la nostra vita è nel globo della barra */
-.sot-info-mostro { position: absolute; z-index: 2; top: 10px; right: 12px; width: 46%; max-width: 190px; text-align: right }
-.sot-info-mostro .sot-vita { margin: 4px 0 0 }
-.sot-figura { position: relative; display: grid; place-items: end center; min-height: 100px; filter: drop-shadow(0 6px 4px #000a) }
-.sot-corpo { display: grid; place-items: end center }
-.sot-respira { animation: sot-respira 2.2s ease-in-out infinite }
-.sot-mostro-fig .sot-respira { scale: -1 1 }   /* guarda l'eroe (la proprietà `scale` non litiga con il respiro, che muove) */
-/* lo scambio ha un ordine, per leggerlo: l'eroe colpisce (0 s), il mostro incassa (.3), il mostro risponde (.65), l'eroe incassa (.95) */
-.sot-scatta-dx { animation: sot-scatta-dx .5s ease-out }
-.sot-scatta-sx { animation: sot-scatta-sx .55s .65s ease-out both }
-.sot-eroe-fig .sot-corpo.sot-colpito { animation: sot-scossa .4s .95s }
-.sot-mostro-fig .sot-corpo.sot-colpito { animation: sot-scossa .4s .3s; filter: drop-shadow(0 0 8px #ff5a3c) brightness(1.5) }
-.sot-nome-mostro { font-size: 13px; letter-spacing: .04em; text-shadow: 0 1px 2px #000 }
-.sot-numero {
-  position: absolute; top: 14px; z-index: 2; font-size: 28px; font-weight: 900; text-shadow: 0 2px 0 #000, 0 0 10px currentColor;
-  animation: sot-sale 1.2s ease-out both; pointer-events: none;
-}
-.sot-numero-dato { right: 22%; color: #ffd23f; animation-delay: .3s }
-.sot-numero-preso { left: 22%; color: #ff6a55; animation-delay: .95s }
-/* il fendente da vicino: una striscia di luce di traverso sul mostro; il graffio sull'eroe: tre segni rossi */
-.sot-fendente { position: absolute; inset: 15% 0 auto 0; height: 70%; pointer-events: none; opacity: 0;
-  background: linear-gradient(115deg, transparent 42%, #fff 47%, var(--tinta, #ffe39a) 50%, transparent 56%);
-  animation: sot-lampo .3s .3s ease-out both }
-.sot-graffio { position: absolute; inset: 0; pointer-events: none; opacity: 0; animation: sot-lampo .35s .95s ease-out both;
-  background: repeating-linear-gradient(60deg, transparent 0 22%, #ff3b2a 24% 27%, transparent 29% 40%) }
-@keyframes sot-lampo { 0% { opacity: 0 } 25% { opacity: 1 } 100% { opacity: 0 } }
-/* uno scudo o una cura: un alone del colore dell'abilità che pulsa sull'eroe, senza farsi sotto */
-.sot-protegge .sot-corpo { animation: sot-alone 1s ease-out }
-@keyframes sot-alone { 0% { filter: none } 30% { filter: drop-shadow(0 0 14px var(--tinta, #7cc8ff)) brightness(1.4) } 100% { filter: none } }
-.sot-dardo {
-  position: absolute; z-index: 3; left: 24%; bottom: 82px; color: var(--tinta, #ffd23f); pointer-events: none;
-  filter: drop-shadow(0 0 8px var(--tinta, #ffd23f)) drop-shadow(0 0 3px #fff); animation: sot-vola .4s ease-in forwards;
-}
-.sot-dardo::after { content: ""; position: absolute; right: 60%; top: 50%; width: 46px; height: 4px; margin-top: -2px;
-  background: linear-gradient(90deg, transparent, var(--tinta, #ffd23f)); border-radius: 4px; opacity: .8 }
-@keyframes sot-vola { 0% { transform: translateX(0) scale(.7); opacity: 0 } 15% { opacity: 1 } 100% { transform: translateX(min(54vw, 250px)) scale(1.2); opacity: 0 } }
-/* gli effetti che durano, addosso al mostro: cambiano il colore della figura e mettono il loro segno sopra la testa */
-.sot-addosso-fuoco { filter: drop-shadow(0 0 7px #ff7a2a) sepia(.35) saturate(2) brightness(1.1) }
-.sot-addosso-debole { filter: drop-shadow(0 0 7px #7cc8ff) hue-rotate(150deg) saturate(1.2) brightness(1.2) }
-.sot-addosso-veleno { filter: drop-shadow(0 0 7px #7ae04a) hue-rotate(60deg) saturate(1.5) }
-.sot-addosso-fermo { filter: drop-shadow(0 0 5px #ffd23f) grayscale(.4) }
-.sot-effetti { position: absolute; right: 8%; top: 18px; z-index: 2; display: flex; gap: 4px; pointer-events: none }
-.sot-effetto { animation: sot-fluttua 1.2s ease-in-out infinite }
-.sot-effetto-fuoco { color: #ff8a3c; filter: drop-shadow(0 0 5px #ff5a1c) }
-.sot-effetto-debole { color: #bfe6ff; filter: drop-shadow(0 0 5px #5ab4ff) }
-.sot-effetto-veleno { color: #8be060; filter: drop-shadow(0 0 5px #4fbf2a) }
-.sot-effetto-fermo { color: #ffd23f; animation: sot-gira 1.4s linear infinite }
-@keyframes sot-fluttua { 50% { transform: translateY(-4px) } }
-@keyframes sot-gira { to { transform: rotate(360deg) } }
-.sot-eroe-fig .sot-respira.sot-protetto { filter: drop-shadow(0 0 8px #7cc8ff) drop-shadow(0 0 3px #fff) }
-.sot-eroe-fig .sot-respira.sot-guarisce { filter: drop-shadow(0 0 8px #6fe08a) }
-@keyframes sot-entra { from { opacity: 0; transform: scale(.94) } }
-@keyframes sot-respira { 50% { transform: translateY(-3px) } }
-@keyframes sot-scatta-dx { 30% { transform: translateX(50px) scale(1.06) } 100% { transform: none } }
-@keyframes sot-scatta-sx { 0% { transform: none } 35% { transform: translateX(-70px) scale(1.1) } 100% { transform: none } }
-@keyframes sot-scossa {
-  25% { transform: translateX(-5px) rotate(-4deg) }
-  75% { transform: translateX(5px) rotate(4deg) }
-}
-@keyframes sot-sale { 0% { opacity: 0; transform: translateY(10px) scale(.7) } 20% { opacity: 1; transform: translateY(0) scale(1.15) } 100% { opacity: 0; transform: translateY(-34px) } }
-@media (prefers-reduced-motion: reduce) {
-  .sot-dardo, .sot-effetto, .sot-duello, .sot-respira, .sot-scatta-dx, .sot-scatta-sx, .sot-numero, .sot-corpo, .sot-fendente, .sot-graffio { animation: none !important }
-}
-.sot-dati { flex: 1; min-width: 0 }
-/* mentre si combatte gli occhi stanno qui, non sul numero in cima allo schermo */
-.sot-io-vita {
-  display: flex; align-items: center; gap: 10px; margin: 2px 0 8px;
-  padding-top: 8px; border-top: 1px solid var(--sot-bordo);
-}
-.sot-botte { font-size: 12.5px; color: var(--sot-tenue) }
-.sot-botte b { color: var(--sot-inchiostro) }
-.sot-vita { height: 6px; border-radius: 999px; background: #ffffff18; overflow: hidden; margin: 4px 0 }
-.sot-vita i { display: block; height: 100%; background: linear-gradient(90deg, #e0644f, #ff9b7a) }
-.sot-ossa { display: flex; gap: 10px; font-size: 12.5px; color: var(--sot-tenue) }
-.sot-costo { font-size: 13px; color: #ffd9a0; margin-top: 3px }
-
 /* quiz/Domanda.vue arriva col suo velo a position:absolute: qui il sotterraneo sta sopra e non c'è niente
    da coprire, quindi il velo diventa l'ultimo pezzo del foglio. --qz-h dice alla carta quanto schermo ha
    davvero (un pannello alto quattro quinti scarsi), o i disegni si misurerebbero sull'intero telefono */
@@ -799,17 +707,6 @@
 }
 .sot-porta .em { font-size: 12px; font-style: normal }
 
-.sot-scambio {
-  margin: 6px 0 0; padding: 5px 8px; border-radius: 10px;
-  font-size: 13.5px; font-weight: 700; text-align: center;
-  background: #ffd23f18; color: var(--sot-oro);
-  animation: sot-appare .12s ease-out;
-}
-.sot-scambio.sot-male { background: #e0432f24; color: #ff9b8a }
-.sot-scambio b { font-size: 15px }
-.sot-scambio p { margin: 0 }
-.sot-scambio p + p { margin-top: 2px; font-weight: 600; font-size: 12.5px }
-
 /* la scelta del colpo nello scontro (viste/CaselleAbilita.vue, docs/sotterraneo/abilita.md): «Attacco» e le abilità, una per riga */
 .sot-abilita { display: flex; flex-direction: column; gap: 4px; margin: 8px 0 0 }
 .sot-scelta {
@@ -854,13 +751,6 @@
 .sot-scelta.sot-pronta .sot-scelta-testo small, .sot-scelta.sot-pronta .sot-scelta-costo { color: var(--sot-oro) }
 .sot-scelta.sot-spenta { cursor: default; opacity: .65 }
 .sot-scelta.sot-spenta:active { transform: none }
-/* sotto la vita del mostro: cosa gli sta succedendo (avvelenato, gelato, stordito, senza difesa) e cosa protegge te */
-.sot-stati { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 3px }
-.sot-stati span {
-  display: inline-flex; align-items: center; gap: 3px; padding: 1px 6px; border-radius: 999px; font-size: 11.5px; font-weight: 700;
-  background: #ffffff10; border: 1px solid #ffffff1a; color: var(--sot-inchiostro);
-}
-
 .sot-storia { margin: 4px 0 2px; font-size: 15px; line-height: 1.45 }   /* la battuta è il premio vero */
 
 .sot-cambio { margin: 6px 0 0; font-size: 14px; font-weight: 700; color: var(--sot-tenue) }
@@ -1241,7 +1131,6 @@
 .sot-riassegna:disabled { opacity: .45; cursor: default }
 .sot-gradi em { font-style: normal; font-size: 10px; font-weight: 900; color: var(--sot-oro); margin-left: 2px; line-height: 7px }
 .sot-glifo-energia { vertical-align: -3px; color: #5fb8ff }
-.sot-scambio-abilita .sot-glifo, .sot-stati .sot-glifo { vertical-align: -2px }
 
 /* ═══════════ il medaglione di un'abilità (viste/Medaglione.vue, Glifo.vue) ═══════════
    L'anello d'oro, il fondo nel colore del ramo (--tinta), l'icona disegnata in codice. Gemma a otto lati per le
@@ -1431,6 +1320,4 @@
 .sot-legenda span { display: inline-flex; align-items: center; gap: 5px }
 .sot-legenda b { color: #ffe39a; font-weight: 700 }
 .sot-piu-posto { margin-top: 8px; padding: 10px; font-size: 14px }
-.sot-addosso-esposto { filter: drop-shadow(0 0 7px #6fbf3a) saturate(1.3) }
-.sot-effetto-esposto { color: #8bd04a; filter: drop-shadow(0 0 5px #4fa02a) }
 .sot-scelta-energia { border-color: #2f5f9a }

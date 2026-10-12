@@ -4,14 +4,15 @@
 // contro questo mostro (coi numeri veri); in fondo bere una pozione e scappare, che prima stavano in un menu a parte
 // quando si stava per cadere. Un tocco sceglie e va avanti: niente da confermare. Non calcola niente: riceve dal
 // motore cosa si può fare e perché no. Per i primi 320 ms i tasti non sentono il tocco (il click che il dito lascia
-// dietro alla risposta atterrerebbe qui: docs/core/interfaccia.md, «I tempi»).
+// dietro alla risposta atterrerebbe qui: docs/core/interfaccia.md, «I tempi»). Mentre si racconta il turno di prima
+// (`ferma`) la scelta c'è già, spenta: il fondale non salta, e quando il racconto finisce la scelta si rimonta (e i 320 ms ripartono).
 import { ref, onMounted, onUnmounted } from 'vue'
 import { CIECA } from '../../pausa.js'
 import Medaglione from './Medaglione.vue'
 import Glifo from './Glifo.vue'
 import { DETTO_DEL_PERICOLO } from '../motore/pericolo.js'
 
-defineProps({
+const props = defineProps({
   attacco: { type: String, required: true },  // «fai 6 di danno»
   caselle: { type: Array, required: true },   // [{ id, glifo, tinta, nome, costo, dice, perche } | null]
   energia: { type: Number, required: true },
@@ -19,7 +20,8 @@ defineProps({
   bevi: { type: Object, default: null },      // { cura, n }: la pozione che si berrebbe, e quante ne restano
   beviEnergia: { type: Object, default: null },   // { quanto, n }: la pozione blu, se ne hai e l'energia non è piena
   scappa: { type: Object, default: null },    // { graffio }: il costo della fuga; null se il graffio farebbe cadere
-  pericolo: { type: Object, default: null },  // { perche, nome, em, vita, male }: il mostro ringhia, si sta per cadere
+  pericolo: { type: Object, default: null },  // { perche, vita, male }: si sta per cadere
+  ferma: { type: Boolean, default: false },   // il turno di prima si sta ancora raccontando: niente si tocca
 })
 const emit = defineEmits(['scegli', 'bevi', 'bevi-energia', 'scappa'])
 
@@ -27,11 +29,11 @@ const pronto = ref(false)
 let cieca = 0
 onMounted(() => { cieca = setTimeout(() => { pronto.value = true }, CIECA) })
 onUnmounted(() => clearTimeout(cieca))
-const vai = (che, ...a) => { if (pronto.value) emit(che, ...a) }
+const vai = (che, ...a) => { if (pronto.value && !props.ferma) emit(che, ...a) }
 </script>
 
 <template>
-  <div class="sot-abilita" data-caselle-abilita :data-energia="energia" :data-pronto="pronto || null">
+  <div class="sot-abilita" data-caselle-abilita :data-energia="energia" :data-pronto="(pronto && !ferma) || null" :data-ferma="ferma || null">
     <p v-if="pericolo" class="sot-ringhio-detto" data-ringhio :data-perche="pericolo.perche" role="alert">
       <b>Attenzione!</b>
       {{ DETTO_DEL_PERICOLO[pericolo.perche] }}
@@ -53,15 +55,15 @@ const vai = (che, ...a) => { if (pronto.value) emit(che, ...a) }
     </template>
     <div v-if="bevi || beviEnergia || scappa" class="sot-scelta-sep"></div>
     <button v-if="bevi" type="button" class="sot-scelta sot-scelta-bevi" data-azione="bevi-scontro" @click="vai('bevi')">
-      <span class="sot-scelta-icona em">🧪</span>
-      <span class="sot-scelta-testo"><b>Bevi una pozione</b><small>{{ bevi.cura ? `ti guarisce di ${bevi.cura} punti di vita` : 'ti rimette in forze' }} · ne hai {{ bevi.n }}</small></span>
+      <span class="sot-scelta-icona"><Glifo nome="calice" :misura="22" /></span>
+      <span class="sot-scelta-testo"><b>Bevi una pozione</b><small>{{ bevi.cura ? `ti guarisce di ${bevi.cura} punti di vita` : 'ti rimette in forze' }} · costa il turno · ne hai {{ bevi.n }}</small></span>
     </button>
     <button v-if="beviEnergia" type="button" class="sot-scelta sot-scelta-energia" data-azione="bevi-energia" @click="vai('bevi-energia')">
       <span class="sot-scelta-icona"><Glifo nome="energia" :misura="22" /></span>
       <span class="sot-scelta-testo"><b>Bevi una pozione blu</b><small>ti ridà {{ beviEnergia.quanto }} di energia · ne hai {{ beviEnergia.n }}</small></span>
     </button>
     <button v-if="scappa" type="button" class="sot-scelta sot-scelta-scappa" data-azione="scappa" @click="vai('scappa')">
-      <span class="sot-scelta-icona em">🏃</span>
+      <span class="sot-scelta-icona"><Glifo nome="vento" :misura="22" /></span>
       <span class="sot-scelta-testo"><b>Scappa via</b><small>ti costa {{ scappa.graffio }} di vita</small></span>
     </button>
   </div>

@@ -117,16 +117,11 @@ Sono la prima mano (prima in codice, poi dipinto, come la cornice della
   tocco non conta (il click lasciato dalla risposta). Un'abilità senza energia o senz'arma resta grigia e dice cosa manca. Sopra la
   domanda resta la riga della scelta fatta. Chi non ha abilità vede comunque Attacco, bere e scappare. L'energia non si ripete:
   la dice il globo blu.
-- **Il duello** (`Scontro.vue`, `Palco.vue`; con più mostri in campo la vista si rifà, [scontro.md](scontro.md#la-vista)), alla Monkey Island: l'eroe a sinistra e il mostro a destra, grandi, sul fondale
-  vero dello scenario (la parete e il pavimento delle stanze, dallo stesso foglio del campo). Del mostro si vede solo la barra della
-  vita in alto a destra, **senza numeri** (il brivido di non sapere quanto resiste); la vita dell'eroe sta nel globo. A ogni
-  scambio chi colpisce scatta in avanti, chi è colpito trema, salgono i numeri del danno; un'abilità fa volare il suo glifo dall'eroe
-  al mostro, del colore del suo ramo; gli effetti che durano stanno addosso al mostro (fiamma, brina, stelle, goccia) e ne
-  cambiano il colore, e lo scudo dà un alone all'eroe. Lo scambio ha un ordine, per leggerlo (`Scontro.vue`, i ritardi in
-  `stile.css`): l'eroe colpisce (0 s: da lontano vola l'abilità o una freccia/scintilla, da vicino si fa sotto e lampeggia il
-  fendente), il mostro incassa e il numero sale (0,3), il mostro risponde facendosi sotto (0,65), l'eroe incassa col colpo
-  rosso (0,95). **Scudo e cura non colpiscono**: niente scatto, solo un alone del colore dell'abilità sull'eroe. La cornice è
-  quella delle finestre dell'eroe e del fabbro (`Cornice.vue`, senza ✕).
+- **Come si vede** ([scontro-interfaccia.md](scontro-interfaccia.md)): i mostri in campo sul fondale vero, ognuno con la sua barra
+  senza numeri (il brivido di non sapere quanto resiste), il bersaglio con l'anello d'oro e chi verrà colpito col contorno; un'abilità
+  fa volare il suo glifo, del colore del suo ramo, verso ognuno dei colpiti; gli effetti che durano stanno addosso al mostro come
+  pastiglie e ne cambiano il colore, lo scudo dà un alone all'eroe. **Scudo e cura non colpiscono**: niente scatto, solo l'alone.
+  La cornice è quella delle finestre dell'eroe e del fabbro (`Cornice.vue`, senza ✕).
 - **Una difesa prende il posto dell'attacco, e nel turno il mostro colpisce comunque**: per questo lo Scudo arcano e la Pelle
   di pietra parano la metà della vita massima al primo grado (due quarti, poi 2,6 e 3,2: `scudo` in `dati/abilita.js`; anche le cure sono raddoppiate, per lo stesso motivo), e non
   più un quarto (l'utente, 9 ottobre). La pozione blu si beve anche dal menu dello scontro («Bevi una pozione blu», senza
@@ -148,7 +143,7 @@ Sono la prima mano (prima in codice, poi dipinto, come la cornice della
 - **Gli effetti si contano nei turni di chi li porta** (docs: [scontro.md](scontro.md)). Sul mostro: veleno o fiamme (metà colpo
   quando tocca a lui, quindi anche se l'eroe sbaglia), gelato (colpisce a metà), stordito (salta i suoi
   prossimi N turni), **sanguina**, senza difesa. Sull'eroe: parato (i colpi presi fanno metà per N turni dell'eroe), scudo che
-  assorbe, intoccabile, specchio, linfa. Si vedono come pastiglie sotto la vita del mostro e sotto quella dell'eroe.
+  assorbe, intoccabile, specchio, linfa. Si vedono come pastiglie sul mostro (glifo e turni che restano) e sotto il palco per l'eroe.
 - **La forma** (`forma` in `dati/abilita.js`): `uno`, `vicini`, `catena`, `tutti`, con abilità vere: la Palla di fuoco e la
   Spazzata `vicini`, la Catena di fulmini e la Freccia che trapassa `catena`, il Mulinello e la Luna piena `tutti`. Gli
   effetti vanno a tutti i mostri presi, e **l'elemento si conta per ognuno**: la palla di fuoco fa di più alla melma accanto
@@ -158,9 +153,6 @@ Sono la prima mano (prima in codice, poi dipinto, come la cornice della
 - **Le parole** (l'utente, 9 ottobre): si parla di danno e di turni, mai di «scambi» o «mezzo colpo»: «fa il doppio del danno»,
   «il mostro arde: metà del tuo danno a ogni turno, per 3 turni», «protezione dai danni per 2 turni». Il nome dell'abilità sta già
   sopra la riga, quindi la riga dice solo l'effetto. Nello scontro i numeri sono quelli veri.
-- **La riga dell'attacco ha una voce per fonte** (`Scontro.vue`, `data-scambio`): «fai 10 di danno (il tuo colpo di 5 ×2)», «altri 3 di
-  danno a ogni turno», «subisci 1 di danno (il gelo gli dimezza il colpo)», o perché non subisci niente (stordito, invulnerabile,
-  la barriera). I dati li porta l'esito di `rispostaScontro` (`base`, `volte`, `salvo`, `gelato`, `assorbito`, e `azioni` in ordine).
 - **Il primo tiro** (elfa, con l'arco): agisce per prima in ogni scontro, prima anche della fila, e il suo primo colpo
   ha il bonus di danno.
 - **L'ultimo fiato** (cavaliere): una volta per discesa, invece di svenire si
@@ -238,8 +230,8 @@ La pagina ha gli stendardi `[data-azione="ramo"][data-ramo-scheda="<chiave>"]` (
 Sulla barra `[data-azione="abilita"]` con `data-punti-abilita` e il globo
 `[data-globo="energia"]`; nello scontro `[data-caselle-abilita][data-energia]`,
 `[data-azione="prepara"][data-abilita="<id>"]` con `data-pronta`, le pastiglie
-`[data-stati-mostro] [data-stato]` e `[data-stati-eroe] [data-stato]`, lo
-scambio `.sot-scambio[data-usata]`; la pagina `[data-pagina-abilita]` coi
+`[data-mostro] [data-effetti] [data-stato]` e `[data-stati-eroe] [data-stato]` (i bersagli del palco:
+[scontro-interfaccia.md](scontro-interfaccia.md#nei-test)); la pagina `[data-pagina-abilita]` coi
 nodi `[data-azione="nodo"][data-nodo][data-grado][data-stato="preso|pronto|chiuso"]`,
 `[data-nodo-dettaglio]`, `[data-azione="impara"]`, `[data-azione="dimentica"][data-costo]`, le caselle `[data-azione="zoccolo"][data-zoccolo="0..2"]`
 e la scelta `[data-scelta-abilita] [data-azione="metti"][data-metti="<id>"]`,
