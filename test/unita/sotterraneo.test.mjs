@@ -904,8 +904,8 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
   uguale('entrare al buio conta come stanza vista', buio.stanzeViste, piena.stanzeViste)
 
   /* il mostro: si sveglia quando ti avvicini nella sua stanza (SVEGLIA), con la luce o senza, quindi la torcia non
-     cambia l'equilibrio; sveglio si vede sempre. Con la torcia lo si vede dormire da lontano; al buio lo si vede
-     arrivare, non dormire */
+     cambia l'equilibrio; ma si vede solo in una cella accesa, sveglio o no. Con la torcia lo si vede dormire da
+     lontano; al buio non si vede finché non entra nel raggio */
   const giri = (c, secondi) => { for (let i = 0; i < Math.round(secondi * 30); i++) c.muoviMostri(1 / 30) }
   const posto = prova.livello.robe.indexOf(m0)
   const mostro = c => c.livello.robe[posto]
@@ -925,7 +925,7 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
     const c = eroeA(torcia, vicina)
     giri(c, 1 / 30)
     uguale(`${come}, avvicinandosi si sveglia`, mostro(c).sveglio, true)
-    uguale(`${come}, appena sveglio si vede`, c.luceDi(mostro(c).x, mostro(c).y), 2)
+    uguale(`${come}, appena sveglio si vede solo se è in luce`, c.luceDi(mostro(c).x, mostro(c).y), torcia ? 2 : 0)
     giri(c, 0.3)
     controlla(`${come}, e ti viene incontro`, mostro(c).fx !== m0.x + 0.5 || mostro(c).fy !== m0.y + 0.5 || !!c.foglio)
   }
@@ -934,8 +934,9 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
     giri(c, 0.1)
     c.eroe = { x: lontana.x + 0.5, y: lontana.y + 0.5 }; c.aggiornaLuce()
     giri(c, 0.1)
-    uguale('e sveglio si vede anche da lontano al buio: non ti insegue senza farsi vedere', c.luceDi(mostro(c).x, mostro(c).y), 2)
-    controlla('e lo si può toccare', c.toccabile(mostro(c)))
+    controlla('sveglio, ma fuori dal raggio, al buio non è in luce', !c.inLuce(mostro(c).y * c.livello.largo + mostro(c).x))
+    uguale('e non si vede, nemmeno nelle celle ricordate', c.luceDi(mostro(c).x, mostro(c).y) < 2, true)
+    controlla('e non si può toccare', !c.toccabile(mostro(c)))
   }
   {
     const c = eroeA(0, vicina)

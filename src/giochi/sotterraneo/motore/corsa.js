@@ -225,7 +225,6 @@ export class Corsa extends Corredo {
     // dal piano generato, non dalla tappa: da quando l'abisso cambia forma scendendo, potevano divergere
     this.visto = new Uint8Array(this.livello.largo * this.livello.alto)
     this.luce = new Set()
-    this.occhi = new Set()
     this.stanzaIntera = null
     this.segnaLaStanza()
     this.chiaveDelPiano = false
@@ -269,9 +268,8 @@ export class Corsa extends Corredo {
     }
   }
 
-  // un mostro sveglio si vede sempre, anche fuori dal raggio: l'hai visto svegliarsi, e uno che ti insegue dal buio senza
-  // farsi vedere sarebbe un colpo preso senza poterlo evitare
-  inLuce(k) { return this.luce.has(k) || this.occhi.has(k) }
+  // un mostro si vede solo se sta in una cella accesa adesso, sveglio o no (docs/sotterraneo/regole.md, «La luce»)
+  inLuce(k) { return this.luce.has(k) }
 
   luceDi(x, y) {
     const k = y * this.livello.largo + x
@@ -364,13 +362,10 @@ export class Corsa extends Corredo {
   }
 
   // un mostro dorme finché non ti avvicini nella sua stanza (SVEGLIA celle, con la luce o senza), e smette appena esci:
-  // è la regola che rende la stanza un confine. Appena sveglio si vede, anche da lontano e al buio (inLuce): non ti
-  // salta addosso da un buio in cui non potevi vederlo (docs/sotterraneo/regole.md, «La luce»)
+  // è la regola che rende la stanza un confine; la luce non c'entra (docs/sotterraneo/regole.md, «La luce»)
   muoviMostri(dt) {
     const cella = { x: Math.floor(this.eroe.x), y: Math.floor(this.eroe.y) }
     const mia = this.livello.stanzaDi(cella.x, cella.y)
-    const L = this.livello.largo
-    this.occhi = new Set()
     for (const m of this.livello.robe) {
       if (m.che !== 'mostro' || m.morto) continue
       if (m.fx == null) { m.fx = m.x + 0.5; m.fy = m.y + 0.5; m.casa = { x: m.x, y: m.y }; m.calmo = 0 }
@@ -389,7 +384,7 @@ export class Corsa extends Corredo {
         this.scontro(m)
         return
       }
-      if (d < 0.05) { if (sveglio) this.occhi.add(m.y * L + m.x); continue }
+      if (d < 0.05) continue
       const v = (sveglio ? PASSO_MOSTRO : PASSO_RIENTRO) * dt
       let nx = m.fx + dx / d * Math.min(v, d), ny = m.fy + dy / d * Math.min(v, d)
       // non esce mai dalla sua stanza: il muro ferma l'asse che lo porterebbe fuori e lascia libero l'altro
@@ -401,7 +396,6 @@ export class Corsa extends Corredo {
       if (this.livello.calpestabile(Math.floor(nx), Math.floor(m.fy))) m.fx = nx
       if (this.livello.calpestabile(Math.floor(m.fx), Math.floor(ny))) m.fy = ny
       m.x = Math.floor(m.fx); m.y = Math.floor(m.fy)
-      if (sveglio) this.occhi.add(m.y * L + m.x)   // dove è arrivato, non dove era
     }
   }
 
