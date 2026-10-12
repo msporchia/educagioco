@@ -7,11 +7,11 @@
      torre:<aspetto>:<stadio>:<ramo>   da torri-2.png. Il ramo vuoto
                   è la torre salita senza averne preso uno: quale figura
                   è quale torre lo dice `torri-2.json`, accanto al foglio.
-     mostro:<creatura>:<fotogramma>   il respiro, dai fogli del sotterraneo
-                  (`mostri-1.png`, `mostri-2.png`): le coordinate stanno nei
-                  suoi foglietti e in `strumenti/sprite/creature-castello.json`.
-     mostro:<creatura>:lato:<passo>, …:fronte:<passo>   i passi, dai fogli
-                  `mostri-cammino-*.png` quando ci sono (7 creature oggi).
+     mostro:<creatura>:<fotogramma>   il respiro, dai fogli delle creature
+                  (`mostri-1.png`, `mostri-2.png`): le coordinate stanno nel
+                  catalogo comune, `strumenti/sprite/sorgenti/creature/creature.json`.
+     mostro:<creatura>:lato:<passo>, …:fronte:<passo>   i passi, dai video
+                  di `sorgenti/creature/passi/` (7 creature oggi).
                   Chi ha i passi non ha il respiro.
 
    Quale creatura per quale mostro, vestito per vestito, lo dice

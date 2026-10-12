@@ -11,7 +11,7 @@ viene: una creatura su fondo bianco, animata «sul posto», prima di lato e
 poi di fronte — il prompt sta in `DA-GENERARE.md`, voce 5.
 
 Il video non si conserva: si tengono **solo i passi**, in
-`sorgenti/castello/cammino/<creatura>.png` — due righe (di lato, di
+`sorgenti/creature/passi/<creatura>.png` — due righe (di lato, di
 fronte) di sei fotogrammi ciascuna, col bianco tolto e al massimo `ALTO`
 pixel d'altezza (il doppio di quanto serve in campo: il video è molto più
 grande, e sei fotogrammi alla sua misura pesano più di un mega) — e accanto il `.json` che dice da quale video e da quali
@@ -36,7 +36,7 @@ from pathlib import Path
 
 from PIL import Image, ImageChops, ImageDraw
 
-CAMMINO = Path(__file__).parent / 'sorgenti' / 'castello' / 'cammino'
+CAMMINO = Path(__file__).parent / 'sorgenti' / 'creature' / 'passi'
 PASSI = 6
 BIANCO = 215     # sopra questo (su tutti e tre i canali) un pixel è fondo
 CHIUSO = 30      # un'isola di bianco chiusa dentro la figura, da quanti pixel in su è fondo

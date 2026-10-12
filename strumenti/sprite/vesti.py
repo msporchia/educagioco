@@ -65,6 +65,7 @@ from PIL import Image, ImageChops, ImageDraw, ImageFilter
 
 sys.path.insert(0, str(Path(__file__).parent))
 import codifica  # noqa: E402
+import creature  # noqa: E402
 import righe  # noqa: E402
 
 C = 64
@@ -1175,21 +1176,20 @@ def torri_dal_foglio(png=None):
 #
 # Le creature che il bestiario del castello nomina
 # (`src/giochi/castello/scena/bestiario.js`), coi fotogrammi del
-# respiro: quelle che il sotterraneo ha già dai suoi foglietti, le altre
-# da `creature-castello.json` qui accanto (perché lì e non nei foglietti
-# lo dice il suo `__`). `unita/castello-bestiario` pretende che le due
+# respiro e, per chi li ha, i passi dai video: le coordinate e i passi
+# stanno nel catalogo comune (`creature.py`, `sorgenti/creature/`,
+# docs/core/creature.md) e qui si prendono quelle che dicono `castello`
+# fra i loro `giochi`. `unita/castello-bestiario` pretende che le due
 # liste — chi il bestiario nomina e chi l'atlante porta — siano la
 # stessa.
 #
-# **I mostri che camminano** (prompt 5 di `DA-GENERARE.md`): quando c'è
-# un foglio `mostri-cammino-<lettera>.png` accanto ai fogli del
-# sotterraneo, le sue righe sono le creature di `CAMMINO[lettera]`, in
-# quell'ordine, ognuna coi quattro passi di lato e i quattro di fronte.
-# Chi cammina lascia a casa il respiro: i pittori lo usano solo dove i
-# passi non ci sono.
+# **I mostri che camminano** (prompt 5 di `DA-GENERARE.md`): un foglio
+# `mostri-cammino-<lettera>.png` accanto ai fogli delle creature ha per
+# righe le creature di `CAMMINO[lettera]`, in quell'ordine, ognuna coi
+# quattro passi di lato e i quattro di fronte (la strada dei fogli, mai
+# percorsa: oggi i passi vengono dai video). Chi cammina lascia a casa il
+# respiro: i pittori lo usano solo dove i passi non ci sono.
 
-MOSTRI_SOT = Path(__file__).parent / 'sorgenti' / 'sotterraneo' / 'generati'
-CREATURE_CASTELLO = Path(__file__).parent / 'creature-castello.json'
 CAMMINO = {
     'A': ['melma', 'scheletro-scudo', 'pipistrello', 'fantasma', 'ragno', 'lupo'],
     'B': ['golem', 'troll', 'scheletro', 'drago', 'grifone', 'pianta'],
@@ -1202,7 +1202,7 @@ CAMMINO = {
 
 
 def foglio_del_cammino(lettera):
-    return MOSTRI_SOT / f'mostri-cammino-{lettera}.png'
+    return creature.SORGENTI / f'mostri-cammino-{lettera}.png'
 
 
 def cammino_dai_fogli():
@@ -1226,74 +1226,29 @@ def cammino_dai_fogli():
     return fuori, chi
 
 
-# **I passi dai video** (`cammino.py`, voce 5 di `DA-GENERARE.md`): una
-# creatura per file, `sorgenti/castello/cammino/<creatura>.png`, con una
-# riga di passi di lato e una di fronte. Qui si portano **alla misura
-# della creatura** — alta quanto il suo respiro, che è di lato: la stessa
-# scala vale per la riga di fronte, così girandosi non cambia taglia — e
-# si ridà il contorno scuro che riducendo si perde. Non si riducono alla
-# grana dei fogli (quattro pixel per punto): a metà misura in campo quella
-# grana era poltiglia, e l'utente ha scelto di avere alcuni mostri nitidi
-# e gli altri come prima, piuttosto che tutti brutti (29 settembre 2026).
-
-CAMMINO_VIDEO = Path(__file__).parent / 'sorgenti' / 'castello' / 'cammino'
-CONTORNO = (28, 16, 22, 255)
-
-
-def contornata(im, spessore=2):
-    """La figura con `spessore` pixel di contorno scuro attorno."""
-    t = Image.new('RGBA', (im.width + 2 * spessore, im.height + 2 * spessore))
-    t.paste(im, (spessore, spessore))
-    for _ in range(spessore):
-        a = t.getchannel('A').point(lambda v: 255 if v >= 128 else 0)
-        attorno = a.filter(ImageFilter.MaxFilter(3))
-        bordo = ImageChops.subtract(attorno, a)
-        t.paste(Image.new('RGBA', t.size, CONTORNO), (0, 0), bordo)
-    return t
-
-
-def pieni(quadri):
-    """Quanti pixel pieni in media in un fotogramma."""
-    return sum(q.getchannel('A').point(lambda v: 255 if v >= 128 else 0).histogram()[255]
-               for q in quadri) / len(quadri)
-
+# **I passi dai video** (`cammino.py`, voce 5 di `DA-GENERARE.md`): li
+# porta alla misura della creatura `creature.passi_alla_misura`, la stessa
+# funzione del sotterraneo; qui con il contorno di 2 px. Non si riducono
+# alla grana dei fogli (quattro pixel per punto): a metà misura in campo
+# quella grana era poltiglia, e l'utente ha scelto di avere alcuni mostri
+# nitidi e gli altri come prima, piuttosto che tutti brutti (29 settembre
+# 2026).
 
 def cammino_dai_video(respiro):
     """I passi di chi ha il suo video: `mostro:<creatura>:lato:<i>` e
     `…:fronte:<i>`, alla misura del suo respiro."""
     fuori, chi = {}, []
-    for png in sorted(CAMMINO_VIDEO.glob('*.png')):
-        creatura = png.stem
+    for creatura in creature.chi_cammina():
         if creatura not in respiro:
-            raise SystemExit(f'{png.name}: «{creatura}» non è una creatura del bestiario')
-        fg = json.loads(png.with_suffix('.json').read_text())
-        im = Image.open(png).convert('RGBA')
-        cw, ch = fg['cella']
-        alto = respiro[creatura][0].getbbox()
-        alto = alto[3] - alto[1]
-        righe_ = {}
-        for r, verso in enumerate(fg['righe']):
-            quadri = [im.crop((i * cw, r * ch, (i + 1) * cw, (r + 1) * ch)) for i in range(fg['passi'])]
-            bb = [q.getbbox() for q in quadri]
-            box = (min(b[0] for b in bb), min(b[1] for b in bb), max(b[2] for b in bb), max(b[3] for b in bb))
-            righe_[verso] = [q.crop(box) for q in quadri]
-        base = righe_.get('lato') or righe_['fronte']
-        k = alto / base[0].height
-        if fg.get('misura') == 'area':
-            # chi salta e si schiaccia ha il riquadro alto quanto il salto:
-            # a misurarlo così la melma a terra veniva metà di prima
-            k = (pieni(respiro[creatura]) / pieni(base)) ** 0.5
-        for verso, quadri in righe_.items():
+            raise SystemExit(f'passi/{creatura}.png: «{creatura}» non è una creatura del castello')
+        for verso, quadri in creature.passi_alla_misura(creatura, respiro[creatura], 2).items():
             for i, q in enumerate(quadri):
-                q = q.convert('RGBa').resize((max(1, round(q.width * k)), max(1, round(q.height * k))),
-                                              Image.BOX).convert('RGBA')
-                q.putalpha(q.getchannel('A').point(lambda v: 255 if v >= 128 else 0))
-                fuori[f'mostro:{creatura}:{verso}:{i}'] = contornata(q)
+                fuori[f'mostro:{creatura}:{verso}:{i}'] = q
         chi.append(creatura)
     return fuori, chi
 
 
-# Sotto quest'alfa un pixel dei fogli del sotterraneo è il bagliore
+# Sotto quest'alfa un pixel dei fogli delle creature è il bagliore
 # colorato che il generatore ci ha messo dietro ogni riga, non la
 # creatura: il corpo sta quasi tutto sopra 128 e l'orlo morbido fra 64 e
 # 128. Tolto, non fa l'alone sul campo e il WebP pesa un sesto di meno.
@@ -1302,28 +1257,9 @@ BAGLIORE = 64
 
 def creature_col_respiro(senza=()):
     """{creatura: [fotogrammi]} del respiro, per chi non cammina."""
-    tab = json.loads(CREATURE_CASTELLO.read_text())
-    fogli = {n: righe.senza_alone(Image.open(MOSTRI_SOT / f'{n}.png'), BAGLIORE)
-             for n in ('mostri-1', 'mostri-2')}
-    fuori = {}
-    for nome in ('mostri-1', 'mostri-2'):
-        f = json.loads((MOSTRI_SOT / f'{nome}.json').read_text())
-        sc = f['scala']
-        for loro in tab['dai_foglietti']:
-            quadri = []
-            for i in range(8):
-                d = f['sprite'].get(f'{loro}-fermo-{i}')
-                if not d:
-                    break
-                (x, y), (w, h) = d['da'], d['cella']
-                quadri.append(fogli[nome].crop((x * sc, y * sc, (x + w) * sc, (y + h) * sc)))
-            if quadri:
-                fuori[loro] = quadri
-    for loro, d in tab['creature'].items():
-        fuori[loro] = [fogli[d['foglio']].crop((x, y, x + w, y + h)) for x, y, w, h in d['fotogrammi']]
-    mancano = [k for k in tab['dai_foglietti'] if k not in fuori]
-    if mancano:
-        raise SystemExit(f'creature-castello.json: non nei foglietti del sotterraneo: {", ".join(mancano)}')
+    dati = creature.carica()
+    fogli = {n: righe.senza_alone(Image.open(creature.SORGENTI / f), BAGLIORE) for n, f in dati['fogli'].items()}
+    fuori = {k: creature.respiro_grande(k, fogli, dati) for k in creature.per_gioco('castello', dati)}
     return {k: v for k, v in sorted(fuori.items()) if k not in senza}
 
 
@@ -1481,11 +1417,11 @@ def atlante():
      torre:<aspetto>:<stadio>:<ramo>   da {fonte['torri']}. Il ramo vuoto
                   è la torre salita senza averne preso uno: quale figura
                   è quale torre lo dice `{fonte['torri'].replace('.png', '.json')}`, accanto al foglio.
-     mostro:<creatura>:<fotogramma>   il respiro, dai fogli del sotterraneo
-                  (`mostri-1.png`, `mostri-2.png`): le coordinate stanno nei
-                  suoi foglietti e in `strumenti/sprite/creature-castello.json`.
-     mostro:<creatura>:lato:<passo>, …:fronte:<passo>   i passi, dai fogli
-                  `mostri-cammino-*.png` quando ci sono ({fonte['camminano']} creature oggi).
+     mostro:<creatura>:<fotogramma>   il respiro, dai fogli delle creature
+                  (`mostri-1.png`, `mostri-2.png`): le coordinate stanno nel
+                  catalogo comune, `strumenti/sprite/sorgenti/creature/creature.json`.
+     mostro:<creatura>:lato:<passo>, …:fronte:<passo>   i passi, dai video
+                  di `sorgenti/creature/passi/` ({fonte['camminano']} creature oggi).
                   Chi ha i passi non ha il respiro.
 
    Quale creatura per quale mostro, vestito per vestito, lo dice
