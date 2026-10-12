@@ -144,7 +144,7 @@ export class Corsa extends Corredo {
   }
 
   // il fuoco dei pezzi brucia anche chi para: si somma dopo la difesa del mostro. Con un'abilità (`nodo`, dati/abilita.js)
-  // il colpo vale `per` volte; `passa` (una frazione) toglie quella parte della difesa, un mostro rotto non ne ha. Un mostro gelato prende di più (Gelo profondo)
+  // il colpo vale `per` volte, per l'elemento (resiste/teme: motore/scontro.js); `passa` (una frazione) toglie quella parte della difesa, un mostro rotto non ne ha. Un mostro gelato prende di più (Gelo profondo)
   colpo(m, nodo = null) {
     const g = nodo ? this.grado(nodo.id) : 0
     const st = m.stati || {}
@@ -153,13 +153,16 @@ export class Corsa extends Corredo {
     // I bonus del colpo sono percentuali (l'utente, 9 ottobre: un +1 fisso non tiene il passo con l'attacco che cresce):
     // Filo affilato e simili, la punta del ramo e Gelo profondo sul gelato si sommano fra loro, poi si moltiplica
     const esposto = st.esposto && st.esposto.scambi > 0 ? st.esposto.piu : 0
-    const piu = this.sempre('colpoPiu') + this.delRamo(nodo, 'piu') + (st.debole > 0 ? this.sempre('geloPiu') : 0) + esposto
+    // la furia (Rabbia, Ira del nano): con meno di metà vita si picchia più forte, anche con l'attacco solito
+    const furia = this.vita * 2 <= this.vitaMax ? this.sempre('furia') : 0
+    const piu = this.sempre('colpoPiu') + this.delRamo(nodo, 'piu') + (st.debole > 0 ? this.sempre('geloPiu') : 0) + esposto + furia
     const base = Math.max(1, Math.round((this.attDelRamo(nodo) - m.dif * (1 - ignora)) * (1 + piu / 100)))
     let per = nodo ? (aGrado(nodo, 'per', g) || 1) : 1
     // l'ultimo gradino dei rami: contro un capo o un mostro grosso vale molto di più
     if (nodo && nodo.capi && this.èCapo(m)) per = aGrado(nodo, 'capi', g)
-    if (nodo && nodo.seStordito && !(st.veleno || st.debole > 0 || st.fermo > 0)) per = nodo.altrimenti || 1
-    return Math.round(base * per) + this.addosso('fuoco')
+    if (nodo && nodo.seStordito && !(st.veleno || st.debole > 0 || st.fermo > 0 || st.sanguina)) per = nodo.altrimenti || 1
+    // l'elemento dell'abilità contro le difese del mostro: metà se le resiste, un danno e mezzo se le teme (l'attacco solito no)
+    return Math.max(1, Math.round(base * per * this.fattoreElemento(m, nodo))) + this.addosso('fuoco')
   }
   colpiPer(m) { return Math.max(1, Math.ceil(m.ossa / this.colpo(m))) }
 

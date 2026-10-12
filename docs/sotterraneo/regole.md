@@ -126,6 +126,8 @@ Nell'abisso ogni posto ha un branco suo, preso da queste fasce (vedi
   di tutto il piano, e il banco confronterebbe due sotterranei.
 - **Il bottino è della fascia, non della faccia**: cambia cosa si trova, non
   quanto spesso.
+- **Ogni mostro ha le sue difese** (cosa resiste, cosa teme, a quali stati non è sensibile) e le abilità elementali le
+  usano: [mostri.md](mostri.md). Ratto e goblin sono neutri.
 
 ## Camminare col dito
 

@@ -87,10 +87,14 @@ import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiut
   /* la roba è dell'avventuriero, non dell'eroe: un mago trova la stessa
      roba, e quello che non porta va in tasca (lo dice, come al rientro) */
   const m = new Corsa(CAMPAGNA[1], { seme: 4, rnd: seminato(4), eroe: 'mago', roba: a.roba })
-  uguale('al mago la spada non va in pugno', m.mano, null)
-  controlla('ma finisce in tasca, con la corazza', m.zaino.includes('spada') && m.zaino.includes('corazza'),
+  uguale('al mago la spada va in pugno: è un mago guerriero (docs/sotterraneo/abilita.md)', m.mano, 'spada')
+  controlla('ma la corazza finisce in tasca, con l\'ascia che aveva già', m.zaino.includes('corazza') && m.zaino.includes('ascia'),
             m.zaino.join())
-  controlla('e la riga dice perché', m.avvisi.some(x => /non impugna/.test(String(x))), JSON.stringify(m.avvisi))
+  controlla('e la riga dice perché', m.avvisi.some(x => /non veste/.test(String(x))), JSON.stringify(m.avvisi))
+  // un'ascia invece no: il mago non porta le asce
+  const m2 = new Corsa(CAMPAGNA[1], { seme: 4, rnd: seminato(4), eroe: 'mago', roba: { ...a.roba, mano: 'ascia', corpo: null, zaino: [] } })
+  uguale('all\'ascia il mago rinuncia: non la impugna', m2.mano, null)
+  controlla('e lo dice', m2.avvisi.some(x => /non impugna/.test(String(x))), JSON.stringify(m2.avvisi))
 
   /* le torce comprate sopra aspettano alla cintura: scendendo se ne accende una */
   const t = new Corsa(CAMPAGNA[0], { seme: 5, rnd: seminato(5), roba: { ...ROBA_VUOTA(), torce: 2 } })
@@ -449,8 +453,9 @@ import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiut
   /* un banco vecchio, pescato prima che si badasse alla famiglia: gli altrui spariscono, sostituiti dove si può */
   const maga = new Bottega({ eroe: 'mago', finite: 3, roba: ROBA_VUOTA(), banchi: { armaiolo: ['ascia', 'spada-corta', 'scudo-legno', 'corazza'] } })
   const vecchio = maga.banco('armaiolo').roba
-  controlla('il mago non ritrova l\'ascia né la spada corta né la corazza nel banco di prima',
-            !vecchio.some(k => ['ascia', 'spada-corta', 'corazza'].includes(k)), vecchio.join())
+  controlla('il mago non ritrova l\'ascia né la corazza nel banco di prima',
+            !vecchio.some(k => ['ascia', 'corazza'].includes(k)), vecchio.join())
+  controlla('la spada corta sì: è una spada, e il mago le porta', vecchio.includes('spada-corta'), vecchio.join())
   controlla('e lo scudo, che porta chiunque, resta', vecchio.includes('scudo-legno'))
   controlla('ma ogni altra cosa è sua', vecchio.every(k => !COSE[k].dove || maga.posso(k)))
   const leggera = new Bottega({ roba: { ...ROBA_VUOTA(), mano: 'spada' } })

@@ -6,10 +6,12 @@
 //   che: 'scontro'     chi: il bersaglio di adesso      campo: i mostri in campo, nell'ordine dei posti (i morti restano al loro posto)
 //   io: gli effetti sull'eroe       pieni: i colpi presi (Testa dura)      tirato: il primo tiro è già partito
 //   coda: la fila dei turni (motore/turni.js)     fermate/pericolo: lo stop      apertura: le azioni prima del primo turno
-//   turni, colpiti, minaccia, inArrivo: quello che la vista legge (si rifanno in `aggiorna`)
+//   turni, colpiti, minaccia, inArrivo, difese: quello che la vista legge (si rifanno in `aggiorna`)
 import { COLPO_DEL_MOSTRO, RAGGIO_SCONTRO, MOSTRI_IN_CAMPO, CALMA } from '../dati/mondo.js'
 import { MOSTRI } from '../dati/mostri.js'
 import { NODI, aGrado, inVita, colpisce, FATTORE_DEL_SALTO } from '../dati/abilita.js'
+import { ELEMENTI, STATI, fattoreDi } from '../dati/elementi.js'
+import { difeseDi } from '../dati/grossi.js'
 import { pericoloDi } from './pericolo.js'
 import { nuovaFila, chiAgisce, agisci, togli, prossimi, primaDelSuoProssimo, TURNI_VISIBILI } from './turni.js'
 
@@ -23,10 +25,13 @@ const AZIONI_DEI_MOSTRI = {
   colpo(c, m) { return c.colpoDelMostro(m) },
 }
 
+// quanti tagli si sommano al più (Taglio profondo, Ferita aperta, Macello): il sangue è un danno che si costruisce
+export const PILE_DEL_SANGUE = 3
+
 const chiaviDegliEffetti = m => {
   const st = m.stati || {}
-  return [st.veleno && st.veleno.scambi > 0 && 'veleno', st.debole > 0 && 'debole', st.fermo > 0 && 'fermo',
-          st.esposto && st.esposto.scambi > 0 && 'esposto', st.rotto && 'rotto'].filter(Boolean)
+  return [st.veleno && st.veleno.scambi > 0 && 'veleno', st.sanguina && st.sanguina.scambi > 0 && 'sanguina', st.debole > 0 && 'debole',
+          st.fermo > 0 && 'fermo', st.esposto && st.esposto.scambi > 0 && 'esposto', st.rotto && 'rotto'].filter(Boolean)
 }
 
 export const MetodiDelloScontro = {
@@ -156,6 +161,43 @@ export const MetodiDelloScontro = {
     return [presi(f.chi)]
   },
 
+  // Le difese di un mostro (dati/grossi.js, `difeseDi`): { resiste, teme, immune }, tre liste di chiavi (dati/elementi.js)
+  difese(m) { return difeseDi(m) },
+
+  // il fattore dell'elemento di un'abilità contro `m`: 0,5 se lo resiste, 1,5 se lo teme. L'attacco solito (senza nodo) e le
+  // abilità che non colpiscono non hanno elemento
+  fattoreElemento(m, nodo) { return nodo && colpisce(nodo) ? fattoreDi(this.difese(m), nodo.elemento) : 1 },
+
+  // Gli effetti dell'abilità che questo mostro rifiuta (immunità agli stati): { veleno, debole, fermo, sanguina, stati } dove
+  // le prime quattro dicono «non parte» e `stati` elenca le chiavi di STATI da dire a chi legge. Il `debole` che non è di gelo
+  // (Rovi, Muro, Grido) non è uno stato che si rifiuta; il fermo del gelo (una prigione) si rifiuta anche per «non gela»
+  effettiBloccati(m, nodo) {
+    const r = { veleno: false, debole: false, fermo: false, sanguina: false, stati: [] }
+    if (!nodo) return r
+    const imm = this.difese(m).immune
+    if (!imm.length) return r
+    const gelo = nodo.elemento === 'gelo'
+    if (nodo.veleno) {
+      const s = nodo.elemento === 'fuoco' ? 'brucia' : 'avvelena'
+      if (imm.includes(s)) { r.veleno = true; r.stati.push(s) }
+    }
+    if (nodo.debole && gelo && imm.includes('gela')) { r.debole = true; r.stati.push('gela') }
+    if (nodo.fermo || nodo.quieto) {
+      if (imm.includes('stordisce')) { r.fermo = true; r.stati.push('stordisce') }
+      else if (gelo && imm.includes('gela')) { r.fermo = true; if (!r.stati.includes('gela')) r.stati.push('gela') }
+    }
+    if (nodo.sanguina && imm.includes('sanguina')) { r.sanguina = true; r.stati.push('sanguina') }
+    return r
+  },
+
+  // Come prende il colpo (o l'abilità) il mostro `x`: { elemento, effetto: 'resiste' | 'teme' | null, rifiutati: [stati] }.
+  // È il dato in più per la vista, nell'anteprima (`foglio.colpiti`) e in ogni colpito dell'esito
+  comeLaPrende(x, nodo) {
+    if (!nodo || !colpisce(nodo)) return { elemento: null, effetto: null, rifiutati: [] }
+    const f = this.fattoreElemento(x, nodo)
+    return { elemento: nodo.elemento, effetto: f < 1 ? 'resiste' : f > 1 ? 'teme' : null, rifiutati: this.effettiBloccati(x, nodo).stati }
+  },
+
   // quello che la vista legge, rifatto a ogni cambio: la fila dei prossimi sette turni (con chi salterà il suo), chi prenderebbe
   // la scelta preparata, quanto picchia ogni mostro adesso, e la somma dei colpi che arrivano prima del prossimo turno
   aggiorna(f = this.foglio) {
@@ -168,7 +210,8 @@ export const MetodiDelloScontro = {
       return { chi: x, salta: ((x.stati || {}).fermo || 0) > k }
     })
     const nodo = this.pronta && NODI[this.pronta] ? NODI[this.pronta] : null
-    f.colpiti = this.colpitiDa(nodo, f)
+    f.colpiti = this.colpitiDa(nodo, f).map(c => ({ ...c, ...this.comeLaPrende(c.chi, nodo) }))
+    f.difese = f.campo.map(x => this.difese(x))
     f.minaccia = this.vivi(f).map(x => ({ chi: x, colpisce: this.botta(x), salta: ((x.stati || {}).fermo || 0) > 0 }))
     f.inArrivo = this.colpiInArrivo(f)
   },
@@ -272,13 +315,20 @@ export const MetodiDelloScontro = {
         const dato = Math.max(1, Math.round(this.colpo(x, nodo) * fattore * bonus))
         x.ossa -= dato
         const caduto = x.ossa <= 0
-        colpiti.push({ chi: x, dato, caduto, effetti: chiaviDegliEffetti(x), fattore })
+        colpiti.push({ chi: x, dato, caduto, effetti: chiaviDegliEffetti(x), fattore, ...this.comeLaPrende(x, nodo) })
         if (caduto) this.muore(f, x)
       }
     }
+    // Mano santa: una parte del danno fatto guarisce chi lo fa (anche con l'attacco solito)
+    let rubato = 0
+    if (colpisceDavvero && this.sempre('ruba') > 0) {
+      rubato = Math.min(this.vitaMax - this.vita, Math.round(colpiti.reduce((a, c) => a + c.dato, 0) * this.sempre('ruba') / 100))
+      if (rubato > 0) this.vita += rubato
+      else rubato = 0
+    }
     const volte = nodo ? (aGrado(nodo, 'per', this.grado(nodo.id)) || 1) : 1
     return { chi: 'eroe', che: nodo ? 'abilita' : 'attacco', bersaglio, forma: (nodo && nodo.forma) || 'uno', colpiti,
-             usata: nodo ? { id: nodo.id, nome: nodo.nome, glifo: nodo.glifo } : null, base: this.colpo(bersaglio), volte, primoTiro }
+             usata: nodo ? { id: nodo.id, nome: nodo.nome, glifo: nodo.glifo, elemento: nodo.elemento } : null, base: this.colpo(bersaglio), volte, primoTiro, rubato }
   },
 
   muore(f, x) {
@@ -315,6 +365,16 @@ export const MetodiDelloScontro = {
       x.stati = st = { ...st, veleno: st.veleno.scambi > 1 ? { ...st.veleno, scambi: st.veleno.scambi - 1 } : null }
       const caduto = x.ossa <= 0
       eventi.push({ chi: x, che: 'veleno', dato, caduto })
+      if (caduto) { this.cade(x); return eventi }
+    }
+    st = x.stati || {}
+    // il taglio sanguina: ogni pila perde `quanto`, finché ci sono turni
+    if (st.sanguina && st.sanguina.scambi > 0) {
+      const dato = st.sanguina.quanto * st.sanguina.pile
+      x.ossa -= dato
+      x.stati = st = { ...st, sanguina: st.sanguina.scambi > 1 ? { ...st.sanguina, scambi: st.sanguina.scambi - 1 } : null }
+      const caduto = x.ossa <= 0
+      eventi.push({ chi: x, che: 'sanguina', dato, caduto })
       if (caduto) { this.cade(x); return eventi }
     }
     if (st.fermo > 0) eventi.push({ chi: x, che: 'salta', contro: 'eroe', preso: 0 })
@@ -359,7 +419,15 @@ export const MetodiDelloScontro = {
     if (rimandato && x.ossa <= 0) { this.cade(x); evento.caduto = true; return evento }
     this.ferisci(male)
     if (this.vita <= 0 && this.resisti()) this.vita = 1
-    if (this.vita <= 0) { this.svieni(); evento.svenuto = true }
+    if (this.vita <= 0) { this.svieni(); evento.svenuto = true; return evento }
+    // Bordo a punte: chi ti colpisce si fa male (una parte di quello che ti toglie, almeno uno)
+    const spine = this.sempre('spine')
+    if (male > 0 && spine > 0) {
+      const dato = Math.max(1, Math.round(male * spine / 100))
+      x.ossa -= dato
+      evento.spinato = dato
+      if (x.ossa <= 0) { this.cade(x); evento.caduto = true }
+    }
     return evento
   },
 
@@ -426,14 +494,21 @@ export const MetodiDelloScontro = {
     const forma = { tutti: ' a tutti i mostri', vicini: ' a lui e ai due accanto',
                     catena: nodo.salti ? ` e salta su altri ${vale('salti')}` : '' }[nodo.forma] || ''
     const parti = [`fai ${this.colpo(m, nodo)} di danno${forma}`]
-    if (nodo.seStordito) parti.push('di più su chi è gelato, avvelenato o stordito')
+    // l'elemento contro questo mostro, e gli stati che non prende: «resiste al fuoco», «non si stordisce»
+    const el = this.comeLaPrende(m, nodo)
+    if (el.effetto === 'resiste') parti.push(`resiste ${ELEMENTI[el.elemento].a}`)
+    else if (el.effetto === 'teme') parti.push(`teme ${ELEMENTI[el.elemento].il}`)
+    for (const s of el.rifiutati) parti.push(STATI[s].non)
+    const no = this.effettiBloccati(m, nodo)
+    if (nodo.seStordito) parti.push('di più su chi è gelato, avvelenato, in fiamme, stordito o sanguina')
     if (nodo.rompe) parti.push('spezza la sua difesa')
     else if (nodo.passa) parti.push(nodo.passa === true || nodo.passa >= 1 ? 'ignora la sua difesa' : 'ignora metà della sua difesa')
-    if (nodo.veleno) parti.push(`poi ${Math.max(1, Math.ceil(this.colpo(m) / 2))} a turno per ${turni(vale('veleno'))}`)
-    if (nodo.debole) parti.push(`fa metà danno per ${turni(vale('debole'))}`)
-    if (nodo.fermo) parti.push(`stordito per ${turni(vale('fermo'))}`)
+    if (nodo.veleno && !no.veleno) parti.push(`poi ${Math.max(1, Math.ceil(this.colpo(m) * this.fattoreElemento(m, nodo) / 2))} a turno per ${turni(vale('veleno'))}`)
+    if (nodo.sanguina && !no.sanguina) parti.push(`sanguina per ${turni(vale('sanguina'))}`)
+    if (nodo.debole && !no.debole) parti.push(`fa metà danno per ${turni(vale('debole'))}`)
+    if (nodo.fermo && !no.fermo) parti.push(`stordito per ${turni(vale('fermo'))}`)
     if (nodo.esposto) parti.push(`subisce il ${vale('esposto')}% in più`)
-    if (nodo.quieto) parti.push('salta il suo prossimo turno')
+    if (nodo.quieto && !no.fermo) parti.push('salta il suo prossimo turno')
     if (nodo.capi && !this.èCapo(m)) parti.push('molto di più contro i capi')
     return parti.join(' · ')
   },
@@ -455,14 +530,24 @@ export const MetodiDelloScontro = {
     const vale = c => aGrado(nodo, c, g)
     const sulMostro = (x, base) => {
       x.stati = { ...(x.stati || {}) }
+      // chi è immune a uno stato lo rifiuta (il colpo fa il suo danno, l'effetto non parte); l'elemento conta anche nei
+      // danni che durano: un mostro che teme il fuoco brucia di più, uno che lo resiste di meno
+      const no = this.effettiBloccati(x, nodo)
+      const fattore = this.fattoreElemento(x, nodo)
       if (nodo.rompe) x.stati.rotto = true
-      if (nodo.veleno) x.stati.veleno = { quanto: Math.max(1, Math.ceil(base / 2)), scambi: vale('veleno'), fuoco: nodo.ramo === 'fuoco' || nodo.id === 'chiodi-roventi' }
-      if (nodo.debole) x.stati.debole = Math.max(x.stati.debole || 0, vale('debole'))
+      if (nodo.veleno && !no.veleno) x.stati.veleno = { quanto: Math.max(1, Math.ceil(base * fattore / 2)), scambi: vale('veleno'), fuoco: nodo.elemento === 'fuoco' }
+      if (nodo.debole && !no.debole) x.stati.debole = Math.max(x.stati.debole || 0, vale('debole'))
       // stordito salta i suoi prossimi N turni; Freccia mirata ne fa saltare uno
-      if (nodo.fermo) x.stati.fermo = Math.max(x.stati.fermo || 0, vale('fermo'))
-      if (nodo.quieto) x.stati.fermo = Math.max(x.stati.fermo || 0, 1)
+      if (nodo.fermo && !no.fermo) x.stati.fermo = Math.max(x.stati.fermo || 0, vale('fermo'))
+      if (nodo.quieto && !no.fermo) x.stati.fermo = Math.max(x.stati.fermo || 0, 1)
       // Radici: bloccato, il mostro è un bersaglio facile per tutto il tempo che resta fermo
-      if (nodo.esposto) x.stati.esposto = { scambi: vale('fermo'), piu: vale('esposto') }
+      if (nodo.esposto && !no.fermo) x.stati.esposto = { scambi: vale('fermo'), piu: vale('esposto') }
+      // un taglio nuovo si somma ai vecchi (fino a tre) e rimette a posto la durata
+      if (nodo.sanguina && !no.sanguina) {
+        const prima = x.stati.sanguina && x.stati.sanguina.scambi > 0 ? x.stati.sanguina : null
+        x.stati.sanguina = { quanto: Math.max(prima ? prima.quanto : 0, Math.max(1, Math.ceil(base * fattore / 4))), scambi: vale('sanguina'),
+                             pile: Math.min(PILE_DEL_SANGUE, (prima ? prima.pile : 0) + 1) }
+      }
     }
     if (nodo.cura) {
       const c = inVita(vale('cura'), this.vitaMax)   // lo stesso conto della riga dell'albero
@@ -488,7 +573,7 @@ export const MetodiDelloScontro = {
     const dato = sul ? sul.dato : 0
     const colpi = suoi.filter(a => a.che === 'colpo')
     const preso = colpi.reduce((n, a) => n + a.preso, 0)
-    const veleno = suoi.filter(a => a.che === 'veleno' && a.chi === bersaglio).reduce((n, a) => n + a.dato, 0)
+    const veleno = suoi.filter(a => (a.che === 'veleno' || a.che === 'sanguina') && a.chi === bersaglio).reduce((n, a) => n + a.dato, 0)
     const caduti = [...(mia.colpiti || []).filter(c => c.caduto).map(c => c.chi),
                     ...suoi.filter(a => a.caduto).map(a => a.chi)]
     const detto = {

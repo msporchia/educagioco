@@ -4,8 +4,11 @@
 // `unaPosa: true`: il foglio disegna solo il respiro, niente corsa separata (scena/tela.js non cerca `-corsa-`).
 // Ogni mostro dichiara `droppa` (quanto spesso lascia qualcosa): un mostro comune non deve intasare lo zaino, e la sua
 // `velocita` (nello scontro agisce ogni 100/velocita; l'eroe parte da 10 più la destrezza: docs/sotterraneo/scontro.md).
+// Poche difese a mostro (docs/sotterraneo/mostri.md): `resiste` e `teme` sono elementi (metà danno, danno e mezzo), `immune`
+// gli stati che non prende (dati/elementi.js). Il grosso porta le sue (dati/grossi.js, `difeseDi`).
 import { EROE } from './mondo.js'
 import { ARMI_DI } from './cose.js'
+import { guastiDelleDifese } from './elementi.js'
 
 export const MOSTRI = {
   goblin: {
@@ -19,6 +22,7 @@ export const MOSTRI = {
     em: '💀', sprite: 'scheletro', nome: 'Uno scheletro',
     ossa: 8, att: 3, dif: 1, gemme: 5,
     velocita: 9,
+    resiste: ['veleno'], teme: ['sacro', 'fisico'], immune: ['avvelena', 'sanguina'],
     droppa: 0.45,
     lascia: [...ARMI_DI(1), 'panciotto', 'pozione-piccola'],   // le armi per gradino: una famiglia nuova entra da sé
   },
@@ -26,6 +30,7 @@ export const MOSTRI = {
     em: '👹', sprite: 'orco', nome: 'Un orco',
     ossa: 12, att: 4, dif: 1, gemme: 8,
     velocita: 8,
+    teme: ['fulmine'],
     droppa: 0.6,
     // saio + corazza (ferro): un mago che batte un orco deve ricavarne qualcosa da mettersi addosso, misurato dal banco
     lascia: [...ARMI_DI(2), 'corazza', 'saio', 'pozione'],
@@ -34,6 +39,7 @@ export const MOSTRI = {
     em: '🗿', sprite: 'mostro-grosso', nome: 'Il gigante',
     ossa: 17, att: 5, dif: 1, gemme: 12, capo: true,
     velocita: 7,
+    resiste: ['gelo'], teme: ['fulmine'],
     droppa: 0.85,
     lascia: [...ARMI_DI(3), 'manto', 'amuleto-rosso'],
   },
@@ -53,6 +59,7 @@ export const MOSTRI = {
     em: '🦇', sprite: 'pipistrello', nome: 'Un pipistrello', unaPosa: true,
     ossa: 3, att: 1, dif: 0, gemme: 2,
     velocita: 13,
+    teme: ['fulmine'],
     droppa: 0.22,   // l'unico che lascia la torcia: trovarla solo comprandola non insegnerebbe a guardarsi intorno
     lascia: ['torcia', 'pozione-piccola'],
   },
@@ -60,6 +67,7 @@ export const MOSTRI = {
     em: '🟢', sprite: 'melma', nome: 'Una melma', unaPosa: true,
     ossa: 6, att: 1, dif: 0, gemme: 3,
     velocita: 6,
+    resiste: ['veleno', 'fulmine'], teme: ['fuoco'], immune: ['avvelena', 'sanguina'],
     droppa: 0.22,
     lascia: ['pozione-piccola'],
   },
@@ -69,6 +77,7 @@ export const MOSTRI = {
     em: '👻', sprite: 'fantasma', nome: 'Un fantasma', unaPosa: true,
     ossa: 5, att: 2, dif: 0, gemme: 4,
     velocita: 9,
+    resiste: ['fisico'], teme: ['sacro'], immune: ['avvelena', 'sanguina', 'gela'],
     droppa: 0.22,
     lascia: ['torcia', 'pozione-piccola'],
   },
@@ -76,6 +85,7 @@ export const MOSTRI = {
     em: '🐝', sprite: 'vespa', nome: 'Un vespone', unaPosa: true,
     ossa: 7, att: 3, dif: 0, gemme: 5,   // poca vita, puntura da orco: conviene toglierlo di mezzo subito
     velocita: 12,
+    teme: ['gelo', 'veleno'],
     droppa: 0.45,
     lascia: [...ARMI_DI(1), 'panciotto', 'pozione-piccola'],
   },
@@ -83,6 +93,7 @@ export const MOSTRI = {
     em: '🍄', sprite: 'fungo', nome: 'Un fungo che morde', unaPosa: true,
     ossa: 9, att: 2, dif: 0, gemme: 5,
     velocita: 7,
+    resiste: ['veleno'], teme: ['fuoco'], immune: ['avvelena'],
     droppa: 0.45,
     lascia: ['panciotto', 'pozione', 'pozione-piccola'],
   },
@@ -92,6 +103,7 @@ export const MOSTRI = {
     em: '🐺', sprite: 'lupo', nome: 'Un lupo', unaPosa: true,
     ossa: 13, att: 4, dif: 0, gemme: 7,
     velocita: 9,
+    resiste: ['gelo'], teme: ['fuoco'],
     droppa: 0.6,
     lascia: [...ARMI_DI(2), 'corazza', 'saio', 'pozione'],
   },
@@ -99,6 +111,7 @@ export const MOSTRI = {
     em: '🦀', sprite: 'granchio', nome: 'Un granchio', unaPosa: true,
     ossa: 12, att: 3, dif: 1, gemme: 7,   // para come un orco e lascia scudi: unico posto dove la mano debole si riempie senza il banco
     velocita: 7,
+    resiste: ['fisico'], teme: ['fulmine'],
     droppa: 0.6,
     lascia: [...ARMI_DI(2), 'corazza', 'scudo-legno', 'scudo-borchiato', 'pozione'],
   },
@@ -106,6 +119,7 @@ export const MOSTRI = {
     em: '🐍', sprite: 'serpente', nome: 'Un serpente', unaPosa: true,
     ossa: 10, att: 4, dif: 0, gemme: 7,
     velocita: 9,
+    resiste: ['veleno'], teme: ['gelo'], immune: ['avvelena'],
     droppa: 0.6,
     lascia: [...ARMI_DI(2), 'saio', 'corazza', 'pozione'],
   },
@@ -116,6 +130,7 @@ export const MOSTRI = {
     em: '🪨', sprite: 'golem', nome: 'Un golem', unaPosa: true,
     ossa: 14, att: 5, dif: 1, gemme: 10,
     velocita: 5,
+    resiste: ['fisico', 'sacro'], teme: ['gelo'], immune: ['stordisce', 'avvelena', 'sanguina'],
     droppa: 0.7,
     lascia: [...ARMI_DI(2), 'corazza', 'scudo-ferro'],
   },
@@ -125,6 +140,7 @@ export const MOSTRI = {
     em: '🧌', sprite: 'troll', nome: 'Il troll', unaPosa: true,
     ossa: 15, att: 5, dif: 1, gemme: 11, capo: true,
     velocita: 7,
+    resiste: ['veleno'], teme: ['fuoco'],
     droppa: 0.8,
     lascia: [...ARMI_DI(3), 'scudo-crociato', 'amuleto-osso'],
   },
@@ -174,6 +190,7 @@ export function guastiDeiMostri() {
     const costo = colpiPer(m, braccio)
     if (costo > 8) g.push(`${k}: ${costo} risposte di fila con attacco ${braccio}, troppe`)
     for (const c of m.lascia || []) if (typeof c !== 'string') g.push(`${k}: lascia una cosa senza nome`)
+    g.push(...guastiDelleDifese(k, m))
     if (m.droppa == null) g.push(`${k}: non dice quanto spesso lascia qualcosa`)
     else if (m.droppa < 0 || m.droppa > 1) g.push(`${k}: droppa ${m.droppa}, e non è una probabilità`)
   }

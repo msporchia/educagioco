@@ -118,10 +118,12 @@ solito è «uno».
 - Gli effetti vanno a tutti quelli presi, col loro danno.
 - **Il salto della catena** va sul vivo più vicino, nei posti, all'ultimo
   colpito (a parità quello dopo), mai due volte sullo stesso.
-- Le abilità di oggi con `stanza: true` sono diventate `tutti` (solo il
-  Grido di guerra), le altre `uno`. Le forme `vicini` e `catena` il motore le sa
-  fare subito (provate con abilità finte in `unita/sotterraneo-gruppi`); le
-  abilità nuove che le usano arrivano con l'albero più ricco.
+- Le abilità di prima con `stanza: true` sono diventate `tutti` (solo il
+  Grido di guerra), le altre `uno`. Le forme `vicini` e `catena` ora ce l'hanno anche abilità vere, quelle
+  dell'albero più ricco ([abilita-rami.md](abilita-rami.md)): la Palla di fuoco, la Spazzata, la Catena di fulmini, la
+  Freccia che trapassa… (provate in `unita/sotterraneo-elementi`; le abilità finte restano in `unita/sotterraneo-gruppi`).
+  **L'elemento si conta per ogni mostro preso**, e un'immunità ferma lo stato solo di chi ce l'ha
+  ([abilita-elementi.md](abilita-elementi.md)).
 - Provato «solo uno» e «solo tutti»: l'utente, «se forziamo area completa/singolo temo che ci perdiamo delle opportunità».
 
 ## Il turno dei mostri
@@ -226,9 +228,15 @@ uguale al bersaglio, quindi il duello di oggi funziona.
 - `inArrivo` — la somma dei colpi prima del prossimo turno (lo stop).
 - `apertura` — le azioni prima del primo turno (l'agguato con `agguato: true`,
   i mostri più veloci); `agguato`, `sorpresa` — booleani.
+- `difese` — **le difese dei mostri in campo**, un elemento per posto di `campo` (stesso indice, anche per chi è caduto):
+  `{ resiste: [elementi], teme: [elementi], immune: [stati] }`, liste di chiavi di `dati/elementi.js` (`ELEMENTI`, `STATI`:
+  nome, glifo, tinta, la frase «non si avvelena»). La stessa cosa per un mostro: `Corsa.difese(m)`. **Con una scelta
+  preparata** `colpiti` porta in più per ogni preso `elemento` (della scelta, o `null` se non colpisce), `effetto`
+  (`'resiste'`, `'teme'` o `null`) e `rifiutati` (gli stati che non prenderà). Così la vista può segnare «resiste al fuoco»,
+  «teme il gelo», «non si stordisce» prima di rispondere. `descrizione(nodo, m)` li dice già a parole, coi numeri veri.
 - `io` — gli effetti sull'eroe: `parato`, `scudo`, `intoccabile`, `specchio`,
   `linfa`. `pericolo`, `fermate` — lo stop, come prima. `stati` di un mostro:
-  `veleno {quanto, scambi}`, `debole`, `fermo`, `esposto {scambi, piu}`, `rotto`;
+  `veleno {quanto, scambi, fuoco}` (`fuoco: true` sono fiamme), `sanguina {quanto, scambi, pile}` (si somma, fino a tre), `debole`, `fermo`, `esposto {scambi, piu}`, `rotto`;
   `scambi` conta ora i turni **del mostro**.
 - `Corsa`: `rispondi(giusto)`, `prepara(id | null)`, `beviNelloScontro()`,
   `beviNelPericolo()`, `continua()`, `scappa()`, `costoFuga()`, `puoScappare()`,
@@ -240,9 +248,10 @@ uguale al bersaglio, quindi il duello di oggi funziona.
   oggi (`che`: `colpo`, `ferito`, `caduto`, `bevuto`, `svenuto`; `dato`, `preso`,
   `usata`, `colpiti`, `veleno`, `salvo`, `gelato`, `assorbito`, `schivato`…).
 - **Un'azione**: dell'eroe `{ chi: 'eroe', che: 'attacco' | 'abilita' | 'sbaglia' | 'bevi',
-  usata, forma, bersaglio, colpiti: [{ chi, dato, caduto, effetti, fattore }], base, volte,
-  primoTiro }`; di un mostro `{ chi: mostro, che: 'colpo' | 'salta' | 'veleno', contro: 'eroe',
-  pieno, preso, schivato, assorbito, rimandato, gelato, salvo, agguato, caduto, svenuto }`.
+  usata (con `elemento`), forma, bersaglio, colpiti: [{ chi, dato, caduto, effetti, fattore, elemento, effetto, rifiutati }],
+  base, volte, primoTiro, rubato }` (`rubato`: la vita che Mano santa ha rimesso); di un mostro `{ chi: mostro, che: 'colpo' | 'salta' | 'veleno' | 'sanguina', contro: 'eroe',
+  pieno, preso, schivato, assorbito, rimandato, gelato, salvo, agguato, caduto, svenuto, spinato }` (`spinato`: quanto il colpo
+  ha fatto perdere al mostro per il Bordo a punte; `veleno` e `sanguina` portano `dato`, `caduto`).
 
 ## La vista
 
@@ -251,8 +260,9 @@ uguale al bersaglio, quindi il duello di oggi funziona.
   «aggiunge un'altra complessità a logiche già difficili da calibrare»).
 - **Sotto ogni mostro la sua barretta, senza numeri**, e «ti colpisce N». Il bersaglio ha un anello d'oro, chi verrà
   colpito un contorno. **La colonna dei turni** sul bordo destro, le figure piccole, chi agisce adesso più grande.
-- Le animazioni di oggi (chi colpisce scatta, i numeri salgono, il glifo vola) per ogni azione; una per ogni abilità e per
-  gli stati arriva con l'albero più ricco.
+- Le animazioni di oggi (chi colpisce scatta, i numeri salgono, il glifo vola) per ogni azione; **una per ogni abilità e per
+  gli stati** (anche il sangue, le fiamme, il sonno) arriva con la vista nuova, non c'è ancora. L'unico stato nuovo che la
+  vista di oggi mostra è la pastiglia del sangue (`statiDel` in `Gioco.vue`).
 
 ## Le domande
 

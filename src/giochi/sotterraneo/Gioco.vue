@@ -731,6 +731,7 @@ function statiDel(m) {
   const st = m.stati || {}
   return [
     st.veleno && st.veleno.scambi > 0 ? { chiave: 'veleno', fuoco: !!st.veleno.fuoco, glifo: st.veleno.fuoco ? 'fiamma' : 'veleno', n: `${st.veleno.quanto} di danno · ${turniDi(st.veleno.scambi)}`, dice: `subisce ${st.veleno.quanto} di danno a ogni turno` } : null,
+    st.sanguina && st.sanguina.scambi > 0 ? { chiave: 'sanguina', glifo: 'sangue', n: `${st.sanguina.quanto * st.sanguina.pile} di danno · ${turniDi(st.sanguina.scambi)}`, dice: `sanguina: ${st.sanguina.quanto * st.sanguina.pile} di danno a ogni turno` } : null,
     st.debole > 0 ? { chiave: 'debole', glifo: 'fiocco', n: `fa metà danno · ${turniDi(st.debole)}`, dice: 'i suoi colpi fanno la metà del danno' } : null,
     st.esposto && st.esposto.scambi > 0 ? { chiave: 'esposto', glifo: 'radici', n: `+${st.esposto.piu}% danno · ${turniDi(st.esposto.scambi)}`, dice: 'bloccato: subisce più danno' } : null,
     st.fermo > 0 ? { chiave: 'fermo', glifo: 'stelle', n: `stordito · ${turniDi(st.fermo)}`, dice: 'stordito: non può attaccare' } : null,

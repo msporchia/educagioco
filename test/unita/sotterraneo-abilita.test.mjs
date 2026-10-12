@@ -1,11 +1,12 @@
-/* L'albero delle abilità (docs/sotterraneo/abilita.md): i rami e i nodi stanno in piedi, i punti dell'albero e
-   le loro regole (il gradino, il nodo sopra, il grado), le caselle dello scontro, l'energia che viene dalle
+/* L'albero delle abilità (docs/sotterraneo/abilita.md): i rami e i nodi stanno in piedi (quattro rami da sette nodi in cinque
+   righe, due nodi fra cui scegliere in due righe, gli id di prima ancora tutti lì), i punti dell'albero e
+   le loro regole (il gradino, la riga sopra, il grado), le caselle dello scontro, l'energia che viene dalle
    risposte giuste, alla fonte e dalla pozione blu, e cosa fanno gli effetti nello scontro: il colpo doppio,
    l'abilità che sbagliando resta pronta, il veleno che brucia al turno del mostro, il mostro gelato e quello
    stordito, la parata, il Grido a tutti, il primo tiro con l'arco, l'ultimo fiato, l'energia nella sosta.
    Gli effetti si contano nei turni di chi li porta (docs/sotterraneo/scontro.md).
    `node test/esegui.mjs sotterraneo-abilita --niente-build` */
-import { RAMI, NODI, ENERGIA, CASELLE_ABILITA, guastiDelleAbilita } from '../../src/giochi/sotterraneo/dati/abilita.js'
+import { RAMI, NODI, ENERGIA, CASELLE_ABILITA, GRADINI, COSTO_DEL_GRADINO, guastiDelleAbilita } from '../../src/giochi/sotterraneo/dati/abilita.js'
 import { EROI } from '../../src/giochi/sotterraneo/dati/eroi.js'
 import { sogliaDi } from '../../src/giochi/sotterraneo/dati/livelli.js'
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
@@ -35,7 +36,33 @@ function scontro(eroe, crescita, mano = null, mancina = null, mostro = {}) {
 {
   const g = guastiDelleAbilita()
   controlla('l\'albero sta in piedi', !g.length, g.join(' · '))
-  for (const e of EROI) uguale(`${e.chiave}: tre rami`, (RAMI[e.chiave] || []).length, 3)
+  for (const e of EROI) uguale(`${e.chiave}: quattro rami`, (RAMI[e.chiave] || []).length, 4)
+  // sette nodi per ramo, in cinque righe: uno, uno, due, due, uno (nelle righe da due si sceglie)
+  for (const [chi, rami] of Object.entries(RAMI)) for (const r of rami) {
+    uguale(`${chi}/${r.chiave}: sette nodi in cinque righe (1,1,2,2,1)`, GRADINI.map((_, i) => r.nodi.filter(x => x.riga === i).length).join(), '1,1,2,2,1')
+    controlla(`${chi}/${r.chiave}: ogni abilità costa quanto la sua riga`, r.nodi.every(x => x.sempre || x.costo === COSTO_DEL_GRADINO[x.riga]))
+    controlla(`${chi}/${r.chiave}: la prima riga si usa e il resto ha una passiva o due`, !r.nodi[0].sempre && r.nodi.some(x => x.sempre) && r.nodi.some(x => !x.sempre && x.riga > 0))
+  }
+  uguale('ventotto nodi per classe', EROI.map(e => RAMI[e.chiave].reduce((n, r) => n + r.nodi.length, 0)).join(), '28,28,28,28')
+  // la regola dell'utente: ogni classe si difende al livello 2 (senz'armi) e si cura entro il 4
+  for (const e of EROI) {
+    const tutti = RAMI[e.chiave].flatMap(r => r.nodi.map(x => ({ ...x, dal: GRADINI[x.riga], arma: r.arma })))
+    controlla(`${e.chiave}: una difesa al livello 2 senza armi`, tutti.some(x => x.difende && x.dal === 2 && !x.arma))
+    controlla(`${e.chiave}: una cura entro il livello 4`, tutti.some(x => x.cura && x.dal <= 4))
+  }
+  // gli id di prima sono chiavi del salvataggio: tutti ancora lì, nello stesso ramo, e un albero vecchio si rilegge intero
+  const VECCHI = {
+    cavaliere: 'fendente filo affondo turbine scudo-alzato parata colpo-di-scudo muro preghiera cuore-saldo grido ultimo-fiato',
+    elfa: 'dardo-avvelenato primo-tiro freccia-mirata pioggia stoccata passo-leggero danza alle-spalle rovi linfa respiro radici',
+    mago: 'dardo-di-fuoco fiamma-viva brucia palla-di-fuoco raggio-di-gelo gelo-profondo lancia-di-ghiaccio tempesta scudo-arcano fonte-arcana fulmine specchio',
+    nano: 'spaccaroccia mani-pesanti stordisce terremoto quadrello perforante chiodi-roventi polvere-da-mina pelle-di-pietra rune testa-dura montagna',
+  }
+  for (const [chi, ids] of Object.entries(VECCHI)) {
+    const lista = ids.split(' ')
+    controlla(`${chi}: i dodici nodi di prima ci sono ancora, della sua classe`, lista.every(id => NODI[id] && NODI[id].classe === chi), lista.filter(id => !NODI[id]).join())
+    const letto = rileggiCrescita({ esp: sogliaDi(40), albero: Object.fromEntries(lista.map(id => [id, 1])), caselle: [] }, chi)
+    uguale(`${chi}: un albero di prima si rilegge intero`, Object.keys(letto.albero).length, 12)
+  }
   uguale('tre caselle nello scontro', CASELLE_ABILITA, 3)
   // le icone sono disegnate in codice (viste/glifi.js): un nome che non c'è sarebbe un medaglione vuoto
   const nomi = Object.values(RAMI).flat().flatMap(r => [r.glifo, r.arma && r.arma.glifo, ...r.nodi.map(x => x.glifo)]).filter(Boolean)
@@ -50,7 +77,8 @@ function scontro(eroe, crescita, mano = null, mancina = null, mostro = {}) {
   uguale('al livello 5, quattro', puntiAbilita({ esp: sogliaDi(5) }), 4)
   let cr = { esp: sogliaDi(5), albero: {}, caselle: [] }
   controlla('il secondo nodo vuole il primo', /prima Dardo avvelenato/.test(perchéNonImpari(cr, 'elfa', 'primo-tiro')))
-  controlla('il terzo vuole il suo livello', /dal livello 8/.test(perchéNonImpari(cr, 'elfa', 'freccia-mirata')))
+  controlla('Freccia mirata sta al livello 8, come prima', /dal livello 8/.test(perchéNonImpari(cr, 'elfa', 'freccia-mirata')))
+  uguale('i gradini si aprono ai livelli 2, 4, 6, 8 e 12', GRADINI.join(), '2,4,6,8,12')
   controlla('un nodo di un altro eroe non si impara', !!perchéNonImpari(cr, 'elfa', 'fendente'))
   cr = impara(cr, 'elfa', 'dardo-avvelenato')
   controlla('il primo nodo si impara, e va da sé in una casella', cr && cr.albero['dardo-avvelenato'] === 1 &&
@@ -70,6 +98,27 @@ function scontro(eroe, crescita, mano = null, mancina = null, mostro = {}) {
   controlla('rileggendo: via i nodi di altri e quelli oltre i punti', r.albero['dardo-avvelenato'] === 2 && !r.albero.fendente &&
             !r.albero['primo-tiro'] && !r.albero.ciao, JSON.stringify(r.albero))
   stessaLista('e le caselle tengono solo le abilità imparate', r.caselle, [null, null, 'dardo-avvelenato'])
+}
+
+/* ══════════ 2b. le righe da due nodi: una scelta ══════════ */
+{
+  // la riga si apre quando si è imparato almeno un nodo della riga sopra: uno qualunque dei due
+  let cr = { esp: sogliaDi(12), albero: {}, caselle: [] }
+  cr = impara(impara(cr, 'cavaliere', 'fendente'), 'cavaliere', 'filo')
+  controlla('prima il Taglio profondo e la Spazzata sono pronti entrambi', !perchéNonImpari(cr, 'cavaliere', 'taglio-profondo') && !perchéNonImpari(cr, 'cavaliere', 'spazzata'))
+  controlla('ma l\'Affondo (due righe più giù) vuole l\'una o l\'altra', /prima Taglio profondo o Spazzata/.test(perchéNonImpari(cr, 'cavaliere', 'affondo')), perchéNonImpari(cr, 'cavaliere', 'affondo'))
+  const una = impara(cr, 'cavaliere', 'spazzata')
+  controlla('una sola basta: dopo la Spazzata l\'Affondo e il Mulinello si aprono', !perchéNonImpari(una, 'cavaliere', 'affondo') && !perchéNonImpari(una, 'cavaliere', 'mulinello'))
+  const due = impara(una, 'cavaliere', 'taglio-profondo')
+  controlla('e si possono prendere tutte e due, coi punti', due && due.albero.spazzata === 1 && due.albero['taglio-profondo'] === 1)
+  uguale('costano un punto l\'una', puntiAbilita(cr) - puntiAbilita(due), 2)
+  controlla('il Colpo del campione vuole una delle due righe da due: l\'Affondo o il Mulinello', /prima Affondo o Mulinello/.test(perchéNonImpari(due, 'cavaliere', 'turbine')))
+  controlla('una passiva e un\'abilità nella stessa riga si scelgono uguale', RAMI.cavaliere[1].nodi.filter(x => x.riga === 2).some(x => x.sempre) &&
+            RAMI.cavaliere[1].nodi.filter(x => x.riga === 2).some(x => !x.sempre))
+  // i livelli: la riga nuova si apre al 6
+  controlla('la riga nuova vuole il livello 6', /dal livello 6/.test(perchéNonImpari({ esp: sogliaDi(5), albero: { fendente: 1, filo: 1 }, caselle: [] }, 'cavaliere', 'spazzata')))
+  // un nodo di un'altra classe si rifiuta, anche se il suo posto sarebbe aperto
+  controlla('il Raggio di luna è dell\'elfa', !!perchéNonImpari(cr, 'cavaliere', 'raggio-di-luna'))
 }
 
 /* ══════════ 3. l'energia ══════════ */

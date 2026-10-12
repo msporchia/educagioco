@@ -226,7 +226,7 @@ function azzera(nome, sot) {
      { mano: 'pugnale-vampiro', mancina: 'scudo-leone', corpo: 'panciotto' }],
     ['nano con la bipenne e lo scudo di ferro (a due mani: lo scudo non si regge)', 'nano',
      { mano: 'bipenne', mancina: 'scudo-ferro', corpo: 'corazza' }],
-    ['mago con una spada che non impugna', 'mago', { mano: 'spada', corpo: 'manto' }],
+    ['mago con un\'ascia che non impugna', 'mago', { mano: 'ascia', corpo: 'manto' }],
   ]
   for (const [nome, eroe, dato] of casi) {
     const roba = fatta(eroe, dato)
@@ -241,8 +241,8 @@ function azzera(nome, sot) {
   const cav = schedaConLaRoba('cavaliere', fatta('cavaliere', { mano: 'spadone', corpo: 'corazza', dito: 'amuleto-rosso' }))
   stessaLista('cavaliere ben armato: 24 di vita, braccio 7, difesa 3',
               [cav.vita, cav.att, cav.dif], [18 + 6, 3 + 4, 1 + 2])
-  const mago = schedaConLaRoba('mago', fatta('mago', { mano: 'spada', corpo: 'manto' }))
-  uguale('il mago non impugna la spada: resta addosso solo il manto', `${mago.mano}|${mago.corpo}`, 'null|manto')
+  const mago = schedaConLaRoba('mago', fatta('mago', { mano: 'ascia', corpo: 'manto' }))
+  uguale('il mago non impugna l\'ascia: resta addosso solo il manto', `${mago.mano}|${mago.corpo}`, 'null|manto')
   uguale('e il braccio è quello di base', mago.att, EROI.find(e => e.chiave === 'mago').att)
   // un'avventura nuova: lo zaino vuoto, i numeri di base
   for (const e of EROI) {

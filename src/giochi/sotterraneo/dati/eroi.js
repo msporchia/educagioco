@@ -32,13 +32,16 @@ export const EROI = [
     porta: ['spade', 'archi', 'stoffa'],
     dice: 'Colpisce più forte, e regge un po\' meno.' },
 
-  // il mago: una famiglia d'arma sola (il prezzo del braccio 5), fila completa (un'arma per gradino) per
+  // il mago: la bacchetta è la sua arma (il prezzo del braccio 5), fila completa (un'arma per gradino) per
   // tenere in piedi il gioco del bottino; lo scettro a una mano gli lascia lo scudo, misurato dal banco
   { chiave: 'mago', nome: 'Mago', em: '🧙', sprite: 'mago',
     chi: 'il mago',
     vita: 12, att: 5, dif: 0,
     parte: { forza: 1, destrezza: 2, intelligenza: 5, tempra: 2 }, vitaPerLivello: 2, dote: 'tempra',
-    porta: ['bacchette', 'stoffa'],
+    // anche le spade: il mago guerriero (docs/sotterraneo/abilita.md). Il requisito di forza è quello di tutti; la forza del
+    // mago è bassa, quindi comincia dalla spada corta e cresce solo se ci mette dei punti. `secondarie`: armi che la classe
+    // impugna ma che non sono la sua (la pagina non pretende che la caratteristica combaci col braccio, vedi guastiDegliEroi)
+    porta: ['bacchette', 'spade', 'stoffa'], secondarie: ['spade'],
     dice: 'I mostri cadono in metà risposte. Ma ogni sbaglio fa malissimo.' },
 
   { chiave: 'nano', nome: 'Nano', em: '🧔', sprite: 'nano',
@@ -103,6 +106,7 @@ export function guastiDegliEroi() {
     for (const k of CAR) if (!Number.isInteger(p[k]) || p[k] < 1) g.push(`${e.chiave}: ${k} di partenza ${p[k]}, serve un intero da 1`)
     for (const f of e.porta || []) {
       const car = FAMIGLIE[f] && FAMIGLIE[f].car
+      if ((e.secondarie || []).includes(f)) continue
       if (car && Math.abs(p[car] - e.att) > 1) g.push(`${e.chiave}: ${car} ${p[car]} e braccio ${e.att} con ${f}, la pagina direbbe due cose`)
     }
     if (!(e.vitaPerLivello >= 1)) g.push(`${e.chiave}: salendo di livello non prende vita`)

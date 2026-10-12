@@ -101,7 +101,12 @@ dell'abisso sta in [abisso-progetto.md](abisso-progetto.md).
   Vedi [abilita.md](abilita.md).
 - **L'albero delle abilità da tarare**: c'è (9 ottobre), ma il banco non lo
   usa e le misure non lo vedono. Cosa manca e da dove si comincia:
-  [abilita.md](abilita.md#cosa-non-è-ancora-fatto).
+  [abilita.md](abilita.md#cosa-non-è-ancora-fatto). Dal 12 ottobre ha quattro rami da sette nodi, gli elementi e
+  le difese dei mostri ([abilita-rami.md](abilita-rami.md), [mostri.md](mostri.md)): il banco non le usa, quindi anche
+  le resistenze aspettano le misure (chi preme a caso non le sente). **Restano**: un'animazione per ogni abilità e
+  per ogni stato (fiamme, gelo, sonno, sangue) con la vista nuova dello scontro; la pastiglia di ogni difesa del
+  mostro sulla vista (oggi la dice solo la riga della scelta); il giocatore finto che sceglie l'abilità giusta per il
+  mostro, perché il bambino se ne accorga da solo (l'utente voleva questo).
 - **L'abisso coi livelli**: non è stato ritarato. I mostri crescono col
   piano come prima, l'eroe arriva al livello 12 o più con pezzi rari e i
   pezzi dei grossi: i primi piani sono facili. Va rifatto insieme al bottino
