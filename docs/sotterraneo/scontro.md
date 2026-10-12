@@ -1,7 +1,6 @@
 # Lo scontro a gruppi
 
-Deciso il 12 ottobre 2026 e **costruito nel motore** (la vista di oggi lo gioca
-col duello di sempre; il rifacimento della vista è il lavoro dopo): lo scontro
+Deciso il 12 ottobre 2026 e **costruito**, motore e vista ([scontro-interfaccia.md](scontro-interfaccia.md)): lo scontro
 passa dal duello uno contro uno a **uno contro tanti, a turni, con
 l'iniziativa**, alla Final Fantasy. Il perché, con le parole dell'utente: in
 una stanza con sei mostri «li devo affrontare uno dietro l'altro… una volta che
@@ -204,51 +203,11 @@ volte prima del mostro, la somma è zero.
 `COLPO_DEL_MOSTRO` vale **0,8** e le velocità sono quelle della tabella qui sopra; come ci si è arrivati, le
 misure e cosa resta da guardare: [scontro-bilancio.md](scontro-bilancio.md).
 
-## L'interfaccia per la vista
+## L'interfaccia e la vista
 
-Per chi rifà `Scontro.vue`, `Palco.vue` e `CaselleAbilita.vue`. Tutto sta in
-`Corsa.foglio` (`che: 'scontro'`) e nelle funzioni di `Corsa`; un mostro è l'oggetto
-del piano (`ossa`, `ossaMax`, `tipo`, `grosso`, `morto`, `stati`). `foglio.chi` resta
-uguale al bersaglio, quindi il duello di oggi funziona.
-
-- `chi` — il bersaglio di adesso; `scegliBersaglio(m)` lo cambia.
-- `campo` — i mostri in campo, **nell'ordine dei posti** (per distanza
-  all'ingresso, il primo è chi ha aperto lo scontro); chi cade resta al suo posto
-  con `morto: true`. `postiDi(m)` (da `motore/scontro.js`): 1, o 2 per il grosso.
-- `colpiti` — `[{ chi, fattore }]`: chi prenderebbe la scelta preparata
-  (`Corsa.pronta`, `prepara(id)`), o l'attacco; `fattore` 1, o ×0,7 a salto.
-- `turni` — `[{ chi: 'eroe' | mostro, salta }]`: i prossimi sette; `salta` per lo stordito.
-- `minaccia` — `[{ chi, colpisce, salta }]`: «ti colpisce N» per ogni vivo.
-- `inArrivo` — la somma dei colpi prima del prossimo turno (lo stop).
-- `apertura` — le azioni prima del primo turno (l'agguato con `agguato: true`,
-  i mostri più veloci); `agguato`, `sorpresa` — booleani.
-- `io` — gli effetti sull'eroe: `parato`, `scudo`, `intoccabile`, `specchio`,
-  `linfa`. `pericolo`, `fermate` — lo stop, come prima. `stati` di un mostro:
-  `veleno {quanto, scambi}`, `debole`, `fermo`, `esposto {scambi, piu}`, `rotto`;
-  `scambi` conta ora i turni **del mostro**.
-- `Corsa`: `rispondi(giusto)`, `prepara(id | null)`, `beviNelloScontro()`,
-  `beviNelPericolo()`, `continua()`, `scappa()`, `costoFuga()`, `puoScappare()`,
-  `botta(m)` (il colpo di quel mostro adesso), `danno(m)`, `colpo(m, nodo)`,
-  `descrizione(nodo, m)`, `velocita`.
-- **L'esito** di `rispondi` e di `beviNelloScontro` (null senza scontro):
-  `azioni` — **in ordine**, da animare una alla volta — `caduti`, `fine` (lo
-  scontro si è chiuso), `ringhia` (lo stop che comincia), e in cima i campi di
-  oggi (`che`: `colpo`, `ferito`, `caduto`, `bevuto`, `svenuto`; `dato`, `preso`,
-  `usata`, `colpiti`, `veleno`, `salvo`, `gelato`, `assorbito`, `schivato`…).
-- **Un'azione**: dell'eroe `{ chi: 'eroe', che: 'attacco' | 'abilita' | 'sbaglia' | 'bevi',
-  usata, forma, bersaglio, colpiti: [{ chi, dato, caduto, effetti, fattore }], base, volte,
-  primoTiro }`; di un mostro `{ chi: mostro, che: 'colpo' | 'salta' | 'veleno', contro: 'eroe',
-  pieno, preso, schivato, assorbito, rimandato, gelato, salvo, agguato, caduto, svenuto }`.
-
-## La vista
-
-- **Il fondale di oggi**, l'eroe a sinistra con **un posto vuoto sotto per il compagno** (in futuro), i mostri a destra in
-  due file da tre; il grosso grande al centro. Le file a schermo non sono regole: davanti o dietro non conta (l'utente:
-  «aggiunge un'altra complessità a logiche già difficili da calibrare»).
-- **Sotto ogni mostro la sua barretta, senza numeri**, e «ti colpisce N». Il bersaglio ha un anello d'oro, chi verrà
-  colpito un contorno. **La colonna dei turni** sul bordo destro, le figure piccole, chi agisce adesso più grande.
-- Le animazioni di oggi (chi colpisce scatta, i numeri salgono, il glifo vola) per ogni azione; una per ogni abilità e per
-  gli stati arriva con l'albero più ricco.
+Cosa legge la vista dal motore (`Corsa.foglio`, l'esito di `rispondi`, un'azione) e com'è fatta lo scontro a schermo (i mostri in una
+o due file, il grosso al centro, la fila dei turni, il racconto un'azione alla volta, i bersagli dei test):
+[scontro-interfaccia.md](scontro-interfaccia.md).
 
 ## Le domande
 

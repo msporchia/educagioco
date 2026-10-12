@@ -37,9 +37,8 @@ Quando tocca all'eroe, sulla **somma dei colpi che arriveranno prima del suo pro
 
 ## Cosa si sceglie
 
-Il riquadro sta al posto della domanda, nella stessa modale (si vede chi
-ringhia e com'è andato l'ultimo turno); il tasto «scappo via» di sempre
-sparisce, perché è una delle tre scelte.
+Il riquadro sta al posto della domanda, nella stessa modale, sotto il palco coi mostri; il tasto «scappo via» di sempre
+sparisce, perché è una delle tre scelte. Compare a racconto del turno finito ([scontro-interfaccia.md](scontro-interfaccia.md#il-racconto-di-un-turno)).
 
 - **🧪 bevi** — solo se ha una pozione. Beve quella che berrebbe la casella
   della barra (`pozioneGiusta`: la più piccola che riempie la vita, o la più
@@ -71,11 +70,12 @@ Far bere il banco allo stop non si fa: sposterebbe ogni tabella, e il banco
 non ha un bambino che sceglie di scappare.
 
 Nei test: `[data-ringhio]` (il riquadro; `data-perche` `duro|poca|ultimo`,
-`data-pronto` dopo i 320 ms ciechi), `.sot-ringhio-titolo`, i tasti
-`[data-azione="ringhio-bevi|ringhio-scappa|ringhio-continua"]`.
+`data-pronto` di `[data-caselle-abilita]` dopo i 320 ms ciechi), i tasti della stessa scelta
+`[data-azione="bevi-scontro|scappa"]` e `[data-azione="attacco"]` (che vale «continuo»).
 `unita/sotterraneo-pericolo` (la soglia, una volta per scontro, il secondo
 stop, mai sopra una domanda né quando il mostro cade, le tre scelte, il banco)
-e `integrazione/sotterraneo-pericolo` (col dito, nella miniera con un eroe
-nudo: il mostro forte, lo stop al posto della domanda, il tocco cieco,
-«continuo», il secondo stop, «bevi» che alza la vita e consuma una
-pozione, «scappo via» che chiude lo scontro).
+e `integrazione/sotterraneo-pericolo` (col dito, nella scalinata con un mago
+e cinque mostri addosso, `#sotterraneo=branco&mostri=5`: lo stop già al primo
+turno, al posto della domanda, il tocco cieco, «continuo», il secondo stop dopo
+i colpi raccontati, «bevi» che consuma una pozione e costa il turno, «scappo via»
+che chiude lo scontro col suo costo fisso).

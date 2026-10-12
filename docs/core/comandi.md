@@ -120,6 +120,7 @@ dell'indirizzo): si usano dal browser.
 | `#fattoria-tipo=30` | mette una fattoria già giocata di quel livello (1–99, `giochi/fattoria/motore/tipo.js`); **butta quella del bambino attivo** nel cestino: si usa con un bambino di prova |
 | `#stagione=natale` | la fattoria a Natale (o `halloween`) fuori stagione |
 | `#sotterraneo=roba` | si scende equipaggiati |
+| `#sotterraneo=branco&mostri=6` | si scende e si apre subito uno scontro con quei mostri attorno (`&grosso=ossuto`, `&agguato=1`, `&sorpresa=1`, `&tipo=goblin`) |
 | `#abisso=12` | l'abisso da quel piano |
 | `#seme=812` | il sotterraneo con quel seme, per rivedere una discesa |
 | `#ripara` | butta la copia del gioco e la riscarica ([guasti.md](guasti.md)) |
