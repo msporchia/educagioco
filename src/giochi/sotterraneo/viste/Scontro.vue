@@ -7,7 +7,7 @@
 import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
 import { CIECA } from '../../pausa.js'
 import { PEZZI } from '../dati/atlante.js'
-import { scalaDelMostro, piazza, SCALA_PALCO } from './campo.js'
+import { scalaDelMostro, piazza, SCALA_FIGURE } from './campo.js'
 import Icona from './Icona.vue'
 import Grosso from './Grosso.vue'
 import Glifo from './Glifo.vue'
@@ -45,7 +45,7 @@ const quanti = computed(() => props.mostri.length)
 // UNA scala per tutti, eroe compreso: i fogli sono già in proporzione fra loro (il ratto più piccolo del cavaliere,
 // l'orco più grosso: strumenti/sprite/sorgenti/creature/creature.json). Una scala per i mostri e una per
 // l'eroe faceva il ratto grande come il cavaliere (l'utente, 12 ottobre: «grotteschi, vanno proporzionati»)
-const scala = computed(() => SCALA_PALCO)
+const scala = computed(() => SCALA_FIGURE)
 const scalaEroe = scala
 // dove stanno i piedi di ognuno (colonne sul pavimento, viste/campo.js); chi sta più in alto è un filo più piccolo, a quarti
 const piano = computed(() => piazza(props.posti, props.mostri, larg.value))
@@ -130,14 +130,9 @@ function punto(chi) {
                 :class="{ 'sot-morto': mortoDi(m), 'sot-m-grosso': m.grosso, 'sot-bersaglio': pulita(m) && m.bersaglio,
                           'sot-colpito-da-me': pulita(m) && m.colpito && soloMiaUna }"
                 :style="[postoDi(k), { '--f': m.colpito }]" :aria-label="m.nome" :disabled="mortoDi(m)"
-                data-mostro :data-i="m.i" :data-tipo="m.tipo" :data-nome="m.nome" :data-grande="m.grosso || null"
+                data-mostro :data-colpisce="m.colpisce" :data-salta="m.salta ? '' : null" :data-i="m.i" :data-tipo="m.tipo" :data-nome="m.nome" :data-grande="m.grosso || null"
                 :data-bersaglio="pulita(m) && m.bersaglio ? '' : null" :data-colpito="pulita(m) && m.colpito ? m.colpito : null"
                 :data-morto="mortoDi(m) ? '' : null" :data-porta-chiave="m.chiave ? '' : null" @click.stop="tocca(m)">
-          <span class="sot-minaccia" data-minaccia :class="{ 'sot-minaccia-salta': m.salta }" :data-colpisce="m.colpisce"
-                :style="{ opacity: pulita(m) ? 1 : 0 }">
-            <template v-if="m.salta"><Glifo nome="stelle" :misura="11" /> salta il turno</template>
-            <template v-else><span v-if="!stretto">ti </span>colpisce <b>{{ m.colpisce }}</b></template>
-          </span>
           <span :ref="el => { elC[m.i] = el }" class="sot-m-corpo">
             <i class="sot-ombra" :style="{ width: Math.round(largoDi(m, k) * 1.25) + 'px' }" aria-hidden="true"></i>
             <span :key="chiaveFx(m.i)" class="sot-figura sot-m-fig" :class="classeFx(m.i)">

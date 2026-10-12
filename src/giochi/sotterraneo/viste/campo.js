@@ -83,13 +83,16 @@ export function disponi(campo) {
 // punto (u, v): u da 0 (vicino all'eroe) a 1 (in fondo a destra), v da 0 (lontano, in alto sul pavimento) a 1 (vicino, in
 // basso). I posti restano quelli del motore; i consecutivi stanno nella stessa colonna o in colonne accanto, così i «vicini»
 // del motore lo sono anche nel disegno.
-export const SCALA_PALCO = 2         // pixel di schermo per pixel di foglio: figure e piastrelle del pavimento
-export const ZOCCOLO = 40            // la parete: una fascia (20 px di foglio ×2)
+export const SCALA_PALCO = 2         // pixel di schermo per pixel di foglio delle piastrelle del pavimento
+// le figure un quinto più piccole delle piastrelle: c'è più pavimento attorno e la stanza sembra meno affollata (l'utente, 12 ottobre)
+export const SCALA_FIGURE = 1.6
+// niente parete in cima: «non aggiunge valore e spreca spazio verticale» (l'utente, 12 ottobre); tutto il palco è pavimento
+export const ZOCCOLO = 0
 export const ALTO_PALCO = { 1: 264, 2: 316 }
 const PIEDI_SOTTO = 26               // sotto i piedi del più avanti: la barra della vita e un po' di pavimento
-const PIEDI_SOPRA = 72               // i piedi del più lontano stanno almeno qui sotto la parete (ci sta la figura e il suo «ti colpisce»)
-// i punti stanno lontani quanto serve perché «ti colpisce N» di uno non cada sull'altro: due vicini di colonna sono distanti in
-// v, due di colonne accanto o lo sono in u o lo sono in v
+const PIEDI_SOPRA = 50               // i piedi del più lontano stanno almeno qui sotto il bordo alto: ci sta la figura
+// i punti stanno lontani quanto serve perché la barra di uno non cada sull'altro: due vicini di colonna sono distanti in v, due di
+// colonne accanto o lo sono in u o lo sono in v
 const SLOT = {
   1: [[.5, .55]],
   2: [[.4, .3], [.6, .8]],

@@ -45,13 +45,6 @@
 .sot-m-corpo { position: relative; display: flex; justify-content: center; align-items: flex-end }
 .sot-m:disabled { cursor: default }
 .sot-m.sot-morto { opacity: 0; transform: translateY(10px) scale(.9); pointer-events: none }
-.sot-minaccia {
-  height: 13px; line-height: 13px; font-size: 10.5px; font-weight: 800; white-space: nowrap; color: #ffb09f;
-  text-shadow: 0 1px 2px #000, 0 0 4px #000; transition: opacity .2s ease;
-}
-.sot-minaccia b { font-size: 12px; color: #ffd2c8 }
-.sot-minaccia .sot-glifo { vertical-align: -2px; color: #ffd23f }
-.sot-minaccia-salta { color: #ffe39a }
 .sot-m-grosso .sot-vita { width: 84px }
 .sot-vita {
   display: block; width: var(--barra, 60px); height: 6px; border-radius: 999px; background: #1a1018; overflow: hidden;

@@ -26,14 +26,10 @@ function disegna() {
   ctx.imageSmoothingEnabled = false
   ctx.fillStyle = props.roccia
   ctx.fillRect(0, 0, L.value, A.value)
-  const f = PEZZI[props.faccia], p = PEZZI[props.pavimento]
-  const yp = f ? f[3] : 20   // il pavimento comincia dove finisce la parete
+  // niente parete: tutto il palco è pavimento (viste/campo.js, ZOCCOLO)
+  const p = PEZZI[props.pavimento]
+  const yp = 0
   if (p) for (let y = yp; y < A.value; y += p[3]) for (let x = 0; x < L.value; x += p[2]) ctx.drawImage(img, p[0], p[1], p[2], p[3], x, y, p[2], p[3])
-  if (f) for (let x = 0; x < L.value; x += f[2]) ctx.drawImage(img, f[0], f[1], f[2], f[3], x, 0, f[2], f[3])
-  ctx.fillStyle = '#00000059'   // l'ombra che la parete getta sul pavimento
-  ctx.fillRect(0, yp, L.value, 3)
-  ctx.fillStyle = '#00000026'
-  ctx.fillRect(0, yp + 3, L.value, 3)
 }
 onMounted(() => {
   img = new Image()
