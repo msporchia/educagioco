@@ -91,48 +91,9 @@ confrontare due tappe):
 
 ## La luce, la torcia e la mappina
 
-Nero = mai stato. Scuro e freddo = ricordato. Pieno e caldo = lo stai
-guardando. Un sotterraneo tutto illuminato è una piantina, e su una piantina
-non c'è niente da esplorare. La piantina c'è — la **mappina** in alto a
-destra — e mostra solo il visto più tre punti: dove sei, la scala, chi ha la
-chiave. La 🗺️ della barra in basso la apre grande ([barra.md](barra.md)).
-
-- **Senza torcia si vede un cerchio attorno all'eroe, anche dentro una
-  stanza** (`RAGGIO` 2,3 celle, `aggiornaLuce` in `motore/corsa.js`): la stanza
-  non si accende tutta, porte, forzieri, roba e arredo compaiono quando ci si è
-  vicini, il resto resta nella penombra del visto: la luce sono le caselle
-  accese, come sempre. Provato un cerchio sfumato disegnato sopra (`Tela.buio`):
-  «terribile», tolto. **Con la torcia
-  la stanza si accende intera e in corridoio si vede lontano** (`RAGGIO_TORCIA`
-  6,2), nessun velo. Il perché: con la stanza che si accende da sé la torcia
-  serviva solo nei corridoi, cioè non contava.
-- **L'ultima stanza della torcia** (`torciaResta` ≤ 1 e niente alla cintura):
-  il raggio scende a 4,2 (`RAGGIO_SGOCCIOLI`), la stanza non si accende più
-  tutta: si nota dalle caselle che si spengono, senza un avviso in più. Con una torcia alla
-  cintura non si stringe: la prossima si accende da sé.
-- **La sveglia dei mostri non dipende dalla luce, e un mostro si vede solo
-  se sta in una cella accesa adesso** (`inLuce` in `Corsa`; sveglio o no, e
-  solo allora si può toccare). Nelle celle ricordate la tela disegna porte,
-  forzieri, scala, fonte, arredo e roba per terra, mai i mostri: il ricordo non
-  si muove. Sulla mappina il custode della chiave è un segno fisso, sta dov'è
-  la sua casa. Il perché: l'utente, 12 ottobre 2026: vedere lontano deve
-  servire; la regola di prima la toglieva, gli agguati arriveranno con lo
-  scontro a gruppi. Si sveglia a distanza (sette celle, la stanza di prima),
-  non quando li vede la luce: provato, e senza torcia il gioco diventava
-  **più facile** (la botola da 62 a 39 risposte obbligate, la miniera da 60 a
-  40, il cavaliere a 6/10 nelle cantine da 7 a 13 vinte su 20), il buio
-  premiava invece di costare.
-- **Contare le stanze (`stanzeViste`, la torcia che brucia, le missioni) non
-  dipende dalla luce**: è l'eroe a entrarci.
-- **Misurato**: il banco gioca a torcia spenta, quindi le tabelle di
-  [la-grande-storia.md](la-grande-storia.md) non si muovono (domande per
-  discesa uguali, il cavaliere a 6/10 con la roba attesa 7 · 11 · 7 · 8 · 5 · 9
-  prima e 9 · 11 · 7 · 7 · 5 · 9 dopo, dentro il caso). Quello che la torcia
-  cambia è il vedere, non il costo in risposte; costa 5 gemme a piano
-  (l'erborista ne ha sempre, i pipistrelli e i fantasmi ne lasciano una ogni dieci
-  morti circa), contro 6–16 gemme a piano che esce il giro minimo: la
-  comodità adesso pesa. Sullo schermo, campioni accesi della tela nella stanza
-  dell'ingresso: 21 500 con la torcia, 9 800 all'ultima stanza, 4 500 senza.
+Un cono davanti all'eroe, un alone corto attorno, l'ombra alle spalle; la
+torcia allunga il cono, i mostri nell'ombra arrivano alle spalle:
+[luce.md](luce.md).
 
 ## Chi ci abita: il branco a fasce
 
@@ -180,7 +141,7 @@ possibilissimi.
   sette celle, `SVEGLIA`), e smettono appena esci.** Uno che insegue per tutto
   il piano farebbe una fuga continua, uno fermo un percorso a ostacoli: così il
   corridoio è sicuro e la soglia è una decisione. La luce non c'entra
-  ([La luce](#la-luce-la-torcia-e-la-mappina)).
+  ([La luce](luce.md)).
 - **Sono più lenti di te** (`PASSO_MOSTRO` 3,1 celle al secondo contro
   `PASSO_EROE` 5,4, in `dati/mondo.js`), e dopo una fuga c'è `CALMA`: tre
   secondi. Scappare deve funzionare sempre: si scappa uscendo, non con un
@@ -247,8 +208,7 @@ nel punto esatto e cosa si salva: [portale-e-sosta.md](portale-e-sosta.md).
 In due righe: **il portale porta su al villaggio e il gemello riporta giù; la
 ✕ non è un portale** — porta in home, e rientrando si è già giù.
 
-Nei test: `unita/sotterraneo` (§ «la torcia conta»: la luce senza, con e agli sgoccioli, la sveglia dei mostri),
-`integrazione/sotterraneo-luce` (i pixel accesi della tela con, senza e agli sgoccioli; `--scatti` lascia le tre foto),
+Nei test: la luce sta in [luce.md](luce.md) (`unita/sotterraneo-luce`, `integrazione/sotterraneo-luce`),
 `unita/sotterraneo-scala-su` (la scala che sale e il bersaglio lontano: [scala-che-sale.md](scala-che-sale.md)),
 `unita/sotterraneo` (le sette discese col giocatore finto e la roba di
 chi ci arriva, i quattro eroi, le soglie qui sopra), `unita/sotterraneo-roba`

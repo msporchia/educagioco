@@ -62,8 +62,8 @@ restano in codice anche dopo: si muovono.
   delle altre). La usano anche la targa dello zaino e il «Togli». Quando
   arriverà una sacca dipinta nel foglio, si cambia solo lì.
 - **Niente luce nella barra.** Il globo d'oro della torcia e la casella delle
-  torce alla cintura non ci sono più: la luce si vede nella scena (il buio
-  che si stringe), agli sgoccioli e senza scorta lo dice una riga in mezzo al
+  torce alla cintura non ci sono più: la luce si vede nella scena (il cono
+  che si accorcia), agli sgoccioli e senza scorta lo dice una riga in mezzo al
   campo («🔥 Torcia sta per finire: ancora due stanze», `bruciaLaTorcia`), e
   per esteso nello zaino ([roba.md](roba.md#la-torcia-si-accende-da-sé-e-finisce)).
 - **L'esperienza sta in un posto solo**: la riga sopra le caselle. Quando era

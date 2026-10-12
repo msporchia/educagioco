@@ -21,3 +21,24 @@ sono state rifatte**: la tabella di [la-grande-storia.md](la-grande-storia.md) e
 - **Rotto prima di questo lavoro**: `integrazione/sotterraneo-pericolo` non scende nella miniera (il mago nudo al livello 8 ha
   forza 1 e il pallino è rosso, la sentinella lo ferma: succede anche prima, con la forza di `motore/forza.js`). Il test
   è aggiornato alla fila dei turni ma va rimesso in piedi con la vista nuova.
+
+## La luce a cono e gli agguati
+
+Col cono di luce ([luce.md](luce.md)) i mostri nell'ombra arrivano alle spalle, e l'agguato (un colpo prima di tutto)
+diventa comune: il banco gioca a torcia spenta e **non si volta mai**, quindi è il caso peggiore.
+
+- **Con il solo cono, mostri che vanno dritti, tutto verde.** I bersagli di `unita/sotterraneo` e `-roba` passano.
+- **Con i mostri che girano alle spalle** gli agguati nelle discese del banco (trenta semi, bravura 0,8) vanno da 12–26 a
+  41–67 per tappa (da circa un decimo a un quarto degli scontri) e le vittorie scendono dove la roba attesa è più
+  stretta: gallerie 29 → 21 su 30, cisterna 29 → 25, le altre invariate (28–30 su 30). Quattro bersagli
+  si rompono, tutti sullo stesso meccanismo: «la torre e le gallerie a otto su dieci si arrivano in fondo» (4/6, serve
+  5/6), «chi ripulisce il piano paga molto di più» sulle gallerie
+  (minimo 53, tutto 56) e «rispondere bene costa meno vite» (seme 31: 7 svenimenti sia a 0,9 sia a 0,25); «a caso no» sulla
+  scala sommersa balla fra 0 e 3 su 8 secondo i ritocchi (il bersaglio è ≤1).
+- **È l'agguato, non il movimento**: senza il colpo in più (`alleSpalle` sempre falso) le stesse discese col giro alle
+  spalle hanno gli svenimenti di prima (gallerie, seme 7: 4, come con i mostri dritti; con l'agguato: 7 e la discesa
+  persa, 19 agguati su 70 scontri).
+- **Non forzato.** Leve, da scegliere con le misure vere: un colpo d'agguato più leggero, l'agguato solo da dietro (un
+  cono di 120° speculare a quello della luce, non la metà intera), un banco che si volta (come un adulto attento), o
+  rifare la roba attesa delle gallerie e della cisterna. Provato un passo più lento per i mostri nell'ombra: gli
+  agguati calano ma le discese peggiorano (gallerie 18 su 30), tolto.

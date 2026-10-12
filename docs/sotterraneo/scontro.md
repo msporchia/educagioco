@@ -44,10 +44,14 @@ Il codice: `motore/scontro.js` (i metodi dello scontro, attaccati a `Corsa`),
   arriva prima di tutto (`foglio.sorpresa`), con la sua domanda. **Oggi è
   rara**: un mostro si sveglia a sette celle nella sua stanza
   ([regole.md](regole.md#la-stanza-è-il-confine)), quindi quasi sempre lo
-  tocchi già sveglio; diventa comune con la luce a cono, quando si potrà
-  avvicinarsi piano.
-- Il cono di luce arriva con la luce nuova; qui «alle spalle» è solo geometria. Se risulterà troppo
-  punitivo, un segno che qualcosa si muove dietro: visivo, perché col suono spento il gioco deve restare intero.
+  tocchi già sveglio: la sveglia (sette celle) è più lunga del cono di luce
+  ([luce.md](luce.md)), quindi non si vede un mostro dormire prima che si
+  svegli.
+- **L'agguato è il premio dei mostri nell'ombra**: con la luce a cono un mostro
+  sveglio fuori luce non va dritto all'eroe, gli arriva alle spalle
+  ([luce.md](luce.md#i-mostri-e-lombra)), e «alle spalle» è la metà dietro il
+  verso (`versoEroe`). Se risulterà troppo punitivo, un segno che qualcosa si
+  muove dietro: visivo, perché col suono spento il gioco deve restare intero.
 
 ## L'iniziativa
 
