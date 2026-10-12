@@ -331,12 +331,26 @@ function seSparisce(e) {
   if (e?.type === 'pagehide' || document.visibilityState === 'hidden') salva({ subito: true })
 }
 
+// il gancio per guardarsi: la partita e qualche leva, per scattare e provare senza giocare
+// mezz'ora. Sparisce dal build (import.meta.env.DEV).
+function gancioDiProva() {
+  if (!import.meta.env.DEV) return
+  window.__arena = {
+    get partita() { return partita.value },
+    get fermo() { return fermo.value },
+    get domanda() { return domanda.value },
+    metti, togli, scegli,
+  }
+}
+
 onMounted(() => {
+  gancioDiProva()
   addEventListener('resize', ridimensiona)
   document.addEventListener('visibilitychange', seSparisce)
   addEventListener('pagehide', seSparisce)
 })
 onUnmounted(() => {
+  if (import.meta.env.DEV) delete window.__arena
   salva({ subito: true })
   removeEventListener('resize', ridimensiona)
   document.removeEventListener('visibilitychange', seSparisce)
