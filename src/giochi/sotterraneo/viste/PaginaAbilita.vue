@@ -1,15 +1,17 @@
 <script setup>
-// L'albero delle abilità (docs/sotterraneo/abilita.md): tre rami sotto il loro stendardo, quattro medaglioni legati da
-// una catena che si accende d'oro, in cima le tre caselle che si portano nello scontro (se ne tocca una e si sceglie
-// l'abilità da mettere, fra quelle che si sanno o toccandola nell'albero) e, in fondo, il medaglione toccato con cosa
-// fa adesso e al grado dopo. Si apre dal globo blu della barra, o dalla pagina dell'eroe. Le regole
+// L'albero delle abilità (docs/sotterraneo/abilita.md): quattro rami, ognuno sotto il suo stendardo (si sceglie il ramo
+// toccandolo sulla fila degli stendardi, uno alla volta: sette medaglioni a ramo non starebbero in 390 px), i medaglioni in
+// cinque righe di uno o due, legati da catene che si accendono d'oro; in cima le tre caselle che si portano nello scontro
+// (se ne tocca una e si sceglie l'abilità da mettere, fra quelle che si sanno o toccandola nell'albero) e, in fondo, il
+// medaglione toccato con cosa fa adesso e al grado dopo, di che elemento è e chi prende. Si apre dal globo blu della barra, o dalla pagina dell'eroe. Le regole
 // (cosa si può imparare e perché no) sono di motore/abilita.js: qui si leggono e si dice cosa è stato toccato.
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, nextTick } from 'vue'
 import Cornice from './Cornice.vue'
 import Medaglione from './Medaglione.vue'
 import Glifo from './Glifo.vue'
 import SchedeEroe from './SchedeEroe.vue'
-import { RAMI, NODI, GRADI } from '../dati/abilita.js'
+import { RAMI, NODI, GRADI, GRADINI, colpisce } from '../dati/abilita.js'
+import { ELEMENTI } from '../dati/elementi.js'
 import { gradoDi, perchéNonImpari, caselleDella } from '../motore/abilita.js'
 
 const props = defineProps({
@@ -27,6 +29,18 @@ const props = defineProps({
 })
 
 const rami = computed(() => RAMI[props.eroe.chiave] || [])
+// il ramo aperto: uno alla volta. All'apertura quello dove c'è qualcosa da imparare, se no il primo; cambiando eroe si riparte
+const aperto = ref(null)
+const ramo = computed(() => rami.value.find(r => r.chiave === aperto.value) || rami.value[0] || null)
+// le righe del ramo aperto: uno o due nodi ciascuna (si prende l'uno, l'altro o tutti e due)
+const righe = computed(() => (ramo.value ? GRADINI.map((_, i) => ramo.value.nodi.filter(x => x.riga === i)) : []))
+const presi = r => r.nodi.filter(x => g(x.id)).length
+const daImparare = r => r.nodi.some(x => !g(x.id) && !perchéNonImpari(props.crescita, props.eroe.chiave, x.id))
+// la catena fra due righe, in un disegno solo: dai nodi di sopra (si accende se imparato) a una sbarra, e dalla sbarra ai nodi di
+// sotto (si accende se ne hai imparato uno sopra). Con un nodo il tratto è dritto, con due i nodi stanno a un quarto e tre quarti
+const xDi = n => (n === 2 ? [25, 75] : [50])
+const sopra = i => (i > 0 ? righe.value[i - 1] : [])
+const sopraAccesa = i => sopra(i).some(x => g(x.id))
 const tintaDi = id => (rami.value.find(r => r.chiave === NODI[id].ramo) || {}).tinta
 const caselle = computed(() => caselleDella(props.crescita).map(id => (id ? NODI[id] : null)))
 // la casella toccata, che aspetta la sua abilità; le abilità che si sanno, da proporre
@@ -57,7 +71,18 @@ function primo() {
   const pronto = tutti.find(n => !perchéNonImpari(props.crescita, props.eroe.chiave, n.id))
   return (pronto || tutti[0] || {}).id || null
 }
-watch(() => props.eroe.chiave, () => { scelto.value = primo() }, { immediate: true })
+watch(() => props.eroe.chiave, () => {
+  scelto.value = primo()
+  aperto.value = scelto.value && NODI[scelto.value] ? NODI[scelto.value].ramo : null
+}, { immediate: true })
+// toccare un ramo lo apre, e guarda il suo primo nodo da imparare (o il primo)
+const scorri = ref(null)
+function apri(r) {
+  aperto.value = r.chiave
+  nextTick(() => { if (scorri.value) scorri.value.scrollTop = 0 })
+  const dentro = r.nodi.find(x => !perchéNonImpari(props.crescita, props.eroe.chiave, x.id) && !g(x.id))
+  scelto.value = (dentro || r.nodi[0]).id
+}
 
 const g = id => gradoDi(props.crescita, id)
 const stato = n => {
@@ -70,12 +95,18 @@ const quando = n => {
   const p = !g(n.id) && perchéNonImpari(props.crescita, props.eroe.chiave, n.id).match(/^dal livello (\d+)/)
   return p ? `livello ${p[1]}` : ''
 }
+// chi prende il colpo, in due parole (la forma del colpo, dati/abilita.js)
+const CHI = { vicini: 'il mostro e i due accanto', catena: 'un mostro, poi salta sugli altri', tutti: 'tutti i mostri in campo' }
+const CON = { forza: 'la forza', destrezza: 'la destrezza', intelligenza: 'l\'intelligenza' }
 const dettaglio = computed(() => {
   const n = scelto.value ? NODI[scelto.value] : null
   if (!n) return null
   const ora = g(n.id)
+  const r = rami.value.find(x => x.chiave === n.ramo) || {}
   return {
     ...n, grado: ora, tinta: tintaDi(n.id), stato: stato(n),
+    colpisce: colpisce(n), chi: CHI[n.forma] || '', elementoDi: colpisce(n) ? ELEMENTI[n.elemento] : null,
+    con: n.car ? CON[n.car] : '', arma: r.arma || null,
     ora: ora ? n.fa(ora, props.vitaMax) : null,
     dopo: maiuscola(n.fa(ora + 1, props.vitaMax)),
     perche: perchéNonImpari(props.crescita, props.eroe.chiave, n.id),
@@ -129,43 +160,71 @@ const dettaglio = computed(() => {
       </div>
     </div>
 
-    <!-- cosa vuol dire gemma e cosa vuol dire tondo (l'utente, 9 ottobre: non si capiva che Fiamma viva è una passiva) -->
-    <p class="sot-legenda" data-legenda-albero>
-      <span><Medaglione glifo="spada" tinta="#c9a24a" stato="preso" :misura="22" /> <b>Abilità</b>: la scegli nello scontro, costa energia</span>
-      <span><Medaglione glifo="spada" tinta="#c9a24a" stato="preso" :tondo="true" :misura="22" /> <b>Passiva</b>: lavora da sola, sempre, senza energia</span>
-    </p>
+    <!-- i quattro stendardi: si tocca il ramo da guardare. Sotto, quello aperto, in cinque righe di uno o due medaglioni -->
+    <div ref="scorri" class="sot-albero" data-albero>
+      <nav class="sot-stendardi" aria-label="i rami">
+        <button v-for="r in rami" :key="r.chiave" type="button" class="sot-stend" :class="{ 'sot-stend-aperto': ramo && ramo.chiave === r.chiave }"
+                :style="{ '--tinta': r.tinta }" data-azione="ramo" :data-ramo-scheda="r.chiave" :data-aperto="ramo && ramo.chiave === r.chiave ? 1 : 0"
+                :data-presi="presi(r)" @click="apri(r)">
+          <span class="sot-stendardo sot-stendardo-pic">
+            <svg viewBox="0 0 60 66" aria-hidden="true">
+              <defs>
+                <linearGradient :id="'st-' + r.chiave" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0" :stop-color="r.tinta" /><stop offset="1" stop-color="#140e08" />
+                </linearGradient>
+              </defs>
+              <path d="M3 2H57V50L30 63L3 50Z" :fill="`url(#st-${r.chiave})`" stroke="#f3cf6b" stroke-width="2" stroke-linejoin="round" />
+              <path d="M8 6H52V47.5L30 58L8 47.5Z" fill="none" stroke="#f3cf6b55" stroke-width="1" />
+            </svg>
+            <Glifo :nome="r.glifo" :misura="22" />
+            <i v-if="daImparare(r)" class="sot-stend-pronto" aria-hidden="true">+</i>
+          </span>
+          <b>{{ r.nome }}</b>
+          <small>{{ presi(r) }}/{{ r.nodi.length }}</small>
+        </button>
+      </nav>
 
-    <div class="sot-albero">
-      <section v-for="r in rami" :key="r.chiave" class="sot-ramo" :data-ramo="r.chiave" :style="{ '--tinta': r.tinta }">
-        <!-- lo stendardo del ramo: il suo colore, la sua icona, e l'arma che vuole -->
-        <span class="sot-stendardo">
-          <svg viewBox="0 0 60 66" aria-hidden="true">
-            <defs>
-              <linearGradient :id="'st-' + r.chiave" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0" :stop-color="r.tinta" /><stop offset="1" stop-color="#140e08" />
-              </linearGradient>
-            </defs>
-            <path d="M3 2H57V50L30 63L3 50Z" :fill="`url(#st-${r.chiave})`" stroke="#f3cf6b" stroke-width="2" stroke-linejoin="round" />
-            <path d="M8 6H52V47.5L30 58L8 47.5Z" fill="none" stroke="#f3cf6b55" stroke-width="1" />
+      <section v-if="ramo" :key="ramo.chiave" class="sot-ramo" :data-ramo="ramo.chiave" :style="{ '--tinta': ramo.tinta }">
+        <!-- l'intestazione del ramo: l'arma che vuole, e con cosa colpisce quando non è l'arma -->
+        <p class="sot-ramo-testa">
+          <span class="sot-ramo-arma" :class="{ 'sot-manca': ramo.arma && !haLArma(ramo.arma) }">{{ ramo.arma ? ramo.arma.con : 'con ogni arma' }}</span>
+          <span v-if="ramo.car" class="sot-ramo-car" data-car>colpisce con {{ CON[ramo.car] }}</span>
+          <span v-if="ramo.elemento && ramo.elemento !== 'fisico'" class="sot-elem" :style="{ '--e': ELEMENTI[ramo.elemento].tinta }" data-elemento-ramo>
+            <Glifo :nome="ELEMENTI[ramo.elemento].glifo" :misura="13" /> {{ ELEMENTI[ramo.elemento].nome }}
+          </span>
+        </p>
+        <template v-for="(riga, i) in righe" :key="i">
+          <!-- la catena che porta alla riga: dritta, o con la forcella se i nodi sono due -->
+          <svg v-if="i" class="sot-giunto" viewBox="0 0 100 20" preserveAspectRatio="none" aria-hidden="true">
+            <path v-for="(x, k) in xDi(sopra(i).length)" :key="'s' + k" :d="`M${x} 0V10`" :class="{ 'sot-accesa': g(sopra(i)[k].id) }" />
+            <path v-if="sopra(i).length + riga.length > 2" :d="`M${xDi(Math.max(sopra(i).length, riga.length))[0]} 10H${xDi(Math.max(sopra(i).length, riga.length)).slice(-1)[0]}`"
+                  :class="{ 'sot-accesa': sopraAccesa(i) }" />
+            <path v-for="(x, k) in xDi(riga.length)" :key="'g' + k" :d="`M${x} 10V20`" :class="{ 'sot-accesa': sopraAccesa(i) }" />
           </svg>
-          <Glifo :nome="r.glifo" :misura="28" />
-        </span>
-        <h3>{{ r.nome }}</h3>
-        <small class="sot-ramo-arma" :class="{ 'sot-manca': r.arma && !haLArma(r.arma) }">{{ r.arma ? r.arma.con : 'con ogni arma' }}</small>
-        <template v-for="(n, i) in r.nodi" :key="n.id">
-          <i class="sot-catena" :class="{ 'sot-accesa': i ? g(r.nodi[i - 1].id) : true }" aria-hidden="true"></i>
-          <button type="button" class="sot-nodo" :class="['sot-nodo-' + stato(n), { 'sot-scelto': scelto === n.id }]"
-                  data-azione="nodo" :data-nodo="n.id" :data-grado="g(n.id)" :data-stato="stato(n)" @click="tocca(n)">
-            <Medaglione :glifo="n.glifo" :tinta="r.tinta" :tondo="!!n.sempre" :stato="stato(n)" :misura="50" />
-            <b>{{ n.nome }}</b>
-            <span class="sot-gradi" aria-hidden="true">
-              <i v-for="k in GRADI" :key="k" :class="{ 'sot-pieno': k <= g(n.id) }"></i>
-              <em v-if="g(n.id) > GRADI">{{ g(n.id) }}</em>
-            </span>
-            <small v-if="quando(n)">{{ quando(n) }}</small>
-          </button>
+          <div class="sot-riga" :class="{ 'sot-riga-due': riga.length === 2 }" :data-riga="i">
+            <template v-for="(n, k) in riga" :key="n.id">
+              <i v-if="k" class="sot-o" aria-hidden="true">o</i>
+              <button type="button" class="sot-nodo" :class="['sot-nodo-' + stato(n), { 'sot-scelto': scelto === n.id }]"
+                      data-azione="nodo" :data-nodo="n.id" :data-grado="g(n.id)" :data-stato="stato(n)" @click="tocca(n)">
+                <Medaglione :glifo="n.glifo" :tinta="ramo.tinta" :tondo="!!n.sempre" :stato="stato(n)" :misura="48" />
+                <b>{{ n.nome }}</b>
+                <span class="sot-gradi" aria-hidden="true">
+                  <i v-for="q in GRADI" :key="q" :class="{ 'sot-pieno': q <= g(n.id) }"></i>
+                  <em v-if="g(n.id) > GRADI">{{ g(n.id) }}</em>
+                </span>
+                <small v-if="quando(n)">{{ quando(n) }}</small>
+              </button>
+            </template>
+          </div>
         </template>
       </section>
+
+      <!-- cosa vuol dire gemma e cosa vuol dire tondo (l'utente, 9 ottobre: non si capiva che Fiamma viva è una passiva) -->
+      <p class="sot-legenda" data-legenda-albero>
+        <span><Medaglione glifo="spada" tinta="#c9a24a" stato="preso" :misura="22" /> <b>Abilità</b>: la scegli nello scontro, costa energia</span>
+        <span><Medaglione glifo="spada" tinta="#c9a24a" stato="preso" :tondo="true" :misura="22" /> <b>Passiva</b>: lavora da sola, sempre, senza energia</span>
+        <span><i class="sot-o" aria-hidden="true">o</i> Due accanto: ne prendi una, l'altra o tutte e due</span>
+      </p>
     </div>
 
     <!-- il medaglione toccato: cosa fa adesso, cosa farebbe al grado dopo, e i due tasti -->
@@ -179,6 +238,12 @@ const dettaglio = computed(() => {
         </span>
       </div>
       <p v-if="dettaglio.ora">Grado {{ dettaglio.grado }}: {{ dettaglio.ora }}</p>
+      <p v-if="dettaglio.colpisce" class="sot-nodo-natura" data-natura>
+        <span v-if="dettaglio.elementoDi" class="sot-elem" :style="{ '--e': dettaglio.elementoDi.tinta }" :data-elemento="dettaglio.elemento">
+          <Glifo :nome="dettaglio.elementoDi.glifo" :misura="13" /> {{ dettaglio.elementoDi.nome }}</span>
+        <span v-if="dettaglio.chi" class="sot-chi" data-chi>colpisce {{ dettaglio.chi }}</span>
+        <span v-if="dettaglio.con" class="sot-chi" data-con>picchia con {{ dettaglio.con }}</span>
+      </p>
       <p v-if="dettaglio.dopo" :class="{ 'sot-tenue': !!dettaglio.grado }">
         <template v-if="dettaglio.grado">Al grado {{ dettaglio.grado + 1 }}: </template>{{ dettaglio.dopo }}
       </p>
