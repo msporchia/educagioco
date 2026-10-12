@@ -7,6 +7,7 @@
 import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
 import { CIECA } from '../../pausa.js'
 import { PEZZI } from '../dati/atlante.js'
+import { scalaDelMostro } from './campo.js'
 import Icona from './Icona.vue'
 import Grosso from './Grosso.vue'
 import Glifo from './Glifo.vue'
@@ -41,16 +42,17 @@ onMounted(() => {
 onUnmounted(() => osserva && osserva.disconnect())
 
 const quanti = computed(() => props.mostri.length)
-const scalaEroe = computed(() => (quanti.value <= 2 ? 4 : 3))
-const lEroe = computed(() => 16 * scalaEroe.value + 18)    // quanto spazio prende a sinistra
+// UNA scala per tutti, eroe compreso: i fogli sono già in proporzione fra loro (il ratto più piccolo del cavaliere,
+// l'orco più grosso: strumenti/sprite/sorgenti/sotterraneo/generati/mostri-1.json). Una scala per i mostri e una per
+// l'eroe faceva il ratto grande come il cavaliere (l'utente, 12 ottobre: «grotteschi, vanno proporzionati»)
+const lEroe = computed(() => 16 * 3 + 18)                   // quanto spazio prende a sinistra
 const lFila = 44                                            // e la colonna dei turni a destra
 const cella = computed(() => (larg.value - lEroe.value - lFila) / 3)   // sei colonne a due a due: tre mostri per fila
 const larghissimo = computed(() => Math.max(16, ...props.mostri.filter(m => !m.grosso).map(m => (PEZZI[m.sprite] ? PEZZI[m.sprite][2] : 16))))
-const scalaM = computed(() => {
-  const n = quanti.value, tetto = props.posti.grande >= 0 ? 2 : n === 1 ? 5 : n <= 3 ? 4 : 3   // col grosso gli altri si fanno piccoli
-  return Math.max(2, Math.min(tetto, Math.floor((cella.value - 4) / larghissimo.value)))
-})
-const scalaGrosso = computed(() => Math.max(2, Math.min(4, Math.floor(cella.value * 1.7 / 32))))
+const scala = computed(() => 2)
+const scalaEroe = scala
+const scalaM = m => scalaDelMostro(m.tipo, PEZZI[m.sprite] ? PEZZI[m.sprite][3] : 16, scala.value)
+const scalaGrosso = computed(() => scala.value + 1)   // il grosso un passo sopra: è il re della stanza
 const stretto = computed(() => cella.value < 72)   // tre per fila a 320 px: la riga della minaccia si accorcia
 const barra = computed(() => (quanti.value === 1 ? 96 : Math.min(64, Math.round(cella.value - 14))))
 
@@ -72,7 +74,7 @@ const soloMiaUna = computed(() => props.mostri.filter(m => m.colpito).length > 1
 const statiDi = m => (props.fx.attivo && props.fx.stati[m.i] ? props.fx.stati[m.i] : m.stati)
 const addosso = m => statiDi(m).map(x => 'sot-addosso-' + (x.fuoco ? 'fuoco' : x.gelo ? 'gelo' : x.chiave === 'debole' ? 'fiacco' : x.chiave))
 // quanto è larga la figura (le stelle dello stordito girano in proporzione)
-const largoDi = m => (m.grosso ? 32 * scalaGrosso.value : (PEZZI[m.sprite] ? PEZZI[m.sprite][2] : 16) * scalaM.value)
+const largoDi = m => (m.grosso ? 32 * scalaGrosso.value : (PEZZI[m.sprite] ? PEZZI[m.sprite][2] : 16) * scalaM(m))
 const protetto = computed(() => props.mie.some(x => ['parato', 'scudo'].includes(x.chiave)))
 const diPietra = computed(() => props.mie.some(x => x.chiave === 'intoccabile'))
 const specchiato = computed(() => props.mie.some(x => x.chiave === 'specchio'))
@@ -145,7 +147,7 @@ function punto(chi) {
               <span class="sot-corpo">
                 <span class="sot-respira" :class="addosso(m)">
                   <Grosso v-if="m.grosso" :chi="m.grosso" :scala="scalaGrosso" />
-                  <Icona v-else :sprite="m.sprite" :em="m.em" :scala="scalaM" :emAlto="48" />
+                  <Icona v-else :sprite="m.sprite" :em="m.em" :scala="scalaM(m)" :emAlto="48" />
                 </span>
               </span>
             </span>

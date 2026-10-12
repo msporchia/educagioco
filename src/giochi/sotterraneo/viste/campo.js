@@ -115,3 +115,16 @@ export function vistaDelloScontro(c) {
     mie: statiMiei(f.io || {}),
   }
 }
+
+// quanto è alto un mostro dei fogli dipinti nello scontro, rispetto all'eroe: dipinti, il ratto viene alto quasi quanto il
+// cavaliere (l'utente, 12 ottobre: «grotteschi, vanno proporzionati»). Goblin, scheletro, orco e gigante vengono dallo
+// stesso set dell'eroe (0x72), già in proporzione con lui: stanno alla sua scala e qui non ci sono
+export const TAGLIA = {
+  ratto: 0.45, pipistrello: 0.5, melma: 0.45, vespa: 0.5, fungo: 0.6, granchio: 0.55, serpente: 0.55,
+  lupo: 0.7, fantasma: 0.8, golem: 1.1, troll: 1.15,
+}
+export const ALTO_EROE = 28   // i pixel dello sprite dell'eroe, la misura di tutti
+// la scala di un mostro alla scala `s` dell'eroe: alto TAGLIA volte l'eroe, a quarti (i pixel restano quasi interi)
+export const scalaDelMostro = (tipo, altoSprite, s) => (TAGLIA[tipo] == null ? s
+  : Math.max(1, Math.round(s * ALTO_EROE * TAGLIA[tipo] / Math.max(1, altoSprite) * 4) / 4))
+

@@ -77,6 +77,7 @@ scrivono niente: stanno in [sprite.md](sprite.md).
 | `node strumenti/generale/piani.mjs` | il simulatore dei piani del Generale |
 | `node strumenti/passo-passo/minimi.mjs` | le strade più corte di Passo passo, messe alla prova |
 | `node strumenti/passo-passo/sentiero.mjs` | i sentieri senza fine di Passo passo: mille posti per famiglia, il programma più corto in carte con la mano del bambino (`--mano=`), le mosse, se serve il ciclo o il se, la strada più corta, le forme, il tempo (su più processi; il cane una ventina di minuti) |
+| `npm run pianta` (`-- --discesa 3 --piano 0 --seme 12 --zona 20 --png`) | la pianta di un piano del sotterraneo vista dall'alto: le stanze colorate per forma, colonne, porte, ruoli, i mostri per specie con caporali, appostati e grosso; in `tmp/piante/` |
 | `node strumenti/scatta-app.mjs <schermata>` | un PNG dell'app servita da Vite (`--porta`), o del file costruito (`--dist`); `--tocca`, `--attesa`, `--larghezza`, `--nome`; la schermata è un indirizzo coi [cheat](#i-cheat-dellindirizzo) (`'sotterraneo=branco&mostri=6'`), in `tmp/scatti/`; dice gli errori della console |
 
 **I banchi sono pagine e vogliono un server**: importano i moduli veri, e
