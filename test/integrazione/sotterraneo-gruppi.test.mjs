@@ -47,6 +47,8 @@ async function toccaIl(sel) {
 
 // scende nella cripta con lo scontro già aperto (il gioco lo apre da `hash`)
 async function entra(hash, { eroe = 'cavaliere', r = roba, cr = crescita } = {}) {
+  // l'indirizzo della prova di prima (`#sotterraneo=…`) aprirebbe il gioco al ricaricamento: si riparte dalla home
+  await page.evaluate(() => history.replaceState(null, '', location.pathname + location.search))
   await azzera(page)
   await page.setViewportSize({ width: 390, height: 844 })
   const avventura = { tappa: TAPPA, libera: false, stelle: { 0: 3 }, missioni: {}, roba: r, crescita: cr,
@@ -69,6 +71,8 @@ const caselle = sel => page.locator(sel).evaluateAll(es => es.map(e => {
   return { i: e.dataset.i, x: r.x, y: r.y, w: r.width, h: r.height, b: r.bottom, r: r.right }
 }))
 const palco = () => page.locator('[data-duello]').boundingBox()
+// quante colonne verticali fanno i mostri: i centri ordinati, una colonna nuova ogni salto di 30 px
+const colonne = ms => [...ms].map(m => m.x + m.w / 2).sort((a, b) => a - b).reduce((n, x, k, v) => (k && x - v[k - 1] > 30 ? n + 1 : n), 1)
 const bersagli = () => page.locator('[data-mostro][data-bersaglio]').evaluateAll(es => es.map(e => e.dataset.i))
 
 /* ---------- 1. sei mostri a 390 px ---------- */
@@ -81,8 +85,8 @@ await scelta()
   controlla('tutti dentro il palco, a destra e in alto e in basso',
             ms.every(m => m.x >= p.x - 1 && m.r <= p.x + p.width + 1 && m.y >= p.y - 1 && m.b <= p.y + p.height + 1),
             JSON.stringify(p))
-  const file = new Set(ms.map(m => Math.round(m.b / 10)))
-  uguale('in due file', file.size, 2)
+  uguale('in tre colonne verticali, non in file', colonne(ms), 3)
+  controlla('i piedi a altezze diverse, niente file orizzontali', new Set(ms.map(m => Math.round(m.b / 12))).size >= 5, JSON.stringify(ms.map(m => Math.round(m.b))))
   uguale('sotto ognuno la sua barra, senza numeri', await page.locator('[data-mostro] [data-vita]').count(), 6)
   controlla('e nessun numero di vita sul palco', !/\d+ ?\/ ?\d+/.test(await page.locator('[data-duello]').innerText()))
   const minacce = await page.locator('[data-minaccia]').evaluateAll(es => es.map(e => e.textContent.replace(/\s+/g, ' ').trim()))
@@ -192,7 +196,7 @@ await entra('mostri=3')
 await scelta()
 {
   uguale('tre mostri', await page.locator('[data-mostro]').count(), 3)
-  uguale('in una fila sola', new Set((await caselle('[data-mostro]')).map(m => Math.round(m.b / 10))).size, 1)
+  uguale('in due colonne', colonne(await caselle('[data-mostro]')), 2)
   await scatto(page, 'gruppi-tre')
 }
 await entra('mostri=6')

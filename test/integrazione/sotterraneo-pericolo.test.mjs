@@ -58,6 +58,8 @@ const finito = () => page.waitForSelector('[data-duello]:not([data-racconto])', 
 
 // un mago nella scalinata, con cinque mostri addosso e la prima scelta davanti
 async function entra() {
+  // l'indirizzo della prova di prima (`#sotterraneo=…`) aprirebbe il gioco al ricaricamento: si riparte dalla home
+  await page.evaluate(() => history.replaceState(null, '', location.pathname + location.search))
   await azzera(page)
   const avventura = { tappa: TAPPA, libera: false, stelle: { 0: 3 }, missioni: {}, roba, crescita,
     terra: { nebbia: 'f'.repeat(768), dove: [55, 11], parlato: true } }
