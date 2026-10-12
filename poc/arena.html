@@ -1,0 +1,1335 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>L'arena — prototipo</title>
+<link rel="icon" href="data:,">
+<style>
+  :root { color-scheme: dark; --viola: #b04bff; --blu: #3d8bff; --rosso: #ff5a4d; --oro: #ffd24a; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #0d1220; color: #e8edf7;
+    font: 15px/1.35 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; touch-action: manipulation; }
+  #app { height: 100dvh; display: flex; flex-direction: column; max-width: 520px; margin: 0 auto; position: relative; }
+  #alto { flex: 0 0 44px; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; gap: 8px; }
+  #alto .tempo { font-weight: 700; font-size: 18px; min-width: 70px; }
+  #alto .corone { font-weight: 700; font-size: 18px; letter-spacing: .02em; }
+  button { font: inherit; color: inherit; border: 0; cursor: pointer; }
+  #esci { background: rgba(255,255,255,.1); border-radius: 10px; width: 40px; height: 36px; font-size: 18px; }
+  #campo { flex: 1 1 0; min-height: 0; display: flex; align-items: center; justify-content: center; position: relative; }
+  canvas { display: block; border-radius: 12px; touch-action: none; }
+  #suggerimento { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); pointer-events: none; white-space: nowrap;
+    font-weight: 800; font-size: 15px; padding: 9px 16px; border-radius: 999px; background: var(--oro); color: #3a2400;
+    box-shadow: 0 4px 14px rgba(0,0,0,.45); display: none; }
+  #suggerimento.si { display: block; }
+  #suggerimento.no { background: #ff7b7b; color: #3a0000; }
+  #basso { flex: 0 0 auto; padding: 6px 10px calc(8px + env(safe-area-inset-bottom)); }
+  #elisirRiga { display: flex; gap: 6px; align-items: center; margin-bottom: 8px; }
+  #elisir { flex: 1; position: relative; height: 30px; background: #1b2238; border-radius: 15px; overflow: hidden; }
+  #elisir i { border-radius: 15px !important; }
+  #elisir b { line-height: 30px !important; }
+  #mano.scorre { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px 6px; padding-top: 6px; }
+  #mano.scorre .carta { min-height: 60px; padding: 3px 2px; gap: 0; }
+  #mano.scorre .carta.azione { border-color: #6b5a9a; background: linear-gradient(180deg, #33305a, #1d1b3a); }
+  #mano.scorre .carta .em { font-size: 21px; line-height: 1.05; }
+  #mano.scorre .carta .nome { font-size: 10.5px; }
+  #mano.scorre .carta .liv { font-size: 10.5px; font-weight: 700; }
+  #mano.scorre .carta .su { font-size: 11px; }
+  .carta.nuova { border-style: dashed; }
+  .az { height: 30px; padding: 0 6px; border-radius: 10px; background: #2a3454; border: 2px solid #3a4670; font-weight: 800; font-size: 12px; white-space: nowrap; }
+  .az.no { opacity: .45; }
+  .az.armata { border-color: var(--oro); box-shadow: 0 0 10px rgba(255,210,74,.6); }
+  #elisir i { position: absolute; left: 0; top: 0; bottom: 0; background: linear-gradient(90deg, #8a2be2, var(--viola)); border-radius: 11px; width: 0; }
+  #elisir .tacche { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(10, 1fr); }
+  #elisir .tacche span { border-right: 1px solid rgba(255,255,255,.18); }
+  #elisir b { position: absolute; left: 0; right: 0; top: 0; line-height: 22px; text-align: center; font-size: 14px; text-shadow: 0 1px 2px #000; }
+  #mano { display: flex; gap: 8px; align-items: stretch; }
+  .poi { flex: 0 0 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: .7; font-size: 11px; gap: 2px; }
+  .poi .mini { font-size: 24px; }
+  .carta { flex: 1; position: relative; min-height: 96px; border-radius: 12px; padding: 6px 4px 6px;
+    background: linear-gradient(180deg, #2a3454, #1a2138); border: 2px solid #3a4670; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 2px; transition: transform .1s, opacity .15s, border-color .15s; }
+  .carta:active { transform: scale(.96); }
+  .carta .em { font-size: 34px; line-height: 1.1; }
+  .carta .nome { font-size: 11.5px; font-weight: 600; color: #c8d2ee; }
+  .carta .costo { position: absolute; top: -8px; left: -6px; width: 28px; height: 28px; border-radius: 50% 50% 50% 8px;
+    background: var(--viola); border: 2px solid #e9c8ff; font-weight: 800; font-size: 14px; display: grid; place-items: center; }
+  .carta .segno { position: absolute; top: 3px; right: 5px; font-size: 15px; font-weight: 800; color: var(--oro); }
+  .carta.no { opacity: .45; }
+  .carta.caserma { padding-bottom: 12px; }
+  .carta.caserma .em { font-size: 30px; }
+  .carta.caserma .liv { font-size: 9px; letter-spacing: 1.5px; color: var(--oro); }
+  .carta.caserma .su { font-size: 12px; font-weight: 800; color: #e9c8ff; }
+  .carta.caserma .prog { position: absolute; left: 7px; right: 7px; bottom: 5px; height: 4px; border-radius: 2px; background: rgba(0,0,0,.45); overflow: hidden; }
+  .carta.caserma .prog b { display: block; height: 100%; width: 0; background: #7ee08c; }
+  .carta.caserma .corsia { position: absolute; top: 3px; left: 4px; font-size: 13px; padding: 1px 6px; border-radius: 8px; background: rgba(255,255,255,.14); }
+  .carta.armata { border-color: var(--oro); transform: translateY(-6px); box-shadow: 0 0 14px rgba(255,210,74,.5); }
+
+  /* il foglio della domanda: copre la mano, il campo resta in vista sopra */
+  #foglio { position: absolute; left: 0; right: 0; bottom: 0; background: #151c33; border-top: 2px solid #3a4670;
+    border-radius: 18px 18px 0 0; padding: 14px 14px calc(14px + env(safe-area-inset-bottom)); display: none; z-index: 5;
+    box-shadow: 0 -10px 30px rgba(0,0,0,.5); }
+  #foglio.si { display: block; }
+  #foglio .testa { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; padding-right: 36px; }
+  #foglio .testa .em { font-size: 30px; }
+  #foglio .testa .nome { font-weight: 700; }
+  #foglio .testa .nota { font-size: 12.5px; color: #9fb0d8; }
+  #foglio .chiudi { position: absolute; top: 10px; right: 10px; width: 34px; height: 34px; border-radius: 50%; background: rgba(255,255,255,.1); font-size: 16px; }
+  #foglio .conto { text-align: center; font-size: 44px; font-weight: 800; letter-spacing: .03em; margin: 6px 0 10px; }
+  #foglio .scelte { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  #foglio .scelte button { min-height: 62px; border-radius: 14px; font-size: 28px; font-weight: 700; background: #2a3454; border: 2px solid #3a4670; }
+  #foglio .scelte button:active { background: #3a4670; }
+  #foglio .scelte button.giusta { background: #1f7a3c; border-color: #4be07b; }
+  #foglio .scelte button.sbagliata { background: #7a2a2a; border-color: #ff7b7b; }
+  #foglio .esito { min-height: 40px; margin-top: 10px; text-align: center; font-size: 14.5px; color: #ffd9a0; }
+
+  .velo { position: absolute; inset: 0; background: rgba(8,11,20,.88); z-index: 10; display: none; flex-direction: column;
+    align-items: center; justify-content: center; padding: 22px; text-align: center; gap: 12px; overflow-y: auto; }
+  .velo.si { display: flex; }
+  .velo h1 { margin: 0; font-size: 30px; letter-spacing: -.02em; }
+  .velo p { margin: 0; color: #9fb0d8; max-width: 34ch; }
+  .gruppo { width: 100%; max-width: 360px; text-align: left; }
+  .gruppo .etic { font-size: 12px; color: #8a96b8; margin: 8px 0 4px; text-transform: uppercase; letter-spacing: .06em; }
+  .chips { display: flex; gap: 6px; }
+  .chips button { flex: 1; padding: 10px 6px; border-radius: 10px; background: #1d2540; border: 2px solid #2e3860; font-size: 14px; }
+  .chips button.su { background: #2c3c78; border-color: var(--blu); font-weight: 700; }
+  .passi { width: 100%; max-width: 360px; text-align: left; display: grid; gap: 8px; }
+  .passi > div { display: flex; gap: 10px; align-items: flex-start; background: #151c33; border: 1px solid #2a3454; border-radius: 12px; padding: 8px 10px; font-size: 13.5px; color: #c8d2ee; }
+  .passi > div > b { flex: 0 0 26px; height: 26px; border-radius: 50%; background: var(--viola); display: grid; place-items: center; font-size: 14px; }
+  .grosso { margin-top: 10px; padding: 14px 40px; border-radius: 16px; background: linear-gradient(180deg, #ffd24a, #f0a21a); color: #3a2400; font-weight: 800; font-size: 20px; }
+  .secondario { padding: 10px 24px; border-radius: 12px; background: rgba(255,255,255,.1); }
+  table.stat { border-collapse: collapse; margin: 4px auto; font-size: 15px; }
+  table.stat td, table.stat th { padding: 4px 12px; }
+  table.stat th { color: #8a96b8; font-weight: 500; font-size: 12px; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="alto">
+    <span class="tempo" id="tempo">2:30</span>
+    <span class="corone" id="corone">🔵 0 – 0 🔴</span>
+    <button id="esci" aria-label="Esci">✕</button>
+  </div>
+  <div id="campo">
+    <canvas id="tela"></canvas>
+    <div id="suggerimento"></div>
+  </div>
+  <div id="basso">
+    <div id="elisirRiga"><div id="elisir"><i></i><div class="tacche"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div><b>5</b></div></div>
+    <div id="mano"></div>
+  </div>
+
+  <div id="foglio">
+    <button class="chiudi" aria-label="Chiudi">✕</button>
+    <div class="testa"><span class="em"></span><div><div class="nome"></div><div class="nota"></div></div></div>
+    <div class="conto"></div>
+    <div class="scelte"></div>
+    <div class="esito"></div>
+  </div>
+
+  <div class="velo si" id="menu">
+    <h1>⚔️ L'arena</h1>
+    <div class="passi caserme">
+      <div><b>1</b><span>Parti con una caserma di 🏹 arcieri e 14 🪙. Le truppe partono da sole, e i muri 🧱 sono già alzati: hai qualche secondo per decidere.</span></div>
+      <div><b>2</b><span>In basso tocca una caserma: se non ce l'hai la <b>costruisci</b>, se ce l'hai la <b>potenzi</b>. Ogni scelta costa monete e un <b>calcolo</b>. Se te la rompono, la ricostruisci.</span></div>
+      <div><b>3</b><span><b>⛏️ Miniera</b>: le monete arrivano più in fretta, ma finché investi non attacchi. <b>🧱 Muro</b> e <b>🔧 Ripara</b> prendono tempo, <b>🗼 Torretta</b> rende più forte la difesa davanti alla base: vanno da soli dove servono. La base si difende anche da sola, ma a lungo andare viene sopraffatta.</span></div>
+    </div>
+    <div class="gruppo">
+      <div class="etic">Livello dei calcoli</div>
+      <div class="chips" data-imp="livello">
+        <button data-v="1" class="su">1 · somme e differenze</button>
+        <button data-v="2">2 · tabelline</button>
+        <button data-v="3">3 · tutto, più grande</button>
+      </div>
+      <div class="etic">Il nemico è…</div>
+      <div class="chips" data-imp="nemico">
+        <button data-v="calmo">calmo</button>
+        <button data-v="normale" class="su">normale</button>
+        <button data-v="tosto">tosto</button>
+      </div>
+    </div>
+    <button class="grosso" id="gioca">Gioca</button>
+  </div>
+
+  <div class="velo" id="fine">
+    <h1></h1>
+    <p class="sotto"></p>
+    <table class="stat"></table>
+    <button class="grosso" id="ancora">Ancora</button>
+    <button class="secondario" id="alMenu">Cambia impostazioni</button>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════
+   L'ARENA — un Clash Royale in cui schierare una carta è risolvere
+   il suo calcolo.
+
+   Cosa si prova qui:
+     · due corsie, due ponti, tre torri per parte; le truppe camminano da
+       sole verso le torri e si scontrano per strada;
+     · l'elisir (0–10) si ricarica da solo e ogni carta ha un costo;
+     · per schierare una carta: la tocchi → il suo calcolo → se è giusto
+       tocchi il tuo campo e la truppa parte. L'OPERAZIONE la decide la
+       carta (+ − × ÷, come le quattro torri del castello), la GRANDEZZA
+       dei numeri il costo: una carta cara chiede un calcolo più duro;
+     · sbagliare non costa elisir né monete: la carta torna in fondo al
+       mazzo (come se l'avessi giocata) e si dice come si fa. Il prezzo
+       è il tempo e la mano che cambia;
+     · mentre si risponde il campo si ferma, rallenta o scorre: è la
+       prima cosa da decidere guardando i bambini giocare.
+
+   Il motore (passo, schiera, nemico) non tocca il DOM: sotto `__arena`
+   si può far girare a mano e far giocare un bot, per misurare. La grafica
+   è provvisoria: emoji e forme, niente sprite.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ═════════ 1. IL MONDO E LE CARTE ═════════ */
+
+const W = 360, H = 540
+const RT = 253, RB = 287, RY = 270            // il fiume: bordo alto, basso, mezzo
+const PONTI = [180]                          // una corsia sola, al centro: niente nemici «dietro» le linee
+const DURATA = 150                            // secondi di partita
+const ELISIR_MAX = 10
+
+/* bers: chi può colpire — 'tutti', 'terra' (non chi vola), 'torri' (solo edifici).
+   gitt: gittata in unità del campo; splash: raggio dello scoppio (0 = singolo). */
+const CARTE = {
+  cavaliere:  { nome: 'Cavaliere',  em: '🗡️', costo: 3, op: '+', n: 1, hp: 420, dmg: 55, rate: 1.1, vel: 38, gitt: 14, bers: 'terra', vola: false, splash: 0,
+                nota: 'Solido, ma non colpisce chi vola.' },
+  arciere:    { nome: 'Arcieri',    em: '🏹', costo: 2, op: '+', n: 2, hp: 110, dmg: 24, rate: 1.0, vel: 40, gitt: 84, bers: 'tutti', vola: false, splash: 0,
+                nota: 'Due, da lontano. Colpiscono anche chi vola.' },
+  pipistrelli:{ nome: 'Pipistrelli',em: '🦇', costo: 3, op: '−', n: 3, hp: 62,  dmg: 22, rate: 0.9, vel: 82, gitt: 12, bers: 'tutti', vola: true,  splash: 0,
+                nota: 'Tre, volano sopra i muri e sono veloci. Deboli ai colpi ad area.' },
+  maga:       { nome: 'Maga',       em: '🧙', costo: 4, op: '−', n: 1, hp: 230, dmg: 72, rate: 1.4, vel: 36, gitt: 90, bers: 'tutti', vola: false, splash: 28,
+                nota: 'Da lontano, e il suo colpo scoppia: ottima contro i gruppi.' },
+  golem:      { nome: 'Golem',      em: '🪨', costo: 5, op: '×', n: 1, hp: 1300,dmg: 95, rate: 2.0, vel: 22, gitt: 16, bers: 'torri', vola: false, splash: 0,
+                nota: 'Lentissimo, resistente, va dritto alle torri e le ignora tutte.' },
+  lupi:       { nome: 'Lupi',       em: '🐺', costo: 2, op: '×', n: 2, hp: 150, dmg: 40, rate: 0.8, vel: 72, gitt: 13, bers: 'terra', vola: false, splash: 0,
+                nota: 'Due, velocissimi. Non colpiscono chi vola.' },
+  bombarolo:  { nome: 'Bombarolo',  em: '💣', costo: 3, op: '÷', n: 1, hp: 210, dmg: 85, rate: 1.6, vel: 36, gitt: 70, bers: 'terra', vola: false, splash: 30,
+                nota: 'Lancia bombe a terra che scoppiano. Non colpisce chi vola.' },
+  drago:      { nome: 'Draghetto',  em: '🐉', costo: 5, op: '÷', n: 1, hp: 390, dmg: 42, rate: 1.2, vel: 50, gitt: 42, bers: 'tutti', vola: true,  splash: 26,
+                nota: 'Vola sopra i muri e sputa fuoco ad area. Lo fermano gli arcieri.' },
+}
+const IDS = Object.keys(CARTE)
+
+const TORRE = {
+  p:  { hp: 800,  dmg: 34, rate: 0.8, gitt: 125, r: 18 },      // la torretta: da sola tiene i primi minuti
+  re: { hp: 1150, dmg: 40, rate: 1.1, gitt: 108, r: 23 },
+}
+const NEMICO = {                      // secondi per ogni elisir, e ogni quanto pensa
+  calmo:   { elisir: 4.6, pausa: 2.2 },
+  normale: { elisir: 3.4, pausa: 1.5 },
+  tosto:   { elisir: 2.6, pausa: 1.0 },
+}
+const ELISIR_GIOCATORE = 3.0          // secondi per ogni elisir
+
+/* Le due azioni di strategia (modo carte): non sono truppe, sono scelte.
+   Ripara: +40% di vita a una tua torre. Pozzo: ogni livello fa arrivare
+   l'elisir il 30% prima. Si pagano in elisir e con un calcolo, più duro
+   quanto più costano: l'operazione è + per aggiungere vita, × per moltiplicare. */
+const AZIONI = {
+  ripara: { nome: 'Ripara', em: '🔧', op: '+', nota: 'Rimette in sesto la tua costruzione messa peggio: +40% di vita.' },
+  pozzo:  { nome: 'Miniera', em: '⛏️', op: '×', nota: 'Le monete arrivano il 30% più in fretta, per sempre. Costa ora, rende dopo.' },
+}
+const COSTO_RIPARA = 3
+AZIONI.torretta = { nome: 'Torretta', em: '🗼', op: '÷', nota: 'La torretta davanti alla tua base spara più forte e più spesso, e resiste di più.' }
+AZIONI.barricata = { nome: 'Barricata', em: '🧱', op: '−', nota: 'Un muro dove arrivano più nemici: chi cammina lo colpisce prima del resto, chi vola lo scavalca.' }
+const COSTO_BARR = 2
+const BARR_HP = 500
+const BARR_MAX = 2                   // per parte, uno dietro l'altro
+const MURI_Y = [345, 372]            // le due file della tua metà; il nemico è specchiato
+const nuovoMuro = (lato, fila) => ({ lato, tipo: 'b', fila, x: PONTI[0], y: lato === 'io' ? MURI_Y[fila] : H - MURI_Y[fila], hp: BARR_HP, max: BARR_HP, r: 26, vivo: true, fl: 0 })
+const POZZO_COSTI = [0, 4, 6]        // POZZO_COSTI[liv] = da liv a liv+1
+const POZZO_MAX_CARTE = 3
+/* Le stesse tre azioni valgono nei due modi, ma si pagano con la valuta del
+   modo: elisir (0–10) nelle carte, monete (senza tetto) nelle caserme, dove i
+   prezzi sono più grandi perché le monete arrivano più piano e si spendono
+   anche per potenziare. */
+const inCaserme = () => G.modo === 'caserme'
+const valuta = () => (inCaserme() ? 'oro' : 'elisir')
+const costoRipara = () => (inCaserme() ? 6 : COSTO_RIPARA)
+const costoBarr = () => (inCaserme() ? 4 : COSTO_BARR)
+const costoPozzo = liv => (inCaserme() ? [0, 10, 16, 24, 34, 46][liv] : POZZO_COSTI[liv])
+const pozzoMax = () => (inCaserme() ? 6 : 3)
+const pozzoDi = liv => 1 + 0.3 * (liv - 1)
+
+/* Modo «caserme»: si parte con una caserma di arcieri e poche monete. Le
+   altre si COSTRUISCONO (monete + il calcolo della loro truppa) su un posto
+   libero della tua metà: il posto decide la corsia. Da quando è finita,
+   una caserma manda la sua truppa da sola; si potenzia fino al livello 5.
+   I muri sono già alzati da tutte e due le parti: i primi secondi si
+   decidono con calma. */
+const BARACCHE = { arciere: 0, cavaliere: 8, lupi: 8, bombarolo: 10, pipistrelli: 12, maga: 12, golem: 14, drago: 16 }
+const BASE = 'arciere'
+const T_COSTRUZIONE = 6            // secondi prima della prima squadra
+const T_INIZIO = 9                 // la caserma di partenza: un po' di calma
+const ORO_INIZIALE = 14
+const SLOTS = [[40, 332], [320, 332], [40, 402], [320, 402], [40, 472], [320, 472], [112, 516], [248, 516]]   // la tua metà; il nemico è specchiato
+const slotXY = (lato, i) => ({ x: SLOTS[i][0], y: lato === 'io' ? SLOTS[i][1] : H - SLOTS[i][1] })
+const LIV_MAX = 10
+const COSTI = Array.from({ length: LIV_MAX + 1 }, (_, l) => (l ? Math.round(6 * 1.28 ** (l - 1)) : 0))   // COSTI[liv] = da liv a liv+1: 6, 8, 10, 13, 16, 21, 27, 34, 44
+const intervalloDi = liv => 9 / (1 + 0.12 * (liv - 1))   // secondi fra due squadre
+const forzaDi = liv => 1 + 0.25 * (liv - 1)              // vita e danno
+const hpCasermaDi = liv => 300 + 60 * (liv - 1)          // le caserme si possono rompere
+const ORO = { io: 1.2, calmo: 1.9, normale: 1.45, tosto: 1.1 }   // secondi per ogni moneta
+
+/* ═════════ 2. LE DOMANDE ═════════
+   Un banchetto finto (nel gioco vero arriverebbe dai moduli di `src/quiz/`).
+   L'operazione la sceglie la carta; la difficoltà viene dal livello e dal costo. */
+
+const casuale = (a, b) => a + Math.floor(Math.random() * (b - a + 1))
+const mescola = l => l.map(v => [Math.random(), v]).sort((a, b) => a[0] - b[0]).map(p => p[1])
+
+function domanda(op, costo, livello) {
+  const d = Math.min(1, [0, 0.3, 0.6][livello - 1] + (costo - 1) * 0.1)
+  let a, b, r, testo
+  if (op === '+') {
+    const m = Math.round(8 + d * 40)
+    a = casuale(Math.ceil(m / 3), m); b = casuale(3, Math.max(5, Math.round(m * 0.7)))
+    r = a + b; testo = `${a} + ${b}`
+  } else if (op === '−') {
+    const m = Math.round(12 + d * 60)
+    a = casuale(Math.ceil(m / 2), m); b = casuale(2, a - 1); r = a - b; testo = `${a} − ${b}`
+  } else if (op === '×') {
+    const m = Math.round(4 + d * 8)
+    a = casuale(2, m); b = casuale(2, Math.min(m + 1, 12)); r = a * b; testo = `${a} × ${b}`
+  } else {
+    const m = Math.round(4 + d * 8)
+    b = casuale(2, m); r = casuale(2, Math.min(m + 2, 12)); a = b * r; testo = `${a} : ${b}`
+  }
+  /* risposte finte vicine, fatte dagli errori che si fanno davvero: lontane si scartano a occhio */
+  const cand = new Set([r - 1, r + 1, r - 2, r + 2, r - 10, r + 10])
+  if (op === '×') { cand.add(a * (b - 1)); cand.add(a * (b + 1)); cand.add(a + b) }
+  if (op === '+') cand.add(a - b > 0 ? a - b : r + 3)
+  if (op === '−') cand.add(a + b)
+  if (op === '÷') { cand.add(a - b); cand.add(r + 3) }
+  const finte = mescola([...cand].filter(v => v >= 0 && v !== r))
+  const scelte = mescola([r, ...finte.slice(0, 3)])
+  return { op, a, b, r, testo, scelte, aiuto: spiega(op, a, b, r) }
+}
+
+/* Dopo uno sbaglio: il perché e come si fa. */
+function spiega(op, a, b, r) {
+  if (op === '+') {
+    const alla = 10 - (a % 10)
+    return (a % 10) + (b % 10) > 10 && b < 10 ? `${a} + ${b}: prima ${alla} per arrivare a ${a + alla}, poi ${b - alla} → ${r}`
+                                               : `${a} + ${b} = ${r}`
+  }
+  if (op === '−') {
+    const gu = a % 10
+    return gu > 0 && gu < b && b < 20 ? `${a} − ${b}: prima togli ${gu} e arrivi a ${a - gu}, poi altri ${b - gu} → ${r}` : `${a} − ${b} = ${r}, perché ${r} + ${b} = ${a}`
+  }
+  if (op === '×') return b <= 5 ? `${a} × ${b} = ${Array(b).fill(a).join(' + ')} = ${r}` : `${a} × ${b} = ${a} × ${b - 1} + ${a} = ${a * (b - 1)} + ${a} = ${r}`
+  return `${a} : ${b} = ${r}, perché ${b} × ${r} = ${a}`
+}
+
+/* ═════════ 3. IL MOTORE (niente DOM) ═════════ */
+
+let G = null        // la partita
+let IMP = { modo: 'carte', livello: 1, tempo: 0.25, nemico: 'normale' }
+
+function nuovaCaserma(lato, id, slot, t) {
+  const q = slotXY(lato, slot)
+  return { lato, id, op: CARTE[id].op, liv: 1, slot, t, ciclo: t, bloc: 0, tipo: 'c', x: q.x, y: q.y, r: 16, hp: hpCasermaDi(1), max: hpCasermaDi(1), vivo: true, fl: 0 }
+}
+
+function nuovaLato() {
+  const m = mescola(IDS)
+  return { elisir: 5, oro: 0, pozzo: 1, mano: m.slice(0, 4), coda: m.slice(4) }
+}
+
+function nuovaPartita(imp) {
+  IMP = { ...IMP, ...imp }
+  G = {
+    t: 0, resto: DURATA, fine: null,
+    lati: { io: nuovaLato(), nem: nuovaLato() },
+    torri: [
+      { lato: 'nem', tipo: 'p',  x: 180, y: H - 418 }, { lato: 'nem', tipo: 're', x: 180, y: H - 482 },
+      { lato: 'io',  tipo: 'p',  x: 180, y: 418 },     { lato: 'io',  tipo: 're', x: 180, y: 482 },
+    ].map(t => ({ ...t, hp: TORRE[t.tipo].hp, max: TORRE[t.tipo].hp, cool: 0.5, vivo: true, fl: 0, r: TORRE[t.tipo].r, liv: 1 })),
+    unita: [], barr: [], colpi: [], effetti: [], giocato: false,
+    pensa: 2.5, modo: IMP.modo,
+    caserme: { io: [nuovaCaserma('io', BASE, 6, T_INIZIO)], nem: [nuovaCaserma('nem', BASE, 6, T_INIZIO)] },
+    stat: { '+': { g: 0, s: 0 }, '−': { g: 0, s: 0 }, '×': { g: 0, s: 0 }, '÷': { g: 0, s: 0 } },
+  }
+  if (G.modo === 'caserme') {
+    G.lati.io.oro = G.lati.nem.oro = ORO_INIZIALE
+    for (const lato of ['io', 'nem']) G.barr.push(nuovoMuro(lato, 0))
+  }
+  return G
+}
+
+function cicla(l, id) {
+  const i = l.mano.indexOf(id)
+  const nuova = l.coda.shift()
+  l.mano[i] = nuova
+  l.coda.push(id)
+}
+
+function schiera(lato, id, x, y, forza = 1) {
+  if (lato === 'io') G.giocato = true
+  const c = CARTE[id]
+  for (let i = 0; i < c.n; i++) {
+    const dx = (i - (c.n - 1) / 2) * 14
+    G.unita.push({ id, lato, x: x + dx, y: y + (i % 2) * 5, hp: c.hp * forza, max: c.hp * forza, mult: forza, cool: 0.9, fl: 0, vola: c.vola, nasce: 0.8, fase: 0, px: 0, r: 8 })
+  }
+}
+
+const altro = l => (l === 'io' ? 'nem' : 'io')
+const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y)
+const lato_y = y => (y < RT ? -1 : y > RB ? 1 : 0)     // -1 sopra il fiume, 1 sotto, 0 nell'acqua
+
+function ferisci(bersaglio, dmg) {
+  bersaglio.hp -= dmg
+  bersaglio.fl = 0.1
+  if (bersaglio.hp <= 0) {
+    bersaglio.hp = 0
+    if (bersaglio.tipo) bersaglio.vivo = false
+  }
+}
+
+function colpisci(att, c, bersaglio) {
+  ferisci(bersaglio, c.dmg * (att.mult || 1))
+  G.colpi.push({ x1: att.x, y1: att.y, x2: bersaglio.x, y2: bersaglio.y, t: 0.12, lato: att.lato, sc: c.splash })
+  if (c.splash) {
+    for (const e of G.unita) {
+      if (e === bersaglio || e.lato === att.lato || e.hp <= 0) continue
+      if (c.bers === 'terra' && e.vola) continue
+      if (Math.hypot(e.x - bersaglio.x, e.y - bersaglio.y) <= c.splash) ferisci(e, c.dmg * 0.8 * (att.mult || 1))
+    }
+  }
+}
+
+/* gli edifici che una truppa può prendere di mira: torri, caserme, e i muri solo per chi cammina */
+function edifici(u) {
+  const l = u.vola ? G.torri : G.torri.concat(G.barr)
+  return G.modo === 'caserme' ? l.concat(G.caserme[altro(u.lato)]) : l
+}
+
+function passoUnita(u, dt) {
+  const c = CARTE[u.id]
+  if (u.fl > 0) u.fl -= dt
+  if (u.nasce > 0) { u.nasce -= dt; return }
+  if (u.cool > 0) u.cool -= dt
+  const nemico = altro(u.lato)
+
+  /* il bersaglio: il più vicino a tiro d'occhio fra le unità, altrimenti la torre più vicina */
+  let bers = null, mn = 1e9
+  if (c.bers !== 'torri') {
+    for (const e of G.unita) {
+      if (e.lato !== nemico || e.hp <= 0 || e.nasce > 0.4) continue
+      if (c.bers === 'terra' && e.vola) continue
+      const d = dist(u, e)
+      if (d < mn && d <= 80) { mn = d; bers = e }
+    }
+  }
+  if (!bers) {
+    mn = 1e9
+    for (const t of edifici(u)) {      // chi vola scavalca i muri
+      if (t.lato !== nemico || !t.vivo) continue
+      const d = dist(u, t)
+      if (d < mn) { mn = d; bers = t }
+    }
+  }
+  if (!bers) return
+
+  const raggio = bers.r || 8
+  const d = dist(u, bers)
+  if (d - raggio <= c.gitt) {
+    if (u.cool <= 0) { colpisci(u, c, bers); u.cool = c.rate }
+    return
+  }
+
+  /* dove andare: i volanti dritti, chi cammina passa dal ponte */
+  let mx = bers.x, my = bers.y
+  if (!u.vola) {
+    const mia = lato_y(u.y), sua = lato_y(bers.y)
+    const inAcqua = mia === 0
+    if (inAcqua) {
+      my = u.dirY > 0 ? RB + 6 : RT - 6; mx = u.px
+    } else if (sua !== 0 && sua !== mia) {
+      if (!u.px || u.fase === 0) {
+        u.px = PONTI.reduce((p, q) => (Math.abs(q - u.x) < Math.abs(p - u.x) ? q : p))
+        u.fase = 1
+      }
+      u.dirY = sua < mia ? -1 : 1
+      const ay = u.dirY < 0 ? RB + 12 : RT - 12            // il punto di imbocco, fuori dall'acqua
+      if (Math.hypot(u.x - u.px, u.y - ay) > 5 && (u.dirY < 0 ? u.y > ay - 1 : u.y < ay + 1)) { mx = u.px; my = ay }
+      else { mx = u.px; my = u.dirY < 0 ? RT - 8 : RB + 8 }
+    } else {
+      u.fase = 0
+    }
+  }
+  const dx = mx - u.x, dy = my - u.y, n = Math.hypot(dx, dy) || 1
+  const v = c.vel * dt
+  u.x += (dx / n) * Math.min(v, n)
+  u.y += (dy / n) * Math.min(v, n)
+  if (!u.vola && lato_y(u.y) === 0) u.dirY = u.dirY || (my < u.y ? -1 : 1)
+}
+
+function passoTorre(t, dt) {
+  if (t.fl > 0) t.fl -= dt
+  if (!t.vivo) return
+  if (t.cool > 0) t.cool -= dt
+  const k = TORRE[t.tipo], torretta = t.tipo === 'p'
+  const dmg = k.dmg * (torretta ? 1 + 0.3 * (t.liv - 1) : 1)
+  const rate = k.rate / (torretta ? 1 + 0.08 * (t.liv - 1) : 1)
+  const gitt = k.gitt + (torretta ? 4 * (t.liv - 1) : 0)
+  let bers = null, mn = 1e9
+  for (const e of G.unita) {
+    if (e.lato === t.lato || e.hp <= 0 || e.nasce > 0.4) continue
+    const d = dist(t, e)
+    if (d < mn && d <= gitt) { mn = d; bers = e }
+  }
+  if (bers && t.cool <= 0) {
+    ferisci(bers, dmg)
+    G.colpi.push({ x1: t.x, y1: t.y - 12, x2: bers.x, y2: bers.y, t: 0.12, lato: t.lato, sc: 0 })
+    t.cool = rate
+  }
+}
+
+function separa() {
+  const u = G.unita
+  for (let i = 0; i < u.length; i++) for (let j = i + 1; j < u.length; j++) {
+    const a = u[i], b = u[j]
+    if (a.vola !== b.vola) continue
+    const dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy)
+    if (d > 0 && d < 12) {
+      const s = (12 - d) / 2 / d
+      /* in acqua non si spinge: si resta sul ponte */
+      a.x -= dx * s; a.y -= dy * s; b.x += dx * s; b.y += dy * s
+    }
+  }
+}
+
+function passo(dt) {
+  if (!G || G.fine) return
+  G.t += dt
+  G.resto -= dt
+  if (G.modo === 'caserme') {
+    G.lati.io.oro += dt * pozzoDi(G.lati.io.pozzo) / ORO.io
+    G.lati.nem.oro += dt * pozzoDi(G.lati.nem.pozzo) / ORO[IMP.nemico]
+    passoCaserme(dt)
+  } else for (const lato of ['io', 'nem']) {
+    const l = G.lati[lato]
+    const s = (lato === 'io' ? ELISIR_GIOCATORE : NEMICO[IMP.nemico].elisir) / pozzoDi(l.pozzo)
+    l.elisir = Math.min(ELISIR_MAX, l.elisir + dt / s)
+  }
+  for (const u of G.unita) passoUnita(u, dt)
+  separa()
+  for (const t of G.torri) passoTorre(t, dt)
+  G.unita = G.unita.filter(u => u.hp > 0)
+  for (const b of G.barr) if (b.fl > 0) b.fl -= dt
+  if (G.modo === 'caserme') for (const lato of ['io', 'nem']) {
+    for (const c of G.caserme[lato]) if (c.fl > 0) c.fl -= dt
+    G.caserme[lato] = G.caserme[lato].filter(c => c.hp > 0)       // crollata: il posto torna libero, e si può ricostruire
+  }
+  G.barr = G.barr.filter(b => b.hp > 0)
+  for (const c of G.colpi) c.t -= dt
+  for (const e of G.effetti) e.t -= dt
+  G.effetti = G.effetti.filter(e => e.t > 0)
+  G.colpi = G.colpi.filter(c => c.t > 0)
+  if (G.modo === 'caserme') pensaCaserme(dt); else pensaNemico(dt)
+  controllaFine()
+}
+
+/* ── modo caserme ── */
+function passoCaserme(dt) {
+  for (const lato of ['io', 'nem']) for (const c of G.caserme[lato]) {
+    if (c.bloc > 0) c.bloc -= dt
+    c.t -= dt
+    if (c.t > 0) continue
+    c.ciclo = intervalloDi(c.liv)
+    c.t += c.ciclo
+    const q = slotXY(lato, c.slot)
+    schiera(lato, c.id, q.x, q.y + (lato === 'io' ? -16 : 16), forzaDi(c.liv))
+  }
+}
+
+function slotLiberi(lato) {
+  return SLOTS.map((_, i) => i).filter(i => !G.caserme[lato].some(c => c.slot === i))
+}
+
+/* Il posto lo sceglie il gioco: la corsia con meno caserme, e dentro la corsia
+   il posto più al sicuro (dietro) per primo. */
+function costruisciAuto(lato, id) {
+  const liberi = slotLiberi(lato)
+  if (!liberi.length) return false
+  const sx = liberi.filter(i => SLOTS[i][0] < W / 2), dx = liberi.filter(i => SLOTS[i][0] >= W / 2)
+  const nSx = G.caserme[lato].filter(c => SLOTS[c.slot][0] < W / 2).length
+  const nDx = G.caserme[lato].length - nSx
+  let lista = nSx < nDx ? sx : nDx < nSx ? dx : (Math.random() < 0.5 ? sx : dx)
+  if (!lista.length) lista = sx.length ? sx : dx
+  lista.sort((a, b) => (lato === 'io' ? SLOTS[b][1] - SLOTS[a][1] : SLOTS[a][1] - SLOTS[b][1]))
+  return costruisci(lato, id, lista[0])
+}
+
+function costruisci(lato, id, slot) {
+  const l = G.lati[lato]
+  if (G.caserme[lato].some(c => c.id === id) || !slotLiberi(lato).includes(slot) || l.oro < BARACCHE[id]) return false
+  l.oro -= BARACCHE[id]
+  G.caserme[lato].push(nuovaCaserma(lato, id, slot, T_COSTRUZIONE))
+  if (lato === 'io') G.giocato = true
+  return true
+}
+
+function potenzia(lato, i) {
+  const c = G.caserme[lato][i], l = G.lati[lato]
+  if (c.liv >= LIV_MAX || l.oro < COSTI[c.liv]) return false
+  l.oro -= COSTI[c.liv]
+  c.liv++
+  c.max = hpCasermaDi(c.liv); c.hp += 60                    // salire dà anche muri più forti
+  if (lato === 'io') G.giocato = true
+  return true
+}
+
+/* il nemico compra da sé, la caserma più indietro per prima */
+function pensaCaserme(dt) {
+  G.pensa -= dt
+  if (G.pensa > 0) return
+  G.pensa = 1.2
+  const l = G.lati.nem
+  const ferite = G.torri.filter(t => t.lato === 'nem' && t.vivo && t.hp < t.max * 0.55).sort((a, b) => a.hp / a.max - b.hp / b.max)
+  if (ferite.length && l.oro >= costoRipara() && Math.random() < 0.5) { riparaTorre('nem', ferite[0]); return }
+  if (G.t > 15 && l.pozzo < pozzoMax() && l.oro >= costoPozzo(l.pozzo) && Math.random() < 0.3) { miglioraPozzo('nem'); return }
+  const minacce = G.unita.filter(u => u.lato === 'io' && u.y < RY + 40 && !u.vola)
+  if (minacce.length && G.barr.filter(b => b.lato === 'nem').length < BARR_MAX && l.oro >= costoBarr() + 3 && Math.random() < 0.25) {
+    piazzaBarricataAuto('nem')
+    return
+  }
+  const tn = G.torri.find(t => t.lato === 'nem' && t.tipo === 'p')
+  if (tn && tn.vivo && tn.liv < LIV_TORRE_MAX && l.oro >= costoTorretta(tn.liv) && G.t > 12 && Math.random() < 0.2) { potenziaTorretta('nem'); return }
+  /* costruisce una caserma nuova (le prime sempre, poi a volte) o potenzia la più indietro */
+  const mie = G.caserme.nem, liberi = slotLiberi('nem')
+  const nuove = Object.keys(BARACCHE).filter(id => !mie.some(c => c.id === id) && l.oro >= BARACCHE[id])
+  if (nuove.length && liberi.length && (mie.length < 3 || Math.random() < 0.4)) {
+    costruisciAuto('nem', nuove[casuale(0, nuove.length - 1)])
+    return
+  }
+  const poss = mie.map((c, i) => ({ c, i })).filter(({ c }) => c.liv < LIV_MAX && l.oro >= COSTI[c.liv])
+  if (!poss.length) return
+  const minimo = Math.min(...poss.map(x => x.c.liv))
+  const piuIndietro = poss.filter(x => x.c.liv === minimo)
+  potenzia('nem', piuIndietro[casuale(0, piuIndietro.length - 1)].i)
+}
+
+/* il nemico: ogni tanto guarda cosa c'è, e se ha elisir gioca */
+function pensaNemico(dt) {
+  G.pensa -= dt
+  if (G.pensa > 0) return
+  G.pensa = NEMICO[IMP.nemico].pausa * (0.7 + Math.random() * 0.6)
+  const l = G.lati.nem
+  const ferite = G.torri.filter(t => t.lato === 'nem' && t.vivo && t.hp < t.max * 0.55).sort((a, b) => a.hp / a.max - b.hp / b.max)
+  if (ferite.length && l.elisir >= COSTO_RIPARA && Math.random() < 0.5) { riparaTorre('nem', ferite[0]); return }
+  if (G.t > 20 && l.pozzo < pozzoMax() && l.elisir >= POZZO_COSTI[l.pozzo] + 2 && Math.random() < 0.25) { miglioraPozzo('nem'); return }
+  const minacce = G.unita.filter(u => u.lato === 'io' && u.y < RY + 40)       // truppe mie che si avvicinano
+  const difesa = minacce.length > 0
+  if (difesa && G.barr.filter(b => b.lato === 'nem').length < BARR_MAX && l.elisir >= COSTO_BARR + 2 && Math.random() < 0.25) {
+    const sx = minacce.reduce((q, u) => q + u.x, 0) / minacce.length
+    piazzaBarricata('nem', sx < W / 2 ? PONTI[0] : PONTI[1], casuale(185, 215))
+    return
+  }
+  const possibili = l.mano.filter(id => CARTE[id].costo <= l.elisir)
+  if (!possibili.length) return
+  if (!difesa && l.elisir < 7 && Math.random() < 0.6) return                // si accumula per una spinta
+  let scelta
+  if (difesa) {
+    const voli = minacce.some(u => u.vola)
+    const buoni = possibili.filter(id => (voli ? CARTE[id].bers === 'tutti' : true) && CARTE[id].bers !== 'torri')
+    scelta = (buoni.length ? buoni : possibili)[casuale(0, (buoni.length ? buoni : possibili).length - 1)]
+  } else {
+    scelta = possibili[casuale(0, possibili.length - 1)]
+  }
+  let lane
+  if (difesa) {
+    const sx = minacce.reduce((s, u) => s + u.x, 0) / minacce.length
+    lane = sx < W / 2 ? 0 : 1
+  } else lane = casuale(0, 1)
+  const x = PONTI[lane] + casuale(-14, 14)
+  const y = difesa ? casuale(150, 205) : casuale(70, 110)
+  l.elisir -= CARTE[scelta].costo
+  schiera('nem', scelta, x, y)
+  cicla(l, scelta)
+}
+
+function corone(lato) {          // le corone di `lato` = torri nemiche abbattute
+  return G.torri.filter(t => t.lato === altro(lato) && !t.vivo).length
+}
+function vitaTorri(lato) {
+  return G.torri.filter(t => t.lato === lato).reduce((s, t) => s + t.hp / t.max, 0)
+}
+
+function controllaFine() {
+  const reMio = G.torri.find(t => t.lato === 'io' && t.tipo === 're')
+  const reLoro = G.torri.find(t => t.lato === 'nem' && t.tipo === 're')
+  if (!reLoro.vivo) G.fine = 'vinto'
+  else if (!reMio.vivo) G.fine = 'perso'
+  else if (G.resto <= 0) {
+    const a = corone('io'), b = corone('nem')
+    if (a !== b) G.fine = a > b ? 'vinto' : 'perso'
+    else {
+      const va = vitaTorri('io'), vb = vitaTorri('nem')
+      G.fine = Math.abs(va - vb) < 0.05 ? 'pari' : va > vb ? 'vinto' : 'perso'
+    }
+  }
+}
+
+/* Il giocatore: schiera la carta già risposta. Torna true se è andata. */
+function giocaCarta(id, x, y) {
+  const l = G.lati.io, c = CARTE[id]
+  if (G.fine || !l.mano.includes(id) || l.elisir < c.costo) return false
+  if (y < RB + 8 || y > H - 10) return false
+  l.elisir -= c.costo
+  schiera('io', id, Math.max(16, Math.min(W - 16, x)), y)
+  cicla(l, id)
+  return true
+}
+
+const LIV_TORRE_MAX = 10
+const costoTorretta = liv => Math.round(8 * 1.3 ** (liv - 1))        // 8, 10, 14, 18, 23, 30, 39, 51, 66
+
+function potenziaTorretta(lato) {
+  const t = G.torri.find(x => x.lato === lato && x.tipo === 'p'), l = G.lati[lato]
+  if (!t || !t.vivo || t.liv >= LIV_TORRE_MAX || l[valuta()] < costoTorretta(t.liv)) return false
+  l[valuta()] -= costoTorretta(t.liv)
+  t.liv++; t.max += 90; t.hp = Math.min(t.max, t.hp + 90)
+  G.effetti.push({ x: t.x, y: t.y, t: 0.7, tipo: 'cura' })
+  if (lato === 'io') G.giocato = true
+  return true
+}
+
+function riparabili(lato) {
+  return G.torri.filter(t => t.lato === lato && t.vivo && t.hp < t.max)
+    .concat(G.barr.filter(b => b.lato === lato && b.hp < b.max))
+    .concat(G.modo === 'caserme' ? G.caserme[lato].filter(c => c.hp < c.max) : [])
+}
+
+function riparaTorre(lato, t) {
+  const l = G.lati[lato]
+  if (!t.vivo || t.hp >= t.max || l[valuta()] < costoRipara()) return false
+  l[valuta()] -= costoRipara()
+  t.hp = Math.min(t.max, t.hp + t.max * 0.4)
+  G.effetti.push({ x: t.x, y: t.y, t: 0.7, tipo: 'cura' })
+  return true
+}
+
+/* Il muro lo piazza il gioco: la prima fila libera, e se sono tutte e due in piedi
+   rifà la più malconcia. */
+function piazzaBarricata(lato) {
+  const l = G.lati[lato]
+  if (l[valuta()] < costoBarr()) return false
+  l[valuta()] -= costoBarr()
+  const mie = G.barr.filter(b => b.lato === lato)
+  let fila = [0, 1].find(f => !mie.some(b => b.fila === f))
+  if (fila === undefined) {
+    const peggio = mie.sort((a, b) => a.hp / a.max - b.hp / b.max)[0]
+    fila = peggio.fila
+    peggio.hp = 0
+    G.barr = G.barr.filter(b => b.hp > 0)
+  }
+  G.barr.push(nuovoMuro(lato, fila))
+  return true
+}
+
+/* il muro sale dove arrivano più nemici, e dove non ce n'è già uno */
+function piazzaBarricataAuto(lato) { return piazzaBarricata(lato) }
+
+/* la riparazione va alla costruzione messa peggio */
+function riparaAuto(lato) {
+  const l = riparabili(lato).sort((a, b) => a.hp / a.max - b.hp / b.max)
+  return l.length ? riparaTorre(lato, l[0]) : false
+}
+
+function miglioraPozzo(lato) {
+  const l = G.lati[lato]
+  if (l.pozzo >= pozzoMax() || l[valuta()] < costoPozzo(l.pozzo)) return false
+  l[valuta()] -= costoPozzo(l.pozzo)
+  l.pozzo++
+  return true
+}
+
+function registra(op, giusta) { G.stat[op][giusta ? 'g' : 's']++ }
+
+/* ═════════ 4. IL BANCO DI MISURA (bot) ═════════
+   Un bot che gioca con una certa precisione, per guardare l'equilibrio
+   senza dita: `__arena.misura(40, 0.9)` fa 40 partite. */
+
+function botGioca(precisione) {
+  const l = G.lati.io
+  const possibili = l.mano.filter(id => CARTE[id].costo <= l.elisir)
+  if (!possibili.length) return
+  if (l.elisir < 6 && Math.random() < 0.5) return
+  const id = possibili[casuale(0, possibili.length - 1)]
+  if (Math.random() > precisione) { registra(CARTE[id].op, false); cicla(l, id); return }
+  registra(CARTE[id].op, true)
+  const minacce = G.unita.filter(u => u.lato === 'nem' && u.y > RY - 60)
+  const lane = minacce.length ? (minacce[0].x < W / 2 ? 0 : 1) : casuale(0, 1)
+  giocaCarta(id, PONTI[lane] + casuale(-12, 12), RB + casuale(60, 130))
+}
+
+function botCaserme(precisione) {
+  const l = G.lati.io
+  const nuove = Object.keys(BARACCHE).filter(id => !G.caserme.io.some(c => c.id === id) && l.oro >= BARACCHE[id])
+  const liberi = slotLiberi('io')
+  if (nuove.length && liberi.length && G.caserme.io.length < 4) {
+    const id = nuove[casuale(0, nuove.length - 1)]
+    const ok = Math.random() < precisione
+    registra(CARTE[id].op, ok)
+    if (ok) costruisciAuto('io', id)
+    return
+  }
+  const poss = G.caserme.io.map((c, i) => ({ c, i })).filter(({ c }) => c.liv < LIV_MAX && l.oro >= COSTI[c.liv])
+  if (!poss.length) return
+  const { c, i } = poss[casuale(0, poss.length - 1)]
+  const ok = Math.random() < precisione
+  registra(c.op, ok)
+  if (ok) potenzia('io', i)
+}
+
+function misura(partite, precisione, nemico, modo) {
+  const out = { vinto: 0, perso: 0, pari: 0, corone: 0 }
+  for (let i = 0; i < partite; i++) {
+    nuovaPartita({ nemico: nemico || IMP.nemico, modo: modo || IMP.modo })
+    let attesa = 0
+    while (!G.fine) {
+      passo(0.1)
+      attesa -= 0.1
+      if (attesa <= 0) { if (G.modo === 'caserme') botCaserme(precisione); else botGioca(precisione); attesa = 1.4 }
+    }
+    out[G.fine]++
+    out.corone += corone('io')
+  }
+  out.corone = +(out.corone / partite).toFixed(2)
+  return out
+}
+
+/* ═════════ 5. IL DISEGNO ═════════ */
+
+const tela = document.getElementById('tela')
+const ctx = tela.getContext('2d')
+let K = 1
+
+function adatta() {
+  const campo = document.getElementById('campo')
+  const w = campo.clientWidth, h = campo.clientHeight
+  const s = Math.min(w / W, h / H)
+  tela.style.width = Math.floor(W * s) + 'px'
+  tela.style.height = Math.floor(H * s) + 'px'
+  const dpr = window.devicePixelRatio || 1
+  tela.width = Math.round(W * s * dpr)
+  tela.height = Math.round(H * s * dpr)
+  K = tela.width / W
+}
+addEventListener('resize', adatta)
+new ResizeObserver(() => adatta()).observe(document.getElementById('campo'))
+
+const FONT_EM = '"Apple Color Emoji","Noto Color Emoji","Segoe UI Emoji",sans-serif'
+function emoji(e, x, y, px) {
+  ctx.fillStyle = '#000'               // le emoji a colori prendono l'alfa dell'ultimo riempimento: l'ombra le rendeva fantasmi
+  ctx.font = `${px}px ${FONT_EM}`
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
+  ctx.fillText(e, x, y)
+}
+
+function barra(x, y, w, frac, colore) {
+  ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fillRect(x - w / 2 - 1, y - 1, w + 2, 6)
+  ctx.fillStyle = colore; ctx.fillRect(x - w / 2, y, w * Math.max(0, frac), 4)
+}
+
+function disegnaSfondo(armata) {
+  /* erba a strisce */
+  for (let i = 0; i < 18; i++) {
+    ctx.fillStyle = i % 2 ? '#4f9d47' : '#58a84f'
+    ctx.fillRect(0, i * 30, W, 30)
+  }
+  /* la metà del nemico un po' più scura, la tua più chiara */
+  ctx.fillStyle = 'rgba(0,0,40,.08)'; ctx.fillRect(0, 0, W, RT)
+  /* corsie (strada di terra) */
+  ctx.fillStyle = 'rgba(180,150,90,.55)'
+  for (const px of PONTI) { ctx.fillRect(px - 32, 40, 64, RT - 40); ctx.fillRect(px - 32, RB, 64, 500 - RB) }
+  /* fiume */
+  const g = ctx.createLinearGradient(0, RT, 0, RB)
+  g.addColorStop(0, '#3a8fe0'); g.addColorStop(1, '#2b6fc0')
+  ctx.fillStyle = g; ctx.fillRect(0, RT, W, RB - RT)
+  ctx.strokeStyle = 'rgba(255,255,255,.35)'; ctx.lineWidth = 1.5
+  const f = G ? G.t : 0
+  for (let i = 0; i < 7; i++) {
+    const x = ((i * 61 + f * 14) % (W + 40)) - 20, y = RT + 6 + (i % 3) * 10
+    ctx.beginPath(); ctx.moveTo(x, y); ctx.quadraticCurveTo(x + 6, y - 3, x + 12, y); ctx.stroke()
+  }
+  /* ponti */
+  for (const px of PONTI) {
+    ctx.fillStyle = '#9a6a3a'; ctx.fillRect(px - 36, RT - 4, 72, RB - RT + 8)
+    ctx.strokeStyle = '#6e4a24'; ctx.lineWidth = 1.5
+    for (let y = RT; y < RB; y += 6) { ctx.beginPath(); ctx.moveTo(px - 36, y); ctx.lineTo(px + 36, y); ctx.stroke() }
+    ctx.fillStyle = '#6e4a24'; ctx.fillRect(px - 38, RT - 4, 3, RB - RT + 8); ctx.fillRect(px + 35, RT - 4, 3, RB - RT + 8)
+  }
+  /* se una carta è pronta, la metà tua si accende */
+  if (armata) {
+    ctx.strokeStyle = '#ffd24a'; ctx.setLineDash([8, 6]); ctx.lineWidth = 3
+    ctx.lineDashOffset = -(performance.now() / 40) % 14
+    ctx.strokeRect(2, RB + 10, W - 4, H - RB - 14); ctx.setLineDash([]); ctx.lineDashOffset = 0
+  }
+}
+
+function disegnaTorre(t) {
+  const colore = t.lato === 'io' ? '#3d8bff' : '#ff5a4d'
+  ctx.save()
+  ctx.fillStyle = 'rgba(0,0,0,.25)'
+  ctx.beginPath(); ctx.ellipse(t.x, t.y + t.r * 0.7, t.r * 1.05, t.r * 0.45, 0, 0, 7); ctx.fill()
+  if (!t.vivo) {
+    emoji('🪨', t.x, t.y + 4, t.r * 1.1)
+    ctx.restore(); return
+  }
+  ctx.strokeStyle = colore; ctx.lineWidth = 4
+  ctx.beginPath(); ctx.ellipse(t.x, t.y + t.r * 0.55, t.r * 1.0, t.r * 0.5, 0, 0, 7); ctx.stroke()
+  if (t.fl > 0) ctx.globalAlpha = 0.6
+  emoji(t.tipo === 're' ? '🏯' : '🗼', t.x, t.y, t.r * 2.1)
+  ctx.globalAlpha = 1
+  if (t.tipo === 're') emoji('👑', t.x, t.y - t.r - 4, 15)
+  barra(t.x, t.y - t.r - (t.tipo === 're' ? 20 : 12), 34, t.hp / t.max, colore)
+  ctx.fillStyle = '#fff'; ctx.font = 'bold 9px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic'
+  ctx.fillText(Math.ceil(t.hp), t.x, t.y - t.r - (t.tipo === 're' ? 23 : 15))
+  if (t.tipo === 'p') ctx.fillText('Lv' + t.liv, t.x, t.y + t.r + 14)
+  ctx.restore()
+}
+
+function disegnaUnita(u) {
+  const c = CARTE[u.id], colore = u.lato === 'io' ? '#3d8bff' : '#ff5a4d'
+  const alto = u.vola ? 10 : 0
+  ctx.save()
+  ctx.fillStyle = 'rgba(0,0,0,.28)'
+  ctx.beginPath(); ctx.ellipse(u.x, u.y + 6, 9, 4, 0, 0, 7); ctx.fill()
+  ctx.strokeStyle = colore; ctx.lineWidth = 3
+  ctx.beginPath(); ctx.ellipse(u.x, u.y + 6, 9, 4, 0, 0, 7); ctx.stroke()
+  if (u.nasce > 0) {
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 2
+    ctx.beginPath(); ctx.arc(u.x, u.y, 8 + u.nasce * 24, 0, 7); ctx.stroke()
+  }
+  ctx.globalAlpha = u.fl > 0 ? 0.65 : 1
+  const px = u.id === 'golem' ? 34 : u.id === 'drago' || u.id === 'maga' ? 26 : 22
+  emoji(c.em, u.x, u.y - alto, px)
+  ctx.globalAlpha = 1
+  if (u.hp < u.max) barra(u.x, u.y - alto - px / 2 - 5, 18, u.hp / u.max, colore)
+  ctx.restore()
+}
+
+function disegnaCaserme() {
+  for (const lato of ['io', 'nem']) {
+    const colore = lato === 'io' ? '#3d8bff' : '#ff5a4d'
+    for (let i = 0; i < SLOTS.length; i++) {
+      const q = slotXY(lato, i)
+      const c = G.caserme[lato].find(x => x.slot === i)
+      ctx.fillStyle = 'rgba(0,0,0,.22)'; ctx.beginPath(); ctx.ellipse(q.x, q.y + 12, 22, 8, 0, 0, 7); ctx.fill()
+      if (!c) {
+        if (lato === 'io' && armata && armata.startsWith('slot:')) {
+          ctx.strokeStyle = '#ffd24a'; ctx.lineWidth = 3; ctx.setLineDash([6, 4])
+          ctx.beginPath(); ctx.arc(q.x, q.y, 22 + 2 * Math.sin(performance.now() / 150), 0, 7); ctx.stroke(); ctx.setLineDash([])
+        }
+        continue
+      }
+      ctx.strokeStyle = colore; ctx.lineWidth = 3
+      ctx.beginPath(); ctx.ellipse(q.x, q.y + 12, 22, 8, 0, 0, 7); ctx.stroke()
+      ctx.globalAlpha = c.fl > 0 ? 0.65 : 1
+      emoji('🛖', q.x, q.y, 30)
+      ctx.globalAlpha = 1
+      barra(q.x, q.y - 36, 30, c.hp / c.max, colore)
+      emoji(CARTE[c.id].em, q.x, q.y - 20, 16)
+      ctx.fillStyle = '#fff'; ctx.font = 'bold 9px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic'
+      ctx.fillText('Lv' + c.liv, q.x, q.y + 28)
+      barra(q.x, q.y + 31, 28, 1 - c.t / c.ciclo, '#7ee08c')
+    }
+  }
+}
+
+function disegna() {
+  ctx.setTransform(K, 0, 0, K, 0, 0)
+  ctx.clearRect(0, 0, W, H)
+  ctx.save()
+  ctx.beginPath(); ctx.rect(0, 0, W, H); ctx.clip()
+  disegnaSfondo(!!armata && armata !== 'ripara' && armata !== 'barricata' && !armata.startsWith('slot:'))
+  if (G) {
+    if (G.modo === 'caserme') disegnaCaserme()
+    for (const t of G.torri) disegnaTorre(t)
+    const ord = [...G.unita].sort((a, b) => a.y - b.y)
+    for (const u of ord.filter(u => !u.vola)) disegnaUnita(u)
+    for (const u of ord.filter(u => u.vola)) disegnaUnita(u)
+    for (const b of G.barr) {
+      const colore = b.lato === 'io' ? '#3d8bff' : '#ff5a4d'
+      ctx.fillStyle = 'rgba(0,0,0,.28)'; ctx.beginPath(); ctx.ellipse(b.x, b.y + 9, 40, 6, 0, 0, 7); ctx.fill()
+      ctx.strokeStyle = colore; ctx.lineWidth = 3; ctx.beginPath(); ctx.ellipse(b.x, b.y + 9, 40, 6, 0, 0, 7); ctx.stroke()
+      ctx.globalAlpha = b.fl > 0 ? 0.65 : 1
+      emoji('🧱', b.x - 24, b.y, 22); emoji('🧱', b.x, b.y, 22); emoji('🧱', b.x + 24, b.y, 22)
+      ctx.globalAlpha = 1
+      barra(b.x, b.y - 18, 34, b.hp / b.max, colore)
+    }
+    for (const e of G.effetti) {
+      ctx.strokeStyle = `rgba(110,240,140,${e.t / 0.7})`; ctx.lineWidth = 4
+      ctx.beginPath(); ctx.arc(e.x, e.y, 14 + (0.7 - e.t) * 60, 0, 7); ctx.stroke()
+      emoji('➕', e.x, e.y - (0.7 - e.t) * 40, 18)
+    }
+    if (armata === 'ripara') for (const t of riparabili('io')) {
+      ctx.strokeStyle = '#ffd24a'; ctx.lineWidth = 3; ctx.setLineDash([6, 4])
+      ctx.beginPath(); ctx.arc(t.x, t.y, (t.r || 14) + 10 + 2 * Math.sin(performance.now() / 150), 0, 7); ctx.stroke(); ctx.setLineDash([])
+    }
+    for (const c of G.colpi) {
+      ctx.strokeStyle = c.lato === 'io' ? 'rgba(160,210,255,.9)' : 'rgba(255,170,150,.9)'
+      ctx.lineWidth = 2
+      ctx.beginPath(); ctx.moveTo(c.x1, c.y1); ctx.lineTo(c.x2, c.y2); ctx.stroke()
+      if (c.sc) { ctx.fillStyle = 'rgba(255,200,80,.35)'; ctx.beginPath(); ctx.arc(c.x2, c.y2, c.sc * (1 - c.t / 0.12 * 0.5), 0, 7); ctx.fill() }
+    }
+  }
+  ctx.restore()
+}
+
+/* ═════════ 6. L'INTERFACCIA ═════════ */
+
+const $ = s => document.querySelector(s)
+let armata = null            // la carta con la risposta giusta, in attesa di un posto
+let aperta = null            // { id, dom, chiusa }  la domanda sul foglio
+let inGioco = false
+
+function ridisegnaCaserme() {
+  const m = $('#mano')
+  m.innerHTML = ''
+  m.classList.add('scorre')
+  for (const id of Object.keys(BARACCHE).sort((a, b) => BARACCHE[a] - BARACCHE[b])) {
+    const k = CARTE[id]
+    const c = G.caserme.io.find(x => x.id === id)
+    const b = document.createElement('button')
+    b.className = 'carta caserma' + (c ? '' : ' nuova')
+    b.dataset.id = id
+    b.innerHTML = `<span class="segno">${k.op}</span><span class="em">${k.em}</span><span class="nome">${k.nome}</span>` +
+      (c ? `<span class="liv">Lv ${c.liv}</span><span class="su">${c.liv >= LIV_MAX ? 'MAX' : '⬆ ' + COSTI[c.liv] + ' 🪙'}</span><i class="prog"><b></b></i>`
+         : `<span class="liv">nuova</span><span class="su">🏗 ${BARACCHE[id]} 🪙</span>`)
+    b.onclick = () => toccaBaracca(id)
+    m.appendChild(b)
+  }
+  for (const id of ['pozzo', 'barricata', 'ripara', 'torretta']) {
+    const a = AZIONI[id]
+    const b = document.createElement('button')
+    b.className = 'carta caserma azione'
+    b.dataset.az = id
+    b.innerHTML = `<span class="segno">${a.op}</span><span class="em">${a.em}</span><span class="nome">${{ pozzo: 'Più monete', barricata: 'Muro', ripara: 'Ripara', torretta: 'Torretta' }[id]}</span><span class="liv"></span><span class="su"></span>`
+    b.onclick = () => toccaAzione(id)
+    m.appendChild(b)
+  }
+}
+
+/* cosa dice la carta di ogni azione adesso, e se si può comprare */
+function statoAzione(id) {
+  const l = G.lati.io, cur = l[valuta()]
+  if (id === 'pozzo') {
+    const max = l.pozzo >= pozzoMax()
+    return { liv: `Lv ${l.pozzo}`, su: max ? 'MAX' : `⬆ ${costoPozzo(l.pozzo)} 🪙`, ok: !max && cur >= costoPozzo(l.pozzo) }
+  }
+  if (id === 'barricata') return { liv: `${G.barr.filter(b => b.lato === 'io').length}/${BARR_MAX} muri`, su: `🧱 ${costoBarr()} 🪙`, ok: cur >= costoBarr() }
+  if (id === 'ripara') return { liv: `${riparabili('io').length} da curare`, su: `🔧 ${costoRipara()} 🪙`, ok: cur >= costoRipara() && riparabili('io').length > 0 }
+  const t = G.torri.find(x => x.lato === 'io' && x.tipo === 'p')
+  if (!t || !t.vivo) return { liv: 'distrutta', su: '✕', ok: false }
+  const max = t.liv >= LIV_TORRE_MAX
+  return { liv: `Lv ${t.liv}`, su: max ? 'MAX' : `⬆ ${costoTorretta(t.liv)} 🪙`, ok: !max && cur >= costoTorretta(t.liv) }
+}
+
+function ridisegnaMano() {
+  $('#mano').classList.remove('scorre')
+  if (G.modo === 'caserme') return ridisegnaCaserme()
+  const l = G.lati.io
+  const m = $('#mano')
+  m.innerHTML = ''
+  for (const id of l.mano) {
+    const c = CARTE[id]
+    const b = document.createElement('button')
+    b.className = 'carta' + (l.elisir < c.costo ? ' no' : '') + (armata === id ? ' armata' : '')
+    b.dataset.id = id
+    b.innerHTML = `<span class="costo">${c.costo}</span><span class="segno">${c.op}</span><span class="em">${c.em}</span><span class="nome">${c.nome}</span>`
+    b.onclick = () => tocca(id)
+    m.appendChild(b)
+  }
+  const poi = document.createElement('div')
+  poi.className = 'poi'
+  poi.innerHTML = `<span>prossima</span><span class="mini">${CARTE[l.coda[0]].em}</span>`
+  m.appendChild(poi)
+}
+
+function aggiornaHUD() {
+  const l = G.lati.io
+  if (G.modo === 'caserme') {
+    const costi = Object.keys(BARACCHE).map(id => {
+      const c = G.caserme.io.find(x => x.id === id)
+      return c ? (c.liv < LIV_MAX ? COSTI[c.liv] : 1e9) : BARACCHE[id]
+    })
+    const minimo = Math.min(...costi.filter(v => v > 0), 1e9)
+    $('#elisir i').style.width = Math.min(100, l.oro / (minimo === 1e9 ? 1 : minimo) * 100) + '%'
+    $('#elisir b').textContent = `🪙 ${Math.floor(l.oro)}   ·   +${(pozzoDi(l.pozzo) / ORO.io).toFixed(1)} al secondo`
+    const chiave = G.caserme.io.map(c => c.id).join()
+    if (chiave !== aggiornaHUD.ultima) { aggiornaHUD.ultima = chiave; ridisegnaMano() }
+    const liberi = slotLiberi('io').length
+    for (const b of document.querySelectorAll('.caserma')) {
+      const c = G.caserme.io.find(x => x.id === b.dataset.id)
+      if (c) {
+        b.classList.toggle('no', c.liv >= LIV_MAX || l.oro < COSTI[c.liv] || c.bloc > 0)
+        b.querySelector('.prog b').style.width = Math.max(0, Math.min(100, (1 - c.t / c.ciclo) * 100)) + '%'
+      } else b.classList.toggle('no', l.oro < BARACCHE[b.dataset.id] || !liberi)
+    }
+  } else {
+    $('#elisir i').style.width = (l.elisir / ELISIR_MAX * 100) + '%'
+    $('#elisir b').textContent = Math.floor(l.elisir)
+  }
+  const s = Math.max(0, Math.ceil(G.resto))
+  $('#tempo').textContent = Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0')
+  $('#corone').textContent = `🔵 ${corone('io')} – ${corone('nem')} 🔴`
+  if (G.modo !== 'caserme') for (const b of $('#mano').querySelectorAll('.carta')) b.classList.toggle('no', l.elisir < CARTE[b.dataset.id].costo)
+  const sug = $('#suggerimento')
+  const idle = !G.giocato && !armata && !aperta
+  sug.classList.toggle('si', !!armata || idle || sug.classList.contains('no'))
+  if (!sug.classList.contains('no')) {
+    if (armata === 'ripara') sug.textContent = '👇 Giusto! Tocca cosa riparare 🔧'
+    else if (armata && armata.startsWith('slot:')) sug.textContent = `👇 Giusto! Tocca un posto libero per la caserma ${CARTE[armata.slice(5)].em}`
+    else if (armata === 'barricata') sug.textContent = '👇 Giusto! Tocca dove alzare il muro 🧱'
+    else if (armata) sug.textContent = `👇 Giusto! Tocca il tuo campo per schierare ${CARTE[armata].em}`
+    else if (idle) sug.textContent = inCaserme() ? '👇 Tocca una caserma in basso per comprarla' : '👇 Tocca una carta per cominciare'
+  }
+  for (const b of document.querySelectorAll('.azione')) {
+    const st = statoAzione(b.dataset.az)
+    b.querySelector('.liv').textContent = st.liv
+    b.querySelector('.su').textContent = st.su
+    b.classList.toggle('no', !st.ok)
+  }
+}
+
+function apriFoglio(em, titolo, nota, dom, extra) {
+  aperta = { id: extra.id, dom, chiusa: false, ...extra }
+  const f = $('#foglio')
+  f.querySelector('.testa .em').textContent = em
+  f.querySelector('.testa .nome').textContent = titolo
+  f.querySelector('.testa .nota').textContent = nota
+  f.querySelector('.conto').textContent = dom.testo + ' = ?'
+  f.querySelector('.esito').textContent = ''
+  const sc = f.querySelector('.scelte')
+  sc.innerHTML = ''
+  for (const v of dom.scelte) {
+    const b = document.createElement('button')
+    b.textContent = v; b.dataset.v = v
+    b.onclick = () => rispondi(v, b)
+    sc.appendChild(b)
+  }
+  f.classList.add('si')
+}
+
+function toccaAzione(id) {
+  if (!inGioco || G.fine) return
+  if (armata === id) { armata = null; ridisegnaMano(); return }
+  const l = G.lati.io, a = AZIONI[id]
+  if (id === 'ripara') {
+    if (l[valuta()] < costoRipara() || !riparabili('io').length) return
+    armata = null
+    apriFoglio(a.em, `${a.nome} · costa ${costoRipara()}`, a.nota, domanda(a.op, 4, IMP.livello), { id, azione: id })
+  } else if (id === 'torretta') {
+    const t = G.torri.find(x => x.lato === 'io' && x.tipo === 'p')
+    if (!t || !t.vivo || t.liv >= LIV_TORRE_MAX || l[valuta()] < costoTorretta(t.liv)) return
+    armata = null
+    apriFoglio(a.em, `${a.nome} · livello ${t.liv} → ${t.liv + 1} · ${costoTorretta(t.liv)} 🪙`, a.nota, domanda(a.op, 2 + Math.ceil(t.liv / 2), IMP.livello), { id, azione: id })
+  } else if (id === 'barricata') {
+    if (l[valuta()] < costoBarr()) return
+    armata = null
+    apriFoglio(a.em, `${a.nome} · costa ${costoBarr()}`, a.nota, domanda(a.op, 3, IMP.livello), { id, azione: id })
+  } else {
+    if (l.pozzo >= pozzoMax() || l[valuta()] < costoPozzo(l.pozzo)) return
+    armata = null
+    apriFoglio(a.em, `${a.nome} · livello ${l.pozzo} → ${l.pozzo + 1} · costa ${costoPozzo(l.pozzo)}`, a.nota, domanda(a.op, 3 + l.pozzo, IMP.livello), { id, azione: id })
+  }
+  ridisegnaMano()
+}
+
+function toccaBaracca(id) {
+  if (!inGioco || G.fine) return
+  const l = G.lati.io, k = CARTE[id]
+  const i = G.caserme.io.findIndex(x => x.id === id)
+  if (i >= 0) {
+    const c = G.caserme.io[i]
+    if (c.liv >= LIV_MAX || l.oro < COSTI[c.liv] || c.bloc > 0) return
+    apriFoglio(k.em, `${k.nome} · livello ${c.liv} → ${c.liv + 1} · ${COSTI[c.liv]} 🪙`, 'Più forte e più veloce a mandare squadre.',
+      domanda(c.op, c.liv + 1, IMP.livello), { id, caserma: i })
+  } else {
+    const costo = BARACCHE[id]
+    if (l.oro < costo || !slotLiberi('io').length) return
+    armata = null
+    apriFoglio(k.em, `Costruisci la caserma · ${k.nome} · ${costo} 🪙`, k.nota, domanda(k.op, 1 + Math.ceil(costo / 4), IMP.livello), { id, costruisci: true })
+  }
+}
+
+function tocca(id) {
+  if (!inGioco || G.fine) return
+  if (armata === id) { armata = null; ridisegnaMano(); return }       // la riprendi in mano
+  const c = CARTE[id]
+  if (G.lati.io.elisir < c.costo) return
+  armata = null
+  const dom = domanda(c.op, c.costo, IMP.livello)
+  aperta = { id, dom, chiusa: false }
+  const f = $('#foglio')
+  f.querySelector('.testa .em').textContent = c.em
+  f.querySelector('.testa .nome').textContent = `${c.nome} · costa ${c.costo}`
+  f.querySelector('.testa .nota').textContent = c.nota
+  f.querySelector('.conto').textContent = dom.testo + ' = ?'
+  f.querySelector('.esito').textContent = ''
+  const sc = f.querySelector('.scelte')
+  sc.innerHTML = ''
+  for (const v of dom.scelte) {
+    const b = document.createElement('button')
+    b.textContent = v
+    b.dataset.v = v
+    b.onclick = () => rispondi(v, b)
+    sc.appendChild(b)
+  }
+  f.classList.add('si')
+  ridisegnaMano()
+}
+
+function chiudiFoglio() {
+  $('#foglio').classList.remove('si')
+  aperta = null
+}
+
+function rispondi(v, bottone) {
+  if (!aperta || aperta.chiusa) return
+  const { id, dom, caserma, azione, costruisci: nuova } = aperta
+  aperta.chiusa = true
+  const giusta = v === dom.r
+  registra(dom.op, giusta)
+  bottone.classList.add(giusta ? 'giusta' : 'sbagliata')
+  if (giusta) {
+    setTimeout(() => {
+      chiudiFoglio()
+      if (caserma != null) potenzia('io', caserma)
+      else if (nuova) costruisciAuto('io', id)
+      else if (azione === 'pozzo') miglioraPozzo('io')
+      else if (azione === 'ripara') riparaAuto('io')
+      else if (azione === 'barricata') piazzaBarricataAuto('io')
+      else if (azione === 'torretta') potenziaTorretta('io')
+      else armata = id
+      ridisegnaMano()
+    }, 280)
+  } else {
+    for (const b of $('#foglio .scelte').children) if (+b.dataset.v === dom.r) b.classList.add('giusta')
+    $('#foglio .esito').textContent = dom.aiuto + (caserma != null ? '  ·  la caserma riposa 6 secondi' : (azione || nuova) ? '  ·  riprova quando vuoi' : '  ·  la carta torna in fondo al mazzo')
+    setTimeout(() => {
+      if (G.fine || !aperta || !aperta.chiusa) return
+      if (caserma != null) G.caserme.io[caserma].bloc = 6
+      else if (!azione && !nuova) cicla(G.lati.io, id)
+      chiudiFoglio(); ridisegnaMano()
+    }, 2600)
+  }
+}
+
+$('#foglio .chiudi').onclick = () => { if (aperta && !aperta.chiusa) { chiudiFoglio(); ridisegnaMano() } }
+
+function avvisa(testo) {
+  const sug = $('#suggerimento')
+  sug.textContent = testo
+  sug.classList.add('no')
+  clearTimeout(avvisa.t)
+  avvisa.t = setTimeout(() => sug.classList.remove('no'), 1300)
+}
+
+/* il tocco sul campo: se c'è una carta pronta, si schiera lì */
+tela.addEventListener('pointerdown', e => {
+  if (!armata || !inGioco || G.fine) return
+  const r = tela.getBoundingClientRect()
+  const x = (e.clientX - r.left) / r.width * W, y = (e.clientY - r.top) / r.height * H
+  if (armata.startsWith('slot:')) {
+    const id = armata.slice(5)
+    const q = slotLiberi('io').map(i => ({ i, d: Math.hypot(SLOTS[i][0] - x, SLOTS[i][1] - y) })).sort((a, b) => a.d - b.d)[0]
+    if (q && q.d < 34 && costruisci('io', id, q.i)) { armata = null; ridisegnaMano() }
+    else avvisa('Tocca un posto libero: i cerchi gialli')
+    return
+  }
+  if (armata === 'barricata') {
+    if (y < RB + 20) { avvisa('Il muro si alza nella tua metà, sotto il fiume'); return }
+    if (piazzaBarricata('io', x, Math.min(y, 400))) { armata = null; ridisegnaMano() }
+    return
+  }
+  if (armata === 'ripara') {
+    const mie = riparabili('io')
+    const t = mie.sort((a, b) => Math.hypot(a.x - x, a.y - y) - Math.hypot(b.x - x, b.y - y))[0]
+    if (t && Math.hypot(t.x - x, t.y - y) < 48 && t.hp < t.max && riparaTorre('io', t)) { armata = null; ridisegnaMano() }
+    else avvisa('Tocca una tua torre, caserma o muro danneggiato')
+    return
+  }
+  if (y < RB + 8) { avvisa('Qui no: sotto il fiume, nella tua metà'); return }
+  if (giocaCarta(armata, x, Math.min(y, H - 14))) { armata = null; ridisegnaMano() }
+})
+
+$('#esci').onclick = () => { inGioco = false; chiudiFoglio(); armata = null; $('#menu').classList.add('si') }
+
+for (const gruppo of document.querySelectorAll('.chips')) {
+  gruppo.onclick = e => {
+    const b = e.target.closest('button'); if (!b) return
+    for (const x of gruppo.children) x.classList.remove('su')
+    b.classList.add('su')
+  }
+}
+
+function impostazioni() {
+  const v = k => document.querySelector(`.chips[data-imp="${k}"] .su`).dataset.v
+  return { modo: new URLSearchParams(location.search).get('modo') === 'carte' ? 'carte' : 'caserme', livello: +v('livello'), tempo: 0.25, nemico: v('nemico') }
+}
+
+function avvia() {
+  nuovaPartita(impostazioni())
+  armata = null; aperta = null
+  $('#foglio').classList.remove('si')
+  $('#menu').classList.remove('si'); $('#fine').classList.remove('si')
+  inGioco = true
+  aggiornaHUD.ultima = null
+  $('#app').classList.toggle('modo-caserme', G.modo === 'caserme')
+  adatta()
+  ridisegnaMano()
+}
+
+$('#gioca').onclick = avvia
+$('#ancora').onclick = avvia
+$('#alMenu').onclick = () => { $('#fine').classList.remove('si'); $('#menu').classList.add('si') }
+
+function mostraFine() {
+  inGioco = false
+  chiudiFoglio(); armata = null
+  const f = $('#fine')
+  f.querySelector('h1').textContent = { vinto: '🏆 Hai vinto!', perso: '💥 Hai perso', pari: '🤝 Pari' }[G.fine]
+  f.querySelector('.sotto').textContent = `Corone ${corone('io')} a ${corone('nem')}`
+  const righe = Object.entries(G.stat).map(([op, s]) => `<tr><td><b>${op}</b></td><td>✔ ${s.g}</td><td>✘ ${s.s}</td></tr>`).join('')
+  f.querySelector('table').innerHTML = '<tr><th>operazione</th><th>giuste</th><th>sbagliate</th></tr>' + righe
+  f.classList.add('si')
+}
+
+/* il ciclo: il tempo del campo rallenta (o si ferma) mentre il foglio è aperto */
+let ultimo = performance.now()
+function ciclo(ora) {
+  const dt = Math.min(0.05, (ora - ultimo) / 1000)
+  ultimo = ora
+  if (G && inGioco && !G.fine) {
+    const scala = aperta ? IMP.tempo : 1
+    passo(dt * scala)
+    aggiornaHUD()
+    if (G.fine) mostraFine()
+  }
+  disegna()
+  requestAnimationFrame(ciclo)
+}
+
+/* il ridisegno della mano quando l'elisir attraversa un costo si fa in aggiornaHUD (classe .no) */
+window.__arena = {
+  get G() { return G }, passo, nuovaPartita, giocaCarta, schiera, misura, domanda, CARTE, tocca, avvia,
+  potenzia, costruisci, SLOTS, slotLiberi, riparaTorre, miglioraPozzo, piazzaBarricata, get caserme() { return G.caserme }, get armata() { return armata }, set armata(v) { armata = v },
+}
+
+adatta()
+nuovaPartita({})
+ridisegnaMano()
+aggiornaHUD()
+requestAnimationFrame(ciclo)
+</script>
+</body>
+</html>
