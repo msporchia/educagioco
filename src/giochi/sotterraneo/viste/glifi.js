@@ -3,34 +3,13 @@
 //   'p' pieno del colore del glifo     'l' tratto del colore del glifo
 //   'o' pieno in ombra (il lato scuro)  'c' pieno chiaro (il riflesso)    'd' tratto scuro (una crepa, una runa)
 // Quando l'albero piace si fanno dipingere con la stessa forma (prima in codice, poi dipinto).
+// I pezzi comuni stanno in glifi-base.js, le icone dei rami più ricchi (12 ottobre) in glifi-rami.js.
 
-const cerchio = (x, y, r) => `M${x + r} ${y}A${r} ${r} 0 1 1 ${x - r} ${y}A${r} ${r} 0 1 1 ${x + r} ${y}Z`
-const stella = (x, y, r) => `M${x} ${y - r}L${x + r * 0.3} ${y - r * 0.3}L${x + r} ${y}L${x + r * 0.3} ${y + r * 0.3}` +
-  `L${x} ${y + r}L${x - r * 0.3} ${y + r * 0.3}L${x - r} ${y}L${x - r * 0.3} ${y - r * 0.3}Z`
-const goccia = (x, y, s) => `M${x} ${y}C${x} ${y} ${x - 3 * s} ${y + 3.8 * s} ${x - 3 * s} ${y + 5.7 * s}` +
-  `C${x - 3 * s} ${y + 7.4 * s} ${x - 1.7 * s} ${y + 8.6 * s} ${x} ${y + 8.6 * s}C${x + 1.7 * s} ${y + 8.6 * s} ${x + 3 * s} ${y + 7.4 * s} ${x + 3 * s} ${y + 5.7 * s}` +
-  `C${x + 3 * s} ${y + 3.8 * s} ${x} ${y} ${x} ${y}Z`
-const fiammella = (x, y, s) => `M${x} ${y}C${x + 0.8 * s} ${y + 3 * s} ${x + 4.5 * s} ${y + 4.6 * s} ${x + 4.5 * s} ${y + 9.2 * s}` +
-  `C${x + 4.5 * s} ${y + 12.5 * s} ${x + 2.5 * s} ${y + 15 * s} ${x} ${y + 15 * s}C${x - 2.5 * s} ${y + 15 * s} ${x - 4.5 * s} ${y + 12.5 * s} ${x - 4.5 * s} ${y + 9.6 * s}` +
-  `C${x - 4.5 * s} ${y + 7.2 * s} ${x - 2.8 * s} ${y + 6 * s} ${x - 2.4 * s} ${y + 4.2 * s}C${x - 1.2 * s} ${y + 5.4 * s} ${x - 1.1 * s} ${y + 6.8 * s} ${x - 1.3 * s} ${y + 7.8 * s}` +
-  `C${x + 0.2 * s} ${y + 6.2 * s} ${x + 0.5 * s} ${y + 3.3 * s} ${x} ${y}Z`
-const SCUDO = 'M12 2.8L19.5 5.6V11C19.5 16 16 19.6 12 21.2C8 19.6 4.5 16 4.5 11V5.6Z'
-const CUORE = 'M12 20.5C5 15.5 2.5 12 2.5 8.6C2.5 5.8 4.7 3.8 7.2 3.8C9.2 3.8 10.9 5 12 6.8C13.1 5 14.8 3.8 16.8 3.8' +
-  'C19.3 3.8 21.5 5.8 21.5 8.6C21.5 12 19 15.5 12 20.5Z'
-const SPADA = [
-  ['p', 'M20.6 2.6L21.4 2.6L21.1 5.9L10.6 16.4L7.6 13.4L18.1 2.9Z'],
-  ['o', 'M21.4 2.6L21.1 5.9L10.6 16.4L9.1 14.9Z'],
-  ['l', 'M5.4 11.6L12.4 18.6'],
-  ['l', 'M8.9 15.1L4.6 19.4'],
-  ['p', cerchio(3.6, 20.4, 1.6)],
-]
-const FRECCIA = [
-  ['l', 'M4.5 19.5L17.5 6.5'],
-  ['p', 'M21 3L14.8 4.6L19.4 9.2Z'],
-  ['l', 'M4.5 19.5H2.2M4.5 19.5V21.8M6.8 17.2H4.5M6.8 17.2V19.5'],
-]
+import { cerchio, stella, goccia, fiammella, SCUDO, CUORE, SPADA, FRECCIA } from './glifi-base.js'
+import { GLIFI_RAMI } from './glifi-rami.js'
 
 export const GLIFI = {
+  ...GLIFI_RAMI,
   spada: SPADA,
   fendente: [...SPADA, ['l', 'M2.8 9.2Q6.5 2.6 14 2.4'], ['l', 'M5.4 11.2Q8.6 6.2 14.2 5.6']],
   filo: [...SPADA, ['c', stella(16.5, 7.5, 3.2)]],
