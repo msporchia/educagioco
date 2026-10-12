@@ -30,6 +30,13 @@ export const SVEGLIA = 7
 export const PASSO_EROE = 5.4, PASSO_MOSTRO = 3.1, PASSO_RIENTRO = 2.2
 export const CALMA = 3   // il tempo di uscire dalla stanza, o lo scontro si riaprirebbe nel fotogramma dopo
 
+// Lo scontro a gruppi (docs/sotterraneo/scontro.md): entrano i mostri vivi entro RAGGIO_SCONTRO celle dall'eroe, nella
+// stessa stanza, al più MOSTRI_IN_CAMPO posti (il grosso ne vale due); un colpo di mostro vale COLPO_DEL_MOSTRO per
+// (attacco − difesa), almeno 1, qualunque sia la risposta
+export const RAGGIO_SCONTRO = 4.5
+export const MOSTRI_IN_CAMPO = 6
+export const COLPO_DEL_MOSTRO = 0.8
+
 // arredo (barili, casse...): non toccabile, disegnato più spento delle cose che rispondono (scena/tela.js).
 // Cosa c'è, dove sta e quanto è epico lo dice dati/orpelli.js; qui resta la frase del generico, quella di chi non
 // dichiara lo scenario (le cantine)
