@@ -346,7 +346,8 @@ const banco = computed(() => {
       const costa = b.quantoCosta(x)
       return {
         chiave: x, sempre, ...COSE[x], ...(COSE[x].cura ? { cura: b.curaDi(x) } : {}), costa, avanti, posso: b.gemme >= costa,
-        nonPuoi: b.perchéNo(x), prova: b.seLoMetto(x), va: b.vaAddosso(x),
+        // `nonPuoi`: la classe non lo porta, non si compra. `serve`: lo porta ma gli manca la caratteristica, si compra e va nello zaino
+        nonPuoi: b.porta(x) ? '' : b.perchéNo(x), serve: b.porta(x) ? b.perchéNo(x) : '', prova: b.seLoMetto(x), va: b.vaAddosso(x),
         mancano: Math.max(0, costa - b.gemme),
         quante: b.quanteNeHo(x),
       }
@@ -566,7 +567,7 @@ const zainoDiSopra = computed(() => {
   tic.value
   if (!zainoSopra.value) return null
   const c = new Corredo({ eroe: eroeQui(), roba: roba.value, crescita: crescita.value })
-  const voce = k => (k ? { chiave: k, ...COSE[k], nonPuoi: c.perchéNo(k), prova: c.seLoMetto(k), ...(COSE[k].cura ? { cura: c.curaDi(k) } : {}) } : null)
+  const voce = k => (k ? { chiave: k, ...COSE[k], nonPuoi: c.perchéNo(k), ancora: c.porta(k) && !c.posso(k), prova: c.seLoMetto(k), ...(COSE[k].cura ? { cura: c.curaDi(k) } : {}) } : null)
   return {
     mano: voce(c.mano), mancina: voce(c.mancina), corpo: voce(c.corpo), dito: voce(c.dito),
     tasche: tascheVoci(c, voce), costoTasca: c.costoTasca,
@@ -799,7 +800,7 @@ const pieni = dallaCorsa(c => c.postiUsati(), 0)   // sei su sei vuol dire che l
 
 const zaino = dallaCorsa(c => {
   // `nonPuoi` la scrive il motore (perchéNo), che sa chi sta scendendo
-  const voce = k => (k ? { chiave: k, ...COSE[k], nonPuoi: c.perchéNo(k), prova: c.seLoMetto(k), ...(COSE[k].cura ? { cura: c.curaDi(k) } : {}) } : null)
+  const voce = k => (k ? { chiave: k, ...COSE[k], nonPuoi: c.perchéNo(k), ancora: c.porta(k) && !c.posso(k), prova: c.seLoMetto(k), ...(COSE[k].cura ? { cura: c.curaDi(k) } : {}) } : null)
   return {
     mano: voce(c.mano), mancina: voce(c.mancina),
     corpo: voce(c.corpo), dito: voce(c.dito),

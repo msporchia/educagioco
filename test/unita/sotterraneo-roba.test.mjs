@@ -236,6 +236,28 @@ import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiut
   }
   uguale('senza gemme non si compra', new Bottega({ finite: 0, rnd: seminato(1) }).compraDa('erborista', 'pozione')?.che, 'niente')
 
+  /* si compra anche senza le caratteristiche: il pezzo va nello zaino, non addosso, e il pannello dice cosa manca */
+  const novizio = new Bottega({ eroe: 'mago', finite: 3, roba: { ...ROBA_VUOTA(), gemme: 500 }, rnd: seminato(4) })
+  const dopo = novizio.mercanziaVista('armaiolo').find(r => r.meritare)
+  controlla('l\'armaiolo ha un pezzo che il mago non regge ancora', !!dopo)
+  const costoDopo = novizio.quantoCosta(dopo.chiave)
+  controlla('di cui manca la caratteristica, e lo dice', !novizio.posso(dopo.chiave) && /^Serve \w+ \d+ \(hai \d+\)$/.test(novizio.perchéNo(dopo.chiave)),
+            novizio.perchéNo(dopo.chiave))
+  const preso = novizio.compraDa('armaiolo', dopo.chiave)
+  uguale('si compra lo stesso', preso?.che, 'comprato')
+  uguale('al prezzo che dice', novizio.gemme, 500 - costoDopo)
+  stessaLista('e va nello zaino', novizio.zaino, [dopo.chiave])
+  controlla('non addosso', !['mano', 'mancina', 'corpo', 'dito'].some(d => novizio.casella(d) === dopo.chiave))
+  controlla('e il banco dice dov\'è finito e cosa manca', novizio.avvisi.some(a => a.cosa === dopo.chiave && /nello zaino · Serve /.test(a.testo)),
+            JSON.stringify(novizio.avvisi))
+  uguale('dallo zaino non si indossa finché manca la caratteristica', novizio.indossaDallaTasca(0)?.che, 'niente')
+  const pienoDiNovizio = new Bottega({ eroe: 'mago', finite: 3, roba: { ...ROBA_VUOTA(), gemme: 500, zaino: ['saio', 'verga', 'manto', 'amuleto-azzurro', 'chiave', 'pozione-grande'] }, rnd: seminato(4) })
+  const trovato = pienoDiNovizio.mercanziaVista('armaiolo').find(r => r.meritare)
+  if (trovato) {
+    uguale('a zaino pieno non si compra, come per gli altri', pienoDiNovizio.compraDa('armaiolo', trovato.chiave)?.che, 'pieno')
+    uguale('e le gemme restano', pienoDiNovizio.gemme, 500)
+  }
+
   /* lo zaino pieno ferma quello che non trova posto */
   const pieno = new Bottega({ roba: { ...ROBA_VUOTA(), gemme: 100, zaino: ['panciotto', 'manto', 'saio', 'amuleto-azzurro', 'chiave', 'corazza'] }, rnd: seminato(2) })
   uguale('a zaino pieno una pozione non entra', pieno.compraDa('erborista', 'pozione')?.che, 'pieno')

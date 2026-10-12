@@ -113,6 +113,8 @@ const note = computed(() => {
   const c = cosa.value, s = scelto.value
   if (!c || s.che !== 'merce') return []
   if (c.nonPuoi) return [{ em: '✋', testo: c.nonPuoi, tono: 'ambra', dato: 'data-non-puoi' }]
+  // si compra lo stesso: va nello zaino, e si indossa quando la caratteristica c'è
+  if (c.serve) return [{ em: '🔒', testo: c.serve, tono: 'ambra', dato: 'data-serve' }]
   if (c.prova && c.prova.bloccata)
     return [{ em: '✋', testo: `${COSE[c.prova.bloccata].nome} tiene tutte e due le mani: questo resta in tasca.`, tono: 'ambra' }]
   return []
@@ -161,7 +163,7 @@ const tascheVuote = computed(() => !!props.tasche && !props.tasche.some(Boolean)
         <div class="sot-griglia">
           <Casella v-for="r in qui" :key="r.chiave" :cosa="r" :sotto="sottoMerce(r)"
                    :spenta="!puoiComprare(r)" :rosso="!r.posso"
-                   :segno="r.nonPuoi ? '✋' : r.quante ? `×${r.quante}` : ''"
+                   :segno="r.nonPuoi ? '✋' : r.serve ? '🔒' : r.quante ? `×${r.quante}` : ''"
                    :scelta="sceltoQui('merce', r.chiave)"
                    :data-casella-pezzo="r.chiave" :data-avanti="r.avanti || null"
                    :data-posso="puoiComprare(r) ? '1' : '0'" @click="toccaMerce(r)" />

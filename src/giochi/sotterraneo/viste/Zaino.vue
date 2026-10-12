@@ -88,6 +88,8 @@ const note = computed(() => {
   if (!nelloZaino.value) return []
   if (c.nonPuoi) {
     const frase = /[.!?]$/.test(c.nonPuoi) ? c.nonPuoi : `${c.nonPuoi}.`   // due frasi, non una sola senza punto
+    // un pezzo che si porta ma non si regge ancora si tiene: lo si indosserà; quello che la classe non porta si vende
+    if (c.ancora) return [{ em: '🔒', testo: frase, tono: 'ambra', dato: 'data-ancora-no' }]
     return [{ em: '✋', testo: frase + (c.prezzo ? ' Il mercante te lo compra.' : ''), tono: 'ambra', dato: 'data-non-puoi' }]
   }
   if (c.prova && c.prova.bloccata) return [{ em: '✋', testo: `${props.mano.nome} vuole tutte e due le mani.`, tono: 'ambra' }]
@@ -129,7 +131,7 @@ const polso = computed(() => (props.vita / props.vitaMax > 0.6 ? '#4fce7c' : pro
 
     <div class="sot-banco-griglia">
       <div class="sot-griglia sot-tasche">
-        <Casella v-for="(t, i) in tasche" :key="i" :cosa="t" vuota="·" :segno="t && t.n > 1 ? `×${t.n}` : t && t.nonPuoi ? '✋' : ''"
+        <Casella v-for="(t, i) in tasche" :key="i" :cosa="t" vuota="·" :segno="t && t.n > 1 ? `×${t.n}` : t && t.nonPuoi ? (t.ancora ? '🔒' : '✋') : ''"
                  :spenta="!!(t && t.nonPuoi)" :scelta="sceltoQui('zaino', i)" :disabled="!t"
                  :data-tasca="i" :data-cosa="t ? t.chiave : null" @click="tocca('zaino', i)" />
       </div>
