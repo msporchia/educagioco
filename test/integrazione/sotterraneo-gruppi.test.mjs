@@ -14,10 +14,13 @@
      racconto finito, e un tocco lo accorcia;
    - il mostro grosso sta grande al centro, con gli altri intorno;
    - l'agguato e la sorpresa dicono la loro riga e la fila li racconta;
-   - a 320 px il palco non esce dalla finestra (scorre al più la scelta).
+   - a 320 px il palco non esce dalla finestra (scorre al più la scelta);
+   - gli effetti delle abilità (docs/sotterraneo/scontro-effetti.md): la palla di fuoco vola e scoppia, la catena di fulmini salta
+     da un mostro all'altro, chi resiste ha il numero piccolo e chi teme grande (con il segno sopra già prima di rispondere), il
+     gelo e lo stordimento si vedono addosso. Foto a metà effetto con `--scatti`.
    Si tocca come un bambino (`Input.dispatchTouchEvent` via CDP).
    `node test/esegui.mjs sotterraneo-gruppi`
-   tempo: 150
+   tempo: 200
    ═══════════════════════════════════════════════════════════════════ */
 import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, scendiNelSotterraneo } from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
@@ -43,15 +46,15 @@ async function toccaIl(sel) {
 }
 
 // scende nella cripta con lo scontro già aperto (il gioco lo apre da `hash`)
-async function entra(hash) {
+async function entra(hash, { eroe = 'cavaliere', r = roba, cr = crescita } = {}) {
   await azzera(page)
   await page.setViewportSize({ width: 390, height: 844 })
-  const avventura = { tappa: TAPPA, libera: false, stelle: { 0: 3 }, missioni: {}, roba, crescita,
+  const avventura = { tappa: TAPPA, libera: false, stelle: { 0: 3 }, missioni: {}, roba: r, crescita: cr,
     terra: { nebbia: 'f'.repeat(768), dove: [55, 11], parlato: true } }
   await semina(page, {
     coins: 300, settings: { sperimentali: true },
     campagne: { sotterraneo: { tappa: TAPPA, libera: false, stelle: { 0: 3 },
-      cfg: { mondo: MONDO, eroe: 'cavaliere', avventure: { cavaliere: avventura } } } },
+      cfg: { mondo: MONDO, eroe, avventure: { [eroe]: avventura } } } },
   })
   await scegli(page, 'sotterraneo')
   await page.waitForSelector('[data-terra]', { timeout: 5000 })
@@ -227,6 +230,108 @@ await entra('mostri=2&sorpresa=1')
   const fila = await page.locator('[data-fila] [data-turno]').evaluateAll(es => es.map(e => e.dataset.chi))
   uguale('e il suo primo turno arriva prima di tutto: l\'eroe due volte di fila', fila.slice(0, 2).join(), 'eroe,eroe')
   await finitoIlRacconto()
+}
+
+/* ---------- 8. gli effetti delle abilità: un mago contro tre melme (resistono al fulmine, temono il fuoco) ----------
+   Quello che compare durante il racconto dura poco e le foto sotto carico sono lente: un osservatore dentro la pagina
+   registra tutto quello che compare (effetti, numeri, scritte, stati), e le prove si fanno su quello. Le foto sono per gli occhi. */
+const rispondiGiusto = async () => {
+  await page.waitForSelector('.sot-domanda .qz-tasto', { timeout: 8000 })
+  await attendi(page, 450)
+  await page.locator('.sot-domanda .qz-tasto[data-giusta]').first().click()
+}
+const osserva = () => page.evaluate(() => {
+  const v = window.__visti = { corpi: [], numeri: [], testi: [], segni: [], stelle: 0 }
+  const guarda = n => {
+    if (n.nodeType !== 1) return
+    for (const e of [n, ...n.querySelectorAll('*')]) {
+      if (e.dataset && e.dataset.corpo) v.corpi.push(e.dataset.corpo)
+      if (e.dataset && e.dataset.segno) v.segni.push(e.dataset.segno)
+      if (e.classList && e.classList.contains('sot-numero')) { v.numeri.push([...e.classList].find(c => /^sot-numero-/.test(c))); v.testi.push(e.textContent.trim()) }
+      if (e.classList && e.classList.contains('sa-stella')) v.stelle++
+    }
+  }
+  new MutationObserver(ms => ms.forEach(m => m.addedNodes.forEach(guarda))).observe(document.querySelector('[data-duello]'), { childList: true, subtree: true })
+})
+const visti = () => page.evaluate(() => window.__visti)
+const foto = async nome => { try { await scatto(page, nome) } catch { /* il racconto può essere finito: la prova non dipende da questo */ } }
+{
+  const mago = { eroe: 'mago', r: { ...roba, mano: 'verga' },
+    cr: { esp: sogliaDi(16), caselle: ['sfera-di-fuoco', 'catena-di-fulmini', 'prigione-di-ghiaccio'],
+      albero: Object.fromEntries(['dardo-di-fuoco', 'fiamma-viva', 'sfera-di-fuoco', 'scudo-arcano', 'fonte-arcana', 'raggio-arcano', 'catena-di-fulmini',
+                                  'raggio-di-gelo', 'gelo-profondo', 'scheggia', 'prigione-di-ghiaccio'].map(id => [id, 1])) } }
+  await entra('mostri=3&tipo=melma', mago)
+  await scelta()
+  // la palla di fuoco: prima di rispondere chi teme il fuoco ha il segno sopra; poi vola, scoppia, e chi la teme ha il numero grande
+  await toccaIl('[data-abilita="sfera-di-fuoco"]')
+  await page.waitForSelector('.sot-domanda .qz-tasto', { timeout: 8000 })
+  const teme = await page.locator('[data-segno-pre="teme"]').count()
+  controlla('la palla di fuoco: le melme prese temono il fuoco, col segno sopra (prima di rispondere)', teme >= 2, 'segni «teme»: ' + teme)
+  uguale('e il segno lo dice a chi lo guarda', (await page.locator('[data-segno-pre="teme"]').first().getAttribute('title')).trim(), 'teme il fuoco')
+  await foto('effetti-segni-prima')
+  await osserva()
+  await rispondiGiusto()
+  await page.waitForSelector('[data-corpo="palla"]', { timeout: 3000, state: 'attached' })
+  await attendi(page, 200)
+  await foto('effetti-palla-vola')
+  await page.waitForSelector('[data-corpo="scoppio"]', { timeout: 3000, state: 'attached' }).catch(() => {})
+  await foto('effetti-palla-scoppia')
+  await finitoIlRacconto()
+  {
+    const v = await visti()
+    controlla('la palla di fuoco vola dall\'eroe e poi scoppia sui mostri', v.corpi.includes('palla') && v.corpi.filter(c => c === 'scoppio').length >= 2, v.corpi.join())
+    controlla('chi teme il fuoco: numero grande e «lo teme!»', v.numeri.includes('sot-numero-teme') && v.testi.includes('lo teme!'), v.numeri.join() + ' | ' + v.testi.join())
+  }
+  // la catena di fulmini: le tre melme resistono (segno prima di rispondere), un lampo salta dall'una all'altra
+  // (un altro scontro: il fuoco ne ha già battute)
+  await entra('mostri=3&tipo=melma&bis=1', mago)
+  await scelta()
+  await toccaIl('[data-abilita="catena-di-fulmini"]')
+  await page.waitForSelector('.sot-domanda .qz-tasto', { timeout: 8000 })
+  uguale('la catena di fulmini: le tre melme resistono al fulmine, col segno', await page.locator('[data-segno-pre="resiste"]').count(), 3)
+  uguale('e il segno dice «resiste»', (await page.locator('[data-segno-pre="resiste"]').first().getAttribute('title')).trim(), 'resiste al fulmine')
+  await osserva()
+  await rispondiGiusto()
+  await page.waitForSelector('[data-corpo="arco"]', { timeout: 3000, state: 'attached' })
+  await attendi(page, 150)
+  await foto('effetti-catena')
+  await attendi(page, 300)
+  await foto('effetti-resiste')
+  await finitoIlRacconto()
+  {
+    const v = await visti()
+    controlla('la catena: un arco per anello (eroe→primo, poi di mostro in mostro)', v.corpi.filter(c => c === 'arco').length === 3, v.corpi.join())
+    controlla('chi resiste al fulmine ha il numero piccolo e la scritta «resiste»', v.numeri.includes('sot-numero-resiste') && v.testi.includes('resiste'), v.numeri.join() + ' | ' + v.testi.join())
+  }
+  await scelta()
+  // il gelo si vede addosso: la prigione di ghiaccio, mentre il mostro è chiuso nel ghiaccio (un altro scontro: l'energia è finita)
+  await entra('mostri=3&tipo=melma&bis=2', mago)
+  await scelta()
+  await toccaIl('[data-abilita="prigione-di-ghiaccio"]')
+  await osserva()
+  await rispondiGiusto()
+  await page.waitForSelector('[data-segno="gelo"]', { timeout: 4000 })
+  await foto('effetti-gelo')
+  await finitoIlRacconto()
+  {
+    const v = await visti()
+    controlla('il gelato ha la brina addosso e il blocco di ghiaccio che si forma', v.segni.includes('gelo') && v.corpi.includes('blocco'), v.segni.join() + ' | ' + v.corpi.join())
+  }
+}
+// uno stordito ha le stelle sopra la testa
+{
+  const cav = { eroe: 'cavaliere', r: { ...roba, mano: 'spada', mancina: 'scudo-legno' },
+    cr: { esp: sogliaDi(12), albero: { 'scudo-alzato': 1, parata: 1, spallata: 1 }, caselle: ['spallata', null, null] } }
+  await entra('mostri=2&tipo=goblin', cav)
+  await scelta()
+  await toccaIl('[data-abilita="spallata"]')
+  await osserva()
+  await rispondiGiusto()
+  await page.waitForSelector('[data-segno="stordito"]', { timeout: 4000, state: 'attached' })
+  await foto('effetti-stordito')
+  await finitoIlRacconto()
+  const v = await visti()
+  controlla('lo stordito ha le stelle che gli girano sopra la testa, e il colpo il suo urto', v.segni.includes('stordito') && v.stelle >= 3 && v.corpi.includes('urto'), v.segni.join() + ' | ' + v.stelle + ' | ' + v.corpi.join())
 }
 
 uguale('nessun errore in pagina', errori.length, 0)

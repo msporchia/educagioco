@@ -27,7 +27,7 @@ Tutto sta in `Corsa.foglio` (`che: 'scontro'`) e nelle funzioni di `Corsa`; un m
   «resiste al fuoco» prima di rispondere. `descrizione(nodo, m)` lo dice già a parole.
 - `io` — gli effetti sull'eroe: `parato`, `scudo`, `intoccabile`, `specchio`, `linfa`. `pericolo`, `fermate` — lo stop.
   `stati` di un mostro: `veleno {quanto, scambi, fuoco}` (`fuoco: true` sono fiamme), `sanguina {quanto, scambi, pile}`
-  (si somma, fino a tre), `debole`, `fermo`, `esposto {scambi, piu}`, `rotto`; `scambi` conta i turni
+  (si somma, fino a tre), `debole`, `fermo`, `esposto {scambi, piu}`, `rotto`; `gelo: true` (solo per disegnare: l'abilità era di gelo); `scambi` conta i turni
   **del mostro**.
 - `Corsa`: `rispondi(giusto)`, `prepara(id | null)`, `beviNelloScontro()`, `beviNelPericolo()`, `continua()`, `scappa()`,
   `costoFuga()`, `puoScappare()`, `botta(m)` (il colpo di quel mostro adesso), `danno(m)`, `colpo(m, nodo)`,
@@ -36,7 +36,8 @@ Tutto sta in `Corsa.foglio` (`che: 'scontro'`) e nelle funzioni di `Corsa`; un m
   `caduti`, `fine` (lo scontro si è chiuso), `ringhia` (lo stop che comincia), e in cima i campi di prima (`che`: `colpo`, `ferito`,
   `caduto`, `bevuto`, `svenuto`; `dato`, `preso`, `usata`, `colpiti`, `veleno`, `salvo`, `gelato`, `assorbito`, `schivato`…).
 - **Un'azione**: dell'eroe `{ chi: 'eroe', che: 'attacco' | 'abilita' | 'sbaglia' | 'bevi', usata, forma, bersaglio,
-  colpiti: [{ chi, dato, caduto, effetti, fattore, elemento, effetto, rifiutati }], base, volte, primoTiro, rubato }` (`rubato`: la vita rimessa da Mano santa; (`sbaglia` porta anche il `bersaglio`, per
+  colpiti: [{ chi, dato, caduto, effetti, fattore, elemento, effetto, rifiutati }], presi: [{ chi, rifiutati }], base, volte, primoTiro, rubato }` (`presi`: chi prende
+  l'abilità anche se non fa danno, Rovi o Ninna nanna; `rubato`: la vita rimessa da Mano santa; (`sbaglia` porta anche il `bersaglio`, per
   dire «a vuoto» su di lui); di un mostro `{ chi: mostro, che: 'colpo' | 'salta' | 'veleno' | 'sanguina', contro: 'eroe', pieno, preso,
   schivato, assorbito, rimandato, gelato, salvo, agguato, caduto, svenuto, spinato }` (`spinato`: quanto gli ha tolto il
   Bordo a punte; `veleno` e `sanguina` portano `dato`, `caduto`).
@@ -73,10 +74,11 @@ Il motore risolve tutto dentro `rispondi`; la vista ne racconta le `azioni` una 
 
 - **Prima il fatto, poi il racconto**: le ossa vere sono già scese. Durante il racconto la barra, i caduti e la fila sono quelli di quel
   momento (`fx.ossa`, `fx.morti`, `fx.fila`); a racconto finito torna la verità.
-- **Chi agisce scatta, chi prende trema, il numero sale.** L'eroe da vicino si fa sotto, da lontano (arco, bacchetta) lancia: il
-  glifo dell'abilità, del colore del suo ramo, vola verso ognuno dei colpiti, la catena in sequenza (~0,17 s fra un salto e il
-  prossimo). Uno scudo o una cura non colpiscono: un alone. Sbagliare è uno scatto a metà e «a vuoto» sul bersaglio. Sul nome
-  dell'abilità una pillola. I tempi: l'eroe ~0,6 s, un mostro ~0,45 s, bere ~0,5 s.
+- **Chi agisce scatta, chi prende trema, il numero sale.** L'eroe agisce con l'effetto della
+  sua abilità: una famiglia di effetti scelta dai dati (palla di fuoco che scoppia, catena di fulmini, fulmine dal cielo, radici dal
+  pavimento, scudo che si forma…), chi subisce ha i suoi segni e i suoi stati — tutto in [scontro-effetti.md](scontro-effetti.md).
+  Sbagliare è uno scatto a metà e «a vuoto» sul bersaglio. Sul nome dell'abilità una pillola. I tempi: l'eroe quanto dura il suo effetto
+  (~0,5 s l'attacco, mai oltre ~0,8 s), un mostro ~0,45 s, bere ~0,5 s.
 - **I mostri uno dopo l'altro**, nell'ordine della fila: il colpo (scatta, l'eroe incassa «−N», il globo sobbalza), «schivato»,
   «parato», il turno saltato («stordito»), il veleno che brucia, lo specchio che torna al mostro. La fila scorre a ogni turno
   finito, chi cade ne esce.
@@ -101,7 +103,7 @@ offerta se `!puoScappare()`), e sopra la riga rossa dello stop ([pericolo.md](pe
 `[data-duello]` (il palco; `data-racconto="in-corso"` mentre si racconta, `data-file` 1|2, `data-mostri`), `[data-mostro]`
 (`data-i` il posto, `data-tipo`, `data-nome`, `data-grande` = la chiave del grosso, `data-bersaglio`, `data-colpito` = il fattore, `data-morto`,
 `data-porta-chiave`), dentro `[data-minaccia]` (`data-colpisce`), `[data-vita]` (`data-ossa`), `[data-effetti] [data-stato]`,
-`[data-cifra]` (i numeri che salgono); `[data-eroe-scontro]`, `[data-posto-compagno]`, `[data-abilita-usata]`, `[data-dardo]`, `[data-apertura]`,
+`[data-cifra]` (i numeri che salgono); `[data-eroe-scontro]`, `[data-posto-compagno]`, `[data-abilita-usata]`, `[data-scena]` (gli effetti), `[data-segno]`, `[data-segno-pre]`, `[data-apertura]`,
 `[data-fila] [data-turno]` (`data-chi`: `eroe` o il posto), `[data-stati-eroe]`; la scelta `[data-caselle-abilita]`
 (`data-pronto`, `data-ferma`), `[data-azione="attacco|bevi-scontro|scappa"]`, `[data-abilita="<id>"]`. `figura grosso`:
 `[data-figura-grosso]`. Per aprire uno scontro con più mostri: `#sotterraneo=branco&mostri=6` ([../core/comandi.md](../core/comandi.md)).

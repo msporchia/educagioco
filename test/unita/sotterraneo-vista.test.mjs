@@ -5,8 +5,12 @@
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
 import { seminato } from '../../src/giochi/sotterraneo/motore/livello.js'
-import { disponi, vistaDelloScontro, statiDel } from '../../src/giochi/sotterraneo/viste/campo.js'
-import { nuovoRacconto } from '../../src/giochi/sotterraneo/viste/racconto.js'
+import { disponi, vistaDelloScontro, statiDel, segniDel } from '../../src/giochi/sotterraneo/viste/campo.js'
+import { nuovoRacconto, modoDelColpo } from '../../src/giochi/sotterraneo/viste/racconto.js'
+import { NODI } from '../../src/giochi/sotterraneo/dati/abilita.js'
+import { EFFETTI, CORPI, SEGNI, effettoDi, effettoDelColpo, aureDelNodo, statiDelNodo, guastiDegliEffetti } from '../../src/giochi/sotterraneo/dati/effetti.js'
+import { sogliaDi } from '../../src/giochi/sotterraneo/dati/livelli.js'
+import { readFileSync } from 'node:fs'
 import { controlla, uguale, stessaLista, riassunto } from '../aiuto/verifica.mjs'
 
 const roba = { v: 1, gemme: 0, zaino: [], mano: 'spada', mancina: null, corpo: null, dito: null, torcia: 0, torce: 0 }
@@ -124,6 +128,209 @@ function scena(n, { grosso = -1 } = {}) {
   await new Promise(f => setTimeout(f, 900))
   r.ferma()
   uguale('ferma pulisce tutto', r.fx.attivo, false)
+}
+
+/* ══════════ 4. gli effetti: uno per ogni abilità, scelto dai dati ══════════ */
+{
+  uguale('nessun guasto negli effetti', guastiDegliEffetti(NODI).join(' | '), '')
+  const usati = new Set()
+  let senza = 0
+  for (const n of Object.values(NODI)) {
+    if (n.sempre) continue
+    // l'effetto scritto, e quello che il nodo avrebbe senza (così un nodo nuovo ne ha già uno)
+    const scritto = effettoDi(n), ricavato = effettoDi({ ...n, effetto: undefined })
+    if (!EFFETTI[scritto] || !EFFETTI[ricavato]) senza++
+    usati.add(scritto)
+  }
+  uguale('ogni abilità ha un effetto che esiste, scritto e ricavato', senza, 0)
+  controlla('e le famiglie in uso sono molte (non uno solo per tutti)', usati.size >= 25, [...usati].join())
+  // quello ricavato ha senso: elemento, forma, arma
+  const d = (nodo, famiglia) => effettoDi({ ...NODI[nodo], effetto: undefined }, famiglia)
+  uguale('il fendente è un taglio', d('fendente'), 'taglio')
+  uguale('la spazzata un arco su più mostri', d('spazzata'), 'spazzata')
+  uguale('il mulinello un turbine', d('mulinello'), 'turbine')
+  uguale('la catena di fulmini una catena', d('catena-di-fulmini'), 'catena')
+  uguale('la freccia che trapassa trapassa', d('freccia-che-trapassa'), 'trapassa')
+  uguale('l\'ascia lanciata rimbalza', d('ascia-lanciata'), 'ascia')
+  uguale('il fulmine scende dall\'alto', d('fulmine'), 'fulmine')
+  uguale('il dardo di fuoco è una palla che vola e scoppia', d('dardo-di-fuoco'), 'palla')
+  uguale('su più mostri la palla scoppia come un\'esplosione', d('sfera-di-fuoco'), 'esplode')
+  uguale('l\'esplosione nasce sul mostro', d('esplosione'), 'esplode')
+  uguale('la scheggia vola e gela', d('scheggia'), 'scheggia')
+  uguale('la nevicata cade', d('nevicata'), 'nevicata')
+  uguale('la luce sacra è un raggio dall\'alto', d('luce-sacra'), 'luce')
+  uguale('il veleno è una nube', d('spore'), 'nube')
+  uguale('lo scudo si forma', d('scudo-alzato'), 'scudo')
+  uguale('la cura sale come scintille', d('fonte-arcana'), 'cura')
+  uguale('l\'invulnerabilità è pietra', d('montagna'), 'pietra')
+  uguale('un colpo di mano con la bacchetta è un dardo, con l\'arco una freccia, senz\'armi un taglio',
+         [effettoDelColpo('bacchette'), effettoDelColpo('archi'), effettoDelColpo(null)].join(), 'dardo,freccia,taglio')
+  // cosa dura e come arriva: mai oltre 800 ms, e ogni corpo e segno si sa disegnare
+  controlla('nessun effetto dura più di 800 ms', Object.values(EFFETTI).every(e => e.dura <= 800))
+  const scene = readFileSync(new URL('../../src/giochi/sotterraneo/viste/Scene.vue', import.meta.url), 'utf8')
+  const mancano = [...CORPI, ...SEGNI].filter(c => !scene.includes(`'${c}'`) && !scene.includes(`sc-${c}`) && !scene.includes(`sg-${c}`))
+  uguale('Scene.vue disegna tutti i corpi e i segni dichiarati', mancano.join(), '')
+  // le aure: la Danza delle lame fa danno e para; la Fortezza cura e para
+  uguale('la Fortezza ha due aure: cura e scudo', aureDelNodo(NODI.fortezza).sort().join(), 'cura,scudo')
+  uguale('un nodo senza protezione non ne ha', aureDelNodo(NODI.fendente).length, 0)
+  // gli stati che mette un'abilità, meno quelli che il mostro rifiuta
+  uguale('la Prigione di ghiaccio gela e ferma', statiDelNodo(NODI['prigione-di-ghiaccio']).join(), 'fermo')
+  uguale('Radici blocca e rende esposti', statiDelNodo(NODI.radici).sort().join(), 'esposto,fermo')
+  uguale('un immune a «stordisce» non si ferma', statiDelNodo(NODI.stordisce, ['stordisce']).length, 0)
+  uguale('un immune al veleno non brucia', statiDelNodo(NODI.brucia, ['brucia']).length, 0)
+}
+
+/* ══════════ 5. gli stati e i segni di chi resiste, teme, è immune ══════════ */
+{
+  const g = statiDel({ stati: { debole: 2, gelo: true, fermo: 1 } })
+  uguale('un gelato ha il fiocco', g.find(x => x.chiave === 'debole').glifo, 'fiocco')
+  controlla('e lo dice (gelo)', g.every(x => x.gelo))
+  const f = statiDel({ stati: { debole: 2 } })
+  uguale('chi colpisce a metà senza gelo è fiacco, non gelato', f[0].glifo + '/' + f[0].gelo, 'fiacco/false')
+  uguale('stordito: le stelle', statiDel({ stati: { fermo: 1 } })[0].glifo, 'stelle')
+  uguale('sanguina: il sangue', statiDel({ stati: { sanguina: { quanto: 2, scambi: 2, pile: 1 } } })[0].glifo, 'sangue')
+  const resiste = segniDel({ elemento: 'fuoco', effetto: 'resiste', rifiutati: [] })
+  const teme = segniDel({ elemento: 'gelo', effetto: 'teme', rifiutati: [] })
+  const immune = segniDel({ elemento: 'veleno', effetto: null, rifiutati: ['avvelena', 'stordisce'] })
+  uguale('chi resiste ha il suo segno, col fuoco', resiste[0].tipo + '/' + resiste[0].glifo, 'resiste/fiamma')
+  uguale('chi teme il suo, col gelo', teme[0].tipo + '/' + teme[0].glifo, 'teme/fiocco')
+  uguale('un immune un segno per ogni stato rifiutato', immune.map(x => x.tipo + '/' + x.glifo).join(), 'immune/veleno,immune/stelle')
+  uguale('un colpo normale non ha segni', segniDel({ elemento: 'fisico', effetto: null, rifiutati: [] }).length, 0)
+  // dall'anteprima di una scelta preparata, a partire dai dati veri del motore
+  const { c, fatti } = scena(3)
+  c.scontro(fatti[0])
+  c.difese = m => (m === fatti[0] ? { resiste: ['fuoco'], teme: [], immune: [] } : m === fatti[1] ? { resiste: [], teme: ['fuoco'], immune: ['brucia'] } : { resiste: [], teme: [], immune: [] })
+  c.pronta = 'sfera-di-fuoco'
+  c.aggiorna(c.foglio)
+  const v = vistaDelloScontro(c)
+  uguale('chi resiste al fuoco lo dice prima di rispondere', v.mostri[0].segni.map(x => x.tipo).join(), 'resiste')
+  uguale('chi lo teme ha il suo segno', v.mostri[1].segni.map(x => x.tipo).join(), 'teme')
+  uguale('chi non ha difese niente', v.mostri[2].segni.length, 0)
+  c.scegliBersaglio(fatti[1])
+  c.pronta = 'brucia'
+  c.aggiorna(c.foglio)
+  uguale('chi lo teme e non brucia ne ha due', vistaDelloScontro(c).mostri[1].segni.map(x => x.tipo).join(), 'teme,immune')
+}
+
+/* ══════════ 6. il racconto di un'abilità: effetti, numeri, stati ══════════ */
+{
+  const aspetta = ms => new Promise(f => setTimeout(f, ms))
+  const prepara = n => {
+    const { c, fatti } = scena(n)
+    c.scontro(fatti[0])
+    const campo = [...c.foglio.campo]
+    const v = vistaDelloScontro(c)
+    const prima = { campo, ossa: campo.map(m => m.ossa), morti: campo.map(() => false), turni: v.turni, stati: v.mostri.map(m => m.stati) }
+    return { c, campo, prima }
+  }
+  const eroe = (campo, nodo, forma, colpiti, presi) => ({
+    chi: 'eroe', che: 'abilita', forma, bersaglio: campo[0],
+    usata: { id: nodo, nome: NODI[nodo].nome, glifo: NODI[nodo].glifo, elemento: NODI[nodo].elemento }, colpiti, presi: presi || colpiti.map(c => ({ chi: c.chi, rifiutati: c.rifiutati || [] })),
+  })
+  const colpito = (m, dato, elemento, effetto = null, rifiutati = []) => ({ chi: m, dato, caduto: false, elemento, effetto, rifiutati })
+  // una palla di fuoco: parte un corpo, e su tre mostri scoppia (uno solo vola, gli altri sentono lo scoppio)
+  {
+    const { campo, prima } = prepara(3)
+    const a = eroe(campo, 'sfera-di-fuoco', 'vicini', campo.map(m => colpito(m, 7, 'fuoco')))
+    const r = nuovoRacconto({})
+    r.racconta({ campo, prima, azioni: [a], modo: () => modoDelColpo({ nodo: NODI['sfera-di-fuoco'], famiglia: 'bacchette' }) })
+    await aspetta(40)
+    uguale('la palla di fuoco: un corpo che vola dall\'eroe', r.fx.scene.filter(x => x.corpo === 'palla').map(x => x.modo + ':' + x.da + '>' + x.a).join(), 'volo:eroe>0')
+    controlla('tinta di fuoco', r.fx.scene[0].tinta.toLowerCase() === '#e8742f')
+    controlla('l\'eroe tira indietro il braccio', r.fx.effetto.eroe && r.fx.effetto.eroe.tipo === 'tira')
+    await aspetta(620)
+    uguale('arrivata, su ognuno dei tre scoppia', r.fx.scene.filter(x => x.corpo === 'scoppio').map(x => x.a).sort().join(), '0,1,2')
+    r.accorcia()
+    await aspetta(900)
+    uguale('finito, niente resta a schermo', r.fx.scene.length, 0)
+  }
+  // la catena di fulmini: un arco per ogni anello, uno dopo l'altro
+  {
+    const { campo, prima } = prepara(3)
+    const a = eroe(campo, 'catena-di-fulmini', 'catena', campo.map((m, k) => colpito(m, 9 - k, 'fulmine')))
+    const r = nuovoRacconto({})
+    r.racconta({ campo, prima, azioni: [a], modo: () => modoDelColpo({ nodo: NODI['catena-di-fulmini'], famiglia: 'bacchette' }) })
+    await aspetta(30)
+    const archi = r.fx.scene.filter(x => x.corpo === 'arco')
+    uguale('tre archi, dall\'eroe al primo e poi di mostro in mostro', archi.map(x => x.da + '>' + x.a).join(), 'eroe>0,0>1,1>2')
+    controlla('con un ritardo crescente: il lampo salta', archi[0].ritardo < archi[1].ritardo && archi[1].ritardo < archi[2].ritardo)
+    r.ferma()
+  }
+  // un mostro che resiste e uno che teme: il numero cambia e c'è il segno; chi è immune ha lo stato barrato
+  {
+    const { campo, prima } = prepara(3)
+    const a = eroe(campo, 'prigione-di-ghiaccio', 'vicini', [
+      colpito(campo[0], 3, 'gelo', 'resiste'), colpito(campo[1], 14, 'gelo', 'teme'), colpito(campo[2], 8, 'gelo', null, ['stordisce'])])
+    const r = nuovoRacconto({})
+    r.racconta({ campo, prima, azioni: [a], modo: () => modoDelColpo({ nodo: NODI['prigione-di-ghiaccio'], famiglia: 'bacchette' }) })
+    await aspetta(700)
+    const n = r.fx.numeri
+    uguale('chi resiste: il numero è piccolo', n.filter(x => x.su === 0 && x.tipo === 'resiste').length, 1)
+    uguale('con la scritta piccola', n.filter(x => x.su === 0 && x.tipo === 'segno').map(x => x.testo + '/' + x.tono).join(), 'resiste/resiste')
+    uguale('chi teme: il numero è grande', n.filter(x => x.su === 1 && x.tipo === 'teme').length, 1)
+    uguale('e dice «lo teme!»', n.filter(x => x.su === 1 && x.tipo === 'segno').map(x => x.testo).join(), 'lo teme!')
+    uguale('l\'immune ha lo stato rifiutato, barrato', n.filter(x => x.su === 2 && x.tipo === 'segno').map(x => x.testo + '/' + !!x.barrato).join(), 'non si stordisce/true')
+    controlla('chi resiste ha il suo scudetto sulla figura', r.fx.scene.some(x => x.corpo === 'rimbalzo' && x.a === 0))
+    controlla('chi teme scoppia', r.fx.scene.some(x => x.corpo === 'colpo' && x.a === 1 && x.piu))
+    controlla('chi resiste trema piano, chi teme forte', r.fx.effetto[0].tipo === 'colpito-debole' && r.fx.effetto[1].tipo === 'colpito-forte')
+    // gli stati si posano quando l'abilità arriva
+    controlla('chi è preso resta fermo, nel ghiaccio', (r.fx.stati[0] || []).some(x => x.chiave === 'fermo' && x.gelo) && (r.fx.stati[1] || []).some(x => x.chiave === 'fermo' && x.gelo))
+    controlla('chi è immune a «stordisce» non si ferma', !(r.fx.stati[2] || []).some(x => x.chiave === 'fermo'))
+    r.ferma()
+  }
+  // un'abilità che non fa danno ma mette addosso (Ninna nanna): chi la prende ha il suo effetto e il suo stato
+  {
+    const { campo, prima } = prepara(3)
+    const a = eroe(campo, 'ninna-nanna', 'vicini', [], campo.slice(0, 2).map(m => ({ chi: m, rifiutati: [] })))
+    const r = nuovoRacconto({})
+    r.racconta({ campo, prima, azioni: [a], modo: () => modoDelColpo({ nodo: NODI['ninna-nanna'], famiglia: 'bacchette' }) })
+    await aspetta(30)
+    uguale('il sonno nasce sui due presi', r.fx.scene.filter(x => x.corpo === 'sonno').map(x => x.a).join(), '0,1')
+    await aspetta(300)
+    controlla('e li ferma (stati addosso mostrati)', [0, 1].every(k => (r.fx.stati[k] || []).some(x => x.chiave === 'fermo')))
+    uguale('il terzo no', (r.fx.stati[2] || []).length, 0)
+    r.ferma()
+  }
+  // lo scudo si forma sull'eroe e non c'è niente da colpire
+  {
+    const { campo, prima } = prepara(2)
+    const a = eroe(campo, 'scudo-alzato', 'uno', [])
+    const r = nuovoRacconto({})
+    r.racconta({ campo, prima, azioni: [a], modo: () => modoDelColpo({ nodo: NODI['scudo-alzato'] }) })
+    await aspetta(30)
+    uguale('lo scudo si forma sull\'eroe', r.fx.scene.map(x => x.corpo + '@' + x.a).join(), 'scudo@eroe')
+    controlla('e lui sta fermo e brilla', r.fx.effetto.eroe && r.fx.effetto.eroe.tipo === 'protegge')
+    r.ferma()
+  }
+}
+
+/* ══════════ 7. il motore dà il dato in più: chi prende l'abilità, e il gelo ══════════ */
+{
+  const roba2 = { v: 1, gemme: 0, zaino: [], mano: null, mancina: null, corpo: null, dito: null, torcia: 0, torce: 0 }
+  const c = new Corsa(CAMPAGNA[5], { seme: 11, rnd: seminato(11), eroe: 'mago', roba: roba2,
+    crescita: { esp: sogliaDi(12), albero: { 'prigione-di-ghiaccio': 1, 'ninna-nanna': 1 }, caselle: ['prigione-di-ghiaccio', 'ninna-nanna', null] } })
+  for (const r of c.livello.robe) if (r.che === 'mostro') r.morto = true
+  c.vitaPiu += 80; c.vita = c.vitaMax; c.energia = 99
+  c.perchéNonUsi = () => ''
+  const st = c.livello.stanze.reduce((a, b) => (b.w > a.w ? b : a))
+  c.eroe = { x: st.x + 0.5, y: st.y + 1.5 }; c.verso = { dx: 1, dy: 0 }
+  const fatti = [0, 1, 2].map(i => Object.assign(c.livello.mostro('goblin', st.x + 1 + i, st.y + 1), { ossa: 90, ossaMax: 90, att: 3, dif: 0, velocita: 10, sveglio: true }))
+  c.livello.robe.push(...fatti)
+  c.scontro(fatti[0])
+  c.prepara('prigione-di-ghiaccio')
+  const e = c.rispondi(true)
+  const az = e.azioni.find(a => a.chi === 'eroe')
+  uguale('l\'azione porta chi prende l\'abilità', az.presi.length, az.colpiti.length)
+  controlla('chi è nel ghiaccio lo dice al disegno (gelo)', fatti[0].stati.gelo === true || fatti[0].stati.fermo === 0, JSON.stringify(fatti[0].stati))
+  const gel = statiDel(fatti[0]).find(x => x.chiave === 'fermo')
+  controlla('e statiDel lo mostra ghiacciato finché dura', !gel || gel.gelo === true)
+  c.prepara('ninna-nanna')
+  const f = c.rispondi(true)
+  const nn = f && f.azioni ? f.azioni.find(a => a.chi === 'eroe') : null
+  if (nn) {
+    uguale('Ninna nanna non fa danno ma ha i suoi presi', nn.colpiti.length, 0)
+    controlla('e i presi sono i vicini del bersaglio', nn.presi.length >= 1 && nn.presi.length <= 3)
+  }
 }
 
 riassunto('la vista dello scontro a gruppi')
