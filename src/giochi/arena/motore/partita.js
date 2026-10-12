@@ -146,7 +146,7 @@ export class Partita {
       const dx = (i - (k.n - 1) / 2) * 14
       this.unita.push({
         id, lato, x: x + dx, y: y + (i % 2) * 5, hp: k.hp * f, max: k.hp * f, forza: f,
-        cool: 0.9, fl: 0, nasce: 0.8, vola: k.vola, dirY: 0, r: 8,
+        cool: 0.9, fl: 0, colpo: 0, cammina: false, nasce: 0.8, vola: k.vola, dirY: 0, r: 8,
       })
     }
     this.evento({ tipo: 'squadra', lato, id, x, y })
@@ -187,6 +187,8 @@ export class Partita {
   muoviUnita(u, dt) {
     const k = TRUPPE[u.id]
     if (u.fl > 0) u.fl -= dt
+    if (u.colpo > 0) u.colpo -= dt
+    u.cammina = false
     if (u.nasce > 0) { u.nasce -= dt; return }
     if (u.cool > 0) u.cool -= dt
 
@@ -209,7 +211,7 @@ export class Partita {
     if (!bers) return
 
     if (dist(u, bers) - (bers.r || 8) <= k.gitt) {
-      if (u.cool <= 0) { this.colpisci(u, k, bers); u.cool = k.rate }
+      if (u.cool <= 0) { this.colpisci(u, k, bers); u.cool = k.rate; u.colpo = 0.25 }
       return
     }
     const m = this.verso(u, bers)
@@ -217,6 +219,7 @@ export class Partita {
     const v = Math.min(k.vel * dt, n)
     u.x += (dx / n) * v
     u.y += (dy / n) * v
+    u.cammina = true
   }
 
   separa() {

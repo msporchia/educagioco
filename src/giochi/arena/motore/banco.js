@@ -19,7 +19,7 @@ export function caso(seme) {
 }
 
 // la fila in cui compra le caserme: prima chi tiene a bada gli altri, poi il resto
-const ORDINE = ['cavaliere', 'pipistrelli', 'maga', 'lupi', 'golem', 'drago', 'bombarolo']
+const ORDINE = ['guardiano', 'pipistrelli', 'negromante', 'lupi', 'golem', 'drago', 'diavoletto']
 
 export class Pilota {
   constructor({ rnd = Math.random, precisione = 0.9, ritmo = 2.5, caserme = 4 } = {}) {

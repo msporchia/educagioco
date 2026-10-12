@@ -60,15 +60,15 @@ controlla('stesso seme, stessa partita', JSON.stringify(uguali) === JSON.stringi
     return p
   }
   // chi vola non è colpito da chi cammina e colpisce solo da vicino
-  const pip = prova(['cavaliere'], ['pipistrelli'], 8)
-  controlla('un cavaliere non ferisce i pipistrelli', pip.unita.filter(u => u.id === 'pipistrelli').every(u => u.hp === u.max))
-  const arc = prova(['arciere'], ['pipistrelli'], 3)
+  const pip = prova(['guardiano'], ['pipistrelli'], 8)
+  controlla('un guardiano non ferisce i pipistrelli', pip.unita.filter(u => u.id === 'pipistrelli').every(u => u.hp === u.max))
+  const arc = prova(['scheletri'], ['pipistrelli'], 3)
   const feriti = arc.unita.filter(u => u.id === 'pipistrelli')
   controlla('gli arcieri invece li colpiscono', feriti.length < 3 || feriti.some(u => u.hp < u.max))
   // il golem va alle costruzioni e ignora le truppe
   const g = new Partita({ rnd: caso(4) })
   g.schiera('nem', 'golem', 180, 100)
-  g.schiera('io', 'cavaliere', 180, 140)
+  g.schiera('io', 'guardiano', 180, 140)
   g.avanza(3)
   const golem = g.unita.find(u => u.id === 'golem')
   controlla('il golem non ferma per le truppe', golem.y > 100 + 20)

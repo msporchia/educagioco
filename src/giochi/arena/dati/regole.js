@@ -6,18 +6,19 @@
    centro: nessun nemico può finire «dietro» le linee di chi costruisce. */
 export const CAMPO = {
   W: 360, H: 540,
-  fiume: { alto: 253, basso: 287 },   // l'acqua; il ponte è largo quanto la corsia
+  fiume: { alto: 245, basso: 295 },   // l'acqua; la strada la attraversa, larga quanto la corsia
   corsia: 180,                         // la x del ponte e della strada
   muri: [345, 372],                    // le due file di muri della metà di sotto (la sopra è specchiata)
   torretta: 418, base: 482,            // la y della torretta e della base, metà di sotto
 }
 
-/* I posti delle caserme sulla metà di sotto; sopra sono specchiati in y.
-   Lo ordina il motore: prima la corsia con meno caserme, e dentro la corsia
-   il posto più al sicuro (più lontano dal fiume). */
+/* I posti delle caserme sulla metà di sotto; sopra sono specchiati in y. Due
+   file ai lati della strada (la x è la distanza dalla corsia: 45 e 315 sono i
+   bordi). Lo ordina il motore: prima il lato con meno caserme, e dentro il
+   lato il posto più al sicuro (più lontano dal fiume). */
 export const POSTI = [
-  [40, 332], [320, 332], [40, 402], [320, 402],
-  [40, 472], [320, 472], [112, 516], [248, 516],
+  [45, 316], [315, 316], [45, 366], [315, 366],
+  [45, 416], [315, 416], [45, 466], [315, 466],
 ]
 
 /* Le truppe. `op` è l'operazione che si risolve per costruire e potenziare la
@@ -27,24 +28,24 @@ export const POSTI = [
    (`bers`: tutti, terra, torri).
    `sprite` è il nome del pezzo di sprite che la scena userà: non entra nel motore. */
 export const TRUPPE = {
-  arciere:     { nome: 'Arcieri',     op: '+', costo: 0,  n: 2, hp: 110,  dmg: 24, rate: 1.0, vel: 40, gitt: 84, bers: 'tutti', vola: false, splash: 0,
+  scheletri:     { nome: 'Scheletri',    op: '+', costo: 0,  n: 2, hp: 110,  dmg: 24, rate: 1.0, vel: 40, gitt: 84, bers: 'tutti', vola: false, splash: 0,
                  nota: 'Due, da lontano. Colpiscono anche chi vola.' },
-  cavaliere:   { nome: 'Cavaliere',   op: '+', costo: 8,  n: 1, hp: 420,  dmg: 55, rate: 1.1, vel: 38, gitt: 14, bers: 'terra', vola: false, splash: 0,
+  guardiano:   { nome: 'Guardiano',  op: '+', costo: 8,  n: 1, hp: 420,  dmg: 55, rate: 1.1, vel: 38, gitt: 14, bers: 'terra', vola: false, splash: 0,
                  nota: 'Solido, ma non colpisce chi vola.' },
   lupi:        { nome: 'Lupi',        op: '×', costo: 8,  n: 2, hp: 150,  dmg: 40, rate: 0.8, vel: 72, gitt: 13, bers: 'terra', vola: false, splash: 0,
                  nota: 'Due, velocissimi. Non colpiscono chi vola.' },
-  bombarolo:   { nome: 'Bombarolo',   op: '÷', costo: 10, n: 1, hp: 210,  dmg: 85, rate: 1.6, vel: 36, gitt: 70, bers: 'terra', vola: false, splash: 30,
+  diavoletto:   { nome: 'Diavoletto',  op: '÷', costo: 10, n: 1, hp: 210,  dmg: 85, rate: 1.6, vel: 36, gitt: 70, bers: 'terra', vola: false, splash: 30,
                  nota: 'Lancia bombe a terra che scoppiano. Non colpisce chi vola.' },
   pipistrelli: { nome: 'Pipistrelli', op: '−', costo: 12, n: 3, hp: 62,   dmg: 22, rate: 0.9, vel: 82, gitt: 12, bers: 'tutti', vola: true,  splash: 0,
                  nota: 'Tre, volano sopra i muri e sono veloci. Deboli ai colpi ad area.' },
-  maga:        { nome: 'Maga',        op: '−', costo: 12, n: 1, hp: 230,  dmg: 72, rate: 1.4, vel: 36, gitt: 90, bers: 'tutti', vola: false, splash: 28,
+  negromante:        { nome: 'Negromante',       op: '−', costo: 12, n: 1, hp: 230,  dmg: 72, rate: 1.4, vel: 36, gitt: 90, bers: 'tutti', vola: false, splash: 28,
                  nota: 'Da lontano, e il suo colpo scoppia: ottima contro i gruppi.' },
   golem:       { nome: 'Golem',       op: '×', costo: 14, n: 1, hp: 1300, dmg: 95, rate: 2.0, vel: 22, gitt: 16, bers: 'torri', vola: false, splash: 0,
                  nota: 'Lentissimo e resistente: va dritto alle costruzioni e ignora le truppe.' },
-  drago:       { nome: 'Draghetto',   op: '÷', costo: 16, n: 1, hp: 390,  dmg: 42, rate: 1.2, vel: 50, gitt: 42, bers: 'tutti', vola: true,  splash: 26,
+  drago:       { nome: 'Drago',      op: '÷', costo: 16, n: 1, hp: 390,  dmg: 42, rate: 1.2, vel: 50, gitt: 42, bers: 'tutti', vola: true,  splash: 26,
                  nota: 'Vola sopra i muri e sputa fuoco ad area. Lo fermano gli arcieri.' },
 }
-export const BASE = 'arciere'          // la caserma con cui si parte, e che il nemico ha già
+export const BASE = 'scheletri'          // la caserma con cui si parte, e che il nemico ha già
 export const OPERAZIONI = ['+', '−', '×', '÷']
 
 /* Le torri: la torretta davanti (si potenzia) e la base dietro (il re).
