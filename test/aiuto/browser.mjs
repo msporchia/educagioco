@@ -232,6 +232,9 @@ export async function azzera(page, { attesa = '.carte' } = {}) {
     const r = indexedDB.deleteDatabase('giochi-bambini')
     r.onsuccess = r.onerror = r.onblocked = ok
     try { localStorage.clear() } catch (e) { /* niente */ }
+    // a nuovo vuol dire anche senza il cheat di prima: un indirizzo col nome di un gioco (`#sotterraneo=branco`) lo
+    // riaprirebbe al posto della home (App.vue, `dallIndirizzo`)
+    history.replaceState(null, '', location.pathname + location.search)
   }))
   await page.reload()
   if (attesa) await page.waitForSelector(attesa, { timeout: 10000 })
