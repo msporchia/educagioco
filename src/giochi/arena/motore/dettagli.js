@@ -36,11 +36,12 @@ export function numeriTruppa(id, liv) {
   }
 }
 
-/* Le etichette dei due riquadri: «adesso fa così» e «al livello dopo fa così». Da costruire
-   (liv 0) il primo è la caserma appena nata e il secondo cosa succede potenziandola. */
+/* Le etichette dei due riquadri, corte e su una riga sola (se una va a capo i due riquadri si
+   disallineano): «adesso fa così» e «al livello dopo fa così». Da costruire (liv 0) sono i
+   livelli 1 e 2: com'è appena nata e com'è potenziandola. */
 const etichette = liv => (liv >= 1
-  ? { ora: `Adesso (livello ${liv})`, dopo: `Al livello ${liv + 1}` }
-  : { ora: 'Appena costruita (livello 1)', dopo: 'Potenziata (livello 2)' })
+  ? { ora: 'Adesso', dopo: `Livello ${liv + 1}` }
+  : { ora: 'Livello 1', dopo: 'Livello 2' })
 
 /* Le righe di una caserma: gli stessi numeri veri, adesso e al livello dopo. */
 export function dettaglioTruppa(id, liv) {

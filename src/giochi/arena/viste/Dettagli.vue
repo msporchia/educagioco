@@ -47,7 +47,7 @@ defineEmits(['chiudi', 'procedi'])
           <dl>
             <template v-for="r in d.righe" :key="r.nome">
               <dt>{{ r.nome }}</dt>
-              <dd :class="{ 'ar-cambia': r.dopo !== r.ora }">{{ r.dopo }}<span v-if="r.dopo !== r.ora" class="em"> ▲</span></dd>
+              <dd :class="{ 'ar-cambia': r.dopo !== r.ora }">{{ r.dopo }}</dd>
             </template>
           </dl>
         </section>

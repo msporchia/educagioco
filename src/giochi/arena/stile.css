@@ -120,7 +120,7 @@
 .ar-due.ar-uno { grid-template-columns: 1fr }
 .ar-riquadro { background: #ffffff0d; border: 1px solid #ffffff1c; border-radius: 14px; padding: 9px 10px }
 .ar-riquadro.ar-dopo { background: #1f7a3c22; border-color: #4be07b55 }
-.ar-riquadro h3 { margin: 0 0 8px; font-size: 12.5px; color: #ffe98a; line-height: 1.25; min-height: 2.5em }
+.ar-riquadro h3 { margin: 0 0 8px; font-size: 12.5px; color: #ffe98a; line-height: 1.25 }
 .ar-riquadro dl { margin: 0; display: grid; gap: 7px }
 .ar-riquadro dt { font-size: 11.5px; color: #9fb0d8; line-height: 1.2 }
 .ar-riquadro dd { margin: 0; font-size: 17px; font-weight: 800; color: #fff }
