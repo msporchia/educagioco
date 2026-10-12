@@ -94,7 +94,7 @@ Troll grigio con la clava in mano, in quattro pose di respiro. **Combatte:** Pes
 Grande drago rosso con ali di pipistrello; nelle pose le ali stanno alzate o spiegate. **Combatte:** Il mostro più grosso dei fogli: soffia fuoco, vola, picchia dall'alto. (resiste fuoco; teme gelo).
 **Dove:** La fornace e l'abisso; in fondo alla torre o alla miniera. **Ruolo:** Grosso finale. Ha i passi. **Tenuta:** Il secondo fotogramma è largo 273 px e contiene due draghi (il fotogramma 2 e la fiammata): il sotterraneo prende il primo e il terzo. Nel catalogo resta com'è perché il castello lo usa così.
 
-### polpo `S` · veleno · 20 px
+### polpo `S` · veleno · 23 px
 Polpo viola con gli occhi gialli e i tentacoli larghi, quattro pose di ondeggio. **Combatte:** Ghermisce con i tentacoli, lento nell'acqua e in cantina. (resiste veleno; teme fulmine).
 **Dove:** La scala sommersa e le cisterne. **Ruolo:** Comune di acqua; da grosso se ingrandito. **Tenuta:** pose coerenti.
 

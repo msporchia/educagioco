@@ -81,7 +81,7 @@ castello. Il catalogo descritto, per sapere cosa c'è:
   `<nome>-fronte-<n>`, sei ciascuno, alla misura del respiro e con **un pixel**
   di contorno (due, a quella grana, sarebbero un filo spesso quanto il dettaglio).
   Non c'è un foglietto `mostri-*.json`: quelle righe ora sono il catalogo.
-- **Peso** (sotterraneo): l'atlante passa da 364 KB a 629 KB di PNG con tutte le
+- **Peso** (sotterraneo): l'atlante passa da 364 KB a 630 KB di PNG con tutte le
   creature col `sotterraneo` (48 creature, 207 pezzi in più delle undici di prima:
   123 fotogrammi di respiro e 84 passi; circa un terzo in più in base64 nel file unico). Una creatura che il gioco alla fine non
   nomina si toglie dal suo `giochi` e il peso se ne va.
