@@ -4,12 +4,12 @@
 // continua da dov'era ma i dadi che tira il nemico sono altri. Perché e cosa
 // si perde: docs/arena/sosta.md.
 import { Partita } from './partita.js'
-import { TRUPPE, POSTI, LIV_MAX, MINIERA_MAX } from '../dati/regole.js'
+import { TRUPPE, POSTI, LIV_MAX, MINIERA_MAX, BOMBA } from '../dati/regole.js'
 import { CAMPAGNA, sfidaDi } from '../dati/campagna.js'
 
 // sale quando un campo cambia significato: un salvataggio di un'altra
 // versione si butta e la tappa ricomincia
-export const VERSIONE = 1
+export const VERSIONE = 2
 
 const num = (n, min, max) => typeof n === 'number' && Number.isFinite(n) && n >= min && n <= max
 const intero = (n, min, max) => Number.isInteger(n) && n >= min && n <= max
@@ -22,8 +22,8 @@ export function scrivi(p, indice) {
     v: VERSIONE,
     chiave: CAMPAGNA[indice].chiave,
     t: r1(p.t), resto: r1(p.resto), pensa: r1(p.pensa),
-    lati: { io: { monete: r1(p.lati.io.monete), miniera: p.lati.io.miniera },
-            nem: { monete: r1(p.lati.nem.monete), miniera: p.lati.nem.miniera } },
+    lati: { io: { monete: r1(p.lati.io.monete), miniera: p.lati.io.miniera, bombe: p.lati.io.bombe, bombaT: r1(p.lati.io.bombaT) },
+            nem: { monete: r1(p.lati.nem.monete), miniera: p.lati.nem.miniera, bombe: p.lati.nem.bombe, bombaT: r1(p.lati.nem.bombaT) } },
     castelli: p.castelli.map(c => ({ lato: c.lato, hp: Math.round(c.hp), max: c.max, liv: c.liv })),
     muri: p.muri.map(m => ({ lato: m.lato, hp: Math.round(m.hp), max: m.max })),
     caserme: p.caserme.map(c => ({ lato: c.lato, id: c.id, posto: c.posto, liv: c.liv, t: r1(c.t), ciclo: r1(c.ciclo),
@@ -43,13 +43,15 @@ export function leggi(dato, { campagna = CAMPAGNA, rnd = Math.random } = {}) {
     if (!num(dato.t, 0, 1e4) || !num(dato.resto, 0, 1e4) || !num(dato.pensa, 0, 60)) return null
     for (const lato of ['io', 'nem']) {
       const l = dato.lati?.[lato]
-      if (!l || !num(l.monete, 0, 1e6) || !intero(l.miniera, 1, MINIERA_MAX)) return null
+      if (!l || !num(l.monete, 0, 1e6) || !intero(l.miniera, 1, MINIERA_MAX) || !intero(l.bombe, 0, BOMBA.max) || !num(l.bombaT, 0, BOMBA.ogni + 1)) return null
     }
     const p = new Partita({ rnd, sfida: sfidaDi(tappa) })
     p.t = dato.t; p.resto = dato.resto; p.pensa = dato.pensa
     for (const lato of ['io', 'nem']) {
       p.lati[lato].monete = dato.lati[lato].monete
       p.lati[lato].miniera = dato.lati[lato].miniera
+      p.lati[lato].bombe = dato.lati[lato].bombe
+      p.lati[lato].bombaT = dato.lati[lato].bombaT
     }
 
     if (!Array.isArray(dato.castelli)) return null

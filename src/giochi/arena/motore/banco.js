@@ -52,6 +52,9 @@ export class Pilota {
     const puo = (a, id) => p.puoFare('io', a, id)
     const t = p.castello('io')
 
+    // la bomba è un regalo: si usa appena c'è un ammasso che vale la pena spazzare
+    const colpo = p.lati.io.bombe > 0 ? p.puntoDellaBomba('io') : null
+    if (colpo && colpo.peso >= 700) return ['bomba']
     const ferite = p.riparabili('io').filter(e => e.hp < e.max * 0.5)
     if (ferite.length && puo('ripara')) return ['ripara']
     const crollato = p.muro('io').hp <= 0

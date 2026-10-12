@@ -5,7 +5,7 @@ Come una scelta (costruire, potenziare, riparare…) diventa una domanda.
 - **L'operazione la decide la scelta, non il giocatore.** Ogni truppa porta la
   sua (`+` scheletri e guardiano, `−` pipistrelli e negromante, `×` lupi e golem,
   `÷` diavoletto e drago); le azioni hanno la loro (miniera `×`, ripara `+`,
-  castello `÷`). Il bambino non può evitare l'operazione che
+  castello `÷`, bomba `÷`). Il bambino non può evitare l'operazione che
   teme: costruire proprio la truppa che gli serve è parte della sfida.
 - **La grandezza dei numeri la decide il prezzo**: il motore dà un «peso» da
   1 a 10 (`calcoloDi`): costruire pesa `1 + prezzo/4`, potenziare il livello

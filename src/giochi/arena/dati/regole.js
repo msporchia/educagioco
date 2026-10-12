@@ -52,7 +52,7 @@ export const OPERAZIONI = ['+', '−', '×', '÷']
 /* Il castello: l'unica costruzione che spara e si potenzia, e quella che non
    deve cadere. Da solo tiene i primi minuti: il respiro che serve per decidere.
    Spara lontano (`gitt`) perché da lì deve coprire il muro sul ponte. */
-export const CASTELLO = { nome: 'Castello', hp: 1600, dmg: 52, rate: 0.75, gitt: 150, r: 23 }
+export const CASTELLO = { nome: 'Castello', hp: 4000, dmg: 52, rate: 0.75, gitt: 150, r: 23 }
 export const LIV_MAX = 10              // caserme e torretta
 export const MINIERA_MAX = 6
 
@@ -61,13 +61,14 @@ export const CRESCITA = {
   squadraOgni: liv => 9 / (1 + 0.12 * (liv - 1)),          // secondi fra due squadre di una caserma
   forza: liv => 1 + 0.25 * (liv - 1),                      // vita e danno delle sue truppe
   vitaCaserma: liv => 300 + 60 * (liv - 1),
+  omini: liv => (liv >= 9 ? 2 : liv >= 5 ? 1 : 0),         // truppe in più per squadra: una al livello 5, un'altra al 9
   salita: liv => Math.round(6 * 1.28 ** (liv - 1)),        // costo di liv → liv+1 per una caserma: 6, 8, 10, 13, 16, 21, 27, 34, 44
   castello: {
     prezzo: liv => Math.round(8 * 1.3 ** (liv - 1)),       // 8, 10, 14, 18, 23, 30, 39, 51, 66
     danno: liv => 1 + 0.3 * (liv - 1),
     cadenza: liv => 1 + 0.08 * (liv - 1),
     gittata: liv => 4 * (liv - 1),
-    vita: 130,                                             // per livello: massimo e punti subito
+    vita: 300,                                             // per livello: massimo e punti subito
   },
   miniera: {
     prezzo: [0, 10, 16, 24, 34, 46],                       // prezzo[liv] = liv → liv+1
@@ -83,8 +84,15 @@ export const AZIONI = {
               nota: 'Rimette in sesto la costruzione messa peggio (anche il muro, anche crollato): +40% di vita.' },
   castello: { nome: 'Castello',   op: '÷', prezzo: null,
               nota: 'Il castello spara più forte e più spesso, e resiste di più.' },
+  bomba:    { nome: 'Bomba',      op: '÷', prezzo: 0,
+              nota: 'Una bomba in regalo ogni tanto: scoppia dove il nemico ha più truppe, e le spazza via. Serve per ripartire quando ti schiacciano.' },
 }
-export const MURO = { hp: 500, r: 26 }              // uno solo per parte: non si costruisce, si ripara
+/* La bomba non si compra: si REGALA a intervalli, a tutti e due. È il «reset» per quando uno ha una
+   forza schiacciante e va avanti per inerzia: una cosa da comprare non aiuta chi è già indietro (non
+   ha le monete). Si usa con un calcolo, ma non costa monete. Spazza l'ammasso più fitto di truppe. */
+export const BOMBA = { ogni: 40, max: 2, raggio: 95, dmg: 700 }
+
+export const MURO = { hp: 1000, r: 26 }             // uno solo per parte: non si costruisce, si ripara
 export const RIPARA = 0.4                            // la quota di vita che rimette
 export const RIPOSO = 6                              // secondi di caserma ferma dopo un calcolo sbagliato
 export const COSTRUZIONE = 6                         // secondi prima della prima squadra di una caserma nuova
@@ -98,7 +106,7 @@ export const NEMICI = {
   tosto:   { moneteAlSecondo: 1 / 1.1,  pensa: 1.2, forza: 1 },
 }
 export const GIOCATORE = { moneteAlSecondo: 1 / 1.2, iniziali: 14 }
-export const DURATA = 150                            // secondi di partita se nessuno cade prima
+export const DURATA = 180                            // secondi di partita se nessuno cade prima
 
 /* Il dato si controlla da sé: un numero sbagliato è un test rosso in un
    secondo, non una partita storta su un telefono. */
@@ -117,6 +125,7 @@ export function guastiDelleRegole() {
   if (!Object.values(TRUPPE).some(t => t.bers === 'tutti' && !t.vola)) g.push('nessuno da terra ferisce chi vola')
   for (const op of OPERAZIONI) if (!Object.values(TRUPPE).some(t => t.op === op)) g.push(`nessuna truppa per ${op}`)
   if (CRESCITA.miniera.prezzo.length !== MINIERA_MAX) g.push('i prezzi della miniera non coprono i livelli')
+  if (!(BOMBA.ogni > 0 && BOMBA.max >= 1 && BOMBA.raggio > 0 && BOMBA.dmg > 0)) g.push('la bomba non sta in piedi')
   for (let l = 1; l < LIV_MAX; l++) {
     if (!(CRESCITA.salita(l) > 0)) g.push(`salita ${l}`)
     if (!(CRESCITA.castello.prezzo(l) > 0)) g.push(`castello ${l}`)

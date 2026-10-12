@@ -20,8 +20,8 @@ const orologio = computed(() => {
   const s = Math.max(0, Math.ceil(props.cruscotto.resto))
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
 })
-const ICONA = { miniera: '⛏️', ripara: '🔧' }
-const NOME = { miniera: 'Più monete', ripara: 'Ripara', castello: 'Castello' }
+const ICONA = { miniera: '⛏️', ripara: '🔧', bomba: '💣' }
+const NOME = { miniera: 'Più monete', ripara: 'Ripara', castello: 'Castello', bomba: 'Bomba' }
 </script>
 
 <template>
@@ -66,7 +66,7 @@ const NOME = { miniera: 'Più monete', ripara: 'Ripara', castello: 'Castello' }
       <button v-for="a in pannello.azioni" :key="a.azione" class="ar-carta ar-azione"
               :class="{ 'ar-no': !a.puoi }"
               :data-azione="a.azione" @click="emit('scegli', { azione: a.azione })">
-        <svg v-if="a.azione !== 'ripara' && a.prezzo !== null" class="ar-su" viewBox="0 0 12 12" aria-label="si può potenziare">
+        <svg v-if="(a.azione === 'miniera' || a.azione === 'castello') && a.prezzo !== null" class="ar-su" viewBox="0 0 12 12" aria-label="si può potenziare">
           <path d="M6 0.8 L11.2 6.6 H8 V11.2 H4 V6.6 H0.8 Z" />
         </svg>
         <span class="ar-info em" role="button" aria-label="dettagli" :data-dettagli="a.azione"
@@ -76,7 +76,8 @@ const NOME = { miniera: 'Più monete', ripara: 'Ripara', castello: 'Castello' }
         <span class="ar-nome">{{ NOME[a.azione] }}</span>
         <span class="ar-liv">{{ a.stato }}</span>
         <span class="ar-prezzo em">
-          <template v-if="a.prezzo === null">—</template>
+          <template v-if="a.azione === 'bomba'">{{ a.attesa && !a.puoi ? 'fra ' + a.attesa + ' s' : 'in regalo' }}</template>
+          <template v-else-if="a.prezzo === null">—</template>
           <template v-else>{{ a.prezzo }} 🪙</template>
         </span>
       </button>

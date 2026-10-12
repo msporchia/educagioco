@@ -4,7 +4,7 @@
    chi non colpisce chi vola, il muro) valgono davvero.
    `node test/esegui.mjs arena`
    tempo: 5 */
-import { guastiDelleRegole, TRUPPE, CAMPO, BASE } from '../../src/giochi/arena/dati/regole.js'
+import { guastiDelleRegole, TRUPPE, CAMPO, BASE, CRESCITA, BOMBA, CASTELLO, MURO } from '../../src/giochi/arena/dati/regole.js'
 import { Partita } from '../../src/giochi/arena/motore/partita.js'
 import { caso, gioca } from '../../src/giochi/arena/motore/banco.js'
 import { CAMPAGNA, SCALINI, QUANTE_TAPPE, guastiDellaCampagna, operazioniDi, operazionePer, stellePer, sfidaDi }
@@ -125,6 +125,36 @@ controlla('stesso seme, stessa partita', JSON.stringify(uguali) === JSON.stringi
   r.schiera('io', 'guardiano', 180, 300)
   r.avanza(6)
   controlla('senza niente in vista marcia verso il castello nemico', r.unita[0].y < 300 - 60)
+}
+
+/* ══════════ 4c. la bomba, e gli omini che crescono ══════════ */
+{
+  const p = new Partita({ rnd: caso(3) })
+  p.schiera('nem', 'scheletri', 180, 200); p.schiera('nem', 'guardiano', 190, 205); p.schiera('nem', 'lupi', 175, 210)
+  controlla('all\'inizio non c\'è nessuna bomba', p.lati.io.bombe === 0 && p.prezzo('io', 'bomba') === null)
+  p.avanza(BOMBA.ogni + 1)
+  uguale('ogni tot ne arriva una in regalo, a tutti e due', `${p.lati.io.bombe}/${p.lati.nem.bombe}`, '1/1')
+  const monete = p.lati.io.monete
+  const nemici = p.unita.filter(u => u.lato === 'nem')
+  controlla('ci sono truppe nemiche da colpire e la bomba non costa monete', nemici.length > 0 && p.prezzo('io', 'bomba') === 0)
+  controlla('la bomba parte', p.fai('io', 'bomba'))
+  uguale('e non costa monete', Math.round(p.lati.io.monete), Math.round(monete))
+  uguale('ne resta zero', p.lati.io.bombe, 0)
+  p.avanza(0.1)
+  controlla('spazza le truppe che stavano insieme', p.unita.filter(u => u.lato === 'nem' && u.hp > 0 && Math.hypot(u.x - 180, u.y - 205) < 60).length === 0)
+  p.avanza(BOMBA.ogni * 4)
+  controlla('non se ne accumulano più di BOMBA.max', p.lati.io.bombe <= BOMBA.max)
+  const q = new Partita({ rnd: caso(4) })
+  q.lati.io.bombe = 1; q.unita = []
+  controlla('senza truppe nemiche la bomba non si lancia', !q.puoFare('io', 'bomba'))
+
+  const r = new Partita({ rnd: caso(5) })
+  r.caserme = r.caserme.filter(c => c.lato === 'io')
+  r.caserme[0].liv = 9; r.caserme[0].t = 0
+  r.avanza(0.1)
+  uguale('al livello 9 una squadra di scheletri ha due omini in più', r.unita.filter(u => u.lato === 'io' && u.id === 'scheletri').length, TRUPPE.scheletri.n + 2)
+  uguale('al 5 uno in più', [CRESCITA.omini(4), CRESCITA.omini(5), CRESCITA.omini(8), CRESCITA.omini(9)].join(), '0,1,1,2')
+  controlla('il castello e il muro sono robusti (le partite non devono finire in un minuto)', CASTELLO.hp >= 4000 && MURO.hp >= 1000)
 }
 
 /* ══════════ 5. una partita finisce, e senza fare niente si perde ══════════ */

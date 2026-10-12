@@ -3,7 +3,7 @@
 // bambino può confrontare («una squadra ogni 9 secondi → ogni 8»). Gira in Node,
 // non sa che esista uno schermo: restituisce righe `{ nome, ora, dopo }` e chi la
 // mostra decide come. Tutto viene da `dati/regole.js`, niente numeri qui.
-import { TRUPPE, CRESCITA, CASTELLO, AZIONI, LIV_MAX, MINIERA_MAX, RIPARA, MURO, GIOCATORE } from '../dati/regole.js'
+import { TRUPPE, CRESCITA, CASTELLO, AZIONI, LIV_MAX, MINIERA_MAX, RIPARA, MURO, GIOCATORE, BOMBA } from '../dati/regole.js'
 
 const secondi = n => `${(Math.round(n * 10) / 10).toString().replace('.', ',')} s`
 const num = n => String(Math.round(n))
@@ -19,7 +19,7 @@ export function ruoloDi(id) {
     `colpisce ${colpisce}, ${dove}`,
     k.vola ? 'vola: scavalca i muri' : 'cammina: si ferma ai muri',
     k.splash ? 'il suo colpo scoppia: ferisce anche chi sta intorno' : 'colpisce un bersaglio per volta',
-    k.n > 1 ? `arriva in ${k.n} per squadra` : 'arriva da sola',
+    `una squadra è di ${k.n}, e arriva uno in più ai livelli 5 e 9`,
   ]
 }
 
@@ -28,6 +28,7 @@ export function numeriTruppa(id, liv) {
   const k = TRUPPE[id]
   const f = CRESCITA.forza(liv)
   return {
+    n: k.n + CRESCITA.omini(liv),
     squadra: CRESCITA.squadraOgni(liv),
     vita: k.hp * f,
     danno: k.dmg * f,
@@ -56,7 +57,7 @@ export function dettaglioTruppa(id, liv) {
     etichette: etichette(liv),
     prezzo: liv >= 1 ? (fine ? null : CRESCITA.salita(liv)) : k.costo,
     righe: [
-      riga('Truppe per squadra', k.n, dopo && k.n, num),
+      riga('Truppe per squadra', ora.n, dopo && dopo.n, num),
       riga('Una squadra ogni', ora.squadra, dopo && dopo.squadra, secondi),
       riga('Vita di ogni truppa', ora.vita, dopo && dopo.vita, num),
       riga('Danno di ogni colpo', ora.danno, dopo && dopo.danno, num),
@@ -94,6 +95,16 @@ export function dettaglioAzione(azione, { miniera = 1, castello = 1 } = {}) {
         { nome: 'Fin dove arriva', ora: num(CASTELLO.gitt + c.gittata(castello)), dopo: fine ? null : num(CASTELLO.gitt + c.gittata(castello + 1)) },
         { nome: 'Vita del castello', ora: num(CASTELLO.hp + c.vita * (castello - 1)), dopo: fine ? null : num(CASTELLO.hp + c.vita * castello) },
       ],
+    }
+  }
+  if (azione === 'bomba') {
+    return {
+      livello: 0,
+      etichette: { ora: 'Cosa fa', dopo: '' },
+      prezzo: 0,
+      righe: [{ nome: 'Ne arriva una ogni', ora: `${BOMBA.ogni} s`, dopo: null },
+              { nome: 'Ne puoi tenere', ora: String(BOMBA.max), dopo: null },
+              { nome: 'Spazza', ora: 'le truppe nemiche più vicine fra loro', dopo: null }],
     }
   }
   // ripara: non ha livelli

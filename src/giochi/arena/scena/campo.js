@@ -66,7 +66,7 @@ export class Campo {
   /* gli eventi del motore diventano effetti a tempo */
   eventi(lista, ora) {
     for (const e of lista) {
-      const durata = { colpo: 0.18, crollo: 0.7, cura: 0.7, costruita: 0.6, potenziata: 0.6, squadra: 0.4, miniera: 0.7, castello: 0.7 }[e.tipo] || 0.4
+      const durata = { colpo: 0.18, crollo: 0.7, cura: 0.7, costruita: 0.6, potenziata: 0.6, squadra: 0.4, miniera: 0.7, castello: 0.7, bomba: 0.8, bombaPronta: 0.1 }[e.tipo] || 0.4
       this.effetti.push({ ...e, t0: ora, durata })
     }
   }
@@ -237,6 +237,12 @@ export class Campo {
         } else if (['costruita', 'potenziata', 'castello', 'miniera'].includes(e.tipo)) {
           c.strokeStyle = `rgba(255,220,90,${1 - q})`; c.lineWidth = 3
           c.beginPath(); c.arc(x, y, this.m(8) + q * this.m(24), 0, 7); c.stroke()
+        } else if (e.tipo === 'bomba') {
+          const r = this.m(e.raggio) * (0.35 + 0.65 * Math.min(1, q * 2.2))
+          c.fillStyle = `rgba(255,170,60,${0.55 * (1 - q)})`; c.beginPath(); c.arc(x, y, r, 0, 7); c.fill()
+          c.strokeStyle = `rgba(255,240,170,${1 - q})`; c.lineWidth = 4; c.beginPath(); c.arc(x, y, r, 0, 7); c.stroke()
+          c.fillStyle = `rgba(80,60,50,${0.5 * (1 - q)})`
+          for (let i = 0; i < 6; i++) { const a = i * 1.05 + 0.4; c.beginPath(); c.arc(x + Math.cos(a) * r * 0.6, y + Math.sin(a) * r * 0.6 - q * this.m(14), this.m(8) * (1 - q * 0.5), 0, 7); c.fill() }
         } else if (e.tipo === 'squadra') {
           c.fillStyle = `rgba(255,255,255,${0.35 * (1 - q)})`
           c.beginPath(); c.arc(x, y, this.m(8) + q * this.m(12), 0, 7); c.fill()

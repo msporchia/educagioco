@@ -10,7 +10,7 @@ I numeri stanno in `src/giochi/arena/dati/regole.js`, il motore in
   muro, che copre una corsia sola, non serviva a niente sull'altra.
 - Il motore conta la corsia in verticale (`y` lungo, `x` di lato), e la scena la
   disegna così, col castello di chi gioca in basso (vedi [grafica.md](grafica.md)).
-- **Una partita dura 2:30.** Vince chi abbatte il castello nemico; allo scadere
+- **Una partita dura 3:00.** Vince chi abbatte il castello nemico; allo scadere
   chi ha il castello più sano (entro il 5% è pari).
 
 ## Le truppe e le caserme
@@ -33,6 +33,9 @@ I numeri stanno in `src/giochi/arena/dati/regole.js`, il motore in
   le truppe nate ai lati tagliavano il campo in diagonale verso le caserme dei
   lati invece di marciare sulla strada (l'utente: «c'è qualcosa di strano nel
   modo in cui gira»).
+- **Gli omini per squadra crescono**: una squadra di `n` truppe ne ha una in più al
+  livello 5 e un'altra al 9 (`CRESCITA.omini`). È il premio che si vede sul campo,
+  oltre a vita, danno e squadre più frequenti.
 - Le caserme **crollano** (hanno vita, 300 + 60 per livello): il posto torna
   libero e si può ricostruire (si riparte dal livello 1). Una partita a
   caserme che nessuno può rompere sarebbe una gara di soldi.
@@ -45,7 +48,8 @@ Costano monete di battaglia e un calcolo, come le caserme.
 |---|---|---|
 | ⛏️ Più monete | +50% di monete al secondo per livello (6 livelli: da ×1 a ×3,5) | 10, 16, 24, 34, 46 |
 | 🔧 Ripara | +40% di vita alla costruzione messa peggio, muro compreso (anche crollato) | 6 |
-| 🏰 Castello | più danno, cadenza, gittata e vita (10 livelli) | 8 → 66 |
+| 🏰 Castello | più danno, cadenza, gittata e vita (+300 per livello, 10 livelli) | 8 → 66 |
+| 💣 Bomba | **in regalo** (non si compra): spazza le truppe nemiche più fitte | 0 monete, un calcolo |
 
 - **Il castello è l'unica costruzione che spara.** Prima c'era una torretta
   davanti alla base: tolta (l'utente: «più un potenziamento del castello»), e il
@@ -59,6 +63,25 @@ Costano monete di battaglia e un calcolo, come le caserme.
 - **La miniera conviene presto e lascia scoperti**: è la scelta di strategia
   voluta dall'utente (produrre di più ma non attaccare); la riparazione e il
   castello più forte sono la risposta difensiva che prende tempo.
+
+## La bomba: un regalo, non un acquisto
+
+Ogni 40 secondi ne arriva una a tutti e due (se ne tengono al massimo due). Si lancia
+con un calcolo di divisione ma **non costa monete**, e il gioco sceglie il punto dove
+le truppe nemiche sono più fitte (e più vive): le spazza (raggio 95, 700 di danno).
+Perché in regalo e non da comprare: è il «reset» per quando uno ha una forza
+schiacciante e va avanti per inerzia, e chi è già indietro non ha le monete per una
+cosa da comprare («non ne esci»). Il nemico la usa quando ha davanti un ammasso che
+vale la pena spazzare; il giocatore finto idem (`motore/banco.js`).
+
+## La durata
+
+Una partita si decideva in circa un minuto (il giocatore bravo vinceva in 50 s, il
+bambino di prova in 70–90) perché i castelli reggevano poco. **Castello da 4000 di
+vita** (era 1600, e cresce di 300 per livello invece di 130), **muro da 1000** (era
+500) e tempo massimo di **3 minuti** (era 2:30): ora il bravo vince in circa 75 s e il
+bambino in circa 105. Alzare soltanto il tempo massimo non serviva: le partite
+finivano molto prima.
 
 ## I dettagli («?»)
 

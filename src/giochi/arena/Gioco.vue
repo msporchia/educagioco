@@ -18,7 +18,7 @@ import Domanda from '../../quiz/Domanda.vue'
 import { Giostra } from './scena/giostra.js'
 
 import { CAMPAGNA, SCALINI, QUANTE_TAPPE, tappeDelloScalino, scalinoDi, operazioniDi, operazionePer, stellePer, sfidaDi } from './dati/campagna.js'
-import { TRUPPE, AZIONI, LIV_MAX, MINIERA_MAX } from './dati/regole.js'
+import { TRUPPE, AZIONI, LIV_MAX, MINIERA_MAX, BOMBA } from './dati/regole.js'
 import { Partita } from './motore/partita.js'
 import { scrivi, leggi, dice } from './motore/sosta.js'
 import { Campo } from './scena/campo.js'
@@ -150,6 +150,7 @@ function suona(eventi) {
     visti.add(e.tipo)
     if (e.tipo === 'costruita' || e.tipo === 'potenziata' || e.tipo === 'castello' || e.tipo === 'miniera') suono.compra()
     else if (e.tipo === 'crollo') suono.rumore(0.4, 0.09, 400, 80)
+    else if (e.tipo === 'bomba') { suono.rumore(0.6, 0.14, 300, 60); suono.nota(160, 40, 0.4, 'sawtooth', 0.1) }
     else if (e.tipo === 'cura') suono.vita()
   }
 }
@@ -194,13 +195,15 @@ function costruisciPannello(p) {
              puoi: prezzo !== null && p.lati.io.monete >= prezzo && riposo <= 0,
              riposo, avanza: c ? Math.max(0, Math.min(1, 1 - c.t / c.ciclo)) : 0 }
   }).sort((a, b) => TRUPPE[a.id].costo - TRUPPE[b.id].costo)
-  const azioni = ['miniera', 'ripara', 'castello'].map(a => {
+  const azioni = ['miniera', 'ripara', 'castello', 'bomba'].map(a => {
     const prezzo = p.prezzo('io', a)
     let stato = ''
     if (a === 'miniera') stato = p.lati.io.miniera >= MINIERA_MAX ? 'MAX' : `Lv ${p.lati.io.miniera}`
     if (a === 'ripara') stato = `${p.riparabili('io').length} da curare`
     if (a === 'castello') stato = p.castello('io').liv >= LIV_MAX ? 'MAX' : `Lv ${p.castello('io').liv}`
-    return { azione: a, nome: AZIONI[a].nome, op: AZIONI[a].op, prezzo, stato, livello: a === 'castello' ? p.castello('io').liv : 0, puoi: prezzo !== null && p.lati.io.monete >= prezzo }
+    if (a === 'bomba') stato = p.lati.io.bombe ? `${p.lati.io.bombe} pronta${p.lati.io.bombe > 1 ? 'e' : ''}` : 'in arrivo'
+    return { azione: a, nome: AZIONI[a].nome, op: AZIONI[a].op, prezzo, stato, livello: a === 'castello' ? p.castello('io').liv : 0, puoi: prezzo !== null && p.lati.io.monete >= prezzo,
+             attesa: a === 'bomba' && p.lati.io.bombe < BOMBA.max ? Math.ceil(p.lati.io.bombaT) : 0 }
   })
   return { caserme, azioni }
 }
@@ -251,10 +254,12 @@ function apriDettagli({ id, azione }) {
     const det = dettaglioAzione(azione, { miniera: p.lati.io.miniera, castello: p.castello('io').liv })
     const cal = p.calcoloDi('io', azione)
     d = { azione }
-    scheda = { titolo: AZIONI[azione].nome, nota: AZIONI[azione].nota, ruolo: [], sottotitolo: '', icona: azione === 'miniera' ? '⛏️' : '🔧',
+    scheda = { titolo: AZIONI[azione].nome, nota: AZIONI[azione].nota, ruolo: [], sottotitolo: azione === 'bomba' ? 'in regalo' : '', icona: { miniera: '⛏️', ripara: '🔧', bomba: '💣' }[azione],
                castello: azione === 'castello', ...det, calcolo: NOME_CALCOLO[operazionePer(cal.op, ammesse)],
-               verbo: azione === 'ripara' ? '🔧 Ripara' : '⬆️ Potenzia',
-               puoi: p.puoFare('io', azione), motivo: azione === 'ripara' && !p.riparabili('io').length ? 'non c\'è niente da riparare' : 'servono più monete',
+               verbo: azione === 'ripara' ? '🔧 Ripara' : azione === 'bomba' ? '💥 Lancia' : '⬆️ Potenzia',
+               puoi: p.puoFare('io', azione),
+               motivo: azione === 'bomba' ? (p.lati.io.bombe ? 'non ci sono truppe nemiche da colpire' : `la prossima arriva fra ${Math.ceil(p.lati.io.bombaT)} secondi`)
+                     : azione === 'ripara' && !p.riparabili('io').length ? 'non c\'è niente da riparare' : 'servono più monete',
                fine: 'È già al livello massimo.' }
   }
   dettaglio.value = { ...scheda, scelta: d }
@@ -304,7 +309,7 @@ function risposto({ giusto, saltata }) {
 function frase(v) {
   const nome = v.id ? TRUPPE[v.id].nome : ''
   return { costruisci: `🛖 caserma nuova: ${nome}`, potenzia: `⬆️ ${nome} sale di livello`, miniera: '⛏️ le monete arrivano più in fretta',
-           ripara: '🔧 riparato', castello: '🏰 il castello è più forte' }[v.azione] || ''
+           ripara: '🔧 riparato', castello: '🏰 il castello è più forte', bomba: '💥 la bomba ha spazzato le truppe nemiche' }[v.azione] || ''
 }
 
 function dici(testo) {

@@ -9,6 +9,10 @@ export function pensaNemico(p, dt) {
   p.pensa = p.nemicoCfg.pensa
   const l = p.lati.nem
 
+  // 0. la bomba in regalo, quando ha davanti un ammasso che vale la pena spazzare
+  const colpo = l.bombe > 0 ? p.puntoDellaBomba('nem') : null
+  if (colpo && colpo.peso >= 700 && p.rnd() < 0.7) { p.fai('nem', 'bomba'); return }
+
   // 1. ripara quello che è messo male (il muro crollato per primo)
   const ferite = p.riparabili('nem').filter(e => e.hp < e.max * 0.55)
   if (ferite.length && p.puoFare('nem', 'ripara') && p.rnd() < 0.5) { p.fai('nem', 'ripara'); return }

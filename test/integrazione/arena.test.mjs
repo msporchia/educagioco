@@ -62,8 +62,8 @@ controlla('e c\'è scritto quante ne arrivano al secondo', /al secondo/.test(awa
 controlla('la caserma di partenza c\'è, quella nuova no',
           await page.locator('[data-caserma="scheletri"]:not(.ar-nuova)').count() === 1 &&
           await page.locator('[data-caserma="guardiano"].ar-nuova').count() === 1)
-controlla('le tre scelte che non sono truppe ci sono (miniera, ripara, castello) e il muro non si compra',
-          await page.locator('.ar-pannello [data-azione]').count() === 3 &&
+controlla('le quattro scelte che non sono truppe ci sono (miniera, ripara, castello, bomba) e il muro non si compra',
+          await page.locator('.ar-pannello [data-azione]').count() === 4 &&
           await page.locator('.ar-pannello [data-azione="muro"]').count() === 0)
 
 /* ── il «?» spiega, e il campo sta fermo mentre si legge ── */
@@ -114,7 +114,7 @@ await scatto(page, 'arena-costruita')
 for (let t = 0; t < 40; t++) {                         // la sosta si scrive da cinque secondi di partita in su
   const orologio = await page.locator('.ar-hud b').first().innerText()
   const [m, s] = orologio.split(':').map(Number)
-  if (m * 60 + s <= 140) break
+  if (m * 60 + s <= 170) break
   await attendi(page, 500)
 }
 await page.click('button[aria-label="indietro"]')

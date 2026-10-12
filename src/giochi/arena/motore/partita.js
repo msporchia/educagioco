@@ -5,7 +5,7 @@
 // Le regole e i numeri stanno in `dati/regole.js`; l'IA del nemico in `nemico.js`.
 import {
   CAMPO, POSTI, TRUPPE, BASE, CASTELLO, LIV_MAX, MINIERA_MAX, CRESCITA, AZIONI, MURO, RIPARA,
-  RIPOSO, COSTRUZIONE, AVVIO, NEMICI, GIOCATORE, DURATA,
+  RIPOSO, COSTRUZIONE, AVVIO, NEMICI, GIOCATORE, DURATA, BOMBA,
 } from '../dati/regole.js'
 import { pensaNemico } from './nemico.js'
 
@@ -50,7 +50,7 @@ export class Partita {
   casuale(a, b) { return a + Math.floor(this.rnd() * (b - a + 1)) }
 
   nuovoLato(lato, alSecondo, monete) {
-    return { monete, alSecondo, miniera: 1, mosse: 0 }
+    return { monete, alSecondo, miniera: 1, mosse: 0, bombe: 0, bombaT: BOMBA.ogni }
   }
   y(lato, y) { return lato === 'io' ? y : CAMPO.H - y }
 
@@ -109,6 +109,9 @@ export class Partita {
     for (const lato of ['io', 'nem']) {
       const l = this.lati[lato]
       l.monete += dt * l.alSecondo * CRESCITA.miniera.resa(l.miniera)
+      // la bomba in regalo: una ogni BOMBA.ogni secondi, fino a BOMBA.max in tasca
+      if (l.bombe >= BOMBA.max) l.bombaT = BOMBA.ogni
+      else if ((l.bombaT -= dt) <= 0) { l.bombe++; l.bombaT += BOMBA.ogni; this.evento({ tipo: 'bombaPronta', lato }) }
     }
     this.squadre(dt)
     for (const u of this.unita) this.muoviUnita(u, dt)
@@ -134,15 +137,16 @@ export class Partita {
       if (c.t > 0) continue
       c.ciclo = CRESCITA.squadraOgni(c.liv)
       c.t += c.ciclo
-      this.schiera(c.lato, c.id, c.x, c.y + (c.lato === 'io' ? -16 : 16), CRESCITA.forza(c.liv))
+      this.schiera(c.lato, c.id, c.x, c.y + (c.lato === 'io' ? -16 : 16), CRESCITA.forza(c.liv), CRESCITA.omini(c.liv))
     }
   }
 
-  schiera(lato, id, x, y, forza = 1) {
+  schiera(lato, id, x, y, forza = 1, extra = 0) {
     const k = TRUPPE[id]
     const f = forza * this.forza[lato]
-    for (let i = 0; i < k.n; i++) {
-      const dx = (i - (k.n - 1) / 2) * 14
+    const n = k.n + extra
+    for (let i = 0; i < n; i++) {
+      const dx = (i - (n - 1) / 2) * 14
       this.unita.push({
         id, lato, x: x + dx, y: y + (i % 2) * 5, hp: k.hp * f, max: k.hp * f, forza: f,
         cool: 0.9, fl: 0, colpo: 0, cammina: false, nasce: 0.8, vola: k.vola, dirY: 0, r: 8,
@@ -287,6 +291,7 @@ export class Partita {
       const c = this.caserme.find(x => x.lato === lato && x.id === id)
       return c && c.liv < LIV_MAX ? CRESCITA.salita(c.liv) : null
     }
+    if (azione === 'bomba') return this.lati[lato].bombe > 0 && this.unita.some(u => u.lato === altro(lato)) ? 0 : null
     if (azione === 'miniera') {
       const m = this.lati[lato].miniera
       return m < MINIERA_MAX ? CRESCITA.miniera.prezzo[m] : null
@@ -313,6 +318,7 @@ export class Partita {
       return { op: TRUPPE[id].op, peso: Math.min(10, c.liv + 1) }
     }
     if (azione === 'miniera') return { op: AZIONI.miniera.op, peso: 3 + this.lati[lato].miniera }
+    if (azione === 'bomba') return { op: AZIONI.bomba.op, peso: 5 }
     if (azione === 'castello') return { op: AZIONI.castello.op, peso: 2 + Math.ceil(this.castello(lato).liv / 2) }
     return { op: AZIONI[azione].op, peso: 4 }
   }
@@ -328,6 +334,7 @@ export class Partita {
     if (azione === 'miniera') { this.paga(lato, p); this.lati[lato].miniera++; this.evento({ tipo: 'miniera', lato }); return true }
     if (azione === 'ripara') return this.ripara(lato, p)
     if (azione === 'castello') return this.potenziaCastello(lato, p)
+    if (azione === 'bomba') return this.bomba(lato)
     return false
   }
 
@@ -369,6 +376,32 @@ export class Partita {
     e.hp = Math.min(e.max, e.hp + e.max * RIPARA)
     if (e.tipo === 'muro') e.crollato = false
     this.evento({ tipo: 'cura', lato, x: e.x, y: e.y })
+    return true
+  }
+
+  /* la bomba: si sceglie da sola il punto dove le truppe nemiche sono più fitte (e più vive) e le
+     spazza via. Non costa monete: ne arriva una ogni BOMBA.ogni secondi (`BOMBA`). */
+  puntoDellaBomba(lato) {
+    const nemici = this.unita.filter(u => u.lato === altro(lato) && viva(u))
+    let meglio = null, peso = 0
+    for (const c of nemici) {
+      const p = nemici.reduce((s, u) => s + (Math.hypot(u.x - c.x, u.y - c.y) <= BOMBA.raggio ? Math.min(u.hp, BOMBA.dmg) : 0), 0)
+      if (p > peso) { peso = p; meglio = c }
+    }
+    return meglio ? { x: meglio.x, y: meglio.y, peso } : null
+  }
+
+  bomba(lato) {
+    const l = this.lati[lato]
+    const p = this.puntoDellaBomba(lato)
+    if (l.bombe <= 0 || !p) return false
+    l.bombe--
+    this.lati[lato].mosse++
+    for (const u of this.unita) {
+      if (u.lato !== altro(lato) || !viva(u)) continue
+      if (Math.hypot(u.x - p.x, u.y - p.y) <= BOMBA.raggio) this.ferisci(u, BOMBA.dmg)
+    }
+    this.evento({ tipo: 'bomba', lato, x: p.x, y: p.y, raggio: BOMBA.raggio })
     return true
   }
 
