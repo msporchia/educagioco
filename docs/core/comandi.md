@@ -122,6 +122,7 @@ dell'indirizzo): si usano dal browser.
 | `#sotterraneo=roba` | si scende equipaggiati |
 | `#abisso=12` | l'abisso da quel piano |
 | `#seme=812` | il sotterraneo con quel seme, per rivedere una discesa |
+| `#stanza=sala` | il sotterraneo comincia al centro della prima stanza di quella forma (`sala`, `elle`, `tu`, `croce`, `doppia`, `caverna`) o di quel ruolo (`anticamera`, `uscita`, `tesoro`…); con `#piano=` e `#seme=` per guardare un piano ([../sotterraneo/piani.md](../sotterraneo/piani.md)) |
 | `#ripara` | butta la copia del gioco e la riscarica ([guasti.md](guasti.md)) |
 | `#<chiave>` (es. `#fattoria`) | apre quel gioco |
 
