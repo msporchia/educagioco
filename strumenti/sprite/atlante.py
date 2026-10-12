@@ -48,6 +48,8 @@ from PIL import Image, ImageOps
 
 from catalogo import Catalogo, VERSI, breve, scrivi
 
+import creature
+
 from attori import allaga, allaga_ombra, e_fondo, fondi_di, sfrangia
 
 from codifica import webp
@@ -191,6 +193,47 @@ def bersagli():
     if not fuori:
         raise SystemExit(f'nessun atlante.json sotto {SORGENTI}')
     return fuori
+
+
+def fogli_delle_creature(gioco):
+    """Le creature che `gioco` disegna, come foglietti finti: uno per foglio dipinto, con un
+    `<nome>-fermo-<i>` per ogni fotogramma del respiro. Le coordinate stanno nel catalogo comune
+    (`creature.py`, docs/core/creature.md), in pixel del foglio grande: qui si portano alla griglia
+    del foglio ridotto, arrotondando in fuori (i multipli di quattro restano esatti)."""
+    dati = creature.carica()
+    scala = dati['scala']
+    W, H = dati['dimensione']
+    per_foglio = {}
+    for k, v in creature.per_gioco(gioco, dati).items():
+        nome = creature.nome_in(gioco, k, v)
+        for i, r in enumerate(creature.fotogrammi_in(gioco, v)):
+            da, cella = creature.in_griglia(r, scala)
+            per_foglio.setdefault(v['foglio'], {})[f'{nome}-fermo-{i}'] = {'da': da, 'cella': cella}
+    return [(creature.SORGENTI / dati['fogli'][n],
+             {'scala': scala, 'foglio': [W // scala, H // scala], 'fondo': 'trasparente', 'cella': [1, 1],
+              'famiglia': 'attore', 'trasforma_ripiego': {'giri': 1, 'ribalta': False}, 'sprite': sprite})
+            for n, sprite in per_foglio.items()]
+
+
+def passi_delle_creature(gioco, contorno, ritagli, provenienza, famiglie, trasforma):
+    """I passi dai video di chi li ha, alla misura del suo respiro in questo atlante: `<nome>-corsa-<i>`
+    (di lato, verso destra) e `<nome>-fronte-<i>`. Stessa funzione del castello
+    (`creature.passi_alla_misura`), contorno di `contorno` pixel."""
+    dati = creature.carica()
+    cammina = set(creature.chi_cammina())
+    for k, v in creature.per_gioco(gioco, dati).items():
+        if k not in cammina:
+            continue
+        nome = creature.nome_in(gioco, k, v)
+        respiro = [ritagli[f'{nome}-fermo-{i}'] for i in range(len(creature.fotogrammi_in(gioco, v)))]
+        for verso, quadri in creature.passi_alla_misura(k, respiro, contorno).items():
+            posa = 'corsa' if verso == 'lato' else verso
+            for i, q in enumerate(quadri):
+                chi = f'{nome}-{posa}-{i}'
+                ritagli[chi] = q
+                provenienza[chi] = f'passi/{k}.png'
+                famiglie[chi] = 'attore'
+                trasforma[chi] = (1, True, False)
 
 
 def di_chi(f, posti):
@@ -1034,12 +1077,22 @@ def costruisci(bers, fogli, con_provini):
             print(f'  {f.name}: foglietto senza sprite, da calibrare — saltato')
             continue
         im = pulisci(alla_misura_vera(senza_alone(Image.open(f).convert('RGBA'), fg), fg), fg)
+        if fg.get('_creature'):
+            doppi = sorted(set(fg['sprite']) & set(ritagli))
+            if doppi:
+                raise SystemExit(f'creature: {", ".join(doppi)} ha già un pezzo omonimo ({provenienza[doppi[0]]}): '
+                                 f'si risolve con `alias` nel catalogo')
         prima = len(ritagli)
         ritagli_di(im, fg, provenienza, ritagli, famiglie, trasforma, anima)
         cose_di(fg, cose, f.name)
         if fg.get('nitido'):
             nitidi_di(f, fg, im, nitidi)
         print(f'  {f.name}: {len(ritagli) - prima} pezzi' + (' (anche nitidi)' if fg.get('nitido') else ''))
+
+    # Le creature del catalogo comune hanno anche i passi dai video (`atlante.json`: `creature`).
+    if bers.get('creature'):
+        passi_delle_creature(bers['creature']['gioco'], bers['creature'].get('contorno', 1),
+                             ritagli, provenienza, famiglie, trasforma)
 
     # Le copie: uno sprite che è un altro sprite ridipinto. La bambina è
     # il bimbo con altri capelli e un'altra tunica — stesso scheletro,
@@ -1153,6 +1206,15 @@ def main():
             print(f'  ! {f.name}: nessun atlante.json sopra di lui, saltato')
             continue
         suoi[p].append((f, fg))
+
+    # le creature: un bersaglio che dichiara `"creature": {"gioco": …}` prende dal catalogo comune
+    # solo quelle che dicono il suo gioco fra i loro `giochi`
+    for p, bers in posti.items():
+        if bers.get('creature'):
+            for f, fg in fogli_delle_creature(bers['creature']['gioco']):
+                fg['_file'] = str(f)
+                fg['_creature'] = True
+                suoi[p].append((f, fg))
 
     for p, bers in sorted(posti.items()):
         if voluti and bers['nome'] not in voluti:

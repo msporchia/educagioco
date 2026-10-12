@@ -1,6 +1,7 @@
 {
-  "__": "Il sotterraneo ha un atlante suo: 0x72 è un set di dungeon e nella fattoria non ci disegna niente. Niente `poc`: il prototipo che si portava dietro una copia dell'atlante è stato tolto, e quello che serviva a fare — guardare gli sprite accostati — lo fa `strumenti/banco/mondo.html` per tutti i mondi insieme, senza copie da tenere allineate.",
+  "__": "Il sotterraneo ha un atlante suo: 0x72 è un set di dungeon e nella fattoria non ci disegna niente. Niente `poc`: il prototipo che si portava dietro una copia dell'atlante è stato tolto, e quello che serviva a fare — guardare gli sprite accostati — lo fa `strumenti/banco/mondo.html` per tutti i mondi insieme, senza copie da tenere allineate. `creature`: i mostri dipinti non hanno più i loro foglietti qui, vengono dal catalogo comune (strumenti/sprite/sorgenti/creature/creature.json, docs/core/creature.md): quelle che dicono `sotterraneo` fra i loro `giochi`, col respiro e, per chi li ha, i passi dai video (`contorno`: pixel di contorno scuro attorno).",
   "nome": "sotterraneo",
   "modulo": "src/giochi/sotterraneo/dati/atlante.js",
-  "tessera": 16
+  "tessera": 16,
+  "creature": { "gioco": "sotterraneo", "contorno": 1 }
 }
