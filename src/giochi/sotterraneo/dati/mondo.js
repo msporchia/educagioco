@@ -18,17 +18,26 @@ export const prezzoTasca = extra => 30 * (extra + 1)
 // e la forza dà posto (l'utente, 9 ottobre: a un mago la forza non serviva a niente): una tasca ogni tre punti oltre il primo
 export const FORZA_PER_TASCA = 3
 
-// quanto si vede attorno all'eroe, in celle: senza torcia due e poco più, anche dentro le stanze; con la torcia sei,
-// e una stanza si accende tutta; all'ultima stanza della torcia il raggio si stringe (docs/sotterraneo/regole.md, «La luce»)
-export const RAGGIO = 2.3, RAGGIO_TORCIA = 6.2, RAGGIO_SGOCCIOLI = 4.2
+// la luce è un cono davanti all'eroe (nel verso dell'ultimo passo) e un alone corto attorno; alle spalle è ombra
+// (docs/sotterraneo/luce.md). Lunghezze in celle: senza torcia il cono è corto, con la torcia lungo, all'ultima stanza
+// della torcia in mezzo; l'alone dietro è quasi niente senza torcia e circa una cella con. La torcia non accende più
+// la stanza: allunga il cono, e l'ombra c'è sempre
+export const RAGGIO = 3.2, RAGGIO_TORCIA = 6.2, RAGGIO_SGOCCIOLI = 4.4
+export const ALONE = 1.5, ALONE_TORCIA = 2.2, ALONE_SGOCCIOLI = 1.8, ALONE_SFUMA = 1   // l'alone sfuma per l'ultima cella
+export const APERTURA_CONO = 120       // gradi, da un bordo all'altro
+export const SFUMA_CONO = 0.6, SFUMA_ARCO = 0.45   // quanto del cono (in lunghezza, e in apertura) sfuma fino a spegnersi
+export const FORZA_MINIMA = 0.22       // sotto questa forza una cella non è in luce: resta ricordo
 // un mostro si sveglia quando ti avvicini a meno di SVEGLIA celle nella sua stanza, con la luce o senza: è quasi la
 // stanza di prima (la sveglia non dipende dalla luce, o la torcia cambierebbe l'equilibrio); si vede solo in luce
-// (docs/sotterraneo/regole.md, «La luce»)
+// (docs/sotterraneo/luce.md)
 export const SVEGLIA = 7
 
 // il mostro è più lento apposta: scappare deve funzionare sempre, o la stanza è una trappola
 export const PASSO_EROE = 5.4, PASSO_MOSTRO = 3.1, PASSO_RIENTRO = 2.2
 export const CALMA = 3   // il tempo di uscire dalla stanza, o lo scontro si riaprirebbe nel fotogramma dopo
+// un mostro sveglio fuori dalla luce non punta all'eroe ma alle sue spalle: il punto dietro di lui (DIETRO celle), girando
+// largo a FIANCO celle finché sta più avanti di ALLA_PAR (docs/sotterraneo/luce.md)
+export const DIETRO = 0.5, FIANCO = 2.6, ALLA_PAR = 0.6
 
 // Lo scontro a gruppi (docs/sotterraneo/scontro.md): entrano i mostri vivi entro RAGGIO_SCONTRO celle dall'eroe, nella
 // stessa stanza, al più MOSTRI_IN_CAMPO posti (il grosso ne vale due); un colpo di mostro vale COLPO_DEL_MOSTRO per
@@ -60,6 +69,8 @@ export function guastiDelMondo() {
     g.push('i mostri corrono quanto o più dell\'eroe: scappare non funziona più')
   if (TASCHE < 3) g.push('meno di tre tasche: lo zaino non è una scelta, è un intoppo')
   if (RAGGIO_TORCIA <= RAGGIO) g.push('la torcia non fa vedere più lontano')
+  if (ALONE >= RAGGIO || ALONE_TORCIA >= RAGGIO_TORCIA) g.push('l\'alone attorno all\'eroe deve essere più corto del cono')
+  if (ALONE_TORCIA <= ALONE) g.push('la torcia non allarga l\'alone')
   if (RAGGIO_SGOCCIOLI <= RAGGIO || RAGGIO_SGOCCIOLI >= RAGGIO_TORCIA) g.push('la torcia agli sgoccioli deve stare fra il buio e la torcia piena')
   return g
 }

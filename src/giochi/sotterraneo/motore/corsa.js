@@ -5,7 +5,7 @@
 // a prendere la domanda vera da src/quiz/ e non nomina mai una materia qui.
 // `foglio` è un dato ({ che: 'scontro', chi }): finché è aperto il tempo è fermo.
 import {
-  TASCHE, RAGGIO, RAGGIO_TORCIA, RAGGIO_SGOCCIOLI, SVEGLIA, PASSO_EROE, PASSO_MOSTRO, PASSO_RIENTRO,
+  TASCHE, RAGGIO, RAGGIO_TORCIA, RAGGIO_SGOCCIOLI, ALONE, ALONE_TORCIA, ALONE_SGOCCIOLI, APERTURA_CONO, SFUMA_CONO, SFUMA_ARCO, ALONE_SFUMA, FORZA_MINIMA, ROCCIA, DIETRO, FIANCO, ALLA_PAR, SVEGLIA, PASSO_EROE, PASSO_MOSTRO, PASSO_RIENTRO,
   CALMA, SORSO, RIPOSO_SCALA, VITA_PER_PIANO,
   ARREDO_DICE, ARREDO_LA_PRIMA_VOLTA,
 } from '../dati/mondo.js'
@@ -205,47 +205,89 @@ export class Corsa extends Corredo {
     // dal piano generato, non dalla tappa: da quando l'abisso cambia forma scendendo, potevano divergere
     this.visto = new Uint8Array(this.livello.largo * this.livello.alto)
     this.luce = new Set()
-    this.stanzaIntera = null
+    this.forzaLuce = new Map()
     this.segnaLaStanza()
     this.chiaveDelPiano = false
     this.stanzeDentro = new Set()
     this.aggiornaLuce()
   }
 
-  // con la torcia piena una stanza si accende tutta e il raggio è lungo; senza, o agli sgoccioli, si vede solo attorno
-  // all'eroe, anche dentro una stanza (docs/sotterraneo/regole.md, «La luce»)
+  // la luce è un cono davanti all'eroe e un alone corto attorno, con l'ombra alle spalle; la torcia allunga il cono e
+  // allarga l'alone, agli sgoccioli stanno in mezzo (docs/sotterraneo/luce.md)
   get torciaAgliSgoccioli() { return this.torciaAccesa && this.torciaResta <= 1 && !this.torceInScorta }
-  get stanzaTuttaAccesa() { return this.torciaAccesa && !this.torciaAgliSgoccioli }
   get raggioDellaLuce() {
     const base = !this.torciaAccesa ? RAGGIO : this.torciaAgliSgoccioli ? RAGGIO_SGOCCIOLI : RAGGIO_TORCIA
     return base + this.addosso('luce')
   }
+  get aloneDellaLuce() { return !this.torciaAccesa ? ALONE : this.torciaAgliSgoccioli ? ALONE_SGOCCIOLI : ALONE_TORCIA }
+
+  // dove guarda l'eroe: l'ultimo passo; prima del primo, dove guarda lo sprite
+  get versoEroe() { return this.verso || { dx: this.guarda === 'sx' ? -1 : 1, dy: 0 } }
+
+  // l'eroe si volta (un passo, o il tocco su una cosa): se cambia il cono, la luce si rifà subito
+  giraVerso(dx, dy) {
+    const d = Math.hypot(dx, dy)
+    if (d < 0.001) return
+    const v = this.versoEroe
+    this.verso = { dx: dx / d, dy: dy / d }
+    if (Math.abs(this.verso.dx - v.dx) + Math.abs(this.verso.dy - v.dy) > 0.01 && this.livello) this.aggiornaLuce()
+  }
+
+  // la luce non passa dai muri né da una porta chiusa (la cella che la ferma si accende, o non si vedrebbe il muro)
+  fermaLaLuce(porte, x, y) {
+    return !this.livello.calpestabile(x, y) || porte.has(y * this.livello.largo + x)
+  }
 
   aggiornaLuce() {
-    const L = this.livello.largo, A = this.livello.alto
+    const liv = this.livello, L = liv.largo, A = liv.alto
     const cx = Math.floor(this.eroe.x), cy = Math.floor(this.eroe.y)
-    this.luce = new Set()
-    const accendi = (x, y) => {
-      if (x < 0 || y < 0 || x >= L || y >= A) return
-      this.luce.add(y * L + x)
-      this.visto[y * L + x] = 1
+    const ox = cx + 0.5, oy = cy + 0.5
+    const porte = new Set(liv.robe.filter(r => r.che === 'porta' && !r.aperta).map(r => r.y * L + r.x))
+    const cono = this.raggioDellaLuce, alone = this.aloneDellaLuce
+    const v = this.versoEroe
+    const mezza = APERTURA_CONO / 2 * Math.PI / 180
+    const forza = new Map()
+    const accendi = (x, y, f) => {
+      if (x < 0 || y < 0 || x >= L || y >= A || f < FORZA_MINIMA) return
+      const k = y * L + x
+      if (f > (forza.get(k) || 0)) forza.set(k, f)
     }
-    const raggio = this.raggioDellaLuce
-    const r = Math.ceil(raggio) + 1
-    for (let x = cx - r; x <= cx + r; x++) for (let y = cy - r; y <= cy + r; y++)
-      if (Math.hypot(x - cx, y - cy) <= raggio) accendi(x, y)
-
-    const st = this.livello.stanzaDi(cx, cy)
-    this.stanzaIntera = null
-    if (st && cx >= st.x - 1 && cy >= st.y - 1 && cx <= st.x + st.w && cy <= st.y + st.h) {
-      if (this.stanzaTuttaAccesa) {
-        this.stanzaIntera = st.id
-        for (let x = st.x - 1; x <= st.x + st.w; x++)
-          for (let y = st.y - 1; y <= st.y + st.h; y++) accendi(x, y)
+    const r = Math.ceil(cono) + 1
+    for (let x = cx - r; x <= cx + r; x++) for (let y = cy - r; y <= cy + r; y++) {
+      const dx = x + 0.5 - ox, dy = y + 0.5 - oy, d = Math.hypot(dx, dy)
+      // l'alone attorno e il cono davanti: piena nel cuore, sfuma ai bordi
+      let f = Math.max(0, Math.min(1, (alone - d) / ALONE_SFUMA))
+      if (d > 0 && d <= cono) {
+        const ang = Math.acos(Math.max(-1, Math.min(1, (dx * v.dx + dy * v.dy) / d)))
+        const lungo = Math.min(1, (cono - d) / (cono * SFUMA_CONO))
+        const largo = Math.min(1, (mezza - ang) / (mezza * SFUMA_ARCO))
+        f = Math.max(f, Math.max(0, lungo) * Math.max(0, largo))
       }
-      // entrare in una stanza si conta anche al buio: è l'eroe a esserci, non la luce
-      if (!this.stanzeDentro.has(st.id)) { this.stanzeDentro.add(st.id); this.stanzeViste++ }
+      if (f < FORZA_MINIMA) continue
+      // il raggio dall'eroe alla cella passa solo da celle libere: il muro si accende, quel che sta dietro no
+      const n = Math.max(1, Math.ceil(d * 4))
+      let libero = true
+      for (let i = 1; i < n && libero; i++) {
+        const px = Math.floor(ox + dx * i / n), py = Math.floor(oy + dy * i / n)
+        if ((px !== cx || py !== cy) && (px !== x || py !== y) && this.fermaLaLuce(porte, px, py)) libero = false
+      }
+      if (libero) accendi(x, y, f)
     }
+    // il muro accanto a un pavimento acceso si accende con lui, o i corridoi sembrerebbero senza pareti
+    for (const [k, f] of [...forza]) {
+      const x = k % L, y = Math.floor(k / L)
+      if (this.fermaLaLuce(porte, x, y)) continue
+      for (let dx = -1; dx <= 1; dx++) for (let dy = -1; dy <= 1; dy++)
+        if (liv.a(x + dx, y + dy) === ROCCIA) accendi(x + dx, y + dy, f)
+    }
+    this.luce = new Set(forza.keys())
+    this.forzaLuce = forza
+    for (const k of this.luce) this.visto[k] = 1
+
+    const st = liv.stanzaDi(cx, cy)
+    // entrare in una stanza si conta anche al buio: è l'eroe a esserci, non la luce
+    if (st && cx >= st.x - 1 && cy >= st.y - 1 && cx <= st.x + st.w && cy <= st.y + st.h &&
+        !this.stanzeDentro.has(st.id)) { this.stanzeDentro.add(st.id); this.stanzeViste++ }
   }
 
   // un mostro si vede solo se sta in una cella accesa adesso, sveglio o no (docs/sotterraneo/regole.md, «La luce»)
@@ -254,6 +296,12 @@ export class Corsa extends Corredo {
   luceDi(x, y) {
     const k = y * this.livello.largo + x
     return this.inLuce(k) ? 2 : this.visto[k] ? 1 : 0
+  }
+
+  // quanto è accesa una cella in luce, da 0 (ricordo) a 1 (piena): ai bordi del cono sfuma, o la luce farebbe gradini
+  forzaDi(x, y) {
+    const k = y * this.livello.largo + x
+    return this.luce.has(k) ? (this.forzaLuce.get(k) ?? 1) : 0
   }
 
   // un mostro che dorme è un ostacolo da aggirare (si sceglie chi pagare); uno sveglio no, perché si sta muovendo
@@ -320,6 +368,9 @@ export class Corsa extends Corredo {
       ? viaVerso(buona, mira, da, { sopra: this.sopra(mira.che) })
       : (buona(c.x, c.y) ? { dove: c, strada: percorso(buona, da, c) } : null)
 
+    // toccando una cosa l'eroe si gira verso di lei, anche se non si muove (il cono la tiene in vista)
+    if (mira) this.giraVerso(mira.x - this.eroe.x + 0.5, mira.y - this.eroe.y + 0.5)
+
     if (!via) { this.bersaglio = null; return }   // spegne il segno: lasciarlo acceso pulsa su un posto dove non si va più
     if (!via.strada) { this.bersaglio = null; this.dillo('di là non si passa'); return }
     if (!via.strada.length) {
@@ -355,11 +406,14 @@ export class Corsa extends Corredo {
       const sveglio = !!(mia && sua && mia === sua && m.calmo <= 0 && (m.sveglio || vicino))
       m.sveglio = sveglio
 
-      const meta = sveglio ? this.eroe : { x: m.casa.x + 0.5, y: m.casa.y + 0.5 }
+      // nella luce va dritto; nell'ombra cerca di arrivare alle spalle (docs/sotterraneo/luce.md)
+      const nellaLuce = this.inLuce(m.y * this.livello.largo + m.x)
+      const meta = !sveglio ? { x: m.casa.x + 0.5, y: m.casa.y + 0.5 }
+        : nellaLuce ? this.eroe : this.versoLeSpalle(m, sua)
       const dx = meta.x - m.fx, dy = meta.y - m.fy
       const d = Math.hypot(dx, dy)
 
-      if (sveglio && d < 0.75) {                 // ti ha preso
+      if (sveglio && Math.hypot(this.eroe.x - m.fx, this.eroe.y - m.fy) < 0.75) {   // ti ha preso                 // ti ha preso
         this.strada = null; this.mira = null; this.bersaglio = null
         this.scontro(m)
         return
@@ -379,6 +433,23 @@ export class Corsa extends Corredo {
     }
   }
 
+  // dove punta un mostro sveglio che non è nella luce: la cella dietro l'eroe. Se è davanti (nell'ombra di lato, o oltre
+  // il cono) gira largo sul fianco, fuori dall'alone, e solo quando è all'altezza dell'eroe punta alle spalle; non esce
+  // dalla sua stanza (con le spalle al muro nessuno arriva da dietro)
+  versoLeSpalle(m, stanza) {
+    const v = this.versoEroe, e = this.eroe
+    const rx = m.fx - e.x, ry = m.fy - e.y
+    const dietro = { x: e.x - v.dx * DIETRO, y: e.y - v.dy * DIETRO }
+    if (rx * v.dx + ry * v.dy <= ALLA_PAR) return dietro
+    const lato = rx * -v.dy + ry * v.dx >= 0 ? 1 : -1
+    let w = { x: e.x - v.dy * lato * FIANCO - v.dx * 0.3, y: e.y + v.dx * lato * FIANCO - v.dy * 0.3 }
+    if (stanza) {
+      w.x = Math.min(stanza.x + stanza.w - 0.5, Math.max(stanza.x + 0.5, w.x))
+      w.y = Math.min(stanza.y + stanza.h - 0.5, Math.max(stanza.y + 0.5, w.y))
+    }
+    return Math.hypot(w.x - m.fx, w.y - m.fy) < 0.5 ? dietro : w
+  }
+
   muoviEroe(dt) {
     if (!this.strada || !this.strada.length) {
       if (this.mira) { const m = this.mira; this.mira = null; this.interagisci(m) }
@@ -389,7 +460,7 @@ export class Corsa extends Corredo {
     const dx = mx - this.eroe.x, dy = my - this.eroe.y
     const d = Math.hypot(dx, dy)
     const v = PASSO_EROE * dt
-    if (d > 0.001) this.verso = { dx: dx / d, dy: dy / d }
+    if (d > 0.001) this.giraVerso(dx, dy)
     if (d <= v) {
       this.eroe.x = mx; this.eroe.y = my
       this.strada.shift()

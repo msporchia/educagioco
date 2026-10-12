@@ -51,9 +51,9 @@ export const MetodiDelloScontro = {
     return campo
   },
 
-  // il mostro arriva dalla metà dietro il verso in cui l'eroe guarda (l'ultimo passo fatto, o `guarda` se non ha mai camminato)
+  // il mostro arriva dalla metà dietro il verso in cui l'eroe guarda (`versoEroe`: l'ultimo passo, o dove guarda lo sprite)
   alleSpalle(m) {
-    const v = this.verso || { dx: this.guarda === 'sx' ? -1 : 1, dy: 0 }
+    const v = this.versoEroe
     const dx = (m.fx != null ? m.fx : m.x + 0.5) - this.eroe.x, dy = (m.fy != null ? m.fy : m.y + 0.5) - this.eroe.y
     return v.dx * dx + v.dy * dy < -1e-6
   },
