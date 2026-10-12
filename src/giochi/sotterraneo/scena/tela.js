@@ -163,6 +163,7 @@ export class Tela {
       if (r.presa || (r.morto && r.che !== 'fonte')) continue   // la fonte bevuta resta, il resto se ne va
       const luce = corsa.luceDi(r.x, r.y)
       if (!luce) continue
+      if (luce === 1 && r.che === 'mostro') continue   // il ricordo non muove: un mostro si vede solo in luce (docs/sotterraneo/regole.md, «La luce»)
       // `toccabile` è un fatto già deciso dal motore, come `potenziabile` nel castello: qui si guarda, non si ricalcola
       this.roba(r, luce, orologio, !!(corsa.toccabile && corsa.toccabile(r)), sc, corsa)
     }
@@ -694,7 +695,9 @@ export class Tela {
       ctx.fillRect(x0 + x * p, y0 + y * p, p, p)
     }
     for (const r of liv.robe) {
-      if (r.presa || r.morto || !corsa.visto[r.y * liv.largo + r.x]) continue
+      // il custode della chiave si segna dov'è la sua casa, mai dov'è adesso (docs/sotterraneo/regole.md, «La luce»)
+      const sx = r.che === 'mostro' && r.casa ? r.casa.x : r.x, sy = r.che === 'mostro' && r.casa ? r.casa.y : r.y
+      if (r.presa || r.morto || !corsa.visto[sy * liv.largo + sx]) continue
       // un baule già aperto sparisce; la roba per terra si segna, perché ora va toccata e una spada dimenticata è persa
       const colore = r.missione && !r.aperto ? '#ff7ad9'
         : r.che === 'mostro' && r.chiave ? '#ffd23f'
@@ -705,7 +708,7 @@ export class Tela {
         : r.che === 'forziere' && !r.aperto ? '#ff9b3d' : null
       if (!colore) continue
       ctx.fillStyle = colore
-      ctx.fillRect(x0 + r.x * p - 1, y0 + r.y * p - 1, p + 2, p + 2)
+      ctx.fillRect(x0 + sx * p - 1, y0 + sy * p - 1, p + 2, p + 2)
     }
     ctx.fillStyle = '#fff'
     ctx.fillRect(x0 + Math.floor(corsa.eroe.x) * p - 1, y0 + Math.floor(corsa.eroe.y) * p - 1,
