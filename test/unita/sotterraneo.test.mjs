@@ -14,7 +14,7 @@ import { ref, shallowRef } from 'vue'
 import { CAMPAGNA, QUANTE_TAPPE, durezzaDi, guardianoDi, stelleDella,
          svenimentiDi, guastiDellaCampagna } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { ORPELLI } from '../../src/giochi/sotterraneo/dati/orpelli.js'
-import { guastiDelMondo, EROE, TASCHE, ARREDO_DICE, SVEGLIA } from '../../src/giochi/sotterraneo/dati/mondo.js'
+import { guastiDelMondo, EROE, TASCHE, ARREDO_DICE, SVEGLIA, COLPO_DEL_MOSTRO } from '../../src/giochi/sotterraneo/dati/mondo.js'
 import { guastiDeiMostri, MOSTRI, colpiPer } from '../../src/giochi/sotterraneo/dati/mostri.js'
 import { guastiDelleCose, COSE, ARMI_DI, CURE, A_SORTE, NEI_FORZIERI,
          pescaMerce, pescaCosa } from '../../src/giochi/sotterraneo/dati/cose.js'
@@ -487,37 +487,38 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
   controlla('e lo spadone è nello zaino', c.zaino.includes('spadone'), c.zaino.join())
 }
 
-/* ══════════ 5c. i mostri picchiano sempre ══════════
-   Rispondendo bene si para il colpo e ne resta un graffio; sbagliando
-   arriva tutto. Prima chi rispondeva bene usciva da una battaglia senza
-   un livido, e le pozioni si accumulavano in fondo allo zaino senza che
-   nessuno le bevesse mai. */
+/* ══════════ 5c. i mostri picchiano sulla difesa, non sulla risposta ══════════
+   Un mostro colpisce COLPO_DEL_MOSTRO × (attacco − difesa), almeno 1, a ogni suo turno: rispondere bene o male decide solo
+   se l'eroe colpisce nel suo (docs/sotterraneo/scontro.md). Prima chi rispondeva bene prendeva un graffio e chi sbagliava
+   il colpo pieno; adesso le risposte servono ad attaccare. */
 {
   const c = new Corsa(CAMPAGNA[2], { seme: 44, rnd: seminato(44) })
   const m = c.livello.robe.find(r => r.che === 'mostro' && r.ossa > c.colpo(r) * 2)
   c.vita = c.vitaMax
-  c.foglio = { che: 'scontro', chi: m }
-  const graffio = c.graffio(m)
+  m.sveglio = true   // sveglio: niente sorpresa, il primo turno è della fila
+  c.scontro(m, { solo: true, tocco: true })
+  const atteso = Math.max(1, Math.round(COLPO_DEL_MOSTRO * (m.att - c.dif)))
+  uguale('il colpo è la quota di (attacco − difesa)', c.danno(m), atteso)
+  controlla('e mai zero: un mostro addosso si sente sempre', atteso >= 1)
   const esito = c.rispondi(true)
   uguale('rispondendo bene si colpisce', esito.che, 'colpo')
-  uguale('e qualcosa passa lo stesso', c.vitaMax - c.vita, graffio)
-  controlla('ma meno che sbagliando', graffio < c.danno(m), `${graffio} contro ${c.danno(m)}`)
-  controlla('e mai zero: un mostro addosso si sente sempre', graffio >= 1)
+  uguale('e il mostro colpisce lo stesso', c.vitaMax - c.vita, atteso)
 
   /* chi cade non restituisce: il colpo che lo abbatte è l'ultimo */
   m.ossa = 1
   const vitaPrima = c.vita
   const fine = c.rispondi(true)
   uguale('l\'ultimo colpo lo abbatte', fine.che, 'caduto')
-  uguale('e chi è caduto non graffia più', c.vita, vitaPrima)
+  uguale('e chi è caduto non colpisce più', c.vita, vitaPrima)
 
-  /* e il graffio può far svenire: è quello che rende una fuga una
+  /* e un colpo può far svenire: è quello che rende una fuga una
      decisione invece che una comodità */
   const c2 = new Corsa(CAMPAGNA[2], { seme: 45, rnd: seminato(45) })
   const m2 = c2.livello.robe.find(r => r.che === 'mostro')
+  m2.sveglio = true
+  c2.scontro(m2, { solo: true, tocco: true })
   m2.ossa = 999
   c2.vita = 1
-  c2.foglio = { che: 'scontro', chi: m2 }
   uguale('con un filo di vita anche una risposta giusta stende',
          c2.rispondi(true).che, 'svenuto')
 }
@@ -614,7 +615,7 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
   const c = new Corsa(CAMPAGNA[2], { seme: 5, rnd: seminato(5) })
   const m = c.livello.robe.find(r => r.che === 'mostro')
   m.sveglio = true
-  c.foglio = { che: 'scontro', chi: m }
+  c.scontro(m, { solo: true })
   c.scappa()
   uguale('lo scontro si chiude', c.foglio, null)
   controlla('e il mostro resta calmo per qualche secondo', m.calmo > 0, String(m.calmo))
@@ -1094,19 +1095,19 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
 {
   const c = new Corsa(CAMPAGNA[2], { seme: 5, rnd: seminato(5) })
   const m = c.livello.robe.find(r => r.che === 'mostro' && !r.morto)
-  c.foglio = { che: 'scontro', chi: m }
+  c.scontro(m, { solo: true, tocco: true })
   const prima = c.vita
-  const atteso = c.graffio(m)
+  const atteso = c.costoFuga()
   const via = c.scappa()
-  uguale('scappare toglie il graffio di quel mostro', prima - c.vita, atteso)
+  uguale('scappare toglie un colpo di quel mostro', prima - c.vita, atteso)
   uguale('e lo dice a chi guarda', via.che, 'scappato')
   controlla('il mostro resta calmo il tempo di uscire', m.calmo > 0, `calmo ${m.calmo}`)
-  controlla('e il graffio non è mai zero, o scappare tornerebbe gratis', atteso >= 1)
+  controlla('e il colpo non è mai zero, o scappare tornerebbe gratis', atteso >= 1)
 
   /* con un filo di vita, scappare fa svenire come le prende in faccia:
      è la stessa ferita, e nessuna scorciatoia la salta */
+  c.scontro(m, { solo: true, tocco: true })
   c.vita = 1
-  c.foglio = { che: 'scontro', chi: m }
   uguale('con un filo di vita scappare fa svenire', c.scappa().che, 'svenuto')
   uguale('e il foglio è quello dello svenimento', c.foglio.che, 'svenuto')
 }

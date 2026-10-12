@@ -9,6 +9,7 @@ import { MISSIONI, PERSONAGGI, TETTO, missioneDi, guastiDelleMissioni, premioDet
   from '../../src/giochi/sotterraneo/dati/missioni.js'
 import { PERSONAGGI as DOVE_PERSONAGGI } from '../../src/giochi/sotterraneo/dati/terra-mappa.js'
 import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
+import { velocitaDel } from '../../src/giochi/sotterraneo/motore/scontro.js'
 import { Corredo } from '../../src/giochi/sotterraneo/motore/corredo.js'
 import { seminato } from '../../src/giochi/sotterraneo/motore/livello.js'
 import { robaAttesa, crescitaAttesa } from '../../src/giochi/sotterraneo/motore/storia.js'
@@ -97,7 +98,7 @@ const palestra = (eroe, k) => new Corredo({ eroe, roba: robaAttesa(eroe, k, { po
     const c = new Corsa(CAMPAGNA[k], { seme: 5, eroe, roba: robaAttesa(eroe, k), crescita: crescitaAttesa(eroe, k), rnd: seminato(5), missioni: [] })
     while (c.piano < m.piano) { c.piano++; c.nuovoPiano() }
     const r = robaDellaMissione(c.livello, m, CAMPAGNA[k])
-    return { c, r, colpi: c.colpiPer(r), rispondendoBene: c.colpiPer(r) * c.graffio(r), vita: c.vitaMax }
+    return { c, r, colpi: c.colpiPer(r), rispondendoBene: Math.ceil(c.colpiPer(r) * velocitaDel(r) / c.velocita) * c.danno(r), vita: c.vitaMax }
   }
   for (const m of MISSIONI.filter(x => x.tipo === 'sconfiggi')) {
     const k = CAMPAGNA.findIndex(t => t.chiave === m.discesa)

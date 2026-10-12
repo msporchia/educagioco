@@ -1,8 +1,9 @@
 /* L'albero delle abilità (docs/sotterraneo/abilita.md): i rami e i nodi stanno in piedi, i punti dell'albero e
    le loro regole (il gradino, il nodo sopra, il grado), le caselle dello scontro, l'energia che viene dalle
    risposte giuste, alla fonte e dalla pozione blu, e cosa fanno gli effetti nello scontro: il colpo doppio,
-   l'abilità che sbagliando resta pronta, il veleno che brucia anche sbagliando, il mostro gelato e quello
-   stordito, la parata, la stanza intera, il primo tiro con l'arco, l'ultimo fiato, l'energia nella sosta.
+   l'abilità che sbagliando resta pronta, il veleno che brucia al turno del mostro, il mostro gelato e quello
+   stordito, la parata, il Grido a tutti, il primo tiro con l'arco, l'ultimo fiato, l'energia nella sosta.
+   Gli effetti si contano nei turni di chi li porta (docs/sotterraneo/scontro.md).
    `node test/esegui.mjs sotterraneo-abilita --niente-build` */
 import { RAMI, NODI, ENERGIA, CASELLE_ABILITA, guastiDelleAbilita } from '../../src/giochi/sotterraneo/dati/abilita.js'
 import { EROI } from '../../src/giochi/sotterraneo/dati/eroi.js'
@@ -20,12 +21,13 @@ import { controlla, uguale, stessaLista, riassunto } from '../aiuto/verifica.mjs
 const roba = (mano = null, mancina = null) => ({ v: 1, gemme: 0, zaino: [], mano, mancina, corpo: null, dito: null, torcia: 0, torce: 0 })
 const conAlbero = (livello, albero) => ({ esp: sogliaDi(livello), albero, caselle: Object.keys(albero).filter(id => !NODI[id].sempre).slice(0, 3) })
 
-// uno scontro con un mostro fatto a mano: i conti si leggono senza il caso del bestiario
+// uno scontro con un mostro fatto a mano: i conti si leggono senza il caso del bestiario. Solo lui in campo, sveglio, e veloce
+// come l'eroe: a parità tocca all'eroe, quindi i turni vanno uno per uno (eroe, mostro, eroe, mostro…)
 function scontro(eroe, crescita, mano = null, mancina = null, mostro = {}) {
   const c = new Corsa(CAMPAGNA[1], { seme: 5, eroe, rnd: seminato(5), crescita, roba: roba(mano, mancina) })
   const m = c.livello.robe.find(r => r.che === 'mostro')
-  Object.assign(m, { ossa: 200, ossaMax: 200, att: 9, dif: 0, sveglio: true, stati: null }, mostro)
-  c.scontro(m)
+  Object.assign(m, { ossa: 200, ossaMax: 200, att: 9, dif: 0, sveglio: true, stati: null, velocita: c.velocita }, mostro)
+  c.scontro(m, { solo: true, tocco: true })
   return { c, m }
 }
 
@@ -114,22 +116,26 @@ function scontro(eroe, crescita, mano = null, mancina = null, mostro = {}) {
   ;({ c, m } = scontro('elfa', conAlbero(3, { 'dardo-avvelenato': 1 }), 'spada'))
   controlla('senza arco il dardo non parte', !c.prepara('dardo-avvelenato') && /arco/.test(c.perchéNonUsi('dardo-avvelenato')))
 
-  // il veleno brucia a ogni scambio, anche sbagliando
+  // il veleno brucia al turno del mostro avvelenato, anche se l'eroe sbaglia: tre turni, il primo già bruciato
   ;({ c, m } = scontro('elfa', conAlbero(3, { 'dardo-avvelenato': 1 }), 'arco-corto'))
   c.prepara('dardo-avvelenato')
+  const ossaIniziali = m.ossa
+  const colpoDato = c.colpo(m, NODI['dardo-avvelenato'])
   c.rispondi(true)
   const v = m.stati.veleno
-  controlla('avvelenato per tre scambi', v && v.scambi === 3 && v.quanto >= 1, JSON.stringify(m.stati))
+  controlla('avvelenato: ha già bruciato una volta, ne restano due', v && v.scambi === 2 && v.quanto >= 1 && ossaIniziali - m.ossa === colpoDato + v.quanto, JSON.stringify(m.stati))
   const prima = m.ossa
   const e2 = c.rispondi(false)
   controlla('sbagliando il veleno brucia lo stesso', prima - m.ossa === v.quanto && e2.veleno === v.quanto)
+  c.rispondi(false)
+  controlla('e dopo tre turni è finito', !m.stati.veleno, JSON.stringify(m.stati))
 
   // gelato colpisce a metà, stordito non colpisce neanche sbagliando
   ;({ c, m } = scontro('mago', conAlbero(4, { 'raggio-di-gelo': 1 }), 'verga'))
-  const pieno = c.botta(m, false)
+  const pieno = c.botta(m)
   c.prepara('raggio-di-gelo')
   c.rispondi(true)
-  uguale('gelato: sbagliando arriva la metà', c.botta(m, false), Math.floor(pieno / 2))
+  uguale('gelato: arriva la metà', c.botta(m), Math.floor(pieno / 2))
   controlla('la riga della scelta dice il danno vero', c.descrizione(NODI['raggio-di-gelo'], m).startsWith(`fai ${c.colpo(m, NODI['raggio-di-gelo'])} di danno`) && /metà danno per 2 turni/.test(c.descrizione(NODI['raggio-di-gelo'], m)), c.descrizione(NODI['raggio-di-gelo'], m))
   // lo scambio dice da dove viene il danno e cosa se lo è portato via (la riga dello scontro, viste/Scontro.vue)
   const eg = c.rispondi(false)
@@ -143,45 +149,70 @@ function scontro(eroe, crescita, mano = null, mancina = null, mostro = {}) {
   controlla('ma lo scudo c\'è', (cs.foglio ? cs.foglio.io.scudo : 0) > 0)
 }
   ;({ c, m } = scontro('nano', conAlbero(9, { spaccaroccia: 1, 'mani-pesanti': 1, stordisce: 1 }), 'ascia'))
+  const vita = c.vita
   c.prepara('stordisce')
   c.rispondi(true)
-  const vita = c.vita
+  uguale('stordito: salta il suo turno', c.vita, vita)
   c.rispondi(false)
-  uguale('stordito: anche sbagliando non colpisce', c.vita, vita)
+  controlla('e al turno dopo colpisce di nuovo', c.vita < vita, `${c.vita} contro ${vita}`)
 
   // la parata del cavaliere, con lo scudo in mano
   ;({ c, m } = scontro('cavaliere', conAlbero(4, { 'scudo-alzato': 1, parata: 1 }), 'spada', 'scudo-legno'))
-  const g = c.graffio(m)
+  const g = c.botta(m)
   ;({ c, m } = scontro('cavaliere', conAlbero(4, { 'scudo-alzato': 1 }), 'spada', 'scudo-legno'))
-  uguale('la Parata lima ogni graffio di uno', g, c.graffio(m) - 1)
+  uguale('la Parata lima ogni colpo di uno', g, c.botta(m) - 1)
   c.prepara('scudo-alzato')
   const v2 = c.vita
+  const mezzo = Math.ceil(c.danno(m) / 2)
   c.rispondi(true); c.rispondi(true)
-  uguale('Scudo alzato: due scambi senza graffio', c.vita, v2)
+  uguale('Scudo alzato: per due turni dell\'eroe i colpi presi fanno metà', v2 - c.vita, mezzo * 2)
+  const v3 = c.vita
+  c.rispondi(true)
+  uguale('e al terzo no', v3 - c.vita, c.danno(m))
 
-  // la stanza intera: gli altri mostri svegli prendono lo stesso colpo (il Grido di guerra, l'unica area rimasta)
-  ;({ c, m } = scontro('cavaliere', conAlbero(12, { preghiera: 1, 'cuore-saldo': 1, grido: 1 }), 'spada'))
-  const stanza = c.livello.stanzaDi(Math.floor(c.eroe.x), Math.floor(c.eroe.y))
-  const altro = { che: 'mostro', tipo: m.tipo, nome: 'altro', em: m.em, x: stanza.cx, y: stanza.cy, casa: { x: stanza.cx, y: stanza.cy },
-                  ossa: 100, ossaMax: 100, att: 3, dif: 0, sveglio: true }
-  m.casa = { x: stanza.cx, y: stanza.cy }
-  c.livello.robe.push(altro)
-  c.prepara('grido')
-  const e3 = c.rispondi(true)
-  controlla('Grido di guerra: colpito anche l\'altro', altro.ossa < 100 && e3.colpiti === 1, `${altro.ossa}`)
-  controlla('e anche l\'altro colpisce a metà', altro.stati && altro.stati.debole > 0)
+  // il Grido di guerra è `forma: 'tutti'`: lo stesso colpo e gli stessi effetti a tutti i mostri in campo
+  {
+    const c = new Corsa(CAMPAGNA[1], { seme: 5, eroe: 'cavaliere', rnd: seminato(5), crescita: conAlbero(12, { preghiera: 1, 'cuore-saldo': 1, grido: 1 }), roba: roba('spada') })
+    const m = c.livello.robe.find(r => r.che === 'mostro')
+    const stanza = c.livello.stanzaDi(m.x, m.y)
+    const altro = c.livello.mostro(m.tipo, m.x, m.y)
+    Object.assign(m, { ossa: 100, ossaMax: 100, att: 3, dif: 0, sveglio: true, velocita: c.velocita, stati: null })
+    Object.assign(altro, { ossa: 100, ossaMax: 100, att: 3, dif: 0, sveglio: true, velocita: c.velocita, casa: { x: m.x, y: m.y } })
+    c.livello.robe.push(altro)
+    c.eroe = { x: m.x + 1.5, y: m.y + 0.5 }
+    c.scontro(m, { tocco: true })
+    uguale('in campo sono due', c.foglio.campo.length, 2)
+    c.prepara('grido')
+    controlla('la scelta prepara entrambi', c.foglio.colpiti.length === 2, String(c.foglio.colpiti.length))
+    const e3 = c.rispondi(true)
+    controlla('Grido di guerra: colpito anche l\'altro', altro.ossa < 100 && e3.colpiti === 1, `${altro.ossa}`)
+    controlla('e anche l\'altro colpisce a metà', altro.stati && altro.stati.debole >= 0 && (m.stati.debole > 0 || altro.stati.debole > 0))
+    void stanza
+  }
 
-  // il primo tiro con l'arco: la prima risposta giusta non fa rispondere il mostro
-  ;({ c, m } = scontro('elfa', conAlbero(12, { 'dardo-avvelenato': 1, 'primo-tiro': 1 }), 'arco-corto'))
-  const e4 = c.rispondi(true)
-  controlla('il primo tiro con l\'arco: il mostro non risponde', e4.preso === 0)
+  // il primo tiro con l'arco: l'elfa agisce per prima in ogni scontro, prima anche della fila, e il primo colpo ha il suo bonus
+  {
+    const bonus = conAlbero(12, { 'dardo-avvelenato': 1, 'primo-tiro': 2 })
+    const senza = conAlbero(12, { 'dardo-avvelenato': 1 })
+    ;({ c, m } = scontro('elfa', senza, 'arco-corto', null, { velocita: 30 }))
+    controlla('senza il primo tiro, un mostro velocissimo ha già colpito', c.foglio.apertura.length > 0 && c.vita < c.vitaMax)
+    ;({ c, m } = scontro('elfa', bonus, 'arco-corto', null, { velocita: 30 }))
+    controlla('con il primo tiro l\'elfa agisce prima della fila', c.foglio.apertura.length === 0 && c.vita === c.vitaMax)
+    const solito = c.colpo(m)
+    const prima = m.ossa
+    const e4 = c.rispondi(true)
+    controlla('e il primo colpo ha il suo bonus (+25%)', e4.primoTiro && prima - m.ossa === Math.round(solito * 1.25), `${prima - m.ossa} contro ${solito}`)
+    const dopo = m.ossa
+    c.rispondi(true)
+    uguale('il secondo è il colpo solito', dopo - m.ossa, solito)
+  }
 
   // Radici: il mostro bloccato non attacca e subisce di più finché resta fermo
   ;({ c, m } = scontro('elfa', conAlbero(12, { 'dardo-avvelenato': 1, radici: 1 }), 'arco-corto', null, { ossa: 500, ossaMax: 500, att: 9 }))
   const colpoPrima = c.colpo(m)
   c.prepara('radici')
   const eR = c.rispondi(true)
-  controlla('Radici: il mostro è bloccato e esposto', m.stati.esposto && m.stati.esposto.piu === 50 && eR.preso === 0, JSON.stringify(m.stati))
+  controlla('Radici: il mostro è bloccato e esposto', m.stati.esposto && m.stati.esposto.piu === 50 && eR.preso === 0 && m.stati.fermo === 2, JSON.stringify(m.stati))
   controlla('e subisce di più mentre dura', c.colpo(m) > colpoPrima, `${colpoPrima} → ${c.colpo(m)}`)
   for (let i = 0; i < 5; i++) c.rispondi(true)
   controlla('poi le radici cedono', !(m.stati.esposto && m.stati.esposto.scambi > 0))

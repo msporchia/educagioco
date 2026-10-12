@@ -55,9 +55,12 @@ function scegliIlPiano() {
       // lo stesso scontro in Node: una risposta sbagliata ferma? e continuando, una giusta?
       const s = new Corsa(CAMPAGNA[MINIERA], { seme, eroe: EROE, roba, crescita })
       const sm = s.livello.robe.find(r => r.che === 'mostro' && r.x === m.x && r.y === m.y)
-      s.scontro(sm)
-      const primo = s.rispondi(false)
-      if (primo.ringhia !== 'duro' || s.vita <= 0 || s.graffio(sm) >= s.vita) continue   // scappando si regge
+      sm.sveglio = true   // per strada un mostro ti vede arrivare: niente sorpresa
+      s.scontro(sm, { tocco: true })
+      // si sbaglia finché non scatta lo stop (con la fila dei turni non è per forza al primo sbaglio)
+      let primo = null
+      for (let i = 0; i < 6 && s.foglio && s.foglio.che === 'scontro' && !(primo && primo.ringhia); i++) primo = s.rispondi(false)
+      if (!primo || primo.ringhia !== 'duro' || s.vita <= 0 || s.costoFuga() >= s.vita) continue   // scappando si regge
       const vita1 = s.vita
       s.continua()
       const secondo = s.rispondi(true)
@@ -161,7 +164,11 @@ async function entra() {
 }
 // sbaglia e aspetta che il mostro picchi e lo scontro si fermi
 async function sbagliaEFermati() {
-  await rispondi(false)
+  // il mostro non colpisce a ogni risposta (la fila dei turni): si sbaglia finché non scatta lo stop
+  for (let i = 0; i < 6 && !(await page.locator('[data-ringhio]').count()); i++) {
+    await rispondi(false)
+    await attendi(page, 700)
+  }
   await page.waitForSelector('[data-ringhio]', { timeout: 20000 })
 }
 const stop = () => page.locator('[data-ringhio]')

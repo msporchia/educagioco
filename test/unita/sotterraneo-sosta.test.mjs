@@ -59,7 +59,7 @@ function rispondiFinche(c, giusto = () => true, giri = 40) {
 
   const ferito = robe.find(r => r.che === 'mostro' && !r.chiave && r.ossa > c.colpo(r))
   controlla('c\'è un mostro che non cade al primo colpo', !!ferito)
-  c.foglio = { che: 'scontro', chi: ferito }; c.chiedi('scontro', 0)
+  c.scontro(ferito, { solo: true, tocco: true })
   c.rispondi(true)
   c.scappa()
   const ossa = ferito.ossa
