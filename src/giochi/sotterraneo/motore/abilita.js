@@ -1,7 +1,7 @@
 // L'albero delle abilità, i punti e le caselle (docs/sotterraneo/abilita.md). Funzioni pure sulla crescita
 // dell'avventura (motore/crescita.js), come i punti delle caratteristiche: `albero` dice il grado di ogni nodo
 // imparato, `caselle` le abilità che si portano nello scontro. Cosa fanno nello scontro lo sa motore/corsa.js.
-import { RAMI, NODI, LIVELLI_PER_GRADO, CASELLE_ABILITA, PUNTI_ABILITA_PER_LIVELLO } from '../dati/abilita.js'
+import { RAMI, NODI, LIVELLI_PER_GRADO, CASELLE_ABILITA, PUNTI_ABILITA_PER_LIVELLO, nodiSopra } from '../dati/abilita.js'
 import { livelloDi, GEMME_PER_RIASSEGNARE } from '../dati/livelli.js'
 
 const livelloDella = cr => livelloDi(cr ? cr.esp : 0)
@@ -12,17 +12,16 @@ export const puntiAbilita = cr => Math.max(0, (livelloDella(cr) - 1) * PUNTI_ABI
 // il livello che serve per il grado `g` di un nodo: il suo gradino, e due livelli in più per ogni grado sopra il primo
 export const livelloPer = (nodo, g) => nodo.dal + (g - 1) * LIVELLI_PER_GRADO
 
-// perché un nodo non si può imparare adesso, in parole da bambino (o '' se si può). Il nodo sopra nel ramo va
-// imparato prima: è quello che fa un albero
+// perché un nodo non si può imparare adesso, in parole da bambino (o '' se si può). La riga sopra nel ramo va
+// aperta prima: basta aver imparato uno dei suoi nodi (quando sono due si sceglie), ed è quello che fa un albero
 export function perchéNonImpari(cr, classe, id) {
   const nodo = NODI[id]
   if (!nodo || nodo.classe !== classe) return 'non è un\'abilità di questo eroe'
   const g = gradoDi(cr, id)
   const serve = livelloPer(nodo, g + 1)
   if (livelloDella(cr) < serve) return `dal livello ${serve}`
-  const ramo = RAMI[classe].find(r => r.chiave === nodo.ramo)
-  const sopra = nodo.gradino > 0 ? ramo.nodi[nodo.gradino - 1] : null
-  if (sopra && !gradoDi(cr, sopra.id)) return `prima ${sopra.nome}`
+  const sopra = nodiSopra(nodo)
+  if (sopra.length && !sopra.some(x => gradoDi(cr, x.id))) return `prima ${sopra.map(x => x.nome).join(' o ')}`
   if (puntiAbilita(cr) <= 0) return 'nessun punto da dare'
   return ''
 }

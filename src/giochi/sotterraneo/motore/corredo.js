@@ -151,13 +151,23 @@ export class Corredo {
   // L'attacco di un'abilità (docs/sotterraneo/scontro.md, «Le caratteristiche»). Un ramo d'arma colpisce con l'attacco della
   // sua arma, anche se sta nella mancina (intera, non a metà): il mago con la spada in mano e la bacchetta nella mancina
   // attacca di spada e incanta di bacchetta. Un ramo senz'arma colpisce con la sua caratteristica (`car` del ramo), qualunque
-  // sia l'arma in mano. Senza abilità, o con un ramo che vuole lo scudo, è l'attacco solito
+  // sia l'arma in mano; un ramo con l'arma e la caratteristica (Lama arcana) vuole l'una e picchia con l'altra. Senza
+  // abilità, o con un ramo che vuole lo scudo, è l'attacco solito
   attDelRamo(nodo) {
     if (!nodo) return this.att
     const arma = nodo.arma
     if (!arma) {
       if (!nodo.car) return this.att
       return this.io.att + this.piu.sopra[nodo.car] * ATT_PER_PUNTO + this.addosso('att')
+    }
+    // un ramo che vuole un'arma E ha la sua caratteristica (la Lama arcana del mago: la spada, ma l'intelligenza): l'arma
+    // dà il suo bonus intero, ovunque la tenga, e la caratteristica decide quanto vale il resto
+    if (nodo.car && arma.famiglie) {
+      const k = [this.mano, this.mancina].find(x => x && COSE[x] && arma.famiglie.includes(COSE[x].famiglia))
+      if (k) {
+        const addosso = [this.corpo, this.dito].reduce((n, x) => n + (x && COSE[x] ? COSE[x].att || 0 : 0), 0)
+        return this.io.att + this.piu.sopra[nodo.car] * ATT_PER_PUNTO + COSE[k].att + addosso
+      }
     }
     if (!arma.famiglie) return this.att
     const buona = k => k && COSE[k] && arma.famiglie.includes(COSE[k].famiglia)
@@ -168,7 +178,7 @@ export class Corredo {
   }
   get dif() { return this.io.dif + this.piu.dif + this.addosso('dif') }
   // il ritmo dello scontro: 10 più la destrezza (motore/turni.js)
-  get velocita() { return VELOCITA_BASE_EROE + this.car('destrezza') }
+  get velocita() { return VELOCITA_BASE_EROE + this.car('destrezza') + this.sempre('velocitaPiu') }
   // il valore di una caratteristica adesso (partenza, punti, dote): i requisiti delle armi e la pagina dell'eroe
   car(k) { return caratteristica(this.io, this.crescita, k) }
   // il massimo di vita con questa roba e questo livello, a inizio discesa: Corsa parte da qui e poi lo fa crescere (vitaPiu)
