@@ -5,6 +5,7 @@
 import { TRUPPE, CASTELLO, CRESCITA, CAMPO, POSTI, MURO, GIOCATORE, DURATA, RIPARA, RIPOSO, COSTRUZIONE, AVVIO, AZIONI, MINIERA_MAX, LIV_MAX } from '../dati/regole.js'
 import { CAMPAGNA } from '../dati/campagna.js'
 import { PILOTI } from './banco.js'
+import { VERSIONE_IA } from './nemico.js'
 
 const fn = (v) => (typeof v === 'function' ? [1, 2, 3, 5, 8, 10].map(x => v(x)) : v)
 
@@ -19,5 +20,5 @@ export function firmaEquilibrio() {
   const regole = JSON.stringify({ TRUPPE, CASTELLO, CAMPO, POSTI, MURO, GIOCATORE, DURATA, RIPARA, RIPOSO, COSTRUZIONE, AVVIO, MINIERA_MAX, LIV_MAX,
                                   prezzi: Object.fromEntries(Object.entries(AZIONI).map(([k, a]) => [k, a.prezzo])) })
   const tappe = JSON.stringify(CAMPAGNA.map(t => [t.chiave, t.truppe]))
-  return impronta(crescita + regole + tappe + JSON.stringify(PILOTI))
+  return impronta(crescita + regole + tappe + JSON.stringify(PILOTI) + VERSIONE_IA)
 }

@@ -130,8 +130,23 @@ export class Campo {
     this.ombra(c, x, y + lh * 0.38, lw * 0.4, lh * 0.1)
     if (re.hp > 0) c.drawImage(img, sx, sy, w, h, x - lw / 2, y + lh * 0.3 - lh, lw, lh)
     else this.ombra(c, x, y, lw * 0.3, lh * 0.1, 0.5)
-    if (re.hp < re.max) this.barra(c, x, y - lh * 0.62, this.m(34), re.hp / re.max)
     this.livello(c, x, y + lh * 0.3 + this.m(8), re.liv, lato)
+    // la vita del castello: una barra grande SOPRA il castello, sempre accesa (con la vita scritta)
+    const alto = Math.max(this.m(4), y + lh * 0.3 - lh - this.m(16))
+    this.barraCastello(c, x, alto, re, lato)
+  }
+
+  barraCastello(c, x, y, re, lato) {
+    const w = this.m(104), h = this.m(13), q = Math.max(0, re.hp / re.max)
+    c.fillStyle = 'rgba(0,0,0,.65)'
+    c.beginPath(); c.roundRect(x - w / 2 - 2, y - 2, w + 4, h + 4, h / 2 + 2); c.fill()
+    c.fillStyle = lato === 'io' ? IO : NEM
+    if (q > 0) { c.beginPath(); c.roundRect(x - w / 2, y, Math.max(h, w * q), h, h / 2); c.fill() }
+    c.fillStyle = '#fff'; c.font = `bold ${this.m(10)}px "Emoji Gioco", system-ui, sans-serif`
+    c.textAlign = 'center'; c.textBaseline = 'middle'
+    c.shadowColor = '#000'; c.shadowBlur = 3
+    c.fillText(`${Math.ceil(re.hp)}`, x, y + h / 2 + 0.5)
+    c.shadowBlur = 0
   }
 
   livello(c, x, y, liv, lato) {

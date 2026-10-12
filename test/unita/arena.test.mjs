@@ -73,7 +73,7 @@ controlla('stesso seme, stessa partita', JSON.stringify(uguali) === JSON.stringi
     return p
   }
   // chi vola non è colpito da chi cammina e colpisce solo da vicino
-  const pip = prova(['guardiano'], ['pipistrelli'], 8)
+  const pip = prova(['guardiano'], ['pipistrelli'], 3)     // prima che i pipistrelli arrivino a tiro del castello
   controlla('un guardiano non ferisce i pipistrelli', pip.unita.filter(u => u.id === 'pipistrelli').every(u => u.hp === u.max))
   const arc = prova(['scheletri'], ['pipistrelli'], 3)
   const feriti = arc.unita.filter(u => u.id === 'pipistrelli')
@@ -130,10 +130,13 @@ controlla('stesso seme, stessa partita', JSON.stringify(uguali) === JSON.stringi
 /* ══════════ 4c. la bomba, e gli omini che crescono ══════════ */
 {
   const p = new Partita({ rnd: caso(3) })
-  p.schiera('nem', 'scheletri', 180, 200); p.schiera('nem', 'guardiano', 190, 205); p.schiera('nem', 'lupi', 175, 210)
+  p.schiera('nem', 'scheletri', 180, 400); p.schiera('nem', 'guardiano', 190, 405); p.schiera('nem', 'lupi', 175, 410)   // nella metà di chi gioca
   controlla('all\'inizio non c\'è nessuna bomba', p.lati.io.bombe === 0 && p.prezzo('io', 'bomba') === null)
   p.avanza(BOMBA.ogni + 1)
   uguale('ogni tot ne arriva una in regalo, a tutti e due', `${p.lati.io.bombe}/${p.lati.nem.bombe}`, '1/1')
+  const lontano = new Partita({ rnd: caso(9) })
+  lontano.lati.io.bombe = 1; lontano.schiera('nem', 'guardiano', 180, 120, 30)
+  controlla('è un\'arma difensiva: truppe nemiche ancora lontane, nella loro metà, non si bombardano', !lontano.puoFare('io', 'bomba'))
   const monete = p.lati.io.monete
   const nemici = p.unita.filter(u => u.lato === 'nem')
   controlla('ci sono truppe nemiche da colpire e la bomba non costa monete', nemici.length > 0 && p.prezzo('io', 'bomba') === 0)
@@ -141,7 +144,7 @@ controlla('stesso seme, stessa partita', JSON.stringify(uguali) === JSON.stringi
   uguale('e non costa monete', Math.round(p.lati.io.monete), Math.round(monete))
   uguale('ne resta zero', p.lati.io.bombe, 0)
   p.avanza(0.1)
-  controlla('spazza le truppe che stavano insieme', p.unita.filter(u => u.lato === 'nem' && u.hp > 0 && Math.hypot(u.x - 180, u.y - 205) < 60).length === 0)
+  controlla('spazza le truppe che stavano insieme', p.unita.filter(u => u.lato === 'nem' && u.hp > 0 && Math.hypot(u.x - 180, u.y - 405) < 60).length === 0)
   p.avanza(BOMBA.ogni * 4)
   controlla('non se ne accumulano più di BOMBA.max', p.lati.io.bombe <= BOMBA.max)
   const q = new Partita({ rnd: caso(4) })

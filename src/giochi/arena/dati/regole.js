@@ -85,7 +85,7 @@ export const AZIONI = {
   castello: { nome: 'Castello',   op: '÷', prezzo: null,
               nota: 'Il castello spara più forte e più spesso, e resiste di più.' },
   bomba:    { nome: 'Bomba',      op: '÷', prezzo: 0,
-              nota: 'Una bomba in regalo ogni tanto: scoppia dove il nemico ha più truppe, e le spazza via. Serve per ripartire quando ti schiacciano.' },
+              nota: 'Una bomba in regalo ogni tanto, per DIFENDERTI: scoppia dove le truppe nemiche arrivate nella tua metà sono più fitte, e le spazza via. Serve per ripartire quando ti schiacciano.' },
 }
 /* La bomba non si compra: si REGALA a intervalli, a tutti e due. È il «reset» per quando uno ha una
    forza schiacciante e va avanti per inerzia: una cosa da comprare non aiuta chi è già indietro (non

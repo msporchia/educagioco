@@ -88,6 +88,7 @@ export function leggi(dato, { campagna = CAMPAGNA, rnd = Math.random } = {}) {
       p.unita.push({ id: u.id, lato: u.lato, x: u.x, y: u.y, hp: u.hp, max: u.max, forza: u.forza,
                      cool: 0.5, fl: 0, colpo: 0, cammina: false, nasce: 0, vola: TRUPPE[u.id].vola, dirY: 0, r: 8 })
     }
+    p.ia.passo = 99                // la scaletta del nemico non si salva: ripreso, va avanti con la regola di tutti i giorni
     return { partita: p, indice }
   } catch {
     // un salvataggio storto non porta giù il gioco

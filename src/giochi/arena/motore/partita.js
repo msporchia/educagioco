@@ -7,7 +7,7 @@ import {
   CAMPO, POSTI, TRUPPE, BASE, CASTELLO, LIV_MAX, MINIERA_MAX, CRESCITA, AZIONI, MURO, RIPARA,
   RIPOSO, COSTRUZIONE, AVVIO, NEMICI, GIOCATORE, DURATA, BOMBA,
 } from '../dati/regole.js'
-import { pensaNemico } from './nemico.js'
+import { pensaNemico, creaIA } from './nemico.js'
 
 const PASSO = 0.05                       // secondi di una fetta di tempo: la partita avanza a passi fissi
 const SGUARDO = 80                       // fin dove una truppa vede un'altra truppa
@@ -33,6 +33,7 @@ export class Partita {
     this.resto = this.durata
     this.fine = null
     this.pensa = 2.5
+    this.ia = creaIA(rnd)            // la scaletta che il nemico segue
     this.unita = []
     this.lati = {
       io: this.nuovoLato('io', GIOCATORE.moneteAlSecondo, sfida.monete ?? GIOCATORE.iniziali),
@@ -291,7 +292,7 @@ export class Partita {
       const c = this.caserme.find(x => x.lato === lato && x.id === id)
       return c && c.liv < LIV_MAX ? CRESCITA.salita(c.liv) : null
     }
-    if (azione === 'bomba') return this.lati[lato].bombe > 0 && this.unita.some(u => u.lato === altro(lato)) ? 0 : null
+    if (azione === 'bomba') return this.lati[lato].bombe > 0 && this.puntoDellaBomba(lato) ? 0 : null
     if (azione === 'miniera') {
       const m = this.lati[lato].miniera
       return m < MINIERA_MAX ? CRESCITA.miniera.prezzo[m] : null
@@ -379,10 +380,14 @@ export class Partita {
     return true
   }
 
-  /* la bomba: si sceglie da sola il punto dove le truppe nemiche sono più fitte (e più vive) e le
-     spazza via. Non costa monete: ne arriva una ogni BOMBA.ogni secondi (`BOMBA`). */
+  /* la bomba è un'ARMA DIFENSIVA: colpisce solo le truppe nemiche che sono entrate nella metà di chi
+     la lancia (fra il fiume e il suo castello), nel punto dove sono più fitte (e più vive). Un'arma
+     che colpisse ovunque servirebbe a poco: spazzerebbe truppe lontane che non fanno ancora danno.
+     Non costa monete: ne arriva una ogni BOMBA.ogni secondi (`BOMBA`). */
   puntoDellaBomba(lato) {
-    const nemici = this.unita.filter(u => u.lato === altro(lato) && viva(u))
+    const meta = (CAMPO.fiume.alto + CAMPO.fiume.basso) / 2
+    const nelMioCampo = u => (lato === 'io' ? u.y > meta : u.y < meta)
+    const nemici = this.unita.filter(u => u.lato === altro(lato) && viva(u) && nelMioCampo(u))
     let meglio = null, peso = 0
     for (const c of nemici) {
       const p = nemici.reduce((s, u) => s + (Math.hypot(u.x - c.x, u.y - c.y) <= BOMBA.raggio ? Math.min(u.hp, BOMBA.dmg) : 0), 0)

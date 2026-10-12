@@ -104,7 +104,7 @@ export function dettaglioAzione(azione, { miniera = 1, castello = 1 } = {}) {
       prezzo: 0,
       righe: [{ nome: 'Ne arriva una ogni', ora: `${BOMBA.ogni} s`, dopo: null },
               { nome: 'Ne puoi tenere', ora: String(BOMBA.max), dopo: null },
-              { nome: 'Spazza', ora: 'le truppe nemiche più vicine fra loro', dopo: null }],
+              { nome: 'Colpisce', ora: 'le truppe nemiche arrivate nella tua metà, dove sono più fitte', dopo: null }],
     }
   }
   // ripara: non ha livelli

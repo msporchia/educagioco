@@ -68,7 +68,7 @@ const scalino = computed(() => scalinoDi(tappa.value))
 const siGioca = computed(() => vista.value === 'campo' && !domanda.value && !finale.value && !dettaglio.value)
 
 function vuoto() {
-  return { resto: 0, monete: 0, alSecondo: 0, baseIo: 100, baseNem: 100, castello: 1, miniera: 1 }
+  return { resto: 0, monete: 0, alSecondo: 0, castello: 1, miniera: 1 }
 }
 
 const dovEravamo = computed(() => {
@@ -180,7 +180,7 @@ function aggiornaCruscotto() {
   if (!p) return
   cruscotto.value = {
     resto: p.resto, monete: Math.floor(p.lati.io.monete), alSecondo: p.alSecondo('io'),
-    baseIo: Math.round(p.vitaBase('io') * 100), baseNem: Math.round(p.vitaBase('nem') * 100), castello: p.castello('io').liv, miniera: p.lati.io.miniera,
+    castello: p.castello('io').liv, miniera: p.lati.io.miniera,
   }
   pannello.value = costruisciPannello(p)
 }

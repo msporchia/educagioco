@@ -9,6 +9,7 @@ chi ci lavora. Cartella `src/giochi/arena/` (la chiave del gioco è `arena`;
 - [regole.md](regole.md) — il campo a una corsia, le caserme, le scelte, la torretta e la base, perché i numeri sono quelli
 - [calcoli.md](calcoli.md) — come una scelta diventa una domanda: operazione per truppa, la grandezza dal prezzo, il campo che rallenta
 - [campagna.md](campagna.md) — le dodici tappe, quando arriva ogni operazione, le stelle
+- [nemico.md](nemico.md) — l'IA: le scalette, l'emergenza, cosa fa quando perde, perché non lascia monete ferme
 - [taratura.md](taratura.md) — il giocatore finto, cosa promette la campagna e come si rimisura
 - [sosta.md](sosta.md) — la battaglia lasciata a metà: cosa si salva e cosa no
 - [grafica.md](grafica.md) — la corsia verticale, gli sprite del castello che si riusano e quelli che mancano

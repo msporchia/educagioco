@@ -28,7 +28,6 @@ const NOME = { miniera: 'Più monete', ripara: 'Ripara', castello: 'Castello', b
   <div class="ar-campo">
     <div class="ar-hud em">
       <span class="ar-gettone">⏱️ <b>{{ orologio }}</b></span>
-      <span class="ar-gettone" data-castelli title="la vita dei due castelli">🏰 <b>{{ cruscotto.baseIo }}%</b> – <b>{{ cruscotto.baseNem }}%</b></span>
     </div>
 
     <div class="ar-quadro">

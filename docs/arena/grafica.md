@@ -16,7 +16,9 @@ e `vestiti.js`): non c'è un foglio nuovo.
   lupo, diavoletto, pipistrello, negromante, golem, drago. Lupo e drago hanno
   i passi di lato (6 fotogrammi); le altre il respiro (4) e uno scatto in
   avanti quando colpiscono, un saltello quando camminano.
-- **Le barre della vita si vedono solo sul ferito** (castello, caserme, muro,
+- **La vita dei castelli sta SOPRA i castelli**, in una barra grande e sempre accesa, con
+  il numero scritto: nella striscia in alto («🏰 100% – 100%») non si capiva di quale
+  castello parlasse. **Le altre barre della vita si vedono solo sul ferito** (caserme, muro,
   truppe): con la barra sempre accesa una caserma ne aveva una sopra e una
   sotto (la squadra che si riempie), e non si capiva quale dicesse cosa. La
   squadra in arrivo sta nella carta in basso, non sul campo.

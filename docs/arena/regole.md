@@ -67,12 +67,15 @@ Costano monete di battaglia e un calcolo, come le caserme.
 ## La bomba: un regalo, non un acquisto
 
 Ogni 40 secondi ne arriva una a tutti e due (se ne tengono al massimo due). Si lancia
-con un calcolo di divisione ma **non costa monete**, e il gioco sceglie il punto dove
-le truppe nemiche sono più fitte (e più vive): le spazza (raggio 95, 700 di danno).
+con un calcolo di divisione ma **non costa monete**. **È un'arma difensiva**: colpisce
+solo le truppe nemiche entrate nella *tua* metà (fra il fiume e il tuo castello), nel
+punto dove sono più fitte e più vive (raggio 95, 700 di danno). Una bomba che colpisse
+ovunque servirebbe a poco: spazzerebbe truppe lontane che non fanno ancora danno
+(l'utente: «un'arma difensiva non offensiva, altrimenti non serve a nulla»).
 Perché in regalo e non da comprare: è il «reset» per quando uno ha una forza
 schiacciante e va avanti per inerzia, e chi è già indietro non ha le monete per una
-cosa da comprare («non ne esci»). Il nemico la usa quando ha davanti un ammasso che
-vale la pena spazzare; il giocatore finto idem (`motore/banco.js`).
+cosa da comprare («non ne esci»). Il nemico la usa quando un ammasso di tue truppe entra nella
+sua metà (vedi [nemico.md](nemico.md)); il giocatore finto idem (`motore/banco.js`).
 
 ## La durata
 

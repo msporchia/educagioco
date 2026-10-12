@@ -57,7 +57,8 @@ export class Pilota {
     if (colpo && colpo.peso >= 700) return ['bomba']
     const ferite = p.riparabili('io').filter(e => e.hp < e.max * 0.5)
     if (ferite.length && puo('ripara')) return ['ripara']
-    const crollato = p.muro('io').hp <= 0
+    const muro = p.muro('io')
+    const crollato = !!muro && muro.hp <= 0
     if (crollato && puo('ripara')) return ['ripara']
     if (t.hp > 0 && t.liv < 3 && puo('castello')) return ['castello']
     if (p.t < 45 && p.lati.io.miniera < 2 && puo('miniera')) return ['miniera']

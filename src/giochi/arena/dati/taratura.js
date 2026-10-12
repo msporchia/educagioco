@@ -6,18 +6,18 @@
    bravo), cercata per bisezione perché il bambino di prova vinca la quota
    che la tappa promette. Vedi docs/arena/taratura.md. */
 export const NEMICO = {
-  scaramuccia: { d: 0.447, moneteAlSecondo: 0.397, pensa: 2.29, forza: 0.746 },
-  ponte: { d: 0.503, moneteAlSecondo: 0.432, pensa: 2.19, forza: 0.777 },
-  radura: { d: 0.297, moneteAlSecondo: 0.304, pensa: 2.52, forza: 0.663 },
-  melma: { d: 0.403, moneteAlSecondo: 0.37, pensa: 2.35, forza: 0.722 },
-  guado: { d: 0.434, moneteAlSecondo: 0.389, pensa: 2.3, forza: 0.739 },
-  canneto: { d: 0.453, moneteAlSecondo: 0.401, pensa: 2.27, forza: 0.749 },
-  valico: { d: 0.428, moneteAlSecondo: 0.385, pensa: 2.31, forza: 0.735 },
-  ghiaccio: { d: 0.434, moneteAlSecondo: 0.389, pensa: 2.3, forza: 0.739 },
-  tormenta: { d: 0.453, moneteAlSecondo: 0.401, pensa: 2.27, forza: 0.749 },
-  cratere: { d: 0.478, moneteAlSecondo: 0.416, pensa: 2.23, forza: 0.763 },
-  fucina: { d: 0.491, moneteAlSecondo: 0.424, pensa: 2.21, forza: 0.77 },
-  trono: { d: 0.497, moneteAlSecondo: 0.428, pensa: 2.21, forza: 0.773 },
+  scaramuccia: { d: 0.416, moneteAlSecondo: 0.378, pensa: 2.33, forza: 0.729 },
+  ponte: { d: 0.391, moneteAlSecondo: 0.362, pensa: 2.38, forza: 0.715 },
+  radura: { d: 0.409, moneteAlSecondo: 0.374, pensa: 2.34, forza: 0.725 },
+  melma: { d: 0.353, moneteAlSecondo: 0.339, pensa: 2.44, forza: 0.694 },
+  guado: { d: 0.428, moneteAlSecondo: 0.385, pensa: 2.31, forza: 0.735 },
+  canneto: { d: 0.578, moneteAlSecondo: 0.478, pensa: 2.08, forza: 0.818 },
+  valico: { d: 0.591, moneteAlSecondo: 0.486, pensa: 2.05, forza: 0.825 },
+  ghiaccio: { d: 0.603, moneteAlSecondo: 0.494, pensa: 2.03, forza: 0.832 },
+  tormenta: { d: 0.653, moneteAlSecondo: 0.525, pensa: 1.95, forza: 0.859 },
+  cratere: { d: 0.678, moneteAlSecondo: 0.54, pensa: 1.91, forza: 0.873 },
+  fucina: { d: 0.678, moneteAlSecondo: 0.54, pensa: 1.91, forza: 0.873 },
+  trono: { d: 0.678, moneteAlSecondo: 0.54, pensa: 1.91, forza: 0.873 },
 }
 // la firma dell'equilibrio al momento della taratura (motore/firma.js): se non torna, rilancia la taratura
-export const FIRMA = '1uusd90'
+export const FIRMA = 'whg98y'

@@ -45,7 +45,7 @@
 
 /* il campo: il quadro (3:2, sempre intero) e il pannello sotto */
 .ar-campo { flex: 1; min-height: 0; display: flex; flex-direction: column; background: #16203a; color: #fff }
-.ar-hud { display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 6px 8px }
+.ar-hud { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 6px 8px }
 .ar-gettone { background: #0006; border-radius: 999px; padding: 4px 10px; font-size: 14px;
               display: inline-flex; align-items: center; gap: 4px; white-space: nowrap }
 /* la striscia delle monete, fra il campo e le scelte */
@@ -57,7 +57,7 @@
 /* il quadro è alto quanto lascia il pannello (barra e striscia in alto, tre righe di carte sotto) e largo 2:3 */
 .ar-quadro { position: relative; height: calc(100dvh - 432px); min-height: 280px; aspect-ratio: 2 / 3; max-width: 100%; margin: 0 auto; touch-action: none }
 .ar-tela { display: block; width: 100%; height: 100% }
-.ar-dritta, .ar-avviso { position: absolute; left: 50%; top: 8px; transform: translateX(-50%);
+.ar-dritta, .ar-avviso { position: absolute; left: 50%; top: 12%; transform: translateX(-50%);
             white-space: nowrap; font-weight: 800; font-size: 14px; padding: 7px 14px; border-radius: 999px;
             background: #ffd24a; color: #3a2400; box-shadow: 0 4px 14px #0007; pointer-events: none }
 .ar-avviso { background: #101a44e8; color: #fff; border: 2px solid #ffe98a }
