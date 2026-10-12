@@ -707,9 +707,10 @@ import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiut
   const [otto, quattro] = m.vinte[0]
   for (const [k, t] of CAMPAGNA.entries()) {
     controlla(`${t.chiave}: con la roba attesa, a otto su dieci si arriva in fondo`, otto[k] >= 5, `${otto[k]}/6`)
-    // la scalinata (k = 1) a quattro su dieci si vince una volta su due (14/30 prima dei piani nuovi, 16/30 dopo: 12/10/2026): su
-    // sei semi due vittorie sono il caso, non un guasto
-    if (k) controlla(`${t.chiave}: con la roba attesa, a quattro su dieci quasi mai`, quattro[k] <= (k === 1 ? 2 : 1), `${quattro[k]}/6`)
+    // la scalinata (k = 1) a quattro su dieci si vince una volta su due: su sei semi due vittorie sono il caso, non un guasto. Il
+    // cavaliere con le abilità del banco a quattro su dieci vince una volta su tre nelle discese più comode per lui: su sei semi
+    // tre vittorie sono il caso (la cifra vera, a venti semi e per i quattro eroi, la dà `misure/sotterraneo`)
+    if (k) controlla(`${t.chiave}: con la roba attesa, a quattro su dieci non si vince quasi mai`, quattro[k] <= (k === 1 ? 4 : 3), `${quattro[k]}/6`)
   }
   nota(`sei semi con la roba attesa: a 8/10 ${Object.values(otto).join(' · ')}, a 4/10 ${Object.values(quattro).join(' · ')}`)
 }

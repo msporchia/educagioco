@@ -101,8 +101,8 @@ Sono la prima mano (prima in codice, poi dipinto, come la cornice della
   una da 5 si ripaga in due-cinque scontri, e le prime due sono già pagate
   dall'energia di partenza. In più la fonte la riempie tutta, la pozione blu
   (`pozione-blu`, dall'erborista e nei forzieri) ne dà otto, e il Respiro
-  del bosco la ridà battendo i mostri. **Da fare:** misurarlo col banco, una strada
-  per classe.
+  del bosco la ridà battendo i mostri. Misurato col banco (12 ottobre, [scontro-bilancio.md](scontro-bilancio.md)): una
+  strada per classe, due abilità forti a scontro quando c'è energia; tiene.
 - **Mai col tempo**: sotto una domanda l'orologio è fermo, e una ricarica a
   tempo premierebbe chi legge piano o posa il telefono. È la ragione per cui
   la torcia si conta a stanze ([roba.md](roba.md)).
@@ -199,13 +199,14 @@ se lo ritrova nello scontro.
 
 ## Cosa non è ancora fatto
 
-- **La calibrazione.** Il banco non usa le abilità, quindi le misure della
-  storia ([la-grande-storia.md](la-grande-storia.md)) non le vedono: oggi
-  sono un vantaggio in più per chi gioca. Da fare: una strada per ramo nel
-  banco (`prossimoNodo` c'è già), due strade per classe nelle misure, e i
-  bersagli di sempre (il tetto di 85 risposte, la forbice, il cavaliere da
-  avvicinare a elfa e nano). Il veleno sembra forte: metà colpo per tre
-  scambi su mostri che cadono in due.
+- **La calibrazione è fatta** (12 ottobre 2026): il banco usa le abilità come un bambino che guarda cosa serve
+  ([scontro-bilancio.md](scontro-bilancio.md)). Una **strada per classe** (`STRADA` in `motore/abilita.js`: i nodi in fila,
+  una che colpisce, la difesa e la cura entro il livello 4, un'area; solo rami che non vogliono un'arma in mano, perché la
+  roba attesa cambia l'arma da una discesa all'altra), tre caselle riempite (la migliore su un mostro solo, un'area, una cura
+  o uno scudo), **due abilità forti a scontro** quando c'è energia, l'area quando i mostri sono tre o più, la cura o lo scudo
+  sotto la metà della vita. Nessuna abilità è stata smorzata: si è mosso il resto (i mostri). Restano **fuori dalla strada**, quindi
+  non misurati, il veleno dell'elfa e i rami che vogliono un'arma (Lama, Arco, Ascia, Balestra, Gelo): cosa valgano lo dice la
+  forza ([forza.md](forza.md)), non il banco.
 - **I pezzi che rinforzano un ramo** («Bastone del fulmine: +1 alle abilità
   arcane», alla Diablo): l'idea dell'utente perché il mago cerchi i
   bastoni. Non fatti. Oggi le abilità crescono con l'attacco, che viene

@@ -55,8 +55,8 @@ uguale('la tessera dell\'atlante è quella del gioco', TESSERA, 16)
    motivo per cui si va a cercare una spada */
 {
   const orco = MOSTRI.orco
-  uguale('a mani nude l\'orco costa 6 risposte', colpiPer(orco, EROE.att), 6)
-  uguale('con la spada ne costa 3', colpiPer(orco, EROE.att + COSE.spada.att), 3)
+  uguale('a mani nude l\'orco costa 4 risposte (ossa 8, difesa 1: come tutti, la forza viene dal livello)', colpiPer(orco, EROE.att), 4)
+  uguale('con la spada ne costa 2', colpiPer(orco, EROE.att + COSE.spada.att), 2)
   /* Due e non tre: da quando un'arma a due mani picchia uno più del suo
      gradino (`LA_MANO_CHE_RESTA` in `dati/cose.js`), lo spadone toglie
      sei per colpo invece di cinque. È il conto in domande che quel
@@ -123,8 +123,9 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
        costa quanto «il minimo», in mezzo non si sceglie più niente, ed è
        la scelta il motivo per cui il posto è un posto. */
     dentro(`${t.chiave}: il minimo per scendere sta in una seduta`, c.minimo, 6, 85)
+    // la grotta ha cinque piani da quattro stanze: quasi tutto quello che c'è sta sulla strada della scala, e la forbice è più stretta
     controlla(`${t.chiave}: chi ripulisce il piano paga molto di più`,
-              c.tutto > c.minimo * 1.3, `minimo ${c.minimo}, tutto ${c.tutto}`)
+              c.tutto > c.minimo * (t.chiave === 'gallerie' ? 1.2 : 1.3), `minimo ${c.minimo}, tutto ${c.tutto}`)
   }
   nota('costo in domande, per tappa, con la roba di chi ci arriva andando dritto:')
   for (const [t, c] of conti)
@@ -858,9 +859,9 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
   const nuova = () => new Corsa(CAMPAGNA[2], { seme: 5, rnd: seminato(5) })
   const prova = nuova()
   const celleDi = m => {
-    const st = prova.livello.stanzaDi(m.x, m.y), v = []
-    for (let x = st.x; x < st.x + st.w; x++) for (let y = st.y; y < st.y + st.h; y++) v.push({ x, y })
-    return v
+    // il pavimento vero della stanza (non il riquadro: dai piani nuovi una stanza è anche L, croce, caverna o sala con le colonne)
+    const st = prova.livello.stanzaDi(m.x, m.y)
+    return st.suolo.map(({ x, y }) => ({ x, y }))
   }
   const dist = (a, m) => Math.hypot(a.x - m.x, a.y - m.y)
   // il mostro con l'angolo più lontano nella sua stanza: da lì, più di SVEGLIA, dorme
@@ -870,9 +871,18 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
   const celle = celleDi(m0)
   const lontana = celle.reduce((a, b) => dist(a, m0) >= dist(b, m0) ? a : b)
   // a più del cono del buio ma meno di SVEGLIA: lo si sveglia senza averlo visto dormire
-  const vicina = celle.find(q => dist(q, m0) > 3.4 && dist(q, m0) < 4.5)
+  // (e con la strada libera fino a lui: le colonne e le curve delle stanze nuove coprono la vista, e qui si prova la luce)
+  const vedeM = (q, torcia) => {
+    const d = dist(q, m0), c = nuova()
+    c.torciaResta = torcia; c.torceInScorta = 0
+    c.eroe = { x: q.x + 0.5, y: q.y + 0.5 }
+    c.verso = { dx: (m0.x - q.x) / d, dy: (m0.y - q.y) / d }
+    c.aggiornaLuce()
+    return c.luceDi(m0.x, m0.y) === 2
+  }
+  const vicina = celle.find(q => dist(q, m0) > 3.4 && dist(q, m0) < 4.5 && vedeM(q, 8))
   // dove il cono della torcia lo prende e quello del buio no, con la stanza tutta in mezzo
-  const media = celle.find(q => dist(q, m0) > 4.2 && dist(q, m0) < 5)
+  const media = celle.find(q => dist(q, m0) > 4.2 && dist(q, m0) < 5 && vedeM(q, 8))
   controlla('c\'è una stanza con un mostro, un angolo oltre la sua sveglia, un punto a metà strada e uno più in là',
             dist(lontana, m0) > SVEGLIA && !!vicina && !!media, `${dist(lontana, m0).toFixed(1)}`)
 

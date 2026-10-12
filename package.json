@@ -11,6 +11,7 @@
     "tara": "node strumenti/tara-castello.mjs",
     "dps": "node strumenti/dps-castello.mjs",
     "pianta": "node strumenti/sotterraneo-pianta.mjs",
+    "sotterraneo": "node strumenti/sotterraneo-banco.mjs",
     "vetrina": "vite --open /strumenti/banco/vetrina.html",
     "mondo": "vite --open /strumenti/banco/mondo.html",
     "storie": "vite --open /strumenti/banco/storie.html",

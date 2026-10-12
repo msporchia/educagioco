@@ -58,7 +58,7 @@ export const MISSIONI = [
     dice: 'Un ratto grosso come un cane mi ruba la farina e scappa sotto la torre in rovina. Si chiama Rosicchione, e sta al secondo piano.',
     grazie: 'Niente più farina rubata! Questo amuleto me l\'ha lasciato un viandante: a te servirà più che a me.',
     ritorno: 'Stamattina nel mulino non manca un chicco. Che ne è stato di Rosicchione?',
-    premio: { cosa: 'amuleto-azzurro', monete: 2 } },
+    premio: { cosa: 'amuleto-azzurro', monete: 1 } },
 
   { id: 'chiavi', da: 'guardia', discesa: 'torre', piano: 2, tipo: 'trova',
     cosa: { nome: 'Il mazzo di chiavi della torre', em: '🔑' },
@@ -75,7 +75,7 @@ export const MISSIONI = [
     dice: 'Il goblin che mi ha rubato la collana non ha smesso: adesso fa il ladro sotto la torre in rovina, al primo piano. Lo chiamano Grattanaso. Fermalo, ti prego.',
     grazie: 'Grattanaso non ruberà più niente al villaggio! Prendi queste gemme: le tenevo da parte per la nonna.',
     ritorno: 'Al villaggio non sparisce più niente. Grattanaso?',
-    premio: { gemme: 10, monete: 2 } },
+    premio: { gemme: 10 } },
 
   { id: 'ascia', da: 'boscaiolo', discesa: 'gallerie', piano: 3, tipo: 'trova',
     cosa: { nome: 'L\'ascia di mio padre', em: '🪓' },
@@ -116,7 +116,7 @@ export const MISSIONI = [
     dice: 'Sotto la botola segreta vive un lupo vecchio e furbo, Zannagrigia: al secondo piano. Di notte esce e ulula sotto la torre.',
     grazie: 'Stanotte niente ululati! Prendi queste gemme: le tenevo per una spada nuova, ma la spada la usi meglio tu.',
     ritorno: 'Stanotte niente ululati sotto la torre. Zannagrigia?',
-    premio: { gemme: 30, monete: 2 } },
+    premio: { gemme: 30, monete: 1 } },
 
   // il seguito di Rosicchione: la farina che il ratto non ha rosicchiato è finita più lontano
   { id: 'sacco', da: 'mugnaio', discesa: 'labirinto', piano: 0, tipo: 'trova',

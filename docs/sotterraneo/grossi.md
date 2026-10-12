@@ -25,7 +25,8 @@ nello scontro e nella barra in cima).
 | la miniera abbandonata | Carbonchio | il re scheletro di brace | `mostro-grosso` (il gigante) | il Martello di Carbonchio (attacco, fuoco) |
 
 - **Si regge su un mostro del bestiario** (`tipo`: lo scheletro, l'orco, il
-  troll, il gigante) con le ossa moltiplicate (`ossa`: da 1,1 a 1,3) e un
+  troll, il gigante) con le ossa moltiplicate (`ossa`: da 1,1 a 1,3, e 1,9 e 1,95 per Grumo e Zannaverde, che si reggono sull'orco: da quando le specie di
+  strada hanno tutte otto ossa l'orco ne ha 8 e non 12, e il grosso è rimasto com'era) e un
   colpo in più (`att`, Re Ossuto no); poi la discesa lo cresce come gli altri
   (`forza`, `spinta`). Re Ossuto è il più tenero: la cripta perdona.
 - **I suoi pezzi non hanno famiglia**: li porta chiunque, perché il mostro
@@ -93,7 +94,7 @@ nello scontro e nella barra in cima).
 
 - **L'esperienza**: tre volte quella della sua specie (`ESP_DEL_CAPO`), che è
   spesso il livello che si prende in una discesa.
-- **Le domande**: con la roba e il livello attesi Re Ossuto chiede da tre a
+- **Le domande** (misurate prima del 12 ottobre, con i mostri di strada di allora; il grosso non è cambiato): con la roba e il livello attesi Re Ossuto chiede da tre a
   sei risposte giuste, Grumo e Fiammetta da cinque a otto, Gorgo da otto a
   undici, Carbonchio da undici a sedici (il mago e l'elfa, che picchiano di
   più, stanno in basso). Provato con le ossa fino a 1,9: oltre venti

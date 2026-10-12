@@ -35,8 +35,8 @@ dell'abisso sta in [abisso-progetto.md](abisso-progetto.md).
   pronto nella scheda
   `strumenti/sprite/sorgenti/sotterraneo/generati/PROMPT-scenario.md`, da
   fare come la cripta: la scena, poi i pezzi che mancano nella stessa chat.
-  Poi i foglietti, una voce in `SCENARI`, un branco in `BRANCHI` e un tratto
-  in `TRATTI_DELL_ABISSO` (vedi [scenari.md](scenari.md) e
+  Poi i foglietti, una voce in `SCENARI` e un tratto
+  in `TRATTI_DELL_ABISSO` (con la sua coppia di mostri) (vedi [scenari.md](scenari.md) e
   [abisso.md](abisso.md#il-posto-cambia-scendendo)).
 - **Un secondo stile di cripta**: il sotterraneo è andato avanti (storia
   a discese, missioni, abisso) e c'è una base da cui scendere, quindi un
@@ -48,14 +48,6 @@ dell'abisso sta in [abisso-progetto.md](abisso-progetto.md).
   lista in `dati/orpelli.js` ([arredo.md](arredo.md)); un posto nuovo ne vuole una, a fogli fitti.
 - **La fontana della cripta** è ancora quella di `sotterraneo_3.png`, piena e
   asciutta: quella del foglio dei pezzi è a muro, e bevendo cambierebbe forma.
-- **Un mostro di quinta fascia per ogni posto**: oggi il golem sta in tutti
-  i branchi, e cantine e cripta si separano solo fino alla quarta. Con un
-  terzo posto conviene anche una seconda faccia per le fasce che ne hanno una
-  sola (il ratto nelle cantine, pipistrello, fantasma e scheletro nella
-  cripta).
-- **I guardiani dell'abisso per posto**: la scaletta è misurata e non guarda
-  il tratto, quindi lo scheletro fa la guardia alle cantine. Da rifare sul
-  banco insieme al bottino graduato.
 - **Il suono**: c'è il minimo (passo, colpo, errore, il graffio). Col suono
   spento il gioco deve restare intero.
 

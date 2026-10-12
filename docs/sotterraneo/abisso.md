@@ -44,7 +44,7 @@ quella di sempre.
 
 - **`L_ABISSO`** in `dati/campagna.js`: `abisso: true`, `piani: Infinity`
   (così `allaScala()` e `scendi()` non chiudono mai la discesa), `dif`,
-  `guardiani`, `capo`, `attOgni`, `forme`. **`INDICE_ABISSO` = −1** è il suo
+  `forza`, `spinta`, `ossaPerPiano`, `capo`, `attOgni`, `forme`. **`INDICE_ABISSO` = −1** è il suo
   indice, e **`tappaDi(indice)`** è l'unico posto che lo traduce:
   `CAMPAGNA[-1]` è `undefined`, e un `undefined` dentro una `Corsa` dà una
   discesa senza numeri e nessun errore.
@@ -92,10 +92,16 @@ difficile da sopravvivere**: la progressione sta tutta sulle altre leve.
 ## Come crescono i mostri
 
 ```
-ossa = base.ossa × (1 + p · 0,22)     OSSA_PER_PIANO
-att  = base.att  + floor(p / 3)       attOgni: 3 (la campagna resta a 2)
-dif  = base.dif                       ferma per sempre
+ossa = base.ossa × forza × (1 + p · 0,12)     forza 5, ossaPerPiano 0,12
+att  = base.att  + spinta + floor(p / 3)      spinta 12, attOgni 3 (la campagna resta a 2)
+dif  = base.dif                               ferma per sempre
 ```
+
+I mostri dell'abisso sono quelli di una zona, un po' più deboli ([zone.md](zone.md)): le specie hanno tutte le stesse ossa e la
+forza viene dal livello ([mostri.md](mostri.md#le-coppie-12-ottobre-2026)), quindi `forza` e `spinta` sono quelle di una zona
+verso il livello 12 (l'abisso si apre a chi esce dalla storia) e il piano le fa crescere. Tarate col banco sull'eroe che esce dalla
+storia ([scontro-bilancio.md](scontro-bilancio.md)). Prima (fino al 12 ottobre) i mostri partivano deboli e la fascia saliva con la
+profondità, e si poteva scendere nudi; adesso nudi non è più un modo di entrare.
 
 **Il costo di un mostro in domande è una costante; quello che cresce è il
 prezzo di restare indietro.** Era il mestiere che il Dungeon, tolto il 6
@@ -110,20 +116,10 @@ raggiunge.
 
 ## I guardiani
 
-**`guardiani: ['scheletro', 'scheletro', 'orco', 'granchio', 'orco', 'golem',
-'golem']`, poi il gigante per sempre** (`guardianoDi` ripiega su `capo`).
-
-- **I primi due piani li guarda lo scheletro**: misurato quando si entrava
-  nudi, e con l'orco si sveniva due volte sul primo piano prima di aver
-  trovato un'arma.
-- Spostare **da quale piano compare il gigante** non cambia quasi niente
-  (media 5,2 → 6,0 fra il piano 3 e il 9): a fermare la discesa è il non
-  avere un'arma, non il capo.
-- Il bestiario a cinque fasce (vedi [regole.md](regole.md)) fa sì che per
-  strada, fra una scala e l'altra, si incontri qualcosa di diverso per tutta
-  la discesa; il golem, quinta fascia, si vede solo quaggiù. Col bestiario il
-  patto della campagna non si è mosso: venti su venti su cinque tappe,
-  diciannove su venti sul labirinto.
+**Il guardiano di ogni piano è la specie più dura della coppia del tratto, fatta caporale** (`guardianoDi`: ossa ×1,25 e un colpo
+in più), e ogni cinque piani c'è un mostro grosso (`GROSSO_OGNI`). Prima c'era una scaletta fissa (`guardiani: ['scheletro',
+'scheletro', 'orco', …]`, poi il gigante) misurata a mano: spostare dove compare il gigante cambiava poco, a fermare la discesa
+era il non avere un'arma, non il capo. Adesso ogni piano ha il guardiano del posto in cui è.
 
 ## Il posto cambia scendendo
 
@@ -132,27 +128,18 @@ raggiunge.
 dal 5° all'8°, la fornace dal 9° in poi, **e l'ultimo posto resta per sempre**:
 un abisso senza fondo non ha un giro da rifare, e la fornace è l'ultima
 tappa visiva. Un posto è **uno scenario**
-(come si disegna, `SCENARI` in `dati/tessere.js`) **e un branco** (chi si
-incontra per strada, `BRANCHI` in `dati/mostri.js`); la riga sotto il campo
-dice dove si è («la cripta · piano 7»).
+(come si disegna, `SCENARI` in `dati/tessere.js`) **e una coppia di mostri** (chi si incontra per strada, `mostri` del tratto in
+`dati/campagna.js`: ratti e melme nelle cantine, scheletri e fantasmi nella cripta, golem e pipistrelli nella fornace); la riga
+sotto il campo dice dove si è («la cripta · piano 7»).
 
 - **Un abisso solo, non uno per posto**: due abissi vorrebbero due record,
   due soste e due corredi, e ognuno mostrerebbe metà dei mostri. Scendendo
   invece il posto nuovo è un traguardo che si vede.
-- **Un branco ha le cinque fasce di `BRANCO`, e ogni mostro sta nella fascia
-  che ha lì** (`guastiDeiMostri` lo pretende): cambiare posto cambia le
-  facce, non la fatica. Le cantine hanno le bestie (ratto, goblin, melma,
-  fungo, vespone, granchio, serpente), la cripta i morti e la notte
-  (pipistrello, fantasma, scheletro, orco, lupo), la fornace i diavoletti e le
-  bestie del fuoco (pipistrello, goblin, melma, scheletro, vespone, orco,
-  serpente). Il golem sta in tutti e tre
-  finché la quinta fascia ha un mostro solo.
-- **La campagna incontra tutto il bestiario**: le sette discese sono dove i
-  mostri si imparano, e cambiarne il branco ritarerebbe tappe misurate.
-- **I guardiani restano quelli della scaletta**, che è misurata: lo scheletro
-  a guardia delle cantine è un mostro della cripta.
-- **Un posto nuovo** è una voce in `SCENARI`, una in `BRANCHI` e una riga in
-  `TRATTI_DELL_ABISSO`; `guastiDelleTessere` e `guastiDellAbisso` dicono se
+- **Un posto cambia le facce, non la fatica**: la forza dipende dal piano, non dalla coppia (un golem della fornace al piano 9
+  costa quanto un ratto delle cantine al piano 9, a meno della forma).
+- **Le discese della campagna hanno la loro coppia**, per ambientazione ([mostri.md](mostri.md)).
+- **Un posto nuovo** è una voce in `SCENARI` e una riga in
+  `TRATTI_DELL_ABISSO` (con la sua coppia); `guastiDelleTessere` e `guastiDellAbisso` dicono se
   ne manca un pezzo. Il piano resta una funzione del numero: rientrando si
   ritrova lo stesso posto.
 
@@ -213,46 +200,37 @@ dall'abisso.
 
 ## Fin dove regge, oggi
 
-Il bottino non ha gradi: l'eroe si ferma al gradino 3 delle armi, i mostri no.
-Sei semi, bravura 0,8:
+Si entra come si esce dalla storia: la roba e il livello dell'ultima riga ([la-grande-storia.md](la-grande-storia.md)), non più
+nudi (i mostri hanno la forza di una zona, [mostri.md](mostri.md): nudi non è un modo di entrare). Sei semi, bravura 0,8,
+`npm run sotterraneo -- --abisso`:
 
-| come si scende | fin dove si arriva |
-|---|---|
-| con l'equipaggiamento migliore (spadone, corazza, anello) | 8 · 9 · 9 · 11 · 12 · 13 — **media 10,3** (due o tre sere) |
-| con la roba di chi ha finito le sei andando dritto (`robaPer(6)`, ⚔️7 🛡️3) | 8 · 8 · 9 · 10 · 10 · 11 — media 9,3 |
-| nudi, dritti alla scala | dal 3 al 13, mediana **5** |
-| nudi, ripulendo ogni piano | 6 quasi sempre: un 52×52 profondo giocato tutto sono venti battaglie, ognuna un graffio |
+| chi scende | fin dove arriva (sei semi, 31 = oltre il tetto di 30 piani) | media |
+|---|---|---|
+| Cavaliere | 6 · 6 · 22 · 23 · 31 · 31 | 19,8 |
+| Elfa | 6 · 7 · 11 · 15 · 16 · 21 | 12,7 |
+| Mago | 3 · 6 · 6 · 11 · 14 · 31 | 11,8 |
+| Nano | 6 · 6 · 15 · 16 · 31 · 31 | 17,5 |
 
-**Il costo di un piano non cresce** — domande obbligate dal 1° all'11°: 10 ·
-6 · 19 · 13 · 18 · 25 · 15 · 15 · 10 · 17 · 16 — e la forbice fra «il minimo»
-e «tutto» resta oltre il doppio (misurata col cavaliere al livello 12, quello
-con cui all'abisso si arriva: dai requisiti delle armi un eroe di livello 1 non
-impugna il bottino dell'abisso, [livelli.md](livelli.md#i-requisiti-delle-armi)).
-Il 6 è un piano fortunato (guardiano a due
-stanze dall'ingresso): il generatore non promette dove mette la scala, e la
-soglia del test è larga in basso apposta.
+Prima (con la roba di chi ha finito le sei, andando dritto) si arrivava al piano 8–11, media 9,3, e nudi dal 3 al 13, mediana 5.
+Adesso la mediana è tra l'11 e il 16 e i due più robusti qualche volta non si fermano: il cavaliere e il nano hanno la vita e le
+cure che durano. Il patto del test resta «almeno tre piani».
 
-**La difesa vale più dell'attacco, quaggiù**: il colpo del mostro si prende a ogni
-suo turno, quindi un punto di difesa vale il doppio di un punto di vita. Nudi,
-sei semi:
+**Il costo di un piano non cresce** (il cavaliere che esce dalla storia, seme 41): domande obbligate dal 1° all'11°: 5 · 4 · 12 ·
+12 · 12 · 10 · 5 · 10 · 17 · 16 · 25, e la seconda metà costa 1,5 volte la prima, sotto il 1,6 del test. I primi due piani costano poco
+(la scalinata di un abisso che parte morbido: i ratti), e il test li accetta da 3 a 30 (prima da 5). La forbice fra «il minimo» e
+«tutto» resta oltre il doppio (il cavaliere con la roba dell'ultima riga).
 
-| chi scende | fin dove arriva |
-|---|---|
-| Nano (❤️20 ⚔️3 🛡️2) | 4 · 6 · 6 · 8 · 13 · 13 |
-| Elfa (❤️15 ⚔️4 🛡️1) | 3 · 4 · 5 · 6 · 11 · 13 |
-| Mago (❤️12 ⚔️5 🛡️0) | 4 · 4 · 5 · 5 · 6 · 6 |
-| Cavaliere (❤️18 ⚔️3 🛡️1) | 3 · 4 · 4 · 4 · 6 · 11 |
-
-Il cavaliere, che in campagna perdona di più, qui si ferma per primo. Non è
-un guasto, ma è la riga da guardare col bottino graduato: se la corazza cresce
-come l'arma, il divario si allarga.
+**La difesa vale più dell'attacco, quaggiù**: il colpo del mostro si prende a ogni suo turno, quindi un punto di difesa vale il
+doppio di un punto di vita. Il mago (la vita più bassa) è quello che arriva meno in fondo (media 11,8, mediana 8,5); il cavaliere e il nano, che durano, arrivano
+più in fondo. Non è un guasto, ma è la riga da guardare col bottino
+graduato.
 
 ## Dove guardare
 
 - `dati/campagna.js` — `L_ABISSO`, `INDICE_ABISSO`, `tappaDi`, `durezzaDi`,
   `guardianoDi`, `formaDi`, `crescitaDi`, `svenimentiDi`, `guastiDellAbisso`,
-  `TRATTI_DELL_ABISSO`, `trattoDi`, `scenarioDi`, `brancoDi`.
-- `dati/mostri.js` — `BRANCHI`, i branchi dei posti.
+  `TRATTI_DELL_ABISSO`, `trattoDi`, `scenarioDi`, `brancoDi`, `tettoDelBrancoDi`.
+- `dati/mostri.js` — le specie e `duraDellaCoppia` (la coppia sta nel tratto).
 - `motore/corsa.js` — `senzaFondo`, `svenimentiSpesi`, `rimettiInPiedi`.
 - `motore/banco.js` — `gioca({ fino })`, `costoDeiPiani`, `finoADove`.
 - `test/unita/sotterraneo-abisso.test.mjs` (pesante, `tempo: 300`): il tetto

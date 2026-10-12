@@ -14,7 +14,7 @@ import { SCENARI, SCENARIO } from '../dati/tessere.js'
 import { DI_PARTENZA } from '../dati/eroi.js'
 import { COSE, NEI_FORZIERI, pescaCosa, aLivello } from '../dati/cose.js'
 import { CURIOSITA_DI, MALUS } from '../dati/curiosita.js'
-import { durezzaDi, guardianoDi, svenimentiDi, formaDi, crescitaDi, brancoDi, scenarioDi, trattoDi, livelloDelPosto }
+import { durezzaDi, guardianoDi, svenimentiDi, formaDi, crescitaDi, brancoDi, tettoDelBrancoDi, scenarioDi, trattoDi, livelloDelPosto }
   from '../dati/campagna.js'
 import { grossoDi, GROSSI } from '../dati/grossi.js'
 import { valoreDelLivello } from '../dati/pezzi.js'
@@ -182,7 +182,7 @@ export class Corsa extends Corredo {
       grosso: grossoDi(t, p),
       caporali: !t.abisso,   // davanti al grosso dell'abisso niente anticamera: docs/sotterraneo/piani.md
       crescita: crescitaDi(t),
-      branco: brancoDi(t, p),
+      branco: brancoDi(t, p), tettoBranco: tettoDelBrancoDi(t, p),
       scenario: scenarioDi(t, p),
     })
     // nell'abisso il primo piano non ha da dove risalire: là la strada su è il portale

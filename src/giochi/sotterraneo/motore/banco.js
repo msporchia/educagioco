@@ -17,6 +17,9 @@ import { zonaPotenziata } from '../dati/zone.js'
 import { robaAttesaA, crescitaAttesaA } from './zone.js'
 import { quotaDi } from '../dati/livelli.js'
 import { viaVerso, percorso } from '../../../motore/passi.js'
+import { NODI, colpisce } from '../dati/abilita.js'
+import { caselleDella, puntiAbilita, prossimoDellaStrada } from './abilita.js'
+import { mostroDiRiferimento, dannoDell } from './forza.js'
 
 const DT = 1 / 30
 const TETTO_PASSI = 3000        // ~100 secondi di cammino: molto più di un piano
@@ -26,6 +29,12 @@ const TETTO_GIRI = 12000        // azioni in una discesa, prima di dire che non 
    dichiarare chiusa una strada che è aperta */
 const TETTO_PROVE = 6
 const SORSI_PROVATI = 3   // quante volte si torna alla stessa fonte dopo un'acqua torbida
+/* quante abilità forti si usano a ogni scontro (docs/sotterraneo/forza.md: l'utente, «almeno 2 abilità forti a scontro»),
+   e sotto che frazione di vita si cura o si para */
+const FORTI_A_SCONTRO = 2
+const VITA_DA_CURARE = 0.5
+// `abilita: false` rifà il banco di prima (solo attacco, nessun albero): serve a confrontare prima e dopo (docs/sotterraneo/scontro-bilancio.md)
+export const BANCO = { abilita: true }
 
 // va su una cella, un passo alla volta, e si ferma appena qualcosa si apre. Torna true se ci è arrivato
 function cammina(corsa, meta) {
@@ -84,6 +93,73 @@ function scudoMeglio(chi, k) {
 // i punti da dare, come li dà il banco (motore/crescita.js, COME_LI_DA): `come` per provare un altro modo
 function daiIPunti(corsa, come) {
   while (puntiDaDare(corsa.crescita) > 0) corsa.daiUnPunto(prossimoPunto(corsa.crescita, corsa.chiEro, come))
+  // e i punti dell'albero, sulla strada della classe (motore/abilita.js, STRADA): a ogni livello nuovo, o la crescita attesa
+  // con cui si entra in una discesa arriverebbe senza
+  while (BANCO.abilita && puntiAbilita(corsa.crescita) > 0) {
+    const id = prossimoDellaStrada(corsa.crescita, corsa.chiEro)
+    const prima = corsa.vitaMax
+    if (!id || !corsa.impara(id)) break
+    corsa.vita = Math.min(corsa.vitaMax, corsa.vita + Math.max(0, corsa.vitaMax - prima))   // Cuore saldo e simili: la vita in più arriva subito
+  }
+}
+
+/* ═══════════ le abilità nello scontro ═══════════
+   Il bambino riempie le tre caselle e le usa (docs/sotterraneo/abilita.md); il banco fa lo stesso senza essere un campione:
+   - le caselle: l'abilità che colpisce di più un mostro solo, quella ad area (se no la seconda) e una cura o uno scudo;
+   - a ogni turno, una cura o uno scudo se la vita è sotto la metà; se no, un'abilità forte (fino a FORTI_A_SCONTRO a scontro)
+     quando il colpo solito non basta a chiudere, e l'area appena i mostri sono tre o più;
+   - non si volta e non beve dentro lo scontro (provato: bere costa il turno e il banco peggiora), resta il caso peggiore per gli agguati */
+const riparoDi = n => !colpisce(n) && (n.cura || n.scudo || n.linfa)
+function riempiLeCaselle(corsa) {
+  const m = mostroDiRiferimento(corsa.livelloEroe)
+  const sa = Object.keys(corsa.crescita.albero || {}).map(id => NODI[id]).filter(n => n && !n.sempre && corsa.haLArma(n.arma))
+  const colpi = sa.filter(colpisce).sort((a, b) => dannoDell(corsa, b, m) - dannoDell(corsa, a, m))
+  const singolo = colpi.find(n => n.forma === 'uno')
+  const area = colpi.find(n => n.forma !== 'uno')
+  const riparo = sa.filter(riparoDi).sort((a, b) => (b.cura || b.scudo || 0) - (a.cura || a.scudo || 0))[0] || sa.find(n => !colpisce(n))
+  const scelte = []
+  for (const n of [singolo, area || colpi.find(x => x !== singolo), riparo, ...colpi]) if (n && !scelte.includes(n)) scelte.push(n)
+  const ids = scelte.slice(0, 3).map(n => n.id)
+  if (ids.join() === caselleDella(corsa.crescita).filter(Boolean).join()) return
+  for (let i = 0; i < 3; i++) corsa.mettiInCasella(i, null)
+  ids.forEach((id, i) => corsa.mettiInCasella(i, id))
+}
+
+// quanto toglie l'abilità adesso, a tutti quelli che prende (il colpo di ognuno non oltre le sue ossa), più il veleno che brucia
+function quantoToglie(corsa, f, nodo) {
+  let tot = 0
+  for (const { chi: x, fattore } of corsa.colpitiDa(nodo, f)) {
+    let d = Math.round(corsa.colpo(x, nodo) * fattore)
+    if (nodo.veleno) d += Math.max(1, Math.ceil(corsa.colpo(x) / 2)) * (nodo.veleno[0] || 1)
+    tot += Math.min(x.ossa, d)
+  }
+  return tot
+}
+
+// prepara l'abilità del turno (o niente, e si attacca): torna l'id preparato
+function preparaLAbilita(corsa, f) {
+  if (!BANCO.abilita || corsa.pronta) return null
+  const vivi = corsa.vivi(f)
+  const usabili = caselleDella(corsa.crescita).filter(id => id && !corsa.perchéNonUsi(id)).map(id => NODI[id])
+  if (!usabili.length) return null
+  const io = f.io || {}
+  if (corsa.vita < corsa.vitaMax * VITA_DA_CURARE) {
+    const cura = usabili.filter(riparoDi).filter(n => !(n.scudo && io.scudo > 0))
+      .sort((a, b) => (b.cura || b.scudo || 0) - (a.cura || a.scudo || 0))[0]
+    if (cura && corsa.prepara(cura.id)) return cura.id
+    const para = usabili.find(n => !colpisce(n) && (n.parato || n.intoccabile) && !(io.parato > 0))
+    if (para && corsa.prepara(para.id)) return para.id
+  }
+  if ((f.bancoForti || 0) >= FORTI_A_SCONTRO) return null
+  const normale = Math.min(f.chi.ossa, corsa.colpo(f.chi))
+  if (vivi.length === 1 && f.chi.ossa <= corsa.colpo(f.chi)) return null   // il colpo di sempre basta a chiudere: l'energia si tiene
+  const meglio = usabili.filter(colpisce)
+    .map(n => ({ n, v: quantoToglie(corsa, f, n) }))
+    .filter(x => x.v > normale)
+    .sort((a, b) => (vivi.length >= 3 ? (b.n.forma !== 'uno') - (a.n.forma !== 'uno') : 0) || b.v - a.v)[0]
+  if (!meglio || !corsa.prepara(meglio.n.id)) return null
+  f.bancoForti = (f.bancoForti || 0) + 1
+  return meglio.n.id
 }
 
 // senza questa funzione il banco gioca tutta la campagna a mani nude, misurando il costo di giocare male
@@ -135,9 +211,12 @@ function sbriga(corsa, bravura, sorte, conto) {
   const f = corsa.foglio
   if (!f) return false
   switch (f.che) {
-    // lo scontro a gruppi (docs/sotterraneo/scontro.md): il banco attacca sempre il bersaglio che il motore sceglie da sé (lo
-    // stesso se è in piedi, se no il più ferito), finché non cadono tutti; non usa le abilità, non beve e non scappa
+    // lo scontro a gruppi (docs/sotterraneo/scontro.md): il banco attacca il bersaglio che il motore sceglie da sé (lo stesso se
+    // è in piedi, se no il più ferito) finché non cadono tutti, con le abilità delle caselle (preparaLAbilita); non beve e non scappa
     case 'scontro':
+      if (BANCO.abilita) { if (!f.bancoCaselle) { riempiLeCaselle(corsa); f.bancoCaselle = true } preparaLAbilita(corsa, f) }
+      corsa.rispondi(sorte() < bravura)
+      return true
     case 'porta':
     case 'forziere':
     case 'fonte':

@@ -6,62 +6,60 @@
 // al posto del quadrato `misura` (la torre alta e stretta, la scala sommersa lunga). `dove` è il posto in mezzo
 // a una frase («sotto la torre non duri», motore/storia.js).
 // `portata`: niente `scuola` qui, quello che insegna questa campagna non lo dà nessuna scuola.
-import { BRANCO, BRANCHI } from './mostri.js'
+import { MOSTRI, duraDellaCoppia, costoInRisposte } from './mostri.js'
 
 export const CAMPAGNA = [
   { chiave: 'altare', nome: 'La cripta dell\'altare', icona: '🕯️', dove: 'nella cripta',
     scenario: 'cripta',
     portata: 25,
     dritta: 'due piani di tombe, e qualcuno che non dorme',
-    piani: 2, misura: 30, giri: 2, dif: [0.05, 0.22], livello: 1,
-    guardiano: 'scheletro', capo: 'scheletro' },
+    piani: 2, misura: 30, giri: 2, dif: [0.05, 0.22], forza: 0.4, livello: 1,
+    mostri: ['scheletro', 'fantasma'], tettoBranco: 5, capo: 'scheletro' },
 
   { chiave: 'cantine', nome: 'La scalinata antica', icona: '🪜', dove: 'giù per la scalinata',
     scenario: 'cantine',
     portata: 31,
     dritta: 'tante stanze, e tutte al buio',
-    piani: 2, misura: 46, giri: 4, dif: [0.12, 0.32], spinta: 5, livello: 2,   // senza forza: il primo avvio si vince anche a mani nude (docs/sotterraneo/la-grande-storia.md, «Il primo avvio»)
-    guardiano: 'scheletro', capo: 'orco' },
+    piani: 2, misura: 46, giri: 4, dif: [0.12, 0.32], forza: 0.8, spinta: 4.5, livello: 2,   // senza forza: il primo avvio si vince anche a mani nude (docs/sotterraneo/la-grande-storia.md, «Il primo avvio»)
+    mostri: ['ratto', 'melma'], tettoBranco: 3, capo: 'orco' },
 
   // alta e stretta come la torre: le stanze una sopra l'altra
   { chiave: 'torre', nome: 'La torre in rovina', icona: '🏰', dove: 'sotto la torre',
     scenario: 'fornace',
     portata: 37,
     dritta: 'stretta e alta: le scale non finiscono mai',
-    piani: 3, misura: 40, largo: 26, alto: 54, giri: 3, dif: [0.2, 0.44], forza: 1.35, spinta: 7, livello: 3,
-    guardiano: 'scheletro', capo: 'troll' },
+    piani: 3, misura: 40, largo: 26, alto: 54, giri: 3, dif: [0.2, 0.44], forza: 0.9, spinta: 5.5, livello: 3,
+    mostri: ['pipistrello', 'vespa'], tettoBranco: 4, capo: 'troll' },
 
   // tutta in profondità: piani piccoli, tanti
   { chiave: 'gallerie', nome: 'La grotta della scaletta', icona: '🪨', dove: 'nella grotta',
     scenario: 'cantine',
     portata: 43,
     dritta: 'piani piccoli, uno sotto l\'altro, sempre più giù',
-    piani: 5, misura: 28, giri: 2, dif: [0.28, 0.54], forza: 1.65, spinta: 9, livello: 5,
-    guardiano: 'orco', capo: 'orco' },
+    piani: 5, misura: 28, giri: 2, dif: [0.28, 0.54], forza: 1.5, spinta: 8, livello: 5,
+    mostri: ['lupo', 'fungo'], tettoBranco: 4, capo: 'orco' },
 
   // lunga e stretta: un canale sott'acqua
   { chiave: 'cisterna', nome: 'La scala sommersa', icona: '💧', dove: 'nella scala sommersa',
     scenario: 'cripta',
     portata: 50,
     dritta: 'lunga e stretta, e in fondo gorgoglia qualcosa',
-    piani: 3, misura: 40, largo: 64, alto: 24, giri: 3, dif: [0.36, 0.66], forza: 2.9, spinta: 9, livello: 6,
-    // guardiano un granchio (non l'orco di sempre): stessa fascia (dati/mostri.js), ma nel posto giusto
-    guardiano: 'granchio', capo: 'gigante' },
+    piani: 3, misura: 40, largo: 64, alto: 24, giri: 3, dif: [0.36, 0.66], forza: 2.25, spinta: 9.5, livello: 6,
+    mostri: ['granchio', 'serpente'], tettoBranco: 3, capo: 'gigante' },
 
   { chiave: 'labirinto', nome: 'La botola segreta', icona: '🌀', dove: 'sotto la botola',
     scenario: 'cantine',
     portata: 57,
     dritta: 'un labirinto: senza mappina ci si perde',
-    piani: 3, misura: 50, giri: 4, dif: [0.44, 0.78], forza: 5.1, spinta: 9, livello: 8,
-    guardiano: 'lupo', capo: 'troll' },
+    piani: 3, misura: 50, giri: 4, dif: [0.44, 0.78], forza: 3, spinta: 10, livello: 8,
+    mostri: ['orco', 'goblin'], tettoBranco: 3, capo: 'troll' },
 
   { chiave: 'fondo', nome: 'La miniera abbandonata', icona: '⛏️', dove: 'nella miniera',
     scenario: 'fornace',
     portata: 64,
     dritta: 'stretta, profonda, e le pietre bruciano',
-    piani: 4, misura: 40, giri: 3, dif: [0.52, 0.92], forza: 4.85, spinta: 10, livello: 10,
-    // il gigante solo in fondo; il serpente ai piani, non l'orco
-    guardiano: 'serpente', capo: 'gigante' },
+    piani: 4, misura: 40, giri: 3, dif: [0.52, 0.92], forza: 4, spinta: 11, livello: 10,
+    mostri: ['golem', 'ratto'], tettoBranco: 2, capo: 'gigante' },
 ]
 
 export const QUANTE_TAPPE = CAMPAGNA.length
@@ -96,9 +94,7 @@ export const L_ABISSO = {
   misura: FORME_DELL_ABISSO[0].misura, giri: FORME_DELL_ABISSO[0].giri,
   forme: FORME_DELL_ABISSO,
   dif: [DIF_ABISSO, 1],
-  // i primi due piani li guarda lo scheletro (misurato): si entra nudi, un orco subito vorrebbe dire
-  // svenire due volte prima di trovare un'arma. Dopo la scaletta c'è un capo per sempre (guardianoDi)
-  guardiani: ['scheletro', 'scheletro', 'orco', 'granchio', 'orco', 'golem', 'golem'],
+  // il guardiano è la specie più dura della coppia del piano, fatta caporale (guardianoDi); `capo` serve solo a chi lo chiede
   capo: 'gigante',
   // l'esperienza dei mostri un terzo: i suoi mostri sono molto più deboli di quelli di una zona dello stesso livello, e
   // per domanda rendeva tre volte una zona verde (docs/sotterraneo/zone.md, «L'esperienza»): ci si fanno le ossa nelle zone
@@ -106,16 +102,16 @@ export const L_ABISSO = {
   // la difesa dell'eroe ha un tetto (l'attacco dei mostri no): lasciando crescere il piano e basta ci si
   // ferma sempre fra il settimo e l'undicesimo, perché i mostri fanno troppo male (misurato dal banco)
   attOgni: 3,
+  forza: 5, spinta: 12, ossaPerPiano: 0.12,   // misurati col banco (docs/sotterraneo/abisso.md): chi parte nudo regge tre piani, e poi i mostri crescono più dell'eroe
   // niente `portata`: il cancello non è l'età ma "hai finito le sei discese", dimostrato invece che stimato
 }
 
 // l'abisso cambia posto ogni PIANI_PER_TRATTO piani, e l'ultimo resta per sempre: il posto dice lo scenario (SCENARI in
-// dati/tessere.js) e chi si incontra per strada (BRANCHI in dati/mostri.js); i guardiani restano la scaletta
-// misurata. Vedi docs/sotterraneo/abisso.md.
+// dati/tessere.js) e chi si incontra per strada (`mostri`). Vedi docs/sotterraneo/abisso.md.
 export const TRATTI_DELL_ABISSO = [
-  { scenario: 'cantine', nome: 'le cantine' },
-  { scenario: 'cripta', nome: 'la cripta' },
-  { scenario: 'fornace', nome: 'la fornace' },
+  { scenario: 'cantine', nome: 'le cantine', mostri: ['ratto', 'melma'], tettoBranco: 2 },
+  { scenario: 'cripta', nome: 'la cripta', mostri: ['scheletro', 'fantasma'], tettoBranco: 4 },
+  { scenario: 'fornace', nome: 'la fornace', mostri: ['golem', 'pipistrello'], tettoBranco: 3 },
 ]
 export const PIANI_PER_TRATTO = 4
 
@@ -130,10 +126,17 @@ export const scenarioDi = (tappa, piano) => {
   return t ? t.scenario : (tappa && tappa.scenario) || null
 }
 
-// chi si incontra per strada: la campagna tutto il bestiario
+// La coppia di mostri del piano (docs/sotterraneo/mostri.md): scelta per ambientazione, come in Diablo, e sempre quella: nella
+// storia la lista `mostri` della discesa, nelle zone la stessa (una zona è la discesa con un volto nuovo), nell'abisso quella del
+// tratto. Chi la legge ha sempre il suo posto: la grotta dei lupi e dei funghi, la scala dei granchi e dei serpenti
 export const brancoDi = (tappa, piano) => {
   const t = trattoDi(tappa, piano)
-  return t ? BRANCHI[t.scenario] : BRANCO
+  return t ? t.mostri : tappa.mostri
+}
+// quanti, al più, in un branco (un gruppo grande picchia tutto insieme: dove i mostri sono molti o veloci si tiene corto)
+export const tettoDelBrancoDi = (tappa, piano) => {
+  const t = trattoDi(tappa, piano)
+  return (t ? t.tettoBranco : tappa.tettoBranco) || 4
 }
 
 // Il livello del posto (docs/sotterraneo/livelli.md): quello di partenza della discesa, uno in più ogni due piani;
@@ -158,7 +161,7 @@ export function formaDi(tappa, piano) {
 // ossa è la leva principale (il bottino la compensa); l'attacco segue più piano o diventa una lotteria
 export const OSSA_PER_PIANO = 0.22
 export const crescitaDi = tappa => ({
-  ossa: OSSA_PER_PIANO,
+  ossa: (tappa && tappa.ossaPerPiano) || OSSA_PER_PIANO,   // l'abisso cresce più in fretta della campagna (ossaPerPiano)
   attOgni: tappa && tappa.attOgni ? tappa.attOgni : 2,   // la campagna resta a 2: sono 4 piani al massimo, non le arriva addosso
   forza: (tappa && tappa.forza) || 1,     // le ossa di tutti, per la roba che ci si porta giù (docs/sotterraneo/regole.md)
   spinta: (tappa && tappa.spinta) || 0,   // e quanto picchiano in più
@@ -180,16 +183,33 @@ export const SVENIMENTI_IN_REGALO = 2
 // nell'abisso il conto si azzera scendendo: qui torna quante occasioni ha QUESTO piano (Corsa.svenimentiSpesi)
 export const svenimentiDi = tappa =>
   tappa.abisso ? SVENIMENTI_PER_PIANO : SVENIMENTI_IN_REGALO + tappa.piani
-// l'ultimo piano è il capo della tappa, gli altri il guardiano di tutti i giorni: l'unica cosa che non si può aggirare
+// l'ultimo piano è il capo della tappa (nella storia lo sostituisce il mostro grosso), gli altri hanno il guardiano di tutti i
+// giorni, l'unica cosa che non si può aggirare: la specie più dura della coppia del piano, fatta caporale (motore/livello.js)
 export const guardianoDi = (tappa, piano) =>
-  tappa.guardiani ? (tappa.guardiani[piano] || tappa.capo)
-                  : (piano >= tappa.piani - 1 ? tappa.capo : tappa.guardiano)
+  (piano >= tappa.piani - 1 ? tappa.capo : duraDellaCoppia(brancoDi(tappa, piano)))
 
 export function stelleDella(esito) {
   if (!esito.vinta) return 0
   if (esito.svenimenti === 0) return 3
   if (esito.svenimenti === 1) return 2
   return 1
+}
+
+// la coppia di una discesa: una o due specie di strada (mai un capo), e dentro la coppia si costa uguale, entro il 15%, con gli
+// attacchi che un eroe ha da quella discesa in poi (da 8 in su: sotto, la difesa di uno e non dell'altro pesa troppo)
+export function guastiDellaCoppia(dove, mostri) {
+  const g = []
+  if (!Array.isArray(mostri) || mostri.length < 1 || mostri.length > 2) return [`${dove}: la coppia di mostri non c'è, o non è di una o due specie`]
+  for (const k of mostri) {
+    if (!MOSTRI[k]) g.push(`${dove}: "${k}" non esiste`)
+    else if (MOSTRI[k].capo) g.push(`${dove}: "${k}" è un capo e sta anche per strada`)
+  }
+  if (mostri.length === 2 && mostri.every(k => MOSTRI[k]))
+    for (let att = 8; att <= 60; att++) {
+      const [a, b] = mostri.map(k => costoInRisposte(MOSTRI[k], att))
+      if (Math.max(a, b) / Math.min(a, b) > 1.15) { g.push(`${dove}: ${mostri.join(' e ')} costano ${a.toFixed(2)} e ${b.toFixed(2)} risposte con attacco ${att}`); break }
+    }
+  return g
 }
 
 export function guastiDellaCampagna() {
@@ -206,13 +226,14 @@ export function guastiDellaCampagna() {
     if (t.giri < 2 || t.giri > 4) g.push(`${t.chiave}: ${t.giri} giri di taglio, fuori da 2..4`)
     const [da, a] = t.dif
     if (da < 0 || a > 1 || da > a) g.push(`${t.chiave}: difficoltà ${da}..${a} storta`)
-    if (t.forza != null && !(t.forza >= 1 && t.forza <= 8)) g.push(`${t.chiave}: forza ${t.forza} fuori da 1..8`)
+    if (t.forza != null && !(t.forza >= 0.3 && t.forza <= 8)) g.push(`${t.chiave}: forza ${t.forza} fuori da 0.3..8`)
     if (t.spinta != null && !(t.spinta >= 0 && t.spinta <= 12)) g.push(`${t.chiave}: spinta ${t.spinta} fuori da 0..12`)
     if (!(t.livello >= 1)) g.push(`${t.chiave}: senza livello, e il bottino non sa a che livello cadere`)
   }
   // la prima si comincia a mani nude: non può contare su una roba che nessuno ha ancora
-  if ((CAMPAGNA[0].forza || 1) !== 1 || (CAMPAGNA[0].spinta || 0) !== 0)
-    g.push(`${CAMPAGNA[0].chiave}: si scende a mani nude, niente forza né spinta`)
+  if ((CAMPAGNA[0].forza || 1) > 1 || (CAMPAGNA[0].spinta || 0) !== 0)
+    g.push(`${CAMPAGNA[0].chiave}: si scende a mani nude, niente spinta né forza sopra il bestiario`)
+  for (const t of CAMPAGNA) g.push(...guastiDellaCoppia(t.chiave, t.mostri))
   // la campagna deve salire: due tappe di fila alla stessa difficoltà sembrano una ripetizione
   for (let i = 1; i < CAMPAGNA.length; i++) if (CAMPAGNA[i].livello <= CAMPAGNA[i - 1].livello)
     g.push(`${CAMPAGNA[i].chiave}: livello ${CAMPAGNA[i].livello}, non sopra quello della discesa di prima`)
@@ -238,15 +259,12 @@ export function guastiDellAbisso() {
   // il tetto va toccato, e presto: se il passo fosse troppo piccolo la promessa qui sopra sarebbe falsa
   if (durezzaDi(a, PIANO_DEL_TETTO) < a.dif[1])
     g.push(`l'abisso: al piano ${PIANO_DEL_TETTO + 1} la difficoltà non è ancora al tetto`)
-  if (!(a.guardiani || []).length || !a.guardiani.every(k => typeof k === 'string' && k))
-    g.push('l\'abisso: la scaletta dei guardiani è vuota o storta')
-  if (!a.capo) g.push('l\'abisso: nessun capo dopo la scaletta')
   if (a.attOgni < 3) g.push(`l'abisso: l'attacco cresce ogni ${a.attOgni} piani, troppo in fretta`)
   if (a.piani !== Infinity) g.push('l\'abisso ha un ultimo piano: non è più un abisso')
   if (!TRATTI_DELL_ABISSO.length) g.push('l\'abisso: nessun tratto')
   for (const t of TRATTI_DELL_ABISSO) {
     if (!t.scenario || !t.nome) g.push('l\'abisso: un tratto senza scenario o nome')
-    else if (!BRANCHI[t.scenario]) g.push(`l'abisso: il tratto ${t.scenario} non ha un branco`)
+    g.push(...guastiDellaCoppia(`l'abisso (${t.scenario})`, t.mostri))
   }
   if (PIANI_PER_TRATTO < 2) g.push(`l'abisso: ${PIANI_PER_TRATTO} piani per tratto, si cambia posto a ogni scala`)
   return g

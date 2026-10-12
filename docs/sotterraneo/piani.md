@@ -90,16 +90,16 @@ essere in un pezzo solo (`connessa`).
   scontro a gruppi rende interessante».
 - **Un branco sta in una stanza, tutto entro due celle da un'ancora** (fra
   due mostri al più quattro celle: lo scontro prende chi sta a 4,5 celle, il
-  branco ci sta sempre dentro) e di una sola fascia (`tipiPer`). Nelle sale (il 70%
-  dei mostri) da due a cinque; più giù i branchi sono più piccoli
-  (`TETTO_DEL_BRANCO`: i golem al più due), o il costo di un incontro
-  crescerebbe scendendo. Le stanze piccole ne hanno uno o due, e molte
+  branco ci sta sempre dentro) e della coppia della discesa (`tipiPer`,
+  [mostri.md](mostri.md)). Nelle sale (il 70% dei mostri) da due a cinque; in alcune discese i branchi sono più piccoli
+  (`tettoBranco` della discesa: la scalinata al più tre, la miniera due), o un incontro
+  sarebbe troppo. Le stanze piccole ne hanno uno o due, e molte
   nessuno: il piano è meno popolato e più incontrare uno è un fatto.
 - **Gli appostati** (`mettiUnAppostato`): un mostro solo, in un angolo (roccia
   da due lati) o dietro una colonna, dalla parte lontana dalle porte, a
   quattro celle da ogni altro mostro. `m.appostato` dice 'angolo' o
   'colonna'. Sono loro che faranno gli agguati con la luce a cono.
-- **La stanza del tesoro ha un'unica guardia**, come prima; quella della scala
+- **La stanza del tesoro ha un'unica guardia**, della specie più dura della coppia; quella della scala
   nei piani col grosso non ha mostri di strada (il grosso è già un branco).
 - **L'anticamera** (`anticameraDi`): nel piano col mostro grosso la stanza
   *subito prima* sulla strada più corta dall'ingresso alla scala (mai
@@ -107,7 +107,7 @@ essere in un pezzo solo (`connessa`).
   stanza di strada: si sceglie prima del premio, che la prenderebbe.
 - **I caporali** (`mettiICaporali`): **due, tre se l'anticamera è una sala in
   un piano da otto stanze in su**, nel mezzo della stanza, vicini fra loro. La
-  specie è quella di strada del piano (stessa fascia), con le ossa ×1,25 e un
+  specie è una delle due della coppia della discesa, con le ossa ×1,25 e un
   colpo in più (`CAPORALE`); il nome diventa «<mostro> caporale»
   (`m.caporale`). Si vedono dai **galloni**: due V d'oro sopra la testa e un
   anello d'oro ai piedi, disegnati in codice (`Tela.galloni`). Niente emoji:
@@ -116,28 +116,28 @@ essere in un pezzo solo (`connessa`).
   eroe nudo che scende all'abisso già si ferma al grosso del quinto piano, e
   coi caporali tre semi su otto si fermavano lì contro uno (e il piano costava
   oltre i 30 del tetto per piano di `unita/sotterraneo-abisso`).
+- **Il guardiano della chiave è un caporale** (`faiCaporale`): la specie più dura della coppia, con i galloni, accanto alla
+  scala; nei piani col grosso c'è il grosso.
 - **Mai più di cinque in un branco, più l'appostato**: lo scontro nuovo ne
   prende al più sei, e il grosso vale due posti.
 
 ## Il costo in domande
 
-Il giocatore finto combatte ancora uno contro uno ([scontro.md](scontro.md)):
-le misure vere arrivano con lo scontro a gruppi. Il tetto di 85 risposte
+Il giocatore finto combatte i gruppi veri e usa le abilità ([scontro-bilancio.md](scontro-bilancio.md)). Il tetto di 85 risposte
 obbligate a seduta regge, per tutti e quattro gli eroi.
 
-| discesa | minimo, prima → dopo (cavaliere, seme 7) | media su otto semi, prima → dopo |
+| discesa | minimo, con le sale (12/10, mattina) → dopo la taratura | tutto il piano, prima → dopo |
 |---|---|---|
-| La cripta dell'altare | 15 → 12 | 12 → 13 |
-| La scalinata antica | 14 → 13 | 14 → 15 |
-| La torre in rovina | 19 → 29 | 21 → 30 |
-| La grotta della scaletta | 44 → 46 | 40 → 45 |
-| La scala sommersa | 45 → 39 | 39 → 45 |
-| La botola segreta | 62 → 37 | 65 → 60 |
-| La miniera abbandonata | 60 → 65 | 67 → 57 |
+| La cripta dell'altare | 12 → 9 | 22 → 16 |
+| La scalinata antica | 13 → 6 | 57 → 50 |
+| La torre in rovina | 29 → 21 | 74 → 55 |
+| La grotta della scaletta | 46 → 31 | 78 → 40 |
+| La scala sommersa | 39 → 26 | 91 → 65 |
+| La botola segreta | 37 → 24 | 158 → 98 |
+| La miniera abbandonata | 65 → 25 | 156 → 98 |
 
-«Tutto il piano» sale poco (media: cripta 22 → 21, torre 58 → 71, botola
-194 → 170, miniera 160 → 151). A otto risposte giuste su dieci le sette
-discese si vincono 30 volte su 30. Mostri per stanza: 0,79 (erano 0,81).
+(cavaliere, seme del banco). Il minimo cala perché le abilità chiudono un mostro in meno risposte; «tutto» cala di meno e la grotta
+resta con una forbice stretta. Mostri per stanza: 0,79 (come prima).
 
 - **Provato**: lo stesso numero di mostri *per stanza* nelle sale
   (due-cinque più l'appostato, tutto sopra il vecchio numero): il minimo della

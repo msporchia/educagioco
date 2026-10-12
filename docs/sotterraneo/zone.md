@@ -143,11 +143,11 @@ il «!» torna.
   dell'età ([abisso.md](abisso.md#le-domande-smettono-presto-di-salire));
 - **il livello del posto è L** (più uno ogni due piani): dice il livello
   del bottino, le gemme e l'esperienza dei mostri ([livelli.md](livelli.md));
-- **i mostri del livello L**: `forza` = (4 + 0,5 · (L − 12)) × la forma,
-  `spinta` = 15 + 0,65 · (L − 12), arrotondata. In linea retta, mai
-  esponenziali. La forma (`FORMA_DELLA_ZONA`) corregge le zone che a pari
-  livello vengono più comode o più dure: la cripta, piccola, ×1,6; la torre
-  ×1,05; la scala sommersa, la botola e la miniera ×0,9;
+- **i mostri del livello L**: la coppia della discesa ([mostri.md](mostri.md): una zona tiene la sua per sempre) con
+  `forza` = (4 + 0,6 · (L − 12)) × la forma e `spinta` = 13 + 1,0 · (L − 12), a un decimo
+  (`CURVA_DELLE_ZONE`). In linea retta, mai esponenziali. La forma (`FORMA_DELLA_ZONA`) dice quanto una coppia è più comoda o più
+  dura a pari livello (le specie hanno tutte le stesse ossa, ma non picchiano uguale): la scalinata (ratto e melma) ×0,8, la
+  torre ×0,8, la grotta ×1,4, la botola ×0,85, la scala sommersa ×0,95, la miniera (il golem lento) ×1,3, la cripta, piccola, ×1,7;
 - **il bottino come nell'abisso** (`indiceDella` dà −1): i forzieri danno un
   pezzo a tono sei volte su dieci, il mostro grosso il suo pezzo col nome e
   un raro del livello.
@@ -172,9 +172,9 @@ vinte o poco più.
   un mostro cresce piano col livello del posto, e una grigia, facile, rendeva
   0,9 livelli contro gli 1,1 di una verde. Adesso 0,26. «Grigia» è per la
   forza dell'eroe, non per il suo livello (`Corsa` la legge da `forzaDelCorredo`).
-- **Nell'abisso un terzo** (`esp` in `L_ABISSO`): i suoi mostri sono molto
-  più deboli di quelli di una zona dello stesso livello (non hanno la
-  `forza`), e per domanda rendeva tre volte una verde (22 contro 8): con la
+- **Nell'abisso un terzo** (`esp` in `L_ABISSO`): i suoi mostri erano molto
+  più deboli di quelli di una zona dello stesso livello (non avevano la
+  `forza`, adesso ce l'hanno: [abisso.md](abisso.md#come-crescono-i-mostri)), e per domanda rendeva tre volte una verde (22 contro 8): con la
   curva nuova l'abisso sarebbe diventato il posto dove farsi le ossa. Con un
   terzo, dal 12 con la roba attesa, quaranta piani portano al 21 (prima della
   curva nuova al 20), e per domanda rende come una zona.
@@ -203,39 +203,36 @@ le zone.
 
 ## Le misure
 
-`misure/sotterraneo`, dieci semi per zona e per eroe, dritti alla scala, con
-la roba attesa al livello (`robaAttesaA`: quella con cui si esce dalla
-storia coi pezzi rifatti a L − 1, le pozioni dell'abisso) e la crescita
-attesa. L'eroe all'inizio della fascia, la verde più dura. Vinte, in media
-fra i quattro eroi, nell'ordine della storia (cripta, scalinata, torre,
-grotta, sommersa, botola, miniera):
+`misure/sotterraneo` (o `npm run sotterraneo -- --zone 12,16,20,30 --verifica`), dieci semi per zona e per eroe, dritti alla scala,
+con la roba attesa al livello (`robaAttesaA`: quella con cui si esce dalla storia coi pezzi rifatti a L − 1, le pozioni
+dell'abisso), la crescita attesa e le abilità della strada del banco ([scontro-bilancio.md](scontro-bilancio.md)). L'eroe
+all'inizio della fascia, la verde più dura. Vinte, in media fra i quattro eroi, nell'ordine della storia (cripta, scalinata,
+torre, grotta, sommersa, botola, miniera), a 8/10 · 6/10 · 4/10:
 
 | | a 8/10 | a 6/10 | a 4/10 | livelli presi (8/10) |
 |---|---|---|---|---|
-| zone 12–15 | 95–100% | 57 · 57 · 68 · 75 · 65 · 55 · 65% | 0–15% | 0,8 · 1,6 · 1,6 · 1,3 · 1,6 · 1,8 · 1,5 |
-| zone 16–19 | 100% | 78 · 57 · 63 · 73 · 70 · 65 · 78% | 0–23% | 0,7 · 1,4 · 1,5 · 1,2 · 1,5 · 1,6 · 1,4 |
-| zone 20–23 | 100% | 78 · 80 · 73 · 75 · 78 · 75 · 75% | 0–20% | 0,7 · 1,3 · 1,4 · 1,1 · 1,4 · 1,5 · 1,3 |
-| zone 30–33 | 100% | 57 · 60 · 57 · 68 · 63 · 63 · 63% | 0–10% | 0,6 · 1,2 · 1,3 · 1,0 · 1,2 · 1,4 · 1,2 |
+| zone 12–15 | 93 · 93 · 90 · 95 · 93 · 93 · 88% | 80 · 80 · 68 · 45 · 78 · 63 · 73% | 18 · 30 · 23 · 28 · 30 · 13 · 28% | 0,8 · 1,3 · 1,2 · 1,0 · 1,6 · 1,5 · 1,6 |
+| zone 16–19 | 93 · 95 · 98 · 98 · 100 · 100 · 95% | 90 · 78 · 70 · 53 · 85 · 70 · 80% | 15 · 23 · 33 · 38 · 25 · 15 · 25% | 0,7 · 1,2 · 1,1 · 0,9 · 1,5 · 1,3 · 1,4 |
+| zone 20–23 | 93 · 85 · 93 · 88 · 93 · 93 · 95% | 88 · 73 · 68 · 53 · 88 · 60 · 75% | 18 · 25 · 35 · 30 · 33 · 20 · 35% | 0,7 · 1,0 · 1,0 · 0,8 · 1,3 · 1,2 · 1,3 |
+| zone 30–33 | 100 · 93 · 90 · 100 · 100 · 100 · 100% | 85 · 75 · 53 · 45 · 83 · 73 · 83% | 23 · 18 · 30 · 33 · 28 · 15 · 35% | 0,6 · 1,0 · 0,9 · 0,8 · 1,2 · 1,2 · 1,2 |
 
-- **Come una discesa della storia**: a otto sempre, a sei due volte su tre,
-  a quattro di rado. Fra il 24 e il 28 a sei su dieci si scende verso il 40%
-  (al 24 il 56%, al 27 il 38%; a otto 98–100%): la roba attesa sale a scalini, e la difesa salta al 30. Provato:
-  `spinta` 0,55 a livello: il buco si chiude, ma al 20 e oltre il 30 a sei
-  su dieci si vinceva nove volte su dieci. Un punto di `spinta` sposta il sei
-  su dieci di dieci punti.
-- **Le domande per zona** (a 8/10): al 12 da 45 (la cripta, che rende anche
-  meno: quattro stanze a piano) a 71, al 20 da 65 a 100. Oltre le 85 di una
-  seduta la zona si fa in due sere, con la sosta.
+- **Come una discesa della storia**: a otto quasi sempre, a sei due volte su tre, a quattro di rado. Fra il 24 e il 28 a sei su
+  dieci si scende solo al 65% (al 24 il 65%, al 27 il 64%; prima il 56% e il 38%). Un punto di `spinta` sposta il sei su dieci di
+  una decina di punti. Provato: `forza` 0,9 a livello e `spinta` 0,8 (la miniera al 30 chiedeva 162 domande, adesso 119).
+- **Le domande per zona** (a 8/10): al 12 da 41 a 66, al 20 da 61 a 99, al 30 da 71 a 119. Oltre le 85 di una seduta la zona
+  si fa in due sere, con la sosta; la miniera (golem lenti e grossi) è la più lunga.
 
 E i colori, su una zona 16–19 (a 8/10 · a 6/10):
 
 | eroe | colore | vinte | livelli |
 |---|---|---|---|
-| dell'11 | rosso | 40% · 0% | |
-| del 12 | arancio, il più duro | 58% · 0% | |
-| del 15 | arancio, il più facile | 99% · 50% | |
-| del 16 | verde, il più duro | 100% · 69% | 1,3 |
-| del 20 | grigio | 100% · 100% (a 4/10 61%) | 0,26 |
+| dell'11 | rosso | 23% · 5% | |
+| del 12 | arancio, il più duro | 26% · 11% | |
+| del 15 | arancio, il più facile | 88% · 62% | |
+| del 20 | grigio | 99% · 88% (a 6/10 · 4/10) | 0,24 |
+
+Il 12 contro la zona 16–19 vince una volta su quattro, non una su due come prima del 12 ottobre: quattro livelli sotto, con le abilità
+che li contano, pesano molto (il bersaglio è ≥ 20%).
 
 Nei test: `unita/sotterraneo-forza` (la forza: [forza.md](forza.md#nei-test)),
 `unita/sotterraneo-zone` (le fasce alla nascita, due grigie, due

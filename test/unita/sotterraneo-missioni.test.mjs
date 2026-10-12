@@ -246,13 +246,13 @@ const palestra = (eroe, k) => new Corredo({ eroe, roba: robaAttesa(eroe, k, { po
   const gemme = b.gemme
   const r = consegna({ zannagrigia: FATTA }, 'zannagrigia', b)
   uguale('Zannagrigia: consegnata', r.stati.zannagrigia, CONSEGNATA)
-  uguale('porta le sue monete', r.monete, 2)
+  uguale('porta le sue monete', r.monete, 1)
   uguale('e le gemme sulla roba', b.gemme, gemme + 30)
   controlla('le monete non finiscono nella roba', !('monete' in b))
   uguale('una missione senza regalo ne porta zero', consegna({ collana: FATTA }, 'collana', palestra('cavaliere', 1)).monete, 0)
   uguale('a tasche piene la consegna aspetta e le monete con lei', consegna({ rosicchione: FATTA }, 'rosicchione',
          new Corredo({ eroe: 'mago', roba: { ...robaAttesa('mago', 4), dito: 'amuleto-rosso', zaino: ['panciotto', 'manto', 'saio', 'amuleto-azzurro', 'chiave', 'corazza'] } })).monete, 0)
-  uguale('il premio si dice con le monete', premioDetto(missioneDi('zannagrigia').premio), '💎 30 · 🪙 2')
+  uguale('il premio si dice con le monete', premioDetto(missioneDi('zannagrigia').premio), '💎 30 · 🪙 1')
   uguale('o con la roba', premioDetto(missioneDi('chela').premio), 'Anello d\'ambra · 🪙 1')
   uguale('non si consegna due volte', consegna(r.stati, 'zannagrigia', b), null)
   // niente moneta per una risposta sbagliata: il forziere della missione resta chiuso e non fa niente
@@ -457,7 +457,7 @@ const palestra = (eroe, k) => new Corredo({ eroe, roba: robaAttesa(eroe, k, { po
   controlla('Rosicchione: il mostro col nome, la sua faccia e la richiesta del mugnaio',
             ros.cosa.tipo === 'sconfiggi' && ros.cosa.nome === 'Rosicchione' && ros.cosa.sprite === 'ratto' && ros.cosa.em === '🐀'
             && ros.da === 'mugnaio' && /Rosicchione/.test(ros.dice) && ros.seguibile, JSON.stringify(ros.cosa))
-  controlla('il premio a pezzi: il gioiello col suo nome e le monete', ros.gemme === 0 && ros.monete === 2
+  controlla('il premio a pezzi: il gioiello col suo nome e le monete', ros.gemme === 0 && ros.monete === 1
             && ros.regalo && ros.regalo.nome === 'Amuleto azzurro' && ros.regalo.sprite === 'amuleto-azzurro')
   const ch = d.inMano.find(v => v.id === 'chiavi')
   controlla('Le chiavi: una cosa da trovare, in gemme', ch.cosa.tipo === 'trova' && ch.cosa.sprite === null && ch.cosa.em === '🔑'

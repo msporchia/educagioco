@@ -46,7 +46,7 @@ export const LARGO_DIETRO = 1.6
 // (attacco − difesa), almeno 1, qualunque sia la risposta
 export const RAGGIO_SCONTRO = 4.5
 export const MOSTRI_IN_CAMPO = 6
-export const COLPO_DEL_MOSTRO = 0.8
+export const COLPO_DEL_MOSTRO = 1.1
 
 // arredo (barili, casse...): non toccabile, disegnato più spento delle cose che rispondono (scena/tela.js).
 // Cosa c'è, dove sta e quanto è epico lo dice dati/orpelli.js; qui resta la frase del generico, quella di chi non

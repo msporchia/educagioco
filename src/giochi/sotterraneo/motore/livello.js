@@ -6,7 +6,7 @@
 import { ROCCIA, PAVIMENTO, PORTA } from '../dati/mondo.js'
 import { ORPELLI } from '../dati/orpelli.js'
 import { CURIOSITA } from '../dati/curiosita.js'
-import { MOSTRI, BRANCO, PASSO_DEL_BRANCO, CAPORALE } from '../dati/mostri.js'
+import { MOSTRI, CAPORALE } from '../dati/mostri.js'
 import { GROSSI } from '../dati/grossi.js'
 import { raggiungibili } from '../../../motore/passi.js'
 import { costruisci, pezziDa, celleDi, CELLE_SALA } from './forme.js'
@@ -25,13 +25,11 @@ export function seminato(seme) {
 // 10%, e di quelli la parte che finisce nelle sale grandi (docs/sotterraneo/piani.md)
 const MOSTRI_PER_STANZA = 0.75 * 0.9
 const PARTE_NELLE_SALE = 0.7
-// quanti, al più, in un branco di una fascia (dalla più tenera): i ratti a cinque, i golem a due
-const TETTO_DEL_BRANCO = [5, 4, 3, 2, 2]
 
 export class Livello {
   // `guardiano`: chi porta la chiave della scala, dichiarato dalla tappa (l'unica cosa che non si può aggirare)
   constructor({ seme = 1, piano = 0, largo = 52, alto = 52, giri = 4,
-                guardiano = 'scheletro', crescita = null, branco = BRANCO, grosso = null, scenario = null, caporali = true } = {}) {
+                guardiano = 'scheletro', crescita = null, branco = ['scheletro'], tettoBranco = 5, grosso = null, scenario = null, caporali = true } = {}) {
     this.seme = seme
     this.piano = piano
     this.largo = largo
@@ -42,7 +40,8 @@ export class Livello {
     this.grosso = grosso && GROSSI[grosso] ? grosso : null
     // l'anticamera coi caporali: davanti al grosso delle discese della storia (l'abisso li lascia a chi la tappa non li chiede)
     this.coiCaporali = !!this.grosso && caporali
-    this.branco = branco              // chi si incontra per strada, fascia per fascia
+    this.branco = branco              // chi si incontra per strada: la coppia della discesa (`mostri` in dati/campagna.js)
+    this.tettoBranco = tettoBranco    // quanti, al più, in un branco della discesa
     // dichiarato da chi genera il piano (dipende da quanto può scendere la discesa, vedi crescitaDi in dati/campagna.js)
     this.crescita = crescita || { ossa: 0.22, attOgni: 2 }
     this.celle = new Uint8Array(largo * alto)
@@ -335,20 +334,14 @@ export class Livello {
                        aperto: false })
     }
 
-    // più giù, più grossi; nelle stanze del tesoro c'è la guardia (il patto dietro il segno 💀 sopra la porta)
-    const scala = Math.min(1, this.piano / 5)
-    // un tiro solo: le cifre alte dicono la fascia, quelle basse la faccia. Un secondo rnd() sposterebbe
-    // il flusso del caso e farebbe nascere un piano diverso da quello di ieri stesso seme
-    // un branco è della stessa fascia: la prima faccia sta nel tiro della fascia, le altre un tiro l'una
-    // `tetto`: un branco più giù è più piccolo (TETTO_DEL_BRANCO), o il costo in domande di un incontro crescerebbe scendendo
+    // chi c'è per strada è la coppia della discesa, e basta: quanto sono forti lo dice il livello (forza e spinta, `mostro`). Un
+    // branco ha la specie del primo tiro più altre pescate a caso fra le due. `forza` 0,6 e oltre, dove c'è la guardia del
+    // tesoro, sceglie la specie più dura. Il tiro è uno solo: un secondo rnd() sposterebbe il caso di tutto il piano
     const tipiPer = (forza, quanti, tetto = false) => {
       const r = this.rnd()
-      const i = Math.max(0, Math.min(this.branco.length - 1,
-        Math.floor((forza + scala) * PASSO_DEL_BRANCO + r * 1.4)))
-      const fascia = this.branco[i]
-      if (tetto) quanti = Math.min(quanti, TETTO_DEL_BRANCO[Math.min(i, TETTO_DEL_BRANCO.length - 1)])
-      const tipi = [fascia[Math.floor(r * 1e6) % fascia.length]]
-      while (tipi.length < quanti) tipi.push(fascia[Math.floor(this.rnd() * fascia.length)])
+      if (tetto) quanti = Math.min(quanti, this.tettoBranco)
+      const tipi = [forza >= 0.5 ? this.branco[this.branco.length - 1] : this.branco[Math.floor(r * 1e6) % this.branco.length]]
+      while (tipi.length < quanti) tipi.push(this.branco[Math.floor(this.rnd() * this.branco.length)])
       return tipi
     }
     this.popolaIlPiano(tipiPer)
@@ -356,7 +349,7 @@ export class Livello {
     // la scala è chiusa e la chiave ce l'ha qualcuno: senza, i mostri si aggirano tutti e il gioco diventa
     // una passeggiata al buio. Il guardiano sta accanto alla scala.
     const guardiano = this.grosso ? this.mostroGrosso(this.grosso, uscita.cx, uscita.cy - 1)
-      : this.mostro(this.chiGuarda, uscita.cx, uscita.cy - 1)
+      : this.faiCaporale(this.mostro(this.chiGuarda, uscita.cx, uscita.cy - 1))
     if (!this.calpestabile(guardiano.x, guardiano.y)) {
       guardiano.x = uscita.cx; guardiano.y = uscita.cy + 1
     }
@@ -596,11 +589,15 @@ export class Livello {
   mettiICaporali(s, tipiPer) {
     const messi = this.mettiIlBranco(s, tipiPer(0.15, this.quantiCaporali(s)), { x: s.cx, y: s.cy })
     for (const m of messi) {
-      m.ossa = m.ossaMax = Math.round(m.ossa * CAPORALE.ossa)
-      m.att += CAPORALE.att
-      m.nome = `${m.nome} caporale`
-      m.caporale = true
+      this.faiCaporale(m)
     }
+  }
+  faiCaporale(m) {
+    m.ossa = m.ossaMax = Math.round(m.ossa * CAPORALE.ossa)
+    m.att += CAPORALE.att
+    m.nome = `${m.nome} caporale`
+    m.caporale = true
+    return m
   }
 
   // le ossa crescono col piano, l'attacco le segue più piano; la difesa non cresce mai (la manopola velenosa)

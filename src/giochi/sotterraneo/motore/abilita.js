@@ -93,3 +93,38 @@ export function prossimoNodo(cr, classe, ramo = null) {
   return null
 }
 
+// La strada del giocatore finto (motore/banco.js) e dell'eroe che il gioco si aspetta (motore/forza.js): l'albero preso come
+// lo prenderebbe un bambino che guarda cosa serve, non un ottimizzatore. In fila: un'abilità che colpisce, la difesa o la
+// cura entro il livello 4, il resto del ramo che picchia, un'area; e solo rami che non vogliono un'arma in mano (Furia,
+// Giuramento, Luna, Bosco, Fucina, Pietra, Arcano) o la vogliono sempre (il fuoco del mago, che comincia con la verga e poi lascia il lavoro all'Arcano): la roba attesa cambia l'arma da
+// una discesa all'altra (la Mazza di Grumo, l'arco al posto della spada), e un ramo che per metà della storia non vale
+// non è una strada.
+// Finita la fila si migliorano i nodi nello stesso ordine. Gli id sono chiavi del salvataggio (dati/abilita.js)
+export const STRADA = {
+  cavaliere: ['colpo-furioso', 'preghiera', 'rabbia', 'cuore-saldo', 'carica', 'luce-sacra', 'macello', 'giudizio', 'tempesta-di-colpi'],
+  elfa: ['raggio-di-luna', 'rovi', 'luce-d-argento', 'linfa', 'notte-gelida', 'spore', 'falce-di-luna', 'ortica', 'luna-piena'],
+  mago: ['dardo-di-fuoco', 'scudo-arcano', 'fonte-arcana', 'raggio-arcano', 'fulmine', 'catena-di-fulmini', 'fiamma-viva', 'mente-lucida', 'sfera-di-fuoco', 'esplosione', 'specchio'],
+  nano: ['martello-caldo', 'pelle-di-pietra', 'fornace', 'rune', 'ferro-rovente', 'cuore-di-pietra', 'scintille-di-fucina', 'pugno-di-pietra', 'colata'],
+}
+
+// il prossimo punto sulla strada: il primo nodo della fila che si può imparare e non si ha ancora, poi il primo che si può
+// migliorare, poi (la fila è finita) il primo nodo qualunque. null se non c'è niente da imparare
+export function prossimoDellaStrada(cr, classe) {
+  const fila = STRADA[classe] || []
+  return fila.find(id => !gradoDi(cr, id) && puoiImparare(cr, classe, id)) ||
+         fila.find(id => puoiImparare(cr, classe, id)) ||
+         prossimoNodo(cr, classe)
+}
+
+// tutti i punti abilità da dare, dati sulla strada (l'eroe atteso a un livello li ha già spesi)
+export function conLaStrada(cr, classe) {
+  let c = cr
+  for (let i = 0; i < 400 && puntiAbilita(c) > 0; i++) {
+    const id = prossimoDellaStrada(c, classe)
+    const n = id && impara(c, classe, id)
+    if (!n) break
+    c = n
+  }
+  return c
+}
+
