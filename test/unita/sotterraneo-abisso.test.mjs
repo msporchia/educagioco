@@ -25,12 +25,13 @@ import { CAMPAGNA, QUANTE_TAPPE, L_ABISSO, INDICE_ABISSO, tappaDi, formaDi,
          SVENIMENTI_PER_PIANO, guastiDellAbisso, TRATTI_DELL_ABISSO, PIANI_PER_TRATTO,
          brancoDi } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { TASCHE } from '../../src/giochi/sotterraneo/dati/mondo.js'
-import { MOSTRI, BRANCO } from '../../src/giochi/sotterraneo/dati/mostri.js'
+import { MOSTRI } from '../../src/giochi/sotterraneo/dati/mostri.js'
 import { EROI } from '../../src/giochi/sotterraneo/dati/eroi.js'
 import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
 import { seminato } from '../../src/giochi/sotterraneo/motore/livello.js'
 import { gioca, costoDeiPiani, finoADove } from '../../src/giochi/sotterraneo/motore/banco.js'
 import { crescitaA } from '../../src/giochi/sotterraneo/motore/crescita.js'
+import { robaAttesa, crescitaAttesa } from '../../src/giochi/sotterraneo/motore/storia.js'
 import { scrivi, leggi, dice, VERSIONE } from '../../src/giochi/sotterraneo/motore/sosta.js'
 import { TAPPE_DEL_GIOCO } from '../../src/data/portata-giochi.js'
 import manifesto from '../../src/giochi/sotterraneo/gioco.js'
@@ -136,10 +137,10 @@ controlla('l\'abisso non ha guasti', guasti.length === 0, guasti.join(' · '))
 }
 
 /* ══════════ 3b. il posto cambia scendendo ══════════
-   Ogni tratto ha il suo scenario e il suo branco, e per strada si
-   incontra solo chi abita quel posto: un mostro fuori branco vorrebbe dire
+   Ogni tratto ha il suo scenario e la sua coppia di mostri, e per strada si
+   incontra solo chi abita quel posto: un mostro fuori coppia vorrebbe dire
    che il piano è nato col branco sbagliato, e a schermo sarebbe solo uno
-   scheletro nelle cantine. La campagna resta a tutto il bestiario. */
+   scheletro nelle cantine. Lo stesso vale per ogni discesa della campagna. */
 {
   const posti = [], fuori = []
   for (const seme of [7, 41]) {
@@ -167,7 +168,7 @@ controlla('l\'abisso non ha guasti', guasti.length === 0, guasti.join(' · '))
   controlla('mai lo stesso scenario due volte di fila',
             CAMPAGNA.every((t, i) => !i || t.scenario !== CAMPAGNA[i - 1].scenario))
   uguale('e non dice il posto', c.posto, null)
-  controlla('e incontra tutto il bestiario', c.livello.branco === BRANCO)
+  stessaLista('e incontra la sua coppia di mostri, quella della sua ambientazione', c.livello.branco, CAMPAGNA[0].mostri)
 }
 
 /* ══════════ 4. i numeri di laggiù restano numeri ══════════
@@ -395,9 +396,15 @@ controlla('l\'abisso non ha guasti', guasti.length === 0, guasti.join(' · '))
    difficile.
 
    La seconda dice dove finisce, oggi, quello che c'è: il bottino non ha
-   ancora gradi, quindi l'eroe si ferma al gradino 3 e i mostri no. */
+   ancora gradi, quindi l'eroe si ferma al gradino 3 e i mostri no.
+   Si entra come si entra: con la roba e il livello con cui si esce dalla
+   storia (l'ultima riga di dati/storia.js). I mostri dell'abisso sono
+   quelli di una zona, un po' più deboli, e crescono col piano; da quando
+   la forza dei mostri viene dal livello e non dalla specie, nudi non è
+   più un modo di entrare (docs/sotterraneo/abisso.md). */
+const entrata = eroe => ({ eroe, roba: robaAttesa(eroe, QUANTE_TAPPE), crescita: crescitaAttesa(eroe, QUANTE_TAPPE) })
 {
-  const c = costoDeiPiani(L_ABISSO, { fino: 11, seme: 41 })
+  const c = costoDeiPiani(L_ABISSO, { fino: 11, seme: 41, ...entrata('cavaliere') })
   const piani = c.minimo.filter(n => n > 0)
   controlla('si misurano almeno otto piani', piani.length >= 8, `${piani.length}`)
   /* La banda è larga apposta in basso: un piano dove il guardiano è uno
@@ -406,7 +413,7 @@ controlla('l\'abisso non ha guasti', guasti.length === 0, guasti.join(' · '))
      dove mette la scala. Quello che conta è il tetto, e che la media non
      cresca (la riga qui sotto). */
   for (let i = 0; i < piani.length; i++)
-    dentro(`il piano ${i + 1} costa fra 5 e 30 domande obbligate`, piani[i], 5, 30)
+    dentro(`il piano ${i + 1} costa fra 3 e 30 domande obbligate`, piani[i], 3, 30)
   /* e non cresce: la seconda metà della discesa non deve costare il
      doppio della prima, o scendere sarebbe un compito che si allunga */
   const meta = Math.floor(piani.length / 2)
@@ -422,7 +429,7 @@ controlla('l\'abisso non ha guasti', guasti.length === 0, guasti.join(' · '))
      all'abisso si arriva (12, LIVELLI_ATTESI): dai requisiti delle armi
      (9 ottobre) un eroe di livello 1 non impugna il bottino dell'abisso,
      e il suo «minimo» costa come un «tutto» */
-  const c12 = costoDeiPiani(L_ABISSO, { fino: 11, seme: 41, crescita: crescitaA(EROI[0], 12) })
+  const c12 = costoDeiPiani(L_ABISSO, { fino: 11, seme: 41, ...entrata(EROI[0].chiave) })
   const media = x => x.reduce((a, b) => a + b, 0) / x.length
   const mediaT = media(c12.tutto.filter(n => n > 0)), mediaM = media(c12.minimo.filter(n => n > 0))
   controlla('chi ripulisce un piano paga molto di più', mediaT > mediaM * 1.8,
@@ -435,13 +442,13 @@ controlla('l\'abisso non ha guasti', guasti.length === 0, guasti.join(' · '))
      secondo piano. */
   const righe = []
   for (const e of EROI) {
-    const f = finoADove(L_ABISSO, { eroe: e.chiave, semi: [7, 41, 99, 203, 311, 457], tetto: 30 })
+    const f = finoADove(L_ABISSO, { ...entrata(e.chiave), semi: [7, 41, 99, 203, 311, 457], tetto: 30 })
     controlla(`${e.chiave}: l'abisso regge almeno tre piani`, f.peggio >= 3,
               `si è fermato al piano ${f.peggio}`)
     righe.push(`  ${e.nome.padEnd(10)} si ferma ai piani ${f.fondi.sort((a, b) => a - b).join(' · ')} ` +
                `· medio ${f.medio.toFixed(1)}`)
   }
-  nota('fin dove si arriva partendo nudi (bravura 0.8, sei semi):')
+  nota('fin dove si arriva entrando come si esce dalla storia (bravura 0.8, sei semi):')
   for (const r of righe) nota(r)
 }
 

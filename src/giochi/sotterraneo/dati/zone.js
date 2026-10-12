@@ -121,15 +121,15 @@ export const DIF_DELLA_ZONA = [0.92, 1]
 // Quanto sono forti i mostri di una zona al livello L: `forza` moltiplica le ossa di tutti, `spinta` aggiunge al loro
 // attacco, come nelle discese della storia (dati/campagna.js). Crescono in linea retta col livello, mai esponenziali,
 // tarati col banco sull'eroe atteso a quel livello (misure/sotterraneo, docs/sotterraneo/zone.md «Le misure»)
-export const FORZA_A_12 = 4, FORZA_PER_LIVELLO = 0.5
-export const SPINTA_A_12 = 15, SPINTA_PER_LIVELLO = 0.65
+// (un oggetto e non quattro costanti: `npm run sotterraneo -- --tara zona.forzaA12=5` ne prova un valore senza toccare il file)
+export const CURVA_DELLE_ZONE = { forzaA12: 4, forzaPerLivello: 0.9, spintaA12: 13, spintaPerLivello: 0.8 }
 // a pari livello le zone non vengono uguali: la cripta ha piani di quattro stanze e pochi mostri prima della chiave,
 // la botola sedici. Questo numero corregge la forza zona per zona (1 di difetto), misurato col banco
-export const FORMA_DELLA_ZONA = { altare: 1.6, torre: 1.05, cisterna: 0.9, fondo: 0.9, labirinto: 0.9 }
+export const FORMA_DELLA_ZONA = { altare: 1.7, cantine: 0.8, torre: 0.8, gallerie: 1.2, cisterna: 0.95, labirinto: 0.85, fondo: 1.3 }
 
 export const forzaDellaZona = (L, chiave) =>
-  Math.round(Math.max(1, FORZA_A_12 + FORZA_PER_LIVELLO * (L - 12)) * (FORMA_DELLA_ZONA[chiave] || 1) * 100) / 100
-export const spintaDellaZona = L => Math.max(0, Math.round(SPINTA_A_12 + SPINTA_PER_LIVELLO * (L - 12)))
+  Math.round(Math.max(1, CURVA_DELLE_ZONE.forzaA12 + CURVA_DELLE_ZONE.forzaPerLivello * (L - 12)) * (FORMA_DELLA_ZONA[chiave] || 1) * 100) / 100
+export const spintaDellaZona = L => Math.max(0, Math.round((CURVA_DELLE_ZONE.spintaA12 + CURVA_DELLE_ZONE.spintaPerLivello * (L - 12)) * 10) / 10)
 
 // La discesa `k` della storia fatta zona, con la fascia che comincia al livello L: la stessa discesa (la chiave, la
 // forma dei piani, lo scenario, i guardiani e il mostro grosso), più piani, le domande dell'abisso, i mostri del

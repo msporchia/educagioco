@@ -27,7 +27,8 @@ const conAlbero = (livello, albero) => ({ esp: sogliaDi(livello), albero, casell
 function scontro(eroe, crescita, mano = null, mancina = null, mostro = {}) {
   const c = new Corsa(CAMPAGNA[1], { seme: 5, eroe, rnd: seminato(5), crescita, roba: roba(mano, mancina) })
   const m = c.livello.robe.find(r => r.che === 'mostro')
-  Object.assign(m, { ossa: 200, ossaMax: 200, att: 9, dif: 0, sveglio: true, stati: null, velocita: c.velocita }, mostro)
+  // (un goblin: la scalinata ha ratti e melme, e la melma non si avvelena, che qui non è quello che si prova)
+  Object.assign(m, { tipo: 'goblin', ossa: 200, ossaMax: 200, att: 9, dif: 0, sveglio: true, stati: null, velocita: c.velocita }, mostro)
   c.scontro(m, { solo: true, tocco: true })
   return { c, m }
 }

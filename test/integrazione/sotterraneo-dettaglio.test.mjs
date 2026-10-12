@@ -171,7 +171,7 @@ uguale('non si segue: si porta', await page.locator('[data-azione="segui"]').cou
 uguale('«vai dal mugnaio»', (await page.locator('[data-azione="vai-da"]').innerText()).replace(/\s+/g, ' ').trim().replace(/^\S+ /, ''), 'vai dal mugnaio')
 {
   const premio = await page.locator('[data-dettaglio-premio]').innerText()
-  controlla('il premio ha il gioiello col suo nome e le monete', premio.includes('Amuleto azzurro') && premio.includes('🪙 2'), premio)
+  controlla('il premio ha il gioiello col suo nome e le monete', premio.includes('Amuleto azzurro') && premio.includes('🪙 1'), premio)
 }
 await scatto(page, 'missioni-dettaglio-fatta')
 await toccaIl('[data-azione="vai-da"]')

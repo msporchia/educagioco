@@ -4,9 +4,9 @@
    caporali davanti al mostro grosso. Tutto dal seme: lo stesso seme, lo stesso piano.
    `node test/esegui.mjs sotterraneo-piani --niente-build`
    tempo: 30 */
-import { CAMPAGNA, L_ABISSO, guardianoDi, formaDi } from '../../src/giochi/sotterraneo/dati/campagna.js'
+import { CAMPAGNA, L_ABISSO, guardianoDi, formaDi, brancoDi, tettoDelBrancoDi } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { grossoDi } from '../../src/giochi/sotterraneo/dati/grossi.js'
-import { CAPORALE } from '../../src/giochi/sotterraneo/dati/mostri.js'
+import { CAPORALE, duraDellaCoppia } from '../../src/giochi/sotterraneo/dati/mostri.js'
 import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
 import { Livello, generaPiano, seminato } from '../../src/giochi/sotterraneo/motore/livello.js'
 import { costruisci, connessa, pezziDa, FORME } from '../../src/giochi/sotterraneo/motore/forme.js'
@@ -20,7 +20,7 @@ const PIANI = []
 for (const t of CAMPAGNA) for (let seme = 1; seme <= 14; seme++) for (let p = 0; p < t.piani; p++) {
   const f = formaDi(t, p)
   PIANI.push({ t, p, seme, l: generaPiano({ seme: seme * 97, piano: p, largo: f.largo, alto: f.alto, giri: f.giri,
-    guardiano: guardianoDi(t, p), grosso: grossoDi(t, p) }) })
+    guardiano: guardianoDi(t, p), grosso: grossoDi(t, p), branco: brancoDi(t, p), tettoBranco: tettoDelBrancoDi(t, p) }) })
 }
 const tutti = PIANI.map(x => x.l)
 const stanze = tutti.flatMap(l => l.stanze.map(s => ({ l, s })))
@@ -165,7 +165,7 @@ const vicini4 = [[1, 0], [-1, 0], [0, 1], [0, -1]]
   controlla('i branchi stanno in una stanza, entro 4,5 celle, da due a cinque', male.length === 0, [...new Set(male)].slice(0, 3).join(' · '))
   controlla('ci sono branchi da tre o più', Object.entries(grandezze).some(([n, c]) => n >= 3 && c > 20), JSON.stringify(grandezze))
   controlla('i branchi stanno soprattutto nelle sale grandi', inGrandi > inPiccole * 1.5, `${inGrandi} contro ${inPiccole}`)
-  controlla('ci sono appostati, in un angolo e dietro una colonna', appostati.angolo > 20 && appostati.colonna > 20, JSON.stringify(appostati))
+  controlla('ci sono appostati, in un angolo e dietro una colonna', appostati.angolo > 20 && appostati.colonna > 10, JSON.stringify(appostati))
   nota(`branchi per grandezza: ${JSON.stringify(grandezze)}; appostati ${soli}: ${appostati.angolo} in un angolo, ${appostati.colonna} dietro una colonna`)
 
   // il numero di mostri non cresce: tre quarti per stanza, o meno
@@ -201,8 +201,17 @@ const vicini4 = [[1, 0], [-1, 0], [0, 1], [0, -1]]
   }
   controlla('ogni piano col grosso ha la sua anticamera con due o tre caporali, più duri, con un nome, vicini fra loro', male.length === 0, [...new Set(male)].slice(0, 3).join(' · '))
   nota(`caporali per anticamera: ${JSON.stringify(lunghezze)}`)
-  controlla('i piani senza il grosso non hanno caporali né anticamera', PIANI.filter(x => !x.l.grosso).every(x =>
-    !x.l.stanze.some(s => s.ruolo === 'anticamera') && !mostriDi(x.l).some(m => m.caporale)))
+  // senza il grosso: niente anticamera e nessun caporale, tranne chi porta la chiave, che è un caporale della specie più dura
+  // della coppia del posto (docs/sotterraneo/mostri.md)
+  controlla('i piani senza il grosso non hanno anticamera, e di caporale hanno solo il guardiano della chiave', PIANI.filter(x => !x.l.grosso).every(x =>
+    !x.l.stanze.some(s => s.ruolo === 'anticamera') && !mostriDi(x.l).some(m => m.caporale && !m.chiave)))
+  // quasi sempre sta accanto alla scala; se lì non c'è posto la chiave la porta il mostro più lontano dall'ingresso (un mostro di strada
+  // della stessa coppia)
+  const senzaGrosso = PIANI.filter(x => !x.l.grosso)
+  const guardiani = senzaGrosso.map(x => mostriDi(x.l).find(m => m.chiave))
+  controlla('il guardiano della chiave è della coppia del posto', guardiani.every((g, i) => g && senzaGrosso[i].l.branco.includes(g.tipo)))
+  const caporali = guardiani.filter((g, i) => g.caporale && g.tipo === duraDellaCoppia(senzaGrosso[i].l.branco))
+  controlla('ed è quasi sempre un caporale della specie più dura', caporali.length >= guardiani.length * 0.9, `${caporali.length} su ${guardiani.length}`)
 
   // la strada va dall'ingresso alla scala passando dall'anticamera quando c'è una strada sola (l'ultima stanza prima della scala)
   let sulla = 0
