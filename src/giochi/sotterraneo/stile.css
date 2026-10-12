@@ -1125,7 +1125,7 @@
   border-radius: 12px; pointer-events: none;
   background: linear-gradient(#2a1414f0, #160a0af0); border: 1.5px solid #7a2a1e; box-shadow: 0 6px 18px #000b;
 }
-.sot-grosso-faccia { flex: none; display: grid; place-items: center; width: 34px; height: 34px }
+.sot-grosso-faccia { flex: none; display: grid; place-items: center; width: 38px; height: 40px; margin-top: 6px }
 .sot-grosso-dati { flex: 1; min-width: 0; display: grid; gap: 3px }
 .sot-grosso-dati b { font-size: 14px; color: #ffcf8a; text-shadow: 0 1px 2px #000 }
 .sot-grosso-barra {
@@ -1138,6 +1138,10 @@
   text-shadow: 0 1px 2px #000;
 }
 .sot-faccia [data-figura-grosso] { display: block }
+/* la figura del grosso: lo sprite (dipinto, o della sua specie ingrandito) col chiarore della sua tinta, e la corona sopra la testa */
+.sot-grosso-fig { position: relative; display: inline-block; line-height: 0; filter: drop-shadow(0 0 5px var(--tinta)) }
+.sot-grosso-fig .sot-ritratto { display: block }
+.sot-corona { position: absolute; left: 50%; top: 0; transform: translate(-50%, -62%); line-height: 1; pointer-events: none }
 
 /* ═══════════ le feste: un livello salito, un leggendario caduto ═══════════ */
 .sot-festa {

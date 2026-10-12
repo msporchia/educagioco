@@ -35,7 +35,6 @@ import { notiziaDi, potenzaDi, livelloDellaZona, coloreDi } from './motore/zone.
 import { pescaLeggendario } from './motore/bottino.js'
 import { quotaDi } from './dati/livelli.js'
 import { LEGGENDARI } from './dati/pezzi.js'
-import { GROSSI } from './dati/grossi.js'
 import { prendi as prendiMissione, consegna as consegnaMissione, fatte as missioniFatte, presePer, promemoria,
          rotta as rottaDi, seguita, diario } from './motore/missioni.js'
 import { Bottega } from './motore/bottega.js'
@@ -598,9 +597,7 @@ const grosso = dallaCorsa(c => {
   const m = f && f.che === 'scontro' && f.chi.grosso ? f.chi
     : c.livello.robe.find(r => r.che === 'mostro' && r.grosso && !r.morto && r.sveglio)
   if (!m) return null
-  // la scheda del grosso prima: i suoi `ossa` e `att` sono moltiplicatori, non i numeri di questo mostro
-  const g = GROSSI[m.grosso]
-  return { disegno: g.disegno, colori: g.colori, chiave: m.grosso, nome: m.nome, ossa: Math.max(0, m.ossa),
+  return { chiave: m.grosso, nome: m.nome, ossa: Math.max(0, m.ossa),
            ossaMax: m.ossaMax, att: m.att, dif: m.dif }
 })
 
@@ -674,7 +671,7 @@ const nemico = dallaCorsa(c => {
     sprite: scheda.sprite ? pezzoAndante(scheda.sprite, 'fermo', 0) : null,   // la stessa faccia del campo
     palco: palcoDi(c),
     eroe: { sprite: c.io.sprite ? pezzoAndante(c.io.sprite, 'fermo', 0) : null, em: c.io.em, vita: c.vita, vitaMax: c.vitaMax },
-    grosso: f.chi.grosso ? GROSSI[f.chi.grosso] : null,                        // il mostro grosso ha la sua, disegnata in codice
+    grosso: f.chi.grosso || null,                                               // il mostro grosso: la sua chiave, la figura la sceglie viste/Grosso.vue
     // detti PRIMA di rispondere: con questi si decide restare o scappare. Con gli effetti delle abilità (Corsa.botta)
     puoiScappare: c.puoScappare(f.chi),
     stati: statiDel(f.chi), mie: statiMiei(f.io || {}),
@@ -1455,7 +1452,7 @@ function ridimensiona() { if (pittore) pittore.misura() }
 
           <!-- il mostro grosso: la sua vita in cima, da quando ci si entra nella stanza (docs/sotterraneo/grossi.md) -->
           <div v-if="grosso" class="sot-grosso-vita" data-grosso :data-chi="grosso.chiave" :data-ossa="grosso.ossa">
-            <span class="sot-grosso-faccia"><Grosso :disegno="grosso.disegno" :colori="grosso.colori" :scala="1" /></span>
+            <span class="sot-grosso-faccia"><Grosso :chi="grosso.chiave" :scala="1" /></span>
             <span class="sot-grosso-dati">
               <b>{{ grosso.nome }}</b>
               <span class="sot-grosso-barra"><i :style="{ width: (grosso.ossa / grosso.ossaMax) * 100 + '%' }"></i>

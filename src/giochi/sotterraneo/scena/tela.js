@@ -15,8 +15,7 @@ import { creaFoglio, netto } from '../../../grafica/atlante.js'
 import { tetto, faccia, bordiDelTetto, capiDellaFaccia, versoDellaPorta, sorteDi } from './muri.js'
 import { dipingiPortale, PORTALE } from './portale.js'
 import { dipingiScalaSu } from './scala-su.js'
-import { GROSSI } from '../dati/grossi.js'
-import { telaDelGrosso, LATO } from './grossi.js'
+import { GROSSI, figuraDelGrosso, spriteDelGrosso } from '../dati/grossi.js'
 
 // l'aura di un pezzo per terra, del colore della sua rarità (docs/sotterraneo/rarita.md): il comune non ne ha
 const AURA = { magico: '111,141,255', raro: '255,210,63', leggendario: '255,154,46' }
@@ -441,29 +440,50 @@ export class Tela {
       this.emoji(SEGNI[r.segno].em, px, py - 1.25, alfa, 0.5)
   }
 
-  // Il mostro grosso (dati/grossi.js), disegnato in codice (scena/grossi.js): due caselle per due, coi piedi sul fondo della
-  // sua cella, che respira; l'alone rosso più largo, la chiave, il sonno e la barretta come gli altri
+  // Il mostro grosso (dati/grossi.js): lo sprite dipinto se l'atlante ce l'ha, se no quello della sua specie ingrandito
+  // (`ingrandisci`, come il bersaglio di una missione) e con la corona sopra la testa. Coi piedi sul fondo della sua
+  // cella, che respira; l'alone rosso più largo e un chiarore della sua tinta, la chiave, il sonno e la barretta come gli altri
   grosso(r, px, py, t, alfa, luce) {
     const ctx = this.ctx
     const G = GROSSI[r.grosso]
+    const F = figuraDelGrosso(r.grosso)
+    const nome = F && spriteDelGrosso(F, r.sveglio, (t * 8) | 0)
+    const m = nome && this.foglio.misura(nome)
+    const suolo = py + 0.5
     const q = r.sveglio ? 0.32 + 0.16 * Math.sin(t * 6) : 0.16
     ctx.fillStyle = `rgba(224,100,79,${q * alfa})`
     ctx.beginPath(); ctx.ellipse(px * T, py * T + T * 0.35, T * 1.05, T * 0.42, 0, 0, 7); ctx.fill()
-    const fig = G && telaDelGrosso(G.disegno, G.colori)
     const respiro = 1 + 0.035 * Math.sin(t * (r.sveglio ? 5 : 2.2))
-    const w = LATO, h = LATO * respiro
-    if (fig) {
+    let alto = 2   // in caselle: quanto sale la figura, per mettere la corona, il nome e la chiave sopra la testa
+    let metà = 1
+    if (m) {
+      alto = m.h * F.k * respiro / T
+      metà = m.w * F.k / 2 / T
+      // il chiarore della sua tinta dietro la figura: distingue Re Ossuto da Carbonchio, che sono tutti e due scheletri
+      const R = Math.max(alto, metà * 2) * T * 0.62
+      const cy = (suolo - alto / 2) * T
+      const g = ctx.createRadialGradient(px * T, cy, R * 0.15, px * T, cy, R)
+      g.addColorStop(0, G.tinta); g.addColorStop(1, G.tinta + '00')
       ctx.save()
-      ctx.globalAlpha = alfa
-      if (r.guarda === 'sx') {
-        ctx.translate(px * T, 0); ctx.scale(-1, 1); ctx.translate(-px * T, 0)
-      }
-      ctx.drawImage(fig, px * T - w / 2, (r.y + 1) * T - h, w, h)
+      ctx.globalAlpha = (r.sveglio ? 0.34 + 0.1 * Math.sin(t * 4) : 0.2) * alfa
+      ctx.fillStyle = g
+      ctx.beginPath(); ctx.arc(px * T, cy, R, 0, 7); ctx.fill()
+      ctx.restore()
+      // l'ingrandimento e il respiro (solo in altezza) attorno ai piedi
+      ctx.save()
+      ctx.translate(px * T, suolo * T)
+      ctx.scale(F.k, F.k * respiro)
+      ctx.translate(-px * T, -suolo * T)
+      this.posa(nome, px - 0.5, py - 0.5, { alfa, specchia: r.guarda === 'sx' })
       ctx.restore()
     } else this.emoji(r.em, px, py - 0.5, alfa, 1.4)
-    if (r.chiave) this.emoji('🗝️', px + 0.9, py - 1.4, alfa, 0.42)
-    if (!r.sveglio) this.emoji('💤', px + 0.9, py - 1.1, alfa * 0.8, 0.32)
-    if (luce === 2) this.etichette.push({ testo: r.nome, px, py: py - 2.3 })
+    // la corona al ripiego: quello dipinto ha già la sua (o no, e allora non è un re)
+    if (m && !F.dipinto) this.emoji('👑', px, suolo - alto - 0.2 + Math.sin(t * 3) * 0.05, alfa, 0.95)
+    const sopra = suolo - alto - (m && !F.dipinto ? 0.95 : 0.3)
+    const lato = px + Math.max(0.55, metà * 0.85)
+    if (r.chiave) this.emoji('🗝️', lato, suolo - alto + 0.15, alfa, 0.42)
+    if (!r.sveglio) this.emoji('💤', lato, suolo - alto + 0.5, alfa * 0.8, 0.32)
+    if (luce === 2) this.etichette.push({ testo: r.nome, px, py: sopra - 0.45 })
     if (r.ossa < r.ossaMax) this.barretta(px, py + 0.1, r.ossa / r.ossaMax, alfa)
   }
 

@@ -12,7 +12,7 @@ import Palco from './Palco.vue'
 const props = defineProps({
   mostro: { type: Object, required: true },   // { em, nome, ossa, ossaMax, chiave }
   sprite: { type: String, default: null },    // il suo pezzo, quello che si vede sul campo
-  grosso: { type: Object, default: null },    // il mostro grosso (dati/grossi.js): la sua figura disegnata in codice
+  grosso: { type: String, default: null },    // la chiave del mostro grosso (dati/grossi.js): al posto dello sprite, il suo ingrandito con la corona
   palco: { type: Object, default: () => ({}) },   // lo scenario vero: { pavimento, faccia, roccia }
   eroe: { type: Object, default: () => ({}) },   // { sprite, em, vita, vitaMax }: lui, di fronte
   puoiScappare: { type: Boolean, default: true },   // lo usa il tasto sotto (Gioco.vue): qui solo per non finire sul div
@@ -59,7 +59,7 @@ const addosso = computed(() => props.stati.map(x => 'sot-addosso-' + (x.fuoco ? 
       <div :key="'m' + scosso" class="sot-figura sot-mostro-fig" :class="{ 'sot-scatta-sx': scambio && (scambio.preso || scambio.assorbito) }">
         <div class="sot-corpo" :class="{ 'sot-colpito': scambio && scambio.dato }">
           <div class="sot-respira" :class="addosso">
-            <Grosso v-if="grosso" :disegno="grosso.disegno" :colori="grosso.colori" :scala="3" />
+            <Grosso v-if="grosso" :chi="grosso" :scala="3" />
             <Icona v-else :sprite="sprite" :em="mostro.em" :scala="5" :emAlto="76" />
           </div>
         </div>

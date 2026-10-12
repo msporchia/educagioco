@@ -220,11 +220,14 @@ for (let giro = 0; giro < 30 && !(await page.locator('.sot-velo-scontro').count(
   if (via.length <= 1) { const s = await schermoDi(piano.g); if (dentro(s)) await tocca(s.x, s.y) } else if (tappa) await tocca(tappa.x, tappa.y)
   await attendi(page, 500)
   await fermoGiu()
+  // se è in vista prima dello scontro, la foto del campo: il grosso grande, con la corona e il nome (non sempre si fa in tempo: scatta appena ci si avvicina)
+  if (dentro(await schermoDi(piano.g)) && !(await page.locator('.sot-velo-scontro').count())) await scatto(page, 'eroe-grosso-campo')
 }
 await page.waitForSelector('.sot-velo-scontro', { timeout: 10000 })   // lo scontro: il tasto della fuga può mancare
 uguale('la vita del mostro grosso è in cima allo schermo', await page.locator('[data-grosso]').getAttribute('data-chi'), 'ossuto')
 controlla('col suo nome', (await page.locator('[data-grosso]').innerText()).includes('Re Ossuto'))
-uguale('nello scontro c\'è la sua figura, disegnata in codice', await page.locator('.sot-modale [data-figura-grosso]').count(), 1)
+uguale('nello scontro c\'è la sua figura (lo sprite della sua specie ingrandito)', await page.locator('.sot-modale [data-figura-grosso]').count(), 1)
+controlla('con la corona sopra la testa', await page.locator('.sot-modale [data-figura-grosso] .sot-corona').count() === 1)
 await scatto(page, 'eroe-grosso')
 const ossa0 = Number(await page.locator('[data-grosso]').getAttribute('data-ossa'))
 let calata = false
