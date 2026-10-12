@@ -129,12 +129,9 @@ in Node) e si prova in `unita/muri-sotterraneo`.
   mercante disegnato nei fogli (`cantine-mercante-0`…) e la porta chiara col
   suo segno non si usano più dal 7 ottobre 2026: il mercante è salito sulla
   terra di sopra ([terra-di-sopra.md](terra-di-sopra.md#i-mercanti)).
-- **L'arredo cambia pelle e frase con lo scenario**: il piano decide *cosa*
-  (`barile`, `ossa`, `lanterna`... in `ARREDI`, `dati/mondo.js`) e dove sta e
-  chi fa luce; `arredo` nella voce di `SCENARI` dice con quale sprite si
-  disegna e `dice` cosa risponde a chi lo tocca. Vuoti, vale quello di tutti
-  (cantine, cripta). La fornace: botte, carbone, incudine, gargoyle,
-  calderone, rastrelliera, banco.
+- **L'arredo è una lista per scenario**: `orpelli` nella voce di `SCENARI`
+  (`dati/orpelli.js`): ogni pezzo sa come si piazza e quanto è epico, il piano
+  decide quanto è epica una stanza. Le regole sono in [arredo.md](arredo.md).
 - **L'arredo** (barili, casse, ossa, uno stendardo, una lanterna che fa luce)
   non si tocca, non blocca e non vale niente: serve a far sembrare che qui
   sotto ci abbia vissuto qualcuno. Un sotterraneo di stanze vuote si legge

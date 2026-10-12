@@ -38,12 +38,14 @@ dell'abisso sta in [abisso-progetto.md](abisso-progetto.md).
   Poi i foglietti, una voce in `SCENARI`, un branco in `BRANCHI` e un tratto
   in `TRATTI_DELL_ABISSO` (vedi [scenari.md](scenari.md) e
   [abisso.md](abisso.md#il-posto-cambia-scendendo)).
+- **Un secondo stile di cripta**: il sotterraneo è andato avanti (storia
+  a discese, missioni, abisso) e c'è una base da cui scendere, quindi un
+  altro posto della famiglia della cripta, più profondo, va bene accanto
+  alla fornace e alla grotta. Le immagini si chiedono a fogli fitti
+  (decine di pezzi per foglio), non otto alla volta.
 - **Le fuliggini della fornace** non sono state usate (alone magenta).
-- **L'arredo della cripta**: la fornace ha il suo (`arredo` e `dice` nella voce
-  di `SCENARI`), le cantine e la cripta no, e botti, casse e stendardi rossi
-  nella cripta sembrano portati dalle cantine. La scena della cripta ha
-  sarcofagi, statue, candelabri e colonne spezzate ma col pavimento dietro:
-  vanno chiesti su fondo magenta e mappati con `arredo`.
+- **Gli orpelli della grotta di cristallo e delle cantine nuove**: ogni scenario ha la sua
+  lista in `dati/orpelli.js` ([arredo.md](arredo.md)); un posto nuovo ne vuole una, a fogli fitti.
 - **La fontana della cripta** è ancora quella di `sotterraneo_3.png`, piena e
   asciutta: quella del foglio dei pezzi è a muro, e bevendo cambierebbe forma.
 - **Un mostro di quinta fascia per ogni posto**: oggi il golem sta in tutti
