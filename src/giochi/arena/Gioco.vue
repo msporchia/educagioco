@@ -22,11 +22,13 @@ import { TRUPPE, AZIONI, LIV_MAX, MINIERA_MAX } from './dati/regole.js'
 import { Partita } from './motore/partita.js'
 import { scrivi, leggi, dice } from './motore/sosta.js'
 import { Campo } from './scena/campo.js'
+import { dettaglioTruppa, dettaglioAzione, ruoloDi, cosaCambia } from './motore/dettagli.js'
 import { domandaDi } from './domande.js'
 
 import Mappa from './viste/Mappa.vue'
 import CampoVista from './viste/Campo.vue'
 import Finale from './viste/Finale.vue'
+import Dettagli from './viste/Dettagli.vue'
 import './stile.css'
 
 defineOptions({ name: 'CastleBattle' })
@@ -45,6 +47,7 @@ const cruscotto = ref(vuoto())
 const pannello = ref({ caserme: [], azioni: [] })
 const domanda = ref(null)             // la domanda che paga la scelta
 const finale = ref(null)
+const dettaglio = ref(null)           // la schermata dei dettagli: il campo sta fermo finché è aperta
 const avviso = ref('')                // la riga che dice cosa è successo
 const toccato = ref(false)
 
@@ -57,12 +60,12 @@ let daSalvare = 0
 let ora = 0
 const giostra = new Giostra(passo)
 
-const { inPausa, fermo, metti, togli, aiuto } = usaPausa({ anche: () => !!finale.value })
+const { inPausa, fermo, metti, togli, aiuto } = usaPausa({ anche: () => !!finale.value || !!dettaglio.value })
 
 const avanza = progresso(CHIAVE)
 const tappa = computed(() => CAMPAGNA[tappaIdx.value] || CAMPAGNA[0])
 const scalino = computed(() => scalinoDi(tappa.value))
-const siGioca = computed(() => vista.value === 'campo' && !domanda.value && !finale.value)
+const siGioca = computed(() => vista.value === 'campo' && !domanda.value && !finale.value && !dettaglio.value)
 
 function vuoto() {
   return { resto: 0, monete: 0, alSecondo: 0, baseIo: 100, baseNem: 100, castello: 1, miniera: 1 }
@@ -121,6 +124,7 @@ function riprendiPartita() {
 function azzera() {
   domanda.value = null
   finale.value = null
+  dettaglio.value = null
   avviso.value = ''
   voluta = null
   pagata = false
@@ -221,6 +225,47 @@ function prendiTela(tela) {
 }
 
 function ridimensiona() { campo?.adatta() }
+
+/* i dettagli: com'è adesso, com'è al livello dopo, quanto costa. Il campo sta fermo. */
+const NOME_CALCOLO = { '+': 'una somma', '−': 'una sottrazione', '×': 'una moltiplicazione', '÷': 'una divisione' }
+function apriDettagli({ id, azione }) {
+  const p = partita.value
+  if (!p || domanda.value || finale.value) return
+  const ammesse = operazioniDi(tappa.value)
+  let d, scheda
+  if (id) {
+    const k = TRUPPE[id]
+    const c = p.caserme.find(x => x.lato === 'io' && x.id === id)
+    const liv = c ? c.liv : 0
+    const det = dettaglioTruppa(id, liv)
+    const az = c ? 'potenzia' : 'costruisci'
+    const cal = p.calcoloDi('io', az, id)
+    d = { azione: az, id }
+    scheda = { truppa: id, titolo: k.nome, nota: k.nota, ruolo: ruoloDi(id), livello: liv, sottotitolo: 'da costruire',
+               ...det, cosa: cosaCambia(id), calcolo: NOME_CALCOLO[operazionePer(cal.op, ammesse)],
+               verbo: c ? '⬆️ Potenzia' : '🛖 Costruisci',
+               puoi: p.puoFare('io', az, id) && !p.inRiposo('io', id),
+               motivo: p.inRiposo('io', id) ? 'la caserma riposa ancora un po\'' : 'servono più monete',
+               fine: 'È già al livello massimo.' }
+  } else {
+    const det = dettaglioAzione(azione, { miniera: p.lati.io.miniera, castello: p.castello('io').liv })
+    const cal = p.calcoloDi('io', azione)
+    d = { azione }
+    scheda = { titolo: AZIONI[azione].nome, nota: AZIONI[azione].nota, ruolo: [], sottotitolo: '', icona: azione === 'miniera' ? '⛏️' : '🔧',
+               castello: azione === 'castello', ...det, cosa: '', calcolo: NOME_CALCOLO[operazionePer(cal.op, ammesse)],
+               verbo: azione === 'ripara' ? '🔧 Ripara' : '⬆️ Potenzia',
+               puoi: p.puoFare('io', azione), motivo: azione === 'ripara' && !p.riparabili('io').length ? 'non c\'è niente da riparare' : 'servono più monete',
+               fine: 'È già al livello massimo.' }
+  }
+  dettaglio.value = { ...scheda, scelta: d }
+  toccato.value = true
+}
+
+function procediDaiDettagli() {
+  const d = dettaglio.value
+  dettaglio.value = null
+  if (d) scegli(d.scelta)
+}
 
 /* una scelta: il calcolo la apre, la risposta la fa */
 function scegli({ azione, id }) {
@@ -337,6 +382,7 @@ function gancioDiProva() {
     get partita() { return partita.value },
     get fermo() { return fermo.value },
     get domanda() { return domanda.value },
+    get dettaglio() { return dettaglio.value },
     metti, togli, scegli,
   }
 }
@@ -371,14 +417,14 @@ onUnmounted(() => {
 
       <CampoVista v-else :cruscotto="cruscotto" :pannello="pannello" :avviso="avviso"
                   :dritta="!toccato && !finale" :ammesse="operazioniDi(tappa)"
-                  @tela="prendiTela" @scegli="scegli" />
+                  @tela="prendiTela" @scegli="scegli" @dettagli="apriDettagli" />
 
-      <!-- il foglio del calcolo sta in basso e lascia in vista il campo, che intanto rallenta -->
-      <div v-if="domanda" class="ar-foglio">
-        <Domanda :domanda="domanda.domanda" :pittori="domanda.pittori"
-                 :titolo="`${domanda.icona} ${domanda.nome}`"
-                 :origine="domanda" gioco="arena" @risposto="risposto" />
-      </div>
+      <!-- il calcolo prende tutto lo schermo; il campo intanto rallenta (non si ferma) -->
+      <Domanda v-if="domanda" :domanda="domanda.domanda" :pittori="domanda.pittori"
+               :titolo="`${domanda.icona} ${domanda.nome}`"
+               :origine="domanda" gioco="arena" @risposto="risposto" />
+
+      <Dettagli v-if="dettaglio" :d="dettaglio" @chiudi="dettaglio = null" @procedi="procediDaiDettagli" />
 
       <Finale v-if="finale" v-bind="finale" @ancora="ancora" @esci="allaMappa" />
 

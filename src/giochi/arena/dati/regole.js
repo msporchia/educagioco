@@ -13,12 +13,13 @@ export const CAMPO = {
 }
 
 /* I posti delle caserme sulla metà di sotto; sopra sono specchiati in y. Due
-   file ai lati della strada (la x è la distanza dalla corsia: 45 e 315 sono i
-   bordi). Lo ordina il motore: prima il lato con meno caserme, e dentro il
+   file ai lati della strada, a 100 dalla corsia: abbastanza vicino perché chi
+   marcia lungo la strada le veda (e le possa rompere), abbastanza lontano da non
+   stare sulla strada. Lo ordina il motore: prima il lato con meno caserme, e dentro il
    lato il posto più al sicuro (più lontano dal fiume). */
 export const POSTI = [
-  [45, 316], [315, 316], [45, 366], [315, 366],
-  [45, 416], [315, 416], [45, 466], [315, 466],
+  [80, 316], [280, 316], [80, 366], [280, 366],
+  [80, 416], [280, 416], [80, 466], [280, 466],
 ]
 
 /* Le truppe. `op` è l'operazione che si risolve per costruire e potenziare la
@@ -70,14 +71,14 @@ export const CRESCITA = {
   },
   miniera: {
     prezzo: [0, 10, 16, 24, 34, 46],                       // prezzo[liv] = liv → liv+1
-    resa: liv => 1 + 0.3 * (liv - 1),                      // moltiplica le monete al secondo
+    resa: liv => 1 + 0.5 * (liv - 1),                      // moltiplica le monete al secondo: +50% per livello
   },
 }
 
 /* Le scelte che non sono caserme. `op` decide il tipo di calcolo. */
 export const AZIONI = {
   miniera:  { nome: 'Più monete', op: '×', prezzo: null,
-              nota: 'Le monete arrivano il 30% più in fretta, per sempre. Costa ora, rende dopo.' },
+              nota: 'Le monete arrivano il 50% più in fretta per ogni livello, per sempre. Costa ora, rende dopo.' },
   ripara:   { nome: 'Ripara',     op: '+', prezzo: 6,
               nota: 'Rimette in sesto la costruzione messa peggio (anche il muro, anche crollato): +40% di vita.' },
   castello: { nome: 'Castello',   op: '÷', prezzo: null,

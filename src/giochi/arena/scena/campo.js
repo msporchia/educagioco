@@ -130,7 +130,7 @@ export class Campo {
     this.ombra(c, x, y + lh * 0.38, lw * 0.4, lh * 0.1)
     if (re.hp > 0) c.drawImage(img, sx, sy, w, h, x - lw / 2, y + lh * 0.3 - lh, lw, lh)
     else this.ombra(c, x, y, lw * 0.3, lh * 0.1, 0.5)
-    this.barra(c, x, y - lh * 0.62, this.m(34), re.hp / re.max)
+    if (re.hp < re.max) this.barra(c, x, y - lh * 0.62, this.m(34), re.hp / re.max)
     this.livello(c, x, y + lh * 0.3 + this.m(8), re.liv, lato)
   }
 
@@ -155,12 +155,10 @@ export class Campo {
     c.beginPath(); c.moveTo(x - m(17), y - m(4)); c.lineTo(x, y - m(17)); c.lineTo(x + m(17), y - m(4)); c.closePath(); c.fill()
     c.strokeStyle = 'rgba(0,0,0,.35)'; c.lineWidth = 1; c.stroke()
     c.restore()
-    this.pezzo(c, fotogramma(cs.id, ora, false, cs.posto), x, y - m(13), SCALA[cs.id] * 0.5 * this.s / 0.85, cs.lato === 'nem')
-    this.barra(c, x, y - m(34), m(26), cs.hp / cs.max)
+    // l'emblema sul tetto: piccolo e FERMO (il primo fotogramma), serve solo a dire di chi è
+    this.pezzo(c, fotogramma(cs.id, 0, false, 0), x, y - m(5), SCALA[cs.id] * 0.36 * this.s / 0.85, cs.lato === 'nem')
     this.livello(c, x, y + m(15), cs.liv, cs.lato)
-    // la prossima squadra: una barra sottile che si riempie (e in costruzione, gialla)
-    const ferma = cs.t > cs.ciclo
-    this.barra(c, x, y + m(21), m(26), 1 - cs.t / cs.ciclo, ferma ? '#ffd24a' : '#7ee08c')
+    if (cs.hp < cs.max) this.barra(c, x, y - m(22), m(26), cs.hp / cs.max)     // la vita si vede solo se è ferita
     if (cs.riposo > 0) { c.font = `${m(11)}px "Emoji Gioco", system-ui, sans-serif`; c.textAlign = 'center'; c.fillText('💤', x + m(16), y - m(8)) }
   }
 
@@ -187,7 +185,7 @@ export class Campo {
     c.beginPath(); c.moveTo(x - w / 2, y); c.lineTo(x + w / 2, y); c.stroke()
     c.strokeStyle = mu.lato === 'io' ? IO : NEM; c.lineWidth = 2; c.strokeRect(x - w / 2, y - h / 2, w, h)
     c.restore()
-    this.barra(c, x, y - h / 2 - m(6), m(26), mu.hp / mu.max)
+    if (mu.hp < mu.max) this.barra(c, x, y - h / 2 - m(6), m(26), mu.hp / mu.max)
   }
 
   truppa(c, u, ora) {

@@ -11,6 +11,7 @@ import { pensaNemico } from './nemico.js'
 
 const PASSO = 0.05                       // secondi di una fetta di tempo: la partita avanza a passi fissi
 const SGUARDO = 80                       // fin dove una truppa vede un'altra truppa
+const SGUARDO_EDIFICI = 105              // e fin dove vede un edificio: più lontano non lo cerca, marcia
 const MAX_EVENTI = 400
 
 export const altro = lato => (lato === 'io' ? 'nem' : 'io')
@@ -203,10 +204,13 @@ export class Partita {
       mn = 1e9
       for (const t of this.edificiContro(u)) {
         const d = dist(u, t)
-        if (d < mn) { mn = d; bers = t }
+        if (d < mn && d <= SGUARDO_EDIFICI) { mn = d; bers = t }
       }
     }
-    if (!bers) return
+    // nient'altro in vista: si marcia lungo la corsia verso il castello nemico, e si colpisce quello
+    // che si incontra per strada (le caserme ai lati si rompono solo se ci si passa vicino)
+    if (!bers) bers = this.castello(altro(u.lato))
+    if (!viva(bers)) return
 
     if (dist(u, bers) - (bers.r || 8) <= k.gitt) {
       if (u.cool <= 0) { this.colpisci(u, k, bers); u.cool = k.rate; u.colpo = 0.25 }

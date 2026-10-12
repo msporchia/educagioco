@@ -25,6 +25,14 @@ I numeri stanno in `src/giochi/arena/dati/regole.js`, il motore in
   cammina, il golem solo le costruzioni, i pipistrelli e il drago volano e
   scavalcano i muri. Il `guasti…()` di `dati/regole.js` pretende che ci sia
   almeno chi vola e almeno chi, da terra, ferisce chi vola.
+- **Le truppe marciano lungo la corsia.** Vedono una truppa nemica a 80 e un
+  edificio a 105: se c'è qualcosa in vista lo colpiscono (la più vicina), se no
+  vanno verso il castello nemico. **Le caserme stanno a 100 dalla strada** (due
+  file ai lati): chi passa le vede e le può rompere, chi non ci passa vicino le
+  lascia stare. La prima versione puntava all'edificio più vicino *in assoluto*:
+  le truppe nate ai lati tagliavano il campo in diagonale verso le caserme dei
+  lati invece di marciare sulla strada (l'utente: «c'è qualcosa di strano nel
+  modo in cui gira»).
 - Le caserme **crollano** (hanno vita, 300 + 60 per livello): il posto torna
   libero e si può ricostruire (si riparte dal livello 1). Una partita a
   caserme che nessuno può rompere sarebbe una gara di soldi.
@@ -35,7 +43,7 @@ Costano monete di battaglia e un calcolo, come le caserme.
 
 | scelta | cosa fa | prezzo |
 |---|---|---|
-| ⛏️ Più monete | +30% di monete al secondo per livello (6 livelli) | 10, 16, 24, 34, 46 |
+| ⛏️ Più monete | +50% di monete al secondo per livello (6 livelli: da ×1 a ×3,5) | 10, 16, 24, 34, 46 |
 | 🔧 Ripara | +40% di vita alla costruzione messa peggio, muro compreso (anche crollato) | 6 |
 | 🏰 Castello | più danno, cadenza, gittata e vita (10 livelli) | 8 → 66 |
 
@@ -51,6 +59,14 @@ Costano monete di battaglia e un calcolo, come le caserme.
 - **La miniera conviene presto e lascia scoperti**: è la scelta di strategia
   voluta dall'utente (produrre di più ma non attaccare); la riparazione e il
   castello più forte sono la risposta difensiva che prende tempo.
+
+## I dettagli («?»)
+
+Ogni carta ha un «?»: apre `viste/Dettagli.vue` con le righe «adesso → livello dopo»
+di `motore/dettagli.js` (una squadra ogni N secondi, vita e danno di ogni truppa,
+vita della caserma, prezzo), chi colpisce e se vola. È pensata per **confrontare
+le truppe in tranquillità** e capire quale conviene costruire; per questo il
+campo sta fermo mentre è aperta. Da lì si può anche partire col calcolo.
 
 ## Il respiro
 

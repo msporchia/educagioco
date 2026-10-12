@@ -13,7 +13,7 @@ const props = defineProps({
   dritta: { type: Boolean, default: true },        // «tocca una caserma»
   ammesse: { type: Array, default: () => ['+'] },  // le operazioni di questa tappa
 })
-const emit = defineEmits(['tela', 'scegli'])
+const emit = defineEmits(['tela', 'scegli', 'dettagli'])
 const tela = ref(null)
 onMounted(() => emit('tela', tela.value))
 
@@ -29,15 +29,19 @@ const NOME = { miniera: 'Più monete', ripara: 'Ripara', castello: 'Castello' }
   <div class="ar-campo">
     <div class="ar-hud em">
       <span class="ar-gettone">⏱️ <b>{{ orologio }}</b></span>
-      <span class="ar-gettone ar-monete" data-monete>🪙 <b>{{ cruscotto.monete }}</b>
-        <i>+{{ cruscotto.alSecondo.toFixed(1) }} al secondo</i></span>
       <span class="ar-gettone" data-castelli title="la vita dei due castelli">🏰 <b>{{ cruscotto.baseIo }}%</b> – <b>{{ cruscotto.baseNem }}%</b></span>
     </div>
 
     <div class="ar-quadro">
       <canvas ref="tela" class="ar-tela"></canvas>
       <div v-if="avviso" class="ar-avviso em" data-avviso>{{ avviso }}</div>
-      <div v-else-if="dritta" class="ar-dritta em">👇 tocca una caserma per costruirla</div>
+      <div v-else-if="dritta" class="ar-dritta em">👇 tocca una caserma · il ? spiega</div>
+    </div>
+
+    <!-- le monete stanno sopra le scelte che le spendono -->
+    <div class="ar-borsa em" data-monete>
+      <span class="ar-moneta">🪙 <b>{{ cruscotto.monete }}</b></span>
+      <i>+{{ cruscotto.alSecondo.toFixed(1) }} al secondo</i>
     </div>
 
     <div class="ar-pannello">
@@ -45,6 +49,8 @@ const NOME = { miniera: 'Più monete', ripara: 'Ripara', castello: 'Castello' }
               :class="{ 'ar-no': !c.puoi, 'ar-nuova': !c.presente }"
               :data-caserma="c.id" @click="emit('scegli', { azione: c.presente ? 'potenzia' : 'costruisci', id: c.id })">
         <span class="ar-segno">{{ c.op }}</span>
+        <span class="ar-info em" role="button" aria-label="dettagli" :data-dettagli="c.id"
+              @click.stop="emit('dettagli', { id: c.id })">?</span>
         <Ritratto :id="c.id" :lato="40" />
         <span class="ar-nome">{{ c.nome }}</span>
         <span class="ar-liv">{{ c.presente ? 'Lv ' + c.liv : 'da costruire' }}</span>
@@ -60,6 +66,8 @@ const NOME = { miniera: 'Più monete', ripara: 'Ripara', castello: 'Castello' }
               :class="{ 'ar-no': !a.puoi }"
               :data-azione="a.azione" @click="emit('scegli', { azione: a.azione })">
         <span class="ar-segno">{{ ammesse.includes(a.op) ? a.op : '' }}</span>
+        <span class="ar-info em" role="button" aria-label="dettagli" :data-dettagli="a.azione"
+              @click.stop="emit('dettagli', { azione: a.azione })">?</span>
         <Ritratto v-if="a.azione === 'castello'" torre :livello="a.livello" :lato="40" />
         <span v-else class="ar-icona em">{{ ICONA[a.azione] }}</span>
         <span class="ar-nome">{{ NOME[a.azione] }}</span>

@@ -14,7 +14,7 @@ misure` (l'equilibrio, dove c'è).
 `npm run tara:arena` cerca, tappa per tappa, per bisezione su una manopola `d`
 (0 = nemico quasi inerme, 1 = pari al giocatore bravo: monete al secondo, ogni
 quanto pensa e forza delle truppe) quanto forte deve essere il nemico perché il
-**bambino** di prova vinca la quota della tappa, da **90% nella prima a 60%
+**bambino** di prova vinca la quota della tappa, da **90% nella prima a 45%
 nell'ultima** (150 partite per passo, 8 passi). Il risultato è in
 `dati/taratura.js` con una firma (`motore/firma.js`): se si ritocca una regola, un
 truppa o una tappa senza ritarare, `unita/arena` diventa rosso.
@@ -39,6 +39,10 @@ indovinare 11% → 26%.
 - **Chi tira a indovinare vince ancora un quarto delle partite alte.** Non è un
   guasto: sbagliare un conto non paga monete né costa il castello, costa tempo e
   una caserma ferma. Il nemico è tarato per il bambino, non contro chi sbaglia.
+- **Provato un tetto per il giocatore bravo** (che non vincesse più dell'85% nell'ultima
+  tappa): il bambino scendeva al 20% perché `misura` è quasi perfetto (100% di conti
+  giusti, 1,5 s a scelta) e la differenza fra lui e il bambino è enorme. Non funziona:
+  l'ultima tappa si rende più dura abbassando il bersaglio del bambino (45%).
 - **Un giocatore attento vince sempre** (`misura` 100% ovunque): per un gioco
   per bambini va bene, ma la lava non ha ancora una tappa che metta in difficoltà
   chi sa giocare. Voce in [da-fare.md](da-fare.md).

@@ -12,6 +12,7 @@ import { CAMPAGNA, SCALINI, QUANTE_TAPPE, guastiDellaCampagna, operazioniDi, ope
 import { scrivi, leggi, dice, VERSIONE } from '../../src/giochi/arena/motore/sosta.js'
 import { firmaEquilibrio } from '../../src/giochi/arena/motore/firma.js'
 import { FIRMA, NEMICO } from '../../src/giochi/arena/dati/taratura.js'
+import { guastiDeiDettagli, dettaglioTruppa, dettaglioAzione, ruoloDi } from '../../src/giochi/arena/motore/dettagli.js'
 import { guastiDelleFigure } from '../../src/giochi/arena/scena/figure.js'
 import manifesto from '../../src/giochi/arena/gioco.js'
 import { guastiDellAlbo } from '../../src/giochi/albo.js'
@@ -98,6 +99,34 @@ controlla('stesso seme, stessa partita', JSON.stringify(uguali) === JSON.stringi
   controlla('i pipistrelli invece lo scavalcano', volanti.length > 0 && volanti.every(u => u.y > muro.y))
 }
 
+/* ══════════ 4b. si marcia lungo la corsia ══════════ */
+{
+  const marcia = lato => {
+    const p = new Partita({ rnd: caso(6) })
+    p.muri = []; p.caserme = []
+    for (const c of p.castelli) c.hp = c.max = 1e6
+    p.schiera(lato, 'guardiano', 80, lato === 'io' ? 400 : 140)
+    p.avanza(8)
+    return p.unita.find(u => u.id === 'guardiano')
+  }
+  const mio = marcia('io'), suo = marcia('nem')
+  controlla('una truppa nata al lato va verso la strada, non verso un lato', Math.abs(mio.x - 180) < Math.abs(80 - 180) && Math.abs(suo.x - 180) < 100)
+  // passando accanto a una caserma nemica entro la vista, la attacca
+  const q = new Partita({ rnd: caso(7) })
+  q.muri = []
+  q.caserme = [q.nuovaCaserma('nem', 'scheletri', 0, 999)]       // sul posto 0, a metà strada fra il fiume e il castello
+  const bersaglio = q.caserme[0]
+  q.schiera('io', 'guardiano', 180, 330, 20)                       // robusto: il castello nemico gli spara
+  q.avanza(8)
+  controlla('chi passa accanto a una caserma nemica la colpisce', bersaglio.hp < bersaglio.max, `vita ${bersaglio.hp}/${bersaglio.max}`)
+  // e se è lontana (a 220 dalla strada) non si scomoda per lei
+  const r = new Partita({ rnd: caso(8) })
+  r.muri = []; r.caserme = []
+  r.schiera('io', 'guardiano', 180, 300)
+  r.avanza(6)
+  controlla('senza niente in vista marcia verso il castello nemico', r.unita[0].y < 300 - 60)
+}
+
 /* ══════════ 5. una partita finisce, e senza fare niente si perde ══════════ */
 {
   const p = new Partita({ rnd: caso(9) })
@@ -158,6 +187,22 @@ controlla('stesso seme, stessa partita', JSON.stringify(uguali) === JSON.stringi
   const vecchio = { ...JSON.parse(JSON.stringify(dato)), v: VERSIONE + 1 }
   uguale('e uno di un\'altra versione pure', leggi(vecchio), null)
   controlla('la carta della mappa dice dove si era', dice(dato) && dice(dato).nome === CAMPAGNA[tappa].nome)
+}
+
+/* ══════════ 7b. i dettagli ══════════ */
+{
+  const g = guastiDeiDettagli()
+  controlla('i dettagli non hanno guasti', g.length === 0, g.join(' · '))
+  const d1 = dettaglioTruppa('lupi', 1), d2 = dettaglioTruppa('lupi', 2)
+  controlla('salire di livello fa arrivare le squadre più spesso',
+            parseFloat(d2.righe[0].dopo) < parseFloat(d2.righe[0].ora) && d1.righe[0].dopo !== null)
+  controlla('e le truppe sono più forti', Number(d1.righe[1].dopo) > Number(d1.righe[1].ora))
+  uguale('da costruire costa il prezzo della caserma', dettaglioTruppa('drago', 0).prezzo, TRUPPE.drago.costo)
+  controlla('al livello massimo non c\'è un «dopo» e non c\'è prezzo', dettaglioTruppa('lupi', 10).prezzo === null && dettaglioTruppa('lupi', 10).righe[0].dopo === null)
+  controlla('il golem dice che ignora le truppe e il drago che vola', ruoloDi('golem')[0].includes('costruzioni') && ruoloDi('drago')[1].includes('vola'))
+  const m = dettaglioAzione('miniera', { miniera: 1 })
+  controlla('la miniera al livello dopo rende di più (+50%)', m.righe[1].ora === '×1' && m.righe[1].dopo === '×1,5')
+  controlla('e costa quanto dice il motore', m.prezzo === new Partita({ rnd: caso(1) }).prezzo('io', 'miniera'))
 }
 
 /* ══════════ 8. la taratura è fresca ══════════ */

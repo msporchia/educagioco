@@ -16,6 +16,12 @@ e `vestiti.js`): non c'è un foglio nuovo.
   lupo, diavoletto, pipistrello, negromante, golem, drago. Lupo e drago hanno
   i passi di lato (6 fotogrammi); le altre il respiro (4) e uno scatto in
   avanti quando colpiscono, un saltello quando camminano.
+- **Le barre della vita si vedono solo sul ferito** (castello, caserme, muro,
+  truppe): con la barra sempre accesa una caserma ne aveva una sopra e una
+  sotto (la squadra che si riempie), e non si capiva quale dicesse cosa. La
+  squadra in arrivo sta nella carta in basso, non sul campo.
+- **Nella caserma l'emblema è piccolo e fermo, sul tetto**: serve solo a dire di
+  quale truppa è. Animato (il respiro) confondeva con le truppe vere.
 - **Il fondale** si compone con `componi()` del castello da una carta a
   caratteri in `campo.js` (acqua in mezzo, la strada la attraversa); la base
   del giocatore è il `castello` del vestito, quella del nemico la `bocca`.

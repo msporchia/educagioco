@@ -5,14 +5,15 @@
    gioco vero sta in piedi nel browser**: si apre dalla home, la mappa
    apre la prima tappa, il campo si dipinge (gli sprite del castello
    arrivano da un foglio che si decodifica dopo), una scelta apre il
-   calcolo **sotto** il campo — che resta in vista, perché rallenta e non
-   si ferma — e rispondere costruisce davvero. Poi si esce a metà e la
+   calcolo a tutto schermo (il campo intanto rallenta, non si ferma), il «?»
+   di una carta apre i dettagli e il campo sta fermo mentre li si legge, e
+   rispondere costruisce davvero. Poi si esce a metà e la
    mappa offre la partita, che si riprende con la caserma costruita.
 
    Le tre cose che da fuori non somigliano a un guasto:
    - **il campo vuoto**: un canvas senza figure non dà nessun errore.
-   - **il calcolo che copre il campo**: nessun errore nemmeno lì, ma
-     la pressione che si voleva (si calcola mentre il tempo corre) sparisce.
+   - **i dettagli che non fermano il campo**: nessun errore, ma chi legge con
+     calma si ritrova la battaglia cambiata.
    - **la partita ripresa su un altro canvas** (vedi survivors-sosta).
    `node test/esegui.mjs arena --niente-build`
    tempo: 60
@@ -65,28 +66,40 @@ controlla('le tre scelte che non sono truppe ci sono (miniera, ripara, castello)
           await page.locator('.ar-pannello [data-azione]').count() === 3 &&
           await page.locator('.ar-pannello [data-azione="muro"]').count() === 0)
 
-/* ── una scelta apre il calcolo sotto il campo ── */
-await page.locator('[data-caserma="guardiano"]').click()
-await page.waitForSelector('.ar-foglio .qz-tasto', { timeout: 6000 })
-const quadro = await page.locator('.ar-quadro').boundingBox()
-const foglio = await page.locator('.ar-foglio').boundingBox()
-controlla('il calcolo sta sotto il campo e non lo copre',
-          foglio.y >= quadro.y + quadro.height - 4, `foglio a ${foglio.y}, campo fino a ${quadro.y + quadro.height}`)
+/* ── il «?» spiega, e il campo sta fermo mentre si legge ── */
+const orologio = () => page.locator('.ar-hud b').first().innerText()
+await page.locator('[data-dettagli="guardiano"]').click()
+await page.waitForSelector('[data-dettagli-aperti]', { timeout: 4000 })
+const t0 = await orologio()
+await attendi(page, 1600)
+uguale('mentre si leggono i dettagli il campo sta fermo', await orologio(), t0)
+const testo = await page.locator('[data-dettagli-aperti]').innerText()
+controlla('i dettagli dicono cosa succede salendo di livello', /Una squadra ogni/.test(testo) && /Vita di ogni truppa/.test(testo))
+controlla('e quanto costa e che conto serve', /8\s*🪙/.test(testo) && /Per farlo si risolve una somma/.test(testo), testo.slice(0, 200))
+await scatto(page, 'arena-dettagli')
+await page.locator('[data-procedi]').click()
+
+/* ── una scelta apre il calcolo a tutto schermo ── */
+await page.waitForSelector('.ar .qz-tasto', { timeout: 6000 })
+const area = await page.locator('.ar').boundingBox()
+const velo = await page.locator('.ar .qz-velo').boundingBox()
+controlla('il calcolo prende tutto lo schermo', velo.height >= area.height * 0.95 && velo.width >= area.width * 0.95,
+          `velo ${Math.round(velo.width)}×${Math.round(velo.height)} su ${Math.round(area.width)}×${Math.round(area.height)}`)
 await scatto(page, 'arena-calcolo')
 
 /* si risponde finché la caserma nasce: sbagliare non costa monete, quindi a
    un conto sbagliato si riprova col prossimo */
 let costruita = false
 for (let giro = 0; giro < 12 && !costruita; giro++) {
-  if (!(await page.locator('.ar-foglio .qz-tasto').count())) {
+  if (!(await page.locator('.ar .qz-tasto').count())) {
     if (await page.locator('[data-caserma="guardiano"].ar-nuova').count() === 0) break
     await page.locator('[data-caserma="guardiano"]').click().catch(() => {})
-    await page.waitForSelector('.ar-foglio .qz-tasto', { timeout: 6000 }).catch(() => {})
+    await page.waitForSelector('.ar .qz-tasto', { timeout: 6000 }).catch(() => {})
   }
   await attendi(page, 450)                           // la finestra cieca del montaggio
-  await page.locator('.ar-foglio .qz-tasto').nth(giro % 4).click().catch(() => {})
+  await page.locator('.ar .qz-tasto').nth(giro % 4).click().catch(() => {})
   await attendi(page, 1200)
-  await page.waitForSelector('.ar-foglio', { state: 'detached', timeout: 12000 }).catch(() => {})
+  await page.waitForSelector('.ar .qz-velo', { state: 'detached', timeout: 12000 }).catch(() => {})
   costruita = await page.locator('[data-caserma="guardiano"]:not(.ar-nuova)').count() === 1
 }
 controlla('rispondendo giusto la caserma nasce davvero', costruita)

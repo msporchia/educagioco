@@ -48,9 +48,14 @@
 .ar-hud { display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 6px 8px }
 .ar-gettone { background: #0006; border-radius: 999px; padding: 4px 10px; font-size: 14px;
               display: inline-flex; align-items: center; gap: 4px; white-space: nowrap }
-.ar-monete i { font-style: normal; font-size: 11px; color: #ffe98a; margin-left: 3px }
+/* la striscia delle monete, fra il campo e le scelte */
+.ar-borsa { display: flex; align-items: center; justify-content: space-between; gap: 10px; height: 40px;
+            margin: 0 8px; padding: 0 14px; border-radius: 12px;
+            background: linear-gradient(180deg, #3b2f66, #281f4a); border: 2px solid #5b4a99 }
+.ar-moneta { font-size: 20px; font-weight: 800 }
+.ar-borsa i { font-style: normal; font-size: 13px; font-weight: 700; color: #ffe98a }
 /* il quadro è alto quanto lascia il pannello (barra e striscia in alto, tre righe di carte sotto) e largo 2:3 */
-.ar-quadro { position: relative; height: calc(100dvh - 388px); min-height: 300px; aspect-ratio: 2 / 3; max-width: 100%; margin: 0 auto; touch-action: none }
+.ar-quadro { position: relative; height: calc(100dvh - 432px); min-height: 280px; aspect-ratio: 2 / 3; max-width: 100%; margin: 0 auto; touch-action: none }
 .ar-tela { display: block; width: 100%; height: 100% }
 .ar-dritta, .ar-avviso { position: absolute; left: 50%; top: 8px; transform: translateX(-50%);
             white-space: nowrap; font-weight: 800; font-size: 14px; padding: 7px 14px; border-radius: 999px;
@@ -78,9 +83,12 @@
 .ar-ritratto { display: block }
 
 /* il foglio del calcolo: in basso, il campo resta in vista sopra e intanto rallenta */
-/* sta dove stava il pannello delle carte: sotto il quadro, che è alto quanto lascia il
-   viewport (100dvh − 388px), quindi sotto la barra e la striscia (56 + 44) restano 288px */
-.ar-foglio { position: absolute; left: 0; right: 0; bottom: 0; height: 288px; z-index: 20; --qz-h: .5vh }
+/* il «?» di una carta: un cerchietto nell'angolo, dentro un'area più larga che il dito prende */
+.ar-info { position: absolute; top: -4px; left: -4px; width: 34px; height: 34px; z-index: 2;
+           display: grid; place-items: center; font-size: 12px; font-weight: 900; color: #ffe98a }
+.ar-info::before { content: ''; position: absolute; width: 20px; height: 20px; border-radius: 50%;
+                   background: #ffffff1c; border: 1.5px solid #ffe98a99 }
+.ar-info { isolation: isolate }
 
 /* i veli: il cartello di fine */
 .ar-velo { position: absolute; inset: 0; z-index: 30; padding: 16px 14px; background: rgba(9, 14, 32, .88);
@@ -93,3 +101,26 @@
 .ar-grosso { width: 100%; padding: 14px 18px; border-radius: 16px; font-size: 18px; font-weight: 800;
              background: linear-gradient(180deg, #ffd24a, #f0a21a); color: #3a2400; display: flex; gap: 8px; justify-content: center }
 .ar-grosso.ar-chiaro { background: rgba(255, 255, 255, .12); color: #fff }
+
+/* i dettagli: a tutto schermo, il campo sta fermo */
+.ar-dettagli { z-index: 35; align-items: stretch; justify-content: flex-start; padding: 12px 10px; gap: 0 }
+.ar-scheda { position: relative; width: 100%; max-width: 420px; margin: auto; padding: 16px 14px 14px;
+             border-radius: 22px; color: #eaf0ff; background: linear-gradient(180deg, #223055, #141c33);
+             border: 1px solid #ffffff22; display: flex; flex-direction: column; gap: 10px }
+.ar-x { position: absolute; top: 10px; right: 10px; width: 34px; height: 34px; border-radius: 50%;
+        background: #ffffff1a; color: #fff; font-size: 16px }
+.ar-intesta { display: flex; align-items: center; gap: 12px; padding-right: 40px }
+.ar-intesta h2 { margin: 0; font-size: 21px; color: #ffe98a }
+.ar-livello { margin: 2px 0 0; font-size: 13px; color: #9fb0d8 }
+.ar-grande { font-size: 44px }
+.ar-nota-grande { margin: 0; font-size: 14.5px; line-height: 1.4; color: #dbe5ff }
+.ar-ruolo { margin: 0; padding-left: 18px; font-size: 13px; color: #b9c8ee; line-height: 1.5 }
+.ar-righe { width: 100%; border-collapse: collapse; font-size: 14px }
+.ar-righe th { font-size: 11px; font-weight: 700; color: #8a96b8; text-transform: uppercase; letter-spacing: .05em; text-align: left; padding: 2px 4px }
+.ar-righe td { padding: 6px 4px; border-top: 1px solid #ffffff14 }
+.ar-righe td:first-child { color: #c8d2ee }
+.ar-meglio { color: #7ee08c }
+.ar-cosa { margin: 0; font-size: 12.5px; color: #9fb0d8; line-height: 1.4 }
+.ar-calcolo { margin: 0; font-size: 13px; color: #e9c8ff; font-weight: 700 }
+.ar-motivo { margin: -4px 0 0; font-size: 12.5px; color: #ffb3a8; text-align: center }
+.ar-grosso.ar-spento { opacity: .45 }

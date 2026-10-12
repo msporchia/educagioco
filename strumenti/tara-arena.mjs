@@ -17,7 +17,7 @@ const argv = process.argv.slice(2)
 const prova = argv.includes('--prova')
 const opz = (nome, def) => { const i = argv.indexOf(nome); return i >= 0 ? Number(argv[i + 1]) : def }
 const DA = opz('--da', 0.9)         // la quota di vittorie del bambino nella prima tappa
-const A = opz('--a', 0.6)          // e nell'ultima
+const A = opz('--a', 0.45)         // e nell'ultima
 const VOLTE = opz('--volte', 120)
 const GIRI = 8
 const D_MAX = 1.6
@@ -34,7 +34,6 @@ const vinte = (tappa, d, pilota, volte = VOLTE) =>
   misura({ volte, sfida: { ...sfidaDi(tappa), nemico: nemicoDi(d) }, pilota }).vinte / volte
 
 const bersaglio = i => DA + (A - DA) * (i / Math.max(1, CAMPAGNA.length - 1))
-
 const risultati = {}
 for (const [i, t] of CAMPAGNA.entries()) {
   const mira = bersaglio(i)
