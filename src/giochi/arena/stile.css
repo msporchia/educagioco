@@ -1,0 +1,92 @@
+/* Ogni classe comincia per `ar-` (evita scontri con `.riga`, `.carta`,
+   `.tondo` dello stile globale). Il campo non scorre: il quadro sta in alto e
+   il pannello delle scelte sotto, a tutta larghezza. */
+
+.ar {
+  --ar-carta: #fffdf7;
+  --ar-inchiostro: #23301f;
+  --ar-tenue: #8a9384;
+  --ar-bordo: #d8e0d0;
+  --ar-accento: #4d6fd1;
+  --ar-notte: #101a34;
+
+  flex: 1; min-height: 0;
+  display: flex; flex-direction: column;
+  width: 100%; max-width: 460px; margin: 0 auto;
+  color: var(--ar-inchiostro);
+  position: relative;
+}
+/* il font di testo PRIMA di quelli delle emoji: Noto Color Emoji ha dentro anche le cifre */
+.ar .em { font-family: "Emoji Gioco", system-ui, "Noto Color Emoji", "Apple Color Emoji",
+                       "Segoe UI Emoji", "Twemoji Mozilla", sans-serif; line-height: 1 }
+
+/* la mappa della campagna */
+.ar-mappa { flex: 1; min-height: 0; overflow-y: auto; display: flex;
+            flex-direction: column; gap: 14px; padding: 8px 10px 20px }
+.ar-scalino > h3 { display: flex; align-items: center; gap: 7px;
+                   font-size: 15px; color: var(--ar-tenue); margin-bottom: 6px }
+.ar-scalino > h3 b { color: var(--ar-inchiostro); font-size: 16px }
+.ar-scalino > h3 i { font-style: normal; font-size: 12px; flex: 1; text-align: right;
+                     overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.ar-tappe { display: flex; flex-direction: column; gap: 8px }
+.ar-tappa { display: flex; align-items: center; gap: 10px; text-align: left;
+            background: var(--ar-carta); border-radius: 14px; padding: 10px 12px;
+            box-shadow: 0 2px 0 var(--ar-bordo); border-left: 6px solid var(--ar-accento);
+            transition: transform .12s }
+.ar-tappa:active { transform: scale(.98) }
+.ar-tappa .ar-faccia { font-size: 30px; flex: none }
+.ar-tappa .ar-testo { flex: 1; min-width: 0 }
+.ar-tappa b { display: block; font-size: 16px }
+.ar-tappa i { display: block; font-style: normal; font-size: 12.5px; color: var(--ar-tenue);
+              overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.ar-tappa .ar-stelle { font-size: 13px; letter-spacing: 1px; flex: none; color: var(--ar-tenue); font-weight: 800 }
+.ar-tappa.ar-chiusa { opacity: .5; border-left-color: #c8cfc0; box-shadow: none }
+.ar-tappa.ar-adesso { box-shadow: 0 3px 0 var(--ar-accento) }
+
+/* il campo: il quadro (3:2, sempre intero) e il pannello sotto */
+.ar-campo { flex: 1; min-height: 0; display: flex; flex-direction: column; background: #16203a; color: #fff }
+.ar-hud { display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 6px 8px }
+.ar-gettone { background: #0006; border-radius: 999px; padding: 4px 10px; font-size: 14px;
+              display: inline-flex; align-items: center; gap: 4px; white-space: nowrap }
+.ar-monete i { font-style: normal; font-size: 11px; color: #ffe98a; margin-left: 3px }
+.ar-quadro { position: relative; width: 100%; aspect-ratio: 3 / 2; max-height: 52vh; touch-action: none }
+.ar-tela { display: block; width: 100%; height: 100% }
+.ar-dritta, .ar-avviso { position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%);
+            white-space: nowrap; font-weight: 800; font-size: 14px; padding: 7px 14px; border-radius: 999px;
+            background: #ffd24a; color: #3a2400; box-shadow: 0 4px 14px #0007; pointer-events: none }
+.ar-avviso { background: #101a44e8; color: #fff; border: 2px solid #ffe98a }
+
+.ar-pannello { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px 6px; padding: 10px 8px 14px;
+               overflow-y: auto; align-content: start }
+.ar-carta { position: relative; min-height: 84px; border-radius: 12px; padding: 4px 2px 8px;
+            background: linear-gradient(180deg, #2a3454, #1a2138); border: 2px solid #3a4670; color: #fff;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
+            transition: transform .1s, opacity .15s }
+.ar-carta:active { transform: scale(.96) }
+.ar-carta.ar-nuova { border-style: dashed }
+.ar-carta.ar-azione { border-color: #6b5a9a; background: linear-gradient(180deg, #33305a, #1d1b3a) }
+.ar-carta.ar-no { opacity: .45 }
+.ar-segno { position: absolute; top: 2px; right: 5px; font-size: 14px; font-weight: 800; color: #ffd24a }
+.ar-icona { font-size: 30px; height: 40px; display: flex; align-items: center }
+.ar-nome { font-size: 10.5px; font-weight: 700; color: #c8d2ee; text-align: center }
+.ar-liv { font-size: 10.5px; font-weight: 800; color: #ffd24a }
+.ar-prezzo { font-size: 11px; font-weight: 800; color: #e9c8ff }
+.ar-prog { position: absolute; left: 7px; right: 7px; bottom: 3px; height: 3px; border-radius: 2px;
+           background: #0007; overflow: hidden; font-style: normal }
+.ar-prog b { display: block; height: 100%; background: #7ee08c }
+.ar-ritratto { display: block }
+
+/* il foglio del calcolo: in basso, il campo resta in vista sopra e intanto rallenta */
+.ar-foglio { position: absolute; left: 0; right: 0; bottom: 0; height: 62%; z-index: 20 }
+
+/* i veli: il cartello di fine */
+.ar-velo { position: absolute; inset: 0; z-index: 30; padding: 16px 14px; background: rgba(9, 14, 32, .88);
+           display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 11px; overflow-y: auto }
+.ar-cartello { width: 100%; max-width: 340px; text-align: center; color: #fff; display: flex; flex-direction: column; gap: 10px; align-items: center }
+.ar-esito { font-size: 56px }
+.ar-cartello h2 { font-size: 22px; margin: 0; color: #ffe98a }
+.ar-stelle-grandi { font-size: 34px }
+.ar-tempo, .ar-nota { margin: 0; color: #cbd5ff; font-size: 14px }
+.ar-grosso { width: 100%; padding: 14px 18px; border-radius: 16px; font-size: 18px; font-weight: 800;
+             background: linear-gradient(180deg, #ffd24a, #f0a21a); color: #3a2400; display: flex; gap: 8px; justify-content: center }
+.ar-grosso.ar-chiaro { background: rgba(255, 255, 255, .12); color: #fff }

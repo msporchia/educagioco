@@ -10,6 +10,7 @@
     "simula": "node strumenti/simula-castello.mjs",
     "tara": "node strumenti/tara-castello.mjs",
     "dps": "node strumenti/dps-castello.mjs",
+    "tara:arena": "node strumenti/tara-arena.mjs",
     "vetrina": "vite --open /strumenti/banco/vetrina.html",
     "mondo": "vite --open /strumenti/banco/mondo.html",
     "storie": "vite --open /strumenti/banco/storie.html",

@@ -18,11 +18,22 @@ export function caso(seme) {
   }
 }
 
+/* I giocatori finti con cui si tara: `misura` non sbaglia e ragiona in fretta,
+   `bambino` sbaglia un conto su quattro e ci pensa il doppio, `lento` ne sbaglia
+   quasi metà, `caso` tira a indovinare. Cambiarli rende vecchia la taratura
+   (la firma li include). */
+export const PILOTI = {
+  misura: { precisione: 1, ritmo: 1.5 },
+  bambino: { precisione: 0.75, ritmo: 2.5 },
+  lento: { precisione: 0.55, ritmo: 3.5 },
+  caso: { precisione: 0.25, ritmo: 3.5 },
+}
+
 // la fila in cui compra le caserme: prima chi tiene a bada gli altri, poi il resto
 const ORDINE = ['guardiano', 'pipistrelli', 'negromante', 'lupi', 'golem', 'drago', 'diavoletto']
 
 export class Pilota {
-  constructor({ rnd = Math.random, precisione = 0.9, ritmo = 2.5, caserme = 4 } = {}) {
+  constructor({ rnd = Math.random, precisione = 0.9, ritmo = 2.5, caserme = 5 } = {}) {
     this.rnd = rnd
     this.precisione = precisione
     this.ritmo = ritmo
@@ -32,28 +43,33 @@ export class Pilota {
     this.sbagliate = 0
   }
 
-  /* decide cosa vorrebbe fare adesso, o null */
+  /* decide cosa vorrebbe fare adesso, o null. Il buon senso di un giocatore che
+     ha capito il gioco: tiene in piedi quello che ha, prima la torretta (da sola
+     fa metà del lavoro), poi la miniera finché c'è tempo per ripagarsi, poi un
+     esercito misto, poi tutto nelle salite. */
   voglia(p) {
     const mie = p.casermeDi('io')
     const puo = (a, id) => p.puoFare('io', a, id)
+    const t = p.torretta('io')
 
     const ferite = p.riparabili('io').filter(e => e.hp < e.max * 0.5)
     if (ferite.length && puo('ripara')) return ['ripara']
-    const nemiciVicini = p.unita.filter(u => u.lato === 'nem' && !u.vola && u.y > p.t * 0 + 230)
-    if (nemiciVicini.length >= 2 && p.muriDi('io').length < 2 && puo('muro')) return ['muro']
-    if (p.t < 60 && p.lati.io.miniera < 3 && puo('miniera')) return ['miniera']
+    const arrivano = p.unita.filter(u => u.lato === 'nem' && !u.vola && u.y > 200)
+    if (arrivano.length >= 2 && p.muriDi('io').length < 2 && puo('muro')) return ['muro']
+    if (t.hp > 0 && t.liv < 3 && puo('torretta')) return ['torretta']
+    if (p.t < 45 && p.lati.io.miniera < 2 && puo('miniera')) return ['miniera']
     if (mie.length < this.caserme) {
       const id = ORDINE.find(i => puo('costruisci', i))
       if (id) return ['costruisci', id]
     }
-    const t = p.torretta('io')
-    if (t.hp > 0 && t.liv < Math.max(2, Math.floor(mie.reduce((s, c) => s + c.liv, 0) / Math.max(1, mie.length))) && puo('torretta')) return ['torretta']
+    const media = Math.floor(mie.reduce((s, c) => s + c.liv, 0) / Math.max(1, mie.length))
+    if (t.hp > 0 && t.liv < Math.max(3, media) && puo('torretta')) return ['torretta']
     const sale = mie.filter(c => c.liv < LIV_MAX && puo('potenzia', c.id) && !p.inRiposo('io', c.id))
     if (sale.length) {
       const minimo = Math.min(...sale.map(c => c.liv))
       return ['potenzia', sale.find(c => c.liv === minimo).id]
     }
-    if (p.lati.io.miniera < 6 && p.t < 100 && puo('miniera')) return ['miniera']
+    if (p.lati.io.miniera < 4 && p.t < 90 && puo('miniera')) return ['miniera']
     return null
   }
 

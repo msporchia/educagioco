@@ -140,7 +140,7 @@ export class Campo {
   }
 
   livello(c, x, y, liv, lato) {
-    c.font = `bold ${this.m(8)}px system-ui`; c.textAlign = 'center'; c.textBaseline = 'middle'
+    c.font = `bold ${this.m(8)}px "Emoji Gioco", system-ui, sans-serif`; c.textAlign = 'center'; c.textBaseline = 'middle'
     const w = this.m(18), h = this.m(10)
     c.fillStyle = lato === 'io' ? IO : NEM
     c.beginPath(); c.roundRect(x - w / 2, y - h / 2, w, h, h / 2); c.fill()
@@ -166,7 +166,7 @@ export class Campo {
     // la prossima squadra: una barra sottile che si riempie (e in costruzione, gialla)
     const ferma = cs.t > cs.ciclo
     this.barra(c, x, y + m(21), m(26), 1 - cs.t / cs.ciclo, ferma ? '#ffd24a' : '#7ee08c')
-    if (cs.riposo > 0) { c.font = `${m(11)}px system-ui`; c.textAlign = 'center'; c.fillText('💤', x + m(16), y - m(8)) }
+    if (cs.riposo > 0) { c.font = `${m(11)}px "Emoji Gioco", system-ui, sans-serif`; c.textAlign = 'center'; c.fillText('💤', x + m(16), y - m(8)) }
   }
 
   muro(c, mu) {
@@ -228,7 +228,7 @@ export class Campo {
         if (e.tipo === 'cura') {
           c.strokeStyle = `rgba(110,240,140,${1 - q})`; c.lineWidth = 3
           c.beginPath(); c.arc(x, y, this.m(10) + q * this.m(26), 0, 7); c.stroke()
-          c.fillStyle = `rgba(110,240,140,${1 - q})`; c.font = `bold ${this.m(14)}px system-ui`
+          c.fillStyle = `rgba(110,240,140,${1 - q})`; c.font = `bold ${this.m(14)}px "Emoji Gioco", system-ui, sans-serif`
           c.textAlign = 'center'; c.fillText('+', x, y - q * this.m(24))
         } else if (e.tipo === 'crollo') {
           c.fillStyle = `rgba(150,140,120,${0.7 * (1 - q)})`

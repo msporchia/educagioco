@@ -7,6 +7,14 @@
 import { guastiDelleRegole, TRUPPE, CAMPO, MURO, BASE } from '../../src/giochi/arena/dati/regole.js'
 import { Partita } from '../../src/giochi/arena/motore/partita.js'
 import { caso, gioca } from '../../src/giochi/arena/motore/banco.js'
+import { CAMPAGNA, SCALINI, QUANTE_TAPPE, guastiDellaCampagna, operazioniDi, operazionePer, stellePer, sfidaDi }
+  from '../../src/giochi/arena/dati/campagna.js'
+import { scrivi, leggi, dice, VERSIONE } from '../../src/giochi/arena/motore/sosta.js'
+import { firmaEquilibrio } from '../../src/giochi/arena/motore/firma.js'
+import { FIRMA, NEMICO } from '../../src/giochi/arena/dati/taratura.js'
+import { guastiDelleFigure } from '../../src/giochi/arena/scena/figure.js'
+import manifesto from '../../src/giochi/arena/gioco.js'
+import { guastiDellAlbo } from '../../src/giochi/albo.js'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 
 /* ══════════ 1. i dati ══════════ */
@@ -92,5 +100,62 @@ controlla('stesso seme, stessa partita', JSON.stringify(uguali) === JSON.stringi
   uguale('chi non fa niente perde', p.fine, 'perso')
   controlla('ma ha respirato qualche decina di secondi', p.t > 30, `solo ${p.t.toFixed(0)}`)
 }
+
+/* ══════════ 6. la campagna ══════════ */
+{
+  const g = guastiDellaCampagna()
+  controlla('la campagna non ha guasti', g.length === 0, g.join(' · '))
+  uguale('dodici tappe', QUANTE_TAPPE, 12)
+  controlla('la prima tappa è di sole somme', operazioniDi(CAMPAGNA[0]).join() === '+')
+  controlla('la palude porta le moltiplicazioni', operazioniDi(CAMPAGNA[3]).includes('×'))
+  controlla('la neve porta le divisioni', operazioniDi(CAMPAGNA[6]).includes('÷'))
+  uguale('un\'azione che vuole ÷ in una tappa di somme ripiega su +', operazionePer('÷', ['+']), '+')
+  uguale('e in una di somme e sottrazioni su −', operazionePer('÷', ['+', '−']), '−')
+  uguale('un\'operazione ammessa resta quella', operazionePer('×', ['+', '−', '×']), '×')
+  uguale('vincere dà una stella', stellePer({ vinto: true, torrettaViva: false, vitaBase: 0.2 }), 1)
+  uguale('con la torretta e la base intatta tre', stellePer({ vinto: true, torrettaViva: true, vitaBase: 0.9 }), 3)
+  uguale('perdere zero', stellePer({ vinto: false, torrettaViva: true, vitaBase: 0.9 }), 0)
+  const gg = guastiDelleFigure()
+  controlla('le figure delle truppe esistono', gg.length === 0, gg.join(' · '))
+  const ga = guastiDellAlbo([manifesto])
+  controlla('il manifesto e il suo albo stanno in piedi', ga.length === 0, ga.join(' · '))
+  for (const t of CAMPAGNA) {
+    const p = new Partita({ rnd: caso(2), sfida: sfidaDi(t) })
+    p.avanza(5)
+    controlla(`${t.chiave}: parte e gira`, !p.fine && p.casermeDi('io').length === 1)
+  }
+}
+
+/* ══════════ 7. la sosta ══════════ */
+{
+  const tappa = 4
+  const p = new Partita({ rnd: caso(11), sfida: sfidaDi(CAMPAGNA[tappa]) })
+  p.lati.io.monete = 200
+  p.fai('io', 'costruisci', 'lupi'); p.fai('io', 'miniera'); p.fai('io', 'muro'); p.fai('io', 'torretta')
+  p.avanza(40)
+  const dato = scrivi(p, tappa)
+  controlla('una partita in corso si salva', dato && dato.v === VERSIONE)
+  const letto = leggi(JSON.parse(JSON.stringify(dato)), { rnd: caso(1) })
+  controlla('e si rilegge', letto && letto.indice === tappa)
+  const q = letto.partita
+  uguale('stesse monete', Math.round(q.lati.io.monete), Math.round(p.lati.io.monete))
+  uguale('stessa miniera', q.lati.io.miniera, p.lati.io.miniera)
+  uguale('stesse caserme', q.casermeDi('io').map(c => c.id + c.liv).sort().join(), p.casermeDi('io').map(c => c.id + c.liv).sort().join())
+  uguale('stessa torretta', q.torretta('io').liv, p.torretta('io').liv)
+  uguale('stesse truppe in campo', q.unita.length, p.unita.length)
+  q.avanza(5)
+  controlla('la partita ripresa continua', q.t > p.t)
+  uguale('niente da salvare a partita appena cominciata', scrivi(new Partita({ rnd: caso(1) }), 0), null)
+  const rotto = JSON.parse(JSON.stringify(dato)); rotto.caserme[0].id = 'inesistente'
+  uguale('un salvataggio storto si butta', leggi(rotto), null)
+  const vecchio = { ...JSON.parse(JSON.stringify(dato)), v: VERSIONE + 1 }
+  uguale('e uno di un\'altra versione pure', leggi(vecchio), null)
+  controlla('la carta della mappa dice dove si era', dice(dato) && dice(dato).nome === CAMPAGNA[tappa].nome)
+}
+
+/* ══════════ 8. la taratura è fresca ══════════ */
+controlla('la taratura è fresca: se questo è rosso, rilancia `npm run tara:arena`',
+          FIRMA === firmaEquilibrio(), `la firma è ${firmaEquilibrio()}, la taratura ha ${FIRMA}`)
+controlla('ogni tappa ha la sua scheda del nemico', CAMPAGNA.every(t => NEMICO[t.chiave] && t.nemico === NEMICO[t.chiave]))
 
 riassunto('arena (motore)')
