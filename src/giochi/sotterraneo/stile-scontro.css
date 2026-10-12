@@ -1,0 +1,185 @@
+/* ═══════════ lo scontro a gruppi (viste/Scontro.vue, FilaDeiTurni.vue; docs/sotterraneo/scontro.md, «La vista») ═══════════
+   Il palco: l'eroe a sinistra, i mostri a destra in una o due file (il grosso al centro), la fila dei turni sul bordo destro.
+   Tutto in un riquadro di altezza fissa: lo scontro non cambia misura mentre i mostri cadono. Il palco sta fermo in cima alla
+   finestra (`sticky`): su un telefono stretto scorre al più la scelta, mai il fondale. */
+.sot-scontro { display: contents }
+.sot-duello {
+  position: sticky; top: 0; z-index: 5; overflow: hidden; height: 244px; margin: 0 -4px;
+  background: #0e0b16;
+  border-radius: 14px; box-shadow: inset 0 0 0 1px #c9a24a55, inset 0 -30px 40px -20px #000;
+  animation: sot-entra .35s ease-out;
+}
+.sot-duello[data-file="2"] { height: 292px }
+.sot-palco { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; z-index: 0 }
+.sot-duello::after {   /* la penombra ai bordi: il palco è la scena vera, ma non deve rubare l'occhio ai personaggi */
+  content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background: radial-gradient(ellipse at 50% 70%, transparent 35%, #000000b0 100%);
+}
+
+/* ── l'eroe, e il posto vuoto del compagno ── */
+.sot-attore-eroe { position: absolute; z-index: 3; left: 8px; bottom: 70px }
+.sot-duello[data-file="2"] .sot-attore-eroe { bottom: 108px }
+.sot-compagno {
+  position: absolute; z-index: 2; left: 14px; bottom: 16px; width: 54px; height: 18px;
+  border: 1.5px dashed #ffffff2e; border-radius: 50%; background: #0000004d;
+}
+.sot-duello[data-file="2"] .sot-compagno { bottom: 24px }
+.sot-nome-abilita {
+  position: absolute; left: 0; top: -22px; z-index: 5; display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px 2px 5px;
+  font-size: 11.5px; font-weight: 800; white-space: nowrap; color: var(--tinta, #ffd23f);
+  background: #000c; border: 1px solid var(--tinta, #ffd23f); border-radius: 999px; animation: sot-entra .18s ease-out;
+}
+
+/* ── i mostri ── */
+.sot-schiera {
+  position: absolute; z-index: 3; left: var(--ae, 80px); right: 44px; top: 10px; bottom: 6px;
+  display: grid; grid-template-columns: repeat(6, 1fr); grid-auto-rows: 1fr;
+}
+.sot-m {
+  position: relative; min-width: 0; margin: 0; padding: 0 0 4px; font: inherit; color: inherit; cursor: pointer;
+  background: none; border: 0; border-radius: 12px; -webkit-tap-highlight-color: transparent;
+  display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 3px;
+  transition: opacity .55s ease, transform .55s ease;
+}
+.sot-duello[data-file="1"] .sot-m { padding-bottom: 50px }
+.sot-m-corpo { position: relative; display: flex; justify-content: center; align-items: flex-end }
+.sot-m:disabled { cursor: default }
+.sot-m.sot-morto { opacity: 0; transform: translateY(10px) scale(.9); pointer-events: none }
+.sot-minaccia {
+  height: 13px; line-height: 13px; font-size: 10.5px; font-weight: 800; white-space: nowrap; color: #ffb09f;
+  text-shadow: 0 1px 2px #000, 0 0 4px #000; transition: opacity .2s ease;
+}
+.sot-minaccia b { font-size: 12px; color: #ffd2c8 }
+.sot-minaccia .sot-glifo { vertical-align: -2px; color: #ffd23f }
+.sot-minaccia-salta { color: #ffe39a }
+.sot-m-grosso .sot-vita { width: 84px }
+.sot-vita {
+  display: block; width: var(--barra, 60px); height: 6px; border-radius: 999px; background: #1a1018; overflow: hidden;
+  box-shadow: 0 0 0 1px #000c, 0 1px 3px #000;
+}
+.sot-vita i { display: block; height: 100%; background: linear-gradient(90deg, #e0644f, #ff9b7a); transition: width .25s ease-out }
+/* il bersaglio: un anello d'oro sotto i piedi. Chi verrà colpito dalla scelta fatta: un contorno */
+.sot-anello { position: absolute; left: 50%; bottom: -5px; width: calc(100% + 14px); max-width: 96px; height: 12px; translate: -50% 0; opacity: 0;
+  border: 2px solid #ffd23f; border-radius: 50%; box-shadow: 0 0 9px #ffd23f99, inset 0 0 6px #ffd23f66; pointer-events: none }
+.sot-bersaglio .sot-anello { opacity: 1 }
+.sot-colpito-da-me { outline: 2px solid color-mix(in srgb, #ffd23f calc(var(--f, 1) * 100%), transparent); outline-offset: -2px;
+  background: #ffd23f14 }
+.sot-m:focus-visible { outline: 2px solid #fff }
+.sot-m-chiave { position: absolute; left: 0; top: 4px; color: #ffd23f; filter: drop-shadow(0 1px 1px #000) }
+/* gli stati addosso: una pastiglia piccola per ognuno, col numero dei turni che restano */
+.sot-m-stati { position: absolute; right: -3px; top: 2px; display: flex; flex-direction: column; gap: 2px; align-items: flex-end; pointer-events: none }
+.sot-chip {
+  display: inline-flex; align-items: center; gap: 1px; padding: 1px 3px; border-radius: 999px; font-size: 10px; font-weight: 800; line-height: 12px;
+  background: #000b; border: 1px solid #ffffff30; color: var(--sot-inchiostro);
+}
+.sot-chip .sot-glifo { flex: none }
+.sot-chip-veleno { color: #8be060; border-color: #4fbf2a99 }
+.sot-chip-fuoco { color: #ff8a3c; border-color: #ff5a1c99 }
+.sot-chip-debole { color: #bfe6ff; border-color: #5ab4ff99 }
+.sot-chip-fermo { color: #ffd23f; border-color: #ffd23f99 }
+.sot-chip-esposto { color: #8bd04a; border-color: #4fa02a99 }
+.sot-chip-rotto { color: #c8c8d4 }
+
+/* ── le figure: tre strati, perché ognuno ha la sua animazione (chi si fa sotto, chi trema, chi respira) ── */
+.sot-figura { position: relative; display: grid; place-items: end center; filter: drop-shadow(0 6px 4px #000a) }
+.sot-corpo { display: grid; place-items: end center }
+.sot-respira { display: block; animation: sot-respira 2.2s ease-in-out infinite }
+.sot-m-fig .sot-respira { scale: -1 1 }   /* guarda l'eroe (la proprietà `scale` non litiga con il respiro, che muove) */
+.sot-m:nth-child(2n) .sot-respira { animation-delay: -.7s }
+.sot-m:nth-child(3n) .sot-respira { animation-delay: -1.4s }
+@keyframes sot-respira { 50% { transform: translateY(-3px) } }
+/* gli effetti che durano cambiano il colore della figura */
+.sot-addosso-fuoco { filter: drop-shadow(0 0 7px #ff7a2a) sepia(.35) saturate(2) brightness(1.1) }
+.sot-addosso-debole { filter: drop-shadow(0 0 7px #7cc8ff) hue-rotate(150deg) saturate(1.2) brightness(1.2) }
+.sot-addosso-veleno { filter: drop-shadow(0 0 7px #7ae04a) hue-rotate(60deg) saturate(1.5) }
+.sot-addosso-fermo { filter: drop-shadow(0 0 5px #ffd23f) grayscale(.4) }
+.sot-addosso-esposto { filter: drop-shadow(0 0 7px #6fbf3a) saturate(1.3) }
+.sot-eroe-fig .sot-respira.sot-protetto { filter: drop-shadow(0 0 8px #7cc8ff) drop-shadow(0 0 3px #fff) }
+.sot-eroe-fig .sot-respira.sot-guarisce { filter: drop-shadow(0 0 8px #6fe08a) }
+
+/* ── le azioni, una alla volta (viste/racconto.js): chi agisce scatta, chi prende trema ── */
+.sot-eroe-fig.sot-fx-scatta { animation: sot-scatta-dx .36s ease-out }
+.sot-eroe-fig.sot-fx-tira { animation: sot-rincula .32s ease-out }
+.sot-eroe-fig.sot-fx-vuoto { animation: sot-vuoto .42s ease-out }
+.sot-m-fig.sot-fx-scatta { animation: sot-scatta-sx .4s ease-out }
+.sot-fx-colpito .sot-corpo { animation: sot-scossa .36s }
+.sot-m-fig.sot-fx-colpito .sot-corpo { filter: drop-shadow(0 0 8px #ff5a3c) brightness(1.5) }
+.sot-eroe-fig.sot-fx-colpito::after {   /* il graffio sull'eroe: tre segni rossi */
+  content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0; animation: sot-lampo .36s ease-out both;
+  background: repeating-linear-gradient(60deg, transparent 0 22%, #ff3b2a 24% 27%, transparent 29% 40%);
+}
+.sot-fx-protegge .sot-corpo, .sot-fx-cura .sot-corpo { animation: sot-alone 1s ease-out }
+.sot-fx-cura { --tinta: #6fe08a }
+@keyframes sot-scatta-dx { 35% { transform: translateX(44px) scale(1.06) } 100% { transform: none } }
+@keyframes sot-scatta-sx { 35% { transform: translateX(-48px) scale(1.1) } 100% { transform: none } }
+@keyframes sot-rincula { 30% { transform: translateX(-8px) } 100% { transform: none } }
+@keyframes sot-vuoto { 40% { transform: translateX(26px) } 100% { transform: none } }
+@keyframes sot-scossa { 25% { transform: translateX(-5px) rotate(-4deg) } 75% { transform: translateX(5px) rotate(4deg) } }
+@keyframes sot-lampo { 0% { opacity: 0 } 25% { opacity: 1 } 100% { opacity: 0 } }
+@keyframes sot-alone { 0% { filter: none } 30% { filter: drop-shadow(0 0 14px var(--tinta, #7cc8ff)) brightness(1.4) } 100% { filter: none } }
+@keyframes sot-entra { from { opacity: 0; transform: scale(.94) } }
+
+/* i numeri che salgono sopra chi li prende */
+.sot-numero {
+  position: absolute; left: 50%; top: -4px; z-index: 6; translate: -50% 0; white-space: nowrap; pointer-events: none;
+  font-size: 24px; font-weight: 900; text-shadow: 0 2px 0 #000, 0 0 10px currentColor;
+  animation: sot-numero-sale 1.1s ease-out both;
+}
+.sot-numero-dato { color: #ffd23f }
+.sot-numero-preso { color: #ff6a55 }
+.sot-numero-veleno { color: #8be060; font-size: 20px }
+.sot-numero-nota { color: #e8e2d4; font-size: 12.5px; font-weight: 800; letter-spacing: .02em }
+.sot-attore-eroe .sot-numero { top: -6px }
+@keyframes sot-numero-sale { 0% { opacity: 0; transform: translateY(10px) scale(.7) } 20% { opacity: 1; transform: translateY(0) scale(1.15) } 100% { opacity: 0; transform: translateY(-34px) } }
+
+/* il glifo che vola dall'eroe a chi colpisce */
+.sot-dardo {
+  position: absolute; z-index: 7; margin: -15px 0 0 -15px; color: var(--tinta, #ffd23f); pointer-events: none; opacity: 0;
+  filter: drop-shadow(0 0 8px var(--tinta, #ffd23f)) drop-shadow(0 0 3px #fff);
+  animation: sot-vola .38s var(--ritardo, 0s) ease-in both;
+}
+@keyframes sot-vola {
+  0% { transform: translate(0, 0) scale(.7); opacity: 0 }
+  15% { opacity: 1 }
+  100% { transform: translate(var(--dx, 100px), var(--dy, 0)) scale(1.2); opacity: 0 }
+}
+
+/* la riga d'apertura (l'agguato, la sorpresa) */
+.sot-apertura {
+  position: absolute; z-index: 8; left: 50%; top: 34%; margin: 0; translate: -50% 0; padding: 5px 16px; white-space: nowrap; pointer-events: none;
+  font-size: 19px; font-weight: 900; letter-spacing: .03em; color: #ffe0a8; background: #000b; border-radius: 6px;
+  border: 1px solid #c9a24a99; text-shadow: 0 2px 0 #000, 0 0 12px #e0432f88; animation: sot-entra .22s ease-out;
+}
+
+/* ── la fila dei turni ── */
+.sot-fila {
+  position: absolute; z-index: 4; right: 4px; top: 8px; width: 38px; display: flex; flex-direction: column; align-items: center; gap: 3px;
+  pointer-events: none;
+}
+.sot-turno {
+  position: relative; box-sizing: border-box; width: 28px; height: 26px; display: grid; place-items: center; overflow: hidden;
+  background: #000a; border: 1px solid #ffffff2a; border-radius: 6px; transition: all .25s ease;
+}
+.sot-turno-fig { display: block; line-height: 0; transform-origin: center; image-rendering: pixelated }
+.sot-turno-eroe { border-color: #c9a24a; background: #2a2008c8 }
+.sot-turno.sot-adesso { width: 38px; height: 42px; border-color: #ffd23f; border-width: 2px; box-shadow: 0 0 10px #ffd23f88 }
+.sot-turno-salta .sot-turno-fig { opacity: .45 }
+.sot-turno-stelle { position: absolute; right: 0; top: 0; color: #ffd23f }
+.sot-fila-enter-from, .sot-fila-leave-to { opacity: 0; transform: translateY(-10px) scale(.8) }
+.sot-fila-leave-active { position: absolute; z-index: -1 }
+.sot-fila-move { transition: transform .25s ease }
+
+/* ── le pastiglie dell'eroe, sotto il palco ── */
+.sot-stati-mie { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 3px }
+.sot-stati-mie span {
+  display: inline-flex; align-items: center; gap: 3px; padding: 1px 6px; border-radius: 999px; font-size: 11.5px; font-weight: 700;
+  background: #ffffff10; border: 1px solid #ffffff1a; color: var(--sot-inchiostro);
+}
+.sot-stati-mie .sot-glifo { vertical-align: -2px }
+
+/* dopo un tocco il racconto va in fretta */
+.sot-veloce *, .sot-veloce *::after { animation-duration: .14s !important; animation-delay: 0s !important; transition-duration: .1s !important }
+@media (prefers-reduced-motion: reduce) {
+  .sot-duello, .sot-duello * , .sot-duello *::after { animation: none !important }
+  .sot-numero { opacity: 1 }
+}

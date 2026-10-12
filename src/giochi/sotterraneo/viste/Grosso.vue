@@ -3,8 +3,9 @@
 // Lo sprite dipinto se l'atlante ha `grosso-<chiave>-fermo-0`; se no quello della sua specie, ingrandito, con la corona.
 // `scala`: i pixel di schermo per ogni pixel della sua scatola di 32×32; lo sprite di ripiego ha una scala intera sua,
 // o uscirebbe a pixel disuguali (viste/figura.js)
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { figura } from './figura.js'
+import { ATLANTE, PEZZI } from '../dati/atlante.js'
 import { GROSSI, figuraDelGrosso, spriteDelGrosso, LATO_DEL_GROSSO } from '../dati/grossi.js'
 
 const props = defineProps({
@@ -19,6 +20,31 @@ const corpo = computed(() => {
   const s = f.dipinto ? props.scala : Math.max(1, Math.round(props.scala * LATO_DEL_GROSSO / f.alto))
   return figura(spriteDelGrosso(f, false, 0), { scala: s })
 })
+// i fotogrammi sono quadrati con righe vuote in cima: la corona si posa dove comincia la testa, non in cima alla scatola
+// (come in scena/tela.js con `vuotoSopra`). Si misura una volta per sprite, sul foglio
+const vuoti = new Map()
+let immagine = null
+const caricaIlFoglio = () => (immagine = immagine || new Promise(ok => { const i = new Image(); i.onload = () => ok(i); i.src = ATLANTE }))
+const vuoto = ref(0)   // righe vuote in cima allo sprite, in pixel dello sprite
+watch(() => (F.value && !F.value.dipinto ? spriteDelGrosso(F.value, false, 0) : null), async nome => {
+  vuoto.value = 0
+  const p = nome && PEZZI[nome]
+  if (!p) return
+  if (!vuoti.has(nome)) {
+    const img = await caricaIlFoglio()
+    const [sx, sy, w, h] = p
+    const c = document.createElement('canvas')
+    c.width = w; c.height = h
+    const g = c.getContext('2d')
+    g.drawImage(img, sx, sy, w, h, 0, 0, w, h)
+    const d = g.getImageData(0, 0, w, h).data
+    let r = 0
+    while (r < h && !Array.from({ length: w }, (_, x) => d[(r * w + x) * 4 + 3]).some(a => a > 0)) r++
+    vuoti.set(nome, r)
+  }
+  vuoto.value = vuoti.get(nome)
+}, { immediate: true })
+const scalaVera = computed(() => (corpo.value && F.value ? parseFloat(corpo.value.gabbia.height) / PEZZI[spriteDelGrosso(F.value, false, 0)][3] : 1))
 // la corona è larga più o meno metà della figura
 const corona = computed(() => (corpo.value ? Math.round(parseFloat(corpo.value.gabbia.width) * 0.5) : 0))
 </script>
@@ -26,6 +52,6 @@ const corona = computed(() => (corpo.value ? Math.round(parseFloat(corpo.value.g
 <template>
   <span v-if="corpo" class="sot-grosso-fig" data-figura-grosso :style="{ '--tinta': G.tinta }">
     <span class="sot-ritratto" :style="corpo.gabbia"><i :style="corpo.pezzo"></i></span>
-    <b v-if="!F.dipinto" class="sot-corona em" :style="{ fontSize: corona + 'px' }">👑</b>
+    <b v-if="!F.dipinto" class="sot-corona em" :style="{ fontSize: corona + 'px', top: Math.round(vuoto * scalaVera) + 'px' }">👑</b>
   </span>
 </template>
