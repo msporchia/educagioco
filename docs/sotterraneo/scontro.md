@@ -211,8 +211,8 @@ misure e cosa resta da guardare: [scontro-bilancio.md](scontro-bilancio.md).
 
 ## L'interfaccia e la vista
 
-Cosa legge la vista dal motore (`Corsa.foglio`, l'esito di `rispondi`, un'azione) e com'è fatta lo scontro a schermo (i mostri in una
-o due file, il grosso al centro, la fila dei turni, il racconto un'azione alla volta, i bersagli dei test):
+Cosa legge la vista dal motore (`Corsa.foglio`, l'esito di `rispondi`, un'azione) e com'è fatta lo scontro a schermo (i mostri in colonne
+sul pavimento, il grosso davanti e al centro, la fila dei turni, il racconto un'azione alla volta, i bersagli dei test):
 [scontro-interfaccia.md](scontro-interfaccia.md).
 
 ## Le domande

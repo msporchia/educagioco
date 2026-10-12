@@ -2,8 +2,7 @@
 
 La regola dello scontro sta in [scontro.md](scontro.md); qui com'è fatta la vista e cosa le dà il motore. Il codice:
 `viste/Scontro.vue` (il palco), `viste/FilaDeiTurni.vue` (la colonna dei turni), `viste/CaselleAbilita.vue` (la scelta in
-basso), `viste/Grosso.vue` (la figura del grosso), `viste/campo.js` (dal foglio ai dati della vista, la disposizione dei
-mostri), `viste/racconto.js` (le azioni di un turno, una alla volta), `Gioco.vue` (`nemico`, `scegliColpo`, `scegliIlBersaglio`,
+basso), `viste/Grosso.vue` (la figura del grosso), `viste/campo.js` (dal foglio ai dati della vista, `piazza`: i piedi di ognuno), `viste/racconto.js` (le azioni di un turno, una alla volta), `Gioco.vue` (`nemico`, `scegliColpo`, `scegliIlBersaglio`,
 `mostra`), `stile-scontro.css`.
 
 ## L'interfaccia del motore
@@ -44,16 +43,29 @@ Tutto sta in `Corsa.foglio` (`che: 'scontro'`) e nelle funzioni di `Corsa`; un m
 
 ## Il palco
 
-- **Il fondale è lo scenario vero** (`Palco.vue`: parete e pavimento delle stanze). Il riquadro ha altezza fissa (244 px, 292 con
-  due file) e sta fermo in cima alla finestra (`sticky`): su un telefono stretto scorre al più la scelta, mai il fondale.
-- **L'eroe a sinistra**, con **un posto vuoto sotto per il compagno** (un ovale tratteggiato, discreto, senza scritta: il compagno
-  è per dopo, [scontro.md](scontro.md#cosa-resta-fuori-per-dopo)).
-- **I mostri a destra**, su una griglia a sei colonne dove ognuno ne prende due (`disponi` in `viste/campo.js`): fino a tre una
-  fila sola, più grandi; da quattro due file (2+2, 3+2, 3+3, nell'ordine dei posti, la seconda centrata). **Il grosso sta al
-  centro e occupa le due file**, gli altri ai lati, prima in basso. Chi cade resta al suo posto e svanisce: niente scatta di
-  posto. Le file a schermo non sono regole: davanti o dietro non conta.
-- **Gli sprite hanno una scala intera** (pixel nitidi), scelta sulla larghezza del palco: fino a 5 con un mostro solo, 3 in due
-  file, 2 a 320 px e di fianco al grosso. A 320 px la riga della minaccia si accorcia a «colpisce N».
+- **Il palco è un pezzo di stanza, non una fascia con uno sfondo.** L'utente, 12 ottobre 2026: «è una questione di dimensione del
+  mostro rispetto allo spazio sul terreno: ti aspetti le proporzioni di Diablo, dove c'è più terreno, e non è solo un piccolo
+  sfondo il terreno». Il fondale è lo scenario vero (`Palco.vue`: parete e pavimento delle stanze), con **la parete ridotta a uno
+  zoccolo in cima** (`ZOCCOLO`, 40 px: la striscia della parete a ×2) e **il pavimento che riempie il resto**, disegnato alla
+  scala degli sprite (`SCALA_PALCO` = 2: una piastrella è grande quanto le figure che ci stanno sopra, mai ingrandita a parte).
+  Il riquadro ha altezza fissa (264 px, 316 da quattro mostri in su: `ALTO_PALCO`) e sta fermo in cima alla finestra (`sticky`):
+  su un telefono stretto scorre al più la scelta, mai il fondale.
+- **Le figure stanno in piedi sul pavimento, mai sulla parete**, ognuna con un'ombra ovale sotto i piedi. `piazza` (`viste/campo.js`)
+  dà a ogni posto il punto dei piedi (`--x`, `--y`); chi sta più in basso è davanti (`z`), chi sta più in alto è appena più
+  piccolo (scala ×0,875, a quarti: i pixel restano nitidi) e disegnato prima. Piccoli scarti per posto, ma stabili (non a caso a
+  ogni render).
+- **L'eroe a sinistra**, con **il posto del compagno sfalsato sotto di lui, in diagonale** (un ovale tratteggiato, senza scritta: il
+  compagno è per dopo, [scontro.md](scontro.md#cosa-resta-fuori-per-dopo)).
+- **I mostri sono in colonne verticali sul lato destro, non in file** (l'utente, 12 ottobre: «sono disposti come statuine su due file,
+  è poco realistico»; come i Final Fantasy e i side-view di RPG Maker): due colonne fino a quattro mostri, tre da cinque; la
+  colonna più vicina all'eroe è davanti; dentro una colonna sono uno sopra l'altro e sfalsati a scaletta. I punti sono la tabella
+  `SLOT` di `campo.js` (u: 0 vicino all'eroe, 1 in fondo; v: 0 lontano, 1 vicino), tarati perché il «ti colpisce N» di uno non cada
+  sull'altro. Uno o due mostri stanno al centro del pavimento. **Il grosso sta davanti e al centro**, gli altri ai lati e dietro (i
+  piccoli negli spazi). I posti sono quelli del motore e i consecutivi stanno nella stessa colonna o in colonne accanto, così i
+  «vicini» delle forme `vicini` e `catena` lo sono anche nel disegno. `disponi` dice ancora quante «file» (1 o 2, l'altezza) e chi è il grosso.
+  Chi cade resta al suo posto e svanisce: niente scatta di posto.
+- **Gli sprite hanno una sola scala per tutti** (2, il grosso 3; i mostri dipinti `TAGLIA` volte l'eroe). A 320 px la riga della
+  minaccia si accorcia a «colpisce N».
 - **Sotto ogni mostro la sua barra della vita, senza numeri** (il brivido di non sapere quanto resiste); **sopra «ti colpisce
   N»**, o «salta il turno» se è stordito. Gli stati addosso sono pastiglie piccole (glifo e turni che restano; il testo intero
   sta nel `title`) e cambiano il colore della figura. Chi porta la chiave ha una chiavetta in un angolo.
@@ -61,7 +73,7 @@ Tutto sta in `Corsa.foglio` (`che: 'scontro'`) e nelle funzioni di `Corsa`; un m
   d'uno: per `vicini`, `catena`, `tutti`; più tenue a ogni salto). Anello e contorno si spengono durante il racconto.
 - **Toccare un mostro lo fa bersaglio** (`scegliBersaglio`), la scelta qui sotto si rifà coi numeri contro di lui. Il tocco non
   vale nei primi 320 ms dopo l'apertura e dopo ogni racconto (`CIECA`: il click che il dito lascia dietro alla risposta
-  atterrerebbe proprio lì, [../core/il-dito.md](../core/il-dito.md)); i mostri sono tasti (`<button>`) alti quanto la loro cella.
+  atterrerebbe proprio lì, [../core/il-dito.md](../core/il-dito.md)); i mostri sono tasti (`<button>`) larghi almeno 48 px e alti quanto la figura con la sua riga e la sua barra.
 - **La fila dei turni** è una colonna di sette figurine sul bordo destro, in sovrimpressione (`FilaDeiTurni.vue`): chi agisce
   adesso in cima, più grande e col bordo d'oro; l'eroe ha il bordo dorato, lo stordito è smorzato con le stelle; il doppio
   turno dell'eroe è lui due volte di fila. Non prende tocchi.
@@ -100,12 +112,12 @@ offerta se `!puoScappare()`), e sopra la riga rossa dello stop ([pericolo.md](pe
 
 ## Nei test
 
-`[data-duello]` (il palco; `data-racconto="in-corso"` mentre si racconta, `data-file` 1|2, `data-mostri`), `[data-mostro]`
+`[data-duello]` (il palco; `data-racconto="in-corso"` mentre si racconta, `data-file` 1|2 = l'altezza, `data-mostri`), `[data-mostro]`
 (`data-i` il posto, `data-tipo`, `data-nome`, `data-grande` = la chiave del grosso, `data-bersaglio`, `data-colpito` = il fattore, `data-morto`,
 `data-porta-chiave`), dentro `[data-minaccia]` (`data-colpisce`), `[data-vita]` (`data-ossa`), `[data-effetti] [data-stato]`,
 `[data-cifra]` (i numeri che salgono); `[data-eroe-scontro]`, `[data-posto-compagno]`, `[data-abilita-usata]`, `[data-scena]` (gli effetti), `[data-segno]`, `[data-segno-pre]`, `[data-apertura]`,
 `[data-fila] [data-turno]` (`data-chi`: `eroe` o il posto), `[data-stati-eroe]`; la scelta `[data-caselle-abilita]`
 (`data-pronto`, `data-ferma`), `[data-azione="attacco|bevi-scontro|scappa"]`, `[data-abilita="<id>"]`. `figura grosso`:
 `[data-figura-grosso]`. Per aprire uno scontro con più mostri: `#sotterraneo=branco&mostri=6` ([../core/comandi.md](../core/comandi.md)).
-`unita/sotterraneo-vista` (disposizione, dati della vista, racconto) e `integrazione/sotterraneo-gruppi` (sei mostri a 390 e
+`unita/sotterraneo-vista` (disposizione, `piazza`, dati della vista, racconto) e `integrazione/sotterraneo-gruppi` (sei mostri in tre colonne a 390 e
 320 px, il bersaglio col dito, il Grido su tutti raccontato in ordine, il grosso, l'agguato e la sorpresa).
