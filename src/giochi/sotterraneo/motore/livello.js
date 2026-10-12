@@ -22,7 +22,7 @@ export function seminato(seme) {
 }
 
 // quanti mostri ci sono in un piano: tre quarti per stanza (la media di quando ogni stanza ne tirava da 0 a 2) meno un
-// 5%, e di quelli la parte che finisce nelle sale grandi (docs/sotterraneo/piani.md)
+// 10%, e di quelli la parte che finisce nelle sale grandi (docs/sotterraneo/piani.md)
 const MOSTRI_PER_STANZA = 0.75 * 0.9
 const PARTE_NELLE_SALE = 0.7
 // quanti, al più, in un branco di una fascia (dalla più tenera): i ratti a cinque, i golem a due
@@ -232,12 +232,16 @@ export class Livello {
       this.vicinanza[k] = id
       this.stanze[id].suolo.push({ x: k % L, y: (k / L) | 0 })
     }
-    for (const s of this.stanze) {
+    // prima le celle che toccano la stanza di lato (l'uscio è sempre della stanza che tocca), poi quelle in diagonale
+    for (const diagonali of [false, true]) for (const s of this.stanze) {
       for (const { x, y } of s.suolo) for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+        if ((dx !== 0 && dy !== 0) !== diagonali || (!dx && !dy)) continue
         const a = x + dx, b = y + dy
         if (a < 0 || b < 0 || a >= L || b >= this.alto) continue
         if (this.vicinanza[b * L + a] < 0) this.vicinanza[b * L + a] = s.id
       }
+    }
+    for (const s of this.stanze) {
       // le celle con tutte e quattro le vicine nella stanza: lontane dai muri
       s.interno = s.suolo.filter(c => [[1, 0], [-1, 0], [0, 1], [0, -1]].every(([dx, dy]) => this.dentro(s, c.x + dx, c.y + dy)))
     }
