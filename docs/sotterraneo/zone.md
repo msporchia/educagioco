@@ -16,9 +16,12 @@ sentinella che non fa passare.
 Provato: la zona sveglia che segue l'eroe (una alla volta, al livello
 dell'eroe, a giro): l'utente vuole fasce fisse, che si vedano avanzare.
 
+**Il colore si legge dalla forza dell'eroe, non dal suo livello**
+([forza.md](forza.md)); sotto, «l'eroe» per un colore è l'atteso, la cui forza è il livello.
+
 Il codice: `dati/zone.js` (l'ordine, le fasce, i volti, quanto picchiano,
 l'esperienza), `motore/zone.js` (la fascia di adesso, i colori, la notizia,
-la roba attesa), `motore/banco.js` (`misuraLeZone`), `Gioco.vue`,
+la roba attesa), `motore/forza.js` (la forza), `motore/banco.js` (`misuraLeZone`), `Gioco.vue`,
 `viste/Terra.vue` (il pallino, la sentinella, il fumetto, il «!»),
 `motore/dialoghi.js` (l'annuncio e le verdi), `viste/pixel.js` (`SENTINELLA`).
 
@@ -27,9 +30,9 @@ la roba attesa), `motore/banco.js` (`misuraLeZone`), `Gioco.vue`,
 Una fascia è di **quattro livelli** (`LARGA`): «livello 14–17». Le sette zone
 nascono a due livelli l'una dall'altra (`PASSO`), dalla scalinata alla
 cripta (`ORDINE_DELLE_ZONE`, `NASCITA`): 6–9, 8–11, … 18–21. Il colore si
-legge dalla fascia contro il livello dell'eroe (`coloreDellaFascia`):
+legge dalla fascia contro la forza dell'eroe (`coloreDellaFascia`):
 
-| colore | l'eroe | cosa succede | la fascia 16–19 |
+| colore | la forza | cosa succede | la fascia 16–19 |
 |---|---|---|---|
 | rosso | più di 4 livelli sotto l'inizio | la sentinella non fa scendere | eroe fino all'11 |
 | arancio | da 1 a 4 livelli sotto l'inizio | si scende; il minatore dice che sono più forti | dal 12 al 15 |
@@ -47,10 +50,10 @@ legge dalla fascia contro il livello dell'eroe (`coloreDellaFascia`):
   larga quanto il margine e quanto due passi, quindi ogni gruppo copre quattro
   livelli di inizi e prende due zone; la rossa è la settima.
   `guastiDelleZone` lo pretende, `unita/sotterraneo-zone` lo prova dall'8 al 90.
-- **Non si scrive niente**: la fascia dipende solo dal livello dell'eroe, che
-  non scende mai (`fasciaDi`: la più bassa delle sue, `NASCITA + 14·n`, non
-  ancora superata). Un eroe che sale tre livelli in una discesa trova al
-  ritorno le zone già rinate. Si scrive solo la notizia sentita.
+- **Si scrive il massimo della forza** (`zone.forza`): la fascia dipende dal più
+  alto fra livello, forza di adesso e forza massima raggiunta (`rinascitaDi`,
+  [forza.md](forza.md#le-zone-ruotano-col-massimo)): vendere un'arma non fa
+  tornare indietro una zona rinata. Si scrive anche la notizia sentita.
 - **Le fasce sono a due livelli, non a sei come nell'esempio dell'utente**:
   un livello di differenza cambia molto ([Le misure](#le-misure)): con fasce
   di sette l'arancio arrivava a sei livelli sopra l'eroe, dove a otto su
@@ -82,7 +85,7 @@ zona, `voltoDi`).
 Le discese in fila, coi colori e la sentinella secondo il livello atteso,
 come prima. **Un gradino è il passo fra due discese di fila**: i livelli
 attesi 1 · 2 · 3 · 5 · 7 · 8 · 10 · 12 ([la-grande-storia.md](la-grande-storia.md))
-sono i gradini da 0 a 7. Due gradini sopra l'eroe rosso, uno sopra arancio,
+sono i gradini da 0 a 7. Due gradini sopra la forza dell'eroe rosso, uno sopra arancio,
 due sotto grigio, il resto verde (`coloreNellaStoria`): la scalinata (2) al
 livello 1 arancio, la torre (3) rossa, la scala sommersa (7) al 4 rossa e al
 5 arancio. Il blocco della storia resta il divieto di sempre; la sentinella
@@ -167,7 +170,8 @@ vinte o poco più.
   0,07; la ruota non sarebbe girata mai.
 - **Nella grigia un quarto** (`ESP_GRIGIA`, `espNellaZona`): l'esperienza di
   un mostro cresce piano col livello del posto, e una grigia, facile, rendeva
-  0,9 livelli contro gli 1,1 di una verde. Adesso 0,26.
+  0,9 livelli contro gli 1,1 di una verde. Adesso 0,26. «Grigia» è per la
+  forza dell'eroe, non per il suo livello (`Corsa` la legge da `forzaDelCorredo`).
 - **Nell'abisso un terzo** (`esp` in `L_ABISSO`): i suoi mostri sono molto
   più deboli di quelli di una zona dello stesso livello (non hanno la
   `forza`), e per domanda rendeva tre volte una verde (22 contro 8): con la
@@ -190,11 +194,12 @@ le zone.
   ([../core/ripresa.md](../core/ripresa.md), [portale-e-sosta.md](portale-e-sosta.md)).
   Finché la sosta c'è, quella discesa sulla mappa è la zona di quando si è
   scesi, anche se intanto l'eroe l'ha superata (`potenzaDi`).
-- **`zone` nell'avventura è `{ sentita }`**. Quello di prima (`{ n, livelli,
+- **`zone` nell'avventura è `{ sentita, forza }`**. Quello di prima (`{ n, livelli,
   sentita: true }`, la zona sveglia) si rilegge come «mai sentita»: il minatore
-  ha la notizia e dice cosa è cambiato. Le fasce non hanno bisogno di niente
-  dal vecchio stato. Niente da azzerare, `MONDO` resta 4; una sosta vecchia
-  con la sua potenza si riprende uguale.
+  ha la notizia e dice cosa è cambiato. Un salvataggio senza `forza` vale come
+  «il livello dell'eroe». Scrivere una delle due non cancella l'altra
+  (`zoneConForza`, `zoneConSentita`). Niente da azzerare, `MONDO` resta 4; una
+  sosta vecchia con la sua potenza si riprende uguale.
 
 ## Le misure
 
@@ -232,7 +237,8 @@ E i colori, su una zona 16–19 (a 8/10 · a 6/10):
 | del 16 | verde, il più duro | 100% · 69% | 1,3 |
 | del 20 | grigio | 100% · 100% (a 4/10 61%) | 0,26 |
 
-Nei test: `unita/sotterraneo-zone` (le fasce alla nascita, due grigie, due
+Nei test: `unita/sotterraneo-forza` (la forza: [forza.md](forza.md#nei-test)),
+`unita/sotterraneo-zone` (le fasce alla nascita, due grigie, due
 verdi, due arancio e una rossa a ogni livello, la fascia fissa e la
 rinascita rossa sopra la più alta, i colori con gli esempi qui sopra, i
 gradini della storia, la notizia e lo stato di prima, il minatore che dice

@@ -31,7 +31,8 @@ import { rileggiCrescita, puntiDaDare, dai as daiPunto, livelloDella } from './m
 import { puntiAbilita, caselleDella } from './motore/abilita.js'
 import { NODI, RAMI, colpisce } from './dati/abilita.js'
 import { zonaDi } from './dati/zone.js'
-import { notiziaDi, potenzaDi, livelloDellaZona, coloreDi } from './motore/zone.js'
+import { notiziaDi, potenzaDi, livelloDellaZona, coloreDi, zoneConForza, zoneConSentita } from './motore/zone.js'
+import { forzaDi, forzaDelCorredo } from './motore/forza.js'
 import { pescaLeggendario } from './motore/bottino.js'
 import { quotaDi } from './dati/livelli.js'
 import { LEGGENDARI } from './dati/pezzi.js'
@@ -277,12 +278,15 @@ function riprendiSeUscito() {
 // nome e i suoi piani, e `livello` e `colore` dicono il pallino per l'eroe di adesso; `nuova` è la zona appena nata,
 // finché il minatore non l'ha raccontata
 const livelloOra = computed(() => livelloDella(crescita.value))
-const notizia = computed(() => notiziaDi(qui.value, livelloOra.value))
+// il livello di forza (motore/forza.js, docs/sotterraneo/forza.md): quanto vale l'eroe con la roba e le abilità di adesso. I
+// colori dei pallini si leggono da lì; le fasce, da quello più alto raggiunto (rilevato qui sotto, sulla terra di sopra)
+const forzaOra = computed(() => forzaDi(eroeQui(), roba.value, crescita.value))
+const notizia = computed(() => notiziaDi(qui.value, livelloOra.value, forzaOra.value))
 const tappe = computed(() => {
   const a = qui.value
   return CAMPAGNA.map((t, i) => {
-    const potenza = potenzaDi(a, i, livelloOra.value)
-    const livello = livelloDellaZona(a, i, livelloOra.value)
+    const potenza = potenzaDi(a, i, livelloOra.value, forzaOra.value)
+    const livello = livelloDellaZona(a, i, livelloOra.value, forzaOra.value)
     return {
       ...zonaDi(i, potenza), indice: i,
       aperta: aperta(CHIAVE, i, a.tappa),
@@ -290,7 +294,7 @@ const tappe = computed(() => {
       stelle: a.stelle[i] || 0,
       perEta: chiusaPerEta(CHIAVE, i),
       fatta: i < a.tappa,
-      livello, colore: coloreDi(a, i, livelloOra.value),
+      livello, colore: coloreDi(a, i, livelloOra.value, forzaOra.value),
       nuova: !!notizia.value && !notizia.value.sentita && notizia.value.indice === i,
     }
   })
@@ -302,8 +306,15 @@ const annuncio = computed(() => (notizia.value
   : null))
 function annuncioSentito() {
   if (!notizia.value || notizia.value.sentita) return
-  nellAvventura({ zone: { sentita: notizia.value.id } }, { subito: true })
+  nellAvventura({ zone: zoneConSentita(qui.value, notizia.value.id) }, { subito: true })
 }
+// Il massimo della forza si scrive nell'avventura (`zone.forza`): una zona rinata non torna indietro se si vende l'arma.
+// Si guarda sulla terra di sopra, appena si arriva e a ogni cambio di roba o di livello; durante una discesa no
+watch([forzaOra, livelloOra, () => !!corsa.value], () => {
+  if (corsa.value || scegliEroe.value) return
+  const z = zoneConForza(qui.value, forzaOra.value, livelloOra.value)
+  if (z) nellAvventura({ zone: z })
+}, { immediate: true })
 
 // chi scende con la roba addosso (vita, braccio, difesa, tratti, gemme): la barra in basso e la pagina dell'eroe, sulla mappa
 const robaSopra = computed(() => schedaConLaRoba(eroeQui(), roba.value, crescita.value))
@@ -471,7 +482,7 @@ const pagina = computed(() => {
   const q = quotaDi(c.crescita.esp)
   return {
     eroe: c.io, mano: c.mano, mancina: c.mancina,
-    livello: q.livello, fatto: q.fatto, serve: q.serve, punti: puntiDaDare(c.crescita),
+    livello: q.livello, fatto: q.fatto, serve: q.serve, punti: puntiDaDare(c.crescita), forza: forzaDelCorredo(c),
     numeri: { vita: c.vita ?? c.vitaConLaRoba, vitaMax: c.vitaMax ?? c.vitaConLaRoba, att: c.att, dif: c.dif,
               gemme: c.gemme },
     caratteristiche: c.caratteristiche(),
@@ -884,7 +895,7 @@ function avvia(i) {
   domanda.value = null
   chiudiLaBarra()
   // la discesa com'è adesso: finita la storia la zona con la sua fascia, prima quella della storia
-  const t = i === INDICE_ABISSO ? L_ABISSO : zonaDi(i, potenzaDi(qui.value, i, livelloOra.value))
+  const t = i === INDICE_ABISSO ? L_ABISSO : zonaDi(i, potenzaDi(qui.value, i, livelloOra.value, forzaOra.value))
   corsa.value = new Corsa(t, { seme: semeDallIndirizzo(), eroe: eroeQui(), roba: roba.value,
                                crescita: crescita.value, missioni: presePer(missioni.value, t.chiave) })
   borsellino = borsa(CHIAVE)

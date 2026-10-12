@@ -27,6 +27,7 @@ import { Corredo } from './corredo.js'
 import { dai as daiPunto } from './crescita.js'
 import { indiceDella, premioPer } from './storia.js'
 import { robaDellaMissione } from './missioni.js'
+import { forzaDelCorredo } from './forza.js'
 import { pericoloDi } from './pericolo.js'
 import { NODI, RISPOSTE_PER_ENERGIA, aGrado, inVita, colpisce } from '../dati/abilita.js'
 
@@ -874,7 +875,9 @@ export class Corsa extends Corredo {
     }
     // l'esperienza: tanta quanto è forte la sua specie e quanto è giù il posto (dati/livelli.js), il grosso molta di più
     // e la dice un numerino «+N ✨» che sale dal campo (Gioco.vue). In una zona grigia un quarto, nell'abisso un terzo (dati/zone.js)
-    const esp = Math.max(1, Math.round(espDi(MOSTRI[m.tipo], this.livelloQui, !!m.grosso) * espNellaZona(this.tappa, this.livelloEroe)))
+    // (il «grigio» si legge dalla forza dell'eroe, non dal livello: motore/forza.js; fuori dalle zone non serve)
+    const forza = this.tappa && this.tappa.potenza ? forzaDelCorredo(this) : this.livelloEroe
+    const esp = Math.max(1, Math.round(espDi(MOSTRI[m.tipo], this.livelloQui, !!m.grosso) * espNellaZona(this.tappa, forza)))
     this.eventi.push({ che: 'esp', esp, x: m.x, y: m.y })
     this.guadagna(esp)
     // 💚 rigenera: ogni mostro battuto rimette in piedi un poco

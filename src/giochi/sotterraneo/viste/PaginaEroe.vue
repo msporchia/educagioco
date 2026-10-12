@@ -15,6 +15,7 @@ const props = defineProps({
   mano: { type: String, default: null },
   mancina: { type: String, default: null },
   livello: { type: Number, required: true },
+  forza: { type: Number, default: 0 },           // il livello di forza (motore/forza.js): quanto vale con la roba e le abilità di adesso
   fatto: { type: Number, default: 0 },           // l'esperienza fatta nel livello, e quella che serve per il dopo
   serve: { type: Number, default: 1 },
   punti: { type: Number, default: 0 },
@@ -47,6 +48,7 @@ const nomeDi = k => (props.caratteristiche.find(c => c.chiave === k) || { nome: 
       <span class="sot-eroe-nome">
         <b>{{ eroe.nome }}</b>
         <i data-livello-eroe :data-livello="livello">Livello {{ livello }}</i>
+        <i v-if="forza" class="sot-eroe-forza" data-forza-eroe :data-forza="forza">Forza {{ forza }}</i>
         <span class="sot-eroe-esp" data-esperienza :data-fatto="fatto" :data-serve="serve"
               :aria-label="`esperienza: ${fatto} su ${serve}`">
           <u :style="{ width: quota * 100 + '%' }"></u>

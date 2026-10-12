@@ -185,7 +185,8 @@ se la più bassa è almeno la metà della più alta: 18 e 12 sì, 18 e 7 no, 50 
 Zaino e le Abilità, [barra.md](barra.md#la-finestra-delleroe)). Si apre dal
 livello nella barra in basso, sopra e sotto.
 Dall'alto: il
-ritratto armato, il nome, il livello e la barra dell'esperienza («✨ 5 /
+ritratto armato, il nome, il livello, la forza («Forza 18»: quanto vale con la roba
+e le abilità di adesso, [forza.md](forza.md)) e la barra dell'esperienza («✨ 5 /
 72»); i numeri che decidono uno scontro (❤️ ⚔️ 🛡️ 💎: attacco e difesa non
 stanno più in cima allo schermo); «Hai 2 punti da dare» in oro, o senza punti
 «Batti i mostri: a ogni livello, un punto da dare»; le quattro righe con
