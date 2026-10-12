@@ -33,8 +33,8 @@ Il codice: `motore/scontro.js` (i metodi dello scontro, attaccati a `Corsa`),
 
 ## Chi parte
 
-- **L'agguato**: se il mostro che ti raggiunge arriva **alle spalle** (dalla
-  metà dietro il verso in cui l'eroe guarda, cioè l'ultimo passo fatto:
+- **L'agguato**: se il mostro che ti raggiunge arriva **alle spalle** (dal
+  cono di 120° dietro il verso in cui l'eroe guarda, cioè l'ultimo passo fatto:
   `Corsa.verso`, `{ dx, dy }`, o `guarda` se non ha mai camminato),
   colpisce **solo lui, una volta**, prima di tutto (`foglio.agguato`, e
   il colpo è il primo in `foglio.apertura`). Poi si va di iniziativa. Farsi
@@ -49,8 +49,8 @@ Il codice: `motore/scontro.js` (i metodi dello scontro, attaccati a `Corsa`),
   svegli.
 - **L'agguato è il premio dei mostri nell'ombra**: con la luce a cono un mostro
   sveglio fuori luce non va dritto all'eroe, gli arriva alle spalle
-  ([luce.md](luce.md#i-mostri-e-lombra)), e «alle spalle» è la metà dietro il
-  verso (`versoEroe`). Se risulterà troppo punitivo, un segno che qualcosa si
+  ([luce.md](luce.md#i-mostri-e-lombra)), e «alle spalle» è il cono di 120° dietro il
+  verso (`versoEroe`), lo specchio della luce. Se risulterà troppo punitivo, un segno che qualcosa si
   muove dietro: visivo, perché col suono spento il gioco deve restare intero.
 
 ## L'iniziativa

@@ -38,7 +38,9 @@ diventa comune: il banco gioca a torcia spenta e **non si volta mai**, quindi è
 - **È l'agguato, non il movimento**: senza il colpo in più (`alleSpalle` sempre falso) le stesse discese col giro alle
   spalle hanno gli svenimenti di prima (gallerie, seme 7: 4, come con i mostri dritti; con l'agguato: 7 e la discesa
   persa, 19 agguati su 70 scontri).
-- **Non forzato.** Leve, da scegliere con le misure vere: un colpo d'agguato più leggero, l'agguato solo da dietro (un
-  cono di 120° speculare a quello della luce, non la metà intera), un banco che si volta (come un adulto attento), o
-  rifare la roba attesa delle gallerie e della cisterna. Provato un passo più lento per i mostri nell'ombra: gli
+- **L'agguato solo dal cono di 120° dietro** (lo specchio della luce), non dalla metà intera: da un fianco l'alone fa
+  vedere chi arriva. Un mostro di lato punta prima a `LARGO_DIETRO` celle dietro l'eroe, per non toccarlo dal fianco.
+  Dei quattro bersagli ne resta rosso uno: «gallerie, a otto su dieci si arriva in fondo» (3/6, serve 5/6). Si rifà con
+  le misure vere; le leve rimaste sono un colpo d'agguato più leggero, un banco che si volta, la roba attesa delle
+  gallerie. Provato un passo più lento per i mostri nell'ombra: gli
   agguati calano ma le discese peggiorano (gallerie 18 su 30), tolto.

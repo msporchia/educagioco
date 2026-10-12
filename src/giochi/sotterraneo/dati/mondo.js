@@ -38,6 +38,8 @@ export const CALMA = 3   // il tempo di uscire dalla stanza, o lo scontro si ria
 // un mostro sveglio fuori dalla luce non punta all'eroe ma alle sue spalle: il punto dietro di lui (DIETRO celle), girando
 // largo a FIANCO celle finché sta più avanti di ALLA_PAR (docs/sotterraneo/luce.md)
 export const DIETRO = 0.5, FIANCO = 2.6, ALLA_PAR = 0.6
+// un mostro di lato ma non ancora nel cono dietro punta prima a LARGO_DIETRO celle dietro l'eroe, per non toccarlo dal fianco
+export const LARGO_DIETRO = 1.6
 
 // Lo scontro a gruppi (docs/sotterraneo/scontro.md): entrano i mostri vivi entro RAGGIO_SCONTRO celle dall'eroe, nella
 // stessa stanza, al più MOSTRI_IN_CAMPO posti (il grosso ne vale due); un colpo di mostro vale COLPO_DEL_MOSTRO per

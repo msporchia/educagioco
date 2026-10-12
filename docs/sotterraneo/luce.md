@@ -78,7 +78,7 @@ il disegno in `scena/tela.js`.
   più lento nell'ombra («sneaking» alla lettera): non cambia gli agguati in modo
   leggibile e peggiora le discese misurate, tolto.
 - **L'agguato è già nello scontro** ([scontro.md](scontro.md#chi-parte)): vale
-  per un mostro che ti raggiunge dalla metà dietro il verso. Col cono scatta da
+  per un mostro che ti raggiunge dal cono di 120° dietro il verso, lo specchio della luce. Col cono scatta da
   un mostro che esce dall'ombra alle spalle, mai da uno che si vede arrivare
   davanti. Per questo vedere in anticipo (la torcia) e non farsi accerchiare
   (voltarsi, mettere le spalle a un muro) servono.

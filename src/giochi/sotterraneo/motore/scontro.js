@@ -55,7 +55,9 @@ export const MetodiDelloScontro = {
   alleSpalle(m) {
     const v = this.versoEroe
     const dx = (m.fx != null ? m.fx : m.x + 0.5) - this.eroe.x, dy = (m.fy != null ? m.fy : m.y + 0.5) - this.eroe.y
-    return v.dx * dx + v.dy * dy < -1e-6
+    // solo dal cono di 120° dietro, lo specchio della luce: da un fianco l'alone lo fa vedere arrivare (docs/sotterraneo/luce.md)
+    const d = Math.hypot(dx, dy), n = Math.hypot(v.dx, v.dy)
+    return d > 1e-6 && n > 1e-6 && (v.dx * dx + v.dy * dy) / (d * n) < -0.5
   },
 
   // `tocco`: l'ha toccato l'eroe (la sorpresa, se dormiva); se no ti ha raggiunto lui (l'agguato, se arriva dalle spalle).

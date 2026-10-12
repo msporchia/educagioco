@@ -5,7 +5,7 @@
 // a prendere la domanda vera da src/quiz/ e non nomina mai una materia qui.
 // `foglio` è un dato ({ che: 'scontro', chi }): finché è aperto il tempo è fermo.
 import {
-  TASCHE, RAGGIO, RAGGIO_TORCIA, RAGGIO_SGOCCIOLI, ALONE, ALONE_TORCIA, ALONE_SGOCCIOLI, APERTURA_CONO, SFUMA_CONO, SFUMA_ARCO, ALONE_SFUMA, FORZA_MINIMA, ROCCIA, DIETRO, FIANCO, ALLA_PAR, SVEGLIA, PASSO_EROE, PASSO_MOSTRO, PASSO_RIENTRO,
+  TASCHE, RAGGIO, RAGGIO_TORCIA, RAGGIO_SGOCCIOLI, ALONE, ALONE_TORCIA, ALONE_SGOCCIOLI, APERTURA_CONO, SFUMA_CONO, SFUMA_ARCO, ALONE_SFUMA, FORZA_MINIMA, ROCCIA, DIETRO, FIANCO, ALLA_PAR, LARGO_DIETRO, SVEGLIA, PASSO_EROE, PASSO_MOSTRO, PASSO_RIENTRO,
   CALMA, SORSO, RIPOSO_SCALA, VITA_PER_PIANO,
   ARREDO_DICE, ARREDO_LA_PRIMA_VOLTA,
 } from '../dati/mondo.js'
@@ -440,7 +440,11 @@ export class Corsa extends Corredo {
     const v = this.versoEroe, e = this.eroe
     const rx = m.fx - e.x, ry = m.fy - e.y
     const dietro = { x: e.x - v.dx * DIETRO, y: e.y - v.dy * DIETRO }
-    if (rx * v.dx + ry * v.dy <= ALLA_PAR) return dietro
+    // già nel cono dietro (lo stesso dell'agguato, motore/scontro.js): dritto alle spalle; di lato prima più indietro, o
+    // toccherebbe l'eroe dal fianco
+    const r = Math.hypot(rx, ry)
+    if (r > 1e-6 && (rx * v.dx + ry * v.dy) / r < -0.5) return dietro
+    if (rx * v.dx + ry * v.dy <= ALLA_PAR) return { x: e.x - v.dx * LARGO_DIETRO, y: e.y - v.dy * LARGO_DIETRO }
     const lato = rx * -v.dy + ry * v.dx >= 0 ? 1 : -1
     let w = { x: e.x - v.dy * lato * FIANCO - v.dx * 0.3, y: e.y + v.dx * lato * FIANCO - v.dy * 0.3 }
     if (stanza) {
