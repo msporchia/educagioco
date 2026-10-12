@@ -1,8 +1,13 @@
 # Da fare
 
-- Le domande: il modulo `conti` e il collegamento (`domande.js`).
-- La taratura delle dodici tappe con il banco, e `test/misure/arena.test.mjs`.
-- Il test integrazione nel browser (`test/integrazione/arena*.test.mjs`).
-- Caserme e muro dipinti (oggi a poligoni), le pose di attacco.
-- La guida in app (`AIUTI.arena`) e la copertina dipinta.
-- Il gioco libero (battaglia senza fine contro un nemico che cresce).
+- Caserme e muro dipinti (oggi capanna e mattoni a poligoni), le pose di attacco
+  e di morte delle truppe, un ponte vero (`strumenti/sprite/DA-GENERARE.md`).
+- La copertina dipinta della home (oggi quella del manifesto) e la guida in
+  app (`AIUTI.arena`, il «?» della barra).
+- Il gioco libero: una battaglia senza fine contro un nemico che cresce, col
+  record (`senzaFine`, `docs/core/primati.md`).
+- `test/misure/arena.test.mjs`: le promesse della taratura (il bambino di prova
+  vince la quota della tappa) come test d'equilibrio, oltre alla firma.
+- Provare col dito di un bambino: il ritmo del campo mentre si calcola
+  (oggi un quarto della velocità) è la prima cosa da guardare.
+- Una tappa (o il gioco libero) tarata sul giocatore bravo: oggi `misura` vince il 100% ovunque ([taratura.md](taratura.md)).

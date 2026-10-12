@@ -8,8 +8,8 @@ export const CAMPO = {
   W: 360, H: 540,
   fiume: { alto: 245, basso: 295 },   // l'acqua; la strada la attraversa, larga quanto la corsia
   corsia: 180,                         // la x del ponte e della strada
-  muri: [345, 372],                    // le due file di muri della metà di sotto (la sopra è specchiata)
-  torretta: 418, base: 482,            // la y della torretta e della base, metà di sotto
+  muro: 345,                           // il muro sul ponte, metà di sotto (la sopra è specchiata)
+  base: 482,                           // la y del castello, metà di sotto
 }
 
 /* I posti delle caserme sulla metà di sotto; sopra sono specchiati in y. Due
@@ -48,12 +48,10 @@ export const TRUPPE = {
 export const BASE = 'scheletri'          // la caserma con cui si parte, e che il nemico ha già
 export const OPERAZIONI = ['+', '−', '×', '÷']
 
-/* Le torri: la torretta davanti (si potenzia) e la base dietro (il re).
-   Da sole tengono i primi minuti: il respiro che serve per decidere. */
-export const TORRI = {
-  p:  { nome: 'Torretta', hp: 800,  dmg: 34, rate: 0.8, gitt: 125, r: 18 },
-  re: { nome: 'Base',     hp: 1150, dmg: 40, rate: 1.1, gitt: 108, r: 23 },
-}
+/* Il castello: l'unica costruzione che spara e si potenzia, e quella che non
+   deve cadere. Da solo tiene i primi minuti: il respiro che serve per decidere.
+   Spara lontano (`gitt`) perché da lì deve coprire il muro sul ponte. */
+export const CASTELLO = { nome: 'Castello', hp: 1600, dmg: 52, rate: 0.75, gitt: 150, r: 23 }
 export const LIV_MAX = 10              // caserme e torretta
 export const MINIERA_MAX = 6
 
@@ -63,12 +61,12 @@ export const CRESCITA = {
   forza: liv => 1 + 0.25 * (liv - 1),                      // vita e danno delle sue truppe
   vitaCaserma: liv => 300 + 60 * (liv - 1),
   salita: liv => Math.round(6 * 1.28 ** (liv - 1)),        // costo di liv → liv+1 per una caserma: 6, 8, 10, 13, 16, 21, 27, 34, 44
-  torretta: {
+  castello: {
     prezzo: liv => Math.round(8 * 1.3 ** (liv - 1)),       // 8, 10, 14, 18, 23, 30, 39, 51, 66
     danno: liv => 1 + 0.3 * (liv - 1),
     cadenza: liv => 1 + 0.08 * (liv - 1),
     gittata: liv => 4 * (liv - 1),
-    vita: 90,                                              // per livello: massimo e punti subito
+    vita: 130,                                             // per livello: massimo e punti subito
   },
   miniera: {
     prezzo: [0, 10, 16, 24, 34, 46],                       // prezzo[liv] = liv → liv+1
@@ -80,14 +78,12 @@ export const CRESCITA = {
 export const AZIONI = {
   miniera:  { nome: 'Più monete', op: '×', prezzo: null,
               nota: 'Le monete arrivano il 30% più in fretta, per sempre. Costa ora, rende dopo.' },
-  muro:     { nome: 'Muro',       op: '−', prezzo: 4,
-              nota: 'Un muro sul ponte: chi cammina lo colpisce prima del resto, chi vola lo scavalca.' },
   ripara:   { nome: 'Ripara',     op: '+', prezzo: 6,
-              nota: 'Rimette in sesto la tua costruzione messa peggio: +40% di vita.' },
-  torretta: { nome: 'Torretta',   op: '÷', prezzo: null,
-              nota: 'La torretta davanti alla base spara più forte e più spesso, e resiste di più.' },
+              nota: 'Rimette in sesto la costruzione messa peggio (anche il muro, anche crollato): +40% di vita.' },
+  castello: { nome: 'Castello',   op: '÷', prezzo: null,
+              nota: 'Il castello spara più forte e più spesso, e resiste di più.' },
 }
-export const MURO = { hp: 500, r: 26, max: 2 }       // per parte, uno dietro l'altro
+export const MURO = { hp: 500, r: 26 }              // uno solo per parte: non si costruisce, si ripara
 export const RIPARA = 0.4                            // la quota di vita che rimette
 export const RIPOSO = 6                              // secondi di caserma ferma dopo un calcolo sbagliato
 export const COSTRUZIONE = 6                         // secondi prima della prima squadra di una caserma nuova
@@ -122,9 +118,8 @@ export function guastiDelleRegole() {
   if (CRESCITA.miniera.prezzo.length !== MINIERA_MAX) g.push('i prezzi della miniera non coprono i livelli')
   for (let l = 1; l < LIV_MAX; l++) {
     if (!(CRESCITA.salita(l) > 0)) g.push(`salita ${l}`)
-    if (!(CRESCITA.torretta.prezzo(l) > 0)) g.push(`torretta ${l}`)
+    if (!(CRESCITA.castello.prezzo(l) > 0)) g.push(`castello ${l}`)
   }
-  if (CAMPO.muri.length < MURO.max) g.push('meno file di muri che muri')
   if (POSTI.length < Object.keys(TRUPPE).length) g.push('meno posti che caserme')
   return g
 }

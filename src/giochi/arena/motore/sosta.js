@@ -1,5 +1,5 @@
 // La partita lasciata a metà: uscire non butta via niente. Si scrive quello che
-// è successo (le monete, le costruzioni, le truppe in campo, le torri); le
+// è successo (le monete, le costruzioni, le truppe in campo, i castelli); le
 // regole si rifanno dalla tappa. Non si salva il caso: la partita ripresa
 // continua da dov'era ma i dadi che tira il nemico sono altri. Perché e cosa
 // si perde: docs/arena/sosta.md.
@@ -24,8 +24,8 @@ export function scrivi(p, indice) {
     t: r1(p.t), resto: r1(p.resto), pensa: r1(p.pensa),
     lati: { io: { monete: r1(p.lati.io.monete), miniera: p.lati.io.miniera },
             nem: { monete: r1(p.lati.nem.monete), miniera: p.lati.nem.miniera } },
-    torri: p.torri.map(t => ({ lato: t.lato, tipo: t.tipo, hp: Math.round(t.hp), max: t.max, liv: t.liv })),
-    muri: p.muri.map(m => ({ lato: m.lato, fila: m.fila, hp: Math.round(m.hp), max: m.max })),
+    castelli: p.castelli.map(c => ({ lato: c.lato, hp: Math.round(c.hp), max: c.max, liv: c.liv })),
+    muri: p.muri.map(m => ({ lato: m.lato, hp: Math.round(m.hp), max: m.max })),
     caserme: p.caserme.map(c => ({ lato: c.lato, id: c.id, posto: c.posto, liv: c.liv, t: r1(c.t), ciclo: r1(c.ciclo),
                                    riposo: r1(c.riposo), hp: Math.round(c.hp), max: c.max })),
     unita: p.unita.map(u => ({ id: u.id, lato: u.lato, x: Math.round(u.x), y: Math.round(u.y), hp: Math.round(u.hp), max: Math.round(u.max), forza: r1(u.forza) })),
@@ -52,21 +52,18 @@ export function leggi(dato, { campagna = CAMPAGNA, rnd = Math.random } = {}) {
       p.lati[lato].miniera = dato.lati[lato].miniera
     }
 
-    if (!Array.isArray(dato.torri)) return null
-    for (const t of dato.torri) {
-      const mia = p.torri.find(x => x.lato === t.lato && x.tipo === t.tipo)
-      if (!mia || !num(t.hp, 0, 1e5) || !num(t.max, 1, 1e5) || t.hp > t.max || !intero(t.liv, 1, LIV_MAX)) return null
-      mia.hp = t.hp; mia.max = t.max; mia.liv = t.liv
+    if (!Array.isArray(dato.castelli)) return null
+    for (const t of dato.castelli) {
+      const mio = p.castelli.find(x => x.lato === t.lato)
+      if (!mio || !num(t.hp, 0, 1e5) || !num(t.max, 1, 1e5) || t.hp > t.max || !intero(t.liv, 1, LIV_MAX)) return null
+      mio.hp = t.hp; mio.max = t.max; mio.liv = t.liv
     }
 
-    if (!Array.isArray(dato.muri) || dato.muri.length > 4) return null
-    p.muri = []
+    if (!Array.isArray(dato.muri)) return null
     for (const m of dato.muri) {
-      if (!['io', 'nem'].includes(m.lato) || ![0, 1].includes(m.fila) || !num(m.hp, 1, 1e5) || !num(m.max, 1, 1e5) || m.hp > m.max) return null
-      if (p.muri.some(x => x.lato === m.lato && x.fila === m.fila)) return null
-      const nuovo = p.nuovoMuro(m.lato, m.fila)
-      nuovo.hp = m.hp; nuovo.max = m.max
-      p.muri.push(nuovo)
+      const mio = p.muri.find(x => x.lato === m.lato)
+      if (!mio || !num(m.hp, 0, 1e5) || !num(m.max, 1, 1e5) || m.hp > m.max) return null
+      mio.hp = m.hp; mio.max = m.max; mio.crollato = m.hp <= 0
     }
 
     if (!Array.isArray(dato.caserme) || dato.caserme.length > 2 * POSTI.length) return null

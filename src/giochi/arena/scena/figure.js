@@ -2,8 +2,8 @@
 // quale fotogramma. Nessuna regola qui (il motore non sa che esistano gli
 // sprite) e nessun prezzo: solo il disegno. Le figure del foglio guardano a
 // DESTRA e quasi tutte hanno solo il respiro (4 fotogrammi); lupo e drago
-// hanno anche i passi di lato (6 fotogrammi). Una corsia orizzontale è la
-// vista per cui sono fatte: di schiena non esiste niente.
+// hanno anche i passi di lato (6 fotogrammi). Di schiena o di fronte non esiste
+// niente per tutte: in campo guardano dalla parte della loro squadra.
 import { PEZZI } from '../../castello/dati/figure.js'
 
 export const CREATURA = {

@@ -11,7 +11,7 @@ chi ci lavora. Cartella `src/giochi/arena/` (la chiave del gioco è `arena`;
 - [campagna.md](campagna.md) — le dodici tappe, quando arriva ogni operazione, le stelle
 - [taratura.md](taratura.md) — il giocatore finto, cosa promette la campagna e come si rimisura
 - [sosta.md](sosta.md) — la battaglia lasciata a metà: cosa si salva e cosa no
-- [grafica.md](grafica.md) — la corsia orizzontale, gli sprite del castello che si riusano e quelli che mancano
+- [grafica.md](grafica.md) — la corsia verticale, gli sprite del castello che si riusano e quelli che mancano
 - [da-fare.md](da-fare.md) — le voci aperte
 
 Vedi anche: [`../apprendimento/calibrazione.md`](../apprendimento/calibrazione.md)

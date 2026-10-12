@@ -17,8 +17,8 @@ nemico, che terreno c'è. **Le operazioni arrivano una famiglia alla volta**
 - **Il nemico** ha una scheda per tappa: monete al secondo, ogni quanto pensa,
   e la forza delle sue truppe. Sono i numeri che si tarano col banco
   ([taratura.md](taratura.md)).
-- **Le stelle**: una per aver vinto, una per aver tenuto in piedi la torretta,
-  una per aver chiuso con la base oltre il 70% della vita (`stellePer`).
+- **Le stelle**: una per aver vinto, una per aver chiuso col castello oltre la
+  metà della vita, una per averlo tenuto oltre l'85% (`stellePer`).
 - Il vestito del terreno è quello del castello (`bosco`, `palude`, `neve`,
   `lava`): stesso foglio, niente da generare.
 - `guastiDellaCampagna()` pretende che le truppe e le portate non scendano, che

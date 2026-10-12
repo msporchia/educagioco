@@ -44,26 +44,26 @@ export class Pilota {
   }
 
   /* decide cosa vorrebbe fare adesso, o null. Il buon senso di un giocatore che
-     ha capito il gioco: tiene in piedi quello che ha, prima la torretta (da sola
+     ha capito il gioco: tiene in piedi quello che ha, prima il castello (da solo
      fa metà del lavoro), poi la miniera finché c'è tempo per ripagarsi, poi un
      esercito misto, poi tutto nelle salite. */
   voglia(p) {
     const mie = p.casermeDi('io')
     const puo = (a, id) => p.puoFare('io', a, id)
-    const t = p.torretta('io')
+    const t = p.castello('io')
 
     const ferite = p.riparabili('io').filter(e => e.hp < e.max * 0.5)
     if (ferite.length && puo('ripara')) return ['ripara']
-    const arrivano = p.unita.filter(u => u.lato === 'nem' && !u.vola && u.y > 200)
-    if (arrivano.length >= 2 && p.muriDi('io').length < 2 && puo('muro')) return ['muro']
-    if (t.hp > 0 && t.liv < 3 && puo('torretta')) return ['torretta']
+    const crollato = p.muro('io').hp <= 0
+    if (crollato && puo('ripara')) return ['ripara']
+    if (t.hp > 0 && t.liv < 3 && puo('castello')) return ['castello']
     if (p.t < 45 && p.lati.io.miniera < 2 && puo('miniera')) return ['miniera']
     if (mie.length < this.caserme) {
       const id = ORDINE.find(i => puo('costruisci', i))
       if (id) return ['costruisci', id]
     }
     const media = Math.floor(mie.reduce((s, c) => s + c.liv, 0) / Math.max(1, mie.length))
-    if (t.hp > 0 && t.liv < Math.max(3, media) && puo('torretta')) return ['torretta']
+    if (t.hp > 0 && t.liv < Math.max(3, media) && puo('castello')) return ['castello']
     const sale = mie.filter(c => c.liv < LIV_MAX && puo('potenzia', c.id) && !p.inRiposo('io', c.id))
     if (sale.length) {
       const minimo = Math.min(...sale.map(c => c.liv))
@@ -100,21 +100,19 @@ export function gioca({ seme = 1, sfida = {}, pilota = {}, passo = 0.25 } = {}) 
     g.gioca(p, passo)
   }
   return {
-    fine: p.fine, secondi: p.t, corone: p.corone('io'), coroneNemico: p.corone('nem'),
-    vitaBase: p.re('io').hp / p.re('io').max, giuste: g.giuste, sbagliate: g.sbagliate,
-    caserme: p.casermeDi('io').length, miniera: p.lati.io.miniera, torretta: p.torretta('io').liv,
+    fine: p.fine, secondi: p.t,
+    vitaBase: p.vitaBase('io'), giuste: g.giuste, sbagliate: g.sbagliate,
+    caserme: p.casermeDi('io').length, miniera: p.lati.io.miniera, castello: p.castello('io').liv,
   }
 }
 
 export function misura({ volte = 50, seme = 1, ...resto } = {}) {
-  const r = { volte, vinte: 0, perse: 0, pari: 0, secondi: 0, corone: 0 }
+  const r = { volte, vinte: 0, perse: 0, pari: 0, secondi: 0 }
   for (let i = 0; i < volte; i++) {
     const g = gioca({ seme: seme + i * 7919, ...resto })
     if (g.fine === 'vinto') r.vinte++; else if (g.fine === 'perso') r.perse++; else r.pari++
     r.secondi += g.secondi
-    r.corone += g.corone
   }
   r.secondi = +(r.secondi / volte).toFixed(0)
-  r.corone = +(r.corone / volte).toFixed(2)
   return r
 }

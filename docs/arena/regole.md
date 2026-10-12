@@ -8,10 +8,10 @@ I numeri stanno in `src/giochi/arena/dati/regole.js`, il motore in
 - **Una corsia, un ponte, al centro.** C'erano due corsie (come Clash Royale):
   tolte perché i nemici finivano «dietro» i muri e le caserme costruiti, e il
   muro, che copre una corsia sola, non serviva a niente sull'altra.
-- Il motore conta la corsia in verticale (`y` lungo, `x` di lato) perché è nato
-  così; la scena la ruota in orizzontale (vedi [grafica.md](grafica.md)).
-- **Una partita dura 2:30.** Vince chi tiene la base (il «re»); allo scadere
-  chi ha più corone (torrette cadute), poi chi ha più vita alle torri.
+- Il motore conta la corsia in verticale (`y` lungo, `x` di lato), e la scena la
+  disegna così, col castello di chi gioca in basso (vedi [grafica.md](grafica.md)).
+- **Una partita dura 2:30.** Vince chi abbatte il castello nemico; allo scadere
+  chi ha il castello più sano (entro il 5% è pari).
 
 ## Le truppe e le caserme
 
@@ -36,25 +36,30 @@ Costano monete di battaglia e un calcolo, come le caserme.
 | scelta | cosa fa | prezzo |
 |---|---|---|
 | ⛏️ Più monete | +30% di monete al secondo per livello (6 livelli) | 10, 16, 24, 34, 46 |
-| 🧱 Muro | un muro sul ponte, due file; il terzo rifà il più malconcio | 4 |
-| 🔧 Ripara | +40% di vita alla costruzione messa peggio | 6 |
-| 🗼 Torretta | più danno, cadenza e vita (10 livelli) | 8 → 66 |
+| 🔧 Ripara | +40% di vita alla costruzione messa peggio, muro compreso (anche crollato) | 6 |
+| 🏰 Castello | più danno, cadenza, gittata e vita (10 livelli) | 8 → 66 |
 
+- **Il castello è l'unica costruzione che spara.** Prima c'era una torretta
+  davanti alla base: tolta (l'utente: «più un potenziamento del castello»), e il
+  castello ne ha preso la gittata (150, più 4 per livello) perché da lì deve
+  coprire il muro sul ponte. La carta usa la torre del castello (a tre stadi,
+  per livello), non un'emoji.
+- **Il muro è uno solo per parte e non si compra**: c'è dall'inizio, chi
+  cammina lo colpisce prima del resto, chi vola lo scavalca. Se crolla resta il
+  cumulo e **si ricostruisce riparando** (la riparazione lo cerca per primo).
+  Con due muri uno finiva «dietro» all'altro e non serviva a niente.
 - **La miniera conviene presto e lascia scoperti**: è la scelta di strategia
-  voluta dall'utente (produrre di più ma non attaccare), il muro e la
-  riparazione sono la risposta difensiva che prende tempo.
-- **Il muro lo ignora chi vola**; chi cammina lo prende di mira prima del resto
-  (è l'edificio più vicino). La scelta di dove metterlo non c'è: si alza sul
-  ponte, davanti alla torretta.
+  voluta dall'utente (produrre di più ma non attaccare); la riparazione e il
+  castello più forte sono la risposta difensiva che prende tempo.
 
 ## Il respiro
 
-La torretta e la base **sparano da sole dal primo secondo** e il nemico parte
-con una caserma e due muri: chi non fa niente resiste una cinquantina di
-secondi (misurato dal banco), e nei primi nove nessuna squadra è ancora
-uscita. Il tempo di decidere la strategia c'è, poi la base viene sopraffatta.
+Il castello **spara da solo dal primo secondo** e il nemico parte con una
+caserma e un muro: chi non fa niente resiste una cinquantina di secondi (misurato
+dal banco), e nei primi nove nessuna squadra è ancora uscita. Il tempo di
+decidere la strategia c'è, poi la base viene sopraffatta.
 
 ## Nei test
 
-`[data-caserma=<truppa>]`, `[data-azione=miniera|muro|ripara|torretta]`,
+`[data-caserma=<truppa>]`, `[data-azione=miniera|ripara|castello]`,
 `[data-monete]`, `[data-avviso]`, `[data-tappa=<n>]`, `[data-fine=vinta|persa|pari]`.

@@ -7,8 +7,8 @@ tana del nemico, in mezzo un ponte. Si parte con una caserma di scheletri
 arcieri e poche monete: le truppe escono da sole dalle caserme e camminano
 verso il nemico. Il bambino decide **cosa costruire e cosa potenziare**: un
 guardiano, dei lupi, un drago; la miniera che fa arrivare le monete più in
-fretta (ma finché investi lì non attacchi), un muro sul ponte per prendere
-tempo, una riparazione, la torretta davanti alla base.
+fretta (ma finché investi lì non attacchi), una riparazione (anche del muro
+sul ponte, che c'è già) e il castello stesso, che si potenzia e spara di più.
 
 Ogni scelta costa monete di battaglia **e un calcolo**. Il calcolo lo decide
 la truppa: gli scheletri e i guardiani chiedono somme, i pipistrelli e i

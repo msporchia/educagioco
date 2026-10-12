@@ -49,9 +49,10 @@
 .ar-gettone { background: #0006; border-radius: 999px; padding: 4px 10px; font-size: 14px;
               display: inline-flex; align-items: center; gap: 4px; white-space: nowrap }
 .ar-monete i { font-style: normal; font-size: 11px; color: #ffe98a; margin-left: 3px }
-.ar-quadro { position: relative; width: 100%; aspect-ratio: 3 / 2; max-height: 52vh; touch-action: none }
+/* il quadro è alto quanto lascia il pannello (barra e striscia in alto, tre righe di carte sotto) e largo 2:3 */
+.ar-quadro { position: relative; height: calc(100dvh - 388px); min-height: 300px; aspect-ratio: 2 / 3; max-width: 100%; margin: 0 auto; touch-action: none }
 .ar-tela { display: block; width: 100%; height: 100% }
-.ar-dritta, .ar-avviso { position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%);
+.ar-dritta, .ar-avviso { position: absolute; left: 50%; top: 8px; transform: translateX(-50%);
             white-space: nowrap; font-weight: 800; font-size: 14px; padding: 7px 14px; border-radius: 999px;
             background: #ffd24a; color: #3a2400; box-shadow: 0 4px 14px #0007; pointer-events: none }
 .ar-avviso { background: #101a44e8; color: #fff; border: 2px solid #ffe98a }
@@ -77,7 +78,9 @@
 .ar-ritratto { display: block }
 
 /* il foglio del calcolo: in basso, il campo resta in vista sopra e intanto rallenta */
-.ar-foglio { position: absolute; left: 0; right: 0; bottom: 0; height: 62%; z-index: 20 }
+/* sta dove stava il pannello delle carte: sotto il quadro, che è alto quanto lascia il
+   viewport (100dvh − 388px), quindi sotto la barra e la striscia (56 + 44) restano 288px */
+.ar-foglio { position: absolute; left: 0; right: 0; bottom: 0; height: 288px; z-index: 20; --qz-h: .5vh }
 
 /* i veli: il cartello di fine */
 .ar-velo { position: absolute; inset: 0; z-index: 30; padding: 16px 14px; background: rgba(9, 14, 32, .88);

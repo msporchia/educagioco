@@ -65,7 +65,7 @@ const scalino = computed(() => scalinoDi(tappa.value))
 const siGioca = computed(() => vista.value === 'campo' && !domanda.value && !finale.value)
 
 function vuoto() {
-  return { resto: 0, monete: 0, alSecondo: 0, coroneIo: 0, coroneNem: 0, torretta: 1, miniera: 1 }
+  return { resto: 0, monete: 0, alSecondo: 0, baseIo: 100, baseNem: 100, castello: 1, miniera: 1 }
 }
 
 const dovEravamo = computed(() => {
@@ -144,10 +144,9 @@ function suona(eventi) {
     }
     if (visti.has(e.tipo)) continue
     visti.add(e.tipo)
-    if (e.tipo === 'costruita' || e.tipo === 'potenziata' || e.tipo === 'torretta' || e.tipo === 'miniera') suono.compra()
+    if (e.tipo === 'costruita' || e.tipo === 'potenziata' || e.tipo === 'castello' || e.tipo === 'miniera') suono.compra()
     else if (e.tipo === 'crollo') suono.rumore(0.4, 0.09, 400, 80)
     else if (e.tipo === 'cura') suono.vita()
-    else if (e.tipo === 'muro') suono.nota(300, 180, 0.12, 'square', 0.05)
   }
 }
 
@@ -176,7 +175,7 @@ function aggiornaCruscotto() {
   if (!p) return
   cruscotto.value = {
     resto: p.resto, monete: Math.floor(p.lati.io.monete), alSecondo: p.alSecondo('io'),
-    coroneIo: p.corone('io'), coroneNem: p.corone('nem'), torretta: p.torretta('io').liv, miniera: p.lati.io.miniera,
+    baseIo: Math.round(p.vitaBase('io') * 100), baseNem: Math.round(p.vitaBase('nem') * 100), castello: p.castello('io').liv, miniera: p.lati.io.miniera,
   }
   pannello.value = costruisciPannello(p)
 }
@@ -191,14 +190,13 @@ function costruisciPannello(p) {
              puoi: prezzo !== null && p.lati.io.monete >= prezzo && riposo <= 0,
              riposo, avanza: c ? Math.max(0, Math.min(1, 1 - c.t / c.ciclo)) : 0 }
   }).sort((a, b) => TRUPPE[a.id].costo - TRUPPE[b.id].costo)
-  const azioni = ['miniera', 'muro', 'ripara', 'torretta'].map(a => {
+  const azioni = ['miniera', 'ripara', 'castello'].map(a => {
     const prezzo = p.prezzo('io', a)
     let stato = ''
     if (a === 'miniera') stato = p.lati.io.miniera >= MINIERA_MAX ? 'MAX' : `Lv ${p.lati.io.miniera}`
-    if (a === 'muro') stato = `${p.muriDi('io').length}/2`
     if (a === 'ripara') stato = `${p.riparabili('io').length} da curare`
-    if (a === 'torretta') stato = p.torretta('io').hp <= 0 ? '✕' : p.torretta('io').liv >= LIV_MAX ? 'MAX' : `Lv ${p.torretta('io').liv}`
-    return { azione: a, nome: AZIONI[a].nome, op: AZIONI[a].op, prezzo, stato, puoi: prezzo !== null && p.lati.io.monete >= prezzo }
+    if (a === 'castello') stato = p.castello('io').liv >= LIV_MAX ? 'MAX' : `Lv ${p.castello('io').liv}`
+    return { azione: a, nome: AZIONI[a].nome, op: AZIONI[a].op, prezzo, stato, livello: a === 'castello' ? p.castello('io').liv : 0, puoi: prezzo !== null && p.lati.io.monete >= prezzo }
   })
   return { caserme, azioni }
 }
@@ -261,7 +259,7 @@ function risposto({ giusto, saltata }) {
 function frase(v) {
   const nome = v.id ? TRUPPE[v.id].nome : ''
   return { costruisci: `🛖 caserma nuova: ${nome}`, potenzia: `⬆️ ${nome} sale di livello`, miniera: '⛏️ le monete arrivano più in fretta',
-           muro: '🧱 un muro in più', ripara: '🔧 riparato', torretta: '🗼 la torretta è più forte' }[v.azione] || ''
+           ripara: '🔧 riparato', castello: '🏰 il castello è più forte' }[v.azione] || ''
 }
 
 function dici(testo) {
@@ -281,7 +279,7 @@ function chiudiPartita() {
   giostra.ferma()
   scorda()          // finita o vinta, non c'è più niente da riprendere
   const vinto = p.fine === 'vinto'
-  const stelle = stellePer({ vinto, torrettaViva: p.torretta('io').hp > 0, vitaBase: p.re('io').hp / p.re('io').max })
+  const stelle = stellePer({ vinto, vitaBase: p.vitaBase('io') })
   if (vinto && !pagata) {
     completa(CHIAVE, tappaIdx.value, QUANTE_TAPPE, { stelle })
     if (stelle === 3) segna('arenaSenzaGraffi')

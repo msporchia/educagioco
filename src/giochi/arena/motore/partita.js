@@ -4,7 +4,7 @@
 // Il caso arriva da fuori (`rnd`), così una partita si rifà identica.
 // Le regole e i numeri stanno in `dati/regole.js`; l'IA del nemico in `nemico.js`.
 import {
-  CAMPO, POSTI, TRUPPE, BASE, TORRI, LIV_MAX, MINIERA_MAX, CRESCITA, AZIONI, MURO, RIPARA,
+  CAMPO, POSTI, TRUPPE, BASE, CASTELLO, LIV_MAX, MINIERA_MAX, CRESCITA, AZIONI, MURO, RIPARA,
   RIPOSO, COSTRUZIONE, AVVIO, NEMICI, GIOCATORE, DURATA,
 } from '../dati/regole.js'
 import { pensaNemico } from './nemico.js'
@@ -38,11 +38,8 @@ export class Partita {
       nem: this.nuovoLato('nem', this.nemicoCfg.moneteAlSecondo, sfida.monete ?? GIOCATORE.iniziali),
     }
     this.forza = { io: 1, nem: (this.nemicoCfg.forza ?? 1) * (sfida.forzaNemico ?? 1) }
-    this.torri = []
-    for (const lato of ['io', 'nem']) {
-      this.torri.push(this.nuovaTorre(lato, 'p', CAMPO.torretta), this.nuovaTorre(lato, 're', CAMPO.base))
-    }
-    this.muri = ['io', 'nem'].map(lato => this.nuovoMuro(lato, 0))
+    this.castelli = ['io', 'nem'].map(lato => this.nuovoCastello(lato))
+    this.muri = ['io', 'nem'].map(lato => this.nuovoMuro(lato))
     this.caserme = []
     for (const lato of ['io', 'nem']) this.caserme.push(this.nuovaCaserma(lato, BASE, 6, AVVIO))
   }
@@ -56,12 +53,12 @@ export class Partita {
   }
   y(lato, y) { return lato === 'io' ? y : CAMPO.H - y }
 
-  nuovaTorre(lato, tipo, y) {
-    const k = TORRI[tipo]
-    return { lato, tipo, x: CAMPO.corsia, y: this.y(lato, y), hp: k.hp, max: k.hp, r: k.r, liv: 1, cool: 0.5, fl: 0 }
+  nuovoCastello(lato) {
+    return { lato, tipo: 'castello', x: CAMPO.corsia, y: this.y(lato, CAMPO.base), hp: CASTELLO.hp, max: CASTELLO.hp, r: CASTELLO.r, liv: 1, cool: 0.5, fl: 0 }
   }
-  nuovoMuro(lato, fila) {
-    return { lato, tipo: 'muro', fila, x: CAMPO.corsia, y: this.y(lato, CAMPO.muri[fila]), hp: MURO.hp, max: MURO.hp, r: MURO.r, fl: 0 }
+  /* il muro non si costruisce: c'è dall'inizio e, se crolla, resta il cumulo e si ricostruisce riparando */
+  nuovoMuro(lato) {
+    return { lato, tipo: 'muro', x: CAMPO.corsia, y: this.y(lato, CAMPO.muro), hp: MURO.hp, max: MURO.hp, r: MURO.r, fl: 0, crollato: false }
   }
   nuovaCaserma(lato, id, posto, t) {
     const [x, y] = POSTI[posto]
@@ -69,10 +66,9 @@ export class Partita {
     return { lato, tipo: 'caserma', id, posto, liv: 1, t, ciclo: t, riposo: 0, x, y: this.y(lato, y), hp: vita, max: vita, r: 16, fl: 0 }
   }
 
-  torretta(lato) { return this.torri.find(t => t.lato === lato && t.tipo === 'p') }
-  re(lato) { return this.torri.find(t => t.lato === lato && t.tipo === 're') }
+  castello(lato) { return this.castelli.find(c => c.lato === lato) }
   casermeDi(lato) { return this.caserme.filter(c => c.lato === lato) }
-  muriDi(lato) { return this.muri.filter(m => m.lato === lato) }
+  muro(lato) { return this.muri.find(m => m.lato === lato) }
   postiLiberi(lato) {
     return POSTI.map((_, i) => i).filter(i => !this.caserme.some(c => c.lato === lato && c.posto === i))
   }
@@ -80,7 +76,7 @@ export class Partita {
   /* quello che una truppa può prendere di mira: torri, caserme e — se cammina — muri */
   edificiContro(u) {
     const lato = altro(u.lato)
-    const lista = this.torri.filter(t => t.lato === lato)
+    const lista = this.castelli.filter(c => c.lato === lato)
     for (const c of this.caserme) if (c.lato === lato) lista.push(c)
     if (!u.vola) for (const m of this.muri) if (m.lato === lato) lista.push(m)
     return lista.filter(viva)
@@ -116,13 +112,15 @@ export class Partita {
     this.squadre(dt)
     for (const u of this.unita) this.muoviUnita(u, dt)
     this.separa()
-    for (const t of this.torri) this.muoviTorre(t, dt)
+    for (const c of this.castelli) this.muoviCastello(c, dt)
     this.unita = this.unita.filter(viva)
     for (const e of [...this.muri, ...this.caserme]) {
       if (e.fl > 0) e.fl -= dt
-      if (!viva(e)) this.evento({ tipo: 'crollo', x: e.x, y: e.y, lato: e.lato, che: e.tipo, id: e.id })
+      if (!viva(e) && !e.crollato) {
+        this.evento({ tipo: 'crollo', x: e.x, y: e.y, lato: e.lato, che: e.tipo, id: e.id })
+        if (e.tipo === 'muro') e.crollato = true            // il cumulo resta, e si ricostruisce riparando
+      }
     }
-    this.muri = this.muri.filter(viva)
     this.caserme = this.caserme.filter(viva)
     pensaNemico(this, dt)
     this.controllaFine()
@@ -235,14 +233,14 @@ export class Partita {
     }
   }
 
-  muoviTorre(t, dt) {
+  muoviCastello(t, dt) {
     if (t.fl > 0) t.fl -= dt
     if (!viva(t)) return
     if (t.cool > 0) t.cool -= dt
-    const k = TORRI[t.tipo], c = CRESCITA.torretta, davanti = t.tipo === 'p'
-    const dmg = k.dmg * (davanti ? c.danno(t.liv) : 1)
-    const rate = k.rate / (davanti ? c.cadenza(t.liv) : 1)
-    const gitt = k.gitt + (davanti ? c.gittata(t.liv) : 0)
+    const c = CRESCITA.castello
+    const dmg = CASTELLO.dmg * c.danno(t.liv)
+    const rate = CASTELLO.rate / c.cadenza(t.liv)
+    const gitt = CASTELLO.gitt + c.gittata(t.liv)
     let bers = null, mn = 1e9
     for (const e of this.unita) {
       if (e.lato === t.lato || !viva(e) || e.nasce > 0.4) continue
@@ -251,26 +249,22 @@ export class Partita {
     }
     if (bers && t.cool <= 0) {
       this.ferisci(bers, dmg)
-      this.evento({ tipo: 'colpo', da: 'torre', lato: t.lato, x1: t.x, y1: t.y - 12, x2: bers.x, y2: bers.y, scoppio: 0 })
+      this.evento({ tipo: 'colpo', da: 'castello', lato: t.lato, x1: t.x, y1: t.y - 12, x2: bers.x, y2: bers.y, scoppio: 0 })
       t.cool = rate
     }
   }
 
   /* ───────── la fine ───────── */
 
-  corone(lato) { return this.torri.filter(t => t.lato === altro(lato) && !viva(t)).length }
-  vitaTorri(lato) { return this.torri.filter(t => t.lato === lato).reduce((s, t) => s + t.hp / t.max, 0) }
+  vitaBase(lato) { const c = this.castello(lato); return c.hp / c.max }
 
   controllaFine() {
-    if (!viva(this.re('nem'))) this.fine = 'vinto'
-    else if (!viva(this.re('io'))) this.fine = 'perso'
+    if (!viva(this.castello('nem'))) this.fine = 'vinto'
+    else if (!viva(this.castello('io'))) this.fine = 'perso'
     else if (this.resto <= 0) {
-      const a = this.corone('io'), b = this.corone('nem')
-      if (a !== b) this.fine = a > b ? 'vinto' : 'perso'
-      else {
-        const va = this.vitaTorri('io'), vb = this.vitaTorri('nem')
-        this.fine = Math.abs(va - vb) < 0.05 ? 'pari' : va > vb ? 'vinto' : 'perso'
-      }
+      // allo scadere vince chi ha il castello più sano
+      const a = this.vitaBase('io'), b = this.vitaBase('nem')
+      this.fine = Math.abs(a - b) < 0.05 ? 'pari' : a > b ? 'vinto' : 'perso'
     }
   }
 
@@ -293,11 +287,10 @@ export class Partita {
       const m = this.lati[lato].miniera
       return m < MINIERA_MAX ? CRESCITA.miniera.prezzo[m] : null
     }
-    if (azione === 'muro') return AZIONI.muro.prezzo
     if (azione === 'ripara') return this.riparabili(lato).length ? AZIONI.ripara.prezzo : null
-    if (azione === 'torretta') {
-      const t = this.torretta(lato)
-      return t && viva(t) && t.liv < LIV_MAX ? CRESCITA.torretta.prezzo(t.liv) : null
+    if (azione === 'castello') {
+      const t = this.castello(lato)
+      return viva(t) && t.liv < LIV_MAX ? CRESCITA.castello.prezzo(t.liv) : null
     }
     return null
   }
@@ -316,8 +309,8 @@ export class Partita {
       return { op: TRUPPE[id].op, peso: Math.min(10, c.liv + 1) }
     }
     if (azione === 'miniera') return { op: AZIONI.miniera.op, peso: 3 + this.lati[lato].miniera }
-    if (azione === 'torretta') return { op: AZIONI.torretta.op, peso: 2 + Math.ceil(this.torretta(lato).liv / 2) }
-    return { op: AZIONI[azione].op, peso: azione === 'ripara' ? 4 : 3 }
+    if (azione === 'castello') return { op: AZIONI.castello.op, peso: 2 + Math.ceil(this.castello(lato).liv / 2) }
+    return { op: AZIONI[azione].op, peso: 4 }
   }
 
   paga(lato, p) { this.lati[lato].monete -= p; this.lati[lato].mosse++ }
@@ -329,9 +322,8 @@ export class Partita {
     if (azione === 'costruisci') return this.costruisci(lato, id, p)
     if (azione === 'potenzia') return this.potenzia(lato, id, p)
     if (azione === 'miniera') { this.paga(lato, p); this.lati[lato].miniera++; this.evento({ tipo: 'miniera', lato }); return true }
-    if (azione === 'muro') return this.muro(lato, p)
     if (azione === 'ripara') return this.ripara(lato, p)
-    if (azione === 'torretta') return this.potenziaTorretta(lato, p)
+    if (azione === 'castello') return this.potenziaCastello(lato, p)
     return false
   }
 
@@ -361,24 +353,9 @@ export class Partita {
     return true
   }
 
-  /* il muro sale nella prima fila libera; se sono in piedi tutte e due, rifà la più malconcia */
-  muro(lato, p) {
-    this.paga(lato, p)
-    const mie = this.muriDi(lato)
-    let fila = [0, 1].find(f => !mie.some(m => m.fila === f))
-    if (fila === undefined) {
-      const peggio = [...mie].sort((a, b) => a.hp / a.max - b.hp / b.max)[0]
-      fila = peggio.fila
-      this.muri = this.muri.filter(m => m !== peggio)
-    }
-    const m = this.nuovoMuro(lato, fila)
-    this.muri.push(m)
-    this.evento({ tipo: 'muro', lato, x: m.x, y: m.y })
-    return true
-  }
-
+  /* quello che si può rimettere in sesto: il muro anche se è crollato (il cumulo si ricostruisce) */
   riparabili(lato) {
-    return [...this.torri, ...this.muri, ...this.caserme].filter(e => e.lato === lato && viva(e) && e.hp < e.max)
+    return [...this.castelli, ...this.muri, ...this.caserme].filter(e => e.lato === lato && e.hp < e.max && (e.tipo === 'muro' || viva(e)))
   }
 
   /* la riparazione va alla costruzione messa peggio */
@@ -386,17 +363,18 @@ export class Partita {
     const e = this.riparabili(lato).sort((a, b) => a.hp / a.max - b.hp / b.max)[0]
     this.paga(lato, p)
     e.hp = Math.min(e.max, e.hp + e.max * RIPARA)
+    if (e.tipo === 'muro') e.crollato = false
     this.evento({ tipo: 'cura', lato, x: e.x, y: e.y })
     return true
   }
 
-  potenziaTorretta(lato, p) {
-    const t = this.torretta(lato)
+  potenziaCastello(lato, p) {
+    const t = this.castello(lato)
     this.paga(lato, p)
     t.liv++
-    t.max += CRESCITA.torretta.vita
-    t.hp = Math.min(t.max, t.hp + CRESCITA.torretta.vita)
-    this.evento({ tipo: 'torretta', lato, liv: t.liv, x: t.x, y: t.y })
+    t.max += CRESCITA.castello.vita
+    t.hp = Math.min(t.max, t.hp + CRESCITA.castello.vita)
+    this.evento({ tipo: 'castello', lato, liv: t.liv, x: t.x, y: t.y })
     return true
   }
 

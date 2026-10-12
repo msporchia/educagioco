@@ -1,27 +1,32 @@
 // Il campo dell'arena: disegna una Partita (il motore) sul canvas, con gli
 // sprite del castello. Non conosce le regole né i prezzi: legge quello che
 // il motore ha già deciso (posizioni, vita, livelli, eventi).
-// La corsia è orizzontale: chi gioca sta a sinistra, il nemico a destra. Il
-// motore la conta in verticale (y lungo la corsia, x di lato): qui si ruota.
+// La corsia è verticale come nel motore (y lungo la corsia, x di lato): il nemico
+// in alto, chi gioca in basso. I castelli ai due capi lasciano la corsia libera
+// per manovrare. Le creature del foglio guardano di lato (di schiena non esiste
+// niente): in campo guardano dalla parte della loro squadra.
 import { CAMPO, TRUPPE } from '../dati/regole.js'
 import { carica, componi, immagineScena } from '../../castello/scena/vestito.js'
 import { PEZZI as SCENE } from '../../castello/dati/vestiti.js'
 import { PEZZI } from '../../castello/dati/figure.js'
 import { caricaFigure, immagineFigure } from '../../castello/scena/pittori.js'
-import { stadioDi } from '../../../data/ops.js'
 import { CREATURA, SCALA, fotogramma } from './figure.js'
 
-// la carta del terreno, a celle da 64: acqua in mezzo (colonne 5-6), e la strada
-// che la attraversa nelle due righe di mezzo
+// la carta del terreno, a celle da 64, in verticale: l'acqua attraversa le due righe
+// di mezzo da un bordo all'altro, e la strada (due colonne) la passa
 const MAPPA = [
-  '^^,..d~~.d,^',
-  ',..,..~~.,..',
-  '.d..,.~~..d.',
-  '++++++++++++',
-  '++++++++++++',
-  '.d..,.~~..d.',
-  ',..,..~~.,..',
-  '^^,..d~~.d,^',
+  '^^,++.^^',
+  ',.d++..,',
+  '.,.++d..',
+  '..d++...',
+  ',..++.d.',
+  '~~~++~~~',
+  '~~~++~~~',
+  ',.d++...',
+  '..,++.d.',
+  '.d.++,..',
+  ',..++..,',
+  '^^.++.^^',
 ]
 const IO = '#3d8bff', NEM = '#ff5a4d'
 
@@ -47,21 +52,21 @@ export class Campo {
     if (!w || !h) return
     this.cv.width = Math.round(w * dpr); this.cv.height = Math.round(h * dpr)
     this.k = this.cv.width / w
-    this.s = Math.min(w / CAMPO.H, h / CAMPO.W)
-    this.ox = (w - CAMPO.H * this.s) / 2
-    this.oy = (h - CAMPO.W * this.s) / 2
+    this.s = Math.min(w / CAMPO.W, h / CAMPO.H)
+    this.ox = (w - CAMPO.W * this.s) / 2
+    this.oy = (h - CAMPO.H * this.s) / 2
   }
 
-  /* dal motore allo schermo: y lungo la corsia diventa x (al contrario), x di lato diventa y */
-  px(y) { return this.ox + (CAMPO.H - y) * this.s }
-  py(x) { return this.oy + x * this.s }
-  /* una misura sul campo, in pixel dello schermo, a larghezza 390 */
-  m(v) { return v * this.s / 0.722 }
+  /* dal motore allo schermo: stesse coordinate, scalate */
+  X(x) { return this.ox + x * this.s }
+  Y(y) { return this.oy + y * this.s }
+  /* una misura sul campo, in pixel dello schermo, a scala 0.85 (campo largo 306) */
+  m(v) { return v * this.s / 0.85 }
 
   /* gli eventi del motore diventano effetti a tempo */
   eventi(lista, ora) {
     for (const e of lista) {
-      const durata = { colpo: 0.18, crollo: 0.7, cura: 0.7, costruita: 0.6, potenziata: 0.6, muro: 0.5, squadra: 0.4, miniera: 0.7, torretta: 0.7 }[e.tipo] || 0.4
+      const durata = { colpo: 0.18, crollo: 0.7, cura: 0.7, costruita: 0.6, potenziata: 0.6, squadra: 0.4, miniera: 0.7, castello: 0.7 }[e.tipo] || 0.4
       this.effetti.push({ ...e, t0: ora, durata })
     }
   }
@@ -76,9 +81,8 @@ export class Campo {
     if (!this.pronto) return
     for (const lato of ['io', 'nem']) this.base(c, p, lato)
     for (const cs of p.caserme) this.caserma(c, p, cs, ora)
-    for (const t of p.torri) if (t.tipo === 'p') this.torretta(c, t, ora)
     for (const mu of p.muri) this.muro(c, mu)
-    const ord = [...p.unita].sort((a, b) => this.py(a.x) - this.py(b.x))
+    const ord = [...p.unita].sort((a, b) => this.Y(a.y) - this.Y(b.y))
     for (const u of ord) if (!u.vola) this.truppa(c, u, ora)
     for (const u of ord) if (u.vola) this.truppa(c, u, ora)
     this.fx(c, ora)
@@ -87,7 +91,7 @@ export class Campo {
   sfondo(c, W, H) {
     c.fillStyle = '#5f9a3c'; c.fillRect(0, 0, W, H)
     const mappa = this.pronto ? componi(MAPPA, this.vestito) : null
-    if (mappa) c.drawImage(mappa, this.ox, this.oy, CAMPO.H * this.s, CAMPO.W * this.s)
+    if (mappa) c.drawImage(mappa, this.ox, this.oy, CAMPO.W * this.s, CAMPO.H * this.s)
   }
 
   /* un pezzo del foglio delle figure, col piede in (x, y) */
@@ -117,26 +121,17 @@ export class Campo {
 
   /* la base: il castello di chi gioca, la bocca da cui escono i mostri per il nemico */
   base(c, p, lato) {
-    const re = p.re(lato)
+    const re = p.castello(lato)
     const sc = SCENE[this.vestito], img = immagineScena(this.vestito)
-    const x = this.px(re.y), y = this.py(re.x)
+    const x = this.X(re.x), y = this.Y(re.y)
     const [nome, k] = lato === 'io' ? ['castello', 0.4] : ['bocca', 0.62]
     const [sx, sy, w, h] = sc[nome]
-    const lw = w * k * this.s / 0.722, lh = h * k * this.s / 0.722
+    const lw = w * k * this.s / 0.85, lh = h * k * this.s / 0.85
     this.ombra(c, x, y + lh * 0.38, lw * 0.4, lh * 0.1)
-    if (re.hp > 0) c.drawImage(img, sx, sy, w, h, x - lw / 2, y + lh * 0.45 - lh, lw, lh)
+    if (re.hp > 0) c.drawImage(img, sx, sy, w, h, x - lw / 2, y + lh * 0.3 - lh, lw, lh)
     else this.ombra(c, x, y, lw * 0.3, lh * 0.1, 0.5)
     this.barra(c, x, y - lh * 0.62, this.m(34), re.hp / re.max)
-  }
-
-  torretta(c, t, ora) {
-    const x = this.px(t.y), y = this.py(t.x)
-    const nome = `torre:arciere:${stadioDi(t.liv)}:`
-    this.ombra(c, x, y + this.m(4), this.m(13), this.m(4))
-    if (t.hp <= 0) return
-    const lh = this.pezzo(c, nome, x, y + this.m(6), 0.4 * this.s / 0.722, false, t.fl > 0 ? 0.65 : 1)
-    this.barra(c, x, y + this.m(6) - lh - this.m(5), this.m(26), t.hp / t.max)
-    this.livello(c, x, y + this.m(6) + this.m(9), t.liv, t.lato)
+    this.livello(c, x, y + lh * 0.3 + this.m(8), re.liv, lato)
   }
 
   livello(c, x, y, liv, lato) {
@@ -149,7 +144,7 @@ export class Campo {
 
   /* una caserma: una capanna col tetto della sua squadra e la creatura sopra */
   caserma(c, p, cs, ora) {
-    const x = this.px(cs.y), y = this.py(cs.x), col = cs.lato === 'io' ? IO : NEM
+    const x = this.X(cs.x), y = this.Y(cs.y), col = cs.lato === 'io' ? IO : NEM
     const m = v => this.m(v)
     this.ombra(c, x, y + m(11), m(19), m(5))
     c.save()
@@ -160,7 +155,7 @@ export class Campo {
     c.beginPath(); c.moveTo(x - m(17), y - m(4)); c.lineTo(x, y - m(17)); c.lineTo(x + m(17), y - m(4)); c.closePath(); c.fill()
     c.strokeStyle = 'rgba(0,0,0,.35)'; c.lineWidth = 1; c.stroke()
     c.restore()
-    this.pezzo(c, fotogramma(cs.id, ora, false, cs.posto), x, y - m(13), SCALA[cs.id] * 0.5 * this.s / 0.722, cs.lato === 'nem')
+    this.pezzo(c, fotogramma(cs.id, ora, false, cs.posto), x, y - m(13), SCALA[cs.id] * 0.5 * this.s / 0.85, cs.lato === 'nem')
     this.barra(c, x, y - m(34), m(26), cs.hp / cs.max)
     this.livello(c, x, y + m(15), cs.liv, cs.lato)
     // la prossima squadra: una barra sottile che si riempie (e in costruzione, gialla)
@@ -169,40 +164,48 @@ export class Campo {
     if (cs.riposo > 0) { c.font = `${m(11)}px "Emoji Gioco", system-ui, sans-serif`; c.textAlign = 'center'; c.fillText('💤', x + m(16), y - m(8)) }
   }
 
+  /* il muro attraversa la corsia; se crolla resta un cumulo di sassi */
   muro(c, mu) {
-    const x = this.px(mu.y), y = this.py(mu.x), m = v => this.m(v)
-    const w = m(11), h = m(52)
-    this.ombra(c, x, y + h / 2 + m(2), m(14), m(4))
+    const x = this.X(mu.x), y = this.Y(mu.y), m = v => this.m(v)
+    const w = m(54), h = m(12)
+    if (mu.hp <= 0) {
+      c.fillStyle = '#8b8478'
+      for (const [dx, dy, r] of [[-16, -2, 6], [-5, 3, 7], [7, -3, 6], [17, 2, 5]]) {
+        c.beginPath(); c.ellipse(x + m(dx), y + m(dy), m(r), m(r * 0.6), 0, 0, 7); c.fill()
+      }
+      return
+    }
+    this.ombra(c, x, y + h / 2 + m(2), w * 0.5, m(4))
     c.save()
     if (mu.fl > 0) c.globalAlpha = 0.7
     c.fillStyle = '#9a8f80'; c.fillRect(x - w / 2, y - h / 2, w, h)
     c.strokeStyle = '#5c5448'; c.lineWidth = 1
-    for (let i = 0; i < 7; i++) {
-      const yy = y - h / 2 + i * h / 7
-      c.beginPath(); c.moveTo(x - w / 2, yy); c.lineTo(x + w / 2, yy); c.stroke()
-      c.beginPath(); c.moveTo(x + (i % 2 ? -w / 4 : w / 4), yy); c.lineTo(x + (i % 2 ? -w / 4 : w / 4), yy + h / 7); c.stroke()
+    for (let i = 0; i < 6; i++) {
+      const xx = x - w / 2 + i * w / 6
+      c.beginPath(); c.moveTo(xx, y - h / 2); c.lineTo(xx, y + h / 2); c.stroke()
     }
+    c.beginPath(); c.moveTo(x - w / 2, y); c.lineTo(x + w / 2, y); c.stroke()
     c.strokeStyle = mu.lato === 'io' ? IO : NEM; c.lineWidth = 2; c.strokeRect(x - w / 2, y - h / 2, w, h)
     c.restore()
-    this.barra(c, x, y - h / 2 - m(6), m(22), mu.hp / mu.max)
+    this.barra(c, x, y - h / 2 - m(6), m(26), mu.hp / mu.max)
   }
 
   truppa(c, u, ora) {
     const k = TRUPPE[u.id], m = v => this.m(v)
-    const x = this.px(u.y), y = this.py(u.x) + m(6)
+    const x = this.X(u.x), y = this.Y(u.y) + m(6)
     const alto = u.vola ? m(14) + Math.sin(ora * 2.6 + u.x * 0.05) * m(2) : 0
     const col = u.lato === 'io' ? IO : NEM
     this.ombra(c, x, y, m(7) * (u.vola ? 0.7 : 1), m(2.5), u.vola ? 0.2 : 0.3)
     c.strokeStyle = col; c.lineWidth = 2
     c.beginPath(); c.ellipse(x, y, m(7) * (u.vola ? 0.7 : 1), m(2.5), 0, 0, 7); c.stroke()
     // un colpo è uno scatto in avanti, una corsa è un saltello
-    const verso = u.lato === 'io' ? 1 : -1
+    const verso = u.lato === 'io' ? -1 : 1
     const scatto = u.colpo > 0 ? Math.sin(u.colpo / 0.25 * Math.PI) * m(4) * verso : 0
     const salto = u.cammina ? Math.abs(Math.sin(ora * 9 + u.x)) * m(2) : 0
     const nasce = u.nasce > 0 ? 1 - u.nasce / 0.8 : 1
     const sfasa = u.x * 0.07 + u.y * 0.05
-    const lh = this.pezzo(c, fotogramma(u.id, ora, u.cammina, sfasa), x + scatto, y - alto - salto,
-      SCALA[u.id] * this.s / 0.722 * (0.6 + 0.4 * nasce), u.lato === 'nem', u.fl > 0 ? 0.6 : 1)
+    const lh = this.pezzo(c, fotogramma(u.id, ora, u.cammina, sfasa), x, y - alto - salto + scatto,
+      SCALA[u.id] * this.s / 0.85 * (0.6 + 0.4 * nasce), u.lato === 'nem', u.fl > 0 ? 0.6 : 1)
     if (u.hp < u.max) this.barra(c, x, y - alto - lh - m(5), m(15), u.hp / u.max)
     if (u.nasce > 0) {
       c.strokeStyle = 'rgba(255,255,255,.8)'; c.lineWidth = 1.5
@@ -215,7 +218,7 @@ export class Campo {
     for (const e of this.effetti) {
       const q = (ora - e.t0) / e.durata
       if (e.tipo === 'colpo') {
-        const x1 = this.px(e.y1), y1 = this.py(e.x1), x2 = this.px(e.y2), y2 = this.py(e.x2)
+        const x1 = this.X(e.x1), y1 = this.Y(e.y1), x2 = this.X(e.x2), y2 = this.Y(e.y2)
         const a = Math.min(1, q * 1.6), b = Math.max(0, a - 0.4)
         c.strokeStyle = e.lato === 'io' ? 'rgba(170,215,255,.95)' : 'rgba(255,175,150,.95)'; c.lineWidth = 2
         c.beginPath(); c.moveTo(x1 + (x2 - x1) * b, y1 + (y2 - y1) * b); c.lineTo(x1 + (x2 - x1) * a, y1 + (y2 - y1) * a); c.stroke()
@@ -224,7 +227,7 @@ export class Campo {
           c.beginPath(); c.arc(x2, y2, this.m(e.scoppio * 0.7) * (0.5 + q * 0.5), 0, 7); c.fill()
         }
       } else {
-        const x = this.px(e.y), y = this.py(e.x)
+        const x = this.X(e.x), y = this.Y(e.y)
         if (e.tipo === 'cura') {
           c.strokeStyle = `rgba(110,240,140,${1 - q})`; c.lineWidth = 3
           c.beginPath(); c.arc(x, y, this.m(10) + q * this.m(26), 0, 7); c.stroke()
@@ -233,7 +236,7 @@ export class Campo {
         } else if (e.tipo === 'crollo') {
           c.fillStyle = `rgba(150,140,120,${0.7 * (1 - q)})`
           for (let i = 0; i < 5; i++) { const a = i * 1.26; c.beginPath(); c.arc(x + Math.cos(a) * q * this.m(20), y + Math.sin(a) * q * this.m(14), this.m(7) * (1 - q * 0.5), 0, 7); c.fill() }
-        } else if (['costruita', 'potenziata', 'muro', 'torretta', 'miniera'].includes(e.tipo)) {
+        } else if (['costruita', 'potenziata', 'castello', 'miniera'].includes(e.tipo)) {
           c.strokeStyle = `rgba(255,220,90,${1 - q})`; c.lineWidth = 3
           c.beginPath(); c.arc(x, y, this.m(8) + q * this.m(24), 0, 7); c.stroke()
         } else if (e.tipo === 'squadra') {

@@ -21,8 +21,8 @@ const orologio = computed(() => {
   const s = Math.max(0, Math.ceil(props.cruscotto.resto))
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
 })
-const ICONA = { miniera: '⛏️', muro: '🧱', ripara: '🔧', torretta: '🗼' }
-const NOME = { miniera: 'Più monete', muro: 'Muro', ripara: 'Ripara', torretta: 'Torretta' }
+const ICONA = { miniera: '⛏️', ripara: '🔧' }
+const NOME = { miniera: 'Più monete', ripara: 'Ripara', castello: 'Castello' }
 </script>
 
 <template>
@@ -31,7 +31,7 @@ const NOME = { miniera: 'Più monete', muro: 'Muro', ripara: 'Ripara', torretta:
       <span class="ar-gettone">⏱️ <b>{{ orologio }}</b></span>
       <span class="ar-gettone ar-monete" data-monete>🪙 <b>{{ cruscotto.monete }}</b>
         <i>+{{ cruscotto.alSecondo.toFixed(1) }} al secondo</i></span>
-      <span class="ar-gettone">🔵 <b>{{ cruscotto.coroneIo }} – {{ cruscotto.coroneNem }}</b> 🔴</span>
+      <span class="ar-gettone" data-castelli title="la vita dei due castelli">🏰 <b>{{ cruscotto.baseIo }}%</b> – <b>{{ cruscotto.baseNem }}%</b></span>
     </div>
 
     <div class="ar-quadro">
@@ -60,7 +60,8 @@ const NOME = { miniera: 'Più monete', muro: 'Muro', ripara: 'Ripara', torretta:
               :class="{ 'ar-no': !a.puoi }"
               :data-azione="a.azione" @click="emit('scegli', { azione: a.azione })">
         <span class="ar-segno">{{ ammesse.includes(a.op) ? a.op : '' }}</span>
-        <span class="ar-icona em">{{ ICONA[a.azione] }}</span>
+        <Ritratto v-if="a.azione === 'castello'" torre :livello="a.livello" :lato="40" />
+        <span v-else class="ar-icona em">{{ ICONA[a.azione] }}</span>
         <span class="ar-nome">{{ NOME[a.azione] }}</span>
         <span class="ar-liv">{{ a.stato }}</span>
         <span class="ar-prezzo em">

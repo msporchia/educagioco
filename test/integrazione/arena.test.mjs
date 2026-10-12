@@ -24,7 +24,7 @@ import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser)
 await azzera(page)
-await semina(page, { settings: { eta: 8 } })
+await semina(page, { settings: { eta: 8, sperimentali: true } })
 
 /* ── dalla home alla prima tappa ── */
 await scegli(page, 'arena')
@@ -61,8 +61,9 @@ controlla('e c\'è scritto quante ne arrivano al secondo', /al secondo/.test(awa
 controlla('la caserma di partenza c\'è, quella nuova no',
           await page.locator('[data-caserma="scheletri"]:not(.ar-nuova)').count() === 1 &&
           await page.locator('[data-caserma="guardiano"].ar-nuova').count() === 1)
-controlla('le quattro scelte che non sono truppe ci sono',
-          await page.locator('.ar-pannello [data-azione]').count() === 4)
+controlla('le tre scelte che non sono truppe ci sono (miniera, ripara, castello) e il muro non si compra',
+          await page.locator('.ar-pannello [data-azione]').count() === 3 &&
+          await page.locator('.ar-pannello [data-azione="muro"]').count() === 0)
 
 /* ── una scelta apre il calcolo sotto il campo ── */
 await page.locator('[data-caserma="guardiano"]').click()

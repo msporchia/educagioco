@@ -4,7 +4,7 @@
    chi non colpisce chi vola, il muro) valgono davvero.
    `node test/esegui.mjs arena`
    tempo: 5 */
-import { guastiDelleRegole, TRUPPE, CAMPO, MURO, BASE } from '../../src/giochi/arena/dati/regole.js'
+import { guastiDelleRegole, TRUPPE, CAMPO, BASE } from '../../src/giochi/arena/dati/regole.js'
 import { Partita } from '../../src/giochi/arena/motore/partita.js'
 import { caso, gioca } from '../../src/giochi/arena/motore/banco.js'
 import { CAMPAGNA, SCALINI, QUANTE_TAPPE, guastiDellaCampagna, operazioniDi, operazionePer, stellePer, sfidaDi }
@@ -30,6 +30,8 @@ controlla('stesso seme, stessa partita', JSON.stringify(uguali) === JSON.stringi
   const p = new Partita({ rnd: caso(1) })
   uguale('si parte con una caserma sola, quella di base', p.casermeDi('io').map(c => c.id).join(), BASE)
   uguale('e con un muro per parte', p.muri.length, 2)
+  controlla('il castello spara da solo dal primo secondo: ha vita, danno e una gittata che copre il muro',
+            p.castello('io').hp > 0 && p.castello('io').y - p.muro('io').y < 150)
   uguale('le monete di partenza', p.lati.io.monete, 14)
   uguale('costruire i lupi costa 8', p.prezzo('io', 'costruisci', 'lupi'), 8)
   controlla('non si può costruire la caserma che c\'è già', p.prezzo('io', 'costruisci', BASE) === null)
@@ -49,8 +51,10 @@ controlla('stesso seme, stessa partita', JSON.stringify(uguali) === JSON.stringi
   p.fai('io', 'miniera')
   uguale('la miniera sale', p.lati.io.miniera, 2)
   controlla('e rende di più al secondo', p.alSecondo('io') > p.alSecondo('nem') * 0 + 0.83 * 1.29)
-  p.fai('io', 'muro')
-  uguale('un terzo muro rifà il più malconcio, non ne aggiunge', p.muriDi('io').length, MURO.max)
+  controlla('il muro non si costruisce: non c\'è nemmeno la scelta', p.prezzo('io', 'muro') === null)
+  uguale('il castello sale come le caserme', p.fai('io', 'castello') && p.castello('io').liv, 2)
+  p.muro('io').hp = 0
+  controlla('un muro crollato si ricostruisce riparando', p.riparabili('io').includes(p.muro('io')) && p.fai('io', 'ripara') && p.muro('io').hp > 0)
   p.sbagliata('io', 'lupi')
   controlla('un calcolo sbagliato ferma la caserma', p.inRiposo('io', 'lupi'))
   controlla('ma non toglie monete', p.lati.io.monete > 50)
@@ -61,7 +65,7 @@ controlla('stesso seme, stessa partita', JSON.stringify(uguali) === JSON.stringi
   const prova = (ids, contro, secondi) => {
     const p = new Partita({ rnd: caso(3) })
     p.muri = []; p.caserme = []
-    for (const t of p.torri) t.hp = t.tipo === 're' ? 1e6 : 0   // un campo vuoto: solo truppe, e le basi non cadono
+    for (const c of p.castelli) c.hp = c.max = 1e6              // un campo vuoto: solo truppe, e i castelli non cadono
     for (const id of ids) p.schiera('io', id, 180, 300)
     for (const id of contro) p.schiera('nem', id, 180, 230)
     p.avanza(secondi)
@@ -85,11 +89,13 @@ controlla('stesso seme, stessa partita', JSON.stringify(uguali) === JSON.stringi
   m.caserme = []
   m.schiera('nem', 'lupi', 180, 230)
   m.schiera('nem', 'pipistrelli', 180, 230)
-  m.avanza(12)
-  const muro = m.muriDi('io')[0]
-  controlla('i lupi si fermano al muro', !muro || muro.hp < muro.max)
+  m.avanza(4)
+  const muro = m.muro('io')
+  controlla('i lupi si fermano al muro e lo colpiscono', muro.hp > 0 && muro.hp < muro.max)
+  const lupi = m.unita.filter(u => u.id === 'lupi')
+  controlla('e non l\'hanno ancora passato', lupi.length > 0 && lupi.every(u => u.y < muro.y))
   const volanti = m.unita.filter(u => u.id === 'pipistrelli')
-  controlla('i pipistrelli lo scavalcano', volanti.every(u => u.y > muro?.y || !muro))
+  controlla('i pipistrelli invece lo scavalcano', volanti.length > 0 && volanti.every(u => u.y > muro.y))
 }
 
 /* ══════════ 5. una partita finisce, e senza fare niente si perde ══════════ */
@@ -112,9 +118,10 @@ controlla('stesso seme, stessa partita', JSON.stringify(uguali) === JSON.stringi
   uguale('un\'azione che vuole ÷ in una tappa di somme ripiega su +', operazionePer('÷', ['+']), '+')
   uguale('e in una di somme e sottrazioni su −', operazionePer('÷', ['+', '−']), '−')
   uguale('un\'operazione ammessa resta quella', operazionePer('×', ['+', '−', '×']), '×')
-  uguale('vincere dà una stella', stellePer({ vinto: true, torrettaViva: false, vitaBase: 0.2 }), 1)
-  uguale('con la torretta e la base intatta tre', stellePer({ vinto: true, torrettaViva: true, vitaBase: 0.9 }), 3)
-  uguale('perdere zero', stellePer({ vinto: false, torrettaViva: true, vitaBase: 0.9 }), 0)
+  uguale('vincere dà una stella', stellePer({ vinto: true, vitaBase: 0.2 }), 1)
+  uguale('col castello oltre la metà due', stellePer({ vinto: true, vitaBase: 0.6 }), 2)
+  uguale('col castello quasi intatto tre', stellePer({ vinto: true, vitaBase: 0.9 }), 3)
+  uguale('perdere zero', stellePer({ vinto: false, vitaBase: 0.9 }), 0)
   const gg = guastiDelleFigure()
   controlla('le figure delle truppe esistono', gg.length === 0, gg.join(' · '))
   const ga = guastiDellAlbo([manifesto])
@@ -131,7 +138,7 @@ controlla('stesso seme, stessa partita', JSON.stringify(uguali) === JSON.stringi
   const tappa = 4
   const p = new Partita({ rnd: caso(11), sfida: sfidaDi(CAMPAGNA[tappa]) })
   p.lati.io.monete = 200
-  p.fai('io', 'costruisci', 'lupi'); p.fai('io', 'miniera'); p.fai('io', 'muro'); p.fai('io', 'torretta')
+  p.fai('io', 'costruisci', 'lupi'); p.fai('io', 'miniera'); p.fai('io', 'castello')
   p.avanza(40)
   const dato = scrivi(p, tappa)
   controlla('una partita in corso si salva', dato && dato.v === VERSIONE)
@@ -141,7 +148,7 @@ controlla('stesso seme, stessa partita', JSON.stringify(uguali) === JSON.stringi
   uguale('stesse monete', Math.round(q.lati.io.monete), Math.round(p.lati.io.monete))
   uguale('stessa miniera', q.lati.io.miniera, p.lati.io.miniera)
   uguale('stesse caserme', q.casermeDi('io').map(c => c.id + c.liv).sort().join(), p.casermeDi('io').map(c => c.id + c.liv).sort().join())
-  uguale('stessa torretta', q.torretta('io').liv, p.torretta('io').liv)
+  uguale('stesso castello', q.castello('io').liv, p.castello('io').liv)
   uguale('stesse truppe in campo', q.unita.length, p.unita.length)
   q.avanza(5)
   controlla('la partita ripresa continua', q.t > p.t)

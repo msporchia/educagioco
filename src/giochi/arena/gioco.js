@@ -14,6 +14,8 @@ export default {
   copertina: { fondo: '#3b4d7a', disegno: '#2c3a5e', scena: 'mura' },
   // le domande passano da src/quiz/ (il modulo `conti`), tagliate dall'età
   quiz: true,
+  // in prova: sta dietro l'interruttore dei giochi sperimentali dei genitori (docs/genitori/interruttori.md)
+  sperimentale: true,
   tappe: QUANTE_TAPPE,
 
   riassunto(av = { tappa: 0, stelle: {} }) {

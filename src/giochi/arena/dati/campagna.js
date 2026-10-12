@@ -47,7 +47,7 @@ export const CAMPAGNA = [
     racconto: 'Il golem va dritto alle costruzioni e non si ferma per le truppe.' },
   { chiave: 'canneto', nome: 'Il canneto', scalino: 'palude', portata: 38,
     truppe: PER2, nemico: NEMICO.canneto,
-    racconto: 'Il nemico adesso fa muri e curare: non basta più correre.' },
+    racconto: 'Il nemico adesso ripara e rialza il muro: non basta più correre.' },
 
   { chiave: 'valico', nome: 'Il valico', scalino: 'neve', portata: 45,
     truppe: CON_DIV, nemico: NEMICO.valico,
@@ -83,7 +83,7 @@ export const sfidaDi = t => ({ nemico: t.nemico, truppe: t.truppe })
    si possono costruire */
 export const operazioniDi = t => [...new Set(['+', ...t.truppe.map(id => TRUPPE[id].op)])]
 
-/* Quando un'azione (miniera, torretta…) vuole un'operazione che la tappa non
+/* Quando un'azione (miniera, castello…) vuole un'operazione che la tappa non
    ha ancora insegnato, si ripiega su quella più vicina: ÷ → × → − → + (la
    stessa scelta del castello, docs/castello/operazioni.md). */
 const RIPIEGO = { '÷': '×', '×': '−', '−': '+' }
@@ -93,11 +93,11 @@ export function operazionePer(op, ammesse) {
   return ammesse.includes(o) ? o : '+'
 }
 
-/* Le stelle: una per aver vinto, una per aver tenuto in piedi la torretta,
-   una per aver finito con la base quasi intatta. */
-export function stellePer({ vinto, torrettaViva, vitaBase }) {
+/* Le stelle: una per aver vinto, una per aver finito col castello oltre la
+   metà, una per averlo tenuto quasi intatto. */
+export function stellePer({ vinto, vitaBase }) {
   if (!vinto) return 0
-  return 1 + (torrettaViva ? 1 : 0) + (vitaBase >= 0.7 ? 1 : 0)
+  return 1 + (vitaBase >= 0.5 ? 1 : 0) + (vitaBase >= 0.85 ? 1 : 0)
 }
 
 export function guastiDellaCampagna(campagna = CAMPAGNA) {
