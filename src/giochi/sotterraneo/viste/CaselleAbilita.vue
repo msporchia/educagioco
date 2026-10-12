@@ -35,7 +35,7 @@ const vai = (che, ...a) => { if (pronto.value) emit(che, ...a) }
     <p v-if="pericolo" class="sot-ringhio-detto" data-ringhio :data-perche="pericolo.perche" role="alert">
       <b>Attenzione!</b>
       {{ DETTO_DEL_PERICOLO[pericolo.perche] }}
-      <span class="em">❤️ <b>{{ pericolo.vita }}</b> · sbagliando ti toglie <b>{{ pericolo.male }}</b></span>
+      <span class="em">❤️ <b>{{ pericolo.vita }}</b> · in arrivo ti toglie <b>{{ pericolo.male }}</b></span>
     </p>
     <button type="button" class="sot-scelta sot-pronta" data-azione="attacco" @click="vai('scegli', null)">
       <span class="sot-scelta-icona"><Glifo nome="spada" :misura="22" /></span>

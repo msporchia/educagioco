@@ -3,6 +3,7 @@
 // (motore/zone.js) si legge da lì, non dal livello che ha scritto sulla barra. Funzioni pure sul Corredo: girano in Node.
 import { NODI, aGrado, colpisce, inVita } from '../dati/abilita.js'
 import { MOSTRI } from '../dati/mostri.js'
+import { COLPO_DEL_MOSTRO } from '../dati/mondo.js'
 import { CAMPAGNA, OSSA_PER_PIANO } from '../dati/campagna.js'
 import { LIVELLI_ATTESI } from '../dati/storia.js'
 import { forzaDellaZona, spintaDellaZona } from '../dati/zone.js'
@@ -44,7 +45,7 @@ export const spintaDei = L => (L >= 12 ? spintaDellaZona(L) : fraI(L, 'spinta'))
 export function mostroDiRiferimento(L) {
   const m = MOSTRI[MOSTRO_TIPICO]
   const ossa = m.ossa * (1 + PIANO_TIPICO * OSSA_PER_PIANO) * forzaDei(L)
-  return { ossa, att: m.att + Math.floor(PIANO_TIPICO / 2) + spintaDei(L), dif: m.dif }
+  return { ossa, att: m.att + Math.floor(PIANO_TIPICO / 2) + spintaDei(L), dif: m.dif, velocita: m.velocita }
 }
 
 /* ═══════════ l'offesa ═══════════
@@ -62,7 +63,7 @@ export function colpoContro(c, m, nodo = null, { rotto = false } = {}) {
   const g = nodo ? gradoDi(c.crescita, nodo.id) : 0
   const passa = rotto ? 1 : Math.max(passaDi(nodo && nodo.passa), passaDelRamo(c, nodo))
   const piu = c.sempre('colpoPiu') + (nodo ? c.delRamo(nodo, 'piu') : 0)
-  const base = Math.max(1, Math.round((c.att - m.dif * (1 - passa)) * (1 + piu / 100)))
+  const base = Math.max(1, Math.round((c.attDelRamo(nodo) - m.dif * (1 - passa)) * (1 + piu / 100)))
   let per = nodo ? (aGrado(nodo, 'per', g) || 1) : 1
   if (nodo && nodo.seStordito) per = nodo.altrimenti || 1   // su un mostro che nessuno ha ancora toccato
   return Math.round(base * per) + c.addosso('fuoco')
@@ -110,8 +111,9 @@ export const ttk = (c, m, o) => offesa(c, m, o).turni
 
 /* ═══════════ la resistenza ═══════════
    La vita massima con la roba, più quello che una cura o uno scudo delle abilità darebbe in uno scontro (la migliore, una
-   sola); contro il colpo che il mostro dà a ogni turno: il graffio se si risponde bene (diminuito dalla Parata e dalla
-   schivata), il colpo pieno se si sbaglia (dimezzato per i primi dalla Testa dura) */
+   sola); contro il colpo che il mostro dà a ogni suo turno, COLPO_DEL_MOSTRO × (attacco − difesa) qualunque sia la risposta
+   (diminuito dalla Parata e dalla schivata, dimezzato per i primi dalla Testa dura); i suoi turni sono quelli che la sua
+   velocità gli dà mentre l'eroe, con la sua, gioca i propri (docs/sotterraneo/scontro.md) */
 export function riparo(c) {
   const vm = c.vitaConLaRoba
   let meglio = 0
@@ -129,20 +131,21 @@ export function riparo(c) {
 export const resistenza = c => c.vitaConLaRoba + riparo(c)
 
 // il danno che il mostro `m` fa in un turno, in media, contro questo eroe; `turni` quanti ne dura lo scontro
-export function dannoPerTurno(c, m, turni, { giuste = RISPOSTE_GIUSTE } = {}) {
-  const danno = Math.max(1, m.att - c.dif)
-  const meno = c.sempre('graffioMeno')
-  const graffio = Math.max(c.ha('graffioMeno') ? 0 : 1, Math.floor(danno / 2) - meno)
+export function dannoPerTurno(c, m, turni) {
+  // il colpo del mostro, come Corsa.danno: COLPO_DEL_MOSTRO × (attacco − difesa), almeno 1, qualunque sia la risposta
+  const colpo = Math.max(1, Math.round(COLPO_DEL_MOSTRO * (m.att - c.dif)))
   const schivata = c.schivata / 100
-  // i primi colpi pieni di ogni scontro fanno metà (Testa dura)
-  const sbagliate = turni * (1 - giuste)
-  const dimezzati = Math.min(c.sempre('testaDura'), sbagliate)
-  const risparmio = dimezzati * (danno - Math.ceil(danno / 2))
-  const totale = turni * (giuste * graffio * (1 - schivata) + (1 - giuste) * danno) - risparmio
+  // mentre l'eroe gioca `turni` turni il mostro ne gioca meno o più, secondo le velocità (motore/turni.js)
+  const suoi = turni * (m.velocita || 8) / c.velocita
+  // i primi colpi di ogni scontro fanno metà (Testa dura); la Parata ne toglie qualcuno a ognuno
+  const dimezzati = Math.min(c.sempre('testaDura'), suoi)
+  const ciascuno = Math.max(0, colpo - c.sempre('graffioMeno'))
+  const risparmio = dimezzati * (colpo - Math.ceil(colpo / 2))
+  const totale = suoi * (1 - schivata) * ciascuno - risparmio
   return Math.max(0, totale / Math.max(1, turni))
 }
-export const ttd = (c, m, turni, o) => {
-  const d = dannoPerTurno(c, m, turni, o)
+export const ttd = (c, m, turni) => {
+  const d = dannoPerTurno(c, m, turni)
   return d > 0 ? resistenza(c) / d : Infinity
 }
 

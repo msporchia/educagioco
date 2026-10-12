@@ -135,6 +135,8 @@ function sbriga(corsa, bravura, sorte, conto) {
   const f = corsa.foglio
   if (!f) return false
   switch (f.che) {
+    // lo scontro a gruppi (docs/sotterraneo/scontro.md): il banco attacca sempre il bersaglio che il motore sceglie da sé (lo
+    // stesso se è in piedi, se no il più ferito), finché non cadono tutti; non usa le abilità, non beve e non scappa
     case 'scontro':
     case 'porta':
     case 'forziere':

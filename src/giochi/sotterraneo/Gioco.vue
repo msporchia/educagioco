@@ -697,7 +697,7 @@ const nemico = dallaCorsa(c => {
     eroe: { sprite: c.io.sprite ? pezzoAndante(c.io.sprite, 'fermo', 0) : null, em: c.io.em, vita: c.vita, vitaMax: c.vitaMax },
     grosso: f.chi.grosso || null,                                               // il mostro grosso: la sua chiave, la figura la sceglie viste/Grosso.vue
     // detti PRIMA di rispondere: con questi si decide restare o scappare. Con gli effetti delle abilità (Corsa.botta)
-    puoiScappare: c.puoScappare(f.chi),
+    puoiScappare: c.puoScappare(),
     stati: statiDel(f.chi), mie: statiMiei(f.io || {}),
   }
 })
@@ -771,8 +771,8 @@ const abilitaScontro = dallaCorsa(c => {
     // la pozione blu: energia per le abilità, se ne hai e il globo non è pieno
     beviEnergia: c.energia < c.energiaMax && c.zaino.some(x => COSE[x] && COSE[x].usa === 'energia')
       ? { quanto: COSE[c.zaino.find(x => COSE[x].usa === 'energia')].energia, n: c.zaino.filter(x => COSE[x] && COSE[x].usa === 'energia').length } : null,
-    scappa: c.puoScappare(m) ? { graffio: c.graffio(m) } : null,
-    pericolo: f.pericolo ? { perche: f.pericolo, vita: c.vita, male: c.danno(m) } : null,
+    scappa: c.puoScappare() ? { graffio: c.costoFuga() } : null,
+    pericolo: f.pericolo ? { perche: f.pericolo, vita: c.vita, male: c.colpiInArrivo() } : null,
     // com'è la scelta fatta, per la riga sopra la domanda
     scelta: c.pronta ? voce(c.pronta) : null,
   }
@@ -784,7 +784,7 @@ function scegliColpo(id) {
   const f = c && c.foglio
   if (!f || f.che !== 'scontro') return
   if (f.pericolo) c.continua()
-  c.pronta = null
+  c.prepara(null)
   if (id && !c.prepara(id)) return
   colpoPer.value = c.chiesta ? c.chiesta.id : 0
   tic.value++
@@ -808,12 +808,18 @@ function beviNelloScontro() {
   const c = corsa.value
   if (!c || !c.foglio || c.foglio.che !== 'scontro') return
   if (c.foglio.pericolo) return ringhioBevi()
-  const i = c.pozioneGiusta()
-  if (i == null) return
-  c.usa(i)
+  bevutaNelloScontro()
+}
+// la pozione rossa costa il turno (docs/sotterraneo/scontro.md): tocca ai mostri, e l'esito si racconta come una risposta
+function bevutaNelloScontro() {
+  const c = corsa.value
+  const e = c.beviNelloScontro()
+  if (!e) return
+  domanda.value = null
+  togli()
   tic.value++
-  suoni.tesoro()
   salva()
+  mostra(e)
 }
 
 const pieni = dallaCorsa(c => c.postiUsati(), 0)   // sei su sei vuol dire che la prossima cosa resta per terra
@@ -1039,6 +1045,11 @@ function risolvi(giusto, saltata = false) {
   tic.value++
   salva()
   if (!esito) return
+  mostra(esito)
+}
+
+// quello che si vede e si sente di un turno: lo scambio sotto il duello, il ringhio, il suono giusto
+function mostra(esito) {
   scosso.value++
   // resta a schermo un paio di secondi: il tempo di leggerlo mentre la domanda dopo si sta già montando
   if (esito.dato != null || esito.preso != null) {
@@ -1074,13 +1085,7 @@ function scappa() {
   salva()
 }
 // le altre due scelte dello stop (la terza, scappare, è `scappa`): bere la pozione della barra, o riprendere a rispondere
-function ringhioBevi() {
-  if (!corsa.value.beviNelPericolo()) return
-  togli()
-  tic.value++
-  suoni.tesoro()
-  salva()
-}
+function ringhioBevi() { bevutaNelloScontro() }
 function chiudiFoglio() { corsa.value.chiudi(); domanda.value = null; tic.value++ }
 // "riprovo" rimette in piedi all'ingresso, tranne all'ultima occasione dove riprendi() risale e la discesa è finita
 function riprendi() {

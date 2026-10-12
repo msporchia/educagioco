@@ -12,6 +12,7 @@ import { rileggiCrescita, piuDellaCrescita, caratteristica, chiTrattiene, puntiD
 import { CARATTERISTICHE } from '../dati/livelli.js'
 import { NODI, ENERGIA, aGrado } from '../dati/abilita.js'
 import { gradoDi, impara, metti, dimentica, costoDelDimenticare } from './abilita.js'
+import { VELOCITA_BASE_EROE } from './turni.js'
 
 // la forma di `cfg.avventure[eroe].roba` nel profilo: sale se un campo cambia significato (docs/core/ripresa.md)
 export const VERSIONE_ROBA = 1
@@ -147,7 +148,27 @@ export class Corredo {
     return ['forza', 'destrezza', 'intelligenza'].reduce((a, k) => (this.piu.sopra[k] > this.piu.sopra[a] ? k : a))
   }
   get att() { return this.io.att + this.piu.sopra[this.carDellArma] * ATT_PER_PUNTO + this.addosso('att') }
+  // L'attacco di un'abilità (docs/sotterraneo/scontro.md, «Le caratteristiche»). Un ramo d'arma colpisce con l'attacco della
+  // sua arma, anche se sta nella mancina (intera, non a metà): il mago con la spada in mano e la bacchetta nella mancina
+  // attacca di spada e incanta di bacchetta. Un ramo senz'arma colpisce con la sua caratteristica (`car` del ramo), qualunque
+  // sia l'arma in mano. Senza abilità, o con un ramo che vuole lo scudo, è l'attacco solito
+  attDelRamo(nodo) {
+    if (!nodo) return this.att
+    const arma = nodo.arma
+    if (!arma) {
+      if (!nodo.car) return this.att
+      return this.io.att + this.piu.sopra[nodo.car] * ATT_PER_PUNTO + this.addosso('att')
+    }
+    if (!arma.famiglie) return this.att
+    const buona = k => k && COSE[k] && arma.famiglie.includes(COSE[k].famiglia)
+    if (buona(this.mano) || !buona(this.mancina)) return this.att
+    const car = FAMIGLIE[COSE[this.mancina].famiglia].car
+    const addosso = [this.corpo, this.dito].reduce((n, k) => n + (k && COSE[k] ? COSE[k].att || 0 : 0), 0)
+    return this.io.att + this.piu.sopra[car] * ATT_PER_PUNTO + COSE[this.mancina].att + addosso
+  }
   get dif() { return this.io.dif + this.piu.dif + this.addosso('dif') }
+  // il ritmo dello scontro: 10 più la destrezza (motore/turni.js)
+  get velocita() { return VELOCITA_BASE_EROE + this.car('destrezza') }
   // il valore di una caratteristica adesso (partenza, punti, dote): i requisiti delle armi e la pagina dell'eroe
   car(k) { return caratteristica(this.io, this.crescita, k) }
   // il massimo di vita con questa roba e questo livello, a inizio discesa: Corsa parte da qui e poi lo fa crescere (vitaPiu)
