@@ -27,7 +27,7 @@ import { POSTI, MINATORE } from '../../src/giochi/sotterraneo/dati/terra-mappa.j
 import { POSTO_DI } from '../../src/giochi/sotterraneo/dati/terra.js'
 import { VOLTI, PRIMA_NOTIZIA, zonaPotenziata } from '../../src/giochi/sotterraneo/dati/zone.js'
 import { MONDO } from '../../src/giochi/sotterraneo/motore/avventure.js'
-import { robaAttesa } from '../../src/giochi/sotterraneo/motore/storia.js'
+import { ROBA_VUOTA } from '../../src/giochi/sotterraneo/motore/corredo.js'
 import { robaAttesaA, crescitaAttesaA } from '../../src/giochi/sotterraneo/motore/zone.js'
 import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
 
@@ -67,7 +67,9 @@ async function apriIlPosto(chiave) {
 }
 
 /* ---------- 1. nella storia: la torre è rossa, e la guardia non fa scendere ---------- */
-await semina(page, profilo({ tappa: TORRE, libera: false, stelle: { 0: 3, 1: 3 }, roba: robaAttesa('cavaliere', TORRE),
+// a mani nude: i colori si leggono dalla forza (docs/sotterraneo/forza.md), e con la roba della scalinata un eroe del livello 1
+// vale 2, e la torre non sarebbe più rossa
+await semina(page, profilo({ tappa: TORRE, libera: false, stelle: { 0: 3, 1: 3 }, roba: ROBA_VUOTA(),
                              crescita: { esp: 0 },
                              terra: { nebbia: 'f'.repeat(768), dove: POSTI[POSTO_DI.torre].piede, parlato: true } }))
 await scegli(page, 'sotterraneo')

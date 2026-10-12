@@ -205,7 +205,9 @@ uguale('e l\'abisso resta l\'abisso', zonaDi(-1).abisso, true)
   // nella zona grigia un mostro dà un quarto: la grigia è facile, e non deve rendere come la verde
   const z = zonaPotenziata(indiceDi('torre'), 14)
   const esp = eroeA => {
-    const c = new Corsa(z, { seme: 5, eroe: 'cavaliere', rnd: seminato(5), crescita: crescitaAttesaA('cavaliere', eroeA) })
+    // con la roba attesa: il grigio si legge dalla forza (docs/sotterraneo/forza.md), e a mani nude un eroe del 18 vale molto meno
+    const c = new Corsa(z, { seme: 5, eroe: 'cavaliere', rnd: seminato(5), crescita: crescitaAttesaA('cavaliere', eroeA),
+                             roba: robaAttesaA('cavaliere', eroeA) })
     const m = c.livello.robe.find(r => r.che === 'mostro' && !r.chiave)
     const prima = c.crescita.esp
     c.cade(m)
