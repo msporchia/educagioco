@@ -85,6 +85,7 @@ function pianta(i) {
       out.push(`<circle cx="${x}" cy="${y}" r="${C * 0.38}" fill="${tinta(r.tipo)}" stroke="${r.caporale ? '#ffd23f' : '#000'}" stroke-width="${r.caporale ? 2 : 0.8}"${r.appostato ? ' stroke-dasharray="2 1.5"' : ''}/>`)
       if (r.chiave) out.push(`<text x="${x + 5}" y="${y - 3}" fill="#ffd23f" font-size="8" font-family="sans-serif">⚷</text>`)
     } else if (r.che === 'forziere') out.push(`<rect x="${x - 3}" y="${y - 3}" width="6" height="6" fill="#e0b040"/>`)
+    else if (r.che === 'porta') out.push(`<rect x="${r.x * C + 1}" y="${r.y * C + 1}" width="${C - 2}" height="${C - 2}" fill="${r.pelle === 'bella' ? '#d23a2a' : '#7a4a1a'}" stroke="#fff" stroke-width="1.2"/>`)
     else if (r.che === 'scala') out.push(`<text x="${x}" y="${y + 4}" fill="#fff" font-size="11" text-anchor="middle" font-family="sans-serif">▼</text>`)
     else if (r.che === 'scala-su') out.push(`<text x="${x}" y="${y + 4}" fill="#fff" font-size="11" text-anchor="middle" font-family="sans-serif">▲</text>`)
     else if (r.che === 'fonte') out.push(`<circle cx="${x}" cy="${y}" r="3" fill="#4fb0e0"/>`)
@@ -95,7 +96,7 @@ function pianta(i) {
     `${tappa.nome || tappa.chiave} · piano ${c.piano + 1}${tappa.abisso ? '' : ` di ${c.quantiPiani}`} · seme ${seme}${zona != null ? ` · zona ${zona}` : ''} · ${L.stanze.length} stanze · pianta ${L.pianta}${L.acqua ? ' con acqua' : ''} · ${(L.relitti || []).length} relitti`,
     specie.map(t => `● ${(MOSTRI[t] && MOSTRI[t].nome) || t} ${conta(t)}`).join('   '),
     `cerchio d'oro caporale · tratteggio appostato · ♛ grosso · ⚷ chiave · ▼ scala · ▲ si risale · ■ forziere`,
-    `blocco chiaro con l'iniziale: relitto (m macerie, c crollo/carro/colonna/cavaliere, r roccia, s sarcofago/stalagmite…) · contorno giallo: nicchia · azzurro: acqua · cella d'oro: porta`,
+    `blocco chiaro con l'iniziale: relitto (m macerie, c crollo/carro, r roccia, s sarcofago…) · contorno giallo: nicchia · azzurro: acqua · cella d'oro: passaggio · riquadro bianco: porta (rossa: portone)`,
     Object.entries(FORME).map(([k]) => k).join(' · '),
   ]
   const HL = 16 * righe.length + 8
