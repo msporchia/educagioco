@@ -877,8 +877,15 @@
   text-shadow: 0 1px 2px #000, 0 0 4px #000;
 }
 .sot-casella-ombra { font-size: 20px; opacity: .2; filter: grayscale(1) }
+/* il pezzo che migliora quello che hai addosso: ▲ verde col numero, in alto a sinistra; il sogno ha la ★ d'oro */
+.sot-casella-su {
+  position: absolute; top: 1px; left: 3px; padding: 0 4px; font-size: 11.5px; font-weight: 800; line-height: 15px; color: #7fe3a0;
+  background: #0a1a10e6; border: 1px solid #3fae6899; border-radius: 6px; white-space: nowrap;
+}
+.sot-casella.sot-sogno .sot-casella-su { color: #ffe27a; background: #2a1d05e6; border-color: #ffd23faa }
 .sot-casella.sot-vuota { border-color: #ffffff14 }
-.sot-casella.sot-spenta .sot-icona { opacity: .38; filter: grayscale(.65) }
+/* una casella `sot-spenta` (non te la puoi permettere, o non ancora) non ha trasparenza né grigio: il pezzo si vede pieno coi suoi colori; il perché lo dicono il prezzo in rosso, il 🔒 e il pannello */
+.sot-casella.sot-spenta { cursor: default }
 .sot-casella.sot-ombra .sot-icona { transform: scaleX(-1); filter: grayscale(.6) brightness(.7); opacity: .5 }
 .sot-casella.sot-scelto {
   border-color: #fff3c4; transform: translateY(-1px);

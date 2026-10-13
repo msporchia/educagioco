@@ -116,8 +116,8 @@ villaggio» o «piano 2/3»). Durante uno scontro non si apre, come prima.
   durante uno scontro: il velo copre la barra (quando si rischia di cadere,
   lo stop dello scontro offre lo stesso «bevi», [pericolo.md](pericolo.md)).
 - **L'elisir conta fra le pozioni.** Era il guasto della casella che «non
-  saliva»: l'utente raccoglieva una boccetta rossa (l'elisir, che i forzieri
-  della storia danno spesso) e la 🧪 non la contava, perché contava solo le
+  saliva»: l'utente raccoglieva una boccetta rossa (l'elisir, che allora i forzieri
+  della storia davano spesso: ora è rarissimo) e la 🧪 non la contava, perché contava solo le
   cure. La casella si aggiornava: contava un'altra cosa. Adesso conta tutto
   quello che si beve, e la prova col dito butta una pozione e la raccoglie.
 - **📖 apre lo stesso diario di sopra.** Da qui si sceglie anche quale

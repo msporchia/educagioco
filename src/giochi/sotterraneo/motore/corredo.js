@@ -7,7 +7,7 @@ import { eroeDi, DI_PARTENZA, portaLa, nonLaPorta, FAMIGLIE, requisitoDi } from 
 import { COSE, STANZE_TORCIA, aLivello } from '../dati/cose.js'
 import { GEMME_PER_FORTUNA, ATT_PER_PUNTO, SCHIVATA_PER_DESTREZZA, ENERGIA_PER_INTELLIGENZA } from '../dati/livelli.js'
 import { valoreDelLivello } from '../dati/pezzi.js'
-import { rileggiCrescita, piuDellaCrescita, caratteristica, chiTrattiene, puntiDaDare, riassegna, costoDelRiassegnare }
+import { rileggiCrescita, piuDellaCrescita, caratteristica, chiTrattiene, puntiDaDare, riassegna, costoDelRiassegnare, trattoDegliElisir }
   from './crescita.js'
 import { CARATTERISTICHE } from '../dati/livelli.js'
 import { NODI, ENERGIA, aGrado } from '../dati/abilita.js'
@@ -77,6 +77,8 @@ export function schedaConLaRoba(eroe, roba = null, crescita = null) {
   const tratti = []
   if (gemme) tratti.push(`💎 ×${(Math.round((1 + gemme) * 100) / 100).toString().replace('.', ',')}`)
   if (luce) tratti.push('🔦 vedi più lontano')
+  const elisir = trattoDegliElisir(c.crescita)
+  if (elisir) tratti.push(elisir)
   return {
     vita: c.vitaConLaRoba, att: c.att, dif: c.dif, gemme: c.gemme, tasche: c.postiUsati(), capienza: c.capienza,
     mano: c.mano, mancina: c.mancina, corpo: c.corpo, dito: c.dito, tratti, livello: c.livelloEroe, energiaMax: c.energiaMax,
@@ -130,7 +132,7 @@ export class Corredo {
   // quello che la crescita aggiunge (docs/sotterraneo/livelli.md); ricalcolato quando cambia l'esperienza o un punto
   get piu() {
     const cr = this.crescita
-    const firma = `${cr.esp}|${cr.forza}|${cr.destrezza}|${cr.intelligenza}|${cr.tempra}`
+    const firma = `${cr.esp}|${cr.forza}|${cr.destrezza}|${cr.intelligenza}|${cr.tempra}|${cr.elisir}`
     if (this._piu && this._piuFirma === firma) return this._piu
     this._piuFirma = firma
     this._piu = piuDellaCrescita(this.io, this.crescita)
@@ -475,9 +477,11 @@ export class Corredo {
   // `cambio` è il confronto pezzo contro pezzo: `toglie` sono i pezzi che il nuovo manda via dalle caselle (uno,
   // nessuno se il posto è vuoto, due se un'arma a due mani sfratta lo scudo), `vecchi` e `nuovi` quanto danno
   // all'eroe, abilità per abilità, le caselle toccate prima e dopo (la mano debole vale metà braccio)
-  seLoMetto(k) {
+  // `ancora`: anche un pezzo che l'eroe porta ma non regge ancora (gli manca la caratteristica): il confronto di quello
+  // che sarà, con `ancora: true` nel risultato
+  seLoMetto(k, { ancora = false } = {}) {
     const c = COSE[k]
-    if (!c || !c.dove || !this.posso(k)) return null
+    if (!c || !c.dove || !(this.posso(k) || (ancora && this.porta(k)))) return null
     if (c.dove === 'mancina' && this.aDueMani(this.mano)) return { dove: 'mancina', bloccata: this.mano }
     const prova = this.copia()
     const dove = c.dove === 'mano' ? prova.postoDellArma(k).dove : c.dove
@@ -494,7 +498,7 @@ export class Corredo {
       return n
     }
     return {
-      dove, fuori: fuori === k ? null : fuori,
+      dove, fuori: fuori === k ? null : fuori, ...(this.posso(k) ? {} : { ancora: true }),
       prima: numeri(this, tetto),
       dopo: numeri(prova, tetto + prova.addosso('vita') - this.addosso('vita')),
       cambio: this.cambioCon(prova, dove),

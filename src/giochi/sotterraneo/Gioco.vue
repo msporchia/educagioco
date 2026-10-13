@@ -25,7 +25,8 @@ import { EROI, DI_PARTENZA, eroeDi } from './dati/eroi.js'
 import { TASCHE, VITA_PER_PIANO } from './dati/mondo.js'
 import { Corsa } from './motore/corsa.js'
 import { rileggiRoba, ROBA_VUOTA, schedaConLaRoba, Corredo, tascheDello, postiDello } from './motore/corredo.js'
-import { rileggiCrescita, puntiDaDare, dai as daiPunto, livelloDella } from './motore/crescita.js'
+import { rileggiCrescita, puntiDaDare, dai as daiPunto, livelloDella, crescitaA, trattoDegliElisir } from './motore/crescita.js'
+import { robaAttesa } from './motore/storia.js'
 import { puntiAbilita, caselleDella } from './motore/abilita.js'
 import { NODI, RAMI } from './dati/abilita.js'
 import { zonaDi } from './dati/zone.js'
@@ -36,7 +37,7 @@ import { quotaDi } from './dati/livelli.js'
 import { LEGGENDARI } from './dati/pezzi.js'
 import { prendi as prendiMissione, consegna as consegnaMissione, fatte as missioniFatte, presePer, promemoria,
          rotta as rottaDi, seguita, diario } from './motore/missioni.js'
-import { Bottega, alGiroNuovo } from './motore/bottega.js'
+import { Bottega, alGiroNuovo, robaRaraDi } from './motore/bottega.js'
 import { scrivi, leggi, dice, viaDi, PORTALE as VIA_PORTALE } from './motore/sosta.js'
 import { avventuraDi, scriviNellAvventura, vintaNellAvventura, azzeraIlVecchio, ricordaIlFondo, cominciata }
   from './motore/avventure.js'
@@ -355,12 +356,15 @@ const banco = computed(() => {
   // comprano a un prezzo più alto (`costa`: il `prezzo` resta quello pieno). Regola dell'utente, 8 ottobre: lo
   // scettro accanto al bastone magico (⚔️ 3 tutti e due) «non sembra molto interessante»
   const vendibili = b.mercanziaVista(k)
-    .map(({ chiave: x, sempre, avanti }) => {
+    .map(({ chiave: x, sempre, avanti, ruolo }) => {
       const costa = b.quantoCosta(x)
+      const conf = COSE[x].dove ? b.confronto(x) : null
       return {
         chiave: x, sempre, ...COSE[x], ...(COSE[x].cura ? { cura: b.curaDi(x) } : {}), costa, avanti, posso: b.gemme >= costa,
+        // `ruolo` salto/sogno (motore/bottega.js) e `su`: di quanto alza il numero principale del posto, per il segno sulla casella
+        ruolo, migliora: !!(conf && conf.meglio > 0), su: conf && conf.delta > 0 ? Math.round(conf.delta * 10) / 10 : 0,
         // `nonPuoi`: la classe non lo porta, non si compra. `serve`: lo porta ma gli manca la caratteristica, si compra e va nello zaino
-        nonPuoi: b.porta(x) ? '' : b.perchéNo(x), serve: b.porta(x) ? b.perchéNo(x) : '', prova: b.seLoMetto(x), va: b.vaAddosso(x),
+        nonPuoi: b.porta(x) ? '' : b.perchéNo(x), serve: b.porta(x) ? b.perchéNo(x) : '', prova: b.seLoMetto(x, { ancora: true }), va: b.vaAddosso(x),
         mancano: Math.max(0, costa - b.gemme),
         quante: b.quanteNeHo(x),
       }
@@ -377,7 +381,7 @@ const banco = computed(() => {
     // le ultime cose vendute, dalla più recente, al prezzo a cui il mercante le ha pagate (`i`: il posto nel suo elenco)
     riacquisto: m.compra ? b.daRiacquistare(k).map(({ k: x, prezzo, i }) => ({
       chiave: x, ...COSE[x], costa: prezzo, i, posso: b.gemme >= prezzo, mancano: Math.max(0, prezzo - b.gemme),
-      serve: b.porta(x) ? b.perchéNo(x) : '', prova: b.seLoMetto(x), va: b.vaAddosso(x),
+      serve: b.porta(x) ? b.perchéNo(x) : '', prova: b.seLoMetto(x, { ancora: true }), va: b.vaAddosso(x),
     })) : null,
   }
 })
@@ -499,7 +503,7 @@ const pagina = computed(() => {
     numeri: { vita: c.vita ?? c.vitaConLaRoba, vitaMax: c.vitaMax ?? c.vitaConLaRoba, att: c.att, dif: c.dif,
               gemme: c.gemme },
     caratteristiche: c.caratteristiche(),
-    cambia: !corsa.value, tratti: corsa.value ? [] : robaSopra.value.tratti,
+    cambia: !corsa.value, tratti: corsa.value ? [trattoDegliElisir(c.crescita)].filter(Boolean) : robaSopra.value.tratti,
     tesori: { trovati: tesoriTrovati.value.length, tutti: Object.keys(LEGGENDARI).length },
     puntiAbilita: puntiAbilita(c.crescita), costoRiassegnare: c.costoRiassegnare,
   }
@@ -590,7 +594,7 @@ const zainoDiSopra = computed(() => {
   tic.value
   if (!zainoSopra.value) return null
   const c = new Corredo({ eroe: eroeQui(), roba: roba.value, crescita: crescita.value })
-  const voce = k => (k ? { chiave: k, ...COSE[k], nonPuoi: c.perchéNo(k), ancora: c.porta(k) && !c.posso(k), prova: c.seLoMetto(k), ...(COSE[k].cura ? { cura: c.curaDi(k) } : {}) } : null)
+  const voce = k => (k ? { chiave: k, ...COSE[k], nonPuoi: c.perchéNo(k), ancora: c.porta(k) && !c.posso(k), prova: c.seLoMetto(k, { ancora: true }), ...(COSE[k].cura ? { cura: c.curaDi(k) } : {}) } : null)
   return {
     mano: voce(c.mano), mancina: voce(c.mancina), corpo: voce(c.corpo), dito: voce(c.dito),
     tasche: tascheVoci(c, voce), costoTasca: c.costoTasca,
@@ -840,7 +844,7 @@ const pieni = dallaCorsa(c => c.postiUsati(), 0)   // sei su sei vuol dire che l
 
 const zaino = dallaCorsa(c => {
   // `nonPuoi` la scrive il motore (perchéNo), che sa chi sta scendendo
-  const voce = k => (k ? { chiave: k, ...COSE[k], nonPuoi: c.perchéNo(k), ancora: c.porta(k) && !c.posso(k), prova: c.seLoMetto(k), ...(COSE[k].cura ? { cura: c.curaDi(k) } : {}) } : null)
+  const voce = k => (k ? { chiave: k, ...COSE[k], nonPuoi: c.perchéNo(k), ancora: c.porta(k) && !c.posso(k), prova: c.seLoMetto(k, { ancora: true }), ...(COSE[k].cura ? { cura: c.curaDi(k) } : {}) } : null)
   return {
     mano: voce(c.mano), mancina: voce(c.mancina),
     corpo: voce(c.corpo), dito: voce(c.dito),
@@ -1488,6 +1492,21 @@ function scesaDaProva() {
   if (i === INDICE_ABISSO || (Number.isInteger(i) && i >= 0 && i < CAMPAGNA.length)) avvia(i, { prova: true })
 }
 scesaDaProva()
+// `#bottega=armaiolo` apre subito quel banco (`&scheda=difese`), con l'eroe a `&livello=12` e `&roba=rara` (un raro per posto), `&roba=nuda`
+// o quella attesa dalla storia, e `&gemme=800`: per guardare la bottega senza camminare fino al mercante (strumenti/scatta-app.mjs)
+function bottegaDaProva() {
+  const h = new URLSearchParams(location.hash.slice(1))
+  const k = h.get('bottega')
+  if (!k || !mercanteDi(k) || scegliEroe.value) return
+  const L = Math.max(1, Math.min(100, Number(h.get('livello')) || 0))
+  const gemme = Math.max(0, Number(h.get('gemme')) || 0)
+  const tipo = h.get('roba')
+  const finite = qui.value.tappa || 0
+  const r = tipo === 'rara' ? robaRaraDi(eroeQui(), L || 12, { gemme }) : tipo === 'nuda' ? { ...ROBA_VUOTA(), gemme } : { ...robaAttesa(eroeQui(), finite), gemme }
+  nellAvventura({ roba: r, ...(L ? { crescita: crescitaA(eroeDi(eroeQui()), L) } : {}) })
+  apriBottega(k, h.get('scheda'))
+}
+bottegaDaProva()
 if (!scegliEroe.value && !corsa.value) riprendiSeUscito()
 
 onMounted(() => {

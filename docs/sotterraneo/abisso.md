@@ -158,7 +158,7 @@ dall'abisso.
 - **Le tasche si svuotano, non si rovesciano per terra**: ritrovarle
   all'ingresso vorrebbe dire non aver perso niente. La riga lo dice.
 - **Sopravvivono** la torcia (brucia sulla corsa, non sta in tasca) e la vita
-  massima cresciuta con l'elisir (`vitaBase`).
+  massima cresciuta con l'elisir (sta nella crescita dell'eroe, per sempre: [rarita.md](rarita.md#lelisir-del-toro)).
 - **Le pozioni reggono**: una pozione bevuta vale sempre più di una tenuta da
   parte, che è il comportamento che si voleva togliere. Con uno scontro
   aperto lo zaino non si apre, ma il colpo di ogni mostro si legge prima e

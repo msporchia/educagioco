@@ -25,8 +25,8 @@ export const MERCANTI = [
     dice: 'Pozioni per chi sanguina, torce per chi ha paura del buio. Laggiù servono tutte e due.',
     schede: [{ chiave: 'pozioni', nome: 'Pozioni', em: '🧪', usa: ['cura', 'cresci', 'energia'] },
              { chiave: 'torce', nome: 'Torce', em: '🔥', usa: ['luce'] }],
-    vende: { chiavi: ['elisir-toro'] }, sempre: [...CURE, 'pozione-blu', 'ampolla-blu', 'torcia'],
-    righe: [0, 0, 1, 1, 1, 1, 1, 1] },
+    vende: { chiavi: [] }, sempre: [...CURE, 'pozione-blu', 'ampolla-blu', 'torcia'],
+    righe: [0, 0, 0, 0, 0, 0, 0, 0] },
 
   // l'unico che compra: tre botteghe che comprano farebbero di ogni banco un posto dove svuotare le tasche
   { chiave: 'rigattiere', nome: 'Il mercante', em: '🧺', sprite: 'rigattiere',

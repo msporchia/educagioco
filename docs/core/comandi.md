@@ -75,6 +75,7 @@ scrivono niente: stanno in [sprite.md](sprite.md).
 | `npm run simula` | il tower defense giocato a mente, senza browser |
 | `npm run dps` | quanto fa male ogni torre, per livello e ramo, col motore vero sulle carte, quanto rende un ⚡, e quanto rende un ⚡ cumulato salendo (un minuto) |
 | `npm run sotterraneo` | il giocatore finto del sotterraneo su più processi: discese vinte a 8/6/4 su 10 per eroe, `--diag` (domande, svenimenti, vita a fine scontro, abilità), `--zone`, `--vere`, `--forza`, `--senza-abilita`, e `--contro <commit>` per il «prima → dopo» (le opzioni sono in testa al file; [../sotterraneo/scontro-bilancio.md](../sotterraneo/scontro-bilancio.md)) |
+| `npm run bottega` (`-- --eroe mago --livello 12 --raro --poi 13 --giro --mercante armaiolo --seme 7 --gemme 500`; `--nudo`, `--finite N` per la roba attesa) | il banco di un mercante stampato per un eroe: cosa ha addosso, e per ogni linguetta i pezzi con livello, rarità, prezzo, di quanto alzano e se sono salti o sogni; `--poi` il banco dopo essere salito di livello, `--giro` dopo una discesa finita ([../sotterraneo/bottega.md](../sotterraneo/bottega.md)) |
 | `node strumenti/regali-castello.mjs` | a che ondata cede ogni libera con N regali |
 | `node strumenti/valida-percorsi.mjs` | le carte del castello, passate ai raggi X |
 | `node strumenti/simula-castello.mjs --sole div` | le tappe con una torre sola dovunque si può, dal metro e dal pigro |
@@ -129,6 +130,7 @@ dell'indirizzo): si usano dal browser.
 | `#stagione=natale` | la fattoria a Natale (o `halloween`) fuori stagione |
 | `#eroe=mago&giu=3` | il sotterraneo con quell'eroe, già giù in quella discesa (l'indice della storia, o `abisso`): con gli altri cheat qui sotto una schermata si guarda senza camminare (`node strumenti/scatta-app.mjs 'sotterraneo=branco&mostri=6&eroe=mago&giu=1' --dist`) |
 | `#sotterraneo=roba` | si scende equipaggiati |
+| `#bottega=armaiolo&livello=12&roba=rara&gemme=800` | apre subito quel banco (`&scheda=difese`), con l'eroe a quel livello e un raro per posto (`roba=rara`), niente addosso (`roba=nuda`) o la roba attesa dalla storia; ci si guarda la bottega senza camminare (`node strumenti/scatta-app.mjs 'eroe=cavaliere&bottega=armaiolo&livello=12&roba=rara&gemme=800' --dist`) |
 | `#sotterraneo=branco&mostri=6` | (fino a sette) si scende e si apre subito uno scontro con quei mostri attorno (`&grosso=ossuto`, `&agguato=1`, `&sorpresa=1`, `&tipo=goblin`; `&tipo=scheletro,zombie` a giro; `&variante=guerriero,arciere,mago,semplice&grado=comune,magico,raro,leggendario` scelgono le varianti armate e i gradi, a giro ([../sotterraneo/varianti.md](../sotterraneo/varianti.md)); `&campo=1` li lascia addormentati sul campo a due o tre caselle, senza scontro, e `&campo=sveglio` li fa venire; con `&stanza=sala&seme=11` una stanza con luce) |
 | `#abisso=12` | l'abisso da quel piano |
 | `#seme=812` | il sotterraneo con quel seme, per rivedere una discesa |
