@@ -6,9 +6,8 @@
      neve   terreno-neve.png
      lava   terreno-lava.png
      palude terreno-palude.png
-   Una scena (`td_1.png`…) è **il provvisorio**, coi ritagli di
-   `vesti.py`; un foglio del terreno (`terreno-<vestito>.png`, il prompt
-   2 della scheda del castello) è quello vero. Tutti e due stanno in
+   Ogni vestito viene dal suo foglio del terreno (`terreno-<vestito>.png`,
+   il prompt 2 della scheda del castello), in
    `strumenti/sprite/sorgenti/castello/generati/`.
 
    PEZZI    vestito → nome → [x, y, largo, alto]

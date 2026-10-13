@@ -46,9 +46,6 @@
     "ossa": { "da": [265, 152], "cella": [12, 10] },
     "teschio-scena": { "da": [385, 110], "cella": [12, 11] },
 
-    "cancello-chiuso":      { "da": [130, 221], "cella": [28, 25] },
-    "arco-vuoto":           { "da": [36, 220],  "cella": [20, 25] },
-
     "forziere-oro-chiuso":   { "da": [143, 294], "cella": [19, 17] },
     "forziere-scuro-chiuso": { "da": [65, 293],  "cella": [19, 17] },
 
@@ -62,9 +59,6 @@
     "pozione-nera":  { "da": [325, 16], "cella": [11, 16] },
     "pozione-viola": { "da": [264, 15], "cella": [12, 17] },
 
-    "chiave-ferro": { "da": [303, 83], "cella": [10, 16], "buchi": true },
-    "chiave-verde": { "da": [246, 83], "cella": [10, 16], "buchi": true },
-    "chiave-blu":   { "da": [207, 83], "cella": [10, 16], "buchi": true },
     "__pezzi-col-nome": "le figure dei leggendari e dei pezzi dei grossi (dati/pezzi.js), scelte dal catalogo roba.json",
     "zanna-del-drago": { "da": [125, 42], "cella": [9, 24] },
     "ascia-del-re-nano": { "da": [74, 14], "cella": [12, 22] },
