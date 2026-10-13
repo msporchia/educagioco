@@ -165,8 +165,9 @@ su 10, le zone a 4 su 10). Prima si è provato a fare a meno di ogni novità, un
 colonnato): la differenza non stava in nessuna, stava nel campione. Le leve usate sono quelle che il documento della taratura
 dice, più una nuova:
 
-- **`densita`** (`dati/campagna.js`, anche per tratto dell'abisso): quanti mostri in più o in meno del solito (1 di difetto,
-  si moltiplica per `MOSTRI_PER_STANZA`). Scalinata 1,6 (e `tettoBranco` 1: con più mostri a gruppi la scalinata o si vinceva
+- **`densita`** (`dati/campagna.js`, anche per tratto dell'abisso; dal 13 ottobre sera ora dice quante stanze sono vuote e nessuna discesa
+  la dichiara più, [piani.md](piani.md#i-mostri-branchi-appostati-caporali)): quanti mostri in più o in meno del solito (1 di difetto,
+  si moltiplicava per `MOSTRI_PER_STANZA`). Scalinata 1,6 (e `tettoBranco` 1: con più mostri a gruppi la scalinata o si vinceva
   nuda o si perdeva a 4 su 10, mai tutte e due; uno alla volta separa le due misure), torre 0,7, scala sommersa 1,3, botola 0,8;
   abisso: cantine 0,7, cripta 0,8, fornace 0,8.
 - **`forza` e `spinta`**: scalinata 0,8 e 4,5 → 0,55 e 6,5; torre 0,9 e 5,5 → 0,9 e 6,8; grotta 1,5 e 8 → 1,4 e 9,6; scala sommersa

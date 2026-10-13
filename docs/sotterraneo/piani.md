@@ -95,23 +95,28 @@ La forma che non ci sta si ritira. Le grotte hanno `grotta`, `bilobata`,
 
 ## I mostri: branchi, appostati, caporali
 
-- **Il numero di mostri non cresce**: tre quarti di mostro per stanza, meno il
-  10% (`MOSTRI_PER_STANZA`), meno due mostri per ogni caporale; cambia come stanno. L'utente:
-  «lo stesso numero di mostri in gruppi più grossi è proprio quello che lo
-  scontro a gruppi rende interessante».
-- **Un branco sta in una stanza, tutto entro due celle da un'ancora** (fra
-  due mostri al più quattro celle: lo scontro prende chi sta a 4,5 celle, il
-  branco ci sta sempre dentro) e degli abitanti della discesa (`tipiPer`,
-  [mostri.md](mostri.md)). Nelle sale (il 70% dei mostri) da due a cinque; in alcune discese i branchi sono più piccoli
-  (`tettoBranco` della discesa: la scalinata uno, la miniera due), o un incontro
-  sarebbe troppo. Le stanze piccole ne hanno uno o due, e molte
-  nessuno: il piano è meno popolato e più incontrare uno è un fatto.
-- **Gli appostati** (`mettiUnAppostato`): un mostro solo, in un angolo (roccia
-  da due lati, una nicchia compresa) o dietro una colonna o un relitto, dalla
-  parte lontana dalle porte, a quattro celle da ogni altro mostro. `m.appostato`
-  dice 'angolo', 'colonna' o 'relitto'. Sono loro che faranno gli agguati con la luce a cono.
+Richiesta dell'utente, 13 ottobre 2026: «ci sono decisamente troppe stanze vuote e molte stanze con un solo avversario». Misurato
+(`npm run pianta -- --conta --semi 1-30`, le stanze dove vanno i mostri: senza ruolo, o del portale e della fonte): prima il 68% era
+vuoto, l'8% aveva un mostro, il 22% due o tre, il 2% quattro o più. **Il numero di mostri per stanza ora cresce, non quello per piano
+è fisso**: il costo in domande sale di conseguenza e va ritarato (qui sotto).
+
+- **Una stanza ordinaria su cinque è vuota** (`STANZE_VUOTE`, di più o di meno con `densita` della discesa, 1 di difetto); **la sala
+  non lo è mai** (lì stanno i branchi). **Una su dieci ha un solo mostro appostato**: il solitario è un'eccezione. Le altre hanno
+  **un branco da due fino al tetto**: `tettoBranco` della discesa (3 alla cripta, alla scalinata e alla torre, 4 alla grotta e alla
+  scala sommersa, 5 alla botola, 6 alla miniera; nell'abisso 3, 5, 6 per tratto), e della stanza (sotto le 25 celle al più tre, sotto
+  le 45 quattro, sotto le 70 cinque, sei solo nelle sale). La coda è corta: i branchi tipici sono da due a quattro. Misurato su 30 semi: vuote il
+  15%, con uno il 9%, con due o tre il 59%, con quattro o più il 17%; in media 2,7 mostri in una stanza che ne ha, al più sette. Le
+  sale hanno spesso (una volta su due) anche un appostato, a quattro celle dal branco.
+- **Un branco sta in una stanza, tutto entro due celle da un'ancora** (fra due mostri al più quattro celle: lo scontro prende chi
+  sta a 4,5 celle, il branco ci sta sempre dentro) e degli abitanti della discesa (`tipiPer`, [mostri.md](mostri.md): una o due specie).
+- **Gli appostati** (`mettiUnAppostato`): un mostro solo, in un angolo (roccia da due lati, una nicchia compresa) o dietro una
+  colonna o un relitto, dalla parte lontana dalle porte, a quattro celle da ogni altro mostro. `m.appostato` dice 'angolo',
+  'colonna' o 'relitto'. Sono loro che fanno gli agguati con la luce a cono.
 - **La stanza del tesoro ha un'unica guardia**, la più dura degli abitanti del posto (colpo per velocità); quella della scala
   nei piani col grosso non ha mostri di strada (il grosso è già un branco).
+- **Il grosso ha da due a tre scagnozzi** (`mettiGliScagnozzi`): mostri del posto (la lista `mostri` della discesa) a non più di 2,5
+  celle da lui, nella sua stanza. Entrano nello scontro con lui (stanza e raggio di 4,5 celle): il grosso vale due posti, quindi
+  con tre scagnozzi sono cinque posti su sette. Vale anche nell'abisso, ogni cinque piani.
 - **L'anticamera** (`anticameraDi`): nel piano col mostro grosso la stanza
   *subito prima* sulla strada più corta dall'ingresso alla scala (mai
   l'ingresso: se la strada va dritta si prende la vicina più lontana). È una
@@ -125,12 +130,25 @@ La forma che non ci sta si ritira. Le grotte hanno `grotta`, `bilobata`,
   il sotterraneo è un gioco serio.
 - **Nell'abisso non ci sono caporali** (`caporali: false` da `faiIlPiano`): un
   eroe nudo che scende all'abisso già si ferma al grosso del quinto piano, e
-  coi caporali tre semi su otto si fermavano lì contro uno (e il piano costava
-  oltre i 30 del tetto per piano di `unita/sotterraneo-abisso`).
+  coi caporali tre semi su otto si fermavano lì contro uno.
 - **Il guardiano della chiave è un caporale** (`faiCaporale`): il caporale del posto, con i galloni, accanto alla
   scala; nei piani col grosso c'è il grosso.
-- **Mai più di cinque in un branco, più l'appostato**: lo scontro nuovo ne
-  prende al più sei, e il grosso vale due posti.
+- **Il tetto dello scontro è sette posti** (`MOSTRI_IN_CAMPO`, 13 ottobre, a richiesta): un branco di sei in una sala più un appostato
+  entrano insieme. È un'eccezione delle discese tarde; le prime hanno branchi da due a tre.
+- Provato: il numero di mostri fisso per piano (tre quarti per stanza) con i branchi nelle sale: restavano vuote due stanze su tre.
+
+## Le porte
+
+- **Una porta non dice cosa c'è dietro** (l'utente, 13 ottobre: «non devi già sapere cosa troverai»): niente 💀💎⛲ sopra, niente
+  frase al tocco, la pelle è la stessa per ogni stanza (`semplice` o `ferro`, a caso dalla cella: `pelle` della porta in
+  `dati/tessere.js`). Si chiudono ancora le stanze del tesoro e della fonte, fuori strada.
+- **La stanza del grosso, in tre piani su quattro, ha il portone** (`pelle: 'bella'`: il teschio nelle cantine e nella cripta, le
+  corna nella fornace; le porte già dipinte, `porte` di `SCENARI`): l'unica porta sulla strada della scala, una domanda in più.
+  Dove la geometria non dà un varco con un muro dritto resta aperta: circa un piano col grosso su due lo ha (112 su 210).
+- **Mai su un muro a scaletta.** Un varco (le celle di porta vicine, anche in diagonale o a una cella) si stringe a una cella,
+  `portaDritta`: roccia ai due lati e la stanza che continua dritta di qua per tre celle; se il muro è obliquo ma basta scavare una o
+  due celle di roccia accanto (`sipuoScavare`, che non apre nient'altro) lo si squadra. Se no, la stanza resta aperta. Due porte a
+  meno di due celle una dall'altra non esistono (sembrerebbero una porta doppia). `npm run pianta -- --conta`: «storte» e «impilate» sono 0.
 
 ## Il costo in domande
 
@@ -148,7 +166,7 @@ obbligate a seduta regge, per tutti e quattro gli eroi.
 | La miniera abbandonata | 65 → 25 → 40 | 156 → 98 → 106 |
 
 (cavaliere, seme del banco; l'ultima freccia è dei piani delle due famiglie, [piani-caverne.md](piani-caverne.md).) Il minimo cala perché le abilità chiudono un mostro in meno risposte; «tutto» cala di meno e la grotta
-resta con una forbice stretta. Mostri per stanza: 0,79 (come prima).
+resta con una forbice stretta. Mostri per stanza: 0,79 (come prima). **Dal 13 ottobre (sera) i mostri per stanza sono molti di più** (vedi sopra: da 0,8 a circa 1,9, e la tabella qui sotto è di prima); le discese vinte sono da rimisurare e i danni da ritarare (`npm run sotterraneo -- --verifica`).
 
 - **Provato**: lo stesso numero di mostri *per stanza* nelle sale
   (due-cinque più l'appostato, tutto sopra il vecchio numero): il minimo della
@@ -169,7 +187,8 @@ resta con una forbice stretta. Mostri per stanza: 0,79 (come prima).
 colonne isolate che non chiudono strade; branchi entro 4,5 celle, appostati
 davvero in un angolo, dietro una colonna o dietro un relitto; anticamera con due o tre caporali
 più duri e senza altri mostri; dal seme sempre uguale; un mostro non esce
-dalla sua stanza; la luce copre il suolo). `unita/sotterraneo` (§ 5a bis: la
+dalla sua stanza; la luce copre il suolo; le stanze ordinarie vuote fra il 10 e il 25%, il mostro solo meno di una su sette, il grosso con due o tre
+scagnozzi nella sua stanza; mai una porta su un muro storto o accanto a un'altra; il portone solo sul grosso). `unita/sotterraneo` (§ 5a bis: la
 posa degli orpelli guarda la roccia accanto, non il riquadro) e
 `unita/sotterraneo-abisso` (nessuna anticamera nell'abisso, il costo per piano).
 Per guardare un piano senza giocarlo: `#seme=812&piano=2&stanza=anticamera`

@@ -24,9 +24,9 @@ Il codice: `motore/scontro.js` (i metodi dello scontro, attaccati a `Corsa`),
   si sveglia), misurati una volta sola all'inizio. Chi è fuori resta fuori:
   **nessun rinforzo** a scontro aperto. Dividere un gruppo grande è una cosa da
   fare apposta, avvicinandosi piano e con la luce.
-- **Al massimo sei posti** (`MOSTRI_IN_CAMPO`): sei figure stanno a 390 px. Se il
+- **Al massimo sette posti** (`MOSTRI_IN_CAMPO`, da sei il 13 ottobre perché i branchi delle discese tarde arrivano a sei): sette figure stanno a 390 px (il palco, `viste/campo.js`). Se il
   raggio ne prende di più, entrano i più vicini, chi ha aperto lo scontro sempre
-  primo. **Il mostro grosso vale due posti** (`postiDi`): con lui, cinque mostri.
+  primo. **Il mostro grosso vale due posti** (`postiDi`): con lui, cinque o sei mostri.
 - I branchi (il caporale col suo seguito) li fanno i piani nuovi: lo scontro funziona con
   quello che trova. Da solo, per provare una regola: `scontro(m, { solo: true })`.
 

@@ -70,7 +70,7 @@ bersagli rompe).
   pochi), e tolto: il colpo d'agguato resta intero, come in [scontro.md](scontro.md).
 - **`CAPORALE` 1,25 / +1**: non toccato. Il guardiano della chiave è un caporale della specie più dura, e per questo le domande «solo
   il guardiano» calano meno delle altre.
-- **Il numero di mostri in un branco** (`tettoBranco` della discesa, `dati/campagna.js`): la scalinata al più tre, la miniera due, la
+- **(Superato il 13 ottobre sera: tetti 3·3·3·4·4·5·6, `densita` tolta, molte più stanze piene: [piani.md](piani.md#i-mostri-branchi-appostati-caporali), e da ritarare.)** **Il numero di mostri in un branco** (`tettoBranco` della discesa, `dati/campagna.js`): la scalinata al più tre, la miniera due, la
   grotta quattro, la cripta cinque. Con i goblin in cinque il mago in giro per tutto il piano moriva nove volte su dieci
   (`--come tutto`, 1/20 contro 18/20 con quattro: un giro di quattro colpi da 7 contro 21 di vita).
 - **La vita e le pozioni attese** (`dati/storia.js`): non toccate.
