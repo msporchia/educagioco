@@ -64,6 +64,13 @@ const postoDi = k => ({ '--x': piano.value.mostri[k].x + 'px', '--y': piano.valu
 /* ── cosa si vede di ognuno: durante il racconto le ossa e i caduti sono quelli di quel momento, non ancora quelli veri ── */
 const ossaDi = m => (props.fx.attivo && props.fx.ossa[m.i] != null ? props.fx.ossa[m.i] : m.ossa)
 const mortoDi = m => (props.fx.attivo ? !!props.fx.morti[m.i] : m.morto)
+// come cade: i pezzi `<nome>-morto-<i>` dell'atlante (uno o due, docs/core/creature.md); chi non li ha svanisce in piedi, e il grosso pure
+const restiDi = m => {
+  if (m.grosso || !m.sprite) return []
+  const base = m.sprite.replace(/-(fermo|corsa)-\d+$/, '')
+  return [0, 1].map(i => `${base}-morto-${i}`).filter(n => PEZZI[n])
+}
+const aTerra = m => mortoDi(m) && restiDi(m).length > 0
 const effettoDi = chi => props.fx.effetto[chi]
 const classeFx = chi => (effettoDi(chi) ? 'sot-fx-' + effettoDi(chi).tipo : '')
 const chiaveFx = chi => chi + '-' + (effettoDi(chi) ? effettoDi(chi).n : 0)
@@ -136,7 +143,7 @@ function punto(chi) {
       <!-- i mostri: colonne sul pavimento, sfalsati; il grosso davanti e al centro (viste/campo.js, `piazza`) -->
       <div class="sot-schiera" data-campo>
         <button v-for="(m, k) in mostri" :key="m.i" type="button" class="sot-m"
-                :class="{ 'sot-morto': mortoDi(m), 'sot-m-grosso': m.grosso, 'sot-bersaglio': pulita(m) && m.bersaglio,
+                :class="{ 'sot-morto': mortoDi(m), 'sot-a-terra': aTerra(m), 'sot-m-grosso': m.grosso, 'sot-bersaglio': pulita(m) && m.bersaglio,
                           'sot-colpito-da-me': pulita(m) && m.colpito && soloMiaUna }"
                 :style="[postoDi(k), { '--f': m.colpito }]" :aria-label="m.nome" :disabled="mortoDi(m)"
                 data-mostro :data-variante="m.variante" :data-grado="m.grado" :data-colpisce="m.colpisce" :data-salta="m.salta ? '' : null" :data-i="m.i" :data-tipo="m.tipo" :data-nome="m.nome" :data-grande="m.grosso || null"
@@ -149,7 +156,10 @@ function punto(chi) {
               <span class="sot-corpo">
                 <span class="sot-respira" :class="addosso(m)">
                   <Grosso v-if="m.grosso" :chi="m.grosso" :scala="scala" />
-                  <Creatura v-else :sprite="m.sprite" :em="m.em" :scala="scalaM(m, k)" :emAlto="48" :tipo="m.tipo" :arma="m.arma" />
+                  <template v-else>
+                    <Creatura :class="aTerra(m) && 'sot-resti-a'" :sprite="aTerra(m) ? restiDi(m)[0] : m.sprite" :em="m.em" :scala="scalaM(m, k)" :emAlto="48" :tipo="m.tipo" :arma="aTerra(m) ? null : m.arma" />
+                    <Creatura v-if="aTerra(m) && restiDi(m)[1]" class="sot-resti-b" :sprite="restiDi(m)[1]" :em="m.em" :scala="scalaM(m, k)" :emAlto="48" :tipo="m.tipo" />
+                  </template>
                 </span>
               </span>
             </span>

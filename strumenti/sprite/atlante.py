@@ -209,6 +209,10 @@ def fogli_delle_creature(gioco):
         for i, r in enumerate(creature.fotogrammi_in(gioco, v)):
             da, cella = creature.in_griglia(r, scala)
             per_foglio.setdefault(v['foglio'], {})[f'{nome}-fermo-{i}'] = {'da': da, 'cella': cella, **({'nitido': True} if v.get('nitido') else {})}
+        # come cade: una o due figure (`morte`), `<nome>-morto-<i>` (docs/core/creature.md)
+        for i, r in enumerate(v.get('morte') or []):
+            da, cella = creature.in_griglia(r, scala)
+            per_foglio.setdefault(v['foglio'], {})[f'{nome}-morto-{i}'] = {'da': da, 'cella': cella, **({'nitido': True} if v.get('nitido') else {})}
     # `nitido` nella voce del catalogo: quei pezzi hanno anche la copia dal foglio com'è dipinto (come la roba, «I pezzi nitidi»)
     return [(creature.SORGENTI / dati['fogli'][n],
              {'scala': scala, 'foglio': [W // scala, H // scala], 'fondo': 'trasparente', 'cella': [1, 1],
