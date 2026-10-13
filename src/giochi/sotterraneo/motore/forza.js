@@ -19,7 +19,7 @@ export const RISPOSTE_GIUSTE = 0.8
 // quante abilità forti si contano a ogni scontro: l'utente, 12 ottobre 2026, «almeno 2 abilità forti a scontro»
 export const ABILITA_A_SCONTRO = 2
 // l'energia di partenza tipica di uno scontro (docs/sotterraneo/forza.md): i due terzi del globo, arrotondati per eccesso. Fra
-// uno scontro e l'altro l'energia non torna piena (si ricarica solo combattendo: docs/sotterraneo/abilita.md), e il banco
+// uno scontro e l'altro l'energia non torna piena (combattendo e camminando, piano: docs/sotterraneo/orologio.md), e il banco
 // entra in uno scontro con il 40–60% del globo; un'abilità che costa più di così non si conta come fatta a ogni scontro
 export const ENERGIA_TIPICA = 2 / 3
 export const energiaTipica = c => Math.ceil(c.energiaMax * ENERGIA_TIPICA - 1e-9)

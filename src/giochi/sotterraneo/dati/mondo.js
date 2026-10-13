@@ -38,6 +38,12 @@ export const SVEGLIA = 7
 // il mostro è più lento apposta: scappare deve funzionare sempre, o la stanza è una trappola
 export const PASSO_EROE = 5.4, PASSO_MOSTRO = 3.1, PASSO_RIENTRO = 2.2
 export const CALMA = 3   // il tempo di uscire dalla stanza, o lo scontro si riaprirebbe nel fotogramma dopo
+// L'orologio del gioco conta i passi dell'eroe, le celle percorse (docs/sotterraneo/orologio.md): fermo, in pausa o sotto una domanda
+// non scorre, e un bambino che legge non lo paga. Un turno dell'eroe nello scontro vale PASSI_PER_TURNO passi; a ogni passo il mana
+// torna di MANA_PER_PASSO del globo massimo (la stessa quota per tutte le classi: l'intelligenza conta alzando il globo): mille
+// passi, tre minuti di cammino, lo riempiono
+export const PASSI_PER_TURNO = 5
+export const MANA_PER_PASSO = 0.001
 // un mostro sveglio fuori dalla luce non punta all'eroe ma alle sue spalle: il punto dietro di lui (DIETRO celle), girando
 // largo a FIANCO celle finché sta più avanti di ALLA_PAR (docs/sotterraneo/luce.md)
 export const DIETRO = 0.5, FIANCO = 2.6, ALLA_PAR = 0.6
@@ -72,6 +78,7 @@ export function guastiDelMondo() {
     g.push('la scala iniziale sta fuori dai suoi estremi')
   if (PASSO_MOSTRO >= PASSO_EROE)
     g.push('i mostri corrono quanto o più dell\'eroe: scappare non funziona più')
+  if (!(PASSI_PER_TURNO >= 1) || !(MANA_PER_PASSO > 0 && MANA_PER_PASSO < 0.01)) g.push('l\'orologio: i passi di un turno o il mana di un passo non tornano')
   if (TASCHE < 3) g.push('meno di tre tasche: lo zaino non è una scelta, è un intoppo')
   if (RAGGIO_TORCIA <= RAGGIO) g.push('la torcia non fa vedere più lontano')
   if (ALONE >= RAGGIO || ALONE_TORCIA >= RAGGIO_TORCIA) g.push('l\'alone attorno all\'eroe deve essere più corto del cono')

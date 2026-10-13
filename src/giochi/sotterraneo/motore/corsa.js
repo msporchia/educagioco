@@ -30,6 +30,8 @@ import { indiceDella, premioPer } from './storia.js'
 import { robaDellaMissione } from './missioni.js'
 import { forzaDelCorredo } from './forza.js'
 import { MetodiDelloScontro } from './scontro.js'
+import { MetodiDellOrologio } from './orologio.js'
+import { MetodiDeiPreparati } from './preparati.js'
 import { RISPOSTE_PER_ENERGIA, aGrado } from '../dati/abilita.js'
 
 // nella storia i forzieri e i mostri di tutti i giorni danno solo quello che si consuma: la roba la dà la riga
@@ -70,6 +72,10 @@ export class Corsa extends Corredo {
 
     this.foglio = null          // cosa è aperto adesso, o niente
     this.energiaResto = 0       // le risposte giuste che non hanno ancora fatto un punto di energia (RISPOSTE_PER_ENERGIA)
+    this.passi = 0              // l'orologio: i passi dell'eroe in questa discesa (motore/orologio.js)
+    this.camminati = 0          // e di quelli, le celle davvero percorse (senza i turni dello scontro): il banco le conta
+    this.manaCammino = 0        // il mana che il cammino ha già dato ma non ancora un punto intero
+    this.preparati = []         // gli incanti preparati dal campo e ancora addosso: [{ id, passi, ... }] (motore/preparati.js)
     this.pronta = null          // l'abilità preparata per la prossima risposta giusta (docs/sotterraneo/abilita.md)
     this.fiatoUsato = false     // «Ultimo fiato»: una volta per discesa
     this.chiesta = null         // la domanda che serve: { id, che, difficolta }
@@ -518,6 +524,8 @@ export class Corsa extends Corredo {
     if (d <= v) {
       this.eroe.x = mx; this.eroe.y = my
       this.strada.shift()
+      this.camminati++
+      this.faiPassi(1, true)
       this.bruciaLaTorcia()
       this.aggiornaLuce()   // dopo: l'ultima stanza della torcia si stringe appena ci si entra
       this.raccogli()
@@ -886,6 +894,7 @@ export class Corsa extends Corredo {
   rimettiInPiedi() {
     this.gemme = Math.floor(this.gemme / 2)
     this.vita = Math.max(6, Math.round(this.vitaMax / 2))
+    this.preparati = []   // svenuti, gli incanti addosso si sono persi
     if (this.zaino.length) {
       const quante = this.zaino.length
       this.zaino = []
@@ -1185,4 +1194,4 @@ export class Corsa extends Corredo {
 }
 
 // lo scontro a gruppi (motore/scontro.js) fa parte della Corsa
-Object.assign(Corsa.prototype, MetodiDelloScontro)
+Object.assign(Corsa.prototype, MetodiDelloScontro, MetodiDellOrologio, MetodiDeiPreparati)
