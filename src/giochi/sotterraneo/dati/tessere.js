@@ -173,7 +173,7 @@ export function guastiDelleTessere(nomi = null) {
     ]
     for (const { sprite, pose } of chiedeva)
       for (const posa of pose)
-        for (let i = 0; i < 4; i++) chiedi(pezzoAndante(sprite, posa, i), `${sprite} ${posa}`)
+        chiedi(`${sprite}-${posa}-0`, `${sprite} ${posa}`)   // quanti ne ha lo dice l'atlante (dati/fotogrammi.js)
   }
   return g
 }

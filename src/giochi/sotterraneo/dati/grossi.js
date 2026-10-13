@@ -2,8 +2,10 @@
 // (docs/sotterraneo/grossi.md). Il nome è suo, sta nella stanza della scala e ne porta la chiave, e quando cade
 // lascia di sicuro un pezzo raro o meglio più il suo pezzo col nome (dati/pezzi.js, DEI_GROSSI). Come si vede:
 // `figuraDelGrosso` più sotto (lo sprite della sua specie ingrandito con la corona, finché non c'è quello dipinto).
-// `tipo`: il mostro del bestiario su cui si regge (dati/mostri.js): ossa e attacco di partenza, il rincaro della
-// domanda e lo sprite di ripiego; `ossa` moltiplica le sue ossa, `att` aggiunge al suo attacco. `tinta`: il colore
+// `tipo`: il mostro del bestiario su cui si regge (dati/mostri.js): ossa, attacco e velocità di partenza e il rincaro della
+// domanda; `ossa` moltiplica le sue ossa, `att` aggiunge al suo attacco. `figura`: la creatura che veste, ingrandita con la corona
+// (una specie del bestiario o una del catalogo comune, docs/core/creature.md); senza, quella di `tipo`: così Zannaverde è un ragno
+// e Carbonchio un drago di lava pur contando come l'orco e il gigante, e i numeri della taratura restano quelli. `tinta`: il colore
 // del chiarore che gli sta intorno, per distinguere due grossi della stessa specie (Re Ossuto e Carbonchio).
 // `difese`: le sue resistenze, debolezze e immunità (dati/elementi.js) al posto di quelle della specie: Carbonchio, il re di
 // brace, non brucia; senza `difese` ha quelle di `tipo`.
@@ -11,33 +13,34 @@ import { MOSTRI } from './mostri.js'
 import { guastiDelleDifese } from './elementi.js'
 import { DEI_GROSSI } from './pezzi.js'
 import { PEZZI } from './atlante.js'
+import { quantiFotogrammi } from './fotogrammi.js'
 
 export const GROSSI = {
-  ossuto: { nome: 'Re Ossuto', tipo: 'scheletro', ossa: 1.15, att: 0, tinta: '#e8dcc0',
-            pezzo: 'ciondolo-di-ossuto', dice: 'Il re delle ossa vecchie. Scricchiola, ma picchia.' },
-  grumo: { nome: 'Grumo', tipo: 'orco', ossa: 1.9, att: 1, tinta: '#7fd16a',
+  ossuto: { nome: 'Re Ossuto', tipo: 'scheletro', figura: 'negromante', ossa: 1.15, att: 0, tinta: '#e8dcc0',
+            pezzo: 'ciondolo-di-ossuto', dice: 'Il re delle ossa vecchie, col suo bastone e la sua corona. Scricchiola, ma picchia.' },
+  grumo: { nome: 'Grumo', tipo: 'orco', ossa: 1.9, att: 3, tinta: '#7fd16a',
            pezzo: 'mazza-di-grumo', dice: 'Un orco grosso come una porta, con la sua mazza preferita.' },
-  fiammetta: { nome: 'Fiammetta', tipo: 'troll', ossa: 1.1, att: 1, tinta: '#ff8a3c',
+  fiammetta: { nome: 'Fiammetta', tipo: 'troll', figura: 'spirito-fuoco', ossa: 1.1, att: 1, tinta: '#ff8a3c',
                difese: { resiste: ['fuoco'], teme: ['gelo'], immune: ['brucia'] },
-               pezzo: 'scudo-di-fiammetta', dice: 'Una melma di fuoco: dove passa, i sassi fumano.' },
-  zannaverde: { nome: 'Zannaverde', tipo: 'orco', ossa: 1.95, att: 1, tinta: '#9cff4a',
+               pezzo: 'scudo-di-fiammetta', dice: 'Uno spirito di fuoco grande come una porta: dove passa, i sassi fumano.' },
+  zannaverde: { nome: 'Zannaverde', tipo: 'orco', figura: 'ragno', ossa: 1.95, att: 3, tinta: '#9cff4a',
                 difese: { resiste: ['veleno'], teme: ['fuoco'], immune: ['avvelena'] },
                 pezzo: 'anello-di-zannaverde', dice: 'Un ragno lungo come un carro, con otto zampe e otto occhi.' },
-  gorgo: { nome: 'Gorgo', tipo: 'gigante', ossa: 1.15, att: 1, tinta: '#5aa8ff',
+  gorgo: { nome: 'Gorgo', tipo: 'gigante', figura: 'polpo', ossa: 1.15, att: 1, tinta: '#5aa8ff',
            difese: { resiste: ['fuoco', 'gelo'], teme: ['fulmine'], immune: ['brucia'] },
-           pezzo: 'amuleto-di-gorgo', dice: 'Una melma d\'acqua nera che non smette di gorgogliare.' },
-  minotto: { nome: 'Minotto', tipo: 'troll', ossa: 1.1, att: 1, tinta: '#d49a55',
+           pezzo: 'amuleto-di-gorgo', dice: 'Un polpo grosso come una barca, che gorgoglia nell\'acqua nera.' },
+  minotto: { nome: 'Minotto', tipo: 'troll', figura: 'bestia-cornuta', ossa: 1.1, att: 1, tinta: '#d49a55',
              difese: { resiste: ['veleno'], teme: ['fuoco'], immune: ['stordisce'] },
              pezzo: 'giubbone-di-minotto', dice: 'Ha le corna, e la botola è casa sua.' },
-  carbonchio: { nome: 'Carbonchio', tipo: 'gigante', ossa: 1.1, att: 1, tinta: '#ff5a1c',
+  carbonchio: { nome: 'Carbonchio', tipo: 'gigante', figura: 'drago-lava', ossa: 1.1, att: 1, tinta: '#ff5a1c',
                 difese: { resiste: ['fuoco'], teme: ['gelo'], immune: ['brucia'] },
-                pezzo: 'martello-di-carbonchio', dice: 'Il re di brace della miniera: le sue ossa sono carbone acceso.' },
+                pezzo: 'martello-di-carbonchio', dice: 'Il drago di lava della miniera: le sue squame sono carbone acceso.' },
 }
 
-// Le difese di un mostro del piano (`m.tipo`, e `m.grosso` se è un grosso): { resiste, teme, immune }, mai undefined
+// Le difese di un mostro del piano (`m.tipo`, e `m.grosso` se è un grosso; `m.difese` se la sua variante le cambia): { resiste, teme, immune }
 export function difeseDi(m) {
   const g = m && m.grosso && GROSSI[m.grosso]
-  const d = (g && g.difese) || (m && MOSTRI[m.tipo]) || {}
+  const d = (g && g.difese) || (m && m.difese) || (m && MOSTRI[m.tipo]) || {}
   return { resiste: d.resiste || [], teme: d.teme || [], immune: d.immune || [] }
 }
 
@@ -63,27 +66,33 @@ export function grossoDi(tappa, piano) {
 
 // Come si vede un mostro grosso (docs/sotterraneo/grossi.md, «Come si vede»). Se l'atlante ha il suo sprite dipinto
 // (`grosso-<chiave>-fermo-0`, come `armaiolo-fermo-0` per i mercanti) si usa quello, a misura vera: 32×32 pixel di
-// gioco, due caselle per due. Se no, il ripiego: lo sprite del bestiario della sua specie, ingrandito a coprire due
-// caselle di altezza (almeno ×1,3, o un gigante già alto resterebbe com'è) e con la corona sopra la testa.
-// Torna { sprite, dipinto, alto, k, unaPosa } (`alto`: l'altezza dello sprite in pixel, `k` il suo ingrandimento) o null.
+// gioco, due caselle per due. Se no la creatura che veste (`figura`, o la specie di `tipo`): il suo sprite del catalogo,
+// ingrandito a coprire due caselle di altezza (almeno ×1,3, o un gigante già alto resterebbe com'è) e con la corona sopra la testa.
+// Torna { sprite, dipinto, alto, k, unaPosa, fermoDaiPassi } (`alto`: l'altezza dello sprite in pixel, `k` il suo ingrandimento) o null.
 export const LATO_DEL_GROSSO = 32
 export function figuraDelGrosso(chiave) {
   const G = GROSSI[chiave]
   if (!G) return null
   const dipinto = `grosso-${chiave}`
   if (PEZZI[`${dipinto}-fermo-0`]) return { sprite: dipinto, dipinto: true, alto: PEZZI[`${dipinto}-fermo-0`][3], k: 1, unaPosa: false }
-  const scheda = MOSTRI[G.tipo]
-  const p = scheda && PEZZI[`${scheda.sprite}-fermo-0`]
+  const nome = G.figura || G.tipo
+  const scheda = MOSTRI[nome]
+  const sprite = scheda ? scheda.sprite : nome   // una creatura del catalogo che non è una specie di strada (il drago di lava) è solo uno sprite
+  const p = PEZZI[`${sprite}-fermo-0`]
   if (!p) return null
-  return { sprite: scheda.sprite, dipinto: false, alto: p[3], k: Math.max(1.3, LATO_DEL_GROSSO / p[3]), unaPosa: !!scheda.unaPosa }
+  return { sprite, dipinto: false, alto: p[3], k: Math.max(1.3, LATO_DEL_GROSSO / p[3]), unaPosa: scheda ? !!scheda.unaPosa : !PEZZI[`${sprite}-corsa-0`],
+           fermoDaiPassi: !!(scheda && scheda.fermoDaiPassi) }
 }
 
-// il nome del fotogramma da posare: da sveglio la corsa (se la sua specie ce l'ha), da addormentato il fermo; `fr` gira sui fotogrammi che ci sono
+// il nome del fotogramma da posare: da sveglio la corsa (se la sua specie ce l'ha), da addormentato il fermo; `fr` gira sui
+// fotogrammi che ci sono. Chi ha il respiro rotto (il drago) sta fermo sul primo passo. `sveglio === 'scontro'`: la posa di lato
+// ferma di chi ha i passi (nello scontro guarda l'eroe di profilo), il respiro per gli altri
 export function spriteDelGrosso(f, sveglio, fr = 0) {
-  const posa = sveglio && !f.unaPosa && PEZZI[`${f.sprite}-corsa-0`] ? 'corsa' : 'fermo'
-  let n = 0
-  while (n < 4 && PEZZI[`${f.sprite}-${posa}-${n}`]) n++
-  return `${f.sprite}-${posa}-${n ? fr % n : 0}`
+  const haPassi = !f.unaPosa && quantiFotogrammi(f.sprite, 'corsa') > 0
+  const posa = haPassi && (sveglio || f.fermoDaiPassi) ? 'corsa' : 'fermo'
+  const n = quantiFotogrammi(f.sprite, posa)
+  const k = sveglio === 'scontro' || (posa === 'corsa' && !sveglio) ? 0 : fr
+  return `${f.sprite}-${posa}-${n ? k % n : 0}`
 }
 
 export function guastiDeiGrossi(campagna = []) {

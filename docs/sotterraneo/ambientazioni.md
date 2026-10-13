@@ -1,6 +1,8 @@
 # Chi abita dove: la proposta di ambientazioni
 
-Proposta, non ancora nel gioco (12 ottobre 2026). L'utente: «come in Diablo, in
+**Nel gioco dal 12 ottobre 2026**, con le scelte dell'utente (una creatura in un posto solo, l'abbinamento fisso) e senza i doppioni: quello che
+è diventato vero, discesa per discesa, sta in [mostri.md](mostri.md#gli-abitanti-12-ottobre-2026), con i numeri. Questo file resta la proposta da cui si
+è partiti (la riga «che cosa è cambiato» di ogni discesa dice dove ci si è staccati). L'utente: «come in Diablo, in
 una zona trovi quel tipo di mostro… ci sono zone dove due mostri convivono ma
 sono due mostri della stessa zona». Oggi `BRANCO` ([regole.md](regole.md#chi-ci-abita-il-branco-a-fasce))
 sceglie i mostri per **profondità**, uguali in ogni discesa: la cripta e la miniera
@@ -117,6 +119,16 @@ mostro grosso si muove poco.
   mietitore, negromante, bestia cornuta.
 - **Fuori dal sotterraneo**: il tornado (solo castello).
 
-Non toccato in questo lavoro: `dati/mostri.js` e `dati/campagna.js` (un altro
-lavoro sta tarando quei dati). Quando le creature entreranno, ognuna ha già il suo
-sprite, la sua scheda e un elemento da contare.
+## Che cosa è cambiato rispetto alla proposta
+
+- **Una creatura in un posto solo**, e da due a quattro abitanti per posto: il ragno solo nella grotta, il vespone nella torre (non nella botola), il
+  pipistrello solo nella torre, la pianta solo nella grotta, e così per l'ombra, il ghoul, il golem di magma.
+- **Il caporale è un dato** (`caporale` della discesa) e non «la più dura della coppia»; il caporale della scalinata resta l'orco, quello della cripta lo
+  scheletro cavaliere, quello della miniera il golem di lava.
+- **La botola** non ha vespone e pianta ma cinghiale, serpente ed ent (con il lupo); la scala sommersa non ha il serpente; la miniera ha lo scorpione,
+  il golem e lo spirito elettrico; la torre ha il vespone e lo spirito di fuoco, non l'occhio; l'occhio sta nella fornace dell'abisso.
+- **I grossi vestono la creatura che gli sta bene**: Re Ossuto il negromante, Fiammetta lo spirito di fuoco, Gorgo il polpo, Carbonchio il drago di lava,
+  Zannaverde il ragno, Minotto la bestia cornuta, Grumo l'orco ([grossi.md](grossi.md)).
+- **Il drago, il grifone, il mietitore e il draghetto** sono caporali o abitanti dell'abisso, non grossi di una discesa della storia.
+- **La cripta è il posto degli scheletri**, e ha i suoi scheletri armati e i loro gradi ([varianti.md](varianti.md)).
+- **Le missioni** col mostro col nome seguono: Rosicchione è un pipistrello, Grattanaso un diavoletto ladro.

@@ -30,7 +30,7 @@ la fila salga).
 | 4 | La scala sommersa (`cisterna`) | la scala nello stagno | 51 | lunga e stretta, 64×24 | cripta | 3 | granchio e serpente · gigante |
 | 5 | La botola segreta (`labirinto`) | la botola nel prato | 54 | un labirinto di sedici stanze | cantine | 3 | orco e goblin · troll |
 | 6 | La miniera abbandonata (`fondo`) | la miniera dentro il monte | 55 | stretta e profonda | fornace | 4 | golem e ratto · gigante |
-| — | l'abisso | il pozzo vecchio d'ardesia | 61 | gira fra tre forme | i tre | ∞ | una coppia per tratto |
+| — | l'abisso | il pozzo vecchio d'ardesia | 61 | gira fra tre forme | i tre | ∞ | gli abitanti di un tratto |
 
 - **Meno pozzi**: il pozzo dal tetto rosso non è più una discesa (resta
   disegno), il pozzo d'ardesia è l'abisso, «il pozzo senza fondo». Le
@@ -39,7 +39,7 @@ la fila salga).
 - **La forma la dà il piano**: `largo` e `alto` al posto del quadrato
   `misura` (la torre, la scala sommersa), `giri` per quante stanze. Mai lo
   stesso scenario due volte di fila (`unita/sotterraneo-abisso`).
-- **Chi c'è per strada è la coppia della discesa**, per ambientazione ([mostri.md](mostri.md)); la più dura delle due, fatta
+- **Chi c'è per strada sono gli abitanti della discesa** (da due a quattro), per ambientazione ([mostri.md](mostri.md)); il suo caporale, fatto
   caporale, porta la chiave. Il capo è la base del mostro grosso dell'ultimo piano ([grossi.md](grossi.md)).
 - **La grotta ha piani da quattro stanze**: ingresso, scala, portale e
   fonte. Niente forzieri: il pezzo della storia lo dà il guardiano

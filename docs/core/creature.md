@@ -45,7 +45,10 @@ castello. Il catalogo descritto, per sapere cosa c'è:
   col `castello` e `unita/castello-bestiario` pretende che siano esattamente
   quelle del suo bestiario; il sotterraneo quelle col `sotterraneo`, e
   `unita/creature` guarda che ogni sprite dei suoi mostri (`dati/mostri.js`)
-  ci sia.
+  ci sia **e che ogni creatura col `sotterraneo` sia disegnata da una specie o
+  da un grosso** (`figura` in `dati/grossi.js`): quella che alla fine nessuno
+  usa si toglie dal suo `giochi` (il troll, ora solo del castello: nel
+  sotterraneo conta solo come base delle statistiche di due grossi).
 - **`scelta`**: i fotogrammi (indici) che un gioco prende, se non tutti: il
   sotterraneo lascia fuori, per esempio, la fiammata della bestia cornuta. Il
   castello non sceglie: i suoi sono quelli del catalogo, com'erano.
@@ -62,7 +65,13 @@ castello. Il catalogo descritto, per sapere cosa c'è:
 - **I passi** non sono nella voce: una creatura cammina se esiste
   `passi/<chiave>.png`. Sette: drago, golem-lava, lupo, melma, ragno, scorpione,
   troll. Il perché dei video e come si fanno: `strumenti/sprite/DA-GENERARE.md`
-  (voce 5) e `cammino.py`.
+  (voce 5) e `cammino.py`. Nel sotterraneo **chi ha i passi cammina davvero**
+  nel campo (`<nome>-corsa-N`, di lato) e nello scontro sta sulla posa di lato
+  ferma, specchiata verso l'eroe (`viste/campo.js`); chi non li ha respira. Il
+  drago ha il respiro rotto (un fotogramma con due draghi e la fiammata): da
+  fermo usa i passi, lenti (`fermoDaiPassi` in `dati/mostri.js`). Quanti
+  fotogrammi ha una posa lo dice l'atlante (`dati/fotogrammi.js`: due, tre o
+  quattro di respiro, sei di passi), non un `% 4`.
 
 ## Come le prende un gioco
 
@@ -81,8 +90,8 @@ castello. Il catalogo descritto, per sapere cosa c'è:
   `<nome>-fronte-<n>`, sei ciascuno, alla misura del respiro e con **un pixel**
   di contorno (due, a quella grana, sarebbero un filo spesso quanto il dettaglio).
   Non c'è un foglietto `mostri-*.json`: quelle righe ora sono il catalogo.
-- **Peso** (sotterraneo): l'atlante passa da 364 KB a 630 KB di PNG con tutte le
-  creature col `sotterraneo` (48 creature, 207 pezzi in più delle undici di prima:
+- **Peso** (sotterraneo): l'atlante passa da 364 KB a 630 KB (611 KB senza il troll, che nel sotterraneo non si disegna più) di PNG con tutte le
+  creature col `sotterraneo` (47 creature dopo il troll, 207 pezzi in più delle undici di prima:
   123 fotogrammi di respiro e 84 passi; circa un terzo in più in base64 nel file unico). Una creatura che il gioco alla fine non
   nomina si toglie dal suo `giochi` e il peso se ne va.
 - **Il banco `npm run mondo`**: i due fogli non hanno più un foglietto, quindi non compaiono più in «i ritagli»;

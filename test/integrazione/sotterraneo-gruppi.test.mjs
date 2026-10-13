@@ -5,7 +5,7 @@
    Uno scontro con più mostri a schermo, aperto da `#sotterraneo=branco`
    (`&mostri=6`, `&grosso=grumo`, `&agguato=1`, `&sorpresa=1`: docs/core/comandi.md):
    - sei mostri a 390 px: tutti dentro il palco, in due file, ognuno con la
-     sua barra e il suo «ti colpisce N»; un bersaglio solo; la fila dei turni
+     sua barra e il suo nome; un bersaglio solo; la fila dei turni
      di sette figurine con l'eroe in cima;
    - toccare un mostro lo fa bersaglio (non nei primi 320 ms);
    - un'abilità su tutti (il Grido di guerra) accende tutti col contorno e,
@@ -89,8 +89,10 @@ await scelta()
   controlla('i piedi a altezze diverse, niente file orizzontali', new Set(ms.map(m => Math.round(m.b / 12))).size >= 5, JSON.stringify(ms.map(m => Math.round(m.b))))
   uguale('sotto ognuno la sua barra, senza numeri', await page.locator('[data-mostro] [data-vita]').count(), 6)
   controlla('e nessun numero di vita sul palco', !/\d+ ?\/ ?\d+/.test(await page.locator('[data-duello]').innerText()))
-  const minacce = await page.locator('[data-minaccia]').evaluateAll(es => es.map(e => e.textContent.replace(/\s+/g, ' ').trim()))
-  controlla('sopra ognuno «ti colpisce N»', minacce.length === 6 && minacce.every(t => /^ti colpisce \d+$/.test(t)), minacce.join(' | '))
+  // niente «ti colpisce N» (l'utente, 12 ottobre: basta la barra della vita); sopra ognuno il suo nome, senza articolo
+  uguale('niente «ti colpisce N» sul palco', await page.locator('[data-minaccia]').count(), 0)
+  const nomi = await page.locator('[data-mostro] [data-nome-mostro]').evaluateAll(es => es.map(e => e.textContent.trim()))
+  controlla('sopra ognuno il suo nome, senza articolo', nomi.length === 6 && nomi.every(t => t && !/^(Un|Uno|Una|Il|Lo|La) /.test(t)), nomi.join(' | '))
   uguale('un bersaglio solo', (await bersagli()).length, 1)
   uguale('ed è il primo, chi ha aperto lo scontro', (await bersagli())[0], '0')
   const fila = await page.locator('[data-fila] [data-turno]').evaluateAll(es => es.map(e => e.dataset.chi))

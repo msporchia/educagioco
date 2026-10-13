@@ -143,12 +143,12 @@ il «!» torna.
   dell'età ([abisso.md](abisso.md#le-domande-smettono-presto-di-salire));
 - **il livello del posto è L** (più uno ogni due piani): dice il livello
   del bottino, le gemme e l'esperienza dei mostri ([livelli.md](livelli.md));
-- **i mostri del livello L**: la coppia della discesa ([mostri.md](mostri.md): una zona tiene la sua per sempre) con
+- **i mostri del livello L**: gli abitanti e il caporale della discesa ([mostri.md](mostri.md): una zona tiene i suoi per sempre) con
   `forza` = (4 + 0,6 · (L − 12)) × la forma e `spinta` = 13 + 1,0 · (L − 12), a un decimo
-  (`CURVA_DELLE_ZONE`). In linea retta, mai esponenziali. La forma (`FORMA_DELLA_ZONA`) dice quanto una coppia è più comoda o più
-  dura a pari livello (le specie hanno tutte le stesse ossa, ma non picchiano uguale): la scalinata (ratto e melma) ×0,72, la
-  torre ×0,95, la grotta ×1,4, la botola ×1,1, la scala sommersa ×0,95, la miniera (il golem lento) ×1,4, la cripta, piccola, ×1,85
-  (ritoccate il 13 ottobre coi piani nuovi: [piani-caverne.md](piani-caverne.md#le-domande-per-discesa));
+  (`CURVA_DELLE_ZONE`). In linea retta, mai esponenziali. La forma (`FORMA_DELLA_ZONA`) dice quanto gli abitanti sono più comodi o più
+  duri a pari livello (le specie hanno tutte le stesse ossa, ma non picchiano uguale): la scalinata ×0,75, la
+  torre ×0,9, la grotta ×1,4, la botola ×0,85, la scala sommersa ×0,95, la miniera ×1,35, la cripta, piccola, ×2,2 (ritoccate il 13 ottobre coi piani nuovi e con gli abitanti per ambientazione di
+  [mostri.md](mostri.md): prima 0,8 · 0,8 · 1,3 · 1,7; nelle zone, dove i mostri hanno una spinta enorme, conta la velocità dei caporali e non il loro colpo);
 - **il bottino come nell'abisso** (`indiceDella` dà −1): i forzieri danno un
   pezzo a tono sei volte su dieci, il mostro grosso il suo pezzo col nome e
   un raro del livello.

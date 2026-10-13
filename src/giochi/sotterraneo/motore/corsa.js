@@ -10,11 +10,12 @@ import {
   ARREDO_DICE, ARREDO_LA_PRIMA_VOLTA,
 } from '../dati/mondo.js'
 import { MOSTRI } from '../dati/mostri.js'
+import { PREMIO_DEL_GRADO } from '../dati/varianti.js'
 import { SCENARI, SCENARIO } from '../dati/tessere.js'
 import { DI_PARTENZA } from '../dati/eroi.js'
 import { COSE, NEI_FORZIERI, pescaCosa, aLivello } from '../dati/cose.js'
 import { CURIOSITA_DI, MALUS } from '../dati/curiosita.js'
-import { durezzaDi, guardianoDi, svenimentiDi, formaDi, crescitaDi, brancoDi, tettoDelBrancoDi, scenarioDi, piantaDi, conAcquaDi, densitaDi, trattoDi, livelloDelPosto }
+import { durezzaDi, guardianoDi, svenimentiDi, formaDi, crescitaDi, brancoDi, caporaleDi, tettoDelBrancoDi, scenarioDi, piantaDi, conAcquaDi, densitaDi, trattoDi, livelloDelPosto }
   from '../dati/campagna.js'
 import { grossoDi, GROSSI } from '../dati/grossi.js'
 import { valoreDelLivello } from '../dati/pezzi.js'
@@ -162,7 +163,9 @@ export class Corsa extends Corredo {
     if (nodo && nodo.capi && this.èCapo(m)) per = aGrado(nodo, 'capi', g)
     if (nodo && nodo.seStordito && !(st.veleno || st.debole > 0 || st.fermo > 0 || st.sanguina)) per = nodo.altrimenti || 1
     // l'elemento dell'abilità contro le difese del mostro: metà se le resiste, un danno e mezzo se le teme (l'attacco solito no)
-    return Math.max(1, Math.round(base * per * this.fattoreElemento(m, nodo))) + this.addosso('fuoco')
+    // gelato dall'incanto di un mago (motore/scontro.js): il colpo di questo turno fa metà
+    const gelato = this.foglio && this.foglio.io && this.foglio.io.gelato > 0 ? 0.5 : 1
+    return Math.max(1, Math.round(base * per * this.fattoreElemento(m, nodo) * gelato)) + this.addosso('fuoco')
   }
   colpiPer(m) { return Math.max(1, Math.ceil(m.ossa / this.colpo(m))) }
 
@@ -182,7 +185,8 @@ export class Corsa extends Corredo {
       grosso: grossoDi(t, p),
       caporali: !t.abisso,   // davanti al grosso dell'abisso niente anticamera: docs/sotterraneo/piani.md
       crescita: crescitaDi(t),
-      branco: brancoDi(t, p), tettoBranco: tettoDelBrancoDi(t, p),
+      branco: brancoDi(t, p), caporale: caporaleDi(t, p), tettoBranco: tettoDelBrancoDi(t, p),
+      livello: livelloDelPosto(t, p),   // dice i gradi dei mostri con le mani (dati/varianti.js)
       scenario: scenarioDi(t, p),
       pianta: piantaDi(t, p), acqua: conAcquaDi(t, p), densita: densitaDi(t, p),
     })
@@ -757,6 +761,7 @@ export class Corsa extends Corredo {
     // e la dice un numerino «+N ✨» che sale dal campo (Gioco.vue). In una zona grigia un quarto, nell'abisso un terzo (dati/zone.js)
     // (il «grigio» si legge dalla forza dell'eroe, non dal livello: motore/forza.js; fuori dalle zone non serve)
     const forza = this.tappa && this.tappa.potenza ? forzaDelCorredo(this) : this.livelloEroe
+    const delGrado = PREMIO_DEL_GRADO[m.grado] || 1   // un mostro di grado alto vale di più (dati/varianti.js)
     const esp = Math.max(1, Math.round(espDi(MOSTRI[m.tipo], this.livelloQui, !!m.grosso) * espNellaZona(this.tappa, forza)))
     this.eventi.push({ che: 'esp', esp, x: m.x, y: m.y })
     this.guadagna(esp)
@@ -768,7 +773,7 @@ export class Corsa extends Corredo {
     if (fiato) this.energia = Math.min(this.energiaMax, this.energia + fiato)
     const scheda = MOSTRI[m.tipo]
     this.livello.robe.push({ che: 'gemme', x: m.x, y: m.y, em: '💎',
-                             quante: Math.round((scheda.gemme + Math.floor(this.piano * 1.5)) * valoreDelLivello(this.livelloQui)) })
+                             quante: Math.round((scheda.gemme + Math.floor(this.piano * 1.5)) * valoreDelLivello(this.livelloQui) * delGrado) })
     const storia = this.indice >= 0
     const lascia = scheda.lascia || []
     const daBere = lascia.filter(SI_CONSUMA).length ? lascia.filter(SI_CONSUMA) : ['pozione-piccola']

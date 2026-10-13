@@ -9,7 +9,7 @@ permette di tornare a prenderlo in un piano di sopra, in
 `robaDellaMissione` in `motore/missioni.js`; `BERSAGLIO` in `dati/mondo.js`;
 `scena/tela.js`.
 
-Il goblin ladro di una missione si confondeva coi goblin di tutti i giorni ed
+Il ladro di una missione (allora un goblin) si confondeva coi mostri di tutti i giorni ed
 era comparso vicino all'entrata (l'utente, giocando, 8 ottobre). Il bersaglio
 sta lontano e si vede.
 

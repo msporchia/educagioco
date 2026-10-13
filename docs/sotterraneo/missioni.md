@@ -43,7 +43,7 @@ non chiudono la strada a nessuno (`unita/sotterraneo-terra`).
 
 ## L'albero
 
-Dodici missioni: le nove di prima e tre seguiti (il goblin della collana, il
+Dodici missioni: le nove di prima e tre seguiti (il ladro della collana, il
 libro dei nomi, il sacco di farina). Ognuna dichiara i suoi `richiede`, e **si
 sblocca da sola** quando sono tutti veri e la sua discesa è aperta (anche per
 l'età: `aperta`); solo allora il suo personaggio mostra il «!». I requisiti:
@@ -56,14 +56,14 @@ conosce non si sblocca mai, e il guasto lo dice.
 |---|---|---|---|---|---|
 | La Dama Grigia (un fantasma; id `badessa`) | l'eremita | la cripta dell'altare · 2 | sconfiggi | — | 💎 12 · 🪙 1 |
 | La collana della nonna | la ragazza | la scalinata antica · 1 | trova | cripta finita | 💎 15 |
-| Rosicchione (un ratto) | il mugnaio | la torre · 2 | sconfiggi | scalinata finita | amuleto azzurro · 🪙 2 |
+| Rosicchione (un pipistrello) | il mugnaio | la torre · 2 | sconfiggi | scalinata finita | amuleto azzurro · 🪙 1 |
 | Il mazzo di chiavi della torre | la guardia | la torre · 3 | trova | scalinata finita | 💎 20 |
-| Grattanaso (un goblin) | la ragazza | la torre · 1 | sconfiggi | **collana consegnata** | 💎 10 · 🪙 2 |
+| Grattanaso (un diavoletto ladro) | la ragazza | la torre · 1 | sconfiggi | **collana consegnata** | 💎 10 |
 | L'ascia di suo padre | il boscaiolo | la grotta · 4 | trova | torre finita | 💎 25 |
 | Il libro dei nomi | l'eremita | la grotta · 3 | trova | **Dama Grigia consegnata** | 💎 20 |
 | Chela, il granchio gigante | il pescatore | la scala sommersa · 2 | sconfiggi | grotta finita | anello d'ambra · 🪙 1 |
 | La canna d'oro | il pescatore | la scala sommersa · 3 | trova | grotta finita | 💎 25 |
-| Zannagrigia (un lupo) | la guardia | la botola · 2 | sconfiggi | scala sommersa finita | 💎 30 · 🪙 2 |
+| Zannagrigia (un lupo) | la guardia | la botola · 2 | sconfiggi | scala sommersa finita | 💎 30 · 🪙 1 |
 | Il sacco di farina buona | il mugnaio | la botola · 1 | trova | **Rosicchione consegnato** | 💎 20 |
 | La lanterna del nonno | il minatore | la miniera · 3 | trova | botola finita | teschio del cercatore |
 

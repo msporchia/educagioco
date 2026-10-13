@@ -189,7 +189,7 @@ const palestra = (eroe, k) => new Corredo({ eroe, roba: robaAttesa(eroe, k, { po
                                     missioni: presePer(treInMano, 'torre') })
   stessaLista('al primo piano della torre c\'è solo il goblin', c.livello.robe.filter(r => r.missione).map(r => r.missione), ['goblin'])
   const g = c.livello.robe.find(r => r.missione === 'goblin')
-  controlla('un goblin col nome, più duro di un goblin', g.tipo === 'goblin' && g.nome === 'Grattanaso, il goblin ladro' && g.ossa > c.livello.mostro('goblin', 0, 0).ossa)
+  controlla('un diavoletto col nome (la torre ha i suoi abitanti), più duro di un diavoletto', g.tipo === 'diavoletto' && g.nome === 'Grattanaso, il diavoletto ladro' && g.ossa > c.livello.mostro('diavoletto', 0, 0).ossa)
   c.cade(g)
   controlla('battuto, è fatta', c.missioniFatte.has('goblin'))
 }
@@ -349,7 +349,7 @@ const palestra = (eroe, k) => new Corredo({ eroe, roba: robaAttesa(eroe, k, { po
   const r = rotta(g)
   controlla('il mostro col nome è su questo piano: la freccia è «qui»', r && r.verso === 'qui' && r.id === 'goblin', JSON.stringify(r))
   uguale('e guarda proprio lui', r.gradi, verso(g, robaDi(g, 'goblin')))
-  uguale('il nome è quello della missione', r.nome, 'Grattanaso, il goblin ladro')
+  uguale('il nome è quello della missione', r.nome, 'Grattanaso, il diavoletto ladro')
   controlla('la distanza è una distanza', r.distanza > 0)
 
   // più in basso: punta alla scala che scende, anche se è nel buio
@@ -455,7 +455,7 @@ const palestra = (eroe, k) => new Corredo({ eroe, roba: robaAttesa(eroe, k, { po
   controlla('la fatta non si segue: si porta', !col.seguibile && !col.segui)
   const ros = d.inMano.find(v => v.id === 'rosicchione')
   controlla('Rosicchione: il mostro col nome, la sua faccia e la richiesta del mugnaio',
-            ros.cosa.tipo === 'sconfiggi' && ros.cosa.nome === 'Rosicchione' && ros.cosa.sprite === 'ratto' && ros.cosa.em === '🐀'
+            ros.cosa.tipo === 'sconfiggi' && ros.cosa.nome === 'Rosicchione' && ros.cosa.sprite === 'pipistrello' && ros.cosa.em === '🦇'
             && ros.da === 'mugnaio' && /Rosicchione/.test(ros.dice) && ros.seguibile, JSON.stringify(ros.cosa))
   controlla('il premio a pezzi: il gioiello col suo nome e le monete', ros.gemme === 0 && ros.monete === 1
             && ros.regalo && ros.regalo.nome === 'Amuleto azzurro' && ros.regalo.sprite === 'amuleto-azzurro')

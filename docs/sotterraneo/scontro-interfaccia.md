@@ -24,7 +24,7 @@ Tutto sta in `Corsa.foglio` (`che: 'scontro'`) e nelle funzioni di `Corsa`; un m
   tinta, «non si avvelena»); per un mostro solo `Corsa.difese(m)`. Con una scelta preparata ogni preso in `colpiti` porta
   anche `elemento`, `effetto` (`'resiste'`, `'teme'` o `null`) e `rifiutati` (gli stati che non prenderà): la vista può dire
   «resiste al fuoco» prima di rispondere. `descrizione(nodo, m)` lo dice già a parole.
-- `io` — gli effetti sull'eroe: `parato`, `scudo`, `intoccabile`, `specchio`, `linfa`. `pericolo`, `fermate` — lo stop.
+- `io` — gli effetti sull'eroe: `parato`, `scudo`, `intoccabile`, `specchio`, `linfa`, `gelato` (un colpo di un mago ti gela: il tuo prossimo colpo fa metà, [varianti.md](varianti.md); l'azione del mostro porta `gelaTe`). `pericolo`, `fermate` — lo stop.
   `stati` di un mostro: `veleno {quanto, scambi, fuoco}` (`fuoco: true` sono fiamme), `sanguina {quanto, scambi, pile}`
   (si somma, fino a tre), `debole`, `fermo`, `esposto {scambi, piu}`, `rotto`; `gelo: true` (solo per disegnare: l'abilità era di gelo); `scambi` conta i turni
   **del mostro**.
@@ -66,6 +66,9 @@ Tutto sta in `Corsa.foglio` (`che: 'scontro'`) e nelle funzioni di `Corsa`; un m
   Chi cade resta al suo posto e svanisce: niente scatta di posto.
 - **Gli sprite hanno una sola scala per tutti** (2, il grosso 3; i mostri dipinti `TAGLIA` volte l'eroe). A 320 px la riga della
   minaccia si accorcia a «colpisce N».
+- **Sopra ogni mostro il suo nome** (`[data-nome-mostro]`, senza articolo e piccolo: «Scheletro», «Scheletro mago spettrale»; il comune è tenue, un grado
+  ha il colore della sua rarità e la figura un alone dello stesso colore) e, se è una variante armata, **l'arma in pugno** (`viste/Creatura.vue`,
+  [varianti.md](varianti.md)). Chi ha i passi è di profilo (la posa di lato ferma); gli altri respirano.
 - **Sotto ogni mostro la sua barra della vita, senza numeri** (il brivido di non sapere quanto resiste); **sopra «ti colpisce
   N»**, o «salta il turno» se è stordito. Gli stati addosso sono pastiglie piccole (glifo e turni che restano; il testo intero
   sta nel `title`) e cambiano il colore della figura. Chi porta la chiave ha una chiavetta in un angolo.
@@ -115,7 +118,7 @@ offerta se `!puoScappare()`), e sopra la riga rossa dello stop ([pericolo.md](pe
 `[data-duello]` (il palco; `data-racconto="in-corso"` mentre si racconta, `data-file` 1|2 = l'altezza, `data-mostri`), `[data-mostro]`
 (`data-i` il posto, `data-tipo`, `data-nome`, `data-grande` = la chiave del grosso, `data-bersaglio`, `data-colpito` = il fattore, `data-morto`,
 `data-porta-chiave`), dentro `[data-minaccia]` (`data-colpisce`), `[data-vita]` (`data-ossa`), `[data-effetti] [data-stato]`,
-`[data-cifra]` (i numeri che salgono); `[data-eroe-scontro]`, `[data-posto-compagno]`, `[data-abilita-usata]`, `[data-scena]` (gli effetti), `[data-segno]`, `[data-segno-pre]`, `[data-apertura]`,
+`[data-cifra]` (i numeri che salgono); `[data-nome-mostro]` (`data-grado`), `[data-arma-in-mano]`, `[data-eroe-scontro]`, `[data-posto-compagno]`, `[data-abilita-usata]`, `[data-scena]` (gli effetti), `[data-segno]`, `[data-segno-pre]`, `[data-apertura]`,
 `[data-fila] [data-turno]` (`data-chi`: `eroe` o il posto), `[data-stati-eroe]`; la scelta `[data-caselle-abilita]`
 (`data-pronto`, `data-ferma`), `[data-azione="attacco|bevi-scontro|scappa"]`, `[data-abilita="<id>"]`. `figura grosso`:
 `[data-figura-grosso]`. Per aprire uno scontro con più mostri: `#sotterraneo=branco&mostri=6` ([../core/comandi.md](../core/comandi.md)).

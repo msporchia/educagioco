@@ -53,9 +53,9 @@ export const MISSIONI = [
     premio: { gemme: 15 } },
 
   { id: 'rosicchione', da: 'mugnaio', discesa: 'torre', piano: 1, tipo: 'sconfiggi',
-    mostro: { tipo: 'ratto', nome: 'Rosicchione' },
+    mostro: { tipo: 'pipistrello', nome: 'Rosicchione' },
     richiede: [{ fatta: 'cantine' }],
-    dice: 'Un ratto grosso come un cane mi ruba la farina e scappa sotto la torre in rovina. Si chiama Rosicchione, e sta al secondo piano.',
+    dice: 'Un pipistrello grosso come un cane mi ruba la farina e scappa sotto la torre in rovina. Si chiama Rosicchione, e sta al secondo piano.',
     grazie: 'Niente più farina rubata! Questo amuleto me l\'ha lasciato un viandante: a te servirà più che a me.',
     ritorno: 'Stamattina nel mulino non manca un chicco. Che ne è stato di Rosicchione?',
     premio: { cosa: 'amuleto-azzurro', monete: 1 } },
@@ -68,11 +68,11 @@ export const MISSIONI = [
     ritorno: 'Sento un tintinnio. Sono le chiavi della torre?',
     premio: { gemme: 20 } },
 
-  // il seguito della collana: il goblin non si è fermato
+  // il seguito della collana: il ladro ha fatto scuola (un diavoletto: il goblin sta nella scalinata, la torre ha i suoi abitanti)
   { id: 'goblin', da: 'ragazza', discesa: 'torre', piano: 0, tipo: 'sconfiggi',
-    mostro: { tipo: 'goblin', nome: 'Grattanaso, il goblin ladro' },
+    mostro: { tipo: 'diavoletto', nome: 'Grattanaso, il diavoletto ladro' },
     richiede: [{ consegnata: 'collana' }],
-    dice: 'Il goblin che mi ha rubato la collana non ha smesso: adesso fa il ladro sotto la torre in rovina, al primo piano. Lo chiamano Grattanaso. Fermalo, ti prego.',
+    dice: 'Il goblin che mi ha rubato la collana ha fatto scuola: adesso un diavoletto ladro ruba al villaggio da sotto la torre in rovina, al primo piano. Lo chiamano Grattanaso. Fermalo, ti prego.',
     grazie: 'Grattanaso non ruberà più niente al villaggio! Prendi queste gemme: le tenevo da parte per la nonna.',
     ritorno: 'Al villaggio non sparisce più niente. Grattanaso?',
     premio: { gemme: 10 } },

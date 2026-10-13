@@ -6,14 +6,14 @@
    lo stesso piano.
    `node test/esegui.mjs sotterraneo-piani --niente-build`
    tempo: 30 */
-import { CAMPAGNA, L_ABISSO, TRATTI_DELL_ABISSO, guardianoDi, formaDi, brancoDi, tettoDelBrancoDi, piantaDi, conAcquaDi, scenarioDi }
+import { CAMPAGNA, L_ABISSO, TRATTI_DELL_ABISSO, guardianoDi, formaDi, brancoDi, caporaleDi, tettoDelBrancoDi, piantaDi, conAcquaDi, scenarioDi }
   from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { ROCCIA, PAVIMENTO, PORTA, RELITTO, ACQUA } from '../../src/giochi/sotterraneo/dati/mondo.js'
 import { CLASSI, ASPETTI, DISEGNI, guastiDeiRelitti } from '../../src/giochi/sotterraneo/dati/relitti.js'
 import { DISEGNATI } from '../../src/giochi/sotterraneo/scena/relitti.js'
 import { PEZZI } from '../../src/giochi/sotterraneo/dati/atlante.js'
 import { grossoDi } from '../../src/giochi/sotterraneo/dati/grossi.js'
-import { CAPORALE, duraDellaCoppia } from '../../src/giochi/sotterraneo/dati/mostri.js'
+import { CAPORALE } from '../../src/giochi/sotterraneo/dati/mostri.js'
 import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
 import { Livello, generaPiano, seminato } from '../../src/giochi/sotterraneo/motore/livello.js'
 import { costruisci, connessa, pezziDa, FORME, FORME_COSTRUITE, FORME_DI_GROTTA } from '../../src/giochi/sotterraneo/motore/forme.js'
@@ -27,7 +27,7 @@ const PIANI = []
 for (const t of CAMPAGNA) for (let seme = 1; seme <= 14; seme++) for (let p = 0; p < t.piani; p++) {
   const f = formaDi(t, p)
   PIANI.push({ t, p, seme, l: generaPiano({ seme: seme * 97, piano: p, largo: f.largo, alto: f.alto, giri: f.giri,
-    guardiano: guardianoDi(t, p), grosso: grossoDi(t, p), branco: brancoDi(t, p), tettoBranco: tettoDelBrancoDi(t, p),
+    guardiano: guardianoDi(t, p), grosso: grossoDi(t, p), branco: brancoDi(t, p), caporale: caporaleDi(t, p), tettoBranco: tettoDelBrancoDi(t, p),
     scenario: scenarioDi(t, p), pianta: piantaDi(t, p), acqua: conAcquaDi(t, p) }) })
 }
 const tutti = PIANI.map(x => x.l)
@@ -204,7 +204,7 @@ const nateDi = s => s.suolo.length + s.colonne.length + s.relitti.length + s.acq
     if (cap.length < 2 || cap.length > 3) male.push(`${cap.length} caporali`)
     for (const m of cap) {
       if (l.stanzaDi(m.x, m.y) !== anti) male.push('un caporale fuori dall\'anticamera')
-      const base = l.mostro(m.tipo, m.x, m.y)
+      const base = l.mostro(m.tipo, m.x, m.y, { variante: m.variante || null, grado: m.grado || 'comune' })   // la stessa variante: l'arciere picchia un po' meno
       if (m.ossa !== Math.round(base.ossa * CAPORALE.ossa) || m.att !== base.att + CAPORALE.att) male.push('un caporale non è più duro')
       if (!/caporale$/.test(m.nome)) male.push('un caporale senza il nome')
       for (const o of cap) if (Math.hypot(o.x - m.x, o.y - m.y) > RAGGIO_SCONTRO) male.push('i caporali non stanno insieme')
@@ -215,17 +215,17 @@ const nateDi = s => s.suolo.length + s.colonne.length + s.relitti.length + s.acq
   }
   controlla('ogni piano col grosso ha la sua anticamera con due o tre caporali, più duri, con un nome, vicini fra loro', male.length === 0, [...new Set(male)].slice(0, 3).join(' · '))
   nota(`caporali per anticamera: ${JSON.stringify(lunghezze)}`)
-  // senza il grosso: niente anticamera e nessun caporale, tranne chi porta la chiave, che è un caporale della specie più dura
-  // della coppia del posto (docs/sotterraneo/mostri.md)
+  // senza il grosso: niente anticamera e nessun caporale, tranne chi porta la chiave, che è il caporale del posto
+  // del posto (docs/sotterraneo/mostri.md)
   controlla('i piani senza il grosso non hanno anticamera, e di caporale hanno solo il guardiano della chiave', PIANI.filter(x => !x.l.grosso).every(x =>
     !x.l.stanze.some(s => s.ruolo === 'anticamera') && !mostriDi(x.l).some(m => m.caporale && !m.chiave)))
   // quasi sempre sta accanto alla scala; se lì non c'è posto la chiave la porta il mostro più lontano dall'ingresso (un mostro di strada
   // della stessa coppia)
   const senzaGrosso = PIANI.filter(x => !x.l.grosso)
   const guardiani = senzaGrosso.map(x => mostriDi(x.l).find(m => m.chiave))
-  controlla('il guardiano della chiave è della coppia del posto', guardiani.every((g, i) => g && senzaGrosso[i].l.branco.includes(g.tipo)))
-  const caporali = guardiani.filter((g, i) => g.caporale && g.tipo === duraDellaCoppia(senzaGrosso[i].l.branco))
-  controlla('ed è quasi sempre un caporale della specie più dura', caporali.length >= guardiani.length * 0.9, `${caporali.length} su ${guardiani.length}`)
+  controlla('il guardiano della chiave è del posto', guardiani.every((g, i) => g && senzaGrosso[i].l.branco.includes(g.tipo) || g.tipo === senzaGrosso[i].l.caporale))
+  const caporali = guardiani.filter((g, i) => g.caporale && g.tipo === senzaGrosso[i].l.caporale)
+  controlla('ed è quasi sempre il caporale del posto, fatto caporale', caporali.length >= guardiani.length * 0.9, `${caporali.length} su ${guardiani.length}`)
 
   // la strada va dall'ingresso alla scala passando dall'anticamera quando c'è una strada sola (l'ultima stanza prima della scala)
   let sulla = 0

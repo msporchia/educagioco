@@ -968,12 +968,22 @@ function brancoDaProva(c) {
   const dietro = h.get('agguato') ? -1 : 1
   libere.sort((a, b) => (a.d - b.d) || (dietro * (b.x - a.x)))
   const grosso = h.get('grosso')
-  const fatti = libere.slice(0, n).map(({ x, y }, k) => grosso && k === 0
-    ? c.livello.mostroGrosso(grosso, x, y) : c.livello.mostro(h.get('tipo') || BRANCO[k % BRANCO.length], x, y))
+  // `&tipo=scheletro` o una lista `&tipo=scheletro,zombie` (a giro); `&variante=mago&grado=raro` (anche in lista, a giro) scelgono la
+  // variante armata e il suo grado (dati/varianti.js), `semplice` quella senza arma; senza, le pesca il caso del piano
+  const lista = nome => (h.get(nome) || '').split(',').filter(Boolean)
+  const tipi = lista('tipo'), varianti = lista('variante'), gradi = lista('grado')
+  // sul campo i mostri stanno a due o tre caselle, nella luce ma non addosso all'eroe
+  const scelte = h.get('campo') ? (libere.filter(l => l.d >= 2 && l.d <= 3.2).slice(0, n).length ? libere.filter(l => l.d >= 2 && l.d <= 3.2).slice(0, n) : libere.slice(-n)) : libere.slice(0, n)
+  const fatti = scelte.map(({ x, y }, k) => grosso && k === 0
+    ? c.livello.mostroGrosso(grosso, x, y)
+    : c.livello.mostro(tipi.length ? tipi[k % tipi.length] : BRANCO[k % BRANCO.length], x, y,
+                       { variante: varianti.length ? varianti[k % varianti.length] : undefined, grado: gradi.length ? gradi[k % gradi.length] : undefined }))
   if (!fatti.length) return
   c.livello.robe.push(...fatti)
   if (h.get('agguato')) fatti.sort((a, b) => a.x - b.x)
   fatti.forEach(m => { m.sveglio = !h.get('sorpresa') })
+  // `&campo=1`: i mostri stanno lì, addormentati (calmi), e non si apre nessuno scontro (per guardarli sul campo); `&campo=sveglio`: svegli, e vengono
+  if (h.get('campo')) { fatti.forEach(m => { m.sveglio = h.get('campo') === 'sveglio'; if (!m.sveglio) { m.fx = m.x + 0.5; m.fy = m.y + 0.5; m.casa = { x: m.x, y: m.y }; m.calmo = 600 } }); return }
   c.scontro(fatti[0], { tocco: !!h.get('sorpresa') })
 }
 

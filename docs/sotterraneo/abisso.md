@@ -98,7 +98,7 @@ dif  = base.dif                               ferma per sempre
 ```
 
 I mostri dell'abisso sono quelli di una zona, un po' più deboli ([zone.md](zone.md)): le specie hanno tutte le stesse ossa e la
-forza viene dal livello ([mostri.md](mostri.md#le-coppie-12-ottobre-2026)), quindi `forza` e `spinta` sono quelle di una zona
+forza viene dal livello ([mostri.md](mostri.md#gli-abitanti-12-ottobre-2026)), quindi `forza` e `spinta` sono quelle di una zona
 verso il livello 12 (l'abisso si apre a chi esce dalla storia) e il piano le fa crescere. Tarate col banco sull'eroe che esce dalla
 storia ([scontro-bilancio.md](scontro-bilancio.md)). Prima (fino al 12 ottobre) i mostri partivano deboli e la fascia saliva con la
 profondità, e si poteva scendere nudi; adesso nudi non è più un modo di entrare.
@@ -116,7 +116,7 @@ raggiunge.
 
 ## I guardiani
 
-**Il guardiano di ogni piano è la specie più dura della coppia del tratto, fatta caporale** (`guardianoDi`: ossa ×1,25 e un colpo
+**Il guardiano di ogni piano è il caporale del tratto, fatto caporale** (`guardianoDi`: ossa ×1,25 e un colpo
 in più), e ogni cinque piani c'è un mostro grosso (`GROSSO_OGNI`). Prima c'era una scaletta fissa (`guardiani: ['scheletro',
 'scheletro', 'orco', …]`, poi il gigante) misurata a mano: spostare dove compare il gigante cambiava poco, a fermare la discesa
 era il non avere un'arma, non il capo. Adesso ogni piano ha il guardiano del posto in cui è.
@@ -128,18 +128,18 @@ era il non avere un'arma, non il capo. Adesso ogni piano ha il guardiano del pos
 dal 5° all'8°, la fornace dal 9° in poi, **e l'ultimo posto resta per sempre**:
 un abisso senza fondo non ha un giro da rifare, e la fornace è l'ultima
 tappa visiva. Un posto è **uno scenario**
-(come si disegna, `SCENARI` in `dati/tessere.js`) **e una coppia di mostri** (chi si incontra per strada, `mostri` del tratto in
-`dati/campagna.js`: ratti e melme nelle cantine, scheletri e fantasmi nella cripta, golem e pipistrelli nella fornace); la riga
+(come si disegna, `SCENARI` in `dati/tessere.js`) **e i suoi abitanti** (chi si incontra per strada, `mostri` e `caporale` del tratto in
+`dati/campagna.js`: melme viola, mostri viola, pipistrelli occhio e ombre nelle cantine; ghoul, teschi azzurri e mummie nella cripta; draghetti, occhi, golem di pietra e grifoni nella fornace); la riga
 sotto il campo dice dove si è («la cripta · piano 7»).
 
 - **Un abisso solo, non uno per posto**: due abissi vorrebbero due record,
   due soste e due corredi, e ognuno mostrerebbe metà dei mostri. Scendendo
   invece il posto nuovo è un traguardo che si vede.
-- **Un posto cambia le facce, non la fatica**: la forza dipende dal piano, non dalla coppia (un golem della fornace al piano 9
+- **Un posto cambia le facce, non la fatica**: la forza dipende dal piano, non dagli abitanti (un golem della fornace al piano 9
   costa quanto un ratto delle cantine al piano 9, a meno della forma).
-- **Le discese della campagna hanno la loro coppia**, per ambientazione ([mostri.md](mostri.md)).
+- **Le discese della campagna hanno i loro abitanti**, per ambientazione ([mostri.md](mostri.md)).
 - **Un posto nuovo** è una voce in `SCENARI` e una riga in
-  `TRATTI_DELL_ABISSO` (con la sua coppia); `guastiDelleTessere` e `guastiDellAbisso` dicono se
+  `TRATTI_DELL_ABISSO` (con i suoi abitanti); `guastiDelleTessere` e `guastiDellAbisso` dicono se
   ne manca un pezzo. Il piano resta una funzione del numero: rientrando si
   ritrova lo stesso posto.
 
@@ -230,7 +230,7 @@ graduato.
 - `dati/campagna.js` — `L_ABISSO`, `INDICE_ABISSO`, `tappaDi`, `durezzaDi`,
   `guardianoDi`, `formaDi`, `crescitaDi`, `svenimentiDi`, `guastiDellAbisso`,
   `TRATTI_DELL_ABISSO`, `trattoDi`, `scenarioDi`, `brancoDi`, `tettoDelBrancoDi`.
-- `dati/mostri.js` — le specie e `duraDellaCoppia` (la coppia sta nel tratto).
+- `dati/mostri.js` — le specie (gli abitanti e il caporale stanno nel tratto).
 - `motore/corsa.js` — `senzaFondo`, `svenimentiSpesi`, `rimettiInPiedi`.
 - `motore/banco.js` — `gioca({ fino })`, `costoDeiPiani`, `finoADove`.
 - `test/unita/sotterraneo-abisso.test.mjs` (pesante, `tempo: 300`): il tetto

@@ -149,16 +149,26 @@ import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifi
   }
   uguale('il pezzo di Grumo è la sua mazza, col nome', COSE[pezzoDelGrosso('mazza-di-grumo', 3)].nome, 'Mazza di Grumo')
   controlla('i pezzi dei grossi li porta chiunque', Object.values(DEI_GROSSI).every(u => !COSE[u.base].famiglia))
-  // la figura: lo sprite della sua specie ingrandito a coprire due caselle di altezza (con la corona), a meno che l'atlante
-  // abbia il suo dipinto (`grosso-<chiave>-fermo-0`), che prende il posto del ripiego da solo
+  // la figura: la creatura che veste (`figura`: il ragno di Zannaverde, il drago di lava di Carbonchio…, senza, la specie di `tipo`), del
+  // catalogo comune, ingrandita a coprire due caselle di altezza (con la corona), a meno che l'atlante abbia il suo dipinto
+  // (`grosso-<chiave>-fermo-0`), che prende il posto del ripiego da solo
+  const FIGURA = { ossuto: 'negromante', grumo: 'orco', fiammetta: 'spirito-fuoco', zannaverde: 'ragno', gorgo: 'polpo', minotto: 'bestia-cornuta', carbonchio: 'drago-lava' }
   for (const [k, x] of Object.entries(GROSSI)) {
     const f = figuraDelGrosso(k)
     controlla(`${k}: ha una figura`, !!f)
-    uguale(`${k}: senza dipinto, è lo sprite della sua specie`, f.sprite, MOSTRI[x.tipo].sprite)
+    uguale(`${k}: senza dipinto, è la creatura giusta`, x.figura || x.tipo, FIGURA[k])
+    uguale(`${k}: e lo sprite è il suo`, f.sprite, (MOSTRI[FIGURA[k]] || { sprite: FIGURA[k] }).sprite)
     controlla(`${k}: ingrandito a coprire le sue due caselle`, f.alto * f.k >= LATO_DEL_GROSSO - 0.01 && f.k > 1.2, `${f.alto} × ${f.k}`)
-    controlla(`${k}: e il suo fotogramma c'è nell'atlante`, !!PEZZI[spriteDelGrosso(f, false)] && !!PEZZI[spriteDelGrosso(f, true, 3)])
+    controlla(`${k}: e il suo fotogramma c'è nell'atlante, da fermo, da sveglio e nello scontro`, !!PEZZI[spriteDelGrosso(f, false)] && !!PEZZI[spriteDelGrosso(f, true, 3)] && !!PEZZI[spriteDelGrosso(f, 'scontro')])
     controlla(`${k}: la tinta è un colore`, /^#[0-9a-f]{6}$/i.test(x.tinta))
   }
+  // chi ha i passi cammina da sveglio e nello scontro sta fermo sulla posa di lato; chi non li ha respira; il drago (respiro rotto) usa i passi anche da fermo
+  controlla('Zannaverde (il ragno) cammina da sveglio e nello scontro usa la posa di lato', /-corsa-\d$/.test(spriteDelGrosso(figuraDelGrosso('zannaverde'), true, 3)) &&
+            spriteDelGrosso(figuraDelGrosso('zannaverde'), 'scontro') === 'ragno-corsa-0' && /-fermo-\d$/.test(spriteDelGrosso(figuraDelGrosso('zannaverde'), false)))
+  controlla('Gorgo (il polpo) non ha i passi: respira, anche nello scontro', /-fermo-/.test(spriteDelGrosso(figuraDelGrosso('gorgo'), true, 2)) && /-fermo-/.test(spriteDelGrosso(figuraDelGrosso('gorgo'), 'scontro')))
+  controlla('Grumo (l\'orco) cammina', /-corsa-/.test(spriteDelGrosso(figuraDelGrosso('grumo'), true, 1)))
+  const drago = { sprite: 'drago', unaPosa: false, fermoDaiPassi: true }
+  controlla('il drago, anche fermo, usa i passi e non il suo respiro rotto', spriteDelGrosso(drago, false) === 'drago-corsa-0' && /^drago-corsa-\d$/.test(spriteDelGrosso(drago, true, 7)))
   // il dipinto vince: una chiave `grosso-ossuto-fermo-0` nell'atlante lo prende al posto del ripiego, a misura vera e senza corona
   PEZZI['grosso-ossuto-fermo-0'] = [0, 0, 32, 32]
   try {
