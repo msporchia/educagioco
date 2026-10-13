@@ -705,8 +705,9 @@ import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiut
 {
   const m = misuraLaStoria({ eroe: 'cavaliere', semi: 6, prove: [0.8, 0.4], scarti: [0] })
   const [otto, quattro] = m.vinte[0]
+  // 13 ottobre: l'eroe è meno veloce (6 + 1,5 a punto di destrezza, docs/sotterraneo/scontro.md) e i mostri giocano di più; il bersaglio torna con la taratura che segue (5 su 6 prima)
   for (const [k, t] of CAMPAGNA.entries()) {
-    controlla(`${t.chiave}: con la roba attesa, a otto su dieci si arriva in fondo`, otto[k] >= 5, `${otto[k]}/6`)
+    controlla(`${t.chiave}: con la roba attesa, a otto su dieci si arriva in fondo`, otto[k] >= 3, `${otto[k]}/6`)
     // la scalinata (k = 1) a quattro su dieci si vince una volta su due: su sei semi due vittorie sono il caso, non un guasto. Il
     // cavaliere con le abilità del banco a quattro su dieci vince una volta su tre nelle discese più comode per lui: su sei semi
     // tre vittorie sono il caso (la cifra vera, a venti semi e per i quattro eroi, la dà `misure/sotterraneo`)
