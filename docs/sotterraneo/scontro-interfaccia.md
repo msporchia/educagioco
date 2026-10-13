@@ -54,8 +54,9 @@ Tutto sta in `Corsa.foglio` (`che: 'scontro'`) e nelle funzioni di `Corsa`; un m
   dà a ogni posto il punto dei piedi (`--x`, `--y`); chi sta più in basso è davanti (`z`), chi sta più in alto è appena più
   piccolo (scala ×0,875, a quarti: i pixel restano nitidi) e disegnato prima. Piccoli scarti per posto, ma stabili (non a caso a
   ogni render).
-- **L'eroe a sinistra**, con **il posto del compagno sfalsato sotto di lui, in diagonale** (un ovale tratteggiato, senza scritta: il
-  compagno è per dopo, [scontro.md](scontro.md#cosa-resta-fuori-per-dopo)).
+- **L'eroe a sinistra, a metà del pavimento** (l'utente, 13 ottobre: il compagno non c'è, «mettilo al centro»). Quando ci sarà il
+  compagno la formazione cambia: l'eroe un po' sopra e il compagno sfalsato sotto, in diagonale ([scontro.md](scontro.md#cosa-resta-fuori-per-dopo)).
+- **Niente chiave sui mostri**, né nello scontro né sul campo (l'utente, 13 ottobre): chi ha la chiave della scala lo dice la mappina.
 - **I mostri sono in colonne verticali sul lato destro, non in file** (l'utente, 12 ottobre: «sono disposti come statuine su due file,
   è poco realistico»; come i Final Fantasy e i side-view di RPG Maker): due colonne fino a quattro mostri, tre da cinque; la
   colonna più vicina all'eroe è davanti; dentro una colonna sono uno sopra l'altro e sfalsati a scaletta. I punti sono la tabella
@@ -118,7 +119,7 @@ offerta se `!puoScappare()`), e sopra la riga rossa dello stop ([pericolo.md](pe
 `[data-duello]` (il palco; `data-racconto="in-corso"` mentre si racconta, `data-file` 1|2 = l'altezza, `data-mostri`), `[data-mostro]`
 (`data-i` il posto, `data-tipo`, `data-nome`, `data-grande` = la chiave del grosso, `data-bersaglio`, `data-colpito` = il fattore, `data-morto`,
 `data-porta-chiave`), dentro `[data-minaccia]` (`data-colpisce`), `[data-vita]` (`data-ossa`), `[data-effetti] [data-stato]`,
-`[data-cifra]` (i numeri che salgono); `[data-nome-mostro]` (`data-grado`), `[data-arma-in-mano]`, `[data-eroe-scontro]`, `[data-posto-compagno]`, `[data-abilita-usata]`, `[data-scena]` (gli effetti), `[data-segno]`, `[data-segno-pre]`, `[data-apertura]`,
+`[data-cifra]` (i numeri che salgono); `[data-nome-mostro]` (`data-grado`), `[data-arma-in-mano]`, `[data-eroe-scontro]`, `[data-posto-compagno]` (oggi assente: il compagno non c'è), `[data-abilita-usata]`, `[data-scena]` (gli effetti), `[data-segno]`, `[data-segno-pre]`, `[data-apertura]`,
 `[data-fila] [data-turno]` (`data-chi`: `eroe` o il posto), `[data-stati-eroe]`; la scelta `[data-caselle-abilita]`
 (`data-pronto`, `data-ferma`), `[data-azione="attacco|bevi-scontro|scappa"]`, `[data-abilita="<id>"]`. `figura grosso`:
 `[data-figura-grosso]`. Per aprire uno scontro con più mostri: `#sotterraneo=branco&mostri=6` ([../core/comandi.md](../core/comandi.md)).

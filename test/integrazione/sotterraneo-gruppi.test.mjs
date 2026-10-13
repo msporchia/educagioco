@@ -101,7 +101,7 @@ await scelta()
   const col = await page.locator('[data-fila]').boundingBox()
   controlla('in una colonna sul bordo destro del palco, in sovrimpressione', col.x > p.x + p.width * 0.8 && col.y >= p.y && col.width < 60,
             JSON.stringify(col))
-  uguale('l\'eroe a sinistra con il posto del compagno sotto', await page.locator('[data-posto-compagno]').count(), 1)
+  uguale('l\'eroe a sinistra, senza il posto del compagno finché il compagno non c\'è', await page.locator('[data-posto-compagno]').count(), 0)
   controlla('la scelta in basso c\'è: attacco e scappa',
             (await page.locator('[data-caselle-abilita] [data-azione]').evaluateAll(es => es.map(e => e.dataset.azione))).join().includes('attacco'))
   await scatto(page, 'gruppi-sei')

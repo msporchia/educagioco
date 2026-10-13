@@ -50,6 +50,8 @@ const scala = computed(() => SCALA_FIGURE)
 const scalaEroe = scala
 // dove stanno i piedi di ognuno (colonne sul pavimento, viste/campo.js); chi sta più in alto è un filo più piccolo, a quarti
 const piano = computed(() => piazza(props.posti, props.mostri, larg.value))
+// il compagno dell'eroe non c'è ancora: il suo posto non si disegna, e l'eroe sta a metà del pavimento (viste/campo.js, `piazza`)
+const compagno = false
 const scalaM = (m, k) => scalaDelMostro(m.tipo, PEZZI[m.sprite] ? PEZZI[m.sprite][3] : 16, Math.round(scala.value * piano.value.mostri[k].prof * 4) / 4)
 const scalaGrosso = computed(() => scala.value + 1)   // il grosso un passo sopra: è il re della stanza
 const stretto = computed(() => larg.value < 340)   // a 320 px la riga della minaccia si accorcia
@@ -107,7 +109,7 @@ function punto(chi) {
          :style="{ '--alto': piano.alto + 'px', '--barra': barra + 'px' }" @click="sulDuello">
       <Palco v-bind="palco" :larg="larg" :alto="piano.alto" />
 
-      <!-- l'eroe, a sinistra; sotto di lui il posto vuoto del compagno (solo il posto, niente scritta) -->
+      <!-- l'eroe, a sinistra; il posto del compagno c'è quando ci sarà il compagno -->
       <div ref="elEroe" class="sot-attore-eroe" data-eroe-scontro :style="{ '--x': piano.eroe.x + 'px', '--y': piano.eroe.y + 'px', zIndex: piano.eroe.y * 10 }">
         <i class="sot-ombra" :style="{ width: 16 * scalaEroe * 1.25 + 'px' }" aria-hidden="true"></i>
         <div :key="chiaveFx('eroe')" class="sot-figura sot-eroe-fig" :class="classeFx('eroe')" :style="tintaEroe">
@@ -123,7 +125,7 @@ function punto(chi) {
         </span>
         <span v-for="n in numeriDi('eroe')" :key="n.id" class="sot-numero" :class="'sot-numero-' + n.tipo" data-cifra>{{ n.testo }}</span>
       </div>
-      <div class="sot-compagno" data-posto-compagno aria-hidden="true" :style="{ '--x': piano.compagno.x + 'px', '--y': piano.compagno.y + 'px' }"></div>
+      <div v-if="compagno" class="sot-compagno" data-posto-compagno aria-hidden="true" :style="{ '--x': piano.compagno.x + 'px', '--y': piano.compagno.y + 'px' }"></div>
 
       <!-- i mostri: colonne sul pavimento, sfalsati; il grosso davanti e al centro (viste/campo.js, `piazza`) -->
       <div class="sot-schiera" data-campo>
@@ -147,9 +149,6 @@ function punto(chi) {
             </span>
             <SegniAddosso :stati="statiDi(m)" :largo="largoDi(m, k)" />
             <i class="sot-anello" aria-hidden="true"></i>
-            <svg v-if="m.chiave" class="sot-m-chiave" viewBox="0 0 24 24" width="14" height="14" aria-label="porta la chiave" data-segno-chiave>
-              <circle cx="7" cy="8" r="4" fill="none" stroke="currentColor" stroke-width="2.4" /><path d="M10 11 L20 21 M16 17 L19 14 M13 14 L16 11" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" />
-            </svg>
             <span v-if="pulita(m) && m.segni.length" class="sot-m-segni" data-segni>
               <span v-for="g in m.segni" :key="g.tipo + g.glifo" class="sot-segno-pre" :class="'sot-segno-pre-' + g.tipo" :style="{ '--tinta': g.tinta }"
                     :data-segno-pre="g.tipo" :title="g.dice">

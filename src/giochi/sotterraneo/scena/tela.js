@@ -443,7 +443,6 @@ export class Tela {
         this.emoji(r.em, px, py, alfa)
       if (r.arma) this.armaDelMostro(r, suo, px, py, alfa)
       if (grande !== 1) ctx.restore()
-      if (r.chiave) this.emoji('🗝️', px + 0.42, py - 0.55, alfa, 0.42)
       if (r.caporale) this.galloni(px, py, alfa)
       // il mostro col nome di una missione porta la corona e il nome sopra la testa, quando è in vista
       if (r.missione) {
@@ -548,7 +547,6 @@ export class Tela {
     if (m && !F.dipinto) this.emoji('👑', px, suolo - alto - 0.2 + Math.sin(t * 3) * 0.05, alfa, 0.95)
     const sopra = suolo - alto - (m && !F.dipinto ? 0.95 : 0.3)
     const lato = px + Math.max(0.55, metà * 0.85)
-    if (r.chiave) this.emoji('🗝️', lato, suolo - alto + 0.15, alfa, 0.42)
     if (!r.sveglio) this.emoji('💤', lato, suolo - alto + 0.5, alfa * 0.8, 0.32)
     if (luce === 2) this.etichette.push({ testo: r.nome, px, py: sopra - 0.45 })
     if (r.ossa < r.ossaMax) this.barretta(px, py + 0.1, r.ossa / r.ossaMax, alfa)

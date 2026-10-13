@@ -130,8 +130,9 @@ export function piazza(posti, campo, larg) {
     if (i === posti.grande) p.prof = 1
     return { ...p, z: p.y * 10 + Math.round((1 - uv[0]) * 8) }
   })
-  // l'eroe a sinistra, e il posto del compagno sfalsato sotto di lui, in diagonale (come la fila del gruppo nei Final Fantasy)
-  const ey = Math.round(ya + (yb - ya) * 0.3)
+  // l'eroe a sinistra, a metà del pavimento: il compagno non c'è ancora (l'utente, 13 ottobre: «mettilo al centro»); quando ci sarà
+  // la formazione cambia, l'eroe un po' sopra e il compagno sfalsato sotto, in diagonale (come la fila del gruppo nei Final Fantasy)
+  const ey = Math.round(ya + (yb - ya) * 0.55)
   return { alto, eroe: { x: stretto ? 34 : 40, y: ey }, compagno: { x: stretto ? 52 : 60, y: ey + 58 }, mostri }
 }
 
