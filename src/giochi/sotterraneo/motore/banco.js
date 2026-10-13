@@ -179,6 +179,8 @@ function equipaggia(corsa) {
     // al dito la prima cosa che capita: i gioielli non si confrontano su un numero solo
     if (c.dove === 'dito' && !corsa.dito) { corsa.usa(i); continue }
     if (c.usa === 'cura' && corsa.vita < corsa.vitaMax * 0.45) corsa.usa(i)   // beve quando serve, non appena trova
+    // la pozione blu, quando il globo è sotto un terzo e ce ne starebbe una intera (l'energia torna solo combattendo: docs/sotterraneo/abilita.md)
+    if (c.usa === 'energia' && corsa.energia <= corsa.energiaMax / 3 && corsa.energiaMax - corsa.energia >= c.energia) corsa.usa(i)
   }
 }
 

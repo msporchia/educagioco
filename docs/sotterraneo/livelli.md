@@ -70,7 +70,7 @@ le classi si somigliavano. La fortuna resta solo sulla roba.
 |---|---|---|---|
 | Forza | spade e asce | una tasca in più ogni tre punti oltre il primo | spade e asce |
 | Destrezza | archi, e il ramo Bosco | 1% di schivata dei colpi, e un punto di velocità nella fila dei turni (10 più la destrezza) | archi |
-| Intelligenza | bacchette e bastoni | un punto di energia massima | bacchette e bastoni |
+| Intelligenza | bacchette e bastoni | tre punti di energia massima | bacchette e bastoni |
 | Tempra | — | tre di vita, e una difesa ogni tre punti | — |
 
 - **L'attacco viene dalla caratteristica dell'arma in mano** (`carDellArma`
@@ -90,9 +90,9 @@ le classi si somigliavano. La fortuna resta solo sulla roba.
   l'attacco prendeva anche la difesa, e il nano e l'elfa (la loro dote è la
   forza) a quattro su dieci vincevano quasi tutto; il mago, che la forza non
   la alza, restava senza difesa e non arrivava in fondo.
-- **L'intelligenza è il mana**: l'energia massima è 8 più l'intelligenza
-  ([abilita.md](abilita.md)), quindi il mago parte da tredici, il cavaliere e
-  il nano da nove.
+- **L'intelligenza è il mana**: l'energia massima è 7 più tre per punto di
+  intelligenza ([abilita.md](abilita.md)), quindi il mago parte da ventidue, l'elfa
+  da tredici, il cavaliere e il nano da dieci.
 - **La forza dà posto a tutti** (l'utente, 9 ottobre: a un mago la forza non serviva a
   niente): una tasca dello zaino in più ogni tre punti oltre il primo (`FORZA_PER_TASCA`,
   `tascheDallaForza` in `motore/corredo.js`), che si somma a quelle comprate con le gemme

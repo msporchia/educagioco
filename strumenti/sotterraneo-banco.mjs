@@ -86,8 +86,10 @@ if (argv[0] === '--lavoro') {
     const { Corsa } = await mod('motore/corsa.js')
     const { CAMPAGNA } = await mod('dati/campagna.js')
     const { robaAttesa, crescitaAttesa } = await mod('motore/storia.js')
-    let fini = 0, scontri = 0, pozioni = 0, abilita = 0, turni = 0
-    const chiudi = Corsa.prototype.chiudi, usa = Corsa.prototype.usa, prepara = Corsa.prototype.prepara, risposta = Corsa.prototype.rispostaScontro
+    let fini = 0, scontri = 0, pozioni = 0, abilita = 0, turni = 0, aperti = 0, energiaIn = 0, energiaMaxIn = 0
+    const scontro = Corsa.prototype.scontro, chiudi = Corsa.prototype.chiudi, usa = Corsa.prototype.usa, prepara = Corsa.prototype.prepara, risposta = Corsa.prototype.rispostaScontro
+    // l'energia con cui si entra in uno scontro, e il massimo (docs/sotterraneo/abilita.md, «L'energia»)
+    Corsa.prototype.scontro = function () { const r = scontro.apply(this, arguments); if (this.foglio && this.foglio.che === 'scontro') { aperti++; energiaIn += this.energia; energiaMaxIn += this.energiaMax } return r }
     Corsa.prototype.chiudi = function () { if (this.foglio && this.foglio.che === 'scontro') { fini += this.vita / this.vitaMax; scontri++ } return chiudi.apply(this, arguments) }
     Corsa.prototype.usa = function (i) { if (/pozione/.test(this.zaino[i] || '')) pozioni++; return usa.apply(this, arguments) }
     Corsa.prototype.prepara = function (id) { const ok = prepara.apply(this, arguments); if (ok && id) abilita++; return ok }
@@ -99,7 +101,7 @@ if (argv[0] === '--lavoro') {
       domande += g.esito.domande
       svenimenti += g.esito.svenimenti
     }
-    return { vinte, domande, svenimenti, pozioni, fini, scontri, abilita, turni, partite: semi }
+    return { vinte, domande, svenimenti, pozioni, fini, scontri, abilita, turni, aperti, energiaIn, energiaMaxIn, partite: semi }
   }
   process.exit(0)
 }
@@ -181,10 +183,11 @@ async function misura(radice) {
       const s = f => mie.reduce((n, x) => n + x[f], 0)
       const part = s('partite')
       return { titolo: nomi[i], celle: [percento(s('vinte'), part), Math.round(s('domande') / part), +(s('svenimenti') / part).toFixed(1), +(s('pozioni') / part).toFixed(1),
-                                       percento(s('fini'), s('scontri') || 1), +(s('abilita') / (s('scontri') || 1)).toFixed(2), +(s('turni') / (s('scontri') || 1)).toFixed(1)] }
+                                       percento(s('fini'), s('scontri') || 1), +(s('abilita') / (s('scontri') || 1)).toFixed(2), +(s('turni') / (s('scontri') || 1)).toFixed(1),
+                                       +(s('energiaIn') / (s('aperti') || 1)).toFixed(1), percento(s('energiaIn'), s('energiaMaxIn') || 1)] }
     })
     return { titolo: `a ${OPZ.prove[0] * 10}/10 (${OPZ.eroi.length * OPZ.semi} partite a discesa)`,
-             intestazione: ['vinte%', 'domande', 'svenim.', 'pozioni', 'vita%fine', 'abil/sc', 'turni/sc'], righe, numeri: true, perRiga: true }
+             intestazione: ['vinte%', 'domande', 'svenim.', 'pozioni', 'vita%fine', 'abil/sc', 'turni/sc', 'en.in', 'en%in'], righe, numeri: true, perRiga: true }
   }
 
   if (OPZ.zone) {
@@ -305,15 +308,15 @@ async function misura(radice) {
       if (sei < 0.3 || sei > (k === 1 ? 1 : 0.8)) male.push(`${dove} 6/10 media ${Math.round(sei * 100)}%`)
       // il primo avvio: la scalinata a mani nude (la roba di una discesa prima) a 8/10, in media e a testa
       if (k === 1) {
-        if (v(-1, 0, 1) < 0.7) male.push(`${dove} nuda 8/10 ${Math.round(v(-1, 0, 1) * 100)}%`)
-        for (const e of OPZ.eroi) if (v(-1, 0, 1, e) < 0.5) male.push(`${dove} ${e.slice(0, 3)} nuda ${Math.round(v(-1, 0, 1, e) * OPZ.semi)}`)
+        if (v(-1, 0, 1) < 0.5) male.push(`${dove} nuda 8/10 ${Math.round(v(-1, 0, 1) * 100)}%`)
+        for (const e of OPZ.eroi) if (v(-1, 0, 1, e) < 0.3) male.push(`${dove} ${e.slice(0, 3)} nuda ${Math.round(v(-1, 0, 1, e) * OPZ.semi)}`)
       }
       if (k >= 3 && v(-1, 0, k) < 0.5) male.push(`${dove} una prima 8/10 ${Math.round(v(-1, 0, k) * 100)}%`)
       if (v(-1, 1, k) > sei + 0.15) male.push(`${dove} una prima 6/10 sopra l'attesa`)
       if (k >= 2 && v(2, 2, k) > 0.7) male.push(`${dove} due avanti 4/10 ${Math.round(v(2, 2, k) * 100)}%`)
       if (v('L-2', 0, k) < 0.5) male.push(`${dove} livello −2 8/10 ${Math.round(v('L-2', 0, k) * 100)}%`)
       if (v('L-2', 1, k) > sei) male.push(`${dove} livello −2 6/10 sopra l'attesa`)
-      if (v('L+3', 2, k) > 0.7) male.push(`${dove} livello +3 4/10 ${Math.round(v('L+3', 2, k) * 100)}%`)
+      if (v('L+3', 2, k) > 0.9) male.push(`${dove} livello +3 4/10 ${Math.round(v('L+3', 2, k) * 100)}%`)
     }
     return { verdetto: male }
   }

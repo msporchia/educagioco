@@ -189,8 +189,8 @@ export class Corredo {
   get schivata() {
     return Math.min(SCHIVATA_MASSIMA, this.addosso('schivata') + this.sempre('schivata') + this.piu.sopra.destrezza * SCHIVATA_PER_DESTREZZA)
   }
-  // l'energia delle abilità (docs/sotterraneo/abilita.md): la base, l'intelligenza (il mago parte da dieci, il
-  // cavaliere da sei) e i nodi che la alzano
+  // l'energia delle abilità (docs/sotterraneo/abilita.md): la base, l'intelligenza (il mago parte da ventidue, il
+  // cavaliere da dieci) e i nodi che la alzano
   get energiaMax() { return ENERGIA + this.car('intelligenza') * ENERGIA_PER_INTELLIGENZA + this.sempre('energiaPiu') }
 
   // L'albero delle abilità: il grado di un nodo, e quanto danno insieme i nodi «sempre» imparati per un campo

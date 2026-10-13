@@ -6,7 +6,7 @@
    rarità stanno in `unita/sotterraneo-rarita`.
    `node test/esegui.mjs sotterraneo-livelli --niente-build` */
 import { CARATTERISTICHE, sogliaDi, livelloDi, quotaDi, espDi, guastiDeiLivelli, VITA_PER_TEMPRA, PUNTI_PER_LIVELLO,
-         DOTE_OGNI, TEMPRA_PER_DIFESA, SCHIVATA_PER_DESTREZZA, GEMME_PER_RIASSEGNARE } from '../../src/giochi/sotterraneo/dati/livelli.js'
+         DOTE_OGNI, TEMPRA_PER_DIFESA, ENERGIA_PER_INTELLIGENZA, SCHIVATA_PER_DESTREZZA, GEMME_PER_RIASSEGNARE } from '../../src/giochi/sotterraneo/dati/livelli.js'
 import { EROI, eroeDi, guastiDegliEroi, requisitoDi, REQUISITO_DEL_GRADINO } from '../../src/giochi/sotterraneo/dati/eroi.js'
 import { COSE, chiaveDelPezzo, aLivello } from '../../src/giochi/sotterraneo/dati/cose.js'
 import { robaAttesa, crescitaAttesa } from '../../src/giochi/sotterraneo/motore/storia.js'
@@ -97,7 +97,7 @@ import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifi
   uguale('la tempra dà difesa, una ogni tre punti', con('tempra').dif - zero().dif, Math.floor(4 / TEMPRA_PER_DIFESA))
   uguale('la forza no', con('forza').dif - zero().dif, 0)
   uguale('la destrezza fa schivare', con('destrezza').schivata - zero().schivata, 4 * SCHIVATA_PER_DESTREZZA)
-  uguale('l\'intelligenza alza l\'energia', con('intelligenza').energiaMax - zero().energiaMax, 4)
+  uguale('l\'intelligenza alza l\'energia, due a punto', con('intelligenza').energiaMax - zero().energiaMax, 4 * ENERGIA_PER_INTELLIGENZA)
   uguale('quattro di tempra: dodici di vita', con('tempra').vitaConLaRoba - zero().vitaConLaRoba, 4 * VITA_PER_TEMPRA)
   uguale('la fortuna non è più una caratteristica: viene solo dai pezzi', zero().fortuna, 0)
   const mago = new Corredo({ eroe: 'mago' }), cavaliere = new Corredo({ eroe: 'cavaliere' })
@@ -200,7 +200,7 @@ import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifi
   controlla('la forza ha il «+» spento: l\'intelligenza è rimasta indietro', car.forza.trattenuta && car.forza.dietro === 'intelligenza')
   controlla('e l\'intelligenza lo dice («prima un po\' di questa»)', car.intelligenza.indietro && !car.intelligenza.trattenuta)
   controlla('la tempra dice prima cosa cambia', car.tempra.cambia.some(x => x.em === '❤️' && x.dopo - x.prima === VITA_PER_TEMPRA))
-  controlla('l\'intelligenza dice l\'energia', car.intelligenza.cambia.some(x => x.glifo === 'energia' && x.dopo - x.prima === 1))
+  controlla('l\'intelligenza dice l\'energia', car.intelligenza.cambia.some(x => x.glifo === 'energia' && x.dopo - x.prima === ENERGIA_PER_INTELLIGENZA))
   controlla('la destrezza dice la schivata', car.destrezza.cambia.some(x => x.em === '🌀'))
   controlla('ogni caratteristica ha il suo medaglione', c.caratteristiche().every(x => x.glifo && x.tinta))
   // giù: dare un punto di tempra alza subito vita e tetto

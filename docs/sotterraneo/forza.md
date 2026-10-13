@@ -162,9 +162,11 @@ così per ogni mostro che batte, ed è il livello 20.
   abilità (due forti a scontro, la cura sotto la metà) e i mostri sono tarati su di lui: l'eroe atteso e il banco sono lo stesso eroe.
 - **Lo scontro a gruppi.** Il mostro di riferimento è uno; il banco combatte gruppi veri (l'area con tre mostri), la formula no.
   Contare quanti mostri e quanto picchiano insieme cambierebbe gli ingressi, non la forma della formula.
-- **L'energia** non è un limite: si supponga che le due abilità siano sempre
-  pagate (ne servono 10–18, l'eroe parte da 9–13 e la ricarica con le risposte
-  giuste). Gli effetti che non fanno danno (stordire, gelare, parare) non
+- **L'energia** è un limite solo a grandi linee: conta l'abilità che l'**energia di partenza tipica di uno scontro** paga,
+  i due terzi del globo per eccesso (`energiaTipica`, `ENERGIA_TIPICA` in `motore/forza.js`; il banco entra in uno scontro con il
+  40–60% del globo, [scontro-bilancio.md](scontro-bilancio.md)). Il cavaliere e il nano, con dieci di energia, contano le
+  abilità fino a 7 (le prime due righe); il mago, con ventidue e più, quasi tutte. Il conto vale anche per l'eroe atteso, quindi la
+  sanità (l'eroe atteso vale il suo livello) non si muove. Gli effetti che non fanno danno (stordire, gelare, parare) non
   contano come difesa; i capi e i grossi non ci sono.
 - **Il mostro di riferimento è neutro**: lo scheletro tipico senza le difese di [mostri.md](mostri.md) (nel conto non ha `tipo`),
   e la formula conta il colpo senza elemento. Un eroe che vive di veleno non vale meno solo perché lo scheletro non si

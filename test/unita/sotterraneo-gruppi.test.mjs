@@ -24,8 +24,9 @@ Livello.prototype.piazzaIRelitti = function () {}
 Livello.prototype.scavaLeNicchie = function () {}
 
 const roba = (mano = null, mancina = null) => ({ v: 1, gemme: 0, zaino: [], mano, mancina, corpo: null, dito: null, torcia: 0, torce: 0 })
+// (con l'intelligenza messa: le abilità alte costano 8, 11 e 16, e senza il cavaliere e il nano (10 di energia) non le pagano: qui si prova cosa fanno)
 const conAlbero = (livello, albero, altro = {}) =>
-  ({ esp: sogliaDi(livello), albero, caselle: Object.keys(albero).filter(id => !NODI[id].sempre).slice(0, 3), ...altro })
+  ({ esp: sogliaDi(livello), albero, intelligenza: Math.min(5, livello - 1), caselle: Object.keys(albero).filter(id => !NODI[id].sempre).slice(0, 3), ...altro })
 
 /* Una scena: una stanza larga della tappa 5 (seme 11), senza i mostri del piano, l'eroe a sinistra e i mostri messi a mano,
    ognuno con la sua distanza (dx, dy) dall'eroe. Tutti sveglia e veloci come l'eroe (a parità tocca all'eroe: un turno per

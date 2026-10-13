@@ -249,6 +249,7 @@ const dettaglio = computed(() => {
       </p>
       <p v-if="dettaglio.sempre" class="sot-tenue" data-passiva>Una passiva lavora da sola: non costa energia e non va nelle caselle dello scontro. Basta averla imparata.</p>
       <p v-if="dettaglio.senzArma" class="sot-manca">Ci vuole {{ dettaglio.senzArma.nome }} in mano</p>
+      <p v-if="!dettaglio.sempre && dettaglio.costo > energiaMax" class="sot-manca" data-serve-energia>Ti serve più energia: ne hai al massimo {{ energiaMax }}. Metti punti in intelligenza</p>
       <div class="sot-nodo-tasti">
         <button type="button" class="sot-grosso" data-azione="impara" :data-impara="dettaglio.id" :disabled="!!dettaglio.perche"
                 @click="$emit('impara', dettaglio.id)">

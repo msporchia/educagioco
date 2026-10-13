@@ -664,10 +664,11 @@ export class Corsa extends Corredo {
       if (giusto) this.giuste++
     }
     const esito = this.rispostaA(f, giusto)
-    // l'energia viene dalle risposte giuste, dovunque (porte, forzieri, mostri): dopo, così un'abilità si paga con
-    // l'energia che c'era quando la si è preparata. Sbagliare non la toglie
-    if (giusto && ++this.energiaResto >= RISPOSTE_PER_ENERGIA) {
-      this.energiaResto = 0
+    // l'energia viene dalle risposte giuste date a un mostro, non da porte e forzieri (l'utente, 12 ottobre: fra uno scontro
+    // e l'altro non deve tornare piena da sola): dopo, così un'abilità si paga con l'energia che c'era quando la si è
+    // preparata. Sbagliare non la toglie
+    if (giusto && f.che === 'scontro' && ++this.energiaResto >= RISPOSTE_PER_ENERGIA) {
+      this.energiaResto -= RISPOSTE_PER_ENERGIA   // 2,5: il resto passa al punto dopo (due punti ogni cinque risposte)
       this.energia = Math.min(this.energiaMax, this.energia + 1)
     }
     return esito

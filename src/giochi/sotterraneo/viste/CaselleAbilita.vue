@@ -25,6 +25,10 @@ const props = defineProps({
 })
 const emit = defineEmits(['scegli', 'bevi', 'bevi-energia', 'scappa'])
 
+// l'energia che non basta si dice con parole di chi gioca: manca adesso, o non basterebbe nemmeno col globo pieno
+// (le abilità alte vogliono punti in intelligenza: docs/sotterraneo/abilita.md, «L'energia»)
+const DETTO_DELL_ENERGIA = { 'poca energia': 'ti manca energia', 'serve più energia': 'ti serve più energia (intelligenza)' }
+
 const pronto = ref(false)
 let cieca = 0
 onMounted(() => { cieca = setTimeout(() => { pronto.value = true }, CIECA) })
@@ -49,8 +53,8 @@ const vai = (che, ...a) => { if (pronto.value && !props.ferma) emit(che, ...a) }
       <button v-if="a" type="button" class="sot-scelta" :class="{ 'sot-spenta': !!a.perche }"
               data-azione="prepara" :data-abilita="a.id" :disabled="!!a.perche" @click="vai('scegli', a.id)">
         <Medaglione :glifo="a.glifo" :tinta="a.tinta" :stato="a.perche ? 'chiuso' : 'preso'" :misura="28" />
-        <span class="sot-scelta-testo"><b>{{ a.nome }}</b><small>{{ a.perche && a.perche !== 'poca energia' ? a.perche : a.dice }}</small></span>
-        <span class="sot-scelta-costo" :class="{ 'sot-poca': a.perche === 'poca energia' }"><Glifo nome="energia" :misura="11" /> {{ a.costo }}</span>
+        <span class="sot-scelta-testo"><b>{{ a.nome }}</b><small>{{ a.perche ? (DETTO_DELL_ENERGIA[a.perche] || a.perche) : a.dice }}</small></span>
+        <span class="sot-scelta-costo" :class="{ 'sot-poca': !!DETTO_DELL_ENERGIA[a.perche] }"><Glifo nome="energia" :misura="11" /> {{ a.costo }}</span>
       </button>
     </template>
     <div v-if="bevi || beviEnergia || scappa" class="sot-scelta-sep"></div>
