@@ -6,6 +6,7 @@
     "generatore": "ChatGPT, 2 ottobre 2026",
     "testo": "il prompt dei pezzi che mancano su magenta della scheda (porte di fronte e di fianco, scala chiusa, fontanella asciutta, mercante, pavimento speciale 3×3, sei cose per terra), con le braci, le candele e le monete vietate"
   },
+  "nitido": "scelti",
   "fondo": [
     255,
     0,
@@ -332,6 +333,21 @@
         13,
         14
       ]
+    },
+    "fornace-fontana-ferro": {
+      "da": [
+        280,
+        684
+      ],
+      "cella": [
+        144,
+        224
+      ],
+      "misura": [
+        12,
+        19
+      ],
+      "nitido": true
     }
   }
 }

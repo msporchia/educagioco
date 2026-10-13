@@ -145,8 +145,8 @@ il telefono in mano.
   montaggio vanno sentiti col dito — sono la differenza fra un tocco fantasma
   ingoiato e un tasto che sembra lento.
 - **I relitti e l'acqua da dipingere**: macerie, crolli, rocce, travi, stalagmiti, il
-  carro rovesciato, i binari e le pozze sono disegnati in codice (`scena/relitti.js`) e
-  per le cantine non c'è nessun pezzo dipinto; da guardare col dito anche **l'eroe
+  carro rovesciato, i binari e le pozze sono disegnati in codice (`scena/relitti.js`), tranne
+  le macerie e le rocce della cripta (`sotterraneo_4_3.png`); per le cantine e la fornace non c'è nessun pezzo dipinto; da guardare col dito anche **l'eroe
   che passa davanti a un relitto alto invece che dietro** quando gli sta a nord, e
   se le grotte (passaggi stretti, un solo varco per stanza) si leggono sul telefono
   ([piani-caverne.md](piani-caverne.md)).
