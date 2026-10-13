@@ -21,7 +21,7 @@ import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, leggiP
   from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 import { CELLA, POSTI, MINATORE, MASCHERA } from '../../src/giochi/sotterraneo/dati/terra-mappa.js'
-import { SCALA_TERRA as S } from '../../src/giochi/sotterraneo/dati/terra.js'
+import { SCALA_TERRA as S, SCALA_DELL_EROE } from '../../src/giochi/sotterraneo/dati/terra.js'
 
 const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser)
@@ -75,7 +75,9 @@ uguale('si parte fra le case del villaggio', casa, '52,36')
 const eroe = await page.locator('[data-eroe-terra] .sot-ritratto').boundingBox()
 controlla('e l\'eroe si vede, dentro lo schermo', eroe && eroe.y > vista.y && eroe.y + eroe.height < vista.y + vista.height,
           JSON.stringify(eroe))
-controlla('grande quanto una cella della mappa', Math.abs(eroe.width - 64 * S) < 2, `${eroe.width} px`)
+// i personaggi dipinti sono a scala 3, grandi quanto una cella della mappa (64 · 3/4 = 48 px); l'eroe armato è un po' più
+// piccolo (`SCALA_DELL_EROE`, 16 px · 2,5 = 40 px: docs/sotterraneo/terra-di-sopra.md, «La scala»)
+controlla('grande come la sua scala, un po\' meno di una cella della mappa', Math.abs(eroe.width - 16 * SCALA_DELL_EROE) < 2 && eroe.width < 64 * S, `${eroe.width} px`)
 uguale('la prima volta si dice cosa fare', await page.locator('.sot-terra-sotto').innerText().then(t => t.includes('Tocca dove')), true)
 await scatto(page, 'terra-avvio')
 
