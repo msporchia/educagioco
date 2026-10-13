@@ -30,7 +30,8 @@ import { MONDO } from '../../src/giochi/sotterraneo/motore/avventure.js'
 import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
 import { percorso } from '../../src/motore/passi.js'
 
-const roba = { v: 1, gemme: 60, zaino: [], mano: 'spada', mancina: null, corpo: 'corazza', dito: null,
+// a mani nude: con la forza della cripta (0,4) un mostro ha tre ossa e una spada lo abbatte in un colpo, e qui serve un mostro che sopravvive a uno
+const roba = { v: 1, gemme: 60, zaino: [], mano: null, mancina: null, corpo: 'corazza', dito: null,
                torcia: 0, torce: 0 }
 
 /* ── il piano: la prima discesa con un portale vicino, una porta e un mostro da ferire, senza mostri sulla strada ── */

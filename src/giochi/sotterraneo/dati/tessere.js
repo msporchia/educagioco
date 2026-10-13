@@ -6,6 +6,7 @@ import { EROI } from './eroi.js'
 import { MOSTRI } from './mostri.js'
 import { CAMPAGNA, TRATTI_DELL_ABISSO } from './campagna.js'
 import { ORPELLI, POSE } from './orpelli.js'
+import { guastiDeiRelitti } from './relitti.js'
 
 export const SCENARI = {
   cantine: {
@@ -158,6 +159,7 @@ export function guastiDelleTessere(nomi = null) {
     if (t.scenario && !SCENARI[t.scenario]) g.push(`${t.nome}: lo scenario "${t.scenario}" non esiste`)
   for (const [k, sc] of Object.entries(SCENARI))
     if (!(sc.perTerra || []).length) g.push(`lo scenario ${k} non ha niente per terra`)
+  g.push(...guastiDeiRelitti(nomi))   // i relitti hanno il loro scenario e i loro sprite (dati/relitti.js)
   for (const q of [1, 6, 12]) chiedi(pezzoDelleGemme(q, 0), `gemme da ${q}`)
   chiedi('forziere-oro-chiuso', 'forziere d\'oro')
   chiedi('forziere-scuro-chiuso', 'forziere scuro')
