@@ -58,17 +58,21 @@ Tutto sta in `Corsa.foglio` (`che: 'scontro'`) e nelle funzioni di `Corsa`; un m
   compagno la formazione cambia: l'eroe un po' sopra e il compagno sfalsato sotto, in diagonale ([scontro.md](scontro.md#cosa-resta-fuori-per-dopo)).
 - **Niente chiave sui mostri**, né nello scontro né sul campo (l'utente, 13 ottobre): chi ha la chiave della scala lo dice la mappina.
 - **I mostri sono in colonne verticali sul lato destro, non in file** (l'utente, 12 ottobre: «sono disposti come statuine su due file,
-  è poco realistico»; come i Final Fantasy e i side-view di RPG Maker): due colonne fino a quattro mostri, tre da cinque; la
+  è poco realistico»; come i Final Fantasy e i side-view di RPG Maker): due colonne fino a quattro mostri, tre da cinque (fino a sette: quattro, tre e due, `SLOT[7]`); la
   colonna più vicina all'eroe è davanti; dentro una colonna sono uno sopra l'altro e sfalsati a scaletta. I punti sono la tabella
   `SLOT` di `campo.js` (u: 0 vicino all'eroe, 1 in fondo; v: 0 lontano, 1 vicino), tarati perché il «ti colpisce N» di uno non cada
   sull'altro. Uno o due mostri stanno al centro del pavimento. **Il grosso sta davanti e al centro**, gli altri ai lati e dietro (i
   piccoli negli spazi). I posti sono quelli del motore e i consecutivi stanno nella stessa colonna o in colonne accanto, così i
   «vicini» delle forme `vicini` e `catena` lo sono anche nel disegno. `disponi` dice ancora quante «file» (1 o 2, l'altezza) e chi è il grosso.
   Chi cade resta al suo posto e svanisce: niente scatta di posto.
-- **Gli sprite hanno una sola scala per tutti** (2, il grosso 3; i mostri dipinti `TAGLIA` volte l'eroe). A 320 px la riga della
-  minaccia si accorcia a «colpisce N».
-- **Sopra ogni mostro il suo nome** (`[data-nome-mostro]`, senza articolo e piccolo: «Scheletro», «Scheletro mago spettrale»; il comune è tenue, un grado
-  ha il colore della sua rarità e la figura un alone dello stesso colore) e, se è una variante armata, **l'arma in pugno** (`viste/Creatura.vue`,
+- **Gli sprite hanno una sola scala per tutti** (`SCALA_FIGURE`; i mostri dipinti `TAGLIA` volte l'eroe, a quarti; **il grosso sta in una
+  scatola**: alto al più 1,9 eroi e largo al più 3, `ingrandimentoDelGrosso` in `dati/grossi.js`, perché un ragno largo e un negromante alto
+  non debordino né restino nani; l'utente, 13 ottobre: Zannaverde e la sua corona troppo grandi). La corona è un terzo della figura. **Lo stesso
+  vale sul campo** (`fattoreDelMostro`): le bestie piccole sono piccole come nello scontro, le grosse restano com'erano, un ingrandimento
+  non supera i 44 px di larghezza (le caselle sono di 16).
+- **Il nome sta solo sul bersaglio e su chi ha un grado** (`[data-nome-mostro]`, senza articolo e piccolo: «Scheletro», «Scheletro mago spettrale»;
+  l'utente, 13 ottobre: un nome sopra tutti affollava il palco; il bersaglio lo porta tenue, un grado ha il colore della sua rarità e la figura un
+  alone dello stesso colore; il grosso ha il suo nome nella barra in cima) e, se è una variante armata, **l'arma in pugno** (`viste/Creatura.vue`,
   [varianti.md](varianti.md)). Chi ha i passi è di profilo (la posa di lato ferma); gli altri respirano.
 - **Sotto ogni mostro la sua barra della vita, senza numeri** (il brivido di non sapere quanto resiste); **sopra «ti colpisce
   N»**, o «salta il turno» se è stordito. Gli stati addosso sono pastiglie piccole (glifo e turni che restano; il testo intero

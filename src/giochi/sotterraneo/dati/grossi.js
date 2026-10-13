@@ -67,9 +67,24 @@ export function grossoDi(tappa, piano) {
 // Come si vede un mostro grosso (docs/sotterraneo/grossi.md, «Come si vede»). Se l'atlante ha il suo sprite dipinto
 // (`grosso-<chiave>-fermo-0`, come `armaiolo-fermo-0` per i mercanti) si usa quello, a misura vera: 32×32 pixel di
 // gioco, due caselle per due. Se no la creatura che veste (`figura`, o la specie di `tipo`): il suo sprite del catalogo,
-// ingrandito a coprire due caselle di altezza (almeno ×1,3, o un gigante già alto resterebbe com'è) e con la corona sopra la testa.
+// ingrandito nella sua scatola (`ingrandimentoDelGrosso`: 1,9 altezze dell'eroe, 3 larghezze) e con la corona sopra la testa.
 // Torna { sprite, dipinto, alto, k, unaPosa, fermoDaiPassi } (`alto`: l'altezza dello sprite in pixel, `k` il suo ingrandimento) o null.
 export const LATO_DEL_GROSSO = 32
+// La scatola di un grosso ripiego, in altezze e larghezze dell'eroe (sprite di 28×16): né più alto di GROSSO_ALTO né più largo di
+// GROSSO_LARGO, a quarti di ingrandimento (docs/sotterraneo/grossi.md, «Come si vede»). Un ragno è largo e basso, un negromante alto
+// e stretto: con una misura sola uno debordava e l'altro restava un nano (l'utente, 13 ottobre: Zannaverde e la sua corona troppo grandi)
+export const EROE = { alto: 28, largo: 16 }
+export const GROSSO_ALTO = 1.9
+export const GROSSO_LARGO = 3
+export const ingrandimentoDelGrosso = (alto, largo) =>
+  Math.max(1, Math.floor(Math.min(GROSSO_ALTO * EROE.alto / alto, GROSSO_LARGO * EROE.largo / largo) * 4) / 4)
+// i pixel di schermo per pixel di sprite di un grosso quando l'eroe ha scala `s`: il dipinto (scatola di 32×32) riempie la scatola, il ripiego
+// ha il suo ingrandimento; a quarti, mai sotto mezzo
+export const scalaDelGrosso = (chiave, s) => {
+  const f = figuraDelGrosso(chiave)
+  if (!f) return s
+  return Math.max(0.5, Math.round(s * (f.dipinto ? GROSSO_ALTO * EROE.alto / LATO_DEL_GROSSO : f.k) * 4) / 4)
+}
 export function figuraDelGrosso(chiave) {
   const G = GROSSI[chiave]
   if (!G) return null
@@ -80,7 +95,7 @@ export function figuraDelGrosso(chiave) {
   const sprite = scheda ? scheda.sprite : nome   // una creatura del catalogo che non è una specie di strada (il drago di lava) è solo uno sprite
   const p = PEZZI[`${sprite}-fermo-0`]
   if (!p) return null
-  return { sprite, dipinto: false, alto: p[3], k: Math.max(1.3, LATO_DEL_GROSSO / p[3]), unaPosa: scheda ? !!scheda.unaPosa : !PEZZI[`${sprite}-corsa-0`],
+  return { sprite, dipinto: false, alto: p[3], k: ingrandimentoDelGrosso(p[3], p[2]), unaPosa: scheda ? !!scheda.unaPosa : !PEZZI[`${sprite}-corsa-0`],
            fermoDaiPassi: !!(scheda && scheda.fermoDaiPassi) }
 }
 

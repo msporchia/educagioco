@@ -30,7 +30,7 @@ import { MONDO } from '../../src/giochi/sotterraneo/motore/avventure.js'
 const TAPPA = 1
 const roba = { v: 1, gemme: 0, zaino: ['pozione-piccola', 'pozione'], mano: null, mancina: null, corpo: null, dito: null, torcia: 0, torce: 0 }
 // un cavaliere di livello 12 col Grido di guerra: abbastanza vita per un giro contro sei mostri
-const crescita = { esp: sogliaDi(12), albero: { grido: 1 }, caselle: ['grido', null, null] }
+const crescita = { v: 2, esp: sogliaDi(12), forza: 1, destrezza: 0, intelligenza: 4, tempra: 0, albero: { grido: 1 }, caselle: ['grido', null, null] }   // l'intelligenza dà l'energia per il Grido (11)
 
 const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser)
@@ -89,10 +89,13 @@ await scelta()
   controlla('i piedi a altezze diverse, niente file orizzontali', new Set(ms.map(m => Math.round(m.b / 12))).size >= 5, JSON.stringify(ms.map(m => Math.round(m.b))))
   uguale('sotto ognuno la sua barra, senza numeri', await page.locator('[data-mostro] [data-vita]').count(), 6)
   controlla('e nessun numero di vita sul palco', !/\d+ ?\/ ?\d+/.test(await page.locator('[data-duello]').innerText()))
-  // niente «ti colpisce N» (l'utente, 12 ottobre: basta la barra della vita); sopra ognuno il suo nome, senza articolo
+  // niente «ti colpisce N» (l'utente, 12 ottobre: basta la barra della vita); il nome, senza articolo, solo sul bersaglio e su chi ha
+  // un grado (l'utente, 13 ottobre: sei nomi affollano il palco)
   uguale('niente «ti colpisce N» sul palco', await page.locator('[data-minaccia]').count(), 0)
   const nomi = await page.locator('[data-mostro] [data-nome-mostro]').evaluateAll(es => es.map(e => e.textContent.trim()))
-  controlla('sopra ognuno il suo nome, senza articolo', nomi.length === 6 && nomi.every(t => t && !/^(Un|Uno|Una|Il|Lo|La) /.test(t)), nomi.join(' | '))
+  const conNome = await page.locator('[data-mostro][data-bersaglio], [data-mostro][data-grado]').count()
+  controlla('il nome solo sul bersaglio e su chi ha un grado, senza articolo', nomi.length === conNome && nomi.length >= 1 && nomi.length < 6 && nomi.every(t => t && !/^(Un|Uno|Una|Il|Lo|La) /.test(t)), nomi.join(' | '))
+  uguale('il bersaglio ha il suo nome', await page.locator('[data-mostro][data-bersaglio] [data-nome-mostro]').count(), 1)
   uguale('un bersaglio solo', (await bersagli()).length, 1)
   uguale('ed è il primo, chi ha aperto lo scontro', (await bersagli())[0], '0')
   const fila = await page.locator('[data-fila] [data-turno]').evaluateAll(es => es.map(e => e.dataset.chi))

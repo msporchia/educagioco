@@ -20,6 +20,7 @@ import { dipingiScalaSu } from './scala-su.js'
 import { GROSSI, figuraDelGrosso, spriteDelGrosso } from '../dati/grossi.js'
 import { fotogrammaDi } from '../dati/fotogrammi.js'
 import { MANI } from '../dati/varianti.js'
+import { fattoreDelMostro } from '../viste/campo.js'
 
 // l'aura di un pezzo per terra, del colore della sua rarità (docs/sotterraneo/rarita.md): il comune non ne ha
 const AURA = { magico: '111,141,255', raro: '255,210,63', leggendario: '255,154,46' }
@@ -433,7 +434,8 @@ export class Tela {
       // il grado dà un alone del colore della sua rarità sotto i piedi, come la roba per terra
       if (gradato) this.aura(px, py, t, alfa, AURA[r.grado], r.grado === 'leggendario')
       // il bersaglio di una missione è più grande dei suoi simili e ha un'aura sua (dati/mondo.js, BERSAGLIO)
-      const grande = r.missione ? BERSAGLIO.scala : 1
+      // e ogni mostro dipinto sta in proporzione con l'eroe (`TAGLIA`, viste/campo.js: com'è nello scontro), a quarti attorno ai piedi
+      const grande = (r.missione ? BERSAGLIO.scala : 1) * fattoreDelMostro(r.tipo, PEZZI[suo] ? PEZZI[suo][3] : 16, PEZZI[suo] ? PEZZI[suo][2] : 0)
       if (r.missione) this.auraDelBersaglio(px, py, t, alfa)
       if (grande !== 1) this.ingrandisci(px, py + 0.5, grande)
       if (r.missione) this.contornoDelBersaglio(suo, px - 0.5, py - 0.5, t, alfa, { specchia: r.guarda === 'sx' })
@@ -544,8 +546,8 @@ export class Tela {
       ctx.restore()
     } else this.emoji(r.em, px, py - 0.5, alfa, 1.4)
     // la corona al ripiego: quello dipinto ha già la sua (o no, e allora non è un re)
-    if (m && !F.dipinto) this.emoji('👑', px, suolo - alto - 0.2 + Math.sin(t * 3) * 0.05, alfa, 0.95)
-    const sopra = suolo - alto - (m && !F.dipinto ? 0.95 : 0.3)
+    if (m && !F.dipinto) this.emoji('👑', px, suolo - alto - 0.1 + Math.sin(t * 3) * 0.05, alfa, Math.max(0.5, Math.min(0.7, metà * 0.6)))   // un terzo della figura, mai un mostro di corona
+    const sopra = suolo - alto - (m && !F.dipinto ? 0.75 : 0.3)
     const lato = px + Math.max(0.55, metà * 0.85)
     if (!r.sveglio) this.emoji('💤', lato, suolo - alto + 0.5, alfa * 0.8, 0.32)
     if (luce === 2) this.etichette.push({ testo: r.nome, px, py: sopra - 0.45 })
