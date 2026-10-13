@@ -490,6 +490,8 @@ Ora, nella stessa mano e con le stesse regole (trasparente, niente scritte, il c
 
 ## In fila
 
+*Le scene `td_2/3/4.png` sono state eliminate il 13/10/2026 (stanno già in `terreno-neve/lava/palude.png`): dove la tabella le nomina come allegato di uno stile, si allega il `terreno-*.png` del vestito. `td_1.png` resta.*
+
 | # | cosa | immagini | allegati | si salva come | sblocca |
 |---|---|---|---|---|---|
 | 1 ✅ | foglio del terreno, bosco | 1 | `td_1`, schema del foglio | `castello/generati/terreno-bosco.png` | le carte vere |

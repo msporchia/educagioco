@@ -335,7 +335,7 @@ function stampa(r) {
     console.log(`\n${g}: ${lista.length} immagini, ${lista.filter(i => i.stato === 'letta').length} lette, ${nessuno.length} che nessuno legge (${kb(nessuno.reduce((a, i) => a + i.byte, 0))})`)
     for (const i of nessuno) console.log(`  ✗ ${i.percorso}  ${kb(i.byte)}${i.parcheggiata ? '  (già in non-usati/)' : ''}`)
     for (const i of altri) console.log(`  · ${i.percorso}  ${kb(i.byte)}  — ${STATI[i.stato]}`)
-    // lette solo da uno strumento (un nome nel codice, non un foglietto): il ripiego di una scena (td_2.png) sta qui
+    // lette solo da uno strumento (un nome nel codice, non un foglietto): un file letto solo da uno strumento (td_1.png in vesti.py) sta qui
     for (const i of lista.filter(i => i.stato === 'letta' && i.lettaDa && /^strumenti\/sprite\/[\w-]+\.(py|mjs)/.test(i.lettaDa) && !/^PROMPT-/.test(i.nome)))
       console.log(`  ? ${i.percorso}  — letta solo da ${i.lettaDa}: controllare che serva`)
   }

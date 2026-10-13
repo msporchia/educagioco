@@ -126,8 +126,8 @@ il test (`unita/sprite-inutilizzati`) guarda solo che giri e sia coerente.
 - **Immagini**: i file di `sorgenti/` che nessun foglietto, nessuno strumento (un nome o un glob nel codice,
   commenti esclusi: `terreno-*.png`) e nessun catalogo legge. Stati: `NESSUNO LA LEGGE` (anche tutto
   `non-usati/`), solo allegato ai prompt (sta in una scheda `PROMPT-*.md`), schema di `scenario.py`, set di
-  terzi (`armm1998/`, `0x72/`: i nomi non si toccano). Una riga `?` dice «letta solo da uno strumento»: il
-  ripiego di una scena (`td_2.png` in `vesti.py`) sta qui e va guardato.
+  terzi (`armm1998/`, `0x72/`: i nomi non si toccano). Una riga `?` dice «letta solo da uno strumento»: va
+  guardata (oggi `td_1.png`, il riferimento delle misure di `vesti.py`, e due falsi allarmi dei glob).
 - **Voci dell'atlante** (fattoria, sotterraneo) che nessun file di `src/` nomina: il nome (o un pezzo della
   sua posa) compare come parola, oppure combacia con un modello come `recinto_${specie}_${stato}` le cui
   parti sono parole che compaiono. È un'euristica: sbaglia per un nome composto in un modo che nessuno scrive
@@ -135,6 +135,13 @@ il test (`unita/sprite-inutilizzati`) guarda solo che giri e sia coerente.
 - **La roba del sotterraneo**: le figure di `roba.json` che nessun foglietto ritaglia e che non hanno un
   `pezzo` (le 17 «fuori» di [figure.md](../sotterraneo/figure.md)). **Le creature**: quelle del catalogo senza
   nessun gioco, e i fotogrammi che un gioco lascia fuori (`scelta`).
+- **Il 13 ottobre 2026** si sono eliminati i doppioni: tutto `castello/non-usati/`, le scene `td_2/3/4.png`
+  (già nei `terreno-*.png`; `vesti.py` non ha più il ripiego sulle scene, `td_1.png` resta come riferimento),
+  `fattoria/non-usati/` e `home/non-usate/` (cartelle ora vuote), e dagli atlanti 13 voci del sotterraneo
+  (chiavi blu/ferro/verde, `arco-vuoto`, `cancello-chiuso`, cuori, pozioni gialla e verde, `forziere-mezzo`,
+  `scena-cassa`, `scena-teschio`) e 24 tessere 16 px della fattoria (laghetti, stagni interni, recinti,
+  `ninfea`, `ossa_mucchio`, torrioni, casse del tesoro). Restano apposta nel rapporto le voci che «verranno
+  usate» (porte chiare, gemme, `pozione-nera/viola`, `cripta-forziere/lampadario`).
 - **`--pixel`** (`strumenti/sprite/non-ritagliato.py`): per ogni foglio con un foglietto toglie i rettangoli
   dal primo piano (alfa, fondo dichiarato, o il colore degli angoli; bianco e scacchiera dipinta riconosciuti)
   e raggruppa il resto in macchie: figure dipinte mai ritagliate. I fogli di scena (`sotterraneo_N`) ne
