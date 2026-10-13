@@ -58,7 +58,9 @@ castello. Il catalogo descritto, per sapere cosa c'è:
   nome.
 - **`nitido`**: i fotogrammi hanno anche la copia dal foglio com'è dipinto (WebP in `NITIDO`, come la roba: [sprite.md](sprite.md#i-pezzi-nitidi)).
   Serve a chi ha un sorgente piccolo e pallido: lo scheletro è 45×73 px nel foglio, ridotto alla griglia a 12×19 diventava una macchia grigia
-  (l'utente, 13 ottobre: «sfocati»). Oggi scheletro, scheletro cavaliere e mummia; costa una cinquantina di KB. Non con i passi (i video non hanno
+  (l'utente, 13 ottobre: «sfocati»). Oggi scheletro, scheletro cavaliere, mummia, **tutte quelle alte fino a 23 pixel nell'atlante** (zombie, diavoletto,
+  fantasma, fantasma azzurro, teschio azzurro, granchio, pipistrello, ratto, serpente, fungo, occhio, pianta, cinghiale, mietitore, le melme viola e rosa,
+  il mostro viola) e il ghoul (19 in più delle prime tre), circa 450 KB di WebP (le altre, da 24 pixel in su, restano come sono: tutte nitide sarebbero state quasi un megabyte). Non con i passi (i video non hanno
   il pezzo grande: camminando la creatura cambierebbe faccia; `creature.py controlla`).
 - **`tenuta`** (e `perche`): il giudizio sulle pose. Una scartata ha il perché
   scritto e nessun gioco: resta nel catalogo per sapere cosa chiedere di nuovo.
