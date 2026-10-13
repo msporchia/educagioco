@@ -11,7 +11,7 @@ export const ATTESA = 100
 export const TURNI_VISIBILI = 7   // quanti ne mostra la colonna a schermo
 const EPS = 1e-9
 
-// la velocità dell'eroe: una base e uno e mezzo a punto di destrezza (docs/sotterraneo/scontro.md, «L'iniziativa»): chi ha poca
+// la velocità dell'eroe: una base di sette e un punto di velocità a punto di destrezza (docs/sotterraneo/scontro.md, «L'iniziativa»): chi ha poca
 // destrezza ha meno turni dei mostri normali, e il doppio turno è dell'agile
 export const VELOCITA_BASE_EROE = 7
 export const VELOCITA_PER_DESTREZZA = 1
