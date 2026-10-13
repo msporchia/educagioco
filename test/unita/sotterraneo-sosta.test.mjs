@@ -236,7 +236,7 @@ function rispondiFinche(c, giusto = () => true, giri = 40) {
   uguale('con lo zaino pieno il pugno si svuota lo stesso', d.mano, null)
   controlla('e l\'ascia è per terra, non persa',
             d.livello.robe.some(r => r.che === 'cosa' && r.cosa === 'ascia' && !r.presa))
-  uguale('e si sa ancora com\'è fatta', COSE.ascia.att, 3)
+  controlla('e si sa ancora com\'è fatta', COSE.ascia.mani === 2 && COSE.ascia.att > COSE.spada.att)
 }
 
 /* ══════════ 8. come si è lasciata: il portale e l'uscita ══════════

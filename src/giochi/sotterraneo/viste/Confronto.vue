@@ -32,9 +32,11 @@ const sinistra = computed(() => righeDi(cambio.value.vecchi))
 const destra = computed(() => righeDi(cambio.value.nuovi))
 
 // il netto sull'eroe se lo indossa: «⚔️ +4 · 🛡️ −2»
+const numero = v => (typeof v === 'string' && /^[+-]?[0-9]+$/.test(v) ? Number(v) : null)
 const netto = computed(() => confrontoDi(props.prova).map(r => {
-  const d = typeof r.prima === 'string' && /^[0-9]+$/.test(r.prima) ? Number(r.dopo) - Number(r.prima) : null
-  return { ...r, testo: d == null ? `${r.prima} → ${r.dopo}` : `${d > 0 ? '+' : '−'}${Math.abs(d)}` }
+  const p = numero(r.prima), q = numero(r.dopo)
+  // dove non c'era niente («0») si scrive quello che arriva («+50%»): una differenza fra una percentuale e un numero è NaN
+  return { ...r, testo: p != null && q != null ? `${q - p > 0 ? '+' : '−'}${Math.abs(q - p)}` : r.prima === '0' ? r.dopo : `${r.prima} → ${r.dopo}` }
 }))
 
 // una mano o due, quando cambia: lo si dice con le cose vere

@@ -20,6 +20,9 @@ nel mago ne vale tre, non quattro o cinque: erano quelle che spazzavano via un m
 riga: se cambiano l'energia, la dote o il giro dei punti, i costi si rifanno da soli (`guastiDelleAbilita` controlla che crescano e
 che l'ultima stia nel globo).
 
+Il **bastone** (bacchette a due mani) fa tornare l'energia del 50% più in fretta (`ricarica`, [roba.md](roba.md#due-mani)): dieci
+risposte giuste a un mostro danno sei punti invece di quattro, e il costo di un'abilità non cambia.
+
 Il globo atteso e i costi, prima → dopo (`npm run sotterraneo -- --costi [--contro <commit>]`; colonne: riga 0 · 1 · 2 · 3 · 4, ai livelli 2 · 4 · 6 · 8 · 12):
 
 | classe | globo | costo | lanci col globo pieno |

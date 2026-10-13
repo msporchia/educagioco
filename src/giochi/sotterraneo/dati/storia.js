@@ -4,7 +4,7 @@
 // (chi porta la chiave, i forzieri) e, se si è perso qualcosa, l'armaiolo e il rigattiere del villaggio. I mostri
 // di ogni discesa sono tarati sulla riga con cui ci si entra (`forza`, `spinta` in dati/campagna.js), e le
 // misure lo controllano (misure/sotterraneo). Una missione fatta dà un piccolo vantaggio, mai un passo intero.
-import { COSE } from './cose.js'
+import { COSE, PESO_DELLA_DIFESA } from './cose.js'
 import { EROI, portaLa } from './eroi.js'
 import { CAMPAGNA } from './campagna.js'
 
@@ -33,13 +33,13 @@ export const PASSI = {
     P('arco-lungo', null, 'manto', 'amuleto-azzurro'),
     P('spadone', null, 'manto', 'amuleto-osso'),
   ],
-  // il mago picchia già: gli serve pelle. Il bastone a due mani nella grotta, poi lo scettro a una mano e lo scudo (dalla
-  // scala sommersa: col bastone e senza scudo, coi mostri di adesso, a 8/10 tornava su una volta su due)
+  // il mago picchia già: gli serve pelle. La bacchetta e lo scudo, poi lo scettro (il bastone a due mani, che vale la bacchetta più
+  // lo scudo, è la sua strada «pura», docs/sotterraneo/strade.md)
   mago: [
     P(),
     P('verga'),
     P('verga', 'scudo-legno', 'saio'),
-    P('bastone-magico', null, 'saio'),
+    P('verga', 'scudo-legno', 'saio', 'amuleto-azzurro'),
     P('scettro', 'scudo-legno', 'saio', 'amuleto-azzurro'),
     P('scettro', 'scudo-legno', 'manto', 'amuleto-azzurro'),
     P('scettro', 'scudo-borchiato', 'manto', 'amuleto-rosso'),
@@ -131,7 +131,7 @@ export function guastiDellaStoria() {
       // ogni discesa dà qualcosa, e la roba non torna indietro: braccio più difesa non cala mai
       if (!premiDella(e.chiave, k - 1).length) g.push(`${e.chiave}: la discesa ${k - 1} non dà niente di nuovo`)
       const a = forzaDi(e.chiave, fila[k - 1]), b = forzaDi(e.chiave, riga)
-      if (b.att + b.dif < a.att + a.dif) g.push(`${e.chiave}, riga ${k}: braccio e difesa calano`)
+      if (b.att + b.dif * PESO_DELLA_DIFESA < a.att + a.dif * PESO_DELLA_DIFESA) g.push(`${e.chiave}, riga ${k}: braccio e difesa calano`)
     })
   }
   if (POZIONI_ATTESE.length !== CAMPAGNA.length + 1) g.push('le pozioni attese non hanno una riga per discesa')

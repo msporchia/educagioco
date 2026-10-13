@@ -10,6 +10,7 @@
    tempo: 30 */
 import { CAMPAGNA, QUANTE_TAPPE } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { EROI } from '../../src/giochi/sotterraneo/dati/eroi.js'
+import { COSE } from '../../src/giochi/sotterraneo/dati/cose.js'
 import { POSTO_DI, iconaDi } from '../../src/giochi/sotterraneo/dati/terra.js'
 import { ICONE } from '../../src/giochi/sotterraneo/dati/terra-icone.js'
 import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
@@ -239,8 +240,8 @@ function azzera(nome, sot) {
   }
   // i numeri a mano, perché «uguali alla discesa» non dice che siano più dei numeri di base
   const cav = schedaConLaRoba('cavaliere', fatta('cavaliere', { mano: 'spadone', corpo: 'corazza', dito: 'amuleto-rosso' }))
-  stessaLista('cavaliere ben armato: 24 di vita, braccio 7, difesa 3',
-              [cav.vita, cav.att, cav.dif], [18 + 6, 3 + 4, 1 + 2])
+  stessaLista('cavaliere ben armato: 24 di vita, il braccio e lo spadone, difesa 3',
+              [cav.vita, cav.att, cav.dif], [18 + 6, 3 + COSE.spadone.att, 1 + 2])
   const mago = schedaConLaRoba('mago', fatta('mago', { mano: 'ascia', corpo: 'manto' }))
   uguale('il mago non impugna l\'ascia: resta addosso solo il manto', `${mago.mano}|${mago.corpo}`, 'null|manto')
   uguale('e il braccio è quello di base', mago.att, EROI.find(e => e.chiave === 'mago').att)

@@ -52,6 +52,8 @@ export const ABILITA = [
   { campo: 'pozioni', em: '🧪', nome: 'Pozioni', scrivi: v => `+${virgola(v)}%`, dice: v => `le pozioni curano il ${virgola(v)}% in più` },
   { campo: 'luce', em: '🔦', nome: 'Luce', scrivi: v => `+${virgola(v)}`, dice: () => 'vedi più lontano' },
   { campo: 'torcia', em: '⏳', nome: 'Torcia', scrivi: v => `+${virgola(v)}`, dice: v => `la torcia dura ${virgola(v)} stanze in più` },
+  // il potere del bastone (dati/cose.js): l'energia delle abilità torna più in fretta con ogni risposta giusta
+  { campo: 'ricarica', em: '🔷', nome: 'Ricarica', scrivi: v => `+${virgola(v)}%`, dice: v => `l'energia torna ${virgola(v)}% più in fretta` },
 ]
 
 // i numeri al posto delle frasi: «⚔️ +4 attacco», non «picchia di più»

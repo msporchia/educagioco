@@ -6,15 +6,23 @@ import { RARITA, RARITA_DA_LETTERA, ABILITA_DEI_PEZZI, UNICI, EPICI, ATT_OGNI_LI
          VITA_OGNI_LIVELLI, valoreDelLivello, TINTE_DELLE_ABILITA } from './pezzi.js'
 import { ASPETTI } from './aspetti.js'
 
-// i tre gradini, uguali per tutte le famiglie: `att` è a una mano
+// i tre gradini, uguali per tutte le famiglie: `att` è a una mano, `mano` quello che darebbe la mancina (uno scudo del gradino:
+// legno, ferro, teschio)
 const GRADINI = [
-  { att: 1, prezzo: 8 },
-  { att: 2, prezzo: 16 },
-  { att: 3, prezzo: 26 },
+  { att: 1, prezzo: 8, mano: 1 },
+  { att: 2, prezzo: 16, mano: 2 },
+  { att: 3, prezzo: 26, mano: 3 },
 ]
 
-// quanto rende la mano che un'arma a due mani ti mangia: Math.ceil(att / 2) del primo gradino
-const LA_MANO_CHE_RESTA = 1
+// Quanto vale una difesa, in attacco: contro i branchi una difesa toglie qualcosa a ogni colpo di ognuno. Misurato col banco
+// (docs/sotterraneo/strade.md): una strada con l'arma a due mani e una con l'arma a una mano e lo scudo, stessi punti e stesso albero,
+// pareggiano fra due e tre; si tiene due, il cambio con cui il gioco sceglieva già i pezzi (PESI in motore/corredo.js). Un'arma a
+// due mani vale quella a una mano più la mano che ti toglie (l'utente, 13 ottobre: l'arma a due mani non aveva vantaggi): la difesa
+// dello scudo del suo gradino e livello, contata come attacco. Lo usano anche la storia (dati/storia.js) e il banco
+export const PESO_DELLA_DIFESA = 2
+// il bastone (a due mani, bacchette) ha in più un potere suo, da mago puro: l'energia torna di più in fretta, in percento
+// (docs/sotterraneo/roba.md, «Due mani»)
+export const RICARICA_DEL_BASTONE = 50
 
 export const STANZE_TORCIA = 12
 
@@ -22,9 +30,13 @@ export const STANZE_TORCIA = 12
 // `genere: 'f'` sulle voci femminili: il nome di un pezzo magico si accorda («Spada fiammeggiante», «Arco affilato»)
 const arma = (famiglia, grado, nome, sprite, dice, mani = 1, genere = 'm') => ({
   em: '⚔️', nome, sprite, dove: 'mano', famiglia, grado, mani, genere,
-  att: GRADINI[grado - 1].att + (mani === 2 ? LA_MANO_CHE_RESTA : 0),
+  att: GRADINI[grado - 1].att + (mani === 2 ? PESO_DELLA_DIFESA * GRADINI[grado - 1].mano : 0),
   prezzo: GRADINI[grado - 1].prezzo, dice,
+  ...(famiglia === 'bacchette' && mani === 2 ? { ricarica: RICARICA_DEL_BASTONE } : {}),
 })
+
+// le armi col nome proprio a due mani stanno al gradino più alto, con un tratto in più
+const DUE_MANI_DEL_TERZO = GRADINI[2].att + PESO_DELLA_DIFESA * GRADINI[2].mano
 
 // le schede dei pezzi di base: la chiave di sempre, quella che i salvataggi e la storia conoscono. `COSE` qui sotto
 // le legge anche con livello e rarità (leggiPezzo)
@@ -32,10 +44,14 @@ const BASI = {
   'spada-corta': arma('spade', 1, 'Spada corta', 'spada-corta', 'I mostri cadono un po\' prima.', 1, 'f'),
   spada: arma('spade', 2, 'Spada', 'spada', 'Ogni risposta giusta fa più male.', 1, 'f'),
   spadone: arma('spade', 3, 'Spadone', 'spadone', 'Anche i grossi cadono in pochi colpi. Due mani.', 2),
+  // le armi a una mano dei gradini alti (le strade con lo scudo, docs/sotterraneo/strade.md): la lama larga di chi non lascia lo scudo
+  sciabola: arma('spade', 3, 'Sciabola', 'spada-13', 'Larga e veloce: la mano che resta tiene lo scudo.', 1, 'f'),
 
   accetta: arma('asce', 1, 'Accetta', 'accetta', 'Piccola, ma taglia.', 1, 'f'),
   ascia: arma('asce', 2, 'Ascia', 'ascia', 'Due mani, e si sente.', 2, 'f'),
   bipenne: arma('asce', 3, 'Ascia doppia', 'bipenne', 'Una lama per parte: non perdona. Due mani.', 2, 'f'),
+  scure: arma('asce', 2, 'Scure', 'ascia-05', 'Un\'ascia corta: si regge con una mano, e lo scudo resta.', 1, 'f'),
+  mannaia: arma('asce', 3, 'Mannaia', 'ascia-06', 'Pesante, ma una mano sola le basta.', 1, 'f'),
 
   'arco-corto': arma('archi', 1, 'Arco corto', 'arco-corto', 'Colpisce prima che ti arrivino addosso. Due mani.', 2),
   'arco-lungo': arma('archi', 2, 'Arco lungo', 'arco-lungo', 'Freccia lunga, colpo pesante. Due mani.', 2),
@@ -72,12 +88,12 @@ const BASI = {
   // le armi col nome proprio stanno un gradino sopra la scala, non dentro: portano un tratto, non più braccio
   'bipenne-solare': {
     em: '🔥', nome: 'Ascia doppia solare', sprite: 'arma-3', dove: 'mano', famiglia: 'asce', mani: 2, genere: 'f',
-    att: 4, luce: 2, prezzo: 36,
+    att: DUE_MANI_DEL_TERZO, luce: 2, prezzo: 36,
     dice: 'Le lame brillano di loro: al buio vedi molto più lontano. Due mani.',
   },
   'spada-del-ladro': {
     em: '💰', nome: 'Spada del ladro', sprite: 'arma-2', dove: 'mano', famiglia: 'spade', mani: 2, genere: 'f',
-    att: 4, gemme: 0.5, prezzo: 34,
+    att: DUE_MANI_DEL_TERZO, gemme: 0.5, prezzo: 34,
     dice: 'Ogni gemma che raccogli ne vale una e mezza. Due mani.',
   },
   'pugnale-vampiro': {
@@ -192,7 +208,9 @@ function componi(k) {
   // il pezzo col nome ha la sua figura, chiamata come lui; uno trovato ne prende una fra quelle della sua base
   c.sprite = unico || aspettoDi(k, base, rarita, abilita) || b.sprite
   // il livello sul numero principale, anche per un pezzo comune
-  if (b.dove === 'mano') c.att = (c.att || 0) + Math.floor((liv - 1) / ATT_OGNI_LIVELLI)
+  // (e un'arma a due mani anche quanto cresce lo scudo che non porta)
+  if (b.dove === 'mano') c.att = (c.att || 0) + Math.floor((liv - 1) / ATT_OGNI_LIVELLI) +
+    (b.mani === 2 ? PESO_DELLA_DIFESA * Math.floor((liv - 1) / DIF_OGNI_LIVELLI) : 0)
   else if (b.dove === 'mancina' || b.dove === 'corpo') c.dif = (c.dif || 0) + Math.floor((liv - 1) / DIF_OGNI_LIVELLI)
   else if (b.dove === 'dito' && b.vita) c.vita = b.vita + Math.floor((liv - 1) / VITA_OGNI_LIVELLI)
   const f = RARITA[rarita].forza
@@ -367,7 +385,7 @@ export function guastiDelleCose(nomi = null) {
     if (c.dove === 'dito' && !(c.luce || c.gemme || c.vita || c.dif))
       g.push(`${k}: al dito, ma non fa niente`)
   }
-  // le quattro famiglie devono valere lo stesso, a parità di mani: chi ne chiede due picchia LA_MANO_CHE_RESTA in più, non meno né di più
+  // le quattro famiglie devono valere lo stesso, a parità di mani: chi ne chiede due picchia quanto la mano che perde in più, non meno né di più
   for (const grado of [1, 2, 3]) {
     const armi = ARMI_DI(grado)
     if (armi.length < 2) { g.push(`gradino ${grado}: solo ${armi.length} arma`); continue }
@@ -378,9 +396,9 @@ export function guastiDelleCose(nomi = null) {
     }
     const aUna = armi.filter(k => (COSE[k].mani || 1) === 1)
     const aDue = armi.filter(k => COSE[k].mani === 2)
-    if (aUna.length && aDue.length && COSE[aDue[0]].att - COSE[aUna[0]].att !== LA_MANO_CHE_RESTA)
+    if (aUna.length && aDue.length && COSE[aDue[0]].att - COSE[aUna[0]].att !== PESO_DELLA_DIFESA * GRADINI[grado - 1].mano)
       g.push(`gradino ${grado}: a due mani ${COSE[aDue[0]].att} contro ${COSE[aUna[0]].att}, ` +
-             `e la mano che resta libera ne vale ${LA_MANO_CHE_RESTA}`)
+             `e la mano che resta libera ne vale ${PESO_DELLA_DIFESA * GRADINI[grado - 1].mano}`)
     const prezzi = new Set(armi.map(k => COSE[k].prezzo))
     if (prezzi.size > 1) g.push(`gradino ${grado}: stesse armi, prezzi diversi`)
   }
