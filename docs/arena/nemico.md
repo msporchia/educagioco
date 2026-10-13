@@ -14,18 +14,22 @@ poco intelligente, sfrutta al 100% le risorse?»). Adesso:
 1. **Una scaletta**, scelta a caso fra tre all'inizio (`assalto`, `economia`, `bastione`):
    una serie di mosse buone in ordine («costruisci un tank, poi un veloce, potenzia
    la base, il castello, la miniera…»). Parlano di *ruoli* (base, tank, veloce, splash,
-   volo), e per ogni tappa un ruolo diventa la prima truppa che c'è: così la stessa
+   volo), e per ogni tappa un ruolo diventa la prima truppa che c'è e il cui edificio è
+   ancora libero (un edificio ha una truppa sola): così la stessa
    scaletta vale per il bosco (due truppe) e per la lava (otto). Un passo che non c'è in
    quella tappa si salta. Se non ci sono le monete per il passo si **aspetta**: un ordine
    di costruzione non si rimescola per fare una mossa piccola.
+0. **Senza caserme, la cripta**: si parte senza, e la prima mossa è costruirla (la
+   rifà anche se gliele abbattono tutte).
 2. **L'emergenza viene prima di tutto**: la bomba su un ammasso che sta entrando nella
    sua metà (peso ≥ 600), la riparazione se il muro è crollato o un edificio è sotto il 50%.
 3. **Se si sente in svantaggio** (il suo castello sta peggio di quello dell'avversario di
-   oltre il 10%, o l'avversario ha molte più caserme) **lascia la scaletta** e rafforza:
+   oltre il 10%, l'avversario ha molte più caserme o gliene ha abbattute di più: il
+   castello cade per ultimo, quindi non basta guardare quello) **lascia la scaletta** e rafforza:
    il castello, le riparazioni, le caserme più indietro. È «quando vede che l'avversario
    sta vincendo».
 4. **Finita la scaletta spende comunque tutto**: una regola sola, per priorità
-   (una caserma nuova finché ne ha meno di quattro, il castello che non resti indietro,
+   (un edificio nuovo finché ne ha meno di quattro, il castello che non resti indietro,
    la miniera presto, le caserme più indietro). Se la prima scelta è quasi alla portata
    (60% del prezzo) risparmia, se no fa la prima che può permettersi: **mai monete ferme**.
 5. Fino a **quattro mosse di fila** per ogni giro di pensiero, se le monete ci sono.

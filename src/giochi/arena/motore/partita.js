@@ -4,15 +4,15 @@
 // Il caso arriva da fuori (`rnd`), così una partita si rifà identica.
 // Le regole e i numeri stanno in `dati/regole.js`; l'IA del nemico in `nemico.js`.
 import {
-  CAMPO, POSTI, TRUPPE, BASE, CASTELLO, LIV_MAX, MINIERA_MAX, CRESCITA, AZIONI, MURO, RIPARA,
-  RIPOSO, COSTRUZIONE, AVVIO, NEMICI, GIOCATORE, DURATA, BOMBA,
+  CAMPO, POSTI, TRUPPE, EDIFICIO_DI, CASTELLO, LIV_MAX, MINIERA_MAX, CRESCITA, AZIONI, MURO, RIPARA,
+  RIPOSO, COSTRUZIONE, NEMICI, GIOCATORE, DURATA, BOMBA,
 } from '../dati/regole.js'
 import { pensaNemico, creaIA } from './nemico.js'
 
 const PASSO = 0.05                       // secondi di una fetta di tempo: la partita avanza a passi fissi
 const SGUARDO = 80                       // fin dove una truppa vede un'altra truppa
-const SGUARDO_EDIFICI = 105              // e fin dove vede un edificio: più lontano non lo cerca, marcia
 const MAX_EVENTI = 400
+const DIFESA = 190                       // chi è nella sua metà accorre ai nemici entro questa distanza dal suo castello
 
 export const altro = lato => (lato === 'io' ? 'nem' : 'io')
 const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y)
@@ -42,8 +42,7 @@ export class Partita {
     this.forza = { io: 1, nem: (this.nemicoCfg.forza ?? 1) * (sfida.forzaNemico ?? 1) }
     this.castelli = ['io', 'nem'].map(lato => this.nuovoCastello(lato))
     this.muri = ['io', 'nem'].map(lato => this.nuovoMuro(lato))
-    this.caserme = []
-    for (const lato of ['io', 'nem']) this.caserme.push(this.nuovaCaserma(lato, BASE, 6, AVVIO))
+    this.caserme = []                // si parte senza: la prima mossa è costruire la cripta, scegliendo la truppa
   }
 
   /* ───────── il mondo ───────── */
@@ -51,7 +50,7 @@ export class Partita {
   casuale(a, b) { return a + Math.floor(this.rnd() * (b - a + 1)) }
 
   nuovoLato(lato, alSecondo, monete) {
-    return { monete, alSecondo, miniera: 1, mosse: 0, bombe: 0, bombaT: BOMBA.ogni }
+    return { monete, alSecondo, miniera: 1, mosse: 0, bombe: 0, bombaT: BOMBA.ogni, abbattuti: 0, livelli: {} }
   }
   y(lato, y) { return lato === 'io' ? y : CAMPO.H - y }
 
@@ -64,8 +63,10 @@ export class Partita {
   }
   nuovaCaserma(lato, id, posto, t) {
     const [x, y] = POSTI[posto]
-    const vita = CRESCITA.vitaCaserma(1)
-    return { lato, tipo: 'caserma', id, posto, liv: 1, t, ciclo: t, riposo: 0, x, y: this.y(lato, y), hp: vita, max: vita, r: 16, fl: 0 }
+    const ed = EDIFICIO_DI[id]
+    const liv = this.lati[lato].livelli[ed] || 1            // rifatta, riparte dal livello che l'edificio aveva
+    const vita = CRESCITA.vitaCaserma(liv)
+    return { lato, tipo: 'caserma', id, ed, posto, liv, t, ciclo: t, riposo: 0, x, y: this.y(lato, y), hp: vita, max: vita, r: 16, fl: 0 }
   }
 
   castello(lato) { return this.castelli.find(c => c.lato === lato) }
@@ -82,6 +83,18 @@ export class Partita {
     for (const c of this.caserme) if (c.lato === lato) lista.push(c)
     if (!u.vola) for (const m of this.muri) if (m.lato === lato) lista.push(m)
     return lista.filter(viva)
+  }
+
+  /* l'ordine dell'assedio: chi cammina sfonda la porta in fondo al ponte, poi tutti le caserme,
+     e il castello per ultimo: una lenta agonia, non un lampo */
+  obiettivo(u) {
+    const lato = altro(u.lato)
+    const porta = this.muro(lato)
+    if (!u.vola && porta && viva(porta) && !(lato === 'io' ? u.y > porta.y + 4 : u.y < porta.y - 4)) return porta
+    let meglio = null, mn = 1e9
+    for (const c of this.caserme) if (c.lato === lato && viva(c)) { const d = dist(u, c); if (d < mn) { mn = d; meglio = c } }
+    if (meglio) return meglio
+    return this.castello(lato)
   }
 
   /* ───────── gli eventi, per la scena ───────── */
@@ -123,6 +136,7 @@ export class Partita {
       if (e.fl > 0) e.fl -= dt
       if (!viva(e) && !e.crollato) {
         this.evento({ tipo: 'crollo', x: e.x, y: e.y, lato: e.lato, che: e.tipo, id: e.id })
+        this.lati[altro(e.lato)].abbattuti++
         if (e.tipo === 'muro') e.crollato = true            // il cumulo resta, e si ricostruisce riparando
       }
     }
@@ -138,7 +152,7 @@ export class Partita {
       if (c.t > 0) continue
       c.ciclo = CRESCITA.squadraOgni(c.liv)
       c.t += c.ciclo
-      this.schiera(c.lato, c.id, c.x, c.y + (c.lato === 'io' ? -16 : 16), CRESCITA.forza(c.liv), CRESCITA.omini(c.liv))
+      this.schiera(c.lato, c.id, c.x, c.y + (c.lato === 'io' ? -16 : 16), CRESCITA.forza(c.liv), CRESCITA.omini(c.liv, TRUPPE[c.id].n))
     }
   }
 
@@ -147,10 +161,10 @@ export class Partita {
     const f = forza * this.forza[lato]
     const n = k.n + extra
     for (let i = 0; i < n; i++) {
-      const dx = (i - (n - 1) / 2) * 14
+      const fila = Math.min(n, 4), dx = (i % 4 - (fila - 1) / 2) * 8
       this.unita.push({
-        id, lato, x: x + dx, y: y + (i % 2) * 5, hp: k.hp * f, max: k.hp * f, forza: f,
-        cool: 0.9, fl: 0, colpo: 0, cammina: false, nasce: 0.8, vola: k.vola, dirY: 0, r: 8,
+        id, lato, x: x + dx, y: y + Math.floor(i / 4) * 8 * (lato === 'io' ? 1 : -1), hp: k.hp * f, max: k.hp * f, forza: f,
+        cool: 0.9, fl: 0, colpo: 0, cammina: false, nasce: 0.8, vola: k.vola, dirY: 0, r: 8, raduno: !k.vola,
       })
     }
     this.evento({ tipo: 'squadra', lato, id, x, y })
@@ -197,7 +211,18 @@ export class Partita {
     if (u.cool > 0) u.cool -= dt
 
     let bers = null, mn = 1e9
-    if (k.bers !== 'torri') {
+    // la difesa: nella propria metà si accorre ai nemici che si avvicinano al castello, anche se lontani
+    const casa = this.castello(u.lato)
+    if (k.bers !== 'torri' && sponda(u.y) === sponda(casa.y)) {
+      for (const e of this.unita) {
+        if (e.lato === u.lato || !viva(e) || e.nasce > 0.4) continue
+        if (k.bers === 'terra' && e.vola) continue
+        if (dist(e, casa) > DIFESA || sponda(e.y) !== sponda(casa.y)) continue
+        const d = dist(u, e)
+        if (d < mn) { mn = d; bers = e }
+      }
+    }
+    if (!bers && k.bers !== 'torri') {
       for (const e of this.unita) {
         if (e.lato === u.lato || !viva(e) || e.nasce > 0.4) continue
         if (k.bers === 'terra' && e.vola) continue
@@ -205,23 +230,17 @@ export class Partita {
         if (d < mn && d <= SGUARDO) { mn = d; bers = e }
       }
     }
-    if (!bers) {
-      mn = 1e9
-      for (const t of this.edificiContro(u)) {
-        const d = dist(u, t)
-        if (d < mn && d <= SGUARDO_EDIFICI) { mn = d; bers = t }
-      }
-    }
-    // nient'altro in vista: si marcia lungo la corsia verso il castello nemico, e si colpisce quello
-    // che si incontra per strada (le caserme ai lati si rompono solo se ci si passa vicino)
-    if (!bers) bers = this.castello(altro(u.lato))
-    if (!viva(bers)) return
+    // nessuna truppa in vista: si va all'obiettivo, nell'ordine dell'assedio
+    if (!bers) bers = this.obiettivo(u)
+    if (!bers || !viva(bers)) return
 
     if (dist(u, bers) - (bers.r || 8) <= k.gitt) {
       if (u.cool <= 0) { this.colpisci(u, k, bers); u.cool = k.rate; u.colpo = 0.25 }
       return
     }
-    const m = this.verso(u, bers)
+    // appena usciti dalla caserma si va sulla strada, poi si marcia in fila (niente tagli in diagonale)
+    if (u.raduno && Math.abs(u.x - CAMPO.corsia) < 10) u.raduno = false
+    const m = u.raduno && bers.tipo ? { x: CAMPO.corsia, y: u.lato === 'io' ? Math.min(u.y - 4, CAMPO.base - 75) : Math.max(u.y + 4, CAMPO.H - CAMPO.base + 75) } : this.verso(u, bers)
     const dx = m.x - u.x, dy = m.y - u.y, n = Math.hypot(dx, dy) || 1
     const v = Math.min(k.vel * dt, n)
     u.x += (dx / n) * v
@@ -235,8 +254,8 @@ export class Partita {
       const a = u[i], b = u[j]
       if (a.vola !== b.vola) continue
       const dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy)
-      if (d > 0 && d < 12) {
-        const s = (12 - d) / 2 / d
+      if (d > 0 && d < 8) {
+        const s = (8 - d) / 2 / d
         a.x -= dx * s; a.y -= dy * s; b.x += dx * s; b.y += dy * s
       }
     }
@@ -266,14 +285,15 @@ export class Partita {
   /* ───────── la fine ───────── */
 
   vitaBase(lato) { const c = this.castello(lato); return c.hp / c.max }
+  punti(lato) { return this.lati[lato].abbattuti + 3 * (1 - this.vitaBase(altro(lato))) }
 
   controllaFine() {
     if (!viva(this.castello('nem'))) this.fine = 'vinto'
     else if (!viva(this.castello('io'))) this.fine = 'perso'
     else if (this.resto <= 0) {
-      // allo scadere vince chi ha il castello più sano
-      const a = this.vitaBase('io'), b = this.vitaBase('nem')
-      this.fine = Math.abs(a - b) < 0.05 ? 'pari' : a > b ? 'vinto' : 'perso'
+      // allo scadere vince chi ha fatto più danni: ogni costruzione abbattuta vale uno, il castello tre
+      const a = this.punti('io'), b = this.punti('nem')
+      this.fine = Math.abs(a - b) < 0.25 ? 'pari' : a > b ? 'vinto' : 'perso'
     }
   }
 
@@ -285,7 +305,7 @@ export class Partita {
   /* il prezzo di una scelta adesso, o null se non si può fare per ragioni sue */
   prezzo(lato, azione, id) {
     if (azione === 'costruisci') {
-      if (!this.truppeAmmesse.includes(id) || this.caserme.some(c => c.lato === lato && c.id === id)) return null
+      if (!this.truppeAmmesse.includes(id) || this.caserme.some(c => c.lato === lato && c.ed === EDIFICIO_DI[id])) return null
       return this.postiLiberi(lato).length ? TRUPPE[id].costo : null
     }
     if (azione === 'potenzia') {
@@ -347,11 +367,11 @@ export class Partita {
     const nDx = this.caserme.filter(c => c.lato === lato).length - nSx
     let lista = nSx < nDx ? sx : nDx < nSx ? dx : (this.rnd() < 0.5 ? sx : dx)
     if (!lista.length) lista = sx.length ? sx : dx
-    lista.sort((a, b) => POSTI[b][1] - POSTI[a][1])                  // il più lontano dal fiume per primo
+    lista.sort((a, b) => POSTI[b][1] - POSTI[a][1] || Math.abs(POSTI[a][0] - CAMPO.corsia) - Math.abs(POSTI[b][0] - CAMPO.corsia))   // il più lontano dal fiume, e attaccato al castello
     this.paga(lato, p)
     const c = this.nuovaCaserma(lato, id, lista[0], COSTRUZIONE)
     this.caserme.push(c)
-    this.evento({ tipo: 'costruita', lato, id, x: c.x, y: c.y })
+    this.evento({ tipo: 'costruita', lato, id, ed: c.ed, x: c.x, y: c.y })
     return true
   }
 
@@ -359,8 +379,10 @@ export class Partita {
     const c = this.caserme.find(x => x.lato === lato && x.id === id)
     this.paga(lato, p)
     c.liv++
+    this.lati[lato].livelli[c.ed] = c.liv
+    const prima = c.max
     c.max = CRESCITA.vitaCaserma(c.liv)
-    c.hp = Math.min(c.max, c.hp + 60)
+    c.hp = Math.min(c.max, c.hp + c.max - prima)          // la vita in più arriva subito, come al castello
     this.evento({ tipo: 'potenziata', lato, id, liv: c.liv, x: c.x, y: c.y })
     return true
   }

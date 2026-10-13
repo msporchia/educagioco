@@ -10,7 +10,7 @@ import { TRUPPE, LIV_MAX, MINIERA_MAX, BOMBA } from '../dati/regole.js'
 /* Una scaletta parla di ruoli, non di truppe: per ogni tappa il ruolo diventa la
    prima truppa che c'è (quelle di una tappa sono poche). */
 const RUOLI = {
-  base: ['scheletri'],
+  base: ['scheletri', 'guardiano'],
   tank: ['guardiano', 'golem'],
   veloce: ['lupi'],
   splash: ['negromante', 'diavoletto'],
@@ -31,7 +31,7 @@ const SCALETTE = {
 
 /* sale a ogni ritocco del modo di giocare del nemico: entra nella firma dell'equilibrio (`firma.js`),
    così un'IA cambiata senza ritarare è un test rosso */
-export const VERSIONE_IA = 2
+export const VERSIONE_IA = 3
 
 export function creaIA(rnd) {
   const nomi = Object.keys(SCALETTE)
@@ -39,21 +39,22 @@ export function creaIA(rnd) {
   return { nome, passo: 0 }
 }
 
-/* il ruolo di un passo → quale truppa, per costruire (una che non c'è ancora) o potenziare (una che c'è) */
+/* il ruolo di un passo → quale truppa, per costruire (in un edificio che non c'è ancora) o potenziare
+   (una che c'è) */
 function truppaDel(p, ruolo, costruire) {
   const mie = new Set(p.casermeDi('nem').map(c => c.id))
-  return RUOLI[ruolo].find(id => p.truppeAmmesse.includes(id) && (costruire ? !mie.has(id) : mie.has(id))) || null
+  return RUOLI[ruolo].find(id => p.truppeAmmesse.includes(id) && (costruire ? p.prezzo('nem', 'costruisci', id) !== null : mie.has(id))) || null
 }
 
 /* una mossa si può fare adesso? */
 const si = (p, azione, id) => p.puoFare('nem', azione, id)
 
-/* il nemico si sente in svantaggio quando il suo castello sta peggio di quello dell'avversario o
-   l'avversario ha molte più caserme */
+/* il nemico si sente in svantaggio quando il suo castello sta peggio di quello dell'avversario,
+   l'avversario ha molte più caserme o gliene ha abbattute di più (il castello cade per ultimo) */
 function sottoPressione(p) {
   const a = p.vitaBase('nem'), b = p.vitaBase('io')
   const livelli = lato => p.casermeDi(lato).reduce((s, c) => s + c.liv, 0)
-  return a < b - 0.1 || livelli('io') > livelli('nem') * 1.3 + 1
+  return a < b - 0.1 || livelli('io') > livelli('nem') * 1.3 + 1 || p.lati.io.abbattuti > p.lati.nem.abbattuti + 1
 }
 
 /* una mossa dall'emergenza: la bomba su un ammasso che arriva, o una riparazione */
@@ -103,6 +104,11 @@ function candidate(p, difesa) {
 function mossa(p) {
   if (emergenza(p)) return true
   const l = p.lati.nem
+  // senza caserme la prima cosa è la cripta (all'inizio, o se gliele hanno abbattute tutte)
+  if (!p.casermeDi('nem').length) {
+    const id = truppaDel(p, 'base', true)
+    if (id && si(p, 'costruisci', id)) return p.fai('nem', 'costruisci', id)
+  }
   const difesa = sottoPressione(p)
 
   if (!difesa && p.ia.passo < SCALETTE[p.ia.nome].length) {
