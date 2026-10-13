@@ -113,6 +113,13 @@ const tappeAl = n => CAMPAGNA.map((t, i) => ({ chiave: t.chiave, aperta: i <= n,
   const nudo = dettoDelLivello('cavaliere', scheda('cavaliere', null, 1), CAMPAGNA[1], 1)
   uguale('a mani nude giù per la scalinata, manca l\'arma', nudo && nudo.manca, 'arma')
   controlla('e lo dice con le cose vere, e da chi andare', /mani nude/.test(nudo.detto) && /fabbro/.test(nudo.detto), nudo.detto)
+  // la verga è dell'incantatrice, non del fabbro: il mago a mani nude lo manda da lei, e senza vesti pure
+  const magoNudo = dettoDelLivello('mago', scheda('mago', null, 1), CAMPAGNA[1], 1)
+  controlla('il mago a mani nude: da chi vende la bacchetta', magoNudo && magoNudo.manca === 'arma' && /incantatrice/.test(magoNudo.detto) && !/fabbro/.test(magoNudo.detto),
+            magoNudo && magoNudo.detto)
+  const magoSenzaVesti = dettoDelLivello('mago', scheda('mago', { ...robaAttesa('mago', 3), corpo: null }, 3), CAMPAGNA[3], 3)
+  controlla('il mago senza niente addosso: le vesti sono di stoffa, dall\'incantatrice', magoSenzaVesti && magoSenzaVesti.manca === 'difesa' &&
+            /niente addosso/.test(magoSenzaVesti.detto) && /incantatrice/.test(magoSenzaVesti.detto), magoSenzaVesti && magoSenzaVesti.detto)
   const corta = dettoDelLivello('cavaliere', scheda('cavaliere', { ...robaAttesa('cavaliere', 4), mano: 'spada-corta' }, 4), CAMPAGNA[4], 4)
   controlla('con la spada corta nella scala sommersa: «con quella spada corta»', corta && corta.detto.startsWith('Con quella spada corta'),
             corta && corta.detto)

@@ -9,7 +9,7 @@
    si accetta («ci penso io» porta a prendere la missione, e lei ringrazia),
    un tocco sul prato chiude e fa camminare; il mugnaio riceve Rosicchione e
    dice il premio, monete comprese; il minatore la prima volta si presenta e
-   poi dice la strada; la guaritrice porta alla bottega, il mercante alla
+   poi dice la strada; la guaritrice e l'incantatrice portano alla bottega, il mercante alla
    linguetta delle tasche.
 
    I tocchi sono tocchi (`Input.dispatchTouchEvent` via CDP).
@@ -166,6 +166,16 @@ await nelDialogo(page, '[data-scelta="bottega"]', { tocca: toccaIl })
 await page.waitForSelector('[data-bottega][data-mercante-aperto="erborista"]', { timeout: 3000 })
 uguale('«mi servono pozioni» apre la bottega della guaritrice', await page.locator('[data-dialogo]').count(), 0)
 await attendi(page, 400)
+await toccaIl('[data-bottega] [data-chiudi]')
+await attendi(page, 300)
+await camminaVerso(page, MERCANTI.incantatrice.accanto, { tocca })
+await toccaIl('[data-mercante="incantatrice"]')
+await page.waitForSelector('[data-dialogo="incantatrice"]', { timeout: 15000 })
+await nelDialogo(page, '[data-scelta="bottega"]', { tocca: toccaIl })
+await page.waitForSelector('[data-bottega][data-mercante-aperto="incantatrice"]', { timeout: 3000 })
+uguale('«fammi vedere la magia» apre la bottega dell\'incantatrice', await page.locator('[data-dialogo]').count(), 0)
+await attendi(page, 400)
+await scatto(page, 'dialogo-incantatrice-bottega')
 await toccaIl('[data-bottega] [data-chiudi]')
 await attendi(page, 300)
 await camminaVerso(page, MERCANTI.rigattiere.accanto, { tocca })

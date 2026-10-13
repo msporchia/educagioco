@@ -6,7 +6,8 @@
    mercanti di sopra»). E la bottega non mostra mai roba che l'eroe non
    porta: il mago non vede la spada corta, l'ascia né la corazza.
    Il mago, tre discese finite, la verga in mano: lo scettro
-   è nella riga dopo, quindi una riga avanti e costa il doppio.
+   è nella riga dopo, quindi una riga avanti e costa il doppio, e lo vende
+   l'incantatrice (le bacchette non sono del fabbro).
    `node test/esegui.mjs sotterraneo-bottega-avanti`
    tempo: 60
    ═══════════════════════════════════════════════════════════════════ */
@@ -29,7 +30,7 @@ await semina(page, {
   coins: 300, settings: { sperimentali: true },
   campagne: { sotterraneo: { tappa: 3, libera: false, stelle,
     cfg: { mondo: MONDO, eroe: 'mago', avventure: { mago: { tappa: 3, libera: false, stelle, missioni: {},
-      roba, terra: { nebbia: 'f'.repeat(768), dove: MERCANTI.armaiolo.accanto, parlato: true } } } } } },
+      roba, terra: { nebbia: 'f'.repeat(768), dove: MERCANTI.incantatrice.accanto, parlato: true } } } } } },
 })
 await scegli(page, 'sotterraneo')
 await page.waitForSelector('[data-terra]', { timeout: 5000 })
@@ -48,7 +49,7 @@ async function toccaIl(sel) {
 }
 const gemmeBottega = async () => Number((await page.locator('[data-gemme-bottega]').innerText()).match(/\d+/)[0])
 
-await toccaIl('[data-mercante="armaiolo"]')
+await toccaIl('[data-mercante="incantatrice"]')
 await nelDialogo(page, '[data-scelta="bottega"]', { tocca: toccaIl })   // si parla, e «fammi vedere» apre il banco
 await page.waitForSelector('[data-bottega]', { timeout: 5000 })
 await attendi(page, 500)   // la bottega è cieca per un attimo (Bottega.vue, CIECO)
@@ -59,12 +60,14 @@ for (const s of await page.locator('[data-bottega] [data-scheda]').evaluateAll(e
   await toccaIl(`[data-bottega] [data-scheda="${s}"]`)
   await attendi(page, 150)
   const qui = await page.locator('[data-casella-pezzo]').evaluateAll(els => els.map(e => e.dataset.casellaPezzo))
-  controlla(`la linguetta «${s}» non resta mai con meno di tre pezzi`, qui.length >= 3, qui.join())
+  if (s !== 'energia') controlla(`la linguetta «${s}» non resta mai con meno di tre pezzi`, qui.length >= 3, qui.join())
   mostrati.push(...qui)
 }
 uguale('e niente «Hai già il meglio che ho»', await page.locator('[data-banco-vuoto]').count(), 0)
 const altrui = mostrati.filter(k => COSE[k].famiglia && !mago.porta.includes(COSE[k].famiglia))
 uguale('il mago non vede armi o armature che non porta', altrui.join(), '')
+uguale('ha le sue tre linguette', (await page.locator('[data-bottega] [data-scheda]').evaluateAll(els => els.map(e => e.dataset.scheda))).join(), 'bacchette,vesti,energia')
+controlla('e niente di ferro: né spade né asce né archi', mostrati.every(k => !['spade', 'asce', 'archi', 'ferro'].includes(COSE[k].famiglia)), mostrati.join())
 uguale('né la ✋ di quello che non fa per lui', await page.locator('[data-non-puoi]').count(), 0)
 
 /* ---------- lo scettro è una riga avanti: si vede col prezzo doppio, e si compra ---------- */
