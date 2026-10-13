@@ -66,6 +66,7 @@ una strada per salire e tornare giù, la ✕ è andare via.
   terra, mostri feriti **dove erano** e non a casa. Uscendo con la ✕ si riprende
   giù; salendo dal portale la terra di sopra offre in cima «piano 2 di 3 ·
   ❤️ 14 · 💎 37 — torno giù da dove ero».
+- **Anche l'orologio**: `passi`, il mana del cammino e gli incanti preparati addosso ([orologio.md](orologio.md)); senza quei campi una sosta di prima si rilegge da zero.
 - **Si salvano il seme e i cambiamenti, non il piano**: il piano si rifà dal
   seme, e la sosta tiene per ogni cosa nata dal seme solo i campi cambiati
   (`cambiDelPiano`, per indice) più le cose nuove (il bottino, la roba

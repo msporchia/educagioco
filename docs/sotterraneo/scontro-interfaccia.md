@@ -109,7 +109,7 @@ Il motore risolve tutto dentro `rispondi`; la vista ne racconta le `azioni` una 
   tiene l'ultima vista), poi il foglio che segue.
 - **L'apertura**: l'agguato («Alle spalle!»), la sorpresa («Li hai sorpresi!», «Lo hai sorpreso!» con uno solo) e i mostri più
   veloci che colpiscono prima del primo turno si raccontano come un turno, con la riga che resta fino alla fine.
-- **Sotto il palco** restano le pastiglie di quello che protegge l'eroe (scudo, parato…, col testo) e la scelta. Spariscono la
+- **Sotto il palco** restano le pastiglie di quello che protegge l'eroe (scudo, parato…, col testo; quelle degli incanti preparati dal campo portano i passi che restano: [orologio.md](orologio.md#come-si-vede-e-come-si-lancia), e sul primo turno dell'eroe nella fila quello che finisce prima) e la scelta. Spariscono la
   riga «fai N di danno…» dello scambio e il suo graffio: lo dicono i numeri sui mostri.
 
 ## La scelta in basso

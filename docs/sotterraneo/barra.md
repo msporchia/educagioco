@@ -45,7 +45,8 @@ restano in codice anche dopo: si muovono.
   di livello la riga si accende d'oro.
 - **L'energia** ([abilita.md](abilita.md)) è il globo blu di destra, col
   numero al centro. È un tasto: apre l'albero delle abilità, e porta il «+»
-  d'oro quando ci sono punti da imparare. Sopra è piena, come la vita.
+  d'oro quando ci sono punti da imparare. Sopra è piena, come la vita. Giù, se l'eroe sa qualche
+  incantesimo da preparare, apre la loro scelta ([orologio.md](orologio.md)), e sopra il globo stanno le pastiglie di quelli che ha addosso.
 - **Le caselle**, da sinistra: 🧪 le pozioni col numero (un tocco beve), la
   bisaccia (lo zaino) con le tasche piene, 📖 il diario delle missioni col numero delle
   aperte (in oro se una è da consegnare), 🗺️ la mappa grande, 💎 le gemme (un
@@ -138,7 +139,7 @@ dell'energia `[data-azione="abilita"]` con `data-punti-abilita`; `[data-casella-
 `data-n`; `[data-azione="bevi"]`, `[data-azione="zaino"]`,
 `[data-azione="diario-giu"]` (giù) e `[data-azione="diario"]` con
 `[data-diario-n]` (sopra), `[data-azione="mappina"]` (con `aria-pressed`),
-`[data-gemme-barra]`; le schede `[data-scheda="zaino|eroe|abilita"]`. `integrazione/sotterraneo-barra` (col dito: la stessa
+`[data-gemme-barra]`; sopra il globo blu `[data-incanti]` ([orologio.md](orologio.md)); le schede `[data-scheda="zaino|eroe|abilita"]`. `integrazione/sotterraneo-barra` (col dito: la stessa
 barra sopra e sotto, i globi, il mostro che colpisce, la pozione dalla
 casella, una pozione buttata e raccolta che fa risalire la casella, il tocco
 altrove, le misure a 390 e a 320 px con le caselle tutte uguali),
