@@ -47,3 +47,21 @@ export function guastiDelleFigure() {
   }
   return g
 }
+
+/* L'arco degli arcieri: nel foglio lo scheletro è a mani vuote. Si disegna in mano, davanti al
+   corpo (le figure guardano a destra; `specchia` le gira); `tira` (0-1) è la corda tirata del
+   colpo. (x, piede) è il piede della figura, `lw`×`lh` la sua misura a schermo. */
+export function arco(c, x, piede, lw, lh, specchia = false, tira = 0) {
+  const v = specchia ? -1 : 1
+  const cx = x + v * lw * 0.1, cy = piede - lh * 0.5, r = lh * 0.3, a = 1.15
+  c.save()
+  c.lineCap = 'round'
+  c.strokeStyle = '#3b2412'; c.lineWidth = Math.max(1.6, lh * 0.085)
+  c.beginPath(); c.arc(cx, cy, r, v > 0 ? -a : Math.PI - a, v > 0 ? a : Math.PI + a); c.stroke()
+  c.strokeStyle = '#a8703a'; c.lineWidth = Math.max(1, lh * 0.045)
+  c.beginPath(); c.arc(cx, cy, r, v > 0 ? -a : Math.PI - a, v > 0 ? a : Math.PI + a); c.stroke()
+  const ex = cx + v * r * Math.cos(a), dy = r * Math.sin(a)
+  c.strokeStyle = 'rgba(240,235,220,.9)'; c.lineWidth = Math.max(0.7, lh * 0.02)
+  c.beginPath(); c.moveTo(ex, cy - dy); c.lineTo(ex - v * r * 0.5 * tira, cy); c.lineTo(ex, cy + dy); c.stroke()
+  c.restore()
+}

@@ -10,24 +10,26 @@ import { carica, componi, immagineScena } from '../../castello/scena/vestito.js'
 import { PEZZI as SCENE } from '../../castello/dati/vestiti.js'
 import { PEZZI } from '../../castello/dati/figure.js'
 import { caricaFigure, immagineFigure } from '../../castello/scena/pittori.js'
-import { CREATURA, SCALA, fotogramma } from './figure.js'
+import { SCALA, fotogramma, arco } from './figure.js'
+import { disegnaEdificio } from './edifici.js'
 
-// la carta del terreno, a celle da 64, in verticale: l'acqua attraversa le due righe
-// di mezzo da un bordo all'altro, e la strada (due colonne) la passa
-const MAPPA = [
-  '^^,++.^^',
-  ',.d++..,',
-  '.,.++d..',
-  '..d++...',
-  ',..++.d.',
-  '~~~++~~~',
-  '~~~++~~~',
-  ',.d++...',
-  '..,++.d.',
-  '.d.++,..',
-  ',..++..,',
-  '^^.++.^^',
-]
+// La carta del terreno, a celle da 64 (16 × 24): celle piccole, così il campo è largo e le
+// figure piccole. La strada sono due colonne, il fiume due righe (y 247–292, dov'è l'acqua del
+// motore). Le due metà di chi gioca sono solo prato, con gli alberi sul bordo: ci stanno le
+// cittadelle.
+const ZOOM = 0.5
+const ZT = ZOOM * 1.2                    // le truppe: un po' più grandi del terreno
+const ZE = 0.75                          // castello ed edifici: stretti in una cittadella, possono essere grandi
+const MAPPA = Array.from({ length: 24 }, (_, y) => Array.from({ length: 16 }, (_, x) => {
+  if (x === 7 || x === 8) return '+'
+  if (y === 11 || y === 12) return '~'
+  if (y <= 9 || y >= 14) return x === 0 || x === 15 ? '^' : '_'
+  const h = ((x * 73856093) ^ (y * 19349663)) >>> 0
+  const bordo = Math.min(x, 15 - x)
+  if (bordo === 0 && h % 4 === 0) return '^'
+  if (bordo > 1 && h % 11 === 0) return 'd'
+  return h % 3 ? '.' : ','
+}).join(''))
 const IO = '#3d8bff', NEM = '#ff5a4d'
 
 export class Campo {
@@ -38,6 +40,7 @@ export class Campo {
     this.pronto = false
     this.effetti = []
     this.s = 1; this.ox = 0; this.oy = 0
+    this.nate = new WeakMap()          // quando è comparsa ogni caserma, per farla spuntare
   }
 
   async prepara() {
@@ -61,7 +64,11 @@ export class Campo {
   X(x) { return this.ox + x * this.s }
   Y(y) { return this.oy + y * this.s }
   /* una misura sul campo, in pixel dello schermo, a scala 0.85 (campo largo 306) */
-  m(v) { return v * this.s / 0.85 }
+  m(v) { return v * this.s / 0.85 * ZT }
+  /* una misura di un edificio */
+  me(v) { return v * this.s / 0.85 * ZE }
+  /* le scritte e le barre dei castelli rimpiccioliscono meno delle figure: si devono leggere */
+  mi(v) { return v * this.s / 0.85 * Math.max(ZOOM, 0.75) }
 
   /* gli eventi del motore diventano effetti a tempo */
   eventi(lista, ora) {
@@ -79,9 +86,12 @@ export class Campo {
     c.imageSmoothingEnabled = true
     this.sfondo(c, W, H)
     if (!this.pronto) return
-    for (const lato of ['io', 'nem']) this.base(c, p, lato)
-    for (const cs of p.caserme) this.caserma(c, p, cs, ora)
-    for (const mu of p.muri) this.muro(c, mu)
+    this.ponte(c)
+    this.piazzale(c)
+    // castelli, caserme e porte dall'alto in basso, così chi sta davanti copre chi sta dietro
+    const edifici = [...p.castelli.map(e => [e.y, () => this.base(c, p, e.lato)]),
+      ...p.caserme.map(e => [e.y + 10, () => this.caserma(c, p, e, ora)]), ...p.muri.map(e => [e.y, () => this.muro(c, e)])]
+    for (const [, disegna] of edifici.sort((a, b) => a[0] - b[0])) disegna()
     const ord = [...p.unita].sort((a, b) => this.Y(a.y) - this.Y(b.y))
     for (const u of ord) if (!u.vola) this.truppa(c, u, ora)
     for (const u of ord) if (u.vola) this.truppa(c, u, ora)
@@ -95,16 +105,27 @@ export class Campo {
   }
 
   /* un pezzo del foglio delle figure, col piede in (x, y) */
-  pezzo(c, nome, x, y, scala, specchia = false, alpha = 1) {
+  pezzo(c, nome, x, y, scala, specchia = false, alpha = 1, foglio = immagineFigure()) {
     const [sx, sy, w, h] = PEZZI[nome]
     const lw = w * scala, lh = h * scala
     c.globalAlpha = alpha
     if (specchia) {
       c.save(); c.translate(x, y - lh); c.scale(-1, 1)
-      c.drawImage(immagineFigure(), sx, sy, w, h, -lw / 2, 0, lw, lh); c.restore()
-    } else c.drawImage(immagineFigure(), sx, sy, w, h, x - lw / 2, y - lh, lw, lh)
+      c.drawImage(foglio, sx, sy, w, h, -lw / 2, 0, lw, lh); c.restore()
+    } else c.drawImage(foglio, sx, sy, w, h, x - lw / 2, y - lh, lw, lh)
     c.globalAlpha = 1
     return lh
+  }
+
+  /* il foglio delle figure tutto del colore di una squadra, per il contorno (si fa una volta) */
+  tinta(lato) {
+    this._tinte ||= {}
+    if (this._tinte[lato]) return this._tinte[lato]
+    const img = immagineFigure(), cv = document.createElement('canvas')
+    cv.width = img.width; cv.height = img.height
+    const x = cv.getContext('2d'); x.drawImage(img, 0, 0)
+    x.globalCompositeOperation = 'source-in'; x.fillStyle = lato === 'io' ? '#4f9dff' : '#ff4a3d'; x.fillRect(0, 0, cv.width, cv.height)
+    return (this._tinte[lato] = cv)
   }
 
   barra(c, x, y, w, q, colore) {
@@ -124,25 +145,42 @@ export class Campo {
     const re = p.castello(lato)
     const sc = SCENE[this.vestito], img = immagineScena(this.vestito)
     const x = this.X(re.x), y = this.Y(re.y)
-    const [nome, k] = lato === 'io' ? ['castello', 0.4] : ['bocca', 0.62]
+    const [nome, k] = ['castello', 0.4]
     const [sx, sy, w, h] = sc[nome]
-    const lw = w * k * this.s / 0.85, lh = h * k * this.s / 0.85
+    const lw = w * k * this.s / 0.85 * ZE, lh = h * k * this.s / 0.85 * ZE
     this.ombra(c, x, y + lh * 0.38, lw * 0.4, lh * 0.1)
-    if (re.hp > 0) c.drawImage(img, sx, sy, w, h, x - lw / 2, y + lh * 0.3 - lh, lw, lh)
-    else this.ombra(c, x, y, lw * 0.3, lh * 0.1, 0.5)
-    this.livello(c, x, y + lh * 0.3 + this.m(8), re.liv, lato)
+    if (re.hp > 0) {
+      if (lato === 'nem') c.drawImage(this.castelloNemico(img, sx, sy, w, h), x - lw / 2, y + lh * 0.3 - lh, lw, lh)
+      else c.drawImage(img, sx, sy, w, h, x - lw / 2, y + lh * 0.3 - lh, lw, lh)
+    } else this.ombra(c, x, y, lw * 0.3, lh * 0.1, 0.5)
+    this.livello(c, x, y + lh * 0.3 + this.mi(2), re.liv, lato)
     // la vita del castello: una barra grande SOPRA il castello, sempre accesa (con la vita scritta)
-    const alto = Math.max(this.m(4), y + lh * 0.3 - lh - this.m(16))
+    const alto = Math.max(this.mi(4), y + lh * 0.3 - lh - this.mi(16))
     this.barraCastello(c, x, alto, re, lato)
   }
 
+  /* il castello del nemico è lo stesso, coi colori scambiati: tetti rossi, stendardi blu */
+  castelloNemico(img, sx, sy, w, h) {
+    if (this._nem) return this._nem
+    const cv = document.createElement('canvas'); cv.width = w; cv.height = h
+    const x = cv.getContext('2d'); x.drawImage(img, sx, sy, w, h, 0, 0, w, h)
+    const d = x.getImageData(0, 0, w, h), a = d.data
+    for (let i = 0; i < a.length; i += 4) {
+      const r = a[i], g = a[i + 1], b = a[i + 2]
+      if (b > r + 70 && b > g + 30) { a[i] = b; a[i + 1] = Math.round(g * 0.55); a[i + 2] = Math.round(r * 0.7) }      // il blu diventa rosso
+      else if (r > g + 60 && r > b + 60) { a[i] = Math.round(b * 0.8); a[i + 1] = Math.round(g * 1.1); a[i + 2] = r }  // e il rosso blu
+    }
+    x.putImageData(d, 0, 0)
+    return (this._nem = cv)
+  }
+
   barraCastello(c, x, y, re, lato) {
-    const w = this.m(104), h = this.m(13), q = Math.max(0, re.hp / re.max)
+    const w = this.mi(104), h = this.mi(13), q = Math.max(0, re.hp / re.max)
     c.fillStyle = 'rgba(0,0,0,.65)'
     c.beginPath(); c.roundRect(x - w / 2 - 2, y - 2, w + 4, h + 4, h / 2 + 2); c.fill()
     c.fillStyle = lato === 'io' ? IO : NEM
     if (q > 0) { c.beginPath(); c.roundRect(x - w / 2, y, Math.max(h, w * q), h, h / 2); c.fill() }
-    c.fillStyle = '#fff'; c.font = `bold ${this.m(10)}px "Emoji Gioco", system-ui, sans-serif`
+    c.fillStyle = '#fff'; c.font = `bold ${this.mi(10)}px "Emoji Gioco", system-ui, sans-serif`
     c.textAlign = 'center'; c.textBaseline = 'middle'
     c.shadowColor = '#000'; c.shadowBlur = 3
     c.fillText(`${Math.ceil(re.hp)}`, x, y + h / 2 + 0.5)
@@ -150,57 +188,114 @@ export class Campo {
   }
 
   livello(c, x, y, liv, lato) {
-    c.font = `bold ${this.m(8)}px "Emoji Gioco", system-ui, sans-serif`; c.textAlign = 'center'; c.textBaseline = 'middle'
-    const w = this.m(18), h = this.m(10)
+    c.font = `bold ${this.mi(8)}px "Emoji Gioco", system-ui, sans-serif`; c.textAlign = 'center'; c.textBaseline = 'middle'
+    const w = this.mi(18), h = this.mi(10)
     c.fillStyle = lato === 'io' ? IO : NEM
     c.beginPath(); c.roundRect(x - w / 2, y - h / 2, w, h, h / 2); c.fill()
     c.fillStyle = '#fff'; c.fillText(liv, x, y + 0.5)
   }
 
-  /* una caserma: una capanna col tetto della sua squadra e la creatura sopra */
-  caserma(c, p, cs, ora) {
-    const x = this.X(cs.x), y = this.Y(cs.y), col = cs.lato === 'io' ? IO : NEM
+  /* il ponte: assi di legno sull'acqua, con le sponde */
+  ponte(c) {
     const m = v => this.m(v)
-    this.ombra(c, x, y + m(11), m(19), m(5))
-    c.save()
-    if (cs.fl > 0) c.globalAlpha = 0.7
-    c.fillStyle = '#8a5a2b'; c.fillRect(x - m(13), y - m(5), m(26), m(15))            // le pareti
-    c.fillStyle = '#6b4220'; c.fillRect(x - m(4), y + m(1), m(8), m(9))               // la porta
-    c.fillStyle = col                                                                  // il tetto
-    c.beginPath(); c.moveTo(x - m(17), y - m(4)); c.lineTo(x, y - m(17)); c.lineTo(x + m(17), y - m(4)); c.closePath(); c.fill()
-    c.strokeStyle = 'rgba(0,0,0,.35)'; c.lineWidth = 1; c.stroke()
-    c.restore()
-    // l'emblema sul tetto: piccolo e FERMO (il primo fotogramma), serve solo a dire di chi è
-    this.pezzo(c, fotogramma(cs.id, 0, false, 0), x, y - m(5), SCALA[cs.id] * 0.36 * this.s / 0.85, cs.lato === 'nem')
-    this.livello(c, x, y + m(15), cs.liv, cs.lato)
-    if (cs.hp < cs.max) this.barra(c, x, y - m(22), m(26), cs.hp / cs.max)     // la vita si vede solo se è ferita
-    if (cs.riposo > 0) { c.font = `${m(11)}px "Emoji Gioco", system-ui, sans-serif`; c.textAlign = 'center'; c.fillText('💤', x + m(16), y - m(8)) }
+    const x0 = this.X(CAMPO.corsia - 26), x1 = this.X(CAMPO.corsia + 26)
+    const y0 = this.Y(CAMPO.fiume.alto - 8), y1 = this.Y(CAMPO.fiume.basso + 8)
+    this.ombra(c, (x0 + x1) / 2, y1, (x1 - x0) * 0.55, m(5), 0.25)
+    c.fillStyle = '#7a5130'; c.fillRect(x0, y0, x1 - x0, y1 - y0)
+    for (let y = y0, i = 0; y < y1; y += m(6), i++) {
+      c.fillStyle = i % 2 ? '#a8713f' : '#9a6636'
+      c.fillRect(x0 + m(2), y + m(0.6), x1 - x0 - m(4), m(5))
+    }
+    for (const x of [x0, x1]) {
+      c.fillStyle = '#5b3a1f'; c.fillRect(x - m(3), y0, m(5), y1 - y0)
+      for (let y = y0; y <= y1 + 1; y += (y1 - y0) / 3) { c.fillStyle = '#4a2f18'; c.fillRect(x - m(4), y - m(4), m(7), m(7)) }
+    }
   }
 
-  /* il muro attraversa la corsia; se crolla resta un cumulo di sassi */
+  /* il piazzale della cittadella: un lastricato su cui castello e caserme si toccano, come in una
+     città di Heroes. Si dipinge una volta per misura e si tiene. */
+  piazzale(c) {
+    const S = this.s
+    if (!this._piazzale || this._piazzale.s !== S) {
+      const w = Math.round(280 * S), h = Math.round(136 * S)
+      const cv = document.createElement('canvas'); cv.width = w * this.k; cv.height = h * this.k
+      const x = cv.getContext('2d'); x.scale(this.k, this.k)
+      x.fillStyle = '#7d7466'; x.beginPath(); x.roundRect(0, 0, w, h, 14 * S); x.fill()
+      x.save(); x.beginPath(); x.roundRect(2 * S, 2 * S, w - 4 * S, h - 4 * S, 12 * S); x.clip()
+      const tinte = ['#aaa293', '#b3ab9c', '#a19989', '#bab3a5']
+      for (let j = 0, yy = 2 * S; yy < h; j++, yy += 6 * S)
+        for (let i = 0, xx = (j % 2 ? -3 : 0) * S; xx < w; i++, xx += 7 * S) {
+          x.fillStyle = tinte[(i * 7 + j * 3) % 4]; x.beginPath(); x.roundRect(xx + 0.5 * S, yy + 0.5 * S, 6 * S, 5 * S, 1.5 * S); x.fill()
+        }
+      x.restore()
+      this._piazzale = { s: S, cv, w, h }
+    }
+    const { cv, w, h } = this._piazzale
+    for (const lato of ['io', 'nem']) {
+      const y = lato === 'io' ? this.Y(394) : this.Y(CAMPO.H - 394) - h
+      c.fillStyle = 'rgba(0,0,0,.25)'; c.beginPath(); c.roundRect(this.X(40) + 2, y + 3, w, h, 14 * S); c.fill()
+      c.drawImage(cv, this.X(40), y, w, h)
+    }
+  }
+
+  /* una caserma: l'edificio della sua truppa (scena/edifici.js), che spunta dal piazzale quando
+     nasce; sopra lo stemma della truppa, sotto il livello */
+  caserma(c, p, cs, ora) {
+    if (!this.nate.has(cs)) this.nate.set(cs, p.t < 1 ? -99 : ora)
+    const q = Math.min(1, (ora - this.nate.get(cs)) / 0.7)
+    const k = q < 1 ? Math.max(0.05, 1 + 2.7 * (q - 1) ** 3 + 1.7 * (q - 1) ** 2) : 1                  // spunta con un rimbalzo
+    const x = this.X(cs.x), y = this.Y(cs.y) + this.me(10), col = cs.lato === 'io' ? IO : NEM
+    const scuro = cs.lato === 'io' ? '#1f4f9e' : '#a32a22'
+    const u = v => this.me(v) * 1.2 * k
+    if (q < 1) {                                                                      // la polvere del cantiere
+      c.fillStyle = `rgba(230,215,180,${0.7 * (1 - q)})`
+      for (let i = 0; i < 6; i++) { const a = i * 1.05; c.beginPath(); c.arc(x + Math.cos(a) * this.me(14 + 18 * q), y + Math.sin(a) * this.me(4 + 6 * q), this.me(8) * (1 - q * 0.6), 0, 7); c.fill() }
+    }
+    this.ombra(c, x + u(3), y + u(1), u(28), u(5), 0.3)
+    c.save()
+    if (cs.fl > 0) c.globalAlpha = 0.7
+    const alto = disegnaEdificio(c, { ed: cs.ed, id: cs.id, stadio: cs.liv >= 5 ? 2 : 1, x, y, u, col, scuro, ora })
+    c.restore()
+    // lo stemma: la truppa ferma, su uno scudo tondo davanti
+    if (k > 0.6) {
+      c.fillStyle = 'rgba(255,255,255,.95)'; c.beginPath(); c.arc(x + u(20), y - u(14), u(6.5), 0, 7); c.fill()
+      c.strokeStyle = scuro; c.lineWidth = 2; c.stroke()
+      const fg = fotogramma(cs.id, 0, false, 0), sc = SCALA[cs.id] * 0.3 * this.s / 0.85 * ZE * k
+      this.pezzo(c, fg, x + u(20), y - u(8.5), sc, cs.lato === 'nem')
+      if (cs.id === 'scheletri') arco(c, x + u(20), y - u(8.5), PEZZI[fg][2] * sc, PEZZI[fg][3] * sc, cs.lato === 'nem')
+    }
+    this.livello(c, x, y + this.mi(6), cs.liv, cs.lato)
+    if (cs.hp < cs.max) this.barra(c, x, y - u(alto) - this.me(4), u(34), cs.hp / cs.max)     // la vita si vede solo se è ferita
+    if (cs.riposo > 0) { c.font = `${u(11)}px "Emoji Gioco", system-ui, sans-serif`; c.textAlign = 'center'; c.fillText('💤', x - u(24), y - u(20)) }
+  }
+
+  /* la porta in fondo al ponte: due torrette e il portone che si rompe; crollata, resta il cumulo */
   muro(c, mu) {
-    const x = this.X(mu.x), y = this.Y(mu.y), m = v => this.m(v)
-    const w = m(54), h = m(12)
+    const S = this.s, x = this.X(mu.x), y = this.Y(mu.y), col = mu.lato === 'io' ? IO : NEM
+    const mezza = 24 * S, alto = 13 * S
+    const torre = tx => {
+      c.fillStyle = 'rgba(0,0,0,.25)'; c.fillRect(tx - 6 * S + 2, y - alto + 3, 12 * S, alto + 4 * S)
+      c.fillStyle = '#9c9486'; c.fillRect(tx - 6 * S, y - alto - 2 * S, 12 * S, alto + 6 * S)
+      c.fillStyle = '#c7bfb0'; for (const d of [-6, -1.5, 3]) c.fillRect(tx + d * S, y - alto - 5 * S, 3 * S, 3 * S)
+      c.fillStyle = col; c.fillRect(tx - 6 * S, y - alto - 2 * S, 12 * S, 1.8 * S)
+    }
     if (mu.hp <= 0) {
       c.fillStyle = '#8b8478'
-      for (const [dx, dy, r] of [[-16, -2, 6], [-5, 3, 7], [7, -3, 6], [17, 2, 5]]) {
-        c.beginPath(); c.ellipse(x + m(dx), y + m(dy), m(r), m(r * 0.6), 0, 0, 7); c.fill()
+      for (const [dx, dy, r] of [[-10, 2, 5], [-2, 5, 6], [6, 1, 5], [12, 4, 4]]) {
+        c.beginPath(); c.ellipse(x + dx * S, y + dy * S, r * S, r * 0.6 * S, 0, 0, 7); c.fill()
       }
-      return
+    } else {
+      c.save()
+      if (mu.fl > 0) c.globalAlpha = 0.7
+      c.fillStyle = '#6b4424'; c.fillRect(x - mezza + 4 * S, y - alto + 2 * S, 2 * mezza - 8 * S, alto + 2 * S)
+      c.strokeStyle = '#4a2e17'; c.lineWidth = Math.max(1, S * 0.8)
+      for (let d = -mezza + 9 * S; d < mezza - 5 * S; d += 5 * S) { c.beginPath(); c.moveTo(x + d, y - alto + 2 * S); c.lineTo(x + d, y + 4 * S); c.stroke() }
+      c.fillStyle = '#3b3b40'; c.fillRect(x - mezza + 4 * S, y - 3 * S, 2 * mezza - 8 * S, 1.6 * S)
+      c.fillStyle = col; c.fillRect(x - mezza + 4 * S, y - alto + 2 * S, 2 * mezza - 8 * S, 1.8 * S)
+      c.restore()
     }
-    this.ombra(c, x, y + h / 2 + m(2), w * 0.5, m(4))
-    c.save()
-    if (mu.fl > 0) c.globalAlpha = 0.7
-    c.fillStyle = '#9a8f80'; c.fillRect(x - w / 2, y - h / 2, w, h)
-    c.strokeStyle = '#5c5448'; c.lineWidth = 1
-    for (let i = 0; i < 6; i++) {
-      const xx = x - w / 2 + i * w / 6
-      c.beginPath(); c.moveTo(xx, y - h / 2); c.lineTo(xx, y + h / 2); c.stroke()
-    }
-    c.beginPath(); c.moveTo(x - w / 2, y); c.lineTo(x + w / 2, y); c.stroke()
-    c.strokeStyle = mu.lato === 'io' ? IO : NEM; c.lineWidth = 2; c.strokeRect(x - w / 2, y - h / 2, w, h)
-    c.restore()
-    if (mu.hp < mu.max) this.barra(c, x, y - h / 2 - m(6), m(26), mu.hp / mu.max)
+    torre(x - mezza); torre(x + mezza)
+    if (mu.hp > 0 && mu.hp < mu.max) this.barra(c, x, y - alto - 9 * S, this.m(40), mu.hp / mu.max)
   }
 
   truppa(c, u, ora) {
@@ -208,17 +303,24 @@ export class Campo {
     const x = this.X(u.x), y = this.Y(u.y) + m(6)
     const alto = u.vola ? m(14) + Math.sin(ora * 2.6 + u.x * 0.05) * m(2) : 0
     const col = u.lato === 'io' ? IO : NEM
-    this.ombra(c, x, y, m(7) * (u.vola ? 0.7 : 1), m(2.5), u.vola ? 0.2 : 0.3)
-    c.strokeStyle = col; c.lineWidth = 2
-    c.beginPath(); c.ellipse(x, y, m(7) * (u.vola ? 0.7 : 1), m(2.5), 0, 0, 7); c.stroke()
+    // sotto i piedi un disco pieno del colore della squadra
+    c.fillStyle = col; c.globalAlpha = u.vola ? 0.45 : 0.75
+    c.beginPath(); c.ellipse(x, y, m(7) * (u.vola ? 0.7 : 1), m(2.6), 0, 0, 7); c.fill(); c.globalAlpha = 1
     // un colpo è uno scatto in avanti, una corsa è un saltello
     const verso = u.lato === 'io' ? -1 : 1
     const scatto = u.colpo > 0 ? Math.sin(u.colpo / 0.25 * Math.PI) * m(4) * verso : 0
     const salto = u.cammina ? Math.abs(Math.sin(ora * 9 + u.x)) * m(2) : 0
     const nasce = u.nasce > 0 ? 1 - u.nasce / 0.8 : 1
     const sfasa = u.x * 0.07 + u.y * 0.05
-    const lh = this.pezzo(c, fotogramma(u.id, ora, u.cammina, sfasa), x, y - alto - salto + scatto,
-      SCALA[u.id] * this.s / 0.85 * (0.6 + 0.4 * nasce), u.lato === 'nem', u.fl > 0 ? 0.6 : 1)
+    const fg = fotogramma(u.id, ora, u.cammina, sfasa), sc = SCALA[u.id] * this.s / 0.85 * ZT * (0.6 + 0.4 * nasce)
+    const py = y - alto - salto + scatto, d = 1.3
+    // il contorno: la stessa figura tinta del colore della squadra, spostata di un pelo ai quattro lati
+    for (const [dx, dy] of [[-d, 0], [d, 0], [0, -d], [0, d]]) this.pezzo(c, fg, x + dx, py + dy, sc, u.lato === 'nem', 1, this.tinta(u.lato))
+    const lh = this.pezzo(c, fg, x, py, sc, u.lato === 'nem', u.fl > 0 ? 0.6 : 1)
+    if (u.id === 'scheletri') {
+      const [, , w, h] = PEZZI[fg]
+      arco(c, x, py, w * sc, h * sc, u.lato === 'nem', u.colpo > 0 ? Math.sin(u.colpo / 0.25 * Math.PI) : 0)
+    }
     if (u.hp < u.max) this.barra(c, x, y - alto - lh - m(5), m(15), u.hp / u.max)
     if (u.nasce > 0) {
       c.strokeStyle = 'rgba(255,255,255,.8)'; c.lineWidth = 1.5
