@@ -20,7 +20,7 @@
      gelo e lo stordimento si vedono addosso. Foto a metà effetto con `--scatti`.
    Si tocca come un bambino (`Input.dispatchTouchEvent` via CDP).
    `node test/esegui.mjs sotterraneo-gruppi`
-   tempo: 200
+   tempo: 320
    ═══════════════════════════════════════════════════════════════════ */
 import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, scendiNelSotterraneo , finestraFerma } from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
