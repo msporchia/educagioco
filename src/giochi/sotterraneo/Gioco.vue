@@ -937,6 +937,18 @@ function stanzaDaProva(c) {
   c.eroe = { x: dove.x + 0.5, y: dove.y + 0.5 }
   c.segnaLaStanza()
   c.aggiornaLuce()
+  luceDaProva(c, s)
+}
+
+// `#luce=stanza` accende tutta la stanza (e il giro di muro), a piena forza: per fotografare l'arredo senza girare il cono
+function luceDaProva(c, s) {
+  if (new URLSearchParams(location.hash.slice(1)).get('luce') !== 'stanza') return
+  const base = c.aggiornaLuce.bind(c)
+  c.aggiornaLuce = () => {
+    base()
+    for (const [x, y] of c.livello.celleDellaLuce(s)) { const k = y * c.livello.largo + x; c.luce.add(k); c.forzaLuce.set(k, 1); c.visto[k] = 1 }
+  }
+  c.aggiornaLuce()
 }
 
 // `#sotterraneo=leggendario` posa un leggendario accanto all'ingresso, come se fosse appena caduto: per guardare la
@@ -1017,6 +1029,7 @@ function accendi() {
   if (!pittore) pittore = new Tela(tela.value)
   else pittore.attacca(tela.value)
   pittore.misura()
+  pittore.zoomA(Number(new URLSearchParams(location.hash.slice(1)).get('zoom')) || pittore.scala)   // `#zoom=2`: più campo, per le foto
   pittore.segui(corsa.value.livello, corsa.value.eroe.x, corsa.value.eroe.y)
   pittore.mostra({ corsa: corsa.value, orologio })   // il primo quadro c'è subito: rientrando si nasce dietro il velo della pausa, e il giro non disegna finché si è fermi
   pittore.avvia()

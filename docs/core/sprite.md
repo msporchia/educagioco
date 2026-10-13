@@ -71,12 +71,14 @@ nello stesso modulo.
 - **I contorni (`alone`) restano dal pezzo piccolo**: sono un filo di un
   pixel di sprite, e da lì vengono uguali.
 - **Peso**: per i tre fogli della roba del sotterraneo, 260 pezzi, 451 KB.
+- **Anche l'arredo dei fogli di scena**, pezzo per pezzo: `"nitido": "scelti"` sul foglio e `"nitido": true` sul pezzo (`sotterraneo_2`,
+  `4_3`, `5_2`, `5_3`). Una botte di 150 px ridotta a 26 sgrana, nitida regge; il resto del foglio (pavimenti, muri) resta com'è.
 - **Anche le creature**, una per una: `"nitido": true` nella voce del catalogo ([creature.md](creature.md)); `atlante.py` prende i suoi
   fotogrammi dal foglio grande (`fogli_delle_creature` li segna, `nitidi_di` salta gli altri). Tela e `figura()` lo scelgono da soli per nome.
 - Il foglietto lo dichiara per i fogli dipinti di oggetti (`bottino-e-arredo`,
   `scudi`, `armature-e-vesti`), non per la pixel art vera (0x72), che è
-  già alla sua misura. `quanti`, `cancella` e `toppa` non li sa ancora
-  fare: quel pezzo resta solo piccolo, e lo strumento lo dice. **`misura`
+  già alla sua misura. `quanti` e `toppa` non li sa ancora fare: quel pezzo
+  resta solo piccolo, e lo strumento lo dice (`cancella` sì, scalato). **`misura`
   vale solo per il piccolo** (impagina): il nitido tiene tutta la sua
   definizione e il gioco lo stira alla gabbia del piccolo (`figura()`, scala
   x e y a parte, ammorbidito: `.sot-ritratto` è `pixelated`, e il pezzo

@@ -757,8 +757,8 @@ def nitidi_di(f, fg, ridotto, nitidi):
             continue
         if fg.get('nitido') == 'scelti' and not d.get('nitido'):   # le creature: solo quelle che lo chiedono
             continue
-        if d.get('quanti', 1) != 1 or any(k in d for k in ('cancella', 'toppa')):
-            print(f'  ! {nome}: «nitido» non sa ancora fare quanti, cancella e toppa: resta solo piccolo')
+        if d.get('quanti', 1) != 1 or 'toppa' in d:
+            print(f'  ! {nome}: «nitido» non sa ancora fare quanti e toppa: resta solo piccolo')
             continue
         # `misura` riguarda solo il pezzo piccolo, quello che impagina: il nitido tiene tutta la sua
         # definizione, e il gioco lo stira alla gabbia del piccolo (viste/figura.js, scala x e y a parte)
@@ -767,6 +767,9 @@ def nitidi_di(f, fg, ridotto, nitidi):
         pezzo = grande.crop((round(x * kx), round(y * ky), round((x + pw) * kx), round((y + ph) * ky)))
         if d.get('specchia'):
             pezzo = ImageOps.mirror(pezzo)
+        # `cancella` è nelle coordinate del ritaglio piccolo: sul grande si scala come il rettangolo
+        pezzo = cancella_in(pezzo, [[round(r[0] * kx), round(r[1] * ky), round(r[2] * kx), round(r[3] * ky)]
+                                    for r in (d.get('cancella') or []) if len(r) == 4], nome)
         regola = d.get('buchi')
         if isinstance(regola, dict) and regola.get('max') is not None:
             regola = {**regola, 'max': regola['max'] * kx * ky}

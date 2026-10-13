@@ -15,10 +15,23 @@ ritaglio che taglia. `--provino` scrive, per foglio, `<gioco>__<foglio>.png` (le
 verde) e `<gioco>__<foglio>-macchie.png` (le macchie ritagliate, una per cella, col numero del rapporto).
 
 I fogli di scena (le stanze del sotterraneo, le mappe) danno molte macchie perché il fondo è dipinto: lì il
-numero non dice niente, e il rapporto li segna `scena`. Non scrive niente di versionato.
+numero non dice niente, e il rapporto li segna `scena`. Non scrive niente di versionato (salvo `--scrivi`).
+
+    python3 strumenti/sprite/non-ritagliato.py --gioco=sotterraneo --foglio=sotterraneo_2 \
+        --prendi 268,968=cantine-botte:26x19 --prendi 440,980=cantine-scaffale:15x17   # le righe da incollare
+    ... --scrivi                                                                      # e le scrive nel foglietto
+
+`--prendi x,y=nome[:LxA]` ritaglia una macchia (la riconosce dall'angolo in alto a sinistra, quello che il provino
+scrive sotto il numero: resta valido anche quando le altre macchie cambiano; `x,y,l,a=nome` dà il rettangolo a mano, per
+una macchia che tiene insieme più figure) e ne fa la riga del foglietto, nelle
+sue coordinate (un foglio ridotto a `scala` le vuole in pixel ridotti) con `misura` se c'è `:LxA`. `--scrivi` la
+mette dentro il foglietto: in un `.json` scritto da una macchina riscrive il file, in uno a mano inserisce le righe
+prima di `__pezzi-col-nome` / `__aspetti` (i blocchi che `roba.py --gioco` rifà da sé).
 """
 import argparse
 import json
+import math
+import re
 import sys
 from pathlib import Path
 
@@ -199,11 +212,11 @@ def provino(r, png):
     if not r['macchie']:
         return
     COL, CW, CH = 8, 190, 200
-    righe = (min(len(r['macchie']), 64) + COL - 1) // COL
+    righe = (len(r['macchie']) + COL - 1) // COL
     F = Image.new('RGB', (COL * CW, righe * CH), (30, 30, 36))
     fd = ImageDraw.Draw(F)
     piccolo = ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf', 12)
-    for i, m in enumerate(r['macchie'][:64]):
+    for i, m in enumerate(r['macchie']):
         x, y, w, h = m['bbox']
         c = im.crop((x, y, x + w, y + h))
         fondo = Image.new('RGBA', c.size, (70, 70, 80, 255))
@@ -241,6 +254,75 @@ def provino_voci(elenco, atlante, dove):
     print(dove)
 
 
+def riga_di(m, misura, fx, fy):
+    """La riga del foglietto per una macchia: `da` e `cella` in pixel del foglio ridotto (quelli di `cella: [1, 1]`)."""
+    x, y, w, h = m['bbox']
+    da = [math.floor(x / fx), math.floor(y / fy)]
+    cella = [math.ceil((x + w) / fx) - da[0], math.ceil((y + h) / fy) - da[1]]
+    d = {'da': da, 'cella': cella}
+    if misura:
+        d['misura'] = misura
+    return d
+
+
+def scrivi_righe(j, nuove):
+    """Mette le righe nel foglietto `j`: riscrivendolo se è nel formato delle macchine, se no inserendole a mano."""
+    testo = j.read_text()
+    dati = json.loads(testo)
+    for fine in ('', '\n'):
+        if json.dumps(dati, indent=2, ensure_ascii=False) + fine == testo:
+            dati['sprite'].update(nuove)
+            j.write_text(json.dumps(dati, indent=2, ensure_ascii=False) + fine)
+            return 'riscritto'
+    righe = testo.split('\n')
+    inizio = next(i for i, r in enumerate(righe) if r.strip().startswith('"sprite"'))
+    nuove_righe = [f'    "{k}": {{ {json.dumps(v)[1:-1]} }},' for k, v in nuove.items()]
+    # prima del primo marcatore di un blocco generato; se non c'è, prima della graffa che chiude `sprite`
+    marcatore = next((i for i in range(inizio, len(righe)) if re.match(r'\s+"__(pezzi-col-nome|aspetti)"', righe[i])), None)
+    if marcatore is not None:
+        righe[marcatore:marcatore] = nuove_righe + ['']
+    else:
+        chiude = next(i for i in range(inizio + 1, len(righe)) if righe[i] == '  }')
+        prima = max(i for i in range(inizio, chiude) if righe[i].strip())
+        if not righe[prima].rstrip().endswith(','):
+            righe[prima] += ','
+        nuove_righe[-1] = nuove_righe[-1].rstrip(',')
+        righe[chiude:chiude] = nuove_righe
+    j.write_text('\n'.join(righe))
+    return 'inserito'
+
+
+def prendi(o):
+    """`--prendi x,y=nome[:LxA]`: le macchie scelte diventano righe del foglietto (stampate, o scritte con --scrivi)."""
+    fogli = fogli_da_guardare(o.gioco, o.foglio)
+    if len(fogli) != 1:
+        sys.exit(f'--prendi vuole un foglio solo: con --gioco e --foglio ne ho trovati {len(fogli)}')
+    gioco, png, j, fg = fogli[0]
+    r = analizza(gioco, png, j, fg, o.minimo)
+    im = Image.open(png)
+    cw, ch = fg['cella']
+    col, rig = fg.get('foglio') or (im.width // cw, im.height // ch)
+    fx, fy = im.width / col, im.height / rig      # quanti pixel del foglio vero fa uno del foglietto
+    nuove = {}
+    for voce in o.prendi:
+        dove, _, resto = voce.partition('=')
+        nome, _, misura = resto.partition(':')
+        n = [int(v) for v in dove.split(',')]
+        if len(n) == 4:                                  # un rettangolo dato a mano, per una macchia che tiene insieme più figure
+            m = {'bbox': n}
+        else:
+            m = next((m for m in r['macchie'] if m['bbox'][0] == n[0] and m['bbox'][1] == n[1]), None)
+        if not m:
+            sys.exit(f"nessuna macchia con l'angolo in {n[0]},{n[1]}: si leggono nel provino (--provino)")
+        if nome in (fg.get('sprite') or {}) or nome in nuove:
+            sys.exit(f"«{nome}» c'è già nel foglietto")
+        nuove[nome] = riga_di(m, [int(n) for n in misura.split('x')] if misura else None, fx, fy)
+    for k, v in nuove.items():
+        print(f'    "{k}": {json.dumps(v)},')
+    if o.scrivi:
+        print(f'→ {j.relative_to(RADICE)}: {scrivi_righe(j, nuove)}')
+
+
 def main():
     a = argparse.ArgumentParser(description=__doc__.split('\n')[0])
     a.add_argument('--voci', help="un JSON di voci non nominate (da inutilizzati.mjs --provino) da disegnare invece di analizzare i fogli")
@@ -251,9 +333,15 @@ def main():
     a.add_argument('--gioco')
     a.add_argument('--foglio', help='solo i fogli il cui nome contiene questo testo')
     a.add_argument('--minimo', type=int, default=500, help='pixel veri sotto i quali una macchia si scarta')
+    a.add_argument('--prendi', action='append', default=[], metavar='X,Y=NOME[:LxA]',
+                   help="la macchia con quell'angolo diventa una riga del foglietto (con `misura` se c'è :LxA)")
+    a.add_argument('--scrivi', action='store_true', help='con --prendi: scrive le righe nel foglietto invece di stamparle')
     o = a.parse_args()
     if o.voci:
         provino_voci(o.voci, o.atlante, o.dove)
+        return
+    if o.prendi:
+        prendi(o)
         return
     fogli = []
     for gioco, png, j, fg in fogli_da_guardare(o.gioco, o.foglio):
