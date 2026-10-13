@@ -42,7 +42,8 @@ const moduli = []
 if (existsSync(CARTELLA))
   for (const f of readdirSync(CARTELLA).sort().filter(x => x.endsWith('.js'))) {
     const mod = (await import(pathToFileURL(resolve(CARTELLA, f)).href)).default
-    if (mod) { moduli.push(mod); classi.push(...classiDelModulo(mod)) }
+    // il quadro descrive i mazzi dei giochi: un modulo `soloSuRichiesta` (i conti puri) non è nel mazzo di nessuno (MODULI_DEI_MAZZI)
+    if (mod) { moduli.push(mod); if (!mod.soloSuRichiesta) classi.push(...classiDelModulo(mod)) }
   }
 controlla('le classi di domande si caricano dalla cartella', classi.length > 20,
           `${classi.length} classi`)

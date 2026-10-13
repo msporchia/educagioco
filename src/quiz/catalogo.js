@@ -1,6 +1,6 @@
 // il ponte fra i moduli e la schermata dei grandi: nucleo/catalogo.js fa il conto puro, qui si aggiunge il registro (import.meta.glob, solo sotto Vite) e profilo/giudizi. Usato da Manopola.vue, Prova.vue e ComeVa.vue; un gioco non lo tocca mai.
 
-import { MODULI } from './nucleo/registro.js'
+import { MODULI_DEI_MAZZI } from './nucleo/registro.js'
 import { catalogoDi, giroDellaFascia, FASCE, fasciaDi, quantoEsce,
          FASCE_ETA, doveCadeCon, gruppoDi } from './nucleo/catalogo.js'
 import { classiAmmesse } from './scelta.js'
@@ -17,10 +17,10 @@ export { FASCE, fasciaDi, quantoEsce }
 
 // i giudizi arrivano da fuori (async): senza, l'elenco si vede lo stesso e le faccine arrivano un istante dopo
 export const catalogo = ({ giudizi = [] } = {}) =>
-  catalogoDi(MODULI, { spenti: saperiSpenti(), giudizi })
+  catalogoDi(MODULI_DEI_MAZZI, { spenti: saperiSpenti(), giudizi })
 
 // tutte le righe senza il profilo (nessuno spento): data/quadro.js le vuole per mostrare altre impostazioni
-export const classiNude = () => catalogoDi(MODULI, {}).flatMap(m => m.classi)
+export const classiNude = () => catalogoDi(MODULI_DEI_MAZZI, {}).flatMap(m => m.classi)
 
 // dove cade ogni classe per QUESTO bambino; i confini restano in nucleo/catalogo.js (li chiede anche il quadro)
 export { FASCE_ETA }
@@ -28,7 +28,7 @@ export { FASCE_ETA }
 export function fasceDelBambino({ eta = etaDelBambino(), giudizi = [] } = {}) {
   const dove = doveCadeCon(eta)
 
-  const tutte = catalogoDi(MODULI, { spenti: saperiSpenti(), giudizi }).flatMap(m => m.classi)
+  const tutte = catalogoDi(MODULI_DEI_MAZZI, { spenti: saperiSpenti(), giudizi }).flatMap(m => m.classi)
 
   const righe = tutte
     .map(c => {
@@ -55,7 +55,7 @@ export function fasceDelBambino({ eta = etaDelBambino(), giudizi = [] } = {}) {
 }
 
 export const giroDi = fascia =>
-  giroDellaFascia(MODULI, fascia, { spenti: saperiSpenti() })
+  giroDellaFascia(MODULI_DEI_MAZZI, fascia, { spenti: saperiSpenti() })
 
 // lista vuota non è un guasto: l'interruttore dei giudizi può non essere mai stato acceso
 export const giudiziDelQuaderno = () => leggiGiudizi().catch(() => [])

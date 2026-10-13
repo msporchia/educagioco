@@ -1,0 +1,660 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Bolle di conti — prototipo</title>
+<style>
+  :root { color-scheme: dark; --oro: #ffd23f; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; height: 100%; overflow: hidden; overscroll-behavior: none; }
+  body {
+    background: #07080d; color: #e8edf7; touch-action: none; user-select: none;
+    font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+
+  /* i fogli (menu e fine partita) stanno sopra la tela, centrati nella colonna da telefono */
+  .velo { position: fixed; inset: 0; z-index: 10; display: flex; align-items: center; justify-content: center;
+          background: #05060bd9; padding: 16px; }
+  .velo[hidden] { display: none; }
+  .foglio { width: 100%; max-width: 380px; padding: 20px 18px 18px; background: #141826; border-radius: 22px;
+            box-shadow: 0 12px 40px #000a; text-align: center; }
+  .foglio h1 { margin: 0 0 4px; font-size: 26px; }
+  .foglio p { margin: 0 0 12px; color: #93a0bd; font-size: 13.5px; }
+  .liv { display: block; width: 100%; margin: 8px 0; padding: 12px 14px; text-align: left; color: inherit;
+         background: #ffffff10; border: 1px solid #ffffff1c; border-radius: 16px; font: inherit; }
+  .liv:active { background: #ffffff24; }
+  .liv b { display: block; font-size: 17px; }
+  .liv span { color: #93a0bd; font-size: 12.5px; }
+  .riga { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 14px 0 2px; color: #b9c3dc; font-size: 14px; }
+  .riga button { width: 38px; height: 38px; border-radius: 12px; border: 0; background: #ffffff18; color: inherit; font-size: 20px; font-weight: 700; }
+  .riga output { min-width: 40px; font-size: 20px; font-weight: 700; color: var(--oro); }
+  .grosso { display: block; width: 100%; margin-top: 9px; padding: 14px; font-size: 16px; font-weight: 700;
+            color: #101422; background: var(--oro); border: 0; border-radius: 16px; }
+  .grosso.piano { color: inherit; background: #ffffff14; }
+  .stat { text-align: left; margin: 10px 0; padding: 10px 12px; background: #ffffff0c; border-radius: 14px; font-size: 14px; }
+  .stat div { display: flex; justify-content: space-between; padding: 2px 0; }
+  .stat b { color: #fff; }
+  .formula { margin: 8px 0 4px; padding: 10px; border-radius: 14px; background: #7d2f2f40; color: #ffd0d0; font-size: 15px; }
+  .formula[hidden] { display: none; }
+</style>
+</head>
+<body>
+<canvas id="tela"></canvas>
+
+<div class="velo" id="menu">
+  <div class="foglio">
+    <h1>Bolle di conti</h1>
+    <p>Le bolle in alto sono risultati, quella nel cannone è un'operazione: miralo contro la bolla che ha il risultato giusto. Sbagli? La tua bolla resta attaccata e occupa posto. Niente tempo, niente monete.</p>
+    <button class="liv" data-l="1"><b>1 · Somme</b><span>somme entro 20, risultati lontani fra loro</span></button>
+    <button class="liv" data-l="2"><b>2 · Sottrazioni e tabelline</b><span>risultati vicini che confondono: 12, 14, 15, 16…</span></button>
+    <button class="liv" data-l="3"><b>3 · Tabelline alte e divisioni</b><span>più righe, la griglia scende più spesso</span></button>
+    <div class="riga">Scende ogni <button id="meno">−</button><output id="ogni">auto</output><button id="piu">+</button> tiri</div>
+  </div>
+</div>
+
+<div class="velo" id="fine" hidden>
+  <div class="foglio">
+    <h1 id="fine-titolo"></h1>
+    <p id="fine-sotto"></p>
+    <div class="stat" id="fine-stat"></div>
+    <div class="formula" id="fine-formula" hidden></div>
+    <button class="grosso" id="ancora">Ancora</button>
+    <button class="grosso piano" id="alMenu">Menu</button>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════
+   BOLLE DI CONTI — prototipo
+
+   Puzzle Bobble in cui la matematica è la meccanica: le bolle fisse
+   sono risultati, quella nel cannone è un'operazione. Si scoppia solo
+   la bolla che ha il risultato giusto (più quelle che restano senza
+   strada fino al soffitto, che cadono con un bonus); una bolla
+   sbagliata resta lì, grigia, e lo sbaglio costa SPAZIO. Niente tempo,
+   niente monete.
+
+   Si vince con N risposte giuste (15 / 18 / 20 secondo il livello) o a
+   griglia vuota; si perde se la griglia tocca la linea rossa. La bolla
+   in canna è sempre un'operazione il cui risultato c'è in griglia, e si
+   vede quella dopo. Una bolla grigia si può scoppiare anche lei, con
+   un'operazione che dia il suo numero.
+
+   Colore = risultato (stesso numero, stesso colore), mai l'operazione:
+   aiuta l'occhio e non rivela se un'operazione combina.
+   Si mira trascinando, si spara rilasciando; trascinando il dito sotto
+   al cannone prima di rilasciare, il tiro si annulla.
+   ═══════════════════════════════════════════════════════════════════ */
+
+const W = 390, H = 844
+const R = 21, RH = R * Math.sqrt(3)         // raggio e passo fra le righe
+const COLONNE = 9, MARGINE = (W - COLONNE * 2 * R) / 2
+const TOP = 62                              // sotto la fascia in cima
+const LINEA = 708                           // se una bolla la tocca è finita
+const CX = W / 2, PY = 744                  // il perno del cannone, dove sta la palla
+const XMIN = MARGINE + R, XMAX = W - MARGINE - R
+const VELOCITA = 1150, PASSO = 3
+const ANG_MIN = 12 * Math.PI / 180, ANG_MAX = Math.PI - ANG_MIN
+
+const LIVELLI = {
+  1: { righe: 5, ogni: 7, meta: 15 },
+  2: { righe: 6, ogni: 6, meta: 18 },
+  3: { righe: 7, ogni: 5, meta: 20 },
+}
+const COLORI = [[355, 72, 52], [28, 92, 50], [48, 92, 46], [140, 58, 38], [205, 80, 48], [280, 52, 54]]
+
+const rnd = n => Math.floor(Math.random() * n)
+const scegli = l => l[rnd(l.length)]
+const mescola = l => l.map(v => [Math.random(), v]).sort((a, b) => a[0] - b[0]).map(p => p[1])
+
+/* ───────── le operazioni ───────── */
+
+function pool(liv) {
+  if (liv === 1) return [5, 8, 11, 14, 17, 20]
+  if (liv === 2) return [12, 14, 15, 16, 18, 21]
+  return mescola([24, 28, 32, 35, 36, 42, 45, 48, 54, 56, 63, 64, 72, 81]).slice(0, 8).sort((a, b) => a - b)
+}
+
+/* Un'operazione che dà esattamente v, adatta al livello. */
+function creaOp(liv, v, evita) {
+  let op
+  for (let t = 0; t < 10; t++) {
+    const opzioni = []
+    const lim = liv === 3 ? 3 : 2
+    const fattori = []
+    for (let d = lim; d <= 12; d++) if (v % d === 0 && v / d >= lim && v / d <= 12) fattori.push(d)
+    if (liv === 1) {
+      const a = 1 + rnd(v - 1); opzioni.push({ k: 'add', a, b: v - a })
+    } else {
+      if (liv === 2) { const b = 2 + rnd(9); opzioni.push({ k: 'sub', a: v + b, b }) }
+      if (fattori.length) {
+        const a = scegli(fattori), b = v / a
+        opzioni.push({ k: 'mul', a, b }, { k: 'mul', a, b })
+      }
+      if (liv === 3) {
+        const ds = [2, 3, 4, 5, 6, 7, 8, 9].filter(d => v * d <= 150)
+        if (ds.length) { const d = scegli(ds); opzioni.push({ k: 'div', a: v * d, b: d }) }
+      }
+    }
+    op = scegli(opzioni)
+    op.v = v
+    op.txt = op.k === 'add' ? `${op.a} + ${op.b}` : op.k === 'sub' ? `${op.a} − ${op.b}`
+           : op.k === 'mul' ? `${op.a} × ${op.b}` : `${op.a} : ${op.b}`
+    if (op.txt !== evita) break
+  }
+  return op
+}
+
+/* Come si calcola, in una riga: serve a fine partita. */
+function spiega(op) {
+  if (op.k === 'add') return `${op.txt} = ${op.v}`
+  if (op.k === 'sub') return `${op.txt} = ${op.v}: parti da ${op.a} e togli ${op.b}`
+  if (op.k === 'mul') return `${op.txt} = ${op.v}: ${op.a} gruppi da ${op.b}`
+  return `${op.txt} = ${op.v}, perché ${op.b} × ${op.v} = ${op.a}`
+}
+
+/* ───────── lo stato ───────── */
+
+const tela = document.getElementById('tela')
+const ctx = tela.getContext('2d')
+let sc = 1, ox = 0, oy = 0, dpr = 1
+
+let S = null          // la partita; null = sul menu
+let ogniScelto = 0    // 0 = quello del livello
+
+function nuova(liv) {
+  const L = LIVELLI[liv]
+  S = {
+    liv, meta: L.meta, ogni: ogniScelto || L.ogni, valori: pool(liv),
+    righe: [], par: 0, gridDy: 0,
+    cur: null, next: null, ang: Math.PI / 2, mira: false,
+    stato: 'mira',                  // mira · volo · fine
+    palla: null,
+    tiri: 0, giuste: 0, sbagliate: 0, cadute: 0, punti: 0, dallaDiscesa: 0,
+    ultima: null, t0: performance.now(), tFine: 0,
+    esplosioni: [], cadenti: [], particelle: [], testi: [], toast: null,
+    esito: null, mostrato: false,
+  }
+  for (let r = 0; r < L.righe; r++) S.righe.push(rigaNuova(r))
+  S.cur = nuovaOp(); S.next = nuovaOp(S.cur.txt)
+}
+
+/* una riga piena: la r serve a sapere se è sfalsata (e quindi di 9 o 8 bolle) */
+function rigaNuova(r) {
+  const riga = new Array(COLONNE).fill(null)
+  for (let c = 0; c < colonne(r); c++) riga[c] = { v: scegli(S.valori), err: false, tremo: 0 }
+  return riga
+}
+
+/* geometria: la riga r è spostata di mezza bolla se (r + par) è dispari */
+const sfalsata = r => (r + S.par) & 1
+const colonne = r => sfalsata(r) ? COLONNE - 1 : COLONNE
+const px = (r, c) => MARGINE + R + c * 2 * R + sfalsata(r) * R
+const py = r => TOP + R + r * RH
+
+function vicini(r, c) {
+  const o = sfalsata(r) ? [c, c + 1] : [c - 1, c]
+  const l = [[r, c - 1], [r, c + 1]]
+  for (const dr of [-1, 1]) for (const k of o) l.push([r + dr, k])
+  return l.filter(([rr, cc]) => rr >= 0 && cc >= 0 && rr < 40 && cc < colonne(rr))
+}
+const occ = (r, c) => !!(S.righe[r] && S.righe[r][c])
+
+function tutte() {
+  const l = []
+  S.righe.forEach((riga, r) => { if (riga) riga.forEach((b, c) => {
+    if (b && c < colonne(r)) l.push({ r, c, b, x: px(r, c), y: py(r) })
+  }) })
+  return l
+}
+
+const valoriInGriglia = () => new Set(tutte().map(t => t.b.v))
+
+function nuovaOp(evita) {
+  return creaOp(S.liv, scegli([...valoriInGriglia()]), evita)
+}
+
+/* dopo ogni cambio della griglia le operazioni in coda devono avere ancora un bersaglio */
+function riallinea() {
+  const vals = valoriInGriglia()
+  if (!vals.size) return
+  if (!vals.has(S.cur.v)) S.cur = nuovaOp()
+  if (!S.next || !vals.has(S.next.v)) S.next = nuovaOp(S.cur.txt)
+}
+
+function coloreDi(v) {
+  const i = S.valori.indexOf(v)
+  return COLORI[(i < 0 ? v : i) % COLORI.length]
+}
+
+/* ───────── il tiro: una traiettoria calcolata una volta, uguale per la mira e per il volo ───────── */
+
+function traccia(ang) {
+  let x = CX, y = PY
+  const dx0 = Math.cos(ang), dy = -Math.sin(ang)
+  let dx = dx0
+  const pts = [[x, y]], bolle = tutte(), soglia = (2 * R * 0.92) ** 2
+  let bersaglio = null
+  for (let i = 0; i < 5000; i++) {
+    x += dx * PASSO; y += dy * PASSO
+    if (x < XMIN) { x = 2 * XMIN - x; dx = -dx; pts.push([x, y]) }
+    else if (x > XMAX) { x = 2 * XMAX - x; dx = -dx; pts.push([x, y]) }
+    if (y <= TOP + R) { y = TOP + R; break }                      // soffitto
+    let best = null, bd = soglia
+    for (const t of bolle) {
+      const d = (t.x - x) ** 2 + (t.y - y) ** 2
+      if (d < bd) { bd = d; best = t }
+    }
+    if (best) { bersaglio = best; break }
+  }
+  pts.push([x, y])
+  return { pts, x, y, bersaglio }
+}
+
+/* la cella libera più vicina al punto dove la palla si è fermata, purché si appoggi a qualcosa */
+function aggancia(x, y) {
+  let best = null, bd = Infinity
+  const nr = Math.min(S.righe.length + 1, 30)
+  for (let r = 0; r < nr; r++) for (let c = 0; c < colonne(r); c++) {
+    if (occ(r, c)) continue
+    if (r > 0 && !vicini(r, c).some(([a, b]) => occ(a, b))) continue
+    const d = (px(r, c) - x) ** 2 + (py(r) - y) ** 2
+    if (d < bd) { bd = d; best = { r, c } }
+  }
+  return best
+}
+
+function spara(ang) {
+  if (!S || S.stato !== 'mira') return false
+  ang = Math.max(ANG_MIN, Math.min(ANG_MAX, ang))
+  const t = traccia(ang)
+  let lung = 0
+  for (let i = 1; i < t.pts.length; i++) lung += Math.hypot(t.pts[i][0] - t.pts[i - 1][0], t.pts[i][1] - t.pts[i - 1][1])
+  S.palla = { pts: t.pts, lung, perc: 0, op: S.cur, bersaglio: t.bersaglio, x: t.x, y: t.y, px: CX, py: PY }
+  S.stato = 'volo'; S.mira = false
+  return true
+}
+
+function atterra() {
+  const p = S.palla, op = p.op
+  S.palla = null; S.tiri++; S.dallaDiscesa++
+  const b = p.bersaglio
+  if (b && b.b.v === op.v) {
+    // giusta: scoppia solo la bolla colpita, poi cade quello che resta staccato
+    S.giuste++; S.punti += 10
+    scoppia(b)
+    S.righe[b.r][b.c] = null
+    stacca()
+    S.toast = { t: 0, testo: `${op.txt} = ${op.v}`, ok: true }
+  } else {
+    const cella = aggancia(p.x, p.y)
+    while (S.righe.length <= cella.r) S.righe.push(null)
+    if (!S.righe[cella.r]) S.righe[cella.r] = new Array(COLONNE).fill(null)
+    S.righe[cella.r][cella.c] = { v: op.v, err: true, tremo: 1 }
+    S.sbagliate++
+    S.ultima = { op, colpita: b ? b.b.v : null }
+    S.toast = { t: 0, testo: b ? `${op.txt} = ${op.v}, non ${b.b.v}` : `${op.txt} = ${op.v}: lì non c'era`, ok: false }
+  }
+  S.cur = S.next; S.next = null
+  if (S.dallaDiscesa >= S.ogni) discesa()
+  if (verdetto()) return
+  riallinea()
+  S.stato = 'mira'
+}
+
+function scoppia(t) {
+  const col = t.b.err ? [220, 6, 55] : coloreDi(t.b.v)
+  S.esplosioni.push({ x: t.x, y: t.y, t: 0, col, v: t.b.v, err: t.b.err })
+  for (let i = 0; i < 14; i++) {
+    const a = Math.random() * 6.283, s = 80 + Math.random() * 220
+    S.particelle.push({ x: t.x, y: t.y, vx: Math.cos(a) * s, vy: Math.sin(a) * s - 60, t: 0, vita: 0.5 + Math.random() * 0.3, col })
+  }
+}
+
+/* le bolle senza strada fino al soffitto cadono, e valgono bonus */
+function stacca() {
+  const visti = new Set(), coda = []
+  if (S.righe[0]) for (let c = 0; c < colonne(0); c++) if (occ(0, c)) { visti.add('0,' + c); coda.push([0, c]) }
+  while (coda.length) {
+    const [r, c] = coda.pop()
+    for (const [a, b] of vicini(r, c)) {
+      const k = a + ',' + b
+      if (occ(a, b) && !visti.has(k)) { visti.add(k); coda.push([a, b]) }
+    }
+  }
+  let n = 0
+  for (const t of tutte()) {
+    if (visti.has(t.r + ',' + t.c)) continue
+    S.righe[t.r][t.c] = null; n++
+    S.cadenti.push({ x: t.x, y: t.y, vx: (Math.random() - 0.5) * 90, vy: -80 - Math.random() * 120,
+                     v: t.b.v, err: t.b.err, col: t.b.err ? [220, 6, 55] : coloreDi(t.b.v) })
+  }
+  if (n) {
+    S.cadute += n; S.punti += 15 * n
+    S.testi.push({ x: CX, y: 420, t: 0, testo: `+${15 * n} cadute!`, col: '#ffd23f' })
+  }
+}
+
+function discesa() {
+  S.par ^= 1                       // le righe vecchie restano dove sono: cambia solo chi è sfalsata
+  S.righe.unshift(rigaNuova(0))
+  S.gridDy = -RH
+  S.dallaDiscesa = 0
+}
+
+/* vittoria, sconfitta, o niente */
+function verdetto() {
+  const b = tutte()
+  let esito = null
+  if (!b.length) esito = 'vuota'
+  else if (S.giuste >= S.meta) esito = 'meta'
+  else if (b.some(t => t.y + R > LINEA)) esito = 'persa'
+  if (!esito) return false
+  S.esito = esito; S.stato = 'fine'; S.tFine = 0
+  return true
+}
+
+/* ───────── il disegno ───────── */
+
+function fitta(txt, larg, grande, peso) {
+  let s = grande
+  ctx.font = `${peso || 800} ${s}px system-ui, -apple-system, "Segoe UI", sans-serif`
+  while (ctx.measureText(txt).width > larg && s > 8) { s -= 1; ctx.font = `${peso || 800} ${s}px system-ui, -apple-system, "Segoe UI", sans-serif` }
+  return s
+}
+
+const hsl = (c, dl = 0, a = 1) => `hsla(${c[0]},${c[1]}%,${Math.max(0, Math.min(100, c[2] + dl))}%,${a})`
+
+function bolla(x, y, r, col, etichetta, err, alfa, grande) {
+  ctx.save()
+  ctx.globalAlpha = alfa === undefined ? 1 : alfa
+  ctx.shadowColor = '#0008'; ctx.shadowBlur = 5; ctx.shadowOffsetY = 2
+  const g = ctx.createRadialGradient(x - r * 0.35, y - r * 0.4, r * 0.1, x, y, r)
+  if (err) { g.addColorStop(0, '#c4c8d2'); g.addColorStop(0.6, '#8a8f9c'); g.addColorStop(1, '#5d626f') }
+  else { g.addColorStop(0, hsl(col, 24)); g.addColorStop(0.55, hsl(col, 0)); g.addColorStop(1, hsl(col, -18)) }
+  ctx.fillStyle = g
+  ctx.beginPath(); ctx.arc(x, y, r - 0.5, 0, 6.2832); ctx.fill()
+  ctx.shadowColor = 'transparent'
+  if (err) { ctx.strokeStyle = '#e0644f'; ctx.lineWidth = 2; ctx.setLineDash([4, 3]); ctx.beginPath(); ctx.arc(x, y, r - 3, 0, 6.2832); ctx.stroke(); ctx.setLineDash([]) }
+  // il lucido
+  ctx.fillStyle = 'rgba(255,255,255,.5)'
+  ctx.beginPath(); ctx.ellipse(x - r * 0.33, y - r * 0.5, r * 0.34, r * 0.18, -0.6, 0, 6.2832); ctx.fill()
+  if (etichetta !== undefined) {
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
+    fitta(String(etichetta), r * 1.75, grande || 20)
+    ctx.lineJoin = 'round'; ctx.lineWidth = 3.5; ctx.strokeStyle = 'rgba(0,0,0,.5)'
+    ctx.strokeText(etichetta, x, y + 1)
+    ctx.fillStyle = '#fff'; ctx.fillText(etichetta, x, y + 1)
+  }
+  ctx.restore()
+}
+
+function disegna(dt) {
+  ctx.setTransform(1, 0, 0, 1, 0, 0)
+  ctx.fillStyle = '#07080d'; ctx.fillRect(0, 0, tela.width, tela.height)
+  ctx.setTransform(sc * dpr, 0, 0, sc * dpr, ox * dpr, oy * dpr)
+  ctx.save()
+  ctx.beginPath(); ctx.rect(0, 0, W, H); ctx.clip()
+  const sfondo = ctx.createLinearGradient(0, 0, 0, H)
+  sfondo.addColorStop(0, '#171c33'); sfondo.addColorStop(1, '#0c0f1c')
+  ctx.fillStyle = sfondo; ctx.fillRect(0, 0, W, H)
+  if (!S) { ctx.restore(); return }
+
+  // sotto la linea: la zona del cannone
+  ctx.fillStyle = 'rgba(224,100,79,.07)'; ctx.fillRect(0, LINEA, W, H - LINEA)
+  ctx.strokeStyle = 'rgba(255,120,100,.75)'; ctx.lineWidth = 2; ctx.setLineDash([10, 7])
+  ctx.beginPath(); ctx.moveTo(0, LINEA); ctx.lineTo(W, LINEA); ctx.stroke(); ctx.setLineDash([])
+
+  // la griglia (scivola giù quando scende una riga)
+  ctx.save(); ctx.translate(0, S.gridDy)
+  for (const t of tutte()) {
+    const tr = t.b.tremo > 0 ? Math.sin(t.b.tremo * 30) * 2.5 * t.b.tremo : 0
+    bolla(t.x + tr, t.y, R, t.b.err ? null : coloreDi(t.b.v), t.b.v, t.b.err)
+  }
+  ctx.restore()
+
+  // mira
+  if (S.mira && S.stato === 'mira') {
+    const t = traccia(S.ang)
+    ctx.save()
+    ctx.strokeStyle = 'rgba(255,255,255,.8)'; ctx.lineWidth = 3.5; ctx.lineCap = 'round'; ctx.setLineDash([0.1, 11])
+    ctx.beginPath(); t.pts.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); ctx.stroke()
+    ctx.restore()
+    if (t.bersaglio) {
+      ctx.strokeStyle = 'rgba(255,255,255,.9)'; ctx.lineWidth = 2.5
+      ctx.beginPath(); ctx.arc(t.bersaglio.x, t.bersaglio.y + S.gridDy, R + 2, 0, 6.2832); ctx.stroke()
+    }
+    const cella = aggancia(t.x, t.y)
+    if (cella) {
+      ctx.strokeStyle = 'rgba(255,255,255,.3)'; ctx.lineWidth = 2; ctx.setLineDash([3, 4])
+      ctx.beginPath(); ctx.arc(px(cella.r, cella.c), py(cella.r), R - 2, 0, 6.2832); ctx.stroke(); ctx.setLineDash([])
+    }
+  }
+
+  // il cannone
+  ctx.save()
+  ctx.translate(CX, PY); ctx.rotate(-S.ang)
+  ctx.fillStyle = '#3a4260'; ctx.strokeStyle = '#6b779c'; ctx.lineWidth = 2
+  ctx.beginPath(); ctx.roundRect(0, -11, 50, 22, 8); ctx.fill(); ctx.stroke()
+  ctx.restore()
+  ctx.fillStyle = '#2a3150'; ctx.strokeStyle = '#6b779c'
+  ctx.beginPath(); ctx.arc(CX, PY + 22, 40, Math.PI, 0); ctx.fill(); ctx.stroke()
+  ctx.fillRect(CX - 40, PY + 22, 80, 100)
+  if (S.stato !== 'volo' && S.cur) bolla(CX, PY, R + 2, coloreDi(S.cur.v), S.cur.txt, false, 1, 13)
+
+  // la domanda grande e la prossima
+  if (S.cur && S.stato !== 'fine') {
+    ctx.fillStyle = '#93a0bd'; ctx.font = '600 12px system-ui, sans-serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'
+    ctx.fillText('QUANTO FA?', 16, 746)
+    ctx.fillStyle = '#fff'; fitta(S.cur.txt, 118, 34, 800); ctx.textBaseline = 'middle'
+    ctx.fillText(S.cur.txt, 16, 780)
+    ctx.textAlign = 'center'; ctx.fillStyle = '#93a0bd'; ctx.font = '600 12px system-ui, sans-serif'; ctx.textBaseline = 'alphabetic'
+    ctx.fillText('POI', W - 52, 746)
+    bolla(W - 52, 780, 24, coloreDi(S.next.v), S.next.txt, false, 0.92, 12)
+  }
+
+  // la palla in volo
+  const p = S.palla
+  if (p) bolla(p.px, p.py, R, coloreDi(p.op.v), p.op.txt, false, 1, 11)
+
+  // scoppi, cadute, particelle
+  for (const e of S.esplosioni) {
+    const k = e.t / 0.32
+    ctx.save(); ctx.translate(e.x, e.y + S.gridDy); ctx.scale(1 + k * 0.55, 1 + k * 0.55)
+    bolla(0, 0, R, e.col, e.v, e.err, Math.max(0, 1 - k))
+    ctx.restore()
+    ctx.strokeStyle = `rgba(255,255,255,${Math.max(0, 0.8 - k)})`; ctx.lineWidth = 3
+    ctx.beginPath(); ctx.arc(e.x, e.y + S.gridDy, R + k * 26, 0, 6.2832); ctx.stroke()
+  }
+  for (const c of S.cadenti) bolla(c.x, c.y, R, c.col, c.v, c.err, Math.max(0, Math.min(1, (H + 30 - c.y) / 120)))
+  for (const q of S.particelle) {
+    ctx.fillStyle = hsl(q.col, 18, Math.max(0, 1 - q.t / q.vita))
+    ctx.beginPath(); ctx.arc(q.x, q.y + S.gridDy, 3.5, 0, 6.2832); ctx.fill()
+  }
+  for (const t of S.testi) {
+    ctx.globalAlpha = Math.max(0, 1 - t.t / 1.1); ctx.fillStyle = t.col
+    ctx.font = '800 18px system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
+    ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(0,0,0,.5)'
+    ctx.strokeText(t.testo, t.x, t.y - t.t * 40); ctx.fillText(t.testo, t.x, t.y - t.t * 40)
+    ctx.globalAlpha = 1
+  }
+
+  // il commento sull'ultimo tiro
+  if (S.toast) {
+    const a = Math.min(1, (1.8 - S.toast.t) * 2)
+    if (a > 0) {
+      ctx.globalAlpha = a
+      ctx.font = '700 16px system-ui, sans-serif'
+      const w = ctx.measureText(S.toast.testo).width + 28
+      ctx.fillStyle = S.toast.ok ? 'rgba(47,125,79,.92)' : 'rgba(125,47,47,.92)'
+      ctx.beginPath(); ctx.roundRect(CX - w / 2, LINEA - 44, w, 32, 16); ctx.fill()
+      ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
+      ctx.fillText(S.toast.testo, CX, LINEA - 28)
+      ctx.globalAlpha = 1
+    }
+  }
+
+  // la fascia in cima (copre la riga che entra)
+  ctx.fillStyle = '#0b0d16'; ctx.fillRect(0, 0, W, TOP)
+  ctx.strokeStyle = '#ffffff14'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(0, TOP - 0.5); ctx.lineTo(W, TOP - 0.5); ctx.stroke()
+  ctx.textBaseline = 'middle'
+  ctx.textAlign = 'left'; ctx.fillStyle = '#e8edf7'; ctx.font = '700 16px system-ui, sans-serif'
+  ctx.fillText(`Giuste ${S.giuste}/${S.meta}`, 14, 20)
+  ctx.fillStyle = '#93a0bd'; ctx.font = '600 13px system-ui, sans-serif'
+  const resta = S.ogni - S.dallaDiscesa
+  ctx.fillText(`scende fra ${resta} ${resta === 1 ? 'tiro' : 'tiri'}`, 14, 43)
+  ctx.textAlign = 'right'; ctx.fillStyle = '#ffd23f'; ctx.font = '700 16px system-ui, sans-serif'
+  ctx.fillText(`${S.punti} pt`, W - 54, 20)
+  ctx.fillStyle = '#ffb3a7'; ctx.font = '600 13px system-ui, sans-serif'
+  ctx.fillText(`sbagliate ${S.sbagliate}`, W - 54, 43)
+  ctx.fillStyle = '#ffffff14'; ctx.beginPath(); ctx.roundRect(W - 42, 12, 32, 32, 10); ctx.fill()
+  ctx.fillStyle = '#e8edf7'; ctx.textAlign = 'center'; ctx.font = '700 18px system-ui, sans-serif'; ctx.fillText('☰', W - 26, 28)
+  ctx.restore()
+}
+
+/* ───────── il tempo ───────── */
+
+let ultimo = 0
+function giro(ora) {
+  const dt = Math.min(0.05, (ora - ultimo) / 1000 || 0.016); ultimo = ora
+  if (S) aggiorna(dt)
+  disegna(dt)
+  requestAnimationFrame(giro)
+}
+
+function aggiorna(dt) {
+  S.gridDy += (0 - S.gridDy) * Math.min(1, dt * 11)
+  if (Math.abs(S.gridDy) < 0.2) S.gridDy = 0
+  for (const t of tutte()) if (t.b.tremo > 0) t.b.tremo = Math.max(0, t.b.tremo - dt * 2.2)
+
+  const p = S.palla
+  if (p) {
+    p.perc += VELOCITA * dt
+    let d = Math.min(p.perc, p.lung)
+    for (let i = 1; i < p.pts.length; i++) {
+      const seg = Math.hypot(p.pts[i][0] - p.pts[i - 1][0], p.pts[i][1] - p.pts[i - 1][1])
+      if (d <= seg || i === p.pts.length - 1) {
+        const f = seg ? Math.min(1, d / seg) : 1
+        p.px = p.pts[i - 1][0] + (p.pts[i][0] - p.pts[i - 1][0]) * f
+        p.py = p.pts[i - 1][1] + (p.pts[i][1] - p.pts[i - 1][1]) * f
+        break
+      }
+      d -= seg
+    }
+    if (p.perc >= p.lung) atterra()
+  }
+
+  for (const e of S.esplosioni) e.t += dt
+  S.esplosioni = S.esplosioni.filter(e => e.t < 0.32)
+  for (const c of S.cadenti) { c.vy += 1700 * dt; c.x += c.vx * dt; c.y += c.vy * dt }
+  S.cadenti = S.cadenti.filter(c => c.y < H + 30)
+  for (const q of S.particelle) { q.t += dt; q.vy += 700 * dt; q.x += q.vx * dt; q.y += q.vy * dt }
+  S.particelle = S.particelle.filter(q => q.t < q.vita)
+  for (const t of S.testi) t.t += dt
+  S.testi = S.testi.filter(t => t.t < 1.1)
+  if (S.toast) { S.toast.t += dt; if (S.toast.t > 1.8) S.toast = null }
+
+  if (S.stato === 'fine' && !S.mostrato) {
+    S.tFine += dt
+    if (S.tFine > 1.1 && !S.cadenti.length) mostraFine()
+  }
+}
+
+/* ───────── input ───────── */
+
+function adatta() {
+  dpr = window.devicePixelRatio || 1
+  const iw = window.innerWidth, ih = window.innerHeight
+  tela.width = Math.round(iw * dpr); tela.height = Math.round(ih * dpr)
+  sc = Math.min(iw / W, ih / H)
+  ox = (iw - W * sc) / 2; oy = (ih - H * sc) / 2
+}
+window.addEventListener('resize', adatta)
+
+function logico(e) {
+  const r = tela.getBoundingClientRect()
+  return [(e.clientX - r.left - ox) / sc, (e.clientY - r.top - oy) / sc]
+}
+
+function punta(x, y) {
+  const dx = x - CX, dy = Math.max(10, PY - y)
+  S.ang = Math.max(ANG_MIN, Math.min(ANG_MAX, Math.atan2(dy, dx)))
+}
+
+tela.addEventListener('pointerdown', e => {
+  if (!S) return
+  e.preventDefault()
+  const [x, y] = logico(e)
+  if (x > W - 48 && y < 50) { tornaMenu(); return }
+  if (S.stato !== 'mira' || y < TOP) return
+  tela.setPointerCapture(e.pointerId)
+  S.mira = true; punta(x, y)
+})
+tela.addEventListener('pointermove', e => {
+  if (!S || !S.mira) return
+  const [x, y] = logico(e); punta(x, y)
+})
+function rilascia(e, annulla) {
+  if (!S || !S.mira) return
+  const [x, y] = logico(e)
+  S.mira = false
+  if (annulla || y > PY + 60) return              // dito trascinato giù: tiro annullato
+  punta(x, y); spara(S.ang)
+}
+tela.addEventListener('pointerup', e => rilascia(e, false))
+tela.addEventListener('pointercancel', e => rilascia(e, true))
+
+/* ───────── menu e fine partita ───────── */
+
+const $ = id => document.getElementById(id)
+let ultimoLivello = 1
+
+function avvia(liv) {
+  ultimoLivello = liv
+  nuova(liv)
+  $('menu').hidden = true; $('fine').hidden = true
+}
+function tornaMenu() { S = null; $('fine').hidden = true; $('menu').hidden = false }
+
+document.querySelectorAll('.liv').forEach(b => b.addEventListener('click', () => avvia(Number(b.dataset.l))))
+function ritocca(d) {
+  ogniScelto = ogniScelto ? Math.max(3, Math.min(12, ogniScelto + d)) : 6
+  $('ogni').textContent = ogniScelto
+}
+$('meno').addEventListener('click', () => ritocca(-1))
+$('piu').addEventListener('click', () => ritocca(1))
+$('ancora').addEventListener('click', () => avvia(ultimoLivello))
+$('alMenu').addEventListener('click', tornaMenu)
+
+function mostraFine() {
+  S.mostrato = true
+  const vinta = S.esito !== 'persa'
+  $('fine-titolo').textContent = S.esito === 'vuota' ? 'Griglia svuotata!' : vinta ? `${S.meta} risposte giuste!` : 'La griglia è arrivata in fondo'
+  $('fine-sotto').textContent = vinta ? 'Bel lavoro.' : 'Ogni sbaglio occupa un posto: ecco com\'è andata.'
+  const sec = Math.round((performance.now() - S.t0) / 1000)
+  const prec = S.tiri ? Math.round(100 * S.giuste / S.tiri) : 0
+  const riga = (a, b) => `<div><span>${a}</span><b>${b}</b></div>`
+  $('fine-stat').innerHTML = riga('Tiri', S.tiri) + riga('Giuste', S.giuste) + riga('Sbagliate', S.sbagliate)
+    + riga('Precisione', prec + '%') + riga('Bolle cadute', S.cadute) + riga('Punti', S.punti)
+    + riga('Tempo', `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`)
+  const f = $('fine-formula')
+  if (S.ultima) {
+    f.hidden = false
+    f.innerHTML = `L'ultima sbagliata:<br><b>${spiega(S.ultima.op)}</b>`
+      + (S.ultima.colpita !== null ? `<br><small>(avevi colpito il ${S.ultima.colpita})</small>` : '<br><small>(non avevi colpito nessun risultato)</small>')
+  } else f.hidden = true
+  $('fine').hidden = false
+}
+
+/* aggancio per le prove da console / Playwright */
+window.__bobble = {
+  get S() { return S }, avvia, spara, traccia, aggancia, px, py,
+}
+
+adatta()
+requestAnimationFrame(giro)
+</script>
+</body>
+</html>

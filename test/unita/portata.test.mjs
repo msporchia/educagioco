@@ -42,6 +42,7 @@ import { CAMPAGNA as SOTTERRANEO } from '../../src/giochi/sotterraneo/dati/campa
 import { CAMPAGNA as PASSO_PASSO } from '../../src/giochi/passo-passo/dati/campagna.js'
 import { STRADE as STRADE_PASSO } from '../../src/giochi/passo-passo/motore/strade.js'
 import { CAMPAGNA as COSTRUTTORE } from '../../src/giochi/costruttore/dati/campagna.js'
+import { CAMPAGNA as ARENA } from '../../src/giochi/arena/dati/campagna.js'
 import { CAMPAGNA as INGLESE } from '../../src/data/campagna-inglese.js'
 import { TAPPE as INGLESE_MONDI } from '../../src/giochi/inglese/dati/mondi.js'
 import { CAMPAGNA as SPAGNOLO } from '../../src/data/campagna-spagnolo.js'
@@ -110,6 +111,7 @@ const CAMPAGNE = [
   // Passo passo in fila come sulla mappa: una strada per animale, le tappe del cane in coda nella loro isola
   ['passo passo, il coniglio', STRADE_PASSO.coniglio.map(i => PASSO_PASSO[i])],
   ['passo passo, il cane', STRADE_PASSO.cane.map(i => PASSO_PASSO[i])], ['il costruttore', COSTRUTTORE],
+  ['castle battle', ARENA],
   ['asteroidi', SCALETTA.map(v => v.T)], ['tabelline', TABELLINE], ['calcolo a mente', STAZIONI],
   ['inglese', INGLESE], ['inglese a mondi', INGLESE_MONDI], ['spagnolo', SPAGNOLO], ['castello', CASTELLO],
   ['pozioni', POZIONI], ['bancarella', BANCARELLA],

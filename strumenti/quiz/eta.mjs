@@ -32,7 +32,7 @@ const QUANTE = numero('--quante', unaSola ? 4 : 2)
 const moduli = []
 for (const f of readdirSync(CARTELLA).sort().filter(x => x.endsWith('.js'))) {
   const m = (await import(pathToFileURL(resolve(CARTELLA, f)).href)).default
-  if (m) moduli.push(m)
+  if (m && !m.soloSuRichiesta) moduli.push(m) // qui si guarda cosa arriva dai giochi: i moduli solo su richiesta non ci sono
 }
 
 const righe = catalogoDi(moduli).flatMap(m => m.classi)

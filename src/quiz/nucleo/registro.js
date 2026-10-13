@@ -15,6 +15,9 @@ export const MODULI = Object.values(trovati)
   .sort((a, b) =>
     (ORDINE.indexOf(a.materia) - ORDINE.indexOf(b.materia)) || a.nome.localeCompare(b.nome))
 
+// quelli che stanno nei mazzi dei giochi: l'elenco dei grandi (catalogo, quadro dell'età) descrive quello che un bambino si vede arrivare
+export const MODULI_DEI_MAZZI = MODULI.filter(m => !m.soloSuRichiesta)
+
 export const perId = id => MODULI.find(m => m.id === id)
 
 export const perMateria = materia => MODULI.filter(m => m.materia === materia)

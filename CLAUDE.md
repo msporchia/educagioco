@@ -64,6 +64,7 @@ quale file.
 | `docs/genitori/` | cosa si può spegnere, la manopola dell'età, il quadro, i ritocchi ✎, «Come va», codice dei genitori, cestino e posta, le novità per i bambini, le guide in app — prima di toccare `components/eta/`, `src/guide/`, `store/pin.js`, `store/cestino.js`, `store/posta.js` |
 | `docs/asteroidi/` | Tabelline Asteroidi: la scaletta unica di pianeti e stazioni, il volo, i cieli, la nave madre e l'hangar |
 | `docs/castello/` | Difendi il Castello: taratura (`npm run tara`), torri, operazioni, mostri e immunità, partite libere e regali, campagne — prima di toccare `data/castello.js`, `data/mostri.js`, `data/campagne-castello.js` o un prezzo |
+| `docs/arena/` | Castle Battle (`src/giochi/arena/`): regole, calcoli, campagna, taratura (`npm run tara:arena`), sosta, grafica — prima di toccare `giochi/arena/dati/`, il motore o un prezzo |
 | `docs/lingue/` | English ed Español: vocaboli, campagne, la pronuncia incisa (`npm run voci`) |
 | `docs/bancarella/` | La bancarella: regole e difficoltà |
 | `docs/pozioni/` | Il laboratorio delle pozioni: regole e tappe |
@@ -143,8 +144,9 @@ Una riga ciascuna; il perché sta nel documento indicato.
   resta. → `docs/core/progressi.md`
 - **I file generati non si toccano a mano**: `src/data/taratura-castello.js`
   (`npm run tara`, un test confronta la firma), `docs/apprendimento/livelli-delle-domande.md`
-  (`npm run quiz:livelli`), `src/data/voci*.js` (`npm run voci`, e se dice
-  «non incise» si rilancia). → `docs/core/comandi.md`
+  (`npm run quiz:livelli`), `src/giochi/arena/dati/taratura.js`
+  (`npm run tara:arena`, un test confronta la firma), `src/data/voci*.js`
+  (`npm run voci`, e se dice «non incise» si rilancia). → `docs/core/comandi.md`
 - **Un'emoji nuova vuole `npm run emoji`**: il gioco disegna le emoji col suo font
   (Twemoji), tagliato a quelle usate; se ci si scorda, `unita/emoji` è rosso.
   → `docs/core/emoji.md`

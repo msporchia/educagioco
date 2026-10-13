@@ -89,7 +89,7 @@ const scambiaCifre = n => {
 }
 
 // la sottrazione fatta colonna per colonna senza mai chiedere in prestito
-function senzaPrestito(a, b) {
+export function senzaPrestito(a, b) {
   let out = 0, peso = 1
   while (a > 0 || b > 0) {
     out += Math.abs((a % 10) - (b % 10)) * peso
@@ -98,7 +98,8 @@ function senzaPrestito(a, b) {
   return out
 }
 
-function erroriTipici(e) {
+// esportata: anche i conti puri dei quiz (quiz/moduli/conti.js) ne pescano i falsi
+export function erroriTipici(e) {
   const r = e.ris
   if (e.complemento) return [r + 10, r - 10, 10 - unita(e.a), r + 1, r - 1, e.a]
   if (e.segno === '+') return [r - 10, r + 10, r - 1, r + 1, scambiaCifre(r),

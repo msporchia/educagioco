@@ -14,7 +14,7 @@ tipologie. Il motore sotto è [srs.md](srs.md).
   tutto quello che lo legge lo fa per prefisso (`en:`, `math:`,
   `pozioni:`…): **un prefisso nuovo si sceglie guardando
   `store/progressi.js`**, dove stanno quelli presi (`verbo:` era già dei
-  verbi inglesi).
+  verbi inglesi; i conti puri hanno `conti:`, vedi [quiz-conti.md](quiz-conti.md)).
 - **Nessuna materia nuova in `progressi.js`**: una padronanza vuole un
   `totale`, e le tipologie non sono un elenco chiuso di cose da imparare.
 - **Gli id non si rinominano**: sono le chiavi dello stato, e cambiarli fa

@@ -1,0 +1,716 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Il coniglietto e i fiumi — prototipo</title>
+<style>
+  :root { --verde: #5fbf4a; --acqua: #38a3e8; --oro: #ffd23f; --inchiostro: #23324a; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; height: 100%; overflow: hidden; overscroll-behavior: none; }
+  body {
+    background: #1d2b3a; color: var(--inchiostro); touch-action: manipulation;
+    font: 15px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    user-select: none; -webkit-user-select: none;
+  }
+  #campo { position: fixed; top: 0; bottom: 0; left: 50%; width: min(100vw, 56vh); transform: translateX(-50%); overflow: hidden; background: #7ccf5a; }
+  canvas { display: block; width: 100%; height: 100%; touch-action: manipulation; }
+
+  .tondo {
+    position: absolute; top: max(10px, env(safe-area-inset-top)); width: 44px; height: 44px;
+    border-radius: 50%; border: 0; background: #ffffffe6; color: var(--inchiostro);
+    font-size: 22px; box-shadow: 0 3px 0 #0003; cursor: pointer; display: none; z-index: 3;
+  }
+  #bMenu { left: 10px; display: block; }
+  #bRifai { right: 10px; }
+  .tondo:active { transform: translateY(2px); box-shadow: 0 1px 0 #0003; }
+
+  .velo {
+    position: absolute; inset: 0; z-index: 5; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 14px; padding: 24px;
+    background: linear-gradient(#5fbf4af2, #38a3e8f2); text-align: center;
+  }
+  .velo.nascosto { display: none; }
+  .velo h1 { margin: 0; font-size: 30px; line-height: 1.1; color: #fff; text-shadow: 0 3px 0 #0003; }
+  .velo p { margin: 0; color: #fff; font-weight: 600; text-shadow: 0 1px 0 #0003; max-width: 300px; }
+  .gruppo { display: flex; gap: 8px; width: 100%; max-width: 320px; }
+  .gruppo button, .grande {
+    flex: 1; border: 0; border-radius: 16px; padding: 12px 6px; font: inherit; font-weight: 800;
+    background: #ffffffd9; color: var(--inchiostro); box-shadow: 0 4px 0 #0003; cursor: pointer;
+  }
+  .gruppo button small { display: block; font-weight: 600; font-size: 12px; opacity: .75; }
+  .gruppo button.scelto { background: var(--oro); }
+  .grande { flex: none; width: 100%; max-width: 320px; font-size: 20px; padding: 14px; background: #fff; }
+  .grande:active, .gruppo button:active { transform: translateY(3px); box-shadow: 0 1px 0 #0003; }
+  .etichetta { color: #fff; font-weight: 800; font-size: 13px; letter-spacing: .06em; text-transform: uppercase; text-shadow: 0 1px 0 #0003; }
+  #stat { background: #ffffffd9; border-radius: 16px; padding: 12px 18px; font-weight: 700; line-height: 1.7; }
+</style>
+</head>
+<body>
+<!--
+  Il coniglietto e i fiumi — prototipo (poc/crossy.html)
+
+  Un Crossy Road dove la matematica è la meccanica, non un pedaggio, e dove
+  non c'è fretta: i tronchi scorrono piano, si aspetta quello giusto.
+
+    · erba: sicura, con qualche albero che sbarra la strada
+    · strada: le auto passano e travolgono (si riparte dall'erba prima)
+    · fiume: ogni tronco porta un numero; il coniglio tiene in mano
+      un'operazione e può posarsi solo sul tronco col risultato
+      (il tronco giusto NON è evidenziato: bisogna calcolare)
+
+  Due modi, scelti dal menu:
+    a) «Un'operazione per fiume»: se ne tiene una in mano, se ne riceve una
+       nuova dopo ogni fiume.
+    b) «Consegna»: portare al villaggio esattamente un totale, raccogliendo
+       casse numerate per le corsie d'erba, senza passare il totale. I fiumi
+       qui hanno tronchi senza numeri; il cancello del villaggio si apre solo
+       a totale giusto. Si può tornare indietro (tocco sotto il coniglio).
+
+  Sbagliare non costa monete né fa finire la partita: si ricomincia la
+  corsia e si dice in una riga come si calcola.
+
+  Comandi: tocco sopra il coniglio = avanti; tocco a sinistra/destra sulla
+  sua riga = passo di lato; tocco sotto = indietro; oppure swipe.
+  Frecce / WASD con la tastiera. Il generatore di domande è quello (finto)
+  di sotterraneo.html, adattato ai tre livelli.
+-->
+<div id="campo">
+  <canvas id="tela"></canvas>
+  <button class="tondo" id="bMenu" title="Menu">☰</button>
+  <button class="tondo" id="bRifai" title="Rimetti giù le casse">↺</button>
+
+  <div class="velo" id="menu">
+    <div style="font-size:64px;line-height:1">🐇</div>
+    <h1>Il coniglietto<br>e i fiumi</h1>
+    <p>Salta sul tronco col numero giusto. Nessuna fretta.</p>
+    <div class="etichetta">Livello</div>
+    <div class="gruppo" id="gLiv">
+      <button data-v="1">1<small>somme fino a 20</small></button>
+      <button data-v="2">2<small>sottrazioni, tabelline</small></button>
+      <button data-v="3">3<small>divisioni, tabelline alte</small></button>
+    </div>
+    <div class="etichetta">Modo</div>
+    <div class="gruppo" id="gModo">
+      <button data-v="op">Un'operazione<br>per fiume</button>
+      <button data-v="consegna">Consegna<small>porta il totale</small></button>
+    </div>
+    <button class="grande" id="bVia">Via!</button>
+  </div>
+
+  <div class="velo nascosto" id="fine">
+    <div style="font-size:64px;line-height:1">🏡</div>
+    <h1 id="fineTit">Sei al villaggio!</h1>
+    <div id="stat"></div>
+    <button class="grande" id="bAncora">Ancora</button>
+    <button class="grande" id="bMenu2" style="background:#ffffffa0">Menu</button>
+  </div>
+</div>
+
+<script>
+'use strict'
+/* ═══════════════════ 0. COSTANTI E UTILITÀ ═══════════════════ */
+const COLONNE = 7
+const DURATA_SALTO = 0.17
+const LARG_TRONCO = 2.0
+const su = n => 1 + Math.floor(Math.random() * n)
+const tra = (a, b) => a + Math.floor(Math.random() * (b - a + 1))
+const mod = (a, L) => ((a % L) + L) % L
+const mescola = l => l.map(v => [Math.random(), v]).sort((a, b) => a[0] - b[0]).map(p => p[1])
+const pesca = l => l[Math.floor(Math.random() * l.length)]
+
+/* ═══════════════════ 1. LE OPERAZIONI ═══════════════════
+   Come in sotterraneo.html: somme, sottrazioni, moltiplicazioni, divisioni.
+   Qui però la difficoltà è una scala per livello (1/2/3) e sale col fiume (k). */
+function operazione(liv, k) {
+  let a, b, giusta, testo, tipo, spiega
+  if (liv === 1) {
+    const tetto = 10 + Math.round(k * 10 / 11)            // da 10 a 20
+    a = su(tetto - 2) + 1; b = su(tetto - a)
+    giusta = a + b; testo = `${a} + ${b}`; tipo = '+'
+  } else if (liv === 2) {
+    if (Math.random() < 0.5) {
+      a = su(20) + 10; b = su(Math.min(a - 1, 20))
+      giusta = a - b; testo = `${a} − ${b}`; tipo = '−'
+    } else {
+      a = tra(2, 6); b = tra(2, 9)
+      giusta = a * b; testo = `${a} × ${b}`; tipo = '×'
+    }
+  } else {
+    if (Math.random() < 0.5) {
+      b = tra(2, 9); const q = tra(2, 9)
+      a = b * q; giusta = q; testo = `${a} : ${b}`; tipo = ':'
+    } else {
+      a = tra(6, 9); b = tra(4, 9)
+      giusta = a * b; testo = `${a} × ${b}`; tipo = '×'
+    }
+  }
+  if (tipo === '+') spiega = `${a} + ${b} = ${giusta}: parti da ${a} e conti avanti di ${b}.`
+  else if (tipo === '−') spiega = `${a} − ${b} = ${giusta}: parti da ${a} e torni indietro di ${b}.`
+  else if (tipo === '×') spiega = `${a} × ${b} = ${giusta}: ${a} ripetuto ${b} volte.`
+  else spiega = `${a} : ${b} = ${giusta}, perché ${b} × ${giusta} fa ${a}.`
+  /* Numeri finti vicini (± piccoli e quelli che nascono da uno sbaglio tipico). */
+  const pool = new Set()
+  for (const d of [1, 2, 3, 4, -1, -2, -3, -4]) pool.add(giusta + d)
+  if (tipo === '×') { pool.add(giusta + a); pool.add(giusta - a); pool.add(giusta + b); pool.add(giusta - b) }
+  if (tipo === '−') pool.add(a + b)
+  if (tipo === '+') pool.add(Math.abs(a - b))
+  const finte = [...pool].filter(v => v >= 0 && v !== giusta)
+  return { testo, giusta, finte, spiega }
+}
+
+/* ═══════════════════ 2. IL MONDO ═══════════════════
+   Si genera tutto all'inizio della partita. Ogni riga ha un tipo; le corsie
+   che si muovono sono funzioni del tempo (nessuno stato da aggiornare):
+   per questo sono ripetitive e leggibili. */
+let G = null
+
+function nuovaPartita(modo, liv) {
+  const righe = []
+  const push = o => { righe.push(o); return righe.length - 1 }
+  const velFiume = [0, 0.85, 1.0, 1.15][liv]
+  const velAuto = [0, 1.5, 1.9, 2.3][liv]
+  const Z = modo === 'op' ? 12 : 8
+  const ops = []
+  push({ tipo: 'erba', alberi: [], inizio: true })
+  let sicura = 0
+  let nuovaOp = null
+  for (let z = 0; z < Z; z++) {
+    if (modo === 'op') ops.push(operazione(liv, z))
+    const alberi = mescola([0, 1, 2, 3, 4, 5, 6]).slice(0, tra(1, 3))
+    if (z === 0) alberi.length = 0
+    const ia = push({ tipo: 'erba', alberi, nuovaOp, cassa: null })
+    sicura = ia
+    nuovaOp = null
+    const nStrada = liv === 1 ? 1 : (z % 2 ? 2 : 1)
+    for (let i = 0; i < nStrada; i++) {
+      const S = 4.2 + Math.random() * 1.4
+      push({ tipo: 'strada', zona: sicura, dir: (i + z) % 2 ? 1 : -1,
+             speed: velAuto * (0.85 + Math.random() * 0.3), n: 3, S, L: 3 * S,
+             phase: Math.random() * 20, sagome: [pesca(['🚗', '🚕', '🚙']), pesca(['🚌', '🚙']), pesca(['🚓', '🚗', '🚕'])] })
+    }
+    const ib = push({ tipo: 'erba', alberi: mescola([0, 1, 2, 3, 4, 5, 6]).slice(0, tra(1, 3)), cassa: null })
+    sicura = ib
+    const nFiume = modo === 'op' ? 2 : 1
+    for (let i = 0; i < nFiume; i++) {
+      const S = 2.9
+      const r = { tipo: 'fiume', zona: sicura, dir: (i + z) % 2 ? 1 : -1,
+                  speed: velFiume * (0.9 + Math.random() * 0.2), n: 4, S, L: 4 * S,
+                  phase: Math.random() * 12, nums: null, zonaFiume: z }
+      if (modo === 'op') {
+        /* Quattro tronchi per giro, due col risultato giusto: il giusto torna
+           ogni ~6 secondi, a intervalli sempre uguali. Gli altri sono vicini. */
+        const o = ops[z]
+        const slot = mescola([0, 1, 2, 3])
+        const giusti = new Set(slot.slice(0, 2))
+        const finte = mescola(o.finte)
+        r.nums = [0, 1, 2, 3].map(k => giusti.has(k) ? o.giusta : (finte.pop() ?? o.giusta + 5 + k))
+      }
+      push(r)
+    }
+    nuovaOp = modo === 'op' ? z + 1 : null
+  }
+  push({ tipo: 'erba', alberi: [], nuovaOp: nuovaOp !== null && nuovaOp < ops.length ? nuovaOp : null, cassa: null, ultima: true })
+  const vil = push({ tipo: 'villaggio' })
+
+  let target = 0, tutteCasse = []
+  if (modo === 'consegna') {
+    const [lo, hi] = [[2, 9], [4, 15], [6, 19]][liv - 1]
+    const k = liv === 1 ? 3 : tra(3, 4)
+    const parti = []
+    let somma = 0
+    for (let i = 0; i < k - 1; i++) { const v = tra(lo, hi); parti.push(v); somma += v }
+    const ultimo = tra(lo, hi); parti.push(ultimo); somma += ultimo
+    target = somma
+    const finte = []
+    for (let i = 0; i < tra(4, 6); i++) finte.push(tra(lo, hi))
+    const tutte = mescola([...parti, ...finte])
+    const libere = mescola(righe.map((r, i) => [r, i]).filter(([r, i]) => r.tipo === 'erba' && !r.inizio && !r.ultima && i > 0))
+    tutte.forEach((num, i) => {
+      const [r] = libere[i]
+      const liberi = [0, 1, 2, 3, 4, 5, 6].filter(c => !r.alberi.includes(c))
+      r.cassa = { col: pesca(liberi), num, presa: false }
+      tutteCasse.push(r.cassa)
+    })
+  }
+
+  G = {
+    modo, liv, righe, ops, Z, vil, target, casse: tutteCasse, somma: 0,
+    t: 0, rab: { row: 0, x: 3 }, hop: null, cam: 0, max: 0,
+    op: modo === 'op' ? ops[0] : null,
+    stato: 'gioco', caduta: null, toast: null, vista: 0,
+    stat: { giuste: 0, sbagliate: 0, auto: 0, ripartenze: 0, t0: performance.now() },
+  }
+}
+
+/* Posizioni delle cose che scorrono, in colonne (0 = bordo sinistro). */
+const sinistraTronco = (c, k, t) => mod(c.phase + k * c.S + c.dir * c.speed * t, c.L) - 3
+const centroAuto = (c, k, t) => mod(c.phase + k * c.S + c.dir * c.speed * t, c.L) - 2.5 + 0.5
+
+/* ═══════════════════ 3. IL GIOCO ═══════════════════ */
+function dillo(testo, durata = 5) { G.toast = { testo, fine: G.t + durata } }
+
+function salta(dx, dr) {
+  if (!G || G.stato !== 'gioco' || G.hop) return
+  const r = G.rab
+  const nr = r.row + dr
+  if (nr < 0) return
+  const dest = G.righe[nr]
+  const daFiume = G.righe[r.row].tipo === 'fiume'
+  let nx = r.x + dx
+  if (dr !== 0) nx = dest.tipo === 'fiume' ? r.x : Math.round(r.x)
+  else if (!daFiume) nx = Math.round(nx)
+  if (nx < 0 || nx > COLONNE - 1) return
+  if (dest.tipo === 'erba' && dest.alberi.includes(Math.round(nx))) { G.hop = { fx: r.x, fr: r.row, tx: r.x, tr: r.row, t: 0, rimbalzo: true, dir: dx }; return }
+  if (dest.tipo === 'villaggio' && G.modo === 'consegna' && G.somma !== G.target) {
+    const m = G.target - G.somma
+    dillo(m > 0 ? `Il cancello è chiuso: portavi ${G.somma}, ne servono ${G.target}. Mancano ${m}.` : `Servono esattamente ${G.target}.`)
+    G.hop = { fx: r.x, fr: r.row, tx: r.x, tr: r.row, t: 0, rimbalzo: true, dir: 0 }
+    return
+  }
+  G.hop = { fx: r.x, fr: r.row, tx: nx, tr: nr, t: 0, dir: dx }
+}
+
+function sulTronco(c, cx) {
+  for (let k = 0; k < c.n; k++) {
+    const l = sinistraTronco(c, k, G.t)
+    if (cx > l + 0.12 && cx < l + LARG_TRONCO - 0.12) return k
+  }
+  return -1
+}
+
+function atterra() {
+  const h = G.hop
+  G.hop = null
+  if (h.rimbalzo) return
+  const r = G.rab
+  const cambiaRiga = h.tr !== h.fr
+  r.row = h.tr; r.x = h.tx
+  const riga = G.righe[r.row]
+  if (r.row > G.max) G.max = r.row
+  if (riga.tipo === 'fiume') {
+    const k = sulTronco(riga, r.x + 0.5)
+    if (k < 0) return cadi('acqua', r.x, `Splash! Lì c'era solo acqua. Si riparte dalla riva: scegli un tronco.`)
+    if (G.modo === 'op') {
+      const n = riga.nums[k]
+      if (n !== G.op.giusta) {
+        G.stat.sbagliate++
+        return cadi('acqua', r.x, `Su quel tronco c'era il ${n}. ${G.op.spiega}`)
+      }
+      if (cambiaRiga) G.stat.giuste++
+    }
+  } else if (riga.tipo === 'erba') {
+    if (riga.cassa && !riga.cassa.presa && riga.cassa.col === Math.round(r.x)) {
+      riga.cassa.presa = true
+      G.somma += riga.cassa.num
+      if (G.somma > G.target) {
+        G.stat.sbagliate++; G.stat.ripartenze++
+        dillo(`${G.somma} è più di ${G.target}! Le casse tornano al loro posto: ${G.somma - riga.cassa.num} + ${riga.cassa.num} supera il totale.`)
+        G.somma = 0
+        for (const c of G.casse) c.presa = false
+      } else if (G.somma === G.target) {
+        G.stat.giuste++
+        dillo(`Giusto: ${G.target}! Adesso il cancello del villaggio si apre.`)
+      } else {
+        dillo(`Hai ${G.somma}. Ne servono ${G.target}: mancano ${G.target - G.somma}.`)
+      }
+    }
+    if (riga.nuovaOp != null && G.modo === 'op') {
+      G.op = G.ops[riga.nuovaOp]
+      G.stat.giuste += 0
+      dillo(`Nuova operazione in mano: ${G.op.testo}`, 4)
+    }
+  } else if (riga.tipo === 'villaggio') {
+    G.stato = 'fine'
+    G.t0fine = G.t
+    setTimeout(finePartita, 700)
+  }
+}
+
+function cadi(come, x, messaggio) {
+  const riga = G.righe[G.rab.row]
+  G.stato = 'caduta'
+  G.caduta = { come, x, row: G.rab.row, fine: G.t + (come === 'auto' ? 1.1 : 1.0), dest: riga.zona }
+  dillo(messaggio, 6)
+}
+
+function riparti() {
+  const c = G.caduta
+  const riga = G.righe[c.dest]
+  const liberi = [0, 1, 2, 3, 4, 5, 6].filter(k => !riga.alberi.includes(k))
+  const col = liberi.reduce((m, k) => Math.abs(k - c.x) < Math.abs(m - c.x) ? k : m, liberi[0])
+  G.rab.row = c.dest; G.rab.x = col
+  G.rab.rinasce = G.t
+  G.caduta = null; G.stato = 'gioco'
+}
+
+function aggiorna(dt) {
+  if (!G) return
+  G.t += dt
+  const r = G.rab
+  if (G.stato === 'gioco') {
+    if (G.hop) {
+      G.hop.t += dt / DURATA_SALTO
+      if (G.hop.t >= 1) atterra()
+    }
+    /* Il tronco porta il coniglio di lato. */
+    if (G.stato === 'gioco' && !G.hop) {
+      const riga = G.righe[r.row]
+      if (riga.tipo === 'fiume') {
+        r.x += riga.dir * riga.speed * dt
+        if (r.x + 0.5 < 0.05 || r.x + 0.5 > COLONNE - 0.05) cadi('acqua', r.x, `Il tronco è uscito dallo schermo e il coniglio con lui. Si riparte dalla riva.`)
+      }
+    }
+    /* Le auto non perdonano: si guarda la riga dove il coniglio sta davvero. */
+    if (G.stato === 'gioco') {
+      const h = G.hop
+      const rigaN = h ? (h.t < 0.5 ? h.fr : h.tr) : r.row
+      const xv = h ? h.fx + (h.tx - h.fx) * Math.min(1, h.t) : r.x
+      const riga = G.righe[rigaN]
+      if (riga.tipo === 'strada') {
+        for (let k = 0; k < riga.n; k++) {
+          if (Math.abs(centroAuto(riga, k, G.t) - (xv + 0.5)) < 0.72) {
+            G.stat.auto++
+            G.rab.row = rigaN; G.rab.x = xv; G.hop = null
+            cadi('auto', xv, `Una macchina! Prima di attraversare guarda gli spazi fra le auto. Si riparte dall'erba.`)
+            break
+          }
+        }
+      }
+    }
+  } else if (G.stato === 'caduta') {
+    if (G.t >= G.caduta.fine) riparti()
+  }
+  /* telecamera: segue il coniglio, piano */
+  const h = G.hop
+  const rv = h ? h.fr + (h.tr - h.fr) * Math.min(1, h.t) : r.row
+  G.cam += (rv - G.cam) * Math.min(1, dt * 4.5)
+  if (G.toast && G.t > G.toast.fine) G.toast = null
+}
+
+/* ═══════════════════ 4. IL DISEGNO ═══════════════════ */
+const tela = document.getElementById('tela')
+const cx = tela.getContext('2d')
+let LW = 390, LH = 844, CELL = 390 / COLONNE, DPR = 1
+
+function ridimensiona() {
+  const campo = document.getElementById('campo')
+  LW = campo.clientWidth; LH = campo.clientHeight
+  DPR = Math.min(window.devicePixelRatio || 1, 3)
+  tela.width = Math.round(LW * DPR); tela.height = Math.round(LH * DPR)
+  CELL = LW / COLONNE
+}
+window.addEventListener('resize', ridimensiona)
+
+const FONT_EMOJI = '"Apple Color Emoji","Noto Color Emoji","Segoe UI Emoji",sans-serif'
+const yRiga = r => LH * 0.66 - (r - G.cam) * CELL
+const xCol = c => c * CELL
+
+function emoji(s, x, y, dim, flip) {
+  cx.save()
+  cx.translate(x, y)
+  if (flip) cx.scale(-1, 1)
+  cx.font = `${dim}px ${FONT_EMOJI}`
+  cx.textAlign = 'center'; cx.textBaseline = 'middle'
+  cx.fillText(s, 0, dim * 0.04)
+  cx.restore()
+}
+function tondo(x, y, w, h, rr) { cx.beginPath(); cx.roundRect(x, y, w, h, rr) }
+function ombra(x, y, rx, ry, a = 0.22) {
+  cx.fillStyle = `rgba(0,0,0,${a})`
+  cx.beginPath(); cx.ellipse(x, y, rx, ry, 0, 0, 7); cx.fill()
+}
+
+function disegnaRiga(r, i) {
+  const riga = G.righe[i]
+  const yc = yRiga(i), top = yc - CELL / 2
+  if (riga.tipo === 'erba' || riga.tipo === 'villaggio') {
+    cx.fillStyle = riga.tipo === 'villaggio' ? '#ecd9a0' : (i % 2 ? '#79cd57' : '#6fc450')
+    cx.fillRect(0, top, LW, CELL + 1)
+    if (riga.tipo === 'erba') {
+      cx.strokeStyle = '#4fa63c'; cx.lineWidth = 2; cx.lineCap = 'round'
+      for (let k = 0; k < 6; k++) {
+        const gx = ((i * 53 + k * 71) % 97) / 97 * LW, gy = top + 8 + ((i * 29 + k * 37) % 41) / 41 * (CELL - 18)
+        cx.beginPath(); cx.moveTo(gx, gy); cx.lineTo(gx - 3, gy - 6); cx.moveTo(gx, gy); cx.lineTo(gx + 3, gy - 6); cx.stroke()
+      }
+    }
+  } else if (riga.tipo === 'strada') {
+    cx.fillStyle = '#4b505c'; cx.fillRect(0, top, LW, CELL + 1)
+    if (G.righe[i + 1] && G.righe[i + 1].tipo === 'strada') {
+      cx.fillStyle = '#e8e4d0'
+      for (let x = 6; x < LW; x += 36) cx.fillRect(x, top - 2, 20, 4)
+    }
+  } else if (riga.tipo === 'fiume') {
+    cx.fillStyle = '#35a0e6'; cx.fillRect(0, top, LW, CELL + 1)
+    cx.strokeStyle = '#86cdf6'; cx.lineWidth = 2.5; cx.lineCap = 'round'
+    for (let k = 0; k < 4; k++) {
+      const off = mod(k * 97 + i * 41 + G.t * 14 * -riga.dir, LW + 60) - 30
+      const wy = top + 10 + k * (CELL - 20) / 4
+      cx.beginPath(); cx.moveTo(off - 12, wy); cx.quadraticCurveTo(off - 6, wy - 4, off, wy); cx.quadraticCurveTo(off + 6, wy + 4, off + 12, wy); cx.stroke()
+    }
+  }
+}
+
+function disegnaCose(i) {
+  const riga = G.righe[i]
+  const yc = yRiga(i)
+  if (riga.tipo === 'erba') {
+    for (const c of riga.alberi) {
+      ombra(xCol(c) + CELL / 2, yc + CELL * 0.3, CELL * 0.32, CELL * 0.1)
+      cx.filter = 'brightness(.82) saturate(1.3)'      // più scuro dell'erba: si legge subito come ostacolo
+      emoji('🌲', xCol(c) + CELL / 2, yc - CELL * 0.08, CELL * 1.05)
+      cx.filter = 'none'
+    }
+    const ca = riga.cassa
+    if (ca && !ca.presa) {
+      const x = xCol(ca.col) + CELL * 0.12, y = yc - CELL * 0.36, s = CELL * 0.76
+      ombra(x + s / 2, y + s + 3, s * 0.5, 5)
+      tondo(x, y, s, s, 9); cx.fillStyle = '#d99a4a'; cx.fill()
+      cx.lineWidth = 3; cx.strokeStyle = '#8a5522'; cx.stroke()
+      cx.strokeStyle = '#b9772f'; cx.lineWidth = 2
+      cx.beginPath(); cx.moveTo(x + 6, y + 6); cx.lineTo(x + s - 6, y + s - 6); cx.moveTo(x + s - 6, y + 6); cx.lineTo(x + 6, y + s - 6); cx.stroke()
+      etichetta(String(ca.num), x + s / 2, y + s / 2, 24, '#fff', '#4a2a0e')
+    }
+  } else if (riga.tipo === 'strada') {
+    for (let k = 0; k < riga.n; k++) {
+      const c = centroAuto(riga, k, G.t)
+      if (c < -1 || c > COLONNE + 1) continue
+      ombra(xCol(c), yc + CELL * 0.28, CELL * 0.4, CELL * 0.1, 0.3)
+      emoji(riga.sagome[k], xCol(c), yc, CELL * 0.92, riga.dir > 0)
+    }
+  } else if (riga.tipo === 'fiume') {
+    for (let k = 0; k < riga.n; k++) {
+      const l = sinistraTronco(riga, k, G.t)
+      if (l > COLONNE || l + LARG_TRONCO < 0) continue
+      const x = xCol(l), w = LARG_TRONCO * CELL, h = CELL * 0.8, y = yc - h / 2
+      tondo(x + 2, y + 6, w, h, h / 2); cx.fillStyle = 'rgba(10,60,110,.28)'; cx.fill()
+      tondo(x, y, w, h, h / 2); cx.fillStyle = '#c0803a'; cx.fill()
+      cx.lineWidth = 3; cx.strokeStyle = '#8a5522'; cx.stroke()
+      tondo(x + 6, y + 5, w - 12, h * 0.22, 6); cx.fillStyle = 'rgba(255,230,170,.45)'; cx.fill()
+      cx.strokeStyle = '#a56a2c'; cx.lineWidth = 2
+      for (const f of [0.18, 0.82]) { cx.beginPath(); cx.ellipse(x + w * f, yc, h * 0.14, h * 0.3, 0, 0, 7); cx.stroke() }
+      if (riga.nums) etichetta(String(riga.nums[k]), x + w / 2, yc + 1, 28, '#fff', '#4a2a0e')
+    }
+  } else if (riga.tipo === 'villaggio') {
+    const casa = ['🏡', '🏠', '⛪', '🏡', '🏠', '🏡', '🌲']
+    casa.forEach((s, c) => emoji(s, xCol(c) + CELL / 2, yc - CELL * 0.02, CELL * 0.95))
+    if (G.modo === 'consegna') {
+      const aperto = G.somma === G.target
+      etichetta(aperto ? '🔓' : '🔒', LW / 2, yc + CELL * 0.62, 22, '#fff', '#5a4a20')
+    }
+    etichetta('VILLAGGIO', LW / 2, yc - CELL * 0.62, 18, '#fff', '#6a5320')
+  }
+}
+
+function etichetta(testo, x, y, dim, riempi, bordo) {
+  cx.font = `800 ${dim}px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif`
+  cx.textAlign = 'center'; cx.textBaseline = 'middle'
+  cx.lineJoin = 'round'; cx.lineWidth = Math.max(4, dim * 0.22); cx.strokeStyle = bordo
+  cx.strokeText(testo, x, y); cx.fillStyle = riempi; cx.fillText(testo, x, y)
+}
+
+function disegnaConiglio() {
+  if (G.stato === 'caduta') {
+    const c = G.caduta, yc = yRiga(c.row), x = xCol(c.x + 0.5)
+    const p = 1 - (c.fine - G.t) / (c.come === 'auto' ? 1.1 : 1.0)
+    if (c.come === 'acqua') {
+      cx.strokeStyle = '#ffffffc0'; cx.lineWidth = 3
+      for (const k of [0, 0.35]) { const q = Math.min(1, p + k); cx.beginPath(); cx.ellipse(x, yc + 4, 8 + q * 22, 4 + q * 9, 0, 0, 7); cx.stroke() }
+      if (p < 0.5) emoji('💦', x, yc - 10 - p * 20, CELL * 0.8)
+    } else {
+      emoji('💥', x, yc, CELL * (0.7 + p * 0.4))
+    }
+    return
+  }
+  const r = G.rab, h = G.hop
+  let row = r.row, x = r.x, alto = 0, sx = 1, sy = 1
+  if (h) {
+    const u = Math.min(1, h.t)
+    row = h.fr + (h.tr - h.fr) * u; x = h.fx + (h.tx - h.fx) * u
+    alto = Math.sin(Math.PI * u) * CELL * (h.rimbalzo ? 0.25 : 0.55)
+    sx = 1 - 0.1 * Math.sin(Math.PI * u); sy = 1 + 0.18 * Math.sin(Math.PI * u)
+    if (h.rimbalzo) x += Math.sin(u * Math.PI * 2) * 3 / CELL * (h.dir || 0.5)
+  } else if (r.rinasce !== undefined && G.t - r.rinasce < 0.3) {
+    const u = (G.t - r.rinasce) / 0.3
+    alto = Math.sin(Math.PI * u) * CELL * 0.3
+  }
+  const px = xCol(x + 0.5), py = yRiga(row)
+  ombra(px, py + CELL * 0.3, CELL * 0.3 * (1 - alto / CELL * 0.4), CELL * 0.09, 0.3)
+  cx.save()
+  cx.translate(px, py + CELL * 0.05 - alto)
+  cx.scale(sx, sy)
+  emoji('🐇', 0, 0, CELL * 0.95, true)
+  cx.restore()
+}
+
+function riga2testo(t, maxW, dim) {
+  cx.font = `700 ${dim}px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif`
+  const parole = t.split(' '); const righe = []; let cur = ''
+  for (const p of parole) {
+    const prova = cur ? cur + ' ' + p : p
+    if (cx.measureText(prova).width > maxW && cur) { righe.push(cur); cur = p } else cur = prova
+  }
+  if (cur) righe.push(cur)
+  return righe
+}
+
+function disegnaHud() {
+  const top = 0
+  const g = cx.createLinearGradient(0, 0, 0, 128)
+  g.addColorStop(0, 'rgba(15,40,30,.55)'); g.addColorStop(1, 'rgba(15,40,30,0)')
+  cx.fillStyle = g; cx.fillRect(0, 0, LW, 128)
+  const pw = 210, ph = 70, px = (LW - pw) / 2, py = 8
+  tondo(px, py + 4, pw, ph, 22); cx.fillStyle = 'rgba(0,0,0,.25)'; cx.fill()
+  tondo(px, py, pw, ph, 22); cx.fillStyle = '#fffdf2'; cx.fill()
+  cx.lineWidth = 3; cx.strokeStyle = '#ffd23f'; cx.stroke()
+  if (G.modo === 'op') {
+    const testo = G.op ? G.op.testo : ''
+    cx.font = '800 38px system-ui,-apple-system,Roboto,sans-serif'
+    cx.textAlign = 'center'; cx.textBaseline = 'middle'; cx.fillStyle = '#23324a'
+    cx.fillText(testo + ' = ?', LW / 2, py + ph / 2 + 1)
+  } else {
+    cx.font = '700 13px system-ui,-apple-system,Roboto,sans-serif'
+    cx.textAlign = 'center'; cx.textBaseline = 'middle'; cx.fillStyle = '#5a6a80'
+    cx.fillText('PORTA AL VILLAGGIO', LW / 2, py + 17)
+    cx.font = '800 32px system-ui,-apple-system,Roboto,sans-serif'
+    cx.fillStyle = '#23324a'
+    cx.fillText(`${G.somma} / ${G.target}`, LW / 2, py + 46)
+  }
+  /* due gettoni piccoli sotto */
+  const gett = (testo, x, al) => {
+    cx.font = '800 14px system-ui,-apple-system,Roboto,sans-serif'
+    const w = cx.measureText(testo).width + 20
+    const xx = al === 'l' ? x : x - w
+    tondo(xx, 86, w, 26, 13); cx.fillStyle = 'rgba(255,255,255,.85)'; cx.fill()
+    cx.fillStyle = '#23324a'; cx.textAlign = 'center'; cx.textBaseline = 'middle'
+    cx.fillText(testo, xx + w / 2, 99.5)
+  }
+  gett(`▲ ${G.max}`, 12, 'l')
+  if (G.modo === 'op') {
+    const fatti = Math.max(0, Math.min(G.Z, countFiumi()))
+    gett(`🌊 ${fatti}/${G.Z}`, LW - 12, 'r')
+  } else {
+    gett(`📦 ${G.casse.filter(c => c.presa).length}/${G.casse.length}`, LW - 12, 'r')
+  }
+}
+
+/* quanti fiumi sono già stati superati (riga raggiunta oltre l'ultima corsia del fiume) */
+function countFiumi() {
+  let n = 0
+  for (let i = 0; i < G.righe.length; i++) {
+    const r = G.righe[i]
+    if (r.tipo === 'fiume' && (!G.righe[i + 1] || G.righe[i + 1].tipo !== 'fiume') && G.max > i) n++
+  }
+  return n
+}
+
+function disegnaToast() {
+  if (!G.toast) return
+  const maxW = LW - 56
+  const righe = riga2testo(G.toast.testo, maxW, 15)
+  const h = 24 + righe.length * 20
+  const y = LH - h - 22, x = 14, w = LW - 28
+  const resto = G.toast.fine - G.t
+  cx.globalAlpha = Math.min(1, resto * 2)
+  tondo(x, y + 4, w, h, 18); cx.fillStyle = 'rgba(0,0,0,.25)'; cx.fill()
+  tondo(x, y, w, h, 18); cx.fillStyle = '#fffdf2'; cx.fill()
+  cx.fillStyle = '#23324a'; cx.textAlign = 'center'; cx.textBaseline = 'middle'
+  cx.font = '700 15px system-ui,-apple-system,Roboto,sans-serif'
+  righe.forEach((l, k) => cx.fillText(l, LW / 2, y + 12 + 10 + k * 20))
+  cx.globalAlpha = 1
+}
+
+function disegna() {
+  cx.setTransform(DPR, 0, 0, DPR, 0, 0)
+  cx.clearRect(0, 0, LW, LH)
+  cx.fillStyle = '#6fc450'; cx.fillRect(0, 0, LW, LH)
+  if (!G) return
+  const da = Math.floor(G.cam - 5), a = Math.ceil(G.cam + 12)
+  for (let i = Math.max(0, da); i <= Math.min(G.righe.length - 1, a); i++) disegnaRiga(0, i)
+  /* dall'alto verso il basso, così gli alberi coprono dietro di sé e il coniglio sta in mezzo */
+  const rr = Math.round(G.hop ? G.hop.fr + (G.hop.tr - G.hop.fr) * Math.min(1, G.hop.t) : G.rab.row)
+  for (let i = Math.min(G.righe.length - 1, a); i >= Math.max(0, da); i--) {
+    disegnaCose(i)
+    if (i === rr) disegnaConiglio()
+  }
+  /* oltre il villaggio: cielo di prato */
+  disegnaHud()
+  disegnaToast()
+}
+
+/* ═══════════════════ 5. INGRESSI ═══════════════════ */
+let giu = null
+tela.addEventListener('pointerdown', e => { giu = { x: e.clientX, y: e.clientY, t: performance.now() } })
+tela.addEventListener('pointerup', e => {
+  if (!giu || !G) { giu = null; return }
+  const dx = e.clientX - giu.x, dy = e.clientY - giu.y
+  giu = null
+  if (Math.hypot(dx, dy) > 28) {                                   // swipe
+    if (Math.abs(dx) > Math.abs(dy)) salta(dx > 0 ? 1 : -1, 0)
+    else salta(0, dy < 0 ? 1 : -1)
+    return
+  }
+  const rect = tela.getBoundingClientRect()
+  const px = e.clientX - rect.left, py = e.clientY - rect.top
+  const rx = xCol(G.rab.x + 0.5), ry = yRiga(G.rab.row)
+  if (Math.abs(py - ry) < CELL * 0.6 && Math.abs(px - rx) > CELL * 0.5) salta(px > rx ? 1 : -1, 0)
+  else if (py > ry + CELL * 0.6) salta(0, -1)
+  else salta(0, 1)
+})
+tela.addEventListener('pointercancel', () => { giu = null })
+window.addEventListener('keydown', e => {
+  const m = { ArrowUp: [0, 1], w: [0, 1], ArrowDown: [0, -1], s: [0, -1], ArrowLeft: [-1, 0], a: [-1, 0], ArrowRight: [1, 0], d: [1, 0] }[e.key]
+  if (m) { e.preventDefault(); salta(m[0], m[1]) }
+})
+
+/* ═══════════════════ 6. MENU E FINE ═══════════════════ */
+const $ = id => document.getElementById(id)
+let scelta = { liv: 1, modo: 'op' }
+function segnaScelta() {
+  for (const b of $('gLiv').children) b.classList.toggle('scelto', +b.dataset.v === scelta.liv)
+  for (const b of $('gModo').children) b.classList.toggle('scelto', b.dataset.v === scelta.modo)
+}
+$('gLiv').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { scelta.liv = +b.dataset.v; segnaScelta() } })
+$('gModo').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { scelta.modo = b.dataset.v; segnaScelta() } })
+function via() {
+  nuovaPartita(scelta.modo, scelta.liv)
+  $('menu').classList.add('nascosto'); $('fine').classList.add('nascosto')
+  $('bRifai').style.display = scelta.modo === 'consegna' ? 'block' : 'none'
+}
+$('bVia').addEventListener('click', via)
+$('bAncora').addEventListener('click', via)
+$('bMenu').addEventListener('click', () => { $('menu').classList.remove('nascosto') })
+$('bMenu2').addEventListener('click', () => { $('fine').classList.add('nascosto'); $('menu').classList.remove('nascosto') })
+$('bRifai').addEventListener('click', () => {
+  if (!G || G.modo !== 'consegna') return
+  G.somma = 0; for (const c of G.casse) c.presa = false
+  dillo('Le casse sono di nuovo al loro posto: si ricomincia a raccogliere.', 3)
+})
+
+function finePartita() {
+  const s = G.stat, sec = Math.round((performance.now() - s.t0) / 1000)
+  $('fineTit').textContent = G.modo === 'op' ? 'Sei al villaggio!' : `Consegna fatta: ${G.target}!`
+  const righe = [`Distanza: ${G.max} passi`, `Tempo: ${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`]
+  if (G.modo === 'op') righe.push(`Risposte giuste: ${s.giuste}`, `Risposte sbagliate: ${s.sbagliate}`)
+  else righe.push(`Totali giusti: ${s.giuste}`, `Casse da rimettere a posto: ${s.ripartenze}`)
+  righe.push(`Auto incontrate: ${s.auto}`)
+  $('stat').innerHTML = righe.join('<br>')
+  $('fine').classList.remove('nascosto')
+}
+
+/* ═══════════════════ 7. IL CICLO ═══════════════════ */
+let ultimo = performance.now()
+function ciclo(ora) {
+  const dt = Math.min(0.05, (ora - ultimo) / 1000)
+  ultimo = ora
+  if (!$('menu').classList.contains('nascosto')) { if (G) G.t += 0 } else aggiorna(dt)
+  disegna()
+  requestAnimationFrame(ciclo)
+}
+ridimensiona(); segnaScelta()
+window.__crossy = { get G() { return G }, salta }   // solo per le prove
+nuovaPartita('op', 1)                                  // sfondo vivo dietro il menu
+requestAnimationFrame(ciclo)
+</script>
+</body>
+</html>

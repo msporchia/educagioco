@@ -35,6 +35,7 @@ export function carica(nome) {
   return attese[nome]
 }
 export const pronto = nome => !!immagini[nome]
+export const immagineScena = nome => immagini[nome]
 
 // la variante per posto (la stessa cella prende sempre lo stesso pezzo): è
 // caso() di vesti.py numero per numero

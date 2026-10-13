@@ -67,6 +67,8 @@ export function caricaFigure() {
   return attesa
 }
 
+export const immagineFigure = () => img
+
 // una figura col piede in (x, y); `scala` è 1 per tutti tranne il capo e i
 // pezzi di chi si è diviso
 function figura(ctx, nome, x, y, { specchia = false, scala = 1 } = {}) {

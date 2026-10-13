@@ -27,17 +27,26 @@ diverso da quello del suo grado.
 - 🔢 **Senso del numero** g2 — Mettere un numero al suo posto
 - ➡️ **Sequenze** g1 — Il ritmo che si ripete
 
+## 19  ·  circa 5.5 anni
+
+- 🧮 **Conti puri** g1 — Le somme
+
 ## 20  ·  circa 5.6 anni
 
 - 📅 **Calendario** g1 — I giorni della settimana
 - 📐 **Geometria** g1 — Le figure e i loro nomi
 - ➡️ **Sequenze** g2 — Chi non c'entra
 
+## 21  ·  circa 5.7 anni
+
+- 🧮 **Conti puri** g1 — Le differenze
+
 ## 25  ·  circa 6 anni
 
 - 🔗 **Analogie** g1 — Le analogie sulle cose del mondo
 - 🦁 **Animali e ambienti** g2 — Dove vive questo animale
 - 📅 **Calendario** g2 — L'ordine dei mesi
+- 🧮 **Conti puri** g2 — Le somme
 - 📐 **Geometria** g2 — Contare lati e vertici
 - 🔤 **Grammatica** g1 — Maschile e femminile
 - 🔤 **Grammatica** g1 — Singolare e plurale
@@ -52,8 +61,13 @@ diverso da quello del suo grado.
 - 🔢 **Senso del numero** g3 — Prima, dopo, in mezzo e in ordine
 - ✂️ **Sillabe** g1 — Quante sillabe ha la parola
 
+## 26  ·  circa 6.1 anni
+
+- 🧮 **Conti puri** g1 — I prodotti e le tabelline
+
 ## 28  ·  circa 6.2 anni
 
+- 🧮 **Conti puri** g2 — Le differenze
 - ⚑ 📊 **Grafici e tabelle** g1 — Contare nel pittogramma
 - ⚑ 📊 **Grafici e tabelle** g2 — Contare nel pittogramma
 
@@ -81,11 +95,25 @@ diverso da quello del suo grado.
 - 📚 **Capire un testo** g1 — Chi, dove, che cosa: è scritto nel testo
 - 🧵 **Connettivi** g1 — Perché: la causa
 - 🧵 **Connettivi** g1 — Quindi e così: la conseguenza
+- 🧮 **Conti puri** g3 — Le somme
+
+## 32  ·  circa 6.6 anni
+
+- 🧮 **Conti puri** g1 — I quozienti e le divisioni esatte
+- 🧮 **Conti puri** g2 — I prodotti e le tabelline
 
 ## 33  ·  circa 6.6 anni
 
 - 🗺️ **La griglia** g3 — Dove si arriva seguendo le frecce
 - 🗺️ **La griglia** g3 — Quante mosse servono
+
+## 34  ·  circa 6.7 anni
+
+- 🧮 **Conti puri** g3 — Le differenze
+
+## 36  ·  circa 6.9 anni
+
+- 🧮 **Conti puri** g4 — Le somme
 
 ## 38  ·  circa 7 anni
 
@@ -100,6 +128,8 @@ diverso da quello del suo grado.
 - 🧵 **Connettivi** g2 — Perché: la causa
 - 🧵 **Connettivi** g2 — Quale frase ha senso
 - 🧵 **Connettivi** g2 — Quindi e così: la conseguenza
+- 🧮 **Conti puri** g2 — I quozienti e le divisioni esatte
+- 🧮 **Conti puri** g3 — I prodotti e le tabelline
 - ⚑ 📐 **Geometria** g1 — I quadrilateri (quadrato, rombo, trapezio)
 - 📐 **Geometria** g4 — Girare una figura di un quarto
 - 📐 **Geometria** g4 — La figura allo specchio
@@ -122,9 +152,11 @@ diverso da quello del suo grado.
 ## 40  ·  circa 7.2 anni
 
 - 📚 **Capire un testo** g2 — Chi, dove, che cosa: è scritto nel testo
+- 🧮 **Conti puri** g4 — Le differenze
 
 ## 41  ·  circa 7.3 anni
 
+- 🧮 **Conti puri** g5 — Le somme
 - 📊 **Grafici e tabelle** g2 — Il pittogramma con la legenda
 
 ## 42  ·  circa 7.4 anni
@@ -135,6 +167,8 @@ diverso da quello del suo grado.
 
 - 🔗 **Analogie** g3 — Le analogie fra figure
 - 🗣️ **Coniugazione** g2 — Il presente dei verbi irregolari
+- 🧮 **Conti puri** g3 — I quozienti e le divisioni esatte
+- 🧮 **Conti puri** g4 — I prodotti e le tabelline
 - ⚖️ **Le bilance** g1 — Il numero nascosto nei più e nei meno (□ + 7 = 15)
 - 🕰️ **Orologio** g3 — Le mezze e i quarti d'ora
 - 🕰️ **Orologio** g3 — Le ore intere
@@ -147,6 +181,14 @@ diverso da quello del suo grado.
 - ✂️ **Sillabe** g3 — Le rime
 - 💶 **Soldi e decimali** g2 — Il resto
 - 💶 **Soldi e decimali** g2 — Quanto fanno monete e banconote
+
+## 45  ·  circa 7.6 anni
+
+- 🧮 **Conti puri** g5 — Le differenze
+
+## 46  ·  circa 7.7 anni
+
+- 🧮 **Conti puri** g6 — Le somme
 
 ## 47  ·  circa 7.8 anni
 
@@ -167,6 +209,8 @@ diverso da quello del suo grado.
 - 🧵 **Connettivi** g3 — Quale frase ha senso
 - 🧵 **Connettivi** g3 — Quando e mentre: il tempo
 - 🧵 **Connettivi** g3 — Quindi e così: la conseguenza
+- 🧮 **Conti puri** g4 — I quozienti e le divisioni esatte
+- 🧮 **Conti puri** g5 — I prodotti e le tabelline
 - 🍕 **Frazioni** g1 — Che parte è colorata
 - 📊 **Grafici e tabelle** g3 — Il pittogramma con la legenda
 - 📊 **Grafici e tabelle** g3 — Quanti in più, quanti in meno
@@ -180,8 +224,13 @@ diverso da quello del suo grado.
 - 💶 **Soldi e decimali** g3 — Quale prezzo è più alto
 - 💶 **Soldi e decimali** g3 — Quanto costano più cose
 
+## 51  ·  circa 8.1 anni
+
+- 🧮 **Conti puri** g6 — Le differenze
+
 ## 52  ·  circa 8.2 anni
 
+- 🧮 **Conti puri** g7 — Le somme
 - 🍕 **Frazioni** g1 — Il disegno di una frazione (e i pezzi non uguali)
 - 🔢 **Senso del numero** g5 — Fare i conti in fila
 
@@ -205,6 +254,7 @@ diverso da quello del suo grado.
 - 🗣️ **Coniugazione** g3 — Essere o avere nel passato prossimo
 - 🗣️ **Coniugazione** g3 — I participi irregolari (preso, scritto)
 - 🗣️ **Coniugazione** g3 — Il participio passato regolare
+- 🧮 **Conti puri** g5 — I quozienti e le divisioni esatte
 - 🍕 **Frazioni** g2 — Chi è più grande, con lo stesso numero sotto
 - 🍕 **Frazioni** g2 — Il disegno di una frazione (e i pezzi non uguali)
 - ⚑ 📐 **Geometria** g2 — Gli angoli: retto, acuto, ottuso
@@ -239,12 +289,15 @@ diverso da quello del suo grado.
 
 ## 57  ·  circa 8.6 anni
 
+- 🧮 **Conti puri** g6 — I prodotti e le tabelline
+- 🧮 **Conti puri** g7 — Le differenze
 - 💶 **Soldi e decimali** g4 — Quale numero con la virgola è più grande
 - 💶 **Soldi e decimali** g4 — Quale prezzo è più alto
 - 💶 **Soldi e decimali** g4 — Quanto costano più cose
 
 ## 58  ·  circa 8.6 anni
 
+- 🧮 **Conti puri** g8 — Le somme
 - 🍕 **Frazioni** g3 — Che parte è colorata
 
 ## 59  ·  circa 8.7 anni
@@ -259,6 +312,7 @@ diverso da quello del suo grado.
 
 ## 62  ·  circa 9 anni
 
+- 🧮 **Conti puri** g7 — I prodotti e le tabelline
 - 🔢 **Senso del numero** g5 — Indovina il numero di partenza
 
 ## 63  ·  circa 9 anni
@@ -267,6 +321,8 @@ diverso da quello del suo grado.
 - ⚑ 📚 **Capire un testo** g4 — Di chi parla «lei», «lo», «gli»
 - 🗣️ **Coniugazione** g4 — Il futuro
 - 🗣️ **Coniugazione** g4 — L'imperfetto
+- 🧮 **Conti puri** g6 — I quozienti e le divisioni esatte
+- 🧮 **Conti puri** g8 — Le differenze
 - 🍕 **Frazioni** g3 — Chi è più grande, con lo stesso numero sopra
 - 📊 **Grafici e tabelle** g5 — La tabella a doppia entrata
 - 📊 **Grafici e tabelle** g5 — Quanti in più, quanti in meno
@@ -299,10 +355,13 @@ diverso da quello del suo grado.
 
 ## 66  ·  circa 9.3 anni
 
+- 🧮 **Conti puri** g8 — I prodotti e le tabelline
+- 🧮 **Conti puri** g9 — Le somme
 - 🍕 **Frazioni** g4 — Chi è più grande, con lo stesso numero sopra
 
 ## 68  ·  circa 9.4 anni
 
+- 🧮 **Conti puri** g7 — I quozienti e le divisioni esatte
 - 🍕 **Frazioni** g4 — Le frazioni equivalenti (2/4 = 1/2)
 - 🍕 **Frazioni** g5 — Quanto manca per fare un intero
 
@@ -318,17 +377,21 @@ diverso da quello del suo grado.
 
 ## 70  ·  circa 9.6 anni
 
+- 🧮 **Conti puri** g9 — Le differenze
 - 🍕 **Frazioni** g5 — La frazione di un numero (1/4 di 20)
 
 ## 72  ·  circa 9.8 anni
 
 - ⚑ 📚 **Capire un testo** g5 — Il titolo giusto per tutto il testo
+- 🧮 **Conti puri** g8 — I quozienti e le divisioni esatte
+- 🧮 **Conti puri** g9 — I prodotti e le tabelline
 - 💶 **Soldi e decimali** g6 — Arrotondare all'euro o al decimo
 - 💶 **Soldi e decimali** g6 — I decimali sulla linea e in ordine
 - 💶 **Soldi e decimali** g6 — Il valore delle cifre dopo la virgola
 
 ## 74  ·  circa 9.9 anni
 
+- 🧮 **Conti puri** g10 — Le somme
 - 🍕 **Frazioni** g5 — Le frazioni equivalenti (2/4 = 1/2)
 
 ## 75  ·  circa 10 anni
@@ -362,6 +425,15 @@ diverso da quello del suo grado.
 
 - 💶 **Soldi e decimali** g7 — Quanto costa una sola cosa
 
+## 78  ·  circa 10.2 anni
+
+- 🧮 **Conti puri** g9 — I quozienti e le divisioni esatte
+- 🧮 **Conti puri** g10 — Le differenze
+
+## 80  ·  circa 10.4 anni
+
+- 🧮 **Conti puri** g10 — I prodotti e le tabelline
+
 ## 81  ·  circa 10.5 anni
 
 - ⚑ 🧵 **Connettivi** g4 — Anche se, contro se
@@ -375,6 +447,7 @@ diverso da quello del suo grado.
 ## 85  ·  circa 10.8 anni
 
 - ⚑ 🧵 **Connettivi** g5 — Il doppio senso di «mentre»
+- 🧮 **Conti puri** g10 — I quozienti e le divisioni esatte
 - 💶 **Soldi e decimali** g9 — Cosa conviene comprare
 
 ## 88  ·  circa 11 anni
@@ -408,4 +481,4 @@ diverso da quello del suo grado.
 
 ---
 
-Totale: 267 classi su 24 moduli.
+Totale: 307 classi su 25 moduli.
