@@ -18,7 +18,7 @@ import { seminato } from '../../src/giochi/sotterraneo/motore/livello.js'
 import { fasciaDi, coloreDi, coloreNellaStoria, potenzaDi, zoneDi, rinascitaDi, zoneConForza, zoneConSentita, notiziaDi }
   from '../../src/giochi/sotterraneo/motore/zone.js'
 import { eroeAtteso, robaDelLivello, livelloDiForza, forzaDi, forzaDelCorredo, mostroDiRiferimento, offesa, colpoContro,
-         dannoDell, resistenza, riparo, dannoPerTurno, rapporto, abilitaDelloScontro, TETTO, ABILITA_A_SCONTRO }
+         dannoDell, resistenza, riparo, dannoPerTurno, rapporto, abilitaDelloScontro, energiaTipica, TETTO, ABILITA_A_SCONTRO }
   from '../../src/giochi/sotterraneo/motore/forza.js'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 
@@ -89,8 +89,19 @@ for (const chi of CHIAVI) {
   const c = eroe('cavaliere', 20)   // la roba attesa del 20 ma senza albero: l'eroe atteso, invece, la strada delle abilità la fa
   const m = mostroDiRiferimento(20)
   const o = offesa(c, m)
+  // le abilità forti che l'energia di partenza tipica paga (energiaTipica: i due terzi del globo): il mago ne conta due, il
+  // cavaliere con i suoi otto di energia solo quelle della prima riga
   controlla('l\'eroe atteso le abilità le ha: sono quelle della strada della sua classe (motore/abilita.js)',
-            offesa(eroeAtteso('cavaliere', 20), m).forti.length === 2)
+            offesa(eroeAtteso('mago', 20), m).forti.length === 2 && offesa(eroeAtteso('cavaliere', 20), m).forti.length >= 1)
+  {
+    const cav = eroeAtteso('cavaliere', 20), mag = eroeAtteso('mago', 20)
+    uguale('l\'energia tipica è i due terzi del globo, per eccesso', energiaTipica(cav), Math.ceil(cav.energiaMax * 2 / 3))
+    controlla('il cavaliere conta solo le abilità che costano quanto la sua energia tipica o meno',
+              abilitaDelloScontro(cav).length > 0 && abilitaDelloScontro(cav).every(n => n.costo <= energiaTipica(cav)),
+              abilitaDelloScontro(cav).map(n => `${n.id} ${n.costo}`).join(', ') + ` (tipica ${energiaTipica(cav)})`)
+    controlla('un\'abilità della riga alta, che il suo globo non regge, non entra nella forza', !abilitaDelloScontro(cav).some(n => n.riga >= 3))
+    controlla('il mago ne conta di alte, il globo è grande', abilitaDelloScontro(mag).some(n => n.riga >= 3), `tipica ${energiaTipica(mag)}`)
+  }
   controlla('senza abilità l\'offesa è il colpo di sempre, e basta', o.forti.length === 0, o.forti.join())
   uguale('le risposte giuste sono le ossa diviso il colpo', Math.round(o.risposte * 1000) / 1000,
          Math.round(Math.max(1, m.ossa / o.colpo) * 1000) / 1000)
@@ -124,7 +135,9 @@ for (const chi of CHIAVI) {
     const arma = forza(chi, L, { roba: { ...robaDelLivello(chi, L), mano: robaDelLivello(chi, L + 12).mano }, strada: true })
     const abil = forza(chi, L, { abilita: true })
     esempi.push(`${chi} ${L}: atteso ${atteso}, nudo ${nudo}, arma+12 ${arma}, roba+12 ${meglio}, con abilità ${abil}`)
-    controlla(`${chi} ${L}: nudo vale meno dell'atteso`, nudo < atteso - 3, `${nudo} contro ${atteso}`)
+    // (almeno tre livelli, non più di tre: con meno abilità forti da contare, quelle del cavaliere e del nano, l'arma pesa un
+    // po' meno, e a mani nude si perde un po' meno)
+    controlla(`${chi} ${L}: nudo vale meno dell'atteso`, nudo <= atteso - 3, `${nudo} contro ${atteso}`)
     controlla(`${chi} ${L}: con la roba di dodici livelli più su vale di più`, meglio >= atteso + 2, `${meglio} contro ${atteso}`)
     controlla(`${chi} ${L}: con la sola arma migliore non vale di meno`, arma >= atteso, `${arma} contro ${atteso}`)
     const senzaAlbero = forza(chi, L)

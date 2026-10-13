@@ -18,6 +18,11 @@ import { crescitaA } from './crescita.js'
 export const RISPOSTE_GIUSTE = 0.8
 // quante abilità forti si contano a ogni scontro: l'utente, 12 ottobre 2026, «almeno 2 abilità forti a scontro»
 export const ABILITA_A_SCONTRO = 2
+// l'energia di partenza tipica di uno scontro (docs/sotterraneo/forza.md): i due terzi del globo, arrotondati per eccesso. Fra
+// uno scontro e l'altro l'energia non torna piena (si ricarica solo combattendo: docs/sotterraneo/abilita.md), e il banco
+// entra in uno scontro con il 40–60% del globo; un'abilità che costa più di così non si conta come fatta a ogni scontro
+export const ENERGIA_TIPICA = 2 / 3
+export const energiaTipica = c => Math.ceil(c.energiaMax * ENERGIA_TIPICA - 1e-9)
 // il mostro di riferimento è lo scheletro (la fascia di mezzo del branco) al terzo piano di una zona
 export const MOSTRO_TIPICO = 'scheletro'
 export const PIANO_TIPICO = 3
@@ -70,9 +75,11 @@ export function colpoContro(c, m, nodo = null, { rotto = false } = {}) {
 }
 
 // le abilità che l'eroe porta nello scontro e può usare adesso: quelle delle caselle che hanno l'arma che vogliono (una
-// casella con la Lama e il martello in mano non serve a niente); se le caselle sono vuote, quelle che sa
+// casella con la Lama e il martello in mano non serve a niente) e che l'energia di partenza tipica paga (`energiaTipica`:
+// il cavaliere con poca intelligenza conta le prime, il mago tutte); se le caselle sono vuote, quelle che sa
 export function abilitaDelloScontro(c) {
-  const usabile = id => NODI[id] && !NODI[id].sempre && gradoDi(c.crescita, id) > 0 && c.haLArma(NODI[id].arma)
+  const tipica = energiaTipica(c)
+  const usabile = id => NODI[id] && !NODI[id].sempre && gradoDi(c.crescita, id) > 0 && c.haLArma(NODI[id].arma) && NODI[id].costo <= tipica
   const incasella = caselleDella(c.crescita).filter(Boolean)
   const ids = incasella.length ? incasella : Object.keys(c.crescita.albero || {})
   return ids.filter(usabile).map(id => NODI[id])
