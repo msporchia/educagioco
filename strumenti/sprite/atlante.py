@@ -208,10 +208,12 @@ def fogli_delle_creature(gioco):
         nome = creature.nome_in(gioco, k, v)
         for i, r in enumerate(creature.fotogrammi_in(gioco, v)):
             da, cella = creature.in_griglia(r, scala)
-            per_foglio.setdefault(v['foglio'], {})[f'{nome}-fermo-{i}'] = {'da': da, 'cella': cella}
+            per_foglio.setdefault(v['foglio'], {})[f'{nome}-fermo-{i}'] = {'da': da, 'cella': cella, **({'nitido': True} if v.get('nitido') else {})}
+    # `nitido` nella voce del catalogo: quei pezzi hanno anche la copia dal foglio com'è dipinto (come la roba, «I pezzi nitidi»)
     return [(creature.SORGENTI / dati['fogli'][n],
              {'scala': scala, 'foglio': [W // scala, H // scala], 'fondo': 'trasparente', 'cella': [1, 1],
-              'famiglia': 'attore', 'trasforma_ripiego': {'giri': 1, 'ribalta': False}, 'sprite': sprite})
+              'famiglia': 'attore', 'trasforma_ripiego': {'giri': 1, 'ribalta': False}, 'sprite': sprite,
+              **({'nitido': 'scelti'} if any(d.get('nitido') for d in sprite.values()) else {})})
             for n, sprite in per_foglio.items()]
 
 
@@ -752,6 +754,8 @@ def nitidi_di(f, fg, ridotto, nitidi):
     cw, ch = fg['cella']
     for nome, d in fg['sprite'].items():
         if nome.startswith('__'):
+            continue
+        if fg.get('nitido') == 'scelti' and not d.get('nitido'):   # le creature: solo quelle che lo chiedono
             continue
         if d.get('quanti', 1) != 1 or any(k in d for k in ('cancella', 'toppa')):
             print(f'  ! {nome}: «nitido» non sa ancora fare quanti, cancella e toppa: resta solo piccolo')

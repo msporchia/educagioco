@@ -71,6 +71,8 @@ nello stesso modulo.
 - **I contorni (`alone`) restano dal pezzo piccolo**: sono un filo di un
   pixel di sprite, e da lì vengono uguali.
 - **Peso**: per i tre fogli della roba del sotterraneo, 260 pezzi, 451 KB.
+- **Anche le creature**, una per una: `"nitido": true` nella voce del catalogo ([creature.md](creature.md)); `atlante.py` prende i suoi
+  fotogrammi dal foglio grande (`fogli_delle_creature` li segna, `nitidi_di` salta gli altri). Tela e `figura()` lo scelgono da soli per nome.
 - Il foglietto lo dichiara per i fogli dipinti di oggetti (`bottino-e-arredo`,
   `scudi`, `armature-e-vesti`), non per la pixel art vera (0x72), che è
   già alla sua misura. `quanti`, `cancella` e `toppa` non li sa ancora

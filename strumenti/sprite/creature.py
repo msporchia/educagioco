@@ -210,6 +210,8 @@ def guasti(dati=None):
             if (gioco, n) in visti:
                 g.append(f'{k}: il nome «{n}» è già preso in {gioco}')
             visti.add((gioco, n))
+        if v.get('nitido') and k in chi_cammina():
+            g.append(f'{k}: «nitido» e i passi insieme: i passi non hanno il pezzo grande, la creatura cambierebbe faccia camminando')
         if not v.get('giochi') and v.get('tenuta'):
             g.append(f'{k}: tenuta ma non serve a nessun gioco')
         s = v.get('scheda') or {}

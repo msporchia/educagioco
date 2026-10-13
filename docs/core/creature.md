@@ -56,6 +56,10 @@ castello. Il catalogo descritto, per sapere cosa c'è:
   presa (lo scheletro dipinto è `scheletro-dipinto` nel sotterraneo, che ha già
   lo `scheletro` di 0x72). `atlante.py` si ferma se due pezzi hanno lo stesso
   nome.
+- **`nitido`**: i fotogrammi hanno anche la copia dal foglio com'è dipinto (WebP in `NITIDO`, come la roba: [sprite.md](sprite.md#i-pezzi-nitidi)).
+  Serve a chi ha un sorgente piccolo e pallido: lo scheletro è 45×73 px nel foglio, ridotto alla griglia a 12×19 diventava una macchia grigia
+  (l'utente, 13 ottobre: «sfocati»). Oggi scheletro, scheletro cavaliere e mummia; costa una cinquantina di KB. Non con i passi (i video non hanno
+  il pezzo grande: camminando la creatura cambierebbe faccia; `creature.py controlla`).
 - **`tenuta`** (e `perche`): il giudizio sulle pose. Una scartata ha il perché
   scritto e nessun gioco: resta nel catalogo per sapere cosa chiedere di nuovo.
 - **`scheda`**: il catalogo descritto: com'è fatta, **elemento** (uno di
