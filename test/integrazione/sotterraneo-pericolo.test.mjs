@@ -34,7 +34,11 @@ const TAPPA = 1   // la scalinata
 const EROE = 'mago'   // il più fragile: coi punti non dati, cinque mostri pesano
 const roba = { v: 1, gemme: 0, zaino: ['pozione-piccola', 'pozione'], mano: null, mancina: null, corpo: null,
                dito: null, torcia: 0, torce: 0 }
-const crescita = { esp: sogliaDi(10) }
+// la tempra dà vita e difesa: senza, il mago di livello 10 ha 14 vita e cinque mostri della scalinata gliene tolgono più di
+// quaranta in un giro, quindi cade al primo colpo senza passare dallo stop «ultimo». Con otto punti ne ha 44 contro un giro
+// da una trentina: lo stop «duro» (vita ≤ 2 giri) c'è, e dopo un giro c'è quello «ultimo» (vita ≤ 1 giro). Con meno punti
+// cade, con più il secondo stop non scatta (provato da 4 a 12)
+const crescita = { esp: sogliaDi(10), tempra: 8 }
 // il pallino della discesa non deve essere rosso (la sentinella non fa scendere): lo dice la forza (docs/sotterraneo/forza.md)
 const colore = coloreNellaStoria(LIVELLI_ATTESI[TAPPA], forzaDi(EROE, roba, crescita))
 controlla('la scalinata non è rossa per questo eroe', colore !== 'rosso', colore)
