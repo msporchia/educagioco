@@ -123,6 +123,13 @@ monete tolgono dall'indirizzo solo il loro pezzo, così un ricaricamento non
 le raddoppia). Dall'app installata non si scrivono (non ha la barra
 dell'indirizzo): si usano dal browser.
 
+Un cheat che porta il nome di un gioco (`#fattoria=40`, `#sotterraneo=roba`)
+**apre quel gioco da sé**, anche cambiando solo il `#` (`dallIndirizzo` in
+`src/App.vue`). Nei test: non c'è la carta da toccare, e l'indirizzo va tolto
+appena dentro (la fattoria lo fa da sé, `azzera` lo toglie sempre; altrove
+`history.replaceState`), se no la ricarica seguente (`semina` ricarica) riapre il gioco al
+posto della home e `.carte` non arriva.
+
 | cheat | cosa fa |
 |---|---|
 | `#admin` | la pagina dei trucchi (`views/AdminView.vue`) |

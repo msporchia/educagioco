@@ -16,7 +16,7 @@
    `node test/esegui.mjs sotterraneo-dialoghi`
    tempo: 200
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, leggiProfilo, camminaVerso, nelDialogo }
+import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, leggiProfilo, camminaVerso, nelDialogo , finestraFerma }
   from '../aiuto/browser.mjs'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
@@ -52,6 +52,7 @@ async function tocca(x, y) {
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
 }
 async function toccaIl(sel) {
+  await finestraFerma(page)   // la finestra nuova cresce per 160 ms: misurata prima, il tocco cade a lato
   const b = await page.locator(sel).first().boundingBox()
   await tocca(b.x + b.width / 2, b.y + b.height / 2)
 }

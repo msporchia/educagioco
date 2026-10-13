@@ -473,16 +473,11 @@ await page.waitForSelector('.prova-velo', { state: 'hidden', timeout: 5000 })
    misurerebbe la fortuna, e infatti la prima stesura di questo test era
    ballerina.
 
-   Il seme è fissato (`#seme=96`): con quello il primo goblin sta sette
-   celle a est della stanza di partenza, in linea retta, e fra i due non
-   c'è nessuna porta né niente da raccogliere. Conta perché da
-   aa2f628 «Si chiude la stanza, non il battente» una porta non si
-   aggira più camminando intorno — tutti i varchi di una stanza sono
-   chiusi e portano allo stesso gruppo, quindi o la si apre rispondendo
-   alla sua domanda, o di là non si passa. Un seme che mettesse una
-   porta sulla strada del test la lascerebbe chiusa per sempre, perché
-   qui si cammina e basta. Il seme si legge quando parte la discesa,
-   quindi si scrive nell'indirizzo un attimo prima di toccare la tappa. */
+   Lo scontro si apre da sé col cheat dell'indirizzo (`#sotterraneo=branco&mostri=4&tipo=goblin`, docs/core/comandi.md):
+   quattro goblin attorno all'ingresso. Prima si camminava verso un goblin con `#seme=96`, ma i piani hanno cambiato
+   forma più volte (porte, branchi, stanze) e un seme scelto a occhio non regge; il cheat non cammina e non dipende dalla
+   generazione. Quattro e non uno: con un goblin solo il colpo giusto lo finisce alla prima domanda, e qui ne servono
+   almeno due nella stessa istanza. Il cheat si legge quando parte la discesa, quindi si scrive nell'indirizzo un attimo prima di toccare la tappa. */
 await page.click('button[aria-label="indietro"]')
 await page.waitForSelector('.carte', { timeout: 5000 })
 await semina(page, { coins: 300, settings: { sperimentali: true } })
@@ -497,7 +492,7 @@ await page.waitForSelector('.sot-tappe', { timeout: 5000 })
    non le lancia. */
 await page.waitForSelector('.sot-velo .sot-eroe', { timeout: 5000 })
 await scegliAvventura(page, 'cavaliere')
-await page.evaluate(() => { location.hash = 'seme=96' })
+await page.evaluate(() => { location.hash = 'sotterraneo=branco&mostri=4&tipo=goblin' })
 await scendiNelSotterraneo(page, 0)
 await page.waitForSelector('.sot-tela', { timeout: 5000 })
 await attendi(page, 700)
@@ -525,7 +520,7 @@ for (let i = 0; i < 24 && !inBattaglia; i++) {
   if (!inBattaglia && await page.locator('.sot-foglio').count())
     await page.locator('.sot-foglio .sot-grosso').last().click()
 }
-controlla('col seme 49 si arriva addosso a un mostro', inBattaglia)
+controlla('col cheat si è già addosso a un mostro', inBattaglia)
 
 /* La battaglia sta **al centro**, non in fondo: comincia mentre si
    cammina, e un pannello in fondo allo schermo compare dove chi guarda

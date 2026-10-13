@@ -25,10 +25,12 @@ sopra la discesa a metà; chi scende (nome, livello, «Cambia eroe») sta nella 
   37 dB): nessun pixel si scosta di più di 6 su 255 dal sorgente. La fa lo
   strumento dal foglietto ([terra-strumento.md](terra-strumento.md)): il
   modulo non si tocca. Il perché: [../core/grafica.md](../core/grafica.md#fedeli-ai-sorgenti).
-- **La scala: una cella della mappa è grande quanto l'eroe.** L'eroe è a
-  scala 3 come nel sotterraneo (16 px × 3 = 48 px), quindi la mappa si
-  mostra a 3/4 (`SCALA_TERRA`): un pixel del disegno (4 px della mappa)
-  diventa 3 px dello schermo, come un pixel dell'eroe. Su un telefono da 390
+- **La scala: una cella della mappa è grande quanto un personaggio.** I
+  personaggi sono a scala 3 come nel sotterraneo (16 px × 3 = 48 px), quindi
+  la mappa si mostra a 3/4 (`SCALA_TERRA`): un pixel del disegno (4 px della
+  mappa) diventa 3 px dello schermo, come un pixel del personaggio. L'eroe
+  armato è a 2,5 (`SCALA_DELL_EROE`, 40 px): a 3, con l'armatura e l'arma,
+  sovrastava i personaggi dipinti. Su un telefono da 390
   px si vedono otto celle in larghezza: la mappa è quattro schermi per uno e
   mezzo. `image-rendering: pixelated`. I pixel del disegno non stanno su una
   griglia esatta, e a 3/4 il vicino più prossimo li rende di larghezza un po'
