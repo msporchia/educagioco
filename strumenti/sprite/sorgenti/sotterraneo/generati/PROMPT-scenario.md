@@ -144,6 +144,38 @@ I fogli si salvano qui accanto numerati — `sotterraneo_1.png`,
 `sotterraneo_2.png` — e «Com'è andata», in fondo, dice di ognuno quale
 scenario è, con quale prompt, e cosa è venuto bene.
 
+## I pezzi diagonali e gli angoli
+
+Le stanze smussate, le cappelle e le grotte (`docs/sotterraneo/piani-caverne.md`)
+hanno muri obliqui e bordi storti, ma le tessere sono tutte dritte: un muro
+in diagonale esce a scaletta di quadrati, e una porta finisce su uno
+scalino (l'utente, 13 ottobre 2026: «la struttura è molto carina, è il
+rendering che è terribile»). Questo foglio dà i pezzi che si **posano sopra
+il pavimento** dove la roccia taglia una cella in diagonale o ne arrotonda
+l'angolo: dove c'è pavimento resta magenta, così il pavimento sotto è quello
+vero. Una chat nuova, e si allega la scena dello scenario (per la cripta
+`sotterraneo_4.png`).
+
+```text
+Disegna su un fondo MAGENTA PIENO (#FF00FF), uniforme, senza sfumature, senza ombre e senza nessuna scacchiera, i pezzi che servono per i MURI IN DIAGONALE e gli ANGOLI della scena allegata: stessi materiali, stessa tavolozza, stessa mano, e la STESSA SCALA della scena (celle da 64×64 px, ogni pixel del disegno è un quadrato di 4×4 px). Immagine 1024×1536 px verticale. Ogni pezzo sta da solo, staccato dagli altri da almeno mezza cella di magenta. NESSUNA PAROLA SCRITTA, NESSUN NUMERO, nessuna ombra o bagliore attorno ai pezzi.
+
+Ogni pezzo è UNA CELLA (64×64) vista dall'alto come la scena: dentro la cella c'è SOLO la roccia (il tetto scuro del muro, col suo bordo chiaro dove tocca il pavimento), e DOVE NELLA CELLA CI SAREBBE IL PAVIMENTO RESTA MAGENTA. La roccia arriva a filo dei lati della cella dove continua nella cella accanto.
+
+Dall'alto in basso, una fila per riga:
+1. Quattro celle tagliate in diagonale: la roccia occupa il triangolo in alto a sinistra, poi in alto a destra, poi in basso a sinistra, poi in basso a destra; il bordo chiaro corre lungo la diagonale.
+2. Quattro angoli esterni: la roccia è solo un quarto di cerchio nell'angolo della cella (in alto a sinistra, in alto a destra, in basso a sinistra, in basso a destra), il resto magenta.
+3. Quattro angoli interni: la roccia riempie la cella tranne un quarto di cerchio di magenta nell'angolo (negli stessi quattro angoli).
+4. La FACCIA del muro dove una parete scende in diagonale: due pezzi larghi DUE celle e alti due, uno per la parete che scende verso destra e uno per quella che scende verso sinistra, con la faccia alta una cella e il coronamento come le facce della scena, che girano di 45° invece di fare scalini.
+5. Per le grotte: sei celle di bordo di roccia NATURALE, storto e scheggiato, senza mattoni (il bordo in alto, in basso, a sinistra, a destra, e due angoli), sempre con il magenta dove c'è pavimento.
+Niente porte, niente oggetti, niente pavimento: solo roccia.
+```
+
+Controllo prima di montarlo: **il magenta è davvero dove c'è pavimento** (nessun
+quadrato di pavimento dipinto dentro le celle), le diagonali vanno **da angolo
+ad angolo** della cella, le celle sono **a filo** della griglia da 64 px. Se il
+generatore aggiunge pavimento dentro le celle, una correzione mirata: «rifai le
+righe 1–3: dove non c'è roccia lascia il magenta».
+
 ## La regola del muro
 
 È la parte che risolve il difetto, e sta nella parte fissa dei due
