@@ -13,8 +13,8 @@ const EPS = 1e-9
 
 // la velocità dell'eroe: una base e uno e mezzo a punto di destrezza (docs/sotterraneo/scontro.md, «L'iniziativa»): chi ha poca
 // destrezza ha meno turni dei mostri normali, e il doppio turno è dell'agile
-export const VELOCITA_BASE_EROE = 6
-export const VELOCITA_PER_DESTREZZA = 1.5
+export const VELOCITA_BASE_EROE = 7
+export const VELOCITA_PER_DESTREZZA = 1
 export const attesaDi = velocita => ATTESA / Math.max(1, velocita)
 
 // l'istante del prossimo turno di un attore: calcolato dal numero dei turni fatti, non sommando, così due attori che
