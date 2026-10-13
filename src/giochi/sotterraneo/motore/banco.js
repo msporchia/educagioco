@@ -435,7 +435,7 @@ export function allaBottega(roba, { finite = 0, eroe = undefined, seme = 1, cres
     const vale = k => (COSE[k].dove === 'dito' ? 1 : scudoMeglio(b, k) && !b.vaAddosso(k)
       ? (COSE[k].dif || 0) * PESO_DELLA_DIFESA - b.attaccoMancino
       : b.confronto(k).meglio)
-    const scelte = ['armaiolo', 'rigattiere']
+    const scelte = ['armaiolo', 'incantatrice', 'rigattiere']
       .flatMap(chi => b.mercanzia(chi).filter(r => meglio(r.chiave)).map(r => ({ chi, k: r.chiave })))
       .sort((x, y) => vale(y.k) - vale(x.k) || b.quantoCosta(y.k) - b.quantoCosta(x.k))
     if (!scelte.length) break

@@ -32,7 +32,7 @@ defineEmits(['ancora', 'esci'])
           : vinta
             ? `${titolo}: hai trovato la scala fino in fondo.`
             : fatti.perche === 'svenuto'
-              ? `Sei svenuto ${fatti.svenimenti} volte: ${titolo} ricomincia da capo. Prima di tornarci, passa dal fabbro.`
+              ? `Sei svenuto ${fatti.svenimenti} volte: ${titolo} ricomincia da capo. Prima di tornarci, passa dai mercanti.`
               : 'Il sotterraneo resta lì. La prossima volta sarà tutto diverso.' }}
       </p>
 

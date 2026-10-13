@@ -43,7 +43,7 @@ import { avventuraDi, scriviNellAvventura, vintaNellAvventura, azzeraIlVecchio, 
   from './motore/avventure.js'
 import { PORTALE } from './dati/terra-mappa.js'
 import { iconaDi } from './dati/terra.js'
-import { mercanteDi } from './dati/mercanti.js'
+import { mercanteDi, schedeDi } from './dati/mercanti.js'
 import { Tela } from './scena/tela.js'
 
 import Campagna from './viste/Campagna.vue'
@@ -372,7 +372,8 @@ const banco = computed(() => {
       }
     })
   return {
-    chi: m,
+    // le linguette di una famiglia che l'eroe non porta non si mostrano (dati/mercanti.js, schedeDi)
+    chi: { ...m, schede: schedeDi(m, eroeDi(eroeQui())) },
     roba: vendibili,
     addosso: { mano: voce(b.mano), mancina: voce(b.mancina), corpo: voce(b.corpo), dito: voce(b.dito) },
     numeri: { vita: b.vitaConLaRoba, att: b.att, dif: b.dif, gemme: b.gemme },
@@ -1572,7 +1573,7 @@ function scesaDaProva() {
   if (i === INDICE_ABISSO || (Number.isInteger(i) && i >= 0 && i < CAMPAGNA.length)) avvia(i, { prova: true })
 }
 scesaDaProva()
-// `#bottega=armaiolo` apre subito quel banco (`&scheda=difese`), con l'eroe a `&livello=12` e `&roba=rara` (un raro per posto), `&roba=nuda`
+// `#bottega=armaiolo` (o `incantatrice`) apre subito quel banco (`&scheda=difese`), con l'eroe a `&livello=12` e `&roba=rara` (un raro per posto), `&roba=nuda`
 // o quella attesa dalla storia, e `&gemme=800`: per guardare la bottega senza camminare fino al mercante (strumenti/scatta-app.mjs)
 function bottegaDaProva() {
   const h = new URLSearchParams(location.hash.slice(1))

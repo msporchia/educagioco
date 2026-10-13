@@ -1,5 +1,5 @@
 <script setup>
-// Il ritratto di chi sta sulla terra di sopra (il minatore, i sei delle missioni, i tre mercanti): lo sprite `<nome>-fermo-0` se l'atlante
+// Il ritratto di chi sta sulla terra di sopra (il minatore, i sei delle missioni, i quattro mercanti): lo sprite `<nome>-fermo-0` se l'atlante
 // ce l'ha, se no la figura di pixel.js, la stessa che sta in piedi sulla mappa (viste/Terra.vue)
 import { computed } from 'vue'
 import Pixel from './Pixel.vue'
