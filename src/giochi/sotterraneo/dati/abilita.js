@@ -45,7 +45,7 @@ export const ENERGIA_DI_PARTENZA_MINIMA = 10
 export const RISPOSTE_PER_ENERGIA = 2.5
 // quanto costa un'abilità (l'utente, 13 ottobre: «il mago può avere costi diversi da quelli del cavaliere»; a lanci, non a numeri):
 // il globo che la sua classe ha al livello del nodo, diviso per quante volte la classe deve poterla lanciare col globo pieno
-// (`lanci` di ogni eroe, dati/eroi.js, una per riga: il mago 6 · 6 · 5 · 4 e l'ultima riga una volta sola, gli altri 3 · 3 · 2,5 · 2 e
+// (`lanci` di ogni eroe, dati/eroi.js, una per riga: il mago 6 · 6 · 5 · 3 e l'ultima riga una volta sola, gli altri 3 · 3 · 2,5 · 2 e
 // una). Il costo cresce con la riga e, nel mago, con il grado (il globo cresce col livello). Si ricalcola da solo se cambia
 // l'energia, la dote o il giro dei punti
 export const LANCI_DELL_ULTIMA = 1
