@@ -159,6 +159,47 @@ si è cambiato il bersaglio e si è scritto perché (`misure/sotterraneo` e le u
   senza colonne (le stanze sono L, croci, caverne e sale); la prova del veleno usa un goblin (la melma non si avvelena); le monete
   delle missioni sono le domande in più, rifatte con le coppie (rosicchione e zannagrigia 1, il goblin 0).
 
+## Il mana costa davvero
+
+12 ottobre 2026, sera. L'utente: *«le abilità costano poco mana: mio figlio è sempre a piena vita e pieno mana»* ([abilita.md](abilita.md#lenergia)).
+Cambiati insieme: energia **7 + 3 per punto di intelligenza** (prima 8 + 1), costi per riga **5 · 7 · 8 · 11 · 16** (prima 5 · 6 · 6 · 7 · 9),
+ricarica **due punti ogni cinque risposte giuste date a un mostro** (prima uno ogni due, dovunque). Il globo, all'1 · 12 · 24:
+cavaliere e nano 10 · 10 · 16, elfa 13 · 13 · 19, mago 22 · 41 · 53 (prima 9 · 9 · 11, 10 · 10 · 12, 13 · 19 · 23). Il banco spende come
+prima (due abilità forti a scontro quando ha energia): abilità usate a scontro, prima → dopo, per discesa (cripta, scalinata, torre, grotta,
+sommersa, botola, miniera), per classe: cavaliere 0,04 · 0,61 · 0,67 · 0,98 · 0,71 · 0,80 · 1,04 → 0,04 · 0,64 · 0,57 · 0,97 · 0,66 · 0,76 · 1,02;
+elfa 0,06 · 0,55 · 0,56 · 0,86 · 0,64 · 0,68 · 0,89 → 0,06 · 0,70 · 0,62 · 0,93 · 0,58 · 0,61 · 0,80; nano 0,06 · 0,61 · 0,63 · 0,87 · 0,74 · 0,88 · 1,00 →
+0,06 · 0,63 · 0,55 · 0,77 · 0,60 · 0,78 · 0,85; **mago** 0 · 0,76 · 0,89 · 1,24 · 0,85 · 0,86 · 1,08 → 0 · 0,95 · 1,14 · 1,70 · 1,28 · 0,85 · 1,25.
+Fra tutti e quattro: 0,04 · 0,64 · 0,64 · 0,98 · 0,78 · 0,80 · 1,00 → 0,04 · 0,73 · 0,72 · 1,09 · 0,78 · 0,75 · 0,98. Il cavaliere, l'elfa e il nano ne usano
+meno (le righe da 11 e 16 non le pagano), il mago di più; il globo con cui il banco entra in uno scontro è il 32–65% del massimo (il 100%
+solo nella cripta). Discese vinte, roba attesa, venti semi, in media fra i quattro:
+
+| | cripta | scalinata | torre | grotta | sommersa | botola | miniera | media |
+|---|---|---|---|---|---|---|---|---|
+| 8/10 | 100→100 | 98→98 | 96→98 | 95→95 | 95→96 | 90→88 | 94→84 | 95→94 |
+| 6/10 | 96→96 | 89→84 | 64→66 | 76→73 | 73→73 | 54→60 | 69→69 | 74→74 |
+| 4/10 | 76→76 | 38→41 | 20→25 | 25→26 | 26→30 | 13→14 | 23→24 | 32→34 |
+
+La storia giocata davvero (rifacendo la discesa persa, con la spesa), vinte a 8 · 6 · 4 su 10, prima → dopo (cripta, scalinata, torre, grotta,
+sommersa, botola, miniera): 8/10 100 · 96 · 90 · 93 · 93 · 80 · 100 → 100 · 98 · 91 · 98 · 93 · 84 · 100; 6/10 95 · 84 · 81 · 78 · 94 · 74 · 85 → 95 · 90 · 83 · 86 · 90 · 75 · 86;
+4/10 88 · 66 · 57 · 34 · 49 · 24 · 46 → 88 · 65 · 56 · 35 · 51 · 24 · 51.
+
+**Perché questi numeri e non altri** (ogni prova con `npm run sotterraneo`, venti semi):
+- *4 · 6 · 9 · 12 · 16 con energia 6 + 2 per punto* (la prima idea): il gioco **scendeva** di difficoltà (il mago alla torre 85 → 95%, alla grotta 85 → 95%), perché 4 e 6
+  sono più economiche di prima e il globo del mago è più grande. Il costo basso della prima riga è quello che il banco usa di più.
+- *Una ricarica a ogni risposta giusta*: il banco usa 1,6 abilità a scontro in fondo (prima 1,0) e vince il 99% a 8/10 e il 40% a 4/10: lontano dal bersaglio.
+  Una ogni tre: il mago che gira tutto non regge il labirinto (45%); 2,5 sta in mezzo.
+- *Costo 12 alla riga 3*: il mago che gira tutto cade nel labirinto (65 → 40%); 11 lo tiene. La riga 4 (14–17) non cambia niente: il banco la usa di rado.
+- *Più energia di base* (8 + 3): la scalinata a 4/10 sale al 46%. *Meno* (6 + 3): le zone al 20–30 scendono sotto i bersagli.
+- Il banco **beve la pozione blu** (con il globo sotto un terzo, quando ce ne sta una intera), come la pozione di cura: prima nessuna pozione blu si beveva.
+- `COLPO_DEL_MOSTRO` e la vita attesa non sono stati toccati: i mostri, le coppie e i piani sono di altri lavori in corso.
+
+**I bersagli che restano rossi** in `misure/sotterraneo` (tre controlli, tutti di un soffio, e cambiano se si muove qualsiasi cifra dell'energia: più semi non
+li stabilizzano): *torre, con la roba di due discese avanti, a 4/10: 71%* (bersaglio ≤ 70%); *zona scalinata al 20, a 8/10: 80%* (≥ 85%);
+*zone al 24, a 8/10 in media: 89%* (≥ 90%). Il primo vorrebbe un giro di vite sui mostri, gli altri due un allentamento: la leva (colpo del mostro, forza o forma
+della scalinata nelle zone, [zone.md](zone.md)) è da decidere sui mostri nuovi. Nelle unità: il tetto del costo di un piano dell'abisso passa da 30 a 35
+domande e la crescita scendendo da 1,6 a 2 (il cavaliere, con dieci di energia, in fondo ha solo l'attacco e le prime abilità: l'ultimo piano gli chiede 33
+domande, prima 25), e a mani nude la forza vale un livello meno dell'atteso (`<=` e non `<` di tre).
+
 ## Cosa resta da guardare col dito
 
 - **L'elfa e il cavaliere** a quattro su dieci: sono i più comodi. Se un bambino con l'elfa passa rispondendo male, i mostri della
