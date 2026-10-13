@@ -1233,7 +1233,13 @@ function apriDallaBarra(che) {
 }
 // La finestra dell'eroe ha tre schede (viste/SchedeEroe.vue): lo zaino, le caratteristiche, l'albero. Si passa
 // dall'una all'altra senza chiudere; sopra lo zaino è quello della terra (zainoSopra), giù quello della discesa
+// passare da una scheda all'altra non rifà crescere la finestra: per 160 ms il tasto stava 20 px più in là
+const cambioScheda = ref(false)
+let fineCambio = 0
 function apriScheda(s) {
+  cambioScheda.value = true
+  clearTimeout(fineCambio)
+  fineCambio = setTimeout(() => { cambioScheda.value = false }, 400)
   if (s === 'zaino') {
     paginaEroe.value = false
     tesoriAperti.value = false
@@ -1549,7 +1555,7 @@ function ridimensiona() { if (pittore) pittore.misura() }
       <!-- vita, gemme e zaino stanno nella barra in basso; attacco e difesa nella pagina dell'eroe (docs/sotterraneo/barra.md) -->
     </Barra>
 
-    <div class="sot">
+    <div class="sot" :class="{ 'sot-cambio-scheda': cambioScheda }">
       <template v-if="!corsa">
         <!-- la chiave è l'eroe: cambiando avventura la terra di sopra rinasce con la nebbia e il posto suoi -->
         <Campagna ref="campagnaEl" :key="eroeQui()" :tappe="tappe" :ripresa="ripresa" :eroe="eroeScheda" :abisso="abisso"

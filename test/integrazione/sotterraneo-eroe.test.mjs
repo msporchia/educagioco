@@ -26,7 +26,7 @@ import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { T } from '../../src/giochi/sotterraneo/dati/mondo.js'
 import { COSE } from '../../src/giochi/sotterraneo/dati/cose.js'
-import { sogliaDi } from '../../src/giochi/sotterraneo/dati/livelli.js'
+import { sogliaDi, VITA_PER_TEMPRA } from '../../src/giochi/sotterraneo/dati/livelli.js'
 import { MONDO } from '../../src/giochi/sotterraneo/motore/avventure.js'
 import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
 
@@ -124,7 +124,7 @@ await scatto(page, 'eroe-pagina')
   await toccaIl('[data-caratteristica="tempra"] [data-azione="dai"]')
   await attendi(page, 300)
   uguale('un punto alla tempra: la tempra sale', await riga('tempra').getAttribute('data-dati'), '1')
-  uguale('e la vita con lei, subito', Number(await page.locator('[data-numero="vita"] b').textContent()), vita0 + 3)
+  uguale('e la vita con lei, subito', Number(await page.locator('[data-numero="vita"] b').textContent()), vita0 + VITA_PER_TEMPRA)
   uguale('resta un punto', await page.locator('[data-punti-da-dare]').getAttribute('data-n'), '1')
   uguale('e il «+» sul globo lo dice', await page.locator('[data-azione="eroe-pagina"]').getAttribute('data-punti'), '1')
 }
