@@ -20,7 +20,7 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { MONDO } from '../../src/giochi/sotterraneo/motore/avventure.js'
 import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, leggiProfilo, scendiNelSotterraneo, nelDialogo,
-         lasciaLaDiscesa, vendiNellaBottega, riacquistaNellaBottega, allaLinguettaDi } from '../aiuto/browser.mjs'
+         lasciaLaDiscesa, vendiNellaBottega, riacquistaNellaBottega, allaLinguettaDi , finestraFerma } from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 import { COSE } from '../../src/giochi/sotterraneo/dati/cose.js'
 import { MERCANTI, CELLA } from '../../src/giochi/sotterraneo/dati/terra-mappa.js'
@@ -52,6 +52,7 @@ async function tocca(x, y) {
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
 }
 async function toccaIl(sel) {
+  await finestraFerma(page)   // la finestra nuova cresce per 160 ms: misurata prima, il tocco cade a lato
   const b = await page.locator(sel).first().boundingBox()
   await tocca(b.x + b.width / 2, b.y + b.height / 2)
 }
