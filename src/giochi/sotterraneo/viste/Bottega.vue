@@ -182,7 +182,7 @@ const tascheVuote = computed(() => !!props.tasche && !props.tasche.some(Boolean)
       <template v-if="!vende && !ricompra">
         <div class="sot-griglia">
           <Casella v-for="r in qui" :key="r.chiave" :cosa="r" :sotto="sottoMerce(r)"
-                   :spenta="!puoiComprare(r)" :rosso="!r.posso"
+                   :spenta="!puoiComprare(r)" :rosso="!r.posso" :ruolo="r.ruolo" :su="r.su" :migliora="r.migliora"
                    :segno="r.nonPuoi ? '✋' : r.serve ? '🔒' : r.quante ? `×${r.quante}` : ''"
                    :scelta="sceltoQui('merce', r.chiave)"
                    :data-casella-pezzo="r.chiave" :data-avanti="r.avanti || null"
