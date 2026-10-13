@@ -89,7 +89,7 @@ bersagli rompe).
   Le ossa delle specie sono tutte 8, quindi la forza si legge come «ossa del mostro di strada / 8» (prima la faceva la fascia). La
   forza non scende mai (la cripta 0,4 e la scalinata 0,8 sono i mostri piccoli del primo avvio) e la spinta nemmeno.
 - **La curva delle zone** (`CURVA_DELLE_ZONE` e `FORMA_DELLA_ZONA`, [zone.md](zone.md)): forza 4 + 0,6 per livello (prima 0,5), spinta
-  13 + 1,0 per livello (prima 15 + 0,65), forme cripta ×1,7, scalinata ×0,8, torre ×0,8, grotta ×1,4, botola ×0,85, sommersa ×0,95,
+  13 + 1,0 per livello (prima 15 + 0,65), forme cripta ×1,7, scalinata ×0,8, torre ×0,8, grotta ×1,4, botola ×0,85, sommersa ×0,95 (poi, con gli abitanti per ambientazione: cripta ×2,2, scalinata ×0,75, torre ×0,9, miniera ×1,35),
   miniera ×1,3. Una forza che cresce piano e una spinta che cresce in fretta tengono la zona sotto le 85 domande dove si può
   (a forza 0,9 a livello la miniera al 30 chiedeva 162 risposte).
 - **L'abisso** ([abisso.md](abisso.md)): forza 5, spinta 12, ossa +0,12 a piano (prima 0,22), tetto dei branchi 2 nelle cantine; il
@@ -203,6 +203,9 @@ dell'elfa a otto su dieci con la roba attesa (7/20); la miniera a 8/10 passa da 
 caso no» usa la roba attesa e non quella giocata (che a un seme su tre è un'arma rara e già prima, al seme 2, faceva vincere 4 su 8), e il costo dei piani dell'abisso
 si guarda su tre semi (ogni piano sotto le 40 domande, la media dei semi sotto le 30): cambiando una specie un piano da 33 o 37 domande lo fa un seme su cinque, e già
 prima alcuni semi sforavano i 30.
+
+**Le zone** (le forme in `FORMA_DELLA_ZONA`: cripta 1,7 → 2,2, scalinata 0,8 → 0,75, torre 0,8 → 0,9, miniera 1,3 → 1,35) e la **spinta di due discese della storia** (la torre 5,5 → 4,75, la sommersa 9,5 → 9,25) sono state rimisurate: `misure/sotterraneo` (265 controlli) è verde come lo era, dopo due
+giri in cui le zone della torre e della miniera, a quattro su dieci, si vincevano il doppio delle volte (i caporali nuovi, lenti, rendono le zone comode).
 
 **L'esperienza dei gradi non c'è**: provato ×1,3 · 1,7 · 2,5 anche sull'esperienza (oltre che sulle gemme), e le zone rendevano mezzo livello in più a discesa (la torre al 12:
 1,9 livelli invece di 1,2) e le discese a quattro su dieci si vincevano la metà delle volte: solo le gemme. E il caporale giusto di una zona non è quello della storia: nelle

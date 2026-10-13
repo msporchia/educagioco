@@ -146,8 +146,9 @@ il «!» torna.
 - **i mostri del livello L**: gli abitanti e il caporale della discesa ([mostri.md](mostri.md): una zona tiene i suoi per sempre) con
   `forza` = (4 + 0,6 · (L − 12)) × la forma e `spinta` = 13 + 1,0 · (L − 12), a un decimo
   (`CURVA_DELLE_ZONE`). In linea retta, mai esponenziali. La forma (`FORMA_DELLA_ZONA`) dice quanto gli abitanti sono più comodi o più
-  dura a pari livello (le specie hanno tutte le stesse ossa, ma non picchiano uguale): la scalinata (ratto e melma) ×0,8, la
-  torre ×0,8, la grotta ×1,4, la botola ×0,85, la scala sommersa ×0,95, la miniera (il golem lento) ×1,3, la cripta, piccola, ×1,7;
+  dura a pari livello (le specie hanno tutte le stesse ossa, ma non picchiano uguale): la scalinata ×0,75, la
+  torre ×0,9, la grotta ×1,4, la botola ×0,85, la scala sommersa ×0,95, la miniera ×1,35, la cripta, piccola, ×2,2 (con gli abitanti per ambientazione di
+  [mostri.md](mostri.md): prima 0,8 · 0,8 · 1,3 · 1,7; nelle zone, dove i mostri hanno una spinta enorme, conta la velocità dei caporali e non il loro colpo);
 - **il bottino come nell'abisso** (`indiceDella` dà −1): i forzieri danno un
   pezzo a tono sei volte su dieci, il mostro grosso il suo pezzo col nome e
   un raro del livello.

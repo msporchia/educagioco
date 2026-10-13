@@ -169,7 +169,7 @@ export const MOSTRI = {
   // la cripta
   zombie: sp('medio', { em: '🧟', sprite: 'zombie', nome: 'Uno zombie', gemme: 6, att: 3, dif: 1, velocita: 8,
     resiste: ['veleno'], teme: ['fuoco', 'sacro'], immune: ['avvelena', 'sanguina'] }),
-  'scheletro-scudo': sp('medio', { em: '💀', sprite: 'scheletro-scudo', nome: 'Uno scheletro cavaliere', gemme: 6, droppa: 0.22, lascia: ['torcia', 'pozione-piccola'], att: 4, dif: 1, velocita: 8,
+  'scheletro-scudo': sp('medio', { em: '💀', sprite: 'scheletro-scudo', nome: 'Uno scheletro cavaliere', gemme: 6, droppa: 0.22, lascia: ['torcia', 'pozione-piccola'], att: 4, dif: 1, velocita: 6,
     resiste: ['veleno'], teme: ['sacro', 'fisico'], immune: ['avvelena', 'sanguina'] }),
 
   // le cantine e la torre
