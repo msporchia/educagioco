@@ -606,13 +606,15 @@ function suLaRoba(fai) {
   const e = fai(c)
   const a = c.avvisi.pop()
   if (a) dilloSopra(typeof a === 'string' ? a : a.testo)
-  nellAvventura({ roba: c.roba }, { subito: true })
+  nellAvventura({ roba: c.roba, crescita: c.crescita }, { subito: true })
   tic.value++
   return e
 }
 function usaSopra(t) {
   const i = tascheDello(roba.value.zaino)[t].i   // la tasca → il posto nella lista (le pozioni uguali ne fanno una sola)
   const k = roba.value.zaino[i]
+  // l'elisir vale per sempre e si beve anche qui; una cura no (si è già in piena forma), le altre cose servono laggiù
+  if (COSE[k] && COSE[k].usa === 'cresci') { suLaRoba(c => { const e = c.beviElisir(i); if (e) c.dillo(`🐂 +${e.vita} vita, per sempre`); return e }); suono.ok(); return }
   if (COSE[k] && !COSE[k].dove) { dilloSopra(COSE[k].usa === 'cura' ? '❤️ sei già in piena forma' : 'Serve laggiù, non qui'); return }
   suLaRoba(c => c.indossaDallaTasca(i))
   suono.ok()

@@ -2,13 +2,13 @@
 // eroe), e resta fra una discesa e l'altra (docs/sotterraneo/la-roba-che-resta.md). Qui
 // le regole che valgono sotto e sopra: cosa si porta, dove va un'arma, cosa vale, come si compra e si vende.
 // La discesa (motore/corsa.js) e i mercanti di sopra (motore/bottega.js) la estendono; gira in Node.
-import { TASCHE, TASCHE_EXTRA_MAX, prezzoTasca, FORZA_PER_TASCA } from '../dati/mondo.js'
+import { TASCHE, TASCHE_EXTRA_MAX, prezzoTasca } from '../dati/mondo.js'
 import { eroeDi, DI_PARTENZA, portaLa, nonLaPorta, FAMIGLIE, requisitoDi } from '../dati/eroi.js'
-import { COSE, STANZE_TORCIA, aLivello } from '../dati/cose.js'
+import { COSE, STANZE_TORCIA, aLivello, PESO_DELLA_DIFESA } from '../dati/cose.js'
 import { GEMME_PER_FORTUNA, ATT_PER_PUNTO, SCHIVATA_PER_DESTREZZA, ENERGIA_PER_INTELLIGENZA } from '../dati/livelli.js'
 import { valoreDelLivello } from '../dati/pezzi.js'
-import { rileggiCrescita, piuDellaCrescita, caratteristica, chiTrattiene, puntiDaDare, riassegna, costoDelRiassegnare, trattoDegliElisir }
-  from './crescita.js'
+import { rileggiCrescita, piuDellaCrescita, caratteristica, chiTrattiene, puntiDaDare, riassegna, costoDelRiassegnare, trattoDegliElisir,
+         ELISIR_MAX } from './crescita.js'
 import { CARATTERISTICHE } from '../dati/livelli.js'
 import { NODI, ENERGIA, aGrado } from '../dati/abilita.js'
 import { gradoDi, impara, metti, dimentica, costoDelDimenticare } from './abilita.js'
@@ -20,13 +20,13 @@ export const VERSIONE_ROBA = 1
 // le abilità che il confronto di un pezzo mette in riga: un'abilità nuova si aggiunge qui, in `addosso()` e
 // in `ABILITA` di viste/pezzo.js (un test controlla che le due liste coincidano)
 export const ABILITA_CONFRONTATE = ['att', 'dif', 'vita', 'rigenera', 'fuoco', 'schivata', 'gemme', 'fortuna', 'pozioni',
-                                    'luce', 'torcia']
+                                    'luce', 'torcia', 'ricarica']
 
 // quanto vale un'abilità quando il gioco sceglie da sé cosa mettersi addosso (per terra, comprando, il banco di prova):
-// un punto di difesa vale due di attacco (si para a ogni scambio), la vita un quarto. Pesi da giocatore, non da
+// un punto di difesa vale quanto PESO_DELLA_DIFESA di attacco (si para a ogni scambio), la vita un quarto. Pesi da giocatore, non da
 // contabile: servono a dire «meglio» o «peggio» quando un pezzo dà più cose insieme
-const PESI = { att: 2, dif: 4, vita: 0.4, rigenera: 1, fuoco: 1.6, schivata: 0.12, gemme: 3, fortuna: 0.4, pozioni: 0.03,
-               luce: 0.6, torcia: 0.2 }
+const PESI = { att: 2, dif: 2 * PESO_DELLA_DIFESA, vita: 0.4, rigenera: 1, fuoco: 1.6, schivata: 0.12, gemme: 3, fortuna: 0.4, pozioni: 0.03,
+               luce: 0.6, torcia: 0.2, ricarica: 0.05 }
 // la schivata ha un tetto: oltre, i mostri non toccherebbero più
 export const SCHIVATA_MASSIMA = 60
 const CASELLE = ['mano', 'mancina', 'corpo', 'dito']
@@ -84,6 +84,8 @@ export function schedaConLaRoba(eroe, roba = null, crescita = null) {
     mano: c.mano, mancina: c.mancina, corpo: c.corpo, dito: c.dito, tratti, livello: c.livelloEroe, energiaMax: c.energiaMax,
   }
 }
+
+const virgola = n => String(Math.round(n * 10) / 10).replace('.', ',')
 
 export class Corredo {
   constructor({ eroe = DI_PARTENZA, roba = null, crescita = null } = {}) {
@@ -236,6 +238,15 @@ export class Corredo {
     this.sistemaIlCorredo()
     return true
   }
+  // L'elisir del toro vale per sempre (docs/sotterraneo/rarita.md): si beve dovunque, anche al villaggio. Sta nella crescita
+  // dell'eroe come le tasche comprate, non nella vita della discesa. Torna null se la tasca `i` non tiene un elisir
+  beviElisir(i) {
+    const c = COSE[this.zaino[i]]
+    if (!c || c.usa !== 'cresci') return null
+    this.crescita = { ...this.crescita, elisir: Math.min(ELISIR_MAX, this.crescita.elisir + c.cresce) }
+    this.zaino.splice(i, 1)
+    return { che: 'cresciuto', vita: c.cresce }
+  }
   dimenticaAlbero() {
     const n = dimentica(this.crescita)
     if (!n || this.gemme < this.costoDimenticare) return false
@@ -269,8 +280,8 @@ export class Corredo {
   }
 
   // La pagina dell'eroe: le quattro caratteristiche, quanto valgono e cosa cambierebbe dando un punto (prima → dopo):
-  // l'attacco se è la caratteristica dell'arma in mano, la difesa quando la tempra arriva al punto che la alza, la vita,
-  // la schivata, l'energia.
+  // l'attacco se è la caratteristica dell'arma in mano, la difesa quando la forza arriva al punto che la alza, la vita, la
+  // schivata e la velocità, l'energia.
   // `trattenuta`: il «+» è spento perché quella caratteristica (`dietro`) è rimasta troppo indietro (chiTrattiene);
   // `indietro`: è lei, quella che trattiene un'altra, e chiede un punto prima
   caratteristiche() {
@@ -287,8 +298,9 @@ export class Corredo {
       const piu = prova.vitaConLaRoba - this.vitaConLaRoba
       if (piu) cambia.push({ em: '❤️', prima: tetto, dopo: tetto + piu })
       if (prova.schivata !== this.schivata) cambia.push({ em: '🌀', prima: `${this.schivata}%`, dopo: `${prova.schivata}%` })
+      // la velocità nella fila dei turni (docs/sotterraneo/scontro.md): chi ne ha di più agisce prima e più spesso
+      if (prova.velocita !== this.velocita) cambia.push({ em: '⚡', prima: virgola(this.velocita), dopo: virgola(prova.velocita) })
       if (prova.energiaMax !== this.energiaMax) cambia.push({ glifo: 'energia', prima: this.energiaMax, dopo: prova.energiaMax })
-      if (prova.capienza !== this.capienza) cambia.push({ em: '🎒', prima: this.capienza, dopo: prova.capienza })
       return { ...c, valore: caratteristica(this.io, this.crescita, c.chiave), dati: this.crescita[c.chiave] || 0, cambia,
                trattenuta: !!dietro[c.chiave], dietro: dietro[c.chiave], indietro: fermate.has(c.chiave) }
     })
@@ -381,10 +393,9 @@ export class Corredo {
   // chi compra prova prima su una copia (compra) e non arriva mai a sforare
   nonCiSta(k) { this.zaino.push(k) }
 
-  // quante tasche ci sono: sei, e quelle comprate con le gemme (crescita.tasche, fino a TASCHE_EXTRA_MAX)
-  get capienza() { return TASCHE + Math.min(TASCHE_EXTRA_MAX, (this.crescita && this.crescita.tasche) || 0) + this.tascheDallaForza }
-  // la forza porta un posto in più ogni FORZA_PER_TASCA punti oltre il primo: serve a tutti, anche a chi non picchia con spade e asce
-  get tascheDallaForza() { return Math.floor(Math.max(0, this.car('forza') - 1) / FORZA_PER_TASCA) }
+  // quante tasche ci sono: sei, e quelle comprate con le gemme (crescita.tasche; se ne comprano fino a TASCHE_EXTRA_MAX, ma
+  // chi ne aveva di più, per la forza di prima del 13 ottobre, se le tiene)
+  get capienza() { return TASCHE + ((this.crescita && this.crescita.tasche) || 0) }
   // quante sono occupate (le pozioni uguali fanno un posto solo), e la lista per tasca: [{ k, n, i }]
   postiUsati(zaino = this.zaino) { return postiDello(zaino) }
   tasche() { return tascheDello(this.zaino) }
@@ -527,6 +538,8 @@ export class Corredo {
   vaAddosso(k) {
     const c = COSE[k]
     if (!c || !c.dove || !this.posso(k)) return false
+    // il banco di una strada (motore/strade.js) non prende da sé quello che è di un'altra strada
+    if (this.vincoloDelBanco && !this.vincoloDelBanco(this, k)) return false
     if (c.dove === 'mancina' && !this.mancinaLibera()) return false
     const conf = this.confronto(k)
     if (!conf.addosso) return true

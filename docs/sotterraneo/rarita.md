@@ -136,7 +136,8 @@ e zone; un salvataggio di prima vale zero; la pagina dell'eroe scrive «🐂 +3 
 oggetto rarissimo (l'utente, 13 ottobre): **non lo vende nessuno** (`rarissimo` in `dati/cose.js`, fuori da `IN_VENDITA`),
 cade dal mostro grosso (15%), da un caporale (4%) e da un forziere (1,2%) (`elisirCade`, `PROBABILITA_ELISIR`): uno ogni
 tre o quattro discese girate tutte. Il tiro nasce dal seme, dal piano e dal posto, non dal caso della discesa, così
-aggiungerlo non ha spostato niente di quello che cade.
+aggiungerlo non ha spostato niente di quello che cade. **Si beve anche al villaggio**, dallo zaino (`Corredo.beviElisir`): un effetto
+per sempre non ha bisogno della discesa, e prima lì diceva «Serve laggiù».
 
 ## I mercanti a tono
 

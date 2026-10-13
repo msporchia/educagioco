@@ -18,8 +18,6 @@ export const TASCHE = 6   // un limite vero: piene, quello per terra resta per t
 // il prezzo cresce in linea retta, mai esponenziale, e c'è un tetto. Stanno nella crescita dell'eroe (`crescita.tasche`)
 export const TASCHE_EXTRA_MAX = 8
 export const prezzoTasca = extra => 30 * (extra + 1)
-// e la forza dà posto (l'utente, 9 ottobre: a un mago la forza non serviva a niente): una tasca ogni tre punti oltre il primo
-export const FORZA_PER_TASCA = 3
 
 // la luce è un cono davanti all'eroe (nel verso dell'ultimo passo) e un alone corto attorno; alle spalle è ombra
 // (docs/sotterraneo/luce.md). Lunghezze in celle: senza torcia il cono è corto, con la torcia lungo, all'ultima stanza

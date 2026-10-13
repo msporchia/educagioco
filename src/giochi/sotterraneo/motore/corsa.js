@@ -25,7 +25,7 @@ import { pezzoNuovo, pezzoDelGrosso, pezzoDalMostro, livelloDelBottino, elisirCa
 import { generaPiano } from './livello.js'
 import { percorso, viaVerso, primaLibera } from '../../../motore/passi.js'
 import { Corredo } from './corredo.js'
-import { dai as daiPunto, ELISIR_MAX } from './crescita.js'
+import { dai as daiPunto } from './crescita.js'
 import { indiceDella, premioPer } from './storia.js'
 import { robaDellaMissione } from './missioni.js'
 import { forzaDelCorredo } from './forza.js'
@@ -671,9 +671,13 @@ export class Corsa extends Corredo {
     // l'energia viene dalle risposte giuste date a un mostro, non da porte e forzieri (l'utente, 12 ottobre: fra uno scontro
     // e l'altro non deve tornare piena da sola): dopo, così un'abilità si paga con l'energia che c'era quando la si è
     // preparata. Sbagliare non la toglie
-    if (giusto && f.che === 'scontro' && ++this.energiaResto >= RISPOSTE_PER_ENERGIA) {
-      this.energiaResto -= RISPOSTE_PER_ENERGIA   // 2,5: il resto passa al punto dopo (due punti ogni cinque risposte)
-      this.energia = Math.min(this.energiaMax, this.energia + 1)
+    // (il bastone la fa tornare più in fretta: `ricarica`, in percento, accorcia l'attesa di ogni risposta giusta)
+    if (giusto && f.che === 'scontro') {
+      this.energiaResto += 1 + this.addosso('ricarica') / 100
+      if (this.energiaResto >= RISPOSTE_PER_ENERGIA) {
+        this.energiaResto -= RISPOSTE_PER_ENERGIA   // 2,5: il resto passa al punto dopo (due punti ogni cinque risposte)
+        this.energia = Math.min(this.energiaMax, this.energia + 1)
+      }
     }
     return esito
   }
@@ -1014,12 +1018,10 @@ export class Corsa extends Corredo {
       return { che: 'energia' }
     }
     if (c.usa === 'cresci') {
-      // per sempre: sta nella crescita dell'eroe (come le tasche comprate), non nella vita della discesa
-      this.crescita = { ...this.crescita, elisir: Math.min(ELISIR_MAX, this.crescita.elisir + c.cresce) }
-      this.vita += c.cresce
-      this.zaino.splice(i, 1)
+      const e = this.beviElisir(i)   // per sempre: sta nella crescita dell'eroe, non nella vita della discesa
+      this.vita += e.vita
       this.dillo(`❤️ ${this.vita}/${this.vitaMax}`)
-      return { che: 'cresciuto' }
+      return e
     }
     // una torcia in tasca non ci finisce più (si accende raccogliendola), ma un salvataggio vecchio può averla ancora
     if (c.usa === 'luce') {

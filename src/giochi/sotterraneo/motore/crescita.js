@@ -1,17 +1,19 @@
 // Come cresce l'eroe (docs/sotterraneo/livelli.md): l'esperienza dell'avventura, il livello che ne viene, i punti
 // dati alle quattro caratteristiche e quanto rendono. Funzioni pure: le usano il Corredo (i numeri dell'eroe, sotto e
 // sopra), la Corsa (l'esperienza dei mostri battuti) e la pagina dell'eroe. Gira in Node.
-import { CHIAVI_CARATTERISTICHE, PUNTI_PER_LIVELLO, DOTE_OGNI, VITA_PER_TEMPRA, TEMPRA_PER_DIFESA,
+import { CHIAVI_CARATTERISTICHE, PUNTI_PER_LIVELLO, DOTE_OGNI, VITA_PER_TEMPRA, FORZA_PER_DIFESA,
          GEMME_PER_RIASSEGNARE, livelloDi, sogliaDi, SCARTO_AMMESSO, stannoInsieme, chiTrattiene, COME_LI_DA } from '../dati/livelli.js'
 import { rileggiAlbero } from './abilita.js'
 import { TASCHE_EXTRA_MAX } from '../dati/mondo.js'
+import { EROI } from '../dati/eroi.js'
 
 // in `cfg.avventure[eroe].crescita`: l'esperienza e i punti dati, caratteristica per caratteristica (quelli di
 // partenza della classe e la sua dote non ci stanno: si contano dal livello). `albero` e `caselle`: le abilità
 // imparate e quelle portate nello scontro (motore/abilita.js)
 // imparate e quelle portate nello scontro (motore/abilita.js). `v`: 2 da quando le caratteristiche sono forza, destrezza,
-// intelligenza e tempra (9 ottobre 2026); prima erano forza, tempra, scorza e fortuna
-export const VERSIONE_CRESCITA = 2
+// intelligenza e tempra (9 ottobre 2026; prima erano forza, tempra, scorza e fortuna), 3 da quando la forza non dà più tasche
+// (13 ottobre): un v 2 si rilegge con le tasche che la forza dava già nelle `tasche` comprate, una volta sola
+export const VERSIONE_CRESCITA = 3
 // `elisir`: i punti di vita massima bevuti con gli elisir del toro, per sempre (come le tasche comprate): un salvataggio
 // di prima non ce l'ha, e vale zero
 export const CRESCITA_NUOVA = () => ({ v: VERSIONE_CRESCITA, esp: 0, forza: 0, destrezza: 0, intelligenza: 0, tempra: 0,
@@ -20,6 +22,17 @@ export const ELISIR_MAX = 90   // trenta elisir: più di quanti se ne troveranno
 
 const intero = n => (Number.isFinite(n) && n > 0 ? Math.floor(n) : 0)
 
+// Le tasche che la forza dava fino al 13 ottobre 2026 (una ogni tre punti oltre il primo): chi le ha se le tiene, come
+// tasche comprate. La forza di allora: la partenza della classe, i punti dati, la dote (senza classe, solo i punti)
+const FORZA_PER_TASCA_DI_PRIMA = 3
+function tascheDellaForzaDiPrima(classe, esp, puntiDati) {
+  const e = EROI.find(x => x.chiave === classe)
+  const forza = (e ? (e.parte.forza || 0) + (e.dote === 'forza' ? Math.floor((livelloDi(esp) - 1) / DOTE_OGNI) : 0) : 0) + puntiDati
+  return Math.floor(Math.max(0, forza - 1) / FORZA_PER_TASCA_DI_PRIMA)
+}
+// il tetto di quelle che si rileggono: le comprate più tutte le tasche che la forza poteva dare a quel livello
+const tettoDelleTasche = (classe, esp) => TASCHE_EXTRA_MAX + tascheDellaForzaDiPrima(classe, esp, (livelloDi(esp) - 1) * PUNTI_PER_LIVELLO)
+
 // un dato storto è un eroe nuovo; più punti dati di quelli che il livello concede si tolgono dalla fine.
 // `classe`: i nodi dell'albero di un'altra classe si buttano. Una crescita di prima delle caratteristiche nuove
 // tiene esperienza e albero, e i punti tornano tutti da dare: la scorza e la fortuna non ci sono più
@@ -27,16 +40,18 @@ export function rileggiCrescita(dato, classe = null) {
   const c = CRESCITA_NUOVA()
   if (!dato || typeof dato !== 'object') return c
   c.esp = intero(dato.esp)
-  c.tasche = Math.min(TASCHE_EXTRA_MAX, intero(dato.tasche))   // le tasche comprate in più (dati/mondo.js)
+  c.tasche = Math.min(tettoDelleTasche(classe, c.esp), intero(dato.tasche))   // le tasche comprate in più (dati/mondo.js)
   c.elisir = Math.min(ELISIR_MAX, intero(dato.elisir))
   // di prima: la versione vecchia, o senza versione ma con la scorza o la fortuna (si scrivevano sempre tutte e quattro)
-  const diPrima = dato.v != null ? dato.v !== VERSIONE_CRESCITA : ('scorza' in dato || 'fortuna' in dato)
+  const diPrima = dato.v != null ? dato.v !== 2 && dato.v !== VERSIONE_CRESCITA : ('scorza' in dato || 'fortuna' in dato)
   if (diPrima) return { ...c, ...rileggiAlbero(dato, c.esp, classe) }
   let resta = (livelloDi(c.esp) - 1) * PUNTI_PER_LIVELLO
   for (const k of CHIAVI_CARATTERISTICHE) {
     c[k] = Math.min(intero(dato[k]), resta)
     resta -= c[k]
   }
+  // un v 2 aveva le tasche della forza: adesso sono sue, comprate, anche oltre il tetto di quelle che si comprano
+  if (dato.v === 2) c.tasche = Math.min(tettoDelleTasche(classe, c.esp), c.tasche + tascheDellaForzaDiPrima(classe, c.esp, c.forza))
   return { ...c, ...rileggiAlbero(dato, c.esp, classe) }
 }
 
@@ -54,7 +69,7 @@ export function caratteristica(eroe, cr, k) {
 }
 
 // Quello che la crescita aggiunge ai numeri di partenza della classe (vita, att, dif di dati/eroi.js, che già
-// contano le caratteristiche di partenza): la vita dei livelli e della tempra, la difesa della tempra, e quanto è salita
+// contano le caratteristiche di partenza): la vita dei livelli e della tempra, la difesa della forza, e quanto è salita
 // ogni caratteristica (`sopra`). L'attacco no: dipende dall'arma in mano, lo conta il Corredo
 export function piuDellaCrescita(eroe, cr) {
   const liv = livelloDella(cr)
@@ -63,7 +78,7 @@ export function piuDellaCrescita(eroe, cr) {
   return {
     livello: liv, sopra,
     vita: (liv - 1) * (eroe.vitaPerLivello || 2) + sopra.tempra * VITA_PER_TEMPRA + ((cr && cr.elisir) || 0),
-    dif: Math.floor(sopra.tempra / TEMPRA_PER_DIFESA),
+    dif: Math.floor(sopra.forza / FORZA_PER_DIFESA),
   }
 }
 

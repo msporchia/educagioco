@@ -7,19 +7,20 @@
 // l'attacco alle armi della loro famiglia (`armi`, dati/eroi.js) e ne sono il requisito; a tutti danno anche
 // qualcos'altro (`fa`). `glifo` e `tinta`: il medaglione sulla pagina dell'eroe (viste/glifi.js)
 export const CARATTERISTICHE = [
-  { chiave: 'forza', nome: 'Forza', glifo: 'martello', tinta: '#c0583a', fa: 'colpi più forti con spade e asce, e più posto nello zaino' },
-  { chiave: 'destrezza', nome: 'Destrezza', glifo: 'mira', tinta: '#4f9a5a', fa: 'archi, e schivi i graffi' },
+  { chiave: 'forza', nome: 'Forza', glifo: 'martello', tinta: '#c0583a', fa: 'colpi più forti con spade e asce, e un po\' di difesa' },
+  { chiave: 'destrezza', nome: 'Destrezza', glifo: 'mira', tinta: '#4f9a5a', fa: 'archi, schivi i colpi e agisci prima' },
   { chiave: 'intelligenza', nome: 'Intelligenza', glifo: 'sfera', tinta: '#6a62d8', fa: 'bacchette e bastoni, e più energia' },
-  { chiave: 'tempra', nome: 'Tempra', glifo: 'cuore', tinta: '#c0393b', fa: 'più vita, e un po\' di difesa' },
+  { chiave: 'tempra', nome: 'Tempra', glifo: 'cuore', tinta: '#c0393b', fa: 'più vita' },
 ]
 export const CHIAVI_CARATTERISTICHE = CARATTERISTICHE.map(c => c.chiave)
 
 // quanto vale un punto. L'attacco: un punto della caratteristica dell'arma in mano (a mani nude, la forza). La difesa
-// entra in una sottrazione e vale il doppio dell'attacco: la tempra ne dà una ogni tre punti. Provata sulla forza: chi
-// alza la forza per l'attacco prendeva anche la difesa, e il nano e l'elfa (dote: forza) vincevano tutto a 4/10
+// entra in una sottrazione e vale il doppio dell'attacco: la forza ne dà una ogni FORZA_PER_DIFESA punti («è la
+// caratteristica di un tank», l'utente, 13 ottobre), la tempra solo vita. Provata a un passo veloce (la difesa ogni tre
+// punti): chi alza la forza per l'attacco, il nano e l'elfa con la dote, vinceva tutto e il mago restava indietro
 export const ATT_PER_PUNTO = 1            // ⚔️ con l'arma della sua famiglia
-export const VITA_PER_TEMPRA = 3          // ❤️ vita
-export const TEMPRA_PER_DIFESA = 3        // punti di tempra per un 🛡️
+export const VITA_PER_TEMPRA = 5          // ❤️ vita
+export const FORZA_PER_DIFESA = 4         // punti di forza per un 🛡️
 export const SCHIVATA_PER_DESTREZZA = 1   // 🌀 per cento a punto (a 2 le zone a 6/10 si vincevano troppo)
 export const ENERGIA_PER_INTELLIGENZA = 3 // energia massima a punto: il mago è il mago del mana (docs/sotterraneo/abilita.md, «L'energia»)
 export const GEMME_PER_FORTUNA = 0.05     // la fortuna dei pezzi: ogni gemma vale un ventesimo in più a punto
@@ -65,7 +66,7 @@ export function chiTrattiene(dati, k) {
 export const COME_LI_DA = {
   cavaliere: ['forza', 'destrezza', 'forza', 'tempra'],
   elfa: ['forza', 'destrezza', 'forza', 'tempra'],
-  mago: ['intelligenza', 'tempra', 'intelligenza', 'tempra'],
+  mago: ['intelligenza', 'destrezza', 'intelligenza', 'tempra'],
   nano: ['forza', 'destrezza', 'forza', 'tempra'],
 }
 // dove va il prossimo punto: quello del giro, o se la regola non lo lascia la caratteristica più indietro
