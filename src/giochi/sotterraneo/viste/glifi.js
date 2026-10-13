@@ -211,6 +211,8 @@ export const GLIFI = {
 
   // l'energia (il globo blu, i costi) e gli stati dello scontro
   energia: [['p', 'M12 1.8L19.2 7V17L12 22.2L4.8 17V7Z'], ['c', 'M12 1.8L19.2 7L12 10.2L4.8 7Z'], ['o', 'M12 10.2V22.2L19.2 17V7Z']],
+  // il libro aperto: la scheda delle missioni (viste/SchedeEroe.vue)
+  libro: [['p', 'M2.6 5.4Q7.6 4 12 6.4V20Q7.6 17.8 2.6 19.2Z'], ['o', 'M21.4 5.4Q16.4 4 12 6.4V20Q16.4 17.8 21.4 19.2Z'], ['d', 'M5 9Q8 8.2 10 9.2M5 12.2Q8 11.4 10 12.4M14 9.2Q16 8.2 19 9M14 12.4Q16 11.4 19 12.2']],
   veleno: [['p', goccia(12, 2.2, 2.2)], ['c', cerchio(9.6, 13.8, 1.4)]],
   'scudo-rotto': [['p', SCUDO], ['d', 'M12.6 3.4L10.6 8.8L13.6 12L11 17.8L12.4 21']],
   // chi colpisce a metà senza essere gelato: una freccia che scende

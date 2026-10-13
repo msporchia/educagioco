@@ -1,14 +1,16 @@
 <script setup>
-// Il diario delle missioni: il riassunto sempre a portata di mano sulla terra di sopra (docs/sotterraneo/missioni.md).
+// Il diario delle missioni, la quarta scheda della finestra dell'eroe (viste/SchedeEroe.vue, docs/sotterraneo/barra.md):
+// il riassunto sempre a portata di mano, sopra e sotto (docs/sotterraneo/missioni.md).
 // In cima la missione principale, la storia (docs/sotterraneo/la-storia-principale.md), con la freccina verso la discesa
 // di adesso e le sette porte nel dettaglio. Poi quelle in mano (le fatte da consegnare in cima, poi le da fare, con chi aspetta), quelle che aspettano di essere prese, quelle
 // già consegnate. Toccando una voce si apre il suo dettaglio, nella stessa finestra: chi te l'ha data, cosa ha detto,
 // dove, cosa, il premio, a che punto sei. Da lì si sceglie quale missione indicano le freccine («segui questa») e si va
-// da chi aspetta. Non scrive niente: dice `segui` e `vai` a chi lo usa (viste/Campagna.vue); si chiude con la ✕ o
+// da chi aspetta. Non scrive niente: dice `segui`, `vai` e `scheda` a chi lo usa (viste/Campagna.vue, Gioco.vue); si chiude con la ✕ o
 // toccando fuori (`fuori`, col tocco: chi lo usa lo passa alla mappa, docs/core/interfaccia.md). `giu`: aperto in
 // discesa, dove chi aspetta non c'è e «vai da …» non serve.
 import { computed, ref, watch } from 'vue'
-import Foglio from './Foglio.vue'
+import Cornice from './Cornice.vue'
+import SchedeEroe from './SchedeEroe.vue'
 import Icona from './Icona.vue'
 import Ritratto from './Ritratto.vue'
 import { diario } from '../motore/missioni.js'
@@ -19,8 +21,10 @@ const props = defineProps({
   tappe: { type: Array, required: true },
   segui: { type: String, default: null },   // la missione che le freccine seguono, se ne è stata scelta una
   giu: { type: Boolean, default: false },
+  punti: { type: Number, default: 0 },          // le schede: i «+» delle altre
+  puntiAbilita: { type: Number, default: 0 },
 })
-const emit = defineEmits(['chiudi', 'segui', 'vai', 'fuori'])
+const emit = defineEmits(['chiudi', 'segui', 'vai', 'fuori', 'scheda'])
 
 const d = computed(() => diario(props.stati, props.tappe, props.segui))
 
@@ -57,8 +61,9 @@ const vaDa = v => emit('vai', v.da)
 </script>
 
 <template>
-  <Foglio :em="inDettaglio ? '' : '📖'" :titolo="inDettaglio ? '' : 'Le tue missioni'" centro con-chiudi data-diario
-          @click.self="$emit('fuori', $event)" @chiudi="$emit('chiudi')">
+  <Cornice alta data-diario @chiudi="$emit('chiudi')" @fuori="e => $emit('fuori', e)">
+    <SchedeEroe attiva="missioni" :punti="punti" :punti-abilita="puntiAbilita" :missioni="d.pronte.length" @scheda="s => $emit('scheda', s)" />
+    <div class="sot-diario-corpo">
 
     <!-- ═══ il dettaglio della missione principale: le sette porte ═══ -->
     <div v-if="storiaAperta" class="sot-dettaglio" data-dettaglio data-missione="storia"
@@ -277,5 +282,6 @@ const vaDa = v => emit('vai', v.da)
         </ul>
       </section>
     </template>
-  </Foglio>
+    </div>
+  </Cornice>
 </template>

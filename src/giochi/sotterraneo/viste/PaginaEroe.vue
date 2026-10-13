@@ -25,6 +25,7 @@ const props = defineProps({
   tratti: { type: Array, default: () => [] },    // quello che la roba addosso dà oltre ai numeri («💎 ×1,5»), sopra
   cambia: { type: Boolean, default: false },     // sopra c'è «Cambia eroe»: la scelta delle avventure; giù si cambia dal velo
   puntiAbilita: { type: Number, default: 0 },    // i punti dell'albero: sul tasto delle abilità
+  missioni: { type: Number, default: 0 },        // le missioni da consegnare, sulla scheda (SchedeEroe.vue)
   costoRiassegnare: { type: Number, default: 0 },   // i punti dati tornano da dare, e si paga in gemme
 })
 const emit = defineEmits(['dai', 'tesori', 'cambia', 'chiudi', 'fuori', 'scheda', 'riassegna'])
@@ -42,7 +43,7 @@ const nomeDi = k => (props.caratteristiche.find(c => c.chiave === k) || { nome: 
 
 <template>
   <Cornice alta data-pagina-eroe @chiudi="$emit('chiudi')" @fuori="e => $emit('fuori', e)">
-    <SchedeEroe attiva="eroe" :punti="punti" :punti-abilita="puntiAbilita" @scheda="s => $emit('scheda', s)" />
+    <SchedeEroe attiva="eroe" :punti="punti" :punti-abilita="puntiAbilita" :missioni="missioni" @scheda="s => $emit('scheda', s)" />
     <header class="sot-eroe-testa">
       <span class="sot-eroe-ritratto"><Armato :eroe="eroe" :mano="mano" :mancina="mancina" :scala="3" /></span>
       <span class="sot-eroe-nome">

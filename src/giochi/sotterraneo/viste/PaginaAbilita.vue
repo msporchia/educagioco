@@ -18,6 +18,7 @@ const props = defineProps({
   eroe: { type: Object, required: true },        // la scheda della classe (dati/eroi.js)
   livello: { type: Number, required: true },
   punti: { type: Number, default: 0 },           // i punti dell'albero ancora da dare
+  missioni: { type: Number, default: 0 },        // le missioni da consegnare, sulla scheda (SchedeEroe.vue)
   crescita: { type: Object, required: true },    // albero e caselle
   energia: { type: Number, default: 0 },
   energiaMax: { type: Number, default: 10 },
@@ -119,7 +120,7 @@ const dettaglio = computed(() => {
 
 <template>
   <Cornice alta data-pagina-abilita @chiudi="$emit('chiudi')" @fuori="e => $emit('fuori', e)">
-    <SchedeEroe attiva="abilita" :punti="puntiEroe" :punti-abilita="punti" @scheda="s => $emit('scheda', s)" />
+    <SchedeEroe attiva="abilita" :punti="puntiEroe" :punti-abilita="punti" :missioni="missioni" @scheda="s => $emit('scheda', s)" />
 
     <div class="sot-punti-riga">
       <p v-if="punti" class="sot-eroe-punti" data-punti-abilita :data-n="punti">
