@@ -149,7 +149,7 @@ raddoppiati, e la taratura unica viene dopo) restano rosse e non ne nascono altr
 
 Nei test: `unita/sotterraneo-orologio` (i passi dell'eroe e che fermo non scorrono, la quota di mana uguale per tutti e mille passi
 che lo riempiono, il resto, i turni che non danno mana, lanciare dal campo e il «ce l'hai già», la barriera, la parata, Montagna,
-lo specchio, la linfa, i debuff di apertura, la sosta e quella vecchia, lo svenimento). Dei bersagli: `[data-incanti]` con
+lo specchio, la linfa, i debuff di apertura, la sosta e quella vecchia, lo svenimento). `integrazione/sotterraneo-incanti` (col dito: il globo apre la scelta e non l'albero, lanciare paga e mette la pastiglia, «ce l'hai già», l'albero a un tocco col riquadro «si può preparare», lo scontro con la barriera, la pastiglia e il badge nella fila). Dei bersagli: `[data-incanti]` con
 `[data-incanto="<id>"][data-passi]` sopra il globo blu; `[data-preparati]` con `[data-azione="prepara-campo"][data-abilita="<id>"]`
 (`data-addosso` coi passi che ha), `[data-azione="apri-albero"]`; nello scontro `[data-stati-eroe] [data-preparato][data-passi]` e
 `[data-incanto-fila]`; nell'albero `[data-preparabile]`. Un cheat per guardarli: `#sotterraneo=1&eroe=mago&giu=2&preparati=1`
