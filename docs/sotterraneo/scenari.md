@@ -53,7 +53,7 @@ Il sotterraneo è **il calco da guardare** per un mondo a sprite:
 - **Quello che non c'è nella tavola non si disegna**: `guastiDelleTessere`
   chiede all'atlante ogni nome di ogni scenario, e un pezzo mancante è rosso
   nei test invece che un muro invisibile.
-- **La pelle di una porta ripete il segno** che le sta sopra, col disegno.
+- **La pelle di una porta non ripete niente**: `semplice` o `ferro` a caso, e la `bella` (teschio, corna) solo per il portone del grosso ([piani.md](piani.md#le-porte)). L'oro non è più usato.
 
 ## Il muro è alto una cella
 

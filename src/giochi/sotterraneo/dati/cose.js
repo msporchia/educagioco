@@ -341,14 +341,6 @@ export const NEI_FORZIERI = [
   'pozione-grande', 'elisir-toro', 'torcia', 'pozione-blu', 'ampolla-blu',
 ]
 
-// non mente mai: dietro un teschio c'è davvero una guardia
-export const SEGNI = {
-  guardia: { em: '💀', dice: 'C\'è qualcosa di grosso, là dentro.' },
-  tesoro: { em: '💎', dice: 'Da qui si sente odore di roba buona.' },
-  fonte: { em: '⛲', dice: 'Si sente acqua.' },
-  vuoto: { em: '·', dice: 'Non si sente niente.' },
-}
-
 // `nomi` arriva da fuori: questo file non importa la grafica, o il motore smetterebbe di girare in Node
 export function guastiDelleCose(nomi = null) {
   const g = []
@@ -419,7 +411,5 @@ export function guastiDelleCose(nomi = null) {
   if (!IN_VENDITA.length) g.push('il mercante non ha niente da vendere')
   if (!CURE.length) g.push('niente che curi, e sul banco ci sta sempre')
   if (A_SORTE.length < 5) g.push(`solo ${A_SORTE.length} cose da pescare: il banco ne vuole cinque`)
-  for (const [k, s] of Object.entries(SEGNI))
-    if (!s.em || !s.dice) g.push(`segno ${k}: senza emoji o senza frase`)
   return g
 }

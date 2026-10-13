@@ -9,7 +9,7 @@
    `node test/esegui.mjs sotterraneo-roba --niente-build`
    tempo: 100 */
 import { CAMPAGNA, L_ABISSO, svenimentiDi } from '../../src/giochi/sotterraneo/dati/campagna.js'
-import { COSE, CURE, SEGNI, IN_VENDITA, STANZE_TORCIA, baseDi, aLivello, chiaveDelPezzo } from '../../src/giochi/sotterraneo/dati/cose.js'
+import { COSE, CURE, IN_VENDITA, STANZE_TORCIA, baseDi, aLivello, chiaveDelPezzo } from '../../src/giochi/sotterraneo/dati/cose.js'
 import { TASCHE } from '../../src/giochi/sotterraneo/dati/mondo.js'
 import { MERCANTI, mercanteDi, vendeLa, righeDi, guastiDeiMercanti, schedaDi, sovrapprezzo, prezzoAvanti }
   from '../../src/giochi/sotterraneo/dati/mercanti.js'
@@ -34,7 +34,6 @@ import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiut
   uguale('tre mercanti', MERCANTI.length, 3)
   for (const m of MERCANTI) controlla(`${m.chiave}: ha un posto sulla terra di sopra`, !!DOVE_MERCANTI[m.chiave])
   uguale('uno solo compra la roba', MERCANTI.filter(m => m.compra).map(m => m.chiave).join(), 'rigattiere')
-  controlla('nessun segno promette un mercante nelle discese', !SEGNI.mercante)
 }
 
 /* ══════════ 2. il mercante non è più giù, e al suo posto c'è un portale ══════════

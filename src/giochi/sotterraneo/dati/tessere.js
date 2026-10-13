@@ -22,12 +22,10 @@ export const SCENARI = {
     capi: { sx: 'cantine-capo-sx', dx: 'cantine-capo-dx' },
     bordi: { n: 'cantine-bordo-n', o: 'cantine-bordo-o', e: 'cantine-bordo-e',
              angolo: 'cantine-bordo-angolo' },
-    // la pelle ripete col disegno il segno sopra la porta (SEGNI in dati/cose.js), e non mente mai
+    // la porta non dice cosa c'è dietro: semplice o ferrata a caso, e solo la stanza del grosso ha la sua più bella (docs/sotterraneo/piani.md, «Le porte»)
     porte: {
-      davanti: { guardia: 'cantine-porta-teschio', tesoro: 'cantine-porta-oro', fonte: 'cantine-porta-ferro',
-                 vuoto: 'cantine-porta-semplice', aperta: 'cantine-porta-aperta' },
-      fianco: { guardia: 'cantine-fianco-teschio', tesoro: 'cantine-fianco-oro', fonte: 'cantine-fianco-ferro',
-                vuoto: 'cantine-fianco-semplice', aperta: 'cantine-fianco-aperta' },
+      davanti: { semplice: 'cantine-porta-semplice', ferro: 'cantine-porta-ferro', bella: 'cantine-porta-teschio', aperta: 'cantine-porta-aperta' },
+      fianco: { semplice: 'cantine-fianco-semplice', ferro: 'cantine-fianco-ferro', bella: 'cantine-fianco-teschio', aperta: 'cantine-fianco-aperta' },
     },
     scala: { aperta: 'cantine-scala-aperta', chiusa: 'cantine-scala-chiusa' },
     fontana: { piena: 'cantine-fontana-piena', asciutta: 'cantine-fontana-asciutta' },   // bevuta resta lì, asciutta
@@ -49,10 +47,8 @@ export const SCENARI = {
     bordi: { n: 'cripta-bordo-n', o: 'cripta-bordo-o', e: 'cripta-bordo-e',
              angolo: 'cripta-bordo-angolo', luce: 3 },
     porte: {
-      davanti: { guardia: 'cripta-porta-teschio', tesoro: 'cripta-porta-oro', fonte: 'cripta-porta-ferro',
-                 vuoto: 'cripta-porta-semplice', aperta: 'cripta-porta-aperta' },
-      fianco: { guardia: 'cripta-fianco-teschio', tesoro: 'cripta-fianco-oro', fonte: 'cripta-fianco-ferro',
-                vuoto: 'cripta-fianco-semplice', aperta: 'cripta-fianco-aperta' },
+      davanti: { semplice: 'cripta-porta-semplice', ferro: 'cripta-porta-ferro', bella: 'cripta-porta-teschio', aperta: 'cripta-porta-aperta' },
+      fianco: { semplice: 'cripta-fianco-semplice', ferro: 'cripta-fianco-ferro', bella: 'cripta-fianco-teschio', aperta: 'cripta-fianco-aperta' },
     },
     scala: { aperta: 'cripta-scala-aperta', chiusa: 'cripta-scala-chiusa' },
     fontana: { piena: 'cripta-fontana-piena', asciutta: 'cripta-fontana-asciutta' },
@@ -72,10 +68,8 @@ export const SCENARI = {
     capi: { sx: 'fornace-capo-sx', dx: 'fornace-capo-dx' },
     bordi: { n: 'fornace-bordo-n', o: 'fornace-bordo-o', e: 'fornace-bordo-e', angolo: 'fornace-bordo-angolo' },
     porte: {
-      davanti: { guardia: 'fornace-porta-corna', tesoro: 'fornace-porta-oro', fonte: 'fornace-porta-ferro',
-                 vuoto: 'fornace-porta-semplice', aperta: 'fornace-porta-aperta' },
-      fianco: { guardia: 'fornace-fianco-corna', tesoro: 'fornace-fianco-oro', fonte: 'fornace-fianco-ferro',
-                vuoto: 'fornace-fianco-semplice', aperta: 'fornace-fianco-aperta' },
+      davanti: { semplice: 'fornace-porta-semplice', ferro: 'fornace-porta-ferro', bella: 'fornace-porta-corna', aperta: 'fornace-porta-aperta' },
+      fianco: { semplice: 'fornace-fianco-semplice', ferro: 'fornace-fianco-ferro', bella: 'fornace-fianco-corna', aperta: 'fornace-fianco-aperta' },
     },
     scala: { aperta: 'fornace-scala-aperta', chiusa: 'fornace-scala-chiusa' },
     fontana: { piena: 'fornace-fontana-piena', asciutta: 'fornace-fontana-asciutta' },
@@ -101,7 +95,7 @@ export const PEZZO_DI = {
   forziere: r => (r.aperto ? 'forziere-aperto' : (r.pelle || 'forziere-chiuso')),
   porta: (r, t, sc, { verso = 'davanti' } = {}) => {
     const pelli = sc.porte[verso]
-    return r.aperta ? pelli.aperta : (pelli[r.segno] || pelli.vuoto)
+    return r.aperta ? pelli.aperta : (pelli[r.pelle] || pelli.semplice)
   },
   gemme: (r, t) => pezzoDelleGemme(r.quante, t),
   curiosita: r => r.pezzo,
@@ -150,7 +144,7 @@ export function guastiDelleTessere(nomi = null) {
     if (!(sc.orpelli || []).some(o => o.epica <= 1 && o.posa !== 'coppia'))
       g.push(`scenario ${k}: nessun orpello da stanza qualunque (epicità 1)`)
     for (const verso of ['davanti', 'fianco'])
-      for (const pelle of ['guardia', 'tesoro', 'fonte', 'vuoto', 'aperta'])
+      for (const pelle of ['semplice', 'ferro', 'bella', 'aperta'])
         if (!(sc.porte && sc.porte[verso] && sc.porte[verso][pelle]))
           g.push(`lo scenario ${k} non ha la porta ${pelle} vista ${verso}`)
   }

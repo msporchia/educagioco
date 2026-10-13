@@ -10,7 +10,7 @@ import { ATLANTE, PEZZI, TESSERA, NITIDO, NITIDI } from '../dati/atlante.js'
 import { T, SCALA_MIN, SCALA_MAX, SCALA_INIZIALE, ROCCIA, PAVIMENTO, PORTA, RELITTO, ACQUA, BERSAGLIO } from '../dati/mondo.js'
 import { SCENARI, SCENARIO, PEZZO_DI, pezzoAndante } from '../dati/tessere.js'
 import { MOSTRI } from '../dati/mostri.js'
-import { COSE, SEGNI } from '../dati/cose.js'
+import { COSE } from '../dati/cose.js'
 import { creaFoglio, netto } from '../../../grafica/atlante.js'
 import { tetto, faccia, bordiDelTetto, capiDellaFaccia, versoDellaPorta, sorteDi } from './muri.js'
 import { dipingiPortale, PORTALE } from './portale.js'
@@ -500,10 +500,6 @@ export class Tela {
       this.emoji(r.em, px, py - 1.5 + Math.sin(t * 2.4) * 0.08, alfa, 0.95)
       if (luce === 2) this.etichette.push({ testo: r.nome, px, py: py - 2.1 })
     }
-
-    // il segno sopra una porta chiusa: l'unica cosa con cui si sceglie dove andare, si vede anche in un piano già girato
-    if (r.che === 'porta' && !r.aperta && SEGNI[r.segno])
-      this.emoji(SEGNI[r.segno].em, px, py - 1.25, alfa, 0.5)
   }
 
   // Il mostro grosso (dati/grossi.js): lo sprite dipinto se l'atlante ce l'ha, se no quello della sua specie ingrandito
