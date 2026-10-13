@@ -10,7 +10,7 @@ import Cornice from './Cornice.vue'
 import Medaglione from './Medaglione.vue'
 import Glifo from './Glifo.vue'
 import SchedeEroe from './SchedeEroe.vue'
-import { RAMI, NODI, GRADI, GRADINI, colpisce, costoAl } from '../dati/abilita.js'
+import { RAMI, NODI, GRADI, GRADINI, colpisce, costoAl, preparabile, aGrado } from '../dati/abilita.js'
 import { ELEMENTI } from '../dati/elementi.js'
 import { gradoDi, perchéNonImpari, caselleDella } from '../motore/abilita.js'
 
@@ -112,6 +112,7 @@ const dettaglio = computed(() => {
     dopo: maiuscola(n.fa(ora + 1, props.vitaMax)),
     perche: perchéNonImpari(props.crescita, props.eroe.chiave, n.id),
     senzArma: n.arma && !props.haLArma(n.arma) ? n.arma : null,
+    preparabile: preparabile(n) ? aGrado(n, 'preparabile', ora || 1) : 0,   // i passi che resta addosso se la lanci dal campo
   }
 })
 </script>
@@ -248,6 +249,7 @@ const dettaglio = computed(() => {
       <p v-if="dettaglio.dopo" :class="{ 'sot-tenue': !!dettaglio.grado }">
         <template v-if="dettaglio.grado">Al grado {{ dettaglio.grado + 1 }}: </template>{{ dettaglio.dopo }}
       </p>
+      <p v-if="dettaglio.preparabile" class="sot-tenue" data-preparabile :data-passi="dettaglio.preparabile">Si può preparare prima di uno scontro, dal globo blu: resta addosso per {{ dettaglio.preparabile }} passi e lo scontro comincia con lei già attiva.</p>
       <p v-if="dettaglio.sempre" class="sot-tenue" data-passiva>Una passiva lavora da sola: non costa energia e non va nelle caselle dello scontro. Basta averla imparata.</p>
       <p v-if="dettaglio.senzArma" class="sot-manca">Ci vuole {{ dettaglio.senzArma.nome }} in mano</p>
       <p v-if="!dettaglio.sempre && dettaglio.costo > energiaMax" class="sot-manca" data-serve-energia>Ti serve più energia: ne hai al massimo {{ energiaMax }}. Metti punti in intelligenza</p>

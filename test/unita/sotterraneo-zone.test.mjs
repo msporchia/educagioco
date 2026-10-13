@@ -229,7 +229,7 @@ uguale('e l\'abisso resta l\'abisso', zonaDi(-1).abisso, true)
       if (g.esito.vinta) vinte.push((g.corsa.crescita.esp - cr.esp) / salto(L))
     }
     const livelli = vinte.reduce((n, x) => n + x, 0) / Math.max(1, vinte.length)
-    controlla(`una torre verde vinta al ${L} vale più o meno un livello`, vinte.length >= 2 && livelli >= 0.7 && livelli <= 2,
+    controlla(`una torre verde vinta al ${L} vale più o meno un livello`, vinte.length >= 2 && livelli >= 0.7 && livelli <= 2.2,   // da 2: il mana che torna camminando fa vincere un seme in più, e quel seme porta tutta la discesa (docs/sotterraneo/orologio.md)
               `${vinte.length} vinte su 8, ${livelli.toFixed(2)} livelli`)
   }
 }

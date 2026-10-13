@@ -20,6 +20,9 @@
 //     capi       contro un capo o un mostro grosso il colpo vale `capi` volte invece di `per` (l'ultimo gradino dei rami)
 //     difende    non fa niente da sé: segna l'abilità di difesa del livello 2 (la regola di guastiDelleAbilita)
 //     seStordito il colpo vale `per` solo su un mostro avvelenato, gelato o fermo (o che sanguina), se no `altrimenti`
+//     preparabile passi per grado: l'abilità si può lanciare anche dal campo (docs/sotterraneo/orologio.md): paga l'energia di sempre e
+//                resta addosso all'eroe per tanti passi dell'orologio. parato, scudo, intoccabile, specchio e linfa lo proteggono nello scontro
+//                che viene; debole (Rovi, Ruggito, Grido) parte con lo scontro e indebolisce i mostri. Mai la cura: curarsi fuori resta alle pozioni
 //     effetto    come si vede sul palco (dati/effetti.js, EFFETTI): una chiave di quella tabella. Solo le abilità importanti ne scrivono
 //                uno; senza, se lo ricava da elemento, forma e da cosa fa (`effettoDi`), così un nodo nuovo ne ha già uno
 //   sempre (nodi senza costo, valgono da soli):
@@ -34,13 +37,13 @@ import { EROI, eroeDi } from './eroi.js'
 import { CHIAVI_ELEMENTI } from './elementi.js'
 import { ENERGIA_PER_INTELLIGENZA, DOTE_OGNI, puntiAttesi } from './livelli.js'
 
-// l'energia: si riempie combattendo (due punti ogni cinque risposte giuste, ma solo dentro lo scontro), alla fonte e con la pozione
-// blu; mai col tempo, perché sotto una domanda l'orologio è fermo (come la torcia, che si conta a stanze:
-// docs/sotterraneo/roba.md). Il massimo è ENERGIA più tre per punto di intelligenza (motore/corredo.js): il mago è il mago
+// l'energia: si riempie combattendo (due punti ogni cinque risposte giuste, ma solo dentro lo scontro), camminando (una quota del globo
+// a passo: MANA_PER_PASSO, docs/sotterraneo/orologio.md), alla fonte e con la pozione blu; mai a secondi, perché sotto una domanda
+// il tempo è fermo (la torcia si conta a stanze: docs/sotterraneo/roba.md). Il massimo è ENERGIA più tre per punto di intelligenza (motore/corredo.js): il mago è il mago
 // del mana, parte da ventidue; l'elfa da tredici, il cavaliere e il nano da dieci (docs/sotterraneo/abilita.md, «L'energia»)
 export const ENERGIA = 7
 export const ENERGIA_DI_PARTENZA_MINIMA = 10
-// l'energia torna piano e solo combattendo (l'utente, 12 ottobre: il bambino era sempre a pieno mana): due punti ogni cinque
+// nello scontro l'energia torna piano (l'utente, 12 ottobre: il bambino era sempre a pieno mana): due punti ogni cinque
 // risposte giuste date a un mostro (2,5 a punto: il resto passa al punto dopo). Porte, forzieri e curiosità non la ridanno
 export const RISPOSTE_PER_ENERGIA = 2.5
 // quanto costa un'abilità (l'utente, 13 ottobre: «il mago può avere costi diversi da quelli del cavaliere»; a lanci, non a numeri):
@@ -145,7 +148,7 @@ export const RAMI = {
         fa: g => `${faDanno(n([2, 2.5, 3], g))}, ${controCapi(n([4, 5, 6], g))}` }],
     ) },
     { chiave: 'scudo', nome: 'Scudo', glifo: 'scudo', tinta: '#c99a3a', arma: SCUDO, elemento: 'fisico', nodi: righe(
-      [{ id: 'scudo-alzato', nome: 'Scudo alzato', glifo: 'scudo', effetto: 'scudo', parato: [2, 3, 4], difende: true,
+      [{ id: 'scudo-alzato', nome: 'Scudo alzato', glifo: 'scudo', effetto: 'scudo', parato: [2, 3, 4], difende: true, preparabile: [40, 50, 60],
         fa: g => `i colpi che subisci fanno metà per ${turni(n([2, 3, 4], g))}` }],
       [{ id: 'parata', nome: 'Parata', glifo: 'parata', sempre: true, graffioMeno: [1, 2, 3],
         fa: g => `ogni colpo che subisci fa ${n([1, 2, 3], g)} di danno in meno` }],
@@ -155,7 +158,7 @@ export const RAMI = {
         fa: g => `chi ti colpisce si fa male: gli torna il ${n([25, 40, 55], g)}% del danno che ti fa` }],
       [{ id: 'colpo-di-scudo', nome: 'Colpo di scudo', glifo: 'colpo-di-scudo', effetto: 'urto', fermo: [1, 2, 2], per: [1, 1, 1.5],
         fa: g => `il mostro resta stordito per ${turni(n([1, 2, 2], g))}: non può attaccare` },
-       { id: 'fortezza', nome: 'Fortezza', glifo: 'fortezza', effetto: 'scudo', cura: [1, 1.4, 1.8], parato: [2, 2, 3],
+       { id: 'fortezza', nome: 'Fortezza', glifo: 'fortezza', effetto: 'scudo', cura: [1, 1.4, 1.8], parato: [2, 2, 3], preparabile: [50, 60, 70],
         fa: (g, vm) => `${cura(n([1, 1.4, 1.8], g), vm)}, e i colpi che subisci fanno metà per ${turni(n([2, 2, 3], g))}` }],
       [{ id: 'muro', nome: 'Muro', glifo: 'muro', effetto: 'muro', debole: [4, 6, 8],
         fa: g => `protezione che dimezza i danni per ${turni(n([4, 6, 8], g))}` }],
@@ -169,7 +172,7 @@ export const RAMI = {
         fa: g => `${faDanno(n([1.5, 2, 2.5], g))}, di luce sacra: i morti e le ombre la temono` },
        { id: 'mano-santa', nome: 'Mano santa', glifo: 'croce', sempre: true, ruba: [8, 12, 16],
         fa: g => `ti guarisci del ${n([8, 12, 16], g)}% del danno che fai` }],
-      [{ id: 'grido', nome: 'Grido di guerra', glifo: 'corno', effetto: 'onda', forma: 'tutti', debole: [3, 4, 5], per: [1, 1, 1],
+      [{ id: 'grido', nome: 'Grido di guerra', glifo: 'corno', effetto: 'onda', forma: 'tutti', debole: [3, 4, 5], per: [1, 1, 1], preparabile: [40, 50, 60],
         fa: g => `tutti i mostri in campo fanno metà del danno per ${turni(n([3, 4, 5], g))}` },
        { id: 'giudizio', nome: 'Giudizio', glifo: 'giudizio', effetto: 'luce', forma: 'vicini', per: [1.2, 1.5, 1.8],
         fa: g => `${faDanno(n([1.2, 1.5, 1.8], g))} di luce sacra ${AI_VICINI}` }],
@@ -184,7 +187,7 @@ export const RAMI = {
         fa: g => `+${n([20, 35, 50], g)}% di danno quando ti resta meno di metà vita` }],
       [{ id: 'carica', nome: 'Carica', glifo: 'carica', effetto: 'affondo', passa: 0.5, per: [1.5, 1.8, 2.2],
         fa: g => `ignora metà della difesa e ${faDanno(n([1.5, 1.8, 2.2], g))}` },
-       { id: 'ruggito', nome: 'Ruggito', glifo: 'ruggito', effetto: 'onda', forma: 'tutti', debole: [1, 2, 2],
+       { id: 'ruggito', nome: 'Ruggito', glifo: 'ruggito', effetto: 'onda', forma: 'tutti', debole: [1, 2, 2], preparabile: [40, 50, 60],
         fa: g => `tutti i mostri in campo fanno metà del danno per ${turni(n([1, 2, 2], g))}` }],
       [{ id: 'macello', nome: 'Macello', glifo: 'macello', effetto: 'croce', forma: 'vicini', per: [1.2, 1.5, 1.8], sanguina: [2, 3, 3],
         fa: g => `${faDanno(n([1.2, 1.5, 1.8], g))} ${AI_VICINI}, e li fa sanguinare per ${turni(n([2, 3, 3], g))}` },
@@ -229,9 +232,9 @@ export const RAMI = {
         fa: g => `fa ${danno(n([3, 3.5, 4], g))} su un mostro avvelenato, gelato o stordito, se no ${danno(1.5)}` }],
     ) },
     { chiave: 'bosco', nome: 'Bosco', glifo: 'foglia', tinta: '#6d8f2e', car: 'destrezza', elemento: 'veleno', nodi: righe(
-      [{ id: 'rovi', nome: 'Rovi', glifo: 'rovi', effetto: 'radici', debole: [3, 4, 5], difende: true,
+      [{ id: 'rovi', nome: 'Rovi', glifo: 'rovi', effetto: 'radici', debole: [3, 4, 5], difende: true, preparabile: [40, 50, 60],
         fa: g => `il mostro fa metà del danno per ${turni(n([3, 4, 5], g))}` }],
-      [{ id: 'linfa', nome: 'Linfa', glifo: 'germoglio', effetto: 'cura', linfa: [4, 5, 6], cura: [0.8, 1.2, 1.6],
+      [{ id: 'linfa', nome: 'Linfa', glifo: 'germoglio', effetto: 'cura', linfa: [4, 5, 6], cura: [0.8, 1.2, 1.6], preparabile: [50, 60, 70],
         fa: (g, vm) => `${cura(n([0.8, 1.2, 1.6], g), vm)}, poi ${vm ? `${Math.max(1, Math.round(vm / 10))} punti` : 'un po\''} a ogni turno per ${turni(n([4, 5, 6], g))}` }],
       [{ id: 'spore', nome: 'Spore', glifo: 'spore', effetto: 'nube', forma: 'vicini', per: [1, 1, 1.2], veleno: [2, 3, 3],
         fa: g => `una nuvola: ${faDanno(n([1, 1, 1.2], g))} ${AI_VICINI}, e li avvelena per ${turni(n([2, 3, 3], g))}` },
@@ -299,7 +302,7 @@ export const RAMI = {
         fa: g => `${faDanno(n([1.5, 1.5, 2], g))} e gela il mostro per ${turni(n([3, 4, 5], g))} · ${controCapi(n([3, 3.5, 4], g))}` }],
     ) },
     { chiave: 'arcano', nome: 'Arcano', glifo: 'sfera', tinta: '#9b4fd0', car: 'intelligenza', elemento: 'fulmine', nodi: righe(
-      [{ id: 'scudo-arcano', nome: 'Scudo arcano', glifo: 'sfera', effetto: 'sfera', scudo: [2, 2.6, 3.2], difende: true,
+      [{ id: 'scudo-arcano', nome: 'Scudo arcano', glifo: 'sfera', effetto: 'sfera', scudo: [2, 2.6, 3.2], difende: true, preparabile: [40, 50, 60],
         fa: (g, vm) => scudo(n([2, 2.6, 3.2], g), vm) }],
       [{ id: 'fonte-arcana', nome: 'Fonte arcana', glifo: 'calice', effetto: 'cura', cura: [2, 2.8, 3.6],
         fa: (g, vm) => cura(n([2, 2.8, 3.6], g), vm) }],
@@ -311,7 +314,7 @@ export const RAMI = {
         fa: g => `ignora metà della difesa e ${faDanno(n([2.5, 3, 3.5], g))}` },
        { id: 'catena-di-fulmini', nome: 'Catena di fulmini', glifo: 'catena-fulmini', effetto: 'catena', forma: 'catena', salti: [2, 2, 3], per: [1.8, 2.2, 2.6],
         fa: g => `${faDanno(n([1.8, 2.2, 2.6], g))}, e il fulmine ${salti(n([2, 2, 3], g))}` }],
-      [{ id: 'specchio', nome: 'Specchio', glifo: 'specchio', effetto: 'specchio', specchio: [1, 1.5, 2],
+      [{ id: 'specchio', nome: 'Specchio', glifo: 'specchio', effetto: 'specchio', specchio: [1, 1.5, 2], preparabile: [60, 70, 80],
         fa: g => `il prossimo colpo che subisci si ritorce contro il mostro${g > 1 ? `, ${volte(n([1, 1.5, 2], g))}` : ''}` }],
     ) },
     // la spada e l'intelligenza (`arma` e `car` insieme: la spada si deve avere in mano, l'intelligenza decide quanto fa male)
@@ -367,7 +370,7 @@ export const RAMI = {
         fa: g => `${faDanno(n([2, 2.5, 3], g))}, ${controCapi(n([4, 5, 6], g))}` }],
     ) },
     { chiave: 'pietra', nome: 'Pietra', glifo: 'montagna', tinta: '#8a7f6a', car: 'forza', elemento: 'fisico', nodi: righe(
-      [{ id: 'pelle-di-pietra', nome: 'Pelle di pietra', glifo: 'pietra', effetto: 'pietra', scudo: [2, 2.6, 3.2], difende: true,
+      [{ id: 'pelle-di-pietra', nome: 'Pelle di pietra', glifo: 'pietra', effetto: 'pietra', scudo: [2, 2.6, 3.2], difende: true, preparabile: [40, 50, 60],
         fa: (g, vm) => scudo(n([2, 2.6, 3.2], g), vm) }],
       [{ id: 'rune', nome: 'Rune di guarigione', glifo: 'runa', effetto: 'cura', cura: [2.4, 3.2, 4],
         fa: (g, vm) => cura(n([2.4, 3.2, 4], g), vm) }],
@@ -379,7 +382,7 @@ export const RAMI = {
         fa: g => `${g === 1 ? 'il primo colpo' : `i primi ${n([1, 2, 3], g)} colpi`} che subisci fa${g === 1 ? '' : 'nno'} metà del danno, in ogni scontro` },
        { id: 'pugno-di-pietra', nome: 'Pugno di pietra', glifo: 'pugno', effetto: 'urto', per: [1.5, 1.8, 2],
         fa: g => `${faDanno(n([1.5, 1.8, 2], g))}` }],
-      [{ id: 'montagna', nome: 'Montagna', glifo: 'montagna', effetto: 'pietra', intoccabile: [2, 3, 4],
+      [{ id: 'montagna', nome: 'Montagna', glifo: 'montagna', effetto: 'pietra', intoccabile: [2, 3, 4], preparabile: [25, 30, 35],
         fa: g => `invulnerabile per ${turni(n([2, 3, 4], g))}` }],
     ) },
     // il fabbro: martello e fuoco, senz'arma (picchia con la forza)
@@ -425,6 +428,11 @@ export const FATTORE_DEL_SALTO = 0.7
 
 // Un'abilità prende il posto dell'attacco (l'utente, 9 ottobre): colpisce solo se è fatta per colpire. Scudi, cure,
 // parate, il gelo e le difese in genere non fanno danno, e il mostro non muore per uno scudo
+// Un'abilità che si può lanciare dal campo e restare addosso (`preparabile`): le protezioni, e il debole che apre lo scontro
+export const preparabile = nodo => !!(nodo && !nodo.sempre && nodo.preparabile)
+// di quelle, le protezioni che stanno addosso all'eroe e quelle che partono con lo scontro e si consumano (indeboliscono i mostri)
+export const apreLoScontro = nodo => preparabile(nodo) && nodo.debole != null
+
 export const colpisce = nodo => !!(nodo && (nodo.per || nodo.veleno || nodo.rompe || nodo.passa || nodo.quieto || nodo.seStordito || nodo.sanguina))
 
 // i nodi della riga sopra, nello stesso ramo: bisogna averne imparato uno per aprire questa riga (motore/abilita.js)
@@ -452,6 +460,13 @@ export function guastiDelleAbilita() {
   }
   const visti = new Set()
   for (const [classe, rami] of Object.entries(RAMI)) {
+    // ogni classe ha qualcosa da preparare prima dello scontro, e il suo tempo cresce coi gradi (il passo di un grado in meno non conta)
+    const prep = rami.flatMap(r => r.nodi).filter(x => x.preparabile)
+    if (!prep.length) g.push(`${classe}: niente da preparare dal campo`)
+    for (const x of prep) {
+      if (x.sempre || !(Array.isArray(x.preparabile) && x.preparabile.length === 3 && x.preparabile.every((v, i) => v > 0 && (!i || v >= x.preparabile[i - 1])))) g.push(`${x.id}: i passi del preparabile (${x.preparabile}) vogliono tre numeri che non calano`)
+      if (!(x.parato || x.scudo || x.intoccabile || x.specchio || x.linfa || x.debole)) g.push(`${x.id}: preparabile ma non protegge né indebolisce`)
+    }
     if (rami.length !== 4) g.push(`${classe}: ${rami.length} rami invece di quattro`)
     for (const r of rami) {
       const chi = `${classe}/${r.chiave}`

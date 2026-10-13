@@ -74,7 +74,8 @@ Il codice: `motore/scontro.js` (i metodi dello scontro, attaccati a `Corsa`),
   ([mostri.md](mostri.md)), così il ratto veloce e la melma lenta fanno più o meno lo stesso male nel tempo.
 - **Una fila di turni alla Final Fantasy X** (`motore/turni.js`): ogni azione
   fa aspettare `100 / velocita`, agisce chi ha aspettato di meno, a parità
-  l'eroe. Niente tempo che scorre, mai: la fila si muove solo agendo.
+  l'eroe. Niente tempo che scorre, mai: la fila si muove solo agendo. Ogni turno dell'eroe, però, fa passare cinque passi dell'orologio del
+  gioco (`PASSI_PER_TURNO`, [orologio.md](orologio.md)): gli incanti preparati dal campo calano dopo i colpi dei mostri.
 - **Il doppio turno nasce da sé**: un eroe veloce il doppio di un mostro
   gioca due volte prima di lui. La destrezza diventa la caratteristica del
   ritmo, e i pezzi hanno una cosa in più da dare.

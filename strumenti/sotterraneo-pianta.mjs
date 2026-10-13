@@ -178,6 +178,85 @@ function conta() {
   for (const r of righe) console.log(riga(r))
   console.log('media = mostri in una stanza che ne ha · scagnozzi = mostri (non il grosso) nella stanza del grosso · storte = porte chiuse non su un muro dritto · impilate = porte chiuse con un\'altra a due celle · portoni = piani col grosso che hanno la porta bella sulla sua stanza')
 }
+// ─── --passi: quanti passi (celle percorse) fa un piano ──────────────────────────────────────────────────────────
+// L'orologio del sotterraneo conta i passi dell'eroe (docs/sotterraneo/orologio.md): serve sapere quanti ne fa un piano. Su ogni piano
+// di ogni discesa, per ogni seme, da una cella all'altra col cammino più corto (quattro direzioni, le porte si aprono): «dritto» è
+// dall'ingresso a chi porta la chiave e da lui alla scala (quello che fa chi va dritto), «giro» è un giro di tutte le stanze (ognuna
+// la più vicina dopo l'altra, come lo fa chi non vuole perdersi niente) e poi la chiave e la scala. Sono i passi minimi: chi gira a
+// occhio ne fa di più (il banco ne conta di veri: `npm run sotterraneo -- --passi`).
+function passi() {
+  const righe = []
+  const dist = (L, da) => {
+    const d = new Int32Array(L.largo * L.alto).fill(-1)
+    const coda = [da.y * L.largo + da.x]
+    d[coda[0]] = 0
+    for (let i = 0; i < coda.length; i++) {
+      const k = coda[i], x = k % L.largo, y = Math.floor(k / L.largo)
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        const nx = x + dx, ny = y + dy
+        if (nx < 0 || ny < 0 || nx >= L.largo || ny >= L.alto || !L.calpestabile(nx, ny)) continue
+        const q = ny * L.largo + nx
+        if (d[q] >= 0) continue
+        d[q] = d[k] + 1
+        coda.push(q)
+      }
+    }
+    return d
+  }
+  const tra = (L, d, a) => d[a.y * L.largo + a.x]
+  const tot = { piani: 0, stanze: 0, dritto: 0, giro: 0 }
+  const tutte = []
+  for (const i of qualiDiscese) {
+    const tappa = i === 'abisso' ? L_ABISSO : zona != null ? zonaDi(i, Number(zona)) : CAMPAGNA[i]
+    const t = { piani: 0, stanze: 0, dritto: 0, giro: 0, giroMax: 0, discese: 0, perDiscesa: 0 }
+    for (const sm of semi) {
+      const c = new Corsa(tappa, { seme: sm })
+      const quanti = tappa.abisso ? 8 : c.quantiPiani
+      let discesa = 0
+      for (let p = 0; p < quanti; p++) {
+        const L = c.faiIlPiano(p)
+        const ingresso = { x: L.stanze[0].cx, y: L.stanze[0].cy }
+        const scala = L.robe.find(r => r.che === 'scala')
+        const chi = L.robe.find(r => r.che === 'mostro' && r.chiave)
+        if (!scala) continue
+        const fine = { x: scala.x, y: scala.y }
+        const mete = chi ? [{ x: chi.x, y: chi.y }, fine] : [fine]
+        // il cammino che passa per le mete, in fila
+        const per = (da, lista) => lista.reduce((n, m) => { const d = dist(L, n.a); return { a: m, passi: n.passi + Math.max(0, tra(L, d, m)) } }, { a: da, passi: 0 }).passi
+        const dritto = per(ingresso, mete)
+        // il giro: le stanze una dopo l'altra, sempre la più vicina; poi chi ha la chiave e la scala
+        let qui = ingresso, giro = 0
+        const restano = L.stanze.map(s => ({ x: s.cx, y: s.cy })).filter(s => s.x !== ingresso.x || s.y !== ingresso.y)
+        while (restano.length) {
+          const d = dist(L, qui)
+          let meglio = 0
+          restano.forEach((s, k) => { if (tra(L, d, s) >= 0 && (tra(L, d, restano[meglio]) < 0 || tra(L, d, s) < tra(L, d, restano[meglio]))) meglio = k })
+          const s = restano.splice(meglio, 1)[0]
+          giro += Math.max(0, tra(L, d, s))
+          qui = s
+        }
+        giro += per(qui, mete)
+        t.piani++; t.stanze += L.stanze.length; t.dritto += dritto; t.giro += giro; t.giroMax = Math.max(t.giroMax, giro)
+        discesa += dritto
+        if (args.includes('--per-piano') && sm === semi[0]) righe.push([`${i === 'abisso' ? 'abisso' : i} p${p + 1}`, L.stanze.length, dritto, giro])
+      }
+      t.discese++; t.perDiscesa += discesa
+    }
+    for (const k of ['piani', 'stanze', 'dritto', 'giro']) tot[k] += t[k]
+    tutte.push([i === 'abisso' ? 'abisso' : `${i} ${(tappa.nome || tappa.chiave).slice(0, 24)}`, (t.piani / t.discese).toFixed(1), (t.stanze / t.piani).toFixed(1),
+      Math.round(t.dritto / t.piani), Math.round(t.giro / t.piani), t.giroMax, Math.round(t.perDiscesa / t.discese)])
+  }
+  if (qualiDiscese.length > 1) tutte.push(['TUTTE', '-', (tot.stanze / tot.piani).toFixed(1), Math.round(tot.dritto / tot.piani), Math.round(tot.giro / tot.piani), '-', '-'])
+  const testa = ['discesa', 'piani', 'stanze', 'dritto', 'giro', 'giro max', 'discesa dritta']
+  const larghe = testa.map((h, k) => Math.max(h.length, ...tutte.map(r => String(r[k]).length)))
+  const riga = r => r.map((v, k) => (k === 0 ? String(v).padEnd(larghe[k]) : String(v).padStart(larghe[k]))).join('  ')
+  console.log(`semi ${semi[0]}-${semi[semi.length - 1]}${zona != null ? ` · zona ${zona}` : ''} · passi per piano (media), dall'ingresso: dritto = la chiave e la scala, giro = tutte le stanze poi la chiave e la scala`)
+  console.log(riga(testa)); console.log(larghe.map(l => '-'.repeat(l)).join('  '))
+  for (const r of tutte) console.log(riga(r))
+  console.log('discesa dritta = i passi di tutta la discesa andando dritti, piano dopo piano')
+  if (righe.length) { console.log(''); for (const r of righe) console.log(r.join('\t')) }
+}
+if (args.includes('--passi')) { passi(); process.exit(0) }
 if (args.includes('--conta')) { conta(); process.exit(0) }
 
 const fatti = qualiDiscese.map(pianta)

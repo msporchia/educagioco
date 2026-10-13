@@ -12,6 +12,7 @@ const props = defineProps({
   turni: { type: Array, default: () => [] },   // [{ chi: 'eroe' | posto, salta, id? }]
   mostri: { type: Array, required: true },
   eroe: { type: Object, default: () => ({}) },
+  incanti: { type: Array, default: () => [] },   // gli incanti preparati addosso: sul primo turno dell'eroe quello che finisce prima, coi passi che restano
 })
 
 const LATO = 22   // le figurine piccole stanno in una scatola di 22 px; chi è più alto o più largo si rimpicciolisce
@@ -24,9 +25,11 @@ const voci = computed(() => props.turni.map((t, k) => {
   const adesso = k === 0
   const scala = adesso && p && p[2] * 2 <= 34 && p[3] * 2 <= 38 ? 2 : 1
   const riduci = !adesso && p ? Math.min(1, LATO / p[3], LATO / p[2]) : 1
-  return { id: t.id != null ? 'f' + t.id : 'v' + k, eroe: e, chi: t.chi, salta: t.salta, adesso, sprite, em: e ? props.eroe.em : m && m.em,
+  return { id: t.id != null ? 'f' + t.id : 'v' + k, eroe: e, primoEroe: e && !props.turni.slice(0, k).some(x => x.chi === 'eroe'), chi: t.chi, salta: t.salta, adesso, sprite, em: e ? props.eroe.em : m && m.em,
            scala, riduci, nome: e ? 'tu' : m && m.nome, grosso: !!(m && m.grosso) }
 }))
+// l'incanto che finisce prima, quello che conta di più saperlo
+const piuCorto = computed(() => [...props.incanti].sort((a, b) => a.passi - b.passi)[0] || { passi: 0, glifo: 'scudo', tinta: '#fff' })
 </script>
 
 <template>
@@ -38,6 +41,9 @@ const voci = computed(() => props.turni.map((t, k) => {
         <Icona :sprite="v.sprite" :em="v.em" :scala="v.scala" :emAlto="18" />
       </span>
       <Glifo v-if="v.salta" class="sot-turno-stelle" nome="stelle" :misura="12" />
+      <span v-if="v.primoEroe && incanti.length" class="sot-turno-incanto" data-incanto-fila :data-passi="piuCorto.passi" :style="{ '--tinta': piuCorto.tinta }">
+        <Glifo :nome="piuCorto.glifo" :misura="9" /><b>{{ piuCorto.passi }}</b>
+      </span>
     </div>
   </TransitionGroup>
 </template>

@@ -4,6 +4,7 @@
 // mappa, gemme) in una cornice di pietra. Tutto in CSS e SVG finché la cornice dipinta non è approvata (docs/sotterraneo/barra.md). Le regole non le
 // sa: dice solo cosa è stato toccato. `sopra`: sulla terra di sopra la mappa grande non c'è (la terra è già la mappa)
 import Globo from './Globo.vue'
+import Glifo from './Glifo.vue'
 import Pixel from './Pixel.vue'
 import { BISACCIA } from './pixel.js'
 
@@ -20,6 +21,7 @@ defineProps({
   energia: { type: Number, default: 0 },        // l'energia delle abilità (docs/sotterraneo/abilita.md)
   energiaMax: { type: Number, default: 10 },
   puntiAbilita: { type: Number, default: 0 },   // i punti dell'albero: un «+» sul globo dell'energia
+  incanti: { type: Array, default: () => [] },  // gli incanti preparati addosso: [{ id, nome, glifo, tinta, passi, dura }], sopra il globo blu (docs/sotterraneo/orologio.md)
   pozioni: { type: Number, default: 0 },
   pieni: { type: Number, default: 0 },          // le tasche occupate
   tasche: { type: Number, default: 6 },
@@ -84,6 +86,14 @@ defineEmits(['bevi', 'zaino', 'diario', 'mappa', 'eroe', 'abilita'])
 
     <div class="sot-plancia-lato sot-plancia-dx">
       <!-- l'energia delle abilità: un tocco apre l'albero; il «+» dice che ci sono punti da dare all'albero -->
+      <!-- gli incanti preparati addosso, con i passi che restano: stanno sul globo che li ha pagati, e si toccano come lui -->
+      <button v-if="incanti.length" type="button" class="sot-incanti" data-incanti :aria-label="`incanti addosso: ${incanti.map(x => `${x.nome}, ${x.passi} passi`).join('; ')}`"
+              @click="$emit('abilita')">
+        <span v-for="x in incanti" :key="x.id" class="sot-incanto" :data-incanto="x.id" :data-passi="x.passi" :class="{ 'sot-incanto-fine': x.passi <= 10 }"
+              :style="{ '--tinta': x.tinta, '--quota': Math.max(0.08, Math.min(1, x.passi / x.dura)) }">
+          <Glifo :nome="x.glifo" :misura="13" /><b>{{ x.passi }}</b>
+        </span>
+      </button>
       <button type="button" class="sot-globo-tasto" data-azione="abilita" :data-punti-abilita="puntiAbilita || null"
               :aria-label="`energia ${energia} su ${energiaMax}${puntiAbilita ? `: ${puntiAbilita} da imparare` : ''}`"
               @click="$emit('abilita')">

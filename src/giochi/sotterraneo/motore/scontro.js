@@ -7,7 +7,7 @@
 //   io: gli effetti sull'eroe       pieni: i colpi presi (Testa dura)      tirato: il primo tiro è già partito
 //   coda: la fila dei turni (motore/turni.js)     fermate/pericolo: lo stop      apertura: le azioni prima del primo turno
 //   turni, colpiti, minaccia, inArrivo, difese: quello che la vista legge (si rifanno in `aggiorna`)
-import { COLPO_DEL_MOSTRO, RAGGIO_SCONTRO, MOSTRI_IN_CAMPO, CALMA } from '../dati/mondo.js'
+import { COLPO_DEL_MOSTRO, RAGGIO_SCONTRO, MOSTRI_IN_CAMPO, CALMA, PASSI_PER_TURNO } from '../dati/mondo.js'
 import { MOSTRI } from '../dati/mostri.js'
 import { NODI, aGrado, inVita, colpisce, costoAl, FATTORE_DEL_SALTO } from '../dati/abilita.js'
 import { ELEMENTI, STATI, fattoreDi } from '../dati/elementi.js'
@@ -81,6 +81,7 @@ export const MetodiDelloScontro = {
                        ...campo.map((x, i) => ({ id: i, lato: 'mostri', velocita: velocitaDel(x) }))]),
     }
     this.pronta = null
+    f.partiti = this.apriConIPreparati(f)   // gli incanti preparati che aprono lo scontro (Rovi, Ruggito, Grido) partono ora
     if (agguato) {
       const e = this.colpoDelMostro(m)
       e.agguato = true
@@ -106,6 +107,7 @@ export const MetodiDelloScontro = {
       this.vita = Math.min(this.vitaMax, this.vita + io.linfa.quanto)
       io.linfa = io.linfa.scambi > 1 ? { ...io.linfa, scambi: io.linfa.scambi - 1 } : null
     }
+    if (this.preparati.length) f.linfaPreparata = this.linfaPreparata()
     if (io.parato > 0) io.parato--
     if (io.intoccabile > 0) io.intoccabile--
     this.bersaglioAuto(f)
@@ -217,7 +219,7 @@ export const MetodiDelloScontro = {
     f.inArrivo = this.colpiInArrivo(f)
   },
 
-  // la somma dei colpi che arriveranno prima del prossimo turno dell'eroe (la fila li sa): un mostro stordito salta i suoi
+  // la somma dei colpi che arriveranno prima del prossimo turno dell'eroe (la fila li sa), meno la barriera addosso: un mostro stordito salta i suoi
   colpiInArrivo(f = this.foglio) {
     if (!f || f.che !== 'scontro') return 0
     const fatti = new Map()
@@ -229,7 +231,9 @@ export const MetodiDelloScontro = {
       if (!x || x.morto || ((x.stati || {}).fermo || 0) > k) continue
       somma += this.botta(x)
     }
-    return somma
+    // una barriera addosso (quella dello scontro, o quella preparata dal campo) ne para una parte: l'avviso dice quanto toglie davvero
+    const barriera = ((f.io && f.io.scudo) || 0) + this.preparati.reduce((n, p) => n + (p.assorbe > 0 ? p.assorbe : 0), 0)
+    return Math.max(0, somma - barriera)
   },
 
   // Lo stop (motore/pericolo.js) si guarda quando tocca all'eroe, sulla somma dei colpi in arrivo; se no la domanda. Torna la ragione
@@ -283,9 +287,10 @@ export const MetodiDelloScontro = {
   // l'eroe ha fatto la sua azione: tocca ai mostri, uno alla volta, finché non torna a lui
   finisciIlTurno(f, azioni, bersaglio) {
     f.io.gelato = 0   // il gelo di un mago dura il tuo turno: hai agito, ti sei scongelato
-    if (!this.vivi(f).length) { this.chiudi(); return this.esitoDello(azioni, bersaglio, { fine: true }) }
+    if (!this.vivi(f).length) { this.faiPassi(PASSI_PER_TURNO); this.chiudi(); return this.esitoDello(azioni, bersaglio, { fine: true }) }
     f.coda = agisci(f.coda, 'eroe')
     const r = this.passaIlTurno(f, azioni)
+    this.faiPassi(PASSI_PER_TURNO)   // un turno dell'eroe vale qualche passo dell'orologio: gli incanti preparati calano dopo i colpi dei mostri
     if (r === 'svenuto') return this.esitoDello(azioni, bersaglio, { svenuto: true })
     if (r === 'fine') { this.chiudi(); return this.esitoDello(azioni, bersaglio, { fine: true }) }
     return this.esitoDello(azioni, bersaglio, { ringhia: this.iniziaTurnoEroe(f) })
@@ -407,21 +412,26 @@ export const MetodiDelloScontro = {
     if (male > 0) f.pieni = (f.pieni || 0) + 1
     const schiva = male > 0 && this.schivata > 0 && this.rnd() * 100 < this.schivata
     if (schiva) { male = 0; this.dillo('🌀 schivato!') }
-    let assorbito = 0
+    // la barriera preparata dal campo para per prima (motore/preparati.js), poi quella dello scontro
+    let assorbito = male > 0 ? this.assorbiConIPreparati(male) : 0
+    male -= assorbito
     if (male > 0 && io.scudo > 0) {
-      assorbito = Math.min(io.scudo, male)
-      io.scudo -= assorbito
-      male -= assorbito
+      const a = Math.min(io.scudo, male)
+      io.scudo -= a
+      assorbito += a
+      male -= a
     }
     let rimandato = 0
-    if (male > 0 && io.specchio) {
-      rimandato = Math.round(male * io.specchio)
+    const specchio = male > 0 ? io.specchio || this.specchioPreparato() : 0
+    if (specchio) {
+      rimandato = Math.round(male * specchio)
       io.specchio = 0
+      this.togliIPreparati('specchio')
       male = 0
       x.ossa -= rimandato
     }
     const evento = { chi: x, che: 'colpo', contro: 'eroe', pieno, preso: male, schivato: schiva, assorbito, rimandato, gelato,
-                     salvo: pieno === 0 && io.intoccabile > 0 ? 'intoccabile' : null }
+                     salvo: pieno === 0 && (io.intoccabile > 0 || this.preparatoCon('intoccabile')) ? 'intoccabile' : null }
     // l'incanto di un mago (dati/varianti.js): un colpo che ti arriva ti può gelare, e il tuo prossimo colpo fa metà. Il tiro si
     // fa solo per chi ha un incanto: gli altri non spostano il caso dello scontro
     if (x.incanto === 'gelo' && male > 0 && this.rnd() * 100 < GELO_DEL_MAGO[x.grado || 'comune']) { io.gelato = 1; evento.gelaTe = true }
@@ -450,9 +460,9 @@ export const MetodiDelloScontro = {
     const f = this.foglio && this.foglio.che === 'scontro' ? this.foglio : null
     const io = (f && f.io) || {}
     const st = m.stati || {}
-    if (st.fermo > 0 || io.intoccabile > 0) return 0
+    if (st.fermo > 0 || io.intoccabile > 0 || this.preparatoCon('intoccabile')) return 0
     let x = this.danno(m)
-    if (io.parato > 0 || (f && (f.pieni || 0) < this.sempre('testaDura'))) x = Math.ceil(x / 2)
+    if (io.parato > 0 || this.preparatoCon('parato') || (f && (f.pieni || 0) < this.sempre('testaDura'))) x = Math.ceil(x / 2)
     if (st.debole > 0) x = Math.floor(x / 2)
     return Math.max(0, x - this.sempre('graffioMeno'))
   },

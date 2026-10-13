@@ -113,6 +113,11 @@ export function scrivi(corsa, tappa, { anchePerFinite = false, via = USCITA } = 
     vita: corsa.vita,
     vitaPiu: corsa.vitaPiu,
     energia: corsa.energia,   // l'energia delle abilità (docs/sotterraneo/abilita.md); senza, si riprende piena
+    // l'orologio (docs/sotterraneo/orologio.md): i passi, il mana del cammino che non è ancora un punto, gli incanti preparati.
+    // Senza questi campi (una sosta di prima) si riprende da zero, senza cambiare VERSIONE
+    passi: corsa.passi,
+    ...(corsa.manaCammino > 0.0005 ? { mana: Math.round(corsa.manaCammino * 1000) / 1000 } : {}),
+    ...(corsa.preparati.length ? { preparati: corsa.preparati.map(p => ({ ...p })) } : {}),
     ...(corsa.fiatoUsato ? { fiato: true } : {}),
     chiave: corsa.chiaveDelPiano,
     // il punto esatto, anche a metà di un passo
@@ -169,6 +174,9 @@ export function leggi(dato, tappa, roba = null, missioni = [], crescita = null) 
     corsa.vitaPiu = Number.isFinite(dato.vitaPiu) ? dato.vitaPiu : 0
     corsa.vita = dato.vita
     corsa.energia = Number.isFinite(dato.energia) ? Math.max(0, Math.min(corsa.energiaMax, dato.energia)) : corsa.energiaMax
+    corsa.passi = Number.isFinite(dato.passi) && dato.passi > 0 ? dato.passi : 0
+    corsa.manaCammino = Number.isFinite(dato.mana) && dato.mana > 0 && dato.mana < 1 ? dato.mana : 0
+    corsa.rileggiIPreparati(dato.preparati)
     corsa.fiatoUsato = !!dato.fiato
     corsa.chiaveDelPiano = !!dato.chiave
     corsa.eroe = { x: dato.dove.x, y: dato.dove.y }

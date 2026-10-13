@@ -12,7 +12,7 @@ Il costo di un nodo è `round(globo atteso della classe al livello del nodo / la
 lo alzano, che sono una scelta. Il livello del nodo è il suo gradino (2, 4, 6, 8, 12) più due per ogni grado oltre il primo
 (`costoAl(nodo, grado)`), quindi il mago, il cui globo cresce col livello, paga un po' di più un'abilità migliorata; gli altri,
 col globo fermo a dieci o tredici, no. L'ultima riga costa tutto il globo che la classe ha lì: si lancia una volta, poi si
-aspetta (l'energia torna solo combattendo, due punti ogni cinque risposte giuste date a un mostro: `Corsa.rispondi`, mai col tempo).
+aspetta (l'energia torna combattendo, due punti ogni cinque risposte giuste date a un mostro: `Corsa.rispondi`, e camminando, lo 0,1% del globo a passo: [orologio.md](orologio.md)); mai a secondi.
 
 `lanci` per riga (`dati/eroi.js`): **mago 6 · 6 · 5 · 3 · 1, gli altri 3 · 3 · 2,5 · 2 · 1**. Le righe normali stanno dove l'utente le
 voleva (cinque o sei lanci per il mago, due o tre per gli altri); la quarta riga è «la potente» (Esplosione, Lancia di ghiaccio, Fulmine) e

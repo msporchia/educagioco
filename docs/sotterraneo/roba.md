@@ -155,7 +155,7 @@ la roba con livello e rarità: [rarita.md](rarita.md).
   tetto**: provata la torcia per tutta la discesa, e ogni altra torcia
   diventava roba da rifiutare.
 - **Dura dodici stanze** (`STANZE_TORCIA`). **L'unità è la stanza, non il
-  tempo**: sotto una domanda l'orologio è fermo, e un conto che scorre farebbe
+  tempo** (e nemmeno i passi dell'orologio del gioco, [orologio.md](orologio.md)): sotto una domanda l'orologio è fermo, e un conto che scorre farebbe
   pagare la luce a chi legge piano. Scendere e risvegliarsi non consumano.
   Dodici è misurato: chi tocca tutto entra in 34 stanze nel pozzo, 36 nella
   grotta, 45 nella scala sommersa, 44 nella miniera, 83 nella botola — undici o

@@ -103,13 +103,16 @@ quasi pieno da sé. Adesso tre leve insieme:
   cresce col livello). Le tabelle, il perché dei numeri e come si stampano: [abilita-energia.md](abilita-energia.md). Dove
   un'abilità non starebbe nel globo pieno la casella dice **«ti serve più energia (intelligenza)»** (`perchéNonUsi` torna `serve più
   energia`), e la pagina dell'albero lo scrive sotto il medaglione; quando manca soltanto per adesso dice **«ti manca energia»** (`poca energia`).
-- **Si ricarica solo combattendo**: due punti ogni **cinque risposte giuste date a un mostro** (`RISPOSTE_PER_ENERGIA` 2,5, il resto passa al punto dopo; solo se il
+- **Si ricarica combattendo, e camminando piano** (13 ottobre: [orologio.md](orologio.md); prima solo combattendo): due punti ogni **cinque risposte giuste date a un mostro** (`RISPOSTE_PER_ENERGIA` 2,5, il resto passa al punto dopo; solo se il
   foglio è uno scontro, `Corsa.rispondi`). Porte, forzieri e curiosità non la ridanno più. Sbagliare non la toglie. La fonte la
   riempie tutta e la pozione blu (`pozione-blu`, dall'erborista e nei forzieri) ne dà otto; il Respiro del bosco la ridà
   battendo i mostri. **Salire di livello non la riempie** (come la vita: arriva solo la differenza di un punto d'intelligenza).
   Si scende con l'energia piena, e la sosta la tiene (`energia`).
-- **Mai col tempo**: sotto una domanda l'orologio è fermo, e una ricarica a tempo premierebbe chi legge piano o posa il
+- **Camminando, mai a secondi**: a ogni passo torna lo 0,1% del globo massimo (mille passi lo riempiono); sotto una domanda il tempo è fermo, e una ricarica a secondi premierebbe chi legge piano o posa il
   telefono. È la ragione per cui la torcia si conta a stanze ([roba.md](roba.md)).
+
+**Le protezioni si lanciano anche dal campo** (Scudo alzato, Scudo arcano, Pelle di pietra, Montagna, Rovi, Grido…): restano addosso per un numero di
+passi e lo scontro comincia con loro già attive ([orologio.md](orologio.md)).
 
 Il banco spende come prima (due abilità forti a scontro quando c'è energia, solo se il colpo solito non chiude) e i costi li legge da
 `perchéNonUsi`. Le misure, prima → dopo: [scontro-bilancio.md](scontro-bilancio.md#il-mana-costa-davvero) e [abilita-energia.md](abilita-energia.md).
@@ -180,7 +183,7 @@ l'intelligenza. Le regole, il perché e le parole dell'utente (12 ottobre 2026):
 La barra cambia così ([barra.md](barra.md)): l'esperienza diventa una riga
 sopra le caselle col livello a sinistra (il tasto della pagina dell'eroe), e
 il globo di destra è l'energia, blu. Il globo è un tasto: apre l'albero, e
-porta il «+» d'oro quando ci sono punti da imparare. L'albero è una delle
+porta il «+» d'oro quando ci sono punti da imparare (giù, se l'eroe sa qualche incantesimo da preparare apre prima la loro scelta, con l'albero a un tocco: [orologio.md](orologio.md#come-si-vede-e-come-si-lancia)). L'albero è una delle
 tre schede della finestra dell'eroe, con lo Zaino e l'Eroe
 ([barra.md](barra.md#la-finestra-delleroe)).
 
