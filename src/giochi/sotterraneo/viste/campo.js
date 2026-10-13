@@ -4,6 +4,8 @@
 import { MOSTRI } from '../dati/mostri.js'
 import { ELEMENTI, STATI } from '../dati/elementi.js'
 import { SCENARI, SCENARIO, pezzoAndante } from '../dati/tessere.js'
+import { fotogrammaDi, quantiFotogrammi } from '../dati/fotogrammi.js'
+import { coloreDelGrado, etichettaDi } from '../dati/varianti.js'
 
 // «2 turni»: una risposta è un turno (le righe dell'albero parlano così, dati/abilita.js)
 export const turniDi = n => `${n} ${n === 1 ? 'turno' : 'turni'}`
@@ -55,6 +57,7 @@ export function statiMiei(io) {
     io.scudo > 0 ? { chiave: 'scudo', glifo: 'sfera', dice: `barriera: para ${io.scudo} danni` } : null,
     io.intoccabile > 0 ? { chiave: 'intoccabile', glifo: 'montagna', dice: `invulnerabile · ${turniDi(io.intoccabile)}` } : null,
     io.specchio ? { chiave: 'specchio', glifo: 'specchio', dice: 'il prossimo colpo torna al mostro' } : null,
+    io.gelato > 0 ? { chiave: 'gelato', glifo: 'fiocco', dice: 'gelato dall\'incantesimo: il tuo prossimo colpo fa metà danno' } : null,
     io.linfa && io.linfa.scambi > 0 ? { chiave: 'linfa', glifo: 'germoglio', dice: `guarisci di ${io.linfa.quanto} · ${turniDi(io.linfa.scambi)}` } : null,
   ].filter(Boolean)
 }
@@ -151,7 +154,10 @@ export function vistaDelloScontro(c) {
     const mi = minaccia.get(m)
     return {
       i, nome: m.nome, tipo: m.tipo, chiave: !!m.chiave, grosso: m.grosso || null,
-      sprite: scheda.sprite ? pezzoAndante(scheda.sprite, 'fermo', 0) : null, em: m.em,   // la stessa faccia del campo
+      // chi ha i passi guarda l'eroe di profilo (la posa di lato, ferma); gli altri respirano (docs/sotterraneo/scontro-interfaccia.md)
+      sprite: scheda.sprite ? fotogrammaDi(scheda.sprite, !scheda.unaPosa && quantiFotogrammi(scheda.sprite, 'corsa') ? 'corsa' : 'fermo', 0) : null, em: m.em,
+      // la variante armata e il suo grado: il nome senza articolo nel colore della rarità, l'arma in pugno, l'alone
+      etichetta: etichettaDi(m.nome), grado: m.grado && m.grado !== 'comune' ? m.grado : null, colore: coloreDelGrado(m.grado), arma: m.arma || null, variante: m.variante || null,
       ossa: Math.max(0, m.ossa), ossaMax: m.ossaMax, morto: !!m.morto,
       stati: m.morto ? [] : statiDel(m),
       colpisce: mi ? mi.colpisce : 0, salta: !!(mi && mi.salta),
@@ -176,6 +182,13 @@ export function vistaDelloScontro(c) {
 export const TAGLIA = {
   ratto: 0.45, pipistrello: 0.5, melma: 0.45, vespa: 0.5, fungo: 0.6, granchio: 0.55, serpente: 0.55,
   lupo: 0.7, fantasma: 0.8, golem: 1.1, troll: 1.15,
+  // il bestiario per ambientazione (docs/sotterraneo/mostri.md): un piranha piccolo, un ent e un drago più grandi dell'eroe
+  scheletro: 1.05, zombie: 1.0, 'scheletro-scudo': 1.0, mummia: 0.95, ghoul: 1.0, mietitore: 1.15,
+  diavoletto: 0.6, 'spirito-fuoco': 0.8, 'golem-magma': 1.15, 'golem-pietra': 1.15, 'golem-muschio': 1.2, 'golem-ghiaccio': 1.15, 'golem-lava': 1.25,
+  ragno: 0.5, pianta: 0.75, 'melma-rosa': 0.45, 'melma-viola': 0.5, 'mostro-verde': 1.2, 'mostro-viola': 1.0,
+  piranha: 0.4, polpo: 0.7, 'fantasma-azzurro': 0.8, tartaruga: 0.65, cinghiale: 0.65, ent: 1.4,
+  scorpione: 0.6, 'spirito-elettrico': 0.8, 'pipistrello-occhio': 0.55, ombra: 0.8, 'teschio-azzurro': 0.7,
+  draghetto: 0.7, occhio: 0.6, grifone: 1.2, drago: 1.9,
 }
 export const ALTO_EROE = 28   // i pixel dello sprite dell'eroe, la misura di tutti
 // la scala di un mostro alla scala `s` dell'eroe: alto TAGLIA volte l'eroe, a quarti (i pixel restano quasi interi)

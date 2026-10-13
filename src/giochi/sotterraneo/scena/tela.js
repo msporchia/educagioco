@@ -16,6 +16,8 @@ import { tetto, faccia, bordiDelTetto, capiDellaFaccia, versoDellaPorta, sorteDi
 import { dipingiPortale, PORTALE } from './portale.js'
 import { dipingiScalaSu } from './scala-su.js'
 import { GROSSI, figuraDelGrosso, spriteDelGrosso } from '../dati/grossi.js'
+import { fotogrammaDi } from '../dati/fotogrammi.js'
+import { MANI } from '../dati/varianti.js'
 
 // l'aura di un pezzo per terra, del colore della sua rarità (docs/sotterraneo/rarita.md): il comune non ne ha
 const AURA = { magico: '111,141,255', raro: '255,210,63', leggendario: '255,154,46' }
@@ -378,9 +380,11 @@ export class Tela {
 
     if (r.che === 'mostro') {
       const scheda = MOSTRI[r.tipo]
-      // `unaPosa`: i mostri del bestiario nuovo non hanno una corsa separata, e chiederla darebbe un mostro invisibile senza errore
-      const posa = r.sveglio && !scheda.unaPosa ? 'corsa' : 'fermo'
-      const fr = (t * (r.sveglio ? 8 : 4)) | 0
+      // `unaPosa`: chi non ha i passi dai video respira soltanto, e chiedere la corsa darebbe un mostro invisibile senza errore.
+      // Chi ha i passi cammina davvero da sveglio; il drago (`fermoDaiPassi`) ha il respiro rotto e da fermo usa i passi, piano
+      const passi = !scheda.unaPosa
+      const posa = passi && (r.sveglio || scheda.fermoDaiPassi) ? 'corsa' : 'fermo'
+      const fr = (t * (r.sveglio ? 8 : posa === 'corsa' ? 1.5 : 4)) | 0
       // l'alone rosso resta solo per chi conta (un capo, il custode della chiave, il bersaglio di una missione): gli altri
       // mostri sono abbastanza riconoscibili da soli, e l'alone sporcava il terreno (l'utente, 9 ottobre)
       if (scheda.capo || r.chiave || r.missione) {
@@ -391,7 +395,10 @@ export class Tela {
         ctx.fill()
       }
 
-      const suo = pezzoAndante(scheda.sprite, posa, fr)
+      const suo = fotogrammaDi(scheda.sprite, posa, fr)
+      const gradato = r.grado && r.grado !== 'comune' && AURA[r.grado]
+      // il grado dà un alone del colore della sua rarità sotto i piedi, come la roba per terra
+      if (gradato) this.aura(px, py, t, alfa, AURA[r.grado], r.grado === 'leggendario')
       // il bersaglio di una missione è più grande dei suoi simili e ha un'aura sua (dati/mondo.js, BERSAGLIO)
       const grande = r.missione ? BERSAGLIO.scala : 1
       if (r.missione) this.auraDelBersaglio(px, py, t, alfa)
@@ -401,6 +408,7 @@ export class Tela {
       else if (tocca) this.filo(suo, px - 0.5, py - 0.5, t, { specchia: r.guarda === 'sx' })
       if (!this.posa(suo, px - 0.5, py - 0.5, { alfa, specchia: r.guarda === 'sx' }))
         this.emoji(r.em, px, py, alfa)
+      if (r.arma) this.armaDelMostro(r, suo, px, py, alfa)
       if (grande !== 1) ctx.restore()
       if (r.chiave) this.emoji('🗝️', px + 0.42, py - 0.55, alfa, 0.42)
       if (r.caporale) this.galloni(px, py, alfa)
@@ -511,6 +519,24 @@ export class Tela {
     if (!r.sveglio) this.emoji('💤', lato, suolo - alto + 0.5, alfa * 0.8, 0.32)
     if (luce === 2) this.etichette.push({ testo: r.nome, px, py: sopra - 0.45 })
     if (r.ossa < r.ossaMax) this.barretta(px, py + 0.1, r.ossa / r.ossaMax, alfa)
+  }
+
+  // L'arma in pugno di un mostro con le mani (dati/varianti.js): una figura della roba posata sulla sua mano (`MANI`), più bassa
+  // dell'originale perché stia in proporzione con lui. Da che parte sta la mano lo dice lo sprite, che guarda a destra; specchiato,
+  // si specchia anche l'arma. Piccola a quel modo si ammorbidisce: la figura nitida dell'atlante regge la riduzione
+  armaDelMostro(r, suo, px, py, alfa) {
+    const mano = MANI[r.tipo]
+    const corpo = this.foglio.misura(suo), arma = this.foglio.misura(r.arma)
+    if (!mano || !corpo || !arma) return
+    const lato = r.guarda === 'sx' ? -1 : 1
+    const k = mano.k * corpo.h / arma.h
+    const ctx = this.ctx
+    ctx.save()
+    ctx.translate(px * T + (mano.x - 0.5) * corpo.w * lato, (py + 0.5) * T - (1 - mano.y) * corpo.h)
+    ctx.scale(k, k)
+    // l'impugnatura sta a due terzi dell'arma, al centro: lì si tiene
+    this.foglio.pezzo(ctx, r.arma, -arma.w / 2, -arma.h * 0.68, { alfa, specchia: lato < 0 })
+    ctx.restore()
   }
 
   // l'aura di un pezzo non comune per terra; il leggendario ha anche la sua colonna di luce, finché nessuno lo prende

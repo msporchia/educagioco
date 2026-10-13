@@ -13,6 +13,8 @@
 import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifica.mjs'
 import { readFileSync, readdirSync } from 'node:fs'
 import { MOSTRI } from '../../src/giochi/sotterraneo/dati/mostri.js'
+import { GROSSI } from '../../src/giochi/sotterraneo/dati/grossi.js'
+import { quantiFotogrammi, fotogrammaDi } from '../../src/giochi/sotterraneo/dati/fotogrammi.js'
 import { PEZZI as PEZZI_SOT } from '../../src/giochi/sotterraneo/dati/atlante.js'
 import { CREATURE, PEZZI as PEZZI_CAS } from '../../src/giochi/castello/dati/figure.js'
 
@@ -85,6 +87,25 @@ const permessi = new Set([...nomi, ...DI_0X72])
 for (const s of stelo) controlla(`sotterraneo · «${s}» ha una posa «fermo» nell'atlante: è nel catalogo o di 0x72`, permessi.has(s))
 for (const [id, m] of Object.entries(MOSTRI))
   controlla(`sotterraneo · il mostro «${id}» (${m.sprite}) ha le sue pose`, stelo.has(m.sprite) || DI_0X72.has(m.sprite), m.sprite)
+
+// ogni creatura col sotterraneo è disegnata da qualcuno: una specie di strada (`sprite`) o un mostro grosso (`figura`): se nessuno la
+// nomina si toglie `sotterraneo` dai suoi `giochi` (il file unico non si porta dietro quello che non disegna)
+{
+  const usati = new Set([...Object.values(MOSTRI).map(m => m.sprite),
+                         ...Object.values(GROSSI).map(g => (g.figura ? (MOSTRI[g.figura] || { sprite: g.figura }).sprite : MOSTRI[g.tipo].sprite))])
+  for (const n of nomi) controlla(`sotterraneo · «${n}» è disegnata da una specie o da un grosso`, usati.has(n))
+  // chi ha i passi li ha anche come specie: `unaPosa` non c'è (cammina); chi non li ha respira soltanto
+  for (const [id, m] of Object.entries(MOSTRI)) {
+    if (!passi.some(p => (cat.creature[p].alias || {}).sotterraneo === m.sprite || p === m.sprite)) continue
+    controlla(`sotterraneo · il mostro «${id}» ha i passi nell'atlante e cammina`, !m.unaPosa || id === 'troll' || DI_0X72.has(m.sprite), id)
+  }
+  // i fotogrammi si contano nell'atlante: due, tre o quattro di respiro, sei di passi (e `fotogrammaDi` non chiede mai un pezzo che non c'è)
+  for (const k of dei('sotterraneo')) {
+    const n = nomeIn('sotterraneo', k)
+    for (const fr of [0, 1, 2, 3, 4, 5, 9]) controlla(`sotterraneo · ${n}: il fotogramma ${fr} del respiro c'è`, !!PEZZI_SOT[fotogrammaDi(n, 'fermo', fr)])
+    if (passi.includes(k)) for (const fr of [0, 5, 7]) controlla(`sotterraneo · ${n}: il fotogramma ${fr} dei passi c'è`, !!PEZZI_SOT[fotogrammaDi(n, 'corsa', fr)] && quantiFotogrammi(n, 'corsa') === 6)
+  }
+}
 
 // ── il catalogo descritto ──
 const md = Object.keys(cat.fogli).map(n => readFileSync(new URL(`../../docs/core/creature-catalogo-${n.slice(-1)}.md`, import.meta.url), 'utf8')).join('\n')

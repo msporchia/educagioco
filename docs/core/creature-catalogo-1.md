@@ -86,9 +86,9 @@ Drago basso e senza ali, color carbone con le vene di lava; nelle prime due pose
 Grifone bruno con la testa d'aquila, ali alzate, richiuse e spiegate in tre pose di volo. **Combatte:** Piomba dall'alto e picchia, veloce; fragile a terra. (teme fulmine).
 **Dove:** La torre in rovina (il nido in cima) e le grotte alte. **Ruolo:** Grosso volante da torre; difficile da farne un comune. **Tenuta:** pose coerenti.
 
-### troll `SCP` · fisico · 26 px
+### troll `CP` · fisico · 26 px
 Troll grigio con la clava in mano, in quattro pose di respiro. **Combatte:** Pesante, un colpo solo molto forte, rigenera piano. (resiste veleno; teme fuoco).
-**Dove:** La torre in rovina e la botola. **Ruolo:** Capo (Fiammetta e Minotto stanno su di lui). Ha i passi. **Tenuta:** pose coerenti.
+**Dove:** Il castello. Nel sotterraneo non si disegna: conta solo come base di due grossi (Fiammetta e Minotto), che vestono altre creature. **Ruolo:** Capo del castello. Ha i passi. **Tenuta:** pose coerenti.
 
 ### drago `SCP` · fuoco · 34 px
 Grande drago rosso con ali di pipistrello; nelle pose le ali stanno alzate o spiegate. **Combatte:** Il mostro più grosso dei fogli: soffia fuoco, vola, picchia dall'alto. (resiste fuoco; teme gelo).
