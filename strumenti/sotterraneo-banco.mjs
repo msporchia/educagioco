@@ -21,6 +21,8 @@
 //   npm run sotterraneo -- --tara 2.spinta=6.5,5.forza=4   # prova un valore di una discesa (indice.campo=valore) senza toccare i sorgenti
 //   npm run sotterraneo -- --tara zona.forzaA12=4|5,zona.altare=1.6   # lo stesso per la curva delle zone e la forma di una zona
 //   npm run sotterraneo -- --tara 2.spinta=5|6|7             # con più valori separati da | prova ogni combinazione, una tabella l'una
+//   npm run sotterraneo -- --turni [--file]      # la fila dei turni: velocità e doppi turni di ogni classe nelle discese (--file: la fila lettera per lettera)
+//   npm run sotterraneo -- --costi               # l'energia: globo atteso, costo e lanci col globo pieno per classe e riga
 //   npm run sotterraneo -- --senza-abilita       # il banco di prima: solo attacco, nessun albero
 //   npm run sotterraneo -- --contro <commit>     # le stesse misure sul commit, e «prima → dopo» nelle celle
 //   npm run sotterraneo -- --contro <commit> --banco-di-adesso   # idem, ma col giocatore finto di adesso (le abilità) anche sul commit
@@ -172,6 +174,53 @@ async function misura(radice) {
     if (argv.includes('--rapporti'))
       return { intestazione: Ls.map(String), titolo: 'rapporto dell\'eroe atteso al livello', righe: OPZ.eroi.map(e => ({ titolo: e, celle: Ls.map(L => +rapporto(eroeAtteso(e, L), L).toFixed(2)) })), numeri: true }
     return { intestazione: Ls.map(String), titolo: 'forza dell\'eroe atteso al livello', righe: OPZ.eroi.map(e => ({ titolo: e, celle: Ls.map(L => livelloDiForza(eroeAtteso(e, L))) })), numeri: true }
+  }
+
+  // `--turni`: la fila dei turni di ogni classe nelle discese, con l'eroe atteso a quel livello (docs/sotterraneo/scontro.md,
+  // «L'iniziativa»): la sua velocità, e quanti turni suoi seguono un altro turno suo (il doppio turno) contro un branco della
+  // discesa e contro il peggiore dei suoi mostri da solo. `--file`: invece, la fila dei primi turni di un branco, lettera per lettera
+  if (argv.includes('--turni')) {
+    const { eroeAtteso } = await import(pathToFileURL(join(radice, SRC, 'motore/forza.js')).href)
+    const { LIVELLI_ATTESI } = await import(pathToFileURL(join(radice, SRC, 'dati/storia.js')).href)
+    const { MOSTRI } = await import(pathToFileURL(join(radice, SRC, 'dati/mostri.js')).href)
+    const { fileGiocata } = await import(pathToFileURL(join(RADICE, SRC, 'motore/turni.js')).href)
+    const vel = k => CAMP[k].mostri.map(m => MOSTRI[m].velocita)
+    const branco = k => Array.from({ length: CAMP[k].tettoBranco }, (_, i) => vel(k)[i % vel(k).length])
+    const righe = []
+    for (const e of OPZ.eroi) {
+      const eroi = discese.map(k => eroeAtteso(e, LIVELLI_ATTESI[k]).velocita)
+      if (argv.includes('--file')) {
+        righe.push({ titolo: `${e} (velocità ${eroi.map(v => +v.toFixed(1)).join(' · ')})`, celle: discese.map((k, i) => fileGiocata(eroi[i], branco(k), 120, 22).fila) })
+        continue
+      }
+      righe.push({ titolo: `${e}: velocità`, celle: eroi.map(v => +v.toFixed(1)), numeri: true })
+      righe.push({ titolo: `${e}: doppi turni nel branco`, celle: discese.map((k, i) => Math.round(fileGiocata(eroi[i], branco(k)).doppi * 100)) })
+      righe.push({ titolo: `${e}: doppi turni, il peggiore da solo`, celle: discese.map((k, i) => Math.round(Math.max(...vel(k).map(v => fileGiocata(eroi[i], [v]).doppi)) * 100)) })
+    }
+    if (argv.includes('--file')) return { intestazione: nomi, titolo: 'la fila dei primi turni di un branco (E l\'eroe, m un mostro)', righe, numeri: true, larga: 24 }
+    return { intestazione: nomi, titolo: 'la fila dei turni: velocità dell\'eroe atteso e doppi turni (% dei turni suoi dopo un altro suo)', righe }
+  }
+
+  // `--costi`: l'energia delle abilità, classe per classe e riga per riga (docs/sotterraneo/abilita.md, «L'energia»): il globo che
+  // l'eroe atteso ha al livello della riga, quanto costa un'abilità di quella riga (al primo grado) e quante se ne lanciano col globo
+  // pieno
+  if (argv.includes('--costi')) {
+    const { eroeAtteso } = await import(pathToFileURL(join(radice, SRC, 'motore/forza.js')).href)
+    const { RAMI, GRADINI, LIVELLI_PER_GRADO, costoAl } = await import(pathToFileURL(join(radice, SRC, 'dati/abilita.js')).href)
+    const righe = []
+    for (const e of OPZ.eroi) {
+      const nodo = riga => RAMI[e].flatMap(r => r.nodi).find(x => x.riga === riga && !x.sempre)   // una riga di sole passive non costa
+      const costo = (riga, g) => (nodo(riga) ? (costoAl && g > 1 ? costoAl({ ...nodo(riga), classe: e }, g) : nodo(riga).costo) : '-')
+      const globo = (riga, g) => eroeAtteso(e, GRADINI[riga] + (g - 1) * LIVELLI_PER_GRADO).energiaMax
+      const lanci = (riga, g) => (nodo(riga) ? +(globo(riga, g) / costo(riga, g)).toFixed(1) : '-')
+      righe.push({ titolo: `${e}: globo`, celle: GRADINI.map((_, r) => globo(r, 1)), numeri: true })
+      righe.push({ titolo: `${e}: costo`, celle: GRADINI.map((_, r) => costo(r, 1)), numeri: true })
+      righe.push({ titolo: `${e}: lanci col globo pieno`, celle: GRADINI.map((_, r) => lanci(r, 1)), numeri: true })
+      // al terzo grado (quattro livelli più su): il globo è cresciuto, e il costo con lui
+      righe.push({ titolo: `${e}: costo al grado 3`, celle: GRADINI.map((_, r) => costo(r, 3)), numeri: true })
+      righe.push({ titolo: `${e}: lanci al grado 3`, celle: GRADINI.map((_, r) => lanci(r, 3)), numeri: true })
+    }
+    return { intestazione: GRADINI.map((L, r) => `riga ${r} (L${L})`), titolo: 'l\'energia attesa e il costo delle abilità per riga', righe, numeri: true, larga: 14 }
   }
 
   if (argv.includes('--diag')) {

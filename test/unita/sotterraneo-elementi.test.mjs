@@ -21,7 +21,7 @@ import { GLIFI } from '../../src/giochi/sotterraneo/viste/glifi.js'
 import { controlla, uguale, stessaLista, riassunto } from '../aiuto/verifica.mjs'
 
 const roba = (mano = null, mancina = null) => ({ v: 1, gemme: 0, zaino: [], mano, mancina, corpo: null, dito: null, torcia: 0, torce: 0 })
-// (con l'intelligenza messa: le abilità alte costano 8, 11 e 16, e senza il cavaliere e il nano (10 di energia) non le pagano: qui si prova cosa fanno)
+// (con l'intelligenza messa, perché l'ultima riga costa tutto il globo che la classe ha al 12: qui si prova cosa fanno)
 const conAlbero = (livello, albero, altro = {}) =>
   ({ esp: sogliaDi(livello), albero, intelligenza: Math.min(5, livello - 1), caselle: Object.keys(albero).filter(id => !NODI[id].sempre).slice(0, 3), ...altro })
 

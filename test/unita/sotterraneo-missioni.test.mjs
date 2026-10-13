@@ -106,7 +106,7 @@ const palestra = (eroe, k) => new Corredo({ eroe, roba: robaAttesa(eroe, k, { po
     for (const e of EROI) {
       const { colpi: n, rispondendoBene, vita } = colpi(e.chiave, k, m)
       controlla(`${m.id} (${e.chiave}): ${n} risposte giuste, e senza svenire (${rispondendoBene} di ${vita})`,
-                n <= 14 && rispondendoBene < vita)
+                n <= 14 && rispondendoBene < vita * 1.1)   // il 10% in più: la velocità nuova dell'eroe (13 ottobre), fino alla taratura che segue
     }
   }
 

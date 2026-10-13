@@ -10,7 +10,7 @@ import Cornice from './Cornice.vue'
 import Medaglione from './Medaglione.vue'
 import Glifo from './Glifo.vue'
 import SchedeEroe from './SchedeEroe.vue'
-import { RAMI, NODI, GRADI, GRADINI, colpisce } from '../dati/abilita.js'
+import { RAMI, NODI, GRADI, GRADINI, colpisce, costoAl } from '../dati/abilita.js'
 import { ELEMENTI } from '../dati/elementi.js'
 import { gradoDi, perchéNonImpari, caselleDella } from '../motore/abilita.js'
 
@@ -105,6 +105,7 @@ const dettaglio = computed(() => {
   const r = rami.value.find(x => x.chiave === n.ramo) || {}
   return {
     ...n, grado: ora, tinta: tintaDi(n.id), stato: stato(n),
+    costo: n.sempre ? 0 : costoAl(n, ora || 1), costoDopo: n.sempre ? 0 : costoAl(n, ora + 1),
     colpisce: colpisce(n), chi: CHI[n.forma] || '', elementoDi: colpisce(n) ? ELEMENTI[n.elemento] : null,
     con: n.car ? CON[n.car] : '', arma: r.arma || null,
     ora: ora ? n.fa(ora, props.vitaMax) : null,
@@ -234,7 +235,7 @@ const dettaglio = computed(() => {
         <span>
           <b>{{ dettaglio.nome }}</b>
           <small v-if="dettaglio.sempre">passiva · vale sempre</small>
-          <small v-else class="sot-costo-energia"><Glifo nome="energia" :misura="13" /> {{ dettaglio.costo }} di energia</small>
+          <small v-else class="sot-costo-energia"><Glifo nome="energia" :misura="13" /> {{ dettaglio.costo }} di energia<template v-if="dettaglio.grado && dettaglio.costoDopo > dettaglio.costo"> (al grado {{ dettaglio.grado + 1 }}: {{ dettaglio.costoDopo }})</template></small>
         </span>
       </div>
       <p v-if="dettaglio.ora">Grado {{ dettaglio.grado }}: {{ dettaglio.ora }}</p>

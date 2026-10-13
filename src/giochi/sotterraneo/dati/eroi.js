@@ -15,20 +15,22 @@ export const FAMIGLIE = {
   stoffa: { em: '🧥', corto: 'stoffa', nome: 'la stoffa', verbo: 'veste' },
 }
 
+// `lanci`: quante abilità di ogni riga dell'albero si lanciano col globo di energia pieno (docs/sotterraneo/abilita.md,
+// «L'energia»): il mago è la classe del mana, e da lì vengono i costi (dati/abilita.js, costoAl)
 export const EROI = [
   { chiave: 'cavaliere', nome: 'Cavaliere', em: '🛡️', sprite: 'cavaliere',
     chi: 'il cavaliere',
     vita: 18, att: 3, dif: 1,
     // le caratteristiche di partenza (dati/livelli.js): vita, attacco e difesa qui sopra le contano già, la crescita
     // aggiunge quello che sale oltre. La caratteristica della sua arma vale il suo braccio (guastiDegliEroi)
-    parte: { forza: 3, destrezza: 2, intelligenza: 1, tempra: 4 }, vitaPerLivello: 3, dote: 'tempra',
+    parte: { forza: 3, destrezza: 2, intelligenza: 1, tempra: 4 }, vitaPerLivello: 3, dote: 'tempra', lanci: [3, 3, 2.5, 2, 1],
     porta: ['spade', 'asce', 'ferro'],
     dice: 'Tiene botta. Se non sai chi scegliere, è questo.' },
 
   { chiave: 'elfa', nome: 'Elfa', em: '🧝', sprite: 'elfa',
     chi: 'l\'elfa',
     vita: 15, att: 4, dif: 1,
-    parte: { forza: 4, destrezza: 4, intelligenza: 2, tempra: 3 }, vitaPerLivello: 3, dote: 'forza',
+    parte: { forza: 4, destrezza: 4, intelligenza: 2, tempra: 3 }, vitaPerLivello: 3, dote: 'forza', lanci: [3, 3, 2.5, 2, 1],
     porta: ['spade', 'archi', 'stoffa'],
     dice: 'Colpisce più forte, e regge un po\' meno.' },
 
@@ -37,7 +39,7 @@ export const EROI = [
   { chiave: 'mago', nome: 'Mago', em: '🧙', sprite: 'mago',
     chi: 'il mago',
     vita: 12, att: 5, dif: 0,
-    parte: { forza: 1, destrezza: 2, intelligenza: 5, tempra: 2 }, vitaPerLivello: 2, dote: 'tempra',
+    parte: { forza: 1, destrezza: 2, intelligenza: 5, tempra: 2 }, vitaPerLivello: 2, dote: 'tempra', lanci: [6, 6, 5, 3, 1],
     // anche le spade: il mago guerriero (docs/sotterraneo/abilita.md). Il requisito di forza è quello di tutti; la forza del
     // mago è bassa, quindi comincia dalla spada corta e cresce solo se ci mette dei punti. `secondarie`: armi che la classe
     // impugna ma che non sono la sua (la pagina non pretende che la caratteristica combaci col braccio, vedi guastiDegliEroi)
@@ -47,7 +49,7 @@ export const EROI = [
   { chiave: 'nano', nome: 'Nano', em: '🧔', sprite: 'nano',
     chi: 'il nano',
     vita: 20, att: 3, dif: 2,
-    parte: { forza: 3, destrezza: 2, intelligenza: 1, tempra: 5 }, vitaPerLivello: 3, dote: 'forza',
+    parte: { forza: 3, destrezza: 2, intelligenza: 1, tempra: 5 }, vitaPerLivello: 3, dote: 'forza', lanci: [3, 3, 2.5, 2, 1],
     porta: ['asce', 'archi', 'ferro'],
     dice: 'Sbagliare gli fa quasi il solletico. Non cade quasi mai.' },
 ]

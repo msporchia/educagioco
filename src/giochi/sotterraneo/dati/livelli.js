@@ -33,6 +33,55 @@ export const PUNTI_PER_LIVELLO = 1
 // ogni tre livelli la classe cresce da sé nella sua caratteristica (la `dote` di dati/eroi.js)
 export const DOTE_OGNI = 3
 
+// Il bilanciamento (regola dell'utente, 8 ottobre 2026): il bambino sceglie, ma non può alzare troppo una caratteristica
+// lasciando indietro le altre. Fra due caratteristiche, contando solo i punti DATI (non la partenza della classe, non la
+// roba), va bene se la differenza è al più SCARTO_AMMESSO oppure se la più bassa è almeno la metà della più alta:
+// 18 e 12 sì, 18 e 7 no, 50 e 30 sì
+export const SCARTO_AMMESSO = 8
+export function stannoInsieme(a, b) {
+  const alto = Math.max(a, b), basso = Math.min(a, b)
+  return alto - basso <= SCARTO_AMMESSO || basso * 2 >= alto
+}
+
+// la caratteristica che resta troppo indietro se si dà un punto a `k` (la più bassa fra quelle che romperebbero la
+// regola), o null se il punto si può dare. La più bassa di tutte si può sempre alzare: un «+» acceso c'è sempre.
+// `dati`: i punti dati, caratteristica per caratteristica (la crescita dell'avventura va bene com'è)
+export function chiTrattiene(dati, k) {
+  const dopo = ((dati && dati[k]) || 0) + 1
+  let chi = null
+  for (const c of CHIAVI_CARATTERISTICHE) {
+    if (c === k) continue
+    const v = (dati && dati[c]) || 0
+    if (!stannoInsieme(dopo, v) && (chi == null || v < ((dati && dati[chi]) || 0))) chi = c
+  }
+  return chi
+}
+
+// Il giocatore finto (motore/banco.js), la misura della storia e i costi dell'energia (dati/abilita.js) danno i punti così,
+// classe per classe: dove la classe è debole prima, poi un po' di tutto. Un bambino li dà come vuole, e la misura dice anche
+// cosa succede a chi li mette tutti in una caratteristica sola (docs/sotterraneo/livelli.md)
+// (dal 9 ottobre: metà nella caratteristica dell'arma della storia, che dà l'attacco e tiene i requisiti; la tempra
+// dà la vita e la difesa che era della scorza)
+export const COME_LI_DA = {
+  cavaliere: ['forza', 'destrezza', 'forza', 'tempra'],
+  elfa: ['forza', 'destrezza', 'forza', 'tempra'],
+  mago: ['intelligenza', 'tempra', 'intelligenza', 'tempra'],
+  nano: ['forza', 'destrezza', 'forza', 'tempra'],
+}
+// dove va il prossimo punto: quello del giro, o se la regola non lo lascia la caratteristica più indietro
+export function prossimaCaratteristica(dati, giro) {
+  const d = dati || {}
+  const k = giro[CHIAVI_CARATTERISTICHE.reduce((n, c) => n + (d[c] || 0), 0) % giro.length]
+  return chiTrattiene(d, k) ? CHIAVI_CARATTERISTICHE.reduce((a, b) => ((d[b] || 0) < (d[a] || 0) ? b : a)) : k
+}
+// i punti dati di chi è arrivato al livello `livello` e li ha dati come li dà il banco (`come`: un altro giro)
+export function puntiAttesi(chiave, livello, come = null) {
+  const giro = come || COME_LI_DA[chiave] || COME_LI_DA.cavaliere
+  const dati = Object.fromEntries(CHIAVI_CARATTERISTICHE.map(k => [k, 0]))
+  for (let n = (Math.max(1, livello) - 1) * PUNTI_PER_LIVELLO; n > 0; n--) dati[prossimaCaratteristica(dati, giro)]++
+  return dati
+}
+
 // L'esperienza che serve per arrivare al livello `n` (dal livello 1, a zero). Mai esponenziale
 // (docs/apprendimento/calibrazione.md): un salto costa A·n + B, quindi il totale cresce col quadrato,
 // e l'esperienza di un mostro cresce in linea retta con la profondità. Tarata col banco: chi va dritto
