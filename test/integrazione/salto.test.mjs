@@ -16,8 +16,11 @@ import { apriBrowser, apriGioco, azzera, attendi } from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 
 const browser = await apriBrowser()
-const { page, errori } = await apriGioco(browser, { hash: 'admin', attesa: '[data-admin]' })
-await azzera(page, { attesa: '[data-admin]' })
+const { page, errori } = await apriGioco(browser)
+// `azzera` toglie l'indirizzo (era il #admin a tenere la pagina dei trucchi): si torna in #admin dopo
+await azzera(page)
+await page.evaluate(() => { location.hash = 'admin' })
+await page.waitForSelector('[data-admin]', { timeout: 5000 })
 
 /* ---------- 1. la leva: in #admin, e spenta di partenza ---------- */
 const leva = page.locator('[data-azione="tasto-salta"]')
