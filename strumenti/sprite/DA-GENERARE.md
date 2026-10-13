@@ -437,6 +437,57 @@ L'ultimo pezzo di 0x72 dopo il 5: cavaliere, elfa, mago e nano, fermi e
 in corsa, nella stessa mano. Resta da decidere se vale la pena (vedi la
 memoria sugli scenari del sotterraneo).
 
+### 7 — La cittadella di Castle Battle · 2 immagini · da mandare (13 ottobre 2026)
+
+**Perché**: in Castle Battle castello e caserme stanno stretti su un
+lastricato unico, come la città di Heroes of Might and Magic III; oggi le
+caserme sono casette disegnate in codice (`src/giochi/arena/scena/campo.js`).
+Le caserme diventano **quattro edifici a due varianti** (si sceglie quale
+quando si costruisce): cripta (arcieri | opliti), torre oscura (negromanti |
+diavoletti), tana (lupi | pipistrelli), antro (golem | drago). Ogni
+edificio ha **la stessa fondazione** in tutte le sue forme, così si
+incastra sul lastricato; il colore della squadra è **un blu solo**, che il
+gioco ridipinge di rosso per il nemico (come il castello, `castelloNemico()`).
+
+**Come si manda**: ChatGPT, chat nuova. Si allegano `torri-2.png` per
+primo (il formato da imitare), `td_1.png` per secondo («solo stile»).
+
+**Si salva in** `strumenti/sprite/sorgenti/arena/caserme.png` (prompt A) e
+`strumenti/sprite/sorgenti/arena/cittadella.png` (prompt B). **Il lettore è
+da scrivere** quando arrivano: come le torri, per righe (`righe.py`).
+
+Prompt A, le caserme:
+
+```text
+Disegna il foglio degli edifici (uno sprite sheet) di un gioco di strategia, nella mano ESATTA delle immagini allegate: stesso contorno scuro, stessa luce da in alto a sinistra, stessa tavolozza, stessa grana — ogni pixel del disegno è un quadrato pieno di 4×4 px. La prima immagine è un foglio di torri: imita il suo FORMATO (righe, celle, trasparente). La seconda serve SOLO per lo stile.
+
+IL CONCETTO: come la schermata della città in Heroes of Might and Magic III. Gli edifici non stanno sparsi su un prato: si incastrano l'uno accanto all'altro su un unico lastricato di pietra, intorno a un castello, e insieme fanno UNA cittadella sola. Per questo ogni edificio poggia su UNA FONDAZIONE IDENTICA in tutte le venti celle: un basamento basso e quadrato di pietra grigia squadrata, largo circa 200 px, visto dall'alto a tre quarti. Gli edifici sono COMPATTI e crescono in altezza, mai di lato oltre la fondazione, perché nel gioco si toccano coi vicini.
+
+Il foglio è ORIZZONTALE, 1536×1024 px, su FONDO TRASPARENTE (PNG). Nessuna ombra sotto, nessun prato, nessun bagliore, nessuna cornice. NESSUNA PAROLA SCRITTA, NESSUN NUMERO, NESSUNA ETICHETTA.
+
+IL COLORE DELLA SQUADRA: in ogni edificio tetti, bandiere e stendardi sono di UN SOLO BLU SATURO E UNIFORME (come #2a5cff). Nessun altro blu o azzurro negli edifici, e niente rosso tranne il fuoco: il gioco ridipinge quel blu di rosso per la squadra nemica.
+
+Quattro righe, una per edificio, in quest'ordine. In ogni riga ESATTAMENTE CINQUE figure, da sinistra a destra: 1) la fondazione vuota con un'impalcatura di legno, il cantiere; 2) la prima variante appena costruita; 3) la prima variante al massimo; 4) la seconda variante appena costruita; 5) la seconda variante al massimo. Le due varianti sono LO STESSO EDIFICIO SULLA STESSA FONDAZIONE, con la parte di sopra diversa; al massimo è più alto e più ricco, non solo più grande. Ogni figura sta dentro una cella invisibile di 300×250 px, con la fondazione sulla stessa linea delle altre della riga; fra una figura e l'altra almeno 40 px di trasparente, e niente esce dalla sua cella. Misure: appena costruito circa 200 px di larghezza e 150 di altezza; al massimo fino a 230 di altezza, MAI più largo di 220.
+
+1. LA CRIPTA DELLE OSSA — pietra chiara e ossa, per i soldati scheletro. Prima variante, GLI ARCIERI: una cripta con una torretta a feritoie, faretre di frecce e un bersaglio di paglia. Seconda variante, GLI OPLITI: una cripta-caserma con rastrelliere di lance e scudi tondi e un portone pesante.
+2. LA TORRE OSCURA — pietra viola e oro. Prima variante, I NEGROMANTI: una guglia con un libro aperto e un teschio luminoso viola che galleggia attaccato in cima, candele sui merli. Seconda variante, I DIAVOLETTI: una fucina infernale con un pozzo di brace rossa, barili di bombe e un camino a corna.
+3. LA TANA — legno scuro, pelli e ossa. Prima variante, I LUPI: una baracca di tronchi con un recinto, ossa rosicchiate e segni di artigli. Seconda variante, I PIPISTRELLI: una torre alta e stretta che finisce in una grotta, con pipistrelli appesi a testa in giù, attaccati.
+4. L'ANTRO DEI GIGANTI — massi enormi e catene. Prima variante, IL GOLEM: una cava-laboratorio con blocchi di pietra, una grande incudine e rune che brillano. Seconda variante, IL DRAGO: un arco di roccia sopra un nido con uova, catene spezzate e una piccola fiamma attaccata alla roccia.
+
+Da lontano e piccoli, i quattro edifici si devono riconoscere dalla sola SAGOMA e dal colore della pietra: cripta chiara, guglia viola, tronchi scuri, massi enormi.
+```
+
+Prompt B, il cuore della cittadella (stessa chat, dopo la A):
+
+```text
+Ora, nella stessa mano e con le stesse regole (trasparente, niente scritte, il colore della squadra di UN SOLO BLU SATURO), il foglio del cuore della cittadella, 1536×1024. Quattro righe, figure separate da almeno 40 px di trasparente:
+
+1. IL CASTELLO al centro della cittadella, in TRE figure che crescono: un mastio con due torri; lo stesso con quattro torri e le mura più alte; lo stesso al massimo, con una torre centrale e gli stendardi. Ogni figura larga al massimo 300 px, con la stessa fondazione di pietra squadrata degli edifici del foglio di prima, solo più grande.
+2. LA TESORERIA, che fa arrivare le monete: TRE figure che crescono, sulla stessa fondazione degli edifici di prima: un capanno con un forziere; un edificio di pietra con una ruota e i sacchi d'oro; al massimo una zecca con la cupola dorata.
+3. LA PORTA DEL PONTE, larga 200 px e alta 120: un portone di legno rinforzato in mezzo a due torrette basse, in TRE stati: intatta, danneggiata e crepata, crollata a cumulo di sassi con le torrette spezzate.
+4. LE COSE DEL LASTRICATO, piccole, per riempire gli spazi fra gli edifici: un braciere acceso, una fontana, una statua di cavaliere, barili, casse, una pila di palle di cannone, un pozzo, un carro, un'asta con lo stendardo blu, una rastrelliera di lance, un mucchio di legna, due panche. Almeno dodici pezzi, ognuno largo fra 50 e 110 px.
+```
+
 ## In fila
 
 | # | cosa | immagini | allegati | si salva come | sblocca |
@@ -449,6 +500,7 @@ memoria sugli scenari del sotterraneo).
 | 4b ✅ | la scena e il foglio del terreno della palude | 2 | `terreno-neve`, `td_4`, chat nuova | `td_4.png`, `terreno-palude.png` | la palude col suo vestito |
 | 5 | i mostri che camminano, un video per creatura | 1 al giorno | la creatura ritagliata | `castello/cammino/<creatura>.png` (`cammino.py`) | mostri che camminano, di lato e di fronte |
 | 6 | gli eroi | 1 | `mostri-1`, una scena | — | l'addio a 0x72 |
+| 7 | la cittadella di Castle Battle (ChatGPT) | 2 | `torri-2`, `td_1` | `arena/caserme.png`, `arena/cittadella.png` | caserme a due varianti che si incastrano |
 
 Il **minimo per rifare il gioco** sono l'1 e il 2: col bosco, le torri
 nuove e i mostri che ci sono già il castello si gioca e si pubblica. Il
