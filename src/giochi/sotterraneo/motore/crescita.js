@@ -2,7 +2,7 @@
 // dati alle quattro caratteristiche e quanto rendono. Funzioni pure: le usano il Corredo (i numeri dell'eroe, sotto e
 // sopra), la Corsa (l'esperienza dei mostri battuti) e la pagina dell'eroe. Gira in Node.
 import { CHIAVI_CARATTERISTICHE, PUNTI_PER_LIVELLO, DOTE_OGNI, VITA_PER_TEMPRA, TEMPRA_PER_DIFESA,
-         GEMME_PER_RIASSEGNARE, livelloDi, sogliaDi } from '../dati/livelli.js'
+         GEMME_PER_RIASSEGNARE, livelloDi, sogliaDi, SCARTO_AMMESSO, stannoInsieme, chiTrattiene, COME_LI_DA } from '../dati/livelli.js'
 import { rileggiAlbero } from './abilita.js'
 import { TASCHE_EXTRA_MAX } from '../dati/mondo.js'
 
@@ -71,28 +71,9 @@ export function riassegna(cr) {
   return { ...cr, ...Object.fromEntries(CHIAVI_CARATTERISTICHE.map(k => [k, 0])) }
 }
 
-// Il bilanciamento (regola dell'utente, 8 ottobre 2026): il bambino sceglie, ma non può alzare troppo una caratteristica
-// lasciando indietro le altre. Fra due caratteristiche, contando solo i punti DATI (non la partenza della classe, non la
-// roba), va bene se la differenza è al più SCARTO_AMMESSO oppure se la più bassa è almeno la metà della più alta:
-// 18 e 12 sì, 18 e 7 no, 50 e 30 sì
-export const SCARTO_AMMESSO = 8
-export function stannoInsieme(a, b) {
-  const alto = Math.max(a, b), basso = Math.min(a, b)
-  return alto - basso <= SCARTO_AMMESSO || basso * 2 >= alto
-}
-
-// la caratteristica che resta troppo indietro se si dà un punto a `k` (la più bassa fra quelle che romperebbero la
-// regola), o null se il punto si può dare. La più bassa di tutte si può sempre alzare: un «+» acceso c'è sempre
-export function chiTrattiene(cr, k) {
-  const dopo = ((cr && cr[k]) || 0) + 1
-  let chi = null
-  for (const c of CHIAVI_CARATTERISTICHE) {
-    if (c === k) continue
-    const v = (cr && cr[c]) || 0
-    if (!stannoInsieme(dopo, v) && (chi == null || v < ((cr && cr[chi]) || 0))) chi = c
-  }
-  return chi
-}
+// Il bilanciamento fra le caratteristiche (stannoInsieme, chiTrattiene) sta in dati/livelli.js, con COME_LI_DA: lo legge anche il
+// costo dell'energia delle abilità. Qui si ridicono per chi le importa da qui
+export { SCARTO_AMMESSO, stannoInsieme, chiTrattiene, COME_LI_DA }
 export const puoiDare = (cr, k) => CHIAVI_CARATTERISTICHE.includes(k) && puntiDaDare(cr) > 0 && !chiTrattiene(cr, k)
 
 // un punto dato: torna la crescita nuova, o null se non ci sono punti, la caratteristica non esiste o il punto
@@ -102,17 +83,7 @@ export function dai(cr, k) {
   return { ...CRESCITA_NUOVA(), ...cr, [k]: ((cr && cr[k]) || 0) + 1 }
 }
 
-// Il giocatore finto (motore/banco.js) e la misura della storia danno i punti così, classe per classe: dove la
-// classe è debole prima, poi un po' di tutto. Un bambino li dà come vuole, e la misura dice anche cosa succede
-// a chi li mette tutti in una caratteristica sola (docs/sotterraneo/livelli.md)
-// (dal 9 ottobre: metà nella caratteristica dell'arma della storia, che dà l'attacco e tiene i requisiti; la tempra
-// dà la vita e la difesa che era della scorza)
-export const COME_LI_DA = {
-  cavaliere: ['forza', 'destrezza', 'forza', 'tempra'],
-  elfa: ['forza', 'destrezza', 'forza', 'tempra'],
-  mago: ['intelligenza', 'tempra', 'intelligenza', 'tempra'],
-  nano: ['forza', 'destrezza', 'forza', 'tempra'],
-}
+// i punti da dare, dati tutti come li dà il banco (dati/livelli.js, COME_LI_DA)
 export function daiTutti(cr, eroe, come = null) {
   let c = { ...CRESCITA_NUOVA(), ...cr }
   while (puntiDaDare(c) > 0) c = dai(c, prossimoPunto(c, eroe, come))

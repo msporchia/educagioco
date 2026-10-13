@@ -30,9 +30,9 @@
 //     furia (percentuale di danno in più quando resta meno di metà vita), ruba (percentuale del danno fatto che guarisce),
 //     spine (percentuale del danno preso che torna a chi colpisce), velocitaPiu (punti di velocità: la fila dei turni)
 
-import { EROI } from './eroi.js'
+import { EROI, eroeDi } from './eroi.js'
 import { CHIAVI_ELEMENTI } from './elementi.js'
-import { ENERGIA_PER_INTELLIGENZA } from './livelli.js'
+import { ENERGIA_PER_INTELLIGENZA, DOTE_OGNI, puntiAttesi } from './livelli.js'
 
 // l'energia: si riempie combattendo (due punti ogni cinque risposte giuste, ma solo dentro lo scontro), alla fonte e con la pozione
 // blu; mai col tempo, perché sotto una domanda l'orologio è fermo (come la torcia, che si conta a stanze:
@@ -43,10 +43,12 @@ export const ENERGIA_DI_PARTENZA_MINIMA = 10
 // l'energia torna piano e solo combattendo (l'utente, 12 ottobre: il bambino era sempre a pieno mana): due punti ogni cinque
 // risposte giuste date a un mostro (2,5 a punto: il resto passa al punto dopo). Porte, forzieri e curiosità non la ridanno
 export const RISPOSTE_PER_ENERGIA = 2.5
-// quanto costa un'abilità, dal gradino del suo posto nel ramo (si apre al livello GRADINI[i]): il costo cresce in fretta,
-// così le ultime righe si usano una volta ogni tanto, dopo averle aspettate. Solo la difesa del primo gradino costa meno
-// dell'energia di partenza di tutti; le righe alte chiedono di aver messo punti in intelligenza (`serve più energia`)
-export const COSTO_DEL_GRADINO = [5, 7, 8, 11, 16]
+// quanto costa un'abilità (l'utente, 13 ottobre: «il mago può avere costi diversi da quelli del cavaliere»; a lanci, non a numeri):
+// il globo che la sua classe ha al livello del nodo, diviso per quante volte la classe deve poterla lanciare col globo pieno
+// (`lanci` di ogni eroe, dati/eroi.js, una per riga: il mago 6 · 6 · 5 · 4 e l'ultima riga una volta sola, gli altri 3 · 3 · 2,5 · 2 e
+// una). Il costo cresce con la riga e, nel mago, con il grado (il globo cresce col livello). Si ricalcola da solo se cambia
+// l'energia, la dote o il giro dei punti
+export const LANCI_DELL_ULTIMA = 1
 // quante abilità si portano nello scontro: tre stanno sopra le risposte anche a 320 px
 export const CASELLE_ABILITA = 3
 // un punto abilità per livello dal 2: al 12, dove finisce la storia, undici punti per una trentina di nodi per classe
@@ -57,6 +59,22 @@ export const PUNTI_ABILITA_PER_LIVELLO = 1
 export const GRADINI = [2, 4, 6, 8, 12]
 export const LIVELLI_PER_GRADO = 2
 export const GRADI = 3
+
+// il globo di energia che la classe ha al livello `livello`, dalle sue caratteristiche (la partenza, i punti come li dà il banco,
+// la dote): non i nodi che alzano l'energia, che sono una scelta. È quello che l'eroe atteso ha (motore/forza.js, eroeAtteso)
+export function globoAtteso(classe, livello) {
+  const e = eroeDi(classe)
+  const dote = e.dote === 'intelligenza' ? Math.floor((Math.max(1, livello) - 1) / DOTE_OGNI) : 0
+  return ENERGIA + ENERGIA_PER_INTELLIGENZA * ((e.parte.intelligenza || 0) + puntiAttesi(classe, livello).intelligenza + dote)
+}
+// quante volte la classe lancia un'abilità della riga `riga` col globo pieno
+export const lanciDellaRiga = (classe, riga) => eroeDi(classe).lanci[riga]
+// il costo di un'abilità della riga `riga` di quella classe, quando chi la porta è al livello `livello`
+export const costoDelGradino = (classe, riga, livello = GRADINI[riga]) =>
+  Math.max(1, Math.round(globoAtteso(classe, livello) / lanciDellaRiga(classe, riga)))
+// il costo di un nodo al grado `g`: ogni grado vuole due livelli in più, e il globo che la classe ha lì (motore/abilita.js, livelloPer)
+export const costoAl = (nodo, g = 1) =>
+  nodo.sempre ? 0 : costoDelGradino(nodo.classe, nodo.riga, GRADINI[nodo.riga] + (Math.max(1, g) - 1) * LIVELLI_PER_GRADO)
 
 // le armi che un ramo vuole in mano: le famiglie (dati/eroi.js), o 'scudo' per uno scudo nella mancina. `corto` sta
 // sulla casella spenta dello scontro, dove c'è posto per due parole
@@ -102,7 +120,7 @@ const sanguina = v => `il mostro sanguina per ${turni(v)}, e ogni ferita nuova l
 
 // I nodi di un ramo stanno in righe: un nodo solo, oppure due fra cui scegliere (si può prendere l'uno, l'altro o tutti e
 // due, coi punti). Una riga si apre quando si è imparato almeno un nodo della riga sopra (motore/abilita.js). `riga` è
-// il numero del gradino; il livello e il costo vengono da lì (GRADINI, COSTO_DEL_GRADINO)
+// il numero del gradino; il livello viene da lì (GRADINI), il costo da costoAl (qui sotto, dopo l'albero)
 const righe = (...rr) => rr.flatMap((r, i) => r.map(x => ({ ...x, riga: i })))
 
 // La regola dell'utente (9 ottobre): ogni classe ha un modo di difendersi al livello 2, in un ramo che non vuole armi,
@@ -111,136 +129,136 @@ const righe = (...rr) => rr.flatMap((r, i) => r.map(x => ({ ...x, riga: i })))
 export const RAMI = {
   cavaliere: [
     { chiave: 'lama', nome: 'Lama', glifo: 'spada', tinta: '#8fa6c8', arma: LAMA, elemento: 'fisico', nodi: righe(
-      [{ id: 'fendente', nome: 'Fendente', glifo: 'fendente', effetto: 'taglio', costo: COSTO_DEL_GRADINO[0], per: [2, 2.5, 3],
+      [{ id: 'fendente', nome: 'Fendente', glifo: 'fendente', effetto: 'taglio', per: [2, 2.5, 3],
         fa: g => `${faDanno(n([2, 2.5, 3], g))}` }],
       [{ id: 'filo', nome: 'Filo affilato', glifo: 'filo', sempre: true, colpoPiu: [20, 35, 50],
         fa: g => `+${n([20, 35, 50], g)}% di danno a ogni colpo` }],
-      [{ id: 'taglio-profondo', nome: 'Taglio profondo', glifo: 'taglio', effetto: 'croce', costo: COSTO_DEL_GRADINO[2], per: [1.5, 1.5, 2], sanguina: [3, 4, 5],
+      [{ id: 'taglio-profondo', nome: 'Taglio profondo', glifo: 'taglio', effetto: 'croce', per: [1.5, 1.5, 2], sanguina: [3, 4, 5],
         fa: g => `${faDanno(n([1.5, 1.5, 2], g))}, ${sanguina(n([3, 4, 5], g))}` },
-       { id: 'spazzata', nome: 'Spazzata', glifo: 'spazzata', effetto: 'spazzata', costo: COSTO_DEL_GRADINO[2], forma: 'vicini', per: [1.2, 1.5, 1.8],
+       { id: 'spazzata', nome: 'Spazzata', glifo: 'spazzata', effetto: 'spazzata', forma: 'vicini', per: [1.2, 1.5, 1.8],
         fa: g => `${faDanno(n([1.2, 1.5, 1.8], g))} ${AI_VICINI}` }],
-      [{ id: 'affondo', nome: 'Affondo', glifo: 'affondo', effetto: 'affondo', costo: COSTO_DEL_GRADINO[3], rompe: true, per: [1.5, 2, 2.5],
+      [{ id: 'affondo', nome: 'Affondo', glifo: 'affondo', effetto: 'affondo', rompe: true, per: [1.5, 2, 2.5],
         fa: g => `spezza la difesa del mostro per tutto lo scontro e ${faDanno(n([1.5, 2, 2.5], g))}` },
-       { id: 'mulinello', nome: 'Mulinello', glifo: 'mulinello', effetto: 'turbine', costo: COSTO_DEL_GRADINO[3], forma: 'tutti', per: [1, 1.2, 1.4],
+       { id: 'mulinello', nome: 'Mulinello', glifo: 'mulinello', effetto: 'turbine', forma: 'tutti', per: [1, 1.2, 1.4],
         fa: g => `${faDanno(n([1, 1.2, 1.4], g))} a tutti i mostri in campo` }],
-      [{ id: 'turbine', nome: 'Colpo del campione', glifo: 'turbine', effetto: 'turbine', costo: COSTO_DEL_GRADINO[4], per: [2, 2.5, 3], capi: [4, 5, 6],
+      [{ id: 'turbine', nome: 'Colpo del campione', glifo: 'turbine', effetto: 'turbine', per: [2, 2.5, 3], capi: [4, 5, 6],
         fa: g => `${faDanno(n([2, 2.5, 3], g))}, ${controCapi(n([4, 5, 6], g))}` }],
     ) },
     { chiave: 'scudo', nome: 'Scudo', glifo: 'scudo', tinta: '#c99a3a', arma: SCUDO, elemento: 'fisico', nodi: righe(
-      [{ id: 'scudo-alzato', nome: 'Scudo alzato', glifo: 'scudo', effetto: 'scudo', costo: COSTO_DEL_GRADINO[0], parato: [2, 3, 4], difende: true,
+      [{ id: 'scudo-alzato', nome: 'Scudo alzato', glifo: 'scudo', effetto: 'scudo', parato: [2, 3, 4], difende: true,
         fa: g => `i colpi che subisci fanno metà per ${turni(n([2, 3, 4], g))}` }],
       [{ id: 'parata', nome: 'Parata', glifo: 'parata', sempre: true, graffioMeno: [1, 2, 3],
         fa: g => `ogni colpo che subisci fa ${n([1, 2, 3], g)} di danno in meno` }],
-      [{ id: 'spallata', nome: 'Spallata', glifo: 'spallata', effetto: 'urto', costo: COSTO_DEL_GRADINO[2], per: [1.2, 1.5, 1.8], quieto: true,
+      [{ id: 'spallata', nome: 'Spallata', glifo: 'spallata', effetto: 'urto', per: [1.2, 1.5, 1.8], quieto: true,
         fa: g => `${faDanno(n([1.2, 1.5, 1.8], g))}, e il mostro salta il suo prossimo turno` },
        { id: 'bordo-a-punte', nome: 'Bordo a punte', glifo: 'punte', sempre: true, spine: [25, 40, 55],
         fa: g => `chi ti colpisce si fa male: gli torna il ${n([25, 40, 55], g)}% del danno che ti fa` }],
-      [{ id: 'colpo-di-scudo', nome: 'Colpo di scudo', glifo: 'colpo-di-scudo', effetto: 'urto', costo: COSTO_DEL_GRADINO[3], fermo: [1, 2, 2], per: [1, 1, 1.5],
+      [{ id: 'colpo-di-scudo', nome: 'Colpo di scudo', glifo: 'colpo-di-scudo', effetto: 'urto', fermo: [1, 2, 2], per: [1, 1, 1.5],
         fa: g => `il mostro resta stordito per ${turni(n([1, 2, 2], g))}: non può attaccare` },
-       { id: 'fortezza', nome: 'Fortezza', glifo: 'fortezza', effetto: 'scudo', costo: COSTO_DEL_GRADINO[3], cura: [1, 1.4, 1.8], parato: [2, 2, 3],
+       { id: 'fortezza', nome: 'Fortezza', glifo: 'fortezza', effetto: 'scudo', cura: [1, 1.4, 1.8], parato: [2, 2, 3],
         fa: (g, vm) => `${cura(n([1, 1.4, 1.8], g), vm)}, e i colpi che subisci fanno metà per ${turni(n([2, 2, 3], g))}` }],
-      [{ id: 'muro', nome: 'Muro', glifo: 'muro', effetto: 'muro', costo: COSTO_DEL_GRADINO[4], debole: [4, 6, 8],
+      [{ id: 'muro', nome: 'Muro', glifo: 'muro', effetto: 'muro', debole: [4, 6, 8],
         fa: g => `protezione che dimezza i danni per ${turni(n([4, 6, 8], g))}` }],
     ) },
     { chiave: 'giuramento', nome: 'Giuramento', glifo: 'cuore', tinta: '#c0393b', car: 'forza', elemento: 'sacro', nodi: righe(
-      [{ id: 'preghiera', nome: 'Preghiera', glifo: 'preghiera', effetto: 'preghiera', costo: COSTO_DEL_GRADINO[0], cura: [2, 2.8, 3.6], difende: true,
+      [{ id: 'preghiera', nome: 'Preghiera', glifo: 'preghiera', effetto: 'preghiera', cura: [2, 2.8, 3.6], difende: true,
         fa: (g, vm) => cura(n([2, 2.8, 3.6], g), vm) }],
       [{ id: 'cuore-saldo', nome: 'Cuore saldo', glifo: 'cuore', sempre: true, vitaPiu: [5, 10, 15],
         fa: g => `+${n([5, 10, 15], g)} di vita` }],
-      [{ id: 'luce-sacra', nome: 'Luce sacra', glifo: 'luce', effetto: 'luce', costo: COSTO_DEL_GRADINO[2], per: [1.5, 2, 2.5],
+      [{ id: 'luce-sacra', nome: 'Luce sacra', glifo: 'luce', effetto: 'luce', per: [1.5, 2, 2.5],
         fa: g => `${faDanno(n([1.5, 2, 2.5], g))}, di luce sacra: i morti e le ombre la temono` },
        { id: 'mano-santa', nome: 'Mano santa', glifo: 'croce', sempre: true, ruba: [8, 12, 16],
         fa: g => `ti guarisci del ${n([8, 12, 16], g)}% del danno che fai` }],
-      [{ id: 'grido', nome: 'Grido di guerra', glifo: 'corno', effetto: 'onda', costo: COSTO_DEL_GRADINO[3], forma: 'tutti', debole: [3, 4, 5], per: [1, 1, 1],
+      [{ id: 'grido', nome: 'Grido di guerra', glifo: 'corno', effetto: 'onda', forma: 'tutti', debole: [3, 4, 5], per: [1, 1, 1],
         fa: g => `tutti i mostri in campo fanno metà del danno per ${turni(n([3, 4, 5], g))}` },
-       { id: 'giudizio', nome: 'Giudizio', glifo: 'giudizio', effetto: 'luce', costo: COSTO_DEL_GRADINO[3], forma: 'vicini', per: [1.2, 1.5, 1.8],
+       { id: 'giudizio', nome: 'Giudizio', glifo: 'giudizio', effetto: 'luce', forma: 'vicini', per: [1.2, 1.5, 1.8],
         fa: g => `${faDanno(n([1.2, 1.5, 1.8], g))} di luce sacra ${AI_VICINI}` }],
       [{ id: 'ultimo-fiato', nome: 'Ultimo fiato', glifo: 'ala', sempre: true, fiato: [1, 1, 1], vitaPiu: [0, 5, 10],
         fa: g => `una volta per discesa, invece di svenire resti in piedi${g > 1 ? ` · +${n([0, 5, 10], g)} di vita` : ''}` }],
     ) },
     // il cavaliere che non ragiona: forte quando ha poca vita, e tira dritto (nessuna arma, picchia con la forza)
     { chiave: 'furia', nome: 'Furia', glifo: 'furia', tinta: '#c2562c', car: 'forza', elemento: 'fisico', nodi: righe(
-      [{ id: 'colpo-furioso', nome: 'Colpo furioso', glifo: 'furia', effetto: 'urto', costo: COSTO_DEL_GRADINO[0], per: [2, 2.5, 3],
+      [{ id: 'colpo-furioso', nome: 'Colpo furioso', glifo: 'furia', effetto: 'urto', per: [2, 2.5, 3],
         fa: g => `${faDanno(n([2, 2.5, 3], g))}, con ogni arma` }],
       [{ id: 'rabbia', nome: 'Rabbia', glifo: 'rabbia', sempre: true, furia: [20, 35, 50],
         fa: g => `+${n([20, 35, 50], g)}% di danno quando ti resta meno di metà vita` }],
-      [{ id: 'carica', nome: 'Carica', glifo: 'carica', effetto: 'affondo', costo: COSTO_DEL_GRADINO[2], passa: 0.5, per: [1.5, 1.8, 2.2],
+      [{ id: 'carica', nome: 'Carica', glifo: 'carica', effetto: 'affondo', passa: 0.5, per: [1.5, 1.8, 2.2],
         fa: g => `ignora metà della difesa e ${faDanno(n([1.5, 1.8, 2.2], g))}` },
-       { id: 'ruggito', nome: 'Ruggito', glifo: 'ruggito', effetto: 'onda', costo: COSTO_DEL_GRADINO[2], forma: 'tutti', debole: [1, 2, 2],
+       { id: 'ruggito', nome: 'Ruggito', glifo: 'ruggito', effetto: 'onda', forma: 'tutti', debole: [1, 2, 2],
         fa: g => `tutti i mostri in campo fanno metà del danno per ${turni(n([1, 2, 2], g))}` }],
-      [{ id: 'macello', nome: 'Macello', glifo: 'macello', effetto: 'croce', costo: COSTO_DEL_GRADINO[3], forma: 'vicini', per: [1.2, 1.5, 1.8], sanguina: [2, 3, 3],
+      [{ id: 'macello', nome: 'Macello', glifo: 'macello', effetto: 'croce', forma: 'vicini', per: [1.2, 1.5, 1.8], sanguina: [2, 3, 3],
         fa: g => `${faDanno(n([1.2, 1.5, 1.8], g))} ${AI_VICINI}, e li fa sanguinare per ${turni(n([2, 3, 3], g))}` },
        { id: 'passo-di-carica', nome: 'Passo di carica', glifo: 'stivale', sempre: true, velocitaPiu: [1, 1, 2],
         fa: g => `+${n([1, 1, 2], g)} di velocità: nella fila dei turni arrivi prima` }],
-      [{ id: 'tempesta-di-colpi', nome: 'Tempesta di colpi', glifo: 'colpi', effetto: 'turbine', costo: COSTO_DEL_GRADINO[4], forma: 'tutti', per: [1.5, 1.8, 2.2],
+      [{ id: 'tempesta-di-colpi', nome: 'Tempesta di colpi', glifo: 'colpi', effetto: 'turbine', forma: 'tutti', per: [1.5, 1.8, 2.2],
         fa: g => `${faDanno(n([1.5, 1.8, 2.2], g))} a tutti i mostri in campo` }],
     ) },
   ],
 
   elfa: [
     { chiave: 'arco', nome: 'Arco', glifo: 'arco', tinta: '#4f9a5a', arma: ARCO, elemento: 'fisico', nodi: righe(
-      [{ id: 'dardo-avvelenato', nome: 'Dardo avvelenato', glifo: 'freccia-veleno', effetto: 'freccia-veleno', costo: COSTO_DEL_GRADINO[0], veleno: [3, 4, 5], elemento: 'veleno',
+      [{ id: 'dardo-avvelenato', nome: 'Dardo avvelenato', glifo: 'freccia-veleno', effetto: 'freccia-veleno', veleno: [3, 4, 5], elemento: 'veleno',
         fa: g => `il veleno fa metà del tuo danno a ogni turno, per ${turni(n([3, 4, 5], g))}` }],
       [{ id: 'primo-tiro', nome: 'Primo tiro', glifo: 'mira', sempre: true, primoTiro: [0, 25, 50],
         fa: g => `spari per primo in ogni scontro, prima di tutti${g > 1 ? ` · +${n([0, 25, 50], g)}% di danno` : ''}` }],
-      [{ id: 'freccia-di-fuoco', nome: 'Freccia di fuoco', glifo: 'freccia-fuoco', effetto: 'freccia-fuoco', costo: COSTO_DEL_GRADINO[2], elemento: 'fuoco', per: [1.5, 1.5, 2], veleno: [2, 3, 3],
+      [{ id: 'freccia-di-fuoco', nome: 'Freccia di fuoco', glifo: 'freccia-fuoco', effetto: 'freccia-fuoco', elemento: 'fuoco', per: [1.5, 1.5, 2], veleno: [2, 3, 3],
         fa: g => `${faDanno(n([1.5, 1.5, 2], g))}, ${brucia(n([2, 3, 3], g))}` },
-       { id: 'freccia-che-trapassa', nome: 'Freccia che trapassa', glifo: 'trapassa', effetto: 'trapassa', costo: COSTO_DEL_GRADINO[2], forma: 'catena', salti: [1, 2, 2], per: [1.5, 1.8, 2.2],
+       { id: 'freccia-che-trapassa', nome: 'Freccia che trapassa', glifo: 'trapassa', effetto: 'trapassa', forma: 'catena', salti: [1, 2, 2], per: [1.5, 1.8, 2.2],
         fa: g => `${faDanno(n([1.5, 1.8, 2.2], g))}, e la freccia ${salti(n([1, 2, 2], g))}` }],
-      [{ id: 'freccia-mirata', nome: 'Freccia mirata', glifo: 'freccia', effetto: 'freccia', costo: COSTO_DEL_GRADINO[3], per: [2, 2.5, 3], quieto: true,
+      [{ id: 'freccia-mirata', nome: 'Freccia mirata', glifo: 'freccia', effetto: 'freccia', per: [2, 2.5, 3], quieto: true,
         fa: g => `${faDanno(n([2, 2.5, 3], g))}, e il mostro salta il suo prossimo turno` },
-       { id: 'volo-di-frecce', nome: 'Volo di frecce', glifo: 'volo', effetto: 'pioggia', costo: COSTO_DEL_GRADINO[3], forma: 'vicini', per: [1.2, 1.5, 1.8],
+       { id: 'volo-di-frecce', nome: 'Volo di frecce', glifo: 'volo', effetto: 'pioggia', forma: 'vicini', per: [1.2, 1.5, 1.8],
         fa: g => `${faDanno(n([1.2, 1.5, 1.8], g))} ${AI_VICINI}` }],
-      [{ id: 'pioggia', nome: 'Freccia del cacciatore', glifo: 'pioggia', effetto: 'pioggia', costo: COSTO_DEL_GRADINO[4], per: [2, 2.5, 3], capi: [4, 5, 6],
+      [{ id: 'pioggia', nome: 'Freccia del cacciatore', glifo: 'pioggia', effetto: 'pioggia', per: [2, 2.5, 3], capi: [4, 5, 6],
         fa: g => `${faDanno(n([2, 2.5, 3], g))}, ${controCapi(n([4, 5, 6], g))}` }],
     ) },
     { chiave: 'lame', nome: 'Lame', glifo: 'pugnale', tinta: '#8a78c8', arma: SPADA, elemento: 'fisico', nodi: righe(
-      [{ id: 'stoccata', nome: 'Stoccata', glifo: 'pugnale', effetto: 'affondo', costo: COSTO_DEL_GRADINO[0], passa: 0.5, per: [1.5, 2, 2.5],
+      [{ id: 'stoccata', nome: 'Stoccata', glifo: 'pugnale', effetto: 'affondo', passa: 0.5, per: [1.5, 2, 2.5],
         fa: g => `ignora metà della difesa e ${faDanno(n([1.5, 2, 2.5], g))}` }],
       [{ id: 'passo-leggero', nome: 'Passo leggero', glifo: 'vento', sempre: true, schivata: [8, 16, 24],
         fa: g => `${n([8, 16, 24], g)}% di probabilità di schivare un colpo` }],
-      [{ id: 'ferita-aperta', nome: 'Ferita aperta', glifo: 'ferita', effetto: 'croce', costo: COSTO_DEL_GRADINO[2], per: [1.2, 1.5, 1.5], sanguina: [4, 5, 6],
+      [{ id: 'ferita-aperta', nome: 'Ferita aperta', glifo: 'ferita', effetto: 'croce', per: [1.2, 1.5, 1.5], sanguina: [4, 5, 6],
         fa: g => `${faDanno(n([1.2, 1.5, 1.5], g))}, ${sanguina(n([4, 5, 6], g))}` },
        { id: 'piedi-leggeri', nome: 'Piedi leggeri', glifo: 'piedi', sempre: true, velocitaPiu: [1, 1, 2],
         fa: g => `+${n([1, 1, 2], g)} di velocità: nella fila dei turni arrivi prima` }],
-      [{ id: 'danza', nome: 'Danza delle lame', glifo: 'danza', effetto: 'turbine', costo: COSTO_DEL_GRADINO[3], parato: [2, 3, 4], per: [1.5, 1.5, 2],
+      [{ id: 'danza', nome: 'Danza delle lame', glifo: 'danza', effetto: 'turbine', parato: [2, 3, 4], per: [1.5, 1.5, 2],
         fa: g => `${faDanno(n([1.5, 1.5, 2], g))} e i colpi che subisci fanno metà per ${turni(n([2, 3, 4], g))}` },
-       { id: 'passo-d-ombra', nome: 'Passo d\'ombra', glifo: 'ombra', effetto: 'affondo', costo: COSTO_DEL_GRADINO[3], intoccabile: [1, 1, 2], per: [1, 1, 1.5],
+       { id: 'passo-d-ombra', nome: 'Passo d\'ombra', glifo: 'ombra', effetto: 'affondo', intoccabile: [1, 1, 2], per: [1, 1, 1.5],
         fa: g => `${faDanno(n([1, 1, 1.5], g))}, e per ${turni(n([1, 1, 2], g))} nessun colpo ti tocca` }],
-      [{ id: 'alle-spalle', nome: 'Alle spalle', glifo: 'luna', effetto: 'croce', costo: COSTO_DEL_GRADINO[4], seStordito: true, per: [3, 3.5, 4], altrimenti: 1.5,
+      [{ id: 'alle-spalle', nome: 'Alle spalle', glifo: 'luna', effetto: 'croce', seStordito: true, per: [3, 3.5, 4], altrimenti: 1.5,
         fa: g => `fa ${danno(n([3, 3.5, 4], g))} su un mostro avvelenato, gelato o stordito, se no ${danno(1.5)}` }],
     ) },
     { chiave: 'bosco', nome: 'Bosco', glifo: 'foglia', tinta: '#6d8f2e', car: 'destrezza', elemento: 'veleno', nodi: righe(
-      [{ id: 'rovi', nome: 'Rovi', glifo: 'rovi', effetto: 'radici', costo: COSTO_DEL_GRADINO[0], debole: [3, 4, 5], difende: true,
+      [{ id: 'rovi', nome: 'Rovi', glifo: 'rovi', effetto: 'radici', debole: [3, 4, 5], difende: true,
         fa: g => `il mostro fa metà del danno per ${turni(n([3, 4, 5], g))}` }],
-      [{ id: 'linfa', nome: 'Linfa', glifo: 'germoglio', effetto: 'cura', costo: COSTO_DEL_GRADINO[1], linfa: [4, 5, 6], cura: [0.8, 1.2, 1.6],
+      [{ id: 'linfa', nome: 'Linfa', glifo: 'germoglio', effetto: 'cura', linfa: [4, 5, 6], cura: [0.8, 1.2, 1.6],
         fa: (g, vm) => `${cura(n([0.8, 1.2, 1.6], g), vm)}, poi ${vm ? `${Math.max(1, Math.round(vm / 10))} punti` : 'un po\''} a ogni turno per ${turni(n([4, 5, 6], g))}` }],
-      [{ id: 'spore', nome: 'Spore', glifo: 'spore', effetto: 'nube', costo: COSTO_DEL_GRADINO[2], forma: 'vicini', per: [1, 1, 1.2], veleno: [2, 3, 3],
+      [{ id: 'spore', nome: 'Spore', glifo: 'spore', effetto: 'nube', forma: 'vicini', per: [1, 1, 1.2], veleno: [2, 3, 3],
         fa: g => `una nuvola: ${faDanno(n([1, 1, 1.2], g))} ${AI_VICINI}, e li avvelena per ${turni(n([2, 3, 3], g))}` },
        { id: 'silenzio-del-bosco', nome: 'Silenzio del bosco', glifo: 'quiete', sempre: true, energiaPiu: [1, 2, 3],
         fa: g => `+${n([1, 2, 3], g)} di energia` }],
       [{ id: 'respiro', nome: 'Respiro del bosco', glifo: 'foglia', sempre: true, energiaPerMostro: [1, 2, 3],
         fa: g => `+${n([1, 2, 3], g)} di energia a ogni mostro battuto` },
-       { id: 'ortica', nome: 'Ortica', glifo: 'ortica', effetto: 'nube', costo: COSTO_DEL_GRADINO[3], forma: 'tutti', per: [0.7, 0.8, 0.9], veleno: [2, 3, 3],
+       { id: 'ortica', nome: 'Ortica', glifo: 'ortica', effetto: 'nube', forma: 'tutti', per: [0.7, 0.8, 0.9], veleno: [2, 3, 3],
         fa: g => `punge tutti i mostri in campo (${faDanno(n([0.7, 0.8, 0.9], g))}) e li avvelena per ${turni(n([2, 3, 3], g))}` }],
-      [{ id: 'radici', nome: 'Radici', glifo: 'radici', effetto: 'radici', costo: COSTO_DEL_GRADINO[4], fermo: [3, 3, 4], esposto: [50, 60, 70], per: [1, 1, 1], capi: [3, 3.5, 4],
+      [{ id: 'radici', nome: 'Radici', glifo: 'radici', effetto: 'radici', fermo: [3, 3, 4], esposto: [50, 60, 70], per: [1, 1, 1], capi: [3, 3.5, 4],
         fa: g => `il mostro è bloccato per ${turni(n([3, 3, 4], g))}: non può attaccare e subisce il ${n([50, 60, 70], g)}% di danno in più · ${controCapi(n([3, 3.5, 4], g))}` }],
     ) },
     // la luna: luce che ferisce, gelo che rallenta, sonno che ferma. Non vuole armi: picchia con la destrezza
     { chiave: 'luna', nome: 'Luna', glifo: 'mezzaluna', tinta: '#9fb4e8', car: 'destrezza', elemento: 'sacro', nodi: righe(
-      [{ id: 'raggio-di-luna', nome: 'Raggio di luna', glifo: 'raggio', effetto: 'luce', costo: COSTO_DEL_GRADINO[0], per: [2, 2.5, 3],
+      [{ id: 'raggio-di-luna', nome: 'Raggio di luna', glifo: 'raggio', effetto: 'luce', per: [2, 2.5, 3],
         fa: g => `${faDanno(n([2, 2.5, 3], g))}, di luce sacra` }],
       [{ id: 'luce-d-argento', nome: 'Luce d\'argento', glifo: 'argento', sempre: true, rami: { piu: [20, 30, 40] },
         fa: g => `la luna fa il ${n([20, 30, 40], g)}% di danno in più` }],
-      [{ id: 'notte-gelida', nome: 'Notte gelida', glifo: 'brina', effetto: 'nevicata', costo: COSTO_DEL_GRADINO[2], elemento: 'gelo', forma: 'vicini', per: [1, 1, 1.2], debole: [2, 2, 3],
+      [{ id: 'notte-gelida', nome: 'Notte gelida', glifo: 'brina', effetto: 'nevicata', elemento: 'gelo', forma: 'vicini', per: [1, 1, 1.2], debole: [2, 2, 3],
         fa: g => `${faDanno(n([1, 1, 1.2], g))} ${AI_VICINI}: gelano e fanno metà del danno per ${turni(n([2, 2, 3], g))}` },
-       { id: 'ninna-nanna', nome: 'Ninna nanna', glifo: 'sonno', effetto: 'sonno', costo: COSTO_DEL_GRADINO[2], forma: 'vicini', fermo: [1, 1, 2],
+       { id: 'ninna-nanna', nome: 'Ninna nanna', glifo: 'sonno', effetto: 'sonno', forma: 'vicini', fermo: [1, 1, 2],
         fa: g => `il mostro e i due accanto si addormentano: non attaccano per ${turni(n([1, 1, 2], g))}` }],
-      [{ id: 'falce-di-luna', nome: 'Falce di luna', glifo: 'falce', effetto: 'falce', costo: COSTO_DEL_GRADINO[3], per: [1.8, 2.2, 2.6],
+      [{ id: 'falce-di-luna', nome: 'Falce di luna', glifo: 'falce', effetto: 'falce', per: [1.8, 2.2, 2.6],
         fa: g => `${faDanno(n([1.8, 2.2, 2.6], g))}, di luce sacra` },
        { id: 'velo-di-luna', nome: 'Velo di luna', glifo: 'velo', sempre: true, schivata: [6, 10, 14],
         fa: g => `+${n([6, 10, 14], g)}% di probabilità di schivare un colpo` }],
-      [{ id: 'luna-piena', nome: 'Luna piena', glifo: 'luna-piena', effetto: 'luce', costo: COSTO_DEL_GRADINO[4], forma: 'tutti', per: [1.5, 1.8, 2.2],
+      [{ id: 'luna-piena', nome: 'Luna piena', glifo: 'luna-piena', effetto: 'luce', forma: 'tutti', per: [1.5, 1.8, 2.2],
         fa: g => `${faDanno(n([1.5, 1.8, 2.2], g))}, di luce sacra, a tutti i mostri in campo` }],
     ) },
   ],
@@ -249,136 +267,136 @@ export const RAMI = {
   // chi le ha tutte e due è un mago guerriero, e ogni ramo colpisce con la caratteristica che gli spetta
   mago: [
     { chiave: 'fuoco', nome: 'Fuoco', glifo: 'fiamma', tinta: '#d9632a', arma: BACCHETTA, elemento: 'fuoco', nodi: righe(
-      [{ id: 'dardo-di-fuoco', nome: 'Dardo di fuoco', glifo: 'fiamma', effetto: 'palla', costo: COSTO_DEL_GRADINO[0], per: [2, 2.5, 3],
+      [{ id: 'dardo-di-fuoco', nome: 'Dardo di fuoco', glifo: 'fiamma', effetto: 'palla', per: [2, 2.5, 3],
         fa: g => `${faDanno(n([2, 2.5, 3], g))}` }],
       [{ id: 'fiamma-viva', nome: 'Fiamma viva', glifo: 'candela', sempre: true, rami: { piu: [30, 40, 50] },
         fa: g => `il fuoco fa il ${n([30, 40, 50], g)}% di danno in più` }],
-      [{ id: 'sfera-di-fuoco', nome: 'Palla di fuoco', glifo: 'palla', effetto: 'palla', costo: COSTO_DEL_GRADINO[2], forma: 'vicini', per: [1.3, 1.6, 2],
+      [{ id: 'sfera-di-fuoco', nome: 'Palla di fuoco', glifo: 'palla', effetto: 'palla', forma: 'vicini', per: [1.3, 1.6, 2],
         fa: g => `${faDanno(n([1.3, 1.6, 2], g))} ${AI_VICINI}` },
-       { id: 'scintille', nome: 'Pioggia di scintille', glifo: 'scintille', effetto: 'brace', costo: COSTO_DEL_GRADINO[2], forma: 'tutti', per: [0.7, 0.9, 1.1],
+       { id: 'scintille', nome: 'Pioggia di scintille', glifo: 'scintille', effetto: 'brace', forma: 'tutti', per: [0.7, 0.9, 1.1],
         fa: g => `${faDanno(n([0.7, 0.9, 1.1], g))} a tutti i mostri in campo` }],
-      [{ id: 'brucia', nome: 'Brucia', glifo: 'brace', effetto: 'rogo', costo: COSTO_DEL_GRADINO[3], veleno: [3, 4, 5],
+      [{ id: 'brucia', nome: 'Brucia', glifo: 'brace', effetto: 'rogo', veleno: [3, 4, 5],
         fa: g => `${brucia(n([3, 4, 5], g))}` },
-       { id: 'esplosione', nome: 'Esplosione', glifo: 'esplosione', effetto: 'esplode', costo: COSTO_DEL_GRADINO[3], forma: 'vicini', per: [1.8, 2.2, 2.6],
+       { id: 'esplosione', nome: 'Esplosione', glifo: 'esplosione', effetto: 'esplode', forma: 'vicini', per: [1.8, 2.2, 2.6],
         fa: g => `${faDanno(n([1.8, 2.2, 2.6], g))} ${AI_VICINI}` }],
-      [{ id: 'palla-di-fuoco', nome: 'Meteora', glifo: 'meteora', effetto: 'meteora', costo: COSTO_DEL_GRADINO[4], per: [2, 2.5, 3], capi: [4, 5, 6],
+      [{ id: 'palla-di-fuoco', nome: 'Meteora', glifo: 'meteora', effetto: 'meteora', per: [2, 2.5, 3], capi: [4, 5, 6],
         fa: g => `${faDanno(n([2, 2.5, 3], g))}, ${controCapi(n([4, 5, 6], g))}` }],
     ) },
     { chiave: 'gelo', nome: 'Gelo', glifo: 'fiocco', tinta: '#4aa3d8', arma: BACCHETTA, elemento: 'gelo', nodi: righe(
-      [{ id: 'raggio-di-gelo', nome: 'Raggio di gelo', glifo: 'fiocco', effetto: 'fascio', costo: COSTO_DEL_GRADINO[0], debole: [2, 3, 4], per: [1, 1, 1],
+      [{ id: 'raggio-di-gelo', nome: 'Raggio di gelo', glifo: 'fiocco', effetto: 'fascio', debole: [2, 3, 4], per: [1, 1, 1],
         fa: g => `il mostro gela: fa metà del danno per ${turni(n([2, 3, 4], g))}` }],
       [{ id: 'gelo-profondo', nome: 'Gelo profondo', glifo: 'cristallo', sempre: true, geloPiu: [20, 35, 50],
         fa: g => `chi è gelato subisce il ${n([20, 35, 50], g)}% di danno in più a ogni colpo` }],
-      [{ id: 'scheggia', nome: 'Scheggia di ghiaccio', glifo: 'scheggia', effetto: 'scheggia', costo: COSTO_DEL_GRADINO[2], per: [1.5, 2, 2.5],
+      [{ id: 'scheggia', nome: 'Scheggia di ghiaccio', glifo: 'scheggia', effetto: 'scheggia', per: [1.5, 2, 2.5],
         fa: g => `${faDanno(n([1.5, 2, 2.5], g))}, di gelo` },
-       { id: 'nevicata', nome: 'Nevicata', glifo: 'neve', effetto: 'nevicata', costo: COSTO_DEL_GRADINO[2], forma: 'vicini', per: [1, 1, 1.2], debole: [2, 2, 3],
+       { id: 'nevicata', nome: 'Nevicata', glifo: 'neve', effetto: 'nevicata', forma: 'vicini', per: [1, 1, 1.2], debole: [2, 2, 3],
         fa: g => `${faDanno(n([1, 1, 1.2], g))} ${AI_VICINI}: gelano e fanno metà del danno per ${turni(n([2, 2, 3], g))}` }],
-      [{ id: 'lancia-di-ghiaccio', nome: 'Lancia di ghiaccio', glifo: 'lancia', effetto: 'lancia', costo: COSTO_DEL_GRADINO[3], seStordito: true, per: [3, 3.5, 4], altrimenti: 1.5,
+      [{ id: 'lancia-di-ghiaccio', nome: 'Lancia di ghiaccio', glifo: 'lancia', effetto: 'lancia', seStordito: true, per: [3, 3.5, 4], altrimenti: 1.5,
         fa: g => `fa ${danno(n([3, 3.5, 4], g))} su un mostro gelato, in fiamme o stordito, se no ${danno(1.5)}` },
-       { id: 'prigione-di-ghiaccio', nome: 'Prigione di ghiaccio', glifo: 'prigione', effetto: 'blocco', costo: COSTO_DEL_GRADINO[3], fermo: [1, 2, 2], per: [1, 1, 1.5],
+       { id: 'prigione-di-ghiaccio', nome: 'Prigione di ghiaccio', glifo: 'prigione', effetto: 'blocco', fermo: [1, 2, 2], per: [1, 1, 1.5],
         fa: g => `il mostro è chiuso nel ghiaccio per ${turni(n([1, 2, 2], g))}: non può attaccare` }],
-      [{ id: 'tempesta', nome: 'Gelo eterno', glifo: 'tempesta', effetto: 'nevicata', costo: COSTO_DEL_GRADINO[4], debole: [3, 4, 5], per: [1.5, 1.5, 2], capi: [3, 3.5, 4],
+      [{ id: 'tempesta', nome: 'Gelo eterno', glifo: 'tempesta', effetto: 'nevicata', debole: [3, 4, 5], per: [1.5, 1.5, 2], capi: [3, 3.5, 4],
         fa: g => `${faDanno(n([1.5, 1.5, 2], g))} e gela il mostro per ${turni(n([3, 4, 5], g))} · ${controCapi(n([3, 3.5, 4], g))}` }],
     ) },
     { chiave: 'arcano', nome: 'Arcano', glifo: 'sfera', tinta: '#9b4fd0', car: 'intelligenza', elemento: 'fulmine', nodi: righe(
-      [{ id: 'scudo-arcano', nome: 'Scudo arcano', glifo: 'sfera', effetto: 'sfera', costo: COSTO_DEL_GRADINO[0], scudo: [2, 2.6, 3.2], difende: true,
+      [{ id: 'scudo-arcano', nome: 'Scudo arcano', glifo: 'sfera', effetto: 'sfera', scudo: [2, 2.6, 3.2], difende: true,
         fa: (g, vm) => scudo(n([2, 2.6, 3.2], g), vm) }],
-      [{ id: 'fonte-arcana', nome: 'Fonte arcana', glifo: 'calice', effetto: 'cura', costo: COSTO_DEL_GRADINO[1], cura: [2, 2.8, 3.6],
+      [{ id: 'fonte-arcana', nome: 'Fonte arcana', glifo: 'calice', effetto: 'cura', cura: [2, 2.8, 3.6],
         fa: (g, vm) => cura(n([2, 2.8, 3.6], g), vm) }],
       [{ id: 'mente-lucida', nome: 'Mente lucida', glifo: 'mente', sempre: true, energiaPiu: [1, 2, 3],
         fa: g => `+${n([1, 2, 3], g)} di energia` },
-       { id: 'raggio-arcano', nome: 'Raggio arcano', glifo: 'raggio-arcano', effetto: 'fascio', costo: COSTO_DEL_GRADINO[2], per: [1.5, 2, 2.5],
+       { id: 'raggio-arcano', nome: 'Raggio arcano', glifo: 'raggio-arcano', effetto: 'fascio', per: [1.5, 2, 2.5],
         fa: g => `${faDanno(n([1.5, 2, 2.5], g))}, di fulmine` }],
-      [{ id: 'fulmine', nome: 'Fulmine', glifo: 'fulmine', effetto: 'fulmine', costo: COSTO_DEL_GRADINO[3], passa: 0.5, per: [2.5, 3, 3.5],
+      [{ id: 'fulmine', nome: 'Fulmine', glifo: 'fulmine', effetto: 'fulmine', passa: 0.5, per: [2.5, 3, 3.5],
         fa: g => `ignora metà della difesa e ${faDanno(n([2.5, 3, 3.5], g))}` },
-       { id: 'catena-di-fulmini', nome: 'Catena di fulmini', glifo: 'catena-fulmini', effetto: 'catena', costo: COSTO_DEL_GRADINO[3], forma: 'catena', salti: [2, 2, 3], per: [1.8, 2.2, 2.6],
+       { id: 'catena-di-fulmini', nome: 'Catena di fulmini', glifo: 'catena-fulmini', effetto: 'catena', forma: 'catena', salti: [2, 2, 3], per: [1.8, 2.2, 2.6],
         fa: g => `${faDanno(n([1.8, 2.2, 2.6], g))}, e il fulmine ${salti(n([2, 2, 3], g))}` }],
-      [{ id: 'specchio', nome: 'Specchio', glifo: 'specchio', effetto: 'specchio', costo: COSTO_DEL_GRADINO[4], specchio: [1, 1.5, 2],
+      [{ id: 'specchio', nome: 'Specchio', glifo: 'specchio', effetto: 'specchio', specchio: [1, 1.5, 2],
         fa: g => `il prossimo colpo che subisci si ritorce contro il mostro${g > 1 ? `, ${volte(n([1, 1.5, 2], g))}` : ''}` }],
     ) },
     // la spada e l'intelligenza (`arma` e `car` insieme: la spada si deve avere in mano, l'intelligenza decide quanto fa male)
     { chiave: 'lama-arcana', nome: 'Lama arcana', glifo: 'lama-incantata', tinta: '#6f8bdc', arma: SPADA, car: 'intelligenza', elemento: 'fulmine', nodi: righe(
-      [{ id: 'lama-incantata', nome: 'Lama incantata', glifo: 'lama-incantata', effetto: 'taglio', costo: COSTO_DEL_GRADINO[0], per: [2, 2.5, 3],
+      [{ id: 'lama-incantata', nome: 'Lama incantata', glifo: 'lama-incantata', effetto: 'taglio', per: [2, 2.5, 3],
         fa: g => `${faDanno(n([2, 2.5, 3], g))}: la spada colpisce con la tua intelligenza` }],
       [{ id: 'incanto', nome: 'Incanto', glifo: 'incanto', sempre: true, rami: { piu: [20, 30, 40] },
         fa: g => `la lama incantata fa il ${n([20, 30, 40], g)}% di danno in più` }],
-      [{ id: 'lama-di-fuoco', nome: 'Lama di fuoco', glifo: 'lama-fuoco', effetto: 'taglio', costo: COSTO_DEL_GRADINO[2], elemento: 'fuoco', per: [1.5, 1.5, 2], veleno: [2, 3, 3],
+      [{ id: 'lama-di-fuoco', nome: 'Lama di fuoco', glifo: 'lama-fuoco', effetto: 'taglio', elemento: 'fuoco', per: [1.5, 1.5, 2], veleno: [2, 3, 3],
         fa: g => `${faDanno(n([1.5, 1.5, 2], g))}, ${brucia(n([2, 3, 3], g))}` },
-       { id: 'lama-di-gelo', nome: 'Lama di gelo', glifo: 'lama-gelo', effetto: 'taglio', costo: COSTO_DEL_GRADINO[2], elemento: 'gelo', per: [1.5, 2, 2.5], debole: [1, 2, 2],
+       { id: 'lama-di-gelo', nome: 'Lama di gelo', glifo: 'lama-gelo', effetto: 'taglio', elemento: 'gelo', per: [1.5, 2, 2.5], debole: [1, 2, 2],
         fa: g => `${faDanno(n([1.5, 2, 2.5], g))}, e il mostro gela: fa metà del danno per ${turni(n([1, 2, 2], g))}` }],
-      [{ id: 'falciata-arcana', nome: 'Falciata arcana', glifo: 'falciata', effetto: 'spazzata', costo: COSTO_DEL_GRADINO[3], forma: 'vicini', per: [1.5, 2, 2.5],
+      [{ id: 'falciata-arcana', nome: 'Falciata arcana', glifo: 'falciata', effetto: 'spazzata', forma: 'vicini', per: [1.5, 2, 2.5],
         fa: g => `${faDanno(n([1.5, 2, 2.5], g))} ${AI_VICINI}, di fulmine` },
-       { id: 'danza-arcana', nome: 'Danza arcana', glifo: 'danza-arcana', effetto: 'turbine', costo: COSTO_DEL_GRADINO[3], parato: [2, 3, 3], per: [1.5, 1.5, 2],
+       { id: 'danza-arcana', nome: 'Danza arcana', glifo: 'danza-arcana', effetto: 'turbine', parato: [2, 3, 3], per: [1.5, 1.5, 2],
         fa: g => `${faDanno(n([1.5, 1.5, 2], g))} e i colpi che subisci fanno metà per ${turni(n([2, 3, 3], g))}` }],
-      [{ id: 'spada-del-mago', nome: 'Spada del mago', glifo: 'spada-stella', effetto: 'croce', costo: COSTO_DEL_GRADINO[4], per: [2, 2.5, 3], capi: [4, 5, 6],
+      [{ id: 'spada-del-mago', nome: 'Spada del mago', glifo: 'spada-stella', effetto: 'croce', per: [2, 2.5, 3], capi: [4, 5, 6],
         fa: g => `${faDanno(n([2, 2.5, 3], g))}, ${controCapi(n([4, 5, 6], g))}` }],
     ) },
   ],
 
   nano: [
     { chiave: 'ascia', nome: 'Ascia', glifo: 'ascia', tinta: '#b8743a', arma: ASCIA, elemento: 'fisico', nodi: righe(
-      [{ id: 'spaccaroccia', nome: 'Spaccaroccia', glifo: 'roccia', effetto: 'urto', costo: COSTO_DEL_GRADINO[0], rompe: true, per: [1.5, 2, 2.5],
+      [{ id: 'spaccaroccia', nome: 'Spaccaroccia', glifo: 'roccia', effetto: 'urto', rompe: true, per: [1.5, 2, 2.5],
         fa: g => `spezza la difesa del mostro per tutto lo scontro e ${faDanno(n([1.5, 2, 2.5], g))}` }],
       [{ id: 'mani-pesanti', nome: 'Mani pesanti', glifo: 'martello', sempre: true, colpoPiu: [20, 35, 50],
         fa: g => `+${n([20, 35, 50], g)}% di danno a ogni colpo` }],
-      [{ id: 'ascia-lanciata', nome: 'Ascia lanciata', glifo: 'ascia-lanciata', effetto: 'ascia', costo: COSTO_DEL_GRADINO[2], forma: 'catena', salti: [1, 1, 2], per: [1.5, 1.8, 2.2],
+      [{ id: 'ascia-lanciata', nome: 'Ascia lanciata', glifo: 'ascia-lanciata', effetto: 'ascia', forma: 'catena', salti: [1, 1, 2], per: [1.5, 1.8, 2.2],
         fa: g => `${faDanno(n([1.5, 1.8, 2.2], g))}, e l'ascia rimbalza: ${salti(n([1, 1, 2], g))}` },
        { id: 'ira-del-nano', nome: 'Ira del nano', glifo: 'ira', sempre: true, furia: [20, 35, 50],
         fa: g => `+${n([20, 35, 50], g)}% di danno quando ti resta meno di metà vita` }],
-      [{ id: 'stordisce', nome: 'Martellata', glifo: 'stelle', effetto: 'urto', costo: COSTO_DEL_GRADINO[3], fermo: [1, 2, 2], per: [1.5, 1.5, 2],
+      [{ id: 'stordisce', nome: 'Martellata', glifo: 'stelle', effetto: 'urto', fermo: [1, 2, 2], per: [1.5, 1.5, 2],
         fa: g => `${faDanno(n([1.5, 1.5, 2], g))} e stordisce il mostro per ${turni(n([1, 2, 2], g))}: non può attaccare` },
-       { id: 'mietitrice', nome: 'Mietitrice', glifo: 'mietitrice', effetto: 'spazzata', costo: COSTO_DEL_GRADINO[3], forma: 'vicini', per: [1.4, 1.8, 2.2],
+       { id: 'mietitrice', nome: 'Mietitrice', glifo: 'mietitrice', effetto: 'spazzata', forma: 'vicini', per: [1.4, 1.8, 2.2],
         fa: g => `${faDanno(n([1.4, 1.8, 2.2], g))} ${AI_VICINI}` }],
-      [{ id: 'terremoto', nome: 'Colpo del titano', glifo: 'terremoto', effetto: 'terremoto', costo: COSTO_DEL_GRADINO[4], fermo: [1, 1, 2], per: [1.5, 1.5, 2], capi: [3, 3.5, 4],
+      [{ id: 'terremoto', nome: 'Colpo del titano', glifo: 'terremoto', effetto: 'terremoto', fermo: [1, 1, 2], per: [1.5, 1.5, 2], capi: [3, 3.5, 4],
         fa: g => `${faDanno(n([1.5, 1.5, 2], g))} e stordisce il mostro per ${turni(n([1, 1, 2], g))} · ${controCapi(n([3, 3.5, 4], g))}` }],
     ) },
     { chiave: 'balestra', nome: 'Balestra', glifo: 'quadrello', tinta: '#7d8a96', arma: ARCO, elemento: 'fisico', nodi: righe(
-      [{ id: 'quadrello', nome: 'Quadrello', glifo: 'quadrello', effetto: 'quadrello', costo: COSTO_DEL_GRADINO[0], per: [2, 2.5, 3],
+      [{ id: 'quadrello', nome: 'Quadrello', glifo: 'quadrello', effetto: 'quadrello', per: [2, 2.5, 3],
         fa: g => `${faDanno(n([2, 2.5, 3], g))}` }],
       [{ id: 'perforante', nome: 'Punta d\'acciaio', glifo: 'punta', sempre: true, rami: { piu: [30, 40, 50] },
         fa: g => `i quadrelli fanno il ${n([30, 40, 50], g)}% di danno in più` }],
-      [{ id: 'tiro-perforante', nome: 'Tiro perforante', glifo: 'tiro-perforante', effetto: 'quadrello', costo: COSTO_DEL_GRADINO[2], passa: 0.5, per: [1.5, 1.8, 2.2],
+      [{ id: 'tiro-perforante', nome: 'Tiro perforante', glifo: 'tiro-perforante', effetto: 'quadrello', passa: 0.5, per: [1.5, 1.8, 2.2],
         fa: g => `ignora metà della difesa e ${faDanno(n([1.5, 1.8, 2.2], g))}` },
        { id: 'mira-del-nano', nome: 'Mira del nano', glifo: 'mirino', sempre: true, primoTiro: [0, 20, 40],
         fa: g => `spari per primo in ogni scontro, prima di tutti${g > 1 ? ` · +${n([0, 20, 40], g)}% di danno` : ''}` }],
-      [{ id: 'chiodi-roventi', nome: 'Chiodi roventi', glifo: 'chiodi', effetto: 'freccia-fuoco', costo: COSTO_DEL_GRADINO[3], veleno: [3, 4, 5], elemento: 'fuoco',
+      [{ id: 'chiodi-roventi', nome: 'Chiodi roventi', glifo: 'chiodi', effetto: 'freccia-fuoco', veleno: [3, 4, 5], elemento: 'fuoco',
         fa: g => `${brucia(n([3, 4, 5], g))}` },
-       { id: 'salva', nome: 'Salva di quadrelli', glifo: 'salva', effetto: 'pioggia', costo: COSTO_DEL_GRADINO[3], forma: 'vicini', per: [1.4, 1.8, 2.2],
+       { id: 'salva', nome: 'Salva di quadrelli', glifo: 'salva', effetto: 'pioggia', forma: 'vicini', per: [1.4, 1.8, 2.2],
         fa: g => `${faDanno(n([1.4, 1.8, 2.2], g))} ${AI_VICINI}` }],
-      [{ id: 'polvere-da-mina', nome: 'Carica di polvere', glifo: 'bomba', effetto: 'esplode', costo: COSTO_DEL_GRADINO[4], per: [2, 2.5, 3], capi: [4, 5, 6], elemento: 'fuoco',
+      [{ id: 'polvere-da-mina', nome: 'Carica di polvere', glifo: 'bomba', effetto: 'esplode', per: [2, 2.5, 3], capi: [4, 5, 6], elemento: 'fuoco',
         fa: g => `${faDanno(n([2, 2.5, 3], g))}, ${controCapi(n([4, 5, 6], g))}` }],
     ) },
     { chiave: 'pietra', nome: 'Pietra', glifo: 'montagna', tinta: '#8a7f6a', car: 'forza', elemento: 'fisico', nodi: righe(
-      [{ id: 'pelle-di-pietra', nome: 'Pelle di pietra', glifo: 'pietra', effetto: 'pietra', costo: COSTO_DEL_GRADINO[0], scudo: [2, 2.6, 3.2], difende: true,
+      [{ id: 'pelle-di-pietra', nome: 'Pelle di pietra', glifo: 'pietra', effetto: 'pietra', scudo: [2, 2.6, 3.2], difende: true,
         fa: (g, vm) => scudo(n([2, 2.6, 3.2], g), vm) }],
-      [{ id: 'rune', nome: 'Rune di guarigione', glifo: 'runa', effetto: 'cura', costo: COSTO_DEL_GRADINO[1], cura: [2.4, 3.2, 4],
+      [{ id: 'rune', nome: 'Rune di guarigione', glifo: 'runa', effetto: 'cura', cura: [2.4, 3.2, 4],
         fa: (g, vm) => cura(n([2.4, 3.2, 4], g), vm) }],
-      [{ id: 'frana', nome: 'Frana', glifo: 'frana', effetto: 'massi', costo: COSTO_DEL_GRADINO[2], forma: 'vicini', per: [1.2, 1.5, 1.8],
+      [{ id: 'frana', nome: 'Frana', glifo: 'frana', effetto: 'massi', forma: 'vicini', per: [1.2, 1.5, 1.8],
         fa: g => `${faDanno(n([1.2, 1.5, 1.8], g))} ${AI_VICINI}` },
        { id: 'cuore-di-pietra', nome: 'Cuore di pietra', glifo: 'cuore-pietra', sempre: true, vitaPiu: [5, 10, 15],
         fa: g => `+${n([5, 10, 15], g)} di vita` }],
       [{ id: 'testa-dura', nome: 'Testa dura', glifo: 'elmo', sempre: true, testaDura: [1, 2, 3],
         fa: g => `${g === 1 ? 'il primo colpo' : `i primi ${n([1, 2, 3], g)} colpi`} che subisci fa${g === 1 ? '' : 'nno'} metà del danno, in ogni scontro` },
-       { id: 'pugno-di-pietra', nome: 'Pugno di pietra', glifo: 'pugno', effetto: 'urto', costo: COSTO_DEL_GRADINO[3], per: [1.5, 1.8, 2],
+       { id: 'pugno-di-pietra', nome: 'Pugno di pietra', glifo: 'pugno', effetto: 'urto', per: [1.5, 1.8, 2],
         fa: g => `${faDanno(n([1.5, 1.8, 2], g))}` }],
-      [{ id: 'montagna', nome: 'Montagna', glifo: 'montagna', effetto: 'pietra', costo: COSTO_DEL_GRADINO[4], intoccabile: [2, 3, 4],
+      [{ id: 'montagna', nome: 'Montagna', glifo: 'montagna', effetto: 'pietra', intoccabile: [2, 3, 4],
         fa: g => `invulnerabile per ${turni(n([2, 3, 4], g))}` }],
     ) },
     // il fabbro: martello e fuoco, senz'arma (picchia con la forza)
     { chiave: 'fucina', nome: 'Fucina', glifo: 'incudine', tinta: '#e0952f', car: 'forza', elemento: 'fuoco', nodi: righe(
-      [{ id: 'martello-caldo', nome: 'Martello caldo', glifo: 'martello-caldo', effetto: 'urto', costo: COSTO_DEL_GRADINO[0], per: [2, 2.5, 3],
+      [{ id: 'martello-caldo', nome: 'Martello caldo', glifo: 'martello-caldo', effetto: 'urto', per: [2, 2.5, 3],
         fa: g => `${faDanno(n([2, 2.5, 3], g))}, di fuoco` }],
       [{ id: 'fornace', nome: 'Fornace', glifo: 'fornace', sempre: true, rami: { piu: [25, 35, 45] },
         fa: g => `la fucina fa il ${n([25, 35, 45], g)}% di danno in più` }],
-      [{ id: 'scintille-di-fucina', nome: 'Scintille di fucina', glifo: 'scintille-fucina', effetto: 'brace', costo: COSTO_DEL_GRADINO[2], forma: 'vicini', per: [1.2, 1.5, 1.8],
+      [{ id: 'scintille-di-fucina', nome: 'Scintille di fucina', glifo: 'scintille-fucina', effetto: 'brace', forma: 'vicini', per: [1.2, 1.5, 1.8],
         fa: g => `${faDanno(n([1.2, 1.5, 1.8], g))} ${AI_VICINI}` },
-       { id: 'ferro-rovente', nome: 'Ferro rovente', glifo: 'ferro-rovente', effetto: 'urto', costo: COSTO_DEL_GRADINO[2], per: [1.5, 1.5, 2], veleno: [3, 4, 4],
+       { id: 'ferro-rovente', nome: 'Ferro rovente', glifo: 'ferro-rovente', effetto: 'urto', per: [1.5, 1.5, 2], veleno: [3, 4, 4],
         fa: g => `${faDanno(n([1.5, 1.5, 2], g))}, ${brucia(n([3, 4, 4], g))}` }],
-      [{ id: 'fiamma-della-fucina', nome: 'Fiamma della fucina', glifo: 'fiammata', effetto: 'fiammata', costo: COSTO_DEL_GRADINO[3], forma: 'tutti', per: [0.8, 1, 1.2],
+      [{ id: 'fiamma-della-fucina', nome: 'Fiamma della fucina', glifo: 'fiammata', effetto: 'fiammata', forma: 'tutti', per: [0.8, 1, 1.2],
         fa: g => `${faDanno(n([0.8, 1, 1.2], g))} a tutti i mostri in campo` },
        { id: 'grembiule', nome: 'Grembiule di cuoio', glifo: 'grembiule', sempre: true, graffioMeno: [1, 1, 2],
         fa: g => `ogni colpo che subisci fa ${n([1, 1, 2], g)} di danno in meno` }],
-      [{ id: 'colata', nome: 'Colata incandescente', glifo: 'colata', effetto: 'meteora', costo: COSTO_DEL_GRADINO[4], per: [2, 2.5, 3], capi: [4, 5, 6],
+      [{ id: 'colata', nome: 'Colata incandescente', glifo: 'colata', effetto: 'meteora', per: [2, 2.5, 3], capi: [4, 5, 6],
         fa: g => `${faDanno(n([2, 2.5, 3], g))}, ${controCapi(n([4, 5, 6], g))}` }],
     ) },
   ],
@@ -389,6 +407,7 @@ export const RAMI = {
 export const NODI = {}
 for (const [classe, rami] of Object.entries(RAMI))
   rami.forEach(r => r.nodi.forEach(nodo => {
+    if (!nodo.sempre) nodo.costo = costoAl({ ...nodo, classe })   // al primo grado; agli altri `costoAl(nodo, g)`
     NODI[nodo.id] = { ...nodo, classe, ramo: r.chiave, gradino: nodo.riga, dal: GRADINI[nodo.riga], arma: r.arma || null, car: r.car || null,
                       forma: nodo.forma || 'uno', elemento: nodo.elemento || r.elemento || 'fisico' }
   }))
@@ -419,7 +438,18 @@ export function guastiDelleAbilita() {
   const g = []
   const minima = Math.min(...EROI.map(e => ENERGIA + (e.parte.intelligenza || 0) * ENERGIA_PER_INTELLIGENZA))
   if (minima !== ENERGIA_DI_PARTENZA_MINIMA) g.push(`l'energia di partenza più bassa è ${minima}, non ${ENERGIA_DI_PARTENZA_MINIMA}`)
-  if (COSTO_DEL_GRADINO.length !== GRADINI.length) g.push('i costi e i gradini non sono lo stesso numero')
+  for (const e of EROI) {
+    const l = e.lanci
+    if (!Array.isArray(l) || l.length !== GRADINI.length || l.some((x, r) => !(x >= LANCI_DELL_ULTIMA) || (r && x > l[r - 1]) || (r === GRADINI.length - 1) !== (x === LANCI_DELL_ULTIMA)))
+      g.push(`${e.chiave}: i lanci col globo pieno (${l}) vogliono una riga per gradino, mai di più salendo, e solo l'ultima una volta sola`)
+    else {
+      // il costo cresce con la riga, e l'ultima si lancia una volta col globo pieno: non più cara del globo che la classe ha lì
+      const costi = GRADINI.map((_, r) => costoDelGradino(e.chiave, r))
+      costi.forEach((c, r) => { if (r && c < costi[r - 1]) g.push(`${e.chiave}: la riga ${r} costa ${c}, meno della riga sopra (${costi[r - 1]})`) })
+      if (!(costi[costi.length - 1] > costi[costi.length - 2])) g.push(`${e.chiave}: l'ultima riga non costa più delle altre`)
+      if (costi[costi.length - 1] > globoAtteso(e.chiave, GRADINI[GRADINI.length - 1])) g.push(`${e.chiave}: l'ultima riga non sta nel globo pieno`)
+    }
+  }
   const visti = new Set()
   for (const [classe, rami] of Object.entries(RAMI)) {
     if (rami.length !== 4) g.push(`${classe}: ${rami.length} rami invece di quattro`)
@@ -446,7 +476,7 @@ export function guastiDelleAbilita() {
         if (x.forma === 'catena' && !((Array.isArray(x.salti) ? x.salti[0] : x.salti) > 0)) g.push(`${x.id}: una catena senza salti`)
         if (x.elemento && !CHIAVI_ELEMENTI.includes(x.elemento)) g.push(`${x.id}: l'elemento "${x.elemento}" non esiste`)
         if (!x.sempre && !(x.costo > 0)) g.push(`${x.id}: un'abilità senza costo`)
-        if (!x.sempre && x.costo !== COSTO_DEL_GRADINO[x.riga]) g.push(`${x.id}: costa ${x.costo}, la riga ${x.riga} costa ${COSTO_DEL_GRADINO[x.riga]}`)
+        if (!x.sempre && x.costo !== costoAl({ ...x, classe })) g.push(`${x.id}: costa ${x.costo}, la sua riga costa ${costoAl({ ...x, classe })}`)
         if (!x.sempre && x.riga === 0 && x.costo >= ENERGIA_DI_PARTENZA_MINIMA) g.push(`${x.id}: il primo gradino costa quanto l'energia di chi ne ha meno`)
         for (let gr = 1; gr <= GRADI; gr++) if (!x.fa(gr)) g.push(`${x.id}: al grado ${gr} non dice cosa fa`)
       }

@@ -1,7 +1,7 @@
 // La forza dell'eroe (docs/sotterraneo/forza.md): quanto regge, con la roba e le abilità di adesso, contro i mostri di un
 // livello. Una formula sui numeri veri, non una partita finta: dice a che livello «vale» l'eroe, e il colore delle discese
 // (motore/zone.js) si legge da lì, non dal livello che ha scritto sulla barra. Funzioni pure sul Corredo: girano in Node.
-import { NODI, aGrado, colpisce, inVita } from '../dati/abilita.js'
+import { NODI, aGrado, colpisce, inVita, costoAl } from '../dati/abilita.js'
 import { MOSTRI } from '../dati/mostri.js'
 import { COLPO_DEL_MOSTRO } from '../dati/mondo.js'
 import { CAMPAGNA, OSSA_PER_PIANO } from '../dati/campagna.js'
@@ -79,7 +79,7 @@ export function colpoContro(c, m, nodo = null, { rotto = false } = {}) {
 // il cavaliere con poca intelligenza conta le prime, il mago tutte); se le caselle sono vuote, quelle che sa
 export function abilitaDelloScontro(c) {
   const tipica = energiaTipica(c)
-  const usabile = id => NODI[id] && !NODI[id].sempre && gradoDi(c.crescita, id) > 0 && c.haLArma(NODI[id].arma) && NODI[id].costo <= tipica
+  const usabile = id => NODI[id] && !NODI[id].sempre && gradoDi(c.crescita, id) > 0 && c.haLArma(NODI[id].arma) && costoAl(NODI[id], gradoDi(c.crescita, id)) <= tipica
   const incasella = caselleDella(c.crescita).filter(Boolean)
   const ids = incasella.length ? incasella : Object.keys(c.crescita.albero || {})
   return ids.filter(usabile).map(id => NODI[id])

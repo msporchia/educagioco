@@ -9,7 +9,7 @@
 //   turni, colpiti, minaccia, inArrivo, difese: quello che la vista legge (si rifanno in `aggiorna`)
 import { COLPO_DEL_MOSTRO, RAGGIO_SCONTRO, MOSTRI_IN_CAMPO, CALMA } from '../dati/mondo.js'
 import { MOSTRI } from '../dati/mostri.js'
-import { NODI, aGrado, inVita, colpisce, FATTORE_DEL_SALTO } from '../dati/abilita.js'
+import { NODI, aGrado, inVita, colpisce, costoAl, FATTORE_DEL_SALTO } from '../dati/abilita.js'
 import { ELEMENTI, STATI, fattoreDi } from '../dati/elementi.js'
 import { difeseDi } from '../dati/grossi.js'
 import { GELO_DEL_MAGO } from '../dati/varianti.js'
@@ -299,7 +299,7 @@ export const MetodiDelloScontro = {
     const nodo = this.pronta && !this.perchéNonUsi(this.pronta) ? NODI[this.pronta] : null
     const presi = this.colpitiDa(nodo, f)
     if (nodo) {
-      this.energia -= nodo.costo
+      this.energia -= this.costoDi(nodo)
       this.pronta = null
       this.usaAbilita(nodo, presi)
     }
@@ -527,9 +527,13 @@ export const MetodiDelloScontro = {
     const nodo = NODI[id]
     if (!nodo || nodo.sempre || !this.grado(id)) return 'non la sai'
     if (!this.haLArma(nodo.arma)) return nodo.arma.corto
-    if (this.energia < nodo.costo) return nodo.costo > this.energiaMax ? 'serve più energia' : 'poca energia'
+    const costo = this.costoDi(nodo)
+    if (this.energia < costo) return costo > this.energiaMax ? 'serve più energia' : 'poca energia'
     return ''
   },
+
+  // quanto costa adesso: dipende dal grado che si ha (docs/sotterraneo/abilita.md, «L'energia»)
+  costoDi(nodo) { return costoAl(nodo, this.grado(nodo.id) || 1) },
 
   // L'abilità entra in gioco: gli effetti su tutti quelli che prende (`presi`, da colpitiDa), sull'eroe, la cura. Il colpo lo
   // conta chi chiama. Gli effetti che durano si contano nei turni di chi li porta (il mostro, o l'eroe)

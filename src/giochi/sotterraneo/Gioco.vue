@@ -767,7 +767,7 @@ const abilitaViva = dallaCorsa(c => {
     const nodo = id && NODI[id]
     if (!nodo) return null
     const ramo = RAMI[c.io.chiave].find(r => r.chiave === nodo.ramo)
-    return { id, glifo: nodo.glifo, tinta: ramo && ramo.tinta, nome: nodo.nome, costo: nodo.costo,
+    return { id, glifo: nodo.glifo, tinta: ramo && ramo.tinta, nome: nodo.nome, costo: c.costoDi(nodo),
              dice: c.descrizione(nodo, m), perche: c.perchéNonUsi(id) }
   }
   const caselle = caselleDella(c.crescita).map(voce).filter(Boolean)
