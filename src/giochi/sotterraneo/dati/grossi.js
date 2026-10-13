@@ -20,7 +20,7 @@ export const GROSSI = {
             pezzo: 'ciondolo-di-ossuto', dice: 'Il re delle ossa vecchie, col suo bastone e la sua corona. Scricchiola, ma picchia.' },
   grumo: { nome: 'Grumo', tipo: 'orco', ossa: 1.9, att: 3, tinta: '#7fd16a',
            pezzo: 'mazza-di-grumo', dice: 'Un orco grosso come una porta, con la sua mazza preferita.' },
-  fiammetta: { nome: 'Fiammetta', tipo: 'troll', figura: 'spirito-fuoco', ossa: 1.1, att: 1, tinta: '#ff8a3c',
+  fiammetta: { nome: 'Fiammetta', genere: 'f', tipo: 'troll', figura: 'spirito-fuoco', ossa: 1.1, att: 1, tinta: '#ff8a3c',
                difese: { resiste: ['fuoco'], teme: ['gelo'], immune: ['brucia'] },
                pezzo: 'scudo-di-fiammetta', dice: 'Uno spirito di fuoco grande come una porta: dove passa, i sassi fumano.' },
   zannaverde: { nome: 'Zannaverde', tipo: 'orco', figura: 'ragno', ossa: 1.95, att: 3, tinta: '#9cff4a',

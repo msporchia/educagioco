@@ -86,11 +86,12 @@ export function situazioneDi(ctx) {
   return {
     finite, livello: (ctx.roba && ctx.roba.livello) || 1,
     boss: ultima ? GROSSI[GROSSO_DELLA_DISCESA[ultima.chiave]].nome : '',
+    caduto: ultima && GROSSI[GROSSO_DELLA_DISCESA[ultima.chiave]].genere === 'f' ? 'caduta' : 'caduto',
     discesa: prossima ? inFrase(prossima.nome) : 'l\'abisso',
   }
 }
 const dentro = (v, q) => (Array.isArray(q) ? v >= q[0] && v <= q[1] : v === q)
-const riempi = (testo, s) => testo.replace(/\{(boss|discesa)\}/g, (_, k) => s[k])
+const riempi = (testo, s) => testo.replace(/\{(boss|discesa|caduto)\}/g, (_, k) => s[k])
 
 // Le frasi di chi parla, nell'ordine in cui le dice: prima le reazioni che valgono adesso (la discesa appena finita, il
 // passo che si è fatto), poi le sue di sempre. `visto` è { n, v }: quante volte gliel'hai chiesto e per quale

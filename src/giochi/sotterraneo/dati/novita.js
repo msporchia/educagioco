@@ -1,7 +1,7 @@
 // «Novità?»: la domanda che ogni personaggio della terra di sopra ha, e le frasi che girano (docs/sotterraneo/dialoghi.md,
 // «Novità?»). Per ognuno: `ruota`, tre frasi sulla sua specialità, sempre valide; `reazioni`, quello che dice per dove è
 // arrivato l'eroe. Una reazione vale in una finestra: `finite` (le discese finite, un numero o [da, a]) e/o `livello`
-// ([da, a]); chi la soddisfa la dice prima, poi girano le frasi sue. Dentro il testo: {boss} l'ultimo mostro grosso battuto,
+// ([da, a]); chi la soddisfa la dice prima, poi girano le frasi sue. Dentro il testo: {boss} l'ultimo mostro grosso battuto ({caduto} accordato a lui),
 // {discesa} la discesa che si è aperta dopo. In bocca a chi parla non c'è «livello»: dice cosa si vede (il passo, la fama).
 // Il tono è quello del resto del gioco: serio, da avventura, non triste; frasi brevi e parole semplici.
 export const NOVITA = 'Novità?'
@@ -32,7 +32,7 @@ export const NOVITA_DI = {
     reazioni: [
       { finite: 0, pagine: ['Sei appena arrivato: si vede dalle scarpe ancora pulite.'] },
       { finite: 1, pagine: ['Al pozzo non si parla d\'altro: la cripta tace, per la prima volta da anni.', 'Dicono che sia merito tuo.'] },
-      { finite: [2, 6], pagine: ['Tutto il villaggio sa che {boss} è caduto.', 'Adesso guardano verso {discesa}, e si chiedono chi ci andrà.'] },
+      { finite: [2, 6], pagine: ['Tutto il villaggio sa che {boss} è {caduto}.', 'Adesso guardano verso {discesa}, e si chiedono chi ci andrà.'] },
       { finite: 7, pagine: ['Sette porte chiuse. Mia madre ha acceso una candela per ognuna.'] },
       { livello: [5, 9], pagine: ['I bambini ti indicano per strada. Dicono: ecco quello che scende.'] },
       { livello: [10, 99], pagine: ['Quando passi, le finestre si aprono. Nessuno lo dice, ma tutti ti aspettano.'] },
@@ -48,7 +48,7 @@ export const NOVITA_DI = {
     reazioni: [
       { finite: 0, pagine: ['Chi scende ha fame al ritorno. Passa dal mulino: il pane c\'è sempre.'] },
       { finite: 1, pagine: ['La cripta è calma, e l\'acqua ha ripreso il suo sapore. Un buon inizio.'] },
-      { finite: [2, 6], pagine: ['{boss} è caduto, e la farina di oggi è la più bianca della settimana.', 'Non so spiegarlo, ma ringrazio.'] },
+      { finite: [2, 6], pagine: ['{boss} è {caduto}, e la farina di oggi è la più bianca della settimana.', 'Non so spiegarlo, ma ringrazio.'] },
       { finite: 7, pagine: ['Il grano ondeggia come non faceva da anni. Merito tuo, e delle sette porte.'] },
       { livello: [5, 9], pagine: ['Hai le braccia di chi porta sacchi. Se un giorno smetti, un posto al mulino c\'è.'] },
       { livello: [10, 99], pagine: ['Con quelle spalle solleveresti la macina. Non provarci: è la mia.'] },
@@ -81,7 +81,7 @@ export const NOVITA_DI = {
       { finite: 0, pagine: ['Sei diretto alla cripta? Passi dall\'altare, non da qui. La torre, per ora, lasciala a me.'] },
       { finite: 1, pagine: ['Il turno di stanotte è stato più calmo. Chi ha chiuso la cripta ha fatto un favore anche a me.'] },
       { finite: 3, pagine: ['La fornace è spenta: dal prato non esce più fumo. Ho smesso di contare i secchi d\'acqua.'] },
-      { finite: [2, 6], pagine: ['Da quando è caduto {boss} i rumori sono cambiati.', 'Ora vengono da {discesa}.'] },
+      { finite: [2, 6], pagine: ['Da quando è {caduto} {boss} i rumori sono cambiati.', 'Ora vengono da {discesa}.'] },
       { finite: 7, pagine: ['Dopo vent\'anni di guardia, stanotte non ho sentito niente. Strano: mi manca.'] },
       { livello: [5, 9], pagine: ['Ti saluto come saluterei un collega. Hai il passo di chi fa ronde.'] },
       { livello: [10, 99], pagine: ['Se un giorno mi serve un capitano, so già dove guardare.'] },
@@ -98,7 +98,7 @@ export const NOVITA_DI = {
       { finite: 0, pagine: ['Se cerchi la scala sott\'acqua, aspetta: non è per chi comincia.'] },
       { finite: 1, pagine: ['Stamattina ho preso tre trote. Sarà merito della cripta? Io ringrazio lo stesso.'] },
       { finite: 5, pagine: ['Lo stagno è limpido: Gorgo non gorgoglia più. Vedo il fondo, ed è bellissimo.'] },
-      { finite: [2, 6], pagine: ['{boss} è caduto, e i pesci tornano a mordere.', 'Chissà cosa c\'è, adesso, dalle parti di {discesa}.'] },
+      { finite: [2, 6], pagine: ['{boss} è {caduto}, e i pesci tornano a mordere.', 'Chissà cosa c\'è, adesso, dalle parti di {discesa}.'] },
       { finite: 7, pagine: ['Tutte le porte chiuse, e il pesce abbocca. Ho aspettato tanto, per questo.'] },
       { livello: [5, 9], pagine: ['Hai l\'occhio di chi sa aspettare. È una cosa rara.'] },
       { livello: [10, 99], pagine: ['Vieni a pescare, un giorno. Non c\'è niente di più forte della pazienza, ma forse lo sai già.'] },
@@ -115,7 +115,7 @@ export const NOVITA_DI = {
       { finite: 0, pagine: ['Se segui il sentiero arrivi all\'arco. Se lo lasci, arrivi dove vuole il bosco.'] },
       { finite: 1, pagine: ['Dalle parti dell\'altare gli uccelli hanno ripreso a cantare. Qualcosa è cambiato.'] },
       { finite: 4, pagine: ['Ho trovato ragnatele vuote: la tela di Zannaverde è strappata. Il legno asciuga bene, adesso.'] },
-      { finite: [2, 6], pagine: ['Il bosco sa che {boss} è caduto: gli alberi sono meno inquieti.', 'Ora il sentiero porta a {discesa}.'] },
+      { finite: [2, 6], pagine: ['Il bosco sa che {boss} è {caduto}: gli alberi sono meno inquieti.', 'Ora il sentiero porta a {discesa}.'] },
       { finite: 7, pagine: ['Il bosco respira. Dopo tanto tempo, ho dormito sotto un albero.'] },
       { livello: [5, 9], pagine: ['Hai il passo giusto per il bosco: leggero, ma deciso.'] },
       { livello: [10, 99], pagine: ['Chi cammina come te, il bosco lo lascia passare.'] },
