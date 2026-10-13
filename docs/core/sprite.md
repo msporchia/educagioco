@@ -73,6 +73,8 @@ nello stesso modulo.
 - **Peso**: per i tre fogli della roba del sotterraneo, 260 pezzi, 451 KB.
 - **Anche l'arredo dei fogli di scena**, pezzo per pezzo: `"nitido": "scelti"` sul foglio e `"nitido": true` sul pezzo (`sotterraneo_2`,
   `4_3`, `5_2`, `5_3`). Una botte di 150 px ridotta a 26 sgrana, nitida regge; il resto del foglio (pavimenti, muri) resta com'è.
+- **`riempi`** rimette il corpo a un pezzo mangiato da dentro: una porta nera su un foglio dal fondo nero resta trasparente dove il contorno ha dei varchi
+  (`atlante.py`: `riempi_in`; `{"chiudi": 2}` chiude i varchi stretti, in pixel del foglietto, e dove la sagoma è piena mette il colore scuro). L'ha la porta del grosso.
 - **Anche le creature**, una per una: `"nitido": true` nella voce del catalogo ([creature.md](creature.md)); `atlante.py` prende i suoi
   fotogrammi dal foglio grande (`fogli_delle_creature` li segna, `nitidi_di` salta gli altri). Tela e `figura()` lo scelgono da soli per nome.
 - Il foglietto lo dichiara per i fogli dipinti di oggetti (`bottino-e-arredo`,

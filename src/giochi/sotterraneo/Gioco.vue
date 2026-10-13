@@ -909,11 +909,12 @@ function pianoDaProva(c) {
 // `cappella`, `grotta`, `bilobata`, `galleria`, `antro`) o di quel ruolo (`anticamera`, `uscita`, `tesoro`...): per guardare i piani senza girarli (docs/sotterraneo/piani.md)
 function stanzaDaProva(c) {
   const q = new URLSearchParams(location.hash.slice(1)).get('stanza')
-  // `#stanza=relitto` (o `acqua`, `nicchia`): l'eroe sta a tre celle dal primo relitto (o dalla prima pozza, o davanti alla prima
-  // nicchia) e lo guarda, per vedere l'ombra che fa (docs/sotterraneo/piani-caverne.md)
+  // `#stanza=relitto` (o `acqua`, `nicchia`, `portone`): l'eroe sta a tre celle dal primo relitto (o dalla prima pozza, davanti alla prima
+  // nicchia, al portone del grosso) e lo guarda, per vedere l'ombra che fa (docs/sotterraneo/piani-caverne.md)
   const liv = c.livello
   const bersaglio = q === 'relitto' ? liv.relitti[0] : q === 'acqua' ? liv.stanze.flatMap(r => r.acqua)[0]
-    : q === 'nicchia' ? liv.stanze.flatMap(r => r.nicchie)[0] : null
+    : q === 'nicchia' ? liv.stanze.flatMap(r => r.nicchie)[0]
+      : q === 'portone' ? liv.robe.find(r => r.che === 'porta' && r.pelle === 'bella') : null
   if (bersaglio) {
     const quasi = []
     for (let dy = -3; dy <= 3; dy++) for (let dx = -3; dx <= 3; dx++) {
@@ -926,6 +927,8 @@ function stanzaDaProva(c) {
     c.giraVerso(bersaglio.x - dove.x, bersaglio.y - dove.y)
     c.segnaLaStanza()
     c.aggiornaLuce()
+    const qui = liv.stanzaDi(dove.x, dove.y)
+    if (qui) luceDaProva(c, qui)
     return
   }
   const s = q && c.livello.stanze.find(r => r.forma === q || r.ruolo === q)

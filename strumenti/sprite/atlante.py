@@ -44,7 +44,7 @@ import re
 import sys
 from pathlib import Path
 
-from PIL import Image, ImageOps
+from PIL import Image, ImageDraw, ImageFilter, ImageOps
 
 from catalogo import Catalogo, VERSI, breve, scrivi
 
@@ -400,6 +400,38 @@ def cancella_in(pezzo, rettangoli, nome):
     return fuori
 
 
+def riempi_in(pezzo, regola, nome, scala=1):
+    """Rimette il corpo a un pezzo che il fondo ha mangiato da dentro.
+
+    Il difetto: una porta nera su un foglio dal fondo nero. `allaga` toglie il nero camminando dal bordo, e dove il contorno
+    (pietre, borchie, puntini d'oro) ha dei varchi entra anche nel corpo della porta, che resta trasparente: a schermo si
+    vede il pavimento attraverso. `buchi` non basta (il vuoto qui tocca il bordo).
+
+    `"riempi": {"chiudi": 4, "colore": [14, 12, 16]}` (o `true`): si chiudono i varchi stretti del contorno (la sagoma si
+    ingrossa di `chiudi` pixel, si riempie quello che resta chiuso, si riporta alla misura), e dove la sagoma è piena e il
+    pezzo no si mette `colore`. `chiudi` è in pixel del foglietto (sul pezzo nitido si scala da sé); un varco più largo non si
+    chiude, e la porta resta bucata: si alza il numero."""
+    if not regola:
+        return pezzo
+    chiudi, colore = 3, (14, 12, 16)
+    if isinstance(regola, dict):
+        chiudi, colore = regola.get('chiudi', chiudi), tuple(regola.get('colore', colore))
+    r = max(1, round(chiudi * scala))
+    w, h = pezzo.size
+    pad = r + 2
+    alfa = pezzo.getchannel('A').point(lambda v: 255 if v > 24 else 0)
+    grande = Image.new('L', (w + 2 * pad, h + 2 * pad), 0)
+    grande.paste(alfa, (pad, pad))
+    chiusa = grande.filter(ImageFilter.MaxFilter(2 * r + 1))
+    fuori = chiusa.copy()
+    ImageDraw.floodfill(fuori, (0, 0), 128)                      # il fondo raggiungibile dal bordo
+    piena = fuori.point(lambda v: 0 if v == 128 else 255).filter(ImageFilter.MinFilter(2 * r + 1)).crop((pad, pad, pad + w, pad + h))
+    base = Image.new('RGBA', (w, h), colore + (0,))
+    base.putalpha(piena)
+    base.alpha_composite(pezzo)
+    return base
+
+
 def buchi_in(pezzo, regola, fondi, nome):
     """Toglie il fondo anche **dentro** la figura: l'occhio di un'ascia, il
     vuoto fra un arco e la sua corda, il foro di una chiave, l'interno di
@@ -713,6 +745,7 @@ def ritagli_di(im, fg, provenienza, ritagli, famiglie, trasforma, anima):
                 pezzo = ImageOps.mirror(pezzo)
             pezzo = cancella_in(pezzo, d.get('cancella'), chi)
             pezzo = buchi_in(pezzo, d.get('buchi'), fg.get('_fondi'), chi)
+            pezzo = riempi_in(pezzo, d.get('riempi'), chi)
             pezzo = toppa_in(pezzo, d.get('toppa'), chi, im, fg)
             pezzo = alla_misura(pezzo, d.get('misura'), chi)
             pezzo = ad_aiuola(pezzo, fg.get('aiuola'), chi)
@@ -775,7 +808,7 @@ def nitidi_di(f, fg, ridotto, nitidi):
             regola = {**regola, 'max': regola['max'] * kx * ky}
         elif regola is not True and isinstance(regola, (int, float)) and regola:
             regola = regola * kx * ky
-        nitidi[nome] = buchi_in(pezzo, regola, fg.get('_fondi'), nome)
+        nitidi[nome] = riempi_in(buchi_in(pezzo, regola, fg.get('_fondi'), nome), d.get('riempi'), nome, kx)
 
 
 def impacchetta(ritagli, largo=LARGO):
