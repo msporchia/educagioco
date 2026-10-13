@@ -29,6 +29,7 @@ import { VOLTI, PRIMA_NOTIZIA, zonaPotenziata } from '../../src/giochi/sotterran
 import { MONDO } from '../../src/giochi/sotterraneo/motore/avventure.js'
 import { ROBA_VUOTA } from '../../src/giochi/sotterraneo/motore/corredo.js'
 import { robaAttesaA, crescitaAttesaA } from '../../src/giochi/sotterraneo/motore/zone.js'
+import { conLaStrada } from '../../src/giochi/sotterraneo/motore/abilita.js'
 import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
 
 const TORRE = CAMPAGNA.findIndex(t => t.chiave === 'torre')
@@ -91,10 +92,12 @@ uguale('il fumetto dice il livello della torre', await page.locator('[data-livel
 await scatto(page, 'zone-guardia')
 
 /* ---------- 2. finita la storia, al livello 14: la notizia, le fasce, e giù in una zona ---------- */
+// L'eroe del 14 è quello che il gioco si aspetta, con le abilità della strada della sua classe (`eroeAtteso` in
+// motore/forza.js): senza albero la sua forza è 10 e i colori scalano di un gradino (docs/sotterraneo/forza.md, punto 5)
 // al 14: la grotta (8–11) e la botola (10–13) grigie, la torre (12–15) e la miniera (14–17) verdi, la scala sommersa
 // (16–19) e la cripta (18–21) arancio, e la scalinata, superata al 14, rinata rossa: 20–23, col nome della seconda volta
 await semina(page, profilo({ tappa: CAMPAGNA.length, libera: true, stelle: tutte, roba: robaAttesaA('cavaliere', 14),
-                             crescita: crescitaAttesaA('cavaliere', 14),
+                             crescita: conLaStrada(crescitaAttesaA('cavaliere', 14), 'cavaliere'),
                              terra: { nebbia: 'f'.repeat(768), dove: MINATORE.accanto, parlato: true } }))
 await scegli(page, 'sotterraneo')
 await page.waitForSelector('[data-terra]', { timeout: 5000 })
