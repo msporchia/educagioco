@@ -4,11 +4,12 @@
    Il test unitario prova il motore e la campagna; questo dice che **il
    gioco vero sta in piedi nel browser**: si apre dalla home, la mappa
    apre la prima tappa, il campo si dipinge (gli sprite del castello
-   arrivano da un foglio che si decodifica dopo), una scelta apre il
-   calcolo a tutto schermo (il campo intanto rallenta, non si ferma), il «?»
-   di una carta apre i dettagli e il campo sta fermo mentre li si legge, e
-   rispondere costruisce davvero. Poi si esce a metà e la
-   mappa offre la partita, che si riprende con la caserma costruita.
+   arrivano da un foglio che si decodifica dopo), la carta della cripta apre
+   la scelta fra le sue due truppe e il campo sta fermo, «i numeri» aprono i
+   dettagli, poi il calcolo a tutto schermo (il campo intanto rallenta, non si
+   ferma), e rispondere costruisce davvero la cripta con la truppa scelta. Poi
+   si esce a metà e la mappa offre la partita, che si riprende con la caserma
+   costruita.
 
    Le tre cose che da fuori non somigliano a un guasto:
    - **il campo vuoto**: un canvas senza figure non dà nessun errore.
@@ -35,7 +36,7 @@ controlla('solo la prima è aperta', await page.locator('[data-tappa]:not([disab
 await scatto(page, 'arena-mappa')
 
 await page.locator('[data-tappa="0"]').click()
-await page.waitForSelector('[data-caserma="guardiano"]', { timeout: 8000 })
+await page.waitForSelector('[data-caserma="cripta"]', { timeout: 8000 })
 
 /* il campo si dipinge: le figure arrivano dopo, ma entro qualche secondo
    nel canvas c'è più di un colore */
@@ -59,24 +60,33 @@ await scatto(page, 'arena-campo')
 const monete = async () => Number((await page.locator('[data-monete] b').innerText()).trim())
 controlla('si parte con qualche moneta di battaglia', await monete() >= 14)
 controlla('e c\'è scritto quante ne arrivano al secondo', /al secondo/.test(await page.locator('[data-monete]').innerText()))
-controlla('la caserma di partenza c\'è, quella nuova no',
-          await page.locator('[data-caserma="scheletri"]:not(.ar-nuova)').count() === 1 &&
-          await page.locator('[data-caserma="guardiano"].ar-nuova').count() === 1)
+controlla('si parte senza caserme: la cripta è da costruire',
+          await page.locator('[data-caserma="cripta"].ar-nuova').count() === 1)
 controlla('le quattro scelte che non sono truppe ci sono (miniera, ripara, castello, bomba) e il muro non si compra',
           await page.locator('.ar-pannello [data-azione]').count() === 4 &&
           await page.locator('.ar-pannello [data-azione="muro"]').count() === 0)
 
-/* ── il «?» spiega, e il campo sta fermo mentre si legge ── */
+/* ── la carta della cripta apre la scelta, e il campo sta fermo mentre si sceglie ── */
 const orologio = () => page.locator('.ar-hud b').first().innerText()
-await page.locator('[data-dettagli="guardiano"]').click()
-await page.waitForSelector('[data-dettagli-aperti]', { timeout: 4000 })
+await page.locator('[data-caserma="cripta"]').click()
+await page.waitForSelector('[data-scelta="cripta"]', { timeout: 4000 })
 const t0 = await orologio()
 await attendi(page, 1600)
+uguale('mentre si sceglie il campo sta fermo', await orologio(), t0)
+controlla('la scelta mostra le due truppe della cripta',
+          await page.locator('[data-scelta] [data-variante="scheletri"]').count() === 1 &&
+          await page.locator('[data-scelta] [data-variante="guardiano"]').count() === 1)
+await scatto(page, 'arena-scelta')
+
+/* ── «i numeri» spiegano, e il campo resta fermo ── */
+await page.locator('[data-scelta] [data-dettagli="guardiano"]').click()
+await page.waitForSelector('[data-dettagli-aperti]', { timeout: 4000 })
+await attendi(page, 800)
 uguale('mentre si leggono i dettagli il campo sta fermo', await orologio(), t0)
 const testo = await page.locator('[data-dettagli-aperti]').innerText()
 controlla('i dettagli dicono com\'è adesso e com\'è al livello dopo, coi numeri',
           /Livello 1/.test(testo) && /Livello 2/.test(testo) && /Una squadra ogni/.test(testo) && /Vita di ogni truppa/.test(testo) && !/%/.test(testo), testo.slice(0, 300))
-controlla('e quanto costa e che conto serve', /8\s*🪙/.test(testo) && /Per farlo si risolve una somma/.test(testo), testo.slice(0, 200))
+controlla('e quanto costa e che conto serve', /6\s*🪙/.test(testo) && /Per farlo si risolve una somma/.test(testo), testo.slice(0, 200))
 await scatto(page, 'arena-dettagli')
 await page.locator('[data-procedi]').click()
 
@@ -93,19 +103,20 @@ await scatto(page, 'arena-calcolo')
 let costruita = false
 for (let giro = 0; giro < 12 && !costruita; giro++) {
   if (!(await page.locator('.ar .qz-tasto').count())) {
-    if (await page.locator('[data-caserma="guardiano"].ar-nuova').count() === 0) break
-    await page.locator('[data-caserma="guardiano"]').click().catch(() => {})
+    if (await page.locator('[data-caserma="cripta"].ar-nuova').count() === 0) break
+    await page.locator('[data-caserma="cripta"]').click().catch(() => {})
+    await page.locator('[data-costruisci="guardiano"]').click({ timeout: 4000 }).catch(() => {})
     await page.waitForSelector('.ar .qz-tasto', { timeout: 6000 }).catch(() => {})
   }
   await attendi(page, 450)                           // la finestra cieca del montaggio
   await page.locator('.ar .qz-tasto').nth(giro % 4).click().catch(() => {})
   await attendi(page, 1200)
   await page.waitForSelector('.ar .qz-velo', { state: 'detached', timeout: 12000 }).catch(() => {})
-  costruita = await page.locator('[data-caserma="guardiano"]:not(.ar-nuova)').count() === 1
+  costruita = await page.locator('[data-caserma="cripta"][data-variante="guardiano"]:not(.ar-nuova)').count() === 1
 }
-controlla('rispondendo giusto la caserma nasce davvero', costruita)
+controlla('rispondendo giusto la cripta nasce davvero, con gli opliti', costruita)
 if (costruita) {
-  const liv = await page.locator('[data-caserma="guardiano"] .ar-liv').innerText()
+  const liv = await page.locator('[data-caserma="cripta"] .ar-liv').innerText()
   controlla('e sta al livello 1', /Lv\s*1/.test(liv), liv)
 }
 await scatto(page, 'arena-costruita')
@@ -126,9 +137,9 @@ controlla('e la mappa offre di riprendere', await page.locator('[data-ripresa]')
 await scatto(page, 'arena-ripresa')
 
 await page.locator('[data-azione="riprendi"]').first().click()
-await page.waitForSelector('[data-caserma="guardiano"]', { timeout: 8000 })
+await page.waitForSelector('[data-caserma="cripta"]', { timeout: 8000 })
 controlla('riprendendo la caserma costruita è ancora lì',
-          await page.locator('[data-caserma="guardiano"]:not(.ar-nuova)').count() === 1)
+          await page.locator('[data-caserma="cripta"][data-variante="guardiano"]:not(.ar-nuova)').count() === 1)
 n = 0
 for (let t = 0; t < 40 && n < 25; t++) { await attendi(page, 250); n = await colori() }
 controlla('e il campo ripreso si dipinge sul canvas nuovo', n >= 25, `solo ${n} colori`)

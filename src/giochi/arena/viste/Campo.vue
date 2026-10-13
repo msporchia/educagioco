@@ -8,11 +8,11 @@ import Ritratto from './Ritratto.vue'
 
 const props = defineProps({
   cruscotto: { type: Object, required: true },
-  pannello: { type: Object, required: true },     // { caserme: [], azioni: [] }
+  pannello: { type: Object, required: true },     // { caserme: [] (una per edificio), azioni: [] }
   avviso: { type: String, default: '' },
   dritta: { type: Boolean, default: true },        // «tocca una caserma»
 })
-const emit = defineEmits(['tela', 'scegli', 'dettagli'])
+const emit = defineEmits(['tela', 'scegli', 'dettagli', 'edificio'])
 const tela = ref(null)
 onMounted(() => emit('tela', tela.value))
 
@@ -43,17 +43,22 @@ const NOME = { miniera: 'Più monete', ripara: 'Ripara', castello: 'Castello', b
     </div>
 
     <div class="ar-pannello">
-      <button v-for="c in pannello.caserme" :key="c.id" class="ar-carta"
+      <!-- una carta per edificio: costruito si potenzia, da costruire apre la scelta fra le sue due truppe -->
+      <button v-for="c in pannello.caserme" :key="c.ed" class="ar-carta"
               :class="{ 'ar-no': !c.puoi, 'ar-nuova': !c.presente }"
-              :data-caserma="c.id" @click="emit('scegli', { azione: c.presente ? 'potenzia' : 'costruisci', id: c.id })">
+              :data-caserma="c.ed" :data-variante="c.id || null"
+              @click="c.presente ? emit('scegli', { azione: 'potenzia', id: c.id }) : emit('edificio', { ed: c.ed })">
         <svg v-if="c.presente && c.prezzo !== null" class="ar-su" viewBox="0 0 12 12" aria-label="si può potenziare">
           <path d="M6 0.8 L11.2 6.6 H8 V11.2 H4 V6.6 H0.8 Z" />
         </svg>
-        <span class="ar-info em" role="button" aria-label="dettagli" :data-dettagli="c.id"
-              @click.stop="emit('dettagli', { id: c.id })">?</span>
-        <Ritratto :id="c.id" :lato="40" />
+        <span class="ar-info em" role="button" aria-label="dettagli" :data-dettagli="c.presente ? c.id : c.ed"
+              @click.stop="c.presente ? emit('dettagli', { id: c.id }) : emit('edificio', { ed: c.ed })">?</span>
+        <Ritratto v-if="c.presente" :id="c.id" :lato="40" />
+        <span v-else class="ar-coppia">
+          <Ritratto v-for="v in c.varianti" :key="v" :id="v" :lato="c.varianti.length > 1 ? 28 : 40" />
+        </span>
         <span class="ar-nome">{{ c.nome }}</span>
-        <span class="ar-liv">{{ c.presente ? 'Lv ' + c.liv : 'da costruire' }}</span>
+        <span class="ar-liv">{{ c.presente ? 'Lv ' + c.liv : c.liv ? 'rifalla · Lv ' + c.liv : 'da costruire' }}</span>
         <span class="ar-prezzo em">
           <template v-if="c.riposo > 0">💤 {{ Math.ceil(c.riposo) }}s</template>
           <template v-else-if="c.prezzo === null">MAX</template>
