@@ -156,7 +156,10 @@ await scelta()
             dopo.every((o, i) => o < prima[i]), `${prima.join()} → ${dopo.join()}`)
   const scattati = await page.evaluate(() => window.__scatti)
   const vivi = await page.locator('[data-mostro]:not([data-morto])').count()
-  controlla('i mostri hanno colpito uno alla volta', scattati.length >= Math.min(2, attesi.length), scattati.join())
+  // chi cade sotto il Grido (i mostri della cripta hanno quattro ossa e il Grido ne toglie 3–5) non colpisce: scattano quelli
+  // che sono rimasti in piedi, nell'ordine della fila
+  const inPiedi = attesi.filter(x => dopo[Number(x)] > 0)
+  controlla('i mostri hanno colpito uno alla volta', scattati.length >= Math.min(2, inPiedi.length), `${scattati.join()} (in piedi: ${inPiedi.join()})`)
   const distinti = scattati.filter((x, i) => scattati.indexOf(x) === i)
   uguale('nell\'ordine della fila', distinti.join(), attesi.filter(x => distinti.includes(x)).join())
   await scelta()
@@ -165,7 +168,13 @@ await scelta()
   controlla('i colpiti restano al loro posto (niente salti)', (await caselle('[data-mostro]')).length === 6)
 }
 
-/* ---------- 4. un tocco accorcia il racconto ---------- */
+/* ---------- 4. un tocco accorcia il racconto ----------
+   Uno scontro nuovo e pieno: dopo il Grido del punto 3 i sei di prima sono quasi caduti, e un colpo di spada finisce
+   lo scontro — `[data-duello]` sparisce e non c'è più un racconto da accorciare. Con sei nuovi, un colpo solo ne
+   colpisce uno, e lo scontro dura. Il cavaliere nudo del test ha poca vita contro sei mostri che colpiscono in fila
+   (cade nel racconto): qui ha anche la tempra, e la vita che ne viene. */
+await entra('mostri=6', { cr: { ...crescita, tempra: 8 } })
+await scelta()
 {
   await toccaIl('[data-azione="attacco"]')
   await page.waitForSelector('.sot-domanda .qz-tasto', { timeout: 8000 })
@@ -238,7 +247,9 @@ await entra('mostri=2&sorpresa=1')
   await page.waitForSelector('[data-apertura]', { timeout: 3000 })
   controlla('la sorpresa lo dice', /sorpres/i.test(await page.locator('[data-apertura]').innerText()))
   const fila = await page.locator('[data-fila] [data-turno]').evaluateAll(es => es.map(e => e.dataset.chi))
-  uguale('e il suo primo turno arriva prima di tutto: l\'eroe due volte di fila', fila.slice(0, 2).join(), 'eroe,eroe')
+  // il primo turno prima di tutto (docs/sotterraneo/scontro.md, «La sorpresa»). Il secondo di fila no: dipende dalla velocità
+  // dell'eroe, che con la destrezza di questo cavaliere è sotto quella dei mostri (`VELOCITA_BASE_EROE`)
+  uguale('e il suo primo turno arriva prima di tutto', fila[0], 'eroe')
   await finitoIlRacconto()
 }
 
