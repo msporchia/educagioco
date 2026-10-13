@@ -146,8 +146,14 @@ il test (`unita/sprite-inutilizzati`) guarda solo che giri e sia coerente.
   `fattoria/non-usati/` e `home/non-usate/` (cartelle ora vuote), e dagli atlanti 13 voci del sotterraneo
   (chiavi blu/ferro/verde, `arco-vuoto`, `cancello-chiuso`, cuori, pozioni gialla e verde, `forziere-mezzo`,
   `scena-cassa`, `scena-teschio`) e 24 tessere 16 px della fattoria (laghetti, stagni interni, recinti,
-  `ninfea`, `ossa_mucchio`, torrioni, casse del tesoro). Restano apposta nel rapporto le voci che «verranno
-  usate» (porte chiare, gemme, `pozione-nera/viola`, `cripta-forziere/lampadario`).
+  `ninfea`, `ossa_mucchio`, torrioni, casse del tesoro).
+- **Lo stesso giorno, in sera, quello che restava si è messo in gioco o tolto** (voci dell'atlante e figure della roba: 0 e 0): arredo di cantine, cripta e
+  fornace dai fogli dipinti ([arredo.md](../sotterraneo/arredo.md)), forzieri per ambientazione e gemme colorate ([roba.md](../sotterraneo/roba.md)), il portone
+  nero col teschio d'oro e la porta chiara ([piani.md](../sotterraneo/piani.md#le-porte)), dieci bastoni raddrizzati con `ruota`, le pose di morte dei mostri
+  ([creature.md](creature.md)). **Tolti**: le porte e i fianchi d'oro, `pozione-nera` e `pozione-viola`, le monete grosse e il mucchio (sostituiti dalle gemme), i due
+  teschi di porta di prima, la `cassa` di decoro, l'occhio dentato, e sei figure della roba che nessun pezzo può avere (balestre `arco-08/09/10`, arco con la lama, frusta,
+  mazza). Restano nei PNG, che non si toccano: le sfere di cristallo di `scudi.png` (la viola è la curiosità, le altre quattro non hanno un ruolo che non si confonda con lei),
+  l'arredo di `bottino-e-arredo.png` che sembra un contenitore, gli stendardi a palo, il pozzo, la statua dello stregone col cappello.
 - **`--pixel`** (`strumenti/sprite/non-ritagliato.py`): per ogni foglio con un foglietto toglie i rettangoli
   dal primo piano (alfa, fondo dichiarato, o il colore degli angoli; bianco e scacchiera dipinta riconosciuti)
   e raggruppa il resto in macchie: figure dipinte mai ritagliate. I fogli di scena (`sotterraneo_N`) ne
