@@ -18,19 +18,19 @@
     1
   ],
   "sprite": {
-    "armaiolo-fermo-0": {"da": [42, 110], "cella": [202, 248], "misura": [18, 21], "buchi": true},
-    "armaiolo-saluta-0": {"da": [264, 110], "cella": [202, 248], "misura": [18, 21], "buchi": true},
-    "erborista-fermo-0": {"da": [529, 102], "cella": [198, 260], "misura": [18, 22], "buchi": true},
-    "erborista-saluta-0": {"da": [779, 102], "cella": [198, 260], "misura": [18, 22], "buchi": true},
-    "rigattiere-fermo-0": {"da": [34, 444], "cella": [210, 264], "misura": [18, 23], "buchi": true},
-    "rigattiere-saluta-0": {"da": [265, 444], "cella": [210, 264], "misura": [18, 23], "buchi": true},
-    "mugnaio-fermo-0": {"da": [530, 449], "cella": [208, 259], "misura": [18, 22], "buchi": true},
-    "mugnaio-saluta-0": {"da": [778, 449], "cella": [208, 259], "misura": [18, 22], "buchi": true},
-    "eremita-fermo-0": {"da": [27, 803], "cella": [212, 268], "misura": [18, 23], "buchi": true},
-    "eremita-saluta-0": {"da": [264, 803], "cella": [212, 268], "misura": [18, 23], "buchi": true},
-    "guardia-fermo-0": {"da": [496, 768], "cella": [226, 305], "misura": [20, 26], "buchi": true},
-    "guardia-saluta-0": {"da": [741, 768], "cella": [226, 305], "misura": [20, 26], "buchi": true},
-    "pescatore-fermo-0": {"da": [29, 1170], "cella": [188, 269], "misura": [16, 23], "buchi": {"tolleranza": 90}},
-    "pescatore-saluta-0": {"da": [274, 1169], "cella": [188, 269], "misura": [16, 23], "buchi": {"tolleranza": 90}}
+    "armaiolo-fermo-0": {"da": [42, 110], "cella": [202, 248], "misura": [13, 15], "buchi": true},
+    "armaiolo-saluta-0": {"da": [264, 110], "cella": [202, 248], "misura": [13, 15], "buchi": true},
+    "erborista-fermo-0": {"da": [529, 102], "cella": [198, 260], "misura": [13, 15], "buchi": true},
+    "erborista-saluta-0": {"da": [779, 102], "cella": [198, 260], "misura": [13, 15], "buchi": true},
+    "rigattiere-fermo-0": {"da": [34, 444], "cella": [210, 264], "misura": [13, 16], "buchi": true},
+    "rigattiere-saluta-0": {"da": [265, 444], "cella": [210, 264], "misura": [13, 16], "buchi": true},
+    "mugnaio-fermo-0": {"da": [530, 449], "cella": [208, 259], "misura": [13, 15], "buchi": true},
+    "mugnaio-saluta-0": {"da": [778, 449], "cella": [208, 259], "misura": [13, 15], "buchi": true},
+    "eremita-fermo-0": {"da": [27, 803], "cella": [212, 268], "misura": [13, 16], "buchi": true},
+    "eremita-saluta-0": {"da": [264, 803], "cella": [212, 268], "misura": [13, 16], "buchi": true},
+    "guardia-fermo-0": {"da": [496, 768], "cella": [226, 305], "misura": [14, 18], "buchi": true},
+    "guardia-saluta-0": {"da": [741, 768], "cella": [226, 305], "misura": [14, 18], "buchi": true},
+    "pescatore-fermo-0": {"da": [29, 1170], "cella": [188, 269], "misura": [11, 16], "buchi": {"tolleranza": 90}},
+    "pescatore-saluta-0": {"da": [274, 1169], "cella": [188, 269], "misura": [11, 16], "buchi": {"tolleranza": 90}}
   }
 }

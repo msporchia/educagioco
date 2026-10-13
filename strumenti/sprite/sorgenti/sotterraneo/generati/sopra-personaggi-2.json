@@ -18,11 +18,11 @@
     1
   ],
   "sprite": {
-    "minatore-fermo-0": {"da": [172, 112], "cella": [304, 328], "misura": [20, 22], "buchi": true},
-    "minatore-saluta-0": {"da": [548, 112], "cella": [304, 328], "misura": [20, 22], "buchi": true},
-    "ragazza-fermo-0": {"da": [190, 559], "cella": [268, 360], "misura": [18, 24], "buchi": true},
-    "ragazza-saluta-0": {"da": [573, 559], "cella": [268, 360], "misura": [18, 24], "buchi": true},
-    "boscaiolo-fermo-0": {"da": [154, 1022], "cella": [330, 392], "misura": [22, 26], "buchi": true},
-    "boscaiolo-saluta-0": {"da": [536, 1022], "cella": [330, 392], "misura": [22, 26], "buchi": true}
+    "minatore-fermo-0": {"da": [172, 112], "cella": [304, 328], "misura": [14, 15], "buchi": true},
+    "minatore-saluta-0": {"da": [548, 112], "cella": [304, 328], "misura": [14, 15], "buchi": true},
+    "ragazza-fermo-0": {"da": [190, 559], "cella": [268, 360], "misura": [13, 17], "buchi": true},
+    "ragazza-saluta-0": {"da": [573, 559], "cella": [268, 360], "misura": [13, 17], "buchi": true},
+    "boscaiolo-fermo-0": {"da": [154, 1022], "cella": [330, 392], "misura": [15, 18], "buchi": true},
+    "boscaiolo-saluta-0": {"da": [536, 1022], "cella": [330, 392], "misura": [15, 18], "buchi": true}
   }
 }
