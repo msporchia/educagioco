@@ -126,7 +126,7 @@ dell'indirizzo): si usano dal browser.
 | `#stagione=natale` | la fattoria a Natale (o `halloween`) fuori stagione |
 | `#eroe=mago&giu=3` | il sotterraneo con quell'eroe, già giù in quella discesa (l'indice della storia, o `abisso`): con gli altri cheat qui sotto una schermata si guarda senza camminare (`node strumenti/scatta-app.mjs 'sotterraneo=branco&mostri=6&eroe=mago&giu=1' --dist`) |
 | `#sotterraneo=roba` | si scende equipaggiati |
-| `#sotterraneo=branco&mostri=6` | si scende e si apre subito uno scontro con quei mostri attorno (`&grosso=ossuto`, `&agguato=1`, `&sorpresa=1`, `&tipo=goblin`) |
+| `#sotterraneo=branco&mostri=6` | si scende e si apre subito uno scontro con quei mostri attorno (`&grosso=ossuto`, `&agguato=1`, `&sorpresa=1`, `&tipo=goblin`; `&tipo=scheletro,zombie` a giro; `&variante=guerriero,arciere,mago,semplice&grado=comune,magico,raro,leggendario` scelgono le varianti armate e i gradi, a giro ([../sotterraneo/varianti.md](../sotterraneo/varianti.md)); `&campo=1` li lascia addormentati sul campo a due o tre caselle, senza scontro, e `&campo=sveglio` li fa venire; con `&stanza=sala&seme=11` una stanza con luce) |
 | `#abisso=12` | l'abisso da quel piano |
 | `#seme=812` | il sotterraneo con quel seme, per rivedere una discesa |
 | `#stanza=sala` | il sotterraneo comincia al centro della prima stanza di quella forma (`sala`, `elle`, `tu`, `croce`, `doppia`, `caverna`) o di quel ruolo (`anticamera`, `uscita`, `tesoro`…); con `#piano=` e `#seme=` per guardare un piano ([../sotterraneo/piani.md](../sotterraneo/piani.md)) |

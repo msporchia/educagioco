@@ -14,21 +14,27 @@ nello scontro e nella barra in cima).
 
 ## Chi sono
 
-| discesa | mostro grosso | com'è (da dipingere) | sprite di ripiego | lascia |
+| discesa | mostro grosso | la creatura che veste | conta come | lascia |
 |---|---|---|---|---|
-| la cripta dell'altare | Re Ossuto | il re scheletro col mantello e la corona | `scheletro` | il Ciondolo di Re Ossuto (difesa, vita) |
-| la scalinata antica | Grumo | l'orco con la mazza alzata | `orco` | la Mazza di Grumo (vita, rigenera) |
-| la torre in rovina | Fiammetta | la melma di fuoco | `troll` | lo Scudo di Fiammetta (difesa, torcia, vita) |
-| la grotta della scaletta | Zannaverde | il ragno con otto occhi | `orco` | l'Anello di Zannaverde (schivata, fortuna) |
-| la scala sommersa | Gorgo | la melma d'acqua nera | `mostro-grosso` (il gigante) | l'Amuleto di Gorgo (rigenera, vita, pozioni) |
-| la botola segreta | Minotto | il bruto con le corna | `troll` | il Giubbone di Minotto (difesa, vita, rigenera) |
-| la miniera abbandonata | Carbonchio | il re scheletro di brace | `mostro-grosso` (il gigante) | il Martello di Carbonchio (attacco, fuoco) |
+| la cripta dell'altare | Re Ossuto | il negromante (il re scheletro col bastone) | scheletro | il Ciondolo di Re Ossuto (difesa, vita) |
+| la scalinata antica | Grumo | l'orco con la mazza | orco | la Mazza di Grumo (vita, rigenera) |
+| la torre in rovina | Fiammetta | lo spirito di fuoco | troll | lo Scudo di Fiammetta (difesa, torcia, vita) |
+| la grotta della scaletta | Zannaverde | il ragno | orco | l'Anello di Zannaverde (schivata, fortuna) |
+| la scala sommersa | Gorgo | il polpo | gigante | l'Amuleto di Gorgo (rigenera, vita, pozioni) |
+| la botola segreta | Minotto | la bestia cornuta | troll | il Giubbone di Minotto (difesa, vita, rigenera) |
+| la miniera abbandonata | Carbonchio | il drago di lava | gigante | il Martello di Carbonchio (attacco, fuoco) |
 
-- **Si regge su un mostro del bestiario** (`tipo`: lo scheletro, l'orco, il
-  troll, il gigante) con le ossa moltiplicate (`ossa`: da 1,1 a 1,3, e 1,9 e 1,95 per Grumo e Zannaverde, che si reggono sull'orco: da quando le specie di
-  strada hanno tutte otto ossa l'orco ne ha 8 e non 12, e il grosso è rimasto com'era) e un
-  colpo in più (`att`, Re Ossuto no); poi la discesa lo cresce come gli altri
-  (`forza`, `spinta`). Re Ossuto è il più tenero: la cripta perdona.
+- **La creatura giusta** (12 ottobre 2026, l'utente: «Zannaverde il ragno, Carbonchio il drago di lava, Minotto la bestia cornuta, Gorgo il
+  polpo, Fiammetta lo spirito di fuoco, Grumo l'orco, Re Ossuto lo scheletro, ingranditi con la corona»). `figura` in `dati/grossi.js` dice quale
+  creatura del catalogo comune veste ([../core/creature.md](../core/creature.md)); senza, quella di `tipo`. **Re Ossuto è il negromante**: uno scheletro
+  col cappuccio, il bastone e (ingrandito) la corona è un re più di uno scheletro grande, e nella cripta lo scheletro è già l'abitante. Il ragno e il polpo
+  stanno anche fra gli abitanti del loro posto ([mostri.md](mostri.md)): il grosso è la stessa creatura, grande.
+- **Le statistiche non cambiano**: `tipo` resta la base (il troll di Fiammetta e di Minotto, il gigante di Gorgo e di Carbonchio, l'orco di Grumo e
+  Zannaverde, lo scheletro di Re Ossuto) con le ossa moltiplicate (`ossa`: da 1,1 a 1,3, e 1,9 e 1,95 per Grumo e Zannaverde, che si reggono sull'orco: da
+  quando le specie di strada hanno tutte otto ossa l'orco ne ha 8 e non 12, e il grosso è rimasto com'era) e un colpo in più (`att`, Re Ossuto no; Grumo e
+  Zannaverde +3, perché l'orco da caporale della scalinata picchia meno di prima e il grosso è rimasto com'era); poi la discesa lo cresce come gli altri
+  (`forza`, `spinta`). Re Ossuto è il più tenero: la cripta perdona. Il troll e il gigante non si disegnano più (solo statistiche): il troll è uscito
+  dall'atlante del sotterraneo.
 - **I suoi pezzi non hanno famiglia**: li porta chiunque, perché il mostro
   grosso è di tutti e quattro gli eroi. La mazza e il martello sono armi
   nuove senza famiglia (`deiGrossi` in `dati/cose.js`), che non si vendono e
@@ -62,20 +68,15 @@ nello scontro e nella barra in cima).
 
 ## Come si vede
 
-- **Lo sprite della sua specie, ingrandito, con la corona** (`figuraDelGrosso`
-  in `dati/grossi.js`; l'utente, 12 ottobre 2026: i boss li fa dipingere
-  ChatGPT, perché lo stile resti lo stesso del bestiario, e finché non ci sono
-  si prende uno sprite che c'è già, ingrandito e con la corona). `tipo` dice
-  quale: lo sprite `fermo`/`corsa` di quella specie a coprire due caselle di
-  altezza (almeno ×1,3: un gigante già alto non resterebbe com'è), la corona
-  👑 sopra la testa (quella del bersaglio di una missione, più grande) e un
-  chiarore della sua `tinta` dietro, che distingue Re Ossuto da Carbonchio.
-  Sulla tela respira (più svelto da sveglio), guarda verso l'eroe, ha l'alone
-  rosso più largo, il nome sopra la corona quando è in luce, la chiave, il sonno
-  e la barretta come gli altri; nello scontro e in cima è lo stesso sprite, a
-  scala intera, con la stessa corona (`viste/Grosso.vue`). La figura
-  disegnata in codice (`scena/grossi.js`, 32×32) è stata tolta: non serve più,
-  e un boss dipinto da chi non è il modello avrebbe cambiato stile.
+- **Lo sprite della creatura che veste, ingrandito, con la corona** (`figuraDelGrosso` in `dati/grossi.js`; l'utente, 12 ottobre 2026: i boss li fa
+  dipingere ChatGPT, perché lo stile resti lo stesso del bestiario, e finché non ci sono si prende uno sprite che c'è già, ingrandito e con la corona).
+  Lo sprite `fermo`/`corsa` di quella creatura a coprire due caselle di altezza (almeno ×1,3: un gigante già alto non resterebbe com'è), la corona
+  👑 sopra la testa (quella del bersaglio di una missione, più grande) e un chiarore della sua `tinta` dietro, che distingue Re Ossuto da Carbonchio.
+  Sulla tela respira (più svelto da sveglio) e, se la creatura ha i passi (il ragno, l'orco), **cammina da sveglia**; guarda verso l'eroe, ha l'alone
+  rosso più largo, il nome sopra la corona quando è in luce, la chiave, il sonno e la barretta come gli altri. **Nello scontro** (`viste/Grosso.vue`)
+  è la posa di lato ferma per chi ha i passi (il ragno, l'orco, specchiati verso l'eroe), il respiro per gli altri, a scala intera, con la stessa
+  corona. La figura disegnata in codice (`scena/grossi.js`, 32×32) è stata tolta: non serve più, e un boss dipinto da chi non è il modello
+  avrebbe cambiato stile.
 - **L'immagine dipinta prende il posto da sola**: se l'atlante ha
   `grosso-<chiave>-fermo-0` (come `armaiolo-fermo-0` per i mercanti) si usa
   quella, a misura vera (32×32), senza corona né ingrandimento; se no il
@@ -104,7 +105,7 @@ nello scontro e nella barra in cima).
 Nei test: `unita/sotterraneo-rarita` (in fondo a ogni discesa il suo mostro
 grosso, nella stanza della scala, con la chiave e il nome, più grosso del
 suo simile; battuto lascia il suo pezzo e un raro o meglio; nell'abisso ogni
-cinque piani; la figura è lo sprite della sua specie ingrandito a due caselle,
+cinque piani; la figura è la creatura che veste, ingrandita a due caselle,
 o la chiave d'atlante dipinta se c'è, e ogni tinta è un colore),
 `unita/sotterraneo-storia` (in fondo alla discesa la chiave ce l'ha il
 grosso), `integrazione/sotterraneo-eroe` (col dito: Re Ossuto con la sua

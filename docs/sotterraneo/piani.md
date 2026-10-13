@@ -90,7 +90,7 @@ essere in un pezzo solo (`connessa`).
   scontro a gruppi rende interessante».
 - **Un branco sta in una stanza, tutto entro due celle da un'ancora** (fra
   due mostri al più quattro celle: lo scontro prende chi sta a 4,5 celle, il
-  branco ci sta sempre dentro) e della coppia della discesa (`tipiPer`,
+  branco ci sta sempre dentro) e degli abitanti della discesa (`tipiPer`,
   [mostri.md](mostri.md)). Nelle sale (il 70% dei mostri) da due a cinque; in alcune discese i branchi sono più piccoli
   (`tettoBranco` della discesa: la scalinata al più tre, la miniera due), o un incontro
   sarebbe troppo. Le stanze piccole ne hanno uno o due, e molte
@@ -99,7 +99,7 @@ essere in un pezzo solo (`connessa`).
   da due lati) o dietro una colonna, dalla parte lontana dalle porte, a
   quattro celle da ogni altro mostro. `m.appostato` dice 'angolo' o
   'colonna'. Sono loro che faranno gli agguati con la luce a cono.
-- **La stanza del tesoro ha un'unica guardia**, della specie più dura della coppia; quella della scala
+- **La stanza del tesoro ha un'unica guardia**, la più dura degli abitanti del posto (colpo per velocità); quella della scala
   nei piani col grosso non ha mostri di strada (il grosso è già un branco).
 - **L'anticamera** (`anticameraDi`): nel piano col mostro grosso la stanza
   *subito prima* sulla strada più corta dall'ingresso alla scala (mai
@@ -107,8 +107,8 @@ essere in un pezzo solo (`connessa`).
   stanza di strada: si sceglie prima del premio, che la prenderebbe.
 - **I caporali** (`mettiICaporali`): **due, tre se l'anticamera è una sala in
   un piano da otto stanze in su**, nel mezzo della stanza, vicini fra loro. La
-  specie è una delle due della coppia della discesa, con le ossa ×1,25 e un
-  colpo in più (`CAPORALE`); il nome diventa «<mostro> caporale»
+  specie è il caporale del posto (`caporale` della discesa), con le ossa ×1,25 e un
+  colpo in più (`CAPORALE`) e un grado che non è mai comune ([varianti.md](varianti.md)); il nome diventa «<mostro> caporale»
   (`m.caporale`). Si vedono dai **galloni**: due V d'oro sopra la testa e un
   anello d'oro ai piedi, disegnati in codice (`Tela.galloni`). Niente emoji:
   il sotterraneo è un gioco serio.
@@ -116,7 +116,7 @@ essere in un pezzo solo (`connessa`).
   eroe nudo che scende all'abisso già si ferma al grosso del quinto piano, e
   coi caporali tre semi su otto si fermavano lì contro uno (e il piano costava
   oltre i 30 del tetto per piano di `unita/sotterraneo-abisso`).
-- **Il guardiano della chiave è un caporale** (`faiCaporale`): la specie più dura della coppia, con i galloni, accanto alla
+- **Il guardiano della chiave è un caporale** (`faiCaporale`): il caporale del posto, con i galloni, accanto alla
   scala; nei piani col grosso c'è il grosso.
 - **Mai più di cinque in un branco, più l'appostato**: lo scontro nuovo ne
   prende al più sei, e il grosso vale due posti.

@@ -66,7 +66,7 @@ Il codice: `motore/scontro.js` (i metodi dello scontro, attaccati a `Corsa`),
   | 5 | golem |
 
   L'eroe parte **più veloce della media dei mostri** (l'utente: «l'eroe è alto
-  come iniziativa»). Le velocità sono la **forma** di una specie: colpo per velocità circa uguale dentro la coppia di una discesa
+  come iniziativa»). Le velocità sono la **forma** di una specie: colpo per velocità circa uguale dentro gli abitanti di una discesa
   ([mostri.md](mostri.md)), così il ratto veloce e la melma lenta fanno più o meno lo stesso male nel tempo.
 - **Una fila di turni alla Final Fantasy X** (`motore/turni.js`): ogni azione
   fa aspettare `100 / velocita`, agisce chi ha aspettato di meno, a parità

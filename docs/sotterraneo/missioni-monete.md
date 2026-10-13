@@ -16,11 +16,13 @@ le domande che la missione chiede in più**, non di più.
 
 | missione | colpi del mostro col nome | colpi di uno comune | in più | 🪙 |
 |---|---|---|---|---|
-| Dama Grigia (fantasma) | 4 · 3 · 2 · 4 | 2 · 2 · 2 · 2 | 1,25 | 1 |
-| Rosicchione (ratto) | 3 · 3 · 2 · 3 | 1 · 1 · 1 · 1 | 1,75 | 2 |
-| Grattanaso (goblin) | 3 · 2 · 2 · 3 | 1 · 1 · 1 · 1 | 1,5 | 2 |
-| Chela (granchio) | 7 · 5 · 5 · 7 | 6 · 4 · 4 · 6 | 1,0 | 1 |
-| Zannagrigia (lupo) | 11 · 8 · 8 · 11 | 9 · 7 · 7 · 9 | 1,5 | 2 |
+| Dama Grigia (fantasma) | 3 · 2 · 2 · 3 | 2 · 2 · 1 · 2 | 0,75 | 1 |
+| Rosicchione (pipistrello) | 3 · 2 · 2 · 3 | 2 · 2 · 2 · 2 | 0,5 | 1 |
+| Grattanaso (diavoletto) | 2 · 2 · 2 · 2 | 2 · 2 · 1 · 2 | 0,25 | 0 |
+| Chela (granchio) | 4 · 3 · 3 · 4 | 3 · 2 · 2 · 3 | 1,0 | 1 |
+| Zannagrigia (lupo) | 4 · 3 · 3 · 4 | 3 · 3 · 3 · 3 | 0,5 | 1 |
+
+(Rifatta il 12 ottobre con gli abitanti per ambientazione: Rosicchione è un pipistrello e Grattanaso un diavoletto, le ossa dei mostri sono tutte otto.)
 
 (cavaliere · elfa · mago · nano, con la roba e il livello attesi;
 `unita/sotterraneo-missioni` rifà il conto e fallisce se `premio.monete` non

@@ -171,3 +171,34 @@ si è cambiato il bersaglio e si è scritto perché (`misure/sotterraneo` e le u
   del villaggio non sono stati toccati; se il banco di sopra diventa troppo comodo è lì.
 - **Il veleno dell'elfa e i rami con un'arma** (Lama, Arco, Ascia, Balestra, Gelo) non sono nella strada del banco: non misurati.
 - **Nessun bambino ha giocato i numeri nuovi**: i colori delle zone, quanti svenimenti sono troppi, la scalinata a mani nude.
+
+## Gli abitanti per ambientazione (12 ottobre, sera)
+
+Il bestiario è passato da due specie per discesa a da due a quattro più un caporale ([mostri.md](mostri.md#gli-abitanti-12-ottobre-2026), [varianti.md](varianti.md)).
+Misurato col banco (venti semi, quattro eroi, discese vinte): **prima → dopo**, nell'ordine cripta, scalinata, torre, grotta, sommersa, botola, miniera.
+
+| | prima | dopo |
+|---|---|---|
+| attesa, 8/10 | 100 · 98 · 96 · 95 · 95 · 90 · 94 (media 95) | 99 · 96 · 95 · 99 · 95 · 96 · 84 (95) |
+| attesa, 6/10 | 96 · 89 · 64 · 76 · 73 · 54 · 69 (74) | 91 · 84 · 74 · 76 · 68 · 54 · 74 (74) |
+| attesa, 4/10 | 76 · 38 · 20 · 25 · 26 · 13 · 23 (32) | 73 · 36 · 23 · 18 · 29 · 11 · 19 (30) |
+
+Cosa ha mosso i numeri, in ordine di peso:
+
+- **Il caporale, non gli abitanti.** Sostituire le specie di strada con altre di otto ossa e colpo per velocità simile non muoveva niente (provato togliendo le
+  paure e il goblin dalla scalinata: stesse cifre); mettere un caporale nuovo al posto di chi guardava la chiave sì, di venti punti: il golem di magma
+  (colpo 5, velocità 6) portava la torre a sei su dieci da 64 a 86, l'orco da caporale (colpo 4, velocità 8) la scalinata da 89 a 78. Ogni caporale è stato
+  tarato col banco (colpo per velocità fino a 48): golem di magma 6 · 7, orco 3 · 7 (e Grumo e Zannaverde, che si reggono su di lui, +3 di colpo invece di +1: il
+  grosso è rimasto com'era), mostro di muschio 6 · 7, tartaruga 5 · 7, golem di muschio 6 · 8, scheletro cavaliere 4 · 8.
+- **Il bottino dei caporali.** Sono tanti per anticamera e lasciano roba: con quella di una fascia a parte (lo scudo di ferro del golem) la roba giocata davvero e le
+  gemme del villaggio salivano e «premendo a caso no» diventava una passeggiata. Ogni caporale ha il bottino di chi guardava la chiave prima.
+- **Gradi e varianti**: non toccano ossa e difesa; alzano un punto di velocità a raro e leggendario e il premio in gemme ed esperienza (×1,3 · 1,7 · 2,5). Con i
+  gradi che escono più spesso (le zone alte) un punto di velocità sui rari è una frazione del banco: non misurato a parte.
+
+**Il banco con `--verifica`**: da 11 bersagli mancati prima a 8 dopo. Restano quelli che già non tornavano (la scalinata a mani nude, i livelli +3 a quattro su dieci
+alla scalinata, torre e grotta); due nuovi: la sommersa a quattro su dieci in media 38% (bersaglio ≤ 30%: sei punti, dentro il rumore di venti semi) e la miniera
+dell'elfa a otto su dieci con la roba attesa (7/20); la miniera a 8/10 passa da 94 a 84 in media. Da riguardare con altri semi, non rincorsi uno per uno.
+
+**I test a un seme solo** (`unita/sotterraneo`, `unita/sotterraneo-roba`, `unita/sotterraneo-abisso`) misurano un campione: il minimo di domande della scalinata ora ammette 5, «premendo a
+caso no» usa la roba attesa e non quella giocata (che a un seme su tre è un'arma rara e già prima, al seme 2, faceva vincere 4 su 8), e il costo dei piani dell'abisso
+si guarda sul seme 203 (media dei piani invariata; con le specie nuove il seme 41 dava un piano da 37, e già prima alcuni semi sforavano i 30).
