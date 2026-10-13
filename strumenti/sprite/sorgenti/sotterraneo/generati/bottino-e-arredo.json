@@ -72,7 +72,7 @@
     "anello-del-tesoriere": { "da": [176, 134], "cella": [13, 19], "buchi": true },
     "mazza-di-grumo": { "da": [61, 105], "cella": [13, 23] },
     "anello-di-zannaverde": { "da": [137, 133], "cella": [13, 20], "buchi": true },
-    "martello-di-carbonchio": { "da": [138, 159], "cella": [11, 22] },
+    "martello-di-carbonchio": { "da": [62, 134], "cella": [8, 19] },
     "__aspetti": "generato da strumenti/sprite/roba.py --gioco dal catalogo roba.json: non si tocca a mano",
     "spada-19": { "da": [30, 14], "cella": [9, 22] },
     "spada-20": { "da": [45, 15], "cella": [8, 21] },
