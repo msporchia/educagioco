@@ -125,7 +125,7 @@ export const DIF_DELLA_ZONA = [0.92, 1]
 export const CURVA_DELLE_ZONE = { forzaA12: 2.2, forzaPerLivello: 0.15, spintaA12: 9.5, spintaPerLivello: 1.3 }
 // a pari livello le zone non vengono uguali: la cripta ha piani di quattro stanze e pochi mostri prima della chiave,
 // la botola sedici. Questo numero corregge la forza zona per zona (1 di difetto), misurato col banco
-export const FORMA_DELLA_ZONA = { altare: 1.7, cantine: 1, torre: 0.9, gallerie: 1.4, cisterna: 1.2, labirinto: 0.85, fondo: 1.35 }
+export const FORMA_DELLA_ZONA = { altare: 1.7, cantine: 1, torre: 0.9, gallerie: 1.4, cisterna: 1.2, labirinto: 0.85, fondo: 1.2 }
 
 export const forzaDellaZona = (L, chiave) =>
   Math.round(Math.max(1, CURVA_DELLE_ZONE.forzaA12 + CURVA_DELLE_ZONE.forzaPerLivello * (L - 12)) * (FORMA_DELLA_ZONA[chiave] || 1) * 100) / 100

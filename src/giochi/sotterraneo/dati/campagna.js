@@ -38,7 +38,7 @@ export const CAMPAGNA = [
     scenario: 'cantine', pianta: 'caverna',
     portata: 43,
     dritta: 'piani piccoli, uno sotto l\'altro, sempre più giù',
-    piani: 5, misura: 28, giri: 2, dif: [0.28, 0.54], forza: 0.8, spinta: 6, livello: 5,
+    piani: 5, misura: 28, giri: 2, dif: [0.28, 0.54], forza: 0.8, spinta: 5.8, livello: 5,
     mostri: ['ragno', 'fungo', 'pianta', 'melma-rosa'], caporale: 'mostro-verde', tettoBranco: 4, capo: 'orco' },
 
   // lunga e stretta: un canale sott'acqua
@@ -46,7 +46,7 @@ export const CAMPAGNA = [
     scenario: 'cripta', pianta: 'caverna', acqua: true,
     portata: 50,
     dritta: 'lunga e stretta, e in fondo gorgoglia qualcosa',
-    piani: 3, misura: 40, largo: 64, alto: 24, giri: 3, dif: [0.36, 0.66], forza: 1.1, spinta: 7.5, livello: 6,
+    piani: 3, misura: 40, largo: 64, alto: 24, giri: 3, dif: [0.36, 0.66], forza: 1.1, spinta: 7, livello: 6,
     mostri: ['granchio', 'piranha', 'polpo', 'fantasma-azzurro'], caporale: 'tartaruga', tettoBranco: 4, capo: 'gigante' },
 
   { chiave: 'labirinto', nome: 'La botola segreta', icona: '🌀', dove: 'sotto la botola',
@@ -104,7 +104,7 @@ export const L_ABISSO = {
   // la difesa dell'eroe ha un tetto (l'attacco dei mostri no): lasciando crescere il piano e basta ci si
   // ferma sempre fra il settimo e l'undicesimo, perché i mostri fanno troppo male (misurato dal banco)
   attOgni: 3,
-  forza: 2.2, spinta: 9.5, ossaPerPiano: 0.12,   // misurati col banco (docs/sotterraneo/abisso.md): chi parte nudo regge tre piani, e poi i mostri crescono più dell'eroe
+  forza: 2.2, spinta: 9, ossaPerPiano: 0.12,   // misurati col banco (docs/sotterraneo/abisso.md): chi parte nudo regge tre piani, e poi i mostri crescono più dell'eroe
   // niente `portata`: il cancello non è l'età ma "hai finito le sei discese", dimostrato invece che stimato
 }
 
