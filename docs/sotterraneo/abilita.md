@@ -126,7 +126,7 @@ La forza conta solo le abilità che l'energia di partenza tipica paga ([forza.md
   per 3 turni»), poi **«Bevi una pozione»** e **«Scappa via»** col loro prezzo. Un tocco sceglie e va avanti; per i primi 320 ms il
   tocco non conta (il click lasciato dalla risposta). Un'abilità senza energia o senz'arma resta grigia e dice cosa manca («ti manca energia», «ti serve più energia», «ci vuole un arco»). Sopra la
   domanda resta la riga della scelta fatta. Chi non ha abilità vede comunque Attacco, bere e scappare. L'energia non si ripete:
-  la dice il globo blu.
+  la dice il globo blu (che apre la scheda Abilità).
 - **Come si vede** ([scontro-interfaccia.md](scontro-interfaccia.md)): i mostri in campo sul fondale vero, ognuno con la sua barra
   senza numeri (il brivido di non sapere quanto resiste), il bersaglio con l'anello d'oro e chi verrà colpito col contorno; un'abilità
   fa volare il suo glifo, del colore del suo ramo, verso ognuno dei colpiti; gli effetti che durano stanno addosso al mostro come
@@ -183,8 +183,8 @@ l'intelligenza. Le regole, il perché e le parole dell'utente (12 ottobre 2026):
 La barra cambia così ([barra.md](barra.md)): l'esperienza diventa una riga
 sopra le caselle col livello a sinistra (il tasto della pagina dell'eroe), e
 il globo di destra è l'energia, blu. Il globo è un tasto: apre l'albero, e
-porta il «+» d'oro quando ci sono punti da imparare (giù, se l'eroe sa qualche incantesimo da preparare apre prima la loro scelta, con l'albero a un tocco: [orologio.md](orologio.md#come-si-vede-e-come-si-lancia)). L'albero è una delle
-tre schede della finestra dell'eroe, con lo Zaino e l'Eroe
+porta il «+» d'oro quando ci sono punti da imparare (gli incantesimi da preparare hanno la loro casella nella barra: [orologio.md](orologio.md#come-si-vede-e-come-si-lancia)). L'albero è una delle
+quattro schede della finestra dell'eroe, con lo Zaino, l'Eroe e le Missioni
 ([barra.md](barra.md#la-finestra-delleroe)).
 
 Nella pagina dell'albero, che è epica e non una tabella (l'utente): in cima

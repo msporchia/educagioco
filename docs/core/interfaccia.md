@@ -40,7 +40,7 @@ niente.
   anche la sua cosa**: sul campo l'eroe parte verso dove si è toccato, su
   qualcuno della mappa ci va. Giù: la battuta della curiosità, le scale che scendono e salgono, il
   portale, la scala chiusa, l'avviso («💎 +9», «🔥 spenta»), la mappa grande,
-  lo zaino, il diario. Sopra: il fumetto, il dialogo (che chiude anche toccando un altro personaggio), il diario, la bottega, l'avviso in
+  lo zaino, la finestra dell'eroe (diario compreso). Sopra: il fumetto, il dialogo (che chiude anche toccando un altro personaggio), la finestra dell'eroe (diario compreso), la bottega, l'avviso in
   fondo. La ✕ resta dov'è.
 - **Resta fermo solo quello che chiede una scelta senza cui non si va
   avanti**: una domanda in corso (porta, forziere, fonte, curiosità prima

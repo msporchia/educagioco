@@ -70,7 +70,7 @@ const segni = () => page.locator('[data-personaggio][data-segno]').evaluateAll(
 /* ---------- 1. il villaggio: due «!» e un «?» ---------- */
 uguale('sul villaggio: la guardia e la ragazza hanno un favore, il mugnaio aspetta che gli porti Rosicchione', await segni(), 'guardia:nuova,mugnaio:consegna,ragazza:nuova')
 uguale('l\'eremita no: la sua Dama Grigia aspetta che si liberi un posto (il tetto è tre)', await page.locator('[data-personaggio="eremita"]').getAttribute('data-segno'), null)
-uguale('il tasto del diario conta le aperte: una in mano e due offerte', await page.locator('[data-diario-n]').innerText(), '3')
+uguale('il globo rosso dice che c\'è una missione da consegnare', await page.locator('[data-azione="vita"]').getAttribute('data-missioni-pronte'), '1')
 await scatto(page, 'missioni-villaggio')
 
 /* ---------- 1b. chi aspetta ed è lontano: l'indicatore sul bordo ---------- */
@@ -139,7 +139,10 @@ uguale('tutte insieme: Rosicchione fatta, il goblin e le chiavi prese', JSON.str
 uguale('adesso tre punti di domanda e nessun «!»: solo il mugnaio ha quello d\'oro', await segni(), 'guardia:attesa,mugnaio:consegna,ragazza:attesa')
 
 /* ---------- 3. il diario ---------- */
-await toccaIl('[data-azione="diario"]')
+await toccaIl('[data-azione="vita"]')
+await page.waitForSelector('[data-pagina-eroe]', { timeout: 5000 })
+uguale('la linguetta delle missioni porta lo stesso numero', await page.locator('[data-scheda="missioni"] [data-missioni-pronte]').innerText(), '1')
+await toccaIl('[data-scheda="missioni"]')
 await page.waitForSelector('[data-diario]', { timeout: 5000 })
 await attendi(page, 300)
 const righe = await page.locator('[data-diario] [data-sezione="da-consegnare"] li, [data-diario] [data-sezione="da-fare"] li').evaluateAll(
@@ -207,7 +210,7 @@ for (let n = 0; n < 6 && !(await page.locator('[data-riga][data-premio]').count(
 }
 controlla('e il mugnaio lo dice, monete comprese', (await page.locator('[data-riga][data-premio]').innerText()).includes(`🪙 ${ROSICCHIONE.premio.monete}`))
 uguale('consegnata una, si libera un posto: la Dama Grigia ha il suo «!»', await segni(), 'eremita:nuova,guardia:attesa,ragazza:attesa')
-uguale('il diario conta di nuovo le aperte: due in mano e una offerta', await page.locator('[data-diario-n]').innerText(), '3')
+uguale('consegnata, sul globo rosso non resta nessuna pastiglia', await page.locator('[data-azione="vita"]').getAttribute('data-missioni-pronte'), null)
 await scatto(page, 'missioni-fatta')
 
 uguale('nessun errore in console', errori.join(' · '), '')

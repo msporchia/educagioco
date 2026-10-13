@@ -2,7 +2,7 @@
    GLI INCANTI PREPARATI DAL CAMPO, COL DITO
 
    (docs/sotterraneo/orologio.md)
-   Giù, il globo blu apre la scelta degli incantesimi che si preparano (non l'albero); un tocco lancia lo Scudo arcano, paga l'energia, e
+   Giù, la casella degli incanti nella barra apre la scelta degli incantesimi che si preparano (il globo blu apre l'albero); un tocco lancia lo Scudo arcano, paga l'energia, e
    sopra il globo compare la pastiglia coi passi; un secondo tocco dice «ce l'hai già»; in fondo il tasto dell'albero lo apre, e il
    riquadro del nodo dice che si può preparare. Poi uno scontro aperto con l'incanto già addosso: la pastiglia sotto il palco coi
    passi, la barriera disegnata sull'eroe, il badge sul primo turno della fila.
@@ -55,16 +55,17 @@ async function entra(hash) {
 }
 const energia = () => page.locator('[data-globo="energia"] .sot-globo-numero').first().textContent().then(Number)
 
-/* ---------- 1. dal globo blu si sceglie e si lancia ---------- */
+/* ---------- 1. dalla casella degli incanti si sceglie e si lancia ---------- */
 {
   await entra('seme=11&sotterraneo=1')
   await page.waitForSelector('[data-barra-giu]', { timeout: 10000 })
   await attendi(page, 600)
   uguale('prima di lanciare niente è addosso', await page.locator('[data-incanti]').count(), 0)
   const piena = await energia()
-  await toccaIl('[data-barra-giu] [data-azione="abilita"]')
+  uguale('la casella sa quanti ne puoi preparare, e nessuno è addosso', await page.locator('[data-casella-barra="incanti"]').evaluate(e => `${e.dataset.n}/${e.dataset.preparabili}`), '0/1')
+  await toccaIl('[data-barra-giu] [data-azione="incanti"]')
   await page.waitForSelector('[data-preparati]', { timeout: 3000 })
-  uguale('il globo apre la scelta degli incantesimi, non l\'albero', await page.locator('[data-pagina-abilita]').count(), 0)
+  uguale('la casella apre la scelta degli incantesimi, non l\'albero', await page.locator('[data-pagina-abilita]').count(), 0)
   uguale('una riga per quello che si prepara (lo Scudo arcano, non la Fonte né il Dardo)', await page.locator('[data-azione="prepara-campo"]').evaluateAll(es => es.map(e => e.dataset.abilita).join()), 'scudo-arcano')
   await attendi(page, 500)   // i 320 ms ciechi
   await scatto(page, 'incanti-scelta')
@@ -75,11 +76,12 @@ const energia = () => page.locator('[data-globo="energia"] .sot-globo-numero').f
   await toccaIl('[data-preparati] [data-chiudi]')
   uguale('la ✕ chiude la scelta', await page.locator('[data-preparati]').count(), 0)
   uguale('sopra il globo c\'è la pastiglia dell\'incanto', await page.locator('[data-incanti] [data-incanto="scudo-arcano"]').count(), 1)
+  uguale('e la casella dice 1 addosso su 1', await page.locator('[data-casella-barra="incanti"]').evaluate(e => `${e.dataset.n}/${e.dataset.preparabili}`), '1/1')
   controlla('coi passi che restano', Number(await page.locator('[data-incanto="scudo-arcano"]').getAttribute('data-passi')) >= 30)
   await scatto(page, 'incanti-campo')
   // un secondo tocco: ce l'ha già, e l'energia non si muove
   const dopo = await energia()
-  await toccaIl('[data-barra-giu] [data-azione="abilita"]')
+  await toccaIl('[data-barra-giu] [data-incanti]')   // la pastiglia si tocca come la casella
   await page.waitForSelector('[data-preparati]', { timeout: 3000 })
   await attendi(page, 500)
   await toccaIl('[data-azione="prepara-campo"][data-abilita="scudo-arcano"]')
@@ -87,6 +89,7 @@ const energia = () => page.locator('[data-globo="energia"] .sot-globo-numero').f
   // l'albero è a un tocco, e il riquadro del nodo dice che si prepara
   await toccaIl('[data-azione="apri-albero"]')
   await page.waitForSelector('[data-pagina-abilita]', { timeout: 3000 })
+  uguale('l\'albero è la scheda Abilità della finestra dell\'eroe', await page.locator('[data-scheda][aria-selected="true"]').getAttribute('data-scheda'), 'abilita')
   await toccaIl('[data-azione="ramo"][data-ramo-scheda="arcano"]')   // un ramo alla volta
   await toccaIl('[data-azione="nodo"][data-nodo="scudo-arcano"]')
   uguale('nell\'albero lo Scudo arcano dice che si può preparare', await page.locator('[data-nodo-dettaglio] [data-preparabile]').count(), 1)
