@@ -150,3 +150,17 @@ il telefono in mano.
   che passa davanti a un relitto alto invece che dietro** quando gli sta a nord, e
   se le grotte (passaggi stretti, un solo varco per stanza) si leggono sul telefono
   ([piani-caverne.md](piani-caverne.md)).
+
+## Le strade e le caratteristiche (13 ottobre)
+
+Aperte dopo il lavoro di [strade.md](strade.md):
+
+- **La destrezza vale più delle altre.** Il banco la paga quanto la forza al cavaliere e di più al mago (a +5 livelli 69 contro
+  25–34 delle altre tre): la velocità nella fila dei turni (6 più uno e mezzo a punto) è una leva forte. Se è troppo, la
+  si ritocca in `VELOCITA_PER_DESTREZZA` (`motore/turni.js`) e le strade si rifanno con `--strada tutte --sintesi`.
+- **Le armi a una mano che mancano**: una bacchetta di secondo gradino (la strada «bacchetta» usa la verga fino alla grotta) e un
+  bastone di terzo (la «pura magia» tiene il bastone di secondo fino in fondo).
+- **La taratura dei mostri** dopo le armi a due mani: l'attacco a due mani è raddoppiato o più (3 · 6 · 9 contro 2 · 3 · 4), quindi
+  nano, elfa e arcieri colpiscono molto di più di quanto i branchi si aspettino; la difesa e la vita sono in [strade.md](strade.md#difesa-e-vita).
+- **Da guardare col dito**: la pagina dell'eroe con il «+» che dice la velocità (⚡), il bastone nel pannello («🔷 +50% ricarica») e che
+  l'energia torni davvero più in fretta, l'elisir del toro bevuto in paese.
