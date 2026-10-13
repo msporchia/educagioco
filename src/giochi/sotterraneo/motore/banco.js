@@ -6,7 +6,7 @@
 import { Corsa } from './corsa.js'
 import { Bottega } from './bottega.js'
 import { ROBA_VUOTA } from './corredo.js'
-import { COSE } from '../dati/cose.js'
+import { COSE, PESO_DELLA_DIFESA } from '../dati/cose.js'
 import { TASCHE } from '../dati/mondo.js'
 import { CAMPAGNA } from '../dati/campagna.js'
 import { seminato } from './livello.js'
@@ -20,6 +20,7 @@ import { viaVerso, percorso } from '../../../motore/passi.js'
 import { NODI, colpisce } from '../dati/abilita.js'
 import { caselleDella, puntiAbilita, prossimoDellaStrada } from './abilita.js'
 import { mostroDiRiferimento, dannoDell } from './forza.js'
+import { ammette, robaDellaStrada, crescitaDellaStrada, stradaDi } from './strade.js'
 
 const DT = 1 / 30
 const TETTO_PASSI = 3000        // ~100 secondi di cammino: molto più di un piano
@@ -87,16 +88,17 @@ function sblocca(corsa, meta, provati) {
 function scudoMeglio(chi, k) {
   const c = COSE[k]
   return c.dove === 'mancina' && chi.posso(k) && !chi.aDueMani(chi.mano) && !!chi.mancina &&
-    COSE[chi.mancina].dove === 'mano' && (c.dif || 0) * 2 > chi.attaccoMancino
+    COSE[chi.mancina].dove === 'mano' && (c.dif || 0) * PESO_DELLA_DIFESA > chi.attaccoMancino
 }
 
-// i punti da dare, come li dà il banco (motore/crescita.js, COME_LI_DA): `come` per provare un altro modo
-function daiIPunti(corsa, come) {
+// i punti da dare, come li dà il banco (motore/crescita.js, COME_LI_DA): `come` per provare un altro modo; `strada`: la fila dei
+// nodi dell'albero di una strada (dati/strade.js) al posto di quella della classe
+function daiIPunti(corsa, come, strada = null) {
   while (puntiDaDare(corsa.crescita) > 0) corsa.daiUnPunto(prossimoPunto(corsa.crescita, corsa.chiEro, come))
   // e i punti dell'albero, sulla strada della classe (motore/abilita.js, STRADA): a ogni livello nuovo, o la crescita attesa
   // con cui si entra in una discesa arriverebbe senza
   while (BANCO.abilita && puntiAbilita(corsa.crescita) > 0) {
-    const id = prossimoDellaStrada(corsa.crescita, corsa.chiEro)
+    const id = prossimoDellaStrada(corsa.crescita, corsa.chiEro, strada)
     const prima = corsa.vitaMax
     if (!id || !corsa.impara(id)) break
     corsa.vita = Math.min(corsa.vitaMax, corsa.vita + Math.max(0, corsa.vitaMax - prima))   // Cuore saldo e simili: la vita in più arriva subito
@@ -169,6 +171,8 @@ function equipaggia(corsa) {
     const c = COSE[k]
     // quello che questa classe non porta non si prova nemmeno, o il costo misurato è quello di un mago con un'ascia
     if (c.dove && !corsa.posso(k)) continue
+    // e quello che non è della strada che si sta giocando (motore/strade.js) nemmeno
+    if (c.dove && corsa.vincoloDelBanco && !corsa.vincoloDelBanco(corsa, k)) continue
     // un pezzo si giudica su tutto quello che dà (confronto: `meglio`), un'arma sul totale delle due mani
     if (c.dove && c.dove !== 'dito' && !(c.dove === 'mancina' && corsa.aDueMani(corsa.mano))) {
       const conf = corsa.confronto(k)
@@ -250,10 +254,12 @@ function sbriga(corsa, bravura, sorte, conto) {
 // `roba`: quella che si porta giù da sopra (motore/corredo.js); torna in `corsa.roba` a discesa finita
 export function gioca(tappa, { bravura = 0.8, seme = 7, come = 'minimo', rnd = null, da = null,
                               eroe = undefined, fino = null, tettoGiri = TETTO_GIRI, roba = null,
-                              crescita = null, punti = null } = {}) {
+                              crescita = null, punti = null, strada = null } = {}) {
   const sorte = rnd || seminato(seme * 31 + 17)
   const corsa = da || new Corsa(tappa, { seme, rnd: sorte, eroe, roba, crescita })
   if (da) da.rnd = sorte
+  // una strada (dati/strade.js): i suoi punti, la sua fila di nodi e il vincolo su quello che si indossa
+  if (strada) { corsa.vincoloDelBanco = ammette(strada); punti = punti || strada.punti }
   let giri = 0
   const persi = []
   const provati = new Map()
@@ -271,7 +277,7 @@ export function gioca(tappa, { bravura = 0.8, seme = 7, come = 'minimo', rnd = n
     if (corsa.piano !== pianoOra) chiudiIlPiano()
     if (fino != null && corsa.piano >= fino) break
     if (corsa.foglio) { sbriga(corsa, bravura, sorte, conto); continue }   // finché un foglio è aperto non si cammina
-    daiIPunti(corsa, punti)
+    daiIPunti(corsa, punti, strada && strada.abilita)
     equipaggia(corsa)
     if (raccogliVicino(corsa, persi)) continue
 
@@ -403,7 +409,7 @@ export function allaBottega(roba, { finite = 0, eroe = undefined, seme = 1, cres
   for (let giro = 0; giro < 8; giro++) {
     // quanto migliora tutto (confronto: `meglio`, la difesa pesa il doppio); a pari, il più caro
     const vale = k => (COSE[k].dove === 'dito' ? 1 : scudoMeglio(b, k) && !b.vaAddosso(k)
-      ? (COSE[k].dif || 0) * 2 - b.attaccoMancino
+      ? (COSE[k].dif || 0) * PESO_DELLA_DIFESA - b.attaccoMancino
       : b.confronto(k).meglio)
     const scelte = ['armaiolo', 'rigattiere']
       .flatMap(chi => b.mercanzia(chi).filter(r => meglio(r.chiave)).map(r => ({ chi, k: r.chiave })))
@@ -490,6 +496,31 @@ export function misuraLaStoria({ eroe = 'cavaliere', semi = 20, prove = [0.8, 0.
     }
   }
   return { vinte, gemme, semi, prove, scarti, livelli, discese }
+}
+
+// Una strada (dati/strade.js, docs/sotterraneo/strade.md) in una discesa: l'eroe di quella classe, col livello atteso più `piu`, la
+// roba della strada e i suoi punti e il suo albero. Torna, per bravura, quante volte su `semi` si arriva in fondo, e le domande e gli
+// svenimenti della prima. `punti` e `mani` provano un'altra distribuzione dei punti o un'arma a una o a due mani con la stessa
+// strada; `allaPrima` si chiama finita la prima bravura (chi misura altro lo spegne lì)
+export function misuraLaStrada({ classe, nome, k, prove = [0.8, 0.6, 0.4], semi = 20, piu = 0, punti = null, mani = null, allaPrima = null } = {}) {
+  const st = stradaDi(classe, nome)
+  if (punti) st.punti = punti
+  if (mani) { st.arma = { ...st.arma, mani: Number(mani) }; st.mancina = Number(mani) === 2 ? null : 'scudo' }
+  const roba = robaDellaStrada(classe, st, k, { piu })
+  const crescita = crescitaDellaStrada(classe, st, k, piu)
+  const vinte = []
+  let domande = 0, svenimenti = 0
+  prove.forEach((bravura, j) => {
+    let v = 0
+    for (let s = 0; s < semi; s++) {
+      const g = gioca(CAMPAGNA[k], { seme: 7000 + s * 89 + k * 11 + j * 5, bravura, eroe: classe, roba, crescita, strada: st })
+      if (g.esito.vinta) v++
+      if (j === 0) { domande += g.esito.domande; svenimenti += g.esito.svenimenti }
+    }
+    vinte.push(v)
+    if (j === 0 && allaPrima) allaPrima()
+  })
+  return { vinte, domande, svenimenti, partite: semi }
 }
 
 // Chi ha messo da parte le gemme: arriva a ogni discesa con la roba attesa e `gemme` in tasca, compra il meglio che
