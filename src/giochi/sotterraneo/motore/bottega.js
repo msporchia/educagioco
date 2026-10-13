@@ -4,12 +4,12 @@
 // la torcia) stanno in cima. L'armaiolo e il rigattiere portano la riga della storia con cui
 // si entra nella prossima discesa (motore/storia.js). Gira in Node: il giocatore finto ci fa la spesa (banco.js).
 // Le regole: docs/sotterraneo/bottega.md.
-import { Corredo, ABILITA_CONFRONTATE } from './corredo.js'
+import { Corredo, ABILITA_CONFRONTATE, ROBA_VUOTA } from './corredo.js'
 import { COSE, A_SORTE, pescaMerce, aLivello, chiaveDelPezzo, baseDi } from '../dati/cose.js'
 import { mercanteDi, vendeLa, righeDi, profonditaDelBanco, prezzoAvanti, schedaDi } from '../dati/mercanti.js'
 import { bancoDelPasso, vetrinaDelPasso, delPassoDi, righeAvanti } from './storia.js'
 import { pescaAbilita } from './bottino.js'
-import { LIVELLI_PER_REQUISITO } from '../dati/eroi.js'
+import { LIVELLI_PER_REQUISITO, eroeDi, portaLa } from '../dati/eroi.js'
 
 // quanti pezzi ha ogni linguetta di un mercante che veste quando il banco si riempie (docs/sotterraneo/bottega.md,
 // «Dieci pezzi per linguetta»), e fin dove si spinge il livello dei pezzi in più per trovarne che migliorano
@@ -18,8 +18,22 @@ export const PEZZI_PER_LINGUETTA = 10
 export const MINIMO_PER_LINGUETTA = 3
 // i pezzi che chiedono più caratteristica di quella che hai, per linguetta: si comprano, vanno nello zaino
 export const DA_MERITARE = 2
-// il tetto di rarità del banco: magico sempre, al più un raro per linguetta, mai un leggendario (quelli sono dei drop)
-export const RARI_PER_LINGUETTA = 1
+// il tetto di rarità del banco: il magico c'è sempre, i rari solo fra i salti e i sogni (sotto), mai un leggendario
+// (quelli sono dei drop)
+export const RARI_PER_LINGUETTA = 5
+// i salti: pezzi che alzano chiaramente quello che l'eroe ha addosso nel posto (almeno un quarto di quanto vale, e non meno
+// di SALTO_MINIMO), di qualche livello sopra, cari; anche con la caratteristica che non ha ancora. I sogni: salti di
+// SOGNO_LIVELLI livelli o più sopra, rari, a un prezzo esorbitante, il traguardo per cui risparmiare. Ogni linguetta
+// che veste ne ha sempre (docs/sotterraneo/bottega.md, «Salti e sogni»)
+export const SALTI_PER_LINGUETTA = 3
+export const SOGNI_PER_LINGUETTA = 2
+export const SALTI_MINIMI = 2
+export const SOGNI_MINIMI = 1
+export const SALTO_RELATIVO = 0.25
+export const SALTO_MINIMO = 1.5
+export const PREZZO_DEL_SOGNO = 2
+export const SOGNO_LIVELLI = 8
+const SOGNO_SPAZIO = 6
 // a ogni giro, per ogni linguetta che veste, se ne vanno i più deboli e ne entrano altrettanti nuovi
 export const SE_NE_VANNO = 3
 // quanti pezzi venduti il rigattiere tiene da parte
@@ -28,6 +42,16 @@ const RIALZO_MASSIMO = 80
 // il traguardo di un'arma sta al più a due punti di caratteristica da quello che l'eroe regge (tosta, non troppo)
 const FINESTRA_DEL_TRAGUARDO = 2 * LIVELLI_PER_REQUISITO
 const MARGINE_DELLA_SCELTA = 6
+
+// La roba di chi ha già trovato dei pezzi rari al suo livello, uno per posto: per guardare il banco di un eroe che ha il meglio
+// che i mercanti gli darebbero (il cheat `#bottega=`, `npm run bottega`, i test)
+export function robaRaraDi(eroe, livello, { gemme = 0, rnd = Math.random } = {}) {
+  const porta = (dove, ...basi) => basi.find(x => COSE[x].dove === dove && portaLa(eroeDi(eroe), COSE[x]))
+  const raro = b => chiaveDelPezzo(b, livello, 'raro', pescaAbilita(b, 2, rnd))
+  const mano = porta('mano', 'scettro', 'balestra', 'bipenne', 'spadone', 'spada')
+  return { ...ROBA_VUOTA(), gemme, mano: raro(mano), mancina: COSE[mano].mani === 2 ? null : raro('scudo-teschio'),
+           corpo: raro(porta('corpo', 'manto', 'corazza', 'panciotto')), dito: raro('amuleto-osso') }
+}
 
 // un pezzo che il banco può portare: mai un leggendario, né uno col nome (dei mostri grossi)
 export const consentito = k => !!COSE[k] && COSE[k].rarita !== 'leggendario' && !COSE[k].unico
@@ -52,7 +76,7 @@ export class Bottega extends Corredo {
   // in più che stanno in mostra accanto al banco, scritti anch'essi; `ruota`: i mercanti il cui banco deve cambiare
   // al giro nuovo (alGiroNuovo). `venduti`: gli ultimi pezzi che l'eroe ha venduto al rigattiere, [{ k, prezzo }]
   constructor({ eroe, roba = null, finite = 0, banchi = null, scaffali = null, ruota = null, venduti = null,
-                rnd = Math.random, crescita = null } = {}) {
+                giudicato = null, rnd = Math.random, crescita = null } = {}) {
     super({ eroe, roba, crescita })
     this.finite = finite
     this.rnd = rnd
@@ -63,12 +87,16 @@ export class Bottega extends Corredo {
     for (const [k, v] of Object.entries(scaffali || {}))
       if (Array.isArray(v) && mercanteDi(k)) this.scaffali[k] = v.filter(x => typeof x === 'string' && consentito(x) && this.porta(x))
     this.ruota = (Array.isArray(ruota) ? ruota : []).filter(mercanteDi)
+    // com'era l'eroe l'ultima volta che si è guardato se al banco restava qualcosa per cui risparmiare, per mercante
+    this.giudicato = {}
+    for (const [k, v] of Object.entries(giudicato || {})) if (mercanteDi(k) && typeof v === 'string') this.giudicato[k] = v
     this.venduti = leggiVenduti(venduti)
   }
 
   // quello che si scrive nell'avventura (`botteghe`): i banchi e gli scaffali, e chi deve ancora cambiare
   get botteghe() {
-    return { banchi: this.banchi, scaffali: this.scaffali, ...(this.ruota.length ? { ruota: this.ruota } : {}) }
+    return { banchi: this.banchi, scaffali: this.scaffali, giudicato: this.giudicato,
+             ...(this.ruota.length ? { ruota: this.ruota } : {}) }
   }
 
   // Un banco pescato prima che si badasse alla famiglia può avere pezzi che l'eroe non porta: non si mostrano.
@@ -121,7 +149,13 @@ export class Bottega extends Corredo {
 
   // quanto costa qui: il prezzo pieno, e di più se il pezzo nella storia viene dopo il passo (sovrapprezzo)
   quantoCosta(k) {
-    return prezzoAvanti(super.quantoCosta(k), righeAvanti(this.chiEro, this.finite, k))
+    return prezzoAvanti(super.quantoCosta(k), righeAvanti(this.chiEro, this.finite, k)) * (this.eDaSogno(k) ? PREZZO_DEL_SOGNO : 1)
+  }
+
+  // un pezzo raro di SOGNO_LIVELLI livelli o più sopra l'eroe: costa il doppio (è il traguardo, il prezzo si legge dal livello e non dal confronto)
+  eDaSogno(k) {
+    const c = COSE[k]
+    return !!(c && c.dove && c.rarita === 'raro' && (c.liv || 1) - this.livelloEroe >= SOGNO_LIVELLI)
   }
 
   // i pezzi delle righe dopo che il banco non porta: si comprano lo stesso, a un prezzo più alto
@@ -165,7 +199,29 @@ export class Bottega extends Corredo {
     const m = mercanteDi(chiave)
     if (!m) return []
     const vista = this.mercanzia(chiave).filter(r => (r.sempre || consentito(r.chiave)) && this.siMostra(r.chiave))
-    return [...vista, ...this.rialzi(chiave)]
+    // `ruolo`: «salto» o «sogno» (ruoloDi); in coda a ogni linguetta, i salti e poi i sogni
+    const ordine = { salto: 1, sogno: 2 }
+    return [...vista, ...this.rialzi(chiave)].map((r, i) => ({ r: { ...r, ruolo: this.ruoloDi(r.chiave) }, i }))
+      .sort((a, b) => (ordine[a.r.ruolo] || 0) - (ordine[b.r.ruolo] || 0) || a.i - b.i).map(x => x.r)
+  }
+
+  // quanto vale oggi il posto in cui va `dove`: il punteggio dell'eroe con quello che c'è, meno quello senza
+  valoreDelPosto(dove) {
+    const senza = this.copia()
+    senza.metti(dove, null)
+    senza.sistemaLeMani()
+    return Math.max(0, this.punteggio() - senza.punteggio())
+  }
+
+  // «salto» se alza chiaramente quello che l'eroe ha addosso nel posto (un quarto di quanto vale, e almeno SALTO_MINIMO),
+  // anche se non ne ha ancora la caratteristica; «sogno» se è un salto di SOGNO_LIVELLI livelli o più sopra; se no null
+  ruoloDi(k) {
+    const c = COSE[k]
+    if (!c || !c.dove || !consentito(k) || !this.porta(k)) return null
+    if (c.dove === 'mancina' && this.aDueMani(this.mano)) return null
+    const conf = this.confronto(k)
+    if (!conf || !(conf.meglio >= Math.max(SALTO_MINIMO, SALTO_RELATIVO * this.valoreDelPosto(conf.dove)))) return null
+    return (c.liv || 1) - this.livelloEroe >= SOGNO_LIVELLI ? 'sogno' : 'salto'
   }
 
   // i pezzi dello scaffale che si vedono adesso: quelli che migliorano ancora qualcosa, e che non si hanno già
@@ -194,10 +250,40 @@ export class Bottega extends Corredo {
     if (primo) this.scaffali[chiave] = []
     const ruota = daRuotare && cera
     const passo = ruota ? delPassoDi(m, this, this.finite, { ammessa: this.ammessaDa(m) }) : []
+    // l'eroe è cambiato (un livello, un pezzo addosso o nello zaino) da quando si è guardato l'ultima volta?
+    const firma = this.firmaDelGiudizio()
+    const daGiudicare = !primo && !ruota && this.giudicato[chiave] !== firma
+    this.giudicato[chiave] = firma
     for (const s of schede) {
       if (ruota) this.ruotaLa(m, s, passo)
-      else this.riempi(m, s, primo ? PEZZI_PER_LINGUETTA : MINIMO_PER_LINGUETTA)
+      else {
+        this.riempi(m, s, primo ? PEZZI_PER_LINGUETTA : MINIMO_PER_LINGUETTA)
+        // non c'è più niente per cui valga la pena risparmiare (è salito il livello, o si è comprato il pezzo): il banco si rinnova
+        if (daGiudicare && this.mancaForza(m, s))
+          this.ruotaLa(m, s, delPassoDi(m, this, this.finite, { ammessa: this.ammessaDa(m) }))
+      }
     }
+  }
+
+  // il livello e quello che l'eroe ha addosso e nello zaino: se non cambia, il banco non si rimette in discussione
+  firmaDelGiudizio() {
+    return [this.livelloEroe, this.mano, this.mancina, this.corpo, this.dito, ...this.zaino].join('|')
+  }
+
+  // Manca il pezzo per cui risparmiare (meno di SALTI_MINIMI pezzi forti, sogni compresi, o di SOGNI_MINIMI sogni in vista) E ce n'è di nuovi da
+  // mettere? Se non c'è niente da offrire il banco resta com'è: non si rinnova per niente
+  mancaForza(m, scheda) {
+    const ruoli = this.vistaQui(m, scheda).map(r => r.ruolo)
+    const salti = ruoli.filter(x => x === 'salto').length, sogni = ruoli.filter(x => x === 'sogno').length
+    if (salti + sogni >= SALTI_MINIMI && sogni >= SOGNI_MINIMI) return false
+    const visti = this.visti(m)
+    return (salti + sogni < SALTI_MINIMI && this.pescaForti(m, scheda, 'salto', 1, visti).length > 0) ||
+           (sogni < SOGNI_MINIMI && this.pescaForti(m, scheda, 'sogno', 1, visti).length > 0)
+  }
+
+  // tutto quello che questo mercante ha già (banco e scaffale): non si pesca due volte
+  visti(m, ancora = []) {
+    return new Set([...(this.banchi[m.chiave] || []), ...(this.scaffali[m.chiave] || []), ...ancora])
   }
 
   // quello che un banco può avere: lo vende il mercante, non sta già in cima, non lo hai e l'eroe lo regge
@@ -243,14 +329,91 @@ export class Bottega extends Corredo {
   // Porta la linguetta a `soglia` pezzi in vista con pezzi nuovi sullo scaffale; `scartati` non tornano (quelli appena
   // andati via). Torna quanti ne ha messi
   riempi(m, scheda, soglia, scartati = []) {
+    // un giro pieno porta prima i salti e i sogni che mancano (anche oltre la soglia), poi il resto
+    const forti = soglia >= PEZZI_PER_LINGUETTA ? this.completaForti(m, scheda, scartati) : 0
     const qui = this.vistaQui(m, scheda)
     const manca = soglia - qui.length
-    if (manca <= 0) return 0
-    const nuovi = this.pescaPer(m, scheda, manca, qui, new Set([...qui.map(r => r.chiave), ...(this.banchi[m.chiave] || []), ...(this.scaffali[m.chiave] || []), ...scartati]))
+    if (manca <= 0) return forti
+    const nuovi = this.pescaPer(m, scheda, manca, qui, new Set([...qui.map(r => r.chiave), ...this.visti(m, scartati)]))
     // dal meno caro, dentro il gruppo: lo scaffale si legge come un banco
     nuovi.sort((a, b) => this.quantoCosta(a) - this.quantoCosta(b) || (a < b ? -1 : 1))
     this.scaffali[m.chiave].push(...nuovi)
-    return nuovi.length
+    return forti + nuovi.length
+  }
+
+  // Porta la linguetta a SALTI_PER_LINGUETTA salti e SOGNI_PER_LINGUETTA sogni, mettendo sullo scaffale quelli che mancano
+  completaForti(m, scheda, scartati = []) {
+    const ruoli = this.vistaQui(m, scheda).map(r => r.ruolo)
+    const visti = this.visti(m, scartati)
+    const salti = this.pescaForti(m, scheda, 'salto', SALTI_PER_LINGUETTA - ruoli.filter(x => x === 'salto').length, visti)
+    for (const k of salti) visti.add(k)
+    const sogni = this.pescaForti(m, scheda, 'sogno', SOGNI_PER_LINGUETTA - ruoli.filter(x => x === 'sogno').length, visti)
+    this.scaffali[m.chiave].push(...salti, ...sogni)
+    return salti.length + sogni.length
+  }
+
+  // I candidati di ogni base (fino a quanti+3 basi) con quel ruolo, fra i livelli da..a, aggiunti a `trovati`
+  cercaForti(basi, ruolo, quanti, visti, da, a, trovati) {
+    const sogno = ruolo === 'sogno'
+    for (const b of basi) {
+      if (trovati.length >= quanti + 3) break
+      const cand = []
+      for (let l = da; l <= a; l++) {
+        for (const rar of sogno ? ['raro'] : ['comune', 'magico', 'raro']) {
+          for (let t = 0; t < (rar === 'comune' ? 1 : 2); t++) {
+            const ab = rar === 'comune' ? [] : pescaAbilita(b, rar === 'raro' ? 2 : 1 + Math.floor(this.rnd() * 2), this.rnd)
+            if (rar !== 'comune' && !ab.length) continue
+            const k = chiaveDelPezzo(b, l, rar, ab)
+            if (!visti.has(k) && !this.possiedo(k) && this.ruoloDi(k) === ruolo) cand.push(k)
+          }
+        }
+      }
+      const gia = trovati.find(t => t.base === b)
+      if (gia) gia.cand.push(...cand)
+      else if (cand.length) trovati.push({ base: b, cand })
+    }
+  }
+
+  // Pezzi forti per la linguetta, di basi diverse (più figure): `salto` di qualche livello sopra (comune, magico o raro: uno a
+  // caso fra quelli che alzano chiaramente, e di solito uno solo che l'eroe regge già), `sogno` raro di SOGNO_LIVELLI livelli e
+  // più sopra (più su ancora se l'eroe ha già il meglio di quei livelli), il più caro di ogni base. Quello che torna è sempre
+  // quel ruolo (ruoloDi)
+  pescaForti(m, scheda, ruolo, quanti, visti) {
+    if (quanti <= 0) return []
+    const basi = A_SORTE.filter(b => COSE[b].dove && scheda.dove.includes(COSE[b].dove) && vendeLa(m, b) &&
+                                     !m.sempre.includes(b) && this.porta(b))
+    const L = this.livelloEroe
+    const sogno = ruolo === 'sogno'
+    let [da, a] = sogno ? [L + SOGNO_LIVELLI, L + SOGNO_LIVELLI + SOGNO_SPAZIO] : [L + 1, L + SOGNO_LIVELLI - 1]
+    const mescolate = basi.map(b => ({ b, r: this.rnd() })).sort((x, y) => x.r - y.r).map(x => x.b)
+    const trovati = []   // [{ base, cand: [k] }]
+    const trovatiIn = () => trovati.reduce((n, t) => n + t.cand.length, 0)
+    for (let giro = 0; giro < 6 && trovatiIn() < quanti; giro++) {
+      if (giro) { da = a + 1; a = da + SOGNO_SPAZIO * giro }
+      this.cercaForti(mescolate, ruolo, quanti, visti, da, a, trovati)
+      if (!sogno) break
+    }
+    // altri pezzi delle stesse basi, per quando le basi non bastano (un mago ha poche armi): altri livelli, altre abilità
+    const altri = presi => trovati.flatMap(t => t.cand).filter(k => !presi.includes(k))
+      .map(k => ({ k, r: this.rnd() })).sort((x, y) => x.r - y.r).map(x => x.k)
+    const presi = []
+    if (sogno) {
+      // il più caro di ogni base (il pezzo da sogno costa: le basi di pregio, al livello più alto), e fra le prime una scelta a caso
+      const caro = t => t.cand.reduce((x, y) => (this.quantoCosta(y) > this.quantoCosta(x) ? y : x))
+      const top = trovati.map(t => caro(t)).sort((x, y) => this.quantoCosta(y) - this.quantoCosta(x)).slice(0, quanti + 1)
+      presi.push(...top.map(k => ({ k, r: this.rnd() })).sort((x, y) => x.r - y.r).slice(0, quanti).map(x => x.k))
+    } else {
+      // il primo, se si può, uno che l'eroe regge già: il salto che si compra e si mette; poi uno per base
+      const uno = t => t.cand[Math.floor(this.rnd() * t.cand.length)]
+      const subito = trovati.find(t => t.cand.some(k => this.posso(k)))
+      if (subito) {
+        const reggibili = subito.cand.filter(k => this.posso(k))
+        presi.push(reggibili[Math.floor(this.rnd() * reggibili.length)])
+      }
+      for (const t of trovati) if (presi.length < quanti && t !== subito) presi.push(uno(t))
+    }
+    for (const k of altri(presi)) if (presi.length < quanti) presi.push(k)
+    return presi.slice(0, quanti)
   }
 
   // Un pezzo per questa linguetta: lo porta la classe, non è già lì, e se ha un posto addosso lo alza
@@ -262,8 +425,8 @@ export class Bottega extends Corredo {
 
   // Pesca `quanti` pezzi nuovi per la linguetta, a tono col livello dell'eroe: comuni e magici (abilità a caso) del
   // livello a cui l'eroe regge l'arma e di quello che ha, e solo se non bastano di più su, livello dopo livello, fino
-  // a trovare pezzi che migliorano quello che ha addosso. Al più un raro per linguetta e al più DA_MERITARE pezzi che
-  // non regge ancora (`qui`: quelli già in vista); mai un leggendario. Uno per base prima, poi il resto, a caso
+  // a trovare pezzi che migliorano quello che ha addosso. Mai un raro (stanno nei salti e nei sogni) né un leggendario, e
+  // al più DA_MERITARE pezzi che non regge ancora (`qui`: quelli già in vista). Uno per base prima, poi il resto, a caso
   pescaPer(m, scheda, quanti, qui, visti) {
     const basi = A_SORTE.filter(b => COSE[b].dove && scheda.dove.includes(COSE[b].dove) && vendeLa(m, b) &&
                                      !m.sempre.includes(b) && this.porta(b))
@@ -276,8 +439,7 @@ export class Bottega extends Corredo {
       trovati.add(k)
       pool.push(k)
     }
-    let rari = qui.filter(r => COSE[r.chiave].rarita === 'raro').length
-    let daMeritare = qui.filter(r => !this.posso(r.chiave)).length
+    let daMeritare = qui.filter(r => !r.ruolo && !this.posso(r.chiave)).length
     for (let su = 0; su <= RIALZO_MASSIMO && pool.length < quanti + MARGINE_DELLA_SCELTA; su++) {
       for (const b of basi) {
         const livelli = su === 0 ? [...new Set([this.livelloPortabile(b, L), L])] : [L + su]
@@ -288,12 +450,6 @@ export class Bottega extends Corredo {
             if (abilita.length) prova(chiaveDelPezzo(b, l, 'magico', abilita))
           }
         }
-      }
-      // un raro per passata, di una base a caso: poi la scelta ne tiene al più RARI_PER_LINGUETTA
-      if (rari < RARI_PER_LINGUETTA) {
-        const b = basi[Math.floor(this.rnd() * basi.length)]
-        const abilita = pescaAbilita(b, 2, this.rnd)
-        if (abilita.length === 2) prova(chiaveDelPezzo(b, L + su, 'raro', abilita))
       }
     }
     // il traguardo: per ogni base, il primo livello (poco più su) a cui l'eroe non la regge ancora; gli manca un punto di caratteristica
@@ -309,11 +465,10 @@ export class Bottega extends Corredo {
     const mescolati = pool.map(k => ({ k, r: this.rnd() })).sort((a, b) => a.r - b.r).map(x => x.k)
     const presi = []
     const basiPrese = new Set()
-    const sta = k => (COSE[k].rarita !== 'raro' || rari < RARI_PER_LINGUETTA) && (this.posso(k) || daMeritare < DA_MERITARE)
+    const sta = k => this.posso(k) || daMeritare < DA_MERITARE
     const metti = k => {
       presi.push(k)
       basiPrese.add(baseDi(k))
-      if (COSE[k].rarita === 'raro') rari++
       if (!this.posso(k)) daMeritare++
     }
     // un pezzo da meritare è il traguardo di una linguetta: uno c'è sempre, se ce n'è

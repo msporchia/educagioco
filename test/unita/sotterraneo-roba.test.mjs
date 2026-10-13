@@ -16,7 +16,8 @@ import { MERCANTI, mercanteDi, vendeLa, righeDi, guastiDeiMercanti, schedaDi, so
 import { MERCANTI as DOVE_MERCANTI } from '../../src/giochi/sotterraneo/dati/terra-mappa.js'
 import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
 import { Corredo, ROBA_VUOTA, rileggiRoba, ABILITA_CONFRONTATE } from '../../src/giochi/sotterraneo/motore/corredo.js'
-import { Bottega, PEZZI_PER_LINGUETTA, RARI_PER_LINGUETTA, ULTIMI_VENDUTI, alGiroNuovo } from '../../src/giochi/sotterraneo/motore/bottega.js'
+import { Bottega, PEZZI_PER_LINGUETTA, RARI_PER_LINGUETTA, ULTIMI_VENDUTI, alGiroNuovo, SALTI_MINIMI, SOGNI_MINIMI, SALTO_RELATIVO,
+         SALTO_MINIMO, SOGNO_LIVELLI } from '../../src/giochi/sotterraneo/motore/bottega.js'
 import { ABILITA, affiancatoDi, sintesiDi } from '../../src/giochi/sotterraneo/viste/pezzo.js'
 import { Livello, seminato } from '../../src/giochi/sotterraneo/motore/livello.js'
 import { scrivi, leggi } from '../../src/giochi/sotterraneo/motore/sosta.js'
@@ -24,7 +25,9 @@ import { gioca, misuraLaStoria } from '../../src/giochi/sotterraneo/motore/banco
 import { robaAttesa, migliora, righeAvanti, crescitaAttesa, delPassoDi } from '../../src/giochi/sotterraneo/motore/storia.js'
 import { passoDi, premiDella } from '../../src/giochi/sotterraneo/dati/storia.js'
 import { EROI, eroeDi, portaLa } from '../../src/giochi/sotterraneo/dati/eroi.js'
-import { crescitaA } from '../../src/giochi/sotterraneo/motore/crescita.js'
+import { crescitaA, rileggiCrescita, trattoDegliElisir } from '../../src/giochi/sotterraneo/motore/crescita.js'
+import { elisirCade, PROBABILITA_ELISIR } from '../../src/giochi/sotterraneo/motore/bottino.js'
+import { schedaConLaRoba } from '../../src/giochi/sotterraneo/motore/corredo.js'
 import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
 
 /* ══════════ 1. i dati ══════════ */
@@ -417,7 +420,7 @@ import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiut
               esempi.slice(0, 6).join(' | '))
     controlla('quasi tutte arrivano a dieci', dieci > giri * 0.9, `${dieci}/${giri}`)
     uguale('mai un leggendario sul banco, né fra i pezzi in più', leggendari, 0)
-    uguale('al più un raro per linguetta', troppiRari, 0)
+    uguale('i rari restano nei salti e nei sogni (al più cinque per linguetta)', troppiRari, 0)
     controlla('il magico c\'è sempre: la maggior parte dello scaffale', magici > scaffali / 2, `${magici} magici su ${scaffali} in scaffale`)
     uguale('tutti portabili dall\'eroe (tranne quelli da meritare)', nonPortabile, 0)
     uguale('quelli da meritare la classe li porta ma non li regge ancora, e hanno un prezzo', meritareStorti, 0)
@@ -547,6 +550,104 @@ import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiut
   controlla('al giro dopo ruota come uno nuovo', mercanteDi('armaiolo').schede.filter(x => x.dove).every(sc => conta(v2, sc) >= 3))
   uguale('alGiroNuovo senza banchi non chiede niente', alGiroNuovo(null), null)
   uguale('né con un record storto', alGiroNuovo({ banchi: 3 }), null)
+}
+
+/* ══════════ 7b2b. salti e sogni ══════════
+   Ogni linguetta che veste ha sempre almeno due pezzi che alzano chiaramente quello che l'eroe ha addosso nel posto (i
+   salti: anche di livelli sopra, cari, anche con la caratteristica che non ha ancora) e almeno uno da sogno (otto livelli
+   e più sopra, raro, esorbitante), anche con roba rara addosso. Il banco si rinnova quando l'eroe sale o compra e non resta
+   più niente per cui risparmiare, e solo allora (docs/sotterraneo/bottega.md, «Salti e sogni»). */
+{
+  const schedeChe = m => m.schede.filter(x => x.dove && !x.vendi)
+  const dellaScheda = (b, m, sc) => b.mercanziaVista(m.chiave).filter(r => COSE[r.chiave].dove && schedaDi(m, r.chiave) === sc)
+  const conta = (qui, ruolo) => qui.filter(r => r.ruolo === ruolo).length
+  const raroDi = (eroe, L) => {
+    const porta = (dove, ...basi) => basi.find(x => COSE[x].dove === dove && portaLa(eroeDi(eroe), COSE[x]))
+    const mano = porta('mano', 'scettro', 'balestra', 'bipenne', 'spadone')
+    const r = (b, ...ab) => chiaveDelPezzo(b, L, 'raro', ab)
+    return { ...ROBA_VUOTA(), gemme: 50, mano: r(mano, 'att', 'fuoco'), mancina: COSE[mano].mani === 2 ? null : r('scudo-teschio', 'dif', 'vita'),
+             corpo: r(porta('corpo', 'manto', 'corazza'), 'dif', 'vita'), dito: r('amuleto-osso', 'dif', 'vita') }
+  }
+  let linguette = 0, pochiSalti = 0, pochiSogni = 0, sogniBassi = 0, saltiDeboli = 0, instabili = 0, reggibili = 0, nonReggibili = 0
+  const guai = []
+  for (const eroe of EROI.map(e => e.chiave))
+    for (const lv of [1, 2, 4, 6, 9, 12, 16, 22, 30, 45, 70, 100])
+      for (const roba of [{ ...ROBA_VUOTA(), gemme: 50 }, raroDi(eroe, lv), { ...robaAttesa(eroe, 3), gemme: 50 }]) {
+        const b = new Bottega({ eroe, finite: 3, roba, crescita: crescitaA(eroeDi(eroe), lv), rnd: seminato(lv * 31 + 7) })
+        for (const m of MERCANTI.filter(x => x.passo))
+          for (const sc of schedeChe(m)) {
+            const qui = dellaScheda(b, m, sc)
+            linguette++
+            const salti = conta(qui, 'salto'), sogni = conta(qui, 'sogno')
+            if (salti + sogni < SALTI_MINIMI) { pochiSalti++; guai.push(`${eroe} lv${lv} ${m.chiave}/${sc.chiave}: ${salti} salti e ${sogni} sogni`) }
+            if (sogni < SOGNI_MINIMI) { pochiSogni++; guai.push(`${eroe} lv${lv} ${m.chiave}/${sc.chiave}: ${sogni} sogni (sogni)`) }
+            for (const r of qui.filter(x => x.ruolo)) {
+              const conf = b.confronto(r.chiave)
+              if (!(conf.meglio >= Math.max(SALTO_MINIMO, SALTO_RELATIVO * b.valoreDelPosto(conf.dove)))) saltiDeboli++
+              if (r.ruolo === 'sogno' && COSE[r.chiave].liv - b.livelloEroe < SOGNO_LIVELLI) sogniBassi++
+              if (r.ruolo === 'sogno' && COSE[r.chiave].rarita === 'leggendario') sogniBassi++
+              if (b.posso(r.chiave)) reggibili++; else nonReggibili++
+            }
+            if (dellaScheda(b, m, sc).map(r => r.chiave).join() !== qui.map(r => r.chiave).join()) instabili++
+          }
+      }
+  controlla(`in ${linguette} linguette (4 eroi, 12 livelli, nudi, con roba rara e attesa) ci sono almeno due pezzi forti`, pochiSalti === 0, guai.slice(0, 6).join(' | '))
+  controlla('e ogni linguetta ha il suo sogno', pochiSogni === 0, guai.filter(g => /sogni/.test(g)).slice(0, 6).join(' | '))
+  uguale('un salto alza davvero un quarto del posto (e almeno il minimo)', saltiDeboli, 0)
+  uguale('un sogno sta otto livelli sopra e non è leggendario', sogniBassi, 0)
+  uguale('guardare due volte il banco non lo cambia', instabili, 0)
+  controlla('ci sono salti che si indossano subito e salti da meritare', reggibili > 0 && nonReggibili > 0, `${reggibili} / ${nonReggibili}`)
+
+  /* il caso dell'utente: cavaliere al 12 con roba rara addosso, al fabbro un raro più su, più di qualche livello */
+  {
+    const eroe = 'cavaliere'
+    const dati = { eroe, finite: 3, roba: raroDi(eroe, 12), crescita: crescitaA(eroeDi(eroe), 12) }
+    const b = new Bottega({ ...dati, rnd: seminato(1) })
+    const armi = mercanteDi('armaiolo').schede[0]
+    const qui = dellaScheda(b, mercanteDi('armaiolo'), armi)
+    const rari = qui.filter(r => COSE[r.chiave].rarita === 'raro' && r.ruolo)
+    controlla('al fabbro, con un raro addosso, ci sono rari più su', rari.length >= 2, rari.map(r => r.chiave).join())
+    controlla('i salti e i sogni stanno in fondo alla linguetta, il sogno ultimo', qui.slice(-1)[0].ruolo === 'sogno' &&
+              qui.findIndex(r => r.ruolo === 'salto') > qui.findIndex(r => !r.ruolo))
+    // il sogno ha un prezzo esorbitante: più del salto più caro non c'è bisogno, ma sopra la media di quello che c'è
+    const sogno = qui.filter(r => r.ruolo === 'sogno')
+    const media = qui.filter(r => !r.ruolo).reduce((n, r) => n + b.quantoCosta(r.chiave), 0) / qui.filter(r => !r.ruolo).length
+    controlla('un sogno costa più della media del resto', sogno.every(r => b.quantoCosta(r.chiave) > media), `${sogno.map(r => b.quantoCosta(r.chiave))} contro ${Math.round(media)}`)
+    // comprare un sogno che l'eroe non regge: va nello zaino; e un altro sogno prende il suo posto
+    const ricco = new Bottega({ ...dati, roba: { ...dati.roba, gemme: 99999 }, rnd: seminato(1) })
+    const sognoK = dellaScheda(ricco, mercanteDi('armaiolo'), armi).find(r => r.ruolo === 'sogno').chiave
+    uguale('il sogno si compra', ricco.compraDa('armaiolo', sognoK)?.che, 'comprato')
+    controlla('e se non lo regge va nello zaino, non addosso', ricco.posso(sognoK) ? ricco.mano === sognoK : ricco.zaino.includes(sognoK))
+    controlla('al banco ce n\'è subito un altro', conta(dellaScheda(ricco, mercanteDi('armaiolo'), armi), 'sogno') >= SOGNI_MINIMI)
+  }
+
+  /* salendo di livello il banco resta com'è se c'è ancora qualcosa per cui risparmiare, si rinnova se non c'è più */
+  {
+    const eroe = 'mago'
+    const m = mercanteDi('armaiolo')
+    const dati = { eroe, finite: 3, roba: raroDi(eroe, 12), crescita: crescitaA(eroeDi(eroe), 12) }
+    const a = new Bottega({ ...dati, rnd: seminato(5) })
+    const prima = m.schede.filter(x => x.dove).map(sc => dellaScheda(a, m, sc).map(r => r.chiave))
+    const registro = JSON.parse(JSON.stringify(a.botteghe))
+    const apri = (lv, seme) => new Bottega({ ...dati, roba: a.roba, crescita: crescitaA(eroeDi(eroe), lv), ...registro, rnd: seminato(seme) })
+    // un livello in più: i salti e i sogni ci sono ancora, quindi niente cambia
+    const su1 = apri(13, 6)
+    const senza = m.schede.filter(x => x.dove).map(sc => su1.vistaDi(m.chiave).filter(r => COSE[r.chiave].dove && schedaDi(m, r.chiave) === sc))
+    const ancora = senza.every(qui => conta(qui, 'salto') + conta(qui, 'sogno') >= SALTI_MINIMI && conta(qui, 'sogno') >= SOGNI_MINIMI)
+    controlla('al livello dopo ci sono ancora un sogno e dei salti', ancora)
+    stessaLista('e allora il banco è lo stesso', m.schede.filter(x => x.dove).map(sc => dellaScheda(su1, m, sc).map(r => r.chiave)), prima)
+    // dieci livelli più su: il sogno di prima non è più un sogno, il banco si rinnova (e i pezzi nuovi sono salti e sogni di adesso)
+    const su10 = apri(24, 7)
+    const dopo10 = m.schede.filter(x => x.dove).map(sc => dellaScheda(su10, m, sc))
+    controlla('molti livelli più su c\'è di nuovo il suo sogno e i suoi salti', dopo10.every(qui => conta(qui, 'salto') + conta(qui, 'sogno') >= SALTI_MINIMI && conta(qui, 'sogno') >= SOGNI_MINIMI))
+    controlla('ed è cambiato qualcosa', dopo10.some((qui, i) => qui.some(r => !prima[i].includes(r.chiave))))
+    controlla('ma i pezzi di prima che servono ancora non sono spariti', dopo10.some((qui, i) => prima[i].some(k => qui.some(r => r.chiave === k))))
+    // riaperto di nuovo allo stesso livello (scritto e riletto) non cambia più niente
+    const reg2 = JSON.parse(JSON.stringify(su10.botteghe))
+    const su10b = new Bottega({ ...dati, roba: su10.roba, crescita: crescitaA(eroeDi(eroe), 24), ...reg2, rnd: seminato(999) })
+    stessaLista('e riaperto allo stesso livello non cambia più', m.schede.filter(x => x.dove).map(sc => dellaScheda(su10b, m, sc).map(r => r.chiave)),
+                dopo10.map(q => q.map(r => r.chiave)))
+  }
 }
 
 /* ══════════ 7b3. il rigattiere tiene gli ultimi cinque pezzi venduti ══════════
@@ -695,6 +796,51 @@ import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiut
   uguale('in piena forma con sole cure non si beve', c.pozioneGiusta(), null)
   c.zaino = []
   uguale('senza pozioni niente', c.pozioneGiusta(), null)
+}
+
+/* ══════════ 7c. l'elisir del toro: non si compra, si trova, e vale per sempre ══════════
+   Un ritrovamento rarissimo (docs/sotterraneo/rarita.md, «L'elisir del toro»): fuori da ogni banco, con una probabilità piccola
+   dal grosso, da un caporale e da un forziere; bevuto, i suoi tre punti di vita stanno nella crescita dell'eroe e restano. */
+{
+  uguale('nessun mercante lo vende', MERCANTI.filter(m => vendeLa(m, 'elisir-toro') || m.sempre.includes('elisir-toro')).length, 0)
+  controlla('e non è fra le cose in vendita', !IN_VENDITA.includes('elisir-toro'))
+  let sui = 0
+  for (const eroe of EROI.map(e => e.chiave))
+    for (const finite of [0, 2, 4, 6, 7]) {
+      const b = new Bottega({ eroe, finite, roba: { ...robaAttesa(eroe, finite), gemme: 9999 }, rnd: seminato(finite + 3) })
+      for (const m of MERCANTI) sui += b.mercanziaVista(m.chiave).filter(r => r.chiave === 'elisir-toro').length
+    }
+  uguale('né compare sul banco di nessun eroe', sui, 0)
+  // quanto cade: un ogni qualche discesa, non a piano (il tiro dipende dal posto, e si rifà identico)
+  let grossi = 0, caporali = 0, forzieri = 0
+  const N = 4000
+  for (let i = 0; i < N; i++) {
+    if (elisirCade('grosso', i, 1, 5, 6)) grossi++
+    if (elisirCade('caporale', i, 1, 5, 6)) caporali++
+    if (elisirCade('forziere', i, 1, 5, 6)) forzieri++
+  }
+  dentro('un grosso su sette lo lascia', grossi / N, PROBABILITA_ELISIR.grosso * 0.7, PROBABILITA_ELISIR.grosso * 1.3)
+  dentro('un caporale su venticinque', caporali / N, PROBABILITA_ELISIR.caporale * 0.6, PROBABILITA_ELISIR.caporale * 1.4)
+  dentro('un forziere su ottanta', forzieri / N, PROBABILITA_ELISIR.forziere * 0.4, PROBABILITA_ELISIR.forziere * 1.6)
+  uguale('lo stesso posto dà lo stesso tiro', elisirCade('grosso', 7, 2, 3, 4), elisirCade('grosso', 7, 2, 3, 4))
+  // bevuto: la vita massima sale di tre e sta nella crescita, sopravvive a risali, svenimento e riletture
+  const c = new Corsa(CAMPAGNA[0], { seme: 3, rnd: seminato(3), roba: { ...ROBA_VUOTA(), zaino: ['elisir-toro'] } })
+  const prima = c.vitaMax
+  uguale('bevuto, la vita massima sale di tre', (c.usa(0), c.vitaMax), prima + 3)
+  uguale('e sta nella crescita, per sempre', c.crescita.elisir, 3)
+  uguale('niente più nello zaino', c.zaino.length, 0)
+  c.rimettiInPiedi()
+  uguale('uno svenimento non la toglie', c.vitaMax, prima + 3)
+  c.risali()
+  const letta = rileggiCrescita(JSON.parse(JSON.stringify(c.crescita)), 'cavaliere')
+  uguale('riletta dall\'avventura è ancora lì', letta.elisir, 3)
+  const nuova = new Corsa(CAMPAGNA[1], { seme: 9, rnd: seminato(9), roba: c.roba, crescita: letta })
+  const senza = new Corsa(CAMPAGNA[1], { seme: 9, rnd: seminato(9), roba: c.roba, crescita: { ...letta, elisir: 0 } })
+  uguale('e la discesa dopo parte con quella vita', nuova.vitaMax, senza.vitaMax + 3)
+  uguale('un salvataggio di prima, senza il campo, vale zero', rileggiCrescita({ v: 2, esp: 0 }, 'cavaliere').elisir, 0)
+  uguale('e un dato storto non gonfia la vita', rileggiCrescita({ v: 2, esp: 0, elisir: 'molto' }, 'cavaliere').elisir, 0)
+  controlla('la pagina dell\'eroe dice da dove viene', /per sempre/.test(trattoDegliElisir(letta)) && !trattoDegliElisir(rileggiCrescita(null)))
+  controlla('anche la carta di sopra', schedaConLaRoba(eroeDi('cavaliere'), null, letta).tratti.some(t => /🐂/.test(t)))
 }
 
 /* ══════════ 8. l'equilibrio, in piccolo ══════════

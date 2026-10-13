@@ -20,9 +20,17 @@ coi pezzi comuni `Cornice.vue`, `Addosso.vue`, `Casella.vue`, `Pannello.vue`,
   solo chi compra; gli altri lo dicono con una battuta. `guastiDeiMercanti` pretende che ogni
   cosa del banco stia sotto una linguetta.
 - **Caselle grandi, tre per riga**, col pezzo disegnato e il prezzo sotto (dieci
-  pezzi sono quattro righe: scorre solo la griglia, a 390 px regge). Un pezzo che
-  la classe porta ma di cui manca la caratteristica ha il 🔒 e il pannello dice cosa
-  manca; si compra lo stesso e va nello zaino ([bottega.md](bottega.md)). Il
+  pezzi sono quattro righe: scorre solo la griglia, a 390 px regge). **Cosa è
+  meglio di quello che hai addosso si vede a colpo d'occhio**: in alto a sinistra
+  una ▲ verde col numero di quanto alza il braccio o la difesa del posto («▲ +3»),
+  e per i pezzi da sogno una ★ d'oro (`Casella.vue`, `data-sale`, `data-ruolo`).
+  Un pezzo che la classe porta ma di cui manca la caratteristica ha il 🔒 e il
+  pannello dice cosa manca; si compra lo stesso e va nello zaino, e il confronto col
+  pezzo che hai addosso c'è lo stesso (`seLoMetto(k, { ancora: true })`, con
+  `ancora: true` nel risultato). **Una casella che non puoi permetterti, o non ancora,
+  si vede piena**, senza trasparenza né grigio (l'utente, 13 ottobre: «non è utile
+  ormai»): il perché lo dicono il prezzo in rosso, il 🔒 o la ✋ e il pannello;
+  `sot-spenta` resta solo come classe per i test e il cursore. Lo zaino uguale. Il
   bordo e l'aura dicono la rarità, coi colori di Diablo: bianco comune, blu
   magico, giallo raro, arancio-oro leggendario ([rarita.md](rarita.md)).
   Provato prima: il bordo diceva il gradino letto dal prezzo (grigio,
@@ -101,7 +109,7 @@ valore in `data-n`), `[data-due-mani]`, `[data-storia]`,
 (`data-posso`) e `[data-azione="riacquista"]`, `[data-riacquisto-vuoto]`, `[data-serve]`
 (la nota 🔒 di un pezzo non ancora reggibile), `[data-detto-banco]`, `[data-battuta]`,
 `[data-chi-compra]`, `[data-tasche-vuote]`,
-`[data-gemme-bottega]`; nello zaino `[data-zaino]`, `[data-tasca]` (con
+`[data-gemme-bottega]`; sulla casella `[data-sale]` (▲ o ★ col numero) e `data-ruolo="salto|sogno"`; nello zaino `[data-zaino]`, `[data-tasca]` (con
 `data-cosa`), `[data-azione="usa|butta|riponi|chiudi"]`, `[data-torcia-zaino]`,
 `[data-ancora-no]` (la nota 🔒 di un pezzo che l'eroe porta ma non regge ancora; la ✋ `[data-non-puoi]` è per quello che la classe non porta);
 in tutte e due `[data-casella="<dove>"]` (con `data-cosa`) e `[data-chiudi]`.
