@@ -28,7 +28,7 @@ export const CAMPAGNA = [
     scenario: 'fornace',
     portata: 37,
     dritta: 'stretta e alta: le scale non finiscono mai',
-    piani: 3, misura: 40, largo: 26, alto: 54, giri: 3, dif: [0.2, 0.44], forza: 0.9, spinta: 5.5, livello: 3,
+    piani: 3, misura: 40, largo: 26, alto: 54, giri: 3, dif: [0.2, 0.44], forza: 0.9, spinta: 4.75, livello: 3,
     mostri: ['pipistrello', 'diavoletto', 'vespa', 'spirito-fuoco'], caporale: 'golem-magma', tettoBranco: 4, capo: 'troll' },
 
   // tutta in profondità: piani piccoli, tanti

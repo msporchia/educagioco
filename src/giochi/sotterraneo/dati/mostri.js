@@ -177,7 +177,7 @@ export const MOSTRI = {
     resiste: ['fuoco'], teme: ['gelo'], immune: ['brucia'] }),
   'spirito-fuoco': sp('medio', { em: '🔥', sprite: 'spirito-fuoco', nome: 'Uno spirito di fuoco', att: 3, dif: 0, velocita: 9,
     resiste: ['fuoco'], teme: ['gelo'], immune: ['brucia'] }),
-  'golem-magma': sp('piccolo', { em: '🪨', sprite: 'golem-magma', nome: 'Un golem di magma', gemme: 3, att: 6, dif: 1, velocita: 7,
+  'golem-magma': sp('piccolo', { em: '🪨', sprite: 'golem-magma', nome: 'Un golem di magma', gemme: 3, att: 5, dif: 1, velocita: 9,
     resiste: ['fuoco', 'fisico'], teme: ['gelo'], immune: ['stordisce', 'brucia', 'sanguina'] }),
 
   // la grotta
@@ -187,7 +187,7 @@ export const MOSTRI = {
     resiste: ['veleno'], teme: ['fuoco'], immune: ['avvelena'] }),
   'melma-rosa': sp('piccolo', { em: '💗', sprite: 'melma-rosa', nome: 'Una melma rosa', gemme: 3, att: 3, dif: 0, velocita: 8,
     resiste: ['veleno'], teme: ['fuoco'], immune: ['avvelena', 'sanguina'] }),
-  'mostro-verde': sp('medio', { em: '🟩', sprite: 'mostro-verde', nome: 'Un mostro di muschio', lascia: ['panciotto', 'pozione', 'pozione-piccola'], att: 6, dif: 1, velocita: 7,
+  'mostro-verde': sp('medio', { em: '🟩', sprite: 'mostro-verde', nome: 'Un mostro di muschio', lascia: ['panciotto', 'pozione', 'pozione-piccola'], att: 6, dif: 1, velocita: 6,
     resiste: ['veleno'], teme: ['fuoco'], immune: ['avvelena'] }),
 
   // la scala sommersa

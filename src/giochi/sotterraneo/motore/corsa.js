@@ -728,7 +728,7 @@ export class Corsa extends Corredo {
     // (il «grigio» si legge dalla forza dell'eroe, non dal livello: motore/forza.js; fuori dalle zone non serve)
     const forza = this.tappa && this.tappa.potenza ? forzaDelCorredo(this) : this.livelloEroe
     const delGrado = PREMIO_DEL_GRADO[m.grado] || 1   // un mostro di grado alto vale di più (dati/varianti.js)
-    const esp = Math.max(1, Math.round(espDi(MOSTRI[m.tipo], this.livelloQui, !!m.grosso) * espNellaZona(this.tappa, forza) * delGrado))
+    const esp = Math.max(1, Math.round(espDi(MOSTRI[m.tipo], this.livelloQui, !!m.grosso) * espNellaZona(this.tappa, forza)))
     this.eventi.push({ che: 'esp', esp, x: m.x, y: m.y })
     this.guadagna(esp)
     // 💚 rigenera: ogni mostro battuto rimette in piedi un poco

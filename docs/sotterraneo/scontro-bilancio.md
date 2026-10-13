@@ -201,4 +201,10 @@ dell'elfa a otto su dieci con la roba attesa (7/20); la miniera a 8/10 passa da 
 
 **I test a un seme solo** (`unita/sotterraneo`, `unita/sotterraneo-roba`, `unita/sotterraneo-abisso`) misurano un campione: il minimo di domande della scalinata ora ammette 5, «premendo a
 caso no» usa la roba attesa e non quella giocata (che a un seme su tre è un'arma rara e già prima, al seme 2, faceva vincere 4 su 8), e il costo dei piani dell'abisso
-si guarda sul seme 203 (media dei piani invariata; con le specie nuove il seme 41 dava un piano da 37, e già prima alcuni semi sforavano i 30).
+si guarda su tre semi (ogni piano sotto le 40 domande, la media dei semi sotto le 30): cambiando una specie un piano da 33 o 37 domande lo fa un seme su cinque, e già
+prima alcuni semi sforavano i 30.
+
+**L'esperienza dei gradi non c'è**: provato ×1,3 · 1,7 · 2,5 anche sull'esperienza (oltre che sulle gemme), e le zone rendevano mezzo livello in più a discesa (la torre al 12:
+1,9 livelli invece di 1,2) e le discese a quattro su dieci si vincevano la metà delle volte: solo le gemme. E il caporale giusto di una zona non è quello della storia: nelle
+zone, dove i mostri hanno una spinta enorme, conta la velocità e non il colpo (un caporale lento e pesante le rende più comode di prima, uno svelto più dure), perciò il golem
+di magma sta a colpo 5 e velocità 9 e la torre, nella storia, a spinta 4,75 (era 5,5).

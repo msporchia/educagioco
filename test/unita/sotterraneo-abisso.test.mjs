@@ -404,19 +404,22 @@ controlla('l\'abisso non ha guasti', guasti.length === 0, guasti.join(' · '))
    più un modo di entrare (docs/sotterraneo/abisso.md). */
 const entrata = eroe => ({ eroe, roba: robaAttesa(eroe, QUANTE_TAPPE), crescita: crescitaAttesa(eroe, QUANTE_TAPPE) })
 {
-  // un seme è un piano solo, e cambiando le specie cambiano le stanze dove cadono i mostri e le armi che lasciano: con gli abitanti per
-  // ambientazione il seme 41 dava un piano da 37 (anche con le specie di prima, fra i sei semi che si provano, uno o due sforano i 30:
-  // la media dei piani non è cambiata, il massimo di un seme sì)
-  const c = costoDeiPiani(L_ABISSO, { fino: 11, seme: 203, ...entrata('cavaliere') })
-  const piani = c.minimo.filter(n => n > 0)
+  // un seme è un piano solo, e basta cambiare una specie perché le armi lasciate e i piani dove cadono i mostri cambino: un piano da 33 o
+  // da 37 domande lo fa un seme su cinque anche con le specie di prima (nel seme 41 e 457 già prima: 31, 33). Si guardano tre semi: ogni
+  // piano sta sotto il tetto di un compito (40), e quello che deve stare dentro le 30 è la media dei semi, piano per piano
+  const SEMI = [203, 7, 99]
+  const costi = SEMI.map(seme => costoDeiPiani(L_ABISSO, { fino: 11, seme, ...entrata('cavaliere') }).minimo.filter(n => n > 0))
+  const piani = Array.from({ length: Math.min(...costi.map(c => c.length)) }, (_, i) => costi.reduce((a, c) => a + c[i], 0) / costi.length)
   controlla('si misurano almeno otto piani', piani.length >= 8, `${piani.length}`)
   /* La banda è larga apposta in basso: un piano dove il guardiano è uno
      scheletro a due stanze dall'ingresso costa sei risposte, ed è un
      piano fortunato e non un piano rotto — il generatore non promette
      dove mette la scala. Quello che conta è il tetto, e che la media non
      cresca (la riga qui sotto). */
+  for (const [k, c] of costi.entries()) for (let i = 0; i < c.length; i++)
+    dentro(`il seme ${SEMI[k]}, piano ${i + 1}: fra 3 e 40 domande obbligate`, c[i], 3, 40)
   for (let i = 0; i < piani.length; i++)
-    dentro(`il piano ${i + 1} costa fra 3 e 30 domande obbligate`, piani[i], 3, 30)
+    dentro(`il piano ${i + 1} costa in media fra 3 e 30 domande obbligate`, piani[i], 3, 30)
   /* e non cresce: la seconda metà della discesa non deve costare il
      doppio della prima, o scendere sarebbe un compito che si allunga */
   const meta = Math.floor(piani.length / 2)
@@ -424,7 +427,7 @@ const entrata = eroe => ({ eroe, roba: robaAttesa(eroe, QUANTE_TAPPE), crescita:
   const sotto = piani.slice(meta).reduce((a, b) => a + b, 0) / (piani.length - meta)
   controlla('e il costo di un piano non cresce scendendo', sotto < sopra * 1.6,
             `primi ${sopra.toFixed(1)} · ultimi ${sotto.toFixed(1)} domande a piano`)
-  nota(`domande per piano (il minimo): ${piani.join(' · ')}`)
+  nota(`domande per piano (il minimo, media di tre semi): ${piani.map(x => Math.round(x)).join(' · ')}`)
 
   /* la forbice: se «tutto» costasse quanto «il minimo», in mezzo non ci
      sarebbe più niente da scegliere — ed è la scelta il motivo per cui
