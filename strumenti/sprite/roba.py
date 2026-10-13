@@ -72,7 +72,10 @@ def riga_del_foglietto(v):
     x, y, w, h = v['rettangolo']
     da = [x // s, y // s]
     cella = [math.ceil((x + w) / s) - da[0], math.ceil((y + h) / s) - da[1]]
-    return f'"{v["id"]}": {{ "da": {da}, "cella": {cella} }}'
+    ruota = f', "ruota": {v["ruota"]}' if v.get('ruota') else ''      # una figura disegnata in diagonale: di quanti gradi girarla
+    misura = f', "misura": {v["misura"]}' if v.get('misura') else ''  # e alla taglia delle sue sorelle, se il foglio la disegna più piccola
+    specchia = ', "specchia": true' if v.get('specchia') else ''      # com'è la base: l'arma guarda sempre dalla stessa parte
+    return f'"{v["id"]}": {{ "da": {da}, "cella": {cella}{ruota}{misura}{specchia} }}'
 
 
 def buchi_di(v):

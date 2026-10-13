@@ -2,9 +2,9 @@
 
 I tre fogli dipinti del sotterraneo (`bottino-e-arredo.png`, `scudi.png`,
 `armature-e-vesti.png` in `strumenti/sprite/sorgenti/sotterraneo/generati/`)
-contengono **244 figure da indossare**: 36 spade e pugnali, 12 asce e aste,
-11 archi e balestre, 57 bacchette, bastoni e scettri, 39 armature e vesti,
-53 scudi, 36 amuleti e anelli. **Ne sono in gioco 227**: le basi, i pezzi
+contengono **238 figure da indossare**: 36 spade e pugnali, 10 asce e aste,
+7 archi e balestre, 57 bacchette, bastoni e scettri, 39 armature e vesti,
+53 scudi, 36 amuleti e anelli. **Sono tutte in gioco**: le basi, i pezzi
 col nome e gli aspetti dei pezzi trovati. Prima di chiederne di nuove a un
 generatore si guarda qui.
 
@@ -82,14 +82,12 @@ in asta (falcioni, tridente) sono «Ascia», la cosa più vicina che c'è. Le
 regole stanno nei dati: per spostare una figura si cambia il suo `pezzo` e
 si rilancia `--gioco`.
 
-**Restano fuori 17 figure, e ognuna ha il suo motivo** nel campo `dubbi`:
-
-- le 13 disegnate in diagonale: dieci bastoni e tre balestre (la balestra
-  di base resta). In mano le armi stanno dritte ([roba.md](roba.md)), e un
-  giro di 45° su una figura così piccola la rovina. Sono quelle da far
-  rifare;
-- 4 di forma che nessun pezzo ha: la frusta, il maglio, la mazza (la porta
-  solo Grumo) e l'arco con la lama.
+**Le figure disegnate in diagonale si girano nel foglietto** (`"ruota": 35` nella figura di `roba.json`, i gradi misurati sull'asse; `atlante.py`
+gira il pezzo grande e poi lo riduce, `ruota_in`): dieci bastoni e bacchette (`bastone-14` e `49`…`57`) sono diventati aspetti di «Bastone magico»
+e «Bacchetta», e `bastone-46` (uno scettro già dritto) di «Scettro». Quelle dei fogli degli scudi sono disegnate più piccole delle altre, e `"misura"`
+le porta alla stessa altezza. **Sono state tolte dal catalogo sei figure**, e il PNG non si tocca: le balestre `arco-08`, `09` e `10` (anche girate
+restano un anello con una corda: non si leggono come balestre a quella misura), l'arco con la lama (`arco-11`), la frusta a catena (`ascia-10`) e la
+mazza (`ascia-12`, che nel gioco è l'arma di Grumo e non si trova): nessun pezzo ha la loro forma.
 
 Pesano nell'atlante: con gli aspetti passa da 244 a 316 KB di PNG, più i
 pezzi nitidi (451 KB di WebP: [../core/sprite.md](../core/sprite.md)), che

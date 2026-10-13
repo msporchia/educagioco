@@ -433,6 +433,15 @@ pavimento attraverso. Con `riempi` la sagoma si ingrossa di `chiudi` pixel (del 
 chiuso si riempie, la sagoma torna alla sua misura, e dove è piena e il pezzo no si mette `colore` (di difetto un nero caldo). Un varco più
 largo di `2 × chiudi` non si chiude: si alza il numero e si guarda con `vedi.py`.
 
+```json
+"bastone-49": { "da": [119, 92], "cella": [11, 16], "ruota": 30, "misura": [10, 22] }
+```
+
+`ruota` raddrizza una figura disegnata in diagonale (le bacchette di `scudi.png` hanno la testa in alto a destra): **i gradi in senso
+antiorario**, misurati sull'asse della figura (un bastone con la testa a destra della verticale di 30° si gira di 30). Si gira il pezzo
+dipinto grande e poi lo si riduce alla grana del foglio (`ruota_in`), non quello piccolo, che con venti pixel si rovinerebbe, e il nitido esce
+girato anche lui. Vale per `sprite` con una `cella` che contiene tutta la figura; `misura` dopo la rotazione porta il pezzo alla taglia delle sorelle.
+
 `scala` e `foglio` restano la strada normale — riducono tutto il foglio
 dello stesso fattore, che è quello che si vuole quando il foglio è una
 tabella onesta. `misura` è per il pezzo che dal fattore comune esce

@@ -400,6 +400,26 @@ def cancella_in(pezzo, rettangoli, nome):
     return fuori
 
 
+def grande_di(fg):
+    """Il foglio com'è dipinto, ripulito come il piccolo, una volta sola per foglio (`fg['_png']` dice dov'è)."""
+    if '_grande' not in fg:
+        senza = {**fg, 'colori': 0}
+        fg['_grande'] = pulisci(senza_alone(Image.open(fg['_png']).convert('RGBA'), senza), senza)
+    return fg['_grande']
+
+
+def ruota_in(pezzo, gradi):
+    """Il pezzo ruotato di `gradi` (positivi: in senso antiorario) e stretto sulla figura.
+
+    Le bacchette e i bastoni dei fogli dipinti sono disegnati in diagonale (la testa in alto a destra), e in mano le armi stanno
+    dritte: il foglietto dice di quanto girarle (`"ruota": 35`, misurato sull'asse della figura), e si gira il pezzo grande
+    (da `grande_di`), poi si riduce: girare quello piccolo di venti pixel lo rovinerebbe. Si passa da `RGBa` (alfa premoltiplicato)
+    come in `alla_misura`, o l'orlo prende una riga scura."""
+    g = pezzo.convert('RGBa').rotate(gradi, resample=Image.BICUBIC, expand=True).convert('RGBA')
+    riquadro = g.getchannel('A').point(lambda v: 255 if v > 8 else 0).getbbox()
+    return g.crop(riquadro) if riquadro else g
+
+
 def riempi_in(pezzo, regola, nome, scala=1):
     """Rimette il corpo a un pezzo che il fondo ha mangiato da dentro.
 
@@ -735,6 +755,12 @@ def ritagli_di(im, fg, provenienza, ritagli, famiglie, trasforma, anima):
                 continue
             chi = f'{nome}{i}' if quanti > 1 else nome
             pezzo = im.crop((x, y, x + pw, y + ph))
+            if d.get('ruota'):
+                # si gira il pezzo grande e poi si riduce alla grana del foglio, come ha fatto `alla_misura_vera` con tutto il resto
+                grande = grande_di(fg)
+                kx, ky = grande.width / im.width, grande.height / im.height
+                g = ruota_in(grande.crop((round(x * kx), round(y * ky), round((x + pw) * kx), round((y + ph) * ky))), d['ruota'])
+                pezzo = g.convert('RGBa').resize((max(1, round(g.width / kx)), max(1, round(g.height / ky))), Image.BOX).convert('RGBA')
             # `specchia`: alcuni fogli disegnano un quadrupede di lato che
             # guarda a sinistra, e la convenzione (FORMATO.md) vuole che
             # `_lato` guardi sempre a destra — la sinistra la fa `ctx.scale
@@ -780,10 +806,10 @@ def nitidi_di(f, fg, ridotto, nitidi):
     col fondo tolto allo stesso modo ma sui pixel veri, e `buchi` con
     `max` scalato all'area. Il gioco impagina con il pezzo piccolo, che
     resta la misura, e disegna con questo (docs/core/sprite.md)."""
-    grande = Image.open(f).convert('RGBA')
+    fg['_png'] = f
+    grande = grande_di(fg)
     kx, ky = grande.width / ridotto.width, grande.height / ridotto.height
     fg = {**fg, 'colori': 0}
-    grande = pulisci(senza_alone(grande, fg), fg)
     cw, ch = fg['cella']
     for nome, d in fg['sprite'].items():
         if nome.startswith('__'):
@@ -798,6 +824,8 @@ def nitidi_di(f, fg, ridotto, nitidi):
         pw, ph = d.get('cella', [cw, ch])
         x, y = d['da'][0] * cw, d['da'][1] * ch
         pezzo = grande.crop((round(x * kx), round(y * ky), round((x + pw) * kx), round((y + ph) * ky)))
+        if d.get('ruota'):
+            pezzo = ruota_in(pezzo, d['ruota'])
         if d.get('specchia'):
             pezzo = ImageOps.mirror(pezzo)
         # `cancella` è nelle coordinate del ritaglio piccolo: sul grande si scala come il rettangolo
@@ -1125,6 +1153,7 @@ def costruisci(bers, fogli, con_provini):
                 raise SystemExit(f'creature: {", ".join(doppi)} ha già un pezzo omonimo ({provenienza[doppi[0]]}): '
                                  f'si risolve con `alias` nel catalogo')
         prima = len(ritagli)
+        fg['_png'] = f
         ritagli_di(im, fg, provenienza, ritagli, famiglie, trasforma, anima)
         cose_di(fg, cose, f.name)
         if fg.get('nitido'):
