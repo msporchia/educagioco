@@ -1,7 +1,7 @@
 # I dialoghi, e le scritte del gioco
 
 Chi sta fermo sulla terra di sopra si **parla**: il vecchio minatore, i sei
-che danno le missioni, i tre mercanti. Prima c'era un fumetto con tutto
+che danno le missioni, i quattro mercanti. Prima c'era un fumetto con tutto
 dentro e i tasti sotto; l'utente, l'8 ottobre 2026: *«dà un tocco di… sto
 controllando il gioco invece di seguirlo»*. Il dialogo fa seguire: chi parla
 ha una faccia, dice una cosa alla volta, e le domande da fargli portano alle
@@ -69,7 +69,8 @@ Node), `viste/Dialogo.vue` (il riquadro), `viste/Terra.vue` (`parla`,
 - **«Novità?»** ([sotto](#novità)): ognuno ha una domanda in più, con frasi
   che girano e reagiscono a dove è arrivato l'eroe.
 - **I mercanti** salutano con la loro battuta (la stessa del banco) e la
-  prima domanda apre la bottega; il mercante ha anche «Ho roba da vendere»,
+  prima domanda apre la bottega («Fammi vedere le armi» dal fabbro, «Fammi vedere la magia» dall'incantatrice, «Mi servono pozioni»
+  dalla guaritrice); il mercante ha anche «Ho roba da vendere»,
   che la apre sulla linguetta delle tasche. **Non dicono mai «non ho niente
   per te»**: il banco di chi veste ha sempre qualcosa che migliora
   ([bottega.md](bottega.md)), e una linguetta vuota dice «… niente alla tua
@@ -87,7 +88,7 @@ dicevano sempre le stesse cose. Ognuno ha adesso **«Novità?»** (dopo la sua
 cosa, prima della storia; `dati/novita.js`, `novita` in `motore/dialoghi.js`):
 
 - **Tre frasi sue** (`ruota`), sulla specialità: il fabbro parla di ferro e
-  lame, la guaritrice di erbe e ferite, il minatore di roccia e puntelli, la
+  lame, l'incantatrice di bacchette, stoffa ed energia, la guaritrice di erbe e ferite, il minatore di roccia e puntelli, la
   ragazza di cosa si sente al pozzo, il boscaiolo di tracce, il pescatore di
   pazienza. Sempre valide.
 - **Reazioni** a dove è arrivato: una **finestra** sulle discese finite
@@ -149,6 +150,7 @@ chiavi restano (sono nei salvataggi e negli sprite).
 | `badessa` (missione) | la Badessa Grigia | la Dama Grigia |
 | `eremita` | l'eremita | il frate (dell'altare) |
 | `armaiolo` | l'armaiolo | il fabbro |
+| `incantatrice` | (nuova, 13 ottobre) | l'incantatrice |
 | `erborista` | l'erborista | la guaritrice |
 | `rigattiere` | il rigattiere | il mercante |
 | `panciotto` · `saio` · `manto` | panciotto · saio · manto | giubba di cuoio · tunica · mantello |
@@ -182,5 +184,5 @@ e la strada, prendere e consegnare, i mercanti),
 un tocco va alla pagina dopo, le domande solo all'ultima, la storia che non
 si richiede, «ci penso io» che prende la missione, un tocco sul prato che
 chiude e cammina, la consegna col premio, il minatore che si presenta e poi
-dice la strada, la guaritrice e il mercante che portano alla bottega);
+dice la strada, la guaritrice, l'incantatrice e il mercante che portano alla bottega);
 `nelDialogo` in `test/aiuto/browser.mjs` gira le pagine e sceglie.

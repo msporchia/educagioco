@@ -141,7 +141,7 @@ per sempre non ha bisogno della discesa, e prima lì diceva «Serve laggiù».
 
 ## I mercanti a tono
 
-L'armaiolo e il rigattiere portano la riga della storia (com'era,
+L'armaiolo, l'incantatrice e il rigattiere portano la riga della storia (com'era,
 [bottega.md](bottega.md)) **al livello dell'eroe**, e anche i pezzi della
 vetrina avanti; le cose in più (`altre`) sono a tono e una su tre magica
 (`MAGICI_SUL_BANCO`). Il resto della bottega non cambia: pezzi avanti a

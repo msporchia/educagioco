@@ -253,6 +253,48 @@ e così `armaiolo-fermo-0`, `erborista-fermo-0`, `rigattiere-fermo-0`, e i
 sei del prompt 7 (`ragazza-fermo-0`…). Le cose del prompt 8 vanno in
 `dati/missioni.js` come `sprite` della cosa, e la corona in `scena/tela.js`.
 
+## Prompt 9 — l'incantatrice, e nove che mancano (il terzo foglio dei personaggi)
+
+La quarta bottega del villaggio (docs/sotterraneo/bottega.md): **l'incantatrice**, che vende bacchette, bastoni, vesti di
+stoffa e le boccette dell'energia. Oggi ha una figura provvisoria (la guaritrice col verde ruotato al viola, `tinta` in
+`sopra-personaggi-1.json`): il foglio la rimpiazza. Un foglio da dieci personaggi costa come uno da due, quindi si chiedono pieni:
+con lei, altre **nove figure che al gioco mancano**, ognuna con un posto già pensato (il perché sta sotto, e nessuna si ritaglia
+finché un ruolo non la usa: la regola degli inutilizzati, `docs/core/sprite.md`).
+
+Si chiede in una **chat nuova**, allegando `sopra-personaggi-1.png` (è la mano: contorno scuro, luce da in alto a sinistra,
+pixel grossi, la stessa scala; il testo del prompt 7 non si è conservato, e questo lo rimpiazza). Il fondo e le pose sono quelli dei
+primi due fogli: **fermo** e **che saluta**, perché il gioco usa il saluto, non «che parla».
+
+```text
+Allego un foglio di personaggi di un gioco di ruolo a 16 bit in pixel art. È lo STILE da seguire, senza copiare i personaggi: stesso contorno scuro, stessa luce da in alto a sinistra, stessi pixel grossi e regolari, stessa cura nei visi e nei vestiti, stessi colori caldi e un po' spenti, STESSA SCALA (ogni figura alta circa come quelle del foglio allegato, un adulto circa 260 px su 1536).
+
+Disegna un foglio nuovo, 1024×1536 px verticale, su un fondo MAGENTA PIENO (#FF00FF), uniforme, senza sfumature, senza ombre e senza nessuna scacchiera. Una griglia invisibile di 4 colonne per 5 righe: dieci personaggi, ognuno in DUE pose affiancate nella sua riga. Prima posa: FERMO, in piedi, di tre quarti, lo sguardo verso chi guarda. Seconda posa: CHE SALUTA, la stessa figura con la stessa sagoma, gli stessi colori e gli stessi piedi nello stesso punto, ma la mano libera alzata e un sorriso con la bocca aperta. Ogni posa sta da sola, staccata dalle altre da almeno mezza figura di magenta, senza ombra a terra, senza prato, senza banco e senza oggetti sparsi; il magenta non compare mai DENTRO una figura. NESSUNA PAROLA SCRITTA, NESSUN FUMETTO, NESSUN NUMERO, NESSUN PUNTO ESCLAMATIVO.
+
+I dieci personaggi, due per riga, dall'alto in basso:
+1. L'incantatrice: una donna alta e sottile, una veste lunga viola scuro con ricami d'argento sull'orlo e sulle maniche larghe, i capelli neri sciolti con un cerchietto d'argento, una bacchetta lunga col cristallo azzurro in una mano e una boccetta blu alla cintura, un libro chiuso sotto il braccio. SENZA cappello a punta.
+2. La cacciatrice del bosco: giubba di cuoio marrone, sciarpa rossa al collo, un arco corto e una faretra sulla schiena, stivali alti, i capelli raccolti in una treccia.
+3. L'ortolana: cappello di paglia a tesa larga, grembiule color terra, un cesto di carote al braccio, le maniche rimboccate, allegra.
+4. Il bambino del villaggio: alto due terzi degli adulti, capelli arruffati, camicia troppo grande e bretelle, una spada di legno infilata nella cintura (non in mano), sveglio.
+5. La nonna: piccola e tonda, scialle grigio, chignon bianco, occhiali, un bastone e un gomitolo di lana nella tasca del grembiule.
+6. Il nonno: magro, baffi bianchi, berretto di lana, giacca rattoppata, la pipa spenta in mano, un bastone da passeggio sotto il braccio.
+7. Il cartografo viandante: cappello a tesa larga, lungo cappotto blu polvere, una bussola d'ottone aperta in una mano, rotoli di mappe sotto il braccio e un cannocchiale alla cintura.
+8. La sentinella: elmo di ferro chiuso col naso, cotta di maglia, tunica rossa, uno scudo a goccia al braccio e la lancia appoggiata dritta accanto; nella seconda posa, invece di salutare, FA ALT: il braccio libero teso in avanti con il palmo aperto e un'espressione severa ma non cattiva.
+9. Il cantastorie: berretto rosso con una piuma, giubba verde a righe, un liuto sulla schiena, la barba corta, un aspetto da chi ha girato il mondo.
+10. La lavandaia: fazzoletto celeste in testa, vestito di lino chiaro con le maniche rimboccate, una grossa cesta di panni bianchi sul fianco, le braccia forti.
+
+Sono tutti amici del villaggio: nessuna arma rivolta verso chi guarda, nessuno minaccioso. Ogni personaggio deve distinguersi a colpo d'occhio anche rimpicciolito (la bacchetta col cristallo, l'arco, il cesto di carote, il bambino piccolo, gli occhiali, la pipa, la bussola, lo scudo, il liuto, i panni).
+```
+
+Controllo: fondo magenta vero; dieci figure da due pose, ognuna con la stessa sagoma e gli stessi piedi nelle due pose (la mano alzata sporge, il resto no); alte come i personaggi del foglio allegato (il bambino più basso); nessun magenta dentro; nessuna scritta. Se la scala è sbagliata si rifà
+con «riduci tutte le figure di un quarto» (o si allarga) nella stessa chat; più di due correzioni, si riparte con l'ultima buona allegata.
+
+Cosa se ne fa, figura per figura (da cercare nel gioco e da scrivere nel foglietto `sopra-personaggi-3.json`, con le chiavi fra parentesi, `<chiave>-fermo-0` e `<chiave>-saluta-0` come gli altri):
+- **L'incantatrice** (`incantatrice`): subito. Si toglie la riga `tinta` dai suoi due sprite in `sopra-personaggi-1.json`, che ha lo stesso nome, e si ritaglia dal foglio nuovo (stessa mano, `misura` e `nitido` come i dieci di prima). Il banco, il posto sulla mappa e le parole ci sono già.
+- **La sentinella** (`sentinella`): dà il posto alla guardia disegnata in codice che si pianta davanti alle discese rosse ([zone.md](../../../../../docs/sotterraneo/zone.md#il-pallino-e-la-sentinella)); la posa «alt» è quella che serve a lei (non saluta: non fa passare).
+- **Il cartografo** (`cartografo`): chi dà la bussola della mappa, che [da-fare.md](../../../../../docs/sotterraneo/da-fare.md) tiene ancora da fare.
+- **La cacciatrice, l'ortolana, il bambino, la nonna e il nonno** (`cacciatrice`, `ortolana`, `bambino`, `nonna`, `nonno`): chi dà le missioni nuove (dodici oggi, sei persone): la collana è della nonna, la lanterna del nonno; la cacciatrice per le discese a cui servono archi, l'ortolana per l'orto del villaggio, il bambino per le missioni «accompagna / porta giù».
+- **Il cantastorie e la lavandaia** (`cantastorie`, `lavandaia`): al villaggio, che ha i panni stesi e nessuno che li stenda, con «Novità?» che dà ai piccoli qualcosa da ascoltare.
+
 ## Com'è andata
 
 - `mappa_sotterraneo.png` — il prompt 1, al primo colpo, il 6/10/2026:

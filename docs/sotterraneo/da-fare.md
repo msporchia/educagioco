@@ -53,6 +53,11 @@ dell'abisso sta in [abisso-progetto.md](abisso-progetto.md).
 
 ## La terra di sopra
 
+- **Il terzo foglio dei personaggi** (prompt 9 di `PROMPT-terra-di-sopra.md`, da chiedere a ChatGPT): la figura vera
+  dell'incantatrice, che ha una provvisoria (la guaritrice ruotata al viola), e nove che il gioco non ha, ognuna con un ruolo
+  da scrivere quando arriva: la sentinella dipinta per le discese rosse, il cartografo che dà la bussola, la cacciatrice, l'ortolana, il
+  bambino, la nonna e il nonno per le missioni nuove, il cantastorie e la lavandaia per il villaggio. Si ritaglia solo chi ha un ruolo
+  ([sprite.md](../core/sprite.md#gli-inutilizzati)).
 - **La bussola del mock** (il minatore che la dà, lei che punta alla prossima
   discesa) non è fatta. La posa del minatore con la bussola in mano c'è, nel
   primo foglio dei personaggi (`sopra-personaggi-1.png`, riquadro nel suo
@@ -79,7 +84,7 @@ dell'abisso sta in [abisso-progetto.md](abisso-progetto.md).
   secondo uso a tutti — armature e scudi pesanti che la chiedono, e una tasca in più ogni quattro punti; (2)
   **calibrare coi numeri finiti dell'equipaggiamento**: il banco deve usare le abilità dell'albero e quelle dei pezzi,
   non solo `att` e `dif` della roba, o la taratura sbaglia (regola dell'utente, 9 ottobre); una strada per ramo, due per
-  classe nelle misure; (3) le **boccette di mana** ci sono già (`pozione-blu`, dall'erborista e nei forzieri): da vedere se
+  classe nelle misure; (3) le **boccette di mana** ci sono già (`pozione-blu`, dall'incantatrice e nei forzieri): da vedere se
   ne servono di più grandi, con nomi epici e lo stesso disegno; (4) la **grafica del duello**: animazioni più lunghe e
   leggibili, una per tipo d'attacco (scudo e cura non scattano in avanti), e il mostro che attacca davvero nel disegno.
   (5) **un effetto grafico diverso per ogni abilità** (l'utente, 9 ottobre): oggi tutte volano con il loro simbolo e il colore

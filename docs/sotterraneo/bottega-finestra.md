@@ -15,8 +15,10 @@ coi pezzi comuni `Cornice.vue`, `Addosso.vue`, `Casella.vue`, `Pannello.vue`,
   linguette, la griglia, il pannello. Scorre solo la griglia. Provato: un
   elenco di voci col bordino, sembrava un modulo da compilare.
 - **Le linguette sono del mercante** (`schede` in `dati/mercanti.js`):
-  l'armaiolo «Armi» e «Scudi e armature», l'erborista «Pozioni» e «Torce»,
-  il rigattiere «Gioielli», «Vendi» e «Riacquista». «Vendi» e «Riacquista» le ha
+  l'armaiolo «Armi» e «Scudi e armature», l'incantatrice «Bacchette e bastoni», «Vesti» ed
+  «Energia», l'erborista «Pozioni» e «Torce», il rigattiere «Gioielli», «Vendi» e «Riacquista».
+  Una linguetta con `famiglie` si mostra solo a chi porta una di quelle famiglie (`schedeDi`, chiamato da
+  `Gioco.vue` quando passa il mercante alla finestra): al cavaliere l'incantatrice ha la sola «Energia». «Vendi» e «Riacquista» le ha
   solo chi compra; gli altri lo dicono con una battuta. `guastiDeiMercanti` pretende che ogni
   cosa del banco stia sotto una linguetta.
 - **Caselle grandi, tre per riga**, col pezzo disegnato e il prezzo sotto (dieci
@@ -95,7 +97,7 @@ coi pezzi comuni `Cornice.vue`, `Addosso.vue`, `Casella.vue`, `Pannello.vue`,
   addosso «Togli». Si chiude con la ✕ o toccando il campo fuori dalla cornice (e l'eroe ci va). Le regole dello zaino sono quelle di
   prima.
 
-Nei test: `[data-bottega]` (con `data-mercante-aperto`),
+Nei test: `[data-bottega]` (con `data-mercante-aperto`: `armaiolo`, `incantatrice`, `erborista`, `rigattiere`),
 `[data-scheda="<linguetta>"]` (con `aria-selected`),
 `[data-casella-pezzo="<cosa>"]` (con `data-posso`, `data-rarita` e
 `data-avanti`: le righe avanti, dove il prezzo è alto), `[data-vendo="<cosa>"]`, `[data-pannello]` (con
