@@ -116,6 +116,31 @@ sì.
 da fuori mentre il banco è aperto vuole una ricarica a mano, apposta: la
 pagina non si muove da sola mentre ci si lavora.
 
+## Gli inutilizzati
+
+**La regola** (dell'utente): niente «oggetti non utilizzati nel gioco ma già generati». Ogni pezzo o è un
+doppione (e si elimina), o si usa; se è già in un altro set o è brutto, si elimina. `npm run
+sprite:inutilizzati` dice quali sono oggi nel mezzo, per cartella-gioco. Non cambia niente e non è un cancello:
+il test (`unita/sprite-inutilizzati`) guarda solo che giri e sia coerente.
+
+- **Immagini**: i file di `sorgenti/` che nessun foglietto, nessuno strumento (un nome o un glob nel codice,
+  commenti esclusi: `terreno-*.png`) e nessun catalogo legge. Stati: `NESSUNO LA LEGGE` (anche tutto
+  `non-usati/`), solo allegato ai prompt (sta in una scheda `PROMPT-*.md`), schema di `scenario.py`, set di
+  terzi (`armm1998/`, `0x72/`: i nomi non si toccano). Una riga `?` dice «letta solo da uno strumento»: il
+  ripiego di una scena (`td_2.png` in `vesti.py`) sta qui e va guardato.
+- **Voci dell'atlante** (fattoria, sotterraneo) che nessun file di `src/` nomina: il nome (o un pezzo della
+  sua posa) compare come parola, oppure combacia con un modello come `recinto_${specie}_${stato}` le cui
+  parti sono parole che compaiono. È un'euristica: sbaglia per un nome composto in un modo che nessuno scrive
+  per intero, quindi **ogni voce si guarda prima di toglierla** (`--provino` la ritaglia dall'atlante).
+- **La roba del sotterraneo**: le figure di `roba.json` che nessun foglietto ritaglia e che non hanno un
+  `pezzo` (le 17 «fuori» di [figure.md](../sotterraneo/figure.md)). **Le creature**: quelle del catalogo senza
+  nessun gioco, e i fotogrammi che un gioco lascia fuori (`scelta`).
+- **`--pixel`** (`strumenti/sprite/non-ritagliato.py`): per ogni foglio con un foglietto toglie i rettangoli
+  dal primo piano (alfa, fondo dichiarato, o il colore degli angoli; bianco e scacchiera dipinta riconosciuti)
+  e raggruppa il resto in macchie: figure dipinte mai ritagliate. I fogli di scena (`sotterraneo_N`) ne
+  danno molte perché il fondo è dipinto. **Di un foglio che resta in uso le macchie non si «eliminano»**:
+  o si ritagliano (una riga nel foglietto) o restano nel PNG, che non si tocca.
+
 ## Gli agganci
 
 **Dove sta la testa di una bestia lo dice il suo foglietto** (`agganci`,
