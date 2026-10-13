@@ -24,13 +24,14 @@ import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { PERSONAGGI, MINATORE } from '../../src/giochi/sotterraneo/dati/terra-mappa.js'
 import { missioneDi } from '../../src/giochi/sotterraneo/dati/missioni.js'
 import { MONDO } from '../../src/giochi/sotterraneo/motore/avventure.js'
-import { robaAttesa } from '../../src/giochi/sotterraneo/motore/storia.js'
+import { robaAttesa, crescitaAttesa } from '../../src/giochi/sotterraneo/motore/storia.js'
 import { sogliaDi } from '../../src/giochi/sotterraneo/dati/livelli.js'
 // al livello atteso della torre: due gradini sotto la guardia non fa scendere (docs/sotterraneo/zone.md)
-const crescita = { esp: sogliaDi(3) }
 
 const DISCESA = CAMPAGNA.findIndex(t => t.chiave === 'torre')
 const roba = robaAttesa('cavaliere', DISCESA, { gemme: 5 })
+// la forza dell'eroe atteso è sotto il livello (docs/sotterraneo/forza.md): due livelli in più perché la torre non abbia la sentinella
+const crescita = crescitaAttesa('cavaliere', DISCESA + 2)
 const ROSICCHIONE = missioneDi('rosicchione'), GOBLIN = missioneDi('goblin'), CHIAVI = missioneDi('chiavi')
 
 const browser = await apriBrowser()
@@ -117,7 +118,7 @@ for (let n = 0; n < 4; n++) {
 await nelDialogo(page, null, { tocca: toccaIl })
 chiede += ' ' + await page.locator('[data-scelta="prendi"]').innerText()
 controlla('il dialogo dice cosa, dove, il premio e le monete', chiede.includes('Grattanaso') && chiede.includes('torre in rovina') &&
-          chiede.includes('primo piano') && chiede.includes(`💎 ${GOBLIN.premio.gemme}`) && chiede.includes(`🪙 ${GOBLIN.premio.monete}`), chiede)
+          chiede.includes('primo piano') && chiede.includes(`💎 ${GOBLIN.premio.gemme}`) && (!GOBLIN.premio.monete || chiede.includes(`🪙 ${GOBLIN.premio.monete}`)), chiede)
 await toccaIl('[data-dialogo] [data-scelta="prendi"]')
 await attendi(page, 500)
 uguale('presa, lei ringrazia', await page.locator('[data-dialogo="ragazza"] [data-missione="goblin"][data-fase="presa"]').count(), 1)
@@ -150,7 +151,7 @@ controlla('Rosicchione è fatta: torna dal mugnaio, hai battuto Rosicchione', ro
 controlla('il goblin è da fare, con la discesa, il piano e chi lo vuole', gob.stato === 'presa' && gob.testo.includes('da fare') &&
           gob.testo.includes('La torre in rovina, piano 1') && gob.testo.toLowerCase().includes('ragazza del pozzo'), gob.testo)
 controlla('ogni riga ha l\'icona ritagliata della discesa', righe.every(r => r.ritaglio))
-controlla('il premio è nella riga', ros.testo.includes('Amuleto azzurro') && ros.testo.includes(`🪙 ${ROSICCHIONE.premio.monete}`) && gob.testo.includes(`🪙 ${GOBLIN.premio.monete}`))
+controlla('il premio è nella riga', ros.testo.includes('Amuleto azzurro') && ros.testo.includes(`🪙 ${ROSICCHIONE.premio.monete}`) && (!GOBLIN.premio.monete || gob.testo.includes(`🪙 ${GOBLIN.premio.monete}`)))
 controlla('tre in mano, e il diario dice perché non ne arrivano altre', (await page.locator('[data-diario-tetto]').innerText()).includes('3 missioni'))
 await scatto(page, 'missioni-diario')
 await toccaIl('[data-diario] [data-chiudi]')

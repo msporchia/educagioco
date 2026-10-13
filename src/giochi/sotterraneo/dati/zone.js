@@ -102,7 +102,7 @@ export const C_E_UNA_NOTIZIA = 'Il minatore ha una notizia: vai a sentirla.'
 export const DETTI_DEL_COLORE = {
   rosso: { chi: 'La sentinella', detto: 'Alt! Laggiù è troppo pericoloso per te: non ti faccio passare. Fatti le ossa dove il pallino è verde, e torna.' },
   arancio: { chi: 'Il minatore ti ha visto passare', detto: 'Laggiù sono più forti di te. Si può tentare, ma porta pozioni.' },
-  grigio: { chi: 'Il minatore ti ha visto passare', detto: 'Laggiù non c\'è più niente alla tua altezza: poca esperienza, e roba da poco.' },
+  grigio: { chi: 'Il minatore ti ha visto passare', detto: 'Questa non è chiusa: ormai laggiù sei più forte di tutto, e rende poco.' },
 }
 
 // Quanta della sua esperienza dà un mostro qui: nella zona grigia (l'eroe sopra la fascia) un quarto, se no le grigie,

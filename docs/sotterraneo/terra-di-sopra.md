@@ -133,8 +133,10 @@ forma e perché: [la-grande-storia.md](la-grande-storia.md#le-discese).
   prato col fumetto aperto lo chiude, e l'eroe parte verso dove si è toccato
   ([../core/interfaccia.md](../core/interfaccia.md#un-tocco-altrove-chiude)). Prima lo chiudeva e
   basta: per andarsene servivano due tocchi.
-- **Una chiusa dice cosa ci sarà e cosa la apre** («Si apre quando finisci
-  la scalinata antica»), senza tasto; chiusa per l'età non promette niente.
+- **Una chiusa dice cosa la apre** («Si apre quando batti Re Ossuto in fondo
+  alla cripta dell'altare»: il grosso della discesa prima, non una missione:
+  [la-storia-principale.md](la-storia-principale.md)), senza tasto; chiusa per
+  l'età non promette niente. Quella dove la storia continua lo dice nel fumetto.
 - **Una chiusa ha il disegno pulito**: niente velo né lucchetto. Quando
   l'eroe ci va (tocco alla discesa chiusa, arrivato ai suoi piedi) **si
   pianta un cartello di divieto** davanti all'ingresso: un paletto di legno

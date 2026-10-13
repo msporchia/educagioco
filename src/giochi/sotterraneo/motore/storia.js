@@ -3,7 +3,7 @@
 // che girano in Node (il banco di prova ci misura sopra). Vedi docs/sotterraneo/la-grande-storia.md.
 import { COSE, A_SORTE, pescaMerce, baseDi, aLivello, chiaveDelPezzo } from '../dati/cose.js'
 import { CAMPAGNA, QUANTE_TAPPE } from '../dati/campagna.js'
-import { PASSI, CASELLE, passoDi, POZIONI_ATTESE, LIVELLI_ATTESI } from '../dati/storia.js'
+import { PASSI, CASELLE, passoDi, POZIONI_ATTESE, LIVELLI_ATTESI, STORIA, CAPITOLI } from '../dati/storia.js'
 import { eroeDi } from '../dati/eroi.js'
 import { VERSIONE_ROBA, Corredo } from './corredo.js'
 import { crescitaA } from './crescita.js'
@@ -194,6 +194,26 @@ export function sottoIlLivello(scheda, attesa) {
   if (scheda.att < attesa.att) return { manca: 'arma', ha: scheda.att, serve: attesa.att }
   if (scheda.dif < attesa.dif) return { manca: 'difesa', ha: scheda.dif, serve: attesa.dif }
   return null
+}
+
+// La missione principale, letta dalle discese dell'avventura (dati/storia.js, STORIA e CAPITOLI; docs/sotterraneo/la-storia-principale.md):
+// le sette porte una per una, quante chiuse, e il capitolo di adesso, la prima non finita (`ferma`: c'è, ma per l'età per
+// ora non si scende, e non c'è una freccia da seguire). `tappe` come le dà Gioco.vue: [{ chiave, aperta, fatta }]
+export function laStoria(tappe) {
+  const l = tappe || []
+  const porte = CAMPAGNA.map((t, i) => {
+    const x = l.find(y => y.chiave === t.chiave) || {}
+    const g = GROSSI[GROSSO_DELLA_DISCESA[t.chiave]]
+    return { chiave: t.chiave, indice: i, nome: t.nome, grosso: g ? g.nome : null, fatta: !!x.fatta, aperta: !!x.aperta }
+  })
+  const chiuse = porte.filter(p => p.fatta).length
+  const prossima = porte.find(p => !p.fatta) || null
+  const ultima = [...porte].reverse().find(p => p.fatta) || null
+  return {
+    titolo: STORIA.titolo, totale: porte.length, chiuse, finita: !prossima, porte,
+    corrente: prossima && { ...prossima, ...CAPITOLI[prossima.chiave], ferma: !prossima.aperta },
+    ultima: ultima && { ...ultima, ...CAPITOLI[ultima.chiave] },
+  }
 }
 
 // «quella spada corta», «quello spadone», «quell'ascia», «quel bastone»: il nome della cosa in mezzo a una frase

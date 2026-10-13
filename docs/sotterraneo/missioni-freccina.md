@@ -31,6 +31,10 @@ non una strada**: niente percorso disegnato, e una freccina sola per volta.
   fumetto della discesa, come toccandola. **Le consegne pronte hanno la
   precedenza**: finché qualcuno aspetta di riceverne una c'è il suo «?» d'oro
   e la freccia azzurra no (una cosa alla volta da ricordare).
+- **Senza missioni prese, la storia**: la freccia azzurra porta alla discesa
+  della missione principale ([la-storia-principale.md](la-storia-principale.md)),
+  la porta da aprire; `discesaDaSeguire(…, storia)` la dà in fondo, dopo la
+  missione presa più vicina. La consegna pronta ha sempre la precedenza.
 - **Sopra, in vista** (l'utente, 8 ottobre: «scompaiono troppo presto»): una
   direzione che sparisce appena la cosa entra nello schermo lascia il bambino
   a cercarla. Finché l'obiettivo (la discesa, o chi aspetta la consegna) è in
@@ -48,7 +52,8 @@ Con più missioni prese le freccine ne indicano una. Di difetto resta la regola 
 sopra (la più vicina, la consegna pronta prima); **nel dettaglio di una missione presa
 nel diario il tasto «segui questa»** ne sceglie una (l'utente, 8 ottobre: *«quale
 missione indicano le freccine quando ce n'è più d'una»*), e «smetti» ridà la regola di
-prima. La scelta è `avventura.segui` (un id, di quell'eroe) e **vale finché quella
+prima. Anche la missione principale ha il suo «segui questa» (`segui = 'storia'`):
+vale sempre, e non decade. La scelta è `avventura.segui` (un id, di quell'eroe) e **vale finché quella
 missione è presa**: fatta o consegnata decade da sé (`seguita` in `motore/missioni.js`;
 `Gioco.vue` la toglie anche dal salvataggio alla consegna).
 
