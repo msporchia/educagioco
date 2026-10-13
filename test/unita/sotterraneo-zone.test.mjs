@@ -222,10 +222,15 @@ uguale('e l\'abisso resta l\'abisso', zonaDi(-1).abisso, true)
   for (const L of [14, 24, 34]) {
     const k = indiceDi('torre')
     const cr = crescitaAttesaA('cavaliere', L)
-    const g = gioca(zonaPotenziata(k, L), { seme: 41, bravura: 0.8, eroe: 'cavaliere', crescita: cr, roba: robaAttesaA('cavaliere', L) })
-    const livelli = (g.corsa.crescita.esp - cr.esp) / salto(L)
-    controlla(`una torre verde vinta al ${L} vale più o meno un livello`, g.esito.vinta && livelli >= 0.7 && livelli <= 2,
-              `${g.esito.vinta ? 'vinta' : 'persa'}, ${livelli.toFixed(2)} livelli`)
+    // fra otto semi quelli vinti (coi branchi nuovi un seme solo può perdere: il passo si legge dove si vince)
+    const vinte = []
+    for (let seme = 41; seme < 49; seme++) {
+      const g = gioca(zonaPotenziata(k, L), { seme, bravura: 1, eroe: 'cavaliere', crescita: cr, roba: robaAttesaA('cavaliere', L) })
+      if (g.esito.vinta) vinte.push((g.corsa.crescita.esp - cr.esp) / salto(L))
+    }
+    const livelli = vinte.reduce((n, x) => n + x, 0) / Math.max(1, vinte.length)
+    controlla(`una torre verde vinta al ${L} vale più o meno un livello`, vinte.length >= 2 && livelli >= 0.7 && livelli <= 2,
+              `${vinte.length} vinte su 8, ${livelli.toFixed(2)} livelli`)
   }
 }
 

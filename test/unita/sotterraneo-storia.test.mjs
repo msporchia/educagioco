@@ -94,7 +94,7 @@ const tappeAl = n => CAMPAGNA.map((t, i) => ({ chiave: t.chiave, aperta: i <= n,
   const livelli = new Set()
   for (let s = 0; s < 40; s++) {
     const d = new Corsa(t, { seme: 100 + s, eroe: e, roba: robaAttesa(e, 2), crescita: crescitaAttesa(e, 2), rnd: seminato(s + 3) })
-    for (const m of d.livello.robe.filter(r => r.che === 'mostro' && !r.chiave)) { d.cade(m); mostri++ }
+    for (const m of d.livello.robe.filter(r => r.che === 'mostro' && !r.chiave).slice(0, 5)) { d.cade(m); mostri++ }   // i primi cinque: chi li ammazza tutti, coi branchi, sale di livello e il pezzo non è più quello del posto
     for (const r of d.livello.robe.filter(r => r.che === 'cosa' && COSE[r.cosa].dove)) { pezzi++; livelli.add(COSE[r.cosa].liv) }
   }
   nota(`mostri qualunque della torre: ${pezzi} pezzi da ${mostri} mostri, ai livelli ${[...livelli].join(', ')}`)

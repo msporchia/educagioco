@@ -30,10 +30,14 @@ export function seminato(seme) {
   }
 }
 
-// quanti mostri ci sono in un piano: tre quarti per stanza (la media di quando ogni stanza ne tirava da 0 a 2) meno un
-// 10%, e di quelli la parte che finisce nelle sale grandi (docs/sotterraneo/piani.md)
-const MOSTRI_PER_STANZA = 0.75 * 0.9
-const PARTE_NELLE_SALE = 0.7
+// Chi abita un piano (docs/sotterraneo/piani.md, «I mostri»): una stanza ordinaria su cinque è vuota (ogni stanza piccola; la sala mai),
+// una su dieci ha un solo mostro appostato, le altre un branco da due a `tettoBranco` (sei al più, più l'appostato di una sala: lo scontro ne
+// prende sette); i numeri alti sono rari anche dove il tetto è alto, e i tetti alti sono delle discese tarde
+const STANZE_VUOTE = 0.2
+const STANZE_CON_UN_APPOSTATO = 0.1
+const TETTO_DEL_BRANCO = 6
+// i mostri che stanno col grosso nella sua stanza (da due a tre)
+const SCAGNOZZI_DEL_GROSSO = [2, 3]
 
 export class Livello {
   // `guardiano`: chi porta la chiave della scala, dichiarato dalla tappa (l'unica cosa che non si può aggirare)
@@ -69,7 +73,7 @@ export class Livello {
     // la famiglia del piano: `costruita` (stanze a pianta, colonnati, nicchie) o `caverna` (grotte e passaggi storti), docs/sotterraneo/piani-caverne.md
     this.pianta = pianta === 'caverna' ? 'caverna' : 'costruita'
     this.acqua = !!acqua   // pozze da aggirare
-    this.densita = densita   // quanti mostri in più o in meno rispetto agli altri piani (`densita` della discesa, dati/campagna.js)
+    this.densita = densita   // quante stanze hanno qualcuno, rispetto agli altri piani: 1 una su cinque vuota (`densita` della discesa, dati/campagna.js)
     // i relitti (macerie, statue rotte, rocce…) hanno il loro caso: non spostano né mostri né arredo, e si vedono nell'elenco `relitti`
     this.rndRelitti = seminato(seme * 29 + piano * 130363 + 7)
     this.relitti = []
@@ -404,18 +408,21 @@ export class Livello {
         if (this.vicinanza[b * L + a] < 0) this.vicinanza[b * L + a] = s.id
       }
     }
-    for (const s of this.stanze) {
-      // le celle con tutte e quattro le vicine nella stanza: lontane dai muri
-      s.interno = s.suolo.filter(c => [[1, 0], [-1, 0], [0, 1], [0, -1]].every(([dx, dy]) => this.dentro(s, c.x + dx, c.y + dy)))
-      // il riquadro e i pezzi sono il suolo più le colonne: una nicchia esce dal riquadro di nascita (relitti e acqua stanno dentro)
-      const celle = [...s.suolo, ...s.colonne]
-      const x0 = Math.min(...celle.map(c => c.x)), y0 = Math.min(...celle.map(c => c.y))
-      const w = Math.max(...celle.map(c => c.x)) - x0 + 1, h = Math.max(...celle.map(c => c.y)) - y0 + 1
-      const m = new Uint8Array(w * h)
-      for (const c of celle) m[(c.y - y0) * w + c.x - x0] = 1
-      s.x = x0; s.y = y0; s.w = w; s.h = h
-      s.pezzi = pezziDa(m, w, h, x0, y0)
-    }
+    for (const s of this.stanze) this.riquadroDi(s)
+  }
+
+  // le celle lontane dai muri e il riquadro con i pezzi di una stanza, dal suo suolo
+  riquadroDi(s) {
+    // le celle con tutte e quattro le vicine nella stanza: lontane dai muri
+    s.interno = s.suolo.filter(c => [[1, 0], [-1, 0], [0, 1], [0, -1]].every(([dx, dy]) => this.dentro(s, c.x + dx, c.y + dy)))
+    // il riquadro e i pezzi sono il suolo più le colonne: una nicchia esce dal riquadro di nascita (relitti e acqua stanno dentro)
+    const celle = [...s.suolo, ...s.colonne]
+    const x0 = Math.min(...celle.map(c => c.x)), y0 = Math.min(...celle.map(c => c.y))
+    const w = Math.max(...celle.map(c => c.x)) - x0 + 1, h = Math.max(...celle.map(c => c.y)) - y0 + 1
+    const m = new Uint8Array(w * h)
+    for (const c of celle) m[(c.y - y0) * w + c.x - x0] = 1
+    s.x = x0; s.y = y0; s.w = w; s.h = h
+    s.pezzi = pezziDa(m, w, h, x0, y0)
   }
 
   // un corridoio a elle; uno su tre è largo due celle (la seconda corsia sotto o accanto alla prima)
@@ -715,6 +722,9 @@ export class Livello {
       if (lontano) lontano.chiave = true
     }
 
+    const capo = this.grosso && this.robe.find(r => r.che === 'mostro' && r.grosso)
+    if (capo) this.mettiGliScagnozzi(capo)
+
     // gemme sparse: fanno valere la pena scostarsi dalla strada anche quando in una stanza non c'è altro
     for (const s of st) {
       if (this.rnd() > 0.55) continue
@@ -830,11 +840,10 @@ export class Livello {
     return this.dentro(s, x, y) && this.calpestabile(x, y) && !this.robeSu(x, y).length && !this.porteVicine(x, y)
   }
 
-  // Chi sta nel piano (docs/sotterraneo/piani.md). Il numero di mostri è quello di sempre (tre quarti di mostro per stanza,
-  // meno i caporali, che sono mostri anche loro: le domande di una discesa non crescono), ma raggruppato: le sale grandi
-  // hanno un branco da due a cinque, tutti vicini fra loro; qualche mostro sta solo, appostato in un angolo o dietro una
-  // colonna; poche stanze piccole ne hanno uno o due; le altre sono vuote. La stanza del tesoro ha la sua guardia.
-  // `tipiPer(forza, quanti)` dà i tipi di una stessa fascia
+  // Chi sta nel piano (docs/sotterraneo/piani.md). Ogni stanza dove vanno i mostri è vuota una volta su cinque (le sale mai: lì stanno i
+  // branchi), ha un solo mostro appostato in un angolo o dietro una colonna una volta su dieci, e altrimenti un branco da due fino al
+  // tetto della discesa e della stanza, tutti vicini fra loro; le sale grandi hanno spesso anche un appostato. La stanza del tesoro ha la
+  // sua guardia. `tipiPer(forza, quanti)` dà i tipi di una stessa fascia
   popolaIlPiano(tipiPer) {
     const vive = this.stanze.filter(s => !['ingresso', 'anticamera', 'tesoro'].includes(s.ruolo) && !(this.grosso && s.ruolo === 'uscita'))
     const caporali = this.stanze.find(s => s.ruolo === 'anticamera')
@@ -842,23 +851,37 @@ export class Livello {
     if (caporali) this.mettiICaporali(caporali, tipiPer)
     for (const s of this.stanze.filter(r => r.ruolo === 'tesoro')) this.mettiIlBranco(s, tipiPer(0.6, 1))
 
-    let resto = Math.max(0, Math.round(MOSTRI_PER_STANZA * this.densita * vive.length) - (caporali ? 2 * this.quantiCaporali(caporali) : 0))
-    const grandi = mescola(vive.filter(s => s.grande))
-    const dato = n => { n = Math.min(n, resto); resto -= n; return n }
-    grandi.forEach((s, i) => {
-      // la parte dei mostri che va nelle sale, divisa fra le sale che restano; due almeno, o non è un branco
-      const n = Math.max(2, Math.min(5, Math.round(resto * PARTE_NELLE_SALE / (grandi.length - i)) + (this.rnd() < 0.3 ? 1 : 0)))
-      const tipi = tipiPer(0.15, n, true)
-      resto = Math.max(0, resto - tipi.length)
-      this.mettiIlBranco(s, tipi)
-    })
-    for (const s of grandi) if (resto > 0 && this.rnd() < 0.6 && this.mettiUnAppostato(s, tipiPer(0.15, 1)[0])) resto--
-    for (const s of mescola(vive.filter(r => !r.grande))) {
-      if (resto <= 0) break
-      const n = dato(resto >= 2 && this.rnd() < 0.35 ? 2 : 1)
-      if (n === 1 && this.rnd() < 0.5) { if (!this.mettiUnAppostato(s, tipiPer(0.15, 1)[0])) this.mettiIlBranco(s, tipiPer(0.15, 1)) }
-      else this.mettiIlBranco(s, tipiPer(0.15, n))
+    const vuota = Math.min(0.4, Math.max(0.05, STANZE_VUOTE / this.densita))
+    for (const s of mescola(vive)) {
+      if (!s.grande && this.rnd() < vuota) continue
+      if (!s.grande && this.rnd() < STANZE_CON_UN_APPOSTATO / (1 - vuota) && this.mettiUnAppostato(s, tipiPer(0.15, 1)[0])) continue
+      // il branco: una stanza stretta ne tiene meno (in una da venti celle tre mostri sono una folla)
+      const celle = s.suolo.length
+      const tetto = Math.max(2, Math.min(this.tettoBranco, TETTO_DEL_BRANCO, celle < 25 ? 3 : celle < 45 ? 4 : celle < CELLE_SALA ? 5 : TETTO_DEL_BRANCO))
+      const n = 2 + Math.floor(Math.pow(this.rnd(), 1.6) * (tetto - 1))   // la coda verso il tetto è corta
+      this.mettiIlBranco(s, tipiPer(0.15, n, true))
+      if (s.grande && this.rnd() < 0.5) this.mettiUnAppostato(s, tipiPer(0.15, 1)[0])
     }
+  }
+
+  // Il mostro grosso non sta solo: da due a tre mostri del posto gli stanno attorno, nella sua stanza (entrano nello scontro con lui: lo scontro
+  // prende chi sta a 4,5 celle e il grosso vale due posti: con tre scagnozzi sono cinque posti su sette)
+  mettiGliScagnozzi(capo) {
+    const s = this.stanzaDi(capo.x, capo.y)
+    if (!s) return []
+    const n = SCAGNOZZI_DEL_GROSSO[0] + Math.floor(this.rnd() * (SCAGNOZZI_DEL_GROSSO[1] - SCAGNOZZI_DEL_GROSSO[0] + 1))
+    const vicine = s.suolo.filter(c => this.liberaPerUnMostro(s, c.x, c.y) && Math.hypot(c.x - capo.x, c.y - capo.y) <= 2.5)
+      .map(c => ({ c, d: Math.hypot(c.x - capo.x, c.y - capo.y) + this.rnd() * 0.8 }))
+      .sort((p, q) => p.d - q.d).map(o => o.c)
+    this.branchi = (this.branchi || 0) + 1
+    capo.branco = this.branchi
+    const messi = []
+    for (let i = 0; i < n && i < vicine.length; i++) {
+      const m = this.mostro(this.branco[Math.floor(this.rnd() * this.branco.length)], vicine[i].x, vicine[i].y)
+      m.branco = this.branchi
+      this.robe.push(m); messi.push(m)
+    }
+    return messi
   }
 
   // un branco: tutti entro due celle da un'ancora (uno scontro prende chi sta a 4,5 celle: il gruppo ci sta sempre dentro)
@@ -981,40 +1004,104 @@ export class Livello {
     return m
   }
 
-  // solo le porte che danno su qualcosa che vale: una porta chiusa su una stanza vuota è una bugia. Si
-  // chiude la STANZA (tutte le sue porte, stesso `gruppo`): rispondere ne apre una e con lei tutte le
-  // altre (Corsa.rispostaPorta), o il segno 💀 prometterebbe una guardia scavalcabile dall'altra parte
+  // Solo le porte che danno su qualcosa che vale: una porta chiusa su una stanza vuota è una bugia. Si chiude la STANZA (tutte le sue
+  // porte, stesso `gruppo`): rispondere ne apre una e con lei tutte le altre (Corsa.rispostaPorta). Una porta non dice cosa c'è dietro
+  // (nessun segno: «non devi già sapere cosa troverai»): solo la stanza del grosso, in tre piani su quattro (la geometria ne toglie: circa uno su due resta), ha il portone più bello
+  // (`pelle: 'bella'`), l'unica a stare sulla strada della scala; le altre stanno fuori strada. Mai su un muro a scaletta: il varco si
+  // stringe a una cella con un muro dritto attorno (`portaDritta`), se no la stanza resta aperta (docs/sotterraneo/piani.md, «Le porte»)
   chiudiPorte() {
     const messe = new Map()
+    const conPortone = !!this.grosso && numeroDa(this.seme, this.piano, 3) % 4 !== 0
     for (const s of this.stanze) {
       if (!s.ruolo || s.ruolo === 'ingresso' || !s.porte.length) continue
-      const segno = s.ruolo === 'tesoro'
-        ? (this.robe.some(r => r.che === 'mostro' && this.dentroStanza(r, s)) ? 'guardia' : 'tesoro')
-        : s.ruolo === 'fonte' ? 'fonte' : null
-      if (!segno) continue
-      // non si sbarra mai la strada: se chiudendola alla scala non si arriva più, resta aperta e senza segno
-      if (this.taglierebbeLaStrada(s, messe)) continue
+      const portone = conPortone && s.ruolo === 'uscita'
+      if (!portone && s.ruolo !== 'tesoro' && s.ruolo !== 'fonte') continue
+      // non si sbarra mai la strada (tranne il portone del grosso): se chiudendola alla scala non si arriva più, resta aperta
+      if (!portone && this.taglierebbeLaStrada(s, messe)) continue
       // le celle contigue di uno stesso varco contano come una cosa sola: al centro la porta, il resto si
       // mura (mai una porta per cella: sembrerebbe una prigione)
-      const varchi = this.varchiDi(s.porte)
-      const stretti = varchi.map(v => {
-        const mezzo = v[Math.floor(v.length / 2)]
-        return { mezzo, troppe: v.filter(p => p !== mezzo) }
-      })
+      const scelti = this.varchiDi(s.porte).map(v => this.portaDritta(v, s))
+      if (scelti.some(v => !v)) continue
+      // due porte di fila (la stanza accanto è sbarrata anche lei, o il corridoio fra le due è corto) sembrerebbero una porta doppia: la seconda resta aperta
+      if (scelti.some(v => [...messe.values()].some(q => Math.max(Math.abs(q.x - v.mezzo.x), Math.abs(q.y - v.mezzo.y)) <= 2))) continue
       // o tutti o nessuno: un varco murato e un altro spalancato si aggirerebbe dall'altra parte
-      if (!stretti.every(v => this.stringiIlVarco(v.troppe, v.mezzo))) continue
-      for (const { mezzo } of stretti) {
+      const murate = []
+      const tutti = scelti.every(v => {
+        const prima = v.troppe.map(p => this.a(p.x, p.y))
+        if (!this.stringiIlVarco(v.troppe, v.mezzo)) return false
+        v.troppe.forEach((p, i) => murate.push({ p, prima: prima[i] }))
+        return true
+      })
+      if (!tutti) { for (const { p, prima } of murate) this.metti(p.x, p.y, prima); continue }
+      for (const v of scelti) for (const c of v.scava) if (!this.dentro(s, c.x, c.y)) this.scavaPerLaStanza(s, c)
+      for (const { mezzo } of scelti) {
         const k = mezzo.x + ',' + mezzo.y
         if (messe.has(k)) continue
         const porta = { che: 'porta', x: mezzo.x, y: mezzo.y, em: '🚪',
-                        nome: 'Una porta chiusa', segno, aperta: false, gruppo: s.id }
+                        nome: 'Una porta chiusa', pelle: portone ? 'bella' : numeroDa(mezzo.x, mezzo.y, 5) % 3 ? 'semplice' : 'ferro',
+                        aperta: false, gruppo: s.id }
         messe.set(k, porta)
         this.robe.push(porta)
       }
     }
   }
 
-  // le celle di porta contigue, raggruppate: un varco largo quattro è una lista di quattro
+  // La cella di un varco dove sta bene una porta: una sola in mezzo a un muro dritto, cioè con la roccia ai due lati (o murata, se è un'altra
+  // cella dello stesso varco) e la stanza che continua dritta di qua, per tre celle; dall'altra parte il passaggio. Dove il muro non lo è
+  // ma si può farlo (la roccia accanto alla stanza, da scavare in una o due celle che non aprono altro) lo si squadra: un angolo smussato o
+  // una grotta altrimenti non avrebbero mai una porta. Torna `{ mezzo, troppe, scava }` (le altre celle del varco, da murare; le celle
+  // di roccia da scavare, che `chiudiPorte` scava solo se la stanza si chiude) o null se nessuna cella ci sta
+  portaDritta(varco, s) {
+    const centro = varco[Math.floor(varco.length / 2)]
+    const ordine = [...varco].sort((a, b) => Math.hypot(a.x - centro.x, a.y - centro.y) - Math.hypot(b.x - centro.x, b.y - centro.y))
+    let squadrata = null
+    for (const p of ordine) {
+      const troppe = varco.filter(q => q !== p)
+      const roccia = (x, y) => this.a(x, y) === ROCCIA || troppe.some(q => q.x === x && q.y === y)
+      for (const [dx, dy] of [[0, 1], [0, -1], [1, 0], [-1, 0]]) {
+        const lx = Math.abs(dy), ly = Math.abs(dx)   // lungo il muro
+        if (!this.dentro(s, p.x + dx, p.y + dy) || this.dentro(s, p.x - dx, p.y - dy) || !this.calpestabile(p.x - dx, p.y - dy)) continue
+        if (!roccia(p.x + lx, p.y + ly) || !roccia(p.x - lx, p.y - ly)) continue
+        const lati = [[lx, ly], [-lx, -ly]].map(([a, b]) => ({ x: p.x + dx + a, y: p.y + dy + b }))
+        const scava = lati.filter(c => !this.dentro(s, c.x, c.y))
+        if (!scava.length) return { mezzo: p, troppe, scava }
+        if (!squadrata && scava.every(c => this.sipuoScavare(s, c, troppe))) squadrata = { mezzo: p, troppe, scava }
+      }
+    }
+    return squadrata
+  }
+
+  // una cella di roccia accanto alla stanza che si può scavare per squadrare un muro: lontana dal bordo del piano, e con attorno solo roccia o
+  // la stanza stessa (se no si aprirebbe un buco verso un corridoio, e la porta si aggirerebbe)
+  sipuoScavare(s, c, murate) {
+    if (this.a(c.x, c.y) !== ROCCIA || this.nelle[c.y * this.largo + c.x] >= 0) return false
+    if (c.x < 2 || c.y < 2 || c.x > this.largo - 3 || c.y > this.alto - 3) return false
+    // chi sta accanto (un appostato nel suo angolo, un orpello appeso al muro) vuole la sua roccia
+    if (this.robe.some(r => Math.max(Math.abs(r.x - c.x), Math.abs(r.y - c.y)) <= 1)) return false
+    // una nicchia vuole due celle di roccia attorno e dietro
+    if (this.stanze.some(r => r.nicchie.some(n => Math.max(Math.abs(n.x - c.x), Math.abs(n.y - c.y)) <= 2))) return false
+    return [[1, 0], [-1, 0], [0, 1], [0, -1]].every(([a, b]) => {
+      const x = c.x + a, y = c.y + b
+      return this.a(x, y) === ROCCIA || murate.some(q => q.x === x && q.y === y) || this.dentro(s, x, y)
+    })
+  }
+
+  // scava una cella di roccia per farla stanza: la stanza la possiede, e il suo riquadro e i suoi pezzi la contano
+  scavaPerLaStanza(s, c) {
+    this.metti(c.x, c.y, PAVIMENTO)
+    this.nelle[c.y * this.largo + c.x] = s.id
+    this.vicinanza[c.y * this.largo + c.x] = s.id
+    s.suolo.push({ x: c.x, y: c.y })
+    ;(s.squadrate ||= []).push({ x: c.x, y: c.y })   // la forma di nascita si legge senza di loro
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+      const k = (c.y + dy) * this.largo + c.x + dx
+      if (c.x + dx >= 0 && c.y + dy >= 0 && c.x + dx < this.largo && c.y + dy < this.alto && this.vicinanza[k] < 0) this.vicinanza[k] = s.id
+    }
+    s.luce = null
+    this.riquadroDi(s)
+  }
+
+  // le celle di porta vicine, raggruppate (anche in diagonale e a una cella di distanza: un muro a scaletta, o due corridoi affiancati, sono un varco solo e una porta sola): un varco largo quattro è una lista di quattro
   varchiDi(porte) {
     const restano = porte.map(p => ({ x: p.x, y: p.y }))
     const gruppi = []
@@ -1022,8 +1109,8 @@ export class Livello {
       const gruppo = [restano.pop()]
       for (let i = 0; i < gruppo.length; i++) {
         for (let j = restano.length - 1; j >= 0; j--) {
-          const d = Math.abs(restano[j].x - gruppo[i].x) + Math.abs(restano[j].y - gruppo[i].y)
-          if (d === 1) gruppo.push(restano.splice(j, 1)[0])
+          const d = Math.max(Math.abs(restano[j].x - gruppo[i].x), Math.abs(restano[j].y - gruppo[i].y))
+          if (d <= 2) gruppo.push(restano.splice(j, 1)[0])
         }
       }
       gruppi.push(gruppo)

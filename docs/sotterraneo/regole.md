@@ -21,11 +21,8 @@ finto che scende davvero, e fa la spesa sopra).
 - **Chi porta la chiave lo dichiara la tappa, non il caso** (`guardianoDi`):
   è il caporale della discesa, fatto caporale
   ([mostri.md](mostri.md)). È l'unica cosa del sotterraneo che non si può aggirare.
-- **I segni sopra le porte non mentono mai** (`SEGNI` in `dati/cose.js`):
-  💀 guardia, 💎 roba buona, ⛲ acqua. La pelle della porta
-  ripete il segno col disegno (`dati/tessere.js`). Un segno che promette a
-  vuoto diventa decorazione, e tornare indietro diventa una penitenza invece
-  di una scelta.
+- **Le porte non dicono cosa c'è dietro** ([piani.md](piani.md#le-porte)): erano 💀💎⛲ sopra e una pelle
+  per segno; l'utente il 13 ottobre ha voluto toglierli («non devi già sapere cosa troverai»). Solo il portone del grosso è più bello.
 - **Le porte chiudono la stanza, non il varco.** Si sbarrano *tutti* i varchi
   di una stanza, e una risposta li apre tutti: il pedaggio resta uno. Provato
   a chiuderne uno solo: il 💀 si scavalcava dall'altra parte, e dove due

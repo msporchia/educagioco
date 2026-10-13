@@ -4,8 +4,8 @@
 // i due estremi 0..1, si sale in linea retta (durezzaDi) più il rincaro per stanza (motore/corsa.js). `giri`
 // è il numero di tagli del BSP (2 → quattro stanze, 4 → sedici); `largo` e `alto`, se ci sono, danno la forma
 // al posto del quadrato `misura` (la torre alta e stretta, la scala sommersa lunga). `dove` è il posto in mezzo
-// a una frase («sotto la torre non duri», motore/storia.js). `densita`: quanti mostri in più (o in meno) del solito, 1 di difetto: dove i piani nuovi
-// hanno meno incontri per strada di quanto la taratura vuole (docs/sotterraneo/piani-caverne.md, «Le domande»); `pianta`: la famiglia dei piani, `costruita` (stanze a pianta, colonnati,
+// a una frase («sotto la torre non duri», motore/storia.js). `densita`: quante stanze hanno qualcuno, 1 di difetto e di norma assente (una stanza ordinaria su cinque è vuota, di più sotto 1: docs/sotterraneo/piani.md, «I mostri»); `tettoBranco`: quanti, al più,
+// in un branco di quella discesa (cresce scendendo: 3 alla cripta, alla scalinata e alla torre, 5 alla botola, 6 alla miniera e alla fornace dell'abisso); `pianta`: la famiglia dei piani, `costruita` (stanze a pianta, colonnati,
 // nicchie) o `caverna` (grotte e passaggi storti); `acqua`: pozze da aggirare (docs/sotterraneo/piani-caverne.md).
 // `portata`: niente `scuola` qui, quello che insegna questa campagna non lo dà nessuna scuola.
 import { MOSTRI, costoInRisposte } from './mostri.js'
@@ -16,13 +16,13 @@ export const CAMPAGNA = [
     portata: 25,
     dritta: 'due piani di tombe, e qualcuno che non dorme',
     piani: 2, misura: 34, giri: 2, dif: [0.05, 0.22], forza: 0.4, livello: 1,
-    mostri: ['scheletro', 'zombie', 'fantasma'], caporale: 'scheletro-scudo', tettoBranco: 5, capo: 'scheletro' },
+    mostri: ['scheletro', 'zombie', 'fantasma'], caporale: 'scheletro-scudo', tettoBranco: 3, capo: 'scheletro' },
 
   { chiave: 'cantine', nome: 'La scalinata antica', icona: '🪜', dove: 'giù per la scalinata',
     scenario: 'cantine', pianta: 'costruita',
     portata: 31,
     dritta: 'tante stanze, e tutte al buio',
-    piani: 2, misura: 46, giri: 4, dif: [0.12, 0.32], forza: 0.55, spinta: 6.5, densita: 1.6, livello: 2,   // senza forza: il primo avvio si vince anche a mani nude (docs/sotterraneo/la-grande-storia.md, «Il primo avvio»)
+    piani: 2, misura: 46, giri: 4, dif: [0.12, 0.32], forza: 0.55, spinta: 6.5, livello: 2,   // senza forza: il primo avvio si vince anche a mani nude (docs/sotterraneo/la-grande-storia.md, «Il primo avvio»)
     mostri: ['ratto', 'goblin', 'melma'], caporale: 'orco', tettoBranco: 3, capo: 'orco' },
 
   // alta e stretta come la torre: le stanze una sopra l'altra
@@ -30,8 +30,8 @@ export const CAMPAGNA = [
     scenario: 'fornace', pianta: 'costruita',
     portata: 37,
     dritta: 'stretta e alta: le scale non finiscono mai',
-    piani: 3, misura: 40, largo: 26, alto: 54, giri: 3, dif: [0.2, 0.44], forza: 0.9, spinta: 6.8, densita: 0.7, livello: 3,
-    mostri: ['pipistrello', 'diavoletto', 'vespa', 'spirito-fuoco'], caporale: 'golem-magma', tettoBranco: 4, capo: 'troll' },
+    piani: 3, misura: 40, largo: 26, alto: 54, giri: 3, dif: [0.2, 0.44], forza: 0.9, spinta: 6.8, livello: 3,
+    mostri: ['pipistrello', 'diavoletto', 'vespa', 'spirito-fuoco'], caporale: 'golem-magma', tettoBranco: 3, capo: 'troll' },
 
   // tutta in profondità: piani piccoli, tanti
   { chiave: 'gallerie', nome: 'La grotta della scaletta', icona: '🪨', dove: 'nella grotta',
@@ -46,22 +46,22 @@ export const CAMPAGNA = [
     scenario: 'cripta', pianta: 'caverna', acqua: true,
     portata: 50,
     dritta: 'lunga e stretta, e in fondo gorgoglia qualcosa',
-    piani: 3, misura: 40, largo: 64, alto: 24, giri: 3, dif: [0.36, 0.66], forza: 2.25, spinta: 9.8, densita: 1.3, livello: 6,
-    mostri: ['granchio', 'piranha', 'polpo', 'fantasma-azzurro'], caporale: 'tartaruga', tettoBranco: 3, capo: 'gigante' },
+    piani: 3, misura: 40, largo: 64, alto: 24, giri: 3, dif: [0.36, 0.66], forza: 2.25, spinta: 9.8, livello: 6,
+    mostri: ['granchio', 'piranha', 'polpo', 'fantasma-azzurro'], caporale: 'tartaruga', tettoBranco: 4, capo: 'gigante' },
 
   { chiave: 'labirinto', nome: 'La botola segreta', icona: '🌀', dove: 'sotto la botola',
     scenario: 'cantine', pianta: 'costruita',
     portata: 57,
     dritta: 'un labirinto: senza mappina ci si perde',
-    piani: 3, misura: 50, giri: 4, dif: [0.44, 0.78], forza: 3, spinta: 10, densita: 0.8, livello: 8,
-    mostri: ['lupo', 'cinghiale', 'serpente', 'ent'], caporale: 'golem-muschio', tettoBranco: 3, capo: 'troll' },
+    piani: 3, misura: 50, giri: 4, dif: [0.44, 0.78], forza: 3, spinta: 10, livello: 8,
+    mostri: ['lupo', 'cinghiale', 'serpente', 'ent'], caporale: 'golem-muschio', tettoBranco: 5, capo: 'troll' },
 
   { chiave: 'fondo', nome: 'La miniera abbandonata', icona: '⛏️', dove: 'nella miniera',
     scenario: 'fornace', pianta: 'caverna',
     portata: 64,
     dritta: 'stretta, profonda, e le pietre bruciano',
     piani: 4, misura: 40, giri: 3, dif: [0.52, 0.92], forza: 4, spinta: 11, livello: 10,
-    mostri: ['scorpione', 'golem', 'spirito-elettrico'], caporale: 'golem-lava', tettoBranco: 2, capo: 'gigante' },
+    mostri: ['scorpione', 'golem', 'spirito-elettrico'], caporale: 'golem-lava', tettoBranco: 6, capo: 'gigante' },
 ]
 
 export const QUANTE_TAPPE = CAMPAGNA.length
@@ -111,9 +111,9 @@ export const L_ABISSO = {
 // l'abisso cambia posto ogni PIANI_PER_TRATTO piani, e l'ultimo resta per sempre: il posto dice lo scenario (SCENARI in
 // dati/tessere.js) e chi si incontra per strada (`mostri`). Vedi docs/sotterraneo/abisso.md.
 export const TRATTI_DELL_ABISSO = [
-  { scenario: 'cantine', pianta: 'costruita', nome: 'le cantine', densita: 0.7, mostri: ['melma-viola', 'mostro-viola', 'pipistrello-occhio', 'ombra'], caporale: 'golem-ghiaccio', tettoBranco: 2 },
-  { scenario: 'cripta', pianta: 'costruita', nome: 'la cripta', densita: 0.8, mostri: ['ghoul', 'teschio-azzurro', 'mummia'], caporale: 'mietitore', tettoBranco: 4 },
-  { scenario: 'fornace', pianta: 'caverna', nome: 'la fornace', densita: 0.8, mostri: ['draghetto', 'occhio', 'golem-pietra', 'grifone'], caporale: 'drago', tettoBranco: 3 },
+  { scenario: 'cantine', pianta: 'costruita', nome: 'le cantine', mostri: ['melma-viola', 'mostro-viola', 'pipistrello-occhio', 'ombra'], caporale: 'golem-ghiaccio', tettoBranco: 3 },
+  { scenario: 'cripta', pianta: 'costruita', nome: 'la cripta', mostri: ['ghoul', 'teschio-azzurro', 'mummia'], caporale: 'mietitore', tettoBranco: 5 },
+  { scenario: 'fornace', pianta: 'caverna', nome: 'la fornace', mostri: ['draghetto', 'occhio', 'golem-pietra', 'grifone'], caporale: 'drago', tettoBranco: 6 },
 ]
 export const PIANI_PER_TRATTO = 4
 
@@ -133,7 +133,7 @@ export const piantaDi = (tappa, piano) => {
   const t = trattoDi(tappa, piano)
   return (t ? t.pianta : tappa && tappa.pianta) || 'costruita'
 }
-// quanti mostri in più o in meno del solito (`densita`): nella storia quello della discesa, nell'abisso quello del tratto
+// quante stanze hanno qualcuno (`densita`): nella storia quello della discesa, nell'abisso quello del tratto
 export const densitaDi = (tappa, piano) => {
   const t = trattoDi(tappa, piano)
   return (t ? t.densita : tappa && tappa.densita) || 1

@@ -19,7 +19,7 @@ import { domandaPerGioco } from '../../quiz/scelta.js'
 import Domanda from '../../quiz/Domanda.vue'
 
 import { CAMPAGNA, QUANTE_TAPPE, stelleDella, L_ABISSO, INDICE_ABISSO } from './dati/campagna.js'
-import { COSE, SEGNI } from './dati/cose.js'
+import { COSE } from './dati/cose.js'
 import { CURIOSITA_DI } from './dati/curiosita.js'
 import { EROI, DI_PARTENZA, eroeDi } from './dati/eroi.js'
 import { TASCHE, VITA_PER_PIANO } from './dati/mondo.js'
@@ -858,11 +858,6 @@ const curiosita = dallaCorsa(c => {
   return CURIOSITA_DI[f.chi.tipo] || {}
 }, {})
 
-const segno = dallaCorsa(c => {
-  const f = c.foglio
-  return f && f.che === 'porta' ? SEGNI[f.chi.segno] : null
-})
-
 const suoni = {
   passo: () => suono.nota(320, 320, 0.05, 'sine', 0.06),
   colpo: () => suono.boom(),
@@ -1656,8 +1651,7 @@ function ridimensiona() { if (pittore) pittore.misura() }
           </div>
         </Cornice>
 
-        <Foglio v-else-if="foglio && foglio.che === 'porta'" em="🚪" titolo="Una porta chiusa"
-                :dice="segno ? segno.em + ' ' + segno.dice : ''">
+        <Foglio v-else-if="foglio && foglio.che === 'porta'" em="🚪" titolo="Una porta chiusa">
           <div v-if="domanda" class="sot-domanda">
             <Domanda :domanda="domanda.domanda" :pittori="domanda.pittori"
                      :origine="domanda" gioco="sotterraneo" :respiro="900"

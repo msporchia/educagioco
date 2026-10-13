@@ -50,7 +50,7 @@ export const LARGO_DIETRO = 1.6
 // stessa stanza, al più MOSTRI_IN_CAMPO posti (il grosso ne vale due); un colpo di mostro vale COLPO_DEL_MOSTRO per
 // (attacco − difesa), almeno 1, qualunque sia la risposta
 export const RAGGIO_SCONTRO = 4.5
-export const MOSTRI_IN_CAMPO = 6
+export const MOSTRI_IN_CAMPO = 7   // il palco ne tiene sette (viste/campo.js); i branchi da sei o sette sono delle discese tarde (motore/livello.js)
 export const COLPO_DEL_MOSTRO = 1.1
 
 // arredo (barili, casse...): non toccabile, disegnato più spento delle cose che rispondono (scena/tela.js).
