@@ -86,6 +86,8 @@ bersagli rompe).
 | botola | 5,1 → 3 | 9 → 10 |
 | miniera | 4,85 → 4 | 10 → 11 |
 
+  (13 ottobre, coi piani nuovi: scalinata 0,55 e 6,5, torre 0,9 e 6,8, grotta 1,4 e 9,6, scala sommersa 2,25 e 9,8, più la `densita` di alcune discese: [piani-caverne.md](piani-caverne.md#le-domande-per-discesa).)
+
   Le ossa delle specie sono tutte 8, quindi la forza si legge come «ossa del mostro di strada / 8» (prima la faceva la fascia). La
   forza non scende mai (la cripta 0,4 e la scalinata 0,8 sono i mostri piccoli del primo avvio) e la spinta nemmeno.
 - **La curva delle zone** (`CURVA_DELLE_ZONE` e `FORMA_DELLA_ZONA`, [zone.md](zone.md)): forza 4 + 0,6 per livello (prima 0,5), spinta

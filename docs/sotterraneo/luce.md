@@ -37,9 +37,11 @@ il disegno in `scena/tela.js`.
   prima di muoversi. Prima del primo passo vale dove guarda lo sprite
   (`versoEroe`). Se cambia, la luce si rifà subito (`giraVerso`), non alla
   cella dopo.
-- **La luce non passa dai muri né da una porta chiusa** (`fermaLaLuce`): la
-  cella che la ferma si accende (si vede il muro, la porta), quel che sta
-  dietro no. Un muro accanto a un pavimento acceso si accende con lui, o i
+- **La luce non passa dai muri, dai relitti né da una porta chiusa** (`fermaLaLuce`): la
+  cella che la ferma si accende (si vede il muro, la porta, il relitto), quel che sta
+  dietro no. **L'acqua non la ferma**: non si cammina ma si vede di là. Un relitto
+  fa dunque angoli d'ombra in mezzo a una stanza, dove stanno gli appostati
+  ([piani-caverne.md](piani-caverne.md#i-relitti)). Un muro accanto a un pavimento acceso si accende con lui, o i
   corridoi sarebbero senza pareti. Prima la luce era un cerchio che passava
   dai muri.
 
@@ -104,7 +106,8 @@ il disegno in `scena/tela.js`.
   fantasmi ne lasciano una ogni dieci morti circa), contro 6–16 gemme a piano
   che esce il giro minimo: la comodità adesso pesa.
 
-Nei test: `unita/sotterraneo-luce` (il cono davanti e l'ombra dietro con e
+Nei test: `unita/sotterraneo-piani` (§ 11 e 12: un relitto fa ombra come un muro, l'acqua no),
+`unita/sotterraneo-luce` (il cono davanti e l'ombra dietro con e
 senza torcia, la stanza che non si accende tutta, la sfumatura, la porta che
 ferma la luce, il verso che segue il passo, il mostro fuori luce che punta
 alle spalle e quello in luce che va dritto, l'agguato da dietro e non da

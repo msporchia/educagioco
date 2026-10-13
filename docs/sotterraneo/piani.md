@@ -9,10 +9,13 @@ farti degli agguati, zone dove c'è il boss e prima del boss ci sono dei
 caporali; dobbiamo rendere il gioco più avventuroso e meno "entro nella zona,
 uccido il mostro e fine"». Gli agguati veri arrivano con la luce a cono e lo
 scontro a gruppi ([scontro.md](scontro.md)): questa pagina prepara i piani.
+Lo stesso giorno: «ancora un po' troppo quadratose»: i piani sono di due famiglie, le
+costruite e le grotte, e hanno relitti da aggirare e acqua
+([piani-caverne.md](piani-caverne.md)).
 
 Il codice: `motore/livello.js` (il piano), `motore/forme.js` (le forme, pura:
 gira in Node), `dati/mostri.js` (`CAPORALE`), `scena/tela.js` (pavimento,
-galloni), `motore/corsa.js` (solo dove una stanza è un'area).
+galloni, relitti), `motore/corsa.js` (solo dove una stanza è un'area).
 
 ## Come nasce un piano
 
@@ -22,13 +25,17 @@ galloni), `motore/corsa.js` (solo dove una stanza è un'area).
    foglie dove ci sta (da 13×10 di foglia, mai l'ingresso); se non ci sta una
    sala vera la foglia più larga ne ospita una piccola. Quasi ogni piano ne ha
    una (95%).
-3. **Le forme** (`stanzaIn`): le altre foglie tirano una forma; l'ingresso
+3. **Le forme** (`stanzaIn`): le altre foglie tirano una forma della famiglia
+   del piano (costruita o grotta, [piani-caverne.md](piani-caverne.md)); l'ingresso
    resta un rettangolo (chi arriva trova un posto semplice).
-4. **I corridoi** collegano i centri delle stanze, come prima.
-5. **Le colonne** (`piazzaLeColonne`), dopo i corridoi, che non le
-   attraversano. 6. **Le porte** (`scavaPorte`) dove un corridoio tocca il
-   bordo vero della stanza. 7. **Le vicinanze** (`segnaLeVicinanze`): la mappa
-   che dice di che stanza è una cella.
+4. **I collegamenti** (`collega`) uniscono i centri delle stanze: corridoi a elle
+   nelle costruite, passaggi storti nelle grotte.
+5. **Le colonne** (`piazzaLeColonne`: il colonnato delle sale) e **le nicchie**
+   (`scavaLeNicchie`), dopo i corridoi, che non le attraversano. 6. **Le porte**
+   (`scavaPorte`) dove un corridoio o un passaggio tocca la stanza di lato.
+   6 bis. **I relitti** e **l'acqua** (`piazzaIRelitti`, `piazzaLAcqua`), a distanza
+   dalle porte. 7. **Le vicinanze** (`segnaLeVicinanze`): la mappa che dice di che
+   stanza è una cella, e il riquadro e i pezzi rifatti sulle celle vere.
 8. **I ruoli** (ingresso, scala, anticamera, portale, fonte, tesoro), poi
    **i mostri** (`popolaIlPiano`), il guardiano, le gemme, le curiosità,
    l'arredo, le porte da chiudere: come prima, ma sulla stanza com'è fatta.
@@ -38,8 +45,11 @@ galloni), `motore/corsa.js` (solo dove una stanza è un'area).
 - **Il riquadro `{x, y, w, h}` resta, ma non dice dove si è dentro.** Una
   stanza ha `pezzi` (rettangoli che, uniti, sono la sua forma), `suolo` (le
   sue celle, colonne escluse), `interno` (quelle con tutte e quattro le
-  vicine nella stanza: lontane dai muri), `colonne`, `cx`/`cy` (una cella
+  vicine nella stanza: lontane dai muri), `colonne`, `nicchie`, `relitti` e
+  `acqua` (le celle chiuse che ha dentro: non sono suolo), `cx`/`cy` (una cella
   del suolo con la roccia lontana: da lì partono scale, forzieri e corridoi).
+  Il riquadro `x, y, w, h` e i `pezzi` coprono suolo e colonne (una nicchia
+  esce dal riquadro di nascita).
 - **Per sapere se una cella è nella stanza si chiede al piano**:
   `dentro(s, x, y)`, `dentroStanza(r, s)`, `stanzaDi(x, y)` (la stanza di una
   cella o del suo bordo, l'uscio compreso: chi tocca la stanza di lato la
@@ -52,35 +62,36 @@ galloni), `motore/corsa.js` (solo dove una stanza è un'area).
 
 ## Le forme
 
-Dal riquadro `bw × bh` a una maschera di celle (`forme.js`, `costruisci`):
+Dal riquadro `bw × bh` a una maschera di celle (`forme.js`, `costruisci`). Le
+costruite (peso per tiro, vedi [piani-caverne.md](piani-caverne.md)):
 
 | forma | com'è | riquadro |
 |---|---|---|
 | rettangolo | come sempre | 5–10 × 4–8 |
+| smussata | un rettangolo con i quattro angoli tagliati, uguali | 6–12 × 5–9 |
 | elle | un rettangolo senza un angolo | 7–11 × 6–9 |
-| tu | una sbarra e un gambo, girata da tutte le parti | 8–11 × 6–9 |
-| croce | due bracci larghi tre | 9–12 × 8–10 |
+| tu | una sbarra e un gambo al centro, girata da tutte le parti | 8–11 × 6–9 |
+| croce | due bracci larghi tre che si incrociano al centro | 9–12 × 9–11 |
+| cappella | un corpo e un'abside tondeggiante in mezzo a un lato corto | 7–10 × 6–9 |
 | doppia | due rettangoli sovrapposti per due celle: una Z | 9–13 × 7–10 |
-| caverna | bordi che vanno e vengono, mai sotto quattro di larghezza | 9–14 × 7–10 |
-| sala | un rettangolo largo, con le colonne | 12–18 × 9–13 |
+| sala | un rettangolo largo (angoli tagliati una volta su tre), col colonnato | 12–18 × 9–13 |
 
-Nelle foglie normali pesano 38% rettangolo, 20 elle, 12 tu, 10 croce, 10
-doppia, 10 caverna; la forma che non ci sta torna rettangolo. Ogni forma deve
-essere in un pezzo solo (`connessa`).
+La forma che non ci sta si ritira. Le grotte hanno `grotta`, `bilobata`,
+`galleria` e l'`antro` che fa da sala. Ogni forma deve essere in un pezzo solo
+(`connessa`).
 
 ## Le sale e le colonne
 
 - **Una sala è grande da 70 celle** (`CELLE_SALA`, la stanza `grande`): qui
-  stanno i branchi. Le colonne stanno nelle sale e, una o due, nelle
-  caverne.
+  stanno i branchi. Le colonne stanno solo nelle sale delle costruite, in
+  due file ordinate (il colonnato); nelle grotte l'antro fa da sala.
 - **Una colonna è roccia sola o a coppia, mai attaccata al muro, mai a meno di
   due celle da un'altra e dal centro.** Si gira attorno e ci si nasconde dietro,
   ma non si chiude mai una strada: tutt'attorno c'è stanza.
 - **Il muro alto una cella le disegna da solo** (`scena/muri.js`): una colonna
   da una cella è una faccia con i due spigoli, una coppia in verticale ha
   il suo tetto sopra la faccia. Guardato con uno scatto: sembrano pilastri.
-- **Per ora non nascondono niente alla luce**: la luce di oggi è un cerchio e
-  non conosce gli ostacoli. Nascondono quando arriva il cono.
+- **Nascondono alla luce** (una colonna è roccia: ferma il cono come un muro).
 
 ## I mostri: branchi, appostati, caporali
 
@@ -92,13 +103,13 @@ essere in un pezzo solo (`connessa`).
   due mostri al più quattro celle: lo scontro prende chi sta a 4,5 celle, il
   branco ci sta sempre dentro) e della coppia della discesa (`tipiPer`,
   [mostri.md](mostri.md)). Nelle sale (il 70% dei mostri) da due a cinque; in alcune discese i branchi sono più piccoli
-  (`tettoBranco` della discesa: la scalinata al più tre, la miniera due), o un incontro
+  (`tettoBranco` della discesa: la scalinata uno, la miniera due), o un incontro
   sarebbe troppo. Le stanze piccole ne hanno uno o due, e molte
   nessuno: il piano è meno popolato e più incontrare uno è un fatto.
 - **Gli appostati** (`mettiUnAppostato`): un mostro solo, in un angolo (roccia
-  da due lati) o dietro una colonna, dalla parte lontana dalle porte, a
-  quattro celle da ogni altro mostro. `m.appostato` dice 'angolo' o
-  'colonna'. Sono loro che faranno gli agguati con la luce a cono.
+  da due lati, una nicchia compresa) o dietro una colonna o un relitto, dalla
+  parte lontana dalle porte, a quattro celle da ogni altro mostro. `m.appostato`
+  dice 'angolo', 'colonna' o 'relitto'. Sono loro che faranno gli agguati con la luce a cono.
 - **La stanza del tesoro ha un'unica guardia**, della specie più dura della coppia; quella della scala
   nei piani col grosso non ha mostri di strada (il grosso è già un branco).
 - **L'anticamera** (`anticameraDi`): nel piano col mostro grosso la stanza
@@ -126,17 +137,17 @@ essere in un pezzo solo (`connessa`).
 Il giocatore finto combatte i gruppi veri e usa le abilità ([scontro-bilancio.md](scontro-bilancio.md)). Il tetto di 85 risposte
 obbligate a seduta regge, per tutti e quattro gli eroi.
 
-| discesa | minimo, con le sale (12/10, mattina) → dopo la taratura | tutto il piano, prima → dopo |
+| discesa | minimo, con le sale (12/10, mattina) → dopo la taratura → piani nuovi (13/10) | tutto il piano, prima → dopo → piani nuovi |
 |---|---|---|
-| La cripta dell'altare | 12 → 9 | 22 → 16 |
-| La scalinata antica | 13 → 6 | 57 → 50 |
-| La torre in rovina | 29 → 21 | 74 → 55 |
-| La grotta della scaletta | 46 → 31 | 78 → 40 |
-| La scala sommersa | 39 → 26 | 91 → 65 |
-| La botola segreta | 37 → 24 | 158 → 98 |
-| La miniera abbandonata | 65 → 25 | 156 → 98 |
+| La cripta dell'altare | 12 → 9 → 9 | 22 → 16 → 16 |
+| La scalinata antica | 13 → 6 → 12 | 57 → 50 → 41 |
+| La torre in rovina | 29 → 21 → 24 | 74 → 55 → 41 |
+| La grotta della scaletta | 46 → 31 → 28 | 78 → 40 → 42 |
+| La scala sommersa | 39 → 26 → 18 | 91 → 65 → 66 |
+| La botola segreta | 37 → 24 → 34 | 158 → 98 → 106 |
+| La miniera abbandonata | 65 → 25 → 40 | 156 → 98 → 106 |
 
-(cavaliere, seme del banco). Il minimo cala perché le abilità chiudono un mostro in meno risposte; «tutto» cala di meno e la grotta
+(cavaliere, seme del banco; l'ultima freccia è dei piani delle due famiglie, [piani-caverne.md](piani-caverne.md).) Il minimo cala perché le abilità chiudono un mostro in meno risposte; «tutto» cala di meno e la grotta
 resta con una forbice stretta. Mostri per stanza: 0,79 (come prima).
 
 - **Provato**: lo stesso numero di mostri *per stanza* nelle sale
@@ -156,10 +167,11 @@ resta con una forbice stretta. Mostri per stanza: 0,79 (come prima).
 `unita/sotterraneo-piani` (le forme si costruiscono e sono in un pezzo solo;
 `dentro`/`stanzaDi`/porte/centro di ogni stanza di 308 piani; sale con le
 colonne isolate che non chiudono strade; branchi entro 4,5 celle, appostati
-davvero in un angolo o dietro una colonna; anticamera con due o tre caporali
+davvero in un angolo, dietro una colonna o dietro un relitto; anticamera con due o tre caporali
 più duri e senza altri mostri; dal seme sempre uguale; un mostro non esce
 dalla sua stanza; la luce copre il suolo). `unita/sotterraneo` (§ 5a bis: la
 posa degli orpelli guarda la roccia accanto, non il riquadro) e
 `unita/sotterraneo-abisso` (nessuna anticamera nell'abisso, il costo per piano).
 Per guardare un piano senza giocarlo: `#seme=812&piano=2&stanza=anticamera`
-(o `sala`, `elle`, `tu`, `croce`, `caverna`; [../core/comandi.md](../core/comandi.md)).
+(o `sala`, `elle`, `tu`, `croce`, `antro`, `relitto`…; [../core/comandi.md](../core/comandi.md)). Le due famiglie, i relitti e
+l'acqua hanno i loro bersagli nelle sezioni 8–13 dello stesso file ([piani-caverne.md](piani-caverne.md#nei-test)).
