@@ -81,6 +81,26 @@
 .sot-m:nth-child(2n) .sot-respira { animation-delay: -.7s }
 .sot-m:nth-child(3n) .sot-respira { animation-delay: -1.4s }
 @keyframes sot-respira { 50% { transform: translateY(-3px) } }
+/* il mostro armato (viste/Creatura.vue): l'arma sta sopra la faccia, nella mano; un pezzo ammorbidito, senza il filo chiaro delle icone */
+.sot-creatura { position: relative; display: inline-block; line-height: 0 }
+.sot-arma-in-mano { position: absolute; display: block; pointer-events: none }
+.sot-arma-in-mano > i { position: absolute; top: 0; left: 0; display: block; filter: drop-shadow(0 1px 1px #000a) }
+/* il grado (dati/varianti.js): un alone del colore della sua rarità sulla figura, e il nome nello stesso colore */
+.sot-figura.sot-grado-magico { --grado: #6f8dff }
+.sot-figura.sot-grado-raro { --grado: #ffd23f }
+.sot-figura.sot-grado-leggendario { --grado: #ff9a2e }
+.sot-figura[class*="sot-grado-"] { filter: drop-shadow(0 1px 1px #0008) drop-shadow(0 0 4px var(--grado)) drop-shadow(0 0 9px color-mix(in srgb, var(--grado) 70%, transparent)) }
+@keyframes sot-brilla { 50% { filter: drop-shadow(0 1px 1px #0008) drop-shadow(0 0 6px var(--grado)) drop-shadow(0 0 14px var(--grado)) } }
+.sot-figura.sot-grado-leggendario { animation: sot-brilla 1.8s ease-in-out infinite }
+.sot-m-nome {   /* il nome sopra la testa, senza articolo, in piccolo: il comune è tenue, un grado ha il suo colore */
+  position: absolute; left: 50%; bottom: 100%; translate: -50% 0; width: max-content; max-width: 112px; margin-bottom: 2px;
+  font-size: 9.5px; line-height: 1.05; font-weight: 800; text-align: center; color: #c9c3d6;
+  text-shadow: 0 1px 2px #000, 0 0 3px #000; pointer-events: none;
+}
+.sot-m-nome.sot-grado { color: var(--grado) }
+.sot-m-nome.sot-grado-magico { --grado: #8fa6ff }
+.sot-m-nome.sot-grado-raro { --grado: #ffd23f }
+.sot-m-nome.sot-grado-leggendario { --grado: #ffab4a }
 /* gli effetti che durano cambiano il colore della figura */
 .sot-addosso-fuoco { filter: drop-shadow(0 0 7px #ff7a2a) sepia(.35) saturate(2) brightness(1.1) }
 .sot-addosso-veleno { filter: drop-shadow(0 0 7px #7ae04a) hue-rotate(60deg) saturate(1.5) }

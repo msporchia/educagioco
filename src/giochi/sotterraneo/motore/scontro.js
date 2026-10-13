@@ -12,6 +12,7 @@ import { MOSTRI } from '../dati/mostri.js'
 import { NODI, aGrado, inVita, colpisce, FATTORE_DEL_SALTO } from '../dati/abilita.js'
 import { ELEMENTI, STATI, fattoreDi } from '../dati/elementi.js'
 import { difeseDi } from '../dati/grossi.js'
+import { GELO_DEL_MAGO } from '../dati/varianti.js'
 import { pericoloDi } from './pericolo.js'
 import { nuovaFila, chiAgisce, agisci, togli, prossimi, primaDelSuoProssimo, TURNI_VISIBILI } from './turni.js'
 
@@ -281,6 +282,7 @@ export const MetodiDelloScontro = {
 
   // l'eroe ha fatto la sua azione: tocca ai mostri, uno alla volta, finché non torna a lui
   finisciIlTurno(f, azioni, bersaglio) {
+    f.io.gelato = 0   // il gelo di un mago dura il tuo turno: hai agito, ti sei scongelato
     if (!this.vivi(f).length) { this.chiudi(); return this.esitoDello(azioni, bersaglio, { fine: true }) }
     f.coda = agisci(f.coda, 'eroe')
     const r = this.passaIlTurno(f, azioni)
@@ -420,6 +422,9 @@ export const MetodiDelloScontro = {
     }
     const evento = { chi: x, che: 'colpo', contro: 'eroe', pieno, preso: male, schivato: schiva, assorbito, rimandato, gelato,
                      salvo: pieno === 0 && io.intoccabile > 0 ? 'intoccabile' : null }
+    // l'incanto di un mago (dati/varianti.js): un colpo che ti arriva ti può gelare, e il tuo prossimo colpo fa metà. Il tiro si
+    // fa solo per chi ha un incanto: gli altri non spostano il caso dello scontro
+    if (x.incanto === 'gelo' && male > 0 && this.rnd() * 100 < GELO_DEL_MAGO[x.grado || 'comune']) { io.gelato = 1; evento.gelaTe = true }
     if (rimandato && x.ossa <= 0) { this.cade(x); evento.caduto = true; return evento }
     this.ferisci(male)
     if (this.vita <= 0 && this.resisti()) this.vita = 1

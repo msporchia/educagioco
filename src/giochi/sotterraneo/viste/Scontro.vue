@@ -10,6 +10,7 @@ import { PEZZI } from '../dati/atlante.js'
 import { scalaDelMostro, piazza, SCALA_FIGURE } from './campo.js'
 import Icona from './Icona.vue'
 import Grosso from './Grosso.vue'
+import Creatura from './Creatura.vue'
 import Glifo from './Glifo.vue'
 import Palco from './Palco.vue'
 import FilaDeiTurni from './FilaDeiTurni.vue'
@@ -130,16 +131,17 @@ function punto(chi) {
                 :class="{ 'sot-morto': mortoDi(m), 'sot-m-grosso': m.grosso, 'sot-bersaglio': pulita(m) && m.bersaglio,
                           'sot-colpito-da-me': pulita(m) && m.colpito && soloMiaUna }"
                 :style="[postoDi(k), { '--f': m.colpito }]" :aria-label="m.nome" :disabled="mortoDi(m)"
-                data-mostro :data-colpisce="m.colpisce" :data-salta="m.salta ? '' : null" :data-i="m.i" :data-tipo="m.tipo" :data-nome="m.nome" :data-grande="m.grosso || null"
+                data-mostro :data-variante="m.variante" :data-grado="m.grado" :data-colpisce="m.colpisce" :data-salta="m.salta ? '' : null" :data-i="m.i" :data-tipo="m.tipo" :data-nome="m.nome" :data-grande="m.grosso || null"
                 :data-bersaglio="pulita(m) && m.bersaglio ? '' : null" :data-colpito="pulita(m) && m.colpito ? m.colpito : null"
                 :data-morto="mortoDi(m) ? '' : null" :data-porta-chiave="m.chiave ? '' : null" @click.stop="tocca(m)">
           <span :ref="el => { elC[m.i] = el }" class="sot-m-corpo">
             <i class="sot-ombra" :style="{ width: Math.round(largoDi(m, k) * 1.25) + 'px' }" aria-hidden="true"></i>
-            <span :key="chiaveFx(m.i)" class="sot-figura sot-m-fig" :class="classeFx(m.i)">
+            <span v-if="!m.grosso" class="sot-m-nome" :class="m.grado && ['sot-grado', 'sot-grado-' + m.grado]" data-nome-mostro :data-grado="m.grado">{{ m.etichetta }}</span>
+            <span :key="chiaveFx(m.i)" class="sot-figura sot-m-fig" :class="[classeFx(m.i), m.grado && 'sot-grado-' + m.grado]">
               <span class="sot-corpo">
                 <span class="sot-respira" :class="addosso(m)">
                   <Grosso v-if="m.grosso" :chi="m.grosso" :scala="scalaGrosso" />
-                  <Icona v-else :sprite="m.sprite" :em="m.em" :scala="scalaM(m, k)" :emAlto="48" />
+                  <Creatura v-else :sprite="m.sprite" :em="m.em" :scala="scalaM(m, k)" :emAlto="48" :tipo="m.tipo" :arma="m.arma" />
                 </span>
               </span>
             </span>
