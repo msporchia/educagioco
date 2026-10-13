@@ -413,13 +413,15 @@ const entrata = eroe => ({ eroe, roba: robaAttesa(eroe, QUANTE_TAPPE), crescita:
      dove mette la scala. Quello che conta è il tetto, e che la media non
      cresca (la riga qui sotto). */
   for (let i = 0; i < piani.length; i++)
-    dentro(`il piano ${i + 1} costa fra 3 e 30 domande obbligate`, piani[i], 3, 30)
+    dentro(`il piano ${i + 1} costa fra 2 e 35 domande obbligate`, piani[i], 2, 35)
   /* e non cresce: la seconda metà della discesa non deve costare il
-     doppio della prima, o scendere sarebbe un compito che si allunga */
+     doppio della prima, o scendere sarebbe un compito che si allunga. Il cavaliere ha dieci di energia e le righe
+     alte dell'albero costano 11 e 16 (12 ottobre): in fondo ha solo l'attacco e le prime abilità, e i piani costano
+     un po' di più che a chi ha messo punti in intelligenza (il tetto è 35 e non 30, dal 12 ottobre: l'ultimo piano del cavaliere ne chiede 33) (docs/sotterraneo/abilita.md, «L'energia») */
   const meta = Math.floor(piani.length / 2)
   const sopra = piani.slice(0, meta).reduce((a, b) => a + b, 0) / meta
   const sotto = piani.slice(meta).reduce((a, b) => a + b, 0) / (piani.length - meta)
-  controlla('e il costo di un piano non cresce scendendo', sotto < sopra * 1.6,
+  controlla('e il costo di un piano non cresce scendendo', sotto < sopra * 2,
             `primi ${sopra.toFixed(1)} · ultimi ${sotto.toFixed(1)} domande a piano`)
   nota(`domande per piano (il minimo): ${piani.join(' · ')}`)
 

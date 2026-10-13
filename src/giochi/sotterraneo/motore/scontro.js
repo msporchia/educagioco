@@ -522,7 +522,7 @@ export const MetodiDelloScontro = {
     const nodo = NODI[id]
     if (!nodo || nodo.sempre || !this.grado(id)) return 'non la sai'
     if (!this.haLArma(nodo.arma)) return nodo.arma.corto
-    if (this.energia < nodo.costo) return 'poca energia'
+    if (this.energia < nodo.costo) return nodo.costo > this.energiaMax ? 'serve più energia' : 'poca energia'
     return ''
   },
 

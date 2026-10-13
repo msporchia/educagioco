@@ -6,7 +6,7 @@
    stordito, la parata, il Grido a tutti, il primo tiro con l'arco, l'ultimo fiato, l'energia nella sosta.
    Gli effetti si contano nei turni di chi li porta (docs/sotterraneo/scontro.md).
    `node test/esegui.mjs sotterraneo-abilita --niente-build` */
-import { RAMI, NODI, ENERGIA, CASELLE_ABILITA, GRADINI, COSTO_DEL_GRADINO, guastiDelleAbilita } from '../../src/giochi/sotterraneo/dati/abilita.js'
+import { RAMI, NODI, ENERGIA, ENERGIA_DI_PARTENZA_MINIMA, CASELLE_ABILITA, GRADINI, COSTO_DEL_GRADINO, guastiDelleAbilita } from '../../src/giochi/sotterraneo/dati/abilita.js'
 import { EROI } from '../../src/giochi/sotterraneo/dati/eroi.js'
 import { sogliaDi } from '../../src/giochi/sotterraneo/dati/livelli.js'
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
@@ -20,7 +20,8 @@ import { GLIFI } from '../../src/giochi/sotterraneo/viste/glifi.js'
 import { controlla, uguale, stessaLista, riassunto } from '../aiuto/verifica.mjs'
 
 const roba = (mano = null, mancina = null) => ({ v: 1, gemme: 0, zaino: [], mano, mancina, corpo: null, dito: null, torcia: 0, torce: 0 })
-const conAlbero = (livello, albero) => ({ esp: sogliaDi(livello), albero, caselle: Object.keys(albero).filter(id => !NODI[id].sempre).slice(0, 3) })
+// `intelligenza`: i punti messi nel globo blu, per le abilità alte (costano 8, 11 e 16; il cavaliere e il nano hanno 10 di energia)
+const conAlbero = (livello, albero, intelligenza = 0) => ({ esp: sogliaDi(livello), albero, intelligenza, caselle: Object.keys(albero).filter(id => !NODI[id].sempre).slice(0, 3) })
 
 // uno scontro con un mostro fatto a mano: i conti si leggono senza il caso del bestiario. Solo lui in campo, sveglio, e veloce
 // come l'eroe: a parità tocca all'eroe, quindi i turni vanno uno per uno (eroe, mostro, eroe, mostro…)
@@ -124,16 +125,44 @@ function scontro(eroe, crescita, mano = null, mancina = null, mostro = {}) {
 
 /* ══════════ 3. l'energia ══════════ */
 {
+  // i costi crescono in fretta con la riga; solo la difesa del primo gradino sta sotto l'energia di partenza di tutti
+  controlla('il costo cresce a ogni riga', COSTO_DEL_GRADINO.every((x, k) => k === 0 || x > COSTO_DEL_GRADINO[k - 1]), COSTO_DEL_GRADINO.join(' · '))
+  controlla('l\'ultima riga costa più del triplo della prima', COSTO_DEL_GRADINO[4] >= COSTO_DEL_GRADINO[0] * 3, COSTO_DEL_GRADINO.join(' · '))
+  controlla('il primo gradino costa meno dell\'energia di partenza di tutti', COSTO_DEL_GRADINO[0] < ENERGIA_DI_PARTENZA_MINIMA)
+  // il mago è il mago del mana: due punti di energia per punto di intelligenza
+  const pozzo = e => scontro(e, conAlbero(1, {}), null).c.energiaMax
+  uguale('il cavaliere parte da dieci', pozzo('cavaliere'), 10)
+  uguale('il nano parte da dieci', pozzo('nano'), 10)
+  uguale('l\'elfa da tredici', pozzo('elfa'), 13)
+  uguale('il mago da ventidue', pozzo('mago'), 22)
+  uguale('la base è sette e l\'intelligenza ne vale tre a punto', scontro('cavaliere', conAlbero(12, {}, 3), null).c.energiaMax, 7 + 3 * (1 + 3))
+  controlla('l\'energia di partenza più bassa è quella del cavaliere e del nano', ENERGIA_DI_PARTENZA_MINIMA === 10 && ENERGIA === 7)
+}
+{
   const { c, m } = scontro('cavaliere', conAlbero(3, { fendente: 1 }), 'spada')
   uguale('si scende con l\'energia piena', c.energia, c.energiaMax)
+  m.ossa = m.ossaMax = 900; m.att = 1   // che regga tre colpi, e non faccia male
   c.energia = 4
   c.rispondi(false)
   uguale('sbagliare non la toglie e non la dà', c.energia, 4)
   c.rispondi(true)
   uguale('una risposta giusta sola non basta a fare un punto', c.energia, 4)
   c.rispondi(true)
-  uguale('ogni due risposte giuste, un punto', c.energia, 5)
+  uguale('nemmeno due', c.energia, 4)
+  c.rispondi(true)
+  uguale('alla terza, un punto', c.energia, 5)
+  c.rispondi(true); c.rispondi(true)
+  uguale('due punti ogni cinque risposte giuste (2,5 a punto, il resto passa)', c.energia, 6)
+  // porte, forzieri e curiosità non la ridanno: l'energia torna combattendo (l'utente, 12 ottobre: «sempre a pieno mana»)
   m.ossa = -1; c.chiudi()
+  c.energia = 2
+  const porta = { che: 'porta', x: 1, y: 1, aperta: false }
+  const forziere = { che: 'forziere', x: 2, y: 1, aperto: false, em: '📦', nome: 'Forziere' }
+  for (let i = 0; i < 6; i++) {
+    c.foglio = { che: 'porta', chi: porta }; c.rispondi(true)
+    c.foglio = { che: 'forziere', chi: { ...forziere, aperto: false } }; c.rispondi(true)
+  }
+  uguale('dodici risposte giuste a porte e forzieri non danno un punto', c.energia, 2)
   const fonte = { che: 'fonte', x: 1, y: 1 }
   c.energia = 0; c.vita = 1
   c.foglio = { che: 'fonte', chi: fonte }
@@ -144,6 +173,20 @@ function scontro(eroe, crescita, mano = null, mancina = null, mostro = {}) {
   c.zaino = ['pozione-blu']
   c.usa(0)
   controlla('la pozione blu ne dà otto', c.energia === 8 && !c.zaino.length)
+}
+{
+  // salire di livello non la riempie (come la vita): il globo cresce, e l'energia resta quella che era
+  const { c } = scontro('mago', conAlbero(3, { 'dardo-di-fuoco': 1 }), 'verga')
+  c.energia = 5
+  c.guadagna(5000)
+  controlla('salendo di livello l\'energia non si riempie', c.energia === 5 && c.livelloEroe > 3, `${c.energia}`)
+  // e un'abilità che non starebbe nemmeno nel globo pieno lo dice (ci vogliono punti in intelligenza), una che manca soltanto no
+  const { c: k } = scontro('cavaliere', conAlbero(12, { 'colpo-furioso': 1, macello: 1 }), 'spada')
+  controlla('il Macello costa 11 e il cavaliere ha 10: serve più energia', k.perchéNonUsi('macello') === 'serve più energia', k.perchéNonUsi('macello'))
+  k.energia = 1
+  controlla('il colpo furioso gli manca soltanto', k.perchéNonUsi('colpo-furioso') === 'poca energia', k.perchéNonUsi('colpo-furioso'))
+  const { c: kk } = scontro('cavaliere', conAlbero(12, { 'colpo-furioso': 1, macello: 1 }, 1), 'spada')
+  controlla('con un punto in intelligenza (13 di energia) il Macello si può preparare', kk.prepara('macello'))
 }
 
 /* ══════════ 4. lo scontro ══════════ */
@@ -198,7 +241,7 @@ function scontro(eroe, crescita, mano = null, mancina = null, mostro = {}) {
   controlla('lo scudo non colpisce: il mostro è ancora in piedi', ms.ossa === 3 && eScudo.dato === 0 && eScudo.che !== 'caduto', JSON.stringify(eScudo))
   controlla('ma lo scudo c\'è', (cs.foglio ? cs.foglio.io.scudo : 0) > 0)
 }
-  ;({ c, m } = scontro('nano', conAlbero(9, { spaccaroccia: 1, 'mani-pesanti': 1, stordisce: 1 }), 'ascia'))
+  ;({ c, m } = scontro('nano', conAlbero(9, { spaccaroccia: 1, 'mani-pesanti': 1, stordisce: 1 }, 3), 'ascia'))
   const vita = c.vita
   c.prepara('stordisce')
   c.rispondi(true)
@@ -222,7 +265,7 @@ function scontro(eroe, crescita, mano = null, mancina = null, mostro = {}) {
 
   // il Grido di guerra è `forma: 'tutti'`: lo stesso colpo e gli stessi effetti a tutti i mostri in campo
   {
-    const c = new Corsa(CAMPAGNA[1], { seme: 5, eroe: 'cavaliere', rnd: seminato(5), crescita: conAlbero(12, { preghiera: 1, 'cuore-saldo': 1, grido: 1 }), roba: roba('spada') })
+    const c = new Corsa(CAMPAGNA[1], { seme: 5, eroe: 'cavaliere', rnd: seminato(5), crescita: conAlbero(12, { preghiera: 1, 'cuore-saldo': 1, grido: 1 }, 3), roba: roba('spada') })
     const m = c.livello.robe.find(r => r.che === 'mostro')
     const stanza = c.livello.stanzaDi(m.x, m.y)
     const altro = c.livello.mostro(m.tipo, m.x, m.y)
@@ -258,7 +301,8 @@ function scontro(eroe, crescita, mano = null, mancina = null, mostro = {}) {
   }
 
   // Radici: il mostro bloccato non attacca e subisce di più finché resta fermo
-  ;({ c, m } = scontro('elfa', conAlbero(12, { 'dardo-avvelenato': 1, radici: 1 }), 'arco-corto', null, { ossa: 500, ossaMax: 500, att: 9 }))
+  // (Radici è dell'ultima riga e costa 16: l'elfa ha 13 di energia, ci vuole un punto in intelligenza)
+  ;({ c, m } = scontro('elfa', conAlbero(12, { 'dardo-avvelenato': 1, radici: 1 }, 1), 'arco-corto', null, { ossa: 500, ossaMax: 500, att: 9 }))
   const colpoPrima = c.colpo(m)
   c.prepara('radici')
   const eR = c.rispondi(true)

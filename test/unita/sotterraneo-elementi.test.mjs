@@ -21,8 +21,9 @@ import { GLIFI } from '../../src/giochi/sotterraneo/viste/glifi.js'
 import { controlla, uguale, stessaLista, riassunto } from '../aiuto/verifica.mjs'
 
 const roba = (mano = null, mancina = null) => ({ v: 1, gemme: 0, zaino: [], mano, mancina, corpo: null, dito: null, torcia: 0, torce: 0 })
+// (con l'intelligenza messa: le abilità alte costano 8, 11 e 16, e senza il cavaliere e il nano (10 di energia) non le pagano: qui si prova cosa fanno)
 const conAlbero = (livello, albero, altro = {}) =>
-  ({ esp: sogliaDi(livello), albero, caselle: Object.keys(albero).filter(id => !NODI[id].sempre).slice(0, 3), ...altro })
+  ({ esp: sogliaDi(livello), albero, intelligenza: Math.min(5, livello - 1), caselle: Object.keys(albero).filter(id => !NODI[id].sempre).slice(0, 3), ...altro })
 
 // uno scontro con un solo mostro fatto a mano (del tipo che si dice), sveglio e veloce come l'eroe: i turni vanno uno per uno
 function scontro(eroe, crescita, mano = null, mancina = null, mostro = {}) {
@@ -431,7 +432,7 @@ function scena(eroe, crescita, mano, mancina, tipi) {
   const solo = scontro('mago', conAlbero(12, { 'lama-incantata': 1 }, { intelligenza: 4 }), 'verga')
   controlla('senza la spada la Lama si spegne e dice perché', !solo.c.prepara('lama-incantata') && /spada/.test(solo.c.perchéNonUsi('lama-incantata')))
   // l'attacco della Lama è quello dell'intelligenza (più il braccio e la spada), non quello della forza
-  const poco = scontro('mago', conAlbero(12, { 'lama-incantata': 1 }), 'spada')
+  const poco = scontro('mago', conAlbero(12, { 'lama-incantata': 1 }, { intelligenza: 0 }), 'spada')
   const tanto = scontro('mago', conAlbero(12, { 'lama-incantata': 1 }, { intelligenza: 6 }), 'spada')
   uguale('sei punti all\'intelligenza: l\'attacco della Lama sale di sei', tanto.c.attDelRamo(lama) - poco.c.attDelRamo(lama), 6 * ATT_PER_PUNTO)
   uguale('mentre l\'attacco solito, di spada, non si muove (conta la forza)', tanto.c.att, poco.c.att)

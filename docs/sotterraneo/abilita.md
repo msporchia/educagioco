@@ -87,26 +87,33 @@ Sono la prima mano (prima in codice, poi dipinto, come la cornice della
 
 ## L'energia
 
-- **Otto più l'intelligenza** (`ENERGIA`, `energiaMax`): il mago parte da
-  tredici, l'elfa da dieci, il cavaliere e il nano da nove, e alzare
-  l'intelligenza alza il globo ([livelli.md](livelli.md#le-quattro-caratteristiche)).
-  Un'abilità costa **per il gradino del suo posto nel ramo** (`COSTO_DEL_GRADINO`:
-  5, 6, 7, 9): nessuna più di nove, l'energia di chi ne ha meno. Si scende con
-  l'energia piena, come con la vita.
-- **Si riempie piano, solo rispondendo giusto**: un punto ogni **due** risposte
-  giuste (`RISPOSTE_PER_ENERGIA`), dovunque (porte, forzieri, fonti, mostri),
-  dopo aver pagato l'abilità. Sbagliare non la toglie. L'utente, 9 ottobre:
-  *un'abilità non si usa a ogni scontro, e non ne avanza*. Misurato a mano: il mago
-  vince un mostro in 1–2 risposte nelle prime discese e in 5–6 in fondo, quindi
-  una da 5 si ripaga in due-cinque scontri, e le prime due sono già pagate
-  dall'energia di partenza. In più la fonte la riempie tutta, la pozione blu
-  (`pozione-blu`, dall'erborista e nei forzieri) ne dà otto, e il Respiro
-  del bosco la ridà battendo i mostri. Misurato col banco (12 ottobre, [scontro-bilancio.md](scontro-bilancio.md)): una
-  strada per classe, due abilità forti a scontro quando c'è energia; tiene.
-- **Mai col tempo**: sotto una domanda l'orologio è fermo, e una ricarica a
-  tempo premierebbe chi legge piano o posa il telefono. È la ragione per cui
-  la torcia si conta a stanze ([roba.md](roba.md)).
-- Sta nella sosta (`energia`): riprendendo si ritrova com'era.
+**12 ottobre 2026, il mana costa davvero.** L'utente: *«le abilità costano poco mana: mio figlio è sempre a piena vita e pieno
+mana. In particolare per quelle più avanzate, se decidi di usarle devi avere un cooldown naturale con il fatto che finisci il
+mana (ricordati che il mago ovviamente predilige il mana)»*. Prima: energia 8 più l'intelligenza, costi 5 · 6 · 6 · 7 · 9, un
+punto ogni due risposte giuste **dovunque**, quindi fra uno scontro e l'altro (porte, forzieri, curiosità) il globo tornava
+quasi pieno da sé. Adesso tre leve insieme:
+
+- **Il mago è il mago del mana**: sette più **tre per punto di intelligenza** (`ENERGIA`, `ENERGIA_PER_INTELLIGENZA`,
+  `energiaMax`). Il mago parte da ventidue, l'elfa da tredici, il cavaliere e il nano da dieci; al 12 il mago ha 41 e gli altri
+  restano dove sono se non mettono punti in intelligenza, al 24 il mago 53, l'elfa 19, il cavaliere e il nano 16.
+- **Il costo cresce in fretta con la riga** (`COSTO_DEL_GRADINO`): **5 · 7 · 8 · 11 · 16**. La difesa del primo gradino costa meno
+  dell'energia di partenza di tutti (10): è la regola di `guastiDelleAbilita`, al posto di «nessuna abilità più cara di chi ne ha
+  meno». La riga 2 (livello 6) si paga una volta con il globo pieno e poi si aspetta. La riga 3 (livello 8, 11 di energia) e la 4
+  (livello 12, 16) **chiedono punti in intelligenza**: il cavaliere e il nano ne hanno bisogno di uno e di due; l'elfa (13) di
+  nessuno e di uno; il mago le paga già dall'inizio (22), una alla volta, e poi aspetta. Dove un'abilità non starebbe nemmeno
+  nel globo pieno la casella dice **«ti serve più energia (intelligenza)»** (`perchéNonUsi` torna `serve più energia`), e la
+  pagina dell'albero lo scrive sotto il medaglione; quando manca soltanto per adesso dice **«ti manca energia»** (`poca energia`).
+- **Si ricarica solo combattendo**: due punti ogni **cinque risposte giuste date a un mostro** (`RISPOSTE_PER_ENERGIA` 2,5, il resto passa al punto dopo; solo se il
+  foglio è uno scontro, `Corsa.rispondi`). Porte, forzieri e curiosità non la ridanno più. Sbagliare non la toglie. La fonte la
+  riempie tutta e la pozione blu (`pozione-blu`, dall'erborista e nei forzieri) ne dà otto; il Respiro del bosco la ridà
+  battendo i mostri. **Salire di livello non la riempie** (come la vita: arriva solo la differenza di un punto d'intelligenza).
+  Si scende con l'energia piena, e la sosta la tiene (`energia`).
+- **Mai col tempo**: sotto una domanda l'orologio è fermo, e una ricarica a tempo premierebbe chi legge piano o posa il
+  telefono. È la ragione per cui la torcia si conta a stanze ([roba.md](roba.md)).
+
+Il banco spende come prima (due abilità forti a scontro quando c'è energia, solo se il colpo solito non chiude): con il
+globo più scarso ne usa meno a testa il cavaliere e il nano, di più il mago. Le misure, prima → dopo: [scontro-bilancio.md](scontro-bilancio.md#il-mana-costa-davvero).
+La forza conta solo le abilità che l'energia di partenza tipica paga ([forza.md](forza.md)).
 
 ## Nello scontro
 
@@ -114,7 +121,7 @@ Sono la prima mano (prima in codice, poi dipinto, come la cornice della
   ogni turno dell'eroe ([scontro.md](scontro.md)). La scelta (`CaselleAbilita.vue`) è un elenco con bordi d'oro: «Attacco» in cima («fai 6 di danno»), le tre
   abilità col costo e quello che fanno **contro questo mostro, coi numeri veri** (`Corsa.descrizione`: «fai 6 di danno · poi 3 a turno
   per 3 turni»), poi **«Bevi una pozione»** e **«Scappa via»** col loro prezzo. Un tocco sceglie e va avanti; per i primi 320 ms il
-  tocco non conta (il click lasciato dalla risposta). Un'abilità senza energia o senz'arma resta grigia e dice cosa manca. Sopra la
+  tocco non conta (il click lasciato dalla risposta). Un'abilità senza energia o senz'arma resta grigia e dice cosa manca («ti manca energia», «ti serve più energia», «ci vuole un arco»). Sopra la
   domanda resta la riga della scelta fatta. Chi non ha abilità vede comunque Attacco, bere e scappare. L'energia non si ripete:
   la dice il globo blu.
 - **Come si vede** ([scontro-interfaccia.md](scontro-interfaccia.md)): i mostri in campo sul fondale vero, ognuno con la sua barra

@@ -21,7 +21,7 @@ export const ATT_PER_PUNTO = 1            // ⚔️ con l'arma della sua famigli
 export const VITA_PER_TEMPRA = 3          // ❤️ vita
 export const TEMPRA_PER_DIFESA = 3        // punti di tempra per un 🛡️
 export const SCHIVATA_PER_DESTREZZA = 1   // 🌀 per cento a punto (a 2 le zone a 6/10 si vincevano troppo)
-export const ENERGIA_PER_INTELLIGENZA = 1 // energia massima a punto
+export const ENERGIA_PER_INTELLIGENZA = 3 // energia massima a punto: il mago è il mago del mana (docs/sotterraneo/abilita.md, «L'energia»)
 export const GEMME_PER_FORTUNA = 0.05     // la fortuna dei pezzi: ogni gemma vale un ventesimo in più a punto
 export const RARITA_PER_FORTUNA = 0.08    // e la roba non comune un dodicesimo più spesso
 

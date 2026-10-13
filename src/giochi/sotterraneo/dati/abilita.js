@@ -32,17 +32,21 @@
 
 import { EROI } from './eroi.js'
 import { CHIAVI_ELEMENTI } from './elementi.js'
+import { ENERGIA_PER_INTELLIGENZA } from './livelli.js'
 
-// l'energia: si riempie rispondendo giusto (porte, forzieri, fonti, mostri), alla fonte e con la pozione blu; mai col
-// tempo, perché sotto una domanda l'orologio è fermo (come la torcia, che si conta a stanze: docs/sotterraneo/roba.md).
-// Il massimo è ENERGIA più l'intelligenza (motore/corredo.js): il mago parte da dieci, il cavaliere e il nano da sei
-export const ENERGIA = 8
-export const ENERGIA_DI_PARTENZA_MINIMA = 9
-// l'energia torna piano (l'utente, 9 ottobre: le abilità non si usano a ogni scontro, e non ne avanza): un punto ogni due
-// risposte giuste, circa due a scontro. Un'abilità da 5 si ripaga in due scontri e mezzo, una da 9 in quattro e mezzo
-export const RISPOSTE_PER_ENERGIA = 2
-// quanto costa un'abilità, dal gradino del suo posto nel ramo (si apre al livello GRADINI[i]): il costo cresce col gradino
-export const COSTO_DEL_GRADINO = [5, 6, 6, 7, 9]
+// l'energia: si riempie combattendo (due punti ogni cinque risposte giuste, ma solo dentro lo scontro), alla fonte e con la pozione
+// blu; mai col tempo, perché sotto una domanda l'orologio è fermo (come la torcia, che si conta a stanze:
+// docs/sotterraneo/roba.md). Il massimo è ENERGIA più tre per punto di intelligenza (motore/corredo.js): il mago è il mago
+// del mana, parte da ventidue; l'elfa da tredici, il cavaliere e il nano da dieci (docs/sotterraneo/abilita.md, «L'energia»)
+export const ENERGIA = 7
+export const ENERGIA_DI_PARTENZA_MINIMA = 10
+// l'energia torna piano e solo combattendo (l'utente, 12 ottobre: il bambino era sempre a pieno mana): due punti ogni cinque
+// risposte giuste date a un mostro (2,5 a punto: il resto passa al punto dopo). Porte, forzieri e curiosità non la ridanno
+export const RISPOSTE_PER_ENERGIA = 2.5
+// quanto costa un'abilità, dal gradino del suo posto nel ramo (si apre al livello GRADINI[i]): il costo cresce in fretta,
+// così le ultime righe si usano una volta ogni tanto, dopo averle aspettate. Solo la difesa del primo gradino costa meno
+// dell'energia di partenza di tutti; le righe alte chiedono di aver messo punti in intelligenza (`serve più energia`)
+export const COSTO_DEL_GRADINO = [5, 7, 8, 11, 16]
 // quante abilità si portano nello scontro: tre stanno sopra le risposte anche a 320 px
 export const CASELLE_ABILITA = 3
 // un punto abilità per livello dal 2: al 12, dove finisce la storia, undici punti per una trentina di nodi per classe
@@ -413,7 +417,7 @@ export function nodiSopra(nodo) {
 
 export function guastiDelleAbilita() {
   const g = []
-  const minima = Math.min(...EROI.map(e => ENERGIA + (e.parte.intelligenza || 0)))
+  const minima = Math.min(...EROI.map(e => ENERGIA + (e.parte.intelligenza || 0) * ENERGIA_PER_INTELLIGENZA))
   if (minima !== ENERGIA_DI_PARTENZA_MINIMA) g.push(`l'energia di partenza più bassa è ${minima}, non ${ENERGIA_DI_PARTENZA_MINIMA}`)
   if (COSTO_DEL_GRADINO.length !== GRADINI.length) g.push('i costi e i gradini non sono lo stesso numero')
   const visti = new Set()
@@ -443,7 +447,7 @@ export function guastiDelleAbilita() {
         if (x.elemento && !CHIAVI_ELEMENTI.includes(x.elemento)) g.push(`${x.id}: l'elemento "${x.elemento}" non esiste`)
         if (!x.sempre && !(x.costo > 0)) g.push(`${x.id}: un'abilità senza costo`)
         if (!x.sempre && x.costo !== COSTO_DEL_GRADINO[x.riga]) g.push(`${x.id}: costa ${x.costo}, la riga ${x.riga} costa ${COSTO_DEL_GRADINO[x.riga]}`)
-        if (!x.sempre && x.costo > ENERGIA_DI_PARTENZA_MINIMA) g.push(`${x.id}: costa più dell'energia di chi ne ha meno`)
+        if (!x.sempre && x.riga === 0 && x.costo >= ENERGIA_DI_PARTENZA_MINIMA) g.push(`${x.id}: il primo gradino costa quanto l'energia di chi ne ha meno`)
         for (let gr = 1; gr <= GRADI; gr++) if (!x.fa(gr)) g.push(`${x.id}: al grado ${gr} non dice cosa fa`)
       }
     }
