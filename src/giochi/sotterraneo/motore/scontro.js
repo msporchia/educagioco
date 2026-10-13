@@ -219,7 +219,7 @@ export const MetodiDelloScontro = {
     f.inArrivo = this.colpiInArrivo(f)
   },
 
-  // la somma dei colpi che arriveranno prima del prossimo turno dell'eroe (la fila li sa): un mostro stordito salta i suoi
+  // la somma dei colpi che arriveranno prima del prossimo turno dell'eroe (la fila li sa), meno la barriera addosso: un mostro stordito salta i suoi
   colpiInArrivo(f = this.foglio) {
     if (!f || f.che !== 'scontro') return 0
     const fatti = new Map()
@@ -231,7 +231,9 @@ export const MetodiDelloScontro = {
       if (!x || x.morto || ((x.stati || {}).fermo || 0) > k) continue
       somma += this.botta(x)
     }
-    return somma
+    // una barriera addosso (quella dello scontro, o quella preparata dal campo) ne para una parte: l'avviso dice quanto toglie davvero
+    const barriera = ((f.io && f.io.scudo) || 0) + this.preparati.reduce((n, p) => n + (p.assorbe > 0 ? p.assorbe : 0), 0)
+    return Math.max(0, somma - barriera)
   },
 
   // Lo stop (motore/pericolo.js) si guarda quando tocca all'eroe, sulla somma dei colpi in arrivo; se no la domanda. Torna la ragione

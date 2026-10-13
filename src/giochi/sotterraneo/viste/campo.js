@@ -6,6 +6,7 @@ import { ELEMENTI, STATI } from '../dati/elementi.js'
 import { SCENARI, SCENARIO, pezzoAndante } from '../dati/tessere.js'
 import { fotogrammaDi, quantiFotogrammi } from '../dati/fotogrammi.js'
 import { coloreDelGrado, etichettaDi } from '../dati/varianti.js'
+import { NODI, RAMI } from '../dati/abilita.js'
 
 // «2 turni»: una risposta è un turno (le righe dell'albero parlano così, dati/abilita.js)
 export const turniDi = n => `${n} ${n === 1 ? 'turno' : 'turni'}`
@@ -50,9 +51,34 @@ export function segniDel(colpito) {
   return s
 }
 
-// e cosa protegge l'eroe in questo scontro (scudo, parato…): le pastiglie col testo, una per effetto
-export function statiMiei(io) {
-  return [
+// Gli incanti preparati dal campo e ancora addosso (motore/preparati.js), come li vede la barra e la fila dei turni: l'icona del suo ramo
+// e i passi che restano, che scendono camminando e, nello scontro, di PASSI_PER_TURNO a turno. `c`: la corsa
+export function incantiAddosso(c) {
+  return (c.preparati || []).map(p => {
+    const nodo = NODI[p.id], ramo = (RAMI[nodo.classe] || []).find(r => r.chiave === nodo.ramo)
+    return { id: p.id, nome: nodo.nome, glifo: nodo.glifo, tinta: ramo ? ramo.tinta : '#ffd23f', passi: Math.ceil(p.passi), dura: c.passiDi(nodo) }
+  })
+}
+
+// Quello che protegge l'eroe da un incanto preparato dal campo (motore/preparati.js), nella forma delle pastiglie dello scontro: la
+// stessa chiave dell'effetto (la vista li disegna uguali) e in fondo i passi che restano. Il debole di Rovi e del Grido parte con lo
+// scontro e sta già sui mostri
+function statiDeiPreparati(c) {
+  return (c.preparati || []).map(p => {
+    const nodo = NODI[p.id], passi = Math.ceil(p.passi)
+    const chiave = nodo.intoccabile != null ? 'intoccabile' : nodo.specchio != null ? 'specchio' : nodo.scudo != null ? 'scudo' : nodo.parato != null ? 'parato' : nodo.linfa != null ? 'linfa' : null
+    if (!chiave) return null
+    const glifo = { intoccabile: 'montagna', specchio: 'specchio', scudo: 'sfera', parato: 'scudo', linfa: 'germoglio' }[chiave]
+    const dice = { intoccabile: 'invulnerabile', specchio: 'il prossimo colpo torna al mostro', scudo: `barriera: para ${p.assorbe} danni`, parato: 'protetto dai danni',
+                   linfa: `guarisci di ${Math.max(1, Math.round(c.vitaMax / 10))} a turno · ${turniDi(p.tick)}` }[chiave]
+    return { chiave, glifo, dice: `${dice} · ${passi} passi`, passi, preparato: p.id }
+  }).filter(Boolean)
+}
+
+// e cosa protegge l'eroe in questo scontro (scudo, parato…): le pastiglie col testo, una per effetto, prima quelle dello scontro e poi
+// gli incanti preparati addosso (`c`: la corsa)
+export function statiMiei(io, c = null) {
+  const dello = [
     io.parato > 0 ? { chiave: 'parato', glifo: 'scudo', dice: `protetto dai danni · ${turniDi(io.parato)}` } : null,
     io.scudo > 0 ? { chiave: 'scudo', glifo: 'sfera', dice: `barriera: para ${io.scudo} danni` } : null,
     io.intoccabile > 0 ? { chiave: 'intoccabile', glifo: 'montagna', dice: `invulnerabile · ${turniDi(io.intoccabile)}` } : null,
@@ -60,6 +86,8 @@ export function statiMiei(io) {
     io.gelato > 0 ? { chiave: 'gelato', glifo: 'fiocco', dice: 'gelato dall\'incantesimo: il tuo prossimo colpo fa metà danno' } : null,
     io.linfa && io.linfa.scambi > 0 ? { chiave: 'linfa', glifo: 'germoglio', dice: `guarisci di ${io.linfa.quanto} · ${turniDi(io.linfa.scambi)}` } : null,
   ].filter(Boolean)
+  const visti = new Set(dello.map(x => x.chiave))
+  return [...dello, ...(c ? statiDeiPreparati(c) : []).filter(x => !visti.has(x.chiave))]
 }
 
 // Le celle di una griglia a sei colonne (ognuno ne prende due): oggi dicono quanti ne stanno «in fila» (fino a tre una fila, da quattro
@@ -175,7 +203,8 @@ export function vistaDelloScontro(c) {
     apertura: { agguato: !!f.agguato, sorpresa: !!f.sorpresa, mostri: f.campo.length },
     palco: palcoDi(c),
     eroe: { sprite: c.io.sprite ? pezzoAndante(c.io.sprite, 'fermo', 0) : null, em: c.io.em, vita: c.vita, vitaMax: c.vitaMax },
-    mie: statiMiei(f.io || {}),
+    mie: statiMiei(f.io || {}, c),
+    incanti: incantiAddosso(c),
   }
 }
 

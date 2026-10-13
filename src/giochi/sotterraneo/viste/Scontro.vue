@@ -26,6 +26,7 @@ const props = defineProps({
   palco: { type: Object, default: () => ({}) },   // lo scenario vero: { pavimento, faccia, roccia }
   eroe: { type: Object, default: () => ({}) },   // { sprite, em, vita, vitaMax }
   mie: { type: Array, default: () => [] },     // cosa protegge l'eroe in questo scontro (scudo, parato…)
+  incanti: { type: Array, default: () => [] },   // gli incanti preparati addosso, coi passi che restano (viste/campo.js, incantiAddosso)
   fx: { type: Object, required: true },        // il racconto di adesso (viste/racconto.js)
 })
 const emit = defineEmits(['bersaglio', 'accorcia'])
@@ -174,7 +175,7 @@ function punto(chi) {
         </button>
       </div>
 
-      <FilaDeiTurni :turni="fx.fila || turni" :mostri="mostri" :eroe="eroe" />
+      <FilaDeiTurni :turni="fx.fila || turni" :mostri="mostri" :eroe="eroe" :incanti="incanti" />
 
       <!-- gli effetti dell'abilità: quello che vola, cade, esce dal pavimento (viste/Scene.vue) -->
       <Scene :scene="fx.scene" :punto="punto" :larg="larg" />
@@ -184,7 +185,7 @@ function punto(chi) {
     </div>
 
     <div v-if="mie.length" class="sot-stati-mie em" data-stati-eroe>
-      <span v-for="x in mie" :key="x.chiave" :data-stato="x.chiave"><Glifo :nome="x.glifo" :misura="14" /> {{ x.dice }}</span>
+      <span v-for="x in mie" :key="x.chiave" :data-stato="x.chiave" :data-preparato="x.preparato || null" :data-passi="x.passi || null"><Glifo :nome="x.glifo" :misura="14" /> {{ x.dice }}</span>
     </div>
   </div>
 </template>
