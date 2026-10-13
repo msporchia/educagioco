@@ -20,7 +20,7 @@
    `node test/esegui.mjs sotterraneo-eroe`
    tempo: 150
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, scegliAttacco, scendiNelSotterraneo, lasciaLaDiscesa }
+import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, scegliAttacco, scendiNelSotterraneo, lasciaLaDiscesa, finestraFerma }
   from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
@@ -73,12 +73,7 @@ async function tocca(x, y) {
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
 }
 async function toccaIl(sel) {
-  /* La finestra nuova nasce a 0,94 e trasparente e cresce in 160 ms (`sot-cresce`): il suo bottone misurato in quel
-     momento sta una ventina di pixel più in là di dove sarà, e il tocco cade a lato. Si misura a finestra ferma. */
-  await page.waitForFunction(() => {
-    const c = document.querySelector('.sot-cornice')
-    return !c || (getComputedStyle(c).transform === 'none' && getComputedStyle(c).opacity === '1')
-  }, null, { timeout: 2000 }).catch(() => {})
+  await finestraFerma(page)   // la finestra nuova cresce per 160 ms: misurata prima, il tocco cade a lato
   const b = await page.locator(sel).first().boundingBox()
   await tocca(b.x + b.width / 2, b.y + b.height / 2)
 }

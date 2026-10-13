@@ -282,6 +282,17 @@ export async function scegli(page, chiave) {
   await page.click(`.carta.gioco.davanti[data-gioco="${chiave}"]`)
 }
 
+/* Aspetta che la finestra del sotterraneo (`.sot-cornice`: zaino, pagina dell'eroe, albero, bottega) abbia finito di
+   crescere. Nasce a 0,94 e trasparente e arriva in 160 ms (`sot-cresce`): un bottone misurato in quel momento sta una
+   ventina di pixel più in là di dove sarà, e un tocco lì cade a lato (a macchina carica, spesso). Un bambino non la
+   tocca prima di vederla; il test sì, quindi aspetta lui. Chi misura un bottone per toccarlo la chiama prima. */
+export async function finestraFerma(page) {
+  await page.waitForFunction(() => {
+    const c = document.querySelector('.sot-cornice')
+    return !c || (getComputedStyle(c).transform === 'none' && getComputedStyle(c).opacity === '1')
+  }, null, { timeout: 2000 }).catch(() => {})
+}
+
 /* Apre un livello del costruttore dalla scheda: il tocco sul led apre il
    fumetto e «▶ costruisci» lo apre (docs/costruttore/scheda.md). `quale` è
    l'indice del livello, o 'libero' per il cantiere libero. */
