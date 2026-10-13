@@ -7,6 +7,7 @@
 import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
 import { CIECA } from '../../pausa.js'
 import { PEZZI } from '../dati/atlante.js'
+import { scalaDelGrosso, figuraDelGrosso } from '../dati/grossi.js'
 import { scalaDelMostro, piazza, SCALA_FIGURE } from './campo.js'
 import Icona from './Icona.vue'
 import Grosso from './Grosso.vue'
@@ -53,7 +54,8 @@ const piano = computed(() => piazza(props.posti, props.mostri, larg.value))
 // il compagno dell'eroe non c'è ancora: il suo posto non si disegna, e l'eroe sta a metà del pavimento (viste/campo.js, `piazza`)
 const compagno = false
 const scalaM = (m, k) => scalaDelMostro(m.tipo, PEZZI[m.sprite] ? PEZZI[m.sprite][3] : 16, Math.round(scala.value * piano.value.mostri[k].prof * 4) / 4)
-const scalaGrosso = computed(() => scala.value + 1)   // il grosso un passo sopra: è il re della stanza
+// il grosso sta nella sua scatola (1,9 eroi di altezza, 3 di larghezza: dati/grossi.js), non a un passo intero sopra gli altri
+const scalaGrosso = chi => scalaDelGrosso(chi, scala.value)
 const stretto = computed(() => larg.value < 340)   // a 320 px la riga della minaccia si accorcia
 const barra = computed(() => (quanti.value === 1 ? 72 : 56))
 // il punto dei piedi di un mostro e l'ordine in cui si disegna (chi sta più in basso sta davanti)
@@ -72,7 +74,11 @@ const soloMiaUna = computed(() => props.mostri.filter(m => m.colpito).length > 1
 const statiDi = m => (props.fx.attivo && props.fx.stati[m.i] ? props.fx.stati[m.i] : m.stati)
 const addosso = m => statiDi(m).map(x => 'sot-addosso-' + (x.fuoco ? 'fuoco' : x.gelo ? 'gelo' : x.chiave === 'debole' ? 'fiacco' : x.chiave))
 // quanto è larga la figura (le stelle dello stordito girano in proporzione)
-const largoDi = (m, k) => (m.grosso ? 32 * scalaGrosso.value : (PEZZI[m.sprite] ? PEZZI[m.sprite][2] : 16) * scalaM(m, k))
+const largoDi = (m, k) => {
+  if (!m.grosso) return (PEZZI[m.sprite] ? PEZZI[m.sprite][2] : 16) * scalaM(m, k)
+  const f = figuraDelGrosso(m.grosso), p = f && PEZZI[`${f.sprite}-fermo-0`]
+  return (p ? p[2] : 32) * scalaGrosso(m.grosso)
+}
 const protetto = computed(() => props.mie.some(x => ['parato', 'scudo'].includes(x.chiave)))
 const diPietra = computed(() => props.mie.some(x => x.chiave === 'intoccabile'))
 const specchiato = computed(() => props.mie.some(x => x.chiave === 'specchio'))
@@ -138,11 +144,11 @@ function punto(chi) {
                 :data-morto="mortoDi(m) ? '' : null" :data-porta-chiave="m.chiave ? '' : null" @click.stop="tocca(m)">
           <span :ref="el => { elC[m.i] = el }" class="sot-m-corpo">
             <i class="sot-ombra" :style="{ width: Math.round(largoDi(m, k) * 1.25) + 'px' }" aria-hidden="true"></i>
-            <span v-if="!m.grosso" class="sot-m-nome" :class="m.grado && ['sot-grado', 'sot-grado-' + m.grado]" data-nome-mostro :data-grado="m.grado">{{ m.etichetta }}</span>
+            <span v-if="!m.grosso && !mortoDi(m) && (m.grado || m.bersaglio)" class="sot-m-nome" :class="m.grado && ['sot-grado', 'sot-grado-' + m.grado]" data-nome-mostro :data-grado="m.grado">{{ m.etichetta }}</span>
             <span :key="chiaveFx(m.i)" class="sot-figura sot-m-fig" :class="[classeFx(m.i), m.grado && 'sot-grado-' + m.grado]">
               <span class="sot-corpo">
                 <span class="sot-respira" :class="addosso(m)">
-                  <Grosso v-if="m.grosso" :chi="m.grosso" :scala="scalaGrosso" />
+                  <Grosso v-if="m.grosso" :chi="m.grosso" :scala="scala" />
                   <Creatura v-else :sprite="m.sprite" :em="m.em" :scala="scalaM(m, k)" :emAlto="48" :tipo="m.tipo" :arma="m.arma" />
                 </span>
               </span>

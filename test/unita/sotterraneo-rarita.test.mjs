@@ -9,7 +9,7 @@
 import { COSE, chiaveDelPezzo, aLivello, baseDi, livelloDelPezzo, raritaDi, nomeDelPezzo, guastiDelleCose } from '../../src/giochi/sotterraneo/dati/cose.js'
 import { RARITA, ABILITA_DEI_PEZZI, LEGGENDARI, DEI_GROSSI, UNICI, TINTE_DELLE_ABILITA } from '../../src/giochi/sotterraneo/dati/pezzi.js'
 import { ASPETTI } from '../../src/giochi/sotterraneo/dati/aspetti.js'
-import { GROSSI, GROSSO_DELLA_DISCESA, GROSSO_OGNI, grossoDi, guastiDeiGrossi, figuraDelGrosso, spriteDelGrosso, LATO_DEL_GROSSO } from '../../src/giochi/sotterraneo/dati/grossi.js'
+import { GROSSI, GROSSO_DELLA_DISCESA, GROSSO_OGNI, grossoDi, guastiDeiGrossi, figuraDelGrosso, spriteDelGrosso, EROE, LATO_DEL_GROSSO } from '../../src/giochi/sotterraneo/dati/grossi.js'
 import { CAMPAGNA, L_ABISSO } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { pezzoNuovo, pescaRarita, pescaAbilita, pezzoDelGrosso, guastiDelBottino, livelloDelBottino }
   from '../../src/giochi/sotterraneo/motore/bottino.js'
@@ -158,7 +158,10 @@ import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifi
     controlla(`${k}: ha una figura`, !!f)
     uguale(`${k}: senza dipinto, è la creatura giusta`, x.figura || x.tipo, FIGURA[k])
     uguale(`${k}: e lo sprite è il suo`, f.sprite, (MOSTRI[FIGURA[k]] || { sprite: FIGURA[k] }).sprite)
-    controlla(`${k}: ingrandito a coprire le sue due caselle`, f.alto * f.k >= LATO_DEL_GROSSO - 0.01 && f.k > 1.2, `${f.alto} × ${f.k}`)
+    // la scatola: né più alto di 1,9 eroi né più largo di 3, e grande davvero (almeno un eroe e mezzo di lato più lungo)
+    const [, , largo, alto] = PEZZI[`${f.sprite}-fermo-0`]
+    controlla(`${k}: ingrandito dentro la sua scatola, grosso ma senza debordare`,
+              alto * f.k <= 1.9 * EROE.alto + 0.01 && largo * f.k <= 3 * EROE.largo + 0.01 && Math.max(alto * f.k, largo * f.k) >= 1.25 * EROE.alto, `${largo}×${alto} × ${f.k}`)
     controlla(`${k}: e il suo fotogramma c'è nell'atlante, da fermo, da sveglio e nello scontro`, !!PEZZI[spriteDelGrosso(f, false)] && !!PEZZI[spriteDelGrosso(f, true, 3)] && !!PEZZI[spriteDelGrosso(f, 'scontro')])
     controlla(`${k}: la tinta è un colore`, /^#[0-9a-f]{6}$/i.test(x.tinta))
   }

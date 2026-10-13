@@ -955,7 +955,7 @@ const BRANCO = ['goblin', 'scheletro', 'ratto', 'orco', 'pipistrello', 'lupo']
 function brancoDaProva(c) {
   const h = new URLSearchParams(location.hash.slice(1))
   if (h.get('sotterraneo') !== 'branco') return
-  const n = Math.max(1, Math.min(6, Number(h.get('mostri')) || 3))
+  const n = Math.max(1, Math.min(8, Number(h.get('mostri')) || 3))
   const ex = Math.floor(c.eroe.x), ey = Math.floor(c.eroe.y)
   const stanza = c.livello.stanzaDi(ex, ey)
   const libere = []
@@ -1581,7 +1581,7 @@ function ridimensiona() { if (pittore) pittore.misura() }
 
           <!-- il mostro grosso: la sua vita in cima, da quando ci si entra nella stanza (docs/sotterraneo/grossi.md) -->
           <div v-if="grosso" class="sot-grosso-vita" data-grosso :data-chi="grosso.chiave" :data-ossa="grosso.ossa">
-            <span class="sot-grosso-faccia"><Grosso :chi="grosso.chiave" :scala="1" /></span>
+            <span class="sot-grosso-faccia"><Grosso :chi="grosso.chiave" :scala="0.6" /></span>
             <span class="sot-grosso-dati">
               <b>{{ grosso.nome }}</b>
               <span class="sot-grosso-barra"><i :style="{ width: (grosso.ossa / grosso.ossaMax) * 100 + '%' }"></i>
