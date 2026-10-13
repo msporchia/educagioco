@@ -57,8 +57,8 @@ grosso. La proposta di partenza era [ambientazioni.md](ambientazioni.md): i dopp
   troll) non stanno per strada: sono le basi delle statistiche dei grossi ([grossi.md](grossi.md)), non si disegnano.
 - **I caporali sono più duri in colpo per velocità** (fino a 48, contro i 20–36 degli altri) e sono stati **misurati col banco**: mettere un
   caporale a caso al posto di chi guardava la chiave spostava una discesa di venti punti (la torre a sei su dieci passava da 64 a 86 col golem di
-  magma lento, e la scalinata scendeva da 89 a 78 con l'orco). Il golem di magma sta a colpo 6 e velocità 7, l'orco a colpo 3 e velocità 7 (e Grumo e
-  Zannaverde, che si reggono su di lui, a colpo +3), il mostro di muschio a 6 e 7, la tartaruga a 5 e 7, il golem di muschio a 6 e 8, lo scheletro cavaliere a 4 e 8. I numeri sono quelli del banco,
+  magma lento, e la scalinata scendeva da 89 a 78 con l'orco). Il golem di magma sta a colpo 5 e velocità 9, l'orco a colpo 3 e velocità 7 (e Grumo e
+  Zannaverde, che si reggono su di lui, a colpo +3), il mostro di muschio a 6 e 6, la tartaruga a 5 e 7, il golem di muschio a 6 e 8, lo scheletro cavaliere a 4 e 8. I numeri sono quelli del banco,
   non di un'idea: `npm run sotterraneo` ([scontro-bilancio.md](scontro-bilancio.md#gli-abitanti-per-ambientazione-12-ottobre-sera)).
 - **Il vantaggio per chi gioca**: ogni posto ha un'identità («la grotta dei ragni e dei funghi»), e con gli elementi si prepara l'albero per quel posto:
   il fuoco alla grotta (il ragno, il fungo e la pianta lo temono), il gelo alla torre (il diavoletto, lo spirito di fuoco e il golem di magma), la luce

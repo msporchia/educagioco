@@ -188,8 +188,8 @@ Cosa ha mosso i numeri, in ordine di peso:
 - **Il caporale, non gli abitanti.** Sostituire le specie di strada con altre di otto ossa e colpo per velocità simile non muoveva niente (provato togliendo le
   paure e il goblin dalla scalinata: stesse cifre); mettere un caporale nuovo al posto di chi guardava la chiave sì, di venti punti: il golem di magma
   (colpo 5, velocità 6) portava la torre a sei su dieci da 64 a 86, l'orco da caporale (colpo 4, velocità 8) la scalinata da 89 a 78. Ogni caporale è stato
-  tarato col banco (colpo per velocità fino a 48): golem di magma 6 · 7, orco 3 · 7 (e Grumo e Zannaverde, che si reggono su di lui, +3 di colpo invece di +1: il
-  grosso è rimasto com'era), mostro di muschio 6 · 7, tartaruga 5 · 7, golem di muschio 6 · 8, scheletro cavaliere 4 · 8.
+  tarato col banco (colpo per velocità fino a 48): golem di magma 5 · 9, orco 3 · 7 (e Grumo e Zannaverde, che si reggono su di lui, +3 di colpo invece di +1: il
+  grosso è rimasto com'era), mostro di muschio 6 · 6, tartaruga 5 · 7, golem di muschio 6 · 8, scheletro cavaliere 4 · 8.
 - **Il bottino dei caporali.** Sono tanti per anticamera e lasciano roba: con quella di una fascia a parte (lo scudo di ferro del golem) la roba giocata davvero e le
   gemme del villaggio salivano e «premendo a caso no» diventava una passeggiata. Ogni caporale ha il bottino di chi guardava la chiave prima.
 - **Gradi e varianti**: non toccano ossa e difesa; alzano un punto di velocità a raro e leggendario e il premio in gemme ed esperienza (×1,3 · 1,7 · 2,5). Con i
