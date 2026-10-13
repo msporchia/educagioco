@@ -906,10 +906,29 @@ function pianoDaProva(c) {
   c.posaLeMissioni()
 }
 
-// `#stanza=sala` porta l'eroe nella prima stanza di quella forma (`sala`, `elle`, `tu`, `croce`, `doppia`,
-// `caverna`) o di quel ruolo (`anticamera`, `uscita`, `tesoro`...): per guardare i piani senza girarli (docs/sotterraneo/piani.md)
+// `#stanza=sala` porta l'eroe nella prima stanza di quella forma (`sala`, `elle`, `tu`, `croce`, `doppia`, `smussata`,
+// `cappella`, `grotta`, `bilobata`, `galleria`, `antro`) o di quel ruolo (`anticamera`, `uscita`, `tesoro`...): per guardare i piani senza girarli (docs/sotterraneo/piani.md)
 function stanzaDaProva(c) {
   const q = new URLSearchParams(location.hash.slice(1)).get('stanza')
+  // `#stanza=relitto` (o `acqua`, `nicchia`): l'eroe sta a tre celle dal primo relitto (o dalla prima pozza, o davanti alla prima
+  // nicchia) e lo guarda, per vedere l'ombra che fa (docs/sotterraneo/piani-caverne.md)
+  const liv = c.livello
+  const bersaglio = q === 'relitto' ? liv.relitti[0] : q === 'acqua' ? liv.stanze.flatMap(r => r.acqua)[0]
+    : q === 'nicchia' ? liv.stanze.flatMap(r => r.nicchie)[0] : null
+  if (bersaglio) {
+    const quasi = []
+    for (let dy = -3; dy <= 3; dy++) for (let dx = -3; dx <= 3; dx++) {
+      const x = bersaglio.x + dx, y = bersaglio.y + dy
+      if (Math.max(Math.abs(dx), Math.abs(dy)) >= 2 && liv.calpestabile(x, y) && !liv.robeSu(x, y).length) quasi.push({ x, y, d: Math.abs(Math.hypot(dx, dy) - 3) })
+    }
+    const dove = quasi.sort((a, b) => a.d - b.d)[0]
+    if (!dove) return
+    c.eroe = { x: dove.x + 0.5, y: dove.y + 0.5 }
+    c.giraVerso(bersaglio.x - dove.x, bersaglio.y - dove.y)
+    c.segnaLaStanza()
+    c.aggiornaLuce()
+    return
+  }
   const s = q && c.livello.stanze.find(r => r.forma === q || r.ruolo === q)
   if (!s) return
   // la cella della stanza più lontana da ogni mostro (al centro c'è spesso un branco: sarebbe uno scontro subito)

@@ -82,7 +82,7 @@ scrivono niente: stanno in [sprite.md](sprite.md).
 | `node strumenti/generale/piani.mjs` | il simulatore dei piani del Generale |
 | `node strumenti/passo-passo/minimi.mjs` | le strade più corte di Passo passo, messe alla prova |
 | `node strumenti/passo-passo/sentiero.mjs` | i sentieri senza fine di Passo passo: mille posti per famiglia, il programma più corto in carte con la mano del bambino (`--mano=`), le mosse, se serve il ciclo o il se, la strada più corta, le forme, il tempo (su più processi; il cane una ventina di minuti) |
-| `npm run pianta` (`-- --discesa 3 --piano 0 --seme 12 --zona 20 --png`) | la pianta di un piano del sotterraneo vista dall'alto: le stanze colorate per forma, colonne, porte, ruoli, i mostri per specie con caporali, appostati e grosso; in `tmp/piante/` |
+| `npm run pianta` (`-- --discesa 3 --piano 0 --seme 12 --zona 20 --png`) | la pianta di un piano del sotterraneo vista dall'alto: le stanze colorate per forma (costruite e di grotta), colonne, nicchie (contorno giallo), relitti (blocchi chiari con l'iniziale), acqua (azzurra), porte, ruoli, i mostri per specie con caporali, appostati e grosso; la famiglia del piano nella prima riga della legenda; in `tmp/piante/` (`--png` vuole `dist/`: prima la build) |
 | `node strumenti/scatta-app.mjs <schermata>` | un PNG dell'app servita da Vite (`--porta`), o del file costruito (`--dist`); `--tocca`, `--attesa`, `--larghezza`, `--nome`; la schermata è un indirizzo coi [cheat](#i-cheat-dellindirizzo) (`'sotterraneo=branco&mostri=6'`), in `tmp/scatti/`; dice gli errori della console |
 
 **I banchi sono pagine e vogliono un server**: importano i moduli veri, e
@@ -131,7 +131,7 @@ dell'indirizzo): si usano dal browser.
 | `#sotterraneo=branco&mostri=6` | si scende e si apre subito uno scontro con quei mostri attorno (`&grosso=ossuto`, `&agguato=1`, `&sorpresa=1`, `&tipo=goblin`) |
 | `#abisso=12` | l'abisso da quel piano |
 | `#seme=812` | il sotterraneo con quel seme, per rivedere una discesa |
-| `#stanza=sala` | il sotterraneo comincia al centro della prima stanza di quella forma (`sala`, `elle`, `tu`, `croce`, `doppia`, `caverna`) o di quel ruolo (`anticamera`, `uscita`, `tesoro`…); con `#piano=` e `#seme=` per guardare un piano ([../sotterraneo/piani.md](../sotterraneo/piani.md)) |
+| `#stanza=sala` | il sotterraneo comincia al centro della prima stanza di quella forma (`sala`, `smussata`, `elle`, `tu`, `croce`, `cappella`, `doppia`, e nelle grotte `grotta`, `bilobata`, `galleria`, `antro`) o di quel ruolo (`anticamera`, `uscita`, `tesoro`…); `#stanza=relitto`, `acqua` e `nicchia` mettono l'eroe a tre celle dal primo relitto, dalla prima pozza o dalla prima nicchia, rivolto verso di lei (per vedere l'ombra che fa); con `#piano=` (da 1) e `#seme=` per guardare un piano ([../sotterraneo/piani.md](../sotterraneo/piani.md), [../sotterraneo/piani-caverne.md](../sotterraneo/piani-caverne.md)) |
 | `#ripara` | butta la copia del gioco e la riscarica ([guasti.md](guasti.md)) |
 | `#<chiave>` (es. `#fattoria`) | apre quel gioco |
 

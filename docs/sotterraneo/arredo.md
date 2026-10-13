@@ -4,6 +4,13 @@ L'arredo non si tocca, non blocca e non vale niente: serve a far sembrare
 che qui sotto ci abbia vissuto qualcuno. È disegnato più spento delle cose
 che rispondono (`scena/tela.js`), e toccarlo dice solo cos'è.
 
+**L'arredo non è un relitto.** I relitti (macerie, statue rotte, sarcofagi,
+rocce) bloccano il passo e la luce e fanno parte del piano, non della
+decorazione: stanno in [piani-caverne.md](piani-caverne.md#i-relitti). Nelle
+grotte l'arredo perde le pose grandi (`fondo` e `coppia`: un altare, un trono o
+due cavalieri di guardia non stanno in una caverna) e si posa solo dove la
+cella è libera, quindi mai su un relitto.
+
 ## Gli orpelli sono una lista che può crescere
 
 Ogni scenario ha la sua lista in `dati/orpelli.js` (cantine, cripta, fornace;

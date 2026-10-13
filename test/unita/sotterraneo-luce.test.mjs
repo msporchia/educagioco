@@ -9,15 +9,20 @@ import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { RAGGIO, RAGGIO_TORCIA, RAGGIO_SGOCCIOLI, ALONE, ALONE_TORCIA, APERTURA_CONO, DIETRO, FIANCO, PASSO_EROE, PASSO_MOSTRO }
   from '../../src/giochi/sotterraneo/dati/mondo.js'
 import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
-import { seminato } from '../../src/giochi/sotterraneo/motore/livello.js'
+import { Livello, seminato } from '../../src/giochi/sotterraneo/motore/livello.js'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
+
+// qui servono stanze lisce: niente relitti né nicchie (hanno il loro test, `sotterraneo-piani`), o un ostacolo sulla riga dell'eroe cambia
+// la strada dei mostri e la luce, che non è quello che si prova
+Livello.prototype.piazzaIRelitti = function () {}
+Livello.prototype.scavaLeNicchie = function () {}
 
 const roba = { v: 1, gemme: 0, zaino: [], mano: 'spada', mancina: null, corpo: null, dito: null, torcia: 0, torce: 0 }
 
-/* Una discesa della tappa 5 (seme 11) senza i mostri del piano. `torcia`: le stanze che le restano (0 = al buio, senza
+/* Una discesa della tappa 5 (un seme che ha una stanza lunga e una larga, vuote: SEME) senza i mostri del piano. `torcia`: le stanze che le restano (0 = al buio, senza
    scorta). L'eroe sta dove si dice, e guarda dove si dice (`verso`). */
 function scena({ qui, verso = { dx: 1, dy: 0 }, torcia = 0 } = {}) {
-  const c = new Corsa(CAMPAGNA[5], { seme: 11, rnd: seminato(11), roba })
+  const c = new Corsa(CAMPAGNA[5], { seme: SEME, rnd: seminato(SEME), roba })
   for (const r of c.livello.robe) if (r.che === 'mostro') r.morto = true
   c.vitaPiu += 60; c.vita = c.vitaMax
   c.torciaResta = torcia; c.torceInScorta = 0
@@ -28,12 +33,20 @@ function scena({ qui, verso = { dx: 1, dy: 0 }, torcia = 0 } = {}) {
 }
 const accesa = (c, x, y) => c.luceDi(x, y) === 2
 
-const prova = new Corsa(CAMPAGNA[5], { seme: 11, rnd: seminato(11) })
-// stanze di prova: un rettangolo pieno (le stanze dei piani nuovi sono anche L, croci, caverne e sale con le colonne: lì il
-// percorso di un mostro gira attorno a un pilastro, e non è quello che la prova guarda)
-const piena = s => s.colonne.length === 0 && s.suolo.length === s.w * s.h
-const lunga = prova.livello.stanze.find(s => s.w >= 10 && piena(s))         // dieci per quattro: una riga lunga
-const larga = prova.livello.stanze.find(s => s.w >= 7 && s.h >= 7 && piena(s))   // sette per sette e più: lati da girare attorno
+// stanze di prova: un rettangolo pieno (le stanze dei piani nuovi sono anche L, croci, grotte, sale con le colonne e relitti: lì il
+// percorso di un mostro gira attorno a un ostacolo, e non è quello che la prova guarda)
+const piena = s => s.colonne.length === 0 && s.relitti.length === 0 && s.nicchie.length === 0 && s.suolo.length === s.w * s.h
+const lungaDi = l => l.stanze.find(s => s.w >= 10 && piena(s))              // dieci per quattro: una riga lunga
+const largaDi = l => l.stanze.find(s => s.w >= 7 && s.h >= 7 && piena(s))   // sette per sette e più: lati da girare attorno
+let SEME = 11
+while (SEME < 400) {
+  const l = new Corsa(CAMPAGNA[5], { seme: SEME, rnd: seminato(SEME) }).livello
+  if (lungaDi(l) && largaDi(l)) break
+  SEME++
+}
+const prova = new Corsa(CAMPAGNA[5], { seme: SEME, rnd: seminato(SEME) })
+const lunga = lungaDi(prova.livello)
+const larga = largaDi(prova.livello)
 controlla('ci sono una stanza lunga e una larga', !!lunga && !!larga)
 const riga = lunga.y + 1
 const io = { x: lunga.x + 3, y: riga }   // tre celle di stanza dietro, sei davanti

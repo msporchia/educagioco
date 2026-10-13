@@ -142,8 +142,9 @@ mostri tarati su un banco che usa le abilità, **si vince più di una volta su
 due**: cavaliere 10 su 20, elfa 17, mago 7, nano 12 (57%). Con la prima arma è comoda (98% a
 8/10, 89% a 6/10).
 
-- **La leva è la forza della scalinata**: i ratti e le melme hanno poche ossa (`forza` 0,8, quattro in
-  tutto) e picchiano forte quanto basta (`spinta` 4,5). Più spinta e meno forza stringe meglio la
+- **La leva è la forza della scalinata**: i ratti e le melme hanno poche ossa (`forza` 0,55) e picchiano forte (`spinta` 6,5), ma
+  vengono uno alla volta (`tettoBranco` 1) e ce ne sono molti di più (`densita` 1,6: il 13 ottobre, coi piani nuovi,
+  [piani-caverne.md](piani-caverne.md#le-domande-per-discesa)); prima `forza` 0,8 e `spinta` 4,5. Più spinta e meno forza stringe meglio la
   forbice fra chi è nudo e chi ha l'arma. Provato a farlo vincere al 70% nudi (`spinta` 3,5): a
   quattro su dieci con la roba attesa si vince il 60%.
 - **Il mago nudo** non ha la bacchetta e non lancia niente: 7 su 20, e ha il guardiano di sempre (la melma caporale).
@@ -203,7 +204,9 @@ roba attesa ma l'eroe due livelli sotto o tre sopra. Discese vinte su venti, cav
 - **Chi gira tutto guadagna molto di più**: arriva tre livelli sopra chi va dritto, coi pezzi dei grossi e il bottino a tono, e a quattro vince
   metà delle discese. È la ricompensa di chi esplora; il tetto in `misure/sotterraneo` è 0,95 a quattro.
 - **La taratura** sono `forza` (le ossa) e `spinta` (l'attacco) di ogni discesa in `dati/campagna.js`, sulla roba e sul livello
-  attesi: forza 0,4 · 0,8 · 0,9 · 1,5 · 2,25 · 3 · 4, spinta — · 4,5 · 5,5 · 8 · 9,5 · 10 · 11 dalla cripta alla miniera, `COLPO_DEL_MOSTRO` 1,1.
+  attesi: forza 0,4 · 0,55 · 0,9 · 1,4 · 2,25 · 3 · 4, spinta — · 6,5 · 6,8 · 9,6 · 9,8 · 10 · 11 dalla cripta alla miniera, `COLPO_DEL_MOSTRO` 1,1;
+  più `densita` (quanti mostri in più o in meno del solito, 1 di difetto): scalinata 1,6, torre 0,7, scala sommersa 1,3, botola 0,8
+  (13 ottobre, [piani-caverne.md](piani-caverne.md#le-domande-per-discesa)).
   Le specie hanno tutte otto ossa e la forza viene da qui (prima la faceva la fascia).
 - **Le gemme con cui si esce andando dritti** (cavaliere): 12 · 17 · 36 · 41 · 61 · 57 · 83 (prima 10 · 19 · 24 · 29 · 38 · 37 · 56):
   più mostri uccisi e più forti, e le gemme valgono di più a livello alto, come i prezzi

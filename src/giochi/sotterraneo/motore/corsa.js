@@ -5,7 +5,7 @@
 // a prendere la domanda vera da src/quiz/ e non nomina mai una materia qui.
 // `foglio` è un dato ({ che: 'scontro', chi }): finché è aperto il tempo è fermo.
 import {
-  TASCHE, RAGGIO, RAGGIO_TORCIA, RAGGIO_SGOCCIOLI, ALONE, ALONE_TORCIA, ALONE_SGOCCIOLI, APERTURA_CONO, SFUMA_CONO, SFUMA_ARCO, ALONE_SFUMA, FORZA_MINIMA, ROCCIA, DIETRO, FIANCO, ALLA_PAR, LARGO_DIETRO, SVEGLIA, PASSO_EROE, PASSO_MOSTRO, PASSO_RIENTRO,
+  TASCHE, RAGGIO, RAGGIO_TORCIA, RAGGIO_SGOCCIOLI, ALONE, ALONE_TORCIA, ALONE_SGOCCIOLI, APERTURA_CONO, SFUMA_CONO, SFUMA_ARCO, ALONE_SFUMA, FORZA_MINIMA, ROCCIA, ACQUA, DIETRO, FIANCO, ALLA_PAR, LARGO_DIETRO, SVEGLIA, PASSO_EROE, PASSO_MOSTRO, PASSO_RIENTRO,
   CALMA, SORSO, RIPOSO_SCALA, VITA_PER_PIANO,
   ARREDO_DICE, ARREDO_LA_PRIMA_VOLTA,
 } from '../dati/mondo.js'
@@ -14,7 +14,7 @@ import { SCENARI, SCENARIO } from '../dati/tessere.js'
 import { DI_PARTENZA } from '../dati/eroi.js'
 import { COSE, NEI_FORZIERI, pescaCosa, aLivello } from '../dati/cose.js'
 import { CURIOSITA_DI, MALUS } from '../dati/curiosita.js'
-import { durezzaDi, guardianoDi, svenimentiDi, formaDi, crescitaDi, brancoDi, tettoDelBrancoDi, scenarioDi, trattoDi, livelloDelPosto }
+import { durezzaDi, guardianoDi, svenimentiDi, formaDi, crescitaDi, brancoDi, tettoDelBrancoDi, scenarioDi, piantaDi, conAcquaDi, densitaDi, trattoDi, livelloDelPosto }
   from '../dati/campagna.js'
 import { grossoDi, GROSSI } from '../dati/grossi.js'
 import { valoreDelLivello } from '../dati/pezzi.js'
@@ -184,6 +184,7 @@ export class Corsa extends Corredo {
       crescita: crescitaDi(t),
       branco: brancoDi(t, p), tettoBranco: tettoDelBrancoDi(t, p),
       scenario: scenarioDi(t, p),
+      pianta: piantaDi(t, p), acqua: conAcquaDi(t, p), densita: densitaDi(t, p),
     })
     // nell'abisso il primo piano non ha da dove risalire: là la strada su è il portale
     if (p > 0 || !t.abisso) {
@@ -237,9 +238,10 @@ export class Corsa extends Corredo {
     if (Math.abs(this.verso.dx - v.dx) + Math.abs(this.verso.dy - v.dy) > 0.01 && this.livello) this.aggiornaLuce()
   }
 
-  // la luce non passa dai muri né da una porta chiusa (la cella che la ferma si accende, o non si vedrebbe il muro)
+  // la luce non passa dai muri, dai relitti né da una porta chiusa (la cella che la ferma si accende, o non si vedrebbe il muro); sopra
+  // l'acqua sì: non si cammina ma si vede di là (docs/sotterraneo/piani-caverne.md)
   fermaLaLuce(porte, x, y) {
-    return !this.livello.calpestabile(x, y) || porte.has(y * this.livello.largo + x)
+    return (!this.livello.calpestabile(x, y) && this.livello.a(x, y) !== ACQUA) || porte.has(y * this.livello.largo + x)
   }
 
   aggiornaLuce() {
@@ -346,6 +348,11 @@ export class Corsa extends Corredo {
 
   // la prima volta spiega la regola dell'arredo, dopo dice solo cos'è (una volta per discesa, o diventa rumore)
   diCheCosaC(c) {
+    // un relitto o una pozza non si toccano e non si passano: dicono cos'è, ogni volta (è un ostacolo, non rumore)
+    const liv = this.livello
+    if (liv.a(c.x, c.y) === ACQUA) { this.dillo('Acqua profonda: di qua non si passa.'); return }
+    const rel = liv.relitti && liv.relitti.find(q => c.x >= q.x && c.x < q.x + q.w && c.y >= q.y && c.y < q.y + q.h)
+    if (rel) { this.dillo(rel.dice); return }
     const a = this.livello.robe.find(r => r.che === 'arredo' && r.x === c.x && r.y === c.y)
     if (!a) return
     if (!this.dettoDellArredo) {
@@ -432,9 +439,19 @@ export class Corsa extends Corredo {
       }
       if (Math.abs(dx) > 0.05) m.guarda = dx < 0 ? 'sx' : 'dx'
       const fx0 = m.fx, fy0 = m.fy
-      if (this.livello.calpestabile(Math.floor(nx), Math.floor(m.fy))) m.fx = nx
-      if (this.livello.calpestabile(Math.floor(m.fx), Math.floor(ny))) m.fy = ny
-      // fermo contro una colonna (la stanza ne ha): scivola di lato invece di restare a guardarla
+      const liberoX = this.livello.calpestabile(Math.floor(nx), Math.floor(m.fy)), liberoY = this.livello.calpestabile(Math.floor(m.fx), Math.floor(ny))
+      if (liberoX) m.fx = nx
+      if (liberoY) m.fy = ny
+      // contro una colonna o un relitto (la stanza ne ha) non resta a guardarli: gira attorno per la strada più corta dentro la
+      // stanza, o i relitti lo fermerebbero e la discesa sarebbe più facile di quanto è tarata (docs/sotterraneo/piani-caverne.md)
+      if ((!liberoX || !liberoY) && sua && sveglio) {
+        const strada = this.stradaDelMostro(m, sua, meta)
+        if (strada) {
+          const px = strada.x + 0.5 - fx0, py = strada.y + 0.5 - fy0, dp = Math.hypot(px, py)
+          if (dp > 1e-6) { m.fx = fx0 + px / dp * Math.min(v, dp); m.fy = fy0 + py / dp * Math.min(v, dp) }
+        }
+      }
+      // fermo contro una colonna senza strada: scivola di lato invece di restare a guardarla
       if (m.fx === fx0 && m.fy === fy0 && sua) {
         const verso = (m.casa.x + m.casa.y) % 2 ? 1 : -1
         for (const s of [verso, -verso]) {
@@ -444,6 +461,20 @@ export class Corsa extends Corredo {
       }
       m.x = Math.floor(m.fx); m.y = Math.floor(m.fy)
     }
+  }
+
+  // la prossima cella sulla strada più corta di un mostro verso la sua meta, tutta dentro la sua stanza (e mai su un ostacolo); null
+  // se non c'è. Si rifà solo quando il mostro è fermo contro qualcosa, e si tiene finché lui e la meta restano nelle stesse celle
+  stradaDelMostro(m, stanza, meta) {
+    const da = { x: Math.floor(m.fx), y: Math.floor(m.fy) }, a = { x: Math.floor(meta.x), y: Math.floor(meta.y) }
+    const k = `${da.x},${da.y}>${a.x},${a.y}`
+    const vie = this._vie || (this._vie = new WeakMap())   // fuori dal mostro: lui si salva, la strada no
+    let via = vie.get(m)
+    if (!via || via.k !== k) {
+      const strada = this.livello.dentro(stanza, a.x, a.y) ? percorso((x, y) => this.livello.dentro(stanza, x, y) && this.livello.calpestabile(x, y), da, a, { tetto: 600 }) : null
+      vie.set(m, via = { k, passo: strada && strada.length ? strada[0] : null })
+    }
+    return via.passo
   }
 
   // dove punta un mostro sveglio che non è nella luce: la cella dietro l'eroe. Se è davanti (nell'ombra di lato, o oltre

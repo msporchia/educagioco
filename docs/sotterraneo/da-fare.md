@@ -144,3 +144,9 @@ il telefono in mano.
   da sé fra una domanda e l'altra, ma i **320 ms di finestra cieca** al
   montaggio vanno sentiti col dito — sono la differenza fra un tocco fantasma
   ingoiato e un tasto che sembra lento.
+- **I relitti e l'acqua da dipingere**: macerie, crolli, rocce, travi, stalagmiti, il
+  carro rovesciato, i binari e le pozze sono disegnati in codice (`scena/relitti.js`) e
+  per le cantine non c'è nessun pezzo dipinto; da guardare col dito anche **l'eroe
+  che passa davanti a un relitto alto invece che dietro** quando gli sta a nord, e
+  se le grotte (passaggi stretti, un solo varco per stanza) si leggono sul telefono
+  ([piani-caverne.md](piani-caverne.md)).

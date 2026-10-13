@@ -146,8 +146,9 @@ il «!» torna.
 - **i mostri del livello L**: la coppia della discesa ([mostri.md](mostri.md): una zona tiene la sua per sempre) con
   `forza` = (4 + 0,6 · (L − 12)) × la forma e `spinta` = 13 + 1,0 · (L − 12), a un decimo
   (`CURVA_DELLE_ZONE`). In linea retta, mai esponenziali. La forma (`FORMA_DELLA_ZONA`) dice quanto una coppia è più comoda o più
-  dura a pari livello (le specie hanno tutte le stesse ossa, ma non picchiano uguale): la scalinata (ratto e melma) ×0,8, la
-  torre ×0,8, la grotta ×1,4, la botola ×0,85, la scala sommersa ×0,95, la miniera (il golem lento) ×1,3, la cripta, piccola, ×1,7;
+  dura a pari livello (le specie hanno tutte le stesse ossa, ma non picchiano uguale): la scalinata (ratto e melma) ×0,72, la
+  torre ×0,95, la grotta ×1,4, la botola ×1,1, la scala sommersa ×0,95, la miniera (il golem lento) ×1,4, la cripta, piccola, ×1,85
+  (ritoccate il 13 ottobre coi piani nuovi: [piani-caverne.md](piani-caverne.md#le-domande-per-discesa));
 - **il bottino come nell'abisso** (`indiceDella` dà −1): i forzieri danno un
   pezzo a tono sei volte su dieci, il mostro grosso il suo pezzo col nome e
   un raro del livello.

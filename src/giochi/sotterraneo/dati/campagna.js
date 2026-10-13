@@ -4,58 +4,60 @@
 // i due estremi 0..1, si sale in linea retta (durezzaDi) più il rincaro per stanza (motore/corsa.js). `giri`
 // è il numero di tagli del BSP (2 → quattro stanze, 4 → sedici); `largo` e `alto`, se ci sono, danno la forma
 // al posto del quadrato `misura` (la torre alta e stretta, la scala sommersa lunga). `dove` è il posto in mezzo
-// a una frase («sotto la torre non duri», motore/storia.js).
+// a una frase («sotto la torre non duri», motore/storia.js). `densita`: quanti mostri in più (o in meno) del solito, 1 di difetto: dove i piani nuovi
+// hanno meno incontri per strada di quanto la taratura vuole (docs/sotterraneo/piani-caverne.md, «Le domande»); `pianta`: la famiglia dei piani, `costruita` (stanze a pianta, colonnati,
+// nicchie) o `caverna` (grotte e passaggi storti); `acqua`: pozze da aggirare (docs/sotterraneo/piani-caverne.md).
 // `portata`: niente `scuola` qui, quello che insegna questa campagna non lo dà nessuna scuola.
 import { MOSTRI, duraDellaCoppia, costoInRisposte } from './mostri.js'
 
 export const CAMPAGNA = [
   { chiave: 'altare', nome: 'La cripta dell\'altare', icona: '🕯️', dove: 'nella cripta',
-    scenario: 'cripta',
+    scenario: 'cripta', pianta: 'costruita',
     portata: 25,
     dritta: 'due piani di tombe, e qualcuno che non dorme',
-    piani: 2, misura: 30, giri: 2, dif: [0.05, 0.22], forza: 0.4, livello: 1,
+    piani: 2, misura: 34, giri: 2, dif: [0.05, 0.22], forza: 0.4, livello: 1,
     mostri: ['scheletro', 'fantasma'], tettoBranco: 5, capo: 'scheletro' },
 
   { chiave: 'cantine', nome: 'La scalinata antica', icona: '🪜', dove: 'giù per la scalinata',
-    scenario: 'cantine',
+    scenario: 'cantine', pianta: 'costruita',
     portata: 31,
     dritta: 'tante stanze, e tutte al buio',
-    piani: 2, misura: 46, giri: 4, dif: [0.12, 0.32], forza: 0.8, spinta: 4.5, livello: 2,   // senza forza: il primo avvio si vince anche a mani nude (docs/sotterraneo/la-grande-storia.md, «Il primo avvio»)
-    mostri: ['ratto', 'melma'], tettoBranco: 3, capo: 'orco' },
+    piani: 2, misura: 46, giri: 4, dif: [0.12, 0.32], forza: 0.55, spinta: 6.5, densita: 1.6, livello: 2,   // senza forza: il primo avvio si vince anche a mani nude (docs/sotterraneo/la-grande-storia.md, «Il primo avvio»)
+    mostri: ['ratto', 'melma'], tettoBranco: 1, capo: 'orco' },
 
   // alta e stretta come la torre: le stanze una sopra l'altra
   { chiave: 'torre', nome: 'La torre in rovina', icona: '🏰', dove: 'sotto la torre',
-    scenario: 'fornace',
+    scenario: 'fornace', pianta: 'costruita',
     portata: 37,
     dritta: 'stretta e alta: le scale non finiscono mai',
-    piani: 3, misura: 40, largo: 26, alto: 54, giri: 3, dif: [0.2, 0.44], forza: 0.9, spinta: 5.5, livello: 3,
+    piani: 3, misura: 40, largo: 26, alto: 54, giri: 3, dif: [0.2, 0.44], forza: 0.9, spinta: 6.8, densita: 0.7, livello: 3,
     mostri: ['pipistrello', 'vespa'], tettoBranco: 4, capo: 'troll' },
 
   // tutta in profondità: piani piccoli, tanti
   { chiave: 'gallerie', nome: 'La grotta della scaletta', icona: '🪨', dove: 'nella grotta',
-    scenario: 'cantine',
+    scenario: 'cantine', pianta: 'caverna',
     portata: 43,
     dritta: 'piani piccoli, uno sotto l\'altro, sempre più giù',
-    piani: 5, misura: 28, giri: 2, dif: [0.28, 0.54], forza: 1.5, spinta: 8, livello: 5,
+    piani: 5, misura: 28, giri: 2, dif: [0.28, 0.54], forza: 1.4, spinta: 9.6, livello: 5,
     mostri: ['lupo', 'fungo'], tettoBranco: 4, capo: 'orco' },
 
   // lunga e stretta: un canale sott'acqua
   { chiave: 'cisterna', nome: 'La scala sommersa', icona: '💧', dove: 'nella scala sommersa',
-    scenario: 'cripta',
+    scenario: 'cripta', pianta: 'caverna', acqua: true,
     portata: 50,
     dritta: 'lunga e stretta, e in fondo gorgoglia qualcosa',
-    piani: 3, misura: 40, largo: 64, alto: 24, giri: 3, dif: [0.36, 0.66], forza: 2.25, spinta: 9.5, livello: 6,
+    piani: 3, misura: 40, largo: 64, alto: 24, giri: 3, dif: [0.36, 0.66], forza: 2.25, spinta: 9.8, densita: 1.3, livello: 6,
     mostri: ['granchio', 'serpente'], tettoBranco: 3, capo: 'gigante' },
 
   { chiave: 'labirinto', nome: 'La botola segreta', icona: '🌀', dove: 'sotto la botola',
-    scenario: 'cantine',
+    scenario: 'cantine', pianta: 'costruita',
     portata: 57,
     dritta: 'un labirinto: senza mappina ci si perde',
-    piani: 3, misura: 50, giri: 4, dif: [0.44, 0.78], forza: 3, spinta: 10, livello: 8,
+    piani: 3, misura: 50, giri: 4, dif: [0.44, 0.78], forza: 3, spinta: 10, densita: 0.8, livello: 8,
     mostri: ['orco', 'goblin'], tettoBranco: 3, capo: 'troll' },
 
   { chiave: 'fondo', nome: 'La miniera abbandonata', icona: '⛏️', dove: 'nella miniera',
-    scenario: 'fornace',
+    scenario: 'fornace', pianta: 'caverna',
     portata: 64,
     dritta: 'stretta, profonda, e le pietre bruciano',
     piani: 4, misura: 40, giri: 3, dif: [0.52, 0.92], forza: 4, spinta: 11, livello: 10,
@@ -109,9 +111,9 @@ export const L_ABISSO = {
 // l'abisso cambia posto ogni PIANI_PER_TRATTO piani, e l'ultimo resta per sempre: il posto dice lo scenario (SCENARI in
 // dati/tessere.js) e chi si incontra per strada (`mostri`). Vedi docs/sotterraneo/abisso.md.
 export const TRATTI_DELL_ABISSO = [
-  { scenario: 'cantine', nome: 'le cantine', mostri: ['ratto', 'melma'], tettoBranco: 2 },
-  { scenario: 'cripta', nome: 'la cripta', mostri: ['scheletro', 'fantasma'], tettoBranco: 4 },
-  { scenario: 'fornace', nome: 'la fornace', mostri: ['golem', 'pipistrello'], tettoBranco: 3 },
+  { scenario: 'cantine', pianta: 'costruita', nome: 'le cantine', densita: 0.7, mostri: ['ratto', 'melma'], tettoBranco: 2 },
+  { scenario: 'cripta', pianta: 'costruita', nome: 'la cripta', densita: 0.8, mostri: ['scheletro', 'fantasma'], tettoBranco: 4 },
+  { scenario: 'fornace', pianta: 'caverna', nome: 'la fornace', densita: 0.8, mostri: ['golem', 'pipistrello'], tettoBranco: 3 },
 ]
 export const PIANI_PER_TRATTO = 4
 
@@ -125,6 +127,19 @@ export const scenarioDi = (tappa, piano) => {
   const t = trattoDi(tappa, piano)
   return t ? t.scenario : (tappa && tappa.scenario) || null
 }
+
+// la famiglia dei piani: nella storia quella dichiarata dalla discesa, nell'abisso quella del tratto (la fornace è una grotta)
+export const piantaDi = (tappa, piano) => {
+  const t = trattoDi(tappa, piano)
+  return (t ? t.pianta : tappa && tappa.pianta) || 'costruita'
+}
+// quanti mostri in più o in meno del solito (`densita`): nella storia quello della discesa, nell'abisso quello del tratto
+export const densitaDi = (tappa, piano) => {
+  const t = trattoDi(tappa, piano)
+  return (t ? t.densita : tappa && tappa.densita) || 1
+}
+// le pozze d'acqua: solo dove la discesa le dichiara (la scala sommersa)
+export const conAcquaDi = (tappa, piano) => !trattoDi(tappa, piano) && !!(tappa && tappa.acqua)
 
 // La coppia di mostri del piano (docs/sotterraneo/mostri.md): scelta per ambientazione, come in Diablo, e sempre quella: nella
 // storia la lista `mostri` della discesa, nelle zone la stessa (una zona è la discesa con un volto nuovo), nell'abisso quella del
@@ -219,6 +234,7 @@ export function guastiDellaCampagna() {
     if (viste.has(t.chiave)) g.push(`due tappe con la chiave "${t.chiave}"`)
     viste.add(t.chiave)
     if (!t.nome || !t.icona || !t.dritta || !t.dove) g.push(`${t.chiave}: senza nome, icona, dritta o dove`)
+    if (!['costruita', 'caverna'].includes(t.pianta)) g.push(`${t.chiave}: la pianta è «${t.pianta}», non costruita né caverna`)
     if (t.piani < 1) g.push(`${t.chiave}: zero piani`)
     const f = formaDi(t, 0)
     if (Math.min(f.largo, f.alto) < 22 || f.largo * f.alto < 24 * 24)
@@ -228,6 +244,7 @@ export function guastiDellaCampagna() {
     if (da < 0 || a > 1 || da > a) g.push(`${t.chiave}: difficoltà ${da}..${a} storta`)
     if (t.forza != null && !(t.forza >= 0.3 && t.forza <= 8)) g.push(`${t.chiave}: forza ${t.forza} fuori da 0.3..8`)
     if (t.spinta != null && !(t.spinta >= 0 && t.spinta <= 12)) g.push(`${t.chiave}: spinta ${t.spinta} fuori da 0..12`)
+    if (t.densita != null && !(t.densita >= 0.5 && t.densita <= 2)) g.push(`${t.chiave}: densità ${t.densita} fuori da 0.5..2`)
     if (!(t.livello >= 1)) g.push(`${t.chiave}: senza livello, e il bottino non sa a che livello cadere`)
   }
   // la prima si comincia a mani nude: non può contare su una roba che nessuno ha ancora
@@ -264,6 +281,7 @@ export function guastiDellAbisso() {
   if (!TRATTI_DELL_ABISSO.length) g.push('l\'abisso: nessun tratto')
   for (const t of TRATTI_DELL_ABISSO) {
     if (!t.scenario || !t.nome) g.push('l\'abisso: un tratto senza scenario o nome')
+    if (!['costruita', 'caverna'].includes(t.pianta)) g.push(`l'abisso (${t.scenario}): la pianta è «${t.pianta}», non costruita né caverna`)
     g.push(...guastiDellaCoppia(`l'abisso (${t.scenario})`, t.mostri))
   }
   if (PIANI_PER_TRATTO < 2) g.push(`l'abisso: ${PIANI_PER_TRATTO} piani per tratto, si cambia posto a ogni scala`)

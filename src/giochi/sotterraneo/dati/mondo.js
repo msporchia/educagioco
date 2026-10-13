@@ -6,6 +6,9 @@ export const T = 16                               // la tessera, in pixel
 export const SCALA_MIN = 2, SCALA_MAX = 5, SCALA_INIZIALE = 3   // interi: a 2,3 i pixel sarebbero larghi due e altri tre
 
 export const ROCCIA = 0, PAVIMENTO = 1, PORTA = 2
+// celle dentro una stanza dove non si cammina e che non sono muro: un relitto (macerie, una statua rotta, un sarcofago: ferma la
+// luce come un muro) e l'acqua (non si calpesta ma si vede di là: non ferma la luce). docs/sotterraneo/piani-caverne.md
+export const RELITTO = 3, ACQUA = 4
 
 // vita/attacco/difesa di partenza: valgono dentro una discesa e non crescono con le tappe fatte (dati/campagna.js)
 export const EROE = { vita: 18, att: 3, dif: 1 }

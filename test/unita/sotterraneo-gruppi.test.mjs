@@ -13,11 +13,15 @@ import { COSE } from '../../src/giochi/sotterraneo/dati/cose.js'
 import { sogliaDi, ATT_PER_PUNTO } from '../../src/giochi/sotterraneo/dati/livelli.js'
 import { COLPO_DEL_MOSTRO, RAGGIO_SCONTRO, MOSTRI_IN_CAMPO, CALMA } from '../../src/giochi/sotterraneo/dati/mondo.js'
 import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
-import { seminato } from '../../src/giochi/sotterraneo/motore/livello.js'
+import { Livello, seminato } from '../../src/giochi/sotterraneo/motore/livello.js'
 import { nuovaFila, chiAgisce, agisci, togli, prossimi, primaDelSuoProssimo } from '../../src/giochi/sotterraneo/motore/turni.js'
 import { postiDi, velocitaDel } from '../../src/giochi/sotterraneo/motore/scontro.js'
 import { scrivi, leggi } from '../../src/giochi/sotterraneo/motore/sosta.js'
 import { controlla, uguale, stessaLista, riassunto } from '../aiuto/verifica.mjs'
+
+// stanze lisce: niente relitti né nicchie (hanno il loro test, `sotterraneo-piani`), o uno sulla riga dell'eroe cambia la strada dei mostri
+Livello.prototype.piazzaIRelitti = function () {}
+Livello.prototype.scavaLeNicchie = function () {}
 
 const roba = (mano = null, mancina = null) => ({ v: 1, gemme: 0, zaino: [], mano, mancina, corpo: null, dito: null, torcia: 0, torce: 0 })
 const conAlbero = (livello, albero, altro = {}) =>

@@ -138,3 +138,8 @@ in Node) e si prova in `unita/muri-sotterraneo`.
   come un diagramma. È disegnato più spento delle cose toccabili, che restano
   come sono. Il braciere è stato tolto: a quella misura non si capiva cosa
   fosse.
+- **I relitti e l'acqua** non stanno nel foglio: i pezzi che l'atlante ha (sarcofagi,
+  colonne spezzate, blocchi caduti, gargoyle) si posano come l'arredo, il resto
+  (macerie, crolli, rocce, travi, stalagmiti, il carro, i binari, le pozze) è
+  disegnato in codice in `scena/relitti.js` e **va dipinto**; si cambia una riga in
+  `dati/relitti.js` quando c'è il pezzo ([piani-caverne.md](piani-caverne.md#i-relitti)).

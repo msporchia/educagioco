@@ -7,13 +7,15 @@
 // da lì in poi tutto è in pixel di sprite — altrimenti una riga prima o
 // poi la moltiplica due volte (il difetto trovato nel bestiario).
 import { ATLANTE, PEZZI, TESSERA, NITIDO, NITIDI } from '../dati/atlante.js'
-import { T, SCALA_MIN, SCALA_MAX, SCALA_INIZIALE, ROCCIA, PAVIMENTO, PORTA, BERSAGLIO } from '../dati/mondo.js'
+import { T, SCALA_MIN, SCALA_MAX, SCALA_INIZIALE, ROCCIA, PAVIMENTO, PORTA, RELITTO, ACQUA, BERSAGLIO } from '../dati/mondo.js'
 import { SCENARI, SCENARIO, PEZZO_DI, pezzoAndante } from '../dati/tessere.js'
 import { MOSTRI } from '../dati/mostri.js'
 import { COSE, SEGNI } from '../dati/cose.js'
 import { creaFoglio, netto } from '../../../grafica/atlante.js'
 import { tetto, faccia, bordiDelTetto, capiDellaFaccia, versoDellaPorta, sorteDi } from './muri.js'
 import { dipingiPortale, PORTALE } from './portale.js'
+import { dipingiRelitto, dipingiAcqua } from './relitti.js'
+import { TINTE_RELITTI } from '../dati/relitti.js'
 import { dipingiScalaSu } from './scala-su.js'
 import { GROSSI, figuraDelGrosso, spriteDelGrosso } from '../dati/grossi.js'
 
@@ -157,6 +159,8 @@ export class Tela {
       if (this.faccia(sc, liv, pietra, x, y, alfaDi(luce, x, y)) && luce === 2 && forza(x, y) > 0.6) torce.push([x, y])
     }
     for (const [x, y] of torce) this.fiamma(x, y, orologio)
+    // l'acqua e i relitti sono terreno: stanno sotto i veli, e il ricordo o il cono li scuriscono come il pavimento
+    this.ingombri(corsa, liv, sc, c0x, c0y, c1x, c1y, alfaDi, orologio)
     // i veli delle caselle in luce si posano a gradini di un quarto, ognuno in un tracciato solo: due rettangoli che si
     // sovrappongono (velo() sbordando di mezzo pixel) lascerebbero la riga della giunzione più scura
     const ambra = corsa.torciaAccesa ? 0.16 : 0.09   // la luce è calda davanti e si raffredda ai bordi
@@ -249,6 +253,7 @@ export class Tela {
       // ragnatele negli angoli in alto: una stanza su due, sempre la stessa. Gli angoli sono i capi della fila più alta
       if (sorteDi(s.x, s.y, 3) % 2) continue
       const fila = s.suolo.filter(c => c.y === s.y).map(c => c.x)
+      if (!fila.length) continue
       const xs = Math.min(...fila), xd = Math.max(...fila)
       if (pietra(xs, s.y - 1) && pietra(xs - 1, s.y))
         perTerra.set(s.y * L + xs, { nome: sc.ragnatele.sx, dove: 'no' })
@@ -339,6 +344,34 @@ export class Tela {
     if (c.sx) f.pezzo(ctx, sc.capi.sx, x * T, y0, { alfa })
     if (c.dx) f.pezzo(ctx, sc.capi.dx, x * T + T - f.misura(sc.capi.dx).w, y0, { alfa })
     return torcia
+  }
+
+  // le pozze e i relitti di un piano (scena/relitti.js, docs/sotterraneo/piani-caverne.md): le pozze prima, poi i relitti dall'alto
+  // in basso, che quelli più giù coprono il bordo di quelli più su. Un relitto con uno sprite nell'atlante si posa come l'arredo, uno
+  // senza si disegna in codice
+  ingombri(corsa, liv, sc, c0x, c0y, c1x, c1y, alfaDi, t) {
+    const scenario = corsa.scenario
+    const tinte = TINTE_RELITTI[scenario] || TINTE_RELITTI.cantine
+    for (let y = c0y; y < c1y; y++) for (let x = c0x; x < c1x; x++) {
+      if (liv.a(x, y) !== ACQUA) continue
+      const luce = corsa.luceDi(x, y)
+      if (!luce) continue
+      const terra = (a, b) => liv.a(a, b) !== ACQUA
+      dipingiAcqua(this.ctx, x, y, { n: terra(x, y - 1), s: terra(x, y + 1), o: terra(x - 1, y), e: terra(x + 1, y) }, t, alfaDi(luce, x, y))
+    }
+    const visti = (liv.relitti || []).filter(r => r.x + r.w >= c0x && r.x < c1x && r.y + r.h >= c0y && r.y < c1y)
+      .sort((a, b) => (a.y + a.h) - (b.y + b.h) || a.x - b.x)
+    for (const r of visti) {
+      let luce = 0, alfa = 0
+      for (let j = 0; j < r.h; j++) for (let i = 0; i < r.w; i++) {
+        const l = corsa.luceDi(r.x + i, r.y + j)
+        if (l > luce) luce = l
+        if (l) alfa = Math.max(alfa, alfaDi(l, r.x + i, r.y + j))
+      }
+      if (!luce) continue
+      if (r.pezzo) this.posa(r.pezzo, r.x + (r.w - 1) / 2, r.y + r.h - 1, { alfa })
+      else dipingiRelitto(this.ctx, r, scenario, alfa)
+    }
   }
 
   fiamma(x, y, t) {
@@ -754,7 +787,10 @@ export class Tela {
     ctx.strokeRect(x0 - 4.5, y0 - 4.5, larg + 9, alt + 9)
     ctx.fillStyle = 'rgba(180,170,150,.5)'
     for (let x = 0; x < liv.largo; x++) for (let y = 0; y < liv.alto; y++) {
-      if (!corsa.visto[y * liv.largo + x] || liv.a(x, y) === ROCCIA) continue
+      const v = liv.a(x, y)
+      if (!corsa.visto[y * liv.largo + x] || v === ROCCIA) continue
+      // un relitto è quasi roccia, l'acqua è azzurra: sulla mappina si vede dove non si passa
+      ctx.fillStyle = v === RELITTO ? 'rgba(96,88,80,.55)' : v === ACQUA ? 'rgba(70,140,200,.6)' : 'rgba(180,170,150,.5)'
       ctx.fillRect(x0 + x * p, y0 + y * p, p, p)
     }
     for (const r of liv.robe) {
