@@ -1,7 +1,6 @@
 {
 
   "forziere-chiuso": [304, 400, 16, 16],
-  "forziere-mezzo": [320, 400, 16, 16],
   "forziere-aperto": [336, 400, 16, 16],
 
   "moneta-0": [289, 385, 6, 7],
@@ -11,12 +10,6 @@
 
   "pozione-rossa": [288, 352, 16, 16],
   "pozione-blu": [304, 352, 16, 16],
-  "pozione-verde": [320, 352, 16, 16],
-  "pozione-gialla": [336, 352, 16, 16],
-
-  "cuore-pieno": [289, 370, 13, 12],
-  "cuore-mezzo": [305, 370, 13, 12],
-  "cuore-vuoto": [321, 370, 13, 12],
 
   "cavaliere-fermo-0": [128, 100, 16, 28],
   "cavaliere-fermo-1": [144, 100, 16, 28],
@@ -96,8 +89,5 @@
 
   "arma-1": [293, 10, 6, 13],
   "arma-2": [323, 10, 10, 21],
-  "arma-3": [288, 167, 16, 24],
-
-  "scena-cassa": [288, 408, 16, 24],
-  "scena-teschio": [288, 432, 16, 16]
+  "arma-3": [288, 167, 16, 24]
 }

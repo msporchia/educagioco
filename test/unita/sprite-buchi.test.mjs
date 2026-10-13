@@ -79,7 +79,7 @@ def neri(n):
 print(json.dumps({n: neri(n) for n in sys.argv[1:] or %NOMI%}))
 `
 
-const CON_BUCO = ['arco-corto', 'arco-lungo', 'balestra', 'chiave-oro', 'chiave-ferro', 'chiave-verde', 'chiave-blu',
+const CON_BUCO = ['arco-corto', 'arco-lungo', 'balestra', 'chiave-oro',
                   'anello-ambra', 'anello-verde', 'amuleto-rosso']
 
 const r = python(PROVA)
