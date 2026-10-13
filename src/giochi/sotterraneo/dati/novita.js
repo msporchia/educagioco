@@ -6,7 +6,7 @@
 // Il tono è quello del resto del gioco: serio, da avventura, non triste; frasi brevi e parole semplici.
 export const NOVITA = 'Novità?'
 
-// le chiavi sono quelle dei personaggi e dei mercanti (armaiolo è «il fabbro», erborista «la guaritrice», rigattiere «il mercante»)
+// le chiavi sono quelle dei personaggi e dei mercanti (armaiolo è «il fabbro», erborista «la guaritrice», rigattiere «il mercante», incantatrice «l'incantatrice»)
 export const NOVITA_DI = {
   minatore: {
     ruota: [
@@ -135,6 +135,22 @@ export const NOVITA_DI = {
       { finite: 7, pagine: ['Sette porte chiuse, e le tue armi ancora intere. Il metallo buono si riconosce anche da questo.'] },
       { livello: [5, 9], pagine: ['Hai il braccio di chi tiene l\'arma da anni. Mi piace vederla in buone mani.'] },
       { livello: [10, 99], pagine: ['Con quel braccio, un\'arma qualunque non ti basta più. Guarda sul banco: c\'è sempre qualcosa di meglio.'] },
+    ],
+  },
+
+  incantatrice: {
+    ruota: [
+      ['Una bacchetta non fa magie da sola: ascolta chi la tiene. Per questo ne esistono tante.'],
+      ['La stoffa non ferma una lama, ma lascia libero il braccio. Chi lancia incanti non vuole altro.'],
+      ['Ogni incanto spende energia. La boccetta blu la rimette: tienine una, e non restare a secco.'],
+    ],
+    reazioni: [
+      { finite: 0, pagine: ['Non conosci ancora nessun incanto? Non importa: la prima scintilla è la più difficile.'] },
+      { finite: 1, pagine: ['Dalla cripta si porta su roba che brilla da sola. Se è magia, fammela vedere.'] },
+      { finite: [2, 6], pagine: ['Hai battuto {boss}? Un mostro così lascia nell\'aria qualcosa di strano.', 'Per {discesa} prepara un incanto in più.'] },
+      { finite: 7, pagine: ['Sette porte chiuse, e nessun incanto ti ha tradito. Questo sì che è saperli usare.'] },
+      { livello: [5, 9], pagine: ['Si vede che hai imparato qualcosa. Ora impara quando usarlo.'] },
+      { livello: [10, 99], pagine: ['Per chi è arrivato fin qui tengo i pezzi migliori. Guarda sul banco.'] },
     ],
   },
 

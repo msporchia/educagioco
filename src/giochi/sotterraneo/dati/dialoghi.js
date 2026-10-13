@@ -130,6 +130,19 @@ export const DIALOGHI = {
     ],
   },
 
+  incantatrice: {
+    domanda: 'La magia serve, laggiù?',
+    bottega: 'Fammi vedere la magia',
+    racconti: [
+      { da: 0, pagine: ['Il ferro ferma un colpo. Un incanto lo ferma prima che arrivi.',
+                        'Ma ogni incanto costa energia. Quando finisce, resti con le mani vuote.'] },
+      { da: 3, pagine: ['Più giù, certi mostri non temono il fuoco. Altri non temono il gelo.',
+                        'Porta un incanto per ogni paura, e una boccetta blu per ogni incanto.'] },
+      { da: 6, pagine: ['Gli ultimi mostri resistono a quasi tutto. Ma nessuno resiste a un incanto scelto bene.',
+                        'Guarda cosa hai davanti, prima di lanciare.'] },
+    ],
+  },
+
   erborista: {
     domanda: 'Cosa serve laggiù?',
     bottega: 'Mi servono pozioni',
