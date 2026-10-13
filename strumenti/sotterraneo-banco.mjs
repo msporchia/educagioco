@@ -16,6 +16,7 @@
 //   npm run sotterraneo -- --vere                # la storia giocata davvero, discesa dopo discesa, con la spesa (--fila tutto)
 //   npm run sotterraneo -- --abisso             # fin dove arriva chi esce dalla storia (--nudo: chi parte nudo) e quanto costa un piano; --tetto N: fin dove si guarda (30)
 //   npm run sotterraneo -- --risparmio 100,250  # chi arriva con quelle gemme da parte e compra il meglio che può
+//   npm run sotterraneo -- --armi               # l'attacco delle armi a una e a due mani nei tre gradini, a livello 1, 11 e 31
 //   npm run sotterraneo -- --numeri 1,5,12,20,30  # vita, difesa e attacco dell'eroe atteso a quei livelli, per eroe
 //   npm run sotterraneo -- --strada mago:pura --punti intelligenza,destrezza,tempra   # lo stesso con un altro giro dei punti
 //   npm run sotterraneo -- --strada cavaliere:spadone --mani 1   # la stessa strada con arma a una mano e scudo (--mani 2: a due mani)
@@ -262,6 +263,20 @@ async function misura(radice) {
       sub.push({ titolo: `${classe}: le strade${piu ? ` (eroe ${piu > 0 ? '+' : ''}${piu} livelli)` : ''}, ${OPZ.semi} partite per cella`, intestazione: nomi, righe })
     }
     return { sub }
+  }
+
+  // `--armi`: l'attacco delle armi a una e a due mani nei tre gradini, a livello 1, 11 e 31 (docs/sotterraneo/roba.md, «Due mani»);
+  // con `--contro` «prima → dopo». Le basi che esistono a quel gradino e a quelle mani, per famiglia
+  if (argv.includes('--armi')) {
+    const { COSE, CHIAVI_COSE, chiaveDelPezzo } = await import(pathToFileURL(join(radice, SRC, 'dati/cose.js')).href)
+    const righe = []
+    for (const grado of [1, 2, 3]) for (const mani of [1, 2]) {
+      const basi = CHIAVI_COSE.filter(k => COSE[k].dove === 'mano' && COSE[k].grado === grado && (COSE[k].mani || 1) === mani)
+      if (!basi.length) continue
+      righe.push({ titolo: `gradino ${grado}, ${mani === 1 ? 'una mano' : 'due mani'} (${basi.join(' ')})`,
+                   celle: [1, 11, 31].map(L => COSE[chiaveDelPezzo ? chiaveDelPezzo(basi[0], L) : basi[0]].att), numeri: true })
+    }
+    return { intestazione: ['liv. 1', 'liv. 11', 'liv. 31'], titolo: 'l\'attacco di un\'arma a una e a due mani', righe, numeri: true, larga: 10 }
   }
 
   if (argv.includes('--forza')) {

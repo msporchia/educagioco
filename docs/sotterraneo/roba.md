@@ -87,6 +87,14 @@ la roba con livello e rarità: [rarita.md](rarita.md).
   due leggere valgono meno, la seconda mano vale la metà. Si è toccato l'attacco e non
   il prezzo perché le armi si trovano più di quanto si comprino. `guastiDelleCose` e
   `unita/sotterraneo` tengono fermo il conto, `unita/sotterraneo-strade` a ogni gradino.
+  L'attacco di un'arma comune, prima → dopo (`npm run sotterraneo -- --armi --contro <commit>`), a livello 1 · 11 · 31:
+
+  | | una mano | due mani |
+  |---|---|---|
+  | primo gradino | 1 · 3 · 7 | 2 → **3** · 4 → **5** · 8 → **13** |
+  | secondo | 2 · 4 · 8 | 3 → **6** · 5 → **8** · 9 → **16** |
+  | terzo | 3 · 5 · 9 | 4 → **9** · 6 → **11** · 10 → **19** |
+
 - **Il bastone** (bacchette a due mani) **ha un potere suo, da mago puro**: l'energia
   delle abilità torna del 50% più in fretta (`ricarica`: ogni risposta giusta a un mostro
   vale 1,5 invece di 1 verso i 2,5 che fanno un punto, `RICARICA_DEL_BASTONE`). Dieci
