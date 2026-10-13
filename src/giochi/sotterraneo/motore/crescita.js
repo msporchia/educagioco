@@ -12,8 +12,11 @@ import { TASCHE_EXTRA_MAX } from '../dati/mondo.js'
 // imparate e quelle portate nello scontro (motore/abilita.js). `v`: 2 da quando le caratteristiche sono forza, destrezza,
 // intelligenza e tempra (9 ottobre 2026); prima erano forza, tempra, scorza e fortuna
 export const VERSIONE_CRESCITA = 2
+// `elisir`: i punti di vita massima bevuti con gli elisir del toro, per sempre (come le tasche comprate): un salvataggio
+// di prima non ce l'ha, e vale zero
 export const CRESCITA_NUOVA = () => ({ v: VERSIONE_CRESCITA, esp: 0, forza: 0, destrezza: 0, intelligenza: 0, tempra: 0,
-  albero: {}, caselle: [null, null, null], tasche: 0 })
+  albero: {}, caselle: [null, null, null], tasche: 0, elisir: 0 })
+export const ELISIR_MAX = 90   // trenta elisir: più di quanti se ne troveranno mai, e un dato storto non gonfia la vita
 
 const intero = n => (Number.isFinite(n) && n > 0 ? Math.floor(n) : 0)
 
@@ -25,6 +28,7 @@ export function rileggiCrescita(dato, classe = null) {
   if (!dato || typeof dato !== 'object') return c
   c.esp = intero(dato.esp)
   c.tasche = Math.min(TASCHE_EXTRA_MAX, intero(dato.tasche))   // le tasche comprate in più (dati/mondo.js)
+  c.elisir = Math.min(ELISIR_MAX, intero(dato.elisir))
   // di prima: la versione vecchia, o senza versione ma con la scorza o la fortuna (si scrivevano sempre tutte e quattro)
   const diPrima = dato.v != null ? dato.v !== VERSIONE_CRESCITA : ('scorza' in dato || 'fortuna' in dato)
   if (diPrima) return { ...c, ...rileggiAlbero(dato, c.esp, classe) }
@@ -58,7 +62,7 @@ export function piuDellaCrescita(eroe, cr) {
   const sopra = Object.fromEntries(CHIAVI_CARATTERISTICHE.map(k => [k, caratteristica(eroe, cr, k) - (parte[k] || 0)]))
   return {
     livello: liv, sopra,
-    vita: (liv - 1) * (eroe.vitaPerLivello || 2) + sopra.tempra * VITA_PER_TEMPRA,
+    vita: (liv - 1) * (eroe.vitaPerLivello || 2) + sopra.tempra * VITA_PER_TEMPRA + ((cr && cr.elisir) || 0),
     dif: Math.floor(sopra.tempra / TEMPRA_PER_DIFESA),
   }
 }
@@ -132,3 +136,6 @@ export function prossimoPunto(cr, eroe, come = null) {
 export function crescitaA(eroe, liv, come = null) {
   return daiTutti({ ...CRESCITA_NUOVA(), esp: sogliaDi(Math.max(1, liv)) }, eroe, come)
 }
+
+// la riga della pagina dell'eroe che dice da dove viene la vita bevuta (niente se non ne ha bevuta)
+export const trattoDegliElisir = cr => (cr && cr.elisir > 0 ? `🐂 +${cr.elisir} vita, per sempre` : null)

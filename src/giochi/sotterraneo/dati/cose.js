@@ -133,10 +133,11 @@ const BASI = {
   // la boccetta grande dell'energia: stesso disegno, nome epico (l'utente, 9 ottobre)
   'ampolla-blu': { em: '🧪', nome: 'Ampolla delle stelle', sprite: 'pozione-blu', usa: 'energia', energia: 16, prezzo: 18, genere: 'f',
                    dice: 'Sedici punti di energia: un fiume per le abilità.' },
-  // l'unica che non torna indietro: alza la vita massima per il resto della discesa
+  // l'unica che non torna indietro: alza la vita massima dell'eroe per sempre (crescita.elisir). Un ritrovamento rarissimo,
+  // mai in vendita (`rarissimo`: fuori da IN_VENDITA); il prezzo resta per quando lo si rivende (docs/sotterraneo/rarita.md)
   'elisir-toro': { em: '🐂', nome: 'Elisir del toro', sprite: 'pozione-rossa',
-                   usa: 'cresci', cresce: 3, prezzo: 22,
-                   dice: 'Tre punti di vita massima, per tutta la discesa.' },
+                   usa: 'cresci', cresce: 3, prezzo: 22, rarissimo: true,
+                   dice: 'Tre punti di vita massima, per sempre.' },
   // l'unità è la stanza e non il tempo: un conto a orologio farebbe pagare la luce a chi legge piano
   torcia: { em: '🔥', nome: 'Torcia', sprite: 'torcia', usa: 'luce', genere: 'f',
             stanze: STANZE_TORCIA, prezzo: 5,
@@ -270,10 +271,10 @@ export const ARMI_DI = grado =>
 export const PEZZI_DI_BASE = CHIAVI_COSE.filter(k => COSE[k].dove && !COSE[k].deiGrossi)
 
 // due elenchi diversi: dal forziere non escono chiavi né boccette
-export const IN_VENDITA = CHIAVI_COSE.filter(k => COSE[k].prezzo && !COSE[k].deiGrossi)
+export const IN_VENDITA = CHIAVI_COSE.filter(k => COSE[k].prezzo && !COSE[k].deiGrossi && !COSE[k].rarissimo)
 export const SCUDI = CHIAVI_COSE.filter(k => COSE[k].dove === 'mancina')
 
-// stanno fuori dal sorteggio (sempre tutte e tre sul banco); l'elisir non c'è: non deve diventare "compro vita finché ho gemme"
+// stanno fuori dal sorteggio (sempre tutte e tre sul banco); l'elisir non c'è: non si compra, si trova (bottino.js, `elisirCade`)
 export const CURE = CHIAVI_COSE.filter(k => COSE[k].usa === 'cura')
 
 export const A_SORTE = IN_VENDITA.filter(k => !CURE.includes(k))
@@ -338,7 +339,7 @@ export const NEI_FORZIERI = [
   'amuleto-osso', 'teschio-cercatore',
   'scudo-ferro', 'scudo-crociato', 'scudo-leone', 'scudo-teschio',
   'bipenne-solare', 'spada-del-ladro', 'pugnale-vampiro', 'spada-di-ghiaccio',
-  'pozione-grande', 'elisir-toro', 'torcia', 'pozione-blu', 'ampolla-blu',
+  'pozione-grande', 'torcia', 'pozione-blu', 'ampolla-blu',
 ]
 
 // non mente mai: dietro un teschio c'è davvero una guardia

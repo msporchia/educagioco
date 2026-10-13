@@ -21,11 +21,11 @@ import { grossoDi, GROSSI } from '../dati/grossi.js'
 import { valoreDelLivello } from '../dati/pezzi.js'
 import { espDi } from '../dati/livelli.js'
 import { espNellaZona } from '../dati/zone.js'
-import { pezzoNuovo, pezzoDelGrosso, pezzoDalMostro, livelloDelBottino } from './bottino.js'
+import { pezzoNuovo, pezzoDelGrosso, pezzoDalMostro, livelloDelBottino, elisirCade } from './bottino.js'
 import { generaPiano } from './livello.js'
 import { percorso, viaVerso, primaLibera } from '../../../motore/passi.js'
 import { Corredo } from './corredo.js'
-import { dai as daiPunto } from './crescita.js'
+import { dai as daiPunto, ELISIR_MAX } from './crescita.js'
 import { indiceDella, premioPer } from './storia.js'
 import { robaDellaMissione } from './missioni.js'
 import { forzaDelCorredo } from './forza.js'
@@ -799,6 +799,9 @@ export class Corsa extends Corredo {
       this.posaPezzo(pezzoNuovo({ livello: this.livelloDelBottino, chi: 'mostro', fortuna: this.fortuna,
                                   rnd: () => this.rnd(), tua: k => this.porta(k) }), { x: m.x, y: m.y + 1 })
     }
+    // l'elisir del toro: rarissimo, dal grosso o da un caporale (e dai forzieri)
+    const chi = m.grosso ? 'grosso' : m.caporale ? 'caporale' : null
+    if (chi && elisirCade(chi, this.seme, this.piano, m.x, m.y)) this.posaPezzo('elisir-toro', { x: m.x + 1, y: m.y + 1 })
     // un mostro che cade si vede, anche il grosso: niente avviso. Quello di una missione sì, dice cosa fare dopo
     if (m.missione) {
       this.missioniFatte.add(m.missione)
@@ -938,6 +941,7 @@ export class Corsa extends Corredo {
                           rnd: () => this.rnd(), tua: k => this.porta(k) })
     if (!cosa) cosa = pescaCosa(NEI_FORZIERI_DELLA_STORIA, { rnd: () => this.rnd(), tua: k => this.porta(k) })
     this.posaPezzo(cosa, { x: f.x, y: f.y + 1 })
+    if (elisirCade('forziere', this.seme, this.piano, f.x, f.y)) this.posaPezzo('elisir-toro', { x: f.x - 1, y: f.y + 1 })
     this.posaRoba({ che: 'gemme', em: '💎', quante: Math.round((6 + this.piano * 3) * valoreDelLivello(this.livelloQui)) },
                   { x: f.x + 1, y: f.y + 1 })
     this.chiudi()
@@ -1010,7 +1014,8 @@ export class Corsa extends Corredo {
       return { che: 'energia' }
     }
     if (c.usa === 'cresci') {
-      this.vitaPiu += c.cresce
+      // per sempre: sta nella crescita dell'eroe (come le tasche comprate), non nella vita della discesa
+      this.crescita = { ...this.crescita, elisir: Math.min(ELISIR_MAX, this.crescita.elisir + c.cresce) }
       this.vita += c.cresce
       this.zaino.splice(i, 1)
       this.dillo(`❤️ ${this.vita}/${this.vitaMax}`)
