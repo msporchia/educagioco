@@ -54,9 +54,10 @@ Il codice: `motore/scontro.js` (i metodi dello scontro, attaccati a `Corsa`),
 
 ## L'iniziativa
 
-- **Ognuno ha una velocità** (`velocita`): l'eroe `10 + destrezza` (12 il
-  cavaliere, il mago e il nano all'inizio, 14 l'elfa), i mostri quella della
-  specie in `dati/mostri.js` (il grosso quella della sua specie):
+- **Ognuno ha una velocità** (`velocita`): l'eroe **6 più uno e mezzo a punto di
+  destrezza** (`VELOCITA_BASE_EROE`, `VELOCITA_PER_DESTREZZA`: 9 il cavaliere, il mago
+  e il nano all'inizio, 12 l'elfa), i mostri quella della specie in
+  `dati/mostri.js` (il grosso quella della sua specie):
 
   | velocità | mostri |
   |---|---|
@@ -65,8 +66,11 @@ Il codice: `motore/scontro.js` (i metodi dello scontro, attaccati a `Corsa`),
   | 7–8 | orco, gigante, troll, fungo, granchio, melma |
   | 5 | golem |
 
-  L'eroe parte **più veloce della media dei mostri** (l'utente: «l'eroe è alto
-  come iniziativa»). Le velocità sono la **forma** di una specie: colpo per velocità circa uguale dentro gli abitanti di una discesa
+  L'iniziativa è dell'agile (l'utente, 13 ottobre: «è del ladro, non del mago»; prima l'eroe
+  era «alto come iniziativa», 10 più la destrezza, e il mago aveva a volte due turni di
+  fila): con mostri da 9 in su il mago **non ha mai due turni di fila**, l'elfa sì, ogni
+  tanto; i mostri lenti (sotto il 9) il doppio turno lo concedono a tutti. La stampa per
+  classe e discesa: [abilita-energia.md](abilita-energia.md#la-fila-dei-turni). Le velocità sono la **forma** di una specie: colpo per velocità circa uguale dentro gli abitanti di una discesa
   ([mostri.md](mostri.md)), così il ratto veloce e la melma lenta fanno più o meno lo stesso male nel tempo.
 - **Una fila di turni alla Final Fantasy X** (`motore/turni.js`): ogni azione
   fa aspettare `100 / velocita`, agisce chi ha aspettato di meno, a parità

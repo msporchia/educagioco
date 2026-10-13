@@ -89,20 +89,20 @@ Sono la prima mano (prima in codice, poi dipinto, come la cornice della
 
 **12 ottobre 2026, il mana costa davvero.** L'utente: *«le abilità costano poco mana: mio figlio è sempre a piena vita e pieno
 mana. In particolare per quelle più avanzate, se decidi di usarle devi avere un cooldown naturale con il fatto che finisci il
-mana (ricordati che il mago ovviamente predilige il mana)»*. Prima: energia 8 più l'intelligenza, costi 5 · 6 · 6 · 7 · 9, un
+mana (ricordati che il mago ovviamente predilige il mana)»*. Prima: energia 8 più l'intelligenza, un
 punto ogni due risposte giuste **dovunque**, quindi fra uno scontro e l'altro (porte, forzieri, curiosità) il globo tornava
 quasi pieno da sé. Adesso tre leve insieme:
 
 - **Il mago è il mago del mana**: sette più **tre per punto di intelligenza** (`ENERGIA`, `ENERGIA_PER_INTELLIGENZA`,
   `energiaMax`). Il mago parte da ventidue, l'elfa da tredici, il cavaliere e il nano da dieci; al 12 il mago ha 41 e gli altri
   restano dove sono se non mettono punti in intelligenza, al 24 il mago 53, l'elfa 19, il cavaliere e il nano 16.
-- **Il costo cresce in fretta con la riga** (`COSTO_DEL_GRADINO`): **5 · 7 · 8 · 11 · 16**. La difesa del primo gradino costa meno
-  dell'energia di partenza di tutti (10): è la regola di `guastiDelleAbilita`, al posto di «nessuna abilità più cara di chi ne ha
-  meno». La riga 2 (livello 6) si paga una volta con il globo pieno e poi si aspetta. La riga 3 (livello 8, 11 di energia) e la 4
-  (livello 12, 16) **chiedono punti in intelligenza**: il cavaliere e il nano ne hanno bisogno di uno e di due; l'elfa (13) di
-  nessuno e di uno; il mago le paga già dall'inizio (22), una alla volta, e poi aspetta. Dove un'abilità non starebbe nemmeno
-  nel globo pieno la casella dice **«ti serve più energia (intelligenza)»** (`perchéNonUsi` torna `serve più energia`), e la
-  pagina dell'albero lo scrive sotto il medaglione; quando manca soltanto per adesso dice **«ti manca energia»** (`poca energia`).
+- **Il costo è a lanci, non a numeri** (l'utente, 13 ottobre: «il mago può avere costi diversi da quelli del cavaliere»; i
+  potenti non devono costare poco): il costo di un nodo è il globo che la **sua classe** ha al livello del nodo, diviso per quante
+  volte la classe deve poterlo lanciare col globo pieno (`costoAl`, `globoAtteso`, `lanci` in `dati/eroi.js`). Il mago 6 · 6 · 5 · 3 e
+  l'ultima riga una volta sola, gli altri 3 · 3 · 2,5 · 2 e una. Il costo cresce con la riga e, per il mago, col grado (il globo
+  cresce col livello). Le tabelle, il perché dei numeri e come si stampano: [abilita-energia.md](abilita-energia.md). Dove
+  un'abilità non starebbe nel globo pieno la casella dice **«ti serve più energia (intelligenza)»** (`perchéNonUsi` torna `serve più
+  energia`), e la pagina dell'albero lo scrive sotto il medaglione; quando manca soltanto per adesso dice **«ti manca energia»** (`poca energia`).
 - **Si ricarica solo combattendo**: due punti ogni **cinque risposte giuste date a un mostro** (`RISPOSTE_PER_ENERGIA` 2,5, il resto passa al punto dopo; solo se il
   foglio è uno scontro, `Corsa.rispondi`). Porte, forzieri e curiosità non la ridanno più. Sbagliare non la toglie. La fonte la
   riempie tutta e la pozione blu (`pozione-blu`, dall'erborista e nei forzieri) ne dà otto; il Respiro del bosco la ridà
@@ -111,8 +111,8 @@ quasi pieno da sé. Adesso tre leve insieme:
 - **Mai col tempo**: sotto una domanda l'orologio è fermo, e una ricarica a tempo premierebbe chi legge piano o posa il
   telefono. È la ragione per cui la torcia si conta a stanze ([roba.md](roba.md)).
 
-Il banco spende come prima (due abilità forti a scontro quando c'è energia, solo se il colpo solito non chiude): con il
-globo più scarso ne usa meno a testa il cavaliere e il nano, di più il mago. Le misure, prima → dopo: [scontro-bilancio.md](scontro-bilancio.md#il-mana-costa-davvero).
+Il banco spende come prima (due abilità forti a scontro quando c'è energia, solo se il colpo solito non chiude) e i costi li legge da
+`perchéNonUsi`. Le misure, prima → dopo: [scontro-bilancio.md](scontro-bilancio.md#il-mana-costa-davvero) e [abilita-energia.md](abilita-energia.md).
 La forza conta solo le abilità che l'energia di partenza tipica paga ([forza.md](forza.md)).
 
 ## Nello scontro

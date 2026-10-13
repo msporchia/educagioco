@@ -69,7 +69,7 @@ le classi si somigliavano. La fortuna resta solo sulla roba.
 | | dà l'attacco a | a tutti, per punto | è il requisito di |
 |---|---|---|---|
 | Forza | spade e asce | una tasca in più ogni tre punti oltre il primo | spade e asce |
-| Destrezza | archi, e il ramo Bosco | 1% di schivata dei colpi, e un punto di velocità nella fila dei turni (10 più la destrezza) | archi |
+| Destrezza | archi, e il ramo Bosco | 1% di schivata dei colpi, e uno e mezzo di velocità nella fila dei turni (6 più uno e mezzo a punto) | archi |
 | Intelligenza | bacchette e bastoni | tre punti di energia massima | bacchette e bastoni |
 | Tempra | — | tre di vita, e una difesa ogni tre punti | — |
 

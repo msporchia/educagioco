@@ -5,8 +5,8 @@ guerriero in [abilita-elementi.md](abilita-elementi.md); le resistenze dei mostr
 ogni ramo. I numeri (e la riga che legge il bambino) stanno in `dati/abilita.js`.
 
 **La forma**: quattro rami per classe, **sette nodi per ramo in cinque righe** da uno, uno, due, due, uno
-(`riga` sul nodo). Le righe si aprono ai livelli 2, 4, 6, 8 e 12 (`GRADINI`) e le abilità costano 5, 7, 8, 11 e 16 di
-energia (`COSTO_DEL_GRADINO`: le ultime due righe chiedono punti in intelligenza, [abilita.md](abilita.md#lenergia)). Nelle righe da due si **sceglie**: l'una, l'altra o tutte e due coi punti; una riga si apre
+(`riga` sul nodo). Le righe si aprono ai livelli 2, 4, 6, 8 e 12 (`GRADINI`) e il costo in
+energia viene dalla classe e dalla riga (`costoAl`: [abilita-energia.md](abilita-energia.md)). Nelle righe da due si **sceglie**: l'una, l'altra o tutte e due coi punti; una riga si apre
 quando se n'è imparato almeno uno della riga sopra. Quattro classi per ventotto nodi: al livello 12 gli undici punti non
 bastano a un ramo e mezzo, e cosa prendere è la scelta.
 

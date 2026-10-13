@@ -21,6 +21,8 @@
 //   npm run sotterraneo -- --tara 2.spinta=6.5,5.forza=4   # prova un valore di una discesa (indice.campo=valore) senza toccare i sorgenti
 //   npm run sotterraneo -- --tara zona.forzaA12=4|5,zona.altare=1.6   # lo stesso per la curva delle zone e la forma di una zona
 //   npm run sotterraneo -- --tara 2.spinta=5|6|7             # con più valori separati da | prova ogni combinazione, una tabella l'una
+//   npm run sotterraneo -- --turni [--file]      # la fila dei turni: velocità e doppi turni di ogni classe nelle discese (--file: la fila lettera per lettera)
+//   npm run sotterraneo -- --costi               # l'energia: globo atteso, costo e lanci col globo pieno per classe e riga
 //   npm run sotterraneo -- --senza-abilita       # il banco di prima: solo attacco, nessun albero
 //   npm run sotterraneo -- --contro <commit>     # le stesse misure sul commit, e «prima → dopo» nelle celle
 //   npm run sotterraneo -- --contro <commit> --banco-di-adesso   # idem, ma col giocatore finto di adesso (le abilità) anche sul commit

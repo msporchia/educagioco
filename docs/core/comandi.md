@@ -73,7 +73,7 @@ scrivono niente: stanno in [sprite.md](sprite.md).
 | `npm run ambienti` | i paesaggi delle domande sugli animali |
 | `npm run simula` | il tower defense giocato a mente, senza browser |
 | `npm run dps` | quanto fa male ogni torre, per livello e ramo, col motore vero sulle carte, quanto rende un ⚡, e quanto rende un ⚡ cumulato salendo (un minuto) |
-| `npm run sotterraneo` | il giocatore finto del sotterraneo su più processi: discese vinte a 8/6/4 su 10 per eroe, `--diag` (domande, svenimenti, vita a fine scontro, abilità), `--zone`, `--vere`, `--forza`, `--senza-abilita`, e `--contro <commit>` per il «prima → dopo» (le opzioni sono in testa al file; [../sotterraneo/scontro-bilancio.md](../sotterraneo/scontro-bilancio.md)) |
+| `npm run sotterraneo` | il giocatore finto del sotterraneo su più processi: discese vinte a 8/6/4 su 10 per eroe, `--diag` (domande, svenimenti, vita a fine scontro, abilità), `--zone`, `--vere`, `--forza`, `--turni` (velocità e doppi turni per classe e discesa, `--file` la fila dei turni lettera per lettera), `--costi` (globo atteso, costo e lanci col globo pieno per classe e riga), `--senza-abilita`, e `--contro <commit>` per il «prima → dopo» (le opzioni sono in testa al file; [../sotterraneo/scontro-bilancio.md](../sotterraneo/scontro-bilancio.md)) |
 | `node strumenti/regali-castello.mjs` | a che ondata cede ogni libera con N regali |
 | `node strumenti/valida-percorsi.mjs` | le carte del castello, passate ai raggi X |
 | `node strumenti/simula-castello.mjs --sole div` | le tappe con una torre sola dovunque si può, dal metro e dal pigro |

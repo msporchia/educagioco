@@ -3,7 +3,7 @@
 // velenosa: il tetto (~8 risposte contro l'eroe nudo, `guastiDeiMostri`) si vede solo contando, non a occhio.
 // `unaPosa: true`: il foglio disegna solo il respiro, niente corsa separata (scena/tela.js non cerca `-corsa-`).
 // Ogni mostro dichiara `droppa` (quanto spesso lascia qualcosa): un mostro comune non deve intasare lo zaino, e la sua
-// `velocita` (nello scontro agisce ogni 100/velocita; l'eroe parte da 10 più la destrezza: docs/sotterraneo/scontro.md).
+// `velocita` (nello scontro agisce ogni 100/velocita; l'eroe ha 6 più uno e mezzo a punto di destrezza: docs/sotterraneo/scontro.md).
 // Poche difese a mostro (docs/sotterraneo/mostri.md): `resiste` e `teme` sono elementi (metà danno, danno e mezzo), `immune`
 // gli stati che non prende (dati/elementi.js). Il grosso porta le sue (dati/grossi.js, `difeseDi`).
 import { EROE } from './mondo.js'
