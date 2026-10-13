@@ -79,7 +79,7 @@ uguale('un tocco sul testo va alla pagina dopo', await pagina(), 2)
 for (let n = 2; n < quante; n++) { await attendi(page, 250); await toccaIl('[data-dialogo-testo]') }
 await page.waitForSelector('[data-dialogo][data-ultima] [data-scelte]', { timeout: 3000 })
 const scelte = await page.locator('[data-scelta]').evaluateAll(els => els.map(e => e.dataset.scelta).join(','))
-uguale('all\'ultima le domande: ci penso io, cosa si dice al pozzo, arrivederci', scelte, 'prendi,racconta,ciao')
+uguale('all\'ultima le domande: ci penso io, novità, cosa si dice al pozzo, arrivederci', scelte, 'prendi,novita,racconta,ciao')
 await attendi(page, 1800)
 uguale('e dopo un attimo torna ferma', await page.locator('[data-personaggio="ragazza"]').getAttribute('data-saluta'), '0')
 await scatto(page, 'dialogo-scelte')
@@ -90,6 +90,17 @@ await page.waitForSelector('[data-riga][data-racconto]', { timeout: 3000 })
 uguale('la risposta riparte dalla prima pagina', await pagina(), 1)
 await nelDialogo(page, null, { tocca: toccaIl })
 uguale('chiesta, la storia non si richiede', await page.locator('[data-scelta="racconta"]').count(), 0)
+
+/* ---------- 2b. «Novità?»: una frase sua, che gira ed è ricordata nell'avventura ---------- */
+await toccaIl('[data-scelta="novita"]')
+await page.waitForSelector('[data-riga][data-novita]', { timeout: 3000 })
+const novita1 = await page.locator('[data-riga]').innerText()
+controlla('«Novità?» risponde con una frase, senza segnaposti', novita1.length > 10 && !/[{}]/.test(novita1), novita1)
+await nelDialogo(page, null, { tocca: toccaIl })
+uguale('chiesta, la novità non si richiede', await page.locator('[data-scelta="novita"]').count(), 0)
+await attendi(page, 800)   // l'archivio rimanda le scritture
+uguale('e l\'avventura ricorda che gliel\'hai chiesto',
+       (await avventura()).terra?.novita?.ragazza?.n, 1)
 
 /* ---------- 3. una scelta porta alla sua azione: prendere la missione ---------- */
 await toccaIl('[data-scelta="prendi"][data-missione="goblin"]')

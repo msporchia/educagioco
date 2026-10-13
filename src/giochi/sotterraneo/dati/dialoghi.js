@@ -6,6 +6,9 @@
 //   `saluti`   quando non ha niente da chiederti né da riprendere
 //   `presa`    quando accetti un suo favore
 //   `bottega`, `vendi`  le scelte dei mercanti (aprono il banco, o la linguetta delle tasche)
+// «Novità?», con le frasi che ruotano e reagiscono, sta in dati/novita.js.
+
+import { guastiDelleNovita } from './novita.js'
 
 export const DIALOGHI = {
   minatore: {
@@ -167,6 +170,7 @@ export const perOra = (voci, finite) => {
 export function guastiDeiDialoghi(chi = []) {
   const g = []
   for (const k of chi) if (!DIALOGHI[k]) g.push(`${k}: non ha un dialogo`)
+  g.push(...guastiDelleNovita(chi))
   for (const [k, d] of Object.entries(DIALOGHI)) {
     if (!d.domanda) g.push(`${k}: senza la domanda della storia`)
     const voci = [...(d.racconti || []), ...(d.saluti || [])]

@@ -126,6 +126,10 @@ Zannagrigia, lanterna) sono radici senza seguito.
 
 ## Il diario e il promemoria
 
+In cima al diario sta la missione principale, la grande storia
+([la-storia-principale.md](la-storia-principale.md)): non è una di queste, non
+conta nel tetto né nel numero sul 📖.
+
 - **Il diario** (`viste/Diario.vue`, `diario` in `motore/missioni.js`): un
   tasto 📖 sempre sulla terra di sopra, nella barra in basso, col
   numero delle aperte (bordo d'oro se una è da consegnare). Si apre al centro,

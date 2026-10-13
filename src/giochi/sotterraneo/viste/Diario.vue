@@ -1,6 +1,7 @@
 <script setup>
 // Il diario delle missioni: il riassunto sempre a portata di mano sulla terra di sopra (docs/sotterraneo/missioni.md).
-// Quelle in mano (le fatte da consegnare in cima, poi le da fare, con chi aspetta), quelle che aspettano di essere prese, quelle
+// In cima la missione principale, la storia (docs/sotterraneo/la-storia-principale.md), con la freccina verso la discesa
+// di adesso e le sette porte nel dettaglio. Poi quelle in mano (le fatte da consegnare in cima, poi le da fare, con chi aspetta), quelle che aspettano di essere prese, quelle
 // già consegnate. Toccando una voce si apre il suo dettaglio, nella stessa finestra: chi te l'ha data, cosa ha detto,
 // dove, cosa, il premio, a che punto sei. Da lì si sceglie quale missione indicano le freccine («segui questa») e si va
 // da chi aspetta. Non scrive niente: dice `segui` e `vai` a chi lo usa (viste/Campagna.vue); si chiude con la ✕ o
@@ -33,6 +34,16 @@ const voce = computed(() => {
 })
 watch(voce, v => { if (aperta.value && !v) aperta.value = null })
 
+// la missione principale, sempre in cima (docs/sotterraneo/la-storia-principale.md): il suo dettaglio è una pagina a parte
+const storia = computed(() => d.value.storia)
+const storiaAperta = ref(false)
+const inDettaglio = computed(() => !!voce.value || storiaAperta.value)
+const porta = p => (p.fatta ? 'chiusa' : storia.value.corrente && storia.value.corrente.chiave === p.chiave ? 'adesso' : 'avanti')
+const doveAndare = computed(() => {
+  const c = storia.value.corrente
+  return c && !c.ferma ? c.chiave : null
+})
+
 // a che punto sei, a parole
 const stato = v => (v.stato === 'fatta' ? `Fatta: torna ${v.daChi}`
   : v.stato === 'presa' ? 'Da fare'
@@ -46,11 +57,74 @@ const vaDa = v => emit('vai', v.da)
 </script>
 
 <template>
-  <Foglio :em="voce ? '' : '📖'" :titolo="voce ? '' : 'Le tue missioni'" centro con-chiudi data-diario
+  <Foglio :em="inDettaglio ? '' : '📖'" :titolo="inDettaglio ? '' : 'Le tue missioni'" centro con-chiudi data-diario
           @click.self="$emit('fuori', $event)" @chiudi="$emit('chiudi')">
 
+    <!-- ═══ il dettaglio della missione principale: le sette porte ═══ -->
+    <div v-if="storiaAperta" class="sot-dettaglio" data-dettaglio data-missione="storia"
+         :data-stato="storia.finita ? 'consegnata' : 'presa'">
+      <button class="sot-indietro" data-azione="indietro-diario" @click="storiaAperta = false">‹ indietro</button>
+
+      <h3 class="sot-dettaglio-titolo"><span class="em">🚪</span> {{ storia.titolo }}</h3>
+      <p class="sot-dettaglio-stato" :class="storia.finita ? 'sot-stato-consegnata' : 'sot-stato-fatta'" data-esito>
+        {{ storia.finita ? 'Compiuta' : `Porta ${storia.chiuse + 1} di ${storia.totale}` }}
+      </p>
+
+      <!-- il minatore la dà, e dice perché questa porta -->
+      <div class="sot-dettaglio-chi" data-dettaglio-chi data-chi="minatore">
+        <span class="sot-dettaglio-ritratto"><Ritratto chi="minatore" :scala="3" /></span>
+        <div>
+          <b>Il vecchio minatore</b>
+          <p class="sot-dettaglio-detto" data-racconto>«{{ storia.finita ? storia.fine : storia.corrente.ferma ? storia.ferma : storia.corrente.dice }}»</p>
+        </div>
+      </div>
+
+      <!-- dove va la freccina: la discesa, e come ci si arriva -->
+      <div v-if="storia.corrente" class="sot-dettaglio-riga" data-dettaglio-dove>
+        <img v-if="iconaDi(storia.corrente.chiave)" class="sot-ritaglio" :src="iconaDi(storia.corrente.chiave)" alt="" data-ritaglio>
+        <span class="sot-testo">
+          <small>Dove</small>
+          <b>{{ storia.corrente.nome }}</b>
+          <i v-if="!storia.corrente.ferma">{{ storia.corrente.luogo }}</i>
+        </span>
+      </div>
+
+      <div v-if="storia.corrente && storia.corrente.cosa" class="sot-dettaglio-riga" data-dettaglio-cosa data-tipo="sconfiggi">
+        <span class="sot-dettaglio-icona"><Icona :sprite="nomeFigura(storia.corrente)" :em="storia.corrente.cosa.em" :scala="2" :emAlto="38" /></span>
+        <span class="sot-testo">
+          <small>Da battere</small>
+          <b>{{ storia.corrente.cosa.nome }}</b>
+          <i>il mostro grosso in fondo all'ultimo piano</i>
+        </span>
+      </div>
+
+      <button v-if="doveAndare" class="sot-grosso" :class="{ 'sot-chiaro': storia.segui }" data-azione="segui"
+              :data-segui-attivo="storia.segui ? 1 : null" @click="$emit('segui', storia.segui ? null : 'storia')">
+        <template v-if="storia.segui"><span class="em">▸</span> la stai seguendo · smetti</template>
+        <template v-else><span class="em">▸</span> segui questa</template>
+      </button>
+      <button v-if="doveAndare && !giu" class="sot-grosso sot-chiaro" data-azione="vai-da" @click="$emit('vai', doveAndare)">
+        <span class="em">🚶</span> vai alla discesa
+      </button>
+
+      <!-- le sette porte, una per una: perché una è aperta e un'altra no -->
+      <div class="sot-porte" data-porte>
+        <small>Le sette porte</small>
+        <ol>
+          <li v-for="p in storia.porte" :key="p.chiave" :data-porta="p.chiave" :data-stato="porta(p)">
+            <span class="sot-porta-segno"></span>
+            <span class="sot-testo">
+              <b>{{ p.nome }}</b>
+              <i>{{ porta(p) === 'chiusa' ? p.grosso + ' è caduto' : porta(p) === 'adesso' ? 'da qui: batti ' + p.grosso : 'si apre dopo la porta di prima' }}</i>
+            </span>
+          </li>
+        </ol>
+      </div>
+
+    </div>
+
     <!-- ═══ il dettaglio di una missione ═══ -->
-    <div v-if="voce" class="sot-dettaglio" data-dettaglio :data-missione="voce.id" :data-stato="voce.stato">
+    <div v-else-if="voce" class="sot-dettaglio" data-dettaglio :data-missione="voce.id" :data-stato="voce.stato">
       <button class="sot-indietro" data-azione="indietro-diario" @click="aperta = null">‹ indietro</button>
 
       <h3 class="sot-dettaglio-titolo"><span class="em">{{ voce.em }}</span> {{ voce.titolo }}</h3>
@@ -113,6 +187,30 @@ const vaDa = v => emit('vai', v.da)
 
     <!-- ═══ l'elenco ═══ -->
     <template v-else>
+      <!-- la missione principale: la storia, data dal minatore. Sempre in cima, distinta dalle altre, con la freccina
+           verso la discesa di adesso -->
+      <section class="sot-diario-sezione sot-diario-storia" data-sezione="storia" :data-chiuse="storia.chiuse">
+        <h3>La storia</h3>
+        <ul>
+          <li data-storia :data-stato="storia.finita ? 'consegnata' : 'presa'" :data-segui="storia.segui ? 1 : null"
+              role="button" tabindex="0" @click="storiaAperta = true" @keydown.enter="storiaAperta = true">
+            <img v-if="storia.corrente && iconaDi(storia.corrente.chiave)" class="sot-ritaglio" :src="iconaDi(storia.corrente.chiave)" alt="" data-ritaglio>
+            <span v-else class="em">{{ storia.finita ? '✅' : '🚪' }}</span>
+            <span class="sot-testo">
+              <b>{{ storia.titolo }}</b>
+              <template v-if="storia.corrente">
+                <i>Porta {{ storia.chiuse + 1 }} di {{ storia.totale }} · {{ storia.corrente.nome }}</i>
+                <em class="sot-freccia-storia" data-freccia-storia :data-ferma="storia.corrente.ferma ? 1 : null">
+                  <span v-if="!storia.corrente.ferma" class="sot-freccina" aria-hidden="true"></span>
+                  {{ storia.corrente.ferma ? storia.ferma : `Batti ${storia.corrente.grosso}, in fondo` }}
+                </em>
+              </template>
+              <i v-else>{{ storia.fine }}</i>
+            </span>
+          </li>
+        </ul>
+      </section>
+
       <!-- le fatte da riportare, in cima e in oro: è quello che qualcuno sta aspettando -->
       <section v-if="d.pronte.length" class="sot-diario-sezione sot-diario-pronte" data-sezione="da-consegnare">
         <h3>Da consegnare</h3>

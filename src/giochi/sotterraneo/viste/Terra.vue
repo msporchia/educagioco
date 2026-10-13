@@ -9,9 +9,10 @@ import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { MAPPA, LARGO, ALTO, CELLA, MASCHERA, POSTI, PARTENZA, MINATORE as DOVE_MINATORE, CARTELLO,
          MERCANTI as DOVE_MERCANTI, PORTALE as DOVE_PORTALE, PERSONAGGI as DOVE_PERSONAGGI } from '../dati/terra-mappa.js'
 import { PERSONAGGI, personaDi } from '../dati/missioni.js'
-import { segnoDi, GLIFO, chiAspetta, presePer, inFrase, discesaDaSeguire } from '../motore/missioni.js'
+import { segnoDi, GLIFO, chiAspetta, presePer, inFrase, discesaDaSeguire, discesaDellaStoria } from '../motore/missioni.js'
 import { MERCANTI, mercanteDi } from '../dati/mercanti.js'
-import { apertura, scelte as scelteDi, risposta, dopoLaPresa, dopoLaConsegna } from '../motore/dialoghi.js'
+import { apertura, scelte as scelteDi, risposta, dopoLaPresa, dopoLaConsegna, novita as novitaDi } from '../motore/dialoghi.js'
+import { laStoria } from '../motore/storia.js'
 import { POSTO_DI, POZZO_VECCHIO, FRECCE, SCALA_TERRA as S, SCALA_EROE, SCALA_DELL_EROE, PASSO_TERRA, VISTA, LUCE,
          BORDO, MORBIDA, iconaDi } from '../dati/terra.js'
 import { creaTerra, scopri, nebbiaNuova, nebbiaInCodice, nebbiaDaCodice } from '../motore/terra.js'
@@ -113,6 +114,9 @@ const consegne = computed(() => {
 // dove sta ogni discesa, in celle (il piede del posto): serve a scegliere la più vicina
 const PIEDI_DELLE_DISCESE = Object.fromEntries(Object.entries(POSTO_DI).filter(([, nome]) => POSTI[nome])
   .map(([chiave, nome]) => [chiave, { x: POSTI[nome].piede[0] + 0.5, y: POSTI[nome].piede[1] + 0.5 }]))
+// la discesa che la missione principale indica (docs/sotterraneo/la-storia-principale.md): la freccia azzurra le porta quando
+// nessuna missione presa o scelta ne chiede un'altra
+const portaDellaStoria = computed(() => discesaDellaStoria(props.tappe))
 const fuori = ref([])    // [{ chiave, nome, x, y, gradi, meta?, immagine? }] in pixel dello schermo, solo per chi non si vede
 const vicine = ref([])   // [{ chiave, meta, nome }]: chi si vede ma non ci si è ancora arrivati: la freccina attorno all'eroe
 let fuoriChiave = '', vicineChiave = ''
@@ -150,7 +154,7 @@ function aggiornaFuori() {
     const sy = (c.piede.y + 0.5) * CELLA * S - cam.y * S - 20
     segna(sx, sy, { x: c.accanto.x + 0.5, y: c.accanto.y + 0.5 }, { chiave: c.chiave, nome: c.nome })
   }
-  const meta = discesaDaSeguire(props.missioni, io, PIEDI_DELLE_DISCESE, props.segui)
+  const meta = discesaDaSeguire(props.missioni, io, PIEDI_DELLE_DISCESE, props.segui, portaDellaStoria.value)
   if (meta) {
     const p = POSTI[POSTO_DI[meta]]
     const sx = (p.riquadro[0] + p.riquadro[2] / 2) * S - cam.x * S
@@ -172,7 +176,9 @@ function aggiornaFuori() {
   }
 }
 // toccandolo l'eroe ci va, come toccando lui (e il fumetto si apre all'arrivo)
-const vaDa = chiave => (chiave === 'minatore' ? toccaMinatore() : toccaPersonaggio(personaggi.find(m => m.chiave === chiave)))
+// (e dalla discesa della storia: la chiave di una discesa porta ai suoi piedi, dove si apre il fumetto)
+const vaDa = chiave => (chiave === 'minatore' ? toccaMinatore()
+  : POSTO_DI[chiave] ? vaAllaDiscesa(chiave) : toccaPersonaggio(personaggi.find(m => m.chiave === chiave)))
 // il tocco che ha chiuso il diario o la bottega, dato qui: chiuso quello, si guarda cosa c'è sotto il dito. Chi sta
 // sulla mappa (un posto, un mercante) fa la sua cosa, il prato fa camminare; le carte in cima e in fondo no, o il tocco
 // che chiude premerebbe un tasto per sbaglio
@@ -210,6 +216,8 @@ const primaVolta = ref(!props.terra)
 const divieti = ref(new Set((props.terra && Array.isArray(props.terra.divieti) ? props.terra.divieti : [])
   .filter(n => posti.value.some(p => p.nome === n && !p.aperto))))
 const parlato = ref(!!(props.terra && props.terra.parlato))
+// quante volte si è chiesto «Novità?» a ognuno, e per quale situazione: le frasi girano (motore/dialoghi.js, novita)
+const ascoltate = ref({ ...((props.terra && props.terra.novita) || {}) })
 
 // un posto si trova quando se ne vede il cuore
 const centroDi = r => ({ x: Math.floor((r[0] + r[2] / 2) / CELLA), y: Math.floor((r[1] + r[3] / 2) / CELLA) })
@@ -533,7 +541,7 @@ function scendi(p) {
 const dialogo = ref(null)           // { chi, nome, pagine, giro, chieste }
 let giri = 0
 const ctx = () => ({ stati: props.missioni, tappe: props.tappe, abisso: !!props.abisso, eroe: props.eroe.chiave,
-                     roba: props.roba, annuncio: props.annuncio })
+                     roba: props.roba, annuncio: props.annuncio, novita: ascoltate.value })
 const chiParla = chi => (personaDi(chi) || mercanteDi(chi) || { nome: '' }).nome
 function parla(chi) {
   chiudi()
@@ -565,6 +573,14 @@ async function scegli(s) {
     chiudiDialogo()
     emit('bottega', d.chi, s.che === 'vendi' ? 'vendi' : null)
     return
+  }
+  if (s.che === 'novita') {
+    // la frase che gira: si ricorda quante volte gliel'hai chiesto, e domani ne dirà un'altra
+    const n = novitaDi(d.chi, ctx(), ascoltate.value[d.chi])
+    ascoltate.value = { ...ascoltate.value, [d.chi]: n.visto }
+    salva()
+    chieste.add('novita')
+    return rispondi(n.pagine, chieste)
   }
   if (s.che === 'strada' || s.che === 'racconta') {
     chieste.add(s.che)
@@ -631,7 +647,8 @@ const posaDi = (chiave, ferma, saluto) => (saluto && salutano.value.has(chiave) 
 /* ═══════════ si ricorda ═══════════ */
 function salva() {
   const c = cellaDiMe()
-  emit('terra', { nebbia: nebbiaInCodice(nebbia), dove: [c.x, c.y], parlato: parlato.value, divieti: [...divieti.value] })
+  emit('terra', { nebbia: nebbiaInCodice(nebbia), dove: [c.x, c.y], parlato: parlato.value, divieti: [...divieti.value],
+                  novita: ascoltate.value })
 }
 
 let osserva = null
@@ -678,11 +695,25 @@ const divieto = p => {
 }
 const nomeDi = p => p.cosa.nome
 // una chiusa dice cosa la apre; quella chiusa per l'età non promette niente («finisci quella di prima» sarebbe falso)
+// (la storia: si apre battendo il mostro grosso della discesa di prima, non facendo missioni)
+const storia = computed(() => laStoria(props.tappe))
 const chiusaPerche = p => {
   if (p.abisso) return POZZO_VECCHIO.chiuso
   const d = prev(p.tappa.indice)
   if (p.tappa.perEta || !d) return 'Per ora non si scende.'
-  return `Si apre quando finisci ${minuscolo(d.nome)}.`
+  const g = storia.value.porte[p.tappa.indice - 1]
+  return g && g.grosso ? `Si apre quando batti ${g.grosso} in fondo ${minuscolo(d.nome).replace(/^la /, 'alla ')}.`
+    : `Si apre quando finisci ${minuscolo(d.nome)}.`
+}
+// la riga della missione principale sul fumetto di una discesa (docs/sotterraneo/la-storia-principale.md): chiusa, o quella dove
+// la storia continua; le altre aperte non ne hanno. Finita la storia ogni discesa è una zona, e non c'è più
+const rigaStoria = p => {
+  const s = storia.value, porta = p.tappa && s.porte.find(x => x.chiave === p.tappa.chiave)
+  if (!porta || s.finita || !p.aperto) return null
+  if (porta.fatta) return { stato: 'chiusa', testo: `la porta è chiusa: ${porta.grosso} è caduto.` }
+  if (s.corrente && s.corrente.chiave === porta.chiave && !s.corrente.ferma)
+    return { stato: 'adesso', testo: `continua qui, in fondo aspetta ${porta.grosso}.` }
+  return null
 }
 </script>
 
@@ -799,6 +830,9 @@ const chiusaPerche = p => {
             </p>
             <p v-else class="sot-fum-conto em" data-fondo>
               {{ aperto.p.cosa.fondo ? `il più giù: piano ${aperto.p.cosa.fondo}` : 'mai sceso' }}
+            </p>
+            <p v-if="rigaStoria(aperto.p)" class="sot-fum-storia" :data-storia-qui="rigaStoria(aperto.p).stato">
+              <b>La storia:</b> {{ rigaStoria(aperto.p).testo }}
             </p>
             <p v-if="quiPrese(aperto.p).length" class="sot-fum-missioni" data-missioni-qui>
               <span v-for="m in quiPrese(aperto.p)" :key="m.id" :data-missione="m.id">

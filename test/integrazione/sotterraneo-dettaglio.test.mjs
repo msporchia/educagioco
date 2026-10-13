@@ -25,14 +25,15 @@ import { PARTENZA } from '../../src/giochi/sotterraneo/dati/terra-mappa.js'
 import { missioneDi, personaDi } from '../../src/giochi/sotterraneo/dati/missioni.js'
 import { MONDO } from '../../src/giochi/sotterraneo/motore/avventure.js'
 import { daLui, titoloDi } from '../../src/giochi/sotterraneo/motore/missioni.js'
-import { robaAttesa } from '../../src/giochi/sotterraneo/motore/storia.js'
-import { sogliaDi } from '../../src/giochi/sotterraneo/dati/livelli.js'
+import { robaAttesa, crescitaAttesa } from '../../src/giochi/sotterraneo/motore/storia.js'
+import { GROSSI, GROSSO_DELLA_DISCESA } from '../../src/giochi/sotterraneo/dati/grossi.js'
 // al livello atteso della torre: due gradini sotto la guardia non fa scendere (docs/sotterraneo/zone.md)
-const crescita = { esp: sogliaDi(3) }
 
 const TORRE = CAMPAGNA.findIndex(t => t.chiave === 'torre')
 const DISCESE = TORRE + 1
 const roba = robaAttesa('cavaliere', TORRE, { gemme: 5 })
+// la forza dell'eroe atteso è sotto il livello (docs/sotterraneo/forza.md): due livelli in più perché la torre non abbia la sentinella
+const crescita = crescitaAttesa('cavaliere', TORRE + 2)
 const nomeDiscesa = chiave => CAMPAGNA.find(t => t.chiave === chiave).nome
 
 const browser = await apriBrowser()
@@ -206,6 +207,38 @@ uguale('la consegnata ha il suo stato', await page.locator('[data-dettaglio]').g
 uguale('e il grazie che ti ha detto', (await page.locator('[data-grazie]').innerText()).trim(), `«${missioneDi('rosicchione').grazie}»`)
 uguale('non c\'è niente da seguire né da portare', await page.locator('[data-azione="segui"], [data-azione="vai-da"]').count(), 0)
 await scatto(page, 'missioni-dettaglio-consegnata')
+
+/* ---------- 4. la missione principale: in cima, con le sette porte ---------- */
+await entra({ badessa: 'consegnata', collana: 'consegnata', rosicchione: 'consegnata' })
+await apriIlDiario()
+{
+  const prossima = CAMPAGNA[DISCESE], grosso = GROSSI[GROSSO_DELLA_DISCESA[prossima.chiave]].nome
+  const sezioni = await page.locator('[data-diario] [data-sezione]').evaluateAll(els => els.map(e => e.dataset.sezione))
+  uguale('la storia è la prima sezione del diario', sezioni[0], 'storia')
+  const riga = await page.locator('[data-storia]').innerText()
+  controlla('dice il titolo, la porta di adesso e chi battere',
+            riga.includes('Chiudi le sette porte') && riga.includes(`Porta ${DISCESE + 1} di 7`) && riga.includes(prossima.nome) && riga.includes(grosso), riga)
+  uguale('con la freccina', await page.locator('[data-freccia-storia] .sot-freccina').count(), 1)
+  uguale('e la freccia azzurra sulla mappa è già per la sua discesa (nessuna missione presa)',
+         await page.locator('[data-meta-fuori], [data-meta-vicina]').evaluateAll(els => els.map(e => e.dataset.metaFuori || e.dataset.metaVicina).join(',')), prossima.chiave)
+  await toccaIl('[data-storia]')
+  await page.waitForSelector('[data-dettaglio][data-missione="storia"]', { timeout: 3000 })
+  const porte = await page.locator('[data-porte] [data-porta]').evaluateAll(els => els.map(e => e.dataset.stato))
+  uguale('sette porte', porte.length, CAMPAGNA.length)
+  uguale('quelle finite sono chiuse, una è quella di adesso, le altre avanti',
+         porte.join(','), CAMPAGNA.map((_, i) => (i < DISCESE ? 'chiusa' : i === DISCESE ? 'adesso' : 'avanti')).join(','))
+  controlla('il minatore la dice, con il capitolo', (await page.locator('[data-dettaglio] [data-racconto]').innerText()).includes(grosso))
+  await scatto(page, 'storia-dettaglio')
+  await toccaIl('[data-dettaglio] [data-azione="segui"]')
+  await attendi(page, 600)
+  uguale('«segui questa» la sceglie', (await avventura()).segui, 'storia')
+  controlla('e il tasto lo dice', (await page.locator('[data-dettaglio] [data-azione="segui"]').getAttribute('data-segui-attivo')) === '1')
+  // «vai alla discesa»: il diario si chiude e l'eroe va a quella della storia, dove il fumetto lo ripete
+  await toccaIl('[data-dettaglio] [data-azione="vai-da"]')
+  await page.waitForSelector('[data-storia-qui="adesso"]', { timeout: 30000 })
+  controlla('il fumetto della discesa dice che la storia continua qui', (await page.locator('[data-storia-qui]').innerText()).includes(grosso))
+  await scatto(page, 'storia-fumetto')
+}
 
 uguale('nessun errore in console', errori.join(' · '), '')
 await browser.close()

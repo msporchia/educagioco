@@ -66,6 +66,8 @@ Node), `viste/Dialogo.vue` (il riquadro), `viste/Terra.vue` (`parla`,
   sa chi incontrerà. I racconti si tengono legati alle missioni e ai grossi
   (la ragazza manda dal frate, la guardia parla di Fiammetta prima della
   torre): parlare con tutti è un modo di sapere dove andare.
+- **«Novità?»** ([sotto](#novità)): ognuno ha una domanda in più, con frasi
+  che girano e reagiscono a dove è arrivato l'eroe.
 - **I mercanti** salutano con la loro battuta (la stessa del banco) e la
   prima domanda apre la bottega; il mercante ha anche «Ho roba da vendere»,
   che la apre sulla linguetta delle tasche. **Non dicono mai «non ho niente
@@ -77,6 +79,39 @@ Node), `viste/Dialogo.vue` (il riquadro), `viste/Terra.vue` (`parla`,
   non «Per aprire devi rispondere giusto»). Chi parla dice cose del suo
   mondo, mai del gioco (niente «tocca», «tasto», «livello» in bocca a un
   personaggio).
+
+## Novità?
+
+L'utente, il 13 ottobre 2026: i dialoghi erano «deprimenti», i personaggi
+dicevano sempre le stesse cose. Ognuno ha adesso **«Novità?»** (dopo la sua
+cosa, prima della storia; `dati/novita.js`, `novita` in `motore/dialoghi.js`):
+
+- **Tre frasi sue** (`ruota`), sulla specialità: il fabbro parla di ferro e
+  lame, la guaritrice di erbe e ferite, il minatore di roccia e puntelli, la
+  ragazza di cosa si sente al pozzo, il boscaiolo di tracce, il pescatore di
+  pazienza. Sempre valide.
+- **Reazioni** a dove è arrivato: una **finestra** sulle discese finite
+  (`finite`, un numero o `[da, a]`: nessuna discesa, la prima, un boss
+  specifico del suo posto, le sette) e/o sul livello (`livello: [5, 9]`,
+  `[10, 99]`: un passo in più, ma il personaggio non dice mai «livello»: dice
+  cosa si vede, il passo, la fama). Nel testo `{boss}` è l'ultimo grosso
+  battuto e `{discesa}` la discesa che si è aperta dopo, così «Tutto il
+  villaggio sa che Fiammetta è caduto» e «ora guardano verso la grotta della
+  scaletta» valgono per ognuna.
+- **Come girano**: prima le reazioni valide adesso, poi le tre sue; a ogni
+  «Novità?» la successiva, e dopo l'ultima si riparte. Si ricorda quante volte
+  si è chiesto a ognuno e per quale situazione (`terra.novita[chi] = { n, v }`
+  nell'avventura): **cambiata la situazione (una discesa finita, un livello di
+  fascia) si riparte dalla notizia fresca**. La domanda non torna nello stesso
+  dialogo, come la storia.
+- **Frasi corte e parole semplici** (nessuna oltre 110 caratteri, quelle dei
+  piccoli si leggono a pagine), tono serio e non triste. `guastiDelleNovita`
+  pretende almeno tre frasi, finestre sensate, `{boss}` solo dove una discesa è
+  finita e un'altra no, e niente «livello» in bocca a chi parla.
+- **Il minatore** dice anche la missione principale
+  ([la-storia-principale.md](la-storia-principale.md)): il perché della porta di
+  adesso prima della strada; la prima volta si presenta, spiega che sono sette
+  porte e passa alla strada.
 
 ## Le scritte
 
@@ -134,11 +169,12 @@ Nei test: `[data-dialogo="<chi>"]` (con `data-pagina`, `data-pagine`,
 `data-ultima` all'ultima), `[data-ritratto-dialogo]`, `[data-dialogo-testo]`
 (si tocca per andare avanti), `[data-avanti-pagina]` (il triangolo), la riga
 `[data-riga]` con `data-missione` e `data-fase` (`offre`, `aspetta`,
-`consegna`, `presa`, `grazie`, `pieno`) o il suo dato: `[data-detto]` (la
+`consegna`, `presa`, `grazie`, `pieno`) o il suo dato: `[data-storia]` (il perché della
+porta, del minatore), `[data-novita]` (la risposta a «Novità?»), `[data-detto]` (la
 strada del minatore), `[data-ti-cerca]`, `[data-sotto-livello]` (con
 `data-manca`), `[data-racconto]`, `[data-saluto]`, `[data-premio]`; le
 domande `[data-scelte] [data-scelta="<che>"]` (`consegna`, `prendi`,
-`bottega`, `vendi`, `strada`, `racconta`, `ciao`), con `data-missione` per
+`bottega`, `vendi`, `strada`, `novita`, `racconta`, `ciao`), con `data-missione` per
 le prime due. `unita/sotterraneo-dialoghi` (i testi stanno in piedi, cosa si
 dice aprendo, le domande e il loro ordine, la storia che cambia, il minatore
 e la strada, prendere e consegnare, i mercanti),

@@ -156,6 +156,9 @@
 .sot-fum-detto { margin: 6px 0 0 }
 /* le missioni già prese per una discesa, nel fumetto del suo posto */
 .sot-fum-missioni { display: grid; gap: 2px; margin: 6px 0 0; font-size: 13px; color: #5d4b2c }
+/* la missione principale sul fumetto: dove la storia continua, o la porta già chiusa */
+.sot-fum-storia { margin: 6px 0 0; font-size: 13px; color: #5d4b2c }
+.sot-fum-storia[data-storia-qui="adesso"] { padding: 6px 9px; border-radius: 9px; background: #f3d98a; color: #3b2a08; font-weight: 600 }
 /* il segno sopra chi ha una missione per te: «!» da prendere, «?» da consegnare, d'oro come le cose da toccare */
 .sot-segno-missione { background: #ffd23f; font-weight: 800 }
 /* «?» grigio e fermo: l'hai presa e non è fatta, non chiede niente adesso */
@@ -285,7 +288,7 @@
 }
 .sot-trovato.sot-piano { color: var(--sot-tenue) }
 @media (prefers-reduced-motion: reduce) {
-  .sot-tre-punti, .sot-segno-missione.sot-segno-consegna, .sot-segno-posto.sot-adesso, .sot-bussola b { animation: none }
+  .sot-tre-punti, .sot-segno-missione.sot-segno-consegna, .sot-segno-posto.sot-adesso, .sot-bussola b, .sot-freccina { animation: none }
 }
 
 .sot-campo { flex: 1; min-height: 0; position: relative }
@@ -622,6 +625,28 @@
 .sot-diario-fatte li[role="button"] { padding: 6px 22px 6px 4px }
 .sot-diario-sezione li[data-segui] { border-color: #6db4ff }
 .sot-diario-sezione li[data-segui] .sot-testo em { color: #8ec8ff }
+/* la missione principale: in cima, d'oro, con la freccina verso la discesa di adesso (viste/Diario.vue) */
+.sot-diario-storia li { background: #ffd23f14; border-color: var(--sot-oro) }
+.sot-diario-storia li .sot-testo b { font-size: 15px }
+.sot-diario-sezione .sot-testo em.sot-freccia-storia { display: flex; align-items: center; gap: 7px; color: var(--sot-oro) }
+.sot-freccina {
+  flex: none; width: 0; height: 0; border-style: solid; border-width: 6px 0 6px 10px;
+  border-color: transparent transparent transparent var(--sot-oro); animation: sot-freccina 1.2s ease-in-out infinite;
+}
+@keyframes sot-freccina { 50% { transform: translateX(4px) } }
+/* le sette porte nel dettaglio: chiusa (piena, verde), quella di adesso (d'oro), le altre ancora da aprire (vuote) */
+.sot-porte { display: grid; gap: 6px; padding: 8px 10px; background: #ffffff0d; border: 1px solid var(--sot-bordo); border-radius: 14px }
+.sot-porte small { font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--sot-tenue) }
+.sot-porte ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px }
+.sot-porte li { display: flex; align-items: center; gap: 10px }
+.sot-porte li .sot-testo { display: grid; gap: 0; min-width: 0 }
+.sot-porte li b { font-size: 13.5px }
+.sot-porte li i { font-style: normal; font-size: 12px; color: var(--sot-tenue) }
+.sot-porta-segno { flex: none; width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--sot-tenue) }
+.sot-porte li[data-stato="chiusa"] .sot-porta-segno { background: #7fe3a0; border-color: #7fe3a0 }
+.sot-porte li[data-stato="adesso"] .sot-porta-segno { background: var(--sot-oro); border-color: var(--sot-oro) }
+.sot-porte li[data-stato="adesso"] b { color: var(--sot-oro) }
+.sot-porte li[data-stato="avanti"] b { color: var(--sot-tenue); font-weight: 600 }
 
 /* il dettaglio di una missione (viste/Diario.vue) */
 .sot-dettaglio { display: grid; gap: 8px }

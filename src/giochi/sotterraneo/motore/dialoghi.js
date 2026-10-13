@@ -4,7 +4,8 @@
 // Una pagina è { testo, dato?, missione?, fase?, manca? }: `dato` dice ai test (e allo stile) che riga è.
 // `ctx` è { stati, tappe, abisso, eroe, roba, annuncio }: lo stato delle missioni, le tappe dell'avventura, se l'abisso è
 // aperto, chi scende e la sua roba contata (schedaConLaRoba), per la frase di chi è sotto il livello; e, finita la
-// storia, la zona appena nata (motore/zone.js, docs/sotterraneo/zone.md).
+// storia, la zona appena nata (motore/zone.js, docs/sotterraneo/zone.md); `novita` quante volte si è chiesto «Novità?»
+// a ognuno ({ [chi]: { n, v } }, in `terra.novita` dell'avventura).
 import { DIALOGHI, ARRIVEDERCI, DOVE_VADO, perOra } from '../dati/dialoghi.js'
 import { missioneDi, premioDetto } from '../dati/missioni.js'
 import { cosaDice, chiTiCerca, titoloDi, inFrase } from './missioni.js'
@@ -13,6 +14,9 @@ import { LUOGHI, POSTO_DI } from '../dati/terra.js'
 import { COSE } from '../dati/cose.js'
 import { mercanteDi } from '../dati/mercanti.js'
 import { dettoDelLivello } from './storia.js'
+import { CAPITOLI, STORIA } from '../dati/storia.js'
+import { NOVITA, NOVITA_DI } from '../dati/novita.js'
+import { CAMPAGNA } from '../dati/campagna.js'
 
 export const finiteDi = tappe => (tappe || []).filter(t => t.fatta).length
 const maiuscola = s => s.charAt(0).toUpperCase() + s.slice(1)
@@ -32,8 +36,9 @@ export function inPagine(testo, max = 120) {
 
 /* ═══════════ il minatore: la strada, e cosa c'è laggiù ═══════════ */
 
-// «cosa faccio adesso»: la prossima discesa e la strada, chi è sotto il livello, chi ti cerca al villaggio
-export function strada(ctx) {
+// «cosa faccio adesso»: la missione principale (il perché di questa porta), la prossima discesa e la strada, chi è sotto
+// il livello, chi ti cerca al villaggio. `capitolo: false` la prima volta, che ha già detto la missione per intero
+export function strada(ctx, { capitolo = true } = {}) {
   const t = (ctx.tappe || []).find(x => x.adesso)
   const pagine = []
   const z = ctx.annuncio && (ctx.tappe || []).find(x => x.chiave === ctx.annuncio.chiave)
@@ -47,6 +52,8 @@ export function strada(ctx) {
     // e dove farsi le ossa: le zone col pallino verde
     for (const v of verdi) pagine.push({ testo: `Alla tua altezza c'è ${inFrase(v.nome)}: ${LUOGHI[POSTO_DI[v.chiave]]}.`, dato: 'verde' })
   } else if (t) {
+    // la storia: perché questa porta, e chi la chiude (dati/storia.js, CAPITOLI)
+    if (capitolo && CAPITOLI[t.chiave]) for (const testo of inPagine(CAPITOLI[t.chiave].dice)) pagine.push({ testo, dato: 'storia' })
     pagine.push({ testo: `${t.nome}: ${LUOGHI[POSTO_DI[t.chiave]]}.`, dato: 'detto' })
     const s = !t.fatta && ctx.roba && ctx.eroe ? dettoDelLivello(ctx.eroe, ctx.roba, t, t.indice) : null
     if (s) pagine.push({ testo: s.detto, dato: 'sotto-livello', manca: s.manca })
@@ -69,6 +76,38 @@ function laggiuDalMinatore(ctx) {
   return ['Per ora hai visto quello che c\'era da vedere. Ma là sotto le stanze cambiano: tornaci.']
 }
 
+/* ═══════════ «Novità?»: frasi che ruotano e reagiscono ═══════════ */
+
+// dove è arrivato l'eroe, per le reazioni di dati/novita.js: le discese finite, il suo livello, l'ultimo grosso battuto, la
+// discesa che si è aperta dopo
+export function situazioneDi(ctx) {
+  const finite = finiteDi(ctx.tappe)
+  const ultima = CAMPAGNA[finite - 1], prossima = CAMPAGNA[finite]
+  return {
+    finite, livello: (ctx.roba && ctx.roba.livello) || 1,
+    boss: ultima ? GROSSI[GROSSO_DELLA_DISCESA[ultima.chiave]].nome : '',
+    discesa: prossima ? inFrase(prossima.nome) : 'l\'abisso',
+  }
+}
+const dentro = (v, q) => (Array.isArray(q) ? v >= q[0] && v <= q[1] : v === q)
+const riempi = (testo, s) => testo.replace(/\{(boss|discesa)\}/g, (_, k) => s[k])
+
+// Le frasi di chi parla, nell'ordine in cui le dice: prima le reazioni che valgono adesso (la discesa appena finita, il
+// passo che si è fatto), poi le sue di sempre. `visto` è { n, v }: quante volte gliel'hai chiesto e per quale
+// situazione; cambiata la situazione si riparte dalla prima, la notizia fresca. Torna le pagine e il `visto` di dopo
+export function novita(chi, ctx, visto = null) {
+  const d = NOVITA_DI[chi]
+  if (!d) return { pagine: [], visto }
+  const s = situazioneDi(ctx)
+  const valide = d.reazioni.map((r, i) => ({ r, i }))
+    .filter(({ r }) => (r.finite == null || dentro(s.finite, r.finite)) && (r.livello == null || dentro(s.livello, r.livello)))
+  const fila = [...valide.map(({ r }) => r.pagine), ...d.ruota]
+  const v = valide.map(({ i }) => i).join(',')
+  const n = visto && visto.v === v ? visto.n : 0
+  const pagine = fila[n % fila.length].map(t => ({ testo: riempi(t, s), dato: 'novita' }))
+  return { pagine, visto: { n: n + 1, v } }
+}
+
 /* ═══════════ le missioni, dette da chi le dà ═══════════ */
 
 const nomeDiscesa = (ctx, chiave) => ((ctx.tappe || []).find(t => t.chiave === chiave) || {}).nome || ''
@@ -88,8 +127,11 @@ function dellaMissione(v, ctx) {
 export function apertura(chi, ctx, { primaVolta = false } = {}) {
   const d = DIALOGHI[chi] || {}
   const pagine = []
-  if (chi === 'minatore' && primaVolta) for (const testo of d.presentazione || []) pagine.push({ testo })
-  if (chi === 'minatore') pagine.push(...strada(ctx))
+  if (chi === 'minatore' && primaVolta) {
+    for (const testo of d.presentazione || []) pagine.push({ testo })
+    pagine.push({ testo: STORIA.affida, dato: 'storia' })
+  }
+  if (chi === 'minatore') pagine.push(...strada(ctx, { capitolo: !primaVolta }))
   for (const v of cosaDice(chi, ctx.stati, ctx.tappe).voci) pagine.push(...dellaMissione(v, ctx))
   if (!pagine.length) {
     const s = perOra(d.saluti, finiteDi(ctx.tappe))
@@ -119,6 +161,7 @@ export function scelte(chi, ctx, chieste = new Set()) {
   if (d.bottega) s.push({ che: 'bottega', testo: d.bottega })
   if (d.vendi) s.push({ che: 'vendi', testo: d.vendi })
   if (chi === 'minatore' && !chieste.has('strada')) s.push({ che: 'strada', testo: DOVE_VADO })
+  if (!chieste.has('novita') && NOVITA_DI[chi]) s.push({ che: 'novita', testo: NOVITA })
   if (!chieste.has('racconta') && (chi === 'minatore' || perOra(d.racconti, finiteDi(ctx.tappe))))
     s.push({ che: 'racconta', testo: d.domanda })
   s.push({ che: 'ciao', testo: ARRIVEDERCI })
@@ -128,6 +171,7 @@ export function scelte(chi, ctx, chieste = new Set()) {
 // la risposta a una domanda che non fa niente se non parlare: la storia, o la strada
 export function risposta(chi, che, ctx) {
   if (che === 'strada') return strada(ctx)
+  if (che === 'novita') return novita(chi, ctx, ctx.novita && ctx.novita[chi]).pagine
   if (che !== 'racconta') return []
   if (chi === 'minatore') return laggiuDalMinatore(ctx).map(testo => ({ testo, dato: 'racconto' }))
   const r = perOra((DIALOGHI[chi] || {}).racconti, finiteDi(ctx.tappe))

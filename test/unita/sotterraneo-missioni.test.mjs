@@ -12,11 +12,12 @@ import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
 import { velocitaDel } from '../../src/giochi/sotterraneo/motore/scontro.js'
 import { Corredo } from '../../src/giochi/sotterraneo/motore/corredo.js'
 import { seminato } from '../../src/giochi/sotterraneo/motore/livello.js'
-import { robaAttesa, crescitaAttesa } from '../../src/giochi/sotterraneo/motore/storia.js'
+import { robaAttesa, crescitaAttesa, laStoria } from '../../src/giochi/sotterraneo/motore/storia.js'
+import { guastiDellaStoriaPrincipale } from '../../src/giochi/sotterraneo/dati/storia.js'
 import { avventuraDi } from '../../src/giochi/sotterraneo/motore/avventure.js'
 import { sbloccata, sbloccate, offerte, inMano, aperte, cosaDice, segnoDi, chiTiCerca, prendi, fatte, consegna,
          presePer, diario, promemoria, inFrase, GLIFO, chiAspetta, daLui, robaDellaMissione, rotta, discesaDaSeguire,
-         seguita, PRESA, FATTA, CONSEGNATA }
+         seguita, discesaDellaStoria, PRESA, FATTA, CONSEGNATA }
   from '../../src/giochi/sotterraneo/motore/missioni.js'
 import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifica.mjs'
 
@@ -466,6 +467,51 @@ const palestra = (eroe, k) => new Corredo({ eroe, roba: robaAttesa(eroe, k, { po
   const fin = d.consegnate.find(v => v.id === 'badessa')
   controlla('la consegnata ha anche il grazie', fin.stato === 'consegnata' && /riposa|dorme/.test(fin.grazie) && fin.dice.length > 20)
   controlla('le offerte hanno il dettaglio ma non si seguono', d.offerte.every(v => v.dice && !v.seguibile && !v.segui))
+}
+
+/* ══════════ 12. la missione principale: le sette porte ══════════ */
+{
+  const g = guastiDellaStoriaPrincipale()
+  controlla('i capitoli stanno in piedi (uno per discesa, a una pagina)', !g.length, g.join(' · '))
+  const s0 = laStoria(tappeAl(0))
+  stessaLista('all\'inizio: nessuna porta chiusa, sette in tutto', [s0.chiuse, s0.totale, s0.finita], [0, 7, false])
+  stessaLista('il capitolo è la cripta, con Re Ossuto', [s0.corrente.chiave, s0.corrente.grosso], ['altare', 'Re Ossuto'])
+  controlla('e dice perché, a parole del minatore', /Re Ossuto/.test(s0.corrente.dice) && !s0.corrente.ferma)
+  // battuto il grosso arriva il capitolo seguente, in fila per le sette
+  for (let n = 0; n < QUANTE_TAPPE; n++) {
+    const s = laStoria(tappeAl(n))
+    uguale(`dopo ${n} discese il capitolo è ${CAMPAGNA[n].chiave}`, s.corrente.chiave, CAMPAGNA[n].chiave)
+    uguale(`e le porte chiuse sono ${n}`, s.porte.filter(p => p.fatta).length, n)
+    controlla(`${CAMPAGNA[n].chiave}: il grosso ha un nome`, !!s.corrente.grosso)
+  }
+  const fine = laStoria(tappeAl(QUANTE_TAPPE))
+  controlla('finite le sette la storia è compiuta e non c\'è più una porta', fine.finita && fine.corrente === null && fine.ultima.chiave === 'fondo')
+  // chiusa per l'età: c'è, ma non si indica e non si segue
+  const eta = laStoria(CAMPAGNA.map((t, i) => ({ chiave: t.chiave, aperta: i < 1, fatta: i < 1 })))
+  controlla('una porta chiusa per l\'età è ferma', eta.corrente.chiave === 'cantine' && eta.corrente.ferma === true)
+  uguale('e non indica nessuna discesa', discesaDellaStoria(CAMPAGNA.map((t, i) => ({ chiave: t.chiave, aperta: i < 1, fatta: i < 1 }))), null)
+  uguale('altrimenti indica la discesa di adesso', discesaDellaStoria(tappeAl(3)), 'gallerie')
+  uguale('finita, nessuna', discesaDellaStoria(tappeAl(QUANTE_TAPPE)), null)
+
+  // è la prima cosa del diario, e non conta fra le missioni aperte né nel tetto
+  const d = diario({}, tappeAl(2), null)
+  stessaLista('il diario porta la storia, con la porta di adesso', [d.storia.chiuse, d.storia.corrente.chiave], [2, 'torre'])
+  controlla('con dov\'è la discesa e il mostro da battere', /torre/.test(d.storia.corrente.luogo) && d.storia.corrente.cosa.nome === 'Fiammetta'
+            && d.storia.corrente.cosa.tipo === 'sconfiggi', JSON.stringify(d.storia.corrente.cosa))
+  uguale('non conta fra le aperte', d.aperte, offerte({}, tappeAl(2)).length)
+  uguale('e non si segue di difetto', d.storia.segui, false)
+  controlla('«storia» si può seguire senza essere una missione presa', diario({}, tappeAl(2), 'storia').storia.segui === true && seguita({}, 'storia') === 'storia')
+  stessaLista('una missione non presa si smette di seguirla, la storia no', [seguita({}, 'chiavi'), seguita({ chiavi: PRESA }, 'chiavi')], [null, 'chiavi'])
+
+  // la freccia azzurra sulla mappa: senza altro, porta alla porta della storia
+  const io = { x: 10, y: 10 }
+  const posti = { altare: { x: 30, y: 8 }, torre: { x: 40, y: 8 }, cantine: { x: 12, y: 20 }, gallerie: { x: 20, y: 30 } }
+  uguale('senza missioni prese: la discesa della storia', discesaDaSeguire({}, io, posti, null, 'cantine'), 'cantine')
+  uguale('con una missione presa vince la missione (una cosa alla volta)', discesaDaSeguire({ badessa: PRESA }, io, posti, null, 'cantine'), 'altare')
+  uguale('scelta la storia, vince la storia', discesaDaSeguire({ badessa: PRESA }, io, posti, 'storia', 'cantine'), 'cantine')
+  uguale('una consegna ha la precedenza anche sulla storia', discesaDaSeguire({ collana: FATTA }, io, posti, 'storia', 'cantine'), null)
+  uguale('scelta la storia ma senza porta, resta la regola di prima', discesaDaSeguire({ badessa: PRESA }, io, posti, 'storia', null), 'altare')
+  uguale('una porta senza posto sulla mappa non si indica', discesaDaSeguire({}, io, { altare: posti.altare }, null, 'torre'), null)
 }
 
 riassunto('l\'albero delle missioni')
