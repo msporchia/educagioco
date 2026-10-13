@@ -2,7 +2,7 @@
 
 <!-- GENERATO da `python3 strumenti/sprite/creature.py catalogo` dal campo `scheda` di `strumenti/sprite/sorgenti/creature/creature.json`: non si scrive a mano, si ritocca il JSON. -->
 
-26 creature di `mostri-2.png`; in tutto il catalogo 50: **49 tenute** (almeno due pose di respiro coerenti), 1 scartate, 7 con i passi dai video. L'altro foglio: [mostri-1](creature-catalogo-1.md). La regola, i giochi che le prendono e come se ne aggiunge una: [creature.md](creature.md). Le ambientazioni del sotterraneo: [../sotterraneo/ambientazioni.md](../sotterraneo/ambientazioni.md).
+25 creature di `mostri-2.png`; in tutto il catalogo 49: **49 tenute** (almeno due pose di respiro coerenti), 0 scartate, 7 con i passi dai video. L'altro foglio: [mostri-1](creature-catalogo-1.md). La regola, i giochi che le prendono e come se ne aggiunge una: [creature.md](creature.md). Le ambientazioni del sotterraneo: [../sotterraneo/ambientazioni.md](../sotterraneo/ambientazioni.md).
 
 Ogni voce: come è fatta, **come combatterebbe** (resiste/teme fra parentesi), **dove** sta bene, il **ruolo** (comune, caporale, grosso, variante) e il giudizio sulle pose. Dopo il nome: `S` sotterraneo, `C` castello, `P` ha i passi dai video; poi l'elemento, l'altezza del fotogramma nella griglia del sotterraneo (le creature del gioco sono alte 14-26 px, l'eroe 28).
 
@@ -105,7 +105,3 @@ Non morto verde con gli occhi rossi, curvo, braccia lunghe: tre pose di passo ma
 ### mietitore `S` · sacro · 22 px
 Figura incappucciata con la falce, due pose. Le uniche due buone: un'altra ha già la polvere di chi sparisce. **Combatte:** Lento, falciata larga; porta via vita, non danno. (teme sacro).
 **Dove:** La cripta più profonda e l'abisso. **Ruolo:** Grosso della cripta o dell'abisso (è «la morte»); mai comune. **Tenuta:** Due sole pose, ma pulite e simili.
-
-### occhio-dentato `-` · fuoco · 20 px
-Occhio rosso come quello del primo foglio, ma con la pupilla viola e, nell'ultima posa, la bocca spalancata. **Combatte:** Come l'occhio: vola e fissa; l'ultima posa è un morso. (teme fisico).
-**Dove:** Come l'occhio: la torre e l'abisso. **Ruolo:** Doppione dell'occhio. **Scartata:** Scartata: le prime due pose sono quasi uguali fra loro e la terza è l'attacco; l'occhio del primo foglio ha quattro pose buone.

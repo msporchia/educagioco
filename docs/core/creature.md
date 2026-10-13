@@ -103,7 +103,7 @@ castello. Il catalogo descritto, per sapere cosa c'è:
 - **Il banco `npm run mondo`**: i due fogli non hanno più un foglietto, quindi non compaiono più in «i ritagli»;
   le creature si guardano in «il mondo» (l'atlante) e si misurano con `creature.py`.
 - **Creature che il sotterraneo non prende**: il tornado (una creatura d'aria
-  aperta, solo castello) e l'occhio dentato (scartato, doppione).
+  aperta, solo castello); l'occhio dentato (un doppione dell'occhio) è stato tolto dal catalogo.
 
 ## Aggiungere o ritoccare una creatura
 
