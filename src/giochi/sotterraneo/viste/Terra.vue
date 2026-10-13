@@ -12,7 +12,7 @@ import { PERSONAGGI, personaDi } from '../dati/missioni.js'
 import { segnoDi, GLIFO, chiAspetta, presePer, inFrase, discesaDaSeguire } from '../motore/missioni.js'
 import { MERCANTI, mercanteDi } from '../dati/mercanti.js'
 import { apertura, scelte as scelteDi, risposta, dopoLaPresa, dopoLaConsegna } from '../motore/dialoghi.js'
-import { POSTO_DI, POZZO_VECCHIO, FRECCE, SCALA_TERRA as S, SCALA_EROE, PASSO_TERRA, VISTA, LUCE,
+import { POSTO_DI, POZZO_VECCHIO, FRECCE, SCALA_TERRA as S, SCALA_EROE, SCALA_DELL_EROE, PASSO_TERRA, VISTA, LUCE,
          BORDO, MORBIDA, iconaDi } from '../dati/terra.js'
 import { creaTerra, scopri, nebbiaNuova, nebbiaInCodice, nebbiaDaCodice } from '../motore/terra.js'
 import { figura, haFigura } from './figura.js'
@@ -756,7 +756,7 @@ const chiusaPerche = p => {
       <div ref="eroeEl" class="sot-io-sopra" :class="{ 'sot-specchio': specchio }" data-eroe-terra
            :data-cammina="cammina ? 1 : 0">
         <!-- con l'arma che ha addosso, come nella scelta delle avventure -->
-        <Armato :eroe="eroe" :mano="roba ? roba.mano : null" :mancina="roba ? roba.mancina : null" :scala="SCALA_EROE"
+        <Armato :eroe="eroe" :mano="roba ? roba.mano : null" :mancina="roba ? roba.mancina : null" :scala="SCALA_DELL_EROE"
                 :posa="cammina ? 'corsa' : 'fermo'" :fotogramma="fotogramma" />
       </div>
 

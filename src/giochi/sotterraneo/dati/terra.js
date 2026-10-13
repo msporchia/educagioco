@@ -49,6 +49,8 @@ export const FRECCE = [
    quindi la mappa si mostra a 3/4. Un pixel del disegno (4 px della mappa) diventa 3 px, come un pixel dell'eroe */
 export const SCALA_TERRA = 3 / 4
 export const SCALA_EROE = 3
+// l'eroe armato un po' più piccolo dei personaggi dipinti: con l'armatura e l'arma a scala 3 li sovrastava (l'utente, 13 ottobre)
+export const SCALA_DELL_EROE = 2.5
 export const PASSO_TERRA = 9        // celle della maschera al secondo (4,5 celle della mappa)
 export const VISTA = 8              // il raggio di quello che si scopre camminando, in celle della maschera
 export const LUCE = [5, 8]          // dove la luce attorno all'eroe è piena, e dove finisce
