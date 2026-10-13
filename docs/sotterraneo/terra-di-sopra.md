@@ -172,10 +172,35 @@ forma e perché: [la-grande-storia.md](la-grande-storia.md#le-discese).
   alla prossima discesa; tolti il 7 ottobre 2026 perché sembravano cose da
   raccogliere e distraevano (l'utente). La strada la dicono le persone e il
   cartello.
-- **Le figure sono disegnate in codice** (`viste/pixel.js`, righe di pixel
-  alla scala dell'eroe) finché non arriva il foglio dei personaggi (prompt 4
-  della scheda): il minatore usa da solo lo sprite `minatore-fermo-0`
-  appena l'atlante lo ha.
+- **Il minatore, i mercanti e i sei delle missioni sono dipinti**
+  (`sopra-personaggi-1.png` e `-2.png`, ChatGPT, 13 ottobre 2026; la
+  provenienza è nei foglietti): ognuno ha `<nome>-fermo-0` e
+  `<nome>-saluta-0` nell'atlante, con le chiavi di `dati/mercanti.js` e
+  `dati/missioni.js` (`armaiolo`, `erborista`, `rigattiere`, `ragazza`,
+  `mugnaio`, `eremita`, `guardia`, `pescatore`, `boscaiolo`, `minatore`), e
+  `viste/Terra.vue` li prende da soli. Stanno alla scala dell'eroe (il corpo
+  dell'eroe è alto 19 pixel; loro 21–26, la guardia con la lancia 26) e si
+  disegnano col pezzo **nitido** (`docs/core/sprite.md`): a 22 pixel un viso
+  dipinto sarebbe una macchia, ridotto a schermo da 200 resta un viso. Fermo e
+  saluta hanno lo **stesso rettangolo, centrato sul piede**: passando
+  dall'uno all'altro i piedi non si spostano anche se il braccio sporge.
+- **Il minatore è quello del secondo foglio**: ha le due pose giuste e la
+  stessa mano di ragazza e boscaiolo. Quello del primo (stesso personaggio,
+  nella seconda posa mostra una bussola invece di salutare) è fuori
+  dall'atlante: la posa sta nel foglietto, nelle note, per quando servirà la
+  bussola della mappa.
+- **Chi sta fermo saluta**: alza la mano per 1,4 secondi quando l'eroe gli si
+  avvicina (entro sei celle della maschera; si riarma solo dopo che l'eroe si
+  è allontanato oltre nove) e quando gli si parla (all'apertura del
+  dialogo), poi torna fermo. Il tempo è quello dei fotogrammi, non un
+  `setTimeout`: a schermo spento non scorre. Il «!» d'oro sopra la testa e il
+  nome (nel dialogo) non cambiano. All'avvio chi sta vicino a dove si parte
+  saluta subito, ed è il benvenuto.
+- **Le figure di `viste/pixel.js` restano come ripiego** (`MINATORE`,
+  `ARMAIOLO`, `ERBORISTA`, `RIGATTIERE`, `RAGAZZA`…): se un pezzo mancasse
+  dall'atlante il personaggio sarebbe un vuoto cliccabile, e `unita/creature`
+  controlla che ogni `<nome>-fermo-0` e `-saluta-0` ci sia. `GUARDIA` serve
+  comunque a `SENTINELLA`.
 
 ## I mercanti
 
@@ -197,10 +222,10 @@ chi vende cosa e perché sta in [bottega.md](bottega.md#i-mercanti-di-sopra).
   vista sono prato (non si toccano). Trovati, si vedono: niente riga.
 - **Stanno a pochi passi da dove si parte**, intorno alla piazza: sul
   telefono se ne vedono due alla volta.
-- **Figure provvisorie disegnate in codice** (`ARMAIOLO`, `ERBORISTA`,
-  `RIGATTIERE` in `viste/pixel.js`) finché non arrivano gli sprite: il posto
-  è pronto, `<sprite>-fermo-0` nell'atlante (`armaiolo-fermo-0`…) si usa da
-  solo, come per il minatore.
+- **Sono dipinti**, come il minatore: `armaiolo-fermo-0`, `erborista-fermo-0`,
+  `rigattiere-fermo-0` e le pose `-saluta-0` (qui sopra, «Chi indica la
+  strada»). Il fabbro è robusto con il martello, la guaritrice ha il cappuccio
+  verde e le boccette, il mercante il cappello viola e il sacco.
 - **Sulla mappa non c'è la carta di chi scende.** C'era in fondo (ritratto,
   livello, armatura e «cambio»): il livello sta sulla barra in basso,
   i numeri, i tratti della roba e «Cambia eroe» nella pagina dell'eroe
@@ -262,7 +287,7 @@ cartello di divieto delle chiuse), `[data-minatore]`, `[data-cartello]`, `[data-
 (con `data-fumetto-di`), `[data-azione="scendi"]`, `[data-detto]`,
 `[data-chiusa-perche]`, `[data-avviso-terra]`, il dialogo di chi sta fermo in
 [dialoghi.md](dialoghi.md), `[data-pallino="<posto>"]` (il
-pallino, con `data-colore`; la sentinella e i colori in [zone.md](zone.md)), `[data-sotto-livello]` (nel fumetto di una discesa), `[data-mercante="<chi>"]`,
+pallino, con `data-colore`; la sentinella e i colori in [zone.md](zone.md)), `[data-sotto-livello]` (nel fumetto di una discesa), `[data-mercante="<chi>"]`, `data-saluta` (1 mentre alza la mano) su `[data-minatore]`, `[data-mercante]` e `[data-personaggio]`,
 `[data-personaggio="<chi>"]` (con `data-segno`, [missioni.md](missioni.md)), `[data-portale]` (il gemello) col suo fumetto
 `[data-fumetto-di="portale"]` e `[data-azione="portale-giu"]`, `[data-ritaglio]`
 (l'icona ritagliata, nella carta in cima, nel fumetto, nella scelta e in

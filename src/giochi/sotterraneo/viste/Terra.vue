@@ -76,6 +76,7 @@ const mercanti = MERCANTI.filter(m => DOVE_MERCANTI[m.chiave]).map(m => {
     ...m, piede: cella(DOVE_MERCANTI[m.chiave].piede), accanto: cella(DOVE_MERCANTI[m.chiave].accanto),
     figura: FIGURE[m.chiave] || MINATORE,
     ritratto: vero ? figura(`${m.sprite}-fermo-0`, { scala: SCALA_EROE }) : null,
+    saluta: haFigura(`${m.sprite}-saluta-0`) ? figura(`${m.sprite}-saluta-0`, { scala: SCALA_EROE }) : null,
   }
 })
 
@@ -88,6 +89,7 @@ const personaggi = Object.entries(DOVE_PERSONAGGI).filter(([k]) => PERSONAGGI[k]
     chiave: k, ...PERSONAGGI[k], piede: cella(d.piede), accanto: cella(d.accanto),
     figura: FIGURE_PERSONAGGI[k] || MINATORE,
     ritratto: vero ? figura(`${PERSONAGGI[k].sprite}-fermo-0`, { scala: SCALA_EROE }) : null,
+    saluta: haFigura(`${PERSONAGGI[k].sprite}-saluta-0`) ? figura(`${PERSONAGGI[k].sprite}-saluta-0`, { scala: SCALA_EROE }) : null,
   }
 })
 // il segno sopra la testa (motore/missioni.js): «!» d'oro ha qualcosa da chiederti, «?» grigio e fermo aspetta che tu
@@ -392,6 +394,7 @@ function battito(ora) {
     seguiEroe()
     if (!via.length) arriva()
   }
+  salutaChiPassa(tempo)
   const fr = Math.floor(tempo * (cammina.value ? 10 : 4)) % 4
   if (fr !== fotogramma.value) fotogramma.value = fr
   const k = 1 - Math.exp(-dt * MORBIDA)
@@ -534,6 +537,8 @@ const ctx = () => ({ stati: props.missioni, tappe: props.tappe, abisso: !!props.
 const chiParla = chi => (personaDi(chi) || mercanteDi(chi) || { nome: '' }).nome
 function parla(chi) {
   chiudi()
+  saluta(chi, tempo)
+  vicini.add(chi)
   const primaVolta = chi === 'minatore' && !parlato.value
   if (primaVolta) { parlato.value = true; salva() }
   // la zona appena nata la racconta lui (docs/sotterraneo/zone.md): sentita, il «!» si spegne
@@ -587,8 +592,41 @@ const frecce = computed(() => FRECCE.map(f => {
   return { verso: f.verso, detto: f.detto, nomi }
 }))
 
-const minatoreVero = haFigura('minatore-fermo-0')   // quando arriva lo sprite (prompt 4), si usa quello
+const minatoreVero = haFigura('minatore-fermo-0')   // lo sprite dipinto se l'atlante ce l'ha, se no la figura di pixel.js
 const ritrattoMinatore = minatoreVero ? figura('minatore-fermo-0', { scala: SCALA_EROE }) : null
+const salutoMinatore = haFigura('minatore-saluta-0') ? figura('minatore-saluta-0', { scala: SCALA_EROE }) : null
+
+/* ═══════════ chi sta fermo saluta ═══════════
+   Quando l'eroe si avvicina (RAGGIO_SALUTO) e quando gli si parla, la figura alza la mano per un attimo
+   (`<nome>-saluta-0`, un ritaglio identico al fermo: i piedi non si spostano) e torna ferma. Si riarma solo
+   dopo che l'eroe si è allontanato (RAGGIO_RIARMO), se no saluterebbe a ogni passo. Il tempo è quello dei
+   fotogrammi (`tempo`), non un setTimeout: a schermo spento non scorre (docs/sotterraneo/terra-di-sopra.md). */
+const RAGGIO_SALUTO = 6, RAGGIO_RIARMO = 9, DURATA_SALUTO = 1.4   // celle della maschera, secondi
+const salutano = ref(new Set())
+const fineSaluto = new Map()   // chiave → il `tempo` in cui torna ferma
+const vicini = new Set()       // chi ha già salutato e l'eroe è ancora lì attorno
+const FERMI = [{ chiave: 'minatore', piede: cella(DOVE_MINATORE.piede) },
+               ...mercanti.map(m => ({ chiave: m.chiave, piede: m.piede })),
+               ...personaggi.map(m => ({ chiave: m.chiave, piede: m.piede }))]
+function saluta(chiave, adesso) {
+  fineSaluto.set(chiave, adesso + DURATA_SALUTO)
+  if (!salutano.value.has(chiave)) salutano.value = new Set([...salutano.value, chiave])
+}
+function salutaChiPassa(adesso) {
+  for (const f of FERMI) {
+    if (f.chiave !== 'minatore' && !trovati.value.has(f.chiave)) continue
+    const d = Math.hypot(io.x - (f.piede.x + 0.5), io.y - (f.piede.y + 0.5))
+    if (d <= RAGGIO_SALUTO && !vicini.has(f.chiave)) { vicini.add(f.chiave); saluta(f.chiave, adesso) }
+    else if (d > RAGGIO_RIARMO) vicini.delete(f.chiave)
+  }
+  for (const [chiave, fine] of fineSaluto)
+    if (adesso >= fine) {
+      fineSaluto.delete(chiave)
+      salutano.value = new Set([...salutano.value].filter(k => k !== chiave))
+    }
+}
+// quale posa sta in piedi adesso: quella che saluta se c'è e sta salutando, se no quella ferma
+const posaDi = (chiave, ferma, saluto) => (saluto && salutano.value.has(chiave) ? saluto : ferma)
 
 /* ═══════════ si ricorda ═══════════ */
 function salva() {
@@ -662,12 +700,12 @@ const chiusaPerche = p => {
         </span>
       </template>
 
-      <button class="sot-minatore" data-minatore aria-label="il vecchio minatore"
+      <button class="sot-minatore" data-minatore :data-saluta="salutano.has('minatore') ? 1 : 0" aria-label="il vecchio minatore"
               :style="{ left: (DOVE_MINATORE.piede[0] + 0.5) * CELLA * S + 'px',
                         top: (DOVE_MINATORE.piede[1] + 0.5) * CELLA * S + 'px' }"
               @click.stop="toccaMinatore">
         <span v-if="ritrattoMinatore" class="sot-ritratto" :style="ritrattoMinatore.gabbia">
-          <i :style="ritrattoMinatore.pezzo"></i></span>
+          <i :style="posaDi('minatore', ritrattoMinatore, salutoMinatore).pezzo"></i></span>
         <Pixel v-else :figura="MINATORE" :scala="SCALA_EROE" />
         <b v-if="!parlato" class="sot-tre-punti">…</b>
         <b v-else-if="annuncio && !annuncio.sentita" class="sot-tre-punti sot-segno-missione sot-segno-nuova"
@@ -678,21 +716,21 @@ const chiusaPerche = p => {
 
       <!-- chi dà le missioni: il segno sopra la testa dice se ha qualcosa per te -->
       <button v-for="m in personaggi" :key="'personaggio-' + m.chiave" class="sot-minatore sot-personaggio"
-              :class="{ 'sot-buio': !trovati.has(m.chiave) }" :data-personaggio="m.chiave" :aria-label="m.nome"
+              :class="{ 'sot-buio': !trovati.has(m.chiave) }" :data-personaggio="m.chiave" :data-saluta="salutano.has(m.chiave) ? 1 : 0" :aria-label="m.nome"
               :data-segno="segnoSopra(m.chiave)" :tabindex="trovati.has(m.chiave) ? 0 : -1"
               :style="{ left: (m.piede.x + 0.5) * CELLA * S + 'px', top: (m.piede.y + 0.5) * CELLA * S + 'px' }"
               @click.stop="toccaPersonaggio(m)">
-        <span v-if="m.ritratto" class="sot-ritratto" :style="m.ritratto.gabbia"><i :style="m.ritratto.pezzo"></i></span>
+        <span v-if="m.ritratto" class="sot-ritratto" :style="m.ritratto.gabbia"><i :style="posaDi(m.chiave, m.ritratto, m.saluta).pezzo"></i></span>
         <Pixel v-else :figura="m.figura" :scala="SCALA_EROE" />
         <b v-if="segnoSopra(m.chiave)" class="sot-tre-punti sot-segno-missione" :class="'sot-segno-' + segnoSopra(m.chiave)">{{ glifoSopra(m.chiave) }}</b>
       </button>
 
       <button v-for="m in mercanti" :key="'mercante-' + m.chiave" class="sot-minatore sot-mercante"
-              :class="{ 'sot-buio': !trovati.has(m.chiave) }" :data-mercante="m.chiave" :aria-label="m.nome"
+              :class="{ 'sot-buio': !trovati.has(m.chiave) }" :data-mercante="m.chiave" :data-saluta="salutano.has(m.chiave) ? 1 : 0" :aria-label="m.nome"
               :tabindex="trovati.has(m.chiave) ? 0 : -1"
               :style="{ left: (m.piede.x + 0.5) * CELLA * S + 'px', top: (m.piede.y + 0.5) * CELLA * S + 'px' }"
               @click.stop="toccaMercante(m)">
-        <span v-if="m.ritratto" class="sot-ritratto" :style="m.ritratto.gabbia"><i :style="m.ritratto.pezzo"></i></span>
+        <span v-if="m.ritratto" class="sot-ritratto" :style="m.ritratto.gabbia"><i :style="posaDi(m.chiave, m.ritratto, m.saluta).pezzo"></i></span>
         <Pixel v-else :figura="m.figura" :scala="SCALA_EROE" />
       </button>
 

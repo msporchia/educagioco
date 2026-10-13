@@ -23,6 +23,7 @@ export function figura(nome, { scala = 3, alto = null } = {}) {
       width: `${n[2]}px`, height: `${n[3]}px`,
       backgroundImage: `url(${NITIDO})`,
       backgroundPosition: `${-n[0]}px ${-n[1]}px`,
+      imageRendering: 'auto',   // il contenitore del ritratto è `pixelated`: un pezzo dipinto ridotto così va a scalini
       transform: `scale(${(w * s) / n[2]}, ${(h * s) / n[3]})`,
       transformOrigin: 'top left',
     },

@@ -63,6 +63,8 @@ await toccaIl('[data-personaggio="ragazza"]')
 await page.waitForSelector('[data-dialogo="ragazza"]', { timeout: 8000 })
 uguale('toccandola si apre il dialogo, sulla prima pagina', await pagina(), 1)
 uguale('col ritratto', await page.locator('[data-dialogo] [data-ritratto-dialogo]').count(), 1)
+// chi sta fermo saluta per un attimo (`<nome>-saluta-0`) quando gli si parla, e torna ferma
+uguale('lei alza la mano', await page.locator('[data-personaggio="ragazza"]').getAttribute('data-saluta'), '1')
 controlla('il nome è il suo', (await page.locator('.sot-dialogo-nome').innerText()).includes('ragazza del pozzo'))
 controlla('chiede il seguito della collana', (await page.locator('[data-riga]').getAttribute('data-missione')) === 'goblin')
 const quante = Number(await page.locator('[data-dialogo]').getAttribute('data-pagine'))
@@ -78,7 +80,8 @@ for (let n = 2; n < quante; n++) { await attendi(page, 250); await toccaIl('[dat
 await page.waitForSelector('[data-dialogo][data-ultima] [data-scelte]', { timeout: 3000 })
 const scelte = await page.locator('[data-scelta]').evaluateAll(els => els.map(e => e.dataset.scelta).join(','))
 uguale('all\'ultima le domande: ci penso io, cosa si dice al pozzo, arrivederci', scelte, 'prendi,racconta,ciao')
-await attendi(page, 400)
+await attendi(page, 1800)
+uguale('e dopo un attimo torna ferma', await page.locator('[data-personaggio="ragazza"]').getAttribute('data-saluta'), '0')
 await scatto(page, 'dialogo-scelte')
 
 /* ---------- 2. la storia: la risposta, e la domanda non torna ---------- */

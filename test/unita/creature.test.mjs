@@ -13,6 +13,8 @@
 import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifica.mjs'
 import { readFileSync, readdirSync } from 'node:fs'
 import { MOSTRI } from '../../src/giochi/sotterraneo/dati/mostri.js'
+import { MERCANTI } from '../../src/giochi/sotterraneo/dati/mercanti.js'
+import { PERSONAGGI } from '../../src/giochi/sotterraneo/dati/missioni.js'
 import { PEZZI as PEZZI_SOT } from '../../src/giochi/sotterraneo/dati/atlante.js'
 import { CREATURE, PEZZI as PEZZI_CAS } from '../../src/giochi/castello/dati/figure.js'
 
@@ -81,7 +83,13 @@ for (const k of dei('sotterraneo')) {
 }
 // niente creature nell'atlante che il catalogo non dica: solo quelle di 0x72 e dei pezzi del gioco
 const stelo = new Set(Object.keys(PEZZI_SOT).map(p => (p.match(/^(.+)-fermo-\d+$/) || [])[1]).filter(Boolean))
-const permessi = new Set([...nomi, ...DI_0X72])
+// le persone della terra di sopra (minatore, mercanti, chi dà le missioni) sono dipinte nei fogli
+// `sopra-personaggi-*`, non creature del catalogo: fermo e saluta, un fotogramma l'una
+const DI_SOPRA = ['minatore', ...MERCANTI.map(m => m.sprite), ...Object.values(PERSONAGGI).map(p => p.sprite)]
+for (const n of DI_SOPRA)
+  for (const posa of ['fermo', 'saluta'])
+    controlla(`sotterraneo · «${n}» ha la posa «${posa}» (terra di sopra)`, !!PEZZI_SOT[`${n}-${posa}-0`])
+const permessi = new Set([...nomi, ...DI_0X72, ...DI_SOPRA])
 for (const s of stelo) controlla(`sotterraneo · «${s}» ha una posa «fermo» nell'atlante: è nel catalogo o di 0x72`, permessi.has(s))
 for (const [id, m] of Object.entries(MOSTRI))
   controlla(`sotterraneo · il mostro «${id}» (${m.sprite}) ha le sue pose`, stelo.has(m.sprite) || DI_0X72.has(m.sprite), m.sprite)

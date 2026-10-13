@@ -53,15 +53,10 @@ dell'abisso sta in [abisso-progetto.md](abisso-progetto.md).
 
 ## La terra di sopra
 
-- **Gli sprite dei mercanti**: armaiolo, erborista e rigattiere sono figure
-  disegnate in codice (`viste/pixel.js`); `armaiolo-fermo-0` e gli altri
-  nell'atlante prendono il loro posto da soli.
-
-- **Gli sprite di chi dà le missioni**: ragazza, mugnaio, eremita,
-  guardia, pescatore e boscaiolo sono figure disegnate in codice
-  (`viste/pixel.js`); `<nome>-fermo-0` nell'atlante prende il loro posto da
-  solo. I prompt sono nella scheda `PROMPT-terra-di-sopra.md`. La bussola del
-  mock (il minatore che la dà, lei che punta alla prossima discesa) non è fatta.
+- **La bussola del mock** (il minatore che la dà, lei che punta alla prossima
+  discesa) non è fatta. La posa del minatore con la bussola in mano c'è, nel
+  primo foglio dei personaggi (`sopra-personaggi-1.png`, riquadro nel suo
+  foglietto), ma non è nell'atlante: non la nomina nessuno.
 - **Le missioni dopo la prima volta**: dodici in tutto (un albero, tre rami),
   e consegnate non tornano. Se piacciono, ne servono altre per chi rigioca,
   altri rami più lunghi (oggi i seguiti sono di un solo passo), e una seconda
