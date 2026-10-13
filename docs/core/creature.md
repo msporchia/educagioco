@@ -58,8 +58,15 @@ castello. Il catalogo descritto, per sapere cosa c'è:
   nome.
 - **`nitido`**: i fotogrammi hanno anche la copia dal foglio com'è dipinto (WebP in `NITIDO`, come la roba: [sprite.md](sprite.md#i-pezzi-nitidi)).
   Serve a chi ha un sorgente piccolo e pallido: lo scheletro è 45×73 px nel foglio, ridotto alla griglia a 12×19 diventava una macchia grigia
-  (l'utente, 13 ottobre: «sfocati»). Oggi scheletro, scheletro cavaliere e mummia; costa una cinquantina di KB. Non con i passi (i video non hanno
+  (l'utente, 13 ottobre: «sfocati»). Oggi scheletro, scheletro cavaliere, mummia, **tutte quelle alte fino a 23 pixel nell'atlante** (zombie, diavoletto,
+  fantasma, fantasma azzurro, teschio azzurro, granchio, pipistrello, ratto, serpente, fungo, occhio, pianta, cinghiale, mietitore, le melme viola e rosa,
+  il mostro viola) e il ghoul (19 in più delle prime tre), circa 450 KB di WebP (le altre, da 24 pixel in su, restano come sono: tutte nitide sarebbero state quasi un megabyte). Non con i passi (i video non hanno
   il pezzo grande: camminando la creatura cambierebbe faccia; `creature.py controlla`).
+- **`morte`**: una o due figure (rettangoli come `fotogrammi`) di come cade, prese dal foglio: i fogli dipingono dopo ogni creatura la sua morte (colpita,
+  a terra, i resti), e `creature.py morti` le elenca (provino `tmp/creature/morti.png`, `--scrivi nome=0,1` sceglie quali). Il rettangolo arriva ai piedi
+  della creatura, così il pezzo posa dove posava lei. Il sotterraneo le porta come `<nome>-morto-<i>` (nitide se la creatura lo è) e lo scontro le
+  mostra ([../sotterraneo/scontro-interfaccia.md](../sotterraneo/scontro-interfaccia.md)); il castello no. Mancano al pipistrello occhio (il foglio non gliela
+  dipinge).
 - **`tenuta`** (e `perche`): il giudizio sulle pose. Una scartata ha il perché
   scritto e nessun gioco: resta nel catalogo per sapere cosa chiedere di nuovo.
 - **`scheda`**: il catalogo descritto: com'è fatta, **elemento** (uno di
@@ -101,7 +108,7 @@ castello. Il catalogo descritto, per sapere cosa c'è:
 - **Il banco `npm run mondo`**: i due fogli non hanno più un foglietto, quindi non compaiono più in «i ritagli»;
   le creature si guardano in «il mondo» (l'atlante) e si misurano con `creature.py`.
 - **Creature che il sotterraneo non prende**: il tornado (una creatura d'aria
-  aperta, solo castello) e l'occhio dentato (scartato, doppione).
+  aperta, solo castello); l'occhio dentato (un doppione dell'occhio) è stato tolto dal catalogo.
 
 ## Aggiungere o ritoccare una creatura
 

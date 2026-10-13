@@ -45,6 +45,15 @@
 .sot-m-corpo { position: relative; display: flex; justify-content: center; align-items: flex-end }
 .sot-m:disabled { cursor: default }
 .sot-m.sot-morto { opacity: 0; transform: translateY(10px) scale(.9); pointer-events: none }
+/* chi cade e ha il suo pezzo a terra ci resta un momento (il secondo pezzo, i resti, dopo un attimo) e poi svanisce */
+.sot-m.sot-a-terra { transition: opacity .6s ease .95s, transform .6s ease .95s }
+.sot-m.sot-morto .sot-vita { opacity: 0 }
+.sot-a-terra .sot-respira { position: relative; animation: none }   /* a terra non si respira */
+.sot-resti-b { position: absolute; left: 50%; bottom: 0; translate: -50% 0; opacity: 0 }
+.sot-a-terra .sot-resti-b { animation: sot-resto-entra .01s .3s forwards }
+.sot-a-terra .sot-resti-a { animation: sot-resto-esce .01s .3s forwards }
+@keyframes sot-resto-entra { to { opacity: 1 } }
+@keyframes sot-resto-esce { to { opacity: 0 } }
 .sot-m-grosso .sot-vita { width: 84px }
 .sot-vita {
   display: block; width: var(--barra, 60px); height: 6px; border-radius: 999px; background: #1a1018; overflow: hidden;

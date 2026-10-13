@@ -124,8 +124,8 @@ spostare o da raccogliere** (regola dell'utente): niente casse, sacchi, barili;
 
   | scenario, famiglia | pezzi dell'atlante | disegnati in codice (da dipingere) |
   |---|---|---|
-  | cripta, costruita | sarcofagi (liscio, spada, stemma, croce, crepato, aperto), lastra funeraria, pilastro con la grata, cavalieri di pietra (spada, scudo, inginocchiato, seduto, mani giunte, caduto), colonne (intera, doppia, spezzata, inclinata, moncone), blocchi caduti | macerie, crollo, trave |
-  | cripta, grotta | blocchi caduti, moncone, lastra funeraria, colonna inclinata, cavaliere caduto | macerie, crollo, roccia, stalagmite |
+  | cripta, costruita | sarcofagi (liscio, spada, stemma, croce, crepato, aperto), lastra funeraria, pilastro con la grata, cavalieri di pietra (spada, scudo, inginocchiato, seduto, mani giunte, caduto), colonne (intera, doppia, spezzata, inclinata, moncone), blocchi caduti, **macerie** (`cripta-macerie`, `sotterraneo_4_3.png`) | crollo, trave |
+  | cripta, grotta | blocchi caduti, moncone, lastra funeraria, colonna inclinata, cavaliere caduto, **macerie e rocce** (`cripta-macerie`, `cripta-rocce`: mucchi bassi, la luce ci passa) | crollo, stalagmite |
   | fornace, costruita | i due gargoyle | macerie, crollo, trave, roccia |
   | fornace, grotta (la miniera) | – | roccia, macerie, crollo, trave, stalagmite, **carro rovesciato, binari divelti** |
   | cantine, costruita e grotta | – | macerie, crollo, roccia, trave, stalagmite |

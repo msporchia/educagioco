@@ -911,11 +911,12 @@ function pianoDaProva(c) {
 // `cappella`, `grotta`, `bilobata`, `galleria`, `antro`) o di quel ruolo (`anticamera`, `uscita`, `tesoro`...): per guardare i piani senza girarli (docs/sotterraneo/piani.md)
 function stanzaDaProva(c) {
   const q = new URLSearchParams(location.hash.slice(1)).get('stanza')
-  // `#stanza=relitto` (o `acqua`, `nicchia`): l'eroe sta a tre celle dal primo relitto (o dalla prima pozza, o davanti alla prima
-  // nicchia) e lo guarda, per vedere l'ombra che fa (docs/sotterraneo/piani-caverne.md)
+  // `#stanza=relitto` (o `acqua`, `nicchia`, `portone`): l'eroe sta a tre celle dal primo relitto (o dalla prima pozza, davanti alla prima
+  // nicchia, al portone del grosso) e lo guarda, per vedere l'ombra che fa (docs/sotterraneo/piani-caverne.md)
   const liv = c.livello
   const bersaglio = q === 'relitto' ? liv.relitti[0] : q === 'acqua' ? liv.stanze.flatMap(r => r.acqua)[0]
-    : q === 'nicchia' ? liv.stanze.flatMap(r => r.nicchie)[0] : null
+    : q === 'nicchia' ? liv.stanze.flatMap(r => r.nicchie)[0]
+      : q === 'portone' ? liv.robe.find(r => r.che === 'porta' && r.pelle === 'bella') : null
   if (bersaglio) {
     const quasi = []
     for (let dy = -3; dy <= 3; dy++) for (let dx = -3; dx <= 3; dx++) {
@@ -928,6 +929,8 @@ function stanzaDaProva(c) {
     c.giraVerso(bersaglio.x - dove.x, bersaglio.y - dove.y)
     c.segnaLaStanza()
     c.aggiornaLuce()
+    const qui = liv.stanzaDi(dove.x, dove.y)
+    if (qui) luceDaProva(c, qui)
     return
   }
   const s = q && c.livello.stanze.find(r => r.forma === q || r.ruolo === q)
@@ -938,6 +941,18 @@ function stanzaDaProva(c) {
   const dove = s.suolo.reduce((b, r) => (lontano(r) > lontano(b) ? r : b), s.suolo[0])
   c.eroe = { x: dove.x + 0.5, y: dove.y + 0.5 }
   c.segnaLaStanza()
+  c.aggiornaLuce()
+  luceDaProva(c, s)
+}
+
+// `#luce=stanza` accende tutta la stanza (e il giro di muro), a piena forza: per fotografare l'arredo senza girare il cono
+function luceDaProva(c, s) {
+  if (new URLSearchParams(location.hash.slice(1)).get('luce') !== 'stanza') return
+  const base = c.aggiornaLuce.bind(c)
+  c.aggiornaLuce = () => {
+    base()
+    for (const [x, y] of c.livello.celleDellaLuce(s)) { const k = y * c.livello.largo + x; c.luce.add(k); c.forzaLuce.set(k, 1); c.visto[k] = 1 }
+  }
   c.aggiornaLuce()
 }
 
@@ -1019,6 +1034,7 @@ function accendi() {
   if (!pittore) pittore = new Tela(tela.value)
   else pittore.attacca(tela.value)
   pittore.misura()
+  pittore.zoomA(Number(new URLSearchParams(location.hash.slice(1)).get('zoom')) || pittore.scala)   // `#zoom=2`: più campo, per le foto
   pittore.segui(corsa.value.livello, corsa.value.eroe.x, corsa.value.eroe.y)
   pittore.mostra({ corsa: corsa.value, orologio })   // il primo quadro c'è subito: rientrando si nasce dietro il velo della pausa, e il giro non disegna finché si è fermi
   pittore.avvia()

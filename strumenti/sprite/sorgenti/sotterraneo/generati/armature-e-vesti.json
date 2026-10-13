@@ -55,6 +55,7 @@
     "bastone-10": { "da": [134, 35], "cella": [9, 22] },
     "bastone-11": { "da": [149, 36], "cella": [8, 21] },
     "bastone-12": { "da": [162, 35], "cella": [8, 23] },
+    "bastone-14": { "da": [191, 35], "cella": [10, 23], "ruota": 16 },
     "bastone-15": { "da": [206, 35], "cella": [8, 23] },
     "bastone-16": { "da": [220, 36], "cella": [9, 22] },
     "bastone-17": { "da": [234, 35], "cella": [9, 23] },

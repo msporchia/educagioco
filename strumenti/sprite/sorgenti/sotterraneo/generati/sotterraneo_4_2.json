@@ -23,13 +23,10 @@
   "sprite": {
     "cripta-porta-semplice": { "da": [30, 113], "cella": [128, 179], "misura": [16, 22] },
     "cripta-porta-ferro": { "da": [191, 113], "cella": [133, 179], "misura": [16, 22] },
-    "cripta-porta-oro": { "da": [357, 113], "cella": [134, 179], "misura": [16, 22] },
-    "cripta-porta-teschio": { "da": [524, 107], "cella": [136, 185], "misura": [16, 23] },
     "cripta-porta-chiara": { "da": [693, 113], "cella": [134, 179], "misura": [16, 22] },
     "cripta-porta-aperta": { "da": [859, 113], "cella": [133, 179], "misura": [16, 22] },
     "cripta-fianco-semplice": { "da": [57, 346], "cella": [70, 176], "misura": [10, 20] },
     "cripta-fianco-ferro": { "da": [223, 346], "cella": [72, 176], "misura": [10, 20] },
-    "cripta-fianco-oro": { "da": [389, 346], "cella": [69, 176], "misura": [10, 20] },
     "cripta-fianco-teschio": { "da": [553, 346], "cella": [71, 176], "misura": [10, 20] },
     "cripta-fianco-chiara": { "da": [722, 346], "cella": [70, 176], "misura": [10, 20] },
     "cripta-fianco-aperta": { "da": [889, 346], "cella": [69, 176], "misura": [10, 20] },

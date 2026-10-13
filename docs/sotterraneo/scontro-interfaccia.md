@@ -65,6 +65,10 @@ Tutto sta in `Corsa.foglio` (`che: 'scontro'`) e nelle funzioni di `Corsa`; un m
   piccoli negli spazi). I posti sono quelli del motore e i consecutivi stanno nella stessa colonna o in colonne accanto, così i
   «vicini» delle forme `vicini` e `catena` lo sono anche nel disegno. `disponi` dice ancora quante «file» (1 o 2, l'altezza) e chi è il grosso.
   Chi cade resta al suo posto e svanisce: niente scatta di posto.
+- **La caduta** (`restiDi`, `.sot-a-terra` in `viste/Scontro.vue`): chi cade non svanisce in piedi ma prende il suo pezzo a terra, `<nome>-morto-0` (le pose
+  che i fogli dipingono dopo ogni creatura: un cadavere, delle ossa, una pozza, un mucchio di brace o di polvere, secondo la creatura), e se c'è un secondo
+  pezzo (`-morto-1`, i resti) lo prende dopo 0,3 secondi; ci resta quasi un secondo e poi svanisce come prima. Non respira, e niente barra della vita.
+  Il grosso e chi non ha il pezzo (il pipistrello occhio, le creature di 0x72) svaniscono in piedi com'era. Nei test: `integrazione/sotterraneo-caduta`.
 - **Gli sprite hanno una sola scala per tutti** (`SCALA_FIGURE`; i mostri dipinti `TAGLIA` volte l'eroe, a quarti; **il grosso sta in una
   scatola**: alto al più 1,9 eroi e largo al più 3, `ingrandimentoDelGrosso` in `dati/grossi.js`, perché un ragno largo e un negromante alto
   non debordino né restino nani; l'utente, 13 ottobre: Zannaverde e la sua corona troppo grandi). La corona è un terzo della figura. **Lo stesso
