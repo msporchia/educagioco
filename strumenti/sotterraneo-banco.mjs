@@ -25,8 +25,10 @@
 //   npm run sotterraneo -- --forza 6,7,8,9,10,11,12 --rapporti   # il suo rapporto (le gobbe che fanno sbagliare la forza)
 //   npm run sotterraneo -- --tara 2.spinta=6.5,5.forza=4   # prova un valore di una discesa (indice.campo=valore) senza toccare i sorgenti
 //   npm run sotterraneo -- --tara zona.forzaA12=4|5,zona.altare=1.6   # lo stesso per la curva delle zone e la forma di una zona
+//   npm run sotterraneo -- --abisso --tara abisso.forza=3,abisso.spinta=10   # e per l'abisso
 //   npm run sotterraneo -- --tara 2.spinta=5|6|7             # con più valori separati da | prova ogni combinazione, una tabella l'una
 //   npm run sotterraneo -- --turni [--file]      # la fila dei turni: velocità e doppi turni di ogni classe nelle discese (--file: la fila lettera per lettera)
+//   npm run sotterraneo -- --domande             # le domande obbligate per discesa e per piano rispondendo sempre giusto: dritto alla scala e girando tutto, per eroe (il tetto è 85)
 //   npm run sotterraneo -- --costi               # l'energia: globo atteso, costo e lanci col globo pieno per classe e riga
 //   npm run sotterraneo -- --passi               # i passi che il giocatore finto fa davvero per piano e per discesa (dritto e giro), e quanto globo ridanno
 //   npm run sotterraneo -- --senza-abilita       # il banco di prima: solo attacco, nessun albero
@@ -61,12 +63,13 @@ if (argv[0] === '--lavoro') {
   if (lavoro.senzaPreparati && banco.BANCO) banco.BANCO.preparati = false
   // `--tara 2.spinta=6.5,5.forza=4` prova un valore di una discesa senza toccare i sorgenti (le zone lo ereditano)
   if (lavoro.tara) {
-    const { CAMPAGNA } = await mod('dati/campagna.js')
+    const { CAMPAGNA, L_ABISSO } = await mod('dati/campagna.js')
     const zone = await mod('dati/zone.js')
     for (const voce of lavoro.tara.split(',').filter(Boolean)) {
       const [k, campo] = voce.split('=')[0].split('.')
       // `zona.forzaA12=5` ritocca la curva delle zone, `zona.altare=1.4` la forma di una zona (dati/zone.js)
       if (k === 'zona') { if (campo in zone.CURVA_DELLE_ZONE) zone.CURVA_DELLE_ZONE[campo] = Number(voce.split('=')[1]); else zone.FORMA_DELLA_ZONA[campo] = Number(voce.split('=')[1]) }
+      else if (k === 'abisso') L_ABISSO[campo] = Number(voce.split('=')[1])   // `abisso.forza=3` ritocca l'abisso
       else CAMPAGNA[Number(k)][campo] = Number(voce.split('=')[1])
     }
   }
@@ -79,7 +82,23 @@ if (argv[0] === '--lavoro') {
   else if (lavoro.che === 'diag') r = await diagnosi(lavoro.opz)
   else if (lavoro.che === 'strada') r = await strada(lavoro.opz)
   else if (lavoro.che === 'passi') r = await passiFatti(lavoro.opz)
+  else if (lavoro.che === 'domande') r = await domandeDi(lavoro.opz)
   console.log(JSON.stringify(r))
+
+  // le domande obbligate di una discesa rispondendo sempre giusto (la misura di `unita/sotterraneo`, «il minimo sta in una seduta»): dritto
+  // alla scala (minimo) e girando tutto, in totale e piano per piano, con la roba e la crescita di chi ci arriva andando dritto; la media di più semi
+  async function domandeDi({ eroe, k, semi }) {
+    const { CAMPAGNA } = await mod('dati/campagna.js')
+    const r = { minimo: [], tutto: [], totMinimo: 0, totTutto: 0, vinte: 0 }
+    for (let s = 0; s < semi; s++) for (const come of ['minimo', 'tutto']) {
+      const g = banco.gioca(CAMPAGNA[k], { seme: [7, 41, 99, 203, 311, 457, 571, 701][s % 8] + 1000 * Math.floor(s / 8), bravura: 1, come, eroe, roba: banco.robaPer(k, { eroe }), crescita: banco.crescitaPer(k, { eroe }) })
+      const p = g.perPiano.map(n => n || 0)
+      p.forEach((n, i) => { r[come][i] = (r[come][i] || 0) + n })
+      r[come === 'minimo' ? 'totMinimo' : 'totTutto'] += g.esito.domande
+      if (come === 'minimo' && g.esito.vinta) r.vinte++
+    }
+    return r
+  }
 
   // l'abisso: fin dove arriva chi ci entra come si entra (la roba e il livello con cui si esce dalla storia, o nudo con `--nudo`) e
   // quanto costa un piano (minimo e tutto, col livello 12)
@@ -388,6 +407,27 @@ async function misura(radice) {
       righe.push({ titolo: `   passi per discesa`, celle: discese.map(k => Math.round(somma(come, k, 'passi') / (OPZ.eroi.length * OPZ.semi))), numeri: true })
     }
     return { intestazione: nomi, titolo: `i passi che il giocatore finto fa davvero (${OPZ.eroi.length * OPZ.semi} partite a discesa, bravura ${OPZ.prove[0] * 10}/10)`, righe, numeri: true }
+  }
+
+  // `--domande`: le domande obbligate per discesa e per piano rispondendo sempre giusto, dritto alla scala (minimo) e girando tutto, per
+  // eroe e in media (il tetto è 85 a seduta: docs/sotterraneo/piani.md, «Il costo in domande»); `--semi` quanti semi
+  if (argv.includes('--domande')) {
+    const lavori = []
+    for (const eroe of OPZ.eroi) for (const k of discese) lavori.push({ ...base, che: 'domande', opz: { eroe, k, semi: OPZ.semi }, eroe, k })
+    const r = await inParallelo(lavori)
+    const di = (eroe, k) => r[lavori.findIndex(l => l.eroe === eroe && l.k === k)]
+    const righe = []
+    for (const come of ['minimo', 'tutto']) {
+      const tot = come === 'minimo' ? 'totMinimo' : 'totTutto'
+      for (const eroe of OPZ.eroi) righe.push({ titolo: `${come}: ${eroe}`, celle: discese.map(k => Math.round(di(eroe, k)[tot] / OPZ.semi)), numeri: true })
+      righe.push({ titolo: `${come}: media`, celle: discese.map(k => Math.round(OPZ.eroi.reduce((n, e) => n + di(e, k)[tot], 0) / (OPZ.eroi.length * OPZ.semi))), numeri: true })
+      righe.push({ titolo: `${come}: per piano (media)`, celle: discese.map(k => {
+        const n = Math.max(...OPZ.eroi.map(e => di(e, k)[come].length))
+        return Array.from({ length: n }, (_, i) => Math.round(OPZ.eroi.reduce((a, e) => a + (di(e, k)[come][i] || 0), 0) / (OPZ.eroi.length * OPZ.semi))).join('·')
+      }), numeri: true })
+    }
+    righe.push({ titolo: 'dritto: discese vinte (%)', celle: discese.map(k => percento(OPZ.eroi.reduce((n, e) => n + di(e, k).vinte, 0), OPZ.eroi.length * OPZ.semi)) })
+    return { titolo: `domande obbligate rispondendo sempre giusto (${OPZ.semi} semi, roba di chi ci arriva andando dritto)`, intestazione: nomi, righe, numeri: true, larga: 16 }
   }
 
   if (argv.includes('--diag')) {
