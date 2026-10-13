@@ -8,8 +8,9 @@ import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { DIALOGHI, guastiDeiDialoghi, ARRIVEDERCI } from '../../src/giochi/sotterraneo/dati/dialoghi.js'
 import { MISSIONI, missioneDi } from '../../src/giochi/sotterraneo/dati/missioni.js'
 import { MERCANTI } from '../../src/giochi/sotterraneo/dati/mercanti.js'
+import { NOVITA_DI } from '../../src/giochi/sotterraneo/dati/novita.js'
 import { PERSONAGGI as DOVE_PERSONAGGI } from '../../src/giochi/sotterraneo/dati/terra-mappa.js'
-import { apertura, scelte, risposta, dopoLaPresa, dopoLaConsegna, inPagine, strada }
+import { apertura, scelte, risposta, dopoLaPresa, dopoLaConsegna, inPagine, strada, novita }
   from '../../src/giochi/sotterraneo/motore/dialoghi.js'
 import { PRESA, FATTA, CONSEGNATA } from '../../src/giochi/sotterraneo/motore/missioni.js'
 import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifica.mjs'
@@ -40,12 +41,12 @@ const che = s => s.map(x => x.che)
   // all'inizio il frate ha la Dama Grigia da chiedere: la richiesta, a pagine, e «Ci penso io»
   const a = apertura('eremita', ctx(0))
   controlla('il frate chiede subito il suo favore', a.length && a.every(p => p.missione === 'badessa' && p.fase === 'offre'), JSON.stringify(a))
-  stessaLista('le scelte: ci penso io, la storia, arrivederci', che(scelte('eremita', ctx(0))), ['prendi', 'racconta', 'ciao'])
+  stessaLista('le scelte: ci penso io, le novità, la storia, arrivederci', che(scelte('eremita', ctx(0))), ['prendi', 'novita', 'racconta', 'ciao'])
   uguale('e l\'ultima è sempre arrivederci', scelte('eremita', ctx(0)).at(-1).testo, ARRIVEDERCI)
   // presa: ricorda dov'è, con le parole del posto
   const presa = apertura('eremita', ctx(0, { badessa: PRESA }))
   controlla('presa, ricorda dov\'è e a che piano', presa.length === 1 && /cripta dell'altare, al secondo piano/.test(presa[0].testo), testi(presa).join(' | '))
-  stessaLista('e allora niente «ci penso io»', che(scelte('eremita', ctx(0, { badessa: PRESA }))), ['racconta', 'ciao'])
+  stessaLista('e allora niente «ci penso io»', che(scelte('eremita', ctx(0, { badessa: PRESA }))), ['novita', 'racconta', 'ciao'])
   // fatta: se ne accorge, e la scelta è consegnarla
   const fatta = apertura('eremita', ctx(1, { badessa: FATTA }))
   uguale('fatta: si accorge che sei tornato', fatta[0].testo, missioneDi('badessa').ritorno)
@@ -72,16 +73,20 @@ const che = s => s.map(x => x.che)
   controlla('alla scalinata il minatore parla di Grumo', testi(risposta('minatore', 'racconta', ctx(1))).join(' ').includes('Grumo'))
   controlla('e finite le sette, dell\'abisso', /fondo/.test(testi(risposta('minatore', 'racconta', ctx(CAMPAGNA.length))).join(' ')))
   // una domanda fatta non torna nello stesso dialogo; arrivederci sì
-  stessaLista('chiesta la storia, resta il resto', che(scelte('mugnaio', ctx(0), new Set(['racconta']))), ['ciao'])
+  stessaLista('chiesta la storia, restano le novità', che(scelte('mugnaio', ctx(0), new Set(['racconta']))), ['novita', 'ciao'])
 }
 
 /* ══════════ 4. il minatore dice sempre la strada ══════════ */
 {
   const prima = apertura('minatore', ctx(0), { primaVolta: true })
   controlla('la prima volta si presenta', prima[0].dato == null && /quarant'anni/.test(prima[0].testo), prima[0].testo)
+  uguale('e dice la missione: le sette porte', prima[2].dato, 'storia')
+  uguale('la prima volta la strada non ripete il perché della porta', prima.filter(p => p.dato === 'storia').length, 1)
   const dopo = apertura('minatore', ctx(2))
-  uguale('poi va dritto alla strada', dopo[0].dato, 'detto')
-  controlla('la strada dice la discesa di adesso', dopo[0].testo.startsWith('La torre in rovina:'), dopo[0].testo)
+  uguale('poi va dritto al perché della porta di adesso', dopo[0].dato, 'storia')
+  controlla('che è quello della torre', /Fiammetta/.test(dopo[0].testo), dopo[0].testo)
+  const detto = dopo.find(p => p.dato === 'detto')
+  controlla('e la strada dice la discesa di adesso', detto.testo.startsWith('La torre in rovina:'), detto.testo)
   // chi ti cerca al villaggio, una pagina per chi
   const cerca = strada(ctx(1, { collana: FATTA }))
   controlla('dice chi ti cerca', cerca.some(p => p.dato === 'ti-cerca' && /ragazza del pozzo ti aspetta/.test(p.testo)), testi(cerca).join(' | '))
@@ -118,6 +123,54 @@ const che = s => s.map(x => x.che)
   }
   controlla('il mercante compra: «ho roba da vendere»', che(scelte('rigattiere', ctx(1))).includes('vendi'))
   nota(MERCANTI.map(m => `${m.nome}: «${m.dice}»`).join(' · '))
+}
+
+/* ══════════ 7. «Novità?»: frasi che ruotano e reagiscono ══════════ */
+{
+  const chi = ['minatore', ...Object.keys(DOVE_PERSONAGGI), ...MERCANTI.map(m => m.chiave)]
+  const roba = livello => ({ att: 5, dif: 5, mano: null, mancina: null, corpo: null, livello })
+  // ognuno ha la domanda, dopo la sua cosa e prima della storia
+  for (const c of chi) {
+    const ch = che(scelte(c, ctx(1)))
+    controlla(`${c}: ha «Novità?» prima della storia`, ch.includes('novita') && ch.indexOf('novita') < ch.indexOf('racconta'), ch.join(','))
+    uguale(`${c}: e la domanda è quella`, scelte(c, ctx(1)).find(s => s.che === 'novita').testo, 'Novità?')
+  }
+  // rotazione: chiesta più volte, dice cose diverse, e dopo l'ultima ricomincia; mai un segnaposto rimasto
+  for (const c of chi) for (const n of [0, 1, 3, 5, 7]) {
+    let visto = null
+    const dette = []
+    for (let i = 0; i < 12; i++) {
+      const r = novita(c, ctx(n, {}, { roba: roba(1 + n) }), visto)
+      visto = r.visto
+      dette.push(testi(r.pagine).join(' '))
+      controlla(`${c}, ${n} finite: la frase ${i} non ha segnaposti`, !/[{}]/.test(dette.at(-1)) && dette.at(-1).length > 10, dette.at(-1))
+    }
+    controlla(`${c}, ${n} finite: almeno quattro frasi diverse`, new Set(dette).size >= 4, [...new Set(dette)].join(' ‖ '))
+    controlla(`${c}, ${n} finite: gira, non resta ferma`, dette[0] !== dette[1] && dette[0] === dette[new Set(dette).size], dette.slice(0, 3).join(' ‖ '))
+  }
+  // reagiscono a dove si è arrivati: la prima è la notizia fresca, col nome del grosso e della discesa nuova
+  const dopoTorre = testi(novita('ragazza', ctx(3), null).pagine).join(' ')
+  controlla('finita la torre la ragazza parla di Fiammetta e della grotta', /Fiammetta/.test(dopoTorre) && /grotta della scaletta/.test(dopoTorre), dopoTorre)
+  controlla('la guardia, finita la torre, parla della fornace spenta', /fornace è spenta/.test(testi(novita('guardia', ctx(3), null).pagine).join(' ')))
+  controlla('prima di scendere: un\'altra notizia', testi(novita('mugnaio', ctx(0), null).pagine).join(' ') !== dopoTorre)
+  // un livello raggiunto cambia la pila: si riparte dalla notizia nuova
+  const l5 = novita('pescatore', ctx(0, {}, { roba: roba(5) }), null)
+  const l1 = novita('pescatore', ctx(0, {}, { roba: roba(1) }), null)
+  controlla('con un livello in più c\'è una frase in più: la seconda cambia',
+            testi(novita('pescatore', ctx(0, {}, { roba: roba(5) }), l5.visto).pagine).join() !==
+            testi(novita('pescatore', ctx(0, {}, { roba: roba(1) }), l1.visto).pagine).join())
+  const ancora = novita('pescatore', ctx(0, {}, { roba: roba(10) }), l5.visto)
+  uguale('cambiata la situazione si riparte dalla prima', ancora.visto.n, 1)
+  // chi finisce le sette dice un'altra cosa
+  controlla('finite le sette, la storia è un\'altra', testi(novita('eremita', ctx(CAMPAGNA.length), null).pagine).join() !== testi(novita('eremita', ctx(1), null).pagine).join())
+  // la risposta della scelta è la stessa, e ricorda a che punto era
+  const r1 = risposta('guardia', 'novita', ctx(1))
+  controlla('«Novità?» risponde a pagine con la sua riga', r1.length >= 1 && r1.every(p => p.dato === 'novita'), JSON.stringify(r1))
+  const r2 = risposta('guardia', 'novita', { ...ctx(1), novita: { guardia: novita('guardia', ctx(1), null).visto } })
+  controlla('e se l\'ha già detta, ne dice un\'altra', testi(r1).join() !== testi(r2).join())
+  // nessuna parola da gioco in bocca ai personaggi: il testo vale anche per i piccoli (frasi corte)
+  for (const c of chi) for (const r of NOVITA_DI[c].reazioni) for (const p of r.pagine)
+    controlla(`${c}: pagina corta («${p.slice(0, 24)}…»)`, p.length <= 110, `${p.length}`)
 }
 
 riassunto('i dialoghi della terra di sopra')
