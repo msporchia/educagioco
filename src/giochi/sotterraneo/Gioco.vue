@@ -360,11 +360,10 @@ const banco = computed(() => {
   const vendibili = b.mercanziaVista(k)
     .map(({ chiave: x, sempre, avanti, ruolo }) => {
       const costa = b.quantoCosta(x)
-      const conf = COSE[x].dove ? b.confronto(x) : null
       return {
         chiave: x, sempre, ...COSE[x], ...(COSE[x].cura ? { cura: b.curaDi(x) } : {}), costa, avanti, posso: b.gemme >= costa,
-        // `ruolo` salto/sogno (motore/bottega.js) e `su`: di quanto alza il numero principale del posto, per il segno sulla casella
-        ruolo, migliora: !!(conf && conf.meglio > 0), su: conf && conf.delta > 0 ? Math.round(conf.delta * 10) / 10 : 0,
+        // `ruolo` salto/sogno (motore/bottega.js): solo per i test, sulla casella non si segna niente
+        ruolo,
         // `nonPuoi`: la classe non lo porta, non si compra. `serve`: lo porta ma gli manca la caratteristica, si compra e va nello zaino
         nonPuoi: b.porta(x) ? '' : b.perchéNo(x), serve: b.porta(x) ? b.perchéNo(x) : '', prova: b.seLoMetto(x, { ancora: true }), va: b.vaAddosso(x),
         mancano: Math.max(0, costa - b.gemme),

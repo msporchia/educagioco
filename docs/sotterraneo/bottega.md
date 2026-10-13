@@ -118,7 +118,7 @@ più nessuno.
   un salto di otto livelli o più sopra (`SOGNO_LIVELLI`), raro, il più caro di
   ogni base: il traguardo per cui risparmiare; chi ha già il meglio di quei
   livelli lo trova più su ancora; **costa il doppio** del prezzo vero (`PREZZO_DEL_SOGNO`: esorbitante, un pezzo di otto livelli più su costa già molto). Mai un leggendario. Sono in fondo alla
-  linguetta, i salti e poi i sogni, con la ▲ e la ★ sulla casella
+  linguetta, i salti e poi i sogni, senza segni sulla casella
   ([bottega-finestra.md](bottega-finestra.md)). Basi diverse prima, per usare
   più figure del catalogo ([figure.md](figure.md)).
 - **Il banco si rinnova quando non c'è più niente per cui risparmiare** (l'utente,
