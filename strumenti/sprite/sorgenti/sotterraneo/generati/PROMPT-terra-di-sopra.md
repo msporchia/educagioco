@@ -225,7 +225,7 @@ Sono amici: nessuna arma rivolta verso chi guarda.
 Controllo: le due pose dello stesso personaggio hanno la stessa sagoma e
 gli stessi colori; si distinguono a colpo d'occhio anche piccoli (il
 secchio, il sacco bianco, il bastone, la lancia, la canna, l'ascia); sono
-alti come il minatore. Nel foglietto: `ragazza-fermo-0`, `ragazza-parla-0`,
+alti come il minatore. Nel foglietto: `ragazza-fermo-0`, `ragazza-saluta-0` (il gioco usa il saluto, non «che parla»),
 `mugnaio-fermo-0`… (`strumenti/sprite/FORMATO.md`).
 
 ## Prompt 8 — le cose delle missioni (il secondo)
@@ -274,3 +274,4 @@ sei del prompt 7 (`ragazza-fermo-0`…). Le cose del prompt 8 vanno in
   risultato regge a occhio sul telefono; il difetto che resta è un sasso
   tagliato dal bordo che si ripete specchiato (riquadro [980, 940, 90, 140]
   sulla tela). Nel gioco dal 7/10/2026.
+- `sopra-personaggi-1.png` e `sopra-personaggi-2.png` — i prompt 4, 5 e 7 messi insieme, 13/10/2026, dall'utente (copie di un foglio «Griglia Pixel Art di Personaggi Fantasy» e di `sopra_4.png`; il testo esatto non si è conservato): dieci personaggi, ognuno in due pose, **fermo e che saluta** (non «che parla» né «che indica»: il gioco usa il saluto, `<nome>-saluta-0`). Venuti bene al primo colpo: stessa mano, stessa luce, riconoscibili a colpo d'occhio (il martello, il cappuccio verde, il sacco viola, il sacco bianco, il bastone, la lancia, la canna, il secchio, l'ascia), le due pose con la stessa sagoma e gli stessi colori. Il primo foglio ha 8 personaggi in 4 righe da due; il secondo il minatore, la ragazza e il boscaiolo, che escono **più grandi** di circa un quarto (una scala per foglio, scritta nel foglietto). Non venuto: **il minatore del primo foglio nella seconda posa non saluta, mostra una bussola** (bella, tenuta nelle note del foglietto per la bussola della mappa); sta nel gioco il minatore del secondo. **La canna da pesca**: il filo bianco di un pixel sul magenta lascia un rosa chiaro e chiude una macchia di magenta fra canna, filo e mano che l'allagamento non raggiunge: lo toglie `buchi` con tolleranza larga (90), e il filo resta un filo. Nel gioco dal 13/10/2026 col pezzo nitido: a 22 pixel un viso dipinto era una macchia.
