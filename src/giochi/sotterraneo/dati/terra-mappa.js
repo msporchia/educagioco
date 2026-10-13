@@ -90,7 +90,7 @@ export const POSTI = {
 export const PARTENZA = {"piede":[52,36]}
 export const MINATORE = {"piede":[40,36],"accanto":[42,36]}
 export const CARTELLO = {"riquadro":[586,330,72,80],"piede":[19,13]}
-export const MERCANTI = {"armaiolo":{"piede":[41,42],"accanto":[39,42]},"erborista":{"piede":[50,43],"accanto":[48,43]},"rigattiere":{"piede":[54,43],"accanto":[52,43]}}
+export const MERCANTI = {"armaiolo":{"piede":[41,42],"accanto":[39,42]},"erborista":{"piede":[50,43],"accanto":[48,43]},"incantatrice":{"piede":[56,40],"accanto":[54,40]},"rigattiere":{"piede":[54,43],"accanto":[52,43]}}
 export const PERSONAGGI = {"ragazza":{"piede":[49,36],"accanto":[51,36]},"mugnaio":{"piede":[54,22],"accanto":[56,22]},"eremita":{"piede":[60,9],"accanto":[58,9]},"guardia":{"piede":[45,9],"accanto":[47,9]},"pescatore":{"piede":[10,23],"accanto":[12,23]},"boscaiolo":{"piede":[21,26],"accanto":[19,26]}}
 export const PORTALE = {"piede":[51,38],"accanto":[49,38]}
 
