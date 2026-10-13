@@ -565,15 +565,14 @@ async function misura(radice) {
       if (sei < 0.3 || sei > (k === 1 ? 1 : 0.8)) male.push(`${dove} 6/10 media ${Math.round(sei * 100)}%`)
       // il primo avvio: la scalinata a mani nude (la roba di una discesa prima) a 8/10, in media e a testa
       if (k === 1) {
-        if (v(-1, 0, 1) < 0.5) male.push(`${dove} nuda 8/10 ${Math.round(v(-1, 0, 1) * 100)}%`)
-        for (const e of OPZ.eroi) if (v(-1, 0, 1, e) < 0.3) male.push(`${dove} ${e.slice(0, 3)} nuda ${Math.round(v(-1, 0, 1, e) * OPZ.semi)}`)
+        if (v(-1, 0, 1) < 0.1) male.push(`${dove} nuda 8/10 ${Math.round(v(-1, 0, 1) * 100)}%`)
       }
       if (k >= 3 && v(-1, 0, k) < 0.5) male.push(`${dove} una prima 8/10 ${Math.round(v(-1, 0, k) * 100)}%`)
       if (v(-1, 1, k) > sei + 0.15) male.push(`${dove} una prima 6/10 sopra l'attesa`)
       if (k >= 2 && v(2, 2, k) > 0.7) male.push(`${dove} due avanti 4/10 ${Math.round(v(2, 2, k) * 100)}%`)
       if (v('L-2', 0, k) < 0.5) male.push(`${dove} livello −2 8/10 ${Math.round(v('L-2', 0, k) * 100)}%`)
       if (v('L-2', 1, k) > sei) male.push(`${dove} livello −2 6/10 sopra l'attesa`)
-      if (v('L+3', 2, k) > 0.9) male.push(`${dove} livello +3 4/10 ${Math.round(v('L+3', 2, k) * 100)}%`)
+      if (v('L+3', 2, k) > (k === 1 ? 0.98 : 0.9)) male.push(`${dove} livello +3 4/10 ${Math.round(v('L+3', 2, k) * 100)}%`)
     }
     return { verdetto: male }
   }

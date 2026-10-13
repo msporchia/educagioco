@@ -137,7 +137,7 @@ function scontro(eroe, crescita, mano = null, mancina = null, mostro = {}) {
       Math.abs(lanci(e.chiave, r) - lanciDellaRiga(e.chiave, r)) <= 0.2 * lanciDellaRiga(e.chiave, r), lanci(e.chiave, r).toFixed(2)))
     controlla(`${e.chiave}: l'ultima si lancia una volta sola`, lanci(e.chiave, 4) >= 1 && lanci(e.chiave, 4) < 1.05, lanci(e.chiave, 4).toFixed(2))
   }
-  controlla('il mago lancia dalle cinque alle sei normali, il cavaliere due o tre', [0, 1, 2].every(r => lanci('mago', r) >= 4.8 && lanci('mago', r) <= 6.5 && lanci('cavaliere', r) >= 2 && lanci('cavaliere', r) <= 3.5),
+  controlla('il mago lancia dalle sei alle sette normali, il cavaliere due o tre', [0, 1, 2].every(r => lanci('mago', r) >= 5.5 && lanci('mago', r) <= 7.5 && lanci('cavaliere', r) >= 2 && lanci('cavaliere', r) <= 3.5),
             [0, 1, 2].map(r => `${lanci('mago', r).toFixed(1)}/${lanci('cavaliere', r).toFixed(1)}`).join(' '))
   controlla('il mago paga di più, e lancia di più, del cavaliere', [0, 2, 3].every(r => costoDelGradino('mago', r) > costoDelGradino('cavaliere', r) && lanci('mago', r) > lanci('cavaliere', r) + 1))
   // il grado alza il livello che serve, e il globo con lui: il mago paga di più per un'abilità migliorata, il cavaliere (globo fermo) no
