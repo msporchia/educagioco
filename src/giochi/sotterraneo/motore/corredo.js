@@ -12,7 +12,7 @@ import { rileggiCrescita, piuDellaCrescita, caratteristica, chiTrattiene, puntiD
 import { CARATTERISTICHE } from '../dati/livelli.js'
 import { NODI, ENERGIA, aGrado } from '../dati/abilita.js'
 import { gradoDi, impara, metti, dimentica, costoDelDimenticare } from './abilita.js'
-import { VELOCITA_BASE_EROE } from './turni.js'
+import { VELOCITA_BASE_EROE, VELOCITA_PER_DESTREZZA } from './turni.js'
 
 // la forma di `cfg.avventure[eroe].roba` nel profilo: sale se un campo cambia significato (docs/core/ripresa.md)
 export const VERSIONE_ROBA = 1
@@ -177,8 +177,8 @@ export class Corredo {
     return this.io.att + this.piu.sopra[car] * ATT_PER_PUNTO + COSE[this.mancina].att + addosso
   }
   get dif() { return this.io.dif + this.piu.dif + this.addosso('dif') }
-  // il ritmo dello scontro: 10 più la destrezza (motore/turni.js)
-  get velocita() { return VELOCITA_BASE_EROE + this.car('destrezza') + this.sempre('velocitaPiu') }
+  // il ritmo dello scontro: 6 più uno e mezzo a punto di destrezza (motore/turni.js)
+  get velocita() { return VELOCITA_BASE_EROE + this.car('destrezza') * VELOCITA_PER_DESTREZZA + this.sempre('velocitaPiu') }
   // il valore di una caratteristica adesso (partenza, punti, dote): i requisiti delle armi e la pagina dell'eroe
   car(k) { return caratteristica(this.io, this.crescita, k) }
   // il massimo di vita con questa roba e questo livello, a inizio discesa: Corsa parte da qui e poi lo fa crescere (vitaPiu)

@@ -386,7 +386,7 @@ const colpoDi = (c, m) => Math.max(1, Math.round(COLPO_DEL_MOSTRO * (m.att - c.d
   const { c, m } = scena({ mostri: [{ dx: 1, att: 9, velocita: 8 }] })
   c.crescita = { ...c.crescita, destrezza: 14 }
   c.zaino = ['pozione-piccola']
-  uguale('la velocità è 10 più la destrezza', c.velocita, 10 + c.car('destrezza'))
+  uguale('la velocità è 6 più uno e mezzo a punto di destrezza', c.velocita, 6 + 1.5 * c.car('destrezza'))
   m[0].velocita = 8
   c.scontro(m[0], { tocco: true })
   controlla('più veloce del doppio del mostro', c.velocita >= 16)
@@ -430,7 +430,7 @@ const colpoDi = (c, m) => Math.max(1, Math.round(COLPO_DEL_MOSTRO * (m.att - c.d
   const b = scena({ eroe: 'elfa', mano: 'arco-corto' }).c
   const v = b.velocita
   b.crescita = { ...b.crescita, destrezza: (b.crescita.destrezza || 0) + 1 }
-  uguale('un punto di destrezza, un punto di velocità', b.velocita, v + 1)
+  uguale('un punto di destrezza, uno e mezzo di velocità', b.velocita, v + 1.5)
 }
 
 /* ══════════ 12. esperienza e bottino per ogni mostro che cade ══════════ */
