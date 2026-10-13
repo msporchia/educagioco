@@ -181,7 +181,7 @@ la roba con livello e rarità: [rarita.md](rarita.md).
 
 ## I mercanti e la bottega
 
-Le tre botteghe della terra di sopra, cosa vendono, i pezzi avanti a
+Le quattro botteghe della terra di sopra (il fabbro lavora il ferro, l'incantatrice la magia), cosa vendono, i pezzi avanti a
 sovrapprezzo, il banco che cambia a ogni giro ([bottega.md](bottega.md)), la finestra
 da gioco di ruolo con le caselle e il confronto affiancato, lo zaino nella stessa
 finestra: [bottega-finestra.md](bottega-finestra.md). La

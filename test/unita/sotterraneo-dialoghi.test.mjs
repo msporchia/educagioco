@@ -25,7 +25,7 @@ const che = s => s.map(x => x.che)
   const chi = ['minatore', ...Object.keys(DOVE_PERSONAGGI), ...MERCANTI.map(m => m.chiave)]
   const g = guastiDeiDialoghi(chi)
   controlla('ognuno sulla mappa ha il suo dialogo, a pagine corte e in ordine', !g.length, g.join(' · '))
-  uguale('dieci che parlano: il minatore, i sei delle missioni, i tre mercanti', chi.length, 10)
+  uguale('undici che parlano: il minatore, i sei delle missioni, i quattro mercanti', chi.length, 11)
   for (const m of MISSIONI) controlla(`${m.id}: ha la frase del ritorno`, !!m.ritorno)
   // una frase lunga si spezza in pagine di una o due frasi, mai oltre i 120 caratteri quando si può
   const p = inPagine('Uno. Due. Tre? Quattro!')
@@ -122,6 +122,7 @@ const che = s => s.map(x => x.che)
     controlla(`${m.chiave}: la prima scelta apre la bottega`, scelte(m.chiave, ctx(1))[0].che === 'bottega')
   }
   controlla('il mercante compra: «ho roba da vendere»', che(scelte('rigattiere', ctx(1))).includes('vendi'))
+  uguale('l\'incantatrice apre la bottega con le sue parole', scelte('incantatrice', ctx(1))[0].testo, 'Fammi vedere la magia')
   nota(MERCANTI.map(m => `${m.nome}: «${m.dice}»`).join(' · '))
 }
 

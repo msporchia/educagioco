@@ -113,9 +113,9 @@ lo stesso giudizio della raccolta). Così la tabella vera, con livello,
 - **I mostri di tutti i giorni a volte lasciano un pezzo** (dal 3 all'11%
   per specie, a tono col posto e con l'eroe, [rarita.md](rarita.md)): poco,
   perché la tabella dica ancora con che roba si arriva.
-- **Il banco porta il passo dopo, non oltre** (`bancoDelPasso`): l'armaiolo
-  e il rigattiere hanno i pezzi della riga con cui si entra nella prossima
-  discesa che ancora mancano, e un paio di cose che non costano più di
+- **Il banco porta il passo dopo, non oltre** (`bancoDelPasso`): l'armaiolo,
+  l'incantatrice (bacchette e stoffa) e il rigattiere hanno i pezzi della riga con cui si entra nella prossima
+  discesa che ancora mancano e che vendono, e un paio di cose che non costano più di
   quei pezzi (e non sono della riga dopo ancora). Chi va dritto esce dalla
   discesa con le gemme che bastano al pezzo che il guardiano non dà (tabella
   sotto); chi gira tutto ne ha il doppio, e le spende in pozioni. I pezzi
@@ -164,7 +164,8 @@ ossa nelle discese di prima»; se no, se braccio o difesa con la roba di
 adesso sono sotto quelli della roba attesa, il fumetto lo dice con la
 voce del minatore e le cose che si hanno in mano: «Con quella spada corta
 sotto la torre non duri: passa dal fabbro», «Nella grotta picchiano
-forte, e senza scudo non reggi: passa dal fabbro» (`dettoDelLivello`,
+forte, e senza scudo non reggi: passa dal fabbro» (`dettoDelLivello`: il mago a mani nude o senza
+vesti è mandato dall'incantatrice, che vende la bacchetta e la stoffa; `daChiAndare`,
 `dove` nella tappa per il posto in mezzo alla frase). Lo ripete il minatore
 quando indica la prossima. Non vieta niente: si scende lo stesso. Vieta
 solo il colore del pallino, quando la discesa è due gradini sopra la forza dell'eroe ([forza.md](forza.md)):

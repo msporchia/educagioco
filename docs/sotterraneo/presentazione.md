@@ -18,7 +18,7 @@ Si parte da un villaggio, e le sette discese stanno in fila lungo la
 strada, sotto una campagna da girare a piedi nella nebbia: dietro l'altare,
 sotto l'arco, sotto la torre in rovina, nella grotta, nello stagno, sotto
 una botola, nella miniera. Un vecchio minatore dice dov'è la prossima; fra
-le case stanno tre botteghe — il fabbro, la guaritrice, il mercante — dove
+le case stanno quattro botteghe — il fabbro, l'incantatrice, la guaritrice, il mercante — dove
 si spendono le gemme trovate giù ([terra-di-sopra.md](terra-di-sopra.md)).
 Con tutti si parla: un ritratto, poche righe a pagine, e le domande da
 fargli, che cambiano andando avanti nella storia ([dialoghi.md](dialoghi.md)).

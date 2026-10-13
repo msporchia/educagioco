@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════
    IL DETTAGLIO DI UNA MISSIONE NEL DIARIO, COL DITO VERO
 
-   Nel diario 📖 si tocca una voce e se ne apre il dettaglio (docs/sotterraneo/missioni.md): chi te l'ha
+   Nel diario (la scheda Missioni della finestra dell'eroe) si tocca una voce e se ne apre il dettaglio (docs/sotterraneo/missioni.md): chi te l'ha
    data, cosa ha detto, dove, cosa, il premio, a che punto sei. «Segui questa» sceglie quale missione
    indicano le freccine (docs/sotterraneo/missioni-freccina.md) e la scelta resta nell'avventura; «vai da …»
    manda l'eroe da chi aspetta.
@@ -60,7 +60,9 @@ async function toccaIl(sel) {
 }
 const avventura = async () => (await leggiProfilo(page))?.campagne?.sotterraneo?.cfg?.avventure?.cavaliere || {}
 const apriIlDiario = async () => {
-  await toccaIl('[data-azione="diario"]')
+  await toccaIl('[data-azione="vita"]')   // il diario è una scheda della finestra dell'eroe
+  await page.waitForSelector('[data-pagina-eroe]', { timeout: 5000 })
+  await toccaIl('[data-scheda="missioni"]')
   await page.waitForSelector('[data-diario]', { timeout: 5000 })
   await attendi(page, 250)
 }

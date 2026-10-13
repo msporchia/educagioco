@@ -44,7 +44,7 @@ import re
 import sys
 from pathlib import Path
 
-from PIL import Image, ImageDraw, ImageFilter, ImageOps
+from PIL import Image, ImageChops, ImageDraw, ImageFilter, ImageOps
 
 from catalogo import Catalogo, VERSI, breve, scrivi
 
@@ -599,6 +599,31 @@ def toppa_in(pezzo, toppe, nome, im, fg):
     return fuori
 
 
+def ritinge_in(pezzo, regola, nome):
+    """Un pezzo ricolorato: `"tinta": {"da": [50, 170], "gradi": 195}` ruota di `gradi` la tonalità dei pixel che ce l'hanno
+    fra `da` (gradi sul cerchio dei colori, 0 rosso, 120 verde, 240 blu) e che non sono grigi (`saturo`, da 0 a 255, 40 di ripiego);
+    pelle, cuoio e bianchi restano com'erano. Per un personaggio provvisorio: la guaritrice con il cappuccio verde diventa
+    la maga col cappuccio viola, finché il generatore non porta la sua figura (docs/sotterraneo/terra-di-sopra.md)."""
+    if not regola:
+        return pezzo
+    try:
+        da, a = regola['da']
+        gradi = regola['gradi']
+    except (KeyError, TypeError, ValueError):
+        print(f'  ! {nome}: "tinta" vuole {{"da": [da, a], "gradi": n}}, ho {regola}')
+        return pezzo
+    rgb = pezzo.convert('RGB')
+    h, s, v = rgb.convert('HSV').split()
+    giri = [round(i + gradi * 256 / 360) % 256 for i in range(256)]
+    saturo = regola.get('saturo', 40)
+    # solo i pixel dentro la fascia e non grigi si toccano: gli altri restano al valore (l'andata e ritorno HSV sposta di uno)
+    dentro = ImageChops.darker(h.point(lambda i: 255 if da <= i * 360 / 256 <= a else 0), s.point(lambda x: 255 if x >= saturo else 0))
+    ruotato = Image.merge('HSV', (h.point(giri), s, v)).convert('RGB')
+    fuori = Image.composite(ruotato, rgb, dentro).convert('RGBA')
+    fuori.putalpha(pezzo.getchannel('A'))
+    return fuori
+
+
 def alla_misura(pezzo, misura, nome):
     """Il ritaglio riportato alla misura voluta.
 
@@ -777,6 +802,7 @@ def ritagli_di(im, fg, provenienza, ritagli, famiglie, trasforma, anima):
             pezzo = buchi_in(pezzo, d.get('buchi'), fg.get('_fondi'), chi)
             pezzo = riempi_in(pezzo, d.get('riempi'), chi)
             pezzo = toppa_in(pezzo, d.get('toppa'), chi, im, fg)
+            pezzo = ritinge_in(pezzo, d.get('tinta'), chi)
             pezzo = alla_misura(pezzo, d.get('misura'), chi)
             pezzo = ad_aiuola(pezzo, fg.get('aiuola'), chi)
             ritagli[chi] = pezzo
@@ -840,7 +866,7 @@ def nitidi_di(f, fg, ridotto, nitidi):
             regola = {**regola, 'max': regola['max'] * kx * ky}
         elif regola is not True and isinstance(regola, (int, float)) and regola:
             regola = regola * kx * ky
-        nitidi[nome] = riempi_in(buchi_in(pezzo, regola, fg.get('_fondi'), nome), d.get('riempi'), nome, kx)
+        nitidi[nome] = ritinge_in(riempi_in(buchi_in(pezzo, regola, fg.get('_fondi'), nome), d.get('riempi'), nome, kx), d.get('tinta'), nome)
 
 
 def impacchetta(ritagli, largo=LARGO):

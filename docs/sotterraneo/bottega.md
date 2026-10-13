@@ -1,6 +1,6 @@
 # I mercanti e la bottega
 
-Le tre botteghe sulla terra di sopra, cosa portano, i pezzi delle righe dopo
+Le quattro botteghe sulla terra di sopra, cosa portano, i pezzi delle righe dopo
 a sovrapprezzo, quanta scelta c'è sul banco e come cambia da un giro all'altro
 (il tetto di rarità, i dieci pezzi, i salti e i sogni, il banco che ruota e si
 rinnova, comprare senza le caratteristiche, il riacquisto). La finestra da gioco di ruolo dove si compra e
@@ -13,16 +13,30 @@ codice: `dati/mercanti.js`, `motore/bottega.js`, `motore/storia.js`
 
 ## I mercanti di sopra
 
-Tre botteghe sulla terra di sopra, vicino alle case e al carro
+Quattro botteghe sulla terra di sopra, vicino alle case e al carro
 (`MERCANTI` in `dati/mercanti.js`; dove stanno:
 [terra-di-sopra.md](terra-di-sopra.md#i-mercanti)). Nelle discese non vende
 più nessuno.
 
 | chi | vende | in cima, sempre |
 |---|---|---|
-| ⚒️ l'armaiolo, davanti alla casa di sinistra | armi, scudi, armature | — |
-| 🌿 l'erborista, davanti alla casa di destra | niente di pescato: solo quello che sta sempre in cima | boccetta, pozione, ampolla, torcia |
-| 🧺 il rigattiere, accanto al carro | anelli, amuleti, chiavi | — e **compra** quello che hai in tasca, e te lo ridà (sotto) |
+| ⚒️ l'armaiolo (il fabbro), sotto la tettoia a sinistra | il ferro: spade, asce, archi, scudi, corazze e giubbe di cuoio | — |
+| 🔮 l'incantatrice (`incantatrice`), alla porta della casa di destra | la magia: bacchette e bastoni, vesti di stoffa | boccetta blu e ampolla delle stelle (l'energia) |
+| 🌿 l'erborista (la guaritrice), al banco con le erbe | niente di pescato: solo quello che sta sempre in cima | boccetta, pozione, ampolla, torcia |
+| 🧺 il rigattiere (il mercante), accanto al carro | anelli, amuleti, chiavi | — e **compra** quello che hai in tasca, e te lo ridà (sotto) |
+
+- **Il fabbro lavora il ferro, lei la magia** (l'utente, 13 ottobre 2026): le armi
+  della famiglia `bacchette` e i pezzi di `stoffa` sono solo suoi, e al fabbro
+  restano tutte le altre armi, gli scudi, il ferro e il cuoio (`vende.famiglie` e
+  `vende.senza` in `dati/mercanti.js`, `vendeLa`). Così il mago ha una bottega per le sue
+  tre strade (la spada dal fabbro, bacchetta e scudo e la pura magia da lei più il fabbro
+  per lo scudo), l'elfa le sue vesti, e il fabbro non si riempie di pezzi che metà degli eroi
+  non porta. **L'energia è sua e non più della guaritrice** (le cure e la torcia restano
+  alla guaritrice): una linguetta «Energia» sempre piena, uguale per tutti.
+- **A chi non porta la famiglia la linguetta non si mostra** (`schedeDi`): al
+  cavaliere e al nano l'incantatrice ha solo «Energia», all'elfa «Vesti» ed «Energia»,
+  al mago «Bacchette e bastoni», «Vesti» ed «Energia». Un banco di bacchette a chi non le
+  impugna sarebbe una linguetta vuota con la scusa «guarda l'altro».
 
 - **Il posto senza domande**: qui si spende quello che le domande hanno
   fruttato. Quello che non ci si può permettere resta visibile, pieno e coi suoi
@@ -32,12 +46,14 @@ più nessuno.
   un oggetto rarissimo): la guaritrice non lo vende, si trova ([rarita.md](rarita.md#lelisir-del-toro)).
 - **Compra solo il rigattiere, a metà prezzo** (`quantoVale`): comprare e
   rivendere perde metà, quindi non è un modo di fare gemme, ma libera le
-  tasche. Tre botteghe che comprano farebbero di ogni banco un posto dove
+  tasche. Più botteghe che comprano farebbero di ogni banco un posto dove
   svuotare le tasche; chi non compra dice chi lo fa. Quello che compra lo
   tiene da parte (**Riacquista**, sotto).
-- **L'armaiolo e il rigattiere portano il passo dopo della storia**
+- **L'armaiolo, l'incantatrice e il rigattiere portano il passo dopo della storia**
   (`passo` in `dati/mercanti.js`, `bancoDelPasso` in `motore/storia.js`):
-  i pezzi della riga con cui si entra nella prossima discesa che mancano,
+  i pezzi della riga con cui si entra nella prossima discesa che mancano
+  **e che vendono loro** (la verga e il saio del mago stanno dall'incantatrice, la
+  spada e lo scudo dal fabbro; anche la vetrina dei pezzi avanti guarda chi vende cosa),
   e un paio di cose (`altre`) che non costano più di quei pezzi.
   L'erborista pesca a righe (`righe` per discese finite), come prima.
 - **I pezzi delle righe dopo si comprano, a un prezzo più alto**
@@ -189,7 +205,8 @@ più nessuno.
   possono uscire magiche o rare, e allora hanno anche le loro abilità.
 - **Le gemme non diventano monete, mai**: la roba si vende solo in gemme.
 
-Nei test: `unita/sotterraneo-roba` (il banco porta il passo dopo; sovrapprezzo
+Nei test: `unita/sotterraneo-roba` (il fabbro e l'incantatrice si dividono la roba: bacchette e stoffa solo da
+lei, l'energia da lei, le cure e la torcia dalla guaritrice, le linguette per ogni eroe; il banco porta il passo dopo; sovrapprezzo
 dei pezzi avanti; nessun pezzo di famiglie non portate; ogni linguetta con
 dieci pezzi che migliorano, mai un leggendario, per i quattro
 eroi a ogni discesa e a vari livelli, anche con roba rara addosso; due pezzi

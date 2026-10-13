@@ -99,13 +99,14 @@ delle lame ha anche una parata ma è un attacco), né le passive.
 
 ## Come si vede e come si lancia
 
-- **Dal globo blu**: toccandolo, giù, si apre la scelta delle preparabili (`Preparati.vue`, nella cornice col ✕, chiusa anche da un
-  tocco fuori): una riga per abilità, col costo, cosa fa coi numeri veri, quanti passi dura, e perché no («ti manca energia», «serve lo
+- **Dalla casella degli incanti** della barra ([barra.md](barra.md); non più dal globo blu, che apre l'albero): toccandola si apre la
+  scelta delle preparabili (`Preparati.vue`, nella cornice col ✕, chiusa anche da un tocco fuori): una riga per abilità, col costo, cosa fa coi numeri veri, quanti passi dura, e perché no («ti manca energia», «serve lo
   scudo», «ce l'hai già»). Un tocco lancia (i primi 320 ms il tocco non conta). In fondo **«L'albero delle abilità»**, col «+» d'oro dei
-  punti da imparare: l'albero resta a un tocco, e dalla pagina dell'eroe. Chi non sa nessuna preparabile, e la terra di sopra, trovano
-  l'albero come prima. Non c'è una barra nuova ([../core/interfaccia.md](../core/interfaccia.md)).
+  punti da imparare: l'albero resta a un tocco, e dalla finestra dell'eroe. La casella c'è sempre: chi non sa nessuna preparabile trova
+  la finestra che lo dice e porta all'albero, e sopra (dove non si prepara) dice che si preparano giù. Non c'è una barra nuova
+  ([../core/interfaccia.md](../core/interfaccia.md)).
 - **Addosso**: una pastiglia per incanto sopra il globo blu (il glifo col colore del suo ramo e i passi, che scendono camminando; la
-  barretta sotto si accorcia, agli ultimi dieci passi lampeggia), da toccare come il globo. Nello scontro le stesse pastiglie sotto il
+  barretta sotto si accorcia, agli ultimi dieci passi lampeggia), da toccare come la casella (apre la stessa scelta); la casella dice «addosso/che ne sai». Nello scontro le stesse pastiglie sotto il
   palco (col testo e i passi), la barriera e la parata disegnate sull'eroe come sempre, e sul primo turno dell'eroe nella fila l'incanto
   che finisce prima, coi suoi passi. Nell'albero il riquadro di un nodo dice «si può preparare» e per quanti passi.
 - **Il giocatore finto** (`motore/banco.js`): prima di andare incontro a un mostro (la chiave, o quello che ha scelto) si avvicina a venti celle,
@@ -149,8 +150,8 @@ raddoppiati, e la taratura unica viene dopo) restano rosse e non ne nascono altr
 
 Nei test: `unita/sotterraneo-orologio` (i passi dell'eroe e che fermo non scorrono, la quota di mana uguale per tutti e mille passi
 che lo riempiono, il resto, i turni che non danno mana, lanciare dal campo e il «ce l'hai già», la barriera, la parata, Montagna,
-lo specchio, la linfa, i debuff di apertura, la sosta e quella vecchia, lo svenimento). `integrazione/sotterraneo-incanti` (col dito: il globo apre la scelta e non l'albero, lanciare paga e mette la pastiglia, «ce l'hai già», l'albero a un tocco col riquadro «si può preparare», lo scontro con la barriera, la pastiglia e il badge nella fila). Dei bersagli: `[data-incanti]` con
-`[data-incanto="<id>"][data-passi]` sopra il globo blu; `[data-preparati]` con `[data-azione="prepara-campo"][data-abilita="<id>"]`
+lo specchio, la linfa, i debuff di apertura, la sosta e quella vecchia, lo svenimento). `integrazione/sotterraneo-incanti` (col dito: la casella apre la scelta e il globo l'albero, lanciare paga e mette la pastiglia, «ce l'hai già», l'albero a un tocco col riquadro «si può preparare», lo scontro con la barriera, la pastiglia e il badge nella fila). Dei bersagli: `[data-incanti]` con
+`[data-incanto="<id>"][data-passi]` sopra il globo blu; la casella `[data-azione="incanti"]` (`data-n`, `data-preparabili`); `[data-preparati]` (con `[data-prep-sopra]` o `[data-prep-nessuno]` se non c'è niente da scegliere) con `[data-azione="prepara-campo"][data-abilita="<id>"]`
 (`data-addosso` coi passi che ha), `[data-azione="apri-albero"]`; nello scontro `[data-stati-eroe] [data-preparato][data-passi]` e
 `[data-incanto-fila]`; nell'albero `[data-preparabile]`. Un cheat per guardarli: `#sotterraneo=1&eroe=mago&giu=2&preparati=1`
 ([../core/comandi.md](../core/comandi.md)).

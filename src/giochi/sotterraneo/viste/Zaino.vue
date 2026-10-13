@@ -31,6 +31,7 @@ const props = defineProps({
   sopra: { type: Boolean, default: false },  // lo zaino della terra di sopra: ci si veste, ma non si butta niente
   punti: { type: Number, default: 0 },        // le schede della finestra dell'eroe: i «+» delle altre due
   puntiAbilita: { type: Number, default: 0 },
+  missioni: { type: Number, default: 0 },     // le missioni da consegnare, sulla scheda
   costoTasca: { type: Number, default: null },   // quanto costa una tasca in più; null: più di così non si compra
 })
 const emit = defineEmits(['usa', 'butta', 'riponi', 'chiudi', 'fuori', 'scheda', 'tasca'])
@@ -100,7 +101,7 @@ const polso = computed(() => (props.vita / props.vitaMax > 0.6 ? '#4fce7c' : pro
 
 <template>
   <Cornice alta data-zaino @chiudi="$emit('chiudi')" @fuori="e => $emit('fuori', e)">
-    <SchedeEroe attiva="zaino" :punti="punti" :punti-abilita="puntiAbilita" @scheda="s => $emit('scheda', s)" />
+    <SchedeEroe attiva="zaino" :punti="punti" :punti-abilita="puntiAbilita" :missioni="missioni" @scheda="s => $emit('scheda', s)" />
     <!-- il nome lo dice la scheda: qui solo dove si è -->
     <p class="sot-zaino-dove em" data-zaino-dove>
       <template v-if="sopra">🏘️ al villaggio</template>

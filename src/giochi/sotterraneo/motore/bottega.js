@@ -1,7 +1,7 @@
 // I mercanti di sopra: la roba dell'avventuriero (Corredo) davanti a un banco. Ogni mercante pesca il suo
 // banco una volta e quello che si compra se ne va; al giro nuovo (una discesa finita) il banco di chi veste cambia
 // poco alla volta (`prepara`: i tre pezzi più deboli via, tre nuovi dentro); le cose che non finiscono (le cure,
-// la torcia) stanno in cima. L'armaiolo e il rigattiere portano la riga della storia con cui
+// la torcia, l'energia) stanno in cima. L'armaiolo, l'incantatrice e il rigattiere portano la riga della storia con cui
 // si entra nella prossima discesa (motore/storia.js). Gira in Node: il giocatore finto ci fa la spesa (banco.js).
 // Le regole: docs/sotterraneo/bottega.md.
 import { Corredo, ABILITA_CONFRONTATE, ROBA_VUOTA } from './corredo.js'
@@ -162,7 +162,7 @@ export class Bottega extends Corredo {
   vetrina(chiave) {
     const m = mercanteDi(chiave)
     const b = this.banco(chiave)
-    return m && m.passo ? vetrinaDelPasso(m, this, this.finite, { banco: b.roba }) : []
+    return m && m.passo ? vetrinaDelPasso(m, this, this.finite, { banco: b.roba, vende: x => vendeLa(m, x) }) : []
   }
 
   // roba che non alza nessun numero di quello che si ha addosso non si mostra (resta pescata: il banco non
@@ -232,7 +232,7 @@ export class Bottega extends Corredo {
                    ...(this.posso(k) ? {} : { meritare: true }) }))
   }
 
-  // Il banco di chi veste (armaiolo, rigattiere) pronto per questo giro, scritto in `banchi` e `scaffali`: la prima volta
+  // Il banco di chi veste (armaiolo, incantatrice, rigattiere) pronto per questo giro, scritto in `banchi` e `scaffali`: la prima volta
   // ogni linguetta si riempie fino a PEZZI_PER_LINGUETTA; al giro nuovo (`ruota`) se ne vanno i più deboli e ne entrano
   // di nuovi, gli altri restano; a metà giro una linguetta non scende sotto MINIMO_PER_LINGUETTA. Si può chiamare
   // quante volte si vuole: dopo la prima non cambia niente. L'erborista, che non veste, si ripesca intero al giro

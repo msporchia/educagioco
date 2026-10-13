@@ -17,9 +17,11 @@ const props = defineProps({
   azioneMissione: { type: Function, default: null },  // (id, 'prendi' | 'consegna') → l'esito, da Gioco.vue
   segui: { type: String, default: null },    // la missione che le freccine seguono, scelta nel diario (avventura.segui)
   roba: { type: Object, default: null },     // quello che ci si porta dietro, già contato (schedaConLaRoba): { vita, att, dif, gemme, mano, mancina, corpo, tratti… }
+  punti: { type: Number, default: 0 },          // le linguette del diario (viste/SchedeEroe.vue): i «+» delle altre schede
+  puntiAbilita: { type: Number, default: 0 },
   annuncio: { type: Object, default: null }, // la zona appena nata che il minatore racconta (motore/zone.js): { chiave, nome, livello, detto, sentita }
 })
-const emit = defineEmits(['gioca', 'riprendi', 'scorda', 'terra', 'bottega', 'segui', 'sentito'])
+const emit = defineEmits(['gioca', 'riprendi', 'scorda', 'terra', 'bottega', 'segui', 'sentito', 'scheda'])
 riprendiSeChiesta(() => props.ripresa, () => emit('riprendi'))
 
 const chiede = ref(null)   // quale tappa si sta per cominciare avendo una discesa in sospeso
@@ -29,7 +31,7 @@ const perdere = ref(false)   // «lascio perdere questa discesa»: il foglio che
 // regala una strada per tornare giù (docs/sotterraneo/portale-e-sosta.md)
 const portale = computed(() => (props.ripresa && props.ripresa.via === 'portale' ? props.ripresa : null))
 
-// il diario delle missioni (viste/Diario.vue): si apre dalla casella 📖 della barra in basso (Gioco.vue, apriDiario)
+// il diario delle missioni (viste/Diario.vue), una scheda della finestra dell'eroe: lo apre Gioco.vue (apriDiario)
 const diarioAperto = ref(false)
 // «vai da …» nel dettaglio: il diario si chiude e l'eroe va da chi aspetta (viste/Terra.vue, vaDa)
 const terraEl = ref(null)
@@ -44,7 +46,7 @@ function fuoriDalDiario(e) {
   diarioAperto.value = false
   if (e) toccoDaFuori(e.clientX, e.clientY)
 }
-const apriDiario = () => { diarioAperto.value = !diarioAperto.value }
+const apriDiario = su => { diarioAperto.value = su === undefined ? !diarioAperto.value : !!su }
 defineExpose({ toccoDaFuori, apriDiario })
 
 function tocca(t) {
@@ -92,7 +94,8 @@ function comincia() {
       </template>
     </Terra>
 
-    <Diario v-if="diarioAperto" :stati="missioni" :tappe="tappe" :segui="segui" @chiudi="diarioAperto = false"
+    <Diario v-if="diarioAperto" :stati="missioni" :tappe="tappe" :segui="segui" :punti="punti" :punti-abilita="puntiAbilita"
+            @scheda="s => $emit('scheda', s)" @chiudi="diarioAperto = false"
             @segui="id => $emit('segui', id)" @vai="vaDa" @fuori="fuoriDalDiario" />
 
     <!-- detto prima: la roba resta, la discesa ricomincia da capo -->

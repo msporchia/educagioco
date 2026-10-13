@@ -1,7 +1,7 @@
 <script setup>
 // La barra in basso, come quella di Diablo, la stessa sopra e sotto: a sinistra il globo della vita, a destra quello
-// dell'energia delle abilità, in mezzo l'esperienza in una riga col livello e sotto le caselle (bevi, zaino, diario,
-// mappa, gemme) in una cornice di pietra. Tutto in CSS e SVG finché la cornice dipinta non è approvata (docs/sotterraneo/barra.md). Le regole non le
+// dell'energia delle abilità, in mezzo l'esperienza in una riga col livello e sotto le caselle (bevi, zaino, incanti,
+// mappa, gemme) in una cornice di pietra. I globi aprono la finestra dell'eroe; gli incanti da preparare hanno la loro casella. Tutto in CSS e SVG finché la cornice dipinta non è approvata (docs/sotterraneo/barra.md). Le regole non le
 // sa: dice solo cosa è stato toccato. `sopra`: sulla terra di sopra la mappa grande non c'è (la terra è già la mappa)
 import Globo from './Globo.vue'
 import Glifo from './Glifo.vue'
@@ -26,19 +26,25 @@ defineProps({
   pieni: { type: Number, default: 0 },          // le tasche occupate
   tasche: { type: Number, default: 6 },
   gemme: { type: Number, default: 0 },
-  missioni: { type: Number, default: 0 },       // quelle aperte, sul diario
-  pronta: { type: Boolean, default: false },    // una missione fatta da consegnare: il diario in oro
+  preparabili: { type: Number, default: 0 },   // gli incantesimi che l'eroe sa e si possono preparare: sulla casella degli incanti
+  missioniPronte: { type: Number, default: 0 }, // le missioni fatte, da consegnare: una pastiglia d'oro sul globo rosso
   mappa: { type: Boolean, default: false },     // la mappina è aperta grande
   sopra: { type: Boolean, default: false },
 })
-defineEmits(['bevi', 'zaino', 'diario', 'mappa', 'eroe', 'abilita'])
+defineEmits(['bevi', 'zaino', 'incanti', 'mappa', 'eroe', 'abilita'])
 </script>
 
 <template>
   <nav class="sot-plancia" data-barra-giu :data-barra="sopra ? 'sopra' : 'giu'" aria-label="la barra dell'eroe">
     <div class="sot-plancia-lato sot-plancia-sx">
-      <Globo tipo="vita" :quota="vita / Math.max(1, vitaMax)" :numero="vita" :colpito="colpito"
-             :etichetta="`vita ${vita} su ${vitaMax}`" />
+      <!-- la vita è un tasto: apre la finestra dell'eroe; la pastiglia d'oro dice che c'è una missione da consegnare -->
+      <button type="button" class="sot-globo-tasto" data-azione="vita" :data-missioni-pronte="missioniPronte || null"
+              :aria-label="`vita ${vita} su ${vitaMax}${missioniPronte ? `: ${missioniPronte} ${missioniPronte === 1 ? 'missione' : 'missioni'} da consegnare` : ''}`"
+              @click="$emit('eroe')">
+        <Globo tipo="vita" :quota="vita / Math.max(1, vitaMax)" :numero="vita" :colpito="colpito"
+               :etichetta="`vita ${vita} su ${vitaMax}`" />
+        <b v-if="missioniPronte" class="sot-pastiglia-missioni" aria-hidden="true"><Glifo nome="libro" :misura="12" />{{ missioniPronte }}</b>
+      </button>
       <svg class="sot-reggi" viewBox="0 0 100 44" aria-hidden="true"><use href="#sot-reggi" /></svg>
     </div>
 
@@ -68,9 +74,12 @@ defineEmits(['bevi', 'zaino', 'diario', 'mappa', 'eroe', 'abilita'])
                 aria-label="zaino" @click="$emit('zaino')">
           <Pixel :figura="BISACCIA" :scala="2" /><b>{{ pieni }}/{{ tasche }}</b>
         </button>
-        <button type="button" class="sot-cella" :class="{ 'sot-pronta': pronta }" data-casella-barra="diario"
-                :data-azione="sopra ? 'diario' : 'diario-giu'" aria-label="le missioni" @click="$emit('diario')">
-          <span class="em">📖</span><b v-if="missioni" data-diario-n>{{ missioni }}</b>
+        <!-- gli incanti da preparare: quanti ne hai addosso su quanti ne sai; spenta se non ne sai nessuno o sei sopra, ma si tocca lo stesso e dice perché -->
+        <button type="button" class="sot-cella" :class="{ 'sot-pronta': incanti.length, 'sot-vuota': sopra || !preparabili }" data-casella-barra="incanti"
+                data-azione="incanti" :data-n="incanti.length" :data-preparabili="preparabili"
+                :aria-label="incanti.length ? `incanti addosso: ${incanti.length} su ${preparabili}` : preparabili ? `incanti da preparare: ${preparabili}` : 'incanti da preparare: nessuno'"
+                @click="$emit('incanti')">
+          <Glifo nome="incanto" :misura="19" /><b>{{ incanti.length }}/{{ preparabili }}</b>
         </button>
         <button type="button" class="sot-cella" :class="{ 'sot-vuota': sopra }" data-casella-barra="mappa"
                 data-azione="mappina" :disabled="sopra" :aria-label="sopra ? 'la mappa: sei già sopra' : 'la mappa'"
@@ -85,15 +94,15 @@ defineEmits(['bevi', 'zaino', 'diario', 'mappa', 'eroe', 'abilita'])
     </div>
 
     <div class="sot-plancia-lato sot-plancia-dx">
-      <!-- l'energia delle abilità: un tocco apre l'albero; il «+» dice che ci sono punti da dare all'albero -->
-      <!-- gli incanti preparati addosso, con i passi che restano: stanno sul globo che li ha pagati, e si toccano come lui -->
+      <!-- gli incanti preparati addosso, con i passi che restano: stanno sul globo che li ha pagati, e si toccano come la loro casella -->
       <button v-if="incanti.length" type="button" class="sot-incanti" data-incanti :aria-label="`incanti addosso: ${incanti.map(x => `${x.nome}, ${x.passi} passi`).join('; ')}`"
-              @click="$emit('abilita')">
+              @click="$emit('incanti')">
         <span v-for="x in incanti" :key="x.id" class="sot-incanto" :data-incanto="x.id" :data-passi="x.passi" :class="{ 'sot-incanto-fine': x.passi <= 10 }"
               :style="{ '--tinta': x.tinta, '--quota': Math.max(0.08, Math.min(1, x.passi / x.dura)) }">
           <Glifo :nome="x.glifo" :misura="13" /><b>{{ x.passi }}</b>
         </span>
       </button>
+      <!-- l'energia delle abilità: un tocco apre l'albero (la scheda Abilità); il «+» dice che ci sono punti da dare -->
       <button type="button" class="sot-globo-tasto" data-azione="abilita" :data-punti-abilita="puntiAbilita || null"
               :aria-label="`energia ${energia} su ${energiaMax}${puntiAbilita ? `: ${puntiAbilita} da imparare` : ''}`"
               @click="$emit('abilita')">

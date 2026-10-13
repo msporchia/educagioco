@@ -25,7 +25,7 @@ freccia), `motore/dialoghi.js` (`strada`).
   (`tappe[i].fatta`), quindi chi giocava prima la trova già al punto giusto e
   non c'è un campo nuovo nel profilo.
 - **Non è una missione dei personaggi**: non entra nel tetto di tre né nel
-  numero sul 📖 ([missioni.md](missioni.md)), non si prende né si consegna.
+  numero delle missioni da consegnare ([missioni.md](missioni.md)), non si prende né si consegna.
   È sempre lì, in cima.
 - **Chiusa per l'età**: la porta c'è, ma la riga dice «Questa porta, per ora,
   resta chiusa» e nessuna freccia la indica (`ferma`). Finite le sette, il
@@ -79,5 +79,5 @@ e `[data-chiusa-perche]`; nel dialogo la riga `[data-storia]`.
 `unita/sotterraneo-missioni` (i capitoli, le porte, il diario, la freccia e le
 sue precedenze), `unita/sotterraneo-dialoghi` (il minatore),
 `integrazione/sotterraneo-missioni` (col dito). Per guardarla senza giocare:
-`node strumenti/scatta-app.mjs x --dist --storia 2 --tocca '[data-azione="diario"]'`
+`node strumenti/scatta-app.mjs x --dist --storia 2 --tocca '[data-azione="vita"],[data-scheda="missioni"]'`
 ([../core/comandi.md](../core/comandi.md)).

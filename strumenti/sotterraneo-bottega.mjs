@@ -3,14 +3,14 @@
 // È lo strumento per guardare il banco senza aprire il gioco (docs/sotterraneo/bottega.md). La roba addosso è quella
 // attesa dalla storia a quella discesa, o con --raro un pezzo raro di ogni posto al livello dell'eroe.
 //
-//   npm run bottega -- --eroe cavaliere --livello 12 --raro      # l'armaiolo e il rigattiere, il cavaliere al 12 con roba rara
+//   npm run bottega -- --eroe cavaliere --livello 12 --raro      # i mercanti che vestono (fabbro, incantatrice, mercante), il cavaliere al 12 con roba rara
 //   npm run bottega -- --eroe mago --livello 5 --finite 2        # con la roba attesa dopo due discese
 //   npm run bottega -- --livello 12 --raro --poi 13              # e il banco dopo essere salito al 13 (si rinnova solo se serve)
 //   npm run bottega -- --livello 12 --raro --giro                # e dopo una discesa finita (il banco ruota)
 //   npm run bottega -- --eroe elfa --livello 1 --nudo            # un eroe senza niente addosso
-//   npm run bottega -- --seme 7 --gemme 500 --mercante armaiolo
+//   npm run bottega -- --seme 7 --gemme 500 --mercante incantatrice
 import { COSE } from '../src/giochi/sotterraneo/dati/cose.js'
-import { MERCANTI, schedaDi } from '../src/giochi/sotterraneo/dati/mercanti.js'
+import { MERCANTI, schedaDi, schedeDi } from '../src/giochi/sotterraneo/dati/mercanti.js'
 import { Bottega, alGiroNuovo, robaRaraDi } from '../src/giochi/sotterraneo/motore/bottega.js'
 import { ROBA_VUOTA } from '../src/giochi/sotterraneo/motore/corredo.js'
 import { robaAttesa, crescitaAttesa } from '../src/giochi/sotterraneo/motore/storia.js'
@@ -41,7 +41,7 @@ function stampa(b, titolo) {
   console.log(`addosso: mano ${nome(b.mano)} · mancina ${nome(b.mancina)} · corpo ${nome(b.corpo)} · dito ${nome(b.dito)}`)
   for (const m of MERCANTI.filter(x => x.passo && (!soloMercante || x.chiave === soloMercante))) {
     const vista = b.mercanziaVista(m.chiave)
-    for (const s of m.schede.filter(x => x.dove)) {
+    for (const s of schedeDi(m, eroeDi(eroe)).filter(x => x.dove)) {
       const qui = vista.filter(r => COSE[r.chiave].dove && schedaDi(m, r.chiave) === s)
       console.log(`\n${m.nome} · ${s.nome} (${qui.length} pezzi)`)
       for (const r of qui) {
@@ -50,6 +50,8 @@ function stampa(b, titolo) {
         console.log(`  ${c.nome.padEnd(34)} L${String(c.liv || 1).padStart(2)} ${(c.rarita || 'comune').padEnd(7)} 💎${String(b.quantoCosta(r.chiave)).padStart(6)}  meglio ${String(conf ? conf.meglio : '-').padStart(6)}  ${nota}`)
       }
     }
+    // quello che sta sempre in cima (l'energia dell'incantatrice), uguale per tutti
+    if (m.sempre.length) console.log(`\n${m.nome} · sempre sul banco: ${m.sempre.map(k => `${COSE[k].nome} 💎${b.quantoCosta(k)}`).join(' · ')}`)
   }
 }
 
