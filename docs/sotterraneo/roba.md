@@ -117,6 +117,15 @@ la roba con livello e rarità: [rarita.md](rarita.md).
 - **Un forziere aperto è scenografia** e non si tocca più: si mangiava il
   tocco destinato alla roba, e a un forziere ci si ferma accanto, quindi la
   roba non deve nascere sotto di lui.
+- **Il forziere veste il posto** (una regola sola): legno e ferro nelle cantine (quattro disegni), pietra e ferro freddo nella cripta (tre,
+  fra cui `cripta-forziere`), ferro e brace nella fornace (due), uno a caso dal numero che il piano gli dà (`pelle`, un numero: lo scenario
+  sceglie il disegno, come i relitti). **Non dice cosa c'è dentro**: una pelle che promettesse la rarità mentirebbe una volta su due (il forziere dà
+  un pezzo uno scontro su tre, se no una pozione o una torcia). **Il forziere d'oro è solo quello di una missione**
+  ([missioni-bersaglio.md](missioni-bersaglio.md)); aperto, tutti diventano lo stesso forziere pixel (`forziere-aperto`).
+- **Le gemme per terra dicono quanto valgono dal colore**: sotto sei la moneta che gira; da sei in su una gemma, blu (6–11), verde (12–23), viola
+  (24–47), rossa (48 e più) (`SOGLIE_DELLE_GEMME`, `dati/tessere.js`). Il numero cresce con la discesa e col livello (`valoreDelLivello`), quindi in fondo sono
+  quasi tutte rosse. Le due pozioni dipinte che non facevano niente (`pozione-nera`, `pozione-viola`: la viola è il doppione dell'Ampolla, e di
+  stati da curare l'eroe non ne ha) sono state tolte.
 
 ## La torcia si accende da sé, e finisce
 

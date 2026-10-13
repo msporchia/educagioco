@@ -38,6 +38,8 @@ const STANZE_CON_UN_APPOSTATO = 0.1
 const TETTO_DEL_BRANCO = 6
 // i mostri che stanno col grosso nella sua stanza (da due a tre)
 const SCAGNOZZI_DEL_GROSSO = [2, 3]
+// le pelli di una porta qualunque, a caso dalla cella: dal numero non si capisce cosa c'è dietro (docs/sotterraneo/piani.md, «Le porte»)
+const PELLI_DELLE_PORTE = ['semplice', 'semplice', 'ferro', 'chiara']
 
 export class Livello {
   // `guardiano`: chi porta la chiave della scala, dichiarato dalla tappa (l'unica cosa che non si può aggirare)
@@ -681,7 +683,7 @@ export class Livello {
       const s = pesca(); if (!s) break
       s.ruolo = 'tesoro'
       this.robe.push({ che: 'forziere', x: s.cx, y: s.cy, em: '🎁', nome: 'Un forziere',
-                       pelle: this.pelleDelForziere(),   // l'oro è raro e si riconosce da lontano
+                       pelle: this.pelleDelForziere(),   // un numero: lo scenario sceglie il disegno (dati/tessere.js)
                        aperto: false })
     }
 
@@ -739,11 +741,7 @@ export class Livello {
   }
 
   // un tiro solo, non due annidati: ogni numero pescato sposta tutta la generazione a valle
-  pelleDelForziere() {
-    const t = this.rnd()
-    return t < 0.2 ? 'forziere-oro-chiuso'
-      : t < 0.45 ? 'forziere-scuro-chiuso' : 'forziere-chiuso'
-  }
+  pelleDelForziere() { return Math.floor(this.rnd() * 1000) }
 
   // mai nella stanza d'ingresso; una o due per piano a ogni misura (12/10/2026, vedi docs/sotterraneo/roba.md):
   // un tiro solo per il numero, che ogni tiro in più o in meno sposta il piano a valle
@@ -1038,7 +1036,7 @@ export class Livello {
         const k = mezzo.x + ',' + mezzo.y
         if (messe.has(k)) continue
         const porta = { che: 'porta', x: mezzo.x, y: mezzo.y, em: '🚪',
-                        nome: 'Una porta chiusa', pelle: portone ? 'bella' : numeroDa(mezzo.x, mezzo.y, 5) % 3 ? 'semplice' : 'ferro',
+                        nome: 'Una porta chiusa', pelle: portone ? 'bella' : PELLI_DELLE_PORTE[numeroDa(mezzo.x, mezzo.y, 5) % PELLI_DELLE_PORTE.length],
                         aperta: false, gruppo: s.id }
         messe.set(k, porta)
         this.robe.push(porta)

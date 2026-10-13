@@ -68,20 +68,6 @@
         25
       ]
     },
-    "fornace-porta-oro": {
-      "da": [
-        364,
-        104
-      ],
-      "cella": [
-        128,
-        200
-      ],
-      "misura": [
-        16,
-        25
-      ]
-    },
     "fornace-porta-corna": {
       "da": [
         526,
@@ -141,20 +127,6 @@
     "fornace-fianco-ferro": {
       "da": [
         234,
-        368
-      ],
-      "cella": [
-        72,
-        244
-      ],
-      "misura": [
-        6,
-        20
-      ]
-    },
-    "fornace-fianco-oro": {
-      "da": [
-        388,
         368
       ],
       "cella": [

@@ -319,34 +319,6 @@
         24
       ]
     },
-    "cantine-porta-oro": {
-      "da": [
-        628,
-        645
-      ],
-      "cella": [
-        63,
-        97
-      ],
-      "misura": [
-        16,
-        24
-      ]
-    },
-    "cantine-porta-teschio": {
-      "da": [
-        706,
-        645
-      ],
-      "cella": [
-        62,
-        97
-      ],
-      "misura": [
-        16,
-        24
-      ]
-    },
     "cantine-porta-chiara": {
       "da": [
         863,
@@ -397,20 +369,6 @@
       "cella": [
         45,
         80
-      ],
-      "misura": [
-        12,
-        16
-      ]
-    },
-    "cantine-fianco-oro": {
-      "da": [
-        674,
-        786
-      ],
-      "cella": [
-        47,
-        82
       ],
       "misura": [
         12,

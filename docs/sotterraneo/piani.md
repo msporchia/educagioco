@@ -140,10 +140,10 @@ vuoto, l'8% aveva un mostro, il 22% due o tre, il 2% quattro o più. **Il numero
 ## Le porte
 
 - **Una porta non dice cosa c'è dietro** (l'utente, 13 ottobre: «non devi già sapere cosa troverai»): niente 💀💎⛲ sopra, niente
-  frase al tocco, la pelle è la stessa per ogni stanza (`semplice` o `ferro`, a caso dalla cella: `pelle` della porta in
-  `dati/tessere.js`). Si chiudono ancora le stanze del tesoro e della fonte, fuori strada.
-- **La stanza del grosso, in tre piani su quattro, ha il portone** (`pelle: 'bella'`: il teschio nelle cantine e nella cripta, le
-  corna nella fornace; le porte già dipinte, `porte` di `SCENARI`): l'unica porta sulla strada della scala, una domanda in più.
+  frase al tocco, la pelle è la stessa per ogni stanza (`semplice`, `ferro` o `chiara`, a caso dalla cella: `PELLI_DELLE_PORTE` in
+  `motore/livello.js`, `pelle` della porta in `dati/tessere.js`; la chiara è la porta di legno chiaro con le fasce di ferro). Si chiudono ancora le stanze del tesoro e della fonte, fuori strada.
+- **La stanza del grosso, in tre piani su quattro, ha il portone** (`pelle: 'bella'`: la porta nera col teschio d'oro nelle cantine e nella cripta
+  (`porta-nera-teschio`, da `bottino-e-arredo.png`, solo di fronte: di fianco resta il pezzo di fianco col teschio), le corna nella fornace; `porte` di `SCENARI`): l'unica porta sulla strada della scala, una domanda in più.
   Dove la geometria non dà un varco con un muro dritto resta aperta: circa un piano col grosso su due lo ha (112 su 210).
 - **Mai su un muro a scaletta.** Un varco (le celle di porta vicine, anche in diagonale o a una cella) si stringe a una cella,
   `portaDritta`: roccia ai due lati e la stanza che continua dritta di qua per tre celle; se il muro è obliquo ma basta scavare una o

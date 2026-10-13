@@ -114,6 +114,8 @@ export const ORPELLI = {
     o('cripta-cerchio-verde', 'posato', 5, 'Un cerchio di rune verdi, coperto di muschio.'),
     o('cripta-tappeto-rune', 'posato', 4, 'Un tappeto di rune, lucido di antico lavoro.'),
     o('cripta-arco-edera', 'appeso', 4, 'Un arco coperto d\'edera. Non porta da nessuna parte.'),
+    o('cripta-lampadario', 'appeso', 4, 'Un lampadario di ferro, con le candele spente da una vita.'),
+    o('cripta-candela', 'posato', 1, 'Un mozzicone di candela in una pozza di cera.'),
   ],
 
   // sotterraneo_5_3.png: la fornace

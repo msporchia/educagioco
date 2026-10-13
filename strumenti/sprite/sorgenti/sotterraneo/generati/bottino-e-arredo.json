@@ -48,15 +48,21 @@
     "forziere-oro-chiuso":   { "da": [143, 294], "cella": [19, 17] },
     "forziere-scuro-chiuso": { "da": [65, 293],  "cella": [19, 17] },
 
-    "moneta-grossa":  { "da": [17, 369], "cella": [14, 13] },
-    "mucchio-monete": { "da": [80, 368], "cella": [15, 14] },
     "gemma-blu":      { "da": [80, 389],  "cella": [13, 12] },
     "gemma-rossa":    { "da": [103, 389], "cella": [13, 12] },
     "gemma-verde":    { "da": [126, 389], "cella": [13, 12] },
     "gemma-viola":    { "da": [149, 389], "cella": [13, 12] },
 
-    "pozione-nera":  { "da": [325, 16], "cella": [11, 16] },
-    "pozione-viola": { "da": [264, 15], "cella": [12, 17] },
+
+    "cantine-forziere-a": { "da": [14, 292], "cella": [20, 18] },
+    "cantine-forziere-b": { "da": [90, 293], "cella": [18, 18] },
+    "cantine-forziere-c": { "da": [116, 293], "cella": [20, 18] },
+    "cantine-forziere-d": { "da": [16, 342], "cella": [18, 17] },
+    "cripta-forziere-b": { "da": [40, 342], "cella": [20, 18] },
+    "fornace-forziere-b": { "da": [92, 318], "cella": [20, 18] },
+    "fornace-forziere-c": { "da": [144, 342], "cella": [19, 18] },
+
+    "porta-nera-teschio": { "da": [148, 251], "cella": [20, 28], "misura": [16, 23], "riempi": { "chiudi": 2 } },
 
     "__pezzi-col-nome": "le figure dei leggendari e dei pezzi dei grossi (dati/pezzi.js), scelte dal catalogo roba.json",
     "zanna-del-drago": { "da": [125, 42], "cella": [9, 24] },
