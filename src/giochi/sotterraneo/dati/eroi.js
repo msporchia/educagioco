@@ -38,8 +38,8 @@ export const EROI = [
   // tenere in piedi il gioco del bottino; lo scettro a una mano gli lascia lo scudo, misurato dal banco
   { chiave: 'mago', nome: 'Mago', em: '🧙', sprite: 'mago',
     chi: 'il mago',
-    vita: 12, att: 5, dif: 0,
-    parte: { forza: 1, destrezza: 2, intelligenza: 5, tempra: 2 }, vitaPerLivello: 2, dote: 'tempra', lanci: [6, 6, 5, 3, 1],
+    vita: 13, att: 5, dif: 1,
+    parte: { forza: 1, destrezza: 2, intelligenza: 5, tempra: 2 }, vitaPerLivello: 2, dote: 'tempra', lanci: [7, 7, 6, 4, 1],
     // anche le spade: il mago guerriero (docs/sotterraneo/abilita.md). Il requisito di forza è quello di tutti; la forza del
     // mago è bassa, quindi comincia dalla spada corta e cresce solo se ci mette dei punti. `secondarie`: armi che la classe
     // impugna ma che non sono la sua (la pagina non pretende che la caratteristica combaci col braccio, vedi guastiDegliEroi)
