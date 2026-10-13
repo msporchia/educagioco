@@ -5,7 +5,7 @@
 import { ref, onMounted, watch } from 'vue'
 import { PEZZI } from '../../castello/dati/figure.js'
 import { caricaFigure, immagineFigure } from '../../castello/scena/pittori.js'
-import { fotogramma, arco } from '../scena/figure.js'
+import { fotogramma, arco, armiPronte } from '../scena/figure.js'
 import { stadioDi } from '../../../data/ops.js'
 
 const props = defineProps({
@@ -31,7 +31,7 @@ function dipingi() {
   if (conArco) arco(c, x + w * s / 2, piede, w * s, h * s)   // gli arcieri: il foglio non ha l'arco
 }
 
-onMounted(() => caricaFigure().then(dipingi))
+onMounted(() => Promise.all([caricaFigure(), armiPronte()]).then(dipingi))
 watch(() => [props.id, props.livello], dipingi)
 </script>
 

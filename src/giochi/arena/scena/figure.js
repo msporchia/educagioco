@@ -5,6 +5,7 @@
 // hanno anche i passi di lato (6 fotogrammi). Di schiena o di fronte non esiste
 // niente per tutte: in campo guardano dalla parte della loro squadra.
 import { PEZZI } from '../../castello/dati/figure.js'
+import { NITIDO, NITIDI } from '../../sotterraneo/dati/atlante.js'
 
 export const CREATURA = {
   scheletri: 'scheletro', guardiano: 'scheletro-scudo', lupi: 'lupo', diavoletto: 'diavoletto',
@@ -48,11 +49,42 @@ export function guastiDelleFigure() {
   return g
 }
 
-/* L'arco degli arcieri: nel foglio lo scheletro è a mani vuote. Si disegna in mano, davanti al
-   corpo (le figure guardano a destra; `specchia` le gira); `tira` (0-1) è la corda tirata del
-   colpo. (x, piede) è il piede della figura, `lw`×`lh` la sua misura a schermo. */
+/* L'arco degli arcieri: nel foglio lo scheletro è a mani vuote, e l'arco è quello dipinto del
+   sotterraneo (`arco-corto`, il pezzo grande), in mano davanti al corpo come l'eroe là
+   (sotterraneo/scena/tela.js, `arma`): un punto fisso, non un aggancio per fotogramma. Le armi
+   del foglio guardano a destra; `specchia` le gira. `tira` (0-1) è il rinculo del colpo. Finché
+   l'immagine non è pronta, un arco disegnato. (x, piede) è il piede della figura, `lw`×`lh` la
+   sua misura a schermo. */
+let foglioArmi = null
+function armi() {
+  if (!foglioArmi && typeof Image !== 'undefined') {
+    foglioArmi = new Image()
+    foglioArmi.src = NITIDO
+  }
+  return foglioArmi && foglioArmi.complete && foglioArmi.naturalWidth ? foglioArmi : null
+}
+
+/* per chi dipinge una volta sola (il ritratto delle carte): aspetta che l'arco ci sia */
+export function armiPronte() {
+  const img = (armi(), foglioArmi)
+  if (!img || (img.complete && img.naturalWidth)) return Promise.resolve()
+  return new Promise(ok => { img.addEventListener('load', ok, { once: true }); img.addEventListener('error', ok, { once: true }) })
+}
+
 export function arco(c, x, piede, lw, lh, specchia = false, tira = 0) {
   const v = specchia ? -1 : 1
+  const img = armi()
+  if (img) {
+    const [sx, sy, w, h] = NITIDI['arco-corto']
+    const ah = lh * 0.85, aw = ah * w / h
+    const cx = x + v * (lw * 0.42 - tira * lh * 0.06), basso = piede - lh * 0.06
+    c.save()
+    c.translate(cx, basso - ah)
+    if (specchia) c.scale(-1, 1)
+    c.drawImage(img, sx, sy, w, h, -aw / 2, 0, aw, ah)
+    c.restore()
+    return
+  }
   const cx = x + v * lw * 0.1, cy = piede - lh * 0.5, r = lh * 0.3, a = 1.15
   c.save()
   c.lineCap = 'round'
@@ -60,8 +92,5 @@ export function arco(c, x, piede, lw, lh, specchia = false, tira = 0) {
   c.beginPath(); c.arc(cx, cy, r, v > 0 ? -a : Math.PI - a, v > 0 ? a : Math.PI + a); c.stroke()
   c.strokeStyle = '#a8703a'; c.lineWidth = Math.max(1, lh * 0.045)
   c.beginPath(); c.arc(cx, cy, r, v > 0 ? -a : Math.PI - a, v > 0 ? a : Math.PI + a); c.stroke()
-  const ex = cx + v * r * Math.cos(a), dy = r * Math.sin(a)
-  c.strokeStyle = 'rgba(240,235,220,.9)'; c.lineWidth = Math.max(0.7, lh * 0.02)
-  c.beginPath(); c.moveTo(ex, cy - dy); c.lineTo(ex - v * r * 0.5 * tira, cy); c.lineTo(ex, cy + dy); c.stroke()
   c.restore()
 }

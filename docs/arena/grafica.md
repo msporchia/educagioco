@@ -31,8 +31,11 @@ la porta e il ponte sono disegnati in codice finché non arriva il foglio dipint
 - **Di che squadra è una truppa** si vede da un contorno del suo colore (la figura tinta,
   `tinta()`, spostata di un pelo ai quattro lati) e da un disco pieno sotto i piedi: con
   il solo cerchietto, vicine, non si distinguevano.
-- **Gli arcieri hanno l'arco disegnato** (`arco()` in `scena/figure.js`): nel foglio lo
-  scheletro è a mani vuote. Tirano la corda quando colpiscono.
+- **Gli arcieri hanno in mano l'arco del sotterraneo** (`arco()` in `scena/figure.js`, il
+  pezzo grande `arco-corto` di `sotterraneo/dati/atlante.js`): nel foglio lo scheletro è a
+  mani vuote. Come l'arma dell'eroe là, sta a un punto fisso davanti al corpo, non a un
+  aggancio per fotogramma, e rincula quando tirano. Il ritratto delle carte aspetta che
+  l'immagine ci sia (`armiPronte()`).
 - **Chi è chi** (`scena/figure.js`): scheletro (arcieri), scheletro con scudo (opliti),
   lupo, diavoletto, pipistrello, negromante, golem, drago. Lupo e drago hanno i passi
   di lato (6 fotogrammi); le altre il respiro (4) e uno scatto in avanti quando
