@@ -447,6 +447,14 @@
   background: radial-gradient(circle at 40% 35%, #fff2b0, #ffd23f 55%, #c98a10);
   box-shadow: 0 0 0 1.5px #3a2400, 0 0 10px #ffd23fcc; animation: sot-punti 1.4s ease-in-out infinite;
 }
+/* una missione da consegnare: la pastiglia d'oro col libro e il numero, in alto a sinistra del globo rosso (docs/sotterraneo/barra.md) */
+.sot-pastiglia-missioni {
+  position: absolute; left: 1px; top: -7px; z-index: 3; min-width: 28px; height: 18px; padding: 0 5px 0 3px; border-radius: 9px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 1px; font-size: 11px; font-weight: 900; line-height: 1; color: #2a1a00;
+  background: radial-gradient(circle at 40% 35%, #fff2b0, #ffd23f 55%, #c98a10);
+  box-shadow: 0 0 0 1.5px #3a2400, 0 0 10px #ffd23fcc; animation: sot-punti 1.4s ease-in-out infinite;
+}
+.sot-pastiglia-missioni .sot-glifo { color: #3a2400 }
 @keyframes sot-punti { 50% { transform: scale(1.15); box-shadow: 0 0 0 1.5px #3a2400, 0 0 18px #ffe58a } }
 
 /* il globo: l'anello di pietra, il vetro, il liquido con l'onda, il riflesso */
@@ -497,7 +505,7 @@
 .sot-globo.sot-colpito .sot-globo-vetro { box-shadow: inset 0 0 0 1px #000, inset 0 0 14px #ff3b2a }
 @keyframes sot-sobbalza { 30% { transform: translateY(2px) rotate(-3deg) } 70% { transform: translateY(-1px) rotate(2deg) } }
 @media (prefers-reduced-motion: reduce) {
-  .sot-onda, .sot-globo.sot-colpito, .sot-globo.sot-acceso, .sot-punti, .sot-incanto-fine { animation: none }
+  .sot-onda, .sot-globo.sot-colpito, .sot-globo.sot-acceso, .sot-punti, .sot-pastiglia-missioni, .sot-incanto-fine { animation: none }
   .sot-guizza .sot-globo-liquido { animation: none; filter: brightness(.6) }
 }
 
@@ -610,7 +618,9 @@
 .sot-armato > .sot-pezzo { position: absolute; display: block }
 .sot-armato > .sot-pezzo > i { position: absolute; top: 0; left: 0; display: block }
 
-/* il diario (viste/Diario.vue) */
+/* il diario (viste/Diario.vue): il corpo della scheda scorre sotto le linguette */
+.sot-diario-corpo { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 0 2px 6px; touch-action: pan-y }
+.sot-diario-corpo > .sot-diario-sezione:first-child h3 { margin-top: 2px }
 .sot-diario-sezione h3 {
   margin: 14px 0 6px; font-size: 12px; font-weight: 700; letter-spacing: .05em;
   text-transform: uppercase; color: var(--sot-tenue);
@@ -1152,7 +1162,7 @@
 }
 .sot-eroe-cambia:active { transform: translateY(1px) }
 
-/* le tre schede della finestra dell'eroe (viste/SchedeEroe.vue): linguette di cuoio, quella aperta d'oro */
+/* le quattro schede della finestra dell'eroe (viste/SchedeEroe.vue): linguette di cuoio, quella aperta d'oro */
 .sot-schede { display: flex; gap: 5px; margin-right: 46px; flex: none }
 .sot-scheda {
   position: relative; flex: 1; min-width: 0; height: 40px; padding: 0 4px; cursor: pointer;
@@ -1173,7 +1183,10 @@
   display: grid; place-items: center; font-size: 11px; font-weight: 900; color: #2a1a00;
   background: radial-gradient(circle at 40% 35%, #fff2b0, #ffd23f 55%, #c98a10); box-shadow: 0 0 0 1.5px #3a2400, 0 0 8px #ffd23fcc;
 }
-@media (max-width: 340px) { .sot-scheda span { display: none } }   /* a 320 px restano le icone */
+/* quattro linguette: sotto i 430 px solo quella aperta dice il nome (e si allarga), le altre restano icone; a 340 px nessuna */
+.sot-scheda { font-size: 12.5px }
+@media (max-width: 430px) { .sot-scheda:not(.sot-attiva) span { display: none } .sot-scheda.sot-attiva { flex: 3 }}
+@media (max-width: 340px) { .sot-scheda span { display: none } }
 
 /* i punti da dare e, accanto, «Riassegna»: un tasto piccolo che chiede conferma, perché costa gemme */
 .sot-punti-riga { display: flex; align-items: center; gap: 8px; flex: none }

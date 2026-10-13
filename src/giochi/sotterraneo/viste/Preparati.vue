@@ -1,9 +1,10 @@
 <script setup>
-// La scelta degli incantesimi da preparare, dal globo blu della barra (docs/sotterraneo/orologio.md): le abilità che proteggono si
+// La scelta degli incantesimi da preparare, dalla loro casella nella barra (docs/sotterraneo/orologio.md): le abilità che proteggono si
 // lanciano anche fuori dallo scontro, pagando l'energia di sempre, e restano addosso per un po' di passi; lo scontro comincia con loro
 // già attive. Il mana speso adesso non c'è dopo. Un tocco lancia; in fondo il tasto dell'albero (con il «+» d'oro dei punti da
-// imparare). Non calcola niente: le voci e i perché le dà la corsa (motore/preparati.js). Si chiude con la ✕ o toccando fuori
-// (docs/core/interfaccia.md). Per i primi 320 ms i tasti non sentono il tocco (il click che il dito lascia dietro al globo).
+// imparare). Non calcola niente: le voci e i perché le dà la corsa (motore/preparati.js). La casella c'è sempre: se l'eroe non ne sa nessuno
+// (`voci` vuote) lo dice e porta all'albero, e sopra (`sopra`) dice che si preparano laggiù. Si chiude con la ✕ o toccando fuori
+// (docs/core/interfaccia.md). Per i primi 320 ms i tasti non sentono il tocco (il click che il dito lascia dietro alla casella).
 import { ref, onMounted, onUnmounted } from 'vue'
 import { CIECA } from '../../pausa.js'
 import Cornice from './Cornice.vue'
@@ -15,6 +16,7 @@ defineProps({
   energia: { type: Number, default: 0 },
   energiaMax: { type: Number, default: 10 },
   puntiAbilita: { type: Number, default: 0 },  // i punti dell'albero da dare: un «+» sul tasto dell'albero
+  sopra: { type: Boolean, default: false },   // sulla terra di sopra non si prepara niente: la finestra lo spiega
 })
 const emit = defineEmits(['prepara', 'albero', 'chiudi', 'fuori'])
 
@@ -31,12 +33,20 @@ const vai = (che, ...a) => { if (pronto.value) emit(che, ...a) }
 <template>
   <Cornice data-preparati :data-pronto="pronto || null" :data-energia="energia" @chiudi="$emit('chiudi')" @fuori="e => $emit('fuori', e)">
     <h2 class="sot-prep-titolo">Prepara un incantesimo</h2>
-    <p class="sot-prep-dida">
+    <p v-if="sopra" class="sot-prep-dida" data-prep-sopra>
+      Gli incantesimi si preparano giù, nel sotterraneo: li lanci prima di uno scontro e restano addosso per qualche passo.
+      Al villaggio non servirebbero a niente.
+    </p>
+    <p v-else-if="!voci.length" class="sot-prep-dida" data-prep-nessuno>
+      Non sai ancora nessun incantesimo da preparare. Nell'albero delle abilità ce ne sono: le protezioni e quelli che indeboliscono
+      si lanciano anche prima dello scontro e restano addosso per qualche passo.
+    </p>
+    <p v-else class="sot-prep-dida">
       Lo lanci adesso e resta addosso per qualche passo: se incontri dei mostri, lo scontro comincia già protetto.
       Ma l'energia che spendi adesso non c'è più dopo.
       <span class="sot-albero-energia" data-energia-preparati><Glifo nome="energia" :misura="14" /> {{ energia }}/{{ energiaMax }}</span>
     </p>
-    <div class="sot-prep-elenco">
+    <div v-if="!sopra && voci.length" class="sot-prep-elenco">
       <button v-for="v in voci" :key="v.id" type="button" class="sot-scelta" :class="{ 'sot-spenta': !!v.perche, 'sot-pronta': v.passi > 0 }"
               data-azione="prepara-campo" :data-abilita="v.id" :data-addosso="v.passi || null" :disabled="!!v.perche" @click="vai('prepara', v.id)">
         <Medaglione :glifo="v.glifo" :tinta="v.tinta" :stato="v.perche && !v.passi ? 'chiuso' : 'preso'" :misura="34" />
