@@ -4,7 +4,7 @@
 // forte il nemico e che terreno c'è. Le operazioni arrivano una famiglia
 // alla volta: + e − nel bosco, poi × nella palude, poi ÷ sulla neve, e la
 // lava le mette tutte insieme. Vedi docs/arena/campagna.md.
-import { TRUPPE, BASE } from './regole.js'
+import { TRUPPE, EDIFICI } from './regole.js'
 import { NEMICO } from './taratura.js'
 
 export const SCALINI = [
@@ -22,7 +22,7 @@ const PER2 = [...CON_PER, 'golem']
 const CON_DIV = [...PER2, 'diavoletto']
 const TUTTE = [...CON_DIV, 'drago']
 
-/* `truppe`: quali caserme si possono costruire (la base c'è sempre).
+/* `truppe`: quali truppe si possono scegliere costruendo gli edifici (la cripta c'è sempre).
    `nemico`: la scheda del nemico — quante monete fa al secondo, ogni quanto
    pensa e quanto sono forti le sue truppe (1 = come le tue). La scrive la
    taratura (`dati/taratura.js`, `npm run tara:arena`): non si ritocca a mano.
@@ -31,7 +31,7 @@ const TUTTE = [...CON_DIV, 'drago']
 export const CAMPAGNA = [
   { chiave: 'scaramuccia', nome: 'La prima scaramuccia', scalino: 'bosco', portata: 12,
     truppe: SOLE_ADD, nemico: NEMICO.scaramuccia,
-    racconto: 'Gli scheletri arcieri sono già tuoi. Costruisci il guardiano e tieni duro.' },
+    racconto: 'Costruisci la cripta: arcieri od opliti? Poi tieni duro.' },
   { chiave: 'ponte', nome: 'Il ponte di pietra', scalino: 'bosco', portata: 16,
     truppe: CON_MENO, nemico: NEMICO.ponte,
     racconto: 'I pipistrelli volano sopra i muri. Gli scheletri li fermano.' },
@@ -111,7 +111,7 @@ export function guastiDellaCampagna(campagna = CAMPAGNA) {
     if (!SCALINI.some(s => s.chiave === t.scalino)) g.push(`${dove}: scalino "${t.scalino}" sconosciuto`)
     if (!Array.isArray(t.truppe) || !t.truppe.length) g.push(`${dove}: nessuna truppa`)
     for (const id of t.truppe || []) if (!TRUPPE[id]) g.push(`${dove}: la truppa "${id}" non esiste`)
-    if (!(t.truppe || []).includes(BASE)) g.push(`${dove}: manca la truppa di partenza`)
+    if (!EDIFICI.cripta.varianti.some(id => (t.truppe || []).includes(id))) g.push(`${dove}: manca la cripta, la prima caserma`)
     const n = t.nemico || {}
     if (!(n.moneteAlSecondo > 0 && n.pensa > 0 && n.forza > 0)) g.push(`${dove}: la scheda del nemico non sta in piedi`)
     if (!(t.portata >= 0 && t.portata <= 100)) g.push(`${dove}: portata ${t.portata}`)

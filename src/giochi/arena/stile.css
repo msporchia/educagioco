@@ -54,8 +54,8 @@
             background: linear-gradient(180deg, #3b2f66, #281f4a); border: 2px solid #5b4a99 }
 .ar-moneta { font-size: 20px; font-weight: 800 }
 .ar-borsa i { font-style: normal; font-size: 13px; font-weight: 700; color: #ffe98a }
-/* il quadro è alto quanto lascia il pannello (barra e striscia in alto, tre righe di carte sotto) e largo 2:3 */
-.ar-quadro { position: relative; height: calc(100dvh - 432px); min-height: 280px; aspect-ratio: 2 / 3; max-width: 100%; margin: 0 auto; touch-action: none }
+/* il quadro è alto quanto lascia il pannello (barra e striscia in alto, due righe di carte sotto) e largo 2:3 */
+.ar-quadro { position: relative; height: calc(100dvh - 340px); min-height: 280px; aspect-ratio: 2 / 3; max-width: 100%; margin: 0 auto; touch-action: none }
 .ar-tela { display: block; width: 100%; height: 100% }
 .ar-dritta, .ar-avviso { position: absolute; left: 50%; top: 12%; transform: translateX(-50%);
             white-space: nowrap; font-weight: 800; font-size: 14px; padding: 7px 14px; border-radius: 999px;
@@ -128,3 +128,15 @@
 .ar-calcolo { margin: 0; font-size: 13px; color: #e9c8ff; font-weight: 700 }
 .ar-motivo { margin: -4px 0 0; font-size: 12.5px; color: #ffb3a8; text-align: center }
 .ar-grosso.ar-spento { opacity: .45 }
+
+/* la carta di un edificio da costruire: le sue due truppe, piccole */
+.ar-coppia { display: flex; align-items: flex-end; height: 40px }
+/* la scelta fra le due truppe di un edificio */
+.ar-varianti { display: grid; grid-template-columns: 1fr 1fr; gap: 8px }
+.ar-variante { background: #ffffff0d; border: 1px solid #ffffff1c; border-radius: 14px; padding: 10px 8px;
+               display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center }
+.ar-variante h3 { margin: 0; font-size: 16px; color: #ffe98a }
+.ar-variante .ar-grosso { padding: 10px 8px; font-size: 17px }
+.ar-variante.ar-chiusa { opacity: .5 }
+.ar-nota-variante { margin: 0; font-size: 12.5px; line-height: 1.35; color: #dbe5ff; flex: 1 }
+.ar-numeri { font-size: 13px; font-weight: 700; color: #9fb0d8; text-decoration: underline; padding: 6px 10px; background: none; border: 0 }

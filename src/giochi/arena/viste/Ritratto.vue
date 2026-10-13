@@ -5,7 +5,7 @@
 import { ref, onMounted, watch } from 'vue'
 import { PEZZI } from '../../castello/dati/figure.js'
 import { caricaFigure, immagineFigure } from '../../castello/scena/pittori.js'
-import { fotogramma } from '../scena/figure.js'
+import { fotogramma, arco, armiPronte } from '../scena/figure.js'
 import { stadioDi } from '../../../data/ops.js'
 
 const props = defineProps({
@@ -24,11 +24,14 @@ function dipingi() {
   const c = cv.getContext('2d')
   c.clearRect(0, 0, cv.width, cv.height)
   const [sx, sy, w, h] = PEZZI[props.torre ? `torre:arciere:${stadioDi(props.livello)}:` : fotogramma(props.id, 0, false)]
-  const s = Math.min(cv.width / w, cv.height / h) * 0.94
-  c.drawImage(img, sx, sy, w, h, (cv.width - w * s) / 2, cv.height - h * s - cv.height * 0.03, w * s, h * s)
+  const conArco = props.id === 'scheletri' && !props.torre
+  const s = Math.min(cv.width / w, cv.height / h) * (conArco ? 0.8 : 0.94)     // l'arco sporge davanti: ci vuole posto
+  const x = (cv.width - w * s) / 2 - (conArco ? cv.width * 0.08 : 0), piede = cv.height - cv.height * 0.03
+  c.drawImage(img, sx, sy, w, h, x, piede - h * s, w * s, h * s)
+  if (conArco) arco(c, x + w * s / 2, piede, w * s, h * s)   // gli arcieri: il foglio non ha l'arco
 }
 
-onMounted(() => caricaFigure().then(dipingi))
+onMounted(() => Promise.all([caricaFigure(), armiPronte()]).then(dipingi))
 watch(() => [props.id, props.livello], dipingi)
 </script>
 

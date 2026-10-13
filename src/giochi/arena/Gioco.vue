@@ -18,7 +18,7 @@ import Domanda from '../../quiz/Domanda.vue'
 import { Giostra } from './scena/giostra.js'
 
 import { CAMPAGNA, SCALINI, QUANTE_TAPPE, tappeDelloScalino, scalinoDi, operazioniDi, operazionePer, stellePer, sfidaDi } from './dati/campagna.js'
-import { TRUPPE, AZIONI, LIV_MAX, MINIERA_MAX, BOMBA } from './dati/regole.js'
+import { TRUPPE, EDIFICI, EDIFICIO_DI, AZIONI, LIV_MAX, MINIERA_MAX, BOMBA } from './dati/regole.js'
 import { Partita } from './motore/partita.js'
 import { scrivi, leggi, dice } from './motore/sosta.js'
 import { Campo } from './scena/campo.js'
@@ -29,6 +29,7 @@ import Mappa from './viste/Mappa.vue'
 import CampoVista from './viste/Campo.vue'
 import Finale from './viste/Finale.vue'
 import Dettagli from './viste/Dettagli.vue'
+import Scelta from './viste/Scelta.vue'
 import './stile.css'
 
 defineOptions({ name: 'CastleBattle' })
@@ -48,6 +49,7 @@ const pannello = ref({ caserme: [], azioni: [] })
 const domanda = ref(null)             // la domanda che paga la scelta
 const finale = ref(null)
 const dettaglio = ref(null)           // la schermata dei dettagli: il campo sta fermo finché è aperta
+const scelta = ref(null)              // quale truppa per un edificio da costruire: anche qui il campo sta fermo
 const avviso = ref('')                // la riga che dice cosa è successo
 const toccato = ref(false)
 
@@ -60,12 +62,12 @@ let daSalvare = 0
 let ora = 0
 const giostra = new Giostra(passo)
 
-const { inPausa, fermo, metti, togli, aiuto } = usaPausa({ anche: () => !!finale.value || !!dettaglio.value })
+const { inPausa, fermo, metti, togli, aiuto } = usaPausa({ anche: () => !!finale.value || !!dettaglio.value || !!scelta.value })
 
 const avanza = progresso(CHIAVE)
 const tappa = computed(() => CAMPAGNA[tappaIdx.value] || CAMPAGNA[0])
 const scalino = computed(() => scalinoDi(tappa.value))
-const siGioca = computed(() => vista.value === 'campo' && !domanda.value && !finale.value && !dettaglio.value)
+const siGioca = computed(() => vista.value === 'campo' && !domanda.value && !finale.value && !dettaglio.value && !scelta.value)
 
 function vuoto() {
   return { resto: 0, monete: 0, alSecondo: 0, castello: 1, miniera: 1 }
@@ -125,6 +127,7 @@ function azzera() {
   domanda.value = null
   finale.value = null
   dettaglio.value = null
+  scelta.value = null
   avviso.value = ''
   voluta = null
   pagata = false
@@ -185,16 +188,27 @@ function aggiornaCruscotto() {
   pannello.value = costruisciPannello(p)
 }
 
+/* le carte delle caserme: una per edificio. Costruito dice la sua truppa e si potenzia; da
+   costruire apre la scelta fra le due truppe. */
+function edificiDellaTappa() {
+  return Object.keys(EDIFICI).filter(ed => EDIFICI[ed].varianti.some(id => tappa.value.truppe.includes(id)))
+}
 function costruisciPannello(p) {
-  const caserme = tappa.value.truppe.map(id => {
-    const k = TRUPPE[id]
-    const c = p.caserme.find(x => x.lato === 'io' && x.id === id)
-    const prezzo = p.prezzo('io', c ? 'potenzia' : 'costruisci', id)
-    const riposo = c ? Math.max(0, c.riposo) : 0
-    return { id, nome: k.nome, op: k.op, presente: !!c, liv: c ? c.liv : 0, prezzo,
-             puoi: prezzo !== null && p.lati.io.monete >= prezzo && riposo <= 0,
-             riposo, avanza: c ? Math.max(0, Math.min(1, 1 - c.t / c.ciclo)) : 0 }
-  }).sort((a, b) => TRUPPE[a.id].costo - TRUPPE[b.id].costo)
+  const caserme = edificiDellaTappa().map(ed => {
+    const c = p.caserme.find(x => x.lato === 'io' && x.ed === ed)
+    const ammesse = EDIFICI[ed].varianti.filter(id => tappa.value.truppe.includes(id))
+    if (c) {
+      const prezzo = p.prezzo('io', 'potenzia', c.id)
+      const riposo = Math.max(0, c.riposo)
+      return { ed, id: c.id, nome: TRUPPE[c.id].nome, presente: true, liv: c.liv, prezzo, varianti: ammesse,
+               puoi: prezzo !== null && p.lati.io.monete >= prezzo && riposo <= 0,
+               riposo, avanza: Math.max(0, Math.min(1, 1 - c.t / c.ciclo)) }
+    }
+    const prezzi = ammesse.map(id => p.prezzo('io', 'costruisci', id)).filter(x => x !== null)
+    const prezzo = prezzi.length ? Math.min(...prezzi) : null
+    return { ed, id: null, nome: EDIFICI[ed].nome, presente: false, liv: p.lati.io.livelli[ed] || 0, prezzo, varianti: ammesse,
+             puoi: prezzo !== null && p.lati.io.monete >= prezzo, riposo: 0, avanza: 0 }
+  })
   const azioni = ['miniera', 'ripara', 'castello', 'bomba'].map(a => {
     const prezzo = p.prezzo('io', a)
     let stato = ''
@@ -239,12 +253,12 @@ function apriDettagli({ id, azione }) {
   if (id) {
     const k = TRUPPE[id]
     const c = p.caserme.find(x => x.lato === 'io' && x.id === id)
-    const liv = c ? c.liv : 0
-    const det = dettaglioTruppa(id, liv)
+    const liv = c ? c.liv : p.lati.io.livelli[EDIFICIO_DI[id]] || 0
+    const det = dettaglioTruppa(id, liv, { costruire: !c })
     const az = c ? 'potenzia' : 'costruisci'
     const cal = p.calcoloDi('io', az, id)
     d = { azione: az, id }
-    scheda = { truppa: id, titolo: k.nome, nota: k.nota, ruolo: ruoloDi(id), livello: liv, sottotitolo: 'da costruire',
+    scheda = { truppa: id, titolo: k.nome, nota: k.nota, ruolo: ruoloDi(id), livello: liv, sottotitolo: EDIFICI[EDIFICIO_DI[id]].nome,
                ...det, calcolo: NOME_CALCOLO[operazionePer(cal.op, ammesse)],
                verbo: c ? '⬆️ Potenzia' : '🛖 Costruisci',
                puoi: p.puoFare('io', az, id) && !p.inRiposo('io', id),
@@ -269,7 +283,32 @@ function apriDettagli({ id, azione }) {
 function procediDaiDettagli() {
   const d = dettaglio.value
   dettaglio.value = null
+  scelta.value = null
   if (d) scegli(d.scelta)
+}
+
+/* un edificio da costruire: le sue due truppe una accanto all'altra, coi prezzi e il calcolo */
+function apriScelta({ ed }) {
+  const p = partita.value
+  if (!p || domanda.value || finale.value || p.fine) return
+  const ammesse = operazioniDi(tappa.value)
+  const livello = p.lati.io.livelli[ed] || 0
+  scelta.value = {
+    ed, nome: EDIFICI[ed].nome, livello,
+    varianti: EDIFICI[ed].varianti.map(id => {
+      const ammessa = tappa.value.truppe.includes(id)
+      const prezzo = TRUPPE[id].costo
+      return { id, nome: TRUPPE[id].nome, nota: TRUPPE[id].nota, ruolo: ruoloDi(id).slice(0, 2), prezzo, ammessa,
+               puoi: ammessa && p.puoFare('io', 'costruisci', id),
+               calcolo: NOME_CALCOLO[operazionePer(TRUPPE[id].op, ammesse)] }
+    }),
+  }
+  toccato.value = true
+}
+
+function costruisciDallaScelta(id) {
+  scelta.value = null
+  scegli({ azione: 'costruisci', id })
 }
 
 /* una scelta: il calcolo la apre, la risposta la fa */
@@ -308,7 +347,7 @@ function risposto({ giusto, saltata }) {
 
 function frase(v) {
   const nome = v.id ? TRUPPE[v.id].nome : ''
-  return { costruisci: `🛖 caserma nuova: ${nome}`, potenzia: `⬆️ ${nome} sale di livello`, miniera: '⛏️ le monete arrivano più in fretta',
+  return { costruisci: `🛖 ${v.id ? EDIFICI[EDIFICIO_DI[v.id]].nome : ''}: ${nome}`, potenzia: `⬆️ ${nome} sale di livello`, miniera: '⛏️ le monete arrivano più in fretta',
            ripara: '🔧 riparato', castello: '🏰 il castello è più forte', bomba: '💥 la bomba ha spazzato le truppe nemiche' }[v.azione] || ''
 }
 
@@ -422,12 +461,15 @@ onUnmounted(() => {
 
       <CampoVista v-else :cruscotto="cruscotto" :pannello="pannello" :avviso="avviso"
                   :dritta="!toccato && !finale"
-                  @tela="prendiTela" @scegli="scegli" @dettagli="apriDettagli" />
+                  @tela="prendiTela" @scegli="scegli" @dettagli="apriDettagli" @edificio="apriScelta" />
 
       <!-- il calcolo prende tutto lo schermo; il campo intanto rallenta (non si ferma) -->
       <Domanda v-if="domanda" :domanda="domanda.domanda" :pittori="domanda.pittori"
                :titolo="`${domanda.icona} ${domanda.nome}`"
                :origine="domanda" gioco="arena" @risposto="risposto" />
+
+      <Scelta v-if="scelta" :s="scelta" @chiudi="scelta = null" @costruisci="costruisciDallaScelta"
+              @dettagli="id => apriDettagli({ id })" />
 
       <Dettagli v-if="dettaglio" :d="dettaglio" @chiudi="dettaglio = null" @procedi="procediDaiDettagli" />
 

@@ -7,7 +7,12 @@ precisione nel calcolo (1 = mai sbagliato, 0.75 = il bambino che ci ragiona,
 a fare una scelta: il campo va a un quarto di velocità mentre calcola).
 
 Comandi: `node test/esegui.mjs arena` (il motore), `node test/esegui.mjs
-misure` (l'equilibrio, dove c'è).
+misure` (l'equilibrio, dove c'è), `npm run tara:arena -- --duelli` (le truppe a
+duello, per la calibrazione di vita e danno: [regole.md](regole.md)).
+
+**Prima i duelli, poi la taratura**: un'unità che vince tutto fa una curva di vittorie a
+gradino (il bambino passava dal 91% a meno della quota con un ritocco minimo del nemico),
+e la bisezione non trova la quota.
 
 ## Cosa promette la campagna
 
@@ -28,8 +33,8 @@ I quattro giocatori finti (`PILOTI` in `motore/banco.js`):
 | lento | 55% | 3,5 s | perdere più del bambino, ma vincere le prime tappe |
 | caso | 25% | 3,5 s | non vincere quasi mai sulle tappe alte |
 
-Ultimo giro misurato: il bambino 91% → 57%, il lento 71% → 60%, chi tira a
-indovinare 11% → 26%.
+Ultimo giro misurato (13 ottobre, dopo gli edifici a due truppe e la calibrazione di vita e
+danno): il bambino 93% → 41%, il lento 28% → 11%, chi tira a indovinare 5% → 3%.
 
 - **La manopola non sale in fila.** Con più truppe a disposizione anche il
   nemico è più forte a parità di `d`, quindi una tappa con più truppe ha un `d`

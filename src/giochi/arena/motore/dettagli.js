@@ -19,7 +19,7 @@ export function ruoloDi(id) {
     `colpisce ${colpisce}, ${dove}`,
     k.vola ? 'vola: scavalca i muri' : 'cammina: si ferma ai muri',
     k.splash ? 'il suo colpo scoppia: ferisce anche chi sta intorno' : 'colpisce un bersaglio per volta',
-    `una squadra è di ${k.n}, e arriva uno in più ai livelli 5 e 9`,
+    `una squadra è di ${k.n}, e salendo di livello le squadre crescono`,
   ]
 }
 
@@ -28,7 +28,7 @@ export function numeriTruppa(id, liv) {
   const k = TRUPPE[id]
   const f = CRESCITA.forza(liv)
   return {
-    n: k.n + CRESCITA.omini(liv),
+    n: k.n + CRESCITA.omini(liv, k.n),
     squadra: CRESCITA.squadraOgni(liv),
     vita: k.hp * f,
     danno: k.dmg * f,
@@ -39,13 +39,15 @@ export function numeriTruppa(id, liv) {
 
 /* Le etichette dei due riquadri, corte e su una riga sola (se una va a capo i due riquadri si
    disallineano): «adesso fa così» e «al livello dopo fa così». Da costruire (liv 0) sono i
-   livelli 1 e 2: com'è appena nata e com'è potenziandola. */
-const etichette = liv => (liv >= 1
-  ? { ora: 'Adesso', dopo: `Livello ${liv + 1}` }
-  : { ora: 'Livello 1', dopo: 'Livello 2' })
+   livelli 1 e 2: com'è appena nata e com'è potenziandola; da rifare (`costruire` con un livello)
+   riparte dal livello che l'edificio aveva. */
+const etichette = (liv, costruire = false) => (costruire || liv < 1
+  ? { ora: `Livello ${Math.max(1, liv)}`, dopo: `Livello ${Math.max(1, liv) + 1}` }
+  : { ora: 'Adesso', dopo: `Livello ${liv + 1}` })
 
-/* Le righe di una caserma: gli stessi numeri veri, adesso e al livello dopo. */
-export function dettaglioTruppa(id, liv) {
+/* Le righe di una caserma: gli stessi numeri veri, adesso e al livello dopo. Con `costruire`
+   il prezzo è quello della prima pietra, anche se l'edificio riparte da un livello più alto. */
+export function dettaglioTruppa(id, liv, { costruire = false } = {}) {
   const k = TRUPPE[id]
   const base = Math.max(1, liv)
   const fine = base >= LIV_MAX
@@ -54,8 +56,8 @@ export function dettaglioTruppa(id, liv) {
   const riga = (nome, v, d, fmt) => ({ nome, ora: fmt(v), dopo: d === null ? null : fmt(d) })
   return {
     livello: liv,
-    etichette: etichette(liv),
-    prezzo: liv >= 1 ? (fine ? null : CRESCITA.salita(liv)) : k.costo,
+    etichette: etichette(liv, costruire),
+    prezzo: costruire || liv < 1 ? k.costo : (fine ? null : CRESCITA.salita(liv)),
     righe: [
       riga('Truppe per squadra', ora.n, dopo && dopo.n, num),
       riga('Una squadra ogni', ora.squadra, dopo && dopo.squadra, secondi),

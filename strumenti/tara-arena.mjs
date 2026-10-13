@@ -5,11 +5,14 @@
 //   npm run tara:arena                  # tara tutto e riscrive dati/taratura.js
 //   npm run tara:arena -- --prova       # tara e stampa, senza scrivere niente
 //   npm run tara:arena -- --da 0.9 --a 0.5 --volte 150
+//   npm run tara:arena -- --duelli      # le truppe a duello, squadre uguali in campo aperto
 import { writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
 import { CAMPAGNA, sfidaDi } from '../src/giochi/arena/dati/campagna.js'
-import { misura, PILOTI } from '../src/giochi/arena/motore/banco.js'
+import { misura, PILOTI, caso } from '../src/giochi/arena/motore/banco.js'
+import { Partita } from '../src/giochi/arena/motore/partita.js'
+import { TRUPPE } from '../src/giochi/arena/dati/regole.js'
 import { firmaEquilibrio } from '../src/giochi/arena/motore/firma.js'
 
 const RADICE = join(dirname(fileURLToPath(import.meta.url)), '..')
@@ -32,6 +35,43 @@ export const nemicoDi = d => ({
 
 const vinte = (tappa, d, pilota, volte = VOLTE) =>
   misura({ volte, sfida: { ...sfidaDi(tappa), nemico: nemicoDi(d) }, pilota }).vinte / volte
+
+/* I duelli: tre squadre per parte, allo stesso livello, in campo aperto (niente porte né
+   caserme, castelli che non cadono). Dice chi batte chi, e se una truppa batte tutte: la
+   calibrazione di vita e danno si guarda qui (docs/arena/regole.md). Il golem non duella:
+   ignora le truppe. */
+if (argv.includes('--duelli')) {
+  const ids = Object.keys(TRUPPE).filter(id => TRUPPE[id].bers !== 'torri')
+  const duello = (a, b, seme) => {
+    const p = new Partita({ rnd: caso(seme) })
+    p.muri = []; p.caserme = []
+    for (const c of p.castelli) { c.hp = c.max = 1e7; c.liv = 0 }
+    p.muoviCastello = () => {}                                   // i castelli non sparano: conta solo chi duella
+    p.pensa = 1e9; p.nemicoCfg = { ...p.nemicoCfg, pensa: 1e9 }     // e il nemico non gioca
+    for (const x of [140, 180, 220]) { p.schiera('io', a, x, 330); p.schiera('nem', b, x, 210) }
+    for (let t = 0; t < 120; t += 0.5) {
+      p.avanza(0.5)
+      const vivi = l => p.unita.filter(u => u.lato === l && u.hp > 0)
+      if (!vivi('io').length || !vivi('nem').length) break
+    }
+    const resta = l => p.unita.filter(u => u.lato === l).reduce((s, u) => s + u.hp / u.max, 0)
+    return Math.sign(resta('io') - resta('nem'))
+  }
+  console.log('chi sta nella riga batte chi sta nella colonna (su 10)\n')
+  console.log(''.padEnd(12) + ids.map(b => TRUPPE[b].nome.slice(0, 6).padStart(7)).join(''))
+  for (const a of ids) {
+    let vinte = 0
+    const celle = ids.map(b => {
+      if (a === b) return '     · '
+      let v = 0
+      for (let s = 1; s <= 10; s++) v += duello(a, b, s) > 0 ? 1 : 0
+      vinte += v
+      return String(v).padStart(6) + ' '
+    })
+    console.log(TRUPPE[a].nome.padEnd(12) + celle.join('') + `   ${Math.round(vinte / (10 * (ids.length - 1)) * 100)}%`)
+  }
+  process.exit(0)
+}
 
 const bersaglio = i => DA + (A - DA) * (i / Math.max(1, CAMPAGNA.length - 1))
 const risultati = {}
