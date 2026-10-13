@@ -68,6 +68,7 @@ export class Livello {
     // i relitti (macerie, statue rotte, rocce…) hanno il loro caso: non spostano né mostri né arredo, e si vedono nell'elenco `relitti`
     this.rndRelitti = seminato(seme * 29 + piano * 130363 + 7)
     this.relitti = []
+    this.bassi = new Set()   // le celle dei relitti bassi: la luce ci passa sopra
     this.scenario = scenario
     // in una grotta non stanno un altare, un trono o due cavalieri di guardia
     this.orpelli = (ORPELLI[scenario] || ORPELLI.cantine).filter(o => this.pianta !== 'caverna' || (o.posa !== 'fondo' && o.posa !== 'coppia'))
@@ -574,7 +575,7 @@ export class Livello {
         // l'aspetto lo dice la cella (non un tiro: lo scenario non sposta il caso del piano)
         const aspetto = aspettoDi(this.scenario, this.pianta, nome, numeroDa(ancora.x, ancora.y, 77), v)
         this.relitti.push({ x: ancora.x, y: ancora.y, w, h, classe: nome, id: aspetto.id, pezzo: aspetto.pezzo || null, disegno: aspetto.disegno || null, dice: aspetto.dice, v })
-        for (const c of piede) s.relitti.push(c)
+        for (const c of piede) { s.relitti.push(c); if (aspetto.basso) this.bassi.add(c.y * this.largo + c.x) }
         messi++
       }
     }

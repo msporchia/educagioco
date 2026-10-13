@@ -491,12 +491,12 @@ const camminabile = (l, x, y) => l.a(x, y) === PAVIMENTO || l.a(x, y) === PORTA
   controlla('...e ogni porta è libera: nessun relitto né pozza accanto a una porta', conRelitti.every(l => l.stanze.every(s => s.porte.every(p =>
     [[0, 0], ...vicini4].every(([dx, dy]) => { const c = l.a(p.x + dx, p.y + dy); return c !== RELITTO && c !== ACQUA })))))
 
-  // un relitto fa ombra come un muro, e si tocca per sapere cos'è
+  // un relitto alto fa ombra come un muro (uno basso no: la luce gli passa sopra), e si tocca per sapere cos'è
   const t = CAMPAGNA[5]
   let trovato = null
   for (let seme = 11; seme < 40 && !trovato; seme++) {
     const cc = new Corsa(t, { seme, rnd: seminato(seme) }), l = cc.livello
-    for (const r of l.relitti) if (r.w === 1 && r.h === 1 && [-2, -1, 1, 2].every(d => l.calpestabile(r.x + d, r.y))) { trovato = { cc, l, r }; break }
+    for (const r of l.relitti) if (r.w === 1 && r.h === 1 && !l.bassi.has(r.y * l.largo + r.x) && [-2, -1, 1, 2].every(d => l.calpestabile(r.x + d, r.y))) { trovato = { cc, l, r }; break }
   }
   controlla('c\'è un relitto con strada libera da una parte e dall\'altra, per provare l\'ombra', !!trovato)
   if (trovato) {

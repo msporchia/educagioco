@@ -241,7 +241,9 @@ export class Corsa extends Corredo {
   // la luce non passa dai muri, dai relitti né da una porta chiusa (la cella che la ferma si accende, o non si vedrebbe il muro); sopra
   // l'acqua sì: non si cammina ma si vede di là (docs/sotterraneo/piani-caverne.md)
   fermaLaLuce(porte, x, y) {
-    return (!this.livello.calpestabile(x, y) && this.livello.a(x, y) !== ACQUA) || porte.has(y * this.livello.largo + x)
+    const k = y * this.livello.largo + x
+    // un relitto basso (un sarcofago, una statua caduta) ferma il passo, non la luce: ci passa sopra come sull'acqua
+    return (!this.livello.calpestabile(x, y) && this.livello.a(x, y) !== ACQUA && !(this.livello.bassi && this.livello.bassi.has(k))) || porte.has(k)
   }
 
   aggiornaLuce() {

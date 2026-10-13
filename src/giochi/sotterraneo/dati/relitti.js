@@ -1,5 +1,5 @@
 // I relitti: roba ferma, rotta e pesante che sta in mezzo a una stanza e si aggira (docs/sotterraneo/piani-caverne.md). Bloccano il
-// passo e fermano la luce del cono come un muro; non si toccano, non si spostano e non si raccolgono: niente casse, sacchi o barili
+// passo e quelli alti fermano la luce del cono come un muro (i bassi no: `basso`); non si toccano, non si spostano e non si raccolgono: niente casse, sacchi o barili
 // (regola dell'utente, 12 ottobre 2026). Dato puro.
 //
 // Due cose separate, perché lo scenario non deve spostare niente del piano (come per l'arredo): la CLASSE dice quanto sta e dove (la
@@ -10,7 +10,8 @@
 // classe: w, h (quante celle; il lato lungo sta in w, `orienta: 'entrambe'` lo gira anche in piedi) · peso: quanto è comune · posa:
 //   'parete' (contro un muro), 'libero' (staccato, tutt'attorno stanza), 'qualsiasi'.
 // aspetto: id · pezzo (lo sprite nell'atlante) oppure disegno (in codice, scena/relitti.js: provvisorio, da dipingere) · dice: cosa
-//   risponde a chi lo tocca · `inPiedi: false` se non si può girare lungo due celle in verticale.
+//   risponde a chi lo tocca · `inPiedi: false` se non si può girare lungo due celle in verticale · `basso: true` se è più basso
+//   dell'eroe (un sarcofago, una statua caduta, macerie, binari): blocca il passo ma non la luce, che ci passa sopra.
 
 export const FAMIGLIE = ['costruita', 'caverna']
 export const POSE_RELITTI = ['parete', 'libero', 'qualsiasi']
@@ -33,12 +34,12 @@ export const CLASSI = {
 }
 
 const a = (id, dice, extra = {}) => ({ id, ...(extra.pezzo ? {} : { disegno: id }), dice, ...extra })
-const MACERIE = a('macerie', 'Macerie: pietre cadute dal soffitto. Di qua non si passa.')
+const MACERIE = a('macerie', 'Macerie: pietre cadute dal soffitto. Di qua non si passa.', { basso: true })
 const CROLLO = a('crollo', 'Un crollo di pietre: bisogna girarci attorno.')
 const ROCCIA = a('roccia', 'Una roccia grossa, rimasta lì da sempre.')
-const TRAVE = a('trave', 'Una trave marcia, crollata di traverso.')
+const TRAVE = a('trave', 'Una trave marcia, crollata di traverso.', { basso: true })
 const STALAGMITE = a('stalagmite', 'Una stalagmite: ci ha messo mille anni a crescere.')
-const p = (id, pezzo, dice) => ({ id, pezzo, dice })
+const p = (id, pezzo, dice, extra = {}) => ({ id, pezzo, dice, ...extra })
 
 // com'è fatto un relitto, per scenario e famiglia: una lista per classe (la scelta dentro la lista è di chi gioca la cella)
 export const ASPETTI = {
@@ -50,13 +51,13 @@ export const ASPETTI = {
   // arredo-cripta-2.png: sarcofagi e statue rotte per le costruite, le rovine che sono rimaste per le grotte
   cripta: {
     costruita: {
-      cumulo: [p('blocchi-caduti', 'cripta-blocchi-caduti', 'Blocchi di pietra caduti dal soffitto: di qua non si passa.'),
-        p('colonna-moncone', 'cripta-colonna-moncone', 'Il moncone di una colonna.'), MACERIE],
+      cumulo: [p('blocchi-caduti', 'cripta-blocchi-caduti', 'Blocchi di pietra caduti dal soffitto: di qua non si passa.', { basso: true }),
+        p('colonna-moncone', 'cripta-colonna-moncone', 'Il moncone di una colonna.', { basso: true }), MACERIE],
       pesante: [
-        p('sarcofago-liscio', 'cripta-sarcofago-liscio', 'Un sarcofago di pietra, pesantissimo. Meglio lasciarlo chiuso.'),
-        p('sarcofago-spada', 'cripta-sarcofago-spada', 'Un sarcofago con una spada incisa: troppo pesante per spostarlo.'),
-        p('sarcofago-stemma', 'cripta-sarcofago-stemma', 'Un sarcofago con uno stemma consumato.'),
-        p('sarcofago-croce', 'cripta-sarcofago-croce', 'Un sarcofago con una croce. Dorme in pace, o ci prova.'),
+        p('sarcofago-liscio', 'cripta-sarcofago-liscio', 'Un sarcofago di pietra, pesantissimo. Meglio lasciarlo chiuso.', { basso: true }),
+        p('sarcofago-spada', 'cripta-sarcofago-spada', 'Un sarcofago con una spada incisa: troppo pesante per spostarlo.', { basso: true }),
+        p('sarcofago-stemma', 'cripta-sarcofago-stemma', 'Un sarcofago con uno stemma consumato.', { basso: true }),
+        p('sarcofago-croce', 'cripta-sarcofago-croce', 'Un sarcofago con una croce. Dorme in pace, o ci prova.', { basso: true }),
         p('lastra-funeraria', 'cripta-lastra-funeraria', 'Una lastra funeraria in piedi. Il nome è consumato.'),
         p('cavaliere-spada', 'cripta-cavaliere-spada', 'Un cavaliere di pietra, di guardia da secoli. Pesa quanto un muro.'),
         p('cavaliere-scudo', 'cripta-cavaliere-scudo', 'Un cavaliere di pietra con lo scudo: non si sposta.'),
@@ -69,17 +70,17 @@ export const ASPETTI = {
         p('cavaliere-mani', 'cripta-cavaliere-mani', 'Un cavaliere di pietra con le mani giunte.'),
         p('colonna-spezzata', 'cripta-colonna-spezzata', 'Una colonna spezzata: la cima è lì vicino, in pezzi.'),
         p('colonna-inclinata', 'cripta-colonna-inclinata', 'Una colonna storta, pronta a cadere da secoli.'),
-        p('cavaliere-caduto', 'cripta-cavaliere-caduto', 'Un cavaliere di pietra, caduto e spezzato.'),
-        p('sarcofago-crepato', 'cripta-sarcofago-crepato', 'Un sarcofago crepato. Dentro non si vede niente.'),
-        p('sarcofago-aperto', 'cripta-sarcofago-aperto', 'Un sarcofago aperto. Vuoto, per fortuna.')],
+        p('cavaliere-caduto', 'cripta-cavaliere-caduto', 'Un cavaliere di pietra, caduto e spezzato.', { basso: true }),
+        p('sarcofago-crepato', 'cripta-sarcofago-crepato', 'Un sarcofago crepato. Dentro non si vede niente.', { basso: true }),
+        p('sarcofago-aperto', 'cripta-sarcofago-aperto', 'Un sarcofago aperto. Vuoto, per fortuna.', { basso: true })],
       lungo: [CROLLO, TRAVE],
     },
     caverna: {
-      cumulo: [p('blocchi-caduti', 'cripta-blocchi-caduti', 'Blocchi di pietra caduti dal soffitto: di qua non si passa.'),
-        p('colonna-moncone', 'cripta-colonna-moncone', 'Il moncone di una colonna.'), MACERIE],
+      cumulo: [p('blocchi-caduti', 'cripta-blocchi-caduti', 'Blocchi di pietra caduti dal soffitto: di qua non si passa.', { basso: true }),
+        p('colonna-moncone', 'cripta-colonna-moncone', 'Il moncone di una colonna.', { basso: true }), MACERIE],
       pesante: [ROCCIA, p('lastra-funeraria', 'cripta-lastra-funeraria', 'Una lastra funeraria in piedi. Il nome è consumato.')],
       isolato: [STALAGMITE, p('colonna-inclinata', 'cripta-colonna-inclinata', 'Una colonna storta, pronta a cadere da secoli.'),
-        p('cavaliere-caduto', 'cripta-cavaliere-caduto', 'Un cavaliere di pietra, caduto e spezzato.')],
+        p('cavaliere-caduto', 'cripta-cavaliere-caduto', 'Un cavaliere di pietra, caduto e spezzato.', { basso: true })],
       lungo: [CROLLO],
     },
   },
@@ -97,8 +98,8 @@ export const ASPETTI = {
       cumulo: [MACERIE, ROCCIA],
       pesante: [ROCCIA, STALAGMITE],
       isolato: [STALAGMITE, ROCCIA],
-      lungo: [a('carro', 'Un carro da miniera rovesciato, pesante e arrugginito.', { inPiedi: false }),
-        a('binari', 'Binari divelti e attorcigliati.', { inPiedi: false }), TRAVE, CROLLO],
+      lungo: [a('carro', 'Un carro da miniera rovesciato, pesante e arrugginito.', { inPiedi: false, basso: true }),
+        a('binari', 'Binari divelti e attorcigliati.', { inPiedi: false, basso: true }), TRAVE, CROLLO],
     },
   },
 }

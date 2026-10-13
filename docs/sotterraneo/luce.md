@@ -15,7 +15,7 @@ il disegno in `scena/tela.js`.
   12 ottobre 2026: «le torce sono carine ma pleonastiche: i bambini le
   ignorano e vanno a sbattere su tutti i muri. Creare una zona d'ombra dietro
   l'eroe, è logico: non vedo dietro di me se la torcia è avanti a me»).
-  Il cono guarda dove guarda l'eroe, apertura 120° (`APERTURA_CONO`); l'alone
+  Il cono guarda dove guarda l'eroe, apertura 220° (`APERTURA_CONO`: buio resta solo il settore alle spalle, non i fianchi; l'utente, 13 ottobre); l'alone
   è un cerchio piccolo attorno; **tutto il resto è ombra**, sempre.
 - **La torcia allunga il cono, non accende la stanza.** Prima con la torcia la
   stanza si accendeva tutta e serviva solo nei corridoi, cioè non contava. Ora

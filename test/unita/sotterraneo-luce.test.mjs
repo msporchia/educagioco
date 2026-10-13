@@ -76,8 +76,8 @@ const io = { x: lunga.x + 3, y: riga }   // tre celle di stanza dietro, sei dava
   const largaIo = { x: larga.x + 1, y: larga.cy }
   const aperta = scena({ qui: largaIo, torcia: 8 })
   uguale('a 45° dall\'asse si vede', accesa(aperta, largaIo.x + 3, largaIo.y + 3), true)
-  uguale('a 90° dall\'asse (di lato) è ombra, oltre l\'alone', accesa(aperta, largaIo.x, largaIo.y + 3), false)
-  controlla('l\'apertura è di 120 gradi', APERTURA_CONO === 120)
+  uguale('a 90° dall\'asse (di lato) è luce: il buio è solo alle spalle', accesa(aperta, largaIo.x, largaIo.y + 3), true)
+  controlla('l\'apertura è di 220 gradi: buio solo alle spalle', APERTURA_CONO === 220)
 }
 
 /* ── ai bordi sfuma, e una porta chiusa ferma la luce ── */
@@ -149,10 +149,10 @@ const io = { x: lunga.x + 3, y: riga }   // tre celle di stanza dietro, sei dava
     uguale('ti raggiunge', c.foglio && c.foglio.che, 'scontro')
     uguale('e davanti non è un agguato', c.foglio.agguato, false)
   }
-  // un mostro nell'ombra, di lato: gira largo e ti prende alle spalle
+  // un mostro nell'ombra, dietro di sbieco: gira e ti prende alle spalle (di lato ormai è luce: il cono è di 220°)
   {
-    const c = scena({ qui: centro, torcia: 0 }), m = mostro(c, 0, 3)
-    uguale('un mostro di lato a tre celle è nell\'ombra', accesa(c, m.x, m.y), false)
+    const c = scena({ qui: centro, torcia: 0 }), m = mostro(c, -2, 3)
+    uguale('un mostro dietro di sbieco a tre celle è nell\'ombra', accesa(c, m.x, m.y), false)
     const strada = arriva(c, m)
     uguale('ti raggiunge', c.foglio && c.foglio.che, 'scontro')
     uguale('dalle spalle: è un agguato', c.foglio.agguato, true)

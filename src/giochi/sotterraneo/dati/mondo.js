@@ -27,7 +27,9 @@ export const FORZA_PER_TASCA = 3
 // la stanza: allunga il cono, e l'ombra c'è sempre
 export const RAGGIO = 3.2, RAGGIO_TORCIA = 6.2, RAGGIO_SGOCCIOLI = 4.4
 export const ALONE = 1.5, ALONE_TORCIA = 2.2, ALONE_SGOCCIOLI = 1.8, ALONE_SFUMA = 1   // l'alone sfuma per l'ultima cella
-export const APERTURA_CONO = 120       // gradi, da un bordo all'altro
+// gradi, da un bordo all'altro: buio resta solo il settore alle spalle (140°), non i fianchi (l'utente, 13 ottobre: «a destra non si
+// vede nulla»; l'idea era l'ombra DIETRO l'eroe). L'agguato viene dai 120° dietro, dentro quel buio (motore/scontro.js)
+export const APERTURA_CONO = 220
 export const SFUMA_CONO = 0.6, SFUMA_ARCO = 0.45   // quanto del cono (in lunghezza, e in apertura) sfuma fino a spegnersi
 export const FORZA_MINIMA = 0.22       // sotto questa forza una cella non è in luce: resta ricordo
 // un mostro si sveglia quando ti avvicini a meno di SVEGLIA celle nella sua stanza, con la luce o senza: è quasi la
