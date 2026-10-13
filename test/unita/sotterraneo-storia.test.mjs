@@ -195,8 +195,8 @@ const tappeAl = n => CAMPAGNA.map((t, i) => ({ chiave: t.chiave, aperta: i <= n,
   c.allaScala(); c.chiaveDelPiano = true; c.foglio = { che: 'scala' }; c.scendi()
   const r = c.livello.robe.find(x => x.missione === 'rosicchione')
   controlla('al secondo sì', !!r && c.piano === m.piano)
-  const ratto = c.livello.mostro('ratto', 0, 0)
-  controlla('è un ratto col nome, più duro di un ratto', r.tipo === 'ratto' && r.nome === 'Rosicchione' && r.ossa > ratto.ossa && r.att > ratto.att,
+  const ratto = c.livello.mostro('pipistrello', 0, 0)
+  controlla('è un pipistrello col nome (la torre ha i suoi abitanti), più duro di un pipistrello', r.tipo === 'pipistrello' && r.nome === 'Rosicchione' && r.ossa > ratto.ossa && r.att > ratto.att,
             `${r.ossa}/${r.att} contro ${ratto.ossa}/${ratto.att}`)
   c.cade(r)
   controlla('battuto, la missione è fatta', c.missioniFatte.has('rosicchione'))

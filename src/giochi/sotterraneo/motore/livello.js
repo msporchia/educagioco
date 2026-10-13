@@ -6,7 +6,8 @@
 import { ROCCIA, PAVIMENTO, PORTA } from '../dati/mondo.js'
 import { ORPELLI } from '../dati/orpelli.js'
 import { CURIOSITA } from '../dati/curiosita.js'
-import { MOSTRI, CAPORALE } from '../dati/mostri.js'
+import { MOSTRI, CAPORALE, minacciaDi } from '../dati/mostri.js'
+import { haLeVarianti, pescaLaVariante, pescaIlGrado, vesti, rangoDelGrado } from '../dati/varianti.js'
 import { GROSSI } from '../dati/grossi.js'
 import { raggiungibili } from '../../../motore/passi.js'
 import { costruisci, pezziDa, celleDi, CELLE_SALA } from './forme.js'
@@ -29,7 +30,8 @@ const PARTE_NELLE_SALE = 0.7
 export class Livello {
   // `guardiano`: chi porta la chiave della scala, dichiarato dalla tappa (l'unica cosa che non si può aggirare)
   constructor({ seme = 1, piano = 0, largo = 52, alto = 52, giri = 4,
-                guardiano = 'scheletro', crescita = null, branco = ['scheletro'], tettoBranco = 5, grosso = null, scenario = null, caporali = true } = {}) {
+                guardiano = 'scheletro', crescita = null, branco = ['scheletro'], caporale = null, tettoBranco = 5, grosso = null, scenario = null, caporali = true,
+                livello = 1 } = {}) {
     this.seme = seme
     this.piano = piano
     this.largo = largo
@@ -40,7 +42,11 @@ export class Livello {
     this.grosso = grosso && GROSSI[grosso] ? grosso : null
     // l'anticamera coi caporali: davanti al grosso delle discese della storia (l'abisso li lascia a chi la tappa non li chiede)
     this.coiCaporali = !!this.grosso && caporali
-    this.branco = branco              // chi si incontra per strada: la coppia della discesa (`mostri` in dati/campagna.js)
+    this.branco = branco              // chi si incontra per strada: gli abitanti del posto (`mostri` in dati/campagna.js)
+    // la più dura (colpo per velocità): quella che sta a guardia del tesoro; e chi fa il caporale (`caporale` del posto, se manca la più dura)
+    this.piuDura = branco.reduce((a, b) => (minacciaDi(MOSTRI[b]) >= minacciaDi(MOSTRI[a]) ? b : a))
+    this.caporale = caporale || this.piuDura
+    this.livelloDelPosto = livello    // quanto è giù il posto: dice i gradi delle varianti (dati/varianti.js)
     this.tettoBranco = tettoBranco    // quanti, al più, in un branco della discesa
     // dichiarato da chi genera il piano (dipende da quanto può scendere la discesa, vedi crescitaDi in dati/campagna.js)
     this.crescita = crescita || { ossa: 0.22, attOgni: 2 }
@@ -52,6 +58,8 @@ export class Livello {
     this.rnd = seminato(seme + piano * 7919)
     // l'arredo ha il suo caso e il suo scenario: cambiarli non sposta nient'altro del piano (docs/sotterraneo/arredo.md)
     this.rndArredo = seminato(seme * 17 + piano * 104729 + 99)
+    // e le varianti e i gradi il loro, per la stessa ragione: cambiare chi ha l'arco non sposta un mostro né una stanza
+    this.rndVarianti = seminato(seme * 31 + piano * 65537 + 7)
     this.orpelli = ORPELLI[scenario] || ORPELLI.cantine
     this.scava()
     this.arreda()
@@ -340,7 +348,7 @@ export class Livello {
     const tipiPer = (forza, quanti, tetto = false) => {
       const r = this.rnd()
       if (tetto) quanti = Math.min(quanti, this.tettoBranco)
-      const tipi = [forza >= 0.5 ? this.branco[this.branco.length - 1] : this.branco[Math.floor(r * 1e6) % this.branco.length]]
+      const tipi = [forza >= 0.5 ? this.piuDura : this.branco[Math.floor(r * 1e6) % this.branco.length]]
       while (tipi.length < quanti) tipi.push(this.branco[Math.floor(this.rnd() * this.branco.length)])
       return tipi
     }
@@ -583,16 +591,22 @@ export class Livello {
       .sort((p, q) => Math.hypot(q.cx - ingresso.cx, q.cy - ingresso.cy) - Math.hypot(p.cx - ingresso.cx, p.cy - ingresso.cy))[0] || null
   }
 
-  // due o tre caporali (tre se l'anticamera è una sala) nel mezzo della stanza: la specie di strada, più duri
-  // (`CAPORALE` in dati/mostri.js), e si riconoscono dal segno che portano (galloni, scena/tela.js)
+  // due o tre caporali (tre se l'anticamera è una sala) nel mezzo della stanza: il caporale del posto, più duri
+  // (`CAPORALE` in dati/mostri.js) e di un grado alto (dati/varianti.js), e si riconoscono dal segno che portano (galloni, scena/tela.js)
   quantiCaporali(s) { return s.grande && this.stanze.length >= 8 ? 3 : 2 }
   mettiICaporali(s, tipiPer) {
-    const messi = this.mettiIlBranco(s, tipiPer(0.15, this.quantiCaporali(s)), { x: s.cx, y: s.cy })
+    tipiPer(0.15, this.quantiCaporali(s))   // i tiri ci sono sempre stati (ora i tipi li dice il caporale del posto): tolti, il caso di tutto il piano si sposterebbe
+    const messi = this.mettiIlBranco(s, Array(this.quantiCaporali(s)).fill(this.caporale), { x: s.cx, y: s.cy })
     for (const m of messi) {
       this.faiCaporale(m)
     }
   }
   faiCaporale(m) {
+    // un caporale non è mai comune: il suo grado, se non ce l'ha già dalla variante, si pesca qui (gradi più alti dei soldati)
+    if (rangoDelGrado(m.grado) === 0) {
+      const r = this.mostro(m.tipo, m.x, m.y, { variante: m.variante || null, grado: pescaIlGrado(this.livelloDelPosto, this.rndVarianti(), true) })
+      for (const k of ['nome', 'grado', 'arma', 'velocita', 'difese', 'att', 'variante', 'incanto']) if (r[k] !== undefined) m[k] = r[k]
+    }
     m.ossa = m.ossaMax = Math.round(m.ossa * CAPORALE.ossa)
     m.att += CAPORALE.att
     m.nome = `${m.nome} caporale`
@@ -601,14 +615,22 @@ export class Livello {
   }
 
   // le ossa crescono col piano, l'attacco le segue più piano; la difesa non cresce mai (la manopola velenosa)
-  mostro(tipo, x, y) {
+  // `variante` e `grado` (dati/varianti.js) si possono chiedere (un cheat, una prova); se no una specie con le mani pesca i suoi
+  // col caso delle varianti
+  mostro(tipo, x, y, { variante = undefined, grado = undefined } = {}) {
     const m = MOSTRI[tipo]
     const su = (1 + this.piano * this.crescita.ossa) * (this.crescita.forza || 1)
     const ossa = Math.round(m.ossa * su)
-    return { che: 'mostro', tipo, x, y, em: m.em, nome: m.nome,
-             ossa, ossaMax: ossa,
-             att: m.att + Math.floor(this.piano / this.crescita.attOgni) + (this.crescita.spinta || 0), dif: m.dif,
-             chiave: false, morto: false }
+    const r = { che: 'mostro', tipo, x, y, em: m.em, nome: m.nome,
+                ossa, ossaMax: ossa,
+                att: m.att + Math.floor(this.piano / this.crescita.attOgni) + (this.crescita.spinta || 0), dif: m.dif,
+                chiave: false, morto: false }
+    if (haLeVarianti(tipo) || variante || grado) {
+      const v = variante !== undefined ? variante : pescaLaVariante(tipo, this.rndVarianti())
+      const g = grado || pescaIlGrado(this.livelloDelPosto, this.rndVarianti())
+      vesti(r, m, { variante: v, grado: g, k: Math.floor(this.rndVarianti() * 9) })
+    }
+    return r
   }
 
   // il mostro grosso: il mostro del bestiario su cui si regge, con più ossa e un colpo in più, il suo nome e la sua figura

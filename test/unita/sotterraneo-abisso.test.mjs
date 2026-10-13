@@ -404,7 +404,10 @@ controlla('l\'abisso non ha guasti', guasti.length === 0, guasti.join(' · '))
    più un modo di entrare (docs/sotterraneo/abisso.md). */
 const entrata = eroe => ({ eroe, roba: robaAttesa(eroe, QUANTE_TAPPE), crescita: crescitaAttesa(eroe, QUANTE_TAPPE) })
 {
-  const c = costoDeiPiani(L_ABISSO, { fino: 11, seme: 41, ...entrata('cavaliere') })
+  // un seme è un piano solo, e cambiando le specie cambiano le stanze dove cadono i mostri e le armi che lasciano: con gli abitanti per
+  // ambientazione il seme 41 dava un piano da 37 (anche con le specie di prima, fra i sei semi che si provano, uno o due sforano i 30:
+  // la media dei piani non è cambiata, il massimo di un seme sì)
+  const c = costoDeiPiani(L_ABISSO, { fino: 11, seme: 203, ...entrata('cavaliere') })
   const piani = c.minimo.filter(n => n > 0)
   controlla('si misurano almeno otto piani', piani.length >= 8, `${piani.length}`)
   /* La banda è larga apposta in basso: un piano dove il guardiano è uno

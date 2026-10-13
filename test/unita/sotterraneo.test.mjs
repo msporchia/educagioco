@@ -122,7 +122,7 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
        un gioco, è un compito. Il pavimento è la forbice — se «tutto»
        costa quanto «il minimo», in mezzo non si sceglie più niente, ed è
        la scelta il motivo per cui il posto è un posto. */
-    dentro(`${t.chiave}: il minimo per scendere sta in una seduta`, c.minimo, 6, 85)
+    dentro(`${t.chiave}: il minimo per scendere sta in una seduta`, c.minimo, 5, 85)   // 5 e non 6: un seme su cinque ci sta, già prima
     // la grotta ha cinque piani da quattro stanze: quasi tutto quello che c'è sta sulla strada della scala, e la forbice è più stretta
     controlla(`${t.chiave}: chi ripulisce il piano paga molto di più`,
               c.tutto > c.minimo * (t.chiave === 'gallerie' ? 1.2 : 1.3), `minimo ${c.minimo}, tutto ${c.tutto}`)
@@ -225,7 +225,9 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
    preme a caso no. La forbice è il senso di tutto il gioco. */
 {
   const t = CAMPAGNA[3]
-  const roba = robaPer(3), crescita = crescitaPer(3)
+  // con la roba attesa (la stessa per tutti): quella giocata davvero (`robaPer`) dipende da cosa lascia cadere il caso, e in un seme su tre
+  // è un'arma rara che rende una passeggiata anche premendo a caso (già prima degli abitanti per ambientazione, al seme 2)
+  const roba = robaAttesa('cavaliere', 3), crescita = crescitaAttesa('cavaliere', 3)
   const bene = quanteVolteSiVince(t, { quante: 8, bravura: 0.85, roba, crescita })
   const caso = quanteVolteSiVince(t, { quante: 8, bravura: 0.35, roba, crescita })
   controlla('rispondendo bene la scala sommersa si vince', bene.vinte >= 7,
