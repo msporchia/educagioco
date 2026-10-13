@@ -166,7 +166,7 @@ obbligate a seduta regge, per tutti e quattro gli eroi.
 | La miniera abbandonata | 65 → 25 → 40 | 156 → 98 → 106 |
 
 (cavaliere, seme del banco; l'ultima freccia è dei piani delle due famiglie, [piani-caverne.md](piani-caverne.md).) Il minimo cala perché le abilità chiudono un mostro in meno risposte; «tutto» cala di meno e la grotta
-resta con una forbice stretta. Mostri per stanza: 0,79 (come prima). **Dal 13 ottobre (sera) i mostri per stanza sono molti di più** (vedi sopra: da 0,8 a circa 1,9, e la tabella qui sotto è di prima); le discese vinte sono da rimisurare e i danni da ritarare (`npm run sotterraneo -- --verifica`).
+resta con una forbice stretta. Mostri per stanza: 0,79 (come prima). **Dal 13 ottobre (sera) i mostri per stanza sono molti di più** (vedi sopra: da 0,8 a circa 1,9, e la tabella qui sotto è di prima); la sera stessa tutto è stato ritarato con mostri singoli più deboli ([taratura-branchi.md](taratura-branchi.md)): le domande obbligate dritto alla scala (media dei quattro eroi) 10 · 19 · 20 · 23 · 24 · 31 · 27, girando tutto 19 · 71 · 57 · 47 · 56 · 110 · 75 (`npm run sotterraneo -- --domande`); i branchi non sono cambiati.
 
 - **Provato**: lo stesso numero di mostri *per stanza* nelle sale
   (due-cinque più l'appostato, tutto sopra il vecchio numero): il minimo della

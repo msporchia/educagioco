@@ -92,8 +92,8 @@ difficile da sopravvivere**: la progressione sta tutta sulle altre leve.
 ## Come crescono i mostri
 
 ```
-ossa = base.ossa × forza × (1 + p · 0,12)     forza 5, ossaPerPiano 0,12
-att  = base.att  + spinta + floor(p / 3)      spinta 12, attOgni 3 (la campagna resta a 2)
+ossa = base.ossa × forza × (1 + p · 0,12)     forza 2,2, ossaPerPiano 0,12
+att  = base.att  + spinta + floor(p / 3)      spinta 9, attOgni 3 (la campagna resta a 2)
 dif  = base.dif                               ferma per sempre
 ```
 
@@ -204,24 +204,22 @@ Si entra come si esce dalla storia: la roba e il livello dell'ultima riga ([la-g
 nudi (i mostri hanno la forza di una zona, [mostri.md](mostri.md): nudi non è un modo di entrare). Sei semi, bravura 0,8,
 `npm run sotterraneo -- --abisso`:
 
-| chi scende | fin dove arriva (sei semi, 31 = oltre il tetto di 30 piani) | media |
+| chi scende | fin dove arriva (otto semi, 31 = oltre il tetto di 30 piani) | media |
 |---|---|---|
-| Cavaliere | 6 · 6 · 22 · 23 · 31 · 31 | 19,8 |
-| Elfa | 6 · 7 · 11 · 15 · 16 · 21 | 12,7 |
-| Mago | 3 · 6 · 6 · 11 · 14 · 31 | 11,8 |
-| Nano | 6 · 6 · 15 · 16 · 31 · 31 | 17,5 |
+| Cavaliere | 9 · 11 · 12 · 14 · 17 · 18 · 18 · 31 | 16,3 |
+| Elfa | 11 · 12 · 14 · 17 · 31 · 31 · 31 · 31 | 22,3 |
+| Mago | 6 · 6 · 8 · 8 · 11 · 12 · 12 · 15 | 9,8 |
+| Nano | 8 · 9 · 11 · 11 · 12 · 15 · 18 · 27 | 13,9 |
 
-Prima (con la roba di chi ha finito le sei, andando dritto) si arrivava al piano 8–11, media 9,3, e nudi dal 3 al 13, mediana 5.
-Adesso la mediana è tra l'11 e il 16 e i due più robusti qualche volta non si fermano: il cavaliere e il nano hanno la vita e le
-cure che durano. Il patto del test resta «almeno tre piani».
+(13 ottobre, sera: coi branchi grossi l'abisso con forza 5 e spinta 12 fermava tutti fra il 3° e il 9° piano; forza e spinta sono ora quelle di una zona verso il 12,
+[taratura-branchi.md](taratura-branchi.md). Prima, la mattina: cavaliere 19,8, elfa 12,7, mago 11,8, nano 17,5.) Il mago è quello che arriva meno in fondo, come prima.
 
-**Il costo di un piano non cresce** (il cavaliere che esce dalla storia, seme 41): domande obbligate dal 1° all'11°: 5 · 4 · 12 ·
-12 · 12 · 10 · 5 · 10 · 17 · 16 · 25, e la seconda metà costa 1,5 volte la prima, sotto il 1,6 del test. I primi due piani costano poco
-(la scalinata di un abisso che parte morbido: i ratti), e il test li accetta da 3 a 30 (prima da 5). La forbice fra «il minimo» e
-«tutto» resta oltre il doppio (il cavaliere con la roba dell'ultima riga).
+**Il costo di un piano non cresce** (il cavaliere che esce dalla storia, media di tre semi): domande obbligate dal 1° all'11° 4 · 7 · 6 · 11 · 14 · 32 · 11 ·
+12 · 28 · 11 · 7 (media dei quattro eroi, seme 41), con due picchi (il 6° e il 9°) sotto le 40 che il test pretende. I primi piani costano poco (i ratti), e il test li accetta da 3 a 30. La forbice fra «il minimo» e
+«tutto» resta oltre il doppio.
 
 **La difesa vale più dell'attacco, quaggiù**: il colpo del mostro si prende a ogni suo turno, quindi un punto di difesa vale il
-doppio di un punto di vita. Il mago (la vita più bassa) è quello che arriva meno in fondo (media 11,8, mediana 8,5); il cavaliere e il nano, che durano, arrivano
+doppio di un punto di vita. Il mago (la vita più bassa) è quello che arriva meno in fondo (media 9,8); il cavaliere e il nano, che durano, arrivano
 più in fondo. Non è un guasto, ma è la riga da guardare col bottino
 graduato.
 

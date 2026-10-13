@@ -71,10 +71,10 @@ ne fanno di più e restano in piedi (vita a fine scontro 55–75%).
 
 - **La destrezza e la forza valgono quanto l'altra, la tempra meno, l'intelligenza poco** (un punto per caratteristica a una strada
   intera, +5 livelli, 8/10): cavaliere destrezza 82, forza 79, tempra 57, intelligenza 43; mago (bacchetta) destrezza 69, intelligenza 34,
-  tempra 32, forza 25. La velocità nella fila dei turni (6 più uno e mezzo a punto) è una leva forte, e per il mago, che a metà
+  tempra 32, forza 25. La velocità nella fila dei turni (la mattina del 13 ottobre 6 più uno e mezzo a punto, la sera 7 più uno: [abilita-energia.md](abilita-energia.md#la-fila-dei-turni)) è una leva forte, e per il mago, che a metà
   strada ha poco altro, la più forte. Ogni strada ha quindi una parte di punti in destrezza; senza (il mago guerriero e quello con la
-  bacchetta, all'inizio) restavano a 25 contro i 45 della pura magia, che ne ha due su otto. **Resta da decidere se la destrezza non vale troppo**
-  (`VELOCITA_PER_DESTREZZA` in `motore/turni.js`, non toccata: l'iniziativa è del 13 ottobre).
+  bacchetta, all'inizio) restavano a 25 contro i 45 della pura magia, che ne ha due su otto. **La destrezza valeva troppo, e la sera del 13 ottobre è stata abbassata**
+  (`VELOCITA_PER_DESTREZZA` da 1,5 a 1, la base da 6 a 7, `motore/turni.js`): ora intelligenza e destrezza stanno vicine nel mago (71 e 86 a 8/10).
 - **L'intelligenza di una classe che non lancia tanto non rende**: «un po' di intelligenza» (paladino, Luna, runico) vuol dire un
   punto su otto. Con due su otto il paladino perdeva venti punti (66 contro 81). Il globo di energia sale di tre a punto, e per il cavaliere
   il banco ne usa due forti a scontro in ogni caso.

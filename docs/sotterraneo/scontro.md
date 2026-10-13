@@ -54,9 +54,9 @@ Il codice: `motore/scontro.js` (i metodi dello scontro, attaccati a `Corsa`),
 
 ## L'iniziativa
 
-- **Ognuno ha una velocità** (`velocita`): l'eroe **6 più uno e mezzo a punto di
+- **Ognuno ha una velocità** (`velocita`): l'eroe **7 più un punto a punto di
   destrezza** (`VELOCITA_BASE_EROE`, `VELOCITA_PER_DESTREZZA`: 9 il cavaliere, il mago
-  e il nano all'inizio, 12 l'elfa), i mostri quella della specie in
+  e il nano all'inizio, 11 l'elfa; prima 6 più uno e mezzo, ritarata la sera del 13 ottobre: [abilita-energia.md](abilita-energia.md#la-fila-dei-turni)), i mostri quella della specie in
   `dati/mostri.js` (il grosso quella della sua specie):
 
   | velocità | mostri |
