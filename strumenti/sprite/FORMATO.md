@@ -327,7 +327,12 @@ Con una cella larga 1 px, moltiplicare `da` per `cella` (quello che fa
 il pixel vero. È la stessa strada che uno userebbe con `ritagli`, senza
 il file a parte — giusto quando quel file non esiste già da nessuna
 parte. `strumenti/sprite/misura.py --figure` (o `--celle`, se il foglio
-ha almeno dei separatori) misura i rettangoli da incollare qui.
+ha almeno dei separatori) misura i rettangoli da incollare qui. Per i fogli
+RGB senza alfa su fondo magenta si aggiunge `--fondo=magenta` (il pieno è
+tutto ciò che non è magenta), e con `--griglia=…` più `--piede` stampa anche
+il centro dei piedi di ogni figura: serve a ritagliare due pose dello stesso
+personaggio con **lo stesso rettangolo centrato sul piede**, così i piedi non
+si spostano se una posa ha il braccio alzato (`sopra-personaggi-1.json`).
 
 ## Correggere un ritaglio storto
 

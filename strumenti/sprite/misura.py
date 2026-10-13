@@ -5,6 +5,7 @@
     python3 strumenti/sprite/misura.py sorgenti/castello/generati/torri-2.png --figure
     python3 strumenti/sprite/misura.py sorgenti/castello/generati/terreno-bosco.png --regione=0,0,512,512 --celle
     python3 strumenti/sprite/misura.py sorgenti/castello/generati/terreno-bosco.png --griglia=0,0,64,64,64,64
+    python3 strumenti/sprite/misura.py sorgenti/sotterraneo/generati/sopra-personaggi-1.png --fondo=magenta --griglia=0,0,256,384,256,384 --piede
 
 ── PERCHÉ NON È UN'EURISTICA ────────────────────────────────────────
 `torri.py` indovinava la geometria a ogni giro, e sbagliava in silenzio.
@@ -50,8 +51,23 @@ from PIL import Image
 QUI = Path(__file__).parent
 
 
-def alfa(im, soglia=8):
-    """La maschera del pieno: dove il foglio ha qualcosa."""
+def alfa(im, soglia=8, magenta=False):
+    """La maschera del pieno: dove il foglio ha qualcosa. Con `magenta` il
+    pieno è tutto ciò che non è fondo magenta (#FF00FF, anche rumoroso):
+    per i fogli RGB senza alfa che il generatore consegna sul fondo che
+    gli si è chiesto. Il magenta è quel pixel in cui rosso e blu superano
+    di molto il verde (la stessa tinta che `atlante.py` toglie con `ombra`)."""
+    if magenta:
+        r, g, b = im.convert('RGB').split()
+        px = [(r.load(), g.load(), b.load())]
+        a = Image.new('L', im.size, 0)
+        ap = a.load()
+        rr, gg, bb = px[0]
+        for y in range(im.height):
+            for x in range(im.width):
+                if not (rr[x, y] - gg[x, y] > 60 and bb[x, y] - gg[x, y] > 60):
+                    ap[x, y] = 255
+        return ap, im.width, im.height
     a = im.convert('RGBA').getchannel('A')
     return a.point(lambda v: 255 if v > soglia else 0).load(), im.width, im.height
 
@@ -164,6 +180,18 @@ def per_griglia(pieno, W, H, g, x0, y0):
     return fuori
 
 
+def piede_di(pieno, r, x0=0, y0=0, righe=14):
+    """Il centro dei piedi di una figura: la metà fra il pixel pieno più a
+    sinistra e quello più a destra nelle ultime `righe` righe del suo
+    rettangolo. Serve a ritagliare una posa **simmetrica attorno al
+    piede**, così due pose dello stesso personaggio (fermo, che saluta)
+    posano i piedi nello stesso punto anche se il braccio alzato sporge."""
+    x, y, w, h = r
+    xs = [i for j in range(y + h - righe, y + h) for i in range(x, x + w)
+          if pieno[i - x0, j - y0]]
+    return (min(xs) + max(xs)) / 2 if xs else None
+
+
 def main():
     args = [a for a in sys.argv[1:] if not a.startswith('--')]
     if not args:
@@ -173,7 +201,8 @@ def main():
     if not f.is_absolute() and not f.exists():
         f = QUI / f
     im = Image.open(f)
-    pieno, W, H = alfa(im)
+    magenta = '--fondo=magenta' in sys.argv
+    pieno, W, H = alfa(im, magenta=magenta)
 
     reg = next((a.split('=')[-1] for a in sys.argv if a.startswith('--regione')), None)
     if reg:
@@ -184,7 +213,7 @@ def main():
     print(f'{f.name}  {W}×{H}  regione {x0},{y0} → {x1},{y1}')
 
     ritaglio = im.crop((x0, y0, x1, y1))
-    p2, w2, h2 = alfa(ritaglio)
+    p2, w2, h2 = alfa(ritaglio, magenta=magenta)
     righe = bande(p2, h2, w2, False)
     colonne = bande(p2, w2, h2, True)
 
@@ -254,7 +283,7 @@ def main():
         # una cella.
         for f, (a, q) in enumerate(salda(righe, 2, 20)):
             fascia = ritaglio.crop((0, a, w2, a + q))
-            p3, w3, h3 = alfa(fascia)
+            p3, w3, h3 = alfa(fascia, magenta=magenta)
             cols = salda(bande(p3, w3, h3, True), 3, 30)
             print(f'    riga {f}  (y {a + y0}, alta {q}): {len(cols)} celle')
             print('      ' + json.dumps([[x + x0, a + y0, w, q] for x, w in cols]))
@@ -265,7 +294,10 @@ def main():
         celle = per_griglia(p2, w2, h2, g, x0, y0)
         print(f'\n  griglia: {len(celle)} celle piene')
         for (f, c), r in celle.items():
-            print(f'    riga {f} colonna {c:2d}   {r}')
+            extra = ''
+            if '--piede' in sys.argv:
+                extra = f'   piede x {piede_di(p2, r, x0, y0)}'
+            print(f'    riga {f} colonna {c:2d}   {r}{extra}')
     return 0
 
 

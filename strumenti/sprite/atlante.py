@@ -753,9 +753,11 @@ def nitidi_di(f, fg, ridotto, nitidi):
     for nome, d in fg['sprite'].items():
         if nome.startswith('__'):
             continue
-        if d.get('quanti', 1) != 1 or any(k in d for k in ('cancella', 'toppa', 'misura')):
-            print(f'  ! {nome}: «nitido» non sa ancora fare quanti, cancella, toppa e misura: resta solo piccolo')
+        if d.get('quanti', 1) != 1 or any(k in d for k in ('cancella', 'toppa')):
+            print(f'  ! {nome}: «nitido» non sa ancora fare quanti, cancella e toppa: resta solo piccolo')
             continue
+        # `misura` riguarda solo il pezzo piccolo, quello che impagina: il nitido tiene tutta la sua
+        # definizione, e il gioco lo stira alla gabbia del piccolo (viste/figura.js, scala x e y a parte)
         pw, ph = d.get('cella', [cw, ch])
         x, y = d['da'][0] * cw, d['da'][1] * ch
         pezzo = grande.crop((round(x * kx), round(y * ky), round((x + pw) * kx), round((y + ph) * ky)))

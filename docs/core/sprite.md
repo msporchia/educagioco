@@ -73,8 +73,14 @@ nello stesso modulo.
 - **Peso**: per i tre fogli della roba del sotterraneo, 260 pezzi, 451 KB.
 - Il foglietto lo dichiara per i fogli dipinti di oggetti (`bottino-e-arredo`,
   `scudi`, `armature-e-vesti`), non per la pixel art vera (0x72), che è
-  già alla sua misura. `quanti`, `cancella`, `toppa` e `misura` non li sa
-  ancora fare: quel pezzo resta solo piccolo, e lo strumento lo dice.
+  già alla sua misura. `quanti`, `cancella` e `toppa` non li sa ancora
+  fare: quel pezzo resta solo piccolo, e lo strumento lo dice. **`misura`
+  vale solo per il piccolo** (impagina): il nitido tiene tutta la sua
+  definizione e il gioco lo stira alla gabbia del piccolo (`figura()`, scala
+  x e y a parte, ammorbidito: `.sot-ritratto` è `pixelated`, e il pezzo
+  nitido dichiara `image-rendering: auto`). È la strada dei personaggi della
+  terra di sopra (`sopra-personaggi-*`: 22 pixel di altezza il piccolo,
+  200 il nitido): +400 KB di WebP per venti pose.
 
 ## Il banco — `npm run mondo`
 
