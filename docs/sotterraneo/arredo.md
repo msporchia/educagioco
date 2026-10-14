@@ -34,17 +34,20 @@ Ogni pezzo sta dove sta bene (le statue in una cripta, il legno in una cantina, 
 da `sotterraneo_2.png`, `sotterraneo_5_2/5_3.png`, `scudi.png` e `arredo-cripta-2.png`, e **i pezzi dei fogli dipinti sono nitidi**
 ([../core/sprite.md](../core/sprite.md#i-pezzi-nitidi)).
 
-- **Cantine**: botte sul cavalletto, scaffale, tavolaccio con la panca, pila di legna, macina, assi, panche, sgabello, scala a pioli
-  (appesa al muro), tavolo, sedia, tavolino, tre candelabri e un candeliere, uno stendardo verde.
+- **Cantine**: botte sul cavalletto, scaffale, tavolaccio con la panca, pila di legna, macina, assi, panche, sgabello, tavolo, sedia, tavolino, tre candelabri e un candeliere, uno stendardo verde.
 - **Cripta**: oltre a sarcofagi, cavalieri e colonne, gli **altari** (di legno, di pietra, col bassorilievo, d'oro: `fondo`), due **troni**
   (di pietra e di legno e velluto), **gargoyle e statue alate a coppie**, la statua nella nicchia, l'idolo con la luce viola, l'obelisco, la colonna
-  col disco, i **bracieri** (viola e azzurro: non scaldano), i **cerchi di rune** (viola, verde) e il tappeto, l'arco d'edera, lo scaffale di libri
+  col disco, i **bracieri** (viola e azzurro: non scaldano), i **cerchi di rune** (viola, verde) e il tappeto, lo scaffale di libri
   e il leggio col libro aperto.
 - **Fornace**: la panca, la fonte di ferro asciutta, il braciere, il bacino di lava (fa luce), la lanterna rossa, lo stendardo rosso.
 
 **Regola del decoro** (dell'utente): niente che sembri da prendere o da spostare. Per questo non ci sono casse (la `cassa`
 dipinta è stata tolta dalle cantine), sacchi, forzieri di decoro (`cripta-forziere` fa da forziere vero, vedi [roba.md](roba.md)); e **niente
 di tenero o buffo** (la statua dello stregone col cappello di `scudi.png` resta nel foglio, senza pezzo).
+
+- **Niente decoro che sembra un passaggio** (l'utente, 14 ottobre: toccava un arco murato credendolo una porta e il gioco rispondeva «di là
+  non si passa»): tolti l'arco murato, l'arco d'edera, il cancello, la grata e la nicchia vuota dipinti sul muro della cripta, e la scala a
+  pioli delle cantine. Una porta, una scala o un varco disegnati sono solo quelli veri.
 
 ## Il piano decide quanto è epica una stanza
 
