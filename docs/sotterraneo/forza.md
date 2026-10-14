@@ -59,7 +59,7 @@ eroe atteso). Niente caso: due chiamate danno lo stesso numero.
    colpo, `COLPO_DEL_MOSTRO` × (attacco − difesa) almeno 1, qualunque sia la
    risposta ([scontro.md](scontro.md)), ridotto dalla Parata e dalla schivata, e per i primi dimezzato
    dalla Testa dura; i suoi turni sono quelli che la sua velocità gli dà mentre
-   l'eroe, con la sua (6 più uno e mezzo a punto di destrezza), gioca i `turni` che gli servono.
+   l'eroe, con la sua (7 più un punto a punto di destrezza), gioca i `turni` che gli servono.
    Il tempo per cadere è `resistenza / danno a turno` (`TTD`).
 4. **Il rapporto** `R = TTD / TTK`: quanti mostri così regge per ogni mostro
    che ci mette a battere.
@@ -153,6 +153,11 @@ così per ogni mostro che batte, ed è il livello 20.
 - **Nella storia** i gradini si contano dalla forza (`coloreNellaStoria`): un
   eroe del 12 a mani nude vale 5, e l'ultima discesa gli sembra rossa. È voluto;
   la strada è il fabbro e la roba.
+- **Chi segue la storia non si blocca** (13 ottobre sera, [taratura-branchi.md](taratura-branchi.md#i-colori-per-chi-segue-la-storia)): l'eroe atteso
+  (roba, livello e abilità della strada) vale il suo livello per tutti e quattro, quindi la discesa in cui entra è verde e la successiva arancio, mai rossa.
+  La forza dei mostri di riferimento sale senza salti dalla storia alle zone (forza 0,25 · 0,5 · 0,5 · 0,8 · 1,1 · 1,25 · 1,8, poi 2,2 al 12): con la miniera
+  a 2,2 contro la botola a 1,1 il rapporto dell'eroe atteso faceva una gobba e il mago all'8 valeva 10. Un eroe in regola che non ha speso i punti
+  dell'albero vale uno o due livelli meno e trova rossa la grotta o la sommersa (la cura e le due abilità forti sono circa tre volte il suo rapporto).
 - La pagina dell'eroe dice «Forza N» sotto il livello (`[data-forza-eroe]`).
 
 ## Cosa non fa ancora

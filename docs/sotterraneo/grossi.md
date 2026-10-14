@@ -33,7 +33,7 @@ nello scontro e nella barra in cima).
   Zannaverde, lo scheletro di Re Ossuto) con le ossa moltiplicate (`ossa`: da 1,1 a 1,3, e 1,9 e 1,95 per Grumo e Zannaverde, che si reggono sull'orco: da
   quando le specie di strada hanno tutte otto ossa l'orco ne ha 8 e non 12, e il grosso è rimasto com'era) e un colpo in più (`att`, Re Ossuto no; Grumo e
   Zannaverde +3, perché l'orco da caporale della scalinata picchia meno di prima e il grosso è rimasto com'era); poi la discesa lo cresce come gli altri
-  (`forza`, `spinta`). Re Ossuto è il più tenero: la cripta perdona. Il troll e il gigante non si disegnano più (solo statistiche): il troll è uscito
+  (`forza`, `spinta`). Re Ossuto è il più tenero: la cripta perdona (dove la forza è piccola, 0,25, un grosso ha comunque almeno due ossa più del suo simile: `mostroGrosso`). Il troll e il gigante non si disegnano più (solo statistiche): il troll è uscito
   dall'atlante del sotterraneo.
 - **I suoi pezzi non hanno famiglia**: li porta chiunque, perché il mostro
   grosso è di tutti e quattro gli eroi. La mazza e il martello sono armi

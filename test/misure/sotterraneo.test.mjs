@@ -13,9 +13,10 @@
      fra i quattro), a quattro quasi mai — tranne le prime due, che perdonano
      (la cripta tutto, la scalinata molto: il primo avvio, vedi sotto);
    - il primo avvio: la scalinata a mani nude (la roba di una discesa prima)
-     a otto su dieci si vince almeno sette volte su dieci, e con le gemme con
-     cui si esce dalla cripta c'è sempre un'arma da comprare (o l'ha già data
-     il guardiano);
+     a otto su dieci si vince di rado (una volta su dieci almeno, e meno che
+     con la prima arma: coi branchi il pezzo conta), e con le gemme con cui si
+     esce dalla cripta c'è sempre un'arma da comprare (o l'ha già data il
+     guardiano);
    - con la roba di una discesa prima si fatica, ma dalla grotta in giù a
      otto su dieci ci si arriva ancora più di metà delle volte (le prime
      discese le fanno i primi pezzi: senza, si torna su);
@@ -86,7 +87,8 @@ for (const [k, t] of CAMPAGNA.entries()) {
   controlla(`${t.chiave}: ma si fatica`, sotto6 <= sei, `${cento(sotto6)} contro ${cento(sei)}`)
   const sopra4 = media(tutte, 'L+3', 2, k)
   // con le abilità tre livelli pesano molto (punti, righe nuove dell'albero, gradi): a quattro su dieci si vince spesso, ma non sempre
-  controlla(`${t.chiave}: tre livelli sopra, a 4/10 non si vince sempre`, sopra4 <= 0.9, cento(sopra4))
+  // la scalinata è la discesa dei primi passi: con tre livelli in più (cinque, nei suoi mostri da una o due ossa) a quattro su dieci si passa quasi sempre
+  controlla(`${t.chiave}: tre livelli sopra, a 4/10 non si vince sempre`, sopra4 <= (k === 1 ? 0.98 : 0.9), cento(sopra4))
 }
 
 /* Il primo avvio (docs/sotterraneo/la-grande-storia.md, «Il primo avvio»): chi entra nella scalinata senza aver
@@ -96,10 +98,10 @@ for (const [k, t] of CAMPAGNA.entries()) {
   const nuda = EROI.map((e, i) => ({ eroe: e.chiave, vinte: tutte[i].vinte[-1][0][1] }))
   const tutteNude = nuda.reduce((n, x) => n + x.vinte, 0) / (EROI.length * SEMI)
   nota(`la scalinata a mani nude a 8/10: ${nuda.map(x => `${x.eroe} ${x.vinte}/${SEMI}`).join(' · ')}`)
-  // più duro di prima (11 ottobre: sette su dieci), e meno a testa: il mago senza bacchetta non lancia niente (a mani nude 7 su 20)
-  controlla('scalinata a mani nude a 8/10: si vince più di una volta su due, fra i quattro eroi', tutteNude >= 0.5, cento(tutteNude))
-  for (const x of nuda)
-    controlla(`${x.eroe}: scalinata a mani nude a 8/10, almeno una volta su tre`, x.vinte >= SEMI * 0.3, `${x.vinte}/${SEMI}`)
+  // coi branchi (13 ottobre, sera) la scalinata nuda si vince di rado: una volta su dieci, e meno dell'attesa; il guardiano della cripta lascia la prima arma
+  // per terra e l'armaiolo la vende a 9 💎 (sotto), quindi nudi non si arriva (docs/sotterraneo/la-grande-storia.md, «Il primo avvio»)
+  controlla('scalinata a mani nude a 8/10: si vince di rado, una volta su dieci almeno, fra i quattro eroi', tutteNude >= 0.1, cento(tutteNude))
+  controlla('e meno che con la prima arma', tutteNude < media(tutte, 0, 0, 1), `${cento(tutteNude)} contro ${cento(media(tutte, 0, 0, 1))}`)
   /* le gemme con cui si esce dalla cripta (in media, andando dritti) bastano alla prima arma dell'armaiolo che a questo
      eroe serve. Il guardiano dell'ultima stanza la lascia anche per terra: qui si conta solo la spesa */
   EROI.forEach((e, i) => {
@@ -207,7 +209,7 @@ for (const L of [24, 27]) {
   controlla('rossa: a 6/10 non si passa', media(rosso, 1) <= 0.15, cento(media(rosso, 1)))
   controlla('rossa: e a 8/10 nemmeno sempre', media(rosso, 0) <= 0.8, cento(media(rosso, 0)))
   // quattro livelli sotto la zona, con le abilità, valgono molto: si può tentare ma di rado (era la metà delle volte)
-  controlla('l\'arancio più duro: a 8/10 si può tentare', media(duro, 0) >= 0.2, cento(media(duro, 0)))
+  controlla('l\'arancio più duro: a 8/10 si può tentare, di rado', media(duro, 0) >= 0.1, cento(media(duro, 0)))
   controlla('ma a 6/10 è dura', media(duro, 1) <= 0.5, cento(media(duro, 1)))
   controlla('l\'arancio più facile: a 8/10 quasi sempre', media(arancio, 0) >= 0.85, cento(media(arancio, 0)))
   controlla('grigia: a 6/10 è una passeggiata', media(grigio, 1) >= 0.95, cento(media(grigio, 1)))

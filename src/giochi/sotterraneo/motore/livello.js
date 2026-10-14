@@ -995,7 +995,7 @@ export class Livello {
   mostroGrosso(id, x, y) {
     const G = GROSSI[id]
     const m = this.mostro(G.tipo, x, y)
-    m.ossa = m.ossaMax = Math.round(m.ossa * G.ossa)
+    m.ossa = m.ossaMax = Math.max(Math.round(m.ossa * G.ossa), m.ossa + 2)   // dove la forza è piccola (la cripta) il grosso resta almeno due ossa sopra il suo simile
     m.att += G.att
     m.grosso = id
     m.nome = G.nome

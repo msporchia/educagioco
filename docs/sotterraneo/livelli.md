@@ -25,6 +25,7 @@ di un mostro), `dati/eroi.js` (`parte`, `vitaPerLivello`, `dote`),
   discesa (`forza`). Si avvitava: indurendo una discesa i mostri davano più
   esperienza, l'eroe saliva di livello a metà discesa, e la discesa diventava
   più facile quanto più la si induriva. Il banco non trovava una taratura.
+- **Un mostro di strada rende il 35%**, in esperienza e gemme (`QUOTA_DEL_COMUNE`; il grosso e i caporali tutto): coi branchi sono più del doppio ([taratura-branchi.md](taratura-branchi.md)).
 - **L'esperienza resta anche perdendo**: i mostri battuti sono battuti. Il
   cartello di fine la dice (`[data-esp-presa]`).
 
@@ -69,7 +70,7 @@ le classi si somigliavano. La fortuna resta solo sulla roba.
 | | dà l'attacco a | a tutti, per punto | è il requisito di |
 |---|---|---|---|
 | Forza | spade e asce | una difesa ogni quattro punti (`FORZA_PER_DIFESA`) | spade e asce |
-| Destrezza | archi, e il ramo Bosco | 1% di schivata dei colpi, e uno e mezzo di velocità nella fila dei turni (6 più uno e mezzo a punto) | archi |
+| Destrezza | archi, e il ramo Bosco | 1% di schivata dei colpi, e un punto di velocità nella fila dei turni (7 più un punto a punto) | archi |
 | Intelligenza | bacchette e bastoni | tre punti di energia massima | bacchette e bastoni |
 | Tempra | — | cinque di vita (`VITA_PER_TEMPRA`), e basta | — |
 
@@ -216,8 +217,8 @@ Il livello con cui si entra in ogni discesa (`LIVELLI_ATTESI` in
 `dati/storia.js`) è quello di chi va dritto alla scala rispondendo bene otto
 volte su dieci e rifacendo quella persa, misurato col banco sulla storia
 giocata davvero (`misuraConLaRoba`, fila `minimo`): 1 · 1,7 · 3,1 · 4,8 ·
-6,8 · 8,5 · 10,3, e l'abisso dopo la miniera. Chi gira tutto arriva tre
-livelli sopra: 1 · 2 · 4,2 · 6,5 · 8,9 · 11 · 13.
+6,8 · 8,5 · 10,3, e l'abisso dopo la miniera (13 ottobre sera, coi branchi: 1 · 1,9 · 3,1 · 5,2 · 7,4 · 9,2 · 11,5). Chi gira tutto arriva tre
+livelli sopra: 1 · 2 · 4,2 · 6,5 · 8,9 · 11 · 13 (sera: 1 · 2 · 4,6 · 7 · 9,6 · 11,9 · 14,1).
 
 | entra in | cripta | scalinata | torre | grotta | sommersa | botola | miniera | abisso |
 |---|---|---|---|---|---|---|---|---|

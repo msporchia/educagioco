@@ -14,7 +14,7 @@ lo alzano, che sono una scelta. Il livello del nodo è il suo gradino (2, 4, 6, 
 col globo fermo a dieci o tredici, no. L'ultima riga costa tutto il globo che la classe ha lì: si lancia una volta, poi si
 aspetta (l'energia torna combattendo, due punti ogni cinque risposte giuste date a un mostro: `Corsa.rispondi`, e camminando, lo 0,1% del globo a passo: [orologio.md](orologio.md)); mai a secondi.
 
-`lanci` per riga (`dati/eroi.js`): **mago 6 · 6 · 5 · 3 · 1, gli altri 3 · 3 · 2,5 · 2 · 1**. Le righe normali stanno dove l'utente le
+`lanci` per riga (`dati/eroi.js`): **mago 6 · 6 · 6 · 4 · 1, gli altri 3 · 3 · 2,5 · 2 · 1** (il mago era 6 · 6 · 5 · 3 · 1 fino alla sera del 13 ottobre: col mana dei costi e i branchi grossi il mago a livello atteso vinceva a 6/10 il 52% contro l'86% dell'elfa, ora il 66%; la riga 2 costa 5 e non 4 e la 3 costa 9, sempre più del cavaliere). Le righe normali stanno dove l'utente le
 voleva (cinque o sei lanci per il mago, due o tre per gli altri); la quarta riga è «la potente» (Esplosione, Lancia di ghiaccio, Fulmine) e
 nel mago ne vale tre, non quattro o cinque: erano quelle che spazzavano via un mostro e costavano poco. Una manopola sola per classe e per
 riga: se cambiano l'energia, la dote o il giro dei punti, i costi si rifanno da soli (`guastiDelleAbilita` controlla che crescano e
@@ -29,7 +29,7 @@ Il globo atteso e i costi, prima → dopo (`npm run sotterraneo -- --costi [--co
 |---|---|---|---|
 | cavaliere | 10 · 10 · 10 · 10 · 10 | 5 · - · 8 · 11 · 16 → **3 · - · 4 · 5 · 10** | 2 · - · 1,3 · 0,9 · 0,6 → **3,3 · - · 2,5 · 2 · 1** |
 | elfa | 13 · 13 · 13 · 13 · 13 | 5 · 7 · 8 · 11 · 16 → **4 · 4 · 5 · 7 · 13** | 2,6 · 1,9 · 1,6 · 1,2 · 0,8 → **3,3 · 3,3 · 2,6 · 1,9 · 1** |
-| mago | 25 · 28 · 31 · 34 · 41 | 5 · 7 · 8 · 11 · 16 → **4 · 5 · 6 · 11 · 40** | 5 · 4 · 3,9 · 3,1 · 2,6 → **6,3 · 5,6 · 5,2 · 3,1 · 1** |
+| mago | 25 · 28 · 31 · 34 · 41 | 5 · 7 · 8 · 11 · 16 → **4 · 5 · 5 · 9 · 40** | 5 · 4 · 3,9 · 3,1 · 2,6 → **6,3 · 5,6 · 6,2 · 3,8 · 1** |
 | nano | 10 · 10 · 10 · 10 · 10 | 5 · 7 · 8 · 11 · 16 → **3 · 3 · 4 · 5 · 10** | 2 · 1,4 · 1,3 · 0,9 · 0,6 → **3,3 · 3,3 · 2,5 · 2 · 1** |
 
 (il globo del mago al 12 è 41 perché l'eroe atteso ha Mente lucida; il costo parte da 40). Il cavaliere e il nano non
@@ -40,25 +40,29 @@ resta quello di prima, il più forte che il globo di adesso paga.
 
 ## La fila dei turni
 
-L'eroe ha `6 + 1,5 × destrezza` di velocità (prima `10 + destrezza`): al livello atteso di ogni discesa, prima → dopo
-(`npm run sotterraneo -- --turni`, `--file` per la fila lettera per lettera, `E` l'eroe, `m` un mostro):
+L'eroe ha `7 + destrezza` di velocità (`VELOCITA_BASE_EROE` e `VELOCITA_PER_DESTREZZA`; la mattina del 13 ottobre era `6 + 1,5 × destrezza`,
+prima ancora `10 + destrezza`). Al livello atteso di ogni discesa (`npm run sotterraneo -- --turni`, `--file` per la fila lettera per lettera,
+`E` l'eroe, `m` un mostro), la mattina → la sera:
 
 | | velocità | doppi turni nel branco della discesa | il peggiore da solo |
 |---|---|---|---|
-| cavaliere, nano | 12 · 12 · 13 · 13 · 14 · 14 · 14 → **9 · 9 · 10,5 · 10,5 · 12 · 12 · 12** | fino al 28% → al 25% (nella miniera, dove c'è il golem da 5) | 64% → 58% |
-| elfa | 14 · 14 · 15 · 15 · 16 · 16 · 16 → **12 · 12 · 13,5 · 13,5 · 15 · 15 · 15** | 38% → 33% | 68% → 67% |
-| mago | 12 in tutte → **9 in tutte** | fino al 25% → 0% (11% nella miniera) | 58% → 44% (solo contro i lenti, da 8 in giù) |
+| cavaliere, nano, mago | 9 · 9 · 10,5 · 10,5 · 12 · 12 · 12 → **9 · 9 · 10 · 10 · 11 · 11 · 11** | 0–8% (la botola) | 11 · 22 · 14 · 52 · 42 · 50 · 58% → **11 · 22 · 10 · 50 · 36 · 45 · 54%** |
+| elfa | 12 · 12 · 13,5 · 13,5 · 15 · 15 · 15 → **11 · 11 · 12 · 12 · 13 · 13 · 13** | 0–17% | 33 · 42 · 33 · 63 · 53 · 60 · 67% → **27 · 36 · 25 · 58 · 46 · 53 · 61%** |
 
-Il mago con mostri da 9 in su non ha mai due turni di fila (`unita/sotterraneo-iniziativa`); l'elfa sì, ogni tanto, e di rado in un branco.
-Una discesa dopo l'altra la destrezza che il banco dà a cavaliere, elfa e nano li rende più veloci; il mago, che non ne ha, resta a nove.
+Il mago con mostri da 9 in su non ha mai due turni di fila (`unita/sotterraneo-iniziativa`); l'elfa della torre (12) sì, ogni tanto, e di rado in un
+branco (alla partenza, con 11, contro un mostro da 10 una volta su dodici). Il banco dà la destrezza a un quarto dei punti, uguale per cavaliere,
+elfa (che parte da quattro), mago e nano.
 
-## Cosa costa ai numeri del gioco
+**Perché un punto e non uno e mezzo.** Misurato con la strada `mago:bacchetta` a livello atteso e i punti tutti in una caratteristica
+(`--strada mago:bacchetta --punti destrezza`, vinte a 8/10 · 6/10): destrezza 95 · 72, intelligenza 73 · 42, tempra 58 · 31, forza 46 · 25. Il mago con
+tutti i punti in destrezza vinceva il 20–30% più di quello con l'intelligenza, perché la velocità è turni in più (e una schivata); la destrezza era
+la scelta unica, per ogni classe. Con 7 + 1: destrezza 86 · 47, intelligenza 71 · 40, tempra 58 · 31. Ancora la migliore, ma non l'unica. A parità di
+mago (a due di destrezza, 9) e con la regola del doppio turno intatta; il prezzo è che ogni classe ha un turno ogni tanto in meno, che la taratura dei
+mostri ([taratura-branchi.md](taratura-branchi.md)) ha già dentro.
 
-L'eroe meno veloce lascia più turni ai mostri: stessa cosa di aumentare il loro colpo del 25–30% (la velocità non è un colpo, ma
-conta uguale). Il banco (`npm run sotterraneo -- --semi 10`, roba attesa, discesa per discesa, cripta · scalinata · torre · grotta · sommersa · botola · miniera):
-a 8/10 100 · 93 · 85 · 100 · 85 · 95 · 95 → **100 · 60 · 68 · 88 · 65 · 90 · 85**; a 4/10 73 · 18 · 13 · 30 · 13 · 33 · 3 → **45 · 5 · 15 · 13 · 3 · 25 · 0**.
-`--verifica` passa da 7 a 20 voci rosse (prima: l'altare del mago a 4/10, la scalinata nuda, la torre del cavaliere, la botola a sei su dieci). **Non
-tarato**: COLPO_DEL_MOSTRO e i danni dei mostri non sono stati toccati (decisione dell'utente in sospeso). Per tenere `npm test` verde si sono
-allentati di un passo i bersagli di vittoria di `unita/sotterraneo` (il mago alla scala sommersa, 4 su 8 invece di 6; la scala sommersa
-bene, 6 su 8 invece di 7), `unita/sotterraneo-roba` (con la roba attesa a 8/10, 3 su 6 invece di 5) e `unita/sotterraneo-missioni` (il 10% di
-vita in più per le missioni di caccia; il rosicchione del cavaliere: 36 di 35): la taratura che segue li riporta.
+## Il conto dei numeri
+
+I mostri e le vittorie di questa pagina sono ritarati nella sera del 13 ottobre ([taratura-branchi.md](taratura-branchi.md)): i branchi più che
+raddoppiati, l'iniziativa e i costi di qui sopra. `COLPO_DEL_MOSTRO` non è stato toccato (decisione dell'utente in sospeso). I bersagli che la
+mattina erano stati allentati di un passo per tenere `npm test` verde (il mago alla scala sommersa, 4 su 8 invece di 6; la scala sommersa bene, 6 su 8
+invece di 7; con la roba attesa a 8/10, 3 su 6 invece di 5; le missioni di caccia, il 10% di vita in più) sono tornati quelli di prima.

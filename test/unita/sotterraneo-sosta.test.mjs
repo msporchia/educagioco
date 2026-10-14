@@ -45,7 +45,7 @@ function rispondiFinche(c, giusto = () => true, giri = 40) {
    l'eroe fermo a metà di un passo: la ripresa è lo stesso piano, cosa per
    cosa. */
 {
-  const c = new Corsa(CAMPAGNA[1], { seme: 314, rnd: seminato(314), roba: { ...ROBA_VUOTA(), gemme: 40 } })
+  const c = new Corsa(CAMPAGNA[5], { seme: 314, rnd: seminato(314), roba: { ...ROBA_VUOTA(), gemme: 40 } })   // la botola: alla scalinata i mostri cadono a un colpo
   const robe = c.livello.robe
   const porta = robe.find(r => r.che === 'porta')
   controlla('il piano ha una porta da aprire', !!porta)
@@ -77,8 +77,8 @@ function rispondiFinche(c, giusto = () => true, giri = 40) {
   c.visto[5] = 1
   c.vita = 13
 
-  const dato = scrivi(c, 1)
-  const b = leggi(dato, CAMPAGNA[1], c.roba)
+  const dato = scrivi(c, 5)
+  const b = leggi(dato, CAMPAGNA[5], c.roba)
   controlla('il salvataggio si rilegge', !!b)
   stessaLista('ogni cosa del piano è com\'era (porte, forzieri, mostri, roba per terra)', firmeDelPiano(b), firmeDelPiano(c))
   uguale('il piano è quello di prima, rifatto dal seme', b.livello.celle.join(), c.livello.celle.join())

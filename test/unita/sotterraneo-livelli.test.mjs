@@ -5,6 +5,7 @@
    discesa, la pagina dell'eroe. I mostri grossi e la roba con livello e
    rarità stanno in `unita/sotterraneo-rarita`.
    `node test/esegui.mjs sotterraneo-livelli --niente-build` */
+import { QUOTA_DEL_COMUNE } from '../../src/giochi/sotterraneo/dati/mondo.js'
 import { CARATTERISTICHE, sogliaDi, livelloDi, quotaDi, espDi, guastiDeiLivelli, VITA_PER_TEMPRA, PUNTI_PER_LIVELLO,
          DOTE_OGNI, FORZA_PER_DIFESA, ENERGIA_PER_INTELLIGENZA, SCHIVATA_PER_DESTREZZA, GEMME_PER_RIASSEGNARE } from '../../src/giochi/sotterraneo/dati/livelli.js'
 import { EROI, eroeDi, guastiDegliEroi, requisitoDi, REQUISITO_DEL_GRADINO } from '../../src/giochi/sotterraneo/dati/eroi.js'
@@ -48,7 +49,7 @@ import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifi
   const m = c.livello.robe.find(r => r.che === 'mostro' && !r.chiave)
   const prima = c.crescita.esp
   c.cade(m)
-  uguale('battere un mostro dà la sua esperienza', c.crescita.esp - prima, espDi(MOSTRI[m.tipo], c.livelloQui))
+  uguale('battere un mostro dà la sua esperienza (un mostro di strada la quota, QUOTA_DEL_COMUNE)', c.crescita.esp - prima, Math.max(1, Math.round(espDi(MOSTRI[m.tipo], c.livelloQui) * QUOTA_DEL_COMUNE)))
   uguale('e la discesa la conta', c.espPresa, c.crescita.esp - prima)
   const e0 = c.crescita.esp
   c.chiaveDelPiano = true; c.foglio = { che: 'scala' }; c.scendi()

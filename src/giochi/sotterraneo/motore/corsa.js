@@ -6,7 +6,7 @@
 // `foglio` è un dato ({ che: 'scontro', chi }): finché è aperto il tempo è fermo.
 import {
   TASCHE, RAGGIO, RAGGIO_TORCIA, RAGGIO_SGOCCIOLI, ALONE, ALONE_TORCIA, ALONE_SGOCCIOLI, APERTURA_CONO, SFUMA_CONO, SFUMA_ARCO, ALONE_SFUMA, FORZA_MINIMA, ROCCIA, ACQUA, DIETRO, FIANCO, ALLA_PAR, LARGO_DIETRO, SVEGLIA, PASSO_EROE, PASSO_MOSTRO, PASSO_RIENTRO,
-  CALMA, SORSO, RIPOSO_SCALA, VITA_PER_PIANO,
+  CALMA, SORSO, RIPOSO_SCALA, VITA_PER_PIANO, QUOTA_DEL_COMUNE,
   ARREDO_DICE, ARREDO_LA_PRIMA_VOLTA,
 } from '../dati/mondo.js'
 import { MOSTRI } from '../dati/mostri.js'
@@ -787,7 +787,8 @@ export class Corsa extends Corredo {
     // (il «grigio» si legge dalla forza dell'eroe, non dal livello: motore/forza.js; fuori dalle zone non serve)
     const forza = this.tappa && this.tappa.potenza ? forzaDelCorredo(this) : this.livelloEroe
     const delGrado = PREMIO_DEL_GRADO[m.grado] || 1   // un mostro di grado alto vale di più (dati/varianti.js)
-    const esp = Math.max(1, Math.round(espDi(MOSTRI[m.tipo], this.livelloQui, !!m.grosso) * espNellaZona(this.tappa, forza)))
+    const quota = m.grosso || m.caporale ? 1 : QUOTA_DEL_COMUNE
+    const esp = Math.max(1, Math.round(espDi(MOSTRI[m.tipo], this.livelloQui, !!m.grosso) * espNellaZona(this.tappa, forza) * quota))
     this.eventi.push({ che: 'esp', esp, x: m.x, y: m.y })
     this.guadagna(esp)
     // 💚 rigenera: ogni mostro battuto rimette in piedi un poco
@@ -798,7 +799,7 @@ export class Corsa extends Corredo {
     if (fiato) this.energia = Math.min(this.energiaMax, this.energia + fiato)
     const scheda = MOSTRI[m.tipo]
     this.livello.robe.push({ che: 'gemme', x: m.x, y: m.y, em: '💎',
-                             quante: Math.round((scheda.gemme + Math.floor(this.piano * 1.5)) * valoreDelLivello(this.livelloQui) * delGrado) })
+                             quante: Math.max(1, Math.round((scheda.gemme + Math.floor(this.piano * 1.5)) * valoreDelLivello(this.livelloQui) * delGrado * quota)) })
     const storia = this.indice >= 0
     const lascia = scheda.lascia || []
     const daBere = lascia.filter(SI_CONSUMA).length ? lascia.filter(SI_CONSUMA) : ['pozione-piccola']
