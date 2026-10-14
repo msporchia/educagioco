@@ -60,3 +60,5 @@ Il bravo: vinte alla prima nella scala sommersa 88 → 91, nella botola 92 → 9
 - **`npm run test:misure` (sotterraneo)**: i guasti salgono da 12 a 21, i nuovi sono tutti delle zone (altare al 12, 16, 20 e 30 e «zone al 20»: si vince il 93–100%
   dove il bersaglio è «non sempre»); la scala sommersa due livelli sotto torna in bersaglio. L'anello verde nelle righe della storia non c'entra (tolto, restano 22):
   è il giocatore finto che con tre gioielli diventa più forte nelle zone. Le unità restano come prima (`unita/sotterraneo-roba`, la sola rossa, è «torre 3/6» di sempre).
+- **Una gemma vale al più il doppio** (`VALORE_GEMME_MASSIMO` in `dati/livelli.js`, come il tetto della schivata): con il teschio
+  cercatore e due anelli verdi una gemma valeva il triplo, e nelle ultime due discese il curioso prendeva il 70% di gemme in più.

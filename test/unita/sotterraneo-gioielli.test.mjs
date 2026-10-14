@@ -7,6 +7,7 @@ import { Bottega } from '../../src/giochi/sotterraneo/motore/bottega.js'
 import { MERCANTI, mercanteDi, schedaDi, vendeLa, guastiDeiMercanti } from '../../src/giochi/sotterraneo/dati/mercanti.js'
 import { guastiDellaStoria } from '../../src/giochi/sotterraneo/dati/storia.js'
 import { seminato } from '../../src/giochi/sotterraneo/motore/livello.js'
+import { VALORE_GEMME_MASSIMO } from '../../src/giochi/sotterraneo/dati/livelli.js'
 import { controlla, uguale, stessaLista, riassunto } from '../aiuto/verifica.mjs'
 
 const roba = extra => ({ ...ROBA_VUOTA(), ...extra })
@@ -65,7 +66,7 @@ const corredo = (extra, eroe = 'cavaliere') => new Corredo({ eroe, roba: roba(ex
   const luci = corredo({ dito: 'anello-ambra', dito2: 'anello-ambra' })
   uguale('la luce si somma', luci.addosso('luce'), 5)
   const misti = corredo({ dito: 'anello-verde', dito2: 'anello-ambra', collo: 'teschio-cercatore' })
-  uguale('anelli e collana insieme: gemme 1 + 0,5 + 1', misti.valoreGemme, 2.5)
+  uguale('anelli e collana insieme: 1 + 0,5 + 1 farebbe 2,5, ma una gemma vale al più il doppio', misti.valoreGemme, VALORE_GEMME_MASSIMO)
   uguale('e la luce solo dall\'ambra', misti.addosso('luce'), 2.5)
   controlla('quello che hai addosso è indossato', misti.indossato('anello-verde') && misti.indossato('teschio-cercatore'))
   uguale('quanti ne hai: due anelli uguali', due.quanteNeHo('anello-verde'), 2)

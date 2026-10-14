@@ -5,7 +5,7 @@
 import { TASCHE, TASCHE_EXTRA_MAX, POZIONI_MASSIME, prezzoTasca } from '../dati/mondo.js'
 import { eroeDi, DI_PARTENZA, portaLa, nonLaPorta, FAMIGLIE, requisitoDi, livelloRichiesto } from '../dati/eroi.js'
 import { COSE, STANZE_TORCIA, aLivello, PESO_DELLA_DIFESA, CASELLE, CASELLE_DEL_TIPO, tipoDellaCasella } from '../dati/cose.js'
-import { GEMME_PER_FORTUNA, ATT_PER_PUNTO, SCHIVATA_PER_DESTREZZA, ENERGIA_PER_INTELLIGENZA } from '../dati/livelli.js'
+import { GEMME_PER_FORTUNA, VALORE_GEMME_MASSIMO, ATT_PER_PUNTO, SCHIVATA_PER_DESTREZZA, ENERGIA_PER_INTELLIGENZA } from '../dati/livelli.js'
 import { rileggiCrescita, piuDellaCrescita, caratteristica, chiTrattiene, puntiDaDare, riassegna, costoDelRiassegnare, trattoDegliElisir,
          ELISIR_MAX } from './crescita.js'
 import { CARATTERISTICHE } from '../dati/livelli.js'
@@ -215,7 +215,7 @@ export class Corredo {
   get vitaConLaRoba() { return this.io.vita + this.piu.vita + this.addosso('vita') + this.sempre('vitaPiu') }
   get fortuna() { return this.addosso('fortuna') }   // solo dai pezzi: non è più una caratteristica
   // quanto vale una gemma raccolta: gli anelli, le abilità e la fortuna
-  get valoreGemme() { return 1 + this.addosso('gemme') + GEMME_PER_FORTUNA * this.fortuna }
+  get valoreGemme() { return Math.min(VALORE_GEMME_MASSIMO, 1 + this.addosso('gemme') + GEMME_PER_FORTUNA * this.fortuna) }
   get schivata() {
     return Math.min(SCHIVATA_MASSIMA, this.addosso('schivata') + this.sempre('schivata') + this.piu.sopra.destrezza * SCHIVATA_PER_DESTREZZA)
   }
