@@ -9,6 +9,7 @@ import { eroeDi } from '../dati/eroi.js'
 import { MERCANTI } from '../dati/mercanti.js'
 import { CAMPAGNA } from '../dati/campagna.js'
 import { seminato } from './livello.js'
+import { COSE } from '../dati/cose.js'
 
 const mediana = v => { if (!v.length) return null; const s = [...v].sort((a, b) => a - b); const m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2 }
 
@@ -35,5 +36,16 @@ export function tabellaDeiSalti({ eroi = ['cavaliere', 'elfa', 'mago', 'nano'], 
     const ordinati = [...salti].sort((a, b) => a - b)
     return { livello: L, n: salti.length, minimo: ordinati[0] ?? null, primoQuarto: ordinati[Math.floor(ordinati.length / 4)] ?? null,
              mediana: mediana(salti), massimo: ordinati[ordinati.length - 1] ?? null, sogno: mediana(sogni) }
+  })
+}
+
+// quante pozioni costa un pezzo utile (docs/sotterraneo/bottega.md, «Una spada costa quanto uno zaino pieno di pozioni»): per ogni livello il salto mediano
+// diviso il prezzo della cura più grande che la guaritrice ha già sul banco (`dalla` discese finite) e della Pozione di mezzo
+export function rapportoPezzoPozione({ semi = [1], livelli } = {}) {
+  const cure = Object.entries(COSE).filter(([, c]) => c.usa === 'cura' && c.prezzo && !c.rarissimo && c.dalla != null).map(([k, c]) => ({ k, nome: c.nome, prezzo: c.prezzo, dalla: c.dalla }))
+  const piccola = cure.reduce((a, c) => (c.prezzo < a.prezzo ? c : a)), mezzo = cure.find(c => c.k === 'pozione') || piccola
+  return tabellaDeiSalti({ semi, livelli }).map(r => {
+    const grande = cure.filter(c => c.dalla <= discesaDel(r.livello)).reduce((a, c) => (c.prezzo > a.prezzo ? c : a), piccola)
+    return { livello: r.livello, salto: r.mediana, grande, piccola, ognuna: r.mediana / grande.prezzo, dellaPozione: r.mediana / mezzo.prezzo, mezzo }
   })
 }

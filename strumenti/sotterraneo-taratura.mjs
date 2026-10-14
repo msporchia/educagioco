@@ -406,6 +406,7 @@ async function stampaLaFine({ linee, passi, fine }, { completo }) {
   for (const l of linee) console.log(`\n${fine.tabellaFine(fine.fineDi(passi[l.id]), `${l.strada} · ${l.tipo}`, { solo })}`)
   console.log('\n══ Le armi nuove che migliorano davvero l\'eroe (bersaglio proposto: circa 3 utili a discesa fra comprate e trovate) ══')
   for (const l of linee) console.log(`\n${fine.tabellaArmi(fine.fineDi(passi[l.id]), `${l.strada} · ${l.tipo}`)}`)
+  await stampaIlRapportoPezzoPozione()
   // il «prima → dopo»: `--riassunto file` salva le mediane di questo giro, `--contro file` le confronta con quelle di un giro salvato (di solito con `--tara risalita.acceso=0,risalita.scaffale=0`)
   const mie = Object.fromEntries(linee.map(l => [l.id, fine.riassuntoDi(fine.fineDi(passi[l.id]))]))
   if (valore('--riassunto')) writeFileSync(valore('--riassunto'), JSON.stringify(mie))
@@ -414,6 +415,14 @@ async function stampaLaFine({ linee, passi, fine }, { completo }) {
     console.log(`\n══ Prima → dopo (il giro salvato in ${valore('--contro')} contro questo) ══`)
     for (const l of linee) if (prima[l.id]) console.log(`\n${fine.confrontoDi(l.id, prima[l.id], mie[l.id])}`)
   }
+}
+
+// quante pozioni costa un pezzo utile, per livello: il salto mediano contro la cura più grande già in vendita e contro la Pozione di mezzo (a pezzo ≈ zaino pieno di pozioni, bottega.md)
+async function stampaIlRapportoPezzoPozione() {
+  const { rapportoPezzoPozione } = await modulo('motore/salti.js')
+  console.log('\n══ Quante pozioni costa un pezzo utile (salto mediano · cura più grande in vendita · pezzo/cura più grande · pezzo/Pozione di mezzo) ══')
+  for (const r of rapportoPezzoPozione({ livelli: [1, 2, 4, 6, 8, 10, 12, 14] }))
+    console.log(`livello ${String(r.livello).padStart(2)}  salto ${String(Math.round(r.salto)).padStart(4)}  ${r.grande.nome} ${String(r.grande.prezzo).padStart(3)}  → ${r.ognuna.toFixed(1).padStart(5)} volte · ${r.dellaPozione.toFixed(1).padStart(5)} ${r.mezzo.nome} da ${r.mezzo.prezzo}`)
 }
 
 // una riga per linea: quanti vincono alla prima, dove si ferma, con che forza arriva
@@ -447,6 +456,7 @@ if (argv.includes('--salti')) {
   const { tabellaDeiSalti } = await modulo('motore/salti.js'), { sogliaDiRisalita } = await modulo('dati/giocatori-tipo.js')
   console.log('livello · soglia proposta · soglia dell\'utente (100 + (livello − 10) · 10) · prezzo dei salti: minimo · primo quarto · mediana · massimo · il sogno (mediana)')
   for (const r of tabellaDeiSalti()) console.log(`${String(r.livello).padStart(5)} ${String(sogliaDiRisalita(r.livello)).padStart(7)} ${String(100 + (r.livello - 10) * 10).padStart(7)}   ${r.minimo} · ${r.primoQuarto} · ${r.mediana} · ${r.massimo}   (${r.n} salti)  sogno ${r.sogno}`)
+  await stampaIlRapportoPezzoPozione()
 } else if (argv.includes('--specie')) await stampaLeSpecie()
 else if (PRESTO) uscita = await presto()
 else if (argv.includes('--cerca')) {
