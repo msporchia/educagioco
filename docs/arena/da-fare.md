@@ -14,5 +14,5 @@
 - La bomba: scegliere il punto col dito (oggi lo sceglie il gioco), un effetto più epico e il suono.
 - Provare col dito di un bambino: il ritmo del campo mentre si calcola
   (oggi metà della velocità) è la prima cosa da guardare.
-- Rush contro economia: dalla quinta tappa l'economia perde (39% → 0%) e il rush vince sempre; e la lava non è quasi imbattibile per chi non sbaglia (95%), per un gradino nella curva ([taratura.md](taratura.md), [regole.md](regole.md)).
+- Rush contro economia: dalla quarta tappa l'economia vince 4-20 punti più del rush; e il pigro (due caserme al 2, poi fermo) vince ancora il 70-100% nelle prime sei tappe ([taratura.md](taratura.md)).
 - Idea dell'utente (13/10), da valutare: dare una priorità alle truppe, caserma per caserma, cioè dire a ciascuna cosa attaccare.
