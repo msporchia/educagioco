@@ -2,14 +2,15 @@
 // trova davvero e si compra (il caso dei drop resta), rifacendo la discesa persa. Un passo è una discesa: serve anche alla ricerca
 // (`--cerca`), che ricomincia da dove una discesa ha lasciato la roba e non rigioca le prime. Gira in Node.
 import { gioca, allaBottega } from './banco.js'
+import { alGiroNuovo } from './bottega.js'
 import { CAMPAGNA } from '../dati/campagna.js'
 import { COSE } from '../dati/cose.js'
 import { ROBA_VUOTA, Corredo } from './corredo.js'
 import { CRESCITA_NUOVA } from './crescita.js'
 import { forzaDelCorredo } from './forza.js'
-import { GIOCATORI_TIPO, NOMI_TIPO, STRADE, NOMI_STRADA, STRADA_BASE, stileDi, TENTATIVI } from '../dati/giocatori-tipo.js'
+import { GIOCATORI_TIPO, NOMI_TIPO, STRADE, NOMI_STRADA, STRADA_BASE, stileDi, TENTATIVI, RISALITA } from '../dati/giocatori-tipo.js'
 import { livelloAtteso } from './storia.js'
-import { dannoPerRisposta, valoreDellaRoba } from './fine.js'
+import { dannoPerRisposta, valoreDellaRoba, utiliComprati } from './fine.js'
 
 const copia = o => JSON.parse(JSON.stringify(o))
 const intero = (v, d = 0) => (Number.isFinite(v) ? v : d)
@@ -31,16 +32,19 @@ export function ingressoDi(eroe, { roba, crescita }, k = 0) {
 function registro(g) {
   const e = g.esito
   return { v: e.vinta ? 1 : 0, sv: e.svenimenti, dom: e.domande, giu: e.giuste, pz: g.pozioni || 0, fo: g.fonti || 0, ge: e.gemme,
-           mo: e.mostri, liv: g.corsa.livelloEroe, pp: (g.perPiano || []).map(n => intero(n)), sc: g.scontri || [], guasto: g.guasto || null }
+           mo: e.mostri, liv: g.corsa.livelloEroe, pp: (g.perPiano || []).map(n => intero(n)), sc: g.scontri || [], guasto: g.guasto || null,
+           ri: g.risalite || [], ar: g.armi || { trovati: 0, inutili: 0 } }
 }
 
 // il seme della partita n di una discesa: lo stesso per chi gioca la discesa dallo stesso ingresso, così il sotterraneo è lo stesso
 export const semeDella = (seme, k, n = 0) => 100 + seme * 37 + k * 3 + n * 7919
 
 function giocaCome(tipo, k, stato, { eroe, seme, n = 0, strada = STRADA_BASE }) {
+  const botteghe = RISALITA.scaffale ? copia(stato.botteghe || {}) : null
   const g = GIOCATORI_TIPO[tipo]
   return gioca(CAMPAGNA[k], { seme: semeDella(seme, k, n), bravura: g.bravura, come: g.come, stile: stileDi(tipo, strada), eroe,
-                              roba: copia(stato.roba), crescita: copia(stato.crescita) })
+                              roba: copia(stato.roba), crescita: copia(stato.crescita),
+                              risalita: { spesa: STRADE[strada].spesa, finite: k, seme: seme * 211 + k * 7 + n * 31 + 5, botteghe, obiettivo: stato.obiettivo ?? null } })
 }
 
 /* Un passo della storia di `tipo`: la spesa di sopra, poi la discesa `k` giocata fino a vincerla (al più `tentativi` volte, rifacendo la
@@ -50,22 +54,33 @@ function giocaCome(tipo, k, stato, { eroe, seme, n = 0, strada = STRADA_BASE }) 
    con cui si esce; `prima` è quello che si aveva uscendo dalla discesa di prima, ancora da spendere */
 export function passoDellaStoria(k, stato, { tipo, eroe, seme, sonde = [], rifai = [], tentativi = TENTATIVI, strada = STRADA_BASE }) {
   let { roba, crescita } = stato
+  let botteghe = RISALITA.scaffale ? copia(stato.botteghe || {}) : null   // i banchi pescati: restano gli stessi finché la discesa non finisce
   const prima = { gemme: roba.gemme, poz: pozioniDi(roba.zaino) }
   const spesa = STRADE[strada].spesa
-  roba = allaBottega(roba, { finite: k, eroe, seme: seme * 101 + k, crescita, spesa })
-  const passo = { tipo, strada, eroe, seme, k, prima, ingresso: ingressoDi(eroe, { roba, crescita }, k), tentativi: [], sonde: {}, rifatte: {} }
+  const scaffale = !!RISALITA.scaffale
+  const spesaFatta = { pezzi: [], pozioni: 0, speso: 0, venduto: 0, obiettivo: null }
+  const robaDiPrima = roba
+  roba = allaBottega(roba, { finite: k, eroe, seme: seme * 101 + k, crescita, spesa, scaffale, botteghe, registro: spesaFatta })
+  let obiettivo = spesaFatta.obiettivo   // il salto che non poteva pagare: scende sapendo quanto gli serve per tornare a prenderlo
+  const passo = { tipo, strada, eroe, seme, k, prima, ingresso: ingressoDi(eroe, { roba, crescita }, k), tentativi: [], sonde: {}, rifatte: {}, pre: utiliComprati(eroe, crescita, robaDiPrima, roba) }
   for (const j of rifai) passo.rifatte[j] = registro(giocaCome(tipo, j, { roba, crescita }, { eroe, seme, n: 100, strada }))
-  if (k >= CAMPAGNA.length) return { passo, stato: { roba, crescita } }
-  for (const s of sonde) passo.sonde[s] = registro(giocaCome(s, k, { roba, crescita }, { eroe, seme }))
+  const stati = () => ({ roba, crescita, obiettivo, ...(botteghe ? { botteghe } : {}) })
+  if (k >= CAMPAGNA.length) return { passo, stato: stati() }
+  for (const s of sonde) passo.sonde[s] = registro(giocaCome(s, k, stati(), { eroe, seme }))
   for (let n = 0; n < tentativi; n++) {
-    const g = giocaCome(tipo, k, { roba, crescita }, { eroe, seme, n, strada })
+    const g = giocaCome(tipo, k, stati(), { eroe, seme, n, strada })
     passo.tentativi.push(registro(g))
     roba = g.corsa.roba
     crescita = g.corsa.crescita
+    if (botteghe) botteghe = alGiroNuovo(g.botteghe) || g.botteghe   // finita la discesa i banchi ruotano
     if (g.esito.vinta) break
-    roba = allaBottega(roba, { finite: k, eroe, seme: seme * 101 + k + n * 17, crescita, spesa })
+    const dopo = { pezzi: [], pozioni: 0, speso: 0, venduto: 0, obiettivo: null }
+    const robaPersa = roba
+    roba = allaBottega(roba, { finite: k, eroe, seme: seme * 101 + k + n * 17, crescita, spesa, scaffale, botteghe, registro: dopo })
+    obiettivo = dopo.obiettivo
+    passo.pre += utiliComprati(eroe, crescita, robaPersa, roba)
   }
-  return { passo, stato: { roba, crescita } }
+  return { passo, stato: stati() }
 }
 
 // quali discese già vinte si rifanno al passo k: quella di due prima (la roba di chi è un po' più avanti), le ultime due all'uscita

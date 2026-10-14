@@ -1,6 +1,7 @@
 // Le misure dell'eroe a fine discesa (docs/sotterraneo/fine-discesa-e-strade.md): il danno che toglie una risposta giusta, quanto vale la roba,
 // e l'eroe atteso letto allo stesso modo. Finiscono nel passo di ogni storia (motore/storie.js); le tabelle sono in rapporto-fine.js. Gira in Node.
 import { COSE } from '../dati/cose.js'
+import { Corredo } from './corredo.js'
 import { colpoContro, dannoDell, abilitaDelloScontro, mostroDiRiferimento, eroeAtteso, ABILITA_A_SCONTRO } from './forza.js'
 import { livelloAtteso } from './storia.js'
 
@@ -29,4 +30,19 @@ export function attesoA(eroe, k) {
     attesi.set(chiave, { liv: L, dpa: dannoPerRisposta(c, L), dif: c.dif, vita: c.vitaConLaRoba, valore: valoreDellaRoba(c) })
   }
   return attesi.get(chiave)
+}
+
+// i pezzi addosso (mano, mancina, corpo, dito) e quanto vale tutto, per contare le armi nuove che migliorano davvero l'eroe
+export const addossoDi = c => ({ pezzi: [c.mano, c.mancina, c.corpo, c.dito], punti: c.punteggio() })
+
+// i pezzi entrati addosso fra due letture, se insieme alzano il valore dell'eroe (un pezzo che finisce nello zaino, o che non alza niente, non conta)
+export function nuoviUtili(prima, dopo) {
+  const nuovi = dopo.pezzi.filter(k => k && !prima.pezzi.includes(k))
+  return nuovi.length && dopo.punti > prima.punti ? nuovi.length : 0
+}
+
+// quanti pezzi utili ha comprato una spesa: la roba prima e dopo, con la stessa crescita
+export function utiliComprati(eroe, crescita, prima, dopo) {
+  const leggi = roba => { const c = new Corredo({ eroe, roba, crescita }); c.sistemaIlCorredo(); return addossoDi(c) }
+  return nuoviUtili(leggi(prima), leggi(dopo))
 }
