@@ -4,6 +4,7 @@ Il posto da girare col dito dove ogni cosa costa una risposta, e l'abisso
 senza fondo sotto le sette discese. Il codice sta in `src/giochi/sotterraneo/`.
 
 - [presentazione.md](presentazione.md) — per chi arriva da fuori: cos'è, cosa allena, note per i genitori
+- [chi-cura.md](chi-cura.md) — la guaritrice e l'incantatrice curano gratis chi è salito dal portale (vita e energia), chiamano con un fumetto sopra la testa; salire non cura da sé
 - [terra-di-sopra.md](terra-di-sopra.md) — la mappa da cui si scende: la vista che segue l'eroe, la maschera di dove si cammina e come si corregge, le discese sui posti, chi indica la strada, i mercanti, la nebbia, il portale gemello, le icone delle discese, la partenza nel villaggio
 - [terra-strumento.md](terra-strumento.md) — lo strumento che fa la terra di sopra dal foglietto: la giunta fra le due metà, la maschera, le icone delle discese
 - [regole.md](regole.md) — la discesa: scala e guardiano, quanto costa in domande, gli abitanti di ogni posto, la stanza come confine, lo scontro, gli svenimenti

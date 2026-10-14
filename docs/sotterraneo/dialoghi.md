@@ -75,6 +75,12 @@ Node), `viste/Dialogo.vue` (il riquadro), `viste/Terra.vue` (`parla`,
   per te»**: il banco di chi veste ha sempre qualcosa che migliora
   ([bottega.md](bottega.md)), e una linguetta vuota dice «… niente alla tua
   altezza. Guarda l'altro». Tengono il bambino sperando.
+- **Chi cura ha una domanda in più** (`cura` in `dati/dialoghi.js`; il perché in
+  [chi-cura.md](chi-cura.md)): «Curami» dalla guaritrice, «Ricaricami» dall'incantatrice. Ferito (o
+  scarico), è la prima domanda, prima della bottega; se no sta subito dopo la bottega, così il dialogo di chi è in forze è
+  quello di sempre. Gratis, senza limiti, e come le altre non torna nello stesso dialogo. Curando risponde con la sua voce («Siediti, e
+  sta' fermo. Ecco: le ferite si chiudono. Questo non lo faccio pagare.»); quando non serve lo dice e basta («Non vedo ferite. Sei già
+  in forze.»), senza far finta e senza effetti. Le pagine sono `dato: 'cura'` e `'in-forze'`.
 - **Il tono è quello di Diablo, non di una favola buffa**: frasi brevi,
   serie, che mostrano invece di spiegare («Il lucchetto non cede: riprova»,
   non «Per aprire devi rispondere giusto»). Chi parla dice cose del suo
@@ -174,9 +180,9 @@ Nei test: `[data-dialogo="<chi>"]` (con `data-pagina`, `data-pagine`,
 `consegna`, `presa`, `grazie`, `pieno`) o il suo dato: `[data-storia]` (il perché della
 porta, del minatore), `[data-novita]` (la risposta a «Novità?»), `[data-detto]` (la
 strada del minatore), `[data-ti-cerca]`, `[data-sotto-livello]` (con
-`data-manca`), `[data-racconto]`, `[data-saluto]`, `[data-premio]`; le
+`data-manca`), `[data-racconto]`, `[data-saluto]`, `[data-premio]`, `[data-cura]` e `[data-in-forze]` (la risposta di chi cura); le
 domande `[data-scelte] [data-scelta="<che>"]` (`consegna`, `prendi`,
-`bottega`, `vendi`, `strada`, `novita`, `racconta`, `ciao`), con `data-missione` per
+`cura`, `bottega`, `vendi`, `strada`, `novita`, `racconta`, `ciao`), con `data-missione` per
 le prime due. `unita/sotterraneo-dialoghi` (i testi stanno in piedi, cosa si
 dice aprendo, le domande e il loro ordine, la storia che cambia, il minatore
 e la strada, prendere e consegnare, i mercanti),
@@ -184,5 +190,5 @@ e la strada, prendere e consegnare, i mercanti),
 un tocco va alla pagina dopo, le domande solo all'ultima, la storia che non
 si richiede, «ci penso io» che prende la missione, un tocco sul prato che
 chiude e cammina, la consegna col premio, il minatore che si presenta e poi
-dice la strada, la guaritrice, l'incantatrice e il mercante che portano alla bottega);
+dice la strada, la guaritrice, l'incantatrice e il mercante che portano alla bottega); chi cura: `unita/sotterraneo-dialoghi` (la domanda, il suo posto, il fumetto) e `integrazione/sotterraneo-cura`;
 `nelDialogo` in `test/aiuto/browser.mjs` gira le pagine e sceglie.
