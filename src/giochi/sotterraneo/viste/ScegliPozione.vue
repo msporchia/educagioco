@@ -27,7 +27,7 @@ const bevi = s => { if (pronto.value) emit('bevi', s.i) }
     <p class="sot-scegli-dice">
       <template v-if="manca > 0">ti mancano <b>{{ manca }}</b> punti di vita</template>
       <template v-else>sei già in piena forma</template>
-      <template v-if="nelloScontro"> · costa il turno</template>
+      <template v-if="nelloScontro"> · poi tocca ancora a te</template>
     </p>
     <div class="sot-scegli-elenco">
       <button v-for="s in scelte" :key="s.k" type="button" class="sot-scelta sot-scelta-bevi sot-scegli-riga"

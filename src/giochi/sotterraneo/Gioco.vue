@@ -788,12 +788,12 @@ const abilitaViva = dallaCorsa(c => {
   const k = i == null ? null : c.zaino[i]
   return {
     caselle, attacco: `fai ${c.colpo(m)} di danno`, energia: c.energia, energiaMax: c.energiaMax,
-    bevi: i == null ? null : { cura: k && COSE[k].usa === 'cura' ? c.curaDi(k) : 0, n: c.pozioni, tipi: c.scelteDiCura().length },
+    bevi: i == null ? null : { cura: k && COSE[k].usa === 'cura' ? c.curaDi(k) : 0, n: c.pozioni, tipi: c.scelteDiCura().length, fatto: !!f.bevuto },
     // la pozione blu: energia per le abilità, se ne hai e il globo non è pieno
     beviEnergia: c.energia < c.energiaMax && c.zaino.some(x => COSE[x] && COSE[x].usa === 'energia')
-      ? { quanto: COSE[c.zaino.find(x => COSE[x].usa === 'energia')].energia, n: c.zaino.filter(x => COSE[x] && COSE[x].usa === 'energia').length } : null,
+      ? { quanto: COSE[c.zaino.find(x => COSE[x].usa === 'energia')].energia, n: c.zaino.filter(x => COSE[x] && COSE[x].usa === 'energia').length, fatto: !!f.bevuto } : null,
     scappa: c.puoScappare() ? { graffio: c.costoFuga() } : null,
-    pericolo: f.pericolo ? { perche: f.pericolo, vita: c.vita, male: c.colpiInArrivo() } : null,
+    pericolo: f.pericolo ? { perche: f.pericolo, vita: c.vita, male: c.colpiInArrivo(), bevuto: !!f.bevuto } : null,
     // com'è la scelta fatta, per la riga sopra la domanda
     scelta: c.pronta ? voce(c.pronta) : null,
   }
@@ -821,10 +821,7 @@ function scegliColpo(id) {
 // la pozione blu dal menu dello scontro: l'energia sale, e si sceglie ancora (non costa il turno)
 function beviEnergiaNelloScontro() {
   const c = corsa.value
-  if (!c || !c.foglio || c.foglio.che !== 'scontro') return
-  const i = c.zaino.findIndex(x => COSE[x] && COSE[x].usa === 'energia')
-  if (i < 0) return
-  c.usa(i)
+  if (!c || !c.foglio || c.foglio.che !== 'scontro' || !c.beviEnergiaNelloScontro()) return
   tic.value++
   suoni.tesoro()
   salva()
@@ -837,13 +834,12 @@ function beviNelloScontro() {
   if (c.foglio.pericolo) return ringhioBevi()
   bevutaNelloScontro()
 }
-// la pozione rossa costa il turno (docs/sotterraneo/scontro.md): tocca ai mostri, e l'esito si racconta come una risposta
+// la pozione rossa non costa il turno (docs/sotterraneo/pozioni.md): si racconta il sorso, poi tocca ancora a chi gioca
 function bevutaNelloScontro(i) {
   const c = corsa.value
   const prima = fotoPrima(c)
   const e = c.beviNelloScontro(i)
   if (!e) return
-  domanda.value = null
   togli()
   tic.value++
   salva()
@@ -1239,7 +1235,7 @@ function bevi() {
   if (c.scelteDiCura().length > 1) { sceltaPozione.value = true; return }
   usa(i)
 }
-// la scelta fatta: nello scontro costa il turno (anche dallo stop del pericolo), fuori si beve e basta
+// la scelta fatta: nello scontro si beve e tocca ancora a te (anche dallo stop del pericolo), fuori si beve e basta
 const sceltaPozione = ref(false)
 const scelteDiPozione = dallaCorsa(c => c.scelteDiCura().map(t => ({ ...t, nome: COSE[t.k].nome, em: COSE[t.k].em, sprite: COSE[t.k].sprite, tutta: !!COSE[t.k].tutta })), [])
 // il foglio che non ha più niente da scegliere si spegne da sé: un `v-if` che resta vero riapparirebbe alla prossima pozione
