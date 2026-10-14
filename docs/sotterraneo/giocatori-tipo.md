@@ -146,9 +146,8 @@ duri, più esperienza, livelli a metà discesa); adesso a frenare è la **curva*
   132 · 245 · 354 · 735 · 1572. Sbadato, vinte alla prima 59 · 92 · 73 · 80 · 82 · 70 · 73 → 64 · 96 · 68 · 79 · 80 · 48 · 62. Bravo, vinte 100 · 78 · 74 ·
   94 · 90 · 88 · 78 → 100 · 78 · 72 · 92 · 91 · 87 · 80. **Il tetto lo toccano quasi a ogni discesa dalla seconda**: il curioso in 93 · 97 · 98 · 99 · 100 ·
   100% delle discese dalle cantine al fondo, il bravo (che gira meno e trova meno) in 2 · 52 · 60 · 66 · 80 · 63% (riga `al tetto` sotto la roba con cui si entra).
-- **Le gemme** una per punto di potenza tornano piene: il curioso ne prende da 47 (cripta) a 3600 (miniera) a discesa, e **il banco non le assorbe**
-  (avanzano 1400 alla botola). La leva è chi decide: i prezzi del banco di sopra, o `potenza.gemme`. Sotto 1 la cripta non basta: il mago che va dritto
-  ne esce con 12 (a 0,5) e la prima arma costa 23 (`misure/sotterraneo` lo controlla).
+- **Le gemme** sono la potenza per `VALORE_DELLA_POTENZA.gemme` (0,5 dal 14 ottobre sera, prima 1: [risalite.md](risalite.md#il-giro-delle-gemme-14-ottobre-sera)). Con le risalite
+  il banco le spende, ma la leva ha un pavimento: 0,5 è il minimo per cui la cripta basta alla prima arma, e la forza del curioso non scende sotto +2/+3 neanche a 0,05.
 
 ## La ricerca (`--cerca`)
 

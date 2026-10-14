@@ -88,6 +88,41 @@ Tre giri: **prima** (`risalita.acceso=0,scaffale=0`), **solo salite** (`scaffale
   il curioso e lo sbadato, che comprano molto, sono a +6 come arma prima.
 - **Chi vince bevendo** è quasi sparito: dal labirinto in giù il curioso beve 0–3 pozioni a discesa.
 
+## Il giro delle gemme (14 ottobre sera)
+
+Decisione dell'utente: il fabbro non deve far pagare di più (le pozioni diventerebbero relativamente economiche): la regola è «un pezzo utile costa quanto uno zaino pieno di pozioni»
+([bottega.md](bottega.md)), e la leva sono le gemme dei mostri (`potenza.gemme`, di difetto 1, adesso **0,5**). Dopo il merge delle cinque cure. Curioso di arma prima, mediane
+(altare · cantine · torre · gallerie · cisterna · labirinto · fondo), prima (1) → dopo (0,5):
+
+| | prima | dopo |
+|---|---|---|
+| armi utili (comprate · trovate) | 1,7+1,6 · 3,2+0,6 · 2,7+0,1 · 2,8+0,1 · 3,4 · 5,3 · 4,3 | 1,0+2,1 · 2,0+1,2 · 2,3+0,2 · 2,0+0,1 · 2,5+0,1 · 4,3 · 4,0 |
+| forza a fine sull'atteso | 0 · +1 · +1 · +2 · +4 · +6 · +7 | 0 · +1 · +1 · +2 · +2 · +4 · +4 |
+| gemme non spese | 4 · 57 · 49 · 108 · 144 · 221 · 342 | 3 · 32 · 39 · 47 · 119 · 152 · 206 |
+| vinte alla prima % | 96 · 90 · 93 · 94 · 98 · 92 · 94 | 98 · 93 · 84 · 99 · 98 · 97 · 96 |
+| discese con uno svenimento % | 32 · 13 · 37 · 24 · 5 · 2 · 0 | 38 · 13 · 45 · 36 · 7 · 6 · 2 |
+| vita dopo il grosso % | 40 · 59 · 53 · 71 · 77 · 78 · 89 | 35 · 58 · 49 · 66 · 71 · 71 · 86 |
+
+Il bravo (dritto): utili 2 a discesa (1,4–2,3), forza −1 · −1 · −3 · −2 · −2 · −1 · −3 (prima −1 · −1 · −3 · −2 · −1 · −1 · −1), vinte alla prima 100 · 65 · 73 · 90 · 88 · 93 · 95.
+
+- **La leva funziona fino a un punto**: le gemme non spese si dimezzano e i pezzi utili tornano intorno a 3 fino alla cisterna (4 al labirinto e al fondo), ma la forza del curioso
+  resta a +4 alla fine. Anche a 0,05 resta +2/+3 e compra ancora 1–2 pezzi a discesa: **la forza del curioso è per metà il livello** (esce a +2 livelli sull'atteso, la curva
+  dell'esperienza non è di questo giro) e il resto viene da forzieri e rivendite; il bersaglio 0…+2 non si raggiunge con le gemme dei mostri. Il bravo, che prende pochissime gemme,
+  perde di più del curioso.
+- **0,5 è il minimo per la cripta**: a 0,25 chi esce dalla cripta ha 5–8 💎 e la prima arma ne costa 9 (4 controlli di `misure/sotterraneo`); a 0,5 passano. A 0,5 le
+  misure ritrovano rosse le discese «dritte» di cantine, gallerie e labirinto (69 · 68 · 63%), oltre alla torre e al fondo che erano già rossi.
+- **Il prezzo pagato**: `unita/sotterraneo` (già rossa) passa da 1 a 3 controlli rossi (gallerie, labirinto e fondo, «si vince 8 volte su 10» a 3/6 contro i 4–5/6 di prima, sei semi soltanto),
+  e il bravo perde 3–7 punti di vinte alla prima. Tornare a 1 è un numero solo (`VALORE_DELLA_POTENZA.gemme`).
+- **I pezzi trovati non servono dalla torre in giù** (0,0–0,4 a discesa) e non per il livello: **provato** il raro del grosso a +2, +3, +5, +6 livelli, il migliore di 4, 6 e 8
+  pescati, e salendo di un livello alla volta finché alza l'eroe (fino a +8): i trovati restano a 0,1–0,8. Il curioso porta già salti di +7 livelli comprati (bipenne di livello 18 a
+  livello 12 d'eroe), e un raro più alto non si regge o non lo batte; la cosa che si porta addosso si guadagna con le gemme. Un forziere o un caporale che lasciano di più non
+  cambiano la sostanza. **Non applicato**: la proposta minima è abbassare ancora l'entrata del curioso (forzieri, rivendita) e riguardare i trovati dopo, o dichiarare che oltre
+  la cisterna i drop sono per il rigattiere.
+- **Il rapporto pezzo / pozione** (`rapportoPezzoPozione`, nel rapporto e in `--salti`): salto mediano 76 · 72 · 127 · 162 · 169 · 204 · 181 · 213 ai livelli 1 · 2 · 4 · 6 · 8 · 10 · 12 · 14,
+  cioè 3,6 · 3,4 · 6,0 · 7,7 · 8,0 · 9,7 · 8,6 · 10,1 Pozioni da 21; contro l'Ampolla maggiore (200) vale una; contro la Boccetta (8) nove al livello 1.
+- **Da rifare** quando bere nello scontro non costerà più il turno (e una sola pozione per turno): le pozioni diventano più forti e questi numeri cambiano.
+- Tempo: un giro a freddo, 150 s (dopo il merge dei muri della cripta); da checkpoint meno di un secondo.
+
 ## I tempi
 
 Con 4 processi: **il giro a freddo dura 212 s** (7 discese più la spesa in uscita 4,7 · 13,3 · 13,9 · 23,8 · 27,7 · 52,8 · 39,7 · 35,6 s), contro i 65 s di prima; solo con le salite e senza scaffale 79 s.

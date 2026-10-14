@@ -80,6 +80,16 @@ più nessuno.
   rarità (comune 1, magico 2,6, raro 6, leggendario 14, `dati/pezzi.js`); rivendendo si incassa
   ancora la metà del vecchio valore (`molt`), così la roba che cade non gonfia le gemme.
   Le varianti sono tre per ogni rarità, con abilità diverse.
+- **Un pezzo utile costa quanto uno zaino pieno di pozioni** (l'utente, 14 ottobre 2026): un salto vale circa **8 Pozioni da 21** dal livello 6 in giù
+  (7,7 · 8,0 · 9,7 · 8,6 · 10,1 ai livelli 6 · 8 · 10 · 12 · 14; più su ai livelli bassi, dove la Pozione ancora non c'è), come il tetto di 8 cure addosso. Il rapporto è
+  una regola e non un risultato: **i prezzi della roba non si alzano** (alzarli rende le cure relativamente economiche e chi beve tutto torna favorito: provato, il
+  curioso arrivava già a +4/+6 di forza comprando tutti i salti, e il fabbro caro non era la cura). `npm run taratura` lo stampa a ogni giro
+  («Quante pozioni costa un pezzo utile») e `--salti` da solo: salto mediano contro la cura più grande già in vendita (`dalla`) e contro la Pozione di mezzo.
+  Chi tocca i prezzi delle cure (`dati/cose.js`) o dei salti lo rilegge.
+- **Quanto rendono i mostri è la leva dei soldi** (`VALORE_DELLA_POTENZA.gemme` in `dati/livelli.js`, 0,5: prima 1): le gemme di un mostro sono la sua potenza per questo
+  numero. **0,5 è il minimo che lascia la cripta sufficiente**: chi esce dalla cripta andando dritto ha 5–8 💎 a 0,25 e la prima arma dell'armaiolo ne costa 9
+  (`misure/sotterraneo`, «la prima arma»). Il taglio costa a chi va dritto: a 0,5 le discese «dritte» a 8/10 si vincono il 69 · 56 · 68 · 63 · 63% (cantine · torre · gallerie · labirinto · fondo) contro il 64 e il 65%
+  della torre e del fondo a 1, e le altre sopra soglia; il curioso, che ha altre entrate (forzieri, rivendite), resta comunque a +3/+4 di forza. Il giro e i numeri: [risalite.md](risalite.md#il-giro-delle-gemme-14-ottobre-sera).
 - **Il tetto di rarità** (l'utente, 12 ottobre 2026: *«il fabbro non venda
   roba leggendaria/epica, quella è appannaggio dei drop: ti permette di
   prendere sempre un'arma tosta per quel livello, ma non super tosta»*): dai

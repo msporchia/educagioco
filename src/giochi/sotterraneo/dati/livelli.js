@@ -124,7 +124,7 @@ export function quotaDi(esp) {
 export const PESO_DELL_ATTACCO = 3, PESO_DELLA_DIFESA_DEL_MOSTRO = 3
 export const PIU_PER_PROTEZIONE = 0.08, PIU_PER_ARMA = 0.15, PIU_PER_INCANTO = 0.25
 // quanto rende una potenza (un oggetto: `npm run taratura -- --tara potenza.gemme=0.3` ne prova un valore senza toccare il file)
-export const VALORE_DELLA_POTENZA = { esp: 1, gemme: 1 }
+export const VALORE_DELLA_POTENZA = { esp: 1, gemme: 0.5 }   // vedi docs/sotterraneo/bottega.md, «Quanto rendono i mostri»
 export function potenzaDi({ ossa, att, dif = 0, protezioni = 0, arma = false, incanto = false, premio = 1 }) {
   const sostanza = (Math.max(1, ossa) + PESO_DELL_ATTACCO * Math.max(0, att) + PESO_DELLA_DIFESA_DEL_MOSTRO * Math.max(0, dif)) / 3
   return sostanza * (1 + PIU_PER_PROTEZIONE * protezioni + (arma ? PIU_PER_ARMA : 0) + (incanto ? PIU_PER_INCANTO : 0)) * premio
