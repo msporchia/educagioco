@@ -39,12 +39,11 @@ ogni gioco si può spegnere. Il nome porta alla pagina del gioco.
 
 ### Imparare a programmare
 
-Tre gradini della stessa scala, e nessuno fa scrivere codice: si comincia con le frecce, a cinque anni, e si arriva a funzioni, parametri e variabili.
+Due gradini della stessa scala, e nessuno fa scrivere codice: si comincia con le frecce, a cinque anni, e si arriva a funzioni, parametri e variabili.
 
 <table>
 <tr>
 <td align="center" width="33%" valign="top"><img src="docs/img/clip-passo.webp" width="220"><br><b><a href="docs/passo-passo/presentazione.md">🐇 Passo passo</a></b><br>Una fila di frecce riporta il coniglio alla tana. Poi il cane pastore, poi i cicli.</td>
-<td align="center" width="33%" valign="top"><img src="docs/img/clip-generale.webp" width="220"><br><b><a href="docs/generale.md">🎖️ Il Generale</a></b><br>Ordini a una squadretta: sequenze, condizioni, cicli e segnali.</td>
 <td align="center" width="33%" valign="top"><img src="docs/img/clip-costruttore.webp" width="220"><br><b><a href="docs/costruttore/presentazione.md">🤖 Il Robot</a></b><br>Un robot costruisce alla lettera quello che programmi: funzioni, parametri, variabili.</td>
 </tr>
 </table>
