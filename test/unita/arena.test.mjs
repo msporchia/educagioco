@@ -70,9 +70,19 @@ controlla('stesso seme, stessa partita', JSON.stringify(uguali) === JSON.stringi
   p.avanza(0.1)
   controlla('crollata, la caserma sparisce e il posto torna libero', !p.casermeDi('io').some(c => c.id === 'lupi'))
   controlla('si rifà, anche con un\'altra truppa, dal livello 1', p.fai('io', 'costruisci', 'pipistrelli') && p.casermeDi('io').find(c => c.id === 'pipistrelli').liv === 1)
-  p.fai('io', 'miniera')
-  uguale('la miniera sale', p.lati.io.miniera, 2)
-  controlla('e rende di più al secondo', p.alSecondo('io') > 0.83 * 1.29)
+  // la miniera è un edificio su una piazzola: le monete salgono finché sta in piedi
+  const prima2 = p.alSecondo('io')
+  controlla('la miniera si costruisce su una piazzola', p.fai('io', 'costruisci', 'miniera') && p.miniereDi('io').length === 1)
+  uguale('e il livello di miniera sale', p.lati.io.miniera, 2)
+  controlla('e rende di più al secondo', p.alSecondo('io') > prima2 * 1.69)
+  const mina = p.miniereDi('io')[0]
+  controlla('si potenzia come una caserma', p.fai('io', 'potenzia', mina.posto) && mina.liv === 2 && p.lati.io.miniera === 3)
+  controlla('il nemico la vede fra le cose da assediare', p.edificiContro({ lato: 'nem', vola: false }).includes(mina))
+  mina.hp = 0
+  p.avanza(0.1)
+  uguale('abbattuta, le monete tornano quelle di prima', p.lati.io.miniera, 1)
+  controlla('e la piazzola torna libera', !p.edificioIn('io', mina.posto))
+  controlla('«più monete» in una mossa: la costruisce se non c\'è', p.fai('io', 'miniera') && p.miniereDi('io').length === 1)
   controlla('il muro non si costruisce: non c\'è nemmeno la scelta', p.prezzo('io', 'muro') === null)
   uguale('il castello sale come le caserme', p.fai('io', 'castello') && p.castello('io').liv, 2)
   p.muro('io').hp = 0
@@ -275,11 +285,11 @@ controlla('stesso seme, stessa partita', JSON.stringify(uguali) === JSON.stringi
   controlla('da rifare costa la prima pietra e parte dal livello che l\'edificio aveva',
             rifatta.prezzo === TRUPPE.lupi.costo && rifatta.etichette.ora === 'Livello 3' && rifatta.etichette.dopo === 'Livello 4')
   controlla('ogni edificio ha le sue due truppe', Object.values(EDIFICI).every(e => e.varianti.length === 2))
-  controlla('al livello massimo non c\'è un «dopo» e non c\'è prezzo', dettaglioTruppa('lupi', 10).prezzo === null && dettaglioTruppa('lupi', 10).righe.every(r => r.dopo === null))
+  controlla('non c\'è un livello massimo: anche al 20 c\'è un «dopo» e un prezzo', dettaglioTruppa('lupi', 20).prezzo > 0 && dettaglioTruppa('lupi', 20).righe.every(r => r.dopo !== null))
   controlla('il golem dice che ignora le truppe e il drago che vola', ruoloDi('golem')[0].includes('costruzioni') && ruoloDi('drago')[1].includes('vola'))
-  const m = dettaglioAzione('miniera', { miniera: 1 })
-  controlla('la miniera al livello dopo rende di più (+70%)', m.righe[1].ora === '×1' && m.righe[1].dopo === '×1,7')
-  controlla('e costa quanto dice il motore', m.prezzo === new Partita({ rnd: caso(1) }).prezzo('io', 'miniera'))
+  const m0 = dettaglioAzione('miniera', { miniera: 0 }), m1 = dettaglioAzione('miniera', { miniera: 1 })
+  controlla('una miniera rende il 70% in più a livello', m1.righe[1].ora === '+70%' && m1.righe[1].dopo === '+140%')
+  controlla('e costa quanto dice il motore', m0.prezzo === new Partita({ rnd: caso(1) }).prezzo('io', 'costruisci', 'miniera'))
 }
 
 /* ══════════ 8. la taratura è fresca ══════════ */

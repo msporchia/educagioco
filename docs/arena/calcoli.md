@@ -44,7 +44,7 @@ grossi sono del castello.
   un gioco di conti svelti. Il calcolo prende **tutto lo schermo**: provato a un foglio
   in basso che lasciava in vista il campo, e non andava (l'utente: «sfrutta
   l'intero schermo per le domande»); il campo corre piano là dietro.
-- **Per scegliere con calma c'è il «?»** su ogni carta: apre i dettagli (come sta
+- **Per scegliere con calma ci sono «i numeri»**, nella scelta e nell'anello: aprono i dettagli (come sta
   la cosa adesso, come starebbe al livello dopo, quanto costa) e **il campo sta
   fermo finché sono aperti**: la scelta di cosa costruire si fa lì, senza fretta,
   e il calcolo viene dopo. Che conto serve non si scrive: «si risolve una

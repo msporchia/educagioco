@@ -7,7 +7,7 @@
 // monete ferme. Con la «furbizia» (da 0 a 1, della tappa) ragiona invece di seguire
 // la scaletta: la truppa che batte la tua, i potenziamenti concentrati, l'attacco a chi
 // prende la miniera scoperto. È più bravo, non più ricco. Perché così: docs/arena/nemico.md.
-import { TRUPPE, LIV_MAX, MINIERA_MAX, BOMBA, CAMPO, EDIFICIO_DI } from '../dati/regole.js'
+import { TRUPPE, LIV_MAX, BOMBA, CAMPO, EDIFICIO_DI } from '../dati/regole.js'
 
 /* Una scaletta parla di ruoli, non di truppe: per ogni tappa il ruolo diventa la
    prima truppa che c'è (quelle di una tappa sono poche). */
@@ -33,7 +33,7 @@ const SCALETTE = {
 
 /* sale a ogni ritocco del modo di giocare del nemico: entra nella firma dell'equilibrio (`firma.js`),
    così un'IA cambiata senza ritarare è un test rosso */
-export const VERSIONE_IA = 6
+export const VERSIONE_IA = 7
 
 export function creaIA(rnd) {
   const nomi = Object.keys(SCALETTE)
@@ -99,7 +99,7 @@ function candidate(p, difesa) {
   } else {
     if (costruibili.length && mie.length < 4) aggiungi('costruisci', costruibili[0])
     if (castello.liv < mediaLiv - 0.5) aggiungi('castello')
-    if (l.miniera < Math.min(MINIERA_MAX, 4) && p.t < 100) aggiungi('miniera')
+    if (l.miniera < 4 && p.t < 100) aggiungi('miniera')
     for (const c of bassa.slice(0, 2)) aggiungi('potenzia', c.posto)
     for (const id of costruibili.slice(0, 1)) aggiungi('costruisci', id)
     aggiungi('castello')
@@ -201,7 +201,7 @@ function testa(p) {
   if (mie.length < 4 && nuove.length) vuoi('costruisci', nuove[0])
   if (castello.liv < Math.max(...sue.map(c => c.liv), 1) - 1) vuoi('castello')
   if (salibili.length) vuoi('potenzia', salibili[0].posto)
-  if (l.miniera < MINIERA_MAX && p.t < 200) vuoi('miniera')
+  if (l.miniera < 6 && p.t < 200) vuoi('miniera')
   vuoi('castello')
 
   if (!obiettivi.length) return false
