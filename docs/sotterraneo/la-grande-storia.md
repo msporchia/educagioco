@@ -113,9 +113,9 @@ lo stesso giudizio della raccolta). Così la tabella vera, con livello,
 - **I mostri di tutti i giorni a volte lasciano un pezzo** (dal 3 all'11%
   per specie, a tono col posto e con l'eroe, [rarita.md](rarita.md)): poco,
   perché la tabella dica ancora con che roba si arriva.
-- **Il banco porta il passo dopo, non oltre** (`bancoDelPasso`): l'armaiolo
-  e il rigattiere hanno i pezzi della riga con cui si entra nella prossima
-  discesa che ancora mancano, e un paio di cose che non costano più di
+- **Il banco porta il passo dopo, non oltre** (`bancoDelPasso`): l'armaiolo,
+  l'incantatrice (bacchette e stoffa) e il rigattiere hanno i pezzi della riga con cui si entra nella prossima
+  discesa che ancora mancano e che vendono, e un paio di cose che non costano più di
   quei pezzi (e non sono della riga dopo ancora). Chi va dritto esce dalla
   discesa con le gemme che bastano al pezzo che il guardiano non dà (tabella
   sotto); chi gira tutto ne ha il doppio, e le spende in pozioni. I pezzi
@@ -140,20 +140,19 @@ Il 9 ottobre un bambino che entrava senza aver comprato niente e rispondeva
 bene la maggior parte delle volte la vinceva (75%); il 12 ottobre, con i
 mostri tarati su un banco che usa le abilità, **si vince più di una volta su
 due**: cavaliere 10 su 20, elfa 17, mago 7, nano 12 (57%). Con la prima arma è comoda (98% a
-8/10, 89% a 6/10).
+8/10, 89% a 6/10). **La sera del 13 ottobre, coi branchi grossi, a mani nude si vince di rado** (15%: cavaliere 0 su 20, elfa 9, mago 0, nano 3; con la prima arma 99% a 8/10,
+78% a 6/10, 45% a 4/10): il bersaglio è «una volta su dieci almeno e meno che con la prima arma». Nudi non si arriva: il guardiano della cripta lascia la prima arma
+per terra e l'armaiolo la vende a 9 💎. La scalinata che si vincesse al 70% nudi, come prima, a quattro su dieci si vincerebbe il 60%.
 
-- **La leva è la forza della scalinata**: i ratti e le melme hanno poche ossa (`forza` 0,55) e picchiano forte (`spinta` 6,5), ma
-  vengono uno alla volta (`tettoBranco` 1) e ce ne sono molti di più (`densita` 1,6: il 13 ottobre, coi piani nuovi,
-  [piani-caverne.md](piani-caverne.md#le-domande-per-discesa)); prima `forza` 0,8 e `spinta` 4,5. Più spinta e meno forza stringe meglio la
-  forbice fra chi è nudo e chi ha l'arma. Provato a farlo vincere al 70% nudi (`spinta` 3,5): a
-  quattro su dieci con la roba attesa si vince il 60%.
-- **Il mago nudo** non ha la bacchetta e non lancia niente: 7 su 20, e ha il guardiano di sempre (la melma caporale).
-  Il test pretende il 50% in media e almeno il 30% a testa ([scontro-bilancio.md](scontro-bilancio.md)).
+- **La leva è la spinta della scalinata** (2, con la forza a 0,5: i mostri cadono a un colpo e picchiano di 2–3 punti): più spinta e la scalinata si perde a
+  sei su dieci, meno e a quattro su dieci si vince oltre il 60%. Prima (mattina del 13 ottobre) `forza` 0,55 e `spinta` 6,5 con i mostri uno alla volta
+  (`tettoBranco` 1, `densita` 1,6), provato a farlo vincere al 70% nudi (`spinta` 3,5): a quattro su dieci con la roba attesa si vinceva il 60%.
+- **Il mago nudo** non ha la bacchetta e non lancia niente: 0 su 20, e ha il guardiano di sempre (la melma caporale).
 - **La forbice si allarga, non sparisce**: alla scalinata si sta larghi (6/10 quasi sempre, 4/10 a testa fino al 70%, 38% in media), dalla
   torre in poi tutto più stretto.
 - **C'è sempre un'arma da comprare**: l'armaiolo ha la prima arma della
   riga (la spada corta, la verga, l'accetta) a 9 💎, e si esce dalla cripta con
-  11–15 💎 in media (scheletro e fantasma lasciano 6 💎, e il guardiano
+  17–20 💎 in media (scheletro e fantasma lasciano 6 💎 ciascuno, a metà, e il guardiano
   dell'ultima stanza la prima arma anche per terra). `misure/sotterraneo` lo controlla per ognuno dei quattro eroi.
 
 ## Chi è sotto il livello lo sa prima di scendere
@@ -164,7 +163,8 @@ ossa nelle discese di prima»; se no, se braccio o difesa con la roba di
 adesso sono sotto quelli della roba attesa, il fumetto lo dice con la
 voce del minatore e le cose che si hanno in mano: «Con quella spada corta
 sotto la torre non duri: passa dal fabbro», «Nella grotta picchiano
-forte, e senza scudo non reggi: passa dal fabbro» (`dettoDelLivello`,
+forte, e senza scudo non reggi: passa dal fabbro» (`dettoDelLivello`: il mago a mani nude o senza
+vesti è mandato dall'incantatrice, che vende la bacchetta e la stoffa; `daChiAndare`,
 `dove` nella tappa per il posto in mezzo alla frase). Lo ripete il minatore
 quando indica la prossima. Non vieta niente: si scende lo stesso. Vieta
 solo il colore del pallino, quando la discesa è due gradini sopra la forza dell'eroe ([forza.md](forza.md)):
@@ -204,15 +204,16 @@ roba attesa ma l'eroe due livelli sotto o tre sopra. Discese vinte su venti, cav
 - **Chi gira tutto guadagna molto di più**: arriva tre livelli sopra chi va dritto, coi pezzi dei grossi e il bottino a tono, e a quattro vince
   metà delle discese. È la ricompensa di chi esplora; il tetto in `misure/sotterraneo` è 0,95 a quattro.
 - **La taratura** sono `forza` (le ossa) e `spinta` (l'attacco) di ogni discesa in `dati/campagna.js`, sulla roba e sul livello
-  attesi: forza 0,4 · 0,55 · 0,9 · 1,4 · 2,25 · 3 · 4, spinta — · 6,5 · 6,8 · 9,6 · 9,8 · 10 · 11 dalla cripta alla miniera, `COLPO_DEL_MOSTRO` 1,1;
-  più `densita` (quanti mostri in più o in meno del solito, 1 di difetto): scalinata 1,6, torre 0,7, scala sommersa 1,3, botola 0,8
-  (13 ottobre, [piani-caverne.md](piani-caverne.md#le-domande-per-discesa)).
-  Le specie hanno tutte otto ossa e la forza viene da qui (prima la faceva la fascia).
+  attesi: forza 0,25 · 0,5 · 0,5 · 0,8 · 1,1 · 1,25 · 1,8, spinta −2 · 2 · 4,5 · 5,8 · 7 · 7,7 · 9 dalla cripta alla miniera, `COLPO_DEL_MOSTRO` 1,1
+  (la sera del 13 ottobre, coi branchi grossi: [taratura-branchi.md](taratura-branchi.md); la mattina 0,4 · 0,55 · 0,9 · 1,4 · 2,25 · 3 · 4 e 0 · 6,5 · 6,8 · 9,6 · 9,8 · 10 · 11,
+  con una `densita` che adesso non c'è più). Le specie hanno tutte otto ossa e la forza viene da qui (prima la faceva la fascia).
 - **Le gemme con cui si esce andando dritti** (cavaliere): 12 · 17 · 36 · 41 · 61 · 57 · 83 (prima 10 · 19 · 24 · 29 · 38 · 37 · 56):
   più mostri uccisi e più forti, e le gemme valgono di più a livello alto, come i prezzi
   ([rarita.md](rarita.md)).
-- **Il minimo per scendere** (cavaliere, roba attesa, un seme): 9 · 6 · 21 · 31 · 26 · 24 · 25 domande, sotto il tetto di una seduta
-  (85); girando tutto 16 · 50 · 55 · 40 · 65 · 98 · 98.
+- **Il minimo per scendere** (media dei quattro eroi, roba attesa, otto semi, `npm run sotterraneo -- --domande`): 10 · 19 · 20 · 23 · 24 · 31 · 27
+  domande, sotto il tetto di una seduta (85); girando tutto 19 · 71 · 57 · 47 · 56 · 110 · 75 (la mattina del 13 ottobre, coi piani di prima:
+  8 · 8 · 17 · 22 · 26 · 29 · 38 e 13 · 41 · 47 · 34 · 65 · 89 · 94). Con i branchi il «tutto» della scalinata e della botola, i due piani da sedici
+  stanze, resta sopra: [taratura-branchi.md](taratura-branchi.md).
 
 Nei test: `unita/sotterraneo-storia` (la tabella sta in piedi, ogni
 discesa dà il primo pezzo della riga dopo e a chi è avanti niente, la roba

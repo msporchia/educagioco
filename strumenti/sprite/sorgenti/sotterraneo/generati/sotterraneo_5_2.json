@@ -6,6 +6,7 @@
     "generatore": "ChatGPT, 2 ottobre 2026",
     "testo": "il prompt dei pezzi che mancano su magenta della scheda (porte di fronte e di fianco, scala chiusa, fontanella asciutta, mercante, pavimento speciale 3×3, sei cose per terra), con le braci, le candele e le monete vietate"
   },
+  "nitido": "scelti",
   "fondo": [
     255,
     0,
@@ -56,20 +57,6 @@
     "fornace-porta-ferro": {
       "da": [
         202,
-        104
-      ],
-      "cella": [
-        128,
-        200
-      ],
-      "misura": [
-        16,
-        25
-      ]
-    },
-    "fornace-porta-oro": {
-      "da": [
-        364,
         104
       ],
       "cella": [
@@ -140,20 +127,6 @@
     "fornace-fianco-ferro": {
       "da": [
         234,
-        368
-      ],
-      "cella": [
-        72,
-        244
-      ],
-      "misura": [
-        6,
-        20
-      ]
-    },
-    "fornace-fianco-oro": {
-      "da": [
-        388,
         368
       ],
       "cella": [
@@ -332,6 +305,21 @@
         13,
         14
       ]
+    },
+    "fornace-fontana-ferro": {
+      "da": [
+        280,
+        684
+      ],
+      "cella": [
+        144,
+        224
+      ],
+      "misura": [
+        12,
+        19
+      ],
+      "nitido": true
     }
   }
 }

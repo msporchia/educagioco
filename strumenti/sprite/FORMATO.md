@@ -423,6 +423,34 @@ Un test
 (`unita/sprite-buchi`) controlla la figurina finta e i pezzi veri del
 sotterraneo.
 
+```json
+"porta-nera-teschio": { …, "riempi": { "chiudi": 2, "colore": [14, 12, 16] } }
+```
+
+`riempi` è il contrario di `buchi`: rimette il corpo a un pezzo che il fondo ha mangiato **da dentro**. Una porta nera su un fondo nero,
+col contorno fatto di pietre e di puntini d'oro, ha dei varchi, e `allaga` entra da lì e la lascia trasparente: a schermo si vede il
+pavimento attraverso. Con `riempi` la sagoma si ingrossa di `chiudi` pixel (del foglietto: sul pezzo nitido si scala da sé), quello che resta
+chiuso si riempie, la sagoma torna alla sua misura, e dove è piena e il pezzo no si mette `colore` (di difetto un nero caldo). Un varco più
+largo di `2 × chiudi` non si chiude: si alza il numero e si guarda con `vedi.py`.
+
+```json
+"bastone-49": { "da": [119, 92], "cella": [11, 16], "ruota": 30, "misura": [10, 22] }
+```
+
+`ruota` raddrizza una figura disegnata in diagonale (le bacchette di `scudi.png` hanno la testa in alto a destra): **i gradi in senso
+antiorario**, misurati sull'asse della figura (un bastone con la testa a destra della verticale di 30° si gira di 30). Si gira il pezzo
+dipinto grande e poi lo si riduce alla grana del foglio (`ruota_in`), non quello piccolo, che con venti pixel si rovinerebbe, e il nitido esce
+girato anche lui. Vale per `sprite` con una `cella` che contiene tutta la figura; `misura` dopo la rotazione porta il pezzo alla taglia delle sorelle.
+
+```json
+"incantatrice-fermo-0": { "da": [529, 102], "cella": [198, 260], "misura": [11, 15], "tinta": { "da": [50, 170], "gradi": 195 } }
+```
+
+`tinta` ricolora il pezzo: ruota di `gradi` la tonalità dei pixel che ce l'hanno fra `da` e `a` (gradi sul cerchio dei colori: 0 rosso, 120
+verde, 240 blu) e non sono grigi (`saturo`, da 0 a 255, 40 di ripiego); pelle, cuoio e bianchi non si muovono. È per una figura
+**provvisoria** fatta da un'altra già dipinta (la guaritrice col verde ruotato al viola è l'incantatrice, finché non arriva il suo foglio):
+`atlante.py` la applica dopo `misura` sul piccolo e dopo `riempi` sul nitido (`ritinge_in`). Nel banco non si vede (l'anteprima non la applica).
+
 `scala` e `foglio` restano la strada normale — riducono tutto il foglio
 dello stesso fattore, che è quello che si vuole quando il foglio è una
 tabella onesta. `misura` è per il pezzo che dal fattore comune esce

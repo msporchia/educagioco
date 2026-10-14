@@ -19,15 +19,16 @@ import { domandaPerGioco } from '../../quiz/scelta.js'
 import Domanda from '../../quiz/Domanda.vue'
 
 import { CAMPAGNA, QUANTE_TAPPE, stelleDella, L_ABISSO, INDICE_ABISSO } from './dati/campagna.js'
-import { COSE, SEGNI } from './dati/cose.js'
+import { COSE } from './dati/cose.js'
 import { CURIOSITA_DI } from './dati/curiosita.js'
 import { EROI, DI_PARTENZA, eroeDi } from './dati/eroi.js'
 import { TASCHE, VITA_PER_PIANO } from './dati/mondo.js'
 import { Corsa } from './motore/corsa.js'
 import { rileggiRoba, ROBA_VUOTA, schedaConLaRoba, Corredo, tascheDello, postiDello } from './motore/corredo.js'
-import { rileggiCrescita, puntiDaDare, dai as daiPunto, livelloDella } from './motore/crescita.js'
-import { puntiAbilita, caselleDella } from './motore/abilita.js'
-import { NODI, RAMI } from './dati/abilita.js'
+import { rileggiCrescita, puntiDaDare, dai as daiPunto, livelloDella, crescitaA, trattoDegliElisir } from './motore/crescita.js'
+import { robaAttesa } from './motore/storia.js'
+import { puntiAbilita, caselleDella, gradoDi } from './motore/abilita.js'
+import { NODI, RAMI, preparabile } from './dati/abilita.js'
 import { zonaDi } from './dati/zone.js'
 import { notiziaDi, potenzaDi, livelloDellaZona, coloreDi, zoneConForza, zoneConSentita } from './motore/zone.js'
 import { forzaDi, forzaDelCorredo } from './motore/forza.js'
@@ -36,13 +37,13 @@ import { quotaDi } from './dati/livelli.js'
 import { LEGGENDARI } from './dati/pezzi.js'
 import { prendi as prendiMissione, consegna as consegnaMissione, fatte as missioniFatte, presePer, promemoria,
          rotta as rottaDi, seguita, diario } from './motore/missioni.js'
-import { Bottega, alGiroNuovo } from './motore/bottega.js'
+import { Bottega, alGiroNuovo, robaRaraDi } from './motore/bottega.js'
 import { scrivi, leggi, dice, viaDi, PORTALE as VIA_PORTALE } from './motore/sosta.js'
 import { avventuraDi, scriviNellAvventura, vintaNellAvventura, azzeraIlVecchio, ricordaIlFondo, cominciata }
   from './motore/avventure.js'
 import { PORTALE } from './dati/terra-mappa.js'
 import { iconaDi } from './dati/terra.js'
-import { mercanteDi } from './dati/mercanti.js'
+import { mercanteDi, schedeDi } from './dati/mercanti.js'
 import { Tela } from './scena/tela.js'
 
 import Campagna from './viste/Campagna.vue'
@@ -52,10 +53,11 @@ import Icona from './viste/Icona.vue'
 import { occhio } from './viste/occhio.js'
 import Scontro from './viste/Scontro.vue'
 import { nuovoRacconto, modoDelColpo } from './viste/racconto.js'
-import { vistaDelloScontro } from './viste/campo.js'
+import { vistaDelloScontro, incantiAddosso } from './viste/campo.js'
 import Zaino from './viste/Zaino.vue'
 import Diario from './viste/Diario.vue'
 import BarraDiSotto from './viste/BarraDiSotto.vue'
+import Preparati from './viste/Preparati.vue'
 import PaginaEroe from './viste/PaginaEroe.vue'
 import PaginaAbilita from './viste/PaginaAbilita.vue'
 import CaselleAbilita from './viste/CaselleAbilita.vue'
@@ -89,7 +91,8 @@ const fine = ref(null)
 // un avviso è una riga sola; `dilloDi` porta anche la cosa, per mostrare la sua faccia vera invece di un'emoji
 const avviso = ref(null)
 const zainoAperto = ref(false)
-const diarioGiu = ref(false)       // il diario delle missioni aperto dalla barra in basso
+const diarioGiu = ref(false)       // il diario delle missioni, scheda della finestra dell'eroe, aperto in discesa (sopra sta in Campagna.vue)
+const preparatiAperti = ref(false) // la scelta degli incantesimi da preparare, dalla loro casella nella barra (docs/sotterraneo/orologio.md)
 const mappaGrande = ref(false)     // la mappina aperta grande dalla barra (scena/tela.js, minimappa)
 const colpito = ref(false)         // il globo della vita sobbalza a un colpo
 const tic = ref(0)                 // batte quando cambia qualcosa che si vede
@@ -355,18 +358,21 @@ const banco = computed(() => {
   // comprano a un prezzo più alto (`costa`: il `prezzo` resta quello pieno). Regola dell'utente, 8 ottobre: lo
   // scettro accanto al bastone magico (⚔️ 3 tutti e due) «non sembra molto interessante»
   const vendibili = b.mercanziaVista(k)
-    .map(({ chiave: x, sempre, avanti }) => {
+    .map(({ chiave: x, sempre, avanti, ruolo }) => {
       const costa = b.quantoCosta(x)
       return {
         chiave: x, sempre, ...COSE[x], ...(COSE[x].cura ? { cura: b.curaDi(x) } : {}), costa, avanti, posso: b.gemme >= costa,
+        // `ruolo` salto/sogno (motore/bottega.js): solo per i test, sulla casella non si segna niente
+        ruolo,
         // `nonPuoi`: la classe non lo porta, non si compra. `serve`: lo porta ma gli manca la caratteristica, si compra e va nello zaino
-        nonPuoi: b.porta(x) ? '' : b.perchéNo(x), serve: b.porta(x) ? b.perchéNo(x) : '', prova: b.seLoMetto(x), va: b.vaAddosso(x),
+        nonPuoi: b.porta(x) ? '' : b.perchéNo(x), serve: b.porta(x) ? b.perchéNo(x) : '', prova: b.seLoMetto(x, { ancora: true }), va: b.vaAddosso(x),
         mancano: Math.max(0, costa - b.gemme),
         quante: b.quanteNeHo(x),
       }
     })
   return {
-    chi: m,
+    // le linguette di una famiglia che l'eroe non porta non si mostrano (dati/mercanti.js, schedeDi)
+    chi: { ...m, schede: schedeDi(m, eroeDi(eroeQui())) },
     roba: vendibili,
     addosso: { mano: voce(b.mano), mancina: voce(b.mancina), corpo: voce(b.corpo), dito: voce(b.dito) },
     numeri: { vita: b.vitaConLaRoba, att: b.att, dif: b.dif, gemme: b.gemme },
@@ -377,7 +383,7 @@ const banco = computed(() => {
     // le ultime cose vendute, dalla più recente, al prezzo a cui il mercante le ha pagate (`i`: il posto nel suo elenco)
     riacquisto: m.compra ? b.daRiacquistare(k).map(({ k: x, prezzo, i }) => ({
       chiave: x, ...COSE[x], costa: prezzo, i, posso: b.gemme >= prezzo, mancano: Math.max(0, prezzo - b.gemme),
-      serve: b.porta(x) ? b.perchéNo(x) : '', prova: b.seLoMetto(x), va: b.vaAddosso(x),
+      serve: b.porta(x) ? b.perchéNo(x) : '', prova: b.seLoMetto(x, { ancora: true }), va: b.vaAddosso(x),
     })) : null,
   }
 })
@@ -444,6 +450,7 @@ const eroe = dallaCorsa(c => {
     pieni: c.postiUsati(), tasche: c.capienza,
     esp: c.crescita.esp, crescita: c.crescita,
     energia: c.energia, energiaMax: c.energiaMax,   // il globo blu della barra (docs/sotterraneo/abilita.md)
+    incanti: incantiAddosso(c),                     // gli incanti preparati addosso, sopra il globo (docs/sotterraneo/orologio.md)
   }
 })
 
@@ -466,9 +473,12 @@ const barra = computed(() => {
     pozioni: giu ? giu.pozioni : r.zaino.filter(k => COSE[k] && (COSE[k].usa === 'cura' || COSE[k].usa === 'cresci')).length,
     pieni: giu ? giu.pieni : postiDello(r.zaino), tasche: giu ? giu.tasche : robaSopra.value.capienza,
     gemme: giu ? giu.gemme : r.gemme,
+    incanti: giu ? giu.incanti : [],
+    // gli incantesimi che l'eroe sa e si preparano (la casella degli incanti), e le missioni da consegnare (il globo rosso e la linguetta)
+    preparabili: (RAMI[eroeQui()] || []).flatMap(r => r.nodi).filter(n => preparabile(n) && gradoDi(cr, n.id)).length,
+    missioniPronte: diario(missioni.value, tappe.value, segui.value).pronte.length,
   }
 })
-const missioniPronte = computed(() => diario(missioni.value, tappe.value, segui.value).inMano.some(v => v.stato === 'fatta'))
 
 /* ═══════════ la pagina dell'eroe e i Tesori (viste/PaginaEroe.vue, viste/Tesori.vue) ═══════════
    Si apre dal globo dell'esperienza, sopra e sotto. Giù i punti si danno alla corsa (la vita della tempra arriva
@@ -478,8 +488,10 @@ const tesoriAperti = ref(false)
 // la pagina dell'eroe ha due facce: le caratteristiche ('eroe') e l'albero delle abilità ('abilita', dal globo blu)
 const facciaEroe = ref('eroe')
 function apriPaginaEroe(faccia = 'eroe') {
+  preparatiAperti.value = false
   zainoAperto.value = false
   diarioGiu.value = false
+  diarioSopra(false)
   zainoSopra.value = false
   tesoriAperti.value = false
   facciaEroe.value = faccia === 'abilita' ? 'abilita' : 'eroe'
@@ -499,7 +511,7 @@ const pagina = computed(() => {
     numeri: { vita: c.vita ?? c.vitaConLaRoba, vitaMax: c.vitaMax ?? c.vitaConLaRoba, att: c.att, dif: c.dif,
               gemme: c.gemme },
     caratteristiche: c.caratteristiche(),
-    cambia: !corsa.value, tratti: corsa.value ? [] : robaSopra.value.tratti,
+    cambia: !corsa.value, tratti: corsa.value ? [trattoDegliElisir(c.crescita)].filter(Boolean) : robaSopra.value.tratti,
     tesori: { trovati: tesoriTrovati.value.length, tutti: Object.keys(LEGGENDARI).length },
     puntiAbilita: puntiAbilita(c.crescita), costoRiassegnare: c.costoRiassegnare,
   }
@@ -590,7 +602,7 @@ const zainoDiSopra = computed(() => {
   tic.value
   if (!zainoSopra.value) return null
   const c = new Corredo({ eroe: eroeQui(), roba: roba.value, crescita: crescita.value })
-  const voce = k => (k ? { chiave: k, ...COSE[k], nonPuoi: c.perchéNo(k), ancora: c.porta(k) && !c.posso(k), prova: c.seLoMetto(k), ...(COSE[k].cura ? { cura: c.curaDi(k) } : {}) } : null)
+  const voce = k => (k ? { chiave: k, ...COSE[k], nonPuoi: c.perchéNo(k), ancora: c.porta(k) && !c.posso(k), prova: c.seLoMetto(k, { ancora: true }), ...(COSE[k].cura ? { cura: c.curaDi(k) } : {}) } : null)
   return {
     mano: voce(c.mano), mancina: voce(c.mancina), corpo: voce(c.corpo), dito: voce(c.dito),
     tasche: tascheVoci(c, voce), costoTasca: c.costoTasca,
@@ -602,13 +614,15 @@ function suLaRoba(fai) {
   const e = fai(c)
   const a = c.avvisi.pop()
   if (a) dilloSopra(typeof a === 'string' ? a : a.testo)
-  nellAvventura({ roba: c.roba }, { subito: true })
+  nellAvventura({ roba: c.roba, crescita: c.crescita }, { subito: true })
   tic.value++
   return e
 }
 function usaSopra(t) {
   const i = tascheDello(roba.value.zaino)[t].i   // la tasca → il posto nella lista (le pozioni uguali ne fanno una sola)
   const k = roba.value.zaino[i]
+  // l'elisir vale per sempre e si beve anche qui; una cura no (si è già in piena forma), le altre cose servono laggiù
+  if (COSE[k] && COSE[k].usa === 'cresci') { suLaRoba(c => { const e = c.beviElisir(i); if (e) c.dillo(`🐂 +${e.vita} vita, per sempre`); return e }); suono.ok(); return }
   if (COSE[k] && !COSE[k].dove) { dilloSopra(COSE[k].usa === 'cura' ? '❤️ sei già in piena forma' : 'Serve laggiù, non qui'); return }
   suLaRoba(c => c.indossaDallaTasca(i))
   suono.ok()
@@ -670,9 +684,6 @@ watch(() => eroe.value && eroe.value.vita, (ora, prima) => {
   clearTimeout(colpitoFino)
   colpitoFino = setTimeout(() => { colpito.value = false }, 380)
 })
-
-// sul diario della barra, quante missioni sono in mano (come il tasto 📖 di sopra)
-const missioniAperte = computed(() => diario(missioni.value, tappe.value, segui.value).aperte)
 
 // chi riapre il telefono dopo mezz'ora non sta guardando il gioco: "piano 2 di 3 · ❤️ 24" fa tornare in mente dov'era
 const dovEravamo = dallaCorsa(c => `🕳️ piano ${c.piano + 1}`
@@ -767,7 +778,7 @@ const abilitaViva = dallaCorsa(c => {
     const nodo = id && NODI[id]
     if (!nodo) return null
     const ramo = RAMI[c.io.chiave].find(r => r.chiave === nodo.ramo)
-    return { id, glifo: nodo.glifo, tinta: ramo && ramo.tinta, nome: nodo.nome, costo: nodo.costo,
+    return { id, glifo: nodo.glifo, tinta: ramo && ramo.tinta, nome: nodo.nome, costo: c.costoDi(nodo),
              dice: c.descrizione(nodo, m), perche: c.perchéNonUsi(id) }
   }
   const caselle = caselleDella(c.crescita).map(voce).filter(Boolean)
@@ -840,7 +851,7 @@ const pieni = dallaCorsa(c => c.postiUsati(), 0)   // sei su sei vuol dire che l
 
 const zaino = dallaCorsa(c => {
   // `nonPuoi` la scrive il motore (perchéNo), che sa chi sta scendendo
-  const voce = k => (k ? { chiave: k, ...COSE[k], nonPuoi: c.perchéNo(k), ancora: c.porta(k) && !c.posso(k), prova: c.seLoMetto(k), ...(COSE[k].cura ? { cura: c.curaDi(k) } : {}) } : null)
+  const voce = k => (k ? { chiave: k, ...COSE[k], nonPuoi: c.perchéNo(k), ancora: c.porta(k) && !c.posso(k), prova: c.seLoMetto(k, { ancora: true }), ...(COSE[k].cura ? { cura: c.curaDi(k) } : {}) } : null)
   return {
     mano: voce(c.mano), mancina: voce(c.mancina),
     corpo: voce(c.corpo), dito: voce(c.dito),
@@ -853,11 +864,6 @@ const curiosita = dallaCorsa(c => {
   if (!f || f.che !== 'curiosita') return {}
   return CURIOSITA_DI[f.chi.tipo] || {}
 }, {})
-
-const segno = dallaCorsa(c => {
-  const f = c.foglio
-  return f && f.che === 'porta' ? SEGNI[f.chi.segno] : null
-})
 
 const suoni = {
   passo: () => suono.nota(320, 320, 0.05, 'sine', 0.06),
@@ -910,11 +916,12 @@ function pianoDaProva(c) {
 // `cappella`, `grotta`, `bilobata`, `galleria`, `antro`) o di quel ruolo (`anticamera`, `uscita`, `tesoro`...): per guardare i piani senza girarli (docs/sotterraneo/piani.md)
 function stanzaDaProva(c) {
   const q = new URLSearchParams(location.hash.slice(1)).get('stanza')
-  // `#stanza=relitto` (o `acqua`, `nicchia`): l'eroe sta a tre celle dal primo relitto (o dalla prima pozza, o davanti alla prima
-  // nicchia) e lo guarda, per vedere l'ombra che fa (docs/sotterraneo/piani-caverne.md)
+  // `#stanza=relitto` (o `acqua`, `nicchia`, `portone`): l'eroe sta a tre celle dal primo relitto (o dalla prima pozza, davanti alla prima
+  // nicchia, al portone del grosso) e lo guarda, per vedere l'ombra che fa (docs/sotterraneo/piani-caverne.md)
   const liv = c.livello
   const bersaglio = q === 'relitto' ? liv.relitti[0] : q === 'acqua' ? liv.stanze.flatMap(r => r.acqua)[0]
-    : q === 'nicchia' ? liv.stanze.flatMap(r => r.nicchie)[0] : null
+    : q === 'nicchia' ? liv.stanze.flatMap(r => r.nicchie)[0]
+      : q === 'portone' ? liv.robe.find(r => r.che === 'porta' && r.pelle === 'bella') : null
   if (bersaglio) {
     const quasi = []
     for (let dy = -3; dy <= 3; dy++) for (let dx = -3; dx <= 3; dx++) {
@@ -927,6 +934,8 @@ function stanzaDaProva(c) {
     c.giraVerso(bersaglio.x - dove.x, bersaglio.y - dove.y)
     c.segnaLaStanza()
     c.aggiornaLuce()
+    const qui = liv.stanzaDi(dove.x, dove.y)
+    if (qui) luceDaProva(c, qui)
     return
   }
   const s = q && c.livello.stanze.find(r => r.forma === q || r.ruolo === q)
@@ -938,6 +947,18 @@ function stanzaDaProva(c) {
   c.eroe = { x: dove.x + 0.5, y: dove.y + 0.5 }
   c.segnaLaStanza()
   c.aggiornaLuce()
+  luceDaProva(c, s)
+}
+
+// `#luce=stanza` accende tutta la stanza (e il giro di muro), a piena forza: per fotografare l'arredo senza girare il cono
+function luceDaProva(c, s) {
+  if (new URLSearchParams(location.hash.slice(1)).get('luce') !== 'stanza') return
+  const base = c.aggiornaLuce.bind(c)
+  c.aggiornaLuce = () => {
+    base()
+    for (const [x, y] of c.livello.celleDellaLuce(s)) { const k = y * c.livello.largo + x; c.luce.add(k); c.forzaLuce.set(k, 1); c.visto[k] = 1 }
+  }
+  c.aggiornaLuce()
 }
 
 // `#sotterraneo=leggendario` posa un leggendario accanto all'ingresso, come se fosse appena caduto: per guardare la
@@ -948,6 +969,18 @@ function leggendarioDaProva(c) {
   c.posaPezzo(k, { x: Math.floor(c.eroe.x) + 1, y: Math.floor(c.eroe.y) })
 }
 
+// `#preparati=1` (o `&preparati=scudo-arcano,rovi`) fa imparare all'eroe gli incantesimi che si preparano dal campo, gli riempie il globo e li
+// lancia (`&preparati=impara` li fa solo imparare): per guardare il campo con un incanto addosso e lo scontro che comincia protetto (docs/sotterraneo/orologio.md). Prima di `branco`
+function preparatiDaProva(c) {
+  const q = new URLSearchParams(location.hash.slice(1)).get('preparati')
+  if (!q) return
+  const tutti = (RAMI[c.chiEro] || []).flatMap(r => r.nodi).filter(preparabile).map(n => n.id)
+  const voluti = q === '1' || q === 'impara' ? tutti : q.split(',').filter(id => tutti.includes(id))
+  c.crescita = { ...c.crescita, albero: { ...c.crescita.albero, ...Object.fromEntries(voluti.map(id => [id, 1])) } }
+  c.energia = c.energiaMax
+  if (q !== 'impara') for (const id of voluti) c.preparaDalCampo(id)
+}
+
 // `#sotterraneo=branco&mostri=6` apre subito uno scontro con quei mostri attorno all'eroe (`&grosso=ossuto` mette al centro un
 // mostro grosso, `&agguato=1` fa colpire alle spalle, `&sorpresa=1` lo fa dormire), per guardare lo scontro a gruppi senza
 // cercare una stanza piena (docs/sotterraneo/scontro.md, «Nei test»)
@@ -955,7 +988,7 @@ const BRANCO = ['goblin', 'scheletro', 'ratto', 'orco', 'pipistrello', 'lupo']
 function brancoDaProva(c) {
   const h = new URLSearchParams(location.hash.slice(1))
   if (h.get('sotterraneo') !== 'branco') return
-  const n = Math.max(1, Math.min(6, Number(h.get('mostri')) || 3))
+  const n = Math.max(1, Math.min(8, Number(h.get('mostri')) || 3))
   const ex = Math.floor(c.eroe.x), ey = Math.floor(c.eroe.y)
   const stanza = c.livello.stanzaDi(ex, ey)
   const libere = []
@@ -1007,6 +1040,7 @@ function avvia(i, { prova = false } = {}) {
   pianoDaProva(corsa.value)
   stanzaDaProva(corsa.value)
   leggendarioDaProva(corsa.value)
+  preparatiDaProva(corsa.value)
   brancoDaProva(corsa.value)
   suono.nota(180, 90, 0.4, 'sawtooth', 0.12)
   nextTick(() => accendi())
@@ -1018,6 +1052,7 @@ function accendi() {
   if (!pittore) pittore = new Tela(tela.value)
   else pittore.attacca(tela.value)
   pittore.misura()
+  pittore.zoomA(Number(new URLSearchParams(location.hash.slice(1)).get('zoom')) || pittore.scala)   // `#zoom=2`: più campo, per le foto
   pittore.segui(corsa.value.livello, corsa.value.eroe.x, corsa.value.eroe.y)
   pittore.mostra({ corsa: corsa.value, orologio })   // il primo quadro c'è subito: rientrando si nasce dietro il velo della pausa, e il giro non disegna finché si è fermi
   pittore.avvia()
@@ -1090,6 +1125,7 @@ function guarda(c) {
             `|${c.foglio ? c.foglio.cosa || '' : ''}|${c.livello.robe.length}` +   // due cose trovate di fila hanno lo stesso `che`
             `|${c.crescita.esp}|${c.crescita.forza}.${c.crescita.destrezza}.${c.crescita.intelligenza}.${c.crescita.tempra}` +
             `|${c.energia}|${c.pronta}|${JSON.stringify(c.crescita.albero)}|${c.crescita.caselle}` +   // le abilità
+            `|${c.preparati.map(p => p.id + Math.ceil(p.passi)).join()}` +   // gli incanti preparati, che calano camminando
             `|${c.livello.robe.reduce((n, r) => n + (r.che === 'mostro' && r.sveglio ? 1 : 0), 0)}`   // il mostro grosso che si sveglia
   if (f !== firma) { firma = f; tic.value++ }
   while (c.eventi.length) festeggia(c.eventi.shift(), c)
@@ -1198,8 +1234,34 @@ function bevi() {
   }
   usa(i)
 }
+// La casella degli incanti (docs/sotterraneo/orologio.md): apre la scelta di quelli da preparare, giù; sopra e senza incanti noti la
+// stessa finestra dice perché non c'è niente da scegliere. I globi aprono l'eroe (apriPaginaEroe), non questa
+function apriIncanti() {
+  const c = corsa.value
+  if (c && (c.foglio || c.finita)) return
+  const aprire = !preparatiAperti.value
+  if (c) apriDallaBarra(null)
+  else { chiudiBottega(); zainoSopra.value = false; paginaEroe.value = false; diarioSopra(false) }
+  preparatiAperti.value = aprire
+  suono.ok()
+}
+// gli incantesimi che si possono preparare adesso: con quanto costano, cosa fanno, perché no e quanti passi hanno già addosso
+const preparabiliVisti = dallaCorsa(c => c.preparabili().map(nodo => {
+  const ramo = RAMI[c.io.chiave].find(r => r.chiave === nodo.ramo)
+  const addosso = c.preparati.find(p => p.id === nodo.id)
+  return { id: nodo.id, nome: nodo.nome, glifo: nodo.glifo, tinta: ramo && ramo.tinta, costo: c.costoDi(nodo), dice: c.diceIlPreparato(nodo),
+           perche: c.perchéNonPrepari(nodo.id), passi: addosso ? Math.ceil(addosso.passi) : 0 }
+}))
+function preparaDalCampo(id) {
+  const c = corsa.value
+  if (!c || c.foglio || !c.preparaDalCampo(id)) return
+  tic.value++
+  suono.nota(659, 988, 0.14, 'triangle', 0.1)
+  salva()
+}
 // una discesa nuova o ripresa nasce senza niente aperto sopra il campo
 function chiudiLaBarra() {
+  preparatiAperti.value = false
   zainoAperto.value = false
   diarioGiu.value = false
   mappaGrande.value = false
@@ -1210,13 +1272,34 @@ function chiudiLaBarra() {
 // lo zaino e il diario si aprono uno alla volta, e chiudono la mappa grande
 function apriDallaBarra(che) {
   mappaGrande.value = false
+  preparatiAperti.value = false
   paginaEroe.value = false
   zainoAperto.value = che === 'zaino'
-  diarioGiu.value = che === 'diario'
+  diarioGiu.value = false
 }
-// La finestra dell'eroe ha tre schede (viste/SchedeEroe.vue): lo zaino, le caratteristiche, l'albero. Si passa
+// il diario di sopra sta in Campagna.vue (con «vai da …»): da qui lo si apre e lo si chiude
+const diarioSopra = su => { if (campagnaEl.value) campagnaEl.value.apriDiario(su) }
+// La finestra dell'eroe ha quattro schede (viste/SchedeEroe.vue): lo zaino, le caratteristiche, l'albero, le missioni. Si passa
 // dall'una all'altra senza chiudere; sopra lo zaino è quello della terra (zainoSopra), giù quello della discesa
+// passare da una scheda all'altra non rifà crescere la finestra: per 160 ms il tasto stava 20 px più in là
+const cambioScheda = ref(false)
+let fineCambio = 0
 function apriScheda(s) {
+  cambioScheda.value = true
+  clearTimeout(fineCambio)
+  fineCambio = setTimeout(() => { cambioScheda.value = false }, 400)
+  preparatiAperti.value = false
+  if (s === 'missioni') {
+    paginaEroe.value = false
+    tesoriAperti.value = false
+    zainoAperto.value = false
+    zainoSopra.value = false
+    if (corsa.value) diarioGiu.value = true
+    else { chiudiBottega(); diarioSopra(true) }
+    return
+  }
+  diarioGiu.value = false
+  diarioSopra(false)
   if (s === 'zaino') {
     paginaEroe.value = false
     tesoriAperti.value = false
@@ -1231,7 +1314,7 @@ function apriScheda(s) {
 }
 watch(mappaGrande, g => { if (pittore) pittore.mappaGrande = g })
 // un foglio che si apre (un mostro, una porta) chiude la mappa grande: si guarda quello
-watch(foglio, f => { if (f) mappaGrande.value = false })
+watch(foglio, f => { if (f) { mappaGrande.value = false; preparatiAperti.value = false } })
 
 /* ═══════════ un tocco altrove chiude (docs/core/interfaccia.md) ═══════════
    Quello che si legge e basta si chiude toccando il campo, e quel tocco porta anche l'eroe dove si è toccato. Resta
@@ -1254,6 +1337,7 @@ function lasciaAndare() {
 // lo zaino e il diario: il tocco sul velo li chiude, e se cade sul campo l'eroe ci va. Il click è quello del dito
 // stesso, che finisce sul velo: dietro non arriva nessun fantasma
 function toccoFuori(e) {
+  preparatiAperti.value = false
   zainoAperto.value = false
   diarioGiu.value = false
   paginaEroe.value = false
@@ -1402,7 +1486,7 @@ function punto(e) {
 
 function premi(e) {
   dita.set(e.pointerId, e)
-  if (zainoAperto.value || diarioGiu.value || paginaEroe.value || fine.value) return
+  if (zainoAperto.value || diarioGiu.value || preparatiAperti.value || paginaEroe.value || fine.value) return
   // un foglio da leggere, la mappa grande, un avviso: il tocco li chiude e intanto cammina
   if (!lasciaAndare()) return
   if (dita.size > 1) { premuto = false; return }
@@ -1488,6 +1572,21 @@ function scesaDaProva() {
   if (i === INDICE_ABISSO || (Number.isInteger(i) && i >= 0 && i < CAMPAGNA.length)) avvia(i, { prova: true })
 }
 scesaDaProva()
+// `#bottega=armaiolo` (o `incantatrice`) apre subito quel banco (`&scheda=difese`), con l'eroe a `&livello=12` e `&roba=rara` (un raro per posto), `&roba=nuda`
+// o quella attesa dalla storia, e `&gemme=800`: per guardare la bottega senza camminare fino al mercante (strumenti/scatta-app.mjs)
+function bottegaDaProva() {
+  const h = new URLSearchParams(location.hash.slice(1))
+  const k = h.get('bottega')
+  if (!k || !mercanteDi(k) || scegliEroe.value) return
+  const L = Math.max(1, Math.min(100, Number(h.get('livello')) || 0))
+  const gemme = Math.max(0, Number(h.get('gemme')) || 0)
+  const tipo = h.get('roba')
+  const finite = qui.value.tappa || 0
+  const r = tipo === 'rara' ? robaRaraDi(eroeQui(), L || 12, { gemme }) : tipo === 'nuda' ? { ...ROBA_VUOTA(), gemme } : { ...robaAttesa(eroeQui(), finite), gemme }
+  nellAvventura({ roba: r, ...(L ? { crescita: crescitaA(eroeDi(eroeQui()), L) } : {}) })
+  apriBottega(k, h.get('scheda'))
+}
+bottegaDaProva()
 if (!scegliEroe.value && !corsa.value) riprendiSeUscito()
 
 onMounted(() => {
@@ -1517,11 +1616,12 @@ function ridimensiona() { if (pittore) pittore.misura() }
       <!-- vita, gemme e zaino stanno nella barra in basso; attacco e difesa nella pagina dell'eroe (docs/sotterraneo/barra.md) -->
     </Barra>
 
-    <div class="sot">
+    <div class="sot" :class="{ 'sot-cambio-scheda': cambioScheda }">
       <template v-if="!corsa">
         <!-- la chiave è l'eroe: cambiando avventura la terra di sopra rinasce con la nebbia e il posto suoi -->
         <Campagna ref="campagnaEl" :key="eroeQui()" :tappe="tappe" :ripresa="ripresa" :eroe="eroeScheda" :abisso="abisso"
                   :roba="robaSopra" :terra="qui.terra || null" @terra="ricordaTerra"
+                  :punti="barra.punti" :punti-abilita="barra.puntiAbilita" @scheda="apriScheda"
                   :annuncio="annuncio" @sentito="annuncioSentito"
                   :missioni="missioni" :azione-missione="azioneMissione" :segui="segui" @segui="seguiMissione"
                   @gioca="i => avvia(i)" @riprendi="riprendiDiscesa" @scorda="scorda" @bottega="apriBottega" />
@@ -1530,14 +1630,17 @@ function ridimensiona() { if (pittore) pittore.misura() }
         <BarraDiSotto sopra :vita="barra.vita" :vita-max="barra.vitaMax" :livello="barra.livello"
                       :esperienza="barra.esperienza" :esp-fatta="barra.espFatta" :esp-serve="barra.espServe" :punti="barra.punti" :pozioni="barra.pozioni" :pieni="barra.pieni"
                       :energia="barra.energia" :energia-max="barra.energiaMax" :punti-abilita="barra.puntiAbilita"
-                      :tasche="barra.tasche" :gemme="barra.gemme" :missioni="missioniAperte" :pronta="missioniPronte"
+                      :tasche="barra.tasche" :gemme="barra.gemme" :preparabili="barra.preparabili" :missioni-pronte="barra.missioniPronte"
                       @bevi="dilloSopra(barra.pozioni ? '❤️ sei già in piena forma' : '🧪 non hai pozioni')"
                       @zaino="apriScheda('zaino')"
-                      @diario="campagnaEl && campagnaEl.apriDiario()" @eroe="apriPaginaEroe()" @abilita="apriPaginaEroe('abilita')" />
+                      @incanti="apriIncanti" @eroe="apriPaginaEroe()" @abilita="apriPaginaEroe('abilita')" />
         <Zaino v-if="zainoDiSopra" v-bind="zainoDiSopra" :eroe="eroeScheda" :piano="0" sopra
-               :punti="barra.punti" :punti-abilita="barra.puntiAbilita" @scheda="apriScheda"
+               :punti="barra.punti" :punti-abilita="barra.puntiAbilita" :missioni="barra.missioniPronte" @scheda="apriScheda"
                @usa="usaSopra" @riponi="riponiSopra" @butta="() => {}" @tasca="compraTasca"
                @chiudi="zainoSopra = false" @fuori="e => { zainoSopra = false; fuoriDallaBottega(e) }" />
+        <!-- gli incanti si preparano giù: sopra la casella apre la finestra che lo dice (docs/sotterraneo/barra.md) -->
+        <Preparati v-if="preparatiAperti" sopra :voci="[]" :punti-abilita="barra.puntiAbilita"
+                   @albero="apriPaginaEroe('abilita')" @chiudi="preparatiAperti = false" @fuori="e => { preparatiAperti = false; fuoriDallaBottega(e) }" />
         <!-- la bottega di un mercante di sopra: quasi a tutto schermo, la ✕ in alto a destra, niente domande.
              La chiave è il mercante: le linguette e la scelta ripartono da capo cambiando bottega -->
         <LaBottega v-if="banco" :key="banco.chi.chiave" v-bind="banco" :eroe="eroeScheda" :detto="dettoBanco" :scheda="schedaBanco"
@@ -1581,7 +1684,7 @@ function ridimensiona() { if (pittore) pittore.misura() }
 
           <!-- il mostro grosso: la sua vita in cima, da quando ci si entra nella stanza (docs/sotterraneo/grossi.md) -->
           <div v-if="grosso" class="sot-grosso-vita" data-grosso :data-chi="grosso.chiave" :data-ossa="grosso.ossa">
-            <span class="sot-grosso-faccia"><Grosso :chi="grosso.chiave" :scala="1" /></span>
+            <span class="sot-grosso-faccia"><Grosso :chi="grosso.chiave" :scala="0.6" /></span>
             <span class="sot-grosso-dati">
               <b>{{ grosso.nome }}</b>
               <span class="sot-grosso-barra"><i :style="{ width: (grosso.ossa / grosso.ossaMax) * 100 + '%' }"></i>
@@ -1608,8 +1711,8 @@ function ridimensiona() { if (pittore) pittore.misura() }
                       :esperienza="barra.esperienza" :esp-fatta="barra.espFatta" :esp-serve="barra.espServe" :punti="barra.punti" :sale="sale"
                       :energia="barra.energia" :energia-max="barra.energiaMax" :punti-abilita="barra.puntiAbilita"
                       :pozioni="barra.pozioni" :pieni="barra.pieni" :tasche="barra.tasche" :gemme="barra.gemme"
-                      :missioni="missioniAperte" :mappa="mappaGrande"
-                      @bevi="bevi" @zaino="apriDallaBarra('zaino')" @diario="apriDallaBarra('diario')"
+                      :mappa="mappaGrande" :preparabili="barra.preparabili" :missioni-pronte="barra.missioniPronte"
+                      :incanti="barra.incanti" @bevi="bevi" @zaino="apriDallaBarra('zaino')" @incanti="apriIncanti"
                       @mappa="mappaGrande = !mappaGrande" @eroe="apriPaginaEroe()" @abilita="apriPaginaEroe('abilita')" />
 
         <!-- lo scontro sta al centro, non sale dal basso: un mostro addosso arriva mentre si cammina, e in
@@ -1637,8 +1740,7 @@ function ridimensiona() { if (pittore) pittore.misura() }
           </div>
         </Cornice>
 
-        <Foglio v-else-if="foglio && foglio.che === 'porta'" em="🚪" titolo="Una porta chiusa"
-                :dice="segno ? segno.em + ' ' + segno.dice : ''">
+        <Foglio v-else-if="foglio && foglio.che === 'porta'" em="🚪" titolo="Una porta chiusa">
           <div v-if="domanda" class="sot-domanda">
             <Domanda :domanda="domanda.domanda" :pittori="domanda.pittori"
                      :origine="domanda" gioco="sotterraneo" :respiro="900"
@@ -1771,22 +1873,26 @@ function ridimensiona() { if (pittore) pittore.misura() }
                :att="eroe.att" :dif="eroe.dif" :gemme="eroe.gemme"
                :vita="eroe.vita" :vitaMax="eroe.vitaMax"
                :piano="eroe.piano" :piani="eroe.piani"
-               :punti="barra.punti" :punti-abilita="barra.puntiAbilita" @scheda="apriScheda"
+               :punti="barra.punti" :punti-abilita="barra.puntiAbilita" :missioni="barra.missioniPronte" @scheda="apriScheda"
                @usa="t => usa(corsa.indiceDellaTasca(t))" @butta="t => butta(corsa.indiceDellaTasca(t))" @riponi="riponi" @tasca="compraTasca"
                @chiudi="zainoAperto = false" @fuori="toccoFuori" />
 
         <!-- il diario delle missioni, giù: lo stesso di sopra, senza «vai da» (chi aspetta sta sopra) -->
-        <Diario v-else-if="diarioGiu" giu :stati="missioni" :tappe="tappe" :segui="segui"
-                @chiudi="diarioGiu = false" @segui="seguiMissione" @fuori="toccoFuori" />
+        <Diario v-else-if="diarioGiu" giu :stati="missioni" :tappe="tappe" :segui="segui" :punti="barra.punti" :punti-abilita="barra.puntiAbilita"
+                @scheda="apriScheda" @chiudi="diarioGiu = false" @segui="seguiMissione" @fuori="toccoFuori" />
+
+        <!-- gli incantesimi da preparare prima di uno scontro, dalla loro casella nella barra (docs/sotterraneo/orologio.md) -->
+        <Preparati v-else-if="preparatiAperti" :voci="preparabiliVisti" :energia="eroe.energia" :energia-max="eroe.energiaMax" :punti-abilita="barra.puntiAbilita"
+                   @prepara="preparaDalCampo" @albero="apriPaginaEroe('abilita')" @chiudi="preparatiAperti = false" @fuori="toccoFuori" />
 
         <Fine v-if="fine" v-bind="fine" @ancora="ancora" @esci="allaMappa" />
       </template>
 
       <!-- la pagina dell'eroe e i Tesori, sopra e sotto: si chiudono con la ✕ o toccando fuori (e il tocco cammina) -->
-      <PaginaAbilita v-if="albero && !tesoriAperti && !(corsa && foglio && foglio.che === 'scontro')" v-bind="albero"
+      <PaginaAbilita v-if="albero && !tesoriAperti && !(corsa && foglio && foglio.che === 'scontro')" v-bind="albero" :missioni="barra.missioniPronte"
                      @impara="imparaAbilita" @casella="casellaAbilita" @dimentica="dimenticaAlbero" @scheda="apriScheda" @chiudi="paginaEroe = false"
                      @fuori="e => { paginaEroe = false; corsa ? toccoFuori(e) : fuoriDallaBottega(e) }" />
-      <PaginaEroe v-else-if="pagina && facciaEroe === 'eroe' && !tesoriAperti && !(corsa && foglio && foglio.che === 'scontro')" v-bind="pagina"
+      <PaginaEroe v-else-if="pagina && facciaEroe === 'eroe' && !tesoriAperti && !(corsa && foglio && foglio.che === 'scontro')" v-bind="pagina" :missioni="barra.missioniPronte"
                   @dai="daiUnPunto" @tesori="tesoriAperti = true" @cambia="cambiaEroe" @chiudi="paginaEroe = false"
                   @scheda="apriScheda" @riassegna="riassegnaPunti"
                   @fuori="e => { paginaEroe = false; corsa ? toccoFuori(e) : fuoriDallaBottega(e) }" />

@@ -45,6 +45,15 @@
 .sot-m-corpo { position: relative; display: flex; justify-content: center; align-items: flex-end }
 .sot-m:disabled { cursor: default }
 .sot-m.sot-morto { opacity: 0; transform: translateY(10px) scale(.9); pointer-events: none }
+/* chi cade e ha il suo pezzo a terra ci resta un momento (il secondo pezzo, i resti, dopo un attimo) e poi svanisce */
+.sot-m.sot-a-terra { transition: opacity .6s ease .95s, transform .6s ease .95s }
+.sot-m.sot-morto .sot-vita { opacity: 0 }
+.sot-a-terra .sot-respira { position: relative; animation: none }   /* a terra non si respira */
+.sot-resti-b { position: absolute; left: 50%; bottom: 0; translate: -50% 0; opacity: 0 }
+.sot-a-terra .sot-resti-b { animation: sot-resto-entra .01s .3s forwards }
+.sot-a-terra .sot-resti-a { animation: sot-resto-esce .01s .3s forwards }
+@keyframes sot-resto-entra { to { opacity: 1 } }
+@keyframes sot-resto-esce { to { opacity: 0 } }
 .sot-m-grosso .sot-vita { width: 84px }
 .sot-vita {
   display: block; width: var(--barra, 60px); height: 6px; border-radius: 999px; background: #1a1018; overflow: hidden;
@@ -165,6 +174,12 @@
 .sot-turno.sot-adesso { width: 38px; height: 42px; border-color: #ffd23f; border-width: 2px; box-shadow: 0 0 10px #ffd23f88 }
 .sot-turno-salta .sot-turno-fig { opacity: .45 }
 .sot-turno-stelle { position: absolute; right: 0; top: 0; color: #ffd23f }
+/* l'incanto preparato che finisce prima, sul primo turno dell'eroe: il glifo del suo ramo e i passi che restano */
+.sot-turno-incanto {
+  position: absolute; left: -3px; bottom: -4px; display: inline-flex; align-items: center; gap: 1px; padding: 0 3px 0 1px; border-radius: 999px;
+  background: #121117; border: 1px solid var(--tinta); color: var(--tinta); font-size: 8.5px; line-height: 1.3;
+}
+.sot-turno-incanto b { font-weight: 800; color: #f3ece0 }
 .sot-fila-enter-from, .sot-fila-leave-to { opacity: 0; transform: translateY(-10px) scale(.8) }
 .sot-fila-leave-active { position: absolute; z-index: -1 }
 .sot-fila-move { transition: transform .25s ease }

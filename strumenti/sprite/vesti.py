@@ -679,8 +679,11 @@ def pezzi_dal_foglio(vestito):
 
 
 def pezzi_del_vestito(vestito):
-    """I pezzi di un vestito: dal suo foglio se c'è, se no dalla scena."""
-    return pezzi_dal_foglio(vestito) or pezzi(Image.open(GENERATI / SCENE[vestito]).convert('RGB'))
+    """I pezzi di un vestito, dal suo foglio del terreno (`terreno-<vestito>.png`)."""
+    p = pezzi_dal_foglio(vestito)
+    if not p:
+        sys.exit(f'vesti.py: manca terreno-{vestito}.png in {GENERATI}')
+    return p
 
 
 def caso(x, y, n, seme=0):
@@ -936,9 +939,10 @@ REPO = Path(__file__).resolve().parents[2]
 DATI = REPO / 'src' / 'giochi' / 'castello' / 'dati'
 # `td_4.png`, la palude, NON è `td_1` rivestita — un'altra pianta, una
 # bocca sola — quindi i ritagli della scena, misurati su `td_1`, lì non
-# valgono: la palude si veste solo dal suo foglio, e la scena resta per
-# lo stile e per il provino.
-SCENE = {'bosco': 'td_1.png', 'neve': 'td_2.png', 'lava': 'td_3.png', 'palude': 'td_4.png'}
+# valgono: la palude si veste solo dal suo foglio. Le scene `td_2/3/4.png`
+# sono state eliminate (stanno già nei fogli del terreno); `td_1.png`
+# resta come il riferimento delle misure.
+VESTITI = ('bosco', 'neve', 'lava', 'palude')
 
 
 def impacchetta(misure, largo=1024, spazio=2):
@@ -1341,7 +1345,7 @@ def atlante():
     # stessa (la geometria è una, rivestita), ma il giorno che uno ha il
     # suo foglio i suoi pezzi hanno altre misure e altri numeri.
     immagini, pesi, tabelle, quanti, fonti, dal_foglio, fedelta = {}, {}, {}, {}, {}, {}, {}
-    for nome in SCENE:
+    for nome in VESTITI:
         pz, q, dal_foglio[nome] = pezzi_da_atlante(nome)
         posti, alto = impacchetta({k: im.size for k, im in pz.items()})
         foglio = Image.new('RGBA', (1024, alto), (0, 0, 0, 0))
@@ -1352,16 +1356,15 @@ def atlante():
         pesi[nome] = round(len(dati) / 1024)
         fedelta[nome] = codifica.riga(foglio, dati)
         tabelle[nome], quanti[nome] = posti, q
-        fonti[nome] = f'terreno-{nome}.png' if foglio_del_terreno(nome) else SCENE[nome]
+        fonti[nome] = f'terreno-{nome}.png'
     tot = sum(pesi.values())
     testa = f"""/* GENERATO da strumenti/sprite/vesti.py --atlante — non si scrive a mano.
 
    I pezzi con cui `scena/vestito.js` compone il campo del castello a
    celle, uno per vestito. Da dove vengono:
 {chr(10).join(f'     {k:6} {v}' for k, v in fonti.items())}
-   Una scena (`td_1.png`…) è **il provvisorio**, coi ritagli di
-   `vesti.py`; un foglio del terreno (`terreno-<vestito>.png`, il prompt
-   2 della scheda del castello) è quello vero. Tutti e due stanno in
+   Ogni vestito viene dal suo foglio del terreno (`terreno-<vestito>.png`,
+   il prompt 2 della scheda del castello), in
    `strumenti/sprite/sorgenti/castello/generati/`.
 
    PEZZI    vestito → nome → [x, y, largo, alto]
@@ -1440,7 +1443,7 @@ if __name__ == '__main__':
     if len(sys.argv) == 4 and sys.argv[1] == '--provino':
         # una scena (`td_1.png`) o il nome di un vestito (`bosco`)
         quale = sys.argv[2]
-        provino(pezzi_del_vestito(quale) if quale in SCENE else pezzi(Image.open(quale).convert('RGB')),
+        provino(pezzi_del_vestito(quale) if quale in VESTITI else pezzi(Image.open(quale).convert('RGB')),
                 sys.argv[3])
     elif len(sys.argv) == 4 and sys.argv[1] == '--provino-foglio':
         provino_foglio(sys.argv[2], sys.argv[3])

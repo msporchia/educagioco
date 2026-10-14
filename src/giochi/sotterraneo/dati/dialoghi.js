@@ -6,6 +6,9 @@
 //   `saluti`   quando non ha niente da chiederti né da riprendere
 //   `presa`    quando accetti un suo favore
 //   `bottega`, `vendi`  le scelte dei mercanti (aprono il banco, o la linguetta delle tasche)
+// «Novità?», con le frasi che ruotano e reagiscono, sta in dati/novita.js.
+
+import { guastiDelleNovita } from './novita.js'
 
 export const DIALOGHI = {
   minatore: {
@@ -127,6 +130,19 @@ export const DIALOGHI = {
     ],
   },
 
+  incantatrice: {
+    domanda: 'La magia serve, laggiù?',
+    bottega: 'Fammi vedere la magia',
+    racconti: [
+      { da: 0, pagine: ['Il ferro ferma un colpo. Un incanto lo ferma prima che arrivi.',
+                        'Ma ogni incanto costa energia. Quando finisce, resti con le mani vuote.'] },
+      { da: 3, pagine: ['Più giù, certi mostri non temono il fuoco. Altri non temono il gelo.',
+                        'Porta un incanto per ogni paura, e una boccetta blu per ogni incanto.'] },
+      { da: 6, pagine: ['Gli ultimi mostri resistono a quasi tutto. Ma nessuno resiste a un incanto scelto bene.',
+                        'Guarda cosa hai davanti, prima di lanciare.'] },
+    ],
+  },
+
   erborista: {
     domanda: 'Cosa serve laggiù?',
     bottega: 'Mi servono pozioni',
@@ -167,6 +183,7 @@ export const perOra = (voci, finite) => {
 export function guastiDeiDialoghi(chi = []) {
   const g = []
   for (const k of chi) if (!DIALOGHI[k]) g.push(`${k}: non ha un dialogo`)
+  g.push(...guastiDelleNovita(chi))
   for (const [k, d] of Object.entries(DIALOGHI)) {
     if (!d.domanda) g.push(`${k}: senza la domanda della storia`)
     const voci = [...(d.racconti || []), ...(d.saluti || [])]

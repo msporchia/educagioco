@@ -9,14 +9,14 @@
    si accetta («ci penso io» porta a prendere la missione, e lei ringrazia),
    un tocco sul prato chiude e fa camminare; il mugnaio riceve Rosicchione e
    dice il premio, monete comprese; il minatore la prima volta si presenta e
-   poi dice la strada; la guaritrice porta alla bottega, il mercante alla
+   poi dice la strada; la guaritrice e l'incantatrice portano alla bottega, il mercante alla
    linguetta delle tasche.
 
    I tocchi sono tocchi (`Input.dispatchTouchEvent` via CDP).
    `node test/esegui.mjs sotterraneo-dialoghi`
    tempo: 200
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, leggiProfilo, camminaVerso, nelDialogo }
+import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, leggiProfilo, camminaVerso, nelDialogo , finestraFerma }
   from '../aiuto/browser.mjs'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
@@ -52,6 +52,7 @@ async function tocca(x, y) {
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
 }
 async function toccaIl(sel) {
+  await finestraFerma(page)   // la finestra nuova cresce per 160 ms: misurata prima, il tocco cade a lato
   const b = await page.locator(sel).first().boundingBox()
   await tocca(b.x + b.width / 2, b.y + b.height / 2)
 }
@@ -79,7 +80,7 @@ uguale('un tocco sul testo va alla pagina dopo', await pagina(), 2)
 for (let n = 2; n < quante; n++) { await attendi(page, 250); await toccaIl('[data-dialogo-testo]') }
 await page.waitForSelector('[data-dialogo][data-ultima] [data-scelte]', { timeout: 3000 })
 const scelte = await page.locator('[data-scelta]').evaluateAll(els => els.map(e => e.dataset.scelta).join(','))
-uguale('all\'ultima le domande: ci penso io, cosa si dice al pozzo, arrivederci', scelte, 'prendi,racconta,ciao')
+uguale('all\'ultima le domande: ci penso io, novità, cosa si dice al pozzo, arrivederci', scelte, 'prendi,novita,racconta,ciao')
 await attendi(page, 1800)
 uguale('e dopo un attimo torna ferma', await page.locator('[data-personaggio="ragazza"]').getAttribute('data-saluta'), '0')
 await scatto(page, 'dialogo-scelte')
@@ -90,6 +91,17 @@ await page.waitForSelector('[data-riga][data-racconto]', { timeout: 3000 })
 uguale('la risposta riparte dalla prima pagina', await pagina(), 1)
 await nelDialogo(page, null, { tocca: toccaIl })
 uguale('chiesta, la storia non si richiede', await page.locator('[data-scelta="racconta"]').count(), 0)
+
+/* ---------- 2b. «Novità?»: una frase sua, che gira ed è ricordata nell'avventura ---------- */
+await toccaIl('[data-scelta="novita"]')
+await page.waitForSelector('[data-riga][data-novita]', { timeout: 3000 })
+const novita1 = await page.locator('[data-riga]').innerText()
+controlla('«Novità?» risponde con una frase, senza segnaposti', novita1.length > 10 && !/[{}]/.test(novita1), novita1)
+await nelDialogo(page, null, { tocca: toccaIl })
+uguale('chiesta, la novità non si richiede', await page.locator('[data-scelta="novita"]').count(), 0)
+await attendi(page, 800)   // l'archivio rimanda le scritture
+uguale('e l\'avventura ricorda che gliel\'hai chiesto',
+       (await avventura()).terra?.novita?.ragazza?.n, 1)
 
 /* ---------- 3. una scelta porta alla sua azione: prendere la missione ---------- */
 await toccaIl('[data-scelta="prendi"][data-missione="goblin"]')
@@ -154,6 +166,16 @@ await nelDialogo(page, '[data-scelta="bottega"]', { tocca: toccaIl })
 await page.waitForSelector('[data-bottega][data-mercante-aperto="erborista"]', { timeout: 3000 })
 uguale('«mi servono pozioni» apre la bottega della guaritrice', await page.locator('[data-dialogo]').count(), 0)
 await attendi(page, 400)
+await toccaIl('[data-bottega] [data-chiudi]')
+await attendi(page, 300)
+await camminaVerso(page, MERCANTI.incantatrice.accanto, { tocca })
+await toccaIl('[data-mercante="incantatrice"]')
+await page.waitForSelector('[data-dialogo="incantatrice"]', { timeout: 15000 })
+await nelDialogo(page, '[data-scelta="bottega"]', { tocca: toccaIl })
+await page.waitForSelector('[data-bottega][data-mercante-aperto="incantatrice"]', { timeout: 3000 })
+uguale('«fammi vedere la magia» apre la bottega dell\'incantatrice', await page.locator('[data-dialogo]').count(), 0)
+await attendi(page, 400)
+await scatto(page, 'dialogo-incantatrice-bottega')
 await toccaIl('[data-bottega] [data-chiudi]')
 await attendi(page, 300)
 await camminaVerso(page, MERCANTI.rigattiere.accanto, { tocca })

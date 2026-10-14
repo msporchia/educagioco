@@ -22,17 +22,17 @@ export const SCENARI = {
     capi: { sx: 'cantine-capo-sx', dx: 'cantine-capo-dx' },
     bordi: { n: 'cantine-bordo-n', o: 'cantine-bordo-o', e: 'cantine-bordo-e',
              angolo: 'cantine-bordo-angolo' },
-    // la pelle ripete col disegno il segno sopra la porta (SEGNI in dati/cose.js), e non mente mai
+    // la porta non dice cosa c'è dietro: semplice, ferrata o di legno chiaro a caso, e solo la stanza del grosso ha la sua più bella (docs/sotterraneo/piani.md, «Le porte»)
     porte: {
-      davanti: { guardia: 'cantine-porta-teschio', tesoro: 'cantine-porta-oro', fonte: 'cantine-porta-ferro',
-                 vuoto: 'cantine-porta-semplice', aperta: 'cantine-porta-aperta' },
-      fianco: { guardia: 'cantine-fianco-teschio', tesoro: 'cantine-fianco-oro', fonte: 'cantine-fianco-ferro',
-                vuoto: 'cantine-fianco-semplice', aperta: 'cantine-fianco-aperta' },
+      davanti: { semplice: 'cantine-porta-semplice', ferro: 'cantine-porta-ferro', chiara: 'cantine-porta-chiara', bella: 'porta-nera-teschio', aperta: 'cantine-porta-aperta' },
+      fianco: { semplice: 'cantine-fianco-semplice', ferro: 'cantine-fianco-ferro', chiara: 'cantine-fianco-chiara', bella: 'cantine-fianco-teschio', aperta: 'cantine-fianco-aperta' },
     },
     scala: { aperta: 'cantine-scala-aperta', chiusa: 'cantine-scala-chiusa' },
     fontana: { piena: 'cantine-fontana-piena', asciutta: 'cantine-fontana-asciutta' },   // bevuta resta lì, asciutta
     perTerra: ['cantine-terriccio', 'cantine-sassolini', 'cantine-radice'],
     ragnatele: { sx: 'cantine-ragnatela-sx', dx: 'cantine-ragnatela-dx' },
+    // i forzieri del posto (docs/sotterraneo/roba.md): legno e ferro, pietra e ferro freddo, ferro e brace; il d'oro è solo quello delle missioni
+    forzieri: ['cantine-forziere-a', 'cantine-forziere-b', 'cantine-forziere-c', 'cantine-forziere-d'],
     orpelli: ORPELLI.cantine,   // l'arredo: cosa c'è, dove sta, quanto è epico (dati/orpelli.js)
   },
   // la cripta (sotterraneo_4*.png): ritagliata da una scena, più due fogli coi pezzi che la scena non ha
@@ -49,15 +49,14 @@ export const SCENARI = {
     bordi: { n: 'cripta-bordo-n', o: 'cripta-bordo-o', e: 'cripta-bordo-e',
              angolo: 'cripta-bordo-angolo', luce: 3 },
     porte: {
-      davanti: { guardia: 'cripta-porta-teschio', tesoro: 'cripta-porta-oro', fonte: 'cripta-porta-ferro',
-                 vuoto: 'cripta-porta-semplice', aperta: 'cripta-porta-aperta' },
-      fianco: { guardia: 'cripta-fianco-teschio', tesoro: 'cripta-fianco-oro', fonte: 'cripta-fianco-ferro',
-                vuoto: 'cripta-fianco-semplice', aperta: 'cripta-fianco-aperta' },
+      davanti: { semplice: 'cripta-porta-semplice', ferro: 'cripta-porta-ferro', chiara: 'cripta-porta-chiara', bella: 'porta-nera-teschio', aperta: 'cripta-porta-aperta' },
+      fianco: { semplice: 'cripta-fianco-semplice', ferro: 'cripta-fianco-ferro', chiara: 'cripta-fianco-chiara', bella: 'cripta-fianco-teschio', aperta: 'cripta-fianco-aperta' },
     },
     scala: { aperta: 'cripta-scala-aperta', chiusa: 'cripta-scala-chiusa' },
     fontana: { piena: 'cripta-fontana-piena', asciutta: 'cripta-fontana-asciutta' },
     perTerra: ['cripta-foglie', 'cripta-schegge', 'cripta-lastra'],
     ragnatele: { sx: 'cripta-ragnatela-sx', dx: 'cripta-ragnatela-dx' },
+    forzieri: ['cripta-forziere', 'forziere-scuro-chiuso', 'cripta-forziere-b'],
     orpelli: ORPELLI.cripta,
   },
   // la fornace (sotterraneo_5*.png): ritagliata da una scena, più un foglio coi pezzi che la scena non ha
@@ -72,36 +71,37 @@ export const SCENARI = {
     capi: { sx: 'fornace-capo-sx', dx: 'fornace-capo-dx' },
     bordi: { n: 'fornace-bordo-n', o: 'fornace-bordo-o', e: 'fornace-bordo-e', angolo: 'fornace-bordo-angolo' },
     porte: {
-      davanti: { guardia: 'fornace-porta-corna', tesoro: 'fornace-porta-oro', fonte: 'fornace-porta-ferro',
-                 vuoto: 'fornace-porta-semplice', aperta: 'fornace-porta-aperta' },
-      fianco: { guardia: 'fornace-fianco-corna', tesoro: 'fornace-fianco-oro', fonte: 'fornace-fianco-ferro',
-                vuoto: 'fornace-fianco-semplice', aperta: 'fornace-fianco-aperta' },
+      davanti: { semplice: 'fornace-porta-semplice', ferro: 'fornace-porta-ferro', chiara: 'fornace-porta-chiara', bella: 'fornace-porta-corna', aperta: 'fornace-porta-aperta' },
+      fianco: { semplice: 'fornace-fianco-semplice', ferro: 'fornace-fianco-ferro', chiara: 'fornace-fianco-chiara', bella: 'fornace-fianco-corna', aperta: 'fornace-fianco-aperta' },
     },
     scala: { aperta: 'fornace-scala-aperta', chiusa: 'fornace-scala-chiusa' },
     fontana: { piena: 'fornace-fontana-piena', asciutta: 'fornace-fontana-asciutta' },
     perTerra: ['fornace-cenere', 'fornace-sassi', 'fornace-scoria'],
     ragnatele: { sx: 'fornace-ragnatela-sx', dx: 'fornace-ragnatela-dx' },
+    forzieri: ['fornace-forziere-b', 'fornace-forziere-c'],
     orpelli: ORPELLI.fornace,
   },
 }
 
 export const SCENARIO = 'cantine'   // di chi non dichiara il suo: una tappa con `scenario:`, l'abisso dal tratto
 
-// la figura dice quanto vale prima di raccoglierlo: scostarsi per tre gemme o per dodici non è la stessa decisione
+// la figura dice quanto vale prima di raccoglierlo: scostarsi per tre gemme o per dodici non è la stessa decisione. Sotto sei
+// la moneta che gira; da lì in su la gemma, e il colore è il valore: blu, verde, viola, rossa (docs/sotterraneo/roba.md)
+export const SOGLIE_DELLE_GEMME = [[48, 'gemma-rossa'], [24, 'gemma-viola'], [12, 'gemma-verde'], [6, 'gemma-blu']]
 export const pezzoDelleGemme = (quante, t) =>
-  (quante >= 12 ? 'mucchio-monete'
-    : quante >= 6 ? 'moneta-grossa'
-      : `moneta-${((t * 8) | 0) % 4}`)
+  (SOGLIE_DELLE_GEMME.find(([da]) => quante >= da) || [0, `moneta-${((t * 8) | 0) % 4}`])[1]
 
 // una funzione per genere, nessuna sa di canvas
 export const PEZZO_DI = {
   scala: (r, t, sc, { chiusa } = {}) => (chiusa ? sc.scala.chiusa : sc.scala.aperta),
   arredo: r => r.pezzo,   // il piano pesca già col pezzo dello scenario (motore/livello.js, arredaLeStanze)
-  // quello d'oro è raro (vedendolo da lontano si decide se vale la strada); le altre famiglie solo chiuse
-  forziere: r => (r.aperto ? 'forziere-aperto' : (r.pelle || 'forziere-chiuso')),
+  // la pelle di un forziere è un numero fisso (dal tiro del piano) e il suo scenario sceglie il disegno; il d'oro è solo
+  // quello di una missione (`pelle` è il suo nome); i salvataggi di prima hanno ancora il nome
+  forziere: (r, t, sc) => (r.aperto ? 'forziere-aperto'
+    : typeof r.pelle === 'number' ? sc.forzieri[r.pelle % sc.forzieri.length] : (r.pelle || 'forziere-chiuso')),
   porta: (r, t, sc, { verso = 'davanti' } = {}) => {
     const pelli = sc.porte[verso]
-    return r.aperta ? pelli.aperta : (pelli[r.segno] || pelli.vuoto)
+    return r.aperta ? pelli.aperta : (pelli[r.pelle] || pelli.semplice)
   },
   gemme: (r, t) => pezzoDelleGemme(r.quante, t),
   curiosita: r => r.pezzo,
@@ -150,7 +150,7 @@ export function guastiDelleTessere(nomi = null) {
     if (!(sc.orpelli || []).some(o => o.epica <= 1 && o.posa !== 'coppia'))
       g.push(`scenario ${k}: nessun orpello da stanza qualunque (epicità 1)`)
     for (const verso of ['davanti', 'fianco'])
-      for (const pelle of ['guardia', 'tesoro', 'fonte', 'vuoto', 'aperta'])
+      for (const pelle of ['semplice', 'ferro', 'chiara', 'bella', 'aperta'])
         if (!(sc.porte && sc.porte[verso] && sc.porte[verso][pelle]))
           g.push(`lo scenario ${k} non ha la porta ${pelle} vista ${verso}`)
   }
@@ -160,9 +160,8 @@ export function guastiDelleTessere(nomi = null) {
   for (const [k, sc] of Object.entries(SCENARI))
     if (!(sc.perTerra || []).length) g.push(`lo scenario ${k} non ha niente per terra`)
   g.push(...guastiDeiRelitti(nomi))   // i relitti hanno il loro scenario e i loro sprite (dati/relitti.js)
-  for (const q of [1, 6, 12]) chiedi(pezzoDelleGemme(q, 0), `gemme da ${q}`)
+  for (const q of [1, 6, 12, 24, 48]) chiedi(pezzoDelleGemme(q, 0), `gemme da ${q}`)
   chiedi('forziere-oro-chiuso', 'forziere d\'oro')
-  chiedi('forziere-scuro-chiuso', 'forziere scuro')
   if (nomi) {
     // eroi e mostri si chiedono alle loro tabelle, non a un elenco a mano; `unaPosa` ha solo il respiro (scena/tela.js)
     const chiedeva = [

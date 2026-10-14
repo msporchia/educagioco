@@ -1,9 +1,9 @@
 # I mercanti e la bottega
 
-Le tre botteghe sulla terra di sopra, cosa portano, i pezzi delle righe dopo
+Le quattro botteghe sulla terra di sopra, cosa portano, i pezzi delle righe dopo
 a sovrapprezzo, quanta scelta c'è sul banco e come cambia da un giro all'altro
-(il tetto di rarità, i dieci pezzi, il banco che ruota, comprare senza le
-caratteristiche, il riacquisto). La finestra da gioco di ruolo dove si compra e
+(il tetto di rarità, i dieci pezzi, i salti e i sogni, il banco che ruota e si
+rinnova, comprare senza le caratteristiche, il riacquisto). La finestra da gioco di ruolo dove si compra e
 si vende, e lo zaino nella stessa finestra: [bottega-finestra.md](bottega-finestra.md).
 Divisa da [roba.md](roba.md) quando ha passato le 250 righe. I banchi sono a
 tono col livello dell'eroe ([rarita.md](rarita.md#i-mercanti-a-tono)). Il
@@ -13,29 +13,47 @@ codice: `dati/mercanti.js`, `motore/bottega.js`, `motore/storia.js`
 
 ## I mercanti di sopra
 
-Tre botteghe sulla terra di sopra, vicino alle case e al carro
+Quattro botteghe sulla terra di sopra, vicino alle case e al carro
 (`MERCANTI` in `dati/mercanti.js`; dove stanno:
 [terra-di-sopra.md](terra-di-sopra.md#i-mercanti)). Nelle discese non vende
 più nessuno.
 
 | chi | vende | in cima, sempre |
 |---|---|---|
-| ⚒️ l'armaiolo, davanti alla casa di sinistra | armi, scudi, armature | — |
-| 🌿 l'erborista, davanti alla casa di destra | l'elisir del toro (dalla seconda discesa finita) | boccetta, pozione, ampolla, torcia |
-| 🧺 il rigattiere, accanto al carro | anelli, amuleti, chiavi | — e **compra** quello che hai in tasca, e te lo ridà (sotto) |
+| ⚒️ l'armaiolo (il fabbro), sotto la tettoia a sinistra | il ferro: spade, asce, archi, scudi, corazze e giubbe di cuoio | — |
+| 🔮 l'incantatrice (`incantatrice`), alla porta della casa di destra | la magia: bacchette e bastoni, vesti di stoffa | boccetta blu e ampolla delle stelle (l'energia) |
+| 🌿 l'erborista (la guaritrice), al banco con le erbe | niente di pescato: solo quello che sta sempre in cima | boccetta, pozione, ampolla, torcia |
+| 🧺 il rigattiere (il mercante), accanto al carro | anelli, amuleti, chiavi | — e **compra** quello che hai in tasca, e te lo ridà (sotto) |
+
+- **Il fabbro lavora il ferro, lei la magia** (l'utente, 13 ottobre 2026): le armi
+  della famiglia `bacchette` e i pezzi di `stoffa` sono solo suoi, e al fabbro
+  restano tutte le altre armi, gli scudi, il ferro e il cuoio (`vende.famiglie` e
+  `vende.senza` in `dati/mercanti.js`, `vendeLa`). Così il mago ha una bottega per le sue
+  tre strade (la spada dal fabbro, bacchetta e scudo e la pura magia da lei più il fabbro
+  per lo scudo), l'elfa le sue vesti, e il fabbro non si riempie di pezzi che metà degli eroi
+  non porta. **L'energia è sua e non più della guaritrice** (le cure e la torcia restano
+  alla guaritrice): una linguetta «Energia» sempre piena, uguale per tutti.
+- **A chi non porta la famiglia la linguetta non si mostra** (`schedeDi`): al
+  cavaliere e al nano l'incantatrice ha solo «Energia», all'elfa «Vesti» ed «Energia»,
+  al mago «Bacchette e bastoni», «Vesti» ed «Energia». Un banco di bacchette a chi non le
+  impugna sarebbe una linguetta vuota con la scusa «guarda l'altro».
 
 - **Il posto senza domande**: qui si spende quello che le domande hanno
-  fruttato. Quello che non ci si può permettere resta visibile e spento, col
-  prezzo in rosso e quanto manca sul tasto: sapere cosa c'era è il motivo per
-  tornare.
+  fruttato. Quello che non ci si può permettere resta visibile, pieno e coi suoi
+  colori (niente trasparenza né grigio: l'utente, 13 ottobre), col prezzo in
+  rosso e quanto manca sul tasto: sapere cosa c'era è il motivo per tornare.
+- **L'elisir del toro non si compra** (l'utente, 13 ottobre: un buff per sempre è
+  un oggetto rarissimo): la guaritrice non lo vende, si trova ([rarita.md](rarita.md#lelisir-del-toro)).
 - **Compra solo il rigattiere, a metà prezzo** (`quantoVale`): comprare e
   rivendere perde metà, quindi non è un modo di fare gemme, ma libera le
-  tasche. Tre botteghe che comprano farebbero di ogni banco un posto dove
+  tasche. Più botteghe che comprano farebbero di ogni banco un posto dove
   svuotare le tasche; chi non compra dice chi lo fa. Quello che compra lo
   tiene da parte (**Riacquista**, sotto).
-- **L'armaiolo e il rigattiere portano il passo dopo della storia**
+- **L'armaiolo, l'incantatrice e il rigattiere portano il passo dopo della storia**
   (`passo` in `dati/mercanti.js`, `bancoDelPasso` in `motore/storia.js`):
-  i pezzi della riga con cui si entra nella prossima discesa che mancano,
+  i pezzi della riga con cui si entra nella prossima discesa che mancano
+  **e che vendono loro** (la verga e il saio del mago stanno dall'incantatrice, la
+  spada e lo scudo dal fabbro; anche la vetrina dei pezzi avanti guarda chi vende cosa),
   e un paio di cose (`altre`) che non costano più di quei pezzi.
   L'erborista pesca a righe (`righe` per discese finite), come prima.
 - **I pezzi delle righe dopo si comprano, a un prezzo più alto**
@@ -66,9 +84,9 @@ più nessuno.
   roba leggendaria/epica, quella è appannaggio dei drop: ti permette di
   prendere sempre un'arma tosta per quel livello, ma non super tosta»*): dai
   mercanti **mai un leggendario**, né un pezzo col nome dei mostri grossi
-  (`consentito`), **il magico sempre** e **al più un raro per linguetta**
-  (`RARI_PER_LINGUETTA`). I rari e i leggendari migliori restano dei drop e dei
-  mostri grossi. Vale per ogni strada che mette un pezzo sul banco: il pescato
+  (`consentito`), **il magico sempre**; i rari solo come salti e sogni (sotto,
+  al più `RARI_PER_LINGUETTA`). I leggendari restano dei drop e dei mostri
+  grossi. Vale per ogni strada che mette un pezzo sul banco: il pescato
   (comune o magico, `aTono`), la vetrina dei pezzi avanti (comuni), lo scaffale
   (sotto); uno scaffale riletto con un pezzo vietato lo butta. Chi ha già roba
   rara addosso trova pezzi di livello più alto, non di rarità più alta.
@@ -89,6 +107,27 @@ più nessuno.
   misure (`motore/banco.js`) non lo compra, quindi l'equilibrio non cambia. Un
   pezzo che col livello nuovo non migliora più niente non si mostra, ma resta
   sullo scaffale (e al giro dopo se ne va per primo).
+- **Salti e sogni** (l'utente, 13 ottobre: *«ho una roba "rara"… non dovrebbe
+  anche a prezzi esorbitanti propormi qualcosa di meglio?»*): ogni linguetta che
+  veste ha **sempre almeno due pezzi forti** (`SALTI_MINIMI`, fino a tre: i
+  **salti**) e **almeno un sogno** (`SOGNI_MINIMI`, fino a due), anche a chi ha
+  addosso roba rara. Un salto alza il posto di almeno un quarto di quanto vale
+  adesso e non meno di `SALTO_MINIMO` (`ruoloDi`: `confronto().meglio`); sta da un
+  livello fino a sette sopra l'eroe, comune, magico o raro, e può chiedere una
+  caratteristica che l'eroe non ha (si compra e va nello zaino). Un **sogno** è
+  un salto di otto livelli o più sopra (`SOGNO_LIVELLI`), raro, il più caro di
+  ogni base: il traguardo per cui risparmiare; chi ha già il meglio di quei
+  livelli lo trova più su ancora; **costa il doppio** del prezzo vero (`PREZZO_DEL_SOGNO`: esorbitante, un pezzo di otto livelli più su costa già molto). Mai un leggendario. Sono in fondo alla
+  linguetta, i salti e poi i sogni, senza segni sulla casella
+  ([bottega-finestra.md](bottega-finestra.md)). Basi diverse prima, per usare
+  più figure del catalogo ([figure.md](figure.md)).
+- **Il banco si rinnova quando non c'è più niente per cui risparmiare** (l'utente,
+  13 ottobre): aprendo la bottega (`prepara`) dopo che l'eroe è salito di livello o
+  ha cambiato quello che ha addosso (`firmaDelGiudizio`, scritta in `giudicato`),
+  una linguetta senza i suoi due pezzi forti e un sogno (`mancaForza`) fa il giro
+  come a fine discesa (tre via, tre nuovi); se ce n'è ancora, il banco resta com'è.
+  Nei test: salire di un livello non cambia il banco, di dieci sì, e riaperto
+  non cambia più.
 - **Il banco cambia poco alla volta** (l'utente, 12 ottobre: *«vedo un'arma
   super carina ma non ho ancora i soldi, entro, passo di livello, torno su e non
   c'è più: elimina le 3 più deboli e ne spawna 3 nuove, ma non elimina le
@@ -166,10 +205,12 @@ più nessuno.
   possono uscire magiche o rare, e allora hanno anche le loro abilità.
 - **Le gemme non diventano monete, mai**: la roba si vende solo in gemme.
 
-Nei test: `unita/sotterraneo-roba` (il banco porta il passo dopo; sovrapprezzo
+Nei test: `unita/sotterraneo-roba` (il fabbro e l'incantatrice si dividono la roba: bacchette e stoffa solo da
+lei, l'energia da lei, le cure e la torcia dalla guaritrice, le linguette per ogni eroe; il banco porta il passo dopo; sovrapprezzo
 dei pezzi avanti; nessun pezzo di famiglie non portate; ogni linguetta con
-dieci pezzi che migliorano, mai un leggendario, al più un raro, per i quattro
-eroi a ogni discesa e a vari livelli, anche con roba rara addosso; comprare
+dieci pezzi che migliorano, mai un leggendario, per i quattro
+eroi a ogni discesa e a vari livelli, anche con roba rara addosso; due pezzi
+forti e un sogno sempre, il rinnovo solo quando serve; l'elisir fuori dai banchi; comprare
 senza le caratteristiche e finire nello zaino; il banco che ruota — tre via,
 tre dentro, gli altri restano, i più deboli se ne vanno, il banco riaperto o
 riletto è lo stesso, il salvataggio di prima; gli ultimi cinque venduti, allo

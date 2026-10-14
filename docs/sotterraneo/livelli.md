@@ -25,6 +25,7 @@ di un mostro), `dati/eroi.js` (`parte`, `vitaPerLivello`, `dote`),
   discesa (`forza`). Si avvitava: indurendo una discesa i mostri davano più
   esperienza, l'eroe saliva di livello a metà discesa, e la discesa diventava
   più facile quanto più la si induriva. Il banco non trovava una taratura.
+- **Un mostro di strada rende il 35%**, in esperienza e gemme (`QUOTA_DEL_COMUNE`; il grosso e i caporali tutto): coi branchi sono più del doppio ([taratura-branchi.md](taratura-branchi.md)).
 - **L'esperienza resta anche perdendo**: i mostri battuti sono battuti. Il
   cartello di fine la dice (`[data-esp-presa]`).
 
@@ -68,10 +69,17 @@ le classi si somigliavano. La fortuna resta solo sulla roba.
 
 | | dà l'attacco a | a tutti, per punto | è il requisito di |
 |---|---|---|---|
-| Forza | spade e asce | una tasca in più ogni tre punti oltre il primo | spade e asce |
-| Destrezza | archi, e il ramo Bosco | 1% di schivata dei colpi, e un punto di velocità nella fila dei turni (10 più la destrezza) | archi |
+| Forza | spade e asce | una difesa ogni quattro punti (`FORZA_PER_DIFESA`) | spade e asce |
+| Destrezza | archi, e il ramo Bosco | 1% di schivata dei colpi, e un punto di velocità nella fila dei turni (7 più un punto a punto) | archi |
 | Intelligenza | bacchette e bastoni | tre punti di energia massima | bacchette e bastoni |
-| Tempra | — | tre di vita, e una difesa ogni tre punti | — |
+| Tempra | — | cinque di vita (`VITA_PER_TEMPRA`), e basta | — |
+
+**13 ottobre 2026, un senso a ogni caratteristica** (l'utente: «dare un senso un po' a tutte»). La forza è «la caratteristica di un
+tank»: attacco con spade e asce e un po' di difesa. La tempra è «ho tante vite»: solo vita, e cinque a punto invece di tre perché
+senza la difesa che aveva (una ogni tre punti) chi la alzava ci perdeva. La destrezza resta schivata e iniziativa, l'intelligenza
+mana e attacco delle bacchette. Misurato col banco, un punto per caratteristica a una strada intera di cavaliere (a +5 livelli,
+vittorie a 8/10): destrezza 82, forza 79, tempra 57, intelligenza 43. La destrezza e la forza stanno alla pari; tempra e
+intelligenza vanno tenute in una strada per quello che dànno, e le strade lo fanno ([strade.md](strade.md)).
 
 - **L'attacco viene dalla caratteristica dell'arma in mano** (`carDellArma`
   in `motore/corredo.js`, `car` delle famiglie in `dati/eroi.js`): l'elfa con
@@ -84,21 +92,23 @@ le classi si somigliavano. La fortuna resta solo sulla roba.
   mani nude nella scalinata, non picchiava più. Un arco può picchiare meno
   dei pugni a chi ha alzato la forza: il mercante non lo propone
   (`sottoAddosso` in `motore/bottega.js`).
-- **La difesa che era della scorza sta nella tempra, a un terzo di ritmo**:
-  la difesa entra in una sottrazione e vale il doppio dell'attacco
-  ([abisso.md](abisso.md)). Provata sulla forza: chi alzava la forza per
-  l'attacco prendeva anche la difesa, e il nano e l'elfa (la loro dote è la
-  forza) a quattro su dieci vincevano quasi tutto; il mago, che la forza non
-  la alza, restava senza difesa e non arrivava in fondo.
+- **La difesa sta nella forza, una ogni quattro punti**: la difesa entra in
+  una sottrazione e vale il doppio dell'attacco ([abisso.md](abisso.md)). Provata
+  due volte: dalla tempra (9 ottobre, una ogni tre punti) e sulla forza a passo
+  veloce (una ogni tre): chi alza la forza per l'attacco prende anche la difesa, e
+  il nano e l'elfa (la loro dote è la forza) vincono molto più degli altri; il mago, che
+  la forza non la alza, resta senza. A uno ogni quattro e con la tempra a cinque di vita le
+  quattro classi crescono insieme (la difesa e la vita per livello, prima e dopo, in [strade.md](strade.md#difesa-e-vita)).
 - **L'intelligenza è il mana**: l'energia massima è 7 più tre per punto di
   intelligenza ([abilita.md](abilita.md)), quindi il mago parte da ventidue, l'elfa
   da tredici, il cavaliere e il nano da dieci.
-- **La forza dà posto a tutti** (l'utente, 9 ottobre: a un mago la forza non serviva a
-  niente): una tasca dello zaino in più ogni tre punti oltre il primo (`FORZA_PER_TASCA`,
-  `tascheDallaForza` in `motore/corredo.js`), che si somma a quelle comprate con le gemme
-  ([roba.md](roba.md)). Non ho dato requisiti di forza a scudi e armature: le classi li
-  portano già per famiglia (`porta`), e un requisito in più avrebbe solo chiuso la strada
-  al mago.
+- **La forza non dà più posto nello zaino** (l'utente, 13 ottobre: «poco quantificabile
+  e tanto si compra»; dal 9 ottobre dava una tasca ogni tre punti). Chi ne aveva se le tiene:
+  un salvataggio di `crescita.v` 2 si rilegge una volta sola con quelle tasche già nelle
+  `tasche` comprate (`rileggiCrescita`, versione 3), anche oltre il tetto di quelle che si
+  comprano, senza perdere niente di quello che c'è dentro (il tetto di rilettura è quello delle
+  comprate più quelle che la forza poteva dare a quel livello). Non ho dato requisiti di forza a
+  scudi e armature: le classi li portano già per famiglia (`porta`).
 - **Le caratteristiche di partenza raccontano i numeri della classe**
   (`parte` in `dati/eroi.js`): la caratteristica di ogni arma che la classe
   porta vale il suo braccio, più o meno uno (`guastiDegliEroi` lo
@@ -106,13 +116,13 @@ le classi si somigliavano. La fortuna resta solo sulla roba.
   e al livello 1 i numeri sono quelli di sempre.
 - **La pagina le mostra in medaglioni** come l'albero (`glifo` e `tinta` in
   `CARATTERISTICHE`), e sotto il «+» dice cosa cambierebbe: l'attacco se è
-  la caratteristica dell'arma in mano, la difesa quando la tempra arriva al
-  punto che la alza, la vita, la schivata, l'energia.
+  la caratteristica dell'arma in mano, la difesa quando la forza arriva al
+  punto che la alza, la vita, la schivata e la velocità (⚡), l'energia.
 - **La roba può dare le stesse cose**: le abilità dei pezzi
   ([rarita.md](rarita.md)) si sommano ai punti. Si sommano tutte (arma,
   scudo, livello, punti): il banco misura la somma, non le parti
   ([Le misure](#le-misure)).
-- **Un salvataggio di prima** (con scorza e fortuna, `v` diverso da 2 in
+- **Un salvataggio di prima** (con scorza e fortuna, `v` né 2 né 3 in
   `crescita`) tiene esperienza e albero, e i punti tornano tutti da dare.
 
 ## I requisiti delle armi
@@ -163,7 +173,7 @@ se la più bassa è almeno la metà della più alta: 18 e 12 sì, 18 e 7 no, 50 
   bassa si può sempre alzare (`unita/sotterraneo-livelli` lo prova su
   duemila mani a caso).
 - Il banco li dà come una classe li darebbe (`COME_LI_DA`, dove la classe è
-  debole prima) e, se la regola lo ferma, alla più bassa (`prossimoPunto`).
+  debole prima: il mago ne dà un quarto alla destrezza, che prima non aveva) e, se la regola lo ferma, alla più bassa (`prossimoPunto`).
 
 ## Le classi partono diverse e crescono diverse
 
@@ -187,10 +197,8 @@ se la più bassa è almeno la metà della più alta: 18 e 12 sì, 18 e 7 no, 50 
 `viste/PaginaEroe.vue`, la scheda «Eroe» della finestra dell'eroe (con lo
 Zaino e le Abilità, [barra.md](barra.md#la-finestra-delleroe)). Si apre dal
 livello nella barra in basso, sopra e sotto.
-Dall'alto: il
-ritratto armato, il nome, il livello, la forza («Forza 18»: quanto vale con la roba
-e le abilità di adesso, [forza.md](forza.md)) e la barra dell'esperienza («✨ 5 /
-72»); i numeri che decidono uno scontro (❤️ ⚔️ 🛡️ 💎: attacco e difesa non
+Dall'alto: il ritratto armato, il nome, il livello, la forza («Forza 18»: quanto vale con la roba
+e le abilità di adesso, [forza.md](forza.md)) e la barra dell'esperienza («✨ 5 / 72»); i numeri che decidono uno scontro (❤️ ⚔️ 🛡️ 💎: attacco e difesa non
 stanno più in cima allo schermo); «Hai 2 punti da dare» in oro, o senza punti
 «Batti i mostri: a ogni livello, un punto da dare»; le quattro righe con
 l'icona, il nome, il valore, la frase corta, prima → dopo e un «+» grande
@@ -198,10 +206,8 @@ l'icona, il nome, il valore, la frase corta, prima → dopo e un «+» grande
 Sopra, sotto i numeri, i tratti della roba addosso («💎 ×1,5», «🔦 vedi più
 lontano»), e in fondo **«Cambia eroe»**: un tasto piccolo a bordo d'oro, non
 un altro tasto grosso, che chiude la pagina e apre la scelta delle avventure
-([avventure.md](avventure.md)). Stava in una carta in fondo alla mappa,
-insieme al ritratto e al livello: la carta è stata tolta perché diceva due
-volte quello che il globo e la pagina dicono già (l'utente, 9 ottobre). Giù
-non c'è: si cambia dal velo della pausa ([portale-e-sosta.md](portale-e-sosta.md)).
+([avventure.md](avventure.md)). Giù non c'è: si cambia dal velo della pausa
+([portale-e-sosta.md](portale-e-sosta.md)).
 Si chiude con la ✕ o toccando fuori; giù non si apre durante uno scontro.
 I numeri li dà il motore (`Corredo.caratteristiche()`): la pagina li mostra.
 
@@ -211,8 +217,8 @@ Il livello con cui si entra in ogni discesa (`LIVELLI_ATTESI` in
 `dati/storia.js`) è quello di chi va dritto alla scala rispondendo bene otto
 volte su dieci e rifacendo quella persa, misurato col banco sulla storia
 giocata davvero (`misuraConLaRoba`, fila `minimo`): 1 · 1,7 · 3,1 · 4,8 ·
-6,8 · 8,5 · 10,3, e l'abisso dopo la miniera. Chi gira tutto arriva tre
-livelli sopra: 1 · 2 · 4,2 · 6,5 · 8,9 · 11 · 13.
+6,8 · 8,5 · 10,3, e l'abisso dopo la miniera (13 ottobre sera, coi branchi: 1 · 1,9 · 3,1 · 5,2 · 7,4 · 9,2 · 11,5). Chi gira tutto arriva tre
+livelli sopra: 1 · 2 · 4,2 · 6,5 · 8,9 · 11 · 13 (sera: 1 · 2 · 4,6 · 7 · 9,6 · 11,9 · 14,1).
 
 | entra in | cripta | scalinata | torre | grotta | sommersa | botola | miniera | abisso |
 |---|---|---|---|---|---|---|---|---|

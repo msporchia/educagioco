@@ -4,7 +4,7 @@
 // (chi porta la chiave, i forzieri) e, se si è perso qualcosa, l'armaiolo e il rigattiere del villaggio. I mostri
 // di ogni discesa sono tarati sulla riga con cui ci si entra (`forza`, `spinta` in dati/campagna.js), e le
 // misure lo controllano (misure/sotterraneo). Una missione fatta dà un piccolo vantaggio, mai un passo intero.
-import { COSE } from './cose.js'
+import { COSE, PESO_DELLA_DIFESA } from './cose.js'
 import { EROI, portaLa } from './eroi.js'
 import { CAMPAGNA } from './campagna.js'
 
@@ -33,13 +33,13 @@ export const PASSI = {
     P('arco-lungo', null, 'manto', 'amuleto-azzurro'),
     P('spadone', null, 'manto', 'amuleto-osso'),
   ],
-  // il mago picchia già: gli serve pelle. Il bastone a due mani nella grotta, poi lo scettro a una mano e lo scudo (dalla
-  // scala sommersa: col bastone e senza scudo, coi mostri di adesso, a 8/10 tornava su una volta su due)
+  // il mago picchia già: gli serve pelle. La bacchetta e lo scudo, poi lo scettro (il bastone a due mani, che vale la bacchetta più
+  // lo scudo, è la sua strada «pura», docs/sotterraneo/strade.md)
   mago: [
     P(),
     P('verga'),
     P('verga', 'scudo-legno', 'saio'),
-    P('bastone-magico', null, 'saio'),
+    P('verga', 'scudo-legno', 'saio', 'amuleto-azzurro'),
     P('scettro', 'scudo-legno', 'saio', 'amuleto-azzurro'),
     P('scettro', 'scudo-legno', 'manto', 'amuleto-azzurro'),
     P('scettro', 'scudo-borchiato', 'manto', 'amuleto-rosso'),
@@ -131,7 +131,7 @@ export function guastiDellaStoria() {
       // ogni discesa dà qualcosa, e la roba non torna indietro: braccio più difesa non cala mai
       if (!premiDella(e.chiave, k - 1).length) g.push(`${e.chiave}: la discesa ${k - 1} non dà niente di nuovo`)
       const a = forzaDi(e.chiave, fila[k - 1]), b = forzaDi(e.chiave, riga)
-      if (b.att + b.dif < a.att + a.dif) g.push(`${e.chiave}, riga ${k}: braccio e difesa calano`)
+      if (b.att + b.dif * PESO_DELLA_DIFESA < a.att + a.dif * PESO_DELLA_DIFESA) g.push(`${e.chiave}, riga ${k}: braccio e difesa calano`)
     })
   }
   if (POZIONI_ATTESE.length !== CAMPAGNA.length + 1) g.push('le pozioni attese non hanno una riga per discesa')
@@ -140,5 +140,66 @@ export function guastiDellaStoria() {
     if (LIVELLI_ATTESI[i] < LIVELLI_ATTESI[i - 1]) g.push(`il livello atteso cala alla discesa ${i}`)
   if (LIVELLI_ATTESI[0] !== 1) g.push('la prima discesa si comincia al livello 1')
   for (const r of POZIONI_ATTESE) for (const k of r) if (!COSE[k] || COSE[k].usa !== 'cura') g.push(`"${k}" non è una pozione`)
+  g.push(...guastiDellaStoriaPrincipale())
+  return g
+}
+
+/* ═══════════ la missione principale ═══════════
+   La grande storia è una missione sola, data dal minatore, in cima al diario (docs/sotterraneo/la-storia-principale.md):
+   chiudere le sette porte, una discesa per volta. Il capitolo di adesso è la prima discesa non finita; battuto il suo
+   mostro grosso arriva il seguente. `dice` lo dice lui mandandoti là (il perché, in una o due frasi), `fatto` quando
+   la porta è chiusa. Lo stato non si salva: viene dalle discese finite. */
+export const STORIA = {
+  titolo: 'Chiudi le sette porte',
+  // la prima volta che il minatore parla: la missione. La porta di adesso la dice la pagina dopo (motore/dialoghi.js, strada)
+  affida: 'Sono sette porte. Io ti dico quale, e il diario ti ricorda la strada.',
+  // finite le sette
+  fine: 'Le sette porte sono chiuse. Resta il pozzo vecchio: l\'abisso non si chiude, si tiene a bada.',
+  // la porta c'è ma per l'età per ora non si scende
+  ferma: 'Questa porta, per ora, resta chiusa.',
+}
+
+export const CAPITOLI = {
+  altare: {
+    dice: 'Comincia dall\'altare. Nella cripta Re Ossuto non ha mai smesso di regnare: battilo, e la prima porta si chiude.',
+    fatto: 'Re Ossuto è caduto, e la prima porta è chiusa.',
+  },
+  cantine: {
+    dice: 'Adesso la scalinata antica. In fondo c\'è Grumo, un orco grosso come una porta. Battilo, e anche questa si chiude.',
+    fatto: 'Grumo non regna più sulle cantine. Due porte chiuse.',
+  },
+  torre: {
+    dice: 'Sotto la torre in rovina c\'è una fornace che nessuno ha acceso. Laggiù brucia Fiammetta: spegni lei, e la fornace tace.',
+    fatto: 'La fornace è spenta. Tre porte chiuse, e le altre sono più profonde.',
+  },
+  gallerie: {
+    dice: 'Nella grotta della scaletta si scende e si scende ancora. In fondo tesse la sua tela Zannaverde: strappala.',
+    fatto: 'La tela è strappata. Quattro porte chiuse.',
+  },
+  cisterna: {
+    dice: 'Nello stagno una scala va sott\'acqua. Giù, nell\'acqua nera, aspetta Gorgo. Quando cade lui, lo stagno torna limpido.',
+    fatto: 'Lo stagno è tornato limpido. Cinque porte chiuse.',
+  },
+  labirinto: {
+    dice: 'La botola nel prato porta a un labirinto. Ne è il padrone Minotto: trova la sua stanza, e battilo.',
+    fatto: 'Il labirinto tace. Sei porte chiuse, ne resta una.',
+  },
+  fondo: {
+    dice: 'L\'ultima è la miniera abbandonata. Laggiù comanda Carbonchio, un drago di brace. Se cade lui, le porte sono chiuse.',
+    fatto: 'Carbonchio è caduto: le sette porte sono chiuse.',
+  },
+}
+
+export function guastiDellaStoriaPrincipale() {
+  const g = []
+  for (const t of CAMPAGNA) {
+    const c = CAPITOLI[t.chiave]
+    if (!c) { g.push(`${t.chiave}: nessun capitolo nella storia principale`); continue }
+    for (const k of ['dice', 'fatto']) {
+      if (!c[k]) g.push(`${t.chiave}: il capitolo non ha «${k}»`)
+      else if (c[k].length > 150) g.push(`${t.chiave}: «${k}» di ${c[k].length} caratteri, non sta in una pagina`)
+    }
+  }
+  for (const k of Object.keys(CAPITOLI)) if (!CAMPAGNA.some(t => t.chiave === k)) g.push(`${k}: un capitolo per una discesa che non c'è`)
   return g
 }

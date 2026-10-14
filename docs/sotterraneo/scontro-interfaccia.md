@@ -58,17 +58,25 @@ Tutto sta in `Corsa.foglio` (`che: 'scontro'`) e nelle funzioni di `Corsa`; un m
   compagno la formazione cambia: l'eroe un po' sopra e il compagno sfalsato sotto, in diagonale ([scontro.md](scontro.md#cosa-resta-fuori-per-dopo)).
 - **Niente chiave sui mostri**, né nello scontro né sul campo (l'utente, 13 ottobre): chi ha la chiave della scala lo dice la mappina.
 - **I mostri sono in colonne verticali sul lato destro, non in file** (l'utente, 12 ottobre: «sono disposti come statuine su due file,
-  è poco realistico»; come i Final Fantasy e i side-view di RPG Maker): due colonne fino a quattro mostri, tre da cinque; la
+  è poco realistico»; come i Final Fantasy e i side-view di RPG Maker): due colonne fino a quattro mostri, tre da cinque (fino a sette: quattro, tre e due, `SLOT[7]`); la
   colonna più vicina all'eroe è davanti; dentro una colonna sono uno sopra l'altro e sfalsati a scaletta. I punti sono la tabella
   `SLOT` di `campo.js` (u: 0 vicino all'eroe, 1 in fondo; v: 0 lontano, 1 vicino), tarati perché il «ti colpisce N» di uno non cada
   sull'altro. Uno o due mostri stanno al centro del pavimento. **Il grosso sta davanti e al centro**, gli altri ai lati e dietro (i
   piccoli negli spazi). I posti sono quelli del motore e i consecutivi stanno nella stessa colonna o in colonne accanto, così i
   «vicini» delle forme `vicini` e `catena` lo sono anche nel disegno. `disponi` dice ancora quante «file» (1 o 2, l'altezza) e chi è il grosso.
   Chi cade resta al suo posto e svanisce: niente scatta di posto.
-- **Gli sprite hanno una sola scala per tutti** (2, il grosso 3; i mostri dipinti `TAGLIA` volte l'eroe). A 320 px la riga della
-  minaccia si accorcia a «colpisce N».
-- **Sopra ogni mostro il suo nome** (`[data-nome-mostro]`, senza articolo e piccolo: «Scheletro», «Scheletro mago spettrale»; il comune è tenue, un grado
-  ha il colore della sua rarità e la figura un alone dello stesso colore) e, se è una variante armata, **l'arma in pugno** (`viste/Creatura.vue`,
+- **La caduta** (`restiDi`, `.sot-a-terra` in `viste/Scontro.vue`): chi cade non svanisce in piedi ma prende il suo pezzo a terra, `<nome>-morto-0` (le pose
+  che i fogli dipingono dopo ogni creatura: un cadavere, delle ossa, una pozza, un mucchio di brace o di polvere, secondo la creatura), e se c'è un secondo
+  pezzo (`-morto-1`, i resti) lo prende dopo 0,3 secondi; ci resta quasi un secondo e poi svanisce come prima. Non respira, e niente barra della vita.
+  Il grosso e chi non ha il pezzo (il pipistrello occhio, le creature di 0x72) svaniscono in piedi com'era. Nei test: `integrazione/sotterraneo-caduta`.
+- **Gli sprite hanno una sola scala per tutti** (`SCALA_FIGURE`; i mostri dipinti `TAGLIA` volte l'eroe, a quarti; **il grosso sta in una
+  scatola**: alto al più 1,9 eroi e largo al più 3, `ingrandimentoDelGrosso` in `dati/grossi.js`, perché un ragno largo e un negromante alto
+  non debordino né restino nani; l'utente, 13 ottobre: Zannaverde e la sua corona troppo grandi). La corona è un terzo della figura. **Lo stesso
+  vale sul campo** (`fattoreDelMostro`): le bestie piccole sono piccole come nello scontro, le grosse restano com'erano, un ingrandimento
+  non supera i 44 px di larghezza (le caselle sono di 16).
+- **Il nome sta solo sul bersaglio e su chi ha un grado** (`[data-nome-mostro]`, senza articolo e piccolo: «Scheletro», «Scheletro mago spettrale»;
+  l'utente, 13 ottobre: un nome sopra tutti affollava il palco; il bersaglio lo porta tenue, un grado ha il colore della sua rarità e la figura un
+  alone dello stesso colore; il grosso ha il suo nome nella barra in cima) e, se è una variante armata, **l'arma in pugno** (`viste/Creatura.vue`,
   [varianti.md](varianti.md)). Chi ha i passi è di profilo (la posa di lato ferma); gli altri respirano.
 - **Sotto ogni mostro la sua barra della vita, senza numeri** (il brivido di non sapere quanto resiste); **sopra «ti colpisce
   N»**, o «salta il turno» se è stordito. Gli stati addosso sono pastiglie piccole (glifo e turni che restano; il testo intero
@@ -105,7 +113,7 @@ Il motore risolve tutto dentro `rispondi`; la vista ne racconta le `azioni` una 
   tiene l'ultima vista), poi il foglio che segue.
 - **L'apertura**: l'agguato («Alle spalle!»), la sorpresa («Li hai sorpresi!», «Lo hai sorpreso!» con uno solo) e i mostri più
   veloci che colpiscono prima del primo turno si raccontano come un turno, con la riga che resta fino alla fine.
-- **Sotto il palco** restano le pastiglie di quello che protegge l'eroe (scudo, parato…, col testo) e la scelta. Spariscono la
+- **Sotto il palco** restano le pastiglie di quello che protegge l'eroe (scudo, parato…, col testo; quelle degli incanti preparati dal campo portano i passi che restano: [orologio.md](orologio.md#come-si-vede-e-come-si-lancia), e sul primo turno dell'eroe nella fila quello che finisce prima) e la scelta. Spariscono la
   riga «fai N di danno…» dello scambio e il suo graffio: lo dicono i numeri sui mostri.
 
 ## La scelta in basso

@@ -144,20 +144,22 @@ const nateDi = s => s.suolo.length + s.colonne.length + s.relitti.length + s.acq
 /* ══════════ 4. i mostri vanno a branchi ══════════ */
 {
   const male = [], grandezze = {}
-  let appostati = { angolo: 0, colonna: 0, relitto: 0 }, soli = 0, inGrandi = 0, inPiccole = 0
+  let appostati = { angolo: 0, colonna: 0, relitto: 0 }, soli = 0, inGrandi = 0, inPiccole = 0, branchiGrandi = 0, branchiPiccoli = 0
   for (const l of tutti) {
     const gruppi = new Map()
     for (const m of mostriDi(l)) if (m.branco) (gruppi.get(m.branco) || gruppi.set(m.branco, []).get(m.branco)).push(m)
     for (const [, g] of gruppi) {
       grandezze[g.length] = (grandezze[g.length] || 0) + 1
-      if (g.length > 5) male.push(`un branco di ${g.length}`)
+      if (g.length > 6) male.push(`un branco di ${g.length}`)
       const stanza = l.stanzaDi(g[0].x, g[0].y)
       for (const a of g) for (const b of g) {
         if (Math.hypot(a.x - b.x, a.y - b.y) > RAGGIO_SCONTRO) male.push('un branco più largo di 4,5 celle')
         if (l.stanzaDi(a.x, a.y) !== stanza || !l.dentro(stanza, a.x, a.y)) male.push('un branco fra due stanze')
       }
-      if (g.length >= 2) { if (stanza.grande) inGrandi += g.length; else inPiccole += g.length }
-      if (g.length > 2 && !stanza.grande && !stanza.ruolo) male.push('un branco da tre in una stanza piccola')
+      if (g.length >= 2) { if (stanza.grande) { inGrandi += g.length; branchiGrandi++ } else { inPiccole += g.length; branchiPiccoli++ } }
+      // una stanza stretta ne tiene meno (livello.js, popolaIlPiano): sotto le venticinque celle tre, sotto le quarantacinque quattro, sotto le settanta cinque, e sei solo nelle sale
+      const celle = stanza.suolo.length
+      if (!stanza.ruolo && g.length > (celle < 25 ? 3 : celle < 45 ? 4 : celle < 70 ? 5 : 6)) male.push(`un branco di ${g.length} in una stanza di ${celle} celle`)
     }
     for (const m of mostriDi(l)) {
       const s = l.stanzaDi(m.x, m.y)
@@ -176,16 +178,22 @@ const nateDi = s => s.suolo.length + s.colonne.length + s.relitti.length + s.acq
       if (mostriDi(l).some(o => o !== m && !o.chiave && l.stanzaDi(o.x, o.y) === s && Math.hypot(o.x - m.x, o.y - m.y) < 4)) male.push('un appostato che non è solo')
     }
   }
-  controlla('i branchi stanno in una stanza, entro 4,5 celle, da due a cinque', male.length === 0, [...new Set(male)].slice(0, 3).join(' · '))
+  controlla('i branchi stanno in una stanza, entro 4,5 celle, da due a sei', male.length === 0, [...new Set(male)].slice(0, 3).join(' · '))
   controlla('ci sono branchi da tre o più', Object.entries(grandezze).some(([n, c]) => n >= 3 && c > 20), JSON.stringify(grandezze))
-  controlla('i branchi stanno soprattutto nelle sale grandi', inGrandi > inPiccole * 1.5, `${inGrandi} contro ${inPiccole}`)
+  const mediaGrandi = inGrandi / Math.max(1, branchiGrandi), mediaPiccole = inPiccole / Math.max(1, branchiPiccoli)
+  controlla('i branchi delle sale sono più grossi di quelli delle stanze piccole', mediaGrandi > mediaPiccole + 0.1, `${mediaGrandi.toFixed(2)} contro ${mediaPiccole.toFixed(2)}`)
   controlla('ci sono appostati, in un angolo, dietro una colonna e dietro un relitto', appostati.angolo > 20 && appostati.colonna > 10 && appostati.relitto > 10, JSON.stringify(appostati))
   nota(`branchi per grandezza: ${JSON.stringify(grandezze)}; appostati ${soli}: ${appostati.angolo} in un angolo, ${appostati.colonna} dietro una colonna, ${appostati.relitto} dietro un relitto`)
 
-  // il numero di mostri non cresce: tre quarti per stanza, o meno
-  const media = tutti.reduce((n, l) => n + mostriDi(l).length, 0) / tutti.reduce((n, l) => n + l.stanze.length, 0)
-  controlla('i mostri per stanza sono quelli di prima (meno di uno)', media < 0.95, media.toFixed(2))
-  nota(`mostri per stanza: ${media.toFixed(2)}`)
+  // le stanze dove vanno i mostri (non l'ingresso, l'anticamera, il tesoro, la scala): una su cinque è vuota, il mostro solo è un'eccezione, e
+  // le altre hanno un branco (docs/sotterraneo/piani.md, «I mostri»)
+  const ordinarie = tutti.flatMap(l => l.stanze.filter(s => !['ingresso', 'anticamera', 'tesoro', 'uscita'].includes(s.ruolo)).map(s => ({ l, s })))
+  const quanti = ordinarie.map(({ l, s }) => mostriDi(l).filter(m => l.dentro(s, m.x, m.y)).length)
+  const quota = f => quanti.filter(f).length / quanti.length
+  controlla('fra il dieci e il venticinque per cento delle stanze ordinarie è vuoto', quota(n => n === 0) >= 0.10 && quota(n => n === 0) <= 0.25, quota(n => n === 0).toFixed(2))
+  controlla('il mostro solo è un\'eccezione: meno di una stanza su sette', quota(n => n === 1) < 1 / 7, quota(n => n === 1).toFixed(2))
+  controlla('le altre hanno da due a sette mostri', quota(n => n >= 2 && n <= 7) > 0.7 && quota(n => n > 7) === 0, quota(n => n >= 2).toFixed(2))
+  nota(`stanze ordinarie ${quanti.length}: vuote ${(100 * quota(n => n === 0)).toFixed(0)}%, con uno ${(100 * quota(n => n === 1)).toFixed(0)}%, due o tre ${(100 * quota(n => n >= 2 && n <= 3)).toFixed(0)}%, quattro o più ${(100 * quota(n => n >= 4)).toFixed(0)}%`)
 }
 
 /* ══════════ 5. l'anticamera coi caporali ══════════ */
@@ -297,7 +305,8 @@ const nateDi = s => s.suolo.length + s.colonne.length + s.relitti.length + s.acq
 
 /* ══════════ 8. due famiglie di piani, scelte dalla discesa ══════════ */
 const costruiti = PIANI.filter(x => x.l.pianta === 'costruita'), grotte = PIANI.filter(x => x.l.pianta === 'caverna')
-const maschera = s => new Set([...s.suolo, ...s.colonne, ...s.relitti, ...s.acqua].map(c => c.x + ',' + c.y).filter(k => !s.nicchie.some(n => n.x + ',' + n.y === k)))
+const maschera = s => new Set([...s.suolo, ...s.colonne, ...s.relitti, ...s.acqua].map(c => c.x + ',' + c.y)
+  .filter(k => !s.nicchie.some(n => n.x + ',' + n.y === k) && !(s.squadrate || []).some(n => n.x + ',' + n.y === k)))   // né le nicchie né le celle scavate per squadrare una porta
 const camminabile = (l, x, y) => l.a(x, y) === PAVIMENTO || l.a(x, y) === PORTA
 {
   const attese = { altare: 'costruita', cantine: 'costruita', torre: 'costruita', gallerie: 'caverna', cisterna: 'caverna', labirinto: 'costruita', fondo: 'caverna' }
@@ -379,7 +388,7 @@ const camminabile = (l, x, y) => l.a(x, y) === PAVIMENTO || l.a(x, y) === PORTA
     const l = maschereDi(f)
     controlla(`la «${f}» è simmetrica da una parte`, l.length > 20 && l.every(({ s }) => riflessa(s, true, false) || riflessa(s, false, true)), `${l.length} stanze`)
   }
-  const sm = maschereDi('smussata').filter(({ s }) => !s.nicchie.length)
+  const sm = maschereDi('smussata').filter(({ s }) => !s.nicchie.length && !s.squadrate)
   controlla('la smussata ha i quattro angoli del riquadro di roccia', sm.length > 20 && sm.every(({ l, s }) =>
     [[s.x, s.y], [s.x + s.w - 1, s.y], [s.x, s.y + s.h - 1], [s.x + s.w - 1, s.y + s.h - 1]].every(([x, y]) => !l.dentro(s, x, y))))
 

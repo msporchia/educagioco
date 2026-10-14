@@ -42,7 +42,8 @@ function scena(n, { grosso = -1 } = {}) {
   uguale('quattro: due file da due', celle(4), '2.1 4.1 2.2 4.2')
   uguale('cinque: tre e due, la seconda centrata', celle(5), '1.1 3.1 5.1 2.2 4.2')
   uguale('sei: due file da tre', celle(6), '1.1 3.1 5.1 1.2 3.2 5.2')
-  uguale('una fila sola fino a tre, due file da quattro', [1, 2, 3, 4, 5, 6].map(k => disponi(nessuno(k)).file).join(''), '111222')
+  uguale('sette: quattro e tre, sempre due file', celle(7), '0.1 2.1 4.1 6.1 1.2 3.2 5.2')
+  uguale('una fila sola fino a tre, due file da quattro', [1, 2, 3, 4, 5, 6, 7].map(k => disponi(nessuno(k)).file).join(''), '1112222')
   // il grosso: al centro, su due file; gli altri ai lati, prima in basso
   const g = disponi([{ grosso: null }, { grosso: 'grumo' }, { grosso: null }, { grosso: null }, { grosso: null }])
   uguale('il grosso sta al centro, su due file', JSON.stringify(g.celle[1]), JSON.stringify({ col: 3, riga: 1, file: 2 }))
@@ -56,7 +57,7 @@ function scena(n, { grosso = -1 } = {}) {
 {
   const nessuno = k => Array.from({ length: k }, () => ({ grosso: null }))
   for (const larg of [320, 352, 390]) {
-    for (let k = 1; k <= 6; k++) {
+    for (let k = 1; k <= 7; k++) {
       const pi = piazza(disponi(nessuno(k)), nessuno(k), larg)
       const campo = `${k} mostri a ${larg}`
       controlla(`${campo}: tutti coi piedi sul pavimento, mai sulla parete`, pi.mostri.every(m => m.y >= ZOCCOLO + 60) && pi.eroe.y > ZOCCOLO + 60 && pi.compagno.y > ZOCCOLO)
@@ -76,12 +77,23 @@ function scena(n, { grosso = -1 } = {}) {
   const sei = piazza(disponi(nessuno(6)), nessuno(6), 390).mostri
   const dist = (a, b) => Math.hypot(sei[a].x - sei[b].x, (sei[a].y - sei[b].y) * 0.6)
   controlla('i posti consecutivi sono vicini nel disegno', [0, 1, 2, 3, 4].every(i => dist(i, i + 1) < 130), [0, 1, 2, 3, 4].map(i => Math.round(dist(i, i + 1))).join())
+  const sette = piazza(disponi(nessuno(7)), nessuno(7), 390).mostri
+  const dist7 = (a, b) => Math.hypot(sette[a].x - sette[b].x, (sette[a].y - sette[b].y) * 0.6)
+  controlla('anche fra sette i posti consecutivi sono vicini', [0, 1, 2, 3, 4, 5].every(i => dist7(i, i + 1) < 130), [0, 1, 2, 3, 4, 5].map(i => Math.round(dist7(i, i + 1))).join())
+  // nessuno copre un altro: due figure, larghe una quarantina di pixel e alte una sessantina, non si sovrappongono quasi mai per intero
+  let copre = 0
+  for (let a = 0; a < 7; a++) for (let b = a + 1; b < 7; b++) if (Math.abs(sette[a].x - sette[b].x) < 34 && Math.abs(sette[a].y - sette[b].y) < 52) copre++
+  uguale('con sette nessuno ne copre un altro', copre, 0)
   // il grosso davanti e al centro, gli altri ai lati
   const gr = [{ grosso: null }, { grosso: 'grumo' }, { grosso: null }, { grosso: null }, { grosso: null }]
   const pg = piazza(disponi(gr), gr, 390)
   controlla('il grosso sta al centro', Math.abs(pg.mostri[1].x - (104 + (390 - 70 - 104) / 2)) < 12)
   controlla('e più in basso (davanti) di chi gli sta ai lati', pg.mostri.filter((_, i) => i !== 1).every(m => m.y < pg.mostri[1].y + 20) && pg.mostri[1].prof === 1)
   controlla('gli altri quattro ai due lati', pg.mostri.filter((_, i) => i !== 1).filter(m => m.x < pg.mostri[1].x).length === 2)
+  // il grosso più sei piccoli (fino a un posto in più del tetto): ognuno ha un punto suo
+  const g7 = [{ grosso: 'grumo' }, ...nessuno(6)]
+  const p7 = piazza(disponi(g7), g7, 390).mostri
+  controlla('il grosso e sei piccoli: tutti su punti diversi', new Set(p7.map(m => `${Math.round(m.x / 12)}.${Math.round(m.y / 12)}`)).size === 7, JSON.stringify(p7.map(m => [m.x, m.y])))
 }
 
 /* ══════════ 2. cosa legge la vista ══════════ */

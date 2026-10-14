@@ -6,7 +6,7 @@
 import { Corsa } from './corsa.js'
 import { Bottega } from './bottega.js'
 import { ROBA_VUOTA } from './corredo.js'
-import { COSE } from '../dati/cose.js'
+import { COSE, PESO_DELLA_DIFESA } from '../dati/cose.js'
 import { TASCHE } from '../dati/mondo.js'
 import { CAMPAGNA } from '../dati/campagna.js'
 import { seminato } from './livello.js'
@@ -20,6 +20,7 @@ import { viaVerso, percorso } from '../../../motore/passi.js'
 import { NODI, colpisce } from '../dati/abilita.js'
 import { caselleDella, puntiAbilita, prossimoDellaStrada } from './abilita.js'
 import { mostroDiRiferimento, dannoDell } from './forza.js'
+import { ammette, robaDellaStrada, crescitaDellaStrada, stradaDi } from './strade.js'
 
 const DT = 1 / 30
 const TETTO_PASSI = 3000        // ~100 secondi di cammino: molto più di un piano
@@ -33,8 +34,23 @@ const SORSI_PROVATI = 3   // quante volte si torna alla stessa fonte dopo un'acq
    e sotto che frazione di vita si cura o si para */
 const FORTI_A_SCONTRO = 2
 const VITA_DA_CURARE = 0.5
+/* gli incanti preparati (docs/sotterraneo/orologio.md): prima di andare incontro a un mostro il bambino lancia quello che ha, se dopo gli
+   resta almeno questa parte del globo per lo scontro (il mana speso prima non c'è durante); lo fa da vicino, a MARGINE_PREPARATI celle
+   dal mostro, perché il più corto di loro dura quaranta passi e un turno di scontro ne mangia cinque */
+const RISERVA_PREPARATI = 0.4
+const MARGINE_PREPARATI = 20
 // `abilita: false` rifà il banco di prima (solo attacco, nessun albero): serve a confrontare prima e dopo (docs/sotterraneo/scontro-bilancio.md)
-export const BANCO = { abilita: true }
+// `preparati: false` toglie solo gli incanti preparati dal campo (docs/sotterraneo/orologio.md), per vedere cosa vale il mana che torna camminando
+export const BANCO = { abilita: true, preparati: true }
+
+// gli incanti preparati prima di un mostro: tutti quelli che si pagano lasciando la riserva
+function preparaPrima(corsa) {
+  if (!BANCO.abilita || !BANCO.preparati) return
+  for (const n of corsa.preparabili()) {
+    if (corsa.perchéNonPrepari(n.id) || corsa.energia - corsa.costoDi(n) < corsa.energiaMax * RISERVA_PREPARATI) continue
+    corsa.preparaDalCampo(n.id)
+  }
+}
 
 // va su una cella, un passo alla volta, e si ferma appena qualcosa si apre. Torna true se ci è arrivato
 function cammina(corsa, meta) {
@@ -56,6 +72,12 @@ function raggiungi(corsa, r) {
   const sopra = ['scala', 'fonte'].includes(r.che)
   const via = viaVerso(corsa.buona(), r, da, { sopra })
   if (!via) return false
+  // un mostro si aspetta preparati: ci si avvicina, si lancia a pochi passi, si arriva (se il mostro ci raggiunge prima, tanto peggio)
+  if (r.che === 'mostro' && BANCO.preparati && corsa.preparabili().length) {
+    if (via.strada.length > MARGINE_PREPARATI && !cammina(corsa, via.strada[via.strada.length - 1 - MARGINE_PREPARATI])) return false
+    if (corsa.foglio) return true
+    preparaPrima(corsa)
+  }
   if (!cammina(corsa, via.dove)) return false
   if (corsa.foglio) return true
   corsa.vaiVerso({ x: r.x, y: r.y }, true)
@@ -87,16 +109,17 @@ function sblocca(corsa, meta, provati) {
 function scudoMeglio(chi, k) {
   const c = COSE[k]
   return c.dove === 'mancina' && chi.posso(k) && !chi.aDueMani(chi.mano) && !!chi.mancina &&
-    COSE[chi.mancina].dove === 'mano' && (c.dif || 0) * 2 > chi.attaccoMancino
+    COSE[chi.mancina].dove === 'mano' && (c.dif || 0) * PESO_DELLA_DIFESA > chi.attaccoMancino
 }
 
-// i punti da dare, come li dà il banco (motore/crescita.js, COME_LI_DA): `come` per provare un altro modo
-function daiIPunti(corsa, come) {
+// i punti da dare, come li dà il banco (motore/crescita.js, COME_LI_DA): `come` per provare un altro modo; `strada`: la fila dei
+// nodi dell'albero di una strada (dati/strade.js) al posto di quella della classe
+function daiIPunti(corsa, come, strada = null) {
   while (puntiDaDare(corsa.crescita) > 0) corsa.daiUnPunto(prossimoPunto(corsa.crescita, corsa.chiEro, come))
   // e i punti dell'albero, sulla strada della classe (motore/abilita.js, STRADA): a ogni livello nuovo, o la crescita attesa
   // con cui si entra in una discesa arriverebbe senza
   while (BANCO.abilita && puntiAbilita(corsa.crescita) > 0) {
-    const id = prossimoDellaStrada(corsa.crescita, corsa.chiEro)
+    const id = prossimoDellaStrada(corsa.crescita, corsa.chiEro, strada)
     const prima = corsa.vitaMax
     if (!id || !corsa.impara(id)) break
     corsa.vita = Math.min(corsa.vitaMax, corsa.vita + Math.max(0, corsa.vitaMax - prima))   // Cuore saldo e simili: la vita in più arriva subito
@@ -144,10 +167,10 @@ function preparaLAbilita(corsa, f) {
   if (!usabili.length) return null
   const io = f.io || {}
   if (corsa.vita < corsa.vitaMax * VITA_DA_CURARE) {
-    const cura = usabili.filter(riparoDi).filter(n => !(n.scudo && io.scudo > 0))
+    const cura = usabili.filter(riparoDi).filter(n => !(n.scudo && (io.scudo > 0 || corsa.preparati.some(p => p.assorbe > 0))))
       .sort((a, b) => (b.cura || b.scudo || 0) - (a.cura || a.scudo || 0))[0]
     if (cura && corsa.prepara(cura.id)) return cura.id
-    const para = usabili.find(n => !colpisce(n) && (n.parato || n.intoccabile) && !(io.parato > 0))
+    const para = usabili.find(n => !colpisce(n) && (n.parato || n.intoccabile) && !(io.parato > 0) && !corsa.preparatoCon('parato'))
     if (para && corsa.prepara(para.id)) return para.id
   }
   if ((f.bancoForti || 0) >= FORTI_A_SCONTRO) return null
@@ -169,6 +192,8 @@ function equipaggia(corsa) {
     const c = COSE[k]
     // quello che questa classe non porta non si prova nemmeno, o il costo misurato è quello di un mago con un'ascia
     if (c.dove && !corsa.posso(k)) continue
+    // e quello che non è della strada che si sta giocando (motore/strade.js) nemmeno
+    if (c.dove && corsa.vincoloDelBanco && !corsa.vincoloDelBanco(corsa, k)) continue
     // un pezzo si giudica su tutto quello che dà (confronto: `meglio`), un'arma sul totale delle due mani
     if (c.dove && c.dove !== 'dito' && !(c.dove === 'mancina' && corsa.aDueMani(corsa.mano))) {
       const conf = corsa.confronto(k)
@@ -179,7 +204,7 @@ function equipaggia(corsa) {
     // al dito la prima cosa che capita: i gioielli non si confrontano su un numero solo
     if (c.dove === 'dito' && !corsa.dito) { corsa.usa(i); continue }
     if (c.usa === 'cura' && corsa.vita < corsa.vitaMax * 0.45) corsa.usa(i)   // beve quando serve, non appena trova
-    // la pozione blu, quando il globo è sotto un terzo e ce ne starebbe una intera (l'energia torna solo combattendo: docs/sotterraneo/abilita.md)
+    // la pozione blu, quando il globo è sotto un terzo e ce ne starebbe una intera (l'energia torna combattendo e camminando, piano: docs/sotterraneo/orologio.md)
     if (c.usa === 'energia' && corsa.energia <= corsa.energiaMax / 3 && corsa.energiaMax - corsa.energia >= c.energia) corsa.usa(i)
   }
 }
@@ -250,28 +275,32 @@ function sbriga(corsa, bravura, sorte, conto) {
 // `roba`: quella che si porta giù da sopra (motore/corredo.js); torna in `corsa.roba` a discesa finita
 export function gioca(tappa, { bravura = 0.8, seme = 7, come = 'minimo', rnd = null, da = null,
                               eroe = undefined, fino = null, tettoGiri = TETTO_GIRI, roba = null,
-                              crescita = null, punti = null } = {}) {
+                              crescita = null, punti = null, strada = null } = {}) {
   const sorte = rnd || seminato(seme * 31 + 17)
   const corsa = da || new Corsa(tappa, { seme, rnd: sorte, eroe, roba, crescita })
   if (da) da.rnd = sorte
+  // una strada (dati/strade.js): i suoi punti, la sua fila di nodi e il vincolo su quello che si indossa
+  if (strada) { corsa.vincoloDelBanco = ammette(strada); punti = punti || strada.punti }
   let giri = 0
   const persi = []
   const provati = new Map()
   const conto = { fonti: 0 }
   const sorsi = new Map()
-  const perPiano = []
-  let pianoOra = corsa.piano, domandeAllInizio = corsa.domande
+  const perPiano = [], passiPerPiano = []   // le domande e le celle percorse (corsa.camminati) di ogni piano
+  let pianoOra = corsa.piano, domandeAllInizio = corsa.domande, camminatiAllInizio = corsa.camminati
   const chiudiIlPiano = () => {
     perPiano[pianoOra] = (perPiano[pianoOra] || 0) + (corsa.domande - domandeAllInizio)
+    passiPerPiano[pianoOra] = (passiPerPiano[pianoOra] || 0) + (corsa.camminati - camminatiAllInizio)
     pianoOra = corsa.piano
     domandeAllInizio = corsa.domande
+    camminatiAllInizio = corsa.camminati
   }
 
   while (!corsa.finita && giri++ < tettoGiri) {
     if (corsa.piano !== pianoOra) chiudiIlPiano()
     if (fino != null && corsa.piano >= fino) break
     if (corsa.foglio) { sbriga(corsa, bravura, sorte, conto); continue }   // finché un foglio è aperto non si cammina
-    daiIPunti(corsa, punti)
+    daiIPunti(corsa, punti, strada && strada.abilita)
     equipaggia(corsa)
     if (raccogliVicino(corsa, persi)) continue
 
@@ -317,6 +346,7 @@ export function gioca(tappa, { bravura = 0.8, seme = 7, come = 'minimo', rnd = n
     esito: corsa.esito,
     fonti: conto.fonti,   // non sta nell'esito: è il modo in cui il giocatore finto gioca, non il gioco
     perPiano,
+    passiPerPiano,
     guasto: corsa.finita || (fino != null && corsa.piano >= fino)
       ? null : 'la discesa non finisce mai',
   }
@@ -403,9 +433,9 @@ export function allaBottega(roba, { finite = 0, eroe = undefined, seme = 1, cres
   for (let giro = 0; giro < 8; giro++) {
     // quanto migliora tutto (confronto: `meglio`, la difesa pesa il doppio); a pari, il più caro
     const vale = k => (COSE[k].dove === 'dito' ? 1 : scudoMeglio(b, k) && !b.vaAddosso(k)
-      ? (COSE[k].dif || 0) * 2 - b.attaccoMancino
+      ? (COSE[k].dif || 0) * PESO_DELLA_DIFESA - b.attaccoMancino
       : b.confronto(k).meglio)
-    const scelte = ['armaiolo', 'rigattiere']
+    const scelte = ['armaiolo', 'incantatrice', 'rigattiere']
       .flatMap(chi => b.mercanzia(chi).filter(r => meglio(r.chiave)).map(r => ({ chi, k: r.chiave })))
       .sort((x, y) => vale(y.k) - vale(x.k) || b.quantoCosta(y.k) - b.quantoCosta(x.k))
     if (!scelte.length) break
@@ -490,6 +520,31 @@ export function misuraLaStoria({ eroe = 'cavaliere', semi = 20, prove = [0.8, 0.
     }
   }
   return { vinte, gemme, semi, prove, scarti, livelli, discese }
+}
+
+// Una strada (dati/strade.js, docs/sotterraneo/strade.md) in una discesa: l'eroe di quella classe, col livello atteso più `piu`, la
+// roba della strada e i suoi punti e il suo albero. Torna, per bravura, quante volte su `semi` si arriva in fondo, e le domande e gli
+// svenimenti della prima. `punti` e `mani` provano un'altra distribuzione dei punti o un'arma a una o a due mani con la stessa
+// strada; `allaPrima` si chiama finita la prima bravura (chi misura altro lo spegne lì)
+export function misuraLaStrada({ classe, nome, k, prove = [0.8, 0.6, 0.4], semi = 20, piu = 0, punti = null, mani = null, allaPrima = null } = {}) {
+  const st = stradaDi(classe, nome)
+  if (punti) st.punti = punti
+  if (mani) { st.arma = { ...st.arma, mani: Number(mani) }; st.mancina = Number(mani) === 2 ? null : 'scudo' }
+  const roba = robaDellaStrada(classe, st, k, { piu })
+  const crescita = crescitaDellaStrada(classe, st, k, piu)
+  const vinte = []
+  let domande = 0, svenimenti = 0
+  prove.forEach((bravura, j) => {
+    let v = 0
+    for (let s = 0; s < semi; s++) {
+      const g = gioca(CAMPAGNA[k], { seme: 7000 + s * 89 + k * 11 + j * 5, bravura, eroe: classe, roba, crescita, strada: st })
+      if (g.esito.vinta) v++
+      if (j === 0) { domande += g.esito.domande; svenimenti += g.esito.svenimenti }
+    }
+    vinte.push(v)
+    if (j === 0 && allaPrima) allaPrima()
+  })
+  return { vinte, domande, svenimenti, partite: semi }
 }
 
 // Chi ha messo da parte le gemme: arriva a ogni discesa con la roba attesa e `gemme` in tasca, compra il meglio che

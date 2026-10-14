@@ -3,11 +3,15 @@
 // Il perché: docs/sotterraneo/bottega.md, "I mercanti di sopra".
 import { COSE, CURE, IN_VENDITA, baseDi } from './cose.js'
 import { CAMPAGNA, QUANTE_TAPPE } from './campagna.js'
+import { portaLa } from './eroi.js'
 
 // `vende`: le caselle (dove) e le chiavi che vende; `sempre`: quello che non finisce mai (in cima al banco);
 // `passo`: le caselle della riga della storia (dati/storia.js) che porta, e `altre` quante cose in più pesca che
 // non costano più di quel pezzo (motore/storia.js, bancoDelPasso); `righe`: chi pesca e basta, quante ne pesca
 // per discese finite; `compra`: chi si prende la roba a metà prezzo. `dice` è la sua battuta, in voce sua.
+// `vende.famiglie`: se c'è, dei pezzi di quei posti vende solo quelle famiglie (l'incantatrice: bacchette e stoffa);
+// `vende.senza`: quelle che non vende (il fabbro, che lavora il ferro: né bacchette né stoffa). `schede[].famiglie`: la
+// linguetta serve solo a chi porta una di quelle famiglie, e agli altri non si mostra (schedeDi)
 // `schede`: le linguette in cima alla bottega (viste/Bottega.vue), ognuna coi posti (`dove`) o gli usi (`usa`) che
 // raccoglie; `vendi` è quella delle tasche e `riacquista` quella delle ultime cose vendute, solo per chi compra
 // (docs/sotterraneo/bottega-finestra.md, "La bottega e lo zaino")
@@ -15,18 +19,27 @@ export const MERCANTI = [
   // la roba del passo dopo, non quella della miniera: chi ha le gemme non scende col meglio
   // le chiavi restano quelle di prima (salvataggi, sprite); i nomi sono parole che un bambino conosce
   { chiave: 'armaiolo', nome: 'Il fabbro', em: '⚒️', sprite: 'armaiolo',
-    dice: 'Lame e scudi, battuti uno per uno su questa incudine. Guarda pure.',
+    dice: 'Lame, scudi e corazze, battuti uno per uno su questa incudine. Guarda pure.',
     schede: [{ chiave: 'armi', nome: 'Armi', em: '⚔️', dove: ['mano'] },
              { chiave: 'difese', nome: 'Scudi e armature', em: '🛡️', dove: ['mancina', 'corpo'] }],
-    vende: { dove: ['mano', 'mancina', 'corpo'] }, sempre: [],
+    vende: { dove: ['mano', 'mancina', 'corpo'], senza: ['bacchette', 'stoffa'] }, sempre: [],
     passo: ['mano', 'mancina', 'corpo'], altre: 2 },
+
+  // il fabbro lavora il ferro, lei la magia: le bacchette e i bastoni, le vesti di stoffa e l'energia (docs/sotterraneo/bottega.md)
+  { chiave: 'incantatrice', nome: 'L\'incantatrice', em: '🔮', sprite: 'incantatrice',
+    dice: 'Bacchette per le mani, stoffa per le spalle, e una boccetta blu per quando la magia si spegne.',
+    schede: [{ chiave: 'bacchette', nome: 'Bacchette e bastoni', em: '🪄', dove: ['mano'], famiglie: ['bacchette'] },
+             { chiave: 'vesti', nome: 'Vesti', em: '🧥', dove: ['corpo'], famiglie: ['stoffa'] },
+             { chiave: 'energia', nome: 'Energia', em: '🧪', usa: ['energia'] }],
+    vende: { dove: ['mano', 'corpo'], famiglie: ['bacchette', 'stoffa'] }, sempre: ['pozione-blu', 'ampolla-blu'],
+    passo: ['mano', 'corpo'], altre: 1 },
 
   { chiave: 'erborista', nome: 'La guaritrice', em: '🌿', sprite: 'erborista',
     dice: 'Pozioni per chi sanguina, torce per chi ha paura del buio. Laggiù servono tutte e due.',
-    schede: [{ chiave: 'pozioni', nome: 'Pozioni', em: '🧪', usa: ['cura', 'cresci', 'energia'] },
+    schede: [{ chiave: 'pozioni', nome: 'Pozioni', em: '🧪', usa: ['cura', 'cresci'] },
              { chiave: 'torce', nome: 'Torce', em: '🔥', usa: ['luce'] }],
-    vende: { chiavi: ['elisir-toro'] }, sempre: [...CURE, 'pozione-blu', 'ampolla-blu', 'torcia'],
-    righe: [0, 0, 1, 1, 1, 1, 1, 1] },
+    vende: { chiavi: [] }, sempre: [...CURE, 'torcia'],
+    righe: [0, 0, 0, 0, 0, 0, 0, 0] },
 
   // l'unico che compra: tre botteghe che comprano farebbero di ogni banco un posto dove svuotare le tasche
   { chiave: 'rigattiere', nome: 'Il mercante', em: '🧺', sprite: 'rigattiere',
@@ -40,8 +53,14 @@ export const MERCANTI = [
 
 export const mercanteDi = chiave => MERCANTI.find(m => m.chiave === chiave) || null
 
+// un pezzo di un posto che vende, se la sua famiglia non è esclusa (`senza`) e, dove `famiglie` c'è, è una di quelle
+const dellaFamiglia = (v, c) => !(v.senza || []).includes(c.famiglia) && (!v.famiglie || v.famiglie.includes(c.famiglia))
 export const vendeLa = (m, k) => !!COSE[k] && IN_VENDITA.includes(baseDi(k)) &&
-  ((m.vende.dove || []).includes(COSE[k].dove) || (m.vende.chiavi || []).includes(baseDi(k)))
+  (((m.vende.dove || []).includes(COSE[k].dove) && dellaFamiglia(m.vende, COSE[k])) || (m.vende.chiavi || []).includes(baseDi(k)))
+
+// le linguette che un eroe vede: quelle che non chiedono una famiglia, e quelle di una famiglia che porta (a un cavaliere
+// la bottega dell'incantatrice non mostra le bacchette)
+export const schedeDi = (m, eroe) => m.schede.filter(s => !s.famiglie || s.famiglie.some(f => portaLa(eroe, { famiglia: f })))
 
 // la linguetta di una cosa: la prima che ne raccoglie il posto o l'uso
 export const schedaDi = (m, k) => (COSE[k]

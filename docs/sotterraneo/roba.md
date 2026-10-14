@@ -60,11 +60,13 @@ la roba con livello e rarità: [rarita.md](rarita.md).
   chiavi, una per pezzo: i posti si contano e si mostrano raggruppando (`tascheDello`).
 - **Le tasche in più si comprano con le gemme**, dallo zaino (sopra e giù), una alla
   volta: `prezzoTasca` cresce in linea retta (30, 60, 90…), fino a otto in più
-  (`TASCHE_EXTRA_MAX`), e restano all'eroe (`crescita.tasche`). Nei test: `unita/sotterraneo-zaino`,
-  `[data-azione="piu-posto"]` sullo zaino.
-- **Quattro famiglie d'arma in tre gradini, e a parità di gradino valgono lo
+  (`TASCHE_EXTRA_MAX`), e restano all'eroe (`crescita.tasche`). La forza non ne dà più (dal 13 ottobre;
+  quelle che dava a un salvataggio di prima gli restano, come comprate: [livelli.md](livelli.md#le-quattro-caratteristiche)).
+  Nei test: `unita/sotterraneo-zaino`, `[data-azione="piu-posto"]` sullo zaino.
+- **Quattro famiglie d'arma in tre gradini, e a parità di gradino e di mani valgono lo
   stesso** — la regola dei due rami del castello: cambia la forma, mai la
-  quantità.
+  quantità. Le armi a una mano ci sono a ogni gradino per ogni famiglia che le ha: la sciabola, la scure e la mannaia
+  si sono aggiunte per le strade con lo scudo ([strade.md](strade.md)).
 - **Al dito va l'unica cosa che non picchia**: vedere più lontano, tornare su
   con più gemme, reggere un colpo in più. Ce n'è uno, quindi si sceglie.
 - **Nello zaino le caselle stanno intorno alla figura**, con in pugno l'arma
@@ -75,12 +77,30 @@ la roba con livello e rarità: [rarita.md](rarita.md).
 - **Le armi leggere si portano due alla volta**; quelle grosse (spadoni,
   asce, archi, bastoni) dichiarano `mani: 2` in `dati/cose.js`.
 - **La mano debole colpisce la metà, arrotondata per eccesso**
-  (`attaccoMancino`), e **un'arma a due mani picchia uno più del suo
-  gradino** (`LA_MANO_CHE_RESTA`): due leggere valgono la pesante dello
-  stesso gradino, fra cose che costano uguale. Si è toccato l'attacco e non
-  il prezzo perché le armi si trovano più di quanto si comprino.
-  `guastiDelleCose` e `unita/sotterraneo` («due leggere valgono una
-  pesante») tengono fermo il conto.
+  (`attaccoMancino`), e **un'arma a due mani vale quella a una mano più la mano
+  che ti toglie** (l'utente, 13 ottobre: nel bastone non vedeva vantaggi, e la
+  mano libera valeva un punto solo): la difesa dello scudo del suo gradino e
+  livello contata come attacco, due a una (`PESO_DELLA_DIFESA` in `dati/cose.js`).
+  A una mano 1 · 2 · 3 nei tre gradini, a due mani 3 · 6 · 9 (a livello 1; ogni cinque
+  livelli l'arma sale di uno, e a due mani, ogni quindici, di altri due come lo scudo). Misurato col banco, strada per strada
+  ([strade.md](strade.md#cosa-insegnano-le-misure)): due mani e scudo pareggiano fra due e tre;
+  due leggere valgono meno, la seconda mano vale la metà. Si è toccato l'attacco e non
+  il prezzo perché le armi si trovano più di quanto si comprino. `guastiDelleCose` e
+  `unita/sotterraneo` tengono fermo il conto, `unita/sotterraneo-strade` a ogni gradino.
+  L'attacco di un'arma comune, prima → dopo (`npm run sotterraneo -- --armi --contro <commit>`), a livello 1 · 11 · 31:
+
+  | | una mano | due mani |
+  |---|---|---|
+  | primo gradino | 1 · 3 · 7 | 2 → **3** · 4 → **5** · 8 → **13** |
+  | secondo | 2 · 4 · 8 | 3 → **6** · 5 → **8** · 9 → **16** |
+  | terzo | 3 · 5 · 9 | 4 → **9** · 6 → **11** · 10 → **19** |
+
+- **Il bastone** (bacchette a due mani) **ha un potere suo, da mago puro**: l'energia
+  delle abilità torna del 50% più in fretta (`ricarica`: ogni risposta giusta a un mostro
+  vale 1,5 invece di 1 verso i 2,5 che fanno un punto, `RICARICA_DEL_BASTONE`). Dieci
+  risposte giuste: sei punti di energia invece di quattro. Lo dice il pannello del pezzo
+  («🔷 +50% ricarica», `ABILITA` in `viste/pezzo.js`) e lo scelgono gli altri solo per
+  il peso che gli dà `PESI`. Ce l'ha ogni arma fatta con `arma('bacchette', …, 2)`.
 - **I tratti valgono pieni anche a sinistra**: la luce di una lama è la
   stessa copia dell'oggetto.
 - **Con un'arma a due mani la casella di sinistra porta la stessa arma in
@@ -117,6 +137,15 @@ la roba con livello e rarità: [rarita.md](rarita.md).
 - **Un forziere aperto è scenografia** e non si tocca più: si mangiava il
   tocco destinato alla roba, e a un forziere ci si ferma accanto, quindi la
   roba non deve nascere sotto di lui.
+- **Il forziere veste il posto** (una regola sola): legno e ferro nelle cantine (quattro disegni), pietra e ferro freddo nella cripta (tre,
+  fra cui `cripta-forziere`), ferro e brace nella fornace (due), uno a caso dal numero che il piano gli dà (`pelle`, un numero: lo scenario
+  sceglie il disegno, come i relitti). **Non dice cosa c'è dentro**: una pelle che promettesse la rarità mentirebbe una volta su due (il forziere dà
+  un pezzo uno scontro su tre, se no una pozione o una torcia). **Il forziere d'oro è solo quello di una missione**
+  ([missioni-bersaglio.md](missioni-bersaglio.md)); aperto, tutti diventano lo stesso forziere pixel (`forziere-aperto`).
+- **Le gemme per terra dicono quanto valgono dal colore**: sotto sei la moneta che gira; da sei in su una gemma, blu (6–11), verde (12–23), viola
+  (24–47), rossa (48 e più) (`SOGLIE_DELLE_GEMME`, `dati/tessere.js`). Il numero cresce con la discesa e col livello (`valoreDelLivello`), quindi in fondo sono
+  quasi tutte rosse. Le due pozioni dipinte che non facevano niente (`pozione-nera`, `pozione-viola`: la viola è il doppione dell'Ampolla, e di
+  stati da curare l'eroe non ne ha) sono state tolte.
 
 ## La torcia si accende da sé, e finisce
 
@@ -126,7 +155,7 @@ la roba con livello e rarità: [rarita.md](rarita.md).
   tetto**: provata la torcia per tutta la discesa, e ogni altra torcia
   diventava roba da rifiutare.
 - **Dura dodici stanze** (`STANZE_TORCIA`). **L'unità è la stanza, non il
-  tempo**: sotto una domanda l'orologio è fermo, e un conto che scorre farebbe
+  tempo** (e nemmeno i passi dell'orologio del gioco, [orologio.md](orologio.md)): sotto una domanda l'orologio è fermo, e un conto che scorre farebbe
   pagare la luce a chi legge piano. Scendere e risvegliarsi non consumano.
   Dodici è misurato: chi tocca tutto entra in 34 stanze nel pozzo, 36 nella
   grotta, 45 nella scala sommersa, 44 nella miniera, 83 nella botola — undici o
@@ -152,7 +181,7 @@ la roba con livello e rarità: [rarita.md](rarita.md).
 
 ## I mercanti e la bottega
 
-Le tre botteghe della terra di sopra, cosa vendono, i pezzi avanti a
+Le quattro botteghe della terra di sopra (il fabbro lavora il ferro, l'incantatrice la magia), cosa vendono, i pezzi avanti a
 sovrapprezzo, il banco che cambia a ogni giro ([bottega.md](bottega.md)), la finestra
 da gioco di ruolo con le caselle e il confronto affiancato, lo zaino nella stessa
 finestra: [bottega-finestra.md](bottega-finestra.md). La

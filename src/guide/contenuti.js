@@ -604,7 +604,7 @@ export const AIUTI = {
         'Quello che hai addosso, quello che hai in tasca e le gemme **te li porti dietro**: alla discesa dopo li ritrovi. Anche uscendo a metà.',
         'Uscendo a metà, la discesa ti aspetta **esattamente dove l\'hai lasciata**: stessa stanza, stesso punto, i mostri dove erano, e rientrando sei già giù. Per salire al villaggio c\'è il portale; o ⏸ e «lascio perdere questa discesa»: la roba resta, la discesa ricomincia da capo.',
         '**Ogni eroe ha la sua avventura**: la sua roba, le sue discese e la sua strada qui sopra. Con «cambio» passi a un altro, e lo ritrovi dove l\'avevi lasciato.',
-        'Le gemme si spendono sopra, dalle botteghe vicino alle case: il **fabbro** (armi, scudi, armature), la **guaritrice** (pozioni e torce) e il **mercante** vicino al carro (anelli e amuleti, e compra quello che hai in tasca). Si tocca chi vende, l\'eroe ci va, ci si parla, e la prima domanda apre il banco.',
+        'Le gemme si spendono sopra, dalle botteghe vicino alle case: il **fabbro** (spade, asce, archi, scudi, armature), l\'**incantatrice** (bacchette, vesti di stoffa, boccette d\'energia), la **guaritrice** (pozioni e torce) e il **mercante** vicino al carro (anelli e amuleti, e compra quello che hai in tasca). Si tocca chi vende, l\'eroe ci va, ci si parla, e la prima domanda apre il banco.',
         'Più discese hai finito, più roba e più forte trovi sul banco; finita una discesa i banchi cambiano.',
         'Svenendo si perdono **le tasche e metà delle gemme**, mai quello che hai addosso.',
       ] },

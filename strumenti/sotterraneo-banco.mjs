@@ -16,12 +16,23 @@
 //   npm run sotterraneo -- --vere                # la storia giocata davvero, discesa dopo discesa, con la spesa (--fila tutto)
 //   npm run sotterraneo -- --abisso             # fin dove arriva chi esce dalla storia (--nudo: chi parte nudo) e quanto costa un piano; --tetto N: fin dove si guarda (30)
 //   npm run sotterraneo -- --risparmio 100,250  # chi arriva con quelle gemme da parte e compra il meglio che può
+//   npm run sotterraneo -- --armi               # l'attacco delle armi a una e a due mani nei tre gradini, a livello 1, 11 e 31
+//   npm run sotterraneo -- --numeri 1,5,12,20,30  # vita, difesa e attacco dell'eroe atteso a quei livelli, per eroe
+//   npm run sotterraneo -- --strada mago:pura --punti intelligenza,destrezza,tempra   # lo stesso con un altro giro dei punti
+//   npm run sotterraneo -- --strada cavaliere:spadone --mani 1   # la stessa strada con arma a una mano e scudo (--mani 2: a due mani)
+//   npm run sotterraneo -- --strada mago         # le tre strade di una classe a confronto (--strada mago:pura una sola, --strada tutte le dodici)
 //   npm run sotterraneo -- --forza 1,5,12,20,30  # la forza dell'eroe atteso a quei livelli, per eroe (deve valere il livello)
 //   npm run sotterraneo -- --forza 6,7,8,9,10,11,12 --rapporti   # il suo rapporto (le gobbe che fanno sbagliare la forza)
 //   npm run sotterraneo -- --tara 2.spinta=6.5,5.forza=4   # prova un valore di una discesa (indice.campo=valore) senza toccare i sorgenti
 //   npm run sotterraneo -- --tara zona.forzaA12=4|5,zona.altare=1.6   # lo stesso per la curva delle zone e la forma di una zona
+//   npm run sotterraneo -- --abisso --tara abisso.forza=3,abisso.spinta=10   # e per l'abisso
 //   npm run sotterraneo -- --tara 2.spinta=5|6|7             # con più valori separati da | prova ogni combinazione, una tabella l'una
+//   npm run sotterraneo -- --turni [--file]      # la fila dei turni: velocità e doppi turni di ogni classe nelle discese (--file: la fila lettera per lettera)
+//   npm run sotterraneo -- --domande             # le domande obbligate per discesa e per piano rispondendo sempre giusto: dritto alla scala e girando tutto, per eroe (il tetto è 85)
+//   npm run sotterraneo -- --costi               # l'energia: globo atteso, costo e lanci col globo pieno per classe e riga
+//   npm run sotterraneo -- --passi               # i passi che il giocatore finto fa davvero per piano e per discesa (dritto e giro), e quanto globo ridanno
 //   npm run sotterraneo -- --senza-abilita       # il banco di prima: solo attacco, nessun albero
+//   npm run sotterraneo -- --senza-preparati     # il banco senza gli incanti preparati dal campo (resta il mana che torna camminando)
 //   npm run sotterraneo -- --contro <commit>     # le stesse misure sul commit, e «prima → dopo» nelle celle
 //   npm run sotterraneo -- --contro <commit> --banco-di-adesso   # idem, ma col giocatore finto di adesso (le abilità) anche sul commit
 //
@@ -49,14 +60,16 @@ if (argv[0] === '--lavoro') {
   const mod = nome => import(pathToFileURL(join(lavoro.radice, SRC, nome)).href)
   const banco = await mod('motore/banco.js')
   if (lavoro.senzaAbilita && banco.BANCO) banco.BANCO.abilita = false
+  if (lavoro.senzaPreparati && banco.BANCO) banco.BANCO.preparati = false
   // `--tara 2.spinta=6.5,5.forza=4` prova un valore di una discesa senza toccare i sorgenti (le zone lo ereditano)
   if (lavoro.tara) {
-    const { CAMPAGNA } = await mod('dati/campagna.js')
+    const { CAMPAGNA, L_ABISSO } = await mod('dati/campagna.js')
     const zone = await mod('dati/zone.js')
     for (const voce of lavoro.tara.split(',').filter(Boolean)) {
       const [k, campo] = voce.split('=')[0].split('.')
       // `zona.forzaA12=5` ritocca la curva delle zone, `zona.altare=1.4` la forma di una zona (dati/zone.js)
       if (k === 'zona') { if (campo in zone.CURVA_DELLE_ZONE) zone.CURVA_DELLE_ZONE[campo] = Number(voce.split('=')[1]); else zone.FORMA_DELLA_ZONA[campo] = Number(voce.split('=')[1]) }
+      else if (k === 'abisso') L_ABISSO[campo] = Number(voce.split('=')[1])   // `abisso.forza=3` ritocca l'abisso
       else CAMPAGNA[Number(k)][campo] = Number(voce.split('=')[1])
     }
   }
@@ -67,7 +80,25 @@ if (argv[0] === '--lavoro') {
   else if (lavoro.che === 'risparmio') r = banco.misuraDiChiHaMessoDaParte(lavoro.opz)
   else if (lavoro.che === 'abisso') r = await abisso(lavoro.opz)
   else if (lavoro.che === 'diag') r = await diagnosi(lavoro.opz)
+  else if (lavoro.che === 'strada') r = await strada(lavoro.opz)
+  else if (lavoro.che === 'passi') r = await passiFatti(lavoro.opz)
+  else if (lavoro.che === 'domande') r = await domandeDi(lavoro.opz)
   console.log(JSON.stringify(r))
+
+  // le domande obbligate di una discesa rispondendo sempre giusto (la misura di `unita/sotterraneo`, «il minimo sta in una seduta»): dritto
+  // alla scala (minimo) e girando tutto, in totale e piano per piano, con la roba e la crescita di chi ci arriva andando dritto; la media di più semi
+  async function domandeDi({ eroe, k, semi }) {
+    const { CAMPAGNA } = await mod('dati/campagna.js')
+    const r = { minimo: [], tutto: [], totMinimo: 0, totTutto: 0, vinte: 0 }
+    for (let s = 0; s < semi; s++) for (const come of ['minimo', 'tutto']) {
+      const g = banco.gioca(CAMPAGNA[k], { seme: [7, 41, 99, 203, 311, 457, 571, 701][s % 8] + 1000 * Math.floor(s / 8), bravura: 1, come, eroe, roba: banco.robaPer(k, { eroe }), crescita: banco.crescitaPer(k, { eroe }) })
+      const p = g.perPiano.map(n => n || 0)
+      p.forEach((n, i) => { r[come][i] = (r[come][i] || 0) + n })
+      r[come === 'minimo' ? 'totMinimo' : 'totTutto'] += g.esito.domande
+      if (come === 'minimo' && g.esito.vinta) r.vinte++
+    }
+    return r
+  }
 
   // l'abisso: fin dove arriva chi ci entra come si entra (la roba e il livello con cui si esce dalla storia, o nudo con `--nudo`) e
   // quanto costa un piano (minimo e tutto, col livello 12)
@@ -82,18 +113,31 @@ if (argv[0] === '--lavoro') {
   }
 
   // com'è una discesa giocata a una bravura: domande, svenimenti, pozioni bevute, vita a fine scontro, abilità e turni per scontro
-  async function diagnosi({ eroe, k, bravura, semi, come }) {
+  // (`strumenta` conta finché `attivo`, e il chiamante lo spegne quando ha giocato la bravura che gli interessa)
+  async function strumenta() {
     const { Corsa } = await mod('motore/corsa.js')
-    const { CAMPAGNA } = await mod('dati/campagna.js')
-    const { robaAttesa, crescitaAttesa } = await mod('motore/storia.js')
-    let fini = 0, scontri = 0, pozioni = 0, abilita = 0, turni = 0, aperti = 0, energiaIn = 0, energiaMaxIn = 0
+    const n = { attivo: true, fini: 0, scontri: 0, pozioni: 0, abilita: 0, turni: 0, aperti: 0, energiaIn: 0, energiaMaxIn: 0, preparati: 0, ceLHo: 0 }
     const scontro = Corsa.prototype.scontro, chiudi = Corsa.prototype.chiudi, usa = Corsa.prototype.usa, prepara = Corsa.prototype.prepara, risposta = Corsa.prototype.rispostaScontro
     // l'energia con cui si entra in uno scontro, e il massimo (docs/sotterraneo/abilita.md, «L'energia»)
-    Corsa.prototype.scontro = function () { const r = scontro.apply(this, arguments); if (this.foglio && this.foglio.che === 'scontro') { aperti++; energiaIn += this.energia; energiaMaxIn += this.energiaMax } return r }
-    Corsa.prototype.chiudi = function () { if (this.foglio && this.foglio.che === 'scontro') { fini += this.vita / this.vitaMax; scontri++ } return chiudi.apply(this, arguments) }
-    Corsa.prototype.usa = function (i) { if (/pozione/.test(this.zaino[i] || '')) pozioni++; return usa.apply(this, arguments) }
-    Corsa.prototype.prepara = function (id) { const ok = prepara.apply(this, arguments); if (ok && id) abilita++; return ok }
-    Corsa.prototype.rispostaScontro = function () { turni++; return risposta.apply(this, arguments) }
+    Corsa.prototype.scontro = function () { const r = scontro.apply(this, arguments); if (n.attivo && this.foglio && this.foglio.che === 'scontro') { n.aperti++; n.energiaIn += this.energia; n.energiaMaxIn += this.energiaMax } return r }
+    Corsa.prototype.chiudi = function () { if (n.attivo && this.foglio && this.foglio.che === 'scontro') { n.fini += this.vita / this.vitaMax; n.scontri++ } return chiudi.apply(this, arguments) }
+    Corsa.prototype.usa = function (i) { if (n.attivo && /pozione/.test(this.zaino[i] || '')) n.pozioni++; return usa.apply(this, arguments) }
+    Corsa.prototype.prepara = function (id) { const ok = prepara.apply(this, arguments); if (n.attivo && ok && id) n.abilita++; return ok }
+    Corsa.prototype.rispostaScontro = function () { if (n.attivo) n.turni++; return risposta.apply(this, arguments) }
+    // gli incanti preparati lanciati dal campo, e quanti scontri cominciano con almeno uno addosso (docs/sotterraneo/orologio.md)
+    if (Corsa.prototype.preparaDalCampo) {
+      const dal = Corsa.prototype.preparaDalCampo
+      Corsa.prototype.preparaDalCampo = function (id) { const ok = dal.apply(this, arguments); if (n.attivo && ok) n.preparati++; return ok }
+      const aperti = Corsa.prototype.scontro
+      Corsa.prototype.scontro = function () { const r = aperti.apply(this, arguments); if (n.attivo && this.foglio && this.foglio.che === 'scontro' && this.preparati.length) n.ceLHo++; return r }
+    }
+    return n
+  }
+
+  async function diagnosi({ eroe, k, bravura, semi, come }) {
+    const { CAMPAGNA } = await mod('dati/campagna.js')
+    const { robaAttesa, crescitaAttesa } = await mod('motore/storia.js')
+    const n = await strumenta()
     let vinte = 0, domande = 0, svenimenti = 0
     for (let s = 0; s < semi; s++) {
       const g = banco.gioca(CAMPAGNA[k], { seme: 7000 + s * 89 + k * 11, bravura, eroe, roba: robaAttesa(eroe, k), crescita: crescitaAttesa(eroe, k), come })
@@ -101,7 +145,29 @@ if (argv[0] === '--lavoro') {
       domande += g.esito.domande
       svenimenti += g.esito.svenimenti
     }
-    return { vinte, domande, svenimenti, pozioni, fini, scontri, abilita, turni, aperti, energiaIn, energiaMaxIn, partite: semi }
+    return { vinte, domande, svenimenti, ...n, partite: semi }
+  }
+
+  // i passi che il giocatore finto fa davvero (le celle percorse, senza i turni dello scontro): per piano, e per discesa intera
+  async function passiFatti({ eroe, k, semi, come, bravura }) {
+    const { CAMPAGNA } = await mod('dati/campagna.js')
+    const { robaAttesa, crescitaAttesa } = await mod('motore/storia.js')
+    let piani = 0, passi = 0, discese = 0
+    for (let s = 0; s < semi; s++) {
+      const g = banco.gioca(CAMPAGNA[k], { seme: 7000 + s * 89 + k * 11, bravura, eroe, roba: robaAttesa(eroe, k), crescita: crescitaAttesa(eroe, k), come })
+      const p = (g.passiPerPiano || []).filter(n => n != null)
+      piani += p.length; passi += p.reduce((a, b) => a + b, 0)
+      if (g.esito.vinta) discese++
+    }
+    return { piani, passi, discese, partite: semi }
+  }
+
+  // una strada (dati/strade.js) in una discesa: quante volte si arriva in fondo a ogni bravura, e com'è la discesa alla prima
+  // (domande, svenimenti, pozioni, vita a fine scontro, abilità e turni per scontro). `piu`: livelli sopra quello atteso
+  async function strada({ classe, nome, k, prove, semi, piu, punti, mani }) {
+    const n = await strumenta()
+    const r = banco.misuraLaStrada({ classe, nome, k, prove, semi, piu, punti, mani, allaPrima: () => { n.attivo = false } })
+    return { ...r, ...n }
   }
   process.exit(0)
 }
@@ -140,6 +206,7 @@ const OPZ = {
   eroeA: numeri('--eroe-a', null),
   fila: valore('--fila', 'minimo'),
   senzaAbilita: argv.includes('--senza-abilita'),
+  senzaPreparati: argv.includes('--senza-preparati'),
   tara: valore('--tara', ''),
   taraOra: valore('--tara', ''),
 }
@@ -152,7 +219,110 @@ async function misura(radice) {
   const discese = numeri('--discese', CAMP.map((_, k) => k))
   const nomi = discese.map(k => CAMP[k].chiave.slice(0, 7))
   const tabelle = []
-  const base = { radice, senzaAbilita: OPZ.senzaAbilita, tara: OPZ.taraOra }
+  const base = { radice, senzaAbilita: OPZ.senzaAbilita, senzaPreparati: OPZ.senzaPreparati, tara: OPZ.taraOra }
+
+  // `--numeri 1,5,12,20,30`: vita, difesa e attacco dell'eroe atteso a quei livelli, per eroe (docs/sotterraneo/livelli.md): quello
+  // che le quattro caratteristiche fanno alle classi. Con `--contro` sono «prima → dopo»
+  if (argv.includes('--numeri')) {
+    const { eroeAtteso } = await import(pathToFileURL(join(radice, SRC, 'motore/forza.js')).href)
+    const Ls = numeri('--numeri', [1, 5, 12, 20, 30])
+    const righe = []
+    for (const e of OPZ.eroi) {
+      const eroi = Ls.map(L => eroeAtteso(e, L))
+      righe.push({ titolo: `${e}: vita`, celle: eroi.map(c => c.vitaConLaRoba), numeri: true })
+      righe.push({ titolo: `${e}: difesa`, celle: eroi.map(c => c.dif), numeri: true })
+      righe.push({ titolo: `${e}: attacco`, celle: eroi.map(c => c.att), numeri: true })
+    }
+    return { intestazione: Ls.map(String), titolo: 'vita, difesa e attacco dell\'eroe atteso al livello', righe, numeri: true }
+  }
+
+  // `--strada mago`, `--strada mago:pura`, `--strada tutte`: le strade di una classe (dati/strade.js, docs/sotterraneo/strade.md) giocate
+  // discesa per discesa, ognuna con la sua roba, i suoi punti e il suo albero, a confronto: quante volte si arriva in fondo a ogni
+  // bravura, le domande, gli svenimenti e la vita che resta a fine scontro. `--livelli 0,5`: anche con l'eroe cinque livelli sopra
+  // quello atteso (dove le discese non sono più un muro e le strade si distinguono)
+  if (argv.includes('--strada')) {
+    const { STRADE } = await import(pathToFileURL(join(radice, SRC, 'dati/strade.js')).href)
+    const voce = valore('--strada')
+    const classi = voce === 'tutte' ? EROI : [voce.split(':')[0]]
+    const lavori = []
+    for (const classe of classi) for (const nome of Object.keys(STRADE[classe] || {})) {
+      if (voce.includes(':') && voce.split(':')[1] !== nome) continue
+      for (const piu of numeri('--livelli', [0])) for (const k of discese)
+        lavori.push({ ...base, che: 'strada', opz: { classe, nome, k, prove: OPZ.prove, semi: OPZ.semi, piu, punti: valore('--punti') ? valore('--punti').split(',') : null, mani: valore('--mani') }, classe, nome, k, piu })
+    }
+    if (!lavori.length) throw new Error(`nessuna strada «${voce}»: ${EROI.map(c => `${c}:${Object.keys(STRADE[c] || {}).join('|')}`).join(' ')}`)
+    // `--scheda`: com'è fatto l'eroe di ogni strada entrando in ogni discesa (arma, scudo, vita, difesa, attacco, schivata, energia,
+    // velocità), con i punti dati e l'albero speso come la strada li dà: niente partite
+    if (argv.includes('--scheda')) {
+      const { stradaDi, robaDellaStrada, crescitaDellaStrada } = await import(pathToFileURL(join(radice, SRC, 'motore/strade.js')).href)
+      const { Corredo } = await import(pathToFileURL(join(radice, SRC, 'motore/corredo.js')).href)
+      const { conLaStrada } = await import(pathToFileURL(join(radice, SRC, 'motore/abilita.js')).href)
+      const piu = numeri('--livelli', [0])[0]
+      const righe = []
+      for (const classe of classi) for (const nome of Object.keys(STRADE[classe])) {
+        if (voce.includes(':') && voce.split(':')[1] !== nome) continue
+        const st = stradaDi(classe, nome)
+        if (valore('--punti')) st.punti = valore('--punti').split(',')
+        const eroi = discese.map(k => {
+          const cr = crescitaDellaStrada(classe, st, k, piu)
+          const c = new Corredo({ eroe: classe, roba: robaDellaStrada(classe, st, k, { piu }), crescita: { ...conLaStrada(cr, classe, st.abilita), caselle: [null, null, null] } })
+          c.sistemaIlCorredo()
+          return c
+        })
+        const nomeDi = k => String(k || '-').split('@')[0].slice(0, 7)
+        righe.push({ titolo: `${classe}:${nome}: mano · mancina`, celle: eroi.map(c => `${nomeDi(c.mano)}/${nomeDi(c.mancina)}`), numeri: true })
+        for (const [campo, f] of [['vita', c => c.vitaConLaRoba], ['difesa', c => c.dif], ['attacco', c => c.att], ['schivata %', c => c.schivata],
+                                  ['energia', c => c.energiaMax], ['velocità', c => +c.velocita.toFixed(1)]])
+          righe.push({ titolo: `   ${campo}`, celle: eroi.map(f), numeri: true })
+      }
+      return { titolo: `l'eroe di ogni strada${piu ? ` (+${piu} livelli)` : ''} entrando in ogni discesa`, intestazione: nomi, righe, numeri: true, larga: 14 }
+    }
+    const r = await inParallelo(lavori)
+    // `--sintesi`: una riga per strada, la media delle discese: vittorie a ogni bravura, domande, svenimenti, vita a fine scontro
+    if (argv.includes('--sintesi')) {
+      const righe = []
+      for (const classe of classi) for (const piu of numeri('--livelli', [0])) for (const nome of Object.keys(STRADE[classe])) {
+        if (voce.includes(':') && voce.split(':')[1] !== nome) continue
+        const mie = lavori.map((l, i) => ({ l, r: r[i] })).filter(x => x.l.classe === classe && x.l.nome === nome && x.l.piu === piu).map(x => x.r)
+        const tot = f => mie.reduce((n, x) => n + f(x), 0)
+        righe.push({ titolo: `${classe}:${nome}${numeri('--livelli', [0]).length > 1 || piu ? ` (${piu > 0 ? '+' : ''}${piu})` : ''}`,
+          celle: [...OPZ.prove.map((_, j) => percento(tot(x => x.vinte[j]), mie.length * OPZ.semi)),
+                  Math.round(tot(x => x.domande) / (mie.length * OPZ.semi)), +(tot(x => x.svenimenti) / (mie.length * OPZ.semi)).toFixed(1),
+                  percento(tot(x => x.fini), tot(x => x.scontri) || 1)] })
+      }
+      return { titolo: `le strade, media delle discese (${OPZ.semi} partite per cella; vittorie %, domande e svenimenti per discesa a ${Math.round(OPZ.prove[0] * 10)}/10, vita % a fine scontro)`,
+               intestazione: [...OPZ.prove.map(b => `${Math.round(b * 10)}/10`), 'domande', 'svenim.', 'vita%'], righe, larga: 9, numeri: true }
+    }
+    const sub = []
+    for (const classe of classi) for (const piu of numeri('--livelli', [0])) {
+      const righe = []
+      for (const nome of Object.keys(STRADE[classe])) {
+        const mie = lavori.map((l, i) => ({ l, r: r[i] })).filter(x => x.l.classe === classe && x.l.nome === nome && x.l.piu === piu)
+        if (!mie.length) continue
+        const per = k => mie.find(x => x.l.k === k).r
+        OPZ.prove.forEach((b, j) => righe.push({ titolo: `${nome} a ${Math.round(b * 10)}/10`, celle: discese.map(k => percento(per(k).vinte[j], OPZ.semi)), media: true }))
+        righe.push({ titolo: `   domande (a ${Math.round(OPZ.prove[0] * 10)}/10)`, celle: discese.map(k => Math.round(per(k).domande / OPZ.semi)), numeri: true })
+        righe.push({ titolo: `   svenimenti`, celle: discese.map(k => +(per(k).svenimenti / OPZ.semi).toFixed(1)), numeri: true })
+        righe.push({ titolo: `   vita% a fine scontro`, celle: discese.map(k => percento(per(k).fini, per(k).scontri || 1)) })
+      }
+      sub.push({ titolo: `${classe}: le strade${piu ? ` (eroe ${piu > 0 ? '+' : ''}${piu} livelli)` : ''}, ${OPZ.semi} partite per cella`, intestazione: nomi, righe })
+    }
+    return { sub }
+  }
+
+  // `--armi`: l'attacco delle armi a una e a due mani nei tre gradini, a livello 1, 11 e 31 (docs/sotterraneo/roba.md, «Due mani»);
+  // con `--contro` «prima → dopo». Le basi che esistono a quel gradino e a quelle mani, per famiglia
+  if (argv.includes('--armi')) {
+    const { COSE, CHIAVI_COSE, chiaveDelPezzo } = await import(pathToFileURL(join(radice, SRC, 'dati/cose.js')).href)
+    const righe = []
+    for (const grado of [1, 2, 3]) for (const mani of [1, 2]) {
+      const basi = CHIAVI_COSE.filter(k => COSE[k].dove === 'mano' && COSE[k].grado === grado && (COSE[k].mani || 1) === mani)
+      if (!basi.length) continue
+      righe.push({ titolo: `gradino ${grado}, ${mani === 1 ? 'una mano' : 'due mani'} (${basi.join(' ')})`,
+                   celle: [1, 11, 31].map(L => COSE[chiaveDelPezzo ? chiaveDelPezzo(basi[0], L) : basi[0]].att), numeri: true })
+    }
+    return { intestazione: ['liv. 1', 'liv. 11', 'liv. 31'], titolo: 'l\'attacco di un\'arma a una e a due mani', righe, numeri: true, larga: 10 }
+  }
 
   if (argv.includes('--forza')) {
     const { livelloDiForza, eroeAtteso, rapporto } = await import(pathToFileURL(join(radice, SRC, 'motore/forza.js')).href)
@@ -174,20 +344,107 @@ async function misura(radice) {
     return { intestazione: Ls.map(String), titolo: 'forza dell\'eroe atteso al livello', righe: OPZ.eroi.map(e => ({ titolo: e, celle: Ls.map(L => livelloDiForza(eroeAtteso(e, L))) })), numeri: true }
   }
 
+  // `--turni`: la fila dei turni di ogni classe nelle discese, con l'eroe atteso a quel livello (docs/sotterraneo/scontro.md,
+  // «L'iniziativa»): la sua velocità, e quanti turni suoi seguono un altro turno suo (il doppio turno) contro un branco della
+  // discesa e contro il peggiore dei suoi mostri da solo. `--file`: invece, la fila dei primi turni di un branco, lettera per lettera
+  if (argv.includes('--turni')) {
+    const { eroeAtteso } = await import(pathToFileURL(join(radice, SRC, 'motore/forza.js')).href)
+    const { LIVELLI_ATTESI } = await import(pathToFileURL(join(radice, SRC, 'dati/storia.js')).href)
+    const { MOSTRI } = await import(pathToFileURL(join(radice, SRC, 'dati/mostri.js')).href)
+    const { fileGiocata } = await import(pathToFileURL(join(RADICE, SRC, 'motore/turni.js')).href)
+    const vel = k => CAMP[k].mostri.map(m => MOSTRI[m].velocita)
+    const branco = k => Array.from({ length: CAMP[k].tettoBranco }, (_, i) => vel(k)[i % vel(k).length])
+    const righe = []
+    for (const e of OPZ.eroi) {
+      const eroi = discese.map(k => eroeAtteso(e, LIVELLI_ATTESI[k]).velocita)
+      if (argv.includes('--file')) {
+        righe.push({ titolo: `${e} (velocità ${eroi.map(v => +v.toFixed(1)).join(' · ')})`, celle: discese.map((k, i) => fileGiocata(eroi[i], branco(k), 120, 22).fila) })
+        continue
+      }
+      righe.push({ titolo: `${e}: velocità`, celle: eroi.map(v => +v.toFixed(1)), numeri: true })
+      righe.push({ titolo: `${e}: doppi turni nel branco`, celle: discese.map((k, i) => Math.round(fileGiocata(eroi[i], branco(k)).doppi * 100)) })
+      righe.push({ titolo: `${e}: doppi turni, il peggiore da solo`, celle: discese.map((k, i) => Math.round(Math.max(...vel(k).map(v => fileGiocata(eroi[i], [v]).doppi)) * 100)) })
+    }
+    if (argv.includes('--file')) return { intestazione: nomi, titolo: 'la fila dei primi turni di un branco (E l\'eroe, m un mostro)', righe, numeri: true, larga: 24 }
+    return { intestazione: nomi, titolo: 'la fila dei turni: velocità dell\'eroe atteso e doppi turni (% dei turni suoi dopo un altro suo)', righe }
+  }
+
+  // `--costi`: l'energia delle abilità, classe per classe e riga per riga (docs/sotterraneo/abilita.md, «L'energia»): il globo che
+  // l'eroe atteso ha al livello della riga, quanto costa un'abilità di quella riga (al primo grado) e quante se ne lanciano col globo
+  // pieno
+  if (argv.includes('--costi')) {
+    const { eroeAtteso } = await import(pathToFileURL(join(radice, SRC, 'motore/forza.js')).href)
+    const { RAMI, GRADINI, LIVELLI_PER_GRADO, costoAl } = await import(pathToFileURL(join(radice, SRC, 'dati/abilita.js')).href)
+    const righe = []
+    for (const e of OPZ.eroi) {
+      const nodo = riga => RAMI[e].flatMap(r => r.nodi).find(x => x.riga === riga && !x.sempre)   // una riga di sole passive non costa
+      const costo = (riga, g) => (nodo(riga) ? (costoAl && g > 1 ? costoAl({ ...nodo(riga), classe: e }, g) : nodo(riga).costo) : '-')
+      const globo = (riga, g) => eroeAtteso(e, GRADINI[riga] + (g - 1) * LIVELLI_PER_GRADO).energiaMax
+      const lanci = (riga, g) => (nodo(riga) ? +(globo(riga, g) / costo(riga, g)).toFixed(1) : '-')
+      righe.push({ titolo: `${e}: globo`, celle: GRADINI.map((_, r) => globo(r, 1)), numeri: true })
+      righe.push({ titolo: `${e}: costo`, celle: GRADINI.map((_, r) => costo(r, 1)), numeri: true })
+      righe.push({ titolo: `${e}: lanci col globo pieno`, celle: GRADINI.map((_, r) => lanci(r, 1)), numeri: true })
+      // al terzo grado (quattro livelli più su): il globo è cresciuto, e il costo con lui
+      righe.push({ titolo: `${e}: costo al grado 3`, celle: GRADINI.map((_, r) => costo(r, 3)), numeri: true })
+      righe.push({ titolo: `${e}: lanci al grado 3`, celle: GRADINI.map((_, r) => lanci(r, 3)), numeri: true })
+    }
+    return { intestazione: GRADINI.map((L, r) => `riga ${r} (L${L})`), titolo: 'l\'energia attesa e il costo delle abilità per riga', righe, numeri: true, larga: 14 }
+  }
+
+  // `--passi`: i passi del giocatore finto per piano e per discesa, dritto alla scala (minimo) e girando ogni cosa che vale (tutto), e
+  // quanto globo di mana ridanno (docs/sotterraneo/orologio.md). Solo le discese vinte contano per «discesa intera»
+  if (argv.includes('--passi')) {
+    const { MANA_PER_PASSO } = await import(pathToFileURL(join(radice, SRC, 'dati/mondo.js')).href)
+    const lavori = []
+    for (const come of ['minimo', 'tutto']) for (const eroe of OPZ.eroi) for (const k of discese) lavori.push({ ...base, che: 'passi', opz: { eroe, k, semi: OPZ.semi, come, bravura: OPZ.prove[0] }, come, k })
+    const r = await inParallelo(lavori)
+    const somma = (come, k, f) => lavori.reduce((n, l, x) => (l.come === come && l.k === k ? n + r[x][f] : n), 0)
+    const righe = []
+    for (const come of ['minimo', 'tutto']) {
+      const piano = discese.map(k => Math.round(somma(come, k, 'passi') / (somma(come, k, 'piani') || 1)))
+      righe.push({ titolo: `${come === 'minimo' ? 'dritto' : 'giro'}: passi per piano`, celle: piano, numeri: true })
+      righe.push({ titolo: `   di globo per piano (%)`, celle: piano.map(n => Math.round(n * MANA_PER_PASSO * 100)), numeri: true })
+      righe.push({ titolo: `   passi per discesa`, celle: discese.map(k => Math.round(somma(come, k, 'passi') / (OPZ.eroi.length * OPZ.semi))), numeri: true })
+    }
+    return { intestazione: nomi, titolo: `i passi che il giocatore finto fa davvero (${OPZ.eroi.length * OPZ.semi} partite a discesa, bravura ${OPZ.prove[0] * 10}/10)`, righe, numeri: true }
+  }
+
+  // `--domande`: le domande obbligate per discesa e per piano rispondendo sempre giusto, dritto alla scala (minimo) e girando tutto, per
+  // eroe e in media (il tetto è 85 a seduta: docs/sotterraneo/piani.md, «Il costo in domande»); `--semi` quanti semi
+  if (argv.includes('--domande')) {
+    const lavori = []
+    for (const eroe of OPZ.eroi) for (const k of discese) lavori.push({ ...base, che: 'domande', opz: { eroe, k, semi: OPZ.semi }, eroe, k })
+    const r = await inParallelo(lavori)
+    const di = (eroe, k) => r[lavori.findIndex(l => l.eroe === eroe && l.k === k)]
+    const righe = []
+    for (const come of ['minimo', 'tutto']) {
+      const tot = come === 'minimo' ? 'totMinimo' : 'totTutto'
+      for (const eroe of OPZ.eroi) righe.push({ titolo: `${come}: ${eroe}`, celle: discese.map(k => Math.round(di(eroe, k)[tot] / OPZ.semi)), numeri: true })
+      righe.push({ titolo: `${come}: media`, celle: discese.map(k => Math.round(OPZ.eroi.reduce((n, e) => n + di(e, k)[tot], 0) / (OPZ.eroi.length * OPZ.semi))), numeri: true })
+      righe.push({ titolo: `${come}: per piano (media)`, celle: discese.map(k => {
+        const n = Math.max(...OPZ.eroi.map(e => di(e, k)[come].length))
+        return Array.from({ length: n }, (_, i) => Math.round(OPZ.eroi.reduce((a, e) => a + (di(e, k)[come][i] || 0), 0) / (OPZ.eroi.length * OPZ.semi))).join('·')
+      }), numeri: true })
+    }
+    righe.push({ titolo: 'dritto: discese vinte (%)', celle: discese.map(k => percento(OPZ.eroi.reduce((n, e) => n + di(e, k).vinte, 0), OPZ.eroi.length * OPZ.semi)) })
+    return { titolo: `domande obbligate rispondendo sempre giusto (${OPZ.semi} semi, roba di chi ci arriva andando dritto)`, intestazione: nomi, righe, numeri: true, larga: 16 }
+  }
+
   if (argv.includes('--diag')) {
     const lavori = []
     for (const eroe of OPZ.eroi) for (const k of discese) lavori.push({ ...base, che: 'diag', opz: { eroe, k, bravura: OPZ.prove[0], semi: OPZ.semi, come: OPZ.come } })
     const r = await inParallelo(lavori)
     const righe = discese.map((k, i) => {
       const mie = r.filter((_, j) => lavori[j].opz.k === k)
-      const s = f => mie.reduce((n, x) => n + x[f], 0)
+      const s = f => mie.reduce((n, x) => n + (x[f] || 0), 0)
       const part = s('partite')
       return { titolo: nomi[i], celle: [percento(s('vinte'), part), Math.round(s('domande') / part), +(s('svenimenti') / part).toFixed(1), +(s('pozioni') / part).toFixed(1),
                                        percento(s('fini'), s('scontri') || 1), +(s('abilita') / (s('scontri') || 1)).toFixed(2), +(s('turni') / (s('scontri') || 1)).toFixed(1),
-                                       +(s('energiaIn') / (s('aperti') || 1)).toFixed(1), percento(s('energiaIn'), s('energiaMaxIn') || 1)] }
+                                       +(s('energiaIn') / (s('aperti') || 1)).toFixed(1), percento(s('energiaIn'), s('energiaMaxIn') || 1),
+                                       +((s('preparati') || 0) / part).toFixed(1), percento(s('ceLHo') || 0, s('aperti') || 1)] }
     })
     return { titolo: `a ${OPZ.prove[0] * 10}/10 (${OPZ.eroi.length * OPZ.semi} partite a discesa)`,
-             intestazione: ['vinte%', 'domande', 'svenim.', 'pozioni', 'vita%fine', 'abil/sc', 'turni/sc', 'en.in', 'en%in'], righe, numeri: true, perRiga: true }
+             intestazione: ['vinte%', 'domande', 'svenim.', 'pozioni', 'vita%fine', 'abil/sc', 'turni/sc', 'en.in', 'en%in', 'prep/disc', 'sc.con%'], righe, numeri: true, perRiga: true }
   }
 
   if (OPZ.zone) {
@@ -308,15 +565,14 @@ async function misura(radice) {
       if (sei < 0.3 || sei > (k === 1 ? 1 : 0.8)) male.push(`${dove} 6/10 media ${Math.round(sei * 100)}%`)
       // il primo avvio: la scalinata a mani nude (la roba di una discesa prima) a 8/10, in media e a testa
       if (k === 1) {
-        if (v(-1, 0, 1) < 0.5) male.push(`${dove} nuda 8/10 ${Math.round(v(-1, 0, 1) * 100)}%`)
-        for (const e of OPZ.eroi) if (v(-1, 0, 1, e) < 0.3) male.push(`${dove} ${e.slice(0, 3)} nuda ${Math.round(v(-1, 0, 1, e) * OPZ.semi)}`)
+        if (v(-1, 0, 1) < 0.1) male.push(`${dove} nuda 8/10 ${Math.round(v(-1, 0, 1) * 100)}%`)
       }
       if (k >= 3 && v(-1, 0, k) < 0.5) male.push(`${dove} una prima 8/10 ${Math.round(v(-1, 0, k) * 100)}%`)
       if (v(-1, 1, k) > sei + 0.15) male.push(`${dove} una prima 6/10 sopra l'attesa`)
       if (k >= 2 && v(2, 2, k) > 0.7) male.push(`${dove} due avanti 4/10 ${Math.round(v(2, 2, k) * 100)}%`)
       if (v('L-2', 0, k) < 0.5) male.push(`${dove} livello −2 8/10 ${Math.round(v('L-2', 0, k) * 100)}%`)
       if (v('L-2', 1, k) > sei) male.push(`${dove} livello −2 6/10 sopra l'attesa`)
-      if (v('L+3', 2, k) > 0.9) male.push(`${dove} livello +3 4/10 ${Math.round(v('L+3', 2, k) * 100)}%`)
+      if (v('L+3', 2, k) > (k === 1 ? 0.98 : 0.9)) male.push(`${dove} livello +3 4/10 ${Math.round(v('L+3', 2, k) * 100)}%`)
     }
     return { verdetto: male }
   }
@@ -325,6 +581,7 @@ async function misura(radice) {
 
 /* ═══════════ la stampa ═══════════ */
 function stampa(t, prima = null) {
+  if (t.sub) { t.sub.forEach((x, i) => { if (i) console.log(''); stampa(x, prima && prima.sub ? prima.sub[i] : null) }); return }
   if (t.verdetto) { console.log(t.verdetto.length ? `KO (${t.verdetto.length}): ${t.verdetto.join(' · ')}` : 'OK'); return }
   const media = c => Math.round(c.reduce((a, b) => a + b, 0) / c.length)
   const cella = (x, y) => (y == null ? String(x) : `${y}→${x}`)

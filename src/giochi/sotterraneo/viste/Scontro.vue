@@ -7,6 +7,7 @@
 import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
 import { CIECA } from '../../pausa.js'
 import { PEZZI } from '../dati/atlante.js'
+import { scalaDelGrosso, figuraDelGrosso } from '../dati/grossi.js'
 import { scalaDelMostro, piazza, SCALA_FIGURE } from './campo.js'
 import Icona from './Icona.vue'
 import Grosso from './Grosso.vue'
@@ -25,6 +26,7 @@ const props = defineProps({
   palco: { type: Object, default: () => ({}) },   // lo scenario vero: { pavimento, faccia, roccia }
   eroe: { type: Object, default: () => ({}) },   // { sprite, em, vita, vitaMax }
   mie: { type: Array, default: () => [] },     // cosa protegge l'eroe in questo scontro (scudo, parato…)
+  incanti: { type: Array, default: () => [] },   // gli incanti preparati addosso, coi passi che restano (viste/campo.js, incantiAddosso)
   fx: { type: Object, required: true },        // il racconto di adesso (viste/racconto.js)
 })
 const emit = defineEmits(['bersaglio', 'accorcia'])
@@ -53,7 +55,8 @@ const piano = computed(() => piazza(props.posti, props.mostri, larg.value))
 // il compagno dell'eroe non c'è ancora: il suo posto non si disegna, e l'eroe sta a metà del pavimento (viste/campo.js, `piazza`)
 const compagno = false
 const scalaM = (m, k) => scalaDelMostro(m.tipo, PEZZI[m.sprite] ? PEZZI[m.sprite][3] : 16, Math.round(scala.value * piano.value.mostri[k].prof * 4) / 4)
-const scalaGrosso = computed(() => scala.value + 1)   // il grosso un passo sopra: è il re della stanza
+// il grosso sta nella sua scatola (1,9 eroi di altezza, 3 di larghezza: dati/grossi.js), non a un passo intero sopra gli altri
+const scalaGrosso = chi => scalaDelGrosso(chi, scala.value)
 const stretto = computed(() => larg.value < 340)   // a 320 px la riga della minaccia si accorcia
 const barra = computed(() => (quanti.value === 1 ? 72 : 56))
 // il punto dei piedi di un mostro e l'ordine in cui si disegna (chi sta più in basso sta davanti)
@@ -62,6 +65,13 @@ const postoDi = k => ({ '--x': piano.value.mostri[k].x + 'px', '--y': piano.valu
 /* ── cosa si vede di ognuno: durante il racconto le ossa e i caduti sono quelli di quel momento, non ancora quelli veri ── */
 const ossaDi = m => (props.fx.attivo && props.fx.ossa[m.i] != null ? props.fx.ossa[m.i] : m.ossa)
 const mortoDi = m => (props.fx.attivo ? !!props.fx.morti[m.i] : m.morto)
+// come cade: i pezzi `<nome>-morto-<i>` dell'atlante (uno o due, docs/core/creature.md); chi non li ha svanisce in piedi, e il grosso pure
+const restiDi = m => {
+  if (m.grosso || !m.sprite) return []
+  const base = m.sprite.replace(/-(fermo|corsa)-\d+$/, '')
+  return [0, 1].map(i => `${base}-morto-${i}`).filter(n => PEZZI[n])
+}
+const aTerra = m => mortoDi(m) && restiDi(m).length > 0
 const effettoDi = chi => props.fx.effetto[chi]
 const classeFx = chi => (effettoDi(chi) ? 'sot-fx-' + effettoDi(chi).tipo : '')
 const chiaveFx = chi => chi + '-' + (effettoDi(chi) ? effettoDi(chi).n : 0)
@@ -72,7 +82,11 @@ const soloMiaUna = computed(() => props.mostri.filter(m => m.colpito).length > 1
 const statiDi = m => (props.fx.attivo && props.fx.stati[m.i] ? props.fx.stati[m.i] : m.stati)
 const addosso = m => statiDi(m).map(x => 'sot-addosso-' + (x.fuoco ? 'fuoco' : x.gelo ? 'gelo' : x.chiave === 'debole' ? 'fiacco' : x.chiave))
 // quanto è larga la figura (le stelle dello stordito girano in proporzione)
-const largoDi = (m, k) => (m.grosso ? 32 * scalaGrosso.value : (PEZZI[m.sprite] ? PEZZI[m.sprite][2] : 16) * scalaM(m, k))
+const largoDi = (m, k) => {
+  if (!m.grosso) return (PEZZI[m.sprite] ? PEZZI[m.sprite][2] : 16) * scalaM(m, k)
+  const f = figuraDelGrosso(m.grosso), p = f && PEZZI[`${f.sprite}-fermo-0`]
+  return (p ? p[2] : 32) * scalaGrosso(m.grosso)
+}
 const protetto = computed(() => props.mie.some(x => ['parato', 'scudo'].includes(x.chiave)))
 const diPietra = computed(() => props.mie.some(x => x.chiave === 'intoccabile'))
 const specchiato = computed(() => props.mie.some(x => x.chiave === 'specchio'))
@@ -130,7 +144,7 @@ function punto(chi) {
       <!-- i mostri: colonne sul pavimento, sfalsati; il grosso davanti e al centro (viste/campo.js, `piazza`) -->
       <div class="sot-schiera" data-campo>
         <button v-for="(m, k) in mostri" :key="m.i" type="button" class="sot-m"
-                :class="{ 'sot-morto': mortoDi(m), 'sot-m-grosso': m.grosso, 'sot-bersaglio': pulita(m) && m.bersaglio,
+                :class="{ 'sot-morto': mortoDi(m), 'sot-a-terra': aTerra(m), 'sot-m-grosso': m.grosso, 'sot-bersaglio': pulita(m) && m.bersaglio,
                           'sot-colpito-da-me': pulita(m) && m.colpito && soloMiaUna }"
                 :style="[postoDi(k), { '--f': m.colpito }]" :aria-label="m.nome" :disabled="mortoDi(m)"
                 data-mostro :data-variante="m.variante" :data-grado="m.grado" :data-colpisce="m.colpisce" :data-salta="m.salta ? '' : null" :data-i="m.i" :data-tipo="m.tipo" :data-nome="m.nome" :data-grande="m.grosso || null"
@@ -138,12 +152,15 @@ function punto(chi) {
                 :data-morto="mortoDi(m) ? '' : null" :data-porta-chiave="m.chiave ? '' : null" @click.stop="tocca(m)">
           <span :ref="el => { elC[m.i] = el }" class="sot-m-corpo">
             <i class="sot-ombra" :style="{ width: Math.round(largoDi(m, k) * 1.25) + 'px' }" aria-hidden="true"></i>
-            <span v-if="!m.grosso" class="sot-m-nome" :class="m.grado && ['sot-grado', 'sot-grado-' + m.grado]" data-nome-mostro :data-grado="m.grado">{{ m.etichetta }}</span>
+            <span v-if="!m.grosso && !mortoDi(m) && (m.grado || m.bersaglio)" class="sot-m-nome" :class="m.grado && ['sot-grado', 'sot-grado-' + m.grado]" data-nome-mostro :data-grado="m.grado">{{ m.etichetta }}</span>
             <span :key="chiaveFx(m.i)" class="sot-figura sot-m-fig" :class="[classeFx(m.i), m.grado && 'sot-grado-' + m.grado]">
               <span class="sot-corpo">
                 <span class="sot-respira" :class="addosso(m)">
-                  <Grosso v-if="m.grosso" :chi="m.grosso" :scala="scalaGrosso" />
-                  <Creatura v-else :sprite="m.sprite" :em="m.em" :scala="scalaM(m, k)" :emAlto="48" :tipo="m.tipo" :arma="m.arma" />
+                  <Grosso v-if="m.grosso" :chi="m.grosso" :scala="scala" />
+                  <template v-else>
+                    <Creatura :class="aTerra(m) && 'sot-resti-a'" :sprite="aTerra(m) ? restiDi(m)[0] : m.sprite" :em="m.em" :scala="scalaM(m, k)" :emAlto="48" :tipo="m.tipo" :arma="aTerra(m) ? null : m.arma" />
+                    <Creatura v-if="aTerra(m) && restiDi(m)[1]" class="sot-resti-b" :sprite="restiDi(m)[1]" :em="m.em" :scala="scalaM(m, k)" :emAlto="48" :tipo="m.tipo" />
+                  </template>
                 </span>
               </span>
             </span>
@@ -168,7 +185,7 @@ function punto(chi) {
         </button>
       </div>
 
-      <FilaDeiTurni :turni="fx.fila || turni" :mostri="mostri" :eroe="eroe" />
+      <FilaDeiTurni :turni="fx.fila || turni" :mostri="mostri" :eroe="eroe" :incanti="incanti" />
 
       <!-- gli effetti dell'abilità: quello che vola, cade, esce dal pavimento (viste/Scene.vue) -->
       <Scene :scene="fx.scene" :punto="punto" :larg="larg" />
@@ -178,7 +195,7 @@ function punto(chi) {
     </div>
 
     <div v-if="mie.length" class="sot-stati-mie em" data-stati-eroe>
-      <span v-for="x in mie" :key="x.chiave" :data-stato="x.chiave"><Glifo :nome="x.glifo" :misura="14" /> {{ x.dice }}</span>
+      <span v-for="x in mie" :key="x.chiave" :data-stato="x.chiave" :data-preparato="x.preparato || null" :data-passi="x.passi || null"><Glifo :nome="x.glifo" :misura="14" /> {{ x.dice }}</span>
     </div>
   </div>
 </template>

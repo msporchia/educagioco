@@ -6,13 +6,13 @@
    stordito, la parata, il Grido a tutti, il primo tiro con l'arco, l'ultimo fiato, l'energia nella sosta.
    Gli effetti si contano nei turni di chi li porta (docs/sotterraneo/scontro.md).
    `node test/esegui.mjs sotterraneo-abilita --niente-build` */
-import { RAMI, NODI, ENERGIA, ENERGIA_DI_PARTENZA_MINIMA, CASELLE_ABILITA, GRADINI, COSTO_DEL_GRADINO, guastiDelleAbilita } from '../../src/giochi/sotterraneo/dati/abilita.js'
+import { RAMI, NODI, ENERGIA, ENERGIA_DI_PARTENZA_MINIMA, CASELLE_ABILITA, GRADINI, costoAl, costoDelGradino, globoAtteso, lanciDellaRiga, guastiDelleAbilita } from '../../src/giochi/sotterraneo/dati/abilita.js'
 import { EROI } from '../../src/giochi/sotterraneo/dati/eroi.js'
 import { sogliaDi } from '../../src/giochi/sotterraneo/dati/livelli.js'
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { SORSO } from '../../src/giochi/sotterraneo/dati/mondo.js'
 import { puntiAbilita, perchéNonImpari, impara, caselleDella, metti } from '../../src/giochi/sotterraneo/motore/abilita.js'
-import { rileggiCrescita } from '../../src/giochi/sotterraneo/motore/crescita.js'
+import { rileggiCrescita, crescitaA } from '../../src/giochi/sotterraneo/motore/crescita.js'
 import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
 import { seminato } from '../../src/giochi/sotterraneo/motore/livello.js'
 import { scrivi, leggi } from '../../src/giochi/sotterraneo/motore/sosta.js'
@@ -20,7 +20,7 @@ import { GLIFI } from '../../src/giochi/sotterraneo/viste/glifi.js'
 import { controlla, uguale, stessaLista, riassunto } from '../aiuto/verifica.mjs'
 
 const roba = (mano = null, mancina = null) => ({ v: 1, gemme: 0, zaino: [], mano, mancina, corpo: null, dito: null, torcia: 0, torce: 0 })
-// `intelligenza`: i punti messi nel globo blu, per le abilità alte (costano 8, 11 e 16; il cavaliere e il nano hanno 10 di energia)
+// `intelligenza`: i punti messi nel globo blu, per le abilità alte (l'ultima riga costa tutto il globo che la classe ha al 12)
 const conAlbero = (livello, albero, intelligenza = 0) => ({ esp: sogliaDi(livello), albero, intelligenza, caselle: Object.keys(albero).filter(id => !NODI[id].sempre).slice(0, 3) })
 
 // uno scontro con un mostro fatto a mano: i conti si leggono senza il caso del bestiario. Solo lui in campo, sveglio, e veloce
@@ -42,7 +42,7 @@ function scontro(eroe, crescita, mano = null, mancina = null, mostro = {}) {
   // sette nodi per ramo, in cinque righe: uno, uno, due, due, uno (nelle righe da due si sceglie)
   for (const [chi, rami] of Object.entries(RAMI)) for (const r of rami) {
     uguale(`${chi}/${r.chiave}: sette nodi in cinque righe (1,1,2,2,1)`, GRADINI.map((_, i) => r.nodi.filter(x => x.riga === i).length).join(), '1,1,2,2,1')
-    controlla(`${chi}/${r.chiave}: ogni abilità costa quanto la sua riga`, r.nodi.every(x => x.sempre || x.costo === COSTO_DEL_GRADINO[x.riga]))
+    controlla(`${chi}/${r.chiave}: ogni abilità costa quanto la sua riga, per la sua classe`, r.nodi.every(x => x.sempre || (x.costo > 0 && x.costo === costoDelGradino(chi, x.riga))))
     controlla(`${chi}/${r.chiave}: la prima riga si usa e il resto ha una passiva o due`, !r.nodi[0].sempre && r.nodi.some(x => x.sempre) && r.nodi.some(x => !x.sempre && x.riga > 0))
   }
   uguale('ventotto nodi per classe', EROI.map(e => RAMI[e.chiave].reduce((n, r) => n + r.nodi.length, 0)).join(), '28,28,28,28')
@@ -125,10 +125,30 @@ function scontro(eroe, crescita, mano = null, mancina = null, mostro = {}) {
 
 /* ══════════ 3. l'energia ══════════ */
 {
-  // i costi crescono in fretta con la riga; solo la difesa del primo gradino sta sotto l'energia di partenza di tutti
-  controlla('il costo cresce a ogni riga', COSTO_DEL_GRADINO.every((x, k) => k === 0 || x > COSTO_DEL_GRADINO[k - 1]), COSTO_DEL_GRADINO.join(' · '))
-  controlla('l\'ultima riga costa più del triplo della prima', COSTO_DEL_GRADINO[4] >= COSTO_DEL_GRADINO[0] * 3, COSTO_DEL_GRADINO.join(' · '))
-  controlla('il primo gradino costa meno dell\'energia di partenza di tutti', COSTO_DEL_GRADINO[0] < ENERGIA_DI_PARTENZA_MINIMA)
+  // il costo si ricava dal globo della classe (l'utente, 13 ottobre: «il mago può avere costi diversi da quelli del cavaliere»):
+  // col globo pieno le abilità normali si lanciano tanto più spesso quanto più mana ha la classe, e l'ultima riga una volta sola
+  const lanci = (e, r, L = GRADINI[r]) => globoAtteso(e, L) / costoDelGradino(e, r, L)
+  for (const e of EROI) {
+    const costi = GRADINI.map((_, r) => costoDelGradino(e.chiave, r))
+    controlla(`${e.chiave}: salendo di riga il costo non scende`, costi.every((x, k) => !k || x >= costi[k - 1]), costi.join(' · '))
+    controlla(`${e.chiave}: l'ultima costa più delle altre`, costi[4] > costi[3] * 1.5, costi.join(' · '))
+    controlla(`${e.chiave}: il primo gradino costa meno dell'energia di partenza di tutti`, costi[0] < ENERGIA_DI_PARTENZA_MINIMA, costi.join(' · '))
+    GRADINI.slice(0, 4).forEach((_, r) => controlla(`${e.chiave}: la riga ${r} si lancia circa ${lanciDellaRiga(e.chiave, r)} volte col globo pieno`,
+      Math.abs(lanci(e.chiave, r) - lanciDellaRiga(e.chiave, r)) <= 0.2 * lanciDellaRiga(e.chiave, r), lanci(e.chiave, r).toFixed(2)))
+    controlla(`${e.chiave}: l'ultima si lancia una volta sola`, lanci(e.chiave, 4) >= 1 && lanci(e.chiave, 4) < 1.05, lanci(e.chiave, 4).toFixed(2))
+  }
+  controlla('il mago lancia dalle sei alle sette normali, il cavaliere due o tre', [0, 1, 2].every(r => lanci('mago', r) >= 5.5 && lanci('mago', r) <= 7.5 && lanci('cavaliere', r) >= 2 && lanci('cavaliere', r) <= 3.5),
+            [0, 1, 2].map(r => `${lanci('mago', r).toFixed(1)}/${lanci('cavaliere', r).toFixed(1)}`).join(' '))
+  controlla('il mago paga di più, e lancia di più, del cavaliere', [0, 2, 3].every(r => costoDelGradino('mago', r) > costoDelGradino('cavaliere', r) && lanci('mago', r) > lanci('cavaliere', r) + 1))
+  // il grado alza il livello che serve, e il globo con lui: il mago paga di più per un'abilità migliorata, il cavaliere (globo fermo) no
+  controlla('al terzo grado il mago paga di più', costoAl(NODI['dardo-di-fuoco'], 3) > costoAl(NODI['dardo-di-fuoco'], 1), `${costoAl(NODI['dardo-di-fuoco'], 1)} → ${costoAl(NODI['dardo-di-fuoco'], 3)}`)
+  uguale('al terzo grado il cavaliere paga uguale', costoAl(NODI.fendente, 3), costoAl(NODI.fendente, 1))
+  uguale('e la passiva non costa', costoAl(NODI.filo, 2), 0)
+  // il globo atteso è quello dell'eroe che il banco fa crescere (senza i nodi che lo alzano)
+  for (const e of EROI) for (const L of [2, 6, 12, 20]) {
+    const vero = scontro(e.chiave, crescitaA(e, L), null).c.energiaMax
+    uguale(`${e.chiave} al livello ${L}: il globo atteso è quello vero`, globoAtteso(e.chiave, L), vero)
+  }
   // il mago è il mago del mana: due punti di energia per punto di intelligenza
   const pozzo = e => scontro(e, conAlbero(1, {}), null).c.energiaMax
   uguale('il cavaliere parte da dieci', pozzo('cavaliere'), 10)
@@ -181,12 +201,12 @@ function scontro(eroe, crescita, mano = null, mancina = null, mostro = {}) {
   c.guadagna(5000)
   controlla('salendo di livello l\'energia non si riempie', c.energia === 5 && c.livelloEroe > 3, `${c.energia}`)
   // e un'abilità che non starebbe nemmeno nel globo pieno lo dice (ci vogliono punti in intelligenza), una che manca soltanto no
-  const { c: k } = scontro('cavaliere', conAlbero(12, { 'colpo-furioso': 1, macello: 1 }), 'spada')
-  controlla('il Macello costa 11 e il cavaliere ha 10: serve più energia', k.perchéNonUsi('macello') === 'serve più energia', k.perchéNonUsi('macello'))
+  const { c: k } = scontro('mago', conAlbero(12, { 'dardo-di-fuoco': 1, 'palla-di-fuoco': 1 }), 'verga')
+  controlla('la Meteora costa tutto il globo che il mago ha al 12: senza i suoi punti in intelligenza serve più energia', k.perchéNonUsi('palla-di-fuoco') === 'serve più energia', k.perchéNonUsi('palla-di-fuoco'))
   k.energia = 1
-  controlla('il colpo furioso gli manca soltanto', k.perchéNonUsi('colpo-furioso') === 'poca energia', k.perchéNonUsi('colpo-furioso'))
-  const { c: kk } = scontro('cavaliere', conAlbero(12, { 'colpo-furioso': 1, macello: 1 }, 1), 'spada')
-  controlla('con un punto in intelligenza (13 di energia) il Macello si può preparare', kk.prepara('macello'))
+  controlla('il dardo di fuoco gli manca soltanto', k.perchéNonUsi('dardo-di-fuoco') === 'poca energia', k.perchéNonUsi('dardo-di-fuoco'))
+  const { c: kk } = scontro('mago', { ...crescitaA(EROI.find(e => e.chiave === 'mago'), 12), albero: { 'dardo-di-fuoco': 1, 'palla-di-fuoco': 1 }, caselle: ['dardo-di-fuoco', 'palla-di-fuoco', null] }, 'verga')
+  controlla('coi punti in intelligenza che il banco gli dà il globo la paga tutta, una volta', kk.prepara('palla-di-fuoco') && kk.costoDi(NODI['palla-di-fuoco']) === kk.energiaMax, `${kk.costoDi(NODI['palla-di-fuoco'])} su ${kk.energiaMax}`)
 }
 
 /* ══════════ 4. lo scontro ══════════ */

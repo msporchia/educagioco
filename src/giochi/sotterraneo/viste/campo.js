@@ -6,6 +6,7 @@ import { ELEMENTI, STATI } from '../dati/elementi.js'
 import { SCENARI, SCENARIO, pezzoAndante } from '../dati/tessere.js'
 import { fotogrammaDi, quantiFotogrammi } from '../dati/fotogrammi.js'
 import { coloreDelGrado, etichettaDi } from '../dati/varianti.js'
+import { NODI, RAMI } from '../dati/abilita.js'
 
 // «2 turni»: una risposta è un turno (le righe dell'albero parlano così, dati/abilita.js)
 export const turniDi = n => `${n} ${n === 1 ? 'turno' : 'turni'}`
@@ -50,9 +51,34 @@ export function segniDel(colpito) {
   return s
 }
 
-// e cosa protegge l'eroe in questo scontro (scudo, parato…): le pastiglie col testo, una per effetto
-export function statiMiei(io) {
-  return [
+// Gli incanti preparati dal campo e ancora addosso (motore/preparati.js), come li vede la barra e la fila dei turni: l'icona del suo ramo
+// e i passi che restano, che scendono camminando e, nello scontro, di PASSI_PER_TURNO a turno. `c`: la corsa
+export function incantiAddosso(c) {
+  return (c.preparati || []).map(p => {
+    const nodo = NODI[p.id], ramo = (RAMI[nodo.classe] || []).find(r => r.chiave === nodo.ramo)
+    return { id: p.id, nome: nodo.nome, glifo: nodo.glifo, tinta: ramo ? ramo.tinta : '#ffd23f', passi: Math.ceil(p.passi), dura: c.passiDi(nodo) }
+  })
+}
+
+// Quello che protegge l'eroe da un incanto preparato dal campo (motore/preparati.js), nella forma delle pastiglie dello scontro: la
+// stessa chiave dell'effetto (la vista li disegna uguali) e in fondo i passi che restano. Il debole di Rovi e del Grido parte con lo
+// scontro e sta già sui mostri
+function statiDeiPreparati(c) {
+  return (c.preparati || []).map(p => {
+    const nodo = NODI[p.id], passi = Math.ceil(p.passi)
+    const chiave = nodo.intoccabile != null ? 'intoccabile' : nodo.specchio != null ? 'specchio' : nodo.scudo != null ? 'scudo' : nodo.parato != null ? 'parato' : nodo.linfa != null ? 'linfa' : null
+    if (!chiave) return null
+    const glifo = { intoccabile: 'montagna', specchio: 'specchio', scudo: 'sfera', parato: 'scudo', linfa: 'germoglio' }[chiave]
+    const dice = { intoccabile: 'invulnerabile', specchio: 'il prossimo colpo torna al mostro', scudo: `barriera: para ${p.assorbe} danni`, parato: 'protetto dai danni',
+                   linfa: `guarisci di ${Math.max(1, Math.round(c.vitaMax / 10))} a turno · ${turniDi(p.tick)}` }[chiave]
+    return { chiave, glifo, dice: `${dice} · ${passi} passi`, passi, preparato: p.id }
+  }).filter(Boolean)
+}
+
+// e cosa protegge l'eroe in questo scontro (scudo, parato…): le pastiglie col testo, una per effetto, prima quelle dello scontro e poi
+// gli incanti preparati addosso (`c`: la corsa)
+export function statiMiei(io, c = null) {
+  const dello = [
     io.parato > 0 ? { chiave: 'parato', glifo: 'scudo', dice: `protetto dai danni · ${turniDi(io.parato)}` } : null,
     io.scudo > 0 ? { chiave: 'scudo', glifo: 'sfera', dice: `barriera: para ${io.scudo} danni` } : null,
     io.intoccabile > 0 ? { chiave: 'intoccabile', glifo: 'montagna', dice: `invulnerabile · ${turniDi(io.intoccabile)}` } : null,
@@ -60,6 +86,8 @@ export function statiMiei(io) {
     io.gelato > 0 ? { chiave: 'gelato', glifo: 'fiocco', dice: 'gelato dall\'incantesimo: il tuo prossimo colpo fa metà danno' } : null,
     io.linfa && io.linfa.scambi > 0 ? { chiave: 'linfa', glifo: 'germoglio', dice: `guarisci di ${io.linfa.quanto} · ${turniDi(io.linfa.scambi)}` } : null,
   ].filter(Boolean)
+  const visti = new Set(dello.map(x => x.chiave))
+  return [...dello, ...(c ? statiDeiPreparati(c) : []).filter(x => !visti.has(x.chiave))]
 }
 
 // Le celle di una griglia a sei colonne (ognuno ne prende due): oggi dicono quanti ne stanno «in fila» (fino a tre una fila, da quattro
@@ -73,7 +101,7 @@ export function disponi(campo) {
     let k = 0
     return { file: 2, grande: g, celle: campo.map((x, i) => (i === g ? { col: 3, riga: 1, file: 2 } : (([col, riga]) => ({ col, riga, file: 1 }))(lati[k++ % lati.length]))) }
   }
-  const file = n <= 3 ? [n] : n === 4 ? [2, 2] : n === 5 ? [3, 2] : [3, 3]
+  const file = n <= 3 ? [n] : n === 4 ? [2, 2] : n === 5 ? [3, 2] : n === 6 ? [3, 3] : [4, 3]
   const celle = []
   file.forEach((k, r) => { for (let j = 0; j < k; j++) celle.push({ col: 4 - k + 2 * j, riga: r + 1, file: 1 }) })
   return { file: file.length, grande: -1, celle }
@@ -103,9 +131,11 @@ const SLOT = {
   4: [[.2, .15], [.28, .8], [.76, .4], [.68, .96]],
   5: [[.08, .1], [.14, .6], [.5, .32], [.44, .97], [.9, .58]],
   6: [[.08, .08], [.14, .55], [.5, .28], [.44, .97], [.82, .68], [.9, .14]],
+  // sette: due, tre e due in tre colonne (il tetto di uno scontro, docs/sotterraneo/scontro.md)
+  7: [[.04, .1], [.1, .62], [.46, .06], [.54, .5], [.46, .98], [.92, .74], [.9, .2]],
 }
 // il grosso al centro e più avanti, gli altri ai lati e fra le sue gambe: prima a sinistra e a destra davanti, poi dietro
-const SLOT_GROSSO = { grosso: [.5, .76], altri: [[.08, .62], [.92, .7], [.1, .1], [.9, .14], [.5, .04]] }
+const SLOT_GROSSO = { grosso: [.5, .76], altri: [[.08, .62], [.92, .7], [.1, .1], [.9, .14], [.5, .04], [.28, .3]] }
 // un numero stabile per ogni posto, mai a caso a ogni render: i piccoli scarti non devono ballare
 const sfasa = (i, k) => (((Math.sin(i * 12.9898 + k * 78.233) * 43758.5453) % 1) + 1) % 1 * 2 - 1   // fra -1 e 1
 
@@ -125,7 +155,7 @@ export function piazza(posti, campo, larg) {
   const mostri = campo.map((m, i) => {
     const uv = posti.grande >= 0
       ? (i === posti.grande ? SLOT_GROSSO.grosso : SLOT_GROSSO.altri[Math.min(altri++, SLOT_GROSSO.altri.length - 1)])
-      : (SLOT[Math.min(n, 6)] || SLOT[6])[i % 6]
+      : (SLOT[Math.min(n, 7)] || SLOT[7])[i % 7]
     const p = punto(uv[0], uv[1], i)
     if (i === posti.grande) p.prof = 1
     return { ...p, z: p.y * 10 + Math.round((1 - uv[0]) * 8) }
@@ -173,7 +203,8 @@ export function vistaDelloScontro(c) {
     apertura: { agguato: !!f.agguato, sorpresa: !!f.sorpresa, mostri: f.campo.length },
     palco: palcoDi(c),
     eroe: { sprite: c.io.sprite ? pezzoAndante(c.io.sprite, 'fermo', 0) : null, em: c.io.em, vita: c.vita, vitaMax: c.vitaMax },
-    mie: statiMiei(f.io || {}),
+    mie: statiMiei(f.io || {}, c),
+    incanti: incantiAddosso(c),
   }
 }
 
@@ -181,17 +212,28 @@ export function vistaDelloScontro(c) {
 // cavaliere (l'utente, 12 ottobre: «grotteschi, vanno proporzionati»). Goblin, scheletro, orco e gigante vengono dallo
 // stesso set dell'eroe (0x72), già in proporzione con lui: stanno alla sua scala e qui non ci sono
 export const TAGLIA = {
-  ratto: 0.45, pipistrello: 0.5, melma: 0.45, vespa: 0.5, fungo: 0.6, granchio: 0.55, serpente: 0.55,
+  ratto: 0.55, pipistrello: 0.5, melma: 0.6, vespa: 0.6, fungo: 0.6, granchio: 0.55, serpente: 0.55,
   lupo: 0.7, fantasma: 0.8, golem: 1.1, troll: 1.15,
   // il bestiario per ambientazione (docs/sotterraneo/mostri.md): un piranha piccolo, un ent e un drago più grandi dell'eroe
   scheletro: 1.05, zombie: 1.0, 'scheletro-scudo': 1.0, mummia: 0.95, ghoul: 1.0, mietitore: 1.15,
   diavoletto: 0.6, 'spirito-fuoco': 0.8, 'golem-magma': 1.15, 'golem-pietra': 1.15, 'golem-muschio': 1.2, 'golem-ghiaccio': 1.15, 'golem-lava': 1.25,
-  ragno: 0.5, pianta: 0.75, 'melma-rosa': 0.45, 'melma-viola': 0.5, 'mostro-verde': 1.2, 'mostro-viola': 1.0,
-  piranha: 0.4, polpo: 0.7, 'fantasma-azzurro': 0.8, tartaruga: 0.65, cinghiale: 0.65, ent: 1.4,
+  ragno: 0.5, pianta: 0.75, 'melma-rosa': 0.6, 'melma-viola': 0.6, 'mostro-verde': 1.2, 'mostro-viola': 1.0,
+  piranha: 0.55, polpo: 0.7, 'fantasma-azzurro': 0.8, tartaruga: 0.65, cinghiale: 0.65, ent: 1.4,
   scorpione: 0.6, 'spirito-elettrico': 0.8, 'pipistrello-occhio': 0.55, ombra: 0.8, 'teschio-azzurro': 0.7,
   draghetto: 0.7, occhio: 0.6, grifone: 1.2, drago: 1.9,
 }
 export const ALTO_EROE = 28   // i pixel dello sprite dell'eroe, la misura di tutti
+// lo stesso sul campo, dove ogni sprite sta alla scala dell'eroe: di quante volte va ingrandito o rimpicciolito perché il mostro sia alto
+// TAGLIA volte l'eroe (a quarti, fra mezzo e uno e mezzo); chi non è in TAGLIA (goblin, orco, gigante: del set dell'eroe) resta com'è.
+// Un ingrandimento non lo fa più largo di LARGO_SUL_CAMPO pixel (le caselle sono di 16: un golem di lava largo il doppio c'è già), e chi è
+// già più largo non si rimpicciolisce: il campo mostra le bestie piccole più piccole, non le grosse più piccole
+export const LARGO_SUL_CAMPO = 44
+export const fattoreDelMostro = (tipo, altoSprite, largoSprite = 0) => {
+  if (TAGLIA[tipo] == null) return 1
+  const f = Math.max(0.5, Math.min(1.5, Math.round(ALTO_EROE * TAGLIA[tipo] / Math.max(1, altoSprite) * 4) / 4))
+  if (f <= 1 || !largoSprite) return f
+  return Math.max(1, Math.floor(Math.min(f, LARGO_SUL_CAMPO / largoSprite) * 4) / 4)
+}
 // la scala di un mostro alla scala `s` dell'eroe: alto TAGLIA volte l'eroe, a quarti (i pixel restano quasi interi)
 export const scalaDelMostro = (tipo, altoSprite, s) => (TAGLIA[tipo] == null ? s
   : Math.max(1, Math.round(s * ALTO_EROE * TAGLIA[tipo] / Math.max(1, altoSprite) * 4) / 4))

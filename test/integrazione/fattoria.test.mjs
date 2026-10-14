@@ -146,10 +146,10 @@ async function chiudi() {
    fratello di `#monete=`) invece di spendere tremila monete a colpi di
    dito. Il cheat si legge quando il gioco nasce, quindi si esce e si
    rientra. */
+// un cheat che porta il nome di un gioco lo apre da sé (App.vue, `dallIndirizzo`): si ricarica con l'indirizzo e si
+// è già dentro, senza la carta da toccare (la fattoria toglie il cheat dall'indirizzo appena nata)
 await page.evaluate(() => { location.hash = 'fattoria=64' })
 await page.reload()
-await page.waitForSelector('.carta.gioco[data-gioco="fattoria"]', { timeout: 5000 })
-await scegli(page, 'fattoria')
 await page.waitForSelector('.fa-tela', { timeout: 5000 })
 await attendi(page, 600)
 controlla('col cheat la fattoria è cresciuta',
@@ -174,8 +174,10 @@ controlla('col cheat la fattoria è cresciuta',
   const daPrendere = page.locator('.fa-premio.da')
   uguale('la pagina dei livelli li mostra tutti',
          await daPrendere.count(), quanti)
-  const quale = await daPrendere.first().getAttribute('data-premio')
-  await daPrendere.first().click()
+  /* si prende la casetta, che il punto 7 posa dal baule: dei tre premi del livello 64 (fontana, casetta, casotta, in
+     ordine di prezzo) il primo non è lei */
+  const quale = 'cosa:casetta'
+  await page.locator(`[data-premio="${quale}"].da`).click()
   await attendi(page, 300)
   uguale('preso, il quadratino non è più da prendere',
          await page.locator(`[data-premio="${quale}"].da`).count(), 0)

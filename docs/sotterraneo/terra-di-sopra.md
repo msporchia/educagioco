@@ -25,10 +25,12 @@ sopra la discesa a metà; chi scende (nome, livello, «Cambia eroe») sta nella 
   37 dB): nessun pixel si scosta di più di 6 su 255 dal sorgente. La fa lo
   strumento dal foglietto ([terra-strumento.md](terra-strumento.md)): il
   modulo non si tocca. Il perché: [../core/grafica.md](../core/grafica.md#fedeli-ai-sorgenti).
-- **La scala: una cella della mappa è grande quanto l'eroe.** L'eroe è a
-  scala 3 come nel sotterraneo (16 px × 3 = 48 px), quindi la mappa si
-  mostra a 3/4 (`SCALA_TERRA`): un pixel del disegno (4 px della mappa)
-  diventa 3 px dello schermo, come un pixel dell'eroe. Su un telefono da 390
+- **La scala: una cella della mappa è grande quanto un personaggio.** I
+  personaggi sono a scala 3 come nel sotterraneo (16 px × 3 = 48 px), quindi
+  la mappa si mostra a 3/4 (`SCALA_TERRA`): un pixel del disegno (4 px della
+  mappa) diventa 3 px dello schermo, come un pixel del personaggio. L'eroe
+  armato è a 2,5 (`SCALA_DELL_EROE`, 40 px): a 3, con l'armatura e l'arma,
+  sovrastava i personaggi dipinti. Su un telefono da 390
   px si vedono otto celle in larghezza: la mappa è quattro schermi per uno e
   mezzo. `image-rendering: pixelated`. I pixel del disegno non stanno su una
   griglia esatta, e a 3/4 il vicino più prossimo li rende di larghezza un po'
@@ -99,13 +101,13 @@ forma e perché: [la-grande-storia.md](la-grande-storia.md#le-discese).
 | discesa | posto | passi da casa |
 |---|---|---|
 | La cripta dell'altare (`altare`) | la scala dietro l'altare fra le colonne, in cima a destra | 35 |
-| La scalinata antica (`cantine`) | la scala sotto l'arco di pietra, oltre il bosco | 40 |
-| La torre in rovina (`torre`) | la porta in basso della torre, in cima a destra | 44 |
-| La grotta della scaletta (`gallerie`) | il buco nella roccia con la scaletta | 45 |
-| La scala sommersa (`cisterna`) | la scala dentro lo stagno | 51 |
-| La botola segreta (`labirinto`) | la botola nel prato, in cima a sinistra | 54 |
-| La miniera abbandonata (`fondo`) | la miniera dentro il monte | 55 |
-| l'abisso | il pozzo vecchio d'ardesia, in cima a sinistra | 61 |
+| La scalinata antica (`cantine`) | la scala sotto l'arco di pietra, oltre il bosco | 42 |
+| La torre in rovina (`torre`) | la porta in basso della torre, in cima a destra | 45 |
+| La grotta della scaletta (`gallerie`) | il buco nella roccia con la scaletta | 48 |
+| La scala sommersa (`cisterna`) | la scala dentro lo stagno | 53 |
+| La botola segreta (`labirinto`) | la botola nel prato, in cima a sinistra | 57 |
+| La miniera abbandonata (`fondo`) | la miniera dentro il monte | 58 |
+| l'abisso | il pozzo vecchio d'ardesia, in cima a sinistra | 64 |
 
 - **Meno pozzi**: il pozzo dal tetto rosso è tornato disegno; i pozzi come
   discesa sono poco intuitivi (l'utente).
@@ -133,8 +135,10 @@ forma e perché: [la-grande-storia.md](la-grande-storia.md#le-discese).
   prato col fumetto aperto lo chiude, e l'eroe parte verso dove si è toccato
   ([../core/interfaccia.md](../core/interfaccia.md#un-tocco-altrove-chiude)). Prima lo chiudeva e
   basta: per andarsene servivano due tocchi.
-- **Una chiusa dice cosa ci sarà e cosa la apre** («Si apre quando finisci
-  la scalinata antica»), senza tasto; chiusa per l'età non promette niente.
+- **Una chiusa dice cosa la apre** («Si apre quando batti Re Ossuto in fondo
+  alla cripta dell'altare»: il grosso della discesa prima, non una missione:
+  [la-storia-principale.md](la-storia-principale.md)), senza tasto; chiusa per
+  l'età non promette niente. Quella dove la storia continua lo dice nel fumetto.
 - **Una chiusa ha il disegno pulito**: niente velo né lucchetto. Quando
   l'eroe ci va (tocco alla discesa chiusa, arrivato ai suoi piedi) **si
   pianta un cartello di divieto** davanti all'ingresso: un paletto di legno
@@ -176,7 +180,7 @@ forma e perché: [la-grande-storia.md](la-grande-storia.md#le-discese).
   (`sopra-personaggi-1.png` e `-2.png`, ChatGPT, 13 ottobre 2026; la
   provenienza è nei foglietti): ognuno ha `<nome>-fermo-0` e
   `<nome>-saluta-0` nell'atlante, con le chiavi di `dati/mercanti.js` e
-  `dati/missioni.js` (`armaiolo`, `erborista`, `rigattiere`, `ragazza`,
+  `dati/missioni.js` (`armaiolo`, `incantatrice`, `erborista`, `rigattiere`, `ragazza`,
   `mugnaio`, `eremita`, `guardia`, `pescatore`, `boscaiolo`, `minatore`), e
   `viste/Terra.vue` li prende da soli. Stanno alla scala dell'eroe (il corpo
   dell'eroe è alto 19 pixel; loro 21–26, la guardia con la lancia 26) e si
@@ -204,14 +208,15 @@ forma e perché: [la-grande-storia.md](la-grande-storia.md#le-discese).
 
 ## I mercanti
 
-Tre personaggi fermi nel villaggio, nella metà di destra, ognuno davanti al
-suo banco (`mercanti` nel foglietto, `MERCANTI` in `dati/terra-mappa.js`);
+Quattro personaggi fermi nel villaggio, nella metà di destra, ognuno davanti al
+suo banco o alla sua porta (`mercanti` nel foglietto, `MERCANTI` in `dati/terra-mappa.js`);
 chi vende cosa e perché sta in [bottega.md](bottega.md#i-mercanti-di-sopra).
 
 | chi | dove | piede · accanto |
 |---|---|---|
 | l'armaiolo | davanti all'incudine sotto la tettoia, a sinistra della piazza | [41, 42] · [39, 42] |
 | l'erborista | davanti al banco con le boccette e i mazzi d'erbe, sotto la piazza | [50, 43] · [48, 43] |
+| l'incantatrice | accanto alla porta della casa di destra, nel suo giardino fra le staccionate | [56, 40] · [54, 40] |
 | il rigattiere | accanto al carretto di cianfrusaglie, in fondo a destra | [54, 43] · [52, 43] |
 
 - **Si toccano come il minatore**: l'eroe ci va, si ferma `accanto`, e
@@ -226,6 +231,14 @@ chi vende cosa e perché sta in [bottega.md](bottega.md#i-mercanti-di-sopra).
   `rigattiere-fermo-0` e le pose `-saluta-0` (qui sopra, «Chi indica la
   strada»). Il fabbro è robusto con il martello, la guaritrice ha il cappuccio
   verde e le boccette, il mercante il cappello viola e il sacco.
+- **L'incantatrice ha una figura provvisoria**: la guaritrice con la tonalità del verde
+  ruotata al viola (`tinta` nel foglietto di `sopra-personaggi-1`, `ritinge_in` in `atlante.py`:
+  [FORMATO.md](../../strumenti/sprite/FORMATO.md)), cappuccio viola, grembiule chiaro, la boccetta in mano.
+  Il terzo foglio dei personaggi (prompt 9 di `PROMPT-terra-di-sopra.md`) porta la sua figura vera, con altri nove
+  che il gioco non ha: arrivato, si toglie la `tinta` e le sue due pose si ritagliano dal foglio nuovo.
+- **Sta alla porta della casa di destra**, nel suo giardino: non ha un banco da tenere e la casa è l'unica
+  vicino alla piazza senza nessuno davanti. Il posto dove si ferma l'eroe è nello stesso giardino. Provato [57, 41],
+  proprio sotto la porta: lasciava senza uscita la cella dietro di lei (`unita/sotterraneo-terra`).
 - **Sulla mappa non c'è la carta di chi scende.** C'era in fondo (ritratto,
   livello, armatura e «cambio»): il livello sta sulla barra in basso,
   i numeri, i tratti della roba e «Cambia eroe» nella pagina dell'eroe

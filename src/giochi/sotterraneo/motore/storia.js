@@ -3,8 +3,9 @@
 // che girano in Node (il banco di prova ci misura sopra). Vedi docs/sotterraneo/la-grande-storia.md.
 import { COSE, A_SORTE, pescaMerce, baseDi, aLivello, chiaveDelPezzo } from '../dati/cose.js'
 import { CAMPAGNA, QUANTE_TAPPE } from '../dati/campagna.js'
-import { PASSI, CASELLE, passoDi, POZIONI_ATTESE, LIVELLI_ATTESI } from '../dati/storia.js'
+import { PASSI, CASELLE, passoDi, POZIONI_ATTESE, LIVELLI_ATTESI, STORIA, CAPITOLI } from '../dati/storia.js'
 import { eroeDi } from '../dati/eroi.js'
+import { MERCANTI, vendeLa } from '../dati/mercanti.js'
 import { VERSIONE_ROBA, Corredo } from './corredo.js'
 import { crescitaA } from './crescita.js'
 import { pescaAbilita, pezzoDelGrosso } from './bottino.js'
@@ -167,7 +168,7 @@ export function delPassoDi(m, corredo, finite, { ammessa = () => true } = {}) {
 // discesa da finire perché arrivi sul banco (`finita`, indice di CAMPAGNA) e le righe di distanza (`avanti`, da
 // cui il sovrapprezzo). Si comprano lo stesso, se hai le gemme: il banco non resta mai vuoto, e chi guarda sa
 // cosa l'aspetta (docs/sotterraneo/bottega.md, "I mercanti di sopra")
-export function vetrinaDelPasso(m, corredo, finite, { quanti = 2, banco = [] } = {}) {
+export function vetrinaDelPasso(m, corredo, finite, { quanti = 2, banco = [], vende = () => true } = {}) {
   const L = corredo.livelloEroe
   const fuori = []
   const visti = new Set(banco.map(baseDi))
@@ -176,7 +177,7 @@ export function vetrinaDelPasso(m, corredo, finite, { quanti = 2, banco = [] } =
     for (let r = finite + 1; r <= QUANTE_TAPPE && n < quanti; r++) {
       const x = passoDi(corredo.chiEro, r)[c]
       const k = x && aLivello(x, corredo.livelloPortabile(x, L))
-      if (!x || visti.has(x) || !migliora(corredo, k)) continue
+      if (!x || visti.has(x) || !vende(x) || !migliora(corredo, k)) continue
       visti.add(x)
       fuori.push({ chiave: k, finita: r - 1, avanti: r - finite })
       n++
@@ -196,6 +197,26 @@ export function sottoIlLivello(scheda, attesa) {
   return null
 }
 
+// La missione principale, letta dalle discese dell'avventura (dati/storia.js, STORIA e CAPITOLI; docs/sotterraneo/la-storia-principale.md):
+// le sette porte una per una, quante chiuse, e il capitolo di adesso, la prima non finita (`ferma`: c'è, ma per l'età per
+// ora non si scende, e non c'è una freccia da seguire). `tappe` come le dà Gioco.vue: [{ chiave, aperta, fatta }]
+export function laStoria(tappe) {
+  const l = tappe || []
+  const porte = CAMPAGNA.map((t, i) => {
+    const x = l.find(y => y.chiave === t.chiave) || {}
+    const g = GROSSI[GROSSO_DELLA_DISCESA[t.chiave]]
+    return { chiave: t.chiave, indice: i, nome: t.nome, grosso: g ? g.nome : null, fatta: !!x.fatta, aperta: !!x.aperta }
+  })
+  const chiuse = porte.filter(p => p.fatta).length
+  const prossima = porte.find(p => !p.fatta) || null
+  const ultima = [...porte].reverse().find(p => p.fatta) || null
+  return {
+    titolo: STORIA.titolo, totale: porte.length, chiuse, finita: !prossima, porte,
+    corrente: prossima && { ...prossima, ...CAPITOLI[prossima.chiave], ferma: !prossima.aperta },
+    ultima: ultima && { ...ultima, ...CAPITOLI[ultima.chiave] },
+  }
+}
+
 // «quella spada corta», «quello spadone», «quell'ascia», «quel bastone»: il nome della cosa in mezzo a una frase
 export function quellaCosa(k) {
   const c = COSE[k]
@@ -203,6 +224,14 @@ export function quellaCosa(k) {
   if (c.genere === 'f') return /^[aeiou]/.test(n) ? `quell'${n}` : `quella ${n}`
   if (/^[aeiou]/.test(n)) return `quell'${n}`
   return /^(s[^aeiou]|z|gn|ps)/.test(n) ? `quello ${n}` : `quel ${n}`
+}
+
+// Da chi andare per il pezzo della riga d'entrata nella casella `dove`: chi lo vende (la verga e il manto sono dell'incantatrice,
+// la spada e lo scudo del fabbro), dal fabbro se la riga è vuota
+const daChiAndare = (eroe, k, dove) => {
+  const x = passoDi(eroe, k)[dove]
+  const m = x && MERCANTI.find(y => vendeLa(y, x))
+  return m && m.chiave === 'incantatrice' ? 'dall\'incantatrice' : 'dal fabbro'
 }
 
 // La frase del minatore a chi tocca una discesa con la roba sotto la riga d'entrata (dati/storia.js): dice cosa
@@ -214,10 +243,10 @@ export function dettoDelLivello(eroe, scheda, tappa, k) {
     return { manca: 'livello', detto: `${tappa.dove.charAt(0).toUpperCase() + tappa.dove.slice(1)} i mostri sono più forti di te: fatti le ossa nelle discese di prima.` }
   if (manca.manca === 'arma') {
     const con = scheda.mano ? `Con ${quellaCosa(scheda.mano)}` : 'A mani nude'
-    return { manca: 'arma', detto: `${con} ${tappa.dove} non duri: passa dal fabbro.` }
+    return { manca: 'arma', detto: `${con} ${tappa.dove} non duri: passa ${daChiAndare(eroe, k, 'mano')}.` }
   }
-  const senza = !scheda.mancina && !(scheda.mano && COSE[scheda.mano].mani === 2) ? 'senza scudo'
-    : !scheda.corpo ? 'senza niente addosso' : `con ${quellaCosa(scheda.corpo)}`
+  const manca2 = !scheda.mancina && !(scheda.mano && COSE[scheda.mano].mani === 2)
+  const senza = manca2 ? 'senza scudo' : !scheda.corpo ? 'senza niente addosso' : `con ${quellaCosa(scheda.corpo)}`
   const dove = tappa.dove.charAt(0).toUpperCase() + tappa.dove.slice(1)
-  return { manca: 'difesa', detto: `${dove} picchiano forte, e ${senza} non reggi: passa dal fabbro.` }
+  return { manca: 'difesa', detto: `${dove} picchiano forte, e ${senza} non reggi: passa ${daChiAndare(eroe, k, manca2 ? 'mancina' : 'corpo')}.` }
 }

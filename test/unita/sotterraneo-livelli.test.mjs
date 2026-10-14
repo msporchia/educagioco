@@ -5,8 +5,9 @@
    discesa, la pagina dell'eroe. I mostri grossi e la roba con livello e
    rarità stanno in `unita/sotterraneo-rarita`.
    `node test/esegui.mjs sotterraneo-livelli --niente-build` */
+import { QUOTA_DEL_COMUNE } from '../../src/giochi/sotterraneo/dati/mondo.js'
 import { CARATTERISTICHE, sogliaDi, livelloDi, quotaDi, espDi, guastiDeiLivelli, VITA_PER_TEMPRA, PUNTI_PER_LIVELLO,
-         DOTE_OGNI, TEMPRA_PER_DIFESA, ENERGIA_PER_INTELLIGENZA, SCHIVATA_PER_DESTREZZA, GEMME_PER_RIASSEGNARE } from '../../src/giochi/sotterraneo/dati/livelli.js'
+         DOTE_OGNI, FORZA_PER_DIFESA, ENERGIA_PER_INTELLIGENZA, SCHIVATA_PER_DESTREZZA, GEMME_PER_RIASSEGNARE } from '../../src/giochi/sotterraneo/dati/livelli.js'
 import { EROI, eroeDi, guastiDegliEroi, requisitoDi, REQUISITO_DEL_GRADINO } from '../../src/giochi/sotterraneo/dati/eroi.js'
 import { COSE, chiaveDelPezzo, aLivello } from '../../src/giochi/sotterraneo/dati/cose.js'
 import { robaAttesa, crescitaAttesa } from '../../src/giochi/sotterraneo/motore/storia.js'
@@ -48,7 +49,7 @@ import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifi
   const m = c.livello.robe.find(r => r.che === 'mostro' && !r.chiave)
   const prima = c.crescita.esp
   c.cade(m)
-  uguale('battere un mostro dà la sua esperienza', c.crescita.esp - prima, espDi(MOSTRI[m.tipo], c.livelloQui))
+  uguale('battere un mostro dà la sua esperienza (un mostro di strada la quota, QUOTA_DEL_COMUNE)', c.crescita.esp - prima, Math.max(1, Math.round(espDi(MOSTRI[m.tipo], c.livelloQui) * QUOTA_DEL_COMUNE)))
   uguale('e la discesa la conta', c.espPresa, c.crescita.esp - prima)
   const e0 = c.crescita.esp
   c.chiaveDelPiano = true; c.foglio = { che: 'scala' }; c.scendi()
@@ -94,8 +95,11 @@ import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifi
   uguale('con l\'arco la forza non tocca l\'attacco', con('forza', 'arco-corto').att - zero('arco-corto').att, 0)
   uguale('con l\'arco, quattro di destrezza: quattro di attacco', con('destrezza', 'arco-corto').att - zero('arco-corto').att, 4)
   uguale('a mani nude conta la caratteristica più alta', con('intelligenza').att, eroeDi('elfa').att + 4)
-  uguale('la tempra dà difesa, una ogni tre punti', con('tempra').dif - zero().dif, Math.floor(4 / TEMPRA_PER_DIFESA))
-  uguale('la forza no', con('forza').dif - zero().dif, 0)
+  // la forza è la caratteristica di un tank (l'utente, 13 ottobre): un po' di difesa, passo lento; la tempra solo vita
+  uguale('la forza dà difesa, una ogni FORZA_PER_DIFESA punti', con('forza').dif - zero().dif, Math.floor(4 / FORZA_PER_DIFESA))
+  uguale('e a passo lento: due volte tanti punti, il doppio', new Corredo({ eroe: 'elfa', crescita: { esp: sogliaDi(20), forza: 2 * FORZA_PER_DIFESA } }).dif -
+         new Corredo({ eroe: 'elfa', crescita: { esp: sogliaDi(20) } }).dif, 2)
+  uguale('la tempra no', con('tempra').dif - zero().dif, 0)
   uguale('la destrezza fa schivare', con('destrezza').schivata - zero().schivata, 4 * SCHIVATA_PER_DESTREZZA)
   uguale('l\'intelligenza alza l\'energia, due a punto', con('intelligenza').energiaMax - zero().energiaMax, 4 * ENERGIA_PER_INTELLIGENZA)
   uguale('quattro di tempra: dodici di vita', con('tempra').vitaConLaRoba - zero().vitaConLaRoba, 4 * VITA_PER_TEMPRA)
@@ -199,7 +203,13 @@ import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifi
   const car = Object.fromEntries(c.caratteristiche().map(x => [x.chiave, x]))
   controlla('la forza ha il «+» spento: l\'intelligenza è rimasta indietro', car.forza.trattenuta && car.forza.dietro === 'intelligenza')
   controlla('e l\'intelligenza lo dice («prima un po\' di questa»)', car.intelligenza.indietro && !car.intelligenza.trattenuta)
-  controlla('la tempra dice prima cosa cambia', car.tempra.cambia.some(x => x.em === '❤️' && x.dopo - x.prima === VITA_PER_TEMPRA))
+  controlla('la tempra dice prima cosa cambia: solo la vita', car.tempra.cambia.some(x => x.em === '❤️' && x.dopo - x.prima === VITA_PER_TEMPRA) &&
+            !car.tempra.cambia.some(x => x.em === '🛡️'))
+  // la forza dice la difesa quando arriva al punto che la alza (un punto prima non cambia niente, oltre l'attacco)
+  const prima = new Corredo({ eroe: 'mago', crescita: { esp: sogliaDi(20), forza: FORZA_PER_DIFESA - 1 } }).caratteristiche().find(x => x.chiave === 'forza')
+  const sopra = new Corredo({ eroe: 'mago', crescita: { esp: sogliaDi(20), forza: FORZA_PER_DIFESA - 2 } }).caratteristiche().find(x => x.chiave === 'forza')
+  controlla('la forza dice la difesa quando il punto la alza', prima.cambia.some(x => x.em === '🛡️' && x.dopo - x.prima === 1) &&
+            !sopra.cambia.some(x => x.em === '🛡️'), JSON.stringify([prima.cambia, sopra.cambia]))
   controlla('l\'intelligenza dice l\'energia', car.intelligenza.cambia.some(x => x.glifo === 'energia' && x.dopo - x.prima === ENERGIA_PER_INTELLIGENZA))
   controlla('la destrezza dice la schivata', car.destrezza.cambia.some(x => x.em === '🌀'))
   controlla('ogni caratteristica ha il suo medaglione', c.caratteristiche().every(x => x.glifo && x.tinta))

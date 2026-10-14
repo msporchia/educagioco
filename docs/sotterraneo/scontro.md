@@ -24,9 +24,9 @@ Il codice: `motore/scontro.js` (i metodi dello scontro, attaccati a `Corsa`),
   si sveglia), misurati una volta sola all'inizio. Chi è fuori resta fuori:
   **nessun rinforzo** a scontro aperto. Dividere un gruppo grande è una cosa da
   fare apposta, avvicinandosi piano e con la luce.
-- **Al massimo sei posti** (`MOSTRI_IN_CAMPO`): sei figure stanno a 390 px. Se il
+- **Al massimo sette posti** (`MOSTRI_IN_CAMPO`, da sei il 13 ottobre perché i branchi delle discese tarde arrivano a sei): sette figure stanno a 390 px (il palco, `viste/campo.js`). Se il
   raggio ne prende di più, entrano i più vicini, chi ha aperto lo scontro sempre
-  primo. **Il mostro grosso vale due posti** (`postiDi`): con lui, cinque mostri.
+  primo. **Il mostro grosso vale due posti** (`postiDi`): con lui, cinque o sei mostri.
 - I branchi (il caporale col suo seguito) li fanno i piani nuovi: lo scontro funziona con
   quello che trova. Da solo, per provare una regola: `scontro(m, { solo: true })`.
 
@@ -54,9 +54,10 @@ Il codice: `motore/scontro.js` (i metodi dello scontro, attaccati a `Corsa`),
 
 ## L'iniziativa
 
-- **Ognuno ha una velocità** (`velocita`): l'eroe `10 + destrezza` (12 il
-  cavaliere, il mago e il nano all'inizio, 14 l'elfa), i mostri quella della
-  specie in `dati/mostri.js` (il grosso quella della sua specie):
+- **Ognuno ha una velocità** (`velocita`): l'eroe **7 più un punto a punto di
+  destrezza** (`VELOCITA_BASE_EROE`, `VELOCITA_PER_DESTREZZA`: 9 il cavaliere, il mago
+  e il nano all'inizio, 11 l'elfa; prima 6 più uno e mezzo, ritarata la sera del 13 ottobre: [abilita-energia.md](abilita-energia.md#la-fila-dei-turni)), i mostri quella della specie in
+  `dati/mostri.js` (il grosso quella della sua specie):
 
   | velocità | mostri |
   |---|---|
@@ -65,12 +66,16 @@ Il codice: `motore/scontro.js` (i metodi dello scontro, attaccati a `Corsa`),
   | 7–8 | orco, gigante, troll, fungo, granchio, melma |
   | 5 | golem |
 
-  L'eroe parte **più veloce della media dei mostri** (l'utente: «l'eroe è alto
-  come iniziativa»). Le velocità sono la **forma** di una specie: colpo per velocità circa uguale dentro gli abitanti di una discesa
+  L'iniziativa è dell'agile (l'utente, 13 ottobre: «è del ladro, non del mago»; prima l'eroe
+  era «alto come iniziativa», 10 più la destrezza, e il mago aveva a volte due turni di
+  fila): con mostri da 9 in su il mago **non ha mai due turni di fila**, l'elfa sì, ogni
+  tanto; i mostri lenti (sotto il 9) il doppio turno lo concedono a tutti. La stampa per
+  classe e discesa: [abilita-energia.md](abilita-energia.md#la-fila-dei-turni). Le velocità sono la **forma** di una specie: colpo per velocità circa uguale dentro gli abitanti di una discesa
   ([mostri.md](mostri.md)), così il ratto veloce e la melma lenta fanno più o meno lo stesso male nel tempo.
 - **Una fila di turni alla Final Fantasy X** (`motore/turni.js`): ogni azione
   fa aspettare `100 / velocita`, agisce chi ha aspettato di meno, a parità
-  l'eroe. Niente tempo che scorre, mai: la fila si muove solo agendo.
+  l'eroe. Niente tempo che scorre, mai: la fila si muove solo agendo. Ogni turno dell'eroe, però, fa passare cinque passi dell'orologio del
+  gioco (`PASSI_PER_TURNO`, [orologio.md](orologio.md)): gli incanti preparati dal campo calano dopo i colpi dei mostri.
 - **Il doppio turno nasce da sé**: un eroe veloce il doppio di un mostro
   gioca due volte prima di lui. La destrezza diventa la caratteristica del
   ritmo, e i pezzi hanno una cosa in più da dare.

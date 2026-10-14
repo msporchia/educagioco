@@ -62,6 +62,21 @@ bordo = Image.new('RGBA', (5, 5), NERO)
 out['bordo'] = alfa(A.buchi_in(bordo, True, FONDI, 'f'), 2, 2)
 # un foglio senza fondo non ha niente da togliere: torna com'è
 out['senza_fondo'] = alfa(A.buchi_in(base, True, None, 'g'), 5, 5)
+
+# riempi: una porta nera col contorno bucato (un varco di un pixel), il corpo mangiato dal fondo
+porta = Image.new('RGBA', (12, 14), (0, 0, 0, 0))
+pp = porta.load()
+for y in range(1, 13):
+    for x in range(1, 11):
+        if x in (1, 10) or y in (1, 12):
+            pp[x, y] = (150, 120, 40, 255)          # il contorno d'oro
+pp[1, 6] = (0, 0, 0, 0)                              # un varco: da lì il fondo entra nel corpo
+out['porta_vuota'] = alfa(porta, 5, 6)
+piena = A.riempi_in(porta, {'chiudi': 1, 'colore': [14, 12, 16]}, 'h')
+out['porta_corpo'] = [alfa(piena, 5, 6), colore(piena, 5, 6)]
+out['porta_fuori'] = [alfa(piena, 0, 0), alfa(piena, 11, 13)]
+out['porta_senza'] = alfa(A.riempi_in(porta, None, 'i'), 5, 6)
+out['porta_originale'] = alfa(porta, 5, 6)
 print(json.dumps(out))
 `
 
@@ -79,7 +94,7 @@ def neri(n):
 print(json.dumps({n: neri(n) for n in sys.argv[1:] or %NOMI%}))
 `
 
-const CON_BUCO = ['arco-corto', 'arco-lungo', 'balestra', 'chiave-oro', 'chiave-ferro', 'chiave-verde', 'chiave-blu',
+const CON_BUCO = ['arco-corto', 'arco-lungo', 'balestra', 'chiave-oro',
                   'anello-ambra', 'anello-verde', 'amuleto-rosso']
 
 const r = python(PROVA)
@@ -101,6 +116,11 @@ if (!r) {
   uguale('l\'originale non si modifica', r.originale, 255)
   uguale('una macchia sul bordo del ritaglio non si sa se è chiusa, e resta', r.bordo, 255)
   uguale('senza un fondo dichiarato non fa niente', r.senza_fondo, 255)
+  uguale('una porta bucata dal fondo ha il corpo trasparente', r.porta_vuota, 0)
+  controlla('con "riempi" il corpo torna pieno, del colore dichiarato', r.porta_corpo[0] === 255 && JSON.stringify(r.porta_corpo[1]) === '[14,12,16,255]', JSON.stringify(r.porta_corpo))
+  controlla('e fuori dalla sagoma resta trasparente', r.porta_fuori[0] === 0 && r.porta_fuori[1] === 0, JSON.stringify(r.porta_fuori))
+  uguale('senza "riempi" il corpo resta com\'è', r.porta_senza, 0)
+  uguale('l\'originale non si modifica', r.porta_originale, 0)
 }
 
 const vero = python(ATLANTE.replace('%NOMI%', JSON.stringify(CON_BUCO)))
@@ -111,4 +131,4 @@ if (!vero) {
     uguale(`atlante del sotterraneo: ${n} non ha nero del fondo rimasto dentro`, vero[n], 0)
 }
 
-riassunto('buchi interni dei pezzi')
+riassunto('buchi interni dei pezzi e corpi da rimettere')

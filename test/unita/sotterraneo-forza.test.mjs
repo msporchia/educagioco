@@ -99,7 +99,7 @@ for (const chi of CHIAVI) {
     controlla('il cavaliere conta solo le abilità che costano quanto la sua energia tipica o meno',
               abilitaDelloScontro(cav).length > 0 && abilitaDelloScontro(cav).every(n => n.costo <= energiaTipica(cav)),
               abilitaDelloScontro(cav).map(n => `${n.id} ${n.costo}`).join(', ') + ` (tipica ${energiaTipica(cav)})`)
-    controlla('un\'abilità della riga alta, che il suo globo non regge, non entra nella forza', !abilitaDelloScontro(cav).some(n => n.riga >= 3))
+    controlla('l\'ultima riga, che costa tutto il globo, non entra nella forza (l\'energia tipica è i due terzi)', !abilitaDelloScontro(cav).some(n => n.riga >= 4))
     controlla('il mago ne conta di alte, il globo è grande', abilitaDelloScontro(mag).some(n => n.riga >= 3), `tipica ${energiaTipica(mag)}`)
   }
   controlla('senza abilità l\'offesa è il colpo di sempre, e basta', o.forti.length === 0, o.forti.join())

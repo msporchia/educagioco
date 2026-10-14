@@ -43,12 +43,16 @@ restano in codice anche dopo: si muovono.
   «Cambia eroe» ([livelli.md](livelli.md#la-pagina-delleroe)). Quando ci
   sono punti da dare porta un «+» d'oro che pulsa (`[data-punti]`); salendo
   di livello la riga si accende d'oro.
-- **L'energia** ([abilita.md](abilita.md)) è il globo blu di destra, col
-  numero al centro. È un tasto: apre l'albero delle abilità, e porta il «+»
-  d'oro quando ci sono punti da imparare. Sopra è piena, come la vita.
+- **I globi sono tasti che aprono l'eroe** (l'utente, 13 ottobre: gli incanti e le
+  missioni hanno la loro strada, i globi no). La vita apre la finestra
+  dell'eroe sulla scheda Eroe, e porta in alto a sinistra una pastiglia d'oro col
+  libro e il numero (`[data-missioni-pronte]`) quando ci sono missioni da
+  consegnare: si vede senza aprire niente. L'energia
+  ([abilita.md](abilita.md)) apre la scheda Abilità, col «+» d'oro dei punti da
+  imparare. Sopra l'energia è piena, come la vita.
 - **Le caselle**, da sinistra: 🧪 le pozioni col numero (un tocco beve), la
-  bisaccia (lo zaino) con le tasche piene, 📖 il diario delle missioni col numero delle
-  aperte (in oro se una è da consegnare), 🗺️ la mappa grande, 💎 le gemme (un
+  bisaccia (lo zaino) con le tasche piene, ✦ gli incanti da preparare («1/3»: uno
+  addosso su tre che l'eroe sa; in oro se ce n'è uno addosso), 🗺️ la mappa grande, 💎 le gemme (un
   tocco apre lo zaino, dove le gemme stanno con la roba). **Tutte della
   stessa forma e della stessa larghezza**: un contatore più stretto e senza
   bordo era una cosa in più da capire. Vuota, una casella si spegne in
@@ -87,7 +91,7 @@ restano in codice anche dopo: si muovono.
 | 🔷 energia | quella della discesa | piena; apre l'albero |
 | 🧪 | beve la pozione giusta | «❤️ sei già in piena forma» |
 | bisaccia | lo zaino della discesa | lo zaino di sopra: ci si veste e ci si spoglia, ma non si beve e non si butta |
-| 📖 | il diario, senza «vai da …» | il diario della terra di sopra, con «vai da …» |
+| ✦ incanti | la scelta di quelli da preparare | spenta, ma si tocca: dice che si preparano giù |
 | 🗺️ | la mappa grande | spenta: la terra è già la mappa |
 | 💎 | le gemme, apre lo zaino | uguale |
 
@@ -96,15 +100,17 @@ spento o col suo significato di sopra.
 
 ## La finestra dell'eroe
 
-Lo zaino, le caratteristiche e l'albero delle abilità sono **tre schede della
-stessa finestra** (`viste/SchedeEroe.vue`, l'utente: «tre tab della stessa
-cosa, aprendo l'eroe dovrei poterli vedere tutti»): Zaino, Eroe, Abilità, in
-cima alla cornice, quella aperta d'oro e un «+N» d'oro dove ci sono punti da
-dare. La bisaccia apre lo Zaino, il livello l'Eroe, il globo blu le Abilità;
-da lì si passa all'altra scheda senza chiudere (`apriScheda` in `Gioco.vue`).
-Le tre cornici sono alte uguali, così cambiando scheda non saltano; il nome
-lo dice la scheda, e dentro non si ripete (lo zaino tiene solo «al
-villaggio» o «piano 2/3»). Durante uno scontro non si apre, come prima.
+Lo zaino, le caratteristiche, l'albero delle abilità e il diario delle missioni sono
+**quattro schede della stessa finestra** (`viste/SchedeEroe.vue`, l'utente: «aprendo
+l'eroe dovrei poterli vedere tutti»): Zaino, Eroe, Abilità, Missioni, in cima alla
+cornice, quella aperta d'oro, un «+N» d'oro dove ci sono punti da dare e il numero
+d'oro sulle Missioni da consegnare. La bisaccia apre lo Zaino, il livello e il globo
+rosso l'Eroe, il globo blu le Abilità; da lì si passa all'altra scheda senza chiudere
+(`apriScheda` in `Gioco.vue`). Le cornici sono alte uguali, così cambiando scheda non
+saltano; il nome lo dice la scheda, e dentro non si ripete (lo zaino tiene solo «al
+villaggio» o «piano 2/3»). Sotto i 430 px solo la linguetta aperta dice il nome (le
+altre restano icone), sotto i 340 nessuna. Durante uno scontro non si apre, come prima.
+Tutto quello che apre il diario (il globo, la linguetta) apre la scheda Missioni.
 
 ## Le caselle che fanno qualcosa
 
@@ -116,30 +122,34 @@ villaggio» o «piano 2/3»). Durante uno scontro non si apre, come prima.
   durante uno scontro: il velo copre la barra (quando si rischia di cadere,
   lo stop dello scontro offre lo stesso «bevi», [pericolo.md](pericolo.md)).
 - **L'elisir conta fra le pozioni.** Era il guasto della casella che «non
-  saliva»: l'utente raccoglieva una boccetta rossa (l'elisir, che i forzieri
-  della storia danno spesso) e la 🧪 non la contava, perché contava solo le
+  saliva»: l'utente raccoglieva una boccetta rossa (l'elisir, che allora i forzieri
+  della storia davano spesso: ora è rarissimo) e la 🧪 non la contava, perché contava solo le
   cure. La casella si aggiornava: contava un'altra cosa. Adesso conta tutto
   quello che si beve, e la prova col dito butta una pozione e la raccoglie.
-- **📖 apre lo stesso diario di sopra.** Da qui si sceglie anche quale
+- **Il diario è la scheda Missioni**, la stessa sopra (con «vai da …») e sotto
+  (senza); la storia in cima, le missioni sotto. Da qui si sceglie anche quale
   missione segue la freccina ([missioni-freccina.md](missioni-freccina.md)).
+- **✦ apre la scelta degli incanti** ([orologio.md](orologio.md)) anche se non ne sai
+  nessuno (la casella non sparisce, la barra non balla): la finestra dice che non ne
+  sai e porta all'albero; sopra dice che si preparano giù. La pastiglia di un
+  incanto addosso, sopra il globo blu, apre la stessa scelta.
 - **🗺️ apre la mappina grande** al centro del campo, sulla tela
   (`mappaGrande` in `scena/tela.js`); il gioco non si ferma. La chiude un
   tocco sul campo, un foglio che si apre, o la casella stessa.
-- **Zaino, diario, mappa grande e pagina dell'eroe si chiudono toccando
+- **Zaino, mappa grande e finestra dell'eroe (diario compreso) si chiudono toccando
   altrove**, e quel tocco porta l'eroe dove si è toccato
   ([../core/interfaccia.md](../core/interfaccia.md#un-tocco-altrove-chiude)).
 
 Nei test: `[data-barra-giu]` con `data-barra="giu|sopra"`;
 `[data-globo="vita|energia"]` con `data-quota` (0..1), il numero in
-`.sot-globo-numero`; la riga dell'esperienza `[data-esperienza-barra]` con
+`.sot-globo-numero`; il globo rosso `[data-azione="vita"]` con `data-missioni-pronte` (assente se nessuna); la riga dell'esperienza `[data-esperienza-barra]` con
 `data-quota` e «fatta/serve» in `.sot-esp-numero`; il livello
 `[data-azione="eroe-pagina"]` con `data-livello` e `data-punti`; il globo
-dell'energia `[data-azione="abilita"]` con `data-punti-abilita`; `[data-casella-barra="pozione|zaino|diario|mappa|gemme"]` con
-`data-n`; `[data-azione="bevi"]`, `[data-azione="zaino"]`,
-`[data-azione="diario-giu"]` (giù) e `[data-azione="diario"]` con
-`[data-diario-n]` (sopra), `[data-azione="mappina"]` (con `aria-pressed`),
-`[data-gemme-barra]`; le schede `[data-scheda="zaino|eroe|abilita"]`. `integrazione/sotterraneo-barra` (col dito: la stessa
-barra sopra e sotto, i globi, il mostro che colpisce, la pozione dalla
+dell'energia `[data-azione="abilita"]` con `data-punti-abilita`; `[data-casella-barra="pozione|zaino|incanti|mappa|gemme"]` con
+`data-n` (per gli incanti quelli addosso, e `data-preparabili`); `[data-azione="bevi"]`, `[data-azione="zaino"]`,
+`[data-azione="incanti"]`, `[data-azione="mappina"]` (con `aria-pressed`),
+`[data-gemme-barra]`; sopra il globo blu `[data-incanti]` ([orologio.md](orologio.md)); le schede `[data-scheda="zaino|eroe|abilita|missioni"]` (sulle Missioni `[data-missioni-pronte]`) e il diario `[data-diario]`. `integrazione/sotterraneo-barra` (col dito: la stessa
+barra sopra e sotto, i globi che aprono l'eroe e le quattro schede, la casella degli incanti spenta che spiega, il mostro che colpisce, la pozione dalla
 casella, una pozione buttata e raccolta che fa risalire la casella, il tocco
 altrove, le misure a 390 e a 320 px con le caselle tutte uguali),
 `unita/sotterraneo-roba` (quale pozione si beve, l'elisir),

@@ -18,8 +18,6 @@ export const TASCHE = 6   // un limite vero: piene, quello per terra resta per t
 // il prezzo cresce in linea retta, mai esponenziale, e c'è un tetto. Stanno nella crescita dell'eroe (`crescita.tasche`)
 export const TASCHE_EXTRA_MAX = 8
 export const prezzoTasca = extra => 30 * (extra + 1)
-// e la forza dà posto (l'utente, 9 ottobre: a un mago la forza non serviva a niente): una tasca ogni tre punti oltre il primo
-export const FORZA_PER_TASCA = 3
 
 // la luce è un cono davanti all'eroe (nel verso dell'ultimo passo) e un alone corto attorno; alle spalle è ombra
 // (docs/sotterraneo/luce.md). Lunghezze in celle: senza torcia il cono è corto, con la torcia lungo, all'ultima stanza
@@ -40,6 +38,12 @@ export const SVEGLIA = 7
 // il mostro è più lento apposta: scappare deve funzionare sempre, o la stanza è una trappola
 export const PASSO_EROE = 5.4, PASSO_MOSTRO = 3.1, PASSO_RIENTRO = 2.2
 export const CALMA = 3   // il tempo di uscire dalla stanza, o lo scontro si riaprirebbe nel fotogramma dopo
+// L'orologio del gioco conta i passi dell'eroe, le celle percorse (docs/sotterraneo/orologio.md): fermo, in pausa o sotto una domanda
+// non scorre, e un bambino che legge non lo paga. Un turno dell'eroe nello scontro vale PASSI_PER_TURNO passi; a ogni passo il mana
+// torna di MANA_PER_PASSO del globo massimo (la stessa quota per tutte le classi: l'intelligenza conta alzando il globo): mille
+// passi, tre minuti di cammino, lo riempiono
+export const PASSI_PER_TURNO = 5
+export const MANA_PER_PASSO = 0.001
 // un mostro sveglio fuori dalla luce non punta all'eroe ma alle sue spalle: il punto dietro di lui (DIETRO celle), girando
 // largo a FIANCO celle finché sta più avanti di ALLA_PAR (docs/sotterraneo/luce.md)
 export const DIETRO = 0.5, FIANCO = 2.6, ALLA_PAR = 0.6
@@ -50,8 +54,11 @@ export const LARGO_DIETRO = 1.6
 // stessa stanza, al più MOSTRI_IN_CAMPO posti (il grosso ne vale due); un colpo di mostro vale COLPO_DEL_MOSTRO per
 // (attacco − difesa), almeno 1, qualunque sia la risposta
 export const RAGGIO_SCONTRO = 4.5
-export const MOSTRI_IN_CAMPO = 6
+export const MOSTRI_IN_CAMPO = 7   // il palco ne tiene sette (viste/campo.js); i branchi da sei o sette sono delle discese tarde (motore/livello.js)
 export const COLPO_DEL_MOSTRO = 1.1
+// i mostri di strada sono più del doppio di prima (branchi in quasi ogni stanza): ognuno rende la metà in esperienza e in gemme; il grosso e i caporali, che sono
+// gli stessi di sempre, tutto (docs/sotterraneo/scontro-bilancio.md)
+export const QUOTA_DEL_COMUNE = 0.35
 
 // arredo (barili, casse...): non toccabile, disegnato più spento delle cose che rispondono (scena/tela.js).
 // Cosa c'è, dove sta e quanto è epico lo dice dati/orpelli.js; qui resta la frase del generico, quella di chi non
@@ -74,6 +81,7 @@ export function guastiDelMondo() {
     g.push('la scala iniziale sta fuori dai suoi estremi')
   if (PASSO_MOSTRO >= PASSO_EROE)
     g.push('i mostri corrono quanto o più dell\'eroe: scappare non funziona più')
+  if (!(PASSI_PER_TURNO >= 1) || !(MANA_PER_PASSO > 0 && MANA_PER_PASSO < 0.01)) g.push('l\'orologio: i passi di un turno o il mana di un passo non tornano')
   if (TASCHE < 3) g.push('meno di tre tasche: lo zaino non è una scelta, è un intoppo')
   if (RAGGIO_TORCIA <= RAGGIO) g.push('la torcia non fa vedere più lontano')
   if (ALONE >= RAGGIO || ALONE_TORCIA >= RAGGIO_TORCIA) g.push('l\'alone attorno all\'eroe deve essere più corto del cono')

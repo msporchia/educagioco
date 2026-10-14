@@ -21,11 +21,8 @@ finto che scende davvero, e fa la spesa sopra).
 - **Chi porta la chiave lo dichiara la tappa, non il caso** (`guardianoDi`):
   è il caporale della discesa, fatto caporale
   ([mostri.md](mostri.md)). È l'unica cosa del sotterraneo che non si può aggirare.
-- **I segni sopra le porte non mentono mai** (`SEGNI` in `dati/cose.js`):
-  💀 guardia, 💎 roba buona, ⛲ acqua. La pelle della porta
-  ripete il segno col disegno (`dati/tessere.js`). Un segno che promette a
-  vuoto diventa decorazione, e tornare indietro diventa una penitenza invece
-  di una scelta.
+- **Le porte non dicono cosa c'è dietro** ([piani.md](piani.md#le-porte)): erano 💀💎⛲ sopra e una pelle
+  per segno; l'utente il 13 ottobre ha voluto toglierli («non devi già sapere cosa troverai»). Solo il portone del grosso è più bello.
 - **Le porte chiudono la stanza, non il varco.** Si sbarrano *tutti* i varchi
   di una stanza, e una risposta li apre tutti: il pedaggio resta uno. Provato
   a chiuderne uno solo: il 💀 si scavalcava dall'altra parte, e dove due
@@ -49,18 +46,18 @@ finto che scende davvero, e fa la spesa sopra).
 Misurato dal banco, una discesa per riga col seme del banco e la roba con cui
 ci si entra secondo la storia (`robaAttesa` e il livello atteso, il cavaliere: [la-grande-storia.md](la-grande-storia.md);
 il numero balla da un seme all'altro: serve a leggere la forbice, non a
-confrontare due tappe; numeri dopo la taratura del 12/10/2026, col banco che usa le abilità e le coppie di mostri: i due giri di prima sono in
+confrontare due tappe; numeri dopo la taratura del 13/10/2026 (sera, coi branchi grossi: [taratura-branchi.md](taratura-branchi.md), che ha anche la media dei quattro eroi; la mattina del 12 erano 9 · 6 · 21 · 31 · 26 · 24 · 25 e 16 · 50 · 55 · 40 · 65 · 98 · 98), col banco che usa le abilità e le coppie di mostri: i due giri di prima sono in
 [piani.md](piani.md#il-costo-in-domande) e [scontro-bilancio.md](scontro-bilancio.md); la grotta è stretta perché quasi tutto sta sulla strada della scala):
 
 | discesa | piani | solo il guardiano | tutto il piano |
 |---|---|---|---|
-| La cripta dell'altare | 2 | 9 | 16 |
-| La scalinata antica | 2 | 6 | 50 |
-| La torre in rovina | 3 | 21 | 55 |
-| La grotta della scaletta | 5 | 31 | 40 |
-| La scala sommersa | 3 | 26 | 65 |
-| La botola segreta | 3 | 24 | 98 |
-| La miniera abbandonata | 4 | 25 | 98 |
+| La cripta dell'altare | 2 | 9 | 19 |
+| La scalinata antica | 2 | 20 | 74 |
+| La torre in rovina | 3 | 26 | 51 |
+| La grotta della scaletta | 5 | 40 | 59 |
+| La scala sommersa | 3 | 25 | 60 |
+| La botola segreta | 3 | 24 | 103 |
+| La miniera abbandonata | 4 | 23 | 71 |
 
 - **La forbice è il punto**: se «tutto» costasse quanto «il minimo» non ci
   sarebbe niente da scegliere.

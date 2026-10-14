@@ -7,6 +7,10 @@ import { MISSIONI, PERSONAGGI, personaDi, missioneDi, premioDetto, PIU_DURO, TET
 import { MOSTRI } from '../dati/mostri.js'
 import { COSE, aLivello } from '../dati/cose.js'
 import { CAMPAGNA, guardianoDi } from '../dati/campagna.js'
+import { GROSSI, GROSSO_DELLA_DISCESA } from '../dati/grossi.js'
+import { LUOGHI, POSTO_DI } from '../dati/terra.js'
+import { STORIA } from '../dati/storia.js'
+import { laStoria } from './storia.js'
 import { seminato } from './livello.js'
 import { PASSI } from '../../../motore/passi.js'
 
@@ -154,8 +158,11 @@ export const presePer = (stati, chiaveTappa) =>
 
 // Con più missioni prese le freccine ne indicano una sola: di difetto la più vicina (rotta, discesaDaSeguire); chi
 // ha toccato «segui questa» nel diario ne sceglie una. La scelta è `avventura.segui`, un id, e vale finché quella
-// missione è presa: fatta o consegnata la scelta decade da sé (docs/sotterraneo/missioni-freccina.md)
-export const seguita = (stati, segui) => (segui && statoDi(stati, segui) === PRESA ? segui : null)
+// missione è presa: fatta o consegnata la scelta decade da sé (docs/sotterraneo/missioni-freccina.md). `'storia'` è la
+// missione principale (docs/sotterraneo/la-storia-principale.md): non decade, e conta solo se c'è una porta da indicare
+export const SEGUI_LA_STORIA = 'storia'
+export const seguita = (stati, segui) =>
+  (segui === SEGUI_LA_STORIA ? segui : segui && statoDi(stati, segui) === PRESA ? segui : null)
 
 /* ═══════════ il diario e il promemoria ═══════════ */
 
@@ -192,13 +199,32 @@ function voceDiario(m, stato, segui = null) {
 // Il riassunto delle missioni di un'avventura, per la terra di sopra: quelle in mano (da fare, o fatte e da
 // consegnare), quelle che aspettano di essere prese, quelle già consegnate. `nascoste` sono sbloccate ma non
 // offerte per il tetto: il diario lo dice, o chi ne ha tre in mano non capirebbe perché non ne arrivano
+// La missione principale nel diario (docs/sotterraneo/la-storia-principale.md): le sette porte, e per il capitolo di adesso la
+// discesa con dov'è e il mostro grosso che la chiude. Non conta fra le aperte né nel tetto: è sempre lì, in cima
+export function storiaDelDiario(tappe, segui = null) {
+  const s = laStoria(tappe)
+  const c = s.corrente
+  const g = c && GROSSI[GROSSO_DELLA_DISCESA[c.chiave]]
+  return {
+    ...s, segui: segui === SEGUI_LA_STORIA, fine: STORIA.fine, ferma: STORIA.ferma,
+    corrente: c && { ...c, luogo: LUOGHI[POSTO_DI[c.chiave]],
+                     cosa: g ? { tipo: 'sconfiggi', nome: g.nome, em: MOSTRI[g.tipo].em, sprite: MOSTRI[g.tipo].sprite } : null },
+  }
+}
+
+// la discesa che la missione principale indica, se c'è una porta da aprire e per l'età si può (se no, nessuna)
+export function discesaDellaStoria(tappe) {
+  const c = laStoria(tappe).corrente
+  return c && !c.ferma ? c.chiave : null
+}
+
 export function diario(stati, tappe, segui = null) {
   const sg = seguita(stati, segui)
   const mano = inMano(stati).map(m => voceDiario(m, statoDi(stati, m.id), sg))
   const offerta = offerte(stati, tappe).map(m => voceDiario(m, 'offerta'))
   const finite = MISSIONI.filter(m => statoDi(stati, m.id) === CONSEGNATA).sort(dellaStoria).map(m => voceDiario(m, CONSEGNATA))
   return {
-    segui: sg,
+    segui: sg, storia: storiaDelDiario(tappe, sg),
     inMano: mano, pronte: mano.filter(v => v.stato === FATTA), daFare: mano.filter(v => v.stato !== FATTA),
     offerte: offerta, consegnate: finite,
     aperte: mano.length + offerta.length,
@@ -269,17 +295,20 @@ export function rotta(c, segui = null) {
 // Sulla terra di sopra: la discesa verso cui puntare. Quella con una missione presa e non fatta, la più vicina a
 // `da`; `posti` dice dove sta ogni discesa ({ [chiave]: { x, y } }). Se qualcuno aspetta una consegna la freccia
 // d'oro ha la precedenza (chiAspetta) e questa non c'è: una cosa alla volta da ricordare
-export function discesaDaSeguire(stati, da, posti, segui = null) {
+export function discesaDaSeguire(stati, da, posti, segui = null, storia = null) {
   if (chiAspetta(stati).length) return null
   const scelta = seguita(stati, segui)
-  if (scelta && posti[missioneDi(scelta).discesa]) return missioneDi(scelta).discesa
+  const dellaStoria = storia && posti[storia] ? storia : null
+  if (scelta === SEGUI_LA_STORIA && dellaStoria) return dellaStoria
+  if (scelta && scelta !== SEGUI_LA_STORIA && posti[missioneDi(scelta).discesa]) return missioneDi(scelta).discesa
   let meglio = null
   for (const m of MISSIONI) {
     if (statoDi(stati, m.id) !== PRESA || !posti[m.discesa]) continue
     const d = distanza(da, posti[m.discesa])
     if (!meglio || d < meglio.distanza) meglio = { discesa: m.discesa, distanza: d }
   }
-  return meglio ? meglio.discesa : null
+  // senza missioni prese né scelta, la freccia è quella della missione principale: la porta da aprire
+  return meglio ? meglio.discesa : dellaStoria
 }
 
 /* ═══════════ dove sta, giù ═══════════ */

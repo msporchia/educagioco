@@ -1,12 +1,12 @@
 <script setup>
 // La figura di un mostro grosso (dati/grossi.js, `figuraDelGrosso`) fuori dal campo: nello scontro e nella sua barra in cima.
 // Lo sprite dipinto se l'atlante ha `grosso-<chiave>-fermo-0`; se no quello della sua specie, ingrandito, con la corona.
-// `scala`: i pixel di schermo per ogni pixel della sua scatola di 32×32; lo sprite di ripiego ha una scala intera sua,
-// o uscirebbe a pixel disuguali (viste/figura.js)
+// `scala`: i pixel di schermo per ogni pixel dello sprite dell'eroe; il grosso ha la sua (`scalaDelGrosso`, dati/grossi.js: la scatola in cui sta,
+// a quarti) e la corona proporzionata alla figura, non grande quanto mezzo mostro
 import { computed, ref, watch } from 'vue'
 import { figura } from './figura.js'
 import { ATLANTE, PEZZI } from '../dati/atlante.js'
-import { GROSSI, figuraDelGrosso, spriteDelGrosso, LATO_DEL_GROSSO } from '../dati/grossi.js'
+import { GROSSI, figuraDelGrosso, spriteDelGrosso, scalaDelGrosso } from '../dati/grossi.js'
 
 const props = defineProps({
   chi: { type: String, required: true },
@@ -17,8 +17,7 @@ const F = computed(() => figuraDelGrosso(props.chi))
 const corpo = computed(() => {
   const f = F.value
   if (!f) return null
-  const s = f.dipinto ? props.scala : Math.max(1, Math.round(props.scala * LATO_DEL_GROSSO / f.alto))
-  return figura(spriteDelGrosso(f, 'scontro', 0), { scala: s })
+  return figura(spriteDelGrosso(f, 'scontro', 0), { scala: scalaDelGrosso(props.chi, props.scala) })
 })
 // i fotogrammi sono quadrati con righe vuote in cima: la corona si posa dove comincia la testa, non in cima alla scatola
 // (come in scena/tela.js con `vuotoSopra`). Si misura una volta per sprite, sul foglio
@@ -45,8 +44,8 @@ watch(() => (F.value && !F.value.dipinto ? spriteDelGrosso(F.value, 'scontro', 0
   vuoto.value = vuoti.get(nome)
 }, { immediate: true })
 const scalaVera = computed(() => (corpo.value && F.value ? parseFloat(corpo.value.gabbia.height) / PEZZI[spriteDelGrosso(F.value, 'scontro', 0)][3] : 1))
-// la corona è larga più o meno metà della figura
-const corona = computed(() => (corpo.value ? Math.round(parseFloat(corpo.value.gabbia.width) * 0.5) : 0))
+// la corona è larga un terzo della figura, fra 14 e 24 px (la scritta è un'emoji: il corpo è un po' meno della larghezza)
+const corona = computed(() => (corpo.value ? Math.max(14, Math.min(24, Math.round(parseFloat(corpo.value.gabbia.width) * 0.3))) : 0))
 </script>
 
 <template>

@@ -18,19 +18,20 @@
    tempo: 240
    ═══════════════════════════════════════════════════════════════════ */
 import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, leggiProfilo, scendiNelSotterraneo,
-         camminaVerso, lasciaLaDiscesa, nelDialogo } from '../aiuto/browser.mjs'
+         camminaVerso, lasciaLaDiscesa, nelDialogo , finestraFerma } from '../aiuto/browser.mjs'
 import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifica.mjs'
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { PERSONAGGI, MINATORE } from '../../src/giochi/sotterraneo/dati/terra-mappa.js'
 import { missioneDi } from '../../src/giochi/sotterraneo/dati/missioni.js'
 import { MONDO } from '../../src/giochi/sotterraneo/motore/avventure.js'
-import { robaAttesa } from '../../src/giochi/sotterraneo/motore/storia.js'
+import { robaAttesa, crescitaAttesa } from '../../src/giochi/sotterraneo/motore/storia.js'
 import { sogliaDi } from '../../src/giochi/sotterraneo/dati/livelli.js'
 // al livello atteso della torre: due gradini sotto la guardia non fa scendere (docs/sotterraneo/zone.md)
-const crescita = { esp: sogliaDi(3) }
 
 const DISCESA = CAMPAGNA.findIndex(t => t.chiave === 'torre')
 const roba = robaAttesa('cavaliere', DISCESA, { gemme: 5 })
+// la forza dell'eroe atteso è sotto il livello (docs/sotterraneo/forza.md): due livelli in più perché la torre non abbia la sentinella
+const crescita = crescitaAttesa('cavaliere', DISCESA + 2)
 const ROSICCHIONE = missioneDi('rosicchione'), GOBLIN = missioneDi('goblin'), CHIAVI = missioneDi('chiavi')
 
 const browser = await apriBrowser()
@@ -57,6 +58,7 @@ async function tocca(x, y) {
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
 }
 async function toccaIl(sel) {
+  await finestraFerma(page)   // la finestra nuova cresce per 160 ms: misurata prima, il tocco cade a lato
   const b = await page.locator(sel).first().boundingBox()
   await tocca(b.x + b.width / 2, b.y + b.height / 2)
 }
@@ -68,7 +70,7 @@ const segni = () => page.locator('[data-personaggio][data-segno]').evaluateAll(
 /* ---------- 1. il villaggio: due «!» e un «?» ---------- */
 uguale('sul villaggio: la guardia e la ragazza hanno un favore, il mugnaio aspetta che gli porti Rosicchione', await segni(), 'guardia:nuova,mugnaio:consegna,ragazza:nuova')
 uguale('l\'eremita no: la sua Dama Grigia aspetta che si liberi un posto (il tetto è tre)', await page.locator('[data-personaggio="eremita"]').getAttribute('data-segno'), null)
-uguale('il tasto del diario conta le aperte: una in mano e due offerte', await page.locator('[data-diario-n]').innerText(), '3')
+uguale('il globo rosso dice che c\'è una missione da consegnare', await page.locator('[data-azione="vita"]').getAttribute('data-missioni-pronte'), '1')
 await scatto(page, 'missioni-villaggio')
 
 /* ---------- 1b. chi aspetta ed è lontano: l'indicatore sul bordo ---------- */
@@ -117,7 +119,7 @@ for (let n = 0; n < 4; n++) {
 await nelDialogo(page, null, { tocca: toccaIl })
 chiede += ' ' + await page.locator('[data-scelta="prendi"]').innerText()
 controlla('il dialogo dice cosa, dove, il premio e le monete', chiede.includes('Grattanaso') && chiede.includes('torre in rovina') &&
-          chiede.includes('primo piano') && chiede.includes(`💎 ${GOBLIN.premio.gemme}`) && chiede.includes(`🪙 ${GOBLIN.premio.monete}`), chiede)
+          chiede.includes('primo piano') && chiede.includes(`💎 ${GOBLIN.premio.gemme}`) && (!GOBLIN.premio.monete || chiede.includes(`🪙 ${GOBLIN.premio.monete}`)), chiede)
 await toccaIl('[data-dialogo] [data-scelta="prendi"]')
 await attendi(page, 500)
 uguale('presa, lei ringrazia', await page.locator('[data-dialogo="ragazza"] [data-missione="goblin"][data-fase="presa"]').count(), 1)
@@ -137,7 +139,10 @@ uguale('tutte insieme: Rosicchione fatta, il goblin e le chiavi prese', JSON.str
 uguale('adesso tre punti di domanda e nessun «!»: solo il mugnaio ha quello d\'oro', await segni(), 'guardia:attesa,mugnaio:consegna,ragazza:attesa')
 
 /* ---------- 3. il diario ---------- */
-await toccaIl('[data-azione="diario"]')
+await toccaIl('[data-azione="vita"]')
+await page.waitForSelector('[data-pagina-eroe]', { timeout: 5000 })
+uguale('la linguetta delle missioni porta lo stesso numero', await page.locator('[data-scheda="missioni"] [data-missioni-pronte]').innerText(), '1')
+await toccaIl('[data-scheda="missioni"]')
 await page.waitForSelector('[data-diario]', { timeout: 5000 })
 await attendi(page, 300)
 const righe = await page.locator('[data-diario] [data-sezione="da-consegnare"] li, [data-diario] [data-sezione="da-fare"] li').evaluateAll(
@@ -150,7 +155,7 @@ controlla('Rosicchione è fatta: torna dal mugnaio, hai battuto Rosicchione', ro
 controlla('il goblin è da fare, con la discesa, il piano e chi lo vuole', gob.stato === 'presa' && gob.testo.includes('da fare') &&
           gob.testo.includes('La torre in rovina, piano 1') && gob.testo.toLowerCase().includes('ragazza del pozzo'), gob.testo)
 controlla('ogni riga ha l\'icona ritagliata della discesa', righe.every(r => r.ritaglio))
-controlla('il premio è nella riga', ros.testo.includes('Amuleto azzurro') && ros.testo.includes(`🪙 ${ROSICCHIONE.premio.monete}`) && gob.testo.includes(`🪙 ${GOBLIN.premio.monete}`))
+controlla('il premio è nella riga', ros.testo.includes('Amuleto azzurro') && ros.testo.includes(`🪙 ${ROSICCHIONE.premio.monete}`) && (!GOBLIN.premio.monete || gob.testo.includes(`🪙 ${GOBLIN.premio.monete}`)))
 controlla('tre in mano, e il diario dice perché non ne arrivano altre', (await page.locator('[data-diario-tetto]').innerText()).includes('3 missioni'))
 await scatto(page, 'missioni-diario')
 await toccaIl('[data-diario] [data-chiudi]')
@@ -205,7 +210,7 @@ for (let n = 0; n < 6 && !(await page.locator('[data-riga][data-premio]').count(
 }
 controlla('e il mugnaio lo dice, monete comprese', (await page.locator('[data-riga][data-premio]').innerText()).includes(`🪙 ${ROSICCHIONE.premio.monete}`))
 uguale('consegnata una, si libera un posto: la Dama Grigia ha il suo «!»', await segni(), 'eremita:nuova,guardia:attesa,ragazza:attesa')
-uguale('il diario conta di nuovo le aperte: due in mano e una offerta', await page.locator('[data-diario-n]').innerText(), '3')
+uguale('consegnata, sul globo rosso non resta nessuna pastiglia', await page.locator('[data-azione="vita"]').getAttribute('data-missioni-pronte'), null)
 await scatto(page, 'missioni-fatta')
 
 uguale('nessun errore in console', errori.join(' · '), '')

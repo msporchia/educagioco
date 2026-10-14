@@ -71,10 +71,16 @@ nello stesso modulo.
 - **I contorni (`alone`) restano dal pezzo piccolo**: sono un filo di un
   pixel di sprite, e da lì vengono uguali.
 - **Peso**: per i tre fogli della roba del sotterraneo, 260 pezzi, 451 KB.
+- **Anche l'arredo dei fogli di scena**, pezzo per pezzo: `"nitido": "scelti"` sul foglio e `"nitido": true` sul pezzo (`sotterraneo_2`,
+  `4_3`, `5_2`, `5_3`). Una botte di 150 px ridotta a 26 sgrana, nitida regge; il resto del foglio (pavimenti, muri) resta com'è.
+- **`riempi`** rimette il corpo a un pezzo mangiato da dentro: una porta nera su un foglio dal fondo nero resta trasparente dove il contorno ha dei varchi
+  (`atlante.py`: `riempi_in`; `{"chiudi": 2}` chiude i varchi stretti, in pixel del foglietto, e dove la sagoma è piena mette il colore scuro). L'ha la porta del grosso.
+- **Anche le creature**, una per una: `"nitido": true` nella voce del catalogo ([creature.md](creature.md)); `atlante.py` prende i suoi
+  fotogrammi dal foglio grande (`fogli_delle_creature` li segna, `nitidi_di` salta gli altri). Tela e `figura()` lo scelgono da soli per nome.
 - Il foglietto lo dichiara per i fogli dipinti di oggetti (`bottino-e-arredo`,
   `scudi`, `armature-e-vesti`), non per la pixel art vera (0x72), che è
-  già alla sua misura. `quanti`, `cancella` e `toppa` non li sa ancora
-  fare: quel pezzo resta solo piccolo, e lo strumento lo dice. **`misura`
+  già alla sua misura. `quanti` e `toppa` non li sa ancora fare: quel pezzo
+  resta solo piccolo, e lo strumento lo dice (`cancella` sì, scalato). **`misura`
   vale solo per il piccolo** (impagina): il nitido tiene tutta la sua
   definizione e il gioco lo stira alla gabbia del piccolo (`figura()`, scala
   x e y a parte, ammorbidito: `.sot-ritratto` è `pixelated`, e il pezzo
@@ -115,6 +121,44 @@ sì.
 `strumenti/sprite/sorgenti/`, e nel build non esiste. Un foglietto cambiato
 da fuori mentre il banco è aperto vuole una ricarica a mano, apposta: la
 pagina non si muove da sola mentre ci si lavora.
+
+## Gli inutilizzati
+
+**La regola** (dell'utente): niente «oggetti non utilizzati nel gioco ma già generati». Ogni pezzo o è un
+doppione (e si elimina), o si usa; se è già in un altro set o è brutto, si elimina. `npm run
+sprite:inutilizzati` dice quali sono oggi nel mezzo, per cartella-gioco. Non cambia niente e non è un cancello:
+il test (`unita/sprite-inutilizzati`) guarda solo che giri e sia coerente.
+
+- **Immagini**: i file di `sorgenti/` che nessun foglietto, nessuno strumento (un nome o un glob nel codice,
+  commenti esclusi: `terreno-*.png`) e nessun catalogo legge. Stati: `NESSUNO LA LEGGE` (anche tutto
+  `non-usati/`), solo allegato ai prompt (sta in una scheda `PROMPT-*.md`), schema di `scenario.py`, set di
+  terzi (`armm1998/`, `0x72/`: i nomi non si toccano). Una riga `?` dice «letta solo da uno strumento»: va
+  guardata (oggi `td_1.png`, il riferimento delle misure di `vesti.py`, e due falsi allarmi dei glob).
+- **Voci dell'atlante** (fattoria, sotterraneo) che nessun file di `src/` nomina: il nome (o un pezzo della
+  sua posa) compare come parola, oppure combacia con un modello come `recinto_${specie}_${stato}` le cui
+  parti sono parole che compaiono. È un'euristica: sbaglia per un nome composto in un modo che nessuno scrive
+  per intero, quindi **ogni voce si guarda prima di toglierla** (`--provino` la ritaglia dall'atlante).
+- **La roba del sotterraneo**: le figure di `roba.json` che nessun foglietto ritaglia e che non hanno un
+  `pezzo` (le 17 «fuori» di [figure.md](../sotterraneo/figure.md)). **Le creature**: quelle del catalogo senza
+  nessun gioco, e i fotogrammi che un gioco lascia fuori (`scelta`).
+- **Il 13 ottobre 2026** si sono eliminati i doppioni: tutto `castello/non-usati/`, le scene `td_2/3/4.png`
+  (già nei `terreno-*.png`; `vesti.py` non ha più il ripiego sulle scene, `td_1.png` resta come riferimento),
+  `fattoria/non-usati/` e `home/non-usate/` (cartelle ora vuote), e dagli atlanti 13 voci del sotterraneo
+  (chiavi blu/ferro/verde, `arco-vuoto`, `cancello-chiuso`, cuori, pozioni gialla e verde, `forziere-mezzo`,
+  `scena-cassa`, `scena-teschio`) e 24 tessere 16 px della fattoria (laghetti, stagni interni, recinti,
+  `ninfea`, `ossa_mucchio`, torrioni, casse del tesoro).
+- **Lo stesso giorno, in sera, quello che restava si è messo in gioco o tolto** (voci dell'atlante e figure della roba: 0 e 0): arredo di cantine, cripta e
+  fornace dai fogli dipinti ([arredo.md](../sotterraneo/arredo.md)), forzieri per ambientazione e gemme colorate ([roba.md](../sotterraneo/roba.md)), il portone
+  nero col teschio d'oro e la porta chiara ([piani.md](../sotterraneo/piani.md#le-porte)), dieci bastoni raddrizzati con `ruota`, le pose di morte dei mostri
+  ([creature.md](creature.md)). **Tolti**: le porte e i fianchi d'oro, `pozione-nera` e `pozione-viola`, le monete grosse e il mucchio (sostituiti dalle gemme), i due
+  teschi di porta di prima, la `cassa` di decoro, l'occhio dentato, e sei figure della roba che nessun pezzo può avere (balestre `arco-08/09/10`, arco con la lama, frusta,
+  mazza). Restano nei PNG, che non si toccano: le sfere di cristallo di `scudi.png` (la viola è la curiosità, le altre quattro non hanno un ruolo che non si confonda con lei),
+  l'arredo di `bottino-e-arredo.png` che sembra un contenitore, gli stendardi a palo, il pozzo, la statua dello stregone col cappello.
+- **`--pixel`** (`strumenti/sprite/non-ritagliato.py`): per ogni foglio con un foglietto toglie i rettangoli
+  dal primo piano (alfa, fondo dichiarato, o il colore degli angoli; bianco e scacchiera dipinta riconosciuti)
+  e raggruppa il resto in macchie: figure dipinte mai ritagliate. I fogli di scena (`sotterraneo_N`) ne
+  danno molte perché il fondo è dipinto. **Di un foglio che resta in uso le macchie non si «eliminano»**:
+  o si ritagliano (una riga nel foglietto) o restano nel PNG, che non si tocca.
 
 ## Gli agganci
 

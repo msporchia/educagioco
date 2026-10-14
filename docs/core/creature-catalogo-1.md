@@ -2,7 +2,7 @@
 
 <!-- GENERATO da `python3 strumenti/sprite/creature.py catalogo` dal campo `scheda` di `strumenti/sprite/sorgenti/creature/creature.json`: non si scrive a mano, si ritocca il JSON. -->
 
-24 creature di `mostri-1.png`; in tutto il catalogo 50: **49 tenute** (almeno due pose di respiro coerenti), 1 scartate, 7 con i passi dai video. L'altro foglio: [mostri-2](creature-catalogo-2.md). La regola, i giochi che le prendono e come se ne aggiunge una: [creature.md](creature.md). Le ambientazioni del sotterraneo: [../sotterraneo/ambientazioni.md](../sotterraneo/ambientazioni.md).
+24 creature di `mostri-1.png`; in tutto il catalogo 49: **49 tenute** (almeno due pose di respiro coerenti), 0 scartate, 7 con i passi dai video. L'altro foglio: [mostri-2](creature-catalogo-2.md). La regola, i giochi che le prendono e come se ne aggiunge una: [creature.md](creature.md). Le ambientazioni del sotterraneo: [../sotterraneo/ambientazioni.md](../sotterraneo/ambientazioni.md).
 
 Ogni voce: come è fatta, **come combatterebbe** (resiste/teme fra parentesi), **dove** sta bene, il **ruolo** (comune, caporale, grosso, variante) e il giudizio sulle pose. Dopo il nome: `S` sotterraneo, `C` castello, `P` ha i passi dai video; poi l'elemento, l'altezza del fotogramma nella griglia del sotterraneo (le creature del gioco sono alte 14-26 px, l'eroe 28).
 

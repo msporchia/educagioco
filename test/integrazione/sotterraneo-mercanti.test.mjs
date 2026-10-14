@@ -2,7 +2,7 @@
    I MERCANTI DI SOPRA, COL DITO VERO
 
    La roba resta fra una discesa e l'altra, e il mercante è uscito dalle
-   discese: tre botteghe sulla terra di sopra (docs/sotterraneo/
+   discese: quattro botteghe sulla terra di sopra (docs/sotterraneo/
    terra-di-sopra.md). Qui il giro intero col dito: toccare un mercante e
    vedere l'eroe andarci e il banco aprirsi, comprare, vendere al
    rigattiere, scendere con la roba comprata, risalire e ritrovarla, e
@@ -20,7 +20,7 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { MONDO } from '../../src/giochi/sotterraneo/motore/avventure.js'
 import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, leggiProfilo, scendiNelSotterraneo, nelDialogo,
-         lasciaLaDiscesa, vendiNellaBottega, riacquistaNellaBottega, allaLinguettaDi } from '../aiuto/browser.mjs'
+         lasciaLaDiscesa, vendiNellaBottega, riacquistaNellaBottega, allaLinguettaDi , finestraFerma } from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 import { COSE } from '../../src/giochi/sotterraneo/dati/cose.js'
 import { MERCANTI, CELLA } from '../../src/giochi/sotterraneo/dati/terra-mappa.js'
@@ -52,6 +52,7 @@ async function tocca(x, y) {
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
 }
 async function toccaIl(sel) {
+  await finestraFerma(page)   // la finestra nuova cresce per 160 ms: misurata prima, il tocco cade a lato
   const b = await page.locator(sel).first().boundingBox()
   await tocca(b.x + b.width / 2, b.y + b.height / 2)
 }
@@ -87,7 +88,7 @@ async function chiudiBanco() {
 }
 
 /* ---------- 1. i mercanti stanno sulla mappa ---------- */
-uguale('sulla terra di sopra ci sono tre mercanti', await page.locator('[data-mercante]').count(), 3)
+uguale('sulla terra di sopra ci sono quattro mercanti', await page.locator('[data-mercante]').count(), 4)
 controlla('e la carta di chi scende dice le gemme', (await gemme()) === 60, String(await gemme()))
 await scatto(page, 'mercanti-mappa-casa')
 
@@ -147,6 +148,7 @@ uguale('la bottega si apre', await page.locator('[data-bottega]').count(), 1)
 uguale('con le sue linguette: pozioni e torce', await page.locator('[data-bottega] [data-scheda]').count(), 2)
 uguale('e la prima è quella delle pozioni', await page.locator('[data-scheda="pozioni"][aria-selected="true"]').count(), 1)
 controlla('in griglia la pozione', await page.locator('[data-casella-pezzo="pozione"]').count() === 1)
+uguale('l\'energia non è sua: la boccetta blu sta dall\'incantatrice', await page.locator('[data-casella-pezzo="pozione-blu"]').count(), 0)
 uguale('e le gemme dell\'eroe in vista', await gemmeBottega(), 60)
 controlla('niente di scelto: parla l\'erborista, e dice chi compra la roba',
           (await page.locator('[data-chi-compra]').innerText()).includes('al mercante'))
@@ -173,7 +175,23 @@ await attendi(page, 200)
 uguale('sotto «Torce» la torcia', await page.locator('[data-casella-pezzo="torcia"]').count(), 1)
 await scatto(page, 'mercanti-banco-erborista')
 await chiudiBanco()
-const spese = COSE.pozione.prezzo + COSE['pozione-piccola'].prezzo
+let spese = COSE.pozione.prezzo + COSE['pozione-piccola'].prezzo
+uguale('e la carta di sopra ha le gemme di adesso', await gemme(), 60 - spese)
+
+/* ---------- 2b. l'incantatrice: a un cavaliere solo l'energia (le bacchette e la stoffa non le porta) ---------- */
+await alBanco('incantatrice')
+uguale('l\'eroe si è fermato accanto all\'incantatrice', await cella(), MERCANTI.incantatrice.accanto.join(','))
+uguale('una linguetta sola: l\'energia', (await page.locator('[data-bottega] [data-scheda]').evaluateAll(els => els.map(e => e.dataset.scheda))).join(), 'energia')
+for (const k of ['pozione-blu', 'ampolla-blu']) uguale(`sotto «Energia» ${k}`, await page.locator(`[data-casella-pezzo="${k}"]`).count(), 1)
+uguale('e non compra: dice chi lo fa', await page.locator('[data-chi-compra]').count(), 1)
+await toccaIl('[data-casella-pezzo="pozione-blu"]')
+await attendi(page, 600)
+await toccaIl('[data-casella-pezzo="pozione-blu"]')
+await attendi(page, 300)
+spese += COSE['pozione-blu'].prezzo
+uguale('un secondo tocco sulla boccetta blu la compra', await gemmeBottega(), 60 - spese)
+await scatto(page, 'mercanti-banco-incantatrice')
+await chiudiBanco()
 uguale('e la carta di sopra ha le gemme di adesso', await gemme(), 60 - spese)
 
 /* ---------- 3. il rigattiere: si vende ---------- */
@@ -336,6 +354,6 @@ await attendi(page, 200)
 uguale('e lo zaino si chiude con la ✕', await page.locator('[data-zaino]').count(), 0)
 
 uguale('nessun errore in console', errori.join(' · '), '')
-nota(`gemme: 60 → ${60 - spese} (pozione e boccetta) → ${dopo} (ascia venduta, spada corta comprata)`)
+nota(`gemme: 60 → ${60 - spese} (pozione, boccetta e boccetta blu) → ${dopo} (ascia venduta, spada corta comprata)`)
 await browser.close()
 riassunto('i mercanti di sopra col dito')

@@ -291,6 +291,10 @@ export const CATEGORIE = [
     V('cartello_cavolfiori', 'cartello_cavolfiori', 'Cartello cavolfiori', 6),
     V('cartello_cipolle', 'cartello_cipolle', 'Cartello cipolle',   6),
     V('cartello_aglio', 'cartello_aglio',     'Cartello aglio',     6),
+    // E gli ultimi tre, dei campi della terra (barbabietola, lavanda, riso).
+    V('cartello_barbabietola', 'cartello_barbabietola', 'Cartello barbabietole', 6),
+    V('cartello_lavanda', 'cartello_lavanda', 'Cartello lavanda', 6),
+    V('cartello_riso', 'cartello_riso',       'Cartello riso',      6),
     // Bandiera animata: quattro fotogrammi con lo stesso palo fermo (misurati sul foglio).
     V('bandiera',      'bandiera0',         'Bandiera',          10, {
       anima: ['bandiera0', 'bandiera1', 'bandiera2', 'bandiera_tesa'] }),

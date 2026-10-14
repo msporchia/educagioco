@@ -10,7 +10,7 @@ import Cornice from './Cornice.vue'
 import Medaglione from './Medaglione.vue'
 import Glifo from './Glifo.vue'
 import SchedeEroe from './SchedeEroe.vue'
-import { RAMI, NODI, GRADI, GRADINI, colpisce } from '../dati/abilita.js'
+import { RAMI, NODI, GRADI, GRADINI, colpisce, costoAl, preparabile, aGrado } from '../dati/abilita.js'
 import { ELEMENTI } from '../dati/elementi.js'
 import { gradoDi, perchéNonImpari, caselleDella } from '../motore/abilita.js'
 
@@ -18,6 +18,7 @@ const props = defineProps({
   eroe: { type: Object, required: true },        // la scheda della classe (dati/eroi.js)
   livello: { type: Number, required: true },
   punti: { type: Number, default: 0 },           // i punti dell'albero ancora da dare
+  missioni: { type: Number, default: 0 },        // le missioni da consegnare, sulla scheda (SchedeEroe.vue)
   crescita: { type: Object, required: true },    // albero e caselle
   energia: { type: Number, default: 0 },
   energiaMax: { type: Number, default: 10 },
@@ -105,19 +106,21 @@ const dettaglio = computed(() => {
   const r = rami.value.find(x => x.chiave === n.ramo) || {}
   return {
     ...n, grado: ora, tinta: tintaDi(n.id), stato: stato(n),
+    costo: n.sempre ? 0 : costoAl(n, ora || 1), costoDopo: n.sempre ? 0 : costoAl(n, ora + 1),
     colpisce: colpisce(n), chi: CHI[n.forma] || '', elementoDi: colpisce(n) ? ELEMENTI[n.elemento] : null,
     con: n.car ? CON[n.car] : '', arma: r.arma || null,
     ora: ora ? n.fa(ora, props.vitaMax) : null,
     dopo: maiuscola(n.fa(ora + 1, props.vitaMax)),
     perche: perchéNonImpari(props.crescita, props.eroe.chiave, n.id),
     senzArma: n.arma && !props.haLArma(n.arma) ? n.arma : null,
+    preparabile: preparabile(n) ? aGrado(n, 'preparabile', ora || 1) : 0,   // i passi che resta addosso se la lanci dal campo
   }
 })
 </script>
 
 <template>
   <Cornice alta data-pagina-abilita @chiudi="$emit('chiudi')" @fuori="e => $emit('fuori', e)">
-    <SchedeEroe attiva="abilita" :punti="puntiEroe" :punti-abilita="punti" @scheda="s => $emit('scheda', s)" />
+    <SchedeEroe attiva="abilita" :punti="puntiEroe" :punti-abilita="punti" :missioni="missioni" @scheda="s => $emit('scheda', s)" />
 
     <div class="sot-punti-riga">
       <p v-if="punti" class="sot-eroe-punti" data-punti-abilita :data-n="punti">
@@ -234,7 +237,7 @@ const dettaglio = computed(() => {
         <span>
           <b>{{ dettaglio.nome }}</b>
           <small v-if="dettaglio.sempre">passiva · vale sempre</small>
-          <small v-else class="sot-costo-energia"><Glifo nome="energia" :misura="13" /> {{ dettaglio.costo }} di energia</small>
+          <small v-else class="sot-costo-energia"><Glifo nome="energia" :misura="13" /> {{ dettaglio.costo }} di energia<template v-if="dettaglio.grado && dettaglio.costoDopo > dettaglio.costo"> (al grado {{ dettaglio.grado + 1 }}: {{ dettaglio.costoDopo }})</template></small>
         </span>
       </div>
       <p v-if="dettaglio.ora">Grado {{ dettaglio.grado }}: {{ dettaglio.ora }}</p>
@@ -247,6 +250,7 @@ const dettaglio = computed(() => {
       <p v-if="dettaglio.dopo" :class="{ 'sot-tenue': !!dettaglio.grado }">
         <template v-if="dettaglio.grado">Al grado {{ dettaglio.grado + 1 }}: </template>{{ dettaglio.dopo }}
       </p>
+      <p v-if="dettaglio.preparabile" class="sot-tenue" data-preparabile :data-passi="dettaglio.preparabile">Si può preparare prima di uno scontro, dal globo blu: resta addosso per {{ dettaglio.preparabile }} passi e lo scontro comincia con lei già attiva.</p>
       <p v-if="dettaglio.sempre" class="sot-tenue" data-passiva>Una passiva lavora da sola: non costa energia e non va nelle caselle dello scontro. Basta averla imparata.</p>
       <p v-if="dettaglio.senzArma" class="sot-manca">Ci vuole {{ dettaglio.senzArma.nome }} in mano</p>
       <p v-if="!dettaglio.sempre && dettaglio.costo > energiaMax" class="sot-manca" data-serve-energia>Ti serve più energia: ne hai al massimo {{ energiaMax }}. Metti punti in intelligenza</p>

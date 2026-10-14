@@ -129,13 +129,23 @@ sulle basi femminili):
 - **La base** si pesca per prezzo come prima (`pescaCosa` con la
   profondità: il livello / 12), e predilige quello che l'eroe porta.
 
+## L'elisir del toro
+
+Tre punti di vita massima **per sempre** (`crescita.elisir`, come le tasche comprate: sopravvive a fine discesa, svenimenti
+e zone; un salvataggio di prima vale zero; la pagina dell'eroe scrive «🐂 +3 vita, per sempre»). Un buff definitivo è un
+oggetto rarissimo (l'utente, 13 ottobre): **non lo vende nessuno** (`rarissimo` in `dati/cose.js`, fuori da `IN_VENDITA`),
+cade dal mostro grosso (15%), da un caporale (4%) e da un forziere (1,2%) (`elisirCade`, `PROBABILITA_ELISIR`): uno ogni
+tre o quattro discese girate tutte. Il tiro nasce dal seme, dal piano e dal posto, non dal caso della discesa, così
+aggiungerlo non ha spostato niente di quello che cade. **Si beve anche al villaggio**, dallo zaino (`Corredo.beviElisir`): un effetto
+per sempre non ha bisogno della discesa, e prima lì diceva «Serve laggiù».
+
 ## I mercanti a tono
 
-L'armaiolo e il rigattiere portano la riga della storia (com'era,
+L'armaiolo, l'incantatrice e il rigattiere portano la riga della storia (com'era,
 [bottega.md](bottega.md)) **al livello dell'eroe**, e anche i pezzi della
 vetrina avanti; le cose in più (`altre`) sono a tono e una su tre magica
 (`MAGICI_SUL_BANCO`). Il resto della bottega non cambia: pezzi avanti a
-sovrapprezzo, solo roba che l'eroe porta, dieci pezzi per linguetta, mai un leggendario e al più un raro per linguetta ([bottega.md](bottega.md)). Il rigattiere
+sovrapprezzo, solo roba che l'eroe porta, dieci pezzi per linguetta, mai un leggendario, i rari solo come salti e sogni ([bottega.md](bottega.md#i-mercanti-di-sopra)). Il rigattiere
 compra a metà del prezzo vero (livello e rarità compresi). Un pezzo
 magico, raro o col nome si giudica sui numeri, non sul posto della sua base
 nella riga (`migliora`).

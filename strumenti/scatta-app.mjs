@@ -16,6 +16,12 @@
    `--dist` apre dist/index.html (o il percorso dopo, se c'è) invece del
    server di Vite: è quello che provano i test, e non serve una porta.
 
+   `--storia N` apre il sotterraneo sulla terra di sopra con N discese finite, come le avrebbe un eroe in regola
+   (`--eroe mago`, `--missioni collana:consegnata,rosicchione:presa`, `--non-parlato` se il minatore non ha ancora
+   detto niente): il diario e i dialoghi si guardano senza giocare la storia. `--zaino bastone-magico,elisir-toro` mette quei
+   pezzi in tasca in più (una chiave composta, `spada@7.m.fuoco`, va bene), per guardarli nel pannello o berli; `--punti 3` lascia tre
+   punti delle caratteristiche da dare, per vedere cosa cambia sotto ogni «+».
+
    `--tocca` accetta più selettori separati da virgola: si toccano in
    fila, aspettando `--attesa` fra l'uno e l'altro. Un selettore che non
    c'è viene detto e non ferma lo scatto.
@@ -58,10 +64,22 @@ const { page, errori } = await apriGioco(browser, {
 })
 await page.waitForTimeout(1200)                 // l'app aspetta il profilo
 
+// `--storia N`: il sotterraneo sulla terra di sopra con N discese finite (test/aiuto/sotterraneo-semina.mjs)
+if (opz('storia', null) != null) {
+  const { seminaIlSotterraneo } = await import('../test/aiuto/sotterraneo-semina.mjs')
+  await seminaIlSotterraneo(page, {
+    finite: Number(opz('storia')), eroe: opz('eroe', 'cavaliere'), parlato: !args.includes('--non-parlato'),
+    missioni: Object.fromEntries((opz('missioni', '') || '').split(',').filter(Boolean).map(x => x.split(':'))),
+    zaino: (opz('zaino', '') || '').split(',').filter(Boolean), punti: Number(opz('punti', 0)),
+  })
+}
+
 for (const sel of tocchi) {
   const el = await page.$(sel)
   if (!el) { console.log(`   (niente da toccare per «${sel}»)`); continue }
-  await el.click().catch(e => errori.push(`tocco fallito su ${sel}: ${e.message}`))
+  // fuori dallo schermo (un personaggio della mappa lontano) il tocco vero non si può dare: si fa il click, e l'eroe ci va
+  await el.click({ timeout: 3000 }).catch(() => el.evaluate(e => e.click()))
+    .catch(e => errori.push(`tocco fallito su ${sel}: ${e.message}`))
   await page.waitForTimeout(attesa)
 }
 

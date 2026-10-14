@@ -15,9 +15,10 @@ const props = defineProps({
   piccola: { type: Boolean, default: false },
   scelta: { type: Boolean, default: false },
   accesa: { type: Boolean, default: false },   // dove andrebbe il pezzo guardato
-  spenta: { type: Boolean, default: false },   // non te la puoi permettere, o non ancora
+  spenta: { type: Boolean, default: false },   // non te la puoi permettere, o non ancora: solo un segno per i test, il pezzo si vede pieno
   ombra: { type: Boolean, default: false },    // la mano presa dall'arma a due mani
   rosso: { type: Boolean, default: false },    // la riga sotto in rosso (mancano gemme)
+  ruolo: { type: String, default: null },     // «salto» o «sogno» (motore/bottega.js): solo `data-ruolo`, niente segno a schermo
 })
 
 const alto = computed(() => (props.piccola ? 40 : 62))
@@ -31,9 +32,10 @@ const colore = computed(() => (props.cosa && !props.ombra ? GRADINI[gradinoDi(pr
 <template>
   <button type="button" class="sot-casella"
           :class="[{ 'sot-piccola': piccola, 'sot-scelto': scelta, 'sot-accesa': accesa, 'sot-spenta': spenta,
-                     'sot-ombra': ombra, 'sot-vuota': !cosa }, cosa && !ombra ? 'sot-r-' + gradinoDi(cosa) : '']"
+                     'sot-ombra': ombra, 'sot-vuota': !cosa, 'sot-salto': ruolo === 'salto', 'sot-sogno': ruolo === 'sogno' },
+                   cosa && !ombra ? 'sot-r-' + gradinoDi(cosa) : '']"
           :style="colore ? { '--sot-gradino': colore } : null"
-          :data-rarita="cosa && !ombra ? gradinoDi(cosa) : null">
+          :data-rarita="cosa && !ombra ? gradinoDi(cosa) : null" :data-ruolo="ruolo || null">
     <span class="sot-casella-dentro">
       <Icona v-if="cosa" :sprite="cosa.sprite" :em="cosa.em" :scala="scala" :emAlto="piccola ? 22 : 28" />
       <b v-else class="em sot-casella-ombra">{{ vuota }}</b>

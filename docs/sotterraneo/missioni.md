@@ -126,17 +126,21 @@ Zannagrigia, lanterna) sono radici senza seguito.
 
 ## Il diario e il promemoria
 
-- **Il diario** (`viste/Diario.vue`, `diario` in `motore/missioni.js`): un
-  tasto 📖 sempre sulla terra di sopra, nella barra in basso, col
-  numero delle aperte (bordo d'oro se una è da consegnare). Si apre al centro,
-  si chiude con la ✕ o toccando fuori (e il tocco passa alla mappa). Quattro elenchi: **da consegnare** (le fatte, in cima e
+In cima al diario sta la missione principale, la grande storia
+([la-storia-principale.md](la-storia-principale.md)): non è una di queste, non
+conta nel tetto né nel numero d'oro delle missioni da consegnare.
+
+- **Il diario** (`viste/Diario.vue`, `diario` in `motore/missioni.js`): la quarta
+  scheda della finestra dell'eroe ([barra.md](barra.md)), sopra e sotto; si apre dal
+  globo rosso o da una linguetta e non ha più una casella sua. Le missioni da
+  consegnare si vedono senza aprirlo: una pastiglia d'oro sul globo rosso e il numero
+  sulla linguetta. Si chiude con la ✕ o toccando fuori (e il tocco passa alla mappa). Quattro elenchi: **da consegnare** (le fatte, in cima e
   in oro: «Torna dal mugnaio: hai il sacco di farina buona», «… hai battuto
   Rosicchione»), **da fare** (le prese: la cosa, la discesa col suo ritaglio
   dalla mappa e il piano, chi la vuole, «da fare», il premio), **ti
   aspettano** (le offerte: chi ha un favore da chiederti, e dove), **consegnate**
   (solo i nomi). Vuoto, dice che qualcuno al villaggio ti chiederà un favore
-  a discesa finita. **Giù** lo stesso diario si apre dalla casella 📖 della
-  barra in basso ([barra.md](barra.md)), senza «vai da …» (chi aspetta sta
+  a discesa finita. **Giù** è la stessa scheda, senza «vai da …» (chi aspetta sta
   sopra): da lì si sceglie anche quale missione segue la freccina.
 - **Il dettaglio**: toccando una voce (di qualunque elenco) il diario cambia
   pagina nella stessa finestra, con «‹ indietro» verso l'elenco; la ✕ e il tocco
@@ -224,8 +228,9 @@ monete e il «!» che arriva sull'eremita). Sulla mappa `[data-personaggio="<chi
 `[data-consegna-fuori="<chi>"]` (c'è solo se chi aspetta è fuori schermo), il
 dialogo `[data-dialogo="<chi>"]` con le righe e le domande di
 [dialoghi.md](dialoghi.md) (`[data-scelta="prendi"|"consegna"][data-missione]`), il segno del minatore `[data-minatore]
-[data-segno]`, `[data-missioni-qui]` nel fumetto di una discesa. Il tasto
-`[data-azione="diario"]` con `[data-diario-n]` (il numero), il foglio
+[data-segno]`, `[data-missioni-qui]` nel fumetto di una discesa. Il globo rosso
+`[data-azione="vita"]` con `[data-missioni-pronte]` (le da consegnare), la scheda
+`[data-scheda="missioni"]`, il foglio
 `[data-diario]` con `[data-sezione="da-fare" | "ti-aspettano" | "consegnate"]`,
 `[data-sezione="da-consegnare"]` per le fatte, le righe
 `li[data-missione][data-stato]` (`presa`, `fatta`, `offerta`, `consegnata`) con `[data-esito]` e `[data-ritaglio]`, `[data-diario-tetto]`,

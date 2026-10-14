@@ -33,7 +33,7 @@ nello scontro e nella barra in cima).
   Zannaverde, lo scheletro di Re Ossuto) con le ossa moltiplicate (`ossa`: da 1,1 a 1,3, e 1,9 e 1,95 per Grumo e Zannaverde, che si reggono sull'orco: da
   quando le specie di strada hanno tutte otto ossa l'orco ne ha 8 e non 12, e il grosso è rimasto com'era) e un colpo in più (`att`, Re Ossuto no; Grumo e
   Zannaverde +3, perché l'orco da caporale della scalinata picchia meno di prima e il grosso è rimasto com'era); poi la discesa lo cresce come gli altri
-  (`forza`, `spinta`). Re Ossuto è il più tenero: la cripta perdona. Il troll e il gigante non si disegnano più (solo statistiche): il troll è uscito
+  (`forza`, `spinta`). Re Ossuto è il più tenero: la cripta perdona (dove la forza è piccola, 0,25, un grosso ha comunque almeno due ossa più del suo simile: `mostroGrosso`). Il troll e il gigante non si disegnano più (solo statistiche): il troll è uscito
   dall'atlante del sotterraneo.
 - **I suoi pezzi non hanno famiglia**: li porta chiunque, perché il mostro
   grosso è di tutti e quattro gli eroi. La mazza e il martello sono armi
@@ -70,12 +70,13 @@ nello scontro e nella barra in cima).
 
 - **Lo sprite della creatura che veste, ingrandito, con la corona** (`figuraDelGrosso` in `dati/grossi.js`; l'utente, 12 ottobre 2026: i boss li fa
   dipingere ChatGPT, perché lo stile resti lo stesso del bestiario, e finché non ci sono si prende uno sprite che c'è già, ingrandito e con la corona).
-  Lo sprite `fermo`/`corsa` di quella creatura a coprire due caselle di altezza (almeno ×1,3: un gigante già alto non resterebbe com'è), la corona
-  👑 sopra la testa (quella del bersaglio di una missione, più grande) e un chiarore della sua `tinta` dietro, che distingue Re Ossuto da Carbonchio.
+  Lo sprite `fermo`/`corsa` di quella creatura ingrandito dentro la sua scatola (alto al più 1,9 altezze dell'eroe, largo al più 3 larghezze, a quarti:
+  `ingrandimentoDelGrosso`; con un'altezza sola un ragno usciva largo il doppio del palco e la corona era grande quanto lui), la corona
+  👑 sopra la testa (un terzo della figura; quella del bersaglio di una missione è più grande) e un chiarore della sua `tinta` dietro, che distingue Re Ossuto da Carbonchio.
   Sulla tela respira (più svelto da sveglio) e, se la creatura ha i passi (il ragno, l'orco), **cammina da sveglia**; guarda verso l'eroe, ha l'alone
   rosso più largo, il nome sopra la corona quando è in luce, la chiave, il sonno e la barretta come gli altri. **Nello scontro** (`viste/Grosso.vue`)
-  è la posa di lato ferma per chi ha i passi (il ragno, l'orco, specchiati verso l'eroe), il respiro per gli altri, a scala intera, con la stessa
-  corona. La figura disegnata in codice (`scena/grossi.js`, 32×32) è stata tolta: non serve più, e un boss dipinto da chi non è il modello
+  è la posa di lato ferma per chi ha i passi (il ragno, l'orco, specchiati verso l'eroe), il respiro per gli altri, con la scala dell'eroe
+  per l'ingrandimento (`scalaDelGrosso`) e la stessa corona. La figura disegnata in codice (`scena/grossi.js`, 32×32) è stata tolta: non serve più, e un boss dipinto da chi non è il modello
   avrebbe cambiato stile.
 - **L'immagine dipinta prende il posto da sola**: se l'atlante ha
   `grosso-<chiave>-fermo-0` (come `armaiolo-fermo-0` per i mercanti) si usa

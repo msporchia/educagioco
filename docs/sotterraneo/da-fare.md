@@ -53,6 +53,11 @@ dell'abisso sta in [abisso-progetto.md](abisso-progetto.md).
 
 ## La terra di sopra
 
+- **Il terzo foglio dei personaggi** (prompt 9 di `PROMPT-terra-di-sopra.md`, da chiedere a ChatGPT): la figura vera
+  dell'incantatrice, che ha una provvisoria (la guaritrice ruotata al viola), e nove che il gioco non ha, ognuna con un ruolo
+  da scrivere quando arriva: la sentinella dipinta per le discese rosse, il cartografo che dà la bussola, la cacciatrice, l'ortolana, il
+  bambino, la nonna e il nonno per le missioni nuove, il cantastorie e la lavandaia per il villaggio. Si ritaglia solo chi ha un ruolo
+  ([sprite.md](../core/sprite.md#gli-inutilizzati)).
 - **La bussola del mock** (il minatore che la dà, lei che punta alla prossima
   discesa) non è fatta. La posa del minatore con la bussola in mano c'è, nel
   primo foglio dei personaggi (`sopra-personaggi-1.png`, riquadro nel suo
@@ -79,7 +84,7 @@ dell'abisso sta in [abisso-progetto.md](abisso-progetto.md).
   secondo uso a tutti — armature e scudi pesanti che la chiedono, e una tasca in più ogni quattro punti; (2)
   **calibrare coi numeri finiti dell'equipaggiamento**: il banco deve usare le abilità dell'albero e quelle dei pezzi,
   non solo `att` e `dif` della roba, o la taratura sbaglia (regola dell'utente, 9 ottobre); una strada per ramo, due per
-  classe nelle misure; (3) le **boccette di mana** ci sono già (`pozione-blu`, dall'erborista e nei forzieri): da vedere se
+  classe nelle misure; (3) le **boccette di mana** ci sono già (`pozione-blu`, dall'incantatrice e nei forzieri): da vedere se
   ne servono di più grandi, con nomi epici e lo stesso disegno; (4) la **grafica del duello**: animazioni più lunghe e
   leggibili, una per tipo d'attacco (scudo e cura non scattano in avanti), e il mostro che attacca davvero nel disegno.
   (5) **un effetto grafico diverso per ogni abilità** (l'utente, 9 ottobre): oggi tutte volano con il loro simbolo e il colore
@@ -145,8 +150,22 @@ il telefono in mano.
   montaggio vanno sentiti col dito — sono la differenza fra un tocco fantasma
   ingoiato e un tasto che sembra lento.
 - **I relitti e l'acqua da dipingere**: macerie, crolli, rocce, travi, stalagmiti, il
-  carro rovesciato, i binari e le pozze sono disegnati in codice (`scena/relitti.js`) e
-  per le cantine non c'è nessun pezzo dipinto; da guardare col dito anche **l'eroe
+  carro rovesciato, i binari e le pozze sono disegnati in codice (`scena/relitti.js`), tranne
+  le macerie e le rocce della cripta (`sotterraneo_4_3.png`); per le cantine e la fornace non c'è nessun pezzo dipinto; da guardare col dito anche **l'eroe
   che passa davanti a un relitto alto invece che dietro** quando gli sta a nord, e
   se le grotte (passaggi stretti, un solo varco per stanza) si leggono sul telefono
   ([piani-caverne.md](piani-caverne.md)).
+
+## Le strade e le caratteristiche (13 ottobre)
+
+Aperte dopo il lavoro di [strade.md](strade.md):
+
+- **La destrezza** valeva più delle altre (a +5 livelli 69 contro 25–34 nel mago): la sera del 13 ottobre la velocità è passata a 7 più un punto per punto
+  (`VELOCITA_PER_DESTREZZA`), e ora sta vicina all'intelligenza ([abilita-energia.md](abilita-energia.md#la-fila-dei-turni)). Restano da guardare col dito il cavaliere
+  (a 6/10 il più debole) e chi non spende i punti dell'albero ([taratura-branchi.md](taratura-branchi.md#cosa-resta-da-decidere)).
+- **Le armi a una mano che mancano**: una bacchetta di secondo gradino (la strada «bacchetta» usa la verga fino alla grotta) e un
+  bastone di terzo (la «pura magia» tiene il bastone di secondo fino in fondo).
+- **La taratura dei mostri** dopo le armi a due mani: l'attacco a due mani è raddoppiato o più (3 · 6 · 9 contro 2 · 3 · 4), quindi
+  nano, elfa e arcieri colpiscono molto di più di quanto i branchi si aspettino; la difesa e la vita sono in [strade.md](strade.md#difesa-e-vita).
+- **Da guardare col dito**: la pagina dell'eroe con il «+» che dice la velocità (⚡), il bastone nel pannello («🔷 +50% ricarica») e che
+  l'energia torni davvero più in fretta, l'elisir del toro bevuto in paese.

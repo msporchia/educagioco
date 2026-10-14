@@ -18,7 +18,7 @@ Si parte da un villaggio, e le sette discese stanno in fila lungo la
 strada, sotto una campagna da girare a piedi nella nebbia: dietro l'altare,
 sotto l'arco, sotto la torre in rovina, nella grotta, nello stagno, sotto
 una botola, nella miniera. Un vecchio minatore dice dov'è la prossima; fra
-le case stanno tre botteghe — il fabbro, la guaritrice, il mercante — dove
+le case stanno quattro botteghe — il fabbro, l'incantatrice, la guaritrice, il mercante — dove
 si spendono le gemme trovate giù ([terra-di-sopra.md](terra-di-sopra.md)).
 Con tutti si parla: un ritratto, poche righe a pagine, e le domande da
 fargli, che cambiano andando avanti nella storia ([dialoghi.md](dialoghi.md)).
@@ -79,7 +79,7 @@ arriva a una discesa sotto il livello lo sa prima di scendere. Svenendo si
 perdono le tasche e metà delle gemme, mai quello che si ha addosso.
 
 **L'eroe cresce**: ogni mostro battuto dà esperienza, a ogni livello un
-punto da dare a forza, tempra, scorza o fortuna ([livelli.md](livelli.md)).
+punto da dare a forza, destrezza, intelligenza o tempra ([livelli.md](livelli.md)).
 La roba ha un livello e una rarità, dal comune bianco al leggendario d'oro
 con la sua storia ([rarita.md](rarita.md)), e in fondo a ogni discesa
 aspetta un mostro grosso col suo nome ([grossi.md](grossi.md)).

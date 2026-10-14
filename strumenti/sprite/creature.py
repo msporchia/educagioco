@@ -198,6 +198,12 @@ def guasti(dati=None):
             x, y, w, h = r
             if x < 0 or y < 0 or x + w > W or y + h > H:
                 g.append(f'{k}: un fotogramma cade fuori dal foglio {r}')
+        if len(v.get('morte') or []) > 2:
+            g.append(f'{k}: «morte» ha più di due figure')
+        for r in v.get('morte') or []:
+            x, y, w, h = r
+            if x < 0 or y < 0 or x + w > W or y + h > H:
+                g.append(f'{k}: una figura di «morte» cade fuori dal foglio {r}')
         if len({r[3] for r in fr}) > 1:
             g.append(f'{k}: i fotogrammi non hanno la stessa altezza (i piedi ballerebbero)')
         for gioco, quali in (v.get('scelta') or {}).items():
@@ -210,6 +216,8 @@ def guasti(dati=None):
             if (gioco, n) in visti:
                 g.append(f'{k}: il nome «{n}» è già preso in {gioco}')
             visti.add((gioco, n))
+        if v.get('nitido') and k in chi_cammina():
+            g.append(f'{k}: «nitido» e i passi insieme: i passi non hanno il pezzo grande, la creatura cambierebbe faccia camminando')
         if not v.get('giochi') and v.get('tenuta'):
             g.append(f'{k}: tenuta ma non serve a nessun gioco')
         s = v.get('scheda') or {}
@@ -520,6 +528,90 @@ def cmd_controlla(o):
     return 1 if g else 0
 
 
+# ── la morte, dal foglio ─────────────────────────────────────────────
+# I due fogli dipingono, dopo le pose di ogni creatura, come cade: due o tre figure (colpita, a terra, i resti). Il sotterraneo
+# ne porta una o due come `<nome>-morto-<i>` (campo `morte` del catalogo: i rettangoli, col fondo ai piedi della creatura).
+
+def morti_di(dati=None, vuoto=5):
+    """{chiave: [rettangoli]}: le figure staccate fra l'ultima posa di ogni creatura e la prossima nella sua riga del foglio
+    (se non ce n'è una, fino in fondo: i doppioni che il catalogo non tiene finiscono nell'elenco, e si scelgono a occhio).
+    Il rettangolo prende un margine attorno alla figura e arriva ai piedi della creatura, così il pezzo posa dove posa lei."""
+    dati = dati or carica()
+    fuori = {}
+    for nome in dati['fogli']:
+        im = foglio(nome)
+        pieno = maschera(im)
+        gente = {k: v for k, v in dati['creature'].items() if v['foglio'] == nome}
+        for k, v in gente.items():
+            fr = v['fotogrammi']
+            alto, piede, fine = min(r[1] for r in fr), max(r[1] + r[3] for r in fr), max(r[0] + r[2] for r in fr)
+            dopo = [min(r[0] for r in w['fotogrammi']) for kk, w in gente.items()
+                    if kk != k and min(r[0] for r in w['fotogrammi']) >= fine - 2 and abs(min(r[1] for r in w['fotogrammi']) - alto) < 40]
+            regione = (fine, max(0, alto - 10), min(dopo) if dopo else im.width, min(im.height, piede + 10))
+            fuori[k] = [[max(0, x - MARGINE), max(0, y - MARGINE), w + 2 * MARGINE, max(piede, y + h + MARGINE) - max(0, y - MARGINE)]
+                        for x, y, w, h in figure_in(pieno, regione, vuoto)]
+    return fuori
+
+
+def cmd_morti(o):
+    dati = carica()
+    morti = morti_di(dati, o.vuoto)
+    if o.scrivi:
+        for voce in o.scrivi:
+            nome, _, quali = voce.partition('=')
+            if nome not in dati['creature']:
+                print(f'  ! «{nome}» non è nel catalogo')
+                return 1
+            scelte = [int(i) for i in quali.split(',') if i != '']
+            if not scelte:
+                dati['creature'][nome].pop('morte', None)
+                continue
+            try:
+                dati['creature'][nome]['morte'] = [morti[nome][i] for i in scelte]
+            except IndexError:
+                print(f'  ! «{nome}» ha {len(morti[nome])} figure, non {max(scelte) + 1}')
+                return 1
+        salva(dati)
+        print(f'  → {len(o.scrivi)} voci scritte nel catalogo')
+        return 0
+    voci = [k for k in dati['creature'] if (not o.nomi or k in o.nomi) and (o.tutte or 'sotterraneo' in dati['creature'][k].get('giochi', []))]
+    Z, PAD = o.zoom, 6
+    font = ImageFont.truetype(FONT, 12)
+    righe = []
+    for k in voci:
+        v = dati['creature'][k]
+        im = foglio(v['foglio'])
+        r0 = v['fotogrammi'][0]
+        quadri = [(f'{k}', im.crop((r0[0], r0[1], r0[0] + r0[2], r0[1] + r0[3])))]
+        for i, r in enumerate(morti[k][:9]):
+            quadri.append((f'{i}', im.crop((r[0], r[1], r[0] + r[2], r[1] + r[3]))))
+        righe.append((k, v.get('morte'), quadri))
+    larghe = [sum(int(q.width * Z) + PAD for _, q in quadri) for _, _, quadri in righe]
+    W = max(larghe) + 20
+    alte = [max(int(q.height * Z) for _, q in quadri) + 22 for _, _, quadri in righe]
+    F = Image.new('RGB', (W, sum(alte) + 10), (36, 36, 44))
+    d = ImageDraw.Draw(F)
+    y = 6
+    for (k, scelta, quadri), a in zip(righe, alte):
+        x = 6
+        for etichetta, q in quadri:
+            z = q.resize((max(1, int(q.width * Z)), max(1, int(q.height * Z))), Image.LANCZOS)
+            sfondo = Image.new('RGBA', z.size, (70, 70, 82, 255))
+            sfondo.alpha_composite(z)
+            F.paste(sfondo.convert('RGB'), (x, y + 16))
+            giusta = scelta and etichetta.isdigit() and morti[k][int(etichetta)] in scelta
+            d.text((x, y), etichetta, font=font, fill=(120, 240, 130) if giusta else (255, 210, 90))
+            x += z.width + PAD
+        y += a
+    dove = FUORI / o.uscita
+    dove.parent.mkdir(parents=True, exist_ok=True)
+    F.save(dove)
+    print(dove)
+    for k in voci:
+        print(f'{k:20} {len(morti[k])} figure' + (f'  → scelte {dati["creature"][k]["morte"]}' if dati['creature'][k].get('morte') else ''))
+    return 0
+
+
 def cmd_catalogo(o):
     for nome, testo in catalogo_md().items():
         (DOC_CORE / nome).write_text(testo)
@@ -556,11 +648,18 @@ def main():
     p.add_argument('--sotterraneo', action='store_true', help='come li riceve l\'atlante del sotterraneo (griglia ridotta; --zoom intero)')
     p.add_argument('--contorno', type=int, default=1)
     p.add_argument('--uscita', default='provino.png')
+    mo = sub.add_parser('morti', help='le figure della morte dopo ogni creatura: guardarle, e scegliere con --scrivi nome=0,2')
+    mo.add_argument('nomi', nargs='*')
+    mo.add_argument('--zoom', type=float, default=1.2)
+    mo.add_argument('--vuoto', type=int, default=5)
+    mo.add_argument('--tutte', action='store_true', help='anche le creature che il sotterraneo non prende')
+    mo.add_argument('--scrivi', nargs='+', metavar='NOME=I,J', help='scrive `morte` nel catalogo: le figure (da 0) che si tengono, una o due')
+    mo.add_argument('--uscita', default='morti.png')
     sub.add_parser('controlla')
     sub.add_parser('catalogo')
     o = a.parse_args()
     return {'riga': cmd_riga, 'misura': cmd_misura, 'vedi': cmd_vedi, 'provino': cmd_provino,
-            'controlla': cmd_controlla, 'catalogo': cmd_catalogo}[o.cmd](o)
+            'controlla': cmd_controlla, 'catalogo': cmd_catalogo, 'morti': cmd_morti}[o.cmd](o)
 
 
 if __name__ == '__main__':

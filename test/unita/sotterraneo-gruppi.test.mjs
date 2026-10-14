@@ -1,6 +1,6 @@
 /* Lo scontro a gruppi (docs/sotterraneo/scontro.md): uno contro tanti, a turni, con l'iniziativa.
 
-   Chi entra (il raggio, sei posti, il grosso ne vale due, nessun rinforzo), chi parte (l'agguato, la sorpresa), la fila dei
+   Chi entra (il raggio, sette posti, il grosso ne vale due, nessun rinforzo), chi parte (l'agguato, la sorpresa), la fila dei
    turni (l'ordine, la parità all'eroe, il doppio turno), il bersaglio, il turno dell'eroe (giusto parte, sbagliato a vuoto,
    bere costa il turno), il colpo dei mostri che non dipende dalla risposta, le quattro forme dei colpi (con abilità finte),
    gli effetti contati nei turni di chi li porta, le abilità riscritte, la fuga a costo fisso, lo stop sulla somma dei colpi,
@@ -24,7 +24,7 @@ Livello.prototype.piazzaIRelitti = function () {}
 Livello.prototype.scavaLeNicchie = function () {}
 
 const roba = (mano = null, mancina = null) => ({ v: 1, gemme: 0, zaino: [], mano, mancina, corpo: null, dito: null, torcia: 0, torce: 0 })
-// (con l'intelligenza messa: le abilità alte costano 8, 11 e 16, e senza il cavaliere e il nano (10 di energia) non le pagano: qui si prova cosa fanno)
+// (con l'intelligenza messa, perché l'ultima riga costa tutto il globo che la classe ha al 12: qui si prova cosa fanno)
 const conAlbero = (livello, albero, altro = {}) =>
   ({ esp: sogliaDi(livello), albero, intelligenza: Math.min(5, livello - 1), caselle: Object.keys(albero).filter(id => !NODI[id].sempre).slice(0, 3), ...altro })
 
@@ -95,26 +95,26 @@ const colpoDi = (c, m) => Math.max(1, Math.round(COLPO_DEL_MOSTRO * (m.att - c.d
   uguale('un morto non entra', c.foglio.campo.length, 2)
 }
 {
-  // al più sei: se il raggio ne prende di più, i sei più vicini
+  // al più sette: se il raggio ne prende di più, i sette più vicini
   const posti = [[1, 0], [1, 1], [2, 0], [2, 1], [3, 0], [3, 1], [4, 0], [4, 1], [3, -1]]
   const { c, m } = scena({ mostri: posti.map(([dx, dy]) => ({ dx, dy })) })
   c.scontro(m[0])
   const campo = c.foglio.campo
-  uguale('sei in campo', campo.length, MOSTRI_IN_CAMPO)
+  uguale('sette in campo', campo.length, MOSTRI_IN_CAMPO)
   const d = x => Math.hypot(x.x - Math.floor(c.eroe.x), x.y - Math.floor(c.eroe.y))
   const fuori = m.filter(x => !campo.includes(x))
-  controlla('sono i sei più vicini', Math.max(...campo.map(d)) <= Math.min(...fuori.map(d)),
+  controlla('sono i sette più vicini', Math.max(...campo.map(d)) <= Math.min(...fuori.map(d)),
             `${Math.max(...campo.map(d))} contro ${Math.min(...fuori.map(d))}`)
 }
 {
   // il grosso vale due posti: con lui, un mostro in meno
-  const { c, m } = scena({ mostri: [{ dx: 1 }, { dx: 1, dy: 1, grosso: 'grumo', tipo: 'orco' }, { dx: 2 }, { dx: 2, dy: 1 }, { dx: 3 }, { dx: 3, dy: 1 }] })
+  const { c, m } = scena({ mostri: [{ dx: 1 }, { dx: 1, dy: 1, grosso: 'grumo', tipo: 'orco' }, { dx: 2 }, { dx: 2, dy: 1 }, { dx: 3 }, { dx: 3, dy: 1 }, { dx: 4 }] })
   uguale('il grosso occupa due posti', postiDi(m[1]), 2)
   c.scontro(m[0])
   const campo = c.foglio.campo
-  uguale('con il grosso i posti sono sei: cinque mostri', campo.length, 5)
-  uguale('il sesto resta fuori', campo.includes(m[5]), false)
-  uguale('e i posti occupati sono sei', campo.reduce((n, x) => n + postiDi(x), 0), MOSTRI_IN_CAMPO)
+  uguale('con il grosso i posti sono sette: sei mostri', campo.length, 6)
+  uguale('il settimo resta fuori', campo.includes(m[6]), false)
+  uguale('e i posti occupati sono sette', campo.reduce((n, x) => n + postiDi(x), 0), MOSTRI_IN_CAMPO)
 }
 
 /* ══════════ 3. chi parte ══════════ */
@@ -386,7 +386,7 @@ const colpoDi = (c, m) => Math.max(1, Math.round(COLPO_DEL_MOSTRO * (m.att - c.d
   const { c, m } = scena({ mostri: [{ dx: 1, att: 9, velocita: 8 }] })
   c.crescita = { ...c.crescita, destrezza: 14 }
   c.zaino = ['pozione-piccola']
-  uguale('la velocità è 10 più la destrezza', c.velocita, 10 + c.car('destrezza'))
+  uguale('la velocità è 7 più un punto di destrezza', c.velocita, 7 + c.car('destrezza'))
   m[0].velocita = 8
   c.scontro(m[0], { tocco: true })
   controlla('più veloce del doppio del mostro', c.velocita >= 16)

@@ -13,7 +13,8 @@
    tempo: 40
    ═══════════════════════════════════════════════════════════════════ */
 import { MONDO } from '../../src/giochi/sotterraneo/motore/avventure.js'
-import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, allaLinguettaDi, nelDialogo } from '../aiuto/browser.mjs'
+import { COSE } from '../../src/giochi/sotterraneo/dati/cose.js'
+import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, allaLinguettaDi, nelDialogo, finestraFerma } from '../aiuto/browser.mjs'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 import { MERCANTI } from '../../src/giochi/sotterraneo/dati/terra-mappa.js'
 
@@ -42,6 +43,7 @@ async function tocca(x, y) {
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
 }
 async function toccaIl(sel) {
+  await finestraFerma(page)   // la finestra nuova cresce per 160 ms: misurata prima, il tocco cade a lato
   const b = await page.locator(sel).first().boundingBox()
   await tocca(b.x + b.width / 2, b.y + b.height / 2)
 }
@@ -64,7 +66,7 @@ controlla('e lo dice chiaro: a due mani lo scudo torna nello zaino', /due mani.*
           await testo('[data-due-mani]'))
 const n = async sel => page.locator(sel).getAttribute('data-n')
 uguale('due cartellini: a sinistra il braccio delle due mani, +2', await n('[data-valore="att-addosso"]'), '+2')
-uguale('a destra lo spadone, +4', await n('[data-valore="att-questo"]'), '+4')
+uguale('a destra lo spadone, quello che dice il catalogo', await n('[data-valore="att-questo"]'), `+${COSE.spadone.att}`)
 uguale('la difesa e la vita dello scudo stanno solo a sinistra', await page.locator('[data-valore="dif-questo"], [data-valore="vita-questo"]').count(), 0)
 uguale('ogni cartellino dice livello e rarità', (await page.locator('[data-colonna="questo"]').innerText()).includes('liv. 1 · comune'), true)
 uguale('il netto sull\'eroe: il braccio sale', await page.locator('[data-confronto="att"]').getAttribute('data-verso'), 'su')

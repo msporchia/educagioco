@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    LO SCONTRO A GRUPPI, COL DITO
+   tempo: 420
 
    (docs/sotterraneo/scontro.md, «La vista»; docs/sotterraneo/scontro-interfaccia.md)
    Uno scontro con più mostri a schermo, aperto da `#sotterraneo=branco`
@@ -20,9 +21,8 @@
      gelo e lo stordimento si vedono addosso. Foto a metà effetto con `--scatti`.
    Si tocca come un bambino (`Input.dispatchTouchEvent` via CDP).
    `node test/esegui.mjs sotterraneo-gruppi`
-   tempo: 200
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, scendiNelSotterraneo } from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, scendiNelSotterraneo , finestraFerma } from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 import { sogliaDi } from '../../src/giochi/sotterraneo/dati/livelli.js'
 import { MONDO } from '../../src/giochi/sotterraneo/motore/avventure.js'
@@ -30,7 +30,7 @@ import { MONDO } from '../../src/giochi/sotterraneo/motore/avventure.js'
 const TAPPA = 1
 const roba = { v: 1, gemme: 0, zaino: ['pozione-piccola', 'pozione'], mano: null, mancina: null, corpo: null, dito: null, torcia: 0, torce: 0 }
 // un cavaliere di livello 12 col Grido di guerra: abbastanza vita per un giro contro sei mostri
-const crescita = { esp: sogliaDi(12), albero: { grido: 1 }, caselle: ['grido', null, null] }
+const crescita = { v: 2, esp: sogliaDi(12), forza: 1, destrezza: 0, intelligenza: 4, tempra: 0, albero: { grido: 1 }, caselle: ['grido', null, null] }   // l'intelligenza dà l'energia per il Grido (11)
 
 const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser)
@@ -41,6 +41,7 @@ async function tocca(x, y) {
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
 }
 async function toccaIl(sel) {
+  await finestraFerma(page)   // la finestra nuova cresce per 160 ms: misurata prima, il tocco cade a lato
   const b = await page.locator(sel).first().boundingBox()
   await tocca(b.x + b.width / 2, b.y + b.height / 2)
 }
@@ -89,10 +90,13 @@ await scelta()
   controlla('i piedi a altezze diverse, niente file orizzontali', new Set(ms.map(m => Math.round(m.b / 12))).size >= 5, JSON.stringify(ms.map(m => Math.round(m.b))))
   uguale('sotto ognuno la sua barra, senza numeri', await page.locator('[data-mostro] [data-vita]').count(), 6)
   controlla('e nessun numero di vita sul palco', !/\d+ ?\/ ?\d+/.test(await page.locator('[data-duello]').innerText()))
-  // niente «ti colpisce N» (l'utente, 12 ottobre: basta la barra della vita); sopra ognuno il suo nome, senza articolo
+  // niente «ti colpisce N» (l'utente, 12 ottobre: basta la barra della vita); il nome, senza articolo, solo sul bersaglio e su chi ha
+  // un grado (l'utente, 13 ottobre: sei nomi affollano il palco)
   uguale('niente «ti colpisce N» sul palco', await page.locator('[data-minaccia]').count(), 0)
   const nomi = await page.locator('[data-mostro] [data-nome-mostro]').evaluateAll(es => es.map(e => e.textContent.trim()))
-  controlla('sopra ognuno il suo nome, senza articolo', nomi.length === 6 && nomi.every(t => t && !/^(Un|Uno|Una|Il|Lo|La) /.test(t)), nomi.join(' | '))
+  const conNome = await page.locator('[data-mostro][data-bersaglio], [data-mostro][data-grado]').count()
+  controlla('il nome solo sul bersaglio e su chi ha un grado, senza articolo', nomi.length === conNome && nomi.length >= 1 && nomi.length < 6 && nomi.every(t => t && !/^(Un|Uno|Una|Il|Lo|La) /.test(t)), nomi.join(' | '))
+  uguale('il bersaglio ha il suo nome', await page.locator('[data-mostro][data-bersaglio] [data-nome-mostro]').count(), 1)
   uguale('un bersaglio solo', (await bersagli()).length, 1)
   uguale('ed è il primo, chi ha aperto lo scontro', (await bersagli())[0], '0')
   const fila = await page.locator('[data-fila] [data-turno]').evaluateAll(es => es.map(e => e.dataset.chi))
@@ -152,7 +156,10 @@ await scelta()
             dopo.every((o, i) => o < prima[i]), `${prima.join()} → ${dopo.join()}`)
   const scattati = await page.evaluate(() => window.__scatti)
   const vivi = await page.locator('[data-mostro]:not([data-morto])').count()
-  controlla('i mostri hanno colpito uno alla volta', scattati.length >= Math.min(2, attesi.length), scattati.join())
+  // chi cade sotto il Grido (i mostri della cripta hanno quattro ossa e il Grido ne toglie 3–5) non colpisce: scattano quelli
+  // che sono rimasti in piedi, nell'ordine della fila
+  const inPiedi = attesi.filter(x => dopo[Number(x)] > 0)
+  controlla('i mostri hanno colpito uno alla volta', scattati.length >= Math.min(2, inPiedi.length), `${scattati.join()} (in piedi: ${inPiedi.join()})`)
   const distinti = scattati.filter((x, i) => scattati.indexOf(x) === i)
   uguale('nell\'ordine della fila', distinti.join(), attesi.filter(x => distinti.includes(x)).join())
   await scelta()
@@ -161,7 +168,13 @@ await scelta()
   controlla('i colpiti restano al loro posto (niente salti)', (await caselle('[data-mostro]')).length === 6)
 }
 
-/* ---------- 4. un tocco accorcia il racconto ---------- */
+/* ---------- 4. un tocco accorcia il racconto ----------
+   Uno scontro nuovo e pieno: dopo il Grido del punto 3 i sei di prima sono quasi caduti, e un colpo di spada finisce
+   lo scontro — `[data-duello]` sparisce e non c'è più un racconto da accorciare. Con sei nuovi, un colpo solo ne
+   colpisce uno, e lo scontro dura. Il cavaliere nudo del test ha poca vita contro sei mostri che colpiscono in fila
+   (cade nel racconto): qui ha anche la tempra, e la vita che ne viene. */
+await entra('mostri=6', { cr: { ...crescita, tempra: 8 } })
+await scelta()
 {
   await toccaIl('[data-azione="attacco"]')
   await page.waitForSelector('.sot-domanda .qz-tasto', { timeout: 8000 })
@@ -234,7 +247,9 @@ await entra('mostri=2&sorpresa=1')
   await page.waitForSelector('[data-apertura]', { timeout: 3000 })
   controlla('la sorpresa lo dice', /sorpres/i.test(await page.locator('[data-apertura]').innerText()))
   const fila = await page.locator('[data-fila] [data-turno]').evaluateAll(es => es.map(e => e.dataset.chi))
-  uguale('e il suo primo turno arriva prima di tutto: l\'eroe due volte di fila', fila.slice(0, 2).join(), 'eroe,eroe')
+  // il primo turno prima di tutto (docs/sotterraneo/scontro.md, «La sorpresa»). Il secondo di fila no: dipende dalla velocità
+  // dell'eroe, che con la destrezza di questo cavaliere è sotto quella dei mostri (`VELOCITA_BASE_EROE`)
+  uguale('e il suo primo turno arriva prima di tutto', fila[0], 'eroe')
   await finitoIlRacconto()
 }
 

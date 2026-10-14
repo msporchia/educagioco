@@ -21,7 +21,7 @@
    `node test/esegui.mjs sotterraneo-barra`
    tempo: 150
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, scegliAttacco, scendiNelSotterraneo }
+import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, scegliAttacco, scendiNelSotterraneo, finestraFerma }
   from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
@@ -85,6 +85,7 @@ async function tocca(x, y) {
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
 }
 async function toccaIl(sel) {
+  await finestraFerma(page)   // la finestra nuova cresce per 160 ms: misurata prima, il tocco cade a lato
   const b = await page.locator(sel).first().boundingBox()
   await tocca(b.x + b.width / 2, b.y + b.height / 2)
 }
@@ -102,24 +103,34 @@ controlla('il globo dice fatta/serve, da zero', /^0\/\d+$/.test((await page.loca
 uguale('le gemme sono una casella come le altre', await page.locator('[data-casella-barra="gemme"]').evaluate(e => e.tagName), 'BUTTON')
 await scatto(page, 'barra-sopra')
 
-/* ---------- 0b. sopra: il diario si chiude toccando il prato, e l'eroe ci va ---------- */
-await toccaIl('[data-azione="diario"]')
+/* ---------- 0b. sopra: i globi aprono la finestra dell'eroe, il diario è una sua scheda, gli incanti hanno la casella ---------- */
+uguale('le caselle: niente diario, c\'è quella degli incanti', formaSopra, 'pozione,zaino,incanti,mappa,gemme')
+await toccaIl('[data-barra-giu] [data-azione="vita"]')
+await page.waitForSelector('[data-pagina-eroe]', { timeout: 3000 })
+uguale('il globo rosso apre la finestra dell\'eroe, sulla scheda Eroe', await page.locator('[data-scheda][aria-selected="true"]').getAttribute('data-scheda'), 'eroe')
+uguale('con quattro linguette', await page.locator('[data-scheda]').evaluateAll(es => es.map(e => e.dataset.scheda).join()), 'zaino,eroe,abilita,missioni')
+await toccaIl('[data-scheda="missioni"]')
 await page.waitForSelector('[data-diario]', { timeout: 3000 })
-await attendi(page, 300)
-{
-  const prima = await page.locator('[data-eroe-terra]').getAttribute('data-cella')
-  const m = await page.locator('[data-diario] .sot-modale').boundingBox()
-  const v = await page.locator('[data-terra]').boundingBox()
-  const su = (await page.locator('.sot-terra-sopra').boundingBox())?.height || 0
-  const y = Math.max(v.y + su + 20, m.y - 40)
-  controlla('sopra il diario c\'è prato da toccare', y < m.y - 10, `${y} / ${m.y}`)
-  await tocca(v.x + v.width / 2 + 60, y)
-  await attendi(page, 300)
-  uguale('sopra, il diario si chiude toccando fuori', await page.locator('[data-diario]').count(), 0)
-  await attendi(page, 500)
-  controlla('e quel tocco porta l\'eroe sul prato', (await page.locator('[data-eroe-terra]').getAttribute('data-cella')) !== prima, prima)
-  await page.waitForFunction(() => document.querySelector('[data-eroe-terra]')?.dataset.cammina === '0', null, { timeout: 15000 })
-}
+uguale('le missioni sono la quarta scheda', await page.locator('[data-scheda][aria-selected="true"]').getAttribute('data-scheda'), 'missioni')
+uguale('con la storia in cima', await page.locator('[data-diario] [data-sezione]').first().getAttribute('data-sezione'), 'storia')
+await toccaIl('[data-scheda="abilita"]')
+await page.waitForSelector('[data-pagina-abilita]', { timeout: 3000 })
+await toccaIl('[data-pagina-abilita] [data-chiudi]')
+await attendi(page, 250)
+uguale('la ✕ chiude la finestra', await page.locator('.sot-cornice').count(), 0)
+await toccaIl('[data-barra-giu] [data-azione="abilita"]')
+await page.waitForSelector('[data-pagina-abilita]', { timeout: 3000 })
+uguale('il globo blu apre l\'eroe sulla scheda Abilità', await page.locator('[data-scheda][aria-selected="true"]').getAttribute('data-scheda'), 'abilita')
+await toccaIl('[data-pagina-abilita] [data-chiudi]')
+await attendi(page, 250)
+uguale('sopra la casella degli incanti è spenta, ma si tocca', await page.locator('[data-casella-barra="incanti"]').evaluate(e => e.classList.contains('sot-vuota') && !e.disabled), true)
+await toccaIl('[data-casella-barra="incanti"]')
+await page.waitForSelector('[data-preparati]', { timeout: 3000 })
+uguale('e dice che si preparano giù', await page.locator('[data-prep-sopra]').count(), 1)
+uguale('senza elenco da scegliere', await page.locator('[data-azione="prepara-campo"]').count(), 0)
+await toccaIl('[data-preparati] [data-chiudi]')
+await attendi(page, 250)
+uguale('la ✕ la chiude', await page.locator('[data-preparati]').count(), 0)
 
 await page.evaluate(s => { location.hash = 'seme=' + s }, piano.seme)
 await scendiNelSotterraneo(page, 0)
@@ -214,6 +225,25 @@ uguale('niente globo della luce né casella delle torce: la luce si vede nella s
 uguale('niente scanalatura dell\'esperienza: è il globo', await page.locator('[data-barra-giu] [data-esperienza]').count(), 0)
 uguale('attacco e difesa non stanno più in cima: si leggono sull\'eroe', await page.locator('[data-azione="zaino-barra"]').count(), 0)
 await scatto(page, 'barra-piena')
+
+// giù, come sopra: i globi aprono l'eroe, la casella degli incanti c'è anche senza incanti e dice perché (e porta all'albero)
+await toccaIl('[data-barra-giu] [data-azione="vita"]')
+await page.waitForSelector('[data-pagina-eroe]', { timeout: 3000 })
+await toccaIl('[data-scheda="missioni"]')
+await page.waitForSelector('[data-diario]', { timeout: 3000 })
+uguale('giù le missioni sono la stessa scheda, senza «vai da»', await page.locator('[data-diario] [data-azione="vai-da"]').count(), 0)
+await toccaIl('[data-diario] [data-chiudi]')
+await attendi(page, 250)
+uguale('senza incanti da preparare la casella è spenta, a 0/0', await page.locator('[data-casella-barra="incanti"]').evaluate(e => e.classList.contains('sot-vuota') && e.textContent.trim() === '0/0'), true)
+await toccaIl('[data-casella-barra="incanti"]')
+await page.waitForSelector('[data-preparati]', { timeout: 3000 })
+uguale('si apre lo stesso e dice che non ne sa nessuno', await page.locator('[data-prep-nessuno]').count(), 1)
+await attendi(page, 500)   // i 320 ms ciechi: il tocco che ha aperto la finestra non deve premere i suoi tasti
+await toccaIl('[data-preparati] [data-azione="apri-albero"]')
+await page.waitForSelector('[data-pagina-abilita]', { timeout: 3000 })
+uguale('e porta all\'albero, senza lasciare la finestra di prima aperta', await page.locator('[data-preparati]').count(), 0)
+await toccaIl('[data-pagina-abilita] [data-chiudi]')
+await attendi(page, 250)
 
 /* ---------- 2. la curiosità: la domanda resta, la battuta si chiude toccando il campo ---------- */
 await vaiGiu(piano.curiosita)

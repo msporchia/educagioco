@@ -16,7 +16,7 @@
    `node test/esegui.mjs sotterraneo-rotta`
    tempo: 150
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, scendiNelSotterraneo, lasciaLaDiscesa }
+import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, scendiNelSotterraneo, lasciaLaDiscesa , finestraFerma }
   from '../aiuto/browser.mjs'
 import { controlla, uguale, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
@@ -25,15 +25,16 @@ import { PARTENZA } from '../../src/giochi/sotterraneo/dati/terra-mappa.js'
 import { MONDO } from '../../src/giochi/sotterraneo/motore/avventure.js'
 import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
 import { presePer, PRESA, FATTA, rotta } from '../../src/giochi/sotterraneo/motore/missioni.js'
-import { robaAttesa } from '../../src/giochi/sotterraneo/motore/storia.js'
+import { robaAttesa, crescitaAttesa } from '../../src/giochi/sotterraneo/motore/storia.js'
 import { sogliaDi } from '../../src/giochi/sotterraneo/dati/livelli.js'
 // al livello atteso della torre: due gradini sotto la guardia non fa scendere (docs/sotterraneo/zone.md)
-const crescita = { esp: sogliaDi(3) }
 
 const indiceDi = chiave => CAMPAGNA.findIndex(t => t.chiave === chiave)
 const TORRE = indiceDi('torre'), CANTINE = indiceDi('cantine')
 const DISCESE = TORRE + 1   // tutte le discese fino alla torre sono finite o aperte
 const roba = robaAttesa('cavaliere', TORRE, { gemme: 5 })
+// la forza dell'eroe atteso è sotto il livello (docs/sotterraneo/forza.md): due livelli in più perché la torre non abbia la sentinella
+const crescita = crescitaAttesa('cavaliere', TORRE + 2)
 
 /* ── il piano: un seme dove la cosa non sta troppo vicina né troppo lontana dall'eroe, così si vede la freccina ── */
 function scegliIlPiano(chiave, missione, voluto, [min, max]) {
@@ -73,6 +74,7 @@ async function tocca(x, y) {
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
 }
 async function toccaIl(sel) {
+  await finestraFerma(page)   // la finestra nuova cresce per 160 ms: misurata prima, il tocco cade a lato
   const b = await page.locator(sel).first().boundingBox()
   await tocca(b.x + b.width / 2, b.y + b.height / 2)
 }
@@ -279,13 +281,17 @@ await page.waitForSelector('[data-dialogo="eremita"]', { timeout: 30000 })
 uguale('arrivato accanto all\'eremita la freccina sparisce', await page.locator('[data-rotta-terra]').count(), 0)
 
 
-/* ---------- 5. niente missioni prese: niente freccia ---------- */
+/* ---------- 5. niente missioni prese: la freccia è quella della storia ---------- */
 await semina(page, profilo({ badessa: 'consegnata' }))
 await scegli(page, 'sotterraneo')
 await page.waitForSelector('[data-terra]', { timeout: 5000 })
 await attendi(page, 600)
-uguale('senza missioni prese né da consegnare, il bordo è libero',
-       await page.locator('[data-meta-fuori], [data-consegna-fuori]').count(), 0)
+uguale('senza missioni prese né da consegnare, nessuna consegna sul bordo',
+       await page.locator('[data-consegna-fuori]').count(), 0)
+// la porta della storia (la discesa dopo quelle finite) si indica da sola, in vista o sul bordo
+uguale('e la freccia azzurra, sul bordo o attorno all\'eroe, è una sola e porta alla discesa della storia',
+       await page.locator('[data-meta-fuori], [data-meta-vicina]').evaluateAll(els => els.map(e => e.dataset.metaFuori || e.dataset.metaVicina).join(',')),
+       CAMPAGNA[DISCESE].chiave)
 
 uguale('nessun errore in console', errori.join(' · '), '')
 await browser.close()

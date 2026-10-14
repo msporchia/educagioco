@@ -1,7 +1,7 @@
 // La forza dell'eroe (docs/sotterraneo/forza.md): quanto regge, con la roba e le abilità di adesso, contro i mostri di un
 // livello. Una formula sui numeri veri, non una partita finta: dice a che livello «vale» l'eroe, e il colore delle discese
 // (motore/zone.js) si legge da lì, non dal livello che ha scritto sulla barra. Funzioni pure sul Corredo: girano in Node.
-import { NODI, aGrado, colpisce, inVita } from '../dati/abilita.js'
+import { NODI, aGrado, colpisce, inVita, costoAl } from '../dati/abilita.js'
 import { MOSTRI } from '../dati/mostri.js'
 import { COLPO_DEL_MOSTRO } from '../dati/mondo.js'
 import { CAMPAGNA, OSSA_PER_PIANO } from '../dati/campagna.js'
@@ -19,7 +19,7 @@ export const RISPOSTE_GIUSTE = 0.8
 // quante abilità forti si contano a ogni scontro: l'utente, 12 ottobre 2026, «almeno 2 abilità forti a scontro»
 export const ABILITA_A_SCONTRO = 2
 // l'energia di partenza tipica di uno scontro (docs/sotterraneo/forza.md): i due terzi del globo, arrotondati per eccesso. Fra
-// uno scontro e l'altro l'energia non torna piena (si ricarica solo combattendo: docs/sotterraneo/abilita.md), e il banco
+// uno scontro e l'altro l'energia non torna piena (combattendo e camminando, piano: docs/sotterraneo/orologio.md), e il banco
 // entra in uno scontro con il 40–60% del globo; un'abilità che costa più di così non si conta come fatta a ogni scontro
 export const ENERGIA_TIPICA = 2 / 3
 export const energiaTipica = c => Math.ceil(c.energiaMax * ENERGIA_TIPICA - 1e-9)
@@ -79,7 +79,7 @@ export function colpoContro(c, m, nodo = null, { rotto = false } = {}) {
 // il cavaliere con poca intelligenza conta le prime, il mago tutte); se le caselle sono vuote, quelle che sa
 export function abilitaDelloScontro(c) {
   const tipica = energiaTipica(c)
-  const usabile = id => NODI[id] && !NODI[id].sempre && gradoDi(c.crescita, id) > 0 && c.haLArma(NODI[id].arma) && NODI[id].costo <= tipica
+  const usabile = id => NODI[id] && !NODI[id].sempre && gradoDi(c.crescita, id) > 0 && c.haLArma(NODI[id].arma) && costoAl(NODI[id], gradoDi(c.crescita, id)) <= tipica
   const incasella = caselleDella(c.crescita).filter(Boolean)
   const ids = incasella.length ? incasella : Object.keys(c.crescita.albero || {})
   return ids.filter(usabile).map(id => NODI[id])

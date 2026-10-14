@@ -6,7 +6,7 @@
 // `foglio` è un dato ({ che: 'scontro', chi }): finché è aperto il tempo è fermo.
 import {
   TASCHE, RAGGIO, RAGGIO_TORCIA, RAGGIO_SGOCCIOLI, ALONE, ALONE_TORCIA, ALONE_SGOCCIOLI, APERTURA_CONO, SFUMA_CONO, SFUMA_ARCO, ALONE_SFUMA, FORZA_MINIMA, ROCCIA, ACQUA, DIETRO, FIANCO, ALLA_PAR, LARGO_DIETRO, SVEGLIA, PASSO_EROE, PASSO_MOSTRO, PASSO_RIENTRO,
-  CALMA, SORSO, RIPOSO_SCALA, VITA_PER_PIANO,
+  CALMA, SORSO, RIPOSO_SCALA, VITA_PER_PIANO, QUOTA_DEL_COMUNE,
   ARREDO_DICE, ARREDO_LA_PRIMA_VOLTA,
 } from '../dati/mondo.js'
 import { MOSTRI } from '../dati/mostri.js'
@@ -21,7 +21,7 @@ import { grossoDi, GROSSI } from '../dati/grossi.js'
 import { valoreDelLivello } from '../dati/pezzi.js'
 import { espDi } from '../dati/livelli.js'
 import { espNellaZona } from '../dati/zone.js'
-import { pezzoNuovo, pezzoDelGrosso, pezzoDalMostro, livelloDelBottino } from './bottino.js'
+import { pezzoNuovo, pezzoDelGrosso, pezzoDalMostro, livelloDelBottino, elisirCade } from './bottino.js'
 import { generaPiano } from './livello.js'
 import { percorso, viaVerso, primaLibera } from '../../../motore/passi.js'
 import { Corredo } from './corredo.js'
@@ -30,6 +30,8 @@ import { indiceDella, premioPer } from './storia.js'
 import { robaDellaMissione } from './missioni.js'
 import { forzaDelCorredo } from './forza.js'
 import { MetodiDelloScontro } from './scontro.js'
+import { MetodiDellOrologio } from './orologio.js'
+import { MetodiDeiPreparati } from './preparati.js'
 import { RISPOSTE_PER_ENERGIA, aGrado } from '../dati/abilita.js'
 
 // nella storia i forzieri e i mostri di tutti i giorni danno solo quello che si consuma: la roba la dà la riga
@@ -70,6 +72,10 @@ export class Corsa extends Corredo {
 
     this.foglio = null          // cosa è aperto adesso, o niente
     this.energiaResto = 0       // le risposte giuste che non hanno ancora fatto un punto di energia (RISPOSTE_PER_ENERGIA)
+    this.passi = 0              // l'orologio: i passi dell'eroe in questa discesa (motore/orologio.js)
+    this.camminati = 0          // e di quelli, le celle davvero percorse (senza i turni dello scontro): il banco le conta
+    this.manaCammino = 0        // il mana che il cammino ha già dato ma non ancora un punto intero
+    this.preparati = []         // gli incanti preparati dal campo e ancora addosso: [{ id, passi, ... }] (motore/preparati.js)
     this.pronta = null          // l'abilità preparata per la prossima risposta giusta (docs/sotterraneo/abilita.md)
     this.fiatoUsato = false     // «Ultimo fiato»: una volta per discesa
     this.chiesta = null         // la domanda che serve: { id, che, difficolta }
@@ -518,6 +524,8 @@ export class Corsa extends Corredo {
     if (d <= v) {
       this.eroe.x = mx; this.eroe.y = my
       this.strada.shift()
+      this.camminati++
+      this.faiPassi(1, true)
       this.bruciaLaTorcia()
       this.aggiornaLuce()   // dopo: l'ultima stanza della torcia si stringe appena ci si entra
       this.raccogli()
@@ -671,9 +679,13 @@ export class Corsa extends Corredo {
     // l'energia viene dalle risposte giuste date a un mostro, non da porte e forzieri (l'utente, 12 ottobre: fra uno scontro
     // e l'altro non deve tornare piena da sola): dopo, così un'abilità si paga con l'energia che c'era quando la si è
     // preparata. Sbagliare non la toglie
-    if (giusto && f.che === 'scontro' && ++this.energiaResto >= RISPOSTE_PER_ENERGIA) {
-      this.energiaResto -= RISPOSTE_PER_ENERGIA   // 2,5: il resto passa al punto dopo (due punti ogni cinque risposte)
-      this.energia = Math.min(this.energiaMax, this.energia + 1)
+    // (il bastone la fa tornare più in fretta: `ricarica`, in percento, accorcia l'attesa di ogni risposta giusta)
+    if (giusto && f.che === 'scontro') {
+      this.energiaResto += 1 + this.addosso('ricarica') / 100
+      if (this.energiaResto >= RISPOSTE_PER_ENERGIA) {
+        this.energiaResto -= RISPOSTE_PER_ENERGIA   // 2,5: il resto passa al punto dopo (due punti ogni cinque risposte)
+        this.energia = Math.min(this.energiaMax, this.energia + 1)
+      }
     }
     return esito
   }
@@ -762,7 +774,8 @@ export class Corsa extends Corredo {
     // (il «grigio» si legge dalla forza dell'eroe, non dal livello: motore/forza.js; fuori dalle zone non serve)
     const forza = this.tappa && this.tappa.potenza ? forzaDelCorredo(this) : this.livelloEroe
     const delGrado = PREMIO_DEL_GRADO[m.grado] || 1   // un mostro di grado alto vale di più (dati/varianti.js)
-    const esp = Math.max(1, Math.round(espDi(MOSTRI[m.tipo], this.livelloQui, !!m.grosso) * espNellaZona(this.tappa, forza)))
+    const quota = m.grosso || m.caporale ? 1 : QUOTA_DEL_COMUNE
+    const esp = Math.max(1, Math.round(espDi(MOSTRI[m.tipo], this.livelloQui, !!m.grosso) * espNellaZona(this.tappa, forza) * quota))
     this.eventi.push({ che: 'esp', esp, x: m.x, y: m.y })
     this.guadagna(esp)
     // 💚 rigenera: ogni mostro battuto rimette in piedi un poco
@@ -773,7 +786,7 @@ export class Corsa extends Corredo {
     if (fiato) this.energia = Math.min(this.energiaMax, this.energia + fiato)
     const scheda = MOSTRI[m.tipo]
     this.livello.robe.push({ che: 'gemme', x: m.x, y: m.y, em: '💎',
-                             quante: Math.round((scheda.gemme + Math.floor(this.piano * 1.5)) * valoreDelLivello(this.livelloQui) * delGrado) })
+                             quante: Math.max(1, Math.round((scheda.gemme + Math.floor(this.piano * 1.5)) * valoreDelLivello(this.livelloQui) * delGrado * quota)) })
     const storia = this.indice >= 0
     const lascia = scheda.lascia || []
     const daBere = lascia.filter(SI_CONSUMA).length ? lascia.filter(SI_CONSUMA) : ['pozione-piccola']
@@ -799,6 +812,9 @@ export class Corsa extends Corredo {
       this.posaPezzo(pezzoNuovo({ livello: this.livelloDelBottino, chi: 'mostro', fortuna: this.fortuna,
                                   rnd: () => this.rnd(), tua: k => this.porta(k) }), { x: m.x, y: m.y + 1 })
     }
+    // l'elisir del toro: rarissimo, dal grosso o da un caporale (e dai forzieri)
+    const chi = m.grosso ? 'grosso' : m.caporale ? 'caporale' : null
+    if (chi && elisirCade(chi, this.seme, this.piano, m.x, m.y)) this.posaPezzo('elisir-toro', { x: m.x + 1, y: m.y + 1 })
     // un mostro che cade si vede, anche il grosso: niente avviso. Quello di una missione sì, dice cosa fare dopo
     if (m.missione) {
       this.missioniFatte.add(m.missione)
@@ -879,6 +895,7 @@ export class Corsa extends Corredo {
   rimettiInPiedi() {
     this.gemme = Math.floor(this.gemme / 2)
     this.vita = Math.max(6, Math.round(this.vitaMax / 2))
+    this.preparati = []   // svenuti, gli incanti addosso si sono persi
     if (this.zaino.length) {
       const quante = this.zaino.length
       this.zaino = []
@@ -938,6 +955,7 @@ export class Corsa extends Corredo {
                           rnd: () => this.rnd(), tua: k => this.porta(k) })
     if (!cosa) cosa = pescaCosa(NEI_FORZIERI_DELLA_STORIA, { rnd: () => this.rnd(), tua: k => this.porta(k) })
     this.posaPezzo(cosa, { x: f.x, y: f.y + 1 })
+    if (elisirCade('forziere', this.seme, this.piano, f.x, f.y)) this.posaPezzo('elisir-toro', { x: f.x - 1, y: f.y + 1 })
     this.posaRoba({ che: 'gemme', em: '💎', quante: Math.round((6 + this.piano * 3) * valoreDelLivello(this.livelloQui)) },
                   { x: f.x + 1, y: f.y + 1 })
     this.chiudi()
@@ -1010,11 +1028,10 @@ export class Corsa extends Corredo {
       return { che: 'energia' }
     }
     if (c.usa === 'cresci') {
-      this.vitaPiu += c.cresce
-      this.vita += c.cresce
-      this.zaino.splice(i, 1)
+      const e = this.beviElisir(i)   // per sempre: sta nella crescita dell'eroe, non nella vita della discesa
+      this.vita += e.vita
       this.dillo(`❤️ ${this.vita}/${this.vitaMax}`)
-      return { che: 'cresciuto' }
+      return e
     }
     // una torcia in tasca non ci finisce più (si accende raccogliendola), ma un salvataggio vecchio può averla ancora
     if (c.usa === 'luce') {
@@ -1178,4 +1195,4 @@ export class Corsa extends Corredo {
 }
 
 // lo scontro a gruppi (motore/scontro.js) fa parte della Corsa
-Object.assign(Corsa.prototype, MetodiDelloScontro)
+Object.assign(Corsa.prototype, MetodiDelloScontro, MetodiDellOrologio, MetodiDeiPreparati)

@@ -57,8 +57,10 @@ async function esci() {
    dell'indirizzo, il fratello di `#monete=`. Serve anche a un'altra
    cosa: senza, a metà prova si salirebbe di livello e il foglio della
    festa comparirebbe sopra quello che il test sta guardando. */
+// il cheat porta il nome del gioco, e App.vue (`dallIndirizzo`) lo apre da sé: non c'è la carta da toccare
 await page.evaluate(() => { location.hash = 'fattoria=65' })
-await entra()
+await page.waitForSelector('.fa-tela', { timeout: 5000 })
+await attendi(page, 600)
 
 /* Il dito vero, come in `integrazione/fattoria`: un `page.click()` non
    porta con sé il click fantasma e non proverebbe niente di quello che

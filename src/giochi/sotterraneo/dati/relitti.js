@@ -40,6 +40,9 @@ const ROCCIA = a('roccia', 'Una roccia grossa, rimasta lì da sempre.')
 const TRAVE = a('trave', 'Una trave marcia, crollata di traverso.', { basso: true })
 const STALAGMITE = a('stalagmite', 'Una stalagmite: ci ha messo mille anni a crescere.')
 const p = (id, pezzo, dice, extra = {}) => ({ id, pezzo, dice, ...extra })
+// dipinti per la cripta (sotterraneo_4_3.png): mucchi bassi, la luce ci passa sopra
+const MACERIE_CRIPTA = p('macerie', 'cripta-macerie', 'Macerie: pietre cadute dal soffitto. Di qua non si passa.', { basso: true })
+const ROCCE_CRIPTA = p('rocce', 'cripta-rocce', 'Un mucchio di rocce: bisogna girarci attorno.', { basso: true })
 
 // com'è fatto un relitto, per scenario e famiglia: una lista per classe (la scelta dentro la lista è di chi gioca la cella)
 export const ASPETTI = {
@@ -52,7 +55,7 @@ export const ASPETTI = {
   cripta: {
     costruita: {
       cumulo: [p('blocchi-caduti', 'cripta-blocchi-caduti', 'Blocchi di pietra caduti dal soffitto: di qua non si passa.', { basso: true }),
-        p('colonna-moncone', 'cripta-colonna-moncone', 'Il moncone di una colonna.', { basso: true }), MACERIE],
+        p('colonna-moncone', 'cripta-colonna-moncone', 'Il moncone di una colonna.', { basso: true }), MACERIE_CRIPTA],
       pesante: [
         p('sarcofago-liscio', 'cripta-sarcofago-liscio', 'Un sarcofago di pietra, pesantissimo. Meglio lasciarlo chiuso.', { basso: true }),
         p('sarcofago-spada', 'cripta-sarcofago-spada', 'Un sarcofago con una spada incisa: troppo pesante per spostarlo.', { basso: true }),
@@ -77,8 +80,8 @@ export const ASPETTI = {
     },
     caverna: {
       cumulo: [p('blocchi-caduti', 'cripta-blocchi-caduti', 'Blocchi di pietra caduti dal soffitto: di qua non si passa.', { basso: true }),
-        p('colonna-moncone', 'cripta-colonna-moncone', 'Il moncone di una colonna.', { basso: true }), MACERIE],
-      pesante: [ROCCIA, p('lastra-funeraria', 'cripta-lastra-funeraria', 'Una lastra funeraria in piedi. Il nome è consumato.')],
+        p('colonna-moncone', 'cripta-colonna-moncone', 'Il moncone di una colonna.', { basso: true }), MACERIE_CRIPTA, ROCCE_CRIPTA],
+      pesante: [ROCCE_CRIPTA, p('lastra-funeraria', 'cripta-lastra-funeraria', 'Una lastra funeraria in piedi. Il nome è consumato.')],
       isolato: [STALAGMITE, p('colonna-inclinata', 'cripta-colonna-inclinata', 'Una colonna storta, pronta a cadere da secoli.'),
         p('cavaliere-caduto', 'cripta-cavaliere-caduto', 'Un cavaliere di pietra, caduto e spezzato.', { basso: true })],
       lungo: [CROLLO],

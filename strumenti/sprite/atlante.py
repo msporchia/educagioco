@@ -44,7 +44,7 @@ import re
 import sys
 from pathlib import Path
 
-from PIL import Image, ImageOps
+from PIL import Image, ImageChops, ImageDraw, ImageFilter, ImageOps
 
 from catalogo import Catalogo, VERSI, breve, scrivi
 
@@ -208,10 +208,16 @@ def fogli_delle_creature(gioco):
         nome = creature.nome_in(gioco, k, v)
         for i, r in enumerate(creature.fotogrammi_in(gioco, v)):
             da, cella = creature.in_griglia(r, scala)
-            per_foglio.setdefault(v['foglio'], {})[f'{nome}-fermo-{i}'] = {'da': da, 'cella': cella}
+            per_foglio.setdefault(v['foglio'], {})[f'{nome}-fermo-{i}'] = {'da': da, 'cella': cella, **({'nitido': True} if v.get('nitido') else {})}
+        # come cade: una o due figure (`morte`), `<nome>-morto-<i>` (docs/core/creature.md)
+        for i, r in enumerate(v.get('morte') or []):
+            da, cella = creature.in_griglia(r, scala)
+            per_foglio.setdefault(v['foglio'], {})[f'{nome}-morto-{i}'] = {'da': da, 'cella': cella, **({'nitido': True} if v.get('nitido') else {})}
+    # `nitido` nella voce del catalogo: quei pezzi hanno anche la copia dal foglio com'è dipinto (come la roba, «I pezzi nitidi»)
     return [(creature.SORGENTI / dati['fogli'][n],
              {'scala': scala, 'foglio': [W // scala, H // scala], 'fondo': 'trasparente', 'cella': [1, 1],
-              'famiglia': 'attore', 'trasforma_ripiego': {'giri': 1, 'ribalta': False}, 'sprite': sprite})
+              'famiglia': 'attore', 'trasforma_ripiego': {'giri': 1, 'ribalta': False}, 'sprite': sprite,
+              **({'nitido': 'scelti'} if any(d.get('nitido') for d in sprite.values()) else {})})
             for n, sprite in per_foglio.items()]
 
 
@@ -398,6 +404,58 @@ def cancella_in(pezzo, rettangoli, nome):
     return fuori
 
 
+def grande_di(fg):
+    """Il foglio com'è dipinto, ripulito come il piccolo, una volta sola per foglio (`fg['_png']` dice dov'è)."""
+    if '_grande' not in fg:
+        senza = {**fg, 'colori': 0}
+        fg['_grande'] = pulisci(senza_alone(Image.open(fg['_png']).convert('RGBA'), senza), senza)
+    return fg['_grande']
+
+
+def ruota_in(pezzo, gradi):
+    """Il pezzo ruotato di `gradi` (positivi: in senso antiorario) e stretto sulla figura.
+
+    Le bacchette e i bastoni dei fogli dipinti sono disegnati in diagonale (la testa in alto a destra), e in mano le armi stanno
+    dritte: il foglietto dice di quanto girarle (`"ruota": 35`, misurato sull'asse della figura), e si gira il pezzo grande
+    (da `grande_di`), poi si riduce: girare quello piccolo di venti pixel lo rovinerebbe. Si passa da `RGBa` (alfa premoltiplicato)
+    come in `alla_misura`, o l'orlo prende una riga scura."""
+    g = pezzo.convert('RGBa').rotate(gradi, resample=Image.BICUBIC, expand=True).convert('RGBA')
+    riquadro = g.getchannel('A').point(lambda v: 255 if v > 8 else 0).getbbox()
+    return g.crop(riquadro) if riquadro else g
+
+
+def riempi_in(pezzo, regola, nome, scala=1):
+    """Rimette il corpo a un pezzo che il fondo ha mangiato da dentro.
+
+    Il difetto: una porta nera su un foglio dal fondo nero. `allaga` toglie il nero camminando dal bordo, e dove il contorno
+    (pietre, borchie, puntini d'oro) ha dei varchi entra anche nel corpo della porta, che resta trasparente: a schermo si
+    vede il pavimento attraverso. `buchi` non basta (il vuoto qui tocca il bordo).
+
+    `"riempi": {"chiudi": 4, "colore": [14, 12, 16]}` (o `true`): si chiudono i varchi stretti del contorno (la sagoma si
+    ingrossa di `chiudi` pixel, si riempie quello che resta chiuso, si riporta alla misura), e dove la sagoma è piena e il
+    pezzo no si mette `colore`. `chiudi` è in pixel del foglietto (sul pezzo nitido si scala da sé); un varco più largo non si
+    chiude, e la porta resta bucata: si alza il numero."""
+    if not regola:
+        return pezzo
+    chiudi, colore = 3, (14, 12, 16)
+    if isinstance(regola, dict):
+        chiudi, colore = regola.get('chiudi', chiudi), tuple(regola.get('colore', colore))
+    r = max(1, round(chiudi * scala))
+    w, h = pezzo.size
+    pad = r + 2
+    alfa = pezzo.getchannel('A').point(lambda v: 255 if v > 24 else 0)
+    grande = Image.new('L', (w + 2 * pad, h + 2 * pad), 0)
+    grande.paste(alfa, (pad, pad))
+    chiusa = grande.filter(ImageFilter.MaxFilter(2 * r + 1))
+    fuori = chiusa.copy()
+    ImageDraw.floodfill(fuori, (0, 0), 128)                      # il fondo raggiungibile dal bordo
+    piena = fuori.point(lambda v: 0 if v == 128 else 255).filter(ImageFilter.MinFilter(2 * r + 1)).crop((pad, pad, pad + w, pad + h))
+    base = Image.new('RGBA', (w, h), colore + (0,))
+    base.putalpha(piena)
+    base.alpha_composite(pezzo)
+    return base
+
+
 def buchi_in(pezzo, regola, fondi, nome):
     """Toglie il fondo anche **dentro** la figura: l'occhio di un'ascia, il
     vuoto fra un arco e la sua corda, il foro di una chiave, l'interno di
@@ -538,6 +596,31 @@ def toppa_in(pezzo, toppe, nome, im, fg):
                 u, v = a - dx, b - dy
                 px[a, b] = sp[u, v] if 0 <= u < s.width and 0 <= v < s.height \
                     else (0, 0, 0, 0)
+    return fuori
+
+
+def ritinge_in(pezzo, regola, nome):
+    """Un pezzo ricolorato: `"tinta": {"da": [50, 170], "gradi": 195}` ruota di `gradi` la tonalità dei pixel che ce l'hanno
+    fra `da` (gradi sul cerchio dei colori, 0 rosso, 120 verde, 240 blu) e che non sono grigi (`saturo`, da 0 a 255, 40 di ripiego);
+    pelle, cuoio e bianchi restano com'erano. Per un personaggio provvisorio: la guaritrice con il cappuccio verde diventa
+    la maga col cappuccio viola, finché il generatore non porta la sua figura (docs/sotterraneo/terra-di-sopra.md)."""
+    if not regola:
+        return pezzo
+    try:
+        da, a = regola['da']
+        gradi = regola['gradi']
+    except (KeyError, TypeError, ValueError):
+        print(f'  ! {nome}: "tinta" vuole {{"da": [da, a], "gradi": n}}, ho {regola}')
+        return pezzo
+    rgb = pezzo.convert('RGB')
+    h, s, v = rgb.convert('HSV').split()
+    giri = [round(i + gradi * 256 / 360) % 256 for i in range(256)]
+    saturo = regola.get('saturo', 40)
+    # solo i pixel dentro la fascia e non grigi si toccano: gli altri restano al valore (l'andata e ritorno HSV sposta di uno)
+    dentro = ImageChops.darker(h.point(lambda i: 255 if da <= i * 360 / 256 <= a else 0), s.point(lambda x: 255 if x >= saturo else 0))
+    ruotato = Image.merge('HSV', (h.point(giri), s, v)).convert('RGB')
+    fuori = Image.composite(ruotato, rgb, dentro).convert('RGBA')
+    fuori.putalpha(pezzo.getchannel('A'))
     return fuori
 
 
@@ -701,6 +784,12 @@ def ritagli_di(im, fg, provenienza, ritagli, famiglie, trasforma, anima):
                 continue
             chi = f'{nome}{i}' if quanti > 1 else nome
             pezzo = im.crop((x, y, x + pw, y + ph))
+            if d.get('ruota'):
+                # si gira il pezzo grande e poi si riduce alla grana del foglio, come ha fatto `alla_misura_vera` con tutto il resto
+                grande = grande_di(fg)
+                kx, ky = grande.width / im.width, grande.height / im.height
+                g = ruota_in(grande.crop((round(x * kx), round(y * ky), round((x + pw) * kx), round((y + ph) * ky))), d['ruota'])
+                pezzo = g.convert('RGBa').resize((max(1, round(g.width / kx)), max(1, round(g.height / ky))), Image.BOX).convert('RGBA')
             # `specchia`: alcuni fogli disegnano un quadrupede di lato che
             # guarda a sinistra, e la convenzione (FORMATO.md) vuole che
             # `_lato` guardi sempre a destra — la sinistra la fa `ctx.scale
@@ -711,7 +800,9 @@ def ritagli_di(im, fg, provenienza, ritagli, famiglie, trasforma, anima):
                 pezzo = ImageOps.mirror(pezzo)
             pezzo = cancella_in(pezzo, d.get('cancella'), chi)
             pezzo = buchi_in(pezzo, d.get('buchi'), fg.get('_fondi'), chi)
+            pezzo = riempi_in(pezzo, d.get('riempi'), chi)
             pezzo = toppa_in(pezzo, d.get('toppa'), chi, im, fg)
+            pezzo = ritinge_in(pezzo, d.get('tinta'), chi)
             pezzo = alla_misura(pezzo, d.get('misura'), chi)
             pezzo = ad_aiuola(pezzo, fg.get('aiuola'), chi)
             ritagli[chi] = pezzo
@@ -745,30 +836,37 @@ def nitidi_di(f, fg, ridotto, nitidi):
     col fondo tolto allo stesso modo ma sui pixel veri, e `buchi` con
     `max` scalato all'area. Il gioco impagina con il pezzo piccolo, che
     resta la misura, e disegna con questo (docs/core/sprite.md)."""
-    grande = Image.open(f).convert('RGBA')
+    fg['_png'] = f
+    grande = grande_di(fg)
     kx, ky = grande.width / ridotto.width, grande.height / ridotto.height
     fg = {**fg, 'colori': 0}
-    grande = pulisci(senza_alone(grande, fg), fg)
     cw, ch = fg['cella']
     for nome, d in fg['sprite'].items():
         if nome.startswith('__'):
             continue
-        if d.get('quanti', 1) != 1 or any(k in d for k in ('cancella', 'toppa')):
-            print(f'  ! {nome}: «nitido» non sa ancora fare quanti, cancella e toppa: resta solo piccolo')
+        if fg.get('nitido') == 'scelti' and not d.get('nitido'):   # le creature: solo quelle che lo chiedono
+            continue
+        if d.get('quanti', 1) != 1 or 'toppa' in d:
+            print(f'  ! {nome}: «nitido» non sa ancora fare quanti e toppa: resta solo piccolo')
             continue
         # `misura` riguarda solo il pezzo piccolo, quello che impagina: il nitido tiene tutta la sua
         # definizione, e il gioco lo stira alla gabbia del piccolo (viste/figura.js, scala x e y a parte)
         pw, ph = d.get('cella', [cw, ch])
         x, y = d['da'][0] * cw, d['da'][1] * ch
         pezzo = grande.crop((round(x * kx), round(y * ky), round((x + pw) * kx), round((y + ph) * ky)))
+        if d.get('ruota'):
+            pezzo = ruota_in(pezzo, d['ruota'])
         if d.get('specchia'):
             pezzo = ImageOps.mirror(pezzo)
+        # `cancella` è nelle coordinate del ritaglio piccolo: sul grande si scala come il rettangolo
+        pezzo = cancella_in(pezzo, [[round(r[0] * kx), round(r[1] * ky), round(r[2] * kx), round(r[3] * ky)]
+                                    for r in (d.get('cancella') or []) if len(r) == 4], nome)
         regola = d.get('buchi')
         if isinstance(regola, dict) and regola.get('max') is not None:
             regola = {**regola, 'max': regola['max'] * kx * ky}
         elif regola is not True and isinstance(regola, (int, float)) and regola:
             regola = regola * kx * ky
-        nitidi[nome] = buchi_in(pezzo, regola, fg.get('_fondi'), nome)
+        nitidi[nome] = ritinge_in(riempi_in(buchi_in(pezzo, regola, fg.get('_fondi'), nome), d.get('riempi'), nome, kx), d.get('tinta'), nome)
 
 
 def impacchetta(ritagli, largo=LARGO):
@@ -1085,6 +1183,7 @@ def costruisci(bers, fogli, con_provini):
                 raise SystemExit(f'creature: {", ".join(doppi)} ha già un pezzo omonimo ({provenienza[doppi[0]]}): '
                                  f'si risolve con `alias` nel catalogo')
         prima = len(ritagli)
+        fg['_png'] = f
         ritagli_di(im, fg, provenienza, ritagli, famiglie, trasforma, anima)
         cose_di(fg, cose, f.name)
         if fg.get('nitido'):

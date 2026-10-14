@@ -76,6 +76,18 @@ export function pezzoNuovo({ livello = 1, chi = 'mostro', fortuna = 0, rnd = Mat
   return chiaveDelPezzo(b, livello, abilita.length ? r : 'comune', abilita)
 }
 
+// L'elisir del toro dà vita massima per sempre: non si compra, si trova, e trovarlo è un evento (uno ogni tre o quattro
+// discese girate tutte: un grosso, un caporale o un forziere su tanti). Il tiro nasce dal seme, dal piano e dal posto e non
+// dal caso della discesa: aggiungerlo non sposta niente di quello che cade (docs/sotterraneo/rarita.md, «L'elisir del toro»)
+export const PROBABILITA_ELISIR = { grosso: 0.15, caporale: 0.04, forziere: 0.012 }
+export function elisirCade(chi, seme, piano, x, y) {
+  let h = 2166136261
+  for (const n of [seme, piano, x, y, chi.length]) h = Math.imul(h ^ (Math.floor(n) | 0), 16777619)
+  h = Math.imul(h ^ (h >>> 15), 0x2c1b3c6d)
+  h = Math.imul(h ^ (h >>> 12), 0x297a2d39)
+  return ((h ^ (h >>> 15)) >>> 0) / 4294967296 < (PROBABILITA_ELISIR[chi] || 0)
+}
+
 // il pezzo col nome di un mostro grosso, al livello del bottino
 export const pezzoDelGrosso = (id, livello) => (UNICI[id] ? chiaveDelPezzo(UNICI[id].base, livello, 'raro', [], id) : null)
 

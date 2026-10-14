@@ -6,6 +6,7 @@
     "generatore": "ChatGPT, 10 ottobre 2026",
     "testo": "griglia 6×8, 48 pezzi d'arredo della cripta su magenta: sarcofagi, cavalieri, colonne, candelabri, altari, rovine, ferro e legno, decorazioni da muro"
   },
+  "nitido": "scelti",
   "fondo": [
     255,
     0,
@@ -593,7 +594,8 @@
       "misura": [
         21,
         20
-      ]
+      ],
+      "nitido": true
     },
     "cripta-lampadario": {
       "da": [
@@ -607,7 +609,11 @@
       "misura": [
         19,
         22
-      ]
+      ],
+      "buchi": {
+        "tolleranza": 150
+      },
+      "nitido": true
     },
     "cripta-muro-cavaliere": {
       "da": [

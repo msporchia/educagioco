@@ -108,19 +108,20 @@ export const STRADA = {
 }
 
 // il prossimo punto sulla strada: il primo nodo della fila che si può imparare e non si ha ancora, poi il primo che si può
-// migliorare, poi (la fila è finita) il primo nodo qualunque. null se non c'è niente da imparare
-export function prossimoDellaStrada(cr, classe) {
-  const fila = STRADA[classe] || []
+// migliorare, poi (la fila è finita) il primo nodo qualunque. null se non c'è niente da imparare. `strada`: un'altra fila di nodi
+// (dati/strade.js), al posto di quella della classe
+export function prossimoDellaStrada(cr, classe, strada = null) {
+  const fila = strada || STRADA[classe] || []
   return fila.find(id => !gradoDi(cr, id) && puoiImparare(cr, classe, id)) ||
          fila.find(id => puoiImparare(cr, classe, id)) ||
          prossimoNodo(cr, classe)
 }
 
 // tutti i punti abilità da dare, dati sulla strada (l'eroe atteso a un livello li ha già spesi)
-export function conLaStrada(cr, classe) {
+export function conLaStrada(cr, classe, strada = null) {
   let c = cr
   for (let i = 0; i < 400 && puntiAbilita(c) > 0; i++) {
-    const id = prossimoDellaStrada(c, classe)
+    const id = prossimoDellaStrada(c, classe, strada)
     const n = id && impara(c, classe, id)
     if (!n) break
     c = n

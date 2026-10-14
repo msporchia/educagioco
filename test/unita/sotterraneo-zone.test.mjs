@@ -16,6 +16,7 @@ import { fasciaDi, coloreDellaFascia, coloreNellaStoria, coloreDi, disposizioneD
          notiziaDi, gradinoDi, COLORI, robaAttesaA, crescitaAttesaA } from '../../src/giochi/sotterraneo/motore/zone.js'
 import { LIVELLI_ATTESI } from '../../src/giochi/sotterraneo/dati/storia.js'
 import { sogliaDi, espDi } from '../../src/giochi/sotterraneo/dati/livelli.js'
+import { QUOTA_DEL_COMUNE } from '../../src/giochi/sotterraneo/dati/mondo.js'
 import { MOSTRI } from '../../src/giochi/sotterraneo/dati/mostri.js'
 import { scenarioDi } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
@@ -212,20 +213,25 @@ uguale('e l\'abisso resta l\'abisso', zonaDi(-1).abisso, true)
     const m = c.livello.robe.find(r => r.che === 'mostro' && !r.chiave)
     const prima = c.crescita.esp
     c.cade(m)
-    return { presa: c.crescita.esp - prima, piena: espDi(MOSTRI[m.tipo], c.livelloQui) }
+    return { presa: c.crescita.esp - prima, piena: espDi(MOSTRI[m.tipo], c.livelloQui) * QUOTA_DEL_COMUNE }
   }
   const verde = esp(16), grigia = esp(18)
-  uguale('nella verde il mostro dà la sua esperienza', verde.presa, verde.piena)
+  uguale('nella verde il mostro dà la sua esperienza (la quota dei mostri di strada)', verde.presa, Math.max(1, Math.round(verde.piena)))
   uguale('nella grigia un quarto', grigia.presa, Math.max(1, Math.round(grigia.piena * ESP_GRIGIA)))
 
   // il passo: una zona verde vinta, dal fondo della fascia, vale più o meno un livello (le misure su tutte le zone)
   for (const L of [14, 24, 34]) {
     const k = indiceDi('torre')
     const cr = crescitaAttesaA('cavaliere', L)
-    const g = gioca(zonaPotenziata(k, L), { seme: 41, bravura: 0.8, eroe: 'cavaliere', crescita: cr, roba: robaAttesaA('cavaliere', L) })
-    const livelli = (g.corsa.crescita.esp - cr.esp) / salto(L)
-    controlla(`una torre verde vinta al ${L} vale più o meno un livello`, g.esito.vinta && livelli >= 0.7 && livelli <= 2,
-              `${g.esito.vinta ? 'vinta' : 'persa'}, ${livelli.toFixed(2)} livelli`)
+    // fra otto semi quelli vinti (coi branchi nuovi un seme solo può perdere: il passo si legge dove si vince)
+    const vinte = []
+    for (let seme = 41; seme < 49; seme++) {
+      const g = gioca(zonaPotenziata(k, L), { seme, bravura: 1, eroe: 'cavaliere', crescita: cr, roba: robaAttesaA('cavaliere', L) })
+      if (g.esito.vinta) vinte.push((g.corsa.crescita.esp - cr.esp) / salto(L))
+    }
+    const livelli = vinte.reduce((n, x) => n + x, 0) / Math.max(1, vinte.length)
+    controlla(`una torre verde vinta al ${L} vale più o meno un livello`, vinte.length >= 2 && livelli >= 0.7 && livelli <= 2,
+              `${vinte.length} vinte su 8, ${livelli.toFixed(2)} livelli`)
   }
 }
 
