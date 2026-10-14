@@ -60,14 +60,14 @@ await scatto(page, 'arena-campo')
 
 const monete = async () => Number((await page.locator('[data-monete] b').innerText()).trim())
 controlla('si parte con qualche moneta di battaglia', await monete() >= 14)
-controlla('e c\'è scritto quante ne arrivano al secondo', /al secondo/.test(await page.locator('[data-monete]').innerText()))
-controlla('si parte senza caserme: le piazzole sono libere',
-          await page.locator('[data-piazzola="0"].ar-nuova').count() === 1)
-controlla('le quattro scelte che non sono truppe ci sono (miniera, ripara, castello, bomba) e il muro non si compra',
-          await page.locator('.ar-pannello [data-azione]').count() === 4 &&
-          await page.locator('.ar-pannello [data-azione="muro"]').count() === 0)
+controlla('e c\'è scritto quante ne arrivano al secondo', /\/s/.test(await page.locator('[data-monete]').innerText()))
+controlla('si parte senza edifici: sei piazzole libere da toccare, e il castello',
+          await page.locator('[data-piazzola]:not([data-variante])').count() === 6 && await page.locator('[data-castello]').count() === 1)
+controlla('sotto restano solo ripara e bomba, e il muro non si compra',
+          await page.locator('.ar-barra-sotto [data-azione]').count() === 2 &&
+          await page.locator('[data-azione="muro"]').count() === 0)
 
-/* ── la carta di una piazzola apre la scelta, e il campo sta fermo mentre si sceglie ── */
+/* ── toccare una piazzola apre la scelta, e il campo sta fermo mentre si sceglie ── */
 const orologio = () => page.locator('.ar-hud b').first().innerText()
 await page.locator('[data-piazzola="0"]').click()
 await page.waitForSelector('[data-scelta="0"]', { timeout: 4000 })
@@ -104,7 +104,7 @@ await scatto(page, 'arena-calcolo')
 let costruita = false
 for (let giro = 0; giro < 12 && !costruita; giro++) {
   if (!(await page.locator('.ar .qz-tasto').count())) {
-    if (await page.locator('[data-piazzola="0"].ar-nuova').count() === 0) break
+    if (await page.locator('[data-piazzola="0"][data-variante]').count() === 1) break
     await page.locator('[data-piazzola="0"]').click().catch(() => {})
     await page.locator('[data-costruisci="guardiano"]').click({ timeout: 4000 }).catch(() => {})
     await page.waitForSelector('.ar .qz-tasto', { timeout: 6000 }).catch(() => {})
@@ -113,17 +113,25 @@ for (let giro = 0; giro < 12 && !costruita; giro++) {
   await page.locator('.ar .qz-tasto').nth(giro % 4).click().catch(() => {})
   await attendi(page, 1200)
   await page.waitForSelector('.ar .qz-velo', { state: 'detached', timeout: 12000 }).catch(() => {})
-  costruita = await page.locator('[data-piazzola="0"][data-variante="guardiano"]:not(.ar-nuova)').count() === 1
+  costruita = await page.locator('[data-piazzola="0"][data-variante="guardiano"]').count() === 1
 }
 controlla('rispondendo giusto la cripta nasce davvero, con gli opliti', costruita)
 if (costruita) {
-  const liv = await page.locator('[data-piazzola="0"] .ar-liv').innerText()
-  controlla('e sta al livello 1', /Lv\s*1/.test(liv), liv)
-  await page.locator('[data-piazzola="0"] [data-dettagli]').click()
+  // toccata, la caserma mostra l'anello: potenziarla al livello 2, venderla per metà della spesa, i numeri
+  await page.locator('[data-piazzola="0"]').click()
+  await page.waitForSelector('[data-anello="potenzia"]', { timeout: 4000 })
+  controlla('toccata, la caserma mostra l\'anello col livello dopo', /Lv\s*2/.test(await page.locator('[data-anello="potenzia"]').innerText()))
+  controlla('e si vende per metà della spesa', /\+3/.test(await page.locator('[data-anello="vendi"]').innerText()))
+  await scatto(page, 'arena-anello')
+  await page.locator('[data-anello="numeri"]').click()
   await page.waitForSelector('[data-dettagli-aperti]', { timeout: 4000 })
-  controlla('nei suoi dettagli si può vendere, per metà della spesa', /Vendi\s*·\s*\+3/.test(await page.locator('[data-vendi]').innerText()))
+  controlla('«i numeri» aprono i dettagli, col tasto per vendere', await page.locator('[data-vendi]').count() === 1)
   await page.locator('[data-dettagli-aperti] .ar-x').click()
   await page.waitForSelector('[data-dettagli-aperti]', { state: 'detached', timeout: 4000 })
+  await page.locator('[data-castello]').click()
+  controlla('anche il castello si tocca, e si potenzia dall\'anello', await page.locator('[data-anello="potenzia"]').count() === 1 &&
+            await page.locator('[data-anello="vendi"]').count() === 0)
+  await page.locator('[data-castello]').click()
 }
 await scatto(page, 'arena-costruita')
 
@@ -131,7 +139,7 @@ await scatto(page, 'arena-costruita')
 for (let t = 0; t < 40; t++) {                         // la sosta si scrive da cinque secondi di partita in su
   const orologio = await page.locator('.ar-hud b').first().innerText()
   const [m, s] = orologio.split(':').map(Number)
-  if (m * 60 + s <= 170) break
+  if (m * 60 + s <= 290) break
   await attendi(page, 500)
 }
 await page.click('button[aria-label="indietro"]')
@@ -145,7 +153,7 @@ await scatto(page, 'arena-ripresa')
 await page.locator('[data-azione="riprendi"]').first().click()
 await page.waitForSelector('[data-piazzola="0"]', { timeout: 8000 })
 controlla('riprendendo la caserma costruita è ancora lì',
-          await page.locator('[data-piazzola="0"][data-variante="guardiano"]:not(.ar-nuova)').count() === 1)
+          await page.locator('[data-piazzola="0"][data-variante="guardiano"]').count() === 1)
 n = 0
 for (let t = 0; t < 40 && n < 25; t++) { await attendi(page, 250); n = await colori() }
 controlla('e il campo ripreso si dipinge sul canvas nuovo', n >= 25, `solo ${n} colori`)

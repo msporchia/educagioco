@@ -1,6 +1,6 @@
 <script setup>
-// La scelta per una piazzola libera: le truppe della tappa a due a due, col prezzo; anche
-// una uguale a una caserma che c'è già. Il campo sta fermo finché è aperta (lo decide
+// La scelta per una piazzola libera: le truppe della tappa a due a due, col prezzo (anche
+// una uguale a una caserma che c'è già), e la miniera. Il campo sta fermo finché è aperta (lo decide
 // Gioco.vue). Le truppe che la tappa non ha ancora si vedono in fondo, piccole.
 import Ritratto from './Ritratto.vue'
 
@@ -31,6 +31,16 @@ defineEmits(['chiudi', 'costruisci', 'dettagli'])
             <span class="em">🛖</span> {{ v.prezzo }} <span class="em">🪙</span>
           </button>
           <button class="ar-numeri" :data-dettagli="v.id" @click="$emit('dettagli', v.id)">i numeri</button>
+        </section>
+        <section class="ar-variante ar-miniera" data-variante="miniera">
+          <span class="ar-grande em">⛏️</span>
+          <h3>{{ s.miniera.nome }}</h3>
+          <p class="ar-nota-variante">{{ s.miniera.nota }}</p>
+          <button class="ar-grosso" :class="{ 'ar-spento': !s.miniera.puoi }" :disabled="!s.miniera.puoi" data-costruisci="miniera"
+                  @click="$emit('costruisci', 'miniera')">
+            <span class="em">🛖</span> {{ s.miniera.prezzo }} <span class="em">🪙</span>
+          </button>
+          <button class="ar-numeri" data-dettagli="miniera" @click="$emit('dettagli', 'miniera')">i numeri</button>
         </section>
       </div>
       <div v-if="s.piuAvanti.length" class="ar-piu-avanti">
