@@ -26,8 +26,9 @@ finto attaccava e basta (`motore/banco.js`): i mostri erano tarati per uno che n
 - **A ogni turno**: sotto la metà della vita una cura o uno scudo (`riparoDi`); se no un'abilità forte (**due a scontro**,
   `FORTI_A_SCONTRO`) quando il colpo solito non basta a chiudere, e l'area appena i mostri sono tre o più. Mai se l'attacco solito
   chiude: l'energia si tiene.
-- **Non si volta** (resta il caso peggiore per gli agguati) e **gioca a torcia spenta** come prima. **Non beve nello scontro**: provato
-  a bere quando il giro dopo lo farebbe cadere, costa il turno e il banco peggiora (il mago nella scalinata da 12 a 10 su 20).
+- **Non si volta** (resta il caso peggiore per gli agguati) e **gioca a torcia spenta** come prima. **Il bravo non beve nello scontro**
+  (provato quando bere costava il turno: il banco peggiorava, il mago nella scalinata da 12 a 10 su 20); il curioso sì, dal 14 ottobre
+  senza perdere il turno (sotto).
 - **L'eroe atteso della forza** ha la stessa strada ([forza.md](forza.md)): senza, un eroe con le abilità valeva molto più del suo
   livello e la grigia gli dava un quarto dell'esperienza troppo presto (le zone rendevano 0,5 livelli invece di 1,1).
 - `BANCO.abilita = false` rifà il banco di prima.
@@ -53,6 +54,25 @@ rispondendo male si vinceva una volta su due. Per discesa (cavaliere, elfa, mago
 | scala sommersa | 57 → 52% | 1,4 → 2 | 44 → 37 |
 | botola | 53 → 46% | 0,9 → 1,9 | 54 → 34 |
 | miniera | 55 → 48% | 0,9 → 2,5 | 64 → 57 |
+
+## Bere non costa il turno (14 ottobre)
+
+L'utente: «bere pozioni non dovrebbe farti perdere un turno, cerchiamo di essere più lenienti con i bambini» ([scontro.md](scontro.md),
+[pozioni.md](pozioni.md)). Il banco beve la sua pozione nel rosso e poi attacca nello stesso turno; una per turno. Lo stesso `HEAD` di
+prima contro quello di dopo, dieci semi per eroe (`taratura --da 0 --semi 10`), **senza ritarare niente** (un'altra persona tara le
+gemme); discese vinte alla prima, pozioni bevute a discesa (cantine, torre, gallerie sono le tappe dove il curioso beve):
+
+| | altare | cantine | torre | gallerie | cisterna | labirinto | fondo |
+|---|---|---|---|---|---|---|---|
+| curioso, vinte | 95 → 98 | 88 → 98 | 88 → 95 | 88 → 93 | 100 → 100 | 100 → 100 | 90 → 98 |
+| curioso, sfortunato | 100 → 100 | 25 → 75 | 50 → 75 | 100 → 100 | 100 | 100 | 100 |
+| curioso, pozioni bevute | 1,5 → 1,3 | 4,2 → 3,0 | 5,3 → 3,2 | 3,7 → 2,5 | 1,2 → 0,6 | 0,8 → 0,6 | 0 → 0 |
+| sbadato, vinte (bersaglio ≤ 15%) | 80 → 85 | 85 → 93 | 63 → 85 | 73 → 85 | 95 → 98 | 100 | 98 → 95 |
+| bravo, vinte (non beve nello scontro) | 100 | 60 → 63 | 75 → 78 | 95 | 98 → 93 | 98 → 100 | 100 |
+
+Il curioso vince di più (cantine e torre erano le tappe dove la perdita del turno pesava) e beve meno pozioni: un sorso e un colpo nello
+stesso turno costa una pozione sola dove prima ne servivano due. Chi sta già sopra il bersaglio (curioso 85%) lo supera di più, lo sbadato
+(da tenere sotto il 15%) vince di più: i bersagli di quei due giocatori si ritareranno con le gemme, non qui.
 
 ## Le leve, prima → dopo
 

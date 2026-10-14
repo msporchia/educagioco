@@ -17,10 +17,10 @@ const props = defineProps({
   caselle: { type: Array, required: true },   // [{ id, glifo, tinta, nome, costo, dice, perche } | null]
   energia: { type: Number, required: true },
   energiaMax: { type: Number, required: true },
-  bevi: { type: Object, default: null },      // { cura, n, tipi }: la pozione che si berrebbe, quante ne restano e di quanti stadi (da più di uno si sceglie)
-  beviEnergia: { type: Object, default: null },   // { quanto, n }: la pozione blu, se ne hai e l'energia non è piena
+  bevi: { type: Object, default: null },      // { cura, n, tipi, fatto }: la pozione che si berrebbe, quante ne restano, di quanti stadi (da più di uno si sceglie), e se hai già bevuto in questo turno
+  beviEnergia: { type: Object, default: null },   // { quanto, n, fatto }: la pozione blu, se ne hai e l'energia non è piena
   scappa: { type: Object, default: null },    // { graffio }: il costo della fuga; null se il graffio farebbe cadere
-  pericolo: { type: Object, default: null },  // { perche, vita, male }: si sta per cadere
+  pericolo: { type: Object, default: null },  // { perche, vita, male, bevuto }: si sta per cadere (e se hai già bevuto in questo turno)
   ferma: { type: Boolean, default: false },   // il turno di prima si sta ancora raccontando: niente si tocca
 })
 const emit = defineEmits(['scegli', 'bevi', 'bevi-energia', 'scappa'])
@@ -42,6 +42,7 @@ const vai = (che, ...a) => { if (pronto.value && !props.ferma) emit(che, ...a) }
       <b>Attenzione!</b>
       {{ DETTO_DEL_PERICOLO[pericolo.perche] }}
       <span class="em">❤️ <b>{{ pericolo.vita }}</b> · in arrivo ti toglie <b>{{ pericolo.male }}</b></span>
+      <span v-if="pericolo.bevuto" class="em" data-ringhio-bevuto>Hai bevuto, e ancora non basta: puoi scappare o continuare.</span>
     </p>
     <button type="button" class="sot-scelta sot-pronta" data-azione="attacco" @click="vai('scegli', null)">
       <span class="sot-scelta-icona"><Glifo nome="spada" :misura="22" /></span>
@@ -58,13 +59,15 @@ const vai = (che, ...a) => { if (pronto.value && !props.ferma) emit(che, ...a) }
       </button>
     </template>
     <div v-if="bevi || beviEnergia || scappa" class="sot-scelta-sep"></div>
-    <button v-if="bevi" type="button" class="sot-scelta sot-scelta-bevi" data-azione="bevi-scontro" @click="vai('bevi')">
+    <button v-if="bevi" type="button" class="sot-scelta sot-scelta-bevi" :class="{ 'sot-spenta': bevi.fatto }" data-azione="bevi-scontro"
+            :disabled="bevi.fatto" @click="vai('bevi')">
       <span class="sot-scelta-icona"><Glifo nome="calice" :misura="22" /></span>
-      <span class="sot-scelta-testo"><b>Bevi una pozione</b><small>{{ bevi.tipi > 1 ? 'scegli quale' : bevi.cura ? `ti guarisce di ${bevi.cura} punti di vita` : 'ti rimette in forze' }} · costa il turno · ne hai {{ bevi.n }}</small></span>
+      <span class="sot-scelta-testo"><b>Bevi una pozione</b><small>{{ bevi.fatto ? 'una per turno: hai già bevuto' : `${bevi.tipi > 1 ? 'scegli quale' : bevi.cura ? `ti guarisce di ${bevi.cura} punti di vita` : 'ti rimette in forze'} · poi tocca ancora a te · ne hai ${bevi.n}` }}</small></span>
     </button>
-    <button v-if="beviEnergia" type="button" class="sot-scelta sot-scelta-energia" data-azione="bevi-energia" @click="vai('bevi-energia')">
+    <button v-if="beviEnergia" type="button" class="sot-scelta sot-scelta-energia" :class="{ 'sot-spenta': beviEnergia.fatto }" data-azione="bevi-energia"
+            :disabled="beviEnergia.fatto" @click="vai('bevi-energia')">
       <span class="sot-scelta-icona"><Glifo nome="energia" :misura="22" /></span>
-      <span class="sot-scelta-testo"><b>Bevi una pozione blu</b><small>ti ridà {{ beviEnergia.quanto }} di energia · ne hai {{ beviEnergia.n }}</small></span>
+      <span class="sot-scelta-testo"><b>Bevi una pozione blu</b><small>{{ beviEnergia.fatto ? 'una per turno: hai già bevuto' : `ti ridà ${beviEnergia.quanto} di energia · poi tocca ancora a te · ne hai ${beviEnergia.n}` }}</small></span>
     </button>
     <button v-if="scappa" type="button" class="sot-scelta sot-scelta-scappa" data-azione="scappa" @click="vai('scappa')">
       <span class="sot-scelta-icona"><Glifo nome="vento" :misura="22" /></span>

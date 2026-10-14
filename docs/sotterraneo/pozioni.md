@@ -27,8 +27,12 @@ di quale bere e come le usa il giocatore finto. Il codice: `dati/cose.js` (le cu
   nel fondo con 55 pozioni (le uguali stanno in una tasca sola): il tetto pesa più del prezzo, e i giocatori tipo lo toccano quasi a ogni
   discesa (riga `al tetto` del rapporto).
 - **Con più stadi in tasca si sceglie quale bere** (`ScegliPozione.vue`, `Corsa.scelteDiCura`): la 🧪 della barra e «Bevi una pozione» dello
-  scontro (costa il turno, anche dallo stop) aprono una riga per stadio con quanto cura e quante ne hai; con uno solo si beve e basta. Il
+  scontro (non costa il turno, anche dallo stop) aprono una riga per stadio con quanto cura e quante ne hai; con uno solo si beve e basta. Il
   motore sceglie da sé la più piccola che rimette quanto manca (`pozioneGiusta`): lo fa il banco.
+- **Nello scontro bere non costa il turno e se ne beve una sola per turno** (l'utente, 14 ottobre: «più lenienti con i bambini»; rossa o blu,
+  `foglio.bevuto`): la vita sale, il racconto è il solo sorso (effetto di cura, numero verde che sale, mai i colpi dei mostri) e tocca ancora
+  all'eroe. «Bevi» si spegne fino al turno dopo e lo dice sul tasto («una per turno: hai già bevuto»). Regola in [scontro.md](scontro.md),
+  lo stop che si rifà dopo il sorso in [pericolo.md](pericolo.md#dopo-il-sorso).
 - **Il giocatore finto** compra la più grande che può pagare, dopo la roba, fino al tetto; il curioso non risparmia l'ampolla della vita, il
   bravo la tiene per il grosso (`tieneLaVita`). Nei test: `unita/sotterraneo-pozioni`, `integrazione/sotterraneo-pozioni`.
 - **Rosse le cure, blu l'energia** (l'utente, 14 ottobre: «un set blu e un set rosso, estremamente chiaro»): le quattro cure in vendita sono

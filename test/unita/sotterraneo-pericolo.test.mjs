@@ -132,8 +132,8 @@ function scontro({ male = 3, vita = null, zaino = [], vitaPiu = 0 } = {}) {
 
 /* ══════════ 3. le tre scelte ══════════ */
 {
-  // bevi: la più adatta, come la 🧪 della barra, costa il turno (il mostro colpisce), e si riprende
-  const { c, m } = scontro({ male: 3, vita: 9, zaino: ['pozione-piccola', 'pozione'] })
+  // bevi: la più adatta, come la 🧪 della barra, non costa il turno (nessun colpo); se la vita ora basta lo stop sparisce e si domanda
+  const { c } = scontro({ male: 3, vita: 9, zaino: ['pozione-piccola', 'pozione'] })
   uguale('si ferma', c.rispondi(false).ringhia, 'duro')
   const prima = c.vita
   const tasche = c.zaino.length
@@ -141,10 +141,45 @@ function scontro({ male = 3, vita = null, zaino = [], vitaPiu = 0 } = {}) {
   const cura = c.curaDi(giusta)
   const e = c.beviNelPericolo()
   uguale('bevuto', e && e.che, 'bevuto')
-  uguale('la vita sale della cura, meno il colpo del turno perso', c.vita, Math.min(c.vitaMax, prima + cura) - c.danno(m))
+  uguale('la vita sale della cura, senza il colpo del turno', c.vita, Math.min(c.vitaMax, prima + cura))
   uguale('una pozione in meno', c.zaino.length, tasche - 1)
   controlla('beve quella che beverebbe la barra', !c.zaino.includes(giusta) || c.zaino.filter(k => k === giusta).length < 2)
-  controlla('la battaglia riprende: domanda in attesa, stop spento', !!c.chiesta && !c.foglio.pericolo && c.foglio.che === 'scontro')
+  controlla('ora la vita basta: stop spento, la domanda c\'è', !!c.chiesta && !c.foglio.pericolo && c.foglio.che === 'scontro')
+  uguale('l\'esito non porta uno stop', e.ringhia, null)
+  uguale('ha bevuto: la seconda no', c.beviNelloScontro(), null)
+}
+
+{
+  // il sorso non basta: lo stop resta (la stessa fermata), bere è spento, restano scappa e continua
+  const { c } = scontro({ male: 12, vita: 26, zaino: ['pozione-piccola', 'pozione-piccola'], vitaPiu: 40 })
+  uguale('si ferma', c.rispondi(false).ringhia, 'duro')
+  const fermate = c.foglio.fermate
+  const e = c.beviNelPericolo()
+  uguale('bevuto', e.che, 'bevuto')
+  controlla('la vita è salita ma due colpi la porterebbero ancora a terra', c.vita <= 2 * c.colpiInArrivo(), `${c.vita}`)
+  uguale('lo stop resta e lo dice l\'esito', e.ringhia, c.foglio.pericolo)
+  controlla('nessuna domanda in attesa', c.chiesta === null && c.foglio.pericolo !== null)
+  uguale('non è una fermata in più', c.foglio.fermate, fermate)
+  uguale('la seconda pozione è spenta', c.beviNelPericolo(), null)
+  controlla('scappare si può ancora', c.puoScappare())
+  uguale('continuare riprende', c.continua().che, 'continua')
+  controlla('e domanda', !!c.chiesta)
+}
+
+{
+  // niente effetti del turno rifatti: bere non fa calare né veleni né protezioni, e non passa il tempo dell'orologio
+  const { c, m } = scontro({ male: 3, vita: 9, zaino: ['pozione-piccola'] })
+  uguale('si ferma', c.rispondi(false).ringhia, 'duro')
+  m.stati = { veleno: { quanto: 2, scambi: 3 } }
+  c.foglio.io.parato = 2
+  c.foglio.io.linfa = { quanto: 2, scambi: 2 }
+  const ossa = m.ossa, vita = c.vita, cura = c.curaDi('pozione-piccola')
+  c.beviNelPericolo()
+  uguale('il veleno non cala', m.stati.veleno.scambi, 3)
+  uguale('né brucia', m.ossa, ossa)
+  uguale('la protezione resta', c.foglio.io.parato, 2)
+  uguale('la linfa non cura due volte', c.vita, Math.min(c.vitaMax, vita + cura))
+  uguale('la linfa conta lo stesso', c.foglio.io.linfa.scambi, 2)
 }
 
 {

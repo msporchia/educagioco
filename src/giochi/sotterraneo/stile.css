@@ -806,6 +806,7 @@
   animation: sot-ringhia .5s ease-out;
 }
 .sot-abilita > .sot-ringhio-detto > b { display: block; font-size: 15px; color: #ffb09f }
+.sot-ringhio-detto > [data-ringhio-bevuto] { display: block; margin-top: 4px }
 .sot-scelta.sot-pronta .sot-scelta-testo small, .sot-scelta.sot-pronta .sot-scelta-costo { color: var(--sot-oro) }
 .sot-scelta.sot-spenta { cursor: default; opacity: .65 }
 .sot-scelta.sot-spenta:active { transform: none }

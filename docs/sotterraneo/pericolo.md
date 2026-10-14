@@ -41,8 +41,8 @@ Il riquadro sta al posto della domanda, nella stessa modale, sotto il palco coi 
 sparisce, perché è una delle tre scelte. Compare a racconto del turno finito ([scontro-interfaccia.md](scontro-interfaccia.md#il-racconto-di-un-turno)).
 
 - **🧪 bevi** — solo se ha una pozione. Con un solo stadio di cura beve quella e dice sul tasto quanto rende; con più stadi apre la
-  scelta di quale ([roba.md](roba.md#le-pozioni)). **Costa il turno**: i mostri colpiscono, poi si riprende a
-  domandare. Non si beve mai da sola: lo stop non agisce, aspetta.
+  scelta di quale ([roba.md](roba.md#le-pozioni)). **Non costa il turno**: la vita sale, i mostri non colpiscono e lo stop si rifà
+  ([dopo il sorso](#dopo-il-sorso)). Non si beve mai da sola: lo stop non agisce, aspetta.
 - **🏃 scappo via** — con il colpo del mostro più forte (sul tasto: «ti costa 5 di vita»).
   **Se quel colpo lo farebbe cadere il tasto non c'è** (`puoScappare`), qui
   come nello scontro: offrirlo sarebbe offrire di svenire.
@@ -57,6 +57,18 @@ sparisce, perché è una delle tre scelte. Compare a racconto del turno finito (
   sbaglio costano una pozione o un colpo. Si vedono spenti, poi si accendono.
 - **Niente pagamenti**: lo stop non dà e non toglie monete, e una risposta
   sbagliata non paga ([../apprendimento/calibrazione.md](../apprendimento/calibrazione.md)).
+
+## Dopo il sorso
+
+Bere non costa il turno ([scontro.md](scontro.md#il-turno-delleroe)), quindi dopo il sorso lo stop si rifà con la vita nuova
+(`Corsa.rifaLoStop`), sulla stessa fermata (il contatore non sale):
+
+- **Ora la vita basta**: lo stop sparisce e arriva la domanda, come dopo «continuo». Il sorso conta come la fermata fatta: un secondo
+  stop resta solo l'`ultimo`.
+- **Non basta ancora**: lo stop resta (con la ragione di adesso, che può cambiare da «poca» a «duro»), «bevi» è spento fino al turno dopo
+  (una pozione sola) e la riga rossa dice «Hai bevuto, e ancora non basta: puoi scappare o continuare» (`[data-ringhio-bevuto]`). Se
+  non resta nemmeno la fuga (`puoScappare`), lo stop avrebbe solo «continuo» e sparisce come all'inizio.
+- Il turno è lo stesso: veleno, gelo, protezioni e incanti preparati non si contano due volte.
 
 ## Il banco non si ferma
 
@@ -76,5 +88,7 @@ stop, mai sopra una domanda né quando il mostro cade, le tre scelte, il banco)
 e `integrazione/sotterraneo-pericolo` (col dito, nella scalinata con un mago
 e cinque mostri addosso, `#sotterraneo=branco&mostri=5`: lo stop già al primo
 turno, al posto della domanda, il tocco cieco, «continuo», il secondo stop dopo
-i colpi raccontati, «bevi» che consuma una pozione e costa il turno, «scappo via»
-che chiude lo scontro col suo costo fisso).
+i colpi raccontati, «bevi» che consuma una pozione senza costare il turno: il numero verde che sale, la vita
+che sale di quanto cura e basta, lo stop che sparisce, «bevi» spento («una per turno») e riacceso al turno dopo; poi un sorso
+che non basta e lascia lo stop con `[data-ringhio-bevuto]`; «scappo via» che chiude lo scontro col suo costo fisso). Il mago è
+di livello 9 senza punti di tempra (29 vita contro un giro di 21): con più vita il primo stop non scatta).
