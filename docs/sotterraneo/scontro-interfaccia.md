@@ -34,7 +34,7 @@ Tutto sta in `Corsa.foglio` (`che: 'scontro'`) e nelle funzioni di `Corsa`; un m
 - **L'esito** di `rispondi` e di `beviNelloScontro` (null senza scontro): `azioni` — **in ordine**, da animare una alla volta —
   `caduti`, `fine` (lo scontro si è chiuso), `ringhia` (lo stop che comincia), e in cima i campi di prima (`che`: `colpo`, `ferito`,
   `caduto`, `bevuto`, `svenuto`; `dato`, `preso`, `usata`, `colpiti`, `veleno`, `salvo`, `gelato`, `assorbito`, `schivato`…).
-- **Un'azione**: dell'eroe `{ chi: 'eroe', che: 'attacco' | 'abilita' | 'sbaglia' | 'bevi', usata, forma, bersaglio,
+- **Un'azione**: dell'eroe `{ chi: 'eroe', che: 'attacco' | 'abilita' | 'sbaglia' | 'bevi' (con `cosa` e `cura`: il turno non finisce, non ci sono azioni di mostri e la fila non scorre), usata, forma, bersaglio,
   colpiti: [{ chi, dato, caduto, effetti, fattore, elemento, effetto, rifiutati }], presi: [{ chi, rifiutati }], base, volte, primoTiro, rubato }` (`presi`: chi prende
   l'abilità anche se non fa danno, Rovi o Ninna nanna; `rubato`: la vita rimessa da Mano santa; (`sbaglia` porta anche il `bersaglio`, per
   dire «a vuoto» su di lui); di un mostro `{ chi: mostro, che: 'colpo' | 'salta' | 'veleno' | 'sanguina', contro: 'eroe', pieno, preso,
@@ -119,7 +119,7 @@ Il motore risolve tutto dentro `rispondi`; la vista ne racconta le `azioni` una 
 ## La scelta in basso
 
 `CaselleAbilita.vue`, come prima ([abilita.md](abilita.md#nello-scontro)): Attacco, le tre abilità coi numeri veri contro il
-bersaglio, **Bevi una pozione** (costa il turno, lo dice), la pozione blu, **Scappa via** col suo costo fisso (`costoFuga`; non
+bersaglio, **Bevi una pozione** (poi tocca ancora a te; una per turno, e dopo il sorso il tasto è spento e lo dice), la pozione blu, **Scappa via** col suo costo fisso (`costoFuga`; non
 offerta se `!puoScappare()`), e sopra la riga rossa dello stop ([pericolo.md](pericolo.md)).
 
 ## Nei test

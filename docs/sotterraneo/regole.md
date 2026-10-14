@@ -156,7 +156,7 @@ dei turni, le forme dei colpi, l'agguato, le caratteristiche per ramo sono in
   scontro si esce rispondendo o scappando. Provato un foglio dal basso:
   compariva dove non si guardava, e la telecamera si spostava da sola.
 - **Con uno scontro aperto lo zaino non si apre**: si beve nella scelta (la
-  pozione rossa costa il turno), o allo **stop del pericolo**: quando i colpi
+  pozione rossa non costa il turno, ma una per turno), o allo **stop del pericolo**: quando i colpi
   in arrivo rischiano di farlo cadere lo scontro si ferma e si sceglie bevi,
   scappo o continuo ([pericolo.md](pericolo.md)).
 - Misurato: chi corre dritto alla scala sviene una o due volte per discesa,
