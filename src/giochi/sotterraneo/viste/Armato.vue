@@ -9,6 +9,7 @@ import { figura } from './figura.js'
 import { pezzoAndante } from '../dati/tessere.js'
 import { PEZZI } from '../dati/atlante.js'
 import { COSE } from '../dati/cose.js'
+import { impugnatura } from '../dati/impugna.js'
 
 const props = defineProps({
   eroe: { type: Object, required: true },        // la scheda: sprite, em
@@ -28,15 +29,16 @@ const larga = computed(() => (T + 2 * MARGINE) * props.scala)
 
 const dueMani = computed(() => !!(props.mano && COSE[props.mano] && COSE[props.mano].mani === 2))
 
-// un pezzo posato con i piedi (il fondo) un pixel sopra quelli dell'eroe, centrato `verso` caselle dal centro
+// un pezzo posato come lo tiene una mano (dati/impugna.js), centrato `verso` volte la distanza della mano dal centro
 function posato(chiave, verso, dy = 0, specchia = false) {
   const cosa = COSE[chiave]
   const p = cosa && cosa.sprite ? PEZZI[cosa.sprite] : null
   if (!p) return null
   const f = figura(cosa.sprite, { scala: props.scala })
   const s = props.scala
-  const x = (MARGINE + T / 2 + verso * T * 0.42) * s - p[2] * s / 2
-  const y = (ALTO - T * 0.08 - p[3] + dy) * s
+  const { dx, base } = impugnatura(cosa, p[2], p[3], 'ritratto')
+  const x = (MARGINE + T / 2 + verso * dx) * s - p[2] * s / 2
+  const y = (ALTO - base - p[3] + dy) * s
   return {
     chiave, gabbia: f.gabbia, pezzo: f.pezzo,
     posto: { left: `${Math.round(x)}px`, top: `${Math.round(y)}px`, transform: specchia ? 'scaleX(-1)' : null },

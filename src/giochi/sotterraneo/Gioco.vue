@@ -882,19 +882,23 @@ function semeDallIndirizzo() {
 
 // `#sotterraneo=roba` scende già equipaggiato, per guardare una schermata senza giocare mezza discesa
 function corredoDaProva(c) {
-  if (new URLSearchParams(location.hash.slice(1)).get('sotterraneo') !== 'roba') return
+  const h = new URLSearchParams(location.hash.slice(1))
+  if (h.get('sotterraneo') !== 'roba') return
+  // `&mano=arco-corto@7`: solo quell'arma in pugno, anche di una famiglia che l'eroe non porta (strumenti/sotterraneo-armi.mjs)
+  const sola = COSE[h.get('mano')] ? h.get('mano') : null
   c.mano = 'spada-di-ghiaccio'
   c.mancina = 'scudo-ferro'
   c.corpo = 'corazza'
   c.dito = 'teschio-cercatore'
   // le tre armature (mai visibili addosso) e i due gioielli: le cose che si vedono solo qui
   c.zaino = ['panciotto', 'manto', 'saio', 'amuleto-azzurro', 'pozione-grande', 'chiave']
+  if (sola) { c.mano = c.mancina = c.corpo = c.dito = null; c.zaino = [] }
   c.gemme += 120
   // due torce (una accesa, una di scorta): la seconda fa vedere anche il "+1" nella fascia in cima
-  c.accendi('torcia')
-  c.accendi('torcia')
+  if (!sola) { c.accendi('torcia'); c.accendi('torcia') }
   // stesso corredo per tutti e quattro: sistemaIlCorredo toglie quello che questa classe non porta, come al rientro
   c.sistemaIlCorredo()
+  if (sola) c.mano = sola
 }
 
 // `#abisso=12` comincia già a quel piano, per guardare una schermata senza aspettare due sere di discesa

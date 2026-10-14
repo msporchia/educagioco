@@ -10,7 +10,7 @@ foglio nuovo (`armi-2.png` + `armi-2.json`, a scala 3 come
 
 | pezzo (chiave nel gioco) | oggi | perché si rifà |
 |---|---|---|
-| Balestra (`balestra`) | un arco con due diagonali incrociate: sembra una trappola | la balestra vera ha il fusto in verticale e l'arco in croce in cima |
+| Balestra (`balestra`) | un arco con due diagonali incrociate: sembra una trappola (girata e ridotta nel foglietto per tenersi in mano) | la balestra vera ha il fusto in verticale e l'arco in croce in cima |
 | Pugnale vampiro (`arma-1`) | pixel art 0x72, contorno bianco e nero | un'altra mano: accanto alle armi dipinte sembra di un altro gioco |
 | Spada del ladro (`arma-2`) | pixel art 0x72, azzurra | come sopra |
 | Bipenne solare (`arma-3`) | pixel art 0x72, azzurra, grande 16×24 | come sopra, e fuori scala |
