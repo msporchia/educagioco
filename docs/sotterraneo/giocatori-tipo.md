@@ -134,6 +134,15 @@ duri, più esperienza, livelli a metà discesa); adesso a frenare è la **curva*
   Tarata col curioso: **chi gira tutto entra in ogni discesa al livello atteso più 0, 0, 1, 1, 1, 1, 2** (1 · 2 · 4 · 6 · 8 · 9 · 12 contro 1 · 2 · 3 · 5 · 7 · 8 · 10);
   la zona verde vinta rende da 0,9 a 1,4 livelli. Il prezzo: **chi va dritto entra 1–2 livelli sotto** i `LIVELLI_ATTESI` (nati per lui), quindi le misure
   fatte col suo banco (`unita/sotterraneo`, `unita/sotterraneo-roba`, `misure/sotterraneo`) vanno ritarate con questo strumento.
+- **Le pozioni** ([pozioni.md](pozioni.md)): il curioso compra la più grande che può pagare, dopo la roba, fino al tetto di otto cure; beve la più
+  piccola che rimette quanto manca (nello scontro anche i colpi in arrivo) e non risparmia l'ampolla della vita, il bravo la tiene per il grosso
+  (`tieneLaVita`). Prima → dopo (30 storie per eroe, `npm run taratura`; il tetto era di fatto assente: nel fondo si scendeva con 55 pozioni).
+  Curioso, per discesa dalla cripta al fondo: vinte alla prima 96 · 98 · 97 · 95 · 100 · 97 · 98 → 98 · 99 · 92 · 96 · 97 · 93 · 93; con uno svenimento
+  54 · 8 · 38 · 23 · 15 · 18 · 18 → 44 · 8 · 46 · 45 · 29 · 46 · 45 (le ultime discese entrano nella fascia 20–60%); pozioni bevute 2,3 · 3,0 · 6,1 ·
+  5,2 · 3,9 · 14,8 · 8,0 → 2,1 · 3,0 · 5,9 · 5,5 · 4,8 · 16,6 · 8,1; gemme che restano dopo la spesa (mediana) 0 · 3 · 133 · 358 · 771 · 1392 · 2704 → 0 · 4 ·
+  132 · 245 · 354 · 735 · 1572. Sbadato, vinte alla prima 59 · 92 · 73 · 80 · 82 · 70 · 73 → 64 · 96 · 68 · 79 · 80 · 48 · 62. Bravo, vinte 100 · 78 · 74 ·
+  94 · 90 · 88 · 78 → 100 · 78 · 72 · 92 · 91 · 87 · 80. **Il tetto lo toccano quasi a ogni discesa dalla seconda**: il curioso in 93 · 97 · 98 · 99 · 100 ·
+  100% delle discese dalle cantine al fondo, il bravo (che gira meno e trova meno) in 2 · 52 · 60 · 66 · 80 · 63% (riga `al tetto` sotto la roba con cui si entra).
 - **Le gemme** una per punto di potenza tornano piene: il curioso ne prende da 47 (cripta) a 3600 (miniera) a discesa, e **il banco non le assorbe**
   (avanzano 1400 alla botola). La leva è chi decide: i prezzi del banco di sopra, o `potenza.gemme`. Sotto 1 la cripta non basta: il mago che va dritto
   ne esce con 12 (a 0,5) e la prima arma costa 23 (`misure/sotterraneo` lo controlla).

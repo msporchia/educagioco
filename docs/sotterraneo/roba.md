@@ -151,8 +151,7 @@ la roba con livello e rarità: [rarita.md](rarita.md).
 
 Cinque cure, ognuna con la sua cura e il suo prezzo **fissi**: non crescono col livello (l'utente, 14 ottobre: «già 18 è una cura ridicola
 se ho 50 vite»; si aggiungono stadi più grandi man mano che l'eroe sale) e a ogni stadio costa di più ogni punto di vita, così la grande
-non è mai la più conveniente (`guastiDelleCose` lo controlla). Le chiavi `pozione-piccola`, `pozione`, `pozione-grande` sono rimaste
-(sono id di salvataggio); in `dati/cose.js`.
+non è mai la più conveniente (`guastiDelleCose`). Le chiavi `pozione-piccola`, `pozione`, `pozione-grande` sono rimaste (id di salvataggio).
 
 | | cura | prezzo, a livello 1 · 6 · 12 · 20 | gemme per punto | sul banco della guaritrice | vita dell'eroe atteso lì |
 |---|---|---|---|---|---|
@@ -162,21 +161,8 @@ non è mai la più conveniente (`guastiDelleCose` lo controlla). Le chiavi `pozi
 | 🍷 Ampolla maggiore | 50 | 200 | 4,0 | dopo 5 | 53–66 |
 | 🍷 Ampolla della vita | tutta la vita | non si compra (rivenduta 60) | — | mai: si trova | — |
 
-- **Le grandi arrivano più avanti** (`dalla`, `Bottega.sempreDi`): chi ha 50 vite trova già quella che gli serve, chi ne ha 20 non ha sul
-  banco una cura da 50 che gli basterebbe in un sorso. Lo mostra il pannello del pezzo («+30 vita, subito»).
-- **L'ampolla della vita non si compra** (l'utente, 14 ottobre): cade dal grosso (25%), da un caporale (5%) e da un forziere (2,5%),
-  `ampollaCade` in `motore/bottino.js` (un tiro suo, che non sposta l'elisir), ed è quella da tenere per un boss. Il nome non si confonde con
-  l'elisir del toro (🐂: vita massima, per sempre, rarissimo): una è una cura sola, l'altro cresce l'eroe.
-- **Al più otto cure in tasca, di qualunque stadio** (`POZIONI_MASSIME`; l'utente, 14 ottobre: «più di 8 pozioni non le puoi portare:
-  quantomeno devi pagare la cosa perdendo un sacco di tempo»): la nona non si compra («hai già 8 pozioni», col tasto spento), per terra resta
-  lì («al massimo 8 pozioni»), e lo zaino scrive «🧪 3/8» accanto al piano. Non contano l'energia (costa poco e torna camminando) né l'elisir
-  del toro. Misurato: senza tetto il giocatore finto entrava nel fondo con 55 pozioni, perché le uguali stanno in una tasca sola; il tetto
-  pesa più del prezzo, e dai giocatori tipo si raggiunge ogni discesa dalla seconda (`al tetto` nel rapporto della taratura).
-- **Con più stadi in tasca si sceglie quale bere** (`ScegliPozione.vue`, `Corsa.scelteDiCura`): la 🧪 della barra e «Bevi una pozione» dello
-  scontro (dove costa il turno, anche dallo stop del pericolo) aprono una riga per stadio, con quanto cura e quante ne hai; con uno solo si
-  beve e basta. Il motore sceglie da sé la più piccola che rimette quanto manca (`pozioneGiusta`): lo fa il banco e la barra con un tipo solo.
-- **Il giocatore finto** compra la più grande che può pagare, dopo la roba, fino al tetto; il curioso non risparmia l'ampolla della vita, il
-  bravo la tiene per il grosso (`tieneLaVita`). Nei test: `unita/sotterraneo-pozioni`, `integrazione/sotterraneo-pozioni`.
+Il resto (il rapporto fra una spada e le pozioni, quando arrivano le grandi, l'ampolla della vita, il tetto di otto, la scelta di quale bere, il
+giocatore finto): [pozioni.md](pozioni.md).
 
 ## La torcia si accende da sé, e finisce
 
