@@ -12,7 +12,7 @@ chi ci lavora. Cartella `src/giochi/arena/` (la chiave del gioco è `arena`;
 - [nemico.md](nemico.md) — l'IA: le scalette, l'emergenza, cosa fa quando perde, perché non lascia monete ferme
 - [taratura.md](taratura.md) — il giocatore finto, cosa promette la campagna e come si rimisura
 - [sosta.md](sosta.md) — la battaglia lasciata a metà: cosa si salva e cosa no
-- [grafica.md](grafica.md) — la corsia verticale, la cittadella, gli edifici disegnati in codice, gli sprite che si riusano e quelli che mancano
+- [grafica.md](grafica.md) — la corsia verticale, il castello sul bordo e le piazzole, gli edifici disegnati in codice, gli sprite che si riusano e quelli che mancano
 - [da-fare.md](da-fare.md) — le voci aperte
 
 Vedi anche: [`../apprendimento/calibrazione.md`](../apprendimento/calibrazione.md)

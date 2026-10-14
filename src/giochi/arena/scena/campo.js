@@ -5,7 +5,7 @@
 // in alto, chi gioca in basso. I castelli ai due capi lasciano la corsia libera
 // per manovrare. Le creature del foglio guardano di lato (di schiena non esiste
 // niente): in campo guardano dalla parte della loro squadra.
-import { CAMPO, TRUPPE } from '../dati/regole.js'
+import { CAMPO, TRUPPE, POSTI } from '../dati/regole.js'
 import { carica, componi, immagineScena } from '../../castello/scena/vestito.js'
 import { PEZZI as SCENE } from '../../castello/dati/vestiti.js'
 import { PEZZI } from '../../castello/dati/figure.js'
@@ -19,7 +19,7 @@ import { disegnaEdificio } from './edifici.js'
 // cittadelle.
 const ZOOM = 0.5
 const ZT = ZOOM * 1.2                    // le truppe: un po' più grandi del terreno
-const ZE = 0.75                          // castello ed edifici: stretti in una cittadella, possono essere grandi
+const ZE = 0.75                          // castello ed edifici: più grandi delle truppe
 const MAPPA = Array.from({ length: 24 }, (_, y) => Array.from({ length: 16 }, (_, x) => {
   if (x === 7 || x === 8) return '+'
   if (y === 11 || y === 12) return '~'
@@ -87,7 +87,7 @@ export class Campo {
     this.sfondo(c, W, H)
     if (!this.pronto) return
     this.ponte(c)
-    this.piazzale(c)
+    this.piazzole(c)
     // castelli, caserme e porte dall'alto in basso, così chi sta davanti copre chi sta dietro
     const edifici = [...p.castelli.map(e => [e.y, () => this.base(c, p, e.lato)]),
       ...p.caserme.map(e => [e.y + 10, () => this.caserma(c, p, e, ora)]), ...p.muri.map(e => [e.y, () => this.muro(c, e)])]
@@ -142,21 +142,21 @@ export class Campo {
 
   /* la base: il castello di chi gioca, la bocca da cui escono i mostri per il nemico */
   base(c, p, lato) {
+    /* il castello sta sul bordo e se ne vede solo un pezzo, la cima (il nemico, in alto, la base):
+       è l'obiettivo finale, non deve prendere campo */
     const re = p.castello(lato)
     const sc = SCENE[this.vestito], img = immagineScena(this.vestito)
-    const x = this.X(re.x), y = this.Y(re.y)
-    const [nome, k] = ['castello', 0.4]
-    const [sx, sy, w, h] = sc[nome]
-    const lw = w * k * this.s / 0.85 * ZE, lh = h * k * this.s / 0.85 * ZE
-    this.ombra(c, x, y + lh * 0.38, lw * 0.4, lh * 0.1)
+    const [sx, sy, w, h] = sc.castello
+    const lw = w * 0.56 * this.s / 0.85 * ZE, lh = h * 0.56 * this.s / 0.85 * ZE
+    const x = this.X(re.x), piede = lato === 'io' ? this.Y(CAMPO.H + 60) : this.Y(60)
     if (re.hp > 0) {
-      if (lato === 'nem') c.drawImage(this.castelloNemico(img, sx, sy, w, h), x - lw / 2, y + lh * 0.3 - lh, lw, lh)
-      else c.drawImage(img, sx, sy, w, h, x - lw / 2, y + lh * 0.3 - lh, lw, lh)
-    } else this.ombra(c, x, y, lw * 0.3, lh * 0.1, 0.5)
-    this.livello(c, x, y + lh * 0.3 + this.mi(2), re.liv, lato)
-    // la vita del castello: una barra grande SOPRA il castello, sempre accesa (con la vita scritta)
-    const alto = Math.max(this.mi(4), y + lh * 0.3 - lh - this.mi(16))
-    this.barraCastello(c, x, alto, re, lato)
+      if (lato === 'nem') c.drawImage(this.castelloNemico(img, sx, sy, w, h), x - lw / 2, piede - lh, lw, lh)
+      else c.drawImage(img, sx, sy, w, h, x - lw / 2, piede - lh, lw, lh)
+    } else this.ombra(c, x, lato === 'io' ? this.Y(CAMPO.H) : this.Y(0), lw * 0.4, lh * 0.1, 0.5)
+    // la vita del castello: una barra grande dalla parte del campo, sempre accesa (con la vita scritta)
+    const by = lato === 'io' ? piede - lh - this.mi(18) : piede + this.mi(6)
+    this.barraCastello(c, x, by, re, lato)
+    this.livello(c, x + this.mi(66), by + this.mi(6.5), re.liv, lato)
   }
 
   /* il castello del nemico è lo stesso, coi colori scambiati: tetti rossi, stendardi blu */
@@ -212,33 +212,20 @@ export class Campo {
     }
   }
 
-  /* il piazzale della cittadella: un lastricato su cui castello e caserme si toccano, come in una
-     città di Heroes. Si dipinge una volta per misura e si tiene. */
-  piazzale(c) {
-    const S = this.s
-    if (!this._piazzale || this._piazzale.s !== S) {
-      const w = Math.round(280 * S), h = Math.round(136 * S)
-      const cv = document.createElement('canvas'); cv.width = w * this.k; cv.height = h * this.k
-      const x = cv.getContext('2d'); x.scale(this.k, this.k)
-      x.fillStyle = '#7d7466'; x.beginPath(); x.roundRect(0, 0, w, h, 14 * S); x.fill()
-      x.save(); x.beginPath(); x.roundRect(2 * S, 2 * S, w - 4 * S, h - 4 * S, 12 * S); x.clip()
-      const tinte = ['#aaa293', '#b3ab9c', '#a19989', '#bab3a5']
-      for (let j = 0, yy = 2 * S; yy < h; j++, yy += 6 * S)
-        for (let i = 0, xx = (j % 2 ? -3 : 0) * S; xx < w; i++, xx += 7 * S) {
-          x.fillStyle = tinte[(i * 7 + j * 3) % 4]; x.beginPath(); x.roundRect(xx + 0.5 * S, yy + 0.5 * S, 6 * S, 5 * S, 1.5 * S); x.fill()
-        }
-      x.restore()
-      this._piazzale = { s: S, cv, w, h }
-    }
-    const { cv, w, h } = this._piazzale
-    for (const lato of ['io', 'nem']) {
-      const y = lato === 'io' ? this.Y(394) : this.Y(CAMPO.H - 394) - h
-      c.fillStyle = 'rgba(0,0,0,.25)'; c.beginPath(); c.roundRect(this.X(40) + 2, y + 3, w, h, 14 * S); c.fill()
-      c.drawImage(cv, this.X(40), y, w, h)
-    }
+  /* i posti delle caserme: una base stabile sempre in vista, la piazzola del castello a torri.
+     Vuota aspetta la caserma, e quando la caserma crolla resta lì. */
+  piazzole(c) {
+    const sc = SCENE[this.vestito], img = immagineScena(this.vestito)
+    for (const lato of ['io', 'nem']) POSTI.forEach(([px, py], i) => {
+      const [sx, sy, w, h] = sc['piazzola:' + (i % 2)]
+      const lw = this.me(70), lh = lw * h / w
+      const y = this.Y(lato === 'io' ? py : CAMPO.H - py) + this.me(9)
+      this.ombra(c, this.X(px) + 2, y + lh * 0.42, lw * 0.5, lh * 0.14, 0.25)
+      c.drawImage(img, sx, sy, w, h, this.X(px) - lw / 2, y - lh / 2, lw, lh)
+    })
   }
 
-  /* una caserma: l'edificio della sua truppa (scena/edifici.js), che spunta dal piazzale quando
+  /* una caserma: l'edificio della sua truppa (scena/edifici.js), che spunta dalla sua piazzola quando
      nasce; sopra lo stemma della truppa, sotto il livello */
   caserma(c, p, cs, ora) {
     if (!this.nate.has(cs)) this.nate.set(cs, p.t < 1 ? -99 : ora)

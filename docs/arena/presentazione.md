@@ -2,8 +2,8 @@
 
 *Costruisci le caserme del tuo castello, mandale contro il nemico e batti la sua base.*
 
-Una battaglia a una corsia sola. Da una parte la tua cittadella, dall'altra
-quella del nemico, in mezzo un ponte. Si parte con poche monete e nessuna
+Una battaglia a una corsia sola. Da una parte il tuo castello, dall'altra
+quello del nemico, in mezzo un ponte. Si parte con poche monete e nessuna
 caserma: le caserme sono quattro edifici, e costruendo ognuno si sceglie chi ci
 abita (la cripta fa arcieri od opliti, la torre oscura negromanti o diavoletti).
 Le truppe escono da sole, sempre di più, e assediano il nemico: prima la porta del

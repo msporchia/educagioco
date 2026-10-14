@@ -43,7 +43,7 @@ controlla('stesso seme, stessa partita', JSON.stringify(uguali) === JSON.stringi
   const cripta = p.casermeDi('io')[0]
   uguale('la cripta fa opliti', `${cripta.ed}/${cripta.id}`, 'cripta/guardiano')
   controlla('un edificio è uno solo: con gli opliti non si costruiscono anche gli arcieri', p.prezzo('io', 'costruisci', 'scheletri') === null)
-  controlla('sta sulla metà del giocatore, attaccata al castello', cripta.y > CAMPO.fiume.basso && Math.abs(cripta.y - p.castello('io').y) < 60)
+  controlla('sta su uno dei posti fissi, fra la porta del ponte e il castello', cripta.y > p.muro('io').y && cripta.y < p.castello('io').y)
   controlla('l\'altro edificio si costruisce', p.fai('io', 'costruisci', 'lupi'))
   const tana = p.casermeDi('io').find(c => c.ed === 'tana')
   const sopra = new Partita({ rnd: caso(1) })

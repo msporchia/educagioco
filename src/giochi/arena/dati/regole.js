@@ -9,14 +9,14 @@ export const CAMPO = {
   fiume: { alto: 245, basso: 295 },   // l'acqua; la strada la attraversa, larga quanto la corsia
   corsia: 180,                         // la x del ponte e della strada
   muro: 312,                           // la porta in fondo al ponte, metà di sotto (la sopra è specchiata)
-  base: 470,                           // la y del castello, metà di sotto
+  base: 520,                           // la y del castello, metà di sotto: sul bordo, se ne vede solo la cima
 }
 
-/* I posti delle caserme sulla metà di sotto; sopra sono specchiati in y. Quattro, stretti
-   attorno al castello come in una città di Heroes: due per lato, uno accanto al castello e uno
-   più avanti. Lo ordina il motore: prima il lato con meno caserme, e dentro il lato il posto
-   più al sicuro (più lontano dal fiume). */
-export const POSTI = [[92, 482], [268, 482], [92, 424], [268, 424]]
+/* I posti delle caserme sulla metà di sotto; sopra sono specchiati in y. Quattro, fissi e
+   sempre visibili (una base stabile, come le piazzole del castello a torri), fra la porta del
+   ponte e il castello: chi assedia li trova prima del castello. Lo ordina il motore: prima il
+   lato con meno caserme, e dentro il lato il posto più al sicuro (più lontano dal fiume). */
+export const POSTI = [[88, 440], [272, 440], [102, 372], [258, 372]]
 
 /* Le truppe. `op` è l'operazione che si risolve per costruire e potenziare la
    sua caserma; `costo` è quello della prima pietra, uguale per le due truppe di
@@ -59,8 +59,8 @@ export const OPERAZIONI = ['+', '−', '×', '÷']
 
 /* Il castello: l'unica costruzione che spara e si potenzia, e quella che non
    deve cadere. Da solo tiene i primi minuti: il respiro che serve per decidere.
-   Spara lontano (`gitt`) perché da lì deve coprire il muro sul ponte. */
-export const CASTELLO = { nome: 'Castello', hp: 4000, dmg: 52,   rate: 0.75, gitt: 175, r: 30 }
+   Spara lontano (`gitt`) perché dal bordo deve coprire la porta in fondo al ponte. */
+export const CASTELLO = { nome: 'Castello', hp: 4000, dmg: 52,   rate: 0.75, gitt: 215, r: 30 }
 export const LIV_MAX = 10              // caserme e torretta
 export const MINIERA_MAX = 6
 

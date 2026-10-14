@@ -10,10 +10,13 @@ I numeri stanno in `src/giochi/arena/dati/regole.js`, il motore in
   muro, che copre una corsia sola, non serviva a niente sull'altra.
 - Il motore conta la corsia in verticale (`y` lungo, `x` di lato), e la scena la
   disegna così, col castello di chi gioca in basso (vedi [grafica.md](grafica.md)).
-- **Ogni metà è una cittadella**: il castello e le quattro caserme stretti su un
-  lastricato, come la città di Heroes of Might and Magic (l'utente: gli edifici che
-  «si sposano e si incastrano su uno sfondo unico»). Fra le cittadelle c'è il campo
-  libero e il ponte.
+- **Il castello sta sul bordo, e se ne vede solo un pezzo**: è l'obiettivo finale, non
+  deve prendere campo (l'utente). Fra lui e il ponte ci sono **quattro posti fissi** con
+  la loro base stabile, sempre in vista, come le piazzole del castello a torri: ci si
+  costruiscono le caserme, e quando una crolla resta la base. **Provato** a stringere
+  castello e caserme in una cittadella alla Heroes, con gli edifici attaccati al castello:
+  ma una caserma si può abbattere, e attaccata al castello non lo si poteva più fare
+  senza toccare lui, né si vedeva che l'assedio arriva al castello per ultimo.
 - **Una partita dura 3:00.** Vince chi abbatte il castello nemico; allo scadere chi ha
   fatto più danni (sotto, «La durata»).
 
@@ -33,7 +36,7 @@ I numeri stanno in `src/giochi/arena/dati/regole.js`, il motore in
   (l'utente). Il livello (1-10) fa uscire le squadre più spesso
   (`9 / (1 + 0.12·(liv−1))` secondi) e più forti (`1 + 0.25·(liv−1)`); potenziando, la
   vita in più della caserma arriva subito.
-- **Il posto lo sceglie il gioco** (`POSTI`, quattro per parte attorno al castello):
+- **Il posto lo sceglie il gioco** (`POSTI`, quattro per parte, fra la porta e il castello):
   il lato con meno caserme, e dentro il lato il più lontano dal fiume. Niente da
   piazzare col dito.
 - **Le truppe sono otto e si distinguono per chi colpiscono, non per quanto
@@ -91,7 +94,7 @@ Costano monete di battaglia e un calcolo, come le caserme.
 
 - **Il castello è l'unica costruzione che spara.** Prima c'era una torretta
   davanti alla base: tolta (l'utente: «più un potenziamento del castello»), e il
-  castello ne ha preso la gittata (175, più 4 per livello) perché da lì deve
+  castello ne ha preso la gittata (215, più 4 per livello) perché dal bordo deve
   coprire la porta in fondo al ponte.
 - **La porta è una sola per parte e non si compra**: c'è dall'inizio, chi cammina la
   colpisce prima del resto, chi vola la scavalca. Se crolla resta il cumulo e **si

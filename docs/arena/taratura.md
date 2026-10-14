@@ -33,8 +33,8 @@ I quattro giocatori finti (`PILOTI` in `motore/banco.js`):
 | lento | 55% | 3,5 s | perdere più del bambino, ma vincere le prime tappe |
 | caso | 25% | 3,5 s | non vincere quasi mai sulle tappe alte |
 
-Ultimo giro misurato (13 ottobre, dopo gli edifici a due truppe e la calibrazione di vita e
-danno): il bambino 93% → 41%, il lento 28% → 11%, chi tira a indovinare 5% → 3%.
+Ultimo giro misurato (14 ottobre, col castello sul bordo e le quattro piazzole fisse): il
+bambino 93% → 51%, il lento 38% → 15%, chi tira a indovinare 5% → 1%.
 
 - **La manopola non sale in fila.** Con più truppe a disposizione anche il
   nemico è più forte a parità di `d`, quindi una tappa con più truppe ha un `d`
