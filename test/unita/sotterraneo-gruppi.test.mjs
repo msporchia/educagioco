@@ -2,7 +2,7 @@
 
    Chi entra (il raggio, sette posti, il grosso ne vale due, nessun rinforzo), chi parte (l'agguato, la sorpresa), la fila dei
    turni (l'ordine, la parità all'eroe, il doppio turno), il bersaglio, il turno dell'eroe (giusto parte, sbagliato a vuoto,
-   bere costa il turno), il colpo dei mostri che non dipende dalla risposta, le quattro forme dei colpi (con abilità finte),
+   bere non costa il turno e una sola a turno), il colpo dei mostri che non dipende dalla risposta, le quattro forme dei colpi (con abilità finte),
    gli effetti contati nei turni di chi li porta, le abilità riscritte, la fuga a costo fisso, lo stop sulla somma dei colpi,
    la caratteristica per ramo, l'esperienza e il bottino, la sosta a metà di uno scontro.
    `node test/esegui.mjs sotterraneo-gruppi --niente-build` */
@@ -198,23 +198,39 @@ const colpoDi = (c, m) => Math.max(1, Math.round(COLPO_DEL_MOSTRO * (m.att - c.d
   uguale('e si paga', c.energia, energia - NODI['dardo-di-fuoco'].costo)
 }
 {
-  // bere la pozione rossa costa il turno: i mostri colpiscono; la blu no
+  // bere non costa il turno: la vita sale e i mostri non colpiscono; una pozione sola per turno, rossa o blu
   const { c, m } = scena({ mostri: [{ dx: 1 }, { dx: 2 }] })
   c.scontro(m[0])
   c.vita = c.vitaMax - 8
-  c.zaino = ['pozione-piccola']
+  c.zaino = ['pozione-piccola', 'pozione-piccola', 'pozione-blu']
+  c.energia = 0
   const prima = c.vita
   const cura = c.curaDi('pozione-piccola')
+  const coda = JSON.stringify(c.foglio.coda), turni = JSON.stringify(c.foglio.turni.map(t => t.chi === 'eroe' ? 'eroe' : t.chi.tipo))
+  const id = c.chiesta.id
   const e = c.beviNelloScontro()
   uguale('bevuta', e.che, 'bevuto')
-  uguale('la vita sale della cura e scende dei colpi di entrambi i mostri', c.vita, Math.min(c.vitaMax, prima + cura) - colpoDi(c, m[0]) - colpoDi(c, m[1]))
+  uguale('la vita sale della cura, senza colpi dei mostri', c.vita, Math.min(c.vitaMax, prima + cura))
+  uguale('il racconto è il solo sorso, con quanto cura', e.azioni.map(a => `${a.chi}:${a.che}:${a.cura}`).join(), `eroe:bevi:${c.vita - prima}`)
   uguale('nessun mostro è stato toccato', m[0].ossa + m[1].ossa, 80)
-  uguale('senza pozioni non si beve', c.beviNelloScontro(), null)
-  c.zaino = ['pozione-blu']
+  uguale('la fila non si è mossa: tocca ancora all\'eroe', JSON.stringify(c.foglio.coda), coda)
+  uguale('e i prossimi turni sono gli stessi', JSON.stringify(c.foglio.turni.map(t => t.chi === 'eroe' ? 'eroe' : t.chi.tipo)), turni)
+  controlla('la domanda è quella di prima', c.chiesta && c.chiesta.id === id)
+  uguale('una sola a turno: la seconda rossa no', c.beviNelloScontro(), null)
+  uguale('né la blu', c.beviEnergiaNelloScontro(), null)
+  uguale('le pozioni sono rimaste', c.zaino.length, 2)
+  uguale('senza pozioni non si beve', (c.zaino = [], c.beviNelloScontro()), null)
+  // dopo la risposta i mostri colpiscono, e al turno dopo si può bere di nuovo
+  c.zaino = ['pozione-piccola', 'pozione-blu']
+  c.rispondi(false)
+  controlla('i mostri hanno colpito', c.vita < Math.min(c.vitaMax, prima + cura))
+  controlla('il turno dopo si beve ancora', c.beviNelloScontro() !== null)
+  uguale('la blu, dopo il sorso, no', c.beviEnergiaNelloScontro(), null)
+  c.rispondi(false)
   c.energia = 0
-  const v = c.vita
-  c.usa(0)
-  controlla('la blu non costa il turno', c.vita === v && c.energia > 0)
+  uguale('la blu sola: l\'energia sale e il turno resta', c.beviEnergiaNelloScontro().che, 'energia')
+  controlla('l\'energia è salita', c.energia > 0)
+  uguale('e una rossa dopo la blu no', (c.zaino = ['pozione-piccola'], c.beviNelloScontro()), null)
 }
 
 /* ══════════ 5. il colpo dei mostri non dipende dalla risposta ══════════ */
