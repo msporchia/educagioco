@@ -28,29 +28,38 @@ export const PILOTI = {
   bambino: { precisione: 0.75, ritmo: inPartita(6) },
   lento: { precisione: 0.55, ritmo: inPartita(9) },
   caso: { precisione: 0.25, ritmo: inPartita(9) },
+  // come chi costruisce due caserme, le porta al livello 2 e poi sta a guardare: non deve vincere le tappe alte
+  pigro: { precisione: 1, ritmo: inPartita(6), caserme: 2, tetto: 2 },
 }
 
 // la fila in cui compra le caserme: prima chi tiene a bada gli altri, poi il resto
 const ORDINE = ['scheletri', 'guardiano', 'pipistrelli', 'lupi', 'negromante', 'diavoletto', 'golem', 'drago']
 
 export class Pilota {
-  constructor({ rnd = Math.random, precisione = 0.9, ritmo = 2.5, caserme = 4 } = {}) {
+  constructor({ rnd = Math.random, precisione = 0.9, ritmo = 2.5, caserme = 4, tetto = 0 } = {}) {
     this.rnd = rnd
     this.precisione = precisione
     this.ritmo = ritmo
     this.caserme = caserme          // quante ne tiene prima di mettere tutto nelle salite
+    this.tetto = tetto              // se c'è: le caserme fino a quel livello e poi niente, né castello né miniera
     this.attesa = ritmo
     this.giuste = 0
     this.sbagliate = 0
   }
 
   /* decide cosa vorrebbe fare adesso, o null. Il buon senso di un giocatore che
-     ha capito il gioco: tiene in piedi quello che ha, prima il castello (da solo
-     fa metà del lavoro), poi la miniera finché c'è tempo per ripagarsi, poi un
+     ha capito il gioco: tiene in piedi quello che ha, prima due caserme (provato il
+     castello per primo: un giocatore così perdeva contro un nemico che chi costruisce
+     due caserme e sta fermo batte sempre), poi il castello e la miniera, poi un
      esercito misto, poi tutto nelle salite. */
   voglia(p) {
     const mie = p.casermeDi('io')
     const puo = (a, id) => p.puoFare('io', a, id)
+    if (this.tetto) {
+      if (mie.length < this.caserme) { const id = ORDINE.find(i => puo('costruisci', i)); return id ? ['costruisci', id] : null }
+      const c = mie.find(x => x.liv < this.tetto && puo('potenzia', x.id))
+      return c ? ['potenzia', c.id] : null
+    }
     const t = p.castello('io')
 
     // la bomba è un regalo: si usa appena c'è un ammasso che vale la pena spazzare
@@ -61,8 +70,16 @@ export class Pilota {
     const muro = p.muro('io')
     const crollato = !!muro && muro.hp <= 0
     if (crollato && puo('ripara')) return ['ripara']
-    if (t.hp > 0 && t.liv < 3 && puo('castello')) return ['castello']
-    if (p.t < 45 && p.lati.io.miniera < 2 && puo('miniera')) return ['miniera']
+    if (mie.length < 2) {
+      const id = ORDINE.find(i => puo('costruisci', i))
+      return id ? ['costruisci', id] : null
+    }
+    if (mie.some(c => c.liv < 2)) {
+      const c = mie.find(x => x.liv < 2 && puo('potenzia', x.id) && !p.inRiposo('io', x.id))
+      return c ? ['potenzia', c.id] : null
+    }
+    if (t.hp > 0 && t.liv < 2 && puo('castello')) return ['castello']
+    if (p.t < 60 && p.lati.io.miniera < 2 && puo('miniera')) return ['miniera']
     if (mie.length < this.caserme) {
       const id = ORDINE.find(i => puo('costruisci', i))
       if (id) return ['costruisci', id]

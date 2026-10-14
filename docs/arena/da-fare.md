@@ -14,5 +14,5 @@
 - La bomba: scegliere il punto col dito (oggi lo sceglie il gioco), un effetto più epico e il suono.
 - Provare col dito di un bambino: il ritmo del campo mentre si calcola
   (oggi metà della velocità) è la prima cosa da guardare.
-- Una tappa (o il gioco libero) tarata sul giocatore bravo: oggi `misura` vince il 100% ovunque ([taratura.md](taratura.md)).
+- Il pigro (due caserme al livello 2, poi fermo) vince il 68-100% dalla seconda tappa alla decima: il nemico non punisce chi si ferma e giocare di più non rende ([taratura.md](taratura.md)).
 - Idea dell'utente (13/10), da valutare: dare una priorità alle truppe, caserma per caserma, cioè dire a ciascuna cosa attaccare.

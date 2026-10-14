@@ -19,42 +19,52 @@ e la bisezione non trova la quota.
 
 `npm run tara:arena` cerca, tappa per tappa, per bisezione su una manopola `d`
 (0 = nemico quasi inerme, 1 = pari al giocatore bravo: monete al secondo, ogni
-quanto pensa e forza delle truppe) quanto forte deve essere il nemico perché il
-**bambino** di prova vinca la quota della tappa, da **90% nella prima a 45%
-nell'ultima** (150 partite per passo, 8 passi). Il risultato è in
-`dati/taratura.js` con una firma (`motore/firma.js`): se si ritocca una regola, un
-truppa o una tappa senza ritarare, `unita/arena` diventa rosso.
+quanto pensa e forza delle truppe; arriva a 3) quanto forte deve essere il nemico.
+Due promesse, e vale la più dura:
 
-I quattro giocatori finti (`PILOTI` in `motore/banco.js`):
+- il **bambino** di prova vince almeno la quota della tappa, da **90% nella prima a
+  30% nell'ultima**;
+- **nella lava** (dalla tappa 10) chi non sbaglia mai e risponde svelto (`misura`) non
+  vince più di **80% → 50%**: in cima il nemico è quasi imbattibile e si vince solo
+  rispondendo tutto giusto e in fretta (l'utente).
+
+Il risultato è in `dati/taratura.js` con una firma (`motore/firma.js`): se si ritocca
+una regola, una truppa o una tappa senza ritarare, `unita/arena` diventa rosso.
+
+I giocatori finti (`PILOTI` in `motore/banco.js`):
 
 | pilota | conti giusti | secondi veri a scelta | cosa deve fare |
 |---|---|---|---|
-| misura | 100% | 4 | vincere sempre: un adulto attento non deve perdere |
-| bambino | 75% | 6 | la rampa 90% → 45% |
+| misura | 100% | 4 | vincere quasi sempre, tranne nella lava |
+| bambino | 75% | 6 | la rampa 90% → 30% |
 | lento | 55% | 9 | perdere più del bambino |
 | caso | 25% | 9 | non vincere quasi mai |
+| pigro | 100% | 6 | due caserme al livello 2, poi sta a guardare: non deve vincere le tappe alte |
 
 Il bambino di prova **fa i conti a mente in fretta**: il gioco li vuole svelti (sono
 solo a mente, [calcoli.md](calcoli.md)). Provato il bambino di prima, 10 secondi a
 scelta, col campo a metà: non arriva al 90% nemmeno col nemico quasi inerme, perché in
 tre minuti non fa abbastanza mosse per abbattere il castello.
 
-Ultimo giro misurato (14 ottobre, campo a metà velocità mentre si calcola): il bambino
-93% → 49%, il lento 13% → 4%, chi tira a indovinare 0%. Chi è lento nel calcolo perde
-quasi sempre: è il prezzo della fretta voluta.
+**Il bambino gioca da persona sensata**: prima due caserme, poi le porta al livello 2,
+poi castello e miniera. **Provato** il castello al livello 3 per prima cosa: quel
+bambino perdeva contro nemici così deboli (0,3-0,4 monete al secondo contro le 0,83
+del giocatore, truppe al 70%) che il pigro li batteva sempre (l'utente: «ho 70 monete,
+non sto facendo niente e sto stravincendo»).
 
+Ultimo giro misurato (14 ottobre): il bambino 91% → 59% fino alla tappa 10, poi 6% nelle
+ultime due; `misura` 100% quasi ovunque e 71% nelle ultime due; il pigro 68-100% dalla
+seconda alla decima, 0% nelle ultime due.
+
+- **Il pigro vince troppo nelle tappe di mezzo**: due caserme al livello 2 valgono quanto
+  il bambino che continua a giocare. Il nemico non sa punire chi si ferma, e giocare di
+  più non rende: è da capire prima di ritarare. Voce in [da-fare.md](da-fare.md).
+- **Nella lava la curva ha un gradino**: `misura` passa dal 71% a meno della metà con un
+  ritocco minimo di `d` (1,66), e il bambino con lui. La bisezione si ferma sul bordo.
 - **La manopola non sale in fila.** Con più truppe a disposizione anche il
   nemico è più forte a parità di `d`, quindi una tappa con più truppe ha un `d`
   più basso e un nemico più duro lo stesso: la rampa la fa la quota di vittorie,
-  non il numero. Provato vincolarla a salire: dalla sesta tappa in poi restava
-  ferma e il bambino perdeva troppo.
+  non il numero.
 - **Il nemico è tarato per il bambino, non contro chi sbaglia**: sbagliare un conto
   non paga monete né costa il castello, costa tempo e una caserma ferma. Chi tira a
   indovinare perde perché il tempo è poco, non perché è punito.
-- **Provato un tetto per il giocatore bravo** (che non vincesse più dell'85% nell'ultima
-  tappa): il bambino scendeva al 20% perché `misura` è quasi perfetto (100% di conti
-  giusti, e più svelto) e la differenza fra lui e il bambino è enorme. Non funziona:
-  l'ultima tappa si rende più dura abbassando il bersaglio del bambino (45%).
-- **Un giocatore attento vince sempre** (`misura` 100% ovunque): per un gioco
-  per bambini va bene, ma la lava non ha ancora una tappa che metta in difficoltà
-  chi sa giocare. Voce in [da-fare.md](da-fare.md).
