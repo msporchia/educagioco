@@ -34,7 +34,8 @@ restano in codice anche dopo: si muovono.
   riflesso in alto a sinistra. Il numero è piccolo, al centro, sempre.
 - **La vita** cala in mezzo secondo quando si è colpiti, e il globo
   sobbalza: il colpo si vede anche con gli occhi sul mostro. Sopra è piena
-  (sopra non si combatte), col tetto della roba e del livello.
+  (sopra non si combatte), col tetto della roba e del livello; salito dal portale a metà discesa è quella di giù, finché
+  la guaritrice non la cura ([chi-cura.md](chi-cura.md)), e lo stesso l'energia.
 - **L'esperienza** ([livelli.md](livelli.md)) è una riga d'oro sopra le
   caselle, come in Diablo, con dentro «35/120» (l'esperienza fatta in questo
   livello su quella che serve). Oro e arancio, come nei giochi: viola
@@ -86,10 +87,10 @@ restano in codice anche dopo: si muovono.
 
 | | giù | sopra |
 |---|---|---|
-| ❤️ vita | quella della discesa | piena, col tetto della roba e del livello |
+| ❤️ vita | quella della discesa | piena, o quella di giù se si è saliti dal portale |
 | esperienza | sale battendo i mostri | quella dell'avventura |
-| 🔷 energia | quella della discesa | piena; apre l'albero |
-| 🧪 | beve la pozione giusta | «❤️ sei già in piena forma» |
+| 🔷 energia | quella della discesa | piena (o quella di giù dopo il portale); apre l'albero |
+| 🧪 | beve la pozione giusta | «❤️ sei già in piena forma», o «la guaritrice ti cura, gratis» se si è ferito |
 | bisaccia | lo zaino della discesa | lo zaino di sopra: ci si veste e ci si spoglia, ma non si beve e non si butta |
 | ✦ incanti | la scelta di quelli da preparare | spenta, ma si tocca: dice che si preparano giù |
 | 🗺️ | la mappa grande | spenta: la terra è già la mappa |

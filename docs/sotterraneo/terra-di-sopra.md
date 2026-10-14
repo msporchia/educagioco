@@ -252,6 +252,11 @@ chi vende cosa e perché sta in [bottega.md](bottega.md#i-mercanti-di-sopra).
   quell'eroe ([la-grande-storia.md](la-grande-storia.md)), e i banchi già
   pescati stanno nella sua avventura.
 
+## Chi cura
+
+La guaritrice cura la vita e l'incantatrice l'energia, gratis, a chi è salito dal portale; chiamano con un fumetto sopra la testa
+finché serve. Tutto in [chi-cura.md](chi-cura.md).
+
 ## Il portale gemello
 
 - **Con una discesa lasciata dal portale, nel villaggio c'è un portale**

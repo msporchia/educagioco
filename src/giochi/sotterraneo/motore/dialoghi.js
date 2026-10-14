@@ -2,7 +2,7 @@
 // si parla, a pagine, e quali domande gli si possono fare alla fine. Le pagine dipendono da dove si è nella storia
 // (le discese finite) e dalle sue missioni. Gira in Node; lo mostra viste/Dialogo.vue, lo usa viste/Terra.vue.
 // Una pagina è { testo, dato?, missione?, fase?, manca? }: `dato` dice ai test (e allo stile) che riga è.
-// `ctx` è { stati, tappe, abisso, eroe, roba, annuncio }: lo stato delle missioni, le tappe dell'avventura, se l'abisso è
+// `ctx` è { stati, tappe, abisso, eroe, roba, annuncio, forze }: lo stato delle missioni, le tappe dell'avventura, se l'abisso è
 // aperto, chi scende e la sua roba contata (schedaConLaRoba), per la frase di chi è sotto il livello; e, finita la
 // storia, la zona appena nata (motore/zone.js, docs/sotterraneo/zone.md); `novita` quante volte si è chiesto «Novità?»
 // a ognuno ({ [chi]: { n, v } }, in `terra.novita` dell'avventura).
@@ -109,6 +109,25 @@ export function novita(chi, ctx, visto = null) {
   return { pagine, visto: { n: n + 1, v } }
 }
 
+/* ═══════════ chi cura gratis (docs/sotterraneo/terra-di-sopra.md, «Chi cura») ═══════════ */
+
+// `forze` è { vita, vitaMax, energia, energiaMax } di chi ha lasciato una discesa a metà dal portale (Gioco.vue), o null:
+// sopra, senza discesa a metà, si è sempre in forze
+export const curaDi = chi => (DIALOGHI[chi] || {}).cura || null
+export function mancaA(chi, forze) {
+  const c = curaDi(chi)
+  if (!c || !forze) return 0
+  return Math.max(0, c.risorsa === 'vita' ? forze.vitaMax - forze.vita : forze.energiaMax - forze.energia)
+}
+// il fumetto sopra la sua testa finché serve; null se non serve
+export const richiamoDi = (chi, forze) => (mancaA(chi, forze) > 0 ? curaDi(chi).richiamo : null)
+// cosa dice curando (o: non serve)
+export function dopoLaCura(chi, manca) {
+  const c = curaDi(chi)
+  if (!c) return []
+  return manca > 0 ? c.pagine.map(testo => ({ testo, dato: 'cura' })) : c.gia.map(testo => ({ testo, dato: 'in-forze' }))
+}
+
 /* ═══════════ le missioni, dette da chi le dà ═══════════ */
 
 const nomeDiscesa = (ctx, chiave) => ((ctx.tappe || []).find(t => t.chiave === chiave) || {}).nome || ''
@@ -159,7 +178,11 @@ export function scelte(chi, ctx, chieste = new Set()) {
   for (const v of nuove)
     s.push({ che: 'prendi', missione: v.missione.id, premio: premioDetto(v.missione.premio),
              testo: nuove.length > 1 ? `Ci penso io: ${inFrase(titoloDi(v.missione))}` : 'Ci penso io' })
+  // chi cura: ferito è la prima cosa che gli si chiede, se no sta dopo la bottega
+  const cura = d.cura && !chieste.has('cura') ? { che: 'cura', testo: d.cura.domanda } : null
+  if (cura && mancaA(chi, ctx.forze) > 0) s.push(cura)
   if (d.bottega) s.push({ che: 'bottega', testo: d.bottega })
+  if (cura && !(mancaA(chi, ctx.forze) > 0)) s.push(cura)
   if (d.vendi) s.push({ che: 'vendi', testo: d.vendi })
   if (chi === 'minatore' && !chieste.has('strada')) s.push({ che: 'strada', testo: DOVE_VADO })
   if (!chieste.has('novita') && NOVITA_DI[chi]) s.push({ che: 'novita', testo: NOVITA })

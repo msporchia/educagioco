@@ -6,6 +6,8 @@
 //   `saluti`   quando non ha niente da chiederti né da riprendere
 //   `presa`    quando accetti un suo favore
 //   `bottega`, `vendi`  le scelte dei mercanti (aprono il banco, o la linguetta delle tasche)
+//   `cura`     chi cura gratis (la guaritrice la vita, l'incantatrice l'energia): `risorsa`, la `domanda`, le `pagine` dette
+//              curando, `gia` quando non serve e `richiamo`, il fumetto sulla sua testa quando serve (motore/dialoghi.js)
 // «Novità?», con le frasi che ruotano e reagiscono, sta in dati/novita.js.
 
 import { guastiDelleNovita } from './novita.js'
@@ -133,6 +135,12 @@ export const DIALOGHI = {
   incantatrice: {
     domanda: 'La magia serve, laggiù?',
     bottega: 'Fammi vedere la magia',
+    cura: {
+      risorsa: 'energia', domanda: 'Ricaricami',
+      richiamo: 'Sei a secco. Vieni, ti ricarico.',
+      pagine: ['Dammi le mani. Respira piano.', 'Ecco: l\'energia torna. Questo lo offro io.'],
+      gia: ['La tua energia è intera. Sei già in forze.'],
+    },
     racconti: [
       { da: 0, pagine: ['Il ferro ferma un colpo. Un incanto lo ferma prima che arrivi.',
                         'Ma ogni incanto costa energia. Quando finisce, resti con le mani vuote.'] },
@@ -146,6 +154,12 @@ export const DIALOGHI = {
   erborista: {
     domanda: 'Cosa serve laggiù?',
     bottega: 'Mi servono pozioni',
+    cura: {
+      risorsa: 'vita', domanda: 'Curami',
+      richiamo: 'Sei ferito. Vieni, ti curo.',
+      pagine: ['Siediti, e sta\' fermo.', 'Ecco: le ferite si chiudono. Questo non lo faccio pagare.'],
+      gia: ['Non vedo ferite. Sei già in forze.'],
+    },
     racconti: [
       { da: 0, pagine: ['Laggiù il buio è il primo nemico: una torcia accesa vale più di una spada.',
                         'E porta sempre una pozione. Quando la vita cala, bevila: non aspettare.'] },
@@ -196,6 +210,12 @@ export function guastiDeiDialoghi(chi = []) {
     for (const v of voci) for (const p of v.pagine || [v.testo]) {
       if (!p) g.push(`${k}: una pagina vuota`)
       else if (p.length > 150) g.push(`${k}: una pagina di ${p.length} caratteri («${p.slice(0, 30)}…»)`)
+    }
+    if (d.cura) {
+      const c = d.cura
+      if (!['vita', 'energia'].includes(c.risorsa)) g.push(`${k}: cura una cosa che non c'è (${c.risorsa})`)
+      if (!c.domanda || !c.richiamo || !(c.pagine || []).length || !(c.gia || []).length) g.push(`${k}: la cura non è completa`)
+      for (const p of [c.richiamo, ...(c.pagine || []), ...(c.gia || [])]) if (p && p.length > 150) g.push(`${k}: una frase della cura di ${p.length} caratteri`)
     }
     for (const v of d.racconti || []) if (v.pagine.length > 4) g.push(`${k}: un racconto di più di quattro pagine`)
   }

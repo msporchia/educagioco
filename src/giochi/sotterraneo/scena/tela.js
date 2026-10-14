@@ -11,6 +11,7 @@ import { T, SCALA_MIN, SCALA_MAX, SCALA_INIZIALE, ROCCIA, PAVIMENTO, PORTA, RELI
 import { SCENARI, SCENARIO, PEZZO_DI, pezzoAndante } from '../dati/tessere.js'
 import { MOSTRI } from '../dati/mostri.js'
 import { COSE } from '../dati/cose.js'
+import { impugnatura } from '../dati/impugna.js'
 import { creaFoglio, netto } from '../../../grafica/atlante.js'
 import { tetto, faccia, bordiDelTetto, capiDellaFaccia, versoDellaPorta, sorteDi, diagonaliDelPiano, VICINA_DEL_TAGLIO } from './muri.js'
 import { dipingiPortale, PORTALE } from './portale.js'
@@ -806,14 +807,16 @@ export class Tela {
     const su = Math.sin(t * (cammina ? 9 : 3)) * (cammina ? 0.9 : 0.5)
     const lato = specchia ? -1 : 1
     const posa = (k, verso, opz) => {
-      const nome = (COSE[k] || {}).sprite
-      if (!nome) return
-      this.foglio.posa(this.ctx, nome, sx + verso * T * 0.42, sy + T * 0.42 + su, opz)
+      const cosa = COSE[k] || {}
+      const m = cosa.sprite && this.foglio.misura(cosa.sprite)
+      if (!m) return
+      const { dx, base } = impugnatura(cosa, m.w, m.h)
+      this.foglio.posa(this.ctx, cosa.sprite, sx + verso * dx, sy + T * 0.5 - base + su, opz)
     }
     // due armi si portano una per lato (la debole va dietro, prima, o coprirebbe la buona); una a due mani
-    // sta in mezzo, davanti al corpo (una copia sbiadita dall'altro lato farebbe sembrare due armi, non una tenuta in due)
-    const due = corsa.mano && (COSE[corsa.mano] || {}).mani === 2
-    if (due) return posa(corsa.mano, 0, { specchia, dy: -T * 0.06 })
+    // sta in mezzo, davanti al corpo (una copia sbiadita dall'altro lato farebbe sembrare due armi, non una tenuta in due);
+    // un arco o una balestra stanno dove li tiene una mano (dati/impugna.js)
+    if (corsa.mano && (COSE[corsa.mano] || {}).mani === 2) return posa(corsa.mano, lato, { specchia })
     if (corsa.mancina) posa(corsa.mancina, -lato, { specchia: !specchia })
     if (corsa.mano) posa(corsa.mano, lato, { specchia })
   }
