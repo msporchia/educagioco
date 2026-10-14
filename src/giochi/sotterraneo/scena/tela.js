@@ -12,7 +12,7 @@ import { SCENARI, SCENARIO, PEZZO_DI, pezzoAndante } from '../dati/tessere.js'
 import { MOSTRI } from '../dati/mostri.js'
 import { COSE } from '../dati/cose.js'
 import { creaFoglio, netto } from '../../../grafica/atlante.js'
-import { tetto, faccia, bordiDelTetto, capiDellaFaccia, versoDellaPorta, sorteDi } from './muri.js'
+import { tetto, faccia, bordiDelTetto, capiDellaFaccia, versoDellaPorta, sorteDi, taglio, VICINA_DEL_TAGLIO } from './muri.js'
 import { dipingiPortale, PORTALE } from './portale.js'
 import { dipingiRelitto, dipingiAcqua } from './relitti.js'
 import { TINTE_RELITTI } from '../dati/relitti.js'
@@ -24,6 +24,7 @@ import { fattoreDelMostro } from '../viste/campo.js'
 
 // l'aura di un pezzo per terra, del colore della sua rarità (docs/sotterraneo/rarita.md): il comune non ne ha
 const AURA = { magico: '111,141,255', raro: '255,210,63', leggendario: '255,154,46' }
+const STANZE_LISCE = ['smussata', 'cappella', 'sala']   // le forme che hanno muri in diagonale (docs/sotterraneo/scenari.md)
 
 export class Tela {
   constructor(canvas) {
@@ -149,16 +150,30 @@ export class Tela {
     const alfaDi = (luce, x, y) => (luce === 2 ? 0.5 + 0.5 * forza(x, y) : 0.5)
     for (let y = c0y; y < c1y; y++) for (let x = c0x; x < c1x; x++) {
       const luce = corsa.luceDi(x, y)
-      if (luce && !pietra(x, y)) this.pavimento(sc, forma, x, y, alfaDi(luce, x, y))
+      if (!luce) continue
+      if (!pietra(x, y)) this.pavimento(sc, forma, x, y, alfaDi(luce, x, y))
+      else if (forma.tagli.has(y * liv.largo + x)) {   // sotto un taglio in diagonale resta il pavimento vero
+        const [dx, dy] = VICINA_DEL_TAGLIO[forma.tagli.get(y * liv.largo + x)]
+        this.pavimento(sc, forma, x, y, alfaDi(luce, x, y), { x: x + dx, y: y + dy })
+      }
     }
     for (let y = c0y; y < c1y; y++) for (let x = c0x; x < c1x; x++) {
       const luce = corsa.luceDi(x, y)
-      if (luce && tetto(pietra, x, y)) this.tetto(sc, pietra, x, y, alfaDi(luce, x, y))
+      if (!luce || !tetto(pietra, x, y)) continue
+      const k = y * liv.largo + x
+      if (forma.tagli.has(k)) this.taglio(sc, forma.tagli.get(k), x, y, alfaDi(luce, x, y))
+      else this.tetto(sc, pietra, x, y, alfaDi(luce, x, y), forma.sopra.has(k))
     }
     const torce = []
     for (let y = c0y; y < c1y; y++) for (let x = c0x; x < c1x; x++) {
       const luce = corsa.luceDi(x, y)
       if (!luce || !faccia(pietra, x, y)) continue
+      const obliqua = forma.tagli.get(y * liv.largo + x)
+      if (obliqua) {
+        const su = corsa.luceDi(x, y - 1)
+        this.facciaObliqua(sc, obliqua, x, y, alfaDi(luce, x, y), su ? alfaDi(su, x, y - 1) : 0)
+        continue
+      }
       if (this.faccia(sc, liv, pietra, x, y, alfaDi(luce, x, y)) && luce === 2 && forza(x, y) > 0.6) torce.push([x, y])
     }
     for (const [x, y] of torce) this.fiamma(x, y, orologio)
@@ -272,15 +287,31 @@ export class Tela {
       const nome = i < 0 ? null : sc.perTerra[i % sc.perTerra.length]
       if (nome) perTerra.set(k, { nome, dove: 'centro', specchia: ((h >>> 9) & 1) === 1 })
     }
-    this._forma = { liv, sc, stanza, medaglione, perTerra }
+    // i muri in diagonale (solo gli scenari che hanno i pezzi): le celle tagliate, e quelle sopra una faccia obliqua, che ne ospitano mezza
+    const tagli = new Map(), sopra = new Set()
+    if (sc.diagonali) {
+      // una porta e una nicchia restano sul muro dritto: accanto a loro il taglio non si fa
+      const nicchie = new Set(stanze.flatMap(r => r.nicchie || []).map(n => n.y * L + n.x))
+      const buona = (x, y) => {
+        const s = stanze[liv.nelle ? liv.nelle[y * L + x] : -1]
+        return !!s && liv.a(x, y) !== PORTA && !nicchie.has(y * L + x) && STANZE_LISCE.includes(s.forma)
+      }
+      for (let y = 0; y < A; y++) for (let x = 0; x < L; x++) {
+        const t = taglio(pietra, x, y, buona)
+        if (!t) continue
+        tagli.set(y * L + x, t)
+        if (t === 'no' || t === 'ne') sopra.add((y - 1) * L + x)
+      }
+    }
+    this._forma = { liv, sc, stanza, medaglione, perTerra, tagli, sopra }
     return this._forma
   }
 
   // stanza e corridoio: due quadrati di 4×4 celle da cui ogni cella prende la sua parte, niente piastrelle col bordo
-  pavimento(sc, forma, x, y, alfa) {
+  pavimento(sc, forma, x, y, alfa, comeDi = null) {
     const ctx = this.ctx, f = this.foglio
     const k = y * forma.liv.largo + x
-    const nome = forma.stanza[k] >= 0 ? sc.pavimento.stanza : sc.pavimento.corridoio
+    const nome = forma.stanza[comeDi ? comeDi.y * forma.liv.largo + comeDi.x : k] >= 0 ? sc.pavimento.stanza : sc.pavimento.corridoio
     const q = f.misura(nome) || { w: 4 * T, h: 4 * T }
     f.ritaglio(ctx, nome, (x % Math.round(q.w / T)) * T, (y % Math.round(q.h / T)) * T, T, T, x * T, y * T, { alfa })
     const m = forma.medaglione.get(k)
@@ -295,7 +326,7 @@ export class Tela {
   }
 
   // la roccia vista da sopra: la trama solo vicino a dove si cammina, o farebbe carta da parati sui muri spessi
-  tetto(sc, pietra, x, y, alfa) {
+  tetto(sc, pietra, x, y, alfa, sottoUnaFaccia = false) {
     const ctx = this.ctx, f = this.foglio
     const prima = ctx.globalAlpha
     ctx.globalAlpha = prima * alfa
@@ -310,6 +341,7 @@ export class Tela {
       f.ritaglio(ctx, sc.tetto, (x & 3) * T, (y & 3) * T, T, T, x * T, y * T,
                  { alfa: alfa * (vicino === 1 ? 1 : 0.35) })
     const b = bordiDelTetto(pietra, x, y)
+    if (sottoUnaFaccia) { b.o = false; b.e = false }   // mezza cella è la faccia obliqua: i suoi lati non hanno striscia
     if (b.n) f.pezzo(ctx, sc.bordi.n, x * T, y * T, { alfa })
     if (b.o) f.pezzo(ctx, sc.bordi.o, x * T, y * T, { alfa })
     if (b.e) f.pezzo(ctx, sc.bordi.e, x * T + T - f.misura(sc.bordi.e).w, y * T, { alfa })
@@ -328,6 +360,19 @@ export class Tela {
       f.pezzo(ctx, sc.bordi.angolo, x * T + (q[1] === 'o' ? 0 : T - a.w),
               y * T + (q[0] === 'n' ? 0 : T - a.h), { alfa })
     }
+  }
+
+  // una cella tagliata in diagonale, roccia sotto (`so`, `se`): il pezzo è la roccia col suo bordo, il pavimento sotto è già posato
+  taglio(sc, lato, x, y, alfa) {
+    this.foglio.pezzo(this.ctx, sc.diagonali.taglio[lato], x * T, y * T, { alfa })
+  }
+
+  // la faccia di una parete obliqua: un pezzo alto due celle, la cella e quella sopra, ognuna con la sua luce (0 = non vista)
+  facciaObliqua(sc, lato, x, y, alfa, alfaSopra) {
+    const ctx = this.ctx, f = this.foglio
+    const nome = sc.diagonali.faccia[lato][x & 1]
+    if (alfaSopra) f.ritaglio(ctx, nome, 0, 0, T, T, x * T, (y - 1) * T, { alfa: alfaSopra })
+    f.ritaglio(ctx, nome, 0, T, T, T, x * T, y * T, { alfa })
   }
 
   // striscia di sei celle, con varianti (torcia, grata, arco); torna true se torcia, la sua luce si disegna dopo

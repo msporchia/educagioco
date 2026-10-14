@@ -156,6 +156,9 @@ l'angolo: dove c'è pavimento resta magenta, così il pavimento sotto è quello
 vero. Una chat nuova, e si allega la scena dello scenario (per la cripta
 `sotterraneo_4.png`).
 
+**Prima in codice** (14 ottobre 2026, solo la cripta): senza generatori, `python3 strumenti/sprite/diagonali.py` fa gli stessi pezzi dalle tessere dritte
+(`docs/sotterraneo/scenari.md`, «I muri in diagonale»). Questo prompt resta per rifarli dipinti, se la prova piace.
+
 ```text
 Disegna su un fondo MAGENTA PIENO (#FF00FF), uniforme, senza sfumature, senza ombre e senza nessuna scacchiera, i pezzi che servono per i MURI IN DIAGONALE e gli ANGOLI della scena allegata: stessi materiali, stessa tavolozza, stessa mano, e la STESSA SCALA della scena (celle da 64×64 px, ogni pixel del disegno è un quadrato di 4×4 px). Immagine 1024×1536 px verticale. Ogni pezzo sta da solo, staccato dagli altri da almeno mezza cella di magenta. NESSUNA PAROLA SCRITTA, NESSUN NUMERO, nessuna ombra o bagliore attorno ai pezzi.
 
