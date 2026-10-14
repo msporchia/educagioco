@@ -70,6 +70,14 @@ Per disegnare con fogli di figure invece che coi poligoni:
   va chiamato prima della figura vera, o le mangia i bordi. È l'unica
   cosa che si tiene in cache (un `source-in` su un canvas a parte è caro,
   ma i pezzi che si illuminano sono poche decine, non l'atlante intero).
+- **Un oggetto non è trasparente: è scuro.** `alfa` su un pezzo posato sopra
+  qualcosa lascia vedere quel che sta sotto (il pavimento attraverso un
+  leggio): lì si passa `scuro: true` a `pezzo`/`ritaglio`/`posa`, che disegna
+  il pezzo opaco e sopra la sua sagoma nera a trasparenza `1 − alfa`, fatta
+  una volta per nome (niente `ctx.filter`, che Safari per iPhone non ha). Il
+  pavimento e i muri, sul nero, restano con `alfa` semplice. Un disegno in
+  codice fa lo stesso: tinte mescolate col nero, o `neraDi(tela)`. Provato
+  `alfa` su tutto il campo: i fantasmi di cui sopra.
 - **`tessere.js`** — *quale* tessera va in una cella, ricavata dai vicini
   (strade, pozze, recinti). Niente canvas: gira in Node e si prova in
   `unita/tessere`.

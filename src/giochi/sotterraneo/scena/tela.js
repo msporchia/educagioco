@@ -242,8 +242,9 @@ export class Tela {
   }
 
   // il fondo sul fondo della sua cella, sbordando in alto: così un mostro sta dietro al muro invece di galleggiarci sopra
+  // `alfa` qui è quanta luce arriva: il pezzo resta opaco e si scurisce (`scuro`), mai trasparente sul pavimento
   posa(nome, cx, cy, opz = {}) {
-    return this.foglio.posa(this.ctx, nome, (cx + 0.5) * T, (cy + 1) * T, opz)
+    return this.foglio.posa(this.ctx, nome, (cx + 0.5) * T, (cy + 1) * T, { scuro: true, ...opz })
   }
 
   // il ricordo si spegne E si raffredda (velo blu): spegnere e basta non basta, due tessere scure sono la stessa cosa
@@ -628,7 +629,7 @@ export class Tela {
     ctx.translate(px * T + (mano.x - 0.5) * corpo.w * lato, (py + 0.5) * T - (1 - mano.y) * corpo.h)
     ctx.scale(k, k)
     // l'impugnatura sta a due terzi dell'arma, al centro: lì si tiene
-    this.foglio.pezzo(ctx, r.arma, -arma.w / 2, -arma.h * 0.68, { alfa, specchia: lato < 0 })
+    this.foglio.pezzo(ctx, r.arma, -arma.w / 2, -arma.h * 0.68, { alfa, specchia: lato < 0, scuro: true })
     ctx.restore()
   }
 

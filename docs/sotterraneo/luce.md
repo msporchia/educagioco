@@ -58,6 +58,12 @@ il disegno in `scena/tela.js`.
   ai bordi. **I veli si posano a gradini di un quarto, ognuno in un tracciato
   solo**: due rettangoli che si sovrappongono lasciano la riga della giunzione
   più scura (provato).
+- **Un oggetto non diventa trasparente, diventa scuro.** Il pavimento e i muri
+  si spengono con la trasparenza sul nero, ma un oggetto posato sul pavimento
+  (roba, arredo, relitti, scale, portale, mostri) è sempre opaco: la luce che
+  manca lo scurisce con la sua sagoma nera (`scuro`, `grafica/atlante.js`),
+  se no il pavimento traspare e gli oggetti nel ricordo sono fantasmi
+  (l'utente, 14 ottobre 2026). → [grafica.md](../core/grafica.md#un-oggetto-non-è-trasparente)
 - **Nelle celle ricordate** la tela disegna porte, forzieri, scala, fonte,
   arredo e roba per terra, mai i mostri: il ricordo non si muove. Sulla mappina
   il custode della chiave è un segno fisso, sta dov'è la sua casa.
