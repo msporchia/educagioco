@@ -21,7 +21,7 @@ import { valoreDelLivello } from '../dati/pezzi.js'
 import { esperienzaDi, gemmeDi } from '../dati/livelli.js'
 import { potenzaDelMostro } from './potenza.js'
 import { espNellaZona } from '../dati/zone.js'
-import { pezzoNuovo, pezzoDelGrosso, pezzoDalMostro, livelloDelBottino, livelloDelTrovato, tiroDalSeme, elisirCade, ampollaCade } from './bottino.js'
+import { pezzoNuovo, pezzoDelGrosso, pezzoDalMostro, livelloDelBottino, livelloDelTrovato, tiroDalSeme, elisirCade, ampollaCade, CURE_DAI_MOSTRI } from './bottino.js'
 import { generaPiano } from './livello.js'
 import { percorso, viaVerso, primaLibera } from '../../../motore/passi.js'
 import { Corredo, eCura, curePerTipo } from './corredo.js'
@@ -89,6 +89,7 @@ export class Corsa extends Corredo {
     this.svenimenti = 0
     this.svenimentiQui = 0   // spesi su QUESTO piano: solo l'abisso li azzera scendendo
     this.cureRifiutate = 0   // le cure trovate a tasche già col tetto: le conta la taratura
+    this.cureTrovate = {}    // le cure raccolte per provenienza (strada, caporale, grosso, forziere, ampolla): le conta la taratura
     this.ultimoSvenimento = false   // l'ultima occasione è stata usata: riprendi() risale invece di rimettere in piedi
     this.perche = null
     this.dettoDellArredo = false   // la regola dell'arredo si spiega una volta per discesa
@@ -590,6 +591,7 @@ export class Corsa extends Corredo {
     if (c.rarita === 'leggendario') this.trovati.add(c.unico)
     // uno scudo si imbraccia da sé solo a mano libera: con un'arma leggera già lì, la scelta la fa chi gioca, dallo zaino
     if (this.vaAddosso(r.cosa)) return this.vesti(r, this.confronto(r.cosa))
+    if (r.da && eCura(r.cosa)) this.cureTrovate[r.da] = (this.cureTrovate[r.da] || 0) + 1
     if (!this.cista(r.cosa)) {
       if (c.rarita === 'leggendario') this.trovati.delete(c.unico)
       this.dillo(this.perchéNonCiSta(r.cosa)); if (eCura(r.cosa) && this.alTettoDelleCure) this.cureRifiutate++; return
@@ -817,10 +819,10 @@ export class Corsa extends Corredo {
     const premio = m.chiave && storia && this.piano >= this.quantiPiani - 1 ? this.premio() : null
     const vicino = { x: m.x + 1, y: m.y }
     if (premio) this.posaRoba({ che: 'cosa', cosa: premio, em: COSE[premio].em }, vicino)
-    else if (m.chiave || tiro < (scheda.droppa != null ? scheda.droppa : 0.5)) {
+    else if (m.chiave || tiro < (m.grosso || m.caporale || CURE_DAI_MOSTRI.strada < 0 ? (scheda.droppa != null ? scheda.droppa : 0.5) : CURE_DAI_MOSTRI.strada)) {
       // da bere (anche nell'abisso: la roba da mettersi addosso la dà il tiro qui sotto, a tono)
       const cosa = pescaCosa(daBere, { rnd: () => this.rnd(), tua: k => this.porta(k) })
-      this.posaRoba({ che: 'cosa', cosa, em: COSE[cosa].em }, vicino)
+      this.posaRoba({ che: 'cosa', cosa, em: COSE[cosa].em, da: m.grosso ? 'grosso' : m.caporale ? 'caporale' : 'strada' }, vicino)
     }
     // il mostro grosso: di sicuro un pezzo raro o meglio, e il suo pezzo col nome
     if (m.grosso) {
@@ -835,7 +837,7 @@ export class Corsa extends Corredo {
     // l'elisir del toro: rarissimo, dal grosso o da un caporale (e dai forzieri)
     const chi = m.grosso ? 'grosso' : m.caporale ? 'caporale' : null
     if (chi && elisirCade(chi, this.seme, this.piano, m.x, m.y)) this.posaPezzo('elisir-toro', { x: m.x + 1, y: m.y + 1 })
-    if (chi && ampollaCade(chi, this.seme, this.piano, m.x, m.y)) this.posaPezzo('ampolla-vita', { x: m.x, y: m.y + 1 })
+    if (chi && ampollaCade(chi, this.seme, this.piano, m.x, m.y)) this.posaPezzo('ampolla-vita', { x: m.x, y: m.y + 1 }, 'ampolla')
     // un mostro che cade si vede, anche il grosso: niente avviso. Quello di una missione sì, dice cosa fare dopo
     if (m.missione) {
       this.missioniFatte.add(m.missione)
@@ -844,9 +846,9 @@ export class Corsa extends Corredo {
   }
 
   // un pezzo per terra; un leggendario lo festeggia la vista (la colonna di luce, il nome in oro: Gioco.vue)
-  posaPezzo(k, vicino) {
+  posaPezzo(k, vicino, da) {
     if (!k || !COSE[k]) return null
-    const dove = this.posaRoba({ che: 'cosa', cosa: k, em: COSE[k].em }, vicino)
+    const dove = this.posaRoba({ che: 'cosa', cosa: k, em: COSE[k].em, ...(da ? { da } : {}) }, vicino)
     if (COSE[k].rarita === 'leggendario') this.eventi.push({ che: 'leggendario', cosa: k, x: dove.x, y: dove.y })
     return dove
   }
@@ -976,9 +978,9 @@ export class Corsa extends Corredo {
       cosa = pezzoNuovo({ livello: this.livelloDelTrovato('forziere', f.x, f.y), chi: 'forziere', fortuna: this.fortuna,
                           rnd: () => this.rnd(), tua: k => this.porta(k) })
     if (!cosa) cosa = pescaCosa(NEI_FORZIERI_DELLA_STORIA, { rnd: () => this.rnd(), tua: k => this.porta(k) })
-    this.posaPezzo(cosa, { x: f.x, y: f.y + 1 })
+    this.posaPezzo(cosa, { x: f.x, y: f.y + 1 }, 'forziere')
     if (elisirCade('forziere', this.seme, this.piano, f.x, f.y)) this.posaPezzo('elisir-toro', { x: f.x - 1, y: f.y + 1 })
-    if (ampollaCade('forziere', this.seme, this.piano, f.x, f.y)) this.posaPezzo('ampolla-vita', { x: f.x + 1, y: f.y })
+    if (ampollaCade('forziere', this.seme, this.piano, f.x, f.y)) this.posaPezzo('ampolla-vita', { x: f.x + 1, y: f.y }, 'ampolla')
     this.posaRoba({ che: 'gemme', em: '💎', quante: Math.round((6 + this.piano * 3) * valoreDelLivello(this.livelloQui)) },
                   { x: f.x + 1, y: f.y + 1 })
     this.chiudi()

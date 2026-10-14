@@ -20,6 +20,10 @@ export const PROFONDITA_PER_LIVELLO = 0.0125
 // tabella della storia smetterebbe di dire con che roba si arriva; un po' di più per chi lascia di più
 export const pezzoDalMostro = scheda => 0.03 + 0.08 * ((scheda && scheda.droppa) || 0)
 
+// quanto spesso un mostro di strada lascia una cosa da bere (docs/sotterraneo/pozioni.md, «Quante ne arrivano»): una probabilità sola, uguale per
+// tutte le specie (negativa, per la taratura: la `droppa` di ogni specie, come prima). Un caporale o il grosso lasciano secondo la loro `droppa`, e chi porta la chiave lascia sempre
+export const CURE_DAI_MOSTRI = { strada: 0.05 }
+
 // il livello del bottino: quello del posto, o quello dell'eroe se è più alto (la roba della storia e delle missioni)
 export const livelloDelBottino = (posto, eroe) => Math.max(1, Math.round(posto || 1), Math.round(eroe || 1))
 
