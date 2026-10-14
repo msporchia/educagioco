@@ -36,6 +36,7 @@ import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 // primo turno non si ferma già
 function scontro({ male = 3, vita = null, zaino = [], vitaPiu = 0 } = {}) {
   const c = new Corsa(CAMPAGNA[1], { seme: 11, rnd: seminato(11) })
+  c.consumaIlDanno = () => {}   // colpo fisso: qui il resto del danno non conta
   c.vitaPiu += vitaPiu   // un colpo forte davanti a poca vita fermerebbe già il primo turno
   c.vita = c.vitaMax
   const m = c.livello.robe.find(r => r.che === 'mostro')

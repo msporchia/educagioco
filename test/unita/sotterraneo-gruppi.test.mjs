@@ -321,6 +321,7 @@ const colpoDi = (c, m) => Math.max(1, Math.round(COLPO_DEL_MOSTRO * (m.att - c.d
   const cr = conAlbero(12, { 'pelle-di-pietra': 1, rune: 1, 'testa-dura': 2 })
   const { c, m } = scena({ eroe: 'nano', mano: 'ascia', crescita: cr, mostri: [{ dx: 1, ossa: 900, ossaMax: 900, att: 14 }] })
   c.vita = c.vitaMax
+  c.consumaIlDanno = () => {}   // colpo fisso: qui il resto del danno non conta
   c.scontro(m[0])
   const pieno = c.danno(m[0])
   const prese = []

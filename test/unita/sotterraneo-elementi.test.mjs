@@ -289,8 +289,9 @@ function scena(eroe, crescita, mano, mancina, tipi) {
   r = prova('mago', 'catena-di-fulmini', 'verga', null, cinque, 2)
   uguale('la catena prende tre mostri', r.toccati.length, 3)
   uguale('il primo è il bersaglio', r.colpiti[0], 2)
-  const colpo = r.c.colpo(r.campo[2], NODI['catena-di-fulmini'])
-  uguale('il bersaglio prende il colpo intero', r.dati[2], colpo)
+  // il danno vero è continuo (colpoCont), `colpo` è quello detto a schermo
+  const colpo = r.c.colpoCont(r.campo[2], NODI['catena-di-fulmini'])
+  uguale('il bersaglio prende il colpo intero', r.dati[2], Math.round(colpo))
   uguale('il primo salto vale ×0,7', r.dati[r.colpiti[1]], Math.max(1, Math.round(colpo * FATTORE_DEL_SALTO)))
   uguale('il secondo ×0,49', r.dati[r.colpiti[2]], Math.max(1, Math.round(colpo * FATTORE_DEL_SALTO ** 2)))
   controlla('sono tre mostri diversi', new Set(r.colpiti).size === 3)

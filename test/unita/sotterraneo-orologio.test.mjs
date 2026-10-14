@@ -25,6 +25,7 @@ function eroeA(k, classe, ...ids) {
   c.mancina = 'scudo-ferro'
   c.sistemaIlCorredo()
   c.energia = c.energiaMax
+  c.consumaIlDanno = () => {}   // colpo fisso: qui il resto del danno non conta (docs/sotterraneo/scontro.md, «Il danno è continuo»)
   return c
 }
 const eroe = (classe, ...ids) => eroeA(3, classe, ...ids)

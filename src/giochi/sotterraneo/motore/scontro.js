@@ -319,7 +319,7 @@ export const MetodiDelloScontro = {
     const colpiti = []
     if (colpisceDavvero) {
       for (const { chi: x, fattore } of presi) {
-        const dato = this.arrotondaIlColpo(this.colpoCont(x, nodo) * fattore * bonus)
+        const dato = this.arrotondaIlColpo(x, this.colpoCont(x, nodo) * fattore * bonus)
         x.ossa -= dato
         const caduto = x.ossa <= 0
         colpiti.push({ chi: x, dato, caduto, effetti: chiaviDegliEffetti(x), fattore, ...this.comeLaPrende(x, nodo) })
@@ -462,11 +462,12 @@ export const MetodiDelloScontro = {
     const v = this.dannoCont(m) + (m.resto != null ? m.resto : 0.5)
     m.resto = v - Math.floor(v)
   },
-  // lo stesso per l'eroe: il danno che fa, intero, col resto portato avanti (almeno 1)
-  arrotondaIlColpo(v) {
-    const t = v + this.restoColpo
+  // lo stesso per i colpi dell'eroe: ogni mostro ha il resto di quello che ha preso (`restoSubito`), così tre mostri colpiti dalla stessa
+  // abilità prendono lo stesso numero e a ognuno la somma torna giusta. Il danno è intero, almeno 1
+  arrotondaIlColpo(x, v) {
+    const t = v + (x.restoSubito != null ? x.restoSubito : 0.5)
     const dato = Math.max(1, Math.floor(t))
-    this.restoColpo = Math.max(0, t - dato)
+    x.restoSubito = Math.max(0, t - dato)
     return dato
   },
 
