@@ -21,7 +21,7 @@ export const PROFONDITA_PER_LIVELLO = 0.0125
 export const pezzoDalMostro = scheda => 0.03 + 0.08 * ((scheda && scheda.droppa) || 0)
 
 // quanto spesso un mostro di strada lascia una cosa da bere (docs/sotterraneo/pozioni.md, «Quante ne arrivano»): una probabilità sola, uguale per
-// tutte le specie (negativa, per la taratura: la `droppa` di ogni specie, come prima). Un caporale o il grosso lasciano secondo la loro `droppa`, e chi porta la chiave lascia sempre
+// tutte le specie (negativa, per la taratura: la `droppa` di ogni specie, come prima; nella cripta, dove si impara e non c'è ancora niente in tasca, resta la `droppa`). Un caporale o il grosso lasciano secondo la loro `droppa`, e chi porta la chiave lascia sempre
 export const CURE_DAI_MOSTRI = { strada: 0.05 }
 
 // il livello del bottino: quello del posto, o quello dell'eroe se è più alto (la roba della storia e delle missioni)

@@ -819,7 +819,7 @@ export class Corsa extends Corredo {
     const premio = m.chiave && storia && this.piano >= this.quantiPiani - 1 ? this.premio() : null
     const vicino = { x: m.x + 1, y: m.y }
     if (premio) this.posaRoba({ che: 'cosa', cosa: premio, em: COSE[premio].em }, vicino)
-    else if (m.chiave || tiro < (m.grosso || m.caporale || CURE_DAI_MOSTRI.strada < 0 ? (scheda.droppa != null ? scheda.droppa : 0.5) : CURE_DAI_MOSTRI.strada)) {
+    else if (m.chiave || tiro < (m.grosso || m.caporale || this.indice === 0 || CURE_DAI_MOSTRI.strada < 0 ? (scheda.droppa != null ? scheda.droppa : 0.5) : CURE_DAI_MOSTRI.strada)) {
       // da bere (anche nell'abisso: la roba da mettersi addosso la dà il tiro qui sotto, a tono)
       const cosa = pescaCosa(daBere, { rnd: () => this.rnd(), tua: k => this.porta(k) })
       this.posaRoba({ che: 'cosa', cosa, em: COSE[cosa].em, da: m.grosso ? 'grosso' : m.caporale ? 'caporale' : 'strada' }, vicino)
