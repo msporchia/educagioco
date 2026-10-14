@@ -25,7 +25,7 @@
    cella di roccia che tocca il pavimento resta senza la sua faccia o il
    suo bordo** da quel lato.
    ═══════════════════════════════════════════════════════════════════ */
-import { genere, bordiDelTetto, capiDellaFaccia, versoDellaPorta, faccia, tetto, taglio, VICINA_DEL_TAGLIO }
+import { genere, bordiDelTetto, capiDellaFaccia, versoDellaPorta, faccia, tetto, taglio, angoloInterno, VICINA_DEL_TAGLIO }
   from '../../src/giochi/sotterraneo/scena/muri.js'
 import { Livello } from '../../src/giochi/sotterraneo/motore/livello.js'
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
@@ -253,6 +253,14 @@ function pianta(righe) {
   const svolta = pianta(['#####', '#...#', '#.###', '#.###', '#####'])
   uguale('l\'angolo interno di una svolta, se il pavimento non è buono, non taglia', taglio(svolta.pietra, 2, 2, () => false), null)
   uguale('...e lo stesso angolo taglia se il pavimento è buono', taglio(svolta.pietra, 2, 2, () => true), 'se')
+
+  // l'angolo interno: il 270° del pavimento, dove la roccia entra nella cella (con gli stessi pezzi del taglio)
+  const dentro = (r, buona) => { const o = []; for (let y = 0; y < r.length; y++) for (let x = 0; x < r[0].length; x++) { const a = angoloInterno(pianta(r).pietra, x, y, buona); if (a) o.push(`${a}@${x},${y}`) } return o.join(' ') }
+  uguale('un rettangolo ha i suoi quattro angoli interni', dentro(['#######', '#.....#', '#.....#', '#.....#', '#######']), 'no@1,1 ne@5,1 so@1,3 se@5,3')
+  uguale('...ma non se il pavimento non è di una stanza liscia', dentro(['#######', '#.....#', '#.....#', '#.....#', '#######'], () => false), '')
+  uguale('una stanza già smussata non ha angoli interni (il taglio c\'è già)', dentro(['###########', '###.....###', '##.......##', '#.........#', '#.........#', '#.........#', '##.......##', '###.....###', '###########']), '')
+  uguale('la fine di un corridoio stretto non è un angolo interno', dentro(['#####', '#...#', '#####']), '')
+  uguale('una svolta di corridoio non lo è: servono tre celle di pavimento dall\'altra parte', dentro(['#####', '#...#', '#.###', '#.###', '#####']), '')
 }
 
 riassunto('la regola del muro del sotterraneo')
