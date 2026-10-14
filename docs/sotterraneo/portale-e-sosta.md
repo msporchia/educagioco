@@ -25,6 +25,10 @@ una strada per salire e tornare giù, la ✕ è andare via.
   ([terra-di-sopra.md](terra-di-sopra.md#il-portale-gemello)); si fanno le
   spese e toccando il gemello si torna giù nella stanza e nel punto di prima.
   Il portale nel piano resta: si sale e si torna quante volte si vuole.
+- **Salire non cura**: la sosta porta la vita e l'energia di giù, e la terra di sopra le mostra così (la barra); a rimetterle a
+  posto, gratis, sono la guaritrice e l'incantatrice ([chi-cura.md](chi-cura.md)), che chiamano da sole chi è
+  ferito o scarico. Il gemello riporta giù con quello che la sosta dice: curata, vita e energia piene (`forzeDi` la legge col
+  massimo di adesso). Uscire con la ✕ non cura niente: si riprende com'era.
 - **Uscire con la ✕ non è un portale** (`via: 'uscita'`): la ✕ (e il «← esco»
   della pausa) salva la discesa nel punto esatto e porta **in home**, non
   sulla terra di sopra. Rientrando nel sotterraneo — dalla copertina, da
@@ -93,7 +97,7 @@ una strada per salire e tornare giù, la ✕ è andare via.
   Davanti a una domanda il ⏸ non c'è.
 
 Nei test: `unita/sotterraneo-sosta` (la ripresa esatta cosa per cosa, il peso, il
-portale, e `via`: portale, uscita, una sosta di prima), `integrazione/sotterraneo-portale`
+portale, e `via`: portale, uscita, una sosta di prima), `integrazione/sotterraneo-cura` (la cura sopra, scritta nella sosta), `integrazione/sotterraneo-portale`
 (col dito: il portale, il gemello, la ✕ che porta in home, «riprendi da qui» che riprende
 giù senza carta né gemello e dietro il velo, il gemello che resta dopo il portale vero),
 `integrazione/sotterraneo` (uscire, rientrare, «lascio perdere» col suo foglio),

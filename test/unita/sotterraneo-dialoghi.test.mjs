@@ -10,7 +10,7 @@ import { MISSIONI, missioneDi } from '../../src/giochi/sotterraneo/dati/missioni
 import { MERCANTI } from '../../src/giochi/sotterraneo/dati/mercanti.js'
 import { NOVITA_DI } from '../../src/giochi/sotterraneo/dati/novita.js'
 import { PERSONAGGI as DOVE_PERSONAGGI } from '../../src/giochi/sotterraneo/dati/terra-mappa.js'
-import { apertura, scelte, risposta, dopoLaPresa, dopoLaConsegna, inPagine, strada, novita }
+import { apertura, scelte, risposta, dopoLaPresa, dopoLaConsegna, inPagine, strada, novita, curaDi, mancaA, richiamoDi, dopoLaCura }
   from '../../src/giochi/sotterraneo/motore/dialoghi.js'
 import { PRESA, FATTA, CONSEGNATA } from '../../src/giochi/sotterraneo/motore/missioni.js'
 import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifica.mjs'
@@ -124,6 +124,39 @@ const che = s => s.map(x => x.che)
   controlla('il mercante compra: «ho roba da vendere»', che(scelte('rigattiere', ctx(1))).includes('vendi'))
   uguale('l\'incantatrice apre la bottega con le sue parole', scelte('incantatrice', ctx(1))[0].testo, 'Fammi vedere la magia')
   nota(MERCANTI.map(m => `${m.nome}: «${m.dice}»`).join(' · '))
+}
+
+/* ══════════ 6b. chi cura gratis: la guaritrice la vita, l'incantatrice l'energia ══════════ */
+{
+  const ferito = { vita: 12, vitaMax: 40, energia: 10, energiaMax: 10 }
+  const scarico = { vita: 40, vitaMax: 40, energia: 2, energiaMax: 10 }
+  const intero = { vita: 40, vitaMax: 40, energia: 10, energiaMax: 10 }
+  uguale('la guaritrice cura la vita', curaDi('erborista').risorsa, 'vita')
+  uguale('l\'incantatrice l\'energia', curaDi('incantatrice').risorsa, 'energia')
+  controlla('gli altri non curano', ['armaiolo', 'rigattiere', 'minatore', 'ragazza'].every(c => !curaDi(c)))
+  uguale('ferito: alla guaritrice mancano 28 punti', mancaA('erborista', ferito), 28)
+  uguale('ma l\'energia non è sua', mancaA('incantatrice', ferito), 0)
+  uguale('scarico: all\'incantatrice ne mancano 8', mancaA('incantatrice', scarico), 8)
+  uguale('senza una discesa a metà non manca niente', mancaA('erborista', null), 0)
+  // la domanda c'è sempre; ferito è la prima, in forze sta dopo la bottega
+  uguale('ferito: «Curami» prima della bottega', che(scelte('erborista', ctx(1, {}, { forze: ferito }))).slice(0, 2).join(), 'cura,bottega')
+  uguale('in forze: la bottega prima, «Curami» dopo', che(scelte('erborista', ctx(1, {}, { forze: intero }))).slice(0, 2).join(), 'bottega,cura')
+  uguale('senza discesa a metà c\'è lo stesso', che(scelte('erborista', ctx(1))).includes('cura'), true)
+  uguale('le parole sono le sue', scelte('erborista', ctx(1, {}, { forze: ferito })).find(x => x.che === 'cura').testo, 'Curami')
+  uguale('e dell\'incantatrice', scelte('incantatrice', ctx(1, {}, { forze: scarico })).find(x => x.che === 'cura').testo, 'Ricaricami')
+  controlla('fatta una volta non torna nello stesso dialogo', !che(scelte('erborista', ctx(1, {}, { forze: ferito }), new Set(['cura']))).includes('cura'))
+  controlla('Arrivederci resta ultima', che(scelte('erborista', ctx(1, {}, { forze: ferito }))).at(-1) === 'ciao')
+  controlla('chi non cura non ha la domanda', !che(scelte('armaiolo', ctx(1, {}, { forze: ferito }))).includes('cura'))
+  // curando dice la sua; in forze lo dice, senza far finta
+  const cura = dopoLaCura('erborista', 28), gia = dopoLaCura('erborista', 0)
+  controlla('curando: le sue frasi, segnate come cura', cura.length >= 1 && cura.every(p => p.dato === 'cura'), JSON.stringify(cura))
+  controlla('in forze: «sei già in forze»', gia.length === 1 && gia[0].dato === 'in-forze' && /in forze/.test(gia[0].testo), JSON.stringify(gia))
+  // il richiamo sopra la testa c'è solo finché serve
+  uguale('ferito la guaritrice chiama', richiamoDi('erborista', ferito), 'Sei ferito. Vieni, ti curo.')
+  uguale('in forze tace', richiamoDi('erborista', intero), null)
+  uguale('l\'incantatrice chiama per l\'energia', /ricarico/.test(richiamoDi('incantatrice', scarico)), true)
+  uguale('e non per la vita', richiamoDi('incantatrice', ferito), null)
+  uguale('il fabbro non chiama mai', richiamoDi('armaiolo', ferito), null)
 }
 
 /* ══════════ 7. «Novità?»: frasi che ruotano e reagiscono ══════════ */

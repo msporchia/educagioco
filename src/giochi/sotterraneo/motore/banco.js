@@ -412,8 +412,9 @@ export function gioca(tappa, { bravura = 0.8, seme = 7, come = 'minimo', rnd = n
     corsa.indossa(nuova)
     for (const [k] of reg.pezzi) comprati.add(k)
     corsa.sistemaIlCorredo()
-    corsa.vita = Math.min(corsa.vita, corsa.vitaMax)
-    corsa.energia = Math.min(corsa.energia, corsa.energiaMax)
+    // sopra la guaritrice e l'incantatrice curano gratis (docs/sotterraneo/terra-di-sopra.md): si risale sano e carico
+    corsa.vita = corsa.vitaMax
+    corsa.energia = corsa.energiaMax
     corsa.chiudi()
     const utili = nuoviUtili(prima0, addossoDi(corsa))
     visto = { ...addossoDi(corsa), tutti: pezziDelloZaino(), chiave: '' }   // quello che si è comprato non è «trovato»

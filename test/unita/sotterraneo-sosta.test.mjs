@@ -12,7 +12,7 @@ import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
 import { seminato } from '../../src/giochi/sotterraneo/motore/livello.js'
 import { ROBA_VUOTA } from '../../src/giochi/sotterraneo/motore/corredo.js'
 import { gioca, robaPer } from '../../src/giochi/sotterraneo/motore/banco.js'
-import { scrivi, leggi, dice, stringaDi, vistoDa, VERSIONE, viaDi, PORTALE, USCITA }
+import { scrivi, leggi, dice, stringaDi, vistoDa, VERSIONE, viaDi, PORTALE, USCITA, forzeDi }
   from '../../src/giochi/sotterraneo/motore/sosta.js'
 import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifica.mjs'
 
@@ -268,6 +268,27 @@ function rispondiFinche(c, giusto = () => true, giri = 40) {
   const ab = new Corsa(L_ABISSO, { seme: 9, rnd: seminato(9) })
   ab.risali()
   uguale('l\'abisso risalito si scrive col portale', scrivi(ab, INDICE_ABISSO, { anchePerFinite: true, via: PORTALE }).via, PORTALE)
+}
+
+/* ══════════ 9. salendo dal portale la vita resta quella di giù ══════════
+   Non c'è una cura che salire dia da sé: la sosta porta la vita e l'energia di prima, e le rimettono a posto, gratis, la
+   guaritrice e l'incantatrice (docs/sotterraneo/terra-di-sopra.md, «Chi cura»). `forzeDi` le legge col massimo di adesso. */
+{
+  const c = new Corsa(CAMPAGNA[1], { seme: 21, rnd: seminato(21) })
+  c.vita = Math.floor(c.vitaMax / 3)
+  c.energia = 0
+  const dato = scrivi(c, 1, { via: PORTALE })
+  uguale('la sosta porta la vita persa', dato.vita, c.vita)
+  const f = forzeDi(dato, CAMPAGNA[1], c.roba)
+  uguale('salendo non si guarisce: la vita è quella di prima', f.vita, c.vita)
+  uguale('e l\'energia', f.energia, 0)
+  uguale('il massimo è quello della discesa', f.vitaMax, c.vitaMax)
+  uguale('l\'energia piena è quella dell\'eroe', f.energiaMax, c.energiaMax)
+  // la cura è un campo della sosta: rimesso, la discesa riprende in forze
+  const curato = leggi({ ...dato, vita: f.vitaMax, energia: f.energiaMax }, CAMPAGNA[1], c.roba)
+  uguale('curata, la discesa riprende a vita piena', curato.vita, curato.vitaMax)
+  uguale('e a energia piena', curato.energia, curato.energiaMax)
+  uguale('una sosta che non si rilegge non ha forze', forzeDi({ ...dato, v: -1 }, CAMPAGNA[1], c.roba), null)
 }
 
 riassunto('la discesa lasciata a metà, e il portale')
