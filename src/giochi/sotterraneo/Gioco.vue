@@ -278,11 +278,18 @@ function riprendiSeUscito() {
 
 // Salendo dal portale la vita e l'energia restano quelle di giù: lo dice la barra, e li rimettono a posto gratis la
 // guaritrice e l'incantatrice (viste/Terra.vue, docs/sotterraneo/terra-di-sopra.md, «Chi cura»). Null senza portale
+// `forzeDi` rifà la discesa dalla sosta (decine di ms): si tiene finché non cambiano sosta, roba e crescita, se no
+// la terra di sopra la rifaceva a ogni passo e andava a scatti
+let forzeTenute = { chiave: null, valore: null }
 const forze = computed(() => {
   const dato = qui.value.sosta
   if (!dato || corsa.value || viaDi(dato) !== VIA_PORTALE) return null
+  const chiave = [dato, qui.value.roba, qui.value.missioni, qui.value.crescita]   // i dati salvati, non le copie rilette
+  if (forzeTenute.chiave && chiave.every((v, i) => v === forzeTenute.chiave[i])) return forzeTenute.valore
   const t = zonaDi(dato.tappa, dato.potenza)
-  return t ? forzeDi(dato, t, roba.value, presePer(missioni.value, t.chiave || ''), crescita.value) : null
+  const valore = t ? forzeDi(dato, t, roba.value, presePer(missioni.value, t.chiave || ''), crescita.value) : null
+  forzeTenute = { chiave, valore }
+  return valore
 })
 const ferito = computed(() => !!forze.value && forze.value.vita < forze.value.vitaMax)
 function curaDa(risorsa) {
