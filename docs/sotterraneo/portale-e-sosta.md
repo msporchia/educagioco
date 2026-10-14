@@ -98,8 +98,10 @@ una strada per salire e tornare giù, la ✕ è andare via.
 
 Nei test: `unita/sotterraneo-sosta` (la ripresa esatta cosa per cosa, il peso, il
 portale, e `via`: portale, uscita, una sosta di prima), `integrazione/sotterraneo-cura` (la cura sopra, scritta nella sosta), `integrazione/sotterraneo-portale`
-(col dito: il portale, il gemello, la ✕ che porta in home, «riprendi da qui» che riprende
-giù senza carta né gemello e dietro il velo, il gemello che resta dopo il portale vero),
+(col dito: il portale, la vita di giù che sale con l'eroe e la guaritrice che la rimette, il gemello, la ✕ che porta in home, «riprendi da qui» che riprende
+giù senza carta né gemello e dietro il velo, il gemello che resta dopo il portale vero; parte nella stanza del portale
+con `#stanza=portale` nella scalinata antica, perché un piano con porta e mostro ferito vicini alla partenza non è raro e uno
+della cripta non può esserci: là i mostri cadono in un colpo),
 `integrazione/sotterraneo` (uscire, rientrare, «lascio perdere» col suo foglio),
 `integrazione/sotterraneo-avventure` (cambiare eroe dal velo, e riprendere giù scegliendo
 quello con la discesa a metà). Il velo della pausa: `[data-pausa]` con
