@@ -155,7 +155,7 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
                                                                     crescita: crescitaPer(3, { eroe: e.chiave, seme }) }))
     const vinte = v.reduce((n, x) => n + x.vinte, 0)
     controlla(`${e.chiave}: la scala sommersa si vince rispondendo bene 8 volte su 10`,
-              vinte >= 4, `${vinte}/8 ${v.flatMap(x => x.guasti).slice(0, 1).join('')}`)
+              vinte >= 6, `${vinte}/8 ${v.flatMap(x => x.guasti).slice(0, 1).join('')}`)
     righe.push(`  ${e.nome.padEnd(10)} ❤️ ${String(e.vita).padStart(2)} ⚔️ ${e.att} · ` +
                `domande per discesa: ${costi.join(' · ')}`)
   }
@@ -231,8 +231,7 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
   const roba = robaAttesa('cavaliere', 3), crescita = crescitaAttesa('cavaliere', 3)
   const bene = quanteVolteSiVince(t, { quante: 8, bravura: 0.85, roba, crescita })
   const caso = quanteVolteSiVince(t, { quante: 8, bravura: 0.35, roba, crescita })
-  // 13 ottobre: l'eroe è meno veloce (6 + 1,5 a punto di destrezza, docs/sotterraneo/scontro.md) e i mostri giocano di più; il bersaglio torna con la taratura che segue
-  controlla('rispondendo bene la scala sommersa si vince', bene.vinte >= 6,
+  controlla('rispondendo bene la scala sommersa si vince', bene.vinte >= 7,
             `${bene.vinte}/${bene.quante}`)
   controlla('premendo a caso no', caso.vinte <= 1, `${caso.vinte}/${caso.quante}`)
   nota(`la scala sommersa: ${bene.vinte}/8 vinte all'85% di risposte giuste, ` +
@@ -499,7 +498,7 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
    se l'eroe colpisce nel suo (docs/sotterraneo/scontro.md). Prima chi rispondeva bene prendeva un graffio e chi sbagliava
    il colpo pieno; adesso le risposte servono ad attaccare. */
 {
-  const c = new Corsa(CAMPAGNA[2], { seme: 44, rnd: seminato(44) })
+  const c = new Corsa(CAMPAGNA[5], { seme: 44, rnd: seminato(44) })   // la botola: i mostri della torre cadono a un colpo
   const m = c.livello.robe.find(r => r.che === 'mostro' && r.ossa > c.colpo(r) * 2)
   c.vita = c.vitaMax
   m.sveglio = true   // sveglio: niente sorpresa, il primo turno è della fila
@@ -1106,8 +1105,8 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
   dentro('nella scalinata la roba da 30 gemme si intravede, e resta rara',
          Math.round(sognoInCima * 100), 5, 40)
   const roboInFondo = quota(durezzaDi(CAMPAGNA[5], CAMPAGNA[5].piani - 1), x => x >= PREGIATO)
-  // (0,75 e non 0,8: le tre armi a una mano dei gradini alti, sciabola, scure e mannaia, stanno a 26 gemme e pesano sul banco di
-  // fondo quanto le altre di quel prezzo, quindi la roba da 30+ è un po' meno)
+  // (0,75 e non 0,8, non toccato dalla taratura dei mostri: le tre armi a una mano dei gradini alti, sciabola, scure e mannaia, stanno a 26 gemme
+  // e pesano sul banco di fondo quanto le altre di quel prezzo, quindi la roba da 30+ è il 79,5%; la leva è il banco, non i mostri)
   controlla('mentre in fondo è la norma', roboInFondo >= 0.75,
             `${(roboInFondo * 100).toFixed(0)}% dei banchi`)
   nota(`roba da ${PREGIATO}+ gemme: ${(sognoInCima * 100).toFixed(0)}% dei banchi nella scalinata, ` +

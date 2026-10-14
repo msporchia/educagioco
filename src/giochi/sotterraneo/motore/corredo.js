@@ -181,7 +181,7 @@ export class Corredo {
     return this.io.att + this.piu.sopra[car] * ATT_PER_PUNTO + COSE[this.mancina].att + addosso
   }
   get dif() { return this.io.dif + this.piu.dif + this.addosso('dif') }
-  // il ritmo dello scontro: 6 più uno e mezzo a punto di destrezza (motore/turni.js)
+  // il ritmo dello scontro: 7 più un punto a punto di destrezza (motore/turni.js)
   get velocita() { return VELOCITA_BASE_EROE + this.car('destrezza') * VELOCITA_PER_DESTREZZA + this.sempre('velocitaPiu') }
   // il valore di una caratteristica adesso (partenza, punti, dote): i requisiti delle armi e la pagina dell'eroe
   car(k) { return caratteristica(this.io, this.crescita, k) }

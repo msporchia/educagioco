@@ -15,14 +15,14 @@ export const CAMPAGNA = [
     scenario: 'cripta', pianta: 'costruita',
     portata: 25,
     dritta: 'due piani di tombe, e qualcuno che non dorme',
-    piani: 2, misura: 34, giri: 2, dif: [0.05, 0.22], forza: 0.4, livello: 1,
+    piani: 2, misura: 34, giri: 2, dif: [0.05, 0.22], forza: 0.25, spinta: -2, livello: 1,
     mostri: ['scheletro', 'zombie', 'fantasma'], caporale: 'scheletro-scudo', tettoBranco: 3, capo: 'scheletro' },
 
   { chiave: 'cantine', nome: 'La scalinata antica', icona: '🪜', dove: 'giù per la scalinata',
     scenario: 'cantine', pianta: 'costruita',
     portata: 31,
     dritta: 'tante stanze, e tutte al buio',
-    piani: 2, misura: 46, giri: 4, dif: [0.12, 0.32], forza: 0.55, spinta: 6.5, livello: 2,   // senza forza: il primo avvio si vince anche a mani nude (docs/sotterraneo/la-grande-storia.md, «Il primo avvio»)
+    piani: 2, misura: 46, giri: 4, dif: [0.12, 0.32], forza: 0.5, spinta: 2, livello: 2,   // senza forza: il primo avvio si vince anche a mani nude (docs/sotterraneo/la-grande-storia.md, «Il primo avvio»)
     mostri: ['ratto', 'goblin', 'melma'], caporale: 'orco', tettoBranco: 3, capo: 'orco' },
 
   // alta e stretta come la torre: le stanze una sopra l'altra
@@ -30,7 +30,7 @@ export const CAMPAGNA = [
     scenario: 'fornace', pianta: 'costruita',
     portata: 37,
     dritta: 'stretta e alta: le scale non finiscono mai',
-    piani: 3, misura: 40, largo: 26, alto: 54, giri: 3, dif: [0.2, 0.44], forza: 0.9, spinta: 6.8, livello: 3,
+    piani: 3, misura: 40, largo: 26, alto: 54, giri: 3, dif: [0.2, 0.44], forza: 0.5, spinta: 4.5, livello: 3,
     mostri: ['pipistrello', 'diavoletto', 'vespa', 'spirito-fuoco'], caporale: 'golem-magma', tettoBranco: 3, capo: 'troll' },
 
   // tutta in profondità: piani piccoli, tanti
@@ -38,7 +38,7 @@ export const CAMPAGNA = [
     scenario: 'cantine', pianta: 'caverna',
     portata: 43,
     dritta: 'piani piccoli, uno sotto l\'altro, sempre più giù',
-    piani: 5, misura: 28, giri: 2, dif: [0.28, 0.54], forza: 1.4, spinta: 9.6, livello: 5,
+    piani: 5, misura: 28, giri: 2, dif: [0.28, 0.54], forza: 0.8, spinta: 5.8, livello: 5,
     mostri: ['ragno', 'fungo', 'pianta', 'melma-rosa'], caporale: 'mostro-verde', tettoBranco: 4, capo: 'orco' },
 
   // lunga e stretta: un canale sott'acqua
@@ -46,21 +46,21 @@ export const CAMPAGNA = [
     scenario: 'cripta', pianta: 'caverna', acqua: true,
     portata: 50,
     dritta: 'lunga e stretta, e in fondo gorgoglia qualcosa',
-    piani: 3, misura: 40, largo: 64, alto: 24, giri: 3, dif: [0.36, 0.66], forza: 2.25, spinta: 9.8, livello: 6,
+    piani: 3, misura: 40, largo: 64, alto: 24, giri: 3, dif: [0.36, 0.66], forza: 1.1, spinta: 7, livello: 6,
     mostri: ['granchio', 'piranha', 'polpo', 'fantasma-azzurro'], caporale: 'tartaruga', tettoBranco: 4, capo: 'gigante' },
 
   { chiave: 'labirinto', nome: 'La botola segreta', icona: '🌀', dove: 'sotto la botola',
     scenario: 'cantine', pianta: 'costruita',
     portata: 57,
     dritta: 'un labirinto: senza mappina ci si perde',
-    piani: 3, misura: 50, giri: 4, dif: [0.44, 0.78], forza: 3, spinta: 10, livello: 8,
+    piani: 3, misura: 50, giri: 4, dif: [0.44, 0.78], forza: 1.25, spinta: 7.7, livello: 8,
     mostri: ['lupo', 'cinghiale', 'serpente', 'ent'], caporale: 'golem-muschio', tettoBranco: 5, capo: 'troll' },
 
   { chiave: 'fondo', nome: 'La miniera abbandonata', icona: '⛏️', dove: 'nella miniera',
     scenario: 'fornace', pianta: 'caverna',
     portata: 64,
     dritta: 'stretta, profonda, e le pietre bruciano',
-    piani: 4, misura: 40, giri: 3, dif: [0.52, 0.92], forza: 4, spinta: 11, livello: 10,
+    piani: 4, misura: 40, giri: 3, dif: [0.52, 0.92], forza: 1.8, spinta: 9, livello: 10,
     mostri: ['scorpione', 'golem', 'spirito-elettrico'], caporale: 'golem-lava', tettoBranco: 6, capo: 'gigante' },
 ]
 
@@ -104,7 +104,7 @@ export const L_ABISSO = {
   // la difesa dell'eroe ha un tetto (l'attacco dei mostri no): lasciando crescere il piano e basta ci si
   // ferma sempre fra il settimo e l'undicesimo, perché i mostri fanno troppo male (misurato dal banco)
   attOgni: 3,
-  forza: 5, spinta: 12, ossaPerPiano: 0.12,   // misurati col banco (docs/sotterraneo/abisso.md): chi parte nudo regge tre piani, e poi i mostri crescono più dell'eroe
+  forza: 2.2, spinta: 9, ossaPerPiano: 0.12,   // misurati col banco (docs/sotterraneo/abisso.md): chi parte nudo regge tre piani, e poi i mostri crescono più dell'eroe
   // niente `portata`: il cancello non è l'età ma "hai finito le sei discese", dimostrato invece che stimato
 }
 
@@ -263,13 +263,13 @@ export function guastiDellaCampagna() {
     if (t.giri < 2 || t.giri > 4) g.push(`${t.chiave}: ${t.giri} giri di taglio, fuori da 2..4`)
     const [da, a] = t.dif
     if (da < 0 || a > 1 || da > a) g.push(`${t.chiave}: difficoltà ${da}..${a} storta`)
-    if (t.forza != null && !(t.forza >= 0.3 && t.forza <= 8)) g.push(`${t.chiave}: forza ${t.forza} fuori da 0.3..8`)
-    if (t.spinta != null && !(t.spinta >= 0 && t.spinta <= 12)) g.push(`${t.chiave}: spinta ${t.spinta} fuori da 0..12`)
+    if (t.forza != null && !(t.forza >= 0.2 && t.forza <= 8)) g.push(`${t.chiave}: forza ${t.forza} fuori da 0.2..8`)
+    if (t.spinta != null && !(t.spinta >= -3 && t.spinta <= 12)) g.push(`${t.chiave}: spinta ${t.spinta} fuori da -3..12`)
     if (t.densita != null && !(t.densita >= 0.5 && t.densita <= 2)) g.push(`${t.chiave}: densità ${t.densita} fuori da 0.5..2`)
     if (!(t.livello >= 1)) g.push(`${t.chiave}: senza livello, e il bottino non sa a che livello cadere`)
   }
   // la prima si comincia a mani nude: non può contare su una roba che nessuno ha ancora
-  if ((CAMPAGNA[0].forza || 1) > 1 || (CAMPAGNA[0].spinta || 0) !== 0)
+  if ((CAMPAGNA[0].forza || 1) > 1 || (CAMPAGNA[0].spinta || 0) > 0)
     g.push(`${CAMPAGNA[0].chiave}: si scende a mani nude, niente spinta né forza sopra il bestiario`)
   for (const t of CAMPAGNA) g.push(...guastiDegliAbitanti(t.chiave, t.mostri, t.caporale))
   // una creatura sta in un posto solo (docs/sotterraneo/mostri.md): né in due discese né fra le discese e l'abisso

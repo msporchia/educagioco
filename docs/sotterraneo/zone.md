@@ -144,11 +144,9 @@ il «!» torna.
 - **il livello del posto è L** (più uno ogni due piani): dice il livello
   del bottino, le gemme e l'esperienza dei mostri ([livelli.md](livelli.md));
 - **i mostri del livello L**: gli abitanti e il caporale della discesa ([mostri.md](mostri.md): una zona tiene i suoi per sempre) con
-  `forza` = (4 + 0,6 · (L − 12)) × la forma e `spinta` = 13 + 1,0 · (L − 12), a un decimo
-  (`CURVA_DELLE_ZONE`). In linea retta, mai esponenziali. La forma (`FORMA_DELLA_ZONA`) dice quanto gli abitanti sono più comodi o più
-  duri a pari livello (le specie hanno tutte le stesse ossa, ma non picchiano uguale): la scalinata ×0,75, la
-  torre ×0,9, la grotta ×1,4, la botola ×0,85, la scala sommersa ×0,95, la miniera ×1,35, la cripta, piccola, ×2,2 (ritoccate il 13 ottobre coi piani nuovi e con gli abitanti per ambientazione di
-  [mostri.md](mostri.md): prima 0,8 · 0,8 · 1,3 · 1,7; nelle zone, dove i mostri hanno una spinta enorme, conta la velocità dei caporali e non il loro colpo);
+  `forza` = (2,2 + 0,15 · (L − 12)) × la forma e `spinta` = 9,5 + 1,3 · (L − 12), a un decimo (`CURVA_DELLE_ZONE`). In linea retta, mai esponenziali. La forma
+  (`FORMA_DELLA_ZONA`) dice quanto gli abitanti sono più comodi o più duri a pari livello: cripta ×1,7, scalinata ×1, torre ×0,9, grotta ×1,4, botola ×0,85, scala
+  sommersa ×1,2, miniera ×1,2. Ritarate la sera del 13 ottobre sui branchi grossi ([taratura-branchi.md](taratura-branchi.md); prima forza 4 + 0,6 a livello e spinta 13 + 1,0, forme 2,2 · 0,75 · 0,9 · 1,4 · 0,85 · 0,95 · 1,35).
 - **il bottino come nell'abisso** (`indiceDella` dà −1): i forzieri danno un
   pezzo a tono sei volte su dieci, il mostro grosso il suo pezzo col nome e
   un raro del livello.
@@ -166,9 +164,7 @@ vinte o poco più.
   ogni livello costa in più 120 + 10 · (2m + 1), con m i livelli sopra il 12
   (`ESP_R`, `ESP_Q`). Cresce in linea retta come l'esperienza di una zona
   (da 470 al 12 a 1310 al 40, misurata), quindi il rapporto resta vicino a
-  uno. Dentro la storia la curva non cambia. Provato: il cubo di m, messo per
-  l'abisso: una zona al 12 valeva 2,3 livelli, al 16 0,4, al 20 0,15, al 26
-  0,07; la ruota non sarebbe girata mai.
+  uno. Provato: il cubo di m: una zona valeva 2,3 livelli al 12 e 0,07 al 26.
 - **Nella grigia un quarto** (`ESP_GRIGIA`, `espNellaZona`): l'esperienza di
   un mostro cresce piano col livello del posto, e una grigia, facile, rendeva
   0,9 livelli contro gli 1,1 di una verde. Adesso 0,26. «Grigia» è per la
@@ -208,32 +204,31 @@ le zone.
 con la roba attesa al livello (`robaAttesaA`: quella con cui si esce dalla storia coi pezzi rifatti a L − 1, le pozioni
 dell'abisso), la crescita attesa e le abilità della strada del banco ([scontro-bilancio.md](scontro-bilancio.md)). L'eroe
 all'inizio della fascia, la verde più dura. Vinte, in media fra i quattro eroi, nell'ordine della storia (cripta, scalinata,
-torre, grotta, sommersa, botola, miniera), a 8/10 · 6/10 · 4/10:
+torre, grotta, sommersa, botola, miniera), a 8/10 · 6/10 · 4/10 (13 ottobre sera):
 
-| | a 8/10 | a 6/10 | a 4/10 | livelli presi (8/10) |
+| | a 8/10 | a 6/10 | a 4/10 | domande (8/10) |
 |---|---|---|---|---|
-| zone 12–15 | 93 · 93 · 90 · 95 · 93 · 93 · 88% | 80 · 80 · 68 · 45 · 78 · 63 · 73% | 18 · 30 · 23 · 28 · 30 · 13 · 28% | 0,8 · 1,3 · 1,2 · 1,0 · 1,6 · 1,5 · 1,6 |
-| zone 16–19 | 93 · 95 · 98 · 98 · 100 · 100 · 95% | 90 · 78 · 70 · 53 · 85 · 70 · 80% | 15 · 23 · 33 · 38 · 25 · 15 · 25% | 0,7 · 1,2 · 1,1 · 0,9 · 1,5 · 1,3 · 1,4 |
-| zone 20–23 | 93 · 85 · 93 · 88 · 93 · 93 · 95% | 88 · 73 · 68 · 53 · 88 · 60 · 75% | 18 · 25 · 35 · 30 · 33 · 20 · 35% | 0,7 · 1,0 · 1,0 · 0,8 · 1,3 · 1,2 · 1,3 |
-| zone 30–33 | 100 · 93 · 90 · 100 · 100 · 100 · 100% | 85 · 75 · 53 · 45 · 83 · 73 · 83% | 23 · 18 · 30 · 33 · 28 · 15 · 35% | 0,6 · 1,0 · 0,9 · 0,8 · 1,2 · 1,2 · 1,2 |
+| zone 12–15 | 95 · 98 · 98 · 98 · 100 · 93 · 98% | 85 · 73 · 83 · 63 · 73 · 68 · 50% | 13 · 5 · 25 · 10 · 30 · 8 · 15% | 64 · 90 · 58 · 76 · 79 · 96 · 71 |
+| zone 16–19 | 93 · 95 · 100 · 93 · 98 · 93 · 95% | 80 · 78 · 80 · 83 · 75 · 57 · 55% | 20 · 18 · 28 · 8 · 25 · 8 · 13% | 64 · 92 · 59 · 75 · 83 · 97 · 75 |
+| zone 20–23 | 98 · 98 · 100 · 90 · 100 · 98 · 98% | 73 · 68 · 73 · 65 · 63 · 63 · 45% | 5 · 3 · 13 · 3 · 15 · 0 · 10% | 72 · 97 · 63 · 82 · 89 · 105 · 79 |
+| zone 30–33 | 98 · 98 · 93 · 95 · 100 · 95 · 100% | 73 · 68 · 83 · 83 · 68 · 50 · 50% | 13 · 5 · 8 · 10 · 15 · 0 · 10% | 77 · 104 · 66 · 91 · 91 · 111 · 85 |
 
-- **Come una discesa della storia**: a otto quasi sempre, a sei due volte su tre, a quattro di rado. Fra il 24 e il 28 a sei su
-  dieci si scende solo al 65% (al 24 il 65%, al 27 il 64%; prima il 56% e il 38%). Un punto di `spinta` sposta il sei su dieci di
-  una decina di punti. Provato: `forza` 0,9 a livello e `spinta` 0,8 (la miniera al 30 chiedeva 162 domande, adesso 119).
-- **Le domande per zona** (a 8/10): al 12 da 41 a 66, al 20 da 61 a 99, al 30 da 71 a 119. Oltre le 85 di una seduta la zona
-  si fa in due sere, con la sosta; la miniera (golem lenti e grossi) è la più lunga.
+- **Come una discesa della storia**: a otto quasi sempre, a sei due volte su tre, a quattro di rado (fra il 24 e il 27 a sei il 54%).
+  I livelli presi vanno da 0,8 a 2,2 (l'esperienza di un mostro di strada è il 35%, [taratura-branchi.md](taratura-branchi.md)).
+- **Le domande per zona** (a 8/10, dritti): al 12 da 58 a 96, al 20 da 63 a 105, al 30 da 66 a 111; prima del 13 ottobre 41–66, 61–99, 71–119. Oltre le 85 di una seduta
+  la zona si fa in due sere, con la sosta; la botola e la scalinata (sedici stanze) sono le più lunghe.
 
 E i colori, su una zona 16–19 (a 8/10 · a 6/10):
 
 | eroe | colore | vinte | livelli |
 |---|---|---|---|
-| dell'11 | rosso | 23% · 5% | |
-| del 12 | arancio, il più duro | 26% · 11% | |
-| del 15 | arancio, il più facile | 88% · 62% | |
-| del 20 | grigio | 99% · 88% (a 6/10 · 4/10) | 0,24 |
+| dell'11 | rosso | 7% · 1% | |
+| del 12 | arancio, il più duro | 14% · 2% | |
+| del 15 | arancio, il più facile | 88% · 49% | |
+| del 20 | grigio | 100% · 83% (a 6/10 · 4/10) | 0,29 |
 
-Il 12 contro la zona 16–19 vince una volta su quattro, non una su due come prima del 12 ottobre: quattro livelli sotto, con le abilità
-che li contano, pesano molto (il bersaglio è ≥ 20%).
+Il 12 contro la zona 16–19 vince una volta su sette (il 12 ottobre una su quattro, prima una su due): quattro livelli sotto, con le abilità e i branchi
+che li contano, pesano molto (il bersaglio è ≥ 10%).
 
 Nei test: `unita/sotterraneo-forza` (la forza: [forza.md](forza.md#nei-test)),
 `unita/sotterraneo-zone` (le fasce alla nascita, due grigie, due

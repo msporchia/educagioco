@@ -160,9 +160,9 @@ il telefono in mano.
 
 Aperte dopo il lavoro di [strade.md](strade.md):
 
-- **La destrezza vale più delle altre.** Il banco la paga quanto la forza al cavaliere e di più al mago (a +5 livelli 69 contro
-  25–34 delle altre tre): la velocità nella fila dei turni (6 più uno e mezzo a punto) è una leva forte. Se è troppo, la
-  si ritocca in `VELOCITA_PER_DESTREZZA` (`motore/turni.js`) e le strade si rifanno con `--strada tutte --sintesi`.
+- **La destrezza** valeva più delle altre (a +5 livelli 69 contro 25–34 nel mago): la sera del 13 ottobre la velocità è passata a 7 più un punto per punto
+  (`VELOCITA_PER_DESTREZZA`), e ora sta vicina all'intelligenza ([abilita-energia.md](abilita-energia.md#la-fila-dei-turni)). Restano da guardare col dito il cavaliere
+  (a 6/10 il più debole) e chi non spende i punti dell'albero ([taratura-branchi.md](taratura-branchi.md#cosa-resta-da-decidere)).
 - **Le armi a una mano che mancano**: una bacchetta di secondo gradino (la strada «bacchetta» usa la verga fino alla grotta) e un
   bastone di terzo (la «pura magia» tiene il bastone di secondo fino in fondo).
 - **La taratura dei mostri** dopo le armi a due mani: l'attacco a due mani è raddoppiato o più (3 · 6 · 9 contro 2 · 3 · 4), quindi

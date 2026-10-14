@@ -16,6 +16,7 @@ import { fasciaDi, coloreDellaFascia, coloreNellaStoria, coloreDi, disposizioneD
          notiziaDi, gradinoDi, COLORI, robaAttesaA, crescitaAttesaA } from '../../src/giochi/sotterraneo/motore/zone.js'
 import { LIVELLI_ATTESI } from '../../src/giochi/sotterraneo/dati/storia.js'
 import { sogliaDi, espDi } from '../../src/giochi/sotterraneo/dati/livelli.js'
+import { QUOTA_DEL_COMUNE } from '../../src/giochi/sotterraneo/dati/mondo.js'
 import { MOSTRI } from '../../src/giochi/sotterraneo/dati/mostri.js'
 import { scenarioDi } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
@@ -212,10 +213,10 @@ uguale('e l\'abisso resta l\'abisso', zonaDi(-1).abisso, true)
     const m = c.livello.robe.find(r => r.che === 'mostro' && !r.chiave)
     const prima = c.crescita.esp
     c.cade(m)
-    return { presa: c.crescita.esp - prima, piena: espDi(MOSTRI[m.tipo], c.livelloQui) }
+    return { presa: c.crescita.esp - prima, piena: espDi(MOSTRI[m.tipo], c.livelloQui) * QUOTA_DEL_COMUNE }
   }
   const verde = esp(16), grigia = esp(18)
-  uguale('nella verde il mostro dà la sua esperienza', verde.presa, verde.piena)
+  uguale('nella verde il mostro dà la sua esperienza (la quota dei mostri di strada)', verde.presa, Math.max(1, Math.round(verde.piena)))
   uguale('nella grigia un quarto', grigia.presa, Math.max(1, Math.round(grigia.piena * ESP_GRIGIA)))
 
   // il passo: una zona verde vinta, dal fondo della fascia, vale più o meno un livello (le misure su tutte le zone)
@@ -229,7 +230,7 @@ uguale('e l\'abisso resta l\'abisso', zonaDi(-1).abisso, true)
       if (g.esito.vinta) vinte.push((g.corsa.crescita.esp - cr.esp) / salto(L))
     }
     const livelli = vinte.reduce((n, x) => n + x, 0) / Math.max(1, vinte.length)
-    controlla(`una torre verde vinta al ${L} vale più o meno un livello`, vinte.length >= 2 && livelli >= 0.7 && livelli <= 2.2,   // da 2: il mana che torna camminando fa vincere un seme in più, e quel seme porta tutta la discesa (docs/sotterraneo/orologio.md)
+    controlla(`una torre verde vinta al ${L} vale più o meno un livello`, vinte.length >= 2 && livelli >= 0.7 && livelli <= 2,
               `${vinte.length} vinte su 8, ${livelli.toFixed(2)} livelli`)
   }
 }

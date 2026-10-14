@@ -1,9 +1,9 @@
 /* Le tre strade di ogni classe sotto il banco (docs/sotterraneo/strade.md).
    tempo: 400
    Ogni strada (dati/strade.js) si gioca discesa per discesa con la sua roba, i suoi punti e il suo albero (motore/strade.js), con
-   l'eroe cinque livelli sopra quello atteso: i mostri di adesso sono tarati per il banco di prima e le sette discese a livello
-   atteso sono quasi tutte un muro, dove le strade non si distinguono. Il bersaglio: le tre strade di una classe stanno vicine
-   (nessuna domina, nessuna crolla); i numeri assoluti li dà la taratura dei mostri.
+   l'eroe cinque livelli sopra quello atteso, dove le strade si distinguono per la roba e per i punti e non per quanto è dura la
+   discesa (a livello atteso l'elfa, la più veloce, si stacca di più: docs/sotterraneo/taratura-branchi.md). Il bersaglio: le tre strade di una
+   classe stanno vicine (nessuna domina, nessuna crolla); i numeri assoluti li dà la taratura dei mostri.
    `node test/esegui.mjs misure/sotterraneo-strade --niente-build` */
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { EROI } from '../../src/giochi/sotterraneo/dati/eroi.js'
