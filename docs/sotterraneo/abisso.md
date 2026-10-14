@@ -148,7 +148,7 @@ dall'abisso.
 
 ## Svenire: si perdono le tasche, mai il corredo
 
-- **Resta addosso tutto** — arma, mano debole, corpo, dito — **e si svuotano
+- **Resta addosso tutto** — arma, mano debole, corpo, collana, anelli — **e si svuotano
   le sei tasche**; le gemme si dimezzano (`rimettiInPiedi` in
   `motore/corsa.js`). La regola è nata qui e adesso vale anche nelle sette
   discese ([regole.md](regole.md#svenire-e-il-fondo-degli-svenimenti)). Punisce senza umiliare: se ne va il margine

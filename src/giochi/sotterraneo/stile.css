@@ -919,16 +919,17 @@
   font-style: normal; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: #c9a46a;
 }
 
-/* l'eroe in mezzo e le quattro caselle intorno, i numeri accanto */
+/* l'eroe in mezzo e le sei caselle intorno (tre per lato), i numeri accanto */
 .sot-intorno {
   flex: none; display: grid; grid-template-columns: auto auto auto 1fr; align-items: center; gap: 6px;
   padding: 8px; border-radius: 12px; border: 1px solid #c9963a55;
   background: radial-gradient(70% 100% at 32% 50%, #3d2c1b, #120c08 78%);
   box-shadow: inset 0 2px 12px #000b;
 }
-.sot-intorno-lato { display: grid; gap: 6px }
+.sot-intorno-lato { display: grid; gap: 5px }
+.sot-intorno-lato .sot-casella.sot-piccola { width: 46px; height: 46px }
 .sot-intorno-eroe {
-  width: 76px; height: 106px; display: grid; place-items: end center; padding-bottom: 6px;
+  align-self: stretch; width: 76px; min-height: 106px; display: grid; place-items: end center; padding-bottom: 6px;
   background: radial-gradient(48% 14% at 50% 90%, #ffd23f30, transparent);
 }
 .sot-intorno-numeri {
@@ -1050,6 +1051,12 @@
 .sot-cartellino.sot-cart-questo { border-color: color-mix(in srgb, var(--sot-gradino) 70%, transparent);
   box-shadow: inset 0 0 14px color-mix(in srgb, var(--sot-gradino) 18%, transparent) }
 .sot-cartellino > small { font-size: 10.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: #b9a27a }
+/* un anello con le due dita piene: il tasto per toglierne l'altro (Confronto.vue) */
+.sot-scambia {
+  min-height: 36px; padding: 4px 8px; font: inherit; font-size: 12.5px; font-weight: 800; color: #ffe39a; text-align: left;
+  background: #ffd23f14; border: 1px solid #c9963a99; border-radius: 8px
+}
+.sot-scambia:active { transform: scale(.97) }
 .sot-cart-pezzo { display: flex; align-items: center; gap: 5px; min-width: 0 }
 .sot-cart-pezzo > span { display: grid; min-width: 0 }
 .sot-cart-pezzo b {

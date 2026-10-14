@@ -48,7 +48,7 @@ export function robaAttesa(eroe, k, { pozioni = true, gemme = 0 } = {}) {
     for (let giro = 0; giro < 2; giro++) for (const p of nuovi) {
       if (!COSE[p] || c.possiedo(p)) continue
       const d = COSE[p].dove
-      const meglio = c.vaAddosso(p) || (d === 'dito' && c.confronto(p).meglio > 0) ||
+      const meglio = c.vaAddosso(p) || ((d === 'dito' || d === 'collo') && c.confronto(p).meglio > 0) ||
         (d === 'mancina' && c.posso(p) && !c.aDueMani(c.mano) && c.confronto(p).meglio > 0)
       if (!meglio) continue
       const dove = c.confronto(p).dove
@@ -79,8 +79,11 @@ const rangoDi = (eroe, k) => (PASSI[eroe] || []).findIndex(riga => CASELLE.some(
 export function migliora(corredo, k) {
   const c = COSE[k]
   if (!c || !c.dove || !corredo.posso(k) || corredo.possiedo(k)) return false
-  const ora = corredo.casella(c.dove)
+  const gioiello = c.dove === 'dito' || c.dove === 'collo'
+  const ora = corredo.casella(gioiello ? corredo.postoDelGioiello(k) : c.dove)
   if (!ora || !COSE[ora]) return true
+  // tutti i posti pieni: un gioiello al posto di un altro è una scelta, e la storia lo propone solo se rende di più
+  if (gioiello) { const conf = corredo.confronto(k); return !!conf && conf.meglio > 0 }
   // un pezzo magico, raro o col nome si giudica sui numeri, non sul posto della sua base nella fila
   const comune = x => !COSE[x].rarita || COSE[x].rarita === 'comune'
   if (!comune(ora) || !comune(k)) {

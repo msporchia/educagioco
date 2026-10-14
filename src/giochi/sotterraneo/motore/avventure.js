@@ -71,7 +71,7 @@ export function cominciata(a) {
   if (oggetto(a.abisso) && a.abisso.fondo > 0) return true
   if (oggetto(a.crescita) && a.crescita.esp > 0) return true
   const r = rileggiRoba(a.roba)
-  return !!r && (r.gemme > 0 || r.zaino.length > 0 || !!(r.mano || r.mancina || r.corpo || r.dito) ||
+  return !!r && (r.gemme > 0 || r.zaino.length > 0 || !!(r.mano || r.mancina || r.corpo || r.collo || r.dito || r.dito2) ||
                  r.torcia > 0 || r.torce > 0)
 }
 

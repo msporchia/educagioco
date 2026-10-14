@@ -98,11 +98,11 @@ const venduti = profilo?.campagne?.sotterraneo?.cfg?.avventure?.cavaliere?.vendu
 uguale('nell\'avventura del cavaliere, con i prezzi', JSON.stringify((venduti || []).map(x => [x.k, x.prezzo])),
        JSON.stringify(['medaglione', 'amuleto-rosso', 'scudo-legno', 'pozione-piccola'].map(k => [k, pagati[k]])))
 
-/* ---------- anche un gioiello si riprende, e va al dito ---------- */
+/* ---------- anche un gioiello si riprende, e va al collo ---------- */
 {
   const prima = await gemmeBottega()
   await riacquistaNellaBottega(page, 'amuleto-rosso', { tocca })
-  uguale('(l\'amuleto rosso si riprende e va al dito)', await page.locator('[data-casella="dito"][data-cosa="amuleto-rosso"]').count(), 1)
+  uguale('(l\'amuleto rosso si riprende e va al collo)', await page.locator('[data-casella="collo"][data-cosa="amuleto-rosso"]').count(), 1)
   uguale('(allo stesso prezzo)', await gemmeBottega(), prima - pagati['amuleto-rosso'])
 }
 

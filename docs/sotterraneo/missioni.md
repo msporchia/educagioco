@@ -195,7 +195,7 @@ il nome sopra la testa: [missioni-bersaglio.md](missioni-bersaglio.md).
 - **Il premio** è in gemme o in un gioiello, a volte con monete. Un premio da
   impugnare o da indossare salterebbe un passo della storia, e
   `guastiDelleMissioni` lo rifiuta, come più di 40 gemme. Il gioiello va
-  al dito se è libero, se no in tasca; a tasche piene la consegna aspetta.
+  al suo posto (dito o collo) se è libero, se no in tasca; a tasche piene la consegna aspetta.
 - **Lo stato è dell'avventura**: `cfg.avventure[eroe].missioni`,
   `{ [id]: 'presa' | 'fatta' | 'consegnata' }`; la forma non è cambiata né
   con la regola «una per volta» né con l'albero: **un'avventura di prima

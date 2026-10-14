@@ -108,6 +108,9 @@ function sblocca(corsa, meta, provati) {
   return false
 }
 
+// un anello o una collana: non si confrontano su un numero solo, si mettono dove c'è posto
+const eGioiello = k => COSE[k].dove === 'dito' || COSE[k].dove === 'collo'
+
 // uno scudo al posto della seconda arma leggera: lo sceglie chi gioca, dallo zaino (vaAddosso non lo fa da sé)
 function scudoMeglio(chi, k) {
   const c = COSE[k]
@@ -203,14 +206,14 @@ function equipaggia(corsa, st = {}, registro = null) {
     // e quello che non è della strada che si sta giocando (motore/strade.js) nemmeno
     if (c.dove && corsa.vincoloDelBanco && !corsa.vincoloDelBanco(corsa, k)) continue
     // un pezzo si giudica su tutto quello che dà (confronto: `meglio`), un'arma sul totale delle due mani
-    if (c.dove && c.dove !== 'dito' && !(c.dove === 'mancina' && corsa.aDueMani(corsa.mano))) {
+    if (c.dove && !eGioiello(k) && !(c.dove === 'mancina' && corsa.aDueMani(corsa.mano))) {
       const conf = corsa.confronto(k)
       if (!conf.addosso ? (c.dove !== 'mancina' || corsa.mancinaLibera()) : conf.meglio > 0) { corsa.usa(i); continue }
     }
     // con un'arma leggera nella mano debole, lo scudo che para più di quanto quell'arma picchi (la difesa conta doppio)
     if (c.dove === 'mancina' && scudoMeglio(corsa, k)) { corsa.usa(i); continue }
-    // al dito la prima cosa che capita: i gioielli non si confrontano su un numero solo
-    if (c.dove === 'dito' && !corsa.dito) { corsa.usa(i); continue }
+    // al dito e al collo la prima cosa che capita, finché c'è un posto libero: i gioielli non si confrontano su un numero solo
+    if (eGioiello(k) && corsa.postoLibero(c.dove)) { corsa.usa(i); continue }
     // beve quando serve, non appena trova (`beviSotto`: la quota di vita sotto cui beve, 0,45 di difetto)
     if (c.usa === 'cura' && corsa.vita < corsa.vitaMax * (st.beviSotto || 0.45)) {
       // quale lo sceglie la regola del giocatore (`tieneLaVita`: l'ampolla della vita aspetta il grosso)
@@ -344,12 +347,12 @@ export function gioca(tappa, { bravura = 0.8, seme = 7, come = 'minimo', rnd = n
   const risalite = []
   // le armi nuove (docs/sotterraneo/fine-discesa-e-strade.md): i pezzi che entrano addosso e alzano il valore dell'eroe (`trovati`), e quelli finiti nello zaino (`inutili`)
   const armi = { trovati: 0, inutili: 0, rimandati: 0 }
-  const pezziDelloZaino = () => [corsa.mano, corsa.mancina, corsa.corpo, corsa.dito, ...corsa.zaino].filter(k => k && COSE[k] && COSE[k].dove)
+  const pezziDelloZaino = () => [corsa.mano, corsa.mancina, corsa.corpo, corsa.collo, corsa.dito, corsa.dito2, ...corsa.zaino].filter(k => k && COSE[k] && COSE[k].dove)
   let visto = { ...addossoDi(corsa), tutti: pezziDelloZaino(), chiave: '' }
   // i pezzi comprati (all'ingresso o in salita) che aspettavano il livello: indossati dopo, sono comprati e non trovati
   const comprati = new Set(visto.tutti)
   const contaLeArmi = () => {
-    const tutti = pezziDelloZaino(), chiave = `${corsa.mano}|${corsa.mancina}|${corsa.corpo}|${corsa.dito}|${tutti.length}`
+    const tutti = pezziDelloZaino(), chiave = `${corsa.mano}|${corsa.mancina}|${corsa.corpo}|${corsa.collo}|${corsa.dito}|${corsa.dito2}|${tutti.length}`
     if (chiave === visto.chiave) return
     const ora = { ...addossoDi(corsa), tutti, chiave }
     const utili = nuoviUtili(visto, ora)
@@ -587,9 +590,9 @@ export function pianiSani(tappa, quanti = 60) {
 // Un banco già pescato si rimette in discussione (Bottega.prepara) solo se l'eroe è salito di livello (o a discesa finita, quando i banchi ruotano): comprare un pezzo non basta
 export function allaBottega(roba, { finite = 0, eroe = undefined, seme = 1, crescita = null, spesa = 'il meglio', registro = null, scaffale = false, botteghe = null } = {}) {
   const b = new Bottega({ eroe, roba, finite, crescita, rnd: seminato(seme * 53 + 11), ...(botteghe || {}) })
-  // con lo scaffale si guardano solo i banchi che hanno qualcosa per questo eroe (l'incantatrice per chi porta bacchette o stoffa, i gioielli finché il dito è libero)
+  // con lo scaffale si guardano solo i banchi che hanno qualcosa per questo eroe (l'incantatrice per chi porta bacchette o stoffa, i gioielli finché c'è un dito o il collo libero)
   const mercanti = () => (scaffale ? ['armaiolo', 'incantatrice', 'rigattiere'].filter(chi => chi === 'armaiolo' ||
-    (chi === 'incantatrice' ? schedeDi(mercanteDi(chi), b.io).some(s => s.dove) : !b.dito)) : ['armaiolo', 'incantatrice', 'rigattiere'])
+    (chi === 'incantatrice' ? schedeDi(mercanteDi(chi), b.io).some(s => s.dove) : b.postoLibero('dito') || b.postoLibero('collo'))) : ['armaiolo', 'incantatrice', 'rigattiere'])
   const sigDelBanco = RISALITA.rivedi ? String(b.livelloEroe) : ''
   if (scaffale) for (const chi of mercanti()) if (b.ruota.includes(chi) || !b.scaffali[chi] || !botteghe || botteghe.sig !== sigDelBanco) b.prepara(chi)
   const compra = (chi, k) => {
@@ -615,8 +618,8 @@ export function allaBottega(roba, { finite = 0, eroe = undefined, seme = 1, cres
         if (registro) registro.venduto += b.gemme - prima
       }
   }
-  // al dito si mette la prima cosa che capita, come fa equipaggia: i gioielli non si confrontano su un numero
-  const migliora = k => !b.possiedo(k) && ((COSE[k].dove === 'dito' ? !b.dito : b.vaAddosso(k)) || scudoMeglio(b, k))
+  // ai posti liberi di dito e collo si mette la prima cosa che capita, come fa equipaggia: i gioielli non si confrontano su un numero
+  const migliora = k => !b.possiedo(k) && ((eGioiello(k) ? b.postoLibero(COSE[k].dove) : b.vaAddosso(k)) || scudoMeglio(b, k))
   const meglio = k => b.quantoCosta(k) <= b.gemme && migliora(k)
   const offerta = chi => (scaffale ? [...b.mercanzia(chi), ...b.rialzi(chi)] : b.mercanzia(chi))
   // le cure: la più grande che può pagare, finché c'è posto e non si tocca il tetto (nessun calcolo fino: chi sceglie meglio spende meglio)
@@ -633,7 +636,7 @@ export function allaBottega(roba, { finite = 0, eroe = undefined, seme = 1, cres
   if (spesa === 'pozioniPrima') comprePozioni(b.capienza - TASCHE_PER_I_PEZZI)
   for (let giro = 0; giro < 8; giro++) {
     // quanto migliora tutto (confronto: `meglio`, la difesa pesa il doppio); a pari, il più caro
-    const vale = k => (COSE[k].dove === 'dito' ? 1 : scudoMeglio(b, k) && !b.vaAddosso(k)
+    const vale = k => (eGioiello(k) ? 1 : scudoMeglio(b, k) && !b.vaAddosso(k)
       ? (COSE[k].dif || 0) * PESO_DELLA_DIFESA - b.attaccoMancino
       : b.confronto(k).meglio)
     const scelte = mercanti()

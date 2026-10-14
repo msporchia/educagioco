@@ -10,7 +10,7 @@ coi pezzi comuni `Cornice.vue`, `Addosso.vue`, `Casella.vue`, `Pannello.vue`,
 
 - **Una finestra da gioco di ruolo stretta in un telefono**: legno scuro e
   bordo d'oro con quattro angoli, disegnati in CSS e SVG. Dall'alto il
-  mercante (ritratto e nome), l'eroe armato con le quattro caselle intorno e
+  mercante (ritratto e nome), l'eroe armato con le sei caselle intorno (a sinistra scudo, corpo e collana, a destra arma e due anelli, tre per lato da 46 px) e
   i numeri accanto (vita, braccio, difesa e le gemme, sempre in vista), le
   linguette, la griglia, il pannello. Scorre solo la griglia. Provato: un
   elenco di voci col bordino, sembrava un modulo da compilare.
@@ -60,7 +60,9 @@ coi pezzi comuni `Cornice.vue`, `Addosso.vue`, `Casella.vue`, `Pannello.vue`,
   - **Una mano o due si dice chiaro quando cambiano**: «A due mani: lo scudo
     borchiato torna nello zaino» (e la sua difesa si perde nel netto), «A una
     mano: l'altra mano resta libera per uno scudo».
-  - **Il posto giusto**: un anello si confronta col gioiello che hai; un pezzo a
+  - **Il posto giusto**: un anello si confronta con quello dei due che rende meno, una collana con la collana; con i due anelli pieni sotto «Addosso»
+    c'è il tasto «🔄 l'altro anello» (`[data-azione="altro-anello"]`, solo nello zaino), che porta il confronto sull'altro dito e accende l'altra casella
+    ([gioielli.md](gioielli.md)); un pezzo a
     due mani con arma **e** scudo insieme; un'arma nella mano debole vale
     metà braccio, e lo dice il numero. Un pezzo che l'eroe non porta, o che
     lo scudo non può affiancare a un'arma a due mani, non ha confronto: il
@@ -114,7 +116,7 @@ valore in `data-n`), `[data-due-mani]`, `[data-storia]`,
 `[data-gemme-bottega]`; sulla casella `data-ruolo="salto|sogno"`; nello zaino `[data-zaino]`, `[data-tasca]` (con
 `data-cosa`), `[data-azione="usa|butta|riponi|chiudi"]`, `[data-torcia-zaino]`,
 `[data-ancora-no]` (la nota 🔒 di un pezzo che l'eroe porta ma non regge ancora; la ✋ `[data-non-puoi]` è per quello che la classe non porta);
-in tutte e due `[data-casella="<dove>"]` (con `data-cosa`) e `[data-chiudi]`.
+in tutte e due `[data-casella="<dove>"]` (`mano`, `mancina`, `corpo`, `collo`, `dito`, `dito2`; con `data-cosa`) e `[data-chiudi]`.
 `compraNellaBottega`, `vendiNellaBottega`, `riacquistaNellaBottega` e `allaLinguettaDi` in
 `test/aiuto/browser.mjs`; `unita/sotterraneo-roba` (i numeri del confronto abilità per abilità; quello che
 non si mostra, le linguette; il resto, i banchi, sta in [bottega.md](bottega.md)),

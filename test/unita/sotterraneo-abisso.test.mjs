@@ -266,7 +266,7 @@ controlla('l\'abisso non ha guasti', guasti.length === 0, guasti.join(' · '))
   const c = new Corsa(L_ABISSO, { seme: 31, rnd: seminato(31), eroe: 'cavaliere' })
   c.mano = 'spadone'
   c.corpo = 'corazza'
-  c.dito = 'amuleto-rosso'
+  c.collo = 'amuleto-rosso'
   c.zaino = ['pozione', 'pozione-grande', 'chiave']
   c.accendi('torcia')
   c.accendi('torcia')       // una accesa, una alla cintura
@@ -277,7 +277,7 @@ controlla('l\'abisso non ha guasti', guasti.length === 0, guasti.join(' · '))
   c.riprendi()
   uguale('l\'arma resta in pugno', c.mano, 'spadone')
   uguale('l\'armatura resta addosso', c.corpo, 'corazza')
-  uguale('e il gioiello al dito', c.dito, 'amuleto-rosso')
+  uguale('e il gioiello al collo', c.collo, 'amuleto-rosso')
   uguale('le sei tasche si svuotano', c.zaino.length, 0)
   uguale('le gemme si dimezzano, non si azzerano', c.gemme, 20)
   /* la torcia non è nello zaino: brucia sulla corsa, e le altre

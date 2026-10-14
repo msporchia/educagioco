@@ -1,7 +1,7 @@
 // I mercanti della terra di sopra: chi vende cosa, e quanta roba ha sul banco secondo le discese finite. Dove
 // stanno sulla mappa lo dice il foglietto (dati/terra-mappa.js, MERCANTI); come si compra motore/bottega.js.
 // Il perché: docs/sotterraneo/bottega.md, "I mercanti di sopra".
-import { COSE, CURE_IN_VENDITA, IN_VENDITA, baseDi } from './cose.js'
+import { COSE, CURE_IN_VENDITA, IN_VENDITA, baseDi, tipoDellaCasella } from './cose.js'
 import { CAMPAGNA, QUANTE_TAPPE } from './campagna.js'
 import { portaLa } from './eroi.js'
 
@@ -43,12 +43,12 @@ export const MERCANTI = [
 
   // l'unico che compra: tre botteghe che comprano farebbero di ogni banco un posto dove svuotare le tasche
   { chiave: 'rigattiere', nome: 'Il mercante', em: '🧺', sprite: 'rigattiere',
-    dice: 'Anelli, amuleti, roba che luccica. E quello che non ti serve, te lo compro io.',
-    schede: [{ chiave: 'gioielli', nome: 'Gioielli', em: '💍', dove: ['dito'], usa: ['porta'] },
+    dice: 'Anelli, collane, amuleti, roba che luccica. E quello che non ti serve, te lo compro io.',
+    schede: [{ chiave: 'gioielli', nome: 'Gioielli', em: '💍', dove: ['dito', 'collo'], usa: ['porta'] },
              { chiave: 'vendi', nome: 'Vendi', em: '💎', vendi: true },
              { chiave: 'riacquista', nome: 'Riacquista', em: '🔄', riacquista: true }],
-    vende: { dove: ['dito'], chiavi: ['chiave'] }, sempre: [], compra: true,
-    passo: ['dito'], altre: 1 },
+    vende: { dove: ['dito', 'collo'], chiavi: ['chiave'] }, sempre: [], compra: true,
+    passo: ['collo', 'dito', 'dito2'], altre: 1 },
 ]
 
 export const mercanteDi = chiave => MERCANTI.find(m => m.chiave === chiave) || null
@@ -94,7 +94,7 @@ export function guastiDeiMercanti() {
       g.push(`${m.chiave}: le righe vanno date per 0..${QUANTE_TAPPE} discese finite`)
     for (let i = 1; i < (m.righe || []).length; i++)
       if (m.righe[i] < m.righe[i - 1]) g.push(`${m.chiave}: con più discese finite ha meno roba`)
-    for (const c of m.passo || []) if (!(m.vende.dove || []).includes(c)) g.push(`${m.chiave}: porta il passo su ${c}, ma non lo vende`)
+    for (const c of m.passo || []) if (!(m.vende.dove || []).includes(tipoDellaCasella(c))) g.push(`${m.chiave}: porta il passo su ${c}, ma non lo vende`)
     for (const k of m.sempre) if (!COSE[k] || !COSE[k].prezzo) g.push(`${m.chiave}: "${k}" sempre sul banco, ma non si vende`)
     // ogni cosa del banco sta sotto una linguetta, e quella delle tasche ce l'ha solo chi compra
     if (!m.schede || !m.schede.some(s => !s.vendi && !s.riacquista)) g.push(`${m.chiave}: senza linguette`)

@@ -174,7 +174,7 @@ export function guastiDelleMissioni(chiDaFuori = []) {
     const p = m.premio || {}
     if (!(p.gemme > 0) && !(p.cosa && COSE[p.cosa])) g.push(`${m.id}: senza premio, o con un premio che non esiste`)
     if (p.gemme > 40) g.push(`${m.id}: ${p.gemme} gemme, è un passo della storia e non un vantaggio`)
-    if (p.cosa && COSE[p.cosa] && COSE[p.cosa].dove && COSE[p.cosa].dove !== 'dito')
+    if (p.cosa && COSE[p.cosa] && COSE[p.cosa].dove && !['dito', 'collo'].includes(COSE[p.cosa].dove))
       g.push(`${m.id}: un premio da impugnare o indossare salterebbe un passo della storia (solo gioielli)`)
     // le monete sono le domande in più (il conto sta in unita/sotterraneo-missioni): intere, poche, e solo dove si combatte
     if (p.monete != null && !(Number.isInteger(p.monete) && p.monete >= 1 && p.monete <= 10))

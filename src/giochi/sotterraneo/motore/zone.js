@@ -6,7 +6,7 @@ import { CAMPAGNA } from '../dati/campagna.js'
 import { ORDINE_DELLE_ZONE, NASCITA, LARGA, MARGINE, GIRO, voltaDi, voltoDi, ANNUNCIO_IN_CODA, PRIMA_NOTIZIA }
   from '../dati/zone.js'
 import { LIVELLI_ATTESI, POZIONI_ATTESE } from '../dati/storia.js'
-import { COSE, chiaveDelPezzo } from '../dati/cose.js'
+import { COSE, CASELLE, chiaveDelPezzo } from '../dati/cose.js'
 import { eroeDi } from '../dati/eroi.js'
 import { crescitaA } from './crescita.js'
 import { robaAttesa } from './storia.js'
@@ -130,7 +130,7 @@ function aLivelloSempre(k, L) {
 export function robaAttesaA(eroe, L, { pozioni = true } = {}) {
   const r = robaAttesa(eroe, CAMPAGNA.length, { pozioni: false })
   const P = Math.max(1, L - 1)
-  for (const c of ['mano', 'mancina', 'corpo', 'dito']) if (r[c]) r[c] = aLivelloSempre(r[c], P)
+  for (const c of CASELLE) if (r[c]) r[c] = aLivelloSempre(r[c], P)
   r.zaino = pozioni ? [...POZIONI_ATTESE[POZIONI_ATTESE.length - 1]] : []
   return r
 }

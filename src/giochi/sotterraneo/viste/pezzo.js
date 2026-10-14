@@ -20,7 +20,8 @@ export function tipoDi(c) {
   if (c.dove === 'mano') return `${FAMIGLIA[c.famiglia] || 'Arma'} · ${c.mani === 2 ? 'a due mani' : 'a una mano'}`
   if (c.dove === 'mancina') return 'Scudo'
   if (c.dove === 'corpo') return 'Armatura'
-  if (c.dove === 'dito') return 'Gioiello'
+  if (c.dove === 'dito') return 'Anello'
+  if (c.dove === 'collo') return 'Collana'
   if (c.usa === 'cura') return 'Pozione'
   if (c.usa === 'cresci') return 'Elisir'
   if (c.usa === 'energia') return 'Pozione dell\'energia'
@@ -98,7 +99,9 @@ export const POSTO = {
   mano: { em: '⚔️', dice: 'nessuna arma' },
   mancina: { em: '🛡️', dice: 'nessuno scudo' },
   corpo: { em: '🦺', dice: 'nessuna armatura' },
-  dito: { em: '💍', dice: 'nessun gioiello' },
+  collo: { em: '📿', dice: 'nessuna collana' },
+  dito: { em: '💍', dice: 'nessun anello' },
+  dito2: { em: '💍', dice: 'nessun anello' },
 }
 
 // «meglio in 2, peggio in 1», o «uguale»

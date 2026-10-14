@@ -292,15 +292,15 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
   uguale('la spada la sostituisce', c.mano, 'spada')
   controlla('e la corta torna nello zaino', c.zaino.includes('spada-corta'), c.zaino.join())
 
-  /* la terza casella: al dito ci va una cosa che non picchia, e il
+  /* la collana: ci va una cosa che non picchia, e il
      conto di quanto si regge la segue in tutte e due i versi */
   c.zaino = ['amuleto-rosso']
   const tetto = c.vitaMax
   c.usa(0)
-  uguale('l\'amuleto va al dito', c.dito, 'amuleto-rosso')
+  uguale('l\'amuleto va al collo', c.collo, 'amuleto-rosso')
   uguale('e alza il tetto della vita', c.vitaMax, tetto + COSE['amuleto-rosso'].vita)
   c.vita = c.vitaMax
-  c.riponi('dito')
+  c.riponi('collo')
   uguale('togliendolo il tetto torna giù', c.vitaMax, tetto)
   controlla('e la vita non resta sopra il suo massimo', c.vita <= c.vitaMax, `${c.vita}/${c.vitaMax}`)
 }

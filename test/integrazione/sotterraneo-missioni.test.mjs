@@ -202,7 +202,7 @@ const a = await avventura()
 uguale('consegnata', a.missioni?.rosicchione, 'consegnata')
 // a tono col livello dell'eroe (amuleto-azzurro@3): si guarda la base
 const base = k => (k || '').split('@')[0]
-controlla('il gioiello va addosso o in tasca', base(a.roba?.dito) === 'amuleto-azzurro' || (a.roba?.zaino || []).map(base).includes('amuleto-azzurro'), JSON.stringify(a.roba))
+controlla('il gioiello va addosso o in tasca', base(a.roba?.collo) === 'amuleto-azzurro' || (a.roba?.zaino || []).map(base).includes('amuleto-azzurro'), JSON.stringify(a.roba))
 uguale('le gemme non cambiano (il premio è il gioiello)', a.roba?.gemme, gemmePrima)
 uguale('le monete: il regalo, le domande in più', (await leggiProfilo(page)).coins, monete + ROSICCHIONE.premio.monete)
 for (let n = 0; n < 6 && !(await page.locator('[data-riga][data-premio]').count()); n++) {

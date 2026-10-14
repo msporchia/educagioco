@@ -1035,12 +1035,12 @@ export class Corsa extends Corredo {
 
   // una tasca toccata apre le sue azioni invece di eseguirne una: usa/butta/riponi. Il verbo lo sceglie chi
   // disegna dai dati (dove, usa): il motore non scrive "bevo" da nessuna parte
-  usa(i) {
+  usa(i, dove = null) {
     const k = this.zaino[i]
     if (!k) return null
     const c = COSE[k]
     if (c.dove) {
-      const e = this.indossaDallaTasca(i)
+      const e = this.indossaDallaTasca(i, dove)
       this.vita = Math.min(this.vita, this.vitaMax)   // un amuleto tolto per un altro abbassa il tetto
       return e
     }

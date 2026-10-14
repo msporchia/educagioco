@@ -50,7 +50,7 @@ la roba con livello e rarità: [rarita.md](rarita.md).
 
 ## Addosso e in tasca
 
-- **Addosso: la mano, la mano debole, il corpo, il dito. In tasca: sei
+- **Addosso: la mano, la mano debole, il corpo, la collana e due anelli. In tasca: sei
   posti** (`TASCHE` in `dati/mondo.js`). Le tasche sono il limite: scegliere
   cosa lasciare per terra è il bivio fatto con le mani.
 - **Le pozioni uguali stanno in una tasca sola** (l'utente, 9 ottobre: sei posti
@@ -68,8 +68,9 @@ la roba con livello e rarità: [rarita.md](rarita.md).
   stesso** — la regola dei due rami del castello: cambia la forma, mai la
   quantità. Le armi a una mano ci sono a ogni gradino per ogni famiglia che le ha: la sciabola, la scure e la mannaia
   si sono aggiunte per le strade con lo scudo ([strade.md](strade.md)).
-- **Al dito va l'unica cosa che non picchia**: vedere più lontano, tornare su
-  con più gemme, reggere un colpo in più. Ce n'è uno, quindi si sceglie.
+- **Al dito e al collo va quello che non picchia**: vedere più lontano, tornare su
+  con più gemme, reggere un colpo in più. I posti sono tre ([gioielli.md](gioielli.md)), quindi si sceglie
+  e si combina.
 - **Nello zaino le caselle stanno intorno alla figura**, con in pugno l'arma
   vera.
 
@@ -137,8 +138,8 @@ la roba con livello e rarità: [rarita.md](rarita.md).
   foglio col confronto: tre tocchi per un sì scontato.
 - **Peggiore o uguale va in tasca**, e si confronta nello zaino. Quello che
   si toglie **non si perde mai**: torna in tasca o prende il posto per terra
-  di quello raccolto. I gioielli restano fuori dall'automatismo quando il dito
-  è occupato: fra due anelli c'è un modo di giocare, non un «più forte».
+  di quello raccolto. I gioielli restano fuori dall'automatismo quando i posti
+  del loro tipo sono pieni: fra due anelli c'è un modo di giocare, non un «più forte».
 - **Nello zaino una tasca toccata sceglie e basta**: sotto compare il
   pannello col confronto e due tasti larghi, «Bevi» (o «Indossa») e «Butta»
   ([La bottega e lo zaino](#la-bottega-e-lo-zaino)).

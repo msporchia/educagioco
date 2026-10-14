@@ -26,6 +26,13 @@ export const RICARICA_DEL_BASTONE = 50
 
 export const STANZE_TORCIA = 12
 
+// Dove si indossa: `dove` di un pezzo è il tipo di posto (dito = anello, collo = collana), le caselle addosso sono sei e due
+// anelli stanno sulle due del dito (docs/sotterraneo/roba.md, «Addosso e in tasca»). Un salvataggio di prima ha un solo `dito`
+export const TIPI_DI_POSTO = ['mano', 'mancina', 'corpo', 'dito', 'collo']
+export const CASELLE = ['mano', 'mancina', 'corpo', 'collo', 'dito', 'dito2']
+export const CASELLE_DEL_TIPO = { mano: ['mano'], mancina: ['mancina'], corpo: ['corpo'], collo: ['collo'], dito: ['dito', 'dito2'] }
+export const tipoDellaCasella = c => (c === 'dito2' ? 'dito' : c)
+
 // `mani: 2` occupa anche la sinistra (bastone, arco, spadone); leggere si sdoppiano, pesanti no
 // `genere: 'f'` sulle voci femminili: il nome di un pezzo magico si accorda («Spada fiammeggiante», «Arco affilato»)
 const arma = (famiglia, grado, nome, sprite, dice, mani = 1, genere = 'm') => ({
@@ -74,15 +81,15 @@ const BASI = {
           dif: 1, vita: 4, prezzo: 20,
           dice: 'Para poco, ma ti tiene in piedi quattro punti di vita più a lungo.' },
 
-  'amuleto-azzurro': { em: '💙', nome: 'Amuleto azzurro', sprite: 'amuleto-azzurro', dove: 'dito',
+  'amuleto-azzurro': { em: '💙', nome: 'Amuleto azzurro', sprite: 'amuleto-azzurro', dove: 'collo',
                        vita: 3, prezzo: 9, dice: 'Tre punti di vita in più, finché lo porti.' },
   'anello-ambra': { em: '💍', nome: 'Anello d\'ambra', sprite: 'anello-ambra', dove: 'dito',
                     luce: 2.5, prezzo: 14, dice: 'Al buio vedi molto più lontano.' },
   'anello-verde': { em: '💚', nome: 'Anello verde', sprite: 'anello-verde', dove: 'dito',
                     gemme: 0.5, prezzo: 16, dice: 'Ogni gemma che raccogli ne vale una e mezza.' },
-  'amuleto-rosso': { em: '❤️', nome: 'Amuleto rosso', sprite: 'amuleto-rosso', dove: 'dito',
+  'amuleto-rosso': { em: '❤️', nome: 'Amuleto rosso', sprite: 'amuleto-rosso', dove: 'collo',
                      vita: 6, prezzo: 18, dice: 'Sei punti di vita in più, finché lo porti.' },
-  medaglione: { em: '🥇', nome: 'Medaglione', sprite: 'medaglione', dove: 'dito',
+  medaglione: { em: '🥇', nome: 'Medaglione', sprite: 'medaglione', dove: 'collo',
                 dif: 1, prezzo: 15, dice: 'Para un pochino, come mezza corazza.' },
 
   // le armi col nome proprio stanno un gradino sopra la scala, non dentro: portano un tratto, non più braccio
@@ -124,11 +131,11 @@ const BASI = {
   'scudo-teschio': { em: '💀', nome: 'Scudo del teschio', sprite: 'scudo-teschio', dove: 'mancina',
                      dif: 3, prezzo: 34, dice: 'Il più duro che ci sia. Non fa altro, e basta così.' },
 
-  'amuleto-osso': { em: '🦴', nome: 'Amuleto d\'ossa', sprite: 'ossa', dove: 'dito',
+  'amuleto-osso': { em: '🦴', nome: 'Amuleto d\'ossa', sprite: 'ossa', dove: 'collo',
                     dif: 1, vita: 4, prezzo: 24,
                     dice: 'Para un pochino, e ti tiene in piedi un po\' di più.' },
   'teschio-cercatore': { em: '💀', nome: 'Teschio del cercatore', sprite: 'amuleto-teschio',
-                         dove: 'dito', gemme: 1, prezzo: 32,
+                         dove: 'collo', gemme: 1, prezzo: 32,
                          dice: 'Ogni gemma che raccogli vale il doppio.' },
 
   // le armi dei mostri grossi (dati/pezzi.js, DEI_GROSSI): basi senza famiglia, che non si vendono e non si pescano
@@ -219,7 +226,7 @@ function componi(k) {
   if (b.dove === 'mano') c.att = (c.att || 0) + Math.floor((liv - 1) / ATT_OGNI_LIVELLI) +
     (b.mani === 2 ? PESO_DELLA_DIFESA * Math.floor((liv - 1) / DIF_OGNI_LIVELLI) : 0)
   else if (b.dove === 'mancina' || b.dove === 'corpo') c.dif = (c.dif || 0) + Math.floor((liv - 1) / DIF_OGNI_LIVELLI)
-  else if (b.dove === 'dito' && b.vita) c.vita = b.vita + Math.floor((liv - 1) / VITA_OGNI_LIVELLI)
+  else if ((b.dove === 'dito' || b.dove === 'collo') && b.vita) c.vita = b.vita + Math.floor((liv - 1) / VITA_OGNI_LIVELLI)
   const f = RARITA[rarita].forza
   for (const a of abilita) {
     const v = ABILITA_DEI_PEZZI[a].valore(liv, f)
@@ -385,14 +392,14 @@ export function guastiDelleCose(nomi = null) {
     if (!c.em || !c.nome) g.push(`${k}: senza emoji o senza nome`)
     if (!c.dice) g.push(`${k}: non dice cosa fa, e il mercante lo mostra`)
     if (!c.dove && !c.usa) g.push(`${k}: né si indossa né si usa, quindi non fa niente`)
-    if (c.dove && !['mano', 'mancina', 'corpo', 'dito'].includes(c.dove)) g.push(`${k}: si indossa su "${c.dove}"?`)
+    if (c.dove && !TIPI_DI_POSTO.includes(c.dove)) g.push(`${k}: si indossa su "${c.dove}"?`)
     if (c.dove === 'mancina' && !c.dif) g.push(`${k}: nella mano debole, ma non para`)
     if (c.dove === 'corpo' && !c.dif) g.push(`${k}: si mette addosso, ma non para`)
     if (c.dove && !c.sprite) g.push(`${k}: si indossa, ma non ha un pezzo disegnato`)
     if (c.usa === 'cura' && !c.cura && !c.tutta) g.push(`${k}: cura zero`)
     if (c.usa === 'luce' && !(c.stanze > 0)) g.push(`${k}: fa luce, ma non dice per quante stanze`)
-    if (c.dove === 'dito' && !(c.luce || c.gemme || c.vita || c.dif))
-      g.push(`${k}: al dito, ma non fa niente`)
+    if ((c.dove === 'dito' || c.dove === 'collo') && !(c.luce || c.gemme || c.vita || c.dif))
+      g.push(`${k}: al dito o al collo, ma non fa niente`)
   }
   // le quattro famiglie devono valere lo stesso, a parità di mani: chi ne chiede due picchia quanto la mano che perde in più, non meno né di più
   for (const grado of [1, 2, 3]) {

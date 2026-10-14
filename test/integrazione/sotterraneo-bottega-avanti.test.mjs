@@ -23,7 +23,7 @@ const mago = EROI.find(e => e.chiave === 'mago')
 const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser)
 await azzera(page)
-const roba = { v: 1, gemme: 99, zaino: [], mano: 'verga', mancina: null, corpo: 'saio', dito: 'amuleto-azzurro',
+const roba = { v: 1, gemme: 99, zaino: [], mano: 'verga', mancina: null, corpo: 'saio', collo: 'amuleto-azzurro',
                torcia: 0, torce: 0 }
 const stelle = { 0: 3, 1: 3, 2: 3 }
 await semina(page, {
