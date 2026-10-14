@@ -33,6 +33,7 @@ const props = defineProps({
   puntiAbilita: { type: Number, default: 0 },
   missioni: { type: Number, default: 0 },     // le missioni da consegnare, sulla scheda
   costoTasca: { type: Number, default: null },   // quanto costa una tasca in più; null: più di così non si compra
+  cure: { type: Object, default: null },      // { n, max }: le pozioni di cura in tasca e il tetto (al più otto, di ogni stadio)
 })
 const emit = defineEmits(['usa', 'butta', 'riponi', 'chiudi', 'fuori', 'scheda', 'tasca'])
 
@@ -94,6 +95,8 @@ const note = computed(() => {
     return [{ em: '✋', testo: frase + (c.prezzo ? ' Il mercante te lo compra.' : ''), tono: 'ambra', dato: 'data-non-puoi' }]
   }
   if (c.prova && c.prova.bloccata) return [{ em: '✋', testo: `${props.mano.nome} vuole tutte e due le mani.`, tono: 'ambra' }]
+  // una cura dice il tetto per esteso (docs/sotterraneo/roba.md, «Le pozioni»)
+  if (c.usa === 'cura' && props.cure && props.cure.n >= props.cure.max) return [{ em: '🧪', testo: `Al massimo ${props.cure.max} pozioni in tasca: per portarne altre, bevine o buttane.`, tono: 'tenue', dato: 'data-cure-nota' }]
   return []
 })
 const polso = computed(() => (props.vita / props.vitaMax > 0.6 ? '#4fce7c' : props.vita / props.vitaMax > 0.3 ? '#f0b429' : '#e0432f'))
@@ -106,6 +109,9 @@ const polso = computed(() => (props.vita / props.vitaMax > 0.6 ? '#4fce7c' : pro
     <p class="sot-zaino-dove em" data-zaino-dove>
       <template v-if="sopra">🏘️ al villaggio</template>
       <template v-else>🪜 piano {{ piano }}<template v-if="piani">/{{ piani }}</template></template>
+      <!-- le pozioni di cura contano tutte insieme: al più otto, e il pannello di una pozione lo dice per esteso -->
+      <span v-if="cure" class="sot-cure-riga" :class="{ 'sot-al-tetto': cure.n >= cure.max }" data-cure-zaino :data-n="cure.n"
+            :title="`al massimo ${cure.max} pozioni`">· 🧪 <b>{{ cure.n }}/{{ cure.max }}</b></span>
     </p>
 
     <Addosso :eroe="eroe" :mano="mano" :mancina="mancina" :corpo="corpo" :dito="dito"

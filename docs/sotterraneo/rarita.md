@@ -131,6 +131,8 @@ sulle basi femminili):
 
 ## L'elisir del toro
 
+Non è l'ampolla della vita ([roba.md](roba.md#le-pozioni)), che rimette tutta la vita una volta e cade più spesso.
+
 Tre punti di vita massima **per sempre** (`crescita.elisir`, come le tasche comprate: sopravvive a fine discesa, svenimenti
 e zone; un salvataggio di prima vale zero; la pagina dell'eroe scrive «🐂 +3 vita, per sempre»). Un buff definitivo è un
 oggetto rarissimo (l'utente, 13 ottobre): **non lo vende nessuno** (`rarissimo` in `dati/cose.js`, fuori da `IN_VENDITA`),

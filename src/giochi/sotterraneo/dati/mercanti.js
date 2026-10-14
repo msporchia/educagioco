@@ -1,7 +1,7 @@
 // I mercanti della terra di sopra: chi vende cosa, e quanta roba ha sul banco secondo le discese finite. Dove
 // stanno sulla mappa lo dice il foglietto (dati/terra-mappa.js, MERCANTI); come si compra motore/bottega.js.
 // Il perché: docs/sotterraneo/bottega.md, "I mercanti di sopra".
-import { COSE, CURE, IN_VENDITA, baseDi } from './cose.js'
+import { COSE, CURE_IN_VENDITA, IN_VENDITA, baseDi } from './cose.js'
 import { CAMPAGNA, QUANTE_TAPPE } from './campagna.js'
 import { portaLa } from './eroi.js'
 
@@ -38,7 +38,7 @@ export const MERCANTI = [
     dice: 'Pozioni per chi sanguina, torce per chi ha paura del buio. Laggiù servono tutte e due.',
     schede: [{ chiave: 'pozioni', nome: 'Pozioni', em: '🧪', usa: ['cura', 'cresci'] },
              { chiave: 'torce', nome: 'Torce', em: '🔥', usa: ['luce'] }],
-    vende: { chiavi: [] }, sempre: [...CURE, 'torcia'],
+    vende: { chiavi: [] }, sempre: [...CURE_IN_VENDITA, 'torcia'],
     righe: [0, 0, 0, 0, 0, 0, 0, 0] },
 
   // l'unico che compra: tre botteghe che comprano farebbero di ogni banco un posto dove svuotare le tasche

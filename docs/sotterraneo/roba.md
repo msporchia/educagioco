@@ -54,7 +54,7 @@ la roba con livello e rarità: [rarita.md](rarita.md).
   cosa lasciare per terra è il bivio fatto con le mani.
 - **Le pozioni uguali stanno in una tasca sola** (l'utente, 9 ottobre: sei posti
   sono pochi con tutto quello che cade): «Pozione ×3» è un posto, e così si portano
-  più tipi (la rossa per la vita, la blu per l'energia). **Solo le pozioni**
+  più tipi (le cure per la vita, la blu per l'energia), le cure al più otto ([Le pozioni](#le-pozioni)). **Solo le pozioni**
   (`impilabile` in `motore/corredo.js`: cure, energia, l'elisir); ogni altro pezzo, anche
   due spade uguali, ha il suo posto; le torce non vanno in tasca. Lo zaino resta una lista di
   chiavi, una per pezzo: i posti si contano e si mostrano raggruppando (`tascheDello`).
@@ -146,6 +146,23 @@ la roba con livello e rarità: [rarita.md](rarita.md).
   (24–47), rossa (48 e più) (`SOGLIE_DELLE_GEMME`, `dati/tessere.js`). Il numero cresce con la discesa e col livello (`valoreDelLivello`), quindi in fondo sono
   quasi tutte rosse. Le due pozioni dipinte che non facevano niente (`pozione-nera`, `pozione-viola`: la viola è il doppione dell'Ampolla, e di
   stati da curare l'eroe non ne ha) sono state tolte.
+
+## Le pozioni
+
+Cinque cure, ognuna con la sua cura e il suo prezzo **fissi**: non crescono col livello (l'utente, 14 ottobre: «già 18 è una cura ridicola
+se ho 50 vite»; si aggiungono stadi più grandi man mano che l'eroe sale) e a ogni stadio costa di più ogni punto di vita, così la grande
+non è mai la più conveniente (`guastiDelleCose`). Le chiavi `pozione-piccola`, `pozione`, `pozione-grande` sono rimaste (id di salvataggio).
+
+| | cura | prezzo, a livello 1 · 6 · 12 · 20 | gemme per punto | sul banco della guaritrice | vita dell'eroe atteso lì |
+|---|---|---|---|---|---|
+| 🧪 Boccetta | 8 | 8 | 1,0 | da subito | 13–20 |
+| 🧪 Pozione | 14 | 21 | 1,5 | dopo 1 discesa finita | 22–30 |
+| 🍷 Ampolla | 30 | 75 | 2,5 | dopo 3 | 44–56 |
+| 🍷 Ampolla maggiore | 50 | 200 | 4,0 | dopo 5 | 53–66 |
+| 🍷 Ampolla della vita | tutta la vita | non si compra (rivenduta 60) | — | mai: si trova | — |
+
+Il resto (il rapporto fra una spada e le pozioni, quando arrivano le grandi, l'ampolla della vita, il tetto di otto, la scelta di quale bere, il
+giocatore finto): [pozioni.md](pozioni.md).
 
 ## La torcia si accende da sé, e finisce
 

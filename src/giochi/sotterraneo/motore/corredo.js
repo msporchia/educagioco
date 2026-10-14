@@ -2,11 +2,10 @@
 // eroe), e resta fra una discesa e l'altra (docs/sotterraneo/la-roba-che-resta.md). Qui
 // le regole che valgono sotto e sopra: cosa si porta, dove va un'arma, cosa vale, come si compra e si vende.
 // La discesa (motore/corsa.js) e i mercanti di sopra (motore/bottega.js) la estendono; gira in Node.
-import { TASCHE, TASCHE_EXTRA_MAX, prezzoTasca } from '../dati/mondo.js'
+import { TASCHE, TASCHE_EXTRA_MAX, POZIONI_MASSIME, prezzoTasca } from '../dati/mondo.js'
 import { eroeDi, DI_PARTENZA, portaLa, nonLaPorta, FAMIGLIE, requisitoDi } from '../dati/eroi.js'
 import { COSE, STANZE_TORCIA, aLivello, PESO_DELLA_DIFESA } from '../dati/cose.js'
 import { GEMME_PER_FORTUNA, ATT_PER_PUNTO, SCHIVATA_PER_DESTREZZA, ENERGIA_PER_INTELLIGENZA } from '../dati/livelli.js'
-import { valoreDelLivello } from '../dati/pezzi.js'
 import { rileggiCrescita, piuDellaCrescita, caratteristica, chiTrattiene, puntiDaDare, riassegna, costoDelRiassegnare, trattoDegliElisir,
          ELISIR_MAX } from './crescita.js'
 import { CARATTERISTICHE } from '../dati/livelli.js'
@@ -46,6 +45,9 @@ export function tascheDello(zaino) {
   return fuori
 }
 export const postiDello = zaino => tascheDello(zaino).length
+// le cure di ogni stadio che si hanno in tasca, dalla più piccola alla più grande: [{ k, n, i }] (`i`: la prima nella lista)
+export const eCura = k => !!(COSE[k] && COSE[k].usa === 'cura')
+export const curePerTipo = zaino => tascheDello(zaino).filter(t => eCura(t.k))
 
 export const ROBA_VUOTA = () => ({
   v: VERSIONE_ROBA, gemme: 0, zaino: [], mano: null, mancina: null, corpo: null, dito: null,
@@ -272,12 +274,18 @@ export class Corredo {
   // una torcia nuova: le stanze di sempre, e quelle in più dei pezzi ⏳
   get stanzeTorcia() { return STANZE_TORCIA + this.addosso('torcia') }
 
-  // quanto cura una pozione: cresce col livello dell'eroe (un decimo a livello), e coi pezzi 🧪
+  // quanto cura una pozione: il suo numero fisso (la tutta rimette tutta la vita), più quel che dà il pezzo 🧪
   curaDi(k) {
     const c = COSE[k]
-    if (!c || !c.cura) return 0
-    return Math.round(c.cura * (1 + 0.1 * (this.livelloEroe - 1)) * (1 + this.addosso('pozioni') / 100))
+    if (!c || !(c.cura || c.tutta)) return 0
+    return Math.round((c.tutta ? (this.vitaMax ?? this.vitaConLaRoba) : c.cura) * (1 + this.addosso('pozioni') / 100))
   }
+
+  // al più POZIONI_MASSIME cure in tasca, di ogni stadio (docs/sotterraneo/roba.md, «Le pozioni»)
+  get pozioniDiCura() { return this.zaino.filter(eCura).length }
+  get alTettoDelleCure() { return this.pozioniDiCura >= POZIONI_MASSIME }
+  // la riga di chi si vede dire di no: lo zaino pieno, o il tetto delle cure
+  perchéNonCiSta(k) { return eCura(k) && this.alTettoDelleCure ? `⚠️ al massimo ${POZIONI_MASSIME} pozioni` : '⚠️ lo zaino è pieno' }
 
   // La pagina dell'eroe: le quattro caratteristiche, quanto valgono e cosa cambierebbe dando un punto (prima → dopo):
   // l'attacco se è la caratteristica dell'arma in mano, la difesa quando la forza arriva al punto che la alza, la vita, la
@@ -411,7 +419,7 @@ export class Corredo {
     return true
   }
   // c'è posto per `k`? Una pozione uguale a una che c'è già ci sta sempre
-  cista(k) { return this.postiUsati([...this.zaino, k]) <= this.capienza }
+  cista(k) { return !(eCura(k) && this.alTettoDelleCure) && this.postiUsati([...this.zaino, k]) <= this.capienza }
 
   // in tasca se c'è posto, se no dove dice nonCiSta
   inTasca(k) {
@@ -583,12 +591,10 @@ export class Corredo {
     return c && c.prezzo ? Math.max(1, Math.floor(this.prezzoDi(k) / 2)) : 0
   }
 
-  // il prezzo pieno: un pezzo lo porta scritto (livello e rarità, dati/cose.js); una cura costa di più quanto più
-  // cura, cioè col livello dell'eroe
+  // il prezzo pieno: un pezzo lo porta scritto (livello e rarità, dati/cose.js), una cura ha il suo prezzo fisso
   prezzoDi(k) {
     const c = COSE[k]
-    if (!c || !c.prezzo) return 0
-    return c.usa === 'cura' ? Math.round(c.prezzo * valoreDelLivello(this.livelloEroe)) : c.prezzo
+    return c && c.prezzo ? c.prezzo : 0
   }
 
   // una cosa entrata adesso (comprata): addosso se è meglio, se no in tasca; la torcia si accende o va alla cintura
@@ -624,7 +630,7 @@ export class Corredo {
     if (c.dove && !this.porta(k)) { this.dillo(this.perchéNo(k)); return { che: 'niente' } }
     const costa = this.quantoCosta(k)
     if (this.gemme < costa) return { che: 'niente' }
-    if (this.nonCiStarebbe(k)) { this.dillo('⚠️ lo zaino è pieno'); return { che: 'pieno' } }
+    if (this.nonCiStarebbe(k)) { this.dillo(this.perchéNonCiSta(k)); return { che: 'pieno' } }
     this.gemme -= costa
     if (scorta) banco.roba.splice(banco.roba.indexOf(k), 1)   // il pescato è unico e se ne va; una cura no
     return this.prendi(k)
@@ -634,6 +640,7 @@ export class Corredo {
   quantoCosta(k) { const c = COSE[k]; return c && c.prezzoAcquisto ? c.prezzoAcquisto : this.prezzoDi(k) }
 
   nonCiStarebbe(k) {
+    if (eCura(k) && this.alTettoDelleCure) return true
     const prova = this.copia()
     prova.prendi(k)
     return prova.postiUsati() > this.capienza

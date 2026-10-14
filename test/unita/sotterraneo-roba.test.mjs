@@ -9,8 +9,8 @@
    `node test/esegui.mjs sotterraneo-roba --niente-build`
    tempo: 100 */
 import { CAMPAGNA, L_ABISSO, svenimentiDi } from '../../src/giochi/sotterraneo/dati/campagna.js'
-import { COSE, CURE, IN_VENDITA, STANZE_TORCIA, baseDi, aLivello, chiaveDelPezzo } from '../../src/giochi/sotterraneo/dati/cose.js'
-import { TASCHE } from '../../src/giochi/sotterraneo/dati/mondo.js'
+import { COSE, CURE, CURE_IN_VENDITA, IN_VENDITA, STANZE_TORCIA, baseDi, aLivello, chiaveDelPezzo } from '../../src/giochi/sotterraneo/dati/cose.js'
+import { TASCHE, POZIONI_MASSIME } from '../../src/giochi/sotterraneo/dati/mondo.js'
 import { MERCANTI, mercanteDi, vendeLa, righeDi, guastiDeiMercanti, schedaDi, schedeDi, sovrapprezzo, prezzoAvanti }
   from '../../src/giochi/sotterraneo/dati/mercanti.js'
 import { MERCANTI as DOVE_MERCANTI } from '../../src/giochi/sotterraneo/dati/terra-mappa.js'
@@ -26,7 +26,7 @@ import { robaAttesa, migliora, righeAvanti, crescitaAttesa, delPassoDi } from '.
 import { passoDi, premiDella } from '../../src/giochi/sotterraneo/dati/storia.js'
 import { EROI, eroeDi, portaLa } from '../../src/giochi/sotterraneo/dati/eroi.js'
 import { crescitaA, rileggiCrescita, trattoDegliElisir } from '../../src/giochi/sotterraneo/motore/crescita.js'
-import { elisirCade, PROBABILITA_ELISIR } from '../../src/giochi/sotterraneo/motore/bottino.js'
+import { elisirCade, PROBABILITA_ELISIR, ampollaCade, PROBABILITA_AMPOLLA } from '../../src/giochi/sotterraneo/motore/bottino.js'
 import { schedaConLaRoba } from '../../src/giochi/sotterraneo/motore/corredo.js'
 import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
 
@@ -46,7 +46,7 @@ import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiut
     else if (COSE[k].dove === 'mano' || COSE[k].dove === 'mancina' || COSE[k].dove === 'corpo') uguale(`${k}: lo vende il fabbro e basta`, chiVende(k), 'armaiolo')
   }
   for (const k of ['pozione-blu', 'ampolla-blu']) uguale(`${k}: l'energia è dell'incantatrice`, chiVende(k), 'incantatrice')
-  for (const k of [...CURE, 'torcia']) uguale(`${k}: le cure e la torcia restano alla guaritrice`, chiVende(k), 'erborista')
+  for (const k of [...CURE_IN_VENDITA, 'torcia']) uguale(`${k}: le cure e la torcia restano alla guaritrice`, chiVende(k), 'erborista')
   uguale('a un cavaliere l\'incantatrice mostra solo l\'energia', schedeDi(mercanteDi('incantatrice'), eroeDi('cavaliere')).map(x => x.chiave).join(), 'energia')
   uguale('a un mago tutte e tre le linguette', schedeDi(mercanteDi('incantatrice'), eroeDi('mago')).map(x => x.chiave).join(), 'bacchette,vesti,energia')
   uguale('a un\'elfa le vesti e l\'energia, non le bacchette', schedeDi(mercanteDi('incantatrice'), eroeDi('elfa')).map(x => x.chiave).join(), 'vesti,energia')
@@ -205,7 +205,7 @@ import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiut
         for (const m of MERCANTI) {
           const r = pari.mercanzia(m.chiave)
           controlla(`${m.chiave}, ${finite} finite: in cima quello che non finisce`,
-                    r.filter(x => x.sempre).map(x => x.chiave).join() === m.sempre.join())
+                    r.filter(x => x.sempre).map(x => x.chiave).join() === m.sempre.filter(k => !COSE[k].dalla || COSE[k].dalla <= finite).join())
           const pescati = r.filter(x => !x.sempre && !x.avanti).map(x => x.chiave)
           fuori += pescati.filter(k => !vendeLa(m, k)).length
           avanti += pescati.filter(k => dopo.has(baseDi(k))).length
@@ -222,7 +222,7 @@ import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiut
   uguale('e niente costa più del pezzo del passo', troppoCare, 0)
   nota('il passo che il banco porta al cavaliere, per discese finite:')
   righe.forEach(r => nota(r))
-  controlla('l\'erborista ha sempre le tre cure e la torcia', CURE.every(k => mercanteDi('erborista').sempre.includes(k)) &&
+  controlla('l\'erborista ha le quattro cure in vendita e la torcia', CURE_IN_VENDITA.every(k => mercanteDi('erborista').sempre.includes(k)) &&
             mercanteDi('erborista').sempre.includes('torcia'))
 }
 {
@@ -253,7 +253,7 @@ import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiut
     uguale('il mago non compra quello che non porta', mago.compraDa('armaiolo', ascia)?.che, 'niente')
     controlla('e il banco dice perché', mago.avvisi.some(a => /mago non/i.test(String(a))), JSON.stringify(mago.avvisi))
   }
-  uguale('senza gemme non si compra', new Bottega({ finite: 0, rnd: seminato(1) }).compraDa('erborista', 'pozione')?.che, 'niente')
+  uguale('senza gemme non si compra', new Bottega({ finite: 0, rnd: seminato(1) }).compraDa('erborista', 'pozione-piccola')?.che, 'niente')
 
   /* si compra anche senza le caratteristiche: il pezzo va nello zaino, non addosso, e il pannello dice cosa manca */
   let novizio = null, dopo = null
@@ -282,7 +282,7 @@ import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiut
 
   /* lo zaino pieno ferma quello che non trova posto */
   const pieno = new Bottega({ roba: { ...ROBA_VUOTA(), gemme: 100, zaino: ['panciotto', 'manto', 'saio', 'amuleto-azzurro', 'chiave', 'corazza'] }, rnd: seminato(2) })
-  uguale('a zaino pieno una pozione non entra', pieno.compraDa('erborista', 'pozione')?.che, 'pieno')
+  uguale('a zaino pieno una pozione non entra', pieno.compraDa('erborista', 'pozione-piccola')?.che, 'pieno')
   uguale('e le gemme restano', pieno.gemme, 100)
 
   /* si vende solo al rigattiere, a metà prezzo */
@@ -801,9 +801,12 @@ import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiut
   c.vita = c.vitaMax - 5
   uguale('mancano 5: la boccetta basta', c.zaino[c.pozioneGiusta()], 'pozione-piccola')
   c.vita = c.vitaMax - 8
-  uguale('mancano 8: la pozione, non l\'ampolla', c.zaino[c.pozioneGiusta()], 'pozione')
+  c.vita = c.vitaMax - 7
+  uguale('mancano 7: la boccetta (ne cura 8) basta ancora', c.zaino[c.pozioneGiusta()], 'pozione-piccola')
+  c.vita = c.vitaMax - 12
+  uguale('mancano 12: la pozione, non l\'ampolla', c.zaino[c.pozioneGiusta()], 'pozione')
   c.vita = 1
-  c.vitaPiu += 30
+  c.vitaPiu += 60
   uguale('ne mancano più di quante ne curi la più grande: l\'ampolla', c.zaino[c.pozioneGiusta()], 'pozione-grande')
   c.zaino = ['elisir-toro']
   uguale('ferito e senza cure: l\'elisir', c.zaino[c.pozioneGiusta()], 'elisir-toro')

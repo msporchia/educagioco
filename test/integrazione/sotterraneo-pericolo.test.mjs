@@ -146,6 +146,10 @@ await scatto(page, 'pericolo-pronto')
 {
   const v = await numeroDel('vita'), n = await pozioni()
   await toccaIl('[data-azione="bevi-scontro"]')
+  // con due stadi in tasca bere apre la scelta (viste/ScegliPozione.vue): nello scontro dice che costa il turno
+  await page.waitForSelector('[data-scegli-pozione][data-pronto]', { timeout: 3000 })
+  controlla('la scelta dice che costa il turno', /costa il turno/.test(await page.locator('[data-scegli-pozione]').innerText()))
+  await toccaIl('[data-azione="bevi-questa"][data-cosa="pozione"]')
   await page.waitForSelector('[data-duello][data-racconto]', { timeout: 8000 })
   await finito()
   await page.waitForSelector('[data-caselle-abilita]', { timeout: 5000 })

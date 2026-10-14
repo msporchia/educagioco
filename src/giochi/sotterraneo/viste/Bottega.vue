@@ -82,7 +82,7 @@ function cambiaScheda(k) {
   dettoVivo.value = false
 }
 
-const puoiComprare = r => !!r && r.posso && !r.nonPuoi
+const puoiComprare = r => !!r && r.posso && !r.nonPuoi && !r.alTetto
 function toccaMerce(r) {
   if (!pronto.value) return
   if (sceltoQui('merce', r.chiave)) {
@@ -133,6 +133,8 @@ const note = computed(() => {
   const c = cosa.value, s = scelto.value
   if (!c || (s.che !== 'merce' && s.che !== 'riacquisto')) return []
   if (c.nonPuoi) return [{ em: '✋', testo: c.nonPuoi, tono: 'ambra', dato: 'data-non-puoi' }]
+  // la nona pozione non si compra: il tetto lo dice chiaro, e come si fa posto
+  if (c.alTetto) return [{ em: '✋', testo: `Al massimo ${c.alTetto} pozioni: bevine una o buttala, poi torna.`, tono: 'ambra', dato: 'data-al-tetto' }]
   // si compra lo stesso: va nello zaino, e si indossa quando la caratteristica c'è
   if (c.serve) return [{ em: '🔒', testo: c.serve, tono: 'ambra', dato: 'data-serve' }]
   if (c.prova && c.prova.bloccata)
@@ -183,7 +185,7 @@ const tascheVuote = computed(() => !!props.tasche && !props.tasche.some(Boolean)
         <div class="sot-griglia">
           <Casella v-for="r in qui" :key="r.chiave" :cosa="r" :sotto="sottoMerce(r)"
                    :spenta="!puoiComprare(r)" :rosso="!r.posso" :ruolo="r.ruolo"
-                   :segno="r.nonPuoi ? '✋' : r.serve ? '🔒' : r.quante ? `×${r.quante}` : ''"
+                   :segno="r.nonPuoi || r.alTetto ? '✋' : r.serve ? '🔒' : r.quante ? `×${r.quante}` : ''"
                    :scelta="sceltoQui('merce', r.chiave)"
                    :data-casella-pezzo="r.chiave" :data-avanti="r.avanti || null"
                    :data-posso="puoiComprare(r) ? '1' : '0'" @click="toccaMerce(r)" />
@@ -231,6 +233,7 @@ const tascheVuote = computed(() => !!props.tasche && !props.tasche.some(Boolean)
           <button type="button" class="sot-grosso sot-compra" data-azione="compra" :disabled="!puoiComprare(cosa)"
                   @click="compra">
             <template v-if="cosa.nonPuoi">non fa per te</template>
+            <template v-else-if="cosa.alTetto">hai già {{ cosa.alTetto }} pozioni</template>
             <template v-else-if="!cosa.posso">ti mancano <span class="em">💎</span> {{ cosa.mancano }}</template>
             <template v-else>Compra <span class="em">💎</span> {{ cosa.costa ?? cosa.prezzo }}</template>
           </button>

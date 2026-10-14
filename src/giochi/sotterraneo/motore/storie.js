@@ -31,7 +31,7 @@ export function ingressoDi(eroe, { roba, crescita }, k = 0) {
 // una discesa giocata, ridotta a quello che il rapporto legge: l'esito, le domande, le pozioni, i piani e uno scontro per riga
 function registro(g) {
   const e = g.esito
-  return { v: e.vinta ? 1 : 0, sv: e.svenimenti, dom: e.domande, giu: e.giuste, pz: g.pozioni || 0, fo: g.fonti || 0, ge: e.gemme,
+  return { v: e.vinta ? 1 : 0, sv: e.svenimenti, dom: e.domande, giu: e.giuste, pz: g.pozioni || 0, fo: g.fonti || 0, tt: g.alTetto ? 1 : 0, ge: e.gemme,
            mo: e.mostri, liv: g.corsa.livelloEroe, pp: (g.perPiano || []).map(n => intero(n)), sc: g.scontri || [], guasto: g.guasto || null,
            ri: g.risalite || [], ar: g.armi || { trovati: 0, inutili: 0 } }
 }

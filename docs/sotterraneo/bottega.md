@@ -22,7 +22,7 @@ più nessuno.
 |---|---|---|
 | ⚒️ l'armaiolo (il fabbro), sotto la tettoia a sinistra | il ferro: spade, asce, archi, scudi, corazze e giubbe di cuoio | — |
 | 🔮 l'incantatrice (`incantatrice`), alla porta della casa di destra | la magia: bacchette e bastoni, vesti di stoffa | boccetta blu e ampolla delle stelle (l'energia) |
-| 🌿 l'erborista (la guaritrice), al banco con le erbe | niente di pescato: solo quello che sta sempre in cima | boccetta, pozione, ampolla, torcia |
+| 🌿 l'erborista (la guaritrice), al banco con le erbe | niente di pescato: solo quello che sta sempre in cima | le quattro cure (le grandi dopo qualche discesa finita), torcia |
 | 🧺 il rigattiere (il mercante), accanto al carro | anelli, amuleti, chiavi | — e **compra** quello che hai in tasca, e te lo ridà (sotto) |
 
 - **Il fabbro lavora il ferro, lei la magia** (l'utente, 13 ottobre 2026): le armi
@@ -192,6 +192,10 @@ più nessuno.
   molto interessante»; contano livello, rarità e abilità.
 - **Quello che si ha già non si offre**, tranne quello che si consuma; il
   pescato è pezzo unico e se ne va comprandolo, le cure e la torcia no.
+- **Le cure arrivano per discese finite e hanno un tetto** ([roba.md](roba.md#le-pozioni)): la guaritrice ha da subito la boccetta, poi la
+  pozione (dopo 1), l'ampolla (dopo 3) e l'ampolla maggiore (dopo 5), a prezzo fisso (`dalla` in `dati/cose.js`, `Bottega.sempreDi`);
+  l'ampolla della vita non la vende, si trova. Con otto cure in tasca la nona non si compra: la casella dice ✋, il pannello «Al massimo 8
+  pozioni: bevine una o buttala, poi torna» e il tasto «hai già 8 pozioni» resta spento. Col riacquisto lo stesso.
 - **Comprato = messo**, come per terra: una cosa migliore va addosso da sé e
   la riga sopra il pannello dice il guadagno. **Lo zaino pieno ferma solo
   quello che non trova posto**, provato prima su una copia (un'arma a due
@@ -205,7 +209,8 @@ più nessuno.
   possono uscire magiche o rare, e allora hanno anche le loro abilità.
 - **Le gemme non diventano monete, mai**: la roba si vende solo in gemme.
 
-Nei test: `unita/sotterraneo-roba` (il fabbro e l'incantatrice si dividono la roba: bacchette e stoffa solo da
+Nei test: `unita/sotterraneo-pozioni` e `integrazione/sotterraneo-pozioni` (le cure per discese finite, il tetto di otto, `[data-al-tetto]`),
+`unita/sotterraneo-roba` (il fabbro e l'incantatrice si dividono la roba: bacchette e stoffa solo da
 lei, l'energia da lei, le cure e la torcia dalla guaritrice, le linguette per ogni eroe; il banco porta il passo dopo; sovrapprezzo
 dei pezzi avanti; nessun pezzo di famiglie non portate; ogni linguetta con
 dieci pezzi che migliorano, mai un leggendario, per i quattro

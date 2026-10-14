@@ -137,12 +137,19 @@ const BASI = {
   martello: { em: '🔨', nome: 'Martello', sprite: 'martello', dove: 'mano', mani: 1, att: 2, prezzo: 24, deiGrossi: true,
               dice: 'Batte come un fabbro, e scotta.' },
 
-  'pozione-piccola': { em: '🧪', nome: 'Boccetta', sprite: 'pozione-piccola', usa: 'cura', cura: 6, genere: 'f',
-                       prezzo: 6, dice: 'Sei punti di vita, subito.' },
-  pozione: { em: '🧪', nome: 'Pozione', sprite: 'pozione', usa: 'cura', cura: 10, prezzo: 10, genere: 'f',
-             dice: 'Dieci punti di vita, subito.' },
-  'pozione-grande': { em: '🍷', nome: 'Ampolla', sprite: 'pozione-grande', usa: 'cura', cura: 18, genere: 'f',
-                      prezzo: 16, dice: 'Diciotto punti di vita: ti rimette in piedi.' },
+  // le cinque cure (docs/sotterraneo/roba.md, «Le pozioni»): numeri fissi, e più è grande più costa ogni punto di vita.
+  // `dalla`: da quante discese finite la guaritrice la mette sul banco; `tutta`: rimette tutta la vita
+  'pozione-piccola': { em: '🧪', nome: 'Boccetta', sprite: 'pozione-piccola', usa: 'cura', cura: 8, genere: 'f',
+                       prezzo: 8, dalla: 0, dice: 'Otto punti di vita, subito.' },
+  pozione: { em: '🧪', nome: 'Pozione', sprite: 'pozione', usa: 'cura', cura: 14, prezzo: 21, genere: 'f', dalla: 1,
+             dice: 'Quattordici punti di vita, subito.' },
+  'pozione-grande': { em: '🍷', nome: 'Ampolla', sprite: 'pozione-grande', usa: 'cura', cura: 30, genere: 'f',
+                      prezzo: 75, dalla: 3, dice: 'Trenta punti di vita: ti rimette in piedi.' },
+  'ampolla-maggiore': { em: '🍷', nome: 'Ampolla maggiore', sprite: 'ampolla-maggiore', usa: 'cura', cura: 50, genere: 'f',
+                        prezzo: 200, dalla: 5, dice: 'Cinquanta punti di vita: per le discese che fanno male.' },
+  // non si compra: cade dal grosso, da un caporale o da un forziere (bottino.js, `ampollaCade`), ed è quella da tenere per un boss
+  'ampolla-vita': { em: '🍷', nome: 'Ampolla della vita', sprite: 'ampolla-vita', usa: 'cura', tutta: true, prezzo: 120, rarissimo: true,
+                    genere: 'f', dice: 'Tutta la vita, subito. Una sola, da tenere per un boss.' },
   // l'energia delle abilità (docs/sotterraneo/abilita.md): si beve dallo zaino, fra uno scontro e l'altro
   'pozione-blu': { em: '🧪', nome: 'Pozione blu', sprite: 'pozione-blu', usa: 'energia', energia: 8, prezzo: 8, genere: 'f',
                    dice: 'Otto punti di energia, per le abilità.' },
@@ -292,8 +299,10 @@ export const PEZZI_DI_BASE = CHIAVI_COSE.filter(k => COSE[k].dove && !COSE[k].de
 export const IN_VENDITA = CHIAVI_COSE.filter(k => COSE[k].prezzo && !COSE[k].deiGrossi && !COSE[k].rarissimo)
 export const SCUDI = CHIAVI_COSE.filter(k => COSE[k].dove === 'mancina')
 
-// stanno fuori dal sorteggio (sempre tutte e tre sul banco); l'elisir non c'è: non si compra, si trova (bottino.js, `elisirCade`)
+// stanno fuori dal sorteggio (la guaritrice le ha sempre, dalla discesa in cui `dalla` le mette sul banco); l'elisir e l'ampolla
+// della vita non ci sono: non si comprano, si trovano (bottino.js, `elisirCade`, `ampollaCade`)
 export const CURE = CHIAVI_COSE.filter(k => COSE[k].usa === 'cura')
+export const CURE_IN_VENDITA = CURE.filter(k => !COSE[k].rarissimo)
 
 export const A_SORTE = IN_VENDITA.filter(k => !CURE.includes(k))
 
@@ -357,7 +366,7 @@ export const NEI_FORZIERI = [
   'amuleto-osso', 'teschio-cercatore',
   'scudo-ferro', 'scudo-crociato', 'scudo-leone', 'scudo-teschio',
   'bipenne-solare', 'spada-del-ladro', 'pugnale-vampiro', 'spada-di-ghiaccio',
-  'pozione-grande', 'torcia', 'pozione-blu', 'ampolla-blu',
+  'pozione', 'pozione-grande', 'torcia', 'pozione-blu', 'ampolla-blu',
 ]
 
 // `nomi` arriva da fuori: questo file non importa la grafica, o il motore smetterebbe di girare in Node
@@ -380,7 +389,7 @@ export function guastiDelleCose(nomi = null) {
     if (c.dove === 'mancina' && !c.dif) g.push(`${k}: nella mano debole, ma non para`)
     if (c.dove === 'corpo' && !c.dif) g.push(`${k}: si mette addosso, ma non para`)
     if (c.dove && !c.sprite) g.push(`${k}: si indossa, ma non ha un pezzo disegnato`)
-    if (c.usa === 'cura' && !c.cura) g.push(`${k}: cura zero`)
+    if (c.usa === 'cura' && !c.cura && !c.tutta) g.push(`${k}: cura zero`)
     if (c.usa === 'luce' && !(c.stanze > 0)) g.push(`${k}: fa luce, ma non dice per quante stanze`)
     if (c.dove === 'dito' && !(c.luce || c.gemme || c.vita || c.dif))
       g.push(`${k}: al dito, ma non fa niente`)
@@ -428,7 +437,14 @@ export function guastiDelleCose(nomi = null) {
 
   for (const k of NEI_FORZIERI) if (!COSE[k]) g.push(`nei forzieri c'è "${k}", che non esiste`)
   if (!IN_VENDITA.length) g.push('il mercante non ha niente da vendere')
-  if (!CURE.length) g.push('niente che curi, e sul banco ci sta sempre')
+  if (!CURE_IN_VENDITA.length) g.push('niente che curi, e sul banco ci sta sempre')
+  if (!CURE_IN_VENDITA.some(k => !COSE[k].dalla)) g.push('nessuna cura sul banco fin dalla prima discesa')
+  const vendute = CURE_IN_VENDITA.filter(k => COSE[k].cura).sort((a, b) => COSE[a].cura - COSE[b].cura)
+  for (let i = 1; i < vendute.length; i++) {
+    const [p, q] = [COSE[vendute[i - 1]], COSE[vendute[i]]]
+    if (q.cura <= p.cura * 1.5 || q.prezzo / q.cura <= p.prezzo / p.cura * 1.3 || (q.dalla || 0) < (p.dalla || 0))
+      g.push(`${vendute[i]}: il salto sulla cura o sul prezzo per punto non è deciso, o arriva prima di ${vendute[i - 1]}`)
+  }
   if (A_SORTE.length < 5) g.push(`solo ${A_SORTE.length} cose da pescare: il banco ne vuole cinque`)
   return g
 }
