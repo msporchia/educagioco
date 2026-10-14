@@ -4,18 +4,24 @@
    La stanza che era del mercante ha un portale (docs/sotterraneo/
    portale-e-sosta.md): toccandolo si sale al villaggio, e nel villaggio compare il
    gemello che riporta giù esattamente dov'eri, col piano com'era. Qui il
-   giro intero: si scende nella prima discesa (la cripta dell'altare), si apre una porta, si ferisce
-   un mostro e si scappa, si entra nel portale, si compra dall'erborista,
-   si torna giù dal gemello e si ritrova tutto; poi si esce con la ✕ e si
-   riprende da «riprendi da qui» in home, nello stesso punto. Uscire con la
-   ✕ non è un portale: lì la sosta è un'«uscita», sopra non c'è il gemello e
-   rientrando si è già giù, dietro il velo della pausa.
+   giro intero: si scende nella scalinata antica (la seconda discesa), si apre una porta, si ferisce
+   un mostro e si scappa, si entra nel portale, sopra la vita resta quella di giù e la
+   guaritrice la rimette (docs/sotterraneo/chi-cura.md), si compra dall'erborista, si torna
+   giù dal gemello e si ritrova tutto, a vita piena; poi si esce con la ✕ e si
+   riprende da «riprendi da qui» in home, nello stesso punto. Uscire con la ✕
+   non è un portale: lì la sosta è un'«uscita», sopra non c'è il gemello e
+   rientrando si è già giù, dietro il velo della pausa. Il giro della cura in
+   sé, con le due che curano, è `sotterraneo-cura`.
 
-   Il piano si sceglie dal seme (`#seme=` nell'indirizzo, come
-   `domanda.test.mjs`): lo stesso generatore gira qui in Node, e dice dove
-   stanno porta, mostro e portale. Si cammina toccando la tela come un
-   bambino, una cella lontana alla volta (`Input.dispatchTouchEvent` via
-   CDP), e si risponde col tasto giusto della domanda (`data-giusta`).
+   Il piano non è raro: si parte DENTRO la stanza del portale (`#stanza=portale`,
+   che mette l'eroe nella cella più lontana dai mostri) e il seme (`#seme=`) si
+   sceglie fra i primi ottanta perché porta e mostro stiano lì vicino. Lo stesso
+   generatore gira qui in Node (`Corsa` col seme dell'indirizzo) e dice dove stanno
+   porta, mostro e portale. Si sceglie la scalinata e non la cripta perché là i
+   mostri hanno due ossa e a mani nude cadono in un colpo: uno «ferito» non
+   c'è. Si cammina toccando la tela come un bambino, una cella lontana alla
+   volta (`Input.dispatchTouchEvent` via CDP), e si risponde col tasto giusto
+   della domanda (`data-giusta`).
    `node test/esegui.mjs sotterraneo-portale`
    tempo: 120
    ═══════════════════════════════════════════════════════════════════ */
@@ -30,35 +36,53 @@ import { MONDO } from '../../src/giochi/sotterraneo/motore/avventure.js'
 import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
 import { percorso } from '../../src/motore/passi.js'
 
-// a mani nude: con la forza della cripta (0,4) un mostro ha tre ossa e una spada lo abbatte in un colpo, e qui serve un mostro che sopravvive a uno
+const DISCESA = 1   // la scalinata antica: i suoi mostri hanno ossa da reggere a un colpo
+const TAPPA = CAMPAGNA[DISCESA]
+// a mani nude: un mostro della scalinata regge a un colpo, e qui serve un mostro che sopravvive a uno
 const roba = { v: 1, gemme: 60, zaino: [], mano: null, mancina: null, corpo: 'corazza', dito: null,
                torcia: 0, torce: 0 }
 
-/* ── il piano: la prima discesa con un portale vicino, una porta e un mostro da ferire, senza mostri sulla strada ── */
+/* ── dove comincia l'eroe con `#stanza=portale`: la cella della stanza più lontana da ogni mostro (lo stesso conto di
+   `stanzaDaProva` in Gioco.vue; più sotto il test controlla che la tela dica la stessa cella) ── */
+function partenzaDelCheat(L) {
+  const s = L.stanze.find(r => r.ruolo === 'portale')
+  const mostri = L.robe.filter(r => r.che === 'mostro')
+  const lontano = r => mostri.reduce((m, o) => Math.min(m, Math.hypot(o.x - r.x, o.y - r.y)), 99)
+  return s.suolo.reduce((b, r) => (lontano(r) > lontano(b) ? r : b), s.suolo[0])
+}
+
+/* ── il piano: la stanza del portale vuota di mostri, una porta e un mostro da ferire vicini, e la strada fra
+   l'una, l'altro e il portale senza altri mostri. Fra i primi semi ce n'è sempre uno ── */
 function scegliIlPiano() {
   let meglio = null
-  for (let seme = 1; seme < 400; seme++) {
-    const c = new Corsa(CAMPAGNA[0], { seme, eroe: 'cavaliere', roba })
+  for (let seme = 1; seme <= 80; seme++) {
+    const c = new Corsa(TAPPA, { seme, eroe: 'cavaliere', roba })
     const L = c.livello
-    const da = { x: Math.floor(c.eroe.x), y: Math.floor(c.eroe.y) }
+    const sala = L.stanze.find(r => r.ruolo === 'portale')
     const portale = L.robe.find(r => r.che === 'portale')
-    if (!portale) continue
-    const lungo = q => (percorso((x, y) => L.calpestabile(x, y), da, q) || { length: 999 }).length
-    const strada = percorso((x, y) => L.calpestabile(x, y), da, portale)
-    if (!strada) continue
-    const stanze = new Set(strada.map(q => L.stanzaDi(q.x, q.y)?.id))
-    if (L.robe.some(r => r.che === 'mostro' && stanze.has(L.stanzaDi(r.x, r.y)?.id))) continue
+    if (!sala || !portale) continue
+    const mostri = L.robe.filter(r => r.che === 'mostro')
+    if (mostri.some(r => L.stanzaDi(r.x, r.y) === sala)) continue
+    const da = partenzaDelCheat(L)
+    const via = (a, b) => percorso((x, y) => L.calpestabile(x, y), a, b)
+    const lungo = q => (via(da, q) || { length: 999 }).length
     const porta = L.robe.filter(r => r.che === 'porta').sort((a, b) => lungo(a) - lungo(b))[0]
-    const mostro = L.robe.filter(r => r.che === 'mostro' && !r.chiave && r.ossa > c.colpo(r))
-        .sort((a, b) => lungo(a) - lungo(b))[0]
-    if (!porta || !mostro) continue
-    const costo = strada.length + lungo(porta) + lungo(mostro)
-    if (!meglio || costo < meglio.costo) meglio = { seme, costo, c, porta, mostro, portale }
+    if (!porta) continue
+    for (const mostro of mostri.filter(r => !r.chiave && r.ossa > c.colpo(r))) {
+      const tratti = [via(da, porta), via(porta, mostro), via(mostro, portale)]
+      if (tratti.some(t => !t)) continue
+      // i mostri di altre stanze sulla strada: quelli della stanza del bersaglio vengono con lui, ed è giusto
+      const sua = L.stanzaDi(mostro.x, mostro.y)
+      const stanze = new Set(tratti.flat().map(q => L.stanzaDi(q.x, q.y)?.id))
+      const intrusi = mostri.filter(r => L.stanzaDi(r.x, r.y) !== sua && stanze.has(L.stanzaDi(r.x, r.y)?.id)).length
+      const costo = tratti.reduce((n, t) => n + t.length, 0) + 40 * intrusi
+      if (!meglio || costo < meglio.costo) meglio = { seme, costo, c, da, porta, mostro, portale }
+    }
   }
   return meglio
 }
 const piano = scegliIlPiano()
-controlla('c\'è un piano della prima discesa col portale, una porta e un mostro', !!piano)
+controlla('c\'è un piano della scalinata col portale, una porta e un mostro da ferire vicini', !!piano)
 const L = piano.c.livello
 const indice = r => L.robe.indexOf(r)
 const aperte = new Set()   // i gruppi di porte aperti, per camminare nel modello come nel gioco
@@ -68,14 +92,14 @@ const { page, errori } = await apriGioco(browser)
 await azzera(page)
 await semina(page, {
   coins: 300, settings: { sperimentali: true },
-  campagne: { sotterraneo: { tappa: 0, libera: false, stelle: {},
-    cfg: { mondo: MONDO, eroe: 'cavaliere', avventure: { cavaliere: { tappa: 0, libera: false, stelle: {}, missioni: {},
+  campagne: { sotterraneo: { tappa: DISCESA, libera: false, stelle: { 0: 3 },
+    cfg: { mondo: MONDO, eroe: 'cavaliere', avventure: { cavaliere: { tappa: DISCESA, libera: false, stelle: { 0: 3 }, missioni: {},
       roba, terra: { nebbia: 'f'.repeat(768), dove: [55, 11], parlato: true } } } } } },
 })
 await scegli(page, 'sotterraneo')
 await page.waitForSelector('[data-terra]', { timeout: 5000 })
-await page.evaluate(s => { location.hash = 'seme=' + s }, piano.seme)
-await scendiNelSotterraneo(page, 0)
+await page.evaluate(s => { location.hash = 'seme=' + s + '&stanza=portale' }, piano.seme)
+await scendiNelSotterraneo(page, DISCESA)
 await page.waitForSelector('.sot-tela', { timeout: 5000 })
 await attendi(page, 700)
 
@@ -160,6 +184,11 @@ async function rispondi(giusto = true) {
   await attendi(page, 1300)
 }
 
+const vitaInBarra = async dove =>
+  (await page.locator(`[data-barra="${dove}"] [data-azione="vita"]`).getAttribute('aria-label')).match(/vita (\d+) su (\d+)/).slice(1).map(Number)
+
+uguale('si parte nella stanza del portale (il cheat e il modello dicono la stessa cella)', await cellaGiu(), `${piano.da.x},${piano.da.y}`)
+
 /* ---------- 1. una porta si apre ---------- */
 await vaiGiu(piano.porta)
 await page.waitForSelector('.sot-domanda', { timeout: 8000 })
@@ -187,6 +216,8 @@ await page.waitForSelector('[data-azione="portale"]', { timeout: 8000 })
 uguale('il portale non chiede niente', await page.locator('.sot-domanda').count(), 0)
 await scatto(page, 'portale-foglio')
 const dovEro = await cellaGiu()
+const vitaGiu = await vitaInBarra('giu')
+controlla('si sale ammaccati: la fuga e i colpi hanno costato vita', vitaGiu[0] < vitaGiu[1], vitaGiu.join('/'))
 await page.locator('[data-azione="portale"]').click()
 
 /* ---------- 4. su nel villaggio: il gemello ---------- */
@@ -195,6 +226,7 @@ await attendi(page, 700)
 uguale('si sbuca accanto al portale gemello', await page.locator('[data-eroe-terra]').getAttribute('data-cella'),
        PORTALE.accanto.join(','))
 uguale('che sta nel villaggio', await page.locator('[data-portale]').count(), 1)
+uguale('salendo non si guarisce: la barra dice la vita di giù', (await vitaInBarra('sopra')).join('/'), vitaGiu.join('/'))
 uguale('e la carta in cima dice la discesa a metà', await page.locator('[data-ripresa] [data-ritaglio]').count(), 1)
 await scatto(page, 'portale-villaggio')
 let p = await leggiProfilo(page)
@@ -208,10 +240,17 @@ uguale('con la porta aperta', cambio(indice(piano.porta)).aperta, true)
 const ferito = L.robe.find(r => r.che === 'mostro' && cambio(indice(r)).ossa < r.ossaMax)
 controlla('e il mostro ferito', !!ferito, JSON.stringify(sosta?.robe?.cambi))
 uguale('e l\'eroe dov\'era', `${Math.floor(sosta?.dove?.x)},${Math.floor(sosta?.dove?.y)}`, dovEro)
+uguale('e la sosta porta la vita di giù', sosta?.vita, vitaGiu[0])
 nota(`la sosta pesa ${JSON.stringify(sosta).length} byte`)
 
-/* ---------- 5. dall'erborista ---------- */
+/* ---------- 5. dall'erborista: prima la cura (gratis), poi la bottega ---------- */
 await toccaIl('[data-mercante="erborista"]')
+await nelDialogo(page, '[data-scelta="cura"]', { tocca: toccaIl })
+await page.waitForSelector('[data-cura-fiocco][data-risorsa="vita"]', { timeout: 3000 })
+await attendi(page, 500)
+uguale('la guaritrice rimette la vita a posto', (await vitaInBarra('sopra')).join('/'), `${vitaGiu[1]}/${vitaGiu[1]}`)
+p = await leggiProfilo(page)
+uguale('e la sosta la scrive piena', p?.campagne?.sotterraneo?.cfg?.avventure?.cavaliere?.sosta?.vita, vitaGiu[1])
 await nelDialogo(page, '[data-scelta="bottega"]', { tocca: toccaIl })
 await page.waitForSelector('[data-chiudi]', { timeout: 10000 })
 await attendi(page, 500)
@@ -231,6 +270,7 @@ await toccaIl('[data-azione="portale-giu"]')
 await page.waitForSelector('.sot-tela', { timeout: 5000 })
 await attendi(page, 700)
 uguale('si torna giù nel punto esatto', await cellaGiu(), dovEro)
+uguale('a vita piena', (await vitaInBarra('giu')).join('/'), `${vitaGiu[1]}/${vitaGiu[1]}`)
 await scatto(page, 'portale-ritorno')
 await page.locator('[data-azione="zaino"]').click()
 await page.waitForSelector('[data-zaino]', { timeout: 3000 })
@@ -255,7 +295,7 @@ uguale('e l\'eroe è dove era', `${Math.floor(dopo?.dove?.x)},${Math.floor(dopo?
 
 /* ---------- 8. «riprendi da qui» in home, nello stesso punto, senza passare di sopra ---------- */
 uguale('in home si riprende il sotterraneo', await page.locator('[data-riprendi]').getAttribute('data-riprendi'), 'sotterraneo')
-controlla('e dice dove', (await page.locator('[data-riprendi]').innerText()).includes(`${CAMPAGNA[0].nome} · piano 1 di`),
+controlla('e dice dove', (await page.locator('[data-riprendi]').innerText()).includes(`${TAPPA.nome} · piano 1 di`),
           await page.locator('[data-riprendi]').innerText())
 uguale('con la scalinata ritagliata dalla mappa', await page.locator('[data-riprendi] [data-ritaglio]').count(), 1)
 await scatto(page, 'portale-riprendi-home')

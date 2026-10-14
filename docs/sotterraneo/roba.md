@@ -107,8 +107,9 @@ la roba con livello e rarità: [rarita.md](rarita.md).
   stessa copia dell'oggetto.
 - **Con un'arma a due mani la casella di sinistra porta la stessa arma in
   ombra e girata**: vuota direbbe che ci si può mettere qualcosa. In scena
-  invece l'arma a due mani sta **in mezzo, davanti al corpo**; provata la
-  copia sbiadita dall'altro lato: si vedevano due armi.
+  l'arma a due mani sta **di lato, come quella a una mano** (`dati/impugna.js`):
+  in mezzo davanti al corpo copriva la faccia (l'utente, 14 ottobre, con l'arco);
+  provata la copia sbiadita dall'altro lato: si vedevano due armi.
 - **Le figure delle armi guardano tutte nello stesso verso**: in mano
   all'eroe la lama sta in su e l'impugnatura in basso, le armi da tiro con la
   pancia (dell'arco, dell'arco della balestra) a destra, dove guarda l'eroe;
@@ -118,6 +119,12 @@ la roba con livello e rarità: [rarita.md](rarita.md).
   un vuoto chiuso (fra l'arco e la corda, l'occhio di una chiave, un anello)
   si toglie col `buchi` del pezzo (`strumenti/sprite/FORMATO.md`). Mazza e
   martello hanno la loro figura: erano il pugnale 0x72.
+- **Un arco si tiene al fianco, non davanti alla faccia** (l'utente, 14 ottobre: la balestra era «tenuta male»): `dati/impugna.js` dice
+  dove sta ogni arma in mano, una volta per il campo (`scena/tela.js`) e per il ritratto (`viste/Armato.vue`). Gli archi stanno in piedi
+  accanto al corpo, con la corda appena fuori dal viso e il centro all'altezza della mano; l'arco corto è alto 17 pixel sui 28
+  dell'eroe, il lungo 24 (la `misura` nel foglietto). La balestra (`tiene: 'orizzontale'`) è girata nel foglietto, piccola (12×10) e
+  bassa, davanti al petto: più su copre gli occhi, e l'eroe è quasi tutta testa. La spada e il resto non sono cambiati. Lo scontro non
+  disegna l'arma dell'eroe. La tavola per giudicarlo: `node strumenti/sotterraneo-armi.mjs`; il test `unita/sotterraneo-impugna`.
 - **Dove va un'arma raccolta lo decide `postoDellArma`**, provando le
   sistemazioni. Un'arma a due mani sfratta la sinistra, e quello che c'era
   torna in tasca, o per terra se le tasche sono piene.

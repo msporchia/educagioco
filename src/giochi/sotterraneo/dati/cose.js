@@ -62,7 +62,7 @@ const BASI = {
 
   'arco-corto': arma('archi', 1, 'Arco corto', 'arco-corto', 'Colpisce prima che ti arrivino addosso. Due mani.', 2),
   'arco-lungo': arma('archi', 2, 'Arco lungo', 'arco-lungo', 'Freccia lunga, colpo pesante. Due mani.', 2),
-  balestra: arma('archi', 3, 'Balestra', 'balestra', 'Un colpo solo, e fa un buco. Due mani.', 2, 'f'),
+  balestra: { ...arma('archi', 3, 'Balestra', 'balestra', 'Un colpo solo, e fa un buco. Due mani.', 2, 'f'), tiene: 'orizzontale' },
 
   // lo scettro è a una mano (l'unica di terzo gradino così): apre al mago, con difesa 0, lo scudo in fondo
   verga: arma('bacchette', 1, 'Bacchetta', 'verga', 'Una scintilla a ogni risposta giusta.', 1, 'f'),

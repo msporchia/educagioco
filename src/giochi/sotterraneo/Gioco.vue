@@ -38,7 +38,7 @@ import { LEGGENDARI } from './dati/pezzi.js'
 import { prendi as prendiMissione, consegna as consegnaMissione, fatte as missioniFatte, presePer, promemoria,
          rotta as rottaDi, seguita, diario } from './motore/missioni.js'
 import { Bottega, alGiroNuovo, robaRaraDi } from './motore/bottega.js'
-import { scrivi, leggi, dice, viaDi, PORTALE as VIA_PORTALE } from './motore/sosta.js'
+import { scrivi, leggi, dice, viaDi, forzeDi, PORTALE as VIA_PORTALE } from './motore/sosta.js'
 import { avventuraDi, scriviNellAvventura, vintaNellAvventura, azzeraIlVecchio, ricordaIlFondo, cominciata }
   from './motore/avventure.js'
 import { PORTALE } from './dati/terra-mappa.js'
@@ -276,6 +276,22 @@ function riprendiSeUscito() {
   riprendiDiscesa({ ferma: true })
 }
 
+// Salendo dal portale la vita e l'energia restano quelle di giù: lo dice la barra, e li rimettono a posto gratis la
+// guaritrice e l'incantatrice (viste/Terra.vue, docs/sotterraneo/terra-di-sopra.md, «Chi cura»). Null senza portale
+const forze = computed(() => {
+  const dato = qui.value.sosta
+  if (!dato || corsa.value || viaDi(dato) !== VIA_PORTALE) return null
+  const t = zonaDi(dato.tappa, dato.potenza)
+  return t ? forzeDi(dato, t, roba.value, presePer(missioni.value, t.chiave || ''), crescita.value) : null
+})
+const ferito = computed(() => !!forze.value && forze.value.vita < forze.value.vitaMax)
+function curaDa(risorsa) {
+  const f = forze.value
+  if (!f) return
+  nellAvventura({ sosta: { ...qui.value.sosta, ...(risorsa === 'vita' ? { vita: f.vitaMax } : { energia: f.energiaMax }) } }, { subito: true })
+  suono.ok()
+}
+
 /* ═══════════ la mappa delle tappe ═══════════ */
 // quelle dell'avventura aperta: un eroe nuovo comincia dalla scalinata (l'età apre lo stesso quelle già passate).
 // Finita la storia ogni discesa è una zona con la sua fascia (motore/zone.js, docs/sotterraneo/zone.md): ha il suo
@@ -463,15 +479,16 @@ const barra = computed(() => {
   const giu = eroe.value
   const r = roba.value
   const n = robaSopra.value
+  const sf = forze.value   // dopo il portale la vita è quella di giù
   const esp = giu ? giu.esp : crescita.value.esp
   const q = quotaDi(esp)
   const cr = giu ? giu.crescita : crescita.value
   return {
-    vita: giu ? giu.vita : n.vita, vitaMax: giu ? giu.vitaMax : n.vita,
+    vita: giu ? giu.vita : sf ? sf.vita : n.vita, vitaMax: giu ? giu.vitaMax : sf ? sf.vitaMax : n.vita,
     livello: q.livello, esperienza: q.quota, espFatta: q.fatto, espServe: q.serve, punti: puntiDaDare(cr),
     // l'energia giù è quella della discesa; sopra è piena, come la vita
-    energia: giu ? giu.energia : robaSopra.value.energiaMax,
-    energiaMax: giu ? giu.energiaMax : robaSopra.value.energiaMax, puntiAbilita: puntiAbilita(cr),
+    energia: giu ? giu.energia : sf ? sf.energia : robaSopra.value.energiaMax,
+    energiaMax: giu ? giu.energiaMax : sf ? sf.energiaMax : robaSopra.value.energiaMax, puntiAbilita: puntiAbilita(cr),
     pozioni: giu ? giu.pozioni : r.zaino.filter(k => COSE[k] && (COSE[k].usa === 'cura' || COSE[k].usa === 'cresci')).length,
     pieni: giu ? giu.pieni : postiDello(r.zaino), tasche: giu ? giu.tasche : robaSopra.value.capienza,
     gemme: giu ? giu.gemme : r.gemme,
@@ -625,7 +642,7 @@ function usaSopra(t, dove = null) {
   const k = roba.value.zaino[i]
   // l'elisir vale per sempre e si beve anche qui; una cura no (si è già in piena forma), le altre cose servono laggiù
   if (COSE[k] && COSE[k].usa === 'cresci') { suLaRoba(c => { const e = c.beviElisir(i); if (e) c.dillo(`🐂 +${e.vita} vita, per sempre`); return e }); suono.ok(); return }
-  if (COSE[k] && !COSE[k].dove) { dilloSopra(COSE[k].usa === 'cura' ? '❤️ sei già in piena forma' : 'Serve laggiù, non qui'); return }
+  if (COSE[k] && !COSE[k].dove) { dilloSopra(COSE[k].usa === 'cura' ? (ferito.value ? '❤️ la guaritrice ti cura, gratis' : '❤️ sei già in piena forma') : 'Serve laggiù, non qui'); return }
   suLaRoba(c => c.indossaDallaTasca(i, dove))
   suono.ok()
 }
@@ -882,7 +899,10 @@ function semeDallIndirizzo() {
 
 // `#sotterraneo=roba` scende già equipaggiato, per guardare una schermata senza giocare mezza discesa
 function corredoDaProva(c) {
-  if (new URLSearchParams(location.hash.slice(1)).get('sotterraneo') !== 'roba') return
+  const h = new URLSearchParams(location.hash.slice(1))
+  if (h.get('sotterraneo') !== 'roba') return
+  // `&mano=arco-corto@7`: solo quell'arma in pugno, anche di una famiglia che l'eroe non porta (strumenti/sotterraneo-armi.mjs)
+  const sola = COSE[h.get('mano')] ? h.get('mano') : null
   c.mano = 'spada-di-ghiaccio'
   c.mancina = 'scudo-ferro'
   c.corpo = 'corazza'
@@ -891,12 +911,13 @@ function corredoDaProva(c) {
   c.dito2 = 'anello-ambra'
   // le tre armature (mai visibili addosso) e i due gioielli: le cose che si vedono solo qui
   c.zaino = ['panciotto', 'manto', 'saio', 'amuleto-azzurro', 'pozione-grande', 'chiave']
+  if (sola) { c.mano = c.mancina = c.corpo = c.dito = null; c.zaino = [] }
   c.gemme += 120
   // due torce (una accesa, una di scorta): la seconda fa vedere anche il "+1" nella fascia in cima
-  c.accendi('torcia')
-  c.accendi('torcia')
+  if (!sola) { c.accendi('torcia'); c.accendi('torcia') }
   // stesso corredo per tutti e quattro: sistemaIlCorredo toglie quello che questa classe non porta, come al rientro
   c.sistemaIlCorredo()
+  if (sola) c.mano = sola
 }
 
 // `#abisso=12` comincia già a quel piano, per guardare una schermata senza aspettare due sere di discesa
@@ -1645,7 +1666,7 @@ function ridimensiona() { if (pittore) pittore.misura() }
         <Campagna ref="campagnaEl" :key="eroeQui()" :tappe="tappe" :ripresa="ripresa" :eroe="eroeScheda" :abisso="abisso"
                   :roba="robaSopra" :terra="qui.terra || null" @terra="ricordaTerra"
                   :punti="barra.punti" :punti-abilita="barra.puntiAbilita" @scheda="apriScheda"
-                  :annuncio="annuncio" @sentito="annuncioSentito"
+                  :annuncio="annuncio" @sentito="annuncioSentito" :forze="forze" @cura="curaDa"
                   :missioni="missioni" :azione-missione="azioneMissione" :segui="segui" @segui="seguiMissione"
                   @gioca="i => avvia(i)" @riprendi="riprendiDiscesa" @scorda="scorda" @bottega="apriBottega" />
         <p v-if="detto" class="sot-avviso sot-avviso-sopra" data-detto-sopra>{{ detto }}</p>
@@ -1654,7 +1675,7 @@ function ridimensiona() { if (pittore) pittore.misura() }
                       :esperienza="barra.esperienza" :esp-fatta="barra.espFatta" :esp-serve="barra.espServe" :punti="barra.punti" :pozioni="barra.pozioni" :pieni="barra.pieni"
                       :energia="barra.energia" :energia-max="barra.energiaMax" :punti-abilita="barra.puntiAbilita"
                       :tasche="barra.tasche" :gemme="barra.gemme" :preparabili="barra.preparabili" :missioni-pronte="barra.missioniPronte"
-                      @bevi="dilloSopra(barra.pozioni ? '❤️ sei già in piena forma' : '🧪 non hai pozioni')"
+                      @bevi="dilloSopra(ferito ? '❤️ la guaritrice ti cura, gratis' : barra.pozioni ? '❤️ sei già in piena forma' : '🧪 non hai pozioni')"
                       @zaino="apriScheda('zaino')"
                       @incanti="apriIncanti" @eroe="apriPaginaEroe()" @abilita="apriPaginaEroe('abilita')" />
         <Zaino v-if="zainoDiSopra" v-bind="zainoDiSopra" :eroe="eroeScheda" :piano="0" sopra
