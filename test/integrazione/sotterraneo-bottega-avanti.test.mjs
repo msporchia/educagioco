@@ -12,7 +12,7 @@
    tempo: 60
    ═══════════════════════════════════════════════════════════════════ */
 import { MONDO } from '../../src/giochi/sotterraneo/motore/avventure.js'
-import { apriBrowser, apriGioco, azzera, semina, attendi, scegli, allaLinguettaDi, nelDialogo , finestraFerma } from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, azzera, semina, attendi, scegli, allaLinguettaDi, nelDialogo, finestraFerma, scatto } from '../aiuto/browser.mjs'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 import { COSE } from '../../src/giochi/sotterraneo/dati/cose.js'
 import { EROI } from '../../src/giochi/sotterraneo/dati/eroi.js'
@@ -56,13 +56,21 @@ await attendi(page, 500)   // la bottega è cieca per un attimo (Bottega.vue, CI
 
 /* ---------- niente roba che non fa per lui, in nessuna linguetta ---------- */
 const mostrati = []
+let daTenere = 0
 for (const s of await page.locator('[data-bottega] [data-scheda]').evaluateAll(els => els.map(e => e.dataset.scheda))) {
   await toccaIl(`[data-bottega] [data-scheda="${s}"]`)
   await attendi(page, 150)
   const qui = await page.locator('[data-casella-pezzo]').evaluateAll(els => els.map(e => e.dataset.casellaPezzo))
   if (s !== 'energia') controlla(`la linguetta «${s}» non resta mai con meno di tre pezzi`, qui.length >= 3, qui.join())
   mostrati.push(...qui)
+  // un pezzo si indossa dal suo livello (docs/sotterraneo/livello-dei-pezzi.md): ogni linguetta ha un pezzo da mettersi subito e altri col 🔒
+  if (s !== 'energia') {
+    const chiuse = await page.locator('[data-casella-pezzo]').evaluateAll(els => els.map(e => !!e.querySelector('.sot-casella-segno') && /🔒/.test(e.querySelector('.sot-casella-segno').textContent)))
+    controlla(`la linguetta «${s}» ha almeno un pezzo che si mette subito`, chiuse.some(x => !x), chiuse.join())
+    daTenere += chiuse.filter(Boolean).length
+  }
 }
+controlla('e dei pezzi da tenere per dopo, col 🔒', daTenere > 0, String(daTenere))
 uguale('e niente «Hai già il meglio che ho»', await page.locator('[data-banco-vuoto]').count(), 0)
 const altrui = mostrati.filter(k => COSE[k].famiglia && !mago.porta.includes(COSE[k].famiglia))
 uguale('il mago non vede armi o armature che non porta', altrui.join(), '')
@@ -89,6 +97,36 @@ await toccaIl('[data-azione="compra"]')
 await attendi(page, 300)
 uguale('si paga il prezzo alto', await gemmeBottega(), 99 - prezzo)
 uguale('e se ne va dalla vetrina', await page.locator('[data-casella-pezzo="scettro"]').count(), 0)
+
+{
+  // il pannello di un pezzo col 🔒 dice che livello serve, e si compra lo stesso
+  await toccaIl('[data-bottega] [data-scheda="bacchette"]')
+  await attendi(page, 150)
+  const chiusa = page.locator('[data-casella-pezzo]').filter({ has: page.locator('.sot-casella-segno', { hasText: '🔒' }) }).first()
+  controlla('c\'è un pezzo col 🔒', (await chiusa.count()) > 0)
+  await chiusa.evaluate(el => el.scrollIntoView())
+  const chiave = await chiusa.getAttribute('data-casella-pezzo')
+  await toccaIl(`[data-casella-pezzo="${chiave}"]`)
+  await page.waitForSelector('[data-pannello]', { timeout: 3000 })
+  await attendi(page, 200)
+  controlla('il pannello dice «Serve livello N (hai M)»', /Serve livello \d+ \(hai \d+\)/.test(await page.locator('[data-serve]').innerText()), await page.locator('[data-serve]').innerText())
+  await scatto(page, 'bottega-pezzo-per-dopo')
+  // si compra lo stesso e va nello zaino col 🔒, senza «Indossa»
+  const costo = await gemmeBottega()
+  await toccaIl('[data-azione="compra"]')
+  await attendi(page, 300)
+  controlla('si paga', (await gemmeBottega()) < costo)
+  await toccaIl('[data-chiudi]')
+  await page.waitForSelector('[data-chiudi]', { state: 'detached', timeout: 3000 })
+  await page.locator('[data-azione="zaino"]').click()
+  await page.waitForSelector('[data-zaino]', { timeout: 3000 })
+  await attendi(page, 300)
+  await toccaIl(`[data-zaino] [data-tasca][data-cosa="${chiave}"]`)
+  await attendi(page, 300)
+  controlla('nello zaino il pezzo ha la nota 🔒 col livello', /Serve livello \d+ \(hai \d+\)/.test(await page.locator('[data-ancora-no]').innerText()), await page.locator('[data-ancora-no]').innerText())
+  uguale('e niente tasto per indossarlo', await page.locator('[data-zaino] [data-azione="usa"]').count(), 0)
+  await scatto(page, 'zaino-pezzo-col-lucchetto')
+}
 
 controlla('nessun errore nella pagina', errori.length === 0, errori.join(' | '))
 await browser.close()
