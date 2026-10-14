@@ -123,6 +123,39 @@ Il bravo (dritto): utili 2 a discesa (1,4–2,3), forza −1 · −1 · −3 · 
 - **Da rifare** quando bere nello scontro non costerà più il turno (e una sola pozione per turno): le pozioni diventano più forti e questi numeri cambiano.
 - Tempo: un giro a freddo, 150 s (dopo il merge dei muri della cripta); da checkpoint meno di un secondo.
 
+## Il livello dei pezzi (14 ottobre sera)
+
+Regola dell'utente: un pezzo si indossa dal suo livello ([livello-dei-pezzi.md](livello-dei-pezzi.md)). **Il metro è il curioso**, quello che gira tutto: l'utente, «il modo
+corretto di giocare è esplorare tutte le stanze, non andare secco all'obiettivo; farmare dà vantaggi ma implica anche più operazioni, quindi per me va bene».
+Che il curioso esca un paio di livelli sopra l'atteso va bene; il bravo, che va dritto, può restare un po' sotto purché non trovi un muro. Curioso di arma prima, mediane
+(altare · cantine · torre · gallerie · cisterna · labirinto · fondo), prima → dopo, sullo stesso albero (dopo i merge di bere senza turno e delle pozioni a cinque stadi):
+
+| | prima | dopo |
+|---|---|---|
+| forza a fine sull'atteso | 0 · +1 · +1 · +2 · +3 · +4 · +4 | 0 · +1 · +1 · +2 · +1 · 0 · 0 |
+| armi utili (comprate + trovate, per discesa) | 1,0+2,1 · 1,9+1,1 · 2,4+0,2 · 2,1+0,1 · 2,4+0,1 · 4,2+0,0 · 3,9+0,0 (mediane 3 · 3 · 3 · 2 · 2 · 4 · 4) | 0,9+2,2 · 2,0+1,3 · 2,0+0,3 · 1,7+0,1 · 1,4+0,1 · 1,7+0,3 · 1,3+0,2 (mediane 3 · 3 · 2 · 2 · 1 · 2 · 1) |
+| gemme non spese | 3 · 39 · 62 · 87 · 114 · 181 · 212 | 4 · 62 · 80 · 91 · 123 · 285 · 449 |
+| vinte alla prima % | 98 · 98 · 100 · 98 · 100 · 98 · 96 | 98 · 98 · 98 · 97 · 99 · 97 · 94 |
+| discese con uno svenimento % | 21 · 3 · 13 · 6 · 3 · 0 · 0 | 20 · 1 · 10 · 8 · 6 · 9 · 9 |
+| pozioni bevute a discesa | 1,5 · 3,4 · 4,1 · 2,8 · 1,4 · 1,9 · 0,1 | 1,4 · 2,9 · 3,7 · 2,8 · 2,0 · 8,7 · 5,1 |
+| domande (mediana) | 19 · 76 · 61 · 53 · 59 · 131 · 80 | 19 · 75 · 60 · 53 · 60 · 139 · 93 |
+
+Il bravo: forza a fine −1 · −1 · −3 · −2 · −2 · −1 · −3 invariata, vinte alla prima 100 · 66 · 73 · 89 · 88 · 93 · 95 → 100 · 68 · 71 · 89 · 85 · 89 · 89 (perde 3–6 punti dalla cisterna in giù); i muri
+alle cantine e alla torre c'erano già (8–10 storie su 120 bloccate).
+
+- **La regola spegne il +4/+6 del curioso**: la forza torna a 0…+2, dove l'utente la vuole. Il prezzo è che il banco ha meno da vendere («armi utili» da 4 a 1,5 al labirinto e al fondo) e
+  il curioso **accumula gemme** (449 al fondo, 212 prima): quello che compra subito si esaurisce, il resto sono pezzi per dopo che il livello non sblocca in fretta. Da guardare.
+- **Il curioso beve di più dal labirinto** (8,7 pozioni a discesa contro 1,9) e fa più domande al fondo (93 contro 80): senza la forza in più i mostri si battono più lentamente. Svenimenti
+  dal 0% al 9% alle ultime due: nel bersaglio 20–60% non entrano comunque.
+- **Più pezzi per dopo non servono**: `--tara risalita.perDopo=4` (da 2) dimezza le gemme non spese del fondo (449 → 246) e lascia la forza a 0 e le armi utili a 1,6. Il giocatore finto
+  compra, ma il livello è quello che decide.
+- **N e non N−1**: provato `MARGINE_DEL_LIVELLO = 1` (il pezzo del livello dopo si porta già) sullo stesso albero: forza 0 · +1 · +1 · +2 · +1 · 0 · 0, utili 3,1 · 3,3 · 2,2 · 1,8 · 1,5 · 1,9 · 1,7. Identico: il banco
+  vende pezzi di molti livelli sopra, e uno solo di margine non li tocca. Si tiene N, che si spiega in una riga.
+- **Il bottino non si è toccato** (livello `max(posto, eroe)`): i pezzi che cadono in una zona sopra l'eroe restano chiusi. Provato in scratch a metterli sempre al livello dell'eroe (solo i test
+  unitari, non il giro): l'abisso rientra nel tetto di 40, la cisterna di `unita/sotterraneo` resta rossa (4/6). È la leva da guardare se i trovati devono pesare di più; non applicata.
+- **Costi nei test**: `unita/sotterraneo` ha una verifica rossa in più (la cisterna a 3/6 invece di 5/6, in aggiunta a gallerie, labirinto e fondo già rossi) e `unita/sotterraneo-abisso` ha il tetto per piano
+  a 45 domande e non 40 (il seme 7 al piano 11 passa da 36 a 41).
+
 ## I tempi
 
 Con 4 processi: **il giro a freddo dura 212 s** (7 discese più la spesa in uscita 4,7 · 13,3 · 13,9 · 23,8 · 27,7 · 52,8 · 39,7 · 35,6 s), contro i 65 s di prima; solo con le salite e senza scaffale 79 s.

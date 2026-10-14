@@ -46,6 +46,14 @@ Lo sbadato non fa un viaggio suo: è il curioso in una giornata storta, con la r
 («se perdi e devi tornare su è stata comunque interessante, dovevi fermarti prima a ricaricarti»). Così ogni discesa ha un bersaglio chiaro e
 non c'è la scrematura di chi resta bloccato alla seconda.
 
+**Il metro è il curioso** (l'utente, 14 ottobre sera: «il modo corretto di giocare è esplorare tutte le stanze, non andare secco all'obiettivo; farmare dà vantaggi ma implica anche più
+operazioni, quindi per me va bene»): che esca un paio di livelli sopra l'atteso va bene; il bravo, che va dritto, può restare un po' sotto purché non trovi un muro. Nei rapporti si legge
+prima il curioso.
+
+**Un pezzo si indossa dal suo livello** ([livello-dei-pezzi.md](livello-dei-pezzi.md)): il finto compra un pezzo per dopo solo se, comprato quello per adesso, gli avanzano gemme e non ha un pezzo per adesso
+da risparmiare; ne tiene al più `RISALITA.perDopo` (2) in attesa del livello, senza venderli, e li mette quando arriva al livello. Quelli indossati dopo contano fra i **comprati**
+(`armi.rimandati`), non fra i trovati. Il giro prima → dopo: [risalite.md](risalite.md#il-livello-dei-pezzi-14-ottobre-sera).
+
 ## I bersagli
 
 Misurati sulla **prima volta** che si scende in una discesa («la discesa nuova»), in media fra i quattro eroi. I numeri precisi sono di chi

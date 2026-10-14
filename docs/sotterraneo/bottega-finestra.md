@@ -26,7 +26,7 @@ coi pezzi comuni `Cornice.vue`, `Addosso.vue`, `Casella.vue`, `Pannello.vue`,
   di confronto sulla casella** (l'utente, 13 ottobre: «chi ha mai detto che lo
   volevo?»): una ▲ col numero e una ★ per i sogni, provate, sono tolte; il
   confronto sta nel pannello del pezzo toccato. `data-ruolo` resta per i test.
-  Un pezzo che la classe porta ma di cui manca la caratteristica ha il 🔒 e il
+  Un pezzo che la classe porta ma di cui manca la caratteristica, o il livello, ha il 🔒 e il
   pannello dice cosa manca; si compra lo stesso e va nello zaino, e il confronto col
   pezzo che hai addosso c'è lo stesso (`seLoMetto(k, { ancora: true })`, con
   `ancora: true` nel risultato). **Una casella che non puoi permetterti, o non ancora,

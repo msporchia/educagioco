@@ -124,7 +124,9 @@ più nessuno.
   addosso roba rara. Un salto alza il posto di almeno un quarto di quanto vale
   adesso e non meno di `SALTO_MINIMO` (`ruoloDi`: `confronto().meglio`); sta da un
   livello fino a sette sopra l'eroe, comune, magico o raro, e può chiedere una
-  caratteristica che l'eroe non ha (si compra e va nello zaino). Un **sogno** è
+  caratteristica che l'eroe non ha: si compra e va nello zaino, perché **un pezzo si indossa dal suo livello**
+  ([livello-dei-pezzi.md](livello-dei-pezzi.md)). Perciò **ogni linguetta ha anche un pezzo che migliora e si mette subito** (`completaSubito`; il primo
+  salto è del livello dell'eroe o fino a due sotto): chi ha le gemme trova sempre qualcosa da mettersi adesso, oltre ai pezzi da tenere per dopo. Un **sogno** è
   un salto di otto livelli o più sopra (`SOGNO_LIVELLI`), raro, il più caro di
   ogni base: il traguardo per cui risparmiare; chi ha già il meglio di quei
   livelli lo trova più su ancora; **costa il doppio** del prezzo vero (`PREZZO_DEL_SOGNO`: esorbitante, un pezzo di otto livelli più su costa già molto). Mai un leggendario. Sono in fondo alla
@@ -171,7 +173,8 @@ più nessuno.
   ha il 🔒 e niente «Indossa» (`Zaino.vue`): si indossa quando la caratteristica
   c'è. Zaino pieno, non si compra, come per tutto. Prima erano «da meritare»
   (9 ottobre) e spenti; ora si comprano, uno per linguetta almeno se ce n'è
-  (`DA_MERITARE` = 2 al più). **Il traguardo sta a due punti di caratteristica**
+  (`DA_MERITARE` = 8 al più, **dietro ai pezzi che si mettono subito**: dal 14 ottobre il livello chiude tutto quello che sta sopra l'eroe, non solo
+  la caratteristica; oltre sette livelli sopra se ne cercano solo se i pezzi non bastano a riempire la linguetta). **Il traguardo sta a due punti di caratteristica**
   (`FINESTRA_DEL_TRAGUARDO`, otto livelli sopra quello che l'eroe regge):
   provato senza tetto, un mago di livello 8 vedeva bacchette di livello 37.
 - **Riacquista: gli ultimi cinque pezzi venduti** (l'utente, 12 ottobre: *«se
@@ -229,6 +232,6 @@ forti e un sogno sempre, il rinnovo solo quando serve; l'elisir fuori dai banchi
 senza le caratteristiche e finire nello zaino; il banco che ruota — tre via,
 tre dentro, gli altri restano, i più deboli se ne vanno, il banco riaperto o
 riletto è lo stesso, il salvataggio di prima; gli ultimi cinque venduti, allo
-stesso prezzo, riletti dall'avventura) e `misure/sotterraneo` (chi spende avanti
+stesso prezzo, riletti dall'avventura; ogni linguetta con un pezzo che si mette subito e i pezzi col 🔒 da tenere per dopo) e `integrazione/sotterraneo-bottega-avanti` (la 🔒 sulla casella, «Serve livello N (hai M)» sul pannello e nello zaino, senza tasto per indossarlo) e `misure/sotterraneo` (chi spende avanti
 nelle ultime due discese); i bersagli della finestra stanno in
 [bottega-finestra.md](bottega-finestra.md).

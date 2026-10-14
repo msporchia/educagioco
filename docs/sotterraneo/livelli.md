@@ -128,6 +128,11 @@ intelligenza vanno tenute in una strada per quello che dànno, e le strade lo fa
 - **Un salvataggio di prima** (con scorza e fortuna, `v` né 2 né 3 in
   `crescita`) tiene esperienza e albero, e i punti tornano tutti da dare.
 
+## Un pezzo si indossa dal suo livello
+
+Un pezzo di livello N si porta dal livello N, da qualunque parte arrivi (banco, forzieri, grossi, missioni); sotto si compra e si raccoglie lo stesso, e sta
+nello zaino col 🔒. Il perché, le scelte e i salvataggi: [livello-dei-pezzi.md](livello-dei-pezzi.md).
+
 ## I requisiti delle armi
 
 Regola dell'utente: **rigidi, sotto il requisito l'arma non si indossa**.
@@ -144,7 +149,7 @@ sente, chi la lascia indietro sì.
   (`perchéNo`), e il requisito sta sulla riga sotto il nome di ogni arma
   («Spada · a una mano · livello 7 · comune · Forza 2»).
 - **Il mercante e la storia propongono il pezzo al livello più alto che si
-  impugna** (`livelloPortabile`): un'arma da guardare e basta non serve.
+  impugna** (`livelloPortabile`: con la caratteristica che c'è e fino al livello dell'eroe): un'arma da guardare e basta non serve.
 - **La roba della storia si indossa con i punti dati come il banco**:
   `unita/sotterraneo-livelli` lo controlla discesa per discesa.
 - Riassegnando i punti, quello che non si regge più torna in tasca

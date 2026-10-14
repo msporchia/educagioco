@@ -38,7 +38,8 @@ la roba con livello e rarità: [rarita.md](rarita.md).
 - **Un'arma vuole la sua caratteristica** (forza per spade e asce, destrezza
   per gli archi, intelligenza per le bacchette): sotto il requisito non si
   indossa, e l'attacco cresce con quella caratteristica
-  ([livelli.md](livelli.md#i-requisiti-delle-armi)).
+  ([livelli.md](livelli.md#i-requisiti-delle-armi)). **Ogni pezzo si indossa anche solo dal suo livello** (14 ottobre: sotto si
+  compra e si raccoglie, ma sta nello zaino col 🔒): [livelli.md](livelli.md#un-pezzo-si-indossa-dal-suo-livello).
 - **Il bottino predilige la classe, non la garantisce** (`PESO_ALTRUI` = un
   terzo, in `pescaCosa`/`pescaMerce`): a zero un forziere smetterebbe di
   essere una notizia.
