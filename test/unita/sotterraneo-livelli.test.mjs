@@ -8,7 +8,7 @@
 import { potenzaDelMostro } from '../../src/giochi/sotterraneo/motore/potenza.js'
 import { CARATTERISTICHE, sogliaDi, livelloDi, quotaDi, potenzaDi, esperienzaDi, gemmeDi, guastiDeiLivelli, VITA_PER_TEMPRA, PUNTI_PER_LIVELLO,
          DOTE_OGNI, FORZA_PER_DIFESA, ENERGIA_PER_INTELLIGENZA, SCHIVATA_PER_DESTREZZA, GEMME_PER_RIASSEGNARE } from '../../src/giochi/sotterraneo/dati/livelli.js'
-import { EROI, eroeDi, guastiDegliEroi, requisitoDi, REQUISITO_DEL_GRADINO } from '../../src/giochi/sotterraneo/dati/eroi.js'
+import { EROI, eroeDi, guastiDegliEroi, requisitoDi, REQUISITO_DEL_GRADINO, livelloRichiesto, MARGINE_DEL_LIVELLO } from '../../src/giochi/sotterraneo/dati/eroi.js'
 import { COSE, chiaveDelPezzo, aLivello } from '../../src/giochi/sotterraneo/dati/cose.js'
 import { robaAttesa, crescitaAttesa } from '../../src/giochi/sotterraneo/motore/storia.js'
 import { MOSTRI } from '../../src/giochi/sotterraneo/dati/mostri.js'
@@ -133,7 +133,7 @@ import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifi
   uguale('la bacchetta intelligenza', requisitoDi(COSE[chiaveDelPezzo('scettro', 9)]).car, 'intelligenza')
   uguale('uno scudo niente', requisitoDi(COSE['scudo-ferro']), null)
   const debole = new Corredo({ eroe: 'cavaliere', crescita: { esp: sogliaDi(14) }, roba: { ...ROBA_VUOTA(), zaino: [chiaveDelPezzo('spadone', 30)] } })
-  controlla('sotto il requisito non si indossa, e si dice perché', !debole.posso(debole.zaino[0]) && /Serve Forza/.test(debole.perchéNo(debole.zaino[0])),
+  controlla('sotto il requisito non si indossa, e si dice perché', !debole.posso(debole.zaino[0]) && /Serve livello 30 \(hai 14\) · Forza \d+ \(hai 3\)/.test(debole.perchéNo(debole.zaino[0])),
             debole.perchéNo(debole.zaino[0]))
   uguale('la tasca resta piena: non si mette addosso', debole.indossaDallaTasca(0).che, 'niente')
   controlla('ma il bottino resta della classe (la porta)', debole.porta(debole.zaino[0]))
@@ -146,6 +146,44 @@ import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifi
     for (const x of c.zaino) if (COSE[x] && COSE[x].dove === 'mano' && !c.posso(x)) fuori.push(`${e.chiave} ${k}: ${x} in tasca`)
   }
   uguale('la roba della storia si indossa con i punti dati come il banco', fuori.join(' · '), '')
+}
+
+/* ══════════ 4b2. un pezzo si indossa dal suo livello ══════════
+   L'utente, 14 ottobre: «anche se ti offre un oggetto super bello non dovresti poterlo equipaggiare». Il pezzo di livello N si
+   porta dal livello N (MARGINE_DEL_LIVELLO), da qualunque parte arrivi; si compra e si raccoglie lo stesso, e sta nello zaino. */
+{
+  uguale('il livello richiesto è quello del pezzo', livelloRichiesto(COSE[chiaveDelPezzo('bipenne', 18)]), 18 - MARGINE_DEL_LIVELLO)
+  uguale('quello che non va addosso (una pozione) non chiede livello', livelloRichiesto(COSE['pozione-piccola']), 1)
+  const ascia = chiaveDelPezzo('bipenne', 18)
+  const basso = new Corredo({ eroe: 'nano', crescita: { esp: sogliaDi(12), forza: 20 }, roba: { ...ROBA_VUOTA(), zaino: [ascia] } })
+  uguale('un eroe di livello 12 non porta un\'ascia di livello 18, anche con la forza', basso.posso(ascia), false)
+  uguale('ma la caratteristica c\'è', basso.reggo(ascia), true)
+  uguale('e il perché dice il livello', basso.perchéNo(ascia), 'Serve livello 18 (hai 12)')
+  uguale('la tasca resta piena', basso.indossaDallaTasca(0).che, 'niente')
+  uguale('al livello giusto si porta', new Corredo({ eroe: 'nano', crescita: { esp: sogliaDi(18), forza: 20 } }).posso(ascia), true)
+  uguale('un livello sotto no', new Corredo({ eroe: 'nano', crescita: { esp: sogliaDi(17), forza: 20 } }).posso(ascia), MARGINE_DEL_LIVELLO >= 1)
+  // la tasca è piena e dice il perché, anche quando manca pure la caratteristica
+  uguale('tutti e due i perché', new Corredo({ eroe: 'cavaliere', crescita: { esp: sogliaDi(12) } }).perchéNo(chiaveDelPezzo('spadone', 18)).startsWith('Serve livello 18 (hai 12) · Forza'), true)
+  // chi ha già addosso un pezzo sopra il suo livello lo tiene (a nessuno si toglie niente)
+  const gia = new Corredo({ eroe: 'nano', crescita: { esp: sogliaDi(12), forza: 20 }, roba: { ...ROBA_VUOTA(), mano: ascia } })
+  gia.sistemaIlCorredo()
+  uguale('un pezzo già addosso sopra il livello resta addosso', gia.mano, ascia)
+  uguale('e senza avvisi', gia.avvisi.length, 0)
+  // salendo di livello, quello nello zaino diventa indossabile e il gioco lo dice se è meglio di quello addosso
+  const corsa = new Corsa(CAMPAGNA[0], { seme: 3, eroe: 'nano', crescita: { esp: sogliaDi(17) - 1, forza: 20 }, roba: { ...ROBA_VUOTA(), mano: 'ascia', zaino: [ascia] }, rnd: seminato(3) })
+  uguale('prima di salire, non va', corsa.vaAddosso(ascia), false)
+  corsa.guadagna(5)
+  uguale('al 17 ancora no', corsa.pezziPronti(16).length, MARGINE_DEL_LIVELLO >= 1 ? 1 : 0)
+  corsa.guadagna(sogliaDi(18) - sogliaDi(17) + 5)
+  controlla('al livello 18 va addosso, ed è meglio', corsa.vaAddosso(ascia), corsa.perchéNo(ascia))
+  controlla('e lo dice', corsa.avvisi.some(a => a.cosa === ascia && /lo puoi indossare/.test(a.testo)), JSON.stringify(corsa.avvisi))
+  // bottino, banco, forzieri: ogni pezzo con un livello soggiace alla regola, la roba della storia no (è un livello sotto per costruzione)
+  const fuori = []
+  for (const e of EROI) for (let k = 0; k <= CAMPAGNA.length; k++) {
+    const c = new Corredo({ eroe: e.chiave, roba: robaAttesa(e.chiave, k), crescita: crescitaAttesa(e.chiave, k) })
+    for (const x of [c.mano, c.mancina, c.corpo, c.dito].filter(Boolean)) if (livelloRichiesto(COSE[x]) > c.livelloEroe) fuori.push(`${e.chiave} ${k}: ${x}`)
+  }
+  uguale('la roba attesa della storia è sempre del livello di chi la porta', fuori.join(' · '), '')
 }
 
 /* ══════════ 4c. riassegnare si paga in gemme ══════════ */

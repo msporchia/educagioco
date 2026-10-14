@@ -74,6 +74,12 @@ export function requisitoDi(cosa) {
   return serve > 0 ? { car: f.car, serve } : null
 }
 
+// Un pezzo si indossa dal suo livello (l'utente, 14 ottobre: «anche se ti offre un oggetto super bello non dovresti poterlo
+// equipaggiare»): sotto si compra e si raccoglie, e sta nello zaino col 🔒. `MARGINE_DEL_LIVELLO`: quanti livelli sotto il
+// suo si può già portare (docs/sotterraneo/livelli.md)
+export const MARGINE_DEL_LIVELLO = 0
+export const livelloRichiesto = cosa => (cosa && cosa.dove ? Math.max(1, (cosa.liv || 1) - MARGINE_DEL_LIVELLO) : 1)
+
 // «Il mago non impugna le asce», torna '' quando non c'è niente da dire
 export function nonLaPorta(eroe, cosa) {
   if (!eroe || portaLa(eroe, cosa)) return ''

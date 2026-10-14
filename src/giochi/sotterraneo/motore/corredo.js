@@ -3,7 +3,7 @@
 // le regole che valgono sotto e sopra: cosa si porta, dove va un'arma, cosa vale, come si compra e si vende.
 // La discesa (motore/corsa.js) e i mercanti di sopra (motore/bottega.js) la estendono; gira in Node.
 import { TASCHE, TASCHE_EXTRA_MAX, POZIONI_MASSIME, prezzoTasca } from '../dati/mondo.js'
-import { eroeDi, DI_PARTENZA, portaLa, nonLaPorta, FAMIGLIE, requisitoDi } from '../dati/eroi.js'
+import { eroeDi, DI_PARTENZA, portaLa, nonLaPorta, FAMIGLIE, requisitoDi, livelloRichiesto } from '../dati/eroi.js'
 import { COSE, STANZE_TORCIA, aLivello, PESO_DELLA_DIFESA } from '../dati/cose.js'
 import { GEMME_PER_FORTUNA, ATT_PER_PUNTO, SCHIVATA_PER_DESTREZZA, ENERGIA_PER_INTELLIGENZA } from '../dati/livelli.js'
 import { rileggiCrescita, piuDellaCrescita, caratteristica, chiTrattiene, puntiDaDare, riassegna, costoDelRiassegnare, trattoDegliElisir,
@@ -354,11 +354,16 @@ export class Corredo {
     const r = requisitoDi(COSE[k])
     return r ? { ...r, ha: this.car(r.car) } : null
   }
-  posso(k) {
+  // `reggo`: la classe lo porta e la caratteristica c'è. `posso` aggiunge il livello (14 ottobre: un pezzo si indossa dal suo
+  // livello); quello che si ha già addosso si tiene (salvataggi di prima: a nessuno si toglie niente)
+  reggo(k) {
     if (!this.porta(k)) return false
     const r = this.requisito(k)
     return !r || r.ha >= r.serve
   }
+  indossato(k) { return this.mano === k || this.mancina === k || this.corpo === k || this.dito === k }
+  livelloBasta(k) { return this.livelloLibero || this.livelloEroe >= livelloRichiesto(COSE[k]) || this.indossato(k) }
+  posso(k) { return this.reggo(k) && this.livelloBasta(k) }
   // il livello più alto, fino a L, a cui l'eroe impugna il pezzo `k`: il mercante e la storia propongono quello, non
   // un'arma da guardare e basta (il requisito sale col livello del pezzo)
   livelloPortabile(k, L) {
@@ -368,10 +373,19 @@ export class Corredo {
   perchéNo(k) {
     const classe = nonLaPorta(this.io, COSE[k])
     if (classe) return classe
+    const dire = []
+    if (!this.livelloBasta(k)) dire.push(`livello ${livelloRichiesto(COSE[k])} (hai ${this.livelloEroe})`)
     const r = this.requisito(k)
-    if (!r || r.ha >= r.serve) return ''
-    const nome = (CARATTERISTICHE.find(c => c.chiave === r.car) || { nome: r.car }).nome
-    return `Serve ${nome} ${r.serve} (hai ${r.ha})`
+    if (r && r.ha < r.serve) {
+      const nome = (CARATTERISTICHE.find(c => c.chiave === r.car) || { nome: r.car }).nome
+      dire.push(`${nome} ${r.serve} (hai ${r.ha})`)
+    }
+    return dire.length ? `Serve ${dire.join(' · ')}` : ''
+  }
+
+  // i pezzi dello zaino che col livello di adesso si indossano e a `prima` no, e che migliorano quello che c'è addosso (vaAddosso)
+  pezziPronti(prima) {
+    return [...new Set(this.zaino)].filter(k => COSE[k] && COSE[k].dove && livelloRichiesto(COSE[k]) > prima && this.vaAddosso(k))
   }
 
   dillo(testo) { this.avvisi.push(testo) }

@@ -860,6 +860,7 @@ export class Corsa extends Corredo {
       this.vita = Math.min(this.vitaMax, this.vita + Math.max(0, this.vitaMax - tetto))
       // lo dice la festa (Gioco.vue), col punto da dare: un avviso sotto ripeterebbe la stessa cosa
       this.eventi.push({ che: 'livello', livello: ora })
+      for (const k of this.pezziPronti(prima)) this.dilloDi(k, ' · ora lo puoi indossare')
     }
   }
 

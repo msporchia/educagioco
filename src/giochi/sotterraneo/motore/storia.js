@@ -31,6 +31,7 @@ export const livelloDeiPezzi = k => Math.max(1, livelloAtteso(k) - 1)
 // gioca davvero era molto più forte della tabella (la mazza di Grumo batte la spada corta), e la tabella mentiva
 export function robaAttesa(eroe, k, { pozioni = true, gemme = 0 } = {}) {
   const c = new Corredo({ eroe, roba: { v: VERSIONE_ROBA, gemme, zaino: [], torcia: 0, torce: 0 } })
+  c.livelloLibero = true   // i pezzi della riga sono già un livello sotto quello di chi la porta: la regola del livello è soddisfatta per costruzione
   const fino = Math.max(0, Math.min(k, CAMPAGNA.length))
   for (let j = 0; j < fino; j++) {
     const L = livelloDeiPezzi(j + 1)
