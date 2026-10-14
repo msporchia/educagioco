@@ -244,9 +244,9 @@ function aiutoDifferenza(grado, a, b, ris) {
 function falsiDifferenza(sorte, grado, a, b, ris) {
   const vero = []
   if (grado >= 3 && prestiti(a, b) > 0) {
-    vero.push([senzaPrestito(a, b), 'hai tolto la cifra piccola da quella grande in ogni colonna: ma se sopra è più piccola serve il prestito'])
-    vero.push([ris + 10, 'il prestito: hai preso una decina dalla colonna accanto e poi non l\'hai tolta'])
-    vero.push([ris - 10, 'il prestito: hai tolto la decina due volte'])
+    vero.push([senzaPrestito(a, b), 'hai tolto la cifra piccola dalla grande, pezzo per pezzo: ma sopra le unità sono meno, e togliendole si scende sotto la decina'])
+    vero.push([ris + 10, 'togliendo le unità sei sceso sotto la decina, ma la decina di prima l\'hai tenuta'])
+    vero.push([ris - 10, 'hai tolto una decina di troppo'])
   }
   if (a % 100 < b % 100)
     vero.push([ris + 100, 'le centinaia: il prestito dalle decine non l\'hai tolto'])
