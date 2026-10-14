@@ -94,8 +94,6 @@ la mette in `components/home/copertine-dipinte.js`: la copertina a 528×352
 e il `fondo` della carta, che è il colore medio del dipinto. «Riprendi da
 qui» mostra l'icona, non il taglio in mezzo della copertina, che a 64 px
 perdeva il soggetto.
-Una figura su fondo bianco (i quattro angoli bianchi, come la torre di Castle Battle)
-non si taglia a 3:2, si allarga col bianco: il taglio le toglieva cima e base.
 
 Finché un gioco non ha la sua, vale quella disegnata in codice: il gioco
 porta `copertina: { fondo, disegno, scena }` nel suo manifesto (i giochi

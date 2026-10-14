@@ -8,7 +8,7 @@ Le sorgenti sono `sorgenti/home/copertina-<chiave>.{png,jpg,webp}` (la chiave
 del gioco: `torri`, `passo`, `sotterraneo`…) e i fogli da quattro elencati in
 `fogli.json` (un nome di file e quattro chiavi: alto a sinistra, alto a
 destra, basso a sinistra, basso a destra), tagliati a croce e senza la riga
-bianca fra un quadro e l'altro. Ognuna si porta sulla stessa `TELA` 3:2 (il
+bianca fra un quadro e l'altro (la croce si cerca, i quadri non sono sempre uguali). Ognuna si porta sulla stessa `TELA` 3:2 (il
 pezzo in mezzo, ingrandito o ridotto) e diventa una voce del modulo: ridotta a
 `LARGA` px e codificata con `codifica.py`, col `fondo` della carta preso dal
 colore medio del dipinto, e l'`icona` dell'indice e di «riprendi» ritagliata
@@ -42,21 +42,9 @@ ICONA = 192
 TELA = (1536, 1024)
 
 
-def su_bianco(im, soglia=235):
-    """Una figura su fondo bianco (i quattro angoli bianchi): il generatore l'ha data
-    scontornata, e tagliarla a 3:2 le toglierebbe la cima e la base."""
-    w, h = im.size
-    return all(min(im.getpixel(p)) >= soglia for p in [(2, 2), (w - 3, 2), (2, h - 3), (w - 3, h - 3)])
-
-
 def tre_mezzi(im):
-    """Il pezzo centrale a 3:2: un sorgente un po' più alto o più largo non si deforma.
-    Una figura su bianco più stretta di 3:2 si allarga col bianco, intera."""
+    """Il pezzo centrale a 3:2: un sorgente un po' più alto o più largo non si deforma."""
     w, h = im.size
-    if w * 2 < h * 3 and su_bianco(im):
-        tela = Image.new('RGB', (h * 3 // 2, h), (255, 255, 255))
-        tela.paste(im, ((h * 3 // 2 - w) // 2, 0))
-        return tela
     if w * 2 > h * 3:
         nw = h * 3 // 2
         return im.crop(((w - nw) // 2, 0, (w - nw) // 2 + nw, h))
@@ -79,6 +67,21 @@ def senza_bianco(im, soglia=235):
     return im.crop((sx, alto, dx, basso))
 
 
+def croce(foglio, soglia=235):
+    """Dove passa la croce bianca fra i quattro quadri: la colonna e la riga più bianche
+    fra il 30% e il 70% del foglio. I quadri non sono sempre uguali (in `foglio_arena`
+    la croce sta a 858 px su 1536); senza una croce chiara, a metà."""
+    g = foglio.convert('L').point(lambda v: 255 if v >= soglia else 0)
+    w, h = foglio.size
+    def piu_bianca(n, linea):
+        conti = {i: sum(linea(i).histogram()[255:]) for i in range(int(n * 0.3), int(n * 0.7))}
+        i = max(conti, key=conti.get)
+        return i, conti[i]
+    cx, bx = piu_bianca(w, lambda x: g.crop((x, 0, x + 1, h)))
+    cy, by = piu_bianca(h, lambda y: g.crop((0, y, w, y + 1)))
+    return (cx if bx > h * 0.5 else w // 2), (cy if by > w * 0.5 else h // 2)
+
+
 def sorgenti():
     """(chiave, immagine) di ogni copertina: le singole e i quadri dei fogli."""
     for f in sorted(SORGENTI.glob('copertina-*.*')):
@@ -94,10 +97,11 @@ def sorgenti():
             continue
         foglio = Image.open(SORGENTI / nome).convert('RGB')
         w, h = foglio.size
-        for i, k in enumerate(chiavi):
+        cx, cy = croce(foglio)
+        quadri = [(0, 0, cx, cy), (cx, 0, w, cy), (0, cy, cx, h), (cx, cy, w, h)]
+        for k, quadro in zip(chiavi, quadri):
             if k:
-                x, y = i % 2 * w // 2, i // 2 * h // 2
-                yield k, senza_bianco(foglio.crop((x, y, x + w // 2, y + h // 2)))
+                yield k, senza_bianco(foglio.crop(quadro))
 
 
 def icona(im, quadrato):
