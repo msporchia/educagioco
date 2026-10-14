@@ -36,7 +36,7 @@ function posato(chiave, verso, dy = 0, specchia = false) {
   if (!p) return null
   const f = figura(cosa.sprite, { scala: props.scala })
   const s = props.scala
-  const { dx, base } = impugnatura(cosa, p[2], p[3], 'ritratto')
+  const { dx, base } = impugnatura(cosa, p[2], p[3])
   const x = (MARGINE + T / 2 + verso * dx) * s - p[2] * s / 2
   const y = (ALTO - base - p[3] + dy) * s
   return {

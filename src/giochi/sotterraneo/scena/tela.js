@@ -810,7 +810,7 @@ export class Tela {
       const cosa = COSE[k] || {}
       const m = cosa.sprite && this.foglio.misura(cosa.sprite)
       if (!m) return
-      const { dx, base } = impugnatura(cosa, m.w, m.h, 'campo')
+      const { dx, base } = impugnatura(cosa, m.w, m.h)
       this.foglio.posa(this.ctx, cosa.sprite, sx + verso * dx, sy + T * 0.5 - base + su, opz)
     }
     // due armi si portano una per lato (la debole va dietro, prima, o coprirebbe la buona); una a due mani

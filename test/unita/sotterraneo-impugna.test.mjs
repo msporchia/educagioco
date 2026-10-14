@@ -12,7 +12,7 @@ const ALTO = 28, META = 8   // l'eroe: 16 × 28; mezza larghezza del corpo
 const misura = s => PEZZI[s] ? { w: PEZZI[s][2], h: PEZZI[s][3] } : null
 const come = (base, sprite) => {
   const cosa = { ...COSE[base], sprite }, m = misura(sprite)
-  return { cosa, m, ...impugnatura(cosa, m.w, m.h, 'campo'), ritratto: impugnatura(cosa, m.w, m.h, 'ritratto') }
+  return { cosa, m, ...impugnatura(cosa, m.w, m.h), ritratto: impugnatura(cosa, m.w, m.h) }
 }
 
 for (const base of ['arco-corto', 'arco-lungo', 'balestra']) {
@@ -37,10 +37,8 @@ for (const base of ['arco-corto', 'arco-lungo', 'balestra']) {
 }
 
 {
-  const spadone = impugnatura(COSE.spadone, 10, 24, 'campo')
-  controlla('un\'arma a due mani che non è un arco sta ancora in mezzo al corpo, sul campo', spadone.dx === 0)
-  controlla('e di lato nel ritratto', impugnatura(COSE.spadone, 10, 24, 'ritratto').dx > 0)
-  controlla('una spada si tiene col fondo vicino ai piedi', impugnatura(COSE.spada, 8, 20, 'campo').base < 2)
+  controlla('un\'arma a due mani si tiene di lato anche sul campo: in mezzo copriva la faccia', impugnatura(COSE.spadone, 10, 24).dx > 0)
+  controlla('una spada si tiene col fondo vicino ai piedi', impugnatura(COSE.spada, 8, 20).base < 2)
 }
 
 riassunto('come si tengono gli archi in mano')

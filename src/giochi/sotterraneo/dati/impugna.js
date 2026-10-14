@@ -11,10 +11,9 @@ export const IMPUGNATURE = {
   orizzontale: { dx: 8.5, centro: 5 },
 }
 
-// `vista`: 'campo' porta l'arma a due mani in mezzo al corpo, 'ritratto' (zaino, pagina dell'eroe) di lato, dove non lo nasconde
-export function impugnatura(cosa, w, h, vista = 'campo') {
+// anche le armi a due mani (spadone, ascia doppia, bastone) di lato, come nel ritratto: in mezzo al corpo coprivano la faccia
+export function impugnatura(cosa, w, h) {
   const i = cosa && (cosa.tiene === 'orizzontale' ? IMPUGNATURE.orizzontale : cosa.famiglia === 'archi' ? IMPUGNATURE.arco : null)
   if (i) return { dx: i.dx != null ? i.dx : i.corda + w / 2, base: Math.max(0, i.centro - h / 2) }
-  if (vista === 'campo' && cosa && cosa.mani === 2) return { dx: 0, base: FONDO + 0.96 }
   return { dx: MANO, base: FONDO }
 }

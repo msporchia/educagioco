@@ -106,8 +106,9 @@ la roba con livello e rarità: [rarita.md](rarita.md).
   stessa copia dell'oggetto.
 - **Con un'arma a due mani la casella di sinistra porta la stessa arma in
   ombra e girata**: vuota direbbe che ci si può mettere qualcosa. In scena
-  invece l'arma a due mani sta **in mezzo, davanti al corpo**; provata la
-  copia sbiadita dall'altro lato: si vedevano due armi.
+  l'arma a due mani sta **di lato, come quella a una mano** (`dati/impugna.js`):
+  in mezzo davanti al corpo copriva la faccia (l'utente, 14 ottobre, con l'arco);
+  provata la copia sbiadita dall'altro lato: si vedevano due armi.
 - **Le figure delle armi guardano tutte nello stesso verso**: in mano
   all'eroe la lama sta in su e l'impugnatura in basso, le armi da tiro con la
   pancia (dell'arco, dell'arco della balestra) a destra, dove guarda l'eroe;
