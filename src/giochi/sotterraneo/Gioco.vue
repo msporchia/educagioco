@@ -950,12 +950,18 @@ function stanzaDaProva(c) {
 }
 
 // `#luce=stanza` accende tutta la stanza (e il giro di muro), a piena forza: per fotografare l'arredo senza girare il cono
+// `#luce=ricordo` la segna solo vista: il cono resta, il resto è memoria (roba in luce, al bordo e nel ricordo nella stessa foto)
 function luceDaProva(c, s) {
-  if (new URLSearchParams(location.hash.slice(1)).get('luce') !== 'stanza') return
+  const prova = new URLSearchParams(location.hash.slice(1)).get('luce')
+  if (prova !== 'stanza' && prova !== 'ricordo') return
   const base = c.aggiornaLuce.bind(c)
   c.aggiornaLuce = () => {
     base()
-    for (const [x, y] of c.livello.celleDellaLuce(s)) { const k = y * c.livello.largo + x; c.luce.add(k); c.forzaLuce.set(k, 1); c.visto[k] = 1 }
+    for (const [x, y] of c.livello.celleDellaLuce(s)) {
+      const k = y * c.livello.largo + x
+      if (prova === 'stanza') { c.luce.add(k); c.forzaLuce.set(k, 1) }
+      c.visto[k] = 1
+    }
   }
   c.aggiornaLuce()
 }
