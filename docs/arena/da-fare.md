@@ -1,8 +1,8 @@
 # Da fare
 
-- Gli edifici, la porta e il ponte dipinti (oggi disegnati in codice, `scena/edifici.js`:
-  il foglio è la voce 7b di `strumenti/sprite/DA-GENERARE.md`; la 7, con ChatGPT, è
-  andata a vuoto), le pose di attacco e di morte delle truppe.
+- Il foglio definitivo delle caserme (quello di adesso è provvisorio: voce 7b di
+  `strumenti/sprite/DA-GENERARE.md`), la porta e il ponte dipinti, le pose di attacco e di
+  morte delle truppe.
 - Il potenziamento a scelta (attacco o difesa), idea dell'utente come le due truppe
   per edificio; una tesoreria su un quinto posto che mostri la miniera.
 - La copertina dipinta della home (oggi quella del manifesto) e la guida in

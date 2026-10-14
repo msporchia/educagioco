@@ -135,7 +135,7 @@ export class Partita {
     for (const e of [...this.muri, ...this.caserme]) {
       if (e.fl > 0) e.fl -= dt
       if (!viva(e) && !e.crollato) {
-        this.evento({ tipo: 'crollo', x: e.x, y: e.y, lato: e.lato, che: e.tipo, id: e.id })
+        this.evento({ tipo: 'crollo', x: e.x, y: e.y, lato: e.lato, che: e.tipo, id: e.id, posto: e.posto })
         this.lati[altro(e.lato)].abbattuti++
         if (e.tipo === 'muro') e.crollato = true            // il cumulo resta, e si ricostruisce riparando
       }

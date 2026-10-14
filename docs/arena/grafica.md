@@ -19,14 +19,18 @@ sono disegnati in codice finché non arriva il foglio dipinto.
   **Provati e tolti**: una muraglia attorno all'accampamento, un muro davanti al castello,
   e un lastricato alla Heroes con gli edifici attaccati al castello (vedi
   [regole.md](regole.md)).
-- **Gli edifici** (`scena/edifici.js`): la stessa fondazione di pietra, sopra la forma
-  dell'edificio (cripta chiara con le ossa, guglia viola, baracca di tronchi, massi) e
-  quella della truppa che ci abita (la torretta a feritoie degli arcieri, il portone
-  degli opliti, il teschio che galleggia, il camino a corna…); dal livello 5 crescono.
-  Davanti uno scudo con la truppa ferma. **È l'unico punto da cambiare** quando arriva il
-  foglio dipinto (`strumenti/sprite/DA-GENERARE.md`, voce 7b; il primo giro, la 7, con
-  ChatGPT non ha dato niente di buono). Il colore della squadra, nel foglio, è un blu solo da
-  ridipingere di rosso come il castello.
+- **Le caserme sono dipinte** (`dati/caserme-dipinte.js`, generato da
+  `strumenti/sprite/caserme-arena.py` dal foglio di ChatGPT, voce 7b di
+  `strumenti/sprite/DA-GENERARE.md`; il foglio di adesso è provvisorio): ogni edificio con le
+  sue due truppe, appena costruito e dal livello 5, **il rudere** e **la piazzola vuota**,
+  tutti sulla stessa piazzola. Un posto mai usato mostra la piazzola vuota; dove una caserma
+  è crollata resta il suo rudere finché non se ne costruisce un'altra (la scena lo ricorda
+  dall'evento del crollo, che porta il posto). Le piazzole del foglio non sono tutte della
+  stessa misura: lo strumento scala ogni figura sulla sua piazzola, e il punto d'appoggio è
+  il centro della piazzola in basso. Finché l'atlante non c'è, o se manca un pezzo, gli
+  edifici si disegnano in codice (`scena/edifici.js`, con lo scudo della truppa davanti).
+- **Il nemico ha le stesse immagini col blu fatto rosso** (`ricolora()`, una volta per
+  atlante): per questo il prompt vuole il colore della squadra di un blu solo.
 - **Il castello nemico è lo stesso** coi colori scambiati pixel per pixel
   (`castelloNemico()`: il blu dei tetti diventa rosso, il rosso degli stendardi blu).
   Prima il nemico aveva la bocca d'albero: in un gioco che si chiama Castle Battle

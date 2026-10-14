@@ -488,7 +488,7 @@ Ora, nella stessa mano e con le stesse regole (trasparente, niente scritte, il c
 4. LE COSE DEL LASTRICATO, piccole, per riempire gli spazi fra gli edifici: un braciere acceso, una fontana, una statua di cavaliere, barili, casse, una pila di palle di cannone, un pozzo, un carro, un'asta con lo stendardo blu, una rastrelliera di lance, un mucchio di legna, due panche. Almeno dodici pezzi, ognuno largo fra 50 e 110 px.
 ```
 
-### 7b — Le caserme di Castle Battle sulle piazzole · da mandare (14 ottobre 2026)
+### 7b — Le caserme di Castle Battle sulle piazzole · ✅ provvisorio, 14 ottobre 2026
 
 **Perché**: la 7 (edifici staccati descritti uno per uno) non ha dato niente di buono.
 Provata a parole anche una città alla Heroes con gli edifici attaccati al castello, e
@@ -498,11 +498,17 @@ ci sono quattro piazzole fisse, e su ognuna si costruisce una caserma. Il prompt
 il gioco e lascia **libero di ideare** gli edifici (l'utente); fisse restano solo le
 regole che servono a ritagliarli.
 
+**Com'è andata**: il primo foglio (ChatGPT ha finito i gettoni, «non è la versione
+definitiva») ha le righe da 6, 6, 8, 8: nella torre e nell'antro una forma semplice in più
+all'inizio, che il foglietto salta; le piazzole non sono tutte della stessa misura, e lo
+strumento le pareggia. È nel gioco così: un foglio nuovo si salva sopra e si rilancia
+`python3 strumenti/sprite/caserme-arena.py`, correggendo il foglietto se le righe cambiano.
+
 **Come si manda**: ChatGPT, chat nuova. Si allega uno screen del gioco di adesso (il campo
 a metà partita, col pannello delle carte) e la piazzola (`terreno-bosco.png`, «la base è
-questa»). **Si salva in** `strumenti/sprite/sorgenti/arena/caserme.png`. **Il lettore è da
-scrivere**: come le torri, per righe (`righe.py`); gli edifici vanno in
-`scena/edifici.js`, l'unico punto da cambiare, e il nemico ridipinge il blu di rosso.
+questa»). **Sta in** `strumenti/sprite/sorgenti/arena/caserme.webp`, col foglietto `caserme.json`;
+lo legge `strumenti/sprite/caserme-arena.py` (per righe, con `righe.py`), che scrive
+`src/giochi/arena/dati/caserme-dipinte.js`. Il nemico ridipinge il blu di rosso.
 
 ```text
 Ti racconto un gioco per bambini dai 6 ai 12 anni e ti chiedo di disegnarne gli edifici. La prima immagine allegata è uno screen del gioco com'è oggi, con gli edifici provvisori disegnati in codice: guardala per capire com'è fatto, non per lo stile. La seconda contiene la piazzola di legno e pietra su cui gli edifici si costruiscono.
@@ -536,7 +542,7 @@ LE REGOLE TECNICHE, queste sì precise, perché il foglio poi si taglia a pezzi:
 | 5 | i mostri che camminano, un video per creatura | 1 al giorno | la creatura ritagliata | `creature/passi/<creatura>.png` (`cammino.py`) | mostri che camminano, di lato e di fronte |
 | 6 | gli eroi | 1 | `mostri-1`, una scena | — | l'addio a 0x72 |
 | 7 ✗ | la cittadella di Castle Battle a fogli (ChatGPT, 13/10: niente di buono) | 2 | `torri-2`, `td_1` | — | — |
-| 7b | le caserme di Castle Battle sulle piazzole (ChatGPT, il gioco raccontato) | 1 | uno screen del gioco, `terreno-bosco` | `arena/caserme.png` | caserme dipinte, rudere e piazzola vuota |
+| 7b ✅ | le caserme di Castle Battle sulle piazzole (ChatGPT, il gioco raccontato; provvisorio) | 1 | uno screen del gioco, `terreno-bosco` | `arena/caserme.webp` | caserme dipinte, rudere e piazzola vuota |
 
 Il **minimo per rifare il gioco** sono l'1 e il 2: col bosco, le torri
 nuove e i mostri che ci sono già il castello si gioca e si pubblica. Il

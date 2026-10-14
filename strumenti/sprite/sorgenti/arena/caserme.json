@@ -1,0 +1,11 @@
+{
+  "_": "Il foglio delle caserme di Castle Battle (ChatGPT, DA-GENERARE.md voce 7b): cosa c'è in ogni riga, da sinistra. null = una figura da saltare (la torre e la grotta semplici, venute in più). Lo legge strumenti/sprite/caserme-arena.py.",
+  "foglio": "caserme.webp",
+  "stacco": 12,
+  "righe": [
+    ["cripta:scheletri:1", "cripta:scheletri:2", "cripta:guardiano:1", "cripta:guardiano:2", "cripta:rudere", "vuota"],
+    ["tana:lupi:1", "tana:lupi:2", "tana:pipistrelli:1", "tana:pipistrelli:2", "tana:rudere", null],
+    [null, null, "torre:negromante:1", "torre:negromante:2", "torre:diavoletto:1", "torre:diavoletto:2", "torre:rudere", null],
+    [null, null, "antro:golem:1", "antro:golem:2", "antro:drago:1", "antro:drago:2", "antro:rudere", null]
+  ]
+}
