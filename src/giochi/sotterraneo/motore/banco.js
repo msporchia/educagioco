@@ -21,6 +21,7 @@ import { NODI, colpisce } from '../dati/abilita.js'
 import { caselleDella, puntiAbilita, prossimoDellaStrada } from './abilita.js'
 import { mostroDiRiferimento, dannoDell } from './forza.js'
 import { ammette, robaDellaStrada, crescitaDellaStrada, stradaDi } from './strade.js'
+import { QUOTA_POCA_VITA } from './pericolo.js'
 
 const DT = 1 / 30
 const TETTO_PASSI = 3000        // ~100 secondi di cammino: molto più di un piano
@@ -160,7 +161,7 @@ function quantoToglie(corsa, f, nodo) {
 }
 
 // prepara l'abilità del turno (o niente, e si attacca): torna l'id preparato
-function preparaLAbilita(corsa, f) {
+function preparaLAbilita(corsa, f, st = {}) {
   if (!BANCO.abilita || corsa.pronta) return null
   const vivi = corsa.vivi(f)
   const usabili = caselleDella(corsa.crescita).filter(id => id && !corsa.perchéNonUsi(id)).map(id => NODI[id])
@@ -172,6 +173,11 @@ function preparaLAbilita(corsa, f) {
     if (cura && corsa.prepara(cura.id)) return cura.id
     const para = usabili.find(n => !colpisce(n) && (n.parato || n.intoccabile) && !(io.parato > 0) && !corsa.preparatoCon('parato'))
     if (para && corsa.prepara(para.id)) return para.id
+  }
+  // `appenaPuoi` (il curioso, docs/sotterraneo/giocatori-tipo.md): la più forte che paga, anche se il colpo solito chiudeva e senza tetto
+  if (st.abilita === 'appenaPuoi') {
+    const piu = usabili.filter(colpisce).map(n => ({ n, v: quantoToglie(corsa, f, n) })).sort((a, b) => b.v - a.v)[0]
+    return piu && corsa.prepara(piu.n.id) ? piu.n.id : null
   }
   if ((f.bancoForti || 0) >= FORTI_A_SCONTRO) return null
   const normale = Math.min(f.chi.ossa, corsa.colpo(f.chi))
@@ -186,7 +192,7 @@ function preparaLAbilita(corsa, f) {
 }
 
 // senza questa funzione il banco gioca tutta la campagna a mani nude, misurando il costo di giocare male
-function equipaggia(corsa) {
+function equipaggia(corsa, st = {}, registro = null) {
   for (let i = corsa.zaino.length - 1; i >= 0; i--) {
     const k = corsa.zaino[i]
     const c = COSE[k]
@@ -203,7 +209,8 @@ function equipaggia(corsa) {
     if (c.dove === 'mancina' && scudoMeglio(corsa, k)) { corsa.usa(i); continue }
     // al dito la prima cosa che capita: i gioielli non si confrontano su un numero solo
     if (c.dove === 'dito' && !corsa.dito) { corsa.usa(i); continue }
-    if (c.usa === 'cura' && corsa.vita < corsa.vitaMax * 0.45) corsa.usa(i)   // beve quando serve, non appena trova
+    // beve quando serve, non appena trova (`beviSotto`: la quota di vita sotto cui beve, 0,45 di difetto)
+    if (c.usa === 'cura' && corsa.vita < corsa.vitaMax * (st.beviSotto || 0.45)) { corsa.usa(i); if (registro) registro.pozioni++ }
     // la pozione blu, quando il globo è sotto un terzo e ce ne starebbe una intera (l'energia torna combattendo e camminando, piano: docs/sotterraneo/orologio.md)
     if (c.usa === 'energia' && corsa.energia <= corsa.energiaMax / 3 && corsa.energiaMax - corsa.energia >= c.energia) corsa.usa(i)
   }
@@ -234,16 +241,25 @@ function robeInteressanti(corsa, quali) {
 }
 
 // `bravura`: 1 è un adulto attento, 0.75 un bambino normale. `conto` è il taccuino della discesa
-function sbriga(corsa, bravura, sorte, conto) {
+function sbriga(corsa, bravura, sorte, conto, st = {}, scontro = null) {
   const f = corsa.foglio
   if (!f) return false
   switch (f.che) {
     // lo scontro a gruppi (docs/sotterraneo/scontro.md): il banco attacca il bersaglio che il motore sceglie da sé (lo stesso se
     // è in piedi, se no il più ferito) finché non cadono tutti, con le abilità delle caselle (preparaLAbilita); non beve e non scappa
-    case 'scontro':
-      if (BANCO.abilita) { if (!f.bancoCaselle) { riempiLeCaselle(corsa); f.bancoCaselle = true } preparaLAbilita(corsa, f) }
+    case 'scontro': {
+      if (scontro) scontro.t++
+      // il curioso beve nello scontro quando il gioco gli dice che rischia (lo stop) o è nel rosso: costa il turno
+      if (st.beviNelloScontro && corsa.zaino.some(k => COSE[k] && COSE[k].usa === 'cura') &&
+          (f.pericolo || corsa.vita < corsa.vitaMax * QUOTA_POCA_VITA) && corsa.beviNelloScontro()) { conto.pozioni++; if (scontro) scontro.pz++; return true }
+      if (BANCO.abilita) {
+        if (!f.bancoCaselle) { riempiLeCaselle(corsa); f.bancoCaselle = true }
+        const id = preparaLAbilita(corsa, f, st)
+        if (id && scontro) scontro.ab[id] = (scontro.ab[id] || 0) + 1
+      }
       corsa.rispondi(sorte() < bravura)
       return true
+    }
     case 'porta':
     case 'forziere':
     case 'fonte':
@@ -273,9 +289,12 @@ function sbriga(corsa, bravura, sorte, conto) {
 // provare che una partita ripresa a metà si finisce davvero). `fino`: il piano oltre cui si smette di
 // scendere, per misurare l'abisso (che non ha un ultimo piano). `perPiano`: quante domande è costato ognuno.
 // `roba`: quella che si porta giù da sopra (motore/corredo.js); torna in `corsa.roba` a discesa finita
+// `stile`: come gioca un giocatore tipo (dati/giocatori-tipo.js; senza, il banco di sempre). Torna anche `scontri`: uno per scontro
+// (docs/sotterraneo/giocatori-tipo.md, «Cosa registra»)
 export function gioca(tappa, { bravura = 0.8, seme = 7, come = 'minimo', rnd = null, da = null,
                               eroe = undefined, fino = null, tettoGiri = TETTO_GIRI, roba = null,
-                              crescita = null, punti = null, strada = null } = {}) {
+                              crescita = null, punti = null, strada = null, stile = null } = {}) {
+  const st = stile || {}
   const sorte = rnd || seminato(seme * 31 + 17)
   const corsa = da || new Corsa(tappa, { seme, rnd: sorte, eroe, roba, crescita })
   if (da) da.rnd = sorte
@@ -284,7 +303,9 @@ export function gioca(tappa, { bravura = 0.8, seme = 7, come = 'minimo', rnd = n
   let giri = 0
   const persi = []
   const provati = new Map()
-  const conto = { fonti: 0 }
+  const conto = { fonti: 0, pozioni: 0 }
+  const scontri = []
+  let aperto = null, prima = { vita: corsa.vita, energia: corsa.energia }
   const sorsi = new Map()
   const perPiano = [], passiPerPiano = []   // le domande e le celle percorse (corsa.camminati) di ogni piano
   let pianoOra = corsa.piano, domandeAllInizio = corsa.domande, camminatiAllInizio = corsa.camminati
@@ -296,28 +317,55 @@ export function gioca(tappa, { bravura = 0.8, seme = 7, come = 'minimo', rnd = n
     camminatiAllInizio = corsa.camminati
   }
 
+  // uno scontro per volta: lo si apre quando compare il foglio, lo si chiude quando cambia (la vita a fine scontro vale 0 se si sviene)
+  const apriLoScontro = f => {
+    aperto = { f, r: { k: corsa.piano, n: f.campo.length, tipi: f.campo.map(m => m.tipo), g: f.campo.some(m => m.grosso) ? 1 : 0,
+                       ag: f.agguato ? 1 : 0, v0: prima.vita / corsa.vitaMax, e0: prima.energia / corsa.energiaMax, vf: 0, sv: 0, ab: {}, pz: 0, t: 0 } }
+  }
+  const chiudiLoScontro = () => {
+    const svenuto = !!corsa.foglio && corsa.foglio.che === 'svenuto'
+    aperto.r.sv = svenuto ? 1 : 0
+    aperto.r.vf = svenuto ? 0 : Math.max(0, corsa.vita) / corsa.vitaMax
+    scontri.push(aperto.r)
+    aperto = null
+  }
+  // il curioso si ferma alle fonti (`stile.fonte`): quando è sotto la soglia di vita o di energia, e alla fine del piano se non è pieno
+  const serveLaFonte = fine => {
+    const fo = st.fonte
+    if (!fo) return !fine && corsa.vita < corsa.vitaMax * 0.45
+    if (fine) return fo.allaFine && (corsa.vita < corsa.vitaMax * 0.9 || corsa.energia < corsa.energiaMax * 0.8)
+    return corsa.vita < corsa.vitaMax * fo.sotto || corsa.energia < corsa.energiaMax * fo.energiaSotto
+  }
+  const allaFonte = () => {
+    const fonte = robeInteressanti(corsa, ['fonte']).find(r => (sorsi.get(r) || 0) < SORSI_PROVATI)
+    if (!fonte) return false
+    sorsi.set(fonte, (sorsi.get(fonte) || 0) + 1)
+    conto.fonti++
+    if (!raggiungi(corsa, fonte)) sorsi.set(fonte, SORSI_PROVATI)
+    return true
+  }
+
   while (!corsa.finita && giri++ < tettoGiri) {
     if (corsa.piano !== pianoOra) chiudiIlPiano()
+    if (aperto && corsa.foglio !== aperto.f) chiudiLoScontro()
     if (fino != null && corsa.piano >= fino) break
-    if (corsa.foglio) { sbriga(corsa, bravura, sorte, conto); continue }   // finché un foglio è aperto non si cammina
+    if (corsa.foglio) {   // finché un foglio è aperto non si cammina
+      if (corsa.foglio.che === 'scontro' && !aperto) apriLoScontro(corsa.foglio)
+      sbriga(corsa, bravura, sorte, conto, st, aperto && aperto.r)
+      continue
+    }
     daiIPunti(corsa, punti, strada && strada.abilita)
-    equipaggia(corsa)
+    equipaggia(corsa, st, conto)
+    prima = { vita: corsa.vita, energia: corsa.energia }
     if (raccogliVicino(corsa, persi)) continue
 
     // mezzo morto e senza pozioni (equipaggia le beve prima): si va a una fonte in tutti e due i modi di
     // giocare, come chiave e scala. Era il mercante, che adesso sta sopra
-    if (corsa.vita < corsa.vitaMax * 0.45) {
-      const fonte = robeInteressanti(corsa, ['fonte']).find(r => (sorsi.get(r) || 0) < SORSI_PROVATI)
-      if (fonte) {
-        sorsi.set(fonte, (sorsi.get(fonte) || 0) + 1)
-        conto.fonti++
-        if (!raggiungi(corsa, fonte)) sorsi.set(fonte, SORSI_PROVATI)
-        continue
-      }
-    }
+    if (serveLaFonte(false) && allaFonte()) continue
 
     if (come === 'tutto') {
-      const roba = robeInteressanti(corsa, ['porta', 'forziere', 'fonte', 'mostro', 'cosa'])
+      // chi si ferma alle fonti le lascia per quando servono: non le beve a vita piena
+      const roba = robeInteressanti(corsa, st.fonte ? ['porta', 'forziere', 'mostro', 'cosa'] : ['porta', 'forziere', 'fonte', 'mostro', 'cosa'])
         .filter(r => !persi.includes(r))
       if (roba.length) {
         const meta = roba[0]
@@ -325,6 +373,7 @@ export function gioca(tappa, { bravura = 0.8, seme = 7, come = 'minimo', rnd = n
           persi.push(meta)
         continue
       }
+      if (serveLaFonte(true) && allaFonte()) continue
     }
 
     if (!corsa.chiaveDelPiano) {
@@ -341,10 +390,13 @@ export function gioca(tappa, { bravura = 0.8, seme = 7, come = 'minimo', rnd = n
   }
 
   chiudiIlPiano()
+  if (aperto) chiudiLoScontro()
   return {
     corsa,
     esito: corsa.esito,
     fonti: conto.fonti,   // non sta nell'esito: è il modo in cui il giocatore finto gioca, non il gioco
+    pozioni: conto.pozioni,
+    scontri,
     perPiano,
     passiPerPiano,
     guasto: corsa.finita || (fino != null && corsa.piano >= fino)
