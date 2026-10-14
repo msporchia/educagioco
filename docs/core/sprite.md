@@ -88,6 +88,33 @@ nello stesso modulo.
   terra di sopra (`sopra-personaggi-*`: 22 pixel di altezza il piccolo,
   200 il nitido): +400 KB di WebP per venti pose.
 
+## I pezzi derivati in codice
+
+**Quando conviene**: un pezzo **geometrico** (una diagonale, un angolo smussato, un quarto di cerchio) che si può ricavare da tessere già dipinte. Generarlo
+con un modello costa un giro di prompt e non esce mai della stessa mano delle tessere vicine; in codice è della stessa mano per costruzione (usa i loro
+pixel) e si rifà con un comando. **Non conviene** per un pezzo con un disegno suo (un'arma, una porta, un mostro) o quando la geometria non è esatta
+(una grotta ha bordi naturali: lì un pezzo semplice raramente migliora). Prima in codice, poi dipinto: se un domani c'è il pezzo dipinto, si cambia il nome
+nello scenario e il derivato si butta.
+
+- **Come si usa**: una libreria, `strumenti/sprite/derivati.py`, e **una configurazione per ogni uso** che dice quali tessere prendere e come chiamare i pezzi.
+  Oggi c'è una sola, `strumenti/sprite/diagonali.py`: i muri obliqui del sotterraneo, una voce di `SCENE` per scena (cripta, cantine, fornace) con il foglio
+  da cui ritagliare, il nome del foglio che esce e due numeri (le righe del coronamento e dove cominciano i mattoni). Una scena nuova è una voce lì, poi
+  `python3 strumenti/sprite/diagonali.py <scena> --provino` (il foglio da guardare in `tmp/diagonali-<scena>.png`) e `atlante.py sotterraneo`. Per un uso
+  nuovo (altri giochi, altre forme) si copia `diagonali.py` come calco: i nomi delle tessere, i pezzi che escono, e `scrivi_foglio` che li mette in un
+  foglio col suo foglietto (famiglie «tessera», un giro, fondo trasparente), nel formato di `atlante.py`.
+- **Le funzioni di `derivati.py`**: `tessere_di(sorgente)` (le tessere di un foglio come le ritaglia `atlante.py`: stesso fondo, stessa scala);
+  `triangolo(dim, angolo)` e `quarto_di_cerchio(dim, angolo, raggio)` (maschere `L`, 255 dentro); `mascherata(tessera, maschera)`; `profondita(h)` (quanto si è
+  entrati in un bordo dopo `h` pixel di una diagonale a 45°: 1/√2 per colonna); `bordo_su_diagonale(roccia, bordo, lato)` (la roccia tagliata dalla linea col suo
+  bordo che corre lungo la diagonale, a gradini di un pixel); `faccia_su_diagonale(fila, lato, parità, righe)` (una fascia di muro spostata di un pixel per
+  colonna: la faccia di una parete obliqua, larga una cella e alta due); `scrivi_foglio` e `provino`. `quarto_di_cerchio` non ha ancora un uso.
+- **Dove sono usate**: i sei pezzi per scena dei muri obliqui ([../sotterraneo/scenari.md](../sotterraneo/scenari.md#i-muri-in-diagonale)), pezzi `<scena>-taglio-so|se`
+  e `<scena>-faccia-no|ne-0|1` nell'atlante del sotterraneo (+9 KB di PNG per tutte e tre le scene).
+- **Il PNG non si tocca**: si rifà col comando, e `unita/sprite-derivati` confronta i pezzi rifatti con quelli scritti in `sorgenti/` (un foglio ritoccato a mano è rosso).
+- **I limiti visti**: la linea passa per gli angoli opposti della cella, quindi solo a 45° e a gradini di una cella (un passo da due celle per una e basta non
+  si ricava: resta a scaletta); la fascia è alta al più una cella (la faccia delle cantine, alta 20, ne perde quattro righe di mattoni); la tessera della roccia
+  si campiona sempre dalla stessa cella, e dove ha un disegno (le pietre delle cantine) il pezzo non si salda alla vicina; il pezzo vuole il pavimento sotto già
+  posato dalla tela, perché dentro la diagonale è trasparente.
+
 ## Il banco — `npm run mondo`
 
 Una pagina sola, `strumenti/banco/mondo.html`, con due metà che sono i due
