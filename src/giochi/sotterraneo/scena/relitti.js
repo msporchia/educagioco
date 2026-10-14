@@ -7,6 +7,7 @@
 import { T } from '../dati/mondo.js'
 import { TINTE_RELITTI } from '../dati/relitti.js'
 import { sorteDi } from './muri.js'
+import { neraDi } from '../../../grafica/atlante.js'
 
 const tela = new Map()
 
@@ -155,10 +156,13 @@ export function dipingiRelitto(ctx, r, scenario, alfa = 1) {
   variante = sorteDi(r.x, r.y, 9) % 3
   const c = sprite(`${r.disegno}|${scenario}|${r.v ? 'v' : 'h'}|${variante}`, w, h, g => PITTORI[r.disegno](g, t, !!r.v))
   const x = Math.round((r.x + r.w / 2) * T - w / 2), y = (r.y + r.h) * T - h
-  const prima = ctx.globalAlpha
-  if (alfa !== 1) ctx.globalAlpha = prima * alfa
   ctx.drawImage(c, x, y)
-  if (alfa !== 1) ctx.globalAlpha = prima
+  if (alfa < 1) {   // opaco e più scuro, non trasparente: sotto c'è il pavimento
+    const prima = ctx.globalAlpha
+    ctx.globalAlpha = prima * (1 - alfa)
+    ctx.drawImage(neraDi(c), x, y)
+    ctx.globalAlpha = prima
+  }
 }
 
 export const DISEGNATI = Object.keys(PITTORI)
@@ -167,7 +171,6 @@ export const DISEGNATI = Object.keys(PITTORI)
 // è alta come un muro basso: tre righe); `riva` dice quali lati toccano terra ({ n, s, o, e }).
 export function dipingiAcqua(ctx, x, y, riva, t, alfa = 1) {
   const prima = ctx.globalAlpha
-  ctx.globalAlpha = prima * alfa
   const px0 = x * T, py0 = y * T
   ctx.fillStyle = '#17394e'
   ctx.fillRect(px0, py0, T, T)
@@ -192,5 +195,10 @@ export function dipingiAcqua(ctx, x, y, riva, t, alfa = 1) {
   if (riva.s) ctx.fillRect(px0, py0 + T - 2, T, 1)
   if (riva.o) ctx.fillRect(px0 + 1, py0, 1, T)
   if (riva.e) ctx.fillRect(px0 + T - 2, py0, 1, T)
-  ctx.globalAlpha = prima
+  if (alfa < 1) {   // opaca e più scura, come il pavimento sul nero: il pavimento non traspare dall'acqua
+    ctx.globalAlpha = prima * (1 - alfa)
+    ctx.fillStyle = '#000'
+    ctx.fillRect(px0, py0, T, T)
+    ctx.globalAlpha = prima
+  }
 }
