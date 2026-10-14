@@ -48,6 +48,7 @@ async function applicaTara(tara) {
     const [k, campo] = voce.split('=')[0].split('.')
     const v = Number(voce.split('=')[1])
     if (k === 'risalita') RISALITA[campo] = v
+    else if (k === 'bottino') (await modulo('motore/bottino.js')).GROSSO_PIU[campo] = v
     else if (k === 'livelli') livelli.CURVA_DELL_ESPERIENZA[campo] = v
     else if (k === 'potenza') livelli.VALORE_DELLA_POTENZA[campo] = v
     else if (k === 'zona') { if (campo in zone.CURVA_DELLE_ZONE) zone.CURVA_DELLE_ZONE[campo] = v; else zone.FORMA_DELLA_ZONA[campo] = v }

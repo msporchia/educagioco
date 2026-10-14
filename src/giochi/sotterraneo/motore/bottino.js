@@ -20,6 +20,9 @@ export const PROFONDITA_PER_LIVELLO = 0.0125
 // tabella della storia smetterebbe di dire con che roba si arriva; un po' di più per chi lascia di più
 export const pezzoDalMostro = scheda => 0.03 + 0.08 * ((scheda && scheda.droppa) || 0)
 
+// il raro che lascia il grosso è di qualche livello sopra il bottino: quello a tono lo compra chi ha le gemme (docs/sotterraneo/rarita.md)
+export const GROSSO_PIU = { livelli: 0 }
+
 // il livello del bottino: quello del posto, o quello dell'eroe se è più alto
 export const livelloDelBottino = (posto, eroe) => Math.max(1, Math.round(posto || 1), Math.round(eroe || 1))
 

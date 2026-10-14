@@ -21,7 +21,7 @@ import { valoreDelLivello } from '../dati/pezzi.js'
 import { esperienzaDi, gemmeDi } from '../dati/livelli.js'
 import { potenzaDelMostro } from './potenza.js'
 import { espNellaZona } from '../dati/zone.js'
-import { pezzoNuovo, pezzoDelGrosso, pezzoDalMostro, livelloDelBottino, elisirCade } from './bottino.js'
+import { pezzoNuovo, pezzoDelGrosso, GROSSO_PIU, pezzoDalMostro, livelloDelBottino, elisirCade } from './bottino.js'
 import { generaPiano } from './livello.js'
 import { percorso, viaVerso, primaLibera } from '../../../motore/passi.js'
 import { Corredo } from './corredo.js'
@@ -815,7 +815,7 @@ export class Corsa extends Corredo {
     }
     // il mostro grosso: di sicuro un pezzo raro o meglio, e il suo pezzo col nome
     if (m.grosso) {
-      this.posaPezzo(pezzoNuovo({ livello: this.livelloDelBottino, chi: 'grosso', fortuna: this.fortuna,
+      this.posaPezzo(pezzoNuovo({ livello: this.livelloDelBottino + GROSSO_PIU.livelli, chi: 'grosso', fortuna: this.fortuna,
                                   rnd: () => this.rnd(), tua: k => this.porta(k) }), { x: m.x - 1, y: m.y })
       this.posaPezzo(pezzoDelGrosso(GROSSI[m.grosso].pezzo, this.livelloDelBottino), { x: m.x, y: m.y + 1 })
     } else if (this.rnd() < pezzoDalMostro(scheda)) {
