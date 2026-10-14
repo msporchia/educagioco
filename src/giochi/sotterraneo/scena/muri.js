@@ -32,6 +32,24 @@ export function bordiDelTetto(pietra, x, y) {
   return { n, o, e, angoli }
 }
 
+// una cella di roccia che sporge nel pavimento taglia in diagonale: roccia da due lati (n/o, n/e, s/o, s/e) e pavimento
+// dai due opposti e fra loro. `no` e `ne` sono facce (sotto si cammina), `so` e `se` bordi. `buona(x, y)` dice se quel
+// pavimento è di una stanza liscia (smussata, cappella, sala): una svolta di corridoio resta quadrata. Il pezzo
+// diagonale ha il suo muro dall'altra parte: docs/sotterraneo/scenari.md, «I muri in diagonale»
+export function taglio(pietra, x, y, buona = () => true) {
+  if (!pietra(x, y)) return null
+  const v = (dx, dy) => pietra(x + dx, y + dy)
+  const lib = (dx, dy) => !v(dx, dy) && buona(x + dx, y + dy)
+  if (v(0, -1) && v(-1, 0) && lib(1, 0) && lib(0, 1) && lib(1, 1)) return 'no'
+  if (v(0, -1) && v(1, 0) && lib(-1, 0) && lib(0, 1) && lib(-1, 1)) return 'ne'
+  if (v(0, 1) && v(-1, 0) && lib(1, 0) && lib(0, -1) && lib(1, -1)) return 'so'
+  if (v(0, 1) && v(1, 0) && lib(-1, 0) && lib(0, -1) && lib(-1, -1)) return 'se'
+  return null
+}
+
+// il pavimento che un taglio lascia scoperto, dalla parte opposta alla roccia: da lì la tela prende com'è il pavimento
+export const VICINA_DEL_TAGLIO = { no: [1, 1], ne: [-1, 1], so: [1, -1], se: [-1, -1] }
+
 // una fila di facce finisce con uno spigolo dove accanto si cammina; dove c'è tetto o una porta non serve
 export function capiDellaFaccia(pietra, porta, x, y) {
   return {

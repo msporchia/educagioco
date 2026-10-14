@@ -34,6 +34,7 @@ export const SCENARI = {
     // i forzieri del posto (docs/sotterraneo/roba.md): legno e ferro, pietra e ferro freddo, ferro e brace; il d'oro è solo quello delle missioni
     forzieri: ['cantine-forziere-a', 'cantine-forziere-b', 'cantine-forziere-c', 'cantine-forziere-d'],
     orpelli: ORPELLI.cantine,   // l'arredo: cosa c'è, dove sta, quanto è epico (dati/orpelli.js)
+    diagonali: null,   // i muri obliqui hanno i pezzi solo nella cripta (docs/sotterraneo/scenari.md, «I muri in diagonale»)
   },
   // la cripta (sotterraneo_4*.png): ritagliata da una scena, più due fogli coi pezzi che la scena non ha
   cripta: {
@@ -58,6 +59,12 @@ export const SCENARI = {
     ragnatele: { sx: 'cripta-ragnatela-sx', dx: 'cripta-ragnatela-dx' },
     forzieri: ['cripta-forziere', 'forziere-scuro-chiuso', 'cripta-forziere-b'],
     orpelli: ORPELLI.cripta,
+    // i muri obliqui delle stanze smussate e delle cappelle, fatti in codice dalle tessere dritte (strumenti/sprite/diagonali.py):
+    // taglio = cella di roccia con il pavimento in diagonale (bordo), faccia = fascia alta due celle, due pezzi per la fila di due
+    diagonali: {
+      taglio: { so: 'cripta-taglio-so', se: 'cripta-taglio-se' },
+      faccia: { no: ['cripta-faccia-no-0', 'cripta-faccia-no-1'], ne: ['cripta-faccia-ne-0', 'cripta-faccia-ne-1'] },
+    },
   },
   // la fornace (sotterraneo_5*.png): ritagliata da una scena, più un foglio coi pezzi che la scena non ha
   fornace: {
@@ -80,6 +87,7 @@ export const SCENARI = {
     ragnatele: { sx: 'fornace-ragnatela-sx', dx: 'fornace-ragnatela-dx' },
     forzieri: ['fornace-forziere-b', 'fornace-forziere-c'],
     orpelli: ORPELLI.fornace,
+    diagonali: null,
   },
 }
 

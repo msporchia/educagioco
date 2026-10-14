@@ -89,6 +89,36 @@ in Node) e si prova in `unita/muri-sotterraneo`.
 - **Le cose per terra** stanno su una cella di pavimento su venticinque,
   sempre le stesse: una su dieci copriva le stanze di sassi.
 
+## I muri in diagonale (prova sulla cripta)
+
+Le stanze smussate, le cappelle e le sale con gli angoli tagliati hanno muri a gradini di una cella, e un muro obliquo usciva
+come una scaletta di quadrati (l'utente, 13 ottobre 2026: «la struttura è molto carina, è il rendering che è terribile»). I generatori
+di immagini non c'erano, e la regola è «prima in codice, poi dipinto»: i pezzi si ricavano dalle tessere dritte della cripta, e **solo la cripta
+li ha** (`diagonali` in `SCENARI`, `null` per le altre). **Il disegno per il dipinto** è in [PROMPT-scenario.md](../../strumenti/sprite/sorgenti/sotterraneo/generati/PROMPT-scenario.md#i-pezzi-diagonali-e-gli-angoli).
+
+- **Quando una cella taglia** (`taglio` in `scena/muri.js`, pura): è roccia con roccia da due lati contigui (n/o, n/e, s/o, s/e) e **pavimento
+  dagli altri due e in diagonale**; `no` e `ne` hanno il pavimento sotto (sono facce), `so` e `se` sopra (sono bordi). Vale solo se quel pavimento
+  è di una stanza `smussata`, `cappella` o `sala` (`STANZE_LISCE` in `tela.js`) e non è una porta né una nicchia: una svolta di corridoio, un'elle,
+  una croce restano quadrate. Gli angoli di roccia del rettangolo (pavimento solo in diagonale) restano quadrati: arrotondarli vuole
+  anche il pavimento che entra nella roccia, e non è fatto.
+- **La linea passa per gli angoli opposti della cella, a gradini di un pixel del disegno** (4 px a schermo). Il pavimento sotto resta quello vero (la tela
+  lo posa anche nella cella tagliata, col tipo del pavimento accanto); il pezzo è trasparente dove c'è pavimento.
+- **Il bordo chiaro** (`so`, `se`): la roccia è la tessera del tetto, mascherata col triangolo; la riga chiara e la fascia scura sono quelle del bordo dritto
+  (`cripta-bordo-n`), lette in profondità dalla linea (1/√2 di riga per colonna: le quattro colonne chiare di una diagonale sono i tre pixel del bordo dritto).
+- **La faccia** (`no`, `ne`): la muraglia a 45° è una fascia di 16 pixel di altezza, la faccia dritta spostata di un pixel per colonna. Sta per metà
+  nella cella tagliata e per metà in quella sopra: **un pezzo largo una cella e alto due**, alla cella tagliata il basso e a quella sopra l'alto, ognuno con la
+  luce della sua cella (0 = non vista). Il coronamento è alto una riga in più (`CORONAMENTO`): a 45° tre righe sembrano due. La cella di sopra non ha più
+  le strisce laterali (`forma.sopra`). Due pezzi per verso, per la parità della fila di due celle della faccia dritta, che così si continua da una cella all'altra.
+- **Il perché dei gradini di un pixel**: la fascia della faccia dritta sale di 16 pixel in 16 colonne e le sue due estremità cadono sulle facce dritte accanto
+  (`y` e `y - 1`) senza saltare; vale per le scalette di una cella come per i passi da due celle della cappella, che diventano una diagonale sola.
+- **Lo strumento**: `python3 strumenti/sprite/diagonali.py` (`--provino`) rifà il foglio `sotterraneo_4_diagonali.png` e il suo foglietto dalle tessere
+  di `sotterraneo_4.png` (lo stesso ritaglio di `atlante.py`); poi `atlante.py sotterraneo`. Sei pezzi: `cripta-taglio-so|se` (16×16),
+  `cripta-faccia-no|ne-0|1` (16×32). Per averne per un altro scenario si cambia il nome della sorgente e dei pezzi in `diagonali.py`.
+- **Provato** (foto prima/dopo): ottagoni, cappelle e sale con gli angoli tagliati diventano muri lisci, i passi da due celle una diagonale, le nicchie e le
+  porte restano al loro posto. **Non guardato**: scale, relitti e arredo accanto a un taglio; le grotte (muri naturali storti) non hanno pezzi loro.
+
+Nei test: `unita/muri-sotterraneo` (§ 6, `taglio`: i quattro versi, il rettangolo che non taglia, una svolta che taglia solo con un pavimento buono).
+
 ## I fogli e l'atlante
 
 - **Il sotterraneo è il primo gioco che usa i due motori comuni**:

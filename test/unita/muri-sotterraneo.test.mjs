@@ -25,7 +25,7 @@
    cella di roccia che tocca il pavimento resta senza la sua faccia o il
    suo bordo** da quel lato.
    ═══════════════════════════════════════════════════════════════════ */
-import { genere, bordiDelTetto, capiDellaFaccia, versoDellaPorta, faccia, tetto }
+import { genere, bordiDelTetto, capiDellaFaccia, versoDellaPorta, faccia, tetto, taglio, VICINA_DEL_TAGLIO }
   from '../../src/giochi/sotterraneo/scena/muri.js'
 import { Livello } from '../../src/giochi/sotterraneo/motore/livello.js'
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
@@ -213,6 +213,46 @@ function pianta(righe) {
     }
   controlla(`nessuna roccia che tocca il pavimento resta senza faccia o bordo (${celle} celle, ${porte} porte)`,
             denti.length === 0, denti.slice(0, 5).join(' · '))
+}
+
+/* ══════════ 6. i tagli in diagonale (la cripta, docs/sotterraneo/scenari.md) ══════════
+   Una cella di roccia con roccia da due lati e pavimento dagli altri due e in diagonale taglia di 45°. Una stanza
+   smussata ha i suoi quattro angoli; il corner di un rettangolo e la svolta di un corridoio no. */
+{
+  const { pietra } = pianta([
+    '###########',
+    '###.....###',
+    '##.......##',
+    '#.........#',
+    '#.........#',
+    '#.........#',
+    '##.......##',
+    '###.....###',
+    '###########',
+  ])
+  const t = (x, y) => taglio(pietra, x, y)
+  uguale('in alto a sinistra la roccia sporge: no', t(2, 1), 'no')
+  uguale('un passo più in basso, ancora no', t(1, 2), 'no')
+  uguale('in alto a destra: ne', t(8, 1), 'ne')
+  uguale('in basso a sinistra: so', t(2, 7), 'so')
+  uguale('in basso a destra: se', t(8, 7), 'se')
+  uguale('un muro dritto non taglia', t(5, 0), null)
+  uguale('il pavimento non è roccia: non taglia', t(5, 3), null)
+  // le due scalette hanno il pavimento dalla parte giusta
+  for (const [x, y, lato] of [[2, 1, 'no'], [8, 1, 'ne'], [2, 7, 'so'], [8, 7, 'se']]) {
+    const [dx, dy] = VICINA_DEL_TAGLIO[lato]
+    controlla(`${lato}: la cella opposta alla roccia è pavimento`, !pietra(x + dx, y + dy))
+  }
+
+  const rettangolo = pianta(['#######', '#.....#', '#.....#', '#.....#', '#######'])
+  let n = 0
+  for (let y = 0; y < 5; y++) for (let x = 0; x < 7; x++) if (taglio(rettangolo.pietra, x, y)) n++
+  uguale('un rettangolo non ha celle tagliate (gli angoli della roccia restano quadrati)', n, 0)
+
+  // la svolta di un corridoio e un'elle: il taglio si fa solo dove il pavimento è di una stanza liscia
+  const svolta = pianta(['#####', '#...#', '#.###', '#.###', '#####'])
+  uguale('l\'angolo interno di una svolta, se il pavimento non è buono, non taglia', taglio(svolta.pietra, 2, 2, () => false), null)
+  uguale('...e lo stesso angolo taglia se il pavimento è buono', taglio(svolta.pietra, 2, 2, () => true), 'se')
 }
 
 riassunto('la regola del muro del sotterraneo')
