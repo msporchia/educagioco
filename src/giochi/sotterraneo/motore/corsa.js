@@ -21,7 +21,7 @@ import { valoreDelLivello } from '../dati/pezzi.js'
 import { esperienzaDi, gemmeDi } from '../dati/livelli.js'
 import { potenzaDelMostro } from './potenza.js'
 import { espNellaZona } from '../dati/zone.js'
-import { pezzoNuovo, pezzoDelGrosso, pezzoDalMostro, livelloDelBottino, elisirCade, ampollaCade } from './bottino.js'
+import { pezzoNuovo, pezzoDelGrosso, pezzoDalMostro, livelloDelBottino, livelloDelTrovato, tiroDalSeme, elisirCade, ampollaCade } from './bottino.js'
 import { generaPiano } from './livello.js'
 import { percorso, viaVerso, primaLibera } from '../../../motore/passi.js'
 import { Corredo, eCura, curePerTipo } from './corredo.js'
@@ -128,6 +128,11 @@ export class Corsa extends Corredo {
   // il livello del posto (dati/campagna.js): dice il livello del bottino e quanto valgono le gemme
   get livelloQui() { return livelloDelPosto(this.tappa, this.piano) }
   get livelloDelBottino() { return livelloDelBottino(this.livelloQui, this.livelloEroe) }
+  // il livello di un pezzo trovato lì: quello dell'eroe con la sua variazione (docs/sotterraneo/livello-dei-pezzi.md)
+  livelloDelTrovato(chi, x, y, sale = 0) {
+    const sem = [this.seme, this.piano, x, y]
+    return livelloDelTrovato(this.livelloEroe, chi, tiroDalSeme(31 + sale, ...sem), tiroDalSeme(37 + sale, ...sem))
+  }
   get quantiPiani() { return this.tappa.piani }
 
   // l'abisso non ha un ultimo piano: `piani: Infinity` lo rende già falso da sé, ma serve dirlo per nome a chi legge
@@ -819,12 +824,12 @@ export class Corsa extends Corredo {
     }
     // il mostro grosso: di sicuro un pezzo raro o meglio, e il suo pezzo col nome
     if (m.grosso) {
-      this.posaPezzo(pezzoNuovo({ livello: this.livelloDelBottino, chi: 'grosso', fortuna: this.fortuna,
+      this.posaPezzo(pezzoNuovo({ livello: this.livelloDelTrovato('grosso', m.x, m.y), chi: 'grosso', fortuna: this.fortuna,
                                   rnd: () => this.rnd(), tua: k => this.porta(k) }), { x: m.x - 1, y: m.y })
-      this.posaPezzo(pezzoDelGrosso(GROSSI[m.grosso].pezzo, this.livelloDelBottino), { x: m.x, y: m.y + 1 })
+      this.posaPezzo(pezzoDelGrosso(GROSSI[m.grosso].pezzo, this.livelloDelTrovato('grosso', m.x, m.y, 1)), { x: m.x, y: m.y + 1 })
     } else if (this.rnd() < pezzoDalMostro(scheda)) {
       // a volte anche un mostro qualunque lascia un pezzo da mettersi addosso, a tono col posto e con l'eroe
-      this.posaPezzo(pezzoNuovo({ livello: this.livelloDelBottino, chi: 'mostro', fortuna: this.fortuna,
+      this.posaPezzo(pezzoNuovo({ livello: this.livelloDelTrovato('mostro', m.x, m.y), chi: 'mostro', fortuna: this.fortuna,
                                   rnd: () => this.rnd(), tua: k => this.porta(k) }), { x: m.x, y: m.y + 1 })
     }
     // l'elisir del toro: rarissimo, dal grosso o da un caporale (e dai forzieri)
@@ -968,7 +973,7 @@ export class Corsa extends Corredo {
     const tiro = this.rnd()
     let cosa = premio
     if (!cosa && tiro < (this.indice >= 0 ? 0.34 : 0.6))
-      cosa = pezzoNuovo({ livello: this.livelloDelBottino, chi: 'forziere', fortuna: this.fortuna,
+      cosa = pezzoNuovo({ livello: this.livelloDelTrovato('forziere', f.x, f.y), chi: 'forziere', fortuna: this.fortuna,
                           rnd: () => this.rnd(), tua: k => this.porta(k) })
     if (!cosa) cosa = pescaCosa(NEI_FORZIERI_DELLA_STORIA, { rnd: () => this.rnd(), tua: k => this.porta(k) })
     this.posaPezzo(cosa, { x: f.x, y: f.y + 1 })

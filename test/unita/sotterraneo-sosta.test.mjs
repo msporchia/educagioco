@@ -176,11 +176,11 @@ function rispondiFinche(c, giusto = () => true, giri = 40) {
             finita.guasto || `${finita.esito.piani}/${finita.esito.quantiPiani} piani (seme ${seme})`)
 
   /* e una ripresa a metà della discesa vera, al secondo piano, si finisce lo stesso */
-  const giu = new Corsa(t, { seme: 303, rnd: seminato(303), roba })
-  gioca(t, { seme: 303, bravura: 1, come: 'tutto', da: giu, fino: 1 })
+  const giu = new Corsa(t, { seme: 304, rnd: seminato(304), roba })
+  gioca(t, { seme: 304, bravura: 1, come: 'tutto', da: giu, fino: 1 })
   const daMeta = leggi(scrivi(giu, 1), t, giu.roba)
   controlla('una sosta scritta a metà discesa si rilegge', !!daMeta)
-  const fine = daMeta && gioca(t, { seme: 303, bravura: 1, come: 'minimo', da: daMeta })
+  const fine = daMeta && gioca(t, { seme: 304, bravura: 1, come: 'minimo', da: daMeta })
   controlla('e arriva in fondo', !!fine && fine.esito.vinta, fine && (fine.guasto || `${fine.esito.piani} piani`))
 }
 

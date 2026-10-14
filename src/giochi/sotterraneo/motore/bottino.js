@@ -20,8 +20,38 @@ export const PROFONDITA_PER_LIVELLO = 0.0125
 // tabella della storia smetterebbe di dire con che roba si arriva; un po' di più per chi lascia di più
 export const pezzoDalMostro = scheda => 0.03 + 0.08 * ((scheda && scheda.droppa) || 0)
 
-// il livello del bottino: quello del posto, o quello dell'eroe se è più alto
+// il livello del bottino: quello del posto, o quello dell'eroe se è più alto (la roba della storia e delle missioni)
 export const livelloDelBottino = (posto, eroe) => Math.max(1, Math.round(posto || 1), Math.round(eroe || 1))
+
+// Un pezzo trovato (forziere, mostro, caporale, grosso) nasce al livello dell'eroe, con una variazione pesata verso il livello giusto
+// (docs/sotterraneo/livello-dei-pezzi.md, «Il livello di un pezzo trovato»): non sempre uguale, e ogni tanto un po' sopra
+export const VARIAZIONE_DEL_TROVATO = [[-1, 0.2], [0, 0.45], [1, 0.25], [2, 0.1]]
+// il grosso, che lascia roba rara: una volta su quattro un pezzo fuori dal suo livello, tre o quattro livelli sopra
+export const FUORI_LIVELLO_DEL_GROSSO = { probabilita: 0.25, livelli: [3, 4] }
+
+// un numero in [0, 1) che nasce dal seme, dal piano e dal posto e non dal caso della discesa, come l'elisir: aggiungere il
+// tiro non sposta niente di quello che cade; `sale` distingue i tiri dello stesso posto
+export function tiroDalSeme(sale, ...numeri) {
+  let h = 2166136261
+  for (const n of [...numeri, sale]) h = Math.imul(h ^ (Math.floor(n) | 0), 16777619)
+  h = Math.imul(h ^ (h >>> 15), 0x2c1b3c6d)
+  h = Math.imul(h ^ (h >>> 12), 0x297a2d39)
+  return ((h ^ (h >>> 15)) >>> 0) / 4294967296
+}
+
+// il livello di un pezzo trovato da `chi` (mostro, forziere, grosso): quello dell'eroe più la variazione, mai sotto 1; `u` e `v`
+// sono due tiri in [0, 1) (il secondo sceglie fra i livelli del fuori livello del grosso)
+export function livelloDelTrovato(eroe, chi, u, v = 0) {
+  const base = Math.max(1, Math.round(eroe || 1))
+  if (chi === 'grosso') {
+    const f = FUORI_LIVELLO_DEL_GROSSO
+    if (u < f.probabilita) return base + f.livelli[Math.min(f.livelli.length - 1, Math.floor(v * f.livelli.length))]
+    u = (u - f.probabilita) / (1 - f.probabilita)
+  }
+  let t = u
+  for (const [d, p] of VARIAZIONE_DEL_TROVATO) { t -= p; if (t < 0) return Math.max(1, base + d) }
+  return base
+}
 
 export function pescaRarita(chi, { fortuna = 0, livello = 1, rnd = Math.random } = {}) {
   const p = PROBABILITA[chi] || PROBABILITA.mostro

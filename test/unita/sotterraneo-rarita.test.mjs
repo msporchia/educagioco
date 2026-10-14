@@ -11,7 +11,7 @@ import { RARITA, ABILITA_DEI_PEZZI, LEGGENDARI, DEI_GROSSI, UNICI, TINTE_DELLE_A
 import { ASPETTI } from '../../src/giochi/sotterraneo/dati/aspetti.js'
 import { GROSSI, GROSSO_DELLA_DISCESA, GROSSO_OGNI, grossoDi, guastiDeiGrossi, figuraDelGrosso, spriteDelGrosso, EROE, LATO_DEL_GROSSO } from '../../src/giochi/sotterraneo/dati/grossi.js'
 import { CAMPAGNA, L_ABISSO } from '../../src/giochi/sotterraneo/dati/campagna.js'
-import { pezzoNuovo, pescaRarita, pescaAbilita, pezzoDelGrosso, guastiDelBottino, livelloDelBottino }
+import { pezzoNuovo, pescaRarita, pescaAbilita, pezzoDelGrosso, guastiDelBottino, livelloDelBottino, livelloDelTrovato, VARIAZIONE_DEL_TROVATO, FUORI_LIVELLO_DEL_GROSSO }
   from '../../src/giochi/sotterraneo/motore/bottino.js'
 import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
 import { Corredo, rileggiRoba } from '../../src/giochi/sotterraneo/motore/corredo.js'
@@ -114,6 +114,36 @@ import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifi
     pezzi += d.livello.robe.filter(r => r.che === 'cosa' && COSE[r.cosa].dove).length
   }
   controlla('un mostro qualunque lascia a volte un pezzo', pezzi > 0 && pezzi < mostri * 0.2, `${pezzi} su ${mostri}`)
+  // un pezzo trovato nasce al livello dell'eroe, con una variazione da −1 a +2 pesata verso il livello giusto
+  const conta = (chi, eroe, n = 4000) => {
+    const q = {}
+    const r = seminato(77)
+    for (let i = 0; i < n; i++) { const l = livelloDelTrovato(eroe, chi, r(), r()); q[l - eroe] = (q[l - eroe] || 0) + 1 }
+    return q
+  }
+  const q = conta('forziere', 12)
+  const fra = Object.keys(q).map(Number)
+  controlla('un trovato sta fra −1 e +2 livelli dall\'eroe', fra.every(d => d >= -1 && d <= 2) && fra.length === 4, JSON.stringify(q))
+  controlla('e il livello giusto è il più frequente', q[0] > q[1] && q[0] > q[-1] && q[0] > q[2], JSON.stringify(q))
+  for (const [d, p] of VARIAZIONE_DEL_TROVATO) controlla(`la variazione ${d} pesa come scritto`, Math.abs(q[d] / 4000 - p) < 0.03, `${q[d] / 4000} contro ${p}`)
+  uguale('al livello 1 non si scende sotto 1', Math.min(...Object.keys(conta('mostro', 1)).map(Number)), 0)
+  const gro = conta('grosso', 12, 8000)
+  const su = (gro[3] || 0) + (gro[4] || 0)
+  controlla('il grosso ogni tanto lascia un pezzo fuori livello, 3 o 4 sopra', Math.abs(su / 8000 - FUORI_LIVELLO_DEL_GROSSO.probabilita) < 0.03 && gro[3] > 0 && gro[4] > 0, JSON.stringify(gro))
+  controlla('ma non sempre: il resto è come per gli altri', gro[0] > gro[3] && gro[-1] > 0 && gro[2] > 0 && Math.max(...Object.keys(gro).map(Number)) === 4, JSON.stringify(gro))
+  // in discesa: deterministico dal seme, e il livello del posto non c'entra
+  {
+    const lv = seme => {
+      const d = new Corsa(CAMPAGNA[6], { seme, rnd: seminato(seme), crescita: { esp: sogliaDi(5) } })
+      return [d.livelloDelTrovato('forziere', 4, 9), d.livelloDelTrovato('grosso', 4, 9), d.livelloDelTrovato('forziere', 4, 9)]
+    }
+    stessaLista('lo stesso seme dà gli stessi livelli, in due discese', lv(11), lv(11))
+    uguale('e lo stesso posto lo stesso', lv(11)[0], lv(11)[2])
+    const d = new Corsa(CAMPAGNA[6], { seme: 3, rnd: seminato(3), crescita: { esp: sogliaDi(5) } })
+    const visti = new Set()
+    for (let i = 0; i < 200; i++) visti.add(d.livelloDelTrovato('mostro', i, 3))
+    controlla('in fondo alla discesa con un eroe di livello 5 i trovati stanno intorno a 5, non al livello del posto', [...visti].every(l => l >= 4 && l <= 7), [...visti].join(','))
+  }
   // nell'abisso, senza tetto: il bottino del piano 40 è del livello 40 e oltre
   const a = new Corsa(L_ABISSO, { seme: 3, rnd: seminato(3) })
   a.piano = 39

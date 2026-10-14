@@ -100,7 +100,7 @@ const tappeAl = n => CAMPAGNA.map((t, i) => ({ chiave: t.chiave, aperta: i <= n,
   nota(`mostri qualunque della torre: ${pezzi} pezzi da ${mostri} mostri, ai livelli ${[...livelli].join(', ')}`)
   controlla('a volte un mostro qualunque lascia un pezzo (poco: la tabella dice ancora con che roba si arriva)',
             pezzi > 0 && pezzi < mostri * 0.15, `${pezzi}/${mostri}`)
-  stessaLista('e il pezzo è a tono: il livello dell\'eroe, più alto di quello del posto', [...livelli], [LIVELLI_ATTESI[2]])
+  controlla('e il pezzo è a tono: il livello dell\'eroe con la sua variazione, da −1 a +2', [...livelli].every(l => l >= LIVELLI_ATTESI[2] - 1 && l <= LIVELLI_ATTESI[2] + 2), [...livelli].join(', '))
 }
 
 /* ══════════ 3. chi è sotto il livello lo sa prima di scendere ══════════ */
