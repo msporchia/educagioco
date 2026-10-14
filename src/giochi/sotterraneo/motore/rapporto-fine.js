@@ -56,7 +56,7 @@ export function fineDi(passi) {
     f.pezRis.push(somma(null, r => r.pz.length))
     f.pozRis.push(somma(null, 'po'))
     f.camRis.push(somma(null, 'ca'))
-    f.comprati.push((dentro.pre || 0) + somma(null, r => r.ut || 0))
+    f.comprati.push((dentro.pre || 0) + somma(null, r => r.ut || 0) + dentro.tentativi.reduce((x, t) => x + ((t.ar && t.ar.rimandati) || 0), 0))
     f.trovati.push(dentro.tentativi.reduce((x, t) => x + ((t.ar && t.ar.trovati) || 0), 0))
     f.inutili.push(dentro.tentativi.reduce((x, t) => x + ((t.ar && t.ar.inutili) || 0), 0))
     f.domande.push(dentro.tentativi.length ? dentro.tentativi[dentro.tentativi.length - 1].dom : null)

@@ -11,7 +11,7 @@ import { CAMPAGNA } from '../dati/campagna.js'
 import { seminato } from './livello.js'
 import { robaAttesa, crescitaAttesa, livelloAtteso } from './storia.js'
 import { puntiDaDare, CRESCITA_NUOVA, crescitaA, prossimoPunto } from './crescita.js'
-import { eroeDi } from '../dati/eroi.js'
+import { eroeDi, livelloRichiesto } from '../dati/eroi.js'
 import { zonaPotenziata } from '../dati/zone.js'
 import { robaAttesaA, crescitaAttesaA } from './zone.js'
 import { quotaDi } from '../dati/livelli.js'
@@ -326,16 +326,23 @@ export function gioca(tappa, { bravura = 0.8, seme = 7, come = 'minimo', rnd = n
   const sorsi = new Map()
   const risalite = []
   // le armi nuove (docs/sotterraneo/fine-discesa-e-strade.md): i pezzi che entrano addosso e alzano il valore dell'eroe (`trovati`), e quelli finiti nello zaino (`inutili`)
-  const armi = { trovati: 0, inutili: 0 }
+  const armi = { trovati: 0, inutili: 0, rimandati: 0 }
   const pezziDelloZaino = () => [corsa.mano, corsa.mancina, corsa.corpo, corsa.dito, ...corsa.zaino].filter(k => k && COSE[k] && COSE[k].dove)
   let visto = { ...addossoDi(corsa), tutti: pezziDelloZaino(), chiave: '' }
+  // i pezzi comprati (all'ingresso o in salita) che aspettavano il livello: indossati dopo, sono comprati e non trovati
+  const comprati = new Set(visto.tutti)
   const contaLeArmi = () => {
     const tutti = pezziDelloZaino(), chiave = `${corsa.mano}|${corsa.mancina}|${corsa.corpo}|${corsa.dito}|${tutti.length}`
     if (chiave === visto.chiave) return
     const ora = { ...addossoDi(corsa), tutti, chiave }
-    armi.trovati += nuoviUtili(visto, ora)
+    const utili = nuoviUtili(visto, ora)
+    const rimandati = utili ? ora.pezzi.filter(k => k && !visto.pezzi.includes(k) && comprati.has(k)).length : 0
+    armi.trovati += utili - rimandati
+    armi.rimandati += rimandati
     const resto = [...visto.tutti]
-    for (const k of tutti) { const i = resto.indexOf(k); if (i >= 0) resto.splice(i, 1); else if (!ora.pezzi.includes(k)) armi.inutili++ }
+    // un pezzo che aspetta il livello non è inutile: si indosserà
+    const aspetta = k => corsa.reggo(k) && !corsa.posso(k) && corsa.confronto(k).meglio > 0
+    for (const k of tutti) { const i = resto.indexOf(k); if (i >= 0) resto.splice(i, 1); else if (!ora.pezzi.includes(k) && !aspetta(k)) armi.inutili++ }
     visto = ora
   }
   const ris = risalita && RISALITA.acceso ? { ...risalita, botteghe: risalita.botteghe || null, obiettivo: risalita.obiettivo ?? null, livello: corsa.livelloEroe, ultima: corsa.gemme, mostri: corsa.mostriBattuti, provati: new Map() } : null
@@ -403,6 +410,7 @@ export function gioca(tappa, { bravura = 0.8, seme = 7, come = 'minimo', rnd = n
     const reg = { pezzi: [], pozioni: 0, speso: 0, venduto: 0, obiettivo: null }
     const nuova = allaBottega(corsa.roba, { finite: ris.finite, eroe: corsa.chiEro, seme: ris.seme, crescita: corsa.crescita, spesa: ris.spesa, registro: reg, scaffale: !!RISALITA.scaffale, botteghe: ris.botteghe })
     corsa.indossa(nuova)
+    for (const [k] of reg.pezzi) comprati.add(k)
     corsa.sistemaIlCorredo()
     corsa.vita = Math.min(corsa.vita, corsa.vitaMax)
     corsa.energia = Math.min(corsa.energia, corsa.energiaMax)
@@ -570,9 +578,15 @@ export function allaBottega(roba, { finite = 0, eroe = undefined, seme = 1, cres
     }
     return e
   }
+  // i pezzi che aspettano il livello (RISALITA.perDopo, i primi a poterli indossare): non si vendono, e ci si fa la spesa per dopo
+  const inAttesa = k => !!COSE[k].dove && b.reggo(k) && !b.posso(k) && b.confronto(k).meglio > 0
+  const aspettano = () => [...new Set(b.zaino.filter(inAttesa))]
+    .sort((x, y) => livelloRichiesto(COSE[x]) - livelloRichiesto(COSE[y]) || b.confronto(y).meglio - b.confronto(x).meglio)
+    .slice(0, RISALITA.perDopo)
   const vendiIlSuperfluo = () => {
+    const teniamo = aspettano()
     for (let i = b.zaino.length - 1; i >= 0; i--)
-      if (COSE[b.zaino[i]].dove && !scudoMeglio(b, b.zaino[i])) {
+      if (COSE[b.zaino[i]].dove && !scudoMeglio(b, b.zaino[i]) && !teniamo.includes(b.zaino[i])) {
         const prima = b.gemme
         b.vendiA('rigattiere', i)
         if (registro) registro.venduto += b.gemme - prima
@@ -605,6 +619,19 @@ export function allaBottega(roba, { finite = 0, eroe = undefined, seme = 1, cres
     if (!scelte.length) break
     compra(scelte[0].chi, scelte[0].k)
     vendiIlSuperfluo()
+  }
+  // per dopo: se dopo il pezzo per adesso avanzano gemme (e nessun pezzo per adesso è in vista da risparmiare), un salto che si indosserà
+  // al livello nuovo: a pezzi diversi per livello, i più vicini prima
+  if (RISALITA.perDopo > 0 && RISALITA.perDopo - aspettano().length > 0) {
+    const tutta = () => mercanti().flatMap(chi => offerta(chi).map(r => ({ chi, k: r.chiave })))
+    if (!tutta().some(({ k }) => COSE[k].dove && b.quantoCosta(k) > b.gemme && migliora(k))) {
+      const scelte = tutta().filter(({ k }) => COSE[k].dove && b.quantoCosta(k) <= b.gemme && !b.possiedo(k) && inAttesa(k) && b.ruoloDi(k))
+        .sort((x, y) => livelloRichiesto(COSE[x.k]) - livelloRichiesto(COSE[y.k]) || b.confronto(y.k).meglio - b.confronto(x.k).meglio)
+      for (const { chi, k } of scelte) {
+        if (RISALITA.perDopo - aspettano().length <= 0) break
+        if (b.quantoCosta(k) <= b.gemme && !b.possiedo(k)) compra(chi, k)
+      }
+    }
   }
   comprePozioni(Infinity)
   // il pezzo per cui risparmia: il salto più economico che migliora quello che ha e che non poteva pagare (docs/sotterraneo/fine-discesa-e-strade.md)

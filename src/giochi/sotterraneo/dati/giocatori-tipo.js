@@ -107,7 +107,7 @@ export const QUOTA_CHE_SI_FERMA = 0.1
 // (o, senza, quando ha preso `soglia(livello)` gemme dall'ultima spesa), o dopo `mostriOgni` mostri se le pozioni sono meno di `pozioniSotto` e ha almeno `minimoPerMostri` gemme. `acceso` 0 le spegne;
 // `scaffale` 1: chi spende guarda anche i salti e i sogni dello scaffale (motore/bottega.js), non solo il banco del passo; `rivedi` 1: i banchi si rimettono in discussione quando l'eroe sale di livello
 // (0: mai, un terzo di tempo in meno); `tentativi`: quante volte per piano prova ad arrivare al portale. La soglia è una proposta: base + salita·(1 − e^(−livello/scala)).
-export const RISALITA = { acceso: 1, scaffale: 1, rivedi: 1, base: 60, salita: 150, scala: 6, mostriOgni: 10, pozioniSotto: 2, minimoPerMostri: 30, tentativi: 4 }
+export const RISALITA = { acceso: 1, scaffale: 1, rivedi: 1, base: 60, salita: 150, scala: 6, mostriOgni: 10, pozioniSotto: 2, minimoPerMostri: 30, tentativi: 4, perDopo: 2 }
 export const sogliaDiRisalita = livello => Math.round(RISALITA.base + RISALITA.salita * (1 - Math.exp(-Math.max(1, livello) / RISALITA.scala)))
 
 // lo stile di un giocatore tipo (quello dello sbadato è quello del curioso), sulla strada di spesa che segue

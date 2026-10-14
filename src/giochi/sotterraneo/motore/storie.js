@@ -33,7 +33,7 @@ function registro(g) {
   const e = g.esito
   return { v: e.vinta ? 1 : 0, sv: e.svenimenti, dom: e.domande, giu: e.giuste, pz: g.pozioni || 0, fo: g.fonti || 0, tt: g.alTetto ? 1 : 0, ge: e.gemme,
            mo: e.mostri, liv: g.corsa.livelloEroe, pp: (g.perPiano || []).map(n => intero(n)), sc: g.scontri || [], guasto: g.guasto || null,
-           ri: g.risalite || [], ar: g.armi || { trovati: 0, inutili: 0 } }
+           ri: g.risalite || [], ar: g.armi || { trovati: 0, inutili: 0, rimandati: 0 } }
 }
 
 // il seme della partita n di una discesa: lo stesso per chi gioca la discesa dallo stesso ingresso, così il sotterraneo è lo stesso
