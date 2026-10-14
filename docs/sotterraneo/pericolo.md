@@ -40,9 +40,8 @@ Quando tocca all'eroe, sulla **somma dei colpi che arriveranno prima del suo pro
 Il riquadro sta al posto della domanda, nella stessa modale, sotto il palco coi mostri; il tasto «scappo via» di sempre
 sparisce, perché è una delle tre scelte. Compare a racconto del turno finito ([scontro-interfaccia.md](scontro-interfaccia.md#il-racconto-di-un-turno)).
 
-- **🧪 bevi** — solo se ha una pozione. Beve quella che berrebbe la casella
-  della barra (`pozioneGiusta`: la più piccola che riempie la vita, o la più
-  grande), dice sul tasto quanto rende («❤️ +10»), e **costa il turno**: i mostri colpiscono, poi si riprende a
+- **🧪 bevi** — solo se ha una pozione. Con un solo stadio di cura beve quella e dice sul tasto quanto rende; con più stadi apre la
+  scelta di quale ([roba.md](roba.md#le-pozioni)). **Costa il turno**: i mostri colpiscono, poi si riprende a
   domandare. Non si beve mai da sola: lo stop non agisce, aspetta.
 - **🏃 scappo via** — con il colpo del mostro più forte (sul tasto: «ti costa 5 di vita»).
   **Se quel colpo lo farebbe cadere il tasto non c'è** (`puoScappare`), qui

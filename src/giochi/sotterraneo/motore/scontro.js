@@ -258,22 +258,22 @@ export const MetodiDelloScontro = {
     return { che: 'continua' }
   },
 
-  // Bere la pozione rossa costa il turno (docs/sotterraneo/scontro.md): beve quella che berrebbe la 🧪 della barra, poi
-  // toccano ai mostri. Torna l'esito del turno (come `rispondi`), o null senza pozioni
-  beviNelloScontro() {
+  // Bere la pozione rossa costa il turno (docs/sotterraneo/scontro.md): quella che sceglie chi gioca (`i`, il posto nello zaino)
+  // o, senza scelta, quella che berrebbe la 🧪 della barra, poi toccano ai mostri. Torna l'esito del turno (come `rispondi`), o
+  // null senza pozioni
+  beviNelloScontro(i = this.pozioneGiusta()) {
     const f = this.foglio
     if (!f || f.che !== 'scontro') return null
-    const i = this.pozioneGiusta()
-    if (i == null) return null
+    if (i == null || !this.zaino[i]) return null
     f.pericolo = null
     const k = this.zaino[i]
     this.usa(i)
     return this.finisciIlTurno(f, [{ chi: 'eroe', che: 'bevi', cosa: k }], f.chi)
   },
-  beviNelPericolo() {
+  beviNelPericolo(i) {
     const f = this.foglio
     if (!f || f.che !== 'scontro' || !f.pericolo) return null
-    return this.beviNelloScontro()
+    return this.beviNelloScontro(i)
   },
 
   // unico ingresso quando l'eroe risponde alla domanda dello scontro: giusto, parte il colpo (o l'abilità preparata); sbagliato,
