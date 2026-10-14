@@ -7,7 +7,8 @@
 import { guastiDelleRegole, TRUPPE, EDIFICI, CAMPO, CRESCITA, BOMBA, CASTELLO, MURO } from '../../src/giochi/arena/dati/regole.js'
 import { Partita } from '../../src/giochi/arena/motore/partita.js'
 import { caso, gioca } from '../../src/giochi/arena/motore/banco.js'
-import { CAMPAGNA, SCALINI, QUANTE_TAPPE, guastiDellaCampagna, operazioniDi, operazionePer, stellePer, sfidaDi }
+import { CAMPAGNA, SCALINI, QUANTE_TAPPE, guastiDellaCampagna, operazioniDi, operazionePer, stellePer, sfidaDi,
+  gradoDelPeso, GRADO_A_MENTE }
   from '../../src/giochi/arena/dati/campagna.js'
 import { scrivi, leggi, dice, VERSIONE } from '../../src/giochi/arena/motore/sosta.js'
 import { firmaEquilibrio } from '../../src/giochi/arena/motore/firma.js'
@@ -200,6 +201,9 @@ controlla('stesso seme, stessa partita', JSON.stringify(uguali) === JSON.stringi
   uguale('un\'azione che vuole ÷ in una tappa di somme ripiega su +', operazionePer('÷', ['+']), '+')
   uguale('e in una di somme e sottrazioni su −', operazionePer('÷', ['+', '−']), '−')
   uguale('un\'operazione ammessa resta quella', operazionePer('×', ['+', '−', '×']), '×')
+  uguale('la scelta più cara chiede ancora un conto a mente', gradoDelPeso(10), GRADO_A_MENTE)
+  uguale('la più leggera il grado più basso', gradoDelPeso(0), 1)
+  uguale('sotto il tetto il peso è il grado', gradoDelPeso(4), 4)
   uguale('vincere dà una stella', stellePer({ vinto: true, vitaBase: 0.2 }), 1)
   uguale('col castello oltre la metà due', stellePer({ vinto: true, vitaBase: 0.6 }), 2)
   uguale('col castello quasi intatto tre', stellePer({ vinto: true, vitaBase: 0.9 }), 3)

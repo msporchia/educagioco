@@ -2,6 +2,11 @@
 
 Come una scelta (costruire, potenziare, riparare…) diventa una domanda.
 
+**Qui si allena il calcolo a mente, svelto**: il gioco sta fra gli asteroidi (le
+tabelline) e il castello (le operazioni in colonna). Il nemico non aspetta, quindi
+un po' d'ansia è voluta: il conto si deve fare in pochi secondi, e quelli più
+grossi sono del castello.
+
 - **L'operazione la decide la scelta, non il giocatore.** Ogni truppa porta la
   sua (`+` arcieri e opliti, `−` pipistrelli e negromanti, `×` lupi e golem,
   `÷` diavoletti e drago): scegliere la truppa di un edificio è anche scegliere il
@@ -11,7 +16,11 @@ Come una scelta (costruire, potenziare, riparare…) diventa una domanda.
 - **La grandezza dei numeri la decide il prezzo**: il motore dà un «peso» da
   1 a 10 (`calcoloDi`): costruire pesa `1 + prezzo/4`, potenziare il livello
   dell'edificio, la miniera `3 + livello`, il castello `2 + livello/2`. Una
-  scelta cara chiede un conto più grosso.
+  scelta cara chiede un conto più grosso, **ma non oltre il grado 7** del modulo
+  (`GRADO_A_MENTE` in `dati/campagna.js`): entro il cento col riporto, le tabelline
+  fino al 12, le divisioni che sono tabelline al contrario. Dall'8 in su vengono le
+  tre cifre, che si fanno in colonna. L'età taglia ancora dentro quel tetto; solo a
+  12 anni le somme salgono all'8 (`67 + 58`), perché sotto l'età non ne lascia.
 - **Una tappa non chiede un'operazione che non ha ancora insegnato.** Se
   l'azione vuole `÷` ma la tappa arriva solo a `+` e `−`, si ripiega sulla più
   vicina (`÷` → `×` → `−` → `+`, la stessa scelta del castello): è
