@@ -1,6 +1,6 @@
 <script setup>
-// L'eroe armato con le quattro caselle intorno, come il cerchio dei giochi di ruolo in piccolo: le mani in alto
-// (la debole a sinistra), il corpo e il dito sotto. Serve alla bottega e allo zaino; toccare una casella la
+// L'eroe armato con le sei caselle intorno, come il cerchio dei giochi di ruolo in piccolo: a sinistra lo scudo, il corpo e la
+// collana, a destra l'arma e i due anelli. Serve alla bottega e allo zaino; toccare una casella la
 // sceglie, e il pannello dice cosa c'è. `va`: la casella dove andrebbe il pezzo guardato, che si accende
 import { computed } from 'vue'
 import Armato from './Armato.vue'
@@ -11,7 +11,9 @@ const props = defineProps({
   mano: { type: Object, default: null },      // { chiave, sprite, em, nome, prezzo, mani } o niente
   mancina: { type: Object, default: null },
   corpo: { type: Object, default: null },
+  collo: { type: Object, default: null },
   dito: { type: Object, default: null },
+  dito2: { type: Object, default: null },
   scelto: { type: String, default: null },    // la casella scelta
   va: { type: String, default: null },
 })
@@ -22,7 +24,9 @@ const POSTI = [
   { dove: 'mancina', ombra: '🛡️', dice: 'scudo' },
   { dove: 'mano', ombra: '⚔️', dice: 'arma' },
   { dove: 'corpo', ombra: '🦺', dice: 'armatura' },
-  { dove: 'dito', ombra: '💍', dice: 'gioiello' },
+  { dove: 'collo', ombra: '📿', dice: 'collana' },
+  { dove: 'dito', ombra: '💍', dice: 'anello' },
+  { dove: 'dito2', ombra: '💍', dice: 'anello' },
 ]
 const su = dove => props[dove]
 // l'arma a due mani tiene anche la sinistra: la stessa arma, in ombra
@@ -33,7 +37,7 @@ const ombra = dove => dove === 'mancina' && dueMani.value
 <template>
   <div class="sot-intorno">
     <div class="sot-intorno-lato">
-      <template v-for="p in POSTI.filter(x => x.dove === 'mancina' || x.dove === 'corpo')" :key="p.dove">
+      <template v-for="p in POSTI.filter(x => x.dove === 'mancina' || x.dove === 'corpo' || x.dove === 'collo')" :key="p.dove">
         <Casella :cosa="ombra(p.dove) ? mano : su(p.dove)" :vuota="p.ombra" piccola :ombra="ombra(p.dove)"
                  :scelta="scelto === p.dove" :accesa="va === p.dove" :disabled="ombra(p.dove)"
                  :data-casella="p.dove" :data-cosa="su(p.dove) ? su(p.dove).chiave : null" :aria-label="su(p.dove) ? su(p.dove).nome : p.dice" @click="$emit('tocca', p.dove)" />
@@ -43,7 +47,7 @@ const ombra = dove => dove === 'mancina' && dueMani.value
       <Armato :eroe="eroe" :mano="mano ? mano.chiave : null" :mancina="mancina ? mancina.chiave : null" :scala="3" />
     </div>
     <div class="sot-intorno-lato">
-      <template v-for="p in POSTI.filter(x => x.dove === 'mano' || x.dove === 'dito')" :key="p.dove">
+      <template v-for="p in POSTI.filter(x => x.dove === 'mano' || x.dove === 'dito' || x.dove === 'dito2')" :key="p.dove">
         <Casella :cosa="su(p.dove)" :vuota="p.ombra" piccola
                  :scelta="scelto === p.dove" :accesa="va === p.dove"
                  :data-casella="p.dove" :data-cosa="su(p.dove) ? su(p.dove).chiave : null" :aria-label="su(p.dove) ? su(p.dove).nome : p.dice" @click="$emit('tocca', p.dove)" />

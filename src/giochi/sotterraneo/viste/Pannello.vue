@@ -13,8 +13,11 @@ const props = defineProps({
   cosa: { type: Object, required: true },      // COSE[k] con la chiave
   prova: { type: Object, default: null },      // seLoMetto(k): null se non si indossa o è già addosso
   note: { type: Array, default: () => [] },    // [{ testo, em?, tono? ('ambra' | 'tenue' | 'oro') , dato? }]
+  scambiabile: { type: Boolean, default: false },   // vedi Confronto.vue
   cura: { type: Number, default: null },       // quanto cura una pozione per questo eroe (il suo numero, più il pezzo 🧪)
 })
+
+defineEmits(['scambia'])
 
 // un anello piccolo cresce fino a riempire il riquadro, una spada lunga ci sta a due
 const scala = computed(() => {
@@ -30,7 +33,7 @@ const affianca = computed(() => !!(props.prova && props.prova.prima && props.pro
 <template>
   <div class="sot-pannello" data-pannello :data-cosa="cosa.chiave" :data-rarita="gradinoDi(cosa)"
        :style="{ '--sot-gradino': gradino.colore }">
-    <Confronto v-if="affianca" :cosa="cosa" :prova="prova" />
+    <Confronto v-if="affianca" :cosa="cosa" :prova="prova" :scambiabile="scambiabile" @scambia="$emit('scambia')" />
     <template v-else>
       <div class="sot-pannello-testa">
         <span class="sot-pannello-icona"><Icona :sprite="cosa.sprite" :em="cosa.em" :scala="scala" :emAlto="26" /></span>

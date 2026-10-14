@@ -152,7 +152,7 @@ const avventure = computed(() => EROI.map(e => {
     discese: Math.min(a.tappa, QUANTE_TAPPE), quante: QUANTE_TAPPE,
     stelle: Object.values(a.stelle).reduce((n, s) => n + (Number(s) || 0), 0),
     // il resto della roba che si vede: l'arma e lo scudo sono già nelle mani del ritratto
-    addosso: [n.corpo, n.dito].filter(k => k && COSE[k]).map(k => ({ chiave: k, ...COSE[k] })),
+    addosso: [n.corpo, n.collo, n.dito, n.dito2].filter(k => k && COSE[k]).map(k => ({ chiave: k, ...COSE[k] })),
     gemme: r.gemme,
     fondo: (a.abisso && a.abisso.fondo) || 0,
     aMeta: meta ? meta.nome : null,
@@ -376,7 +376,7 @@ const banco = computed(() => {
     // le linguette di una famiglia che l'eroe non porta non si mostrano (dati/mercanti.js, schedeDi)
     chi: { ...m, schede: schedeDi(m, eroeDi(eroeQui())) },
     roba: vendibili,
-    addosso: { mano: voce(b.mano), mancina: voce(b.mancina), corpo: voce(b.corpo), dito: voce(b.dito) },
+    addosso: { mano: voce(b.mano), mancina: voce(b.mancina), corpo: voce(b.corpo), collo: voce(b.collo), dito: voce(b.dito), dito2: voce(b.dito2) },
     numeri: { vita: b.vitaConLaRoba, att: b.att, dif: b.dif, gemme: b.gemme },
     tasche: m.compra ? Array.from({ length: b.capienza }, (_, i) => {
       const t = b.tasche()[i]
@@ -606,7 +606,7 @@ const zainoDiSopra = computed(() => {
   const c = new Corredo({ eroe: eroeQui(), roba: roba.value, crescita: crescita.value })
   const voce = k => (k ? { chiave: k, ...COSE[k], nonPuoi: c.perchéNo(k), ancora: c.porta(k) && !c.posso(k), prova: c.seLoMetto(k, { ancora: true }), ...((COSE[k].cura || COSE[k].tutta) ? { cura: c.curaDi(k) } : {}) } : null)
   return {
-    mano: voce(c.mano), mancina: voce(c.mancina), corpo: voce(c.corpo), dito: voce(c.dito),
+    mano: voce(c.mano), mancina: voce(c.mancina), corpo: voce(c.corpo), collo: voce(c.collo), dito: voce(c.dito), dito2: voce(c.dito2),
     tasche: tascheVoci(c, voce), costoTasca: c.costoTasca, cure: { n: c.pozioniDiCura, max: POZIONI_MASSIME },
     att: c.att, dif: c.dif, gemme: c.gemme, vita: c.vitaConLaRoba, vitaMax: c.vitaConLaRoba,
   }
@@ -620,13 +620,13 @@ function suLaRoba(fai) {
   tic.value++
   return e
 }
-function usaSopra(t) {
+function usaSopra(t, dove = null) {
   const i = tascheDello(roba.value.zaino)[t].i   // la tasca → il posto nella lista (le pozioni uguali ne fanno una sola)
   const k = roba.value.zaino[i]
   // l'elisir vale per sempre e si beve anche qui; una cura no (si è già in piena forma), le altre cose servono laggiù
   if (COSE[k] && COSE[k].usa === 'cresci') { suLaRoba(c => { const e = c.beviElisir(i); if (e) c.dillo(`🐂 +${e.vita} vita, per sempre`); return e }); suono.ok(); return }
   if (COSE[k] && !COSE[k].dove) { dilloSopra(COSE[k].usa === 'cura' ? '❤️ sei già in piena forma' : 'Serve laggiù, non qui'); return }
-  suLaRoba(c => c.indossaDallaTasca(i))
+  suLaRoba(c => c.indossaDallaTasca(i, dove))
   suono.ok()
 }
 function riponiSopra(dove) { suLaRoba(c => c.riponi(dove)); suono.ok() }
@@ -853,7 +853,7 @@ const zaino = dallaCorsa(c => {
   const voce = k => (k ? { chiave: k, ...COSE[k], nonPuoi: c.perchéNo(k), ancora: c.porta(k) && !c.posso(k), prova: c.seLoMetto(k, { ancora: true }), ...((COSE[k].cura || COSE[k].tutta) ? { cura: c.curaDi(k) } : {}) } : null)
   return {
     mano: voce(c.mano), mancina: voce(c.mancina),
-    corpo: voce(c.corpo), dito: voce(c.dito),
+    corpo: voce(c.corpo), collo: voce(c.collo), dito: voce(c.dito), dito2: voce(c.dito2),
     tasche: tascheVoci(c, voce), costoTasca: c.costoTasca, cure: { n: c.pozioniDiCura, max: POZIONI_MASSIME },
   }
 })
@@ -886,7 +886,9 @@ function corredoDaProva(c) {
   c.mano = 'spada-di-ghiaccio'
   c.mancina = 'scudo-ferro'
   c.corpo = 'corazza'
-  c.dito = 'teschio-cercatore'
+  c.collo = 'teschio-cercatore'
+  c.dito = 'anello-verde'
+  c.dito2 = 'anello-ambra'
   // le tre armature (mai visibili addosso) e i due gioielli: le cose che si vedono solo qui
   c.zaino = ['panciotto', 'manto', 'saio', 'amuleto-azzurro', 'pozione-grande', 'chiave']
   c.gemme += 120
@@ -1124,8 +1126,8 @@ let firma = ''
 function guarda(c) {
   const f = `${c.vita}|${c.gemme}|${c.foglio ? c.foglio.che : '-'}|${c.chiesta ? c.chiesta.id : 0}` +
             `|${c.piano}|${c.zaino.length}|${c.chiaveDelPiano}|${c.finita}` +
-            // tutte e quattro le caselle: uno scudo raccolto camminandoci sopra va nella mancina, un anello al dito
-            `|${c.mano}|${c.mancina}|${c.corpo}|${c.dito}` +
+            // tutte le caselle: uno scudo raccolto camminandoci sopra va nella mancina, un anello al dito
+            `|${c.mano}|${c.mancina}|${c.corpo}|${c.collo}|${c.dito}|${c.dito2}` +
             `|${c.torciaResta}|${c.torceInScorta}` +   // la torcia cala da sola, camminando
             `|${c.foglio ? c.foglio.cosa || '' : ''}|${c.livello.robe.length}` +   // due cose trovate di fila hanno lo stesso `che`
             `|${c.crescita.esp}|${c.crescita.forza}.${c.crescita.destrezza}.${c.crescita.intelligenza}.${c.crescita.tempra}` +
@@ -1222,7 +1224,7 @@ function riprendi() {
   tic.value++
   if (c.finita) chiudi()
 }
-function usa(i) { corsa.value.usa(i); tic.value++; suono.ok(); salva() }
+function usa(i, dove = null) { corsa.value.usa(i, dove); tic.value++; suono.ok(); salva() }
 function butta(i) { corsa.value.butta(i); tic.value++; suoni.passo(); salva() }
 function riponi(dove) { corsa.value.riponi(dove); tic.value++; suono.ok(); salva() }
 
@@ -1895,7 +1897,7 @@ function ridimensiona() { if (pittore) pittore.misura() }
                :vita="eroe.vita" :vitaMax="eroe.vitaMax"
                :piano="eroe.piano" :piani="eroe.piani"
                :punti="barra.punti" :punti-abilita="barra.puntiAbilita" :missioni="barra.missioniPronte" @scheda="apriScheda"
-               @usa="t => usa(corsa.indiceDellaTasca(t))" @butta="t => butta(corsa.indiceDellaTasca(t))" @riponi="riponi" @tasca="compraTasca"
+               @usa="(t, dove) => usa(corsa.indiceDellaTasca(t), dove)" @butta="t => butta(corsa.indiceDellaTasca(t))" @riponi="riponi" @tasca="compraTasca"
                @chiudi="zainoAperto = false" @fuori="toccoFuori" />
 
         <!-- il diario delle missioni, giù: lo stesso di sopra, senza «vai da» (chi aspetta sta sopra) -->

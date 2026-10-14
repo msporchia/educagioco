@@ -14,7 +14,9 @@ import { GRADINI, gradinoDi, tipoDi, requisitoScritto, confrontoDi, ABILITA, POS
 const props = defineProps({
   cosa: { type: Object, required: true },   // il pezzo guardato (COSE[k] con la chiave)
   prova: { type: Object, required: true },  // seLoMetto(k), con `prima` e `cambio`
+  scambiabile: { type: Boolean, default: false },   // un anello con due dita piene: si può scegliere quale togliere
 })
+defineEmits(['scambia'])
 
 const cambio = computed(() => props.prova.cambio)
 const colore = c => GRADINI[gradinoDi(c)].colore
@@ -63,6 +65,9 @@ const mani = computed(() => {
     <div class="sot-cartellini">
       <div class="sot-cartellino" data-colonna="addosso">
         <small>Addosso</small>
+        <button v-if="scambiabile" type="button" class="sot-scambia" data-azione="altro-anello" @click="$emit('scambia')">
+          <span class="em">🔄</span> l'altro anello
+        </button>
         <div v-for="v in vecchi" :key="v.chiave" class="sot-cart-pezzo" :style="{ '--sot-gradino': colore(v) }" :data-pezzo="v.chiave">
           <i class="sot-tab-icona"><Icona :sprite="v.sprite" :em="v.em" :scala="scala(v)" :emAlto="22" /></i>
           <span><b>{{ v.nome }}</b><em>{{ tipoDi(v) }} · liv. {{ v.liv || 1 }} · {{ GRADINI[gradinoDi(v)].nome }}<template v-if="requisitoScritto(v)"> · {{ requisitoScritto(v) }}</template></em></span>
