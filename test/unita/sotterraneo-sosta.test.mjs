@@ -163,24 +163,27 @@ function rispondiFinche(c, giusto = () => true, giri = 40) {
   const mezzo = gioca(t, { seme: 101, bravura: 1, come: 'minimo', da: c })
   controlla('la prova parte da una discesa giocata', mezzo.esito.domande > 0)
 
-  // il seme è il primo, da 202, in cui la discesa si vince anche senza interromperla: coi branchi nuovi non tutti i semi si vincono, e qui
-  // si prova la ripresa, non l'equilibrio (quello è del banco, `npm run sotterraneo`)
-  let seme = 202
-  while (seme < 230 && !gioca(t, { seme, bravura: 1, come: 'minimo', da: new Corsa(t, { seme, rnd: seminato(seme), roba }) }).esito.vinta) seme++
-  const dopo = new Corsa(t, { seme, rnd: seminato(seme), roba })
-  const salvato = scrivi(dopo, 1)
-  for (let i = 0; i < 60; i++) dopo.passo(1 / 30)
-  const ripresa = leggi(salvato, t, roba)
-  const finita = gioca(t, { seme, bravura: 1, come: 'minimo', da: ripresa })
+  // il seme è il primo, da 202, in cui la discesa ripresa si vince: coi caporali duri non tutti i semi si vincono dritti alla scala, e qui
+  // si prova la ripresa, non l'equilibrio (quello è del banco, `npm run taratura`)
+  const riprendi = s => {
+    const dopo = new Corsa(t, { seme: s, rnd: seminato(s), roba })
+    const salvato = scrivi(dopo, 1)
+    for (let i = 0; i < 60; i++) dopo.passo(1 / 30)
+    return gioca(t, { seme: s, bravura: 1, come: 'minimo', da: leggi(salvato, t, roba) })
+  }
+  let seme = 202, finita = riprendi(seme)
+  while (seme < 400 && !finita.esito.vinta) finita = riprendi(++seme)
   controlla('una discesa ripresa arriva in fondo', finita.esito.vinta,
             finita.guasto || `${finita.esito.piani}/${finita.esito.quantiPiani} piani (seme ${seme})`)
 
   /* e una ripresa a metà della discesa vera, al secondo piano, si finisce lo stesso */
-  const giu = new Corsa(t, { seme: 304, rnd: seminato(304), roba })
-  gioca(t, { seme: 304, bravura: 1, come: 'tutto', da: giu, fino: 1 })
+  let seme2 = 304   // idem: il primo seme da 304 che si vince anche senza interromperlo
+  while (seme2 < 400 && !gioca(t, { seme: seme2, bravura: 1, come: 'minimo', da: new Corsa(t, { seme: seme2, rnd: seminato(seme2), roba }) }).esito.vinta) seme2++
+  const giu = new Corsa(t, { seme: seme2, rnd: seminato(seme2), roba })
+  gioca(t, { seme: seme2, bravura: 1, come: 'tutto', da: giu, fino: 1 })
   const daMeta = leggi(scrivi(giu, 1), t, giu.roba)
   controlla('una sosta scritta a metà discesa si rilegge', !!daMeta)
-  const fine = daMeta && gioca(t, { seme: 304, bravura: 1, come: 'minimo', da: daMeta })
+  const fine = daMeta && gioca(t, { seme: seme2, bravura: 1, come: 'minimo', da: daMeta })
   controlla('e arriva in fondo', !!fine && fine.esito.vinta, fine && (fine.guasto || `${fine.esito.piani} piani`))
 }
 

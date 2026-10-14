@@ -213,7 +213,7 @@ const nateDi = s => s.suolo.length + s.colonne.length + s.relitti.length + s.acq
     for (const m of cap) {
       if (l.stanzaDi(m.x, m.y) !== anti) male.push('un caporale fuori dall\'anticamera')
       const base = l.mostro(m.tipo, m.x, m.y, { variante: m.variante || null, grado: m.grado || 'comune' })   // la stessa variante: l'arciere picchia un po' meno
-      if (m.ossa !== Math.round(base.ossa * CAPORALE.ossa) || m.att !== base.att + CAPORALE.att) male.push('un caporale non è più duro')
+      if (m.ossa !== Math.round(base.ossa * (l.crescita.caporali || CAPORALE.ossa)) || m.att !== base.att + CAPORALE.att) male.push('un caporale non è più duro')
       if (!/caporale$/.test(m.nome)) male.push('un caporale senza il nome')
       for (const o of cap) if (Math.hypot(o.x - m.x, o.y - m.y) > RAGGIO_SCONTRO) male.push('i caporali non stanno insieme')
     }

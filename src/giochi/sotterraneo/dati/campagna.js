@@ -15,14 +15,14 @@ export const CAMPAGNA = [
     scenario: 'cripta', pianta: 'costruita',
     portata: 25,
     dritta: 'due piani di tombe, e qualcuno che non dorme',
-    piani: 2, misura: 34, giri: 2, dif: [0.05, 0.22], forza: 0.25, livello: 1,
+    piani: 2, misura: 34, giri: 2, dif: [0.05, 0.22], forza: 0.25, livello: 1, gradi: 0,
     mostri: ['scheletro', 'zombie', 'fantasma'], caporale: 'scheletro-scudo', tettoBranco: 2, capo: 'scheletro' },
 
   { chiave: 'cantine', nome: 'La scalinata antica', icona: '🪜', dove: 'giù per la scalinata',
     scenario: 'cantine', pianta: 'costruita',
     portata: 31,
     dritta: 'tante stanze, e tutte al buio',
-    piani: 2, misura: 46, giri: 4, dif: [0.12, 0.32], forza: 0.5, spinta: 2, livello: 2,   // senza forza: il primo avvio si vince anche a mani nude (docs/sotterraneo/la-grande-storia.md, «Il primo avvio»)
+    piani: 2, misura: 46, giri: 4, dif: [0.12, 0.32], forza: 0.5, spinta: 2, livello: 2, caporali: 6, grosso: 3.5,   // senza forza: il primo avvio si vince anche a mani nude (docs/sotterraneo/la-grande-storia.md, «Il primo avvio»)
     mostri: ['ratto', 'goblin', 'melma'], caporale: 'orco', tettoBranco: 3, capo: 'orco' },
 
   // alta e stretta come la torre: le stanze una sopra l'altra
@@ -30,7 +30,7 @@ export const CAMPAGNA = [
     scenario: 'fornace', pianta: 'costruita',
     portata: 37,
     dritta: 'stretta e alta: le scale non finiscono mai',
-    piani: 3, misura: 40, largo: 26, alto: 54, giri: 3, dif: [0.2, 0.44], forza: 0.5, spinta: 4.5, livello: 3,
+    piani: 3, misura: 40, largo: 26, alto: 54, giri: 3, dif: [0.2, 0.44], forza: 0.5, spinta: 4, livello: 3, caporali: 6.5, grosso: 3.5,
     mostri: ['pipistrello', 'diavoletto', 'vespa', 'spirito-fuoco'], caporale: 'golem-magma', tettoBranco: 3, capo: 'troll' },
 
   // tutta in profondità: piani piccoli, tanti
@@ -38,7 +38,7 @@ export const CAMPAGNA = [
     scenario: 'cantine', pianta: 'caverna',
     portata: 43,
     dritta: 'piani piccoli, uno sotto l\'altro, sempre più giù',
-    piani: 5, misura: 28, giri: 2, dif: [0.28, 0.54], forza: 0.8, spinta: 5.8, livello: 5,
+    piani: 5, misura: 28, giri: 2, dif: [0.28, 0.54], forza: 0.8, spinta: 6.5, livello: 5, caporali: 7, grosso: 4,
     mostri: ['ragno', 'fungo', 'pianta', 'melma-rosa'], caporale: 'mostro-verde', tettoBranco: 4, capo: 'orco' },
 
   // lunga e stretta: un canale sott'acqua
@@ -46,21 +46,21 @@ export const CAMPAGNA = [
     scenario: 'cripta', pianta: 'caverna', acqua: true,
     portata: 50,
     dritta: 'lunga e stretta, e in fondo gorgoglia qualcosa',
-    piani: 3, misura: 40, largo: 64, alto: 24, giri: 3, dif: [0.36, 0.66], forza: 1.1, spinta: 7, livello: 6,
+    piani: 3, misura: 40, largo: 64, alto: 24, giri: 3, dif: [0.36, 0.66], forza: 1.1, spinta: 7.7, livello: 6, caporali: 6.5, grosso: 4,
     mostri: ['granchio', 'piranha', 'polpo', 'fantasma-azzurro'], caporale: 'tartaruga', tettoBranco: 4, capo: 'gigante' },
 
   { chiave: 'labirinto', nome: 'La botola segreta', icona: '🌀', dove: 'sotto la botola',
     scenario: 'cantine', pianta: 'costruita',
     portata: 57,
     dritta: 'un labirinto: senza mappina ci si perde',
-    piani: 3, misura: 50, giri: 4, dif: [0.44, 0.78], forza: 1.25, spinta: 7.7, livello: 8,
+    piani: 3, misura: 50, giri: 4, dif: [0.44, 0.78], forza: 1.25, spinta: 8.7, livello: 8, caporali: 6, grosso: 4,
     mostri: ['lupo', 'cinghiale', 'serpente', 'ent'], caporale: 'golem-muschio', tettoBranco: 5, capo: 'troll' },
 
   { chiave: 'fondo', nome: 'La miniera abbandonata', icona: '⛏️', dove: 'nella miniera',
     scenario: 'fornace', pianta: 'caverna',
     portata: 64,
     dritta: 'stretta, profonda, e le pietre bruciano',
-    piani: 4, misura: 40, giri: 3, dif: [0.52, 0.92], forza: 1.8, spinta: 9, livello: 10,
+    piani: 4, misura: 40, giri: 3, dif: [0.52, 0.92], forza: 1.8, spinta: 9.5, livello: 10, caporali: 6.5, grosso: 3.5,
     mostri: ['scorpione', 'golem', 'spirito-elettrico'], caporale: 'golem-lava', tettoBranco: 6, capo: 'gigante' },
 ]
 
@@ -186,6 +186,9 @@ export const crescitaDi = tappa => ({
   attOgni: tappa && tappa.attOgni ? tappa.attOgni : 2,   // la campagna resta a 2: sono 4 piani al massimo, non le arriva addosso
   forza: (tappa && tappa.forza) || 1,     // le ossa di tutti, per la roba che ci si porta giù (docs/sotterraneo/regole.md)
   spinta: (tappa && tappa.spinta) || 0,   // e quanto picchiano in più
+  caporali: (tappa && tappa.caporali) || 0,   // le ossa di un caporale rispetto a quelle di strada (0: CAPORALE.ossa) e del grosso rispetto alla sua tabella (docs/sotterraneo/mostri.md, «Quanto chiede»)
+  grosso: (tappa && tappa.grosso) || 0,
+  gradi: tappa && tappa.gradi != null ? tappa.gradi : 1,   // quanto pesa il grado di un mostro (0 nella cripta, dove si impara)
 })
 
 // un solo piano vuol dire un solo numero: il primo, non la media, perché è quello che il bambino vede appena entra

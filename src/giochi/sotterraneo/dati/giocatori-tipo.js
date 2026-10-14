@@ -17,7 +17,7 @@ export const TENTATIVI = 4
 
 // «Tanti mostri che picchiano poco» (l'utente): in quanti colpi un mostro solo stende l'eroe atteso, almeno, per ruolo. Sotto, la specie
 // picchia fuori misura e il rapporto la segnala per nome. I numeri sono di chi ha scritto lo strumento: da confermare con l'utente
-export const COLPI_PER_STENDERE = { comune: 8, caporale: 5, grosso: 3 }
+export const COLPI_PER_STENDERE = { comune: 7, caporale: 4.5, grosso: 3 }
 
 export const GIOCATORI_TIPO = {
   curioso: {

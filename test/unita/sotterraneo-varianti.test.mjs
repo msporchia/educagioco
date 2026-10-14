@@ -1,10 +1,11 @@
 /* Le varianti armate e i gradi (docs/sotterraneo/varianti.md): lo scheletro, lo zombie, il goblin e l'orco possono avere un'arma in
    pugno (una figura della roba dell'atlante) e diventano guerrieri, arcieri, maghi; ogni mostro armato ha un grado (comune, magico, raro,
    leggendario) che dà un aggettivo al nome, il colore della rarità e un'arma più ricca. Una variante cambia la forma, mai la forza: le
-   ossa e la difesa restano quelle della specie, e dentro una discesa si costa uguale (entro il 15%).
+   ossa e la difesa restano quelle della specie, e a pari grado si costa uguale (entro il 15%). Il grado, dal magico in su, rende il mostro più duro
+   (OSSA_DEL_GRADO, ATT_DEL_GRADO): un nome epico è un mostro più forte.
    `node test/esegui.mjs sotterraneo-varianti --niente-build` */
 import { VARIANTI, MANI, GRADI, AGGETTIVI, armaDi, nomeDelMostro, etichettaDi, vesti, pescaIlGrado, pescaLaVariante, pesiDeiGradi, coloreDelGrado,
-         guastiDelleVarianti, VELOCITA_DEL_GRADO, PREMIO_DEL_GRADO } from '../../src/giochi/sotterraneo/dati/varianti.js'
+         guastiDelleVarianti, VELOCITA_DEL_GRADO, PREMIO_DEL_GRADO, OSSA_DEL_GRADO, ATT_DEL_GRADO } from '../../src/giochi/sotterraneo/dati/varianti.js'
 import { MOSTRI, costoInRisposte } from '../../src/giochi/sotterraneo/dati/mostri.js'
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { RARITA } from '../../src/giochi/sotterraneo/dati/pezzi.js'
@@ -57,17 +58,18 @@ uguale('l\'etichetta sullo schermo non ha l\'articolo', etichettaDi('Uno schelet
 uguale('nemmeno quando è elisa', etichettaDi('Un\'ombra'), 'Ombra')
 controlla('il colore è quello della rarità, come la roba', GRADI.every(g => coloreDelGrado(g) === RARITA[g].colore) && new Set(GRADI.map(coloreDelGrado)).size === 4)
 
-/* ══════════ 3. la forma cambia, la forza no ══════════ */
+/* ══════════ 3. la forma cambia, la forza no; il grado la alza ══════════ */
 {
   const sch = MOSTRI.scheletro
   const base = () => ({ tipo: 'scheletro', ossa: 24, att: 5, dif: sch.dif })
   for (const v of VARIANTI.scheletro) for (const g of GRADI) {
     const m = vesti(base(), sch, { variante: v.chiave, grado: g, k: 2 })
-    controlla(`scheletro ${v.chiave} ${g}: le ossa e la difesa sono quelle della specie`, m.ossa === 24 && m.dif === sch.dif)
+    controlla(`scheletro ${v.chiave} ${g}: le ossa sono quelle della specie per il grado, la difesa quella della specie`, m.ossa === Math.round(24 * OSSA_DEL_GRADO[g]) && m.dif === sch.dif)
     const vel = m.velocita != null ? m.velocita : sch.velocita
     controlla(`scheletro ${v.chiave} ${g}: la velocità resta fra 5 e 13`, vel >= 5 && vel <= 13, String(vel))
-    controlla(`scheletro ${v.chiave} ${g}: colpo per velocità entro il 15% di quello dello scheletro, in più o in meno`,
-              (m.att * vel) / (5 * sch.velocita) < 1.2 && (m.att * vel) / (5 * sch.velocita) > 0.7, `${m.att * vel} contro ${5 * sch.velocita}`)
+    const pari = vesti(base(), sch, { variante: 'semplice', grado: g, k: 2 }), velPari = pari.velocita != null ? pari.velocita : sch.velocita
+    controlla(`scheletro ${v.chiave} ${g}: colpo per velocità entro il 15% di quello dello scheletro dello stesso grado, in più o in meno`,
+              (m.att * vel) / (pari.att * velPari) < 1.2 && (m.att * vel) / (pari.att * velPari) > 0.7, `${m.att * vel} contro ${pari.att * velPari}`)
     controlla(`scheletro ${v.chiave} ${g}: le difese sono valide`, guastiDelleDifese('x', difeseDi(m)).length === 0, guastiDelleDifese('x', difeseDi(m)).join())
   }
   const guerriero = vesti(base(), sch, { variante: 'guerriero', grado: 'comune' }), arciere = vesti(base(), sch, { variante: 'arciere', grado: 'comune' })
@@ -80,15 +82,22 @@ controlla('il colore è quello della rarità, come la roba', GRADI.every(g => co
   controlla('il grado alza un poco la velocità, e basta', VELOCITA_DEL_GRADO.comune === 0 && VELOCITA_DEL_GRADO.leggendario <= 2 && (leg.velocita ?? sch.velocita) >= (raro.velocita ?? sch.velocita))
   controlla('e vale di più abbatterlo', PREMIO_DEL_GRADO.leggendario > PREMIO_DEL_GRADO.raro && PREMIO_DEL_GRADO.raro > PREMIO_DEL_GRADO.magico && PREMIO_DEL_GRADO.magico > 1)
 }
-// dentro una discesa si costa uguale: ogni variante a ogni grado costa in risposte come la specie, entro il 15% (le ossa e la difesa sono le stesse)
+// a pari grado si costa uguale: ogni variante costa in risposte come la specie dello stesso grado, entro il 15% (le ossa e la difesa sono le stesse)
 {
   const male = []
   for (const tipo of Object.keys(VARIANTI)) for (const v of VARIANTI[tipo]) for (const g of GRADI) for (const att of [3, 5, 8, 12, 20, 40]) {
     const m = vesti({ tipo, ossa: MOSTRI[tipo].ossa, att: MOSTRI[tipo].att, dif: MOSTRI[tipo].dif }, MOSTRI[tipo], { variante: v.chiave, grado: g })
-    const r = costoInRisposte(m, att) / costoInRisposte(MOSTRI[tipo], att)
+    const pari = vesti({ tipo, ossa: MOSTRI[tipo].ossa, att: MOSTRI[tipo].att, dif: MOSTRI[tipo].dif }, MOSTRI[tipo], { variante: 'semplice', grado: g })
+    const r = costoInRisposte(m, att) / costoInRisposte(pari, att)
     if (Math.abs(r - 1) > 0.15) male.push(`${tipo} ${v.chiave} ${g} a ${att}`)
   }
-  controlla('ogni variante a ogni grado costa in risposte come la sua specie', !male.length, male.slice(0, 3).join(' · '))
+  controlla('ogni variante a ogni grado costa in risposte come la sua specie dello stesso grado', !male.length, male.slice(0, 3).join(' · '))
+  // il grado pesa: più sale, più ossa e più attacco; nella cripta (peso 0) è solo un nome
+  const su = (g, peso = 1) => vesti({ tipo: 'scheletro', ossa: 24, att: 5, dif: 1 }, MOSTRI.scheletro, { variante: 'guerriero', grado: g, peso })
+  controlla('un grado più alto ha più ossa e più attacco', su('magico').ossa > su('comune').ossa && su('raro').ossa > su('magico').ossa && su('leggendario').ossa > su('raro').ossa &&
+            su('raro').att > su('comune').att && su('leggendario').att > su('raro').att, [su('comune'), su('magico'), su('raro'), su('leggendario')].map(m => `${m.ossa}/${m.att}`).join(' '))
+  controlla('con peso 0 (la cripta) il grado è solo un nome', su('leggendario', 0).ossa === 24 && su('leggendario', 0).att === 5 + (VARIANTI.scheletro[1].att || 0))
+  controlla('il grado comune non cambia niente', OSSA_DEL_GRADO.comune === 1 && ATT_DEL_GRADO.comune === 0)
 }
 
 /* ══════════ 4. dove e quanto spesso ══════════ */

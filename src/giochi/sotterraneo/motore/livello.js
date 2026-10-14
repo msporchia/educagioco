@@ -976,9 +976,9 @@ export class Livello {
     // un caporale non è mai comune: il suo grado, se non ce l'ha già dalla variante, si pesca qui (gradi più alti dei soldati)
     if (rangoDelGrado(m.grado) === 0) {
       const r = this.mostro(m.tipo, m.x, m.y, { variante: m.variante || null, grado: pescaIlGrado(this.livelloDelPosto, this.rndVarianti(), true) })
-      for (const k of ['nome', 'grado', 'arma', 'velocita', 'difese', 'att', 'variante', 'incanto']) if (r[k] !== undefined) m[k] = r[k]
+      for (const k of ['nome', 'grado', 'arma', 'velocita', 'difese', 'att', 'ossa', 'ossaMax', 'variante', 'incanto']) if (r[k] !== undefined) m[k] = r[k]
     }
-    m.ossa = m.ossaMax = Math.round(m.ossa * CAPORALE.ossa)
+    m.ossa = m.ossaMax = Math.round(m.ossa * (this.crescita.caporali || CAPORALE.ossa))
     m.att += CAPORALE.att
     m.nome = `${m.nome} caporale`
     m.caporale = true
@@ -999,7 +999,7 @@ export class Livello {
     if (haLeVarianti(tipo) || variante || grado) {
       const v = variante !== undefined ? variante : pescaLaVariante(tipo, this.rndVarianti())
       const g = grado || pescaIlGrado(this.livelloDelPosto, this.rndVarianti())
-      vesti(r, m, { variante: v, grado: g, k: Math.floor(this.rndVarianti() * 9) })
+      vesti(r, m, { variante: v, grado: g, k: Math.floor(this.rndVarianti() * 9), peso: this.crescita.gradi ?? 1 })
     }
     return r
   }
@@ -1008,7 +1008,7 @@ export class Livello {
   mostroGrosso(id, x, y) {
     const G = GROSSI[id]
     const m = this.mostro(G.tipo, x, y)
-    m.ossa = m.ossaMax = Math.max(Math.round(m.ossa * G.ossa), m.ossa + 2)   // dove la forza è piccola (la cripta) il grosso resta almeno due ossa sopra il suo simile
+    m.ossa = m.ossaMax = Math.max(Math.round(m.ossa * G.ossa * (this.crescita.grosso || 1)), m.ossa + 2)   // dove la forza è piccola (la cripta) il grosso resta almeno due ossa sopra il suo simile
     m.att += G.att
     m.grosso = id
     m.nome = G.nome

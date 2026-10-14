@@ -205,6 +205,7 @@ async function stampaLeSpecie({ completa = true } = {}) {
   const { tabellaDelleSpecie } = await modulo('motore/specie.js')
   const t = tabellaDelleSpecie()
   if (completa) console.log(t.testo)
+  if (completa) console.log(`\nIl grado pesa (ossa, attacco e colpo medi per ruolo e grado, sui piani veri):${(await modulo('motore/specie.js')).tabellaDeiGradi()}`)
   console.log(t.fuori.length ? `\nSpecie che picchiano fuori misura (la prima cosa da guardare):\n${t.fuori.map(x => `  ! ${x}`).join('\n')}` : '\nNessuna specie picchia fuori misura.')
 }
 

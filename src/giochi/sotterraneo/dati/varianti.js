@@ -60,6 +60,9 @@ export const AGGETTIVI = {
 }
 // quanto il grado alza la forma: un filo di velocità, e basta (le ossa e la difesa non si toccano)
 export const VELOCITA_DEL_GRADO = { comune: 0, magico: 0, raro: 1, leggendario: 1 }
+// e quanto lo rende più duro (docs/sotterraneo/varianti.md, «Il grado pesa»): un nome epico è un mostro più forte, non solo più bello
+export const OSSA_DEL_GRADO = { comune: 1, magico: 1.25, raro: 1.5, leggendario: 2 }
+export const ATT_DEL_GRADO = { comune: 0, magico: 0.5, raro: 1, leggendario: 2 }
 // e quanto vale di più, in gemme e in esperienza, abbatterlo
 export const PREMIO_DEL_GRADO = { comune: 1, magico: 1.3, raro: 1.7, leggendario: 2.5 }
 // L'incanto del mago: la probabilità, in cento, che un colpo del mago che ti arriva ti geli; sale col grado
@@ -131,11 +134,13 @@ export const etichettaDi = nome => {
 }
 
 // Veste un mostro appena fatto (`m`: l'istanza di Livello.mostro) della sua variante e del suo grado: nome, arma, velocità e difese.
-// `scheda`: la specie in dati/mostri.js. Tocca solo la forma: mai le ossa, mai la difesa
-export function vesti(m, scheda, { variante = null, grado = 'comune', k = 0 } = {}) {
+// `scheda`: la specie in dati/mostri.js. Tocca la forma e, dal grado magico in su, le ossa e l'attacco (OSSA_DEL_GRADO, ATT_DEL_GRADO); mai la difesa
+export function vesti(m, scheda, { variante = null, grado = 'comune', k = 0, peso = 1 } = {}) {
   const v = variante ? (VARIANTI[m.tipo] || []).find(x => x.chiave === variante) : null
   if ((!v || !v.nome) && grado === 'comune') return m
   m.grado = grado
+  m.ossa = m.ossaMax = Math.round(m.ossa * (1 + (OSSA_DEL_GRADO[grado] - 1) * peso))   // `peso` 0 nella cripta, dove si impara: il grado è solo un nome
+  m.att += ATT_DEL_GRADO[grado] * peso
   m.nome = nomeDelMostro(scheda.nome, v, grado, k)
   let vel = (scheda.velocita || 8) + VELOCITA_DEL_GRADO[grado]
   if (v) {
