@@ -94,8 +94,8 @@ nello scontro e nella barra in cima).
 
 ## Quanto conta
 
-- **L'esperienza**: tre volte quella della sua specie (`ESP_DEL_CAPO`), che è
-  spesso il livello che si prende in una discesa.
+- **L'esperienza**: la sua potenza (ossa, attacco, poteri: [livelli.md](livelli.md#lesperienza-viene-solo-dai-mostri)),
+  che con le sue ossa e il suo colpo in più è molto: spesso il livello che si prende in una discesa.
 - **Le domande** (misurate prima del 12 ottobre, con i mostri di strada di allora; il grosso non è cambiato): con la roba e il livello attesi Re Ossuto chiede da tre a
   sei risposte giuste, Grumo e Fiammetta da cinque a otto, Gorgo da otto a
   undici, Carbonchio da undici a sedici (il mago e l'elfa, che picchiano di

@@ -15,27 +15,30 @@ di un mostro), `dati/eroi.js` (`parte`, `vitaPerLivello`, `dote`),
 
 ## L'esperienza viene solo dai mostri
 
-- **Tanta quanto sono forti**: `espDi` conta la specie (le ossa e l'attacco
-  del bestiario, `dati/mostri.js`) e quanto è giù il posto (il livello del
-  posto, `livelloDelPosto` in `dati/campagna.js`: +30% a livello). Il mostro
-  grosso tre volte tanto (`ESP_DEL_CAPO`). Decisione dell'utente: *«fermiamoci
-  all'esperienza che si accumula uccidendo i mostri: più i mostri son forti,
-  più esperienza»*. Niente per i piani nuovi né per le missioni.
-- **Provato: contarla sulle ossa vere del mostro**, già moltiplicate dalla
-  discesa (`forza`). Si avvitava: indurendo una discesa i mostri davano più
-  esperienza, l'eroe saliva di livello a metà discesa, e la discesa diventava
-  più facile quanto più la si induriva. Il banco non trovava una taratura.
-- **Un mostro di strada rende il 35%**, in esperienza e gemme (`QUOTA_DEL_COMUNE`; il grosso e i caporali tutto): coi branchi sono più del doppio ([taratura-branchi.md](taratura-branchi.md)).
+- **Ogni mostro porta quello che è** (14 ottobre, decisione dell'utente: *«ogni
+  mostro dovrebbe portare la sua esperienza e le sue caratteristiche»*): la sua
+  **potenza** (`potenzaDi` in `dati/livelli.js`, `potenzaDelMostro` in
+  `motore/potenza.js`) viene dalle ossa, dall'attacco, dalla difesa, dalle
+  protezioni, dall'arma e dall'incanto di una variante e dal grado, e da lì
+  l'esperienza e le gemme: una formula sola, la stessa per il mostro di strada,
+  il caporale e il grosso ([giocatori-tipo.md](giocatori-tipo.md#il-mostro-porta-quello-che-è)).
+  Niente per i piani nuovi né per le missioni.
+- **Provato: contarla sulle ossa vere del mostro** (prima del 14 ottobre). Si
+  avvitava: indurendo una discesa i mostri davano più esperienza, l'eroe saliva
+  di livello a metà discesa, e la discesa diventava più facile quanto più la si
+  induriva. Adesso a frenare i livelli è la curva delle soglie, tarata col
+  curioso che gira tutto.
 - **L'esperienza resta anche perdendo**: i mostri battuti sono battuti. Il
   cartello di fine la dice (`[data-esp-presa]`).
 
 ## Le soglie
 
 `sogliaDi(n)` è l'esperienza che serve per il livello `n`: un salto costa
-`ESP_A · n + ESP_B` (14 e 16), quindi il totale cresce col quadrato, mai
+`A · n + B` (50 e 56, `CURVA_DELL_ESPERIENZA`; erano 14 e 16 finché il mostro di
+strada rendeva il 35%), quindi il totale cresce col quadrato, mai
 esponenziale ([../apprendimento/calibrazione.md](../apprendimento/calibrazione.md#le-curve-mai-esponenziali)).
 Oltre il livello 12 (`ESP_OLTRE`, dove finisce la storia) ogni livello costa
-anche `120 + 10 · (2m + 1)`, con m i livelli sopra il 12 (`ESP_R`, `ESP_Q`):
+anche `200 + 20 · (2m + 1)`, con m i livelli sopra il 12 (`R`, `Q`):
 una retta come l'esperienza di una zona, così una zona verde vinta vale più o
 meno un livello a ogni altezza ([zone.md](zone.md#lesperienza)). Provato: il
 cubo di m, messo per l'abisso; dal 18 una zona valeva 0,2 livelli. L'abisso
@@ -43,7 +46,7 @@ dà un terzo dell'esperienza, e cresce come prima.
 
 | livello | 2 | 3 | 5 | 8 | 10 | 12 | 15 | 20 | 30 |
 |---|---|---|---|---|---|---|---|---|---|
-| esperienza | 30 | 74 | 204 | 504 | 774 | 1100 | 2144 | 4564 | 11954 |
+| esperienza | 106 | 262 | 724 | 1792 | 2754 | 3916 | 6814 | 13444 | 33454 |
 
 ## Salire di livello
 

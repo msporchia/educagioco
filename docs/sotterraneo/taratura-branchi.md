@@ -33,7 +33,7 @@ più numerosi corrisponde **un mostro singolo più debole**. Le leve sono la vit
 | l'abisso | forza 5, spinta 12 | forza 2,2, spinta 9 |
 | velocità dell'eroe | 6 + 1,5 a punto di destrezza | **7 + 1 a punto** |
 | il mago | difesa 0, lanci 6 · 6 · 5 · 3 · 1, vita 12 | difesa 1, lanci 6 · 6 · 6 · 4 · 1, vita 13 |
-| esperienza e gemme di un mostro di strada | tutta | il 35% (`QUOTA_DEL_COMUNE`; il grosso e i caporali tutto) |
+| esperienza e gemme di un mostro di strada | tutta | il 35% (`QUOTA_DEL_COMUNE`); tolto il 14 ottobre: ogni mostro porta la sua potenza ([giocatori-tipo.md](giocatori-tipo.md#il-mostro-porta-quello-che-è)) |
 | il mostro grosso | ossa della specie × il suo moltiplicatore | almeno due ossa più del suo simile (nella cripta la specie ha due ossa) |
 
 - **La spinta della cripta è negativa** (−2, cioè un colpo di uno per tutti: i mostri hanno attacco 3, l'eroe difesa 1–2). La cripta si comincia

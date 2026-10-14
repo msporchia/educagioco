@@ -140,6 +140,8 @@ solito è «uno».
   effetti (`danno`, `botta`). La protezione (parato, o i primi colpi di Testa
   dura) lo dimezza una volta sola, il gelo ancora; la Parata ne toglie qualcuno;
   la schivata vale per ogni colpo. Il valore è **1,1**: vedi «Il bilancio».
+  **Il danno è continuo**: ogni mostro porta il resto del suo colpo al colpo dopo (3,4 toglie 3, 3, 4…), lo stesso per i colpi dell'eroe sul
+  mostro che li prende; a schermo l'intero che arriva ([giocatori-tipo.md](giocatori-tipo.md#come-si-misura)).
 - **Sotto il mostro**: «ti colpisce 3» (`foglio.minaccia`). Spariscono «se
   sbagli» e il graffio.
 - **Uno alla volta, in ordine**, con la sua animazione corta; un tocco la

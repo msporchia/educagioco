@@ -114,7 +114,7 @@ dell'abisso sta in [abisso-progetto.md](abisso-progetto.md).
 - **Chi gira tutto arriva tre livelli sopra** e a quattro su dieci vince
   metà delle discese ([la-grande-storia.md](la-grande-storia.md#le-misure)):
   è il premio dell'esplorare, ma se a guardarlo è troppo la leva è
-  `ESP_PER_LIVELLO_DEL_POSTO` o la probabilità dei pezzi dai mostri.
+  la curva dell'esperienza (`CURVA_DELL_ESPERIENZA`) o la probabilità dei pezzi dai mostri.
 - **La scalinata a mani nude** (con la roba di una discesa prima) non si fa
   più neanche a otto su dieci: il minatore lo dice, l'armaiolo ha la spada
   corta.

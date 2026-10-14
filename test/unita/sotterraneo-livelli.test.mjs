@@ -46,7 +46,7 @@ import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifi
   controlla('più vita, più attacco, più difesa: vale di più', potenzaDi({ ...base, ossa: 16 }) > potenzaDi(base) && potenzaDi({ ...base, att: 6 }) > potenzaDi(base) && potenzaDi({ ...base, dif: 3 }) > potenzaDi(base))
   controlla('i poteri lo fanno valere di più', potenzaDi({ ...base, protezioni: 2 }) > potenzaDi(base) && potenzaDi({ ...base, arma: true }) > potenzaDi(base) && potenzaDi({ ...base, incanto: true }) > potenzaDi({ ...base, arma: true }))
   uguale('il grado la moltiplica', potenzaDi({ ...base, premio: 2.5 }), 2.5 * potenzaDi(base))
-  controlla('esperienza e gemme sono la stessa potenza, a scale diverse', esperienzaDi(40) > gemmeDi(40) && esperienzaDi(0) === 1 && gemmeDi(0) === 1)
+  controlla('esperienza e gemme vengono dalla stessa potenza: crescono con lei, mai meno di una', esperienzaDi(80) > esperienzaDi(40) && gemmeDi(80) > gemmeDi(40) && esperienzaDi(0) === 1 && gemmeDi(0) === 1)
   // battere un mostro in una discesa dà la sua esperienza all'eroe, e nient'altro la dà
   const c = new Corsa(CAMPAGNA[1], { seme: 4, rnd: seminato(4) })
   const m = c.livello.robe.find(r => r.che === 'mostro' && !r.chiave)

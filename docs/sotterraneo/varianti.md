@@ -49,7 +49,7 @@ mani ne ha uno, e anche **ogni caporale**, che non è mai comune: sono i buoni p
   2 magico, 3 raro, 4 leggendario): `armaDi` prende fra le figure delle basi della variante, e delle sue tinte (il mago ha il bastone del ghiaccio, a
   leggendario anche arcano) quelle col pregio più vicino.
 - **Cosa cambia di vero**: raro e leggendario hanno **un punto di velocità in più** (`VELOCITA_DEL_GRADO`), e abbatterli vale di più (gemme ed
-  esperienza ×1,3 · 1,7 · 2,5: `PREMIO_DEL_GRADO`, `Corsa.cade`). Le ossa e la difesa no: la gradatura è epicità, non un muro. Provato: ossa più alte
+  esperienza ×1,3 · 1,7 · 2,5: `PREMIO_DEL_GRADO`, dentro la potenza del mostro, `motore/potenza.js`). Le ossa e la difesa no: la gradatura è epicità, non un muro. Provato: ossa più alte
   ai gradi alti (il leggendario ×1,12): con un guerriero e un mostro di difesa 1 a fianco usciva dal 15%; l'attacco più alto ai gradi alti: nella cripta,
   a mani nude, un +1 è un terzo di colpo in più.
 
