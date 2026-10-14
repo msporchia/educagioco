@@ -25,7 +25,7 @@ discesa all'altra nello stato della storia), `dati/giocatori-tipo.js` (`RISALITA
   con quello solo, le risalite non hanno niente da comprare (provato: stesse gemme non spese, stessa forza, `--tara risalita.scaffale=0`). Vale anche fra una
   discesa e l'altra. I banchi **persistono** (`botteghe` nello stato della storia): riaprire non li cambia, a discesa finita ruotano (`alGiroNuovo`, tre via e tre
   dentro), salendo di livello si rimettono in discussione (`prepara`). Provato: ripescarli a ogni visita era una slot machine, e costava 100 ms a visita.
-- **Chi guarda i banchi**: l'incantatrice solo per chi porta bacchette o stoffa, il mercante dei gioielli finché il dito è libero, il fabbro sempre.
+- **Chi guarda i banchi**: l'incantatrice solo per chi porta bacchette o stoffa, il mercante dei gioielli finché un dito o il collo è libero, il fabbro sempre.
 - **Le strade restano**: arma prima compra i pezzi e poi le pozioni, beve tutto le pozioni prima (fino a lasciare due tasche), in salita come fra le discese.
 - **Il resto del gioco non cambia**: `RISALITA.acceso = 0` e `scaffale = 0` riproducono il giro di prima cifra per cifra (`--tara risalita.acceso=0,risalita.scaffale=0`).
 
