@@ -211,7 +211,10 @@ import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifi
   }
   controlla('e qualche pezzo magico in mezzo', magici > 0 && magici < tutti / 2, `${magici}/${tutti}`)
   const p = new Bottega({ eroe: 'cavaliere', crescita: { esp: sogliaDi(10) } })
-  controlla('le pozioni costano di più ai grandi, e curano di più', p.quantoCosta('pozione') > COSE.pozione.prezzo && p.curaDi('pozione') > COSE.pozione.cura)
+  const piccolo = new Bottega({ eroe: 'cavaliere' })
+  controlla('le pozioni costano e curano uguale a ogni livello', p.quantoCosta('pozione') === COSE.pozione.prezzo &&
+            p.curaDi('pozione') === COSE.pozione.cura && piccolo.curaDi('pozione') === COSE.pozione.cura &&
+            piccolo.quantoCosta('pozione') === p.quantoCosta('pozione'))
   uguale('il rigattiere compra a metà del prezzo vero', new Corredo().quantoVale('spada@7.m.fuoco'), Math.floor(COSE['spada@7.m.fuoco'].prezzo / 2))
 }
 

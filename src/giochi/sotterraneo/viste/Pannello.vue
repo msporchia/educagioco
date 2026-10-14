@@ -13,7 +13,7 @@ const props = defineProps({
   cosa: { type: Object, required: true },      // COSE[k] con la chiave
   prova: { type: Object, default: null },      // seLoMetto(k): null se non si indossa o è già addosso
   note: { type: Array, default: () => [] },    // [{ testo, em?, tono? ('ambra' | 'tenue' | 'oro') , dato? }]
-  cura: { type: Number, default: null },       // quanto cura una pozione per questo eroe (cresce col livello)
+  cura: { type: Number, default: null },       // quanto cura una pozione per questo eroe (il suo numero, più il pezzo 🧪)
 })
 
 // un anello piccolo cresce fino a riempire il riquadro, una spada lunga ci sta a due

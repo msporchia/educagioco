@@ -46,7 +46,8 @@ senza fondo sotto le sette discese. Il codice sta in `src/giochi/sotterraneo/`.
 - [missioni-freccina.md](missioni-freccina.md) — le due freccine che ricordano una missione presa: giù attorno all'eroe (la cosa o la scala), sopra azzurra sul bordo, e «segui questa» per sceglierne una
 - [la-roba-che-resta.md](la-roba-che-resta.md) — la roba che scende e risale con l'avventuriero, le discese che contano su di lei, l'equilibrio di prima
 - [avventure.md](avventure.md) — un'avventura per eroe: cosa ha ognuno e dove sta nel salvataggio, cosa è in comune (monete, il massimo per medaglie ed esperienza), i salvataggi di prima, azzerati e poi riordinati
-- [roba.md](roba.md) — gli eroi e cosa portano, due mani, la torcia, per terra e nello zaino, curiosità e arredo
+- [roba.md](roba.md) — gli eroi e cosa portano, due mani, la torcia, per terra e nello zaino, curiosità e arredo; la tabella delle cinque cure
+- [pozioni.md](pozioni.md) — le cure: quanto costano rispetto a una spada, quando arrivano sul banco, l'ampolla della vita, il tetto di otto, la scelta di quale bere
 - [figure.md](figure.md) — le 238 figure da indossare dei fogli dipinti, descritte una per una (elemento, materia, a chi sta bene): il catalogo, `roba.py` per guardarle e ritagliarle, i pezzi col nome con la figura loro
 - [bottega.md](bottega.md) — i mercanti di sopra, i pezzi avanti a sovrapprezzo, il tetto di rarità, i dieci pezzi per linguetta, il banco che cambia poco alla volta, comprare senza le caratteristiche, il riacquisto degli ultimi cinque venduti
 - [bottega-finestra.md](bottega-finestra.md) — la finestra da gioco di ruolo dove si compra, si vende e si riprende, lo zaino nella stessa finestra, il confronto affiancato, i bersagli dei test

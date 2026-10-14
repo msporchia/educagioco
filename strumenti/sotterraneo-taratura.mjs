@@ -179,6 +179,7 @@ async function stampaIlRapporto(passi, { completo = false, solo = null, tipi = n
     console.log('livello'.padEnd(10) + f.map(x => `${x.livello.join('·')} (${x.atteso})`.padStart(14)).join(''))
     console.log('gemme prese'.padEnd(10) + f.map(x => String(Math.round(x.gemmePrese ?? 0)).padStart(14)).join(''))
     console.log('avanzate'.padEnd(10) + f.map(x => x.gemmeAvanzate.map(v => v ?? '-').join('·').padStart(14)).join(''))
+    console.log('al tetto'.padEnd(10) + f.map(x => `${Math.round((x.alTetto ?? 0) * 100)}%`.padStart(14)).join('') + '   discese in cui il tetto delle pozioni ha frenato')
   }
   const lista = rap.scostamenti(R, P, { solo }).filter(x => elenco.includes(x.f.tipo))
   console.log(`\nScostamenti (${lista.length}): ogni deviazione è sospetta, prima si capisce e poi si gira una manopola`)

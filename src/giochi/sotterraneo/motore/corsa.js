@@ -21,10 +21,13 @@ import { valoreDelLivello } from '../dati/pezzi.js'
 import { esperienzaDi, gemmeDi } from '../dati/livelli.js'
 import { potenzaDelMostro } from './potenza.js'
 import { espNellaZona } from '../dati/zone.js'
-import { pezzoNuovo, pezzoDelGrosso, pezzoDalMostro, livelloDelBottino, elisirCade } from './bottino.js'
+import { pezzoNuovo, pezzoDelGrosso, pezzoDalMostro, livelloDelBottino, elisirCade, ampollaCade } from './bottino.js'
 import { generaPiano } from './livello.js'
 import { percorso, viaVerso, primaLibera } from '../../../motore/passi.js'
-import { Corredo } from './corredo.js'
+import { Corredo, eCura, curePerTipo } from './corredo.js'
+
+// l'ordine degli stadi: l'ampolla della vita sta in fondo anche quando la vita è poca e un'ampolla ne curerebbe di più
+const pesoDiCura = p => (COSE[p.k].tutta ? Infinity : p.cura)
 import { dai as daiPunto } from './crescita.js'
 import { indiceDella, premioPer } from './storia.js'
 import { robaDellaMissione } from './missioni.js'
@@ -85,6 +88,7 @@ export class Corsa extends Corredo {
     this.vinta = false
     this.svenimenti = 0
     this.svenimentiQui = 0   // spesi su QUESTO piano: solo l'abisso li azzera scendendo
+    this.cureRifiutate = 0   // le cure trovate a tasche già col tetto: le conta la taratura
     this.ultimoSvenimento = false   // l'ultima occasione è stata usata: riprendi() risale invece di rimettere in piedi
     this.perche = null
     this.dettoDellArredo = false   // la regola dell'arredo si spiega una volta per discesa
@@ -583,7 +587,7 @@ export class Corsa extends Corredo {
     if (this.vaAddosso(r.cosa)) return this.vesti(r, this.confronto(r.cosa))
     if (!this.cista(r.cosa)) {
       if (c.rarita === 'leggendario') this.trovati.delete(c.unico)
-      this.dillo('⚠️ lo zaino è pieno'); return
+      this.dillo(this.perchéNonCiSta(r.cosa)); if (eCura(r.cosa) && this.alTettoDelleCure) this.cureRifiutate++; return
     }
     this.zaino.push(r.cosa)
     r.presa = true
@@ -826,6 +830,7 @@ export class Corsa extends Corredo {
     // l'elisir del toro: rarissimo, dal grosso o da un caporale (e dai forzieri)
     const chi = m.grosso ? 'grosso' : m.caporale ? 'caporale' : null
     if (chi && elisirCade(chi, this.seme, this.piano, m.x, m.y)) this.posaPezzo('elisir-toro', { x: m.x + 1, y: m.y + 1 })
+    if (chi && ampollaCade(chi, this.seme, this.piano, m.x, m.y)) this.posaPezzo('ampolla-vita', { x: m.x, y: m.y + 1 })
     // un mostro che cade si vede, anche il grosso: niente avviso. Quello di una missione sì, dice cosa fare dopo
     if (m.missione) {
       this.missioniFatte.add(m.missione)
@@ -967,6 +972,7 @@ export class Corsa extends Corredo {
     if (!cosa) cosa = pescaCosa(NEI_FORZIERI_DELLA_STORIA, { rnd: () => this.rnd(), tua: k => this.porta(k) })
     this.posaPezzo(cosa, { x: f.x, y: f.y + 1 })
     if (elisirCade('forziere', this.seme, this.piano, f.x, f.y)) this.posaPezzo('elisir-toro', { x: f.x - 1, y: f.y + 1 })
+    if (ampollaCade('forziere', this.seme, this.piano, f.x, f.y)) this.posaPezzo('ampolla-vita', { x: f.x + 1, y: f.y })
     this.posaRoba({ che: 'gemme', em: '💎', quante: Math.round((6 + this.piano * 3) * valoreDelLivello(this.livelloQui)) },
                   { x: f.x + 1, y: f.y + 1 })
     this.chiudi()
@@ -998,19 +1004,25 @@ export class Corsa extends Corredo {
   // boccetta rossa e un bambino la conta fra le pozioni (contarla no era il guasto della casella che non saliva)
   get pozioni() { return this.zaino.filter(k => COSE[k] && (COSE[k].usa === 'cura' || COSE[k].usa === 'cresci')).length }
 
-  // quale bere dalla barra: ferito, la più piccola cura che riempie la vita, o la più grande se nessuna basta;
-  // l'elisir quando non c'è una cura da bere (vale uguale a ogni momento). null senza pozioni, o in piena forma con
-  // sole cure: un tocco per sbaglio non butta via una boccetta
-  pozioneGiusta() {
+  // quale bere da sé (il tocco sulla barra con un solo tipo, il giocatore finto): la cura più piccola che rimette `serve`
+  // punti di vita (di difetto quanti ne mancano), o la più grande se nessuna basta; l'ampolla della vita rimette tutto e quindi
+  // conta come la più grande. `riservaLaVita`: chi la tiene per il grosso la beve solo contro di lui (o se non ha altro).
+  // L'elisir del toro quando non c'è una cura da bere. null senza pozioni, o in piena forma con sole cure
+  pozioneGiusta({ serve = this.vitaMax - this.vita, riservaLaVita = false } = {}) {
     const manca = this.vitaMax - this.vita
-    const cure = this.zaino.map((k, i) => ({ i, cura: COSE[k] && COSE[k].usa === 'cura' ? this.curaDi(k) : 0 }))
-      .filter(p => p.cura > 0)
+    const tutte = this.zaino.map((k, i) => ({ i, k, cura: eCura(k) ? this.curaDi(k) : 0 })).filter(p => p.cura > 0)
+    const cure = riservaLaVita && tutte.some(p => !COSE[p.k].tutta) ? tutte.filter(p => !COSE[p.k].tutta) : tutte
     if (manca > 0 && cure.length) {
-      const basta = cure.filter(p => p.cura >= manca).sort((a, b) => a.cura - b.cura)[0]
-      return (basta || cure.sort((a, b) => b.cura - a.cura)[0]).i
+      const basta = cure.filter(p => p.cura >= serve).sort((a, b) => pesoDiCura(a) - pesoDiCura(b))[0]
+      return (basta || [...cure].sort((a, b) => pesoDiCura(b) - pesoDiCura(a))[0]).i
     }
     const elisir = this.zaino.findIndex(k => COSE[k] && COSE[k].usa === 'cresci')
     return elisir >= 0 ? elisir : null
+  }
+
+  // le cure che si hanno, per scegliere quale bere: [{ k, n, i, cura }], dalla più piccola alla più grande
+  scelteDiCura() {
+    return curePerTipo(this.zaino).map(t => ({ ...t, cura: this.curaDi(t.k) })).sort((a, b) => pesoDiCura(a) - pesoDiCura(b))
   }
 
   // una tasca toccata apre le sue azioni invece di eseguirne una: usa/butta/riponi. Il verbo lo sceglie chi

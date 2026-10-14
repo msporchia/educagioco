@@ -29,6 +29,8 @@
     "pozione-piccola": { "da": [15, 136], "cella": [9, 14] },
     "pozione": { "da": [227, 37], "cella": [10, 15] },
     "pozione-grande": { "da": [266, 37], "cella": [11, 15] },
+    "ampolla-maggiore": { "da": [206, 37], "cella": [11, 16] },
+    "ampolla-vita": { "da": [366, 16], "cella": [11, 16] },
 
     "anello-ambra": { "da": [117, 135], "cella": [11, 17], "buchi": true },
     "anello-verde": { "da": [158, 135], "cella": [11, 17], "buchi": true },

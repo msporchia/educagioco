@@ -114,10 +114,9 @@ Tutto quello che apre il diario (il globo, la linguetta) apre la scheda Missioni
 
 ## Le caselle che fanno qualcosa
 
-- **🧪 beve senza aprire lo zaino**: ferito, la più piccola pozione che
-  riempie la vita, o la più grande se nessuna basta (`pozioneGiusta` in
-  `motore/corsa.js`); senza una cura da bere, l'elisir del toro, che vale
-  uguale a ogni momento. In piena forma con sole cure non si beve e lo dice:
+- **🧪 beve senza aprire lo zaino**: ferito, con un solo stadio di cura si beve e basta; con più stadi apre la scelta di quale
+  ([roba.md](roba.md#le-pozioni), `ScegliPozione.vue`: una riga per stadio con quanto cura e quante ne hai, ✕ in alto a destra). Senza una
+  cura da bere, l'elisir del toro, che vale uguale a ogni momento. In piena forma con sole cure non si beve e lo dice:
   un tocco per sbaglio non butta una boccetta. Come lo zaino, non si apre
   durante uno scontro: il velo copre la barra (quando si rischia di cadere,
   lo stop dello scontro offre lo stesso «bevi», [pericolo.md](pericolo.md)).
@@ -145,7 +144,7 @@ Nei test: `[data-barra-giu]` con `data-barra="giu|sopra"`;
 `.sot-globo-numero`; il globo rosso `[data-azione="vita"]` con `data-missioni-pronte` (assente se nessuna); la riga dell'esperienza `[data-esperienza-barra]` con
 `data-quota` e «fatta/serve» in `.sot-esp-numero`; il livello
 `[data-azione="eroe-pagina"]` con `data-livello` e `data-punti`; il globo
-dell'energia `[data-azione="abilita"]` con `data-punti-abilita`; `[data-casella-barra="pozione|zaino|incanti|mappa|gemme"]` con
+dell'energia `[data-azione="abilita"]` con `data-punti-abilita`; `[data-casella-barra="pozione|zaino|incanti|mappa|gemme"]` (la scelta: `[data-scegli-pozione]`, `[data-azione="bevi-questa"]` con `data-cosa`, `data-cura`, `data-n`) con
 `data-n` (per gli incanti quelli addosso, e `data-preparabili`); `[data-azione="bevi"]`, `[data-azione="zaino"]`,
 `[data-azione="incanti"]`, `[data-azione="mappina"]` (con `aria-pressed`),
 `[data-gemme-barra]`; sopra il globo blu `[data-incanti]` ([orologio.md](orologio.md)); le schede `[data-scheda="zaino|eroe|abilita|missioni"]` (sulle Missioni `[data-missioni-pronte]`) e il diario `[data-diario]`. `integrazione/sotterraneo-barra` (col dito: la stessa

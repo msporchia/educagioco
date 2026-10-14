@@ -32,7 +32,8 @@ import { scrivi } from '../../src/giochi/sotterraneo/motore/sosta.js'
 import { percorso } from '../../src/motore/passi.js'
 
 // quattro stanze di torcia e niente alla cintura: dopo una stanza nuova la luce è agli sgoccioli. Due pozioni
-const roba = { v: 1, gemme: 40, zaino: ['pozione-piccola', 'pozione'], mano: 'spada', mancina: null, corpo: null,
+// due pozioni dello stesso stadio: la 🧪 beve al tocco; con stadi diversi apre la scelta (integrazione/sotterraneo-pozioni)
+const roba = { v: 1, gemme: 40, zaino: ['pozione', 'pozione'], mano: 'spada', mancina: null, corpo: null,
                dito: null, torcia: 4, torce: 0 }
 
 /* ── il piano: una curiosità in un'altra stanza e un mostro, senza mostri né porte per strada ── */

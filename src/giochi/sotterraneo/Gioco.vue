@@ -22,9 +22,9 @@ import { CAMPAGNA, QUANTE_TAPPE, stelleDella, L_ABISSO, INDICE_ABISSO } from './
 import { COSE } from './dati/cose.js'
 import { CURIOSITA_DI } from './dati/curiosita.js'
 import { EROI, DI_PARTENZA, eroeDi } from './dati/eroi.js'
-import { TASCHE, VITA_PER_PIANO } from './dati/mondo.js'
+import { TASCHE, VITA_PER_PIANO, POZIONI_MASSIME } from './dati/mondo.js'
 import { Corsa } from './motore/corsa.js'
-import { rileggiRoba, ROBA_VUOTA, schedaConLaRoba, Corredo, tascheDello, postiDello } from './motore/corredo.js'
+import { rileggiRoba, ROBA_VUOTA, schedaConLaRoba, Corredo, tascheDello, postiDello, eCura } from './motore/corredo.js'
 import { rileggiCrescita, puntiDaDare, dai as daiPunto, livelloDella, crescitaA, trattoDegliElisir } from './motore/crescita.js'
 import { robaAttesa } from './motore/storia.js'
 import { puntiAbilita, caselleDella, gradoDi } from './motore/abilita.js'
@@ -55,6 +55,7 @@ import Scontro from './viste/Scontro.vue'
 import { nuovoRacconto, modoDelColpo } from './viste/racconto.js'
 import { vistaDelloScontro, incantiAddosso } from './viste/campo.js'
 import Zaino from './viste/Zaino.vue'
+import ScegliPozione from './viste/ScegliPozione.vue'
 import Diario from './viste/Diario.vue'
 import BarraDiSotto from './viste/BarraDiSotto.vue'
 import Preparati from './viste/Preparati.vue'
@@ -361,10 +362,11 @@ const banco = computed(() => {
     .map(({ chiave: x, sempre, avanti, ruolo }) => {
       const costa = b.quantoCosta(x)
       return {
-        chiave: x, sempre, ...COSE[x], ...(COSE[x].cura ? { cura: b.curaDi(x) } : {}), costa, avanti, posso: b.gemme >= costa,
+        chiave: x, sempre, ...COSE[x], ...((COSE[x].cura || COSE[x].tutta) ? { cura: b.curaDi(x) } : {}), costa, avanti, posso: b.gemme >= costa,
         // `ruolo` salto/sogno (motore/bottega.js): solo per i test, sulla casella non si segna niente
         ruolo,
         // `nonPuoi`: la classe non lo porta, non si compra. `serve`: lo porta ma gli manca la caratteristica, si compra e va nello zaino
+        alTetto: eCura(x) && b.alTettoDelleCure ? POZIONI_MASSIME : 0,
         nonPuoi: b.porta(x) ? '' : b.perchéNo(x), serve: b.porta(x) ? b.perchéNo(x) : '', prova: b.seLoMetto(x, { ancora: true }), va: b.vaAddosso(x),
         mancano: Math.max(0, costa - b.gemme),
         quante: b.quanteNeHo(x),
@@ -602,10 +604,10 @@ const zainoDiSopra = computed(() => {
   tic.value
   if (!zainoSopra.value) return null
   const c = new Corredo({ eroe: eroeQui(), roba: roba.value, crescita: crescita.value })
-  const voce = k => (k ? { chiave: k, ...COSE[k], nonPuoi: c.perchéNo(k), ancora: c.porta(k) && !c.posso(k), prova: c.seLoMetto(k, { ancora: true }), ...(COSE[k].cura ? { cura: c.curaDi(k) } : {}) } : null)
+  const voce = k => (k ? { chiave: k, ...COSE[k], nonPuoi: c.perchéNo(k), ancora: c.porta(k) && !c.posso(k), prova: c.seLoMetto(k, { ancora: true }), ...((COSE[k].cura || COSE[k].tutta) ? { cura: c.curaDi(k) } : {}) } : null)
   return {
     mano: voce(c.mano), mancina: voce(c.mancina), corpo: voce(c.corpo), dito: voce(c.dito),
-    tasche: tascheVoci(c, voce), costoTasca: c.costoTasca,
+    tasche: tascheVoci(c, voce), costoTasca: c.costoTasca, cure: { n: c.pozioniDiCura, max: POZIONI_MASSIME },
     att: c.att, dif: c.dif, gemme: c.gemme, vita: c.vitaConLaRoba, vitaMax: c.vitaConLaRoba,
   }
 })
@@ -786,7 +788,7 @@ const abilitaViva = dallaCorsa(c => {
   const k = i == null ? null : c.zaino[i]
   return {
     caselle, attacco: `fai ${c.colpo(m)} di danno`, energia: c.energia, energiaMax: c.energiaMax,
-    bevi: i == null ? null : { cura: k && COSE[k].usa === 'cura' ? c.curaDi(k) : 0, n: c.pozioni },
+    bevi: i == null ? null : { cura: k && COSE[k].usa === 'cura' ? c.curaDi(k) : 0, n: c.pozioni, tipi: c.scelteDiCura().length },
     // la pozione blu: energia per le abilità, se ne hai e il globo non è pieno
     beviEnergia: c.energia < c.energiaMax && c.zaino.some(x => COSE[x] && COSE[x].usa === 'energia')
       ? { quanto: COSE[c.zaino.find(x => COSE[x].usa === 'energia')].energia, n: c.zaino.filter(x => COSE[x] && COSE[x].usa === 'energia').length } : null,
@@ -831,14 +833,15 @@ function beviEnergiaNelloScontro() {
 function beviNelloScontro() {
   const c = corsa.value
   if (!c || !c.foglio || c.foglio.che !== 'scontro') return
+  if (c.scelteDiCura().length > 1) { sceltaPozione.value = true; return }
   if (c.foglio.pericolo) return ringhioBevi()
   bevutaNelloScontro()
 }
 // la pozione rossa costa il turno (docs/sotterraneo/scontro.md): tocca ai mostri, e l'esito si racconta come una risposta
-function bevutaNelloScontro() {
+function bevutaNelloScontro(i) {
   const c = corsa.value
   const prima = fotoPrima(c)
-  const e = c.beviNelloScontro()
+  const e = c.beviNelloScontro(i)
   if (!e) return
   domanda.value = null
   togli()
@@ -851,11 +854,11 @@ const pieni = dallaCorsa(c => c.postiUsati(), 0)   // sei su sei vuol dire che l
 
 const zaino = dallaCorsa(c => {
   // `nonPuoi` la scrive il motore (perchéNo), che sa chi sta scendendo
-  const voce = k => (k ? { chiave: k, ...COSE[k], nonPuoi: c.perchéNo(k), ancora: c.porta(k) && !c.posso(k), prova: c.seLoMetto(k, { ancora: true }), ...(COSE[k].cura ? { cura: c.curaDi(k) } : {}) } : null)
+  const voce = k => (k ? { chiave: k, ...COSE[k], nonPuoi: c.perchéNo(k), ancora: c.porta(k) && !c.posso(k), prova: c.seLoMetto(k, { ancora: true }), ...((COSE[k].cura || COSE[k].tutta) ? { cura: c.curaDi(k) } : {}) } : null)
   return {
     mano: voce(c.mano), mancina: voce(c.mancina),
     corpo: voce(c.corpo), dito: voce(c.dito),
-    tasche: tascheVoci(c, voce), costoTasca: c.costoTasca,
+    tasche: tascheVoci(c, voce), costoTasca: c.costoTasca, cure: { n: c.pozioniDiCura, max: POZIONI_MASSIME },
   }
 })
 
@@ -1232,6 +1235,20 @@ function bevi() {
     tic.value++
     return
   }
+  // con più stadi si sceglie quale (ScegliPozione.vue); con un tipo solo si beve e basta
+  if (c.scelteDiCura().length > 1) { sceltaPozione.value = true; return }
+  usa(i)
+}
+// la scelta fatta: nello scontro costa il turno (anche dallo stop del pericolo), fuori si beve e basta
+const sceltaPozione = ref(false)
+const scelteDiPozione = dallaCorsa(c => c.scelteDiCura().map(t => ({ ...t, nome: COSE[t.k].nome, em: COSE[t.k].em, sprite: COSE[t.k].sprite, tutta: !!COSE[t.k].tutta })), [])
+// il foglio che non ha più niente da scegliere si spegne da sé: un `v-if` che resta vero riapparirebbe alla prossima pozione
+watch(() => scelteDiPozione.value.length, n => { if (n < 2) sceltaPozione.value = false })
+function bevutaScelta(i) {
+  sceltaPozione.value = false
+  const c = corsa.value
+  if (!c) return
+  if (c.foglio && c.foglio.che === 'scontro') return bevutaNelloScontro(i)
   usa(i)
 }
 // La casella degli incanti (docs/sotterraneo/orologio.md): apre la scelta di quelli da preparare, giù; sopra e senza incanti noti la
@@ -1573,7 +1590,8 @@ function scesaDaProva() {
 }
 scesaDaProva()
 // `#bottega=armaiolo` (o `incantatrice`) apre subito quel banco (`&scheda=difese`), con l'eroe a `&livello=12` e `&roba=rara` (un raro per posto), `&roba=nuda`
-// o quella attesa dalla storia, e `&gemme=800`: per guardare la bottega senza camminare fino al mercante (strumenti/scatta-app.mjs)
+// o quella attesa dalla storia, `&gemme=800` e `&zaino=pozione,ampolla-vita` (le sole cose in tasca): per guardare la bottega senza camminare
+// fino al mercante (strumenti/scatta-app.mjs)
 function bottegaDaProva() {
   const h = new URLSearchParams(location.hash.slice(1))
   const k = h.get('bottega')
@@ -1583,6 +1601,7 @@ function bottegaDaProva() {
   const tipo = h.get('roba')
   const finite = qui.value.tappa || 0
   const r = tipo === 'rara' ? robaRaraDi(eroeQui(), L || 12, { gemme }) : tipo === 'nuda' ? { ...ROBA_VUOTA(), gemme } : { ...robaAttesa(eroeQui(), finite), gemme }
+  if (h.get('zaino') != null) r.zaino = h.get('zaino').split(',').filter(k => COSE[k])
   nellAvventura({ roba: r, ...(L ? { crescita: crescitaA(eroeDi(eroeQui()), L) } : {}) })
   apriBottega(k, h.get('scheda'))
 }
@@ -1886,6 +1905,11 @@ function ridimensiona() { if (pittore) pittore.misura() }
                    @prepara="preparaDalCampo" @albero="apriPaginaEroe('abilita')" @chiudi="preparatiAperti = false" @fuori="toccoFuori" />
 
         <Fine v-if="fine" v-bind="fine" @ancora="ancora" @esci="allaMappa" />
+        <!-- quale pozione bere, con più stadi: sopra a tutto, anche allo scontro (docs/sotterraneo/roba.md, «Le pozioni») -->
+        <ScegliPozione v-if="sceltaPozione && scelteDiPozione.length > 1" :scelte="scelteDiPozione" :manca="eroe.vitaMax - eroe.vita"
+                       :nello-scontro="!!(foglio && foglio.che === 'scontro')"
+                       @bevi="bevutaScelta" @chiudi="sceltaPozione = false"
+                       @fuori="e => { sceltaPozione = false; if (!nemico) toccoFuori(e) }" />
       </template>
 
       <!-- la pagina dell'eroe e i Tesori, sopra e sotto: si chiudono con la ✕ o toccando fuori (e il tocco cammina) -->
