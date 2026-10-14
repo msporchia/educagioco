@@ -16,7 +16,7 @@ import { tetto, faccia, bordiDelTetto, capiDellaFaccia, versoDellaPorta, sorteDi
 import { dipingiPortale, PORTALE } from './portale.js'
 import { dipingiRelitto, dipingiAcqua } from './relitti.js'
 import { TINTE_RELITTI } from '../dati/relitti.js'
-import { dipingiScalaSu } from './scala-su.js'
+import { chiaroreDellaScala, SCALA_SU } from './scala-su.js'
 import { GROSSI, figuraDelGrosso, spriteDelGrosso } from '../dati/grossi.js'
 import { fotogrammaDi } from '../dati/fotogrammi.js'
 import { MANI } from '../dati/varianti.js'
@@ -468,9 +468,11 @@ export class Tela {
       return
     }
 
-    // la scala che sale non ha pezzo nel foglio: si disegna da sé, in tutta la cella
+    // la scala che sale: la scala a pioli dipinta, in piedi nella cella, sopra il suo chiarore
     if (r.che === 'scala-su') {
-      dipingiScalaSu(ctx, r.x * T, r.y * T, t, { alfa })
+      chiaroreDellaScala(ctx, r.x * T, r.y * T, t, { alfa })
+      const m = this.foglio.misura(SCALA_SU)
+      if (m) this.foglio.pezzo(ctx, SCALA_SU, r.x * T + Math.round((T - m.w) / 2), r.y * T + T - m.h, { alfa })
       return
     }
 

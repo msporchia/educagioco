@@ -47,7 +47,7 @@ di tenero o buffo** (la statua dello stregone col cappello di `scudi.png` resta 
 
 - **Niente decoro che sembra un passaggio** (l'utente, 14 ottobre: toccava un arco murato credendolo una porta e il gioco rispondeva «di là
   non si passa»): tolti l'arco murato, l'arco d'edera, il cancello, la grata e la nicchia vuota dipinti sul muro della cripta, e la scala a
-  pioli delle cantine. Una porta, una scala o un varco disegnati sono solo quelli veri.
+  pioli delle cantine dal muro (è diventata la scala che sale: [scala-che-sale.md](scala-che-sale.md)). Una porta, una scala o un varco disegnati sono solo quelli veri.
 
 ## Il piano decide quanto è epica una stanza
 
