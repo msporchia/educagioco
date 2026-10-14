@@ -42,9 +42,21 @@ ICONA = 192
 TELA = (1536, 1024)
 
 
-def tre_mezzi(im):
-    """Il pezzo centrale a 3:2: un sorgente un po' più alto o più largo non si deforma."""
+def su_bianco(im, soglia=235):
+    """Una figura su fondo bianco (i quattro angoli bianchi): il generatore l'ha data
+    scontornata, e tagliarla a 3:2 le toglierebbe la cima e la base."""
     w, h = im.size
+    return all(min(im.getpixel(p)) >= soglia for p in [(2, 2), (w - 3, 2), (2, h - 3), (w - 3, h - 3)])
+
+
+def tre_mezzi(im):
+    """Il pezzo centrale a 3:2: un sorgente un po' più alto o più largo non si deforma.
+    Una figura su bianco più stretta di 3:2 si allarga col bianco, intera."""
+    w, h = im.size
+    if w * 2 < h * 3 and su_bianco(im):
+        tela = Image.new('RGB', (h * 3 // 2, h), (255, 255, 255))
+        tela.paste(im, ((h * 3 // 2 - w) // 2, 0))
+        return tela
     if w * 2 > h * 3:
         nw = h * 3 // 2
         return im.crop(((w - nw) // 2, 0, (w - nw) // 2 + nw, h))
