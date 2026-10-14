@@ -586,13 +586,14 @@ export function allaBottega(roba, { finite = 0, eroe = undefined, seme = 1, cres
   const comprePozioni = fino => {
     const cure = () => b.mercanzia('erborista').filter(r => r.sempre && eCura(r.chiave) && b.quantoCosta(r.chiave) <= b.gemme)
       .sort((x, y) => COSE[y.chiave].cura - COSE[x.chiave].cura)
-    for (let r = cure()[0]; r && b.zaino.length < fino && !b.nonCiStarebbe(r.chiave); r = cure()[0]) {
+    const ciSta = k => { const prova = b.copia(); prova.prendi(k); return prova.postiUsati() <= Math.min(fino, b.capienza) }
+    for (let r = cure()[0]; r && ciSta(r.chiave); r = cure()[0]) {
       const e = compra('erborista', r.chiave)
       if (!e || e.che !== 'comprato') break
     }
   }
   vendiIlSuperfluo()
-  if (spesa === 'pozioniPrima') comprePozioni(TASCHE - TASCHE_PER_I_PEZZI)
+  if (spesa === 'pozioniPrima') comprePozioni(b.capienza - TASCHE_PER_I_PEZZI)
   for (let giro = 0; giro < 8; giro++) {
     // quanto migliora tutto (confronto: `meglio`, la difesa pesa il doppio); a pari, il più caro
     const vale = k => (COSE[k].dove === 'dito' ? 1 : scudoMeglio(b, k) && !b.vaAddosso(k)
@@ -605,7 +606,7 @@ export function allaBottega(roba, { finite = 0, eroe = undefined, seme = 1, cres
     compra(scelte[0].chi, scelte[0].k)
     vendiIlSuperfluo()
   }
-  comprePozioni(TASCHE)
+  comprePozioni(Infinity)
   // il pezzo per cui risparmia: il salto più economico che migliora quello che ha e che non poteva pagare (docs/sotterraneo/fine-discesa-e-strade.md)
   if (registro) {
     const cari = mercanti().flatMap(chi => offerta(chi).map(r => r.chiave))
