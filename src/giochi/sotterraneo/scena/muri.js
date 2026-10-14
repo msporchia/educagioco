@@ -47,6 +47,22 @@ export function taglio(pietra, x, y, buona = () => true) {
   return null
 }
 
+// l'angolo interno di una stanza liscia: una cella di pavimento con la roccia da due lati contigui e in diagonale, e il pavimento dagli altri
+// due e in diagonale (il 270° del rettangolo). Si smussa con gli stessi pezzi del taglio, posati sul pavimento: la roccia entra nella cella.
+// Non dove il muro accanto è già un taglio (sarebbe smussato due volte). `buona` come per `taglio`
+export function angoloInterno(pietra, x, y, buona = () => true) {
+  if (pietra(x, y) || !buona(x, y)) return null
+  const v = (dx, dy) => pietra(x + dx, y + dy)
+  const lib = (dx, dy) => !v(dx, dy) && buona(x + dx, y + dy)
+  const dritto = (dx, dy) => !taglio(pietra, x + dx, y + dy, buona)
+  const prova = (sn, so) => v(0, sn) && v(so, 0) && v(so, sn) && lib(-so, 0) && lib(0, -sn) && lib(-so, -sn) && dritto(0, sn) && dritto(so, 0)
+  if (prova(-1, -1)) return 'no'
+  if (prova(-1, 1)) return 'ne'
+  if (prova(1, -1)) return 'so'
+  if (prova(1, 1)) return 'se'
+  return null
+}
+
 // il pavimento che un taglio lascia scoperto, dalla parte opposta alla roccia: da lì la tela prende com'è il pavimento
 export const VICINA_DEL_TAGLIO = { no: [1, 1], ne: [-1, 1], so: [1, -1], se: [-1, -1] }
 
