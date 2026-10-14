@@ -256,7 +256,7 @@ function sbriga(corsa, bravura, sorte, conto, st = {}, scontro = null) {
     // è in piedi, se no il più ferito) finché non cadono tutti, con le abilità delle caselle (preparaLAbilita); non beve e non scappa
     case 'scontro': {
       if (scontro) scontro.t++
-      // il curioso beve nello scontro quando è nel rosso (la soglia dello stop del pericolo): costa il turno. Lo stop da solo non basta:
+      // il curioso beve nello scontro quando è nel rosso (la soglia dello stop del pericolo), una per turno e poi attacca. Lo stop da solo non basta:
       // con cinque mostri in campo scatta anche a vita alta, e berrebbe a ogni scontro
       if (st.beviNelloScontro && corsa.zaino.some(k => COSE[k] && COSE[k].usa === 'cura') &&
           corsa.vita < corsa.vitaMax * (st.scontroSotto ?? QUOTA_POCA_VITA) &&

@@ -6,9 +6,11 @@
 //   che: 'scontro'     chi: il bersaglio di adesso      campo: i mostri in campo, nell'ordine dei posti (i morti restano al loro posto)
 //   io: gli effetti sull'eroe       pieni: i colpi presi (Testa dura)      tirato: il primo tiro è già partito
 //   coda: la fila dei turni (motore/turni.js)     fermate/pericolo: lo stop      apertura: le azioni prima del primo turno
+//   bevuto: ha già bevuto in questo turno (una pozione sola, e non costa il turno)
 //   turni, colpiti, minaccia, inArrivo, difese: quello che la vista legge (si rifanno in `aggiorna`)
 import { COLPO_DEL_MOSTRO, RAGGIO_SCONTRO, MOSTRI_IN_CAMPO, CALMA, PASSI_PER_TURNO } from '../dati/mondo.js'
 import { MOSTRI } from '../dati/mostri.js'
+import { COSE } from '../dati/cose.js'
 import { NODI, aGrado, inVita, colpisce, costoAl, FATTORE_DEL_SALTO } from '../dati/abilita.js'
 import { ELEMENTI, STATI, fattoreDi } from '../dati/elementi.js'
 import { difeseDi } from '../dati/grossi.js'
@@ -103,6 +105,7 @@ export const MetodiDelloScontro = {
   // stesso se è in piedi, se no il più ferito in proporzione), lo stop del pericolo, la domanda. Torna la ragione dello stop
   iniziaTurnoEroe(f) {
     const io = f.io
+    f.bevuto = false
     if (io.linfa && io.linfa.scambi > 0) {
       this.vita = Math.min(this.vitaMax, this.vita + io.linfa.quanto)
       io.linfa = io.linfa.scambi > 1 ? { ...io.linfa, scambi: io.linfa.scambi - 1 } : null
@@ -241,7 +244,7 @@ export const MetodiDelloScontro = {
     const f = this.foglio
     const perche = pericoloDi({ vita: this.vita, vitaMax: this.vitaMax, male: this.colpiInArrivo(f), fermate: f.fermate || 0 })
     // uno stop senza niente da bere né da dove scappare offrirebbe solo «continuo»: non si ferma
-    const scelte = this.pozioneGiusta() != null || this.puoScappare()
+    const scelte = (!f.bevuto && this.pozioneGiusta() != null) || this.puoScappare()
     if (!perche || !scelte) { this.chiedi('scontro', this.rincaroDi(f.chi || m)); return null }
     f.fermate = (f.fermate || 0) + 1
     f.pericolo = perche
@@ -258,17 +261,34 @@ export const MetodiDelloScontro = {
     return { che: 'continua' }
   },
 
-  // Bere la pozione rossa costa il turno (docs/sotterraneo/scontro.md): quella che sceglie chi gioca (`i`, il posto nello zaino)
-  // o, senza scelta, quella che berrebbe la 🧪 della barra, poi toccano ai mostri. Torna l'esito del turno (come `rispondi`), o
-  // null senza pozioni
+  // Bere non costa il turno e si beve una pozione sola per turno, rossa o blu (docs/sotterraneo/pozioni.md); torna l'esito, o null
   beviNelloScontro(i = this.pozioneGiusta()) {
     const f = this.foglio
-    if (!f || f.che !== 'scontro') return null
+    if (!f || f.che !== 'scontro' || f.bevuto) return null
     if (i == null || !this.zaino[i]) return null
-    f.pericolo = null
-    const k = this.zaino[i]
+    const k = this.zaino[i], prima = this.vita
     this.usa(i)
-    return this.finisciIlTurno(f, [{ chi: 'eroe', che: 'bevi', cosa: k }], f.chi)
+    f.bevuto = true
+    this.aggiorna(f)
+    return this.esitoDello([{ chi: 'eroe', che: 'bevi', cosa: k, cura: Math.max(0, this.vita - prima) }], f.chi, { ringhia: this.rifaLoStop(f) })
+  },
+  beviEnergiaNelloScontro() {
+    const f = this.foglio
+    if (!f || f.che !== 'scontro' || f.bevuto) return null
+    const i = this.zaino.findIndex(k => COSE[k] && COSE[k].usa === 'energia')
+    if (i < 0) return null
+    this.usa(i)
+    f.bevuto = true
+    return { che: 'energia' }
+  },
+  // dopo il sorso lo stop si rifà con la vita nuova (stessa fermata): sparisce se ora basta, resta con le scelte che restano
+  rifaLoStop(f) {
+    if (!f.pericolo) return null
+    const perche = pericoloDi({ vita: this.vita, vitaMax: this.vitaMax, male: this.colpiInArrivo(f), fermate: Math.max(0, (f.fermate || 1) - 1) })
+    if (perche && this.puoScappare()) { f.pericolo = perche; return perche }
+    f.pericolo = null
+    this.chiedi('scontro', this.rincaroDi(f.chi))
+    return null
   },
   beviNelPericolo(i) {
     const f = this.foglio

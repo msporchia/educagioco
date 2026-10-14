@@ -5,7 +5,7 @@
    ci sono tutte), con la cura vera sul pannello; al più otto in tasca, e la nona non si compra: il banco lo dice e il tasto resta
    spento; lo zaino dice quante se ne portano (`[data-cure-zaino]`); l'ampolla della vita non si compra e dice «tutta la vita».
    Con più stadi in tasca, bere apre la scelta (`[data-scegli-pozione]`): una riga per stadio, la ✕ in alto a destra, e nello
-   scontro dice che costa il turno; con un solo stadio si beve e basta (lo prova `integrazione/sotterraneo-barra`).
+   scontro dice che poi tocca ancora a te (bere non costa il turno); con un solo stadio si beve e basta (lo prova `integrazione/sotterraneo-barra`).
    `node test/esegui.mjs sotterraneo-pozioni`
    tempo: 120
    ═══════════════════════════════════════════════════════════════════ */
@@ -151,7 +151,7 @@ uguale('dalla più piccola alla più grande (la vita in fondo), con quanto cura 
   .evaluateAll(b => b.map(x => `${x.dataset.cosa}:${x.dataset.cura}:${x.dataset.n}`).join()),
   ['pozione-piccola:' + COSE['pozione-piccola'].cura + ':1', 'pozione:' + COSE.pozione.cura + ':3', 'pozione-grande:' + COSE['pozione-grande'].cura + ':1',
    'ampolla-maggiore:' + COSE['ampolla-maggiore'].cura + ':2', 'ampolla-vita:' + (await page.locator('[data-cosa="ampolla-vita"]').getAttribute('data-cura')) + ':1'].join())
-controlla('nello scontro dice che costa il turno', /costa il turno/.test(await page.locator('[data-scegli-pozione]').innerText()))
+controlla('nello scontro dice che poi tocca ancora a te', /tocca ancora a te/.test(await page.locator('[data-scegli-pozione]').innerText()))
 controlla('la ✕ in alto a destra', await page.locator('[data-scegli-pozione] [data-chiudi]').count() === 1)
 await scatto(page, 'pozioni-scelta-scontro')
 await toccaIl('[data-scegli-pozione] [data-chiudi]')
@@ -166,7 +166,8 @@ await page.waitForSelector('[data-duello]:not([data-racconto])', { timeout: 2000
 await attendi(page, 300)
 uguale('toccata una riga beve quella: una pozione in meno', await pozioni(), n0 - 1)
 uguale('e la scelta si è chiusa', await page.locator('[data-scegli-pozione]').count(), 0)
-nota(`vita ${v0} → ${await vita()} con l'ampolla (${COSE['pozione-grande'].cura}), meno i colpi del turno`)
+const v1 = await vita(), quota = await page.locator('[data-globo="vita"]').getAttribute('data-quota')
+controlla('la vita sale della cura e basta (o fino in cima): i mostri non colpiscono', v1 === v0 + COSE['pozione-grande'].cura || quota === '1.00', `${v0} → ${v1}, globo ${quota}`)
 
 uguale('nessun errore in pagina', errori.length, 0)
 if (errori.length) console.log(errori)

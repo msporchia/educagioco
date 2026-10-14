@@ -37,7 +37,7 @@ npm run taratura -- --tara 2.spinta=8,livelli.A=40,potenza.gemme=0.5   # prova d
 | risposte giuste | 9 su 10 | 19 su 20 | 6 su 10 |
 | dove va | gira tutte le stanze, apre tutto | dritto alla scala | come il curioso |
 | abilità | la più forte che può pagare, anche se spreca (niente tetto di due, niente risparmio) | due forti a scontro, la cura sotto la metà | come il curioso |
-| pozioni | beve nel rosso (sotto il 30%, la soglia dello stop) **anche nello scontro**, dove costa il turno | sotto il 45% fuori dallo scontro, mai dentro | come il curioso |
+| pozioni | beve nel rosso (sotto il 30%, la soglia dello stop) **anche nello scontro**, una per turno e poi attacca (non costa il turno) | sotto il 45% fuori dallo scontro, mai dentro | come il curioso |
 | fonti | si ferma se è sotto il 65% di vita o il 40% di energia, e a fine piano se non è pieno | sotto il 45% di vita | come il curioso |
 | spesa e punti | il meglio che può dal fabbro, dall'incantatrice e dal rigattiere, poi le pozioni; punti secondo la strada della classe | idem | idem |
 | la storia | la sua, di fila | la sua, di fila | gioca ogni discesa dall'**ingresso del curioso** |

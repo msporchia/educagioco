@@ -148,6 +148,7 @@
 }
 .sot-numero-dato { color: #ffd23f }
 .sot-numero-preso { color: #ff6a55 }
+.sot-numero-cura { color: #6fe08a }
 .sot-numero-veleno { color: #8be060; font-size: 20px }
 .sot-numero-nota { color: #e8e2d4; font-size: 12.5px; font-weight: 800; letter-spacing: .02em }
 .sot-attore-eroe .sot-numero { top: -6px }

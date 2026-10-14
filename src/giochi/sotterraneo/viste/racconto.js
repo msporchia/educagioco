@@ -111,8 +111,9 @@ export function nuovoRacconto({ suono = () => {}, colpitoEroe = () => {}, finito
       if (a.chi === 'eroe') {
         const m = modo(a)
         if (a.che === 'bevi') {
-          p(0, () => { fx.nome = null; tocca('eroe', 'cura'); suono('bevuto') })
+          p(0, () => { fx.nome = null; tocca('eroe', 'cura'); if (a.cura > 0) numero('eroe', `+${a.cura}`, 'cura'); suono('bevuto') })
           p(TEMPI.bevi, () => {})
+          continue   // bere non chiude il turno: la fila non scorre
         } else if (a.che === 'sbaglia') {
           p(0, () => { tocca('eroe', 'vuoto'); if (a.bersaglio) numero(posto(a.bersaglio), 'a vuoto', 'nota'); suono('ahia') })
           p(620 * 0.7, () => {})

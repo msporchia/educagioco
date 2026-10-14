@@ -14,8 +14,10 @@
    - «continuo» (l'attacco) toglie lo stop e fa partire la domanda, senza
      costare vita; con una risposta giusta i mostri colpiscono e, a un colpo
      dal cadere, compare il secondo stop («ultimo»), mai di più;
-   - «bevi» alza la vita, consuma una pozione, costa il turno (i mostri
-     colpiscono) e la battaglia riprende;
+   - «bevi» alza la vita e consuma una pozione, ma non costa il turno (i mostri
+     non colpiscono): se la vita ora basta lo stop sparisce e si domanda, se
+     no resta con «bevi» spento (una pozione per turno) e il turno dopo si
+     può bere ancora;
    - in un altro scontro «scappo via» dallo stop esce, col suo costo fisso.
    Si tocca come un bambino (`Input.dispatchTouchEvent` via CDP).
    `node test/esegui.mjs sotterraneo-pericolo`
@@ -34,11 +36,9 @@ const TAPPA = 1   // la scalinata
 const EROE = 'mago'   // il più fragile: coi punti non dati, cinque mostri pesano
 const roba = { v: 1, gemme: 0, zaino: ['pozione-piccola', 'pozione'], mano: null, mancina: null, corpo: null,
                dito: null, torcia: 0, torce: 0 }
-// la tempra dà vita e difesa: senza, il mago di livello 10 ha 14 vita e cinque mostri della scalinata gliene tolgono più di
-// quaranta in un giro, quindi cade al primo colpo senza passare dallo stop «ultimo». Con otto punti ne ha 44 contro un giro
-// da una trentina: lo stop «duro» (vita ≤ 2 giri) c'è, e dopo un giro c'è quello «ultimo» (vita ≤ 1 giro). Con meno punti
-// cade, con più il secondo stop non scatta (provato da 4 a 12)
-const crescita = { esp: sogliaDi(10), tempra: 8 }
+// il mago di livello 9 senza punti in tempra ha 29 vita contro un giro di 21: lo stop «duro» (vita ≤ 2 giri) c'è, e dopo un giro
+// (16 di vita persa) c'è quello «ultimo» (vita ≤ 1 giro). Con più vita il primo stop non scatta (a livello 10 con otto punti ne ha 76)
+const crescita = { esp: sogliaDi(9), tempra: 0 }
 // il pallino della discesa non deve essere rosso (la sentinella non fa scendere): lo dice la forza (docs/sotterraneo/forza.md)
 const colore = coloreNellaStoria(LIVELLI_ATTESI[TAPPA], forzaDi(EROE, roba, crescita))
 controlla('la scalinata non è rossa per questo eroe', colore !== 'rosso', colore)
@@ -142,23 +142,57 @@ await scatto(page, 'pericolo-pronto')
   uguale('un colpo pieno e cade: secondo stop «ultimo»', await stop().getAttribute('data-perche'), 'ultimo')
 }
 
-// bevi: la vita sale, una pozione in meno, costa il turno (i mostri colpiscono), si riprende
+// bevi: la vita sale della cura e basta (nessun colpo), una pozione in meno, lo stop sparisce perché ora la vita basta; il turno è ancora suo
 {
   const v = await numeroDel('vita'), n = await pozioni()
   await toccaIl('[data-azione="bevi-scontro"]')
-  // con due stadi in tasca bere apre la scelta (viste/ScegliPozione.vue): nello scontro dice che costa il turno
+  // con due stadi in tasca bere apre la scelta (viste/ScegliPozione.vue): nello scontro dice che poi tocca ancora a te
   await page.waitForSelector('[data-scegli-pozione][data-pronto]', { timeout: 3000 })
-  controlla('la scelta dice che costa il turno', /costa il turno/.test(await page.locator('[data-scegli-pozione]').innerText()))
+  controlla('la scelta dice che poi tocca ancora a te', /tocca ancora a te/.test(await page.locator('[data-scegli-pozione]').innerText()))
   await toccaIl('[data-azione="bevi-questa"][data-cosa="pozione"]')
   await page.waitForSelector('[data-duello][data-racconto]', { timeout: 8000 })
+  await page.waitForSelector('.sot-numero-cura', { timeout: 3000 })
+  uguale('il sorso si vede: il numero che sale', (await page.locator('.sot-numero-cura').first().innerText()).trim(), '+14')
+  await scatto(page, 'pericolo-bevuto-racconto')
   await finito()
-  await page.waitForSelector('[data-caselle-abilita]', { timeout: 5000 })
-  await attendi(page, 300)
+  await page.waitForSelector('[data-caselle-abilita][data-pronto]', { timeout: 5000 })
   uguale('«bevi» consuma una pozione', await pozioni(), n - 1)
-  controlla('lo stop è passato (due al più per scontro)', (await stop().count()) === 0)
-  uguale('e la battaglia riprende: lo scontro è aperto con la sua scelta', await page.locator('.sot-velo-scontro [data-caselle-abilita]').count(), 1)
-  nota(`vita ${v} → ${await numeroDel('vita')} (bevuta e subito i colpi)`)
+  uguale('la vita è salita della cura, senza i colpi dei mostri', await numeroDel('vita'), v + 14)
+  uguale('ora la vita basta: lo stop sparisce', await stop().count(), 0)
+  uguale('e lo scontro è aperto con la sua scelta', await page.locator('.sot-velo-scontro [data-caselle-abilita]').count(), 1)
+  uguale('una pozione sola per turno: «bevi» è spento', await page.locator('[data-azione="bevi-scontro"]').isDisabled(), true)
+  controlla('e dice perché', /una per turno/.test(await page.locator('[data-azione="bevi-scontro"]').innerText()))
   await scatto(page, 'pericolo-bevuto')
+  // il turno è ancora suo: attacca, i mostri colpiscono, e al turno dopo si beve di nuovo
+  await rispondiGiusto()
+  await page.waitForSelector('[data-caselle-abilita][data-pronto]', { timeout: 8000 })
+  uguale('il turno dopo «bevi» è acceso', await page.locator('[data-azione="bevi-scontro"]').isDisabled(), false)
+  nota(`vita ${v} → ${v + 14} bevendo → ${await numeroDel('vita')} dopo i colpi del turno`)
+}
+
+/* ---------- 1b. il sorso non basta: lo stop resta ---------- */
+await entra()
+await page.waitForSelector('[data-caselle-abilita][data-pronto]', { timeout: 8000 })
+{
+  const v = await numeroDel('vita'), n = await pozioni()
+  uguale('lo stop è lì', await stop().getAttribute('data-perche'), 'duro')
+  await toccaIl('[data-azione="bevi-scontro"]')
+  await page.waitForSelector('[data-scegli-pozione][data-pronto]', { timeout: 3000 })
+  await toccaIl('[data-azione="bevi-questa"][data-cosa="pozione-piccola"]')
+  await page.waitForSelector('[data-duello][data-racconto]', { timeout: 8000 })
+  await finito()
+  await page.waitForSelector('[data-caselle-abilita][data-pronto]', { timeout: 5000 })
+  uguale('una pozione in meno', await pozioni(), n - 1)
+  uguale('la vita è salita di 8, senza colpi', await numeroDel('vita'), v + 8)
+  uguale('non basta ancora: lo stop resta', await stop().getAttribute('data-perche'), 'duro')
+  controlla('e dice che hai bevuto e cosa puoi fare', /puoi scappare o continuare/.test(await page.locator('[data-ringhio-bevuto]').innerText()))
+  uguale('«bevi» è spento', await page.locator('[data-azione="bevi-scontro"]').isDisabled(), true)
+  uguale('«scappo via» c\'è ancora', await page.locator('[data-azione="scappa"]:not([disabled])').count(), 1)
+  uguale('niente domanda', await page.locator('.sot-domanda').count(), 0)
+  await scatto(page, 'pericolo-dopo-sorso')
+  await toccaIl('[data-caselle-abilita] [data-azione="attacco"]')
+  await page.waitForSelector('.sot-velo-scontro .sot-domanda', { timeout: 5000 })
+  uguale('«continuo» toglie lo stop', await stop().count(), 0)
 }
 
 /* ---------- 2. «scappo via» dallo stop ---------- */

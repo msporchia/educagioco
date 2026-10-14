@@ -99,8 +99,12 @@ Il codice: `motore/scontro.js` (i metodi dello scontro, attaccati a `Corsa`),
   il colpo va a vuoto, l'abilità resta pronta e non costa, il turno è
   passato. Una domanda per turno che colpisce: bere e scappare non ne
   chiedono.
-- **Bere costa il turno** (la pozione rossa, `beviNelloScontro`, anche dallo
-  stop); la blu come oggi, gratis.
+- **Bere non costa il turno** (l'utente, 14 ottobre: «bere pozioni non dovrebbe farti perdere un turno, cerchiamo di essere più
+  lenienti con i bambini»): si beve, la vita sale, i mostri non colpiscono e tocca ancora all'eroe, con la domanda di prima
+  (`beviNelloScontro`, anche dallo stop; `beviEnergiaNelloScontro` per la blu). **Una pozione sola per turno, rossa o blu**
+  (`foglio.bevuto`, azzerato a ogni `iniziaTurnoEroe`): senza, otto pozioni di fila sarebbero una cura totale gratis. Il tasto «Bevi»
+  si spegne e dice «una per turno: hai già bevuto». Gli effetti che contano i turni (veleno, gelo, protezioni, linfa, incanti preparati)
+  non si toccano: il turno è lo stesso.
 - **Scappare ha un costo fisso**: un colpo solo, del mostro più forte in
   campo, quanti che siano (`costoFuga`, con gli effetti: uno stordito non
   conta). Non si offre se quel colpo farebbe svenire (`puoScappare`).
@@ -227,8 +231,8 @@ sul pavimento, il grosso davanti e al centro, la fila dei turni, il racconto un'
 Il tetto resta: **85 risposte obbligate a seduta** (`unita/sotterraneo`): i mostri in gruppo picchiano di più, ma un colpo
 ad area ne prende tanti con una domanda sola. Il giocatore finto (`motore/banco.js`) attacca il bersaglio che il motore
 sceglie finché non cadono tutti, con le abilità delle sue caselle (due forti a scontro, l'area con tre mostri, la cura sotto la
-metà della vita); non beve né scappa dentro uno scontro (provato a bere quando il giro dopo lo farebbe cadere: costa il turno e il
-banco peggiora).
+metà della vita); non scappa dentro uno scontro. Il curioso beve nel rosso (una pozione per turno, poi attacca; prima, quando bere
+costava il turno, il banco peggiorava e non beveva: [scontro-bilancio.md](scontro-bilancio.md)).
 
 ## Cosa resta fuori (per dopo)
 
