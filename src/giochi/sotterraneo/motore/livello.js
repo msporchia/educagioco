@@ -4,7 +4,7 @@
 // cammina davvero dall'ingresso alla scala trattando le porte chiuse come attraversabili (si aprono
 // rispondendo); `serveUnaPorta` dice comunque quanto costa arrivarci senza aprire nulla. Gira in Node.
 import { ROCCIA, PAVIMENTO, PORTA, RELITTO, ACQUA } from '../dati/mondo.js'
-import { ORPELLI } from '../dati/orpelli.js'
+import { ORPELLI, NICCHIE } from '../dati/orpelli.js'
 import { CLASSI, aspettoDi } from '../dati/relitti.js'
 import { CURIOSITA } from '../dati/curiosita.js'
 import { MOSTRI, CAPORALE, minacciaDi } from '../dati/mostri.js'
@@ -737,6 +737,7 @@ export class Livello {
 
     this.spargiLeCuriosita(st)
     this.arredaLeStanze()
+    this.arredaLeNicchie()
     this.chiudiPorte()
   }
 
@@ -800,6 +801,18 @@ export class Livello {
                            pezzo: o.pezzo, arde: !!o.arde, epica: o.epica })
         quanti -= celle.length
       }
+    }
+  }
+
+  // una nicchia vuota sembra un buco nel muro: ogni nicchia senza un mostro, una gemma o un orpello ne riceve uno dei suoi (`NICCHIE`
+  // dello scenario), scelto dalla cella (`numeroDa`) e non dal caso del piano: nient'altro si sposta (docs/sotterraneo/piani-caverne.md)
+  arredaLeNicchie() {
+    const lista = ORPELLI[this.scenario] || ORPELLI.cantine
+    const nomi = NICCHIE[this.scenario] || NICCHIE.cantine
+    for (const s of this.stanze) for (const n of s.nicchie) {
+      if (this.robeSu(n.x, n.y).length) continue
+      const o = lista.find(q => q.pezzo === nomi[numeroDa(n.x, n.y, this.piano + 31) % nomi.length])
+      this.robe.push({ che: 'arredo', x: n.x, y: n.y, em: '📦', pezzo: o.pezzo, arde: false, epica: o.epica, nicchia: true })
     }
   }
 
