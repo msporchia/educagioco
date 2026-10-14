@@ -6,18 +6,18 @@
    bravo), cercata per bisezione perché il bambino di prova vinca la quota
    che la tappa promette. Vedi docs/arena/taratura.md. */
 export const NEMICO = {
-  scaramuccia: { d: 0.491, moneteAlSecondo: 0.424, pensa: 2.21, forza: 0.77 },
-  ponte: { d: 0.534, moneteAlSecondo: 0.451, pensa: 2.15, forza: 0.794 },
+  scaramuccia: { d: 0.391, moneteAlSecondo: 0.362, pensa: 2.38, forza: 0.715 },
+  ponte: { d: 0.491, moneteAlSecondo: 0.424, pensa: 2.21, forza: 0.77 },
   radura: { d: 0.247, moneteAlSecondo: 0.273, pensa: 2.6, forza: 0.636 },
-  melma: { d: 0.241, moneteAlSecondo: 0.269, pensa: 2.62, forza: 0.632 },
-  guado: { d: 0.378, moneteAlSecondo: 0.354, pensa: 2.4, forza: 0.708 },
-  canneto: { d: 0.384, moneteAlSecondo: 0.358, pensa: 2.38, forza: 0.711 },
-  valico: { d: 0.403, moneteAlSecondo: 0.37, pensa: 2.35, forza: 0.722 },
-  ghiaccio: { d: 0.403, moneteAlSecondo: 0.37, pensa: 2.35, forza: 0.722 },
-  tormenta: { d: 0.416, moneteAlSecondo: 0.378, pensa: 2.33, forza: 0.729 },
-  cratere: { d: 0.422, moneteAlSecondo: 0.382, pensa: 2.32, forza: 0.732 },
-  fucina: { d: 0.428, moneteAlSecondo: 0.385, pensa: 2.31, forza: 0.735 },
+  melma: { d: 0.228, moneteAlSecondo: 0.261, pensa: 2.63, forza: 0.625 },
+  guado: { d: 0.366, moneteAlSecondo: 0.347, pensa: 2.42, forza: 0.701 },
+  canneto: { d: 0.366, moneteAlSecondo: 0.347, pensa: 2.42, forza: 0.701 },
+  valico: { d: 0.372, moneteAlSecondo: 0.351, pensa: 2.4, forza: 0.705 },
+  ghiaccio: { d: 0.378, moneteAlSecondo: 0.354, pensa: 2.4, forza: 0.708 },
+  tormenta: { d: 0.378, moneteAlSecondo: 0.354, pensa: 2.4, forza: 0.708 },
+  cratere: { d: 0.397, moneteAlSecondo: 0.366, pensa: 2.36, forza: 0.718 },
+  fucina: { d: 0.434, moneteAlSecondo: 0.389, pensa: 2.3, forza: 0.739 },
   trono: { d: 0.453, moneteAlSecondo: 0.401, pensa: 2.27, forza: 0.749 },
 }
 // la firma dell'equilibrio al momento della taratura (motore/firma.js): se non torna, rilancia la taratura
-export const FIRMA = '10wchck'
+export const FIRMA = '10d2hf0'

@@ -2,10 +2,10 @@
 // `precisione` è quante volte il calcolo gli riesce (1 = mai sbagliato, 0.75 =
 // il bambino che ci ragiona, 0.4 = quello che tira a indovinare); `ritmo` è
 // ogni quanti secondi di partita riesce a fare una scelta (la domanda ruba
-// tempo, e il campo va a un quarto di velocità mentre risponde: a 6 secondi
-// veri sono 1,5 di partita). Non bara: legge quello che si vede a schermo.
+// tempo, e il campo va a metà velocità mentre risponde: a 6 secondi veri sono
+// 3 di partita). Non bara: legge quello che si vede a schermo.
 import { Partita } from './partita.js'
-import { TRUPPE, LIV_MAX } from '../dati/regole.js'
+import { TRUPPE, LIV_MAX, CALCOLANDO } from '../dati/regole.js'
 
 /* il caso che non cambia: stesso seme, stessa partita */
 export function caso(seme) {
@@ -21,12 +21,13 @@ export function caso(seme) {
 /* I giocatori finti con cui si tara: `misura` non sbaglia e ragiona in fretta,
    `bambino` sbaglia un conto su quattro e ci pensa il doppio, `lento` ne sbaglia
    quasi metà, `caso` tira a indovinare. Cambiarli rende vecchia la taratura
-   (la firma li include). */
+   (la firma li include). Il ritmo si dice in secondi veri a scelta: il bambino fa il conto a mente in fretta. */
+const inPartita = secondi => secondi * CALCOLANDO
 export const PILOTI = {
-  misura: { precisione: 1, ritmo: 1.5 },
-  bambino: { precisione: 0.75, ritmo: 2.5 },
-  lento: { precisione: 0.55, ritmo: 3.5 },
-  caso: { precisione: 0.25, ritmo: 3.5 },
+  misura: { precisione: 1, ritmo: inPartita(4) },
+  bambino: { precisione: 0.75, ritmo: inPartita(6) },
+  lento: { precisione: 0.55, ritmo: inPartita(9) },
+  caso: { precisione: 0.25, ritmo: inPartita(9) },
 }
 
 // la fila in cui compra le caserme: prima chi tiene a bada gli altri, poi il resto

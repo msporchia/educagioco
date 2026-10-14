@@ -18,7 +18,7 @@ import Domanda from '../../quiz/Domanda.vue'
 import { Giostra } from './scena/giostra.js'
 
 import { CAMPAGNA, SCALINI, QUANTE_TAPPE, tappeDelloScalino, scalinoDi, operazioniDi, operazionePer, stellePer, sfidaDi } from './dati/campagna.js'
-import { TRUPPE, EDIFICI, EDIFICIO_DI, AZIONI, LIV_MAX, MINIERA_MAX, BOMBA } from './dati/regole.js'
+import { TRUPPE, EDIFICI, EDIFICIO_DI, AZIONI, LIV_MAX, MINIERA_MAX, BOMBA, CALCOLANDO } from './dati/regole.js'
 import { Partita } from './motore/partita.js'
 import { scrivi, leggi, dice } from './motore/sosta.js'
 import { Campo } from './scena/campo.js'
@@ -36,7 +36,6 @@ defineOptions({ name: 'CastleBattle' })
 const emit = defineEmits(['vai'])
 
 const CHIAVE = 'arena'
-const TEMPO_DOMANDA = 0.25    // la velocità del campo mentre si calcola: rallenta, non si ferma
 const RESPIRO = 900           // quanto si guarda il campo dopo l'ultima mossa, prima del cartello
 
 let borsellino = borsa(CHIAVE)   // le monete vere di questa partita, un calcolo giusto alla volta
@@ -163,7 +162,7 @@ function passo(dt) {
   const p = partita.value
   if (!p) return
   ora += dt
-  const scala = fermo.value || p.fine ? 0 : domanda.value ? TEMPO_DOMANDA : 1
+  const scala = fermo.value || p.fine ? 0 : domanda.value ? CALCOLANDO : 1
   if (scala) {
     p.avanza(dt * scala)
     daSalvare += dt

@@ -103,6 +103,7 @@ export const BOMBA = { ogni: 40, max: 2, raggio: 95, dmg: 700 }
 export const MURO = { hp: 1000, r: 26 }             // uno per parte, la porta in fondo al ponte: non si costruisce, si ripara
 export const RIPARA = 0.4                            // la quota di vita che rimette
 export const RIPOSO = 6                              // secondi di caserma ferma dopo un calcolo sbagliato
+export const CALCOLANDO = 0.5                        // la velocità del campo mentre si calcola: rallenta, non si ferma
 export const COSTRUZIONE = 6                         // secondi prima della prima squadra di una caserma nuova
 
 /* Un nemico: quanto ricarica, quanto pensa, e come gioca. Una sfida ne sceglie

@@ -28,9 +28,10 @@ grossi sono del castello.
 - **Si chiede al modulo di quiz `conti`** (`src/quiz/moduli/conti.js`, solo su
   richiesta), non a un generatore del gioco: così arrivano il perché dopo lo
   sbaglio, lo SRS, l'età e i saperi spenti dai genitori.
-- **Il campo rallenta a un quarto mentre si calcola, non si ferma.** È una
-  scelta dell'utente: la pressione resta, e una scelta ponderata costa
-  davvero qualcosa. Il calcolo prende **tutto lo schermo**: provato a un foglio
+- **Il campo va a metà velocità mentre si calcola, non si ferma**
+  (`CALCOLANDO` in `dati/regole.js`). È una scelta dell'utente: la pressione resta,
+  e una scelta ponderata costa davvero qualcosa. Era a un quarto: troppo comodo per
+  un gioco di conti svelti. Il calcolo prende **tutto lo schermo**: provato a un foglio
   in basso che lasciava in vista il campo, e non andava (l'utente: «sfrutta
   l'intero schermo per le domande»); il campo corre piano là dietro.
 - **Per scegliere con calma c'è il «?»** su ogni carta: apre i dettagli (come sta
