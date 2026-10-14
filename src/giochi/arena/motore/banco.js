@@ -30,18 +30,22 @@ export const PILOTI = {
   caso: { precisione: 0.25, ritmo: inPartita(9) },
   // come chi costruisce due caserme, le porta al livello 2 e poi sta a guardare: non deve vincere le tappe alte
   pigro: { precisione: 1, ritmo: inPartita(6), caserme: 2, tetto: 2 },
+  // due strade, a parità di bravura: tutto in truppe subito, o prima la miniera. Si deve poter scegliere
+  rush: { precisione: 1, ritmo: inPartita(6), apertura: 'rush' },
+  economia: { precisione: 1, ritmo: inPartita(6), apertura: 'economia' },
 }
 
 // la fila in cui compra le caserme: prima chi tiene a bada gli altri, poi il resto
 const ORDINE = ['scheletri', 'guardiano', 'pipistrelli', 'lupi', 'negromante', 'diavoletto', 'golem', 'drago']
 
 export class Pilota {
-  constructor({ rnd = Math.random, precisione = 0.9, ritmo = 2.5, caserme = 4, tetto = 0 } = {}) {
+  constructor({ rnd = Math.random, precisione = 0.9, ritmo = 2.5, caserme = 4, tetto = 0, apertura = null } = {}) {
     this.rnd = rnd
     this.precisione = precisione
     this.ritmo = ritmo
     this.caserme = caserme          // quante ne tiene prima di mettere tutto nelle salite
     this.tetto = tetto              // se c'è: le caserme fino a quel livello e poi niente, né castello né miniera
+    this.apertura = apertura        // 'rush': solo caserme, mai castello né miniera; 'economia': la cripta, poi la miniera al 3
     this.attesa = ritmo
     this.giuste = 0
     this.sbagliate = 0
@@ -70,6 +74,15 @@ export class Pilota {
     const muro = p.muro('io')
     const crollato = !!muro && muro.hp <= 0
     if (crollato && puo('ripara')) return ['ripara']
+    if (this.apertura === 'rush') {
+      if (mie.length < this.caserme) { const id = ORDINE.find(i => puo('costruisci', i)); if (id) return ['costruisci', id] }
+      const sale = mie.filter(c => c.liv < LIV_MAX && !p.inRiposo('io', c.id))
+      if (!sale.length) return null
+      const c = sale.reduce((a, b) => (b.liv < a.liv ? b : a))
+      return puo('potenzia', c.id) ? ['potenzia', c.id] : null      // risparmia per la più indietro
+    }
+    if (this.apertura === 'economia' && mie.length && p.lati.io.miniera < 3)
+      return puo('miniera') ? ['miniera'] : null                      // risparmia per la miniera
     if (mie.length < 2) {
       const id = ORDINE.find(i => puo('costruisci', i))
       return id ? ['costruisci', id] : null

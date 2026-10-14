@@ -8,6 +8,7 @@
 //   npm run tara:arena -- --da 0.9 --a 0.5 --volte 150   # la rampa del bambino
 //   npm run tara:arena -- --bravo-da 0.8 --bravo-a 0.5 --bravo-dalla 10   # e quella di chi non sbaglia
 //   npm run tara:arena -- --duelli      # le truppe a duello, squadre uguali in campo aperto
+//   npm run tara:arena -- --misura      # i giocatori finti contro la taratura di adesso, senza ritarare
 import { writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
@@ -16,6 +17,7 @@ import { misura, PILOTI, caso } from '../src/giochi/arena/motore/banco.js'
 import { Partita } from '../src/giochi/arena/motore/partita.js'
 import { TRUPPE } from '../src/giochi/arena/dati/regole.js'
 import { firmaEquilibrio } from '../src/giochi/arena/motore/firma.js'
+import { NEMICO } from '../src/giochi/arena/dati/taratura.js'
 
 const RADICE = join(dirname(fileURLToPath(import.meta.url)), '..')
 const argv = process.argv.slice(2)
@@ -74,6 +76,18 @@ if (argv.includes('--duelli')) {
       return String(v).padStart(6) + ' '
     })
     console.log(TRUPPE[a].nome.padEnd(12) + celle.join('') + `   ${Math.round(vinte / (10 * (ids.length - 1)) * 100)}%`)
+  }
+  process.exit(0)
+}
+
+/* Quanto vince ogni giocatore finto contro il nemico scritto adesso: per guardare una regola
+   nuova (il rush contro l'economia, il pigro) prima di ritarare. */
+if (argv.includes('--misura')) {
+  for (const [i, t] of CAMPAGNA.entries()) {
+    const sfida = { ...sfidaDi(t), nemico: NEMICO[t.chiave] }
+    // con la durata media: verso i 180 secondi si vince ai punti, molto meno abbattendo il castello
+    const riga = Object.entries(PILOTI).map(([n, p]) => { const r = misura({ volte: 80, sfida, pilota: p }); return `${n} ${Math.round(r.vinte / 80 * 100)}% ${r.secondi}s` }).join(' · ')
+    console.log(`${String(i + 1).padStart(2)} ${t.chiave.padEnd(12)} d=${NEMICO[t.chiave].d.toFixed(2)}  ${riga}`)
   }
   process.exit(0)
 }
