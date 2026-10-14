@@ -6,18 +6,18 @@
    bravo), cercata per bisezione perché il bambino di prova vinca la quota
    che la tappa promette. Vedi docs/arena/taratura.md. */
 export const NEMICO = {
-  scaramuccia: { d: 0.504, moneteAlSecondo: 0.606, pensa: 2.45, forza: 0.802, furbizia: 0.003 },
-  ponte: { d: 0.746, moneteAlSecondo: 0.717, pensa: 2.18, forza: 0.898, furbizia: 0.164 },
-  radura: { d: 0.441, moneteAlSecondo: 0.577, pensa: 2.51, forza: 0.777, furbizia: 0 },
-  melma: { d: 0.652, moneteAlSecondo: 0.674, pensa: 2.28, forza: 0.861, furbizia: 0.102 },
-  guado: { d: 0.676, moneteAlSecondo: 0.685, pensa: 2.26, forza: 0.87, furbizia: 0.117 },
-  canneto: { d: 0.715, moneteAlSecondo: 0.703, pensa: 2.21, forza: 0.886, furbizia: 0.143 },
-  valico: { d: 0.793, moneteAlSecondo: 0.738, pensa: 2.13, forza: 0.917, furbizia: 0.195 },
-  ghiaccio: { d: 0.824, moneteAlSecondo: 0.753, pensa: 2.09, forza: 0.93, furbizia: 0.216 },
-  tormenta: { d: 0.863, moneteAlSecondo: 0.771, pensa: 2.05, forza: 0.945, furbizia: 0.242 },
-  cratere: { d: 0.918, moneteAlSecondo: 0.796, pensa: 1.99, forza: 0.967, furbizia: 0.279 },
-  fucina: { d: 0.926, moneteAlSecondo: 0.799, pensa: 1.98, forza: 0.97, furbizia: 0.284 },
-  trono: { d: 1.043, moneteAlSecondo: 0.833, pensa: 1.85, forza: 1, furbizia: 0.362 },
+  scaramuccia: { d: 0.73, moneteAlSecondo: 0.71, pensa: 2.2, forza: 0.892, furbizia: 0.154 },
+  ponte: { d: 0.785, moneteAlSecondo: 0.735, pensa: 2.14, forza: 0.914, furbizia: 0.19 },
+  radura: { d: 0.746, moneteAlSecondo: 0.717, pensa: 2.18, forza: 0.898, furbizia: 0.164 },
+  melma: { d: 0.785, moneteAlSecondo: 0.735, pensa: 2.14, forza: 0.914, furbizia: 0.19 },
+  guado: { d: 0.926, moneteAlSecondo: 0.799, pensa: 1.98, forza: 0.97, furbizia: 0.284 },
+  canneto: { d: 0.965, moneteAlSecondo: 0.817, pensa: 1.94, forza: 0.986, furbizia: 0.31 },
+  valico: { d: 1.309, moneteAlSecondo: 0.833, pensa: 1.56, forza: 1, furbizia: 0.539 },
+  ghiaccio: { d: 1.363, moneteAlSecondo: 0.833, pensa: 1.5, forza: 1, furbizia: 0.576 },
+  tormenta: { d: 1.629, moneteAlSecondo: 0.833, pensa: 1.21, forza: 1, furbizia: 0.753 },
+  cratere: { d: 2, moneteAlSecondo: 0.833, pensa: 0.8, forza: 1, furbizia: 1 },
+  fucina: { d: 2, moneteAlSecondo: 0.833, pensa: 0.8, forza: 1, furbizia: 1 },
+  trono: { d: 2, moneteAlSecondo: 0.833, pensa: 0.8, forza: 1, furbizia: 1 },
 }
 // la firma dell'equilibrio al momento della taratura (motore/firma.js): se non torna, rilancia la taratura
-export const FIRMA = 'q7h27c'
+export const FIRMA = '1rzxavp'

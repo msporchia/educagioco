@@ -7,7 +7,7 @@
 // monete ferme. Con la «furbizia» (da 0 a 1, della tappa) ragiona invece di seguire
 // la scaletta: la truppa che batte la tua, i potenziamenti concentrati, l'attacco a chi
 // prende la miniera scoperto. È più bravo, non più ricco. Perché così: docs/arena/nemico.md.
-import { TRUPPE, LIV_MAX, MINIERA_MAX, BOMBA, CAMPO, EDIFICIO_DI } from '../dati/regole.js'
+import { TRUPPE, LIV_MAX, BOMBA, CAMPO, EDIFICIO_DI } from '../dati/regole.js'
 
 /* Una scaletta parla di ruoli, non di truppe: per ogni tappa il ruolo diventa la
    prima truppa che c'è (quelle di una tappa sono poche). */
@@ -33,7 +33,7 @@ const SCALETTE = {
 
 /* sale a ogni ritocco del modo di giocare del nemico: entra nella firma dell'equilibrio (`firma.js`),
    così un'IA cambiata senza ritarare è un test rosso */
-export const VERSIONE_IA = 5
+export const VERSIONE_IA = 7
 
 export function creaIA(rnd) {
   const nomi = Object.keys(SCALETTE)
@@ -41,11 +41,16 @@ export function creaIA(rnd) {
   return { nome, passo: 0 }
 }
 
-/* il ruolo di un passo → quale truppa, per costruire (in un edificio che non c'è ancora) o potenziare
-   (una che c'è) */
+/* il ruolo di un passo → per costruire la truppa (meglio una che non ha ancora), per potenziare la
+   piazzola della sua caserma più indietro con quel ruolo */
 function truppaDel(p, ruolo, costruire) {
-  const mie = new Set(p.casermeDi('nem').map(c => c.id))
-  return RUOLI[ruolo].find(id => p.truppeAmmesse.includes(id) && (costruire ? p.prezzo('nem', 'costruisci', id) !== null : mie.has(id))) || null
+  const mie = p.casermeDi('nem')
+  if (costruire) {
+    const buone = RUOLI[ruolo].filter(id => p.truppeAmmesse.includes(id) && p.prezzo('nem', 'costruisci', id) !== null)
+    return buone.find(id => !mie.some(c => c.id === id)) || buone[0] || null
+  }
+  const sue = mie.filter(c => RUOLI[ruolo].includes(c.id)).sort((a, b) => a.liv - b.liv)
+  return sue.length ? sue[0].posto : null
 }
 
 /* una mossa si può fare adesso? */
@@ -80,21 +85,22 @@ function candidate(p, difesa) {
   const mediaLiv = mie.length ? mie.reduce((s, c) => s + c.liv, 0) / mie.length : 1
   const lista = []
   const aggiungi = (azione, id) => { const pr = p.prezzo('nem', azione, id); if (pr !== null) lista.push({ azione, id, prezzo: pr }) }
+  const ha = id => mie.some(c => c.id === id)
   const costruibili = Object.keys(TRUPPE).filter(id => p.prezzo('nem', 'costruisci', id) !== null)
-    .sort((a, b) => TRUPPE[a].costo - TRUPPE[b].costo)
+    .sort((a, b) => ha(a) - ha(b) || TRUPPE[a].costo - TRUPPE[b].costo)   // prima quelle che non ha
   const bassa = [...mie].filter(c => c.liv < LIV_MAX).sort((a, b) => a.liv - b.liv)
 
   if (difesa) {
     // chi sta perdendo rafforza: castello, riparazioni, poi chi ferisce a gruppi e chi vola
     if (castello.liv <= mediaLiv + 2) aggiungi('castello')
     if (p.riparabili('nem').some(e => e.hp < e.max * 0.85)) aggiungi('ripara')
-    for (const c of bassa.slice(0, 2)) aggiungi('potenzia', c.id)
+    for (const c of bassa.slice(0, 2)) aggiungi('potenzia', c.posto)
     for (const id of costruibili.slice(0, 2)) aggiungi('costruisci', id)
   } else {
     if (costruibili.length && mie.length < 4) aggiungi('costruisci', costruibili[0])
     if (castello.liv < mediaLiv - 0.5) aggiungi('castello')
-    if (l.miniera < Math.min(MINIERA_MAX, 4) && p.t < 100) aggiungi('miniera')
-    for (const c of bassa.slice(0, 2)) aggiungi('potenzia', c.id)
+    if (l.miniera < 4 && p.t < 100) aggiungi('miniera')
+    for (const c of bassa.slice(0, 2)) aggiungi('potenzia', c.posto)
     for (const id of costruibili.slice(0, 1)) aggiungi('costruisci', id)
     aggiungi('castello')
   }
@@ -164,8 +170,8 @@ function testa(p) {
   // le truppe dell'avversario già nella sua metà (il nemico sta in alto)
   const dentro = p.unita.filter(u => u.lato === 'io' && u.hp > 0 && u.y < CAMPO.fiume.alto)
   const livelli = cs => cs.reduce((s, c) => s + c.liv, 0)
-  const occupati = new Set(mie.map(c => EDIFICIO_DI[c.id]))
-  const nuove = p.truppeAmmesse.filter(id => !occupati.has(EDIFICIO_DI[id]) && p.prezzo('nem', 'costruisci', id) !== null)
+  // anche una truppa che ha già, se è quella che conviene (le piazzole sono libere)
+  const nuove = p.truppeAmmesse.filter(id => p.prezzo('nem', 'costruisci', id) !== null)
     .sort((a, b) => convenienza(b, sue, dentro) - convenienza(a, sue, dentro) || TRUPPE[a].costo - TRUPPE[b].costo)
   const salibili = mie.filter(c => c.liv < LIV_MAX)
     .sort((a, b) => convenienza(b.id, sue, dentro) + b.liv * 0.3 - convenienza(a.id, sue, dentro) - a.liv * 0.3)
@@ -183,7 +189,7 @@ function testa(p) {
   // c'è qualcuno in casa: la truppa che lo batte, nuova o potenziata
   if (dentro.length) {
     if (nuove.length && convenienza(nuove[0], [], dentro) > 0 && mie.length < 4) vuoi('costruisci', nuove[0])
-    if (salibili.length) vuoi('potenzia', salibili[0].id)
+    if (salibili.length) vuoi('potenzia', salibili[0].posto)
     if (castello.liv < Math.max(...sue.map(c => c.liv), 1)) vuoi('castello')
   }
   // l'avversario fa economia (più miniera): la si fa anche noi, se non c'è nessuno in casa. Provato
@@ -194,8 +200,8 @@ function testa(p) {
   if (!dentro.length && l.miniera < 3 && p.t < 150) vuoi('miniera')
   if (mie.length < 4 && nuove.length) vuoi('costruisci', nuove[0])
   if (castello.liv < Math.max(...sue.map(c => c.liv), 1) - 1) vuoi('castello')
-  if (salibili.length) vuoi('potenzia', salibili[0].id)
-  if (l.miniera < MINIERA_MAX && p.t < 200) vuoi('miniera')
+  if (salibili.length) vuoi('potenzia', salibili[0].posto)
+  if (l.miniera < 6 && p.t < 200) vuoi('miniera')
   vuoi('castello')
 
   if (!obiettivi.length) return false

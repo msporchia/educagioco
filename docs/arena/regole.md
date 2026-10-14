@@ -11,9 +11,10 @@ I numeri stanno in `src/giochi/arena/dati/regole.js`, il motore in
 - Il motore conta la corsia in verticale (`y` lungo, `x` di lato), e la scena la
   disegna così, col castello di chi gioca in basso (vedi [grafica.md](grafica.md)).
 - **Il castello sta sul bordo, e se ne vede solo un pezzo**: è l'obiettivo finale, non
-  deve prendere campo (l'utente). Fra lui e il ponte ci sono **quattro posti fissi** con
-  la loro base stabile, sempre in vista, come le piazzole del castello a torri: ci si
-  costruiscono le caserme, e quando una crolla resta la base. **Provato** a stringere
+  deve prendere campo (l'utente). Fra lui e il ponte ci sono **sei piazzole fisse**, su
+  tre file, con la loro base stabile, sempre in vista, come nel castello a torri: ci si
+  costruiscono caserme e miniere, e quando una crolla resta la base. Erano quattro:
+  l'utente voleva «poter far molto più casino». **Provato** a stringere
   castello e caserme in una cittadella alla Heroes, con gli edifici attaccati al castello:
   ma una caserma si può abbattere, e attaccata al castello non lo si poteva più fare
   senza toccare lui, né si vedeva che l'assedio arriva al castello per ultimo.
@@ -21,37 +22,42 @@ I numeri stanno in `src/giochi/arena/dati/regole.js`, il motore in
   fatto più danni (sotto, «La durata»). Era 3:00: troppo poco perché la miniera rendesse,
   e vinceva sempre chi attaccava subito (sotto, «Rush o economia»).
 
-## Le caserme: quattro edifici, due truppe ciascuno
+## Le caserme: sei piazzole libere
 
 - **Gli edifici sono quattro** (`EDIFICI`): la cripta (arcieri | opliti), la tana
   (lupi | pipistrelli), la torre oscura (negromanti | diavoletti), l'antro (golem |
-  drago). **Quale truppa, si sceglie costruendo**: l'utente voleva meno caserme e una
-  scelta vera («una caserma può fare scheletri arcieri o scheletri opliti, e quando
-  parti scegli quale dei due»). Le due truppe di un edificio **costano uguale**: si
-  sceglie il mestiere, non il prezzo.
-- **Si parte senza caserme**, tutti e due: la prima mossa è la cripta. Così anche la
-  prima tappa, che ha solo arcieri e opliti, ha una scelta da fare.
-- **Il livello è dell'edificio, una ricerca**: costruire è la pietra, potenziare è lo
-  studio. Se una caserma crolla, il posto torna libero e la si rifà **dal livello che
-  aveva** (anche scegliendo l'altra truppa): chi perde una caserma è meno svantaggiato
-  (l'utente). Il livello (1-10) fa uscire le squadre più spesso
-  (`9 / (1 + 0.12·(liv−1))` secondi) e più forti (`1 + 0.25·(liv−1)`); potenziando, la
-  vita in più della caserma arriva subito. Potenziare costa 8, 11, 14, 18, 24… (`salita`):
-  rende tanto, e a 6, 8, 10 era la mossa che batteva tutte le altre.
+  drago). Le due truppe di un edificio **costano uguale**: si sceglie il mestiere, non
+  il prezzo. L'edificio dice com'è disegnata la caserma, non quante se ne fanno.
+- **Le piazzole sono libere**: su ognuna delle sei si costruisce la caserma che si
+  vuole, **anche due uguali** (due cripte di arcieri), o una miniera. Prima un edificio era uno solo, e
+  nella prima tappa, che ha solo la cripta, si restava con una caserma e niente da
+  aggiungere (l'utente). La piazzola **la sceglie chi gioca toccandola sul campo**; il
+  nemico e i giocatori finti la lasciano al gioco (il lato con meno caserme, e dentro
+  il lato il più lontano dal fiume).
+- **Ogni caserma ha il suo livello e parte dall'1**, anche la seconda uguale (scelta
+  dell'utente). Prima il livello era una ricerca dell'edificio e una caserma rifatta
+  ripartiva da lì: con due caserme uguali avrebbe dato un esercito raddoppiato a buon
+  mercato. Il livello (1-10) fa uscire le squadre più spesso
+  (`9 / (1 + 0.12·(liv−1))` secondi), più numerose e più forti (`1 + 0.15·(liv−1)`);
+  potenziando, la vita in più della caserma arriva subito. Potenziare costa 8, 11, 14,
+  18, 24… (`salita`): rende tanto, e a 6, 8, 10 era la mossa che batteva tutte le altre.
+- **Si vende**: nei dettagli di una caserma, «Vendi» ridà **metà di quello che ci si è
+  speso** (costruzione e potenziamenti, `spesa`) e libera la piazzola, per cambiare
+  strategia (l'utente). Si paga con un calcolo come le altre scelte (una sottrazione):
+  non è un'uscita gratis. Il nemico non vende.
 - **L'antro (golem | drago) costa 20**, e le sue truppe sono forti in proporzione: è un
   investimento, non un'apertura. A 14 costava quanto le monete di partenza.
-- **Il posto lo sceglie il gioco** (`POSTI`, quattro per parte, fra la porta e il castello):
-  il lato con meno caserme, e dentro il lato il più lontano dal fiume. Niente da
-  piazzare col dito.
 - **Le truppe sono otto e si distinguono per chi colpiscono, non per quanto
   valgono**: arcieri e negromanti feriscono tutti, opliti, lupi e diavoletti solo chi
   cammina, il golem solo le costruzioni, i pipistrelli e il drago volano e scavalcano
   i muri. Il `guasti…()` di `dati/regole.js` pretende due truppe per edificio allo
   stesso prezzo, chi vola e chi, da terra, ferisce chi vola.
 - **Masse, non quattro omini**: le squadre sono grandi (quattro arcieri, sei
-  pipistrelli…) con vita e danno divisi in proporzione, e **crescono ogni due livelli**
-  in proporzione alla squadra (`CRESCITA.omini`). L'utente: «col tempo una massa di
-  persone, non solo 4-5 in giro».
+  pipistrelli…) con vita e danno divisi in proporzione, e **crescono di un ottavo a ogni
+  livello** (`CRESCITA.omini`: gli arcieri da 4 a 8 al livello 10). L'utente: «col tempo
+  una massa di persone, non solo 4-5 in giro», e poi «potenziare dovrebbe aumentare anche
+  il numero di truppe, non solo la potenza». Per non farne troppo la forza per livello è
+  scesa da +25% a +15%: al 10 una caserma vale circa ×4,9 la prima, contro ×6,5 di prima.
 
 ## Vita e danno: chi sta davanti e chi sta dietro
 
@@ -85,23 +91,43 @@ I numeri stanno in `src/giochi/arena/dati/regole.js`, il motore in
   flash». Le caserme reggono (1100 di vita, più 160 a livello) perché sono il primo
   bersaglio.
 
-## Le scelte che non sono truppe
+## La miniera, un edificio
 
-Costano monete di battaglia e un calcolo, come le caserme.
+**La miniera sta su una piazzola come una caserma** (l'utente): si costruisce, si potenzia,
+si vende, si ripara, e il nemico la può abbattere. Ogni suo livello fa arrivare le monete
+il 70% più in fretta finché sta in piedi (il livello di miniera di una parte è 1 + la somma
+dei livelli delle sue miniere: `contaMiniere`). Costa 8 costruirla, poi 15, 24, 35, 48…
+(`CRESCITA.miniera.prezzo`), ha meno vita di una caserma, e se ne fanno quante si vuole:
+rush o economia diventa una scelta di spazio, oltre che di monete. Prima era un pulsante
+sotto il campo, al più al livello 6. Il nemico e i giocatori finti la chiedono con l'azione
+`miniera` del motore: la prima la costruisce, poi alza la più indietro.
+
+## Niente tetti
+
+**I livelli non hanno un massimo** (`LIV_MAX` è infinito): caserme, castello e miniere
+salgono finché si pagano, e i prezzi crescono abbastanza da fermarli da soli. L'utente: «non
+c'è motivo di imporre un tetto», e «se una partita tira lunga mi aspetto tutte le piazzole
+piene di draghi; se succede sempre abbiamo sbagliato la taratura». Le squadre di una caserma
+non escono più spesso di una ogni 2,5 secondi.
+
+## Le scelte che non stanno su una piazzola
+
+Costano monete di battaglia e un calcolo, come gli edifici.
 
 | scelta | cosa fa | prezzo |
 |---|---|---|
-| ⛏️ Più monete | +70% di monete al secondo per livello (6 livelli: da ×1 a ×4,5) | 8, 14, 22, 32, 44 |
 | 🔧 Ripara | +40% di vita alla costruzione messa peggio, porta compresa (anche crollata) | 6 |
-| 🏰 Castello | più danno, cadenza, gittata e vita (+300 per livello, 10 livelli) | 8 → 66 |
+| 🏰 Castello | più danno, cadenza, gittata e vita (+300 per livello); si tocca sul campo | 8, 10, 14, 18, 23… |
 | 💣 Bomba | **in regalo** (non si compra): spazza le truppe nemiche più fitte | 0 monete, un calcolo |
 
 - **Il castello è l'unica costruzione che spara.** Prima c'era una torretta
   davanti alla base: tolta (l'utente: «più un potenziamento del castello»), e il
   castello ne ha preso la gittata (215, più 4 per livello) perché dal bordo deve
   coprire la porta in fondo al ponte.
-- **Sotto casa il castello picchia il triplo, e ad area** (`difesa` 180, `vicino` ×3,
-  `splash` 16): la zona delle piazzole, non la porta. Chi assedia le caserme lo paga, e
+- **Sotto casa il castello picchia il triplo** sul bersaglio (`difesa` 180, `vicino` ×3),
+  **e ad area** col danno di base (`splash` 16, al 60%): la zona delle piazzole, non la
+  porta. L'area al triplo spazzava i gruppi di chi tira: gli arcieri al livello 10 morivano
+  a un colpo e non arrivavano mai sotto le mura (l'utente). Chi assedia le caserme lo paga, e
   il castello fa da «reset» automatico: lo scontro torna al centro e la superiorità non
   arriva in fretta (l'utente: «perdi troppo facilmente le caserme, il castello dovrebbe
   proteggerle di più»). Con lui le caserme da 700 a 1100 e la porta da 1000 a 1400.
@@ -153,16 +179,25 @@ più danni** (`punti()`): ogni costruzione abbattuta vale uno, il castello abbat
 (in proporzione alla vita che gli manca); entro un quarto di punto è pari. Col castello
 che cade per ultimo, «vince il castello più sano» finiva quasi sempre pari.
 
-## I dettagli («?») e la scelta
+## Si gioca toccando il campo
 
-- Ogni carta ha un «?». Su una caserma costruita apre `viste/Dettagli.vue` con le righe
-  «adesso → livello dopo» di `motore/dettagli.js` (una squadra ogni N secondi, vita e
-  danno di ogni truppa, vita della caserma, prezzo), chi colpisce e se vola.
-- Su un edificio da costruire apre **la scelta** (`viste/Scelta.vue`): le due truppe una
-  accanto all'altra, col prezzo; quella che la tappa non ha
-  ancora si vede spenta («arriva più avanti»). Da lì «i numeri» aprono i dettagli.
+- **Niente carte sotto il campo**: si toccano le piazzole e il castello (l'utente: «tutta
+  l'interfaccia può essere semplificata se premo sopra le piazzole, così abbiamo tutto lo
+  spazio sotto»). Sopra ognuna c'è un bersaglio trasparente grande quanto l'edificio
+  (`viste/Campo.vue`, le misure dalla scena); le piazzole libere hanno un «＋».
+- **Una piazzola libera apre la scelta** (`viste/Scelta.vue`): le truppe della tappa a due a
+  due col prezzo, la miniera, e piccole in fondo quelle che arrivano più avanti. «I numeri»
+  aprono i dettagli.
+- **Un edificio toccato mostra l'anello**: pulsanti grandi sopra di lui, ⬆️ potenzia (col
+  livello dopo e il prezzo, o quanto riposa), 💰 vendi (quanto ridà), ? i numeri. Il
+  castello ha l'anello senza vendere. Toccarlo di nuovo o toccare il campo lo chiude; il
+  campo intanto non si ferma.
+- **I dettagli** (`viste/Dettagli.vue`) hanno le righe «adesso → livello dopo» di
+  `motore/dettagli.js`, chi colpisce e se vola, e per un edificio costruito «Vendi».
 - **Il campo sta fermo** finché dettagli o scelta sono aperti: servono a confrontare
   con calma.
+- **Sotto resta una barra sottile**: le monete, 🔧 ripara e 💣 bomba, che non stanno su un
+  edificio.
 
 ## Il respiro
 
@@ -173,7 +208,7 @@ Il tempo di decidere c'è, poi la base viene sopraffatta.
 
 ## Nei test
 
-`[data-caserma=<edificio>]` (con `data-variante=<truppa>` se è costruito),
-`[data-scelta=<edificio>]`, `[data-costruisci=<truppa>]`, `[data-dettagli=<truppa|edificio>]`,
-`[data-azione=miniera|ripara|castello|bomba]`, `[data-monete]`, `[data-avviso]`,
+`[data-piazzola=<n>]` (con `data-variante=<truppa|miniera>` se c'è un edificio), `[data-castello]`,
+`[data-anello=potenzia|vendi|numeri]`, `[data-scelta=<n>]`, `[data-costruisci=<truppa|miniera>]`,
+`[data-dettagli=<truppa|miniera|ripara|bomba>]`, `[data-vendi]`, `[data-azione=ripara|bomba]`, `[data-monete]`, `[data-avviso]`,
 `[data-tappa=<n>]`, `[data-fine=vinta|persa|pari]`.

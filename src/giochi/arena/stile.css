@@ -54,8 +54,27 @@
             background: linear-gradient(180deg, #3b2f66, #281f4a); border: 2px solid #5b4a99 }
 .ar-moneta { font-size: 20px; font-weight: 800 }
 .ar-borsa i { font-style: normal; font-size: 13px; font-weight: 700; color: #ffe98a }
-/* il quadro è alto quanto lascia il pannello (barra e striscia in alto, due righe di carte sotto) e largo 2:3 */
-.ar-quadro { position: relative; height: calc(100dvh - 340px); min-height: 280px; aspect-ratio: 2 / 3; max-width: 100%; margin: 0 auto; touch-action: none }
+/* il quadro è alto quanto lascia la barra sottile sotto (si gioca toccandolo) e largo 2:3 */
+.ar-quadro { position: relative; height: calc(100dvh - 190px); min-height: 280px; aspect-ratio: 2 / 3; max-width: 100%; margin: 0 auto; touch-action: none }
+/* i bersagli sopra piazzole e castello: trasparenti, grandi quanto l'edificio */
+.ar-bersaglio { position: absolute; background: transparent; border: 0; padding: 0; border-radius: 14px; z-index: 3;
+                display: grid; place-items: center }
+.ar-bersaglio.ar-scelto { box-shadow: 0 0 0 3px #ffe98a, 0 0 18px #ffe98a88 }
+.ar-piu { font-size: 22px; font-weight: 900; color: #ffe98a; text-shadow: 0 1px 3px #000; opacity: .85 }
+/* l'anello: pulsanti grandi in fila sopra l'edificio toccato */
+.ar-anello { position: absolute; z-index: 6; transform: translate(-50%, -100%); display: flex; gap: 6px; pointer-events: none }
+.ar-voce { pointer-events: auto; min-width: 64px; min-height: 58px; padding: 4px 6px; border-radius: 14px;
+           background: linear-gradient(180deg, #ffd24a, #f0a21a); color: #3a2400; border: 2px solid #fff6;
+           box-shadow: 0 4px 12px #0009; display: flex; flex-direction: column; align-items: center; justify-content: center }
+.ar-voce.ar-no { background: linear-gradient(180deg, #8a8fa6, #5e6380); color: #eef }
+.ar-voce-icona { font-size: 22px; line-height: 1 }
+.ar-voce-testo { font-size: 11.5px; font-weight: 800; white-space: nowrap }
+/* la barra sottile sotto il campo: monete, ripara, bomba */
+.ar-barra-sotto { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 6px; padding: 8px 8px 12px; align-items: stretch }
+.ar-barra-sotto .ar-borsa { margin: 0; height: auto; flex-direction: column; justify-content: center; gap: 0; padding: 4px 8px }
+.ar-carta.ar-bassa { min-height: 62px; padding: 2px 2px 4px }
+.ar-carta.ar-bassa .ar-icona { font-size: 22px; height: 28px }
+.ar-variante.ar-miniera .ar-grande { font-size: 44px; line-height: 60px }
 .ar-tela { display: block; width: 100%; height: 100% }
 .ar-dritta, .ar-avviso { position: absolute; left: 50%; top: 12%; transform: translateX(-50%);
             white-space: nowrap; font-weight: 800; font-size: 14px; padding: 7px 14px; border-radius: 999px;
@@ -134,5 +153,7 @@
 .ar-variante h3 { margin: 0; font-size: 16px; color: #ffe98a }
 .ar-variante .ar-grosso { padding: 10px 8px; font-size: 17px }
 .ar-variante.ar-chiusa { opacity: .5 }
+.ar-piu-avanti { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; opacity: .55; margin-top: 8px }
+.ar-vendi { background: linear-gradient(180deg, #8a6a2a, #5e4618) }
 .ar-nota-variante { margin: 0; font-size: 12.5px; line-height: 1.35; color: #dbe5ff; flex: 1 }
 .ar-numeri { font-size: 13px; font-weight: 700; color: #9fb0d8; text-decoration: underline; padding: 6px 10px; background: none; border: 0 }

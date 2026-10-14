@@ -2,7 +2,7 @@
 // vecchia la taratura (le regole, le truppe di ogni tappa, il giocatore finto).
 // La scrive `npm run tara:arena` in `dati/taratura.js`, e un test la confronta:
 // se si ritocca un numero senza ritarare, il test dice di rilanciare.
-import { TRUPPE, EDIFICI, CASTELLO, CRESCITA, CAMPO, POSTI, MURO, GIOCATORE, DURATA, RIPARA, RIPOSO, COSTRUZIONE, AZIONI, MINIERA_MAX, LIV_MAX, BOMBA } from '../dati/regole.js'
+import { TRUPPE, EDIFICI, CASTELLO, CRESCITA, CAMPO, POSTI, MURO, GIOCATORE, DURATA, RIPARA, RIPOSO, COSTRUZIONE, AZIONI, LIV_MAX, BOMBA } from '../dati/regole.js'
 import { CAMPAGNA } from '../dati/campagna.js'
 import { PILOTI } from './banco.js'
 import { VERSIONE_IA } from './nemico.js'
@@ -17,7 +17,7 @@ function impronta(testo) {
 
 export function firmaEquilibrio() {
   const crescita = JSON.stringify(CRESCITA, (k, v) => fn(v))
-  const regole = JSON.stringify({ TRUPPE, EDIFICI, CASTELLO, CAMPO, POSTI, MURO, GIOCATORE, DURATA, RIPARA, RIPOSO, COSTRUZIONE, MINIERA_MAX, LIV_MAX, BOMBA,
+  const regole = JSON.stringify({ TRUPPE, EDIFICI, CASTELLO, CAMPO, POSTI, MURO, GIOCATORE, DURATA, RIPARA, RIPOSO, COSTRUZIONE, LIV_MAX: String(LIV_MAX), BOMBA,
                                   prezzi: Object.fromEntries(Object.entries(AZIONI).map(([k, a]) => [k, a.prezzo])) })
   const tappe = JSON.stringify(CAMPAGNA.map(t => [t.chiave, t.truppe]))
   return impronta(crescita + regole + tappe + JSON.stringify(PILOTI) + VERSIONE_IA)

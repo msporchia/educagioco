@@ -51,8 +51,11 @@ sono disegnati in codice finché non arriva il foglio dipinto.
 - **Una caserma nuova spunta** dalla sua piazzola con un rimbalzo e uno sbuffo di polvere.
 - **La vita dei castelli sta SOPRA i castelli**, in una barra grande e sempre accesa, col
   numero. **Le altre barre si vedono solo sul ferito** (caserme, porta, truppe).
-- **Sulle carte niente barra della prossima squadra**: c'era, verde, sotto il livello; tolta
-  (l'utente: «orribili»).
+- **Niente barra della prossima squadra**: c'era, verde, sotto il livello delle carte; tolta
+  (l'utente: «orribili»), e poi tolte anche le carte: si tocca il campo ([regole.md](regole.md)).
+- **La miniera è disegnata in codice** (`miniera()` in `scena/campo.js`): un monte di roccia
+  con l'imbocco di legno, il carrello d'oro e la bandierina della squadra. Prima in codice,
+  poi dipinta: nel foglio delle caserme non c'è.
 - **Il ponte** è di assi, con la porta di ciascuno al suo capo: due torrette e il
   portone; crollata, resta il cumulo.
 - **Mancano**: gli edifici e la porta dipinti, pose di attacco e di morte delle truppe.

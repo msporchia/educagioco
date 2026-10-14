@@ -12,11 +12,12 @@ export const CAMPO = {
   base: 520,                           // la y del castello, metà di sotto: sul bordo, se ne vede solo la cima
 }
 
-/* I posti delle caserme sulla metà di sotto; sopra sono specchiati in y. Quattro, fissi e
-   sempre visibili (una base stabile, come le piazzole del castello a torri), fra la porta del
-   ponte e il castello: chi assedia li trova prima del castello. Lo ordina il motore: prima il
-   lato con meno caserme, e dentro il lato il posto più al sicuro (più lontano dal fiume). */
-export const POSTI = [[88, 440], [272, 440], [102, 372], [258, 372]]
+/* Le piazzole sulla metà di sotto; sopra sono specchiate in y. Sei, fisse e sempre visibili
+   (una base stabile, come le piazzole del castello a torri), fra la porta del ponte e il
+   castello, su tre file: chi assedia le trova prima del castello. Ci va una caserma o una
+   miniera. Chi gioca la sceglie toccandola; il nemico la lascia al motore: prima il lato con
+   meno edifici, e dentro il lato il posto più al sicuro (più lontano dal fiume). */
+export const POSTI = [[86, 452], [274, 452], [98, 398], [262, 398], [110, 344], [250, 344]]
 
 /* Le truppe. `op` è l'operazione che si risolve per costruire e potenziare la
    sua caserma; `costo` è quello della prima pietra, uguale per le due truppe di
@@ -62,16 +63,16 @@ export const OPERAZIONI = ['+', '−', '×', '÷']
    Spara lontano (`gitt`) perché dal bordo deve coprire la porta in fondo al ponte; ad area
    (`splash`) e, dentro `difesa` (le piazzole, non la porta), `vicino` volte più forte: chi
    arriva sotto casa lo paga, e lo scontro torna al centro (docs/arena/regole.md). */
-export const CASTELLO = { nome: 'Castello', hp: 4000, dmg: 52,   rate: 0.75, gitt: 215, r: 30, splash: 16, difesa: 180, vicino: 3 }
-export const LIV_MAX = 10              // caserme e torretta
-export const MINIERA_MAX = 6
+export const CASTELLO = { nome: 'Castello', hp: 4000, dmg: 52,   rate: 0.75, gitt: 215, r: 30, splash: 16, difesa: 195, vicino: 3 }
+// niente tetto ai livelli (l'utente: «non c'è motivo di imporre un limite»): li ferma il prezzo, che cresce
+export const LIV_MAX = Infinity
 
 /* Tutto quello che cresce con il livello. */
 export const CRESCITA = {
-  squadraOgni: liv => 9 / (1 + 0.12 * (liv - 1)),          // secondi fra due squadre di una caserma
-  forza: liv => 1 + 0.25 * (liv - 1),                      // vita e danno delle sue truppe
+  squadraOgni: liv => Math.max(2.5, 9 / (1 + 0.12 * (liv - 1))),   // secondi fra due squadre di una caserma
+  forza: liv => 1 + 0.15 * (liv - 1),                      // vita e danno delle sue truppe
   vitaCaserma: liv => 1100 + 160 * (liv - 1),            // il primo bersaglio dell'assedio: deve reggere, il castello la copre
-  omini: (liv, n) => Math.round(Math.floor((liv - 1) / 2) * n / 4),   // truppe in più per squadra: crescono ogni due livelli, in proporzione alla squadra
+  omini: (liv, n) => Math.round((liv - 1) * n / 8),        // truppe in più per squadra: un ottavo a livello, in proporzione; la forza cresce meno (l'utente: potenziare dà anche più truppe)
   salita: liv => Math.round(8 * 1.32 ** (liv - 1)),        // costo di liv → liv+1 per una caserma: 8, 11, 14, 18, 24, 32, 42, 55, 73
   castello: {
     prezzo: liv => Math.round(8 * 1.3 ** (liv - 1)),       // 8, 10, 14, 18, 23, 30, 39, 51, 66
@@ -80,20 +81,26 @@ export const CRESCITA = {
     gittata: liv => 4 * (liv - 1),
     vita: 300,                                             // per livello: massimo e punti subito
   },
+  /* la miniera è un edificio su una piazzola: costruirla e potenziarla costa `prezzo(liv)` (0 =
+     costruirla), e il livello di miniera di una parte è 1 + la somma dei livelli delle sue miniere
+     in piedi: `resa` lo fa diventare il moltiplicatore delle monete al secondo */
   miniera: {
-    prezzo: [0, 8, 14, 22, 32, 44],                        // prezzo[liv] = liv → liv+1
-    resa: liv => 1 + 0.7 * (liv - 1),                      // moltiplica le monete al secondo: +70% per livello
+    prezzo: liv => 8 + 6 * liv + liv * liv,                // 8 costruirla, poi 15, 24, 35, 48…
+    resa: liv => 1 + 0.7 * (liv - 1),                      // +70% per ogni livello di miniera
+    vita: liv => 800 + 150 * (liv - 1),                    // più fragile di una caserma: chi fa economia rischia
   },
 }
 
 /* Le scelte che non sono caserme. `op` decide il tipo di calcolo. */
 export const AZIONI = {
-  miniera:  { nome: 'Più monete', op: '×', prezzo: null,
-              nota: 'Le monete arrivano il 70% più in fretta per ogni livello, per sempre. Costa ora, rende dopo.' },
+  miniera:  { nome: 'Miniera', op: '×', prezzo: null,
+              nota: 'Una miniera su una piazzola: le monete arrivano il 70% più in fretta per ogni suo livello, finché sta in piedi. Costa ora, rende dopo, e il nemico la può abbattere.' },
   ripara:   { nome: 'Ripara',     op: '+', prezzo: 6,
               nota: 'Rimette in sesto la costruzione messa peggio (anche il muro, anche crollato): +40% di vita.' },
   castello: { nome: 'Castello',   op: '÷', prezzo: null,
               nota: 'Il castello spara più forte e più spesso, e resiste di più.' },
+  vendi:    { nome: 'Vendi',      op: '−', prezzo: 0,
+              nota: 'Vendi la caserma: ti ridà metà di quello che ci hai speso, e la piazzola torna libera per un\'altra.' },
   bomba:    { nome: 'Bomba',      op: '÷', prezzo: 0,
               nota: 'Una bomba in regalo ogni tanto, per DIFENDERTI: scoppia dove le truppe nemiche arrivate nella tua metà sono più fitte, e le spazza via. Serve per ripartire quando ti schiacciano.' },
 }
@@ -139,11 +146,11 @@ export function guastiDelleRegole() {
   if (!Object.values(TRUPPE).some(t => t.vola)) g.push('nessuno vola')
   if (!Object.values(TRUPPE).some(t => t.bers === 'tutti' && !t.vola)) g.push('nessuno da terra ferisce chi vola')
   for (const op of OPERAZIONI) if (!Object.values(TRUPPE).some(t => t.op === op)) g.push(`nessuna truppa per ${op}`)
-  if (CRESCITA.miniera.prezzo.length !== MINIERA_MAX) g.push('i prezzi della miniera non coprono i livelli')
   if (!(BOMBA.ogni > 0 && BOMBA.max >= 1 && BOMBA.raggio > 0 && BOMBA.dmg > 0)) g.push('la bomba non sta in piedi')
-  for (let l = 1; l < LIV_MAX; l++) {
-    if (!(CRESCITA.salita(l) > 0)) g.push(`salita ${l}`)
+  for (let l = 1; l < 30; l++) {
+    if (!(CRESCITA.salita(l) > CRESCITA.salita(l - 1 || 1) - 1)) g.push(`salita ${l}`)
     if (!(CRESCITA.castello.prezzo(l) > 0)) g.push(`castello ${l}`)
+    if (!(CRESCITA.miniera.prezzo(l) > CRESCITA.miniera.prezzo(l - 1))) g.push(`miniera ${l}`)
   }
   if (POSTI.length < Object.keys(EDIFICI).length) g.push('meno posti che edifici')
   return g

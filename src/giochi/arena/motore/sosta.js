@@ -4,12 +4,12 @@
 // continua da dov'era ma i dadi che tira il nemico sono altri. Perché e cosa
 // si perde: docs/arena/sosta.md.
 import { Partita } from './partita.js'
-import { TRUPPE, EDIFICI, EDIFICIO_DI, POSTI, LIV_MAX, MINIERA_MAX, BOMBA } from '../dati/regole.js'
+import { TRUPPE, POSTI, BOMBA } from '../dati/regole.js'
 import { CAMPAGNA, sfidaDi } from '../dati/campagna.js'
 
 // sale quando un campo cambia significato: un salvataggio di un'altra
 // versione si butta e la tappa ricomincia
-export const VERSIONE = 3
+export const VERSIONE = 5
 
 const num = (n, min, max) => typeof n === 'number' && Number.isFinite(n) && n >= min && n <= max
 const intero = (n, min, max) => Number.isInteger(n) && n >= min && n <= max
@@ -22,11 +22,12 @@ export function scrivi(p, indice) {
     v: VERSIONE,
     chiave: CAMPAGNA[indice].chiave,
     t: r1(p.t), resto: r1(p.resto), pensa: r1(p.pensa),
-    lati: { io: { monete: r1(p.lati.io.monete), miniera: p.lati.io.miniera, bombe: p.lati.io.bombe, bombaT: r1(p.lati.io.bombaT), livelli: { ...p.lati.io.livelli } },
-            nem: { monete: r1(p.lati.nem.monete), miniera: p.lati.nem.miniera, bombe: p.lati.nem.bombe, bombaT: r1(p.lati.nem.bombaT), livelli: { ...p.lati.nem.livelli } } },
+    lati: { io: { monete: r1(p.lati.io.monete), bombe: p.lati.io.bombe, bombaT: r1(p.lati.io.bombaT) },
+            nem: { monete: r1(p.lati.nem.monete), bombe: p.lati.nem.bombe, bombaT: r1(p.lati.nem.bombaT) } },
+    miniere: p.miniere.map(m => ({ lato: m.lato, posto: m.posto, liv: m.liv, spesa: m.spesa, hp: Math.round(m.hp), max: m.max })),
     castelli: p.castelli.map(c => ({ lato: c.lato, hp: Math.round(c.hp), max: c.max, liv: c.liv })),
     muri: p.muri.map(m => ({ lato: m.lato, hp: Math.round(m.hp), max: m.max })),
-    caserme: p.caserme.map(c => ({ lato: c.lato, id: c.id, posto: c.posto, liv: c.liv, t: r1(c.t), ciclo: r1(c.ciclo),
+    caserme: p.caserme.map(c => ({ lato: c.lato, id: c.id, posto: c.posto, liv: c.liv, spesa: c.spesa, t: r1(c.t), ciclo: r1(c.ciclo),
                                    riposo: r1(c.riposo), hp: Math.round(c.hp), max: c.max })),
     unita: p.unita.map(u => ({ id: u.id, lato: u.lato, x: Math.round(u.x), y: Math.round(u.y), hp: Math.round(u.hp), max: Math.round(u.max), forza: r1(u.forza) })),
   }
@@ -43,24 +44,20 @@ export function leggi(dato, { campagna = CAMPAGNA, rnd = Math.random } = {}) {
     if (!num(dato.t, 0, 1e4) || !num(dato.resto, 0, 1e4) || !num(dato.pensa, 0, 60)) return null
     for (const lato of ['io', 'nem']) {
       const l = dato.lati?.[lato]
-      if (!l || !num(l.monete, 0, 1e6) || !intero(l.miniera, 1, MINIERA_MAX) || !intero(l.bombe, 0, BOMBA.max) || !num(l.bombaT, 0, BOMBA.ogni + 1)) return null
+      if (!l || !num(l.monete, 0, 1e6) || !intero(l.bombe, 0, BOMBA.max) || !num(l.bombaT, 0, BOMBA.ogni + 1)) return null
     }
     const p = new Partita({ rnd, sfida: sfidaDi(tappa) })
     p.t = dato.t; p.resto = dato.resto; p.pensa = dato.pensa
     for (const lato of ['io', 'nem']) {
       p.lati[lato].monete = dato.lati[lato].monete
-      p.lati[lato].miniera = dato.lati[lato].miniera
       p.lati[lato].bombe = dato.lati[lato].bombe
       p.lati[lato].bombaT = dato.lati[lato].bombaT
-      const liv = dato.lati[lato].livelli || {}
-      if (!Object.entries(liv).every(([ed, n]) => EDIFICI[ed] && intero(n, 1, LIV_MAX))) return null
-      p.lati[lato].livelli = { ...liv }
     }
 
     if (!Array.isArray(dato.castelli)) return null
     for (const t of dato.castelli) {
       const mio = p.castelli.find(x => x.lato === t.lato)
-      if (!mio || !num(t.hp, 0, 1e5) || !num(t.max, 1, 1e5) || t.hp > t.max || !intero(t.liv, 1, LIV_MAX)) return null
+      if (!mio || !num(t.hp, 0, 1e6) || !num(t.max, 1, 1e6) || t.hp > t.max || !intero(t.liv, 1, 1e3)) return null
       mio.hp = t.hp; mio.max = t.max; mio.liv = t.liv
     }
 
@@ -75,15 +72,25 @@ export function leggi(dato, { campagna = CAMPAGNA, rnd = Math.random } = {}) {
     p.caserme = []
     for (const c of dato.caserme) {
       if (!['io', 'nem'].includes(c.lato) || !TRUPPE[c.id] || !tappa.truppe.includes(c.id) || !intero(c.posto, 0, POSTI.length - 1) ||
-          !intero(c.liv, 1, LIV_MAX) || !num(c.t, -1e3, 1e3) || !num(c.ciclo, 0.1, 1e3) || !num(c.riposo, -1e3, 100) ||
+          !intero(c.liv, 1, 1e3) || !num(c.spesa, 0, 1e5) || !num(c.t, -1e3, 1e3) || !num(c.ciclo, 0.1, 1e3) || !num(c.riposo, -1e3, 100) ||
           !num(c.hp, 1, 1e5) || !num(c.max, 1, 1e5) || c.hp > c.max) return null
-      if (p.caserme.some(x => x.lato === c.lato && (x.posto === c.posto || x.ed === EDIFICIO_DI[c.id]))) return null
+      if (p.caserme.some(x => x.lato === c.lato && x.posto === c.posto)) return null      // due caserme uguali sì, due su una piazzola no
       const nuova = p.nuovaCaserma(c.lato, c.id, c.posto, c.t)
-      Object.assign(nuova, { liv: c.liv, t: c.t, ciclo: c.ciclo, riposo: c.riposo, hp: c.hp, max: c.max })
+      Object.assign(nuova, { liv: c.liv, spesa: c.spesa, t: c.t, ciclo: c.ciclo, riposo: c.riposo, hp: c.hp, max: c.max })
       p.caserme.push(nuova)
     }
 
-    if (!Array.isArray(dato.unita) || dato.unita.length > 300) return null
+    if (!Array.isArray(dato.miniere) || dato.miniere.length > POSTI.length * 2) return null
+    p.miniere = []
+    for (const m of dato.miniere) {
+      if (!['io', 'nem'].includes(m.lato) || !intero(m.posto, 0, POSTI.length - 1) || !intero(m.liv, 1, 1e3) ||
+          !num(m.spesa, 0, 1e5) || !num(m.hp, 1, 1e5) || !num(m.max, 1, 1e5) || m.hp > m.max) return null
+      if (p.edificioIn(m.lato, m.posto)) return null                                  // una piazzola, un edificio
+      p.miniere.push(Object.assign(p.nuovaMiniera(m.lato, m.posto), { liv: m.liv, spesa: m.spesa, hp: m.hp, max: m.max }))
+    }
+    p.contaMiniere('io'); p.contaMiniere('nem')
+
+    if (!Array.isArray(dato.unita) || dato.unita.length > 800) return null       // le squadre crescono a ogni livello
     p.unita = []
     for (const u of dato.unita) {
       if (!['io', 'nem'].includes(u.lato) || !TRUPPE[u.id] || !num(u.x, -50, 450) || !num(u.y, -50, 600) ||
