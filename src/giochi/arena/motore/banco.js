@@ -5,7 +5,7 @@
 // tempo, e il campo va a metà velocità mentre risponde: a 6 secondi veri sono
 // 3 di partita). Non bara: legge quello che si vede a schermo.
 import { Partita } from './partita.js'
-import { TRUPPE, LIV_MAX, CALCOLANDO } from '../dati/regole.js'
+import { TRUPPE, LIV_MAX, CALCOLANDO, POSTI } from '../dati/regole.js'
 
 /* il caso che non cambia: stesso seme, stessa partita */
 export function caso(seme) {
@@ -39,7 +39,7 @@ export const PILOTI = {
 const ORDINE = ['scheletri', 'guardiano', 'pipistrelli', 'lupi', 'negromante', 'diavoletto', 'golem', 'drago']
 
 export class Pilota {
-  constructor({ rnd = Math.random, precisione = 0.9, ritmo = 2.5, caserme = 4, tetto = 0, apertura = null } = {}) {
+  constructor({ rnd = Math.random, precisione = 0.9, ritmo = 2.5, caserme = POSTI.length - 1, tetto = 0, apertura = null } = {}) {
     this.rnd = rnd
     this.precisione = precisione
     this.ritmo = ritmo

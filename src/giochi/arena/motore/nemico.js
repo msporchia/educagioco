@@ -7,7 +7,10 @@
 // monete ferme. Con la «furbizia» (da 0 a 1, della tappa) ragiona invece di seguire
 // la scaletta: la truppa che batte la tua, i potenziamenti concentrati, l'attacco a chi
 // prende la miniera scoperto. È più bravo, non più ricco. Perché così: docs/arena/nemico.md.
-import { TRUPPE, LIV_MAX, BOMBA, CAMPO, EDIFICIO_DI } from '../dati/regole.js'
+import { TRUPPE, LIV_MAX, BOMBA, CAMPO, EDIFICIO_DI, POSTI } from '../dati/regole.js'
+
+// quante caserme al più: le piazzole meno una, che resta per la miniera
+const CASERME = POSTI.length - 1
 
 /* Una scaletta parla di ruoli, non di truppe: per ogni tappa il ruolo diventa la
    prima truppa che c'è (quelle di una tappa sono poche). */
@@ -33,7 +36,7 @@ const SCALETTE = {
 
 /* sale a ogni ritocco del modo di giocare del nemico: entra nella firma dell'equilibrio (`firma.js`),
    così un'IA cambiata senza ritarare è un test rosso */
-export const VERSIONE_IA = 7
+export const VERSIONE_IA = 8
 
 export function creaIA(rnd) {
   const nomi = Object.keys(SCALETTE)
@@ -97,7 +100,7 @@ function candidate(p, difesa) {
     for (const c of bassa.slice(0, 2)) aggiungi('potenzia', c.posto)
     for (const id of costruibili.slice(0, 2)) aggiungi('costruisci', id)
   } else {
-    if (costruibili.length && mie.length < 4) aggiungi('costruisci', costruibili[0])
+    if (costruibili.length && mie.length < CASERME) aggiungi('costruisci', costruibili[0])
     if (castello.liv < mediaLiv - 0.5) aggiungi('castello')
     if (l.miniera < 4 && p.t < 100) aggiungi('miniera')
     for (const c of bassa.slice(0, 2)) aggiungi('potenzia', c.posto)
@@ -188,7 +191,7 @@ function testa(p) {
   if (mie.length < 2 && nuove.length) vuoi('costruisci', nuove[0])
   // c'è qualcuno in casa: la truppa che lo batte, nuova o potenziata
   if (dentro.length) {
-    if (nuove.length && convenienza(nuove[0], [], dentro) > 0 && mie.length < 4) vuoi('costruisci', nuove[0])
+    if (nuove.length && convenienza(nuove[0], [], dentro) > 0 && mie.length < CASERME) vuoi('costruisci', nuove[0])
     if (salibili.length) vuoi('potenzia', salibili[0].posto)
     if (castello.liv < Math.max(...sue.map(c => c.liv), 1)) vuoi('castello')
   }
@@ -198,7 +201,7 @@ function testa(p) {
   if (io.miniera > l.miniera && !dentro.length) vuoi('miniera')
   // al sicuro: le monete crescono, anche se l'avversario ha più caserme (chi attacca subito lo può punire)
   if (!dentro.length && l.miniera < 3 && p.t < 150) vuoi('miniera')
-  if (mie.length < 4 && nuove.length) vuoi('costruisci', nuove[0])
+  if (mie.length < CASERME && nuove.length) vuoi('costruisci', nuove[0])
   if (castello.liv < Math.max(...sue.map(c => c.liv), 1) - 1) vuoi('castello')
   if (salibili.length) vuoi('potenzia', salibili[0].posto)
   if (l.miniera < 6 && p.t < 200) vuoi('miniera')

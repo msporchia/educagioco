@@ -58,17 +58,15 @@ bambino perdeva contro nemici così deboli (0,3-0,4 monete al secondo contro le 
 del giocatore, truppe al 70%) che il pigro li batteva sempre (l'utente: «ho 70 monete,
 non sto facendo niente e sto stravincendo»).
 
-Ultimo giro misurato (14 ottobre, nemico furbo e mai più ricco del giocatore): il bambino
-88% → 25%; `misura` 99% → 45%; il rush 100% → 36%, l'economia 99% → 51%; il pigro 36-100%
-fino alla sesta tappa, 26% nell'ultima. La curva sale piano, senza gradini: la furbizia è
-una probabilità, non una soglia (col nemico che vinceva solo con le monete `misura` passava
-da quasi sempre a meno della metà con un ritocco minimo).
+Ultimo giro misurato (14 ottobre, sei piazzole, la miniera edificio, niente tetti): il
+bambino 90% → 31%; `misura` 95-100% ovunque, anche nella lava; il rush 100% → 74% fino alle
+nevi e 0% nella lava; l'economia 90% → 55% e 88% nella lava; il pigro 68% → 0%.
 
-- **L'economia rende un po' più del rush**: dalla quarta tappa 4-20 punti in più. Le
-  strade ci sono tutte e due; il rush finto però costruisce sempre nello stesso ordine e il
-  nemico furbo lo contrasta. Voce in [da-fare.md](da-fare.md).
-- **Il pigro vince ancora tanto nelle prime sei tappe** (70-100%): lì il nemico ragiona di
-  rado.
+- **La lava non tiene chi non sbaglia mai**: lì la manopola è al massimo (`d` = 2: il nemico
+  ragiona sempre, pensa ogni 0,8 secondi, monete pari) e `misura` vince sempre. Il nemico
+  batte il rush ma perde contro chi fa economia. Voce in [da-fare.md](da-fare.md).
+- **Chi si ferma perde**: il pigro (due caserme al 2, poi fermo) cala con le tappe e nelle
+  nevi non vince più.
 - **La manopola non sale in fila.** Con più truppe a disposizione anche il
   nemico è più forte a parità di `d`, quindi una tappa con più truppe ha un `d`
   più basso e un nemico più duro lo stesso: la rampa la fa la quota di vittorie,
