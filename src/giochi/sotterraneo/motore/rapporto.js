@@ -50,7 +50,7 @@ export function misure(P) {
   const sopra = sc.filter(c => c.vf >= 0.9)
   return { n: P.length, scontri: sc.length, grossi: gr.length,
     vinte: media(P.map(p => p.rec.v)), svenuto: media(P.map(p => (p.rec.sv > 0 ? 1 : 0))), sv: media(P.map(p => p.rec.sv)),
-    pozioni: media(P.map(p => p.rec.pz)), domande: media(P.map(p => p.rec.dom)),
+    pozioni: media(P.map(p => p.rec.pz)), domande: media(P.map(p => p.rec.dom)), mostri: media(P.map(p => p.rec.mo)),
     vitaGrosso: gr.length ? media(gr.map(c => c.vf)) : null, vitaScontri: sc.length ? media(sc.map(c => c.vf)) : null,
     sopra90: sc.length ? sopra.length / sc.length : null,
     muri: media(P.map(p => (p.tent.filter(t => !t.v).length >= 2 ? 1 : 0))) }
@@ -261,7 +261,7 @@ export function spiega(f, P) {
   const n = natura(sottoinsieme, riga.misura, cella.b, dir)
   righe.push(`${n.tipo === 'uniforme' ? 'uniforme' : n.tipo === 'eroe' ? `di ${n.fuoriEroi.join(', ')}` : 'isolato'}: ${n.perEroe.map(x => `${x.e.slice(0, 3)} ${fmt(x.v, u)}`).join(' · ')}`)
   for (const i of n.isolati)
-    righe.push(`⚠ caso isolato, possibile difetto del gioco: ${i.p.eroe} seme ${i.p.seme} ${fmt(i.v, u)}${u === 'perc' ? '%' : ''}, la maggioranza sta altrove (entra con la forza ${i.p.scarto >= 0 ? '+' : ''}${i.p.scarto}; pezzi ${i.p.ing.pezzi.filter(Boolean).map(nome).join(', ') || 'nessuno'})`)
+    righe.push(`! caso isolato, possibile difetto del gioco: ${i.p.eroe} seme ${i.p.seme} ${fmt(i.v, u)}${u === 'perc' ? '%' : ''}, la maggioranza sta altrove (entra con la forza ${i.p.scarto >= 0 ? '+' : ''}${i.p.scarto}; pezzi ${i.p.ing.pezzi.filter(Boolean).map(nome).join(', ') || 'nessuno'})`)
   if (riga.misura === 'svenuto') righe.push(...chiUccide(sottoinsieme))
   if (riga.misura === 'domande') {
     const piani = []
@@ -277,20 +277,23 @@ export function forbice(P, tipo = 'curioso') {
     const g = (P.per[tipo] || {})[k] || []
     const q = (v, p) => { const s = [...v].sort((a, b) => a - b); return s.length ? s[Math.min(s.length - 1, Math.floor(p * s.length))] : null }
     const f = g.map(p => p.scarto), l = g.map(p => p.ing.liv)
-    return { k, n: g.length, scarto: [q(f, 0.1), q(f, 0.5), q(f, 0.9)], livello: [q(l, 0.1), q(l, 0.5), q(l, 0.9)], atteso: livelloAtteso(k) }
+    // le gemme: quante ne porta a casa la discesa e quante gliene restano dopo la spesa (il banco di sopra non ha più niente da vendergli)
+    const prese = media(g.map(p => p.rec.ge)), avanzate = g.map(p => p.ing.gemme)
+    return { k, n: g.length, scarto: [q(f, 0.1), q(f, 0.5), q(f, 0.9)], livello: [q(l, 0.1), q(l, 0.5), q(l, 0.9)], atteso: livelloAtteso(k),
+             gemmePrese: prese, gemmeAvanzate: [q(avanzate, 0.1), q(avanzate, 0.5), q(avanzate, 0.9)] }
   })
 }
 
 /* ═══════════ la stampa ═══════════ */
 export function tabella(R, tipo) {
   const g = GIOCATORI_TIPO[tipo]
-  const nomi = CAMPAGNA.map(t => t.chiave.slice(0, 6).padStart(8))
+  const nomi = CAMPAGNA.map(t => t.chiave.slice(0, 6).padStart(9))
   const righe = [`${g.nome} — ${g.chi}  [${Math.round(g.bravura * 10)}/10, ${g.come === 'tutto' ? 'gira tutto' : 'dritto alla scala'}]`,
-                 ' '.repeat(44) + nomi.join('')]
+                 ' '.repeat(54) + nomi.join('')]
   for (const r of R[tipo]) {
     const u = MISURE[r.misura].u
-    const celle = r.celle.map(c => (c.v == null ? '       -' : `${c.fuori ? '❌' : '✅'}${fmt(c.v, u).padStart(5)} `)).join('')
-    righe.push(`${`${nomeDi(r.chiave)} [${bersaglioTesto(bersaglioDi(r.b, 1), u)}]`.padEnd(44)}${celle}`)
+    const celle = r.celle.map(c => (c.v == null ? '        -' : ` ${c.fuori ? '❌' : '✅'}${fmt(c.v, u).padStart(4)} `)).join('')
+    righe.push(`${`${nomeDi(r.chiave)} [${bersaglioTesto(bersaglioDi(r.b, 1), u)}]`.padEnd(54)}${celle}`)
   }
   return righe.join('\n')
 }

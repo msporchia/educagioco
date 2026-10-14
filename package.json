@@ -12,6 +12,7 @@
     "dps": "node strumenti/dps-castello.mjs",
     "pianta": "node strumenti/sotterraneo-pianta.mjs",
     "sotterraneo": "node strumenti/sotterraneo-banco.mjs",
+    "taratura": "node strumenti/sotterraneo-taratura.mjs",
     "bottega": "node strumenti/sotterraneo-bottega.mjs",
     "tara:arena": "node strumenti/tara-arena.mjs",
     "vetrina": "vite --open /strumenti/banco/vetrina.html",

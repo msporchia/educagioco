@@ -34,7 +34,7 @@
    Infine le zone, a ogni livello, l'esperienza che danno, e i colori del pallino. */
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { EROI } from '../../src/giochi/sotterraneo/dati/eroi.js'
-import { misuraLaStoria, misuraConLaRoba, misuraDiChiHaMessoDaParte, misuraLeZone } from '../../src/giochi/sotterraneo/motore/banco.js'
+import { inParallelo } from '../aiuto/parallelo.mjs'
 import { numeriAttesi, crescitaAttesa } from '../../src/giochi/sotterraneo/motore/storia.js'
 import { COSE } from '../../src/giochi/sotterraneo/dati/cose.js'
 import { ROBA_VUOTA } from '../../src/giochi/sotterraneo/motore/corredo.js'
@@ -47,10 +47,26 @@ const fila = v => CAMPAGNA.map((_, k) => String(v[k]).padStart(9)).join('')
 const media = (tutte, scarto, j, k) => tutte.reduce((n, m) => n + m.vinte[scarto][j][k], 0) / (tutte.length * SEMI)
 const cento = x => `${Math.round(x * 100)}%`
 
-const tutte = []
-for (const e of EROI) {
-  const m = misuraLaStoria({ eroe: e.chiave, semi: SEMI, livelli: [-2, 3] })
-  tutte.push(m)
+/* Le misure giocano ventimila discese: su più processi (test/aiuto/parallelo.mjs), tutte insieme, come il banco da riga di comando.
+   Un processo solo ci metteva sette otto minuti; l'ordine dei compiti è quello con cui si leggono sotto. */
+const SEMI_ZONE = 10
+const BANCO = 'src/giochi/sotterraneo/motore/banco.js'
+const compito = (funzione, opz) => ({ modulo: BANCO, funzione, args: [opz] })
+const CONFIGURAZIONI_ZONE = [[12], [16], [20], [30], [24], [27], [16, 11], [16, 12], [16, 15], [16, 20]]
+const compiti = [
+  ...EROI.map(e => compito('misuraLaStoria', { eroe: e.chiave, semi: SEMI, livelli: [-2, 3] })),
+  ...['cavaliere', 'mago'].map(eroe => compito('misuraLaStoria', { eroe, semi: SEMI, come: 'tutto', prove: [0.8], scarti: [0] })),
+  ...['minimo', 'tutto'].flatMap(come => EROI.map(e => compito('misuraConLaRoba', { semi: SEMI, eroe: e.chiave, fila: come }))),
+  ...[100, 250].flatMap(gemme => EROI.map(e => compito('misuraDiChiHaMessoDaParte', { eroe: e.chiave, semi: SEMI, gemme }))),
+  ...CONFIGURAZIONI_ZONE.flatMap(([L, A]) => EROI.map(e => compito('misuraLeZone', { eroe: e.chiave, livello: L, eroeA: A ?? L, semi: SEMI_ZONE }))),
+]
+const risultati = await inParallelo(compiti)
+let letti = 0
+const prossimi = n => { const r = risultati.slice(letti, letti + n); letti += n; return r }
+
+const tutte = prossimi(EROI.length)
+for (const [i, e] of EROI.entries()) {
+  const m = tutte[i]
   nota(`${e.chiave}, venti semi per discesa, dritti alla scala${' '.repeat(6)}${CAMPAGNA.map(corto).join('')}`)
   nota(`  livello, ⚔️, 🛡️, ❤️ attesi: ${CAMPAGNA.map((_, k) => { const n = numeriAttesi(e.chiave, k); return `${n.livello}·${n.att}·${n.dif}·${n.vita}` }).join('  ')}`)
   for (const [scarto, nome] of [[0, 'roba attesa'], [-1, 'una prima'], [2, 'due avanti'], ['L-2', 'due livelli −'], ['L+3', 'tre livelli +']])
@@ -114,8 +130,9 @@ for (const [k, t] of CAMPAGNA.entries()) {
 }
 
 /* chi gira tutto: più mostri con la stessa roba, ma anche più pozioni, più esperienza e i pezzi dei forzieri */
-for (const eroe of ['cavaliere', 'mago']) {
-  const m = misuraLaStoria({ eroe, semi: SEMI, come: 'tutto', prove: [0.8], scarti: [0] })
+const giraTutto = prossimi(2)
+for (const [i, eroe] of ['cavaliere', 'mago'].entries()) {
+  const m = giraTutto[i]
   nota(`${eroe}, gira tutto, roba attesa, a 8/10: ${' '.repeat(10)}${fila(m.vinte[0][0])}`)
   for (const [k, t] of CAMPAGNA.entries())
     controlla(`${eroe}, ${t.chiave}: girando tutto a 8/10 si arriva in fondo quasi sempre`, m.vinte[0][0][k] >= SEMI * 0.65,
@@ -132,7 +149,7 @@ const quanto = (misure, j, k) => misure.reduce((n, m) => n + m.vinte[j][k], 0) /
 // chi gira tutto, tre livelli sopra, quasi sempre
 const TETTI = { minimo: [0.7, 0.97, 0.7], tutto: [0.7, 1, 0.95] }
 for (const [come, nome] of [['minimo', 'chi va dritto'], ['tutto', 'chi gira tutto e spende']]) {
-  const vere = EROI.map(e => misuraConLaRoba({ semi: SEMI, eroe: e.chiave, fila: come }))
+  const vere = prossimi(EROI.length)
   nota(`${nome}, la storia giocata davvero: livello ${CAMPAGNA.map((_, k) => (vere.reduce((n, m) => n + m.zaini[k].livello, 0) / vere.length).toFixed(1)).join(' · ')}`)
   for (const [j, bravura] of [[0, 8], [1, 6], [2, 4]])
     nota(`${nome}: a ${bravura}/10 ${CAMPAGNA.map((_, k) => cento(quanto(vere, j, k)).padStart(5)).join('')}`)
@@ -149,7 +166,7 @@ for (const [come, nome] of [['minimo', 'chi va dritto'], ['tutto', 'chi gira tut
 /* chi arriva con molte gemme da parte e compra il meglio che può, anche i pezzi avanti (a un prezzo più alto) */
 const ultime = CAMPAGNA.length - 2
 for (const gemme of [100, 250]) {
-  const ricchi = EROI.map(e => misuraDiChiHaMessoDaParte({ eroe: e.chiave, semi: SEMI, gemme }))
+  const ricchi = prossimi(EROI.length)
   for (const [j, bravura] of [[0, 8], [1, 6], [2, 4]])
     nota(`con ${gemme} gemme da parte: a ${bravura}/10 ${CAMPAGNA.map((_, k) => cento(quanto(ricchi, j, k)).padStart(5)).join('')}`)
   for (const k of [ultime, ultime + 1]) {
@@ -165,9 +182,9 @@ for (const gemme of [100, 250]) {
    storia, a ogni livello. Vinta, vale più o meno un livello. E i colori del pallino si misurano qui, su una fascia
    16–19: l'eroe del 11 (rosso) non passa rispondendo sei su dieci, del 12 (l'arancio più duro) a otto si può tentare,
    del 15 (l'arancio più facile) a otto quasi sempre; dal 20 (grigio) è una passeggiata, e rende un quarto */
-const SEMI_ZONE = 10
+const zonePronte = CONFIGURAZIONI_ZONE.map(() => prossimi(EROI.length))
 const nelleZone = (livello, eroeA = livello) => {
-  const tutte = EROI.map(e => misuraLeZone({ eroe: e.chiave, livello, eroeA, semi: SEMI_ZONE }))
+  const tutte = zonePronte[CONFIGURAZIONI_ZONE.findIndex(([L, A]) => L === livello && (A ?? L) === eroeA)]
   return { tutte, quota: (j, k) => tutte.reduce((n, m) => n + m.vinte[j][k], 0) / (tutte.length * SEMI_ZONE),
            livelli: k => tutte.reduce((n, m) => n + m.livelli[k], 0) / tutte.length }
 }

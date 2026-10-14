@@ -11,6 +11,7 @@
 //   npm run taratura -- --cerca --discese 2,3     # cerca solo su quelle (le altre si giocano con i valori di adesso)
 //   npm run taratura -- --tutto                   # nel rapporto, il perché di ogni cella e non solo il riassunto
 //   npm run taratura -- --giocatori curioso,bravo # solo quei giocatori tipo
+//   npm run taratura -- --specie                  # solo la tabella delle specie: quanto picchiano contro l'eroe atteso, cosa portano (senza giocare)
 //
 // Il caso è dichiarato: `--seme-da N` (di difetto 1) fa le storie N..N+semi−1, due giri danno le stesse cifre. `--processi N` (di difetto 4)
 // limita i processi; la macchina ha poca memoria. I tempi si stampano alla fine.
@@ -34,11 +35,14 @@ if (argv[0] === '--lavoro') {
   const lavoro = JSON.parse(dentro)
   const { CAMPAGNA } = await modulo('dati/campagna.js')
   const zone = await modulo('dati/zone.js')
+  const livelli = await modulo('dati/livelli.js')
   // `2.spinta=6.5` ritocca una discesa (le zone la ereditano); `zona.forzaA12=5` la curva delle zone: stesse chiavi di npm run sotterraneo
   for (const voce of (lavoro.tara || '').split(',').filter(Boolean)) {
     const [k, campo] = voce.split('=')[0].split('.')
     const v = Number(voce.split('=')[1])
-    if (k === 'zona') { if (campo in zone.CURVA_DELLE_ZONE) zone.CURVA_DELLE_ZONE[campo] = v; else zone.FORMA_DELLA_ZONA[campo] = v }
+    if (k === 'livelli') livelli.CURVA_DELL_ESPERIENZA[campo] = v
+    else if (k === 'potenza') livelli.VALORE_DELLA_POTENZA[campo] = v
+    else if (k === 'zona') { if (campo in zone.CURVA_DELLE_ZONE) zone.CURVA_DELLE_ZONE[campo] = v; else zone.FORMA_DELLA_ZONA[campo] = v }
     else CAMPAGNA[Number(k)][campo] = v
   }
   const { storiaDi, passoDellaStoria, rifatteAl } = await modulo('motore/storie.js')
@@ -52,8 +56,8 @@ if (argv[0] === '--lavoro') {
     risultato = lavoro.lista.map(x => passoDellaStoria(lavoro.k, x.stato, { tipo: lavoro.tipo, eroe: x.eroe, seme: x.seme,
       sonde: lavoro.sonde || [], rifai: lavoro.rifai ? rifatteAl(lavoro.k) : [] }))
   }
-  process.stdout.write(JSON.stringify(risultato))
-  process.exit(0)
+  process.stdout.write(JSON.stringify(risultato), () => process.exit(0))   // uscire prima che la pipe si svuoti tronca l'output
+  await new Promise(() => {})
 }
 
 /* ═══════════ il pool ═══════════ */
@@ -99,20 +103,24 @@ async function giocaLeStorie({ tipi, fino }) {
 /* ═══════════ la stampa del rapporto ═══════════ */
 async function stampaIlRapporto(passi, { completo = false, solo = null, tipi = null } = {}) {
   const rap = await modulo('motore/rapporto.js')
-  const { NOMI_TIPO } = await modulo('dati/giocatori-tipo.js')
+  const { NOMI_TIPO, GIOCATORI_TIPO } = await modulo('dati/giocatori-tipo.js')
   const { CAMPAGNA } = await modulo('dati/campagna.js')
   const P = rap.partite(passi)
   const R = rap.rapporto(P)
   const elenco = (tipi || NOMI_TIPO).filter(t => P.per[t])
   for (const t of elenco) console.log(`\n${rap.tabella(R, t)}`)
-  const f = rap.forbice(P)
-  console.log(`\nLa roba con cui il curioso entra (10° · mediana · 90° percentile): forza sul livello atteso, e livello`)
-  console.log(' '.repeat(10) + f.map(x => CAMPAGNA[x.k].chiave.slice(0, 6).padStart(14)).join(''))
-  console.log('scarto'.padEnd(10) + f.map(x => x.scarto.map(v => (v == null ? '-' : (v > 0 ? '+' : '') + v)).join('·').padStart(14)).join(''))
-  console.log('livello'.padEnd(10) + f.map(x => `${x.livello.join('·')} (${x.atteso})`.padStart(14)).join(''))
+  for (const t of ['curioso', 'bravo'].filter(x => elenco.includes(x))) {
+    const f = rap.forbice(P, t)
+    console.log(`\nLa roba con cui ${GIOCATORI_TIPO[t].nome.toLowerCase()} entra (10° · mediana · 90° percentile): la forza sul livello atteso, il livello (atteso), le gemme`)
+    console.log(' '.repeat(10) + f.map(x => CAMPAGNA[x.k].chiave.slice(0, 6).padStart(14)).join(''))
+    console.log('scarto'.padEnd(10) + f.map(x => x.scarto.map(v => (v == null ? '-' : (v > 0 ? '+' : '') + v)).join('·').padStart(14)).join(''))
+    console.log('livello'.padEnd(10) + f.map(x => `${x.livello.join('·')} (${x.atteso})`.padStart(14)).join(''))
+    console.log('gemme prese'.padEnd(10) + f.map(x => String(Math.round(x.gemmePrese ?? 0)).padStart(14)).join(''))
+    console.log('avanzate'.padEnd(10) + f.map(x => x.gemmeAvanzate.map(v => v ?? '-').join('·').padStart(14)).join(''))
+  }
   const lista = rap.scostamenti(R, P, { solo }).filter(x => elenco.includes(x.f.tipo))
   console.log(`\nScostamenti (${lista.length}): ogni deviazione è sospetta, prima si capisce e poi si gira una manopola`)
-  const limite = completo ? 99 : 6
+  const limite = completo ? 99 : 5
   for (const { spiegazione: s } of lista) console.log(`\n❌ ${s.testa}  [${s.natura}]\n${s.righe.slice(0, limite).map(r => `     · ${r}`).join('\n')}`)
   if (!lista.length) console.log('nessuno: tutti i bersagli sono rispettati')
   return { R, P, lista }
@@ -121,6 +129,14 @@ async function stampaIlRapporto(passi, { completo = false, solo = null, tipi = n
 function stampaITempi(inizio) {
   const tot = (Date.now() - inizio) / 1000
   console.log(`\nTempi: ${tempi.map(([n, s]) => `${n} ${s.toFixed(1)} s`).join(' · ')} — in tutto ${tot.toFixed(1)} s con ${POSTI} processi`)
+}
+
+// la tabella delle specie: i mostri dei piani veri contro l'eroe atteso, e cosa portano (docs/sotterraneo/giocatori-tipo.md)
+async function stampaLeSpecie({ completa = true } = {}) {
+  const { tabellaDelleSpecie } = await modulo('motore/specie.js')
+  const t = tabellaDelleSpecie()
+  if (completa) console.log(t.testo)
+  console.log(t.fuori.length ? `\nSpecie che picchiano fuori misura (la prima cosa da guardare):\n${t.fuori.map(x => `  ! ${x}`).join('\n')}` : '\nNessuna specie picchia fuori misura.')
 }
 
 /* ═══════════ il giro corto ═══════════ */
@@ -172,6 +188,21 @@ async function cerca() {
   const att = k => ({ forza: proposte[`${k}.forza`] ?? CAMPAGNA[k].forza ?? 1, spinta: proposte[`${k}.spinta`] ?? CAMPAGNA[k].spinta ?? 0 })
   const arrotonda = v => Math.round(v * 20) / 20
 
+  // la bisezione: `crescente` dice se il numero misurato sale con la manopola; torna il valore provato più vicino al centro
+  const bisezione = async (k, campo, lo, hi, { crescente, centro, dentro, misurato, cicli = 5 }) => {
+    let migliore = null
+    for (let i = 0; i < cicli && hi - lo > 0.1; i++) {
+      const mid = arrotonda((lo + hi) / 2)
+      const x = misura(k, (await passo(k, 'curioso', {}, taraCon(k, campo, mid))).passi)
+      const v = misurato(x)
+      if (v == null) break
+      if (!migliore || Math.abs(v - centro) < Math.abs(migliore.v - centro)) migliore = { x: mid, v, m: x.m }
+      if (dentro(v)) break
+      if ((v > centro) === crescente) hi = mid; else lo = mid
+    }
+    return migliore
+  }
+
   for (let k = 0; k < CAMPAGNA.length; k++) {
     const nome = CAMPAGNA[k].chiave
     const prima = att(k)
@@ -188,36 +219,31 @@ async function cerca() {
       if (capire.length) {
         nota = `prima capire: ${fuoriVita && nv.tipo !== 'uniforme' ? `la vita (${nv.tipo}${nv.fuoriEroi.length ? ` ${nv.fuoriEroi.join(', ')}` : ''})` : ''} ${fuoriDom && nd.tipo !== 'uniforme' ? `le domande (${nd.tipo})` : ''}`.trim()
       } else {
+        const motivi = []
         await cronometra(`${nome} ricerca`, async () => {
           // 1. le domande: la forza più alta che sta nel tetto (solo verso il basso: se stanno sotto, non si tocca)
-          if (fuoriDom && CAMPAGNA[k].forza != null) {
-            let lo = 0.3, hi = prima.forza, buona = null
-            for (let i = 0; i < 5 && hi - lo > 0.05; i++) {
-              const mid = arrotonda((lo + hi) / 2)
-              const x = misura(k, (await passo(k, 'curioso', {}, taraCon(k, 'forza', mid))).passi)
-              if (x.m.domande <= bd.max - 2) { buona = mid; lo = mid } else hi = mid
-              if (buona != null && bd.max - 2 - x.m.domande < 4 && x.m.domande <= bd.max - 2) break
-            }
-            if (buona != null) { proposte[`${k}.forza`] = buona; e = misura(k, (await passo(k, 'curioso')).passi) }
+          if (fuoriDom) {
+            const r = await bisezione(k, 'forza', 0.2, prima.forza, { crescente: true, centro: bd.max - 7, dentro: v => v >= bd.max - 12 && v <= bd.max - 2, misurato: x => x.m.domande })
+            if (r && r.v <= bd.max) { proposte[`${k}.forza`] = r.x; e = misura(k, (await passo(k, 'curioso')).passi) }
+            else if (r) motivi.push(`le domande non scendono sotto ${Math.round(r.v)} nemmeno a forza ${r.x} (${Math.round(r.m.mostri)} mostri battuti a discesa, una domanda a mostro): la leva è il numero dei mostri, non la forza`)
           }
-          // 2. la vita: la spinta che porta il curioso a metà della sua forbice (la cripta non ha spinta: si scende a mani nude)
-          const centro = (b.min + b.max) / 2
+          // 2. la vita: la spinta (la cripta non ne ha: si scende all'attacco normale, e lì cede la forza) che porta il curioso a metà della sua forbice
           const v1 = e.m.vitaGrosso
-          if (k > 0 && v1 != null && rap.fuori(v1, b)) {
-            let lo = v1 > b.max ? prima.spinta : 0, hi = v1 > b.max ? 12 : prima.spinta
-            let migliore = { s: att(k).spinta, v: v1 }
-            for (let i = 0; i < 6 && hi - lo > 0.1; i++) {
-              const mid = arrotonda((lo + hi) / 2)
-              const x = misura(k, (await passo(k, 'curioso', {}, taraCon(k, 'spinta', mid))).passi)
-              if (x.m.vitaGrosso != null && Math.abs(x.m.vitaGrosso - centro) < Math.abs(migliore.v - centro)) migliore = { s: mid, v: x.m.vitaGrosso }
-              if (x.m.vitaGrosso != null && x.m.vitaGrosso >= b.min + 0.05 && x.m.vitaGrosso <= b.max - 0.05) break
-              if (x.m.vitaGrosso > centro) lo = mid; else hi = mid
-            }
-            if (migliore.s !== att(k).spinta) proposte[`${k}.spinta`] = migliore.s
+          if (v1 != null && rap.fuori(v1, b)) {
+            const troppoFacile = v1 > b.max
+            const opz = { crescente: false, centro: (b.min + b.max) / 2, dentro: v => v >= b.min + 0.05 && v <= b.max - 0.05, misurato: x => x.m.vitaGrosso }
+            const campo = k > 0 ? 'spinta' : 'forza'
+            const r = k > 0
+              ? await bisezione(k, 'spinta', troppoFacile ? att(k).spinta : 0, troppoFacile ? 12 : att(k).spinta, { ...opz, cicli: 6 })
+              : (fuoriDom && proposte[`${k}.forza`] != null ? null : await bisezione(k, 'forza', troppoFacile ? att(k).forza : 0.2, troppoFacile ? 1 : att(k).forza, opz))
+            if (r) {
+              proposte[`${k}.${campo}`] = r.x
+              if (rap.fuori(r.v, b)) motivi.push(`la vita arriva a ${Math.round(r.v * 100)}% e non oltre con ${campo === 'spinta' ? 'la spinta' : 'la forza'} ${r.x}`)
+            } else motivi.push(k === 0 && !(fuoriDom && proposte[`${k}.forza`] != null) ? `la manopola è già al minimo (forza ${att(k).forza}, la cripta non ha spinta): restano il tetto dei branchi e gli scagnozzi del grosso` : 'la vita resta fuori, ma la forza della cripta è già stata mossa per le domande')
           }
         })
         const dopo = att(k)
-        nota = `${dopo.forza !== prima.forza ? `forza ${prima.forza} → ${dopo.forza}` : 'forza invariata'}, ${dopo.spinta !== prima.spinta ? `spinta ${prima.spinta} → ${dopo.spinta}` : 'spinta invariata'}`
+        nota = `${dopo.forza !== prima.forza ? `forza ${prima.forza} → ${dopo.forza}` : 'forza invariata'}, ${dopo.spinta !== prima.spinta ? `spinta ${prima.spinta} → ${dopo.spinta}` : 'spinta invariata'}${motivi.length ? ` — ${motivi.join('; ')}` : ''}`
       }
     } else if (fuoriVita || fuoriDom) nota = 'fuori bersaglio ma non cercata (--discese)'
     // il passo che vale: i tre giocatori tipo coi valori proposti, e gli stati con cui si entra nella discesa dopo
@@ -246,7 +272,19 @@ const { GIOCATORI_TIPO: GIOCATORI } = await modulo('dati/giocatori-tipo.js')
 /* ═══════════ si parte ═══════════ */
 const inizio = Date.now()
 let uscita = 0
-if (PRESTO) uscita = await presto()
+if (TARA) {
+  // anche questo processo vede i valori provati (la tabella delle specie si legge qui)
+  const { CAMPAGNA } = await modulo('dati/campagna.js'), zone = await modulo('dati/zone.js'), livelli = await modulo('dati/livelli.js')
+  for (const voce of TARA.split(',').filter(Boolean)) {
+    const [k, campo] = voce.split('=')[0].split('.'), v = Number(voce.split('=')[1])
+    if (k === 'livelli') livelli.CURVA_DELL_ESPERIENZA[campo] = v
+    else if (k === 'potenza') livelli.VALORE_DELLA_POTENZA[campo] = v
+    else if (k === 'zona') { if (campo in zone.CURVA_DELLE_ZONE) zone.CURVA_DELLE_ZONE[campo] = v; else zone.FORMA_DELLA_ZONA[campo] = v }
+    else CAMPAGNA[Number(k)][campo] = v
+  }
+}
+if (argv.includes('--specie')) await stampaLeSpecie()
+else if (PRESTO) uscita = await presto()
 else if (argv.includes('--cerca')) {
   console.log(`Ricerca: ${SEMI} storie per eroe, un passo alla volta (chi entra nella discesa dopo ha quello che ha preso nella prima)`)
   const r = await cerca()
@@ -262,6 +300,7 @@ else if (argv.includes('--cerca')) {
 } else {
   const passi = await cronometra('storie', () => giocaLeStorie({ tipi: valore('--giocatori') ? valore('--giocatori').split(',').filter(t => t !== 'sbadato') : ['curioso', 'bravo'], fino: 7 }))
   await cronometra('rapporto', () => stampaIlRapporto(passi, { completo: argv.includes('--tutto'), solo: valore('--discese') ? numeri('--discese') : null }))
+  await cronometra('specie', () => stampaLeSpecie())
 }
 stampaITempi(inizio)
 process.exit(uscita)

@@ -25,8 +25,8 @@ export function ingressoDi(eroe, { roba, crescita }) {
 // una discesa giocata, ridotta a quello che il rapporto legge: l'esito, le domande, le pozioni, i piani e uno scontro per riga
 function registro(g) {
   const e = g.esito
-  return { v: e.vinta ? 1 : 0, sv: e.svenimenti, dom: e.domande, giu: e.giuste, pz: g.pozioni, fo: g.fonti, ge: e.gemme,
-           mo: e.mostri, liv: g.corsa.livelloEroe, pp: g.perPiano.map(n => intero(n)), sc: g.scontri, guasto: g.guasto || null }
+  return { v: e.vinta ? 1 : 0, sv: e.svenimenti, dom: e.domande, giu: e.giuste, pz: g.pozioni || 0, fo: g.fonti || 0, ge: e.gemme,
+           mo: e.mostri, liv: g.corsa.livelloEroe, pp: (g.perPiano || []).map(n => intero(n)), sc: g.scontri || [], guasto: g.guasto || null }
 }
 
 // il seme della partita n di una discesa: lo stesso per chi gioca la discesa dallo stesso ingresso, così il sotterraneo è lo stesso
