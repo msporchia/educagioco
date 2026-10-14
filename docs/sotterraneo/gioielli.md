@@ -57,4 +57,6 @@ Il bravo: vinte alla prima nella scala sommersa 88 → 91, nella botola 92 → 9
 - **I bersagli che si spostano** (di quelli già fuori, e quelli nuovi): gli svenimenti del curioso, già sotto il 20% in cinque discese su sette, scendono ancora (torre
   21 → 8); la vita dopo lo scontro grosso sale di due-otto punti (gallerie 65 → 70, fuori da 40–70); fra i fortunati gli scontri finiti sopra il 90% passano il 55% nelle
   gallerie (46 → 62) e nella scala sommersa (34 → 57). Gli scostamenti sono 27, erano 28: la taratura dei mostri li rimette in fila.
-
+- **`npm run test:misure` (sotterraneo)**: i guasti salgono da 12 a 21, i nuovi sono tutti delle zone (altare al 12, 16, 20 e 30 e «zone al 20»: si vince il 93–100%
+  dove il bersaglio è «non sempre»); la scala sommersa due livelli sotto torna in bersaglio. L'anello verde nelle righe della storia non c'entra (tolto, restano 22):
+  è il giocatore finto che con tre gioielli diventa più forte nelle zone. Le unità restano come prima (`unita/sotterraneo-roba`, la sola rossa, è «torre 3/6» di sempre).
