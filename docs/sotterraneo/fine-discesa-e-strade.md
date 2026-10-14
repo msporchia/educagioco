@@ -6,6 +6,9 @@ misurava **come ne esce l'eroe**. L'obiezione dell'utente: una strategia che com
 ce l'hai fatta e il danno è tosto, va bene. La discesa è limitata e non si accorge di quanto male può andare dopo. Da qui tre cose, tutte nello stesso
 strumento (`npm run taratura`) e **senza toccare un numero del gioco**: la lettura dell'eroe a fine discesa, i checkpoint e le strade di spesa.
 
+**Dal 14 ottobre sera il banco spende anche durante la discesa** (le risalite dal portale, e lo scaffale con i salti e i sogni): [risalite.md](risalite.md). Le gemme «avanzate» sono lì
+«gemme non spese all'uscita», un sospetto e non un dato, e i numeri del primo giro qui sotto sono quelli **di prima delle risalite** (`--tara risalita.acceso=0,risalita.scaffale=0`).
+
 Il codice: `motore/fine.js` (danno a risposta, valore della roba, l'eroe atteso letto allo stesso modo), `motore/rapporto-fine.js` (le tabelle),
 `motore/storie.js` (`lineeDelGiro`, `strada` nel passo), `dati/giocatori-tipo.js` (`STRADE`), `strumenti/sotterraneo-checkpoint.mjs` (i file e la firma),
 `strumenti/sotterraneo-taratura.mjs`. Le unità: `unita/sotterraneo-taratura`. I comandi: [../core/comandi.md](../core/comandi.md).
@@ -21,7 +24,7 @@ Per ogni linea (strada e giocatore) e discesa, il rapporto dà **il 10° percent
 | forza sull'atteso | `forzaDelCorredo` ([forza.md](forza.md)) meno il livello atteso della discesa dopo: 0 è «come la storia lo vuole» |
 | danno a risposta % | quanto toglie in media una risposta giusta a un mostro di riferimento di quel livello, in % dello stesso numero per l'eroe atteso della classe |
 | valore roba % | il prezzo pieno dei pezzi addosso e nello zaino, in % di quello dell'eroe atteso (le pozioni no) |
-| gemme avanzate | quelle in tasca dopo la spesa |
+| gemme non spese | quelle in tasca dopo la spesa all'uscita: alte vuol dire che il giocatore non sfrutta il personaggio ([risalite.md](risalite.md)) |
 | pozioni rimaste · bevute | prima di spendere; e quelle bevute nella discesa (tutti i tentativi) |
 | difesa % · vita massima % | con `--tutto` |
 
@@ -67,7 +70,7 @@ Una strada si può cambiare in `STRADE`: `spesa` e `stile` (sopra il giocatore).
 della roba alla fine; le pozioni bevute per discesa; e **chi vince bevendo** (una discesa vinta con almeno 10 pozioni, `POZIONI_DA_BEONE`) contro chi vince bevendo meno:
 forza e danno all'uscita, e quanti vincono alla prima la discesa dopo.
 
-## Il primo giro (14 ottobre, 30 storie per eroe, 6 per le strade)
+## Il primo giro, di prima delle risalite (14 ottobre, 30 storie per eroe, 6 per le strade)
 
 Alla fine della miniera (mediana; fra parentesi 10° e 90° percentile):
 

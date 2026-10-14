@@ -365,7 +365,6 @@ export function gioca(tappa, { bravura = 0.8, seme = 7, come = 'minimo', rnd = n
     return true
   }
 
-  // sale al portale del piano (cammina davvero fin là) e fa la spesa con la strada del giocatore; poi si riprende da lì (il gemello lo riporta nel punto del portale)
   // quando sale: ha in tasca il prezzo del salto che all'ultima spesa non poteva pagare (`obiettivo`); se non ne ha uno (o è salito di livello, e i banchi cambiano)
   // la soglia delle gemme prese dall'ultima spesa; o, dopo `mostriOgni` mostri, se le pozioni stanno finendo e ha di che comprarne
   const vuoleSalire = () => {
@@ -375,6 +374,7 @@ export function gioca(tappa, { bravura = 0.8, seme = 7, come = 'minimo', rnd = n
     const pozioni = corsa.zaino.filter(k => COSE[k] && COSE[k].usa === 'cura').length
     return mostri >= RISALITA.mostriOgni && pozioni < RISALITA.pozioniSotto && guadagnate >= RISALITA.minimoPerMostri
   }
+  // sale al portale del piano (cammina davvero fin là) e fa la spesa con la strada del giocatore; poi si riprende da lì (il gemello lo riporta nel punto del portale)
   const vaAlPortale = () => {
     if (!vuoleSalire()) return false
     const mostri = corsa.mostriBattuti - ris.mostri

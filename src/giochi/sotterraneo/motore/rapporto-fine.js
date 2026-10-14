@@ -81,7 +81,7 @@ export function tabellaFine(F, nome, { solo = null } = {}) {
   for (const r of RIGHE_FINE.filter(x => !solo || solo.includes(x.chiave)))
     righe.push(r.nome.padEnd(22) + quantili(F, r.chiave).map(v => v.map(x => cifra(x, r.segno)).join('·').padStart(14)).join(''))
   // gemme non spese oltre il valore della roba attesa: il giocatore non sfrutta il personaggio (un sospetto da spiegare, non un dato)
-  const sospetti = F.map((f, j) => (f.n && mediana(f.gemme) > attesoDellaFine(j).valore ? '⚠' : ''))
+  const sospetti = F.map((f, j) => (f.n && mediana(f.gemme) > attesoDellaFine(j).valore ? '!!' : ''))
   if (sospetti.some(Boolean) && (!solo || solo.includes('gemme'))) righe.push('gemme non spese: sospetto'.padEnd(22) + sospetti.map(x => x.padStart(14)).join(''))
   return righe.join('\n')
 }

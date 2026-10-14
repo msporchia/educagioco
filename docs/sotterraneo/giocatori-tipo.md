@@ -18,6 +18,7 @@ Il codice: `dati/giocatori-tipo.js` (come gioca ognuno e i suoi bersagli), `moto
 `motore/storie.js` (la storia di fila), `motore/rapporto.js` (le misure, ✅/❌, il perché), `motore/specie.js` (la tabella delle specie),
 `motore/potenza.js` (esperienza e gemme), `strumenti/sotterraneo-taratura.mjs`. I comandi: [../core/comandi.md](../core/comandi.md).
 **A che punto è l'eroe alla fine di ogni discesa, i checkpoint e le strade di spesa** (beve tutto, arma prima): [fine-discesa-e-strade.md](fine-discesa-e-strade.md).
+**I giocatori tipo tornano su dal portale a spendere durante la discesa, e le armi nuove utili a discesa**: [risalite.md](risalite.md).
 
 ```bash
 npm run taratura                       # il giro: 30 storie per eroe, il rapporto (circa 40 s con 4 processi)
@@ -157,7 +158,7 @@ Non scrive i sorgenti: stampa prima → dopo e il comando `--tara …` per verif
 
 ## I tempi
 
-Con 4 processi (la macchina ha poca memoria): il giro con 30 storie per eroe **40 s** (con le sei linee delle strade 52–62 s a freddo, 0,6 s da checkpoint:
+Con 4 processi (la macchina ha poca memoria; **con le risalite il giro a freddo è di 212 s**: [risalite.md](risalite.md#i-tempi)): il giro con 30 storie per eroe **40 s** (con le sei linee delle strade 52–62 s a freddo, 0,6 s da checkpoint:
 [fine-discesa-e-strade.md](fine-discesa-e-strade.md#i-tempi)), il giro corto **5 s**, la ricerca su tutte le discese **62 s** (16 storie
 per eroe; 2–3 discese cercate costano 15 s l'una). Una discesa giocata costa 30–40 ms; le storie si dividono fra i processi in dodici pezzi.
 `misure/sotterraneo` è lenta perché gioca ventimila discese (1200 s di processore): ora le divide fra quattro processi (`test/aiuto/parallelo.mjs`,
