@@ -10,12 +10,16 @@ I numeri stanno in `src/giochi/arena/dati/regole.js`, il motore in
   muro, che copre una corsia sola, non serviva a niente sull'altra.
 - Il motore conta la corsia in verticale (`y` lungo, `x` di lato), e la scena la
   disegna così, col castello di chi gioca in basso (vedi [grafica.md](grafica.md)).
-- **Ogni metà è una cittadella**: il castello e le quattro caserme stretti su un
-  lastricato, come la città di Heroes of Might and Magic (l'utente: gli edifici che
-  «si sposano e si incastrano su uno sfondo unico»). Fra le cittadelle c'è il campo
-  libero e il ponte.
-- **Una partita dura 3:00.** Vince chi abbatte il castello nemico; allo scadere chi ha
-  fatto più danni (sotto, «La durata»).
+- **Il castello sta sul bordo, e se ne vede solo un pezzo**: è l'obiettivo finale, non
+  deve prendere campo (l'utente). Fra lui e il ponte ci sono **quattro posti fissi** con
+  la loro base stabile, sempre in vista, come le piazzole del castello a torri: ci si
+  costruiscono le caserme, e quando una crolla resta la base. **Provato** a stringere
+  castello e caserme in una cittadella alla Heroes, con gli edifici attaccati al castello:
+  ma una caserma si può abbattere, e attaccata al castello non lo si poteva più fare
+  senza toccare lui, né si vedeva che l'assedio arriva al castello per ultimo.
+- **Una partita dura 5:00.** Vince chi abbatte il castello nemico; allo scadere chi ha
+  fatto più danni (sotto, «La durata»). Era 3:00: troppo poco perché la miniera rendesse,
+  e vinceva sempre chi attaccava subito (sotto, «Rush o economia»).
 
 ## Le caserme: quattro edifici, due truppe ciascuno
 
@@ -32,8 +36,11 @@ I numeri stanno in `src/giochi/arena/dati/regole.js`, il motore in
   aveva** (anche scegliendo l'altra truppa): chi perde una caserma è meno svantaggiato
   (l'utente). Il livello (1-10) fa uscire le squadre più spesso
   (`9 / (1 + 0.12·(liv−1))` secondi) e più forti (`1 + 0.25·(liv−1)`); potenziando, la
-  vita in più della caserma arriva subito.
-- **Il posto lo sceglie il gioco** (`POSTI`, quattro per parte attorno al castello):
+  vita in più della caserma arriva subito. Potenziare costa 8, 11, 14, 18, 24… (`salita`):
+  rende tanto, e a 6, 8, 10 era la mossa che batteva tutte le altre.
+- **L'antro (golem | drago) costa 20**, e le sue truppe sono forti in proporzione: è un
+  investimento, non un'apertura. A 14 costava quanto le monete di partenza.
+- **Il posto lo sceglie il gioco** (`POSTI`, quattro per parte, fra la porta e il castello):
   il lato con meno caserme, e dentro il lato il più lontano dal fiume. Niente da
   piazzare col dito.
 - **Le truppe sono otto e si distinguono per chi colpiscono, non per quanto
@@ -75,7 +82,7 @@ I numeri stanno in `src/giochi/arena/dati/regole.js`, il motore in
 - **Se non c'è nessuno da colpire si va all'obiettivo, in ordine**: chi cammina sfonda
   la **porta** in fondo al ponte, poi tutti vanno sulle **caserme** (la più vicina), e
   il **castello per ultimo** (`obiettivo()`). L'utente: «una lenta agonia, non un
-  flash». Le caserme reggono (700 di vita, più 120 a livello) perché sono il primo
+  flash». Le caserme reggono (1100 di vita, più 160 a livello) perché sono il primo
   bersaglio.
 
 ## Le scelte che non sono truppe
@@ -84,15 +91,20 @@ Costano monete di battaglia e un calcolo, come le caserme.
 
 | scelta | cosa fa | prezzo |
 |---|---|---|
-| ⛏️ Più monete | +50% di monete al secondo per livello (6 livelli: da ×1 a ×3,5) | 10, 16, 24, 34, 46 |
+| ⛏️ Più monete | +70% di monete al secondo per livello (6 livelli: da ×1 a ×4,5) | 8, 14, 22, 32, 44 |
 | 🔧 Ripara | +40% di vita alla costruzione messa peggio, porta compresa (anche crollata) | 6 |
 | 🏰 Castello | più danno, cadenza, gittata e vita (+300 per livello, 10 livelli) | 8 → 66 |
 | 💣 Bomba | **in regalo** (non si compra): spazza le truppe nemiche più fitte | 0 monete, un calcolo |
 
 - **Il castello è l'unica costruzione che spara.** Prima c'era una torretta
   davanti alla base: tolta (l'utente: «più un potenziamento del castello»), e il
-  castello ne ha preso la gittata (175, più 4 per livello) perché da lì deve
+  castello ne ha preso la gittata (215, più 4 per livello) perché dal bordo deve
   coprire la porta in fondo al ponte.
+- **Sotto casa il castello picchia il triplo, e ad area** (`difesa` 180, `vicino` ×3,
+  `splash` 16): la zona delle piazzole, non la porta. Chi assedia le caserme lo paga, e
+  il castello fa da «reset» automatico: lo scontro torna al centro e la superiorità non
+  arriva in fretta (l'utente: «perdi troppo facilmente le caserme, il castello dovrebbe
+  proteggerle di più»). Con lui le caserme da 700 a 1100 e la porta da 1000 a 1400.
 - **La porta è una sola per parte e non si compra**: c'è dall'inizio, chi cammina la
   colpisce prima del resto, chi vola la scavalca. Se crolla resta il cumulo e **si
   ricostruisce riparando** (la riparazione la cerca per prima). **Provati** due muri
@@ -116,10 +128,27 @@ schiacciante e va avanti per inerzia, e chi è già indietro non ha le monete pe
 cosa da comprare («non ne esci»). Il nemico la usa quando un ammasso di tue truppe entra nella
 sua metà (vedi [nemico.md](nemico.md)); il giocatore finto idem (`motore/banco.js`).
 
+## Rush o economia
+
+**Si deve poter scegliere** fra attaccare subito e prima far crescere le monete (l'utente:
+«vince chi fa un rush, ma dovrebbe darti almeno la possibilità di scegliere»). Si misura
+con due giocatori finti ugualmente bravi, `rush` (solo caserme e potenziamenti) ed
+`economia` (la cripta, poi la miniera al 3): `npm run tara:arena -- --misura`.
+
+Con le regole di prima il rush vinceva l'80-100% e l'economia lo 0-43%, e tutte le
+vittorie arrivavano allo scadere, ai punti: chi danneggia per primo vince, e le monete
+della miniera arrivano quando la partita è finita. **Non basta alzare il prezzo del golem**:
+il rush si fa con arcieri e opliti. Si è mosso l'insieme: la partita a 5:00, i
+potenziamenti più cari, la miniera che rende di più, il castello che picchia il triplo
+sotto casa, le costruzioni più dure, l'antro come investimento. Misurato prima di
+ritarare: nel bosco e nella palude rush ed economia vincono tutti e due l'80-100% (e
+l'economia a volte abbatte il castello prima dello scadere); nelle nevi il rush resta
+avanti.
+
 ## La durata
 
-Il castello da 4000 (più 300 a livello) cade per ultimo, quindi una partita si decide
-in circa due minuti, dopo aver perso caserme e porta. **Allo scadere vince chi ha fatto
+Il castello da 4000 (più 300 a livello) cade per ultimo, dopo caserme e porta, e spesso
+non cade: allora decidono i punti. **Allo scadere vince chi ha fatto
 più danni** (`punti()`): ogni costruzione abbattuta vale uno, il castello abbattuto tre
 (in proporzione alla vita che gli manca); entro un quarto di punto è pari. Col castello
 che cade per ultimo, «vince il castello più sano» finiva quasi sempre pari.
@@ -130,7 +159,7 @@ che cade per ultimo, «vince il castello più sano» finiva quasi sempre pari.
   «adesso → livello dopo» di `motore/dettagli.js` (una squadra ogni N secondi, vita e
   danno di ogni truppa, vita della caserma, prezzo), chi colpisce e se vola.
 - Su un edificio da costruire apre **la scelta** (`viste/Scelta.vue`): le due truppe una
-  accanto all'altra, col prezzo e il calcolo che costano; quella che la tappa non ha
+  accanto all'altra, col prezzo; quella che la tappa non ha
   ancora si vede spenta («arriva più avanti»). Da lì «i numeri» aprono i dettagli.
 - **Il campo sta fermo** finché dettagli o scelta sono aperti: servono a confrontare
   con calma.
@@ -138,8 +167,9 @@ che cade per ultimo, «vince il castello più sano» finiva quasi sempre pari.
 ## Il respiro
 
 Il castello **spara da solo dal primo secondo** e il nemico si costruisce la cripta
-dopo un paio di secondi: chi non fa niente resiste una cinquantina di secondi
-(misurato dal banco). Il tempo di decidere c'è, poi la base viene sopraffatta.
+dopo un paio di secondi: chi non fa niente resisteva una cinquantina di secondi
+(misurato dal banco prima che il castello picchiasse il triplo sotto casa: adesso di più).
+Il tempo di decidere c'è, poi la base viene sopraffatta.
 
 ## Nei test
 

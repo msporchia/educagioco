@@ -56,6 +56,7 @@ pubblicato.** Per controllare solo che il build passi:
 | `python3 strumenti/sprite/regno-castello.py` (`--provino` in `tmp/regno/`) | `src/giochi/castello/dati/regno.js` | dopo aver spostato un posto o un ponte nel foglietto `castello/regno.json`, o quando cambia la mappa ([../castello/regno.md](../castello/regno.md)) |
 | `python3 strumenti/sprite/isole-passo-passo.py [zaino\|valle]` (`--provino` in `tmp/isole/`) | `src/giochi/passo-passo/dati/isole-mappa.js` e `zaino-mappa.js` | dopo aver corretto un foglietto di Passo passo (`isole.json` la valle, `zaino.json` lo zaino: sentieri, ponti, tane, cartelli), o quando cambia un fondale o il numero di tappe di un'isola ([../passo-passo/mappa.md](../passo-passo/mappa.md#il-foglietto-e-lo-strumento)) |
 | `python3 strumenti/sprite/copertine.py` (`--collana`: le copertine fatte in `tmp/copertine/collana.png`, lo stile da allegare) | `src/components/home/copertine-dipinte.js` | quando arriva o cambia una `copertina-<chiave>` in `strumenti/sprite/sorgenti/home/` ([home.md](home.md#le-copertine)) |
+| `python3 strumenti/sprite/caserme-arena.py [provino.png]` | `src/giochi/arena/dati/caserme-dipinte.js` | quando arriva o cambia il foglio delle caserme di Castle Battle (`sorgenti/arena/caserme.webp` e il suo foglietto `caserme.json`: cosa c'è in ogni riga) ([../arena/grafica.md](../arena/grafica.md)) |
 | `node strumenti/sprite/in-campo.mjs <creatura>` | `tmp/in-campo/<creatura>/` (GIF del campo, di lato, di fronte) | per guardare una creatura camminare in partita, dopo `vesti.py --atlante` e `npm run build` |
 | `node strumenti/sprite/carte-castello.mjs` | `poc/scatti/castello-carte*.png`, `castello-battaglia*.png` | dopo aver toccato carte, schizzi o bestiario |
 
@@ -112,6 +113,7 @@ testa, e una modifica sparisce senza rumore alla prossima rigenerazione.
 | `src/giochi/castello/dati/regno.js` | `regno-castello.py` — `unita/castello-regno` diventa rosso se il foglietto è cambiato dopo |
 | `src/giochi/passo-passo/dati/isole-mappa.js`, `zaino-mappa.js` | `isole-passo-passo.py` — `unita/passo-passo-valle` diventa rosso se il foglietto è cambiato dopo |
 | `src/components/home/copertine-dipinte.js` | `copertine.py` |
+| `src/giochi/arena/dati/caserme-dipinte.js` | `caserme-arena.py` |
 | `src/giochi/sotterraneo/dati/aspetti.js` (e il blocco `__aspetti` dei foglietti) | `roba.py --gioco` — `unita/sotterraneo-rarita` diventa rosso se non è quello del catalogo `roba.json` |
 | `docs/apprendimento/livelli-delle-domande.md` | `npm run quiz:livelli` |
 | `docs/img/*` | `npm run scatti` |

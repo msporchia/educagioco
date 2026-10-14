@@ -5,7 +5,8 @@
 // in alto, chi gioca in basso. I castelli ai due capi lasciano la corsia libera
 // per manovrare. Le creature del foglio guardano di lato (di schiena non esiste
 // niente): in campo guardano dalla parte della loro squadra.
-import { CAMPO, TRUPPE } from '../dati/regole.js'
+import { CAMPO, TRUPPE, POSTI, EDIFICIO_DI } from '../dati/regole.js'
+import { PEZZI as DIPINTE, ATLANTE as FOGLIO_CASERME, PIAZZOLA } from '../dati/caserme-dipinte.js'
 import { carica, componi, immagineScena } from '../../castello/scena/vestito.js'
 import { PEZZI as SCENE } from '../../castello/dati/vestiti.js'
 import { PEZZI } from '../../castello/dati/figure.js'
@@ -19,7 +20,7 @@ import { disegnaEdificio } from './edifici.js'
 // cittadelle.
 const ZOOM = 0.5
 const ZT = ZOOM * 1.2                    // le truppe: un po' più grandi del terreno
-const ZE = 0.75                          // castello ed edifici: stretti in una cittadella, possono essere grandi
+const ZE = 0.75                          // castello ed edifici: più grandi delle truppe
 const MAPPA = Array.from({ length: 24 }, (_, y) => Array.from({ length: 16 }, (_, x) => {
   if (x === 7 || x === 8) return '+'
   if (y === 11 || y === 12) return '~'
@@ -41,12 +42,52 @@ export class Campo {
     this.effetti = []
     this.s = 1; this.ox = 0; this.oy = 0
     this.nate = new WeakMap()          // quando è comparsa ogni caserma, per farla spuntare
+    this.rovine = new Map()            // 'lato:posto' → l'edificio crollato lì: ne resta il rudere
+    this.caserme = null                // le caserme dipinte: { io, nem } (il nemico col blu fatto rosso)
   }
 
   async prepara() {
-    await Promise.all([carica(this.vestito), caricaFigure()])
+    await Promise.all([carica(this.vestito), caricaFigure(), this.caricaCaserme()])
     this.pronto = true
   }
+
+  /* l'atlante delle caserme dipinte, e la sua copia col blu della squadra fatto rosso */
+  caricaCaserme() {
+    if (typeof Image === 'undefined') return Promise.resolve()
+    return new Promise(ok => {
+      const img = new Image()
+      img.onload = () => { this.caserme = { io: img, nem: this.ricolora(img) }; ok() }
+      img.onerror = () => ok()                                  // resta il disegno in codice
+      img.src = FOGLIO_CASERME
+    })
+  }
+
+  /* il blu della squadra diventa rosso (e il rosso blu): castello e caserme del nemico */
+  ricolora(img, sx = 0, sy = 0, w = img.width, h = img.height) {
+    const cv = document.createElement('canvas'); cv.width = w; cv.height = h
+    const x = cv.getContext('2d'); x.drawImage(img, sx, sy, w, h, 0, 0, w, h)
+    const d = x.getImageData(0, 0, w, h), a = d.data
+    for (let i = 0; i < a.length; i += 4) {
+      const r = a[i], g = a[i + 1], b = a[i + 2]
+      if (b > r + 70 && b > g + 30) { a[i] = b; a[i + 1] = Math.round(g * 0.55); a[i + 2] = Math.round(r * 0.7) }
+      else if (r > g + 60 && r > b + 60) { a[i] = Math.round(b * 0.8); a[i + 1] = Math.round(g * 1.1); a[i + 2] = r }
+    }
+    x.putImageData(d, 0, 0)
+    return cv
+  }
+
+  /* un pezzo delle caserme dipinte, con la piazzola larga `larga` e centrata in (x, piede);
+     torna l'altezza a schermo, o 0 se non c'è (e allora si disegna in codice) */
+  dipinta(c, nome, x, piede, larga, lato, k = 1) {
+    const p = DIPINTE[nome]
+    if (!p || !this.caserme) return 0
+    const [sx, sy, w, h, cx, pd] = p, sc = larga / PIAZZOLA * k
+    c.drawImage(this.caserme[lato], sx, sy, w, h, x - cx * sc, piede - pd * sc, w * sc, h * sc)
+    return h * sc
+  }
+
+  /* dove sta il piede di una piazzola, a schermo */
+  piede(lato, py) { return this.Y(lato === 'io' ? py : CAMPO.H - py) + this.me(30) }
 
   /* la tela prende la misura che il contenitore le dà; il mondo sta 3:2 */
   adatta() {
@@ -75,6 +116,7 @@ export class Campo {
     for (const e of lista) {
       const durata = { colpo: 0.18, crollo: 0.7, cura: 0.7, costruita: 0.6, potenziata: 0.6, squadra: 0.4, miniera: 0.7, castello: 0.7, bomba: 0.8, bombaPronta: 0.1 }[e.tipo] || 0.4
       this.effetti.push({ ...e, t0: ora, durata })
+      if (e.tipo === 'crollo' && e.che === 'caserma') this.rovine.set(`${e.lato}:${e.posto}`, EDIFICIO_DI[e.id])
     }
   }
 
@@ -87,7 +129,7 @@ export class Campo {
     this.sfondo(c, W, H)
     if (!this.pronto) return
     this.ponte(c)
-    this.piazzale(c)
+    this.piazzole(c, p)
     // castelli, caserme e porte dall'alto in basso, così chi sta davanti copre chi sta dietro
     const edifici = [...p.castelli.map(e => [e.y, () => this.base(c, p, e.lato)]),
       ...p.caserme.map(e => [e.y + 10, () => this.caserma(c, p, e, ora)]), ...p.muri.map(e => [e.y, () => this.muro(c, e)])]
@@ -142,36 +184,26 @@ export class Campo {
 
   /* la base: il castello di chi gioca, la bocca da cui escono i mostri per il nemico */
   base(c, p, lato) {
+    /* il castello sta sul bordo e se ne vede solo un pezzo, la cima (il nemico, in alto, la base):
+       è l'obiettivo finale, non deve prendere campo */
     const re = p.castello(lato)
     const sc = SCENE[this.vestito], img = immagineScena(this.vestito)
-    const x = this.X(re.x), y = this.Y(re.y)
-    const [nome, k] = ['castello', 0.4]
-    const [sx, sy, w, h] = sc[nome]
-    const lw = w * k * this.s / 0.85 * ZE, lh = h * k * this.s / 0.85 * ZE
-    this.ombra(c, x, y + lh * 0.38, lw * 0.4, lh * 0.1)
+    const [sx, sy, w, h] = sc.castello
+    const lw = w * 0.56 * this.s / 0.85 * ZE, lh = h * 0.56 * this.s / 0.85 * ZE
+    const x = this.X(re.x), piede = lato === 'io' ? this.Y(CAMPO.H + 60) : this.Y(60)
     if (re.hp > 0) {
-      if (lato === 'nem') c.drawImage(this.castelloNemico(img, sx, sy, w, h), x - lw / 2, y + lh * 0.3 - lh, lw, lh)
-      else c.drawImage(img, sx, sy, w, h, x - lw / 2, y + lh * 0.3 - lh, lw, lh)
-    } else this.ombra(c, x, y, lw * 0.3, lh * 0.1, 0.5)
-    this.livello(c, x, y + lh * 0.3 + this.mi(2), re.liv, lato)
-    // la vita del castello: una barra grande SOPRA il castello, sempre accesa (con la vita scritta)
-    const alto = Math.max(this.mi(4), y + lh * 0.3 - lh - this.mi(16))
-    this.barraCastello(c, x, alto, re, lato)
+      if (lato === 'nem') c.drawImage(this.castelloNemico(img, sx, sy, w, h), x - lw / 2, piede - lh, lw, lh)
+      else c.drawImage(img, sx, sy, w, h, x - lw / 2, piede - lh, lw, lh)
+    } else this.ombra(c, x, lato === 'io' ? this.Y(CAMPO.H) : this.Y(0), lw * 0.4, lh * 0.1, 0.5)
+    // la vita del castello: una barra grande dalla parte del campo, sempre accesa (con la vita scritta)
+    const by = lato === 'io' ? piede - lh - this.mi(18) : piede + this.mi(6)
+    this.barraCastello(c, x, by, re, lato)
+    this.livello(c, x + this.mi(66), by + this.mi(6.5), re.liv, lato)
   }
 
   /* il castello del nemico è lo stesso, coi colori scambiati: tetti rossi, stendardi blu */
   castelloNemico(img, sx, sy, w, h) {
-    if (this._nem) return this._nem
-    const cv = document.createElement('canvas'); cv.width = w; cv.height = h
-    const x = cv.getContext('2d'); x.drawImage(img, sx, sy, w, h, 0, 0, w, h)
-    const d = x.getImageData(0, 0, w, h), a = d.data
-    for (let i = 0; i < a.length; i += 4) {
-      const r = a[i], g = a[i + 1], b = a[i + 2]
-      if (b > r + 70 && b > g + 30) { a[i] = b; a[i + 1] = Math.round(g * 0.55); a[i + 2] = Math.round(r * 0.7) }      // il blu diventa rosso
-      else if (r > g + 60 && r > b + 60) { a[i] = Math.round(b * 0.8); a[i + 1] = Math.round(g * 1.1); a[i + 2] = r }  // e il rosso blu
-    }
-    x.putImageData(d, 0, 0)
-    return (this._nem = cv)
+    return (this._nem ||= this.ricolora(img, sx, sy, w, h))
   }
 
   barraCastello(c, x, y, re, lato) {
@@ -212,33 +244,26 @@ export class Campo {
     }
   }
 
-  /* il piazzale della cittadella: un lastricato su cui castello e caserme si toccano, come in una
-     città di Heroes. Si dipinge una volta per misura e si tiene. */
-  piazzale(c) {
-    const S = this.s
-    if (!this._piazzale || this._piazzale.s !== S) {
-      const w = Math.round(280 * S), h = Math.round(136 * S)
-      const cv = document.createElement('canvas'); cv.width = w * this.k; cv.height = h * this.k
-      const x = cv.getContext('2d'); x.scale(this.k, this.k)
-      x.fillStyle = '#7d7466'; x.beginPath(); x.roundRect(0, 0, w, h, 14 * S); x.fill()
-      x.save(); x.beginPath(); x.roundRect(2 * S, 2 * S, w - 4 * S, h - 4 * S, 12 * S); x.clip()
-      const tinte = ['#aaa293', '#b3ab9c', '#a19989', '#bab3a5']
-      for (let j = 0, yy = 2 * S; yy < h; j++, yy += 6 * S)
-        for (let i = 0, xx = (j % 2 ? -3 : 0) * S; xx < w; i++, xx += 7 * S) {
-          x.fillStyle = tinte[(i * 7 + j * 3) % 4]; x.beginPath(); x.roundRect(xx + 0.5 * S, yy + 0.5 * S, 6 * S, 5 * S, 1.5 * S); x.fill()
-        }
-      x.restore()
-      this._piazzale = { s: S, cv, w, h }
-    }
-    const { cv, w, h } = this._piazzale
-    for (const lato of ['io', 'nem']) {
-      const y = lato === 'io' ? this.Y(394) : this.Y(CAMPO.H - 394) - h
-      c.fillStyle = 'rgba(0,0,0,.25)'; c.beginPath(); c.roundRect(this.X(40) + 2, y + 3, w, h, 14 * S); c.fill()
-      c.drawImage(cv, this.X(40), y, w, h)
-    }
+  /* i posti delle caserme: una base stabile sempre in vista, la piazzola del castello a torri.
+     Vuota aspetta la caserma, e quando la caserma crolla resta lì. */
+  piazzole(c, p) {
+    const sc = SCENE[this.vestito], img = immagineScena(this.vestito)
+    for (const lato of ['io', 'nem']) POSTI.forEach(([px, py], i) => {
+      // dipinte: la piazzola vuota del foglio, o il rudere della caserma crollata lì
+      if (this.caserme) {
+        if (p.caserme.some(cs => cs.lato === lato && cs.posto === i)) return
+        const rovina = this.rovine.get(`${lato}:${i}`)
+        if (this.dipinta(c, rovina ? `${rovina}:rudere` : 'vuota', this.X(px), this.piede(lato, py), this.me(70), lato)) return
+      }
+      const [sx, sy, w, h] = sc['piazzola:' + (i % 2)]
+      const lw = this.me(70), lh = lw * h / w
+      const y = this.Y(lato === 'io' ? py : CAMPO.H - py) + this.me(9)
+      this.ombra(c, this.X(px) + 2, y + lh * 0.42, lw * 0.5, lh * 0.14, 0.25)
+      c.drawImage(img, sx, sy, w, h, this.X(px) - lw / 2, y - lh / 2, lw, lh)
+    })
   }
 
-  /* una caserma: l'edificio della sua truppa (scena/edifici.js), che spunta dal piazzale quando
+  /* una caserma: l'edificio della sua truppa (scena/edifici.js), che spunta dalla sua piazzola quando
      nasce; sopra lo stemma della truppa, sotto il livello */
   caserma(c, p, cs, ora) {
     if (!this.nate.has(cs)) this.nate.set(cs, p.t < 1 ? -99 : ora)
@@ -251,11 +276,21 @@ export class Campo {
       c.fillStyle = `rgba(230,215,180,${0.7 * (1 - q)})`
       for (let i = 0; i < 6; i++) { const a = i * 1.05; c.beginPath(); c.arc(x + Math.cos(a) * this.me(14 + 18 * q), y + Math.sin(a) * this.me(4 + 6 * q), this.me(8) * (1 - q * 0.6), 0, 7); c.fill() }
     }
-    this.ombra(c, x + u(3), y + u(1), u(28), u(5), 0.3)
+    const stadio = cs.liv >= 5 ? 2 : 1
+    const piede = this.piede(cs.lato, cs.lato === 'io' ? cs.y : CAMPO.H - cs.y)
     c.save()
     if (cs.fl > 0) c.globalAlpha = 0.7
-    const alto = disegnaEdificio(c, { ed: cs.ed, id: cs.id, stadio: cs.liv >= 5 ? 2 : 1, x, y, u, col, scuro, ora })
+    // dipinta se c'è il pezzo (strumenti/sprite/caserme-arena.py), se no disegnata in codice
+    const alta = this.dipinta(c, `${cs.ed}:${cs.id}:${stadio}`, x, piede, this.me(70), cs.lato, k)
+    if (!alta) this.ombra(c, x + u(3), y + u(1), u(28), u(5), 0.3)
+    const alto = alta ? 0 : disegnaEdificio(c, { ed: cs.ed, id: cs.id, stadio, x, y, u, col, scuro, ora })
     c.restore()
+    if (alta) {
+      this.livello(c, x, piede + this.mi(4), cs.liv, cs.lato)
+      if (cs.hp < cs.max) this.barra(c, x, piede - alta - this.me(6), this.me(40), cs.hp / cs.max)
+      if (cs.riposo > 0) { c.font = `${this.me(13)}px "Emoji Gioco", system-ui, sans-serif`; c.textAlign = 'center'; c.fillText('💤', x - this.me(30), piede - alta * 0.6) }
+      return
+    }
     // lo stemma: la truppa ferma, su uno scudo tondo davanti
     if (k > 0.6) {
       c.fillStyle = 'rgba(255,255,255,.95)'; c.beginPath(); c.arc(x + u(20), y - u(14), u(6.5), 0, 7); c.fill()

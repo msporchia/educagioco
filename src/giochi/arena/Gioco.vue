@@ -8,22 +8,23 @@
 import { ref, shallowRef, computed, onMounted, onUnmounted } from 'vue'
 import Barra from '../../components/Barra.vue'
 import { suono } from '../../audio.js'
-import { segna } from '../../store/profile.js'
+import { segna, state, etaDelBambino } from '../../store/profile.js'
 import { borsa } from '../../store/varieta.js'   // paga e dice se il salvadanaio è stanco
 import { PAGA } from '../../data/paghe.js'
-import { progresso, aperta, adesso, stelleDi, completa, sosta, salvaSosta, buttaSosta } from '../campagne.js'
+import { progresso, aperta, adesso, stelleDi, completa, sosta, salvaSosta, buttaSosta, ritocca } from '../campagne.js'
 import { usaPausa } from '../pausa.js'
 import VeloPausa from '../VeloPausa.vue'
 import Domanda from '../../quiz/Domanda.vue'
 import { Giostra } from './scena/giostra.js'
 
 import { CAMPAGNA, SCALINI, QUANTE_TAPPE, tappeDelloScalino, scalinoDi, operazioniDi, operazionePer, stellePer, sfidaDi } from './dati/campagna.js'
-import { TRUPPE, EDIFICI, EDIFICIO_DI, AZIONI, LIV_MAX, MINIERA_MAX, BOMBA } from './dati/regole.js'
+import { TRUPPE, EDIFICI, EDIFICIO_DI, AZIONI, LIV_MAX, MINIERA_MAX, BOMBA, CALCOLANDO } from './dati/regole.js'
 import { Partita } from './motore/partita.js'
 import { scrivi, leggi, dice } from './motore/sosta.js'
 import { Campo } from './scena/campo.js'
 import { dettaglioTruppa, dettaglioAzione, ruoloDi } from './motore/dettagli.js'
 import { domandaDi } from './domande.js'
+import { basi, gradoDi, dopoLaRisposta } from './bravura.js'
 
 import Mappa from './viste/Mappa.vue'
 import CampoVista from './viste/Campo.vue'
@@ -36,7 +37,6 @@ defineOptions({ name: 'CastleBattle' })
 const emit = defineEmits(['vai'])
 
 const CHIAVE = 'arena'
-const TEMPO_DOMANDA = 0.25    // la velocità del campo mentre si calcola: rallenta, non si ferma
 const RESPIRO = 900           // quanto si guarda il campo dopo l'ultima mossa, prima del cartello
 
 let borsellino = borsa(CHIAVE)   // le monete vere di questa partita, un calcolo giusto alla volta
@@ -163,7 +163,7 @@ function passo(dt) {
   const p = partita.value
   if (!p) return
   ora += dt
-  const scala = fermo.value || p.fine ? 0 : domanda.value ? TEMPO_DOMANDA : 1
+  const scala = fermo.value || p.fine ? 0 : domanda.value ? CALCOLANDO : 1
   if (scala) {
     p.avanza(dt * scala)
     daSalvare += dt
@@ -202,12 +202,12 @@ function costruisciPannello(p) {
       const riposo = Math.max(0, c.riposo)
       return { ed, id: c.id, nome: TRUPPE[c.id].nome, presente: true, liv: c.liv, prezzo, varianti: ammesse,
                puoi: prezzo !== null && p.lati.io.monete >= prezzo && riposo <= 0,
-               riposo, avanza: Math.max(0, Math.min(1, 1 - c.t / c.ciclo)) }
+               riposo }
     }
     const prezzi = ammesse.map(id => p.prezzo('io', 'costruisci', id)).filter(x => x !== null)
     const prezzo = prezzi.length ? Math.min(...prezzi) : null
     return { ed, id: null, nome: EDIFICI[ed].nome, presente: false, liv: p.lati.io.livelli[ed] || 0, prezzo, varianti: ammesse,
-             puoi: prezzo !== null && p.lati.io.monete >= prezzo, riposo: 0, avanza: 0 }
+             puoi: prezzo !== null && p.lati.io.monete >= prezzo, riposo: 0 }
   })
   const azioni = ['miniera', 'ripara', 'castello', 'bomba'].map(a => {
     const prezzo = p.prezzo('io', a)
@@ -244,11 +244,9 @@ function prendiTela(tela) {
 function ridimensiona() { campo?.adatta() }
 
 /* i dettagli: com'è adesso, com'è al livello dopo, quanto costa. Il campo sta fermo. */
-const NOME_CALCOLO = { '+': 'una somma', '−': 'una sottrazione', '×': 'una moltiplicazione', '÷': 'una divisione' }
 function apriDettagli({ id, azione }) {
   const p = partita.value
   if (!p || domanda.value || finale.value) return
-  const ammesse = operazioniDi(tappa.value)
   let d, scheda
   if (id) {
     const k = TRUPPE[id]
@@ -256,20 +254,18 @@ function apriDettagli({ id, azione }) {
     const liv = c ? c.liv : p.lati.io.livelli[EDIFICIO_DI[id]] || 0
     const det = dettaglioTruppa(id, liv, { costruire: !c })
     const az = c ? 'potenzia' : 'costruisci'
-    const cal = p.calcoloDi('io', az, id)
     d = { azione: az, id }
     scheda = { truppa: id, titolo: k.nome, nota: k.nota, ruolo: ruoloDi(id), livello: liv, sottotitolo: EDIFICI[EDIFICIO_DI[id]].nome,
-               ...det, calcolo: NOME_CALCOLO[operazionePer(cal.op, ammesse)],
+               ...det,
                verbo: c ? '⬆️ Potenzia' : '🛖 Costruisci',
                puoi: p.puoFare('io', az, id) && !p.inRiposo('io', id),
                motivo: p.inRiposo('io', id) ? 'la caserma riposa ancora un po\'' : 'servono più monete',
                fine: 'È già al livello massimo.' }
   } else {
     const det = dettaglioAzione(azione, { miniera: p.lati.io.miniera, castello: p.castello('io').liv })
-    const cal = p.calcoloDi('io', azione)
     d = { azione }
     scheda = { titolo: AZIONI[azione].nome, nota: AZIONI[azione].nota, ruolo: [], sottotitolo: azione === 'bomba' ? 'in regalo' : '', icona: { miniera: '⛏️', ripara: '🔧', bomba: '💣' }[azione],
-               castello: azione === 'castello', ...det, calcolo: NOME_CALCOLO[operazionePer(cal.op, ammesse)],
+               castello: azione === 'castello', ...det,
                verbo: azione === 'ripara' ? '🔧 Ripara' : azione === 'bomba' ? '💥 Lancia' : '⬆️ Potenzia',
                puoi: p.puoFare('io', azione),
                motivo: azione === 'bomba' ? (p.lati.io.bombe ? 'non ci sono truppe nemiche da colpire' : `la prossima arriva fra ${Math.ceil(p.lati.io.bombaT)} secondi`)
@@ -287,11 +283,10 @@ function procediDaiDettagli() {
   if (d) scegli(d.scelta)
 }
 
-/* un edificio da costruire: le sue due truppe una accanto all'altra, coi prezzi e il calcolo */
+/* un edificio da costruire: le sue due truppe una accanto all'altra, coi prezzi */
 function apriScelta({ ed }) {
   const p = partita.value
   if (!p || domanda.value || finale.value || p.fine) return
-  const ammesse = operazioniDi(tappa.value)
   const livello = p.lati.io.livelli[ed] || 0
   scelta.value = {
     ed, nome: EDIFICI[ed].nome, livello,
@@ -299,8 +294,7 @@ function apriScelta({ ed }) {
       const ammessa = tappa.value.truppe.includes(id)
       const prezzo = TRUPPE[id].costo
       return { id, nome: TRUPPE[id].nome, nota: TRUPPE[id].nota, ruolo: ruoloDi(id).slice(0, 2), prezzo, ammessa,
-               puoi: ammessa && p.puoFare('io', 'costruisci', id),
-               calcolo: NOME_CALCOLO[operazionePer(TRUPPE[id].op, ammesse)] }
+               puoi: ammessa && p.puoFare('io', 'costruisci', id) }
     }),
   }
   toccato.value = true
@@ -316,20 +310,28 @@ function scegli({ azione, id }) {
   const p = partita.value
   if (!p || fermo.value || domanda.value || p.fine) return
   if (!p.puoFare('io', azione, id) || (id && p.inRiposo('io', id))) return
-  const { op, peso } = p.calcoloDi('io', azione, id)
-  voluta = { azione, id }
+  const cal = p.calcoloDi('io', azione, id)
+  const op = operazionePer(cal.op, operazioniDi(tappa.value))
+  voluta = { azione, id, op }
   toccato.value = true
-  domanda.value = domandaDi(operazionePer(op, operazioniDi(tappa.value)), peso)
+  domanda.value = domandaDi(op, gradoDi(laBase(op), cal.peso))
   suono.ok()
 }
 
-function risposto({ giusto, saltata }) {
+/* la base del bambino per un'operazione: la sua, o da dove parte la prima volta (bravura.js) */
+const laBase = op => basi(progresso(CHIAVE).bravura, { eta: etaDelBambino(), items: state.profile.items })[op]
+
+function risposto({ giusto, saltata, tempo }) {
   const p = partita.value
   const v = voluta
   domanda.value = null
   voluta = null
   togli()
   if (!p || !v) return
+  if (!saltata) {
+    const nuova = dopoLaRisposta(laBase(v.op), { giusto, tempo })
+    ritocca(CHIAVE, c => { c.bravura = { ...(c.bravura || {}), [v.op]: nuova } })
+  }
   if (giusto) {
     if (p.fai('io', v.azione, v.id)) {
       // il tasto «salta» dei grandi dà la scelta ma non paga e non conta (docs/core/comandi.md)

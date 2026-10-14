@@ -6,9 +6,9 @@ import { domandaPerGioco } from '../../quiz/scelta.js'
 
 const TIPO = { '+': 'somma', '−': 'differenza', '×': 'prodotto', '÷': 'quoziente' }
 
-/* `op` è l'operazione (+ − × ÷), `peso` la grandezza da 1 a 10 che dice il
-   motore di gioco. Torna quello che Domanda.vue si aspetta
-   ({ domanda, pittori, modulo, nome, icona }). */
-export function domandaDi(op, peso) {
-  return domandaPerGioco({ moduli: ['conti'], tipi: [TIPO[op] || 'somma'], grado: Math.max(1, Math.min(10, Math.round(peso))) })
+/* `op` è l'operazione (+ − × ÷), `grado` quello del modulo, già fatto da
+   `bravura.js` (la base del bambino più il peso della scelta). Torna quello che
+   Domanda.vue si aspetta ({ domanda, pittori, modulo, nome, icona }). */
+export function domandaDi(op, grado) {
+  return domandaPerGioco({ moduli: ['conti'], tipi: [TIPO[op] || 'somma'], grado })
 }

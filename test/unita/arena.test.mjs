@@ -16,6 +16,9 @@ import { guastiDeiDettagli, dettaglioTruppa, dettaglioAzione, ruoloDi } from '..
 import { guastiDelleFigure } from '../../src/giochi/arena/scena/figure.js'
 import manifesto from '../../src/giochi/arena/gioco.js'
 import { guastiDellAlbo } from '../../src/giochi/albo.js'
+import { GRADO_A_MENTE, PARTENZA_MAX, partenza, basi, gradoDi, dopoLaRisposta, gradoDelleTabelline, gradoDellEta }
+  from '../../src/giochi/arena/bravura.js'
+import { calcoliTabellina } from '../../src/data/tabelline.js'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 
 /* ══════════ 1. i dati ══════════ */
@@ -43,7 +46,7 @@ controlla('stesso seme, stessa partita', JSON.stringify(uguali) === JSON.stringi
   const cripta = p.casermeDi('io')[0]
   uguale('la cripta fa opliti', `${cripta.ed}/${cripta.id}`, 'cripta/guardiano')
   controlla('un edificio è uno solo: con gli opliti non si costruiscono anche gli arcieri', p.prezzo('io', 'costruisci', 'scheletri') === null)
-  controlla('sta sulla metà del giocatore, attaccata al castello', cripta.y > CAMPO.fiume.basso && Math.abs(cripta.y - p.castello('io').y) < 60)
+  controlla('sta su uno dei posti fissi, fra la porta del ponte e il castello', cripta.y > p.muro('io').y && cripta.y < p.castello('io').y)
   controlla('l\'altro edificio si costruisce', p.fai('io', 'costruisci', 'lupi'))
   const tana = p.casermeDi('io').find(c => c.ed === 'tana')
   const sopra = new Partita({ rnd: caso(1) })
@@ -98,6 +101,7 @@ controlla('stesso seme, stessa partita', JSON.stringify(uguali) === JSON.stringi
   // il muro ferma chi cammina e non chi vola
   const m = new Partita({ rnd: caso(5) })
   m.caserme = []
+  m.muoviCastello = () => {}          // qui conta il muro: il castello ad area spazzerebbe i pipistrelli prima
   m.schiera('nem', 'lupi', 180, 230)
   m.schiera('nem', 'pipistrelli', 180, 230)
   m.avanza(4)
@@ -265,7 +269,7 @@ controlla('stesso seme, stessa partita', JSON.stringify(uguali) === JSON.stringi
   controlla('al livello massimo non c\'è un «dopo» e non c\'è prezzo', dettaglioTruppa('lupi', 10).prezzo === null && dettaglioTruppa('lupi', 10).righe.every(r => r.dopo === null))
   controlla('il golem dice che ignora le truppe e il drago che vola', ruoloDi('golem')[0].includes('costruzioni') && ruoloDi('drago')[1].includes('vola'))
   const m = dettaglioAzione('miniera', { miniera: 1 })
-  controlla('la miniera al livello dopo rende di più (+50%)', m.righe[1].ora === '×1' && m.righe[1].dopo === '×1,5')
+  controlla('la miniera al livello dopo rende di più (+70%)', m.righe[1].ora === '×1' && m.righe[1].dopo === '×1,7')
   controlla('e costa quanto dice il motore', m.prezzo === new Partita({ rnd: caso(1) }).prezzo('io', 'miniera'))
 }
 
@@ -273,5 +277,25 @@ controlla('stesso seme, stessa partita', JSON.stringify(uguali) === JSON.stringi
 controlla('la taratura è fresca: se questo è rosso, rilancia `npm run tara:arena`',
           FIRMA === firmaEquilibrio(), `la firma è ${firmaEquilibrio()}, la taratura ha ${FIRMA}`)
 controlla('ogni tappa ha la sua scheda del nemico', CAMPAGNA.every(t => NEMICO[t.chiave] && t.nemico === NEMICO[t.chiave]))
+
+/* ══════════ la base del bambino (bravura.js) ══════════ */
+{
+  const fino7 = {}
+  for (let n = 2; n <= 7; n++) for (const k of calcoliTabellina(n)) fino7[k] = { s: 6 }
+  uguale('chi sa le tabelline fino al 7 parte da «fino al 9»', gradoDelleTabelline(fino7), 5)
+  uguale('chi non è mai passato dagli asteroidi non ha una base dalle tabelline', gradoDelleTabelline({}), 0)
+  controlla('a 8 anni le somme partono più su che a 6', gradoDellEta('+', 8) > gradoDellEta('+', 6), `${gradoDellEta('+', 6)} → ${gradoDellEta('+', 8)}`)
+  uguale('a 6 anni, con le tabelline fino al 7, i prodotti partono dagli asteroidi', partenza('×', { eta: 6, items: fino7 }), 5)
+  uguale('e le divisioni un gradino sotto', partenza('÷', { eta: 6, items: fino7 }), 4)
+  controlla('la partenza non passa mai il suo tetto', ['+', '−', '×', '÷'].every(op => partenza(op, { eta: 12 }) <= PARTENZA_MAX))
+  uguale('una base salvata vince sulla partenza', basi({ '+': 6.4 }, { eta: 6 })['+'], 6.4)
+  uguale('la prima caserma chiede la base', gradoDi(4, 3), 4)
+  uguale('una scelta cara sale di un grado ogni due di peso', gradoDi(4, 7), 6)
+  uguale('ma non oltre il calcolo a mente', gradoDi(6, 10), GRADO_A_MENTE)
+  uguale('tre giusti e svelti fanno un grado', +[1, 2, 3].reduce(b => dopoLaRisposta(b, { giusto: true, tempo: 3 }), 4).toFixed(6), 5)
+  uguale('giusto ma lento non muove', dopoLaRisposta(4, { giusto: true, tempo: 12 }), 4)
+  uguale('sbagliato scende di mezzo grado', dopoLaRisposta(4, { giusto: false, tempo: 3 }), 3.5)
+  uguale('mai sotto il primo grado', dopoLaRisposta(1, { giusto: false, tempo: 3 }), 1)
+}
 
 riassunto('arena (motore)')

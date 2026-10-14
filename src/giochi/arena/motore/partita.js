@@ -135,7 +135,7 @@ export class Partita {
     for (const e of [...this.muri, ...this.caserme]) {
       if (e.fl > 0) e.fl -= dt
       if (!viva(e) && !e.crollato) {
-        this.evento({ tipo: 'crollo', x: e.x, y: e.y, lato: e.lato, che: e.tipo, id: e.id })
+        this.evento({ tipo: 'crollo', x: e.x, y: e.y, lato: e.lato, che: e.tipo, id: e.id, posto: e.posto })
         this.lati[altro(e.lato)].abbattuti++
         if (e.tipo === 'muro') e.crollato = true            // il cumulo resta, e si ricostruisce riparando
       }
@@ -276,8 +276,13 @@ export class Partita {
       if (d < mn && d <= gitt) { mn = d; bers = e }
     }
     if (bers && t.cool <= 0) {
-      this.ferisci(bers, dmg)
-      this.evento({ tipo: 'colpo', da: 'castello', lato: t.lato, x1: t.x, y1: t.y - 12, x2: bers.x, y2: bers.y, scoppio: 0 })
+      const colpo = dmg * (mn <= CASTELLO.difesa ? CASTELLO.vicino : 1)   // sotto casa picchia di più
+      this.ferisci(bers, colpo)
+      for (const e of this.unita) {
+        if (e === bers || e.lato === t.lato || !viva(e)) continue
+        if (Math.hypot(e.x - bers.x, e.y - bers.y) <= CASTELLO.splash) this.ferisci(e, colpo * 0.8)
+      }
+      this.evento({ tipo: 'colpo', da: 'castello', lato: t.lato, x1: t.x, y1: t.y - 12, x2: bers.x, y2: bers.y, scoppio: CASTELLO.splash })
       t.cool = rate
     }
   }

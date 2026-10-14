@@ -2,10 +2,10 @@
 // `precisione` è quante volte il calcolo gli riesce (1 = mai sbagliato, 0.75 =
 // il bambino che ci ragiona, 0.4 = quello che tira a indovinare); `ritmo` è
 // ogni quanti secondi di partita riesce a fare una scelta (la domanda ruba
-// tempo, e il campo va a un quarto di velocità mentre risponde: a 6 secondi
-// veri sono 1,5 di partita). Non bara: legge quello che si vede a schermo.
+// tempo, e il campo va a metà velocità mentre risponde: a 6 secondi veri sono
+// 3 di partita). Non bara: legge quello che si vede a schermo.
 import { Partita } from './partita.js'
-import { TRUPPE, LIV_MAX } from '../dati/regole.js'
+import { TRUPPE, LIV_MAX, CALCOLANDO } from '../dati/regole.js'
 
 /* il caso che non cambia: stesso seme, stessa partita */
 export function caso(seme) {
@@ -21,35 +21,49 @@ export function caso(seme) {
 /* I giocatori finti con cui si tara: `misura` non sbaglia e ragiona in fretta,
    `bambino` sbaglia un conto su quattro e ci pensa il doppio, `lento` ne sbaglia
    quasi metà, `caso` tira a indovinare. Cambiarli rende vecchia la taratura
-   (la firma li include). */
+   (la firma li include). Il ritmo si dice in secondi veri a scelta: il bambino fa il conto a mente in fretta. */
+const inPartita = secondi => secondi * CALCOLANDO
 export const PILOTI = {
-  misura: { precisione: 1, ritmo: 1.5 },
-  bambino: { precisione: 0.75, ritmo: 2.5 },
-  lento: { precisione: 0.55, ritmo: 3.5 },
-  caso: { precisione: 0.25, ritmo: 3.5 },
+  misura: { precisione: 1, ritmo: inPartita(4) },
+  bambino: { precisione: 0.75, ritmo: inPartita(6) },
+  lento: { precisione: 0.55, ritmo: inPartita(9) },
+  caso: { precisione: 0.25, ritmo: inPartita(9) },
+  // come chi costruisce due caserme, le porta al livello 2 e poi sta a guardare: non deve vincere le tappe alte
+  pigro: { precisione: 1, ritmo: inPartita(6), caserme: 2, tetto: 2 },
+  // due strade, a parità di bravura: tutto in truppe subito, o prima la miniera. Si deve poter scegliere
+  rush: { precisione: 1, ritmo: inPartita(6), apertura: 'rush' },
+  economia: { precisione: 1, ritmo: inPartita(6), apertura: 'economia' },
 }
 
 // la fila in cui compra le caserme: prima chi tiene a bada gli altri, poi il resto
 const ORDINE = ['scheletri', 'guardiano', 'pipistrelli', 'lupi', 'negromante', 'diavoletto', 'golem', 'drago']
 
 export class Pilota {
-  constructor({ rnd = Math.random, precisione = 0.9, ritmo = 2.5, caserme = 4 } = {}) {
+  constructor({ rnd = Math.random, precisione = 0.9, ritmo = 2.5, caserme = 4, tetto = 0, apertura = null } = {}) {
     this.rnd = rnd
     this.precisione = precisione
     this.ritmo = ritmo
     this.caserme = caserme          // quante ne tiene prima di mettere tutto nelle salite
+    this.tetto = tetto              // se c'è: le caserme fino a quel livello e poi niente, né castello né miniera
+    this.apertura = apertura        // 'rush': solo caserme, mai castello né miniera; 'economia': la cripta, poi la miniera al 3
     this.attesa = ritmo
     this.giuste = 0
     this.sbagliate = 0
   }
 
   /* decide cosa vorrebbe fare adesso, o null. Il buon senso di un giocatore che
-     ha capito il gioco: tiene in piedi quello che ha, prima il castello (da solo
-     fa metà del lavoro), poi la miniera finché c'è tempo per ripagarsi, poi un
+     ha capito il gioco: tiene in piedi quello che ha, prima due caserme (provato il
+     castello per primo: un giocatore così perdeva contro un nemico che chi costruisce
+     due caserme e sta fermo batte sempre), poi il castello e la miniera, poi un
      esercito misto, poi tutto nelle salite. */
   voglia(p) {
     const mie = p.casermeDi('io')
     const puo = (a, id) => p.puoFare('io', a, id)
+    if (this.tetto) {
+      if (mie.length < this.caserme) { const id = ORDINE.find(i => puo('costruisci', i)); return id ? ['costruisci', id] : null }
+      const c = mie.find(x => x.liv < this.tetto && puo('potenzia', x.id))
+      return c ? ['potenzia', c.id] : null
+    }
     const t = p.castello('io')
 
     // la bomba è un regalo: si usa appena c'è un ammasso che vale la pena spazzare
@@ -60,8 +74,25 @@ export class Pilota {
     const muro = p.muro('io')
     const crollato = !!muro && muro.hp <= 0
     if (crollato && puo('ripara')) return ['ripara']
-    if (t.hp > 0 && t.liv < 3 && puo('castello')) return ['castello']
-    if (p.t < 45 && p.lati.io.miniera < 2 && puo('miniera')) return ['miniera']
+    if (this.apertura === 'rush') {
+      if (mie.length < this.caserme) { const id = ORDINE.find(i => puo('costruisci', i)); if (id) return ['costruisci', id] }
+      const sale = mie.filter(c => c.liv < LIV_MAX && !p.inRiposo('io', c.id))
+      if (!sale.length) return null
+      const c = sale.reduce((a, b) => (b.liv < a.liv ? b : a))
+      return puo('potenzia', c.id) ? ['potenzia', c.id] : null      // risparmia per la più indietro
+    }
+    if (this.apertura === 'economia' && mie.length && p.lati.io.miniera < 3)
+      return puo('miniera') ? ['miniera'] : null                      // risparmia per la miniera
+    if (mie.length < 2) {
+      const id = ORDINE.find(i => puo('costruisci', i))
+      return id ? ['costruisci', id] : null
+    }
+    if (mie.some(c => c.liv < 2)) {
+      const c = mie.find(x => x.liv < 2 && puo('potenzia', x.id) && !p.inRiposo('io', x.id))
+      return c ? ['potenzia', c.id] : null
+    }
+    if (t.hp > 0 && t.liv < 2 && puo('castello')) return ['castello']
+    if (p.t < 60 && p.lati.io.miniera < 2 && puo('miniera')) return ['miniera']
     if (mie.length < this.caserme) {
       const id = ORDINE.find(i => puo('costruisci', i))
       if (id) return ['costruisci', id]

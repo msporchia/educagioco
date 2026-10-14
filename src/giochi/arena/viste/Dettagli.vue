@@ -53,8 +53,6 @@ defineEmits(['chiudi', 'procedi'])
         </section>
       </div>
 
-      <p class="ar-calcolo em">Per farlo si risolve {{ d.calcolo }}.</p>
-
       <button v-if="d.prezzo !== null" class="ar-grosso" :class="{ 'ar-spento': !d.puoi }" data-procedi
               :disabled="!d.puoi" @click="$emit('procedi')">
         <span class="em">{{ d.verbo }}</span> · {{ d.prezzo }} <span class="em">🪙</span>
