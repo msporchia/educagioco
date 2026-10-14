@@ -19,7 +19,7 @@ export function dannoPerRisposta(c, L, risposte = RISPOSTE_DELLO_SCONTRO) {
 }
 
 // quanto vale la roba: il prezzo pieno dei pezzi addosso e nello zaino (le pozioni si contano a parte)
-export const valoreDellaRoba = c => [c.mano, c.mancina, c.corpo, c.dito, ...c.zaino].filter(k => k && COSE[k] && COSE[k].dove).reduce((s, k) => s + c.prezzoDi(k), 0)
+export const valoreDellaRoba = c => [c.mano, c.mancina, c.corpo, c.collo, c.dito, c.dito2, ...c.zaino].filter(k => k && COSE[k] && COSE[k].dove).reduce((s, k) => s + c.prezzoDi(k), 0)
 
 // l'eroe atteso all'ingresso della discesa k (la roba e la crescita della storia), letto con le stesse misure
 const attesi = new Map()
@@ -32,8 +32,8 @@ export function attesoA(eroe, k) {
   return attesi.get(chiave)
 }
 
-// i pezzi addosso (mano, mancina, corpo, dito) e quanto vale tutto, per contare le armi nuove che migliorano davvero l'eroe
-export const addossoDi = c => ({ pezzi: [c.mano, c.mancina, c.corpo, c.dito], punti: c.punteggio() })
+// i pezzi addosso (mano, mancina, corpo, collo, i due anelli) e quanto vale tutto, per contare le armi nuove che migliorano davvero l'eroe
+export const addossoDi = c => ({ pezzi: [c.mano, c.mancina, c.corpo, c.collo, c.dito, c.dito2], punti: c.punteggio() })
 
 // i pezzi entrati addosso fra due letture, se insieme alzano il valore dell'eroe (un pezzo che finisce nello zaino, o che non alza niente, non conta)
 export function nuoviUtili(prima, dopo) {

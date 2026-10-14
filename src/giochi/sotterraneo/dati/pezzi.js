@@ -19,27 +19,27 @@ export const RARITA_DA_LETTERA = Object.fromEntries(Object.entries(RARITA).map((
 // Le abilità dei pezzi: `campo` è quello che il motore somma (Corredo.addosso), `dove` le caselle dove nascono,
 // `valore` quanto vale al livello `L` con la forza `f` della rarità. Il nome: l'aggettivo (maschile e
 // femminile) e il complemento («della volpe»). Parole da sette anni, un po' epiche (docs/sotterraneo/rarita.md)
-const T = ['mano', 'mancina', 'corpo', 'dito']
+const T = ['mano', 'mancina', 'corpo', 'dito', 'collo']
 export const ABILITA_DEI_PEZZI = {
   att: { em: '⚔️', nome: 'Attacco', dove: ['mano', 'mancina'], agg: ['affilato', 'affilata'], di: 'del leone',
          valore: (L, f) => Math.max(1, Math.round((0.5 + L / 10) * f)) },
-  dif: { em: '🛡️', nome: 'Difesa', dove: ['mancina', 'corpo', 'dito'], agg: ['corazzato', 'corazzata'], di: 'della tartaruga',
+  dif: { em: '🛡️', nome: 'Difesa', dove: ['mancina', 'corpo', 'dito', 'collo'], agg: ['corazzato', 'corazzata'], di: 'della tartaruga',
          valore: (L, f) => Math.max(1, Math.round((0.4 + L / 20) * f)) },
   vita: { em: '❤️', nome: 'Vita', dove: T, agg: ['robusto', 'robusta'], di: 'dell\'orso',
           valore: (L, f) => Math.max(2, Math.round((2 + L / 3) * f)) },
   rigenera: { em: '💚', nome: 'Rigenera', dove: T, agg: ['vivo', 'viva'], di: 'del troll',
               valore: (L, f) => Math.max(1, Math.round((0.5 + L / 12) * f)) },
-  fuoco: { em: '🔥', nome: 'Fuoco', dove: ['mano', 'dito'], agg: ['fiammeggiante', 'fiammeggiante'], di: 'del drago',
+  fuoco: { em: '🔥', nome: 'Fuoco', dove: ['mano', 'dito', 'collo'], agg: ['fiammeggiante', 'fiammeggiante'], di: 'del drago',
            valore: (L, f) => Math.max(1, Math.round((0.5 + L / 12) * f)) },
-  schivata: { em: '🌀', nome: 'Schivata', dove: ['mancina', 'corpo', 'dito'], agg: ['leggero', 'leggera'], di: 'della volpe',
+  schivata: { em: '🌀', nome: 'Schivata', dove: ['mancina', 'corpo', 'dito', 'collo'], agg: ['leggero', 'leggera'], di: 'della volpe',
               valore: (L, f) => Math.min(40, Math.round((4 + L / 3) * f)) },
-  gemme: { em: '💎', nome: 'Gemme', dove: ['mano', 'dito'], agg: ['luccicante', 'luccicante'], di: 'della gazza',
+  gemme: { em: '💎', nome: 'Gemme', dove: ['mano', 'dito', 'collo'], agg: ['luccicante', 'luccicante'], di: 'della gazza',
            valore: (L, f) => Math.round((0.1 + L * 0.005) * f * 100) / 100 },
-  fortuna: { em: '🍀', nome: 'Fortuna', dove: ['mano', 'corpo', 'dito'], agg: ['fortunato', 'fortunata'], di: 'del quadrifoglio',
+  fortuna: { em: '🍀', nome: 'Fortuna', dove: ['mano', 'corpo', 'dito', 'collo'], agg: ['fortunato', 'fortunata'], di: 'del quadrifoglio',
              valore: (L, f) => Math.max(1, Math.round((0.5 + L / 12) * f)) },
-  pozioni: { em: '🧪', nome: 'Pozioni', dove: ['corpo', 'dito'], agg: ['incantato', 'incantata'], di: 'della strega',
+  pozioni: { em: '🧪', nome: 'Pozioni', dove: ['corpo', 'dito', 'collo'], agg: ['incantato', 'incantata'], di: 'della strega',
              valore: (L, f) => Math.round((10 + L) * f) },
-  torcia: { em: '⏳', nome: 'Torcia', dove: ['mancina', 'dito'], agg: ['lucente', 'lucente'], di: 'della lucciola',
+  torcia: { em: '⏳', nome: 'Torcia', dove: ['mancina', 'dito', 'collo'], agg: ['lucente', 'lucente'], di: 'della lucciola',
             valore: (L, f) => Math.max(1, Math.round((2 + L / 6) * f)) },
 }
 export const CHIAVI_ABILITA = Object.keys(ABILITA_DEI_PEZZI)

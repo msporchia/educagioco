@@ -4,7 +4,7 @@
 // La discesa (motore/corsa.js) e i mercanti di sopra (motore/bottega.js) la estendono; gira in Node.
 import { TASCHE, TASCHE_EXTRA_MAX, POZIONI_MASSIME, prezzoTasca } from '../dati/mondo.js'
 import { eroeDi, DI_PARTENZA, portaLa, nonLaPorta, FAMIGLIE, requisitoDi, livelloRichiesto } from '../dati/eroi.js'
-import { COSE, STANZE_TORCIA, aLivello, PESO_DELLA_DIFESA } from '../dati/cose.js'
+import { COSE, STANZE_TORCIA, aLivello, PESO_DELLA_DIFESA, CASELLE, CASELLE_DEL_TIPO, tipoDellaCasella } from '../dati/cose.js'
 import { GEMME_PER_FORTUNA, ATT_PER_PUNTO, SCHIVATA_PER_DESTREZZA, ENERGIA_PER_INTELLIGENZA } from '../dati/livelli.js'
 import { rileggiCrescita, piuDellaCrescita, caratteristica, chiTrattiene, puntiDaDare, riassegna, costoDelRiassegnare, trattoDegliElisir,
          ELISIR_MAX } from './crescita.js'
@@ -28,7 +28,8 @@ const PESI = { att: 2, dif: 2 * PESO_DELLA_DIFESA, vita: 0.4, rigenera: 1, fuoco
                luce: 0.6, torcia: 0.2, ricarica: 0.05 }
 // la schivata ha un tetto: oltre, i mostri non toccherebbero più
 export const SCHIVATA_MASSIMA = 60
-const CASELLE = ['mano', 'mancina', 'corpo', 'dito']
+// le caselle che non sono le mani: danno solo quello che hanno addosso (difesa, vita, abilità)
+const DEL_CORPO = ['corpo', 'collo', 'dito', 'dito2']
 
 // Le pozioni dello stesso tipo stanno nella stessa tasca (l'utente, 9 ottobre): «Pozione ×3» è un posto solo. Lo zaino resta
 // una lista di chiavi, una per pezzo; i posti si contano e si mostrano raggruppando. Solo le pozioni (le torce non vanno in
@@ -50,7 +51,7 @@ export const eCura = k => !!(COSE[k] && COSE[k].usa === 'cura')
 export const curePerTipo = zaino => tascheDello(zaino).filter(t => eCura(t.k))
 
 export const ROBA_VUOTA = () => ({
-  v: VERSIONE_ROBA, gemme: 0, zaino: [], mano: null, mancina: null, corpo: null, dito: null,
+  v: VERSIONE_ROBA, gemme: 0, zaino: [], mano: null, mancina: null, corpo: null, collo: null, dito: null, dito2: null,
   torcia: 0, torce: 0,
 })
 
@@ -59,19 +60,38 @@ export function rileggiRoba(dato) {
   if (!dato || typeof dato !== 'object' || dato.v !== VERSIONE_ROBA) return null
   const vera = k => (typeof k === 'string' && COSE[k] ? k : null)
   const numero = n => (Number.isFinite(n) && n > 0 ? Math.floor(n) : 0)
-  return {
+  const roba = {
     v: VERSIONE_ROBA,
     gemme: numero(dato.gemme),
-    zaino: (Array.isArray(dato.zaino) ? dato.zaino : []).filter(k => COSE[k]).slice(0, 64),
-    mano: vera(dato.mano), mancina: vera(dato.mancina), corpo: vera(dato.corpo), dito: vera(dato.dito),
+    zaino: (Array.isArray(dato.zaino) ? dato.zaino : []).filter(k => COSE[k]),
+    mano: vera(dato.mano), mancina: vera(dato.mancina), corpo: vera(dato.corpo),
+    collo: vera(dato.collo), dito: vera(dato.dito), dito2: vera(dato.dito2),
     torcia: numero(dato.torcia), torce: numero(dato.torce),
   }
+  return sistemaIGioielli(roba)
+}
+
+// Prima c'era un posto solo, `dito`, per anelli e amuleti insieme: un gioiello nel posto sbagliato va nel suo (un amuleto al collo, un
+// anello al primo dito libero), e se il suo posto è occupato torna in tasca. Niente si perde (docs/sotterraneo/roba.md)
+function sistemaIGioielli(r) {
+  const fuori = []
+  for (const d of ['collo', 'dito', 'dito2']) {
+    const k = r[d]
+    if (k && COSE[k].dove !== tipoDellaCasella(d)) { fuori.push(k); r[d] = null }
+  }
+  for (const k of fuori) {
+    const libero = (CASELLE_DEL_TIPO[COSE[k].dove] || []).find(d => !r[d])
+    if (libero) r[libero] = k
+    else r.zaino.push(k)
+  }
+  r.zaino = r.zaino.slice(0, 64)
+  return r
 }
 
 // I numeri di chi scende con la roba addosso, per le carte che lo mostrano fuori dalla discesa (la scelta delle
 // avventure, la carta sulla terra di sopra): sono quelli che userà la Corsa, calcolati dallo stesso Corredo, e
 // per una roba vuota restano quelli di base dell'eroe (docs/sotterraneo/avventure.md). `mano`, `mancina`,
-// `corpo` e `dito` sono le chiavi di quello che c'è addosso adesso, dopo aver messo da parte quello che la classe non porta
+// `corpo`, `collo`, `dito` e `dito2` sono le chiavi di quello che c'è addosso adesso, dopo aver messo da parte quello che la classe non porta
 export function schedaConLaRoba(eroe, roba = null, crescita = null) {
   const c = new Corredo({ eroe, roba, crescita })
   c.sistemaIlCorredo()
@@ -83,7 +103,7 @@ export function schedaConLaRoba(eroe, roba = null, crescita = null) {
   if (elisir) tratti.push(elisir)
   return {
     vita: c.vitaConLaRoba, att: c.att, dif: c.dif, gemme: c.gemme, tasche: c.postiUsati(), capienza: c.capienza,
-    mano: c.mano, mancina: c.mancina, corpo: c.corpo, dito: c.dito, tratti, livello: c.livelloEroe, energiaMax: c.energiaMax,
+    mano: c.mano, mancina: c.mancina, corpo: c.corpo, collo: c.collo, dito: c.dito, dito2: c.dito2, tratti, livello: c.livelloEroe, energiaMax: c.energiaMax,
   }
 }
 
@@ -101,7 +121,9 @@ export class Corredo {
     this.mano = null
     this.mancina = null   // seconda arma leggera, o l'ombra di una a due mani (vedi `mani` in dati/cose.js)
     this.corpo = null
-    this.dito = null
+    this.collo = null     // la collana: un posto solo
+    this.dito = null      // gli anelli: due posti, `dito` e `dito2`
+    this.dito2 = null
     // `torciaResta`: stanze davanti alla torcia accesa (0 = spenta). `torceInScorta`: quante aspettano alla cintura
     this.torciaResta = 0
     this.torceInScorta = 0
@@ -113,7 +135,7 @@ export class Corredo {
   get roba() {
     return {
       v: VERSIONE_ROBA, gemme: this.gemme, zaino: [...this.zaino],
-      mano: this.mano, mancina: this.mancina, corpo: this.corpo, dito: this.dito,
+      mano: this.mano, mancina: this.mancina, corpo: this.corpo, collo: this.collo, dito: this.dito, dito2: this.dito2,
       torcia: this.torciaResta, torce: this.torceInScorta,
     }
   }
@@ -125,7 +147,9 @@ export class Corredo {
     this.mano = r.mano
     this.mancina = r.mancina
     this.corpo = r.corpo
+    this.collo = r.collo
     this.dito = r.dito
+    this.dito2 = r.dito2
     this.torciaResta = r.torcia
     this.torceInScorta = r.torce
   }
@@ -171,7 +195,7 @@ export class Corredo {
     if (nodo.car && arma.famiglie) {
       const k = [this.mano, this.mancina].find(x => x && COSE[x] && arma.famiglie.includes(COSE[x].famiglia))
       if (k) {
-        const addosso = [this.corpo, this.dito].reduce((n, x) => n + (x && COSE[x] ? COSE[x].att || 0 : 0), 0)
+        const addosso = DEL_CORPO.reduce((n, d) => n + (this[d] && COSE[this[d]] ? COSE[this[d]].att || 0 : 0), 0)
         return this.io.att + this.piu.sopra[nodo.car] * ATT_PER_PUNTO + COSE[k].att + addosso
       }
     }
@@ -179,7 +203,7 @@ export class Corredo {
     const buona = k => k && COSE[k] && arma.famiglie.includes(COSE[k].famiglia)
     if (buona(this.mano) || !buona(this.mancina)) return this.att
     const car = FAMIGLIE[COSE[this.mancina].famiglia].car
-    const addosso = [this.corpo, this.dito].reduce((n, k) => n + (k && COSE[k] ? COSE[k].att || 0 : 0), 0)
+    const addosso = DEL_CORPO.reduce((n, d) => n + (this[d] && COSE[this[d]] ? COSE[this[d]].att || 0 : 0), 0)
     return this.io.att + this.piu.sopra[car] * ATT_PER_PUNTO + COSE[this.mancina].att + addosso
   }
   get dif() { return this.io.dif + this.piu.dif + this.addosso('dif') }
@@ -338,7 +362,7 @@ export class Corredo {
 
   addosso(campo) {
     let n = 0
-    for (const k of [this.mano, this.corpo, this.dito])
+    for (const k of [this.mano, ...DEL_CORPO.map(d => this[d])])
       if (k && COSE[k]) n += COSE[k][campo] || 0
     // la seconda arma vale piena per tutto il resto (la luce illumina uguale in qualunque mano), metà solo per il braccio
     if (this.mancina && COSE[this.mancina])
@@ -361,7 +385,7 @@ export class Corredo {
     const r = this.requisito(k)
     return !r || r.ha >= r.serve
   }
-  indossato(k) { return this.mano === k || this.mancina === k || this.corpo === k || this.dito === k }
+  indossato(k) { return this.mano === k || this.mancina === k || DEL_CORPO.some(d => this[d] === k) }
   livelloBasta(k) { return this.livelloLibero || this.livelloEroe >= livelloRichiesto(COSE[k]) || this.indossato(k) }
   posso(k) { return this.reggo(k) && this.livelloBasta(k) }
   // il livello più alto, fino a L, a cui l'eroe impugna il pezzo `k`: il mercante e la storia propongono quello, non
@@ -397,18 +421,30 @@ export class Corredo {
     this.avvisi.push({ cosa: k, testo: c.nome + coda })
   }
 
-  casella(dove) {
-    if (dove === 'mano') return this.mano
-    if (dove === 'mancina') return this.mancina
-    if (dove === 'corpo') return this.corpo
-    return this.dito
-  }
+  casella(dove) { return CASELLE.includes(dove) ? this[dove] : null }
+  metti(dove, k) { if (CASELLE.includes(dove)) this[dove] = k }
 
-  metti(dove, k) {
-    if (dove === 'mano') this.mano = k
-    else if (dove === 'mancina') this.mancina = k
-    else if (dove === 'corpo') this.corpo = k
-    else this.dito = k
+  // dove va un gioiello: la prima casella libera del suo tipo; se sono piene tutte, quella dove il pezzo vecchio rende meno
+  // (docs/sotterraneo/roba.md, «Due anelli e una collana»). Gli altri pezzi hanno una casella sola (le armi: postoDellArma)
+  postoDelGioiello(k) {
+    const posti = CASELLE_DEL_TIPO[COSE[k].dove]
+    const libero = posti.find(d => !this.casella(d))
+    if (libero || posti.length === 1) return libero || posti[0]
+    let scelto = posti[0], tenuto = -Infinity
+    for (const d of posti) {
+      const prova = this.copia()
+      prova.metti(d, k)
+      const p = prova.punteggio()
+      if (p > tenuto) { tenuto = p; scelto = d }
+    }
+    return scelto
+  }
+  // c'è una casella libera per un pezzo di questo tipo (un anello ne ha due)?
+  postoLibero(dove) { return (CASELLE_DEL_TIPO[dove] || [dove]).some(d => !this.casella(d)) }
+  // la casella dove va un pezzo: per le armi la sistemazione migliore, per i gioielli il posto libero o quello che rende meno
+  postoDi(k) {
+    const dove = COSE[k].dove
+    return dove === 'mano' ? this.postoDellArma(k).dove : dove === 'dito' || dove === 'collo' ? this.postoDelGioiello(k) : dove
   }
 
   // dove va una cosa che non trova posto in tasca: nella discesa per terra (Corsa), qui in tasca comunque —
@@ -443,7 +479,7 @@ export class Corredo {
 
   // un salvataggio vecchio, o la roba di prima delle avventure, può avere addosso cose che la classe non porta
   sistemaIlCorredo() {
-    for (const dove of ['mano', 'mancina', 'corpo', 'dito']) {
+    for (const dove of CASELLE) {
       const k = this.casella(dove)
       if (!k || this.posso(k)) continue
       this.metti(dove, null)
@@ -493,7 +529,7 @@ export class Corredo {
     const c = COSE[k]
     if (!c || !c.dove) return null
     // le armi hanno due caselle: il confronto è col totale delle mani, non "uguale a quella che hai"
-    const dove = c.dove === 'mano' ? this.postoDellArma(k).dove : c.dove
+    const dove = this.postoDi(k)
     const campo = c.dove === 'mano' ? 'att' : c.dove === 'corpo' || c.dove === 'mancina' ? 'dif' : 'dono'
     const prova = this.copia()
     prova.metti(dove, k)
@@ -512,12 +548,13 @@ export class Corredo {
   // all'eroe, abilità per abilità, le caselle toccate prima e dopo (la mano debole vale metà braccio)
   // `ancora`: anche un pezzo che l'eroe porta ma non regge ancora (gli manca la caratteristica): il confronto di quello
   // che sarà, con `ancora: true` nel risultato
-  seLoMetto(k, { ancora = false } = {}) {
+  // `dove`: la casella scelta a mano, per un anello che ha due posti
+  seLoMetto(k, { ancora = false, dove: voluta = null } = {}) {
     const c = COSE[k]
     if (!c || !c.dove || !(this.posso(k) || (ancora && this.porta(k)))) return null
     if (c.dove === 'mancina' && this.aDueMani(this.mano)) return { dove: 'mancina', bloccata: this.mano }
     const prova = this.copia()
-    const dove = c.dove === 'mano' ? prova.postoDellArma(k).dove : c.dove
+    const dove = voluta && tipoDellaCasella(voluta) === c.dove ? voluta : prova.postoDi(k)
     const fuori = prova.casella(dove)
     prova.metti(dove, k)
     prova.sistemaLeMani()
@@ -535,6 +572,9 @@ export class Corredo {
       prima: numeri(this, tetto),
       dopo: numeri(prova, tetto + prova.addosso('vita') - this.addosso('vita')),
       cambio: this.cambioCon(prova, dove),
+      // un anello con tutte e due le dita piene: cosa succede mettendolo sull'altro (il pannello offre di scambiare)
+      ...(!voluta && c.dove === 'dito' && this.dito && this.dito2 && fuori !== k
+        ? { altro: this.seLoMetto(k, { ancora, dove: dove === 'dito' ? 'dito2' : 'dito' }) } : {}),
     }
   }
 
@@ -566,7 +606,7 @@ export class Corredo {
     const conf = this.confronto(k)
     if (!conf.addosso) return true
     // fra due gioielli non c'è un più forte: è una scelta, e la fa chi gioca
-    return c.dove !== 'dito' && conf.meglio > 0
+    return c.dove !== 'dito' && c.dove !== 'collo' && conf.meglio > 0
   }
 
   // la torcia non va in tasca: la prima si accende, le altre aspettano alla cintura senza tetto (docs/sotterraneo/roba.md)
@@ -587,8 +627,7 @@ export class Corredo {
 
   // ce l'ho già? Addosso o in tasca è lo stesso: una seconda spada uguale non serve. Pozioni fanno eccezione
   possiedo(k) {
-    return this.mano === k || this.mancina === k || this.corpo === k ||
-           this.dito === k || this.zaino.includes(k)
+    return this.mano === k || this.mancina === k || DEL_CORPO.some(d => this[d] === k) || this.zaino.includes(k)
   }
 
   quanteNeHo(k) {
@@ -596,7 +635,7 @@ export class Corredo {
     if (COSE[k] && COSE[k].usa === 'luce')
       return (this.torciaAccesa ? 1 : 0) + this.torceInScorta
     return this.zaino.filter(x => x === k).length +
-           (this.mano === k || this.corpo === k || this.dito === k ? 1 : 0)
+           (this.mano === k ? 1 : 0) + DEL_CORPO.filter(d => this[d] === k).length
   }
 
   // a metà prezzo: comprare e rivendere è una perdita, non un modo di fare gemme girando in tondo (docs/sotterraneo/roba.md)
@@ -662,7 +701,7 @@ export class Corredo {
 
   // dalla tasca addosso, nello zaino di sotto e in quello di sopra: quello che si aveva addosso torna in tasca, non
   // sparisce; per un'arma il posto lo sceglie `postoDellArma`. Torna null se la tasca non tiene niente da mettersi
-  indossaDallaTasca(i) {
+  indossaDallaTasca(i, voluta = null) {
     const k = this.zaino[i]
     const c = COSE[k]
     if (!c || !c.dove) return null
@@ -672,7 +711,8 @@ export class Corredo {
       this.dillo(`✋ ${COSE[this.mano].nome} vuole tutte e due le mani`)
       return { che: 'niente' }
     }
-    const dove = c.dove === 'mano' ? this.postoDellArma(k).dove : c.dove
+    // un anello con le due dita piene: `voluta` è il dito scelto, se no quello che rende meno
+    const dove = voluta && tipoDellaCasella(voluta) === c.dove ? voluta : this.postoDi(k)
     const vecchio = this.casella(dove)
     this.metti(dove, k)
     this.zaino.splice(i, 1)

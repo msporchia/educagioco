@@ -222,7 +222,7 @@ function azzera(nome, sot) {
   const inDiscesa = (eroe, roba) => new Corsa(CAMPAGNA[1], { seme: 5, rnd: seminato(5), eroe, roba })
   const casi = [
     ['cavaliere con spadone, corazza e amuleto rosso', 'cavaliere',
-     { mano: 'spadone', corpo: 'corazza', dito: 'amuleto-rosso', gemme: 12 }],
+     { mano: 'spadone', corpo: 'corazza', collo: 'amuleto-rosso', gemme: 12 }],
     ['cavaliere col pugnale vampiro, lo scudo del leone e il panciotto', 'cavaliere',
      { mano: 'pugnale-vampiro', mancina: 'scudo-leone', corpo: 'panciotto' }],
     ['nano con la bipenne e lo scudo di ferro (a due mani: lo scudo non si regge)', 'nano',
@@ -239,7 +239,7 @@ function azzera(nome, sot) {
     uguale(`${nome}: lo scudo anche`, n.mancina, c.mancina)
   }
   // i numeri a mano, perché «uguali alla discesa» non dice che siano più dei numeri di base
-  const cav = schedaConLaRoba('cavaliere', fatta('cavaliere', { mano: 'spadone', corpo: 'corazza', dito: 'amuleto-rosso' }))
+  const cav = schedaConLaRoba('cavaliere', fatta('cavaliere', { mano: 'spadone', corpo: 'corazza', collo: 'amuleto-rosso' }))
   stessaLista('cavaliere ben armato: 24 di vita, il braccio e lo spadone, difesa 3',
               [cav.vita, cav.att, cav.dif], [18 + 6, 3 + COSE.spadone.att, 1 + 2])
   const mago = schedaConLaRoba('mago', fatta('mago', { mano: 'ascia', corpo: 'manto' }))

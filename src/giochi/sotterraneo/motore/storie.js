@@ -25,7 +25,7 @@ export function ingressoDi(eroe, { roba, crescita }, k = 0) {
   const c = new Corredo({ eroe, roba, crescita })
   c.sistemaIlCorredo()
   return { liv: c.livelloEroe, att: c.att, dif: c.dif, vita: c.vitaConLaRoba, forza: forzaDelCorredo(c), dpa: dannoPerRisposta(c, livelloAtteso(k)),
-           valore: valoreDellaRoba(c), pezzi: [c.mano, c.mancina, c.corpo, c.dito], poz: pozioniDi(c.zaino), gemme: c.gemme }
+           valore: valoreDellaRoba(c), pezzi: [c.mano, c.mancina, c.corpo, c.collo, c.dito, c.dito2], poz: pozioniDi(c.zaino), gemme: c.gemme }
 }
 
 // una discesa giocata, ridotta a quello che il rapporto legge: l'esito, le domande, le pozioni, i piani e uno scontro per riga
