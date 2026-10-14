@@ -9,13 +9,14 @@
 //   npm run tara:arena -- --bravo-da 0.8 --bravo-a 0.5 --bravo-dalla 10   # e quella di chi non sbaglia
 //   npm run tara:arena -- --duelli      # le truppe a duello, squadre uguali in campo aperto
 //   npm run tara:arena -- --misura      # i giocatori finti contro la taratura di adesso, senza ritarare
+//   npm run tara:arena -- --misura --d 1 --furbizia 0   # contro un nemico fisso (la furbizia forzata)
 import { writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
 import { CAMPAGNA, sfidaDi } from '../src/giochi/arena/dati/campagna.js'
 import { misura, PILOTI, caso } from '../src/giochi/arena/motore/banco.js'
 import { Partita } from '../src/giochi/arena/motore/partita.js'
-import { TRUPPE } from '../src/giochi/arena/dati/regole.js'
+import { TRUPPE, GIOCATORE } from '../src/giochi/arena/dati/regole.js'
 import { firmaEquilibrio } from '../src/giochi/arena/motore/firma.js'
 import { NEMICO } from '../src/giochi/arena/dati/taratura.js'
 
@@ -30,15 +31,21 @@ const BRAVO_DA = opz('--bravo-da', 0.8)  // le vittorie massime di chi non sbagl
 const BRAVO_A = opz('--bravo-a', 0.5)    // e nell'ultima: in cima si vince solo rispondendo bene e svelti
 const VOLTE = opz('--volte', 120)
 const GIRI = 8
-const D_MAX = 3
+const D_MAX = 2
 
-/* la manopola: da un nemico che quasi non gioca a uno più bravo del giocatore */
-export const nemicoDi = d => ({
-  d: +d.toFixed(3),
-  moneteAlSecondo: +(0.12 + 0.62 * d).toFixed(3),
-  pensa: +(3.0 - 1.6 * d).toFixed(2),
-  forza: +(0.5 + 0.55 * d).toFixed(3),
-})
+/* la manopola: da un nemico che quasi non gioca a uno bravo quanto il giocatore. Monete e forza
+   delle truppe salgono fino a pari (d = 1) e non oltre: più su il nemico non diventa più ricco ma
+   più svelto a pensare e più furbo (docs/arena/nemico.md) */
+export const nemicoDi = d => {
+  const pari = Math.min(d, 1)
+  return {
+    d: +d.toFixed(3),
+    moneteAlSecondo: +(GIOCATORE.moneteAlSecondo * (0.45 + 0.55 * pari)).toFixed(3),
+    pensa: +(3.0 - 2.2 * Math.min(d, D_MAX) / D_MAX).toFixed(2),
+    forza: +(0.6 + 0.4 * pari).toFixed(3),
+    furbizia: +Math.min(1, Math.max(0, (d - 0.5) / (D_MAX - 0.5))).toFixed(3),
+  }
+}
 
 const vinte = (tappa, d, pilota, volte = VOLTE) =>
   misura({ volte, sfida: { ...sfidaDi(tappa), nemico: nemicoDi(d) }, pilota }).vinte / volte
@@ -83,11 +90,13 @@ if (argv.includes('--duelli')) {
 /* Quanto vince ogni giocatore finto contro il nemico scritto adesso: per guardare una regola
    nuova (il rush contro l'economia, il pigro) prima di ritarare. */
 if (argv.includes('--misura')) {
+  const fisso = argv.includes('--d') ? nemicoDi(opz('--d', 1)) : null
+  const furbo = argv.includes('--furbizia') ? { furbizia: opz('--furbizia', 0) } : {}
   for (const [i, t] of CAMPAGNA.entries()) {
-    const sfida = { ...sfidaDi(t), nemico: NEMICO[t.chiave] }
+    const sfida = { ...sfidaDi(t), nemico: { ...(fisso || NEMICO[t.chiave]), ...furbo } }
     // con la durata media: verso i 180 secondi si vince ai punti, molto meno abbattendo il castello
     const riga = Object.entries(PILOTI).map(([n, p]) => { const r = misura({ volte: 80, sfida, pilota: p }); return `${n} ${Math.round(r.vinte / 80 * 100)}% ${r.secondi}s` }).join(' · ')
-    console.log(`${String(i + 1).padStart(2)} ${t.chiave.padEnd(12)} d=${NEMICO[t.chiave].d.toFixed(2)}  ${riga}`)
+    console.log(`${String(i + 1).padStart(2)} ${t.chiave.padEnd(12)} d=${sfida.nemico.d.toFixed(2)}  ${riga}`)
   }
   process.exit(0)
 }

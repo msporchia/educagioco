@@ -17,9 +17,10 @@ e la bisezione non trova la quota.
 
 ## Cosa promette la campagna
 
-`npm run tara:arena` cerca, tappa per tappa, per bisezione su una manopola `d`
-(0 = nemico quasi inerme, 1 = pari al giocatore bravo: monete al secondo, ogni
-quanto pensa e forza delle truppe; arriva a 3) quanto forte deve essere il nemico.
+`npm run tara:arena` cerca, tappa per tappa, per bisezione su una manopola `d` (0-2)
+quanto forte deve essere il nemico. Fino a `d` = 1 salgono le sue monete e la forza delle
+sue truppe, fino alla parità col giocatore; poi solo quanto in fretta pensa e la sua
+furbizia ([nemico.md](nemico.md)): più bravo, non più ricco.
 Due promesse, e vale la più dura:
 
 - il **bambino** di prova vince almeno la quota della tappa, da **90% nella prima a
@@ -57,17 +58,17 @@ bambino perdeva contro nemici così deboli (0,3-0,4 monete al secondo contro le 
 del giocatore, truppe al 70%) che il pigro li batteva sempre (l'utente: «ho 70 monete,
 non sto facendo niente e sto stravincendo»).
 
-Ultimo giro misurato (14 ottobre, partita a 5:00, castello che picchia il triplo sotto
-casa): il bambino 90% → 29%; `misura` 80-100% ovunque, anche nella lava; il rush 80-100%
-ovunque; l'economia 100% nel bosco e nella palude fino alla quarta tappa, poi 39% → 0%;
-il pigro 48-95% fino alla quarta, 0% nella lava.
+Ultimo giro misurato (14 ottobre, nemico furbo e mai più ricco del giocatore): il bambino
+88% → 25%; `misura` 99% → 45%; il rush 100% → 36%, l'economia 99% → 51%; il pigro 36-100%
+fino alla sesta tappa, 26% nell'ultima. La curva sale piano, senza gradini: la furbizia è
+una probabilità, non una soglia (col nemico che vinceva solo con le monete `misura` passava
+da quasi sempre a meno della metà con un ritocco minimo).
 
-- **L'economia regge solo contro i nemici deboli**: dalla quinta tappa il nemico ha più
-  monete del giocatore, e chi parte dalla miniera viene travolto prima che renda. Voce in
-  [da-fare.md](da-fare.md).
-- **Nella lava la curva ha un gradino**: `misura` passa da vincere quasi sempre a meno
-  della metà con un ritocco minimo di `d`, e il bambino con lui. La bisezione si ferma sul
-  bordo, e il tetto del bravo nella lava non tiene (95% contro l'80-50% voluto).
+- **L'economia rende un po' più del rush**: dalla quarta tappa 4-20 punti in più. Le
+  strade ci sono tutte e due; il rush finto però costruisce sempre nello stesso ordine e il
+  nemico furbo lo contrasta. Voce in [da-fare.md](da-fare.md).
+- **Il pigro vince ancora tanto nelle prime sei tappe** (70-100%): lì il nemico ragiona di
+  rado.
 - **La manopola non sale in fila.** Con più truppe a disposizione anche il
   nemico è più forte a parità di `d`, quindi una tappa con più truppe ha un `d`
   più basso e un nemico più duro lo stesso: la rampa la fa la quota di vittorie,

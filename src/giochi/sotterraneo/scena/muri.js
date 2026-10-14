@@ -4,6 +4,8 @@
 // bordo. Faccia alta una cella = qualunque muro sta in una cella di spessore (docs/sotterraneo/scenari.md).
 // Angoli decisi per quarto di cella guardando tre vicini (i "quarti" di RPG Maker): 4 casi invece di 47 figure.
 
+import { ROCCIA, PORTA, RELITTO, ACQUA } from '../dati/mondo.js'
+
 // `pietra(x, y)`: fuori dal piano è roccia anche lei, compito di chi la passa
 export const faccia = (pietra, x, y) => pietra(x, y) && !pietra(x, y + 1)
 export const tetto = (pietra, x, y) => pietra(x, y) && pietra(x, y + 1)
@@ -35,9 +37,9 @@ export function bordiDelTetto(pietra, x, y) {
 // una cella di roccia che sporge nel pavimento taglia in diagonale: roccia da due lati (n/o, n/e, s/o, s/e) e pavimento
 // dai due opposti e fra loro. `no` e `ne` sono facce (sotto si cammina), `so` e `se` bordi. `buona(x, y)` dice se quel
 // pavimento è di una stanza liscia (smussata, cappella, sala): una svolta di corridoio resta quadrata. Il pezzo
-// diagonale ha il suo muro dall'altra parte: docs/sotterraneo/scenari.md, «I muri in diagonale»
+// diagonale ha il suo muro dall'altra parte: docs/sotterraneo/scenari.md, «I muri in diagonale». Non con una nicchia o una porta fra le otto celle intorno
 export function taglio(pietra, x, y, buona = () => true) {
-  if (!pietra(x, y)) return null
+  if (!pietra(x, y) || !intornoBuono(pietra, x, y, buona)) return null
   const v = (dx, dy) => pietra(x + dx, y + dy)
   const lib = (dx, dy) => !v(dx, dy) && buona(x + dx, y + dy)
   if (v(0, -1) && v(-1, 0) && lib(1, 0) && lib(0, 1) && lib(1, 1)) return 'no'
@@ -47,20 +49,22 @@ export function taglio(pietra, x, y, buona = () => true) {
   return null
 }
 
+const intornoBuono = (pietra, x, y, buona) => {
+  for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if (!pietra(x + dx, y + dy) && !buona(x + dx, y + dy)) return false
+  return true
+}
+
 // l'angolo interno di una stanza liscia: una cella di pavimento con la roccia da due lati contigui e in diagonale, e il pavimento dagli altri
 // due e in diagonale (il 270° del rettangolo). Si smussa con gli stessi pezzi del taglio, posati sul pavimento: la roccia entra nella cella.
-// Non dove il muro accanto è già un taglio (sarebbe smussato due volte). `buona` come per `taglio`
+// Non dove il muro accanto è già un taglio, né accanto a una nicchia o a una porta, e solo con due celle di muro dritto per lato (`trattiDelAngolo`). `buona` come per `taglio`
 export function angoloInterno(pietra, x, y, buona = () => true) {
-  if (pietra(x, y) || !buona(x, y)) return null
+  if (pietra(x, y) || !buona(x, y) || !intornoBuono(pietra, x, y, buona)) return null
   const v = (dx, dy) => pietra(x + dx, y + dy)
   const lib = (dx, dy) => !v(dx, dy) && buona(x + dx, y + dy)
   const dritto = (dx, dy) => !taglio(pietra, x + dx, y + dy, buona)
   const prova = (sn, so) => v(0, sn) && v(so, 0) && v(so, sn) && lib(-so, 0) && lib(0, -sn) && lib(-so, -sn) && dritto(0, sn) && dritto(so, 0)
-  if (prova(-1, -1)) return 'no'
-  if (prova(-1, 1)) return 'ne'
-  if (prova(1, -1)) return 'so'
-  if (prova(1, 1)) return 'se'
-  return null
+  const tipo = prova(-1, -1) ? 'no' : prova(-1, 1) ? 'ne' : prova(1, -1) ? 'so' : prova(1, 1) ? 'se' : null
+  return tipo && trattiDelAngolo(pietra, x, y, tipo, buona).every(n => n >= 2) ? tipo : null
 }
 
 // il pavimento che un taglio lascia scoperto, dalla parte opposta alla roccia: da lì la tela prende com'è il pavimento
@@ -88,3 +92,46 @@ export function sorteDi(x, y, sale = 0) {
   h ^= h >>> 13; h = Math.imul(h, 0x5bd1e995) >>> 0; h ^= h >>> 15
   return h >>> 0
 }
+
+// i muri obliqui di un piano (`lisce`: le forme che si smussano); il pavimento di un relitto o di una pozza conta come quello della stanza che lo circonda
+export function diagonaliDelPiano(liv, lisce) {
+  const L = liv.largo, A = liv.alto
+  const pietra = (x, y) => liv.a(x, y) === ROCCIA
+  const stanze = liv.stanze || []
+  const nicchie = new Set(stanze.flatMap(r => r.nicchie || []).map(n => n.y * L + n.x))
+  const buona = (x, y) => {
+    const a = liv.a(x, y)
+    const s = stanze[liv.nelle ? liv.nelle[y * L + x] : -1] || (a === RELITTO || a === ACQUA ? liv.stanzaDi(x, y) : null)
+    return !!s && a !== PORTA && !nicchie.has(y * L + x) && lisce.includes(s.forma)
+  }
+  const tagli = new Map(), sopra = new Set(), interni = new Map(), sopraInterni = new Set()
+  for (let y = 0; y < A; y++) for (let x = 0; x < L; x++) {
+    const t = taglio(pietra, x, y, buona)
+    if (!t) continue
+    tagli.set(y * L + x, t)
+    if (t === 'no' || t === 'ne') sopra.add((y - 1) * L + x)
+  }
+  for (let y = 0; y < A; y++) for (let x = 0; x < L; x++) {
+    const t = angoloInterno(pietra, x, y, buona)
+    if (!t) continue
+    interni.set(y * L + x, t)
+    if (t === 'no' || t === 'ne') sopraInterni.add((y - 1) * L + x)
+  }
+  return { tagli, sopra, interni, sopraInterni, buona }
+}
+
+// le celle di muro dritto (fino a due) oltre l'angolo interno, lungo ognuno dei due muri: una nicchia, una porta o un taglio accorciano il conto
+export function trattiDelAngolo(pietra, x, y, tipo, buona = () => true) {
+  const [sn, so] = VERSI_ANGOLO[tipo]
+  const lungo = (dx, dy, mx, my) => {
+    let n = 0
+    for (let k = 1; k <= 2; k++) {
+      const [px, py] = [x + dx * k, y + dy * k]
+      if (!pietra(px + mx, py + my) || pietra(px, py) || !buona(px, py) || taglio(pietra, px + mx, py + my, buona)) break
+      n++
+    }
+    return n
+  }
+  return [lungo(-so, 0, 0, sn), lungo(0, -sn, so, 0)]
+}
+const VERSI_ANGOLO = { no: [-1, -1], ne: [-1, 1], so: [1, -1], se: [1, 1] }

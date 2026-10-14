@@ -12,7 +12,7 @@ import { SCENARI, SCENARIO, PEZZO_DI, pezzoAndante } from '../dati/tessere.js'
 import { MOSTRI } from '../dati/mostri.js'
 import { COSE } from '../dati/cose.js'
 import { creaFoglio, netto } from '../../../grafica/atlante.js'
-import { tetto, faccia, bordiDelTetto, capiDellaFaccia, versoDellaPorta, sorteDi, taglio, angoloInterno, VICINA_DEL_TAGLIO } from './muri.js'
+import { tetto, faccia, bordiDelTetto, capiDellaFaccia, versoDellaPorta, sorteDi, diagonaliDelPiano, VICINA_DEL_TAGLIO } from './muri.js'
 import { dipingiPortale, PORTALE } from './portale.js'
 import { dipingiRelitto, dipingiAcqua } from './relitti.js'
 import { TINTE_RELITTI } from '../dati/relitti.js'
@@ -297,31 +297,9 @@ export class Tela {
       const nome = i < 0 ? null : sc.perTerra[i % sc.perTerra.length]
       if (nome) perTerra.set(k, { nome, dove: 'centro', specchia: ((h >>> 9) & 1) === 1 })
     }
-    // i muri in diagonale (solo gli scenari che hanno i pezzi): le celle tagliate, e quelle sopra una faccia obliqua, che ne ospitano mezza
-    const tagli = new Map(), sopra = new Set(), interni = new Map(), sopraInterni = new Set()
-    if (sc.diagonali) {
-      // una porta e una nicchia restano sul muro dritto: accanto a loro il taglio non si fa
-      const nicchie = new Set(stanze.flatMap(r => r.nicchie || []).map(n => n.y * L + n.x))
-      const buona = (x, y) => {
-        // un relitto o una pozza accanto al muro non lo raddrizza: la cella è della stanza che la circonda
-        const a = liv.a(x, y)
-        const s = stanze[liv.nelle ? liv.nelle[y * L + x] : -1] || (a === RELITTO || a === ACQUA ? liv.stanzaDi(x, y) : null)
-        return !!s && liv.a(x, y) !== PORTA && !nicchie.has(y * L + x) && STANZE_LISCE.includes(s.forma)
-      }
-      for (let y = 0; y < A; y++) for (let x = 0; x < L; x++) {
-        const t = taglio(pietra, x, y, buona)
-        if (!t) continue
-        tagli.set(y * L + x, t)
-        if (t === 'no' || t === 'ne') sopra.add((y - 1) * L + x)
-      }
-      // gli angoli interni delle stanze lisce: la roccia entra nel pavimento con gli stessi pezzi; sopra uno `no`/`ne` la cella di faccia diventa tetto
-      for (let y = 0; y < A; y++) for (let x = 0; x < L; x++) {
-        const t = angoloInterno(pietra, x, y, buona)
-        if (!t) continue
-        interni.set(y * L + x, t)
-        if (t === 'no' || t === 'ne') sopraInterni.add((y - 1) * L + x)
-      }
-    }
+    // i muri in diagonale (solo gli scenari che hanno i pezzi): le celle tagliate, gli angoli interni e le celle sopra una faccia obliqua
+    const { tagli, sopra, interni, sopraInterni } = sc.diagonali ? diagonaliDelPiano(liv, STANZE_LISCE)
+      : { tagli: new Map(), sopra: new Set(), interni: new Map(), sopraInterni: new Set() }
     this._forma = { liv, sc, stanza, medaglione, perTerra, tagli, sopra, interni, sopraInterni }
     return this._forma
   }

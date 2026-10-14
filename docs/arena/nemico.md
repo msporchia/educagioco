@@ -34,8 +34,34 @@ poco intelligente, sfrutta al 100% le risorse?»). Adesso:
    (60% del prezzo) risparmia, se no fa la prima che può permettersi: **mai monete ferme**.
 5. Fino a **quattro mosse di fila** per ogni giro di pensiero, se le monete ci sono.
 
-La difficoltà resta nella scheda della tappa (`moneteAlSecondo`, `pensa`, `forza`, tarate
-da `npm run tara:arena`): l'IA è sempre la stessa, cambia quanto ha e quanto è veloce.
+La difficoltà sta nella scheda della tappa (`moneteAlSecondo`, `pensa`, `forza`,
+`furbizia`, tarate da `npm run tara:arena`).
+
+## Più bravo, non più ricco
+
+**Le monete e la forza delle truppe del nemico arrivano al massimo a pari con le tue**
+(`nemicoDi` in `strumenti/tara-arena.mjs`: `d` = 1 è la parità). Oltre, il nemico diventa
+più svelto a pensare e più furbo. Prima la manopola gli dava fino al 25% di monete in più
+e truppe più forti: l'unico modo di metterti in difficoltà, perché la scaletta gioca male.
+Così però chi partiva dalla miniera veniva travolto, e vinceva sempre chi attaccava
+subito (l'utente: «se riesci a renderlo più bravo e non più ricco va bene»).
+
+**La furbizia** (0-1) è quante volte, a ogni giro di pensiero, il nemico ragiona invece di
+seguire la scaletta (`testa()` in `nemico.js`). Una probabilità e non una soglia, così la
+difficoltà sale piano. Quando ragiona:
+
+- **sceglie la truppa che batte la tua** (`BATTE`, i duelli di [regole.md](regole.md)),
+  guardando le tue caserme e le tue truppe già entrate nella sua metà;
+- **concentra** i potenziamenti sulla caserma che conviene di più, invece di spalmarli;
+- **se sei in casa sua** costruisce o potenzia chi ti batte, e alza il castello;
+- **fa economia quando è al sicuro** (la miniera fino al 3 nei primi due minuti e mezzo), e
+  **se tu fai economia la fa anche lui**. Provato ad attaccare chi faceva economia, prima
+  con una caserma sola e poi con tre: le squadre morivano sotto il castello, che sotto casa
+  picchia il triplo, e chi faceva economia vinceva sempre.
+
+Misurato con le stesse monete del giocatore (`npm run tara:arena -- --misura --d 1.5
+--furbizia 1` contro `--furbizia 0`): dalla quinta tappa il giocatore perfetto passa da
+vincere il 100% al 0-26%, il rush dal 100% allo 0%; chi fa economia vince ancora il 70-80%.
 
 ## La bomba del nemico
 

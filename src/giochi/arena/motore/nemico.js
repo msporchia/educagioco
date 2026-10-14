@@ -4,8 +4,10 @@
 // quando serve: la bomba e la riparazione se lo stanno schiacciando, il castello
 // e le difese se vede che l'avversario sta vincendo. Spende quello che ha:
 // finite le mosse della scaletta continua con una regola sola, senza lasciare
-// monete ferme. Perché così e cosa si è provato: docs/arena/nemico.md.
-import { TRUPPE, LIV_MAX, MINIERA_MAX, BOMBA } from '../dati/regole.js'
+// monete ferme. Con la «furbizia» (da 0 a 1, della tappa) ragiona invece di seguire
+// la scaletta: la truppa che batte la tua, i potenziamenti concentrati, l'attacco a chi
+// prende la miniera scoperto. È più bravo, non più ricco. Perché così: docs/arena/nemico.md.
+import { TRUPPE, LIV_MAX, MINIERA_MAX, BOMBA, CAMPO, EDIFICIO_DI } from '../dati/regole.js'
 
 /* Una scaletta parla di ruoli, non di truppe: per ogni tappa il ruolo diventa la
    prima truppa che c'è (quelle di una tappa sono poche). */
@@ -31,7 +33,7 @@ const SCALETTE = {
 
 /* sale a ogni ritocco del modo di giocare del nemico: entra nella firma dell'equilibrio (`firma.js`),
    così un'IA cambiata senza ritarare è un test rosso */
-export const VERSIONE_IA = 3
+export const VERSIONE_IA = 5
 
 export function creaIA(rnd) {
   const nomi = Object.keys(SCALETTE)
@@ -131,9 +133,85 @@ function mossa(p) {
   return altra ? p.fai('nem', altra.azione, altra.id) : false
 }
 
+/* ── la testa: quando la furbizia vince il tiro, si ragiona invece di seguire la scaletta ── */
+
+/* chi batte chi: i duelli di docs/arena/regole.md (gli arcieri fermano chi vola, chi colpisce
+   da vicino batte chi tira, chi tira ad area le file, chi vola chi colpisce solo a terra) */
+const BATTE = {
+  scheletri: ['pipistrelli', 'drago'],
+  guardiano: ['scheletri', 'negromante', 'diavoletto', 'golem'],
+  lupi: ['scheletri', 'negromante', 'diavoletto', 'golem'],
+  negromante: ['scheletri', 'guardiano', 'lupi', 'pipistrelli'],
+  diavoletto: ['scheletri', 'guardiano', 'lupi'],
+  pipistrelli: ['guardiano', 'lupi', 'diavoletto', 'golem'],
+  drago: ['guardiano', 'lupi', 'diavoletto', 'golem'],
+  golem: [],
+}
+
+/* quanto conviene una truppa contro quello che ha l'avversario: chi batte, meno chi la batte,
+   pesati sul livello delle sue caserme e sulle sue truppe che stanno già entrando */
+function convenienza(id, sue, dentro) {
+  let v = 0
+  for (const c of sue) v += (BATTE[id].includes(c.id) ? c.liv : 0) - (BATTE[c.id].includes(id) ? c.liv : 0)
+  for (const u of dentro) v += (BATTE[id].includes(u.id) ? 0.5 : 0) - (BATTE[u.id].includes(id) ? 0.5 : 0)
+  if (id === 'golem') v += sue.length <= 1 ? 1 : 0          // contro chi non ha esercito si va alle mura
+  return v
+}
+
+function testa(p) {
+  const l = p.lati.nem, io = p.lati.io
+  const mie = p.casermeDi('nem'), sue = p.casermeDi('io')
+  // le truppe dell'avversario già nella sua metà (il nemico sta in alto)
+  const dentro = p.unita.filter(u => u.lato === 'io' && u.hp > 0 && u.y < CAMPO.fiume.alto)
+  const livelli = cs => cs.reduce((s, c) => s + c.liv, 0)
+  const occupati = new Set(mie.map(c => EDIFICIO_DI[c.id]))
+  const nuove = p.truppeAmmesse.filter(id => !occupati.has(EDIFICIO_DI[id]) && p.prezzo('nem', 'costruisci', id) !== null)
+    .sort((a, b) => convenienza(b, sue, dentro) - convenienza(a, sue, dentro) || TRUPPE[a].costo - TRUPPE[b].costo)
+  const salibili = mie.filter(c => c.liv < LIV_MAX)
+    .sort((a, b) => convenienza(b.id, sue, dentro) + b.liv * 0.3 - convenienza(a.id, sue, dentro) - a.liv * 0.3)
+  const castello = p.castello('nem')
+  // la prima mossa è la cripta, come nella scaletta: provato lasciar scegliere, e contro chi non ha
+  // ancora niente il golem sembrava il migliore e il nemico restava fermo a risparmiare
+  if (!mie.length) {
+    const id = nuove.find(i => EDIFICIO_DI[i] === 'cripta')
+    return !!id && si(p, 'costruisci', id) && p.fai('nem', 'costruisci', id)
+  }
+
+  const obiettivi = []
+  const vuoi = (azione, id) => { const pr = p.prezzo('nem', azione, id); if (pr !== null) obiettivi.push({ azione, id, prezzo: pr }) }
+  if (mie.length < 2 && nuove.length) vuoi('costruisci', nuove[0])
+  // c'è qualcuno in casa: la truppa che lo batte, nuova o potenziata
+  if (dentro.length) {
+    if (nuove.length && convenienza(nuove[0], [], dentro) > 0 && mie.length < 4) vuoi('costruisci', nuove[0])
+    if (salibili.length) vuoi('potenzia', salibili[0].id)
+    if (castello.liv < Math.max(...sue.map(c => c.liv), 1)) vuoi('castello')
+  }
+  // l'avversario fa economia (più miniera): la si fa anche noi, se non c'è nessuno in casa. Provato
+  // ad attaccarlo, prima con una caserma sola e poi con tre: le squadre morivano sotto il suo
+  // castello, che sotto casa picchia il triplo, e chi faceva economia vinceva sempre
+  if (io.miniera > l.miniera && !dentro.length) vuoi('miniera')
+  // al sicuro: le monete crescono, anche se l'avversario ha più caserme (chi attacca subito lo può punire)
+  if (!dentro.length && l.miniera < 3 && p.t < 150) vuoi('miniera')
+  if (mie.length < 4 && nuove.length) vuoi('costruisci', nuove[0])
+  if (castello.liv < Math.max(...sue.map(c => c.liv), 1) - 1) vuoi('castello')
+  if (salibili.length) vuoi('potenzia', salibili[0].id)
+  if (l.miniera < MINIERA_MAX && p.t < 200) vuoi('miniera')
+  vuoi('castello')
+
+  if (!obiettivi.length) return false
+  const primo = obiettivi[0]
+  if (l.monete >= primo.prezzo) return p.fai('nem', primo.azione, primo.id)
+  if (l.monete >= primo.prezzo * 0.5) return false           // si risparmia per la cosa giusta
+  const altro = obiettivi.find(o => l.monete >= o.prezzo && o.azione !== 'castello')
+  return altro ? p.fai('nem', altro.azione, altro.id) : false
+}
+
 export function pensaNemico(p, dt) {
   p.pensa -= dt
   if (p.pensa > 0) return
   p.pensa = p.nemicoCfg.pensa
-  for (let giro = 0; giro < 4; giro++) if (!mossa(p)) break   // più mosse di fila se le monete ci sono
+  const ragiona = p.rnd() < (p.nemicoCfg.furbizia || 0)
+  for (let giro = 0; giro < 4; giro++) {                      // più mosse di fila se le monete ci sono
+    if (ragiona ? !(emergenza(p) || testa(p)) : !mossa(p)) break
+  }
 }

@@ -11,7 +11,7 @@
      npm run pianta -- --discesa 5 --zona 20          # la zona rinata al livello 20
      npm run pianta -- --discesa 2 --png              # anche un PNG accanto all'SVG
      npm run pianta -- --conta --semi 1-20            # le stanze per discesa: quante hanno 0, 1, 2-3, 4+ mostri (tutti i piani, nessun disegno)
-     npm run pianta -- --conta --discesa 3 --semi 1-40 --zona 20
+     npm run pianta -- --conta --discesa 3 --semi 1-40 --zona 20   # e sotto la tabella dei muri obliqui per scena
 
    `--discesa` è l'indice della storia (0 la cripta … 6 la miniera), o
    `abisso`; `--piano` da 0, o `ultimo` (quello del mostro grosso, il
@@ -27,6 +27,8 @@ import { zonaDi } from '../src/giochi/sotterraneo/dati/zone.js'
 import { Corsa } from '../src/giochi/sotterraneo/motore/corsa.js'
 import { MOSTRI } from '../src/giochi/sotterraneo/dati/mostri.js'
 import { ROCCIA, PORTA, RELITTO, ACQUA } from '../src/giochi/sotterraneo/dati/mondo.js'
+import { diagonaliDelPiano, trattiDelAngolo } from '../src/giochi/sotterraneo/scena/muri.js'
+import { SCENARI } from '../src/giochi/sotterraneo/dati/tessere.js'
 
 const QUI = dirname(fileURLToPath(import.meta.url))
 const FUORI = resolve(QUI, '../tmp/piante')
@@ -179,6 +181,43 @@ function conta() {
   for (const r of righe) console.log(riga(r))
   console.log('media = mostri in una stanza che ne ha · scagnozzi = mostri (non il grosso) nella stanza del grosso · storte = porte chiuse non su un muro dritto · impilate = porte chiuse con un\'altra a due celle · portoni = piani col grosso che hanno la porta bella sulla sua stanza · nicchie vuote = nicchie senza niente dentro (né mostro, né gemma, né un pezzo) su tutte le nicchie')
 }
+// ─── --conta, i muri obliqui: quanti tagli e angoli interni, e quanti stanno male (accanto a una nicchia o a una porta, su un tratto dritto corto) ──
+function contaMuri() {
+  const per = {}
+  for (const i of qualiDiscese) {
+    const tappa = i === 'abisso' ? L_ABISSO : zona != null ? zonaDi(i, Number(zona)) : CAMPAGNA[i]
+    for (const sm of semi) {
+      const c = new Corsa(tappa, { seme: sm })
+      const quanti = tappa.abisso ? 8 : c.quantiPiani
+      for (let p = 0; p < quanti; p++) {
+        const L = c.faiIlPiano(p)
+        const sc = SCENARI[L.scenario]
+        if (!sc || !sc.diagonali) continue
+        const t = per[L.scenario] ||= { piani: 0, tagli: 0, tagliVicini: 0, interni: 0, interniVicini: 0, interniCorti: 0 }
+        t.piani++
+        const pietra = (x, y) => L.a(x, y) === ROCCIA
+        const nicchie = new Set(L.stanze.flatMap(r => r.nicchie || []).map(n => n.y * L.largo + n.x))
+        const vicino = (x, y) => { for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if (nicchie.has((y + dy) * L.largo + x + dx) || L.a(x + dx, y + dy) === PORTA) return true; return false }
+        const { tagli, interni, buona } = diagonaliDelPiano(L, ['smussata', 'cappella', 'sala'])
+        for (const k of tagli.keys()) { t.tagli++; if (vicino(k % L.largo, Math.floor(k / L.largo))) t.tagliVicini++ }
+        for (const [k, tipo] of interni) {
+          const x = k % L.largo, y = Math.floor(k / L.largo)
+          t.interni++
+          if (vicino(x, y)) t.interniVicini++
+          if (trattiDelAngolo(pietra, x, y, tipo, buona).some(n => n < 2)) t.interniCorti++
+        }
+      }
+    }
+  }
+  const testa = ['scena', 'piani', 'tagli', 'a nicchia/porta', 'interni', 'a nicchia/porta', 'su tratto corto']
+  const righe = Object.entries(per).map(([n, t]) => [n, t.piani, t.tagli, t.tagliVicini, t.interni, t.interniVicini, t.interniCorti])
+  const larghe = testa.map((h, k) => Math.max(h.length, ...righe.map(r => String(r[k]).length)))
+  const riga = r => r.map((v, k) => (k === 0 ? String(v).padEnd(larghe[k]) : String(v).padStart(larghe[k]))).join('  ')
+  console.log(`\nmuri obliqui · semi ${semi[0]}-${semi[semi.length - 1]}${zona != null ? ` · zona ${zona}` : ''} · tutti i piani`)
+  console.log(riga(testa)); console.log(larghe.map(l => '-'.repeat(l)).join('  '))
+  for (const r of righe) console.log(riga(r))
+  console.log('a nicchia/porta = una nicchia o una porta fra le otto celle intorno · su tratto corto = un angolo interno con meno di due celle di muro dritto oltre l\'angolo su uno dei due lati')
+}
 // ─── --passi: quanti passi (celle percorse) fa un piano ──────────────────────────────────────────────────────────
 // L'orologio del sotterraneo conta i passi dell'eroe (docs/sotterraneo/orologio.md): serve sapere quanti ne fa un piano. Su ogni piano
 // di ogni discesa, per ogni seme, da una cella all'altra col cammino più corto (quattro direzioni, le porte si aprono): «dritto» è
@@ -258,7 +297,7 @@ function passi() {
   if (righe.length) { console.log(''); for (const r of righe) console.log(r.join('\t')) }
 }
 if (args.includes('--passi')) { passi(); process.exit(0) }
-if (args.includes('--conta')) { conta(); process.exit(0) }
+if (args.includes('--conta')) { conta(); contaMuri(); process.exit(0) }
 
 const fatti = qualiDiscese.map(pianta)
 for (const f of fatti) console.log(`✓ ${f.file}`)
