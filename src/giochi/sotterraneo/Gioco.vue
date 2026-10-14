@@ -911,7 +911,7 @@ function corredoDaProva(c) {
   c.dito2 = 'anello-ambra'
   // le tre armature (mai visibili addosso) e i due gioielli: le cose che si vedono solo qui
   c.zaino = ['panciotto', 'manto', 'saio', 'amuleto-azzurro', 'pozione-grande', 'chiave']
-  if (sola) { c.mano = c.mancina = c.corpo = c.dito = null; c.zaino = [] }
+  if (sola) { c.mano = c.mancina = c.corpo = c.collo = c.dito = c.dito2 = null; c.zaino = [] }
   c.gemme += 120
   // due torce (una accesa, una di scorta): la seconda fa vedere anche il "+1" nella fascia in cima
   if (!sola) { c.accendi('torcia'); c.accendi('torcia') }
