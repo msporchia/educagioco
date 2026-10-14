@@ -104,7 +104,10 @@ di immagini non c'erano, e la regola è «prima in codice, poi dipinto»: i pezz
 - **L'angolo interno** (`angoloInterno` in `scena/muri.js`, pura): una cella di **pavimento** con la roccia da due lati contigui e in diagonale e il pavimento dagli altri
   due e in diagonale, in una stanza liscia (il 270° del rettangolo: gli angoli di una sala, di una cappella). Si smussa con **gli stessi pezzi del taglio**, posati sul
   pavimento: la roccia (o la faccia obliqua) occupa mezza cella e la cella di faccia sopra diventa tetto (`sopraInterni` in `tela.js`). Non dove il muro accanto è già un taglio
-  (sarebbe smussato due volte), e non accanto a una nicchia o a una porta. Visivamente mangia un po' di cella calpestabile nell'angolo: chi ci sta sopra si vede davanti alla roccia.
+  (sarebbe smussato due volte). Visivamente mangia un po' di cella calpestabile nell'angolo: chi ci sta sopra si vede davanti alla roccia.
+- **Dove non si fa** (`intornoBuono`, `trattiDelAngolo`): né un taglio né un angolo interno con una nicchia o una porta fra le otto celle intorno (a una nicchia in diagonale il pezzo scendeva sul pavimento
+  e contro il muro dritto senza chiudere), e un angolo interno solo se tutti e due i muri che si incontrano restano dritti per due celle oltre l'angolo. Meglio un gradino che un pezzo che non chiude.
+  Su 30 semi (`npm run pianta -- --conta`) gli angoli interni passano da 3230 a 1389, i tagli da 5019 a 4638, e quelli accanto a nicchie e porte da 1005 a 0.
 - **La linea passa per gli angoli opposti della cella, a gradini di un pixel del disegno** (4 px a schermo). Il pavimento sotto resta quello vero (la tela
   lo posa anche nella cella tagliata, col tipo del pavimento accanto); il pezzo è trasparente dove c'è pavimento.
 - **Il bordo chiaro** (`so`, `se`): la roccia è la tessera del tetto, mascherata col triangolo; la riga chiara e la fascia scura sono quelle del bordo dritto
@@ -123,7 +126,7 @@ di immagini non c'erano, e la regola è «prima in codice, poi dipinto»: i pezz
   porte restano al loro posto, gli angoli interni di sale e cappelle si arrotondano. **Restano a scaletta** (e va bene: «non tutto deve essere smussato», l'utente, 14 ottobre): i passi da
   tre celle o più della cappella, le celle accanto a una nicchia o a una porta. **Non guardato**: scale accanto a un taglio.
 
-Nei test: `unita/muri-sotterraneo` (§ 6, `taglio` e `angoloInterno`: i quattro versi, il rettangolo che non taglia ma ha i suoi quattro angoli interni, una svolta che taglia solo con un pavimento buono), `unita/sprite-derivati` (le funzioni e che i fogli siano quelli del comando), `unita/tessere` (i nomi nell'atlante).
+Nei test: `unita/muri-sotterraneo` (§ 6, `taglio` e `angoloInterno`: i quattro versi, il rettangolo che non taglia ma ha i suoi quattro angoli interni, una svolta che taglia solo con un pavimento buono, la nicchia o la porta vicina e il tratto corto; § 7 sui piani veri), `unita/sprite-derivati` (le funzioni e che i fogli siano quelli del comando), `unita/tessere` (i nomi nell'atlante).
 
 ## I fogli e l'atlante
 
