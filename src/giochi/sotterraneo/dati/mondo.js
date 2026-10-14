@@ -14,6 +14,8 @@ export const RELITTO = 3, ACQUA = 4
 export const EROE = { vita: 18, att: 3, dif: 1 }
 
 export const TASCHE = 6   // un limite vero: piene, quello per terra resta per terra
+// di cure se ne portano al più otto, di qualunque stadio (l'utente, 14 ottobre): chi ne vuole di più torna su a comprarle
+export const POZIONI_MASSIME = 8
 // le tasche in più si comprano con le gemme, una alla volta (l'utente, 9 ottobre: sei sono poche con tutto quello che cade):
 // il prezzo cresce in linea retta, mai esponenziale, e c'è un tetto. Stanno nella crescita dell'eroe (`crescita.tasche`)
 export const TASCHE_EXTRA_MAX = 8

@@ -88,6 +88,17 @@ export function elisirCade(chi, seme, piano, x, y) {
   return ((h ^ (h >>> 15)) >>> 0) / 4294967296 < (PROBABILITA_ELISIR[chi] || 0)
 }
 
+// L'ampolla della vita (rimette tutta la vita) non si compra, si trova: dal grosso, da un caporale o da un forziere, più spesso
+// dell'elisir del toro perché si beve e finisce. Il tiro ha un sale suo: aggiungerla non sposta l'elisir né il resto
+export const PROBABILITA_AMPOLLA = { grosso: 0.25, caporale: 0.05, forziere: 0.025 }
+export function ampollaCade(chi, seme, piano, x, y) {
+  let h = 2166136261
+  for (const n of [seme, piano, x, y, chi.length, 7919]) h = Math.imul(h ^ (Math.floor(n) | 0), 16777619)
+  h = Math.imul(h ^ (h >>> 15), 0x2c1b3c6d)
+  h = Math.imul(h ^ (h >>> 12), 0x297a2d39)
+  return ((h ^ (h >>> 15)) >>> 0) / 4294967296 < (PROBABILITA_AMPOLLA[chi] || 0)
+}
+
 // il pezzo col nome di un mostro grosso, al livello del bottino
 export const pezzoDelGrosso = (id, livello) => (UNICI[id] ? chiaveDelPezzo(UNICI[id].base, livello, 'raro', [], id) : null)
 

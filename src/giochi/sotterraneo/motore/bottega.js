@@ -132,8 +132,11 @@ export class Bottega extends Corredo {
           quante: righeDi(m, this.finite), rnd: this.rnd, ammessa, tua: k => this.posso(k),
         })
     }
-    return { roba: this.banchi[chiave], sempre: m.sempre }
+    return { roba: this.banchi[chiave], sempre: this.sempreDi(m) }
   }
+
+  // quello che sta sempre in cima, a quel punto della storia: le cure grandi arrivano dopo qualche discesa (`dalla`)
+  sempreDi(m) { return m.sempre.filter(k => !COSE[k].dalla || COSE[k].dalla <= this.finite) }
 
   // le righe sul banco: quelle che non finiscono prima (`sempre`), poi le pescate, poi i pezzi delle righe dopo
   // (`avanti`: quante righe, e quindi di quanto costano di più)
@@ -515,7 +518,7 @@ export class Bottega extends Corredo {
     const x = m && m.compra ? this.venduti[i] : null
     if (!x) return null
     if (this.gemme < x.prezzo) return { che: 'niente' }
-    if (this.nonCiStarebbe(x.k)) { this.dillo('⚠️ lo zaino è pieno'); return { che: 'pieno' } }
+    if (this.nonCiStarebbe(x.k)) { this.dillo(this.perchéNonCiSta(x.k)); return { che: 'pieno' } }
     this.gemme -= x.prezzo
     this.venduti.splice(i, 1)
     return this.prendi(x.k)
