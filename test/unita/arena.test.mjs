@@ -101,6 +101,7 @@ controlla('stesso seme, stessa partita', JSON.stringify(uguali) === JSON.stringi
   // il muro ferma chi cammina e non chi vola
   const m = new Partita({ rnd: caso(5) })
   m.caserme = []
+  m.muoviCastello = () => {}          // qui conta il muro: il castello ad area spazzerebbe i pipistrelli prima
   m.schiera('nem', 'lupi', 180, 230)
   m.schiera('nem', 'pipistrelli', 180, 230)
   m.avanza(4)
@@ -268,7 +269,7 @@ controlla('stesso seme, stessa partita', JSON.stringify(uguali) === JSON.stringi
   controlla('al livello massimo non c\'è un «dopo» e non c\'è prezzo', dettaglioTruppa('lupi', 10).prezzo === null && dettaglioTruppa('lupi', 10).righe.every(r => r.dopo === null))
   controlla('il golem dice che ignora le truppe e il drago che vola', ruoloDi('golem')[0].includes('costruzioni') && ruoloDi('drago')[1].includes('vola'))
   const m = dettaglioAzione('miniera', { miniera: 1 })
-  controlla('la miniera al livello dopo rende di più (+50%)', m.righe[1].ora === '×1' && m.righe[1].dopo === '×1,5')
+  controlla('la miniera al livello dopo rende di più (+70%)', m.righe[1].ora === '×1' && m.righe[1].dopo === '×1,7')
   controlla('e costa quanto dice il motore', m.prezzo === new Partita({ rnd: caso(1) }).prezzo('io', 'miniera'))
 }
 

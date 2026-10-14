@@ -40,11 +40,16 @@ I giocatori finti (`PILOTI` in `motore/banco.js`):
 | lento | 55% | 9 | perdere più del bambino |
 | caso | 25% | 9 | non vincere quasi mai |
 | pigro | 100% | 6 | due caserme al livello 2, poi sta a guardare: non deve vincere le tappe alte |
+| rush | 100% | 6 | solo caserme e potenziamenti: deve vincere quanto l'economia |
+| economia | 100% | 6 | la cripta, poi la miniera al 3: deve vincere quanto il rush ([regole.md](regole.md)) |
+
+`npm run tara:arena -- --misura` gioca tutti contro la taratura scritta, senza ritararla, e
+stampa anche la durata media: verso la fine del tempo si vince ai punti.
 
 Il bambino di prova **fa i conti a mente in fretta**: il gioco li vuole svelti (sono
 solo a mente, [calcoli.md](calcoli.md)). Provato il bambino di prima, 10 secondi a
 scelta, col campo a metà: non arriva al 90% nemmeno col nemico quasi inerme, perché in
-tre minuti non fa abbastanza mosse per abbattere il castello.
+tre minuti (allora la partita durava tanto) non fa abbastanza mosse.
 
 **Il bambino gioca da persona sensata**: prima due caserme, poi le porta al livello 2,
 poi castello e miniera. **Provato** il castello al livello 3 per prima cosa: quel
@@ -52,15 +57,17 @@ bambino perdeva contro nemici così deboli (0,3-0,4 monete al secondo contro le 
 del giocatore, truppe al 70%) che il pigro li batteva sempre (l'utente: «ho 70 monete,
 non sto facendo niente e sto stravincendo»).
 
-Ultimo giro misurato (14 ottobre): il bambino 91% → 59% fino alla tappa 10, poi 6% nelle
-ultime due; `misura` 100% quasi ovunque e 71% nelle ultime due; il pigro 68-100% dalla
-seconda alla decima, 0% nelle ultime due.
+Ultimo giro misurato (14 ottobre, partita a 5:00, castello che picchia il triplo sotto
+casa): il bambino 90% → 29%; `misura` 80-100% ovunque, anche nella lava; il rush 80-100%
+ovunque; l'economia 100% nel bosco e nella palude fino alla quarta tappa, poi 39% → 0%;
+il pigro 48-95% fino alla quarta, 0% nella lava.
 
-- **Il pigro vince troppo nelle tappe di mezzo**: due caserme al livello 2 valgono quanto
-  il bambino che continua a giocare. Il nemico non sa punire chi si ferma, e giocare di
-  più non rende: è da capire prima di ritarare. Voce in [da-fare.md](da-fare.md).
-- **Nella lava la curva ha un gradino**: `misura` passa dal 71% a meno della metà con un
-  ritocco minimo di `d` (1,66), e il bambino con lui. La bisezione si ferma sul bordo.
+- **L'economia regge solo contro i nemici deboli**: dalla quinta tappa il nemico ha più
+  monete del giocatore, e chi parte dalla miniera viene travolto prima che renda. Voce in
+  [da-fare.md](da-fare.md).
+- **Nella lava la curva ha un gradino**: `misura` passa da vincere quasi sempre a meno
+  della metà con un ritocco minimo di `d`, e il bambino con lui. La bisezione si ferma sul
+  bordo, e il tetto del bravo nella lava non tiene (95% contro l'80-50% voluto).
 - **La manopola non sale in fila.** Con più truppe a disposizione anche il
   nemico è più forte a parità di `d`, quindi una tappa con più truppe ha un `d`
   più basso e un nemico più duro lo stesso: la rampa la fa la quota di vittorie,

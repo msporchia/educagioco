@@ -38,9 +38,9 @@ export const TRUPPE = {
                  nota: 'Maghi, in due: da lontano, e il colpo scoppia. Ottimi contro i gruppi.' },
   diavoletto:  { nome: 'Diavoletti',  op: '÷', costo: 10, n: 2, hp: 90,   dmg: 24,   rate: 1.6, vel: 36, gitt: 70, bers: 'terra', vola: false, splash: 15,
                  nota: 'In due, lanciano bombe a terra che scoppiano. Non colpiscono chi vola.' },
-  golem:       { nome: 'Golem',       op: '×', costo: 14, n: 1, hp: 1300, dmg: 95,   rate: 2.0, vel: 22, gitt: 16, bers: 'torri', vola: false, splash: 0,
+  golem:       { nome: 'Golem',       op: '×', costo: 20, n: 1, hp: 1700, dmg: 120,  rate: 2.0, vel: 22, gitt: 16, bers: 'torri', vola: false, splash: 0,
                  nota: 'Lentissimo e resistente: va dritto alle costruzioni e ignora le truppe.' },
-  drago:       { nome: 'Drago',       op: '÷', costo: 14, n: 1, hp: 170,  dmg: 22,   rate: 1.2, vel: 50, gitt: 42, bers: 'tutti', vola: true,  splash: 13,
+  drago:       { nome: 'Drago',       op: '÷', costo: 20, n: 1, hp: 195,  dmg: 25,   rate: 1.2, vel: 50, gitt: 42, bers: 'tutti', vola: true,  splash: 13,
                  nota: 'Vola sopra i muri e sputa fuoco ad area. Lo fermano gli arcieri.' },
 }
 
@@ -59,8 +59,10 @@ export const OPERAZIONI = ['+', '−', '×', '÷']
 
 /* Il castello: l'unica costruzione che spara e si potenzia, e quella che non
    deve cadere. Da solo tiene i primi minuti: il respiro che serve per decidere.
-   Spara lontano (`gitt`) perché dal bordo deve coprire la porta in fondo al ponte. */
-export const CASTELLO = { nome: 'Castello', hp: 4000, dmg: 52,   rate: 0.75, gitt: 215, r: 30 }
+   Spara lontano (`gitt`) perché dal bordo deve coprire la porta in fondo al ponte; ad area
+   (`splash`) e, dentro `difesa` (le piazzole, non la porta), `vicino` volte più forte: chi
+   arriva sotto casa lo paga, e lo scontro torna al centro (docs/arena/regole.md). */
+export const CASTELLO = { nome: 'Castello', hp: 4000, dmg: 52,   rate: 0.75, gitt: 215, r: 30, splash: 16, difesa: 180, vicino: 3 }
 export const LIV_MAX = 10              // caserme e torretta
 export const MINIERA_MAX = 6
 
@@ -68,9 +70,9 @@ export const MINIERA_MAX = 6
 export const CRESCITA = {
   squadraOgni: liv => 9 / (1 + 0.12 * (liv - 1)),          // secondi fra due squadre di una caserma
   forza: liv => 1 + 0.25 * (liv - 1),                      // vita e danno delle sue truppe
-  vitaCaserma: liv => 700 + 120 * (liv - 1),             // il primo bersaglio dell'assedio: deve reggere
+  vitaCaserma: liv => 1100 + 160 * (liv - 1),            // il primo bersaglio dell'assedio: deve reggere, il castello la copre
   omini: (liv, n) => Math.round(Math.floor((liv - 1) / 2) * n / 4),   // truppe in più per squadra: crescono ogni due livelli, in proporzione alla squadra
-  salita: liv => Math.round(6 * 1.28 ** (liv - 1)),        // costo di liv → liv+1 per una caserma: 6, 8, 10, 13, 16, 21, 27, 34, 44
+  salita: liv => Math.round(8 * 1.32 ** (liv - 1)),        // costo di liv → liv+1 per una caserma: 8, 11, 14, 18, 24, 32, 42, 55, 73
   castello: {
     prezzo: liv => Math.round(8 * 1.3 ** (liv - 1)),       // 8, 10, 14, 18, 23, 30, 39, 51, 66
     danno: liv => 1 + 0.3 * (liv - 1),
@@ -79,15 +81,15 @@ export const CRESCITA = {
     vita: 300,                                             // per livello: massimo e punti subito
   },
   miniera: {
-    prezzo: [0, 10, 16, 24, 34, 46],                       // prezzo[liv] = liv → liv+1
-    resa: liv => 1 + 0.5 * (liv - 1),                      // moltiplica le monete al secondo: +50% per livello
+    prezzo: [0, 8, 14, 22, 32, 44],                        // prezzo[liv] = liv → liv+1
+    resa: liv => 1 + 0.7 * (liv - 1),                      // moltiplica le monete al secondo: +70% per livello
   },
 }
 
 /* Le scelte che non sono caserme. `op` decide il tipo di calcolo. */
 export const AZIONI = {
   miniera:  { nome: 'Più monete', op: '×', prezzo: null,
-              nota: 'Le monete arrivano il 50% più in fretta per ogni livello, per sempre. Costa ora, rende dopo.' },
+              nota: 'Le monete arrivano il 70% più in fretta per ogni livello, per sempre. Costa ora, rende dopo.' },
   ripara:   { nome: 'Ripara',     op: '+', prezzo: 6,
               nota: 'Rimette in sesto la costruzione messa peggio (anche il muro, anche crollato): +40% di vita.' },
   castello: { nome: 'Castello',   op: '÷', prezzo: null,
@@ -100,7 +102,7 @@ export const AZIONI = {
    ha le monete). Si usa con un calcolo, ma non costa monete. Spazza l'ammasso più fitto di truppe. */
 export const BOMBA = { ogni: 40, max: 2, raggio: 95, dmg: 700 }
 
-export const MURO = { hp: 1000, r: 26 }             // uno per parte, la porta in fondo al ponte: non si costruisce, si ripara
+export const MURO = { hp: 1400, r: 26 }             // uno per parte, la porta in fondo al ponte: non si costruisce, si ripara
 export const RIPARA = 0.4                            // la quota di vita che rimette
 export const RIPOSO = 6                              // secondi di caserma ferma dopo un calcolo sbagliato
 export const CALCOLANDO = 0.5                        // la velocità del campo mentre si calcola: rallenta, non si ferma
@@ -114,7 +116,7 @@ export const NEMICI = {
   tosto:   { moneteAlSecondo: 1 / 1.1,  pensa: 1.2, forza: 1 },
 }
 export const GIOCATORE = { moneteAlSecondo: 1 / 1.2, iniziali: 14 }
-export const DURATA = 180                            // secondi di partita se nessuno cade prima
+export const DURATA = 300                            // secondi di partita se nessuno cade prima: la miniera deve fare in tempo a rendere
 
 /* Il dato si controlla da sé: un numero sbagliato è un test rosso in un
    secondo, non una partita storta su un telefono. */

@@ -14,5 +14,5 @@
 - La bomba: scegliere il punto col dito (oggi lo sceglie il gioco), un effetto più epico e il suono.
 - Provare col dito di un bambino: il ritmo del campo mentre si calcola
   (oggi metà della velocità) è la prima cosa da guardare.
-- Il pigro (due caserme al livello 2, poi fermo) vince il 68-100% dalla seconda tappa alla decima: il nemico non punisce chi si ferma e giocare di più non rende ([taratura.md](taratura.md)).
+- Rush contro economia: dalla quinta tappa l'economia perde (39% → 0%) e il rush vince sempre; e la lava non è quasi imbattibile per chi non sbaglia (95%), per un gradino nella curva ([taratura.md](taratura.md), [regole.md](regole.md)).
 - Idea dell'utente (13/10), da valutare: dare una priorità alle truppe, caserma per caserma, cioè dire a ciascuna cosa attaccare.
