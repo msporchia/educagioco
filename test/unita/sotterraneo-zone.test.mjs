@@ -15,8 +15,8 @@ import { ORDINE_DELLE_ZONE, VOLTI, voltoDi, zonaPotenziata, zonaDi, forzaDellaZo
 import { fasciaDi, coloreDellaFascia, coloreNellaStoria, coloreDi, disposizioneDi, potenzaDi, livelloDellaZona, zoneDi,
          notiziaDi, gradinoDi, COLORI, robaAttesaA, crescitaAttesaA } from '../../src/giochi/sotterraneo/motore/zone.js'
 import { LIVELLI_ATTESI } from '../../src/giochi/sotterraneo/dati/storia.js'
-import { sogliaDi, espDi } from '../../src/giochi/sotterraneo/dati/livelli.js'
-import { QUOTA_DEL_COMUNE } from '../../src/giochi/sotterraneo/dati/mondo.js'
+import { sogliaDi, esperienzaDi } from '../../src/giochi/sotterraneo/dati/livelli.js'
+import { potenzaDelMostro } from '../../src/giochi/sotterraneo/motore/potenza.js'
 import { MOSTRI } from '../../src/giochi/sotterraneo/dati/mostri.js'
 import { scenarioDi } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
@@ -199,7 +199,7 @@ uguale('e l\'abisso resta l\'abisso', zonaDi(-1).abisso, true)
 /* ══════════ 8. l'esperienza ══════════ */
 {
   // dentro la storia la curva è quella tarata; oltre, ogni livello costa una retta in più, non un cubo
-  uguale('le soglie della storia non cambiano', [2, 5, 8, 10, 12].map(sogliaDi).join(), '30,204,504,774,1100')
+  uguale('le soglie della storia non cambiano', [2, 5, 8, 10, 12].map(sogliaDi).join(), '106,724,1792,2754,3916')
   const salto = n => sogliaDi(n + 1) - sogliaDi(n)
   uguale('oltre il 12 il costo di un livello cresce in linea retta', salto(30) - salto(29), salto(20) - salto(19))
   nota(`un livello costa: al 12 ${salto(12)}, al 16 ${salto(16)}, al 20 ${salto(20)}, al 30 ${salto(30)}, al 40 ${salto(40)}`)
@@ -213,10 +213,10 @@ uguale('e l\'abisso resta l\'abisso', zonaDi(-1).abisso, true)
     const m = c.livello.robe.find(r => r.che === 'mostro' && !r.chiave)
     const prima = c.crescita.esp
     c.cade(m)
-    return { presa: c.crescita.esp - prima, piena: espDi(MOSTRI[m.tipo], c.livelloQui) * QUOTA_DEL_COMUNE }
+    return { presa: c.crescita.esp - prima, piena: esperienzaDi(potenzaDelMostro(m)) }
   }
   const verde = esp(16), grigia = esp(18)
-  uguale('nella verde il mostro dà la sua esperienza (la quota dei mostri di strada)', verde.presa, Math.max(1, Math.round(verde.piena)))
+  uguale('nella verde il mostro dà la sua esperienza (quella delle sue caratteristiche)', verde.presa, Math.max(1, Math.round(verde.piena)))
   uguale('nella grigia un quarto', grigia.presa, Math.max(1, Math.round(grigia.piena * ESP_GRIGIA)))
 
   // il passo: una zona verde vinta, dal fondo della fascia, vale più o meno un livello (le misure su tutte le zone)

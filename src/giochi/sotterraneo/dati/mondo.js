@@ -56,9 +56,6 @@ export const LARGO_DIETRO = 1.6
 export const RAGGIO_SCONTRO = 4.5
 export const MOSTRI_IN_CAMPO = 7   // il palco ne tiene sette (viste/campo.js); i branchi da sei o sette sono delle discese tarde (motore/livello.js)
 export const COLPO_DEL_MOSTRO = 1.1
-// i mostri di strada sono più del doppio di prima (branchi in quasi ogni stanza): ognuno rende la metà in esperienza e in gemme; il grosso e i caporali, che sono
-// gli stessi di sempre, tutto (docs/sotterraneo/scontro-bilancio.md)
-export const QUOTA_DEL_COMUNE = 0.35
 
 // arredo (barili, casse...): non toccabile, disegnato più spento delle cose che rispondono (scena/tela.js).
 // Cosa c'è, dove sta e quanto è epico lo dice dati/orpelli.js; qui resta la frase del generico, quella di chi non

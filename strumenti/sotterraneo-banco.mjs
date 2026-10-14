@@ -25,6 +25,7 @@
 //   npm run sotterraneo -- --forza 6,7,8,9,10,11,12 --rapporti   # il suo rapporto (le gobbe che fanno sbagliare la forza)
 //   npm run sotterraneo -- --tara 2.spinta=6.5,5.forza=4   # prova un valore di una discesa (indice.campo=valore) senza toccare i sorgenti
 //   npm run sotterraneo -- --tara zona.forzaA12=4|5,zona.altare=1.6   # lo stesso per la curva delle zone e la forma di una zona
+//   npm run sotterraneo -- --tara livelli.A=50,livelli.B=56,livelli.Q=35,livelli.R=420   # e per la curva dell'esperienza (dati/livelli.js)
 //   npm run sotterraneo -- --abisso --tara abisso.forza=3,abisso.spinta=10   # e per l'abisso
 //   npm run sotterraneo -- --tara 2.spinta=5|6|7             # con più valori separati da | prova ogni combinazione, una tabella l'una
 //   npm run sotterraneo -- --turni [--file]      # la fila dei turni: velocità e doppi turni di ogni classe nelle discese (--file: la fila lettera per lettera)
@@ -65,10 +66,12 @@ if (argv[0] === '--lavoro') {
   if (lavoro.tara) {
     const { CAMPAGNA, L_ABISSO } = await mod('dati/campagna.js')
     const zone = await mod('dati/zone.js')
+    const livelli = await mod('dati/livelli.js')
     for (const voce of lavoro.tara.split(',').filter(Boolean)) {
       const [k, campo] = voce.split('=')[0].split('.')
-      // `zona.forzaA12=5` ritocca la curva delle zone, `zona.altare=1.4` la forma di una zona (dati/zone.js)
-      if (k === 'zona') { if (campo in zone.CURVA_DELLE_ZONE) zone.CURVA_DELLE_ZONE[campo] = Number(voce.split('=')[1]); else zone.FORMA_DELLA_ZONA[campo] = Number(voce.split('=')[1]) }
+      // `zona.forzaA12=5` ritocca la curva delle zone, `zona.altare=1.4` la forma di una zona (dati/zone.js), `livelli.A=50` la curva dell'esperienza
+      if (k === 'livelli') livelli.CURVA_DELL_ESPERIENZA[campo] = Number(voce.split('=')[1])
+      else if (k === 'zona') { if (campo in zone.CURVA_DELLE_ZONE) zone.CURVA_DELLE_ZONE[campo] = Number(voce.split('=')[1]); else zone.FORMA_DELLA_ZONA[campo] = Number(voce.split('=')[1]) }
       else if (k === 'abisso') L_ABISSO[campo] = Number(voce.split('=')[1])   // `abisso.forza=3` ritocca l'abisso
       else CAMPAGNA[Number(k)][campo] = Number(voce.split('=')[1])
     }

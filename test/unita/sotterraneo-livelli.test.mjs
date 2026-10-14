@@ -5,8 +5,8 @@
    discesa, la pagina dell'eroe. I mostri grossi e la roba con livello e
    rarità stanno in `unita/sotterraneo-rarita`.
    `node test/esegui.mjs sotterraneo-livelli --niente-build` */
-import { QUOTA_DEL_COMUNE } from '../../src/giochi/sotterraneo/dati/mondo.js'
-import { CARATTERISTICHE, sogliaDi, livelloDi, quotaDi, espDi, guastiDeiLivelli, VITA_PER_TEMPRA, PUNTI_PER_LIVELLO,
+import { potenzaDelMostro } from '../../src/giochi/sotterraneo/motore/potenza.js'
+import { CARATTERISTICHE, sogliaDi, livelloDi, quotaDi, potenzaDi, esperienzaDi, gemmeDi, guastiDeiLivelli, VITA_PER_TEMPRA, PUNTI_PER_LIVELLO,
          DOTE_OGNI, FORZA_PER_DIFESA, ENERGIA_PER_INTELLIGENZA, SCHIVATA_PER_DESTREZZA, GEMME_PER_RIASSEGNARE } from '../../src/giochi/sotterraneo/dati/livelli.js'
 import { EROI, eroeDi, guastiDegliEroi, requisitoDi, REQUISITO_DEL_GRADINO } from '../../src/giochi/sotterraneo/dati/eroi.js'
 import { COSE, chiaveDelPezzo, aLivello } from '../../src/giochi/sotterraneo/dati/cose.js'
@@ -41,15 +41,18 @@ import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifi
 
 /* ══════════ 2. l'esperienza viene dai mostri, tanta quanto sono forti ══════════ */
 {
-  controlla('un orco vale più di un ratto', espDi(MOSTRI.orco, 3) > espDi(MOSTRI.ratto, 3))
-  controlla('lo stesso mostro vale di più più giù', espDi(MOSTRI.orco, 9) > espDi(MOSTRI.orco, 3))
-  uguale('il mostro grosso tre volte tanto', espDi(MOSTRI.orco, 4, true), 3 * espDi(MOSTRI.orco, 4))
+  // il mostro porta quello che è: vita, attacco, difesa, poteri e grado (dati/livelli.js, potenzaDi)
+  const base = { ossa: 8, att: 3, dif: 1 }
+  controlla('più vita, più attacco, più difesa: vale di più', potenzaDi({ ...base, ossa: 16 }) > potenzaDi(base) && potenzaDi({ ...base, att: 6 }) > potenzaDi(base) && potenzaDi({ ...base, dif: 3 }) > potenzaDi(base))
+  controlla('i poteri lo fanno valere di più', potenzaDi({ ...base, protezioni: 2 }) > potenzaDi(base) && potenzaDi({ ...base, arma: true }) > potenzaDi(base) && potenzaDi({ ...base, incanto: true }) > potenzaDi({ ...base, arma: true }))
+  uguale('il grado la moltiplica', potenzaDi({ ...base, premio: 2.5 }), 2.5 * potenzaDi(base))
+  controlla('esperienza e gemme sono la stessa potenza, a scale diverse', esperienzaDi(40) > gemmeDi(40) && esperienzaDi(0) === 1 && gemmeDi(0) === 1)
   // battere un mostro in una discesa dà la sua esperienza all'eroe, e nient'altro la dà
   const c = new Corsa(CAMPAGNA[1], { seme: 4, rnd: seminato(4) })
   const m = c.livello.robe.find(r => r.che === 'mostro' && !r.chiave)
   const prima = c.crescita.esp
   c.cade(m)
-  uguale('battere un mostro dà la sua esperienza (un mostro di strada la quota, QUOTA_DEL_COMUNE)', c.crescita.esp - prima, Math.max(1, Math.round(espDi(MOSTRI[m.tipo], c.livelloQui) * QUOTA_DEL_COMUNE)))
+  uguale('battere un mostro dà la sua esperienza (quella delle sue caratteristiche vere)', c.crescita.esp - prima, esperienzaDi(potenzaDelMostro(m)))
   uguale('e la discesa la conta', c.espPresa, c.crescita.esp - prima)
   const e0 = c.crescita.esp
   c.chiaveDelPiano = true; c.foglio = { che: 'scala' }; c.scendi()

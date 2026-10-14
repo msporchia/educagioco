@@ -87,16 +87,18 @@ export function puntiAttesi(chiave, livello, come = null) {
 // (docs/apprendimento/calibrazione.md): un salto costa A·n + B, quindi il totale cresce col quadrato,
 // e l'esperienza di un mostro cresce in linea retta con la profondità. Tarata col banco: chi va dritto
 // arriva all'abisso verso il livello 11 (docs/sotterraneo/livelli.md, «Le misure»)
-export const ESP_A = 14, ESP_B = 16
+// (un oggetto e non quattro costanti: `npm run taratura -- --tara livelli.A=30` ne prova un valore senza toccare il file)
 // Oltre la storia (dal livello 12) ogni livello costa in più ESP_R + ESP_Q · (2m + 1), con m quanti livelli si è sopra
 // il 12: cresce in linea retta come l'esperienza di una zona, così una zona verde vinta vale più o meno un livello a
 // ogni altezza (docs/sotterraneo/zone.md, «L'esperienza»). Provato: il cubo di m, messo per l'abisso; dal 18 una zona
 // valeva 0,2 livelli e le zone non giravano mai
-export const ESP_OLTRE = 12, ESP_Q = 10, ESP_R = 120
+export const ESP_OLTRE = 12
+export const CURVA_DELL_ESPERIENZA = { A: 50, B: 56, Q: 20, R: 200 }
 export const sogliaDi = n => {
   if (n <= 1) return 0
   const m = Math.max(0, n - ESP_OLTRE)
-  return ESP_A * (n - 1) * n / 2 + ESP_B * (n - 1) + ESP_Q * m * m + ESP_R * m
+  const c = CURVA_DELL_ESPERIENZA
+  return c.A * (n - 1) * n / 2 + c.B * (n - 1) + c.Q * m * m + c.R * m
 }
 
 // il livello di chi ha `esp` di esperienza; nessun tetto
@@ -113,16 +115,22 @@ export function quotaDi(esp) {
   return { livello: n, fatto: (esp || 0) - da, serve: a - da, quota: Math.max(0, Math.min(1, ((esp || 0) - da) / (a - da))) }
 }
 
-// L'esperienza di un mostro battuto: tanta quanto è forte, cioè quanto è forte la sua specie (le ossa e quanto picchia
-// nel bestiario, dati/mostri.js) e quanto è giù il posto (il livello del posto, dati/campagna.js); il mostro grosso
-// tre volte tanto. Provato: contarla sulle ossa vere del mostro, già moltiplicate per la discesa. Si avvitava: mostri
-// più grossi davano più esperienza, l'eroe saliva di livello a metà discesa, e la discesa diventava più facile quanto
-// più la si induriva (misurato col banco)
-export const ESP_DEL_CAPO = 3
-export const ESP_PER_LIVELLO_DEL_POSTO = 0.3
-export const espDi = (specie, livelloDelPosto = 1, grosso = false) =>
-  Math.max(1, Math.round(((specie.ossa || 1) + 3 * (specie.att || 0)) / 3 *
-    (1 + ESP_PER_LIVELLO_DEL_POSTO * (Math.max(1, livelloDelPosto) - 1)))) * (grosso ? ESP_DEL_CAPO : 1)
+// Il mostro porta quello che è (docs/sotterraneo/livelli.md, «Il mostro porta quello che è»): l'esperienza e le gemme vengono da una
+// potenza sola, fatta delle sue caratteristiche vere. La sostanza è la media fra la vita (le ossa), tre volte l'attacco e tre volte la
+// difesa: un punto di attacco o di difesa pesa tre ossa, come un colpo in meno o in più nello scontro. I poteri la gonfiano di una
+// quota: ogni protezione (resistenza o immunità), l'arma di una variante, l'incanto del mago; il grado la moltiplica
+// (PREMIO_DEL_GRADO). Un caporale e il grosso valgono tanto perché hanno più ossa e più attacco, non per un moltiplicatore.
+// La curva dell'esperienza (CURVA_DELL_ESPERIENZA qui sopra) frena i livelli: è lei da tarare, non la potenza
+export const PESO_DELL_ATTACCO = 3, PESO_DELLA_DIFESA_DEL_MOSTRO = 3
+export const PIU_PER_PROTEZIONE = 0.08, PIU_PER_ARMA = 0.15, PIU_PER_INCANTO = 0.25
+// quanto rende una potenza (un oggetto: `npm run taratura -- --tara potenza.gemme=0.3` ne prova un valore senza toccare il file)
+export const VALORE_DELLA_POTENZA = { esp: 1, gemme: 0.5 }
+export function potenzaDi({ ossa, att, dif = 0, protezioni = 0, arma = false, incanto = false, premio = 1 }) {
+  const sostanza = (Math.max(1, ossa) + PESO_DELL_ATTACCO * Math.max(0, att) + PESO_DELLA_DIFESA_DEL_MOSTRO * Math.max(0, dif)) / 3
+  return sostanza * (1 + PIU_PER_PROTEZIONE * protezioni + (arma ? PIU_PER_ARMA : 0) + (incanto ? PIU_PER_INCANTO : 0)) * premio
+}
+export const esperienzaDi = potenza => Math.max(1, Math.round(potenza * VALORE_DELLA_POTENZA.esp))
+export const gemmeDi = potenza => Math.max(1, Math.round(potenza * VALORE_DELLA_POTENZA.gemme))
 
 export function guastiDeiLivelli() {
   const g = []

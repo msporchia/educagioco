@@ -6,11 +6,10 @@
 // `foglio` è un dato ({ che: 'scontro', chi }): finché è aperto il tempo è fermo.
 import {
   TASCHE, RAGGIO, RAGGIO_TORCIA, RAGGIO_SGOCCIOLI, ALONE, ALONE_TORCIA, ALONE_SGOCCIOLI, APERTURA_CONO, SFUMA_CONO, SFUMA_ARCO, ALONE_SFUMA, FORZA_MINIMA, ROCCIA, ACQUA, DIETRO, FIANCO, ALLA_PAR, LARGO_DIETRO, SVEGLIA, PASSO_EROE, PASSO_MOSTRO, PASSO_RIENTRO,
-  CALMA, SORSO, RIPOSO_SCALA, VITA_PER_PIANO, QUOTA_DEL_COMUNE,
+  CALMA, SORSO, RIPOSO_SCALA, VITA_PER_PIANO,
   ARREDO_DICE, ARREDO_LA_PRIMA_VOLTA,
 } from '../dati/mondo.js'
 import { MOSTRI } from '../dati/mostri.js'
-import { PREMIO_DEL_GRADO } from '../dati/varianti.js'
 import { SCENARI, SCENARIO } from '../dati/tessere.js'
 import { DI_PARTENZA } from '../dati/eroi.js'
 import { COSE, NEI_FORZIERI, pescaCosa, aLivello } from '../dati/cose.js'
@@ -19,7 +18,8 @@ import { durezzaDi, guardianoDi, svenimentiDi, formaDi, crescitaDi, brancoDi, ca
   from '../dati/campagna.js'
 import { grossoDi, GROSSI } from '../dati/grossi.js'
 import { valoreDelLivello } from '../dati/pezzi.js'
-import { espDi } from '../dati/livelli.js'
+import { esperienzaDi, gemmeDi } from '../dati/livelli.js'
+import { potenzaDelMostro } from './potenza.js'
 import { espNellaZona } from '../dati/zone.js'
 import { pezzoNuovo, pezzoDelGrosso, pezzoDalMostro, livelloDelBottino, elisirCade } from './bottino.js'
 import { generaPiano } from './livello.js'
@@ -76,7 +76,6 @@ export class Corsa extends Corredo {
     this.camminati = 0          // e di quelli, le celle davvero percorse (senza i turni dello scontro): il banco le conta
     this.manaCammino = 0        // il mana che il cammino ha già dato ma non ancora un punto intero
     this.preparati = []         // gli incanti preparati dal campo e ancora addosso: [{ id, passi, ... }] (motore/preparati.js)
-    this.restoColpo = 0.5       // il resto del danno dell'eroe, riportato al colpo dopo (docs/sotterraneo/scontro.md, «Il danno è continuo»)
     this.pronta = null          // l'abilità preparata per la prossima risposta giusta (docs/sotterraneo/abilita.md)
     this.fiatoUsato = false     // «Ultimo fiato»: una volta per discesa
     this.chiesta = null         // la domanda che serve: { id, che, difficolta }
@@ -786,9 +785,8 @@ export class Corsa extends Corredo {
     // e la dice un numerino «+N ✨» che sale dal campo (Gioco.vue). In una zona grigia un quarto, nell'abisso un terzo (dati/zone.js)
     // (il «grigio» si legge dalla forza dell'eroe, non dal livello: motore/forza.js; fuori dalle zone non serve)
     const forza = this.tappa && this.tappa.potenza ? forzaDelCorredo(this) : this.livelloEroe
-    const delGrado = PREMIO_DEL_GRADO[m.grado] || 1   // un mostro di grado alto vale di più (dati/varianti.js)
-    const quota = m.grosso || m.caporale ? 1 : QUOTA_DEL_COMUNE
-    const esp = Math.max(1, Math.round(espDi(MOSTRI[m.tipo], this.livelloQui, !!m.grosso) * espNellaZona(this.tappa, forza) * quota))
+    const potenza = potenzaDelMostro(m)   // la sua vita, il suo attacco, i suoi poteri e il suo grado: una formula sola (dati/livelli.js)
+    const esp = Math.max(1, Math.round(esperienzaDi(potenza) * espNellaZona(this.tappa, forza)))
     this.eventi.push({ che: 'esp', esp, x: m.x, y: m.y })
     this.guadagna(esp)
     // 💚 rigenera: ogni mostro battuto rimette in piedi un poco
@@ -799,7 +797,7 @@ export class Corsa extends Corredo {
     if (fiato) this.energia = Math.min(this.energiaMax, this.energia + fiato)
     const scheda = MOSTRI[m.tipo]
     this.livello.robe.push({ che: 'gemme', x: m.x, y: m.y, em: '💎',
-                             quante: Math.max(1, Math.round((scheda.gemme + Math.floor(this.piano * 1.5)) * valoreDelLivello(this.livelloQui) * delGrado * quota)) })
+                             quante: gemmeDi(potenza) })
     const storia = this.indice >= 0
     const lascia = scheda.lascia || []
     const daBere = lascia.filter(SI_CONSUMA).length ? lascia.filter(SI_CONSUMA) : ['pozione-piccola']
