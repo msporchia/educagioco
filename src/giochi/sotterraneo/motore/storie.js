@@ -10,7 +10,7 @@ import { CRESCITA_NUOVA } from './crescita.js'
 import { forzaDelCorredo } from './forza.js'
 import { GIOCATORI_TIPO, NOMI_TIPO, STRADE, NOMI_STRADA, STRADA_BASE, stileDi, TENTATIVI, RISALITA } from '../dati/giocatori-tipo.js'
 import { livelloAtteso } from './storia.js'
-import { dannoPerRisposta, valoreDellaRoba, utiliComprati } from './fine.js'
+import { dannoPerRisposta, colpoBase, valoreDellaRoba, utiliComprati } from './fine.js'
 
 const copia = o => JSON.parse(JSON.stringify(o))
 const intero = (v, d = 0) => (Number.isFinite(v) ? v : d)
@@ -24,14 +24,14 @@ const pozioniDi = zaino => zaino.filter(k => COSE[k] && COSE[k].usa === 'cura').
 export function ingressoDi(eroe, { roba, crescita }, k = 0) {
   const c = new Corredo({ eroe, roba, crescita })
   c.sistemaIlCorredo()
-  return { liv: c.livelloEroe, att: c.att, dif: c.dif, vita: c.vitaConLaRoba, forza: forzaDelCorredo(c), dpa: dannoPerRisposta(c, livelloAtteso(k)),
+  return { liv: c.livelloEroe, att: c.att, dif: c.dif, vita: c.vitaConLaRoba, forza: forzaDelCorredo(c), dpa: dannoPerRisposta(c, livelloAtteso(k)), col: colpoBase(c, livelloAtteso(k)),
            valore: valoreDellaRoba(c), pezzi: [c.mano, c.mancina, c.corpo, c.dito], poz: pozioniDi(c.zaino), gemme: c.gemme }
 }
 
 // una discesa giocata, ridotta a quello che il rapporto legge: l'esito, le domande, le pozioni, i piani e uno scontro per riga
 function registro(g) {
   const e = g.esito
-  return { v: e.vinta ? 1 : 0, sv: e.svenimenti, dom: e.domande, giu: e.giuste, pz: g.pozioni || 0, fo: g.fonti || 0, tt: g.alTetto ? 1 : 0, ge: e.gemme,
+  return { v: e.vinta ? 1 : 0, sv: e.svenimenti, dom: e.domande, giu: e.giuste, pz: g.pozioni || 0, fo: g.fonti || 0, tt: g.alTetto ? 1 : 0, tc: g.toccaIlTetto ? 1 : 0, ct: g.cureTrovate || {}, cr: g.cureRifiutate || 0, sl: g.scale || [], ge: e.gemme,
            mo: e.mostri, liv: g.corsa.livelloEroe, pp: (g.perPiano || []).map(n => intero(n)), sc: g.scontri || [], guasto: g.guasto || null,
            ri: g.risalite || [], ar: g.armi || { trovati: 0, inutili: 0, rimandati: 0 } }
 }

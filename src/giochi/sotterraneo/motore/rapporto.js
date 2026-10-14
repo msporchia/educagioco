@@ -41,6 +41,12 @@ export function partite(passi) {
 
 /* ═══════════ le misure ═══════════ */
 const grosso = c => c.n >= MOSTRI_DEL_GROSSO || c.g
+// uno scontro pesante: il grosso (3+ mostri o il grosso) o un caporale in campo (docs/sotterraneo/giocatori-tipo.md, «Quanto chiede un mostro»)
+export const pesante = c => grosso(c) || c.cap > 0
+// i colpi che ha chiesto ogni mostro caduto, per ruolo (0 di strada, 1 caporale, 2 grosso)
+const colpiDi = (sc, ruolo) => sc.flatMap(c => (c.mc || []).filter(m => m[0] === ruolo).map(m => m[1]))
+// le cure raccolte in una discesa, tutte le provenienze insieme
+export const cureRaccolte = rec => Object.values(rec.ct || {}).reduce((a, b) => a + b, 0)
 const scontriDi = P => P.flatMap(p => p.rec.sc.map(c => ({ c, p })))
 
 // le misure di un gruppo di partite
@@ -53,6 +59,9 @@ export function misure(P) {
     pozioni: media(P.map(p => p.rec.pz)), domande: media(P.map(p => p.rec.dom)), mostri: media(P.map(p => p.rec.mo)),
     vitaGrosso: gr.length ? media(gr.map(c => c.vf)) : null, vitaScontri: sc.length ? media(sc.map(c => c.vf)) : null,
     sopra90: sc.length ? sopra.length / sc.length : null,
+    colpiStrada: media(colpiDi(sc, 0)), colpiCaporale: media(colpiDi(sc, 1)), colpiGrosso: media(colpiDi(sc, 2)),
+    persaNormale: media(sc.filter(c => !pesante(c)).map(c => c.pe)), persaPesante: media(sc.filter(pesante).map(c => c.pe)),
+    cureTrovate: media(P.map(p => cureRaccolte(p.rec))), tetto: media(P.map(p => p.rec.tc || 0)),
     muri: media(P.map(p => (p.tent.filter(t => !t.v).length >= 2 ? 1 : 0))) }
 }
 
@@ -74,6 +83,13 @@ export const MISURE = {
   sopra90: { nome: 'scontri finiti sopra il 90%', u: 'perc' },
   domande: { nome: 'domande a discesa', u: 'zero' },
   rifatteSvenute: { nome: 'rifatte con uno svenimento', u: 'perc' },
+  colpiStrada: { nome: 'colpi per un mostro di strada', u: 'uno' },
+  colpiCaporale: { nome: 'colpi per un caporale', u: 'uno' },
+  colpiGrosso: { nome: 'colpi per il grosso', u: 'uno' },
+  persaNormale: { nome: 'vita persa in uno scontro normale', u: 'perc' },
+  persaPesante: { nome: 'vita persa in uno scontro pesante', u: 'perc' },
+  cureTrovate: { nome: 'cure trovate a discesa', u: 'uno' },
+  tetto: { nome: 'discese col tetto delle cure toccato', u: 'perc' },
   muri: { nome: 'muri (2 sconfitte di fila)', u: 'perc' },
 }
 const fmt = (v, u) => (v == null ? '-' : u === 'perc' ? `${Math.round(v * 100)}` : u === 'uno' ? v.toFixed(1) : String(Math.round(v)))

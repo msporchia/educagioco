@@ -247,6 +247,19 @@ function robeInteressanti(corsa, quali) {
     .map(v => v.r)
 }
 
+// quanti colpi ha preso ogni mostro, e la vita che costa lo scontro (docs/sotterraneo/giocatori-tipo.md, «Quanto chiede un mostro»): al turno
+// dopo la risposta, chi ha perso ossa ha preso un colpo, chi è caduto lo scrive nello scontro (ruolo 0 di strada, 1 caporale, 2 grosso)
+const COLPI_AL_MOSTRO = new WeakMap()
+function misuraIlTurno(corsa, f, scontro, ossa, vita0) {
+  scontro.pe += Math.max(0, vita0 - corsa.vita) / corsa.vitaMax
+  f.campo.forEach((m, i) => {
+    if (!(m.ossa < ossa[i])) return
+    const n = (COLPI_AL_MOSTRO.get(m) || 0) + 1
+    COLPI_AL_MOSTRO.set(m, n)
+    if (m.morto) scontro.mc.push([m.grosso ? 2 : m.caporale ? 1 : 0, n])
+  })
+}
+
 // `bravura`: 1 è un adulto attento, 0.75 un bambino normale. `conto` è il taccuino della discesa
 function sbriga(corsa, bravura, sorte, conto, st = {}, scontro = null) {
   const f = corsa.foglio
@@ -272,7 +285,9 @@ function sbriga(corsa, bravura, sorte, conto, st = {}, scontro = null) {
         const id = preparaLAbilita(corsa, f, st)
         if (id && scontro) scontro.ab[id] = (scontro.ab[id] || 0) + 1
       }
+      const ossa = scontro ? f.campo.map(m => m.ossa) : null, vita0 = corsa.vita
       corsa.rispondi(sorte() < bravura)
+      if (scontro) misuraIlTurno(corsa, f, scontro, ossa, vita0)
       return true
     }
     case 'porta':
@@ -292,6 +307,7 @@ function sbriga(corsa, bravura, sorte, conto, st = {}, scontro = null) {
       corsa.chiudi()
       return false
     case 'scala':
+      conto.scale.push(corsa.vita / corsa.vitaMax)   // con quanta vita si scende (la taratura: sotto metà, in fondo a una discesa)
       corsa.scendi()
       return false
     default:
@@ -319,8 +335,9 @@ export function gioca(tappa, { bravura = 0.8, seme = 7, come = 'minimo', rnd = n
   let giri = 0
   const persi = []
   const provati = new Map()
-  const conto = { fonti: 0, pozioni: 0 }
+  const conto = { fonti: 0, pozioni: 0, scale: [] }
   const alTettoIn = corsa.alTettoDelleCure   // scende con il tetto delle cure già pieno: la taratura lo conta
+  let toccaIlTetto = alTettoIn
   const scontri = []
   let aperto = null, prima = { vita: corsa.vita, energia: corsa.energia }
   const sorsi = new Map()
@@ -359,7 +376,7 @@ export function gioca(tappa, { bravura = 0.8, seme = 7, come = 'minimo', rnd = n
   // uno scontro per volta: lo si apre quando compare il foglio, lo si chiude quando cambia (la vita a fine scontro vale 0 se si sviene)
   const apriLoScontro = f => {
     aperto = { f, r: { k: corsa.piano, n: f.campo.length, tipi: f.campo.map(m => m.tipo), g: f.campo.some(m => m.grosso) ? 1 : 0,
-                       ag: f.agguato ? 1 : 0, v0: prima.vita / corsa.vitaMax, e0: prima.energia / corsa.energiaMax, vf: 0, sv: 0, ab: {}, pz: 0, t: 0 } }
+                       ag: f.agguato ? 1 : 0, cap: f.campo.filter(m => m.caporale).length, pe: 0, mc: [], v0: prima.vita / corsa.vitaMax, e0: prima.energia / corsa.energiaMax, vf: 0, sv: 0, ab: {}, pz: 0, t: 0 } }
   }
   const chiudiLoScontro = () => {
     const svenuto = !!corsa.foglio && corsa.foglio.che === 'svenuto'
@@ -399,7 +416,7 @@ export function gioca(tappa, { bravura = 0.8, seme = 7, come = 'minimo', rnd = n
     const mostri = corsa.mostriBattuti - ris.mostri
     const portale = corsa.livello.robe.find(r => r.che === 'portale')
     if (!portale || (ris.provati.get(corsa.piano) || 0) >= RISALITA.tentativi) return false
-    const camminati = corsa.camminati, piano = corsa.piano, livello = corsa.livelloEroe, gemme = corsa.gemme
+    const camminati = corsa.camminati, piano = corsa.piano, livello = corsa.livelloEroe, gemme = corsa.gemme, vitaPartendo = corsa.vita / corsa.vitaMax
     if (!raggiungi(corsa, portale)) sblocca(corsa, { x: portale.x, y: portale.y }, provati)
     if (!corsa.foglio || corsa.foglio.che !== 'portale') {
       if (!corsa.foglio) ris.provati.set(piano, (ris.provati.get(piano) || 0) + 1)
@@ -417,7 +434,7 @@ export function gioca(tappa, { bravura = 0.8, seme = 7, come = 'minimo', rnd = n
     corsa.chiudi()
     const utili = nuoviUtili(prima0, addossoDi(corsa))
     visto = { ...addossoDi(corsa), tutti: pezziDelloZaino(), chiave: '' }   // quello che si è comprato non è «trovato»
-    risalite.push({ p: piano, l: livello, g: gemme, sp: reg.speso, ve: reg.venduto, pz: reg.pezzi, po: reg.pozioni, ut: utili, ca: corsa.camminati - camminati, mo: mostri })
+    risalite.push({ vi: vitaPartendo, p: piano, l: livello, g: gemme, sp: reg.speso, ve: reg.venduto, pz: reg.pezzi, po: reg.pozioni, ut: utili, ca: corsa.camminati - camminati, mo: mostri })
     ris.ultima = corsa.gemme
     ris.mostri = corsa.mostriBattuti
     ris.obiettivo = reg.obiettivo
@@ -426,6 +443,7 @@ export function gioca(tappa, { bravura = 0.8, seme = 7, come = 'minimo', rnd = n
 
   while (!corsa.finita && giri++ < tettoGiri) {
     if (corsa.piano !== pianoOra) chiudiIlPiano()
+    if (!toccaIlTetto && corsa.alTettoDelleCure) toccaIlTetto = true
     if (aperto && corsa.foglio !== aperto.f) chiudiLoScontro()
     if (fino != null && corsa.piano >= fino) break
     if (corsa.foglio) {   // finché un foglio è aperto non si cammina
@@ -481,6 +499,10 @@ export function gioca(tappa, { bravura = 0.8, seme = 7, come = 'minimo', rnd = n
     armi,
     botteghe: ris ? ris.botteghe : null,
     alTetto: alTettoIn || corsa.cureRifiutate > 0,   // il tetto delle cure ha frenato questa discesa
+    cureTrovate: corsa.cureTrovate,   // le cure raccolte per provenienza
+    cureRifiutate: corsa.cureRifiutate,
+    scale: conto.scale,
+    toccaIlTetto,   // in qualche momento della discesa le tasche hanno avuto il tetto delle cure
     scontri,
     perPiano,
     passiPerPiano,

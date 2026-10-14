@@ -18,6 +18,9 @@ export function dannoPerRisposta(c, L, risposte = RISPOSTE_DELLO_SCONTRO) {
   return (forti.reduce((a, x) => a + x.danno, 0) + (risposte - forti.length) * dopo) / risposte
 }
 
+// il colpo di sempre (senza abilità) al mostro di riferimento del livello L: quanto toglie una risposta giusta a un mostro di strada
+export const colpoBase = (c, L) => colpoContro(c, mostroDiRiferimento(L), null)
+
 // quanto vale la roba: il prezzo pieno dei pezzi addosso e nello zaino (le pozioni si contano a parte)
 export const valoreDellaRoba = c => [c.mano, c.mancina, c.corpo, c.dito, ...c.zaino].filter(k => k && COSE[k] && COSE[k].dove).reduce((s, k) => s + c.prezzoDi(k), 0)
 
