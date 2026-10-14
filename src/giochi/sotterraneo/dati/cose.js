@@ -154,7 +154,7 @@ const BASI = {
   'pozione-blu': { em: '🧪', nome: 'Pozione blu', sprite: 'pozione-blu', usa: 'energia', energia: 8, prezzo: 8, genere: 'f',
                    dice: 'Otto punti di energia, per le abilità.' },
   // la boccetta grande dell'energia: stesso disegno, nome epico (l'utente, 9 ottobre)
-  'ampolla-blu': { em: '🧪', nome: 'Ampolla delle stelle', sprite: 'pozione-blu', usa: 'energia', energia: 16, prezzo: 18, genere: 'f',
+  'ampolla-blu': { em: '🧪', nome: 'Ampolla delle stelle', sprite: 'ampolla-blu', usa: 'energia', energia: 16, prezzo: 18, genere: 'f',
                    dice: 'Sedici punti di energia: un fiume per le abilità.' },
   // l'unica che non torna indietro: alza la vita massima dell'eroe per sempre (crescita.elisir). Un ritrovamento rarissimo,
   // mai in vendita (`rarissimo`: fuori da IN_VENDITA); il prezzo resta per quando lo si rivende (docs/sotterraneo/rarita.md)

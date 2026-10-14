@@ -50,7 +50,10 @@ quello che segue sembra costruito: niente forme a caso.
   parete. Nelle sale col colonnato stanno **in linea coi pilastri**, sulle due
   pareti lunghe; altrove una stanza su due ne ha da una a tre (di più la cappella
   e la croce), distanti fra loro. Sono celle della stanza: ci si appostano i
-  mostri e ci sta una gemma.
+  mostri e ci sta una gemma. **Una nicchia non resta mai vuota** (`arredaLeNicchie`, l'utente il 14 ottobre: «mi sembra banalmente un bug»; prima 3457 su 4241
+  nicchie di 30 semi erano un buco nel muro): quella senza mostro né gemma riceve un pezzo del suo scenario (`NICCHIE` in `dati/orpelli.js`: la statua o il cavaliere
+  di pietra nella cripta, la botte o il teschio nelle cantine, l'incudine o il carbone nella fornace), scelto dalla cella, mai acceso. `npm run pianta -- --conta`
+  ha la colonna «nicchie vuote».
 - **I corridoi**: uno su tre è largo due celle (la seconda corsia accanto alla
   prima). Dove tocca una stanza il varco largo si stringe alla porta di sempre.
 

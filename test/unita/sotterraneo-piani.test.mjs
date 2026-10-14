@@ -368,6 +368,11 @@ const camminabile = (l, x, y) => l.a(x, y) === PAVIMENTO || l.a(x, y) === PORTA
     if (l.robeSu(n.x, n.y).some(r => r.che === 'porta')) storte.push('una porta dentro una nicchia')
   }
   controlla('ogni nicchia è una cella della stanza con una sola apertura e il muro spesso due attorno e dietro', storte.length === 0, [...new Set(storte)].slice(0, 3).join(' · '))
+  // una nicchia vuota sembra un buco nel muro: dentro c'è sempre qualcosa (un mostro, una gemma o un pezzo dell'arredo), e un pezzo che esiste
+  const vuote = nicchie.filter(({ l, n }) => !l.robeSu(n.x, n.y).length)
+  controlla('nessuna nicchia è vuota: ha dentro un mostro, una gemma o un pezzo', vuote.length === 0, `${vuote.length}/${nicchie.length}`)
+  const senzaPezzo = nicchie.filter(({ l, n }) => l.robeSu(n.x, n.y).some(r => r.che === 'arredo' && !PEZZI[r.pezzo]))
+  controlla('il pezzo di una nicchia è nell\'atlante', senzaPezzo.length === 0, `${senzaPezzo.length}`)
   const allineate = conColonnato.flatMap(({ s }) => s.nicchie.map(n => ({ s, n })))
   controlla('nelle sale col colonnato le nicchie stanno in linea coi pilastri', allineate.length > 40 &&
             allineate.every(({ s, n }) => s.colonnato.pos.includes(s.colonnato.lungoX ? n.x : n.y)), `${allineate.length} nicchie`)

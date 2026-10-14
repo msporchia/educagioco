@@ -5,7 +5,7 @@
 import { EROI } from './eroi.js'
 import { MOSTRI } from './mostri.js'
 import { CAMPAGNA, TRATTI_DELL_ABISSO } from './campagna.js'
-import { ORPELLI, POSE } from './orpelli.js'
+import { ORPELLI, POSE, NICCHIE } from './orpelli.js'
 import { guastiDeiRelitti } from './relitti.js'
 
 export const SCENARI = {
@@ -34,7 +34,11 @@ export const SCENARI = {
     // i forzieri del posto (docs/sotterraneo/roba.md): legno e ferro, pietra e ferro freddo, ferro e brace; il d'oro è solo quello delle missioni
     forzieri: ['cantine-forziere-a', 'cantine-forziere-b', 'cantine-forziere-c', 'cantine-forziere-d'],
     orpelli: ORPELLI.cantine,   // l'arredo: cosa c'è, dove sta, quanto è epico (dati/orpelli.js)
-    diagonali: null,   // i muri obliqui hanno i pezzi solo nella cripta (docs/sotterraneo/scenari.md, «I muri in diagonale»)
+    // i muri obliqui, fatti in codice dalle tessere dritte (strumenti/sprite/diagonali.py, docs/sotterraneo/scenari.md, «I muri in diagonale»)
+    diagonali: {
+      taglio: { so: 'cantine-taglio-so', se: 'cantine-taglio-se' },
+      faccia: { no: ['cantine-faccia-no-0', 'cantine-faccia-no-1'], ne: ['cantine-faccia-ne-0', 'cantine-faccia-ne-1'] },
+    },
   },
   // la cripta (sotterraneo_4*.png): ritagliata da una scena, più due fogli coi pezzi che la scena non ha
   cripta: {
@@ -87,7 +91,10 @@ export const SCENARI = {
     ragnatele: { sx: 'fornace-ragnatela-sx', dx: 'fornace-ragnatela-dx' },
     forzieri: ['fornace-forziere-b', 'fornace-forziere-c'],
     orpelli: ORPELLI.fornace,
-    diagonali: null,
+    diagonali: {
+      taglio: { so: 'fornace-taglio-so', se: 'fornace-taglio-se' },
+      faccia: { no: ['fornace-faccia-no-0', 'fornace-faccia-no-1'], ne: ['fornace-faccia-ne-0', 'fornace-faccia-ne-1'] },
+    },
   },
 }
 
@@ -154,6 +161,13 @@ export function guastiDelleTessere(nomi = null) {
       if (!o.dice) g.push(`scenario ${k}: l'orpello "${o.pezzo}" non dice niente a chi lo tocca`)
       if (!POSE.includes(o.posa)) g.push(`scenario ${k}: l'orpello "${o.pezzo}" ha una posa che non esiste (${o.posa})`)
       if (!(o.epica >= 1 && o.epica <= 10)) g.push(`scenario ${k}: l'orpello "${o.pezzo}" ha un'epicità fuori da 1–10`)
+    }
+    // le nicchie hanno i loro pezzi, presi dall'arredo dello scenario e mai accesi (la luce non si regala a ogni nicchia)
+    if (!(NICCHIE[k] || []).length) g.push(`scenario ${k}: nessun pezzo per le nicchie`)
+    for (const p of NICCHIE[k] || []) {
+      const o = (sc.orpelli || []).find(q => q.pezzo === p)
+      if (!o) g.push(`scenario ${k}: il pezzo di nicchia "${p}" non è fra i suoi orpelli`)
+      else if (o.arde) g.push(`scenario ${k}: il pezzo di nicchia "${p}" fa luce`)
     }
     if (!(sc.orpelli || []).some(o => o.epica <= 1 && o.posa !== 'coppia'))
       g.push(`scenario ${k}: nessun orpello da stanza qualunque (epicità 1)`)

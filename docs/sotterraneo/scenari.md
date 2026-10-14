@@ -89,18 +89,22 @@ in Node) e si prova in `unita/muri-sotterraneo`.
 - **Le cose per terra** stanno su una cella di pavimento su venticinque,
   sempre le stesse: una su dieci copriva le stanze di sassi.
 
-## I muri in diagonale (prova sulla cripta)
+## I muri in diagonale
 
 Le stanze smussate, le cappelle e le sale con gli angoli tagliati hanno muri a gradini di una cella, e un muro obliquo usciva
 come una scaletta di quadrati (l'utente, 13 ottobre 2026: «la struttura è molto carina, è il rendering che è terribile»). I generatori
-di immagini non c'erano, e la regola è «prima in codice, poi dipinto»: i pezzi si ricavano dalle tessere dritte della cripta, e **solo la cripta
-li ha** (`diagonali` in `SCENARI`, `null` per le altre). **Il disegno per il dipinto** è in [PROMPT-scenario.md](../../strumenti/sprite/sorgenti/sotterraneo/generati/PROMPT-scenario.md#i-pezzi-diagonali-e-gli-angoli).
+di immagini non c'erano, e la regola è «prima in codice, poi dipinto»: i pezzi si ricavano dalle tessere dritte di ogni scena (il metodo è in
+[../core/sprite.md](../core/sprite.md#i-pezzi-derivati-in-codice), `diagonali` in `SCENARI`). Le grotte (muri naturali storti) non hanno pezzi loro. **Il disegno per il dipinto** è in [PROMPT-scenario.md](../../strumenti/sprite/sorgenti/sotterraneo/generati/PROMPT-scenario.md#i-pezzi-diagonali-e-gli-angoli).
 
 - **Quando una cella taglia** (`taglio` in `scena/muri.js`, pura): è roccia con roccia da due lati contigui (n/o, n/e, s/o, s/e) e **pavimento
   dagli altri due e in diagonale**; `no` e `ne` hanno il pavimento sotto (sono facce), `so` e `se` sopra (sono bordi). Vale solo se quel pavimento
   è di una stanza `smussata`, `cappella` o `sala` (`STANZE_LISCE` in `tela.js`) e non è una porta né una nicchia: una svolta di corridoio, un'elle,
-  una croce restano quadrate. Gli angoli di roccia del rettangolo (pavimento solo in diagonale) restano quadrati: arrotondarli vuole
-  anche il pavimento che entra nella roccia, e non è fatto.
+  una croce restano quadrate. Il pavimento di un relitto o di una pozza accanto al muro conta come pavimento della stanza (un
+  mucchio di macerie nell'angolo non lascia più la scaletta).
+- **L'angolo interno** (`angoloInterno` in `scena/muri.js`, pura): una cella di **pavimento** con la roccia da due lati contigui e in diagonale e il pavimento dagli altri
+  due e in diagonale, in una stanza liscia (il 270° del rettangolo: gli angoli di una sala, di una cappella). Si smussa con **gli stessi pezzi del taglio**, posati sul
+  pavimento: la roccia (o la faccia obliqua) occupa mezza cella e la cella di faccia sopra diventa tetto (`sopraInterni` in `tela.js`). Non dove il muro accanto è già un taglio
+  (sarebbe smussato due volte), e non accanto a una nicchia o a una porta. Visivamente mangia un po' di cella calpestabile nell'angolo: chi ci sta sopra si vede davanti alla roccia.
 - **La linea passa per gli angoli opposti della cella, a gradini di un pixel del disegno** (4 px a schermo). Il pavimento sotto resta quello vero (la tela
   lo posa anche nella cella tagliata, col tipo del pavimento accanto); il pezzo è trasparente dove c'è pavimento.
 - **Il bordo chiaro** (`so`, `se`): la roccia è la tessera del tetto, mascherata col triangolo; la riga chiara e la fascia scura sono quelle del bordo dritto
@@ -111,13 +115,15 @@ li ha** (`diagonali` in `SCENARI`, `null` per le altre). **Il disegno per il dip
   le strisce laterali (`forma.sopra`). Due pezzi per verso, per la parità della fila di due celle della faccia dritta, che così si continua da una cella all'altra.
 - **Il perché dei gradini di un pixel**: la fascia della faccia dritta sale di 16 pixel in 16 colonne e le sue due estremità cadono sulle facce dritte accanto
   (`y` e `y - 1`) senza saltare; vale per le scalette di una cella come per i passi da due celle della cappella, che diventano una diagonale sola.
-- **Lo strumento**: `python3 strumenti/sprite/diagonali.py` (`--provino`) rifà il foglio `sotterraneo_4_diagonali.png` e il suo foglietto dalle tessere
-  di `sotterraneo_4.png` (lo stesso ritaglio di `atlante.py`); poi `atlante.py sotterraneo`. Sei pezzi: `cripta-taglio-so|se` (16×16),
-  `cripta-faccia-no|ne-0|1` (16×32). Per averne per un altro scenario si cambia il nome della sorgente e dei pezzi in `diagonali.py`.
-- **Provato** (foto prima/dopo): ottagoni, cappelle e sale con gli angoli tagliati diventano muri lisci, i passi da due celle una diagonale, le nicchie e le
-  porte restano al loro posto. **Non guardato**: scale, relitti e arredo accanto a un taglio; le grotte (muri naturali storti) non hanno pezzi loro.
+- **Lo strumento**: `python3 strumenti/sprite/diagonali.py [scena]` (`--provino`) rifà i fogli `sotterraneo_4|2|5_diagonali.png` e i loro foglietti dalle tessere
+  di ogni scena (lo stesso ritaglio di `atlante.py`); poi `atlante.py sotterraneo`. Sei pezzi per scena: `<scena>-taglio-so|se` (16×16),
+  `<scena>-faccia-no|ne-0|1` (16×32). Le funzioni sono in `derivati.py`, la voce di ogni scena (da quale foglio, le righe del coronamento) in `SCENE` di `diagonali.py`.
+  Le cantine hanno la faccia alta 20 e il coronamento di quattro righe: la fascia obliqua è alta 16, con quattro righe di mattoni in meno.
+- **Provato** (foto prima/dopo, 14 ottobre): ottagoni, cappelle e sale con gli angoli tagliati diventano muri lisci nelle tre scene, i passi da due celle una diagonale, le nicchie e le
+  porte restano al loro posto, gli angoli interni di sale e cappelle si arrotondano. **Restano a scaletta** (e va bene: «non tutto deve essere smussato», l'utente, 14 ottobre): i passi da
+  tre celle o più della cappella, le celle accanto a una nicchia o a una porta. **Non guardato**: scale accanto a un taglio.
 
-Nei test: `unita/muri-sotterraneo` (§ 6, `taglio`: i quattro versi, il rettangolo che non taglia, una svolta che taglia solo con un pavimento buono).
+Nei test: `unita/muri-sotterraneo` (§ 6, `taglio` e `angoloInterno`: i quattro versi, il rettangolo che non taglia ma ha i suoi quattro angoli interni, una svolta che taglia solo con un pavimento buono), `unita/sprite-derivati` (le funzioni e che i fogli siano quelli del comando), `unita/tessere` (i nomi nell'atlante).
 
 ## I fogli e l'atlante
 

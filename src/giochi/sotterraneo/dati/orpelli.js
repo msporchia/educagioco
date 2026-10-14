@@ -136,3 +136,11 @@ export const ORPELLI = {
     o('fornace-stendardo', 'appeso', 3, 'Uno stendardo rosso con un segno di fuoco.'),
   ],
 }
+
+// I pezzi che stanno in una nicchia (nomi di pezzi di ORPELLI dello stesso scenario): una nicchia vuota sembra un buco nel muro
+// e non una nicchia. `arredaLeNicchie` ne mette uno in ogni nicchia rimasta vuota; niente pezzi che fanno luce. docs/sotterraneo/piani-caverne.md
+export const NICCHIE = {
+  cantine: ['barile', 'cantine-botte', 'cantine-scaffale', 'cantine-legna', 'cantine-candeliere', 'cantine-candelabro-alto', 'teschio-scena', 'ossa'],
+  cripta: ['cripta-statua-nicchia', 'cripta-cavaliere-mani', 'cripta-lastra-funeraria', 'cripta-idolo', 'cripta-braciere', 'cripta-base', 'cripta-candela', 'cripta-leggio'],
+  fornace: ['fornace-botte', 'fornace-carbone', 'fornace-incudine', 'fornace-gargoyle-0', 'fornace-fontana-ferro'],
+}
