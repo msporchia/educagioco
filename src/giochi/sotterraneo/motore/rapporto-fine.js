@@ -16,9 +16,14 @@ export const RIGHE_FINE = [
   { chiave: 'dif', nome: 'difesa %', segno: false },
   { chiave: 'vita', nome: 'vita massima %', segno: false },
   { chiave: 'valore', nome: 'valore roba %', segno: false },
-  { chiave: 'gemme', nome: 'gemme avanzate', segno: false },
+  { chiave: 'gemme', nome: 'gemme non spese', segno: false },
   { chiave: 'poz', nome: 'pozioni rimaste', segno: false },
   { chiave: 'bevute', nome: 'pozioni bevute', segno: false },
+  { chiave: 'ris', nome: 'risalite a discesa', segno: false },
+  { chiave: 'spRis', nome: 'gemme spese in salita', segno: false },
+  { chiave: 'pezRis', nome: 'pezzi comprati in salita', segno: false },
+  { chiave: 'pozRis', nome: 'pozioni comprate in salita', segno: false },
+  { chiave: 'camRis', nome: 'passi per il portale', segno: false },
 ]
 
 /* Le letture a fine discesa di una linea: `passi` sono i suoi passi (uno per storia e per discesa k; k = 7 è la spesa in uscita). La fine
@@ -26,7 +31,7 @@ export const RIGHE_FINE = [
 export function fineDi(passi) {
   const storie = new Map()
   for (const p of passi) { const c = `${p.eroe}|${p.seme}`; if (!storie.has(c)) storie.set(c, []); storie.get(c)[p.k] = p }
-  const nuovo = () => ({ n: 0, passa: [], allaPrima: [], dopoAllaPrima: [], ...Object.fromEntries(RIGHE_FINE.map(r => [r.chiave, []])) })
+  const nuovo = () => ({ n: 0, passa: [], allaPrima: [], dopoAllaPrima: [], comprati: [], trovati: [], inutili: [], domande: [], forzaAlla: [], ...Object.fromEntries(RIGHE_FINE.map(r => [r.chiave, []])) })
   const per = CAMPAGNA.map(nuovo)
   for (const s of storie.values()) CAMPAGNA.forEach((_, j) => {
     const dentro = s[j], dopo = s[j + 1]
@@ -45,6 +50,16 @@ export function fineDi(passi) {
     f.gemme.push(i.gemme)
     f.poz.push(dopo.prima.poz)
     f.bevute.push(dentro.tentativi.reduce((x, t) => x + t.pz, 0))
+    const somma = (dove, campo) => dentro.tentativi.reduce((x, t) => x + (t.ri || []).reduce((y, r) => y + (typeof campo === 'function' ? campo(r) : r[campo]), 0), 0)
+    f.ris.push(dentro.tentativi.reduce((x, t) => x + (t.ri || []).length, 0))
+    f.spRis.push(somma(null, 'sp'))
+    f.pezRis.push(somma(null, r => r.pz.length))
+    f.pozRis.push(somma(null, 'po'))
+    f.camRis.push(somma(null, 'ca'))
+    f.comprati.push((dentro.pre || 0) + somma(null, r => r.ut || 0))
+    f.trovati.push(dentro.tentativi.reduce((x, t) => x + ((t.ar && t.ar.trovati) || 0), 0))
+    f.inutili.push(dentro.tentativi.reduce((x, t) => x + ((t.ar && t.ar.inutili) || 0), 0))
+    f.domande.push(dentro.tentativi.length ? dentro.tentativi[dentro.tentativi.length - 1].dom : null)
   })
   return per
 }
@@ -65,7 +80,22 @@ export function tabellaFine(F, nome, { solo = null } = {}) {
   const righe = [`${nome} (a fine discesa, dopo la spesa: 10° · mediana · 90° percentile di ${Math.max(...F.map(f => f.n))} storie)`, intestazione()]
   for (const r of RIGHE_FINE.filter(x => !solo || solo.includes(x.chiave)))
     righe.push(r.nome.padEnd(22) + quantili(F, r.chiave).map(v => v.map(x => cifra(x, r.segno)).join('·').padStart(14)).join(''))
+  // gemme non spese oltre il valore della roba attesa: il giocatore non sfrutta il personaggio (un sospetto da spiegare, non un dato)
+  const sospetti = F.map((f, j) => (f.n && mediana(f.gemme) > attesoDellaFine(j).valore ? '⚠' : ''))
+  if (sospetti.some(Boolean) && (!solo || solo.includes('gemme'))) righe.push('gemme non spese: sospetto'.padEnd(22) + sospetti.map(x => x.padStart(14)).join(''))
   return righe.join('\n')
+}
+
+// Le armi nuove che migliorano davvero l'eroe, per discesa: comprate (fra una discesa e l'altra e in salita) · trovate · totale, la mediana del totale e i pezzi trovati che non servivano
+// (l'utente: circa 3 utili a discesa fra comprati e trovati; molti di più è troppa generosità, molti di meno un fabbro troppo caro o drop avari)
+export function tabellaArmi(F, nome) {
+  const m = v => (v.length ? media(v) : null), d = x => (x == null ? '-' : x.toFixed(1))
+  const riga = (n, f) => n.padEnd(22) + F.map((g, j) => (g.n ? f(g, j) : '-').padStart(14)).join('')
+  return [`${nome} (armi nuove che migliorano l'eroe, per discesa)`, intestazione(),
+    riga('comprate', g => d(m(g.comprati))), riga('trovate', g => d(m(g.trovati))),
+    riga('utili in tutto', g => d(m(g.comprati.map((c, i) => c + g.trovati[i])))),
+    riga('mediana utili', g => String(mediana(g.comprati.map((c, i) => c + g.trovati[i])))),
+    riga('trovate e inutili', g => d(m(g.inutili)))].join('\n')
 }
 
 // l'atteso in assoluto, una riga per misura
@@ -96,4 +126,21 @@ export function chiVinceBevendo(F) {
   F.forEach(f => f.passa.forEach((p, i) => { if (p) (f.bevute[i] >= POZIONI_DA_BEONE ? beve : altri).push({ scarto: f.scarto[i], dpa: f.dpa[i], dopo: f.dopoAllaPrima[i] }) }))
   const riassunto = xs => ({ n: xs.length, scarto: mediana(xs.map(x => x.scarto)), dpa: mediana(xs.map(x => x.dpa)), dopo: media(xs.filter(x => x.dopo != null).map(x => x.dopo)) })
   return { quota: beve.length + altri.length ? beve.length / (beve.length + altri.length) : null, beve: riassunto(beve), altri: riassunto(altri) }
+}
+
+// Il riassunto di una linea per il «prima → dopo» (`--riassunto file` lo salva, `--contro file` lo legge): per discesa le mediane che contano
+export function riassuntoDi(F) {
+  return F.map(f => (f.n ? { allaPrima: media(f.allaPrima), domande: mediana(f.domande.filter(x => x != null)), scarto: mediana(f.scarto), dpa: mediana(f.dpa),
+    valore: mediana(f.valore), gemme: mediana(f.gemme), utili: mediana(f.comprati.map((c, i) => c + f.trovati[i])), ris: media(f.ris) } : null))
+}
+
+// il confronto fra due riassunti della stessa linea: una riga per misura, «prima → dopo» per discesa
+export function confrontoDi(nome, prima, dopo) {
+  const cifraC = (x, d = 0) => (x == null ? '-' : Math.abs(x) >= 1000 ? `${(x / 1000).toFixed(1)}k` : x.toFixed(d))
+  const righe = [`${nome} (prima → dopo)`, intestazione()]
+  const mis = [['vinte alla prima %', x => x.allaPrima * 100, 0], ['domande (mediana)', x => x.domande, 0], ['forza sull\'atteso', x => x.scarto, 0], ['danno a risposta %', x => x.dpa, 0],
+    ['gemme non spese', x => x.gemme, 0], ['armi utili (mediana)', x => x.utili, 0], ['risalite a discesa', x => x.ris, 1]]
+  for (const [n, f, d] of mis)
+    righe.push(n.padEnd(22) + CAMPAGNA.map((_, j) => (prima[j] && dopo[j] ? `${cifraC(f(prima[j]), d)}→${cifraC(f(dopo[j]), d)}` : '-').padStart(14)).join(''))
+  return righe.join('\n')
 }

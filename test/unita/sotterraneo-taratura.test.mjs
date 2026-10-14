@@ -3,15 +3,15 @@
    ogni cella fuori bersaglio, la tabella delle specie si legge, la potenza del mostro porta esperienza e gemme, il danno è continuo; le strade di
    spesa, la fine della discesa e i checkpoint (una tappa da un checkpoint dà gli stessi numeri del giro intero, la firma dice cosa rifare).
    `node test/esegui.mjs sotterraneo-taratura --niente-build` */
-import { GIOCATORI_TIPO, NOMI_TIPO, COLPI_PER_STENDERE, stileDi, STRADE, NOMI_STRADA } from '../../src/giochi/sotterraneo/dati/giocatori-tipo.js'
+import { GIOCATORI_TIPO, NOMI_TIPO, COLPI_PER_STENDERE, stileDi, STRADE, NOMI_STRADA, RISALITA, sogliaDiRisalita } from '../../src/giochi/sotterraneo/dati/giocatori-tipo.js'
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { storiaDi, passoDellaStoria, STATO_NUOVO, rifatteAl, lineeDelGiro, compatta } from '../../src/giochi/sotterraneo/motore/storie.js'
-import { allaBottega } from '../../src/giochi/sotterraneo/motore/banco.js'
+import { allaBottega, gioca } from '../../src/giochi/sotterraneo/motore/banco.js'
 import { ROBA_VUOTA } from '../../src/giochi/sotterraneo/motore/corredo.js'
 import { COSE } from '../../src/giochi/sotterraneo/dati/cose.js'
 import { eroeAtteso } from '../../src/giochi/sotterraneo/motore/forza.js'
 import { dannoPerRisposta, attesoA } from '../../src/giochi/sotterraneo/motore/fine.js'
-import { fineDi, tabellaFine, tabellaAtteso, rigaDellaStrada, chiVinceBevendo } from '../../src/giochi/sotterraneo/motore/rapporto-fine.js'
+import { fineDi, tabellaFine, tabellaAtteso, rigaDellaStrada, chiVinceBevendo, tabellaArmi, riassuntoDi } from '../../src/giochi/sotterraneo/motore/rapporto-fine.js'
 import { firmeDelleDiscese, scrivi, leggi, validi, scegli } from '../../strumenti/sotterraneo-checkpoint.mjs'
 import { mkdtempSync, writeFileSync, rmSync, mkdirSync } from 'node:fs'
 import { tmpdir } from 'node:os'
@@ -19,6 +19,8 @@ import { join } from 'node:path'
 import { partite, rapporto, tabella, spiega, fuoriBersaglio, primoFuoriDiMolto, forbice, scostamento, bersaglioDi } from '../../src/giochi/sotterraneo/motore/rapporto.js'
 import { tabellaDelleSpecie } from '../../src/giochi/sotterraneo/motore/specie.js'
 import { potenzaDelMostro } from '../../src/giochi/sotterraneo/motore/potenza.js'
+import { prezziAlLivello } from '../../src/giochi/sotterraneo/motore/salti.js'
+import { robaAttesa, crescitaAttesa } from '../../src/giochi/sotterraneo/motore/storia.js'
 import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
 import { seminato } from '../../src/giochi/sotterraneo/motore/livello.js'
 import { controlla, uguale, stessaLista, riassunto } from '../aiuto/verifica.mjs'
@@ -196,6 +198,40 @@ const passi = [
   scrivi(dir, 1, { firma: 'vecchia', linee: { l: storie } })
   uguale('una discesa vecchia in mezzo: valgono quelle prima, non quelle dopo anche se tornano', validi(dir, base, { l: ['mago|1'] }), 1)
   rmSync(dir, { recursive: true, force: true })
+}
+
+/* ══════════ 9. le risalite: tornare su dal portale a spendere ══════════ */
+{
+  controlla('la soglia sale col livello e non scende', [1, 2, 5, 10, 14].every((L, i, v) => i === 0 || sogliaDiRisalita(L) >= sogliaDiRisalita(v[i - 1])))
+  const prezzi = prezziAlLivello('cavaliere', 8, 1)
+  const med = v => [...v].sort((a, b) => a - b)[Math.floor(v.length / 2)]
+  controlla('i salti di un livello hanno un prezzo, e i sogni costano di più', prezzi.salti.length > 0 && prezzi.sogni.length > 0 && med(prezzi.sogni) > med(prezzi.salti))
+  // una discesa della miniera giocata con molte gemme in tasca: sale, cammina davvero fino al portale e spende
+  const k = 4, eroe = 'cavaliere'
+  const via = (acceso, extra = {}) => {
+    RISALITA.acceso = acceso
+    try { return gioca(CAMPAGNA[k], { seme: 11, bravura: 0.9, come: 'tutto', eroe, roba: { ...robaAttesa(eroe, k), gemme: 900 }, crescita: crescitaAttesa(eroe, k), stile: stileDi('curioso'),
+                                       risalita: { spesa: STRADE.armaPrima.spesa, finite: k, seme: 5, botteghe: {}, obiettivo: 100 }, ...extra }) } finally { RISALITA.acceso = 1 }
+  }
+  const con = via(1), senza = via(0)
+  controlla('con le risalite accese sale almeno una volta, camminando', con.risalite.length >= 1 && con.risalite.every(r => r.ca >= 0 && r.sp >= 0 && Array.isArray(r.pz)), JSON.stringify(con.risalite).slice(0, 200))
+  uguale('spente, non sale mai', senza.risalite.length, 0)
+  controlla('le armi nuove si contano: trovate e inutili sono numeri', Number.isInteger(con.armi.trovati) && Number.isInteger(con.armi.inutili))
+  controlla('chi sale spende: non finisce con le gemme di partenza', con.risalite.some(r => r.sp > 0) && con.corsa.roba.gemme < 900 + con.esito.gemme)
+  uguale('lo stesso seme, la stessa discesa', JSON.stringify(via(1).risalite), JSON.stringify(con.risalite))
+  // una storia con le risalite porta i numeri nel passo e nelle tabelle
+  const p = storiaDi({ tipo: 'curioso', eroe: 'mago', seme: 3, fino: 2 })
+  controlla('il passo ha le armi comprate prima di scendere, e le risalite per tentativo', p.every(x => Number.isInteger(x.pre)) && p[2].tentativi.every(t => Array.isArray(t.ri) && t.ar))
+  const F = fineDi(p)
+  controlla('la fine ha le risalite e le armi', F[1].n === 1 && F[1].ris.length === 1 && F[1].comprati.length === 1 && F[1].trovati.length === 1)
+  controlla('la tabella delle armi ha comprate, trovate, utili e inutili', /comprate/.test(tabellaArmi(F, 'x')) && /utili in tutto/.test(tabellaArmi(F, 'x')) && /inutili/.test(tabellaArmi(F, 'x')))
+  controlla('il riassunto per il prima → dopo ha le misure', riassuntoDi(F)[1].utili != null && riassuntoDi(F)[1].ris != null)
+  // il banco pescato resta lo stesso fra una visita e l'altra
+  const botteghe = {}
+  allaBottega({ ...robaAttesa('mago', 3), gemme: 50 }, { finite: 3, eroe: 'mago', seme: 4, crescita: crescitaAttesa('mago', 3), scaffale: true, botteghe })
+  const banchi = JSON.stringify(botteghe.banchi)
+  allaBottega({ ...robaAttesa('mago', 3), gemme: 50 }, { finite: 3, eroe: 'mago', seme: 99, crescita: crescitaAttesa('mago', 3), scaffale: true, botteghe })
+  uguale('riaprire la bottega non cambia il banco', JSON.stringify(botteghe.banchi), banchi)
 }
 
 riassunto('La taratura coi giocatori tipo')

@@ -6,7 +6,7 @@ import { createHash } from 'node:crypto'
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs'
 import { dirname, resolve, relative } from 'node:path'
 
-export const FORMATO = 2
+export const FORMATO = 3
 const sha = testo => createHash('sha1').update(testo).digest('hex').slice(0, 16)
 
 // i file che un modulo importa, di qua e di là: le dipendenze relative (le altre, come vue, non fanno parte del gioco misurato)

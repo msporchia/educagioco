@@ -15,12 +15,15 @@
 //   npm run taratura -- --da 4                    # rigioca dalla quinta discesa in poi, dai checkpoint (tmp/taratura/): quelle prima non si giocano
 //   npm run taratura -- --da 4 --fino 4 --semi 10 --semi-strade 3   # una tappa sola e poche storie, servite dai checkpoint: pochi secondi
 //   npm run taratura -- --rifai                   # rifà tutti i checkpoint (di difetto si rifanno da sé quelli che la firma dei sorgenti dice vecchi)
+//   npm run taratura -- --salti                   # i prezzi dei salti per livello e la soglia delle risalite (senza giocare)
+//   npm run taratura -- --tara risalita.acceso=0,risalita.scaffale=0 --riassunto tmp/prima.json   # il giro di prima, salvato; poi `--contro tmp/prima.json` confronta
 //   npm run taratura -- --strade armaPrima        # solo quelle strade di spesa (di difetto armaPrima e beveTutto); --semi-strade N le storie per eroe
 //
 // Il caso è dichiarato: `--seme-da N` (di difetto 1) fa le storie N..N+semi−1, due giri danno le stesse cifre. `--processi N` (di difetto 4)
 // limita i processi; la macchina ha poca memoria. I tempi si stampano alla fine.
 import { spawn } from 'node:child_process'
 import { createInterface } from 'node:readline'
+import { readFileSync, writeFileSync } from 'node:fs'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { dirname, resolve, join } from 'node:path'
 import { firmeDelleDiscese, scrivi, leggi, validi, scegli } from './sotterraneo-checkpoint.mjs'
@@ -40,10 +43,12 @@ async function applicaTara(tara) {
   const { CAMPAGNA } = await modulo('dati/campagna.js')
   const zone = await modulo('dati/zone.js')
   const livelli = await modulo('dati/livelli.js')
+  const { RISALITA } = await modulo('dati/giocatori-tipo.js')
   for (const voce of (tara || '').split(',').filter(Boolean)) {
     const [k, campo] = voce.split('=')[0].split('.')
     const v = Number(voce.split('=')[1])
-    if (k === 'livelli') livelli.CURVA_DELL_ESPERIENZA[campo] = v
+    if (k === 'risalita') RISALITA[campo] = v
+    else if (k === 'livelli') livelli.CURVA_DELL_ESPERIENZA[campo] = v
     else if (k === 'potenza') livelli.VALORE_DELLA_POTENZA[campo] = v
     else if (k === 'zona') { if (campo in zone.CURVA_DELLE_ZONE) zone.CURVA_DELLE_ZONE[campo] = v; else zone.FORMA_DELLA_ZONA[campo] = v }
     else CAMPAGNA[Number(k)][campo] = v
@@ -332,7 +337,7 @@ const DIR_BASE = resolve(RADICE, 'tmp/taratura')
 const { SEMI_DELLE_STRADE } = await modulo('dati/giocatori-tipo.js')
 
 // di giocatori-tipo.js conta come si gioca (non i bersagli: cambiarli non cambia le storie)
-const sceltaDeiGiocatori = m => ({ tipi: Object.fromEntries(Object.entries(m.GIOCATORI_TIPO).map(([n, { bersagli, ...gioca }]) => [n, gioca])), strade: m.STRADE, tentativi: m.TENTATIVI, tasche: m.TASCHE_PER_I_PEZZI })
+const sceltaDeiGiocatori = m => ({ tipi: Object.fromEntries(Object.entries(m.GIOCATORI_TIPO).map(([n, { bersagli, ...gioca }]) => [n, gioca])), strade: m.STRADE, tentativi: m.TENTATIVI, tasche: m.TASCHE_PER_I_PEZZI, risalita: m.RISALITA, soglia: m.sogliaDiRisalita })
 
 async function giroATappe({ completo, solo }) {
   const storie = await modulo('motore/storie.js'), tipiMod = await modulo('dati/giocatori-tipo.js'), fine = await modulo('motore/rapporto-fine.js')
@@ -395,8 +400,18 @@ async function giroATappe({ completo, solo }) {
 async function stampaLaFine({ linee, passi, fine }, { completo }) {
   console.log('\n══ A che punto è l\'eroe alla fine di ogni discesa (dopo la spesa, prima di scendere ancora) ══')
   console.log(`\n${fine.tabellaAtteso()}`)
-  const solo = completo ? null : ['liv', 'scarto', 'dpa', 'valore', 'gemme', 'poz', 'bevute']
+  const solo = completo ? null : ['liv', 'scarto', 'dpa', 'valore', 'gemme', 'poz', 'bevute', 'ris', 'spRis', 'pezRis', 'pozRis']
   for (const l of linee) console.log(`\n${fine.tabellaFine(fine.fineDi(passi[l.id]), `${l.strada} · ${l.tipo}`, { solo })}`)
+  console.log('\n══ Le armi nuove che migliorano davvero l\'eroe (bersaglio proposto: circa 3 utili a discesa fra comprate e trovate) ══')
+  for (const l of linee) console.log(`\n${fine.tabellaArmi(fine.fineDi(passi[l.id]), `${l.strada} · ${l.tipo}`)}`)
+  // il «prima → dopo»: `--riassunto file` salva le mediane di questo giro, `--contro file` le confronta con quelle di un giro salvato (di solito con `--tara risalita.acceso=0,risalita.scaffale=0`)
+  const mie = Object.fromEntries(linee.map(l => [l.id, fine.riassuntoDi(fine.fineDi(passi[l.id]))]))
+  if (valore('--riassunto')) writeFileSync(valore('--riassunto'), JSON.stringify(mie))
+  if (valore('--contro')) {
+    const prima = JSON.parse(readFileSync(valore('--contro'), 'utf8'))
+    console.log(`\n══ Prima → dopo (il giro salvato in ${valore('--contro')} contro questo) ══`)
+    for (const l of linee) if (prima[l.id]) console.log(`\n${fine.confrontoDi(l.id, prima[l.id], mie[l.id])}`)
+  }
 }
 
 // una riga per linea: quanti vincono alla prima, dove si ferma, con che forza arriva
@@ -425,18 +440,12 @@ async function stampaLeStrade({ linee, passi, fine }) {
 /* ═══════════ si parte ═══════════ */
 const inizio = Date.now()
 let uscita = 0
-if (TARA) {
-  // anche questo processo vede i valori provati (la tabella delle specie si legge qui)
-  const { CAMPAGNA } = await modulo('dati/campagna.js'), zone = await modulo('dati/zone.js'), livelli = await modulo('dati/livelli.js')
-  for (const voce of TARA.split(',').filter(Boolean)) {
-    const [k, campo] = voce.split('=')[0].split('.'), v = Number(voce.split('=')[1])
-    if (k === 'livelli') livelli.CURVA_DELL_ESPERIENZA[campo] = v
-    else if (k === 'potenza') livelli.VALORE_DELLA_POTENZA[campo] = v
-    else if (k === 'zona') { if (campo in zone.CURVA_DELLE_ZONE) zone.CURVA_DELLE_ZONE[campo] = v; else zone.FORMA_DELLA_ZONA[campo] = v }
-    else CAMPAGNA[Number(k)][campo] = v
-  }
-}
-if (argv.includes('--specie')) await stampaLeSpecie()
+if (TARA) await applicaTara(TARA)   // anche questo processo vede i valori provati (la tabella delle specie si legge qui)
+if (argv.includes('--salti')) {
+  const { tabellaDeiSalti } = await modulo('motore/salti.js'), { sogliaDiRisalita } = await modulo('dati/giocatori-tipo.js')
+  console.log('livello · soglia proposta · soglia dell\'utente (100 + (livello − 10) · 10) · prezzo dei salti: minimo · primo quarto · mediana · massimo · il sogno (mediana)')
+  for (const r of tabellaDeiSalti()) console.log(`${String(r.livello).padStart(5)} ${String(sogliaDiRisalita(r.livello)).padStart(7)} ${String(100 + (r.livello - 10) * 10).padStart(7)}   ${r.minimo} · ${r.primoQuarto} · ${r.mediana} · ${r.massimo}   (${r.n} salti)  sogno ${r.sogno}`)
+} else if (argv.includes('--specie')) await stampaLeSpecie()
 else if (PRESTO) uscita = await presto()
 else if (argv.includes('--cerca')) {
   console.log(`Ricerca: ${SEMI} storie per eroe, un passo alla volta (chi entra nella discesa dopo ha quello che ha preso nella prima)`)
