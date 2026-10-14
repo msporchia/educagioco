@@ -226,11 +226,11 @@ const passi = [
   controlla('la fine ha le risalite e le armi', F[1].n === 1 && F[1].ris.length === 1 && F[1].comprati.length === 1 && F[1].trovati.length === 1)
   controlla('la tabella delle armi ha comprate, trovate, utili e inutili', /comprate/.test(tabellaArmi(F, 'x')) && /utili in tutto/.test(tabellaArmi(F, 'x')) && /inutili/.test(tabellaArmi(F, 'x')))
   controlla('il riassunto per il prima → dopo ha le misure', riassuntoDi(F)[1].utili != null && riassuntoDi(F)[1].ris != null)
-  // il banco pescato resta lo stesso fra una visita e l'altra
+  // il banco pescato resta lo stesso fra una visita e l'altra (senza gemme: comprare lo cambierebbe)
   const botteghe = {}
   allaBottega({ ...robaAttesa('mago', 3), gemme: 50 }, { finite: 3, eroe: 'mago', seme: 4, crescita: crescitaAttesa('mago', 3), scaffale: true, botteghe })
   const banchi = JSON.stringify(botteghe.banchi)
-  allaBottega({ ...robaAttesa('mago', 3), gemme: 50 }, { finite: 3, eroe: 'mago', seme: 99, crescita: crescitaAttesa('mago', 3), scaffale: true, botteghe })
+  allaBottega({ ...robaAttesa('mago', 3), gemme: 0 }, { finite: 3, eroe: 'mago', seme: 99, crescita: crescitaAttesa('mago', 3), scaffale: true, botteghe })
   uguale('riaprire la bottega non cambia il banco', JSON.stringify(botteghe.banchi), banchi)
 }
 

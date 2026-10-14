@@ -263,7 +263,7 @@ import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiut
   }
   controlla('l\'armaiolo ha un pezzo che l\'eroe non regge ancora', !!dopo)
   const costoDopo = novizio.quantoCosta(dopo.chiave)
-  controlla('di cui manca la caratteristica, e lo dice', !novizio.posso(dopo.chiave) && /^Serve \w+ \d+ \(hai \d+\)$/.test(novizio.perchéNo(dopo.chiave)),
+  controlla('di cui manca la caratteristica, e lo dice', !novizio.posso(dopo.chiave) && /^Serve (livello \d+ \(hai \d+\)|\w+ \d+ \(hai \d+\))( · \w+ \d+ \(hai \d+\))?$/.test(novizio.perchéNo(dopo.chiave)),
             novizio.perchéNo(dopo.chiave))
   const preso = novizio.compraDa('armaiolo', dopo.chiave)
   uguale('si compra lo stesso', preso?.che, 'comprato')
@@ -395,7 +395,8 @@ import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiut
                corpo: raro(porta('corpo', 'manto', 'corazza'), L, 'dif', 'vita'), dito: raro('amuleto-osso', L, 'dif', 'vita') }
     }
     let giri = 0, pochi = 0, nonMigliora = 0, nonPortabile = 0, rialzi = 0, storti = 0, meritare = 0, meritareStorti = 0
-    let dieci = 0, troppiRari = 0, leggendari = 0, magici = 0, scaffali = 0
+    let dieci = 0, troppiRari = 0, leggendari = 0, magici = 0, scaffali = 0, senzaSubito = 0, daTenere = 0
+    const senza = []
     const esempi = []
     for (const eroe of EROI.map(e => e.chiave))
       for (const { lv, rara } of prove)
@@ -413,6 +414,10 @@ import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiut
                 const qui = vista.filter(r => COSE[r.chiave].dove && schedaDi(m, r.chiave) === s)
                 if (qui.length < 3) { pochi++; esempi.push(`${eroe} lv${lv} f${finite} ${m.chiave}/${s.chiave}: ${qui.length}`) }
                 if (qui.length >= PEZZI_PER_LINGUETTA) dieci++
+                // un pezzo si indossa dal suo livello: chi ha le gemme trova sempre qualcosa da mettersi adesso (se l'eroe non ha già il meglio
+                // del suo livello, e i gioielli migliorano quasi solo col livello)
+                if (!rara && s.chiave !== 'gioielli' && !qui.some(r => COSE[r.chiave].dove && b.posso(r.chiave))) { senzaSubito++; senza.push(`${eroe} lv${lv} f${finite} ${m.chiave}/${s.chiave}`) }
+                if (qui.some(r => COSE[r.chiave].dove && !b.posso(r.chiave) && b.porta(r.chiave))) daTenere++
                 if (qui.filter(r => COSE[r.chiave].rarita === 'raro').length > RARI_PER_LINGUETTA) troppiRari++
                 magici += qui.filter(r => r.rialzo && COSE[r.chiave].rarita === 'magico').length
                 for (const r of qui) {
@@ -435,6 +440,8 @@ import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiut
     controlla(`in ${giri} linguette (4 eroi, vari livelli, roba rara addosso) nessuna ha meno di tre pezzi`, pochi === 0,
               esempi.slice(0, 6).join(' | '))
     controlla('quasi tutte arrivano a dieci', dieci > giri * 0.9, `${dieci}/${giri}`)
+    controlla('ogni linguetta ha almeno un pezzo che migliora e si indossa subito', senzaSubito === 0, senza.slice(0, 5).join(' | '))
+    controlla('e quasi sempre anche pezzi da tenere per dopo', daTenere > giri * 0.8, `${daTenere}/${giri}`)
     uguale('mai un leggendario sul banco, né fra i pezzi in più', leggendari, 0)
     uguale('i rari restano nei salti e nei sogni (al più cinque per linguetta)', troppiRari, 0)
     controlla('il magico c\'è sempre: la maggior parte dello scaffale', magici > scaffali / 2, `${magici} magici su ${scaffali} in scaffale`)

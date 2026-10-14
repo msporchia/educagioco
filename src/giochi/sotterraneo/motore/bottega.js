@@ -17,7 +17,7 @@ export const PEZZI_PER_LINGUETTA = 10
 // sotto questi (comprati, o non più utili al nuovo livello) una linguetta si rimette in piedi anche a metà giro
 export const MINIMO_PER_LINGUETTA = 3
 // i pezzi che chiedono più caratteristica di quella che hai, per linguetta: si comprano, vanno nello zaino
-export const DA_MERITARE = 2
+export const DA_MERITARE = 8
 // il tetto di rarità del banco: il magico c'è sempre, i rari solo fra i salti e i sogni (sotto), mai un leggendario
 // (quelli sono dei drop)
 export const RARI_PER_LINGUETTA = 5
@@ -34,11 +34,14 @@ export const SALTO_MINIMO = 1.5
 export const PREZZO_DEL_SOGNO = 2
 export const SOGNO_LIVELLI = 8
 const SOGNO_SPAZIO = 6
+// oltre SOGNO_LIVELLI livelli sopra l'eroe un pezzo per dopo si cerca solo se i pezzi non bastano a riempire
+const RIALZO_MASSIMO = 80
+// il salto da mettere subito si cerca fino a questi livelli sotto quello dell'eroe
+const SALTO_SUBITO_SOTTO = 2
 // a ogni giro, per ogni linguetta che veste, se ne vanno i più deboli e ne entrano altrettanti nuovi
 export const SE_NE_VANNO = 3
 // quanti pezzi venduti il rigattiere tiene da parte
 export const ULTIMI_VENDUTI = 5
-const RIALZO_MASSIMO = 80
 // il traguardo di un'arma sta al più a due punti di caratteristica da quello che l'eroe regge (tosta, non troppo)
 const FINESTRA_DEL_TRAGUARDO = 2 * LIVELLI_PER_REQUISITO
 const MARGINE_DELLA_SCELTA = 6
@@ -333,7 +336,7 @@ export class Bottega extends Corredo {
   // andati via). Torna quanti ne ha messi
   riempi(m, scheda, soglia, scartati = []) {
     // un giro pieno porta prima i salti e i sogni che mancano (anche oltre la soglia), poi il resto
-    const forti = soglia >= PEZZI_PER_LINGUETTA ? this.completaForti(m, scheda, scartati) : 0
+    const forti = soglia >= PEZZI_PER_LINGUETTA ? this.completaForti(m, scheda, scartati) + this.completaSubito(m, scheda, scartati) : 0
     const qui = this.vistaQui(m, scheda)
     const manca = soglia - qui.length
     if (manca <= 0) return forti
@@ -344,13 +347,47 @@ export class Bottega extends Corredo {
     return forti + nuovi.length
   }
 
+  // Almeno un pezzo che l'eroe indossa subito e che migliora quello che ha (i salti stanno più su): se la linguetta non ne ha, il
+  // migliore che c'è al suo livello, comune o magico o un raro che sia un salto. Torna quanti ne ha messi (zero se non ce n'è)
+  completaSubito(m, scheda, scartati = []) {
+    if (this.vistaQui(m, scheda).some(r => this.posso(r.chiave))) return 0
+    const visti = this.visti(m, scartati)
+    const L = this.livelloEroe
+    const rari = this.vistaQui(m, scheda).filter(r => COSE[r.chiave].rarita === 'raro').length
+    let migliore = null
+    for (const b of A_SORTE) {
+      if (!(COSE[b].dove && scheda.dove.includes(COSE[b].dove) && vendeLa(m, b) && !m.sempre.includes(b) && this.porta(b))) continue
+      for (let l = L; l >= Math.max(1, L - SALTO_SUBITO_SOTTO); l--) {
+        for (const rar of ['comune', 'magico', 'raro']) {
+          for (let t = 0; t < (rar === 'comune' ? 1 : 2); t++) {
+            const ab = rar === 'comune' ? [] : pescaAbilita(b, rar === 'raro' ? 2 : 1 + Math.floor(this.rnd() * 2), this.rnd)
+            if (rar !== 'comune' && !ab.length) continue
+            const k = chiaveDelPezzo(b, l, rar, ab)
+            if (visti.has(k) || !this.posso(k) || !this.valeLaPena(k) || (rar === 'raro' && (rari >= RARI_PER_LINGUETTA || this.ruoloDi(k) !== 'salto'))) continue
+            const meglio = this.confronto(k).meglio
+            if (!migliore || meglio > migliore.meglio) migliore = { k, meglio }
+          }
+        }
+      }
+    }
+    if (!migliore) return 0
+    this.scaffali[m.chiave].push(migliore.k)
+    return 1
+  }
+
   // Porta la linguetta a SALTI_PER_LINGUETTA salti e SOGNI_PER_LINGUETTA sogni, mettendo sullo scaffale quelli che mancano
   completaForti(m, scheda, scartati = []) {
     const ruoli = this.vistaQui(m, scheda).map(r => r.ruolo)
     const visti = this.visti(m, scartati)
     const salti = this.pescaForti(m, scheda, 'salto', SALTI_PER_LINGUETTA - ruoli.filter(x => x === 'salto').length, visti)
     for (const k of salti) visti.add(k)
-    const sogni = this.pescaForti(m, scheda, 'sogno', SOGNI_PER_LINGUETTA - ruoli.filter(x => x === 'sogno').length, visti)
+    const bisogno = SOGNI_PER_LINGUETTA - ruoli.filter(x => x === 'sogno').length
+    const sogni = this.pescaForti(m, scheda, 'sogno', bisogno, visti)
+    // il caso può non dare due sogni al primo tentativo: due riprese
+    for (let t = 0; t < 2 && sogni.length < bisogno; t++) {
+      for (const k of sogni) visti.add(k)
+      sogni.push(...this.pescaForti(m, scheda, 'sogno', bisogno - sogni.length, visti))
+    }
     this.scaffali[m.chiave].push(...salti, ...sogni)
     return salti.length + sogni.length
   }
@@ -390,8 +427,11 @@ export class Bottega extends Corredo {
     let [da, a] = sogno ? [L + SOGNO_LIVELLI, L + SOGNO_LIVELLI + SOGNO_SPAZIO] : [L + 1, L + SOGNO_LIVELLI - 1]
     const mescolate = basi.map(b => ({ b, r: this.rnd() })).sort((x, y) => x.r - y.r).map(x => x.b)
     const trovati = []   // [{ base, cand: [k] }]
+    // il salto che si mette subito è del livello dell'eroe o sotto: un pezzo si indossa dal suo livello
+    const subitoDi = []
+    if (!sogno) this.cercaForti(mescolate, ruolo, quanti, visti, Math.max(1, L - SALTO_SUBITO_SOTTO), L, subitoDi)
     const trovatiIn = () => trovati.reduce((n, t) => n + t.cand.length, 0)
-    for (let giro = 0; giro < 6 && trovatiIn() < quanti; giro++) {
+    for (let giro = 0; giro < 10 && trovatiIn() < quanti; giro++) {
       if (giro) { da = a + 1; a = da + SOGNO_SPAZIO * giro }
       this.cercaForti(mescolate, ruolo, quanti, visti, da, a, trovati)
       if (!sogno) break
@@ -408,12 +448,9 @@ export class Bottega extends Corredo {
     } else {
       // il primo, se si può, uno che l'eroe regge già: il salto che si compra e si mette; poi uno per base
       const uno = t => t.cand[Math.floor(this.rnd() * t.cand.length)]
-      const subito = trovati.find(t => t.cand.some(k => this.posso(k)))
-      if (subito) {
-        const reggibili = subito.cand.filter(k => this.posso(k))
-        presi.push(reggibili[Math.floor(this.rnd() * reggibili.length)])
-      }
-      for (const t of trovati) if (presi.length < quanti && t !== subito) presi.push(uno(t))
+      const subito = subitoDi.flatMap(t => t.cand.filter(k => this.posso(k)))
+      if (subito.length) presi.push(subito.sort((x, y) => this.confronto(y).meglio - this.confronto(x).meglio || (x < y ? -1 : 1))[0])
+      for (const t of trovati) if (presi.length < quanti) presi.push(uno(t))
     }
     for (const k of altri(presi)) if (presi.length < quanti) presi.push(k)
     return presi.slice(0, quanti)
@@ -443,7 +480,7 @@ export class Bottega extends Corredo {
       pool.push(k)
     }
     let daMeritare = qui.filter(r => !r.ruolo && !this.posso(r.chiave)).length
-    for (let su = 0; su <= RIALZO_MASSIMO && pool.length < quanti + MARGINE_DELLA_SCELTA; su++) {
+    for (let su = 0; (su < SOGNO_LIVELLI || (pool.length < quanti && su <= RIALZO_MASSIMO)) && pool.length < quanti + MARGINE_DELLA_SCELTA; su++) {
       for (const b of basi) {
         const livelli = su === 0 ? [...new Set([this.livelloPortabile(b, L), L])] : [L + su]
         for (const l of livelli) {
@@ -458,14 +495,15 @@ export class Bottega extends Corredo {
     // il traguardo: per ogni base, il primo livello (poco più su) a cui l'eroe non la regge ancora; gli manca un punto di caratteristica
     for (const b of basi) {
       for (let l = L + 1; l <= L + FINESTRA_DEL_TRAGUARDO; l++) {
-        if (this.posso(aLivello(b, l))) continue
+        if (this.reggo(aLivello(b, l))) continue
         prova(chiaveDelPezzo(b, l))
         const abilita = pescaAbilita(b, 1 + Math.floor(this.rnd() * 2), this.rnd)
         if (abilita.length) prova(chiaveDelPezzo(b, l, 'magico', abilita))
         break
       }
     }
-    const mescolati = pool.map(k => ({ k, r: this.rnd() })).sort((a, b) => a.r - b.r).map(x => x.k)
+    // quelli che si indossano subito prima di quelli da tenere per dopo
+    const mescolati = pool.map(k => ({ k, r: this.rnd() })).sort((a, b) => (this.posso(b.k) - this.posso(a.k)) || a.r - b.r).map(x => x.k)
     const presi = []
     const basiPrese = new Set()
     const sta = k => this.posso(k) || daMeritare < DA_MERITARE
