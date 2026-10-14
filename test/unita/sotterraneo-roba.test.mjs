@@ -16,7 +16,7 @@ import { MERCANTI, mercanteDi, vendeLa, righeDi, guastiDeiMercanti, schedaDi, sc
 import { MERCANTI as DOVE_MERCANTI } from '../../src/giochi/sotterraneo/dati/terra-mappa.js'
 import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
 import { Corredo, ROBA_VUOTA, rileggiRoba, ABILITA_CONFRONTATE } from '../../src/giochi/sotterraneo/motore/corredo.js'
-import { Bottega, PEZZI_PER_LINGUETTA, RARI_PER_LINGUETTA, ULTIMI_VENDUTI, alGiroNuovo, SALTI_MINIMI, SOGNI_MINIMI, SALTO_RELATIVO,
+import { Bottega, PEZZI_PER_LINGUETTA, SUBITO_PER_LINGUETTA, RARI_PER_LINGUETTA, ULTIMI_VENDUTI, alGiroNuovo, SALTI_MINIMI, SOGNI_MINIMI, SALTO_RELATIVO,
          SALTO_MINIMO, SOGNO_LIVELLI } from '../../src/giochi/sotterraneo/motore/bottega.js'
 import { ABILITA, affiancatoDi, sintesiDi } from '../../src/giochi/sotterraneo/viste/pezzo.js'
 import { Livello, seminato } from '../../src/giochi/sotterraneo/motore/livello.js'
@@ -395,7 +395,7 @@ import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiut
                corpo: raro(porta('corpo', 'manto', 'corazza'), L, 'dif', 'vita'), dito: raro('amuleto-osso', L, 'dif', 'vita') }
     }
     let giri = 0, pochi = 0, nonMigliora = 0, nonPortabile = 0, rialzi = 0, storti = 0, meritare = 0, meritareStorti = 0
-    let dieci = 0, troppiRari = 0, leggendari = 0, magici = 0, scaffali = 0, senzaSubito = 0, daTenere = 0
+    let conSubito = 0, dueSubito = 0, dieci = 0, troppiRari = 0, leggendari = 0, magici = 0, scaffali = 0, senzaSubito = 0, daTenere = 0
     const senza = []
     const esempi = []
     for (const eroe of EROI.map(e => e.chiave))
@@ -417,6 +417,7 @@ import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiut
                 // un pezzo si indossa dal suo livello: chi ha le gemme trova sempre qualcosa da mettersi adesso (se l'eroe non ha già il meglio
                 // del suo livello, e i gioielli migliorano quasi solo col livello)
                 if (!rara && s.chiave !== 'gioielli' && !qui.some(r => COSE[r.chiave].dove && b.posso(r.chiave))) { senzaSubito++; senza.push(`${eroe} lv${lv} f${finite} ${m.chiave}/${s.chiave}`) }
+                if (!rara && s.chiave !== 'gioielli') { conSubito++; if (qui.filter(r => COSE[r.chiave].dove && b.posso(r.chiave) && b.valeLaPena(r.chiave)).length >= SUBITO_PER_LINGUETTA) dueSubito++ }
                 if (qui.some(r => COSE[r.chiave].dove && !b.posso(r.chiave) && b.porta(r.chiave))) daTenere++
                 if (qui.filter(r => COSE[r.chiave].rarita === 'raro').length > RARI_PER_LINGUETTA) troppiRari++
                 magici += qui.filter(r => r.rialzo && COSE[r.chiave].rarita === 'magico').length
@@ -441,6 +442,7 @@ import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiut
               esempi.slice(0, 6).join(' | '))
     controlla('quasi tutte arrivano a dieci', dieci > giri * 0.9, `${dieci}/${giri}`)
     controlla('ogni linguetta ha almeno un pezzo che migliora e si indossa subito', senzaSubito === 0, senza.slice(0, 5).join(' | '))
+    controlla('e di solito due, perché le gemme abbiano dove andare', dueSubito > conSubito * 0.85, `${dueSubito}/${conSubito}`)
     controlla('e quasi sempre anche pezzi da tenere per dopo', daTenere > giri * 0.8, `${daTenere}/${giri}`)
     uguale('mai un leggendario sul banco, né fra i pezzi in più', leggendari, 0)
     uguale('i rari restano nei salti e nei sogni (al più cinque per linguetta)', troppiRari, 0)

@@ -38,6 +38,10 @@ const SOGNO_SPAZIO = 6
 const RIALZO_MASSIMO = 80
 // il salto da mettere subito si cerca fino a questi livelli sotto quello dell'eroe
 const SALTO_SUBITO_SOTTO = 2
+// i pezzi per adesso che ogni linguetta ha (le gemme devono avere dove andare)
+export const SUBITO_PER_LINGUETTA = 2
+// le abilità a caso provate per ogni livello e rarità, cercando i pezzi per adesso: con due soli tentativi un eroe già forte ne restava senza
+const TENTATIVI_SUBITO = 4
 // a ogni giro, per ogni linguetta che veste, se ne vanno i più deboli e ne entrano altrettanti nuovi
 export const SE_NE_VANNO = 3
 // quanti pezzi venduti il rigattiere tiene da parte
@@ -347,32 +351,43 @@ export class Bottega extends Corredo {
     return forti + nuovi.length
   }
 
-  // Almeno un pezzo che l'eroe indossa subito e che migliora quello che ha (i salti stanno più su): se la linguetta non ne ha, il
-  // migliore che c'è al suo livello, comune o magico o un raro che sia un salto. Torna quanti ne ha messi (zero se non ce n'è)
+  // Almeno SUBITO_PER_LINGUETTA pezzi che l'eroe indossa subito e che migliorano quello che ha (i salti stanno più su): se la
+  // linguetta ne ha meno, i migliori che ci sono al suo livello, di basi diverse prima, comuni o magici o un raro che sia un
+  // salto. Torna quanti ne ha messi (zero se non ce n'è)
   completaSubito(m, scheda, scartati = []) {
-    if (this.vistaQui(m, scheda).some(r => this.posso(r.chiave))) return 0
+    const manca = SUBITO_PER_LINGUETTA - this.vistaQui(m, scheda).filter(r => this.posso(r.chiave) && this.valeLaPena(r.chiave)).length
+    if (manca <= 0) return 0
     const visti = this.visti(m, scartati)
     const L = this.livelloEroe
     const rari = this.vistaQui(m, scheda).filter(r => COSE[r.chiave].rarita === 'raro').length
-    let migliore = null
+    const candidati = []
     for (const b of A_SORTE) {
       if (!(COSE[b].dove && scheda.dove.includes(COSE[b].dove) && vendeLa(m, b) && !m.sempre.includes(b) && this.porta(b))) continue
       for (let l = L; l >= Math.max(1, L - SALTO_SUBITO_SOTTO); l--) {
         for (const rar of ['comune', 'magico', 'raro']) {
-          for (let t = 0; t < (rar === 'comune' ? 1 : 2); t++) {
+          for (let t = 0; t < (rar === 'comune' ? 1 : TENTATIVI_SUBITO); t++) {
             const ab = rar === 'comune' ? [] : pescaAbilita(b, rar === 'raro' ? 2 : 1 + Math.floor(this.rnd() * 2), this.rnd)
             if (rar !== 'comune' && !ab.length) continue
             const k = chiaveDelPezzo(b, l, rar, ab)
             if (visti.has(k) || !this.posso(k) || !this.valeLaPena(k) || (rar === 'raro' && (rari >= RARI_PER_LINGUETTA || this.ruoloDi(k) !== 'salto'))) continue
-            const meglio = this.confronto(k).meglio
-            if (!migliore || meglio > migliore.meglio) migliore = { k, meglio }
+            candidati.push({ k, b, meglio: this.confronto(k).meglio })
           }
         }
       }
     }
-    if (!migliore) return 0
-    this.scaffali[m.chiave].push(migliore.k)
-    return 1
+    candidati.sort((x, y) => y.meglio - x.meglio || (x.k < y.k ? -1 : 1))
+    const presi = []
+    let rariPresi = rari
+    const prendi = c => {
+      const raro = COSE[c.k].rarita === 'raro'
+      if (presi.length >= manca || presi.includes(c) || (raro && rariPresi >= RARI_PER_LINGUETTA)) return
+      presi.push(c)
+      if (raro) rariPresi++
+    }
+    for (const c of candidati) if (!presi.some(p => p.b === c.b)) prendi(c)
+    for (const c of candidati) prendi(c)
+    this.scaffali[m.chiave].push(...presi.map(c => c.k))
+    return presi.length
   }
 
   // Porta la linguetta a SALTI_PER_LINGUETTA salti e SOGNI_PER_LINGUETTA sogni, mettendo sullo scaffale quelli che mancano
