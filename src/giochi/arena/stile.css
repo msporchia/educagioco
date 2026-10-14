@@ -78,9 +78,6 @@
 .ar-nome { font-size: 10.5px; font-weight: 700; color: #c8d2ee; text-align: center }
 .ar-liv { font-size: 10.5px; font-weight: 800; color: #ffd24a }
 .ar-prezzo { font-size: 11px; font-weight: 800; color: #e9c8ff }
-.ar-prog { position: absolute; left: 7px; right: 7px; bottom: 3px; height: 3px; border-radius: 2px;
-           background: #0007; overflow: hidden; font-style: normal }
-.ar-prog b { display: block; height: 100%; background: #7ee08c }
 .ar-ritratto { display: block }
 
 /* il foglio del calcolo: in basso, il campo resta in vista sopra e intanto rallenta */

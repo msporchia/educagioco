@@ -51,6 +51,8 @@ sono disegnati in codice finché non arriva il foglio dipinto.
 - **Una caserma nuova spunta** dalla sua piazzola con un rimbalzo e uno sbuffo di polvere.
 - **La vita dei castelli sta SOPRA i castelli**, in una barra grande e sempre accesa, col
   numero. **Le altre barre si vedono solo sul ferito** (caserme, porta, truppe).
+- **Sulle carte niente barra della prossima squadra**: c'era, verde, sotto il livello; tolta
+  (l'utente: «orribili»).
 - **Il ponte** è di assi, con la porta di ciascuno al suo capo: due torrette e il
   portone; crollata, resta il cumulo.
 - **Mancano**: gli edifici e la porta dipinti, pose di attacco e di morte delle truppe.

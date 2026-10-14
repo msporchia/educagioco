@@ -64,7 +64,6 @@ const NOME = { miniera: 'Più monete', ripara: 'Ripara', castello: 'Castello', b
           <template v-else-if="c.prezzo === null">MAX</template>
           <template v-else>{{ c.prezzo }} 🪙</template>
         </span>
-        <i v-if="c.presente" class="ar-prog"><b :style="{ width: (c.avanza * 100) + '%' }"></b></i>
       </button>
 
       <button v-for="a in pannello.azioni" :key="a.azione" class="ar-carta ar-azione"

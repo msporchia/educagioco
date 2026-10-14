@@ -201,12 +201,12 @@ function costruisciPannello(p) {
       const riposo = Math.max(0, c.riposo)
       return { ed, id: c.id, nome: TRUPPE[c.id].nome, presente: true, liv: c.liv, prezzo, varianti: ammesse,
                puoi: prezzo !== null && p.lati.io.monete >= prezzo && riposo <= 0,
-               riposo, avanza: Math.max(0, Math.min(1, 1 - c.t / c.ciclo)) }
+               riposo }
     }
     const prezzi = ammesse.map(id => p.prezzo('io', 'costruisci', id)).filter(x => x !== null)
     const prezzo = prezzi.length ? Math.min(...prezzi) : null
     return { ed, id: null, nome: EDIFICI[ed].nome, presente: false, liv: p.lati.io.livelli[ed] || 0, prezzo, varianti: ammesse,
-             puoi: prezzo !== null && p.lati.io.monete >= prezzo, riposo: 0, avanza: 0 }
+             puoi: prezzo !== null && p.lati.io.monete >= prezzo, riposo: 0 }
   })
   const azioni = ['miniera', 'ripara', 'castello', 'bomba'].map(a => {
     const prezzo = p.prezzo('io', a)
