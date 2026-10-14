@@ -26,9 +26,10 @@
     "mazza": { "da": [93, 15], "cella": [8, 20] },
     "martello": { "da": [100, 105], "cella": [9, 21] },
 
-    "pozione-piccola": { "da": [15, 136], "cella": [9, 14] },
-    "pozione": { "da": [227, 37], "cella": [10, 15] },
-    "pozione-grande": { "da": [266, 37], "cella": [11, 15] },
+    "pozione-piccola": { "da": [78, 135], "cella": [10, 17] },
+    "pozione": { "da": [207, 15], "cella": [11, 16] },
+    "ampolla-blu": { "da": [227, 37], "cella": [10, 15] },
+    "pozione-grande": { "da": [306, 37], "cella": [11, 16] },
     "ampolla-maggiore": { "da": [206, 37], "cella": [11, 16] },
     "ampolla-vita": { "da": [366, 16], "cella": [11, 16] },
 
