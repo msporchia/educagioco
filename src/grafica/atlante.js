@@ -29,15 +29,18 @@ export function creaFoglio({ pezzi, immagine, tessera = 32, nitidi = null }) {
     return p ? { w: p[2], h: p[3] } : null
   }
 
-  // la sagoma nera di un pezzo (alla risoluzione della sua fonte), fatta una volta per nome: serve a `scuro`
+  // la sagoma nera di un pezzo, fatta una volta per nome e già alla misura in cui si disegna: serve a `scuro`.
+  // Alla risoluzione della fonte nitida ogni fotogramma la riduceva di nuovo ad alta qualità, e sul telefono andava a scatti
   const nere = new Map()
-  function nera(chiave, fonte, fx, fy, fw, fh) {
+  function nera(chiave, fonte, fx, fy, fw, fh, w = fw, h = fh) {
     let c = nere.get(chiave)
     if (c) return c
     c = document.createElement('canvas')
-    c.width = fw; c.height = fh
+    c.width = w; c.height = h
     const g = c.getContext('2d')
-    g.drawImage(fonte, fx, fy, fw, fh, 0, 0, fw, fh)
+    g.imageSmoothingEnabled = w !== fw || h !== fh
+    g.imageSmoothingQuality = 'high'
+    g.drawImage(fonte, fx, fy, fw, fh, 0, 0, w, h)
     g.globalCompositeOperation = 'source-in'
     g.fillStyle = '#000'
     g.fillRect(0, 0, fw, fh)
@@ -70,7 +73,10 @@ export function creaFoglio({ pezzi, immagine, tessera = 32, nitidi = null }) {
     stampa(fonte, fx, fy, fw, fh)
     if (scuro && alfa < 1) {
       ctx.globalAlpha = prima * (1 - alfa)
-      stampa(nera(n ? nome + '|n' : nome, fonte, fx, fy, fw, fh), 0, 0, fw, fh)
+      // la sagoma alla misura che avrà sullo schermo (la scala della tela), così non si riduce a ogni fotogramma
+      const k = n ? Math.max(1, Math.min(8, Math.round(ctx.getTransform ? ctx.getTransform().a : 1))) : 1
+      ctx.imageSmoothingEnabled = false
+      stampa(nera(n ? nome + '|n' + k : nome, fonte, fx, fy, fw, fh, w * k, h * k), 0, 0, w * k, h * k)
     }
     if (n) ctx.imageSmoothingEnabled = false
     if (alfa !== 1) ctx.globalAlpha = prima
