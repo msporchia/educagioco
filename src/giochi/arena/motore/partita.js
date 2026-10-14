@@ -50,7 +50,7 @@ export class Partita {
   casuale(a, b) { return a + Math.floor(this.rnd() * (b - a + 1)) }
 
   nuovoLato(lato, alSecondo, monete) {
-    return { monete, alSecondo, miniera: 1, mosse: 0, bombe: 0, bombaT: BOMBA.ogni, abbattuti: 0, livelli: {} }
+    return { monete, alSecondo, miniera: 1, mosse: 0, bombe: 0, bombaT: BOMBA.ogni, abbattuti: 0 }
   }
   y(lato, y) { return lato === 'io' ? y : CAMPO.H - y }
 
@@ -61,16 +61,19 @@ export class Partita {
   nuovoMuro(lato) {
     return { lato, tipo: 'muro', x: CAMPO.corsia, y: this.y(lato, CAMPO.muro), hp: MURO.hp, max: MURO.hp, r: MURO.r, fl: 0, crollato: false }
   }
+  /* ogni caserma ha il suo livello e parte dall'1, anche la seconda uguale; `spesa` è quello che ci si è
+     messo (costruzione e potenziamenti): vendendola se ne riprende la metà */
   nuovaCaserma(lato, id, posto, t) {
     const [x, y] = POSTI[posto]
-    const ed = EDIFICIO_DI[id]
-    const liv = this.lati[lato].livelli[ed] || 1            // rifatta, riparte dal livello che l'edificio aveva
-    const vita = CRESCITA.vitaCaserma(liv)
-    return { lato, tipo: 'caserma', id, ed, posto, liv, t, ciclo: t, riposo: 0, x, y: this.y(lato, y), hp: vita, max: vita, r: 16, fl: 0 }
+    const vita = CRESCITA.vitaCaserma(1)
+    return { lato, tipo: 'caserma', id, ed: EDIFICIO_DI[id], posto, liv: 1, spesa: TRUPPE[id].costo, t, ciclo: t, riposo: 0,
+             x, y: this.y(lato, y), hp: vita, max: vita, r: 16, fl: 0 }
   }
 
   castello(lato) { return this.castelli.find(c => c.lato === lato) }
   casermeDi(lato) { return this.caserme.filter(c => c.lato === lato) }
+  // una caserma si chiama per piazzola: due caserme possono avere la stessa truppa
+  casermaIn(lato, posto) { return this.caserme.find(c => c.lato === lato && c.posto === posto) }
   muro(lato) { return this.muri.find(m => m.lato === lato) }
   postiLiberi(lato) {
     return POSTI.map((_, i) => i).filter(i => !this.caserme.some(c => c.lato === lato && c.posto === i))
@@ -278,9 +281,11 @@ export class Partita {
     if (bers && t.cool <= 0) {
       const colpo = dmg * (mn <= CASTELLO.difesa ? CASTELLO.vicino : 1)   // sotto casa picchia di più
       this.ferisci(bers, colpo)
+      // l'area resta col danno di base: col triplo spazzava i gruppi di chi tira, e ai massimi livelli
+      // gli arcieri non arrivavano mai sotto le mura (l'utente)
       for (const e of this.unita) {
         if (e === bers || e.lato === t.lato || !viva(e)) continue
-        if (Math.hypot(e.x - bers.x, e.y - bers.y) <= CASTELLO.splash) this.ferisci(e, colpo * 0.8)
+        if (Math.hypot(e.x - bers.x, e.y - bers.y) <= CASTELLO.splash) this.ferisci(e, dmg * 0.6)
       }
       this.evento({ tipo: 'colpo', da: 'castello', lato: t.lato, x1: t.x, y1: t.y - 12, x2: bers.x, y2: bers.y, scoppio: CASTELLO.splash })
       t.cool = rate
@@ -307,16 +312,20 @@ export class Partita {
      calcolo lo fa chi sta sopra (la vista): qui si chiede solo «si può?»
      e poi «fallo». `calcoloDi` dice di che tipo e quanto grosso. */
 
-  /* il prezzo di una scelta adesso, o null se non si può fare per ragioni sue */
-  prezzo(lato, azione, id) {
+  /* il prezzo di una scelta adesso, o null se non si può fare per ragioni sue. `chi` è la truppa per
+     costruire (con `dove`, la piazzola: senza, la sceglie il gioco) e la piazzola per potenziare e vendere.
+     Vendere costa zero e ridà metà della spesa (`resa`). */
+  prezzo(lato, azione, chi, dove) {
     if (azione === 'costruisci') {
-      if (!this.truppeAmmesse.includes(id) || this.caserme.some(c => c.lato === lato && c.ed === EDIFICIO_DI[id])) return null
-      return this.postiLiberi(lato).length ? TRUPPE[id].costo : null
+      if (!this.truppeAmmesse.includes(chi)) return null
+      const liberi = this.postiLiberi(lato)
+      return (dove === undefined ? liberi.length : liberi.includes(dove)) ? TRUPPE[chi].costo : null
     }
     if (azione === 'potenzia') {
-      const c = this.caserme.find(x => x.lato === lato && x.id === id)
+      const c = this.casermaIn(lato, chi)
       return c && c.liv < LIV_MAX ? CRESCITA.salita(c.liv) : null
     }
+    if (azione === 'vendi') return this.casermaIn(lato, chi) ? 0 : null
     if (azione === 'bomba') return this.lati[lato].bombe > 0 && this.puntoDellaBomba(lato) ? 0 : null
     if (azione === 'miniera') {
       const m = this.lati[lato].miniera
@@ -330,18 +339,20 @@ export class Partita {
     return null
   }
 
-  puoFare(lato, azione, id) {
-    const p = this.prezzo(lato, azione, id)
+  puoFare(lato, azione, chi, dove) {
+    const p = this.prezzo(lato, azione, chi, dove)
     return p !== null && this.lati[lato].monete >= p
   }
 
+  resa(lato, posto) { const c = this.casermaIn(lato, posto); return c ? Math.floor(c.spesa / 2) : 0 }
+
   /* di che calcolo si tratta: l'operazione e un «peso» da 1 a 10 che la vista
      traduce nella grandezza dei numeri */
-  calcoloDi(lato, azione, id) {
-    if (azione === 'costruisci') return { op: TRUPPE[id].op, peso: 1 + Math.ceil(TRUPPE[id].costo / 4) }
+  calcoloDi(lato, azione, chi) {
+    if (azione === 'costruisci') return { op: TRUPPE[chi].op, peso: 1 + Math.ceil(TRUPPE[chi].costo / 4) }
     if (azione === 'potenzia') {
-      const c = this.caserme.find(x => x.lato === lato && x.id === id)
-      return { op: TRUPPE[id].op, peso: Math.min(10, c.liv + 1) }
+      const c = this.casermaIn(lato, chi)
+      return { op: TRUPPE[c.id].op, peso: Math.min(10, c.liv + 1) }
     }
     if (azione === 'miniera') return { op: AZIONI.miniera.op, peso: 3 + this.lati[lato].miniera }
     if (azione === 'bomba') return { op: AZIONI.bomba.op, peso: 5 }
@@ -352,11 +363,12 @@ export class Partita {
   paga(lato, p) { this.lati[lato].monete -= p; this.lati[lato].mosse++ }
 
   /* ogni azione torna true se è andata */
-  fai(lato, azione, id) {
-    if (this.fine || !this.puoFare(lato, azione, id)) return false
-    const p = this.prezzo(lato, azione, id)
-    if (azione === 'costruisci') return this.costruisci(lato, id, p)
-    if (azione === 'potenzia') return this.potenzia(lato, id, p)
+  fai(lato, azione, chi, dove) {
+    if (this.fine || !this.puoFare(lato, azione, chi, dove)) return false
+    const p = this.prezzo(lato, azione, chi, dove)
+    if (azione === 'costruisci') return this.costruisci(lato, chi, p, dove)
+    if (azione === 'potenzia') return this.potenzia(lato, chi, p)
+    if (azione === 'vendi') return this.vendi(lato, chi)
     if (azione === 'miniera') { this.paga(lato, p); this.lati[lato].miniera++; this.evento({ tipo: 'miniera', lato }); return true }
     if (azione === 'ripara') return this.ripara(lato, p)
     if (azione === 'castello') return this.potenziaCastello(lato, p)
@@ -364,8 +376,10 @@ export class Partita {
     return false
   }
 
-  /* il posto lo sceglie il gioco: la corsia con meno caserme, e dentro il più al sicuro */
-  costruisci(lato, id, p) {
+  /* il posto lo sceglie chi costruisce (il giocatore tocca la piazzola); se no il gioco: la corsia con
+     meno caserme, e dentro il più al sicuro */
+  costruisci(lato, id, p, dove) {
+    if (dove !== undefined) return this.mettiCaserma(lato, id, p, dove)
     const liberi = this.postiLiberi(lato)
     const sx = liberi.filter(i => POSTI[i][0] < CAMPO.W / 2), dx = liberi.filter(i => POSTI[i][0] >= CAMPO.W / 2)
     const nSx = this.caserme.filter(c => c.lato === lato && POSTI[c.posto][0] < CAMPO.W / 2).length
@@ -373,22 +387,36 @@ export class Partita {
     let lista = nSx < nDx ? sx : nDx < nSx ? dx : (this.rnd() < 0.5 ? sx : dx)
     if (!lista.length) lista = sx.length ? sx : dx
     lista.sort((a, b) => POSTI[b][1] - POSTI[a][1] || Math.abs(POSTI[a][0] - CAMPO.corsia) - Math.abs(POSTI[b][0] - CAMPO.corsia))   // il più lontano dal fiume, e attaccato al castello
+    return this.mettiCaserma(lato, id, p, lista[0])
+  }
+
+  mettiCaserma(lato, id, p, posto) {
     this.paga(lato, p)
-    const c = this.nuovaCaserma(lato, id, lista[0], COSTRUZIONE)
+    const c = this.nuovaCaserma(lato, id, posto, COSTRUZIONE)
     this.caserme.push(c)
     this.evento({ tipo: 'costruita', lato, id, ed: c.ed, x: c.x, y: c.y })
     return true
   }
 
-  potenzia(lato, id, p) {
-    const c = this.caserme.find(x => x.lato === lato && x.id === id)
+  /* vendere libera la piazzola e ridà metà della spesa: per cambiare strategia (l'utente) */
+  vendi(lato, posto) {
+    const c = this.casermaIn(lato, posto)
+    this.lati[lato].monete += this.resa(lato, posto)
+    this.lati[lato].mosse++
+    this.caserme = this.caserme.filter(x => x !== c)
+    this.evento({ tipo: 'venduta', lato, id: c.id, x: c.x, y: c.y })
+    return true
+  }
+
+  potenzia(lato, posto, p) {
+    const c = this.casermaIn(lato, posto)
     this.paga(lato, p)
+    c.spesa += p
     c.liv++
-    this.lati[lato].livelli[c.ed] = c.liv
     const prima = c.max
     c.max = CRESCITA.vitaCaserma(c.liv)
     c.hp = Math.min(c.max, c.hp + c.max - prima)          // la vita in più arriva subito, come al castello
-    this.evento({ tipo: 'potenziata', lato, id, liv: c.liv, x: c.x, y: c.y })
+    this.evento({ tipo: 'potenziata', lato, id: c.id, liv: c.liv, x: c.x, y: c.y })
     return true
   }
 
@@ -448,12 +476,12 @@ export class Partita {
   }
 
   /* una caserma che sbaglia il calcolo si riposa: il prezzo è il tempo, mai le monete */
-  sbagliata(lato, id) {
-    const c = this.caserme.find(x => x.lato === lato && x.id === id)
+  sbagliata(lato, posto) {
+    const c = this.casermaIn(lato, posto)
     if (c) c.riposo = RIPOSO
   }
-  inRiposo(lato, id) {
-    const c = this.caserme.find(x => x.lato === lato && x.id === id)
+  inRiposo(lato, posto) {
+    const c = this.casermaIn(lato, posto)
     return !!c && c.riposo > 0
   }
 

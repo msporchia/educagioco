@@ -45,23 +45,31 @@ controlla('stesso seme, stessa partita', JSON.stringify(uguali) === JSON.stringi
   uguale('e si pagano', p.lati.io.monete, 14)
   const cripta = p.casermeDi('io')[0]
   uguale('la cripta fa opliti', `${cripta.ed}/${cripta.id}`, 'cripta/guardiano')
-  controlla('un edificio è uno solo: con gli opliti non si costruiscono anche gli arcieri', p.prezzo('io', 'costruisci', 'scheletri') === null)
+  controlla('le piazzole sono libere: anche una seconda cripta, di arcieri', p.prezzo('io', 'costruisci', 'scheletri') === 6)
   controlla('sta su uno dei posti fissi, fra la porta del ponte e il castello', cripta.y > p.muro('io').y && cripta.y < p.castello('io').y)
-  controlla('l\'altro edificio si costruisce', p.fai('io', 'costruisci', 'lupi'))
-  const tana = p.casermeDi('io').find(c => c.ed === 'tana')
+  const libera = p.postiLiberi('io')[0]
+  controlla('si costruisce sulla piazzola che si sceglie', p.fai('io', 'costruisci', 'lupi', libera) && p.casermaIn('io', libera).id === 'lupi')
+  const tana = p.casermaIn('io', libera)
   const sopra = new Partita({ rnd: caso(1) })
   sopra.lati.nem.monete = 20; sopra.fai('nem', 'costruisci', 'scheletri')
   controlla('quella del nemico è specchiata', sopra.casermeDi('nem')[0].y < CAMPO.fiume.alto)
   p.lati.io.monete = 100
-  p.fai('io', 'potenzia', 'lupi')
+  p.fai('io', 'potenzia', libera)
   uguale('una caserma sale di livello', tana.liv, 2)
   uguale('e la vita in più arriva subito: non resta ferita', tana.hp, tana.max)
-  // il livello è una ricerca dell'edificio: crollata e rifatta, riparte da lì
+  controlla('una seconda caserma uguale parte dal livello 1', p.fai('io', 'costruisci', 'lupi') && p.casermeDi('io').filter(c => c.id === 'lupi').map(c => c.liv).sort().join() === '1,2')
+  // vendere: metà di quello che ci si è speso, e la piazzola torna libera
+  const prima = p.lati.io.monete, spesa = tana.spesa
+  uguale('la spesa conta costruzione e potenziamenti', spesa, 8 + 8)
+  controlla('si vende', p.fai('io', 'vendi', libera))
+  uguale('e ridà metà della spesa', p.lati.io.monete - prima, spesa / 2)
+  controlla('la piazzola torna libera', !p.casermaIn('io', libera) && p.postiLiberi('io').includes(libera))
   tana.hp = 0
+  const altra = p.casermeDi('io').find(c => c.id === 'lupi')
+  altra.hp = 0
   p.avanza(0.1)
-  controlla('crollata, la tana sparisce e il posto torna libero', !p.casermeDi('io').some(c => c.ed === 'tana'))
-  controlla('si rifà, anche con l\'altra truppa', p.fai('io', 'costruisci', 'pipistrelli'))
-  uguale('e riparte dal livello che aveva', p.casermeDi('io').find(c => c.ed === 'tana').liv, 2)
+  controlla('crollata, la caserma sparisce e il posto torna libero', !p.casermeDi('io').some(c => c.id === 'lupi'))
+  controlla('si rifà, anche con un\'altra truppa, dal livello 1', p.fai('io', 'costruisci', 'pipistrelli') && p.casermeDi('io').find(c => c.id === 'pipistrelli').liv === 1)
   p.fai('io', 'miniera')
   uguale('la miniera sale', p.lati.io.miniera, 2)
   controlla('e rende di più al secondo', p.alSecondo('io') > 0.83 * 1.29)
@@ -69,8 +77,8 @@ controlla('stesso seme, stessa partita', JSON.stringify(uguali) === JSON.stringi
   uguale('il castello sale come le caserme', p.fai('io', 'castello') && p.castello('io').liv, 2)
   p.muro('io').hp = 0
   controlla('una porta crollata si ricostruisce riparando', p.riparabili('io').includes(p.muro('io')) && p.fai('io', 'ripara') && p.muro('io').hp > 0)
-  p.sbagliata('io', 'guardiano')
-  controlla('un calcolo sbagliato ferma la caserma', p.inRiposo('io', 'guardiano'))
+  p.sbagliata('io', cripta.posto)
+  controlla('un calcolo sbagliato ferma la caserma', p.inRiposo('io', cripta.posto))
   controlla('ma non toglie monete', p.lati.io.monete > 30)
 }
 
@@ -180,7 +188,7 @@ controlla('stesso seme, stessa partita', JSON.stringify(uguali) === JSON.stringi
   r.caserme[0].liv = 9; r.caserme[0].t = 0
   r.avanza(0.1)
   uguale('al livello 9 una squadra di arcieri ha quattro omini in più', r.unita.filter(u => u.lato === 'io' && u.id === 'scheletri').length, TRUPPE.scheletri.n + 4)
-  uguale('le squadre crescono ogni due livelli', [1, 3, 5, 7, 9].map(l => CRESCITA.omini(l, 4)).join(), '0,1,2,3,4')
+  uguale('le squadre crescono di un ottavo a livello', [1, 3, 5, 7, 9].map(l => CRESCITA.omini(l, 8)).join(), '0,2,4,6,8')
   controlla('il castello e il muro sono robusti (le partite non devono finire in un minuto)', CASTELLO.hp >= 4000 && MURO.hp >= 1000)
 }
 
@@ -224,7 +232,8 @@ controlla('stesso seme, stessa partita', JSON.stringify(uguali) === JSON.stringi
   const tappa = 4
   const p = new Partita({ rnd: caso(11), sfida: sfidaDi(CAMPAGNA[tappa]) })
   p.lati.io.monete = 200
-  p.fai('io', 'costruisci', 'scheletri'); p.fai('io', 'costruisci', 'lupi'); p.fai('io', 'potenzia', 'lupi'); p.fai('io', 'miniera'); p.fai('io', 'castello')
+  p.fai('io', 'costruisci', 'scheletri'); p.fai('io', 'costruisci', 'lupi'); p.fai('io', 'costruisci', 'lupi')
+  p.fai('io', 'potenzia', p.casermeDi('io').find(c => c.id === 'lupi').posto); p.fai('io', 'miniera'); p.fai('io', 'castello')
   p.avanza(40)
   const dato = scrivi(p, tappa)
   controlla('una partita in corso si salva', dato && dato.v === VERSIONE)
@@ -234,7 +243,7 @@ controlla('stesso seme, stessa partita', JSON.stringify(uguali) === JSON.stringi
   uguale('stesse monete', Math.round(q.lati.io.monete), Math.round(p.lati.io.monete))
   uguale('stessa miniera', q.lati.io.miniera, p.lati.io.miniera)
   uguale('stesse caserme', q.casermeDi('io').map(c => c.id + c.liv).sort().join(), p.casermeDi('io').map(c => c.id + c.liv).sort().join())
-  uguale('e gli stessi livelli degli edifici', JSON.stringify(q.lati.io.livelli), JSON.stringify(p.lati.io.livelli))
+  uguale('con la spesa di ognuna, per vendere', q.casermeDi('io').map(c => c.spesa).sort().join(), p.casermeDi('io').map(c => c.spesa).sort().join())
   uguale('stesso castello', q.castello('io').liv, p.castello('io').liv)
   uguale('stesse truppe in campo', q.unita.length, p.unita.length)
   q.avanza(5)

@@ -8,7 +8,7 @@ import Ritratto from './Ritratto.vue'
 defineProps({
   d: { type: Object, required: true },
 })
-defineEmits(['chiudi', 'procedi'])
+defineEmits(['chiudi', 'procedi', 'vendi'])
 </script>
 
 <template>
@@ -59,6 +59,10 @@ defineEmits(['chiudi', 'procedi'])
       </button>
       <p v-if="d.prezzo !== null && !d.puoi" class="ar-motivo">{{ d.motivo }}</p>
       <p v-if="d.prezzo === null" class="ar-motivo">{{ d.fine }}</p>
+      <!-- vendere: per cambiare strategia; ridà metà di quello che ci si è speso -->
+      <button v-if="d.vendi !== null && d.vendi !== undefined" class="ar-grosso ar-vendi" data-vendi @click="$emit('vendi')">
+        <span class="em">💰</span> Vendi · +{{ d.vendi }} <span class="em">🪙</span>
+      </button>
       <button class="ar-grosso ar-chiaro" @click="$emit('chiudi')">torno in campo</button>
     </div>
   </div>

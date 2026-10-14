@@ -59,10 +59,12 @@ export class Pilota {
   voglia(p) {
     const mie = p.casermeDi('io')
     const puo = (a, id) => p.puoFare('io', a, id)
+    // un esercito misto: prima le truppe che non ha, poi anche doppioni
+    const nuova = () => ORDINE.find(i => puo('costruisci', i) && !mie.some(c => c.id === i)) || ORDINE.find(i => puo('costruisci', i))
     if (this.tetto) {
-      if (mie.length < this.caserme) { const id = ORDINE.find(i => puo('costruisci', i)); return id ? ['costruisci', id] : null }
-      const c = mie.find(x => x.liv < this.tetto && puo('potenzia', x.id))
-      return c ? ['potenzia', c.id] : null
+      if (mie.length < this.caserme) { const id = nuova(); return id ? ['costruisci', id] : null }
+      const c = mie.find(x => x.liv < this.tetto && puo('potenzia', x.posto))
+      return c ? ['potenzia', c.posto] : null
     }
     const t = p.castello('io')
 
@@ -75,34 +77,34 @@ export class Pilota {
     const crollato = !!muro && muro.hp <= 0
     if (crollato && puo('ripara')) return ['ripara']
     if (this.apertura === 'rush') {
-      if (mie.length < this.caserme) { const id = ORDINE.find(i => puo('costruisci', i)); if (id) return ['costruisci', id] }
-      const sale = mie.filter(c => c.liv < LIV_MAX && !p.inRiposo('io', c.id))
+      if (mie.length < this.caserme) { const id = nuova(); if (id) return ['costruisci', id] }
+      const sale = mie.filter(c => c.liv < LIV_MAX && !p.inRiposo('io', c.posto))
       if (!sale.length) return null
       const c = sale.reduce((a, b) => (b.liv < a.liv ? b : a))
-      return puo('potenzia', c.id) ? ['potenzia', c.id] : null      // risparmia per la più indietro
+      return puo('potenzia', c.posto) ? ['potenzia', c.posto] : null      // risparmia per la più indietro
     }
     if (this.apertura === 'economia' && mie.length && p.lati.io.miniera < 3)
       return puo('miniera') ? ['miniera'] : null                      // risparmia per la miniera
     if (mie.length < 2) {
-      const id = ORDINE.find(i => puo('costruisci', i))
+      const id = nuova()
       return id ? ['costruisci', id] : null
     }
     if (mie.some(c => c.liv < 2)) {
-      const c = mie.find(x => x.liv < 2 && puo('potenzia', x.id) && !p.inRiposo('io', x.id))
-      return c ? ['potenzia', c.id] : null
+      const c = mie.find(x => x.liv < 2 && puo('potenzia', x.posto) && !p.inRiposo('io', x.posto))
+      return c ? ['potenzia', c.posto] : null
     }
     if (t.hp > 0 && t.liv < 2 && puo('castello')) return ['castello']
     if (p.t < 60 && p.lati.io.miniera < 2 && puo('miniera')) return ['miniera']
     if (mie.length < this.caserme) {
-      const id = ORDINE.find(i => puo('costruisci', i))
+      const id = nuova()
       if (id) return ['costruisci', id]
     }
     const media = Math.floor(mie.reduce((s, c) => s + c.liv, 0) / Math.max(1, mie.length))
     if (t.hp > 0 && t.liv < Math.max(3, media) && puo('castello')) return ['castello']
-    const sale = mie.filter(c => c.liv < LIV_MAX && puo('potenzia', c.id) && !p.inRiposo('io', c.id))
+    const sale = mie.filter(c => c.liv < LIV_MAX && puo('potenzia', c.posto) && !p.inRiposo('io', c.posto))
     if (sale.length) {
       const minimo = Math.min(...sale.map(c => c.liv))
-      return ['potenzia', sale.find(c => c.liv === minimo).id]
+      return ['potenzia', sale.find(c => c.liv === minimo).posto]
     }
     if (p.lati.io.miniera < 4 && p.t < 90 && puo('miniera')) return ['miniera']
     return null

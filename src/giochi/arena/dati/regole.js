@@ -69,9 +69,9 @@ export const MINIERA_MAX = 6
 /* Tutto quello che cresce con il livello. */
 export const CRESCITA = {
   squadraOgni: liv => 9 / (1 + 0.12 * (liv - 1)),          // secondi fra due squadre di una caserma
-  forza: liv => 1 + 0.25 * (liv - 1),                      // vita e danno delle sue truppe
+  forza: liv => 1 + 0.15 * (liv - 1),                      // vita e danno delle sue truppe
   vitaCaserma: liv => 1100 + 160 * (liv - 1),            // il primo bersaglio dell'assedio: deve reggere, il castello la copre
-  omini: (liv, n) => Math.round(Math.floor((liv - 1) / 2) * n / 4),   // truppe in più per squadra: crescono ogni due livelli, in proporzione alla squadra
+  omini: (liv, n) => Math.round((liv - 1) * n / 8),        // truppe in più per squadra: un ottavo a livello, in proporzione; la forza cresce meno (l'utente: potenziare dà anche più truppe)
   salita: liv => Math.round(8 * 1.32 ** (liv - 1)),        // costo di liv → liv+1 per una caserma: 8, 11, 14, 18, 24, 32, 42, 55, 73
   castello: {
     prezzo: liv => Math.round(8 * 1.3 ** (liv - 1)),       // 8, 10, 14, 18, 23, 30, 39, 51, 66
@@ -94,6 +94,8 @@ export const AZIONI = {
               nota: 'Rimette in sesto la costruzione messa peggio (anche il muro, anche crollato): +40% di vita.' },
   castello: { nome: 'Castello',   op: '÷', prezzo: null,
               nota: 'Il castello spara più forte e più spesso, e resiste di più.' },
+  vendi:    { nome: 'Vendi',      op: '−', prezzo: 0,
+              nota: 'Vendi la caserma: ti ridà metà di quello che ci hai speso, e la piazzola torna libera per un\'altra.' },
   bomba:    { nome: 'Bomba',      op: '÷', prezzo: 0,
               nota: 'Una bomba in regalo ogni tanto, per DIFENDERTI: scoppia dove le truppe nemiche arrivate nella tua metà sono più fitte, e le spazza via. Serve per ripartire quando ti schiacciano.' },
 }

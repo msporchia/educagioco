@@ -10,7 +10,7 @@ grossi sono del castello.
 - **L'operazione la decide la scelta, non il giocatore.** Ogni truppa porta la
   sua (`+` arcieri e opliti, `−` pipistrelli e negromanti, `×` lupi e golem,
   `÷` diavoletti e drago): scegliere la truppa di un edificio è anche scegliere il
-  conto; le azioni hanno la loro (miniera `×`, ripara `+`,
+  conto; le azioni hanno la loro (miniera `×`, ripara `+`, vendi `−`,
   castello `÷`, bomba `÷`). Il bambino non può evitare l'operazione che
   teme: costruire proprio la truppa che gli serve è parte della sfida.
 - **La grandezza dei numeri la decide il bambino, poi il prezzo** (`bravura.js`).

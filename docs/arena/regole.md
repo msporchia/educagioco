@@ -21,37 +21,42 @@ I numeri stanno in `src/giochi/arena/dati/regole.js`, il motore in
   fatto più danni (sotto, «La durata»). Era 3:00: troppo poco perché la miniera rendesse,
   e vinceva sempre chi attaccava subito (sotto, «Rush o economia»).
 
-## Le caserme: quattro edifici, due truppe ciascuno
+## Le caserme: quattro piazzole libere
 
 - **Gli edifici sono quattro** (`EDIFICI`): la cripta (arcieri | opliti), la tana
   (lupi | pipistrelli), la torre oscura (negromanti | diavoletti), l'antro (golem |
-  drago). **Quale truppa, si sceglie costruendo**: l'utente voleva meno caserme e una
-  scelta vera («una caserma può fare scheletri arcieri o scheletri opliti, e quando
-  parti scegli quale dei due»). Le due truppe di un edificio **costano uguale**: si
-  sceglie il mestiere, non il prezzo.
-- **Si parte senza caserme**, tutti e due: la prima mossa è la cripta. Così anche la
-  prima tappa, che ha solo arcieri e opliti, ha una scelta da fare.
-- **Il livello è dell'edificio, una ricerca**: costruire è la pietra, potenziare è lo
-  studio. Se una caserma crolla, il posto torna libero e la si rifà **dal livello che
-  aveva** (anche scegliendo l'altra truppa): chi perde una caserma è meno svantaggiato
-  (l'utente). Il livello (1-10) fa uscire le squadre più spesso
-  (`9 / (1 + 0.12·(liv−1))` secondi) e più forti (`1 + 0.25·(liv−1)`); potenziando, la
-  vita in più della caserma arriva subito. Potenziare costa 8, 11, 14, 18, 24… (`salita`):
-  rende tanto, e a 6, 8, 10 era la mossa che batteva tutte le altre.
+  drago). Le due truppe di un edificio **costano uguale**: si sceglie il mestiere, non
+  il prezzo. L'edificio dice com'è disegnata la caserma, non quante se ne fanno.
+- **Le piazzole sono libere**: su ognuna delle quattro si costruisce la caserma che si
+  vuole, **anche due uguali** (due cripte di arcieri). Prima un edificio era uno solo, e
+  nella prima tappa, che ha solo la cripta, si restava con una caserma e niente da
+  aggiungere (l'utente). La piazzola **la sceglie chi gioca toccandone la carta**; il
+  nemico e i giocatori finti la lasciano al gioco (il lato con meno caserme, e dentro
+  il lato il più lontano dal fiume).
+- **Ogni caserma ha il suo livello e parte dall'1**, anche la seconda uguale (scelta
+  dell'utente). Prima il livello era una ricerca dell'edificio e una caserma rifatta
+  ripartiva da lì: con due caserme uguali avrebbe dato un esercito raddoppiato a buon
+  mercato. Il livello (1-10) fa uscire le squadre più spesso
+  (`9 / (1 + 0.12·(liv−1))` secondi), più numerose e più forti (`1 + 0.15·(liv−1)`);
+  potenziando, la vita in più della caserma arriva subito. Potenziare costa 8, 11, 14,
+  18, 24… (`salita`): rende tanto, e a 6, 8, 10 era la mossa che batteva tutte le altre.
+- **Si vende**: nei dettagli di una caserma, «Vendi» ridà **metà di quello che ci si è
+  speso** (costruzione e potenziamenti, `spesa`) e libera la piazzola, per cambiare
+  strategia (l'utente). Si paga con un calcolo come le altre scelte (una sottrazione):
+  non è un'uscita gratis. Il nemico non vende.
 - **L'antro (golem | drago) costa 20**, e le sue truppe sono forti in proporzione: è un
   investimento, non un'apertura. A 14 costava quanto le monete di partenza.
-- **Il posto lo sceglie il gioco** (`POSTI`, quattro per parte, fra la porta e il castello):
-  il lato con meno caserme, e dentro il lato il più lontano dal fiume. Niente da
-  piazzare col dito.
 - **Le truppe sono otto e si distinguono per chi colpiscono, non per quanto
   valgono**: arcieri e negromanti feriscono tutti, opliti, lupi e diavoletti solo chi
   cammina, il golem solo le costruzioni, i pipistrelli e il drago volano e scavalcano
   i muri. Il `guasti…()` di `dati/regole.js` pretende due truppe per edificio allo
   stesso prezzo, chi vola e chi, da terra, ferisce chi vola.
 - **Masse, non quattro omini**: le squadre sono grandi (quattro arcieri, sei
-  pipistrelli…) con vita e danno divisi in proporzione, e **crescono ogni due livelli**
-  in proporzione alla squadra (`CRESCITA.omini`). L'utente: «col tempo una massa di
-  persone, non solo 4-5 in giro».
+  pipistrelli…) con vita e danno divisi in proporzione, e **crescono di un ottavo a ogni
+  livello** (`CRESCITA.omini`: gli arcieri da 4 a 8 al livello 10). L'utente: «col tempo
+  una massa di persone, non solo 4-5 in giro», e poi «potenziare dovrebbe aumentare anche
+  il numero di truppe, non solo la potenza». Per non farne troppo la forza per livello è
+  scesa da +25% a +15%: al 10 una caserma vale circa ×4,9 la prima, contro ×6,5 di prima.
 
 ## Vita e danno: chi sta davanti e chi sta dietro
 
@@ -100,8 +105,10 @@ Costano monete di battaglia e un calcolo, come le caserme.
   davanti alla base: tolta (l'utente: «più un potenziamento del castello»), e il
   castello ne ha preso la gittata (215, più 4 per livello) perché dal bordo deve
   coprire la porta in fondo al ponte.
-- **Sotto casa il castello picchia il triplo, e ad area** (`difesa` 180, `vicino` ×3,
-  `splash` 16): la zona delle piazzole, non la porta. Chi assedia le caserme lo paga, e
+- **Sotto casa il castello picchia il triplo** sul bersaglio (`difesa` 180, `vicino` ×3),
+  **e ad area** col danno di base (`splash` 16, al 60%): la zona delle piazzole, non la
+  porta. L'area al triplo spazzava i gruppi di chi tira: gli arcieri al livello 10 morivano
+  a un colpo e non arrivavano mai sotto le mura (l'utente). Chi assedia le caserme lo paga, e
   il castello fa da «reset» automatico: lo scontro torna al centro e la superiorità non
   arriva in fretta (l'utente: «perdi troppo facilmente le caserme, il castello dovrebbe
   proteggerle di più»). Con lui le caserme da 700 a 1100 e la porta da 1000 a 1400.
@@ -173,7 +180,7 @@ Il tempo di decidere c'è, poi la base viene sopraffatta.
 
 ## Nei test
 
-`[data-caserma=<edificio>]` (con `data-variante=<truppa>` se è costruito),
-`[data-scelta=<edificio>]`, `[data-costruisci=<truppa>]`, `[data-dettagli=<truppa|edificio>]`,
+`[data-piazzola=<n>]` (con `data-variante=<truppa>` se è costruita), `[data-scelta=<n>]`,
+`[data-costruisci=<truppa>]`, `[data-dettagli=<truppa|piazzola>]`, `[data-vendi]`,
 `[data-azione=miniera|ripara|castello|bomba]`, `[data-monete]`, `[data-avviso]`,
 `[data-tappa=<n>]`, `[data-fine=vinta|persa|pari]`.
