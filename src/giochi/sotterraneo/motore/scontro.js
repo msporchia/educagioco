@@ -319,7 +319,7 @@ export const MetodiDelloScontro = {
     const colpiti = []
     if (colpisceDavvero) {
       for (const { chi: x, fattore } of presi) {
-        const dato = Math.max(1, Math.round(this.colpo(x, nodo) * fattore * bonus))
+        const dato = this.arrotondaIlColpo(this.colpoCont(x, nodo) * fattore * bonus)
         x.ossa -= dato
         const caduto = x.ossa <= 0
         colpiti.push({ chi: x, dato, caduto, effetti: chiaviDegliEffetti(x), fattore, ...this.comeLaPrende(x, nodo) })
@@ -408,6 +408,7 @@ export const MetodiDelloScontro = {
     const io = f.io
     let male = this.botta(x)
     const pieno = male
+    if (pieno > 0) this.consumaIlDanno(x)
     const gelato = (x.stati || {}).debole > 0 && pieno > 0
     if (male > 0) f.pieni = (f.pieni || 0) + 1
     const schiva = male > 0 && this.schivata > 0 && this.rnd() * 100 < this.schivata
@@ -450,8 +451,24 @@ export const MetodiDelloScontro = {
     return evento
   },
 
-  // il colpo pieno di un mostro, prima degli effetti: COLPO_DEL_MOSTRO × (attacco − difesa), almeno 1
-  danno(m) { return Math.max(1, Math.round(COLPO_DEL_MOSTRO * (m.att - this.dif))) },
+  // Il danno è continuo (docs/sotterraneo/scontro.md): a schermo e alla vita arriva un numero intero, ma il resto non si perde: ogni mostro
+  // ha il suo (`resto`, 0,5 all'inizio: il primo colpo è quello arrotondato di sempre), e un colpo da 3,4 toglie 3, 3, 4, 3, 3, 4…
+  // Così una frazione di spinta sposta le vittorie piano, non a gradini.
+  // Il colpo pieno di un mostro, prima degli effetti: COLPO_DEL_MOSTRO × (attacco − difesa), almeno 1
+  dannoCont(m) { return Math.max(1, COLPO_DEL_MOSTRO * (m.att - this.dif)) },
+  danno(m) { return Math.floor(this.dannoCont(m) + (m.resto != null ? m.resto : 0.5)) },
+  // il colpo di `m` è arrivato: il suo resto passa al colpo dopo
+  consumaIlDanno(m) {
+    const v = this.dannoCont(m) + (m.resto != null ? m.resto : 0.5)
+    m.resto = v - Math.floor(v)
+  },
+  // lo stesso per l'eroe: il danno che fa, intero, col resto portato avanti (almeno 1)
+  arrotondaIlColpo(v) {
+    const t = v + this.restoColpo
+    const dato = Math.max(1, Math.floor(t))
+    this.restoColpo = Math.max(0, t - dato)
+    return dato
+  },
 
   // Quanto arriva davvero con un suo colpo, con gli effetti (docs/sotterraneo/abilita.md): stordito e invulnerabile niente; la
   // protezione (parato, o i primi colpi di «Testa dura») dimezza; gelato dimezza ancora; la Parata ne toglie qualcuno. Non tocca

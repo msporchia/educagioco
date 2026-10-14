@@ -76,6 +76,7 @@ export class Corsa extends Corredo {
     this.camminati = 0          // e di quelli, le celle davvero percorse (senza i turni dello scontro): il banco le conta
     this.manaCammino = 0        // il mana che il cammino ha già dato ma non ancora un punto intero
     this.preparati = []         // gli incanti preparati dal campo e ancora addosso: [{ id, passi, ... }] (motore/preparati.js)
+    this.restoColpo = 0.5       // il resto del danno dell'eroe, riportato al colpo dopo (docs/sotterraneo/scontro.md, «Il danno è continuo»)
     this.pronta = null          // l'abilità preparata per la prossima risposta giusta (docs/sotterraneo/abilita.md)
     this.fiatoUsato = false     // «Ultimo fiato»: una volta per discesa
     this.chiesta = null         // la domanda che serve: { id, che, difficolta }
@@ -153,6 +154,18 @@ export class Corsa extends Corredo {
   // il fuoco dei pezzi brucia anche chi para: si somma dopo la difesa del mostro. Con un'abilità (`nodo`, dati/abilita.js)
   // il colpo vale `per` volte, per l'elemento (resiste/teme: motore/scontro.js); `passa` (una frazione) toglie quella parte della difesa, un mostro rotto non ne ha. Un mostro gelato prende di più (Gelo profondo)
   colpo(m, nodo = null) {
+    const { base, per, resto } = this.pezziDelColpo(m, nodo)
+    return Math.max(1, Math.round(Math.max(1, Math.round(base)) * per * resto)) + this.addosso('fuoco')
+  }
+
+  // Lo stesso colpo senza gli arrotondamenti: il danno vero che l'eroe fa (docs/sotterraneo/scontro.md, «Il danno è continuo»);
+  // `colpo` è quello che si dice a schermo
+  colpoCont(m, nodo = null) {
+    const { base, per, resto } = this.pezziDelColpo(m, nodo)
+    return Math.max(1, base * per * resto) + this.addosso('fuoco')
+  }
+
+  pezziDelColpo(m, nodo) {
     const g = nodo ? this.grado(nodo.id) : 0
     const st = m.stati || {}
     // «ignora metà della difesa» vale 0,5 (`passa: true` sarebbe tutta); la passiva di un ramo ormai è solo percentuale
@@ -163,7 +176,7 @@ export class Corsa extends Corredo {
     // la furia (Rabbia, Ira del nano): con meno di metà vita si picchia più forte, anche con l'attacco solito
     const furia = this.vita * 2 <= this.vitaMax ? this.sempre('furia') : 0
     const piu = this.sempre('colpoPiu') + this.delRamo(nodo, 'piu') + (st.debole > 0 ? this.sempre('geloPiu') : 0) + esposto + furia
-    const base = Math.max(1, Math.round((this.attDelRamo(nodo) - m.dif * (1 - ignora)) * (1 + piu / 100)))
+    const base = (this.attDelRamo(nodo) - m.dif * (1 - ignora)) * (1 + piu / 100)
     let per = nodo ? (aGrado(nodo, 'per', g) || 1) : 1
     // l'ultimo gradino dei rami: contro un capo o un mostro grosso vale molto di più
     if (nodo && nodo.capi && this.èCapo(m)) per = aGrado(nodo, 'capi', g)
@@ -171,7 +184,7 @@ export class Corsa extends Corredo {
     // l'elemento dell'abilità contro le difese del mostro: metà se le resiste, un danno e mezzo se le teme (l'attacco solito no)
     // gelato dall'incanto di un mago (motore/scontro.js): il colpo di questo turno fa metà
     const gelato = this.foglio && this.foglio.io && this.foglio.io.gelato > 0 ? 0.5 : 1
-    return Math.max(1, Math.round(base * per * this.fattoreElemento(m, nodo) * gelato)) + this.addosso('fuoco')
+    return { base, per, resto: this.fattoreElemento(m, nodo) * gelato }
   }
   colpiPer(m) { return Math.max(1, Math.ceil(m.ossa / this.colpo(m))) }
 
