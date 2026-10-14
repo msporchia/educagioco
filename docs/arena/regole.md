@@ -133,7 +133,7 @@ che cade per ultimo, «vince il castello più sano» finiva quasi sempre pari.
   «adesso → livello dopo» di `motore/dettagli.js` (una squadra ogni N secondi, vita e
   danno di ogni truppa, vita della caserma, prezzo), chi colpisce e se vola.
 - Su un edificio da costruire apre **la scelta** (`viste/Scelta.vue`): le due truppe una
-  accanto all'altra, col prezzo e il calcolo che costano; quella che la tappa non ha
+  accanto all'altra, col prezzo; quella che la tappa non ha
   ancora si vede spenta («arriva più avanti»). Da lì «i numeri» aprono i dettagli.
 - **Il campo sta fermo** finché dettagli o scelta sono aperti: servono a confrontare
   con calma.

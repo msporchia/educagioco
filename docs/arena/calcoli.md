@@ -35,9 +35,10 @@ grossi sono del castello.
   in basso che lasciava in vista il campo, e non andava (l'utente: «sfrutta
   l'intero schermo per le domande»); il campo corre piano là dietro.
 - **Per scegliere con calma c'è il «?»** su ogni carta: apre i dettagli (come sta
-  la cosa adesso, come starebbe al livello dopo, quanto costa, che conto serve)
-  e **il campo sta fermo finché sono aperti**: la scelta di cosa costruire si fa
-  lì, senza fretta, e il calcolo viene dopo.
+  la cosa adesso, come starebbe al livello dopo, quanto costa) e **il campo sta
+  fermo finché sono aperti**: la scelta di cosa costruire si fa lì, senza fretta,
+  e il calcolo viene dopo. Che conto serve non si scrive: «si risolve una
+  moltiplicazione» è stato tolto (l'utente).
 - **Sbagliare non costa monete**: la caserma sbagliata riposa 6 secondi (il
   prezzo è il tempo), le altre scelte si ritentano quando si vuole.
 - **Una moneta vera per conto giusto** (`PAGA.mossa`): la domanda è la mossa

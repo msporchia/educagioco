@@ -243,11 +243,9 @@ function prendiTela(tela) {
 function ridimensiona() { campo?.adatta() }
 
 /* i dettagli: com'è adesso, com'è al livello dopo, quanto costa. Il campo sta fermo. */
-const NOME_CALCOLO = { '+': 'una somma', '−': 'una sottrazione', '×': 'una moltiplicazione', '÷': 'una divisione' }
 function apriDettagli({ id, azione }) {
   const p = partita.value
   if (!p || domanda.value || finale.value) return
-  const ammesse = operazioniDi(tappa.value)
   let d, scheda
   if (id) {
     const k = TRUPPE[id]
@@ -255,20 +253,18 @@ function apriDettagli({ id, azione }) {
     const liv = c ? c.liv : p.lati.io.livelli[EDIFICIO_DI[id]] || 0
     const det = dettaglioTruppa(id, liv, { costruire: !c })
     const az = c ? 'potenzia' : 'costruisci'
-    const cal = p.calcoloDi('io', az, id)
     d = { azione: az, id }
     scheda = { truppa: id, titolo: k.nome, nota: k.nota, ruolo: ruoloDi(id), livello: liv, sottotitolo: EDIFICI[EDIFICIO_DI[id]].nome,
-               ...det, calcolo: NOME_CALCOLO[operazionePer(cal.op, ammesse)],
+               ...det,
                verbo: c ? '⬆️ Potenzia' : '🛖 Costruisci',
                puoi: p.puoFare('io', az, id) && !p.inRiposo('io', id),
                motivo: p.inRiposo('io', id) ? 'la caserma riposa ancora un po\'' : 'servono più monete',
                fine: 'È già al livello massimo.' }
   } else {
     const det = dettaglioAzione(azione, { miniera: p.lati.io.miniera, castello: p.castello('io').liv })
-    const cal = p.calcoloDi('io', azione)
     d = { azione }
     scheda = { titolo: AZIONI[azione].nome, nota: AZIONI[azione].nota, ruolo: [], sottotitolo: azione === 'bomba' ? 'in regalo' : '', icona: { miniera: '⛏️', ripara: '🔧', bomba: '💣' }[azione],
-               castello: azione === 'castello', ...det, calcolo: NOME_CALCOLO[operazionePer(cal.op, ammesse)],
+               castello: azione === 'castello', ...det,
                verbo: azione === 'ripara' ? '🔧 Ripara' : azione === 'bomba' ? '💥 Lancia' : '⬆️ Potenzia',
                puoi: p.puoFare('io', azione),
                motivo: azione === 'bomba' ? (p.lati.io.bombe ? 'non ci sono truppe nemiche da colpire' : `la prossima arriva fra ${Math.ceil(p.lati.io.bombaT)} secondi`)
@@ -286,11 +282,10 @@ function procediDaiDettagli() {
   if (d) scegli(d.scelta)
 }
 
-/* un edificio da costruire: le sue due truppe una accanto all'altra, coi prezzi e il calcolo */
+/* un edificio da costruire: le sue due truppe una accanto all'altra, coi prezzi */
 function apriScelta({ ed }) {
   const p = partita.value
   if (!p || domanda.value || finale.value || p.fine) return
-  const ammesse = operazioniDi(tappa.value)
   const livello = p.lati.io.livelli[ed] || 0
   scelta.value = {
     ed, nome: EDIFICI[ed].nome, livello,
@@ -298,8 +293,7 @@ function apriScelta({ ed }) {
       const ammessa = tappa.value.truppe.includes(id)
       const prezzo = TRUPPE[id].costo
       return { id, nome: TRUPPE[id].nome, nota: TRUPPE[id].nota, ruolo: ruoloDi(id).slice(0, 2), prezzo, ammessa,
-               puoi: ammessa && p.puoFare('io', 'costruisci', id),
-               calcolo: NOME_CALCOLO[operazionePer(TRUPPE[id].op, ammesse)] }
+               puoi: ammessa && p.puoFare('io', 'costruisci', id) }
     }),
   }
   toccato.value = true

@@ -1,6 +1,6 @@
 <script setup>
 // La scelta di un edificio da costruire: le sue due truppe una accanto all'altra,
-// col prezzo e il calcolo che costa. Il campo sta fermo finché è aperta (lo decide
+// col prezzo. Il campo sta fermo finché è aperta (lo decide
 // Gioco.vue). Una truppa che la tappa non ha ancora si vede, spenta: arriva più avanti.
 import Ritratto from './Ritratto.vue'
 
@@ -31,7 +31,6 @@ defineEmits(['chiudi', 'costruisci', 'dettagli'])
                     @click="$emit('costruisci', v.id)">
               <span class="em">🛖</span> {{ v.prezzo }} <span class="em">🪙</span>
             </button>
-            <p class="ar-calcolo em">si risolve {{ v.calcolo }}</p>
             <button class="ar-numeri" :data-dettagli="v.id" @click="$emit('dettagli', v.id)">i numeri</button>
           </template>
           <p v-else class="ar-motivo">arriva più avanti</p>
