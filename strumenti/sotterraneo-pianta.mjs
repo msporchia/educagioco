@@ -126,9 +126,9 @@ function pianta(i) {
 // mostro grosso nella sua stanza, le porte chiuse per piano e quelle che non stanno su un muro dritto. Tutti i piani di ogni discesa.
 function conta() {
   const righe = []
-  const tot = { st: 0, b: [0, 0, 0, 0], mostri: 0, piani: 0, nonVuote: 0, soloMostri: 0, max: 0, scag: [], porte: 0, storte: 0, impilate: 0, grossi: 0, portoni: 0 }
+  const tot = { st: 0, b: [0, 0, 0, 0], mostri: 0, piani: 0, nonVuote: 0, soloMostri: 0, max: 0, scag: [], porte: 0, storte: 0, impilate: 0, grossi: 0, portoni: 0, nic: 0, nicVuote: 0 }
   for (const i of qualiDiscese) {
-    const t = { st: 0, b: [0, 0, 0, 0], mostri: 0, piani: 0, nonVuote: 0, soloMostri: 0, max: 0, scag: [], porte: 0, storte: 0, impilate: 0, grossi: 0, portoni: 0 }
+    const t = { st: 0, b: [0, 0, 0, 0], mostri: 0, piani: 0, nonVuote: 0, soloMostri: 0, max: 0, scag: [], porte: 0, storte: 0, impilate: 0, grossi: 0, portoni: 0, nic: 0, nicVuote: 0 }
     const tappa = i === 'abisso' ? L_ABISSO : zona != null ? zonaDi(i, Number(zona)) : CAMPAGNA[i]
     for (const sm of semi) {
       const c = new Corsa(tappa, { seme: sm })
@@ -136,6 +136,7 @@ function conta() {
       for (let p = 0; p < quanti; p++) {
         const L = c.faiIlPiano(p)
         t.piani++
+        for (const s of L.stanze) for (const n of s.nicchie) { t.nic++; if (!L.robeSu(n.x, n.y).length) t.nicVuote++ }
         const mostri = L.robe.filter(r => r.che === 'mostro')
         t.mostri += mostri.length
         for (const s of L.stanze) {
@@ -163,20 +164,20 @@ function conta() {
     const media = t.nonVuote ? (t.soloMostri / t.nonVuote).toFixed(1) : '-'
     const scag = t.scag.length ? (t.scag.reduce((a, b) => a + b, 0) / t.scag.length).toFixed(1) + ` (${Math.min(...t.scag)}-${Math.max(...t.scag)})` : '-'
     const nome = i === 'abisso' ? 'abisso' : `${i} ${(tappa.nome || tappa.chiave).slice(0, 24)}`
-    righe.push([nome, t.st, pc(t.b[0]), pc(t.b[1]), pc(t.b[2]), pc(t.b[3]), media, t.max, (t.mostri / t.piani).toFixed(1), scag, (t.porte / t.piani).toFixed(1), t.storte, t.impilate, t.grossi ? `${t.portoni}/${t.grossi}` : '-'])
-    for (const k of ['st', 'mostri', 'piani', 'nonVuote', 'soloMostri', 'porte', 'storte', 'impilate', 'grossi', 'portoni']) tot[k] += t[k]
+    righe.push([nome, t.st, pc(t.b[0]), pc(t.b[1]), pc(t.b[2]), pc(t.b[3]), media, t.max, (t.mostri / t.piani).toFixed(1), scag, (t.porte / t.piani).toFixed(1), t.storte, t.impilate, t.grossi ? `${t.portoni}/${t.grossi}` : '-', `${t.nicVuote}/${t.nic}`])
+    for (const k of ['st', 'mostri', 'piani', 'nonVuote', 'soloMostri', 'porte', 'storte', 'impilate', 'grossi', 'portoni', 'nic', 'nicVuote']) tot[k] += t[k]
     t.b.forEach((x, k) => { tot.b[k] += x }); tot.max = Math.max(tot.max, t.max); tot.scag.push(...t.scag)
   }
   const pc = x => (tot.st ? Math.round(100 * x / tot.st) : 0) + '%'
   if (qualiDiscese.length > 1) righe.push(['TUTTE', tot.st, pc(tot.b[0]), pc(tot.b[1]), pc(tot.b[2]), pc(tot.b[3]), tot.nonVuote ? (tot.soloMostri / tot.nonVuote).toFixed(1) : '-', tot.max,
-    (tot.mostri / tot.piani).toFixed(1), tot.scag.length ? (tot.scag.reduce((a, b) => a + b, 0) / tot.scag.length).toFixed(1) : '-', (tot.porte / tot.piani).toFixed(1), tot.storte, tot.impilate, `${tot.portoni}/${tot.grossi}`])
-  const testa = ['discesa', 'stanze', '0', '1', '2-3', '4+', 'media', 'max', 'mostri/piano', 'scagnozzi', 'porte/piano', 'storte', 'impilate', 'portoni']
+    (tot.mostri / tot.piani).toFixed(1), tot.scag.length ? (tot.scag.reduce((a, b) => a + b, 0) / tot.scag.length).toFixed(1) : '-', (tot.porte / tot.piani).toFixed(1), tot.storte, tot.impilate, `${tot.portoni}/${tot.grossi}`, `${tot.nicVuote}/${tot.nic}`])
+  const testa = ['discesa', 'stanze', '0', '1', '2-3', '4+', 'media', 'max', 'mostri/piano', 'scagnozzi', 'porte/piano', 'storte', 'impilate', 'portoni', 'nicchie vuote']
   const larghe = testa.map((h, k) => Math.max(h.length, ...righe.map(r => String(r[k]).length)))
   const riga = r => r.map((v, k) => (k === 0 ? String(v).padEnd(larghe[k]) : String(v).padStart(larghe[k]))).join('  ')
   console.log(`semi ${semi[0]}-${semi[semi.length - 1]}${zona != null ? ` · zona ${zona}` : ''} · stanze ordinarie (senza ruolo, portale, fonte), tutti i piani`)
   console.log(riga(testa)); console.log(larghe.map(l => '-'.repeat(l)).join('  '))
   for (const r of righe) console.log(riga(r))
-  console.log('media = mostri in una stanza che ne ha · scagnozzi = mostri (non il grosso) nella stanza del grosso · storte = porte chiuse non su un muro dritto · impilate = porte chiuse con un\'altra a due celle · portoni = piani col grosso che hanno la porta bella sulla sua stanza')
+  console.log('media = mostri in una stanza che ne ha · scagnozzi = mostri (non il grosso) nella stanza del grosso · storte = porte chiuse non su un muro dritto · impilate = porte chiuse con un\'altra a due celle · portoni = piani col grosso che hanno la porta bella sulla sua stanza · nicchie vuote = nicchie senza niente dentro (né mostro, né gemma, né un pezzo) su tutte le nicchie')
 }
 // ─── --passi: quanti passi (celle percorse) fa un piano ──────────────────────────────────────────────────────────
 // L'orologio del sotterraneo conta i passi dell'eroe (docs/sotterraneo/orologio.md): serve sapere quanti ne fa un piano. Su ogni piano

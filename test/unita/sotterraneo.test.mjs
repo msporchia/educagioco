@@ -342,7 +342,7 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
                              grosso: i % 2 ? 'ossuto' : null, scenario: 'cripta' }))
   // una stanza non è un rettangolo (docs/sotterraneo/piani.md): si chiede al piano se la cella è dentro
   const dentro = (r, s, l) => l.dentroStanza(r, s)
-  const conStanza = PIANI.flatMap(l => l.robe.filter(r => r.che === 'arredo')
+  const conStanza = PIANI.flatMap(l => l.robe.filter(r => r.che === 'arredo' && !r.nicchia)   // i pezzi di nicchia hanno la loro regola (docs/sotterraneo/piani-caverne.md)
     .map(r => ({ r, l, s: l.stanze.find(s => dentro(r, s, l)) })))
   controlla('gli orpelli stanno tutti in una stanza', conStanza.every(x => !!x.s))
   controlla('nessun orpello più epico della sua stanza (salvo i più semplici)',
@@ -357,7 +357,7 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
             dellaScala.map(s => s.epica).join())
   const ingressi = PIANI.map(l => l.stanze[0].epica)
   controlla('l\'ingresso è la stanza meno epica', ingressi.every(e => e <= 2), ingressi.join())
-  const conta = (l, s) => l.robe.filter(r => r.che === 'arredo' && dentro(r, s, l)).length
+  const conta = (l, s) => l.robe.filter(r => r.che === 'arredo' && !r.nicchia && dentro(r, s, l)).length
   const ricche = PIANI.filter(l => l.grosso).map(l => conta(l, l.stanze.find(s => s.ruolo === 'uscita')))
   const povere = PIANI.map(l => conta(l, l.stanze[0]))
   controlla('la sala del mostro grosso è più ricca dell\'ingresso',
