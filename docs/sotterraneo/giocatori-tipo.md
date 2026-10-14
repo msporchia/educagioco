@@ -52,7 +52,7 @@ prima il curioso.
 
 **Un pezzo si indossa dal suo livello** ([livello-dei-pezzi.md](livello-dei-pezzi.md)): il finto compra un pezzo per dopo solo se, comprato quello per adesso, gli avanzano gemme e non ha un pezzo per adesso
 da risparmiare; ne tiene al più `RISALITA.perDopo` (2) in attesa del livello, senza venderli, e li mette quando arriva al livello. Quelli indossati dopo contano fra i **comprati**
-(`armi.rimandati`), non fra i trovati. Il giro prima → dopo: [risalite.md](risalite.md#il-livello-dei-pezzi-14-ottobre-sera).
+(`armi.rimandati`), non fra i trovati. Il giro prima → dopo: [risalite.md](risalite.md#il-livello-dei-pezzi-14-ottobre-sera). Con due pezzi subito per linguetta e il bottino a livello dell'eroe: [risalite.md](risalite.md#il-livello-del-bottino-e-due-pezzi-subito-14-ottobre-notte).
 
 ## I bersagli
 

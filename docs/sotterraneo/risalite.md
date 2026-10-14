@@ -156,6 +156,34 @@ alle cantine e alla torre c'erano già (8–10 storie su 120 bloccate).
 - **Costi nei test**: `unita/sotterraneo` ha una verifica rossa in più (la cisterna a 3/6 invece di 5/6, in aggiunta a gallerie, labirinto e fondo già rossi) e `unita/sotterraneo-abisso` ha il tetto per piano
   a 45 domande e non 40 (il seme 7 al piano 11 passa da 36 a 41).
 
+## Il livello del bottino e due pezzi subito (14 ottobre, notte)
+
+Due decisioni dell'utente sul giro di sopra: **un pezzo trovato nasce al livello dell'eroe con una variazione −1…+2** (e il grosso ogni tanto 3 o 4 sopra,
+[livello-dei-pezzi.md](livello-dei-pezzi.md#il-livello-di-un-pezzo-trovato)) e **il banco ha due pezzi da mettersi subito per linguetta** (`SUBITO_PER_LINGUETTA`, e
+quattro tentativi di abilità per livello e rarità invece di due). Curioso di arma prima, mediane (altare · cantine · torre · gallerie · cisterna · labirinto · fondo), prima → dopo:
+
+| | prima | dopo |
+|---|---|---|
+| armi utili (comprate + trovate) | 0,9+2,2 · 2,0+1,3 · 2,0+0,3 · 1,7+0,1 · 1,4+0,1 · 1,7+0,3 · 1,3+0,2 | 1,0+1,5 · 2,3+1,3 · 2,2+0,1 · 1,8+0,1 · 1,7+0,1 · 1,8+0,1 · 1,6+0,1 |
+| forza a fine sull'atteso | 0 · +1 · +1 · +2 · +1 · 0 · 0 | −1 · −1 · +1 · 0 · +1 · −1 · −1 |
+| gemme non spese | 4 · 62 · 80 · 91 · 123 · 285 · 449 | 3 · 49 · 64 · 77 · 96 · 240 · 362 |
+| pozioni bevute a discesa | 1,4 · 2,9 · 3,7 · 2,8 · 2,0 · 8,7 · 5,1 | 1,5 · 4,1 · 4,6 · 3,5 · 2,7 · 9,1 · 6,3 |
+| vinte alla prima % | 98 · 98 · 98 · 97 · 99 · 97 · 94 | 98 · 93 · 99 · 96 · 99 · 93 · 98 |
+| discese con uno svenimento % | 20 · 1 · 10 · 8 · 6 · 9 · 9 | 20 · 13 · 21 · 18 · 8 · 13 · 9 |
+
+Il bravo, vinte alla prima: 100 · 68 · 71 · 89 · 85 · 89 · 89 → 100 · 53 · 67 · 87 · 88 · 92 · 82. Lo sbadato (bersaglio ≤ 15%): 80 · 94 · 87 · 93 · 97 · 85 · 88 → 78 · 80 · 81 · 91 · 92 · 82 · 86.
+
+- **Il banco dà qualcosa** (due pezzi subito, da solo: comprati 1,0 · 2,2 · 2,0 · 1,9 · 1,6 · 1,8 · 1,4, utili 3,0 · 3,3 · 2,3 · 2,0 · 1,7 · 2,1 · 1,6; gemme non spese −10…−20%), **ma non quanto serve**: il bersaglio
+  è 3 e dalla torre in giù si sta a 1,7–2,3.
+- **Il livello del bottino non è il problema**: con la variazione azzerata (eroe esatto) i numeri sono identici a quelli di prima, al decimale. Il curioso è sempre sopra il livello atteso della discesa
+  (4 contro 3 alla torre, 12 contro 10 al fondo) e il bottino era già al suo livello; i pezzi trovati sono 0,1 a discesa dalla torre in giù perché **non migliorano quello che ha**: nove su dieci sono comuni
+  o magici e il fabbro gli dà ogni volta il meglio del suo livello, rari compresi. 4–6 pezzi a discesa cadono e restano inutili.
+- **La variazione costa forza**: −1 livello è un pezzo appena peggiore, +1 e +2 stanno chiusi finché non sale, quindi solo il 45% è utile subito; il curioso passa dal bersaglio 0…+2 a −1 in quattro
+  discese su sette, con più svenimenti (le cantine da 1% a 13%) e più pozioni (4,1 contro 2,9). Il bravo perde alle cantine (68 → 53).
+- **Lo sbadato non rientra** (78–92% contro ≤ 15%): non lo salvano le risalite (`--tara risalita.acceso=0`: 72 · 79 · 82 · 92 · 97 · 93 · 88, uguale a prima). Bevono: 9 · 8 · 9 · 7 · 18 · 16 pozioni a discesa dalle cantine
+  in giù, 3–7,5 fonti, e svenire è concesso 5–7 volte a discesa (`svenimentiDi`: `SVENIMENTI_IN_REGALO` più i piani) senza perdere la discesa. Leve non applicate: un tetto di pozioni per scontro, il costo
+  del turno rimesso a chi beve sotto una soglia, o meno svenimenti concessi; prima va misurato quanti ne spende lo sbadato.
+
 ## I tempi
 
 Con 4 processi: **il giro a freddo dura 212 s** (7 discese più la spesa in uscita 4,7 · 13,3 · 13,9 · 23,8 · 27,7 · 52,8 · 39,7 · 35,6 s), contro i 65 s di prima; solo con le salite e senza scaffale 79 s.

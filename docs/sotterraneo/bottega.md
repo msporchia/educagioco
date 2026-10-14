@@ -125,8 +125,7 @@ più nessuno.
   adesso e non meno di `SALTO_MINIMO` (`ruoloDi`: `confronto().meglio`); sta da un
   livello fino a sette sopra l'eroe, comune, magico o raro, e può chiedere una
   caratteristica che l'eroe non ha: si compra e va nello zaino, perché **un pezzo si indossa dal suo livello**
-  ([livello-dei-pezzi.md](livello-dei-pezzi.md)). Perciò **ogni linguetta ha anche un pezzo che migliora e si mette subito** (`completaSubito`; il primo
-  salto è del livello dell'eroe o fino a due sotto): chi ha le gemme trova sempre qualcosa da mettersi adesso, oltre ai pezzi da tenere per dopo. Un **sogno** è
+  ([livello-dei-pezzi.md](livello-dei-pezzi.md)). Perciò **ogni linguetta ha anche due pezzi che migliorano e si mettono subito** (`completaSubito`, `SUBITO_PER_LINGUETTA`: di basi diverse prima, del livello dell'eroe o fino a due sotto): chi ha le gemme trova sempre qualcosa da mettersi adesso, oltre ai pezzi da tenere per dopo. Un **sogno** è
   un salto di otto livelli o più sopra (`SOGNO_LIVELLI`), raro, il più caro di
   ogni base: il traguardo per cui risparmiare; chi ha già il meglio di quei
   livelli lo trova più su ancora; **costa il doppio** del prezzo vero (`PREZZO_DEL_SOGNO`: esorbitante, un pezzo di otto livelli più su costa già molto). Mai un leggendario. Sono in fondo alla

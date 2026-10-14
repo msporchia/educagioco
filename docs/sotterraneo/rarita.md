@@ -105,11 +105,10 @@ sulle basi femminili):
 
 ## Cosa cade, e a che livello
 
-- **Il livello del bottino è quello del posto, o quello dell'eroe se è più
-  alto** (`livelloDelBottino`). Il posto: il livello della discesa, uno in
-  più ogni due piani; l'abisso dal 12 in giù, uno a piano, senza tetto
-  (`livelloDelPosto`). Così chi è al livello 20 trova pezzi del 20 anche
-  nella cripta; ma le rarità crescono con la profondità, e scendere conta.
+- **Un pezzo trovato nasce al livello dell'eroe, con una variazione da −1 a +2** (20 · 45 · 25 · 10%), e il grosso ogni tanto uno 3 o 4 sopra
+  ([livello-dei-pezzi.md](livello-dei-pezzi.md#il-livello-di-un-pezzo-trovato)). La roba della storia e delle missioni resta al livello del bottino
+  (`livelloDelBottino`: quello del posto, o dell'eroe se è più alto; il posto è il livello della discesa, uno in più ogni due piani, e l'abisso dal 12 in
+  giù uno a piano, senza tetto: `livelloDelPosto`). Chi è al livello 20 trova pezzi intorno al 20 anche nella cripta; le rarità crescono con la profondità, e scendere conta.
 - **Le rarità** (`PROBABILITA` in `motore/bottino.js`), spinte dalla fortuna
   (+8% a punto) e dalla profondità (+1,25% a livello):
 
