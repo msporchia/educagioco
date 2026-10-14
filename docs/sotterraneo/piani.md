@@ -102,7 +102,7 @@ vuoto, l'8% aveva un mostro, il 22% due o tre, il 2% quattro o più. **Il numero
 
 - **Una stanza ordinaria su cinque è vuota** (`STANZE_VUOTE`, di più o di meno con `densita` della discesa, 1 di difetto); **la sala
   non lo è mai** (lì stanno i branchi). **Una su dieci ha un solo mostro appostato**: il solitario è un'eccezione. Le altre hanno
-  **un branco da due fino al tetto**: `tettoBranco` della discesa (3 alla cripta, alla scalinata e alla torre, 4 alla grotta e alla
+  **un branco da due fino al tetto**: `tettoBranco` della discesa (2 alla cripta, dove si impara; 3 alla scalinata e alla torre, 4 alla grotta e alla
   scala sommersa, 5 alla botola, 6 alla miniera; nell'abisso 3, 5, 6 per tratto), e della stanza (sotto le 25 celle al più tre, sotto
   le 45 quattro, sotto le 70 cinque, sei solo nelle sale). La coda è corta: i branchi tipici sono da due a quattro. Misurato su 30 semi: vuote il
   15%, con uno il 9%, con due o tre il 59%, con quattro o più il 17%; in media 2,7 mostri in una stanza che ne ha, al più sette. Le

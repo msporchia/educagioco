@@ -5,7 +5,7 @@
 // è il numero di tagli del BSP (2 → quattro stanze, 4 → sedici); `largo` e `alto`, se ci sono, danno la forma
 // al posto del quadrato `misura` (la torre alta e stretta, la scala sommersa lunga). `dove` è il posto in mezzo
 // a una frase («sotto la torre non duri», motore/storia.js). `densita`: quante stanze hanno qualcuno, 1 di difetto e di norma assente (una stanza ordinaria su cinque è vuota, di più sotto 1: docs/sotterraneo/piani.md, «I mostri»); `tettoBranco`: quanti, al più,
-// in un branco di quella discesa (cresce scendendo: 3 alla cripta, alla scalinata e alla torre, 5 alla botola, 6 alla miniera e alla fornace dell'abisso); `pianta`: la famiglia dei piani, `costruita` (stanze a pianta, colonnati,
+// in un branco di quella discesa (cresce scendendo: 2 alla cripta, che è dove si impara, 3 alla scalinata e alla torre, 5 alla botola, 6 alla miniera e alla fornace dell'abisso); `pianta`: la famiglia dei piani, `costruita` (stanze a pianta, colonnati,
 // nicchie) o `caverna` (grotte e passaggi storti); `acqua`: pozze da aggirare (docs/sotterraneo/piani-caverne.md).
 // `portata`: niente `scuola` qui, quello che insegna questa campagna non lo dà nessuna scuola.
 import { MOSTRI, costoInRisposte } from './mostri.js'
@@ -15,8 +15,8 @@ export const CAMPAGNA = [
     scenario: 'cripta', pianta: 'costruita',
     portata: 25,
     dritta: 'due piani di tombe, e qualcuno che non dorme',
-    piani: 2, misura: 34, giri: 2, dif: [0.05, 0.22], forza: 0.25, spinta: -2, livello: 1,
-    mostri: ['scheletro', 'zombie', 'fantasma'], caporale: 'scheletro-scudo', tettoBranco: 3, capo: 'scheletro' },
+    piani: 2, misura: 34, giri: 2, dif: [0.05, 0.22], forza: 0.25, livello: 1,
+    mostri: ['scheletro', 'zombie', 'fantasma'], caporale: 'scheletro-scudo', tettoBranco: 2, capo: 'scheletro' },
 
   { chiave: 'cantine', nome: 'La scalinata antica', icona: '🪜', dove: 'giù per la scalinata',
     scenario: 'cantine', pianta: 'costruita',
