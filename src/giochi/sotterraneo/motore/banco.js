@@ -22,6 +22,7 @@ import { caselleDella, puntiAbilita, prossimoDellaStrada } from './abilita.js'
 import { mostroDiRiferimento, dannoDell } from './forza.js'
 import { ammette, robaDellaStrada, crescitaDellaStrada, stradaDi } from './strade.js'
 import { QUOTA_POCA_VITA } from './pericolo.js'
+import { TASCHE_PER_I_PEZZI } from '../dati/giocatori-tipo.js'
 
 const DT = 1 / 30
 const TETTO_PASSI = 3000        // ~100 secondi di cammino: molto più di un piano
@@ -252,7 +253,7 @@ function sbriga(corsa, bravura, sorte, conto, st = {}, scontro = null) {
       // il curioso beve nello scontro quando è nel rosso (la soglia dello stop del pericolo): costa il turno. Lo stop da solo non basta:
       // con cinque mostri in campo scatta anche a vita alta, e berrebbe a ogni scontro
       if (st.beviNelloScontro && corsa.zaino.some(k => COSE[k] && COSE[k].usa === 'cura') &&
-          corsa.vita < corsa.vitaMax * QUOTA_POCA_VITA && corsa.beviNelloScontro()) { conto.pozioni++; if (scontro) scontro.pz++; return true }
+          corsa.vita < corsa.vitaMax * (st.scontroSotto ?? QUOTA_POCA_VITA) && corsa.beviNelloScontro()) { conto.pozioni++; if (scontro) scontro.pz++; return true }
       if (BANCO.abilita) {
         if (!f.bancoCaselle) { riempiLeCaselle(corsa); f.bancoCaselle = true }
         const id = preparaLAbilita(corsa, f, st)
@@ -473,7 +474,8 @@ export function pianiSani(tappa, quanti = 60) {
 // Il giocatore finto davanti ai mercanti di sopra: vende quello che ha in tasca e non mette, compra quello che
 // migliora (arma, armatura, scudo; al dito se è libero) e con quello che resta riempie le tasche di pozioni.
 // È il caso peggiore per l'equilibrio, chi scende con lo zaino pieno (docs/sotterraneo/regole.md)
-export function allaBottega(roba, { finite = 0, eroe = undefined, seme = 1, crescita = null } = {}) {
+// `spesa`: 'il meglio' (i pezzi, poi le pozioni) o 'pozioniPrima' (la strada di chi beve tutto: dati/giocatori-tipo.js, STRADE)
+export function allaBottega(roba, { finite = 0, eroe = undefined, seme = 1, crescita = null, spesa = 'il meglio' } = {}) {
   const b = new Bottega({ eroe, roba, finite, crescita, rnd: seminato(seme * 53 + 11) })
   const vendiIlSuperfluo = () => {
     for (let i = b.zaino.length - 1; i >= 0; i--)
@@ -482,7 +484,16 @@ export function allaBottega(roba, { finite = 0, eroe = undefined, seme = 1, cres
   // al dito si mette la prima cosa che capita, come fa equipaggia: i gioielli non si confrontano su un numero
   const meglio = k => b.quantoCosta(k) <= b.gemme && !b.possiedo(k) &&
     ((COSE[k].dove === 'dito' ? !b.dito : b.vaAddosso(k)) || scudoMeglio(b, k))
+  const POZIONI = ['pozione-grande', 'pozione', 'pozione-piccola']
+  const comprePozioni = fino => {
+    while (b.zaino.length < fino) {
+      const k = POZIONI.find(p => COSE[p].prezzo <= b.gemme)
+      const e = k && b.compraDa('erborista', k)
+      if (!e || e.che !== 'comprato') break
+    }
+  }
   vendiIlSuperfluo()
+  if (spesa === 'pozioniPrima') comprePozioni(TASCHE - TASCHE_PER_I_PEZZI)
   for (let giro = 0; giro < 8; giro++) {
     // quanto migliora tutto (confronto: `meglio`, la difesa pesa il doppio); a pari, il più caro
     const vale = k => (COSE[k].dove === 'dito' ? 1 : scudoMeglio(b, k) && !b.vaAddosso(k)
@@ -495,12 +506,7 @@ export function allaBottega(roba, { finite = 0, eroe = undefined, seme = 1, cres
     b.compraDa(scelte[0].chi, scelte[0].k)
     vendiIlSuperfluo()
   }
-  const POZIONI = ['pozione-grande', 'pozione', 'pozione-piccola']
-  while (b.zaino.length < TASCHE) {
-    const k = POZIONI.find(p => COSE[p].prezzo <= b.gemme)
-    const e = k && b.compraDa('erborista', k)
-    if (!e || e.che !== 'comprato') break
-  }
+  comprePozioni(TASCHE)
   return b.roba
 }
 

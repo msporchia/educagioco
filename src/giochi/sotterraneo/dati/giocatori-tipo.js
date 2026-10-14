@@ -81,8 +81,29 @@ export const GIOCATORI_TIPO = {
 
 export const NOMI_TIPO = Object.keys(GIOCATORI_TIPO)
 
-// lo stile di un giocatore tipo (quello dello sbadato è quello del curioso)
-export const stileDi = chi => {
+// Le strade di spesa, incrociate coi giocatori tipo (docs/sotterraneo/fine-discesa-e-strade.md); `stile` si sovrappone a quello del giocatore.
+// `spesa`: 'il meglio' i pezzi migliori e poi le pozioni (allaBottega di sempre); 'pozioniPrima' le pozioni, e ai pezzi quello che avanza.
+export const STRADE = {
+  armaPrima: { nome: 'arma prima', spesa: 'il meglio', stile: {} },
+  beveTutto: { nome: 'beve tutto', spesa: 'pozioniPrima', stile: { beviSotto: 0.55, scontroSotto: 0.55, beviNelloScontro: true } },
+}
+export const NOMI_STRADA = Object.keys(STRADE)
+export const STRADA_BASE = 'armaPrima'
+
+// con la spesa 'pozioniPrima': le tasche che restano libere per i pezzi (le pozioni riempiono le altre)
+export const TASCHE_PER_I_PEZZI = 2
+
+// quante storie per eroe giocano le strade oltre quelle dei bersagli (il curioso e il bravo di arma prima ne giocano `--semi`, 30)
+export const SEMI_DELLE_STRADE = 6
+
+// una discesa vinta con almeno tante pozioni bevute è vinta «bevendo» (docs/sotterraneo/fine-discesa-e-strade.md)
+export const POZIONI_DA_BEONE = 10
+
+// una discesa «blocca» chi non la vince in TENTATIVI giri; «si ferma» alla prima in cui almeno questa quota delle storie è bloccata
+export const QUOTA_CHE_SI_FERMA = 0.1
+
+// lo stile di un giocatore tipo (quello dello sbadato è quello del curioso), sulla strada di spesa che segue
+export const stileDi = (chi, strada = STRADA_BASE) => {
   const g = GIOCATORI_TIPO[chi]
-  return g.stile === 'curioso' ? GIOCATORI_TIPO.curioso.stile : g.stile
+  return { ...(g.stile === 'curioso' ? GIOCATORI_TIPO.curioso.stile : g.stile), ...STRADE[strada].stile }
 }

@@ -17,12 +17,14 @@ va avanti da sola.
 Il codice: `dati/giocatori-tipo.js` (come gioca ognuno e i suoi bersagli), `motore/banco.js` (`gioca` con `stile`, lo scontro registrato),
 `motore/storie.js` (la storia di fila), `motore/rapporto.js` (le misure, ✅/❌, il perché), `motore/specie.js` (la tabella delle specie),
 `motore/potenza.js` (esperienza e gemme), `strumenti/sotterraneo-taratura.mjs`. I comandi: [../core/comandi.md](../core/comandi.md).
+**A che punto è l'eroe alla fine di ogni discesa, i checkpoint e le strade di spesa** (beve tutto, arma prima): [fine-discesa-e-strade.md](fine-discesa-e-strade.md).
 
 ```bash
 npm run taratura                       # il giro: 30 storie per eroe, il rapporto (circa 40 s con 4 processi)
 npm run taratura -- --presto           # il giro corto: 3 storie per eroe, dice il primo bersaglio fuori di molto (5 s)
 npm run taratura -- --cerca            # la proposta: spinta e forza per bisezione (circa 60 s, 16 storie per eroe)
 npm run taratura -- --specie           # solo la tabella delle specie, senza giocare
+npm run taratura -- --da 4             # rigioca dalla quinta discesa in poi, dai checkpoint (vedi fine-discesa-e-strade.md)
 npm run taratura -- --tara 2.spinta=8,livelli.A=40,potenza.gemme=0.5   # prova dei valori senza toccare i sorgenti
 ```
 
@@ -155,7 +157,8 @@ Non scrive i sorgenti: stampa prima → dopo e il comando `--tara …` per verif
 
 ## I tempi
 
-Con 4 processi (la macchina ha poca memoria): il giro con 30 storie per eroe **40 s**, il giro corto **5 s**, la ricerca su tutte le discese **62 s** (16 storie
+Con 4 processi (la macchina ha poca memoria): il giro con 30 storie per eroe **40 s** (con le sei linee delle strade 52–62 s a freddo, 0,6 s da checkpoint:
+[fine-discesa-e-strade.md](fine-discesa-e-strade.md#i-tempi)), il giro corto **5 s**, la ricerca su tutte le discese **62 s** (16 storie
 per eroe; 2–3 discese cercate costano 15 s l'una). Una discesa giocata costa 30–40 ms; le storie si dividono fra i processi in dodici pezzi.
 `misure/sotterraneo` è lenta perché gioca ventimila discese (1200 s di processore): ora le divide fra quattro processi (`test/aiuto/parallelo.mjs`,
 4 min 25 s); per averla sotto il minuto va sostituita dal rapporto di questo strumento quando i bersagli saranno confermati.
@@ -166,4 +169,5 @@ per eroe; 2–3 discese cercate costano 15 s l'una). Una discesa giocata costa 3
 - `forza` ha ancora i gradini della ossa intere (8 ossa per forza 0,9 sono 7): il resto continuo vale per i colpi, non per le ossa.
 - `--zone`: la curva delle zone non ha ancora i suoi bersagli per giocatore tipo (le zone sono un'altra promessa, quella di un livello a zona).
 - La forza di `forza.js` conta ancora il colpo del mostro arrotondato; la differenza è sotto il 5%.
+- I bersagli nuovi sulla fine della discesa sono proposti, non confermati: [fine-discesa-e-strade.md](fine-discesa-e-strade.md#i-bersagli-nuovi-proposti--da-confermare-con-lutente).
 - La taratura vera (cosa girare dopo il primo giro) è dell'utente: [taratura-branchi.md](taratura-branchi.md) è il punto di partenza.

@@ -12,12 +12,18 @@
 //   npm run taratura -- --tutto                   # nel rapporto, il perché di ogni cella e non solo il riassunto
 //   npm run taratura -- --giocatori curioso,bravo # solo quei giocatori tipo
 //   npm run taratura -- --specie                  # solo la tabella delle specie: quanto picchiano contro l'eroe atteso, cosa portano (senza giocare)
+//   npm run taratura -- --da 4                    # rigioca dalla quinta discesa in poi, dai checkpoint (tmp/taratura/): quelle prima non si giocano
+//   npm run taratura -- --da 4 --fino 4 --semi 10 --semi-strade 3   # una tappa sola e poche storie, servite dai checkpoint: pochi secondi
+//   npm run taratura -- --rifai                   # rifà tutti i checkpoint (di difetto si rifanno da sé quelli che la firma dei sorgenti dice vecchi)
+//   npm run taratura -- --strade armaPrima        # solo quelle strade di spesa (di difetto armaPrima e beveTutto); --semi-strade N le storie per eroe
 //
 // Il caso è dichiarato: `--seme-da N` (di difetto 1) fa le storie N..N+semi−1, due giri danno le stesse cifre. `--processi N` (di difetto 4)
 // limita i processi; la macchina ha poca memoria. I tempi si stampano alla fine.
 import { spawn } from 'node:child_process'
+import { createInterface } from 'node:readline'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { dirname, resolve, join } from 'node:path'
+import { firmeDelleDiscese, scrivi, leggi, validi, scegli } from './sotterraneo-checkpoint.mjs'
 
 const QUI = fileURLToPath(import.meta.url)
 const RADICE = resolve(dirname(QUI), '..')
@@ -28,16 +34,13 @@ const numeri = (nome, difetto) => (valore(nome) != null ? valore(nome).split(','
 const modulo = nome => import(pathToFileURL(join(RADICE, SRC, nome)).href)
 const EROI_TUTTI = ['cavaliere', 'elfa', 'mago', 'nano']
 
-/* ═══════════ il lavoratore: un pezzo di storie in un processo a sé ═══════════ */
-if (argv[0] === '--lavoro') {
-  let dentro = ''
-  for await (const d of process.stdin) dentro += d
-  const lavoro = JSON.parse(dentro)
+/* ═══════════ i valori provati a mano ═══════════ */
+// `2.spinta=6.5` ritocca una discesa (le zone la ereditano); `zona.forzaA12=5` la curva delle zone: stesse chiavi di npm run sotterraneo
+async function applicaTara(tara) {
   const { CAMPAGNA } = await modulo('dati/campagna.js')
   const zone = await modulo('dati/zone.js')
   const livelli = await modulo('dati/livelli.js')
-  // `2.spinta=6.5` ritocca una discesa (le zone la ereditano); `zona.forzaA12=5` la curva delle zone: stesse chiavi di npm run sotterraneo
-  for (const voce of (lavoro.tara || '').split(',').filter(Boolean)) {
+  for (const voce of (tara || '').split(',').filter(Boolean)) {
     const [k, campo] = voce.split('=')[0].split('.')
     const v = Number(voce.split('=')[1])
     if (k === 'livelli') livelli.CURVA_DELL_ESPERIENZA[campo] = v
@@ -45,19 +48,43 @@ if (argv[0] === '--lavoro') {
     else if (k === 'zona') { if (campo in zone.CURVA_DELLE_ZONE) zone.CURVA_DELLE_ZONE[campo] = v; else zone.FORMA_DELLA_ZONA[campo] = v }
     else CAMPAGNA[Number(k)][campo] = v
   }
-  const { storiaDi, passoDellaStoria, rifatteAl } = await modulo('motore/storie.js')
-  let risultato
+}
+
+/* ═══════════ il lavoratore: un pezzo di storie in un processo a sé ═══════════ */
+async function eseguiLavoro(lavoro) {
+  const { storiaDi, passoDellaStoria, rifatteAl, compatta } = await modulo('motore/storie.js')
   if (lavoro.che === 'storie') {
-    risultato = []
+    const risultato = []
     for (const eroe of lavoro.eroi) for (const seme of lavoro.semi) for (const tipo of lavoro.tipi)
       risultato.push(...storiaDi({ tipo, eroe, seme, fino: lavoro.fino }))
-  } else if (lavoro.che === 'passi') {
-    // un passo solo per ogni storia, da dove ne è rimasta: la ricerca non rigioca le discese di prima
-    risultato = lavoro.lista.map(x => passoDellaStoria(lavoro.k, x.stato, { tipo: lavoro.tipo, eroe: x.eroe, seme: x.seme,
-      sonde: lavoro.sonde || [], rifai: lavoro.rifai ? rifatteAl(lavoro.k) : [] }))
+    return risultato
   }
+  // un passo solo per ogni storia, da dove ne è rimasta: la ricerca non rigioca le discese di prima
+  if (lavoro.che === 'passi')
+    return lavoro.lista.map(x => passoDellaStoria(lavoro.k, x.stato, { tipo: lavoro.tipo, eroe: x.eroe, seme: x.seme,
+      sonde: lavoro.sonde || [], rifai: lavoro.rifai ? rifatteAl(lavoro.k) : [] }))
+  // una tappa: la discesa k per storie di linee diverse, ognuna dal suo stato
+  if (lavoro.che === 'tappa')
+    return lavoro.items.map(x => {
+      const r = passoDellaStoria(lavoro.k, x.stato, { tipo: x.tipo, strada: x.strada, eroe: x.eroe, seme: x.seme, sonde: x.sonde, rifai: x.rifai ? rifatteAl(lavoro.k) : [] })
+      return { l: x.l, i: x.i, passo: x.compatta ? compatta(r.passo) : r.passo, stato: r.stato }
+    })
+}
+// un lavoro per processo (la ricerca prova valori diversi a ogni lavoro)
+if (argv[0] === '--lavoro') {
+  let dentro = ''
+  for await (const d of process.stdin) dentro += d
+  const lavoro = JSON.parse(dentro)
+  await applicaTara(lavoro.tara)
+  const risultato = await eseguiLavoro(lavoro)
   process.stdout.write(JSON.stringify(risultato), () => process.exit(0))   // uscire prima che la pipe si svuoti tronca l'output
   await new Promise(() => {})
+}
+// un operaio resta in vita e riceve un lavoro per riga: i valori provati sono gli stessi per tutti
+if (argv[0] === '--operaio') {
+  await applicaTara(argv[1])
+  for await (const riga of createInterface({ input: process.stdin })) process.stdout.write(`${JSON.stringify(await eseguiLavoro(JSON.parse(riga)))}\n`)
+  process.exit(0)
 }
 
 /* ═══════════ il pool ═══════════ */
@@ -82,6 +109,35 @@ async function inParallelo(lavori) {
   return risultati
 }
 
+// operai che restano in vita: un lavoro per volta ciascuno, senza ricaricare il gioco a ogni tappa
+class Operai {
+  constructor(tara) {
+    this.figli = Array.from({ length: POSTI }, () => {
+      const p = spawn('node', [QUI, '--operaio', tara], { stdio: ['pipe', 'pipe', 'inherit'] })
+      const f = { p, buf: '', corrente: null }
+      p.stdout.setEncoding('utf8')
+      p.stdout.on('data', d => {
+        f.buf += d
+        for (let i; (i = f.buf.indexOf('\n')) >= 0;) { const riga = f.buf.slice(0, i); f.buf = f.buf.slice(i + 1); f.corrente.ok(JSON.parse(riga)) }
+      })
+      p.on('close', codice => { if (f.corrente) f.corrente.no(new Error(`un operaio è finito male (${codice})`)) })
+      return f
+    })
+  }
+  async esegui(lavori) {
+    const fuori = new Array(lavori.length)
+    let prossimo = 0
+    await Promise.all(this.figli.map(async f => {
+      while (prossimo < lavori.length) {
+        const i = prossimo++
+        fuori[i] = await new Promise((ok, no) => { f.corrente = { ok, no }; f.p.stdin.write(`${JSON.stringify(lavori[i])}\n`) })
+      }
+    }))
+    return fuori
+  }
+  chiudi() { for (const f of this.figli) f.p.stdin.end() }
+}
+
 const PRESTO = argv.includes('--presto')
 const EROI = valore('--eroi') ? valore('--eroi').split(',') : EROI_TUTTI
 const SEMI = Number(valore('--semi')) || (PRESTO ? 3 : argv.includes('--cerca') ? 16 : 30)
@@ -101,11 +157,12 @@ async function giocaLeStorie({ tipi, fino }) {
 }
 
 /* ═══════════ la stampa del rapporto ═══════════ */
-async function stampaIlRapporto(passi, { completo = false, solo = null, tipi = null } = {}) {
+async function stampaIlRapporto(passi, { completo = false, solo = null, tipi = null, finito = true } = {}) {
   const rap = await modulo('motore/rapporto.js')
   const { NOMI_TIPO, GIOCATORI_TIPO } = await modulo('dati/giocatori-tipo.js')
   const { CAMPAGNA } = await modulo('dati/campagna.js')
   const P = rap.partite(passi)
+  if (!finito) P.finite = null   // senza tutte le discese non si dice quante storie sono finite
   const R = rap.rapporto(P)
   const elenco = (tipi || NOMI_TIPO).filter(t => P.per[t])
   for (const t of elenco) console.log(`\n${rap.tabella(R, t)}`)
@@ -269,6 +326,102 @@ async function cerca() {
 function bersaglioDi(rap, tipo, chiave, k) { return rap.bersaglioDi(GIOCATORI[tipo].bersagli[chiave], k) }
 const { GIOCATORI_TIPO: GIOCATORI } = await modulo('dati/giocatori-tipo.js')
 
+
+/* ═══════════ il giro a tappe: le linee, i checkpoint, la fine, le strade ═══════════ */
+const DIR_BASE = resolve(RADICE, 'tmp/taratura')
+const { SEMI_DELLE_STRADE } = await modulo('dati/giocatori-tipo.js')
+
+// di giocatori-tipo.js conta come si gioca (non i bersagli: cambiarli non cambia le storie)
+const sceltaDeiGiocatori = m => ({ tipi: Object.fromEntries(Object.entries(m.GIOCATORI_TIPO).map(([n, { bersagli, ...gioca }]) => [n, gioca])), strade: m.STRADE, tentativi: m.TENTATIVI, tasche: m.TASCHE_PER_I_PEZZI })
+
+async function giroATappe({ completo, solo }) {
+  const storie = await modulo('motore/storie.js'), tipiMod = await modulo('dati/giocatori-tipo.js'), fine = await modulo('motore/rapporto-fine.js')
+  const campagna = await modulo('dati/campagna.js')
+  const { CAMPAGNA } = campagna
+  const giocatori = valore('--giocatori') ? valore('--giocatori').split(',') : tipiMod.NOMI_TIPO
+  const strade = valore('--strade') ? valore('--strade').split(',') : tipiMod.NOMI_STRADA
+  const linee = storie.lineeDelGiro({ giocatori, strade, eroi: EROI, semi: SEMI, semiStrade: Math.min(SEMI, Number(valore('--semi-strade')) || SEMI_DELLE_STRADE), semeDa: DA })
+  const chiaviDi = l => l.storie.map(x => `${x.eroe}|${x.seme}`)
+  const richieste = Object.fromEntries(linee.map(l => [l.id, chiaviDi(l)]))
+  // si scrivono i checkpoint solo del giro di difetto (tutti gli eroi, le linee e le storie): un giro più piccolo si serve da quelli, uno più grande non li pesta
+  const intero = storie.lineeDelGiro({ eroi: EROI_TUTTI, semi: 30, semiStrade: SEMI_DELLE_STRADE, semeDa: 1 })
+  const predefinito = JSON.stringify(Object.fromEntries(intero.map(l => [l.id, chiaviDi(l)]))) === JSON.stringify(richieste)
+  const dir = DIR_BASE
+  const generale = TARA.split(',').filter(v => v && !/^\d+\./.test(v)).sort().join(',')
+  const firme = firmeDelleDiscese({ entrate: [`${SRC}motore/storie.js`], radice: RADICE, campagna, righe: CAMPAGNA.length + 1, generale, propri: ['strumenti/sotterraneo-checkpoint.mjs'],
+    escludi: [`${SRC}dati/campagna.js`, `${SRC}dati/giocatori-tipo.js`], extra: sceltaDeiGiocatori(tipiMod) })
+  const nValidi = argv.includes('--rifai') ? 0 : validi(dir, firme, richieste)
+  const daK = Math.min(nValidi, valore('--da') != null ? Number(valore('--da')) : Infinity)
+  const scrive = !TARA && predefinito   // una prova con valori a mano, o un giro diverso, usa i checkpoint che tornano e non scrive i suoi
+  const fino = valore('--fino') != null ? Number(valore('--fino')) : CAMPAGNA.length
+  const operai = new Operai(TARA)
+  const passi = Object.fromEntries(linee.map(l => [l.id, []]))
+  let stati = Object.fromEntries(linee.map(l => [l.id, l.storie.map(() => storie.STATO_NUOVO())]))
+  const chiavi = []
+  console.log(`Giro a tappe: ${linee.length} linee (${linee.map(l => `${l.id} ${l.storie.length}`).join(' · ')}); checkpoint in ${dir.replace(`${RADICE}/`, '')}: ${nValidi} validi su ${firme.length}${scrive ? '' : ' (un giro diverso da quello di difetto, o con valori a mano: non si scrivono)'}`)
+  for (let k = 0; k <= fino; k++) {
+    const t0 = Date.now()
+    const nome = k < CAMPAGNA.length ? CAMPAGNA[k].chiave : 'uscita'
+    if (k < daK) {
+      const c = leggi(dir, k)
+      for (const l of linee) { const sc = scegli(c.linee[l.id], richieste[l.id]); passi[l.id].push(...sc.map(x => x.passo)); stati[l.id] = sc.map(x => x.stato) }
+      chiavi.push([nome, 'checkpoint', (Date.now() - t0) / 1000])
+      continue
+    }
+    const items = linee.flatMap(l => l.storie.map((st, i) => ({ l: l.id, i, ...st, stato: stati[l.id][i], tipo: l.tipo, strada: l.strada, sonde: l.sonde, rifai: l.rifai, compatta: l.compatta })))
+    const pezzi = Math.min(items.length, POSTI * 3)
+    const lavori = Array.from({ length: pezzi }, (_, p) => ({ che: 'tappa', k, items: items.filter((_, n) => n % pezzi === p) }))
+    const dati = await operai.esegui(lavori)
+    const fuori = Object.fromEntries(linee.map(l => [l.id, new Array(l.storie.length)]))
+    for (const x of dati.flat()) fuori[x.l][x.i] = x
+    for (const l of linee) { passi[l.id].push(...fuori[l.id].map(x => x.passo)); stati[l.id] = fuori[l.id].map(x => x.stato) }
+    if (scrive) scrivi(dir, k, { firma: firme[k], linee: Object.fromEntries(linee.map(l => [l.id, fuori[l.id].map(x => ({ passo: x.passo, stato: x.stato }))])) })
+    chiavi.push([nome, 'giocata', (Date.now() - t0) / 1000])
+  }
+  operai.chiudi()
+  tempi.push(['tappe', chiavi.reduce((a, c) => a + c[2], 0)])
+  console.log(`Tappe: ${chiavi.map(([n, come, s]) => `${n} ${come === 'checkpoint' ? 'cache' : `${s.toFixed(1)} s`}`).join(' · ')}`)
+
+  // i bersagli: la base (il curioso e il bravo di arma prima)
+  const base = linee.filter(l => l.base)
+  if (base.length) {
+    const r = await stampaIlRapporto(base.flatMap(l => passi[l.id]), { completo, solo, finito: fino >= CAMPAGNA.length - 1 })
+    return { r, linee, passi, fine }
+  }
+  return { r: null, linee, passi, fine }
+}
+
+// a che punto è l'eroe alla fine di ogni discesa, per ogni linea
+async function stampaLaFine({ linee, passi, fine }, { completo }) {
+  console.log('\n══ A che punto è l\'eroe alla fine di ogni discesa (dopo la spesa, prima di scendere ancora) ══')
+  console.log(`\n${fine.tabellaAtteso()}`)
+  const solo = completo ? null : ['liv', 'scarto', 'dpa', 'valore', 'gemme', 'poz', 'bevute']
+  for (const l of linee) console.log(`\n${fine.tabellaFine(fine.fineDi(passi[l.id]), `${l.strada} · ${l.tipo}`, { solo })}`)
+}
+
+// una riga per linea: quanti vincono alla prima, dove si ferma, con che forza arriva
+async function stampaLeStrade({ linee, passi, fine }) {
+  const { CAMPAGNA } = await modulo('dati/campagna.js')
+  const { QUOTA_CHE_SI_FERMA, POZIONI_DA_BEONE } = await modulo('dati/giocatori-tipo.js')
+  console.log(`\n══ Le strade: vinte alla prima · bloccati (nessuna vittoria in 4 giri), per discesa ══`)
+  console.log(' '.repeat(22) + CAMPAGNA.map(t => t.chiave.slice(0, 6).padStart(10)).join('') + '   si ferma · forza lì · forza a fine · danno a fine · valore roba a fine')
+  const f = v => (v == null ? '-' : `${Math.round(v * 100)}`)
+  const n = v => (v == null ? '-' : `${v > 0 ? '+' : ''}${Math.round(v)}`)
+  for (const l of linee) {
+    const r = fine.rigaDellaStrada(fine.fineDi(passi[l.id]))
+    console.log(`${l.id}`.padEnd(22) + CAMPAGNA.map((_, j) => `${f(r.allaPrima[j])}·${f(r.bloccati[j])}`.padStart(10)).join('') +
+      `   ${r.ferma != null ? `${CAMPAGNA[r.ferma].chiave} (≥ ${Math.round(QUOTA_CHE_SI_FERMA * 100)}% bloccati)` : r.fine === CAMPAGNA.length - 1 ? 'arriva in fondo' : `non si ferma fino a ${r.fine >= 0 ? CAMPAGNA[r.fine].chiave : '-'}`} · ${n(r.forzaLa)} · ${n(r.forzaFine)} · ${f(r.dpaFine ? r.dpaFine / 100 : null)}% · ${f(r.valoreFine ? r.valoreFine / 100 : null)}%`)
+  }
+  console.log('\nPozioni bevute a discesa (media):')
+  for (const l of linee) console.log(`${l.id}`.padEnd(22) + fine.fineDi(passi[l.id]).map(x => (x.n ? (x.bevute.reduce((a, b) => a + b, 0) / x.n).toFixed(1) : '-').padStart(10)).join(''))
+  console.log(`\nChi vince bevendo (almeno ${POZIONI_DA_BEONE} pozioni in una discesa vinta) contro chi vince bevendo meno: quota delle discese vinte, forza sull'atteso e danno a risposta all'uscita (mediane), discesa dopo vinta alla prima`)
+  const c = v => (v == null ? '-' : `${Math.round(v)}`), p = v => (v == null ? '-' : `${Math.round(v * 100)}%`)
+  for (const l of linee) {
+    const b = fine.chiVinceBevendo(fine.fineDi(passi[l.id]))
+    console.log(`${l.id}`.padEnd(22) + `${p(b.quota).padStart(4)} bevendo (${b.beve.n} su ${b.beve.n + b.altri.n}) · forza ${n(b.beve.scarto)} contro ${n(b.altri.scarto)} · danno ${c(b.beve.dpa)}% contro ${c(b.altri.dpa)}% · dopo alla prima ${p(b.beve.dopo)} contro ${p(b.altri.dopo)}`)
+  }
+}
+
 /* ═══════════ si parte ═══════════ */
 const inizio = Date.now()
 let uscita = 0
@@ -298,8 +451,9 @@ else if (argv.includes('--cerca')) {
                     : '\nNessun cambio proposto.')
   console.log(`${r.valutazioni} valutazioni di una discesa`)
 } else {
-  const passi = await cronometra('storie', () => giocaLeStorie({ tipi: valore('--giocatori') ? valore('--giocatori').split(',').filter(t => t !== 'sbadato') : ['curioso', 'bravo'], fino: 7 }))
-  await cronometra('rapporto', () => stampaIlRapporto(passi, { completo: argv.includes('--tutto'), solo: valore('--discese') ? numeri('--discese') : null }))
+  const giro = await giroATappe({ completo: argv.includes('--tutto'), solo: valore('--discese') ? numeri('--discese') : null })
+  await cronometra('fine', () => stampaLaFine(giro, { completo: argv.includes('--tutto') }))
+  await cronometra('strade', () => stampaLeStrade(giro))
   await cronometra('specie', () => stampaLeSpecie())
 }
 stampaITempi(inizio)
