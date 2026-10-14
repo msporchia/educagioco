@@ -30,6 +30,7 @@ export const GIOCATORI_TIPO = {
       abilita: 'appenaPuoi',      // la più forte che può pagare, anche se spreca: niente tetto di due a scontro, niente risparmio
       beviSotto: 0.3,             // beve una pozione nel rosso (la soglia dello stop di motore/pericolo.js)…
       beviNelloScontro: true,     // …anche nello scontro, e allo stop del pericolo
+      // quale pozione: la più piccola che rimette quanto manca (e quanto picchiano i mostri in arrivo), l'ampolla della vita compresa: non la risparmia
       fonte: { sotto: 0.65, energiaSotto: 0.4, allaFine: true },   // si ferma alle fonti se è sotto il 65% di vita o il 40% di energia, e alla fine del piano se non è pieno
     },
     punti: 'strada',              // i punti alle caratteristiche e all'albero come li dà la strada della classe (COME_LI_DA, STRADA)
@@ -52,7 +53,7 @@ export const GIOCATORI_TIPO = {
     chi: 'il banco di prima: dritto alla scala, abilità al meglio',
     bravura: 0.95,                // 9–10 su 10
     come: 'minimo',
-    stile: {},                    // il banco di sempre: due abilità forti a scontro, la cura sotto la metà, non beve nello scontro
+    stile: { tieneLaVita: true },   // il banco di sempre: due abilità forti a scontro, la cura sotto la metà, non beve nello scontro, e l'ampolla della vita la tiene per il grosso
     punti: 'strada',
     spesa: 'il meglio',
     bersagli: {

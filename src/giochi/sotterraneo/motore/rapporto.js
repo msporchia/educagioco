@@ -280,7 +280,8 @@ export function forbice(P, tipo = 'curioso') {
     // le gemme: quante ne porta a casa la discesa e quante gliene restano dopo la spesa (il banco di sopra non ha più niente da vendergli)
     const prese = media(g.map(p => p.rec.ge)), avanzate = g.map(p => p.ing.gemme)
     return { k, n: g.length, scarto: [q(f, 0.1), q(f, 0.5), q(f, 0.9)], livello: [q(l, 0.1), q(l, 0.5), q(l, 0.9)], atteso: livelloAtteso(k),
-             gemmePrese: prese, gemmeAvanzate: [q(avanzate, 0.1), q(avanzate, 0.5), q(avanzate, 0.9)] }
+             gemmePrese: prese, gemmeAvanzate: [q(avanzate, 0.1), q(avanzate, 0.5), q(avanzate, 0.9)],
+             alTetto: media(g.map(p => p.rec.tt || 0)) }   // quote di discese col tetto delle pozioni (docs/sotterraneo/roba.md, «Le pozioni»)
   })
 }
 

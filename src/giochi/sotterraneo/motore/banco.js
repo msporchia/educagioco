@@ -5,9 +5,8 @@
 // poter rifare identica.
 import { Corsa } from './corsa.js'
 import { Bottega } from './bottega.js'
-import { ROBA_VUOTA } from './corredo.js'
+import { ROBA_VUOTA, eCura } from './corredo.js'
 import { COSE, PESO_DELLA_DIFESA } from '../dati/cose.js'
-import { TASCHE } from '../dati/mondo.js'
 import { CAMPAGNA } from '../dati/campagna.js'
 import { seminato } from './livello.js'
 import { robaAttesa, crescitaAttesa, livelloAtteso } from './storia.js'
@@ -210,7 +209,12 @@ function equipaggia(corsa, st = {}, registro = null) {
     // al dito la prima cosa che capita: i gioielli non si confrontano su un numero solo
     if (c.dove === 'dito' && !corsa.dito) { corsa.usa(i); continue }
     // beve quando serve, non appena trova (`beviSotto`: la quota di vita sotto cui beve, 0,45 di difetto)
-    if (c.usa === 'cura' && corsa.vita < corsa.vitaMax * (st.beviSotto || 0.45)) { corsa.usa(i); if (registro) registro.pozioni++ }
+    if (c.usa === 'cura' && corsa.vita < corsa.vitaMax * (st.beviSotto || 0.45)) {
+      // quale lo sceglie la regola del giocatore (`tieneLaVita`: l'ampolla della vita aspetta il grosso)
+      const j = corsa.pozioneGiusta({ riservaLaVita: !!st.tieneLaVita })
+      if (j != null && corsa.zaino[j] && eCura(corsa.zaino[j])) { corsa.usa(j); if (registro) registro.pozioni++ }
+      i = Math.min(i, corsa.zaino.length)
+    }
     // la pozione blu, quando il globo è sotto un terzo e ce ne starebbe una intera (l'energia torna combattendo e camminando, piano: docs/sotterraneo/orologio.md)
     if (c.usa === 'energia' && corsa.energia <= corsa.energiaMax / 3 && corsa.energiaMax - corsa.energia >= c.energia) corsa.usa(i)
   }
@@ -252,7 +256,14 @@ function sbriga(corsa, bravura, sorte, conto, st = {}, scontro = null) {
       // il curioso beve nello scontro quando è nel rosso (la soglia dello stop del pericolo): costa il turno. Lo stop da solo non basta:
       // con cinque mostri in campo scatta anche a vita alta, e berrebbe a ogni scontro
       if (st.beviNelloScontro && corsa.zaino.some(k => COSE[k] && COSE[k].usa === 'cura') &&
-          corsa.vita < corsa.vitaMax * QUOTA_POCA_VITA && corsa.beviNelloScontro()) { conto.pozioni++; if (scontro) scontro.pz++; return true }
+          corsa.vita < corsa.vitaMax * QUOTA_POCA_VITA &&
+          corsa.beviNelloScontro(corsa.pozioneGiusta({ serve: corsa.vitaMax - corsa.vita + corsa.colpiInArrivo(f), riservaLaVita: !!st.tieneLaVita && !f.campo.some(m => m.grosso) })))
+      { conto.pozioni++; if (scontro) scontro.pz++; return true }
+      // chi tiene l'ampolla della vita per il grosso la beve lì, nel rosso, anche se di solito nello scontro non beve
+      if (!st.beviNelloScontro && st.tieneLaVita && f.campo.some(m => m.grosso) && corsa.vita < corsa.vitaMax * QUOTA_POCA_VITA) {
+        const j = corsa.zaino.findIndex(k => COSE[k] && COSE[k].tutta)
+        if (j >= 0 && corsa.beviNelloScontro(j)) { conto.pozioni++; if (scontro) scontro.pz++; return true }
+      }
       if (BANCO.abilita) {
         if (!f.bancoCaselle) { riempiLeCaselle(corsa); f.bancoCaselle = true }
         const id = preparaLAbilita(corsa, f, st)
@@ -305,6 +316,7 @@ export function gioca(tappa, { bravura = 0.8, seme = 7, come = 'minimo', rnd = n
   const persi = []
   const provati = new Map()
   const conto = { fonti: 0, pozioni: 0 }
+  const alTettoIn = corsa.alTettoDelleCure   // scende con il tetto delle cure già pieno: la taratura lo conta
   const scontri = []
   let aperto = null, prima = { vita: corsa.vita, energia: corsa.energia }
   const sorsi = new Map()
@@ -397,6 +409,7 @@ export function gioca(tappa, { bravura = 0.8, seme = 7, come = 'minimo', rnd = n
     esito: corsa.esito,
     fonti: conto.fonti,   // non sta nell'esito: è il modo in cui il giocatore finto gioca, non il gioco
     pozioni: conto.pozioni,
+    alTetto: alTettoIn || corsa.cureRifiutate > 0,   // il tetto delle cure ha frenato questa discesa
     scontri,
     perPiano,
     passiPerPiano,
@@ -495,12 +508,11 @@ export function allaBottega(roba, { finite = 0, eroe = undefined, seme = 1, cres
     b.compraDa(scelte[0].chi, scelte[0].k)
     vendiIlSuperfluo()
   }
-  const POZIONI = ['pozione-grande', 'pozione', 'pozione-piccola']
-  while (b.zaino.length < TASCHE) {
-    const k = POZIONI.find(p => COSE[p].prezzo <= b.gemme)
-    const e = k && b.compraDa('erborista', k)
-    if (!e || e.che !== 'comprato') break
-  }
+  // le cure: la più grande che può pagare, finché c'è posto e non si tocca il tetto (nessun calcolo fino: chi sceglie meglio spende meglio)
+  const cure = () => b.mercanzia('erborista').filter(r => r.sempre && eCura(r.chiave) && b.quantoCosta(r.chiave) <= b.gemme)
+    .sort((x, y) => COSE[y.chiave].cura - COSE[x.chiave].cura)
+  for (let r = cure()[0]; r && !b.nonCiStarebbe(r.chiave); r = cure()[0])
+    if (b.compraDa('erborista', r.chiave)?.che !== 'comprato') break
   return b.roba
 }
 
