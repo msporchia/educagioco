@@ -181,7 +181,7 @@ import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifi
   const fuori = []
   for (const e of EROI) for (let k = 0; k <= CAMPAGNA.length; k++) {
     const c = new Corredo({ eroe: e.chiave, roba: robaAttesa(e.chiave, k), crescita: crescitaAttesa(e.chiave, k) })
-    for (const x of [c.mano, c.mancina, c.corpo, c.dito].filter(Boolean)) if (livelloRichiesto(COSE[x]) > c.livelloEroe) fuori.push(`${e.chiave} ${k}: ${x}`)
+    for (const x of [c.mano, c.mancina, c.corpo, c.collo, c.dito, c.dito2].filter(Boolean)) if (livelloRichiesto(COSE[x]) > c.livelloEroe) fuori.push(`${e.chiave} ${k}: ${x}`)
   }
   uguale('la roba attesa della storia è sempre del livello di chi la porta', fuori.join(' · '), '')
 }

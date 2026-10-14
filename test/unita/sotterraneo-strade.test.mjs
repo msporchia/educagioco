@@ -33,7 +33,7 @@ import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifi
     CAMPAGNA.forEach((_, k) => {
       const roba = robaDellaStrada(e.chiave, s, k)
       const c = new Corredo({ eroe: e.chiave, roba, crescita: crescitaDellaStrada(e.chiave, s, k) })
-      for (const dove of ['mano', 'mancina', 'corpo', 'dito'])
+      for (const dove of ['mano', 'mancina', 'corpo', 'collo', 'dito', 'dito2'])
         if (roba[dove] && !c.posso(roba[dove])) storte.push(`discesa ${k}: ${roba[dove]} non si regge`)
       const arma = COSE[roba.mano]
       if (arma && !s.arma.famiglie.includes(arma.famiglia)) storte.push(`discesa ${k}: ${roba.mano} non è della strada`)

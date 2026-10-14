@@ -115,7 +115,7 @@ const passi = [
   // con poche gemme, chi compra le pozioni prima ha più pozioni e meno pezzi
   const con = spesa => allaBottega({ ...ROBA_VUOTA(), gemme: 150 }, { finite: 1, eroe: 'cavaliere', seme: 5, spesa })
   const pozioni = r => r.zaino.filter(k => COSE[k].usa === 'cura').length
-  const pezzi = r => [r.mano, r.mancina, r.corpo, r.dito].filter(Boolean).length
+  const pezzi = r => [r.mano, r.mancina, r.corpo, r.collo, r.dito, r.dito2].filter(Boolean).length
   const meglio = con(STRADE.armaPrima.spesa), bevo = con(STRADE.beveTutto.spesa)
   controlla('pozioni prima: più pozioni', pozioni(bevo) > pozioni(meglio), `${pozioni(bevo)} contro ${pozioni(meglio)}`)
   controlla('pozioni prima: meno pezzi addosso', pezzi(bevo) < pezzi(meglio), `${pezzi(bevo)} contro ${pezzi(meglio)}`)
