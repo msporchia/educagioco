@@ -176,6 +176,32 @@ ad angolo** della cella, le celle sono **a filo** della griglia da 64 px. Se il
 generatore aggiunge pavimento dentro le celle, una correzione mirata: «rifai le
 righe 1–3: dove non c'è roccia lascia il magenta».
 
+### Lo stesso, per Grok in modalità agente (14 ottobre 2026)
+
+Una prova sulla sola cripta. Si allegano, in quest'ordine, una foto del gioco
+com'è oggi (`node strumenti/scatta-app.mjs 'sotterraneo=1&eroe=cavaliere&giu=0&seme=11&stanza=smussata&luce=stanza&zoom=2' --dist --larghezza 560 --nome diag-cripta`:
+una stanza smussata coi muri a scaletta) e la scena da cui vengono le tessere,
+`sotterraneo_4.png`. In modalità agente il testo può spiegare il perché: Grok
+lo usa per decidere da sé i dettagli.
+
+```text
+Ciao! Sto facendo un gioco educativo per bambini, un piccolo gioco di ruolo in pixel art a 16 bit: un eroe esplora un sotterraneo visto dall'alto (a tre quarti, senza prospettiva) e combatte rispondendo a domande di scuola. Il pavimento e i muri del gioco sono fatti a tessere quadrate su una griglia, e ogni tessera è stata ritagliata dalla seconda immagine che ti allego: una scena della cripta dipinta su celle da 64×64 px, dove ogni pixel del disegno è un quadrato di 4×4.
+
+Il problema è nella prima immagine, che è il gioco com'è oggi. Alcune stanze hanno gli angoli smussati e i muri che girano in diagonale: la forma è bella, ma siccome ho solo tessere dritte, ogni muro obliquo esce come una scaletta di quadrati, e il bordo chiaro del muro fa tanti gradini. Mi servono i pezzi che mancano perché un muro possa girare di 45 gradi in modo pulito, e perché gli angoli possano essere smussati.
+
+Come si leggono i muri in questa scena (è la regola da rispettare): la roccia si vede da sopra, scura, ed è il "tetto" del muro; dove la roccia tocca il pavimento ha un bordo chiaro sottile. Solo dove sotto una cella di roccia c'è pavimento si vede anche la FACCIA del muro, alta una cella, con le pietre e il coronamento in cima. I muri ai lati e in basso non hanno faccia: solo il bordo.
+
+Disegnami UN FOGLIO DI PEZZI, 1024×1536 px verticale, su un fondo MAGENTA PIENO (#FF00FF) uniforme, senza sfumature, senza ombre e senza scacchiera. Stessi materiali, stessa tavolozza, stessa mano e STESSA SCALA della scena allegata (celle da 64×64, pixel da 4×4). Ogni pezzo sta da solo, staccato dagli altri da almeno mezza cella di magenta. Nessuna parola, nessun numero, nessuna cornice.
+
+Ogni pezzo è una cella vista dall'alto come nella scena. Dentro la cella c'è SOLO la roccia (scura, col suo bordo chiaro dove toccherebbe il pavimento); DOVE CI SAREBBE IL PAVIMENTO LASCIA IL MAGENTA, perché nel gioco il pezzo si posa sopra il pavimento vero. La roccia arriva a filo dei lati della cella dove continua nella cella accanto. I pezzi che mi servono, una fila per riga:
+1. Quattro celle tagliate in diagonale da angolo ad angolo: la roccia occupa il triangolo in alto a sinistra, poi in alto a destra, poi in basso a sinistra, poi in basso a destra, con il bordo chiaro che corre lungo la diagonale.
+2. Quattro angoli esterni: la roccia è solo un quarto di cerchio nell'angolo della cella (in alto a sinistra, in alto a destra, in basso a sinistra, in basso a destra), il resto magenta.
+3. Quattro angoli interni: la roccia riempie la cella tranne un quarto di cerchio di magenta in un angolo (negli stessi quattro angoli).
+4. Due pezzi larghi DUE celle e alti due: la faccia del muro dove la parete scende in diagonale, uno per la parete che scende verso destra e uno verso sinistra. La faccia è alta una cella e ha il coronamento come le facce della scena, ma gira di 45 gradi invece di fare scalini.
+
+Niente porte, niente oggetti, niente pavimento: solo roccia. Se un dettaglio non ti torna, scegli tu la cosa che sta meglio accanto alle tessere della scena: conta che, messi nel gioco, i muri obliqui sembrino un muro solo e non una scala.
+```
+
 ## La regola del muro
 
 È la parte che risolve il difetto, e sta nella parte fissa dei due
