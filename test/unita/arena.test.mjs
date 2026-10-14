@@ -7,8 +7,7 @@
 import { guastiDelleRegole, TRUPPE, EDIFICI, CAMPO, CRESCITA, BOMBA, CASTELLO, MURO } from '../../src/giochi/arena/dati/regole.js'
 import { Partita } from '../../src/giochi/arena/motore/partita.js'
 import { caso, gioca } from '../../src/giochi/arena/motore/banco.js'
-import { CAMPAGNA, SCALINI, QUANTE_TAPPE, guastiDellaCampagna, operazioniDi, operazionePer, stellePer, sfidaDi,
-  gradoDelPeso, GRADO_A_MENTE }
+import { CAMPAGNA, SCALINI, QUANTE_TAPPE, guastiDellaCampagna, operazioniDi, operazionePer, stellePer, sfidaDi }
   from '../../src/giochi/arena/dati/campagna.js'
 import { scrivi, leggi, dice, VERSIONE } from '../../src/giochi/arena/motore/sosta.js'
 import { firmaEquilibrio } from '../../src/giochi/arena/motore/firma.js'
@@ -17,6 +16,9 @@ import { guastiDeiDettagli, dettaglioTruppa, dettaglioAzione, ruoloDi } from '..
 import { guastiDelleFigure } from '../../src/giochi/arena/scena/figure.js'
 import manifesto from '../../src/giochi/arena/gioco.js'
 import { guastiDellAlbo } from '../../src/giochi/albo.js'
+import { GRADO_A_MENTE, PARTENZA_MAX, partenza, basi, gradoDi, dopoLaRisposta, gradoDelleTabelline, gradoDellEta }
+  from '../../src/giochi/arena/bravura.js'
+import { calcoliTabellina } from '../../src/data/tabelline.js'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 
 /* ══════════ 1. i dati ══════════ */
@@ -201,9 +203,6 @@ controlla('stesso seme, stessa partita', JSON.stringify(uguali) === JSON.stringi
   uguale('un\'azione che vuole ÷ in una tappa di somme ripiega su +', operazionePer('÷', ['+']), '+')
   uguale('e in una di somme e sottrazioni su −', operazionePer('÷', ['+', '−']), '−')
   uguale('un\'operazione ammessa resta quella', operazionePer('×', ['+', '−', '×']), '×')
-  uguale('la scelta più cara chiede ancora un conto a mente', gradoDelPeso(10), GRADO_A_MENTE)
-  uguale('la più leggera il grado più basso', gradoDelPeso(0), 1)
-  uguale('sotto il tetto il peso è il grado', gradoDelPeso(4), 4)
   uguale('vincere dà una stella', stellePer({ vinto: true, vitaBase: 0.2 }), 1)
   uguale('col castello oltre la metà due', stellePer({ vinto: true, vitaBase: 0.6 }), 2)
   uguale('col castello quasi intatto tre', stellePer({ vinto: true, vitaBase: 0.9 }), 3)
@@ -277,5 +276,25 @@ controlla('stesso seme, stessa partita', JSON.stringify(uguali) === JSON.stringi
 controlla('la taratura è fresca: se questo è rosso, rilancia `npm run tara:arena`',
           FIRMA === firmaEquilibrio(), `la firma è ${firmaEquilibrio()}, la taratura ha ${FIRMA}`)
 controlla('ogni tappa ha la sua scheda del nemico', CAMPAGNA.every(t => NEMICO[t.chiave] && t.nemico === NEMICO[t.chiave]))
+
+/* ══════════ la base del bambino (bravura.js) ══════════ */
+{
+  const fino7 = {}
+  for (let n = 2; n <= 7; n++) for (const k of calcoliTabellina(n)) fino7[k] = { s: 6 }
+  uguale('chi sa le tabelline fino al 7 parte da «fino al 9»', gradoDelleTabelline(fino7), 5)
+  uguale('chi non è mai passato dagli asteroidi non ha una base dalle tabelline', gradoDelleTabelline({}), 0)
+  controlla('a 8 anni le somme partono più su che a 6', gradoDellEta('+', 8) > gradoDellEta('+', 6), `${gradoDellEta('+', 6)} → ${gradoDellEta('+', 8)}`)
+  uguale('a 6 anni, con le tabelline fino al 7, i prodotti partono dagli asteroidi', partenza('×', { eta: 6, items: fino7 }), 5)
+  uguale('e le divisioni un gradino sotto', partenza('÷', { eta: 6, items: fino7 }), 4)
+  controlla('la partenza non passa mai il suo tetto', ['+', '−', '×', '÷'].every(op => partenza(op, { eta: 12 }) <= PARTENZA_MAX))
+  uguale('una base salvata vince sulla partenza', basi({ '+': 6.4 }, { eta: 6 })['+'], 6.4)
+  uguale('la prima caserma chiede la base', gradoDi(4, 3), 4)
+  uguale('una scelta cara sale di un grado ogni due di peso', gradoDi(4, 7), 6)
+  uguale('ma non oltre il calcolo a mente', gradoDi(6, 10), GRADO_A_MENTE)
+  uguale('tre giusti e svelti fanno un grado', +[1, 2, 3].reduce(b => dopoLaRisposta(b, { giusto: true, tempo: 3 }), 4).toFixed(6), 5)
+  uguale('giusto ma lento non muove', dopoLaRisposta(4, { giusto: true, tempo: 12 }), 4)
+  uguale('sbagliato scende di mezzo grado', dopoLaRisposta(4, { giusto: false, tempo: 3 }), 3.5)
+  uguale('mai sotto il primo grado', dopoLaRisposta(1, { giusto: false, tempo: 3 }), 1)
+}
 
 riassunto('arena (motore)')

@@ -8,10 +8,10 @@
 import { ref, shallowRef, computed, onMounted, onUnmounted } from 'vue'
 import Barra from '../../components/Barra.vue'
 import { suono } from '../../audio.js'
-import { segna } from '../../store/profile.js'
+import { segna, state, etaDelBambino } from '../../store/profile.js'
 import { borsa } from '../../store/varieta.js'   // paga e dice se il salvadanaio è stanco
 import { PAGA } from '../../data/paghe.js'
-import { progresso, aperta, adesso, stelleDi, completa, sosta, salvaSosta, buttaSosta } from '../campagne.js'
+import { progresso, aperta, adesso, stelleDi, completa, sosta, salvaSosta, buttaSosta, ritocca } from '../campagne.js'
 import { usaPausa } from '../pausa.js'
 import VeloPausa from '../VeloPausa.vue'
 import Domanda from '../../quiz/Domanda.vue'
@@ -24,6 +24,7 @@ import { scrivi, leggi, dice } from './motore/sosta.js'
 import { Campo } from './scena/campo.js'
 import { dettaglioTruppa, dettaglioAzione, ruoloDi } from './motore/dettagli.js'
 import { domandaDi } from './domande.js'
+import { basi, gradoDi, dopoLaRisposta } from './bravura.js'
 
 import Mappa from './viste/Mappa.vue'
 import CampoVista from './viste/Campo.vue'
@@ -309,20 +310,28 @@ function scegli({ azione, id }) {
   const p = partita.value
   if (!p || fermo.value || domanda.value || p.fine) return
   if (!p.puoFare('io', azione, id) || (id && p.inRiposo('io', id))) return
-  const { op, peso } = p.calcoloDi('io', azione, id)
-  voluta = { azione, id }
+  const cal = p.calcoloDi('io', azione, id)
+  const op = operazionePer(cal.op, operazioniDi(tappa.value))
+  voluta = { azione, id, op }
   toccato.value = true
-  domanda.value = domandaDi(operazionePer(op, operazioniDi(tappa.value)), peso)
+  domanda.value = domandaDi(op, gradoDi(laBase(op), cal.peso))
   suono.ok()
 }
 
-function risposto({ giusto, saltata }) {
+/* la base del bambino per un'operazione: la sua, o da dove parte la prima volta (bravura.js) */
+const laBase = op => basi(progresso(CHIAVE).bravura, { eta: etaDelBambino(), items: state.profile.items })[op]
+
+function risposto({ giusto, saltata, tempo }) {
   const p = partita.value
   const v = voluta
   domanda.value = null
   voluta = null
   togli()
   if (!p || !v) return
+  if (!saltata) {
+    const nuova = dopoLaRisposta(laBase(v.op), { giusto, tempo })
+    ritocca(CHIAVE, c => { c.bravura = { ...(c.bravura || {}), [v.op]: nuova } })
+  }
   if (giusto) {
     if (p.fai('io', v.azione, v.id)) {
       // il tasto «salta» dei grandi dà la scelta ma non paga e non conta (docs/core/comandi.md)

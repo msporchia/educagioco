@@ -93,12 +93,6 @@ export function operazionePer(op, ammesse) {
   return ammesse.includes(o) ? o : '+'
 }
 
-/* Qui si allena il calcolo a mente: il peso della scelta (1-10) diventa il grado
-   del modulo `conti`, ma non oltre il 7 (entro il cento, tabelline fino al 12).
-   Le tre cifre e la colonna sono del castello. Vedi docs/arena/calcoli.md. */
-export const GRADO_A_MENTE = 7
-export const gradoDelPeso = peso => Math.max(1, Math.min(GRADO_A_MENTE, Math.round(peso) || 1))
-
 /* Le stelle: una per aver vinto, una per aver finito col castello oltre la
    metà, una per averlo tenuto quasi intatto. */
 export function stellePer({ vinto, vitaBase }) {
