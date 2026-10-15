@@ -178,7 +178,7 @@ const R = V.regoleDi({})
     if (!f) { controlla(`trovo la schermata di ${g.chiave}`, false); continue }
     // una schermata che avvolge un'altra (il Sotterraneo 3D monta il Gioco.vue di sempre) paga con quella: si legge anche lei
     const sorgente = readFileSync(f, 'utf8')
-    const dentro = [...sorgente.matchAll(/import \w+ from '(\.\/[^']+\.vue)'/g)].map(m => readFileSync(resolve(dirname(f), m[1]), 'utf8'))
+    const dentro = [...sorgente.matchAll(/import(?: \w+ from |\()'(\.\/[^']+\.vue)'/g)].map(m => readFileSync(resolve(dirname(f), m[1]), 'utf8'))
     const paga = /\baddCoins\(|\bincassa\(|\bborsa\(/.test([sorgente, ...dentro].join('\n'))
     uguale(`${g.chiave}: ${paga ? 'paga' : 'non paga'}, e NON_PAGANO lo sa`, V.paga(g), paga)
   }
