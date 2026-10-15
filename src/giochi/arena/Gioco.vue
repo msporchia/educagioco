@@ -30,7 +30,6 @@ import Mappa from './viste/Mappa.vue'
 import CampoVista from './viste/Campo.vue'
 import Finale from './viste/Finale.vue'
 import Dettagli from './viste/Dettagli.vue'
-import Scelta from './viste/Scelta.vue'
 import './stile.css'
 
 defineOptions({ name: 'CastleBattle' })
@@ -45,7 +44,7 @@ const vista = ref('mappa')            // mappa | campo
 const tappaIdx = ref(0)
 const partita = shallowRef(null)      // il motore: NON reattivo dentro
 const cruscotto = ref(vuoto())
-const pannello = ref({ bersagli: [], anello: null, azioni: [] })
+const pannello = ref({ bersagli: [], anello: null, scelta: null, azioni: [] })
 const anello = ref(null)              // l'edificio toccato, con l'anello di pulsanti attorno: { chiave, posto } o { chiave, castello }
 const domanda = ref(null)             // la domanda che paga la scelta
 const finale = ref(null)
@@ -216,7 +215,7 @@ function costruisciPannello(p) {
     return { azione: a, prezzo, stato, puoi: prezzo !== null && p.lati.io.monete >= prezzo,
              attesa: a === 'bomba' && p.lati.io.bombe < BOMBA.max ? Math.ceil(p.lati.io.bombaT) : 0 }
   })
-  return { bersagli, anello: anelloDi(p, bersagli), azioni }
+  return { bersagli, anello: anelloDi(p, bersagli), scelta: sceltaDi(bersagli), azioni }
 }
 
 /* l'anello dell'edificio toccato: potenziare (col prezzo, o quanto riposa), vendere, i numeri.
@@ -230,15 +229,28 @@ function anelloDi(p, bersagli) {
   const prezzo = a.castello ? p.prezzo('io', 'castello') : p.prezzo('io', 'potenzia', a.posto)
   const riposo = a.castello ? 0 : Math.max(0, e.riposo)
   const voci = [
-    { chiave: 'potenzia', icona: '⬆️', testo: riposo > 0 ? `💤 ${Math.ceil(riposo)}s` : `Lv ${e.liv + 1} · ${prezzo} 🪙`,
+    { chiave: 'potenzia', icona: '⬆️', testo: riposo > 0 ? `💤 ${Math.ceil(riposo)}s` : `Lv ${e.liv + 1} · ${prezzo} 💎`,
       puoi: prezzo !== null && p.lati.io.monete >= prezzo && riposo <= 0 },
   ]
-  if (!a.castello) voci.push({ chiave: 'vendi', icona: '💰', testo: `+${p.resa('io', a.posto)} 🪙`, puoi: true })
-  voci.push({ chiave: 'numeri', icona: '?', testo: 'i numeri', puoi: true })
-  // dentro il campo anche sulle piazzole di lato: ogni pulsante è largo una settantina di pixel
-  const largo = voci.length * 70 + (voci.length - 1) * 6, W = campo.cv.clientWidth
+  // vendere è un tocco, ma due: il primo chiede «sicuro?» (la ✓ al posto del 💰), il secondo vende
+  if (!a.castello) voci.push({ chiave: 'vendi', icona: a.conferma ? '✓' : '💰', testo: `+${p.resa('io', a.posto)} 💎`, puoi: true, sicuro: !!a.conferma })
+  voci.push({ chiave: 'numeri', icona: '?', testo: '', puoi: true, piccola: true })
+  // dentro il campo anche sulle piazzole di lato: i pulsanti grandi 68 px, il «?» 44
+  const largo = voci.reduce((t, v) => t + (v.piccola ? 44 : 68), 0) + (voci.length - 1) * 6, W = campo.cv.clientWidth
   const x = Math.min(Math.max(b.x + b.w / 2, largo / 2 + 4), W - largo / 2 - 4)
   return { chiave: a.chiave, x, y: b.y + campo.me(6), voci }
+}
+
+/* la nuvoletta della piazzola libera: sopra la piazzola, dentro il campo (la coda punta alla piazzola) */
+function sceltaDi(bersagli) {
+  const s = scelta.value
+  if (!s) return null
+  const b = bersagli.find(x => x.chiave === 'p' + s.posto)
+  if (!b) return null
+  const largo = (s.varianti.length + 1) * 76 + 24, W = campo.cv.clientWidth
+  const cx = b.x + b.w / 2
+  const x = Math.min(Math.max(cx, largo / 2 + 4), W - largo / 2 - 4)
+  return { ...s, x, y: b.y + campo.me(4), coda: cx - x }
 }
 
 function tocca(b) {
@@ -246,6 +258,7 @@ function tocca(b) {
   if (!p || domanda.value || finale.value || p.fine) return
   toccato.value = true
   if (anello.value && anello.value.chiave === b.chiave) { anello.value = null; aggiornaCruscotto(); return }
+  if (scelta.value && 'p' + scelta.value.posto === b.chiave) { scelta.value = null; aggiornaCruscotto(); return }
   if (b.castello) anello.value = { chiave: b.chiave, castello: true }
   else if (p.edificioIn('io', b.posto)) anello.value = { chiave: b.chiave, posto: b.posto }
   else { anello.value = null; apriScelta({ posto: b.posto }) }
@@ -255,14 +268,36 @@ function tocca(b) {
 function dallAnello(voce) {
   const a = anello.value
   if (!a) return
+  if (voce === 'vendi' && !a.conferma) { anello.value = { ...a, conferma: true }; aggiornaCruscotto(); return }
   anello.value = null
   if (voce === 'numeri') apriDettagli(a.castello ? { azione: 'castello' } : { posto: a.posto })
-  else if (voce === 'vendi') scegli({ azione: 'vendi', posto: a.posto })
+  else if (voce === 'vendi') vendiSubito(a.posto)
   else scegli(a.castello ? { azione: 'castello' } : { azione: 'potenzia', posto: a.posto })
   aggiornaCruscotto()
 }
 
-function chiudiAnello() { if (anello.value) { anello.value = null; aggiornaCruscotto() } }
+/* un tocco fuori chiude l'anello e la nuvoletta */
+function chiudiAnello() {
+  if (!anello.value && !scelta.value) return
+  anello.value = null
+  scelta.value = null
+  aggiornaCruscotto()
+}
+
+/* vendere non chiede un conto (non si guadagna né si perde con una risposta): si vende e basta,
+   ridà metà della spesa */
+function vendiSubito(posto) {
+  const p = partita.value
+  if (!p || domanda.value || finale.value || p.fine) return
+  const e = p.edificioIn('io', posto)
+  if (!e) return
+  const resa = p.resa('io', posto)
+  const id = e.tipo === 'miniera' ? 'miniera' : e.id
+  if (p.fai('io', 'vendi', posto)) dici(frase({ azione: 'vendi', id, resa }))
+  toccato.value = true
+  aggiornaCruscotto()
+  salva()
+}
 
 /* ── giocare ── */
 function avvia(indice) {
@@ -297,7 +332,7 @@ function apriDettagli({ posto, truppa, azione }) {
     const det = dettaglioAzione('miniera', { miniera: mina ? mina.liv : 0 })
     d = mina ? { azione: 'potenzia', posto } : { azione: 'costruisci', id: 'miniera', posto: scelta.value?.posto }
     scheda = { titolo: AZIONI.miniera.nome, nota: AZIONI.miniera.nota, ruolo: [], icona: '⛏️', sottotitolo: 'monete', ...det,
-               verbo: mina ? '⬆️ Potenzia' : '🛖 Costruisci',
+               verbo: mina ? '⬆️ Potenzia' : 'Costruisci',
                puoi: mina ? p.puoFare('io', 'potenzia', posto) && !p.inRiposo('io', posto) : p.puoFare('io', 'costruisci', 'miniera', d.posto),
                motivo: mina && p.inRiposo('io', posto) ? 'la miniera riposa ancora un po\'' : 'servono più monete',
                fine: '', vendi: mina ? p.resa('io', posto) : null }
@@ -313,7 +348,7 @@ function apriDettagli({ posto, truppa, azione }) {
     d = c ? { azione: 'potenzia', posto } : { azione: 'costruisci', id: truppa, posto: scelta.value?.posto }
     scheda = { truppa: id, titolo: k.nome, nota: k.nota, ruolo: ruoloDi(id), livello: c ? c.liv : 0, sottotitolo: EDIFICI[EDIFICIO_DI[id]].nome,
                ...det,
-               verbo: c ? '⬆️ Potenzia' : '🛖 Costruisci',
+               verbo: c ? '⬆️ Potenzia' : 'Costruisci',
                puoi: c ? p.puoFare('io', 'potenzia', posto) && !p.inRiposo('io', posto) : p.puoFare('io', 'costruisci', truppa, d.posto),
                motivo: c && p.inRiposo('io', posto) ? 'la caserma riposa ancora un po\'' : 'servono più monete',
                fine: 'È già al livello massimo.',
@@ -343,7 +378,7 @@ function procediDaiDettagli() {
 function vendiDaiDettagli() {
   const d = dettaglio.value
   dettaglio.value = null
-  if (d) scegli({ azione: 'vendi', posto: d.scelta.posto })
+  if (d) vendiSubito(d.scelta.posto)
 }
 
 /* una piazzola libera: tutte le truppe della tappa, coi prezzi; quelle che arrivano più avanti si
@@ -355,18 +390,20 @@ function apriScelta({ posto }) {
   scelta.value = {
     posto,
     varianti: Object.keys(TRUPPE).filter(id => ammesse.includes(id)).map(id => ({
-      id, nome: TRUPPE[id].nome, nota: TRUPPE[id].nota, prezzo: TRUPPE[id].costo,
+      id, nome: TRUPPE[id].nome, prezzo: TRUPPE[id].costo,
       puoi: p.puoFare('io', 'costruisci', id, posto) })),
     piuAvanti: Object.keys(TRUPPE).filter(id => !ammesse.includes(id)),
-    miniera: { id: 'miniera', nome: AZIONI.miniera.nome, nota: AZIONI.miniera.nota, prezzo: CRESCITA.miniera.prezzo(0),
+    miniera: { id: 'miniera', nome: AZIONI.miniera.nome, prezzo: CRESCITA.miniera.prezzo(0),
                puoi: p.puoFare('io', 'costruisci', 'miniera', posto) },
   }
   toccato.value = true
+  aggiornaCruscotto()
 }
 
 function costruisciDallaScelta(id) {
   const posto = scelta.value?.posto
   scelta.value = null
+  aggiornaCruscotto()
   scegli({ azione: 'costruisci', id, posto })
 }
 
@@ -375,6 +412,7 @@ function costruisciDallaScelta(id) {
 function scegli({ azione, id, posto }) {
   const p = partita.value
   if (!p || fermo.value || domanda.value || p.fine) return
+  if (scelta.value && azione !== 'costruisci') { scelta.value = null; aggiornaCruscotto() }
   const chi = azione === 'costruisci' ? id : azione === 'potenzia' || azione === 'vendi' ? posto : undefined
   const dove = azione === 'costruisci' ? posto : undefined
   if (!p.puoFare('io', azione, chi, dove) || (azione === 'potenzia' && p.inRiposo('io', posto))) return
@@ -418,11 +456,11 @@ function risposto({ giusto, saltata, tempo }) {
 
 function frase(v) {
   if (v.id === 'miniera') return { costruisci: '⛏️ una miniera: le monete arrivano più in fretta', potenzia: '⛏️ la miniera sale di livello',
-                                   vendi: `💰 miniera venduta: +${v.resa} 🪙` }[v.azione] || ''
+                                   vendi: `💰 miniera venduta: +${v.resa} 💎` }[v.azione] || ''
   const nome = v.id ? TRUPPE[v.id].nome : ''
-  return { costruisci: `🛖 ${v.id ? EDIFICI[EDIFICIO_DI[v.id]].nome : ''}: ${nome}`, potenzia: `⬆️ ${nome} sale di livello`, miniera: '⛏️ le monete arrivano più in fretta',
+  return { costruisci: `${v.id ? EDIFICI[EDIFICIO_DI[v.id]].nome : ''}: ${nome}`, potenzia: `⬆️ ${nome} sale di livello`, miniera: '⛏️ le monete arrivano più in fretta',
            ripara: '🔧 riparato', castello: '🏰 il castello è più forte', bomba: '💥 la bomba ha spazzato le truppe nemiche',
-           vendi: `💰 ${nome} venduti: +${v.resa} 🪙` }[v.azione] || ''
+           vendi: `💰 ${nome} venduti: +${v.resa} 💎` }[v.azione] || ''
 }
 
 function dici(testo) {
@@ -535,16 +573,13 @@ onUnmounted(() => {
 
       <CampoVista v-else :cruscotto="cruscotto" :pannello="pannello" :avviso="avviso"
                   :dritta="!toccato && !finale"
-                  @tela="prendiTela" @scegli="scegli" @dettagli="apriDettagli" @tocca="tocca"
+                  @tela="prendiTela" @scegli="scegli" @dettagli="apriDettagli" @tocca="tocca" @costruisci="costruisciDallaScelta"
                   @anello="dallAnello" @chiudi-anello="chiudiAnello" />
 
       <!-- il calcolo prende tutto lo schermo; il campo intanto rallenta (non si ferma) -->
       <Domanda v-if="domanda" :domanda="domanda.domanda" :pittori="domanda.pittori"
                :titolo="`${domanda.icona} ${domanda.nome}`"
                :origine="domanda" gioco="arena" @risposto="risposto" />
-
-      <Scelta v-if="scelta" :s="scelta" @chiudi="scelta = null" @costruisci="costruisciDallaScelta"
-              @dettagli="id => apriDettagli({ truppa: id })" />
 
       <Dettagli v-if="dettaglio" :d="dettaglio" @chiudi="dettaglio = null" @procedi="procediDaiDettagli" @vendi="vendiDaiDettagli" />
 

@@ -1,11 +1,12 @@
 <script setup>
 // Il campo, che si tocca: consegna il suo canvas a chi lo deve dipingere (emit('tela')) e
 // sopra le piazzole e il castello mette dei bersagli trasparenti grandi quanto l'edificio.
-// Toccata una piazzola libera si sceglie cosa costruirci; toccato un edificio gli compare
-// attorno l'anello (⬆️ potenzia, 💰 vendi, ? i numeri). Sotto resta una barra sottile:
+// Toccata una piazzola libera le compare sopra la nuvoletta con le truppe (il disegno e il prezzo);
+// toccato un edificio gli compare attorno l'anello (⬆️ potenzia, 💰 vendi, ? i numeri). Sotto resta una barra sottile:
 // monete, ripara, bomba. Non conosce le regole: riceve già decisi posti, prezzi e cosa si
 // può fare. Il dito non è un mouse: niente di piccolo da toccare.
 import { ref, computed, onMounted } from 'vue'
+import Scelta from './Scelta.vue'
 
 const props = defineProps({
   cruscotto: { type: Object, required: true },
@@ -13,7 +14,7 @@ const props = defineProps({
   avviso: { type: String, default: '' },
   dritta: { type: Boolean, default: true },        // «tocca una piazzola»
 })
-const emit = defineEmits(['tela', 'scegli', 'dettagli', 'tocca', 'anello', 'chiudiAnello'])
+const emit = defineEmits(['tela', 'scegli', 'dettagli', 'tocca', 'anello', 'chiudiAnello', 'costruisci'])
 const tela = ref(null)
 onMounted(() => emit('tela', tela.value))
 
@@ -44,12 +45,17 @@ const px = v => `${Math.round(v)}px`
         <span v-if="b.posto !== undefined && !b.id && b.puoi" class="ar-piu em">＋</span>
       </button>
 
-      <!-- l'anello attorno all'edificio toccato: pulsanti grandi, sopra l'edificio -->
+      <!-- la nuvoletta di una piazzola libera: il disegno delle truppe e il prezzo -->
+      <Scelta v-if="pannello.scelta" :s="pannello.scelta" @costruisci="id => emit('costruisci', id)"
+              @dettagli="d => emit('dettagli', d)" />
+
+      <!-- l'anello attorno all'edificio toccato: potenzia, vendi (due tocchi), il «?» dei numeri -->
       <div v-if="pannello.anello" class="ar-anello" :style="{ left: px(pannello.anello.x), top: px(pannello.anello.y) }">
         <button v-for="v in pannello.anello.voci" :key="v.chiave" class="ar-voce em"
-                :class="{ 'ar-no': !v.puoi }" :data-anello="v.chiave" @click.stop="emit('anello', v.chiave)">
+                :class="{ 'ar-no': !v.puoi, 'ar-piccola': v.piccola, 'ar-sicuro': v.sicuro }" :data-anello="v.chiave"
+                :aria-label="v.chiave" @click.stop="emit('anello', v.chiave)">
           <span class="ar-voce-icona">{{ v.icona }}</span>
-          <span class="ar-voce-testo">{{ v.testo }}</span>
+          <span v-if="v.testo" class="ar-voce-testo">{{ v.testo }}</span>
         </button>
       </div>
 
