@@ -19,7 +19,7 @@ import Domanda from '../../quiz/Domanda.vue'
 import { Giostra } from './scena/giostra.js'
 
 import { CAMPAGNA, SCALINI, QUANTE_TAPPE, INFINITA, tappeDelloScalino, scalinoDi, scalinoDelTerreno, terrenoDiverso, operazioniDi, operazionePer, stellePer, sfidaDi, sfidaInfinita } from './dati/campagna.js'
-import { TRUPPE, EDIFICI, EDIFICIO_DI, AZIONI, BOMBA, CALCOLANDO, POSTI, CAMPO, CRESCITA, truppeDelTerreno } from './dati/regole.js'
+import { TRUPPE, EDIFICI, EDIFICIO_DI, AZIONI, BOMBA, POSTI, CAMPO, CRESCITA, truppeDelTerreno } from './dati/regole.js'
 import { Partita } from './motore/partita.js'
 import { scrivi, leggi, dice } from './motore/sosta.js'
 import { Campo } from './scena/campo.js'
@@ -187,7 +187,8 @@ function passo(dt) {
   const p = partita.value
   if (!p) return
   ora += dt
-  const scala = fermo.value || p.fine ? 0 : domanda.value ? CALCOLANDO : 1
+  // mentre si calcola il campo è fermo del tutto (vedi docs/arena/calcoli.md)
+  const scala = fermo.value || p.fine || domanda.value ? 0 : 1
   if (scala) {
     p.avanza(dt * scala)
     daSalvare += dt

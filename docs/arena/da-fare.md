@@ -15,7 +15,8 @@
 - `test/misure/arena.test.mjs`: le promesse della taratura (il bambino di prova
   vince la quota della tappa) come test d'equilibrio, oltre alla firma.
 - La bomba: scegliere il punto col dito (oggi lo sceglie il gioco), un effetto più epico e il suono.
-- Provare col dito di un bambino: il ritmo del campo mentre si calcola
-  (oggi metà della velocità) è la prima cosa da guardare.
+- Rimisurare la taratura: dal 15/10 il campo sta fermo mentre si calcola, ma i piloti finti
+  (`motore/banco.js`) hanno ancora il ritmo di quando andava a metà velocità. `npm run tara:arena`
+  e la firma vanno rifatte, e provato col dito di un bambino.
 - La lava non tiene chi non sbaglia mai: il nemico al massimo della bravura vince contro il rush ma perde contro l'economia, e il giocatore perfetto vince sempre ([taratura.md](taratura.md), [nemico.md](nemico.md)).
 - Idea dell'utente (13/10), da valutare: dare una priorità alle truppe, caserma per caserma, cioè dire a ciascuna cosa attaccare.

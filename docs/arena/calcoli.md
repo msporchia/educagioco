@@ -38,12 +38,10 @@ grossi sono del castello.
 - **Si chiede al modulo di quiz `conti`** (`src/quiz/moduli/conti.js`, solo su
   richiesta), non a un generatore del gioco: così arrivano il perché dopo lo
   sbaglio, lo SRS, l'età e i saperi spenti dai genitori.
-- **Il campo va a metà velocità mentre si calcola, non si ferma**
-  (`CALCOLANDO` in `dati/regole.js`). È una scelta dell'utente: la pressione resta,
-  e una scelta ponderata costa davvero qualcosa. Era a un quarto: troppo comodo per
-  un gioco di conti svelti. Il calcolo prende **tutto lo schermo**: provato a un foglio
-  in basso che lasciava in vista il campo, e non andava (l'utente: «sfrutta
-  l'intero schermo per le domande»); il campo corre piano là dietro.
+- **Il campo sta fermo del tutto mentre si calcola** (era a metà velocità, `CALCOLANDO`, tolto il
+  15/10 su richiesta dell'utente: «il gioco si deve fermare completamente»). La fretta non c'è: si
+  ragiona, e sbagliare costa solo il riposo della caserma. Il calcolo prende **tutto lo schermo**.
+  La taratura non è stata rimisurata: vedi [da-fare.md](da-fare.md).
 - **Per scegliere con calma ci sono «i numeri»**, nella scelta e nell'anello: aprono i dettagli (come sta
   la cosa adesso, come starebbe al livello dopo, quanto costa) e **il campo sta
   fermo finché sono aperti**: la scelta di cosa costruire si fa lì, senza fretta,

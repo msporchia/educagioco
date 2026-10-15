@@ -5,7 +5,7 @@
 // tempo, e il campo va a metà velocità mentre risponde: a 6 secondi veri sono
 // 3 di partita). Non bara: legge quello che si vede a schermo.
 import { Partita } from './partita.js'
-import { TRUPPE, LIV_MAX, CALCOLANDO, POSTI } from '../dati/regole.js'
+import { TRUPPE, LIV_MAX, POSTI } from '../dati/regole.js'
 
 /* il caso che non cambia: stesso seme, stessa partita */
 export function caso(seme) {
@@ -22,7 +22,9 @@ export function caso(seme) {
    `bambino` sbaglia un conto su quattro e ci pensa il doppio, `lento` ne sbaglia
    quasi metà, `caso` tira a indovinare. Cambiarli rende vecchia la taratura
    (la firma li include). Il ritmo si dice in secondi veri a scelta: il bambino fa il conto a mente in fretta. */
-const inPartita = secondi => secondi * CALCOLANDO
+// il campo ora sta fermo mentre si calcola: il pensare non costa secondi di partita. Il ritmo resta quello di prima
+// (la metà dei secondi veri) come stima di quanto il bambino guarda il campo fra una scelta e l'altra; da rimisurare
+const inPartita = secondi => secondi * 0.5
 export const PILOTI = {
   misura: { precisione: 1, ritmo: inPartita(4) },
   bambino: { precisione: 0.75, ritmo: inPartita(6) },
