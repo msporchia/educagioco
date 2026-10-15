@@ -19,7 +19,9 @@ const tela = ref(null)
 onMounted(() => emit('tela', tela.value))
 
 const orologio = computed(() => {
-  const s = Math.max(0, Math.ceil(props.cruscotto.resto))
+  // la battaglia infinita non ha un timer: l'orologio conta quanto si resiste
+  const c = props.cruscotto
+  const s = Math.max(0, c.infinita ? Math.floor(c.t) : Math.ceil(c.resto))
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
 })
 const ICONA = { ripara: '🔧', bomba: '💣' }
@@ -30,7 +32,7 @@ const px = v => `${Math.round(v)}px`
 <template>
   <div class="ar-campo">
     <div class="ar-hud em">
-      <span class="ar-gettone">⏱️ <b>{{ orologio }}</b></span>
+      <span class="ar-gettone">{{ cruscotto.infinita ? '♾️' : '⏱️' }} <b>{{ orologio }}</b></span>
       <span class="ar-gettone ar-borsa" data-monete>💎 <b>{{ cruscotto.monete }}</b> <i>+{{ cruscotto.alSecondo.toFixed(1) }}/s</i></span>
     </div>
 

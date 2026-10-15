@@ -25,9 +25,9 @@ I numeri stanno in `src/giochi/arena/dati/regole.js`, il motore in
 ## Le caserme: sei piazzole libere
 
 - **Gli edifici sono quattro** (`EDIFICI`): la cripta (arcieri | opliti), la tana
-  (lupi | pipistrelli), la torre oscura (negromanti | diavoletti), l'antro (golem |
-  drago). Le due truppe di un edificio **costano uguale**: si sceglie il mestiere, non
-  il prezzo. L'edificio dice com'è disegnata la caserma, non quante se ne fanno.
+  (lupi | pipistrelli, e le bestie cornute della battaglia infinita), la torre oscura
+  (negromanti | diavoletti), l'antro (golem | drago). Le truppe di un edificio **costano
+  uguale**: si sceglie il mestiere, non il prezzo. L'edificio dice com'è disegnata la caserma, non quante se ne fanno.
 - **Le piazzole sono libere**: su ognuna delle sei si costruisce la caserma che si
   vuole, **anche due uguali** (due cripte di arcieri), o una miniera. Prima un edificio era uno solo, e
   nella prima tappa, che ha solo la cripta, si restava con una caserma e niente da
@@ -47,11 +47,12 @@ I numeri stanno in `src/giochi/arena/dati/regole.js`, il motore in
   non è un'uscita gratis. Il nemico non vende.
 - **L'antro (golem | drago) costa 20**, e le sue truppe sono forti in proporzione: è un
   investimento, non un'apertura. A 14 costava quanto le monete di partenza.
-- **Le truppe sono otto e si distinguono per chi colpiscono, non per quanto
-  valgono**: arcieri e negromanti feriscono tutti, opliti, lupi e diavoletti solo chi
+- **Le truppe sono nove e si distinguono per chi colpiscono, non per quanto
+  valgono**: arcieri e negromanti feriscono tutti, opliti, lupi, bestie cornute e diavoletti solo chi
   cammina, il golem solo le costruzioni, i pipistrelli e il drago volano e scavalcano
-  i muri. Il `guasti…()` di `dati/regole.js` pretende due truppe per edificio allo
-  stesso prezzo, chi vola e chi, da terra, ferisce chi vola.
+  i muri. Il `guasti…()` di `dati/regole.js` pretende due o tre truppe per edificio allo
+  stesso prezzo, chi vola e chi, da terra, ferisce chi vola, e (battaglia infinita, sotto) una
+  truppa da costruire per ogni edificio in ogni terreno.
 - **Masse, non quattro omini**: le squadre sono grandi (quattro arcieri, sei
   pipistrelli…) con vita e danno divisi in proporzione, e **ai livelli 3, 6, 9… la
   squadra prende una truppa in più** (`CRESCITA.omini`: gli arcieri da 4 a 7 al livello
@@ -86,7 +87,43 @@ I numeri stanno in `src/giochi/arena/dati/regole.js`, il motore in
   vicino batte arcieri e chi tira ad area, chi tira ad area batte gli arcieri, chi vola
   batte chi colpisce solo a terra. Ultimo giro: arcieri 33%, opliti 50%, lupi 67%,
   pipistrelli 50%, negromanti e diavoletti 33%, drago 83% (costa di più, e chi colpisce
-  solo a terra non lo tocca). Il golem non duella: ignora le truppe.
+  solo a terra non lo tocca). Il golem non duella: ignora le truppe. Con le bestie cornute
+  (tre per squadra, 190 di vita e 13 di danno ciascuna, vanno a 56): 57%, come opliti e lupi; battono arcieri, lupi,
+  negromanti e diavoletti, perdono con opliti, pipistrelli e drago (`BATTE` in `motore/nemico.js`).
+
+## La battaglia infinita e le truppe di un terreno
+
+La voce in cima alla mappa (`INFINITA` in `dati/campagna.js`): **niente timer**, il nemico alla
+**difficoltà massima** (la scheda dell'ultima tappa, `NEMICO.trono`, niente scale né crescita), finisce
+quando cade un castello. **Il terreno è diverso a ogni volta** (`terrenoDiverso`: bosco, palude,
+neve, lava; l'ultimo sta in `campagne.arena.ultimoTerreno`), e **ogni terreno ha una truppa firma**
+che altrove non si costruisce (`ESCLUSIVE` e `TRUPPE_DEL_TERRENO` in `dati/regole.js`):
+
+| terreno | firma | edificio |
+|---|---|---|
+| bosco | pipistrelli | tana |
+| palude | lupi | tana |
+| neve | golem | antro |
+| lava | diavoletti | torre oscura |
+
+Arcieri, opliti, negromanti e drago sono di tutti. Le operazioni valgono tutte e quattro (`INFINITA.operazioni`),
+anche dove nessuna truppa ammessa porta `×`. **La campagna non cambia**: il golem e il diavoletto
+restano dov'erano, perché là le operazioni si insegnano per scalino e `operazionePer` ripiega su
+quelle note. Il nemico e i giocatori finti usano la stessa lista (`Partita.truppeAmmesse`).
+
+- **Le bestie cornute completano la tana**: senza lupi e pipistrelli, in neve e in lava la tana non
+  avrebbe truppe; sono per quei due terreni (`×`, 8 monete come le altre della tana: tre per squadra, 190 di
+  vita, 13 di danno, 56 di velocità, colpiscono solo chi cammina, da vicino). Il ruolo è «regge e
+  colpisce a corto raggio», fra i lupi (veloci, di più danno) e i pipistrelli (volano, fragili).
+  L'operazione è `×` perché in lava non c'è nessun'altra truppa con la moltiplicazione.
+- **Il record è il tempo** (`senzaFine` nel manifesto, [../core/primati.md](../core/primati.md)): quanto si
+  resiste; **una vittoria conta il tempo che c'è voluto per abbattere il castello nemico** (misura da
+  confermare con l'utente). Non ci sono stelle, né tappe, né un finale di campagna.
+- **Si apre come una tappa dopo l'ultima** (`apertaQui(INFINITA, QUANTE_TAPPE, fatte)`): campagna finita e
+  portata dell'età (la stessa dell'ultima tappa, 70); chiusa, la voce ha il lucchetto.
+- **Senza timer la partita non può restare in piedi per sempre**: `npm run tara:arena -- --infinita` misura i
+  giocatori finti in ogni terreno col tetto di 30 minuti, e dice quante restano «aperte» (nessuna, all'ultimo giro).
+- La sosta ha chiave `infinita` e il terreno ([sosta.md](sosta.md)).
 
 ## Come marciano, e l'ordine dell'assedio
 
@@ -226,4 +263,5 @@ Il tempo di decidere c'è, poi la base viene sopraffatta.
 `[data-piazzola=<n>]` (con `data-variante=<truppa|miniera>` se c'è un edificio), `[data-castello]`,
 `[data-anello=potenzia|vendi|numeri]`, `[data-scelta=<n>]`, `[data-costruisci=<truppa|miniera>]`,
 `[data-dettagli=<truppa|miniera|ripara|bomba>]`, `[data-vendi]`, `[data-azione=ripara|bomba]`, `[data-monete]`, `[data-avviso]`,
-`[data-tappa=<n>]`, `[data-fine=vinta|persa|pari]`.
+`[data-tappa=<n>]`, `[data-infinita]` (la voce della battaglia infinita in cima alla mappa, `disabled` se chiusa; `[data-record]`
+il suo record), `[data-ancora]` (il tasto del cartello di fine), `[data-fine=vinta|persa|pari]`, `[data-primato=nuovo|no]`.

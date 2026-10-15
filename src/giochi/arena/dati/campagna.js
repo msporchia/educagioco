@@ -4,7 +4,7 @@
 // forte il nemico e che terreno c'è. Le operazioni arrivano una famiglia
 // alla volta: + e − nel bosco, poi × nella palude, poi ÷ sulla neve, e la
 // lava le mette tutte insieme. Vedi docs/arena/campagna.md.
-import { TRUPPE, EDIFICI } from './regole.js'
+import { TRUPPE, EDIFICI, OPERAZIONI, TERRENI, truppeDelTerreno } from './regole.js'
 import { NEMICO } from './taratura.js'
 
 export const SCALINI = [
@@ -76,6 +76,25 @@ export const tappeDelloScalino = chiave =>
   CAMPAGNA.map((t, i) => ({ ...t, indice: i })).filter(t => t.scalino === chiave)
 export const scalinoDi = t => SCALINI.find(s => s.chiave === t.scalino)
 
+/* La battaglia infinita, in cima alla mappa oltre le dodici tappe: senza timer, col nemico alla
+   difficoltà massima (la scheda dell'ultima tappa, niente scale), e un terreno diverso a ogni
+   volta con la sua truppa firma (`truppeDelTerreno`). Finisce quando cade un castello; il record è
+   il tempo. `portata` è quella dell'ultima tappa: si apre con la stessa regola (docs/arena/campagna.md). */
+export const INFINITA = {
+  chiave: 'infinita', nome: 'La battaglia infinita', icona: '♾️', portata: CAMPAGNA[CAMPAGNA.length - 1].portata,
+  nemico: NEMICO.trono,
+  racconto: 'Senza timer, nemico al massimo, terreno sempre nuovo.',
+  operazioni: OPERAZIONI,
+}
+export const sfidaInfinita = terreno => ({ nemico: INFINITA.nemico, truppe: truppeDelTerreno(terreno), durata: Infinity })
+export const scalinoDelTerreno = terreno => SCALINI.find(s => s.vestito === terreno)
+
+/* un terreno diverso dall'ultimo (che sta nel profilo): mai due volte lo stesso di fila */
+export function terrenoDiverso(ultimo, rnd = Math.random) {
+  const altri = TERRENI.filter(t => t !== ultimo)
+  return altri[Math.floor(rnd() * altri.length)]
+}
+
 /* quello che il motore legge di una tappa */
 export const sfidaDi = t => ({ nemico: t.nemico, truppe: t.truppe })
 
@@ -125,6 +144,15 @@ export function guastiDellaCampagna(campagna = CAMPAGNA) {
   const fila = campagna.map(t => ordine.indexOf(t.scalino))
   if (fila.some((x, i) => i > 0 && x < fila[i - 1])) g.push('gli scalini non sono in fila')
   for (const s of SCALINI) if (!campagna.some(t => t.scalino === s.chiave)) g.push(`lo scalino "${s.chiave}" non ha tappe`)
+  if (campagna === CAMPAGNA) {
+    if (TERRENI.join() !== SCALINI.map(s => s.vestito).join()) g.push('i terreni della battaglia infinita non sono quelli degli scalini')
+    if (!(INFINITA.nemico && INFINITA.nemico.moneteAlSecondo > 0 && INFINITA.nemico.pensa > 0 && INFINITA.nemico.forza > 0)) g.push('la battaglia infinita: la scheda del nemico non sta in piedi')
+    if (INFINITA.portata !== CAMPAGNA[CAMPAGNA.length - 1].portata) g.push('la battaglia infinita non ha la portata dell\'ultima tappa')
+    for (const terreno of TERRENI) {
+      const ammesse = truppeDelTerreno(terreno)
+      if (!EDIFICI.cripta.varianti.some(id => ammesse.includes(id))) g.push(`${terreno}: manca la cripta`)
+    }
+  }
   if (campagna[0] && operazioniDi(campagna[0]).some(o => o !== '+')) g.push('la prima tappa comincia già con altre operazioni oltre la somma')
   return g
 }

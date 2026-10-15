@@ -11,14 +11,16 @@ import { suono } from '../../audio.js'
 import { segna, state, etaDelBambino } from '../../store/profile.js'
 import { borsa } from '../../store/varieta.js'   // paga e dice se il salvadanaio è stanco
 import { PAGA } from '../../data/paghe.js'
-import { progresso, aperta, adesso, stelleDi, completa, sosta, salvaSosta, buttaSosta, ritocca } from '../campagne.js'
+import { progresso, aperta, adesso, stelleDi, completa, sosta, salvaSosta, buttaSosta, ritocca, primatoDi, segnaPrimato } from '../campagne.js'
+import { apertaQui } from '../../data/portata-giochi.js'
+import { recordInParole, fraseDiFine } from '../primati.js'
 import { usaPausa } from '../pausa.js'
 import VeloPausa from '../VeloPausa.vue'
 import Domanda from '../../quiz/Domanda.vue'
 import { Giostra } from './scena/giostra.js'
 
-import { CAMPAGNA, SCALINI, QUANTE_TAPPE, tappeDelloScalino, scalinoDi, operazioniDi, operazionePer, stellePer, sfidaDi } from './dati/campagna.js'
-import { TRUPPE, EDIFICI, EDIFICIO_DI, AZIONI, BOMBA, CALCOLANDO, POSTI, CAMPO, CRESCITA } from './dati/regole.js'
+import { CAMPAGNA, SCALINI, QUANTE_TAPPE, INFINITA, tappeDelloScalino, scalinoDi, scalinoDelTerreno, terrenoDiverso, operazioniDi, operazionePer, stellePer, sfidaDi, sfidaInfinita } from './dati/campagna.js'
+import { TRUPPE, EDIFICI, EDIFICIO_DI, AZIONI, BOMBA, CALCOLANDO, POSTI, CAMPO, CRESCITA, truppeDelTerreno } from './dati/regole.js'
 import { Partita } from './motore/partita.js'
 import { scrivi, leggi, dice } from './motore/sosta.js'
 import { Campo } from './scena/campo.js'
@@ -30,6 +32,7 @@ import Mappa from './viste/Mappa.vue'
 import CampoVista from './viste/Campo.vue'
 import Finale from './viste/Finale.vue'
 import Dettagli from './viste/Dettagli.vue'
+import { SENZA_FINE } from './gioco.js'
 import './stile.css'
 
 defineOptions({ name: 'CastleBattle' })
@@ -42,6 +45,8 @@ let borsellino = borsa(CHIAVE)   // le monete vere di questa partita, un calcolo
 
 const vista = ref('mappa')            // mappa | campo
 const tappaIdx = ref(0)
+const infinita = ref(null)            // il terreno, se si gioca la battaglia infinita (niente tappa)
+const chiaveCampo = ref(0)            // sale a ogni battaglia: il campo si rimonta, col suo terreno
 const partita = shallowRef(null)      // il motore: NON reattivo dentro
 const cruscotto = ref(vuoto())
 const pannello = ref({ bersagli: [], anello: null, scelta: null, azioni: [] })
@@ -67,6 +72,9 @@ const { inPausa, fermo, metti, togli, aiuto } = usaPausa({ anche: () => !!finale
 const avanza = progresso(CHIAVE)
 const tappa = computed(() => CAMPAGNA[tappaIdx.value] || CAMPAGNA[0])
 const scalino = computed(() => scalinoDi(tappa.value))
+const ammesse = computed(() => (infinita.value ? truppeDelTerreno(infinita.value) : tappa.value.truppe))
+const operazioniAttive = computed(() => (infinita.value ? INFINITA.operazioni : operazioniDi(tappa.value)))
+const titoloPartita = computed(() => (infinita.value ? INFINITA.nome : tappa.value.nome))
 const siGioca = computed(() => vista.value === 'campo' && !domanda.value && !finale.value && !dettaglio.value && !scelta.value)
 
 function vuoto() {
@@ -74,6 +82,10 @@ function vuoto() {
 }
 
 const dovEravamo = computed(() => {
+  if (cruscotto.value.infinita) {
+    const t = Math.max(0, Math.floor(cruscotto.value.t))
+    return `♾️ da ${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')} · 💎 ${cruscotto.value.monete}`
+  }
   const s = Math.max(0, Math.ceil(cruscotto.value.resto))
   return `⏱️ mancano ${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')} · 💎 ${cruscotto.value.monete}`
 })
@@ -90,11 +102,24 @@ const scalini = computed(() => SCALINI.map(s => ({
   })),
 })))
 
+/* la battaglia infinita, in cima: si apre come una tappa che viene dopo l'ultima (campagna finita e
+   portata dell'età), e porta il record scritto in parole */
+const laInfinita = computed(() => {
+  const fatte = progresso(CHIAVE).tappa
+  return {
+    nome: INFINITA.nome, icona: INFINITA.icona, racconto: INFINITA.racconto,
+    aperta: apertaQui(INFINITA, QUANTE_TAPPE, fatte),
+    motivo: fatte < QUANTE_TAPPE ? `finisci le ${QUANTE_TAPPE} tappe` : 'per ora è chiusa',
+    record: recordInParole(primatoDi(CHIAVE), SENZA_FINE),
+  }
+})
+
 /* ── la partita lasciata a metà ── */
 const ripresa = ref(laRipresa())
 
 function laRipresa() {
   const d = dice(sosta(CHIAVE))
+  if (d && d.infinita) return { emoji: INFINITA.icona, nome: d.nome, dettaglio: `${scalinoDelTerreno(d.terreno)?.nome} · da ${d.restano} · 💎 ${d.monete}` }
   return d && { emoji: '⚔️', nome: d.nome, dettaglio: `mancano ${d.restano} · 💎 ${d.monete}` }
 }
 
@@ -102,7 +127,7 @@ function salva({ subito = false } = {}) {
   const p = partita.value
   if (!p) return
   daSalvare = 0
-  salvaSosta(CHIAVE, scrivi(p, tappaIdx.value), { subito })
+  salvaSosta(CHIAVE, scrivi(p, infinita.value ? { infinita: infinita.value } : tappaIdx.value), { subito })
 }
 
 function scorda() {
@@ -114,7 +139,9 @@ function riprendiPartita() {
   const letto = leggi(sosta(CHIAVE))
   if (!letto) return scorda()          // la carta sparisce, la mappa resta
   clearTimeout(attesa); attesa = 0
-  tappaIdx.value = letto.indice
+  tappaIdx.value = Math.max(0, letto.indice)
+  infinita.value = letto.terreno || null
+  chiaveCampo.value++
   partita.value = letto.partita
   azzera()
   toccato.value = true
@@ -182,7 +209,7 @@ function aggiornaCruscotto() {
   const p = partita.value
   if (!p) return
   cruscotto.value = {
-    resto: p.resto, monete: Math.floor(p.lati.io.monete), alSecondo: p.alSecondo('io'),
+    resto: p.resto, t: p.t, infinita: !Number.isFinite(p.resto), monete: Math.floor(p.lati.io.monete), alSecondo: p.alSecondo('io'),
     castello: p.castello('io').liv, miniera: p.lati.io.miniera,
   }
   pannello.value = costruisciPannello(p)
@@ -193,8 +220,7 @@ function aggiornaCruscotto() {
    si sceglie cosa costruire; toccato un edificio gli compare sopra l'anello. Sotto, la barra
    sottile: ripara e bomba, che non stanno su un edificio. */
 function costruisciPannello(p) {
-  const ammesse = tappa.value.truppe
-  const piuEconomica = Math.min(CRESCITA.miniera.prezzo(0), ...ammesse.map(id => TRUPPE[id].costo))
+  const piuEconomica = Math.min(CRESCITA.miniera.prezzo(0), ...ammesse.value.map(id => TRUPPE[id].costo))
   const bersagli = []
   if (campo) {
     POSTI.forEach(([px, py], posto) => {
@@ -247,10 +273,15 @@ function sceltaDi(bersagli) {
   if (!s) return null
   const b = bersagli.find(x => x.chiave === 'p' + s.posto)
   if (!b) return null
-  const largo = (s.varianti.length + 1) * 76 + 24, W = campo.cv.clientWidth
+  // le opzioni (una per truppa, più la miniera) vanno a capo se non stanno in una riga: con sei truppe e la miniera
+  // la nuvoletta sarebbe più larga dello schermo (76 px a opzione, 20 di bordo)
+  const quante = s.varianti.length + 1, W = campo.cv.clientWidth
+  const perRiga = Math.max(1, Math.min(quante, Math.floor((W - 8 - 20) / 76)))
+  const colonne = Math.ceil(quante / Math.ceil(quante / perRiga))
+  const largo = colonne * 76 + 20
   const cx = b.x + b.w / 2
   const x = Math.min(Math.max(cx, largo / 2 + 4), W - largo / 2 - 4)
-  return { ...s, x, y: b.y + campo.me(4), coda: cx - x }
+  return { ...s, x, y: b.y + campo.me(4), coda: cx - x, larga: largo }
 }
 
 function tocca(b) {
@@ -301,20 +332,36 @@ function vendiSubito(posto) {
 
 /* ── giocare ── */
 function avvia(indice) {
+  if (indice === 'infinita') return avviaInfinita()
+  infinita.value = null
+  comincia(new Partita({ sfida: sfidaDi(CAMPAGNA[indice]), registra: true, eviaIA: progresso(CHIAVE).ultimaIA || null }), indice)
+}
+
+/* la battaglia infinita: il nemico è quello dell'ultima tappa, e il terreno è sempre un altro dall'ultima volta
+   (l'ultimo sta nel profilo, `campagne.arena.ultimoTerreno`), con le truppe di quel terreno */
+function avviaInfinita() {
+  const terreno = terrenoDiverso(progresso(CHIAVE).ultimoTerreno)
+  ritocca(CHIAVE, c => { c.ultimoTerreno = terreno })
+  infinita.value = terreno
+  comincia(new Partita({ sfida: sfidaInfinita(terreno), registra: true, eviaIA: progresso(CHIAVE).ultimaIA || null }), 0)
+}
+
+function comincia(nuova, indice) {
   clearTimeout(attesa); attesa = 0
   togli()   // una partita che comincia non comincia in pausa
   scorda()  // una partita nuova butta quella lasciata a metà (già chiesto dalla mappa)
   tappaIdx.value = indice
-  partita.value = new Partita({ sfida: sfidaDi(CAMPAGNA[indice]), registra: true, eviaIA: progresso(CHIAVE).ultimaIA || null })
-  ritocca(CHIAVE, c => { c.ultimaIA = partita.value.ia.nome })   // la prossima partita avrà un altro carattere
+  partita.value = nuova
+  ritocca(CHIAVE, c => { c.ultimaIA = nuova.ia.nome })   // la prossima partita avrà un altro carattere
   azzera()
   toccato.value = false
+  chiaveCampo.value++      // un campo nuovo: il terreno può essere cambiato, e la giostra riparte (prendiTela)
   vista.value = 'campo'
 }
 
 function prendiTela(tela) {
   if (!tela) return
-  campo = new Campo(tela, { vestito: scalino.value.vestito })
+  campo = new Campo(tela, { vestito: infinita.value || scalino.value.vestito })
   campo.prepara().then(() => { campo.adatta() })
   giostra.avvia()
 }
@@ -387,13 +434,13 @@ function vendiDaiDettagli() {
 function apriScelta({ posto }) {
   const p = partita.value
   if (!p || domanda.value || finale.value || p.fine) return
-  const ammesse = tappa.value.truppe
+  const permesse = ammesse.value
   scelta.value = {
     posto,
-    varianti: Object.keys(TRUPPE).filter(id => ammesse.includes(id)).map(id => ({
+    varianti: Object.keys(TRUPPE).filter(id => permesse.includes(id)).map(id => ({
       id, nome: TRUPPE[id].nome, prezzo: TRUPPE[id].costo,
       puoi: p.puoFare('io', 'costruisci', id, posto) })),
-    piuAvanti: Object.keys(TRUPPE).filter(id => !ammesse.includes(id)),
+    piuAvanti: infinita.value ? [] : Object.keys(TRUPPE).filter(id => !permesse.includes(id)),
     miniera: { id: 'miniera', nome: AZIONI.miniera.nome, prezzo: CRESCITA.miniera.prezzo(0),
                puoi: p.puoFare('io', 'costruisci', 'miniera', posto) },
   }
@@ -418,7 +465,7 @@ function scegli({ azione, id, posto }) {
   const dove = azione === 'costruisci' ? posto : undefined
   if (!p.puoFare('io', azione, chi, dove) || (azione === 'potenzia' && p.inRiposo('io', posto))) return
   const cal = p.calcoloDi('io', azione, chi)
-  const op = operazionePer(cal.op, operazioniDi(tappa.value))
+  const op = operazionePer(cal.op, operazioniAttive.value)
   const prima = posto !== undefined ? p.casermaIn('io', posto) : null
   voluta = { azione, id: id || prima?.id, posto, chi, dove, op, resa: azione === 'vendi' ? p.resa('io', posto) : 0 }
   toccato.value = true
@@ -481,8 +528,16 @@ function chiudiPartita() {
   giostra.ferma()
   scorda()          // finita o vinta, non c'è più niente da riprendere
   const vinto = p.fine === 'vinto'
-  const stelle = stellePer({ vinto, vitaBase: p.vitaBase('io') })
-  if (vinto && !pagata) {
+  const stelle = infinita.value ? 0 : stellePer({ vinto, vitaBase: p.vitaBase('io') })
+  let primato = null
+  if (infinita.value) {
+    // non ci sono stelle né tappe: conta il tempo (una vittoria conta quanto ci è voluto) e il record
+    if (!pagata) {
+      const esito = segnaPrimato(CHIAVE, Math.floor(p.t), Date.now(), { terreno: infinita.value, vinta: vinto })
+      primato = { ...esito, frase: fraseDiFine(esito, SENZA_FINE.misura) }
+      pagata = true
+    }
+  } else if (vinto && !pagata) {
     completa(CHIAVE, tappaIdx.value, QUANTE_TAPPE, { stelle })
     if (stelle === 3) segna('arenaSenzaGraffi')
     pagata = true
@@ -490,15 +545,17 @@ function chiudiPartita() {
   if (!contata) { segna('arenaPartite'); contata = true }
   suono[vinto ? 'livello' : 'fine']()
   finale.value = {
-    vinta: vinto, pari: p.fine === 'pari', titolo: tappa.value.nome, stelle,
+    vinta: vinto, pari: p.fine === 'pari', titolo: titoloPartita.value, stelle,
     monete: borsellino.dato, notaMonete: borsellino.nota(), tempo: p.t,
-    ultima: vinto && tappaIdx.value === QUANTE_TAPPE - 1,
+    ultima: vinto && !infinita.value && tappaIdx.value === QUANTE_TAPPE - 1,
+    infinita: !!infinita.value, primato,
   }
 }
 
 function ancora() {
   const f = finale.value
   if (!f) return
+  if (infinita.value) return avviaInfinita()      // sempre un altro terreno
   if (f.vinta && tappaIdx.value + 1 < QUANTE_TAPPE && aperta(CHIAVE, tappaIdx.value + 1)) return avvia(tappaIdx.value + 1)
   if (f.vinta) return allaMappa()
   avvia(tappaIdx.value)
@@ -510,6 +567,7 @@ function allaMappa() {
   giostra.ferma()
   partita.value = null
   campo = null
+  infinita.value = null
   finale.value = null
   domanda.value = null
   vista.value = 'mappa'
@@ -565,14 +623,14 @@ onUnmounted(() => {
 <template>
   <div class="schermo">
     <!-- il ⏸ c'è solo dove scorre qualcosa -->
-    <Barra :titolo="vista === 'campo' ? tappa.nome : 'Castle Battle'" monete
+    <Barra :titolo="vista === 'campo' ? titoloPartita : 'Castle Battle'" monete
            :pausa="siGioca" @pausa="metti()" @aiuto="aiuto" @indietro="indietro" />
 
     <div class="ar">
-      <Mappa v-if="vista === 'mappa'" :scalini="scalini" :ripresa="ripresa"
+      <Mappa v-if="vista === 'mappa'" :scalini="scalini" :infinita="laInfinita" :ripresa="ripresa"
              @gioca="avvia" @riprendi="riprendiPartita" @scorda="scorda" />
 
-      <CampoVista v-else :cruscotto="cruscotto" :pannello="pannello" :avviso="avviso"
+      <CampoVista v-else :key="chiaveCampo" :cruscotto="cruscotto" :pannello="pannello" :avviso="avviso"
                   :dritta="!toccato && !finale"
                   @tela="prendiTela" @scegli="scegli" @dettagli="apriDettagli" @tocca="tocca" @costruisci="costruisciDallaScelta"
                   @anello="dallAnello" @chiudi-anello="chiudiAnello" />

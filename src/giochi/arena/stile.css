@@ -42,6 +42,8 @@
 .ar-tappa .ar-stelle { font-size: 13px; letter-spacing: 1px; flex: none; color: var(--ar-tenue); font-weight: 800 }
 .ar-tappa.ar-chiusa { opacity: .5; border-left-color: #c8cfc0; box-shadow: none }
 .ar-tappa.ar-adesso { box-shadow: 0 3px 0 var(--ar-accento) }
+.ar-tappa.ar-infinita { border-left-color: #7a5cf0 }
+.ar-infinita .ar-stelle { letter-spacing: 0; color: #5b3fc8 }
 
 /* il campo: il quadro (3:2, sempre intero) e il pannello sotto */
 .ar-campo { flex: 1; min-height: 0; display: flex; flex-direction: column; background: #16203a; color: #fff }
@@ -82,7 +84,7 @@
                               font-size: 11px; color: #fff; white-space: nowrap }
 .ar-azione-tonda .ar-info { top: -10px; left: auto; right: -6px }
 /* la nuvoletta di una piazzola libera: crema con l'orlo giallo, la coda in giù verso la piazzola */
-.ar-nuvola { position: absolute; z-index: 7; transform: translate(-50%, -100%); display: flex; gap: 8px; padding: 10px 10px 12px;
+.ar-nuvola { position: absolute; z-index: 7; transform: translate(-50%, -100%); display: flex; flex-wrap: wrap; justify-content: center; gap: 18px 8px; padding: 10px 10px 12px;
              background: #fdf3d7; border: 4px solid #f5bb3c; border-radius: 22px;
              box-shadow: 0 0 0 2px #c47f12, inset 0 0 0 2px #fff6dc, 0 12px 28px #0009;
              animation: ar-spunta .16s ease-out; transform-origin: 50% 100% }

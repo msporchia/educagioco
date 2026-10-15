@@ -17,6 +17,10 @@
    - **i dettagli che non fermano il campo**: nessun errore, ma chi legge con
      calma si ritrova la battaglia cambiata.
    - **la partita ripresa su un altro canvas** (vedi survivors-sosta).
+   La battaglia infinita (in cima alla mappa, senza timer, un terreno diverso a ogni volta, con la truppa
+   firma del terreno) si prova a parte: chiusa finché la campagna non è finita, poi si apre, si dipinge, la
+   nuvoletta mostra le truppe di quel terreno (le bestie cornute in neve e lava), la sosta la ritrova col suo
+   terreno, e la volta dopo il terreno è un altro.
    `node test/esegui.mjs arena --niente-build`
    tempo: 60
    ═══════════════════════════════════════════════════════════════════ */
@@ -34,6 +38,8 @@ await scegli(page, 'arena')
 await page.waitForSelector('.ar-mappa', { timeout: 8000 })
 controlla('la mappa mostra le dodici tappe', await page.locator('[data-tappa]').count() === 12)
 controlla('solo la prima è aperta', await page.locator('[data-tappa]:not([disabled])').count() === 1)
+controlla('in cima c\'è la battaglia infinita, chiusa finché la campagna non è finita',
+          await page.locator('[data-infinita]').count() === 1 && await page.locator('[data-infinita][disabled]').count() === 1)
 await scatto(page, 'arena-mappa')
 
 await page.locator('[data-tappa="0"]').click()
@@ -157,6 +163,103 @@ controlla('riprendendo la caserma costruita è ancora lì',
 n = 0
 for (let t = 0; t < 40 && n < 25; t++) { await attendi(page, 250); n = await colori() }
 controlla('e il campo ripreso si dipinge sul canvas nuovo', n >= 25, `solo ${n} colori`)
+
+/* ── la battaglia infinita ── */
+await azzera(page)
+await semina(page, { settings: { eta: 8, sperimentali: true, tuttoAperto: true } })
+await scegli(page, 'arena')
+await page.waitForSelector('.ar-mappa', { timeout: 8000 })
+controlla('con i lucchetti tolti la battaglia infinita si apre', await page.locator('[data-infinita]:not([disabled])').count() === 1)
+await scatto(page, 'arena-mappa-infinita')
+
+const FIRMA = { bosco: 'pipistrelli', palude: 'lupi', neve: 'golem', lava: 'diavoletto' }
+const ultimoTerreno = async () => (await leggiProfilo(page))?.campagne?.arena?.ultimoTerreno
+const tempoDelCampo = async () => {
+  const [m, s] = (await page.locator('.ar-hud b').first().innerText()).split(':').map(Number)
+  return m * 60 + s
+}
+async function entra(nome) {
+  await page.waitForSelector('[data-piazzola="0"]', { timeout: 8000 })
+  let colori = 0
+  for (let t = 0; t < 40 && colori < 25; t++) { await attendi(page, 250); colori = await (async () => page.evaluate(() => {
+    const c = document.querySelector('.ar-tela')
+    if (!c || !c.width) return 0
+    const x = c.getContext('2d'), visti = new Set()
+    for (let i = 0; i < 40; i++) for (let j = 0; j < 20; j++) {
+      const d = x.getImageData(Math.floor(c.width * (i + 0.5) / 40), Math.floor(c.height * (j + 0.5) / 20), 1, 1).data
+      visti.add(`${d[0] >> 4},${d[1] >> 4},${d[2] >> 4}`)
+    }
+    return visti.size
+  }))() }
+  controlla(`${nome}: il campo si dipinge`, colori >= 25, `solo ${colori} colori`)
+}
+await page.locator('[data-infinita]').click()
+await entra('infinita')
+let terreno1 = null
+for (let t = 0; t < 20 && !terreno1; t++) { await attendi(page, 250); terreno1 = await ultimoTerreno() }
+controlla('il terreno si scrive nel profilo, in campagne.arena', Object.keys(FIRMA).includes(terreno1), String(terreno1))
+controlla('l\'orologio conta quanto si resiste, non quanto manca', /♾️/.test(await page.locator('.ar-hud').innerText()) && await tempoDelCampo() < 20)
+await scatto(page, 'arena-infinita')
+
+/* la nuvoletta di una piazzola libera: le truppe di quel terreno e nessuna firma degli altri */
+async function nuvoletta(terreno, posto, nome) {
+  await page.locator(`[data-piazzola="${posto}"]`).click()
+  await page.waitForSelector(`[data-scelta="${posto}"]`, { timeout: 4000 })
+  await attendi(page, 350)                                 // la nuvoletta spunta con un rimbalzo
+  const varianti = await page.locator('[data-scelta] [data-variante]').evaluateAll(l => l.map(x => x.getAttribute('data-variante')))
+  controlla(`${terreno}: la nuvoletta ha la truppa firma (${FIRMA[terreno]}) e nessuna di quelle degli altri terreni`,
+            varianti.includes(FIRMA[terreno]) && Object.entries(FIRMA).every(([t, id]) => t === terreno || !varianti.includes(id)), varianti.join())
+  controlla(`${terreno}: le truppe comuni ci sono sempre`, ['scheletri', 'guardiano', 'negromante', 'drago'].every(id => varianti.includes(id)))
+  controlla(`${terreno}: le bestie cornute, la tana di neve e lava, solo lì`, varianti.includes('bestie') === (terreno === 'neve' || terreno === 'lava'), varianti.join())
+  const largo = await page.locator('[data-scelta]').boundingBox()
+  controlla(`${terreno}: la nuvoletta sta nello schermo (va a capo)`, largo.x >= 0 && largo.x + largo.width <= 390, `${Math.round(largo.x)}+${Math.round(largo.width)}`)
+  await scatto(page, nome)
+}
+await nuvoletta(terreno1, 0, 'arena-infinita-scelta')
+await page.locator('[data-scelta] [data-costruisci="scheletri"]').click()
+await page.waitForSelector('.ar .qz-tasto', { timeout: 6000 })
+await page.locator('.ar .qz-tasto').first().click()   // sbagliare non costa niente: la sosta c'è comunque
+await attendi(page, 600)
+
+/* si esce a metà: la sosta si scrive col suo terreno, la carta la offre, e una battaglia nuova ha un altro terreno */
+for (let t = 0; t < 30 && await tempoDelCampo() < 7; t++) await attendi(page, 500)
+await page.click('button[aria-label="indietro"]')
+await page.waitForSelector('.ar-mappa', { timeout: 6000 })
+let sosta2 = null
+for (let t = 0; t < 20 && !sosta2; t++) { await attendi(page, 250); sosta2 = (await leggiProfilo(page))?.campagne?.arena?.sosta || null }
+controlla('uscendo la sosta della battaglia infinita ha il suo terreno e nessun tempo che resta',
+          !!sosta2 && sosta2.chiave === 'infinita' && sosta2.terreno === terreno1 && sosta2.resto === 0, JSON.stringify(sosta2 && { c: sosta2.chiave, t: sosta2.terreno }))
+controlla('e la mappa offre di riprendere', await page.locator('[data-ripresa]').count() === 1)
+await page.locator('[data-azione="riprendi"]').first().click()
+await entra('ripresa')
+controlla('riprendendo il terreno e il campo sono gli stessi', await ultimoTerreno() === terreno1 && /♾️/.test(await page.locator('.ar-hud').innerText()))
+await attendi(page, 900)                                 // la ripresa nasce in pausa: si tocca per continuare
+await page.locator('[data-pausa]').click()
+await page.waitForSelector('[data-pausa]', { state: 'detached', timeout: 4000 })
+await page.click('button[aria-label="indietro"]')
+await page.waitForSelector('.ar-mappa', { timeout: 6000 })
+await page.locator('[data-infinita]').click()
+await page.locator('[data-azione="comincia"]').click()
+await entra('seconda')
+let terreno2 = terreno1
+for (let t = 0; t < 20 && terreno2 === terreno1; t++) { await attendi(page, 250); terreno2 = await ultimoTerreno() }
+controlla('la volta dopo il terreno è un altro', Object.keys(FIRMA).includes(terreno2) && terreno2 !== terreno1, `${terreno1} → ${terreno2}`)
+await scatto(page, 'arena-infinita-2')
+await nuvoletta(terreno2, 1, 'arena-infinita-2-scelta')
+
+/* finché non esce un terreno con le bestie cornute (neve o lava) si ricomincia: serve a guardarle nella nuvoletta */
+let terreno3 = terreno2
+for (let giro = 0; giro < 6 && terreno3 !== 'neve' && terreno3 !== 'lava'; giro++) {
+  await page.click('button[aria-label="indietro"]')
+  await page.waitForSelector('.ar-mappa', { timeout: 6000 })
+  await page.locator('[data-infinita]').click()
+  if (await page.locator('[data-azione="comincia"]').count()) await page.locator('[data-azione="comincia"]').click()
+  await entra('altra')
+  const prima = terreno3
+  for (let t = 0; t < 20 && terreno3 === prima; t++) { await attendi(page, 250); terreno3 = await ultimoTerreno() }
+  controlla('anche questa volta il terreno cambia', terreno3 !== prima, `${prima} → ${terreno3}`)
+}
+if (terreno3 !== terreno2) await nuvoletta(terreno3, 2, 'arena-infinita-bestie')
 
 uguale('nessun errore in console', errori.length, 0)
 if (errori.length) nota(errori.slice(0, 3).join(' · '))

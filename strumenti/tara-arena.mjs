@@ -10,13 +10,14 @@
 //   npm run tara:arena -- --duelli      # le truppe a duello, squadre uguali in campo aperto
 //   npm run tara:arena -- --misura      # i giocatori finti contro la taratura di adesso, senza ritarare
 //   npm run tara:arena -- --misura --d 1 --furbizia 0   # contro un nemico fisso (la furbizia forzata)
+//   npm run tara:arena -- --infinita    # i giocatori finti nella battaglia infinita, un terreno alla volta (non tara niente)
 import { writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
-import { CAMPAGNA, sfidaDi } from '../src/giochi/arena/dati/campagna.js'
+import { CAMPAGNA, sfidaDi, sfidaInfinita } from '../src/giochi/arena/dati/campagna.js'
 import { misura, PILOTI, caso } from '../src/giochi/arena/motore/banco.js'
 import { Partita } from '../src/giochi/arena/motore/partita.js'
-import { TRUPPE, GIOCATORE } from '../src/giochi/arena/dati/regole.js'
+import { TRUPPE, GIOCATORE, TERRENI } from '../src/giochi/arena/dati/regole.js'
 import { firmaEquilibrio } from '../src/giochi/arena/motore/firma.js'
 import { NEMICO } from '../src/giochi/arena/dati/taratura.js'
 
@@ -97,6 +98,22 @@ if (argv.includes('--misura')) {
     // con la durata media: verso i 180 secondi si vince ai punti, molto meno abbattendo il castello
     const riga = Object.entries(PILOTI).map(([n, p]) => { const r = misura({ volte: 80, sfida, pilota: p }); return `${n} ${Math.round(r.vinte / 80 * 100)}% ${r.secondi}s` }).join(' · ')
     console.log(`${String(i + 1).padStart(2)} ${t.chiave.padEnd(12)} d=${sfida.nemico.d.toFixed(2)}  ${riga}`)
+  }
+  process.exit(0)
+}
+
+/* La battaglia infinita: il nemico dell'ultima tappa e le truppe di ogni terreno, senza timer. Dice quanto vincono
+   i giocatori finti e in quanto tempo finisce; se una battaglia resta in piedi oltre il limite (30 minuti di partita)
+   finisce fra le «aperte»: un nemico che non si batte e non batte. Non scrive niente. */
+if (argv.includes('--infinita')) {
+  const LIMITE = 1800
+  for (const terreno of TERRENI) {
+    const sfida = sfidaInfinita(terreno)
+    const riga = Object.entries(PILOTI).map(([n, p]) => {
+      const r = misura({ volte: 30, sfida, pilota: p, limite: LIMITE })
+      return `${n} ${Math.round(r.vinte / 30 * 100)}% ${r.secondi}s${r.pari ? ` (${r.pari} aperte)` : ''}`
+    }).join(' · ')
+    console.log(`${terreno.padEnd(7)} ${riga}`)
   }
   process.exit(0)
 }

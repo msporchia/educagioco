@@ -14,9 +14,12 @@ attorno l'anello per farlo. Il castello stesso si potenzia, e spara di più.
 
 Ogni scelta costa diamanti di battaglia (💎, per non confonderli con le monete vere) **e un calcolo**. Il calcolo lo decide
 la truppa: arcieri e opliti chiedono somme, pipistrelli e negromanti
-sottrazioni, lupi e golem moltiplicazioni, diavoletti e drago divisioni. Mentre si calcola il campo rallenta, non si ferma: c'è sempre
+sottrazioni, lupi, bestie cornute e golem moltiplicazioni, diavoletti e drago divisioni. Mentre si calcola il campo rallenta, non si ferma: c'è sempre
 un po' di pressione. Se si sbaglia non si perde niente, ma quella caserma
 riposa qualche secondo.
+
+Finite le dodici tappe si apre la **battaglia infinita**: niente timer, il nemico più forte, e a ogni volta un terreno
+diverso (bosco, palude, neve, lava) con una truppa che c'è solo lì. Si tiene il tempo che si resiste.
 
 ## Per i genitori
 

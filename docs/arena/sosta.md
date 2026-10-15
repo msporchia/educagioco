@@ -11,6 +11,9 @@ Uscire non butta via la battaglia: si scrive dov'era in `profile.campagne.arena.
 - **Non si salva il caso**: dopo la ripresa i dadi del nemico sono altri. Per
   un gioco in cui il nemico decide a caso quando costruire non cambia niente
   che un bambino possa accorgersi.
+- **La battaglia infinita** si salva con chiave `infinita` e il `terreno`, senza il tempo che resta (non c'è:
+  conta `t`, quanto si resiste); `leggi()` la rifà con le truppe di quel terreno e una truppa di un altro
+  terreno la butta. La carta della mappa dice il terreno e da quanto si resiste.
 - **Quando non si salva**: partita finita o durata meno di cinque secondi.
 - `leggi()` convalida ogni campo (numeri nei limiti, truppe della tappa, posti
   non doppi): un salvataggio storto si butta e la mappa resta com'è.
