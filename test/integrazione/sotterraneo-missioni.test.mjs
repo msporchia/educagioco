@@ -9,7 +9,7 @@
    (il tasto accanto alla carta dell'eroe) le mostra, e dice che altre
    aspettano; si scende nella torre e in cima c'è il promemoria di ognuna;
    si risale, si consegna Rosicchione e si ricevono le monete (e il
-   gioiello); consegnata una, arriva la successiva con il «!» sull'eremita.
+   gioiello); consegnata una, arriva la successiva con il «!» sul mugnaio.
 
    I tocchi sono tocchi (`Input.dispatchTouchEvent` via CDP). Il piano di
    sotto non si gioca: il promemoria si legge appena si arriva, e si risale
@@ -209,7 +209,7 @@ for (let n = 0; n < 6 && !(await page.locator('[data-riga][data-premio]').count(
   await attendi(page, 360); await toccaIl('[data-dialogo-testo]')
 }
 controlla('e il mugnaio lo dice, monete comprese', (await page.locator('[data-riga][data-premio]').innerText()).includes(`🪙 ${ROSICCHIONE.premio.monete}`))
-uguale('consegnata una, si libera un posto: la Dama Grigia ha il suo «!»', await segni(), 'eremita:nuova,guardia:attesa,ragazza:attesa')
+uguale('consegnata una, si libera un posto: ai ratti della scalinata (la discesa più vicina) tocca il «!» del mugnaio', await segni(), 'guardia:attesa,mugnaio:nuova,ragazza:attesa')
 uguale('consegnata, sul globo rosso non resta nessuna pastiglia', await page.locator('[data-azione="vita"]').getAttribute('data-missioni-pronte'), null)
 await scatto(page, 'missioni-fatta')
 

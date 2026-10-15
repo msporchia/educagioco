@@ -246,7 +246,7 @@ function sali(c) {
     return d
   }
   let provati = 0, soloPerGrado = 0
-  for (const m of MISSIONI) {
+  for (const m of MISSIONI.filter(x => x.tipo !== 'conta')) {   // le «sconfiggi N» non hanno una cosa nel piano
     const t = CAMPAGNA.find(x => x.chiave === m.discesa)
     for (const seme of [2, 9, 31, 77, 120, 205]) {
       const c = new Corsa(t, { seme, rnd: seminato(seme), missioni: presePer({ [m.id]: PRESA }, t.chiave) })
