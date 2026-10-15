@@ -311,8 +311,8 @@ const camminabile = (l, x, y) => l.a(x, y) === PAVIMENTO || l.a(x, y) === PORTA
 {
   const attese = { altare: 'costruita', cantine: 'costruita', torre: 'costruita', gallerie: 'caverna', cisterna: 'caverna', labirinto: 'costruita', fondo: 'caverna' }
   for (const t of CAMPAGNA) uguale(`${t.chiave}: la famiglia dei piani`, piantaDi(t, 0), attese[t.chiave])
-  uguale('l\'abisso: cantine e cripta costruite, la fornace una grotta', TRATTI_DELL_ABISSO.map(x => `${x.scenario}:${x.pianta}`).join(), 'cantine:costruita,cripta:costruita,fornace:caverna')
-  uguale('...e ogni piano dell\'abisso lo sa', [0, 4, 8, 12, 30].map(p => piantaDi(L_ABISSO, p)).join(), 'costruita,costruita,caverna,caverna,caverna')
+  uguale('l\'abisso: cantine e cripta costruite, la fornace una grotta, l\'inferno di nuovo costruito', TRATTI_DELL_ABISSO.map(x => `${x.scenario}:${x.pianta}`).join(), 'cantine:costruita,cripta:costruita,fornace:caverna,inferno:costruita')
+  uguale('...e ogni piano dell\'abisso lo sa', [0, 4, 8, 12, 30].map(p => piantaDi(L_ABISSO, p)).join(), 'costruita,costruita,caverna,costruita,costruita')
   uguale('l\'acqua c\'è solo nella scala sommersa', CAMPAGNA.filter(t => conAcquaDi(t, 0)).map(t => t.chiave).join(), 'cisterna')
   controlla('...e non nell\'abisso', !conAcquaDi(L_ABISSO, 9))
   controlla('i piani fatti sanno la loro famiglia', PIANI.every(x => x.l.pianta === piantaDi(x.t, x.p)))
@@ -330,6 +330,9 @@ const camminabile = (l, x, y) => l.a(x, y) === PAVIMENTO || l.a(x, y) === PORTA
     uguale(`${pianta}: con un altro scenario le celle sono le stesse`, a.celle.join(), b.celle.join())
     uguale('...e i relitti stanno negli stessi posti', JSON.stringify(a.relitti.map(r => [r.x, r.y, r.w, r.h, r.classe])), JSON.stringify(b.relitti.map(r => [r.x, r.y, r.w, r.h, r.classe])))
     controlla('...vestiti d\'altro', a.relitti.length > 3 && a.relitti.some((r, i) => r.id !== b.relitti[i].id))
+    const ci = fa('inferno')
+    uguale(`${pianta}: e l'inferno non sposta niente`, a.celle.join(), ci.celle.join())
+    uguale('...nemmeno i relitti', JSON.stringify(a.relitti.map(r => [r.x, r.y, r.w, r.h, r.classe])), JSON.stringify(ci.relitti.map(r => [r.x, r.y, r.w, r.h, r.classe])))
   }
 }
 

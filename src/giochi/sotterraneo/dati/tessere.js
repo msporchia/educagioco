@@ -96,6 +96,32 @@ export const SCENARI = {
       faccia: { no: ['fornace-faccia-no-0', 'fornace-faccia-no-1'], ne: ['fornace-faccia-ne-0', 'fornace-faccia-ne-1'] },
     },
   },
+  // l'inferno (sotterraneo_6*.png): ritagliato da una scena, più i pezzi derivati in codice (strumenti/sprite/inferno.py) e due tavole d'arredo
+  inferno: {
+    pavimento: { stanza: 'inferno-pav-stanze', corridoio: 'inferno-pav-corridoi' },
+    medaglione: 'inferno-medaglione',
+    tetto: 'inferno-tetto',
+    colori: { roccia: '#0d0a0b' },
+    faccia: 'inferno-faccia-fila',
+    torcia: 'inferno-faccia-torcia',
+    varianti: ['inferno-faccia-grata', 'inferno-faccia-liscia', 'inferno-faccia-toppa'],
+    capi: { sx: 'inferno-capo-sx', dx: 'inferno-capo-dx' },
+    bordi: { n: 'inferno-bordo-n', o: 'inferno-bordo-o', e: 'inferno-bordo-e', angolo: 'inferno-bordo-angolo' },
+    porte: {
+      davanti: { semplice: 'inferno-porta-semplice', ferro: 'inferno-porta-ferro', chiara: 'inferno-porta-chiara', bella: 'inferno-porta-bella', aperta: 'inferno-porta-aperta' },
+      fianco: { semplice: 'inferno-fianco-semplice', ferro: 'inferno-fianco-ferro', chiara: 'inferno-fianco-chiara', bella: 'inferno-fianco-bella', aperta: 'inferno-fianco-aperta' },
+    },
+    scala: { aperta: 'inferno-scala-aperta', chiusa: 'inferno-scala-chiusa' },
+    fontana: { piena: 'inferno-coppa-lava', asciutta: 'inferno-fontana-asciutta' },
+    perTerra: ['inferno-anello-catena', 'inferno-sassolini', 'inferno-erba-secca'],
+    ragnatele: { sx: 'fornace-ragnatela-sx', dx: 'fornace-ragnatela-dx' },   // la scena non le ha: restano quelle della fornace, da chiedere al modello
+    forzieri: ['fornace-forziere-b', 'fornace-forziere-c'],   // idem: ferro e brace stanno bene anche qui
+    orpelli: ORPELLI.inferno,
+    diagonali: {
+      taglio: { so: 'inferno-taglio-so', se: 'inferno-taglio-se' },
+      faccia: { no: ['inferno-faccia-no-0', 'inferno-faccia-no-1'], ne: ['inferno-faccia-ne-0', 'inferno-faccia-ne-1'] },
+    },
+  },
 }
 
 export const SCENARIO = 'cantine'   // di chi non dichiara il suo: una tappa con `scenario:`, l'abisso dal tratto

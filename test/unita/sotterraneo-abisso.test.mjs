@@ -194,7 +194,8 @@ controlla('l\'abisso non ha guasti', guasti.length === 0, guasti.join(' · '))
   }
   controlla('nessun mostro con numeri assurdi, dal piano 1 al 60',
             storti.length === 0, storti.slice(0, 3).join(' · '))
-  controlla('ma sono cresciuti davvero', ultimo.ossa > primo.ossa * 5,
+  // il caporale che il banco trova per primo è uno qualsiasi della coppia del tratto: nell'inferno anche il negromante, che di ossa ne ha meno di un drago
+  controlla('ma sono cresciuti davvero', ultimo.ossa > primo.ossa * 4,
             `${primo.ossa} → ${ultimo.ossa}`)
   /* ── la difesa è la manopola velenosa, e resta ferma per sempre ──
      Entra in una sottrazione: un punto in più lì dentro allunga la

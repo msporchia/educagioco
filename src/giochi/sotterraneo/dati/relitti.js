@@ -23,6 +23,7 @@ export const DISEGNI = ['macerie', 'crollo', 'roccia', 'trave', 'stalagmite', 'c
 export const TINTE_RELITTI = {
   cantine: { chiaro: '#8d7a63', medio: '#615141', scuro: '#3a3028', filo: '#1e1713', ferro: '#6a6a6e', legno: '#6b4a2c' },
   cripta: { chiaro: '#8f9ba5', medio: '#5d6972', scuro: '#363f47', filo: '#14191d', ferro: '#6d7479', legno: '#5b4a3a' },
+  inferno: { chiaro: '#7a6a6e', medio: '#4a3c40', scuro: '#2a2024', filo: '#0e0a0c', ferro: '#4a4648', legno: '#4a2c20' },
   fornace: { chiaro: '#8a665c', medio: '#5b413b', scuro: '#33231f', filo: '#150e0d', ferro: '#5c5456', legno: '#59391f' },
 }
 
@@ -85,6 +86,37 @@ export const ASPETTI = {
       isolato: [STALAGMITE, p('colonna-inclinata', 'cripta-colonna-inclinata', 'Una colonna storta, pronta a cadere da secoli.'),
         p('cavaliere-caduto', 'cripta-cavaliere-caduto', 'Un cavaliere di pietra, caduto e spezzato.', { basso: true })],
       lungo: [CROLLO],
+    },
+  },
+
+  // arredo-inferno.png e bottega-inferno.png: statue e sarcofagi per le costruite, le rocce a punta e i cristalli per le grotte
+  inferno: {
+    costruita: {
+      cumulo: [p('blocchi', 'inferno-blocchi', 'Blocchi di pietra nera caduti dal soffitto: di qua non si passa.', { basso: true }), MACERIE],
+      pesante: [
+        p('sarcofago-croce', 'inferno-sarcofago-croce', 'Un sarcofago di ferro e pietra, pesantissimo. Meglio lasciarlo chiuso.', { basso: true }),
+        p('sarcofago-largo', 'inferno-sarcofago-croce-largo', 'Un sarcofago fasciato di ferro: non si sposta.', { basso: true }),
+        p('sarcofago-stemma', 'inferno-sarcofago-stemma', 'Un sarcofago col segno di un toro cornuto.', { basso: true }),
+        p('gargoyle', 'inferno-gargoyle-accovacciato', 'Un gargoyle di pietra, accovacciato. Ti segue con gli occhi.'),
+        p('gargoyle-alato', 'inferno-gargoyle-alato', 'Un gargoyle con le ali aperte, fermo da sempre.'),
+        p('statua-demone', 'inferno-statua-demone', 'Una statua di demone alato. La pietra è tiepida.')],
+      isolato: [
+        p('colonna', 'inferno-colonna', 'Una colonna nera, ancora in piedi in mezzo alla sala.'),
+        p('colonna-chiodata', 'inferno-colonna-chiodata', 'Una colonna coperta di punte di ferro.'),
+        p('obelisco', 'inferno-obelisco-corna', 'Un obelisco nero con due corna in cima.'),
+        p('colonna-spezzata', 'inferno-colonna-spezzata', 'Una colonna spezzata, annerita dal fuoco.'),
+        p('statua-incappucciata', 'inferno-statua-incappucciata-libro', 'Una statua incappucciata con un libro chiuso.'),
+        p('forca-spuntoni', 'inferno-forca-spuntoni', 'Un telaio di punte di ferro, troppo pesante da spostare.')],
+      lungo: [CROLLO, TRAVE],
+    },
+    caverna: {
+      cumulo: [MACERIE, p('cristalli-roccia', 'inferno-cristalli-roccia', 'Un cumulo di roccia coi cristalli rossi: di qua non si passa.'),
+        p('blocchi', 'inferno-blocchi', 'Blocchi di pietra nera caduti dal soffitto: di qua non si passa.', { basso: true })],
+      pesante: [ROCCIA, p('obelisco-roccia', 'inferno-obelisco-roccia', 'Una punta di roccia nera, alta come un uomo.')],
+      isolato: [p('obelischi-roccia', 'inferno-obelischi-roccia', 'Un gruppo di punte di roccia nera.'), STALAGMITE,
+        p('albero-appeso', 'inferno-albero-appeso', 'Un albero secco, con dei frutti rossi che non si dovrebbero toccare.'),
+        p('albero-secco', 'inferno-albero-secco', 'Un albero secco, spoglio da secoli.')],
+      lungo: [CROLLO, TRAVE],
     },
   },
 

@@ -114,6 +114,7 @@ export const TRATTI_DELL_ABISSO = [
   { scenario: 'cantine', pianta: 'costruita', nome: 'le cantine', mostri: ['melma-viola', 'mostro-viola', 'pipistrello-occhio', 'ombra'], caporale: 'golem-ghiaccio', tettoBranco: 3 },
   { scenario: 'cripta', pianta: 'costruita', nome: 'la cripta', mostri: ['ghoul', 'teschio-azzurro', 'mummia'], caporale: 'mietitore', tettoBranco: 5 },
   { scenario: 'fornace', pianta: 'caverna', nome: 'la fornace', mostri: ['draghetto', 'occhio', 'golem-pietra', 'grifone'], caporale: 'drago', tettoBranco: 6 },
+  { scenario: 'inferno', pianta: 'costruita', nome: 'l\'inferno', mostri: ['bestia-cornuta', 'negromante', 'troll-clava'], caporale: 'drago-lava', tettoBranco: 6 },
 ]
 export const PIANI_PER_TRATTO = 4
 

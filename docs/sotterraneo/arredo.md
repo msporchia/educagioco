@@ -13,7 +13,7 @@ cella è libera, quindi mai su un relitto.
 
 ## Gli orpelli sono una lista che può crescere
 
-Ogni scenario ha la sua lista in `dati/orpelli.js` (cantine, cripta, fornace;
+Ogni scenario ha la sua lista in `dati/orpelli.js` (cantine, cripta, fornace, inferno;
 quella delle cantine è anche il ripiego di chi non dichiara lo scenario).
 Un orpello è una riga: `pezzo` (il nome nell'atlante), `posa`, `epica`, `dice`
 e, se fa luce, `arde`. **Un pezzo nuovo è una riga e il suo ritaglio nel
@@ -40,6 +40,7 @@ da `sotterraneo_2.png`, `sotterraneo_5_2/5_3.png`, `scudi.png` e `arredo-cripta-
   col disco, i **bracieri** (viola e azzurro: non scaldano), i **cerchi di rune** (viola, verde) e il tappeto, lo scaffale di libri
   e il leggio col libro aperto.
 - **Fornace**: la panca, la fonte di ferro asciutta, il braciere, il bacino di lava (fa luce), la lanterna rossa, lo stendardo rosso.
+- **Inferno** (`arredo-inferno.png` e `bottega-inferno.png`, 74 pezzi): sarcofagi di ferro, altari e troni (`fondo`), gargoyle e statue di demoni a coppie, colonne chiodate e obelischi cornuti, torce e candelabri, gabbie, catene e stendardi appesi, scaffali, la fucina (forno, banco, incudine, carbone), calderoni e vasche di lava, il cerchio del pentagramma, il tavolo del boia e la gogna. Non ci sono casse né botti né passaggi dipinti (grate, botole, portali): restano nei fogli, fuori dalla lista.
 
 **Regola del decoro** (dell'utente): niente che sembri da prendere o da spostare. Per questo non ci sono casse (la `cassa`
 dipinta è stata tolta dalle cantine), sacchi, forzieri di decoro (`cripta-forziere` fa da forziere vero, vedi [roba.md](roba.md)); e **niente

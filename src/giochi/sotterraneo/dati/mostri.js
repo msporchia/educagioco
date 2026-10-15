@@ -241,6 +241,14 @@ export const MOSTRI = {
   // il drago ha un respiro rotto (due draghi e la fiammata in un fotogramma): da fermo e da sveglio usa i passi dai video
   drago: sp('pesante', { em: '🐉', sprite: 'drago', nome: 'Un drago', passi: true, fermoDaiPassi: true, att: 5, dif: 1, velocita: 7,
     resiste: ['fuoco'], teme: ['gelo'], immune: ['brucia'] }),
+
+  // l'abisso dell'inferno: quattro specie che il bestiario aveva e nessuna discesa usava (la bestia, il negromante e il troll; il drago di lava
+  // faceva solo da grosso, Carbonchio)
+  'bestia-cornuta': sp('tosto', { em: '👹', sprite: 'bestia-cornuta', nome: 'Una bestia cornuta', att: 5, dif: 0, velocita: 9, resiste: ['fuoco'], teme: ['gelo'] }),
+  negromante: sp('medio', { em: '🧙', sprite: 'negromante', nome: 'Un negromante', att: 4, dif: 0, velocita: 8, teme: ['sacro', 'fisico'], immune: ['avvelena', 'sanguina'] }),
+  'troll-clava': sp('tosto', { em: '👹', sprite: 'troll', nome: 'Un troll', passi: true, att: 5, dif: 1, velocita: 6, resiste: ['veleno'], teme: ['fuoco'] }),
+  'drago-lava': sp('pesante', { em: '🐲', sprite: 'drago-lava', nome: 'Un drago di lava', att: 5, dif: 1, velocita: 7,
+    resiste: ['fuoco'], teme: ['gelo'], immune: ['brucia'] }),
 }
 
 export const CHIAVI_MOSTRI = Object.keys(MOSTRI)

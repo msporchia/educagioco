@@ -125,11 +125,11 @@ era il non avere un'arma, non il capo. Adesso ogni piano ha il guardiano del pos
 
 **Ogni quattro piani l'abisso cambia posto** (`TRATTI_DELL_ABISSO`,
 `PIANI_PER_TRATTO` in `dati/campagna.js`): le cantine dal 1° al 4°, la cripta
-dal 5° all'8°, la fornace dal 9° in poi, **e l'ultimo posto resta per sempre**:
-un abisso senza fondo non ha un giro da rifare, e la fornace è l'ultima
-tappa visiva. Un posto è **uno scenario**
+dal 5° all'8°, la fornace dal 9° al 12°, l'inferno dal 13° in poi, **e l'ultimo posto resta per sempre**:
+un abisso senza fondo non ha un giro da rifare, e l'inferno è l'ultima
+tappa visiva (15 ottobre 2026: prima era la fornace; l'inferno è una pianta costruita, come le cantine e la cripta). Un posto è **uno scenario**
 (come si disegna, `SCENARI` in `dati/tessere.js`) **e i suoi abitanti** (chi si incontra per strada, `mostri` e `caporale` del tratto in
-`dati/campagna.js`: melme viola, mostri viola, pipistrelli occhio e ombre nelle cantine; ghoul, teschi azzurri e mummie nella cripta; draghetti, occhi, golem di pietra e grifoni nella fornace); la riga
+`dati/campagna.js`: melme viola, mostri viola, pipistrelli occhio e ombre nelle cantine; ghoul, teschi azzurri e mummie nella cripta; draghetti, occhi, golem di pietra e grifoni nella fornace; bestie cornute, negromanti e troll nell'inferno, col drago di lava a fare da caporale); la riga
 sotto il campo dice dove si è («la cripta · piano 7»).
 
 - **Un abisso solo, non uno per posto**: due abissi vorrebbero due record,

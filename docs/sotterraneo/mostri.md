@@ -27,6 +27,9 @@ grosso. La proposta di partenza era [ambientazioni.md](ambientazioni.md): i dopp
 | l'abisso, le cantine | | melma viola · mostro viola · pipistrello occhio · ombra | golem di ghiaccio | (il giro dei sette) |
 | l'abisso, la cripta | | ghoul · teschio azzurro · mummia | mietitore | |
 | l'abisso, la fornace | | draghetto · occhio · golem di pietra · grifone | drago | |
+| l'abisso, l'inferno | | bestia cornuta · negromante · troll | drago di lava | |
+
+**L'inferno** (15 ottobre 2026) è il posto dove entrano le creature del bestiario che nessuna discesa usava: la bestia cornuta, il negromante e il troll (con `troll-clava` in `MOSTRI`: la chiave `troll` è la base dei grossi Fiammetta e Minotto, uno sprite che non si disegna), e il drago di lava che prima faceva solo Carbonchio. Non hanno una discesa della storia: stanno solo nell'abisso. Il negromante ha meno ossa degli altri per strada: nel test dell'abisso il caporale trovato per primo può essere lui, e il piano 60 deve pesare almeno quattro volte il piano 1.
 
 - **I doppioni tolti** rispetto alla proposta: il ragno solo nella grotta (non nella scalinata); il vespone **fuori dalla botola**, e va nella
   torre; il pipistrello solo nella torre (non nella cripta e nell'abisso); la pianta solo nella grotta (non nella botola); l'ombra, il ghoul e
@@ -130,6 +133,10 @@ grosso. La proposta di partenza era [ambientazioni.md](ambientazioni.md): i dopp
 | golem di pietra | abisso (fornace) | fisico | gelo | non si stordisce, non si avvelena, non sanguina |
 | grifone | abisso (fornace) | — | fulmine | — |
 | drago | abisso (fornace) | fuoco | gelo | non brucia |
+| bestia cornuta | abisso (inferno) | fuoco | gelo | — |
+| negromante | abisso (inferno) | — | luce sacra, fisico | non si avvelena, non sanguina |
+| troll | abisso (inferno) | veleno | fuoco | — |
+| drago di lava | abisso (inferno, caporale) | fuoco | gelo | non brucia |
 
 | grosso | statistiche della specie | figura | resiste | teme | non prende |
 |---|---|---|---|---|---|

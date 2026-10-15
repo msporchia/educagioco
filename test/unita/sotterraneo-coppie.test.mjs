@@ -36,8 +36,8 @@ for (const t of CAMPAGNA) {
   uguale(`${t.chiave}: caporaleDi dice lo stesso caporale a ogni piano`, [0, 1, 2].map(p => caporaleDi(t, p)).filter((x, i, v) => v.indexOf(x) === i).join(), t.caporale)
 }
 stessaLista('l\'abisso, per tratto', TRATTI_DELL_ABISSO.map(t => t.mostri), [['melma-viola', 'mostro-viola', 'pipistrello-occhio', 'ombra'], ['ghoul', 'teschio-azzurro', 'mummia'],
-                                                                           ['draghetto', 'occhio', 'golem-pietra', 'grifone']])
-stessaLista('e i suoi caporali', TRATTI_DELL_ABISSO.map(t => t.caporale), ['golem-ghiaccio', 'mietitore', 'drago'])
+                                                                           ['draghetto', 'occhio', 'golem-pietra', 'grifone'], ['bestia-cornuta', 'negromante', 'troll-clava']])
+stessaLista('e i suoi caporali', TRATTI_DELL_ABISSO.map(t => t.caporale), ['golem-ghiaccio', 'mietitore', 'drago', 'drago-lava'])
 controlla('ogni tratto ha da due a quattro abitanti', TRATTI_DELL_ABISSO.every(t => t.mostri.length >= 2 && t.mostri.length <= 4))
 controlla('nessun capo per strada', CAMPAGNA.every(t => t.mostri.every(k => !MOSTRI[k].capo)))
 controlla('un posto che non va è un guasto: un capo, una creatura che non esiste, una sola creatura, cinque, il caporale anche per strada',
