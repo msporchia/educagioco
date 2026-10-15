@@ -108,7 +108,7 @@ function costruisci(renderer, fisso) {
   postScena.add(quadro)
 
   let W = 1, H = 1, dpr = fisso || Math.min(DPR_MAX, window.devicePixelRatio || 1), D = 10
-  let cieloOra = null, ultimo = 0, mediaMs = 16, lenti = 0, svelti = 0
+  let cieloOra = null, ultimo = 0, mediaMs = 16, lenti = 0, svelti = 0, msScena = 0, msDisegno = 0
   const X = x => (x - W / 2) * K
   const Y = y => (H / 2 - y) * K
 
@@ -146,6 +146,7 @@ function costruisci(renderer, fisso) {
         const L = cielo.luci(q.cielo)
         sole.color.set(L.sole); sole.intensity = L.k; amb.color.set(L.amb)
       }
+      camera.position.set(0, 0, D)
       cielo.metti(q.cielo, W, H, camera)
       // la scossa: la telecamera trema, e i colori si sdoppiano un poco
       const sx = q.scossa > 0 ? (Math.random() - 0.5) * q.scossa * K : 0, sy = q.scossa > 0 ? (Math.random() - 0.5) * q.scossa * K : 0
@@ -155,7 +156,7 @@ function costruisci(renderer, fisso) {
       sassi.disegna(q, X, Y, K, t)
       sassi.codaTempo.value = t
       nave.disegna(q.nave, X, Y, K, t, dt, eff.sciame, q.S)
-      madre.disegna(q.madre, q.pezzi, X, Y, K, t, dt, eff.sciame, q.S)
+      madre.disegna(q.madre, q.pezzi, X, Y, K, t, dt, eff.sciame, q.S, D)
       eff.disegna(q, X, Y, K, dt)
 
       // il lampo delle esplosioni: una luce dove è nato l'anello più giovane
@@ -176,16 +177,21 @@ function costruisci(renderer, fisso) {
       post.uniforms.uFlash.value = Math.max(0, Math.min(1, q.lampo * 1.6))
       post.uniforms.uLampo.value = Math.max(0, q.lampo) * 0.45
 
+      const fatto = performance.now()
+      msScena += (fatto - ora - msScena) * 0.05
       renderer.info.reset()
       renderer.setRenderTarget(tela)
       renderer.render(scena, camera)
       renderer.setRenderTarget(null)
       renderer.render(postScena, postCam)
+      msDisegno += (performance.now() - fatto - msDisegno) * 0.05
     },
     // per i test e per chi misura: quanto costa un fotogramma
     info() {
       const i = renderer.info.render
-      return { chiamate: i.calls, triangoli: i.triangles, dpr, ms: Math.round(mediaMs * 10) / 10 }
+      const d = x => Math.round(x * 10) / 10
+      // `ms`: fra un fotogramma e l'altro; `scena`: il JS che prepara; `disegno`: le chiamate a WebGL
+      return { chiamate: i.calls, triangoli: i.triangles, dpr, ms: d(mediaMs), scena: d(msScena), disegno: d(msDisegno) }
     },
     distruggi() {
       this.toglie?.()

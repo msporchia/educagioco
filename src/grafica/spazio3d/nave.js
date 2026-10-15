@@ -135,6 +135,7 @@ export function creaNave(scena) {
                                            bumpMap: pelle.rilievo, bumpScale: 0.8, envMapIntensity: 0.6 })
   const accento = new MeshStandardMaterial({ color: T0.accento, metalness: 0.35, roughness: 0.45, envMapIntensity: 0.6 })
   const lume = c => new MeshBasicMaterial({ color: new Color(...c) })
+  const bocche = lume([1.6, 3.6, 6])
   const telaDx = document.createElement('canvas'), telaSx = document.createElement('canvas')
   telaDx.width = telaSx.width = TELA_W; telaDx.height = telaSx.height = TELA_H
   const texDx = new CanvasTexture(telaDx), texSx = new CanvasTexture(telaSx)
@@ -223,13 +224,21 @@ export function creaNave(scena) {
       return e(new SphereGeometry(0.045, 10, 8), lume(s < 0 ? [6, 0.4, 0.4] : [0.4, 6, 0.6]), s * tx, -ty, 0.04, 0, 0, 0, g)
     })
     // i motori: gondola, presa, fascia, ugello, e le due fiamme
+    // i pezzi fermi dei motori, uniti per materiale: quattro disegni per tutti i motori della stazza
+    const fermi = new Map()
+    const fermo = (geo, mat, x, y, z, rx = 0) => {
+      geo.rotateX(rx); geo.translate(x, y, z)
+      if (!fermi.has(mat)) fermi.set(mat, [])
+      fermi.get(mat).push(geo.index ? geo.toNonIndexed() : geo)
+    }
     const motori = PROPULSORI[lv].map(([px, py, pr]) => {
       const m = new Group(); m.position.set(px, -py, 0.02); g.add(m)
-      e(new CylinderGeometry(pr * 0.78, pr * 0.9, 0.52, 20), scafo, 0, 0.27, 0, 0, 0, 0, m)
-      e(new ConeGeometry(pr * 0.7, 0.16, 18), scuro, 0, 0.6, 0, 0, 0, 0, m)
-      e(new TorusGeometry(pr * 0.83, 0.016, 8, 22), accento, 0, 0.3, 0, Math.PI / 2, 0, 0, m)
-      e(new CylinderGeometry(pr * 0.82, pr * 0.95, 0.09, 20), scuro, 0, -0.03, 0, 0, 0, 0, m)
-      const bocca = e(new CircleGeometry(pr * 0.62, 18), lume([1.6, 3.6, 6]), 0, -0.08, 0, Math.PI / 2, 0, 0, m)
+      const y0 = -py, z0 = 0.02
+      fermo(new CylinderGeometry(pr * 0.78, pr * 0.9, 0.52, 20), scafo, px, y0 + 0.27, z0)
+      fermo(new ConeGeometry(pr * 0.7, 0.16, 18), scuro, px, y0 + 0.6, z0)
+      fermo(new TorusGeometry(pr * 0.83, 0.016, 8, 22), accento, px, y0 + 0.3, z0, Math.PI / 2)
+      fermo(new CylinderGeometry(pr * 0.82, pr * 0.95, 0.09, 20), scuro, px, y0 - 0.03, z0)
+      fermo(new CircleGeometry(pr * 0.62, 18), bocche, px, y0 - 0.08, z0, Math.PI / 2)
       const fiammeQui = [[0.95, 6, 0], [0.48, 3.6, 1]].map(([rr, ll, nucleo]) => {
         const mat = new ShaderMaterial({ vertexShader: FIAMMA_V, fragmentShader: FIAMMA_F, transparent: true, depthWrite: false,
           blending: AdditiveBlending, side: DoubleSide,
@@ -239,8 +248,9 @@ export function creaNave(scena) {
         fiamme.push({ mat, px })
         return f
       })
-      return { m, bocca, fiamme: fiammeQui, px }
+      return { m, fiamme: fiammeQui, px }
     })
+    for (const [mat, geos] of fermi) e(mergeGeometries(geos), mat, 0, 0, 0, 0, 0, 0, g)
     stazze[lv] = { g, alaD, sx, punte, luci, motori }
     return stazze[lv]
   }
@@ -276,15 +286,14 @@ export function creaNave(scena) {
 
   scena.add(nave)
 
-  let chiave = '', lvOra = 0, stOra = -1, colpo = 9, urti = 0
+  let livreaOra, lvOra = 0, stOra = -1, colpo = 9, urti = 0
   const rosso = new Color()
   const fiammaCol = new Color()
 
   // la nave cambia vernice o stato: si ridipingono le ali (poche volte a partita)
   function vesti(lv, st, L) {
-    const k = lv + '|' + st + '|' + JSON.stringify(L)
-    if (k === chiave) return
-    chiave = k
+    if (L === livreaOra && lv === lvOra && st === stOra) return   // la livrea è un oggetto nuovo solo a partita nuova
+    livreaOra = L
     dipingiLato(telaDx, lv, 1, st, L); dipingiLato(telaSx, lv, -1, st, L)
     texDx.needsUpdate = true; texSx.needsUpdate = true
     const T = tinteNave(L, st / 2)
@@ -320,7 +329,7 @@ export function creaNave(scena) {
       const vira = Math.max(-0.5, Math.min(0.5, (n.vx || 0) / Math.max(1, n.r * 8)))
       nave.rotation.set(-0.3 + Math.sin(t * 1.3) * 0.04, vira * 0.9, -vira * 0.25)
       cannone.rotation.z = -((n.mira ?? -Math.PI / 2) + Math.PI / 2)
-      punta.color.setRGB(...(n.gelo > 0 ? [0.8, 1.6, 2.4] : [2.4, 1.9, 0.5]))
+      if (n.gelo > 0) punta.color.setRGB(0.8, 1.6, 2.4); else punta.color.setRGB(2.4, 1.9, 0.5)
 
       // i motori: la spinta allunga le fiamme; quello rotto va a singhiozzo
       const sp = Math.max(0.2, 0.8 + (n.spinta || 0) * 1.1 + Math.sin(t * 22) * 0.14)
@@ -350,12 +359,13 @@ export function creaNave(scena) {
         // i cocci galleggiano accanto allo strappo, e dallo strappo escono scintille
         const resta = st >= 2 ? 0.34 : 0.55, a0 = ali(lv)[0]
         const dx = a0[0][0] + (a0[1][0] - a0[0][0]) * resta, dy = a0[0][1] + (a0[1][1] - a0[0][1]) * resta
-        SCHEGGE.forEach(([sx, sy, sr, giro], i) => {
-          const c = cocci[i]; c.visible = true
+        for (let i = 0; i < SCHEGGE.length; i++) {
+          const [sx, sy, sr, giro] = SCHEGGE[i], c = cocci[i]
+          c.visible = true
           c.position.set(-(dx + sx), -(dy + sy + Math.sin(t * 1.6 + sx * 9) * 0.045), 0.05)
           c.rotation.set(t * 0.7 + i, t * 0.5, giro + Math.sin(t * 1.1 + sy * 7) * 0.25)
           c.scale.setScalar(sr)
-        })
+        }
         if (Math.random() < dt * (rossa ? 26 : 14)) {
           const bx = n.x - dx * n.r, by = n.y + dy * n.r
           sciame.emetti(bx, by, (Math.random() - 0.7) * 80 * S, -(40 + Math.random() * 90) * S, 0.35 + Math.random() * 0.3,

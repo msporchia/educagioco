@@ -64,6 +64,7 @@ await scatto(page, 'asteroidi-3d-cielo')
 let prima = await conto(page)
 let s = await unSasso(page, true)
 await tocco(s.x, s.y)
+await scatto(page, 'asteroidi-3d-centro')
 let dopo = await conto(page)
 uguale('il tocco sul sasso giusto è un centro', dopo.giuste, prima.giuste + 1)
 uguale('e non uno sbaglio', dopo.sbagliate, prima.sbagliate)
@@ -110,7 +111,9 @@ await page.evaluate(() => {
   const m = window.__mate, a = m.asteroidi().find(x => !x.morto && !x.ok)
   a.x = m.nave.x; a.y = m.nave.y - m.nave.r * 1.2
 })
-await attendi(page, 250)
+await attendi(page, 120)
+await scatto(page, 'asteroidi-3d-scudo')
+await attendi(page, 130)
 const dopoUrto = await page.evaluate(() => ({
   urti: window.__mate.nave.urti,
   sasso: window.__mate.asteroidi().filter(a => a.urtato).map(a => ({ su: a.spy < 0, vivo: !a.morto }))[0],

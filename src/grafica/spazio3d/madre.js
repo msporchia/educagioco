@@ -120,11 +120,15 @@ export function creaMadre(scena) {
 
   return {
     // `m`: la nave madre della view, in pixel; `pezzi`: i cannoni che volano via
-    disegna(m, pezziVia, X, Y, k, t, dt, sciame, S) {
+    // `D`: quanto sta lontana la telecamera. La nave madre sta indietro di tutto il suo disco, se no il
+    // bordo copre le bombe che le nascono sotto; posizione e misura si allargano quanto basta a restare
+    // a schermo dove e grande come la vuole il gioco
+    disegna(m, pezziVia, X, Y, k, t, dt, sciame, S, D) {
       madre.visible = !!m
       if (m) {
-        madre.position.set(X(m.x), Y(m.y), -0.2)
-        madre.scale.setScalar(m.r * k)
+        const z = -1.9 * m.r * k, f = (D - z) / D
+        madre.position.set(X(m.x) * f, Y(m.y) * f, z)
+        madre.scale.setScalar(m.r * k * f)
         corpo.rotation.z = -(m.inclina || 0)
         disco.rotation.y = t * 0.25
         mat.userData.u.uT.value = t

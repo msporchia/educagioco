@@ -186,7 +186,7 @@ export function creaCielo(scena, renderer) {
   for (const m of [pianeta, anelli, luna, sole, corona, buco]) { m.visible = false; dietro.add(m) }
   corona.renderOrder = -70; sole.renderOrder = -69; buco.renderOrder = -70; anelli.renderOrder = -60
 
-  let cielo = null, forma = '', vista = { larg: 1, alto: 1 }
+  let cielo = null, cottoW = 0, cottoH = 0, cottoCam = 0
   // da frazioni dello schermo (y dall'alto) a mondo, alla profondità del fondo
   function posa(m, fx, fy, fr, cam) {
     const h = 2 * Math.tan((cam.fov * Math.PI / 180) / 2) * (cam.position.z + PROF), w = h * cam.aspect
@@ -225,8 +225,11 @@ export function creaCielo(scena, renderer) {
     luci: c => LUCI[c] || LUCI.cintura,
     // `cielo`: il posto (data/asteroidi.js); W, H in pixel; `cam` la telecamera della scena
     metti(c, W, H, cam) {
-      const f = `${c}|${W}x${H}`
-      if (f !== forma) { const vecchio = cielo; cielo = c; forma = f; cuociFondo(W, H); if (vecchio !== c) cambia() }
+      if (c === cielo && W === cottoW && H === cottoH && cam.position.z === cottoCam) return
+      const vecchio = cielo
+      cielo = c; cottoW = W; cottoH = H; cottoCam = cam.position.z
+      cuociFondo(W, H)
+      if (vecchio !== c) cambia()
       const S = SFONDI[cielo] || SFONDI.cintura
       if (S.pianeta) {
         const p = S.pianeta

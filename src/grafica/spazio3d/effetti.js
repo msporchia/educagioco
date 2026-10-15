@@ -117,12 +117,29 @@ export function creaEffetti(scena) {
   scena.add(cocci)
   const o = new Object3D(), col = new Color()
 
-  let tagliaPunti = 1   // i punti sono in pixel: la tela li moltiplica per il suo pixel ratio
+  // un anello nuovo e piccolo è un sasso che esplode: il 3D ci aggiunge la palla di fuoco e il fumo
+  const visti = new WeakSet()
+  function scoppio(g, S) {
+    for (let i = 0; i < 34; i++) {
+      const a = Math.random() * 6.283, v = (60 + Math.random() * 260) * S
+      sciame.emetti(g.x, g.y, Math.cos(a) * v, Math.sin(a) * v, 0.3 + Math.random() * 0.6, (1.2 + Math.random() * 2.4) * S,
+                    i % 3 ? g.c : '#ffffff', false, 60 * S)
+    }
+    for (let i = 0; i < 4; i++) sciame.emetti(g.x, g.y, 0, 0, 0.28 + i * 0.05, (14 + i * 4) * S, '#ffb347', false, 0)
+    for (let i = 0; i < 9; i++) {
+      const a = Math.random() * 6.283, v = (15 + Math.random() * 45) * S
+      sciame.emetti(g.x, g.y, Math.cos(a) * v, Math.sin(a) * v, 0.9 + Math.random() * 0.7, (5 + Math.random() * 4) * S, '#3a3440', true, -12 * S)
+    }
+  }
+
   return {
     sciame,
-    pixel(dpr) { tagliaPunti = dpr; fuoco.mat.uniforms.uPx.value = dpr; fumo.mat.uniforms.uPx.value = dpr },
+    // i punti sono in pixel: la tela li moltiplica per il suo pixel ratio
+    pixel(dpr) { fuoco.mat.uniforms.uPx.value = dpr; fumo.mat.uniforms.uPx.value = dpr },
     // `q`: la scena della view; `X`, `Y`: da pixel a mondo; `k`: mondo per pixel
     disegna(q, X, Y, k, dt) {
+      const piccolo = Math.min(q.W, q.H) * 0.55
+      for (const g of q.anelli) if (!visti.has(g)) { visti.add(g); if (g.max <= piccolo) scoppio(g, q.S) }
       fuoco.n = 0; fumo.n = 0
       for (const p of q.particelle) {
         const a = Math.max(0, Math.min(1, p.vita)), t = rgb(p.c)
