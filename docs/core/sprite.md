@@ -97,11 +97,12 @@ pixel) e si rifà con un comando. **Non conviene** per un pezzo con un disegno s
 nello scenario e il derivato si butta.
 
 - **Come si usa**: una libreria, `strumenti/sprite/derivati.py`, e **una configurazione per ogni uso** che dice quali tessere prendere e come chiamare i pezzi.
-  Oggi c'è una sola, `strumenti/sprite/diagonali.py`: i muri obliqui del sotterraneo, una voce di `SCENE` per scena (cripta, cantine, fornace) con il foglio
+  Oggi ce ne sono due: `strumenti/sprite/diagonali.py`: i muri obliqui del sotterraneo, una voce di `SCENE` per scena (cripta, cantine, fornace, inferno) con il foglio
   da cui ritagliare, il nome del foglio che esce e due numeri (le righe del coronamento e dove cominciano i mattoni). Una scena nuova è una voce lì, poi
   `python3 strumenti/sprite/diagonali.py <scena> --provino` (il foglio da guardare in `tmp/diagonali-<scena>.png`) e `atlante.py sotterraneo`. Per un uso
   nuovo (altri giochi, altre forme) si copia `diagonali.py` come calco: i nomi delle tessere, i pezzi che escono, e `scrivi_foglio` che li mette in un
   foglio col suo foglietto (famiglie «tessera», un giro, fondo trasparente), nel formato di `atlante.py`.
+- **`strumenti/sprite/inferno.py`** (15 ottobre 2026) è l'altra: i pezzi che mancano allo scenario dell'inferno e che non sono geometria ma «il resto» (pavimenti senza cuciture, tetto a massi, il pentagramma, le porte chiara e aperta, i fianchi, la scala chiusa, la fontana asciutta), ricavati dalla scena e dalle tavole dipinte; il perché e cosa esce sta in [../sotterraneo/scenari.md](../sotterraneo/scenari.md#linferno). La regola è la stessa («prima in codice, poi dipinto») e il test (`unita/sprite-derivati`) confronta il foglio scritto con quello che il codice rifà.
 - **Le funzioni di `derivati.py`**: `tessere_di(sorgente)` (le tessere di un foglio come le ritaglia `atlante.py`: stesso fondo, stessa scala);
   `triangolo(dim, angolo)` e `quarto_di_cerchio(dim, angolo, raggio)` (maschere `L`, 255 dentro); `mascherata(tessera, maschera)`; `profondita(h)` (quanto si è
   entrati in un bordo dopo `h` pixel di una diagonale a 45°: 1/√2 per colonna); `bordo_su_diagonale(roccia, bordo, lato)` (la roccia tagliata dalla linea col suo

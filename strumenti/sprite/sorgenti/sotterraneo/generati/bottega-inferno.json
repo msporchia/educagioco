@@ -1,0 +1,397 @@
+{
+  "__": "Il foglietto di bottega-inferno.png: i pezzi usabili della «bottega infernale» (ChatGPT, 15 ottobre 2026, fondo magenta, a circa 4,6 px di foglio per pixel di gioco). Il foglio è una tavola di ambienti e di pezzi: qui si prendono solo i pezzi che stanno in una stanza (obelischi, torce, forche, fucina, banco, cristalli, il cerchio del pentagramma, la statua del demone, le rocce e gli alberi secchi dei relitti, le cose piccole per terra). Restano fuori gli ambienti interi (l'ingresso della caverna col teschio, il recinto, l'orto, la tenda, il ponte, la cascata di lava: sono scene, non pezzi), il cancello a spuntoni (sembra un passaggio), casse e botti (sembrano da prendere), le ossa e i teschi, il forziere pieno d'oro (il d'oro è solo delle missioni). Quali pezzi servono, e come: la voce inferno in dati/tessere.js, dati/orpelli.js e dati/relitti.js.",
+  "nitido": "scelti",
+  "fondo": [
+    255,
+    0,
+    255
+  ],
+  "ombra": true,
+  "colori": 0,
+  "cella": [
+    1,
+    1
+  ],
+  "famiglie": {
+    "inferno-": "oggetto"
+  },
+  "sprite": {
+    "inferno-obelisco-corna": {
+      "da": [
+        28,
+        559
+      ],
+      "cella": [
+        64,
+        149
+      ],
+      "misura": [
+        13,
+        31
+      ],
+      "nitido": true
+    },
+    "inferno-torcia-treppiede": {
+      "da": [
+        126,
+        595
+      ],
+      "cella": [
+        45,
+        113
+      ],
+      "misura": [
+        8,
+        23
+      ]
+    },
+    "inferno-stendardo-asta": {
+      "da": [
+        204,
+        568
+      ],
+      "cella": [
+        62,
+        145
+      ],
+      "misura": [
+        12,
+        30
+      ]
+    },
+    "inferno-forca-spuntoni": {
+      "da": [
+        303,
+        591
+      ],
+      "cella": [
+        101,
+        119
+      ],
+      "misura": [
+        21,
+        25
+      ]
+    },
+    "inferno-gabbia-patibolo": {
+      "da": [
+        449,
+        580
+      ],
+      "cella": [
+        76,
+        140
+      ],
+      "misura": [
+        15,
+        29
+      ],
+      "nitido": true
+    },
+    "inferno-forca-gancio": {
+      "da": [
+        556,
+        589
+      ],
+      "cella": [
+        95,
+        131
+      ],
+      "misura": [
+        19,
+        27
+      ]
+    },
+    "inferno-calderone-spuntoni": {
+      "da": [
+        809,
+        597
+      ],
+      "cella": [
+        91,
+        111
+      ],
+      "misura": [
+        18,
+        23
+      ],
+      "nitido": true
+    },
+    "inferno-fornello": {
+      "da": [
+        13,
+        750
+      ],
+      "cella": [
+        122,
+        146
+      ],
+      "misura": [
+        25,
+        30
+      ],
+      "nitido": true
+    },
+    "inferno-banco-attrezzi": {
+      "da": [
+        158,
+        774
+      ],
+      "cella": [
+        124,
+        96
+      ],
+      "misura": [
+        26,
+        20
+      ],
+      "nitido": true
+    },
+    "inferno-incudine-ceppo": {
+      "da": [
+        326,
+        793
+      ],
+      "cella": [
+        78,
+        77
+      ],
+      "misura": [
+        16,
+        15
+      ]
+    },
+    "inferno-carbone-mucchio": {
+      "da": [
+        424,
+        815
+      ],
+      "cella": [
+        62,
+        54
+      ],
+      "misura": [
+        12,
+        10
+      ]
+    },
+    "inferno-tavolo-lungo": {
+      "da": [
+        614,
+        785
+      ],
+      "cella": [
+        148,
+        86
+      ],
+      "misura": [
+        31,
+        17
+      ]
+    },
+    "inferno-cristalli-grigi": {
+      "da": [
+        784,
+        785
+      ],
+      "cella": [
+        110,
+        96
+      ],
+      "misura": [
+        23,
+        20
+      ]
+    },
+    "inferno-cristalli-rossi": {
+      "da": [
+        917,
+        786
+      ],
+      "cella": [
+        92,
+        86
+      ],
+      "misura": [
+        19,
+        17
+      ],
+      "nitido": true
+    },
+    "inferno-vasca-lava-catene": {
+      "da": [
+        23,
+        954
+      ],
+      "cella": [
+        109,
+        122
+      ],
+      "misura": [
+        22,
+        25
+      ],
+      "nitido": true
+    },
+    "inferno-statua-demone-trono": {
+      "da": [
+        300,
+        927
+      ],
+      "cella": [
+        69,
+        155
+      ],
+      "misura": [
+        14,
+        32
+      ],
+      "nitido": true
+    },
+    "inferno-cerchio-pentagramma": {
+      "da": [
+        397,
+        964
+      ],
+      "cella": [
+        167,
+        174
+      ],
+      "misura": [
+        35,
+        37
+      ],
+      "nitido": true
+    },
+    "inferno-cristalli-roccia": {
+      "da": [
+        387,
+        1132
+      ],
+      "cella": [
+        97,
+        107
+      ],
+      "misura": [
+        20,
+        22
+      ],
+      "nitido": true
+    },
+    "inferno-obelisco-roccia": {
+      "da": [
+        515,
+        1142
+      ],
+      "cella": [
+        50,
+        80
+      ],
+      "misura": [
+        10,
+        16
+      ],
+      "nitido": true
+    },
+    "inferno-obelischi-roccia": {
+      "da": [
+        589,
+        1142
+      ],
+      "cella": [
+        94,
+        95
+      ],
+      "misura": [
+        19,
+        19
+      ],
+      "nitido": true
+    },
+    "inferno-albero-appeso": {
+      "da": [
+        794,
+        1135
+      ],
+      "cella": [
+        104,
+        125
+      ],
+      "misura": [
+        21,
+        26
+      ],
+      "nitido": true
+    },
+    "inferno-albero-secco": {
+      "da": [
+        928,
+        1144
+      ],
+      "cella": [
+        76,
+        105
+      ],
+      "misura": [
+        15,
+        22
+      ]
+    },
+    "inferno-sassolini": {
+      "da": [
+        256,
+        1143
+      ],
+      "cella": [
+        97,
+        80
+      ],
+      "misura": [
+        20,
+        16
+      ]
+    },
+    "inferno-erba-secca": {
+      "da": [
+        259,
+        1263
+      ],
+      "cella": [
+        86,
+        83
+      ],
+      "misura": [
+        17,
+        17
+      ]
+    },
+    "inferno-funghi-piccoli": {
+      "da": [
+        795,
+        1254
+      ],
+      "cella": [
+        79,
+        92
+      ],
+      "misura": [
+        16,
+        19
+      ]
+    },
+    "inferno-croce-teschio": {
+      "da": [
+        927,
+        1263
+      ],
+      "cella": [
+        57,
+        96
+      ],
+      "misura": [
+        11,
+        20
+      ]
+    }
+  }
+}

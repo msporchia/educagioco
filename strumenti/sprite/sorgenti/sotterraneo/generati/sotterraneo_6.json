@@ -1,0 +1,247 @@
+{
+  "__": "Il foglietto di sotterraneo_6.png: la scena dell'inferno (ChatGPT, 15 ottobre 2026: una mappa di tre stanze e corridoi, muri a massi con punte e facce di mattoni con stendardi, torce e catene). La cella è di 64 px (quattro per pixel di gioco), ma le facce sono più alte di una cella: se ne ritaglia l'alto (il coronamento di massi e i mattoni sotto), schiacciato di un quinto. Dalla scena si prendono facce, capo, bordi, due porte (la minacciosa col teschio e le corna, e quella rossa senza) e i due ritagli grezzi di pavimento da cui `strumenti/sprite/inferno.py` ricava i pavimenti senza cuciture. Il resto dello scenario (tetto, medaglione, porte, scala, fontana, cose per terra) lo fa quello strumento o lo porta il foglio d'arredo arredo-inferno.png.",
+  "prompt": {
+    "scheda": "PROMPT-scenario.md",
+    "generatore": "ChatGPT, 15 ottobre 2026",
+    "testo": "una mappa di dungeon infernale a tre stanze, con le facce dei muri di mattoni e il coronamento a massi con punte"
+  },
+  "fondo": "trasparente",
+  "cella": [
+    1,
+    1
+  ],
+  "famiglie": {
+    "inferno-grezzo": "fondo",
+    "inferno-faccia": "tessera",
+    "inferno-capo": "tessera",
+    "inferno-bordo": "tessera",
+    "inferno-porta": "figura"
+  },
+  "trasforma": {
+    "inferno-faccia": {
+      "giri": 1
+    },
+    "inferno-capo": {
+      "giri": 1
+    },
+    "inferno-bordo": {
+      "giri": 1
+    },
+    "inferno-porta": {
+      "giri": 1
+    }
+  },
+  "sprite": {
+    "inferno-grezzo-pav-stanze": {
+      "da": [
+        540,
+        1062
+      ],
+      "cella": [
+        192,
+        144
+      ],
+      "misura": [
+        64,
+        48
+      ]
+    },
+    "inferno-grezzo-pav-corridoi": {
+      "da": [
+        60,
+        448
+      ],
+      "cella": [
+        56,
+        224
+      ],
+      "misura": [
+        16,
+        64
+      ]
+    },
+    "inferno-faccia-fila": {
+      "da": [
+        392,
+        842
+      ],
+      "cella": [
+        128,
+        76
+      ],
+      "misura": [
+        32,
+        16
+      ]
+    },
+    "inferno-faccia-torcia": {
+      "da": [
+        318,
+        842
+      ],
+      "cella": [
+        64,
+        76
+      ],
+      "misura": [
+        16,
+        16
+      ]
+    },
+    "inferno-faccia-grata": {
+      "da": [
+        530,
+        842
+      ],
+      "cella": [
+        64,
+        76
+      ],
+      "misura": [
+        16,
+        16
+      ]
+    },
+    "inferno-faccia-liscia": {
+      "da": [
+        482,
+        214
+      ],
+      "cella": [
+        64,
+        76
+      ],
+      "misura": [
+        16,
+        16
+      ]
+    },
+    "inferno-faccia-toppa": {
+      "da": [
+        600,
+        842
+      ],
+      "cella": [
+        64,
+        76
+      ],
+      "misura": [
+        16,
+        16
+      ]
+    },
+    "inferno-capo-sx": {
+      "da": [
+        165,
+        214
+      ],
+      "cella": [
+        24,
+        64
+      ],
+      "misura": [
+        6,
+        16
+      ]
+    },
+    "inferno-capo-dx": {
+      "da": [
+        165,
+        214
+      ],
+      "cella": [
+        24,
+        64
+      ],
+      "misura": [
+        6,
+        16
+      ],
+      "specchia": true
+    },
+    "inferno-bordo-n": {
+      "da": [
+        392,
+        606
+      ],
+      "cella": [
+        64,
+        32
+      ],
+      "misura": [
+        16,
+        8
+      ]
+    },
+    "inferno-bordo-o": {
+      "da": [
+        164,
+        330
+      ],
+      "cella": [
+        32,
+        64
+      ],
+      "misura": [
+        8,
+        16
+      ]
+    },
+    "inferno-bordo-e": {
+      "da": [
+        668,
+        330
+      ],
+      "cella": [
+        32,
+        64
+      ],
+      "misura": [
+        8,
+        16
+      ]
+    },
+    "inferno-bordo-angolo": {
+      "da": [
+        668,
+        604
+      ],
+      "cella": [
+        16,
+        16
+      ],
+      "misura": [
+        4,
+        4
+      ]
+    },
+    "inferno-porta-bella": {
+      "da": [
+        388,
+        158
+      ],
+      "cella": [
+        78,
+        128
+      ],
+      "misura": [
+        16,
+        26
+      ]
+    },
+    "inferno-porta-ferro": {
+      "da": [
+        392,
+        196
+      ],
+      "cella": [
+        70,
+        90
+      ],
+      "misura": [
+        16,
+        20
+      ]
+    }
+  }
+}

@@ -14,7 +14,7 @@ const python = code => {
 const PROVA = `
 import sys, json
 sys.path.insert(0, 'strumenti/sprite')
-import derivati as D, diagonali as G
+import derivati as D, diagonali as G, inferno as I
 from PIL import Image
 
 def conta(m): return sum(1 for v in m.getdata() if v)
@@ -40,7 +40,21 @@ for scena in G.SCENE:
     nomi = sorted(pezzi)
     fuori[scena] = all(foglio.crop((16 * i, 0, 16 * i + 16, 32)).tobytes() == pezzi[n].convert('RGBA').crop((0, 0, 16, 32)).tobytes() if pezzi[n].height == 32
                       else foglio.crop((16 * i, 0, 16 * i + 16, 16)).tobytes() == pezzi[n].convert('RGBA').tobytes() for i, n in enumerate(nomi))
+# e i pezzi dell'inferno (inferno.py): il foglio scritto in sorgenti è quello che il codice rifà adesso, pezzo per pezzo
+inf = I.costruisci()
+inf_foglio = Image.open(D.SORGENTI / 'sotterraneo/generati' / (I.FOGLIO + '.png')).convert('RGBA')
+inf_json = json.loads((D.SORGENTI / 'sotterraneo/generati' / (I.FOGLIO + '.json')).read_text())
+inferno_uguale = sorted(inf) == sorted(inf_json['sprite']) and all(
+    inf_foglio.crop((s['da'][0], s['da'][1], s['da'][0] + s['cella'][0], s['da'][1] + s['cella'][1])).tobytes() == inf[n].convert('RGBA').tobytes()
+    for n, s in inf_json['sprite'].items())
+inferno_misure = {n: list(inf[n].size) for n in ('inferno-pav-stanze', 'inferno-pav-corridoi', 'inferno-tetto', 'inferno-medaglione')}
+# senza cuciture: il lato destro continua nel sinistro, il basso nell'alto (la differenza fra due pixel che si toccano è piccola quanto fra due vicini)
+def salto(im, a, b): return sum(abs(x - y) for x, y in zip(im.getpixel(a)[:3], im.getpixel(b)[:3]))
+pav = inf['inferno-pav-stanze']
+cucitura = [salto(pav, (63, y), (0, y)) for y in range(0, 48, 3)]
+interno = [salto(pav, (31, y), (32, y)) for y in range(0, 48, 3)]
 out = {
+  'inferno_uguale': inferno_uguale, 'inferno_misure': inferno_misure, 'cucitura': sum(cucitura) / len(cucitura), 'interno': sum(interno) / len(interno),
   'tri_pixel': conta(tri), 'tri_angolo': tri.getpixel((0, 15)), 'tri_lontano': tri.getpixel((15, 0)), 'tri_diag': [tri.getpixel((7, 8)), tri.getpixel((7, 7))],
   'cerchio_angolo': cerchio.getpixel((0, 0)), 'cerchio_lontano': cerchio.getpixel((15, 15)), 'cerchio_pixel': conta(cerchio),
   'prof': [D.profondita(h) for h in (0, 1, 2, 3, 5, 12)],
@@ -59,6 +73,9 @@ const r = python(PROVA)
 if (!r) {
   nota('python3 o Pillow non ci sono: salto le prove sui pezzi derivati')
 } else {
+  controlla('inferno.py rifà il foglio scritto in sorgenti, pezzo per pezzo', r.inferno_uguale)
+  uguale('...coi pavimenti, il tetto e il medaglione delle misure giuste', J(r.inferno_misure), J({ 'inferno-pav-stanze': [64, 48], 'inferno-pav-corridoi': [16, 64], 'inferno-tetto': [64, 64], 'inferno-medaglione': [48, 48] }))
+  controlla('il pavimento si ripete senza cucitura: il salto fra il lato destro e il sinistro non supera il doppio di quello fra due pixel vicini', r.cucitura <= r.interno * 2 + 20, `${r.cucitura.toFixed(1)} contro ${r.interno.toFixed(1)}`)
   uguale('il triangolo: i pixel sotto la diagonale (120 su 256)', r.tri_pixel, 120)
   uguale('...col suo angolo retto in basso a sinistra, e l\'angolo opposto fuori', J([r.tri_angolo, r.tri_lontano]), J([255, 0]))
   uguale('...e la diagonale a gradini di un pixel: dentro un pixel sotto la linea, fuori sulla linea', J(r.tri_diag), J([255, 0]))

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""I pezzi dei muri obliqui del sotterraneo, fatti in codice dalle tessere dritte di ogni scena (cripta, cantine, fornace).
+"""I pezzi dei muri obliqui del sotterraneo, fatti in codice dalle tessere dritte di ogni scena (cripta, cantine, fornace, inferno).
 
     python3 strumenti/sprite/diagonali.py                    # riscrive i fogli e i foglietti di tutte le scene
     python3 strumenti/sprite/diagonali.py cantine            # solo quella
@@ -39,13 +39,26 @@ SCENE = {
         'sorgente': 'sotterraneo/generati/sotterraneo_5.png', 'foglio': 'sotterraneo_5_diagonali',
         'coronamento': [0, 1, 1, 2], 'mattoni_da': 3,
     },
+    # il tetto dell'inferno lo fa inferno.py (foglio derivato): `ancheDa` porta le sue tessere accanto a quelle della scena. Il coronamento è
+    # di massi, alto più delle altre: quattro righe, poi i mattoni
+    'inferno': {
+        'sorgente': 'sotterraneo/generati/sotterraneo_6.png', 'ancheDa': 'sotterraneo/generati/sotterraneo_6_derivati.png',
+        'foglio': 'sotterraneo_6_diagonali', 'coronamento': [0, 1, 2, 3], 'mattoni_da': 4,
+    },
 }
+
+
+def _tessere(c):
+    t = dict(derivati.tessere_di(c['sorgente']))
+    if c.get('ancheDa'):
+        t.update(derivati.tessere_di(c['ancheDa']))
+    return t
 
 
 def costruisci(scena, tessere=None):
     """Tutti i pezzi di una scena: nome → immagine. `tessere` (nome → immagine) di difetto si ritagliano dal foglio della scena."""
     c = SCENE[scena]
-    t = tessere or derivati.tessere_di(c['sorgente'])
+    t = tessere or _tessere(c)
     fila = t[f'{scena}-faccia-fila']
     righe = c['coronamento'] + list(range(c['mattoni_da'], c['mattoni_da'] + T - len(c['coronamento'])))
     righe = [min(r, fila.size[1] - 1) for r in righe]
@@ -68,7 +81,7 @@ def scrivi(scena, pezzi):
 
 
 def provino(scena, pezzi):
-    t = derivati.tessere_di(SCENE[scena]['sorgente'])
+    t = _tessere(SCENE[scena])
     derivati.provino(pezzi, [(f'{scena}-faccia-fila', t[f'{scena}-faccia-fila']), (f'{scena}-bordo-n', t[f'{scena}-bordo-n'])],
                      derivati.REPO / f'tmp/diagonali-{scena}.png')
 

@@ -1,0 +1,165 @@
+{
+  "__": "Il foglietto di sotterraneo_6_derivati.png: i pezzi dell'inferno costruiti in codice da `strumenti/sprite/inferno.py` (il PNG si rifà col comando, non si tocca): pavimenti senza cuciture, il tetto, il medaglione del pentagramma, le porte chiara e aperta, i fianchi, la scala chiusa e la fontana asciutta. Dalla scena sotterraneo_6.png e dalla tavola arredo-inferno.png.",
+  "fondo": "trasparente",
+  "cella": [
+    1,
+    1
+  ],
+  "famiglie": {
+    "inferno-pav": "fondo",
+    "inferno-tetto": "fondo",
+    "inferno-medaglione": "fondo",
+    "inferno-porta": "figura",
+    "inferno-fianco": "figura",
+    "inferno-scala": "figura",
+    "inferno-fontana": "figura"
+  },
+  "trasforma": {
+    "inferno-porta": {
+      "giri": 1
+    },
+    "inferno-fianco": {
+      "giri": 1,
+      "specchia": false
+    },
+    "inferno-scala": {
+      "giri": 1,
+      "specchia": false
+    },
+    "inferno-fontana": {
+      "giri": 1
+    }
+  },
+  "sprite": {
+    "inferno-fianco-aperta": {
+      "da": [
+        0,
+        0
+      ],
+      "cella": [
+        6,
+        20
+      ]
+    },
+    "inferno-fianco-bella": {
+      "da": [
+        7,
+        0
+      ],
+      "cella": [
+        6,
+        20
+      ]
+    },
+    "inferno-fianco-chiara": {
+      "da": [
+        14,
+        0
+      ],
+      "cella": [
+        6,
+        20
+      ]
+    },
+    "inferno-fianco-ferro": {
+      "da": [
+        21,
+        0
+      ],
+      "cella": [
+        6,
+        20
+      ]
+    },
+    "inferno-fianco-semplice": {
+      "da": [
+        28,
+        0
+      ],
+      "cella": [
+        6,
+        20
+      ]
+    },
+    "inferno-fontana-asciutta": {
+      "da": [
+        35,
+        0
+      ],
+      "cella": [
+        14,
+        16
+      ]
+    },
+    "inferno-medaglione": {
+      "da": [
+        50,
+        0
+      ],
+      "cella": [
+        48,
+        48
+      ]
+    },
+    "inferno-pav-corridoi": {
+      "da": [
+        99,
+        0
+      ],
+      "cella": [
+        16,
+        64
+      ]
+    },
+    "inferno-pav-stanze": {
+      "da": [
+        116,
+        0
+      ],
+      "cella": [
+        64,
+        48
+      ]
+    },
+    "inferno-porta-aperta": {
+      "da": [
+        181,
+        0
+      ],
+      "cella": [
+        17,
+        23
+      ]
+    },
+    "inferno-porta-chiara": {
+      "da": [
+        199,
+        0
+      ],
+      "cella": [
+        17,
+        23
+      ]
+    },
+    "inferno-scala-chiusa": {
+      "da": [
+        217,
+        0
+      ],
+      "cella": [
+        15,
+        20
+      ]
+    },
+    "inferno-tetto": {
+      "da": [
+        0,
+        65
+      ],
+      "cella": [
+        64,
+        64
+      ]
+    }
+  }
+}
