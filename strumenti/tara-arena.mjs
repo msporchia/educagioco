@@ -10,13 +10,15 @@
 //   npm run tara:arena -- --duelli      # le truppe a duello, squadre uguali in campo aperto
 //   npm run tara:arena -- --misura      # i giocatori finti contro la taratura di adesso, senza ritarare
 //   npm run tara:arena -- --misura --d 1 --furbizia 0   # contro un nemico fisso (la furbizia forzata)
+//   npm run tara:arena -- --infinita    # i giocatori finti nella battaglia infinita, un terreno alla volta (non tara niente)
 import { writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
-import { CAMPAGNA, sfidaDi } from '../src/giochi/arena/dati/campagna.js'
-import { misura, PILOTI, caso } from '../src/giochi/arena/motore/banco.js'
+import { CAMPAGNA, sfidaDi, sfidaInfinita } from '../src/giochi/arena/dati/campagna.js'
+import { PILOTI, caso } from '../src/giochi/arena/motore/banco.js'
+import { misuraParallela as misura, chiudiBanco } from './banco-parallelo.mjs'
 import { Partita } from '../src/giochi/arena/motore/partita.js'
-import { TRUPPE, GIOCATORE } from '../src/giochi/arena/dati/regole.js'
+import { TRUPPE, GIOCATORE, TERRENI } from '../src/giochi/arena/dati/regole.js'
 import { firmaEquilibrio } from '../src/giochi/arena/motore/firma.js'
 import { NEMICO } from '../src/giochi/arena/dati/taratura.js'
 
@@ -47,8 +49,8 @@ export const nemicoDi = d => {
   }
 }
 
-const vinte = (tappa, d, pilota, volte = VOLTE) =>
-  misura({ volte, sfida: { ...sfidaDi(tappa), nemico: nemicoDi(d) }, pilota }).vinte / volte
+const vinte = async (tappa, d, pilota, volte = VOLTE) =>
+  (await misura({ volte, sfida: { ...sfidaDi(tappa), nemico: nemicoDi(d) }, pilota })).vinte / volte
 
 /* I duelli: tre squadre per parte, allo stesso livello, in campo aperto (niente porte né
    caserme, castelli che non cadono). Dice chi batte chi, e se una truppa batte tutte: la
@@ -95,8 +97,24 @@ if (argv.includes('--misura')) {
   for (const [i, t] of CAMPAGNA.entries()) {
     const sfida = { ...sfidaDi(t), nemico: { ...(fisso || NEMICO[t.chiave]), ...furbo } }
     // con la durata media: verso i 180 secondi si vince ai punti, molto meno abbattendo il castello
-    const riga = Object.entries(PILOTI).map(([n, p]) => { const r = misura({ volte: 80, sfida, pilota: p }); return `${n} ${Math.round(r.vinte / 80 * 100)}% ${r.secondi}s` }).join(' · ')
+    const riga = (await Promise.all(Object.entries(PILOTI).map(async ([n, p]) => { const r = await misura({ volte: 80, sfida, pilota: p }); return `${n} ${Math.round(r.vinte / 80 * 100)}% ${r.secondi}s` }))).join(' · ')
     console.log(`${String(i + 1).padStart(2)} ${t.chiave.padEnd(12)} d=${sfida.nemico.d.toFixed(2)}  ${riga}`)
+  }
+  process.exit(0)
+}
+
+/* La battaglia infinita: il nemico dell'ultima tappa e le truppe di ogni terreno, senza timer. Dice quanto vincono
+   i giocatori finti e in quanto tempo finisce; se una battaglia resta in piedi oltre il limite (30 minuti di partita)
+   finisce fra le «aperte»: un nemico che non si batte e non batte. Non scrive niente. */
+if (argv.includes('--infinita')) {
+  const LIMITE = 1800
+  for (const terreno of TERRENI) {
+    const sfida = sfidaInfinita(terreno)
+    const riga = (await Promise.all(Object.entries(PILOTI).map(async ([n, p]) => {
+      const r = await misura({ volte: 30, sfida, pilota: p, limite: LIMITE })
+      return `${n} ${Math.round(r.vinte / 30 * 100)}% ${r.secondi}s${r.pari ? ` (${r.pari} aperte)` : ''}`
+    }))).join(' · ')
+    console.log(`${terreno.padEnd(7)} ${riga}`)
   }
   process.exit(0)
 }
@@ -109,13 +127,13 @@ const tettoBravo = i => {
 }
 
 /* il `d` più alto a cui `pilota` vince ancora almeno `quota` (le vittorie scendono col `d`) */
-function finoA(t, pilota, quota) {
+async function finoA(t, pilota, quota) {
   let basso = 0, alto = D_MAX
-  if (vinte(t, basso, pilota) < quota) return basso
-  if (vinte(t, alto, pilota) >= quota) return alto
+  if (await vinte(t, basso, pilota) < quota) return basso
+  if (await vinte(t, alto, pilota) >= quota) return alto
   for (let g = 0; g < GIRI; g++) {
     const m = (basso + alto) / 2
-    if (vinte(t, m, pilota) >= quota) basso = m; else alto = m
+    if (await vinte(t, m, pilota) >= quota) basso = m; else alto = m
   }
   return (basso + alto) / 2
 }
@@ -127,11 +145,11 @@ for (const [i, t] of CAMPAGNA.entries()) {
   // nemico è più forte a parità di `d`, e la rampa la fa la quota di vittorie.
   // Il bambino dà il nemico più forte che gli lascia la quota; se a quel nemico il
   // bravo vince più del suo tetto, si sale finché non ci sta (e il bambino scende)
-  const dBambino = finoA(t, PILOTI.bambino, mira)
-  const dBravo = tetto >= 1 ? 0 : finoA(t, PILOTI.misura, tetto + 0.001)
+  const dBambino = await finoA(t, PILOTI.bambino, mira)
+  const dBravo = tetto >= 1 ? 0 : await finoA(t, PILOTI.misura, tetto + 0.001)
   const d = risultati[t.chiave] = Math.max(dBambino, dBravo)
   const chi = d > dBambino ? 'il bravo' : 'il bambino'
-  const riga = Object.entries(PILOTI).map(([n, p]) => `${n} ${Math.round(vinte(t, d, p, 80) * 100)}%`).join(' · ')
+  const riga = (await Promise.all(Object.entries(PILOTI).map(async ([n, p]) => `${n} ${Math.round(await vinte(t, d, p, 80) * 100)}%`))).join(' · ')
   console.log(`${String(i + 1).padStart(2)} ${t.chiave.padEnd(12)} d=${d.toFixed(2)}  (bambino ≥ ${Math.round(mira * 100)}%, bravo ≤ ${Math.round(tetto * 100)}%: decide ${chi})  ${riga}`)
 }
 
@@ -149,3 +167,4 @@ if (!prova) {
   writeFileSync(file, `${intestazione}export const NEMICO = {\n${righe.join('\n')}\n}\n// la firma dell'equilibrio al momento della taratura (motore/firma.js): se non torna, rilancia la taratura\nexport const FIRMA = '${firmaEquilibrio()}'\n`)
   console.log(`\nscritto ${file}`)
 }
+chiudiBanco()

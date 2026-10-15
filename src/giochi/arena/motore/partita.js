@@ -21,8 +21,8 @@ const sponda = y => (y < CAMPO.fiume.alto ? -1 : y > CAMPO.fiume.basso ? 1 : 0) 
 
 export class Partita {
   /* `sfida`: { nemico: 'normale' | {moneteAlSecondo, pensa, forza}, durata, monete, truppe, forzaNemico }.
-     `registra`: tiene gli eventi per la scena (un banco di prova non li vuole). */
-  constructor({ rnd = Math.random, sfida = {}, registra = false } = {}) {
+     `eviaIA`: il carattere dell'ultima partita, per cambiarlo. `registra`: tiene gli eventi per la scena (un banco di prova non li vuole). */
+  constructor({ rnd = Math.random, sfida = {}, registra = false, eviaIA = null } = {}) {
     this.rnd = rnd
     this.registraEventi = registra
     this.eventi = []
@@ -33,7 +33,7 @@ export class Partita {
     this.resto = this.durata
     this.fine = null
     this.pensa = 2.5
-    this.ia = creaIA(rnd)            // la scaletta che il nemico segue
+    this.ia = creaIA(rnd, eviaIA)    // il carattere del nemico: scaletta e manopole
     this.unita = []
     this.lati = {
       io: this.nuovoLato('io', GIOCATORE.moneteAlSecondo, sfida.monete ?? GIOCATORE.iniziali),
@@ -171,7 +171,7 @@ export class Partita {
       if (c.t > 0) continue
       c.ciclo = CRESCITA.squadraOgni(c.liv)
       c.t += c.ciclo
-      this.schiera(c.lato, c.id, c.x, c.y + (c.lato === 'io' ? -16 : 16), CRESCITA.forza(c.liv), CRESCITA.omini(c.liv, TRUPPE[c.id].n))
+      this.schiera(c.lato, c.id, c.x, c.y + (c.lato === 'io' ? -16 : 16), CRESCITA.forza(c.liv, TRUPPE[c.id].n), CRESCITA.omini(c.liv, TRUPPE[c.id].n))
     }
   }
 

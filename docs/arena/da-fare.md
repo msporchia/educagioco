@@ -10,8 +10,9 @@
 - Il limite delle sei piazzole è da rivedere più avanti (l'utente: «ce lo segnamo per un futuro»).
 - La copertina dipinta della home (oggi quella del manifesto) e la guida in
   app (`AIUTI.arena`, il «?» della barra).
-- Il gioco libero: una battaglia senza fine contro un nemico che cresce, col
-  record (`senzaFine`, `docs/core/primati.md`).
+- La battaglia infinita è fatta (senza timer, nemico al massimo, un terreno a ogni volta, record = tempo):
+  da confermare con l'utente la misura (una vittoria conta il tempo per abbattere il castello nemico) e se il
+  nemico debba crescere col tempo; il pezzo dipinto della tana delle bestie cornute (oggi la capanna dei lupi).
 - `test/misure/arena.test.mjs`: le promesse della taratura (il bambino di prova
   vince la quota della tappa) come test d'equilibrio, oltre alla firma.
 - La bomba: scegliere il punto col dito (oggi lo sceglie il gioco), un effetto più epico e il suono.

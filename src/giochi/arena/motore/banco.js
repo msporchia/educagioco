@@ -36,7 +36,7 @@ export const PILOTI = {
 }
 
 // la fila in cui compra le caserme: prima chi tiene a bada gli altri, poi il resto
-const ORDINE = ['scheletri', 'guardiano', 'pipistrelli', 'lupi', 'negromante', 'diavoletto', 'golem', 'drago']
+const ORDINE = ['scheletri', 'guardiano', 'pipistrelli', 'lupi', 'bestie', 'negromante', 'diavoletto', 'golem', 'drago']
 
 export class Pilota {
   constructor({ rnd = Math.random, precisione = 0.9, ritmo = 2.5, caserme = POSTI.length - 1, tetto = 0, apertura = null } = {}) {
@@ -127,12 +127,13 @@ export class Pilota {
   }
 }
 
-/* Una partita fino in fondo. `pilota` e `sfida` si passano da fuori. */
-export function gioca({ seme = 1, sfida = {}, pilota = {}, passo = 0.25 } = {}) {
+/* Una partita fino in fondo. `pilota` e `sfida` si passano da fuori. `limite` (secondi di partita)
+   serve alla battaglia infinita, che non ha un timer: oltre, la partita resta aperta (`fine: null`). */
+export function gioca({ seme = 1, sfida = {}, pilota = {}, passo = 0.25, limite = Infinity } = {}) {
   const rnd = caso(seme)
   const p = new Partita({ rnd, sfida })
   const g = new Pilota({ rnd, ...pilota })
-  while (!p.fine) {
+  while (!p.fine && p.t < limite) {
     p.avanza(passo)
     g.gioca(p, passo)
   }

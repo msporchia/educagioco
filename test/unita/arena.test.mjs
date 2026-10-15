@@ -4,10 +4,10 @@
    chi non colpisce chi vola, il muro) valgono davvero.
    `node test/esegui.mjs arena`
    tempo: 5 */
-import { guastiDelleRegole, TRUPPE, EDIFICI, CAMPO, CRESCITA, BOMBA, CASTELLO, MURO } from '../../src/giochi/arena/dati/regole.js'
+import { guastiDelleRegole, TRUPPE, EDIFICI, CAMPO, CRESCITA, BOMBA, CASTELLO, MURO, SQUADRA_MAX, TERRENI, ESCLUSIVE, TRUPPE_DEL_TERRENO, truppeDelTerreno } from '../../src/giochi/arena/dati/regole.js'
 import { Partita } from '../../src/giochi/arena/motore/partita.js'
 import { caso, gioca } from '../../src/giochi/arena/motore/banco.js'
-import { CAMPAGNA, SCALINI, QUANTE_TAPPE, guastiDellaCampagna, operazioniDi, operazionePer, stellePer, sfidaDi }
+import { CAMPAGNA, SCALINI, QUANTE_TAPPE, INFINITA, guastiDellaCampagna, operazioniDi, operazionePer, stellePer, sfidaDi, sfidaInfinita, terrenoDiverso }
   from '../../src/giochi/arena/dati/campagna.js'
 import { scrivi, leggi, dice, VERSIONE } from '../../src/giochi/arena/motore/sosta.js'
 import { firmaEquilibrio } from '../../src/giochi/arena/motore/firma.js'
@@ -16,6 +16,7 @@ import { guastiDeiDettagli, dettaglioTruppa, dettaglioAzione, ruoloDi } from '..
 import { guastiDelleFigure } from '../../src/giochi/arena/scena/figure.js'
 import manifesto from '../../src/giochi/arena/gioco.js'
 import { guastiDellAlbo } from '../../src/giochi/albo.js'
+import { guastiDelleSfide } from '../../src/giochi/primati.js'
 import { GRADO_A_MENTE, PARTENZA_MAX, partenza, basi, gradoDi, dopoLaRisposta, gradoDelleTabelline, gradoDellEta }
   from '../../src/giochi/arena/bravura.js'
 import { calcoliTabellina } from '../../src/data/tabelline.js'
@@ -197,8 +198,19 @@ controlla('stesso seme, stessa partita', JSON.stringify(uguali) === JSON.stringi
   r.lati.io.monete = 20; r.fai('io', 'costruisci', 'scheletri')
   r.caserme[0].liv = 9; r.caserme[0].t = 0
   r.avanza(0.1)
-  uguale('al livello 9 una squadra di arcieri ha quattro omini in più', r.unita.filter(u => u.lato === 'io' && u.id === 'scheletri').length, TRUPPE.scheletri.n + 4)
-  uguale('le squadre crescono di un ottavo a livello', [1, 3, 5, 7, 9].map(l => CRESCITA.omini(l, 8)).join(), '0,2,4,6,8')
+  uguale('al livello 9 una squadra di arcieri ha tre omini in più', r.unita.filter(u => u.lato === 'io' && u.id === 'scheletri').length, TRUPPE.scheletri.n + 3)
+  uguale('una truppa in più ogni tre livelli', [1, 2, 3, 5, 6, 9].map(l => CRESCITA.omini(l, 4)).join(), '0,0,1,1,2,3')
+  uguale('fino al tetto, poi più niente', [30, 99].map(l => TRUPPE.scheletri.n + CRESCITA.omini(l, TRUPPE.scheletri.n)).join(), `${SQUADRA_MAX},${SQUADRA_MAX}`)
+  // il bilancio: la potenza di una squadra (truppe × forza di una) sale sempre, senza buchi né salti brutali, e la forza di una truppa non scende
+  for (const [id, k] of Object.entries(TRUPPE)) {
+    let prec = null, fprec = 0
+    for (let l = 1; l <= 40; l++) {
+      const f = CRESCITA.forza(l, k.n), tot = (k.n + CRESCITA.omini(l, k.n)) * f
+      controlla(`${id} liv ${l}: la forza di ogni truppa non scende`, f >= fprec - 1e-9)
+      if (prec !== null) controlla(`${id} liv ${l}: la squadra sale, senza saltare più del doppio`, tot > prec && tot / prec < (k.n < 3 ? 2.1 : 1.6), `${prec.toFixed(2)} → ${tot.toFixed(2)}`)
+      prec = tot; fprec = f
+    }
+  }
   controlla('il castello e il muro sono robusti (le partite non devono finire in un minuto)', CASTELLO.hp >= 4000 && MURO.hp >= 1000)
 }
 
@@ -237,6 +249,52 @@ controlla('stesso seme, stessa partita', JSON.stringify(uguali) === JSON.stringi
   }
 }
 
+/* ══════════ 6b. la battaglia infinita ══════════ */
+{
+  uguale('i terreni sono quelli degli scalini', TERRENI.join(), SCALINI.map(s => s.vestito).join())
+  const firma = { bosco: 'pipistrelli', palude: 'lupi', neve: 'golem', lava: 'diavoletto' }
+  for (const terreno of TERRENI) {
+    const ammesse = truppeDelTerreno(terreno)
+    controlla(`${terreno}: c'è la truppa firma (${firma[terreno]}) e non quelle degli altri terreni`,
+              ammesse.includes(firma[terreno]) && Object.entries(firma).every(([t, id]) => t === terreno || !ammesse.includes(id)))
+    controlla(`${terreno}: le quattro truppe comuni ci sono sempre`, ['scheletri', 'guardiano', 'negromante', 'drago'].every(id => ammesse.includes(id)))
+    controlla(`${terreno}: ogni edificio ha una truppa da costruire, la cripta compresa`,
+              Object.values(EDIFICI).every(e => e.varianti.some(id => ammesse.includes(id))))
+  }
+  controlla('le bestie cornute sono della tana, e solo di neve e lava', EDIFICI.tana.varianti.includes('bestie') && ESCLUSIVE.bestie.join() === 'neve,lava' &&
+            !TRUPPE_DEL_TERRENO.bosco.includes('bestie') && !TRUPPE_DEL_TERRENO.palude.includes('bestie'))
+  controlla('la campagna non cambia: nessuna tappa ha le bestie, e lupi e golem stanno dove stavano',
+            CAMPAGNA.every(t => !t.truppe.includes('bestie')) && CAMPAGNA[3].truppe.includes('lupi') && CAMPAGNA[6].truppe.includes('diavoletto') && CAMPAGNA[11].truppe.includes('lupi'))
+  controlla('le bestie hanno una figura, e non fanno la fiammata', guastiDelleFigure().length === 0)
+  uguale('terreno diverso: mai lo stesso di fila', TERRENI.every(u => [0, 0.3, 0.6, 0.99].every(r => terrenoDiverso(u, () => r) !== u)), true)
+  uguale('e senza ultimo ne dà uno vero', TERRENI.includes(terrenoDiverso(null, () => 0.5)), true)
+  uguale('la battaglia infinita ha la scheda del nemico dell\'ultima tappa e nessun timer', `${INFINITA.nemico === NEMICO.trono}/${sfidaInfinita('neve').durata}`, 'true/Infinity')
+  uguale('si apre alla portata dell\'ultima tappa', INFINITA.portata, CAMPAGNA[QUANTE_TAPPE - 1].portata)
+  uguale('con tutte e quattro le operazioni', INFINITA.operazioni.join(), '+,−,×,÷')
+  const sf = guastiDelleSfide([manifesto])
+  controlla('il manifesto dichiara la sua sfida senza fine', sf.length === 0 && manifesto.senzaFine.misura === 'tempo', sf.join(' · '))
+  controlla('e i dettagli del record sono parole', manifesto.senzaFine.dettagli({ terreno: 'neve', vinta: false }).every(x => typeof x === 'string' && x.length))
+  for (const terreno of TERRENI) {
+    const p = new Partita({ rnd: caso(5), sfida: sfidaInfinita(terreno) })
+    p.avanza(60)
+    const ammesse = truppeDelTerreno(terreno)
+    controlla(`${terreno}: senza timer (il tempo che resta non scende) e il nemico costruisce solo le truppe del terreno`,
+              p.resto === Infinity && !p.fine && p.casermeDi('nem').length > 0 && p.casermeDi('nem').every(c => ammesse.includes(c.id)), p.casermeDi('nem').map(c => c.id).join())
+    controlla(`${terreno}: chi gioca non può costruire quelle degli altri`, Object.keys(TRUPPE).every(id => (p.prezzo('io', 'costruisci', id) !== null) === ammesse.includes(id)))
+  }
+  // senza fare niente il castello cade: la battaglia finisce comunque, con un perso e mai con un pari
+  const sola = new Partita({ rnd: caso(9), sfida: sfidaInfinita('lava') })
+  for (let s = 0; s < 3000 && !sola.fine; s += 5) sola.avanza(5)
+  controlla('chi sta fermo perde, e il tempo è quello resistito', sola.fine === 'perso' && sola.t > 20 && sola.t < 3000, `${sola.fine} ${Math.round(sola.t)}`)
+  // le bestie in campo: camminano, colpiscono chi cammina e non chi vola
+  const b = new Partita({ rnd: caso(3), sfida: sfidaInfinita('neve') })
+  b.muri = []; b.caserme = []
+  for (const c of b.castelli) c.hp = c.max = 1e6
+  b.schiera('io', 'bestie', 180, 300); b.schiera('nem', 'pipistrelli', 180, 230)
+  b.avanza(3)
+  controlla('le bestie non feriscono i pipistrelli', b.unita.filter(u => u.id === 'pipistrelli').every(u => u.hp === u.max))
+}
+
 /* ══════════ 7. la sosta ══════════ */
 {
   const tappa = 4
@@ -265,6 +323,28 @@ controlla('stesso seme, stessa partita', JSON.stringify(uguali) === JSON.stringi
   uguale('e uno di un\'altra versione pure', leggi(vecchio), null)
   controlla('la carta della mappa dice dove si era', dice(dato) && dice(dato).nome === CAMPAGNA[tappa].nome)
 }
+{
+  // la battaglia infinita lasciata a metà: il terreno, le regole del terreno e il tempo che passa, non quello che resta
+  const p = new Partita({ rnd: caso(21), sfida: sfidaInfinita('neve') })
+  p.lati.io.monete = 100
+  p.fai('io', 'costruisci', 'bestie'); p.fai('io', 'costruisci', 'golem')
+  p.avanza(60)
+  const dato = scrivi(p, { infinita: 'neve' })
+  controlla('si salva col suo terreno e senza il tempo che resta', dato && dato.chiave === 'infinita' && dato.terreno === 'neve' && dato.resto === 0)
+  const letto = leggi(JSON.parse(JSON.stringify(dato)), { rnd: caso(1) })
+  controlla('e si rilegge: terreno, nessun timer, le stesse caserme', letto && letto.terreno === 'neve' && letto.indice === -1 && letto.partita.resto === Infinity &&
+            letto.partita.casermeDi('io').map(c => c.id).sort().join() === 'bestie,golem')
+  uguale('con le regole del terreno (non si costruiscono i lupi)', letto.partita.prezzo('io', 'costruisci', 'lupi'), null)
+  letto.partita.avanza(5)
+  controlla('la ripresa continua', letto.partita.t > p.t && !letto.partita.fine)
+  const d = dice(dato)
+  controlla('la carta della mappa dice il tempo trascorso e il terreno', d && d.infinita && d.terreno === 'neve' && /^\d+:\d\d$/.test(d.restano))
+  const storto = JSON.parse(JSON.stringify(dato)); storto.terreno = 'deserto'
+  uguale('un terreno che non esiste si butta', leggi(storto), null)
+  const intruso = JSON.parse(JSON.stringify(dato)); intruso.caserme[0].id = 'lupi'
+  uguale('e una truppa di un altro terreno pure', leggi(intruso), null)
+  uguale('niente da salvare a battaglia appena cominciata', scrivi(new Partita({ rnd: caso(1), sfida: sfidaInfinita('neve') }), { infinita: 'neve' }), null)
+}
 
 /* ══════════ 7b. i dettagli ══════════ */
 {
@@ -284,7 +364,7 @@ controlla('stesso seme, stessa partita', JSON.stringify(uguali) === JSON.stringi
   const rifatta = dettaglioTruppa('lupi', 3, { costruire: true })
   controlla('da rifare costa la prima pietra e parte dal livello che l\'edificio aveva',
             rifatta.prezzo === TRUPPE.lupi.costo && rifatta.etichette.ora === 'Livello 3' && rifatta.etichette.dopo === 'Livello 4')
-  controlla('ogni edificio ha le sue due truppe', Object.values(EDIFICI).every(e => e.varianti.length === 2))
+  controlla('ogni edificio ha due truppe (la tana tre) allo stesso prezzo', Object.values(EDIFICI).every(e => e.varianti.length >= 2 && e.varianti.length <= 3 && e.varianti.every(id => TRUPPE[id].costo === TRUPPE[e.varianti[0]].costo)))
   controlla('non c\'è un livello massimo: anche al 20 c\'è un «dopo» e un prezzo', dettaglioTruppa('lupi', 20).prezzo > 0 && dettaglioTruppa('lupi', 20).righe.every(r => r.dopo !== null))
   controlla('il golem dice che ignora le truppe e il drago che vola', ruoloDi('golem')[0].includes('costruzioni') && ruoloDi('drago')[1].includes('vola'))
   const m0 = dettaglioAzione('miniera', { miniera: 0 }), m1 = dettaglioAzione('miniera', { miniera: 1 })

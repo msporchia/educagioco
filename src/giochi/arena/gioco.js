@@ -1,8 +1,19 @@
 // Il manifesto: dato puro, non importa Vue né il profilo. Struttura della
 // cartella e convenzione dei giochi nuovi in docs/core/convenzione-giochi.md.
-import { CAMPAGNA, QUANTE_TAPPE } from './dati/campagna.js'
+import { CAMPAGNA, QUANTE_TAPPE, INFINITA, scalinoDelTerreno } from './dati/campagna.js'
 
 export const CHIAVE = 'arena'
+
+// La battaglia infinita (in cima alla mappa): non si vince, si resiste; il record è il tempo.
+// Una partita vinta conta il tempo che c'è voluto per abbattere il castello nemico.
+// docs/core/primati.md, docs/arena/campagna.md.
+export const SENZA_FINE = {
+  nome: INFINITA.nome,
+  icona: INFINITA.icona,
+  misura: 'tempo',
+  che: 'quanto resisti',
+  dettagli: d => [scalinoDelTerreno(d.terreno)?.nome, d.vinta ? 'castello nemico abbattuto' : 'il tuo castello è caduto'],
+}
 
 export default {
   chiave: CHIAVE,
@@ -17,6 +28,7 @@ export default {
   // in prova: sta dietro l'interruttore dei giochi sperimentali dei genitori (docs/genitori/interruttori.md)
   sperimentale: true,
   tappe: QUANTE_TAPPE,
+  senzaFine: SENZA_FINE,
 
   riassunto(av = { tappa: 0, stelle: {} }) {
     const stelle = Object.values(av.stelle || {}).reduce((n, s) => n + s, 0)

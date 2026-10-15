@@ -6,9 +6,9 @@ chi ci lavora. Cartella `src/giochi/arena/` (la chiave del gioco è `arena`;
 `src/motore/battaglia.js` è il motore del castello, un'altra cosa).
 
 - [presentazione.md](presentazione.md) — il gioco raccontato a chi arriva da fuori
-- [regole.md](regole.md) — il campo a una corsia, i quattro edifici a due truppe, l'ordine dell'assedio, le scelte, perché i numeri sono quelli
+- [regole.md](regole.md) — il campo a una corsia, i quattro edifici, l'ordine dell'assedio, le scelte, la battaglia infinita e le truppe di un terreno, perché i numeri sono quelli
 - [calcoli.md](calcoli.md) — come una scelta diventa una domanda: operazione per truppa, la grandezza dal prezzo, il campo che rallenta
-- [campagna.md](campagna.md) — le dodici tappe, quando arriva ogni operazione, le stelle
+- [campagna.md](campagna.md) — le dodici tappe, quando arriva ogni operazione, le stelle, la battaglia infinita
 - [nemico.md](nemico.md) — l'IA: le scalette, l'emergenza, cosa fa quando perde, perché non lascia monete ferme
 - [taratura.md](taratura.md) — il giocatore finto, cosa promette la campagna e come si rimisura
 - [sosta.md](sosta.md) — la battaglia lasciata a metà: cosa si salva e cosa no
