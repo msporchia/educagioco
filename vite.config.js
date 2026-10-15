@@ -75,11 +75,13 @@ function scriviServiceWorker () {
       const FILE = !SPEZZATO ? [] : Object.entries(bundle)
         .filter(([nome]) => !['index.html', 'sw.js', 'versione.json'].includes(nome))
         .map(([nome, o]) => {
-          const gioco = o.type === 'chunk' && /\/giochi\/([^/]+)\/Gioco\.vue/.exec(o.facadeModuleId || '')
+          const gioco = o.type === 'chunk' && /\/giochi\/([^/]+)\/Gioco(?:3d)?\.vue/.exec(schermataDi(o))
           const vecchio = o.type === 'chunk' && /\/views\/(\w+)\.vue/.exec(o.facadeModuleId || '')
           const tre = o.type === 'chunk' && o.name === 'asteroidi-3d'
+          // il disegno 3D del sotterraneo: il file che Gioco.vue chiede a richiesta scendendo nel Sotterraneo 3D
+          const sot3d = o.type === 'chunk' && /\/giochi\/sotterraneo\/scena3d\/indice\.js/.test(o.facadeModuleId || '')
           return ['./' + nome, o.type === 'asset' ? o.source.length : o.code.length,
-                  gioco ? gioco[1] : tre ? 'mate' : (vecchio && VECCHI[vecchio[1]]) || GRUPPI.get(nome) || '']
+                  gioco ? gioco[1] : tre ? 'mate' : sot3d ? 'sotterraneo' : (vecchio && VECCHI[vecchio[1]]) || GRUPPI.get(nome) || '']
         })
       const cache = `educagioco-${VERSIONE.id}`
       this.emitFile({
@@ -269,6 +271,10 @@ const SPEZZATO = !!process.env.SPEZZATO
 // Il gruppo di un file: il gioco a cui serve ('sotterraneo', 'inglese'…) o '' se serve a tutti (la base: home, codice
 // comune, schermate dei grandi). Il service worker scarica la base all'installazione e i giochi poi, uno alla volta.
 // i giochi vecchi (src/views/) stanno in un file loro; il gruppo è quello della carta (o del gioco che ne porta gli sprite)
+// il modulo che dà il nome a un pezzo: la sua facciata, o — se un altro pezzo prende roba da lui (il 3D del sotterraneo usa i dati
+// del Gioco.vue di sempre) e Rollup non gli dà una facciata — il suo Gioco.vue
+const schermataDi = c => c.facadeModuleId ||
+  (c.name && /^Gioco(3d)?$/.test(c.name) && (c.moduleIds || Object.keys(c.modules || {})).find(id => /\/giochi\/[^/]+\/Gioco(3d)?\.vue$/.test(id))) || ''
 const VECCHI = { MathGame: 'mate', TowerDefense: 'castello', BancarellaGame: 'bancarella', GeneraleGame: 'generale', LinguaGame: 'inglese' }
 const GRUPPI = new Map()   // nome del file prodotto → gruppo; lo riempie estraiDati, lo legge il service worker
 function gruppoDiModulo (id) {
@@ -334,8 +340,11 @@ export default defineConfig({
              } }),
              // il gioco si riconosce dal nome del file (gioco-sotterraneo-<hash>.js): servirà a scaricarli a gruppi
              chunkFileNames: c => {
-               const m = c.name === 'Gioco' && /giochi\/([^/]+)\/Gioco\.vue/.exec(c.facadeModuleId || '')
-               return m ? `assets/gioco-${m[1]}-[hash].js` : 'assets/[name]-[hash].js'
+               const m = /^Gioco(3d)?$/.test(c.name) && /giochi\/([^/]+)\/Gioco(3d)?\.vue/.exec(schermataDi(c))
+               // il 3D del sotterraneo non ha un manualChunks: è il confine dell'import a richiesta (con un manualChunks si
+               // tirava dentro i dati in comune col 2D, e il Sotterraneo di sempre caricava three)
+               if (/giochi\/sotterraneo\/scena3d\/indice\.js/.test(c.facadeModuleId || '')) return 'assets/sotterraneo-3d-[hash].js'
+               return m ? `assets/gioco-${m[1]}${m[2] || ''}-[hash].js` : 'assets/[name]-[hash].js'
              } } },
            target: 'es2020', assetsInlineLimit: SPEZZATO ? 4096 : 100000000, cssCodeSplit: false,
            outDir: SPEZZATO ? 'dist-sito' : 'dist',
