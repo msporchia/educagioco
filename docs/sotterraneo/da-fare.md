@@ -88,10 +88,10 @@ coi numeri di `npm run taratura` ([giocatori-tipo.md](giocatori-tipo.md)) e con 
   discesa) non è fatta. La posa del minatore con la bussola in mano c'è, nel
   primo foglio dei personaggi (`sopra-personaggi-1.png`, riquadro nel suo
   foglietto), ma non è nell'atlante: non la nomina nessuno.
-- **Le missioni dopo la prima volta**: dodici in tutto (un albero, tre rami),
+- **Le missioni dopo la prima volta**: diciassette in tutto (un albero, tre rami, cinque da contare),
   e consegnate non tornano. Se piacciono, ne servono altre per chi rigioca,
-  altri rami più lunghi (oggi i seguiti sono di un solo passo), e una seconda
-  forma oltre a «trova» e «sconfiggi» (accompagnare, portare giù qualcosa).
+  altri rami più lunghi (oggi i seguiti sono di un solo passo), e una forma
+  oltre a «trova», «sconfiggi» e «sconfiggi N» ([missioni-conteggio.md](missioni-conteggio.md)): accompagnare, portare giù qualcosa.
   I requisiti «il piano N toccato» e «un pezzo di roba» non ci sono: vedi
   il perché in [missioni.md](missioni.md). Da guardare col dito: se il tetto
   di tre basta, o se un bambino con tre in mano e nessun «!» pensa che le
