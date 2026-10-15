@@ -36,7 +36,9 @@ spento, quei giochi non esistono affatto (`sperimentaliAccesi`).
 
 Oggi in prova, fra gli altri, gli **Asteroidi 3D**
 (`mate3d`): gli stessi Asteroidi col cielo in 3D, con la loro carta ma la
-stessa campagna di quelli di sempre ([../asteroidi/grafica-3d.md](../asteroidi/grafica-3d.md)).
+stessa campagna di quelli di sempre ([../asteroidi/grafica-3d.md](../asteroidi/grafica-3d.md)),
+e il **Sotterraneo 3D** (`sotterraneo3d`): lo stesso sotterraneo con la discesa in 3D, la stessa
+avventura e la stessa sosta ([../sotterraneo/grafica-3d.md](../sotterraneo/grafica-3d.md)).
 
 ## Il quarto non si rifà
 
