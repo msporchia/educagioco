@@ -33,7 +33,7 @@ ogni gioco si può spegnere. Il nome porta alla pagina del gioco.
 <tr>
 <td align="center" width="33%" valign="top"><img src="docs/img/clip-bancarella.webp" width="220"><br><b><a href="docs/bancarella/presentazione.md">🛒 La bancarella</a></b><br>Si vende, si incassa e si dà il resto.</td>
 <td align="center" width="33%" valign="top"><img src="docs/img/clip-pozioni.webp" width="220"><br><b><a href="docs/pozioni/presentazione.md">⚗️ Le pozioni</a></b><br>Litri, chili e metri: si dosa con gli attrezzi che si hanno.</td>
-<td width="33%"></td>
+<td align="center" width="33%" valign="top"><img src="docs/img/clip-arena.webp" width="220"><br><b><a href="docs/arena/presentazione.md">⚔️ Castle Battle</a></b><br>Caserme contro caserme: ogni mossa è un conto a mente, e il nemico non aspetta.</td>
 </tr>
 </table>
 
