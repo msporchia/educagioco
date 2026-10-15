@@ -31,7 +31,9 @@ tela più grande delle lingue 53–56 MB.
 ## Il sito spezzato
 
 `npm run build:sito` (`SPEZZATO=1`) scrive `dist-sito/`: una pagina di 4 KB, un
-JS (~4 MB), un CSS e i file veri di sprite e voci, ognuno col suo hash nel nome.
+JS di avvio (~1,6 MB), un file JS per gioco (`gioco-<nome>-<hash>.js`, da 23 a
+490 KB) e per le schermate dei grandi, un CSS e i file veri di sprite e voci,
+ognuno col suo hash nel nome.
 Il file unico (`npm run build`, `dist/index.html`) resta com'è: serve ai test,
 al doppio click e a `./pubblica.sh`. La CI pubblica `dist-sito/` con accanto
 `giochi.html` (il file unico).
@@ -41,6 +43,14 @@ al doppio click e a `./pubblica.sh`. La CI pubblica `dist-sito/` con accanto
   (`vite.config.js`) li estrae in file e lascia l'indirizzo al posto della
   stringa. Nei test in Node i moduli restano com'erano. Chi legge uno sprite deve
   accettare un indirizzo oltre a un `data:` (`voce.js` lo fa con `byteDi`).
+- **Ogni gioco è un file suo** (`giochi/carica.js`, `caricaQuando`): `schermate.js` e
+  `App.vue` importano le schermate con `import()`. Nel file unico il build le rimette
+  dentro la pagina e cambia solo un istante di attesa. Un file che manca (senza rete e
+  non ancora scaricato) fa dire al bambino «Questo gioco non è ancora sul telefono».
+- **Cosa cambia fra una versione e l'altra** lo dicono i nomi: l'hash è quello del
+  contenuto, quindi un file uguale ha lo stesso nome e il service worker lo ricopia
+  dalla cache di prima. Cambiano sempre il JS di avvio (porta `__VERSIONE__`) e i
+  file che dipendono da lui; tutto il resto resta. Il codice comune va tenuto piccolo.
 - **Il service worker scarica tutto** (`scaricaTutto` nel `sw.js` generato): sei
   file alla volta, copia dalle cache delle versioni precedenti quello che ha lo
   stesso nome (hash uguale = file uguale), e fallisce l'installazione se ne manca
@@ -62,7 +72,6 @@ home in 0,2 s, giochi aperti senza immagini rotte.
   (i file già in cassa si ricopiano, ma c'è da riscaricare). Il passo dopo è lo
   scarico a due tempi: prima il minimo per giocare, poi un gioco alla volta con
   la lista nel build, e un gioco non ancora scaricato che dice «in download».
-- **Il JS è ancora uno solo** (4 MB): i giochi si possono caricare a pezzi.
 - **Il banco di memoria per gioco** (sopra) non entra in partita: misura solo
   l'ingresso.
 - **`pubblica.sh` (server di casa) serve ancora il file unico.**

@@ -6,22 +6,23 @@ import { entra as entraNelGioco, esci as esciDalGioco } from './store/sessioni.j
 import { fotografa } from './quiz/fotografia.js'
 import { controlla } from './aggiornamento.js'
 import HomeView from './views/HomeView.vue'
-import LinguaGame from './views/LinguaGame.vue'
-import MathGame from './views/MathGame.vue'
-import TowerDefense from './views/TowerDefense.vue'
-import BancarellaGame from './views/BancarellaGame.vue'
-import GeneraleGame from './views/GeneraleGame.vue'
-import AlboView from './views/AlboView.vue'
-import ProfiloView from './views/ProfiloView.vue'
-import GenitoriView from './views/GenitoriView.vue'
-import Guide from './guide/Guide.vue'
-import Novita from './guide/Novita.vue'
-import AdminView from './views/AdminView.vue'
+const LinguaGame = caricaQuando(() => import('./views/LinguaGame.vue'))
+const MathGame = caricaQuando(() => import('./views/MathGame.vue'))
+const TowerDefense = caricaQuando(() => import('./views/TowerDefense.vue'))
+const BancarellaGame = caricaQuando(() => import('./views/BancarellaGame.vue'))
+const GeneraleGame = caricaQuando(() => import('./views/GeneraleGame.vue'))
+const AlboView = caricaQuando(() => import('./views/AlboView.vue'))
+const ProfiloView = caricaQuando(() => import('./views/ProfiloView.vue'))
+const GenitoriView = caricaQuando(() => import('./views/GenitoriView.vue'))
+const Guide = caricaQuando(() => import('./guide/Guide.vue'))
+const Novita = caricaQuando(() => import('./guide/Novita.vue'))
+const AdminView = caricaQuando(() => import('./views/AdminView.vue'))
 import Traguardo from './components/Traguardo.vue'
 import Benvenuto from './components/Benvenuto.vue'
 import Scarico from './components/Scarico.vue'
 import AvvisoMonete from './components/varieta/Avviso.vue'   // importarlo accende anche il filtro delle monete
 import { SCHERMATE } from './giochi/schermate.js'
+import { caricaQuando } from './giochi/carica.js'
 import { lasciaRipresa } from './giochi/ripresa.js'
 
 const vista = ref('home')

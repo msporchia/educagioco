@@ -236,7 +236,13 @@ export default defineConfig({
   plugins: [estraiDati(), vue(), ...(SPEZZATO ? [] : [viteSingleFile()]), scriviVersione(), iconaInline(), scriviServiceWorker(),
             salvaFoglietto()],
   define: { __SPEZZATO__: JSON.stringify(SPEZZATO), __VERSIONE__: JSON.stringify(VERSIONE), __INDIRIZZO__: JSON.stringify(INDIRIZZO) },
-  build: { target: 'es2020', assetsInlineLimit: SPEZZATO ? 4096 : 100000000, cssCodeSplit: false,
+  build: { rollupOptions: { output: {
+             // il gioco si riconosce dal nome del file (gioco-sotterraneo-<hash>.js): servirà a scaricarli a gruppi
+             chunkFileNames: c => {
+               const m = c.name === 'Gioco' && /giochi\/([^/]+)\/Gioco\.vue/.exec(c.facadeModuleId || '')
+               return m ? `assets/gioco-${m[1]}-[hash].js` : 'assets/[name]-[hash].js'
+             } } },
+           target: 'es2020', assetsInlineLimit: SPEZZATO ? 4096 : 100000000, cssCodeSplit: false,
            outDir: SPEZZATO ? 'dist-sito' : 'dist',
            reportCompressedSize: false, chunkSizeWarningLimit: 100000 },
 })
