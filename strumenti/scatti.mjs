@@ -334,11 +334,6 @@ const RICETTE = [
   { file: 'castello-calcolo', dove: 'torri', attesa: '.tappe',
     passi: [['.tap:not(.chiusa)', 1500], scegliTorre] },
 
-  /* Castle Battle: la prima tappa dopo una ventina di secondi, quando il nemico ha già mandato
-     le sue truppe e il campo non è vuoto */
-  { file: 'arena-gioco', dove: 'arena', attesa: '[data-tappa]',
-    passi: [['[data-tappa="0"]', 20000]] },
-
   { file: 'pozioni-mappa', dove: 'pozioni', attesa: '.pz-mappa' },
   { file: 'pozioni-gioco', dove: 'pozioni', attesa: '.pz-mappa',
     passi: [['.pz-tappa:not(.pz-chiusa)', 1600]] },
