@@ -22,6 +22,10 @@
    pezzi in tasca in più (una chiave composta, `spada@7.m.fuoco`, va bene), per guardarli nel pannello o berli; `--punti 3` lascia tre
    punti delle caratteristiche da dare, per vedere cosa cambia sotto ogni «+».
 
+   `--domanda ing-parole:2:ing:figura,tabelline:3:tab:prodotto` apre quelle domande dalla palestra dei grandi (codice 0000,
+   il quadro dell'età, il ▶ della riga: `modulo:grado:chiave`, come `data-prova`) e fa uno scatto per ciascuna
+   (`<nome>-1.png`, …).
+
    `--tocca` accetta più selettori separati da virgola: si toccano in
    fila, aspettando `--attesa` fra l'uno e l'altro. Un selettore che non
    c'è viene detto e non ferma lo scatto.
@@ -72,6 +76,42 @@ if (opz('storia', null) != null) {
     missioni: Object.fromEntries((opz('missioni', '') || '').split(',').filter(Boolean).map(x => x.split(':'))),
     zaino: (opz('zaino', '') || '').split(',').filter(Boolean), punti: Number(opz('punti', 0)),
   })
+}
+
+// le domande dalla palestra dei grandi: lo stesso giro di test/integrazione/domanda.test.mjs
+const domande = (opz('domanda', '') || '').split(',').map(x => x.trim()).filter(Boolean)
+if (domande.length) {
+  await page.click('[data-azione="grandi"]')
+  await page.waitForSelector('.tastierino', { timeout: 5000 })
+  for (const c of '0000') await page.click(`.tasto >> text="${c}"`)
+  await page.waitForSelector('.carte', { timeout: 5000 })
+  await page.click('[data-scheda="giochi"]')
+  await page.waitForSelector('[data-manopola] .quadro', { timeout: 5000 })
+  let n = 0
+  for (const d of domande) {
+    const bersaglio = `[data-prova*="${d}"]`
+    for (const k of ['facili', 'medie', 'toste', 'sotto', 'spenta']) {
+      if (await page.locator(bersaglio).count()) break
+      const sel = `[data-manopola] [data-apri="${k}"]`
+      if (!(await page.locator(sel).count())) continue
+      if (!(await page.locator(sel).evaluate(el => el.classList.contains('aperta')))) await page.click(sel)
+      await page.waitForTimeout(150)
+      const chiuse = page.locator(`${sel} .voce-riga.apribile:not(.aperta)`)
+      while (!(await page.locator(bersaglio).count()) && await chiuse.count()) {
+        await chiuse.first().click()
+        await page.waitForTimeout(60)
+      }
+    }
+    if (!(await page.locator(bersaglio).count())) { console.log(`   (nel quadro non c'è «${d}»)`); continue }
+    await page.click(bersaglio)
+    await page.waitForSelector('.qz-tasto', { timeout: 5000 })
+    await page.waitForTimeout(attesa)
+    n++
+    await page.screenshot({ path: resolve(SCATTI, `${nome}-${n}.png`) })
+    console.log(`   ${d} → ${resolve(SCATTI, `${nome}-${n}.png`)}`)
+    await page.click('.prova-x')
+    await page.waitForSelector('.prova-velo', { state: 'hidden', timeout: 5000 })
+  }
 }
 
 for (const sel of tocchi) {

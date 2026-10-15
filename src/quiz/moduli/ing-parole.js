@@ -1,6 +1,6 @@
 // Le parole inglesi dentro i quiz degli altri giochi, in tre modi: dalla figura all'inglese, dall'inglese all'italiano, dall'italiano all'inglese. Un grado per isola dell'inglese a mondi (src/quiz/inglese.js); tutto l'inglese pesa una domanda su 20 (docs/apprendimento/quote.md).
 import { Modulo } from '../nucleo/modulo.js'
-import { domanda, testo } from '../nucleo/domanda.js'
+import { domanda, testo, emoji } from '../nucleo/domanda.js'
 import { QUOTA, GRADI, livelloParole, mondoDelGrado, vocePer, altreVoci } from '../inglese.js'
 
 const TUTTI = Object.fromEntries(Array.from({ length: GRADI }, (_, i) => [i + 1, 1]))
@@ -39,7 +39,7 @@ class IngParole extends Modulo {
     const falsi = altreVoci(voce, grado, sorte, 3, { figure: true })
     return domanda({
       testo: 'Come si dice in inglese?',
-      soggetto: testo(voce.emoji),
+      soggetto: emoji(voce.emoji),
       buona: testo(voce.str),
       falsi: falsi.map(f => testo(f.str, `${f.str} vuol dire «${f.it}»`)),
       chiave: 'ing:figura',

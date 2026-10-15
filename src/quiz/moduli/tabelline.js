@@ -23,7 +23,7 @@ class Tabelline extends Modulo {
     super({
       id: 'tabelline',
       nome: 'Tabelline',
-      icona: '✖️',
+      icona: '🔟',
       materia: 'matematica',
       chiaro: 'le tabelline e le loro divisioni, dal 2 e dal 10 fino al 12, in mezzo alle altre domande',
       scaletta: SCALETTA,
