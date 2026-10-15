@@ -38,6 +38,12 @@ quando si rilascia. Due avvertenze:
    quelli del sito che si usa in casa. Una prova che tocca l'archivio tocca
    i salvataggi veri.
 
+**`pubblica.sh` non è versionato, quindi ogni checkout e ogni worktree ha la sua copia**, e una copia
+vecchia pubblica la roba sbagliata: il 15 ottobre una copia di prima dello spezzamento ha rimesso sul
+server il file unico da 28 MB sopra il sito in file separati, e i telefoni sono rimasti a ripetere
+«c'è una versione nuova». Quando lo script cambia si copia in tutti (`.claude/worktrees/*/pubblica.sh`);
+uno che non trova `npm run build:sito` si ferma invece di pubblicare il file sbagliato.
+
 **`pubblica.sh` costruisce dal working tree così com'è**, non da un
 commit: con altre sessioni al lavoro sullo stesso repo porta in casa anche
 il loro lavoro a metà. Prima si guarda `git status`; se c'è roba non
