@@ -77,8 +77,9 @@ function scriviServiceWorker () {
         .map(([nome, o]) => {
           const gioco = o.type === 'chunk' && /\/giochi\/([^/]+)\/Gioco\.vue/.exec(o.facadeModuleId || '')
           const vecchio = o.type === 'chunk' && /\/views\/(\w+)\.vue/.exec(o.facadeModuleId || '')
+          const tre = o.type === 'chunk' && o.name === 'asteroidi-3d'
           return ['./' + nome, o.type === 'asset' ? o.source.length : o.code.length,
-                  gioco ? gioco[1] : (vecchio && VECCHI[vecchio[1]]) || GRUPPI.get(nome) || '']
+                  gioco ? gioco[1] : tre ? 'mate' : (vecchio && VECCHI[vecchio[1]]) || GRUPPI.get(nome) || '']
         })
       const cache = `educagioco-${VERSIONE.id}`
       this.emitFile({
@@ -321,6 +322,8 @@ export default defineConfig({
              // dei file da caricare) ogni gioco cambiato cambierebbe il nome di quello, e a cascata di tutti gli altri.
              // (solo nel sito spezzato: il file unico mette tutto in linea, e con quello manualChunks è un errore anche se vuoto)
              ...(!SPEZZATO ? {} : { manualChunks: id => {
+               // three e il disegno 3D servono solo agli asteroidi: un file loro, nel gruppo 'mate', non nella base
+               if (id.includes('node_modules/three/') || id.includes('/src/grafica/spazio3d/')) return 'asteroidi-3d'
                if (id.includes('node_modules')) return 'vendor'
                const m = /\/src\/(.*)$/.exec(id)
                if (!m) return undefined

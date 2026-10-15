@@ -53,7 +53,9 @@ al doppio click e a `./pubblica.sh`. La CI pubblica `dist-sito/` con accanto
   file che dipendono da lui; tutto il resto resta. Il codice comune va tenuto piccolo.
 - **Cambiare un gioco cambia pochi file.** Il nome di un file è l'hash del suo contenuto, e
   il build lo tiene così: la **versione sta nella pagina** (uno script in `index.html`,
-  `__VERSIONE_PAGINA__`) e non nel JS; Vue è un file suo (`vendor`); il codice condiviso è un
+  `__VERSIONE_PAGINA__`) e non nel JS; Vue è un file suo (`vendor`); three.js e il cielo 3D
+  degli asteroidi un altro (`asteroidi-3d`, ~630 KB), nel gruppo degli asteroidi e non nella
+  base ([../asteroidi/grafica-3d.md](../asteroidi/grafica-3d.md)); il codice condiviso è un
   file suo (`comune`, ~2 MB) che non conosce i nomi dei giochi; il JS di avvio (`index`, 13 KB)
   porta solo le strade verso i giochi. Provato: toccando un solo gioco cambiano 3 file,
   ~100 KB (prima, con la versione nel JS e il codice condiviso nell'avvio, cambiavano tutti e
