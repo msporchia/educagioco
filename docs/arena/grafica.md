@@ -59,3 +59,9 @@ sono disegnati in codice finché non arriva il foglio dipinto.
 - **Il ponte** è di assi, con la porta di ciascuno al suo capo: due torrette e il
   portone; crollata, resta il cumulo.
 - **Mancano**: gli edifici e la porta dipinti, pose di attacco e di morte delle truppe.
+- **Le modali sono quelle della fattoria e del sotterraneo, ma asciutte**: la scelta di una
+  piazzola è una nuvoletta crema con l'orlo giallo (disegno e pulsantino col prezzo, il «?»
+  dei numeri piccolo nell'angolo), l'anello usa gli stessi pulsanti, i dettagli una scheda
+  scura con la ✕ rossa tonda. Il bambino sa già cosa vuole costruire: **niente nomi, note e
+  titoli**, e le emoji restano solo dove portano informazione (💎 del prezzo, 💰 vendi, ⛏️ per
+  la miniera, che non ha un ritratto).

@@ -87,7 +87,7 @@ uguale('mentre si leggono i dettagli il campo sta fermo', await orologio(), t0)
 const testo = await page.locator('[data-dettagli-aperti]').innerText()
 controlla('i dettagli dicono com\'è adesso e com\'è al livello dopo, coi numeri',
           /Livello 1/.test(testo) && /Livello 2/.test(testo) && /Una squadra ogni/.test(testo) && /Vita di ogni truppa/.test(testo) && !/%/.test(testo), testo.slice(0, 300))
-controlla('e quanto costa, senza dire che conto serve', /6\s*🪙/.test(testo) && !/si risolve/.test(testo), testo.slice(0, 200))
+controlla('e quanto costa, senza dire che conto serve', /6\s*💎/.test(testo) && !/si risolve/.test(testo), testo.slice(0, 200))
 await scatto(page, 'arena-dettagli')
 await page.locator('[data-procedi]').click()
 
