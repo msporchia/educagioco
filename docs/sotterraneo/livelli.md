@@ -57,6 +57,8 @@ dà un terzo dell'esperienza, e cresce come prima.
 - **Non si torna in piena forma.** Provato, come in Diablo: a metà discesa
   era una pozione gratis, e siccome l'esperienza arriva combattendo, chi
   sbagliava di più (e combatteva più a lungo) si ritrovava curato più spesso.
+- **Si torna in forze solo al villaggio**: la guaritrice e l'incantatrice curano gratis chi è salito dal portale
+  ([chi-cura.md](chi-cura.md)); a metà discesa niente cure regalate.
 - **Si festeggia**: la colonna di luce d'oro sull'eroe (`colonneDiLuce` in
   `scena/tela.js`), la riga dell'esperienza che si accende, un arpeggio suo
   (`suoniDellaFesta` in `Gioco.vue`) e in mezzo al campo «✨ Livello 5!» con

@@ -3,6 +3,17 @@
 // il foglio è un'immagine in base64 senza misura dichiarata. `pixelated`: senza, uno sprite ingrandito esce sfocato.
 import { ATLANTE, PEZZI, NITIDO, NITIDI } from '../dati/atlante.js'
 
+// il foglio come indirizzo `blob:` corto, preparato in sottofondo: messo in uno stile come `data:` (due megabyte di
+// testo) il browser lo rileggeva a ogni elemento rifatto, e sul telefono la terra di sopra andava a scatti anche da
+// ferma. Finché il blob non è pronto vale il `data:` di prima
+let URL_ATLANTE = ATLANTE, URL_NITIDO = NITIDO
+function accorcia(dato, fatto) {
+  if (!dato || typeof fetch === 'undefined' || typeof URL === 'undefined' || !URL.createObjectURL) return
+  fetch(dato).then(r => r.blob()).then(b => fatto(URL.createObjectURL(b))).catch(() => {})
+}
+accorcia(ATLANTE, u => { URL_ATLANTE = u })
+accorcia(NITIDO, u => { URL_NITIDO = u })
+
 export const haFigura = nome => !!(nome && PEZZI[nome])
 
 // una scala sola per tutte le cose: "grande quanto ci sta" faceva uscire la stessa boccetta a misure diverse
@@ -21,7 +32,7 @@ export function figura(nome, { scala = 3, alto = null } = {}) {
     gabbia: { width: `${w * s}px`, height: `${h * s}px` },
     pezzo: {
       width: `${n[2]}px`, height: `${n[3]}px`,
-      backgroundImage: `url(${NITIDO})`,
+      backgroundImage: `url(${URL_NITIDO})`,
       backgroundPosition: `${-n[0]}px ${-n[1]}px`,
       imageRendering: 'auto',   // il contenitore del ritratto è `pixelated`: un pezzo dipinto ridotto così va a scalini
       transform: `scale(${(w * s) / n[2]}, ${(h * s) / n[3]})`,
@@ -32,7 +43,7 @@ export function figura(nome, { scala = 3, alto = null } = {}) {
     gabbia: { width: `${w * s}px`, height: `${h * s}px` },
     pezzo: {
       width: `${w}px`, height: `${h}px`,
-      backgroundImage: `url(${ATLANTE})`,
+      backgroundImage: `url(${URL_ATLANTE})`,
       backgroundPosition: `${-x}px ${-y}px`,
       imageRendering: 'pixelated',
       transform: `scale(${s})`,

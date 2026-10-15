@@ -14,7 +14,9 @@ discesa all'altra nello stato della storia), `dati/giocatori-tipo.js` (`RISALITA
 - **Il portale c'è in ogni piano**, nella stanza che era del mercante. Il giocatore ci cammina davvero (`raggiungi`: passi veri, orologio, torcia, mostri che
   si muovono, un portone chiuso lungo la strada si sblocca come per ogni altra meta), fa la spesa con la **sua strada** (arma prima, beve tutto) e riprende da lì:
   nel gioco il gemello lo riporta nel punto del portale, quindi il ritorno non costa passi, e il cammino verso il resto del piano si paga esplorando.
-  Salendo non si guarisce e non passa tempo: sopra la discesa è ferma.
+  Salendo non si guarisce da sé e non passa tempo: sopra la discesa è ferma. Ma la guaritrice e l'incantatrice curano gratis ([chi-cura.md](chi-cura.md)), e dal
+  14 ottobre sera il giocatore finto, dopo la spesa, riparte a vita e energia piene (`motore/banco.js`, `vaAlPortale`). **Le misure sotto sono di prima: la taratura
+  va rifatta con questa regola** (chi risale ferito ora guadagna una cura intera).
 - **Quando sale** (`vuoleSalire`):
   1. ha in tasca il prezzo del **salto** che all'ultima spesa non poteva pagare (l'**obiettivo**: il pezzo che migliora l'eroe, il più economico di quelli fuori dalla sua borsa).
      È la regola dell'utente «quando può comprare qualcosa che serve», e il bambino la fa da sé: ha visto il pezzo sul banco;
@@ -25,7 +27,7 @@ discesa all'altra nello stato della storia), `dati/giocatori-tipo.js` (`RISALITA
   con quello solo, le risalite non hanno niente da comprare (provato: stesse gemme non spese, stessa forza, `--tara risalita.scaffale=0`). Vale anche fra una
   discesa e l'altra. I banchi **persistono** (`botteghe` nello stato della storia): riaprire non li cambia, a discesa finita ruotano (`alGiroNuovo`, tre via e tre
   dentro), salendo di livello si rimettono in discussione (`prepara`). Provato: ripescarli a ogni visita era una slot machine, e costava 100 ms a visita.
-- **Chi guarda i banchi**: l'incantatrice solo per chi porta bacchette o stoffa, il mercante dei gioielli finché il dito è libero, il fabbro sempre.
+- **Chi guarda i banchi**: l'incantatrice solo per chi porta bacchette o stoffa, il mercante dei gioielli finché un dito o il collo è libero, il fabbro sempre.
 - **Le strade restano**: arma prima compra i pezzi e poi le pozioni, beve tutto le pozioni prima (fino a lasciare due tasche), in salita come fra le discese.
 - **Il resto del gioco non cambia**: `RISALITA.acceso = 0` e `scaffale = 0` riproducono il giro di prima cifra per cifra (`--tara risalita.acceso=0,risalita.scaffale=0`).
 

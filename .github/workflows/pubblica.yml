@@ -41,15 +41,19 @@ jobs:
       # le prove che girano senza browser: le altre vogliono Chrome e
       # qui servirebbe scaricarlo a ogni deploy
       - run: npm run test:unita
+      # il sito installato è spezzato in file (dist-sito/, docs/core/avvio-e-memoria.md); il file unico per il
+      # doppio click resta, accanto, come giochi.html
       - run: npm run build
+      - run: npm run build:sito
+      - run: cp dist/index.html dist-sito/giochi.html
       - id: versione
         run: |
-          id=$(node -p "require('./dist/versione.json').id")
+          id=$(node -p "require('./dist-sito/versione.json').id")
           echo "costruita la versione $id"
           echo "id=$id" >> "$GITHUB_OUTPUT"
       - uses: actions/upload-pages-artifact@v5
         with:
-          path: dist
+          path: dist-sito
 
   pubblica:
     needs: costruisci

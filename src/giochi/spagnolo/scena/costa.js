@@ -46,9 +46,30 @@ function smin(a, b, k) {
   const h = Math.max(k - Math.abs(a - b), 0) / k
   return Math.min(a, b) - h * h * k / 4
 }
+// la scatola di una forma (x0, y0, x1, y1), fatta una volta e tenuta sulla forma senza che si veda (né JSON né spread)
+function scatolaDi(f) {
+  if (f.scatola) return f.scatola
+  const b = f.tipo === 'tondo' ? [f.x - f.r, f.y - f.r, f.x + f.r, f.y + f.r]
+    : f.tipo === 'tratto' ? [Math.min(f.ax, f.bx) - f.r, Math.min(f.ay, f.by) - f.r, Math.max(f.ax, f.bx) + f.r, Math.max(f.ay, f.by) + f.r]
+    : [f.x - f.w2, f.y - f.h2, f.x + f.w2, f.y + f.h2]
+  Object.defineProperty(f, 'scatola', { value: b })
+  return b
+}
+
+/* Una forma più lontana di `d + k` non cambia l'unione (con |a - b| ≥ k, smin è il minimo), e (da fuori) la distanza dalla sua
+   scatola è un limite sotto la sua: si scarta senza calcolarla. Stesso risultato, a una frazione del costo: sulla
+   mappa sono milioni di punti per qualche decina di forme. */
 export function unione(forme, x, y, k = 0) {
   let d = Infinity
   for (const f of forme) {
+    if (d !== Infinity) {
+      const b = scatolaDi(f)
+      const dx = Math.max(b[0] - x, 0, x - b[2]), dy = Math.max(b[1] - y, 0, y - b[3])
+      const l2 = dx * dx + dy * dy
+      const t = d + k
+      // solo fuori dalla scatola: dentro la distanza dalla forma può essere negativa, e allora vince lei
+      if (l2 > 0 && (t <= 0 || l2 >= t * t)) continue
+    }
     const v = distanza(f, x, y)
     d = k && d !== Infinity ? smin(d, v, k) : Math.min(d, v)
   }

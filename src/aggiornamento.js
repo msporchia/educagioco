@@ -1,8 +1,11 @@
 // «C'è una versione nuova»: vedi docs/core/aggiornamento.md.
 import { ref } from 'vue'
+import { chiediScarico } from './scarico.js'
 
 // Da Node (i test) non c'è: chi prova passa la sua.
 const QUESTA = typeof __VERSIONE__ !== 'undefined' ? __VERSIONE__ : { id: '', etichetta: '' }
+// il sito spezzato mette in cassa la base prima che il service worker nuovo sia attivo (la striscia di Scarico.vue la conta)
+const SPEZZATO = typeof __SPEZZATO__ !== 'undefined' && __SPEZZATO__
 
 // { id, etichetta, peso } della versione servita dal sito, o null: si
 // accende confrontando versione.json con __VERSIONE__, non l'installazione
@@ -42,10 +45,13 @@ export function sorveglia () {
       navigator.serviceWorker.register('./sw.js')
         .then(reg => { registrazione = reg })
         .catch(() => { /* pazienza */ })
+      // i giochi li scarica il service worker quando glielo si chiede: a ogni avvio, e quando ne arriva uno nuovo
+      navigator.serviceWorker.ready.then(reg => chiediScarico(reg)).catch(() => {})
+      navigator.serviceWorker.addEventListener('controllerchange', () => chiediScarico())
     }
     setInterval(() => controlla(), OGNI)
     document.addEventListener('visibilitychange', () => {
-      if (!document.hidden) controlla()
+      if (!document.hidden) { controlla(); chiediScarico() }
     })
     controlla()
   })
@@ -136,7 +142,7 @@ export async function aggiornaOra ({
   prendi = rete,
   cassetti = typeof caches !== 'undefined' ? caches : null,
   riparti = () => location.reload(),
-  prepara = swNuovoAttivo,
+  prepara = () => swNuovoAttivo({ pazienza: SPEZZATO ? 40000 : 8000 }),
   base = qui(),
   mia = QUESTA.id,
   pazienza = CHIEDERE,

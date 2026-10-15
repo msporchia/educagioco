@@ -135,12 +135,12 @@ for (const k of [1, 4]) for (const L of [12, 40]) {
     const media = {}
     for (const p of [0, t.piani - 1]) {
       c.piano = p; c.nuovoPiano()
-      for (const r of c.livello.robe) if (r.che === 'mostro' && !r.grosso && !r.caporale && !r.chiave && t.mostri.includes(r.tipo))
+      for (const r of c.livello.robe) if (r.che === 'mostro' && !r.grosso && !r.caporale && !r.chiave && t.mostri.includes(r.tipo) && (!r.grado || r.grado === 'comune'))
         (media[`${p}|${r.tipo}`] = media[`${p}|${r.tipo}`] || []).push(r.ossa / MOSTRI[r.tipo].ossa)
     }
     for (const [chiave, v] of Object.entries(media)) if (new Set(v.map(x => x.toFixed(3))).size > 1) peggio.push(`${t.chiave} ${chiave}`)
   }
-  controlla('a ogni piano tutti i mostri della stessa specie hanno le stesse ossa (la forza è del piano, non del singolo; e una variante o un grado non le toccano)', !peggio.length, peggio.slice(0, 3).join(' · '))
+  controlla('a ogni piano tutti i mostri della stessa specie hanno le stesse ossa (la forza è del piano, non del singolo; una variante non le tocca, e un grado solo dal magico in su)', !peggio.length, peggio.slice(0, 3).join(' · '))
 }
 
 /* ══════════ 7. il guardiano, i caporali e i grossi ══════════ */
@@ -153,8 +153,8 @@ for (const t of CAMPAGNA) {
   const g = c.livello.robe.find(r => r.che === 'mostro' && r.chiave)
   const base = c.livello.mostro(g.tipo, 0, 0)
   uguale('il guardiano della grotta è il suo caporale', g.tipo, 'mostro-verde')
-  controlla('il guardiano è un caporale: più ossa, un colpo in più, un nome, un grado che non è mai comune', g.caporale && g.ossa === Math.round(base.ossa * CAPORALE.ossa) &&
-            g.att === base.att + CAPORALE.att && /caporale$/.test(g.nome) && g.grado && g.grado !== 'comune', JSON.stringify([g.caporale, g.ossa, base.ossa, g.att, g.nome, g.grado]))
+  controlla('il guardiano è un caporale: più ossa, un colpo in più, un nome, un grado che non è mai comune', g.caporale && g.ossa >= Math.round(base.ossa * (c.livello.crescita.caporali || CAPORALE.ossa)) &&
+            g.att >= base.att + CAPORALE.att && /caporale$/.test(g.nome) && g.grado && g.grado !== 'comune', JSON.stringify([g.caporale, g.ossa, base.ossa, g.att, g.nome, g.grado]))
 }
 
 riassunto('gli abitanti dei posti')

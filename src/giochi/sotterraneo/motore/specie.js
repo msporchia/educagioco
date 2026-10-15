@@ -52,7 +52,7 @@ export function specieDella(k, { semi = [1, 2, 3], eroi = EROI } = {}) {
     const abbatterlo = media(lista.flatMap(m => attesi.map(c => Math.ceil(m.ossaMax / Math.max(1, c.att - m.dif)))))
     const potenza = media(lista.map(potenzaDelMostro))
     const colpiPerStendere = vita / colpo
-    return { tipo, nome: (MOSTRI[tipo] || {}).nome || tipo, ruolo, n: lista.length, ossa, att, dif, colpo, vita,
+    return { tipo, nome: (MOSTRI[tipo] || {}).nome || tipo, ruolo, n: lista.length, ossa, att, dif, colpo, vita, colpoSuVita: colpo / vita,
              colpiPerStendere, colpiPerAbbatterlo: abbatterlo,
              protezioni: media(lista.map(m => { const d = difeseDi(m); return d.resiste.length + d.immune.length })),
              armati: media(lista.map(m => (m.arma ? 1 : 0))), gradi: media(lista.map(m => (m.grado && m.grado !== 'comune' ? 1 : 0))),
@@ -69,11 +69,34 @@ export function tabellaDelleSpecie(opz = {}) {
   CAMPAGNA.forEach((t, k) => {
     const s = specieDella(k, opz)
     righe.push(`\n${t.nome} (eroe atteso al livello ${livelloAtteso(k)}, ${f(s[0].vita, 0)} di vita; fuori misura sotto ${COLPI_PER_STENDERE.comune} colpi per i mostri di strada, ${COLPI_PER_STENDERE.caporale} i caporali, ${COLPI_PER_STENDERE.grosso} il grosso)`)
-    righe.push(`${''.padEnd(30)}${'ruolo'.padEnd(9)}${['n', 'ossa', 'att', 'dif', 'colpo', 'stende in', 'si abbatte in', 'potenza', 'esp', 'gemme'].map(x => x.padStart(13)).join('')}`)
+    righe.push(`${''.padEnd(30)}${'ruolo'.padEnd(9)}${['n', 'ossa', 'att', 'dif', 'colpo', 'colpo/vita %', 'stende in', 'si abbatte in', 'potenza', 'esp', 'gemme'].map(x => x.padStart(13)).join('')}`)
     for (const r of s) {
-      righe.push(`${r.nome.slice(0, 29).padEnd(30)}${r.ruolo.padEnd(9)}${[r.n, f(r.ossa), f(r.att), f(r.dif), f(r.colpo), f(r.colpiPerStendere), f(r.colpiPerAbbatterlo), f(r.potenza), f(r.esp, 0), f(r.gemme, 0)].map(x => String(x).padStart(13)).join('')}${r.fuoriMisura ? '  ! picchia fuori misura' : ''}`)
+      righe.push(`${r.nome.slice(0, 29).padEnd(30)}${r.ruolo.padEnd(9)}${[r.n, f(r.ossa), f(r.att), f(r.dif), f(r.colpo), f(100 * r.colpoSuVita, 0), f(r.colpiPerStendere), f(r.colpiPerAbbatterlo), f(r.potenza), f(r.esp, 0), f(r.gemme, 0)].map(x => String(x).padStart(13)).join('')}${r.fuoriMisura ? '  ! picchia fuori misura' : ''}`)
       if (r.fuoriMisura) fuori.push(`${r.nome} (${r.ruolo}, ${t.chiave}): ${f(r.colpo)} a colpo, stende in ${f(r.colpiPerStendere)}`)
     }
   })
   return { testo: righe.join('\n'), fuori }
+}
+
+/* Il grado pesa (docs/sotterraneo/varianti.md, «Il grado pesa»): per discesa, ruolo e grado, le ossa e l'attacco medi dei mostri dei piani veri e il colpo contro
+   la vita dell'eroe atteso. Un nome epico deve essere un mostro più duro: la tabella lo dice con i numeri. */
+export function tabellaDeiGradi({ semi = [1, 2, 3], eroi = EROI } = {}) {
+  const f = (v, d = 1) => v.toFixed(d)
+  const righe = []
+  CAMPAGNA.forEach((t, k) => {
+    const attesi = eroi.map(e => eroeAtteso(e, livelloAtteso(k)))
+    const vita = media(attesi.map(c => c.vitaConLaRoba))
+    const gruppi = new Map()
+    for (const m of mostriDella(k, semi)) {
+      const ch = `${ruoloDi(m)}|${m.grado || 'comune'}`
+      if (!gruppi.has(ch)) gruppi.set(ch, [])
+      gruppi.get(ch).push(m)
+    }
+    righe.push(`\n${t.nome} (${f(vita, 0)} di vita)`)
+    for (const [ch, lista] of [...gruppi].sort((a, b) => a[0].localeCompare(b[0]))) {
+      const colpo = media(lista.flatMap(m => attesi.map(c => Math.max(1, COLPO_DEL_MOSTRO * (m.att - c.dif)))))
+      righe.push(`  ${ch.replace('|', ' ').padEnd(24)}n ${String(lista.length).padStart(4)}  ossa ${f(media(lista.map(m => m.ossaMax)), 1).padStart(6)}  att ${f(media(lista.map(m => m.att))).padStart(5)}  colpo ${f(colpo).padStart(5)} (${f(100 * colpo / vita, 0)}% della vita)`)
+    }
+  })
+  return righe.join('\n')
 }

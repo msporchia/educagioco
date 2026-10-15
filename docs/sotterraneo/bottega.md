@@ -23,7 +23,7 @@ più nessuno.
 | ⚒️ l'armaiolo (il fabbro), sotto la tettoia a sinistra | il ferro: spade, asce, archi, scudi, corazze e giubbe di cuoio | — |
 | 🔮 l'incantatrice (`incantatrice`), alla porta della casa di destra | la magia: bacchette e bastoni, vesti di stoffa | boccetta blu e ampolla delle stelle (l'energia) |
 | 🌿 l'erborista (la guaritrice), al banco con le erbe | niente di pescato: solo quello che sta sempre in cima | le quattro cure (le grandi dopo qualche discesa finita), torcia |
-| 🧺 il rigattiere (il mercante), accanto al carro | anelli, amuleti, chiavi | — e **compra** quello che hai in tasca, e te lo ridà (sotto) |
+| 🧺 il rigattiere (il mercante), accanto al carro | anelli, collane (amuleti, medaglione), chiavi: tutti sotto la linguetta «Gioielli» | — e **compra** quello che hai in tasca, e te lo ridà (sotto) |
 
 - **Il fabbro lavora il ferro, lei la magia** (l'utente, 13 ottobre 2026): le armi
   della famiglia `bacchette` e i pezzi di `stoffa` sono solo suoi, e al fabbro

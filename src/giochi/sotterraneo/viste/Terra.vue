@@ -11,7 +11,8 @@ import { MAPPA, LARGO, ALTO, CELLA, MASCHERA, POSTI, PARTENZA, MINATORE as DOVE_
 import { PERSONAGGI, personaDi } from '../dati/missioni.js'
 import { segnoDi, GLIFO, chiAspetta, presePer, inFrase, discesaDaSeguire, discesaDellaStoria } from '../motore/missioni.js'
 import { MERCANTI, mercanteDi } from '../dati/mercanti.js'
-import { apertura, scelte as scelteDi, risposta, dopoLaPresa, dopoLaConsegna, novita as novitaDi } from '../motore/dialoghi.js'
+import { apertura, scelte as scelteDi, risposta, dopoLaPresa, dopoLaConsegna, novita as novitaDi,
+         curaDi, mancaA, richiamoDi, dopoLaCura } from '../motore/dialoghi.js'
 import { laStoria } from '../motore/storia.js'
 import { POSTO_DI, POZZO_VECCHIO, FRECCE, SCALA_TERRA as S, SCALA_EROE, SCALA_DELL_EROE, PASSO_TERRA, VISTA, LUCE,
          BORDO, MORBIDA, iconaDi } from '../dati/terra.js'
@@ -40,8 +41,10 @@ const props = defineProps({
   segui: { type: String, default: null },     // la missione che la freccia azzurra segue, se scelta nel diario
   // la zona appena nata che il minatore racconta (motore/zone.js): { chiave, nome, livello, detto, sentita }
   annuncio: { type: Object, default: null },
+  // vita ed energia di chi ha lasciato la discesa dal portale, col massimo: { vita, vitaMax, energia, energiaMax }, o null (sopra si è in forze)
+  forze: { type: Object, default: null },
 })
-const emit = defineEmits(['scendi', 'terra', 'bottega', 'riprendi', 'sentito'])
+const emit = defineEmits(['scendi', 'terra', 'bottega', 'riprendi', 'sentito', 'cura'])
 
 const SCARTO_DITO = 16   // sotto, il dito è fermo (docs/core/il-dito.md)
 const minuscolo = s => s.charAt(0).toLowerCase() + s.slice(1)
@@ -541,7 +544,7 @@ function scendi(p) {
 const dialogo = ref(null)           // { chi, nome, pagine, giro, chieste }
 let giri = 0
 const ctx = () => ({ stati: props.missioni, tappe: props.tappe, abisso: !!props.abisso, eroe: props.eroe.chiave,
-                     roba: props.roba, annuncio: props.annuncio, novita: ascoltate.value })
+                     roba: props.roba, annuncio: props.annuncio, novita: ascoltate.value, forze: props.forze })
 const chiParla = chi => (personaDi(chi) || mercanteDi(chi) || { nome: '' }).nome
 function parla(chi) {
   chiudi()
@@ -556,6 +559,9 @@ function parla(chi) {
                     chieste: new Set(chi === 'minatore' ? ['strada'] : []) }
 }
 function chiudiDialogo() { dialogo.value = null }
+// il numero che sale sopra l'eroe curandosi, e il fumetto sopra chi cura finché serve (non mentre ci si parla)
+const fiocco = ref(null)
+const richiamo = chi => (dialogo.value && dialogo.value.chi === chi ? null : richiamoDi(chi, props.forze))
 const scelteDelDialogo = computed(() => (dialogo.value ? scelteDi(dialogo.value.chi, ctx(), dialogo.value.chieste) : []))
 // le pagine nuove di una risposta: si riparte dalla prima
 function rispondi(pagine, chieste) {
@@ -573,6 +579,13 @@ async function scegli(s) {
     chiudiDialogo()
     emit('bottega', d.chi, s.che === 'vendi' ? 'vendi' : null)
     return
+  }
+  if (s.che === 'cura') {
+    // gratis e senza limiti: l'effetto parte subito, la risposta lo racconta
+    const manca = mancaA(d.chi, props.forze)
+    chieste.add('cura')
+    if (manca > 0) { emit('cura', curaDi(d.chi).risorsa); fiocco.value = { n: ++giri, testo: `+${manca}`, risorsa: curaDi(d.chi).risorsa } }
+    return rispondi(dopoLaCura(d.chi, manca), chieste)
   }
   if (s.che === 'novita') {
     // la frase che gira: si ricorda quante volte gliel'hai chiesto, e domani ne dirà un'altra
@@ -763,6 +776,8 @@ const rigaStoria = p => {
               @click.stop="toccaMercante(m)">
         <span v-if="m.ritratto" class="sot-ritratto" :style="m.ritratto.gabbia"><i :style="posaDi(m.chiave, m.ritratto, m.saluta).pezzo"></i></span>
         <Pixel v-else :figura="m.figura" :scala="SCALA_EROE" />
+        <!-- chi cura chiama chi ne ha bisogno: un fumetto che resta finché serve, e toccarlo è toccare lei -->
+        <span v-if="trovati.has(m.chiave) && richiamo(m.chiave)" class="sot-richiamo" data-richiamo :data-richiamo-di="curaDi(m.chiave).risorsa">{{ richiamo(m.chiave) }}</span>
       </button>
 
       <!-- il portale gemello: c'è finché c'è una discesa lasciata a metà, e riporta giù nel punto esatto -->
@@ -789,6 +804,8 @@ const rigaStoria = p => {
         <!-- con l'arma che ha addosso, come nella scelta delle avventure -->
         <Armato :eroe="eroe" :mano="roba ? roba.mano : null" :mancina="roba ? roba.mancina : null" :scala="SCALA_DELL_EROE"
                 :posa="cammina ? 'corsa' : 'fermo'" :fotogramma="fotogramma" />
+        <span v-if="fiocco" :key="fiocco.n" class="sot-cura-fiocco" :class="'sot-cura-' + fiocco.risorsa" data-cura-fiocco
+              :data-risorsa="fiocco.risorsa" @animationend="fiocco = null">{{ fiocco.testo }} {{ fiocco.risorsa === 'vita' ? '❤️' : '⚡' }}</span>
       </div>
 
       <span v-if="segno" :key="'segno-' + segno.n" class="sot-segno"

@@ -14,6 +14,8 @@ aggiornato davvero: senza quel controllo un deploy andato a metà è
 indistinguibile da uno riuscito. Un deploy per volta, e quello in corso
 non si annulla (lascerebbe il sito con i file di due versioni).
 
+Il sito pubblicato è **spezzato in file** (`npm run build:sito`, `dist-sito/`) con accanto `giochi.html`, il file unico: vedi [avvio-e-memoria.md](avvio-e-memoria.md).
+
 La CI non lancia le prove nel browser: chi tocca lo schermo le lancia a
 mano prima del push (vedi [test.md](test.md)).
 
@@ -35,6 +37,12 @@ quando si rilascia. Due avvertenze:
    tailnet, non un secondo indirizzo: profili, cache e service worker sono
    quelli del sito che si usa in casa. Una prova che tocca l'archivio tocca
    i salvataggi veri.
+
+**`pubblica.sh` non è versionato, quindi ogni checkout e ogni worktree ha la sua copia**, e una copia
+vecchia pubblica la roba sbagliata: il 15 ottobre una copia di prima dello spezzamento ha rimesso sul
+server il file unico da 28 MB sopra il sito in file separati, e i telefoni sono rimasti a ripetere
+«c'è una versione nuova». Quando lo script cambia si copia in tutti (`.claude/worktrees/*/pubblica.sh`);
+uno che non trova `npm run build:sito` si ferma invece di pubblicare il file sbagliato.
 
 **`pubblica.sh` costruisce dal working tree così com'è**, non da un
 commit: con altre sessioni al lavoro sullo stesso repo porta in casa anche

@@ -38,7 +38,7 @@ const crescita = arg('livello', null) != null ? crescitaA(eroeDi(eroe), livello)
 function stampa(b, titolo) {
   console.log(`\n=== ${titolo} · ${eroe} livello ${b.livelloEroe} · ${b.gemme} gemme ===`)
   const nome = k => (k ? `${COSE[k].nome} (${COSE[k].rarita || 'comune'} L${COSE[k].liv || 1})` : '—')
-  console.log(`addosso: mano ${nome(b.mano)} · mancina ${nome(b.mancina)} · corpo ${nome(b.corpo)} · dito ${nome(b.dito)}`)
+  console.log(`addosso: mano ${nome(b.mano)} · mancina ${nome(b.mancina)} · corpo ${nome(b.corpo)} · collo ${nome(b.collo)} · anelli ${nome(b.dito)}, ${nome(b.dito2)}`)
   for (const m of MERCANTI.filter(x => x.passo && (!soloMercante || x.chiave === soloMercante))) {
     const vista = b.mercanziaVista(m.chiave)
     for (const s of schedeDi(m, eroeDi(eroe)).filter(x => x.dove)) {

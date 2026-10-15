@@ -85,7 +85,10 @@ si rilancia `--gioco`.
 **Le figure disegnate in diagonale si girano nel foglietto** (`"ruota": 35` nella figura di `roba.json`, i gradi misurati sull'asse; `atlante.py`
 gira il pezzo grande e poi lo riduce, `ruota_in`): dieci bastoni e bacchette (`bastone-14` e `49`…`57`) sono diventati aspetti di «Bastone magico»
 e «Bacchetta», e `bastone-46` (uno scettro già dritto) di «Scettro». Quelle dei fogli degli scudi sono disegnate più piccole delle altre, e `"misura"`
-le porta alla stessa altezza. **Sono state tolte dal catalogo sei figure**, e il PNG non si tocca: le balestre `arco-08`, `09` e `10` (anche girate
+le porta alla stessa altezza. **La balestra (`arco-07`) non è una balestra:** è un arco con un dardo in diagonale, e gira a fatica. Nel foglietto è girata di 90° (`ruota`) e
+ridotta a 12×10 perché in mano, orizzontale e bassa, almeno si legga come un'arma da tiro; resta l'unico aspetto del terzo gradino degli archi e
+**va rifatta** (`generati/PROMPT-armi.md`: il fusto in verticale e l'arco in croce in cima). Gli archi hanno una `misura` che li mette in
+proporzione all'eroe (corti 17 pixel, lunghi 24: `unita/sotterraneo-impugna`). **Sono state tolte dal catalogo sei figure**, e il PNG non si tocca: le balestre `arco-08`, `09` e `10` (anche girate
 restano un anello con una corda: non si leggono come balestre a quella misura), l'arco con la lama (`arco-11`), la frusta a catena (`ascia-10`) e la
 mazza (`ascia-12`, che nel gioco è l'arma di Grumo e non si trova): nessun pezzo ha la loro forma.
 

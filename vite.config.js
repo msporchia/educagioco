@@ -50,7 +50,8 @@ function scriviVersione () {
     enforce: 'post',   // dopo viteSingleFile: solo allora la pagina pesa quello che pesa
     generateBundle (_opzioni, bundle) {
       const sorgente = bundle['index.html']?.source
-      const peso = typeof sorgente === 'string' ? Buffer.byteLength(sorgente) : (sorgente?.byteLength || 0)
+      const lunga = typeof sorgente === 'string' ? Buffer.byteLength(sorgente) : (sorgente?.byteLength || 0)
+      const peso = lunga   // la pagina: è quella che «cerca aggiornamenti» scarica a mano (il resto lo scarica il service worker)
       this.emitFile({
         type: 'asset',
         fileName: 'versione.json',
@@ -67,7 +68,18 @@ function scriviVersione () {
 function scriviServiceWorker () {
   return {
     name: 'scrivi-service-worker',
-    generateBundle () {
+    enforce: 'post',   // dopo gli altri: la lista dei file la scrive chi li ha visti tutti
+    generateBundle (_opzioni, bundle) {
+      // sito spezzato: tutto quello che il build ha prodotto (nomi con l'impronta, quindi immutabili) tranne la
+      // pagina, che ha già la sua strada, e i due file che dicono la versione. [indirizzo, byte]
+      const FILE = !SPEZZATO ? [] : Object.entries(bundle)
+        .filter(([nome]) => !['index.html', 'sw.js', 'versione.json'].includes(nome))
+        .map(([nome, o]) => {
+          const gioco = o.type === 'chunk' && /\/giochi\/([^/]+)\/Gioco\.vue/.exec(o.facadeModuleId || '')
+          const vecchio = o.type === 'chunk' && /\/views\/(\w+)\.vue/.exec(o.facadeModuleId || '')
+          return ['./' + nome, o.type === 'asset' ? o.source.length : o.code.length,
+                  gioco ? gioco[1] : (vecchio && VECCHI[vecchio[1]]) || GRUPPI.get(nome) || '']
+        })
       const cache = `educagioco-${VERSIONE.id}`
       this.emitFile({
         type: 'asset',
@@ -75,6 +87,7 @@ function scriviServiceWorker () {
         source: `/* generato dal build — non si modifica a mano (vite.config.js) */
 const CACHE = ${JSON.stringify(cache)}
 const PAGINA = './'
+const FILE = ${JSON.stringify(FILE)}   // sito spezzato: [indirizzo, byte, gioco ('' = base)]; vuota nel file unico
 const ROBA = ['./manifest.webmanifest', './icona.svg', './icona-192.png',
               './icona-512.png', './icona-maskable.png', './apple-touch-icon.png']
 
@@ -82,6 +95,78 @@ const ROBA = ['./manifest.webmanifest', './icona.svg', './icona-192.png',
 // crede fresca. Senza, il service worker nuovo può mettersi in casa la
 // pagina vecchia che il browser si teneva da parte.
 const fresca = u => new Request(u, { cache: 'no-cache' })
+
+// Il sito spezzato, in due tempi (docs/core/avvio-e-memoria.md). Ogni file ha l'impronta nel nome, quindi non cambia
+// mai: quello che una versione precedente ha già in cassa si copia, senza rete. L'installazione scarica solo la BASE
+// (home, codice comune: i file senza gioco); i giochi li scarica poi, uno alla volta, quando la pagina lo chiede
+// (messaggio 'scarica': a ogni avvio, e riprende da dove era arrivato). Uno che manca fa fallire solo la base.
+// I progressi vanno alla pagina sul canale 'educagioco-scarico'.
+const canale = typeof BroadcastChannel === 'function' ? new BroadcastChannel('educagioco-scarico') : null
+const annuncia = d => { if (canale) canale.postMessage(d) }
+
+async function inCassa (c, f) {
+  if (await c.match(f[0])) return true
+  const altrove = await caches.match(f[0])          // la cache di una versione precedente
+  if (!altrove) return false
+  await c.put(f[0], altrove)
+  return true
+}
+
+// scarica l'elenco dei file non ancora in cassa, qualche file alla volta, contando i byte
+async function scarica (c, elenco, fase, mancanti) {
+  const byteTotale = elenco.reduce((a, f) => a + f[1], 0)
+  let fatti = 0, byteFatti = 0
+  const coda = elenco.slice()
+  const stato = fine => ({ fase: fase, fatti: fatti, totale: elenco.length, byteFatti: byteFatti, byteTotale: byteTotale, mancanti: mancanti(), fine: !!fine })
+  annuncia(stato())
+  const operaio = async () => {
+    for (let f = coda.shift(); f; f = coda.shift()) {
+      await c.add(f[0])
+      fatti++; byteFatti += f[1]; annuncia(stato())
+    }
+  }
+  await Promise.all([operaio(), operaio(), operaio(), operaio()])
+  annuncia(stato(true))
+}
+
+async function scaricaBase (c) {
+  if (!FILE.length) return
+  const daPrendere = []
+  for (const f of FILE) if (!(await inCassa(c, f)) && !f[2]) daPrendere.push(f)
+  await scarica(c, daPrendere, 'base', function () { return [] })
+}
+
+let inCorso = null
+function scaricaGiochi () {
+  if (!inCorso) inCorso = (async () => {
+    const c = await caches.open(CACHE)
+    const poi = []
+    for (const f of FILE) if (f[2] && !(await inCassa(c, f))) poi.push(f)
+    const mancano = function () { return [...new Set(poi.filter(function (f) { return !f.fatto }).map(function (f) { return f[2] }))] }
+    if (!poi.length) return annuncia({ fase: 'giochi', fatti: 0, totale: 0, byteFatti: 0, byteTotale: 0, mancanti: [], fine: true })
+    const gruppi = mancano()
+    // un gioco per volta: finito il suo, si può aprire senza rete
+    let byteFatti = 0
+    const byteTotale = poi.reduce((a, f) => a + f[1], 0)
+    for (const g of gruppi) {
+      const suoi = poi.filter(function (f) { return f[2] === g })
+      try {
+        await scarica(c, suoi, 'giochi-un-gioco', function () { return mancano() })
+      } catch (e) {
+        annuncia({ fase: 'giochi', fatti: 0, totale: poi.length, byteFatti: byteFatti, byteTotale: byteTotale, mancanti: mancano(), fine: false, errore: true })
+        return
+      }
+      for (const f of suoi) f.fatto = true
+      byteFatti += suoi.reduce((a, f) => a + f[1], 0)
+      annuncia({ fase: 'giochi', fatti: poi.filter(function (f) { return f.fatto }).length, totale: poi.length, byteFatti: byteFatti, byteTotale: byteTotale, mancanti: mancano(), fine: !mancano().length })
+    }
+  })().then(function () { inCorso = null }, function () { inCorso = null })
+  return inCorso
+}
+
+self.addEventListener('message', e => {
+  if (e.data && e.data.tipo === 'scarica') e.waitUntil(scaricaGiochi())
+})
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE)
@@ -94,6 +179,7 @@ self.addEventListener('install', e => {
       // il resto a uno a uno: un'icona mancante non è un buon motivo per
       // restare senza offline
       ...ROBA.map(u => c.add(fresca(u)).catch(() => {})),
+      scaricaBase(c),
     ]))
     .then(() => self.skipWaiting()))
 })
@@ -166,16 +252,89 @@ function iconaInline () {
         .trim()
       const dato = 'data:image/svg+xml,' + encodeURIComponent(svg)
       // %INDIRIZZO%: un data: URI non lo scaricano i meta dell'anteprima, vogliono un URL assoluto
+      // l'id di versione anche nella pagina: «cerca aggiornamenti» controlla che quella scaricata sia la sua (nel sito
+      // spezzato la pagina è di 4 KB e l'id sta nel JS)
       return html.replace('%ICONA%', dato).replaceAll('%INDIRIZZO%', INDIRIZZO)
+        .replace('</head>', `  <meta name="versione" content="${VERSIONE.id}">\n${SPEZZATO ? `  <script>globalThis.__VERSIONE_PAGINA__=${JSON.stringify(VERSIONE)}</script>\n` : ''}</head>`)
+    },
+  }
+}
+
+// SPEZZATO=1: il sito installato, in file separati (dist-sito/) invece del file unico: vedi docs/core/avvio-e-memoria.md
+const SPEZZATO = !!process.env.SPEZZATO
+
+// Solo nel sito spezzato: i moduli generati tengono sprite e voci come stringhe `data:…;base64,…`; qui diventano file
+// veri (assets/), e nel modulo resta l'indirizzo. Nei test in Node i moduli restano com'erano.
+// Il gruppo di un file: il gioco a cui serve ('sotterraneo', 'inglese'…) o '' se serve a tutti (la base: home, codice
+// comune, schermate dei grandi). Il service worker scarica la base all'installazione e i giochi poi, uno alla volta.
+// i giochi vecchi (src/views/) stanno in un file loro; il gruppo è quello della carta (o del gioco che ne porta gli sprite)
+const VECCHI = { MathGame: 'mate', TowerDefense: 'castello', BancarellaGame: 'bancarella', GeneraleGame: 'generale', LinguaGame: 'inglese' }
+const GRUPPI = new Map()   // nome del file prodotto → gruppo; lo riempie estraiDati, lo legge il service worker
+function gruppoDiModulo (id) {
+  const m = /\/src\/giochi\/([^/]+)\//.exec(id)
+  if (m) return m[1]
+  if (/\/src\/data\/voci-es\.js/.test(id)) return 'spagnolo'
+  if (/\/src\/data\/voci\.js/.test(id)) return 'inglese'
+  return ''
+}
+
+function estraiDati () {
+  const emessi = []   // [riferimento, gruppo]
+  const DATO = /(['"`])data:(image\/webp|image\/png|audio\/ogg);base64,([A-Za-z0-9+/=]{2000,})\1/g
+  return {
+    name: 'estrai-dati',
+    enforce: 'pre',
+    generateBundle () {
+      for (const [ref, gruppo] of emessi) {
+        const nome = this.getFileName(ref)
+        // lo stesso file chiesto da due giochi non è di nessuno dei due: sta nella base
+        GRUPPI.set(nome, GRUPPI.has(nome) && GRUPPI.get(nome) !== gruppo ? '' : gruppo)
+      }
+    },
+    transform (codice, id) {
+      if (!SPEZZATO || !codice.includes(';base64,') || !/\.(js|vue)(\?|$)/.test(id)) return null
+      const nome = id.split('/').pop().replace(/\.(js|vue).*$/, '')
+      let n = 0
+      const nuovo = codice.replace(DATO, (_tutto, _q, tipo, b64) => {
+        const estensione = tipo.split('/')[1].replace('webp', 'webp')
+        const ref = this.emitFile({ type: 'asset', name: `${nome}-${n++}.${estensione}`, source: Buffer.from(b64, 'base64') })
+        emessi.push([ref, gruppoDiModulo(id)])
+        return `import.meta.ROLLUP_FILE_URL_${ref}`   // Vite lo trasforma già in una stringa (new URL(…).href)
+      })
+      return nuovo === codice ? null : { code: nuovo, map: null }
     },
   }
 }
 
 export default defineConfig({
+  base: SPEZZATO ? './' : '/',   // il sito sta sotto un percorso (GitHub Pages) e si apre anche da una cartella
   // salvaFoglietto è `apply: 'serve'`: solo per il banco (npm run mondo), non nel build
-  plugins: [vue(), viteSingleFile(), scriviVersione(), iconaInline(), scriviServiceWorker(),
+  plugins: [estraiDati(), vue(), ...(SPEZZATO ? [] : [viteSingleFile()]), scriviVersione(), iconaInline(), scriviServiceWorker(),
             salvaFoglietto()],
-  define: { __VERSIONE__: JSON.stringify(VERSIONE), __INDIRIZZO__: JSON.stringify(INDIRIZZO) },
-  build: { target: 'es2020', assetsInlineLimit: 100000000, cssCodeSplit: false,
+  define: { __SPEZZATO__: JSON.stringify(SPEZZATO),
+            // sito spezzato: la versione la porta la pagina (uno script in index.html) e non il JS, se no ogni build cambierebbe
+            // il nome di tutti i file di codice e un aggiornamento li riscaricherebbe tutti
+            __VERSIONE__: SPEZZATO ? 'globalThis.__VERSIONE_PAGINA__' : JSON.stringify(VERSIONE), __INDIRIZZO__: JSON.stringify(INDIRIZZO) },
+  build: { rollupOptions: { output: {
+             // Vue non cambia mai: un file suo, che un aggiornamento non riscarica
+             // Il codice condiviso in un file suo, che non conosce i nomi dei giochi: se stesse nel JS di avvio (che porta l'elenco
+             // dei file da caricare) ogni gioco cambiato cambierebbe il nome di quello, e a cascata di tutti gli altri.
+             // (solo nel sito spezzato: il file unico mette tutto in linea, e con quello manualChunks è un errore anche se vuoto)
+             ...(!SPEZZATO ? {} : { manualChunks: id => {
+               if (id.includes('node_modules')) return 'vendor'
+               const m = /\/src\/(.*)$/.exec(id)
+               if (!m) return undefined
+               const q = m[1]
+               if (q === 'main.js' || q === 'App.vue' || q === 'giochi/schermate.js') return undefined   // il JS di avvio: le strade verso i giochi
+               if (/^giochi\/[^/]+\/|^views\//.test(q)) return undefined                                  // un gioco: lo decide Rollup
+               return 'comune'
+             } }),
+             // il gioco si riconosce dal nome del file (gioco-sotterraneo-<hash>.js): servirà a scaricarli a gruppi
+             chunkFileNames: c => {
+               const m = c.name === 'Gioco' && /giochi\/([^/]+)\/Gioco\.vue/.exec(c.facadeModuleId || '')
+               return m ? `assets/gioco-${m[1]}-[hash].js` : 'assets/[name]-[hash].js'
+             } } },
+           target: 'es2020', assetsInlineLimit: SPEZZATO ? 4096 : 100000000, cssCodeSplit: false,
+           outDir: SPEZZATO ? 'dist-sito' : 'dist',
            reportCompressedSize: false, chunkSizeWarningLimit: 100000 },
 })

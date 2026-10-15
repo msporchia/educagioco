@@ -3,7 +3,7 @@
 // bambino può confrontare («una squadra ogni 9 secondi → ogni 8»). Gira in Node,
 // non sa che esista uno schermo: restituisce righe `{ nome, ora, dopo }` e chi la
 // mostra decide come. Tutto viene da `dati/regole.js`, niente numeri qui.
-import { TRUPPE, CRESCITA, CASTELLO, AZIONI, LIV_MAX, MINIERA_MAX, RIPARA, MURO, GIOCATORE, BOMBA } from '../dati/regole.js'
+import { TRUPPE, CRESCITA, CASTELLO, AZIONI, LIV_MAX, RIPARA, MURO, GIOCATORE, BOMBA } from '../dati/regole.js'
 
 const secondi = n => `${(Math.round(n * 10) / 10).toString().replace('.', ',')} s`
 const num = n => String(Math.round(n))
@@ -19,14 +19,14 @@ export function ruoloDi(id) {
     `colpisce ${colpisce}, ${dove}`,
     k.vola ? 'vola: scavalca i muri' : 'cammina: si ferma ai muri',
     k.splash ? 'il suo colpo scoppia: ferisce anche chi sta intorno' : 'colpisce un bersaglio per volta',
-    `una squadra è di ${k.n}, e salendo di livello le squadre crescono`,
+    `una squadra è di ${k.n}, e ogni tre livelli (3, 6, 9…) ne esce una in più`,
   ]
 }
 
 /* Una truppa al livello `liv` (1..10): numeri semplici per i bambini. */
 export function numeriTruppa(id, liv) {
   const k = TRUPPE[id]
-  const f = CRESCITA.forza(liv)
+  const f = CRESCITA.forza(liv, k.n)
   return {
     n: k.n + CRESCITA.omini(liv, k.n),
     squadra: CRESCITA.squadraOgni(liv),
@@ -68,18 +68,19 @@ export function dettaglioTruppa(id, liv, { costruire = false } = {}) {
   }
 }
 
-/* Le righe di una scelta che non è una truppa. `stato` porta i livelli di adesso. */
-export function dettaglioAzione(azione, { miniera = 1, castello = 1 } = {}) {
+/* Le righe di una scelta che non è una truppa. `miniera` è il livello di QUELLA miniera (0 = da
+   costruire), `castello` quello del castello. */
+export function dettaglioAzione(azione, { miniera = 0, castello = 1 } = {}) {
   if (azione === 'miniera') {
-    const fine = miniera >= MINIERA_MAX
-    const r = l => CRESCITA.miniera.resa(l)
-    const base = GIOCATORE.moneteAlSecondo
+    const base = Math.max(1, miniera)
+    const piu = l => GIOCATORE.moneteAlSecondo * 0.7 * l            // le monete al secondo che porta una miniera di livello l
     return {
       livello: miniera,
-      etichette: etichette(miniera),
-      prezzo: fine ? null : CRESCITA.miniera.prezzo[miniera],
-      righe: [{ nome: 'Monete al secondo', ora: dec(r(miniera) * base), dopo: fine ? null : dec(r(miniera + 1) * base) },
-              { nome: 'Rende', ora: `×${dec(r(miniera))}`, dopo: fine ? null : `×${dec(r(miniera + 1))}` }],
+      etichette: etichette(miniera, miniera < 1),
+      prezzo: CRESCITA.miniera.prezzo(miniera),
+      righe: [{ nome: 'Monete al secondo in più', ora: `+${dec(piu(base))}`, dopo: `+${dec(piu(base + 1))}` },
+              { nome: 'Rende', ora: `+${Math.round(70 * base)}%`, dopo: `+${Math.round(70 * (base + 1))}%` },
+              { nome: 'Vita della miniera', ora: num(CRESCITA.miniera.vita(base)), dopo: num(CRESCITA.miniera.vita(base + 1)) }],
     }
   }
   if (azione === 'castello') {
@@ -122,7 +123,7 @@ export function dettaglioAzione(azione, { miniera = 1, castello = 1 } = {}) {
 export function guastiDeiDettagli() {
   const g = []
   for (const id of Object.keys(TRUPPE)) {
-    for (const liv of [0, 1, 5, LIV_MAX]) {
+    for (const liv of [0, 1, 5, 20]) {
       const d = dettaglioTruppa(id, liv)
       if (!d.righe.length || d.righe.some(r => !r.nome || r.ora === undefined)) g.push(`${id} liv ${liv}: righe storte`)
       if (liv < LIV_MAX && d.righe.some(r => r.dopo === null)) g.push(`${id} liv ${liv}: manca il «dopo»`)

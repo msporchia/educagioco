@@ -149,6 +149,7 @@ controlla('gli altri sono un posto vuoto', (await page.locator('[data-tesoro][da
 controlla('senza dire «in arrivo»', !/in arrivo/i.test(await page.locator('[data-tesori]').innerText()))
 await scatto(page, 'eroe-tesori')
 {
+  await finestraFerma(page)   // la cornice misurata mentre cresce è più piccola: il tocco «fuori» le cadrebbe dentro
   const s = await page.locator('.sot-sipario').boundingBox(), c = await page.locator('.sot-cornice').boundingBox()
   await tocca(s.x + s.width / 2, Math.max(s.y + 4, (s.y + c.y) / 2))
   await attendi(page, 300)

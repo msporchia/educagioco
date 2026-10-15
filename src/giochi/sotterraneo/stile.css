@@ -82,6 +82,28 @@
   border: 2px solid #2b2433; border-radius: 10px; animation: sot-respira 1.6s ease-in-out infinite;
 }
 @keyframes sot-respira { 50% { transform: translateY(-3px) } }
+/* chi cura chiama chi ne ha bisogno: un fumetto sopra la testa che resta finché serve, senza bloccare niente (si tocca come lei) */
+.sot-richiamo {
+  position: absolute; right: -8px; bottom: 100%; z-index: 2; width: max-content; max-width: 132px; margin-bottom: 4px;
+  padding: 4px 8px 5px; font-size: 12px; font-weight: 700; line-height: 1.2; text-align: center; color: #2b2433;
+  background: #fffaf0; border: 2px solid #2b2433; border-radius: 10px; animation: sot-respira 1.8s ease-in-out infinite;
+}
+.sot-richiamo::after {
+  content: ''; position: absolute; right: 22px; top: 100%; width: 8px; height: 8px; margin-top: -5px;
+  background: #fffaf0; border: solid #2b2433; border-width: 0 2px 2px 0; transform: rotate(45deg);
+}
+.sot-richiamo[data-richiamo-di="vita"] { background: #ffe3e0 }
+.sot-richiamo[data-richiamo-di="vita"]::after { background: #ffe3e0 }
+.sot-richiamo[data-richiamo-di="energia"] { background: #dcecff }
+.sot-richiamo[data-richiamo-di="energia"]::after { background: #dcecff }
+/* il numero che sale sopra l'eroe curato: verde la vita, azzurro l'energia */
+.sot-cura-fiocco {
+  position: absolute; left: 0; top: -64px; z-index: 3; font-size: 18px; font-weight: 800; white-space: nowrap;
+  text-shadow: 0 2px 0 #000c, 0 0 8px #000a; transform: translateX(-50%); animation: sot-cura-sale 2s ease-out forwards;
+}
+.sot-cura-vita { color: #7dff9a }
+.sot-cura-energia { color: #7fc8ff }
+@keyframes sot-cura-sale { 0% { opacity: 0; transform: translate(-50%, 10px) } 15% { opacity: 1 } 100% { opacity: 0; transform: translate(-50%, -34px) } }
 
 .sot-io-sopra { position: absolute; left: 0; top: 0; pointer-events: none; will-change: transform }
 .sot-io-sopra > .sot-armato { position: absolute; left: 0; top: 0; transform: translate(-50%, -94%) }
@@ -288,7 +310,7 @@
 }
 .sot-trovato.sot-piano { color: var(--sot-tenue) }
 @media (prefers-reduced-motion: reduce) {
-  .sot-tre-punti, .sot-segno-missione.sot-segno-consegna, .sot-segno-posto.sot-adesso, .sot-bussola b, .sot-freccina { animation: none }
+  .sot-tre-punti, .sot-richiamo, .sot-segno-missione.sot-segno-consegna, .sot-segno-posto.sot-adesso, .sot-bussola b, .sot-freccina { animation: none }
 }
 
 .sot-campo { flex: 1; min-height: 0; position: relative }
@@ -897,16 +919,17 @@
   font-style: normal; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: #c9a46a;
 }
 
-/* l'eroe in mezzo e le quattro caselle intorno, i numeri accanto */
+/* l'eroe in mezzo e le sei caselle intorno (tre per lato), i numeri accanto */
 .sot-intorno {
   flex: none; display: grid; grid-template-columns: auto auto auto 1fr; align-items: center; gap: 6px;
   padding: 8px; border-radius: 12px; border: 1px solid #c9963a55;
   background: radial-gradient(70% 100% at 32% 50%, #3d2c1b, #120c08 78%);
   box-shadow: inset 0 2px 12px #000b;
 }
-.sot-intorno-lato { display: grid; gap: 6px }
+.sot-intorno-lato { display: grid; gap: 5px }
+.sot-intorno-lato .sot-casella.sot-piccola { width: 46px; height: 46px }
 .sot-intorno-eroe {
-  width: 76px; height: 106px; display: grid; place-items: end center; padding-bottom: 6px;
+  align-self: stretch; width: 76px; min-height: 106px; display: grid; place-items: end center; padding-bottom: 6px;
   background: radial-gradient(48% 14% at 50% 90%, #ffd23f30, transparent);
 }
 .sot-intorno-numeri {
@@ -1028,6 +1051,12 @@
 .sot-cartellino.sot-cart-questo { border-color: color-mix(in srgb, var(--sot-gradino) 70%, transparent);
   box-shadow: inset 0 0 14px color-mix(in srgb, var(--sot-gradino) 18%, transparent) }
 .sot-cartellino > small { font-size: 10.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: #b9a27a }
+/* un anello con le due dita piene: il tasto per toglierne l'altro (Confronto.vue) */
+.sot-scambia {
+  min-height: 36px; padding: 4px 8px; font: inherit; font-size: 12.5px; font-weight: 800; color: #ffe39a; text-align: left;
+  background: #ffd23f14; border: 1px solid #c9963a99; border-radius: 8px
+}
+.sot-scambia:active { transform: scale(.97) }
 .sot-cart-pezzo { display: flex; align-items: center; gap: 5px; min-width: 0 }
 .sot-cart-pezzo > span { display: grid; min-width: 0 }
 .sot-cart-pezzo b {

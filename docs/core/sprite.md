@@ -196,3 +196,5 @@ in `giochi/fattoria/dati/animali.js` legge foglietto → scheda → ripiego. Si
 calibra a occhio nel banco («i ritagli» → modo **agganci**, trascinando i
 cerchietti con l'anteprima vestita accanto) e si controlla in
 `poc/scatti/agganci-fattoria.png`.
+
+- **L'atlante nitido è largo 2048 px** (`LARGO_NITIDO` in `strumenti/sprite/atlante.py`), non 1024: alto 4279 px non stava in una texture su molti telefoni (il limite tipico è 4096) e il sotterraneo andava a scatti solo sul cellulare, anche da fermo (14 ottobre 2026). Nessuna immagine del file unico supera i 4096 px per lato.

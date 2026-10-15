@@ -69,6 +69,10 @@ lo dà il posto dove si trova.
 | miniera | spadone, corazza, amuleto d'ossa | arco lungo, manto | + scudo borchiato, amuleto rosso | bipenne |
 | l'abisso | spada di ghiaccio, scudo del teschio | spadone, amuleto d'ossa | + scudo di ferro | + amuleto d'ossa |
 
+La quarta voce di ogni riga è la collana (`collo`); nelle ultime due righe (la miniera e l'abisso) ogni eroe ha anche l'anello verde, al primo dito
+(`P(mano, mancina, corpo, collo, dito, dito2)` in `dati/storia.js`, [gioielli.md](gioielli.md)). Il secondo anello non è della storia: lo
+trova o lo compra chi gioca. `migliora` giudica un gioiello con tutti i posti pieni sui numeri, mai sul posto nella fila.
+
 **La roba attesa** (`robaAttesa` in `motore/storia.js`) non è più la riga
 e basta: è la storia simulata discesa per discesa. Chi esce dalla discesa
 j ha il pezzo della riga dopo a livello `livelloDeiPezzi(j + 1)` (il

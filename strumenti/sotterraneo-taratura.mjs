@@ -44,10 +44,15 @@ async function applicaTara(tara) {
   const zone = await modulo('dati/zone.js')
   const livelli = await modulo('dati/livelli.js')
   const { RISALITA } = await modulo('dati/giocatori-tipo.js')
+  const { CAPORALE } = await modulo('dati/mostri.js')
+  const { OSSA_DEL_GRADO, ATT_DEL_GRADO } = await modulo('dati/varianti.js')
+  const { CURE_DAI_MOSTRI } = await modulo('motore/bottino.js')
+  const mani = { caporale: CAPORALE, ossaGrado: OSSA_DEL_GRADO, attGrado: ATT_DEL_GRADO, cure: CURE_DAI_MOSTRI }
   for (const voce of (tara || '').split(',').filter(Boolean)) {
     const [k, campo] = voce.split('=')[0].split('.')
     const v = Number(voce.split('=')[1])
     if (k === 'risalita') RISALITA[campo] = v
+    else if (mani[k]) mani[k][campo] = v
     else if (k === 'livelli') livelli.CURVA_DELL_ESPERIENZA[campo] = v
     else if (k === 'potenza') livelli.VALORE_DELLA_POTENZA[campo] = v
     else if (k === 'zona') { if (campo in zone.CURVA_DELLE_ZONE) zone.CURVA_DELLE_ZONE[campo] = v; else zone.FORMA_DELLA_ZONA[campo] = v }
@@ -171,6 +176,7 @@ async function stampaIlRapporto(passi, { completo = false, solo = null, tipi = n
   const R = rap.rapporto(P)
   const elenco = (tipi || NOMI_TIPO).filter(t => P.per[t])
   for (const t of elenco) console.log(`\n${rap.tabella(R, t)}`)
+  if (elenco.includes('curioso')) console.log(`\n${(await modulo('motore/rapporto-chiede.js')).tabellaChiede(P, 'curioso')}`)
   for (const t of ['curioso', 'bravo'].filter(x => elenco.includes(x))) {
     const f = rap.forbice(P, t)
     console.log(`\nLa roba con cui ${GIOCATORI_TIPO[t].nome.toLowerCase()} entra (10° · mediana · 90° percentile): la forza sul livello atteso, il livello (atteso), le gemme`)
@@ -199,6 +205,7 @@ async function stampaLeSpecie({ completa = true } = {}) {
   const { tabellaDelleSpecie } = await modulo('motore/specie.js')
   const t = tabellaDelleSpecie()
   if (completa) console.log(t.testo)
+  if (completa) console.log(`\nIl grado pesa (ossa, attacco e colpo medi per ruolo e grado, sui piani veri):${(await modulo('motore/specie.js')).tabellaDeiGradi()}`)
   console.log(t.fuori.length ? `\nSpecie che picchiano fuori misura (la prima cosa da guardare):\n${t.fuori.map(x => `  ! ${x}`).join('\n')}` : '\nNessuna specie picchia fuori misura.')
 }
 

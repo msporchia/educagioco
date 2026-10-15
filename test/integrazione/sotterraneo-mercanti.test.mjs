@@ -333,7 +333,7 @@ await scatto(page, 'mercanti-zaino-ritrovato')
 uguale('il tasto dice «Indossa»', (await page.locator('[data-azione="usa"]').innerText()).trim(), 'Indossa')
 await page.locator('[data-azione="usa"]').click()
 await attendi(page, 200)
-uguale('indossato, sta al dito', await page.locator('[data-zaino] [data-casella="dito"][data-cosa="medaglione"]').count(), 1)
+uguale('indossato, sta al collo', await page.locator('[data-zaino] [data-casella="collo"][data-cosa="medaglione"]').count(), 1)
 /* l'amuleto rosso contro il medaglione al dito: due abilità in riga, una meglio e una peggio */
 await page.locator('[data-tasca][data-cosa="amuleto-rosso"]').click()
 await attendi(page, 400)

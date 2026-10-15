@@ -4,11 +4,12 @@
 // (chi porta la chiave, i forzieri) e, se si è perso qualcosa, l'armaiolo e il rigattiere del villaggio. I mostri
 // di ogni discesa sono tarati sulla riga con cui ci si entra (`forza`, `spinta` in dati/campagna.js), e le
 // misure lo controllano (misure/sotterraneo). Una missione fatta dà un piccolo vantaggio, mai un passo intero.
-import { COSE, PESO_DELLA_DIFESA } from './cose.js'
+import { COSE, PESO_DELLA_DIFESA, CASELLE, tipoDellaCasella } from './cose.js'
 import { EROI, portaLa } from './eroi.js'
 import { CAMPAGNA } from './campagna.js'
 
-const P = (mano = null, mancina = null, corpo = null, dito = null) => ({ mano, mancina, corpo, dito })
+// una riga: le caselle di CASELLE (dati/cose.js), la collana prima dei due anelli (`dito`, `dito2`)
+const P = (mano = null, mancina = null, corpo = null, collo = null, dito = null, dito2 = null) => ({ mano, mancina, corpo, collo, dito, dito2 })
 
 export const PASSI = {
   // lo scudo presto, poi lo spadone a due mani quando le ossa dei mostri chiedono braccio
@@ -19,8 +20,8 @@ export const PASSI = {
     P('spada', 'scudo-legno', 'panciotto'),
     P('spada', 'scudo-borchiato', 'panciotto', 'amuleto-azzurro'),
     P('spada', 'scudo-ferro', 'corazza', 'amuleto-azzurro'),
-    P('spadone', null, 'corazza', 'amuleto-osso'),
-    P('spada-di-ghiaccio', 'scudo-teschio', 'corazza', 'amuleto-osso'),
+    P('spadone', null, 'corazza', 'amuleto-osso', 'anello-verde'),
+    P('spada-di-ghiaccio', 'scudo-teschio', 'corazza', 'amuleto-osso', 'anello-verde'),
   ],
   // picchia più del cavaliere e regge meno: la stoffa (il saio che tiene in piedi, poi il manto) e l'arco lungo
   elfa: [
@@ -30,8 +31,8 @@ export const PASSI = {
     P('spada', 'scudo-legno', 'saio'),
     P('spada', 'scudo-legno', 'saio', 'amuleto-azzurro'),
     P('spada', 'scudo-borchiato', 'manto', 'amuleto-azzurro'),
-    P('arco-lungo', null, 'manto', 'amuleto-azzurro'),
-    P('spadone', null, 'manto', 'amuleto-osso'),
+    P('arco-lungo', null, 'manto', 'amuleto-azzurro', 'anello-verde'),
+    P('spadone', null, 'manto', 'amuleto-osso', 'anello-verde'),
   ],
   // il mago picchia già: gli serve pelle. La bacchetta e lo scudo, poi lo scettro (il bastone a due mani, che vale la bacchetta più
   // lo scudo, è la sua strada «pura», docs/sotterraneo/strade.md)
@@ -42,8 +43,8 @@ export const PASSI = {
     P('verga', 'scudo-legno', 'saio', 'amuleto-azzurro'),
     P('scettro', 'scudo-legno', 'saio', 'amuleto-azzurro'),
     P('scettro', 'scudo-legno', 'manto', 'amuleto-azzurro'),
-    P('scettro', 'scudo-borchiato', 'manto', 'amuleto-rosso'),
-    P('scettro', 'scudo-ferro', 'manto', 'amuleto-rosso'),
+    P('scettro', 'scudo-borchiato', 'manto', 'amuleto-rosso', 'anello-verde'),
+    P('scettro', 'scudo-ferro', 'manto', 'amuleto-rosso', 'anello-verde'),
   ],
   // il nano para di suo: l'accetta e lo scudo, poi le asce a due mani
   nano: [
@@ -53,8 +54,8 @@ export const PASSI = {
     P('ascia', null, 'panciotto'),
     P('ascia', null, 'panciotto', 'amuleto-azzurro'),
     P('ascia', null, 'corazza', 'amuleto-azzurro'),
-    P('bipenne', null, 'corazza', 'amuleto-azzurro'),
-    P('bipenne', null, 'corazza', 'amuleto-osso'),
+    P('bipenne', null, 'corazza', 'amuleto-azzurro', 'anello-verde'),
+    P('bipenne', null, 'corazza', 'amuleto-osso', 'anello-verde'),
   ],
 }
 
@@ -78,7 +79,7 @@ export const POZIONI_ATTESE = [
 // pezzi della riga sono di un livello sotto (motore/storia.js, livelloDeiPezzi)
 export const LIVELLI_ATTESI = [1, 2, 3, 5, 7, 8, 10, 12]
 
-export const CASELLE = ['mano', 'mancina', 'corpo', 'dito']
+export { CASELLE }
 
 // la riga con cui si entra nella discesa `k` (fuori misura: la prima o l'ultima)
 export const passoDi = (eroe, k) => {
@@ -121,7 +122,7 @@ export function guastiDellaStoria() {
         if (!x) continue
         if (!COSE[x]) { g.push(`${e.chiave}, riga ${k}: "${x}" non esiste`); continue }
         const dove = COSE[x].dove
-        if (dove !== c && !(c === 'mancina' && dove === 'mano')) g.push(`${e.chiave}, riga ${k}: ${x} non va su ${c}`)
+        if (dove !== tipoDellaCasella(c) && !(c === 'mancina' && dove === 'mano')) g.push(`${e.chiave}, riga ${k}: ${x} non va su ${c}`)
         if (!portaLa(e, COSE[x])) g.push(`${e.chiave}, riga ${k}: ${x}, e non lo porta`)
         if (!COSE[x].prezzo) g.push(`${e.chiave}, riga ${k}: ${x} non ha un prezzo, e il banco non lo potrebbe dare`)
       }

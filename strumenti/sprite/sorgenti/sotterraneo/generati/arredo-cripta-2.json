@@ -442,20 +442,6 @@
         19
       ]
     },
-    "cripta-arco-murato": {
-      "da": [
-        31,
-        1002
-      ],
-      "cella": [
-        117,
-        163
-      ],
-      "misura": [
-        20,
-        27
-      ]
-    },
     "cripta-blocchi-caduti": {
       "da": [
         196,
@@ -524,20 +510,6 @@
       "misura": [
         15,
         26
-      ]
-    },
-    "cripta-cancello": {
-      "da": [
-        31,
-        1197
-      ],
-      "cella": [
-        123,
-        139
-      ],
-      "misura": [
-        20,
-        23
       ]
     },
     "cripta-campana": {
@@ -629,20 +601,6 @@
         20
       ]
     },
-    "cripta-muro-nicchia": {
-      "da": [
-        212,
-        1367
-      ],
-      "cella": [
-        94,
-        125
-      ],
-      "misura": [
-        16,
-        21
-      ]
-    },
     "cripta-muro-edera": {
       "da": [
         382,
@@ -683,20 +641,6 @@
       "misura": [
         19,
         19
-      ]
-    },
-    "cripta-muro-grata": {
-      "da": [
-        888,
-        1387
-      ],
-      "cella": [
-        94,
-        94
-      ],
-      "misura": [
-        16,
-        16
       ]
     }
   }

@@ -108,6 +108,9 @@ function sblocca(corsa, meta, provati) {
   return false
 }
 
+// un anello o una collana: non si confrontano su un numero solo, si mettono dove c'è posto
+const eGioiello = k => COSE[k].dove === 'dito' || COSE[k].dove === 'collo'
+
 // uno scudo al posto della seconda arma leggera: lo sceglie chi gioca, dallo zaino (vaAddosso non lo fa da sé)
 function scudoMeglio(chi, k) {
   const c = COSE[k]
@@ -203,14 +206,14 @@ function equipaggia(corsa, st = {}, registro = null) {
     // e quello che non è della strada che si sta giocando (motore/strade.js) nemmeno
     if (c.dove && corsa.vincoloDelBanco && !corsa.vincoloDelBanco(corsa, k)) continue
     // un pezzo si giudica su tutto quello che dà (confronto: `meglio`), un'arma sul totale delle due mani
-    if (c.dove && c.dove !== 'dito' && !(c.dove === 'mancina' && corsa.aDueMani(corsa.mano))) {
+    if (c.dove && !eGioiello(k) && !(c.dove === 'mancina' && corsa.aDueMani(corsa.mano))) {
       const conf = corsa.confronto(k)
       if (!conf.addosso ? (c.dove !== 'mancina' || corsa.mancinaLibera()) : conf.meglio > 0) { corsa.usa(i); continue }
     }
     // con un'arma leggera nella mano debole, lo scudo che para più di quanto quell'arma picchi (la difesa conta doppio)
     if (c.dove === 'mancina' && scudoMeglio(corsa, k)) { corsa.usa(i); continue }
-    // al dito la prima cosa che capita: i gioielli non si confrontano su un numero solo
-    if (c.dove === 'dito' && !corsa.dito) { corsa.usa(i); continue }
+    // al dito e al collo la prima cosa che capita, finché c'è un posto libero: i gioielli non si confrontano su un numero solo
+    if (eGioiello(k) && corsa.postoLibero(c.dove)) { corsa.usa(i); continue }
     // beve quando serve, non appena trova (`beviSotto`: la quota di vita sotto cui beve, 0,45 di difetto)
     if (c.usa === 'cura' && corsa.vita < corsa.vitaMax * (st.beviSotto || 0.45)) {
       // quale lo sceglie la regola del giocatore (`tieneLaVita`: l'ampolla della vita aspetta il grosso)
@@ -247,6 +250,19 @@ function robeInteressanti(corsa, quali) {
     .map(v => v.r)
 }
 
+// quanti colpi ha preso ogni mostro, e la vita che costa lo scontro (docs/sotterraneo/giocatori-tipo.md, «Quanto chiede un mostro»): al turno
+// dopo la risposta, chi ha perso ossa ha preso un colpo, chi è caduto lo scrive nello scontro (ruolo 0 di strada, 1 caporale, 2 grosso)
+const COLPI_AL_MOSTRO = new WeakMap()
+function misuraIlTurno(corsa, f, scontro, ossa, vita0) {
+  scontro.pe += Math.max(0, vita0 - corsa.vita) / corsa.vitaMax
+  f.campo.forEach((m, i) => {
+    if (!(m.ossa < ossa[i])) return
+    const n = (COLPI_AL_MOSTRO.get(m) || 0) + 1
+    COLPI_AL_MOSTRO.set(m, n)
+    if (m.morto) scontro.mc.push([m.grosso ? 2 : m.caporale ? 1 : 0, n])
+  })
+}
+
 // `bravura`: 1 è un adulto attento, 0.75 un bambino normale. `conto` è il taccuino della discesa
 function sbriga(corsa, bravura, sorte, conto, st = {}, scontro = null) {
   const f = corsa.foglio
@@ -272,7 +288,9 @@ function sbriga(corsa, bravura, sorte, conto, st = {}, scontro = null) {
         const id = preparaLAbilita(corsa, f, st)
         if (id && scontro) scontro.ab[id] = (scontro.ab[id] || 0) + 1
       }
+      const ossa = scontro ? f.campo.map(m => m.ossa) : null, vita0 = corsa.vita
       corsa.rispondi(sorte() < bravura)
+      if (scontro) misuraIlTurno(corsa, f, scontro, ossa, vita0)
       return true
     }
     case 'porta':
@@ -292,6 +310,7 @@ function sbriga(corsa, bravura, sorte, conto, st = {}, scontro = null) {
       corsa.chiudi()
       return false
     case 'scala':
+      conto.scale.push(corsa.vita / corsa.vitaMax)   // con quanta vita si scende (la taratura: sotto metà, in fondo a una discesa)
       corsa.scendi()
       return false
     default:
@@ -319,20 +338,21 @@ export function gioca(tappa, { bravura = 0.8, seme = 7, come = 'minimo', rnd = n
   let giri = 0
   const persi = []
   const provati = new Map()
-  const conto = { fonti: 0, pozioni: 0 }
+  const conto = { fonti: 0, pozioni: 0, scale: [] }
   const alTettoIn = corsa.alTettoDelleCure   // scende con il tetto delle cure già pieno: la taratura lo conta
+  let toccaIlTetto = alTettoIn
   const scontri = []
   let aperto = null, prima = { vita: corsa.vita, energia: corsa.energia }
   const sorsi = new Map()
   const risalite = []
   // le armi nuove (docs/sotterraneo/fine-discesa-e-strade.md): i pezzi che entrano addosso e alzano il valore dell'eroe (`trovati`), e quelli finiti nello zaino (`inutili`)
   const armi = { trovati: 0, inutili: 0, rimandati: 0 }
-  const pezziDelloZaino = () => [corsa.mano, corsa.mancina, corsa.corpo, corsa.dito, ...corsa.zaino].filter(k => k && COSE[k] && COSE[k].dove)
+  const pezziDelloZaino = () => [corsa.mano, corsa.mancina, corsa.corpo, corsa.collo, corsa.dito, corsa.dito2, ...corsa.zaino].filter(k => k && COSE[k] && COSE[k].dove)
   let visto = { ...addossoDi(corsa), tutti: pezziDelloZaino(), chiave: '' }
   // i pezzi comprati (all'ingresso o in salita) che aspettavano il livello: indossati dopo, sono comprati e non trovati
   const comprati = new Set(visto.tutti)
   const contaLeArmi = () => {
-    const tutti = pezziDelloZaino(), chiave = `${corsa.mano}|${corsa.mancina}|${corsa.corpo}|${corsa.dito}|${tutti.length}`
+    const tutti = pezziDelloZaino(), chiave = `${corsa.mano}|${corsa.mancina}|${corsa.corpo}|${corsa.collo}|${corsa.dito}|${corsa.dito2}|${tutti.length}`
     if (chiave === visto.chiave) return
     const ora = { ...addossoDi(corsa), tutti, chiave }
     const utili = nuoviUtili(visto, ora)
@@ -359,7 +379,7 @@ export function gioca(tappa, { bravura = 0.8, seme = 7, come = 'minimo', rnd = n
   // uno scontro per volta: lo si apre quando compare il foglio, lo si chiude quando cambia (la vita a fine scontro vale 0 se si sviene)
   const apriLoScontro = f => {
     aperto = { f, r: { k: corsa.piano, n: f.campo.length, tipi: f.campo.map(m => m.tipo), g: f.campo.some(m => m.grosso) ? 1 : 0,
-                       ag: f.agguato ? 1 : 0, v0: prima.vita / corsa.vitaMax, e0: prima.energia / corsa.energiaMax, vf: 0, sv: 0, ab: {}, pz: 0, t: 0 } }
+                       ag: f.agguato ? 1 : 0, cap: f.campo.filter(m => m.caporale).length, pe: 0, mc: [], v0: prima.vita / corsa.vitaMax, e0: prima.energia / corsa.energiaMax, vf: 0, sv: 0, ab: {}, pz: 0, t: 0 } }
   }
   const chiudiLoScontro = () => {
     const svenuto = !!corsa.foglio && corsa.foglio.che === 'svenuto'
@@ -399,7 +419,7 @@ export function gioca(tappa, { bravura = 0.8, seme = 7, come = 'minimo', rnd = n
     const mostri = corsa.mostriBattuti - ris.mostri
     const portale = corsa.livello.robe.find(r => r.che === 'portale')
     if (!portale || (ris.provati.get(corsa.piano) || 0) >= RISALITA.tentativi) return false
-    const camminati = corsa.camminati, piano = corsa.piano, livello = corsa.livelloEroe, gemme = corsa.gemme
+    const camminati = corsa.camminati, piano = corsa.piano, livello = corsa.livelloEroe, gemme = corsa.gemme, vitaPartendo = corsa.vita / corsa.vitaMax
     if (!raggiungi(corsa, portale)) sblocca(corsa, { x: portale.x, y: portale.y }, provati)
     if (!corsa.foglio || corsa.foglio.che !== 'portale') {
       if (!corsa.foglio) ris.provati.set(piano, (ris.provati.get(piano) || 0) + 1)
@@ -412,12 +432,13 @@ export function gioca(tappa, { bravura = 0.8, seme = 7, come = 'minimo', rnd = n
     corsa.indossa(nuova)
     for (const [k] of reg.pezzi) comprati.add(k)
     corsa.sistemaIlCorredo()
-    corsa.vita = Math.min(corsa.vita, corsa.vitaMax)
-    corsa.energia = Math.min(corsa.energia, corsa.energiaMax)
+    // sopra la guaritrice e l'incantatrice curano gratis (docs/sotterraneo/terra-di-sopra.md): si risale sano e carico
+    corsa.vita = corsa.vitaMax
+    corsa.energia = corsa.energiaMax
     corsa.chiudi()
     const utili = nuoviUtili(prima0, addossoDi(corsa))
     visto = { ...addossoDi(corsa), tutti: pezziDelloZaino(), chiave: '' }   // quello che si è comprato non è «trovato»
-    risalite.push({ p: piano, l: livello, g: gemme, sp: reg.speso, ve: reg.venduto, pz: reg.pezzi, po: reg.pozioni, ut: utili, ca: corsa.camminati - camminati, mo: mostri })
+    risalite.push({ vi: vitaPartendo, p: piano, l: livello, g: gemme, sp: reg.speso, ve: reg.venduto, pz: reg.pezzi, po: reg.pozioni, ut: utili, ca: corsa.camminati - camminati, mo: mostri })
     ris.ultima = corsa.gemme
     ris.mostri = corsa.mostriBattuti
     ris.obiettivo = reg.obiettivo
@@ -426,6 +447,7 @@ export function gioca(tappa, { bravura = 0.8, seme = 7, come = 'minimo', rnd = n
 
   while (!corsa.finita && giri++ < tettoGiri) {
     if (corsa.piano !== pianoOra) chiudiIlPiano()
+    if (!toccaIlTetto && corsa.alTettoDelleCure) toccaIlTetto = true
     if (aperto && corsa.foglio !== aperto.f) chiudiLoScontro()
     if (fino != null && corsa.piano >= fino) break
     if (corsa.foglio) {   // finché un foglio è aperto non si cammina
@@ -481,6 +503,10 @@ export function gioca(tappa, { bravura = 0.8, seme = 7, come = 'minimo', rnd = n
     armi,
     botteghe: ris ? ris.botteghe : null,
     alTetto: alTettoIn || corsa.cureRifiutate > 0,   // il tetto delle cure ha frenato questa discesa
+    cureTrovate: corsa.cureTrovate,   // le cure raccolte per provenienza
+    cureRifiutate: corsa.cureRifiutate,
+    scale: conto.scale,
+    toccaIlTetto,   // in qualche momento della discesa le tasche hanno avuto il tetto delle cure
     scontri,
     perPiano,
     passiPerPiano,
@@ -564,9 +590,9 @@ export function pianiSani(tappa, quanti = 60) {
 // Un banco già pescato si rimette in discussione (Bottega.prepara) solo se l'eroe è salito di livello (o a discesa finita, quando i banchi ruotano): comprare un pezzo non basta
 export function allaBottega(roba, { finite = 0, eroe = undefined, seme = 1, crescita = null, spesa = 'il meglio', registro = null, scaffale = false, botteghe = null } = {}) {
   const b = new Bottega({ eroe, roba, finite, crescita, rnd: seminato(seme * 53 + 11), ...(botteghe || {}) })
-  // con lo scaffale si guardano solo i banchi che hanno qualcosa per questo eroe (l'incantatrice per chi porta bacchette o stoffa, i gioielli finché il dito è libero)
+  // con lo scaffale si guardano solo i banchi che hanno qualcosa per questo eroe (l'incantatrice per chi porta bacchette o stoffa, i gioielli finché c'è un dito o il collo libero)
   const mercanti = () => (scaffale ? ['armaiolo', 'incantatrice', 'rigattiere'].filter(chi => chi === 'armaiolo' ||
-    (chi === 'incantatrice' ? schedeDi(mercanteDi(chi), b.io).some(s => s.dove) : !b.dito)) : ['armaiolo', 'incantatrice', 'rigattiere'])
+    (chi === 'incantatrice' ? schedeDi(mercanteDi(chi), b.io).some(s => s.dove) : b.postoLibero('dito') || b.postoLibero('collo'))) : ['armaiolo', 'incantatrice', 'rigattiere'])
   const sigDelBanco = RISALITA.rivedi ? String(b.livelloEroe) : ''
   if (scaffale) for (const chi of mercanti()) if (b.ruota.includes(chi) || !b.scaffali[chi] || !botteghe || botteghe.sig !== sigDelBanco) b.prepara(chi)
   const compra = (chi, k) => {
@@ -592,8 +618,8 @@ export function allaBottega(roba, { finite = 0, eroe = undefined, seme = 1, cres
         if (registro) registro.venduto += b.gemme - prima
       }
   }
-  // al dito si mette la prima cosa che capita, come fa equipaggia: i gioielli non si confrontano su un numero
-  const migliora = k => !b.possiedo(k) && ((COSE[k].dove === 'dito' ? !b.dito : b.vaAddosso(k)) || scudoMeglio(b, k))
+  // ai posti liberi di dito e collo si mette la prima cosa che capita, come fa equipaggia: i gioielli non si confrontano su un numero
+  const migliora = k => !b.possiedo(k) && ((eGioiello(k) ? b.postoLibero(COSE[k].dove) : b.vaAddosso(k)) || scudoMeglio(b, k))
   const meglio = k => b.quantoCosta(k) <= b.gemme && migliora(k)
   const offerta = chi => (scaffale ? [...b.mercanzia(chi), ...b.rialzi(chi)] : b.mercanzia(chi))
   // le cure: la più grande che può pagare, finché c'è posto e non si tocca il tetto (nessun calcolo fino: chi sceglie meglio spende meglio)
@@ -610,7 +636,7 @@ export function allaBottega(roba, { finite = 0, eroe = undefined, seme = 1, cres
   if (spesa === 'pozioniPrima') comprePozioni(b.capienza - TASCHE_PER_I_PEZZI)
   for (let giro = 0; giro < 8; giro++) {
     // quanto migliora tutto (confronto: `meglio`, la difesa pesa il doppio); a pari, il più caro
-    const vale = k => (COSE[k].dove === 'dito' ? 1 : scudoMeglio(b, k) && !b.vaAddosso(k)
+    const vale = k => (eGioiello(k) ? 1 : scudoMeglio(b, k) && !b.vaAddosso(k)
       ? (COSE[k].dif || 0) * PESO_DELLA_DIFESA - b.attaccoMancino
       : b.confronto(k).meglio)
     const scelte = mercanti()

@@ -50,7 +50,7 @@ la roba con livello e rarità: [rarita.md](rarita.md).
 
 ## Addosso e in tasca
 
-- **Addosso: la mano, la mano debole, il corpo, il dito. In tasca: sei
+- **Addosso: la mano, la mano debole, il corpo, la collana e due anelli. In tasca: sei
   posti** (`TASCHE` in `dati/mondo.js`). Le tasche sono il limite: scegliere
   cosa lasciare per terra è il bivio fatto con le mani.
 - **Le pozioni uguali stanno in una tasca sola** (l'utente, 9 ottobre: sei posti
@@ -68,8 +68,9 @@ la roba con livello e rarità: [rarita.md](rarita.md).
   stesso** — la regola dei due rami del castello: cambia la forma, mai la
   quantità. Le armi a una mano ci sono a ogni gradino per ogni famiglia che le ha: la sciabola, la scure e la mannaia
   si sono aggiunte per le strade con lo scudo ([strade.md](strade.md)).
-- **Al dito va l'unica cosa che non picchia**: vedere più lontano, tornare su
-  con più gemme, reggere un colpo in più. Ce n'è uno, quindi si sceglie.
+- **Al dito e al collo va quello che non picchia**: vedere più lontano, tornare su
+  con più gemme, reggere un colpo in più. I posti sono tre ([gioielli.md](gioielli.md)), quindi si sceglie
+  e si combina.
 - **Nello zaino le caselle stanno intorno alla figura**, con in pugno l'arma
   vera.
 
@@ -106,8 +107,9 @@ la roba con livello e rarità: [rarita.md](rarita.md).
   stessa copia dell'oggetto.
 - **Con un'arma a due mani la casella di sinistra porta la stessa arma in
   ombra e girata**: vuota direbbe che ci si può mettere qualcosa. In scena
-  invece l'arma a due mani sta **in mezzo, davanti al corpo**; provata la
-  copia sbiadita dall'altro lato: si vedevano due armi.
+  l'arma a due mani sta **di lato, come quella a una mano** (`dati/impugna.js`):
+  in mezzo davanti al corpo copriva la faccia (l'utente, 14 ottobre, con l'arco);
+  provata la copia sbiadita dall'altro lato: si vedevano due armi.
 - **Le figure delle armi guardano tutte nello stesso verso**: in mano
   all'eroe la lama sta in su e l'impugnatura in basso, le armi da tiro con la
   pancia (dell'arco, dell'arco della balestra) a destra, dove guarda l'eroe;
@@ -117,6 +119,12 @@ la roba con livello e rarità: [rarita.md](rarita.md).
   un vuoto chiuso (fra l'arco e la corda, l'occhio di una chiave, un anello)
   si toglie col `buchi` del pezzo (`strumenti/sprite/FORMATO.md`). Mazza e
   martello hanno la loro figura: erano il pugnale 0x72.
+- **Un arco si tiene al fianco, non davanti alla faccia** (l'utente, 14 ottobre: la balestra era «tenuta male»): `dati/impugna.js` dice
+  dove sta ogni arma in mano, una volta per il campo (`scena/tela.js`) e per il ritratto (`viste/Armato.vue`). Gli archi stanno in piedi
+  accanto al corpo, con la corda appena fuori dal viso e il centro all'altezza della mano; l'arco corto è alto 17 pixel sui 28
+  dell'eroe, il lungo 24 (la `misura` nel foglietto). La balestra (`tiene: 'orizzontale'`) è girata nel foglietto, piccola (12×10) e
+  bassa, davanti al petto: più su copre gli occhi, e l'eroe è quasi tutta testa. La spada e il resto non sono cambiati. Lo scontro non
+  disegna l'arma dell'eroe. La tavola per giudicarlo: `node strumenti/sotterraneo-armi.mjs`; il test `unita/sotterraneo-impugna`.
 - **Dove va un'arma raccolta lo decide `postoDellArma`**, provando le
   sistemazioni. Un'arma a due mani sfratta la sinistra, e quello che c'era
   torna in tasca, o per terra se le tasche sono piene.
@@ -130,8 +138,8 @@ la roba con livello e rarità: [rarita.md](rarita.md).
   foglio col confronto: tre tocchi per un sì scontato.
 - **Peggiore o uguale va in tasca**, e si confronta nello zaino. Quello che
   si toglie **non si perde mai**: torna in tasca o prende il posto per terra
-  di quello raccolto. I gioielli restano fuori dall'automatismo quando il dito
-  è occupato: fra due anelli c'è un modo di giocare, non un «più forte».
+  di quello raccolto. I gioielli restano fuori dall'automatismo quando i posti
+  del loro tipo sono pieni: fra due anelli c'è un modo di giocare, non un «più forte».
 - **Nello zaino una tasca toccata sceglie e basta**: sotto compare il
   pannello col confronto e due tasti larghi, «Bevi» (o «Indossa») e «Butta»
   ([La bottega e lo zaino](#la-bottega-e-lo-zaino)).

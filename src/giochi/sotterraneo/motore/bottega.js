@@ -57,7 +57,8 @@ export function robaRaraDi(eroe, livello, { gemme = 0, rnd = Math.random } = {})
   const raro = b => chiaveDelPezzo(b, livello, 'raro', pescaAbilita(b, 2, rnd))
   const mano = porta('mano', 'scettro', 'balestra', 'bipenne', 'spadone', 'spada')
   return { ...ROBA_VUOTA(), gemme, mano: raro(mano), mancina: COSE[mano].mani === 2 ? null : raro('scudo-teschio'),
-           corpo: raro(porta('corpo', 'manto', 'corazza', 'panciotto')), dito: raro('amuleto-osso') }
+           corpo: raro(porta('corpo', 'manto', 'corazza', 'panciotto')), collo: raro('amuleto-osso'),
+           dito: raro('anello-verde'), dito2: raro('anello-ambra') }
 }
 
 // un pezzo che il banco può portare: mai un leggendario, né uno col nome (dei mostri grossi)
@@ -183,7 +184,7 @@ export class Bottega extends Corredo {
     // uno scudo con un'arma a due mani in pugno non si può portare: non migliora niente
     if (c.dove === 'mancina' && this.aDueMani(this.mano)) return true
     // una casella vuota prende tutto, tranne un'arma che picchia meno dei pugni (un arco a chi ha alzato la forza)
-    if (!this.casella(c.dove) && c.dove !== 'mano') return false
+    if (this.postoLibero(c.dove) && c.dove !== 'mano') return false
     // un pezzo che si porta ma non si regge ancora (si compra, va nello zaino) si giudica sul punteggio che darebbe
     if (!this.posso(k)) { const conf = this.confronto(k); return !conf || !(conf.meglio > 0) }
     const p = this.seLoMetto(k)
@@ -277,7 +278,7 @@ export class Bottega extends Corredo {
 
   // il livello e quello che l'eroe ha addosso e nello zaino: se non cambia, il banco non si rimette in discussione
   firmaDelGiudizio() {
-    return [this.livelloEroe, this.mano, this.mancina, this.corpo, this.dito, ...this.zaino].join('|')
+    return [this.livelloEroe, this.mano, this.mancina, this.corpo, this.collo, this.dito, this.dito2, ...this.zaino].join('|')
   }
 
   // Manca il pezzo per cui risparmiare (meno di SALTI_MINIMI pezzi forti, sogni compresi, o di SOGNI_MINIMI sogni in vista) E ce n'è di nuovi da

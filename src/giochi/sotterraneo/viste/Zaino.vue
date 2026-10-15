@@ -18,7 +18,9 @@ const props = defineProps({
   mano: { type: Object, default: null },      // { chiave, em, nome, att, sprite, mani, … } o niente
   mancina: { type: Object, default: null },   // la seconda arma, o lo scudo
   corpo: { type: Object, default: null },
+  collo: { type: Object, default: null },
   dito: { type: Object, default: null },
+  dito2: { type: Object, default: null },
   tasche: { type: Array, required: true },    // [{ chiave, …COSE, nonPuoi, prova } | null]
   att: { type: Number, required: true },
   dif: { type: Number, required: true },
@@ -40,9 +42,7 @@ const emit = defineEmits(['usa', 'butta', 'riponi', 'chiudi', 'fuori', 'scheda',
 // una tasca ({ dove: 'zaino', i }) o una casella addosso ({ dove: 'mano' }); null è lo stato normale
 const scelto = ref(null)
 
-const addosso = dove => (dove === 'mano' ? props.mano
-  : dove === 'mancina' ? props.mancina
-    : dove === 'corpo' ? props.corpo : props.dito)
+const addosso = dove => props[dove] || null
 const dueMani = computed(() => !!(props.mano && props.mano.mani === 2))
 
 const cosa = computed(() => {
@@ -82,8 +82,19 @@ const verbo = computed(() => {
 })
 
 const nelloZaino = computed(() => !!scelto.value && scelto.value.dove === 'zaino')
-const prova = computed(() => (nelloZaino.value && cosa.value && cosa.value.prova && cosa.value.prova.prima
+const provaBase = computed(() => (nelloZaino.value && cosa.value && cosa.value.prova && cosa.value.prova.prima
   ? cosa.value.prova : null))
+// un anello con le due dita piene va dove rende meno; `altro` (motore/corredo.js, seLoMetto) è la prova sull'altro dito
+const altroDito = ref(false)
+watch(scelto, () => { altroDito.value = false })
+const scambiabile = computed(() => !!(provaBase.value && provaBase.value.altro))
+const prova = computed(() => (scambiabile.value && altroDito.value ? provaBase.value.altro : provaBase.value))
+function indossa() {
+  const dove = scambiabile.value ? prova.value.dove : null
+  const i = scelto.value.i
+  scelto.value = null
+  emit('usa', i, dove)
+}
 const note = computed(() => {
   const c = cosa.value
   if (!c) return []
@@ -114,7 +125,7 @@ const polso = computed(() => (props.vita / props.vitaMax > 0.6 ? '#4fce7c' : pro
             :title="`al massimo ${cure.max} pozioni`">· 🧪 <b>{{ cure.n }}/{{ cure.max }}</b></span>
     </p>
 
-    <Addosso :eroe="eroe" :mano="mano" :mancina="mancina" :corpo="corpo" :dito="dito"
+    <Addosso :eroe="eroe" :mano="mano" :mancina="mancina" :corpo="corpo" :collo="collo" :dito="dito" :dito2="dito2"
              :scelto="scelto && scelto.dove !== 'zaino' ? scelto.dove : null" :va="prova ? prova.dove : null"
              @tocca="tocca">
       <span class="sot-polso" :style="{ '--sot-polso': polso }">
@@ -150,10 +161,10 @@ const polso = computed(() => (props.vita / props.vitaMax > 0.6 ? '#4fce7c' : pro
     </div>
 
     <div v-if="cosa" ref="pannello" class="sot-banco-piede">
-      <Pannello :cosa="cosa" :prova="prova" :note="note">
+      <Pannello :cosa="cosa" :prova="prova" :note="note" :scambiabile="scambiabile" @scambia="altroDito = !altroDito">
         <div v-if="nelloZaino" class="sot-due-tasti">
           <button v-if="!cosa.nonPuoi" type="button" class="sot-grosso" data-azione="usa"
-                  :disabled="!!(cosa.prova && cosa.prova.bloccata)" @click="fai('usa', scelto.i)">{{ verbo }}</button>
+                  :disabled="!!(cosa.prova && cosa.prova.bloccata)" @click="indossa">{{ verbo }}</button>
           <button v-if="!sopra" type="button" class="sot-grosso sot-chiaro" data-azione="butta" @click="fai('butta', scelto.i)">
             <span class="em">🫳</span> Butta
           </button>

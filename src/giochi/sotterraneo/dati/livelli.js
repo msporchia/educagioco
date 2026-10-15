@@ -24,6 +24,7 @@ export const FORZA_PER_DIFESA = 4         // punti di forza per un 🛡️
 export const SCHIVATA_PER_DESTREZZA = 1   // 🌀 per cento a punto (a 2 le zone a 6/10 si vincevano troppo)
 export const ENERGIA_PER_INTELLIGENZA = 3 // energia massima a punto: il mago è il mago del mana (docs/sotterraneo/abilita.md, «L'energia»)
 export const GEMME_PER_FORTUNA = 0.05     // la fortuna dei pezzi: ogni gemma vale un ventesimo in più a punto
+export const VALORE_GEMME_MASSIMO = 2   // anelli, collana e fortuna insieme non fanno valere una gemma più del doppio (docs/sotterraneo/gioielli.md)
 export const RARITA_PER_FORTUNA = 0.08    // e la roba non comune un dodicesimo più spesso
 
 // Riassegnare i punti (delle caratteristiche e dell'albero) si paga in gemme, tante quante i punti da rimettere: si

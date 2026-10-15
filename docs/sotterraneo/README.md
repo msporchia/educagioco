@@ -4,6 +4,7 @@ Il posto da girare col dito dove ogni cosa costa una risposta, e l'abisso
 senza fondo sotto le sette discese. Il codice sta in `src/giochi/sotterraneo/`.
 
 - [presentazione.md](presentazione.md) — per chi arriva da fuori: cos'è, cosa allena, note per i genitori
+- [chi-cura.md](chi-cura.md) — la guaritrice e l'incantatrice curano gratis chi è salito dal portale (vita e energia), chiamano con un fumetto sopra la testa; salire non cura da sé
 - [terra-di-sopra.md](terra-di-sopra.md) — la mappa da cui si scende: la vista che segue l'eroe, la maschera di dove si cammina e come si corregge, le discese sui posti, chi indica la strada, i mercanti, la nebbia, il portale gemello, le icone delle discese, la partenza nel villaggio
 - [terra-strumento.md](terra-strumento.md) — lo strumento che fa la terra di sopra dal foglietto: la giunta fra le due metà, la maschera, le icone delle discese
 - [regole.md](regole.md) — la discesa: scala e guardiano, quanto costa in domande, gli abitanti di ogni posto, la stanza come confine, lo scontro, gli svenimenti
@@ -48,6 +49,7 @@ senza fondo sotto le sette discese. Il codice sta in `src/giochi/sotterraneo/`.
 - [la-roba-che-resta.md](la-roba-che-resta.md) — la roba che scende e risale con l'avventuriero, le discese che contano su di lei, l'equilibrio di prima
 - [avventure.md](avventure.md) — un'avventura per eroe: cosa ha ognuno e dove sta nel salvataggio, cosa è in comune (monete, il massimo per medaglie ed esperienza), i salvataggi di prima, azzerati e poi riordinati
 - [roba.md](roba.md) — gli eroi e cosa portano, due mani, la torcia, per terra e nello zaino, curiosità e arredo; la tabella delle cinque cure
+- [gioielli.md](gioielli.md) — due anelli e una collana: i tre posti, dove va un gioiello e quale anello si toglie, i salvataggi di prima, cosa ha cambiato per forza e gemme (14 ottobre)
 - [pozioni.md](pozioni.md) — le cure: quanto costano rispetto a una spada, quando arrivano sul banco, l'ampolla della vita, il tetto di otto, la scelta di quale bere
 - [figure.md](figure.md) — le 238 figure da indossare dei fogli dipinti, descritte una per una (elemento, materia, a chi sta bene): il catalogo, `roba.py` per guardarle e ritagliarle, i pezzi col nome con la figura loro
 - [bottega.md](bottega.md) — i mercanti di sopra, i pezzi avanti a sovrapprezzo, il tetto di rarità, i dieci pezzi per linguetta, il banco che cambia poco alla volta, comprare senza le caratteristiche, il riacquisto degli ultimi cinque venduti

@@ -58,7 +58,7 @@ QUI = Path(__file__).parent
 REPO = Path(__file__).resolve().parents[2]
 SORGENTI = QUI / 'sorgenti'
 LARGO = 256                       # larghezza dell'atlante, in pixel
-LARGO_NITIDO = 1024               # e di quello nitido (`nitidi_di`)
+LARGO_NITIDO = 2048               # e di quello nitido (`nitidi_di`): largo, perché alto oltre 4096 px su molti telefoni non sta in una texture
 
 # I marcatori fra cui vive l'atlante dentro un prototipo. Un `poc/` è un
 # file solo apribile col doppio click, quindi non può importare un

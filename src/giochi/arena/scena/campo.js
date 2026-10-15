@@ -19,6 +19,9 @@ import { disegnaEdificio } from './edifici.js'
 // motore). Le due metà di chi gioca sono solo prato, con gli alberi sul bordo: ci stanno le
 // cittadelle.
 const ZOOM = 0.5
+// caserme che il foglio dipinto non ha ancora e che per ora prendono il pezzo di un'altra (docs/arena/grafica.md):
+// la tana delle bestie cornute, per neve e lava, ha la capanna dei lupi, che là non ci sono
+const IN_PRESTITO = { 'tana:bestie:1': 'tana:lupi:1', 'tana:bestie:2': 'tana:lupi:2' }
 const ZT = ZOOM * 1.2                    // le truppe: un po' più grandi del terreno
 const ZE = 0.75                          // castello ed edifici: più grandi delle truppe
 const MAPPA = Array.from({ length: 24 }, (_, y) => Array.from({ length: 16 }, (_, x) => {
@@ -79,7 +82,7 @@ export class Campo {
   /* un pezzo delle caserme dipinte, con la piazzola larga `larga` e centrata in (x, piede);
      torna l'altezza a schermo, o 0 se non c'è (e allora si disegna in codice) */
   dipinta(c, nome, x, piede, larga, lato, k = 1) {
-    const p = DIPINTE[nome]
+    const p = DIPINTE[nome] || DIPINTE[IN_PRESTITO[nome]]
     if (!p || !this.caserme) return 0
     const [sx, sy, w, h, cx, pd] = p, sc = larga / PIAZZOLA * k
     c.drawImage(this.caserme[lato], sx, sy, w, h, x - cx * sc, piede - pd * sc, w * sc, h * sc)
@@ -132,7 +135,8 @@ export class Campo {
     this.piazzole(c, p)
     // castelli, caserme e porte dall'alto in basso, così chi sta davanti copre chi sta dietro
     const edifici = [...p.castelli.map(e => [e.y, () => this.base(c, p, e.lato)]),
-      ...p.caserme.map(e => [e.y + 10, () => this.caserma(c, p, e, ora)]), ...p.muri.map(e => [e.y, () => this.muro(c, e)])]
+      ...p.caserme.map(e => [e.y + 10, () => this.caserma(c, p, e, ora)]), ...p.miniere.map(e => [e.y + 10, () => this.miniera(c, p, e, ora)]),
+      ...p.muri.map(e => [e.y, () => this.muro(c, e)])]
     for (const [, disegna] of edifici.sort((a, b) => a[0] - b[0])) disegna()
     const ord = [...p.unita].sort((a, b) => this.Y(a.y) - this.Y(b.y))
     for (const u of ord) if (!u.vola) this.truppa(c, u, ora)
@@ -143,7 +147,17 @@ export class Campo {
   sfondo(c, W, H) {
     c.fillStyle = '#5f9a3c'; c.fillRect(0, 0, W, H)
     const mappa = this.pronto ? componi(MAPPA, this.vestito) : null
-    if (mappa) c.drawImage(mappa, this.ox, this.oy, CAMPO.W * this.s, CAMPO.H * this.s)
+    if (!mappa) return
+    const w = CAMPO.W * this.s, h = CAMPO.H * this.s
+    // se il quadro è più alto del campo, il terreno continua specchiato (le giunzioni combaciano)
+    for (let n = 1; this.oy - (n - 1) * h > 0; n++) {
+      for (const dir of [-1, 1]) {
+        const y = this.oy + dir * n * h
+        c.save(); c.translate(this.ox, y + (n % 2 ? h : 0)); c.scale(1, n % 2 ? -1 : 1)
+        c.drawImage(mappa, 0, 0, w, h); c.restore()
+      }
+    }
+    c.drawImage(mappa, this.ox, this.oy, w, h)
   }
 
   /* un pezzo del foglio delle figure, col piede in (x, y) */
@@ -250,6 +264,7 @@ export class Campo {
     const sc = SCENE[this.vestito], img = immagineScena(this.vestito)
     for (const lato of ['io', 'nem']) POSTI.forEach(([px, py], i) => {
       // dipinte: la piazzola vuota del foglio, o il rudere della caserma crollata lì
+      if (p.miniere.some(m => m.lato === lato && m.posto === i)) { this.rovine.delete(`${lato}:${i}`) }   // la miniera ci sta sopra, sulla piazzola
       if (this.caserme) {
         if (p.caserme.some(cs => cs.lato === lato && cs.posto === i)) return
         const rovina = this.rovine.get(`${lato}:${i}`)
@@ -261,6 +276,32 @@ export class Campo {
       this.ombra(c, this.X(px) + 2, y + lh * 0.42, lw * 0.5, lh * 0.14, 0.25)
       c.drawImage(img, sx, sy, w, h, this.X(px) - lw / 2, y - lh / 2, lw, lh)
     })
+  }
+
+  /* una miniera: disegnata in codice (prima in codice, poi dipinta), sulla sua piazzola: un monte di
+     roccia con l'imbocco di legno e un carrello d'oro; sotto il livello, sopra la vita se è ferita */
+  miniera(c, p, m, ora) {
+    if (!this.nate.has(m)) this.nate.set(m, p.t < 1 ? -99 : ora)
+    const q = Math.min(1, (ora - this.nate.get(m)) / 0.7), k = q < 1 ? Math.max(0.05, q) : 1
+    const x = this.X(m.x), piede = this.piede(m.lato, m.lato === 'io' ? m.y : CAMPO.H - m.y)
+    const u = v => this.me(v) * k
+    c.save()
+    if (m.fl > 0) c.globalAlpha = 0.7
+    this.ombra(c, x + u(2), piede - u(4), u(30), u(6), 0.3)
+    c.fillStyle = '#5d5466'; c.beginPath(); c.ellipse(x, piede - u(10), u(30), u(26), 0, Math.PI, 0); c.fill()       // il monte
+    c.fillStyle = '#7a6f86'; c.beginPath(); c.ellipse(x - u(8), piede - u(18), u(14), u(12), 0, Math.PI, 0); c.fill()
+    c.fillStyle = '#6b4a2b'; c.fillRect(x - u(11), piede - u(30), u(22), u(22))                                       // l'imbocco
+    c.fillStyle = '#1b1410'; c.fillRect(x - u(7), piede - u(26), u(14), u(18))
+    c.fillStyle = '#8a6438'; c.fillRect(x - u(13), piede - u(32), u(26), u(4))
+    c.fillStyle = '#3b3b44'; c.fillRect(x + u(10), piede - u(10), u(16), u(7))                                         // il carrello
+    c.fillStyle = '#ffd24a'
+    for (const [dx, dy] of [[13, -12], [18, -13], [23, -12], [15.5, -15], [20.5, -15.5]]) { c.beginPath(); c.arc(x + u(dx), piede + u(dy), u(3), 0, 7); c.fill() }
+    c.fillStyle = m.lato === 'io' ? IO : NEM; c.fillRect(x - u(2), piede - u(48), u(2), u(18))                         // la bandierina della squadra
+    c.beginPath(); c.moveTo(x, piede - u(48)); c.lineTo(x + u(12), piede - u(44)); c.lineTo(x, piede - u(40)); c.fill()
+    c.restore()
+    this.livello(c, x, piede + this.mi(4), m.liv, m.lato)
+    if (m.hp < m.max) this.barra(c, x, piede - this.me(54), this.me(40), m.hp / m.max)
+    if (m.riposo > 0) { c.font = `${this.me(13)}px "Emoji Gioco", system-ui, sans-serif`; c.textAlign = 'center'; c.fillText('💤', x - this.me(30), piede - this.me(30)) }
   }
 
   /* una caserma: l'edificio della sua truppa (scena/edifici.js), che spunta dalla sua piazzola quando

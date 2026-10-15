@@ -11,12 +11,13 @@ import { T, SCALA_MIN, SCALA_MAX, SCALA_INIZIALE, ROCCIA, PAVIMENTO, PORTA, RELI
 import { SCENARI, SCENARIO, PEZZO_DI, pezzoAndante } from '../dati/tessere.js'
 import { MOSTRI } from '../dati/mostri.js'
 import { COSE } from '../dati/cose.js'
+import { impugnatura } from '../dati/impugna.js'
 import { creaFoglio, netto } from '../../../grafica/atlante.js'
-import { tetto, faccia, bordiDelTetto, capiDellaFaccia, versoDellaPorta, sorteDi, taglio, angoloInterno, VICINA_DEL_TAGLIO } from './muri.js'
+import { tetto, faccia, bordiDelTetto, capiDellaFaccia, versoDellaPorta, sorteDi, diagonaliDelPiano, VICINA_DEL_TAGLIO } from './muri.js'
 import { dipingiPortale, PORTALE } from './portale.js'
 import { dipingiRelitto, dipingiAcqua } from './relitti.js'
 import { TINTE_RELITTI } from '../dati/relitti.js'
-import { dipingiScalaSu } from './scala-su.js'
+import { chiaroreDellaScala, SCALA_SU } from './scala-su.js'
 import { GROSSI, figuraDelGrosso, spriteDelGrosso } from '../dati/grossi.js'
 import { fotogrammaDi } from '../dati/fotogrammi.js'
 import { MANI } from '../dati/varianti.js'
@@ -242,8 +243,9 @@ export class Tela {
   }
 
   // il fondo sul fondo della sua cella, sbordando in alto: così un mostro sta dietro al muro invece di galleggiarci sopra
+  // `alfa` qui è quanta luce arriva: il pezzo resta opaco e si scurisce (`scuro`), mai trasparente sul pavimento
   posa(nome, cx, cy, opz = {}) {
-    return this.foglio.posa(this.ctx, nome, (cx + 0.5) * T, (cy + 1) * T, opz)
+    return this.foglio.posa(this.ctx, nome, (cx + 0.5) * T, (cy + 1) * T, { scuro: true, ...opz })
   }
 
   // il ricordo si spegne E si raffredda (velo blu): spegnere e basta non basta, due tessere scure sono la stessa cosa
@@ -297,31 +299,9 @@ export class Tela {
       const nome = i < 0 ? null : sc.perTerra[i % sc.perTerra.length]
       if (nome) perTerra.set(k, { nome, dove: 'centro', specchia: ((h >>> 9) & 1) === 1 })
     }
-    // i muri in diagonale (solo gli scenari che hanno i pezzi): le celle tagliate, e quelle sopra una faccia obliqua, che ne ospitano mezza
-    const tagli = new Map(), sopra = new Set(), interni = new Map(), sopraInterni = new Set()
-    if (sc.diagonali) {
-      // una porta e una nicchia restano sul muro dritto: accanto a loro il taglio non si fa
-      const nicchie = new Set(stanze.flatMap(r => r.nicchie || []).map(n => n.y * L + n.x))
-      const buona = (x, y) => {
-        // un relitto o una pozza accanto al muro non lo raddrizza: la cella è della stanza che la circonda
-        const a = liv.a(x, y)
-        const s = stanze[liv.nelle ? liv.nelle[y * L + x] : -1] || (a === RELITTO || a === ACQUA ? liv.stanzaDi(x, y) : null)
-        return !!s && liv.a(x, y) !== PORTA && !nicchie.has(y * L + x) && STANZE_LISCE.includes(s.forma)
-      }
-      for (let y = 0; y < A; y++) for (let x = 0; x < L; x++) {
-        const t = taglio(pietra, x, y, buona)
-        if (!t) continue
-        tagli.set(y * L + x, t)
-        if (t === 'no' || t === 'ne') sopra.add((y - 1) * L + x)
-      }
-      // gli angoli interni delle stanze lisce: la roccia entra nel pavimento con gli stessi pezzi; sopra uno `no`/`ne` la cella di faccia diventa tetto
-      for (let y = 0; y < A; y++) for (let x = 0; x < L; x++) {
-        const t = angoloInterno(pietra, x, y, buona)
-        if (!t) continue
-        interni.set(y * L + x, t)
-        if (t === 'no' || t === 'ne') sopraInterni.add((y - 1) * L + x)
-      }
-    }
+    // i muri in diagonale (solo gli scenari che hanno i pezzi): le celle tagliate, gli angoli interni e le celle sopra una faccia obliqua
+    const { tagli, sopra, interni, sopraInterni } = sc.diagonali ? diagonaliDelPiano(liv, STANZE_LISCE)
+      : { tagli: new Map(), sopra: new Set(), interni: new Map(), sopraInterni: new Set() }
     this._forma = { liv, sc, stanza, medaglione, perTerra, tagli, sopra, interni, sopraInterni }
     return this._forma
   }
@@ -468,9 +448,11 @@ export class Tela {
       return
     }
 
-    // la scala che sale non ha pezzo nel foglio: si disegna da sé, in tutta la cella
+    // la scala che sale: la scala a pioli dipinta, in piedi nella cella, sopra il suo chiarore
     if (r.che === 'scala-su') {
-      dipingiScalaSu(ctx, r.x * T, r.y * T, t, { alfa })
+      chiaroreDellaScala(ctx, r.x * T, r.y * T, t, { alfa })
+      const m = this.foglio.misura(SCALA_SU)
+      if (m) this.foglio.pezzo(ctx, SCALA_SU, r.x * T + Math.round((T - m.w) / 2), r.y * T + T - m.h, { alfa, scuro: true })
       return
     }
 
@@ -628,7 +610,7 @@ export class Tela {
     ctx.translate(px * T + (mano.x - 0.5) * corpo.w * lato, (py + 0.5) * T - (1 - mano.y) * corpo.h)
     ctx.scale(k, k)
     // l'impugnatura sta a due terzi dell'arma, al centro: lì si tiene
-    this.foglio.pezzo(ctx, r.arma, -arma.w / 2, -arma.h * 0.68, { alfa, specchia: lato < 0 })
+    this.foglio.pezzo(ctx, r.arma, -arma.w / 2, -arma.h * 0.68, { alfa, specchia: lato < 0, scuro: true })
     ctx.restore()
   }
 
@@ -825,14 +807,16 @@ export class Tela {
     const su = Math.sin(t * (cammina ? 9 : 3)) * (cammina ? 0.9 : 0.5)
     const lato = specchia ? -1 : 1
     const posa = (k, verso, opz) => {
-      const nome = (COSE[k] || {}).sprite
-      if (!nome) return
-      this.foglio.posa(this.ctx, nome, sx + verso * T * 0.42, sy + T * 0.42 + su, opz)
+      const cosa = COSE[k] || {}
+      const m = cosa.sprite && this.foglio.misura(cosa.sprite)
+      if (!m) return
+      const { dx, base } = impugnatura(cosa, m.w, m.h)
+      this.foglio.posa(this.ctx, cosa.sprite, sx + verso * dx, sy + T * 0.5 - base + su, opz)
     }
     // due armi si portano una per lato (la debole va dietro, prima, o coprirebbe la buona); una a due mani
-    // sta in mezzo, davanti al corpo (una copia sbiadita dall'altro lato farebbe sembrare due armi, non una tenuta in due)
-    const due = corsa.mano && (COSE[corsa.mano] || {}).mani === 2
-    if (due) return posa(corsa.mano, 0, { specchia, dy: -T * 0.06 })
+    // sta in mezzo, davanti al corpo (una copia sbiadita dall'altro lato farebbe sembrare due armi, non una tenuta in due);
+    // un arco o una balestra stanno dove li tiene una mano (dati/impugna.js)
+    if (corsa.mano && (COSE[corsa.mano] || {}).mani === 2) return posa(corsa.mano, lato, { specchia })
     if (corsa.mancina) posa(corsa.mancina, -lato, { specchia: !specchia })
     if (corsa.mano) posa(corsa.mano, lato, { specchia })
   }

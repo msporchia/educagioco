@@ -25,15 +25,15 @@
    cella di roccia che tocca il pavimento resta senza la sua faccia o il
    suo bordo** da quel lato.
    ═══════════════════════════════════════════════════════════════════ */
-import { genere, bordiDelTetto, capiDellaFaccia, versoDellaPorta, faccia, tetto, taglio, angoloInterno, VICINA_DEL_TAGLIO }
+import { genere, bordiDelTetto, capiDellaFaccia, versoDellaPorta, faccia, tetto, taglio, angoloInterno, diagonaliDelPiano, VICINA_DEL_TAGLIO }
   from '../../src/giochi/sotterraneo/scena/muri.js'
 import { Livello } from '../../src/giochi/sotterraneo/motore/livello.js'
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { ROCCIA, PAVIMENTO, PORTA } from '../../src/giochi/sotterraneo/dati/mondo.js'
 import { controlla, uguale, stessaLista, riassunto } from '../aiuto/verifica.mjs'
 
-/* Una pianta scritta a mano: `#` roccia, `.` pavimento, `+` porta. Fuori
-   dalla pianta è roccia, come nel gioco. */
+/* Una pianta scritta a mano: `#` roccia, `.` pavimento, `+` porta, `n` nicchia. Fuori
+   dalla pianta è roccia, come nel gioco. `buona` è il pavimento di una stanza liscia: né porta né nicchia. */
 function pianta(righe) {
   const a = (x, y) => (y >= 0 && y < righe.length && x >= 0 && x < righe[y].length
     ? righe[y][x] : '#')
@@ -41,6 +41,7 @@ function pianta(righe) {
     pietra: (x, y) => a(x, y) === '#',
     porta: (x, y) => a(x, y) === '+',
     chiuso: (x, y) => a(x, y) !== '.',
+    buona: (x, y) => a(x, y) !== '+' && a(x, y) !== 'n',
   }
 }
 
@@ -261,6 +262,37 @@ function pianta(righe) {
   uguale('una stanza già smussata non ha angoli interni (il taglio c\'è già)', dentro(['###########', '###.....###', '##.......##', '#.........#', '#.........#', '#.........#', '##.......##', '###.....###', '###########']), '')
   uguale('la fine di un corridoio stretto non è un angolo interno', dentro(['#####', '#...#', '#####']), '')
   uguale('una svolta di corridoio non lo è: servono tre celle di pavimento dall\'altra parte', dentro(['#####', '#...#', '#.###', '#.###', '#####']), '')
+
+  // niente pezzo obliquo accanto a una nicchia o a una porta, e un angolo interno solo con due celle di muro dritto oltre l'angolo, da tutti e due i lati
+  const conNicchia = x => ['#########', '#'.repeat(x) + 'n' + '#'.repeat(8 - x), '#.......#', '#.......#', '#.......#', '#########']
+  const angoli = r => { const p = pianta(r); const o = []; for (let y = 0; y < r.length; y++) for (let x = 0; x < r[0].length; x++) { const a = angoloInterno(p.pietra, x, y, p.buona); if (a) o.push(`${a}@${x},${y}`) } return o.join(' ') }
+  uguale('una sala con la nicchia lontana dagli angoli li ha tutti e quattro', angoli(conNicchia(4)), 'no@1,2 ne@7,2 so@1,4 se@7,4')
+  uguale('una nicchia sulla diagonale dell\'angolo lo toglie', angoli(conNicchia(2)), 'ne@7,2 so@1,4 se@7,4')
+  uguale('una nicchia sul muro a due celle dall\'angolo lo toglie (il tratto dritto è corto)', angoli(conNicchia(3)), 'ne@7,2 so@1,4 se@7,4')
+  uguale('una porta in diagonale toglie l\'angolo come una nicchia', angoli(conNicchia(2).map(r => r.replace('n', '+'))), 'ne@7,2 so@1,4 se@7,4')
+  uguale('una stanza larga due celle non ha angoli interni: i muri non restano dritti per due celle', angoli(['####', '#..#', '#..#', '#..#', '####']), '')
+  const gradino = ['##+##', '##...', '#....', '#....', '#....']
+  const g = pianta(gradino)
+  uguale('il taglio c\'è con la porta fuori dal conto', taglio(g.pietra, 1, 1), 'no')
+  uguale('...e non c\'è con una porta fra le otto celle intorno: meglio il gradino', taglio(g.pietra, 1, 1, g.buona), null)
+}
+
+/* ══════════ 7. sui piani veri: nessun pezzo obliquo accanto a una nicchia o a una porta ══════════ */
+{
+  let pezzi = 0
+  const male = []
+  for (const tappa of CAMPAGNA) for (let seme = 1; seme <= 8; seme++) {
+    const liv = new Livello({ seme: seme * 131 + tappa.misura, largo: tappa.misura, alto: tappa.misura, giri: tappa.giri })
+    const nicchie = new Set(liv.stanze.flatMap(r => r.nicchie || []).map(n => n.y * liv.largo + n.x))
+    const { tagli, interni } = diagonaliDelPiano(liv, ['smussata', 'cappella', 'sala'])
+    for (const k of [...tagli.keys(), ...interni.keys()]) {
+      pezzi++
+      const x = k % liv.largo, y = Math.floor(k / liv.largo)
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++)
+        if (nicchie.has((y + dy) * liv.largo + x + dx) || liv.a(x + dx, y + dy) === PORTA) male.push(`${tappa.chiave}/${seme} (${x},${y})`)
+    }
+  }
+  controlla(`nei piani veri nessun taglio o angolo interno ha una nicchia o una porta fra le otto celle intorno (${pezzi} pezzi)`, pezzi > 0 && male.length === 0, male.slice(0, 5).join(' · '))
 }
 
 riassunto('la regola del muro del sotterraneo')

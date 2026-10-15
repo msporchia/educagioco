@@ -12,7 +12,7 @@ let ultimoPorto = null
    la tappa si apre; una chiusa la nave non parte e si dice cosa serve.
    Si apre scorrendo fino alla nave. */
 import { ref, shallowRef, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
-import { disponi, doveStaLaNave } from '../scena/disposizione.js'
+import { disponi, doveStaLaNave, caricaGeografie } from '../scena/disposizione.js'
 import { dipingiMappa } from '../scena/mappa.js'
 import { rotta, lunghezza, durata, pezzoVisibile } from '../scena/rotte.js'
 import { posa, viaggia } from '../scena/nave.js'
@@ -44,7 +44,9 @@ const adessoVero = computed(() => (quadro.value && quadro.value.nodi.find(n => n
 
 function misura() {
   if (!scorre.value) return
-  W.value = Math.min(520, Math.floor(scorre.value.clientWidth))
+  // a multipli di 10, per difetto: la mappa è centrata, e i telefoni con la stessa larghezza (più o meno) dividono la
+  // stessa geografia messa da parte
+  W.value = Math.floor(Math.min(520, scorre.value.clientWidth) / 10) * 10
 }
 
 function nodoDi(chiave) { return quadro.value && quadro.value.nodi.find(n => n.chiave === chiave) }
@@ -75,7 +77,9 @@ function scendi() {
 
 watch(quadro, async () => { await nextTick(); dipingi(); scendi() })
 
-onMounted(() => {
+onMounted(async () => {
+  await caricaGeografie()   // prima della prima disposizione: se l'abbiamo già fatta, non si rifà
+  if (!scorre.value) return
   misura()
   if (typeof ResizeObserver !== 'undefined') {
     occhio = new ResizeObserver(misura)

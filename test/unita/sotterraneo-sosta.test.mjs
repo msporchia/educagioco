@@ -12,7 +12,7 @@ import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
 import { seminato } from '../../src/giochi/sotterraneo/motore/livello.js'
 import { ROBA_VUOTA } from '../../src/giochi/sotterraneo/motore/corredo.js'
 import { gioca, robaPer } from '../../src/giochi/sotterraneo/motore/banco.js'
-import { scrivi, leggi, dice, stringaDi, vistoDa, VERSIONE, viaDi, PORTALE, USCITA }
+import { scrivi, leggi, dice, stringaDi, vistoDa, VERSIONE, viaDi, PORTALE, USCITA, forzeDi }
   from '../../src/giochi/sotterraneo/motore/sosta.js'
 import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifica.mjs'
 
@@ -163,24 +163,31 @@ function rispondiFinche(c, giusto = () => true, giri = 40) {
   const mezzo = gioca(t, { seme: 101, bravura: 1, come: 'minimo', da: c })
   controlla('la prova parte da una discesa giocata', mezzo.esito.domande > 0)
 
-  // il seme è il primo, da 202, in cui la discesa si vince anche senza interromperla: coi branchi nuovi non tutti i semi si vincono, e qui
-  // si prova la ripresa, non l'equilibrio (quello è del banco, `npm run sotterraneo`)
-  let seme = 202
-  while (seme < 230 && !gioca(t, { seme, bravura: 1, come: 'minimo', da: new Corsa(t, { seme, rnd: seminato(seme), roba }) }).esito.vinta) seme++
-  const dopo = new Corsa(t, { seme, rnd: seminato(seme), roba })
-  const salvato = scrivi(dopo, 1)
-  for (let i = 0; i < 60; i++) dopo.passo(1 / 30)
-  const ripresa = leggi(salvato, t, roba)
-  const finita = gioca(t, { seme, bravura: 1, come: 'minimo', da: ripresa })
+  // il seme è il primo, da 202, in cui la discesa ripresa si vince: coi caporali duri non tutti i semi si vincono dritti alla scala, e qui
+  // si prova la ripresa, non l'equilibrio (quello è del banco, `npm run taratura`)
+  const riprendi = s => {
+    const dopo = new Corsa(t, { seme: s, rnd: seminato(s), roba })
+    const salvato = scrivi(dopo, 1)
+    for (let i = 0; i < 60; i++) dopo.passo(1 / 30)
+    return gioca(t, { seme: s, bravura: 1, come: 'minimo', da: leggi(salvato, t, roba) })
+  }
+  let seme = 202, finita = riprendi(seme)
+  while (seme < 400 && !finita.esito.vinta) finita = riprendi(++seme)
   controlla('una discesa ripresa arriva in fondo', finita.esito.vinta,
             finita.guasto || `${finita.esito.piani}/${finita.esito.quantiPiani} piani (seme ${seme})`)
 
-  /* e una ripresa a metà della discesa vera, al secondo piano, si finisce lo stesso */
-  const giu = new Corsa(t, { seme: 304, rnd: seminato(304), roba })
-  gioca(t, { seme: 304, bravura: 1, come: 'tutto', da: giu, fino: 1 })
-  const daMeta = leggi(scrivi(giu, 1), t, giu.roba)
+  /* e una ripresa a metà della discesa vera, al secondo piano, si finisce lo stesso. Come sopra, il seme è il primo da 304 in cui la discesa
+     ripresa si vince: il finto che va dritto coi mostri di oggi ne perde una parte, e qui si prova la ripresa, non l'equilibrio */
+  const aMeta = s => {
+    const giu = new Corsa(t, { seme: s, rnd: seminato(s), roba })
+    gioca(t, { seme: s, bravura: 1, come: 'tutto', da: giu, fino: 1 })
+    const daMeta = leggi(scrivi(giu, 1), t, giu.roba)
+    return { daMeta, fine: daMeta && gioca(t, { seme: s, bravura: 1, come: 'minimo', da: daMeta }) }
+  }
+  let seme2 = 304, m = aMeta(seme2)
+  while (seme2 < 400 && !(m.fine && m.fine.esito.vinta)) m = aMeta(++seme2)
+  const { daMeta, fine } = m
   controlla('una sosta scritta a metà discesa si rilegge', !!daMeta)
-  const fine = daMeta && gioca(t, { seme: 304, bravura: 1, come: 'minimo', da: daMeta })
   controlla('e arriva in fondo', !!fine && fine.esito.vinta, fine && (fine.guasto || `${fine.esito.piani} piani`))
 }
 
@@ -268,6 +275,27 @@ function rispondiFinche(c, giusto = () => true, giri = 40) {
   const ab = new Corsa(L_ABISSO, { seme: 9, rnd: seminato(9) })
   ab.risali()
   uguale('l\'abisso risalito si scrive col portale', scrivi(ab, INDICE_ABISSO, { anchePerFinite: true, via: PORTALE }).via, PORTALE)
+}
+
+/* ══════════ 9. salendo dal portale la vita resta quella di giù ══════════
+   Non c'è una cura che salire dia da sé: la sosta porta la vita e l'energia di prima, e le rimettono a posto, gratis, la
+   guaritrice e l'incantatrice (docs/sotterraneo/terra-di-sopra.md, «Chi cura»). `forzeDi` le legge col massimo di adesso. */
+{
+  const c = new Corsa(CAMPAGNA[1], { seme: 21, rnd: seminato(21) })
+  c.vita = Math.floor(c.vitaMax / 3)
+  c.energia = 0
+  const dato = scrivi(c, 1, { via: PORTALE })
+  uguale('la sosta porta la vita persa', dato.vita, c.vita)
+  const f = forzeDi(dato, CAMPAGNA[1], c.roba)
+  uguale('salendo non si guarisce: la vita è quella di prima', f.vita, c.vita)
+  uguale('e l\'energia', f.energia, 0)
+  uguale('il massimo è quello della discesa', f.vitaMax, c.vitaMax)
+  uguale('l\'energia piena è quella dell\'eroe', f.energiaMax, c.energiaMax)
+  // la cura è un campo della sosta: rimesso, la discesa riprende in forze
+  const curato = leggi({ ...dato, vita: f.vitaMax, energia: f.energiaMax }, CAMPAGNA[1], c.roba)
+  uguale('curata, la discesa riprende a vita piena', curato.vita, curato.vitaMax)
+  uguale('e a energia piena', curato.energia, curato.energiaMax)
+  uguale('una sosta che non si rilegge non ha forze', forzeDi({ ...dato, v: -1 }, CAMPAGNA[1], c.roba), null)
 }
 
 riassunto('la discesa lasciata a metà, e il portale')

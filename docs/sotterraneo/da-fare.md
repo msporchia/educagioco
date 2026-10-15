@@ -3,6 +3,30 @@
 Le voci aperte, ognuna con quello che serve per farla. Il progetto dettagliato
 dell'abisso sta in [abisso-progetto.md](abisso-progetto.md).
 
+## Dopo il giro del 14 ottobre 2026
+
+Le voci rimaste aperte dalla sferzata (scontro a gruppi, branchi, fabbro, pozioni, giocatori tipo), da riprendere
+coi numeri di `npm run taratura` ([giocatori-tipo.md](giocatori-tipo.md)) e con l'utente nel giro.
+
+- **Lo sbadato vince ancora troppo**: 67–100% di discese vinte alla prima contro un bersaglio ≤ 15% (cripta ≤ 50%).
+  Lo salvano le pozioni e gli svenimenti concessi (5–7 a discesa, `svenimentiDi`), più il bere che non costa il turno.
+  La leva va scelta con l'utente: meno svenimenti concessi, o un limite di pozioni per scontro; prima misurare quanti ne
+  spende davvero.
+- **La taratura di mostri e pozioni è a metà**: entrati caporali e grosso più duri, colpi un po' più forti, meno cure
+  trovate nella cripta; rimasti fuori due ritocchi a `forza` e `spinta` di discese e zone (`dati/campagna.js`,
+  `dati/zone.js`), lasciati non salvati nel worktree dell'agente fermato. Da rifare col giro intero e i bersagli
+  dell'utente: un mostro di strada 2–3 risposte, un caporale 4–6, uno scontro normale il 15–25% della vita, uno grosso
+  il 30–60%, qualche risalita per curarsi.
+- **Le quattro unità rosse sono riallineate** (15 ottobre): misurano il curioso, non il finto che va dritto ([giocatori-tipo.md](giocatori-tipo.md)). L'abisso:
+  il tetto di un piano è 60 domande e non 45 (un piano rifatto dopo uno svenimento ne costa 57 al seme 7, gli altri sei semi stanno sotto 38; la media dei semi
+  resta sotto 35). Aperto: il dritto con la roba attesa non vince più nessuna discesa, quindi `misure/sotterraneo` e `robaPer` misurano ancora il metro vecchio.
+- **I pezzi utili per discesa** dalla torre in giù sono 1,7–2,3 contro il bersaglio di circa 3: quelli trovati servono
+  poco perché il fabbro dà già il meglio del livello ([risalite.md](risalite.md)).
+- **La figura della balestra**: anche girata e piccola non si legge come una balestra (è un arco con un dardo); va
+  rifatta dal prompt di `strumenti/sprite/sorgenti/sotterraneo/generati/PROMPT-armi.md`.
+- **L'incantatrice vera**: oggi è la guaritrice ritinta; il terzo foglio dei personaggi è il prompt 9 di
+  `PROMPT-terra-di-sopra.md` (con lei, la sentinella, il cartografo e altri sei).
+
 ## L'abisso
 
 - **La lettura unica `cosa(k)`** e le chiavi `base#N` (punto 1 del progetto):

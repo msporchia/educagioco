@@ -10,6 +10,8 @@ quello che resta da fare.
 - [lasciare-a-meta.md](lasciare-a-meta.md) — il piano di ogni livello resta in archivio uscendo a metà: cosa si salva, quando se ne va, perché non la sosta unica
 - [da-fare.md](da-fare.md) — voci aperte: scorciatoie mancanti, quello che la didattica chiede, gli attriti del mondo
 
+**Stato: in pausa.** Il gioco è `sperimentale: true` (dietro l'interruttore dei giochi in prova, `docs/genitori/interruttori.md`) e non è nel README di radice: è incompleto e non gira bene. Si toglie il flag da `src/data/giochi.js` quando riparte.
+
 La pagina per chi arriva da fuori è ancora [`docs/generale.md`](../generale.md)
 e il punto della situazione del motore
 [`docs/generale_improvements.md`](../generale_improvements.md): verranno

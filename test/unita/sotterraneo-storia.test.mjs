@@ -63,7 +63,7 @@ const tappeAl = n => CAMPAGNA.map((t, i) => ({ chiave: t.chiave, aperta: i <= n,
       const atteso = new Corsa(CAMPAGNA[k], { seme: 11 + k, eroe: e.chiave, roba: robaAttesa(e.chiave, k),
                                              crescita: crescitaAttesa(e.chiave, k), rnd: seminato(k + 1) })
       const p = atteso.premio()
-      if (p) { dati++; if (!(atteso.confronto(p).meglio > 0 || !atteso.casella(COSE[p].dove))) peggiori++ }
+      if (p) { dati++; if (!(atteso.confronto(p).meglio > 0 || atteso.postoLibero(COSE[p].dove))) peggiori++ }
     }
   }
   uguale('ogni discesa dà il primo pezzo nuovo della riga dopo, a tono col posto e con l\'eroe', giusti, quanti)
@@ -185,12 +185,12 @@ const tappeAl = n => CAMPAGNA.map((t, i) => ({ chiave: t.chiave, aperta: i <= n,
   uguale('consegnarla di nuovo non dà niente', consegna(r.stati, 'collana', b), null)
 
   // un premio in roba: va addosso o in tasca; a tasche piene la consegna aspetta
-  const pieno = new Corredo({ eroe: 'mago', roba: { ...robaAttesa('mago', 4), dito: 'amuleto-rosso', zaino: ['panciotto', 'manto', 'saio', 'amuleto-azzurro', 'chiave', 'corazza'] } })
+  const pieno = new Corredo({ eroe: 'mago', roba: { ...robaAttesa('mago', 4), collo: 'amuleto-rosso', zaino: ['panciotto', 'manto', 'saio', 'amuleto-azzurro', 'chiave', 'corazza'] } })
   const s2 = { rosicchione: FATTA }
   uguale('a tasche piene il gioiello non entra', consegna(s2, 'rosicchione', pieno).esito, 'pieno')
-  const vuoto = new Corredo({ eroe: 'mago', roba: { ...robaAttesa('mago', 2, { pozioni: false }), dito: null } })
+  const vuoto = new Corredo({ eroe: 'mago', roba: { ...robaAttesa('mago', 2, { pozioni: false }), collo: null } })
   consegna(s2, 'rosicchione', vuoto)
-  controlla('a dito libero l\'amuleto va addosso', vuoto.dito === 'amuleto-azzurro', vuoto.dito)
+  controlla('a collo libero l\'amuleto va addosso', vuoto.collo === 'amuleto-azzurro', vuoto.collo)
 }
 {
   // il mostro col nome: più duro di quelli del suo piano, e battuto fa la missione

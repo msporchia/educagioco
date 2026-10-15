@@ -29,24 +29,54 @@ export function creaFoglio({ pezzi, immagine, tessera = 32, nitidi = null }) {
     return p ? { w: p[2], h: p[3] } : null
   }
 
-  // il disegno crudo, angolo in alto a sinistra; specchia riflette destra/sinistra
-  function pezzo(ctx, nome, x, y, { alfa = 1, specchia = false } = {}) {
+  // la sagoma nera di un pezzo, fatta una volta per nome e già alla misura in cui si disegna: serve a `scuro`.
+  // Alla risoluzione della fonte nitida ogni fotogramma la riduceva di nuovo ad alta qualità, e sul telefono andava a scatti
+  const nere = new Map()
+  function nera(chiave, fonte, fx, fy, fw, fh, w = fw, h = fh) {
+    let c = nere.get(chiave)
+    if (c) return c
+    c = document.createElement('canvas')
+    c.width = w; c.height = h
+    const g = c.getContext('2d')
+    g.imageSmoothingEnabled = w !== fw || h !== fh
+    g.imageSmoothingQuality = 'high'
+    g.drawImage(fonte, fx, fy, fw, fh, 0, 0, w, h)
+    g.globalCompositeOperation = 'source-in'
+    g.fillStyle = '#000'
+    g.fillRect(0, 0, fw, fh)
+    nere.set(chiave, c)
+    return c
+  }
+
+  // il disegno crudo, angolo in alto a sinistra; specchia riflette destra/sinistra. `scuro`: alfa non rende il pezzo
+  // trasparente (si vedrebbe il pavimento attraverso) ma più scuro, con la sua sagoma nera a trasparenza 1 − alfa
+  function pezzo(ctx, nome, x, y, { alfa = 1, specchia = false, scuro = false } = {}) {
     const p = pezzi[nome]
     if (!p || !img) return false
     const [sx, sy, w, h] = p
     const n = imgN && nitidi.pezzi[nome]
     const [fonte, fx, fy, fw, fh] = n ? [imgN, ...n] : [img, sx, sy, w, h]
     const prima = ctx.globalAlpha
-    if (alfa !== 1) ctx.globalAlpha = alfa
+    if (alfa !== 1 && !scuro) ctx.globalAlpha = alfa
     if (n) { ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high' }
-    if (specchia) {
-      ctx.save()
-      ctx.translate(Math.round(x) + w, Math.round(y))
-      ctx.scale(-1, 1)
-      ctx.drawImage(fonte, fx, fy, fw, fh, 0, 0, w, h)
-      ctx.restore()
-    } else {
-      ctx.drawImage(fonte, fx, fy, fw, fh, Math.round(x), Math.round(y), w, h)
+    const stampa = (sorgente, a, b, c, d) => {
+      if (specchia) {
+        ctx.save()
+        ctx.translate(Math.round(x) + w, Math.round(y))
+        ctx.scale(-1, 1)
+        ctx.drawImage(sorgente, a, b, c, d, 0, 0, w, h)
+        ctx.restore()
+      } else {
+        ctx.drawImage(sorgente, a, b, c, d, Math.round(x), Math.round(y), w, h)
+      }
+    }
+    stampa(fonte, fx, fy, fw, fh)
+    if (scuro && alfa < 1) {
+      ctx.globalAlpha = prima * (1 - alfa)
+      // la sagoma alla misura che avrà sullo schermo (la scala della tela), così non si riduce a ogni fotogramma
+      const k = n ? Math.max(1, Math.min(8, Math.round(ctx.getTransform ? ctx.getTransform().a : 1))) : 1
+      ctx.imageSmoothingEnabled = false
+      stampa(nera(n ? nome + '|n' + k : nome, fonte, fx, fy, fw, fh, w * k, h * k), 0, 0, w * k, h * k)
     }
     if (n) ctx.imageSmoothingEnabled = false
     if (alfa !== 1) ctx.globalAlpha = prima
@@ -54,15 +84,19 @@ export function creaFoglio({ pezzi, immagine, tessera = 32, nitidi = null }) {
   }
 
   // un pezzo di un pezzo (rx,ry,rw,rh in pixel del pezzo): per disegnare a fette senza tagliare 16 nomi diversi
-  function ritaglio(ctx, nome, rx, ry, rw, rh, x, y, { alfa = 1 } = {}) {
+  function ritaglio(ctx, nome, rx, ry, rw, rh, x, y, { alfa = 1, scuro = false } = {}) {
     const p = pezzi[nome]
     if (!p || !img) return false
     const [sx, sy, w, h] = p
     const lw = Math.min(rw, w - rx), lh = Math.min(rh, h - ry)
     if (lw <= 0 || lh <= 0) return false
     const prima = ctx.globalAlpha
-    if (alfa !== 1) ctx.globalAlpha = alfa
+    if (alfa !== 1 && !scuro) ctx.globalAlpha = alfa
     ctx.drawImage(img, sx + rx, sy + ry, lw, lh, Math.round(x), Math.round(y), lw, lh)
+    if (scuro && alfa < 1) {
+      ctx.globalAlpha = prima * (1 - alfa)
+      ctx.drawImage(nera(nome, img, sx, sy, w, h), rx, ry, lw, lh, Math.round(x), Math.round(y), lw, lh)
+    }
     if (alfa !== 1) ctx.globalAlpha = prima
     return true
   }
@@ -150,6 +184,22 @@ export function creaFoglio({ pezzi, immagine, tessera = 32, nitidi = null }) {
     nomi: () => Object.keys(pezzi),
   }
   return foglio
+}
+
+// la sagoma nera di una tela (relitti, sprite fatti in codice), fatta una volta per tela: per scurire senza trasparenza
+const nereDiTele = new WeakMap()
+export function neraDi(tela) {
+  let c = nereDiTele.get(tela)
+  if (c) return c
+  c = document.createElement('canvas')
+  c.width = tela.width; c.height = tela.height
+  const g = c.getContext('2d')
+  g.drawImage(tela, 0, 0)
+  g.globalCompositeOperation = 'source-in'
+  g.fillStyle = '#000'
+  g.fillRect(0, 0, c.width, c.height)
+  nereDiTele.set(tela, c)
+  return c
 }
 
 // va rimesso ogni fotogramma: cambiare la trasformazione lo azzera su qualche browser

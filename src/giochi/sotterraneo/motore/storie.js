@@ -10,7 +10,7 @@ import { CRESCITA_NUOVA } from './crescita.js'
 import { forzaDelCorredo } from './forza.js'
 import { GIOCATORI_TIPO, NOMI_TIPO, STRADE, NOMI_STRADA, STRADA_BASE, stileDi, TENTATIVI, RISALITA } from '../dati/giocatori-tipo.js'
 import { livelloAtteso } from './storia.js'
-import { dannoPerRisposta, valoreDellaRoba, utiliComprati } from './fine.js'
+import { dannoPerRisposta, colpoBase, valoreDellaRoba, utiliComprati } from './fine.js'
 
 const copia = o => JSON.parse(JSON.stringify(o))
 const intero = (v, d = 0) => (Number.isFinite(v) ? v : d)
@@ -24,14 +24,14 @@ const pozioniDi = zaino => zaino.filter(k => COSE[k] && COSE[k].usa === 'cura').
 export function ingressoDi(eroe, { roba, crescita }, k = 0) {
   const c = new Corredo({ eroe, roba, crescita })
   c.sistemaIlCorredo()
-  return { liv: c.livelloEroe, att: c.att, dif: c.dif, vita: c.vitaConLaRoba, forza: forzaDelCorredo(c), dpa: dannoPerRisposta(c, livelloAtteso(k)),
-           valore: valoreDellaRoba(c), pezzi: [c.mano, c.mancina, c.corpo, c.dito], poz: pozioniDi(c.zaino), gemme: c.gemme }
+  return { liv: c.livelloEroe, att: c.att, dif: c.dif, vita: c.vitaConLaRoba, forza: forzaDelCorredo(c), dpa: dannoPerRisposta(c, livelloAtteso(k)), col: colpoBase(c, livelloAtteso(k)),
+           valore: valoreDellaRoba(c), pezzi: [c.mano, c.mancina, c.corpo, c.collo, c.dito, c.dito2], poz: pozioniDi(c.zaino), gemme: c.gemme }
 }
 
 // una discesa giocata, ridotta a quello che il rapporto legge: l'esito, le domande, le pozioni, i piani e uno scontro per riga
 function registro(g) {
   const e = g.esito
-  return { v: e.vinta ? 1 : 0, sv: e.svenimenti, dom: e.domande, giu: e.giuste, pz: g.pozioni || 0, fo: g.fonti || 0, tt: g.alTetto ? 1 : 0, ge: e.gemme,
+  return { v: e.vinta ? 1 : 0, sv: e.svenimenti, dom: e.domande, giu: e.giuste, pz: g.pozioni || 0, fo: g.fonti || 0, tt: g.alTetto ? 1 : 0, tc: g.toccaIlTetto ? 1 : 0, ct: g.cureTrovate || {}, cr: g.cureRifiutate || 0, sl: g.scale || [], ge: e.gemme,
            mo: e.mostri, liv: g.corsa.livelloEroe, pp: (g.perPiano || []).map(n => intero(n)), sc: g.scontri || [], guasto: g.guasto || null,
            ri: g.risalite || [], ar: g.armi || { trovati: 0, inutili: 0, rimandati: 0 } }
 }
@@ -39,10 +39,10 @@ function registro(g) {
 // il seme della partita n di una discesa: lo stesso per chi gioca la discesa dallo stesso ingresso, così il sotterraneo è lo stesso
 export const semeDella = (seme, k, n = 0) => 100 + seme * 37 + k * 3 + n * 7919
 
-function giocaCome(tipo, k, stato, { eroe, seme, n = 0, strada = STRADA_BASE }) {
+function giocaCome(tipo, k, stato, { eroe, seme, n = 0, strada = STRADA_BASE, bravura = null }) {
   const botteghe = RISALITA.scaffale ? copia(stato.botteghe || {}) : null
   const g = GIOCATORI_TIPO[tipo]
-  return gioca(CAMPAGNA[k], { seme: semeDella(seme, k, n), bravura: g.bravura, come: g.come, stile: stileDi(tipo, strada), eroe,
+  return gioca(CAMPAGNA[k], { seme: semeDella(seme, k, n), bravura: bravura ?? g.bravura, come: g.come, stile: stileDi(tipo, strada), eroe,
                               roba: copia(stato.roba), crescita: copia(stato.crescita),
                               risalita: { spesa: STRADE[strada].spesa, finite: k, seme: seme * 211 + k * 7 + n * 31 + 5, botteghe, obiettivo: stato.obiettivo ?? null } })
 }
@@ -81,6 +81,28 @@ export function passoDellaStoria(k, stato, { tipo, eroe, seme, sonde = [], rifai
     passo.pre += utiliComprati(eroe, crescita, robaPersa, roba)
   }
   return { passo, stato: stati() }
+}
+
+/* Il metro delle unità (docs/sotterraneo/giocatori-tipo.md, «Il metro è il curioso»): la discesa k giocata dal curioso (o da chi si dice) con la
+   roba e la crescita con cui la sua storia ci arriva, la spesa di sopra già fatta. Un ingresso è una storia (`seme`) e un eroe; la fila degli
+   ingressi si gioca una volta e si tiene. `n` cambia il sotterraneo (il seme della partita), `bravura` le risposte giuste. */
+const ingressi = new Map()
+export function ingressoDelCurioso(k, { eroe = 'cavaliere', seme = 1, strada = STRADA_BASE } = {}) {
+  const chiave = `${eroe}|${seme}|${strada}`
+  let fila = ingressi.get(chiave)
+  if (!fila) { fila = []; ingressi.set(chiave, fila) }
+  let s = fila.length ? fila[fila.length - 1].dopo : STATO_NUOVO()
+  while (fila.length <= k) {
+    const j = fila.length
+    const opz = { tipo: 'curioso', eroe, seme, strada }
+    const entrato = passoDellaStoria(j, s, { ...opz, tentativi: 0 }).stato
+    s = passoDellaStoria(j, s, opz).stato
+    fila.push({ entrato, dopo: s })
+  }
+  return copia(fila[k].entrato)
+}
+export function giocaDalCurioso(k, { eroe = 'cavaliere', seme = 1, n = 0, bravura = null, strada = STRADA_BASE } = {}) {
+  return giocaCome('curioso', k, ingressoDelCurioso(k, { eroe, seme, strada }), { eroe, seme, n, strada, bravura })
 }
 
 // quali discese già vinte si rifanno al passo k: quella di due prima (la roba di chi è un po' più avanti), le ultime due all'uscita

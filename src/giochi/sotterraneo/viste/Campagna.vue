@@ -19,9 +19,10 @@ const props = defineProps({
   roba: { type: Object, default: null },     // quello che ci si porta dietro, già contato (schedaConLaRoba): { vita, att, dif, gemme, mano, mancina, corpo, tratti… }
   punti: { type: Number, default: 0 },          // le linguette del diario (viste/SchedeEroe.vue): i «+» delle altre schede
   puntiAbilita: { type: Number, default: 0 },
+  forze: { type: Object, default: null },    // vita ed energia di chi ha lasciato la discesa dal portale: { vita, vitaMax, energia, energiaMax }
   annuncio: { type: Object, default: null }, // la zona appena nata che il minatore racconta (motore/zone.js): { chiave, nome, livello, detto, sentita }
 })
-const emit = defineEmits(['gioca', 'riprendi', 'scorda', 'terra', 'bottega', 'segui', 'sentito', 'scheda'])
+const emit = defineEmits(['gioca', 'riprendi', 'scorda', 'terra', 'bottega', 'segui', 'sentito', 'scheda', 'cura'])
 riprendiSeChiesta(() => props.ripresa, () => emit('riprendi'))
 
 const chiede = ref(null)   // quale tappa si sta per cominciare avendo una discesa in sospeso
@@ -67,7 +68,7 @@ function comincia() {
     <Terra ref="terraEl" :tappe="tappe" :abisso="abisso" :eroe="eroe" :terra="terra" :roba="roba"
            :missioni="missioni" :azione-missione="azioneMissione" :segui="segui"
            :giaScesa="ripresa ? ripresa.tappa : null" :portale="portale"
-           :annuncio="annuncio" @sentito="$emit('sentito')"
+           :annuncio="annuncio" :forze="forze" @sentito="$emit('sentito')" @cura="r => $emit('cura', r)"
            @scendi="tocca" @terra="v => $emit('terra', v)" @bottega="(k, s) => $emit('bottega', k, s)"
            @riprendi="$emit('riprendi')">
       <template #sopra>

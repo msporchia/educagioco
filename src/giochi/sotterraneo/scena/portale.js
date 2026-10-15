@@ -3,6 +3,8 @@
 // (docs/sotterraneo/regole.md). Lo stesso disegno giù nel piano (scena/tela.js) e sopra nel villaggio
 // (viste/Portale.vue): `ctx` lavora in pixel di sprite, (cx, cy) è il centro dell'ovale.
 
+import { mescola } from '../../../grafica/comune.js'
+
 export const PORTALE = { rx: 7, ry: 11 }   // i semiassi, in pixel
 
 // l'anello: otto spicchi che girano, dal bianco al viola e ritorno
@@ -12,7 +14,8 @@ const DENTRO = ['#2a1d72', '#3d2aa6', '#5a44d6']
 export function dipingiPortale(ctx, cx, cy, t, { alfa = 1, bagliore = true } = {}) {
   const { rx, ry } = PORTALE
   ctx.save()
-  ctx.globalAlpha = alfa
+  ctx.globalAlpha = alfa   // il bagliore e l'ombra sono luce: si smorzano; il corpo no, si scurisce
+  const scuro = c => (alfa < 1 ? mescola(c, '#000000', 1 - alfa) : c)
   if (bagliore) {
     const r = ry * 1.7
     const g = ctx.createRadialGradient(cx, cy, 2, cx, cy, r)
@@ -24,6 +27,7 @@ export function dipingiPortale(ctx, cx, cy, t, { alfa = 1, bagliore = true } = {
   // l'ombra per terra, sotto l'ovale
   ctx.fillStyle = 'rgba(10,6,30,.45)'
   ctx.beginPath(); ctx.ellipse(cx, cy + ry, rx * 0.9, 2, 0, 0, 7); ctx.fill()
+  ctx.globalAlpha = 1
 
   for (let j = -ry; j <= ry; j++) for (let i = -rx; i <= rx; i++) {
     const d = Math.hypot(i / (rx + 0.5), j / (ry + 0.5))
@@ -31,16 +35,16 @@ export function dipingiPortale(ctx, cx, cy, t, { alfa = 1, bagliore = true } = {
     const a = Math.atan2(j / ry, i / rx)
     if (d > 0.74) {
       const k = Math.floor(((a / (2 * Math.PI)) * 8 + t * 2.4) % 8 + 8) % 8
-      ctx.fillStyle = ANELLO[k]
+      ctx.fillStyle = scuro(ANELLO[k])
     } else {
       // dentro un vortice più scuro, che gira al contrario
       const s = Math.sin(a * 2 + d * 9 - t * 5)
-      ctx.fillStyle = DENTRO[s > 0.35 ? 2 : s > -0.35 ? 1 : 0]
+      ctx.fillStyle = scuro(DENTRO[s > 0.35 ? 2 : s > -0.35 ? 1 : 0])
     }
     ctx.fillRect(cx + i, cy + j, 1, 1)
   }
   // tre scintille che girano attorno
-  ctx.fillStyle = '#ffffff'
+  ctx.fillStyle = scuro('#ffffff')
   for (let n = 0; n < 3; n++) {
     const g = t * 1.7 + n * 2.094
     ctx.fillRect(Math.round(cx + Math.cos(g) * (rx + 2)), Math.round(cy + Math.sin(g) * (ry + 1)), 1, 1)

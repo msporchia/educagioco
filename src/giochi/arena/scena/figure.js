@@ -1,28 +1,30 @@
 // Le truppe dell'arena sono creature del castello: chi è chi, a che misura, e
 // quale fotogramma. Nessuna regola qui (il motore non sa che esistano gli
 // sprite) e nessun prezzo: solo il disegno. Le figure del foglio guardano a
-// DESTRA e quasi tutte hanno solo il respiro (4 fotogrammi); lupo e drago
+// DESTRA e quasi tutte hanno solo il respiro (4 fotogrammi); drago
 // hanno anche i passi di lato (6 fotogrammi). Di schiena o di fronte non esiste
 // niente per tutte: in campo guardano dalla parte della loro squadra.
 import { PEZZI } from '../../castello/dati/figure.js'
 import { NITIDO, NITIDI } from '../../sotterraneo/dati/atlante.js'
 
 export const CREATURA = {
-  scheletri: 'scheletro', guardiano: 'scheletro-scudo', lupi: 'lupo', diavoletto: 'diavoletto',
-  pipistrelli: 'pipistrello', negromante: 'negromante', golem: 'golem', drago: 'drago',
+  scheletri: 'scheletro', guardiano: 'scheletro-scudo', lupi: 'mummia', diavoletto: 'diavoletto',
+  pipistrelli: 'pipistrello', bestie: 'bestia-cornuta', negromante: 'negromante', golem: 'golem', drago: 'drago',
 }
 
 // pixel dello schermo per pixel del foglio, a larghezza di campo 390
 export const SCALA = {
   scheletri: 0.42, guardiano: 0.36, lupi: 0.4, diavoletto: 0.38,
-  pipistrelli: 0.45, negromante: 0.36, golem: 0.5, drago: 0.42,
+  pipistrelli: 0.45, bestie: 0.36, negromante: 0.36, golem: 0.5, drago: 0.42,
 }
 
-// le pose dai nomi dei pezzi: mostro:<chi>:<n> è il respiro, mostro:<chi>:lato:<n> i passi
+// le pose dai nomi dei pezzi (meno `NON_SUE`): mostro:<chi>:<n> è il respiro, mostro:<chi>:lato:<n> i passi
+// pose del foglio che la truppa non fa: la fiammata della bestia cornuta (le bestie colpiscono da vicino)
+const NON_SUE = new Set(['mostro:bestia-cornuta:2'])
 const pose = {}
 for (const nome of Object.keys(PEZZI)) {
   const [fam, chi, verso, n] = nome.split(':')
-  if (fam !== 'mostro') continue
+  if (fam !== 'mostro' || NON_SUE.has(nome)) continue
   const p = (pose[chi] ||= { respiro: [], lato: [] })
   if (n === undefined) p.respiro.push(nome)
   else if (verso === 'lato') p.lato.push(nome)

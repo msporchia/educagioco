@@ -8,7 +8,7 @@ alla scala che scende** da cui si era venuti. Le regole della discesa sono in
 «lascio perdere») in [portale-e-sosta.md](portale-e-sosta.md). Il codice:
 `faiIlPiano`, `scendi`, `sali`, `lasciaIlPiano`, `entraNelPiano` in
 `motore/corsa.js`; `dietro` e `fondo` in `motore/sosta.js`;
-`scena/scala-su.js` (il disegno); il foglio in `Gioco.vue`.
+`scena/scala-su.js` (la scala a pioli e il chiarore); il foglio in `Gioco.vue`.
 
 ## Dov'è, e come si tocca
 
@@ -23,12 +23,13 @@ alla scala che scende** da cui si era venuti. Le regole della discesa sono in
 - **Si tocca solo sulla sua cella** (`cosaC` la salta nella ricerca «vicino»):
   l'eroe ci nasce sopra, e un tocco a un passo da lui, per camminare, non deve
   aprirla.
-- **Si disegna in codice** (`scena/scala-su.js`, come il portale): un'apertura
-  nella pietra coi gradini che salgono e si stringono, chiari perché da su viene
-  la luce, una freccia in su che sobbalza sopra la cornice, un chiarore che
-  pulsa. Colori di nessuno scenario: la scala che scende è buia e a gradini che
-  spariscono, questa è chiara, e si legge a colpo d'occhio. Sulla mappina non
-  c'è (la mappina dice solo dove sei, la scala, chi ha la chiave).
+- **È la scala a pioli dipinta delle cantine** (`SCALA_SU` in `scena/scala-su.js`),
+  in piedi nella cella, in tutte le scene: l'utente, 14 ottobre, «abbiamo delle
+  scale per risalire, usiamole al posto di quel disegno fatto a mano con la
+  freccina in su». Sotto resta un chiarore che pulsa piano (da su viene la luce),
+  così si trova da lontano. Provato prima: un'apertura coi gradini disegnata in
+  codice e una freccia che sobbalza, che stonava coi pezzi dipinti. Sulla mappina
+  non c'è (la mappina dice solo dove sei, la scala, chi ha la chiave).
 
 ## Dove si compare
 

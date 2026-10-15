@@ -9,7 +9,7 @@
    `node test/esegui.mjs sotterraneo-roba --niente-build`
    tempo: 100 */
 import { CAMPAGNA, L_ABISSO, svenimentiDi } from '../../src/giochi/sotterraneo/dati/campagna.js'
-import { COSE, CURE, CURE_IN_VENDITA, IN_VENDITA, STANZE_TORCIA, baseDi, aLivello, chiaveDelPezzo } from '../../src/giochi/sotterraneo/dati/cose.js'
+import { COSE, CURE, CURE_IN_VENDITA, IN_VENDITA, STANZE_TORCIA, baseDi, aLivello, chiaveDelPezzo, CASELLE } from '../../src/giochi/sotterraneo/dati/cose.js'
 import { TASCHE, POZIONI_MASSIME } from '../../src/giochi/sotterraneo/dati/mondo.js'
 import { MERCANTI, mercanteDi, vendeLa, righeDi, guastiDeiMercanti, schedaDi, schedeDi, sovrapprezzo, prezzoAvanti }
   from '../../src/giochi/sotterraneo/dati/mercanti.js'
@@ -21,7 +21,8 @@ import { Bottega, PEZZI_PER_LINGUETTA, SUBITO_PER_LINGUETTA, RARI_PER_LINGUETTA,
 import { ABILITA, affiancatoDi, sintesiDi } from '../../src/giochi/sotterraneo/viste/pezzo.js'
 import { Livello, seminato } from '../../src/giochi/sotterraneo/motore/livello.js'
 import { scrivi, leggi } from '../../src/giochi/sotterraneo/motore/sosta.js'
-import { gioca, misuraLaStoria } from '../../src/giochi/sotterraneo/motore/banco.js'
+import { gioca } from '../../src/giochi/sotterraneo/motore/banco.js'
+import { giocaDalCurioso } from '../../src/giochi/sotterraneo/motore/storie.js'
 import { robaAttesa, migliora, righeAvanti, crescitaAttesa, delPassoDi } from '../../src/giochi/sotterraneo/motore/storia.js'
 import { passoDi, premiDella } from '../../src/giochi/sotterraneo/dati/storia.js'
 import { EROI, eroeDi, portaLa } from '../../src/giochi/sotterraneo/dati/eroi.js'
@@ -82,7 +83,7 @@ import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiut
   const a = new Corsa(CAMPAGNA[0], { seme: 3, rnd: seminato(3) })
   a.mano = 'spada'
   a.corpo = 'corazza'
-  a.dito = 'amuleto-rosso'
+  a.collo = 'amuleto-rosso'
   a.zaino = ['pozione', 'ascia']
   a.gemme = 40
   a.torciaResta = 5
@@ -90,7 +91,7 @@ import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiut
   const r = a.roba
   const b = new Corsa(CAMPAGNA[1], { seme: 4, rnd: seminato(4), roba: r })
   stessaLista('alla discesa dopo si ritrova quello che si aveva addosso',
-              [b.mano, b.corpo, b.dito], ['spada', 'corazza', 'amuleto-rosso'])
+              [b.mano, b.corpo, b.collo], ['spada', 'corazza', 'amuleto-rosso'])
   stessaLista('e in tasca', b.zaino, ['pozione', 'ascia'])
   uguale('e le gemme', b.gemme, 40)
   uguale('e la torcia a metà, con quella di scorta', `${b.torciaResta}+${b.torceInScorta}`, '5+1')
@@ -123,7 +124,7 @@ import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiut
   const giu = new Corsa(CAMPAGNA[1], { seme: 12, rnd: seminato(12), roba: su })
   uguale('e nel pozzo si scende con la stessa roba', JSON.stringify(giu.roba.zaino), JSON.stringify(su.zaino))
   uguale('e le stesse gemme', giu.gemme, su.gemme)
-  nota(`dalla scalinata si porta su: ${[su.mano, su.mancina, su.corpo, su.dito].filter(Boolean).join(', ') || 'niente addosso'}` +
+  nota(`dalla scalinata si porta su: ${[su.mano, su.mancina, su.corpo, su.collo, su.dito, su.dito2].filter(Boolean).join(', ') || 'niente addosso'}` +
        ` · tasche ${su.zaino.join(', ') || 'vuote'} · 💎 ${su.gemme}`)
 }
 
@@ -269,7 +270,7 @@ import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiut
   uguale('si compra lo stesso', preso?.che, 'comprato')
   uguale('al prezzo che dice', novizio.gemme, 500 - costoDopo)
   stessaLista('e va nello zaino', novizio.zaino, [dopo.chiave])
-  controlla('non addosso', !['mano', 'mancina', 'corpo', 'dito'].some(d => novizio.casella(d) === dopo.chiave))
+  controlla('non addosso', !CASELLE.some(d => novizio.casella(d) === dopo.chiave))
   controlla('e il banco dice dov\'è finito e cosa manca', novizio.avvisi.some(a => a.cosa === dopo.chiave && /nello zaino · Serve /.test(a.testo)),
             JSON.stringify(novizio.avvisi))
   uguale('dallo zaino non si indossa finché manca la caratteristica', novizio.indossaDallaTasca(0)?.che, 'niente')
@@ -304,10 +305,11 @@ import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiut
   const p = nudo.seLoMetto('spada-corta')
   uguale('a mani nude la spada corta porta il braccio da 3 a 4', `${p.prima.att} → ${p.dopo.att}`, '3 → 4')
   uguale('in mano', p.dove, 'mano')
-  const vestito = new Bottega({ roba: { ...ROBA_VUOTA(), mano: 'spadone', corpo: 'panciotto', dito: 'amuleto-rosso' } })
+  const vestito = new Bottega({ roba: { ...ROBA_VUOTA(), mano: 'spadone', corpo: 'panciotto', collo: 'amuleto-rosso' } })
   uguale('lo scudo con lo spadone in mano non va: lo dice', vestito.seLoMetto('scudo-legno')?.bloccata, 'spadone')
   const anello = vestito.seLoMetto('anello-verde')
-  uguale('cambiare l\'amuleto rosso con l\'anello verde toglie sei di vita', anello.prima.vita - anello.dopo.vita, 6)
+  uguale('l\'anello verde non toglie la vita dell\'amuleto rosso: sta su un altro posto', anello.prima.vita - anello.dopo.vita, 0)
+  uguale('e non manda via niente', anello.cambio.toglie.length, 0)
   controlla('e dà le gemme', anello.dopo.gemme > anello.prima.gemme)
   uguale('il mago non si mette l\'ascia: niente confronto', new Bottega({ eroe: 'mago' }).seLoMetto('ascia'), null)
   /* in discesa la vita è il tetto della corsa, che cresce coi piani */
@@ -392,7 +394,7 @@ import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiut
       const mano = porta('mano', 'scettro', 'balestra', 'bipenne', 'spadone')
       return { ...ROBA_VUOTA(), mano: raro(mano, L, 'att', 'fuoco'),
                mancina: COSE[mano].mani === 2 ? null : raro('scudo-teschio', L, 'dif', 'vita'),
-               corpo: raro(porta('corpo', 'manto', 'corazza'), L, 'dif', 'vita'), dito: raro('amuleto-osso', L, 'dif', 'vita') }
+               corpo: raro(porta('corpo', 'manto', 'corazza'), L, 'dif', 'vita'), collo: raro('amuleto-osso', L, 'dif', 'vita') }
     }
     let giri = 0, pochi = 0, nonMigliora = 0, nonPortabile = 0, rialzi = 0, storti = 0, meritare = 0, meritareStorti = 0
     let conSubito = 0, dueSubito = 0, dieci = 0, troppiRari = 0, leggendari = 0, magici = 0, scaffali = 0, senzaSubito = 0, daTenere = 0
@@ -591,7 +593,7 @@ import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiut
     const mano = porta('mano', 'scettro', 'balestra', 'bipenne', 'spadone')
     const r = (b, ...ab) => chiaveDelPezzo(b, L, 'raro', ab)
     return { ...ROBA_VUOTA(), gemme: 50, mano: r(mano, 'att', 'fuoco'), mancina: COSE[mano].mani === 2 ? null : r('scudo-teschio', 'dif', 'vita'),
-             corpo: r(porta('corpo', 'manto', 'corazza'), 'dif', 'vita'), dito: r('amuleto-osso', 'dif', 'vita') }
+             corpo: r(porta('corpo', 'manto', 'corazza'), 'dif', 'vita'), collo: r('amuleto-osso', 'dif', 'vita') }
   }
   let linguette = 0, pochiSalti = 0, pochiSogni = 0, sogniBassi = 0, saltiDeboli = 0, instabili = 0, reggibili = 0, nonReggibili = 0
   const guai = []
@@ -771,14 +773,19 @@ import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiut
   uguale('la vita', pd.dopo.vita - pd.prima.vita, -3)
   uguale('un\'arma a due mani sola in mano non è «arma e scudo»', affianca(bott({ mano: 'spada' }), 'spadone').dueMani, false)
 
-  /* un anello si confronta col gioiello che hai, e le gemme si scrivono come moltiplicatore */
-  const a = affianca(bott({ dito: 'amuleto-rosso' }), 'anello-verde')
-  uguale('a sinistra l\'amuleto rosso', a.toglie.join(), 'amuleto-rosso')
-  uguale('la vita 6 si perde', `${riga(a, 'vita').vecchio} → ${riga(a, 'vita').nuovo} ${riga(a, 'vita').verso}`, '+6 → — giu')
+  /* un gioiello si confronta con quello che hai nel suo posto, e le gemme si scrivono come moltiplicatore */
+  const c1 = affianca(bott({ collo: 'amuleto-rosso' }), 'medaglione')
+  uguale('a sinistra l\'amuleto rosso', c1.toglie.join(), 'amuleto-rosso')
+  uguale('la vita 6 si perde', `${riga(c1, 'vita').vecchio} → ${riga(c1, 'vita').nuovo} ${riga(c1, 'vita').verso}`, '+6 → — giu')
+  uguale('la difesa arriva', `${riga(c1, 'dif').vecchio} → ${riga(c1, 'dif').nuovo} ${riga(c1, 'dif').verso}`, '— → +1 su')
+  uguale('la mano non c\'entra: niente riga del braccio', riga(c1, 'att'), undefined)
+  uguale('uno meglio e uno peggio', c1.sintesi, 'meglio in 1, peggio in 1')
+  const a = affianca(bott({ dito: 'anello-ambra', dito2: 'anello-ambra' }), 'anello-verde')
+  uguale('con due anelli addosso, l\'anello nuovo ne toglie uno', a.toglie.join(), 'anello-ambra')
   uguale('le gemme ×1,5 arrivano', `${riga(a, 'gemme').vecchio} → ${riga(a, 'gemme').nuovo} ${riga(a, 'gemme').verso}`, '— → ×1,5 su')
-  uguale('la mano non c\'entra: niente riga del braccio', riga(a, 'att'), undefined)
-  uguale('uno meglio e uno peggio', a.sintesi, 'meglio in 1, peggio in 1')
-  const luce = affianca(bott({ dito: 'anello-ambra' }), 'anello-ambra')
+  const libero = affianca(bott({ dito: 'anello-ambra' }), 'anello-ambra')
+  uguale('un anello uguale al primo va sul dito libero: niente da togliere', libero.toglie.length, 0)
+  const luce = affianca(bott({ dito: 'anello-ambra', dito2: 'anello-ambra' }), 'anello-ambra')
   uguale('lo stesso pezzo contro se stesso: tutto neutro', luce.sintesi, 'uguale')
   controlla('e ha comunque la sua riga', luce.righe.length === 1 && luce.righe[0].verso === 'pari')
 
@@ -873,20 +880,22 @@ import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiut
 
 /* ══════════ 8. l'equilibrio, in piccolo ══════════
    La misura intera (venti semi, otto/sei/quattro su dieci, la roba di una
-   discesa prima e di due avanti) sta in `misure/sotterraneo`; qui sei semi
-   col cavaliere e la roba attesa, per accorgersi subito se la tabella
-   rende una discesa una passeggiata o un muro. */
+   discesa prima e di due avanti) sta in `misure/sotterraneo`; qui sei storie
+   del curioso col cavaliere (il metro: docs/sotterraneo/giocatori-tipo.md),
+   ognuna con la roba che la sua storia gli ha dato, per accorgersi subito se
+   una discesa diventa una passeggiata o un muro. */
 {
-  const m = misuraLaStoria({ eroe: 'cavaliere', semi: 6, prove: [0.8, 0.4], scarti: [0] })
-  const [otto, quattro] = m.vinte[0]
+  const vinte = bravura => CAMPAGNA.map((_, k) => Array.from({ length: 6 }, (_, s) => giocaDalCurioso(k, { eroe: 'cavaliere', seme: s + 1, bravura }))
+                                                   .filter(g => g.esito.vinta).length)
+  const otto = vinte(0.9), quattro = vinte(0.4)
   for (const [k, t] of CAMPAGNA.entries()) {
-    controlla(`${t.chiave}: con la roba attesa, a otto su dieci si arriva in fondo`, otto[k] >= 5, `${otto[k]}/6`)
+    controlla(`${t.chiave}: col curioso, a nove su dieci si arriva in fondo`, otto[k] >= 5, `${otto[k]}/6`)
     // la scalinata (k = 1) a quattro su dieci si vince una volta su due: su sei semi due vittorie sono il caso, non un guasto. Il
     // cavaliere con le abilità del banco a quattro su dieci vince una volta su tre nelle discese più comode per lui: su sei semi
     // tre vittorie sono il caso (la cifra vera, a venti semi e per i quattro eroi, la dà `misure/sotterraneo`)
-    if (k) controlla(`${t.chiave}: con la roba attesa, a quattro su dieci non si vince quasi mai`, quattro[k] <= (k === 1 ? 4 : 3), `${quattro[k]}/6`)
+    if (k) controlla(`${t.chiave}: col curioso, a quattro su dieci non si vince quasi mai`, quattro[k] <= (k === 1 ? 4 : 3), `${quattro[k]}/6`)
   }
-  nota(`sei semi con la roba attesa: a 8/10 ${Object.values(otto).join(' · ')}, a 4/10 ${Object.values(quattro).join(' · ')}`)
+  nota(`sei storie del curioso: a 9/10 ${otto.join(' · ')}, a 4/10 ${quattro.join(' · ')}`)
 }
 
 riassunto('la roba che resta e i mercanti')
