@@ -16,7 +16,6 @@ import { guastiDeiDettagli, dettaglioTruppa, dettaglioAzione, ruoloDi } from '..
 import { guastiDelleFigure } from '../../src/giochi/arena/scena/figure.js'
 import manifesto from '../../src/giochi/arena/gioco.js'
 import { guastiDellAlbo } from '../../src/giochi/albo.js'
-import { guastiDelleSfide } from '../../src/giochi/primati.js'
 import { GRADO_A_MENTE, PARTENZA_MAX, partenza, basi, gradoDi, dopoLaRisposta, gradoDelleTabelline, gradoDellEta }
   from '../../src/giochi/arena/bravura.js'
 import { calcoliTabellina } from '../../src/data/tabelline.js'
@@ -271,9 +270,7 @@ controlla('stesso seme, stessa partita', JSON.stringify(uguali) === JSON.stringi
   uguale('la battaglia infinita ha la scheda del nemico dell\'ultima tappa e nessun timer', `${INFINITA.nemico === NEMICO.trono}/${sfidaInfinita('neve').durata}`, 'true/Infinity')
   uguale('si apre alla portata dell\'ultima tappa', INFINITA.portata, CAMPAGNA[QUANTE_TAPPE - 1].portata)
   uguale('con tutte e quattro le operazioni', INFINITA.operazioni.join(), '+,−,×,÷')
-  const sf = guastiDelleSfide([manifesto])
-  controlla('il manifesto dichiara la sua sfida senza fine', sf.length === 0 && manifesto.senzaFine.misura === 'tempo', sf.join(' · '))
-  controlla('e i dettagli del record sono parole', manifesto.senzaFine.dettagli({ terreno: 'neve', vinta: false }).every(x => typeof x === 'string' && x.length))
+  controlla('la battaglia infinita non ha record: il manifesto non dichiara una sfida senza fine', !manifesto.senzaFine)
   for (const terreno of TERRENI) {
     const p = new Partita({ rnd: caso(5), sfida: sfidaInfinita(terreno) })
     p.avanza(60)

@@ -78,8 +78,8 @@ export const scalinoDi = t => SCALINI.find(s => s.chiave === t.scalino)
 
 /* La battaglia infinita, in cima alla mappa oltre le dodici tappe: senza timer, col nemico alla
    difficoltà massima (la scheda dell'ultima tappa, niente scale), e un terreno diverso a ogni
-   volta con la sua truppa firma (`truppeDelTerreno`). Finisce quando cade un castello; il record è
-   il tempo. `portata` è quella dell'ultima tappa: si apre con la stessa regola (docs/arena/campagna.md). */
+   volta con la sua truppa firma (`truppeDelTerreno`). Finisce quando cade un castello; niente record
+   (non ha senso: l'utente). `portata` è quella dell'ultima tappa: si apre con la stessa regola (docs/arena/campagna.md). */
 export const INFINITA = {
   chiave: 'infinita', nome: 'La battaglia infinita', icona: '♾️', portata: CAMPAGNA[CAMPAGNA.length - 1].portata,
   nemico: NEMICO.trono,

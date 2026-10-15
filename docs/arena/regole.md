@@ -116,9 +116,9 @@ quelle note. Il nemico e i giocatori finti usano la stessa lista (`Partita.trupp
   vita, 13 di danno, 56 di velocità, colpiscono solo chi cammina, da vicino). Il ruolo è «regge e
   colpisce a corto raggio», fra le mummie (veloci, di più danno) e i pipistrelli (volano, fragili).
   L'operazione è `×` perché in lava non c'è nessun'altra truppa con la moltiplicazione.
-- **Il record è il tempo** (`senzaFine` nel manifesto, [../core/primati.md](../core/primati.md)): quanto si
-  resiste; **una vittoria conta il tempo che c'è voluto per abbattere il castello nemico** (misura da
-  confermare con l'utente). Non ci sono stelle, né tappe, né un finale di campagna.
+- **Non c'è un record** (l'utente: «non ha senso per questo gioco»): a fine battaglia si dice solo il tempo
+  di questa volta, niente `senzaFine` nel manifesto né riga nella tabella dei primati. Non ci sono nemmeno
+  stelle, tappe o un finale di campagna.
 - **Si apre come una tappa dopo l'ultima** (`apertaQui(INFINITA, QUANTE_TAPPE, fatte)`): campagna finita e
   portata dell'età (la stessa dell'ultima tappa, 70); chiusa, la voce ha il lucchetto.
 - **Senza timer la partita non può restare in piedi per sempre**: `npm run tara:arena -- --infinita` misura i
@@ -263,5 +263,4 @@ Il tempo di decidere c'è, poi la base viene sopraffatta.
 `[data-piazzola=<n>]` (con `data-variante=<truppa|miniera>` se c'è un edificio), `[data-castello]`,
 `[data-anello=potenzia|vendi|numeri]`, `[data-scelta=<n>]`, `[data-costruisci=<truppa|miniera>]`,
 `[data-dettagli=<truppa|miniera|ripara|bomba>]`, `[data-vendi]`, `[data-azione=ripara|bomba]`, `[data-monete]`, `[data-avviso]`,
-`[data-tappa=<n>]`, `[data-infinita]` (la voce della battaglia infinita in cima alla mappa, `disabled` se chiusa; `[data-record]`
-il suo record), `[data-ancora]` (il tasto del cartello di fine), `[data-fine=vinta|persa|pari]`, `[data-primato=nuovo|no]`.
+`[data-tappa=<n>]`, `[data-infinita]` (la voce della battaglia infinita in cima alla mappa, `disabled` se chiusa), `[data-ancora]` (il tasto del cartello di fine), `[data-fine=vinta|persa|pari]`.

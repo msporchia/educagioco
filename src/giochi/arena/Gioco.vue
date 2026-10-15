@@ -11,9 +11,8 @@ import { suono } from '../../audio.js'
 import { segna, state, etaDelBambino } from '../../store/profile.js'
 import { borsa } from '../../store/varieta.js'   // paga e dice se il salvadanaio è stanco
 import { PAGA } from '../../data/paghe.js'
-import { progresso, aperta, adesso, stelleDi, completa, sosta, salvaSosta, buttaSosta, ritocca, primatoDi, segnaPrimato } from '../campagne.js'
+import { progresso, aperta, adesso, stelleDi, completa, sosta, salvaSosta, buttaSosta, ritocca } from '../campagne.js'
 import { apertaQui } from '../../data/portata-giochi.js'
-import { recordInParole, fraseDiFine } from '../primati.js'
 import { usaPausa } from '../pausa.js'
 import VeloPausa from '../VeloPausa.vue'
 import Domanda from '../../quiz/Domanda.vue'
@@ -32,7 +31,6 @@ import Mappa from './viste/Mappa.vue'
 import CampoVista from './viste/Campo.vue'
 import Finale from './viste/Finale.vue'
 import Dettagli from './viste/Dettagli.vue'
-import { SENZA_FINE } from './gioco.js'
 import './stile.css'
 
 defineOptions({ name: 'CastleBattle' })
@@ -103,14 +101,13 @@ const scalini = computed(() => SCALINI.map(s => ({
 })))
 
 /* la battaglia infinita, in cima: si apre come una tappa che viene dopo l'ultima (campagna finita e
-   portata dell'età), e porta il record scritto in parole */
+   portata dell'età). Niente record: una battaglia senza fine non ha un tempo da battere */
 const laInfinita = computed(() => {
   const fatte = progresso(CHIAVE).tappa
   return {
     nome: INFINITA.nome, icona: INFINITA.icona, racconto: INFINITA.racconto,
     aperta: apertaQui(INFINITA, QUANTE_TAPPE, fatte),
     motivo: fatte < QUANTE_TAPPE ? `finisci le ${QUANTE_TAPPE} tappe` : 'per ora è chiusa',
-    record: recordInParole(primatoDi(CHIAVE), SENZA_FINE),
   }
 })
 
@@ -529,15 +526,8 @@ function chiudiPartita() {
   scorda()          // finita o vinta, non c'è più niente da riprendere
   const vinto = p.fine === 'vinto'
   const stelle = infinita.value ? 0 : stellePer({ vinto, vitaBase: p.vitaBase('io') })
-  let primato = null
-  if (infinita.value) {
-    // non ci sono stelle né tappe: conta il tempo (una vittoria conta quanto ci è voluto) e il record
-    if (!pagata) {
-      const esito = segnaPrimato(CHIAVE, Math.floor(p.t), Date.now(), { terreno: infinita.value, vinta: vinto })
-      primato = { ...esito, frase: fraseDiFine(esito, SENZA_FINE.misura) }
-      pagata = true
-    }
-  } else if (vinto && !pagata) {
+  // nella battaglia infinita non ci sono stelle né tappe né record: si dice solo il tempo di questa volta
+  if (!infinita.value && vinto && !pagata) {
     completa(CHIAVE, tappaIdx.value, QUANTE_TAPPE, { stelle })
     if (stelle === 3) segna('arenaSenzaGraffi')
     pagata = true
@@ -548,7 +538,7 @@ function chiudiPartita() {
     vinta: vinto, pari: p.fine === 'pari', titolo: titoloPartita.value, stelle,
     monete: borsellino.dato, notaMonete: borsellino.nota(), tempo: p.t,
     ultima: vinto && !infinita.value && tappaIdx.value === QUANTE_TAPPE - 1,
-    infinita: !!infinita.value, primato,
+    infinita: !!infinita.value,
   }
 }
 

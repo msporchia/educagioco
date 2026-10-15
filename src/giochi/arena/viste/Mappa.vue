@@ -10,7 +10,7 @@ import Ripresa from '../../Ripresa.vue'
 const props = defineProps({
   scalini: { type: Array, required: true },   // [{ chiave, nome, icona, dritta, tappe: [] }]
   ripresa: { type: Object, default: null },   // { emoji, nome, dettaglio }
-  infinita: { type: Object, default: null },  // { nome, icona, racconto, aperta, record, motivo }
+  infinita: { type: Object, default: null },  // { nome, icona, racconto, aperta, motivo }
 })
 const emit = defineEmits(['gioca', 'riprendi', 'scorda'])
 riprendiSeChiesta(() => props.ripresa, () => emit('riprendi'))
@@ -48,7 +48,6 @@ function vai() {
             <b>{{ infinita.nome }}</b>
             <i>{{ infinita.aperta ? infinita.racconto : infinita.motivo }}</i>
           </span>
-          <span v-if="infinita.aperta && infinita.record" class="ar-stelle" data-record>{{ infinita.record }}</span>
         </button>
       </div>
     </section>
