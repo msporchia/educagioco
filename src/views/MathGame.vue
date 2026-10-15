@@ -34,6 +34,8 @@ import { suono } from '../audio.js'
 import { dipingiFondale, disegnaNave, disegnaAsteroide, statoScafo, puntoRotto,
          disegnaRaggio, disegnaFrammento } from '../grafica/spazio.js'
 import { specieDi, disegnaSfondoVivo, coloreFrammenti } from '../grafica/cieli.js'
+import { creaSpazio3d } from '../grafica/spazio3d/indice.js'
+import { sassoSotto, toccaLaNave, ordineFalsi } from '../motore/asteroidi/comandi.js'
 import { disegnaNaveMadre, disegnaPezzoMadre, cannoneDi, cupolaDi } from '../grafica/nave-madre.js'
 import RegaloHangar from '../components/RegaloHangar.vue'
 import HangarAsteroidi from '../components/HangarAsteroidi.vue'
@@ -58,6 +60,9 @@ const CFG = {
   puntiOk: 10, puntiNo: -5, bossLento: 1.45, difficileLento: 1.25, colpiMadre: 3,
   msNonRisposto: 9000,             // il sasso è caduto: non è lentezza, è un buco
   bossPunti: 40, serieVita: 10, cartelloMonete: 10,
+  // la nave segue il dito (`guida`), un falso che la tocca rimbalza (`rimbalzo`, px/s) e i
+  // falsi nascono a quote distanti `falsiOgni` raggi (docs/asteroidi/grafica-3d.md)
+  guida: 12, rimbalzo: 520, falsiOgni: 1.5,
 }
 
 /* ---------- elementi: chiave normalizzata, 6×8 e 8×6 sono lo stesso fatto ---------- */
@@ -177,6 +182,9 @@ let cielo = 'cintura', salto = 0   // il posto (data/asteroidi.js `cieloDi`) e i
 const nave = reactive({
   x: 0, y: 0, r: 34, lv: 1, danno: 0, mira: -Math.PI / 2, spinta: 0,
   gelo: 0, botta: 0, riparata: 0, t: 0, livrea: null,
+  // dove la porta il dito, quanto corre (per inclinarla), e lo scudo: quanti falsi ha
+  // respinto, l'ultimo da che parte, e il lampo che svanisce
+  meta: 0, vx: 0, urti: 0, scudo: 0, scudoX: 0, scudoY: -1,
 })
 
 /* La nave madre (docs/asteroidi/boss.md): in fondo a ogni tappa e ogni
@@ -358,6 +366,13 @@ function ondata(salvata = null) {
   // conto e non fa in tempo a farlo — vedi `data/potenziamenti.js`
   if (hud.vite <= EMERGENZA.sotto) lento *= EMERGENZA.tempo
   const vel = suolo / (caduta * lento)
+  // i falsi nascono a quote diverse, e due colonne vicine mai a quote vicine: fra un
+  // sasso e l'altro resta un varco per la nave (docs/asteroidi/grafica-3d.md)
+  const nFalsi = valori.length - 1
+  const passoFalsi = Math.max(H * 0.30 / Math.max(1, nFalsi), Math.min(W, H) * 0.095 * CFG.falsiOgni)
+  const rigaFalsi = ordineFalsi(nFalsi)
+  if (Math.random() < 0.5) rigaFalsi.reverse()
+  let falso = 0
 
   valori.forEach((v, i) => {
     const ok = v === domanda.ris
@@ -367,7 +382,8 @@ function ondata(salvata = null) {
     // il sasso giusto è vincolato a essere in scena entro `rispostaEntro`
     // secondi, e da lì parte il cronometro `prontaIl` (docs/asteroidi/volo.md)
     const inScena = 2 * r                   // da y = -r-off a centro in y = r
-    const sfalsa = Math.random() * H * 0.30
+    const sfalsa = ok ? Math.random() * H * 0.30
+                      : (rigaFalsi[falso++] + Math.random() * 0.35) * passoFalsi
     const off = ok ? Math.min(sfalsa, Math.max(-r, vel * CFG.rispostaEntro - inScena))
                    : sfalsa
     if (ok) prontaIl = apertoIl + ((inScena + off) / vel) * 1000
@@ -379,6 +395,9 @@ function ondata(salvata = null) {
       seme: Math.floor(Math.random() * 1e9),
       vy: vel, rot: Math.random() * 6.28, vr: (Math.random() - 0.5) * 0.5,
       ph: Math.random() * 6.28, morto: false,
+      // la spinta dello scudo o del colpo sbagliato, il rosso dello sbaglio, e quanto resta
+      // da vedere a un sasso respinto (è già fuori gioco: `morto`)
+      spx: 0, spy: 0, rosso: 0, respinto: 0, urtato: false,
       forma: Array.from({ length: 9 }, () => 0.76 + Math.random() * 0.34),
       // i crateri si sorteggiano qui una volta sola: sorteggiarli a ogni
       // fotogramma farebbe ribollire il sasso invece di farlo ruotare
@@ -414,15 +433,26 @@ function rimettiCielo(d) {
   prontaIl = performance.now() - d.ms
 }
 
-/* ---------- interazione ---------- */
+/* ---------- interazione ----------
+   Come sul telefono (docs/asteroidi/grafica-3d.md): premere sopra un sasso, o appena
+   fuori dal bordo, spara a quello ed è la risposta; premere altrove porta la nave lì e
+   basta, e finché il dito resta giù la nave lo segue. Il mouse conta solo premuto. */
+let dito = null                          // il puntatore che sta guidando
+const dentroCampo = x => Math.max(nave.r * 1.4, Math.min(W - nave.r * 1.4, x))
 function tocca(e) {
   if (fase.value !== 'gioco') return
   const x = e.clientX, y = e.clientY
-  for (const a of asteroidi) {
-    if (a.morto) continue
-    if ((x - a.x) ** 2 + (y - a.y) ** 2 <= a.r * a.r) return colpisci(a)
-  }
+  dito = e.pointerId
+  try { e.currentTarget.setPointerCapture?.(e.pointerId) } catch (x) { /* un puntatore finto non si cattura */ }
+  const preso = sassoSotto(asteroidi, x, y)
+  if (preso) return colpisci(preso)
+  if (!fermo.value) nave.meta = dentroCampo(x)
 }
+function guida(e) {
+  if (e.pointerId !== dito || fase.value !== 'gioco' || fermo.value) return
+  nave.meta = dentroCampo(e.clientX)
+}
+function lascia(e) { if (e.pointerId === dito) dito = null }
 
 /* il bersaglio della tappa: le giuste in tutto, e quante di quelle devono
    essere sulla tabellina nuova */
@@ -638,6 +668,10 @@ function colpisci(a) {
   } else {
     answer(k, nota); picker.afterAnswer(k, false)
     a.morto = true; hud.serie = 0; hud.sbagliate++
+    // il sasso sbagliato non esplode: diventa rosso e il colpo lo spinge via
+    a.respinto = 1; a.rosso = 1
+    const via = Math.hypot(a.x - nave.x, a.y - nave.y) || 1
+    a.spx = (a.x - nave.x) / via * CFG.rimbalzo * 0.6 * S; a.spy = (a.y - nave.y) / via * CFG.rimbalzo * 0.6 * S
     spara(a, '#ff6b6b')
     esplodi(a.x, a.y, '#ff6b6b', 14); suono.no(); scossa = 10
     hud.punti = Math.max(0, hud.punti + CFG.puntiNo)
@@ -732,14 +766,38 @@ function ridimensiona() {
              r: (0.4 + Math.random() * 1.2) * z, s: (6 + Math.random() * 10) * z,
              a: 0.25 + Math.random() * 0.55 * z }
   })
-  fondale = dipingiFondale(W, H, Math.random, cielo)
+  fondale = pittore3d ? null : dipingiFondale(W, H, Math.random, cielo)
   madre.r = Math.max(40, Math.min(80, Math.min(W, H) * 0.13))
   nave.r = Math.max(30, Math.min(54, Math.min(W, H) * 0.1))
-  nave.x = W / 2; nave.y = suolo - nave.r * 0.8
+  nave.x = nave.meta = W / 2; nave.y = suolo - nave.r * 0.8
+  pittore3d?.ridimensiona(W, H)
 }
 
 function mettiCielo(c) {
   cielo = c
+  if (W && !pittore3d) fondale = dipingiFondale(W, H, Math.random, cielo)
+  pittore3d?.prepara(c)
+}
+
+/* Il disegno in 3D (grafica/spazio3d/): se WebGL non c'è, o il contesto si perde, si
+   resta (o si torna) sul 2D di sempre. `#mate&tela=2d` lo spegne per provare. */
+const tela3d = ref(null)
+const usa3d = ref(false)
+let pittore3d = null
+function accendi3d() {
+  if (/(?:^#?|&)tela=2d(?:&|$)/.test(location.hash || '') || !tela3d.value) return
+  const fisso = Number(new URLSearchParams((location.hash || '').slice(1)).get('dpr')) || undefined   // `&dpr=2`: per le foto
+  pittore3d = creaSpazio3d(tela3d.value, { perso: spegni3d, dpr: fisso })
+  if (!pittore3d) return
+  usa3d.value = true
+  pittore3d.ridimensiona(W, H)
+  pittore3d.prepara(cielo)
+  fondale = null
+}
+function spegni3d() {
+  if (!pittore3d) return
+  try { pittore3d.distruggi() } catch (e) { /* il contesto è già andato */ }
+  pittore3d = null; usa3d.value = false
   if (W) fondale = dipingiFondale(W, H, Math.random, cielo)
 }
 
@@ -764,9 +822,20 @@ function aggiorna(dt) {
      sasso è nato (`a.vy`) resta quella, se no un gettone speso a metà
      caduta lascerebbe metà covata veloce e metà lenta */
   const rall = gelo ? POTENZIAMENTI.gelo.lento : 1
+  // la nave va dove la porta il dito, svelta ma non di scatto
+  const primaX = nave.x
+  nave.x += (nave.meta - nave.x) * (1 - Math.exp(-dt * CFG.guida))
+  nave.vx = dt > 0 ? (nave.x - primaX) / dt : 0
+  const frena = Math.exp(-dt * 3)
   for (const a of asteroidi) {
     if (a.morto) continue
-    a.y += a.vy * rall * dt; a.rot += a.vr * dt
+    a.x += a.spx * dt; a.spx *= frena; a.spy *= frena
+    a.y += (a.vy * rall + a.spy) * dt; a.rot += a.vr * dt
+    // un falso che tocca la nave rimbalza sullo scudo: non è una risposta, non costa niente
+    if (!a.ok && !a.urtato && toccaLaNave(a, nave)) {
+      const dx = a.x - nave.x, dy = a.y - nave.y, d = Math.hypot(dx, dy) || 1
+      urtaScudo(a, dx / d, dy / d)
+    }
     if (a.y - a.r > suolo) { a.morto = true; if (a.ok) caduto = a }
   }
   if (caduto) {
@@ -782,6 +851,14 @@ function aggiorna(dt) {
     perdiVita()
     if (fase.value === 'gioco') ondata()
   }
+}
+
+function urtaScudo(a, ux, uy) {
+  a.urtato = true; a.rosso = 1
+  a.spx = ux * CFG.rimbalzo * S; a.spy = Math.min(uy, -0.4) * CFG.rimbalzo * S
+  nave.urti++; nave.scudo = 1; nave.scudoX = ux; nave.scudoY = uy
+  esplodi(a.x - ux * a.r * 0.8, a.y - uy * a.r * 0.8, '#7fe3ff', 12)
+  suono.blub(); scossa = Math.max(scossa, 5)
 }
 
 // scintille, fumo, raggi e la spazzata vivono qui e non in `aggiorna`:
@@ -817,6 +894,15 @@ function effetti(dt) {
     p.rot += p.vr * dt; p.vita -= dt * 0.45
   }
   pezzi = pezzi.filter(p => p.vita > 0 && p.y < H + p.r)
+  // il rosso dello sbaglio svanisce; un sasso respinto vola via e si spegne
+  for (const a of asteroidi) {
+    if (a.rosso > 0) a.rosso -= dt * 0.9
+    if (a.morto && a.respinto > 0) {
+      a.respinto -= dt * 1.6
+      a.x += a.spx * dt; a.y += a.spy * dt; a.spx *= 0.96; a.spy *= 0.96
+    }
+  }
+  if (nave.scudo > 0) nave.scudo -= dt * 1.4
   if (salto > 0) salto -= dt * 0.8
   if (scossa > 0) scossa -= dt * 40
   if (lampo > 0) lampo -= dt * 1.6
@@ -846,7 +932,25 @@ function effetti(dt) {
 
 // l'ordine dei piani: il cielo, la nave, poi gli asteroidi — i numeri
 // devono restare leggibili anche quando un sasso passa davanti alla nave
+/* La scena per il disegno 3D: le stesse cose del 2D, in pixel (docs/asteroidi/grafica-3d.md).
+   Un oggetto solo, rinfrescato a ogni fotogramma: niente allocazioni. */
+const quadro = { t: 0, W: 0, H: 0, S: 1, cielo: 'cintura', salto: 0, scossa: 0, lampo: 0, gelo: false,
+                 nave, asteroidi: [], madre: null, pezzi: [], frammenti: [], particelle: [], anelli: [], raggi: [] }
+const nessuno = []
+function disegna3d(dt) {
+  const q = quadro, gioca = fase.value === 'gioco'
+  q.t = pulsa; q.W = W; q.H = H; q.S = S; q.cielo = cielo; q.salto = salto; q.scossa = Math.max(0, scossa)
+  q.lampo = Math.max(0, lampo); q.gelo = gelo
+  q.asteroidi = gioca ? asteroidi : nessuno
+  q.madre = gioca && madre.attiva ? madre : null
+  q.pezzi = pezzi; q.frammenti = frammenti; q.particelle = particelle; q.anelli = anelli; q.raggi = raggi
+  nave.t = pulsa
+  pittore3d.disegna(q, dt)
+}
+
 function disegna(dt) {
+  // la rotta e «Cosa so» coprono tutto: sotto, la tela 3D non lavora
+  if (pittore3d) { if (fase.value !== 'mappa' && fase.value !== 'tavola') disegna3d(dt); return }
   ctx.save()
   if (scossa > 0) ctx.translate((Math.random() - 0.5) * scossa, (Math.random() - 0.5) * scossa)
 
@@ -933,6 +1037,7 @@ function inizia(i = posizione.value, dato = null) {
   // sta in `data/potenziamenti.js`
   nave.lv = stazzaDi(hud.partenza); nave.gelo = 0
   nave.botta = 0; nave.riparata = 0; nave.mira = -Math.PI / 2
+  nave.scudo = 0; nave.vx = 0; nave.meta = nave.x = W / 2
   tasca.gelo = 0; tasca.mirino = 0
   gelo = false; gelato.value = false; ultimoGettone = null
   sincronizzaNave()
@@ -1168,10 +1273,17 @@ onMounted(() => {
                     // i gettoni: quanti ce n'è e cosa fanno se li premi.
                     // `gelo` è una funzione perché i secondi che restano
                     // vivono fuori da Vue (cambiano a ogni fotogramma)
-                    tasca, usaGelo, usaMirino, gelo: () => gelo }
+                    tasca, usaGelo, usaMirino, gelo: () => gelo,
+                    // chi disegna: il 3D (con quanto costa un fotogramma) o il 2D di riserva
+                    grafica: () => (pittore3d ? { tre: true, ...pittore3d.info() } : { tre: false }) }
   ctx = tela.value.getContext('2d')
   ridimensiona()
+  accendi3d()
+  dalCheat()
   window.addEventListener('resize', ridimensiona)
+  window.addEventListener('pointermove', guida)
+  window.addEventListener('pointerup', lascia)
+  window.addEventListener('pointercancel', lascia)
   document.addEventListener('visibilitychange', seSparisce)
   addEventListener('pagehide', seSparisce)
   raf = requestAnimationFrame(ciclo)
@@ -1185,12 +1297,40 @@ onBeforeUnmount(() => {
 onUnmounted(() => {
   cancelAnimationFrame(raf)
   window.removeEventListener('resize', ridimensiona)
+  window.removeEventListener('pointermove', guida)
+  window.removeEventListener('pointerup', lascia)
+  window.removeEventListener('pointercancel', lascia)
+  spegni3d()
 })
+
+/* `#mate=5` apre la tappa 5 della fila (`#mate=volo` il volo), per guardarla senza
+   giocare: `&livello=7` la nave e il cielo di quel livello, `&vite=1` la nave malconcia,
+   `&madre=1` la nave madre subito; `&tela=2d` il disegno di riserva; `&nave=scafo:oro,disegno:fiamme`
+   una vernice solo per guardarla, senza toccare l'hangar (docs/core/comandi.md) */
+function dalCheat() {
+  const h = new URLSearchParams((location.hash || '').slice(1))
+  const dove = h.get('mate')
+  if (dove == null || dove === '') return
+  inizia(dove === 'volo' ? -1 : Math.max(0, Math.min(fila.length - 1, Number(dove) || 0)))
+  const lv = Number(h.get('livello'))
+  if (lv > 1) {
+    hud.livello = lv; nave.lv = stazzaDi(lv)
+    if (!campagna.value) mettiCielo(cieloDelVolo(lv))
+  }
+  const vite = Number(h.get('vite'))
+  if (vite >= 1) { hud.vite = Math.min(CFG.viteMax, vite); sincronizzaNave() }
+  if (h.get('madre')) chiamaMadre()
+  if (h.get('nave')) nave.livrea = livrea(Object.fromEntries(h.get('nave').split(',').map(x => x.split(':'))))
+}
 </script>
 
 <template>
   <div class="schermo spazio">
-    <canvas ref="tela" @pointerdown="tocca"></canvas>
+    <!-- il cielo: in 3D se si può, se no il disegno 2D di sempre (docs/asteroidi/grafica-3d.md) -->
+    <div class="campo" @pointerdown="tocca">
+      <canvas ref="tela3d" v-show="usa3d" data-tela="3d"></canvas>
+      <canvas ref="tela" v-show="!usa3d" data-tela="2d"></canvas>
+    </div>
 
     <!-- la fascia in cima dice solo le due cose che la nave non può dire
          (docs/asteroidi/volo.md): quanto manca alla tappa, e sulla nuova -->
@@ -1387,7 +1527,9 @@ onUnmounted(() => {
 
 <style scoped>
 .spazio { background:#05081a; color:#fff }
-canvas { position:absolute; inset:0; touch-action:manipulation }
+/* la nave si trascina col dito: il browser non deve scorrere né ingrandire (docs/core/il-dito.md) */
+.campo { position:absolute; inset:0; touch-action:none }
+canvas { position:absolute; inset:0; width:100%; height:100% }
 .tondo.scuro { pointer-events:auto; background:#ffffff18; color:#fff; box-shadow:none }
 
 /* ---- l'avanzamento della tappa, dentro la fascia ----
