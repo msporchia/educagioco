@@ -319,8 +319,8 @@ export default defineConfig({
              // Vue non cambia mai: un file suo, che un aggiornamento non riscarica
              // Il codice condiviso in un file suo, che non conosce i nomi dei giochi: se stesse nel JS di avvio (che porta l'elenco
              // dei file da caricare) ogni gioco cambiato cambierebbe il nome di quello, e a cascata di tutti gli altri.
-             manualChunks: id => {
-               if (!SPEZZATO) return undefined
+             // (solo nel sito spezzato: il file unico mette tutto in linea, e con quello manualChunks è un errore anche se vuoto)
+             ...(!SPEZZATO ? {} : { manualChunks: id => {
                if (id.includes('node_modules')) return 'vendor'
                const m = /\/src\/(.*)$/.exec(id)
                if (!m) return undefined
@@ -328,7 +328,7 @@ export default defineConfig({
                if (q === 'main.js' || q === 'App.vue' || q === 'giochi/schermate.js') return undefined   // il JS di avvio: le strade verso i giochi
                if (/^giochi\/[^/]+\/|^views\//.test(q)) return undefined                                  // un gioco: lo decide Rollup
                return 'comune'
-             },
+             } }),
              // il gioco si riconosce dal nome del file (gioco-sotterraneo-<hash>.js): servirà a scaricarli a gruppi
              chunkFileNames: c => {
                const m = c.name === 'Gioco' && /giochi\/([^/]+)\/Gioco\.vue/.exec(c.facadeModuleId || '')
