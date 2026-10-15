@@ -27,7 +27,8 @@ export const PARTENZE = [
              'accenti', 'suoni-difficili', 'frazioni',
              'lettura', 'sillabe', 'griglia', 'calendario', 'simmetria',
              'deduzione', 'incertezza', 'insiemi', 'confronti', 'analogie',
-             'denaro', 'decimali', 'adattamento', 'bilance', 'dati', 'comprensione'],
+             'denaro', 'decimali', 'adattamento', 'bilance', 'dati', 'comprensione',
+             'inglese-parole', 'inglese-frasi'],
     tiene: {
       numeri: 'contare fino a dieci e dire chi è di più si fa prima della scuola',
       figure: 'il cerchio e il quadrato si riconoscono dai libri illustrati',
@@ -47,7 +48,8 @@ export const PARTENZE = [
     saperi: ['moltiplicazioni', 'divisioni', 'misure', 'conversioni', 'decine',
              'stima', 'problemi', 'orologio', 'date', 'area-perimetro', 'solidi',
              'spazio-mente', 'analisi', 'flessione', 'presente', 'tempi-verbali',
-             'accenti', 'suoni-difficili', 'frazioni', 'denaro', 'decimali', 'adattamento'],
+             'accenti', 'suoni-difficili', 'frazioni', 'denaro', 'decimali', 'adattamento',
+             'inglese-frasi'],
     tiene: {
       lettura: 'in prima si impara a leggere: è esattamente quello che si sta facendo',
       comprensione: 'due frasi con chi e dove si leggono a fine prima; i testi più lunghi li tiene lontani l\'età',
@@ -62,6 +64,7 @@ export const PARTENZE = [
       analogie: 'il cane sta all\'osso: si capisce a voce, senza saper leggere',
       bilance: 'il numero che manca (5 + □ = 8) si fa sul quaderno di prima; le bilance vere arrivano dopo, e senza divisioni restano spente da sole',
       dati: 'il pittogramma della classe si fa in prima; le barre e la legenda si spiegano in una riga',
+      'inglese-parole': 'colori e animali in inglese si imparano in prima, con le canzoni; le figure aiutano a leggere',
     },
   },
   {
@@ -95,6 +98,8 @@ export const PARTENZE = [
       'suoni-difficili': 'gn, gl, sc e le doppie sono di prima',
       adattamento: 'è l\'obiettivo di fine terza, e a otto anni ci siamo',
       frazioni: 'la frazione come parte colorata di una figura è di terza, e il resto si spiega nella carta: sotto i pezzi, sopra i colorati',
+      'inglese-parole': 'l\'inglese è dalla prima: la finestra d\'età tiene le isole giuste',
+      'inglese-frasi': 'le frasi corte (it is, I like, there is) sono di seconda e terza; le altre le taglia l\'età',
     },
   },
   {
@@ -114,6 +119,8 @@ export const PARTENZE = [
       solidi: 'viste dall\'alto e facce sono di quinta, e da 8,75 anni in su ci siamo',
       'spazio-mente': 'le rotazioni sono di quarta, lo sviluppo del cubo di quinta',
       decimali: 'il numero con la virgola come numero — decimi, centesimi, confronto e arrotondamento — è di quarta e quinta',
+      'inglese-parole': 'le parole di quarta e quinta (la città, i mestieri, i soldi) sono nelle isole giuste per l\'età',
+      'inglese-frasi': 'does, -ing e was sono di quarta e quinta, e l\'età le porta solo qui',
     },
   },
 ]

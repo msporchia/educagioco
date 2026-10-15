@@ -299,6 +299,20 @@ export const SAPERI = [
     esempio: '«un animale ha il pelo bianco e il grasso sotto la pelle: dove vive?»',
     spegne: 'le domande in cui il posto si ricava dall\'indizio; restano quelle su chi vive dove',
   },
+
+  /* ── inglese ── parole e frasi dell'inglese a mondi, dentro i quiz degli altri giochi (una domanda su 20) */
+  {
+    chiave: 'inglese-parole', nome: 'Le parole inglesi', ico: '🇬🇧', materia: 'inglese',
+    che: 'dire e capire le parole inglesi che si imparano a scuola: colori, animali, cibo, la casa, la città',
+    esempio: '«🐶: come si dice in inglese?»',
+    spegne: 'le domande di parole inglesi, dalla figura e dall\'italiano',
+  },
+  {
+    chiave: 'inglese-frasi', nome: 'Le frasi inglesi', ico: '💬', materia: 'inglese',
+    che: 'scegliere la frase giusta e capire che cosa dice, con le strutture dell\'anno: it is, I like, there is, does, was',
+    esempio: '«il gatto è sotto il letto: quale frase lo dice?»',
+    spegne: 'le domande di frasi inglesi, in tutte e due le direzioni',
+  },
 ]
 
 export const CHIAVI_SAPERI = SAPERI.map(s => s.chiave)

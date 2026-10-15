@@ -13,6 +13,10 @@ resto, in ordine.
 - **L'alfabeto e lo spelling**: sono suoni, e l'audio non porta
   informazione ([programma.md](programma.md#cosa-non-si-è-aggiunto)).
 
+## I quiz degli altri giochi
+
+- **Le tessere in fila** (monta, completa con più buchi) non sono nei quiz: la domanda è a scelta. Vedi [../apprendimento/quote.md](../apprendimento/quote.md). Le storie del libro non ci sono ancora.
+
 ## Il libro
 
 - **Una serie sola**, «La vecchia mappa» nella sesta isola, con le tre puntate alla

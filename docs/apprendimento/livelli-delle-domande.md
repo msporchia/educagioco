@@ -64,6 +64,7 @@ diverso da quello del suo grado.
 ## 26  ·  circa 6.1 anni
 
 - 🧮 **Conti puri** g1 — I prodotti e le tabelline
+- ✖️ **Tabelline** g1 — Le tabelline
 
 ## 28  ·  circa 6.2 anni
 
@@ -89,6 +90,7 @@ diverso da quello del suo grado.
 ## 30  ·  circa 6.4 anni
 
 - 🔢 **Senso del numero** g3 — Fare i conti in fila
+- ✖️ **Tabelline** g1 — Il numero nascosto nella tabellina
 
 ## 31  ·  circa 6.5 anni
 
@@ -96,14 +98,18 @@ diverso da quello del suo grado.
 - 🧵 **Connettivi** g1 — Perché: la causa
 - 🧵 **Connettivi** g1 — Quindi e così: la conseguenza
 - 🧮 **Conti puri** g3 — Le somme
+- 🇬🇧 **Inglese: le parole** g1 — Il nome inglese di una figura
 
 ## 32  ·  circa 6.6 anni
 
 - 🧮 **Conti puri** g1 — I quozienti e le divisioni esatte
 - 🧮 **Conti puri** g2 — I prodotti e le tabelline
+- ✖️ **Tabelline** g2 — Le tabelline
 
 ## 33  ·  circa 6.6 anni
 
+- 💬 **Inglese: le frasi** g1 — Che cosa dice la frase inglese
+- 🇬🇧 **Inglese: le parole** g1 — Che cosa vuol dire una parola inglese
 - 🗺️ **La griglia** g3 — Dove si arriva seguendo le frecce
 - 🗺️ **La griglia** g3 — Quante mosse servono
 
@@ -111,9 +117,15 @@ diverso da quello del suo grado.
 
 - 🧮 **Conti puri** g3 — Le differenze
 
+## 35  ·  circa 6.8 anni
+
+- 💬 **Inglese: le frasi** g1 — La parola che manca
+
 ## 36  ·  circa 6.9 anni
 
 - 🧮 **Conti puri** g4 — Le somme
+- 🇬🇧 **Inglese: le parole** g1 — Dall'italiano all'inglese
+- ✖️ **Tabelline** g2 — Il numero nascosto nella tabellina
 
 ## 38  ·  circa 7 anni
 
@@ -136,6 +148,7 @@ diverso da quello del suo grado.
 - 📊 **Grafici e tabelle** g2 — Leggere il grafico a barre
 - ⚑ 🔤 **Grammatica** g5 — Nomi propri e nomi comuni
 - 🔎 **Indizi** g3 — Chi sono io: le figure
+- 💬 **Inglese: le frasi** g1 — La frase giusta in inglese
 - 📏 **Misure** g1 — Con che cosa si misura
 - 🕰️ **Orologio** g2 — Le mezze e i quarti d'ora
 - 🕰️ **Orologio** g2 — Le ore intere
@@ -148,6 +161,7 @@ diverso da quello del suo grado.
 - 🔢 **Senso del numero** g4 — Mettere un numero al suo posto
 - ✂️ **Sillabe** g2 — Dividere in sillabe
 - 💶 **Soldi e decimali** g1 — Quanto fanno monete e banconote
+- ✖️ **Tabelline** g3 — Le tabelline
 
 ## 40  ·  circa 7.2 anni
 
@@ -162,6 +176,7 @@ diverso da quello del suo grado.
 ## 42  ·  circa 7.4 anni
 
 - ➡️ **Sequenze** g4 — Chi non c'entra
+- ✖️ **Tabelline** g3 — Il numero nascosto nella tabellina
 
 ## 44  ·  circa 7.5 anni
 
@@ -169,6 +184,7 @@ diverso da quello del suo grado.
 - 🗣️ **Coniugazione** g2 — Il presente dei verbi irregolari
 - 🧮 **Conti puri** g3 — I quozienti e le divisioni esatte
 - 🧮 **Conti puri** g4 — I prodotti e le tabelline
+- 🇬🇧 **Inglese: le parole** g2 — Il nome inglese di una figura
 - ⚖️ **Le bilance** g1 — Il numero nascosto nei più e nei meno (□ + 7 = 15)
 - 🕰️ **Orologio** g3 — Le mezze e i quarti d'ora
 - 🕰️ **Orologio** g3 — Le ore intere
@@ -181,6 +197,7 @@ diverso da quello del suo grado.
 - ✂️ **Sillabe** g3 — Le rime
 - 💶 **Soldi e decimali** g2 — Il resto
 - 💶 **Soldi e decimali** g2 — Quanto fanno monete e banconote
+- ✖️ **Tabelline** g4 — Le tabelline
 
 ## 45  ·  circa 7.6 anni
 
@@ -189,11 +206,22 @@ diverso da quello del suo grado.
 ## 46  ·  circa 7.7 anni
 
 - 🧮 **Conti puri** g6 — Le somme
+- 💬 **Inglese: le frasi** g2 — Che cosa dice la frase inglese
+- 🇬🇧 **Inglese: le parole** g2 — Che cosa vuol dire una parola inglese
 
 ## 47  ·  circa 7.8 anni
 
 - 📊 **Grafici e tabelle** g3 — Leggere il grafico a barre
 - 📊 **Grafici e tabelle** g3 — Quanti in tutto
+
+## 48  ·  circa 7.8 anni
+
+- 💬 **Inglese: le frasi** g2 — La parola che manca
+- ✖️ **Tabelline** g4 — Il numero nascosto nella tabellina
+
+## 49  ·  circa 7.9 anni
+
+- 🇬🇧 **Inglese: le parole** g2 — Dall'italiano all'inglese
 
 ## 50  ·  circa 8 anni
 
@@ -223,10 +251,12 @@ diverso da quello del suo grado.
 - 💶 **Soldi e decimali** g3 — Il resto
 - 💶 **Soldi e decimali** g3 — Quale prezzo è più alto
 - 💶 **Soldi e decimali** g3 — Quanto costano più cose
+- ✖️ **Tabelline** g5 — Le tabelline
 
 ## 51  ·  circa 8.1 anni
 
 - 🧮 **Conti puri** g6 — Le differenze
+- 💬 **Inglese: le frasi** g2 — La frase giusta in inglese
 
 ## 52  ·  circa 8.2 anni
 
@@ -241,6 +271,7 @@ diverso da quello del suo grado.
 ## 54  ·  circa 8.3 anni
 
 - 🍕 **Frazioni** g2 — Che parte è colorata
+- ✖️ **Tabelline** g5 — Il numero nascosto nella tabellina
 
 ## 55  ·  circa 8.4 anni
 
@@ -267,6 +298,7 @@ diverso da quello del suo grado.
 - 📊 **Grafici e tabelle** g4 — Quanti in più, quanti in meno
 - 🔤 **Grammatica** g3 — Che parte del discorso è
 - 🔎 **Indizi** g4 — Indovinello: le cose del mondo
+- 🇬🇧 **Inglese: le parole** g3 — Il nome inglese di una figura
 - 🗺️ **La griglia** g4 — L'area: i quadretti dentro
 - ⚖️ **Le bilance** g2 — Il numero nascosto nelle tabelline (□ × 6 = 42)
 - 📖 **Lessico** g3 — I sinonimi
@@ -294,11 +326,14 @@ diverso da quello del suo grado.
 - 💶 **Soldi e decimali** g4 — Quale numero con la virgola è più grande
 - 💶 **Soldi e decimali** g4 — Quale prezzo è più alto
 - 💶 **Soldi e decimali** g4 — Quanto costano più cose
+- ✖️ **Tabelline** g6 — Le tabelline
 
 ## 58  ·  circa 8.6 anni
 
 - 🧮 **Conti puri** g8 — Le somme
 - 🍕 **Frazioni** g3 — Che parte è colorata
+- 💬 **Inglese: le frasi** g3 — Che cosa dice la frase inglese
+- 🇬🇧 **Inglese: le parole** g3 — Che cosa vuol dire una parola inglese
 
 ## 59  ·  circa 8.7 anni
 
@@ -308,12 +343,19 @@ diverso da quello del suo grado.
 
 - 🍕 **Frazioni** g3 — Il disegno di una frazione (e i pezzi non uguali)
 - 🍕 **Frazioni** g3 — Quanto manca per fare un intero
+- 💬 **Inglese: le frasi** g3 — La parola che manca
 - 🔢 **Senso del numero** g6 — Fare i conti in fila
+
+## 61  ·  circa 8.9 anni
+
+- 🇬🇧 **Inglese: le parole** g3 — Dall'italiano all'inglese
+- ✖️ **Tabelline** g6 — Il numero nascosto nella tabellina
 
 ## 62  ·  circa 9 anni
 
 - 🧮 **Conti puri** g7 — I prodotti e le tabelline
 - 🔢 **Senso del numero** g5 — Indovina il numero di partenza
+- ✖️ **Tabelline** g7 — Le tabelline
 
 ## 63  ·  circa 9 anni
 
@@ -329,6 +371,7 @@ diverso da quello del suo grado.
 - 📊 **Grafici e tabelle** g5 — Quanti in tutto
 - 🔤 **Grammatica** g4 — Il nome e il suo aggettivo
 - ⚑ 🔎 **Indizi** g4 — La tabella per esclusione: solo «non»
+- 💬 **Inglese: le frasi** g3 — La frase giusta in inglese
 - 🗺️ **La griglia** g5 — Il perimetro: il giro del bordo
 - ⚖️ **Le bilance** g3 — Il numero nascosto nelle tabelline (□ × 6 = 42)
 - ⚖️ **Le bilance** g3 — Quanto pesa uno, sulla bilancia in pari
@@ -358,6 +401,7 @@ diverso da quello del suo grado.
 - 🧮 **Conti puri** g8 — I prodotti e le tabelline
 - 🧮 **Conti puri** g9 — Le somme
 - 🍕 **Frazioni** g4 — Chi è più grande, con lo stesso numero sopra
+- ✖️ **Tabelline** g7 — Il numero nascosto nella tabellina
 
 ## 68  ·  circa 9.4 anni
 
@@ -370,6 +414,7 @@ diverso da quello del suo grado.
 - 🧵 **Connettivi** g4 — Quale frase ha senso
 - 🧵 **Connettivi** g4 — Se: la condizione
 - 🔤 **Grammatica** g5 — Soggetto e predicato
+- 🇬🇧 **Inglese: le parole** g4 — Il nome inglese di una figura
 - 🗺️ **La griglia** g6 — Il perimetro: il giro del bordo
 - 🗺️ **La griglia** g6 — L'area: i quadretti dentro
 - ⚖️ **Le bilance** g3 — Togliere la stessa cosa dai due piatti
@@ -380,6 +425,11 @@ diverso da quello del suo grado.
 - 🧮 **Conti puri** g9 — Le differenze
 - 🍕 **Frazioni** g5 — La frazione di un numero (1/4 di 20)
 
+## 71  ·  circa 9.7 anni
+
+- 💬 **Inglese: le frasi** g4 — Che cosa dice la frase inglese
+- 🇬🇧 **Inglese: le parole** g4 — Che cosa vuol dire una parola inglese
+
 ## 72  ·  circa 9.8 anni
 
 - ⚑ 📚 **Capire un testo** g5 — Il titolo giusto per tutto il testo
@@ -389,10 +439,15 @@ diverso da quello del suo grado.
 - 💶 **Soldi e decimali** g6 — I decimali sulla linea e in ordine
 - 💶 **Soldi e decimali** g6 — Il valore delle cifre dopo la virgola
 
+## 73  ·  circa 9.8 anni
+
+- 💬 **Inglese: le frasi** g4 — La parola che manca
+
 ## 74  ·  circa 9.9 anni
 
 - 🧮 **Conti puri** g10 — Le somme
 - 🍕 **Frazioni** g5 — Le frazioni equivalenti (2/4 = 1/2)
+- 🇬🇧 **Inglese: le parole** g4 — Dall'italiano all'inglese
 
 ## 75  ·  circa 10 anni
 
@@ -423,6 +478,7 @@ diverso da quello del suo grado.
 
 ## 76  ·  circa 10.1 anni
 
+- 💬 **Inglese: le frasi** g4 — La frase giusta in inglese
 - 💶 **Soldi e decimali** g7 — Quanto costa una sola cosa
 
 ## 78  ·  circa 10.2 anni
@@ -439,20 +495,32 @@ diverso da quello del suo grado.
 - ⚑ 🧵 **Connettivi** g4 — Anche se, contro se
 - ⚑ 🧵 **Connettivi** g5 — Anche se, contro se
 - ⚑ 📊 **Grafici e tabelle** g5 — La media
+- 🇬🇧 **Inglese: le parole** g5 — Il nome inglese di una figura
 - ⚖️ **Le bilance** g5 — Una cosa pesa come tante altre: lo scambio
 - 📏 **Misure** g5 — I problemi con le misure
 - 📝 **Problemi** g6 — I dati che non servono
 - 💶 **Soldi e decimali** g8 — Quanto costano tante cose
 
+## 83  ·  circa 10.6 anni
+
+- 💬 **Inglese: le frasi** g5 — Che cosa dice la frase inglese
+- 🇬🇧 **Inglese: le parole** g5 — Che cosa vuol dire una parola inglese
+
 ## 85  ·  circa 10.8 anni
 
 - ⚑ 🧵 **Connettivi** g5 — Il doppio senso di «mentre»
 - 🧮 **Conti puri** g10 — I quozienti e le divisioni esatte
+- 💬 **Inglese: le frasi** g5 — La parola che manca
 - 💶 **Soldi e decimali** g9 — Cosa conviene comprare
+
+## 86  ·  circa 10.9 anni
+
+- 🇬🇧 **Inglese: le parole** g5 — Dall'italiano all'inglese
 
 ## 88  ·  circa 11 anni
 
 - ⚑ 🔎 **Indizi** g5 — Due tabelle collegate
+- 💬 **Inglese: le frasi** g5 — La frase giusta in inglese
 - ⚑ ⚖️ **Le bilance** g5 — Due cose da pesare, con due bilance
 - ⚑ ⚖️ **Le bilance** g5 — Lo scambio lungo, con tre bilance
 
@@ -463,6 +531,7 @@ diverso da quello del suo grado.
 
 ## 94  ·  circa 11.5 anni
 
+- 🇬🇧 **Inglese: le parole** g6 — Il nome inglese di una figura
 - 💶 **Soldi e decimali** g11 — Quale offerta conviene
 
 ## 95  ·  circa 11.6 anni
@@ -479,6 +548,23 @@ diverso da quello del suo grado.
 - 🗣️ **Coniugazione** g6 — Trapassato prossimo e futuro anteriore (avevo/avrò mangiato)
 - ⚑ 📖 **Lessico** g5 — Le parole difficili
 
+## 96  ·  circa 11.7 anni
+
+- 💬 **Inglese: le frasi** g6 — Che cosa dice la frase inglese
+- 🇬🇧 **Inglese: le parole** g6 — Che cosa vuol dire una parola inglese
+
+## 98  ·  circa 11.8 anni
+
+- 💬 **Inglese: le frasi** g6 — La parola che manca
+
+## 99  ·  circa 11.9 anni
+
+- 🇬🇧 **Inglese: le parole** g6 — Dall'italiano all'inglese
+
+## 100  ·  circa 12 anni
+
+- 💬 **Inglese: le frasi** g6 — La frase giusta in inglese
+
 ---
 
-Totale: 307 classi su 25 moduli.
+Totale: 357 classi su 28 moduli.
