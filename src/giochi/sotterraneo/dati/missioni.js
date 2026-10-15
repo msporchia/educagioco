@@ -159,11 +159,12 @@ export const MISSIONI = [
     ritorno: 'Le reti sono tornate su piene. I polpi?',
     premio: { gemme: 15 } },
 
-  { id: 'cinghiali', da: 'mugnaio', discesa: 'labirinto', piano: 0, tipo: 'conta', specie: 'cinghiale', quanti: 10, nomi: 'cinghiali',
+  // l'id resta `cinghiali` (è nei salvataggi): erano cinghiali, da quando la botola scende all'inferno sono bestie cornute (stesse ossa e difesa)
+  { id: 'cinghiali', da: 'mugnaio', discesa: 'labirinto', piano: 0, tipo: 'conta', specie: 'bestia-cornuta', quanti: 10, nomi: 'bestie cornute',
     richiede: [{ fatta: 'cisterna' }],
-    dice: 'I cinghiali che escono dalla botola segreta scavano nei miei campi. Sono tanti: sconfiggine dieci.',
+    dice: 'Le bestie con le corna che escono dalla botola segreta scavano nei miei campi. Sono tante: sconfiggine dieci.',
     grazie: 'I campi sono salvi! Prendi queste gemme, te le sei guadagnate.',
-    ritorno: 'Nei campi non c\'è più una buca nuova. Sono i cinghiali?',
+    ritorno: 'Nei campi non c\'è più una buca nuova. Sono le bestie cornute?',
     premio: { gemme: 20 } },
 
   { id: 'scorpioni', da: 'minatore', discesa: 'fondo', piano: 0, tipo: 'conta', specie: 'scorpione', quanti: 10, nomi: 'scorpioni',

@@ -41,7 +41,7 @@ sotto), perché chi gira tutto la fa quasi sempre da solo, e chi ne perde per st
 | `topi` | il mugnaio | la scalinata antica | ratti · 8 | 10 · 15 · 20 | 💎 10 |
 | `funghi` | il boscaiolo | la grotta della scaletta | funghi · 7 | 4 · 10 · 12 | 💎 15 |
 | `polpi` | il pescatore | la scala sommersa | polpi · 8 | 11 · 16 · 17 | 💎 15 |
-| `cinghiali` | il mugnaio | la botola | cinghiali · 10 | 23 · 32 · 38 | 💎 20 |
+| `cinghiali` (ora bestie cornute) | il mugnaio | la botola | bestie cornute · 10 | 23 · 32 · 38 | 💎 20 |
 | `scorpioni` | il minatore | la miniera | scorpioni · 10 | 18 · 24 · 26 | 💎 20 |
 
 - **Le gemme** seguono la discesa (la tabella di [missioni.md](missioni.md): 💎 10–30) e stanno un po' sotto una «trova» a pari fatica:

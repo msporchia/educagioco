@@ -69,7 +69,7 @@ conosce non si sblocca mai, e il guasto lo dice.
 | 8 ratti (`topi`) | il mugnaio | la scalinata antica | conta | cripta finita | 💎 10 |
 | 7 funghi (`funghi`) | il boscaiolo | la grotta della scaletta | conta | torre finita | 💎 15 |
 | 8 polpi (`polpi`) | il pescatore | la scala sommersa | conta | grotta finita | 💎 15 |
-| 10 cinghiali (`cinghiali`) | il mugnaio | la botola | conta | scala sommersa finita | 💎 20 |
+| 10 bestie cornute (`cinghiali`, erano cinghiali) | il mugnaio | la botola | conta | scala sommersa finita | 💎 20 |
 | 10 scorpioni (`scorpioni`) | il minatore | la miniera | conta | botola finita | 💎 20 |
 
 I rami sono tre: **Dama Grigia → libro dei nomi**, **collana → Grattanaso**,
