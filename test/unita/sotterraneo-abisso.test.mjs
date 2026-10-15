@@ -163,8 +163,8 @@ controlla('l\'abisso non ha guasti', guasti.length === 0, guasti.join(' · '))
   nota(`i posti scendendo: ${posti.join(' · ')}`)
   const c = new Corsa(CAMPAGNA[0], { seme: 7, rnd: seminato(7) })
   uguale('una discesa indossa il suo scenario', c.scenario, CAMPAGNA[0].scenario)
-  stessaLista('e le sette li mostrano tutti e tre', [...new Set(CAMPAGNA.map(t => t.scenario))].sort(),
-              ['cantine', 'cripta', 'fornace'])
+  stessaLista('e le sette li mostrano tutti e quattro', [...new Set(CAMPAGNA.map(t => t.scenario))].sort(),
+              ['cantine', 'cripta', 'fornace', 'inferno'])
   controlla('mai lo stesso scenario due volte di fila',
             CAMPAGNA.every((t, i) => !i || t.scenario !== CAMPAGNA[i - 1].scenario))
   uguale('e non dice il posto', c.posto, null)
@@ -194,8 +194,7 @@ controlla('l\'abisso non ha guasti', guasti.length === 0, guasti.join(' · '))
   }
   controlla('nessun mostro con numeri assurdi, dal piano 1 al 60',
             storti.length === 0, storti.slice(0, 3).join(' · '))
-  // il caporale che il banco trova per primo è uno qualsiasi della coppia del tratto: nell'inferno anche il negromante, che di ossa ne ha meno di un drago
-  controlla('ma sono cresciuti davvero', ultimo.ossa > primo.ossa * 4,
+  controlla('ma sono cresciuti davvero', ultimo.ossa > primo.ossa * 5,
             `${primo.ossa} → ${ultimo.ossa}`)
   /* ── la difesa è la manopola velenosa, e resta ferma per sempre ──
      Entra in una sottrazione: un punto in più lì dentro allunga la

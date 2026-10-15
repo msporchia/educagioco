@@ -63,7 +63,7 @@ conosce non si sblocca mai, e il guasto lo dice.
 | Il libro dei nomi | l'eremita | la grotta · 3 | trova | **Dama Grigia consegnata** | 💎 20 |
 | Chela, il granchio gigante | il pescatore | la scala sommersa · 2 | sconfiggi | grotta finita | anello d'ambra · 🪙 1 |
 | La canna d'oro | il pescatore | la scala sommersa · 3 | trova | grotta finita | 💎 25 |
-| Zannagrigia (un lupo) | la guardia | la botola · 2 | sconfiggi | scala sommersa finita | 💎 30 · 🪙 1 |
+| Zannagrigia (ora Corna Grigie, una bestia cornuta) | la guardia | la botola · 2 | sconfiggi | scala sommersa finita | 💎 30 · 🪙 1 |
 | Il sacco di farina buona | il mugnaio | la botola · 1 | trova | **Rosicchione consegnato** | 💎 20 |
 | La lanterna del nonno | il minatore | la miniera · 3 | trova | botola finita | teschio del cercatore |
 

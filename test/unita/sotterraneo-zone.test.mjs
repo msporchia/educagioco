@@ -36,10 +36,10 @@ const detta = (E, chiavi = null) => disposizioneDi(E).filter(z => !chiavi || chi
 uguale('nessun guasto nelle zone', guastiDelleZone().join(' · '), '')
 uguale('l\'ordine passa da ogni discesa una volta', [...ORDINE_DELLE_ZONE].sort().join(), CAMPAGNA.map(t => t.chiave).sort().join())
 {
-  // lo scenario resta fisso per qualche rinascita di fila: tre blocchi, non sette cambi
+  // lo scenario resta fisso per qualche rinascita di fila: quattro blocchi (due di cantine, l'inferno della botola, la fornace, la cripta), non sette cambi
   const scenari = ORDINE_DELLE_ZONE.map(k => CAMPAGNA[indiceDi(k)].scenario)
-  uguale('lo scenario cambia due volte nel giro (cantine, fornace, cripta)', scenari.filter((s, i) => i && s !== scenari[i - 1]).length, 2)
-  uguale('le prime sono le cantine', scenari.slice(0, 3).join(), 'cantine,cantine,cantine')
+  uguale('lo scenario cambia tre volte nel giro (cantine, inferno, fornace, cripta)', scenari.filter((s, i) => i && s !== scenari[i - 1]).length, 3)
+  uguale('le prime sono le cantine, poi l\'inferno della botola', scenari.slice(0, 3).join(), 'cantine,cantine,inferno')
   controlla('ogni zona ha almeno tre volti', Object.values(VOLTI).every(v => v.length >= 3))
   uguale('il volto gira: dopo l\'ultimo torna il primo', voltoDi('torre', VOLTI.torre.length).nome, VOLTI.torre[0].nome)
 }

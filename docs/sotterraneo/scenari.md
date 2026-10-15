@@ -57,7 +57,7 @@ Il sotterraneo è **il calco da guardare** per un mondo a sprite:
 
 ## L'inferno
 
-Il quarto scenario (`inferno`, 15 ottobre 2026), l'ultimo posto dell'abisso ([abisso.md](abisso.md#il-posto-cambia-scendendo)): massi con le punte, mattoni scuri e brace, stendardi rossi e un toro cornuto sopra ogni porta. Nasce da **tre immagini di ChatGPT** (nella cartella dei fogli) e da **un attrezzo che fa i pezzi che mancano**.
+Il quarto scenario (`inferno`, 15 ottobre 2026), quello della **botola segreta** (`labirinto`, la quinta discesa: ogni discesa il suo scenario, non più scenari che si alternano in orizzontale; i suoi abitanti sono in [mostri.md](mostri.md)): massi con le punte, mattoni scuri e brace, stendardi rossi e un toro cornuto sopra ogni porta. Nasce da **tre immagini di ChatGPT** (nella cartella dei fogli) e da **un attrezzo che fa i pezzi che mancano**.
 
 - **`sotterraneo_6.png`**, la scena (tre stanze e i corridoi). La cella è di 64 px come nelle altre, ma le facce sono più alte (coronamento di massi e mattoni): se ne prende l'alto, 76 px su 64, schiacciato di un quinto. Dalla scena: facce, capo, bordi, la porta col teschio cornuto (`bella`) e quella rossa senza (`ferro`), e due ritagli grezzi di pavimento.
 - **`arredo-inferno.png`**, una tavola di 71 pezzi su fondo magenta (nove file, scala circa 5,9 px per pixel di gioco): quasi tutto l'arredo (sarcofagi, altari, statue e gargoyle, colonne, torce, gabbie, stendardi, fucina, troni, tavolo del boia…), più la porta di legno, la scala in cornice di pietra, la grata, il lucchetto e la coppa di lava, che servono all'attrezzo.
@@ -65,7 +65,7 @@ Il quarto scenario (`inferno`, 15 ottobre 2026), l'ultimo posto dell'abisso ([ab
 - **`python3 strumenti/sprite/inferno.py`** (`--provino` in `tmp/inferno.png`) fa in codice quello che nessuno ha dipinto: i due pavimenti **senza cuciture** (il ritaglio con una banda di 6 px che sfuma sul lato opposto), il **tetto** (massi neri a macchie, una vena di brace ogni tanto), il **medaglione** (un pentagramma inciso: quello della scena ha la ciotola dentro e sulla fontana farebbe doppio), la porta **chiara** e quella **aperta**, i **cinque fianchi** (colori campionati dalle porte), la **scala chiusa** (la grata e il lucchetto sulla scala) e la **fontana asciutta** (la lava della coppa diventa pietra). Scrive `sotterraneo_6_derivati.png`; poi `atlante.py sotterraneo`. Se un pezzo non regge a schermo si fa chiedere al modello: la regola resta «prima in codice, poi dipinto».
 - **I muri obliqui** li fa `diagonali.py inferno`, che legge le tessere della scena e il tetto del foglio derivato (`ancheDa` in `SCENE`).
 - **Le ragnatele e i forzieri sono quelli della fornace** (la scena non li ha e il ferro con la brace sta bene): da chiedere al modello con le altre cose per terra.
-- **Dove si vede**: abisso dal piano 13 (`abisso=14` e `giu=abisso` nei cheat); nessuna discesa della storia lo indossa.
+- **Dove si vede**: la botola segreta (`giu=5` nei cheat); l'abisso, che attraversa cantine, cripta e fornace, non lo ha (le sue creature sono quelle della botola).
 - **Da guardare col dito**: il pavimento delle stanze è tondo e caldo (il filtro di luce lo scalda), le facce sono basse di contrasto; le porte e le scale sono dipinte a 5–6 px per pixel di gioco e vanno viste in corsa.
 
 ## Il muro è alto una cella

@@ -84,7 +84,7 @@ export const DIALOGHI = {
       { da: 2, pagine: ['Sotto la torre c\'è una fornace che nessuno accende da cent\'anni. Eppure è calda.',
                         'Dentro, dicono, si muove una melma di fuoco. La chiamano Fiammetta.'] },
       { da: 3, pagine: ['La fornace si è spenta. Stanotte, per la prima volta da anni, ho dormito.',
-                        'Ma dal prato, verso la botola, arrivano ululati.'] },
+                        'Ma dal prato, verso la botola, arrivano muggiti.'] },
       { da: 6, pagine: ['Ho fatto la guardia a questa torre per vent\'anni.',
                         'Adesso so che la guardia va fatta a quello che c\'è sotto. E quella, la fai tu.'] },
     ],

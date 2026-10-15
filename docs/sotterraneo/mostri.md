@@ -22,14 +22,13 @@ grosso. La proposta di partenza era [ambientazioni.md](ambientazioni.md): i dopp
 | la torre in rovina | fornace | pipistrello · diavoletto · vespone · spirito di fuoco | golem di magma | Fiammetta (lo spirito di fuoco) |
 | la grotta della scaletta | cantine | ragno · fungo · pianta · melma rosa | mostro di muschio | Zannaverde (il ragno) |
 | la scala sommersa | cripta | granchio · piranha · polpo · fantasma azzurro | tartaruga | Gorgo (il polpo) |
-| la botola segreta | cantine | lupo · cinghiale · serpente · ent | golem di muschio | Minotto (la bestia cornuta) |
+| la botola segreta | inferno | bestia cornuta · negromante · troll | drago di lava | Minotto (la bestia cornuta) |
 | la miniera abbandonata | fornace | scorpione · golem · spirito elettrico | golem di lava | Carbonchio (il drago di lava) |
 | l'abisso, le cantine | | melma viola · mostro viola · pipistrello occhio · ombra | golem di ghiaccio | (il giro dei sette) |
 | l'abisso, la cripta | | ghoul · teschio azzurro · mummia | mietitore | |
 | l'abisso, la fornace | | draghetto · occhio · golem di pietra · grifone | drago | |
-| l'abisso, l'inferno | | bestia cornuta · negromante · troll | drago di lava | |
 
-**L'inferno** (15 ottobre 2026) è il posto dove entrano le creature del bestiario che nessuna discesa usava: la bestia cornuta, il negromante e il troll (con `troll-clava` in `MOSTRI`: la chiave `troll` è la base dei grossi Fiammetta e Minotto, uno sprite che non si disegna), e il drago di lava che prima faceva solo Carbonchio. Non hanno una discesa della storia: stanno solo nell'abisso. Il negromante ha meno ossa degli altri per strada: nel test dell'abisso il caporale trovato per primo può essere lui, e il piano 60 deve pesare almeno quattro volte il piano 1.
+**L'inferno** (15 ottobre 2026) è lo scenario della botola segreta: ogni discesa il suo scenario, in verticale. Ci sono entrate le creature del bestiario che nessuna discesa usava (la bestia cornuta, il negromante e il troll, con `troll-clava` in `MOSTRI`: la chiave `troll` è la base dei grossi Fiammetta e Minotto, uno sprite che non si disegna) e il drago di lava che prima faceva solo Carbonchio. **Escono dalla botola** lupo, cinghiale, serpente, ent e golem di muschio: restano in `MOSTRI` (e nel catalogo) senza un posto, da dare a un'altra discesa o all'abisso.
 
 - **I doppioni tolti** rispetto alla proposta: il ragno solo nella grotta (non nella scalinata); il vespone **fuori dalla botola**, e va nella
   torre; il pipistrello solo nella torre (non nella cripta e nell'abisso); la pianta solo nella grotta (non nella botola); l'ombra, il ghoul e
@@ -133,10 +132,10 @@ grosso. La proposta di partenza era [ambientazioni.md](ambientazioni.md): i dopp
 | golem di pietra | abisso (fornace) | fisico | gelo | non si stordisce, non si avvelena, non sanguina |
 | grifone | abisso (fornace) | — | fulmine | — |
 | drago | abisso (fornace) | fuoco | gelo | non brucia |
-| bestia cornuta | abisso (inferno) | fuoco | gelo | — |
-| negromante | abisso (inferno) | — | luce sacra, fisico | non si avvelena, non sanguina |
-| troll | abisso (inferno) | veleno | fuoco | — |
-| drago di lava | abisso (inferno, caporale) | fuoco | gelo | non brucia |
+| bestia cornuta | botola (inferno) | fuoco | gelo | — |
+| negromante | botola (inferno) | — | luce sacra, fisico | non si avvelena, non sanguina |
+| troll | botola (inferno) | veleno | fuoco | — |
+| drago di lava | botola (inferno, caporale) | fuoco | gelo | non brucia |
 
 | grosso | statistiche della specie | figura | resiste | teme | non prende |
 |---|---|---|---|---|---|

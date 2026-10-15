@@ -57,7 +57,7 @@ quale creatura gli sta bene come sprite di ripiego).
 | 2 | **La torre in rovina** (fornace) | pipistrello · diavoletto · spirito di fuoco · occhio | golem di magma | Fiammetta (troll di fuoco); un grifone sul tetto |
 | 3 | **La grotta della scaletta** (cantine) | ragno · fungo · pianta · melma rosa | mostro verde | Zannaverde (il ragno con gli occhi) |
 | 4 | **La scala sommersa** (cripta, con l'acqua) | granchio · piranha · polpo · fantasma azzurro | tartaruga | Gorgo (la melma d'acqua nera) |
-| 5 | **La botola segreta** (cantine, il prato di sopra) | lupo · cinghiale · vespone · pianta | golem di muschio | Minotto (la bestia cornuta) o un ent |
+| 5 | **La botola segreta** (inferno, sotto il prato di sopra) | bestia cornuta · negromante · troll | drago di lava | Minotto (la bestia cornuta) |
 | 6 | **La miniera abbandonata** (fornace) | serpente · scorpione · golem di pietra · spirito elettrico | golem di lava | Carbonchio (il drago di lava; anche il drago) |
 
 Perché stanno insieme:
@@ -81,9 +81,8 @@ Perché stanno insieme:
   forme di fondale, il fantasma azzurro il fiocco di freddo; la tartaruga davanti a
   Gorgo ha la corazza che solo l'abilità giusta (il fulmine) scalfisce. Si capisce
   che qui serve il fulmine.
-- **5 — la botola.** Un labirinto sotto un prato: lupo e cinghiale sono la caccia,
-  il vespone il nido, la pianta il rovo. Il golem di muschio è il guardiano
-  verde. Minotto è «il bruto con le corna», e la bestia cornuta è proprio quello.
+- **5 — la botola.** Un labirinto sotto un prato che scende all'inferno (15 ottobre 2026: era cantine con lupo, cinghiale, serpente ed ent): la bestia
+  cornuta, il negromante e il troll per strada, il drago di lava è il guardiano. Minotto è «il bruto con le corna», e la bestia cornuta è proprio quello.
 - **6 — la miniera.** Pietra e brace: serpente e scorpione sono i velenosi dei
   cunicoli, il golem di pietra lo scavo che si muove, lo spirito elettrico gli
   scoppi nelle gallerie. Il golem di lava davanti a Carbonchio.

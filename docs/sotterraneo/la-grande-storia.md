@@ -28,7 +28,7 @@ la fila salga).
 | 2 | La torre in rovina (`torre`) | la porta in basso della torre | 44 | alta e stretta, 26×54 | fornace | 3 | pipistrello e vespone · troll |
 | 3 | La grotta della scaletta (`gallerie`) | il buco nella roccia | 45 | tutta in profondità: piani piccoli | cantine | 5 | lupo e fungo · orco |
 | 4 | La scala sommersa (`cisterna`) | la scala nello stagno | 51 | lunga e stretta, 64×24 | cripta | 3 | granchio e serpente · gigante |
-| 5 | La botola segreta (`labirinto`) | la botola nel prato | 54 | un labirinto di sedici stanze | cantine | 3 | orco e goblin · troll |
+| 5 | La botola segreta (`labirinto`) | la botola nel prato | 54 | un labirinto di sedici stanze | inferno | 3 | orco e goblin · troll |
 | 6 | La miniera abbandonata (`fondo`) | la miniera dentro il monte | 55 | stretta e profonda | fornace | 4 | golem e ratto · gigante |
 | — | l'abisso | il pozzo vecchio d'ardesia | 61 | gira fra tre forme | i tre | ∞ | gli abitanti di un tratto |
 

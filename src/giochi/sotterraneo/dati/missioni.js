@@ -111,11 +111,11 @@ export const MISSIONI = [
     premio: { gemme: 25 } },
 
   { id: 'zannagrigia', da: 'guardia', discesa: 'labirinto', piano: 1, tipo: 'sconfiggi',
-    mostro: { tipo: 'lupo', nome: 'Zannagrigia' },
+    mostro: { tipo: 'bestia-cornuta', nome: 'Corna Grigie' },   // l'id resta `zannagrigia` (è nei salvataggi): era un lupo, da quando la botola scende all'inferno è una bestia cornuta
     richiede: [{ fatta: 'cisterna' }],
-    dice: 'Sotto la botola segreta vive un lupo vecchio e furbo, Zannagrigia: al secondo piano. Di notte esce e ulula sotto la torre.',
-    grazie: 'Stanotte niente ululati! Prendi queste gemme: le tenevo per una spada nuova, ma la spada la usi meglio tu.',
-    ritorno: 'Stanotte niente ululati sotto la torre. Zannagrigia?',
+    dice: 'Sotto la botola segreta c\'è una bestia vecchia e furba con le corna grigie, Corna Grigie: al secondo piano. Di notte sale e muggisce sotto la torre.',
+    grazie: 'Stanotte niente muggiti! Prendi queste gemme: le tenevo per una spada nuova, ma la spada la usi meglio tu.',
+    ritorno: 'Stanotte niente muggiti sotto la torre. Corna Grigie?',
     premio: { gemme: 30, monete: 1 } },
 
   // il seguito di Rosicchione: la farina che il ratto non ha rosicchiato è finita più lontano

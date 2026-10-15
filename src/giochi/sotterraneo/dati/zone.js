@@ -4,7 +4,7 @@
 // picchiano. Le regole (che fascia ha una zona adesso, di che colore è il pallino) stanno in motore/zone.js.
 import { CAMPAGNA, tappaDi } from './campagna.js'
 
-// L'ordine in cui nascono, dalla fascia più bassa: tre zone delle cantine, due della fornace (la roccia della miniera),
+// L'ordine in cui nascono, dalla fascia più bassa: due zone delle cantine, l'inferno della botola, due della fornace (la roccia della miniera),
 // due della cripta. Rinascono nello stesso ordine: lo scenario resta lo stesso per qualche rinascita di fila
 export const ORDINE_DELLE_ZONE = ['cantine', 'gallerie', 'labirinto', 'torre', 'fondo', 'cisterna', 'altare']
 
