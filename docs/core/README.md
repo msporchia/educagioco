@@ -10,6 +10,7 @@ comandi, pubblicazione, grafica, e le regole comuni a tutti i giochi.
 - [aggiornamento.md](aggiornamento.md) — «c'è una versione nuova», «cerca aggiornamenti», il service worker
 - [guasti.md](guasti.md) — gli incidenti, `ripara()`, cosa guardare quando qualcosa va storto
 - [test.md](test.md) — la cadenza delle prove, le cartelle, le regole per scrivere un test
+- [avvio-e-memoria.md](avvio-e-memoria.md) — quanto ci mette ad aprirsi il file e quanta memoria d'immagini tiene (`strumenti/misura-avvio.mjs`)
 - [tempi-dei-test.md](tempi-dei-test.md) — quanto costano le prove, e le regole che ne vengono
 - [comandi.md](comandi.md) — tutti i comandi, cosa riscrivono, i banchi di prova, la roba generata, i cheat
 - [pubblicare.md](pubblicare.md) — GitHub Pages, il server di casa, il numero di versione
