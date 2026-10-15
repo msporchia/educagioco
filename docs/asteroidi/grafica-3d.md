@@ -131,8 +131,10 @@ sassi cambia col posto.
   prototipo: tolto, senza stava meglio. Provato il pannello delle tre
   qualità: non si distinguevano.
 - **Misurato in Chrome senza schermo** (SwiftShader, cioè la CPU fa la
-  GPU): una trentina di disegni per fotogramma, 12–40 mila triangoli, 23–25
-  ms a fotogramma a pixel ratio 1,5. Su una GPU vera di telefono la scena
+  GPU): 30 disegni per fotogramma con la navetta e tre sassi, fino a 70
+  con l'incrociatore, sei sassi e la nave madre; 12–23 mila triangoli;
+  21–28 ms a fotogramma a pixel ratio 1,5, di cui meno di un decimo di ms
+  di JS per preparare la scena e mezzo per le chiamate a WebGL. Su una GPU vera di telefono la scena
   sta in pochi millisecondi; da provare su un telefono vecchio.
   `window.__mate.grafica()` dice disegni, triangoli, pixel ratio e i
   millisecondi (fra due fotogrammi, del JS che prepara, delle chiamate a

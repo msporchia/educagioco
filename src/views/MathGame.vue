@@ -750,6 +750,7 @@ const anello = (x, y, c, max) => anelli.push({ x, y, r: 0, max, vita: 1, c })
 
 /* ---------- ciclo ---------- */
 function ridimensiona() {
+  const prima = W
   W = window.innerWidth; H = window.innerHeight
   const cv = tela.value; if (!cv) return
   cv.width = Math.floor(W * devicePixelRatio); cv.height = Math.floor(H * devicePixelRatio)
@@ -769,7 +770,9 @@ function ridimensiona() {
   fondale = pittore3d ? null : dipingiFondale(W, H, Math.random, cielo)
   madre.r = Math.max(40, Math.min(80, Math.min(W, H) * 0.13))
   nave.r = Math.max(30, Math.min(54, Math.min(W, H) * 0.1))
-  nave.x = nave.meta = W / 2; nave.y = suolo - nave.r * 0.8
+  // la nave resta dov'era, in proporzione: sul telefono la barra dell'indirizzo che sparisce è un ridimensiona
+  nave.x = nave.meta = prima ? dentroCampo(nave.x * W / prima) : W / 2
+  nave.y = suolo - nave.r * 0.8
   pittore3d?.ridimensiona(W, H)
 }
 
