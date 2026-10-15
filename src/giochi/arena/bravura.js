@@ -11,8 +11,9 @@ import { frontieraTabelline } from '../../store/marea.js'
 export const GRADO_A_MENTE = 7
 // da dove si parte la prima volta, al massimo: sopra resta da guadagnare giocando
 export const PARTENZA_MAX = 5
-// il peso della prima caserma (`calcoloDi`): quello che costa di più sale da qui, un grado ogni due
-export const PESO_DI_BASE = 3
+// dentro una battaglia i conti salgono di un grado ogni tanti conti giusti, fino a RAMPA_MAX gradi sopra la base
+export const RAMPA_OGNI = 3
+export const RAMPA_MAX = 3
 // sotto questi secondi un conto giusto è svelto e fa salire
 export const SVELTO = 6
 export const PASSO = { svelto: 1 / 3, lento: 0, sbagliato: -1 / 2 }
@@ -55,9 +56,10 @@ export function basi(salvate, ctx) {
   return out
 }
 
-// il grado di un conto: la base, più un grado ogni due di peso sopra la prima caserma
-export const gradoDi = (base, peso) =>
-  dentro(Math.round(base) + Math.round((peso - PESO_DI_BASE) / 2))
+// il grado di un conto: la base di inizio battaglia, più un grado ogni RAMPA_OGNI conti giusti già fatti.
+// Cresce solo col procedere della battaglia, mai con la scelta: il prezzo non c'entra più
+export const gradoDi = (base, giusti) =>
+  dentro(Math.round(base) + Math.min(RAMPA_MAX, Math.floor(giusti / RAMPA_OGNI)))
 
 export function dopoLaRisposta(base, { giusto, tempo }) {
   const passo = !giusto ? PASSO.sbagliato : tempo <= SVELTO ? PASSO.svelto : PASSO.lento

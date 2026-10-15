@@ -57,6 +57,8 @@ const avviso = ref('')                // la riga che dice cosa è successo
 const toccato = ref(false)
 
 let voluta = null                     // la scelta che si sta pagando
+let giusti = 0                        // i conti giusti di questa battaglia: fanno salire la difficoltà (bravura.js)
+let baseInizio = {}                   // la base di ogni operazione al primo conto della battaglia: la rampa parte da lì
 let campo = null
 let attesa = 0
 let orologio = 0
@@ -154,6 +156,8 @@ function azzera() {
   scelta.value = null
   avviso.value = ''
   voluta = null
+  giusti = 0
+  baseInizio = {}
   pagata = false
   contata = false
   borsellino = borsa(CHIAVE)
@@ -466,7 +470,8 @@ function scegli({ azione, id, posto }) {
   const prima = posto !== undefined ? p.casermaIn('io', posto) : null
   voluta = { azione, id: id || prima?.id, posto, chi, dove, op, resa: azione === 'vendi' ? p.resa('io', posto) : 0 }
   toccato.value = true
-  domanda.value = domandaDi(op, gradoDi(laBase(op), cal.peso))
+  baseInizio[op] ??= laBase(op)
+  domanda.value = domandaDi(op, gradoDi(baseInizio[op], giusti))
   suono.ok()
 }
 
@@ -486,6 +491,7 @@ function risposto({ giusto, saltata, tempo }) {
   }
   if (giusto) {
     if (p.fai('io', v.azione, v.chi, v.dove)) {
+      if (!saltata) giusti++
       // il tasto «salta» dei grandi dà la scelta ma non paga e non conta (docs/core/comandi.md)
       if (!saltata) { borsellino.paga(PAGA.mossa); segna('arenaCalcoli') }
       if (v.azione === 'costruisci' || v.azione === 'potenzia') segna('arenaCaserme')

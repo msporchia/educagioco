@@ -13,12 +13,15 @@ grossi sono del castello.
   conto; le azioni hanno la loro (miniera `×`, ripara `+`, vendi `−`,
   castello `÷`, bomba `÷`). Il bambino non può evitare l'operazione che
   teme: costruire proprio la truppa che gli serve è parte della sfida.
-- **La grandezza dei numeri la decide il bambino, poi il prezzo** (`bravura.js`).
-  Ogni operazione ha una **base**, un grado del modulo: la prima caserma chiede
-  quella, e una scelta cara sale di un grado ogni due di «peso» (`calcoloDi`, da 1
-  a 10: costruire `1 + prezzo/4`, potenziare il livello dell'edificio, la miniera
-  `3 + livello`, il castello `2 + livello/2`). Prima la grandezza era solo del
-  prezzo, e la prima caserma chiedeva `7 + 6` a tutti (l'utente: «troppo facili»).
+- **La grandezza dei numeri la decide il bambino, poi il punto della battaglia** (`bravura.js`).
+  Ogni operazione ha una **base**, un grado del modulo: il primo conto della battaglia chiede
+  quella, e poi **si sale di un grado ogni tre conti giusti**, fino a tre gradi sopra
+  (`RAMPA_OGNI`, `RAMPA_MAX`). La difficoltà cresce solo col procedere della battaglia, mai
+  con la scelta: prima dipendeva dal «peso» di cosa si comprava (prezzo, livello) e i conti
+  uscivano a caso, facili e difficili alternati (l'utente: «a difficoltà crescente e non un
+  po' a caso»). La rampa parte dalla base che c'era al primo conto di ogni operazione, non da
+  quella che si muove giocando, così non sale due volte; il peso (`calcoloDi`) resta nel
+  motore ma i conti non lo leggono più. I conti sbagliati e il tasto «salta» non la fanno salire.
 - **La base si muove giocando**: un conto giusto entro 6 secondi la alza di un
   terzo, uno sbagliato la abbassa di mezzo, uno giusto ma lento non la muove. Sta in
   `profile.campagne.arena.bravura`, una per operazione. **La prima volta si parte da
@@ -38,10 +41,12 @@ grossi sono del castello.
 - **Si chiede al modulo di quiz `conti`** (`src/quiz/moduli/conti.js`, solo su
   richiesta), non a un generatore del gioco: così arrivano il perché dopo lo
   sbaglio, lo SRS, l'età e i saperi spenti dai genitori.
-- **Il campo va a metà velocità mentre si calcola, non si ferma**
-  (`CALCOLANDO` in `dati/regole.js`). È una scelta dell'utente: la pressione resta,
-  e una scelta ponderata costa davvero qualcosa. Era a un quarto: troppo comodo per
-  un gioco di conti svelti. Il calcolo prende **tutto lo schermo**: provato a un foglio
+- **Il campo va al 10% della velocità mentre si calcola, non si ferma**
+  (`CALCOLANDO` in `dati/regole.js`). Era a metà (e prima a un quarto, «troppo comodo per
+  un gioco di conti svelti»); il 15/10 l'utente l'ha portato al 10% perché la bambina non
+  teneva il passo e le monete restavano ferme: il conto deve poter essere fatto senza che
+  la base crolli. I piloti di prova restano tarati a metà (`TARATI_A` in `motore/banco.js`):
+  gli stessi secondi di partita sono ora cinque volte i secondi veri. Il calcolo prende **tutto lo schermo**: provato a un foglio
   in basso che lasciava in vista il campo, e non andava (l'utente: «sfrutta
   l'intero schermo per le domande»); il campo corre piano là dietro.
 - **Per scegliere con calma ci sono «i numeri»**, nella scelta e nell'anello: aprono i dettagli (come sta

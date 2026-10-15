@@ -4,8 +4,9 @@ Il motore gira in Node, quindi la difficoltà si **misura** (`motore/banco.js`):
 un `Pilota` finto che compra, potenzia, ripara e alza muri con una certa
 precisione nel calcolo (1 = mai sbagliato, 0.75 = il bambino che ci ragiona,
 0.4 = chi tira a indovinare) e un `ritmo`: ogni quanti secondi veri riesce a fare
-una scelta, che diventano secondi di partita moltiplicati per `CALCOLANDO` (il campo
-va a metà velocità mentre si calcola).
+una scelta, che diventano secondi di partita moltiplicati per `TARATI_A` (0,5, il campo a
+metà velocità: la taratura non è stata rifatta quando `CALCOLANDO` è sceso a 0,1, quindi
+ora quei secondi sono cinque volte i secondi veri, [calcoli.md](calcoli.md)).
 
 Comandi: `node test/esegui.mjs arena` (il motore), `node test/esegui.mjs
 misure` (l'equilibrio, dove c'è), `npm run tara:arena -- --duelli` (le truppe a

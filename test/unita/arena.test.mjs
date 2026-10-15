@@ -16,7 +16,7 @@ import { guastiDeiDettagli, dettaglioTruppa, dettaglioAzione, ruoloDi } from '..
 import { guastiDelleFigure } from '../../src/giochi/arena/scena/figure.js'
 import manifesto from '../../src/giochi/arena/gioco.js'
 import { guastiDellAlbo } from '../../src/giochi/albo.js'
-import { GRADO_A_MENTE, PARTENZA_MAX, partenza, basi, gradoDi, dopoLaRisposta, gradoDelleTabelline, gradoDellEta }
+import { GRADO_A_MENTE, RAMPA_MAX, PARTENZA_MAX, partenza, basi, gradoDi, dopoLaRisposta, gradoDelleTabelline, gradoDellEta }
   from '../../src/giochi/arena/bravura.js'
 import { calcoliTabellina } from '../../src/data/tabelline.js'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
@@ -385,9 +385,10 @@ controlla('ogni tappa ha la sua scheda del nemico', CAMPAGNA.every(t => NEMICO[t
   uguale('e le divisioni un gradino sotto', partenza('÷', { eta: 6, items: fino7 }), 4)
   controlla('la partenza non passa mai il suo tetto', ['+', '−', '×', '÷'].every(op => partenza(op, { eta: 12 }) <= PARTENZA_MAX))
   uguale('una base salvata vince sulla partenza', basi({ '+': 6.4 }, { eta: 6 })['+'], 6.4)
-  uguale('la prima caserma chiede la base', gradoDi(4, 3), 4)
-  uguale('una scelta cara sale di un grado ogni due di peso', gradoDi(4, 7), 6)
-  uguale('ma non oltre il calcolo a mente', gradoDi(6, 10), GRADO_A_MENTE)
+  uguale('il primo conto della battaglia chiede la base', gradoDi(4, 0), 4)
+  uguale('ogni tre conti giusti la battaglia sale di un grado', [0, 2, 3, 5, 6].map(g => gradoDi(4, g)).join(), '4,4,5,5,6')
+  uguale('la rampa ha un tetto', gradoDi(2, 99), 2 + RAMPA_MAX)
+  uguale('e non va oltre il calcolo a mente', gradoDi(6, 99), GRADO_A_MENTE)
   uguale('tre giusti e svelti fanno un grado', +[1, 2, 3].reduce(b => dopoLaRisposta(b, { giusto: true, tempo: 3 }), 4).toFixed(6), 5)
   uguale('giusto ma lento non muove', dopoLaRisposta(4, { giusto: true, tempo: 12 }), 4)
   uguale('sbagliato scende di mezzo grado', dopoLaRisposta(4, { giusto: false, tempo: 3 }), 3.5)

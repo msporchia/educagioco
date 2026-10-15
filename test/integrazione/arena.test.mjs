@@ -222,7 +222,8 @@ await page.locator('.ar .qz-tasto').first().click()   // sbagliare non costa nie
 await attendi(page, 600)
 
 /* si esce a metà: la sosta si scrive col suo terreno, la carta la offre, e una battaglia nuova ha un altro terreno */
-for (let t = 0; t < 30 && await tempoDelCampo() < 7; t++) await attendi(page, 500)
+await page.waitForSelector('.ar .qz-velo', { state: 'detached', timeout: 45000 }).catch(() => {})   // col calcolo aperto il campo va al 10%
+for (let t = 0; t < 40 && await tempoDelCampo() < 7; t++) await attendi(page, 500)
 await page.click('button[aria-label="indietro"]')
 await page.waitForSelector('.ar-mappa', { timeout: 6000 })
 let sosta2 = null

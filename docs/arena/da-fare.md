@@ -16,6 +16,6 @@
   vince la quota della tappa) come test d'equilibrio, oltre alla firma.
 - La bomba: scegliere il punto col dito (oggi lo sceglie il gioco), un effetto più epico e il suono.
 - Provare col dito di un bambino: il ritmo del campo mentre si calcola
-  (oggi metà della velocità) è la prima cosa da guardare.
+  (oggi il 10% della velocità) e la rampa dei conti (un grado ogni tre giusti) sono le prime cose da guardare.
 - La lava non tiene chi non sbaglia mai: il nemico al massimo della bravura vince contro il rush ma perde contro l'economia, e il giocatore perfetto vince sempre ([taratura.md](taratura.md), [nemico.md](nemico.md)).
 - Idea dell'utente (13/10), da valutare: dare una priorità alle truppe, caserma per caserma, cioè dire a ciascuna cosa attaccare.
