@@ -18,6 +18,7 @@ import { iconaDi } from '../dati/terra.js'
 
 const props = defineProps({
   stati: { type: Object, default: () => ({}) },
+  conti: { type: Object, default: () => ({}) },   // a che punto sono le «sconfiggi N»
   tappe: { type: Array, required: true },
   segui: { type: String, default: null },   // la missione che le freccine seguono, se ne è stata scelta una
   giu: { type: Boolean, default: false },
@@ -26,7 +27,7 @@ const props = defineProps({
 })
 const emit = defineEmits(['chiudi', 'segui', 'vai', 'fuori', 'scheda'])
 
-const d = computed(() => diario(props.stati, props.tappe, props.segui))
+const d = computed(() => diario(props.stati, props.tappe, props.segui, props.conti))
 
 // il dettaglio: l'id della voce aperta (null = l'elenco). Si cerca fra tutte le voci a ogni giro, così se la voce
 // cambia sotto (consegnata mentre il diario è aperto) il dettaglio la segue, e se sparisce si torna all'elenco
@@ -151,7 +152,7 @@ const vaDa = v => emit('vai', v.da)
         <span class="sot-testo">
           <small>Dove</small>
           <b>{{ voce.dove }}</b>
-          <i>piano {{ voce.piano }}</i>
+          <i v-if="voce.piano">piano {{ voce.piano }}</i>
         </span>
       </div>
 
@@ -159,9 +160,10 @@ const vaDa = v => emit('vai', v.da)
       <div class="sot-dettaglio-riga" data-dettaglio-cosa :data-tipo="voce.tipo">
         <span class="sot-dettaglio-icona"><Icona :sprite="nomeFigura(voce)" :em="voce.cosa.em" :scala="2" :emAlto="38" /></span>
         <span class="sot-testo">
-          <small>{{ voce.tipo === 'trova' ? (fatto(voce) ? 'Trovata' : 'Da trovare') : (fatto(voce) ? 'Battuto' : 'Da battere') }}</small>
+          <small>{{ voce.tipo === 'trova' ? (fatto(voce) ? 'Trovata' : 'Da trovare') : (fatto(voce) ? 'Battuti' : 'Da battere') }}</small>
           <b>{{ voce.cosa.nome }}</b>
-          <i v-if="!fatto(voce)">{{ voce.tipo === 'trova' ? 'in un forziere d\'oro' : 'il mostro con la corona' }}</i>
+          <i v-if="voce.progresso" data-progresso :data-fatti="voce.progresso.fatti">{{ voce.progresso.fatti }} di {{ voce.progresso.quanti }}</i>
+          <i v-else-if="!fatto(voce)">{{ voce.tipo === 'trova' ? 'in un forziere d\'oro' : 'il mostro con la corona' }}</i>
         </span>
       </div>
 
@@ -225,7 +227,7 @@ const vaDa = v => emit('vai', v.da)
             <img v-if="iconaDi(v.discesa)" class="sot-ritaglio" :src="iconaDi(v.discesa)" alt="" data-ritaglio>
             <span class="sot-testo">
               <b><span class="em">{{ v.em }}</span> {{ v.titolo }}</b>
-              <i>{{ v.dove }}, piano {{ v.piano }}</i>
+              <i>{{ v.dove }}<template v-if="v.piano">, piano {{ v.piano }}</template></i>
               <em class="sot-fatta" data-esito>{{ v.torna }}</em>
             </span>
             <span class="sot-diario-premio em">{{ v.premio }}</span>
@@ -241,7 +243,7 @@ const vaDa = v => emit('vai', v.da)
             <img v-if="iconaDi(v.discesa)" class="sot-ritaglio" :src="iconaDi(v.discesa)" alt="" data-ritaglio>
             <span class="sot-testo">
               <b><span class="em">{{ v.em }}</span> {{ v.titolo }}</b>
-              <i>{{ v.dove }}, piano {{ v.piano }} · {{ v.chi.toLowerCase() }}</i>
+              <i>{{ v.dove }}<template v-if="v.piano">, piano {{ v.piano }}</template> · {{ v.chi.toLowerCase() }}</i>
               <em data-esito>da fare<template v-if="v.segui"> · la segui</template></em>
             </span>
             <span class="sot-diario-premio em">{{ v.premio }}</span>
@@ -257,7 +259,7 @@ const vaDa = v => emit('vai', v.da)
             <img v-if="iconaDi(v.discesa)" class="sot-ritaglio" :src="iconaDi(v.discesa)" alt="" data-ritaglio>
             <span class="sot-testo">
               <b><span class="em">{{ v.em }}</span> {{ v.titolo }}</b>
-              <i>{{ v.dove }}, piano {{ v.piano }}</i>
+              <i>{{ v.dove }}<template v-if="v.piano">, piano {{ v.piano }}</template></i>
               <em data-esito>{{ v.chi }} ha un favore da chiederti</em>
             </span>
             <span class="sot-diario-premio em">{{ v.premio }}</span>

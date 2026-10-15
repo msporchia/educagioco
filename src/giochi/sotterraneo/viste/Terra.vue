@@ -9,7 +9,7 @@ import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { MAPPA, LARGO, ALTO, CELLA, MASCHERA, POSTI, PARTENZA, MINATORE as DOVE_MINATORE, CARTELLO,
          MERCANTI as DOVE_MERCANTI, PORTALE as DOVE_PORTALE, PERSONAGGI as DOVE_PERSONAGGI } from '../dati/terra-mappa.js'
 import { PERSONAGGI, personaDi } from '../dati/missioni.js'
-import { segnoDi, GLIFO, chiAspetta, presePer, inFrase, discesaDaSeguire, discesaDellaStoria } from '../motore/missioni.js'
+import { segnoDi, GLIFO, chiAspetta, presePer, inFrase, titoloDi, faccia, discesaDaSeguire, discesaDellaStoria } from '../motore/missioni.js'
 import { MERCANTI, mercanteDi } from '../dati/mercanti.js'
 import { apertura, scelte as scelteDi, risposta, dopoLaPresa, dopoLaConsegna, novita as novitaDi,
          curaDi, mancaA, richiamoDi, dopoLaCura } from '../motore/dialoghi.js'
@@ -853,7 +853,7 @@ const rigaStoria = p => {
             </p>
             <p v-if="quiPrese(aperto.p).length" class="sot-fum-missioni" data-missioni-qui>
               <span v-for="m in quiPrese(aperto.p)" :key="m.id" :data-missione="m.id">
-                <span class="em">{{ m.tipo === 'trova' ? m.cosa.em : '👑' }}</span> {{ inFrase(m.tipo === 'trova' ? m.cosa.nome : m.mostro.nome) }}, piano {{ m.piano + 1 }}
+                <span class="em">{{ faccia(m) }}</span> {{ inFrase(titoloDi(m)) }}<template v-if="m.tipo !== 'conta'">, piano {{ m.piano + 1 }}</template>
               </span>
             </p>
             <p v-if="livelloDi(aperto.p.tappa) && coloreDi(aperto.p) !== 'rosso'" class="sot-fum-avviso" data-sotto-livello

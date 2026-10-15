@@ -189,7 +189,9 @@ function salva({ subito = false, via } = {}) {
 }
 function fatteGiu(c) {
   const n = c.missioniFatte.size ? missioniFatte(qui.value.missioni, [...c.missioniFatte]) : null
-  return n ? { missioni: n } : {}
+  // «sconfiggi N»: il conto passa nell'avventura insieme alle fatte, così sopravvive a uscite, soste e svenimenti
+  const k = Object.keys(c.conti).length ? { conti: { ...(qui.value.conti || {}), ...c.conti } } : {}
+  return { ...(n ? { missioni: n } : {}), ...k }
 }
 
 /* ═══════════ le missioni dei personaggi (motore/missioni.js) ═══════════
@@ -197,6 +199,9 @@ function fatteGiu(c) {
    premio va sulla roba dell'avventura, gemme o un gioiello, e a volte monete, che passano dalla borsa del gioco
    come ogni altra (docs/sotterraneo/missioni.md) */
 const missioni = computed(() => qui.value.missioni || {})
+// a che punto sono le «sconfiggi N»: quello dell'avventura, e giù quello della discesa che cammina (motore/missioni.js)
+const contiGiu = dallaCorsa(c => ({ ...c.conti }), {})
+const conti = computed(() => ({ ...(qui.value.conti || {}), ...contiGiu.value }))
 // la missione che le freccine seguono, se nel diario ne è stata scelta una e quella è ancora presa
 // (motore/missioni.js, seguita; docs/sotterraneo/missioni-freccina.md)
 const segui = computed(() => seguita(missioni.value, qui.value.segui))
@@ -225,7 +230,7 @@ function azioneMissione(id, azione) {
 // la riga in cima a una discesa per ogni missione presa che la riguarda (motore/missioni.js, promemoria)
 const ricordo = dallaCorsa(c => {
   const t = c.tappa
-  return t && !t.abisso ? promemoria(missioni.value, t.chiave, c.piano + 1) : []
+  return t && !t.abisso ? promemoria(missioni.value, t.chiave, c.piano + 1, conti.value) : []
 }, [])
 
 function scorda() {
@@ -251,7 +256,7 @@ function salgoDalPortale() {
 function riprendiDiscesa({ ferma = false } = {}) {
   const dato = qui.value.sosta
   const t = dato ? zonaDi(dato.tappa, dato.potenza) : null
-  const c = t ? leggi(dato, t, roba.value, presePer(missioni.value, t.chiave || ''), crescita.value) : null
+  const c = t ? leggi(dato, t, roba.value, presePer(missioni.value, t.chiave || ''), crescita.value, qui.value.conti) : null
   if (!c) { scorda(); return }
   togli()   // il telefono posato sulla mappa lascia acceso il freno, o si ritroverebbe dietro un velo non chiesto
   tappaIdx.value = dato.tappa
@@ -502,7 +507,7 @@ const barra = computed(() => {
     incanti: giu ? giu.incanti : [],
     // gli incantesimi che l'eroe sa e si preparano (la casella degli incanti), e le missioni da consegnare (il globo rosso e la linguetta)
     preparabili: (RAMI[eroeQui()] || []).flatMap(r => r.nodi).filter(n => preparabile(n) && gradoDi(cr, n.id)).length,
-    missioniPronte: diario(missioni.value, tappe.value, segui.value).pronte.length,
+    missioniPronte: diario(missioni.value, tappe.value, segui.value, conti.value).pronte.length,
   }
 })
 
@@ -1069,7 +1074,7 @@ function avvia(i, { prova = false } = {}) {
   // la discesa com'è adesso: finita la storia la zona con la sua fascia, prima quella della storia
   const t = i === INDICE_ABISSO ? L_ABISSO : zonaDi(i, potenzaDi(qui.value, i, livelloOra.value, forzaOra.value))
   corsa.value = new Corsa(t, { seme: semeDallIndirizzo(), eroe: eroeQui(), roba: roba.value,
-                               crescita: crescita.value, missioni: presePer(missioni.value, t.chiave) })
+                               crescita: crescita.value, missioni: presePer(missioni.value, t.chiave), conti: qui.value.conti })
   borsellino = borsa(CHIAVE)
   corredoDaProva(corsa.value)
   pianoDaProva(corsa.value)
@@ -1674,7 +1679,7 @@ function ridimensiona() { if (pittore) pittore.misura() }
                   :roba="robaSopra" :terra="qui.terra || null" @terra="ricordaTerra"
                   :punti="barra.punti" :punti-abilita="barra.puntiAbilita" @scheda="apriScheda"
                   :annuncio="annuncio" @sentito="annuncioSentito" :forze="forze" @cura="curaDa"
-                  :missioni="missioni" :azione-missione="azioneMissione" :segui="segui" @segui="seguiMissione"
+                  :missioni="missioni" :conti="conti" :azione-missione="azioneMissione" :segui="segui" @segui="seguiMissione"
                   @gioca="i => avvia(i)" @riprendi="riprendiDiscesa" @scorda="scorda" @bottega="apriBottega" />
         <p v-if="detto" class="sot-avviso sot-avviso-sopra" data-detto-sopra>{{ detto }}</p>
         <!-- la stessa barra di giù (docs/sotterraneo/barra.md): sopra la vita è piena e la mappa grande non c'è -->
@@ -1929,7 +1934,7 @@ function ridimensiona() { if (pittore) pittore.misura() }
                @chiudi="zainoAperto = false" @fuori="toccoFuori" />
 
         <!-- il diario delle missioni, giù: lo stesso di sopra, senza «vai da» (chi aspetta sta sopra) -->
-        <Diario v-else-if="diarioGiu" giu :stati="missioni" :tappe="tappe" :segui="segui" :punti="barra.punti" :punti-abilita="barra.puntiAbilita"
+        <Diario v-else-if="diarioGiu" giu :stati="missioni" :conti="conti" :tappe="tappe" :segui="segui" :punti="barra.punti" :punti-abilita="barra.puntiAbilita"
                 @scheda="apriScheda" @chiudi="diarioGiu = false" @segui="seguiMissione" @fuori="toccoFuori" />
 
         <!-- gli incantesimi da preparare prima di uno scontro, dalla loro casella nella barra (docs/sotterraneo/orologio.md) -->
