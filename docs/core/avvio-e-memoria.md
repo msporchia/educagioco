@@ -51,6 +51,19 @@ al doppio click e a `./pubblica.sh`. La CI pubblica `dist-sito/` con accanto
   contenuto, quindi un file uguale ha lo stesso nome e il service worker lo ricopia
   dalla cache di prima. Cambiano sempre il JS di avvio (porta `__VERSIONE__`) e i
   file che dipendono da lui; tutto il resto resta. Il codice comune va tenuto piccolo.
+- **Cambiare un gioco cambia pochi file.** Il nome di un file è l'hash del suo contenuto, e
+  il build lo tiene così: la **versione sta nella pagina** (uno script in `index.html`,
+  `__VERSIONE_PAGINA__`) e non nel JS; Vue è un file suo (`vendor`); il codice condiviso è un
+  file suo (`comune`, ~2 MB) che non conosce i nomi dei giochi; il JS di avvio (`index`, 13 KB)
+  porta solo le strade verso i giochi. Provato: toccando un solo gioco cambiano 3 file,
+  ~100 KB (prima, con la versione nel JS e il codice condiviso nell'avvio, cambiavano tutti e
+  37 i file di codice, ~4,5 MB). Toccare il codice condiviso cambia `comune` e i giochi che lo
+  importano: è giusto, è davvero cambiato.
+- **I giochi vecchi** (`src/views/`: asteroidi, castello, bancarella, Generale) hanno il
+  gruppo loro (`VECCHI` in `vite.config.js`). La base è ~4,8 MB.
+- **«Cerca aggiornamenti» controlla un `<meta name="versione">`** nella pagina: nel sito
+  spezzato la pagina pesa 4 KB e l'id non sta più nel JS, e senza il meta il controllo
+  falliva e il nastro tornava a ogni tentativo.
 - **Il service worker scarica tutto** (`scaricaTutto` nel `sw.js` generato): sei
   file alla volta, copia dalle cache delle versioni precedenti quello che ha lo
   stesso nome (hash uguale = file uguale), e fallisce l'installazione se ne manca

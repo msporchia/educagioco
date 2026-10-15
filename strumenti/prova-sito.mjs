@@ -115,11 +115,15 @@ console.log(`la striscia del download: ${striscia ? '«' + striscia.replace(/\n/
 if (argv.includes('--solo-prima')) { await chiudiTutto(); process.exit(0) }
 if (argv.includes('--interrompi')) await interrompi()
 t0 = Date.now()
-const attesi = JSON.parse(/const FILE = (\[.*\])\s+\/\//.exec(readFileSync(join(radice, 'sw.js'), 'utf8'))[1]).length
+const attesi = JSON.parse(/const FILE = (\[.*\])\s+\/\//.exec(readFileSync(join(radice, 'sw.js'), 'utf8'))[1]).map(f => '/' + f[0].slice(2))
 // (non waitForFunction: una funzione asincrona restituisce una promessa, e per Playwright una promessa è sempre «vera»)
 for (const fine = Date.now() + 600000; Date.now() < fine;) {
-  const n = await page.evaluate(async () => { const k = await caches.keys(); return k.length ? (await (await caches.open(k[0])).keys()).length : 0 })
-  if (n >= attesi) break
+  const mancano = await page.evaluate(async attesi => {
+    const k = await caches.keys(); if (!k.length) return attesi.length
+    const avute = new Set((await (await caches.open(k[0])).keys()).map(r => new URL(r.url).pathname))
+    return attesi.filter(u => !avute.has(u)).length
+  }, attesi)
+  if (!mancano) break
   await page.waitForTimeout(500)
 }
 const cassa = await page.evaluate(async () => {

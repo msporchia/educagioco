@@ -76,7 +76,9 @@ function scriviServiceWorker () {
         .filter(([nome]) => !['index.html', 'sw.js', 'versione.json'].includes(nome))
         .map(([nome, o]) => {
           const gioco = o.type === 'chunk' && /\/giochi\/([^/]+)\/Gioco\.vue/.exec(o.facadeModuleId || '')
-          return ['./' + nome, o.type === 'asset' ? o.source.length : o.code.length, gioco ? gioco[1] : (GRUPPI.get(nome) || '')]
+          const vecchio = o.type === 'chunk' && /\/views\/(\w+)\.vue/.exec(o.facadeModuleId || '')
+          return ['./' + nome, o.type === 'asset' ? o.source.length : o.code.length,
+                  gioco ? gioco[1] : (vecchio && VECCHI[vecchio[1]]) || GRUPPI.get(nome) || '']
         })
       const cache = `educagioco-${VERSIONE.id}`
       this.emitFile({
@@ -253,7 +255,7 @@ function iconaInline () {
       // l'id di versione anche nella pagina: «cerca aggiornamenti» controlla che quella scaricata sia la sua (nel sito
       // spezzato la pagina è di 4 KB e l'id sta nel JS)
       return html.replace('%ICONA%', dato).replaceAll('%INDIRIZZO%', INDIRIZZO)
-        .replace('</head>', `  <meta name="versione" content="${VERSIONE.id}">\n</head>`)
+        .replace('</head>', `  <meta name="versione" content="${VERSIONE.id}">\n${SPEZZATO ? `  <script>globalThis.__VERSIONE_PAGINA__=${JSON.stringify(VERSIONE)}</script>\n` : ''}</head>`)
     },
   }
 }
@@ -265,6 +267,8 @@ const SPEZZATO = !!process.env.SPEZZATO
 // veri (assets/), e nel modulo resta l'indirizzo. Nei test in Node i moduli restano com'erano.
 // Il gruppo di un file: il gioco a cui serve ('sotterraneo', 'inglese'…) o '' se serve a tutti (la base: home, codice
 // comune, schermate dei grandi). Il service worker scarica la base all'installazione e i giochi poi, uno alla volta.
+// i giochi vecchi (src/views/) stanno in un file loro; il gruppo è quello della carta (o del gioco che ne porta gli sprite)
+const VECCHI = { MathGame: 'mate', TowerDefense: 'castello', BancarellaGame: 'bancarella', GeneraleGame: 'generale', LinguaGame: 'inglese' }
 const GRUPPI = new Map()   // nome del file prodotto → gruppo; lo riempie estraiDati, lo legge il service worker
 function gruppoDiModulo (id) {
   const m = /\/src\/giochi\/([^/]+)\//.exec(id)
@@ -307,8 +311,24 @@ export default defineConfig({
   // salvaFoglietto è `apply: 'serve'`: solo per il banco (npm run mondo), non nel build
   plugins: [estraiDati(), vue(), ...(SPEZZATO ? [] : [viteSingleFile()]), scriviVersione(), iconaInline(), scriviServiceWorker(),
             salvaFoglietto()],
-  define: { __SPEZZATO__: JSON.stringify(SPEZZATO), __VERSIONE__: JSON.stringify(VERSIONE), __INDIRIZZO__: JSON.stringify(INDIRIZZO) },
+  define: { __SPEZZATO__: JSON.stringify(SPEZZATO),
+            // sito spezzato: la versione la porta la pagina (uno script in index.html) e non il JS, se no ogni build cambierebbe
+            // il nome di tutti i file di codice e un aggiornamento li riscaricherebbe tutti
+            __VERSIONE__: SPEZZATO ? 'globalThis.__VERSIONE_PAGINA__' : JSON.stringify(VERSIONE), __INDIRIZZO__: JSON.stringify(INDIRIZZO) },
   build: { rollupOptions: { output: {
+             // Vue non cambia mai: un file suo, che un aggiornamento non riscarica
+             // Il codice condiviso in un file suo, che non conosce i nomi dei giochi: se stesse nel JS di avvio (che porta l'elenco
+             // dei file da caricare) ogni gioco cambiato cambierebbe il nome di quello, e a cascata di tutti gli altri.
+             manualChunks: id => {
+               if (!SPEZZATO) return undefined
+               if (id.includes('node_modules')) return 'vendor'
+               const m = /\/src\/(.*)$/.exec(id)
+               if (!m) return undefined
+               const q = m[1]
+               if (q === 'main.js' || q === 'App.vue' || q === 'giochi/schermate.js') return undefined   // il JS di avvio: le strade verso i giochi
+               if (/^giochi\/[^/]+\/|^views\//.test(q)) return undefined                                  // un gioco: lo decide Rollup
+               return 'comune'
+             },
              // il gioco si riconosce dal nome del file (gioco-sotterraneo-<hash>.js): servirà a scaricarli a gruppi
              chunkFileNames: c => {
                const m = c.name === 'Gioco' && /giochi\/([^/]+)\/Gioco\.vue/.exec(c.facadeModuleId || '')
