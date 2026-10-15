@@ -29,6 +29,7 @@ import { CAMPAGNA as SOTTERRANEO } from '../giochi/sotterraneo/dati/campagna.js'
 import { CAMPAGNA as PASSO_PASSO } from '../giochi/passo-passo/dati/campagna.js'
 import { CAMPAGNA as COSTRUTTORE } from '../giochi/costruttore/dati/campagna.js'
 import { CAMPAGNA as ARENA } from '../giochi/arena/dati/campagna.js'
+import { CAMPAGNA as GIARDINO } from '../giochi/giardino/dati/campagna.js'
 
 // chi non è qui dentro non ha una campagna (la fattoria è un posto): l'assenza vuol dire «non si giudica», non «si nasconde»
 export const TAPPE_DEL_GIOCO = {
@@ -47,6 +48,7 @@ export const TAPPE_DEL_GIOCO = {
   passo: PASSO_PASSO,
   costruttore: COSTRUTTORE,
   arena: ARENA,
+  giardino: GIARDINO,
 }
 
 const regole = () => ({ eta: etaDelBambino(), spenti: saperiSpenti() })

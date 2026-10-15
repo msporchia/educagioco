@@ -13,9 +13,10 @@ import costruttore from './costruttore/gioco.js'
 import inglese from './inglese/gioco.js'
 import spagnolo from './spagnolo/gioco.js'
 import arena from './arena/gioco.js'
+import giardino from './giardino/gioco.js'
 
 export const GIOCHI_NUOVI = [codiceSegreto, survivors, conta, primaDopo, fattoria,
-                             sotterraneo, pozioni, passoPasso, costruttore, inglese, spagnolo, arena]
+                             sotterraneo, pozioni, passoPasso, costruttore, inglese, spagnolo, arena, giardino]
 
 export const gioco = chiave => GIOCHI_NUOVI.find(g => g.chiave === chiave) || null
 
