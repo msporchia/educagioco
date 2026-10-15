@@ -200,35 +200,26 @@ le zone.
 
 ## Le misure
 
-`misure/sotterraneo` (o `npm run sotterraneo -- --zone 12,16,20,30 --verifica`), dieci semi per zona e per eroe, dritti alla scala,
-con la roba attesa al livello (`robaAttesaA`: quella con cui si esce dalla storia coi pezzi rifatti a L − 1, le pozioni
-dell'abisso), la crescita attesa e le abilità della strada del banco ([scontro-bilancio.md](scontro-bilancio.md)). L'eroe
-all'inizio della fascia, la verde più dura. Vinte, in media fra i quattro eroi, nell'ordine della storia (cripta, scalinata,
-torre, grotta, sommersa, botola, miniera), a 8/10 · 6/10 · 4/10 (13 ottobre sera):
+`misure/sotterraneo`, otto storie del **curioso** per zona e per eroe (`misuraLeZoneDelCurioso`, [giocatori-tipo.md](giocatori-tipo.md)): la roba e le pozioni
+dell'ingresso della sua ultima discesa, il livello rifatto all'inizio della fascia (la verde più dura) con i punti dati come li dà il banco, la spesa con le gemme che ha.
+Una zona troppo dura per lui va bene («uno esce, si ricarica o fa altre zone»): i bersagli sono la misura del 15 ottobre arrotondata al 5%, e si segnala solo ciò che è
+fuori scala. Vinte in media fra le sette zone e i quattro eroi, a 9/10 · 6/10, e livelli presi:
 
-| | a 8/10 | a 6/10 | a 4/10 | domande (8/10) |
-|---|---|---|---|---|
-| zone 12–15 | 95 · 98 · 98 · 98 · 100 · 93 · 98% | 85 · 73 · 83 · 63 · 73 · 68 · 50% | 13 · 5 · 25 · 10 · 30 · 8 · 15% | 64 · 90 · 58 · 76 · 79 · 96 · 71 |
-| zone 16–19 | 93 · 95 · 100 · 93 · 98 · 93 · 95% | 80 · 78 · 80 · 83 · 75 · 57 · 55% | 20 · 18 · 28 · 8 · 25 · 8 · 13% | 64 · 92 · 59 · 75 · 83 · 97 · 75 |
-| zone 20–23 | 98 · 98 · 100 · 90 · 100 · 98 · 98% | 73 · 68 · 73 · 65 · 63 · 63 · 45% | 5 · 3 · 13 · 3 · 15 · 0 · 10% | 72 · 97 · 63 · 82 · 89 · 105 · 79 |
-| zone 30–33 | 98 · 98 · 93 · 95 · 100 · 95 · 100% | 73 · 68 · 83 · 83 · 68 · 50 · 50% | 13 · 5 · 8 · 10 · 15 · 0 · 10% | 77 · 104 · 66 · 91 · 91 · 111 · 85 |
+| fascia | a 9/10 | a 6/10 | forza di ingresso | livelli presi | bersaglio (9/10 almeno · 6/10 al più) |
+|---|---|---|---|---|---|
+| 12–15 | 76% | 40% | 10,4 | 3,1 | 75 · 45% |
+| 16–19 | 69% | 25% | 13,0 | 2,9 | 65 · 25% |
+| 20–23 | 57% | 16% | 14,7 | 2,7 | 55 · 20% |
+| 24–27 | 51% | 11% | 16,4 | 2,5 | 50 · 15% |
+| 30–33 | 48% | 12% | 21,0 | 2,4 | 45 · 15% |
 
-- **Come una discesa della storia**: a otto quasi sempre, a sei due volte su tre, a quattro di rado (fra il 24 e il 27 a sei il 54%).
-  I livelli presi vanno da 0,8 a 2,2 (l'esperienza di un mostro di strada è il 35%, [taratura-branchi.md](taratura-branchi.md)).
-- **Le domande per zona** (a 8/10, dritti): al 12 da 58 a 96, al 20 da 63 a 105, al 30 da 66 a 111; prima del 13 ottobre 41–66, 61–99, 71–119. Oltre le 85 di una seduta
-  la zona si fa in due sere, con la sosta; la botola e la scalinata (sedici stanze) sono le più lunghe.
-
-E i colori, su una zona 16–19 (a 8/10 · a 6/10):
-
-| eroe | colore | vinte | livelli |
-|---|---|---|---|
-| dell'11 | rosso | 7% · 1% | |
-| del 12 | arancio, il più duro | 14% · 2% | |
-| del 15 | arancio, il più facile | 88% · 49% | |
-| del 20 | grigio | 100% · 83% (a 6/10 · 4/10) | 0,29 |
-
-Il 12 contro la zona 16–19 vince una volta su sette (il 12 ottobre una su quattro, prima una su due): quattro livelli sotto, con le abilità e i branchi
-che li contano, pesano molto (il bersaglio è ≥ 10%).
+- **L'esperienza** di una zona vinta: fra 0,8 e 3,5 livelli (prima 0,8–2 per il dritto; il curioso gira tutto e ne prende di più).
+- **Il colore del pallino** è quello del gioco, non una cifra: `coloreDellaFascia(da, forza)` sulla forza di `forzaDi` (forza.js) del curioso a quel livello, a punti
+  dati. La sua forza resta 1–4 livelli sotto il livello (la roba non è al passo), quindi su una fascia 16–19 l'eroe del 11 e del 12 è rosso o arancio (26 · 6 storie su 32),
+  del 15 per lo più rosso e arancio, del 16 arancio, del 20 arancio: il verde e il grigio non si vedono. Vinte a 9/10 con l'eroe del 11 · 12 · 15 · 16 · 20: 20 · 22 · 53 · 69 · 86%;
+  a 6/10 4 · 5 · 18 · 25 · 60%. Bersagli: rosso e arancio duro ≤ 25% a 9/10 e ≤ 10% a 6/10, l'arancio facile fra 45 e 60%, il 16 almeno 65%, il 20 almeno 80% (a 6/10 55%), e più si è
+  avanti più si vince.
+- **Fuori scala** non ce n'è: la zona più dura è la cantine al 30 (25% a 9/10, 0% a 6/10) contro l'altare 84% e il fondo 56%, ma a 9/10 si vince ancora una volta su quattro.
 
 Nei test: `unita/sotterraneo-forza` (la forza: [forza.md](forza.md#nei-test)),
 `unita/sotterraneo-zone` (le fasce alla nascita, due grigie, due
