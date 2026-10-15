@@ -1,11 +1,12 @@
 <script setup>
 // Il campo, che si tocca: consegna il suo canvas a chi lo deve dipingere (emit('tela')) e
 // sopra le piazzole e il castello mette dei bersagli trasparenti grandi quanto l'edificio.
-// Toccata una piazzola libera si sceglie cosa costruirci; toccato un edificio gli compare
-// attorno l'anello (⬆️ potenzia, 💰 vendi, ? i numeri). Sotto resta una barra sottile:
-// monete, ripara, bomba. Non conosce le regole: riceve già decisi posti, prezzi e cosa si
+// Toccata una piazzola libera le compare sopra la nuvoletta con le truppe (il disegno e il prezzo);
+// toccato un edificio gli compare attorno l'anello (⬆️ potenzia, 💰 vendi, ? i numeri). Diamanti in alto,
+// ripara e bomba come icone in basso a destra. Non conosce le regole: riceve già decisi posti, prezzi e cosa si
 // può fare. Il dito non è un mouse: niente di piccolo da toccare.
 import { ref, computed, onMounted } from 'vue'
+import Scelta from './Scelta.vue'
 
 const props = defineProps({
   cruscotto: { type: Object, required: true },
@@ -13,12 +14,14 @@ const props = defineProps({
   avviso: { type: String, default: '' },
   dritta: { type: Boolean, default: true },        // «tocca una piazzola»
 })
-const emit = defineEmits(['tela', 'scegli', 'dettagli', 'tocca', 'anello', 'chiudiAnello'])
+const emit = defineEmits(['tela', 'scegli', 'dettagli', 'tocca', 'anello', 'chiudiAnello', 'costruisci'])
 const tela = ref(null)
 onMounted(() => emit('tela', tela.value))
 
 const orologio = computed(() => {
-  const s = Math.max(0, Math.ceil(props.cruscotto.resto))
+  // la battaglia infinita non ha un timer: l'orologio conta quanto si resiste
+  const c = props.cruscotto
+  const s = Math.max(0, c.infinita ? Math.floor(c.t) : Math.ceil(c.resto))
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
 })
 const ICONA = { ripara: '🔧', bomba: '💣' }
@@ -29,7 +32,8 @@ const px = v => `${Math.round(v)}px`
 <template>
   <div class="ar-campo">
     <div class="ar-hud em">
-      <span class="ar-gettone">⏱️ <b>{{ orologio }}</b></span>
+      <span class="ar-gettone">{{ cruscotto.infinita ? '♾️' : '⏱️' }} <b>{{ orologio }}</b></span>
+      <span class="ar-gettone ar-borsa" data-monete>💎 <b>{{ cruscotto.monete }}</b> <i>+{{ cruscotto.alSecondo.toFixed(1) }}/s</i></span>
     </div>
 
     <div class="ar-quadro" @click.self="emit('chiudiAnello')">
@@ -44,12 +48,38 @@ const px = v => `${Math.round(v)}px`
         <span v-if="b.posto !== undefined && !b.id && b.puoi" class="ar-piu em">＋</span>
       </button>
 
-      <!-- l'anello attorno all'edificio toccato: pulsanti grandi, sopra l'edificio -->
+      <!-- la nuvoletta di una piazzola libera: il disegno delle truppe e il prezzo -->
+      <Scelta v-if="pannello.scelta" :s="pannello.scelta" @costruisci="id => emit('costruisci', id)"
+              @dettagli="d => emit('dettagli', d)" />
+
+      <!-- l'anello attorno all'edificio toccato: potenzia, vendi (due tocchi), il «?» dei numeri -->
       <div v-if="pannello.anello" class="ar-anello" :style="{ left: px(pannello.anello.x), top: px(pannello.anello.y) }">
         <button v-for="v in pannello.anello.voci" :key="v.chiave" class="ar-voce em"
-                :class="{ 'ar-no': !v.puoi }" :data-anello="v.chiave" @click.stop="emit('anello', v.chiave)">
-          <span class="ar-voce-icona">{{ v.icona }}</span>
-          <span class="ar-voce-testo">{{ v.testo }}</span>
+                :class="{ 'ar-no': !v.puoi, 'ar-piccola': v.piccola, 'ar-sicuro': v.sicuro }" :data-anello="v.chiave"
+                :aria-label="v.chiave" @click.stop="emit('anello', v.chiave)">
+          <svg v-if="v.chiave === 'potenzia' && !v.testo.startsWith('💤')" class="ar-freccia" viewBox="0 0 34 34" aria-hidden="true">
+            <defs><linearGradient id="ar-fr" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9af06a"/><stop offset="1" stop-color="#2fa84a"/></linearGradient></defs>
+            <path d="M17 3 L30 16 H22 V20 H12 V16 H4 Z" fill="url(#ar-fr)" stroke="#1d6b2a" stroke-width="1.6" stroke-linejoin="round"/>
+            <path d="M17 18 L28 29 H6 Z" fill="url(#ar-fr)" stroke="#1d6b2a" stroke-width="1.6" stroke-linejoin="round"/>
+          </svg>
+          <span v-else class="ar-voce-icona">{{ v.icona }}</span>
+          <span v-if="v.testo" class="ar-voce-testo">{{ v.testo }}</span>
+        </button>
+      </div>
+
+      <!-- ripara e bomba: due icone tonde in basso a destra, il prezzo (o l'attesa) in un cartellino -->
+      <div class="ar-azioni">
+        <button v-for="a in pannello.azioni" :key="a.azione" class="ar-azione-tonda"
+                :class="{ 'ar-no': !a.puoi }" :data-azione="a.azione" :aria-label="NOME[a.azione]"
+                @click.stop="emit('scegli', { azione: a.azione })">
+          <span class="ar-info em" role="button" aria-label="dettagli" :data-dettagli="a.azione"
+                @click.stop="emit('dettagli', { azione: a.azione })">?</span>
+          <span class="ar-icona em">{{ ICONA[a.azione] }}</span>
+          <span class="ar-prezzo em">
+            <template v-if="a.azione === 'bomba'">{{ a.attesa && !a.puoi ? a.attesa + ' s' : 'gratis' }}</template>
+            <template v-else-if="a.prezzo === null">—</template>
+            <template v-else>{{ a.prezzo }} 💎</template>
+          </span>
         </button>
       </div>
 
@@ -57,25 +87,5 @@ const px = v => `${Math.round(v)}px`
       <div v-else-if="dritta" class="ar-dritta em">👆 tocca una piazzola o il castello</div>
     </div>
 
-    <!-- la barra sottile: le monete, e le due scelte che non stanno su un edificio -->
-    <div class="ar-barra-sotto">
-      <div class="ar-borsa em" data-monete>
-        <span class="ar-moneta">🪙 <b>{{ cruscotto.monete }}</b></span>
-        <i>+{{ cruscotto.alSecondo.toFixed(1) }}/s</i>
-      </div>
-      <button v-for="a in pannello.azioni" :key="a.azione" class="ar-carta ar-azione ar-bassa"
-              :class="{ 'ar-no': !a.puoi }"
-              :data-azione="a.azione" @click="emit('scegli', { azione: a.azione })">
-        <span class="ar-info em" role="button" aria-label="dettagli" :data-dettagli="a.azione"
-              @click.stop="emit('dettagli', { azione: a.azione })">?</span>
-        <span class="ar-icona em">{{ ICONA[a.azione] }}</span>
-        <span class="ar-nome">{{ NOME[a.azione] }} · {{ a.stato }}</span>
-        <span class="ar-prezzo em">
-          <template v-if="a.azione === 'bomba'">{{ a.attesa && !a.puoi ? 'fra ' + a.attesa + ' s' : 'in regalo' }}</template>
-          <template v-else-if="a.prezzo === null">—</template>
-          <template v-else>{{ a.prezzo }} 🪙</template>
-        </span>
-      </button>
-    </div>
   </div>
 </template>

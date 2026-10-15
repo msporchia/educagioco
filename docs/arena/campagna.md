@@ -9,10 +9,14 @@ nemico, che terreno c'è. **Le operazioni arrivano una famiglia alla volta**
 | scalino | terreno | truppe nuove | operazione |
 |---|---|---|---|
 | Il bosco (3 tappe) | bosco | arcieri e opliti (la cripta), pipistrelli, negromanti | `+` `−` |
-| La palude (3) | palude | lupi, golem | `×` |
+| La palude (3) | palude | mummie, golem | `×` |
 | Le nevi (3) | neve | diavoletti, drago | `÷` |
 | La lava (3) | lava | — | tutte |
 
+- **Oltre le dodici tappe c'è la battaglia infinita** (in cima alla mappa): senza timer, il nemico dell'ultima
+  tappa, un terreno diverso a ogni volta con la sua truppa firma; si apre dopo l'ultima tappa, con la sua
+  portata (70). Le regole in [regole.md](regole.md#la-battaglia-infinita-e-le-truppe-di-un-terreno). Le tappe non
+  la vedono: `CAMPAGNA` resta di dodici e le truppe di una tappa sono quelle scritte lì.
 - **La portata** (0-100, [eta-e-portata.md](../apprendimento/eta-e-portata.md))
   sale da 12 a 70: una tappa sopra la mira dell'età resta chiusa.
 - **Il nemico** ha una scheda per tappa: monete al secondo, ogni quanto pensa,

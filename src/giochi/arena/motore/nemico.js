@@ -6,7 +6,8 @@
 // finite le mosse della scaletta continua con una regola sola, senza lasciare
 // monete ferme. Con la «furbizia» (da 0 a 1, della tappa) ragiona invece di seguire
 // la scaletta: la truppa che batte la tua, i potenziamenti concentrati, l'attacco a chi
-// prende la miniera scoperto. È più bravo, non più ricco. Perché così: docs/arena/nemico.md.
+// prende la miniera scoperto. È più bravo, non più ricco. Ogni partita ha un CARATTERE diverso
+// (più aggressivo, più prudente, più minatore, meno riparatore…). Perché così: docs/arena/nemico.md.
 import { TRUPPE, LIV_MAX, BOMBA, CAMPO, EDIFICIO_DI, POSTI } from '../dati/regole.js'
 
 // quante caserme al più: le piazzole meno una, che resta per la miniera
@@ -17,7 +18,7 @@ const CASERME = POSTI.length - 1
 const RUOLI = {
   base: ['scheletri', 'guardiano'],
   tank: ['guardiano', 'golem'],
-  veloce: ['lupi'],
+  veloce: ['lupi', 'bestie'],            // le bestie sono la tana di neve e lava, dove i lupi non ci sono
   splash: ['negromante', 'diavoletto'],
   volo: ['pipistrelli', 'drago'],
 }
@@ -32,16 +33,44 @@ const SCALETTE = {
   // il castello e chi ferisce a gruppi: resiste, poi rovescia
   bastione: [['castello'], ['costruisci', 'splash'], ['costruisci', 'tank'], ['castello'], ['miniera'],
              ['costruisci', 'volo'], ['potenzia', 'splash'], ['costruisci', 'veloce']],
+  // quasi solo monete: poche truppe, e tardi
+  minatore: [['miniera'], ['miniera'], ['costruisci', 'tank'], ['miniera'], ['miniera'], ['costruisci', 'splash'],
+             ['castello'], ['miniera'], ['costruisci', 'veloce'], ['costruisci', 'volo']],
+  // chi vola passa sopra i muri, chi ferisce a gruppi pulisce
+  volante: [['costruisci', 'volo'], ['costruisci', 'splash'], ['potenzia', 'volo'], ['costruisci', 'veloce'],
+            ['castello'], ['miniera'], ['potenzia', 'splash'], ['costruisci', 'tank']],
+  // pochi edifici, tutti alti, dietro un castello solido
+  muraglia: [['castello'], ['costruisci', 'tank'], ['potenzia', 'tank'], ['castello'], ['costruisci', 'splash'],
+             ['miniera'], ['potenzia', 'tank'], ['potenzia', 'splash']],
+  // una caserma dopo l'altra, senza potenziare: tante squadre piccole
+  sciame: [['costruisci', 'veloce'], ['costruisci', 'tank'], ['costruisci', 'volo'], ['costruisci', 'splash'],
+           ['costruisci', 'base'], ['potenzia', 'veloce'], ['castello']],
+}
+
+/* Il carattere: una scaletta e quattro manopole. Mai gli stessi numeri di una partita all'altra.
+   - riparaSotto: sotto quale frazione di vita ripara un edificio (il muro crollato lo ripara chi ripara di più)
+   - miniere: quanto conta l'economia (1 = come prima: fino a 4 miniere nei primi 100 s)
+   - prudenza: quanto presto si sente in svantaggio e smette la scaletta per rafforzare (1 = come prima)
+   - bomba: quanto fitto deve essere l'ammasso perché la lanci (peso) */
+export const CARATTERI = {
+  assalto:  { scaletta: 'assalto',  riparaSotto: 0.35, riparaMuro: false, miniere: 0.5, prudenza: 0.4, bomba: 450 },
+  sciame:   { scaletta: 'sciame',   riparaSotto: 0.25, riparaMuro: false, miniere: 0.4, prudenza: 0.6, bomba: 500 },
+  economia: { scaletta: 'economia', riparaSotto: 0.5,  riparaMuro: true,  miniere: 1.2, prudenza: 1,   bomba: 600 },
+  minatore: { scaletta: 'minatore', riparaSotto: 0.5,  riparaMuro: true,  miniere: 2,   prudenza: 1,   bomba: 600 },
+  bastione: { scaletta: 'bastione', riparaSotto: 0.7,  riparaMuro: true,  miniere: 0.8, prudenza: 1.6, bomba: 700 },
+  muraglia: { scaletta: 'muraglia', riparaSotto: 0.85, riparaMuro: true,  miniere: 0.7, prudenza: 2,   bomba: 750 },
+  volante:  { scaletta: 'volante',  riparaSotto: 0.45, riparaMuro: true,  miniere: 1,   prudenza: 0.8, bomba: 550 },
 }
 
 /* sale a ogni ritocco del modo di giocare del nemico: entra nella firma dell'equilibrio (`firma.js`),
    così un'IA cambiata senza ritarare è un test rosso */
-export const VERSIONE_IA = 8
+export const VERSIONE_IA = 10
 
-export function creaIA(rnd) {
-  const nomi = Object.keys(SCALETTE)
+/* `evita`: il carattere dell'ultima partita, per non giocare due volte di fila contro lo stesso */
+export function creaIA(rnd, evita = null) {
+  const nomi = Object.keys(CARATTERI).filter(n => n !== evita)
   const nome = nomi[Math.floor(rnd() * nomi.length)]
-  return { nome, passo: 0 }
+  return { nome, passo: 0, ...CARATTERI[nome] }
 }
 
 /* il ruolo di un passo → per costruire la truppa (meglio una che non ha ancora), per potenziare la
@@ -62,20 +91,21 @@ const si = (p, azione, id) => p.puoFare('nem', azione, id)
 /* il nemico si sente in svantaggio quando il suo castello sta peggio di quello dell'avversario,
    l'avversario ha molte più caserme o gliene ha abbattute di più (il castello cade per ultimo) */
 function sottoPressione(p) {
-  const a = p.vitaBase('nem'), b = p.vitaBase('io')
+  const a = p.vitaBase('nem'), b = p.vitaBase('io'), k = p.ia.prudenza
   const livelli = lato => p.casermeDi(lato).reduce((s, c) => s + c.liv, 0)
-  return a < b - 0.1 || livelli('io') > livelli('nem') * 1.3 + 1 || p.lati.io.abbattuti > p.lati.nem.abbattuti + 1
+  return a < b - 0.1 / k || livelli('io') > livelli('nem') * (1 + 0.3 / k) + 1 / k ||
+         p.lati.io.abbattuti > p.lati.nem.abbattuti + (k >= 1 ? 1 : 2)
 }
 
 /* una mossa dall'emergenza: la bomba su un ammasso che arriva, o una riparazione */
 function emergenza(p) {
   const l = p.lati.nem
   const colpo = l.bombe > 0 ? p.puntoDellaBomba('nem') : null
-  if (colpo && colpo.peso >= 600 && p.fai('nem', 'bomba')) return true
+  if (colpo && colpo.peso >= p.ia.bomba && p.fai('nem', 'bomba')) return true
   const messi = p.riparabili('nem')
   const muro = p.muro('nem')
-  const crollato = !!muro && muro.hp <= 0
-  const quasiMorti = messi.some(e => e.hp < e.max * 0.5)
+  const crollato = !!muro && muro.hp <= 0 && p.ia.riparaMuro
+  const quasiMorti = messi.some(e => e.hp < e.max * p.ia.riparaSotto)
   if ((crollato || quasiMorti) && si(p, 'ripara') && p.fai('nem', 'ripara')) return true
   return false
 }
@@ -96,13 +126,13 @@ function candidate(p, difesa) {
   if (difesa) {
     // chi sta perdendo rafforza: castello, riparazioni, poi chi ferisce a gruppi e chi vola
     if (castello.liv <= mediaLiv + 2) aggiungi('castello')
-    if (p.riparabili('nem').some(e => e.hp < e.max * 0.85)) aggiungi('ripara')
+    if (p.riparabili('nem').some(e => e.hp < e.max * Math.min(0.85, p.ia.riparaSotto + 0.15))) aggiungi('ripara')
     for (const c of bassa.slice(0, 2)) aggiungi('potenzia', c.posto)
     for (const id of costruibili.slice(0, 2)) aggiungi('costruisci', id)
   } else {
     if (costruibili.length && mie.length < CASERME) aggiungi('costruisci', costruibili[0])
     if (castello.liv < mediaLiv - 0.5) aggiungi('castello')
-    if (l.miniera < 4 && p.t < 100) aggiungi('miniera')
+    if (l.miniera < 1 + 3 * p.ia.miniere && p.t < 100 * p.ia.miniere) aggiungi('miniera')
     for (const c of bassa.slice(0, 2)) aggiungi('potenzia', c.posto)
     for (const id of costruibili.slice(0, 1)) aggiungi('costruisci', id)
     aggiungi('castello')
@@ -122,8 +152,8 @@ function mossa(p) {
   }
   const difesa = sottoPressione(p)
 
-  if (!difesa && p.ia.passo < SCALETTE[p.ia.nome].length) {
-    const passo = SCALETTE[p.ia.nome][p.ia.passo]
+  if (!difesa && p.ia.passo < SCALETTE[p.ia.scaletta].length) {
+    const passo = SCALETTE[p.ia.scaletta][p.ia.passo]
     const [azione, ruolo] = passo
     let id = null
     if (ruolo) id = truppaDel(p, ruolo, azione === 'costruisci')
@@ -148,12 +178,13 @@ function mossa(p) {
    da vicino batte chi tira, chi tira ad area le file, chi vola chi colpisce solo a terra) */
 const BATTE = {
   scheletri: ['pipistrelli', 'drago'],
-  guardiano: ['scheletri', 'negromante', 'diavoletto', 'golem'],
+  guardiano: ['scheletri', 'negromante', 'diavoletto', 'golem', 'bestie'],
   lupi: ['scheletri', 'negromante', 'diavoletto', 'golem'],
+  bestie: ['scheletri', 'negromante', 'diavoletto'],
   negromante: ['scheletri', 'guardiano', 'lupi', 'pipistrelli'],
   diavoletto: ['scheletri', 'guardiano', 'lupi'],
-  pipistrelli: ['guardiano', 'lupi', 'diavoletto', 'golem'],
-  drago: ['guardiano', 'lupi', 'diavoletto', 'golem'],
+  pipistrelli: ['guardiano', 'lupi', 'bestie', 'diavoletto', 'golem'],
+  drago: ['guardiano', 'lupi', 'bestie', 'diavoletto', 'golem'],
   golem: [],
 }
 
@@ -198,13 +229,13 @@ function testa(p) {
   // l'avversario fa economia (più miniera): la si fa anche noi, se non c'è nessuno in casa. Provato
   // ad attaccarlo, prima con una caserma sola e poi con tre: le squadre morivano sotto il suo
   // castello, che sotto casa picchia il triplo, e chi faceva economia vinceva sempre
-  if (io.miniera > l.miniera && !dentro.length) vuoi('miniera')
+  if (io.miniera > l.miniera && !dentro.length && p.ia.miniere >= 0.7) vuoi('miniera')
   // al sicuro: le monete crescono, anche se l'avversario ha più caserme (chi attacca subito lo può punire)
-  if (!dentro.length && l.miniera < 3 && p.t < 150) vuoi('miniera')
+  if (!dentro.length && l.miniera < 1 + 2 * p.ia.miniere && p.t < 150 * p.ia.miniere) vuoi('miniera')
   if (mie.length < CASERME && nuove.length) vuoi('costruisci', nuove[0])
   if (castello.liv < Math.max(...sue.map(c => c.liv), 1) - 1) vuoi('castello')
   if (salibili.length) vuoi('potenzia', salibili[0].posto)
-  if (l.miniera < 6 && p.t < 200) vuoi('miniera')
+  if (l.miniera < 1 + 5 * p.ia.miniere && p.t < 200 * p.ia.miniere) vuoi('miniera')
   vuoi('castello')
 
   if (!obiettivi.length) return false

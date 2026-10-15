@@ -19,6 +19,9 @@ import { disegnaEdificio } from './edifici.js'
 // motore). Le due metà di chi gioca sono solo prato, con gli alberi sul bordo: ci stanno le
 // cittadelle.
 const ZOOM = 0.5
+// caserme che il foglio dipinto non ha ancora e che per ora prendono il pezzo di un'altra (docs/arena/grafica.md):
+// la tana delle bestie cornute, per neve e lava, ha la capanna dei lupi, che là non ci sono
+const IN_PRESTITO = { 'tana:bestie:1': 'tana:lupi:1', 'tana:bestie:2': 'tana:lupi:2' }
 const ZT = ZOOM * 1.2                    // le truppe: un po' più grandi del terreno
 const ZE = 0.75                          // castello ed edifici: più grandi delle truppe
 const MAPPA = Array.from({ length: 24 }, (_, y) => Array.from({ length: 16 }, (_, x) => {
@@ -79,7 +82,7 @@ export class Campo {
   /* un pezzo delle caserme dipinte, con la piazzola larga `larga` e centrata in (x, piede);
      torna l'altezza a schermo, o 0 se non c'è (e allora si disegna in codice) */
   dipinta(c, nome, x, piede, larga, lato, k = 1) {
-    const p = DIPINTE[nome]
+    const p = DIPINTE[nome] || DIPINTE[IN_PRESTITO[nome]]
     if (!p || !this.caserme) return 0
     const [sx, sy, w, h, cx, pd] = p, sc = larga / PIAZZOLA * k
     c.drawImage(this.caserme[lato], sx, sy, w, h, x - cx * sc, piede - pd * sc, w * sc, h * sc)
@@ -144,7 +147,17 @@ export class Campo {
   sfondo(c, W, H) {
     c.fillStyle = '#5f9a3c'; c.fillRect(0, 0, W, H)
     const mappa = this.pronto ? componi(MAPPA, this.vestito) : null
-    if (mappa) c.drawImage(mappa, this.ox, this.oy, CAMPO.W * this.s, CAMPO.H * this.s)
+    if (!mappa) return
+    const w = CAMPO.W * this.s, h = CAMPO.H * this.s
+    // se il quadro è più alto del campo, il terreno continua specchiato (le giunzioni combaciano)
+    for (let n = 1; this.oy - (n - 1) * h > 0; n++) {
+      for (const dir of [-1, 1]) {
+        const y = this.oy + dir * n * h
+        c.save(); c.translate(this.ox, y + (n % 2 ? h : 0)); c.scale(1, n % 2 ? -1 : 1)
+        c.drawImage(mappa, 0, 0, w, h); c.restore()
+      }
+    }
+    c.drawImage(mappa, this.ox, this.oy, w, h)
   }
 
   /* un pezzo del foglio delle figure, col piede in (x, y) */

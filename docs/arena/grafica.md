@@ -44,10 +44,16 @@ sono disegnati in codice finché non arriva il foglio dipinto.
   aggancio per fotogramma, e rincula quando tirano. Il ritratto delle carte aspetta che
   l'immagine ci sia (`armiPronte()`).
 - **Chi è chi** (`scena/figure.js`): scheletro (arcieri), scheletro con scudo (opliti),
-  lupo, diavoletto, pipistrello, negromante, golem, drago. Lupo e drago hanno i passi
+  lupo, diavoletto, pipistrello, negromante, golem, drago, e la bestia cornuta (le bestie della
+  tana di neve e lava: una creatura del catalogo che l'arena non usava, già nel foglio del castello;
+  del suo respiro si tengono le due pose calme, la terza è la fiammata e le bestie non sparano:
+  `NON_SUE`). Lupo e drago hanno i passi
   di lato (6 fotogrammi); le altre il respiro (4) e uno scatto in avanti quando
   colpiscono, un saltello quando camminano. Guardano di lato (di schiena non esiste
   niente): ciascuna dalla parte della sua squadra.
+- **La tana delle bestie cornute** non ha ancora il suo pezzo nel foglio dipinto: per ora prende la
+  capanna dei lupi (`IN_PRESTITO` in `scena/campo.js`; la figura della truppa davanti dice chi abita), e
+  quando il foglio avrà `tana:bestie:1/2` basta metterli in `sorgenti/arena/caserme.json`.
 - **Una caserma nuova spunta** dalla sua piazzola con un rimbalzo e uno sbuffo di polvere.
 - **La vita dei castelli sta SOPRA i castelli**, in una barra grande e sempre accesa, col
   numero. **Le altre barre si vedono solo sul ferito** (caserme, porta, truppe).
@@ -59,3 +65,18 @@ sono disegnati in codice finché non arriva il foglio dipinto.
 - **Il ponte** è di assi, con la porta di ciascuno al suo capo: due torrette e il
   portone; crollata, resta il cumulo.
 - **Mancano**: gli edifici e la porta dipinti, pose di attacco e di morte delle truppe.
+
+## Il quadro e i comandi
+
+Il quadro è alto quanto lo schermo lascia e il terreno continua specchiato sopra e
+sotto il campo (`sfondo` in `scena/campo.js`): niente fascia verde. Orologio e
+diamanti stanno in alto; ripara e bomba sono due icone tonde in basso a destra
+sul campo (`.ar-azioni`), col prezzo o l'attesa in un cartellino.
+- **La nuvoletta va a capo**: con più di quattro opzioni (le truppe di un terreno della battaglia
+  infinita sono sei, più la miniera) le righe sono due, bilanciate; prima, con otto truppe, usciva dallo schermo.
+- **Le modali sono quelle della fattoria e del sotterraneo, ma asciutte**: la scelta di una
+  piazzola è una nuvoletta crema con l'orlo giallo (disegno e pulsantino col prezzo, il «?»
+  dei numeri piccolo nell'angolo), l'anello usa gli stessi pulsanti, i dettagli una scheda
+  scura con la ✕ rossa tonda. Il bambino sa già cosa vuole costruire: **niente nomi, note e
+  titoli**, e le emoji restano solo dove portano informazione (💎 del prezzo, 💰 vendi, ⛏️ per
+  la miniera, che non ha un ritratto).

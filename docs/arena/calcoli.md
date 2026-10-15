@@ -8,7 +8,7 @@ un po' d'ansia è voluta: il conto si deve fare in pochi secondi, e quelli più
 grossi sono del castello.
 
 - **L'operazione la decide la scelta, non il giocatore.** Ogni truppa porta la
-  sua (`+` arcieri e opliti, `−` pipistrelli e negromanti, `×` lupi e golem,
+  sua (`+` arcieri e opliti, `−` pipistrelli e negromanti, `×` mummie, bestie cornute e golem,
   `÷` diavoletti e drago): scegliere la truppa di un edificio è anche scegliere il
   conto; le azioni hanno la loro (miniera `×`, ripara `+`, vendi `−`,
   castello `÷`, bomba `÷`). Il bambino non può evitare l'operazione che

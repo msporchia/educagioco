@@ -69,6 +69,9 @@ e `dettagli` scritti una volta in cima come difetti.
   confrontano, e quello di ieri sera è quello che il bambino ha in testa.
 - `guastiDelleSfide` controlla le dichiarazioni nel test di ogni gioco.
 
+Castle Battle non ha primati: la sua battaglia infinita non ha un record
+([../arena/regole.md](../arena/regole.md#la-battaglia-infinita-e-le-truppe-di-un-terreno)).
+
 Il volo infinito degli asteroidi (una sfida sola, che va oltre il catalogo
 e riparte sotto il record) è in [`../asteroidi/`](../asteroidi/).
 

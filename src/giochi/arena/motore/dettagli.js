@@ -19,14 +19,14 @@ export function ruoloDi(id) {
     `colpisce ${colpisce}, ${dove}`,
     k.vola ? 'vola: scavalca i muri' : 'cammina: si ferma ai muri',
     k.splash ? 'il suo colpo scoppia: ferisce anche chi sta intorno' : 'colpisce un bersaglio per volta',
-    `una squadra è di ${k.n}, e salendo di livello le squadre crescono`,
+    `una squadra è di ${k.n}, e ogni tre livelli (3, 6, 9…) ne esce una in più`,
   ]
 }
 
 /* Una truppa al livello `liv` (1..10): numeri semplici per i bambini. */
 export function numeriTruppa(id, liv) {
   const k = TRUPPE[id]
-  const f = CRESCITA.forza(liv)
+  const f = CRESCITA.forza(liv, k.n)
   return {
     n: k.n + CRESCITA.omini(liv, k.n),
     squadra: CRESCITA.squadraOgni(liv),
