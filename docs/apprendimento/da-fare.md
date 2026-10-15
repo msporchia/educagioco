@@ -16,6 +16,17 @@ nel file del suo argomento.
   tabella pronta c'era nel modulo `classi-animali`, tolto
   (`git log -S CURIOSITA`). Rimandata.
 
+## Inglese e tabelline nei quiz
+
+Fatto: parole e frasi, una domanda su 20; tabelline, una su 40 ([quote.md](quote.md)). Si può estendere:
+
+- **Le tessere in fila** («metti le parole al posto giusto», monta, completa con più buchi): il motore dell'inglese a mondi le ha già (`costruisci(…, 'monta' | 'completa')`), manca il tocco nuovo in `Domanda.vue`, che oggi è a scelta fra risposte.
+- **Le storie del libro** come domande di lettura (chi, frase, ordine), da `giochi/inglese/motore/libro.js`.
+- **I verbi e le forme** (`verbo:`, `forma:`) e i **numeri e i soldi** dell'inglese: oggi si chiedono solo le parole e le frasi.
+- **Le emoji generiche** (🎉 può essere party o birthday) possono dare due risposte plausibili: se dà fastidio, escluderle dalle domande a figura.
+- **Altre materie a quota** (`quota` in `nucleo/modulo.js`): lo spagnolo no, per scelta; altre tabelline o i conti puri, se servono.
+- **La taratura**: 1/20 e 1/40 sono indicativi, si ritoccano in `QUOTA_INGLESE` e `QUOTA_TABELLINE` dopo averli visti giocare.
+
 ## Saperi e livelli
 
 - **Il livello di `geo:rotazione`.** Sta al grado 4 di
