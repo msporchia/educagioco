@@ -28,3 +28,4 @@ PIANO.md
 __pycache__/
 # fontTools per `npm run emoji`: lo crea lo strumento da solo la prima volta
 .venv-emoji/
+dist-sito/

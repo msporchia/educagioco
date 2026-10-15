@@ -28,8 +28,43 @@ più lungo è 0,23 s (0,9 s a 4×). I giochi si aprono in un tempo pari alla hom
 (il codice è già nel file). Fra le immagini, il sotterraneo tiene 30 MB e la
 tela più grande delle lingue 53–56 MB.
 
-## La direzione
+## Il sito spezzato
 
-Spacchettare il file per il sito installato (file separati con hash, elenco nel
-service worker, scarico guidato dalla pagina con un overlay) è la strada scelta
-ma non fatta: prima si guarda con questo strumento cosa cambierebbe.
+`npm run build:sito` (`SPEZZATO=1`) scrive `dist-sito/`: una pagina di 4 KB, un
+JS (~4 MB), un CSS e i file veri di sprite e voci, ognuno col suo hash nel nome.
+Il file unico (`npm run build`, `dist/index.html`) resta com'è: serve ai test,
+al doppio click e a `./pubblica.sh`. La CI pubblica `dist-sito/` con accanto
+`giochi.html` (il file unico).
+
+- **Gli sprite sono ancora scritti come `data:` nei moduli generati**
+  (`dati/atlante.js` e gli altri): nel sito spezzato `estraiDati`
+  (`vite.config.js`) li estrae in file e lascia l'indirizzo al posto della
+  stringa. Nei test in Node i moduli restano com'erano. Chi legge uno sprite deve
+  accettare un indirizzo oltre a un `data:` (`voce.js` lo fa con `byteDi`).
+- **Il service worker scarica tutto** (`scaricaTutto` nel `sw.js` generato): sei
+  file alla volta, copia dalle cache delle versioni precedenti quello che ha lo
+  stesso nome (hash uguale = file uguale), e fallisce l'installazione se ne manca
+  uno. I progressi vanno sul canale `educagioco-scarico`; li mostra
+  `components/Scarico.vue`, la striscia in cima.
+- **«Cerca aggiornamenti»** aspetta il service worker nuovo fino a 3 minuti
+  invece di 8 secondi (`__SPEZZATO__`), perché prima deve finire di scaricare.
+- **Provarlo:** `node strumenti/prova-sito.mjs` (`--rete KB/s`, `--lento N`,
+  `--dist dist --solo-prima` per il file unico a confronto): prima visita, poi
+  senza rete, poi alcuni giochi.
+
+Primo risultato (rete 1500 KB/s e CPU 4× più lenta, prima visita): la home dopo
+**20 s** col file unico, **4,8 s** spezzato. Senza rete: 0 richieste al server,
+home in 0,2 s, giochi aperti senza immagini rotte.
+
+## Da fare
+
+- **L'installazione è tutto o niente**: se la rete cade a metà riparte da capo
+  (i file già in cassa si ricopiano, ma c'è da riscaricare). Il passo dopo è lo
+  scarico a due tempi: prima il minimo per giocare, poi un gioco alla volta con
+  la lista nel build, e un gioco non ancora scaricato che dice «in download».
+- **Il JS è ancora uno solo** (4 MB): i giochi si possono caricare a pezzi.
+- **Il banco di memoria per gioco** (sopra) non entra in partita: misura solo
+  l'ingresso.
+- **`pubblica.sh` (server di casa) serve ancora il file unico.**
+- **iPhone**: lo scarico lungo con l'app in secondo piano si prova su un telefono
+  vero.

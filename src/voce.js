@@ -18,7 +18,9 @@ const vocabolario = lingua => VOCI[lingua] || VOCI.en
 /** C'è la pronuncia di questa parola? */
 export const haVoce = (parola, lingua = 'en') => !!vocabolario(lingua).indice[parola]
 
-function daBase64(dato) {
+// uno sprite è un `data:` nel file unico e un indirizzo nel sito spezzato (vite.config.js, estraiDati)
+async function byteDi(dato) {
+  if (!dato.startsWith('data:')) return (await fetch(dato)).arrayBuffer()
   const b = atob(dato.slice(dato.indexOf(',') + 1))
   const a = new Uint8Array(b.length)
   for (let i = 0; i < b.length; i++) a[i] = b.charCodeAt(i)
@@ -37,7 +39,7 @@ async function prendiSprite(lingua, nome) {
   const ac = contesto()
   const sprite = vocabolario(lingua).sprite[nome]
   if (!ac || !sprite) return null
-  const lavoro = ac.decodeAudioData(daBase64(sprite)).then(buf => {
+  const lavoro = byteDi(sprite).then(b => ac.decodeAudioData(b)).then(buf => {
     decodificati.set(id, buf)
     while (decodificati.size > QUANTI_TENERNE)
       decodificati.delete(decodificati.keys().next().value)

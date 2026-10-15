@@ -14,6 +14,8 @@ aggiornato davvero: senza quel controllo un deploy andato a metà è
 indistinguibile da uno riuscito. Un deploy per volta, e quello in corso
 non si annulla (lascerebbe il sito con i file di due versioni).
 
+Il sito pubblicato è **spezzato in file** (`npm run build:sito`, `dist-sito/`) con accanto `giochi.html`, il file unico: vedi [avvio-e-memoria.md](avvio-e-memoria.md).
+
 La CI non lancia le prove nel browser: chi tocca lo schermo le lancia a
 mano prima del push (vedi [test.md](test.md)).
 

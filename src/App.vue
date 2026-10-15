@@ -19,6 +19,7 @@ import Novita from './guide/Novita.vue'
 import AdminView from './views/AdminView.vue'
 import Traguardo from './components/Traguardo.vue'
 import Benvenuto from './components/Benvenuto.vue'
+import Scarico from './components/Scarico.vue'
 import AvvisoMonete from './components/varieta/Avviso.vue'   // importarlo accende anche il filtro delle monete
 import { SCHERMATE } from './giochi/schermate.js'
 import { lasciaRipresa } from './giochi/ripresa.js'
@@ -98,6 +99,7 @@ watch(vista, v => { if (v === 'home') controlla() })   // uscire da un gioco è 
 </script>
 
 <template>
+  <Scarico />
   <div v-if="!pronto" class="schermo">
     <div class="centro"><h1>Un attimo…</h1></div>
   </div>

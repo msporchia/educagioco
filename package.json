@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:sito": "SPEZZATO=1 vite build",
     "voci": "node strumenti/incidi-voci.mjs",
     "simula": "node strumenti/simula-castello.mjs",
     "tara": "node strumenti/tara-castello.mjs",

@@ -3,6 +3,8 @@ import { ref } from 'vue'
 
 // Da Node (i test) non c'è: chi prova passa la sua.
 const QUESTA = typeof __VERSIONE__ !== 'undefined' ? __VERSIONE__ : { id: '', etichetta: '' }
+// il sito spezzato ha decine di file da mettere in cassa prima che il service worker nuovo sia attivo (la striscia di Scarico.vue li conta)
+const SPEZZATO = typeof __SPEZZATO__ !== 'undefined' && __SPEZZATO__
 
 // { id, etichetta, peso } della versione servita dal sito, o null: si
 // accende confrontando versione.json con __VERSIONE__, non l'installazione
@@ -136,7 +138,7 @@ export async function aggiornaOra ({
   prendi = rete,
   cassetti = typeof caches !== 'undefined' ? caches : null,
   riparti = () => location.reload(),
-  prepara = swNuovoAttivo,
+  prepara = () => swNuovoAttivo({ pazienza: SPEZZATO ? 180000 : 8000 }),
   base = qui(),
   mia = QUESTA.id,
   pazienza = CHIEDERE,

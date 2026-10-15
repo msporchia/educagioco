@@ -50,7 +50,10 @@ function scriviVersione () {
     enforce: 'post',   // dopo viteSingleFile: solo allora la pagina pesa quello che pesa
     generateBundle (_opzioni, bundle) {
       const sorgente = bundle['index.html']?.source
-      const peso = typeof sorgente === 'string' ? Buffer.byteLength(sorgente) : (sorgente?.byteLength || 0)
+      const lunga = typeof sorgente === 'string' ? Buffer.byteLength(sorgente) : (sorgente?.byteLength || 0)
+      // sito spezzato: il peso di un aggiornamento è la pagina con tutti i suoi file
+      const peso = !SPEZZATO ? lunga : Object.entries(bundle).reduce((somma, [nome, o]) =>
+        nome === 'versione.json' ? somma : somma + (o.type === 'asset' ? Buffer.byteLength(o.source) : Buffer.byteLength(o.code)), 0)
       this.emitFile({
         type: 'asset',
         fileName: 'versione.json',
@@ -67,7 +70,13 @@ function scriviVersione () {
 function scriviServiceWorker () {
   return {
     name: 'scrivi-service-worker',
-    generateBundle () {
+    enforce: 'post',   // dopo gli altri: la lista dei file la scrive chi li ha visti tutti
+    generateBundle (_opzioni, bundle) {
+      // sito spezzato: tutto quello che il build ha prodotto (nomi con l'impronta, quindi immutabili) tranne la
+      // pagina, che ha già la sua strada, e i due file che dicono la versione. [indirizzo, byte]
+      const FILE = !SPEZZATO ? [] : Object.entries(bundle)
+        .filter(([nome]) => !['index.html', 'sw.js', 'versione.json'].includes(nome))
+        .map(([nome, o]) => ['./' + nome, o.type === 'asset' ? o.source.length : o.code.length])
       const cache = `educagioco-${VERSIONE.id}`
       this.emitFile({
         type: 'asset',
@@ -75,6 +84,7 @@ function scriviServiceWorker () {
         source: `/* generato dal build — non si modifica a mano (vite.config.js) */
 const CACHE = ${JSON.stringify(cache)}
 const PAGINA = './'
+const FILE = ${JSON.stringify(FILE)}   // sito spezzato: [indirizzo, byte]; vuota nel file unico
 const ROBA = ['./manifest.webmanifest', './icona.svg', './icona-192.png',
               './icona-512.png', './icona-maskable.png', './apple-touch-icon.png']
 
@@ -82,6 +92,30 @@ const ROBA = ['./manifest.webmanifest', './icona.svg', './icona-192.png',
 // crede fresca. Senza, il service worker nuovo può mettersi in casa la
 // pagina vecchia che il browser si teneva da parte.
 const fresca = u => new Request(u, { cache: 'no-cache' })
+
+// Il sito spezzato: ogni file con l'impronta nel nome non cambia mai, quindi quello che una versione precedente
+// ha già in cassa si copia invece di riscaricarlo. Uno che manca fa fallire l'installazione (resta la versione di
+// prima). I progressi vanno alla pagina, che li mostra: docs/core/avvio-e-memoria.md
+async function scaricaTutto (c) {
+  if (!FILE.length) return
+  const canale = typeof BroadcastChannel === 'function' ? new BroadcastChannel('educagioco-scarico') : null
+  const byteTotale = FILE.reduce((a, f) => a + f[1], 0)
+  let fatti = 0, byteFatti = 0
+  const avvisa = fine => canale && canale.postMessage({ fatti, totale: FILE.length, byteFatti, byteTotale, fine: !!fine })
+  avvisa()
+  const coda = FILE.slice()
+  const operaio = async () => {
+    for (let f = coda.shift(); f; f = coda.shift()) {
+      const gia = await caches.match(f[0])
+      if (gia) await c.put(f[0], gia)
+      else await c.add(f[0])
+      fatti++; byteFatti += f[1]; avvisa()
+    }
+  }
+  await Promise.all([operaio(), operaio(), operaio(), operaio(), operaio(), operaio()])
+  avvisa(true)
+  if (canale) canale.close()
+}
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE)
@@ -94,6 +128,7 @@ self.addEventListener('install', e => {
       // il resto a uno a uno: un'icona mancante non è un buon motivo per
       // restare senza offline
       ...ROBA.map(u => c.add(fresca(u)).catch(() => {})),
+      scaricaTutto(c),
     ]))
     .then(() => self.skipWaiting()))
 })
@@ -171,11 +206,37 @@ function iconaInline () {
   }
 }
 
+// SPEZZATO=1: il sito installato, in file separati (dist-sito/) invece del file unico: vedi docs/core/avvio-e-memoria.md
+const SPEZZATO = !!process.env.SPEZZATO
+
+// Solo nel sito spezzato: i moduli generati tengono sprite e voci come stringhe `data:…;base64,…`; qui diventano file
+// veri (assets/), e nel modulo resta l'indirizzo. Nei test in Node i moduli restano com'erano.
+function estraiDati () {
+  const DATO = /(['"`])data:(image\/webp|image\/png|audio\/ogg);base64,([A-Za-z0-9+/=]{2000,})\1/g
+  return {
+    name: 'estrai-dati',
+    enforce: 'pre',
+    transform (codice, id) {
+      if (!SPEZZATO || !codice.includes(';base64,') || !/\.(js|vue)(\?|$)/.test(id)) return null
+      const nome = id.split('/').pop().replace(/\.(js|vue).*$/, '')
+      let n = 0
+      const nuovo = codice.replace(DATO, (_tutto, _q, tipo, b64) => {
+        const estensione = tipo.split('/')[1].replace('webp', 'webp')
+        const ref = this.emitFile({ type: 'asset', name: `${nome}-${n++}.${estensione}`, source: Buffer.from(b64, 'base64') })
+        return `import.meta.ROLLUP_FILE_URL_${ref}`   // Vite lo trasforma già in una stringa (new URL(…).href)
+      })
+      return nuovo === codice ? null : { code: nuovo, map: null }
+    },
+  }
+}
+
 export default defineConfig({
+  base: SPEZZATO ? './' : '/',   // il sito sta sotto un percorso (GitHub Pages) e si apre anche da una cartella
   // salvaFoglietto è `apply: 'serve'`: solo per il banco (npm run mondo), non nel build
-  plugins: [vue(), viteSingleFile(), scriviVersione(), iconaInline(), scriviServiceWorker(),
+  plugins: [estraiDati(), vue(), ...(SPEZZATO ? [] : [viteSingleFile()]), scriviVersione(), iconaInline(), scriviServiceWorker(),
             salvaFoglietto()],
-  define: { __VERSIONE__: JSON.stringify(VERSIONE), __INDIRIZZO__: JSON.stringify(INDIRIZZO) },
-  build: { target: 'es2020', assetsInlineLimit: 100000000, cssCodeSplit: false,
+  define: { __SPEZZATO__: JSON.stringify(SPEZZATO), __VERSIONE__: JSON.stringify(VERSIONE), __INDIRIZZO__: JSON.stringify(INDIRIZZO) },
+  build: { target: 'es2020', assetsInlineLimit: SPEZZATO ? 4096 : 100000000, cssCodeSplit: false,
+           outDir: SPEZZATO ? 'dist-sito' : 'dist',
            reportCompressedSize: false, chunkSizeWarningLimit: 100000 },
 })
