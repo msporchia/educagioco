@@ -134,6 +134,44 @@ export const MISSIONI = [
     grazie: 'La lanterna del nonno! È come averlo qui. Questo teschio l\'ho trovato in miniera da ragazzo: le gemme gli piacciono.',
     ritorno: 'Quella luce… è la lanterna del nonno. L\'hai trovata davvero.',
     premio: { cosa: 'teschio-cercatore' } },
+
+  // sconfiggi N di una specie (docs/sotterraneo/missioni-conteggio.md): per imparare a farmare. Radici, senza seguito. Il conto vale
+  // solo nella discesa della missione e dopo averla presa, anche per i mostri tornati; niente freccina e niente bersaglio. `piano` è
+  // solo l'ordine nel diario. N sta sotto quanti ne ha un giro intero della discesa (`unita/sotterraneo-missioni` lo misura)
+  { id: 'topi', da: 'mugnaio', discesa: 'cantine', piano: 0, tipo: 'conta', specie: 'ratto', quanti: 8, nomi: 'ratti',
+    richiede: [{ fatta: 'altare' }],
+    dice: 'I ratti della scalinata antica vengono su di notte e mangiano il grano. Ce ne sono tantissimi laggiù. Sconfiggine otto, e per un po\' staranno lontani.',
+    grazie: 'Il grano è al sicuro! Ecco le gemme del mio raccolto.',
+    ritorno: 'Stanotte il grano è tutto intero. Ci hai pensato tu, ai ratti?',
+    premio: { gemme: 10 } },
+
+  { id: 'funghi', da: 'boscaiolo', discesa: 'gallerie', piano: 0, tipo: 'conta', specie: 'fungo', quanti: 7, nomi: 'funghi',
+    richiede: [{ fatta: 'torre' }],
+    dice: 'Nella grotta della scaletta camminano dei funghi grossi come sgabelli, e rovinano le radici degli alberi. Sconfiggine sette.',
+    grazie: 'Gli alberi respirano di nuovo! Tieni, queste le avevo messe da parte.',
+    ritorno: 'Le radici stanno meglio. Hai sistemato i funghi?',
+    premio: { gemme: 15 } },
+
+  { id: 'polpi', da: 'pescatore', discesa: 'cisterna', piano: 0, tipo: 'conta', specie: 'polpo', quanti: 8, nomi: 'polpi',
+    richiede: [{ fatta: 'gallerie' }],
+    dice: 'I polpi della scala sommersa mi tirano giù le reti, una dopo l\'altra. Sconfiggine otto: così ne restano pochi.',
+    grazie: 'Le reti tornano su piene! Ecco la tua parte.',
+    ritorno: 'Le reti sono tornate su piene. I polpi?',
+    premio: { gemme: 15 } },
+
+  { id: 'cinghiali', da: 'mugnaio', discesa: 'labirinto', piano: 0, tipo: 'conta', specie: 'cinghiale', quanti: 10, nomi: 'cinghiali',
+    richiede: [{ fatta: 'cisterna' }],
+    dice: 'I cinghiali che escono dalla botola segreta scavano nei miei campi. Sono tanti: sconfiggine dieci.',
+    grazie: 'I campi sono salvi! Prendi queste gemme, te le sei guadagnate.',
+    ritorno: 'Nei campi non c\'è più una buca nuova. Sono i cinghiali?',
+    premio: { gemme: 20 } },
+
+  { id: 'scorpioni', da: 'minatore', discesa: 'fondo', piano: 0, tipo: 'conta', specie: 'scorpione', quanti: 10, nomi: 'scorpioni',
+    richiede: [{ fatta: 'labirinto' }],
+    dice: 'La miniera è piena di scorpioni, e i minatori non ci scendono più. Sconfiggine dieci e riapro i tunnel.',
+    grazie: 'Adesso i tunnel si possono usare! Ecco la paga della squadra.',
+    ritorno: 'Nei tunnel non si sente più il fruscio. Gli scorpioni?',
+    premio: { gemme: 20 } },
 ]
 
 // il mostro col nome è più duro di quelli del suo piano: più ossa e un colpo in più (il motore lo applica). Era una volta
@@ -142,6 +180,10 @@ export const MISSIONI = [
 export const PIU_DURO = { ossa: 1.25, att: 1 }
 
 export const missioneDi = id => MISSIONI.find(m => m.id === id) || null
+// il titolo di una missione e la sua faccia: «Rosicchione», «8 ratti»
+export const titoloDi = m => (m.tipo === 'trova' ? m.cosa.nome : m.tipo === 'conta' ? `${m.quanti} ${m.nomi}` : m.mostro.nome)
+export const faccia = m => (m.tipo === 'trova' ? m.cosa.em : m.tipo === 'conta' ? MOSTRI[m.specie].em : '👑')
+
 export const missioniDi = chi => MISSIONI.filter(m => m.da === chi)
 
 // quello che il premio dice, per il fumetto e la riga: «💎 15», «Amuleto azzurro», «💎 12 · 🪙 1»
@@ -166,10 +208,16 @@ export function guastiDelleMissioni(chiDaFuori = []) {
     const t = CAMPAGNA.find(x => x.chiave === m.discesa)
     if (!t) { g.push(`${m.id}: la discesa "${m.discesa}" non c'è`); continue }
     if (!(m.piano >= 0 && m.piano < t.piani)) g.push(`${m.id}: piano ${m.piano + 1}, e ${t.nome.toLowerCase()} ne ha ${t.piani}`)
-    if (!['trova', 'sconfiggi'].includes(m.tipo)) g.push(`${m.id}: tipo "${m.tipo}"`)
+    if (!['trova', 'sconfiggi', 'conta'].includes(m.tipo)) g.push(`${m.id}: tipo "${m.tipo}"`)
     if (m.tipo === 'trova' && !(m.cosa && m.cosa.nome && m.cosa.em)) g.push(`${m.id}: cosa trovare, senza nome o faccia`)
     if (m.tipo === 'sconfiggi' && !(m.mostro && MOSTRI[m.mostro.tipo] && m.mostro.nome)) g.push(`${m.id}: il mostro non c'è o non ha nome`)
     if (m.tipo === 'sconfiggi' && MOSTRI[m.mostro.tipo] && MOSTRI[m.mostro.tipo].capo) g.push(`${m.id}: un capo non si ruba alla tappa`)
+    if (m.tipo === 'conta') {
+      if (!MOSTRI[m.specie]) g.push(`${m.id}: la specie "${m.specie}" non c'è`)
+      else if (!t.mostri.includes(m.specie)) g.push(`${m.id}: ${m.specie} non abita ${t.nome.toLowerCase()}`)
+      if (!(Number.isInteger(m.quanti) && m.quanti >= 2 && m.quanti <= 20)) g.push(`${m.id}: ${m.quanti} da battere (da 2 a 20, intero)`)
+      if (!m.nomi) g.push(`${m.id}: senza il nome al plurale`)
+    }
     if (!m.dice || !m.grazie || !m.ritorno) g.push(`${m.id}: senza richiesta, ritorno o grazie`)
     const p = m.premio || {}
     if (!(p.gemme > 0) && !(p.cosa && COSE[p.cosa])) g.push(`${m.id}: senza premio, o con un premio che non esiste`)

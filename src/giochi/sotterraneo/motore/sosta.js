@@ -141,11 +141,11 @@ export function scrivi(corsa, tappa, { anchePerFinite = false, via = USCITA } = 
 // torna una Corsa pronta a giocare, o null se il salvataggio non si può leggere. `roba`: quella dell'avventura
 // (cfg.avventure[eroe].roba), che sopra può essere cambiata dai mercanti; `missioni`: quelle prese adesso per
 // questa discesa (una presa sopra, passando dal portale, compare nel suo piano)
-export function leggi(dato, tappa, roba = null, missioni = [], crescita = null) {
+export function leggi(dato, tappa, roba = null, missioni = [], crescita = null, conti = {}) {
   if (!dato || dato.v !== VERSIONE || !dato.robe || !dato.dove || typeof dato.eroe !== 'string') return null
   try {
     // la roba si indossa dopo, sul piano già rimesso: quello che la classe non porta può finire per terra
-    const corsa = new Corsa(tappa, { seme: dato.seme, eroe: dato.eroe, missioni, crescita })
+    const corsa = new Corsa(tappa, { seme: dato.seme, eroe: dato.eroe, missioni, crescita, conti })
     corsa.piano = dato.piano || 0
     corsa.nuovoPiano()   // lo stesso piano di allora, dal seme
 
