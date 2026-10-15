@@ -55,7 +55,7 @@ export const gradini = n => Math.max(-RITOCCO_MAX, Math.min(RITOCCO_MAX, Math.ro
 export class Modulo {
   constructor({ id, nome, icona, materia, chiaro, scaletta,
                 saperi = null, tipi = null, pittori = {}, livelli = null,
-                soloSuRichiesta = false }) {
+                soloSuRichiesta = false, quota = null }) {
     this.id = id                  // 'ortografia' — anche il prefisso delle chiavi
     this.nome = nome              // 'Ortografia' — quello che si legge
     this.icona = icona            // un'emoji sola
@@ -71,6 +71,8 @@ export class Modulo {
     this.livelloDichiarato = Array.isArray(livelli) && livelli.length > 0
     // fuori dai mazzi generali: lo pesca solo chi lo nomina in `moduli` (scelta.js, docs/apprendimento/quiz-moduli.md)
     this.soloSuRichiesta = soloSuRichiesta
+    // { gruppo, quota }: i moduli dello stesso gruppo pesano insieme `quota` del mazzo (classi.js, QUOTE)
+    this.quota = quota
   }
 
   get gradi() { return this.scaletta.length }

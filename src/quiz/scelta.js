@@ -12,7 +12,7 @@ import { ilBisogno } from './memoria.js'
 import { saperiSpenti, regoleDomande } from '../store/profile.js'
 
 // un gioco può restringere il campo (materie: ['matematica', 'spazio']); senza filtro entrano tutte
-export const MATERIE = ['italiano', 'matematica', 'spazio', 'tempo', 'logica', 'scienze']
+export const MATERIE = ['italiano', 'matematica', 'spazio', 'tempo', 'logica', 'scienze', 'inglese']
 
 // da 0..1 al grado di quel modulo; se il grado chiede saperi spenti si scende al grado buono più vicino
 export function gradoPer(modulo, difficolta = 0, spenti = [], regole = null) {

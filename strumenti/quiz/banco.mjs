@@ -12,7 +12,7 @@ import { guastiDi } from '../../src/quiz/nucleo/domanda.js'
 const QUI = dirname(fileURLToPath(import.meta.url))
 const MODULI = resolve(QUI, '../../src/quiz/moduli')
 
-const MATERIE = ['italiano', 'matematica', 'spazio', 'tempo', 'logica', 'scienze']
+const MATERIE = ['italiano', 'matematica', 'spazio', 'tempo', 'logica', 'scienze', 'inglese']
 
 // due domande con la stessa impronta sono la stessa domanda, anche con le risposte mescolate diversamente
 function impronta(d) {

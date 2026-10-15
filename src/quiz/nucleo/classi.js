@@ -102,7 +102,33 @@ export function classiDi(moduli, { spenti = [], difficolta = 0, bisogno = null,
              v.modulo.bisognoMedio(v.grado, spenti, bisogno, qui)
     delete v.visto
   }
-  return fuori
+  return conQuote(fuori)
+}
+
+/* Le quote: i moduli che dichiarano `quota: { gruppo, quota }` (l'inglese, le
+   tabelline) pesano insieme una frazione del mazzo, comunque siano tanti i
+   moduli e i gradi del gruppo: aggiungerne uno non fa uscire più inglese.
+   Vedi docs/apprendimento/quote.md. Se nel mazzo c'è solo il gruppo (un
+   gioco che lo nomina) non si scala niente. */
+export function conQuote(classi) {
+  const gruppi = new Map()
+  for (const c of classi) {
+    const q = c.modulo.quota
+    if (!q) continue
+    if (!gruppi.has(q.gruppo)) gruppi.set(q.gruppo, { quota: q.quota, tot: 0 })
+    gruppi.get(q.gruppo).tot += c.peso
+  }
+  if (!gruppi.size) return classi
+  const resto = classi.reduce((s, c) => s + (c.modulo.quota ? 0 : c.peso), 0)
+  if (!(resto > 0)) return classi
+  // tutti i gruppi insieme: ognuno pesa quota/(1-somma delle quote) del resto
+  const somma = [...gruppi.values()].reduce((s, g) => s + g.quota, 0)
+  for (const c of classi) {
+    const q = c.modulo.quota
+    const g = q && gruppi.get(q.gruppo)
+    if (g && g.tot > 0) c.peso = c.peso / g.tot * (g.quota / (1 - somma)) * resto
+  }
+  return classi
 }
 
 // sorte.frazione una volta sola: a parità di seme esce sempre la stessa classe, e si prova la distribuzione

@@ -426,7 +426,8 @@ for (const eta of [6, 8, 10]) {
     const doppie = q.gruppi.flatMap(g => g.saperi.flatMap(s =>
       s.classi.filter(c => (c.sa || []).length > 1).map(c => ({ s: s.chiave, c }))))
     const larghe = doppie.filter(({ s, c }) => {
-      const quante = k => classi.filter(x => (x.sa || []).includes(k)).length
+      // i moduli a quota (tabelline, inglese) rifanno in piccolo domande che ci sono già: non allargano un gruppo
+      const quante = k => classi.filter(x => (x.sa || []).includes(k) && !x.sorgente.modulo.quota).length
       return c.sa.some(k => quante(k) < quante(s))
     })
     uguale('una domanda finisce sotto il gruppo più stretto che dichiara',

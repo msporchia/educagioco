@@ -17,6 +17,7 @@ export const MATERIE_QUIZ = [
   { id: 'tempo', nome: 'Tempo e orologio', emoji: '🕰️' },
   { id: 'logica', nome: 'Logica', emoji: '🧩' },
   { id: 'scienze', nome: 'Scienze', emoji: '🔬' },
+  { id: 'inglese', nome: 'Inglese', emoji: '🇬🇧' },
 ]
 
 // nell'albo parole, verbi e frasi sono tre barre; per un grande la lingua è una

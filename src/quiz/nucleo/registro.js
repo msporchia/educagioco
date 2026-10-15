@@ -2,7 +2,7 @@
    aggiornare). `import.meta.glob` è di Vite: questo file vive solo nel
    browser, e chi lavora senza schermo importa il modulo che gli interessa. */
 
-const ORDINE = ['italiano', 'matematica', 'spazio', 'tempo', 'logica', 'scienze']
+const ORDINE = ['italiano', 'matematica', 'spazio', 'tempo', 'logica', 'scienze', 'inglese']
 
 // fuori da Vite import.meta.glob non esiste: meglio una lista vuota che un TypeError senza indirizzo
 let trovati = {}
