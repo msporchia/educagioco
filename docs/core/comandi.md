@@ -33,7 +33,7 @@ pubblicato.** Per controllare solo che il build passi:
 | comando | riscrive | quando |
 |---|---|---|
 | `npm run tara` | `src/data/taratura-castello.js` | dopo aver toccato prezzi, potenza delle torri o tappe del castello |
-| `npm run tara:arena` | `src/giochi/arena/dati/taratura.js` | dopo aver toccato regole, truppe, tappe o il nemico di Castle Battle (una ventina di minuti: gioca migliaia di partite da cinque minuti col banco); `-- --misura` gioca i giocatori finti contro la taratura scritta senza ritarare (`--d`, `--furbizia` per un nemico fisso) |
+| `npm run tara:arena` | `src/giochi/arena/dati/taratura.js` | dopo aver toccato regole, truppe, tappe o il nemico di Castle Battle (gioca migliaia di partite da cinque minuti col banco, su tutti i core: `strumenti/banco-parallelo.mjs`, stessi semi e stesso esito che in fila; da una ventina di minuti a pochi); `-- --misura` gioca i giocatori finti contro la taratura scritta senza ritarare (`--d`, `--furbizia` per un nemico fisso) |
 | `npm run emoji` | `src/emoji/emoji.woff2`, `emoji.css`, `strumenti/emoji/elenco.json` | dopo aver scritto un'emoji nuova in `src/` ([emoji.md](emoji.md)); vuole Python con `fonttools` e `brotli` (si installano da soli in `.venv-emoji/`) |
 | `npm run voci` (`-- --lingua es`) | `src/data/voci.js`, `voci-es.js` | dopo aver aggiunto parole da pronunciare ([strumenti.md](strumenti.md)) |
 | `npm run scatti` (`clip`, `castello`…) | le immagini e le clip di `docs/img/` | quando una schermata cambia faccia ([strumenti.md](strumenti.md)) |
