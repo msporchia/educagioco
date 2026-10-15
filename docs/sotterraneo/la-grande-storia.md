@@ -177,36 +177,32 @@ Finita la storia ogni discesa è una zona con una fascia di livelli fissa: [zone
 
 ## Le misure
 
-`misure/sotterraneo` (o `npm run sotterraneo`, [scontro-bilancio.md](scontro-bilancio.md)), venti semi per discesa e per eroe,
-dritti alla scala, col giocatore finto che usa le abilità, con la roba attesa (0), di una discesa prima (−1), di due avanti (+2), e con la
-roba attesa ma l'eroe due livelli sotto o tre sopra. Discese vinte su venti, cavaliere · elfa · mago · nano (12 ottobre 2026):
+`misure/sotterraneo` (`node test/misure/sotterraneo.test.mjs`, 7–8 minuti su quattro processi), venti storie per eroe: ogni discesa si gioca
+dall'ingresso che la storia del **curioso** gli ha dato (roba, livello, pozioni: `giocaDalCurioso`, [giocatori-tipo.md](giocatori-tipo.md)), a 9, 6 e 4
+risposte giuste su 10. Il vecchio metro (il finto che va dritto con la roba attesa, 8/6/4) è tolto: coi mostri di oggi non vince più nemmeno a 8 su 10 (0–4
+discese su 20), quindi misurava un giocatore che non c'è. Discese vinte su venti (cavaliere · elfa · mago · nano, 15 ottobre 2026):
 
-| | cripta | scalinata | torre | grotta | sommersa | botola | miniera |
+| | altare | cantine | torre | gallerie | cisterna | labirinto | fondo |
 |---|---|---|---|---|---|---|---|
-| attesa, a 8/10 | 20·20·20·20 | 18·20·20·20 | 20·20·17·20 | 19·20·17·20 | 20·18·18·20 | 18·19·18·17 | 20·19·16·20 |
-| attesa, a 6/10 | 19·20·18·20 | 16·19·17·19 | 12·15·8·16 | 14·18·12·17 | 18·13·12·15 | 11·13·10·9 | 16·14·10·15 |
-| attesa, a 4/10 | 14·17·12·18 | 4·12·5·9 | 4·4·0·8 | 3·8·2·7 | 7·6·4·4 | 4·2·2·2 | 6·5·2·5 |
-| una prima, a 8/10 | 20·20·20·20 | 10·17·7·12 | 10·13·6·16 | 15·16·11·16 | 20·16·9·20 | 18·16·15·12 | 19·20·15·17 |
-| due avanti, a 4/10 | 20·20·20·20 | 20·20·18·20 | 11·17·8·18 | 10·15·17·13 | 12·11·7·11 | 13·11·4·9 | 15·13·8·12 |
-| due livelli sotto, a 8/10 | 20·20·20·20 | 11·17·18·17 | 8·18·6·15 | 6·16·4·16 | 8·15·12·9 | 14·14·13·11 | 20·11·7·11 |
-| tre livelli sopra, a 4/10 | 20·20·18·20 | 17·19·17·17 | 18·18·13·18 | 18·18·14·19 | 12·13·10·9 | 9·9·6·7 | 19·12·13·18 |
+| a 9/10 | 20·20·20·19 | 18·20·18·18 | 15·19·19·19 | 16·19·19·19 | 18·20·19·20 | 19·19·18·18 | 19·19·19·19 |
+| a 6/10 | 12·18·14·20 | 11·17·12·15 | 6·13·13·13 | 10·15·11·16 | 12·19·15·19 | 9·16·11·14 | 16·18·17·19 |
+| a 4/10 | 3·7·4·12 | 1·10·4·2 | 1·10·4·4 | 2·6·2·4 | 4·13·5·14 | 2·9·1·7 | 4·12·5·11 |
 
-- **A otto si arriva in fondo quasi sempre (95% in media), a sei circa tre volte su quattro (74%), a quattro una volta su tre
-  (32%)**: l'elfa e il nano i più comodi, il mago il più fragile. Prima della taratura, con il banco che non usava le abilità, a
-  otto 90%, a sei 68%, a quattro 30%: sono le stesse cifre, ma giocate da uno che le abilità le usa
-  ([scontro-bilancio.md](scontro-bilancio.md)).
-- **La storia giocata davvero** (`misuraConLaRoba`, la fila del banco con spesa, livelli, punti, bottino e pozioni dal caso),
-  dalla cripta alla miniera, discese vinte:
-
-| chi | a 8/10 | a 6/10 | a 4/10 |
-|---|---|---|---|
-| va dritto | 100·96·90·93·93·80·100 | 95·84·81·78·94·74·85 | 88·66·57·34·49·24·46 |
-| gira tutto e spende | 100·91·100·100·99·98·100 | 95·90·94·99·96·95·100 | 88·73·80·83·73·64·95 |
-| con 100 gemme da parte (botola · miniera) | 93 · 94 | 57 · 71 | 14 · 23 |
-| con 250 gemme da parte (botola · miniera) | 94 · 94 | 60 · 74 | 15 · 28 |
-
-- **Chi gira tutto guadagna molto di più**: arriva tre livelli sopra chi va dritto, coi pezzi dei grossi e il bottino a tono, e a quattro vince
-  metà delle discese. È la ricompensa di chi esplora; il tetto in `misure/sotterraneo` è 0,95 a quattro.
+- **Bersagli** (quelli approvati, giocatori-tipo.md e le unità): a 9/10 quasi sempre (media dei quattro ≥ 85%, a testa ≥ 75%), a 4/10 quasi mai (media ≤ 30%,
+  la scalinata ≤ 45%; a testa ≤ 60%, la scalinata ≤ 70%: le classi non sono uguali, l'elfa e il nano a 4/10 vincono di più), la cripta senza bersaglio sopra.
+- **La roba di una discesa prima** (il curioso che salta l'ultimo acquisto) e **di due dopo**, **due livelli sotto** e **tre sopra**: il livello e la roba si
+  sommano, e la tabella lo misura (sotto si fatica, sopra a 4/10 non è una passeggiata; con la roba di una discesa prima, dalla gallerie in giù, a 9/10 ci si
+  arriva ancora più di metà delle volte).
+- **Il primo avvio**: la scalinata senza roba (la riga 0) a 9/10 si vince l'11% delle volte (0 · 5 · 0 · 4 su 20), meno che con la sua roba; le gemme con cui il
+  curioso esce dalla cripta (18 · 18 · 16 · 20) bastano alla prima arma tranne che al mago (16 contro 23 💎: il guardiano gliela lascia per terra).
+- **Chi va dritto** (il bravo): non è più un metro ma un controllo che non trovi un muro (due sconfitte di fila nella stessa discesa).
+- **Chi arriva con 100 o 250 gemme da parte** e compra il meglio che può: nelle ultime due discese a 6/10 non è una passeggiata (≤ 90% / 95%) e a 4/10 di rado (≤ 40%).
+- **Tolti**: «chi gira tutto» e «la storia giocata davvero» (il curioso è già lui: stessa storia, stessa roba, stessi livelli) e la fila di `misuraConLaRoba` /
+  `robaPer`, che restano nel banco ma non sono più il metro di niente.
+- **Ancora rossi** (da decidere, non si ritocca né il gioco né il bersaglio): a 4/10 la cripta si vince 3 · 7 · 4 su 20 (cavaliere, elfa, mago; la vecchia promessa
+  «la prima perdona» era del dritto), la cisterna e il fondo a 4/10 per elfa e nano (13–14 su 20, in media 45% e 40% contro 30%); il bravo trova un muro
+  in ogni discesa (55 · 45 · 36 · 29 · 24 · 18% dalle cantine al fondo, vinte alla prima 25 · 34 · 45 · 59 · 59 · 74%); con 100 o 250 gemme da parte, nel fondo, a 4/10
+  si vince il 43%; le zone (sotto) misurano ancora il dritto con la roba attesa e restano rosse come prima.
 - **La taratura** sono `forza` (le ossa) e `spinta` (l'attacco) di ogni discesa in `dati/campagna.js`, sulla roba e sul livello
   attesi: forza 0,25 · 0,5 · 0,5 · 0,8 · 1,1 · 1,25 · 1,8, spinta −2 · 2 · 4,5 · 5,8 · 7 · 7,7 · 9 dalla cripta alla miniera, `COLPO_DEL_MOSTRO` 1,1
   (la sera del 13 ottobre, coi branchi grossi: [taratura-branchi.md](taratura-branchi.md); la mattina 0,4 · 0,55 · 0,9 · 1,4 · 2,25 · 3 · 4 e 0 · 6,5 · 6,8 · 9,6 · 9,8 · 10 · 11,

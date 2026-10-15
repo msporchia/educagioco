@@ -1,63 +1,48 @@
-/* La tabella della grande storia sotto il banco (docs/sotterraneo/
-   la-grande-storia.md e livelli.md).
-   tempo: 500
-   Ogni eroe ha una riga di roba
-   attesa per ogni discesa (dati/storia.js, con i pezzi dei mostri grossi
-   delle discese prima) e un livello atteso (LIVELLI_ATTESI, coi punti
-   dati come li dà il banco), e i mostri di ogni discesa sono tarati su
-   quella riga (`forza`, `spinta` in dati/campagna.js). Qui si gioca ogni
-   discesa venti volte per eroe, andando dritti alla scala:
+/* La tabella della grande storia sotto il banco (docs/sotterraneo/la-grande-storia.md e livelli.md), misurata col curioso.
+   tempo: 900
+   Il metro è il curioso (docs/sotterraneo/giocatori-tipo.md): gira tutte le stanze, risponde giusto nove volte su dieci e spende il meglio che
+   può; i mostri e la roba sono tarati su di lui. Ogni discesa si gioca venti volte per eroe dall'ingresso che la storia del curioso gli ha
+   dato (roba, livello, pozioni: `giocaDalCurioso`, motore/storie.js), cambiando solo le risposte giuste o una cosa dell'ingresso
+   (test/aiuto/misure-curioso.mjs):
 
-   - con la roba e il livello attesi, a otto risposte giuste su dieci si
-     arriva in fondo quasi sempre, a sei circa metà delle volte (in media
-     fra i quattro), a quattro quasi mai — tranne le prime due, che perdonano
-     (la cripta tutto, la scalinata molto: il primo avvio, vedi sotto);
-   - il primo avvio: la scalinata a mani nude (la roba di una discesa prima)
-     a otto su dieci si vince di rado (una volta su dieci almeno, e meno che
-     con la prima arma: coi branchi il pezzo conta), e con le gemme con cui si
-     esce dalla cripta c'è sempre un'arma da comprare (o l'ha già data il
-     guardiano);
-   - con la roba di una discesa prima si fatica, ma dalla grotta in giù a
-     otto su dieci ci si arriva ancora più di metà delle volte (le prime
-     discese le fanno i primi pezzi: senza, si torna su);
-   - con la roba di due discese avanti, a quattro su dieci non diventa una
-     passeggiata (dalla torre in giù);
-   - due livelli sotto si fatica, tre sopra a quattro su dieci non è una
-     passeggiata: i livelli e la roba si sommano, e la tabella lo misura.
-   E chi gira tutto (combatte ogni mostro) con la roba attesa, a otto su
-   dieci, arriva in fondo lo stesso quasi sempre.
-   Poi la storia giocata davvero, discesa dopo discesa, con la spesa e il
-   bottino che cade (anche i pezzi magici e rari): non deve diventare una
-   passeggiata né per chi va dritto né per chi gira tutto e spende tutto,
-   né per chi arriva con molte gemme da parte.
-   `node test/esegui.mjs misure/sotterraneo --niente-build`
-   Infine le zone, a ogni livello, l'esperienza che danno, e i colori del pallino. */
+   - a nove su dieci si arriva in fondo quasi sempre, a quattro quasi mai: la cripta perdona (si impara), la scalinata un po' (il primo
+     avvio, vedi sotto); a sei su dieci in mezzo;
+   - il primo avvio: la scalinata a mani nude (senza roba) a nove su dieci si vince di rado e meno che con la prima arma, e con le gemme con
+     cui si esce dalla cripta c'è sempre un'arma da comprare (o l'ha già data il guardiano);
+   - con la roba di una discesa prima si fatica, ma si arriva ancora più di metà delle volte; con quella di due discese dopo, a quattro
+     su dieci, non è una passeggiata;
+   - due livelli sotto si fatica, tre sopra a quattro su dieci non è una passeggiata: il livello e la roba si sommano, e la tabella lo misura;
+   - chi arriva con molte gemme da parte e compra il meglio che può non fa passeggiate.
+   Chi va dritto (il bravo, 19 su 20) può stare un po' sotto il curioso purché non trovi un muro (due sconfitte di fila nella stessa discesa).
+   Il «chi gira tutto» di una volta è il curioso stesso: non ha più un blocco suo.
+   `node test/misure/sotterraneo.test.mjs` (il lanciatore, `node test/esegui.mjs sotterraneo`, prende anche le unità)
+   Infine le zone, a ogni livello, l'esperienza che danno, e i colori del pallino: con la roba attesa a quel livello, dritti alla scala. */
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { EROI } from '../../src/giochi/sotterraneo/dati/eroi.js'
 import { inParallelo } from '../aiuto/parallelo.mjs'
-import { numeriAttesi, crescitaAttesa } from '../../src/giochi/sotterraneo/motore/storia.js'
+import { crescitaAttesa } from '../../src/giochi/sotterraneo/motore/storia.js'
 import { COSE } from '../../src/giochi/sotterraneo/dati/cose.js'
 import { ROBA_VUOTA } from '../../src/giochi/sotterraneo/motore/corredo.js'
 import { Bottega } from '../../src/giochi/sotterraneo/motore/bottega.js'
 import { controlla, nota, riassunto } from '../aiuto/verifica.mjs'
 
 const SEMI = 20
+const PROVE = [0.9, 0.6, 0.4]   // il curioso: nove giuste su dieci, e le stesse mani più storte
 const corto = t => t.chiave.slice(0, 8).padStart(9)
 const fila = v => CAMPAGNA.map((_, k) => String(v[k]).padStart(9)).join('')
-const media = (tutte, scarto, j, k) => tutte.reduce((n, m) => n + m.vinte[scarto][j][k], 0) / (tutte.length * SEMI)
+const media = (tutte, chiave, j, k) => tutte.reduce((n, m) => n + m.vinte[chiave][j][k], 0) / (tutte.length * SEMI)
 const cento = x => `${Math.round(x * 100)}%`
 
 /* Le misure giocano ventimila discese: su più processi (test/aiuto/parallelo.mjs), tutte insieme, come il banco da riga di comando.
-   Un processo solo ci metteva sette otto minuti; l'ordine dei compiti è quello con cui si leggono sotto. */
+   L'ordine dei compiti è quello con cui si leggono sotto. */
 const SEMI_ZONE = 10
 const BANCO = 'src/giochi/sotterraneo/motore/banco.js'
+const CURIOSO = 'test/aiuto/misure-curioso.mjs'
 const compito = (funzione, opz) => ({ modulo: BANCO, funzione, args: [opz] })
 const CONFIGURAZIONI_ZONE = [[12], [16], [20], [30], [24], [27], [16, 11], [16, 12], [16, 15], [16, 20]]
 const compiti = [
-  ...EROI.map(e => compito('misuraLaStoria', { eroe: e.chiave, semi: SEMI, livelli: [-2, 3] })),
-  ...['cavaliere', 'mago'].map(eroe => compito('misuraLaStoria', { eroe, semi: SEMI, come: 'tutto', prove: [0.8], scarti: [0] })),
-  ...['minimo', 'tutto'].flatMap(come => EROI.map(e => compito('misuraConLaRoba', { semi: SEMI, eroe: e.chiave, fila: come }))),
-  ...[100, 250].flatMap(gemme => EROI.map(e => compito('misuraDiChiHaMessoDaParte', { eroe: e.chiave, semi: SEMI, gemme }))),
+  ...EROI.map(e => ({ modulo: CURIOSO, funzione: 'misuraDelCurioso', args: [{ eroe: e.chiave, semi: SEMI, prove: PROVE }] })),
+  ...EROI.map(e => ({ modulo: CURIOSO, funzione: 'misuraDelBravo', args: [{ eroe: e.chiave, semi: SEMI }] })),
   ...CONFIGURAZIONI_ZONE.flatMap(([L, A]) => EROI.map(e => compito('misuraLeZone', { eroe: e.chiave, livello: L, eroeA: A ?? L, semi: SEMI_ZONE }))),
 ]
 const risultati = await inParallelo(compiti)
@@ -65,41 +50,39 @@ let letti = 0
 const prossimi = n => { const r = risultati.slice(letti, letti + n); letti += n; return r }
 
 const tutte = prossimi(EROI.length)
+const bravi = prossimi(EROI.length)
 for (const [i, e] of EROI.entries()) {
   const m = tutte[i]
-  nota(`${e.chiave}, venti semi per discesa, dritti alla scala${' '.repeat(6)}${CAMPAGNA.map(corto).join('')}`)
-  nota(`  livello, ⚔️, 🛡️, ❤️ attesi: ${CAMPAGNA.map((_, k) => { const n = numeriAttesi(e.chiave, k); return `${n.livello}·${n.att}·${n.dif}·${n.vita}` }).join('  ')}`)
-  for (const [scarto, nome] of [[0, 'roba attesa'], [-1, 'una prima'], [2, 'due avanti'], ['L-2', 'due livelli −'], ['L+3', 'tre livelli +']])
-    m.prove.forEach((b, j) => nota(`  ${nome.padEnd(14)} a ${b * 10}/10: ${' '.repeat(15)}${fila(m.vinte[scarto][j])}`))
-  nota(`  gemme con cui si esce, con la roba attesa: ${CAMPAGNA.map((_, k) => Math.round(m.gemme[k])).join(' · ')}`)
+  nota(`${e.chiave}, venti storie, dall'ingresso del curioso${' '.repeat(6)}${CAMPAGNA.map(corto).join('')}`)
+  for (const [chiave, nome] of [['curioso', 'sua roba'], ['prima', 'roba -1'], ['avanti', 'roba +2'], ['L-2', 'due livelli −'], ['L+3', 'tre livelli +'],
+                                ['gemme100', '+100 gemme'], ['gemme250', '+250 gemme']])
+    for (const j of m.quali[chiave]) nota(`  ${nome.padEnd(14)} a ${m.prove[j] * 10}/10: ${' '.repeat(15)}${fila(m.vinte[chiave][j])}`)
+  nota(`  gemme con cui si esce dalla cripta, prima di spendere: ${Math.round(m.uscita)}`)
 
   for (const [k, t] of CAMPAGNA.entries()) {
-    const [otto, , quattro] = m.vinte[0].map(v => v[k])
-    const pavimento = e.chiave === 'mago' ? 0.7 : 0.8   // il mago regge meno
-    controlla(`${e.chiave}, ${t.chiave}: con la roba e il livello attesi a 8/10 si arriva in fondo quasi sempre`,
-              otto >= SEMI * pavimento, `${otto}/${SEMI}`)
+    const [nove, , quattro] = m.vinte.curioso.map(v => v[k])
+    controlla(`${e.chiave}, ${t.chiave}: dal suo ingresso a 9/10 si arriva in fondo quasi sempre`, nove >= SEMI * 0.75, `${nove}/${SEMI}`)
     // a testa le classi non sono uguali (l'elfa è la più veloce, e a quattro su dieci vince più delle altre): a testa non sempre,
     // e in media «quasi mai» (sotto, nel ciclo delle discese)
-    if (k) controlla(`${e.chiave}, ${t.chiave}: con la roba attesa a 4/10 non si vince quasi sempre`, quattro <= SEMI * (k === 1 ? 0.7 : 0.6), `${quattro}/${SEMI}`)
+    if (k) controlla(`${e.chiave}, ${t.chiave}: a 4/10 non si vince quasi sempre`, quattro <= SEMI * (k === 1 ? 0.7 : 0.6), `${quattro}/${SEMI}`)
     else controlla(`${e.chiave}, la prima perdona: a 4/10 si arriva in fondo spesso`, quattro >= SEMI * 0.6, `${quattro}/${SEMI}`)
   }
 }
 
 for (const [k, t] of CAMPAGNA.entries()) {
   if (!k) continue
-  const quattroInMedia = media(tutte, 0, 2, k)
-  controlla(`${t.chiave}: a 4/10 con la roba attesa quasi mai, fra i quattro eroi${k === 1 ? ' (la scalinata, di più: il primo avvio)' : ''}`,
-            quattroInMedia <= (k === 1 ? 0.45 : 0.3), cento(quattroInMedia))
-  const sei = media(tutte, 0, 1, k)
-  controlla(`${t.chiave}: a 6/10 con la roba attesa circa metà, fra i quattro eroi${k === 1 ? ' (la scalinata, molto di più: il primo avvio)' : ''}`,
-            sei >= 0.3 && sei <= (k === 1 ? 1 : 0.8), cento(sei))
-  const prima8 = media(tutte, -1, 0, k), prima6 = media(tutte, -1, 1, k)
-  if (k >= 3) controlla(`${t.chiave}: con la roba di una discesa prima, a 8/10 ci si arriva ancora`, prima8 >= 0.5, cento(prima8))
-  controlla(`${t.chiave}: e non va meglio che con la roba attesa (a 6/10, a meno del caso)`, prima6 <= sei + 0.15, `${cento(prima6)} contro ${cento(sei)}`)
-  const avanti4 = media(tutte, 2, 2, k)
-  if (k >= 2) controlla(`${t.chiave}: con la roba di due discese avanti, a 4/10 non è una passeggiata`, avanti4 <= 0.7, cento(avanti4))
-  const sotto8 = media(tutte, 'L-2', 0, k), sotto6 = media(tutte, 'L-2', 1, k)
-  controlla(`${t.chiave}: due livelli sotto, a 8/10 ci si arriva ancora`, sotto8 >= 0.5, cento(sotto8))
+  const nove = media(tutte, 'curioso', 0, k), sei = media(tutte, 'curioso', 1, k), quattro = media(tutte, 'curioso', 2, k)
+  controlla(`${t.chiave}: a 9/10 dal suo ingresso quasi sempre, fra i quattro eroi`, nove >= 0.85, cento(nove))
+  controlla(`${t.chiave}: a 6/10 in mezzo: meno che a 9/10`, sei <= nove, `${cento(sei)} contro ${cento(nove)}`)
+  controlla(`${t.chiave}: a 4/10 quasi mai, fra i quattro eroi${k === 1 ? ' (la scalinata, di più: il primo avvio)' : ''}`,
+            quattro <= (k === 1 ? 0.45 : 0.3), cento(quattro))
+  const prima9 = media(tutte, 'prima', 0, k), prima6 = media(tutte, 'prima', 1, k)
+  if (k >= 3) controlla(`${t.chiave}: con la roba di una discesa prima, a 9/10 ci si arriva ancora`, prima9 >= 0.5, cento(prima9))
+  controlla(`${t.chiave}: e non va meglio che con la sua roba (a 6/10, a meno del caso)`, prima6 <= sei + 0.15, `${cento(prima6)} contro ${cento(sei)}`)
+  const avanti4 = media(tutte, 'avanti', 2, k)
+  if (k >= 2) controlla(`${t.chiave}: con la roba di due discese dopo, a 4/10 non è una passeggiata`, avanti4 <= 0.7, cento(avanti4))
+  const sotto9 = media(tutte, 'L-2', 0, k), sotto6 = media(tutte, 'L-2', 1, k)
+  controlla(`${t.chiave}: due livelli sotto, a 9/10 ci si arriva ancora`, sotto9 >= 0.5, cento(sotto9))
   controlla(`${t.chiave}: ma si fatica`, sotto6 <= sei, `${cento(sotto6)} contro ${cento(sei)}`)
   const sopra4 = media(tutte, 'L+3', 2, k)
   // con le abilità tre livelli pesano molto (punti, righe nuove dell'albero, gradi): a quattro su dieci si vince spesso, ma non sempre
@@ -108,20 +91,20 @@ for (const [k, t] of CAMPAGNA.entries()) {
 }
 
 /* Il primo avvio (docs/sotterraneo/la-grande-storia.md, «Il primo avvio»): chi entra nella scalinata senza aver
-   comprato niente (la roba di una discesa prima, cioè nulla) e risponde bene la maggior parte delle volte la vince;
-   e con le gemme con cui si esce dalla cripta c'è sempre una prima arma da comprare, se il guardiano non l'ha data */
+   comprato niente e risponde bene la vince di rado, e meno che con la prima arma; e con le gemme con cui si esce dalla cripta c'è sempre
+   una prima arma da comprare, se il guardiano non l'ha data */
 {
-  const nuda = EROI.map((e, i) => ({ eroe: e.chiave, vinte: tutte[i].vinte[-1][0][1] }))
+  const nuda = EROI.map((e, i) => ({ eroe: e.chiave, vinte: tutte[i].vinte.nuda[0][1] }))
   const tutteNude = nuda.reduce((n, x) => n + x.vinte, 0) / (EROI.length * SEMI)
-  nota(`la scalinata a mani nude a 8/10: ${nuda.map(x => `${x.eroe} ${x.vinte}/${SEMI}`).join(' · ')}`)
+  nota(`la scalinata a mani nude a 9/10: ${nuda.map(x => `${x.eroe} ${x.vinte}/${SEMI}`).join(' · ')}`)
   // coi branchi (13 ottobre, sera) la scalinata nuda si vince di rado: una volta su dieci, e meno dell'attesa; il guardiano della cripta lascia la prima arma
   // per terra e l'armaiolo la vende a 9 💎 (sotto), quindi nudi non si arriva (docs/sotterraneo/la-grande-storia.md, «Il primo avvio»)
-  controlla('scalinata a mani nude a 8/10: si vince di rado, una volta su dieci almeno, fra i quattro eroi', tutteNude >= 0.1, cento(tutteNude))
-  controlla('e meno che con la prima arma', tutteNude < media(tutte, 0, 0, 1), `${cento(tutteNude)} contro ${cento(media(tutte, 0, 0, 1))}`)
-  /* le gemme con cui si esce dalla cripta (in media, andando dritti) bastano alla prima arma dell'armaiolo che a questo
+  controlla('scalinata a mani nude a 9/10: si vince di rado, una volta su dieci almeno, fra i quattro eroi', tutteNude >= 0.1, cento(tutteNude))
+  controlla('e meno che con la prima arma', tutteNude < media(tutte, 'curioso', 0, 1), `${cento(tutteNude)} contro ${cento(media(tutte, 'curioso', 0, 1))}`)
+  /* le gemme con cui si esce dalla cripta (in media, il curioso) bastano alla prima arma dell'armaiolo che a questo
      eroe serve. Il guardiano dell'ultima stanza la lascia anche per terra: qui si conta solo la spesa */
   EROI.forEach((e, i) => {
-    const gemme = Math.floor(tutte[i].gemme[0])
+    const gemme = Math.floor(tutte[i].uscita)
     const b = new Bottega({ eroe: e.chiave, roba: { ...ROBA_VUOTA(), gemme }, finite: 1, crescita: crescitaAttesa(e.chiave, 1) })
     const armi = b.mercanzia('armaiolo').filter(r => r.avanti === 0 && ['mano', 'mancina'].includes(COSE[r.chiave].dove) && b.vaAddosso(r.chiave))
     const prezzo = armi.length ? Math.min(...armi.map(r => b.quantoCosta(r.chiave))) : Infinity
@@ -129,50 +112,27 @@ for (const [k, t] of CAMPAGNA.entries()) {
   })
 }
 
-/* chi gira tutto: più mostri con la stessa roba, ma anche più pozioni, più esperienza e i pezzi dei forzieri */
-const giraTutto = prossimi(2)
-for (const [i, eroe] of ['cavaliere', 'mago'].entries()) {
-  const m = giraTutto[i]
-  nota(`${eroe}, gira tutto, roba attesa, a 8/10: ${' '.repeat(10)}${fila(m.vinte[0][0])}`)
+/* Chi va dritto, il bravo (19 su 20): la sua storia di fila. Può stare un po' sotto il curioso, purché non trovi un muro (due sconfitte
+   di fila nella stessa discesa): giocatori-tipo.md, «Il metro è il curioso» */
+{
+  const alla = k => bravi.reduce((n, m) => n + m.alla[k], 0) / (bravi.length * SEMI)
+  const muri = k => bravi.reduce((n, m) => n + m.muri[k], 0) / (bravi.length * SEMI)
+  nota(`chi va dritto (il bravo), vinte alla prima ${CAMPAGNA.map((_, k) => cento(alla(k)).padStart(5)).join('')}`)
+  nota(`chi va dritto (il bravo), muri            ${CAMPAGNA.map((_, k) => cento(muri(k)).padStart(5)).join('')}`)
   for (const [k, t] of CAMPAGNA.entries())
-    controlla(`${eroe}, ${t.chiave}: girando tutto a 8/10 si arriva in fondo quasi sempre`, m.vinte[0][0][k] >= SEMI * 0.65,
-              `${m.vinte[0][0][k]}/${SEMI}`)
+    controlla(`${t.chiave}, chi va dritto: non trova un muro`, muri(k) <= 0.1, cento(muri(k)))
 }
 
-/* La storia giocata davvero: discesa dopo discesa, rifacendo quella persa, con la spesa e il bottino che cade (i pezzi
-   magici e rari, il raro e il pezzo col nome dei mostri grossi). La roba vera è più della tabella (la fortuna, i
-   negozi): i livelli, la roba e le pozioni si sommano, e qui si guarda che la somma non faccia una passeggiata a chi
-   va dritto. Chi gira tutto arriva in fondo alla storia tre livelli sopra: per lui la storia si fa comoda, ed è il
-   premio di aver girato (come in Diablo); non deve però vincere quattro volte su cinque rispondendo male */
-const quanto = (misure, j, k) => misure.reduce((n, m) => n + m.vinte[j][k], 0) / (misure.length * SEMI)
-// la roba vera è più della tabella (il bottino, le tasche piene): a quattro su dieci chi va dritto vince sino a due volte su tre, e
-// chi gira tutto, tre livelli sopra, quasi sempre
-const TETTI = { minimo: [0.7, 0.97, 0.7], tutto: [0.7, 1, 0.95] }
-for (const [come, nome] of [['minimo', 'chi va dritto'], ['tutto', 'chi gira tutto e spende']]) {
-  const vere = prossimi(EROI.length)
-  nota(`${nome}, la storia giocata davvero: livello ${CAMPAGNA.map((_, k) => (vere.reduce((n, m) => n + m.zaini[k].livello, 0) / vere.length).toFixed(1)).join(' · ')}`)
-  for (const [j, bravura] of [[0, 8], [1, 6], [2, 4]])
-    nota(`${nome}: a ${bravura}/10 ${CAMPAGNA.map((_, k) => cento(quanto(vere, j, k)).padStart(5)).join('')}`)
-  for (const [k, t] of CAMPAGNA.entries()) {
-    if (!k) continue
-    const [otto, sei, quattro] = TETTI[come]
-    controlla(`${t.chiave}, ${nome}: a 8/10 ci arriva quasi sempre`, quanto(vere, 0, k) >= otto, cento(quanto(vere, 0, k)))
-    if (sei < 1) controlla(`${t.chiave}, ${nome}: a 6/10 non sempre`, quanto(vere, 1, k) <= sei, cento(quanto(vere, 1, k)))
-    controlla(`${t.chiave}, ${nome}: a 4/10 non quasi sempre`, quanto(vere, 2, k) <= quattro, cento(quanto(vere, 2, k)))
-  }
-}
 /* chi arriva con molte gemme da parte e compra il meglio che può, anche i pezzi avanti (a un prezzo più alto). Con 250
    gemme a 6/10 si passa quasi sempre: è il premio di averle messe da parte; a 4/10 resta difficile */
-/* chi arriva con molte gemme da parte e compra il meglio che può, anche i pezzi avanti (a un prezzo più alto) */
 const ultime = CAMPAGNA.length - 2
 for (const gemme of [100, 250]) {
-  const ricchi = prossimi(EROI.length)
-  for (const [j, bravura] of [[0, 8], [1, 6], [2, 4]])
-    nota(`con ${gemme} gemme da parte: a ${bravura}/10 ${CAMPAGNA.map((_, k) => cento(quanto(ricchi, j, k)).padStart(5)).join('')}`)
+  for (const [j, bravura] of [[1, 6], [2, 4]])
+    nota(`con ${gemme} gemme da parte: a ${bravura}/10 ${CAMPAGNA.map((_, k) => cento(media(tutte, `gemme${gemme}`, j, k)).padStart(5)).join('')}`)
   for (const k of [ultime, ultime + 1]) {
     const t = CAMPAGNA[k].chiave
-    controlla(`${t}: con ${gemme} gemme da parte, a 6/10 non è una passeggiata`, quanto(ricchi, 1, k) <= (gemme > 100 ? 0.95 : 0.9), cento(quanto(ricchi, 1, k)))
-    controlla(`${t}: con ${gemme} gemme da parte, a 4/10 di rado`, quanto(ricchi, 2, k) <= 0.4, cento(quanto(ricchi, 2, k)))
+    controlla(`${t}: con ${gemme} gemme da parte, a 6/10 non è una passeggiata`, media(tutte, `gemme${gemme}`, 1, k) <= (gemme > 100 ? 0.95 : 0.9), cento(media(tutte, `gemme${gemme}`, 1, k)))
+    controlla(`${t}: con ${gemme} gemme da parte, a 4/10 di rado`, media(tutte, `gemme${gemme}`, 2, k) <= 0.4, cento(media(tutte, `gemme${gemme}`, 2, k)))
   }
 }
 

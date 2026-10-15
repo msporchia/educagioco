@@ -101,8 +101,11 @@ export function ingressoDelCurioso(k, { eroe = 'cavaliere', seme = 1, strada = S
   }
   return copia(fila[k].entrato)
 }
-export function giocaDalCurioso(k, { eroe = 'cavaliere', seme = 1, n = 0, bravura = null, strada = STRADA_BASE } = {}) {
-  return giocaCome('curioso', k, ingressoDelCurioso(k, { eroe, seme, strada }), { eroe, seme, n, strada, bravura })
+// `ritocca`: una funzione che riceve l'ingresso ({ roba, crescita }, una copia) e torna quello con cui si gioca davvero (le misure provano
+// un livello in più o in meno, la roba di un'altra discesa, niente roba: test/aiuto/misure-curioso.mjs)
+export function giocaDalCurioso(k, { eroe = 'cavaliere', seme = 1, n = 0, bravura = null, strada = STRADA_BASE, ritocca = null } = {}) {
+  const ingresso = ingressoDelCurioso(k, { eroe, seme, strada })
+  return giocaCome('curioso', k, ritocca ? ritocca(ingresso) : ingresso, { eroe, seme, n, strada, bravura })
 }
 
 // quali discese già vinte si rifanno al passo k: quella di due prima (la roba di chi è un po' più avanti), le ultime due all'uscita

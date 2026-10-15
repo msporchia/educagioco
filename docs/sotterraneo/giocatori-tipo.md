@@ -54,6 +54,9 @@ prima il curioso.
 `motore/storie.js` gioca la discesa k come il curioso, dall'ingresso che la sua storia gli ha dato. Bersaglio delle unità (`unita/sotterraneo`, `-roba`): su sei storie
 del cavaliere ogni discesa si vince alla prima almeno cinque volte (9 giuste su 10), la scala sommersa 6 su 8 per ogni eroe, e a 4 giuste su 10 al più 4/6 (la scalinata) o 3/6.
 Misurato: 5–6 su 6 ovunque; premendo a caso (35%) la scala sommersa si vince 0 volte su 8.
+**Anche `misure/sotterraneo` misura il curioso** (venti storie per eroe, 9/6/4 giuste su 10, `test/aiuto/misure-curioso.mjs`; i numeri in [la-grande-storia.md](la-grande-storia.md#le-misure)):
+la roba di una discesa prima o di due dopo, il livello −2/+3 e le gemme da parte sono ritocchi del suo ingresso (`ritocca` di `giocaDalCurioso`); il bravo è un controllo
+«nessun muro». Fuori bersaglio per il curioso: la cripta a 4/10 (3 · 7 · 4 · 12 su 20), la cisterna e il fondo a 4/10 per elfa e nano; il bravo trova muri.
 
 **Un pezzo si indossa dal suo livello** ([livello-dei-pezzi.md](livello-dei-pezzi.md)): il finto compra un pezzo per dopo solo se, comprato quello per adesso, gli avanzano gemme e non ha un pezzo per adesso
 da risparmiare; ne tiene al più `RISALITA.perDopo` (2) in attesa del livello, senza venderli, e li mette quando arriva al livello. Quelli indossati dopo contano fra i **comprati**
