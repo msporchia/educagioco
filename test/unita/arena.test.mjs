@@ -4,7 +4,7 @@
    chi non colpisce chi vola, il muro) valgono davvero.
    `node test/esegui.mjs arena`
    tempo: 5 */
-import { guastiDelleRegole, TRUPPE, EDIFICI, CAMPO, CRESCITA, BOMBA, CASTELLO, MURO } from '../../src/giochi/arena/dati/regole.js'
+import { guastiDelleRegole, TRUPPE, EDIFICI, CAMPO, CRESCITA, BOMBA, CASTELLO, MURO, SQUADRA_MAX } from '../../src/giochi/arena/dati/regole.js'
 import { Partita } from '../../src/giochi/arena/motore/partita.js'
 import { caso, gioca } from '../../src/giochi/arena/motore/banco.js'
 import { CAMPAGNA, SCALINI, QUANTE_TAPPE, guastiDellaCampagna, operazioniDi, operazionePer, stellePer, sfidaDi }
@@ -197,8 +197,19 @@ controlla('stesso seme, stessa partita', JSON.stringify(uguali) === JSON.stringi
   r.lati.io.monete = 20; r.fai('io', 'costruisci', 'scheletri')
   r.caserme[0].liv = 9; r.caserme[0].t = 0
   r.avanza(0.1)
-  uguale('al livello 9 una squadra di arcieri ha quattro omini in più', r.unita.filter(u => u.lato === 'io' && u.id === 'scheletri').length, TRUPPE.scheletri.n + 4)
-  uguale('le squadre crescono di un ottavo a livello', [1, 3, 5, 7, 9].map(l => CRESCITA.omini(l, 8)).join(), '0,2,4,6,8')
+  uguale('al livello 9 una squadra di arcieri ha tre omini in più', r.unita.filter(u => u.lato === 'io' && u.id === 'scheletri').length, TRUPPE.scheletri.n + 3)
+  uguale('una truppa in più ogni tre livelli', [1, 2, 3, 5, 6, 9].map(l => CRESCITA.omini(l, 4)).join(), '0,0,1,1,2,3')
+  uguale('fino al tetto, poi più niente', [30, 99].map(l => TRUPPE.scheletri.n + CRESCITA.omini(l, TRUPPE.scheletri.n)).join(), `${SQUADRA_MAX},${SQUADRA_MAX}`)
+  // il bilancio: la potenza di una squadra (truppe × forza di una) sale sempre, senza buchi né salti brutali, e la forza di una truppa non scende
+  for (const [id, k] of Object.entries(TRUPPE)) {
+    let prec = null, fprec = 0
+    for (let l = 1; l <= 40; l++) {
+      const f = CRESCITA.forza(l, k.n), tot = (k.n + CRESCITA.omini(l, k.n)) * f
+      controlla(`${id} liv ${l}: la forza di ogni truppa non scende`, f >= fprec - 1e-9)
+      if (prec !== null) controlla(`${id} liv ${l}: la squadra sale, senza saltare più del doppio`, tot > prec && tot / prec < (k.n < 3 ? 2.1 : 1.6), `${prec.toFixed(2)} → ${tot.toFixed(2)}`)
+      prec = tot; fprec = f
+    }
+  }
   controlla('il castello e il muro sono robusti (le partite non devono finire in un minuto)', CASTELLO.hp >= 4000 && MURO.hp >= 1000)
 }
 

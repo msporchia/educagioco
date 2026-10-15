@@ -67,12 +67,36 @@ export const CASTELLO = { nome: 'Castello', hp: 4000, dmg: 52,   rate: 0.75, git
 // niente tetto ai livelli (l'utente: «non c'è motivo di imporre un limite»): li ferma il prezzo, che cresce
 export const LIV_MAX = Infinity
 
+/* Il numero di truppe di una squadra sale a scatti, il resto della crescita no (l'utente: «chiaramente
+   aumenti meno la potenza se aumenti anche il numero, è giusto per fare un po' di scena»).
+   - una truppa in più ogni `OGNI_TRUPPA` livelli (3, 6, 9…), fino a `SQUADRA_MAX` truppe per squadra
+     (una squadra di partenza già più grande del tetto non ne prende): dopo, sale solo la potenza;
+   - il bilancio è lo stesso di prima: la potenza di una squadra (truppe × forza di una) segue
+     `1 + 0.15·(liv−1)` volte `1 + (liv−1)/8` (la crescita smussata di quando le truppe in più erano un
+     ottavo a livello). Quindi la forza di ogni truppa è quel totale diviso per quante sono: dove arriva una
+     truppa in più il guadagno di ognuna è piccolo. Mai negativo, e mai sotto il +4% (`SALITA_MIN`): nelle
+     squadre da una o due truppe il numero in più supera da solo il totale, e senza il minimo i livelli dopo
+     lo scatto non migliorerebbero niente. docs/arena/regole.md. */
+export const OGNI_TRUPPA = 3
+export const SQUADRA_MAX = 12
+const ominiDi = (liv, n) => Math.max(0, Math.min(Math.max(SQUADRA_MAX, n), n + Math.floor(Math.max(1, liv) / OGNI_TRUPPA)) - n)
+const SALITA_MIN = 0.04
+const totaleDi = liv => (1 + 0.15 * (liv - 1)) * (1 + (liv - 1) / 8)
+const forze = new Map()                                  // per squadra di n truppe: la forza di una truppa a ogni livello
+function forzaDi(liv, n = 1) {
+  liv = Math.max(1, Math.floor(liv))
+  let v = forze.get(n)
+  if (!v) forze.set(n, v = [1, 1])
+  for (let l = v.length; l <= liv; l++) v[l] = Math.max(v[l - 1] * (1 + SALITA_MIN), totaleDi(l) * n / (n + ominiDi(l, n)))
+  return v[liv]
+}
+
 /* Tutto quello che cresce con il livello. */
 export const CRESCITA = {
   squadraOgni: liv => Math.max(2.5, 9 / (1 + 0.12 * (liv - 1))),   // secondi fra due squadre di una caserma
-  forza: liv => 1 + 0.15 * (liv - 1),                      // vita e danno delle sue truppe
+  forza: (liv, n) => forzaDi(liv, n),                    // vita e danno di OGNI truppa: segue il bilancio totale, vedi sotto
   vitaCaserma: liv => 1100 + 160 * (liv - 1),            // il primo bersaglio dell'assedio: deve reggere, il castello la copre
-  omini: (liv, n) => Math.round((liv - 1) * n / 8),        // truppe in più per squadra: un ottavo a livello, in proporzione; la forza cresce meno (l'utente: potenziare dà anche più truppe)
+  omini: (liv, n) => ominiDi(liv, n),                    // truppe in più per squadra: una ogni TRE livelli (3, 6, 9…), fino a SQUADRA_MAX
   salita: liv => Math.round(8 * 1.32 ** (liv - 1)),        // costo di liv → liv+1 per una caserma: 8, 11, 14, 18, 24, 32, 42, 55, 73
   castello: {
     prezzo: liv => Math.round(8 * 1.3 ** (liv - 1)),       // 8, 10, 14, 18, 23, 30, 39, 51, 66

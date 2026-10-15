@@ -38,7 +38,7 @@ I numeri stanno in `src/giochi/arena/dati/regole.js`, il motore in
   dell'utente). Prima il livello era una ricerca dell'edificio e una caserma rifatta
   ripartiva da lì: con due caserme uguali avrebbe dato un esercito raddoppiato a buon
   mercato. Il livello (1-10) fa uscire le squadre più spesso
-  (`9 / (1 + 0.12·(liv−1))` secondi), più numerose e più forti (`1 + 0.15·(liv−1)`);
+  (`9 / (1 + 0.12·(liv−1))` secondi), più numerose (una truppa in più ogni tre livelli, sotto) e più forti;
   potenziando, la vita in più della caserma arriva subito. Potenziare costa 8, 11, 14,
   18, 24… (`salita`): rende tanto, e a 6, 8, 10 era la mossa che batteva tutte le altre.
 - **Si vende**: nei dettagli di una caserma, «Vendi» ridà **metà di quello che ci si è
@@ -53,11 +53,23 @@ I numeri stanno in `src/giochi/arena/dati/regole.js`, il motore in
   i muri. Il `guasti…()` di `dati/regole.js` pretende due truppe per edificio allo
   stesso prezzo, chi vola e chi, da terra, ferisce chi vola.
 - **Masse, non quattro omini**: le squadre sono grandi (quattro arcieri, sei
-  pipistrelli…) con vita e danno divisi in proporzione, e **crescono di un ottavo a ogni
-  livello** (`CRESCITA.omini`: gli arcieri da 4 a 8 al livello 10). L'utente: «col tempo
-  una massa di persone, non solo 4-5 in giro», e poi «potenziare dovrebbe aumentare anche
-  il numero di truppe, non solo la potenza». Per non farne troppo la forza per livello è
-  scesa da +25% a +15%: al 10 una caserma vale circa ×4,9 la prima, contro ×6,5 di prima.
+  pipistrelli…) con vita e danno divisi in proporzione, e **ai livelli 3, 6, 9… la
+  squadra prende una truppa in più** (`CRESCITA.omini`: gli arcieri da 4 a 7 al livello
+  9), **fino a 12 per squadra** (`SQUADRA_MAX`: il campo regge 800 unità e le caserme
+  sono fino a sei per parte); poi sale solo la potenza. L'utente: «col tempo una massa di
+  persone», «potenziare dovrebbe aumentare anche il numero di truppe», e «chiaramente
+  aumenti meno la potenza se aumenti anche il numero, è giusto per fare un po' di scena».
+- **Il bilancio non cambia, cambia la forma** (`CRESCITA.forza(liv, n)`): la potenza di una
+  squadra (truppe × forza di una) segue `(1 + 0.15·(liv−1)) · (1 + (liv−1)/8)`, la crescita
+  di quando le truppe in più erano un ottavo a livello; la forza di ogni truppa è quel
+  totale diviso per quante sono, ma **non scende mai e sale almeno del 4%** (`SALITA_MIN`).
+  Così dove arriva una truppa il guadagno di ognuna è piccolo (arcieri: 1,29 al 2, 1,35 al 3),
+  agli altri livelli è quello che serve. Il totale di una squadra, rispetto al livello 1:
+  da 4 truppe 1,3 · 1,7 · 2,0 · 2,4 · 3,0 al 2, 3, 4, 5, 6 (prima 1,4 · 1,6 · 2,2 · 2,4 · 3,1);
+  da 1 o 2 truppe (golem, drago, opliti, negromanti, diavoletti) lo scatto della truppa in più
+  da solo vale più di un livello (un golem al 3 è due golem, ×2,7): il minimo del 4% evita che
+  i livelli dopo lo scatto siano fermi. Lo controlla `unita/arena`: la squadra sale a ogni livello,
+  senza saltare più del doppio (più di 1,6 se ha almeno tre truppe).
 
 ## Vita e danno: chi sta davanti e chi sta dietro
 
