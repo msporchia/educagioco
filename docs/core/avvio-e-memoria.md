@@ -66,12 +66,32 @@ Primo risultato (rete 1500 KB/s e CPU 4× più lenta, prima visita): la home dop
 **20 s** col file unico, **4,8 s** spezzato. Senza rete: 0 richieste al server,
 home in 0,2 s, giochi aperti senza immagini rotte.
 
+## Le mappe di inglese e spagnolo
+
+Aprirle costava ~0,8 s sul computer (4-8 s su un telefono lento): le coste sono un
+campo di distanza su ~35 000 celle per isola, e non cambiano mai per la stessa larghezza.
+
+- **La larghezza si arrotonda per difetto a multipli di 10 px** (`misura()` in
+  `viste/Mappa.vue`; la tavola è centrata): i telefoni quasi uguali dividono la stessa
+  geografia.
+- **La geografia si tiene da parte** (`src/calcoli-in-cassa.js`, database
+  `educagioco-calcoli`, fuori dai salvataggi, dai backup e dalle cache del service worker): la
+  prima apertura calcola, le altre la rileggono (`caricaGeografie` prima di disporre).
+  Una copia vale per la versione dell'app che l'ha fatta; aggiornando, si rifà una volta.
+  Misurato a CPU 4× più lenta: 6,0 s la prima volta, 3,4 s riaperta (dentro c'è il riavvio).
+- **`unione` scarta le forme lontane** (`scena/costa.js`) con lo stesso risultato; lo
+  garantisce `unita/costa-unione`. Provato e scartato: valutare il campo ogni 8 px e
+  interpolare (la costa si sposta, e con la copia da parte non serve).
+- **Profilare un'apertura:** `node strumenti/profila-app.mjs 'inglese' --apertura --lento 4`
+  (parte dalla home e registra solo l'ingresso nel gioco).
+
 ## Da fare
 
 - **L'installazione è tutto o niente**: se la rete cade a metà riparte da capo
   (i file già in cassa si ricopiano, ma c'è da riscaricare). Il passo dopo è lo
   scarico a due tempi: prima il minimo per giocare, poi un gioco alla volta con
   la lista nel build, e un gioco non ancora scaricato che dice «in download».
+- **La prima apertura di una mappa** calcola ancora: si può fare nel sottofondo dopo lo scarico, isola per isola.
 - **Il banco di memoria per gioco** (sopra) non entra in partita: misura solo
   l'ingresso.
 - **`pubblica.sh` (server di casa) serve ancora il file unico.**

@@ -5,6 +5,7 @@
 // dove naviga, in pixel CSS. Si calcola una volta per disposizione: la tela
 // la dipinge, la vista ci mette sopra i tasti e la nave.
 // Le scelte sono in docs/lingue/mondi-vista.md («La mappa del tesoro», «Le isole»).
+import { leggiCalcoli, mettiDaParte } from '../../../calcoli-in-cassa.js'
 import { dado } from '../../../grafica/comune.js'
 import { tondo, tratto, unione, scatola, griglia, leggi, contorni, area, liscia, rumori } from './costa.js'
 import { creaMare, attracco, rotta, sfoltisci } from './rotte.js'
@@ -262,6 +263,11 @@ export function doveStaLaNave(q, chiave) {
 const GEOGRAFIE = new Map()
 // per i test: la stessa isola deve venire uguale anche ricalcolata da capo
 export const dimenticaGeografie = () => GEOGRAFIE.clear()
+/* Le geografie calcolate nelle aperture di prima, da mettere in memoria PRIMA di disporre la mappa (src/calcoli-in-cassa.js):
+   il calcolo è lungo e sempre uguale, e su un telefono lento era l'attesa a ogni apertura a freddo. */
+export async function caricaGeografie() {
+  for (const [k, v] of await leggiCalcoli('spagnolo')) if (!GEOGRAFIE.has(k)) GEOGRAFIE.set(k, v)
+}
 function geografia(pezzi, stato, prof, W, H) {
   const chiave = W + '|' + pezzi.map(p => p.nodi.map(n => n.chiave + '@' + Math.round(n.x) + ',' + Math.round(n.y)).join(';')
     + '#' + p.titoli.map(t => t.nome).join()).join('|')
@@ -290,6 +296,7 @@ function geografia(pezzi, stato, prof, W, H) {
                 decori: isole.flatMap(is => is.decori) }
   if (GEOGRAFIE.size > 5) GEOGRAFIE.delete(GEOGRAFIE.keys().next().value)
   GEOGRAFIE.set(chiave, geo)
+  mettiDaParte('spagnolo', chiave, geo)   // senza aspettare: se non riesce, la prossima volta si ricalcola
   return geo
 }
 

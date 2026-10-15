@@ -7,6 +7,8 @@
 //   node strumenti/profila-app.mjs 'sotterraneo=1&eroe=elfa&giu=1&seme=11' --dist --tocca 210,300 --secondi 12
 //   node strumenti/profila-app.mjs 'sotterraneo' --dist --contro tmp/vecchio/dist/index.html   # due file a confronto
 //
+// `--apertura` apre la home, poi accende il profilo e solo allora apre il gioco: quello che pesa all'ingresso (la mappa
+// dell'inglese) altrimenti è già passato quando il profilo parte.
 // `--tocca x,y` tocca lì dopo l'apertura e poi ogni due secondi un po' più in là (l'eroe cammina); `--lento N`
 // rallenta la CPU di N volte. Un telefono non si imita davvero (la GPU, la memoria, il calore restano del computer):
 // per quello c'è chrome://inspect col telefono collegato (docs/core/comandi.md). Trovato così, il 14 ottobre 2026, lo
@@ -17,22 +19,24 @@ import { resolve } from 'node:path'
 const argv = process.argv.slice(2)
 const opz = (nome, difetto = null) => { const i = argv.indexOf('--' + nome); return i >= 0 && argv[i + 1] && !argv[i + 1].startsWith('--') ? argv[i + 1] : difetto }
 const schermata = argv[0]
-if (!schermata || schermata.startsWith('--')) { console.error("uso: node strumenti/profila-app.mjs '<cheat>' [--dist file] [--contro file] [--tocca x,y] [--secondi 12] [--lento 4]"); process.exit(1) }
+if (!schermata || schermata.startsWith('--')) { console.error("uso: node strumenti/profila-app.mjs '<cheat>' [--dist file] [--contro file] [--tocca x,y] [--secondi 12] [--lento 4] [--apertura]"); process.exit(1) }
 const file = resolve(opz('dist', 'dist/index.html'))
 const contro = opz('contro')
 const tocca = opz('tocca') ? opz('tocca').split(',').map(Number) : null
 const secondi = Number(opz('secondi', 12)), lento = Number(opz('lento', 1))
+const apertura = argv.includes('--apertura')   // registra l'APERTURA: parte dalla home e il profilo comincia prima di cambiare l'indirizzo
 
 async function profila(dist) {
   if (!existsSync(dist)) { console.error(`manca ${dist}: prima npm run build`); process.exit(1) }
   process.env.DIST = dist
   const { apriBrowser, apriGioco } = await import('../test/aiuto/browser.mjs?' + encodeURIComponent(dist))
   const b = await apriBrowser()
-  const { page } = await apriGioco(b, { hash: schermata, attesa: null, indirizzo: 'file://' + dist })
+  const { page } = await apriGioco(b, { hash: apertura ? '' : schermata, attesa: null, indirizzo: 'file://' + dist })
   await page.waitForTimeout(3500)
   const s = await page.context().newCDPSession(page)
   if (lento > 1) await s.send('Emulation.setCPUThrottlingRate', { rate: lento })
   await s.send('Profiler.enable'); await s.send('Profiler.start')
+  if (apertura) await page.evaluate(h => { location.hash = h }, schermata)
   if (tocca) await page.mouse.click(tocca[0], tocca[1])
   for (let t = 0; t < secondi; t += 2) {
     await page.waitForTimeout(2000)

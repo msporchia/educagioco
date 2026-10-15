@@ -90,5 +90,16 @@ for (const g of GIOCHI) {
   console.log(`  offline ${g.padEnd(12)} aperto in ${Date.now() - t} ms, immagini rotte ${rotte}${manca ? '  ← MANCA IL FILE DEL GIOCO' : ''}`)
 }
 for (const [u, n] of [...fallite].slice(0, 8)) console.log(`  richiesta fallita ×${n}: ${u.slice(0, 120)}`)
+// le mappe di inglese e spagnolo: la prima apertura calcola la geografia, le altre la trovano da parte (src/calcoli-in-cassa.js)
+for (const g of ['inglese', 'spagnolo']) {
+  const tempi = []
+  for (let volta = 0; volta < 2; volta++) {
+    const t = Date.now()
+    await page.goto(BASE + '#' + g); await page.reload()
+    await page.waitForSelector('.ing-nodo', { timeout: 120000 })
+    tempi.push(Date.now() - t)
+  }
+  console.log(`  mappa ${g.padEnd(9)} la prima volta ${tempi[0]} ms, riaperta ${tempi[1]} ms`)
+}
 console.log(`errori in console: ${errori.length}`); errori.slice(0, 6).forEach(e => console.log('  ' + e.slice(0, 160)))
 await chiudiTutto()
