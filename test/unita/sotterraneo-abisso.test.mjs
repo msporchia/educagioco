@@ -418,7 +418,9 @@ const entrata = eroe => ({ eroe, roba: robaAttesa(eroe, QUANTE_TAPPE), crescita:
      cresca (la riga qui sotto). */
   for (const [k, c] of costi.entries()) for (let i = 0; i < c.length; i++)
     // 45 e non 40 dal 14 ottobre: i pezzi trovati sopra il livello dell'eroe restano chiusi (livello-dei-pezzi.md) e il seme 7 al piano 11 passa da 36 a 41
-    dentro(`il seme ${SEMI[k]}, piano ${i + 1}: fra 2 e 45 domande obbligate`, c[i], 2, 45)   // le cantine sono rade (densita 0,7): il primo piano può costare due risposte
+    // 60 e non 45 dal 15 ottobre: il finto che va dritto coi mostri di oggi sviene ogni tanto e il piano rifatto conta due volte (seme 7, piano 11: 57; gli altri
+    // sei semi provati stanno sotto 38); quello che tiene la discesa lunga invece che difficile è la media dei semi, qui sotto (35)
+    dentro(`il seme ${SEMI[k]}, piano ${i + 1}: fra 2 e 60 domande obbligate`, c[i], 2, 60)   // le cantine sono rade (densita 0,7): il primo piano può costare due risposte
   for (let i = 0; i < piani.length; i++)
     dentro(`il piano ${i + 1} costa fra 2 e 35 domande obbligate`, piani[i], 2, 35)
   /* e non cresce: la seconda metà della discesa non deve costare il

@@ -176,14 +176,18 @@ function rispondiFinche(c, giusto = () => true, giri = 40) {
   controlla('una discesa ripresa arriva in fondo', finita.esito.vinta,
             finita.guasto || `${finita.esito.piani}/${finita.esito.quantiPiani} piani (seme ${seme})`)
 
-  /* e una ripresa a metà della discesa vera, al secondo piano, si finisce lo stesso */
-  let seme2 = 304   // idem: il primo seme da 304 che si vince anche senza interromperlo
-  while (seme2 < 400 && !gioca(t, { seme: seme2, bravura: 1, come: 'minimo', da: new Corsa(t, { seme: seme2, rnd: seminato(seme2), roba }) }).esito.vinta) seme2++
-  const giu = new Corsa(t, { seme: seme2, rnd: seminato(seme2), roba })
-  gioca(t, { seme: seme2, bravura: 1, come: 'tutto', da: giu, fino: 1 })
-  const daMeta = leggi(scrivi(giu, 1), t, giu.roba)
+  /* e una ripresa a metà della discesa vera, al secondo piano, si finisce lo stesso. Come sopra, il seme è il primo da 304 in cui la discesa
+     ripresa si vince: il finto che va dritto coi mostri di oggi ne perde una parte, e qui si prova la ripresa, non l'equilibrio */
+  const aMeta = s => {
+    const giu = new Corsa(t, { seme: s, rnd: seminato(s), roba })
+    gioca(t, { seme: s, bravura: 1, come: 'tutto', da: giu, fino: 1 })
+    const daMeta = leggi(scrivi(giu, 1), t, giu.roba)
+    return { daMeta, fine: daMeta && gioca(t, { seme: s, bravura: 1, come: 'minimo', da: daMeta }) }
+  }
+  let seme2 = 304, m = aMeta(seme2)
+  while (seme2 < 400 && !(m.fine && m.fine.esito.vinta)) m = aMeta(++seme2)
+  const { daMeta, fine } = m
   controlla('una sosta scritta a metà discesa si rilegge', !!daMeta)
-  const fine = daMeta && gioca(t, { seme: seme2, bravura: 1, come: 'minimo', da: daMeta })
   controlla('e arriva in fondo', !!fine && fine.esito.vinta, fine && (fine.guasto || `${fine.esito.piani} piani`))
 }
 
