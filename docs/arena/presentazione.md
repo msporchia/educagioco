@@ -12,7 +12,7 @@ ponte, poi le caserme, il castello per ultimo. Il bambino decide **cosa costruir
 cosa potenziare e cosa vendere** per cambiare strada; toccando un edificio gli compare
 attorno l'anello per farlo. Il castello stesso si potenzia, e spara di più.
 
-Ogni scelta costa monete di battaglia **e un calcolo**. Il calcolo lo decide
+Ogni scelta costa diamanti di battaglia (💎, per non confonderli con le monete vere) **e un calcolo**. Il calcolo lo decide
 la truppa: arcieri e opliti chiedono somme, pipistrelli e negromanti
 sottrazioni, lupi e golem moltiplicazioni, diavoletti e drago divisioni. Mentre si calcola il campo rallenta, non si ferma: c'è sempre
 un po' di pressione. Se si sbaglia non si perde niente, ma quella caserma

@@ -63,8 +63,8 @@ controlla('si parte con qualche moneta di battaglia', await monete() >= 14)
 controlla('e c\'è scritto quante ne arrivano al secondo', /\/s/.test(await page.locator('[data-monete]').innerText()))
 controlla('si parte senza edifici: sei piazzole libere da toccare, e il castello',
           await page.locator('[data-piazzola]:not([data-variante])').count() === 6 && await page.locator('[data-castello]').count() === 1)
-controlla('sotto restano solo ripara e bomba, e il muro non si compra',
-          await page.locator('.ar-barra-sotto [data-azione]').count() === 2 &&
+controlla('restano solo ripara e bomba, e il muro non si compra',
+          await page.locator('.ar-azioni [data-azione]').count() === 2 &&
           await page.locator('[data-azione="muro"]').count() === 0)
 
 /* ── toccare una piazzola apre la scelta, e il campo sta fermo mentre si sceglie ── */
@@ -87,7 +87,7 @@ uguale('mentre si leggono i dettagli il campo sta fermo', await orologio(), t0)
 const testo = await page.locator('[data-dettagli-aperti]').innerText()
 controlla('i dettagli dicono com\'è adesso e com\'è al livello dopo, coi numeri',
           /Livello 1/.test(testo) && /Livello 2/.test(testo) && /Una squadra ogni/.test(testo) && /Vita di ogni truppa/.test(testo) && !/%/.test(testo), testo.slice(0, 300))
-controlla('e quanto costa, senza dire che conto serve', /6\s*🪙/.test(testo) && !/si risolve/.test(testo), testo.slice(0, 200))
+controlla('e quanto costa, senza dire che conto serve', /6\s*💎/.test(testo) && !/si risolve/.test(testo), testo.slice(0, 200))
 await scatto(page, 'arena-dettagli')
 await page.locator('[data-procedi]').click()
 

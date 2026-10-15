@@ -55,13 +55,13 @@ defineEmits(['chiudi', 'procedi', 'vendi'])
 
       <button v-if="d.prezzo !== null" class="ar-grosso" :class="{ 'ar-spento': !d.puoi }" data-procedi
               :disabled="!d.puoi" @click="$emit('procedi')">
-        <span class="em">{{ d.verbo }}</span> · {{ d.prezzo }} <span class="em">🪙</span>
+        <span class="em">{{ d.verbo }}</span> · {{ d.prezzo }} <span class="em">💎</span>
       </button>
       <p v-if="d.prezzo !== null && !d.puoi" class="ar-motivo">{{ d.motivo }}</p>
       <p v-if="d.prezzo === null" class="ar-motivo">{{ d.fine }}</p>
       <!-- vendere: per cambiare strategia; ridà metà di quello che ci si è speso -->
       <button v-if="d.vendi !== null && d.vendi !== undefined" class="ar-grosso ar-vendi" data-vendi @click="$emit('vendi')">
-        <span class="em">💰</span> Vendi · +{{ d.vendi }} <span class="em">🪙</span>
+        <span class="em">💰</span> Vendi · +{{ d.vendi }} <span class="em">💎</span>
       </button>
       <button class="ar-grosso ar-chiaro" @click="$emit('chiudi')">torno in campo</button>
     </div>

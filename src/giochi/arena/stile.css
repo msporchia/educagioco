@@ -48,14 +48,11 @@
 .ar-hud { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 6px 8px }
 .ar-gettone { background: #0006; border-radius: 999px; padding: 4px 10px; font-size: 14px;
               display: inline-flex; align-items: center; gap: 4px; white-space: nowrap }
-/* la striscia delle monete, fra il campo e le scelte */
-.ar-borsa { display: flex; align-items: center; justify-content: space-between; gap: 10px; height: 40px;
-            margin: 0 8px; padding: 0 14px; border-radius: 12px;
-            background: linear-gradient(180deg, #3b2f66, #281f4a); border: 2px solid #5b4a99 }
-.ar-moneta { font-size: 20px; font-weight: 800 }
-.ar-borsa i { font-style: normal; font-size: 13px; font-weight: 700; color: #ffe98a }
-/* il quadro è alto quanto lascia la barra sottile sotto (si gioca toccandolo) e largo 2:3 */
-.ar-quadro { position: relative; height: calc(100dvh - 190px); min-height: 280px; aspect-ratio: 2 / 3; max-width: 100%; margin: 0 auto; touch-action: none }
+/* i diamanti di battaglia, accanto all'orologio */
+.ar-borsa b { font-size: 16px }
+.ar-borsa i { font-style: normal; font-size: 12px; font-weight: 700; color: #ffe98a }
+/* il quadro è alto quanto lasciano la barra e l'orologio (si gioca toccandolo) e largo 2:3 */
+.ar-quadro { position: relative; height: calc(100dvh - 104px); min-height: 280px; aspect-ratio: 2 / 3; max-width: 100%; margin: 0 auto; touch-action: none }
 /* i bersagli sopra piazzole e castello: trasparenti, grandi quanto l'edificio */
 .ar-bersaglio { position: absolute; background: transparent; border: 0; padding: 0; border-radius: 14px; z-index: 3;
                 display: grid; place-items: center }
@@ -69,12 +66,18 @@
 .ar-voce.ar-no { background: linear-gradient(180deg, #8a8fa6, #5e6380); color: #eef }
 .ar-voce-icona { font-size: 22px; line-height: 1 }
 .ar-voce-testo { font-size: 11.5px; font-weight: 800; white-space: nowrap }
-/* la barra sottile sotto il campo: monete, ripara, bomba */
-.ar-barra-sotto { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 6px; padding: 8px 8px 12px; align-items: stretch }
-.ar-barra-sotto .ar-borsa { margin: 0; height: auto; flex-direction: column; justify-content: center; gap: 0; padding: 4px 8px }
-.ar-carta.ar-bassa { min-height: 62px; padding: 2px 2px 4px }
-.ar-carta.ar-bassa .ar-icona { font-size: 22px; height: 28px }
-.ar-variante.ar-miniera .ar-grande { font-size: 44px; line-height: 60px }
+/* ripara e bomba: icone tonde in basso a destra sul campo (il dito: almeno 56 px) */
+.ar-azioni { position: absolute; right: 8px; bottom: 10px; z-index: 5; display: flex; flex-direction: column; gap: 10px }
+.ar-azione-tonda { position: relative; width: 58px; height: 58px; border-radius: 50%; display: flex; flex-direction: column;
+                   align-items: center; justify-content: center; color: #fff;
+                   background: radial-gradient(circle at 35% 30%, #4a4380, #1d1b3a); border: 3px solid #8b7ad0;
+                   box-shadow: 0 4px 12px #000a }
+.ar-azione-tonda:active { transform: scale(.94) }
+.ar-azione-tonda.ar-no { opacity: .55 }
+.ar-azione-tonda .ar-icona { font-size: 28px; height: 32px }
+.ar-azione-tonda .ar-prezzo { position: absolute; bottom: -9px; padding: 2px 7px; border-radius: 999px; background: #101a44; border: 1.5px solid #ffe98a88;
+                              font-size: 11px; color: #fff; white-space: nowrap }
+.ar-azione-tonda .ar-info { top: -10px; left: auto; right: -6px }
 .ar-tela { display: block; width: 100%; height: 100% }
 .ar-dritta, .ar-avviso { position: absolute; left: 50%; top: 12%; transform: translateX(-50%);
             white-space: nowrap; font-weight: 800; font-size: 14px; padding: 7px 14px; border-radius: 999px;

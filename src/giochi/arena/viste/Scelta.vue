@@ -28,7 +28,7 @@ defineEmits(['chiudi', 'costruisci', 'dettagli'])
           <p class="ar-nota-variante">{{ v.nota }}</p>
           <button class="ar-grosso" :class="{ 'ar-spento': !v.puoi }" :disabled="!v.puoi" :data-costruisci="v.id"
                   @click="$emit('costruisci', v.id)">
-            <span class="em">🛖</span> {{ v.prezzo }} <span class="em">🪙</span>
+            <span class="em">🛖</span> {{ v.prezzo }} <span class="em">💎</span>
           </button>
           <button class="ar-numeri" :data-dettagli="v.id" @click="$emit('dettagli', v.id)">i numeri</button>
         </section>
@@ -38,7 +38,7 @@ defineEmits(['chiudi', 'costruisci', 'dettagli'])
           <p class="ar-nota-variante">{{ s.miniera.nota }}</p>
           <button class="ar-grosso" :class="{ 'ar-spento': !s.miniera.puoi }" :disabled="!s.miniera.puoi" data-costruisci="miniera"
                   @click="$emit('costruisci', 'miniera')">
-            <span class="em">🛖</span> {{ s.miniera.prezzo }} <span class="em">🪙</span>
+            <span class="em">🛖</span> {{ s.miniera.prezzo }} <span class="em">💎</span>
           </button>
           <button class="ar-numeri" data-dettagli="miniera" @click="$emit('dettagli', 'miniera')">i numeri</button>
         </section>

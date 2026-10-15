@@ -76,7 +76,7 @@ function vuoto() {
 
 const dovEravamo = computed(() => {
   const s = Math.max(0, Math.ceil(cruscotto.value.resto))
-  return `⏱️ mancano ${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')} · 🪙 ${cruscotto.value.monete}`
+  return `⏱️ mancano ${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')} · 💎 ${cruscotto.value.monete}`
 })
 
 /* ── la mappa ── */
@@ -96,7 +96,7 @@ const ripresa = ref(laRipresa())
 
 function laRipresa() {
   const d = dice(sosta(CHIAVE))
-  return d && { emoji: '⚔️', nome: d.nome, dettaglio: `mancano ${d.restano} · 🪙 ${d.monete}` }
+  return d && { emoji: '⚔️', nome: d.nome, dettaglio: `mancano ${d.restano} · 💎 ${d.monete}` }
 }
 
 function salva({ subito = false } = {}) {
@@ -230,10 +230,10 @@ function anelloDi(p, bersagli) {
   const prezzo = a.castello ? p.prezzo('io', 'castello') : p.prezzo('io', 'potenzia', a.posto)
   const riposo = a.castello ? 0 : Math.max(0, e.riposo)
   const voci = [
-    { chiave: 'potenzia', icona: '⬆️', testo: riposo > 0 ? `💤 ${Math.ceil(riposo)}s` : `Lv ${e.liv + 1} · ${prezzo} 🪙`,
+    { chiave: 'potenzia', icona: '⬆️', testo: riposo > 0 ? `💤 ${Math.ceil(riposo)}s` : `Lv ${e.liv + 1} · ${prezzo} 💎`,
       puoi: prezzo !== null && p.lati.io.monete >= prezzo && riposo <= 0 },
   ]
-  if (!a.castello) voci.push({ chiave: 'vendi', icona: '💰', testo: `+${p.resa('io', a.posto)} 🪙`, puoi: true })
+  if (!a.castello) voci.push({ chiave: 'vendi', icona: '💰', testo: `+${p.resa('io', a.posto)} 💎`, puoi: true })
   voci.push({ chiave: 'numeri', icona: '?', testo: 'i numeri', puoi: true })
   // dentro il campo anche sulle piazzole di lato: ogni pulsante è largo una settantina di pixel
   const largo = voci.length * 70 + (voci.length - 1) * 6, W = campo.cv.clientWidth
@@ -418,11 +418,11 @@ function risposto({ giusto, saltata, tempo }) {
 
 function frase(v) {
   if (v.id === 'miniera') return { costruisci: '⛏️ una miniera: le monete arrivano più in fretta', potenzia: '⛏️ la miniera sale di livello',
-                                   vendi: `💰 miniera venduta: +${v.resa} 🪙` }[v.azione] || ''
+                                   vendi: `💰 miniera venduta: +${v.resa} 💎` }[v.azione] || ''
   const nome = v.id ? TRUPPE[v.id].nome : ''
   return { costruisci: `🛖 ${v.id ? EDIFICI[EDIFICIO_DI[v.id]].nome : ''}: ${nome}`, potenzia: `⬆️ ${nome} sale di livello`, miniera: '⛏️ le monete arrivano più in fretta',
            ripara: '🔧 riparato', castello: '🏰 il castello è più forte', bomba: '💥 la bomba ha spazzato le truppe nemiche',
-           vendi: `💰 ${nome} venduti: +${v.resa} 🪙` }[v.azione] || ''
+           vendi: `💰 ${nome} venduti: +${v.resa} 💎` }[v.azione] || ''
 }
 
 function dici(testo) {

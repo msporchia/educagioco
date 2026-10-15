@@ -59,3 +59,10 @@ sono disegnati in codice finché non arriva il foglio dipinto.
 - **Il ponte** è di assi, con la porta di ciascuno al suo capo: due torrette e il
   portone; crollata, resta il cumulo.
 - **Mancano**: gli edifici e la porta dipinti, pose di attacco e di morte delle truppe.
+
+## Il quadro e i comandi
+
+Il quadro è alto quanto lo schermo lascia e il terreno continua specchiato sopra e
+sotto il campo (`sfondo` in `scena/campo.js`): niente fascia verde. Orologio e
+diamanti stanno in alto; ripara e bomba sono due icone tonde in basso a destra
+sul campo (`.ar-azioni`), col prezzo o l'attesa in un cartellino.

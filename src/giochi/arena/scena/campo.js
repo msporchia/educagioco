@@ -144,7 +144,17 @@ export class Campo {
   sfondo(c, W, H) {
     c.fillStyle = '#5f9a3c'; c.fillRect(0, 0, W, H)
     const mappa = this.pronto ? componi(MAPPA, this.vestito) : null
-    if (mappa) c.drawImage(mappa, this.ox, this.oy, CAMPO.W * this.s, CAMPO.H * this.s)
+    if (!mappa) return
+    const w = CAMPO.W * this.s, h = CAMPO.H * this.s
+    // se il quadro è più alto del campo, il terreno continua specchiato (le giunzioni combaciano)
+    for (let n = 1; this.oy - (n - 1) * h > 0; n++) {
+      for (const dir of [-1, 1]) {
+        const y = this.oy + dir * n * h
+        c.save(); c.translate(this.ox, y + (n % 2 ? h : 0)); c.scale(1, n % 2 ? -1 : 1)
+        c.drawImage(mappa, 0, 0, w, h); c.restore()
+      }
+    }
+    c.drawImage(mappa, this.ox, this.oy, w, h)
   }
 
   /* un pezzo del foglio delle figure, col piede in (x, y) */

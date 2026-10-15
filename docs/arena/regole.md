@@ -112,7 +112,7 @@ non escono più spesso di una ogni 2,5 secondi.
 
 ## Le scelte che non stanno su una piazzola
 
-Costano monete di battaglia e un calcolo, come gli edifici.
+Costano diamanti di battaglia (💎, per non confonderli con le monete vere) e un calcolo, come gli edifici.
 
 | scelta | cosa fa | prezzo |
 |---|---|---|
