@@ -2,8 +2,9 @@
 
 # ☄️ Asteroidi
 
-*Tabelline e calcolo a mente.* Gli asteroidi scendono con dei numeri sopra:
-si colpisce quello giusto prima che arrivi in fondo.
+*Tabelline e calcolo a mente.* Gli asteroidi scendono col numero inciso
+nella roccia: si tocca quello giusto prima che arrivi in fondo, e
+trascinando il dito si guida la nave fra quelli sbagliati.
 
 <img src="../img/asteroidi-gioco.png" width="230"> <img src="../img/asteroidi-mappa.png" width="230"> <img src="../img/asteroidi-stazioni.png" width="230">
 
