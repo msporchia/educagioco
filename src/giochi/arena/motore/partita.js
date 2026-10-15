@@ -171,7 +171,7 @@ export class Partita {
       if (c.t > 0) continue
       c.ciclo = CRESCITA.squadraOgni(c.liv)
       c.t += c.ciclo
-      this.schiera(c.lato, c.id, c.x, c.y + (c.lato === 'io' ? -16 : 16), CRESCITA.forza(c.liv), CRESCITA.omini(c.liv, TRUPPE[c.id].n))
+      this.schiera(c.lato, c.id, c.x, c.y + (c.lato === 'io' ? -16 : 16), CRESCITA.forza(c.liv, TRUPPE[c.id].n), CRESCITA.omini(c.liv, TRUPPE[c.id].n))
     }
   }
 

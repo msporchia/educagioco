@@ -36,7 +36,7 @@ const SCALETTE = {
 
 /* sale a ogni ritocco del modo di giocare del nemico: entra nella firma dell'equilibrio (`firma.js`),
    così un'IA cambiata senza ritarare è un test rosso */
-export const VERSIONE_IA = 8
+export const VERSIONE_IA = 9
 
 export function creaIA(rnd) {
   const nomi = Object.keys(SCALETTE)
