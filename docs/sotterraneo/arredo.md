@@ -21,7 +21,7 @@ foglietto**: il motore non cambia, e `guastiDelleTessere` chiede all'atlante
 ogni nome, la posa e il numero.
 
 - **`posa`** è l'idea che il pezzo ha di come piazzarsi: `appeso` sulla fila
-  di faccia (un bassorilievo, uno stemma), `posato` su un bordo della stanza,
+  di faccia (un bassorilievo, uno stemma), `contro` lo stesso ma solo sulla parete in alto della stanza e mai su una colonna (le fucine, i telai e le vasche dell'inferno: pezzi grossi che si guardano di fronte, e davanti a una colonna in mezzo alla sala sembravano buttati lì), `posato` su un bordo della stanza,
   `angolo` in uno dei quattro angoli (colonne), `fondo` al centro della parete
   di fondo (un altare, un trono: uno solo per stanza), `coppia` due uguali ai
   lati della parete di fondo, uno di qua e uno di là (cavalieri di guardia).

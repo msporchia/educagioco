@@ -1,5 +1,5 @@
 {
-  "__": "Il foglietto di bottega-inferno.png: i pezzi usabili della «bottega infernale» (ChatGPT, 15 ottobre 2026, fondo magenta, a circa 4,6 px di foglio per pixel di gioco). Il foglio è una tavola di ambienti e di pezzi: qui si prendono solo i pezzi che stanno in una stanza (obelischi, torce, forche, fucina, banco, cristalli, il cerchio del pentagramma, la statua del demone, le rocce e gli alberi secchi dei relitti, le cose piccole per terra). Restano fuori gli ambienti interi (l'ingresso della caverna col teschio, il recinto, l'orto, la tenda, il ponte, la cascata di lava: sono scene, non pezzi), il cancello a spuntoni (sembra un passaggio), casse e botti (sembrano da prendere), le ossa e i teschi, il forziere pieno d'oro (il d'oro è solo delle missioni). Quali pezzi servono, e come: la voce inferno in dati/tessere.js, dati/orpelli.js e dati/relitti.js.",
+  "__": "Il foglietto di bottega-inferno.png: i pezzi usabili della «bottega infernale» (ChatGPT, 15 ottobre 2026, fondo magenta, a circa 6 px di foglio per pixel di gioco (7,6 la fucina, che a 4,6 occupava due celle)). Il foglio è una tavola di ambienti e di pezzi: qui si prendono solo i pezzi che stanno in una stanza (obelischi, torce, forche, fucina, banco, cristalli, il cerchio del pentagramma, la statua del demone, le rocce e gli alberi secchi dei relitti, le cose piccole per terra). Restano fuori gli ambienti interi (l'ingresso della caverna col teschio, il recinto, l'orto, la tenda, il ponte, la cascata di lava: sono scene, non pezzi), il cancello a spuntoni (sembra un passaggio), casse e botti (sembrano da prendere), le ossa e i teschi, il forziere pieno d'oro (il d'oro è solo delle missioni). Quali pezzi servono, e come: la voce inferno in dati/tessere.js, dati/orpelli.js e dati/relitti.js.",
   "nitido": "scelti",
   "fondo": [
     255,
@@ -26,8 +26,8 @@
         149
       ],
       "misura": [
-        13,
-        31
+        10,
+        24
       ],
       "nitido": true
     },
@@ -41,8 +41,8 @@
         113
       ],
       "misura": [
-        8,
-        23
+        6,
+        18
       ]
     },
     "inferno-stendardo-asta": {
@@ -55,8 +55,8 @@
         145
       ],
       "misura": [
-        12,
-        30
+        9,
+        23
       ]
     },
     "inferno-forca-spuntoni": {
@@ -69,8 +69,8 @@
         119
       ],
       "misura": [
-        21,
-        25
+        16,
+        19
       ]
     },
     "inferno-gabbia-patibolo": {
@@ -83,8 +83,8 @@
         140
       ],
       "misura": [
-        15,
-        29
+        12,
+        22
       ],
       "nitido": true
     },
@@ -98,8 +98,8 @@
         131
       ],
       "misura": [
-        19,
-        27
+        15,
+        21
       ]
     },
     "inferno-calderone-spuntoni": {
@@ -112,8 +112,8 @@
         111
       ],
       "misura": [
-        18,
-        23
+        14,
+        18
       ],
       "nitido": true
     },
@@ -127,8 +127,8 @@
         146
       ],
       "misura": [
-        25,
-        30
+        15,
+        18
       ],
       "nitido": true
     },
@@ -142,8 +142,8 @@
         96
       ],
       "misura": [
-        26,
-        20
+        20,
+        15
       ],
       "nitido": true
     },
@@ -157,8 +157,8 @@
         77
       ],
       "misura": [
-        16,
-        15
+        12,
+        12
       ]
     },
     "inferno-carbone-mucchio": {
@@ -171,8 +171,8 @@
         54
       ],
       "misura": [
-        12,
-        10
+        9,
+        8
       ]
     },
     "inferno-tavolo-lungo": {
@@ -185,8 +185,8 @@
         86
       ],
       "misura": [
-        31,
-        17
+        24,
+        13
       ]
     },
     "inferno-cristalli-grigi": {
@@ -199,8 +199,8 @@
         96
       ],
       "misura": [
-        23,
-        20
+        17,
+        15
       ]
     },
     "inferno-cristalli-rossi": {
@@ -213,8 +213,8 @@
         86
       ],
       "misura": [
-        19,
-        17
+        14,
+        13
       ],
       "nitido": true
     },
@@ -228,8 +228,8 @@
         122
       ],
       "misura": [
-        22,
-        25
+        17,
+        19
       ],
       "nitido": true
     },
@@ -243,8 +243,8 @@
         155
       ],
       "misura": [
-        14,
-        32
+        10,
+        23
       ],
       "nitido": true
     },
@@ -258,8 +258,8 @@
         174
       ],
       "misura": [
-        35,
-        37
+        27,
+        28
       ],
       "nitido": true
     },
@@ -273,8 +273,8 @@
         107
       ],
       "misura": [
-        20,
-        22
+        15,
+        17
       ],
       "nitido": true
     },
@@ -288,8 +288,8 @@
         80
       ],
       "misura": [
-        10,
-        16
+        7,
+        12
       ],
       "nitido": true
     },
@@ -303,8 +303,8 @@
         95
       ],
       "misura": [
-        19,
-        19
+        15,
+        15
       ],
       "nitido": true
     },
@@ -318,8 +318,8 @@
         125
       ],
       "misura": [
-        21,
-        26
+        16,
+        20
       ],
       "nitido": true
     },
@@ -333,8 +333,8 @@
         105
       ],
       "misura": [
-        15,
-        22
+        12,
+        16
       ]
     },
     "inferno-sassolini": {
@@ -347,8 +347,8 @@
         80
       ],
       "misura": [
-        20,
-        16
+        15,
+        12
       ]
     },
     "inferno-erba-secca": {
@@ -361,8 +361,8 @@
         83
       ],
       "misura": [
-        17,
-        17
+        13,
+        13
       ]
     },
     "inferno-funghi-piccoli": {
@@ -375,8 +375,8 @@
         92
       ],
       "misura": [
-        16,
-        19
+        12,
+        14
       ]
     },
     "inferno-croce-teschio": {
@@ -389,8 +389,8 @@
         96
       ],
       "misura": [
-        11,
-        20
+        8,
+        15
       ]
     }
   }

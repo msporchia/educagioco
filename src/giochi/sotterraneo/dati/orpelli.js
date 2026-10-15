@@ -4,13 +4,13 @@
 // (livello.js, epicaDellaStanza) e pesca fra quelli che le stanno bene. La lista può crescere quanto vuole:
 // un pezzo in più è una riga qui e il suo ritaglio nell'atlante, il motore non cambia.
 //
-// posa: 'appeso' sulla fila in alto contro la parete di faccia · 'posato' sul bordo della stanza · 'angolo' in
+// posa: 'appeso' sulla fila in alto contro la parete di faccia (anche una colonna) · 'contro' lo stesso ma solo la parete della stanza, mai una colonna: per i pezzi grossi che si guardano di fronte (fucine, telai) · 'posato' sul bordo della stanza · 'angolo' in
 //   uno dei quattro angoli · 'fondo' al centro della parete di fondo (uno solo per stanza) · 'coppia' due uguali
 //   ai lati della parete di fondo, uno di qua e uno di là.
 // arde: fa luce (uno solo acceso per stanza, o due cantine illuminerebbero tutto).
 // pezzo: il nome nell'atlante · dice: cosa risponde a chi lo tocca.
 
-export const POSE = ['appeso', 'posato', 'angolo', 'fondo', 'coppia']
+export const POSE = ['appeso', 'contro', 'posato', 'angolo', 'fondo', 'coppia']
 
 const o = (pezzo, posa, epica, dice, arde = false) => ({ pezzo, posa, epica, dice, ...(arde ? { arde } : {}) })
 
@@ -130,7 +130,7 @@ export const ORPELLI = {
     o('fornace-stendardo', 'appeso', 3, 'Uno stendardo rosso con un segno di fuoco.'),
   ],
 
-  // arredo-inferno.png e bottega-inferno.png: ferro nero, brace, pietra sporca; niente casse né botti da prendere, né passaggi dipinti (grate, botole, portali)
+  // arredo-inferno.png e bottega-inferno.png: ferro nero, brace, pietra sporca; i pezzi che si guardano di fronte (fucina, forni, telai, vasche, rastrelliere) stanno `contro`, cioè sul muro in alto della stanza (mai su una colonna): di lato o in basso girerebbero le spalle a chi guarda; niente casse né botti da prendere, né passaggi dipinti (grate, botole, portali)
   inferno: [
     o('inferno-sarcofago-croce', 'posato', 3, 'Un sarcofago di ferro e pietra, con una croce. Resta chiuso: è meglio.'),
     o('inferno-sarcofago-croce-largo', 'posato', 3, 'Un sarcofago largo, fasciato di ferro. Pesa quanto una casa.'),
@@ -166,7 +166,7 @@ export const ORPELLI = {
     o('inferno-torcia-muro', 'appeso', 1, 'Una torcia fissata al muro, accesa.', true),
     o('inferno-picca-teschio', 'appeso', 3, 'Una picca con un teschio cornuto in cima, fissata al muro.'),
     o('inferno-catene-trave', 'appeso', 2, 'Una trave con le catene che penzolano, rosse di ruggine.'),
-    o('inferno-rastrelliera-lance', 'posato', 2, 'Una rastrelliera di lance nere: tutte al loro posto.'),
+    o('inferno-rastrelliera-lance', 'contro', 2, 'Una rastrelliera di lance nere: tutte al loro posto.'),
     o('inferno-libreria-teschi', 'appeso', 3, 'Uno scaffale di libri e teschi. Le pagine si sfarinano al tocco.'),
     o('inferno-libreria', 'appeso', 2, 'Uno scaffale di libri rilegati in pelle scura.'),
     o('inferno-armadio-pozioni', 'appeso', 2, 'Un armadietto con boccette di liquidi scuri. Meglio non assaggiare.'),
@@ -177,25 +177,25 @@ export const ORPELLI = {
     o('inferno-panca-rossa', 'posato', 1, 'Una panca con un cuscino rosso, logoro.'),
     o('inferno-incudine', 'posato', 2, 'Un\'incudine sul suo ceppo: troppo pesante per spostarla.'),
     o('inferno-incudine-ceppo', 'posato', 2, 'Un\'incudine, nera di fuliggine.'),
-    o('inferno-banco-forgia', 'posato', 3, 'Un banco da fabbro con una forgia, ancora calda.', true),
-    o('inferno-banco-attrezzi', 'posato', 2, 'Un banco con gli attrezzi del fabbro, in ordine.'),
+    o('inferno-banco-forgia', 'contro', 3, 'Un banco da fabbro con una forgia, ancora calda.', true),
+    o('inferno-banco-attrezzi', 'contro', 2, 'Un banco con gli attrezzi del fabbro, in ordine.'),
     o('inferno-carrello-carbone', 'posato', 2, 'Un carrello pieno di carbone nero.'),
     o('inferno-carbone-mucchio', 'posato', 1, 'Un mucchio di carbone. Nero, e non scalda più.'),
     o('inferno-cassa-carbone', 'posato', 1, 'Un cesto di carbone.'),
     o('inferno-calderone', 'posato', 3, 'Un calderone di lava lenta, sulle braci.', true),
     o('inferno-calderone-spuntoni', 'posato', 3, 'Un calderone con le punte di ferro. Ribolle da solo.', true),
-    o('inferno-vasca-lava', 'posato', 5, 'Una vasca di pietra piena di lava, con due corna di ferro. Scotta anche da qui.', true),
-    o('inferno-vasca-lava-catene', 'posato', 4, 'Una vasca di lava tenuta da catene di ferro.', true),
-    o('inferno-forno', 'posato', 4, 'Un forno di pietra con la fiamma accesa dentro.', true),
-    o('inferno-fornace-pietra', 'posato', 4, 'Una fornace di pietra, accesa. Il calore arriva fin qui.', true),
-    o('inferno-fornello', 'posato', 3, 'Un forno di pietra nera, con la sua leva.', true),
-    o('inferno-forca-catene', 'posato', 3, 'Un telaio con le catene che penzolano.'),
-    o('inferno-forca-gancio', 'posato', 2, 'Una forca con un gancio appeso a una catena.'),
-    o('inferno-forca-spuntoni', 'posato', 3, 'Un telaio di punte di ferro. Sembra fatto per tenere dentro qualcuno.'),
-    o('inferno-gabbia-patibolo', 'posato', 3, 'Una gabbia di ferro appesa a un palo.'),
+    o('inferno-vasca-lava', 'contro', 5, 'Una vasca di pietra piena di lava, con due corna di ferro. Scotta anche da qui.', true),
+    o('inferno-vasca-lava-catene', 'contro', 4, 'Una vasca di lava tenuta da catene di ferro.', true),
+    o('inferno-forno', 'contro', 4, 'Un forno di pietra con la fiamma accesa dentro.', true),
+    o('inferno-fornace-pietra', 'contro', 4, 'Una fornace di pietra, accesa. Il calore arriva fin qui.', true),
+    o('inferno-fornello', 'contro', 3, 'Un forno di pietra nera, con la sua leva.', true),
+    o('inferno-forca-catene', 'contro', 3, 'Un telaio con le catene che penzolano.'),
+    o('inferno-forca-gancio', 'contro', 2, 'Una forca con un gancio appeso a una catena.'),
+    o('inferno-forca-spuntoni', 'contro', 3, 'Un telaio di punte di ferro. Sembra fatto per tenere dentro qualcuno.'),
+    o('inferno-gabbia-patibolo', 'contro', 3, 'Una gabbia di ferro appesa a un palo.'),
     o('inferno-gabbia-viola', 'posato', 3, 'Una gabbia di ferro, con una luce viola dentro. Non c\'è niente.'),
-    o('inferno-catene-rastrelliera', 'posato', 2, 'Una rastrelliera di catene.'),
-    o('inferno-argano', 'posato', 3, 'Un argano di legno e ferro, con la catena arrotolata.'),
+    o('inferno-catene-rastrelliera', 'contro', 2, 'Una rastrelliera di catene.'),
+    o('inferno-argano', 'contro', 3, 'Un argano di legno e ferro, con la catena arrotolata.'),
     o('inferno-palo-gancio', 'angolo', 2, 'Un palo con un gancio in cima.'),
     o('inferno-tavolo-tortura', 'posato', 4, 'Un tavolo con le cinghie e la ruota. Qui non si è mai mangiato.'),
     o('inferno-gogna', 'posato', 3, 'Una gogna di legno: tre buchi e un po\' di ruggine.'),

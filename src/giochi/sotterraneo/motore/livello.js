@@ -833,7 +833,10 @@ export class Livello {
       const cima = colonna.reduce((m, c) => Math.min(m, c.y), Infinity)
       return roccia(s.cx, cima - 1) && libera(s.cx, cima) ? [[s.cx, cima]] : null
     }
-    const c = pesca(o.posa === 'appeso' ? s.suolo.filter(c => roccia(c.x, c.y - 1))
+    // `contro`: la parete in alto della stanza e basta, non una colonna (una fucina in mezzo alla sala, davanti a una colonna, sembra buttata lì)
+    const colonna = (x, y) => (s.colonne || []).some(k => x >= k.x && x < k.x + (k.w || 1) && y >= k.y && y < k.y + (k.h || 1))
+    const c = pesca(o.posa === 'contro' ? s.suolo.filter(c => roccia(c.x, c.y - 1) && !colonna(c.x, c.y - 1))
+      : o.posa === 'appeso' ? s.suolo.filter(c => roccia(c.x, c.y - 1))
       : o.posa === 'angolo' ? s.suolo.filter(c => (roccia(c.x - 1, c.y) || roccia(c.x + 1, c.y)) && (roccia(c.x, c.y - 1) || roccia(c.x, c.y + 1)))
       : s.suolo.filter(c => roccia(c.x - 1, c.y) || roccia(c.x + 1, c.y) || roccia(c.x, c.y - 1) || roccia(c.x, c.y + 1)))
     return c ? [[c.x, c.y]] : null

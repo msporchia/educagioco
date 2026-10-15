@@ -371,6 +371,7 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
   const roccia = (l, x, y) => l.a(x, y) === 0
   const POSE_ATTESE = {
     appeso: ({ r, l }) => roccia(l, r.x, r.y - 1),
+    contro: ({ r, l }) => roccia(l, r.x, r.y - 1),
     fondo: ({ r, s, l }) => roccia(l, r.x, r.y - 1) && r.x === s.cx,
     angolo: ({ r, l }) => (roccia(l, r.x - 1, r.y) || roccia(l, r.x + 1, r.y)) && (roccia(l, r.x, r.y - 1) || roccia(l, r.x, r.y + 1)),
     posato: ({ r, l }) => roccia(l, r.x - 1, r.y) || roccia(l, r.x + 1, r.y) || roccia(l, r.x, r.y - 1) || roccia(l, r.x, r.y + 1),
@@ -378,6 +379,15 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
   }
   const storte = ORPELLI.cripta.flatMap(o => dove(o).filter(x => !POSE_ATTESE[o.posa](x)).map(() => o.pezzo))
   uguale('ogni orpello sta dove la sua posa dice', [...new Set(storte)].join(), '')
+  // `contro`: sulla parete della stanza, mai davanti a una colonna (la fucina dell'inferno in mezzo alla sala sembrava buttata lì)
+  {
+    const INF = Array.from({ length: 24 }, (_, i) => new Livello({ seme: 7300 + i * 97, piano: i % 4, largo: 40, alto: 40, giri: 3, scenario: 'inferno' }))
+    const contro = ORPELLI.inferno.filter(o => o.posa === 'contro').map(o => o.pezzo)
+    const messi = INF.flatMap(l => l.robe.filter(r => r.che === 'arredo' && !r.nicchia && contro.includes(r.pezzo)).map(r => ({ r, l })))
+    const suColonna = ({ r, l }) => l.stanze.some(s => (s.colonne || []).some(k => r.x >= k.x && r.x < k.x + (k.w || 1) && r.y - 1 >= k.y && r.y - 1 < k.y + (k.h || 1)))
+    controlla('l\'inferno mette qualche pezzo grosso contro la parete', messi.length >= 5, String(messi.length))
+    controlla('...e mai davanti a una colonna', messi.every(x => !suColonna(x)), messi.filter(suColonna).map(x => x.r.pezzo).join())
+  }
   const coppie = ORPELLI.cripta.filter(o => o.posa === 'coppia')
   controlla('le coppie sono sempre due per stanza',
             coppie.every(o => PIANI.every(l => l.stanze.every(s => {
