@@ -18,7 +18,7 @@ const CASERME = POSTI.length - 1
 const RUOLI = {
   base: ['scheletri', 'guardiano'],
   tank: ['guardiano', 'golem'],
-  veloce: ['lupi'],
+  veloce: ['lupi', 'bestie'],            // le bestie sono la tana di neve e lava, dove i lupi non ci sono
   splash: ['negromante', 'diavoletto'],
   volo: ['pipistrelli', 'drago'],
 }
@@ -64,7 +64,7 @@ export const CARATTERI = {
 
 /* sale a ogni ritocco del modo di giocare del nemico: entra nella firma dell'equilibrio (`firma.js`),
    così un'IA cambiata senza ritarare è un test rosso */
-export const VERSIONE_IA = 9
+export const VERSIONE_IA = 10
 
 /* `evita`: il carattere dell'ultima partita, per non giocare due volte di fila contro lo stesso */
 export function creaIA(rnd, evita = null) {
@@ -178,12 +178,13 @@ function mossa(p) {
    da vicino batte chi tira, chi tira ad area le file, chi vola chi colpisce solo a terra) */
 const BATTE = {
   scheletri: ['pipistrelli', 'drago'],
-  guardiano: ['scheletri', 'negromante', 'diavoletto', 'golem'],
+  guardiano: ['scheletri', 'negromante', 'diavoletto', 'golem', 'bestie'],
   lupi: ['scheletri', 'negromante', 'diavoletto', 'golem'],
+  bestie: ['scheletri', 'negromante', 'diavoletto'],
   negromante: ['scheletri', 'guardiano', 'lupi', 'pipistrelli'],
   diavoletto: ['scheletri', 'guardiano', 'lupi'],
-  pipistrelli: ['guardiano', 'lupi', 'diavoletto', 'golem'],
-  drago: ['guardiano', 'lupi', 'diavoletto', 'golem'],
+  pipistrelli: ['guardiano', 'lupi', 'bestie', 'diavoletto', 'golem'],
+  drago: ['guardiano', 'lupi', 'bestie', 'diavoletto', 'golem'],
   golem: [],
 }
 

@@ -9,20 +9,22 @@ import { NITIDO, NITIDI } from '../../sotterraneo/dati/atlante.js'
 
 export const CREATURA = {
   scheletri: 'scheletro', guardiano: 'scheletro-scudo', lupi: 'lupo', diavoletto: 'diavoletto',
-  pipistrelli: 'pipistrello', negromante: 'negromante', golem: 'golem', drago: 'drago',
+  pipistrelli: 'pipistrello', bestie: 'bestia-cornuta', negromante: 'negromante', golem: 'golem', drago: 'drago',
 }
 
 // pixel dello schermo per pixel del foglio, a larghezza di campo 390
 export const SCALA = {
   scheletri: 0.42, guardiano: 0.36, lupi: 0.4, diavoletto: 0.38,
-  pipistrelli: 0.45, negromante: 0.36, golem: 0.5, drago: 0.42,
+  pipistrelli: 0.45, bestie: 0.36, negromante: 0.36, golem: 0.5, drago: 0.42,
 }
 
-// le pose dai nomi dei pezzi: mostro:<chi>:<n> è il respiro, mostro:<chi>:lato:<n> i passi
+// le pose dai nomi dei pezzi (meno `NON_SUE`): mostro:<chi>:<n> è il respiro, mostro:<chi>:lato:<n> i passi
+// pose del foglio che la truppa non fa: la fiammata della bestia cornuta (le bestie colpiscono da vicino)
+const NON_SUE = new Set(['mostro:bestia-cornuta:2'])
 const pose = {}
 for (const nome of Object.keys(PEZZI)) {
   const [fam, chi, verso, n] = nome.split(':')
-  if (fam !== 'mostro') continue
+  if (fam !== 'mostro' || NON_SUE.has(nome)) continue
   const p = (pose[chi] ||= { respiro: [], lato: [] })
   if (n === undefined) p.respiro.push(nome)
   else if (verso === 'lato') p.lato.push(nome)

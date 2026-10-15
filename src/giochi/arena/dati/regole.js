@@ -33,6 +33,8 @@ export const TRUPPE = {
                  nota: 'Scheletri con lo scudo, in due: solidi, ma non colpiscono chi vola.' },
   lupi:        { nome: 'Lupi',        op: '×', costo: 8,  n: 4, hp: 140,  dmg: 10,   rate: 0.8, vel: 72, gitt: 13, bers: 'terra', vola: false, splash: 0,
                  nota: 'In quattro, velocissimi. Non colpiscono chi vola.' },
+  bestie:      { nome: 'Bestie cornute', op: '×', costo: 8, n: 3, hp: 190, dmg: 13, rate: 0.9, vel: 56, gitt: 14, bers: 'terra', vola: false, splash: 0,
+                 nota: 'In tre, corrono a testa bassa: reggono e colpiscono da vicino. Non colpiscono chi vola.' },
   pipistrelli: { nome: 'Pipistrelli', op: '−', costo: 8,  n: 6, hp: 40,   dmg: 5.4,  rate: 0.9, vel: 82, gitt: 12, bers: 'tutti', vola: true,  splash: 0,
                  nota: 'In sei, volano sopra i muri e sono veloci. Deboli ai colpi ad area.' },
   negromante:  { nome: 'Negromanti',  op: '−', costo: 10, n: 2, hp: 90,   dmg: 20,   rate: 1.4, vel: 36, gitt: 90, bers: 'tutti', vola: false, splash: 14,
@@ -45,17 +47,29 @@ export const TRUPPE = {
                  nota: 'Vola sopra i muri e sputa fuoco ad area. Lo fermano gli arcieri.' },
 }
 
-/* Gli edifici: quattro caserme, ognuna con due truppe. Quale delle due si sceglie
+/* Gli edifici: quattro caserme, ognuna con due truppe (la tana tre: lupi e pipistrelli, e le bestie
+   che prendono il posto dei lupi in neve e lava; un terreno ne ammette una sola). Quale si sceglie
    costruendola; il livello è dell'edificio (una ricerca): crollata e rifatta, riparte da
    lì, anche se si sceglie l'altra truppa. Si parte senza caserme: la prima mossa è la
    cripta. Le chiavi non si rinominano: stanno nei salvataggi delle partite a metà. */
 export const EDIFICI = {
   cripta: { nome: 'La cripta',       varianti: ['scheletri', 'guardiano'] },
-  tana:   { nome: 'La tana',         varianti: ['lupi', 'pipistrelli'] },
+  tana:   { nome: 'La tana',         varianti: ['lupi', 'bestie', 'pipistrelli'] },
   torre:  { nome: 'La torre oscura', varianti: ['negromante', 'diavoletto'] },
   antro:  { nome: "L'antro",         varianti: ['golem', 'drago'] },
 }
 export const EDIFICIO_DI = Object.fromEntries(Object.entries(EDIFICI).flatMap(([ed, e]) => e.varianti.map(id => [id, ed])))
+/* I terreni della battaglia infinita (quelli della campagna: bosco, palude, neve, lava) e le truppe
+   che sono di un terreno solo: ogni terreno ha la sua truppa firma, che altrove non si costruisce.
+   Le altre (arcieri, opliti, negromanti, drago) sono di tutti. La campagna di dodici tappe non li
+   usa: là il golem e il diavoletto restano dove sono, perché le operazioni arrivano per scalino.
+   `bestie` è per la tana in neve e lava, dove lupi e pipistrelli non ci sono (docs/arena/regole.md). */
+export const TERRENI = ['bosco', 'palude', 'neve', 'lava']
+export const ESCLUSIVE = { pipistrelli: ['bosco'], lupi: ['palude'], golem: ['neve'], diavoletto: ['lava'], bestie: ['neve', 'lava'] }
+/* terreno → le truppe che vi si possono costruire */
+export const TRUPPE_DEL_TERRENO = Object.fromEntries(TERRENI.map(t =>
+  [t, Object.keys(TRUPPE).filter(id => !ESCLUSIVE[id] || ESCLUSIVE[id].includes(t))]))
+export const truppeDelTerreno = terreno => TRUPPE_DEL_TERRENO[terreno] || Object.keys(TRUPPE)
 export const OPERAZIONI = ['+', '−', '×', '÷']
 
 /* Il castello: l'unica costruzione che spara e si potenzia, e quella che non
@@ -161,9 +175,16 @@ export function guastiDelleRegole() {
     for (const c of ['hp', 'dmg', 'rate', 'vel', 'gitt']) if (!(t[c] > 0)) g.push(`${k}: ${c} ${t[c]}`)
   }
   for (const [ed, e] of Object.entries(EDIFICI)) {
-    if (e.varianti.length !== 2 || e.varianti.some(id => !TRUPPE[id])) g.push(`${ed}: le truppe non sono due`)
-    else if (TRUPPE[e.varianti[0]].costo !== TRUPPE[e.varianti[1]].costo) g.push(`${ed}: le due truppe costano diverso`)
+    if (e.varianti.length < 2 || e.varianti.length > 3 || e.varianti.some(id => !TRUPPE[id])) g.push(`${ed}: le truppe non sono due o tre`)
+    else if (e.varianti.some(id => TRUPPE[id].costo !== TRUPPE[e.varianti[0]].costo)) g.push(`${ed}: le truppe costano diverso`)
+    // in ogni terreno della battaglia infinita ogni edificio ha almeno una truppa da costruire (la cripta è la prima mossa)
+    for (const terreno of TERRENI) if (!e.varianti.some(id => truppeDelTerreno(terreno).includes(id))) g.push(`${ed}: in ${terreno} non ha nessuna truppa`)
   }
+  for (const [id, dove] of Object.entries(ESCLUSIVE)) {
+    if (!TRUPPE[id]) g.push(`${id}: truppa esclusiva che non esiste`)
+    if (!dove.length || dove.some(t => !TERRENI.includes(t))) g.push(`${id}: terreno sconosciuto`)
+  }
+  for (const t of TERRENI) if (!Object.entries(ESCLUSIVE).some(([, dove]) => dove.includes(t))) g.push(`${t}: nessuna truppa firma`)
   if (Object.keys(EDIFICIO_DI).length !== Object.keys(TRUPPE).length) g.push('una truppa non sta in nessun edificio, o sta in due')
   if (GIOCATORE.iniziali < TRUPPE[EDIFICI.cripta.varianti[0]].costo) g.push('con le monete di partenza non si costruisce la cripta')
   // una truppa che vola e non colpisce chi vola non c'è: i volanti e chi li ferma sono i due lati della scelta

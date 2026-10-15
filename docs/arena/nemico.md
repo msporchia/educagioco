@@ -68,6 +68,12 @@ vincere il 100% al 0-26%, il rush dal 100% allo 0%; chi fa economia vince ancora
 Come per il giocatore è difensiva: la lancia sulle truppe del giocatore **entrate nella sua
 metà**, quando sono abbastanza fitte da valere la pena.
 
+## Nella battaglia infinita
+
+Stesse regole, la scheda dell'ultima tappa e le truppe del terreno (`Partita.truppeAmmesse`): i ruoli si risolvono
+sulla lista ammessa e un passo che non c'è si salta. Le bestie cornute sono nel ruolo `veloce` (dove ci sono i
+lupi non ci sono le bestie) e in `BATTE` come terrestri a corto raggio. `VERSIONE_IA` 10.
+
 ## Se si ritocca
 
 `VERSIONE_IA` in `nemico.js` entra nella firma dell'equilibrio: va alzata a ogni cambio del

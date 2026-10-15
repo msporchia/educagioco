@@ -12,7 +12,7 @@ defineEmits(['costruisci', 'dettagli'])
 </script>
 
 <template>
-  <div class="ar-nuvola" :data-scelta="s.posto" :style="{ left: s.x + 'px', top: s.y + 'px', '--coda': s.coda + 'px' }"
+  <div class="ar-nuvola" :data-scelta="s.posto" :style="{ left: s.x + 'px', top: s.y + 'px', width: s.larga + 'px', '--coda': s.coda + 'px' }"
        @click.stop>
     <div v-for="v in s.varianti" :key="v.id" class="ar-opzione" :class="{ 'ar-no': !v.puoi }" :data-variante="v.id">
       <button class="ar-disegno" :disabled="!v.puoi" :data-costruisci="v.id" :aria-label="v.nome"
