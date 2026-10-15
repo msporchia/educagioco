@@ -18,7 +18,7 @@
    `node test/esegui.mjs varieta --niente-build`
    ═══════════════════════════════════════════════════════════════════ */
 import { readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
+import { resolve, dirname } from 'node:path'
 import * as V from '../../src/data/varieta.js'
 import { GIOCHI } from '../../src/data/giochi.js'
 import { state, init, creaGiocatore, addCoins } from '../../src/store/profile.js'
@@ -176,7 +176,10 @@ const R = V.regoleDi({})
     if (g.posto) continue
     const f = fileDi(g.chiave)
     if (!f) { controlla(`trovo la schermata di ${g.chiave}`, false); continue }
-    const paga = /\baddCoins\(|\bincassa\(|\bborsa\(/.test(readFileSync(f, 'utf8'))
+    // una schermata che avvolge un'altra (il Sotterraneo 3D monta il Gioco.vue di sempre) paga con quella: si legge anche lei
+    const sorgente = readFileSync(f, 'utf8')
+    const dentro = [...sorgente.matchAll(/import \w+ from '(\.\/[^']+\.vue)'/g)].map(m => readFileSync(resolve(dirname(f), m[1]), 'utf8'))
+    const paga = /\baddCoins\(|\bincassa\(|\bborsa\(/.test([sorgente, ...dentro].join('\n'))
     uguale(`${g.chiave}: ${paga ? 'paga' : 'non paga'}, e NON_PAGANO lo sa`, V.paga(g), paga)
   }
 }
