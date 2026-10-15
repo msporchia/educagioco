@@ -8,7 +8,7 @@ da fuori, e `da-fare.md` tiene le voci aperte.
 - [core/](core/README.md) — architettura, archivio, test, comandi, pubblicare, convenzioni comuni, grafica e strumenti
 - [apprendimento/](apprendimento/README.md) — motore di ripasso, quiz, età e portata, saperi, calibrazione delle monete
 - [genitori/](genitori/README.md) — cosa si spegne, manopola dell'età, quadro, codice, cestino e posta, novità, guide
-- [asteroidi/](asteroidi/README.md) · [castello/](castello/README.md) · [arena/](arena/README.md) · [lingue/](lingue/README.md) · [bancarella/](bancarella/README.md) · [pozioni/](pozioni/README.md)
+- [asteroidi/](asteroidi/README.md) · [castello/](castello/README.md) · [arena/](arena/README.md) · [giardino/](giardino/README.md) · [lingue/](lingue/README.md) · [bancarella/](bancarella/README.md) · [pozioni/](pozioni/README.md)
 - [passo-passo/](passo-passo/README.md) · [generale/](generale/README.md) · [costruttore/](costruttore/README.md) (il Robot)
 - [sotterraneo/](sotterraneo/README.md) · [survivors/](survivors/README.md)
 - [codice-segreto/](codice-segreto/README.md) · [fattoria/](fattoria/README.md) · [conta/](conta/README.md) · [prima-dopo/](prima-dopo/README.md)

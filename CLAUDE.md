@@ -65,6 +65,7 @@ quale file.
 | `docs/asteroidi/` | Tabelline Asteroidi: la scaletta unica di pianeti e stazioni, il volo, i cieli, la nave madre e l'hangar |
 | `docs/castello/` | Difendi il Castello: taratura (`npm run tara`), torri, operazioni, mostri e immunità, partite libere e regali, campagne — prima di toccare `data/castello.js`, `data/mostri.js`, `data/campagne-castello.js` o un prezzo |
 | `docs/arena/` | Castle Battle (`src/giochi/arena/`): regole, calcoli, campagna, taratura (`npm run tara:arena`), sosta, grafica — prima di toccare `giochi/arena/dati/`, il motore o un prezzo |
+| `docs/giardino/` | Il giardino (`src/giochi/giardino/`, sperimentale): regole, calcoli, campagna, taratura — prima di toccare `giochi/giardino/dati/`, il motore o un prezzo |
 | `docs/lingue/` | English ed Español: vocaboli, campagne, la pronuncia incisa (`npm run voci`) |
 | `docs/bancarella/` | La bancarella: regole e difficoltà |
 | `docs/pozioni/` | Il laboratorio delle pozioni: regole e tappe |
