@@ -29,6 +29,12 @@ export const GIOCHI = [
       dettagli: d => [`livello ${d.livello}`, `${d.centri} centri`, `serie ${d.serie}`],
       vecchio: p => (p && p.best ? p.best.math : 0),
     } },
+  // gli stessi Asteroidi disegnati in 3D, in prova sui telefoni: stessa vista, stessa campagna
+  // (`mate`: tappe, stelle, record e sosta in comune), cambia solo il disegno (docs/asteroidi/grafica-3d.md)
+  { chiave: 'mate3d',     ico: '☄️', nome: 'Asteroidi 3D',
+    che: 'gli stessi asteroidi, in 3D', area: 'numeri', come: 'domande',
+    sperimentale: true,
+    copertina: { fondo: '#1d1f4a', disegno: '#6a4ac0', scena: 'stelle' } },
   // l'inglese e lo spagnolo a mondi hanno preso il posto delle carte di prima, e ne tengono il posto
   riga(gioco('inglese')),
   riga(gioco('spagnolo')),

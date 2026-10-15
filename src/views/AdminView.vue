@@ -60,6 +60,7 @@ const A_MANO = [
   ['#sotterraneo=roba', 'si scende equipaggiati'],
   ['#abisso=12', 'l\'abisso dal piano 12'],
   ['#seme=812', 'il sotterraneo con quel seme, per rivedere una discesa'],
+  ['#mate=5&livello=7&vite=1', 'asteroidi: la tappa 5 della fila (o volo), con livello e vite; &madre=1 la nave madre, &tela=2d il disegno di riserva, &nave=scafo:oro,ali:rosso,disegno:fiamme,stemma:stella una vernice da guardare'],
   ['#pin=1234', 'il codice dei grandi rimesso a quello'],
   ['#ripara', 'butta la copia del gioco e la riscarica'],
   ['#fattoria', 'apre un gioco: la chiave dopo il #'],

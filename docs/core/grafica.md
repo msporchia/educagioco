@@ -31,7 +31,11 @@ entrano energia e prezzi: solo fatti già decisi (`potenziabile: true`).
   (`motore/castello/carta.js`). Il castello a poligoni che c'era prima è
   stato tolto il 29 settembre 2026.
 - **`spazio.js`** — il cielo degli asteroidi (nave, pianeta, sassi, raggi):
-  riceve `danno: 0.5`, non sa che esistano le vite.
+  riceve `danno: 0.5`, non sa che esistano le vite. Gli Asteroidi 3D (gioco
+  in prova) disegnano invece con **`spazio3d/`**, il solo 3D del gioco
+  (three.js, WebGL 2), che riceve dalla view la stessa scena in pixel e la
+  traduce in mondo; senza WebGL tornano a `spazio.js`
+  ([../asteroidi/grafica-3d.md](../asteroidi/grafica-3d.md)).
 - **`corpo.js`** — **lo scheletro**: `persona()` per chi cammina su due
   gambe, `bestia()` per tutti gli altri. Chi lo usa scrive una *scheda di
   dati* e si ritrova ombra, respiro, lampo bianco della botta e

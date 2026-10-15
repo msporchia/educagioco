@@ -11,6 +11,7 @@ un numero per sasso, uno giusto, scendono dritti.
 | `src/data/asteroidi.js` | quale cielo ha ogni tappa (`cieloDi`, per codice `p3`/`m5` e non per posto), e quale il volo a ogni livello (`voceDelVolo`, `cieloDelVolo`) |
 | `src/grafica/cieli.js` | le tavolozze dei fondali, la specie di sasso di ogni cielo (`CIELI`, `specieDi`), i sassi (`disegnaSasso`), il Sole e il buco nero che si muovono (`disegnaSfondoVivo`) |
 | `src/views/MathGame.vue` | sceglie il cielo a inizio partita e a ogni livello del volo (`mettiCielo`), dà a ogni sasso `specie` e `seme` |
+| `src/grafica/spazio3d/` | lo stesso in 3D: il fondale cotto, le forme di ogni specie, il pianeta, il Sole e il buco nero ([grafica-3d.md](grafica-3d.md#ogni-posto-ha-il-suo-cielo)) |
 
 ## I cieli
 
@@ -25,8 +26,8 @@ un numero per sasso, uno giusto, scendono dritti.
 | `sole` | lava, col Sole in alto | il Sole |
 | `nero` | sassi scuri col bordo viola, il buco nero in alto | «La prova», e il volo oltre la fila |
 
-- **Il disegno non tradisce la risposta**: `disegnaSasso` non guarda mai
-  `a.ok`, e tutti i sassi di un'ondata sono della stessa specie.
+- **Il disegno non tradisce la risposta**: `disegnaSasso` (e il 3D) non
+  guarda mai `a.ok`, e tutti i sassi di un'ondata sono della stessa specie.
 - **Un sasso si disegna dal suo `seme`**: forma, crepe e tipo di rottame
   escono da un generatore col seme, mai da `Math.random` nel disegno, se no
   il sasso ribolle a ogni fotogramma.

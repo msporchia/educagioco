@@ -9,7 +9,7 @@ const TAU = Math.PI * 2
 // ricopiate da comune.js (che tira dentro mezzo cassetto del castello)
 const canale = (c, i) => parseInt(c.slice(i, i + 2), 16)
 const esa = q => Math.round(Math.max(0, Math.min(1, q)) * 255).toString(16).padStart(2, '0')
-function mescola(a, b, q) {
+export function mescola(a, b, q) {
   return '#' + [1, 3, 5].map(i =>
     Math.round(canale(a, i) + (canale(b, i) - canale(a, i)) * q)
       .toString(16).padStart(2, '0')).join('')
@@ -53,14 +53,15 @@ export const statoScafo = d => (d < 0.34 ? 0 : d < 0.67 ? 1 : 2)
 const SCAFO = [[0, -1.18], [0.30, -0.42], [0.36, 0.34], [0.24, 0.74],
                [-0.24, 0.74], [-0.36, 0.34], [-0.30, -0.42]]
 
-function ali(lv) {
+// le sagome sono anche quelle della nave in 3D (grafica/spazio3d/nave.js): lo strappo è lo stesso
+export function ali(lv) {
   if (lv <= 1) return [[[0.30, -0.10], [0.92, 0.46], [0.86, 0.72], [0.34, 0.60]]]
   if (lv === 2) return [[[0.30, -0.24], [1.16, 0.40], [1.20, 0.66], [0.86, 0.72], [0.34, 0.60]]]
   return [[[0.30, -0.30], [1.26, 0.30], [1.30, 0.58], [0.88, 0.66], [0.34, 0.52]],
           [[0.34, 0.30], [1.04, 0.78], [0.96, 0.98], [0.32, 0.80]]]
 }
 
-const PROPULSORI = { 1: [[0, 0.78, 0.20]], 2: [[-0.20, 0.76, 0.17], [0.20, 0.76, 0.17]],
+export const PROPULSORI = { 1: [[0, 0.78, 0.20]], 2: [[-0.20, 0.76, 0.17], [0.20, 0.76, 0.17]],
                      3: [[-0.30, 0.74, 0.15], [0, 0.80, 0.19], [0.30, 0.74, 0.15]] }
 
 // Un'ala è sempre scritta nello stesso verso (attacco alto, punta, attacco
@@ -70,7 +71,7 @@ const PROPULSORI = { 1: [[0, 0.78, 0.20]], 2: [[-0.20, 0.76, 0.17], [0.20, 0.76,
 const lerp = (p, q, k) => [p[0] + (q[0] - p[0]) * k, p[1] + (q[1] - p[1]) * k]
 const DENTI = [0.20, -0.30, 0.26, -0.22, 0.14]
 
-function strappa(a, quanto) {
+export function strappa(a, quanto) {
   const n = a.length
   const alto = lerp(a[0], a[1], quanto)
   const basso = lerp(a[n - 1], a[n - 2], quanto)
@@ -82,7 +83,7 @@ function strappa(a, quanto) {
 }
 
 // due schegge FUORI dalla sagoma: un contorno con dei cocci attorno si legge come una cosa rotta
-const SCHEGGE = [[0.16, -0.10, 0.10, 1.0], [0.30, 0.16, 0.07, -1.4]]
+export const SCHEGGE = [[0.16, -0.10, 0.10, 1.0], [0.30, 0.16, 0.07, -1.4]]
 
 // dove sta lo strappo: serve al gioco per soffiarci il fumo (particelle, non disegno)
 export const puntoRotto = (lv = 1) => {
@@ -106,19 +107,27 @@ function riflesso(ctx, R, t) {
   ctx.restore()
 }
 
+// la livrea parte dai suoi colori, il danno li imbrunisce sopra: senza livrea è la nave di serie.
+// `d`: 0, 0.5, 1. Le usa anche la nave in 3D, per gli stessi colori.
+export function tinteNave(L, d) {
+  const chiaro = mescola(L?.scafo ? mescola(L.scafo, '#ffffff', 0.55) : '#e8eefc', '#5a4a44', d * 0.75)
+  const scuro = mescola(L?.scafo ? mescola(L.scafo, '#000000', 0.35) : '#7d8aa6', '#2a1f1c', d * 0.8)
+  return {
+    chiaro, scuro,
+    accento: mescola(L?.scafo ? mescola(L.scafo, '#000000', 0.2) : '#2f7bff', '#7a3a20', d * 0.7),
+    chiaroAli: L?.ali ? mescola(mescola(L.ali, '#ffffff', 0.3), '#5a4a44', d * 0.75) : chiaro,
+    scuroAli: L?.ali ? mescola(mescola(L.ali, '#000000', 0.45), '#2a1f1c', d * 0.8) : scuro,
+    fiamma: L?.fiamma || null,
+  }
+}
+
 export function disegnaNave(ctx, n) {
   const R = n.r, lv = Math.max(1, Math.min(3, n.lv || 1))
   const st = statoScafo(Math.max(0, Math.min(1, n.danno || 0)))
   const d = st / 2                       // 0, 0.5, 1: i gradini, non la sfumatura
   const t = n.t || 0
-  // la livrea parte dai suoi colori, il danno li imbrunisce sopra: senza livrea è la nave di serie
   const L = n.livrea || null
-  const chiaro = mescola(L?.scafo ? mescola(L.scafo, '#ffffff', 0.55) : '#e8eefc', '#5a4a44', d * 0.75)
-  const scuro = mescola(L?.scafo ? mescola(L.scafo, '#000000', 0.35) : '#7d8aa6', '#2a1f1c', d * 0.8)
-  const accento = mescola(L?.scafo ? mescola(L.scafo, '#000000', 0.2) : '#2f7bff', '#7a3a20', d * 0.7)
-  const chiaroAli = L?.ali ? mescola(mescola(L.ali, '#ffffff', 0.3), '#5a4a44', d * 0.75) : chiaro
-  const scuroAli = L?.ali ? mescola(mescola(L.ali, '#000000', 0.45), '#2a1f1c', d * 0.8) : scuro
-  const fiamma = L?.fiamma || null
+  const { chiaro, scuro, accento, chiaroAli, scuroAli, fiamma } = tinteNave(L, d)
 
   ctx.save()
   ctx.translate(n.x, n.y)
@@ -303,6 +312,12 @@ export function disegnaNave(ctx, n) {
     sg.addColorStop(0, '#9fd8ff00'); sg.addColorStop(1, '#9fd8ff' + esa(0.22 * q))
     ctx.fillStyle = sg; ctx.fill()
     ctx.strokeStyle = '#dff6ff' + esa(0.8 * q); ctx.lineWidth = Math.max(2, R * 0.07); ctx.stroke()
+  }
+  // lo scudo che respinge un falso: un arco dalla parte dove ha urtato
+  if (n.scudo > 0) {
+    const ang = Math.atan2(n.scudoY ?? -1, n.scudoX ?? 0)
+    ctx.beginPath(); ctx.arc(0, 0, R * 1.6, ang - 0.9, ang + 0.9)
+    ctx.strokeStyle = '#7fe3ff' + esa(0.85 * Math.min(1, n.scudo)); ctx.lineWidth = Math.max(2, R * 0.1); ctx.stroke()
   }
   ctx.restore()
 }

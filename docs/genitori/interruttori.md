@@ -34,6 +34,10 @@ stanno in [../apprendimento/saperi.md](../apprendimento/saperi.md).
 Un flag solo per tutti i giochi con `sperimentale: true` nel manifesto:
 spento, quei giochi non esistono affatto (`sperimentaliAccesi`).
 
+Oggi in prova, fra gli altri, gli **Asteroidi 3D**
+(`mate3d`): gli stessi Asteroidi col cielo in 3D, con la loro carta ma la
+stessa campagna di quelli di sempre ([../asteroidi/grafica-3d.md](../asteroidi/grafica-3d.md)).
+
 ## Il quarto non si rifà
 
 Niente interruttore per *metà di un gioco* (`settings.varianti`, tolto):

@@ -29,6 +29,10 @@
    `--tocca` accetta più selettori separati da virgola: si toccano in
    fila, aspettando `--attesa` fra l'uno e l'altro. Un selettore che non
    c'è viene detto e non ferma lo scatto.
+
+   `--stampa '<espressione>'` scrive, dopo i tocchi, quanto vale nella pagina
+   (in JSON): `--stampa 'window.__mate.grafica()'` dice quanto costa un
+   fotogramma degli asteroidi in 3D.
    ═══════════════════════════════════════════════════════════════════ */
 
 import { apriBrowser, apriGioco } from '../test/aiuto/browser.mjs'
@@ -124,6 +128,8 @@ for (const sel of tocchi) {
 }
 
 await page.screenshot({ path: esce })
+const stampa = opz('stampa', null)
+if (stampa) console.log('  ', stampa, '=', JSON.stringify(await page.evaluate(stampa).catch(e => 'errore: ' + e.message)))
 await browser.close()
 
 console.log(errori.length

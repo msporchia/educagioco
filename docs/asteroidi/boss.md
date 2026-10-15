@@ -18,7 +18,8 @@ lascia un pacco per l'hangar ([hangar.md](hangar.md)).
   come tutte le altre. Prima il boss arrivava ogni otto domande ed era un
   assaggio della tappa dopo, non segnato: è stato tolto quando il boss è
   diventato raro e il pacco ha avuto bisogno di uno che lo regala.
-- **Il disegno sta in `src/grafica/nave-madre.js`**: `disegnaNaveMadre` riceve
+- **Il disegno sta in `src/grafica/nave-madre.js`** (in 3D in
+  `spazio3d/madre.js`, coi pezzi negli stessi posti): `disegnaNaveMadre` riceve
   i pezzi che le restano (`sx`, `dx`, `cupola`, `paura`), `cannoneDi` e
   `cupolaDi` dicono dove mandare il raggio che rimbalza.
 

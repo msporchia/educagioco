@@ -62,7 +62,7 @@ quale file.
 | `docs/core/` | architettura e file unico, archivio e salvataggi, progressi, sessioni, aggiornamento e service worker, guasti, test, comandi, pubblicare, la convenzione dei giochi nuovi, la home (profilo, riprendi, carosello, indice), interfaccia (barra, ✕, pausa, v-if), la partita lasciata a metà, il dito, primati, aiuti a monete, la guida del primo giro, grafica, sprite, creature (il catalogo comune dei mostri dipinti), strumenti — prima di toccare `src/store/`, `src/grafica/`, `vite.config.js`, un componente comune o un gioco nuovo |
 | `docs/apprendimento/` | il motore SRS, i moduli di quiz, livelli 0–100 e banda, ripasso, la domanda (fretta, perché e come si fa, il muro), saperi, età e portata delle tappe, **la calibrazione delle monete** — prima di toccare `src/store/srs.js`, `src/quiz/`, `data/partenze.js`, `data/portata*.js`, o di scrivere un prezzo o un premio |
 | `docs/genitori/` | cosa si può spegnere, la manopola dell'età, il quadro, i ritocchi ✎, «Come va», codice dei genitori, cestino e posta, le novità per i bambini, le guide in app — prima di toccare `components/eta/`, `src/guide/`, `store/pin.js`, `store/cestino.js`, `store/posta.js` |
-| `docs/asteroidi/` | Tabelline Asteroidi: la scaletta unica di pianeti e stazioni, il volo, i cieli, la nave madre e l'hangar |
+| `docs/asteroidi/` | Tabelline Asteroidi: la scaletta unica di pianeti e stazioni, il volo, i cieli, la nave madre e l'hangar, il cielo in 3D e i comandi col dito — prima di toccare `grafica/spazio3d/` |
 | `docs/castello/` | Difendi il Castello: taratura (`npm run tara`), torri, operazioni, mostri e immunità, partite libere e regali, campagne — prima di toccare `data/castello.js`, `data/mostri.js`, `data/campagne-castello.js` o un prezzo |
 | `docs/arena/` | Castle Battle (`src/giochi/arena/`): regole, calcoli, campagna, taratura (`npm run tara:arena`), sosta, grafica — prima di toccare `giochi/arena/dati/`, il motore o un prezzo |
 | `docs/giardino/` | Il giardino (`src/giochi/giardino/`, sperimentale): regole, calcoli, campagna, taratura — prima di toccare `giochi/giardino/dati/`, il motore o un prezzo |
@@ -90,8 +90,11 @@ Generale), `strumenti/sprite/*.md` (fogli e foglietti degli sprite),
 - **Il codice è in italiano**: nomi, funzioni, commenti, documenti.
 - **I fine riga sono LF** (`.gitattributes`). Uno script che riscrive un file
   (Python lo fa senza chiedere) non deve cambiarli, se no il diff annega.
-- **Niente dipendenze a runtime oltre a Vue.** Suoni sintetizzati, icone
-  emoji o disegnate, nessun file esterno: il build resta un HTML unico.
+- **Niente dipendenze a runtime oltre a Vue**, con un'eccezione: three.js
+  per gli Asteroidi 3D, gioco in prova (~640 KB, accettati dall'utente: il
+  3D non si scrive a mano; gli Asteroidi di sempre restano in 2D). Suoni sintetizzati,
+  icone emoji o disegnate, nessun file esterno: il build resta un HTML
+  unico. → `docs/asteroidi/grafica-3d.md`
 - **I giochi nuovi stanno in `src/giochi/`** col calco di `codice-segreto/`
   (`docs/core/convenzione-giochi.md`); `src/views/` sono i giochi vecchi e
   non sono un modello.

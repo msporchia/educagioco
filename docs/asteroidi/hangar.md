@@ -27,7 +27,9 @@ rotta, sempre: anche senza pezzi regalati si vede la nave di serie.
   che non ce ne sia uno che nessuno regala.
 - **La nave scelta è la stessa dappertutto**: in partita, sulla rotta (il
   razzo), nell'hangar. La tela riceve la `livrea`, cioè colori e forme già
-  decisi, e non sa niente di pezzi o regali.
+  decisi, e non sa niente di pezzi o regali. Negli Asteroidi 3D (in prova)
+  la livrea si dipinge sulle ali della nave 3D con gli stessi pittori
+  ([grafica-3d.md](grafica-3d.md#la-nave)); la rotta e l'hangar restano 2D.
 - **Il danno sta sopra la livrea**: il disegno e lo stemma si dipingono
   dentro l'ala com'è, anche strappata, quindi lo strappo resta leggibile e lo
   stemma se ne va col pezzo. Provato nel mockup: dipinte sopra l'ala intera,
