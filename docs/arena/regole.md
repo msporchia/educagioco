@@ -197,16 +197,19 @@ che cade per ultimo, «vince il castello più sano» finiva quasi sempre pari.
   l'interfaccia può essere semplificata se premo sopra le piazzole, così abbiamo tutto lo
   spazio sotto»). Sopra ognuna c'è un bersaglio trasparente grande quanto l'edificio
   (`viste/Campo.vue`, le misure dalla scena); le piazzole libere hanno un «＋».
-- **Una piazzola libera apre la scelta** (`viste/Scelta.vue`): le truppe della tappa a due a
-  due col prezzo, la miniera, e piccole in fondo quelle che arrivano più avanti. «I numeri»
-  aprono i dettagli.
-- **Un edificio toccato mostra l'anello**: pulsanti grandi sopra di lui, ⬆️ potenzia (col
-  livello dopo e il prezzo, o quanto riposa), 💰 vendi (quanto ridà), ? i numeri. Il
-  castello ha l'anello senza vendere. Toccarlo di nuovo o toccare il campo lo chiude; il
-  campo intanto non si ferma.
-- **I dettagli** (`viste/Dettagli.vue`) hanno le righe «adesso → livello dopo» di
-  `motore/dettagli.js`, chi colpisce e se vola, e per un edificio costruito «Vendi».
-- **Il campo sta fermo** finché dettagli o scelta sono aperti: servono a confrontare
+- **Una piazzola libera apre una nuvoletta** (`viste/Scelta.vue`, dentro il campo sopra la
+  piazzola): il disegno di ogni truppa della tappa e la miniera, ciascuno col prezzo. Si preme
+  il disegno o il prezzo; il «?» piccolo nell'angolo apre «i numeri». Niente nomi né frasi.
+- **Un edificio toccato mostra l'anello**: ⬆️ potenzia (livello dopo e prezzo, o quanto
+  riposa), 💰 vendi (quanto ridà), un «?» piccolo per i numeri. Il castello ha l'anello senza
+  vendere. **Vendere non chiede un calcolo**: due tocchi (il primo cambia 💰 in ✓, il secondo
+  vende e ridà metà della spesa, `vendiSubito` in `Gioco.vue`); `AZIONI.vendi.op` resta nei
+  dati ma chi gioca non lo incontra più. Toccarlo di nuovo o toccare il campo lo chiude; il campo
+  intanto non si ferma.
+- **I dettagli** (`viste/Dettagli.vue`, la scheda dei «numeri») hanno le righe «adesso →
+  livello dopo» di `motore/dettagli.js`, tre righe su chi colpisce e se vola, il pulsante col
+  prezzo, e per un edificio costruito «Vendi» in disparte.
+- **Il campo sta fermo** finché dettagli o nuvoletta sono aperti: servono a confrontare
   con calma.
 - **Sotto resta una barra sottile**: le monete, 🔧 ripara e 💣 bomba, che non stanno su un
   edificio.

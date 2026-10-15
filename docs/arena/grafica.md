@@ -66,3 +66,9 @@ Il quadro è alto quanto lo schermo lascia e il terreno continua specchiato sopr
 sotto il campo (`sfondo` in `scena/campo.js`): niente fascia verde. Orologio e
 diamanti stanno in alto; ripara e bomba sono due icone tonde in basso a destra
 sul campo (`.ar-azioni`), col prezzo o l'attesa in un cartellino.
+- **Le modali sono quelle della fattoria e del sotterraneo, ma asciutte**: la scelta di una
+  piazzola è una nuvoletta crema con l'orlo giallo (disegno e pulsantino col prezzo, il «?»
+  dei numeri piccolo nell'angolo), l'anello usa gli stessi pulsanti, i dettagli una scheda
+  scura con la ✕ rossa tonda. Il bambino sa già cosa vuole costruire: **niente nomi, note e
+  titoli**, e le emoji restano solo dove portano informazione (💎 del prezzo, 💰 vendi, ⛏️ per
+  la miniera, che non ha un ritratto).

@@ -58,12 +58,15 @@
                 display: grid; place-items: center }
 .ar-bersaglio.ar-scelto { box-shadow: 0 0 0 3px #ffe98a, 0 0 18px #ffe98a88 }
 .ar-piu { font-size: 22px; font-weight: 900; color: #ffe98a; text-shadow: 0 1px 3px #000; opacity: .85 }
-/* l'anello: pulsanti grandi in fila sopra l'edificio toccato */
-.ar-anello { position: absolute; z-index: 6; transform: translate(-50%, -100%); display: flex; gap: 6px; pointer-events: none }
-.ar-voce { pointer-events: auto; min-width: 64px; min-height: 58px; padding: 4px 6px; border-radius: 14px;
-           background: linear-gradient(180deg, #ffd24a, #f0a21a); color: #3a2400; border: 2px solid #fff6;
-           box-shadow: 0 4px 12px #0009; display: flex; flex-direction: column; align-items: center; justify-content: center }
-.ar-voce.ar-no { background: linear-gradient(180deg, #8a8fa6, #5e6380); color: #eef }
+/* l'anello: pochi pulsanti cremosi come quelli della fattoria, sopra l'edificio toccato; il «?» è piccolo */
+.ar-anello { position: absolute; z-index: 6; transform: translate(-50%, -100%); display: flex; align-items: flex-end; gap: 6px; pointer-events: none }
+.ar-voce { pointer-events: auto; width: 68px; min-height: 60px; padding: 5px 4px 6px; border-radius: 18px;
+           background: #fdf3d7; color: #4a2c12; border: 3px solid #f5bb3c;
+           box-shadow: 0 3px 0 #c47f12, 0 6px 14px #0008; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px }
+.ar-voce:active { transform: translateY(2px) }
+.ar-voce.ar-no { opacity: .55 }
+.ar-voce.ar-sicuro { background: #ffe0d6; border-color: #e0644f; box-shadow: 0 3px 0 #9b2f1c, 0 6px 14px #0008 }
+.ar-voce.ar-piccola { width: 44px; min-height: 44px; padding: 0; border-radius: 50%; font-size: 18px; font-weight: 900 }
 .ar-voce-icona { font-size: 22px; line-height: 1 }
 .ar-voce-testo { font-size: 11.5px; font-weight: 800; white-space: nowrap }
 /* ripara e bomba: icone tonde in basso a destra sul campo (il dito: almeno 56 px) */
@@ -78,6 +81,31 @@
 .ar-azione-tonda .ar-prezzo { position: absolute; bottom: -9px; padding: 2px 7px; border-radius: 999px; background: #101a44; border: 1.5px solid #ffe98a88;
                               font-size: 11px; color: #fff; white-space: nowrap }
 .ar-azione-tonda .ar-info { top: -10px; left: auto; right: -6px }
+/* la nuvoletta di una piazzola libera: crema con l'orlo giallo, la coda in giù verso la piazzola */
+.ar-nuvola { position: absolute; z-index: 7; transform: translate(-50%, -100%); display: flex; gap: 8px; padding: 10px 10px 12px;
+             background: #fdf3d7; border: 4px solid #f5bb3c; border-radius: 22px;
+             box-shadow: 0 0 0 2px #c47f12, inset 0 0 0 2px #fff6dc, 0 12px 28px #0009;
+             animation: ar-spunta .16s ease-out; transform-origin: 50% 100% }
+.ar-nuvola::after { content: ''; position: absolute; left: calc(50% + var(--coda, 0px)); bottom: -15px; width: 20px; height: 20px;
+                    margin-left: -10px; transform: rotate(45deg); background: #fdf3d7;
+                    border-right: 4px solid #f5bb3c; border-bottom: 4px solid #f5bb3c; box-shadow: 3px 3px 0 #c47f12 }
+@keyframes ar-spunta { from { transform: translate(-50%, -96%) scale(.85); opacity: 0 } }
+.ar-opzione { position: relative; width: 68px; display: flex; flex-direction: column; align-items: center; gap: 6px }
+.ar-opzione.ar-no { opacity: .55 }
+.ar-disegno { width: 68px; height: 64px; border-radius: 18px; background: #fffaf0; border: 3px solid #d3b47d;
+              box-shadow: 0 3px 0 #c9a46a; display: grid; place-items: center; padding: 0 }
+.ar-disegno:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 1px 0 #c9a46a }
+.ar-pico { font-size: 34px }
+.ar-pillola { min-width: 56px; padding: 6px 10px; border-radius: 999px; font-size: 14px; font-weight: 800; color: #5a3410;
+              background: linear-gradient(#ffe36e, #f5b324); border: 3px solid #c47f12; box-shadow: 0 3px 0 #a5650c; white-space: nowrap }
+.ar-pillola:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 1px 0 #a5650c }
+.ar-pillola:disabled { background: #e6dcc4; border-color: #b9a77c; box-shadow: 0 3px 0 #b9a77c; color: #8a7a55 }
+/* il «?» dei numeri: un cerchietto nell'angolo, dentro un'area più larga che il dito prende */
+.ar-punto { position: absolute; top: -9px; right: -9px; width: 36px; height: 36px; z-index: 2; display: grid; place-items: center;
+            font-size: 13px; font-weight: 900; color: #6b4a26; background: none; padding: 0 }
+.ar-punto::before { content: ''; position: absolute; width: 20px; height: 20px; border-radius: 50%; z-index: -1;
+                    background: #fffaf0; border: 2px solid #d3b47d }
+.ar-punto { isolation: isolate }
 .ar-tela { display: block; width: 100%; height: 100% }
 .ar-dritta, .ar-avviso { position: absolute; left: 50%; top: 12%; transform: translateX(-50%);
             white-space: nowrap; font-weight: 800; font-size: 14px; padding: 7px 14px; border-radius: 999px;
@@ -122,41 +150,37 @@
              background: linear-gradient(180deg, #ffd24a, #f0a21a); color: #3a2400; display: flex; gap: 8px; justify-content: center }
 .ar-grosso.ar-chiaro { background: rgba(255, 255, 255, .12); color: #fff }
 
-/* i dettagli: a tutto schermo, il campo sta fermo */
+/* i dettagli («i numeri»): una scheda scura come lo zaino del sotterraneo, con la ✕ rossa tonda della fattoria; il campo sta fermo */
 .ar-dettagli { z-index: 35; align-items: stretch; justify-content: flex-start; padding: 12px 10px; gap: 0 }
-.ar-scheda { position: relative; width: 100%; max-width: 420px; margin: auto; padding: 16px 14px 14px;
-             border-radius: 22px; color: #eaf0ff; background: linear-gradient(180deg, #223055, #141c33);
-             border: 1px solid #ffffff22; display: flex; flex-direction: column; gap: 10px }
-.ar-x { position: absolute; top: 10px; right: 10px; width: 34px; height: 34px; border-radius: 50%;
-        background: #ffffff1a; color: #fff; font-size: 16px }
-.ar-intesta { display: flex; align-items: center; gap: 12px; padding-right: 40px }
-.ar-intesta h2 { margin: 0; font-size: 21px; color: #ffe98a }
-.ar-livello { margin: 2px 0 0; font-size: 13px; color: #9fb0d8 }
+.ar-scheda { position: relative; width: 100%; max-width: 380px; margin: auto; padding: 16px 14px 14px;
+             border-radius: 22px; color: #eaf0ff; background: #141826;
+             border: 1px solid #ffffff22; box-shadow: 0 18px 60px #000c; display: flex; flex-direction: column; gap: 10px;
+             animation: ar-cresce .16s ease-out }
+@keyframes ar-cresce { from { transform: scale(.94); opacity: 0 } }
+.ar-x { position: absolute; top: 8px; right: 8px; width: 38px; height: 38px; border-radius: 50%; z-index: 2;
+        border: 3px solid #fff; background: radial-gradient(circle at 35% 30%, #ff7a62, #d93a2a 70%);
+        box-shadow: 0 3px 0 #8a1f14, 0 4px 8px #0004; color: #fff; font-size: 16px; font-weight: 900; padding: 0 }
+.ar-x:active { transform: scale(.92) }
+.ar-intesta { display: flex; align-items: center; gap: 12px; padding-right: 44px }
+.ar-intesta h2 { margin: 0; font-size: 21px; color: #ffd23f }
+.ar-livello { margin: 2px 0 0; font-size: 13px; color: #93a0bd }
 .ar-grande { font-size: 44px }
-.ar-nota-grande { margin: 0; font-size: 14.5px; line-height: 1.4; color: #dbe5ff }
-.ar-ruolo { margin: 0; padding-left: 18px; font-size: 13px; color: #b9c8ee; line-height: 1.5 }
+.ar-ruolo { margin: 0; padding-left: 18px; font-size: 12.5px; color: #93a0bd; line-height: 1.5 }
 .ar-due { display: grid; grid-template-columns: 1fr 1fr; gap: 8px }
 .ar-due.ar-uno { grid-template-columns: 1fr }
 .ar-riquadro { background: #ffffff0d; border: 1px solid #ffffff1c; border-radius: 14px; padding: 9px 10px }
 .ar-riquadro.ar-dopo { background: #1f7a3c22; border-color: #4be07b55 }
-.ar-riquadro h3 { margin: 0 0 8px; font-size: 12.5px; color: #ffe98a; line-height: 1.25 }
+.ar-riquadro h3 { margin: 0 0 8px; font-size: 12.5px; color: #ffd23f; line-height: 1.25 }
 .ar-riquadro dl { margin: 0; display: grid; gap: 7px }
-.ar-riquadro dt { font-size: 11.5px; color: #9fb0d8; line-height: 1.2 }
+.ar-riquadro dt { font-size: 11.5px; color: #93a0bd; line-height: 1.2 }
 .ar-riquadro dd { margin: 0; font-size: 17px; font-weight: 800; color: #fff }
 .ar-riquadro dd.ar-cambia { color: #7ee08c }
 .ar-motivo { margin: -4px 0 0; font-size: 12.5px; color: #ffb3a8; text-align: center }
 .ar-grosso.ar-spento { opacity: .45 }
-
-/* la carta di un edificio da costruire: le sue due truppe, piccole */
-.ar-coppia { display: flex; align-items: flex-end; height: 40px }
-/* la scelta fra le due truppe di un edificio */
-.ar-varianti { display: grid; grid-template-columns: 1fr 1fr; gap: 8px }
-.ar-variante { background: #ffffff0d; border: 1px solid #ffffff1c; border-radius: 14px; padding: 10px 8px;
-               display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center }
-.ar-variante h3 { margin: 0; font-size: 16px; color: #ffe98a }
-.ar-variante .ar-grosso { padding: 10px 8px; font-size: 17px }
-.ar-variante.ar-chiusa { opacity: .5 }
-.ar-piu-avanti { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; opacity: .55; margin-top: 8px }
-.ar-vendi { background: linear-gradient(180deg, #8a6a2a, #5e4618) }
-.ar-nota-variante { margin: 0; font-size: 12.5px; line-height: 1.35; color: #dbe5ff; flex: 1 }
-.ar-numeri { font-size: 13px; font-weight: 700; color: #9fb0d8; text-decoration: underline; padding: 6px 10px; background: none; border: 0 }
+/* il tasto che conta: il pulsantino giallo con il prezzo, come in fattoria; vendere sta in disparte */
+.ar-pill { align-self: center; padding: 10px 24px; border-radius: 999px; font-size: 16px; font-weight: 800; color: #5a3410;
+           background: linear-gradient(#ffe36e, #f5b324); border: 3px solid #c47f12; box-shadow: 0 3px 0 #a5650c }
+.ar-pill:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 1px 0 #a5650c }
+.ar-pill:disabled { opacity: .4 }
+.ar-vendi-link { align-self: center; min-height: 44px; padding: 8px 16px; font-size: 13px; font-weight: 700; color: #93a0bd;
+                 background: none; border: 0; text-decoration: underline }
