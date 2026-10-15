@@ -270,7 +270,8 @@ function avvia(indice) {
   togli()   // una partita che comincia non comincia in pausa
   scorda()  // una partita nuova butta quella lasciata a metà (già chiesto dalla mappa)
   tappaIdx.value = indice
-  partita.value = new Partita({ sfida: sfidaDi(CAMPAGNA[indice]), registra: true })
+  partita.value = new Partita({ sfida: sfidaDi(CAMPAGNA[indice]), registra: true, eviaIA: progresso(CHIAVE).ultimaIA || null })
+  ritocca(CHIAVE, c => { c.ultimaIA = partita.value.ia.nome })   // la prossima partita avrà un altro carattere
   azzera()
   toccato.value = false
   vista.value = 'campo'
