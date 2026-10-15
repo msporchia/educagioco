@@ -88,6 +88,39 @@ Controllo: come il primo; Carbonchio non è uno scheletro uguale a Re Ossuto
 (qui nero e arancio, lì avorio e viola); Zannaverde e Gorgo si leggono come
 un ragno e una melma anche a mezza dimensione.
 
+## Prompt 3 e 4 — i boss dei posti (proposta del 15 ottobre 2026)
+
+Otto boss nuovi, **due per scenario** (cantine, cripta, fornace, inferno), da affiancare ai sette di sopra o da dare a ogni posto dell'abisso e ai
+tratti che li useranno. Non sono ancora nel codice: arrivati i fogli si decide dove stanno (`dati/grossi.js`, `GIRO_DELL_ABISSO`: [grossi.md](../../../../../docs/sotterraneo/grossi.md)).
+Il tono è quello del sotterraneo, **serio** (regola dell'utente: niente icone tenere o buffe): grandi, con una faccia sola e inconfondibile, un po' di paura
+come in Diablo, mai sangue o cose orribili. **Due chat nuove, una per foglio**; si allega `mostri-1.png` (la mano) e, per l'inferno, anche `sotterraneo_6.png`
+(la scena: da lì i colori). I mostri di ogni posto sono pensati per non somigliare a nessun comune di quel posto né a un boss di prima.
+
+| posto | boss | com'è | tavolozza |
+|---|---|---|---|
+| cantine | **Il Carceriere** | un omone con la maschera di ferro, un mazzo di chiavi alla cintura e una mazza chiodata | cuoio, ferro, grigio ruggine |
+| cantine | **Il Re dei Ratti** | un ammasso di ratti fusi in un corpo solo, grosso come un carro, con una corona di ferro arrugginito | bruno sporco, rosa pallido, ferro |
+| cripta | **Il Cavaliere Senza Nome** | un'armatura nera e vuota, alta il doppio, uno spadone a due mani, una fiamma azzurra negli occhi dell'elmo | nero, azzurro ghiaccio, argento |
+| cripta | **La Vedova** | una figura alta e sottile in un velo da lutto, le mani lunghe come rami, una luce verde dentro il cappuccio | grigio scuro, verde pallido, bianco |
+| fornace | **Il Fabbro Ardente** | un colosso di ferro fuso con un maglio e un'incudine fusa nel braccio, vene di lava | ferro nero, arancio, giallo |
+| fornace | **La Salamandra** | un grande lucertolone di brace, tozzo e senza ali, la schiena di scaglie accese e la bocca da cui cola lava | rosso scuro, arancio, nero |
+| inferno | **Il Sovrano Cornuto** | un demone enorme in piedi, corna ricurve, ali chiuse, una catena nera attorno al pugno | rosso cupo, nero, oro |
+| inferno | **Il Cerbero** | un cane infernale a tre teste, ognuna con gli occhi di brace, un collare di catene spezzate | bruno rossastro, nero, brace |
+
+```text
+Allego [un foglio di mostri di un gioco di ruolo a 16 bit per bambini: è lo STILE da copiare / per l'inferno: anche la scena di un posto dello stesso gioco, da cui prendere i COLORI], uguale, con lo stesso contorno scuro di un pixel, la stessa luce da in alto a sinistra, gli stessi colori pieni e gli stessi piccoli bagliori attorno ai mostri. Ogni pixel del disegno è un quadrato pieno di 4×4 px.
+
+Disegna sullo stesso stile quattro MOSTRI GROSSI, i boss in fondo ai sotterranei: devono fare un po' paura, come in Diablo, ma niente sangue e niente cose orribili. Sono grandi più o meno il doppio dei mostri normali del foglio allegato, e ognuno ha una faccia sola, inconfondibile e diversa dalle altre.
+
+Su un fondo MAGENTA PIENO (#FF00FF), uniforme, senza sfumature, senza ombre e senza scacchiera, immagine 1024×1024 px: quattro righe, una per mostro, quattro colonne, cioè quattro FOTOGRAMMI DI RESPIRO dello stesso mostro. Ogni fotogramma sta al centro di un quadrato di 256×256 px; il mostro è alto circa 128 px (mai più di 160), ha i PIEDI sullo stesso bordo basso in tutti e quattro i fotogrammi e guarda verso DESTRA. I quattro fotogrammi sono quasi identici: cambia solo di 4 px su o giù il petto e la testa, come un respiro. Il magenta non compare mai DENTRO un mostro. Niente ombra per terra, niente testo, niente numeri, niente cornice.
+
+[le quattro righe: i due boss del primo posto e i due del secondo, dalla tabella: «IL CARCERIERE: …», «IL RE DEI RATTI: …», «IL CAVALIERE SENZA NOME: …», «LA VEDOVA: …»; nel secondo foglio «IL FABBRO ARDENTE», «LA SALAMANDRA», «IL SOVRANO CORNUTO», «IL CERBERO»]
+```
+
+Foglio 1: cantine e cripta. Foglio 2: fornace e inferno. Controllo come il Prompt 2: riconoscibili a mezza dimensione, stesso contorno e stessa luce
+del foglio allegato, piedi alla stessa altezza nei quattro fotogrammi, nessun magenta dentro le figure; **i due di un posto non si confondono** (il Fabbro è
+ferro e scintille, la Salamandra è bassa e rossa; il Sovrano sta in piedi, il Cerbero a quattro zampe).
+
 ## Dopo l'immagine
 
 1. Si salva con il suo foglietto `.json` (com'erano quelli dei mostri, in
