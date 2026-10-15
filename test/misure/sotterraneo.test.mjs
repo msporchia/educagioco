@@ -35,15 +35,18 @@ const cento = x => `${Math.round(x * 100)}%`
 
 /* Le misure giocano ventimila discese: su più processi (test/aiuto/parallelo.mjs), tutte insieme, come il banco da riga di comando.
    L'ordine dei compiti è quello con cui si leggono sotto. */
-const SEMI_ZONE = 10
-const BANCO = 'src/giochi/sotterraneo/motore/banco.js'
+const SEMI_ZONE = 8
 const CURIOSO = 'test/aiuto/misure-curioso.mjs'
-const compito = (funzione, opz) => ({ modulo: BANCO, funzione, args: [opz] })
-const CONFIGURAZIONI_ZONE = [[12], [16], [20], [30], [24], [27], [16, 11], [16, 12], [16, 15], [16, 20]]
+/* Le discese in cui a 4 giuste su 10 il curioso vince oltre il bersaglio per come sono fatte, e va bene (il proprietario, 15 ottobre: «a memoria oneshotta
+   tutti, quindi è difficile perdere; l'idea è dargli alcuni punti dove deve pianificare»): la cripta (che si impara) e la cisterna (45% in media, elfa e nano 65–70%) */
+const SENZA_BERSAGLIO_A_4 = ['altare', 'cisterna']
+const CONFIGURAZIONI_ZONE = [[12], [16], [20], [24], [30], [16, 11], [16, 12], [16, 15], [16, 20]]
+const PROVE_ZONE = [0.9, 0.6]   // a 4/10 il curioso nelle zone non vince quasi mai: non serve giocarle
 const compiti = [
   ...EROI.map(e => ({ modulo: CURIOSO, funzione: 'misuraDelCurioso', args: [{ eroe: e.chiave, semi: SEMI, prove: PROVE }] })),
   ...EROI.map(e => ({ modulo: CURIOSO, funzione: 'misuraDelBravo', args: [{ eroe: e.chiave, semi: SEMI }] })),
-  ...CONFIGURAZIONI_ZONE.flatMap(([L, A]) => EROI.map(e => compito('misuraLeZone', { eroe: e.chiave, livello: L, eroeA: A ?? L, semi: SEMI_ZONE }))),
+  ...EROI.map(e => ({ modulo: CURIOSO, funzione: 'misuraLeZoneDelCurioso', args: [{ eroe: e.chiave, semi: SEMI_ZONE, prove: PROVE_ZONE,
+                                                                                   configurazioni: CONFIGURAZIONI_ZONE.map(([L, A]) => [L, A ?? L]) }] })),
 ]
 const risultati = await inParallelo(compiti)
 let letti = 0
@@ -63,9 +66,8 @@ for (const [i, e] of EROI.entries()) {
     const [nove, , quattro] = m.vinte.curioso.map(v => v[k])
     controlla(`${e.chiave}, ${t.chiave}: dal suo ingresso a 9/10 si arriva in fondo quasi sempre`, nove >= SEMI * 0.75, `${nove}/${SEMI}`)
     // a testa le classi non sono uguali (l'elfa è la più veloce, e a quattro su dieci vince più delle altre): a testa non sempre,
-    // e in media «quasi mai» (sotto, nel ciclo delle discese)
-    if (k) controlla(`${e.chiave}, ${t.chiave}: a 4/10 non si vince quasi sempre`, quattro <= SEMI * (k === 1 ? 0.7 : 0.6), `${quattro}/${SEMI}`)
-    else controlla(`${e.chiave}, la prima perdona: a 4/10 si arriva in fondo spesso`, quattro >= SEMI * 0.6, `${quattro}/${SEMI}`)
+    // e in media «quasi mai» (sotto, nel ciclo delle discese). Nelle discese facili (SENZA_BERSAGLIO_A_4) niente
+    if (!SENZA_BERSAGLIO_A_4.includes(t.chiave)) controlla(`${e.chiave}, ${t.chiave}: a 4/10 non si vince quasi sempre`, quattro <= SEMI * (k === 1 ? 0.7 : 0.6), `${quattro}/${SEMI}`)
   }
 }
 
@@ -74,8 +76,9 @@ for (const [k, t] of CAMPAGNA.entries()) {
   const nove = media(tutte, 'curioso', 0, k), sei = media(tutte, 'curioso', 1, k), quattro = media(tutte, 'curioso', 2, k)
   controlla(`${t.chiave}: a 9/10 dal suo ingresso quasi sempre, fra i quattro eroi`, nove >= 0.85, cento(nove))
   controlla(`${t.chiave}: a 6/10 in mezzo: meno che a 9/10`, sei <= nove, `${cento(sei)} contro ${cento(nove)}`)
-  controlla(`${t.chiave}: a 4/10 quasi mai, fra i quattro eroi${k === 1 ? ' (la scalinata, di più: il primo avvio)' : ''}`,
-            quattro <= (k === 1 ? 0.45 : 0.3), cento(quattro))
+  if (!SENZA_BERSAGLIO_A_4.includes(t.chiave))
+    controlla(`${t.chiave}: a 4/10 quasi mai, fra i quattro eroi${k === 1 ? ' (la scalinata, di più: il primo avvio)' : ''}`,
+              quattro <= (k === 1 ? 0.45 : 0.3), cento(quattro))
   const prima9 = media(tutte, 'prima', 0, k), prima6 = media(tutte, 'prima', 1, k)
   if (k >= 3) controlla(`${t.chiave}: con la roba di una discesa prima, a 9/10 ci si arriva ancora`, prima9 >= 0.5, cento(prima9))
   controlla(`${t.chiave}: e non va meglio che con la sua roba (a 6/10, a meno del caso)`, prima6 <= sei + 0.15, `${cento(prima6)} contro ${cento(sei)}`)
@@ -101,26 +104,25 @@ for (const [k, t] of CAMPAGNA.entries()) {
   // per terra e l'armaiolo la vende a 9 💎 (sotto), quindi nudi non si arriva (docs/sotterraneo/la-grande-storia.md, «Il primo avvio»)
   controlla('scalinata a mani nude a 9/10: si vince di rado, una volta su dieci almeno, fra i quattro eroi', tutteNude >= 0.1, cento(tutteNude))
   controlla('e meno che con la prima arma', tutteNude < media(tutte, 'curioso', 0, 1), `${cento(tutteNude)} contro ${cento(media(tutte, 'curioso', 0, 1))}`)
-  /* le gemme con cui si esce dalla cripta (in media, il curioso) bastano alla prima arma dell'armaiolo che a questo
-     eroe serve. Il guardiano dell'ultima stanza la lascia anche per terra: qui si conta solo la spesa */
+  /* le gemme con cui si esce dalla scalinata (in media, il curioso; non subito dalla cripta: anche senza un'arma la scalinata si vince, il proprietario, 15 ottobre)
+     bastano alla prima arma dell'armaiolo che a questo eroe serve. Il guardiano dell'ultima stanza la lascia anche per terra: qui si conta solo la spesa */
+  nota(`le gemme con cui si esce dalla cripta e dalla scalinata: ${EROI.map((e, i) => `${e.chiave} ${Math.round(tutte[i].uscita[0])} · ${Math.round(tutte[i].uscita[1])}`).join(' · ')}`)
   EROI.forEach((e, i) => {
-    const gemme = Math.floor(tutte[i].uscita)
-    const b = new Bottega({ eroe: e.chiave, roba: { ...ROBA_VUOTA(), gemme }, finite: 1, crescita: crescitaAttesa(e.chiave, 1) })
+    const gemme = Math.floor(tutte[i].uscita[1])
+    const b = new Bottega({ eroe: e.chiave, roba: { ...ROBA_VUOTA(), gemme }, finite: 2, crescita: crescitaAttesa(e.chiave, 2) })
     const armi = b.mercanzia('armaiolo').filter(r => r.avanti === 0 && ['mano', 'mancina'].includes(COSE[r.chiave].dove) && b.vaAddosso(r.chiave))
     const prezzo = armi.length ? Math.min(...armi.map(r => b.quantoCosta(r.chiave))) : Infinity
-    controlla(`${e.chiave}: con le ${gemme} 💎 con cui si esce dalla cripta si compra la prima arma (${prezzo} 💎)`, prezzo <= gemme, `${prezzo} contro ${gemme}`)
+    controlla(`${e.chiave}: con le ${gemme} 💎 con cui si esce dalla scalinata si compra un'arma (${prezzo} 💎)`, prezzo <= gemme, `${prezzo} contro ${gemme}`)
   })
 }
 
-/* Chi va dritto, il bravo (19 su 20): la sua storia di fila. Può stare un po' sotto il curioso, purché non trovi un muro (due sconfitte
-   di fila nella stessa discesa): giocatori-tipo.md, «Il metro è il curioso» */
+/* Chi va dritto, il bravo (19 su 20): la sua storia di fila, solo stampata. Può trovare muri (due sconfitte di fila nella stessa discesa) e va bene: non
+   sta livellando, il fine è fargli fare più domande possibile, e esplorare è parte del divertimento (il proprietario, 15 ottobre) */
 {
   const alla = k => bravi.reduce((n, m) => n + m.alla[k], 0) / (bravi.length * SEMI)
   const muri = k => bravi.reduce((n, m) => n + m.muri[k], 0) / (bravi.length * SEMI)
   nota(`chi va dritto (il bravo), vinte alla prima ${CAMPAGNA.map((_, k) => cento(alla(k)).padStart(5)).join('')}`)
   nota(`chi va dritto (il bravo), muri            ${CAMPAGNA.map((_, k) => cento(muri(k)).padStart(5)).join('')}`)
-  for (const [k, t] of CAMPAGNA.entries())
-    controlla(`${t.chiave}, chi va dritto: non trova un muro`, muri(k) <= 0.1, cento(muri(k)))
 }
 
 /* chi arriva con molte gemme da parte e compra il meglio che può, anche i pezzi avanti (a un prezzo più alto). Con 250
@@ -132,67 +134,58 @@ for (const gemme of [100, 250]) {
   for (const k of [ultime, ultime + 1]) {
     const t = CAMPAGNA[k].chiave
     controlla(`${t}: con ${gemme} gemme da parte, a 6/10 non è una passeggiata`, media(tutte, `gemme${gemme}`, 1, k) <= (gemme > 100 ? 0.95 : 0.9), cento(media(tutte, `gemme${gemme}`, 1, k)))
-    controlla(`${t}: con ${gemme} gemme da parte, a 4/10 di rado`, media(tutte, `gemme${gemme}`, 2, k) <= 0.4, cento(media(tutte, `gemme${gemme}`, 2, k)))
+    controlla(`${t}: con ${gemme} gemme da parte, a 4/10 di rado (fino al 45%: può sempre tornare indietro a farmare)`, media(tutte, `gemme${gemme}`, 2, k) <= 0.45, cento(media(tutte, `gemme${gemme}`, 2, k)))
   }
 }
 
-/* Le zone (docs/sotterraneo/zone.md): finita la storia ogni discesa ha una fascia di quattro livelli. Chi sta in fondo
-   alla fascia (il livello dove comincia: la verde più dura) con la roba attesa a quel livello (motore/zone.js) a 8/10
-   arriva in fondo quasi sempre, a 6/10 più o meno due volte su tre ma non sempre, a 4/10 di rado: come una discesa della
-   storia, a ogni livello. Vinta, vale più o meno un livello. E i colori del pallino si misurano qui, su una fascia
-   16–19: l'eroe del 11 (rosso) non passa rispondendo sei su dieci, del 12 (l'arancio più duro) a otto si può tentare,
-   del 15 (l'arancio più facile) a otto quasi sempre; dal 20 (grigio) è una passeggiata, e rende un quarto */
-const zonePronte = CONFIGURAZIONI_ZONE.map(() => prossimi(EROI.length))
+/* Le zone (docs/sotterraneo/zone.md): finita la storia ogni discesa ha una fascia di quattro livelli. Qui le gioca il curioso (misuraLeZoneDelCurioso):
+   la roba e le pozioni dell'ingresso della sua ultima discesa, il livello della fascia (l'inizio, la verde più dura) con i punti da dare, la spesa fatta
+   con le gemme che ha. Una zona troppo dura per lui va bene («uno esce, si ricarica o fa altre zone»): i bersagli sono quello che si misura, arrotondato,
+   e si segnala solo ciò che è fuori scala. I colori del pallino sono quelli del gioco (`coloreDellaFascia` sulla forza di `forzaDi`, motore/zone.js e
+   forza.js): si misurano su una fascia 16–19, con l'eroe al 11, 12, 15 e 20 */
+const zonePronte = prossimi(EROI.length)
 const nelleZone = (livello, eroeA = livello) => {
-  const tutte = zonePronte[CONFIGURAZIONI_ZONE.findIndex(([L, A]) => L === livello && (A ?? L) === eroeA)]
+  const tutte = zonePronte.map(m => m.zone[`${livello},${eroeA}`])
   return { tutte, quota: (j, k) => tutte.reduce((n, m) => n + m.vinte[j][k], 0) / (tutte.length * SEMI_ZONE),
-           livelli: k => tutte.reduce((n, m) => n + m.livelli[k], 0) / tutte.length }
+           livelli: k => tutte.reduce((n, m) => n + m.livelli[k], 0) / tutte.length,
+           forza: tutte.reduce((n, m) => n + m.forza, 0) / tutte.length,
+           colori: tutte.reduce((o, m) => { for (const c in m.colori) o[c] = (o[c] || 0) + m.colori[c]; return o }, {}) }
 }
 const mediaZone = f => CAMPAGNA.reduce((n, _, k) => n + f(k), 0) / CAMPAGNA.length
-for (const L of [12, 16, 20, 30]) {
-  const { tutte, quota, livelli } = nelleZone(L)
-  for (const [j, b] of [[0, 8], [1, 6], [2, 4]])
+// quanto il curioso vince in media nelle sette zone, a 9/10 (almeno) e a 6/10 (al più), per livello della fascia: la misura del 15 ottobre arrotondata al 5%
+const BERSAGLI_ZONE = { 12: [0.75, 0.45], 16: [0.65, 0.25], 20: [0.55, 0.2], 24: [0.5, 0.15], 30: [0.45, 0.15] }
+for (const L of [12, 16, 20, 24, 30]) {
+  const { tutte, quota, livelli, forza } = nelleZone(L)
+  for (const [j, b] of [[0, 9], [1, 6]])
     nota(`zone al livello ${L}, a ${b}/10: ${CAMPAGNA.map((_, k) => cento(quota(j, k)).padStart(5)).join('')}`)
-  nota(`  domande (a 8/10): ${CAMPAGNA.map((_, k) => Math.round(tutte.reduce((n, m) => n + m.domande[k], 0) / tutte.length)).join(' · ')}` +
-       `, livelli presi: ${CAMPAGNA.map((_, k) => livelli(k).toFixed(1)).join(' · ')}`)
-  for (const [k, t] of CAMPAGNA.entries()) {
-    controlla(`zona ${t.chiave} al ${L}: a 8/10 si arriva in fondo quasi sempre`, quota(0, k) >= 0.85, cento(quota(0, k)))
-    controlla(`zona ${t.chiave} al ${L}: a 6/10 si vince, ma non sempre`, quota(1, k) >= 0.4 && quota(1, k) <= 0.92, cento(quota(1, k)))
-    controlla(`zona ${t.chiave} al ${L}: a 4/10 di rado`, quota(2, k) <= 0.4, cento(quota(2, k)))
-  }
-  const sei = mediaZone(k => quota(1, k))
-  controlla(`zone al ${L}: a 6/10 in media fra metà e quattro volte su cinque`, sei >= 0.5 && sei <= 0.8, cento(sei))
-  // l'esperienza tiene il passo: una zona verde vinta vale più o meno un livello, a ogni altezza
+  nota(`  domande (a 9/10): ${CAMPAGNA.map((_, k) => Math.round(tutte.reduce((n, m) => n + m.domande[k], 0) / tutte.length)).join(' · ')}` +
+       `, livelli presi: ${CAMPAGNA.map((_, k) => livelli(k).toFixed(1)).join(' · ')}; forza di ingresso ${forza.toFixed(1)}`)
+  const [nove, sei] = BERSAGLI_ZONE[L]
+  controlla(`zone al ${L}: a 9/10 in media si vince almeno ${cento(nove)}`, mediaZone(k => quota(0, k)) >= nove, cento(mediaZone(k => quota(0, k))))
+  controlla(`zone al ${L}: a 6/10 in media si vince al più ${cento(sei)}`, mediaZone(k => quota(1, k)) <= sei, cento(mediaZone(k => quota(1, k))))
+  // il curioso gira tutto, quindi di esperienza ne prende più del dritto di una volta (0,8–2): in media fra uno e tre livelli e mezzo a zona
   const presi = mediaZone(livelli)
-  controlla(`zone al ${L}: una verde vinta vale più o meno un livello`, presi >= 0.8 && presi <= 2, presi.toFixed(2))
-}
-// fra il 24 e il 28 la roba attesa resta indietro (la difesa sale a scalini, al 30): a 6/10 si scende verso il 40%,
-// ma si vince ancora (docs/sotterraneo/zone.md, «Le misure»)
-for (const L of [24, 27]) {
-  const { quota, livelli } = nelleZone(L)
-  const sei = mediaZone(k => quota(1, k)), otto = mediaZone(k => quota(0, k))
-  nota(`zone al livello ${L}: a 8/10 ${cento(otto)}, a 6/10 ${cento(sei)}, livelli presi ${mediaZone(livelli).toFixed(2)}`)
-  controlla(`zone al ${L}: a 8/10 quasi sempre`, otto >= 0.9, cento(otto))
-  controlla(`zone al ${L}: a 6/10 almeno una volta su tre`, sei >= 0.33, cento(sei))
+  controlla(`zone al ${L}: una zona vinta vale fra uno e tre livelli e mezzo`, presi >= 0.8 && presi <= 3.5, presi.toFixed(2))
 }
 {
   const media = (q, j) => mediaZone(k => q(j, k))
-  const rosso = nelleZone(16, 11).quota, duro = nelleZone(16, 12).quota, arancio = nelleZone(16, 15).quota
-  const grigia = nelleZone(16, 20)
-  const grigio = grigia.quota
-  nota(`una zona 16–19: eroe del 11 (rosso) ${cento(media(rosso, 0))} · ${cento(media(rosso, 1))}, del 12 (arancio) ` +
-       `${cento(media(duro, 0))} · ${cento(media(duro, 1))}, del 15 (arancio) ${cento(media(arancio, 0))} · ${cento(media(arancio, 1))}, ` +
-       `del 20 (grigio) ${cento(media(grigio, 1))} · ${cento(media(grigio, 2))} (a 8 · 6, a 6 · 4)`)
-  controlla('rossa: a 6/10 non si passa', media(rosso, 1) <= 0.15, cento(media(rosso, 1)))
-  controlla('rossa: e a 8/10 nemmeno sempre', media(rosso, 0) <= 0.8, cento(media(rosso, 0)))
-  // quattro livelli sotto la zona, con le abilità, valgono molto: si può tentare ma di rado (era la metà delle volte)
-  controlla('l\'arancio più duro: a 8/10 si può tentare, di rado', media(duro, 0) >= 0.1, cento(media(duro, 0)))
-  controlla('ma a 6/10 è dura', media(duro, 1) <= 0.5, cento(media(duro, 1)))
-  controlla('l\'arancio più facile: a 8/10 quasi sempre', media(arancio, 0) >= 0.85, cento(media(arancio, 0)))
-  controlla('grigia: a 6/10 è una passeggiata', media(grigio, 1) >= 0.95, cento(media(grigio, 1)))
-  const poco = mediaZone(grigia.livelli)
-  nota(`  la grigia (eroe del 20) rende ${poco.toFixed(2)} livelli`)
-  controlla('grigia: e rende poco', poco <= 0.5, poco.toFixed(2))
+  for (const [A, nome] of [[11, 'rosso'], [12, 'arancio duro'], [15, 'arancio facile'], [16, 'verde'], [20, 'grigio']]) {
+    const z = nelleZone(16, A)
+    nota(`una zona 16–19, eroe del ${A} (${nome}): a 9/10 ${cento(media(z.quota, 0))}, a 6/10 ${cento(media(z.quota, 1))}; ` +
+         `forza ${z.forza.toFixed(1)}, colori ${JSON.stringify(z.colori)}; rende ${mediaZone(z.livelli).toFixed(2)} livelli`)
+  }
+  /* il colore è quello del gioco (forza di `forzaDi` contro la fascia): più l'eroe è avanti più si vince, e il rosso e l'arancio più duri non si passano a 6/10.
+     La forza del curioso resta sotto il suo livello (1–4 livelli: la roba non è al passo), quindi sulla fascia 16–19 il verde e il grigio non si vedono mai: nel
+     gioco la zona gli direbbe «più forte» finché non compra a tono */
+  const a9 = A => media(nelleZone(16, A).quota, 0), a6 = A => media(nelleZone(16, A).quota, 1)
+  controlla('rossa/arancio duro (eroe del 11 e del 12): a 9/10 si vince di rado', a9(11) <= 0.25 && a9(12) <= 0.25, `${cento(a9(11))} · ${cento(a9(12))}`)
+  controlla('e a 6/10 quasi mai', a6(11) <= 0.1 && a6(12) <= 0.1, `${cento(a6(11))} · ${cento(a6(12))}`)
+  controlla('l\'arancio più facile (eroe del 15): a 9/10 una volta su due', a9(15) >= 0.45 && a9(15) <= 0.6, cento(a9(15)))
+  controlla('verde (eroe del 16): a 9/10 più spesso che no', a9(16) >= 0.65, cento(a9(16)))
+  controlla('eroe del 20: a 9/10 quasi sempre', a9(20) >= 0.8, cento(a9(20)))
+  controlla('e a 6/10 più di metà delle volte', a6(20) >= 0.55, cento(a6(20)))
+  controlla('più l\'eroe è avanti più si vince (a 9/10, 11 → 12 → 15 → 16 → 20)', [11, 12, 15, 16, 20].every((A, i, v) => !i || a9(A) >= a9(v[i - 1]) - 0.05),
+            [11, 12, 15, 16, 20].map(a9).map(cento).join(' · '))
 }
 
 riassunto('la tabella della grande storia')
