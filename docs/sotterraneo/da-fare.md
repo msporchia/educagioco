@@ -3,6 +3,17 @@
 Le voci aperte, ognuna con quello che serve per farla. Il progetto dettagliato
 dell'abisso sta in [abisso-progetto.md](abisso-progetto.md).
 
+## Le botti da rompere (idea del 15 ottobre 2026)
+
+Più cose da fare e più divertimento per il bambino fra uno scontro e l'altro: **botti sparse nelle stanze che si
+rompono toccandole, e ogni tanto lasciano cadere qualcosa di basilare** (una moneta, una pozione piccola); in cambio
+**niente domanda per aprire libri, forzieri e simili** (oggi la apre una domanda, vedi [regole.md](regole.md) e
+[arredo.md](arredo.md)). Non è fatta: cambia quanto il bambino guadagna per piano, quindi **va ricalibrata**
+([giocatori-tipo.md](giocatori-tipo.md), `npm run taratura`): prima si decide cosa cade e quanto spesso, poi si
+rimisurano risposte e bottino per discesa. La prova di come si vede, modellata in 3D (la botte che si rompe in doghe),
+sta in `poc/sotterraneo-luce` ([poc/sotterraneo-luce.md](../../poc/sotterraneo-luce.md)); nel gioco vero la botte è
+ancora arredo fermo.
+
 ## Dopo il giro del 14 ottobre 2026
 
 Le voci rimaste aperte dalla sferzata (scontro a gruppi, branchi, fabbro, pozioni, giocatori tipo), da riprendere
