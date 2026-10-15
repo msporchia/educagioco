@@ -34,6 +34,7 @@ import { CAMPAGNA as GIARDINO } from '../giochi/giardino/dati/campagna.js'
 // chi non è qui dentro non ha una campagna (la fattoria è un posto): l'assenza vuol dire «non si giudica», non «si nasconde»
 export const TAPPE_DEL_GIOCO = {
   mate: SCALETTA.map(v => v.T),
+  mate3d: SCALETTA.map(v => v.T),     // la stessa fila degli Asteroidi, in 3D
   inglese: INGLESE,
   spagnolo: SPAGNOLO,
   torri: CASTELLO,
@@ -55,7 +56,7 @@ const regole = () => ({ eta: etaDelBambino(), spenti: saperiSpenti() })
 
 // un gioco cominciato non sparisce mai: i vecchi si riconoscono dal loro contatore, i nuovi da albo.provato
 const CONTATORE_VECCHIO = {
-  mate: 'math', inglese: 'en', spagnolo: 'es', torri: 'torri',
+  mate: 'math', mate3d: 'math', inglese: 'en', spagnolo: 'es', torri: 'torri',
   bancarella: 'clienti', generale: 'missioni',
 }
 

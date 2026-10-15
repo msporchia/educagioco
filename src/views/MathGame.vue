@@ -51,6 +51,12 @@ import Barra from '../components/Barra.vue'
 import TastoSalta from '../components/TastoSalta.vue'
 
 const emit = defineEmits(['vai'])
+// `disegno: '3d'`: gli Asteroidi 3D dei giochi in prova (`mate3d`), stessa partita e stessa
+// campagna; senza, il disegno 2D di sempre (docs/asteroidi/grafica-3d.md)
+const props = defineProps({ disegno: { type: String, default: '' } })
+// i comandi nuovi (la nave che si guida, lo scudo, il giusto che esplode addosso, i falsi a quote
+// distanti) sono del gioco in prova: gli Asteroidi di sempre restano com'erano
+const comandiNuovi = props.disegno === '3d'
 
 const CFG = {
   vite: 3, viteMax: 5, cadutaSec: 10,
@@ -382,8 +388,8 @@ function ondata(salvata = null) {
     // il sasso giusto è vincolato a essere in scena entro `rispostaEntro`
     // secondi, e da lì parte il cronometro `prontaIl` (docs/asteroidi/volo.md)
     const inScena = 2 * r                   // da y = -r-off a centro in y = r
-    const sfalsa = ok ? Math.random() * H * 0.30
-                      : (rigaFalsi[falso++] + Math.random() * 0.35) * passoFalsi
+    const sfalsa = ok || !comandiNuovi ? Math.random() * H * 0.30
+                                       : (rigaFalsi[falso++] + Math.random() * 0.35) * passoFalsi
     const off = ok ? Math.min(sfalsa, Math.max(-r, vel * CFG.rispostaEntro - inScena))
                    : sfalsa
     if (ok) prontaIl = apertoIl + ((inScena + off) / vel) * 1000
@@ -443,6 +449,10 @@ function tocca(e) {
   if (fase.value !== 'gioco') return
   const x = e.clientX, y = e.clientY
   dito = e.pointerId
+  if (!comandiNuovi) {   // gli Asteroidi di sempre: solo sopra il sasso, e la nave sta ferma
+    for (const a of asteroidi) if (!a.morto && (x - a.x) ** 2 + (y - a.y) ** 2 <= a.r * a.r) return colpisci(a)
+    return
+  }
   try { e.currentTarget.setPointerCapture?.(e.pointerId) } catch (x) { /* un puntatore finto non si cattura */ }
   const preso = sassoSotto(asteroidi, x, y)
   if (preso) return colpisci(preso)
@@ -788,7 +798,7 @@ const tela3d = ref(null)
 const usa3d = ref(false)
 let pittore3d = null
 function accendi3d() {
-  if (/(?:^#?|&)tela=2d(?:&|$)/.test(location.hash || '') || !tela3d.value) return
+  if (props.disegno !== '3d' || /(?:^#?|&)tela=2d(?:&|$)/.test(location.hash || '') || !tela3d.value) return
   const fisso = Number(new URLSearchParams((location.hash || '').slice(1)).get('dpr')) || undefined   // `&dpr=2`: per le foto
   pittore3d = creaSpazio3d(tela3d.value, { perso: spegni3d, dpr: fisso })
   if (!pittore3d) return
@@ -835,21 +845,23 @@ function aggiorna(dt) {
     a.x += a.spx * dt; a.spx *= frena; a.spy *= frena
     a.y += (a.vy * rall + a.spy) * dt; a.rot += a.vr * dt
     // un falso che tocca la nave rimbalza sullo scudo: non è una risposta, non costa niente
-    if (!a.ok && !a.urtato && toccaLaNave(a, nave)) {
+    if (comandiNuovi && !a.ok && !a.urtato && toccaLaNave(a, nave)) {
       const dx = a.x - nave.x, dy = a.y - nave.y, d = Math.hypot(dx, dy) || 1
       urtaScudo(a, dx / d, dy / d)
     }
+    // il giusto che tocca la nave esplode addosso a lei: è come se fosse arrivato in fondo
+    if (comandiNuovi && a.ok && toccaLaNave(a, nave)) { a.morto = true; caduto = a; continue }
     if (a.y - a.r > suolo) { a.morto = true; if (a.ok) caduto = a }
   }
   if (caduto) {
     const k = domanda.chiave
     answer(k, { correct: false, ms: CFG.msNonRisposto }); picker.afterAnswer(k, false)
     hud.sbagliate++
-    // il sasso arriva in fondo, all'altezza della nave: la botta la
-    // prende lei (`perdiVita`), e qui resta solo lo scoppio là dove ha
-    // colpito — il pianeta che si accendeva di rosso non c'è più
-    esplodi(caduto.x, suolo, '#ff9d1c', 34)
-    anello(caduto.x, suolo, '#ff9d1c', W * 0.5)
+    // il sasso arriva in fondo (o addosso alla nave): la botta la prende
+    // lei (`perdiVita`), e qui resta solo lo scoppio là dove ha colpito
+    const y = Math.min(caduto.y, suolo)
+    esplodi(caduto.x, y, '#ff9d1c', 34)
+    anello(caduto.x, y, '#ff9d1c', W * 0.5)
     suono.boom(); scossa = 16
     perdiVita()
     if (fase.value === 'gioco') ondata()
@@ -1312,7 +1324,7 @@ onUnmounted(() => {
    una vernice solo per guardarla, senza toccare l'hangar (docs/core/comandi.md) */
 function dalCheat() {
   const h = new URLSearchParams((location.hash || '').slice(1))
-  const dove = h.get('mate')
+  const dove = h.get('mate3d') ?? h.get('mate')   // `#mate3d=5`: lo stesso, negli Asteroidi 3D
   if (dove == null || dove === '') return
   inizia(dove === 'volo' ? -1 : Math.max(0, Math.min(fila.length - 1, Number(dove) || 0)))
   const lv = Number(h.get('livello'))
@@ -1399,7 +1411,7 @@ function dalCheat() {
 
     <!-- ════════ la rotta: la mappa dello spazio, una tappa dopo l'altra (docs/asteroidi/mappa.md) ════════ -->
     <div v-if="fase === 'mappa'" class="schermo campagna spaziale">
-      <Barra titolo="Asteroidi" guida="mate" monete scura @indietro="$emit('vai','home')">
+      <Barra :titolo="disegno === '3d' ? 'Asteroidi 3D' : 'Asteroidi'" guida="mate" monete scura @indietro="$emit('vai','home')">
         <!-- i due conti di «Cosa so»: scendono se non si ripassa, la fila non lo dice più -->
         <div class="gettone">✖️ <b>{{ intere.size }}/10</b></div>
         <div class="gettone">🧠 <b>{{ stelleMente }}/{{ STAZIONI.length }}</b></div>
