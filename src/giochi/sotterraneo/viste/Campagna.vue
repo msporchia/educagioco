@@ -15,6 +15,7 @@ const props = defineProps({
   terra: { type: Object, default: null },    // la terra dell'avventura: la nebbia, dove si era, se il minatore ha già parlato
   missioni: { type: Object, default: () => ({}) },   // lo stato delle missioni dell'avventura (motore/missioni.js)
   azioneMissione: { type: Function, default: null },  // (id, 'prendi' | 'consegna') → l'esito, da Gioco.vue
+  conti: { type: Object, default: () => ({}) },   // a che punto sono le «sconfiggi N» (avventura.conti)
   segui: { type: String, default: null },    // la missione che le freccine seguono, scelta nel diario (avventura.segui)
   roba: { type: Object, default: null },     // quello che ci si porta dietro, già contato (schedaConLaRoba): { vita, att, dif, gemme, mano, mancina, corpo, tratti… }
   punti: { type: Number, default: 0 },          // le linguette del diario (viste/SchedeEroe.vue): i «+» delle altre schede
@@ -95,7 +96,7 @@ function comincia() {
       </template>
     </Terra>
 
-    <Diario v-if="diarioAperto" :stati="missioni" :tappe="tappe" :segui="segui" :punti="punti" :punti-abilita="puntiAbilita"
+    <Diario v-if="diarioAperto" :stati="missioni" :conti="conti" :tappe="tappe" :segui="segui" :punti="punti" :punti-abilita="puntiAbilita"
             @scheda="s => $emit('scheda', s)" @chiudi="diarioAperto = false"
             @segui="id => $emit('segui', id)" @vai="vaDa" @fuori="fuoriDalDiario" />
 

@@ -12,7 +12,7 @@ pronti, e di averle sempre davanti: *«una specie di albero di missioni»*,
 `motore/missioni.js` (l'albero, il segno, prendere e consegnare, il diario e il
 promemoria, dove sta la cosa nel piano), `motore/dialoghi.js` e
 `viste/Dialogo.vue` (quello che dice chi le dà, [dialoghi.md](dialoghi.md)), `viste/Diario.vue` (col dettaglio) e `viste/Ritratto.vue`, `viste/Terra.vue` (chi sta fermo),
-`motore/corsa.js` (`posaLeMissioni`).
+`motore/corsa.js` (`posaLeMissioni`, `contaPerLeMissioni`). Le «sconfiggi N»: [missioni-conteggio.md](missioni-conteggio.md).
 
 ## Chi le dà, e dove sta
 
@@ -43,8 +43,8 @@ non chiudono la strada a nessuno (`unita/sotterraneo-terra`).
 
 ## L'albero
 
-Dodici missioni: le nove di prima e tre seguiti (il ladro della collana, il
-libro dei nomi, il sacco di farina). Ognuna dichiara i suoi `richiede`, e **si
+Diciassette missioni: le nove di prima, tre seguiti (il ladro della collana, il
+libro dei nomi, il sacco di farina) e cinque «sconfiggi N» ([missioni-conteggio.md](missioni-conteggio.md)). Ognuna dichiara i suoi `richiede`, e **si
 sblocca da sola** quando sono tutti veri e la sua discesa è aperta (anche per
 l'età: `aperta`); solo allora il suo personaggio mostra il «!». I requisiti:
 `{ fatta: <discesa> }` la discesa è finita, `{ consegnata: <id> }` quella
@@ -66,10 +66,15 @@ conosce non si sblocca mai, e il guasto lo dice.
 | Zannagrigia (ora Corna Grigie, una bestia cornuta) | la guardia | la botola · 2 | sconfiggi | scala sommersa finita | 💎 30 · 🪙 1 |
 | Il sacco di farina buona | il mugnaio | la botola · 1 | trova | **Rosicchione consegnato** | 💎 20 |
 | La lanterna del nonno | il minatore | la miniera · 3 | trova | botola finita | teschio del cercatore |
+| 8 ratti (`topi`) | il mugnaio | la scalinata antica | conta | cripta finita | 💎 10 |
+| 7 funghi (`funghi`) | il boscaiolo | la grotta della scaletta | conta | torre finita | 💎 15 |
+| 8 polpi (`polpi`) | il pescatore | la scala sommersa | conta | grotta finita | 💎 15 |
+| 10 cinghiali (`cinghiali`) | il mugnaio | la botola | conta | scala sommersa finita | 💎 20 |
+| 10 scorpioni (`scorpioni`) | il minatore | la miniera | conta | botola finita | 💎 20 |
 
 I rami sono tre: **Dama Grigia → libro dei nomi**, **collana → Grattanaso**,
-**Rosicchione → sacco di farina**; le altre sei (chiavi, ascia, Chela, canna,
-Zannagrigia, lanterna) sono radici senza seguito.
+**Rosicchione → sacco di farina**; le altre undici (chiavi, ascia, Chela, canna,
+Zannagrigia, lanterna e le cinque da contare) sono radici senza seguito.
 
 - **Le radici** (le missioni senza altra missione davanti) bastano a ogni
   discesa: chi non ne consegna mai una incontra comunque una missione a ogni
@@ -80,8 +85,8 @@ Zannagrigia, lanterna) sono radici senza seguito.
   stesso motivo **due missioni della stessa discesa non si aspettano fra
   loro** (chela e canna si prendono insieme e si fanno nella stessa discesa).
 - **A ogni punto della storia, da una a tre insieme**, per chi le fa tutte e
-  le consegna a ogni ritorno: cripta 1 · scalinata 1 · torre 3 · grotta 2 ·
-  scala sommersa 2 · botola 2 · miniera 1 (`unita/sotterraneo-missioni`).
+  le consegna a ogni ritorno: cripta 1 · scalinata 2 · torre 3 · grotta 3 ·
+  scala sommersa 3 · botola 3 · miniera 2 (`unita/sotterraneo-missioni`).
   Ognuna si sblocca prima di entrare nella sua discesa, quindi con la roba di
   `dati/storia.js`: i mostri col nome si battono rispondendo giusto, senza
   svenire, per tutti e quattro gli eroi.
@@ -184,6 +189,7 @@ il nome sopra la testa: [missioni-bersaglio.md](missioni-bersaglio.md).
   chiede una domanda; **sbagliando resta chiuso e si riprova**, come una
   porta (un forziere normale si perde per sempre: questo no, la missione
   non si brucia). La cosa non entra nello zaino: è fatta.
+- **Sconfiggi N** (`tipo: 'conta'`): nessun bersaglio, nessuna freccina, nessun piano: vale in tutta la discesa e dice "3 di 8" nel diario e nel promemoria. Tutto in [missioni-conteggio.md](missioni-conteggio.md).
 - **Sconfiggi**: nel piano giusto c'è un mostro del bestiario col nome e
   la corona, più duro di quelli del suo piano (le ossa del guardiano
   del piano o un quarto in più delle sue, e un colpo in più: `PIU_DURO`). Battuto
@@ -207,10 +213,10 @@ il nome sopra la testa: [missioni-bersaglio.md](missioni-bersaglio.md).
 
 ## Le monete come regalo
 
-Il regalo vale le domande che la missione chiede in più, non di più: da 🪙1 a 🪙4 in 5 missioni su 12, il conto in
+Il regalo vale le domande che la missione chiede in più, non di più: da 🪙1 a 🪙4 in 5 missioni su 17, il conto in
 [missioni-monete.md](missioni-monete.md).
 
-Nei test: `unita/sotterraneo-missioni` (i dati e i guasti che vede davvero, ogni
+Nei test: `unita/sotterraneo-missioni-conteggio` (le «sconfiggi N», [missioni-conteggio.md](missioni-conteggio.md)), `unita/sotterraneo-missioni` (i dati e i guasti che vede davvero, ogni
 requisito e lo sblocco da sola, l'albero punto per punto, i tre segni e la consegna che vince sulla nuova, mai più di tre
 aperte per chi non consegna mai, più missioni prese insieme, il tetto che si
 libera consegnando, il goblin nel suo piano, lo stato di prima, il conto delle

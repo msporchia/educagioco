@@ -136,6 +136,7 @@ function dellaMissione(v, ctx) {
   const m = v.missione
   if (v.fase === 'offre') return inPagine(m.dice).map(testo => ({ testo, missione: m.id, fase: 'offre' }))
   if (v.fase === 'consegna') return [{ testo: m.ritorno, missione: m.id, fase: 'consegna' }]
+  if (m.tipo === 'conta') return [{ testo: `Me ne servono ancora: ${titoloDi(m)}, ${nomeDiscesa(ctx, m.discesa).toLowerCase()}. Io aspetto.`, missione: m.id, fase: 'aspetta' }]
   const dove = `${nomeDiscesa(ctx, m.discesa).toLowerCase()}, al ${PIANI[m.piano + 1] || m.piano + 1 + '°'} piano`
   return [{ testo: `${maiuscola(inFrase(titoloDi(m)))} è ancora laggiù: ${dove}. Io aspetto.`, missione: m.id, fase: 'aspetta' }]
 }
@@ -172,7 +173,7 @@ export function scelte(chi, ctx, chieste = new Set()) {
     const m = v.missione
     const premio = premioDetto(m.premio)
     if (v.fase === 'consegna')
-      s.push({ che: 'consegna', missione: m.id, testo: m.tipo === 'trova' ? 'Ecco qua' : 'Non darà più fastidio', premio })
+      s.push({ che: 'consegna', missione: m.id, testo: m.tipo === 'trova' ? 'Ecco qua' : m.tipo === 'conta' ? 'Non daranno più fastidio' : 'Non darà più fastidio', premio })
   }
   const nuove = cosaDice(chi, ctx.stati, ctx.tappe).voci.filter(v => v.fase === 'offre')
   for (const v of nuove)

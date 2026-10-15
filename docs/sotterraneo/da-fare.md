@@ -19,9 +19,7 @@ coi numeri di `npm run taratura` ([giocatori-tipo.md](giocatori-tipo.md)) e con 
   il 30–60%, qualche risalita per curarsi.
 - **Le quattro unità rosse sono riallineate** (15 ottobre): misurano il curioso, non il finto che va dritto ([giocatori-tipo.md](giocatori-tipo.md)). L'abisso:
   il tetto di un piano è 60 domande e non 45 (un piano rifatto dopo uno svenimento ne costa 57 al seme 7, gli altri sei semi stanno sotto 38; la media dei semi
-  resta sotto 35). `misure/sotterraneo` misura il curioso (la-grande-storia.md, «Le misure»). Aperto, da decidere con l'utente (non si ritocca né il gioco né il bersaglio): la
-  cripta a 4/10 non si vince più (3 · 7 · 4 · 12 su 20), la cisterna e il fondo a 4/10 per elfa e nano, il bravo che trova muri (18–55% per discesa), il mago che esce
-  dalla cripta con 16 💎 contro i 23 della prima arma, le zone che misurano ancora il dritto con la roba attesa (rosse quanto prima).
+  resta sotto 35). `misure/sotterraneo` misura il curioso, anche nelle zone (la-grande-storia.md e zone.md, «Le misure»); resta rosso solo il fondo a 4/10 (40% contro il 30%), da decidere se allargare.
 - **I pezzi utili per discesa** dalla torre in giù sono 1,7–2,3 contro il bersaglio di circa 3: quelli trovati servono
   poco perché il fabbro dà già il meglio del livello ([risalite.md](risalite.md)).
 - **La figura della balestra**: anche girata e piccola non si legge come una balestra (è un arco con un dardo); va
@@ -88,10 +86,10 @@ coi numeri di `npm run taratura` ([giocatori-tipo.md](giocatori-tipo.md)) e con 
   discesa) non è fatta. La posa del minatore con la bussola in mano c'è, nel
   primo foglio dei personaggi (`sopra-personaggi-1.png`, riquadro nel suo
   foglietto), ma non è nell'atlante: non la nomina nessuno.
-- **Le missioni dopo la prima volta**: dodici in tutto (un albero, tre rami),
+- **Le missioni dopo la prima volta**: diciassette in tutto (un albero, tre rami, cinque da contare),
   e consegnate non tornano. Se piacciono, ne servono altre per chi rigioca,
-  altri rami più lunghi (oggi i seguiti sono di un solo passo), e una seconda
-  forma oltre a «trova» e «sconfiggi» (accompagnare, portare giù qualcosa).
+  altri rami più lunghi (oggi i seguiti sono di un solo passo), e una forma
+  oltre a «trova», «sconfiggi» e «sconfiggi N» ([missioni-conteggio.md](missioni-conteggio.md)): accompagnare, portare giù qualcosa.
   I requisiti «il piano N toccato» e «un pezzo di roba» non ci sono: vedi
   il perché in [missioni.md](missioni.md). Da guardare col dito: se il tetto
   di tre basta, o se un bambino con tre in mano e nessun «!» pensa che le

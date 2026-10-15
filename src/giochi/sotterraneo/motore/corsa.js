@@ -35,6 +35,7 @@ import { forzaDelCorredo } from './forza.js'
 import { MetodiDelloScontro } from './scontro.js'
 import { MetodiDellOrologio } from './orologio.js'
 import { MetodiDeiPreparati } from './preparati.js'
+import { MetodiDellaRicomparsa } from './ricomparsa.js'
 import { RISPOSTE_PER_ENERGIA, aGrado } from '../dati/abilita.js'
 
 // nella storia i forzieri e i mostri di tutti i giorni danno solo quello che si consuma: la roba la dà la riga
@@ -51,12 +52,14 @@ const RINCARO = { porta: -0.05, forziere: 0.25, fonte: 0, mostro: 0.05, capo: 0.
 export class Corsa extends Corredo {
   // `missioni`: quelle prese che riguardano questa discesa (motore/missioni.js, presePer)
   // `crescita`: l'esperienza e i punti dell'avventura (motore/crescita.js): l'eroe sale di livello anche giù
-  constructor(tappa, { seme = null, rnd = Math.random, eroe = DI_PARTENZA, roba = null, missioni = [], crescita = null } = {}) {
+  constructor(tappa, { seme = null, rnd = Math.random, eroe = DI_PARTENZA, roba = null, missioni = [], crescita = null, ricomparsa = true, conti = {} } = {}) {
     super({ eroe, roba, crescita })
+    this.ricomparsa = ricomparsa   // i mostri morti tornano (motore/ricomparsa.js); il banco la spegne: misura un passaggio solo
     this.tappa = tappa
     // il posto nella storia (−1 l'abisso, che pesca come sempre): dice cosa deve dare questa discesa
     this.indice = indiceDella(tappa)
     this.missioni = missioni || []
+    this.conti = Object.fromEntries((missioni || []).filter(m => m.tipo === 'conta').map(m => [m.id, Math.max(0, Math.floor(Number(conti && conti[m.id])) || 0)]))   // «sconfiggi N»: a che punto è ognuna (motore/missioni.js)
     this.missioniFatte = new Set()   // le cose trovate e i mostri col nome battuti: Gioco.vue li porta nell'avventura
     this.rnd = rnd
     this.seme = seme == null ? Math.floor(rnd() * 100000) : seme
@@ -117,7 +120,7 @@ export class Corsa extends Corredo {
   // salva fra le cose nuove, e chi riprende dopo aver preso una missione se la ritrova (motore/sosta.js)
   posaLeMissioni() {
     for (const m of this.missioni) {
-      if (m.piano !== this.piano || this.missioniFatte.has(m.id)) continue
+      if (m.tipo === 'conta' || m.piano !== this.piano || this.missioniFatte.has(m.id)) continue
       if (this.livello.robe.some(r => r.missione === m.id)) continue
       const r = robaDellaMissione(this.livello, m, this.tappa)
       if (r) this.livello.robe.push(r)
@@ -550,6 +553,7 @@ export class Corsa extends Corredo {
       this.faiPassi(1, true)
       this.bruciaLaTorcia()
       this.aggiornaLuce()   // dopo: l'ultima stanza della torcia si stringe appena ci si entra
+      this.faiTornareIMostri()
       this.raccogli()
       if (!this.strada.length) {
         this.strada = null
@@ -786,6 +790,8 @@ export class Corsa extends Corredo {
   cade(m) {
     m.morto = true
     m.sveglio = false
+    this.prenotaIlRitorno(m)
+    this.contaPerLeMissioni(m)
     this.mostriBattuti++
     // la chiave non cade per terra: la si ha e basta, o si può dimenticarla e rifare la strada per niente
     if (m.chiave) {
@@ -842,6 +848,18 @@ export class Corsa extends Corredo {
     if (m.missione) {
       this.missioniFatte.add(m.missione)
       this.dillo(`👑 ${m.nome} non si rialza più. Torna su a dirlo`)
+    }
+  }
+
+  // «sconfiggi N»: ogni mostro di quella specie che muore in questa discesa, anche tornato, conta per le missioni prese; a N è fatta
+  contaPerLeMissioni(m) {
+    if (m.missione) return
+    for (const q of this.missioni) {
+      if (q.tipo !== 'conta' || q.specie !== m.tipo || this.missioniFatte.has(q.id)) continue
+      this.conti[q.id] = (this.conti[q.id] || 0) + 1
+      if (this.conti[q.id] < q.quanti) continue
+      this.missioniFatte.add(q.id)
+      this.dillo(`👑 ${q.quanti} ${q.nomi}: fatto. Torna su a dirlo`)
     }
   }
 
@@ -1187,6 +1205,7 @@ export class Corsa extends Corredo {
     this.strada = null; this.mira = null; this.bersaglio = null
     this.segnaLaStanza()
     this.aggiornaLuce()
+    this.faiTornareIMostri()   // i passi fatti nel frattempo (anche su altri piani) contano: gli scaduti tornano
   }
 
   // risalendo si sbuca accanto alla scala che scende (la prima cella libera attorno), non all'inizio del piano
@@ -1226,4 +1245,4 @@ export class Corsa extends Corredo {
 }
 
 // lo scontro a gruppi (motore/scontro.js) fa parte della Corsa
-Object.assign(Corsa.prototype, MetodiDelloScontro, MetodiDellOrologio, MetodiDeiPreparati)
+Object.assign(Corsa.prototype, MetodiDelloScontro, MetodiDellOrologio, MetodiDeiPreparati, MetodiDellaRicomparsa)

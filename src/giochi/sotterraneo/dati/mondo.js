@@ -46,6 +46,9 @@ export const CALMA = 3   // il tempo di uscire dalla stanza, o lo scontro si ria
 // passi, tre minuti di cammino, lo riempiono
 export const PASSI_PER_TURNO = 5
 export const MANA_PER_PASSO = 0.001
+// I mostri morti tornano col tempo (docs/sotterraneo/ricomparsa.md): fra RICOMPARSA_BASE e due volte tanto passi dalla morte, diverso per
+// ogni mostro. Un piano girato tutto sono ~160 passi al banco, un bambino ne fa forse il doppio. Da provare giocando
+export const RICOMPARSA_BASE = 200
 // un mostro sveglio fuori dalla luce non punta all'eroe ma alle sue spalle: il punto dietro di lui (DIETRO celle), girando
 // largo a FIANCO celle finché sta più avanti di ALLA_PAR (docs/sotterraneo/luce.md)
 export const DIETRO = 0.5, FIANCO = 2.6, ALLA_PAR = 0.6
@@ -81,6 +84,7 @@ export function guastiDelMondo() {
   if (PASSO_MOSTRO >= PASSO_EROE)
     g.push('i mostri corrono quanto o più dell\'eroe: scappare non funziona più')
   if (!(PASSI_PER_TURNO >= 1) || !(MANA_PER_PASSO > 0 && MANA_PER_PASSO < 0.01)) g.push('l\'orologio: i passi di un turno o il mana di un passo non tornano')
+  if (!(RICOMPARSA_BASE >= 1)) g.push('la ricomparsa dei mostri: la base non è un numero di passi')
   if (TASCHE < 3) g.push('meno di tre tasche: lo zaino non è una scelta, è un intoppo')
   if (RAGGIO_TORCIA <= RAGGIO) g.push('la torcia non fa vedere più lontano')
   if (ALONE >= RAGGIO || ALONE_TORCIA >= RAGGIO_TORCIA) g.push('l\'alone attorno all\'eroe deve essere più corto del cono')

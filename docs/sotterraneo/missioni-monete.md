@@ -31,7 +31,7 @@ volte le ossa: in fondo chiedeva venti risposte di fila. Chela è passata da
 2 a 1, Grattanaso da 1 a 2, Zannagrigia da 4 a 2.
 
 - **Chi cerca non ha monete**: un forziere è una sola domanda, già pagata, e
-  il giro per arrivarci non si misura. Quindi 5 missioni su 12 danno monete,
+  il giro per arrivarci non si misura. Quindi 5 missioni su 17 danno monete (le cinque da contare no: [missioni-conteggio.md](missioni-conteggio.md)),
   da 🪙1 a 🪙2: otto monete in tutto, meno di due minuti di esercizio, per chi
   le fa tutte.
 - **Niente premio per una risposta sbagliata**: il regalo arriva alla

@@ -30,7 +30,8 @@ const palestra = (eroe, k) => new Corredo({ eroe, roba: robaAttesa(eroe, k, { po
 {
   const g = guastiDelleMissioni(Object.keys(DOVE_PERSONAGGI))
   controlla('le missioni stanno in piedi (requisiti, premi, monete)', !g.length, g.join(' · '))
-  uguale('dodici missioni: le nove di prima e tre seguiti', MISSIONI.length, 12)
+  uguale('diciassette missioni: dodici di prima e cinque da contare', MISSIONI.length, 17)
+  uguale('le cinque nuove sono «sconfiggi N» e radici', MISSIONI.filter(m => m.tipo === 'conta' && !m.richiede.some(r => r.consegnata)).length, 5)
   controlla('il minatore si nomina anche se non sta fra i personaggi', personaDi('minatore') && personaDi('minatore').nome === 'Il vecchio minatore')
 
   // un guasto lo vede davvero: un requisito dopo la sua discesa, uno ignoto, un ciclo di sole missioni
@@ -65,15 +66,15 @@ const palestra = (eroe, k) => new Corredo({ eroe, roba: robaAttesa(eroe, k, { po
   // l'offerta cambia da sola quando cambia lo stato, senza che nessuno la chiami
   const t2 = tappeAl(2)
   // chi non ha preso niente alla torre: sbloccate quattro, ma se ne offrono tre, le più vicine alla discesa di adesso
-  stessaLista('a stati vuoti, alla torre: quattro sbloccate (il goblin no)', ids(sbloccate({}, t2)).sort(), ['badessa', 'chiavi', 'collana', 'rosicchione'])
+  stessaLista('a stati vuoti, alla torre: cinque sbloccate (il goblin no)', ids(sbloccate({}, t2)).sort(), ['badessa', 'chiavi', 'collana', 'rosicchione', 'topi'])
   stessaLista('e se ne offrono tre, quelle della torre prima della Dama Grigia', ids(offerte({}, t2)), ['collana', 'rosicchione', 'chiavi'])
   const dopo = { badessa: CONSEGNATA, collana: CONSEGNATA }
-  stessaLista('consegnata la collana, alla torre arriva il goblin', ids(sbloccate(dopo, t2)).sort(), ['chiavi', 'goblin', 'rosicchione'])
+  stessaLista('consegnata la collana, alla torre arriva il goblin', ids(sbloccate(dopo, t2)).sort(), ['chiavi', 'goblin', 'rosicchione', 'topi'])
 
   // la storia di chi le fa tutte e le consegna subito: ecco l'albero, discesa per discesa
   const giusti = [
-    ['badessa'], ['collana'], ['chiavi', 'goblin', 'rosicchione'], ['ascia', 'libro'],
-    ['canna', 'chela'], ['sacco', 'zannagrigia'], ['lanterna'],
+    ['badessa'], ['collana', 'topi'], ['chiavi', 'goblin', 'rosicchione'], ['ascia', 'funghi', 'libro'],
+    ['canna', 'chela', 'polpi'], ['cinghiali', 'sacco', 'zannagrigia'], ['lanterna', 'scorpioni'],
   ]
   let stati = {}
   for (let n = 0; n < QUANTE_TAPPE; n++) {
@@ -152,19 +153,19 @@ const palestra = (eroe, k) => new Corredo({ eroe, roba: robaAttesa(eroe, k, { po
   stati = fatte(stati, ['rosicchione'])
   uguale('una fatta pesa lo stesso, finché non è consegnata', offerte(stati, t3).length, 0)
   stati = consegna(stati, 'rosicchione', palestra('cavaliere', 2)).stati
-  stessaLista('consegnata una, arriva un\'altra (e non di più): a pari discesa il piano più in alto', ids(offerte(stati, t3)), ['libro'])
+  stessaLista('consegnata una, arriva un\'altra (e non di più): a pari discesa il piano più in alto', ids(offerte(stati, t3)), ['funghi'])
   uguale('l\'ascia aspetta il suo turno', prendi(stati, 'ascia', t3), null)
-  stati = prendi(stati, 'libro', t3)
-  controlla('e il libro si prende', !!stati && stati.libro === PRESA)
+  stati = prendi(stati, 'funghi', t3)
+  controlla('e i funghi si prendono', !!stati && stati.funghi === PRESA)
   // i seguiti sbloccano altro: consegnata Rosicchione, il sacco aspetta soltanto la botola aperta
   controlla('il sacco non è ancora offerto (la botola è chiusa)', !ids(offerte(stati, t3)).includes('sacco'))
 
   // lo stesso personaggio con due missioni: due voci nel fumetto, una per missione, ognuna con la sua fase
   const t4 = tappeAl(4)
   let p = { badessa: CONSEGNATA, collana: CONSEGNATA }
-  stessaLista('il pescatore ha due favori da chiedere', cosaDice('pescatore', p, t4).voci.map(v => v.missione.id + ':' + v.fase).sort(), ['canna:offre', 'chela:offre'])
+  stessaLista('il pescatore ha tre favori da chiedere', cosaDice('pescatore', p, t4).voci.map(v => v.missione.id + ':' + v.fase).sort(), ['canna:offre', 'chela:offre', 'polpi:offre'])
   p = prendi(p, 'chela', t4)
-  stessaLista('presa una, l\'altra resta da dare', cosaDice('pescatore', p, t4).voci.map(v => v.missione.id + ':' + v.fase).sort(), ['canna:offre', 'chela:aspetta'])
+  stessaLista('presa una, l\'altra resta da dare', cosaDice('pescatore', p, t4).voci.map(v => v.missione.id + ':' + v.fase).sort(), ['canna:offre', 'chela:aspetta', 'polpi:offre'])
   uguale('il segno è «!»: c\'è ancora qualcosa da prendere', segnoDi('pescatore', p, t4), 'nuova')
   p = fatte(prendi(p, 'canna', t4), ['canna'])
   uguale('una fatta e una presa: prima la consegna', cosaDice('pescatore', p, t4).voci[0].fase, 'consegna')
@@ -177,7 +178,7 @@ const palestra = (eroe, k) => new Corredo({ eroe, roba: robaAttesa(eroe, k, { po
   uguale('canna fatta e Chela mai presa: la consegna vince sulla missione nuova', segnoDi('pescatore', q, t4), 'consegna')
   uguale('…e la fase che conta è la stessa', cosaDice('pescatore', q, t4).fase, 'consegna')
   uguale('senza la consegna, la nuova', segnoDi('pescatore', { badessa: CONSEGNATA, collana: CONSEGNATA }, t4), 'nuova')
-  uguale('solo presa: l\'attesa', segnoDi('pescatore', { badessa: CONSEGNATA, collana: CONSEGNATA, canna: PRESA, chela: PRESA }, t4), 'attesa')
+  uguale('solo presa: l\'attesa', segnoDi('pescatore', { badessa: CONSEGNATA, collana: CONSEGNATA, canna: PRESA, chela: PRESA, polpi: PRESA }, t4), 'attesa')
   uguale('chi non ha niente non ha segno', segnoDi('boscaiolo', q, t4), null)
   uguale('il «!» è «!»', GLIFO.nuova, '!')
   uguale('l\'attesa e la consegna sono «?», ma sono due segni', GLIFO.attesa + GLIFO.consegna + (GLIFO.attesa !== GLIFO.consegna ? 'x' : ''), '??')
@@ -210,7 +211,7 @@ const palestra = (eroe, k) => new Corredo({ eroe, roba: robaAttesa(eroe, k, { po
   uguale('e le altre restano prese', r.stati.collana, PRESA)
   // il minimo vecchio: solo la prima consegnata, cripta fatta
   uguale('uno stato con una sola consegnata non offre il seguito', ids(sbloccate({ badessa: CONSEGNATA }, tappeAl(0))).length, 0)
-  stessaLista('e alla scalinata offre la collana', ids(offerte({ badessa: CONSEGNATA }, tappeAl(1))), ['collana'])
+  stessaLista('e alla scalinata offre la collana e i ratti', ids(offerte({ badessa: CONSEGNATA }, tappeAl(1))), ['collana', 'topi'])
   // l'avventura di oggi, letta com'è: `missioni` come mappa di stati, niente di nuovo in più
   const profilo = { cfg: { avventure: { cavaliere: { tappa: 2, stelle: {}, missioni: { badessa: 'consegnata', collana: 'presa' } } } } }
   const a = avventuraDi(profilo, 'cavaliere')
@@ -279,10 +280,10 @@ const palestra = (eroe, k) => new Corredo({ eroe, roba: robaAttesa(eroe, k, { po
   uguale('la riga dice a chi tornare e cosa si ha', chiavi.torna, 'Torna dalla guardia della torre: hai il mazzo di chiavi della torre')
   uguale('per un mostro: hai battuto', diario({ rosicchione: FATTA }, t3).pronte[0].torna, 'Torna dal mugnaio: hai battuto Rosicchione')
   controlla('il goblin è da battere, con la sua corona e chi lo vuole', goblin.em === '👑' && goblin.chi === 'La ragazza del pozzo' && !goblin.tornaDa)
-  stessaLista('ti aspetta il libro dei nomi (l\'ascia è nascosta dal tetto)', d.offerte.map(v => v.id), ['libro'])
+  stessaLista('ti aspettano i funghi (libro e ascia sono nascosti dal tetto)', d.offerte.map(v => v.id), ['funghi'])
   stessaLista('consegnate: la Dama Grigia, la collana, Rosicchione', d.consegnate.map(v => v.id), ['badessa', 'collana', 'rosicchione'])
   uguale('tre aperte, due in mano e due offerte: il tetto ne tiene tre', d.aperte, 3)
-  uguale('una è nascosta dal tetto', d.nascoste, 1)
+  uguale('tre sono nascoste dal tetto (ascia, libro, ratti)', d.nascoste, 3)
   uguale('il diario sa il tetto', d.tetto, TETTO)
   uguale('un\'avventura nuova ha un diario quasi vuoto: la Dama Grigia e basta',
          JSON.stringify(diario({}, tappeAl(0)).offerte.map(v => v.id)), '["badessa"]')
@@ -316,16 +317,16 @@ const palestra = (eroe, k) => new Corredo({ eroe, roba: robaAttesa(eroe, k, { po
 /* ══════════ 7. il minatore dice chi ti cerca ══════════ */
 {
   stessaLista('alla scalinata: l\'eremita e la ragazza hanno un favore, nell\'ordine della storia', chiTiCerca({}, tappeAl(1)),
-              ['Il frate dell\'altare ha un favore da chiederti.', 'La ragazza del pozzo ha un favore da chiederti.'])
-  const presa = chiTiCerca({ collana: PRESA, badessa: CONSEGNATA }, tappeAl(1))
+              ['Il frate dell\'altare ha un favore da chiederti.', 'La ragazza del pozzo ha un favore da chiederti.', 'Il mugnaio ha un favore da chiederti.'])
+  const presa = chiTiCerca({ collana: PRESA, badessa: CONSEGNATA, topi: CONSEGNATA }, tappeAl(1))
   controlla('presa: dice cosa aspetta', presa.length === 1 && /aspetta ancora: la collana della nonna\./.test(presa[0]), presa.join('|'))
-  controlla('fatta: dice che ti aspetta', /ti aspetta/.test(chiTiCerca({ collana: FATTA, badessa: CONSEGNATA }, tappeAl(1))[0]))
-  const prima = chiTiCerca({ collana: FATTA }, tappeAl(1))
+  controlla('fatta: dice che ti aspetta', /ti aspetta/.test(chiTiCerca({ collana: FATTA, badessa: CONSEGNATA, topi: CONSEGNATA }, tappeAl(1))[0]))
+  const prima = chiTiCerca({ collana: FATTA, topi: CONSEGNATA }, tappeAl(1))
   controlla('chi ha da consegnare viene prima di chi ha un favore', prima.length === 2 && /ti aspetta/.test(prima[0]) && /favore/.test(prima[1]), prima.join('|'))
-  uguale('la lanterna è sua: il minatore non la ripete', chiTiCerca({ badessa: CONSEGNATA, collana: CONSEGNATA, rosicchione: CONSEGNATA, chiavi: CONSEGNATA, goblin: CONSEGNATA, ascia: CONSEGNATA, libro: CONSEGNATA, chela: CONSEGNATA, canna: CONSEGNATA, zannagrigia: CONSEGNATA, sacco: CONSEGNATA }, tappeAl(6)).length, 0)
+  uguale('la lanterna è sua: il minatore non la ripete', chiTiCerca({ badessa: CONSEGNATA, collana: CONSEGNATA, rosicchione: CONSEGNATA, chiavi: CONSEGNATA, goblin: CONSEGNATA, ascia: CONSEGNATA, libro: CONSEGNATA, chela: CONSEGNATA, canna: CONSEGNATA, zannagrigia: CONSEGNATA, sacco: CONSEGNATA, topi: CONSEGNATA, funghi: CONSEGNATA, polpi: CONSEGNATA, cinghiali: CONSEGNATA }, tappeAl(6)).length, 0)
   uguale('senza niente da dire, niente', chiTiCerca({ badessa: CONSEGNATA }, tappeAl(0)).length, 0)
   const due = chiTiCerca({ badessa: CONSEGNATA, collana: CONSEGNATA }, tappeAl(4))
-  controlla('il pescatore ha due favori: lo dice una volta sola', due.some(r => /ha due favori da chiederti/.test(r)), due.join('|'))
+  controlla('il pescatore ha tre favori: lo dice una volta sola', due.some(r => /ha tre favori da chiederti/.test(r)), due.join('|'))
 }
 
 /* ══════════ 8. la freccina in discesa: da che parte è la missione ══════════

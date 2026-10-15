@@ -20,6 +20,8 @@ ogni scontro parto da 0 senza buff gli scudi hanno poco senso, perché li attivi
 - **Si salva con la discesa** (`passi`, `mana`, `preparati` in `motore/sosta.js`, senza alzare `VERSIONE`): una sosta di prima senza
   quei campi si rilegge da zero, e un incanto storto (nodo che non esiste, che l'eroe non sa più, passi a zero) si butta.
   Uscire a metà non butta la partita ([../core/ripresa.md](../core/ripresa.md)). Svenire porta via gli incanti addosso.
+- **I mostri morti tornano a passi**: da una a due volte `RICOMPARSA_BASE` (200) passi dalla morte, mai nella stanza dell'eroe né in luce
+  ([ricomparsa.md](ricomparsa.md)). Il banco la tiene spenta.
 
 ## Quanti passi fa un piano
 

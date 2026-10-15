@@ -109,6 +109,8 @@ uno appostato in un angolo, i caporali davanti al grosso): [piani.md](piani.md).
 - **Il bottino è della specie, non del posto**: cambia cosa si trova, non quanto spesso.
 - **Ogni mostro ha le sue difese** (cosa resiste, cosa teme, a quali stati non è sensibile) e le abilità elementali le
   usano: [mostri.md](mostri.md#le-difese). Ratto e goblin sono neutri.
+- **I mostri morti tornano col tempo**, contato in passi dell'eroe, al loro posto e non sotto gli occhi di chi gioca; non tornano la chiave,
+  i grossi, i caporali e i bersagli delle missioni: [ricomparsa.md](ricomparsa.md).
 
 ## Camminare col dito
 

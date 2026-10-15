@@ -56,9 +56,9 @@ const che = s => s.map(x => x.che)
   controlla('il mugnaio, senza missioni, saluta', sal.length === 1 && sal[0].dato === 'saluto', JSON.stringify(sal))
   controlla('la ragazza saluta diversa più avanti', apertura('ragazza', ctx(0, { collana: CONSEGNATA, goblin: CONSEGNATA }))[0]?.testo !==
             apertura('ragazza', ctx(5, { collana: CONSEGNATA, goblin: CONSEGNATA }))[0]?.testo)
-  // due favori dalla stessa persona: tutte e due le richieste, e una scelta per ognuna col suo nome
+  // più favori dalla stessa persona: tutti le richieste, e una scelta per ognuna col suo nome
   const due = scelte('pescatore', ctx(4)).filter(s => s.che === 'prendi')
-  uguale('il pescatore ha due favori: due «ci penso io»', due.length, 2)
+  uguale('il pescatore ha tre favori: tre «ci penso io»', due.length, 3)
   controlla('e ognuno dice quale', due.every(s => s.testo.startsWith('Ci penso io: ')), due.map(s => s.testo).join(' | '))
 }
 

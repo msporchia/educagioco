@@ -331,8 +331,8 @@ export function gioca(tappa, { bravura = 0.8, seme = 7, come = 'minimo', rnd = n
                               crescita = null, punti = null, strada = null, stile = null, risalita = null } = {}) {
   const st = stile || {}
   const sorte = rnd || seminato(seme * 31 + 17)
-  const corsa = da || new Corsa(tappa, { seme, rnd: sorte, eroe, roba, crescita })
-  if (da) da.rnd = sorte
+  const corsa = da || new Corsa(tappa, { seme, rnd: sorte, eroe, roba, crescita, ricomparsa: false })
+  if (da) { da.rnd = sorte; da.ricomparsa = false }   // il banco misura il passaggio di una volta (docs/sotterraneo/ricomparsa.md)
   // una strada (dati/strade.js): i suoi punti, la sua fila di nodi e il vincolo su quello che si indossa
   if (strada) { corsa.vincoloDelBanco = ammette(strada); punti = punti || strada.punti }
   let giri = 0

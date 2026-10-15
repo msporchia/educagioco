@@ -3,7 +3,7 @@
 // Qui: quali missioni si sono sbloccate (l'albero), quante se ne offrono insieme, cosa dice un personaggio, il
 // segno sopra la sua testa, prendere e consegnare, il diario e il promemoria, e dove la discesa mette la cosa da
 // trovare e il mostro col nome. Gira in Node.
-import { MISSIONI, PERSONAGGI, personaDi, missioneDi, premioDetto, PIU_DURO, TETTO, posto } from '../dati/missioni.js'
+import { MISSIONI, PERSONAGGI, personaDi, missioneDi, premioDetto, PIU_DURO, TETTO, posto, titoloDi, faccia } from '../dati/missioni.js'
 import { MOSTRI } from '../dati/mostri.js'
 import { COSE, aLivello } from '../dati/cose.js'
 import { CAMPAGNA, guardianoDi } from '../dati/campagna.js'
@@ -22,7 +22,9 @@ const statoDi = (stati, id) => (stati && typeof stati === 'object' ? stati[id] |
 const indiceDi = chiave => { const i = posto(chiave); return i < 0 ? 999 : i }
 const dellaStoria = (a, b) => indiceDi(a.discesa) - indiceDi(b.discesa) || a.piano - b.piano
 
-export const titoloDi = m => (m.tipo === 'trova' ? m.cosa.nome : m.mostro.nome)
+export { titoloDi, faccia }
+// «sconfiggi N»: si conta, senza bersaglio né freccina (docs/sotterraneo/missioni-conteggio.md)
+export const sConta = m => m.tipo === 'conta'
 
 /* ═══════════ l'albero: cosa si sblocca da sola ═══════════ */
 
@@ -176,22 +178,25 @@ export const daLui = chi => chi.replace(/^la /, 'dalla ').replace(/^il /, 'dal '
 // per un mostro, e se l'atlante non ce l'ha ripiega sull'emoji)
 const cosaDi = m => (m.tipo === 'trova'
   ? { tipo: 'trova', nome: m.cosa.nome, em: m.cosa.em, sprite: null }
+  : m.tipo === 'conta'
+  ? { tipo: 'conta', nome: titoloDi(m), em: MOSTRI[m.specie].em, sprite: MOSTRI[m.specie].sprite }
   : { tipo: 'sconfiggi', nome: m.mostro.nome, em: MOSTRI[m.mostro.tipo].em, sprite: MOSTRI[m.mostro.tipo].sprite })
 
-function voceDiario(m, stato, segui = null) {
+function voceDiario(m, stato, segui = null, conti = {}) {
   const p = personaDi(m.da)
   const r = COSE[m.premio.cosa] || null
   return {
     id: m.id, stato, tipo: m.tipo, da: m.da,
-    titolo: titoloDi(m), em: m.tipo === 'trova' ? m.cosa.em : '👑',
+    titolo: titoloDi(m), em: faccia(m),
+    ...(m.tipo === 'conta' ? { progresso: { fatti: Math.min(m.quanti, stato === FATTA || stato === CONSEGNATA ? m.quanti : conti[m.id] || 0), quanti: m.quanti } } : {}),
     chi: p.nome, chiFrase: p.chi, daChi: daLui(p.chi),
-    discesa: m.discesa, dove: nomeDiscesa(m.discesa), piano: m.piano + 1,
+    discesa: m.discesa, dove: nomeDiscesa(m.discesa), piano: m.tipo === 'conta' ? null : m.piano + 1,   // «sconfiggi N» vale in tutta la discesa
     premio: premioDetto(m.premio),
     // il dettaglio: cosa dice lui (la richiesta, e alla consegna il grazie), la cosa o il mostro, il premio per pezzi
     dice: m.dice, grazie: m.grazie, cosa: cosaDi(m),
     gemme: m.premio.gemme || 0, monete: m.premio.monete || 0,
     regalo: r ? { nome: r.nome, em: r.em, sprite: r.sprite || null } : null,
-    seguibile: stato === PRESA, segui: stato === PRESA && segui === m.id,
+    seguibile: stato === PRESA && m.tipo !== 'conta', segui: stato === PRESA && segui === m.id,
     ...(stato === FATTA ? { tornaDa: daLui(p.chi), torna: `Torna ${daLui(p.chi)}: ${m.tipo === 'trova' ? 'hai' : 'hai battuto'} ${inFrase(titoloDi(m))}` } : {}),
   }
 }
@@ -218,11 +223,11 @@ export function discesaDellaStoria(tappe) {
   return c && !c.ferma ? c.chiave : null
 }
 
-export function diario(stati, tappe, segui = null) {
+export function diario(stati, tappe, segui = null, conti = {}) {
   const sg = seguita(stati, segui)
-  const mano = inMano(stati).map(m => voceDiario(m, statoDi(stati, m.id), sg))
-  const offerta = offerte(stati, tappe).map(m => voceDiario(m, 'offerta'))
-  const finite = MISSIONI.filter(m => statoDi(stati, m.id) === CONSEGNATA).sort(dellaStoria).map(m => voceDiario(m, CONSEGNATA))
+  const mano = inMano(stati).map(m => voceDiario(m, statoDi(stati, m.id), sg, conti))
+  const offerta = offerte(stati, tappe).map(m => voceDiario(m, 'offerta', null, conti))
+  const finite = MISSIONI.filter(m => statoDi(stati, m.id) === CONSEGNATA).sort(dellaStoria).map(m => voceDiario(m, CONSEGNATA, null, conti))
   return {
     segui: sg, storia: storiaDelDiario(tappe, sg),
     inMano: mano, pronte: mano.filter(v => v.stato === FATTA), daFare: mano.filter(v => v.stato !== FATTA),
@@ -236,13 +241,15 @@ export function diario(stati, tappe, segui = null) {
 // La riga in cima a una discesa, per ogni missione che la riguarda e non è ancora consegnata: cosa, e a che piano.
 // Sul piano giusto dice cosa cercare (il forziere d'oro, il mostro con la corona), oltre quel piano dice di risalire (la scala che sale);
 // una volta fatta ricorda a chi riportarla. `piano` è quello di adesso, da 1 (null fuori da una discesa)
-export function promemoria(stati, chiaveTappa, piano = null) {
+export function promemoria(stati, chiaveTappa, piano = null, conti = {}) {
   const queste = MISSIONI.filter(m => m.discesa === chiaveTappa && [PRESA, FATTA].includes(statoDi(stati, m.id))).sort(dellaStoria)
   return queste.map(m => {
-    const em = m.tipo === 'trova' ? m.cosa.em : '👑'
+    const em = faccia(m)
     const nome = inFrase(titoloDi(m))
     if (statoDi(stati, m.id) === FATTA)
       return { id: m.id, dove: 'fatta', em, testo: `Missione compiuta: ${nome}, torna ${daLui(personaDi(m.da).chi)}` }
+    // si conta ovunque nella discesa: niente piano e niente freccina, solo a che punto sei
+    if (m.tipo === 'conta') return { id: m.id, dove: 'qui', em, testo: `Missione: sconfiggi ${nome} (${Math.min(m.quanti, conti[m.id] || 0)} di ${m.quanti})` }
     const giusto = m.piano + 1
     const dove = piano == null || piano < giusto ? 'sopra' : piano === giusto ? 'qui' : 'oltre'
     const testo = dove === 'qui'
@@ -270,7 +277,7 @@ export function rotta(c, segui = null) {
   const scala = robe.find(r => r.che === 'scala')
   let meglio = null
   for (const m of c.missioni || []) {
-    if (c.missioniFatte.has(m.id) || m.piano < c.piano) continue
+    if (m.tipo === 'conta' || c.missioniFatte.has(m.id) || m.piano < c.piano) continue
     let dove, quale
     if (m.piano === c.piano) {
       const r = robe.find(x => x.missione === m.id && !x.morto && !x.aperto)
@@ -289,7 +296,7 @@ export function rotta(c, segui = null) {
   }
   if (!meglio) return null
   const m = missioneDi(meglio.id)
-  return { ...meglio, gradi: verso(c.eroe, meglio), em: m.tipo === 'trova' ? m.cosa.em : '👑', nome: inFrase(titoloDi(m)) }
+  return { ...meglio, gradi: verso(c.eroe, meglio), em: faccia(m), nome: inFrase(titoloDi(m)) }
 }
 
 // Sulla terra di sopra: la discesa verso cui puntare. Quella con una missione presa e non fatta, la più vicina a
@@ -303,7 +310,7 @@ export function discesaDaSeguire(stati, da, posti, segui = null, storia = null) 
   if (scelta && scelta !== SEGUI_LA_STORIA && posti[missioneDi(scelta).discesa]) return missioneDi(scelta).discesa
   let meglio = null
   for (const m of MISSIONI) {
-    if (statoDi(stati, m.id) !== PRESA || !posti[m.discesa]) continue
+    if (m.tipo === 'conta' || statoDi(stati, m.id) !== PRESA || !posti[m.discesa]) continue
     const d = distanza(da, posti[m.discesa])
     if (!meglio || d < meglio.distanza) meglio = { discesa: m.discesa, distanza: d }
   }

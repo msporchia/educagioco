@@ -39,10 +39,10 @@ function registro(g) {
 // il seme della partita n di una discesa: lo stesso per chi gioca la discesa dallo stesso ingresso, così il sotterraneo è lo stesso
 export const semeDella = (seme, k, n = 0) => 100 + seme * 37 + k * 3 + n * 7919
 
-function giocaCome(tipo, k, stato, { eroe, seme, n = 0, strada = STRADA_BASE, bravura = null }) {
+function giocaCome(tipo, k, stato, { eroe, seme, n = 0, strada = STRADA_BASE, bravura = null, tappa = null }) {
   const botteghe = RISALITA.scaffale ? copia(stato.botteghe || {}) : null
   const g = GIOCATORI_TIPO[tipo]
-  return gioca(CAMPAGNA[k], { seme: semeDella(seme, k, n), bravura: bravura ?? g.bravura, come: g.come, stile: stileDi(tipo, strada), eroe,
+  return gioca(tappa || CAMPAGNA[k], { seme: semeDella(seme, k, n), bravura: bravura ?? g.bravura, come: g.come, stile: stileDi(tipo, strada), eroe,
                               roba: copia(stato.roba), crescita: copia(stato.crescita),
                               risalita: { spesa: STRADE[strada].spesa, finite: k, seme: seme * 211 + k * 7 + n * 31 + 5, botteghe, obiettivo: stato.obiettivo ?? null } })
 }
@@ -102,10 +102,10 @@ export function ingressoDelCurioso(k, { eroe = 'cavaliere', seme = 1, strada = S
   return copia(fila[k].entrato)
 }
 // `ritocca`: una funzione che riceve l'ingresso ({ roba, crescita }, una copia) e torna quello con cui si gioca davvero (le misure provano
-// un livello in più o in meno, la roba di un'altra discesa, niente roba: test/aiuto/misure-curioso.mjs)
-export function giocaDalCurioso(k, { eroe = 'cavaliere', seme = 1, n = 0, bravura = null, strada = STRADA_BASE, ritocca = null } = {}) {
+// un livello in più o in meno, la roba di un'altra discesa, niente roba: test/aiuto/misure-curioso.mjs). `tappa`: un'altra discesa al posto di CAMPAGNA[k] (una zona potenziata)
+export function giocaDalCurioso(k, { eroe = 'cavaliere', seme = 1, n = 0, bravura = null, strada = STRADA_BASE, ritocca = null, tappa = null } = {}) {
   const ingresso = ingressoDelCurioso(k, { eroe, seme, strada })
-  return giocaCome('curioso', k, ritocca ? ritocca(ingresso) : ingresso, { eroe, seme, n, strada, bravura })
+  return giocaCome('curioso', k, ritocca ? ritocca(ingresso) : ingresso, { eroe, seme, n, strada, bravura, tappa })
 }
 
 // quali discese già vinte si rifanno al passo k: quella di due prima (la roba di chi è un po' più avanti), le ultime due all'uscita

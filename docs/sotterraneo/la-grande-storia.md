@@ -177,7 +177,7 @@ Finita la storia ogni discesa è una zona con una fascia di livelli fissa: [zone
 
 ## Le misure
 
-`misure/sotterraneo` (`node test/misure/sotterraneo.test.mjs`, 7–8 minuti su quattro processi), venti storie per eroe: ogni discesa si gioca
+`misure/sotterraneo` (`node test/misure/sotterraneo.test.mjs`, 12 minuti su quattro processi, `tempo: 900`), venti storie per eroe: ogni discesa si gioca
 dall'ingresso che la storia del **curioso** gli ha dato (roba, livello, pozioni: `giocaDalCurioso`, [giocatori-tipo.md](giocatori-tipo.md)), a 9, 6 e 4
 risposte giuste su 10. Il vecchio metro (il finto che va dritto con la roba attesa, 8/6/4) è tolto: coi mostri di oggi non vince più nemmeno a 8 su 10 (0–4
 discese su 20), quindi misurava un giocatore che non c'è. Discese vinte su venti (cavaliere · elfa · mago · nano, 15 ottobre 2026):
@@ -188,21 +188,23 @@ discese su 20), quindi misurava un giocatore che non c'è. Discese vinte su vent
 | a 6/10 | 12·18·14·20 | 11·17·12·15 | 6·13·13·13 | 10·15·11·16 | 12·19·15·19 | 9·16·11·14 | 16·18·17·19 |
 | a 4/10 | 3·7·4·12 | 1·10·4·2 | 1·10·4·4 | 2·6·2·4 | 4·13·5·14 | 2·9·1·7 | 4·12·5·11 |
 
-- **Bersagli** (quelli approvati, giocatori-tipo.md e le unità): a 9/10 quasi sempre (media dei quattro ≥ 85%, a testa ≥ 75%), a 4/10 quasi mai (media ≤ 30%,
-  la scalinata ≤ 45%; a testa ≤ 60%, la scalinata ≤ 70%: le classi non sono uguali, l'elfa e il nano a 4/10 vincono di più), la cripta senza bersaglio sopra.
+- **Bersagli**: a 9/10 quasi sempre (media dei quattro ≥ 85%, a testa ≥ 75%); a 4/10 quasi mai (media ≤ 30%, la scalinata ≤ 45%; a testa ≤ 60%, la
+  scalinata ≤ 70%: l'elfa e il nano a 4/10 vincono di più), **tranne la cripta e la cisterna, senza bersaglio a 4/10**: il curioso «a memoria oneshotta tutti», e il gioco
+  gli chiede di pianificare solo in alcuni punti (il proprietario, 15 ottobre); la cisterna fa il 45% a 4/10 (elfa e nano 65–70%) per com'è fatta.
 - **La roba di una discesa prima** (il curioso che salta l'ultimo acquisto) e **di due dopo**, **due livelli sotto** e **tre sopra**: il livello e la roba si
   sommano, e la tabella lo misura (sotto si fatica, sopra a 4/10 non è una passeggiata; con la roba di una discesa prima, dalla gallerie in giù, a 9/10 ci si
   arriva ancora più di metà delle volte).
-- **Il primo avvio**: la scalinata senza roba (la riga 0) a 9/10 si vince l'11% delle volte (0 · 5 · 0 · 4 su 20), meno che con la sua roba; le gemme con cui il
-  curioso esce dalla cripta (18 · 18 · 16 · 20) bastano alla prima arma tranne che al mago (16 contro 23 💎: il guardiano gliela lascia per terra).
-- **Chi va dritto** (il bravo): non è più un metro ma un controllo che non trovi un muro (due sconfitte di fila nella stessa discesa).
-- **Chi arriva con 100 o 250 gemme da parte** e compra il meglio che può: nelle ultime due discese a 6/10 non è una passeggiata (≤ 90% / 95%) e a 4/10 di rado (≤ 40%).
+- **Il primo avvio**: la scalinata senza roba (la riga 0) a 9/10 si vince l'11% delle volte (0 · 5 · 0 · 4 su 20), meno che con la sua roba. L'arma da comprare si
+  pretende **all'uscita della scalinata**, non della cripta: anche senza un'arma la scalinata si vince, e dalla cripta il curioso esce con 18 · 18 · 16 · 20 💎 (il mago
+  non arriva ai 23 della prima arma), dalla scalinata con 78 · 67 · 80 · 80.
+- **Chi va dritto** (il bravo): solo stampato (vinte alla prima 25 · 34 · 45 · 59 · 59 · 74% dalle cantine al fondo, muri 55 · 45 · 36 · 29 · 24 · 18%). Trovare muri va
+  bene: non sta livellando, il fine è fargli fare più domande possibile ed esplorare è parte del divertimento (il proprietario, 15 ottobre).
+- **Chi arriva con 100 o 250 gemme da parte** e compra il meglio che può: nelle ultime due discese a 6/10 non è una passeggiata (≤ 90% / 95%) e a 4/10 di rado
+  (≤ 45%: misurato 43% nel fondo; può sempre tornare indietro a farmare, finché non va totalmente fuori scala).
 - **Tolti**: «chi gira tutto» e «la storia giocata davvero» (il curioso è già lui: stessa storia, stessa roba, stessi livelli) e la fila di `misuraConLaRoba` /
   `robaPer`, che restano nel banco ma non sono più il metro di niente.
-- **Ancora rossi** (da decidere, non si ritocca né il gioco né il bersaglio): a 4/10 la cripta si vince 3 · 7 · 4 su 20 (cavaliere, elfa, mago; la vecchia promessa
-  «la prima perdona» era del dritto), la cisterna e il fondo a 4/10 per elfa e nano (13–14 su 20, in media 45% e 40% contro 30%); il bravo trova un muro
-  in ogni discesa (55 · 45 · 36 · 29 · 24 · 18% dalle cantine al fondo, vinte alla prima 25 · 34 · 45 · 59 · 59 · 74%); con 100 o 250 gemme da parte, nel fondo, a 4/10
-  si vince il 43%; le zone (sotto) misurano ancora il dritto con la roba attesa e restano rosse come prima.
+- **Ancora rosso**: il fondo a 4/10, in media fra i quattro eroi 40% contro il 30% del bersaglio (elfa 12/20, nano 11/20): è solo poco oltre, quindi il bersaglio non è
+  stato tolto; da decidere se allargarlo.
 - **La taratura** sono `forza` (le ossa) e `spinta` (l'attacco) di ogni discesa in `dati/campagna.js`, sulla roba e sul livello
   attesi: forza 0,25 · 0,5 · 0,5 · 0,8 · 1,1 · 1,25 · 1,8, spinta −2 · 2 · 4,5 · 5,8 · 7 · 7,7 · 9 dalla cripta alla miniera, `COLPO_DEL_MOSTRO` 1,1
   (la sera del 13 ottobre, coi branchi grossi: [taratura-branchi.md](taratura-branchi.md); la mattina 0,4 · 0,55 · 0,9 · 1,4 · 2,25 · 3 · 4 e 0 · 6,5 · 6,8 · 9,6 · 9,8 · 10 · 11,
