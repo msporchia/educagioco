@@ -200,6 +200,7 @@ export function leggi(dato, tappa, roba = null, missioni = [], crescita = null) 
     corsa.aggiornaLuce()
     corsa.segnaLaStanza()   // riprendere non è entrare in una stanza, o il primo passo consumerebbe torcia
     corsa.sistemaIlCorredo()
+    corsa.faiTornareIMostri()   // gli scaduti mentre era spenta (una sosta di prima non ne ha: niente torna)
     return corsa
   } catch (e) {
     return null   // un salvataggio storto non porta giù il gioco: si ricomincia

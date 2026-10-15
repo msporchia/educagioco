@@ -35,6 +35,7 @@ import { forzaDelCorredo } from './forza.js'
 import { MetodiDelloScontro } from './scontro.js'
 import { MetodiDellOrologio } from './orologio.js'
 import { MetodiDeiPreparati } from './preparati.js'
+import { MetodiDellaRicomparsa } from './ricomparsa.js'
 import { RISPOSTE_PER_ENERGIA, aGrado } from '../dati/abilita.js'
 
 // nella storia i forzieri e i mostri di tutti i giorni danno solo quello che si consuma: la roba la dà la riga
@@ -51,8 +52,9 @@ const RINCARO = { porta: -0.05, forziere: 0.25, fonte: 0, mostro: 0.05, capo: 0.
 export class Corsa extends Corredo {
   // `missioni`: quelle prese che riguardano questa discesa (motore/missioni.js, presePer)
   // `crescita`: l'esperienza e i punti dell'avventura (motore/crescita.js): l'eroe sale di livello anche giù
-  constructor(tappa, { seme = null, rnd = Math.random, eroe = DI_PARTENZA, roba = null, missioni = [], crescita = null } = {}) {
+  constructor(tappa, { seme = null, rnd = Math.random, eroe = DI_PARTENZA, roba = null, missioni = [], crescita = null, ricomparsa = true } = {}) {
     super({ eroe, roba, crescita })
+    this.ricomparsa = ricomparsa   // i mostri morti tornano (motore/ricomparsa.js); il banco la spegne: misura un passaggio solo
     this.tappa = tappa
     // il posto nella storia (−1 l'abisso, che pesca come sempre): dice cosa deve dare questa discesa
     this.indice = indiceDella(tappa)
@@ -550,6 +552,7 @@ export class Corsa extends Corredo {
       this.faiPassi(1, true)
       this.bruciaLaTorcia()
       this.aggiornaLuce()   // dopo: l'ultima stanza della torcia si stringe appena ci si entra
+      this.faiTornareIMostri()
       this.raccogli()
       if (!this.strada.length) {
         this.strada = null
@@ -786,6 +789,7 @@ export class Corsa extends Corredo {
   cade(m) {
     m.morto = true
     m.sveglio = false
+    this.prenotaIlRitorno(m)
     this.mostriBattuti++
     // la chiave non cade per terra: la si ha e basta, o si può dimenticarla e rifare la strada per niente
     if (m.chiave) {
@@ -1187,6 +1191,7 @@ export class Corsa extends Corredo {
     this.strada = null; this.mira = null; this.bersaglio = null
     this.segnaLaStanza()
     this.aggiornaLuce()
+    this.faiTornareIMostri()   // i passi fatti nel frattempo (anche su altri piani) contano: gli scaduti tornano
   }
 
   // risalendo si sbuca accanto alla scala che scende (la prima cella libera attorno), non all'inizio del piano
@@ -1226,4 +1231,4 @@ export class Corsa extends Corredo {
 }
 
 // lo scontro a gruppi (motore/scontro.js) fa parte della Corsa
-Object.assign(Corsa.prototype, MetodiDelloScontro, MetodiDellOrologio, MetodiDeiPreparati)
+Object.assign(Corsa.prototype, MetodiDelloScontro, MetodiDellOrologio, MetodiDeiPreparati, MetodiDellaRicomparsa)
