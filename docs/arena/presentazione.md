@@ -5,7 +5,7 @@
 Una battaglia a una corsia sola. Da una parte il tuo castello, dall'altra
 quello del nemico, in mezzo un ponte. Si parte con poche monete e sei piazzole
 libere: toccandone una si sceglie cosa costruirci, una caserma (arcieri od opliti,
-lupi, negromanti, draghi…, anche due uguali) o una miniera che fa arrivare le monete
+mummie, negromanti, draghi…, anche due uguali) o una miniera che fa arrivare le monete
 più in fretta (ma il nemico la può abbattere, e una piazzola usata lì non attacca).
 Le truppe escono da sole, sempre di più, e assediano il nemico: prima la porta del
 ponte, poi le caserme, il castello per ultimo. Il bambino decide **cosa costruire,
@@ -14,7 +14,7 @@ attorno l'anello per farlo. Il castello stesso si potenzia, e spara di più.
 
 Ogni scelta costa diamanti di battaglia (💎, per non confonderli con le monete vere) **e un calcolo**. Il calcolo lo decide
 la truppa: arcieri e opliti chiedono somme, pipistrelli e negromanti
-sottrazioni, lupi, bestie cornute e golem moltiplicazioni, diavoletti e drago divisioni. Mentre si calcola il campo rallenta, non si ferma: c'è sempre
+sottrazioni, mummie, bestie cornute e golem moltiplicazioni, diavoletti e drago divisioni. Mentre si calcola il campo rallenta, non si ferma: c'è sempre
 un po' di pressione. Se si sbaglia non si perde niente, ma quella caserma
 riposa qualche secondo.
 

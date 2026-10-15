@@ -25,7 +25,7 @@ I numeri stanno in `src/giochi/arena/dati/regole.js`, il motore in
 ## Le caserme: sei piazzole libere
 
 - **Gli edifici sono quattro** (`EDIFICI`): la cripta (arcieri | opliti), la tana
-  (lupi | pipistrelli, e le bestie cornute della battaglia infinita), la torre oscura
+  (mummie | pipistrelli, e le bestie cornute della battaglia infinita), la torre oscura
   (negromanti | diavoletti), l'antro (golem | drago). Le truppe di un edificio **costano
   uguale**: si sceglie il mestiere, non il prezzo. L'edificio dice com'è disegnata la caserma, non quante se ne fanno.
 - **Le piazzole sono libere**: su ognuna delle sei si costruisce la caserma che si
@@ -48,7 +48,7 @@ I numeri stanno in `src/giochi/arena/dati/regole.js`, il motore in
 - **L'antro (golem | drago) costa 20**, e le sue truppe sono forti in proporzione: è un
   investimento, non un'apertura. A 14 costava quanto le monete di partenza.
 - **Le truppe sono nove e si distinguono per chi colpiscono, non per quanto
-  valgono**: arcieri e negromanti feriscono tutti, opliti, lupi, bestie cornute e diavoletti solo chi
+  valgono**: arcieri e negromanti feriscono tutti, opliti, mummie, bestie cornute e diavoletti solo chi
   cammina, il golem solo le costruzioni, i pipistrelli e il drago volano e scavalcano
   i muri. Il `guasti…()` di `dati/regole.js` pretende due o tre truppe per edificio allo
   stesso prezzo, chi vola e chi, da terra, ferisce chi vola, e (battaglia infinita, sotto) una
@@ -76,7 +76,7 @@ I numeri stanno in `src/giochi/arena/dati/regole.js`, il motore in
 
 - **Chi colpisce da vicino ha più vita e meno danno, chi tira da lontano il contrario**
   (l'utente), **ma senza esagerare**: chi tira sta nelle retrovie e muore già meno. Per
-  squadra, al livello 1: opliti 600 di vita e 40 di danno al secondo, lupi 560 e 50,
+  squadra, al livello 1: opliti 600 di vita e 40 di danno al secondo, mummie 560 e 50,
   arcieri 180 e 72, negromanti e diavoletti 180 e 29-30 (ad area), pipistrelli 240 e 36.
 - **I raggi dei colpi ad area stanno in scala con le figure** (13-15): con le masse fitte
   un raggio di 26-30, quello di quando le figure erano grandi il doppio, prendeva sei
@@ -85,10 +85,10 @@ I numeri stanno in `src/giochi/arena/dati/regole.js`, il motore in
   campo aperto, senza castelli né porte. Nessuna truppa deve vincerle tutte o perderle
   tutte, e ci dev'essere il giro: gli arcieri fermano pipistrelli e drago, chi colpisce da
   vicino batte arcieri e chi tira ad area, chi tira ad area batte gli arcieri, chi vola
-  batte chi colpisce solo a terra. Ultimo giro: arcieri 33%, opliti 50%, lupi 67%,
+  batte chi colpisce solo a terra. Ultimo giro: arcieri 33%, opliti 50%, mummie 67%,
   pipistrelli 50%, negromanti e diavoletti 33%, drago 83% (costa di più, e chi colpisce
   solo a terra non lo tocca). Il golem non duella: ignora le truppe. Con le bestie cornute
-  (tre per squadra, 190 di vita e 13 di danno ciascuna, vanno a 56): 57%, come opliti e lupi; battono arcieri, lupi,
+  (tre per squadra, 190 di vita e 13 di danno ciascuna, vanno a 56): 57%, come opliti e mummie; battono arcieri, mummie,
   negromanti e diavoletti, perdono con opliti, pipistrelli e drago (`BATTE` in `motore/nemico.js`).
 
 ## La battaglia infinita e le truppe di un terreno
@@ -102,7 +102,7 @@ che altrove non si costruisce (`ESCLUSIVE` e `TRUPPE_DEL_TERRENO` in `dati/regol
 | terreno | firma | edificio |
 |---|---|---|
 | bosco | pipistrelli | tana |
-| palude | lupi | tana |
+| palude | mummie | tana |
 | neve | golem | antro |
 | lava | diavoletti | torre oscura |
 
@@ -111,10 +111,10 @@ anche dove nessuna truppa ammessa porta `×`. **La campagna non cambia**: il gol
 restano dov'erano, perché là le operazioni si insegnano per scalino e `operazionePer` ripiega su
 quelle note. Il nemico e i giocatori finti usano la stessa lista (`Partita.truppeAmmesse`).
 
-- **Le bestie cornute completano la tana**: senza lupi e pipistrelli, in neve e in lava la tana non
+- **Le bestie cornute completano la tana**: senza mummie e pipistrelli, in neve e in lava la tana non
   avrebbe truppe; sono per quei due terreni (`×`, 8 monete come le altre della tana: tre per squadra, 190 di
   vita, 13 di danno, 56 di velocità, colpiscono solo chi cammina, da vicino). Il ruolo è «regge e
-  colpisce a corto raggio», fra i lupi (veloci, di più danno) e i pipistrelli (volano, fragili).
+  colpisce a corto raggio», fra le mummie (veloci, di più danno) e i pipistrelli (volano, fragili).
   L'operazione è `×` perché in lava non c'è nessun'altra truppa con la moltiplicazione.
 - **Il record è il tempo** (`senzaFine` nel manifesto, [../core/primati.md](../core/primati.md)): quanto si
   resiste; **una vittoria conta il tempo che c'è voluto per abbattere il castello nemico** (misura da

@@ -72,7 +72,7 @@ metà**, quando sono abbastanza fitte da valere la pena.
 
 Stesse regole, la scheda dell'ultima tappa e le truppe del terreno (`Partita.truppeAmmesse`): i ruoli si risolvono
 sulla lista ammessa e un passo che non c'è si salta. Le bestie cornute sono nel ruolo `veloce` (dove ci sono i
-lupi non ci sono le bestie) e in `BATTE` come terrestri a corto raggio. `VERSIONE_IA` 10.
+mummie non ci sono le bestie) e in `BATTE` come terrestri a corto raggio. `VERSIONE_IA` 10.
 
 ## Se si ritocca
 

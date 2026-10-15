@@ -9,7 +9,7 @@ nemico, che terreno c'è. **Le operazioni arrivano una famiglia alla volta**
 | scalino | terreno | truppe nuove | operazione |
 |---|---|---|---|
 | Il bosco (3 tappe) | bosco | arcieri e opliti (la cripta), pipistrelli, negromanti | `+` `−` |
-| La palude (3) | palude | lupi, golem | `×` |
+| La palude (3) | palude | mummie, golem | `×` |
 | Le nevi (3) | neve | diavoletti, drago | `÷` |
 | La lava (3) | lava | — | tutte |
 

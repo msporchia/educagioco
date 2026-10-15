@@ -126,7 +126,7 @@ if (costruita) {
   // toccata, la caserma mostra l'anello: potenziarla al livello 2, venderla per metà della spesa, i numeri
   await page.locator('[data-piazzola="0"]').click()
   await page.waitForSelector('[data-anello="potenzia"]', { timeout: 4000 })
-  controlla('toccata, la caserma mostra l\'anello col livello dopo', /Lv\s*2/.test(await page.locator('[data-anello="potenzia"]').innerText()))
+  controlla('toccata, la caserma mostra l\'anello col prezzo, senza scritte', /^\s*\d+\s*💎\s*$/.test(await page.locator('[data-anello="potenzia"]').innerText()))
   controlla('e si vende per metà della spesa', /\+3/.test(await page.locator('[data-anello="vendi"]').innerText()))
   await scatto(page, 'arena-anello')
   await page.locator('[data-anello="numeri"]').click()

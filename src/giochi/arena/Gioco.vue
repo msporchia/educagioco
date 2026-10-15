@@ -255,7 +255,7 @@ function anelloDi(p, bersagli) {
   const prezzo = a.castello ? p.prezzo('io', 'castello') : p.prezzo('io', 'potenzia', a.posto)
   const riposo = a.castello ? 0 : Math.max(0, e.riposo)
   const voci = [
-    { chiave: 'potenzia', icona: '⬆️', testo: riposo > 0 ? `💤 ${Math.ceil(riposo)}s` : `Lv ${e.liv + 1} · ${prezzo} 💎`,
+    { chiave: 'potenzia', icona: '⬆️', testo: riposo > 0 ? `💤 ${Math.ceil(riposo)}s` : `${prezzo} 💎`,
       puoi: prezzo !== null && p.lati.io.monete >= prezzo && riposo <= 0 },
   ]
   // vendere è un tocco, ma due: il primo chiede «sicuro?» (la ✓ al posto del 💰), il secondo vende

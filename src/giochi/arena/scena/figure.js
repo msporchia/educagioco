@@ -1,14 +1,14 @@
 // Le truppe dell'arena sono creature del castello: chi è chi, a che misura, e
 // quale fotogramma. Nessuna regola qui (il motore non sa che esistano gli
 // sprite) e nessun prezzo: solo il disegno. Le figure del foglio guardano a
-// DESTRA e quasi tutte hanno solo il respiro (4 fotogrammi); lupo e drago
+// DESTRA e quasi tutte hanno solo il respiro (4 fotogrammi); drago
 // hanno anche i passi di lato (6 fotogrammi). Di schiena o di fronte non esiste
 // niente per tutte: in campo guardano dalla parte della loro squadra.
 import { PEZZI } from '../../castello/dati/figure.js'
 import { NITIDO, NITIDI } from '../../sotterraneo/dati/atlante.js'
 
 export const CREATURA = {
-  scheletri: 'scheletro', guardiano: 'scheletro-scudo', lupi: 'lupo', diavoletto: 'diavoletto',
+  scheletri: 'scheletro', guardiano: 'scheletro-scudo', lupi: 'mummia', diavoletto: 'diavoletto',
   pipistrelli: 'pipistrello', bestie: 'bestia-cornuta', negromante: 'negromante', golem: 'golem', drago: 'drago',
 }
 

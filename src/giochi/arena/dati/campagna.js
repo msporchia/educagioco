@@ -9,7 +9,7 @@ import { NEMICO } from './taratura.js'
 
 export const SCALINI = [
   { chiave: 'bosco',  nome: 'Il bosco',     icona: '🌲', vestito: 'bosco',  dritta: 'Poche truppe e un nemico che impara adesso.' },
-  { chiave: 'palude', nome: 'La palude',    icona: '🐸', vestito: 'palude', dritta: 'Arrivano i lupi e i golem: si calcola con le tabelline.' },
+  { chiave: 'palude', nome: 'La palude',    icona: '🐸', vestito: 'palude', dritta: 'Arrivano le mummie e i golem: si calcola con le tabelline.' },
   { chiave: 'neve',   nome: 'Le nevi',      icona: '❄️', vestito: 'neve',   dritta: 'Il diavoletto e il drago: qui si divide.' },
   { chiave: 'lava',   nome: 'La lava',      icona: '🌋', vestito: 'lava',   dritta: 'Tutte le truppe, e un nemico che non ti aspetta.' },
 ]
@@ -41,7 +41,7 @@ export const CAMPAGNA = [
 
   { chiave: 'melma', nome: 'Gli stagni', scalino: 'palude', portata: 30,
     truppe: CON_PER, nemico: NEMICO.melma,
-    racconto: 'I lupi sono due, e velocissimi. Ma non colpiscono chi vola.' },
+    racconto: 'Le mummie sono quattro, e svelte. Ma non colpiscono chi vola.' },
   { chiave: 'guado', nome: 'Il guado', scalino: 'palude', portata: 34,
     truppe: PER2, nemico: NEMICO.guado,
     racconto: 'Il golem va dritto alle costruzioni e non si ferma per le truppe.' },

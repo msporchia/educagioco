@@ -31,8 +31,9 @@ export const TRUPPE = {
                  nota: 'Scheletri arcieri, in quattro: da lontano, e colpiscono anche chi vola.' },
   guardiano:   { nome: 'Opliti',      op: '+', costo: 6,  n: 2, hp: 300,  dmg: 22,   rate: 1.1, vel: 38, gitt: 14, bers: 'terra', vola: false, splash: 0,
                  nota: 'Scheletri con lo scudo, in due: solidi, ma non colpiscono chi vola.' },
-  lupi:        { nome: 'Lupi',        op: '×', costo: 8,  n: 4, hp: 140,  dmg: 10,   rate: 0.8, vel: 72, gitt: 13, bers: 'terra', vola: false, splash: 0,
-                 nota: 'In quattro, velocissimi. Non colpiscono chi vola.' },
+  // `lupi` è l'id storico (chiave di salvataggio): sono le mummie, perché un lupo di lato camminava male
+  lupi:        { nome: 'Mummie',      op: '×', costo: 8,  n: 4, hp: 140,  dmg: 10,   rate: 0.8, vel: 72, gitt: 13, bers: 'terra', vola: false, splash: 0,
+                 nota: 'In quattro, fasciate e svelte. Non colpiscono chi vola.' },
   bestie:      { nome: 'Bestie cornute', op: '×', costo: 8, n: 3, hp: 190, dmg: 13, rate: 0.9, vel: 56, gitt: 14, bers: 'terra', vola: false, splash: 0,
                  nota: 'In tre, corrono a testa bassa: reggono e colpiscono da vicino. Non colpiscono chi vola.' },
   pipistrelli: { nome: 'Pipistrelli', op: '−', costo: 8,  n: 6, hp: 40,   dmg: 5.4,  rate: 0.9, vel: 82, gitt: 12, bers: 'tutti', vola: true,  splash: 0,

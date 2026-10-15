@@ -57,7 +57,12 @@ const px = v => `${Math.round(v)}px`
         <button v-for="v in pannello.anello.voci" :key="v.chiave" class="ar-voce em"
                 :class="{ 'ar-no': !v.puoi, 'ar-piccola': v.piccola, 'ar-sicuro': v.sicuro }" :data-anello="v.chiave"
                 :aria-label="v.chiave" @click.stop="emit('anello', v.chiave)">
-          <span class="ar-voce-icona">{{ v.icona }}</span>
+          <svg v-if="v.chiave === 'potenzia' && !v.testo.startsWith('💤')" class="ar-freccia" viewBox="0 0 34 34" aria-hidden="true">
+            <defs><linearGradient id="ar-fr" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9af06a"/><stop offset="1" stop-color="#2fa84a"/></linearGradient></defs>
+            <path d="M17 3 L30 16 H22 V20 H12 V16 H4 Z" fill="url(#ar-fr)" stroke="#1d6b2a" stroke-width="1.6" stroke-linejoin="round"/>
+            <path d="M17 18 L28 29 H6 Z" fill="url(#ar-fr)" stroke="#1d6b2a" stroke-width="1.6" stroke-linejoin="round"/>
+          </svg>
+          <span v-else class="ar-voce-icona">{{ v.icona }}</span>
           <span v-if="v.testo" class="ar-voce-testo">{{ v.testo }}</span>
         </button>
       </div>
