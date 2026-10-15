@@ -5,23 +5,25 @@
    lento ma vero) e i comandi sono quelli del telefono: premere sopra un
    sasso, o appena fuori dal bordo, è la risposta; premere altrove porta la
    nave lì, e trascinare la guida; un falso che tocca la nave rimbalza sullo
-   scudo e non costa niente. Il dito è vero (`Input.dispatchTouchEvent`):
-   un `page.click()` non trascina e non porta i pointer del tocco.
+   scudo e non costa niente, il giusto che la tocca esplode e costa come
+   arrivare in fondo. Il dito è vero (`Input.dispatchTouchEvent`): un
+   `page.click()` non trascina e non porta i pointer del tocco.
 
-   Poi il disegno di riserva: con `#tela=2d`, e con un browser che il
-   WebGL 2 non ce l'ha, il gioco resta sul 2D e si gioca lo stesso.
+   Il 3D è un gioco in prova (`mate3d`, «Asteroidi 3D»): la sua carta c'è solo
+   coi giochi in prova accesi, e gli Asteroidi di sempre restano in 2D. Con un
+   browser che il WebGL 2 non ce l'ha, anche gli Asteroidi 3D tornano al 2D.
 
    `node test/esegui.mjs asteroidi-3d --niente-build`
    tempo: 120
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, attendi, scatto, scegli, parti } from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, azzera, attendi, scatto, scegli, parti, semina } from '../aiuto/browser.mjs'
 import { controlla, uguale, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
 
 const browser = await apriBrowser()
 
 // entra nella prima tappa e aspetta che il cielo scenda (il primo traguardo lo ferma tre secondi)
-async function entra(page) {
-  await scegli(page, 'mate')
+async function entra(page, chiave = 'mate3d') {
+  await scegli(page, chiave)
   await page.waitForSelector('[data-rotta]', { timeout: 8000 })
   await parti(page, '[data-rotta] [data-tipo="pianeta"]')
   await page.waitForSelector('button[aria-label="pausa"]', { timeout: 8000 })
@@ -45,6 +47,9 @@ const conto = page => page.evaluate(() => {
 /* ---------- 1. il 3D c'è, e costa poco ---------- */
 const { page, errori } = await apriGioco(browser)
 await azzera(page)
+uguale('coi giochi in prova spenti gli Asteroidi 3D non ci sono', await page.locator('[data-indice="mate3d"]').count(), 0)
+await semina(page, { settings: { sperimentali: true } })
+uguale('accesi, la carta c\'è', await page.locator('[data-indice="mate3d"]').count(), 1)
 await entra(page)
 const cdp = await page.context().newCDPSession(page)
 const giu = (x, y) => cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y }] })
@@ -125,16 +130,28 @@ uguale('non è una risposta', dopo.sbagliate, prima.sbagliate)
 uguale('e non costa una vita', dopo.vite, prima.vite)
 uguale('né il filotto', dopo.serie, prima.serie)
 
+/* ---------- 7. il giusto che tocca la nave esplode, e costa come arrivare in fondo ---------- */
+s = await unSasso(page, true)
+prima = await conto(page)
+await page.evaluate(() => {
+  const m = window.__mate, a = m.asteroidi().find(x => !x.morto && x.ok)
+  a.x = m.nave.x; a.y = m.nave.y - m.nave.r * 1.2
+})
+await attendi(page, 250)
+dopo = await conto(page)
+uguale('il giusto addosso alla nave costa una vita', dopo.vite, prima.vite - 1)
+uguale('ed è segnato come non preso', dopo.sbagliate, prima.sbagliate + 1)
+uguale('non è un centro', dopo.giuste, prima.giuste)
+
 controlla('nessun errore in console', errori.length === 0, errori.join(' | '))
 await page.close()
 
-/* ---------- 7. il disegno di riserva: chiesto con #tela=2d ---------- */
+/* ---------- 8. gli Asteroidi di sempre restano in 2D ---------- */
 {
-  const { page, errori } = await apriGioco(browser, { hash: 'tela=2d' })
+  const { page, errori } = await apriGioco(browser)
   await azzera(page)
-  await page.evaluate(() => { location.hash = 'tela=2d' })
-  await entra(page)
-  uguale('con #tela=2d si resta sul 2D', (await page.evaluate(() => window.__mate.grafica())).tre, false)
+  await entra(page, 'mate')
+  uguale('gli Asteroidi di sempre sono in 2D', (await page.evaluate(() => window.__mate.grafica())).tre, false)
   controlla('e la tela 2D si vede', await page.locator('[data-tela="2d"]').isVisible())
   const prima = await conto(page)
   const s = await unSasso(page, true)
@@ -145,7 +162,7 @@ await page.close()
   await page.close()
 }
 
-/* ---------- 8. un browser senza WebGL 2: il 2D, senza errori ---------- */
+/* ---------- 9. un browser senza WebGL 2: anche gli Asteroidi 3D tornano al 2D, senza errori ---------- */
 {
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, hasTouch: true })
   await ctx.addInitScript(() => {
@@ -157,6 +174,7 @@ await page.close()
   const fittizio = { newPage: opz => ctx.newPage(opz) }
   const { page, errori } = await apriGioco(fittizio)
   await azzera(page)
+  await semina(page, { settings: { sperimentali: true } })
   await entra(page)
   uguale('senza WebGL il cielo è quello 2D', (await page.evaluate(() => window.__mate.grafica())).tre, false)
   const s = await unSasso(page, true)
