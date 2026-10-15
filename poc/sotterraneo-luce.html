@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Sotterraneo con la luce</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #000; overflow: hidden; -webkit-user-select: none; user-select: none; }
+  #tela { display: block; width: 100vw; height: 100vh; touch-action: none; }
+  #hud { position: fixed; left: 8px; top: 8px; font: 11px/1.3 ui-monospace, monospace; color: #c8b89a; background: rgba(0,0,0,.45);
+         padding: 2px 6px; border-radius: 4px; pointer-events: none; z-index: 20; }
+  /* sopra la scena: le barre della vita, i nomi, i numeri che salgono, le etichette della vetrina */
+  #segni { position: fixed; inset: 0; pointer-events: none; z-index: 5; }
+  .segno { position: absolute; transform: translate(-50%, -100%); display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .segno b { font: 700 11px system-ui, sans-serif; color: #ffe6a8; text-shadow: 0 1px 0 #000, 0 0 4px #000; white-space: nowrap; }
+  .segno i { display: block; width: 34px; height: 5px; border-radius: 2px; background: linear-gradient(90deg, #e2412c calc(var(--q) * 100%), #2a1a18 0);
+             box-shadow: 0 0 0 1px #000; }
+  .segno.bersaglio i { width: 40px; box-shadow: 0 0 0 1px #000, 0 0 0 2px #ffd050; }
+  .numero { position: absolute; transform: translate(-50%, -100%); font: 900 20px system-ui, sans-serif; color: #fff;
+            text-shadow: 0 2px 0 #000, 0 0 6px #000; white-space: nowrap; }
+  .numero-dato, .numero-teme { color: #ffe36a; } .numero-teme { font-size: 26px; } .numero-resiste { color: #c8c8c8; font-size: 16px; }
+  .numero-preso { color: #ff5a40; } .numero-cura { color: #7dff9a; } .numero-veleno { color: #9aff5a; }
+  .numero-nota, .numero-segno { font-size: 13px; color: #f3e6cc; }
+  .etichetta { position: absolute; transform: translate(-50%, -100%); font: 600 11px system-ui, sans-serif; color: #f3e6cc;
+               background: rgba(0,0,0,.55); padding: 2px 6px; border-radius: 4px; white-space: nowrap; }
+  #sopra { position: fixed; inset: 0; pointer-events: none; z-index: 10; }
+  /* il bottino di prova delle botti (botti.js): solo un contatore, la roba vera la decide il gioco */
+  #bottino-prova { position: fixed; left: 8px; top: 30px; z-index: 20; padding: 4px 10px; border-radius: 12px; background: rgba(20,15,10,.75);
+                   color: #ffe6a8; font: 700 15px system-ui, sans-serif; pointer-events: none; }
+  #bottino-prova[hidden] { display: none; }
+</style>
+</head>
+<body>
+<canvas id="tela"></canvas>
+<div id="segni"></div>
+<div id="sopra"></div>
+<div id="hud">…</div>
+<script type="module" src="./sotterraneo-luce/main.js"></script>
+</body>
+</html>
