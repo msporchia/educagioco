@@ -51,9 +51,7 @@ function scriviVersione () {
     generateBundle (_opzioni, bundle) {
       const sorgente = bundle['index.html']?.source
       const lunga = typeof sorgente === 'string' ? Buffer.byteLength(sorgente) : (sorgente?.byteLength || 0)
-      // sito spezzato: il peso di un aggiornamento è la pagina con tutti i suoi file
-      const peso = !SPEZZATO ? lunga : Object.entries(bundle).reduce((somma, [nome, o]) =>
-        nome === 'versione.json' ? somma : somma + (o.type === 'asset' ? Buffer.byteLength(o.source) : Buffer.byteLength(o.code)), 0)
+      const peso = lunga   // la pagina: è quella che «cerca aggiornamenti» scarica a mano (il resto lo scarica il service worker)
       this.emitFile({
         type: 'asset',
         fileName: 'versione.json',
@@ -76,7 +74,10 @@ function scriviServiceWorker () {
       // pagina, che ha già la sua strada, e i due file che dicono la versione. [indirizzo, byte]
       const FILE = !SPEZZATO ? [] : Object.entries(bundle)
         .filter(([nome]) => !['index.html', 'sw.js', 'versione.json'].includes(nome))
-        .map(([nome, o]) => ['./' + nome, o.type === 'asset' ? o.source.length : o.code.length])
+        .map(([nome, o]) => {
+          const gioco = o.type === 'chunk' && /\/giochi\/([^/]+)\/Gioco\.vue/.exec(o.facadeModuleId || '')
+          return ['./' + nome, o.type === 'asset' ? o.source.length : o.code.length, gioco ? gioco[1] : (GRUPPI.get(nome) || '')]
+        })
       const cache = `educagioco-${VERSIONE.id}`
       this.emitFile({
         type: 'asset',
@@ -84,7 +85,7 @@ function scriviServiceWorker () {
         source: `/* generato dal build — non si modifica a mano (vite.config.js) */
 const CACHE = ${JSON.stringify(cache)}
 const PAGINA = './'
-const FILE = ${JSON.stringify(FILE)}   // sito spezzato: [indirizzo, byte]; vuota nel file unico
+const FILE = ${JSON.stringify(FILE)}   // sito spezzato: [indirizzo, byte, gioco ('' = base)]; vuota nel file unico
 const ROBA = ['./manifest.webmanifest', './icona.svg', './icona-192.png',
               './icona-512.png', './icona-maskable.png', './apple-touch-icon.png']
 
@@ -93,29 +94,77 @@ const ROBA = ['./manifest.webmanifest', './icona.svg', './icona-192.png',
 // pagina vecchia che il browser si teneva da parte.
 const fresca = u => new Request(u, { cache: 'no-cache' })
 
-// Il sito spezzato: ogni file con l'impronta nel nome non cambia mai, quindi quello che una versione precedente
-// ha già in cassa si copia invece di riscaricarlo. Uno che manca fa fallire l'installazione (resta la versione di
-// prima). I progressi vanno alla pagina, che li mostra: docs/core/avvio-e-memoria.md
-async function scaricaTutto (c) {
-  if (!FILE.length) return
-  const canale = typeof BroadcastChannel === 'function' ? new BroadcastChannel('educagioco-scarico') : null
-  const byteTotale = FILE.reduce((a, f) => a + f[1], 0)
+// Il sito spezzato, in due tempi (docs/core/avvio-e-memoria.md). Ogni file ha l'impronta nel nome, quindi non cambia
+// mai: quello che una versione precedente ha già in cassa si copia, senza rete. L'installazione scarica solo la BASE
+// (home, codice comune: i file senza gioco); i giochi li scarica poi, uno alla volta, quando la pagina lo chiede
+// (messaggio 'scarica': a ogni avvio, e riprende da dove era arrivato). Uno che manca fa fallire solo la base.
+// I progressi vanno alla pagina sul canale 'educagioco-scarico'.
+const canale = typeof BroadcastChannel === 'function' ? new BroadcastChannel('educagioco-scarico') : null
+const annuncia = d => { if (canale) canale.postMessage(d) }
+
+async function inCassa (c, f) {
+  if (await c.match(f[0])) return true
+  const altrove = await caches.match(f[0])          // la cache di una versione precedente
+  if (!altrove) return false
+  await c.put(f[0], altrove)
+  return true
+}
+
+// scarica l'elenco dei file non ancora in cassa, qualche file alla volta, contando i byte
+async function scarica (c, elenco, fase, mancanti) {
+  const byteTotale = elenco.reduce((a, f) => a + f[1], 0)
   let fatti = 0, byteFatti = 0
-  const avvisa = fine => canale && canale.postMessage({ fatti, totale: FILE.length, byteFatti, byteTotale, fine: !!fine })
-  avvisa()
-  const coda = FILE.slice()
+  const coda = elenco.slice()
+  const stato = fine => ({ fase: fase, fatti: fatti, totale: elenco.length, byteFatti: byteFatti, byteTotale: byteTotale, mancanti: mancanti(), fine: !!fine })
+  annuncia(stato())
   const operaio = async () => {
     for (let f = coda.shift(); f; f = coda.shift()) {
-      const gia = await caches.match(f[0])
-      if (gia) await c.put(f[0], gia)
-      else await c.add(f[0])
-      fatti++; byteFatti += f[1]; avvisa()
+      await c.add(f[0])
+      fatti++; byteFatti += f[1]; annuncia(stato())
     }
   }
-  await Promise.all([operaio(), operaio(), operaio(), operaio(), operaio(), operaio()])
-  avvisa(true)
-  if (canale) canale.close()
+  await Promise.all([operaio(), operaio(), operaio(), operaio()])
+  annuncia(stato(true))
 }
+
+async function scaricaBase (c) {
+  if (!FILE.length) return
+  const daPrendere = []
+  for (const f of FILE) if (!(await inCassa(c, f)) && !f[2]) daPrendere.push(f)
+  await scarica(c, daPrendere, 'base', function () { return [] })
+}
+
+let inCorso = null
+function scaricaGiochi () {
+  if (!inCorso) inCorso = (async () => {
+    const c = await caches.open(CACHE)
+    const poi = []
+    for (const f of FILE) if (f[2] && !(await inCassa(c, f))) poi.push(f)
+    const mancano = function () { return [...new Set(poi.filter(function (f) { return !f.fatto }).map(function (f) { return f[2] }))] }
+    if (!poi.length) return annuncia({ fase: 'giochi', fatti: 0, totale: 0, byteFatti: 0, byteTotale: 0, mancanti: [], fine: true })
+    const gruppi = mancano()
+    // un gioco per volta: finito il suo, si può aprire senza rete
+    let byteFatti = 0
+    const byteTotale = poi.reduce((a, f) => a + f[1], 0)
+    for (const g of gruppi) {
+      const suoi = poi.filter(function (f) { return f[2] === g })
+      try {
+        await scarica(c, suoi, 'giochi-un-gioco', function () { return mancano() })
+      } catch (e) {
+        annuncia({ fase: 'giochi', fatti: 0, totale: poi.length, byteFatti: byteFatti, byteTotale: byteTotale, mancanti: mancano(), fine: false, errore: true })
+        return
+      }
+      for (const f of suoi) f.fatto = true
+      byteFatti += suoi.reduce((a, f) => a + f[1], 0)
+      annuncia({ fase: 'giochi', fatti: poi.filter(function (f) { return f.fatto }).length, totale: poi.length, byteFatti: byteFatti, byteTotale: byteTotale, mancanti: mancano(), fine: !mancano().length })
+    }
+  })().then(function () { inCorso = null }, function () { inCorso = null })
+  return inCorso
+}
+
+self.addEventListener('message', e => {
+  if (e.data && e.data.tipo === 'scarica') e.waitUntil(scaricaGiochi())
+})
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE)
@@ -128,7 +177,7 @@ self.addEventListener('install', e => {
       // il resto a uno a uno: un'icona mancante non è un buon motivo per
       // restare senza offline
       ...ROBA.map(u => c.add(fresca(u)).catch(() => {})),
-      scaricaTutto(c),
+      scaricaBase(c),
     ]))
     .then(() => self.skipWaiting()))
 })
@@ -201,7 +250,10 @@ function iconaInline () {
         .trim()
       const dato = 'data:image/svg+xml,' + encodeURIComponent(svg)
       // %INDIRIZZO%: un data: URI non lo scaricano i meta dell'anteprima, vogliono un URL assoluto
+      // l'id di versione anche nella pagina: «cerca aggiornamenti» controlla che quella scaricata sia la sua (nel sito
+      // spezzato la pagina è di 4 KB e l'id sta nel JS)
       return html.replace('%ICONA%', dato).replaceAll('%INDIRIZZO%', INDIRIZZO)
+        .replace('</head>', `  <meta name="versione" content="${VERSIONE.id}">\n</head>`)
     },
   }
 }
@@ -211,11 +263,30 @@ const SPEZZATO = !!process.env.SPEZZATO
 
 // Solo nel sito spezzato: i moduli generati tengono sprite e voci come stringhe `data:…;base64,…`; qui diventano file
 // veri (assets/), e nel modulo resta l'indirizzo. Nei test in Node i moduli restano com'erano.
+// Il gruppo di un file: il gioco a cui serve ('sotterraneo', 'inglese'…) o '' se serve a tutti (la base: home, codice
+// comune, schermate dei grandi). Il service worker scarica la base all'installazione e i giochi poi, uno alla volta.
+const GRUPPI = new Map()   // nome del file prodotto → gruppo; lo riempie estraiDati, lo legge il service worker
+function gruppoDiModulo (id) {
+  const m = /\/src\/giochi\/([^/]+)\//.exec(id)
+  if (m) return m[1]
+  if (/\/src\/data\/voci-es\.js/.test(id)) return 'spagnolo'
+  if (/\/src\/data\/voci\.js/.test(id)) return 'inglese'
+  return ''
+}
+
 function estraiDati () {
+  const emessi = []   // [riferimento, gruppo]
   const DATO = /(['"`])data:(image\/webp|image\/png|audio\/ogg);base64,([A-Za-z0-9+/=]{2000,})\1/g
   return {
     name: 'estrai-dati',
     enforce: 'pre',
+    generateBundle () {
+      for (const [ref, gruppo] of emessi) {
+        const nome = this.getFileName(ref)
+        // lo stesso file chiesto da due giochi non è di nessuno dei due: sta nella base
+        GRUPPI.set(nome, GRUPPI.has(nome) && GRUPPI.get(nome) !== gruppo ? '' : gruppo)
+      }
+    },
     transform (codice, id) {
       if (!SPEZZATO || !codice.includes(';base64,') || !/\.(js|vue)(\?|$)/.test(id)) return null
       const nome = id.split('/').pop().replace(/\.(js|vue).*$/, '')
@@ -223,6 +294,7 @@ function estraiDati () {
       const nuovo = codice.replace(DATO, (_tutto, _q, tipo, b64) => {
         const estensione = tipo.split('/')[1].replace('webp', 'webp')
         const ref = this.emitFile({ type: 'asset', name: `${nome}-${n++}.${estensione}`, source: Buffer.from(b64, 'base64') })
+        emessi.push([ref, gruppoDiModulo(id)])
         return `import.meta.ROLLUP_FILE_URL_${ref}`   // Vite lo trasforma già in una stringa (new URL(…).href)
       })
       return nuovo === codice ? null : { code: nuovo, map: null }

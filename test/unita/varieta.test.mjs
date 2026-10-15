@@ -167,7 +167,8 @@ const R = V.regoleDi({})
   const fileDi = k => {
     const vista = new RegExp(`\\b${k}: (\\w+)`).exec(app) || new RegExp(`\\b${k}: (\\w+)`).exec(nuovi)
     if (!vista) return null
-    const imp = new RegExp(`import ${vista[1]} from '([^']+)'`)
+    // `import X from '…'` o, per le schermate caricate a richiesta (giochi/carica.js), `const X = caricaQuando(() => import('…'))`
+    const imp = new RegExp(`(?:import ${vista[1]} from |const ${vista[1]} = caricaQuando\\(\\(\\) => import\\()'([^']+)'`)
     const da = imp.exec(app) ? ['src', imp.exec(app)[1]] : ['src/giochi', imp.exec(nuovi)?.[1]]
     return da[1] ? resolve(radice, da[0], da[1]) : null
   }

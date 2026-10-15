@@ -1,34 +1,36 @@
 <script setup>
-/* La striscia «sto scaricando i giochi»: il service worker del sito spezzato (vite.config.js, scaricaTutto) mette
-   in cassa tutti i file e racconta a che punto è su un canale. Sta in App.vue, sopra tutto (z-index 70, fra i veli
-   di casa): finché c'è da scaricare i giochi si aprono lo stesso se c'è rete, ma senza rete no.
-   Il file unico e il dev server non hanno service worker: qui non arriva mai niente. */
-import { ref, onMounted, onUnmounted } from 'vue'
+/* La striscia «sto scaricando»: il service worker del sito spezzato mette in cassa prima la base e poi i giochi, e
+   racconta a che punto è (src/scarico.js). Sta in App.vue, sopra tutto (z-index 70, fra i veli di casa): non blocca
+   niente — finché non è finita i giochi si aprono lo stesso se c'è rete, senza rete no. */
+import { ref, watch, onMounted, onUnmounted } from 'vue'
+import { scarico, ascolta, chiediScarico } from '../scarico.js'
 
-const stato = ref(null)   // { fatti, totale, byteFatti, byteTotale } mentre scarica
-let canale = null, nascondi = null
+const finito = ref(false)    // «tutto sul telefono», per qualche secondo
+let nascondi = null
+const siVede = () => scarico.totale > 0 && !scarico.fine
 
-onMounted(() => {
-  if (typeof BroadcastChannel !== 'function') return
-  canale = new BroadcastChannel('educagioco-scarico')
-  canale.onmessage = e => {
-    clearTimeout(nascondi)
-    stato.value = e.data.fine ? { ...e.data, fine: true } : e.data
-    if (e.data.fine) nascondi = setTimeout(() => { stato.value = null }, 2500)
-  }
+watch(() => scarico.fine, fine => {
+  if (!fine || !scarico.totale) return
+  finito.value = true
+  clearTimeout(nascondi)
+  nascondi = setTimeout(() => { finito.value = false }, 2500)
 })
-onUnmounted(() => { canale && canale.close(); clearTimeout(nascondi) })
 
-const percento = () => stato.value && stato.value.byteTotale ? Math.min(100, Math.round(100 * stato.value.byteFatti / stato.value.byteTotale)) : 0
+const riprova = () => chiediScarico()
+onMounted(() => { ascolta(); window.addEventListener('online', riprova) })
+onUnmounted(() => { window.removeEventListener('online', riprova); clearTimeout(nascondi) })
+
+const percento = () => scarico.byteTotale ? Math.min(100, Math.round(100 * scarico.byteFatti / scarico.byteTotale)) : 0
 const mega = b => (b / 1048576).toFixed(0)
 </script>
 
 <template>
-  <div v-if="stato" class="scarico" role="status" data-scarico>
-    <b v-if="stato.fine">✓ Tutti i giochi sono sul telefono: funzionano anche senza internet</b>
+  <div v-if="siVede() || finito" class="scarico" role="status" data-scarico>
+    <b v-if="finito && !siVede()">✓ Tutti i giochi sono sul telefono: funzionano anche senza internet</b>
     <template v-else>
-      <b>Sto scaricando i giochi… {{ percento() }}%</b>
-      <span class="mini">{{ mega(stato.byteFatti) }} di {{ mega(stato.byteTotale) }} MB · tieni aperta l'app</span>
+      <b v-if="scarico.errore">Il download si è fermato: riprende appena torna internet</b>
+      <b v-else>{{ scarico.fase === 'base' ? "Sto preparando l'app…" : 'Sto scaricando i giochi…' }} {{ percento() }}%</b>
+      <span class="mini">{{ mega(scarico.byteFatti) }} di {{ mega(scarico.byteTotale) }} MB · tieni aperta l'app</span>
       <i class="barra"><u :style="{ width: percento() + '%' }"></u></i>
     </template>
   </div>

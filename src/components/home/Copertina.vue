@@ -4,6 +4,7 @@
 import { computed } from 'vue'
 import { SCENE } from './scene.js'
 import { DIPINTE } from './copertine-dipinte.js'
+import { inArrivo } from '../../scarico.js'
 
 const props = defineProps({
   chiave: { type: String, default: '' },     // il gioco: trova la copertina dipinta
@@ -27,6 +28,8 @@ const disegno = computed(() => (SCENE[c.value.scena] || SCENE.colline)(c.value.d
       <svg viewBox="0 0 200 160" preserveAspectRatio="xMidYMid slice" aria-hidden="true" v-html="disegno"></svg>
       <span class="icona" :style="{ fontSize: grande + 'px' }">{{ ico }}</span>
     </template>
+    <!-- il gioco non è ancora sul telefono: sta arrivando (src/scarico.js) -->
+    <span v-if="chiave && inArrivo(chiave)" class="in-arrivo" title="Sta arrivando sul telefono" data-in-arrivo>↓</span>
   </span>
 </template>
 
@@ -34,5 +37,7 @@ const disegno = computed(() => (SCENE[c.value.scena] || SCENE.colline)(c.value.d
 .copertina { position:relative; display:block; overflow:hidden; border-radius:16px }
 .copertina svg { position:absolute; inset:0; width:100%; height:100% }
 .copertina img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; pointer-events:none }
+.in-arrivo { position:absolute; right:6px; top:6px; z-index:2; min-width:22px; height:22px; border-radius:11px; display:grid; place-items:center;
+  background:rgba(43,33,64,.85); color:#ffd24a; font-size:.8rem; line-height:1 }
 .icona { position:absolute; inset:0; display:grid; place-items:center; line-height:1 }
 </style>
