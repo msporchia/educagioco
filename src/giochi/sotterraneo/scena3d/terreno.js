@@ -6,6 +6,7 @@ import { BufferGeometry, Float32BufferAttribute, BoxGeometry, CylinderGeometry, 
          Matrix4, Vector2, Color } from 'three'
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js'
 import { conMaschera } from './maschera.js'
+import { GLSL_RUMORE } from './luci.js'
 import { ALTO_MURO, PARAPETTO } from './costanti.js'
 
 // un parallelepipedo con due gruppi soli (facce, cima) invece di sei: due chiamate invece di sei per tutti i muri
@@ -43,8 +44,13 @@ export function creaTerreno(scena, { pianta, aspetto, trame, maschera }) {
   const t = trame.pav
   const matPav = conMaschera(new MeshStandardMaterial({
     map: t.map, normalMap: t.normalMap, roughnessMap: t.roughnessMap, roughness: 1, metalness: 0, normalScale: new Vector2(1.2, 1.2),
-    ...(t.emissiveMap ? { emissiveMap: t.emissiveMap, emissive: new Color(1, 1, 1), emissiveIntensity: 1.1 } : {}),
-  }), maschera, { spinta: 0, chiave: 'pav' + !!t.emissiveMap })
+    ...(t.emissiveMap ? { emissiveMap: t.emissiveMap, emissive: new Color(1, 1, 1), emissiveIntensity: 0.8 } : {}),
+  }), maschera, t.emissiveMap ? {
+    spinta: 0, chiave: 'pav-braci',
+    // le braci si accendono a chiazze larghe nel mondo, non a ogni ripetizione della trama (si vedeva il disegno ripetuto)
+    prima: 'outgoingLight -= totalEmissiveRadiance * (1.0 - smoothstep(0.5, 0.72, rumore3(vec3(vMondoM.xz * 0.3, 0.0))));',
+    poi(sh) { sh.fragmentShader = GLSL_RUMORE + sh.fragmentShader },
+  } : { spinta: 0, chiave: 'pav' })
   const pav = new Mesh(gPav, matPav)
   pav.receiveShadow = true
   aggiungi(pav)

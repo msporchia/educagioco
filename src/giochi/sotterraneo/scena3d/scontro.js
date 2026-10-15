@@ -16,7 +16,7 @@ export function creaScontro({ S, cam, eroe, getPiano, getCose, getFigure, anelli
     if (palco) for (const s of palco.stati) s.meta = null
     const cose = getCose(), piano = getPiano()
     const stati = sc.campo.map(r => cose.stato(r))
-    const d = disponiPalco(piano.pianta, piano.ingombri, { x: corsa.eroe.x, z: corsa.eroe.y }, stati)
+    const d = disponiPalco(piano.pianta, piano.ingombri, { x: corsa.eroe.x, z: corsa.eroe.y }, stati.map((s, i) => ({ x: s.x, z: s.z, grande: !!sc.campo[i].grosso })))
     eroe.meta = d.eroe
     stati.forEach((s, i) => { s.meta = d.mostri[i]; s.specchio = d.mostri[i].x > d.eroe.x })
     piano.terreno.abbassa(d.abbassa)

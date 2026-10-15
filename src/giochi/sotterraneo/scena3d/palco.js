@@ -5,7 +5,8 @@
 // il motore non sa dove stanno. Puro, senza three: unita/sotterraneo-3d.
 import { AGIO, POSTI } from './costanti.js'
 
-// `pianta` (scena3d/pianta.js), `ingombri`: le celle con una cosa posata (arredo, relitti), `eroe` e `mostri`: dove stanno ({ x, z })
+// `pianta` (scena3d/pianta.js), `ingombri`: le celle con una cosa posata (arredo, relitti), `eroe` e `mostri`: dove stanno ({ x, z },
+// `grande` per il mostro grosso)
 export function disponiPalco(pianta, ingombri, eroe, mostri) {
   const libera = (x, z) => pianta.calpestabile(Math.floor(x), Math.floor(z)) && !ingombri.has(pianta.id(Math.floor(x), Math.floor(z)))
   const o = mostri[0] || { x: eroe.x + 1, z: eroe.z }
@@ -32,7 +33,13 @@ export function disponiPalco(pianta, ingombri, eroe, mostri) {
   }
   const prova = (cx, cz, l, verticale) => {
     const p = (u, v) => (verticale ? [cx + v * 0.8, cz + u * l] : [cx + u * l, cz + v])
-    const posti = [p(-1.25, 0), ...mostri.map((_, i) => p(POSTI[i % POSTI.length][0] - 0.25, POSTI[i % POSTI.length][1]))]
+    // il grosso è largo due celle: chi viene dopo di lui sta una cella più in là (nel palco 2D «ne vale due»)
+    let spinta = 0
+    const posti = [p(-1.25, 0), ...mostri.map((m, i) => {
+      const q = p(POSTI[i % POSTI.length][0] - 0.25 + spinta, POSTI[i % POSTI.length][1])
+      if (m.grande) spinta += 1
+      return q
+    })]
     let voto = -(verticale ? 1.5 : 0) - Math.hypot(cx - cx0, cz - cz0) * 0.05 - (l < 0 ? 0.05 : 0)
     for (const [x, z] of posti) {
       if (!libera(x, z) || !passi.has(pianta.id(Math.floor(x), Math.floor(z)))) { voto -= 2; continue }
