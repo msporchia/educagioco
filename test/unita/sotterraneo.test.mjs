@@ -27,6 +27,7 @@ import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
 import { Livello, seminato } from '../../src/giochi/sotterraneo/motore/livello.js'
 import { gioca, costoDi, quanteVolteSiVince, pianiSani, robaPer, crescitaPer } from '../../src/giochi/sotterraneo/motore/banco.js'
 import { robaAttesa, crescitaAttesa } from '../../src/giochi/sotterraneo/motore/storia.js'
+import { giocaDalCurioso } from '../../src/giochi/sotterraneo/motore/storie.js'
 import manifesto from '../../src/giochi/sotterraneo/gioco.js'
 import { guastiDellAlbo } from '../../src/giochi/albo.js'
 import { misure, statoTraguardo } from '../../src/store/progressi.js'
@@ -114,9 +115,13 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
   const conti = []
   for (const [i, t] of CAMPAGNA.entries()) {
     const roba = robaPer(i), crescita = crescitaPer(i)
-    const v = quanteVolteSiVince(t, { quante: 6, bravura: 0.8, roba, crescita })
-    controlla(`${t.chiave}: si vince rispondendo bene 8 volte su 10`, v.vinte >= v.quante - 1,
-              `${v.vinte}/${v.quante} ${v.guasti.slice(0, 2).join(' · ')}`)
+    /* Il metro è il curioso (docs/sotterraneo/giocatori-tipo.md): sei storie, ognuna con la roba e il livello con cui il curioso arriva a
+       questa discesa (gira tutto, 9 giuste su 10), e la discesa si vince alla prima. Il finto che andava dritto con la roba attesa
+       entra uno o due livelli sotto e coi mostri di oggi non vince quasi più: non è più il riferimento. */
+    const sei = Array.from({ length: 6 }, (_, s) => giocaDalCurioso(i, { eroe: 'cavaliere', seme: s + 1 }))
+    const vinte = sei.filter(g => g.esito.vinta).length
+    controlla(`${t.chiave}: il curioso la vince alla prima, quasi sempre`, vinte >= sei.length - 1,
+              `${vinte}/${sei.length} ${sei.map(g => g.guasto).filter(Boolean).slice(0, 2).join(' · ')}`)
     const c = costoDi(t, { roba, crescita })
     conti.push([t, c])
     /* Il tetto è una seduta: oltre le ottanta domande obbligate non è più
@@ -150,12 +155,10 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
     /* due file per eroe, quattro discese ciascuna: con lo zaino di chi ci
        arriva andando dritto il mago (che regge meno) cade una volta su
        cinque, e una fila sola diceva più della fila che dell'eroe */
-    const v = [1, 2].map(seme => quanteVolteSiVince(CAMPAGNA[3], { quante: 4, bravura: 0.8, eroe: e.chiave,
-                                                                    roba: robaPer(3, { eroe: e.chiave, seme }),
-                                                                    crescita: crescitaPer(3, { eroe: e.chiave, seme }) }))
-    const vinte = v.reduce((n, x) => n + x.vinte, 0)
-    controlla(`${e.chiave}: la scala sommersa si vince rispondendo bene 8 volte su 10`,
-              vinte >= 6, `${vinte}/8 ${v.flatMap(x => x.guasti).slice(0, 1).join('')}`)
+    const otto = [1, 2].flatMap(seme => [0, 1, 2, 3].map(n => giocaDalCurioso(3, { eroe: e.chiave, seme, n })))
+    const vinte = otto.filter(g => g.esito.vinta).length
+    controlla(`${e.chiave}: il curioso vince la scala sommersa, quasi sempre`,
+              vinte >= 6, `${vinte}/8 ${otto.map(g => g.guasto).filter(Boolean).slice(0, 1).join('')}`)
     righe.push(`  ${e.nome.padEnd(10)} ❤️ ${String(e.vita).padStart(2)} ⚔️ ${e.att} · ` +
                `domande per discesa: ${costi.join(' · ')}`)
   }
@@ -226,15 +229,15 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
    preme a caso no. La forbice è il senso di tutto il gioco. */
 {
   const t = CAMPAGNA[3]
-  // con la roba attesa (la stessa per tutti): quella giocata davvero (`robaPer`) dipende da cosa lascia cadere il caso, e in un seme su tre
-  // è un'arma rara che rende una passeggiata anche premendo a caso (già prima degli abitanti per ambientazione, al seme 2)
-  const roba = robaAttesa('cavaliere', 3), crescita = crescitaAttesa('cavaliere', 3)
-  const bene = quanteVolteSiVince(t, { quante: 8, bravura: 0.85, roba, crescita })
-  const caso = quanteVolteSiVince(t, { quante: 8, bravura: 0.35, roba, crescita })
+  // dall'ingresso del curioso in otto storie, con le sue abilità e le sue pozioni: cambia solo quante risposte sono giuste
+  const otto = bravura => Array.from({ length: 8 }, (_, s) => giocaDalCurioso(3, { eroe: 'cavaliere', seme: s + 1, bravura }))
+  const conta = gs => ({ vinte: gs.filter(g => g.esito.vinta).length, quante: gs.length })
+  const bene = conta(otto(0.9))
+  const caso = conta(otto(0.35))
   controlla('rispondendo bene la scala sommersa si vince', bene.vinte >= 7,
             `${bene.vinte}/${bene.quante}`)
   controlla('premendo a caso no', caso.vinte <= 1, `${caso.vinte}/${caso.quante}`)
-  nota(`la scala sommersa: ${bene.vinte}/8 vinte all'85% di risposte giuste, ` +
+  nota(`la scala sommersa: ${bene.vinte}/8 vinte al 90% di risposte giuste, ` +
        `${caso.vinte}/8 al 35%`)
 }
 
@@ -242,8 +245,8 @@ uguale('zero a chi non finisce', stelleDella({ vinta: false, svenimenti: 0 }), 0
    arrivasse uguale, rispondere non servirebbe a niente */
 {
   const t = CAMPAGNA[3]
-  const bravo = gioca(t, { seme: 31, bravura: 0.9, roba: robaPer(3), crescita: crescitaPer(3) }).esito
-  const acaso = gioca(t, { seme: 31, bravura: 0.25, roba: robaPer(3), crescita: crescitaPer(3) }).esito
+  const bravo = giocaDalCurioso(3, { seme: 1, bravura: 0.9 }).esito
+  const acaso = giocaDalCurioso(3, { seme: 1, bravura: 0.25 }).esito
   controlla('rispondere bene costa meno vite',
             acaso.svenimenti > bravo.svenimenti || acaso.domande > bravo.domande,
             `bravo: ${bravo.domande} domande / ${bravo.svenimenti} svenimenti · ` +

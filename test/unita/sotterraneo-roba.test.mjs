@@ -21,7 +21,8 @@ import { Bottega, PEZZI_PER_LINGUETTA, SUBITO_PER_LINGUETTA, RARI_PER_LINGUETTA,
 import { ABILITA, affiancatoDi, sintesiDi } from '../../src/giochi/sotterraneo/viste/pezzo.js'
 import { Livello, seminato } from '../../src/giochi/sotterraneo/motore/livello.js'
 import { scrivi, leggi } from '../../src/giochi/sotterraneo/motore/sosta.js'
-import { gioca, misuraLaStoria } from '../../src/giochi/sotterraneo/motore/banco.js'
+import { gioca } from '../../src/giochi/sotterraneo/motore/banco.js'
+import { giocaDalCurioso } from '../../src/giochi/sotterraneo/motore/storie.js'
 import { robaAttesa, migliora, righeAvanti, crescitaAttesa, delPassoDi } from '../../src/giochi/sotterraneo/motore/storia.js'
 import { passoDi, premiDella } from '../../src/giochi/sotterraneo/dati/storia.js'
 import { EROI, eroeDi, portaLa } from '../../src/giochi/sotterraneo/dati/eroi.js'
@@ -879,20 +880,22 @@ import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiut
 
 /* ══════════ 8. l'equilibrio, in piccolo ══════════
    La misura intera (venti semi, otto/sei/quattro su dieci, la roba di una
-   discesa prima e di due avanti) sta in `misure/sotterraneo`; qui sei semi
-   col cavaliere e la roba attesa, per accorgersi subito se la tabella
-   rende una discesa una passeggiata o un muro. */
+   discesa prima e di due avanti) sta in `misure/sotterraneo`; qui sei storie
+   del curioso col cavaliere (il metro: docs/sotterraneo/giocatori-tipo.md),
+   ognuna con la roba che la sua storia gli ha dato, per accorgersi subito se
+   una discesa diventa una passeggiata o un muro. */
 {
-  const m = misuraLaStoria({ eroe: 'cavaliere', semi: 6, prove: [0.8, 0.4], scarti: [0] })
-  const [otto, quattro] = m.vinte[0]
+  const vinte = bravura => CAMPAGNA.map((_, k) => Array.from({ length: 6 }, (_, s) => giocaDalCurioso(k, { eroe: 'cavaliere', seme: s + 1, bravura }))
+                                                   .filter(g => g.esito.vinta).length)
+  const otto = vinte(0.9), quattro = vinte(0.4)
   for (const [k, t] of CAMPAGNA.entries()) {
-    controlla(`${t.chiave}: con la roba attesa, a otto su dieci si arriva in fondo`, otto[k] >= 5, `${otto[k]}/6`)
+    controlla(`${t.chiave}: col curioso, a nove su dieci si arriva in fondo`, otto[k] >= 5, `${otto[k]}/6`)
     // la scalinata (k = 1) a quattro su dieci si vince una volta su due: su sei semi due vittorie sono il caso, non un guasto. Il
     // cavaliere con le abilità del banco a quattro su dieci vince una volta su tre nelle discese più comode per lui: su sei semi
     // tre vittorie sono il caso (la cifra vera, a venti semi e per i quattro eroi, la dà `misure/sotterraneo`)
-    if (k) controlla(`${t.chiave}: con la roba attesa, a quattro su dieci non si vince quasi mai`, quattro[k] <= (k === 1 ? 4 : 3), `${quattro[k]}/6`)
+    if (k) controlla(`${t.chiave}: col curioso, a quattro su dieci non si vince quasi mai`, quattro[k] <= (k === 1 ? 4 : 3), `${quattro[k]}/6`)
   }
-  nota(`sei semi con la roba attesa: a 8/10 ${Object.values(otto).join(' · ')}, a 4/10 ${Object.values(quattro).join(' · ')}`)
+  nota(`sei storie del curioso: a 9/10 ${otto.join(' · ')}, a 4/10 ${quattro.join(' · ')}`)
 }
 
 riassunto('la roba che resta e i mercanti')

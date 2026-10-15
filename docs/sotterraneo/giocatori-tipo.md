@@ -50,6 +50,11 @@ non c'è la scrematura di chi resta bloccato alla seconda.
 operazioni, quindi per me va bene»): che esca un paio di livelli sopra l'atteso va bene; il bravo, che va dritto, può restare un po' sotto purché non trovi un muro. Nei rapporti si legge
 prima il curioso.
 
+**Le unità non usano più il finto che va dritto con la roba attesa** (con i mostri di oggi non vinceva quasi più: 0 discese su 6 a 8/10): `giocaDalCurioso` in
+`motore/storie.js` gioca la discesa k come il curioso, dall'ingresso che la sua storia gli ha dato. Bersaglio delle unità (`unita/sotterraneo`, `-roba`): su sei storie
+del cavaliere ogni discesa si vince alla prima almeno cinque volte (9 giuste su 10), la scala sommersa 6 su 8 per ogni eroe, e a 4 giuste su 10 al più 4/6 (la scalinata) o 3/6.
+Misurato: 5–6 su 6 ovunque; premendo a caso (35%) la scala sommersa si vince 0 volte su 8.
+
 **Un pezzo si indossa dal suo livello** ([livello-dei-pezzi.md](livello-dei-pezzi.md)): il finto compra un pezzo per dopo solo se, comprato quello per adesso, gli avanzano gemme e non ha un pezzo per adesso
 da risparmiare; ne tiene al più `RISALITA.perDopo` (2) in attesa del livello, senza venderli, e li mette quando arriva al livello. Quelli indossati dopo contano fra i **comprati**
 (`armi.rimandati`), non fra i trovati. Il giro prima → dopo: [risalite.md](risalite.md#il-livello-dei-pezzi-14-ottobre-sera). Con due pezzi subito per linguetta e il bottino a livello dell'eroe: [risalite.md](risalite.md#il-livello-del-bottino-e-due-pezzi-subito-14-ottobre-notte).

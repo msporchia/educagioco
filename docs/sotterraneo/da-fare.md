@@ -17,9 +17,9 @@ coi numeri di `npm run taratura` ([giocatori-tipo.md](giocatori-tipo.md)) e con 
   `dati/zone.js`), lasciati non salvati nel worktree dell'agente fermato. Da rifare col giro intero e i bersagli
   dell'utente: un mostro di strada 2–3 risposte, un caporale 4–6, uno scontro normale il 15–25% della vita, uno grosso
   il 30–60%, qualche risalita per curarsi.
-- **Quattro unità rosse misurano col metro vecchio** (`unita/sotterraneo`, `-roba`, `-sosta`, `-abisso`): il giocatore
-  finto che va dritto con la roba attesa, che coi mostri più duri perde quasi sempre. Il riferimento ora è il curioso,
-  che gira tutto: vanno riscritte sui bersagli dei giocatori tipo. L'abisso: un piano a 57 domande contro il tetto di 45.
+- **Le quattro unità rosse sono riallineate** (15 ottobre): misurano il curioso, non il finto che va dritto ([giocatori-tipo.md](giocatori-tipo.md)). L'abisso:
+  il tetto di un piano è 60 domande e non 45 (un piano rifatto dopo uno svenimento ne costa 57 al seme 7, gli altri sei semi stanno sotto 38; la media dei semi
+  resta sotto 35). Aperto: il dritto con la roba attesa non vince più nessuna discesa, quindi `misure/sotterraneo` e `robaPer` misurano ancora il metro vecchio.
 - **I pezzi utili per discesa** dalla torre in giù sono 1,7–2,3 contro il bersaglio di circa 3: quelli trovati servono
   poco perché il fabbro dà già il meglio del livello ([risalite.md](risalite.md)).
 - **La figura della balestra**: anche girata e piccola non si legge come una balestra (è un arco con un dardo); va
