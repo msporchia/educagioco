@@ -140,8 +140,9 @@ Quello che esce, per livello (misurato in `misure/asteroidi`):
 - **La nave cresce col livello**: navetta, al 3 caccia, al 6 incrociatore.
 - **`src/grafica/spazio.js` (e `spazio3d/`) non sa di vite né di punti**:
   riceve fatti già decisi (`danno: 0.5`).
-- **La nave si guida col dito** e si risponde toccando il sasso; un falso
-  che la tocca rimbalza sullo scudo senza costare niente
+- **Negli Asteroidi 3D (in prova) la nave si guida col dito** e si risponde
+  toccando il sasso; un falso che la tocca rimbalza sullo scudo senza
+  costare niente, il giusto che la tocca esplode e costa come arrivare in fondo
   ([grafica-3d.md](grafica-3d.md#i-comandi)). Il pianeta in basso non c'è: una cosa in
   scena che non fa niente è una domanda senza risposta.
 

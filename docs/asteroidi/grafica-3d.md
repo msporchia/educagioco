@@ -1,10 +1,29 @@
-# Il cielo in 3D, e i comandi del telefono
+# Asteroidi 3D: il cielo in 3D, e i comandi del telefono
 
-Gli asteroidi si disegnano in WebGL con three.js, partendo dal prototipo
-approvato (`poc/asteroidi-3d`, ottobre 2026). Le regole del gioco non
-cambiano: tempi, ritmi, `rispostaEntro`, il cronometro che parte quando il
-sasso giusto è tutto in scena, l'SRS, le vite, i gettoni. Cambiano il
-disegno e i comandi.
+**Asteroidi 3D** (`mate3d`) è un gioco in prova: gli stessi Asteroidi
+disegnati in WebGL con three.js, partendo dal prototipo approvato
+(`poc/asteroidi-3d`, ottobre 2026), per provarlo sui telefoni veri. Gli
+**Asteroidi** di sempre (`mate`) restano com'erano, in 2D e coi comandi di
+prima, per i bambini. Le regole del gioco non cambiano: tempi, ritmi,
+`rispostaEntro`, il cronometro che parte quando il sasso giusto è tutto in
+scena, l'SRS, le vite, i gettoni. Cambiano il disegno e i comandi.
+
+## Un gioco in prova, la stessa partita
+
+- **La carta c'è solo coi giochi in prova accesi** (`sperimentale: true`
+  nella riga di `src/data/giochi.js`, [../genitori/interruttori.md](../genitori/interruttori.md)).
+- **La stessa vista, un disegno diverso**: `App.vue` monta `MathGame.vue`
+  per `mate3d` col prop `disegno: '3d'`. Senza il prop è il 2D di sempre.
+- **Lo stesso avanzamento**: la chiave della campagna resta `mate` (tappe,
+  stelle, hangar, record del volo, monete, sosta). Un gioco non aggiunge
+  campi al profilo, e due copie dello stesso avanzamento si separerebbero.
+  La sosta è una sola: una partita lasciata nel 3D si riprende anche dal 2D
+  e viceversa (i sassi non si salvano, il disegno non conta). La fila e
+  l'età si leggono uguali (`mate3d` in `TAPPE_DEL_GIOCO` e
+  `CONTATORE_VECCHIO` di `portata-giochi.js`).
+- **I comandi nuovi sono solo del 3D** (`comandiNuovi`): negli Asteroidi di
+  sempre si tocca solo sopra il sasso, la nave sta ferma, niente scudo, e i
+  falsi nascono come prima.
 
 ## Dove sta cosa
 
@@ -19,7 +38,7 @@ disegno e i comandi.
 | `src/grafica/spazio3d/madre.js` | la nave madre col comandante |
 | `src/grafica/spazio3d/effetti.js` | scintille e fumo, anelli, raggi, cocci |
 | `src/motore/asteroidi/comandi.js` | quale sasso tocca il dito, il falso che urta la nave, le quote dei falsi (puro) |
-| `src/views/MathGame.vue` | sceglie chi disegna (`accendi3d`), passa la scena (`disegna3d`), guida la nave |
+| `src/views/MathGame.vue` | col prop `disegno` sceglie chi disegna (`accendi3d`), passa la scena (`disegna3d`), guida la nave |
 
 ## Chi gioca non disegna
 
@@ -44,15 +63,15 @@ disegno e i comandi.
   sempre** (`grafica/spazio.js`, `cieli.js`, `nave-madre.js`): stesse
   regole, stessi comandi. Il contesto si chiede a mano prima di three, così
   senza WebGL non esce niente in console.
-- Il 2D resta finché non si sa che i telefoni veri e il Chrome dei test
-  reggono il 3D; `#tela=2d` lo chiede apposta.
+- Negli Asteroidi 3D il 2D fa da riserva finché non si sa che i telefoni
+  veri reggono il 3D; `#tela=2d` lo chiede apposta.
 - La rotta e l'hangar restano in 2D (la nave piccola di `disegnaNave`):
   il 3D legge la stessa `livrea`.
 - Sotto la rotta e «Cosa so», che coprono tutto, la tela 3D non disegna.
 
 ## I comandi
 
-Come sul telefono, e uguali nel 3D e nel 2D:
+Come sul telefono, negli Asteroidi 3D (anche quando disegna il 2D di riserva):
 
 - **Premere sopra un sasso, o appena fuori dal bordo** (1,15 del raggio,
   mai meno di 22 px: `TOCCO`), spara a quello: è la risposta, giusta o
@@ -64,10 +83,12 @@ Come sul telefono, e uguali nel 3D e nel 2D:
 - **Un falso che tocca la nave rimbalza sullo scudo**: lo scudo si accende
   dalla parte dell'urto, il sasso diventa rosso e vola via verso l'alto
   (resta in cielo e si può ancora toccare). Non è una risposta: niente
-  SRS, niente vita, niente filotto, niente monete. È la scelta che cambia
-  meno le regole: il bambino non ha scelto quel sasso.
-- **Il sasso giusto passa sopra la nave senza fermarsi**: si prende solo
-  toccandolo. Se arriva in fondo costa una vita come prima.
+  SRS, niente vita, niente filotto, niente monete: il bambino non ha
+  scelto quel sasso (confermato dall'utente).
+- **Il sasso giusto che tocca la nave esplode addosso a lei** e costa
+  quello che costa arrivare in fondo (una vita, la domanda segnata come non
+  presa, lo scoppio, la scossa, la nave che si rompe): è lo stesso codice.
+  Toccato col dito resta la risposta giusta. Deciso dall'utente.
 - **Uno sbaglio non fa esplodere il sasso**: diventa rosso e il colpo lo
   spinge via mentre si spegne (`respinto`); è già fuori gioco (`morto`)
   come prima, costa la vita come prima, e il trucco alla seconda volta si
@@ -142,20 +163,14 @@ sassi cambia col posto.
 - **Il file unico**: three pesa circa 640 KB minificato (28,5 → 29,2 MB),
   e il file si apre ancora col doppio click.
 
-## Da decidere
-
-- Il falso che urta la nave non costa niente: senza una conseguenza,
-  schivare è solo gioco. Una vita? Il filotto? Lo decide l'utente.
-- Il giusto che tocca la nave potrebbe valere come preso (nel prototipo
-  sì): qui no, perché si risponde toccando.
-
 Nei test: `unita/asteroidi-3d` (il dito, l'urto, le quote dei falsi, le
 forme di ogni specie), `integrazione/asteroidi-3d` (col dito vero: il 3D
-acceso e quanto costa, il tocco sul giusto, il vuoto che guida, il
-trascinare, appena fuori dal bordo, lo scudo, il 2D chiesto e quello senza
+acceso e quanto costa, la carta solo coi giochi in prova, il tocco sul
+giusto, il vuoto che guida, il trascinare, appena fuori dal bordo, lo scudo,
+il giusto addosso alla nave, gli Asteroidi di sempre in 2D, il 2D senza
 WebGL). Bersagli: la tela `[data-tela="3d"|"2d"]`; `window.__mate.grafica()`
 (`tre`, `chiamate`, `triangoli`, `dpr`, `ms`, `scena`, `disegno`);
 `window.__mate.nave` (`meta`, `urti`, `scudo`); sui sassi `respinto`,
-`rosso`, `urtato`. Il cheat `#mate=<tappa>` (`volo`, `&livello=`, `&vite=`,
+`rosso`, `urtato`. Il cheat `#mate3d=<tappa>` (o `#mate=` per il 2D; `volo`, `&livello=`, `&vite=`,
 `&madre=1`, `&nave=scafo:oro,…`, `&tela=2d`, `&dpr=2`) in
 [../core/comandi.md](../core/comandi.md).

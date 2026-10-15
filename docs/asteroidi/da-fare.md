@@ -13,11 +13,11 @@ ancora giudicato col dito: si guardano giocando, dopo una build.
   `src/store/calcolo.js` vale anche per le stazioni, che nessuno ha ancora
   giocato con quel numero: va guardato se otto domande su dieci sul
   concetto nuovo sono troppe quando il concetto pesa due o tre.
-- **Il 3D su un telefono vero** ([grafica-3d.md](grafica-3d.md)): se un
+- **Gli Asteroidi 3D su un telefono vero** ([grafica-3d.md](grafica-3d.md)), gioco in prova: se un
   telefono di fascia media regge i sessanta fotogrammi, se il pixel ratio
   scende (e quanto), se i numeri dei dischi volanti si leggono a sei sassi,
-  e se il 2D di riserva si può togliere. E da decidere: cosa costa un falso
-  che urta la nave (oggi niente).
+  e se il 2D di riserva si può togliere. Poi: se prende il posto degli
+  Asteroidi di sempre, e con loro i comandi nuovi.
 - **I cieli, la nave madre e l'hangar** ([cieli.md](cieli.md), [boss.md](boss.md),
   [hangar.md](hangar.md)). Da guardare col dito: se il Sole e il buco nero in
   alto sono troppo grandi; se la nave madre, in alto, copre le bombe che

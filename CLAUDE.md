@@ -91,8 +91,8 @@ Generale), `strumenti/sprite/*.md` (fogli e foglietti degli sprite),
 - **I fine riga sono LF** (`.gitattributes`). Uno script che riscrive un file
   (Python lo fa senza chiedere) non deve cambiarli, se no il diff annega.
 - **Niente dipendenze a runtime oltre a Vue**, con un'eccezione: three.js
-  per il cielo 3D degli asteroidi (~640 KB, accettati dall'utente: il 3D
-  non si scrive a mano, e il 2D resta di riserva). Suoni sintetizzati,
+  per gli Asteroidi 3D, gioco in prova (~640 KB, accettati dall'utente: il
+  3D non si scrive a mano; gli Asteroidi di sempre restano in 2D). Suoni sintetizzati,
   icone emoji o disegnate, nessun file esterno: il build resta un HTML
   unico. → `docs/asteroidi/grafica-3d.md`
 - **I giochi nuovi stanno in `src/giochi/`** col calco di `codice-segreto/`
