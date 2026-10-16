@@ -299,8 +299,10 @@ export function creaNave(scena) {
     const T = tinteNave(L, st / 2)
     scafo.color.set(T.chiaro); scuro.color.set(T.scuro); accento.color.set(T.accento)
     const lucida = !!L?.scafoLucida, aliLucida = !!L?.aliLucida
-    scafo.metalness = lucida ? 0.8 : 0.3; scafo.roughness = lucida ? 0.25 : 0.55
-    alaDx.metalness = alaSx.metalness = aliLucida ? 0.75 : 0.3
+    // un metallo vede solo l'ambiente, che è quasi nero: meno metallo e più riflesso, se no il blu muore
+    scafo.metalness = lucida ? 0.55 : 0.3; scafo.roughness = lucida ? 0.32 : 0.55; scafo.envMapIntensity = lucida ? 2.4 : 0.9
+    alaDx.metalness = alaSx.metalness = aliLucida ? 0.55 : 0.3
+    alaDx.envMapIntensity = alaSx.envMapIntensity = aliLucida ? 2.2 : 0.9
     alaDx.roughness = alaSx.roughness = aliLucida ? 0.28 : 0.55
     const f = rgb(T.fiamma || '#4aa3ff')
     fiammaCol.setRGB(f[0], f[1], f[2])
