@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Un pannello del sotterraneo</title>
+<!-- Il riquadro del banco dei pannelli (pannelli.html): un pannello solo, coi componenti veri. Vuole il server di
+     Vite (npm run pannelli); `?p=zaino&tema=pietra&stato=giusta`. Il perché: pannello.js -->
+<style>
+  html, body { margin: 0; height: 100%; background: #0b0d16; overflow: hidden }
+  body { display: flex; flex-direction: column }
+  #banco.banco-sot { flex: 1; min-height: 0; height: 100%; max-width: none }
+  /* un pavimento scuro qualunque dietro ai pannelli, perché il velo abbia qualcosa da velare */
+  .banco-sot::before { content: ''; position: absolute; inset: 0;
+    background: repeating-linear-gradient(0deg, #1d1a17 0 31px, #120f0d 31px 32px), #1a1714; opacity: .9 }
+  .banco-campo { flex: 1 }
+  .banco-sotto { position: absolute; left: 0; right: 0; bottom: 0; padding: 10px 12px }
+  .banco-palco { position: relative; height: 210px; border-radius: 6px;
+    background: radial-gradient(80% 70% at 40% 60%, #5a4a38, #2a2219 80%); box-shadow: inset 0 0 30px #000c }
+</style>
+</head>
+<body>
+<div id="banco"></div>
+<script type="module" src="./pannello.js"></script>
+</body>
+</html>

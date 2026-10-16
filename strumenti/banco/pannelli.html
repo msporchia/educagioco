@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>I pannelli del sotterraneo</title>
+<!-- ═══════════════════════════════════════════════════════════════════
+     IL BANCO DEI PANNELLI — l'aspetto dei pannelli del sotterraneo, nei
+     tre temi affiancati (l'attuale, «pietra», «rilievo"), senza giocare.
+
+         npm run pannelli              e si apre da solo
+         npm run pannelli -- --host    e si guarda dal telefono
+
+     Ogni riquadro è un iframe di `pannello.html`: un pannello solo, coi
+     componenti veri e la Domanda comune, alla larghezza scelta (le regole
+     `@media` dei pannelli rispondono al riquadro, non al monitor). Col
+     mouse sopra un riquadro «rilievo» si vede la piega dei tasti.
+     Docs: docs/sotterraneo/tema-pannelli.md
+     ═══════════════════════════════════════════════════════════════════ -->
+<style>
+  :root { --fondo: #10131a; --carta: #171b26; --riga: #262c3c; --testo: #e6e9f2; --tenue: #8b93aa; --acceso: #ffcc55 }
+  * { box-sizing: border-box }
+  body { margin: 0; padding: 18px 18px 60px; background: var(--fondo); color: var(--testo);
+         font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif }
+  h1 { font-size: 20px; margin: 0 0 4px }
+  header p { margin: 2px 0; color: var(--tenue); font-size: 13px; max-width: 90ch }
+  .comandi { position: sticky; top: 0; z-index: 2; display: flex; gap: 14px 22px; flex-wrap: wrap; align-items: center;
+             margin: 14px 0 18px; padding: 10px 14px; background: var(--carta); border: 1px solid var(--riga); border-radius: 8px;
+             font-size: 12.5px; color: var(--tenue) }
+  .comandi b { color: var(--testo); font-weight: 650; margin-right: 4px }
+  .comandi label { white-space: nowrap; cursor: pointer }
+  .riga { margin: 0 0 26px }
+  .riga h2 { margin: 0 0 8px; font-size: 15px; color: var(--acceso) }
+  .riga h2 small { color: var(--tenue); font-weight: 400; margin-left: 8px }
+  .colonne { display: flex; gap: 16px; overflow-x: auto; padding-bottom: 6px }
+  figure { margin: 0; flex: none }
+  figcaption { font-size: 12px; font-weight: 650; margin-bottom: 4px }
+  .cornice { overflow: hidden; border: 1px solid var(--riga); border-radius: 10px; background: #000 }
+  iframe { display: block; border: 0; transform-origin: 0 0 }
+</style>
+</head>
+<body>
+<header>
+  <h1>I pannelli del sotterraneo, in tre temi</h1>
+  <p>L'attuale, «pietra» (2D rifinito) e «rilievo» (lo stesso con la profondità). I componenti sono quelli del gioco, i
+     numeri del motore vero su un cavaliere a metà storia; i tasti non fanno niente. Nel gioco: <code>#tema=pietra</code>.</p>
+</header>
+<div class="comandi" id="comandi"></div>
+<main id="righe"></main>
+<script type="module" src="./pannelli.js"></script>
+</body>
+</html>
