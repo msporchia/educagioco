@@ -23,6 +23,7 @@ export function creaVeduta(m) {
   return {
     camera,
     get veduta() { return st.k > 0.5 },
+    get k() { return st.k },
     get d() { return st.d },
     get zoom() { return zoom },
     set zoom(z) { zoom = Math.min(VISTA.zoomMax, Math.max(VISTA.zoomMin, z)) },

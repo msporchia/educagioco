@@ -10,6 +10,7 @@ export const U = {
   uVisto: { value: null },      // W×H, rosso = la cella è stata vista (0/1, filtrata: i bordi sfumano)
   uQuando: { value: null },     // W×H, il tempo in cui la cella si è vista (molto avanti: mai); letta senza filtro
   uNebbia: { value: 1 },        // 0 spenta (per le foto col cheat), 1 accesa
+  uVeduta: { value: 0 },        // 0..1, quanto si è saliti nella veduta: il fuori mappa si sbiadisce
   uMappa: { value: new Vector2(1, 1) },
   uCostruiti: { value: new Float32Array(25) },   // 1 per i pezzi costruiti vicino all'eroe: il mondo lontano lì si toglie
 }
@@ -24,7 +25,7 @@ export const GLSL_RUMORE = /* glsl */`
   float frumore (vec2 p) { return vrumore(p) * 0.55 + vrumore(p * 2.1 + 7.3) * 0.3 + vrumore(p * 4.3 + 1.7) * 0.15; }
 `
 export const GLSL_CIELO = /* glsl */`
-  uniform float uTempo; uniform sampler2D uVisto; uniform float uNebbia; uniform vec2 uMappa;
+  uniform float uTempo; uniform sampler2D uVisto; uniform float uNebbia; uniform vec2 uMappa; uniform float uVeduta;
   ${GLSL_RUMORE}
   float ombraNuvole (vec2 xz) {
     float n = frumore(xz * 0.03 + vec2(uTempo * 0.018, uTempo * 0.011));
@@ -43,7 +44,9 @@ export const GLSL_CIELO = /* glsl */`
     return mix(vec3(0.82, 0.86, 0.93), vec3(0.99, 0.99, 1.0), smoothstep(0.3, 0.8, n));
   }
   vec3 nebbiaSu (vec3 c, vec3 p) {
-    if (uNebbia < 0.5 || p.x < 0.0 || p.z < 0.0 || p.x > uMappa.x || p.z > uMappa.y) return c;
+    // fuori dalla mappa: dall'alto della veduta si sbiadisce, così il mondo si legge come un'isola fra le nuvole
+    if (p.x < 0.0 || p.z < 0.0 || p.x > uMappa.x || p.z > uMappa.y) return mix(c, vec3(0.72, 0.79, 0.86), uVeduta * 0.7);
+    if (uNebbia < 0.5) return c;
     return mix(foschiaA(p.xz), c, vistoA(p.xz));
   }
 `
