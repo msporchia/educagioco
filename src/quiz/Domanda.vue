@@ -459,7 +459,6 @@ onUnmounted(() => {
   background: var(--qz-carta-fondo, linear-gradient(180deg, #223055 0%, #141c33 100%));
   border: var(--qz-carta-bordo, 1px solid rgba(255, 255, 255, .13));
   box-shadow: var(--qz-carta-ombra, 0 24px 60px rgba(0, 0, 0, .55));
-  transform: var(--qz-carta-posa); transform-style: var(--qz-carta-strati);
 }
 .qz-avanti { height: 3px; border-radius: 999px; background: #ffffff14;
              overflow: hidden; margin-top: 8px }
@@ -483,7 +482,7 @@ onUnmounted(() => {
   /* senza ripiego apposta: non definite valgono `unset`, cioè ereditate come prima */
   color: var(--qz-consegna-colore); text-shadow: var(--qz-consegna-ombra);
   text-align: var(--qz-consegna-allinea); background: var(--qz-consegna-fondo); padding: var(--qz-consegna-spazio);
-  border-radius: var(--qz-consegna-raggio); box-shadow: var(--qz-consegna-incavo); transform: var(--qz-consegna-posa);
+  border-radius: var(--qz-consegna-raggio); box-shadow: var(--qz-consegna-incavo);
   margin-bottom: clamp(7px, calc(1.5 * var(--qz-h)), 14px);
   /* una consegna può arrivare su più righe (le premesse di un
      ragionamento si leggono una alla volta): gli a capo si rispettano */
@@ -558,7 +557,6 @@ onUnmounted(() => {
   --qz-gap: clamp(6px, calc(1.1 * var(--qz-h)), 10px);
   font-size: clamp(16px, 4.4vw, 19px); /* si misura anche qui: `ch` dipende da dove si usa */
   display: flex; flex-wrap: wrap; gap: var(--qz-gap);
-  transform: var(--qz-risposte-posa); transform-style: var(--qz-carta-strati);
 }
 .qz-tasto {
   flex: 1 1 max(var(--qz-min, 0px),
@@ -571,7 +569,7 @@ onUnmounted(() => {
   padding: clamp(6px, calc(1.1 * var(--qz-h)), 12px) 8px; cursor: pointer;
   border-radius: var(--qz-tasto-raggio, 16px); border: var(--qz-tasto-bordo, 1px solid rgba(255, 255, 255, .14));
   background: var(--qz-tasto-fondo, rgba(255, 255, 255, .075)); color: var(--qz-tasto-testo);
-  box-shadow: var(--qz-tasto-ombra, none); text-shadow: var(--qz-tasto-ombra-testo); transform: var(--qz-tasto-posa);
+  box-shadow: var(--qz-tasto-ombra, none); text-shadow: var(--qz-tasto-ombra-testo);
   font: inherit; font-size: clamp(16px, 4.4vw, 19px); font-weight: var(--qz-tasto-peso, 650);
   text-align: center;
   transition: var(--qz-tasto-moto, transform .1s ease, background .12s ease, border-color .12s ease);

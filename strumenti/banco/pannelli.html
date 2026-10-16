@@ -7,7 +7,7 @@
 <title>I pannelli del sotterraneo</title>
 <!-- ═══════════════════════════════════════════════════════════════════
      IL BANCO DEI PANNELLI — l'aspetto dei pannelli del sotterraneo, nei
-     tre temi affiancati (l'attuale, «pietra», «rilievo"), senza giocare.
+     tre temi affiancati (l'attuale, «legno», «rilievo»), senza giocare.
 
          npm run pannelli              e si apre da solo
          npm run pannelli -- --host    e si guarda dal telefono
@@ -15,7 +15,7 @@
      Ogni riquadro è un iframe di `pannello.html`: un pannello solo, coi
      componenti veri e la Domanda comune, alla larghezza scelta (le regole
      `@media` dei pannelli rispondono al riquadro, non al monitor). Col
-     mouse sopra un riquadro «rilievo» si vede la piega dei tasti.
+     dito (o il mouse premuto) su un riquadro «rilievo» si vede la piega dei tasti.
      Docs: docs/sotterraneo/tema-pannelli.md
      ═══════════════════════════════════════════════════════════════════ -->
 <style>
@@ -43,8 +43,8 @@
 <body>
 <header>
   <h1>I pannelli del sotterraneo, in tre temi</h1>
-  <p>L'attuale, «pietra» (2D rifinito) e «rilievo» (lo stesso con la profondità). I componenti sono quelli del gioco, i
-     numeri del motore vero su un cavaliere a metà storia; i tasti non fanno niente. Nel gioco: <code>#tema=pietra</code>.</p>
+  <p>L'attuale, «legno» (legno e ottone, in 2D) e «rilievo» (lo stesso con lo spessore). I componenti sono quelli del gioco, i
+     numeri del motore vero su un cavaliere a metà storia; i tasti non fanno niente. Nel gioco: <code>#sotterraneo&amp;tema=legno</code>.</p>
 </header>
 <div class="comandi" id="comandi"></div>
 <main id="righe"></main>

@@ -1,5 +1,5 @@
-// L'aspetto dei pannelli del sotterraneo, in prova (docs/sotterraneo/tema-pannelli.md): l'attuale, «pietra» (2D
-// rifinito) o «rilievo» (lo stesso, con la profondità). Si sceglie col cheat `#tema=pietra|rilievo|attuale`, e il
+// L'aspetto dei pannelli del sotterraneo, in prova (docs/sotterraneo/tema-pannelli.md): l'attuale, «legno» (legno e
+// ottone, in 2D) o «rilievo» (lo stesso, con lo spessore). Si sceglie col cheat `#tema=legno|rilievo|attuale`, e il
 // telefono se lo ricorda (dall'app installata l'indirizzo non si scrive): è di chi prova, non di un bambino, come il
 // tasto salta. Il tema è solo un attributo sulla radice del gioco (`data-tema`): lo leggono i CSS di questa
 // cartella, e la Domanda comune lo eredita dalle sue variabili `--qz-…`
@@ -8,9 +8,12 @@ import { load, save } from '../../../store/storage.js'
 import { accendiRilievo } from './rilievo.js'
 
 const CHIAVE = 'sotterraneo-tema'
-export const TEMI = ['attuale', 'pietra', 'rilievo']
-// «rilievo» è pietra più la profondità: l'attributo li porta tutti e due, così rilievo.css aggiunge e non ripete
-export const ATTRIBUTO = { attuale: null, pietra: 'pietra', rilievo: 'pietra rilievo' }
+export const TEMI = ['attuale', 'legno', 'rilievo']
+// «pietra» era il primo nome di «legno»: un telefono che l'ha salvato, o un indirizzo vecchio, vale legno
+const ALIAS = { pietra: 'legno' }
+export const temaDi = t => (TEMI.includes(t) ? t : ALIAS[t] || null)
+// «rilievo» è legno più lo spessore: l'attributo li porta tutti e due, così rilievo.css aggiunge e non ripete
+export const ATTRIBUTO = { attuale: null, legno: 'legno', rilievo: 'legno rilievo' }
 
 export const tema = ref('attuale')
 let letto = false
@@ -21,8 +24,8 @@ function dallIndirizzo() {
 
 // l'indirizzo vince e si ricorda; senza, quello ricordato. Mai il valore nudo: storage.js scarta i `true` soli
 export async function leggiTema() {
-  const h = dallIndirizzo()
-  if (TEMI.includes(h)) {
+  const h = temaDi(dallIndirizzo())
+  if (h) {
     tema.value = h
     save(CHIAVE, { tema: h })
     return h
@@ -30,7 +33,7 @@ export async function leggiTema() {
   if (!letto) {
     letto = true
     const c = await load(CHIAVE)
-    if (c && TEMI.includes(c.tema) && !TEMI.includes(dallIndirizzo())) tema.value = c.tema
+    if (c && temaDi(c.tema) && !temaDi(dallIndirizzo())) tema.value = temaDi(c.tema)
   }
   return tema.value
 }

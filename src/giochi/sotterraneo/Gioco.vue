@@ -75,7 +75,7 @@ import LascioPerdere from './viste/LascioPerdere.vue'   // la frase chiara prima
 import './stile.css'
 import './stile-scontro.css'
 import './stile-effetti.css'
-import './tema/pietra.css'
+import './tema/legno.css'
 import './tema/rilievo.css'
 import { usaTema, ATTRIBUTO } from './tema/tema.js'
 
@@ -1769,7 +1769,7 @@ function ridimensiona() { if (pittore) pittore.misura() }
       <!-- vita, gemme e zaino stanno nella barra in basso; attacco e difesa nella pagina dell'eroe (docs/sotterraneo/barra.md) -->
     </Barra>
 
-    <!-- l'aspetto dei pannelli in prova (`#tema=pietra|rilievo`, docs/sotterraneo/tema-pannelli.md) -->
+    <!-- l'aspetto dei pannelli in prova (`#tema=legno|rilievo`, docs/sotterraneo/tema-pannelli.md) -->
     <div ref="radice" class="sot" :class="{ 'sot-cambio-scheda': cambioScheda }" :data-tema="ATTRIBUTO[tema]">
       <template v-if="!corsa">
         <!-- la chiave è l'eroe: cambiando avventura la terra di sopra rinasce con la nebbia e il posto suoi -->
