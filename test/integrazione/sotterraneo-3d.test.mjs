@@ -3,8 +3,8 @@
 
    Il Sotterraneo 3D è un gioco in prova (`sotterraneo3d`): la sua carta
    c'è solo coi giochi in prova accesi, e il Sotterraneo di sempre resta in
-   2D. Qui si entra dalla carta, si sceglie l'eroe e si scende dalla terra
-   di sopra (che resta quella del 2D); giù la scena è WebGL (in Chrome
+   2D. Qui si entra dalla carta, si sceglie l'eroe e si scende dal mondo
+   di sopra in 3D (integrazione/sotterraneo-mondo); giù la scena è WebGL (in Chrome
    senza schermo la disegna SwiftShader, lento ma vero) e il motore è lo
    stesso: si cammina, si apre una porta rispondendo, si combatte (una
    risposta sbagliata, una giusta, il mostro che cade), si sale e si scende
@@ -62,12 +62,12 @@ uguale('accesi, la carta c\'è', await page.locator('[data-indice="sotterraneo3d
 uguale('e il Sotterraneo di sempre resta', await page.locator('[data-indice="sotterraneo"]').count(), 1)
 await scegli(page, 'sotterraneo3d')
 await scegliAvventura(page, 'cavaliere')
-controlla('la terra di sopra è quella di sempre (2D)', await page.locator('[data-terra]').count() === 1 && await page.locator('[data-tela="3d"]').count() === 0)
+controlla('sopra c\'è il mondo in 3D, non la terra dipinta', await page.locator('[data-mondo3d]').count() === 1 && await page.locator('[data-terra]').count() === 0)
 // un seme con una porta chiusa a pochi passi dall'arrivo (lo legge chi scende, come `#seme=` dei cheat)
 await page.evaluate(() => { location.hash = 'sotterraneo3d&seme=11' })
-await scendiNelSotterraneo(page, 0)
+await scendiNelSotterraneo(page, 0, { tocca })
 await page.waitForSelector('[data-tela="3d"]', { timeout: 10000 })
-await page.waitForFunction(() => window.__sotterraneo3d && window.__sotterraneo3d.grafica().figure > 0, null, { timeout: 15000 })
+await page.waitForFunction(() => window.__sotterraneo3d && !window.__sotterraneo3d.grafica().mondo && window.__sotterraneo3d.grafica().figure > 0, null, { timeout: 15000 })
 {
   const g = await g3d()
   uguale('giù la discesa si disegna in 3D', g.tre, true)

@@ -460,7 +460,9 @@ export async function camminaVerso(page, meta, { tocca = null, giri = 30 } = {})
    fumetto. Coi tocchi del mouse: quelli del dito vero li prova
    `integrazione/sotterraneo-terra`. `quale` è l'indice della discesa o
    'abisso'; con `scendi: false` si ferma al fumetto aperto. */
-export async function scendiNelSotterraneo(page, quale, { scendi = true } = {}) {
+export async function scendiNelSotterraneo(page, quale, { scendi = true, tocca = null } = {}) {
+  await page.waitForSelector('[data-terra], [data-mondo3d]', { timeout: 8000 })
+  if (await page.locator('[data-mondo3d]').count()) return scendiNelMondo(page, quale, { scendi, tocca })
   const posto = page.locator(quale === 'abisso' ? '[data-posto][data-abisso]' : `[data-discesa="${quale}"]`)
   await page.waitForSelector('[data-terra]', { timeout: 5000 })
   const fermo = async () => {
@@ -498,6 +500,38 @@ export async function scendiNelSotterraneo(page, quale, { scendi = true } = {}) 
   if (scendi) await page.click('[data-fumetto] [data-azione="scendi"]')
 }
 
+/* Il mondo di sopra del Sotterraneo 3D (viste/Mondo3d.vue, docs/sotterraneo/terra-di-sopra.md «Il mondo in 3D»). Aspetta che
+   sia nato e che la scena abbia costruito i pezzi attorno all'eroe */
+export async function mondoPronto(page) {
+  await page.waitForSelector('[data-mondo3d][data-pronto="1"]', { timeout: 30000 })
+  await page.waitForFunction(() => window.__sotterraneo3d && window.__sotterraneo3d.pronto, null, { timeout: 30000 })
+}
+// aspetta che l'eroe del mondo si sia fermato
+export async function fermoNelMondo(page) {
+  await page.waitForFunction(() => document.querySelector('[data-eroe-mondo]')?.dataset.cammina === '0', null, { timeout: 60000 })
+  await attendi(page, 300)
+}
+// tocca il centro di un bersaglio del mondo (un elemento HTML sopra la tela): `tocca(x, y)` il dito, di difetto il mouse
+export async function toccaNelMondo(page, sel, { tocca = null } = {}) {
+  await page.waitForSelector(`${sel}[data-vis="1"]`, { timeout: 20000 })
+  const b = await page.locator(sel).first().boundingBox()
+  await (tocca || ((x, y) => page.mouse.click(x, y)))(b.x + b.width / 2, b.y + b.height * 0.6)
+}
+/* Scende in una discesa dal mondo: l'eroe si porta alla pietra davanti all'ingresso (`__mondo3d.vai`, il viaggio delle
+   prove: la strada a piedi la prova integrazione/sotterraneo-mondo), poi si tocca l'ingresso e «scendo» nel fumetto */
+export async function scendiNelMondo(page, quale, { scendi = true, tocca = null } = {}) {
+  const { CAMPAGNA } = await import('../../src/giochi/sotterraneo/dati/campagna.js')
+  const chiave = quale === 'abisso' ? 'abisso' : CAMPAGNA[quale].chiave
+  await mondoPronto(page)
+  await page.evaluate(k => window.__mondo3d.vai('pietra:' + k), chiave)
+  await attendi(page, 1500)
+  await page.waitForFunction(() => window.__sotterraneo3d.pronto, null, { timeout: 30000 })
+  await toccaNelMondo(page, `[data-posto="${chiave}"]`, { tocca })
+  await page.waitForSelector(`[data-fumetto-di="${chiave}"] [data-azione="scendi"]`, { timeout: 60000 })
+  await attendi(page, 300)
+  if (scendi) await page.click(`[data-fumetto-di="${chiave}"] [data-azione="scendi"]`)
+}
+
 /* Nel dialogo aperto sulla terra di sopra (docs/sotterraneo/dialoghi.md): le pagine avanti con un tocco sul testo,
    fino alle domande, poi la scelta `sel` (es. '[data-scelta="bottega"]'). Aspetta i 320 ms ciechi. `tocca(sel)`: un
    tocco vero; senza, il mouse */
@@ -523,7 +557,7 @@ export async function lasciaLaDiscesa(page) {
   await page.click('[data-azione="lascia-discesa"]')
   await page.waitForSelector('[data-lascio-perdere]', { timeout: 3000 })
   await page.click('[data-lascio-perdere] [data-azione="scorda-si"]')
-  await page.waitForSelector('[data-terra]', { timeout: 5000 })
+  await page.waitForSelector('[data-terra], [data-mondo3d]', { timeout: 5000 })
 }
 
 /* La bottega di un mercante del sotterraneo (docs/sotterraneo/bottega-finestra.md, «La bottega e lo zaino»): un tocco
@@ -580,12 +614,12 @@ export async function riacquistaNellaBottega(page, chiave, { tocca = null } = {}
    alla pagina dell'eroe (il globo dell'esperienza). Aspetta la terra dell'eroe scelto. Col
    mouse: il dito vero lo prova `integrazione/sotterraneo-avventure`. */
 export async function scegliAvventura(page, eroe) {
-  await page.waitForSelector('[data-terra], .sot-eroe[data-eroe]', { timeout: 5000 })
+  await page.waitForSelector('[data-terra], [data-mondo3d], .sot-eroe[data-eroe]', { state: 'attached', timeout: 30000 })
   if (!(await page.locator('.sot-eroe[data-eroe]').count())) {
     await page.click('[data-azione="eroe-pagina"]')
     await page.click('[data-pagina-eroe] [data-azione="eroe"]')
   }
   await page.click(`.sot-eroe[data-eroe="${eroe}"]`)
-  await page.waitForSelector('.sot-eroe[data-eroe]', { state: 'detached', timeout: 3000 })
-  await page.waitForSelector('[data-terra]', { timeout: 5000 })
+  await page.waitForSelector('.sot-eroe[data-eroe]', { state: 'detached', timeout: 30000 })
+  await page.waitForSelector('[data-terra], [data-mondo3d]', { state: 'attached', timeout: 30000 })
 }
