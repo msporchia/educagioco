@@ -31,6 +31,7 @@
    c'è viene detto e non ferma lo scatto.
 
    `--aspetta 4000` aspetta tanto dopo l'apertura, prima dei tocchi e dello scatto.
+   `--sequenza 8 --ogni 120` fa otto scatti di fila dopo i tocchi (`<nome>-1.png`…), per guardare un'animazione.
 
    `--stampa '<espressione>'` scrive, dopo i tocchi, quanto vale nella pagina
    (in JSON): `--stampa 'window.__mate.grafica()'` dice quanto costa un
@@ -168,6 +169,13 @@ for (const sel of tocchi) {
   await page.waitForTimeout(attesa)
 }
 
+// `--sequenza 8 --ogni 120`: dopo i tocchi, otto scatti a 120 ms l'uno dall'altro (<nome>-1.png…): un'animazione fotogramma per
+// fotogramma (l'affondo dello scontro, una magia). L'ultimo è anche lo scatto solito
+const quanti = Number(opz('sequenza', 0)), ogni = Number(opz('ogni', 120))
+for (let i = 1; i <= quanti; i++) {
+  await page.screenshot({ path: esce.replace(/\.png$/, '') + `-${i}.png` })
+  await page.waitForTimeout(ogni)
+}
 await page.screenshot({ path: esce })
 const stampa = opz('stampa', null)
 if (stampa) console.log('  ', stampa, '=', JSON.stringify(await page.evaluate(stampa).catch(e => 'errore: ' + e.message)))

@@ -278,6 +278,66 @@ for (const [k, pianta] of [['ghiaccio', 'caverna'], ['tempio', 'costruita']]) {
   await page.waitForSelector('.carte', { timeout: 8000 })
 }
 
+/* ---------- 8. la scena sta nella colonna del gioco, a ogni larghezza, e il dito prende la cosa giusta ----------
+   La tela si misura sul suo contenitore (il campo), mai sulla finestra: prima, a pixel ratio 1,5, era larga una volta e
+   mezza il campo (la scena ingrandita e tagliata, a destra fuori dalla colonna sugli schermi larghi, e il dito fuori posto) */
+for (const [w, h] of [[1100, 900], [1861, 1900], [390, 844]]) {
+  await page.evaluate(() => history.replaceState(null, '', location.pathname + location.search))
+  await page.setViewportSize({ width: w, height: h })
+  await page.evaluate(() => { location.hash = 'sotterraneo3d=0&eroe=cavaliere&seme=11' })
+  await page.waitForFunction(() => window.__sotterraneo3d && window.__sotterraneo3d.grafica().figure > 0, null, { timeout: 15000 })
+  await attendi(page, 1200)
+  const misure = () => page.evaluate(() => {
+    const c = document.querySelector('[data-tela="3d"]'), r = c.getBoundingClientRect(), p = c.parentElement.getBoundingClientRect()
+    const b = document.querySelector('[data-barra-giu]').getBoundingClientRect()
+    return { x: r.x, w: r.width, h: r.height, px: p.x, pw: p.width, ph: p.height, bx: b.x, bw: b.width }
+  })
+  let m = await misure()
+  controlla(`${w}×${h}: la tela è il campo (x e larghezza)`, Math.abs(m.x - m.px) <= 1 && Math.abs(m.w - m.pw) <= 1 && Math.abs(m.h - m.ph) <= 1, JSON.stringify(m))
+  controlla(`${w}×${h}: nella stessa colonna della barra`, Math.abs(m.x - m.bx) <= 1 && Math.abs(m.w - m.bw) <= 1, JSON.stringify(m))
+  // la scala che sale: il tocco sulla sua figura apre il suo foglio (dal primo piano è «lascio perdere»)
+  const su = await page.evaluate(() => { const r = window.__sotterraneo3d.corsa.livello.robe.find(q => q.che === 'scala-su'); return r && { x: r.x, y: r.y } })
+  controlla(`${w}×${h}: c'è la scala che sale`, !!su)
+  const pt = await schermoDi(su.x + 0.5, su.y + 0.5, 0.5)
+  await tocca(pt.x, pt.y)
+  await page.waitForSelector('[data-lascio-perdere], [data-azione="sali"]', { timeout: 8000 })
+  controlla(`${w}×${h}: il tocco sulla scala prende la scala`, true)
+  await page.locator('[data-azione="scorda-no"], [data-azione="dopo"]').first().click()
+  await attendi(page, 300)
+  // la finestra cambia (un telefono girato, una finestra stretta): la tela la segue
+  await page.setViewportSize({ width: Math.round(w * 0.8), height: h })
+  await attendi(page, 800)
+  m = await misure()
+  controlla(`${w}×${h} stretta: la tela segue il campo`, Math.abs(m.x - m.px) <= 1 && Math.abs(m.w - m.pw) <= 1, JSON.stringify(m))
+  await scatto(page, `sotterraneo-3d-largo-${w}`)
+  await page.locator('button[aria-label="indietro"]').first().click()
+  await page.waitForSelector('.carte', { timeout: 8000 })
+}
+
+/* ---------- 9. lo scontro da vicino: tutti in vista e il pixel dello sprite netto ----------
+   Il pixel dello sprite sta su un numero intero di pixel del disegno (la distanza della telecamera si arrotonda), mai più di
+   CAMERA.pixelMassimo: più vicino erano macchie. Tutti i combattenti stanno nella tela, sopra il pannello */
+for (const [w, h, n] of [[390, 844, 3], [360, 640, 6]]) {
+  await page.evaluate(() => history.replaceState(null, '', location.pathname + location.search))
+  await page.setViewportSize({ width: w, height: h })
+  await page.evaluate(q => { location.hash = q }, `sotterraneo3d=2&eroe=elfa&seme=7&stanza=sala&sotterraneo=branco&mostri=${n}&tipo=spirito-fuoco&dpr=1.5`)
+  await page.waitForSelector('[data-scontro-3d]', { timeout: 15000 })
+  await attendi(page, 4000)   // i combattenti vanno ai loro posti e la telecamera ci arriva morbida
+  const g = await g3d()
+  dentro(`${w}×${h}: un pixel dello sprite è un numero intero di pixel`, Math.abs(g.pixelSprite - Math.round(g.pixelSprite)), 0, 0.2)
+  dentro(`${w}×${h}: e non più di cinque`, g.pixelSprite, 1, 5.2)
+  const fuori = await page.evaluate(() => {
+    const c = document.querySelector('[data-tela="3d"]').getBoundingClientRect(), p = document.querySelector('[data-pannello3d]').getBoundingClientRect()
+    return [...document.querySelectorAll('[data-scontro-3d] [data-mostro], [data-eroe-scontro]')].map(e => e.getBoundingClientRect())
+      .filter(r => r.x + r.width / 2 < c.x || r.x + r.width / 2 > c.right || r.bottom < c.y || r.bottom > p.top).length
+  })
+  uguale(`${w}×${h}: con ${n} mostri tutti in vista sopra il pannello`, fuori, 0)
+  nota(`${w}×${h}, ${n} mostri: un pixel dello sprite = ${g.pixelSprite} pixel, ${g.chiamate} chiamate`)
+  await scatto(page, `sotterraneo-3d-vicino-${w}`)
+  await page.locator('button[aria-label="indietro"]').first().click()
+  await page.waitForSelector('.carte', { timeout: 8000 })
+}
+
 uguale('nessun errore in console', errori.join(' | '), '')
 await browser.close()
 riassunto('sotterraneo 3d')
