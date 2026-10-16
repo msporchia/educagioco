@@ -60,6 +60,7 @@ const A_MANO = [
   ['#sotterraneo=roba', 'si scende equipaggiati'],
   ['#abisso=12', 'l\'abisso dal piano 12'],
   ['#seme=812', 'il sotterraneo con quel seme, per rivedere una discesa'],
+  ['#sotterraneo&tema=pietra', 'i pannelli del sotterraneo in prova (pietra, rilievo, attuale): il telefono se lo ricorda'],
   ['#pin=1234', 'il codice dei grandi rimesso a quello'],
   ['#ripara', 'butta la copia del gioco e la riscarica'],
   ['#fattoria', 'apre un gioco: la chiave dopo il #'],
