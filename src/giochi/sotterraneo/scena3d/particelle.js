@@ -19,6 +19,9 @@ export function creaNebbia(scena, W, H, fette, condivise, maschera, aspetto) {
       ${GLSL_RUMORE}${GLSL_LUCI}
       void main(){
         vec4 m = texture2D(uMaschera, vW.xz / uDimMappa);
+        // fuori da quello che si vede adesso la nebbia è zero: niente rumore né luci per i pixel bui (cinque fette a tutto
+        // schermo col rumore erano il pezzo più caro del fotogramma, e quasi tutto lo schermo è buio)
+        if (m.r * m.b < 0.004) { gl_FragColor = vec4(0.0); return; }
         float n = fbm3(vec3(vW.x*0.55 + uT*0.07, vW.y*1.3, vW.z*0.55 - uT*0.05));
         float dens = uDens * smoothstep(0.25, 0.85, n) * 2.2 * m.b * m.r * (1.15 - vW.y*0.5);
         gl_FragColor = vec4(luceIn(vW) * uTinta * dens, 1.0);

@@ -29,6 +29,8 @@ import { ACCESI, POLVERE, SCINTILLE, FIGURE_MAX, ALONI_MAX } from './costanti.js
 const NIENTE = { emetti() {}, aggiorna() {}, aspetto() {}, via() {} }
 
 export function creaSotterraneo3d(canvas, opz = {}) {
+  // `spegni`: i pezzi di ACCESI da spegnere, per misurare quanto costa ognuno (il cheat `&spegni=nebbia,post`): mai per i bambini
+  for (const k of opz.spegni || []) if (k in ACCESI) ACCESI[k] = false
   const ctx = creaContesto(canvas, { perso: opz.perso, fisso: opz.dpr })
   if (!ctx) return null
   try { return costruisci(canvas, ctx, opz) } catch (e) {
@@ -95,13 +97,22 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
     azione.annulla()
   }
 
+  // La misura è quella del contenitore (il campo del gioco, nella colonna della barra), mai della finestra: la tela lo
+  // riempie in CSS (100%) e il disegno ha i suoi pixel × dpr. Senza la misura in CSS una tela assoluta resta grande quanto
+  // i suoi pixel: a dpr 1,5 era larga una volta e mezza il campo, la scena ingrandita e tagliata, le scritte e il dito fuori
+  // posto. Il ResizeObserver la rilegge quando il campo cambia (finestra, rotazione, pannelli), non a ogni fotogramma.
+  const casa = canvas.parentElement || canvas
+  canvas.style.width = '100%'; canvas.style.height = '100%'
+  let rett = casa.getBoundingClientRect()
+  const osserva = typeof ResizeObserver === 'function' ? new ResizeObserver(([e]) => { rett = e.contentRect }) : null
+  if (osserva) osserva.observe(casa)
   function misura() {
-    const casa = canvas.parentElement || canvas
-    const r = casa.getBoundingClientRect()
+    if (!osserva) rett = casa.getBoundingClientRect()
+    const r = rett
     if (!r.width || !r.height) return false
     const l = Math.round(r.width), a = Math.round(r.height)
     ctx.misura(l, a, (w, h) => { if (post) post.misura(w, h); maschera.uniforms.uRisB.value.set(w, h) })
-    cam.misura(l, a)
+    cam.misura(l, a, a * ctx.dpr)
     contorno.misura(l, a)
     return true
   }
@@ -147,7 +158,7 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
     // la telecamera: sull'eroe, o sul palco sopra il pannello
     if (!scontro.centro(centro)) centro.set(eroe.disegnato.x, 0, eroe.disegnato.z)
     S.scossa = Math.max(0, S.scossa - dtVero * 2.2)
-    cam.aggiorna(dtVero, centro, { scontro: !!scontro.palco, coperto, scossa: S.scossa, t })
+    cam.aggiorna(dtVero, centro, { scontro: !!scontro.palco, celle: scontro.celle, coperto, scossa: S.scossa, t })
     // la luce del palco: nello scontro una luce calda dalla parte della telecamera schiarisce i combattenti
     luci.palco.intensity += ((scontro.palco ? 5 : 0) - luci.palco.intensity) * Math.min(1, dtVero * 4)
     luci.palco.position.set(centro.x, 2.6, centro.z + 2.8)
@@ -163,10 +174,11 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
     if (piano.portale) piano.portale.aggiorna(dt, t, punti, vistaOra(piano.vis, piano.portale.cella.x + 0.5, piano.portale.cella.y + 0.5))
     piano.terreno.aggiorna(dtVero, torcia)
 
-    S.aberr *= Math.exp(-6 * dtVero); S.rosso *= Math.exp(-5 * dtVero)
+    S.rosso *= Math.exp(-5 * dtVero)
+    figure.nitido(scontro.palco ? 1 : 0, dtVero); figureEroe.nitido(scontro.palco ? 1 : 0, dtVero)
     if (post) {
       const u = post.uni
-      u.uT.value = t; u.uAberr.value = S.aberr; u.uRosso.value = S.rosso * 0.6; u.uLampo.value = Math.max(0, luci.lampo.intensity - 15) * 0.004
+      u.uT.value = t; u.uRosso.value = S.rosso * 0.6; u.uLampo.value = Math.max(0, luci.lampo.intensity - 15) * 0.004
     }
     contorno.mappina(corsa, this_.mappaGrande, !!scontro.palco)
     contorno.dataset(corsa, eroe, scala)
@@ -229,7 +241,7 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
       const m = ctx.misure
       return { tre: true, chiamate: m.chiamate, triangoli: m.triangoli, dpr: ctx.dpr, ms: Math.round(m.msFotogramma * 10) / 10,
                msJs: Math.round(m.msJs * 100) / 100, msDisegno: Math.round(m.msDisegno * 100) / 100,
-               figure: figure ? figure.quante : 0, scenario: piano ? piano.aspetto.chiave : null, palco: !!scontro.palco }
+               figure: figure ? figure.quante : 0, pixelSprite: Math.round(cam.pixelSprite * 100) / 100, scenario: piano ? piano.aspetto.chiave : null, palco: !!scontro.palco }
     },
     // per le prove: dove sta a schermo un punto del mondo, lo stato di disegno di una cosa, il palco
     aSchermo(x, y, z) { const p = cam.schermo(x, y, z); return [p.x, p.y] },
@@ -239,6 +251,7 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
     get palco() { return scontro.palco },
     distruggi() {
       vivo = false
+      if (osserva) osserva.disconnect()
       this_.ferma()
       racconto.svuota()
       if (piano) piano.via()

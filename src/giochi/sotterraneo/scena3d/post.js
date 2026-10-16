@@ -1,7 +1,7 @@
 // Il passaggio finale, uno solo: la scena si disegna in una texture (colori oltre l'1, niente tono), e un quadrato a tutto
 // schermo ci mette il tono (ACES), poi la correzione colore (ombre fredde, luci calde), l'aberrazione dei colpi, la vignetta,
 // il rosso della ferita, il lampo e la grana. Niente bagliore (bloom): provato nel prototipo, bagna tutto (all'utente non piace).
-import { WebGLRenderTarget, HalfFloatType, Scene, OrthographicCamera, Mesh, PlaneGeometry, ShaderMaterial, Vector2 } from 'three'
+import { WebGLRenderTarget, HalfFloatType, NearestFilter, Scene, OrthographicCamera, Mesh, PlaneGeometry, ShaderMaterial, Vector2 } from 'three'
 
 const FRAMMENTO = /* glsl */`
 uniform sampler2D tScena; uniform float uT, uAberr, uVign, uGrana, uLampo, uRosso; uniform vec2 uRis; varying vec2 vUv;
@@ -14,8 +14,9 @@ vec3 tono(vec3 c){
 }
 void main(){
   vec2 c = vUv - 0.5; float r2 = dot(c, c);
-  float a = uAberr + 0.001;   // poca di base: sui retini chiari del buco (neve, ghiaccio) faceva frange viola
-  vec3 col = vec3(tono(texture2D(tScena, vUv - c*a*r2*4.0).rgb).r, tono(texture2D(tScena, vUv).rgb).g, tono(texture2D(tScena, vUv + c*a*r2*4.0).rgb).b);
+  // niente aberrazione: spostava il rosso e il blu e lasciava agli sprite una scia di copie colorate (l'arma fantasma
+  // dell'elfa nell'affondo); un campione solo, e il tono una volta sola invece di tre
+  vec3 col = tono(texture2D(tScena, vUv).rgb);
   float l = dot(col, vec3(0.2126, 0.7152, 0.0722));
   col *= mix(vec3(0.86, 0.98, 1.12), vec3(1.0), smoothstep(0.0, 0.35, l));
   col *= mix(vec3(1.0), vec3(1.07, 1.0, 0.88), smoothstep(0.35, 1.0, l));
@@ -30,7 +31,8 @@ void main(){
 }`
 
 export function creaPost(renderer) {
-  const rt = new WebGLRenderTarget(4, 4, { type: HalfFloatType, depthBuffer: true })
+  // Nearest: il quadro ha la misura dello schermo, e preso un pixel per pixel non deve sfumare niente
+  const rt = new WebGLRenderTarget(4, 4, { type: HalfFloatType, depthBuffer: true, minFilter: NearestFilter, magFilter: NearestFilter })
   const uni = { tScena: { value: rt.texture }, uT: { value: 0 }, uAberr: { value: 0 }, uVign: { value: 0.3 }, uGrana: { value: 0.045 },
                 uLampo: { value: 0 }, uRosso: { value: 0 }, uRis: { value: new Vector2(1, 1) } }
   const geo = new PlaneGeometry(2, 2)

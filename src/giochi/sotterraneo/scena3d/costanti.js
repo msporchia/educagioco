@@ -10,6 +10,9 @@ export const CAMERA = {
   celleScontro: 9.5,     // nello scontro la telecamera si avvicina
   guarda: 0.35,          // il punto guardato: poco sopra il pavimento
   zoomMin: 0.7, zoomMax: 1.4,   // il pizzico e la rotella
+  // la distanza si arrotonda perché un pixel dello sprite stia su un numero intero di pixel dello schermo (nitido, uguale per
+  // tutti); `pixelMassimo`: mai più di tanti pixel dello schermo per pixel dello sprite (più vicino sono macchie)
+  pixelMassimo: 5,
 }
 
 // la luce: senza questi minimi il primo giro era troppo tetro
@@ -18,13 +21,17 @@ export const LUCE = {
   ambiente: 2.6,         // l'emisferica, solo dentro quello che si vede (la maschera spegne il resto)
   minimoFigure: 0.32,    // le figure non scendono mai sotto questa frazione del loro colore
   rim: 0.55,             // il contorno caldo che stacca le figure dal fondo
+  // nello scontro, da vicino, la normal map finta e il contorno sporcano i colori e ammorbidiscono i bordi: si spengono quasi
+  nitidoScontro: { rim: 0.12, rilievo: 0.25, minimo: 0.55 },
   alone: 9, cono: 40,    // la torcia dell'eroe: l'alone corto senza ombre e il cono che le fa
   ombra: 0.75,           // le ombre non sono mai nere
 }
 
 export const ALTO_MURO = 1.25
 export const PARAPETTO = 0.32       // un muro con il pavimento a nord sta fra la telecamera e la stanza: basso
-export const ALLUNGA = 1.3          // le figure stanno ritte: lo schiacciamento della vista dall'alto lo ripaga questo
+// le figure stanno ritte, e la vista dall'alto (52°) le schiaccia di cos 52°: le si allunga di 1/cos, così il pixel dello sprite
+// a schermo è quadrato (con 1,3 era alto 0,8 della larghezza: le righe venivano di altezze diverse)
+export const ALLUNGA = 1 / Math.cos(52 * Math.PI / 180)
 export const PIXEL_CELLA = 16       // i pixel di sprite in una cella (dati/mondo.js, T)
 
 export const N_FUOCHI = 6           // le luci delle torce, dei bracieri, della fonte e del portale: una riserva fissa
@@ -49,5 +56,6 @@ export const ACCESI = {
 
 // lo scontro: quanto agio vogliono i combattenti dai muri e dalle cose posate, e i posti dei mostri attorno al centro
 export const AGIO = 1.2
-export const POSTI = [[1.0, 0], [1.7, -0.85], [1.8, 0.85], [2.6, 0.05], [2.4, -1.4], [2.5, 1.5], [3.3, 0]]
+// le figure ritte sono alte una cella e mezza: a meno di 1,2 celle in profondità una copre l'altra (con 0,85 i tre stavano in pila)
+export const POSTI = [[1.0, 0], [1.9, -1.25], [2.0, 1.25], [3.0, 0], [2.9, -2.5], [3.0, 2.5], [4.0, -1.25]]
 export const MARGINE_DITO = 44      // px: una cosa si prende anche toccandole vicino

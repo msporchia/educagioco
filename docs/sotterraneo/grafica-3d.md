@@ -88,6 +88,20 @@ componenti.
 
 ## La vista
 
+- **La tela si misura sul suo contenitore** (il campo, nella colonna della
+  barra), mai sulla finestra, e lo riempie in CSS; un ResizeObserver la
+  rilegge quando il campo cambia. Senza la misura in CSS una tela assoluta
+  resta grande quanto i suoi pixel: a pixel ratio 1,5 era larga una volta e
+  mezza il campo (scena ingrandita e tagliata, scritte e dito fuori posto,
+  sugli schermi larghi fuori dalla colonna).
+- **Il pixel dello sprite è netto**: la distanza della telecamera si
+  arrotonda perché un pixel dello sprite stia su un numero intero di pixel
+  del disegno (per difetto: si allontana, si avvicina al più dell'8%), mai
+  più di `CAMERA.pixelMassimo` (5); con un pixel ratio basso, dove
+  l'arrotondamento sposterebbe la telecamera di più di un quarto, non si
+  arrotonda. Le figure ritte si allungano di 1/cos 52°: il pixel è quadrato.
+  Niente aberrazione cromatica: lasciava agli sprite una scia di copie
+  colorate (l'«arma fantasma» dell'elfa nell'affondo).
 - **La telecamera** sta a 52° e vede almeno 15 celle in largo e in profondo
   (nello scontro 9,5), la distanza viene dalla forma dello schermo; si alza
   di metà di quanto coprono un foglio o il pannello dello scontro
@@ -102,8 +116,9 @@ componenti.
   muove, le luci dei fuochi vivono solo dove si vede adesso**: le fiamme
   leggono la maschera nello shader, le particelle fuori vista non si emettono
   e la riserva dei fuochi si dà solo a quelli in vista.
-- **Le figure** sono cartelli ritti (`ALLUNGA` 1,3) con la normal map finta e
-  un contorno caldo; i mostri si vedono solo in luce, come nel 2D. Sopra la
+- **Le figure** sono cartelli ritti (`ALLUNGA`, 1/cos 52°) con la normal map
+  finta e un contorno caldo, che nello scontro quasi si spengono (da vicino
+  sporcavano i colori e ammorbidivano i bordi: `LUCE.nitidoScontro`); i mostri si vedono solo in luce, come nel 2D. Sopra la
   testa, in HTML: 💤, la corona e il nome del bersaglio di una missione e
   del grosso, i galloni del caporale, la barretta della vita.
 - **Niente bagliore, niente pannello di qualità**: una qualità sola.
@@ -122,7 +137,12 @@ dito. Il mouse conta solo col tasto sinistro premuto.
 
 - **Il palco sul pavimento vero** (`palco.js`): l'eroe a sinistra, i mostri
   a colonne a destra come nel palco 2D, con almeno 1,2 celle d'agio dai muri
-  e dalle cose posate, mai di là da un muro.
+  e dalle cose posate, mai di là da un muro. In profondità i mostri stanno a
+  1,25 celle (le figure sono alte una cella e mezza: a 0,85 stavano in pila),
+  il grosso un passo più in là e chi viene dopo di lui ancora di più.
+- **La telecamera vuole tutti**: si allontana quanto serve perché il palco
+  (con una cella e mezza di margine) stia nello spazio sopra il pannello,
+  mai più vicino di `celleScontro`.
 - **Le animazioni** leggono lo stesso `fx` della vista 2D: l'eroe carica,
   affonda all'`arrivo` dell'effetto e torna; il mostro scatta coi tempi del
   racconto; il colpo fa scintille nel colore dell'elemento, un lampo, la
@@ -176,7 +196,17 @@ in media, risale piano sotto i 15 (cambia prima del disegno, mai dopo: la
 tela cambiata si svuota). **Il degrado a scalini non c'è** (l'utente vuole
 prima provare): se un telefono non regge, i pezzi si spengono in `ACCESI`.
 `window.__sotterraneo3d.grafica()` dice chiamate, triangoli, figure, pixel
-ratio e i ms.
+ratio, `pixelSprite` (quanti pixel del disegno fa un pixel dello sprite) e i
+ms; il cheat `&spegni=nebbia,post` spegne pezzi di `ACCESI` per misurare
+quanto costa ognuno.
+
+**Dove va il tempo** (SwiftShader, lo scontro della fornace a pixel ratio 1,5,
+ms a fotogramma): tutto acceso 160; senza nebbia 98, senza ombre 148, senza
+arredo 147, senza post 153; tutto spento 52. La nebbia (cinque fette a tutto
+schermo col rumore) era il pezzo più caro: ora i pixel che non si vedono
+saltano rumore e luci (sono zero comunque), e lo scontro è sceso a 112 (in
+esplorazione 62). Il passaggio finale prende la scena una volta sola invece
+di tre.
 
 **Il peso**: `dist/index.html` da 29 190 a 29 289 kB (+99 kB: il codice di
 `scena3d/` e delle viste nuove; three c'era già per gli Asteroidi 3D). Nel sito
@@ -190,7 +220,12 @@ tirava dentro i dati in comune col 2D, e il 2D finiva per caricare three)
 ## Cosa manca
 
 - Le armi in mano (dell'eroe e dei mostri) vengono dall'atlante piccolo:
-  ingrandite sono a blocchi (il 2D usa i pezzi nitidi, un'immagine in più).
+  ingrandite sono a blocchi (il 2D usa i pezzi nitidi, ma il foglio nitido è
+  11 848×2 331: come texture non entra in un telefono, andrebbe ritagliato).
+- I grossi di ripiego (Re Ossuto e gli altri senza figura dipinta) sono lo
+  sprite della specie ingrandito due volte e mezza: a pixel grossi, come nel
+  2D; gli eroi e le creature (elfa 16×28, spirito di fuoco 17×25) non hanno
+  pezzi nitidi neanche nel 2D.
 - I muri obliqui delle stanze smussate sono a gradini nei paesaggi costruiti (in quelli di roccia gli spigoli si smussano,
   [paesaggi-3d.md](paesaggi-3d.md)); le porte aperte non si disegnano; le ragnatele e la roba per
   terra di decoro (`perTerra`) non ci sono.
@@ -206,7 +241,10 @@ carta solo coi giochi in prova, la terra di sopra 2D, la discesa in 3D e
 quanto costa, camminare, aprire una porta, lo scontro con una risposta
 sbagliata e una giusta, il mostro che cade, la scala che sale e quella che
 scende da una sosta scritta in Node, la sosta una sola col 2D, senza
-WebGL, il ghiaccio e il tempio aperti col cheat). Bersagli: la tela `[data-tela="3d"|"2d"]` (con `data-eroe`,
+WebGL, il ghiaccio e il tempio aperti col cheat, la tela nella colonna della
+barra a 1100, 1861 e 390 px col tocco che prende la scala, anche stringendo la
+finestra; lo scontro a 390 e 360×640 con tutti in vista e il pixel dello sprite
+intero e non oltre cinque). Bersagli: la tela `[data-tela="3d"|"2d"]` (con `data-eroe`,
 `data-eroe-schermo`, `data-scala` come il 2D), `[data-strato3d]`,
 `[data-scontro-3d]` (con `[data-mostro]`, `[data-vita]`, `[data-fila]`,
 `[data-eroe-scontro]`), `[data-pannello3d]`, `[data-senza-3d]`,
