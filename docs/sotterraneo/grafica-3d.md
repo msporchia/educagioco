@@ -114,9 +114,19 @@ frequenza non cambia i passi.
   arrotonda. Le figure ritte si allungano di 1/cos 52°: il pixel è quadrato.
   Niente aberrazione cromatica (lasciava una scia colorata agli sprite).
 - **La telecamera** sta a 52° e vede almeno 15 celle in largo e in profondo
-  (nello scontro 9,5), la distanza viene dalla forma dello schermo; si alza
-  di metà di quanto coprono un foglio o il pannello dello scontro
-  (`misuraFoglio` in Gioco.vue). Il pizzico e la rotella la avvicinano o la
+  (nello scontro 9,5), la distanza viene dalla forma dello schermo; nello
+  scontro si alza di metà di quanto copre il pannello (`misuraFoglio` in
+  Gioco.vue), e ci va e torna morbida.
+- **I fogli dell'esplorazione sono un velo** (porta, forziere, fonte,
+  curiosità, scala…): stanno sopra la scena, e la telecamera non si muove né
+  cambia zoom aprendoli o chiudendoli, anche se coprono l'eroe (l'utente, 16
+  ottobre 2026: «quando rispondi a una domanda ti concentri su quella… è più
+  un overlay»). Prima si alzava anche per loro, e a ogni domanda la mappa
+  scorreva. Velo scuro sopra la scena non messo: la discesa è già buia.
+  Nei test: `integrazione/sotterraneo-3d-fogli` (`aSchermo` fermo a mezzo
+  pixel prima, durante e dopo la domanda di una porta, `&dpr=1` perché il
+  pixel ratio che si adatta cambierebbe la scala da sé; nello scontro i
+  combattenti sopra il pannello). Il pizzico e la rotella la avvicinano o la
   allontanano (`zoomA`).
 - **I muri con il pavimento a nord sono parapetti** (0,32): stanno fra la
   telecamera e la stanza. Colonne e spigoli alti che coprono l'eroe si

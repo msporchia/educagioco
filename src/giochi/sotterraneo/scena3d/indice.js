@@ -166,7 +166,8 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
     // la telecamera: sull'eroe, o sul palco sopra il pannello
     if (!scontro.centro(centro)) centro.set(eroe.disegnato.x, 0, eroe.disegnato.z)
     S.scossa = Math.max(0, S.scossa - dtVero * 2.2)
-    cam.aggiorna(dtVero, centro, { scontro: !!scontro.palco, celle: scontro.celle, coperto, scossa: S.scossa, t })
+    // quanto copre il pannello conta solo nello scontro: in esplorazione un foglio è un velo sopra la scena, e l'inquadratura resta
+    cam.aggiorna(dtVero, centro, { scontro: !!scontro.palco, celle: scontro.celle, coperto: scontro.palco ? coperto : 0, scossa: S.scossa, t })
     // la luce del palco: nello scontro una luce calda dalla parte della telecamera schiarisce i combattenti
     luci.palco.intensity += ((scontro.palco ? 5 : 0) - luci.palco.intensity) * verso(dtVero, 4)
     luci.palco.position.set(centro.x, 2.6, centro.z + 2.8)

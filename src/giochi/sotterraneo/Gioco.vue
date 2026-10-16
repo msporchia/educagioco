@@ -1210,8 +1210,9 @@ function siPerdeIl3d() {
 let altoFoglio = 0, contaGiri = 0
 function misuraFoglio() {
   if (in3d) {
-    // in 3D anche il pannello dello scontro copre il fondo del campo: si misura quanto ne copre davvero
-    const f = document.querySelector('.sot-foglio, [data-pannello3d]')
+    // in 3D conta solo il pannello dello scontro, che alza i combattenti; i fogli dell'esplorazione (porta, forziere, fonte…)
+    // stanno sopra la scena come un velo e la telecamera non si muove (l'utente, 16 ottobre: «è più un overlay»)
+    const f = corsa.value && corsa.value.foglio && corsa.value.foglio.che === 'scontro' ? document.querySelector('[data-pannello3d]') : null
     const campo = tela.value && tela.value.getBoundingClientRect()
     altoFoglio = f && campo ? Math.max(0, campo.bottom - f.getBoundingClientRect().top) : 0
     return
