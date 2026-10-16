@@ -9,8 +9,8 @@
    arrivare in fondo. Il dito è vero (`Input.dispatchTouchEvent`): un
    `page.click()` non trascina e non porta i pointer del tocco.
 
-   Il 3D è un gioco in prova (`mate3d`, «Asteroidi 3D»): la sua carta c'è solo
-   coi giochi in prova accesi, e gli Asteroidi di sempre restano in 2D. Con un
+   Il 3D (`mate3d`, «Asteroidi 3D») ha la sua carta accanto agli Asteroidi, anche coi
+   giochi in prova spenti, e gli Asteroidi di sempre restano in 2D. Con un
    browser che il WebGL 2 non ce l'ha, anche gli Asteroidi 3D tornano al 2D.
 
    `node test/esegui.mjs asteroidi-3d --niente-build`
@@ -33,11 +33,13 @@ async function entra(page, chiave = 'mate3d') {
 }
 
 // aspetta un sasso (giusto o no) tutto in scena, lontano dai bordi
-const unSasso = (page, giusto) => page.waitForFunction(g => {
+// `lati`: con spazio da una parte e dall'altra, per il tocco appena fuori dal bordo che deve cadere nello schermo
+const unSasso = (page, giusto, lati = false) => page.waitForFunction(([g, lati]) => {
   const m = window.__mate
-  const a = m.asteroidi().find(x => !x.morto && x.ok === g && x.y > 140 && x.y < m.nave.y - 160)
+  const a = m.asteroidi().find(x => !x.morto && x.ok === g && x.y > 140 && x.y < m.nave.y - 160
+    && (!lati || (x.x - x.r * 1.2 > 4 && x.x + x.r * 1.2 < innerWidth - 4)))
   return a ? { x: a.x, y: a.y, r: a.r } : null
-}, giusto, { timeout: 15000, polling: 50 }).then(h => h.jsonValue())
+}, [giusto, lati], { timeout: 15000, polling: 50 }).then(h => h.jsonValue())
 
 const conto = page => page.evaluate(() => {
   const m = window.__mate
@@ -47,9 +49,7 @@ const conto = page => page.evaluate(() => {
 /* ---------- 1. il 3D c'è, e costa poco ---------- */
 const { page, errori } = await apriGioco(browser)
 await azzera(page)
-uguale('coi giochi in prova spenti gli Asteroidi 3D non ci sono', await page.locator('[data-indice="mate3d"]').count(), 0)
-await semina(page, { settings: { sperimentali: true } })
-uguale('accesi, la carta c\'è', await page.locator('[data-indice="mate3d"]').count(), 1)
+uguale('anche coi giochi in prova spenti c\'è la carta degli Asteroidi 3D', await page.locator('[data-indice="mate3d"]').count(), 1)
 await entra(page)
 const cdp = await page.context().newCDPSession(page)
 const giu = (x, y) => cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y }] })
@@ -100,7 +100,7 @@ await attendi(page, 150)
 
 /* ---------- 5. appena fuori dal bordo di un falso: è la risposta (sbagliata) ---------- */
 prima = await conto(page)
-s = await unSasso(page, false)
+s = await unSasso(page, false, true)
 await tocco(s.x + s.r * 1.08, s.y)
 dopo = await conto(page)
 uguale('il tocco appena fuori dal bordo prende il sasso', dopo.sbagliate, prima.sbagliate + 1)

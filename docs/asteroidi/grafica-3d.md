@@ -1,6 +1,6 @@
 # Asteroidi 3D: il cielo in 3D, e i comandi del telefono
 
-**Asteroidi 3D** (`mate3d`) è un gioco in prova: gli stessi Asteroidi
+**Asteroidi 3D** (`mate3d`) è accanto agli Asteroidi (dal 16/10/2026, non più dietro i giochi in prova): gli stessi Asteroidi
 disegnati in WebGL con three.js, partendo dal prototipo approvato
 (`poc/asteroidi-3d`, ottobre 2026), per provarlo sui telefoni veri. Gli
 **Asteroidi** di sempre (`mate`) restano com'erano, in 2D e coi comandi di
@@ -8,10 +8,11 @@ prima, per i bambini. Le regole del gioco non cambiano: tempi, ritmi,
 `rispostaEntro`, il cronometro che parte quando il sasso giusto è tutto in
 scena, l'SRS, le vite, i gettoni. Cambiano il disegno e i comandi.
 
-## Un gioco in prova, la stessa partita
+## Un gioco accanto all'altro, la stessa partita
 
-- **La carta c'è solo coi giochi in prova accesi** (`sperimentale: true`
-  nella riga di `src/data/giochi.js`, [../genitori/interruttori.md](../genitori/interruttori.md)).
+- **La carta c'è per tutti**, accanto a quella degli Asteroidi (la riga di `src/data/giochi.js` non è più
+  `sperimentale`). Resta così "per un po'": avanzamento e sosta sono in comune, quindi i due giochi
+  convivono senza danni, e se il 3D desse problemi basta rimettere `sperimentale: true`.
 - **La stessa vista, un disegno diverso**: `App.vue` monta `MathGame.vue`
   per `mate3d` col prop `disegno: '3d'`. Senza il prop è il 2D di sempre.
 - **Lo stesso avanzamento**: la chiave della campagna resta `mate` (tappe,
@@ -171,7 +172,7 @@ sassi cambia col posto.
 
 Nei test: `unita/asteroidi-3d` (il dito, l'urto, le quote dei falsi, le
 forme di ogni specie), `integrazione/asteroidi-3d` (col dito vero: il 3D
-acceso e quanto costa, la carta solo coi giochi in prova, il tocco sul
+acceso e quanto costa, la carta anche coi giochi in prova spenti, il tocco sul
 giusto, il vuoto che guida, il trascinare, appena fuori dal bordo, lo scudo,
 il giusto addosso alla nave, gli Asteroidi di sempre in 2D, il 2D senza
 WebGL). Bersagli: la tela `[data-tela="3d"|"2d"]`; `window.__mate.grafica()`
