@@ -10,7 +10,8 @@
   --sot-rosso: #e0644f;
   --sot-bordo: #ffffff1e;
   /* quanto si alza dal fondo la barra coi globi, punta dei globi compresa: un pannello che poggia sulla barra finisce qui
-     sopra (docs/sotterraneo/barra.md). 70 px la barra, i globi a 3 px dal fondo, e un respiro di 6 px */
+     sopra (docs/sotterraneo/barra.md). La misura vera la scrive BarraDiSotto.vue in px; questa è la stima finché non c'è:
+     70 px la barra, i globi a 3 px dal fondo, e un respiro di 6 px */
   --globo: clamp(54px, 18.5vw, 74px);
   --sot-sopra-barra: calc(max(70px, var(--globo) + 3px) + 6px + env(safe-area-inset-bottom));
 
