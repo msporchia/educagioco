@@ -23,7 +23,7 @@ function dallIndirizzo() {
 }
 
 // l'indirizzo vince e si ricorda; senza, quello ricordato. Mai il valore nudo: storage.js scarta i `true` soli
-export async function leggiTema() {
+export async function leggiTema(predefinito = 'attuale') {
   const h = temaDi(dallIndirizzo())
   if (h) {
     tema.value = h
@@ -34,14 +34,16 @@ export async function leggiTema() {
     letto = true
     const c = await load(CHIAVE)
     if (c && temaDi(c.tema) && !temaDi(dallIndirizzo())) tema.value = temaDi(c.tema)
+    // niente cheat e niente scelta ricordata: il predefinito di chi chiama (il Sotterraneo 3D, in prova, parte col legno)
+    else if (!c || !temaDi(c.tema)) tema.value = temaDi(predefinito) || 'attuale'
   }
   return tema.value
 }
 
 // per Gioco.vue: legge il tema, lo rilegge se cambia il `#`, e accende il dito del rilievo sulla radice (`radice`, un ref)
-export function usaTema(radice) {
-  leggiTema()
-  const rilegge = () => leggiTema()
+export function usaTema(radice, predefinito = 'attuale') {
+  leggiTema(predefinito)
+  const rilegge = () => leggiTema(predefinito)
   addEventListener('hashchange', rilegge)
   let spegni = null
   watch([tema, radice], ([t, el]) => {

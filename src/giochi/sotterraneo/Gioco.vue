@@ -94,7 +94,7 @@ const FERMO_PX = 16   // sotto i 16px Android/iOS considerano il dito ancora fer
 
 const tela = ref(null)
 const radice = ref(null)
-const tema = usaTema(radice)
+const tema = usaTema(radice, in3d ? 'legno' : 'attuale')
 const corsa = shallowRef(null)
 // indice della campagna, o INDICE_ABISSO (−1); null vuol dire nessuna discesa
 const tappaIdx = ref(null)
