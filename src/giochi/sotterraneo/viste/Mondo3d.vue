@@ -413,7 +413,7 @@ async function scegli(s) {
   if (s.che === 'prendi' && e === 'presa') return rispondi(dopoLaPresa(d.chi, s.missione), chieste)
   if (s.che === 'consegna' && e) { await nextTick(); rispondi(dopoLaConsegna(d.chi, s.missione, e, ctx()), chieste) }
 }
-const segnoSopra = b => (b.ruolo === 'minatore' || b.ruolo === 'personaggio' ? segnoDi(b.k, props.missioni, props.tappe) : null)
+const segnoSopra = b => (['minatore', 'personaggio', 'mercante'].includes(b.ruolo) ? segnoDi(b.k, props.missioni, props.tappe) : null)
 
 /* ═══════════ il dito ═══════════ */
 const vista = ref(null), tela = ref(null), sopraEl = ref(null), sottoEl = ref(null)
@@ -598,7 +598,7 @@ function aggiornaBussole() {
     lista.push({ ...resto, x: Math.round(cx + dx * k), y: Math.round(cy + dy * k), gradi: Math.round(Math.atan2(dy, dx) * 180 / Math.PI) })
   }
   const chi = chiAspetta(props.missioni)
-  for (const b of bersagli.value) if ((b.ruolo === 'personaggio' || b.ruolo === 'minatore') && chi.includes(b.k)) {
+  for (const b of bersagli.value) if (['personaggio', 'minatore', 'mercante'].includes(b.ruolo) && chi.includes(b.k)) {
     scena.aSchermo(b.piede.x + 0.5, scena.quota(b.piede.x + 0.5, b.piede.y + 0.5) + 1, b.piede.y + 0.5, pt)
     alBordo(pt.x, pt.y, { chiave: b.k, nome: b.nome })
   }

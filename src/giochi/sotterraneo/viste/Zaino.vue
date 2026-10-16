@@ -78,6 +78,7 @@ const verbo = computed(() => {
   if (c.usa === 'cura' || c.usa === 'cresci' || c.usa === 'energia') return 'Bevi'
   if (c.usa === 'luce') return 'Accendi'
   if (c.usa === 'porta') return 'Apri una porta'
+  if (c.usa === 'portale') return 'Apri il portale'
   return 'Usa'
 })
 

@@ -20,7 +20,7 @@ import Domanda from '../../quiz/Domanda.vue'
 
 import { CAMPAGNA, QUANTE_TAPPE, stelleDella, L_ABISSO, INDICE_ABISSO } from './dati/campagna.js'
 import { inPaesaggio } from './dati/paesaggi.js'
-import { COSE } from './dati/cose.js'
+import { COSE, PERGAMENE_MASSIME } from './dati/cose.js'
 import { CURIOSITA_DI } from './dati/curiosita.js'
 import { EROI, DI_PARTENZA, eroeDi } from './dati/eroi.js'
 import { TASCHE, VITA_PER_PIANO, POZIONI_MASSIME } from './dati/mondo.js'
@@ -37,12 +37,12 @@ import { pescaLeggendario } from './motore/bottino.js'
 import { quotaDi } from './dati/livelli.js'
 import { LEGGENDARI } from './dati/pezzi.js'
 import { prendi as prendiMissione, consegna as consegnaMissione, fatte as missioniFatte, presePer, promemoria,
-         rotta as rottaDi, seguita, diario } from './motore/missioni.js'
+         rotta as rottaDi, seguita, diario, dopoLaMissione } from './motore/missioni.js'
+import { ultimoPostoSicuro } from './motore/posto-sicuro.js'
 import { Bottega, alGiroNuovo, robaRaraDi } from './motore/bottega.js'
 import { scrivi, leggi, dice, viaDi, forzeDi, PORTALE as VIA_PORTALE } from './motore/sosta.js'
 import { avventuraDi, scriviNellAvventura, vintaNellAvventura, azzeraIlVecchio, ricordaIlFondo, cominciata }
   from './motore/avventure.js'
-import { PORTALE } from './dati/terra-mappa.js'
 import { iconaDi } from './dati/terra.js'
 import { mercanteDi, schedeDi } from './dati/mercanti.js'
 import { Tela } from './scena/tela.js'
@@ -259,14 +259,24 @@ function scorda() {
 function salgoDalPortale() {
   const c = corsa.value
   if (!c || c.finita) return
+  const sale = c.foglio && c.foglio.chi
+  // la pergamena nell'abisso non lascia il gemello: è la sera che finisce, come «torno su per stasera» (docs/sotterraneo/portale-e-sosta.md)
+  if (sale && sale.senzaGemello) {
+    c.chiudi()
+    suono.nota(260, 880, 0.5, 'sine', 0.12)
+    if (in3d && pittore && pittore.attraversa) { pittore.attraversa(() => chiudi(), sale); return }
+    return chiudi()
+  }
   c.chiudi()
   salva({ subito: true, via: VIA_PORTALE })
-  nellAvventura({ terra: { ...(qui.value.terra || {}), dove: [...PORTALE.accanto] } }, { subito: true })
+  // si sbuca nell'ultimo posto sicuro (motore/posto-sicuro.js): oggi il villaggio, accanto al gemello
+  const sicuro = ultimoPostoSicuro(qui.value)
+  nellAvventura({ terra: { ...(qui.value.terra || {}), dove: sicuro.terra } }, { subito: true })
   // nel mondo in 3D si sbuca accanto al gemello, nella città che serve quel dungeon (viste/Mondo3d.vue lo trova)
-  if (in3d) nellAvventura({ mondo: { ...(qui.value.mondo || {}), dove: { portale: true } } }, { subito: true })
+  if (in3d) nellAvventura({ mondo: { ...(qui.value.mondo || {}), dove: sicuro.mondo } }, { subito: true })
   suono.nota(260, 880, 0.5, 'sine', 0.12)
   // in 3D si vede il passaggio (il velo lampeggia, l'eroe ci si stringe dentro): la sosta è già scritta, non si riscrive
-  if (in3d && pittore && pittore.attraversa) { salendo = true; pittore.attraversa(allaMappa); return }
+  if (in3d && pittore && pittore.attraversa) { salendo = true; pittore.attraversa(allaMappa, sale); return }
   allaMappa()
 }
 let salendo = false
@@ -286,6 +296,7 @@ function riprendiDiscesa({ ferma = false } = {}) {
   chiudiLaBarra()
   c.botti = in3d   // le botti da rompere sono solo del 3D (motore/botti.js)
   corsa.value = c
+  c.pergameneTrovabili = dopoLaMissione(COSE['pergamena-portale'].dopo, missioni.value)
   borsellino = borsa(CHIAVE)
   nuovoGiro({ nuovo: true })   // la stessa discesa è lo stesso giro: quello che si è già pensato non torna
   suono.nota(180, 90, 0.4, 'sawtooth', 0.12)
@@ -389,7 +400,7 @@ let bottega = null
 function apriBottega(k, scheda = null) {
   if (!mercanteDi(k)) return
   bottega = new Bottega({ eroe: eroeQui(), roba: roba.value, finite: qui.value.tappa, crescita: crescita.value,
-                          ...(qui.value.botteghe || {}), venduti: qui.value.venduti })
+                          ...(qui.value.botteghe || {}), venduti: qui.value.venduti, missioni: missioni.value })
   bottega.prepara(k)   // il banco di questo giro, o il suo cambio a metà se è finita una discesa
   nellAvventura({ botteghe: bottega.botteghe })
   dettoBanco.value = null
@@ -417,7 +428,8 @@ const banco = computed(() => {
         // `ruolo` salto/sogno (motore/bottega.js): solo per i test, sulla casella non si segna niente
         ruolo,
         // `nonPuoi`: la classe non lo porta, non si compra. `serve`: lo porta ma gli manca la caratteristica, si compra e va nello zaino
-        alTetto: eCura(x) && b.alTettoDelleCure ? POZIONI_MASSIME : 0,
+        alTetto: eCura(x) && b.alTettoDelleCure ? POZIONI_MASSIME : b.alTettoDi(x) ? PERGAMENE_MASSIME : 0,
+        tettoDi: eCura(x) ? 'pozioni' : 'pergamene',
         nonPuoi: b.porta(x) ? '' : b.perchéNo(x), serve: b.porta(x) ? b.perchéNo(x) : '', prova: b.seLoMetto(x, { ancora: true }), va: b.vaAddosso(x),
         mancano: Math.max(0, costa - b.gemme),
         quante: b.quanteNeHo(x),
@@ -425,7 +437,7 @@ const banco = computed(() => {
     })
   return {
     // le linguette di una famiglia che l'eroe non porta non si mostrano (dati/mercanti.js, schedeDi)
-    chi: { ...m, schede: schedeDi(m, eroeDi(eroeQui())) },
+    chi: { ...m, schede: schedeDi(m, eroeDi(eroeQui()), missioni.value) },
     roba: vendibili,
     addosso: { mano: voce(b.mano), mancina: voce(b.mancina), corpo: voce(b.corpo), collo: voce(b.collo), dito: voce(b.dito), dito2: voce(b.dito2) },
     numeri: { vita: b.vitaConLaRoba, att: b.att, dif: b.dif, gemme: b.gemme },
@@ -1155,6 +1167,7 @@ function avvia(i, { prova = false } = {}) {
   corsa.value = new Corsa(t, { seme: semeDallIndirizzo(), eroe: eroeQui(), roba: roba.value,
                                crescita: crescita.value, missioni: presePer(missioni.value, t.chiave), conti: qui.value.conti })
   corsa.value.botti = in3d   // le botti da rompere sono solo del 3D (motore/botti.js)
+  corsa.value.pergameneTrovabili = dopoLaMissione(COSE['pergamena-portale'].dopo, missioni.value)   // si trova solo dopo la missione dell'incantatrice
   borsellino = borsa(CHIAVE)
   corredoDaProva(corsa.value)
   torciaDaProva(corsa.value)
@@ -1391,7 +1404,12 @@ function riprendi() {
   tic.value++
   if (c.finita) chiudi()
 }
-function usa(i, dove = null) { corsa.value.usa(i, dove); tic.value++; suono.ok(); salva() }
+function usa(i, dove = null) {
+  const e = corsa.value.usa(i, dove)
+  // la pergamena: lo zaino si chiude, e il portale appena aperto si vede (motore/corsa.js, apriLaPergamena)
+  if (e && e.che === 'portale') { zainoAperto.value = false; suono.nota(260, 880, 0.5, 'sine', 0.12) }
+  tic.value++; suono.ok(); salva()
+}
 function butta(i) { corsa.value.butta(i); tic.value++; suoni.passo(); salva() }
 function riponi(dove) { corsa.value.riponi(dove); tic.value++; suono.ok(); salva() }
 
@@ -2111,7 +2129,8 @@ function ridimensiona() { if (pittore) pittore.misura() }
 
         <!-- il portale: niente domanda, è la strada di casa; il piano resta com'è -->
         <Foglio v-else-if="foglio && foglio.che === 'portale'" em="🌀" titolo="Un portale"
-                dice="Porta al villaggio. Lassù, il suo gemello ti riporta qui.">
+                :dice="foglio.chi && foglio.chi.senzaGemello ? 'Porta al villaggio. Per stasera basta: l\'abisso ti aspetta dove sei arrivato.'
+                  : 'Porta al villaggio. Lassù, il suo gemello ti riporta qui.'">
           <button class="sot-grosso" data-azione="portale" @click="salgoDalPortale">
             salgo al villaggio
           </button>
