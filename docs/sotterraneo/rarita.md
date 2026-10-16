@@ -127,6 +127,9 @@ sulle basi femminili):
   Nell'abisso sei su dieci.
 - **La base** si pesca per prezzo come prima (`pescaCosa` con la
   profondità: il livello / 12), e predilige quello che l'eroe porta.
+- **La pergamena del portale** cade a parte, da forzieri e curiosità, solo
+  dopo la missione dell'incantatrice (`pergamenaCade`, il 3%):
+  [portale-e-sosta.md](portale-e-sosta.md#la-pergamena-del-portale).
 
 ## L'elisir del toro
 

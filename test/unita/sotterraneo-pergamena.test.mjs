@@ -42,6 +42,11 @@ const roba = (zaino = [], gemme = 0) => ({ v: 1, gemme, zaino, mano: null, manci
   uguale('il premio è la prima pergamena', q.premio.cosa, P)
   controlla('c\'è dall\'inizio, e non toglie posto alle altre tre', offerte({}, tappeAl(0)).some(m => m.id === 'quaderno') && offerte({}, tappeAl(0)).some(m => m.id === 'badessa'))
 
+  // presa, il quaderno sta in un forziere della cripta al primo piano
+  const giu = new Corsa(CAMPAGNA[0], { seme: 3, rnd: seminato(3), roba: roba(), missioni: presePer({ quaderno: 'presa' }, 'altare') })
+  const f = giu.livello.robe.find(r => r.missione === 'quaderno')
+  controlla('presa, il quaderno aspetta in un forziere del primo piano della cripta', f && f.che === 'forziere', JSON.stringify(f))
+
   const m = mercanteDi('incantatrice')
   const prima = new Bottega({ eroe: 'mago', roba: roba([], 200), finite: 1, missioni: {} })
   controlla('prima della missione l\'incantatrice non la vende', !prima.banco('incantatrice').sempre.includes(P))

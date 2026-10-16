@@ -43,8 +43,8 @@ non chiudono la strada a nessuno (`unita/sotterraneo-terra`).
 
 ## L'albero
 
-Diciassette missioni: le nove di prima, tre seguiti (il ladro della collana, il
-libro dei nomi, il sacco di farina) e cinque «sconfiggi N» ([missioni-conteggio.md](missioni-conteggio.md)). Ognuna dichiara i suoi `richiede`, e **si
+Diciotto missioni: le nove di prima, tre seguiti (il ladro della collana, il
+libro dei nomi, il sacco di farina), cinque «sconfiggi N» e il quaderno dell'incantatrice (fuori dal tetto) ([missioni-conteggio.md](missioni-conteggio.md)). Ognuna dichiara i suoi `richiede`, e **si
 sblocca da sola** quando sono tutti veri e la sua discesa è aperta (anche per
 l'età: `aperta`); solo allora il suo personaggio mostra il «!». I requisiti:
 `{ fatta: <discesa> }` la discesa è finita, `{ consegnata: <id> }` quella
@@ -54,6 +54,7 @@ conosce non si sblocca mai, e il guasto lo dice.
 
 | missione | chi | discesa · piano | tipo | requisiti | premio |
 |---|---|---|---|---|---|
+| Il quaderno degli incantesimi (fuori dal tetto) | l'incantatrice | la cripta dell'altare · 1 | trova | — | la prima pergamena del portale ([portale-e-sosta.md](portale-e-sosta.md#la-pergamena-del-portale)) |
 | La Dama Grigia (un fantasma; id `badessa`) | l'eremita | la cripta dell'altare · 2 | sconfiggi | — | 💎 12 · 🪙 1 |
 | La collana della nonna | la ragazza | la scalinata antica · 1 | trova | cripta finita | 💎 15 |
 | Rosicchione (un pipistrello) | il mugnaio | la torre · 2 | sconfiggi | scalinata finita | amuleto azzurro · 🪙 1 |
