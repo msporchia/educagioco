@@ -25,6 +25,9 @@ export const PESO_DELLA_DIFESA = 2
 export const RICARICA_DEL_BASTONE = 50
 
 export const STANZE_TORCIA = 12
+// la pergamena del portale (docs/sotterraneo/portale-e-sosta.md, «La pergamena del portale»): costa una scelta, cinque torce;
+// se ne tengono al più PERGAMENE_MASSIME, e la vende solo l'incantatrice dopo la sua missione (`dopo`)
+export const PREZZO_PERGAMENA = 25, PERGAMENE_MASSIME = 5
 
 // Dove si indossa: `dove` di un pezzo è il tipo di posto (dito = anello, collo = collana), le caselle addosso sono sei e due
 // anelli stanno sulle due del dito (docs/sotterraneo/roba.md, «Addosso e in tasca»). Un salvataggio di prima ha un solo `dito`
@@ -174,6 +177,9 @@ const BASI = {
             dice: `La prendi e si accende: ${STANZE_TORCIA} stanze di luce, poi si spegne.` },
   chiave: { em: '🗝️', nome: 'Chiave', sprite: 'chiave-oro', usa: 'porta', prezzo: 6, genere: 'f',
             dice: 'Apre una porta senza rispondere.' },
+  // niente sprite ancora: si vede la sua emoji (docs/sotterraneo/da-fare.md)
+  'pergamena-portale': { em: '📜', nome: 'Pergamena del portale', usa: 'portale', prezzo: PREZZO_PERGAMENA, genere: 'f', dopo: 'quaderno',
+                         dice: 'La apri e si accende un portale: ti porta a casa, e quando torni giù riparti proprio da qui.' },
 }
 
 // Una chiave composta è un pezzo con livello e rarità (docs/sotterraneo/rarita.md):
@@ -311,7 +317,8 @@ export const SCUDI = CHIAVI_COSE.filter(k => COSE[k].dove === 'mancina')
 export const CURE = CHIAVI_COSE.filter(k => COSE[k].usa === 'cura')
 export const CURE_IN_VENDITA = CURE.filter(k => !COSE[k].rarissimo)
 
-export const A_SORTE = IN_VENDITA.filter(k => !CURE.includes(k))
+// la pergamena non si pesca: sta sul banco dell'incantatrice dopo la sua missione, e cade da sola (bottino.js, `pergamenaCade`)
+export const A_SORTE = IN_VENDITA.filter(k => !CURE.includes(k) && !COSE[k].dopo)
 
 // il prezzo è l'unica scala su cui sta tutto il catalogo (docs/sotterraneo/roba.md)
 const PREZZI = A_SORTE.map(k => COSE[k].prezzo)

@@ -116,13 +116,19 @@ const che = s => s.map(x => x.che)
 
 /* ══════════ 6. i mercanti: la loro battuta, e la bottega ══════════ */
 {
+  // il quaderno dell'incantatrice già consegnato: qui si guarda il mercante (la missione è sotto)
+  const fatto = { quaderno: 'consegnata' }
   for (const m of MERCANTI) {
-    const a = apertura(m.chiave, ctx(1))
+    const a = apertura(m.chiave, ctx(1, fatto))
     uguale(`${m.chiave}: saluta con la sua battuta`, a[0]?.testo, m.dice)
-    controlla(`${m.chiave}: la prima scelta apre la bottega`, scelte(m.chiave, ctx(1))[0].che === 'bottega')
+    controlla(`${m.chiave}: la prima scelta apre la bottega`, scelte(m.chiave, ctx(1, fatto))[0].che === 'bottega')
   }
   controlla('il mercante compra: «ho roba da vendere»', che(scelte('rigattiere', ctx(1))).includes('vendi'))
-  uguale('l\'incantatrice apre la bottega con le sue parole', scelte('incantatrice', ctx(1))[0].testo, 'Fammi vedere la magia')
+  uguale('l\'incantatrice apre la bottega con le sue parole', scelte('incantatrice', ctx(1, fatto))[0].testo, 'Fammi vedere la magia')
+  // la sua missione: la chiede a voce, «Ci penso io», e la bottega resta lì sotto
+  const q = apertura('incantatrice', ctx(0))
+  controlla('all\'inizio l\'incantatrice chiede il quaderno', q.some(p => p.missione === 'quaderno' && p.fase === 'offre'), JSON.stringify(q))
+  stessaLista('e le scelte: prima «Ci penso io», poi la bottega', che(scelte('incantatrice', ctx(0))).slice(0, 2), ['prendi', 'bottega'])
   nota(MERCANTI.map(m => `${m.nome}: «${m.dice}»`).join(' · '))
 }
 

@@ -206,7 +206,8 @@ import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiut
         for (const m of MERCANTI) {
           const r = pari.mercanzia(m.chiave)
           controlla(`${m.chiave}, ${finite} finite: in cima quello che non finisce`,
-                    r.filter(x => x.sempre).map(x => x.chiave).join() === m.sempre.filter(k => !COSE[k].dalla || COSE[k].dalla <= finite).join())
+                    // (la pergamena del portale sta in cima solo dopo la missione dell'incantatrice: qui non c'è)
+                    r.filter(x => x.sempre).map(x => x.chiave).join() === m.sempre.filter(k => (!COSE[k].dalla || COSE[k].dalla <= finite) && !COSE[k].dopo).join())
           const pescati = r.filter(x => !x.sempre && !x.avanti).map(x => x.chiave)
           fuori += pescati.filter(k => !vendeLa(m, k)).length
           avanti += pescati.filter(k => dopo.has(baseDi(k))).length

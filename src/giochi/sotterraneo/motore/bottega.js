@@ -9,6 +9,7 @@ import { COSE, A_SORTE, pescaMerce, aLivello, chiaveDelPezzo, baseDi } from '../
 import { mercanteDi, vendeLa, righeDi, profonditaDelBanco, prezzoAvanti, schedaDi } from '../dati/mercanti.js'
 import { bancoDelPasso, vetrinaDelPasso, delPassoDi, righeAvanti } from './storia.js'
 import { pescaAbilita } from './bottino.js'
+import { dopoLaMissione } from './missioni.js'
 import { LIVELLI_PER_REQUISITO, eroeDi, portaLa } from '../dati/eroi.js'
 
 // quanti pezzi ha ogni linguetta di un mercante che veste quando il banco si riempie (docs/sotterraneo/bottega.md,
@@ -84,9 +85,10 @@ export class Bottega extends Corredo {
   // in più che stanno in mostra accanto al banco, scritti anch'essi; `ruota`: i mercanti il cui banco deve cambiare
   // al giro nuovo (alGiroNuovo). `venduti`: gli ultimi pezzi che l'eroe ha venduto al rigattiere, [{ k, prezzo }]
   constructor({ eroe, roba = null, finite = 0, banchi = null, scaffali = null, ruota = null, venduti = null,
-                giudicato = null, rnd = Math.random, crescita = null } = {}) {
+                giudicato = null, rnd = Math.random, crescita = null, missioni = null } = {}) {
     super({ eroe, roba, crescita })
     this.finite = finite
+    this.missioni = missioni   // gli stati delle missioni dell'avventura: la pergamena si vende dopo la sua (`dopo`)
     this.rnd = rnd
     this.banchi = {}
     for (const [k, v] of Object.entries(banchi || {}))
@@ -144,7 +146,7 @@ export class Bottega extends Corredo {
   }
 
   // quello che sta sempre in cima, a quel punto della storia: le cure grandi arrivano dopo qualche discesa (`dalla`)
-  sempreDi(m) { return m.sempre.filter(k => !COSE[k].dalla || COSE[k].dalla <= this.finite) }
+  sempreDi(m) { return m.sempre.filter(k => (!COSE[k].dalla || COSE[k].dalla <= this.finite) && dopoLaMissione(COSE[k].dopo, this.missioni)) }
 
   // le righe sul banco: quelle che non finiscono prima (`sempre`), poi le pescate, poi i pezzi delle righe dopo
   // (`avanti`: quante righe, e quindi di quanto costano di più)

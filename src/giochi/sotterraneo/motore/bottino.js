@@ -133,6 +133,17 @@ export function ampollaCade(chi, seme, piano, x, y) {
   return ((h ^ (h >>> 15)) >>> 0) / 4294967296 < (PROBABILITA_AMPOLLA[chi] || 0)
 }
 
+// La pergamena del portale si trova, rara, solo dopo la missione dell'incantatrice (chi gioca lo dice alla Corsa: `pergameneTrovabili`), e solo
+// da un forziere o da una curiosità, mai dai mostri. Un sale suo, come l'ampolla: non sposta gli altri tiri
+export const PROBABILITA_PERGAMENA = { forziere: 0.03, curiosita: 0.03 }
+export function pergamenaCade(chi, seme, piano, x, y) {
+  let h = 2166136261
+  for (const n of [seme, piano, x, y, chi.length, 104729]) h = Math.imul(h ^ (Math.floor(n) | 0), 16777619)
+  h = Math.imul(h ^ (h >>> 15), 0x2c1b3c6d)
+  h = Math.imul(h ^ (h >>> 12), 0x297a2d39)
+  return ((h ^ (h >>> 15)) >>> 0) / 4294967296 < (PROBABILITA_PERGAMENA[chi] || 0)
+}
+
 // il pezzo col nome di un mostro grosso, al livello del bottino
 export const pezzoDelGrosso = (id, livello) => (UNICI[id] ? chiaveDelPezzo(UNICI[id].base, livello, 'raro', [], id) : null)
 

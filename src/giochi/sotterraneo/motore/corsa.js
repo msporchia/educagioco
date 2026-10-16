@@ -21,7 +21,7 @@ import { valoreDelLivello } from '../dati/pezzi.js'
 import { esperienzaDi, gemmeDi } from '../dati/livelli.js'
 import { potenzaDelMostro } from './potenza.js'
 import { espNellaZona } from '../dati/zone.js'
-import { pezzoNuovo, pezzoDelGrosso, pezzoDalMostro, livelloDelBottino, livelloDelTrovato, tiroDalSeme, elisirCade, ampollaCade, CURE_DAI_MOSTRI } from './bottino.js'
+import { pezzoNuovo, pezzoDelGrosso, pezzoDalMostro, livelloDelBottino, livelloDelTrovato, tiroDalSeme, elisirCade, ampollaCade, pergamenaCade, CURE_DAI_MOSTRI } from './bottino.js'
 import { generaPiano } from './livello.js'
 import { percorso, viaVerso, primaLibera } from '../../../motore/passi.js'
 import { Corredo, eCura, curePerTipo } from './corredo.js'
@@ -55,6 +55,8 @@ export class Corsa extends Corredo {
   // `crescita`: l'esperienza e i punti dell'avventura (motore/crescita.js): l'eroe sale di livello anche giù
   constructor(tappa, { seme = null, rnd = Math.random, eroe = DI_PARTENZA, roba = null, missioni = [], crescita = null, ricomparsa = true, botti = false, conti = {} } = {}) {
     super({ eroe, roba, crescita })
+    // la pergamena del portale si trova (rara) solo dopo la missione dell'incantatrice: lo dice chi gioca (Gioco.vue)
+    this.pergameneTrovabili = false
     this.ricomparsa = ricomparsa   // i mostri morti tornano (motore/ricomparsa.js); il banco la spegne: misura un passaggio solo
     this.botti = botti             // le botti da rompere (motore/botti.js): solo il Sotterraneo 3D le accende; il 2D e il banco no
     this.tappa = tappa
@@ -758,6 +760,7 @@ export class Corsa extends Corredo {
       if (p.cura) this.vita = Math.min(this.vitaMax, this.vita + p.cura)
       if (p.vitaPiu) { this.vitaPiu += p.vitaPiu; this.vita += p.vitaPiu }
       if (p.torcia) this.accendi('torcia')   // dalla stessa porta di tutte le altre: aspetta alla cintura se una brucia già
+      if (this.pergameneTrovabili && pergamenaCade('curiosita', this.seme, this.piano, r.x, r.y)) this.posaPezzo('pergamena-portale', { x: r.x, y: r.y + 1 })
       this.tesori++
       f.esito = { buono: true, dice: b.dice, conto: this.dettoIlPremio(p) }
       return { che: 'curiosita', buono: true }
@@ -1006,6 +1009,7 @@ export class Corsa extends Corredo {
     this.posaPezzo(cosa, { x: f.x, y: f.y + 1 }, 'forziere')
     if (elisirCade('forziere', this.seme, this.piano, f.x, f.y)) this.posaPezzo('elisir-toro', { x: f.x - 1, y: f.y + 1 })
     if (ampollaCade('forziere', this.seme, this.piano, f.x, f.y)) this.posaPezzo('ampolla-vita', { x: f.x + 1, y: f.y }, 'ampolla')
+    if (this.pergameneTrovabili && pergamenaCade('forziere', this.seme, this.piano, f.x, f.y)) this.posaPezzo('pergamena-portale', { x: f.x - 1, y: f.y })
     this.posaRoba({ che: 'gemme', em: '💎', quante: Math.round((6 + this.piano * 3) * valoreDelLivello(this.livelloQui)) },
                   { x: f.x + 1, y: f.y + 1 })
     this.chiudi()
@@ -1095,6 +1099,7 @@ export class Corsa extends Corredo {
       this.accendi(k)
       return { che: 'luce' }
     }
+    if (c.usa === 'portale') return this.apriLaPergamena(i)
     if (c.usa === 'porta') {
       const vicina = this.livello.robe.find(r => r.che === 'porta' && !r.aperta &&
         Math.abs(r.x + 0.5 - this.eroe.x) < 2 && Math.abs(r.y + 0.5 - this.eroe.y) < 2)
@@ -1175,8 +1180,33 @@ export class Corsa extends Corredo {
     return { che: 'salito', piano: this.piano }
   }
 
-  // il piano su cui si sta resta com'è (mostri battuti, cose prese, porte aperte, mappa girata): rientrando lo si ritrova
+  // La pergamena del portale (docs/sotterraneo/portale-e-sosta.md, «La pergamena del portale»): fuori dallo scontro e senza un
+  // foglio aperto, si apre un portale nella cella libera davanti all'eroe (o accanto). Lo si tocca come quello fisso; resta
+  // aperto, gratis, finché non si lascia il piano (lasciaIlPiano), così chi torna giù dal gemello lo ritrova. Nell'abisso non
+  // resta: là finisce la sera (`senzaGemello`). Uno solo per piano: un secondo non serve, e la pergamena non si spreca
+  get portaleDellaPergamena() { return this.livello.robe.find(r => r.che === 'portale' && r.pergamena) || null }
+  apriLaPergamena(i) {
+    if (this.foglio && this.foglio.che === 'scontro') { this.dillo('📜 nello scontro no'); return { che: 'niente' } }
+    if (this.foglio || this.finita) return { che: 'niente' }
+    if (this.portaleDellaPergamena) { this.dillo('🌀 il portale è già aperto'); return { che: 'niente' } }
+    const v = this.versoEroe, e = { x: Math.floor(this.eroe.x), y: Math.floor(this.eroe.y) }
+    const davanti = { x: e.x + Math.round(v.dx), y: e.y + Math.round(v.dy) }
+    const intorno = [davanti, ...[[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, 1], [1, -1], [-1, -1]].map(([dx, dy]) => ({ x: e.x + dx, y: e.y + dy }))]
+    const dove = intorno.find(c => (c.x !== e.x || c.y !== e.y) && this.libera(c.x, c.y))
+    if (!dove) { this.dillo('📜 qui non c\'è posto per un portale'); return { che: 'niente' } }
+    const r = { che: 'portale', x: dove.x, y: dove.y, em: '🌀', nome: 'Un portale', pergamena: true, ...(this.senzaFondo ? { senzaGemello: true } : {}) }
+    this.livello.robe.push(r)
+    this.zaino.splice(i, 1)
+    this.giraVerso(dove.x - e.x, dove.y - e.y)
+    this.aggiornaLuce()
+    this.dillo('📜 si apre un portale: toccalo per tornare a casa')
+    return { che: 'portale', x: dove.x, y: dove.y }
+  }
+
+  // il piano su cui si sta resta com'è (mostri battuti, cose prese, porte aperte, mappa girata): rientrando lo si ritrova.
+  // Il portale della pergamena no: resta aperto solo finché si sta sul suo piano
   lasciaIlPiano() {
+    for (let i = this.livello.robe.length - 1; i >= 0; i--) if (this.livello.robe[i].pergamena) this.livello.robe.splice(i, 1)
     this.piani.set(this.piano, {
       livello: this.livello, robeDelSeme: this.robeDelSeme, visto: this.visto,
       stanzeDentro: this.stanzeDentro, chiave: this.chiaveDelPiano,

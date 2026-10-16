@@ -15,6 +15,8 @@ import { seminato } from './livello.js'
 import { PASSI } from '../../../motore/passi.js'
 
 export const PRESA = 'presa', FATTA = 'fatta', CONSEGNATA = 'consegnata'
+// una cosa che si vende o si trova solo dopo una missione (`dopo` in dati/cose.js: la pergamena del portale, dopo il quaderno)
+export const dopoLaMissione = (dopo, stati) => !dopo || (!!stati && typeof stati === 'object' && stati[dopo] === CONSEGNATA)
 
 const statoDi = (stati, id) => (stati && typeof stati === 'object' ? stati[id] || null : null)
 
@@ -55,8 +57,13 @@ export const inMano = stati =>
 
 // quelle che il mondo offre adesso, col «!»: le sbloccate, finché con quelle in mano non si arriva al TETTO.
 // Chi ne ha tante in mano non ne vede altre finché non ne consegna una
-export const offerte = (stati, tappe) =>
-  sbloccate(stati, tappe).slice(0, Math.max(0, TETTO - inMano(stati).length)).sort(dellaStoria)
+// Una missione `fuoriDalTetto` (il quaderno dell'incantatrice: insegna la pergamena, non è un favore della storia) non conta
+// e non si nasconde: le altre restano tre come prima
+export const offerte = (stati, tappe) => {
+  const tutte = sbloccate(stati, tappe)
+  const conta = inMano(stati).filter(m => !m.fuoriDalTetto).length
+  return [...tutte.filter(m => m.fuoriDalTetto), ...tutte.filter(m => !m.fuoriDalTetto).slice(0, Math.max(0, TETTO - conta))].sort(dellaStoria)
+}
 
 // tutte le aperte insieme, nell'ordine della storia
 export const aperte = (stati, tappe) => [...inMano(stati), ...offerte(stati, tappe)].sort(dellaStoria)
@@ -227,12 +234,14 @@ export function diario(stati, tappe, segui = null, conti = {}) {
   const sg = seguita(stati, segui)
   const mano = inMano(stati).map(m => voceDiario(m, statoDi(stati, m.id), sg, conti))
   const offerta = offerte(stati, tappe).map(m => voceDiario(m, 'offerta', null, conti))
+  // il tetto conta solo le missioni dell'albero (il quaderno dell'incantatrice sta fuori: `fuoriDalTetto`)
+  const nelTetto = [...inMano(stati), ...offerte(stati, tappe)].filter(m => !m.fuoriDalTetto).length
   const finite = MISSIONI.filter(m => statoDi(stati, m.id) === CONSEGNATA).sort(dellaStoria).map(m => voceDiario(m, CONSEGNATA, null, conti))
   return {
     segui: sg, storia: storiaDelDiario(tappe, sg),
     inMano: mano, pronte: mano.filter(v => v.stato === FATTA), daFare: mano.filter(v => v.stato !== FATTA),
     offerte: offerta, consegnate: finite,
-    aperte: mano.length + offerta.length,
+    aperte: nelTetto,
     nascoste: Math.max(0, sbloccate(stati, tappe).length - offerta.length),
     tetto: TETTO,
   }
