@@ -56,6 +56,7 @@ senza fondo sotto le sette discese. Il codice sta in `src/giochi/sotterraneo/`.
 - [figure.md](figure.md) — le 238 figure da indossare dei fogli dipinti, descritte una per una (elemento, materia, a chi sta bene): il catalogo, `roba.py` per guardarle e ritagliarle, i pezzi col nome con la figura loro
 - [bottega.md](bottega.md) — i mercanti di sopra, i pezzi avanti a sovrapprezzo, il tetto di rarità, i dieci pezzi per linguetta, il banco che cambia poco alla volta, comprare senza le caratteristiche, il riacquisto degli ultimi cinque venduti
 - [bottega-finestra.md](bottega-finestra.md) — la finestra da gioco di ruolo dove si compra, si vende e si riprende, lo zaino nella stessa finestra, il confronto affiancato, i bersagli dei test
+- [tema-pannelli.md](tema-pannelli.md) — i pannelli in prova in due temi (`#tema=pietra|rilievo`): i materiali, i token `--pt-…`/`--rl-…` e quelli `--qz-…` della Domanda comune, come si aggiunge un pannello, il banco `npm run pannelli`, costo e raccomandazione
 - [scenari.md](scenari.md) — come è disegnato: lo scenario generato da un prompt, il muro alto una cella, i fogli e l'atlante
 - [arredo.md](arredo.md) — gli orpelli: una lista per scenario che può crescere, ogni pezzo sa come si piazza (appeso, posato, angolo, fondo, coppia) e quanto è epico, il piano decide quanto è epica una stanza (la sala del mostro grosso è la più ricca)
 - [abisso.md](abisso.md) — l'abisso com'è oggi: perché, formule della crescita, svenimenti, record, fin dove regge
