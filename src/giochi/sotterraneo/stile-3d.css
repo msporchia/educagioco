@@ -51,6 +51,9 @@
   box-shadow: 0 -10px 30px #000a; animation: sot-sale .16s ease-out;
 }
 .sot3d-scelta { display: flex; flex-direction: column; gap: 6px }
+/* gli angoli d'oro della cornice: spenti, li accende il tema dei pannelli; dentro, perché il pannello scorre e taglierebbe il resto */
+.sot3d-sotto > .sot-angolo { display: none; top: 0; left: 0 }
+.sot3d-sotto > .sot-angolo.sot-alto-dx { left: auto; right: 0 }
 
 /* senza WebGL 2, o il contesto perso: si dice e si esce */
 .sot3d-senza { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 24px;
