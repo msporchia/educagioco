@@ -12,6 +12,8 @@ const PANNELLI = [
   ['domanda-sbagliata', 'La domanda, risposta sbagliata', 'il segno, il tremolio, il perché e come si fa'],
   ['scontro', 'Lo scontro: cosa fare, col pericolo', 'CaselleAbilita.vue nella cornice del duello, la fila dei turni sul palco'],
   ['scontro-domanda', 'Lo scontro: la domanda del colpo', 'la scelta fatta sopra, la domanda sotto'],
+  ['scontro-3d', 'Lo scontro nel 3D: cosa fare', 'Pannello3d.vue in fondo, sopra la barra; la scena è un fondo finto (quella vera: scatta-app sotterraneo3d=1)'],
+  ['scontro-3d-domanda', 'Lo scontro nel 3D: la domanda', 'la scelta fatta e la domanda nel pannello in fondo'],
   ['zaino', 'Lo zaino', 'Zaino.vue con le schede dell\'eroe'],
   ['bottega', 'La bottega', 'Bottega.vue, l\'armaiolo'],
   ['eroe', 'La pagina dell\'eroe', 'PaginaEroe.vue'],
@@ -22,7 +24,7 @@ const PANNELLI = [
   ['fine', 'Il cartello di fine', 'Fine.vue'],
   ['pausa', 'La pausa', 'giochi/VeloPausa.vue col suo slot'],
 ]
-const TEMI = [['attuale', 'attuale'], ['pietra', 'A · pietra'], ['rilievo', 'B · rilievo']]
+const TEMI = [['attuale', 'attuale'], ['legno', 'A · legno'], ['rilievo', 'B · rilievo']]
 const LARGHEZZE = [[390, 'telefono 390'], [320, 'stretto 320'], [768, 'tablet 768'], [1100, 'scrivania 1100']]
 const SCALE = [[1, '100%'], [0.75, '75%'], [0.5, '50%']]
 
@@ -31,7 +33,7 @@ const scelte = {
   larghezza: Number(q.get('larghezza')) || 390,
   alto: Number(q.get('alto')) || 760,
   scala: Number(q.get('scala')) || 1,
-  temi: (q.get('temi') || 'attuale,pietra,rilievo').split(','),
+  temi: (q.get('temi') || 'attuale,legno,rilievo').split(','),
   solo: q.get('solo') ? q.get('solo').split(',') : null,
 }
 function scrivi() {
