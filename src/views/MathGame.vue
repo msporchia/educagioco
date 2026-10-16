@@ -186,7 +186,7 @@ let cielo = 'cintura', salto = 0   // il posto (data/asteroidi.js `cieloDi`) e i
    dello stato; lo traduce `sincronizzaNave()` qui sotto, i tre gradini
    stanno in `grafica/spazio.js`. */
 const nave = reactive({
-  x: 0, y: 0, r: 34, lv: 1, danno: 0, mira: -Math.PI / 2, spinta: 0,
+  x: 0, y: 0, r: 34, lv: comandiNuovi ? 3 : 1, danno: 0, scorta: 0, mira: -Math.PI / 2, spinta: 0,
   gelo: 0, botta: 0, riparata: 0, t: 0, livrea: null,
   // dove la porta il dito, quanto corre (per inclinarla), e lo scudo: quanti falsi ha
   // respinto, l'ultimo da che parte, e il lampo che svanisce
@@ -209,11 +209,12 @@ function conHangar(fn) {
   ritocca(CHIAVE, c => { c.hangar = hangarDi(c.hangar); esito = fn(c.hangar) }, { subito: true })
   return esito
 }
-// `CFG.vite` è il riferimento: le vite di scorta guadagnate col filotto
-// si vedono come una nave sana, non come una nave super
-const stazzaDi = livello => (livello >= 6 ? 3 : livello >= 3 ? 2 : 1)
+// `CFG.vite` è il riferimento: le vite di scorta guadagnate col filotto si vedono come una nave sana, e in 3D come uno scudo
+// sempre acceso. Negli Asteroidi 3D la nave è una sola, la più bella, dal primo livello (docs/asteroidi/grafica-3d.md)
+const stazzaDi = livello => (comandiNuovi || livello >= 6 ? 3 : livello >= 3 ? 2 : 1)
 function sincronizzaNave() {
   nave.danno = Math.max(0, Math.min(1, 1 - (hud.vite - 1) / Math.max(1, CFG.vite - 1)))
+  nave.scorta = Math.max(0, hud.vite - CFG.vite)
   const lv = stazzaDi(hud.livello)
   if (lv > nave.lv) {
     nave.lv = lv
@@ -1438,8 +1439,8 @@ function dalCheat() {
         <div class="hangar">
           <div class="titoletto">La tua astronave</div>
           <p>Le vite sono la nave: intatta, poi con un'<b>ala strappata</b> che
-            fuma e la spia che lampeggia, poi in fiamme. Se cresce di livello diventa più
-            grossa. A fine partita torna com'era.</p>
+            fuma e la spia che lampeggia, poi in fiamme.<template v-if="comandiNuovi"> Con una vita in più, uno <b>scudo</b> la avvolge sempre.</template><template v-else> Se cresce di livello diventa più
+            grossa.</template> A fine partita torna com'era.</p>
           <p>Ogni <b>cinque risposte giuste di fila</b> guadagni un gettone.
             Resta lì in basso finché non lo premi tu — anche per tutta la partita, se
             vuoi — e sbagliando non si perde.</p>

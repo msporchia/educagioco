@@ -137,7 +137,10 @@ Quello che esce, per livello (misurato in `misure/asteroidi`):
   che si accorcia — non c'è niente con cui confrontarla, e non dice
   *rotta*. (`statoScafo`, `puntoRotto` in `src/grafica/spazio.js`; in 3D
   le stesse sagome, [grafica-3d.md](grafica-3d.md))
-- **La nave cresce col livello**: navetta, al 3 caccia, al 6 incrociatore.
+- **La nave cresce col livello**: navetta, al 3 caccia, al 6 incrociatore. **Negli Asteroidi 3D no**: è
+  sempre l'incrociatore, dal primo livello, e le vite di scorta (sopra `CFG.vite`) si leggono come uno
+  **scudo sempre acceso**, più forte con più scorta; finite quelle, lo scudo se ne va e restano lo
+  strappo e il fumo (`scorta` in `nave`, deciso il 16/10/2026).
 - **`src/grafica/spazio.js` (e `spazio3d/`) non sa di vite né di punti**:
   riceve fatti già decisi (`danno: 0.5`).
 - **Negli Asteroidi 3D (in prova) la nave si guida col dito** e si risponde

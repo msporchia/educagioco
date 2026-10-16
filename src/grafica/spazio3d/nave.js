@@ -391,8 +391,10 @@ export function creaNave(scena) {
       }
       colpo += dt
       scudoMat.uniforms.uT.value = colpo
-      scudoMat.uniforms.uGelo.value = Math.min(1, n.gelo || 0) * (1 + Math.sin(t * 3) * 0.08)
-      scudo.visible = colpo < 1.7 || (n.gelo || 0) > 0
+      // le vite di scorta: lo stesso scudo, più tenue, sempre acceso (più scorta, più si vede)
+      const fisso = n.scorta > 0 ? 0.4 + 0.15 * Math.min(2, n.scorta) : 0
+      scudoMat.uniforms.uGelo.value = Math.max(Math.min(1, n.gelo || 0), fisso) * (1 + Math.sin(t * 3) * 0.08)
+      scudo.visible = colpo < 1.7 || (n.gelo || 0) > 0 || fisso > 0
     },
     // dove sono gli ugelli, per la luce dei motori
     lv: () => lvOra,
