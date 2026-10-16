@@ -70,6 +70,7 @@ senza fondo sotto le sette discese. Il codice sta in `src/giochi/sotterraneo/`.
 - [mondo-3d.md](mondo-3d.md) — la fase 2, fatta: il mondo di sopra in 3D nel Sotterraneo 3D (`viste/Mondo3d.vue`, `scena3d/mondo/`): i moduli, il salvataggio in `mondo`, la telecamera e la veduta d'insieme, il dito con le persone che vincono, le figure ancorate, città, ingressi, grate e ritorno, le pietre del viaggio, la nebbia che non disegna quello che non si è visto, i pezzi e quanto costa, cosa manca
 - [mondo-aperto-generatore.md](mondo-aperto-generatore.md) — la fase 1, fatta: il generatore del mondo aperto come dato puro (`motore/mondo-aperto.js`, la scheda `dati/mondo-aperto.js`), cosa la geometria ha cambiato del progetto (i due ponti del villaggio, i due ingressi delle marche, il monte all'angolo), l'algoritmo passo per passo, il risultato che fa da contratto per le fasi dopo, i guasti, il seme 19 e come si sceglie, come si aggiunge una regione o un posto, `npm run pianta -- --mondo`
 - [da-fare.md](da-fare.md) — le voci aperte e quello che va guardato col dito
+- [da-fare-3d-e-mondo.md](da-fare-3d-e-mondo.md) — le voci aperte del giro del 16 ottobre 2026: cosa provare col dito, le decisioni aperte, i lavori pronti, cosa ritarare, i guasti noti e come si pubblica senza pestarsi i piedi
 
 Vedi anche: [../core/grafica.md](../core/grafica.md) (tela, atlante, tessere),
 [../core/interfaccia.md](../core/interfaccia.md) (la pausa),

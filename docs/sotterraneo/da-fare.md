@@ -1,6 +1,7 @@
 # Il sotterraneo: da fare
 
-Le voci aperte, ognuna con quello che serve per farla. Il progetto dettagliato
+Le voci aperte, ognuna con quello che serve per farla. Le voci del giro del 16 ottobre 2026 (3D, mondo aperto, pergamena, botti, pensieri, torcia) stanno in
+[da-fare-3d-e-mondo.md](da-fare-3d-e-mondo.md). Il progetto dettagliato
 dell'abisso sta in [abisso-progetto.md](abisso-progetto.md).
 
 ## La pergamena del portale (16 ottobre 2026)
