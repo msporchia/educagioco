@@ -453,10 +453,13 @@ onUnmounted(() => {
   padding: clamp(10px, calc(2 * var(--qz-h)), 20px)
            clamp(12px, 4vw, 18px)
            clamp(10px, calc(1.8 * var(--qz-h)), 18px);
-  border-radius: 24px; color: #eaf0ff;
-  background: linear-gradient(180deg, #223055 0%, #141c33 100%);
-  border: 1px solid rgba(255, 255, 255, .13);
-  box-shadow: 0 24px 60px rgba(0, 0, 0, .55);
+  /* i --qz-… li ridefinisce un tema da fuori (il sotterraneo, docs/sotterraneo/tema-pannelli.md):
+     il ripiego è l'aspetto di sempre, e chi non li tocca non cambia di un pixel */
+  border-radius: var(--qz-carta-raggio, 24px); color: var(--qz-carta-testo, #eaf0ff);
+  background: var(--qz-carta-fondo, linear-gradient(180deg, #223055 0%, #141c33 100%));
+  border: var(--qz-carta-bordo, 1px solid rgba(255, 255, 255, .13));
+  box-shadow: var(--qz-carta-ombra, 0 24px 60px rgba(0, 0, 0, .55));
+  transform: var(--qz-carta-posa); transform-style: var(--qz-carta-strati);
 }
 .qz-avanti { height: 3px; border-radius: 999px; background: #ffffff14;
              overflow: hidden; margin-top: 8px }
@@ -472,11 +475,15 @@ onUnmounted(() => {
 .qz-testa {
   display: flex; align-items: center; justify-content: space-between; gap: 8px;
   font-size: 12.5px; letter-spacing: .06em; text-transform: uppercase;
-  color: #ffd58a; font-weight: 700;
+  color: var(--qz-oro, #ffd58a); font-weight: 700;
   margin-bottom: clamp(5px, calc(1.2 * var(--qz-h)), 12px);
 }
 .qz-consegna {
   font-size: clamp(15px, 4.4vw, 20px); font-weight: 650; line-height: 1.3;
+  /* senza ripiego apposta: non definite valgono `unset`, cioè ereditate come prima */
+  color: var(--qz-consegna-colore); text-shadow: var(--qz-consegna-ombra);
+  text-align: var(--qz-consegna-allinea); background: var(--qz-consegna-fondo); padding: var(--qz-consegna-spazio);
+  border-radius: var(--qz-consegna-raggio); box-shadow: var(--qz-consegna-incavo); transform: var(--qz-consegna-posa);
   margin-bottom: clamp(7px, calc(1.5 * var(--qz-h)), 14px);
   /* una consegna può arrivare su più righe (le premesse di un
      ragionamento si leggono una alla volta): gli a capo si rispettano */
@@ -487,8 +494,9 @@ onUnmounted(() => {
   margin-bottom: clamp(8px, calc(1.7 * var(--qz-h)), 16px);
   padding: clamp(7px, calc(1.4 * var(--qz-h)), 14px);
   min-height: clamp(46px, calc(8 * var(--qz-h)), 74px);
-  border-radius: 18px; background: rgba(255, 255, 255, .06);
-  border: 1px solid rgba(255, 255, 255, .08);
+  border-radius: var(--qz-soggetto-raggio, 18px); background: var(--qz-soggetto-fondo, rgba(255, 255, 255, .06));
+  border: var(--qz-soggetto-bordo, 1px solid rgba(255, 255, 255, .08));
+  box-shadow: var(--qz-soggetto-ombra, none);
   font-size: clamp(22px, 6vw, 30px); font-weight: 750; text-align: center;
 }
 .qz-emoji { font-size: clamp(38px, 11vw, 56px); } /* la figura È la domanda: grande quanto concede il riquadro */
@@ -514,7 +522,7 @@ onUnmounted(() => {
 }
 .qz-scegli { /* l'altra metà del confine: da qui in giù si tocca */
   margin: 0 0 4px 2px; font-size: 11.5px; letter-spacing: .08em;
-  text-transform: uppercase; font-weight: 800; color: #ffd58a;
+  text-transform: uppercase; font-weight: 800; color: var(--qz-oro, #ffd58a);
 }
 .qz-foglio.svolto { margin: 0; flex: 1 1 100%; padding: 6px 10px 7px 12px; }
 .qz-foglio.svolto::before { display: none; }
@@ -550,6 +558,7 @@ onUnmounted(() => {
   --qz-gap: clamp(6px, calc(1.1 * var(--qz-h)), 10px);
   font-size: clamp(16px, 4.4vw, 19px); /* si misura anche qui: `ch` dipende da dove si usa */
   display: flex; flex-wrap: wrap; gap: var(--qz-gap);
+  transform: var(--qz-risposte-posa); transform-style: var(--qz-carta-strati);
 }
 .qz-tasto {
   flex: 1 1 max(var(--qz-min, 0px),
@@ -558,14 +567,24 @@ onUnmounted(() => {
   display: flex; align-items: center; justify-content: center;
   /* `anywhere` e non `break-word`: solo il primo abbassa il min-content, o una parola lunga sfonda il tasto */
   min-width: 0; overflow-wrap: anywhere;
-  min-height: clamp(42px, calc(7 * var(--qz-h)), 62px); /* 42px è il dito, non l'estetica */
+  min-height: var(--qz-tasto-alto, clamp(42px, calc(7 * var(--qz-h)), 62px)); /* 42px è il dito, non l'estetica */
   padding: clamp(6px, calc(1.1 * var(--qz-h)), 12px) 8px; cursor: pointer;
-  border-radius: 16px; border: 1px solid rgba(255, 255, 255, .14);
-  background: rgba(255, 255, 255, .075); color: inherit;
-  font: inherit; font-size: clamp(16px, 4.4vw, 19px); font-weight: 650;
+  border-radius: var(--qz-tasto-raggio, 16px); border: var(--qz-tasto-bordo, 1px solid rgba(255, 255, 255, .14));
+  background: var(--qz-tasto-fondo, rgba(255, 255, 255, .075)); color: var(--qz-tasto-testo);
+  box-shadow: var(--qz-tasto-ombra, none); text-shadow: var(--qz-tasto-ombra-testo); transform: var(--qz-tasto-posa);
+  font: inherit; font-size: clamp(16px, 4.4vw, 19px); font-weight: var(--qz-tasto-peso, 650);
   text-align: center;
-  transition: transform .1s ease, background .12s ease, border-color .12s ease;
+  transition: var(--qz-tasto-moto, transform .1s ease, background .12s ease, border-color .12s ease);
 }
+/* il segno sul tasto risposto (✓ ✗ disegnati): spento di ripiego, `--qz-segno: ''` lo accende */
+.qz-tasto.giusta, .qz-tasto.sbagliata { position: var(--qz-segno-posto, static); }
+.qz-tasto.giusta::after, .qz-tasto.sbagliata::after {
+  content: var(--qz-segno, none); position: absolute; z-index: 1; pointer-events: none;
+  top: var(--qz-segno-cima, -9px); right: var(--qz-segno-lato, -7px);
+  width: var(--qz-segno-misura, 26px); height: var(--qz-segno-misura, 26px);
+  background: var(--qz-segno-giusta) center / contain no-repeat;
+}
+.qz-tasto.sbagliata::after { background: var(--qz-segno-sbagliata) center / contain no-repeat; }
 .qz-tasto.emoji { font-size: clamp(28px, 7.5vw, 40px); }
 .qz-telo {
   width: 100%; max-width: clamp(52px, calc(13.5 * var(--qz-h)), 118px);
@@ -578,14 +597,17 @@ onUnmounted(() => {
   text-align: center; opacity: .93;
 }
 .qz-nome.grande { font-size: clamp(13px, 3.8vw, 16px); }
-.qz-tasto:active { transform: scale(.97); background: rgba(255, 255, 255, .13); }
-.qz-tasto.giusta { background: rgba(78, 214, 128, .24); border-color: #4ed680; }
-.qz-tasto.sbagliata { background: rgba(255, 105, 105, .2); border-color: #ff6969; }
-.qz-tasto.spenta { opacity: .38; }
+.qz-tasto:active { transform: var(--qz-premuto, scale(.97)); background: var(--qz-premuto-fondo, rgba(255, 255, 255, .13));
+                   box-shadow: var(--qz-premuto-ombra, none); }
+.qz-tasto.giusta { background: var(--qz-giusta-fondo, rgba(78, 214, 128, .24)); border-color: var(--qz-giusta-bordo, #4ed680);
+                   box-shadow: var(--qz-giusta-ombra, none); animation: var(--qz-giusta-moto, none); }
+.qz-tasto.sbagliata { background: var(--qz-sbagliata-fondo, rgba(255, 105, 105, .2)); border-color: var(--qz-sbagliata-bordo, #ff6969);
+                      box-shadow: var(--qz-sbagliata-ombra, none); animation: var(--qz-sbagliata-moto, none); }
+.qz-tasto.spenta { opacity: var(--qz-spenta, .38); filter: var(--qz-spenta-filtro, none); }
 .qz-esito {
   margin-top: clamp(7px, calc(1.4 * var(--qz-h)), 14px);
   min-height: 20px; font-size: clamp(13px, 3.8vw, 15px);
-  line-height: 1.4; color: #b9c6e6;
+  line-height: 1.4; color: var(--qz-esito-testo, #b9c6e6);
 }
 .qz-zoom {
   /* fixed, appesa al body col Teleport: il velo scorre quando la carta è più alta dello schermo,
@@ -616,12 +638,12 @@ onUnmounted(() => {
   background: rgba(255, 255, 255, .08); color: #eaf0ff;
   font: inherit; font-size: 18px; line-height: 1;
 }
-.qz-esito .bene { color: #7ee6a4; font-weight: 700; }
+.qz-esito .bene { color: var(--qz-bene, #7ee6a4); font-weight: 700; }
 .qz-dritta { /* ambra: è un consiglio, non una correzione */
   margin-top: 4px; color: #ffd79a;
   font-size: clamp(12px, 3.5vw, 14px); line-height: 1.35;
 }
-.qz-esito .male { color: #ffb0b0; font-weight: 700; }
+.qz-esito .male { color: var(--qz-male, #ffb0b0); font-weight: 700; }
 .qz-come { /* azzurro: parla del prossimo tentativo, non c'è niente da rimproverare */
   margin-top: 6px; padding: 5px 10px 6px;
   border-left: 3px solid #6fc4ff; border-radius: 0 8px 8px 0;
