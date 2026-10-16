@@ -540,7 +540,8 @@ function dopo() {
     const s = `${Math.round(pt.x)},${Math.round(pt.y)}`
     if (eroeEl.value.dataset.schermo !== s) eroeEl.value.dataset.schermo = s
   }
-  if (segno.value && segnoEl.value) { scena.aSchermo(segno.value.x, scena.quota(segno.value.x, segno.value.z), segno.value.z, pt); segnoEl.value.style.transform = `translate(${Math.round(pt.x)}px, ${Math.round(pt.y)}px)` }
+  // il segno d'arrivo si posa con `translate` (proprietà a parte): la sua animazione fa `transform: scale`, che con un `transform` inline lo porterebbe via
+  if (segno.value && segnoEl.value) { scena.aSchermo(segno.value.x, scena.quota(segno.value.x, segno.value.z), segno.value.z, pt); segnoEl.value.style.translate = `${Math.round(pt.x)}px ${Math.round(pt.y)}px` }
   if (aperto.value && fumEl.value) piazzaFumetto()
   if (props.pensiero && pensieroEl.value) piazzaPensiero()
   if (veduta) for (const n of nomiVeduta.value) {
