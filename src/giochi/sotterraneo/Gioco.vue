@@ -74,6 +74,9 @@ import LascioPerdere from './viste/LascioPerdere.vue'   // la frase chiara prima
 import './stile.css'
 import './stile-scontro.css'
 import './stile-effetti.css'
+import './tema/pietra.css'
+import './tema/rilievo.css'
+import { usaTema, ATTRIBUTO } from './tema/tema.js'
 
 defineOptions({ name: 'IlSotterraneo' })
 const emit = defineEmits(['vai'])
@@ -89,6 +92,8 @@ const FANTASMA_PX = 32
 const FERMO_PX = 16   // sotto i 16px Android/iOS considerano il dito ancora fermo
 
 const tela = ref(null)
+const radice = ref(null)
+const tema = usaTema(radice)
 const corsa = shallowRef(null)
 // indice della campagna, o INDICE_ABISSO (−1); null vuol dire nessuna discesa
 const tappaIdx = ref(null)
@@ -1737,7 +1742,8 @@ function ridimensiona() { if (pittore) pittore.misura() }
       <!-- vita, gemme e zaino stanno nella barra in basso; attacco e difesa nella pagina dell'eroe (docs/sotterraneo/barra.md) -->
     </Barra>
 
-    <div class="sot" :class="{ 'sot-cambio-scheda': cambioScheda }">
+    <!-- l'aspetto dei pannelli in prova (`#tema=pietra|rilievo`, docs/sotterraneo/tema-pannelli.md) -->
+    <div ref="radice" class="sot" :class="{ 'sot-cambio-scheda': cambioScheda }" :data-tema="ATTRIBUTO[tema]">
       <template v-if="!corsa">
         <!-- la chiave è l'eroe: cambiando avventura la terra di sopra rinasce con la nebbia e il posto suoi -->
         <Campagna ref="campagnaEl" :key="eroeQui()" :tappe="tappe" :ripresa="ripresa" :eroe="eroeScheda" :abisso="abisso"

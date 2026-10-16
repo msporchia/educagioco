@@ -35,10 +35,17 @@
    `--stampa '<espressione>'` scrive, dopo i tocchi, quanto vale nella pagina
    (in JSON): `--stampa 'window.__mate.grafica()'` dice quanto costa un
    fotogramma degli asteroidi in 3D.
+   `--pagina strumenti/banco/pannello.html?p=zaino&tema=pietra` fotografa una pagina del server di Vite (un banco)
+   invece dell'app: niente giocatore di prova, niente `#`. `--alto 700` cambia l'altezza della finestra (844).
+
+   `--stili '.qz-velo, .qz-velo *'` scrive accanto allo scatto (e a ogni `--domanda`) `<nome>.stili.json`: per ogni elemento trovato, in
+   ordine, il suo stile calcolato (e quello di ::before e ::after). Due file uguali vogliono dire due schermate
+   uguali al pixel, anche quando la domanda pescata è un'altra: è la prova che un ritocco non ha toccato chi non
+   doveva (docs/sotterraneo/tema-pannelli.md).
    ═══════════════════════════════════════════════════════════════════ */
 
 import { apriBrowser, apriGioco } from '../test/aiuto/browser.mjs'
-import { existsSync, mkdirSync } from 'node:fs'
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, resolve } from 'node:path'
 
@@ -51,30 +58,43 @@ const opz = (nome, difetto) => {
   const i = args.indexOf('--' + nome)
   return i >= 0 ? args[i + 1] : difetto
 }
-const dove = args.find(a => !a.startsWith('--') && args[args.indexOf(a) - 1]?.startsWith('--') !== true)
-if (!dove) { console.error('uso: node strumenti/scatta-app.mjs <schermata> [--porta 5173 | --dist [index.html]] [--tocca sel,sel] [--attesa 700] [--larghezza 390] [--nome nome]'); process.exit(1) }
+const pagina = opz('pagina', null)
+const dove = args.find(a => !a.startsWith('--') && args[args.indexOf(a) - 1]?.startsWith('--') !== true) || (pagina ? '' : null)
+if (dove == null) { console.error('uso: node strumenti/scatta-app.mjs <schermata> [--porta 5173 | --dist [index.html]] [--tocca sel,sel] [--attesa 700] [--larghezza 390] [--nome nome]'); process.exit(1) }
 
 const porta = opz('porta', '5173')
 const attesa = Number(opz('attesa', 700))
 const tocchi = (opz('tocca', '') || '').split(',').map(s => s.trim()).filter(Boolean)
 mkdirSync(SCATTI, { recursive: true })
-const nome = opz('nome', dove.replace(/[^\w=-]+/g, '_'))
+const nome = opz('nome', (dove || pagina).replace(/[^\w=-]+/g, '_'))
 const esce = opz('file', resolve(SCATTI, `${nome}.png`))
 const conDist = args.includes('--dist')
 const dist = conDist && opz('dist', '') && !opz('dist', '').startsWith('--') ? resolve(opz('dist')) : resolve(QUI, '../dist/index.html')
 if (conDist && !existsSync(dist)) { console.error(`manca ${dist}: prima npm run build`); process.exit(1) }
 const larghezza = Number(opz('larghezza', TELEFONO.width))
+const alto = Number(opz('alto', TELEFONO.height))
 
 // lo stesso browser e la stessa partenza dei test (un giocatore di prova, le spiegazioni già viste): senza, un
 // browser nuovo si ferma su «come ti chiami?»
 const browser = await apriBrowser()
-const { page, errori } = await apriGioco(browser, {
-  viewport: { ...TELEFONO, width: larghezza }, hash: dove, attesa: null,
+const { page, errori } = pagina ? await apriPagina() : await apriGioco(browser, {
+  viewport: { width: larghezza, height: alto }, hash: dove, attesa: null,
   indirizzo: conDist ? `file://${dist}` : `http://localhost:${porta}/`,
 })
 await page.waitForTimeout(1200)                 // l'app aspetta il profilo
 // `--aspetta 4000`: prima dei tocchi e dello scatto (il 3D del sotterraneo ci mette un attimo a nascere)
 await page.waitForTimeout(Number(opz('aspetta', 0)))
+
+// una pagina del server di Vite (un banco), senza il giocatore di prova dell'app
+async function apriPagina() {
+  const p = await browser.newPage({ viewport: { width: larghezza, height: alto }, deviceScaleFactor: 2, hasTouch: true })
+  const e = []
+  p.on('pageerror', x => e.push('errore JS: ' + x.message))
+  p.on('console', m => m.type() === 'error' && e.push('console: ' + m.text()))
+  await p.goto(`http://localhost:${porta}/${pagina.replace(/^\//, '')}`, { waitUntil: 'load', timeout: 90000 })
+  await p.waitForTimeout(2500)   // i riquadri di un banco (iframe) finiscono dopo la pagina
+  return { page: p, errori: e }
+}
 
 // `--storia N`: il sotterraneo sulla terra di sopra con N discese finite (test/aiuto/sotterraneo-semina.mjs)
 if (opz('storia', null) != null) {
@@ -84,6 +104,22 @@ if (opz('storia', null) != null) {
     missioni: Object.fromEntries((opz('missioni', '') || '').split(',').filter(Boolean).map(x => x.split(':'))),
     zaino: (opz('zaino', '') || '').split(',').filter(Boolean), punti: Number(opz('punti', 0)),
   })
+}
+
+const stili = opz('stili', null)
+// lo stile calcolato di ogni elemento del selettore, in ordine: il confronto «prima/dopo» che non dipende dalla domanda pescata
+async function scriviStili(png) {
+  const tutto = await page.evaluate(([sel, MISURE]) => [...document.querySelectorAll(sel)].map(el => {
+    const tre = [null, '::before', '::after'].map(p => {
+      const c = getComputedStyle(el, p)
+      // via le misure risolte (larghezza, altezza, origini): dipendono dal testo pescato, non dallo stile
+      return Object.fromEntries([...c].filter(k => !MISURE.includes(k)).sort().map(k => [k, c.getPropertyValue(k)]))
+    })
+    return { el: el.tagName.toLowerCase() + '.' + [...el.classList].join('.'), stile: tre[0], prima: tre[1], dopo: tre[2] }
+  }), [stili, ['width', 'height', 'inline-size', 'block-size', 'transform-origin', 'perspective-origin']])
+  const file = png.replace(/\.png$/, '') + '.stili.json'
+  writeFileSync(file, JSON.stringify(tutto, null, 1))
+  console.log(`   ${tutto.length} elementi → ${file}`)
 }
 
 // le domande dalla palestra dei grandi: lo stesso giro di test/integrazione/domanda.test.mjs
@@ -116,6 +152,7 @@ if (domande.length) {
     await page.waitForTimeout(attesa)
     n++
     await page.screenshot({ path: resolve(SCATTI, `${nome}-${n}.png`) })
+    if (stili) await scriviStili(resolve(SCATTI, `${nome}-${n}.png`))
     console.log(`   ${d} → ${resolve(SCATTI, `${nome}-${n}.png`)}`)
     await page.click('.prova-x')
     await page.waitForSelector('.prova-velo', { state: 'hidden', timeout: 5000 })
@@ -134,9 +171,11 @@ for (const sel of tocchi) {
 await page.screenshot({ path: esce })
 const stampa = opz('stampa', null)
 if (stampa) console.log('  ', stampa, '=', JSON.stringify(await page.evaluate(stampa).catch(e => 'errore: ' + e.message)))
+
+if (stili) await scriviStili(esce)
 await browser.close()
 
 console.log(errori.length
-  ? `✗ ${dove}  →  ${esce}\n  ` + errori.slice(0, 8).join('\n  ')
-  : `✓ ${dove}  →  ${esce}`)
+  ? `✗ ${dove || pagina}  →  ${esce}\n  ` + errori.slice(0, 8).join('\n  ')
+  : `✓ ${dove || pagina}  →  ${esce}`)
 process.exit(errori.length ? 1 : 0)
