@@ -43,9 +43,9 @@
 .sot3d-fila .sot-fila { position: static }
 .sot3d-mie { position: absolute; left: 8px; top: 40px; max-width: 60% }
 
-/* in fondo al campo, sopra la barra coi globi: la scelta del colpo e la domanda (la scena si alza sopra) */
+/* in fondo al campo, sopra la barra e la punta dei globi (--sot-sopra-barra, in stile.css): la scelta del colpo e la domanda (la scena si alza sopra) */
 .sot3d-sotto {
-  position: absolute; left: 0; right: 0; bottom: calc(64px + env(safe-area-inset-bottom)); z-index: 10; max-width: 560px; margin: 0 auto;
+  position: absolute; left: 0; right: 0; bottom: var(--sot-sopra-barra); z-index: 10; max-width: 560px; margin: 0 auto;
   padding: 10px 10px 8px; box-sizing: border-box; max-height: 70%; overflow-y: auto;
   background: linear-gradient(to bottom, #0c0907 0, #0c0907e6 14px, #0a0806f7); border-top: 1px solid #c9963a55;
   box-shadow: 0 -10px 30px #000a; animation: sot-sale .16s ease-out;
@@ -54,6 +54,8 @@
 /* gli angoli d'oro della cornice: spenti, li accende il tema dei pannelli; dentro, perché il pannello scorre e taglierebbe il resto */
 .sot3d-sotto > .sot-angolo { display: none; top: 0; left: 0 }
 .sot3d-sotto > .sot-angolo.sot-alto-dx { left: auto; right: 0 }
+.sot3d-sotto > .sot-angolo.sot-basso-sx { top: auto; bottom: 0 }
+.sot3d-sotto > .sot-angolo.sot-basso-dx { top: auto; left: auto; bottom: 0; right: 0 }
 
 /* senza WebGL 2, o il contesto perso: si dice e si esce */
 .sot3d-senza { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 24px;

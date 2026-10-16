@@ -48,6 +48,9 @@ const TAGLIO = /* glsl */`
 // `contorno`: il filo scuro attorno e la luce di taglio (le figure ancorate del mondo di sopra)
 export function creaFigure(scena, { tex, norm, larga, alta, pezzi, maschera, max, ombra = true, contorno = false }) {
   const geo = new PlaneGeometry(1, 1).translate(0, 0.5, 0)
+  // il contorno e il minimo di luce: uniform, perché nello scontro cambiano senza ricompilare (`nitido`)
+  const nitidezza = { uMinimoF: { value: LUCE.minimoFigure }, uRimF: { value: LUCE.rim } }
+  let n0 = 0
   const rett = new Float32Array(max * 4), lampo = new Float32Array(max * 3), alfa = new Float32Array(max).fill(1)
   geo.setAttribute('aRett', new InstancedBufferAttribute(rett, 4))
   geo.setAttribute('aLampo', new InstancedBufferAttribute(lampo, 3))
@@ -58,9 +61,11 @@ export function creaFigure(scena, { tex, norm, larga, alta, pezzi, maschera, max
     spinta: 0, chiave: contorno ? 'figure-contorno' : 'figure',
     // né troppo buie né bruciate: fra il minimo e 1,3 volte il loro colore (il lampo del colpo, emissivo, resta sopra)
     prima: `
-      outgoingLight = clamp(outgoingLight - totalEmissiveRadiance, diffuseColor.rgb * ${LUCE.minimoFigure.toFixed(2)}, diffuseColor.rgb * 1.3) + totalEmissiveRadiance;
-      outgoingLight += vec3(1.0, 0.82, 0.6) * pow(1.0 - clamp(abs(normal.z), 0.0, 1.0), 1.5) * ${LUCE.rim.toFixed(2)} * (0.4 + diffuseColor.rgb);${contorno ? TAGLIO : ''}`,
+      outgoingLight = clamp(outgoingLight - totalEmissiveRadiance, diffuseColor.rgb * uMinimoF, diffuseColor.rgb * 1.3) + totalEmissiveRadiance;
+      outgoingLight += vec3(1.0, 0.82, 0.6) * pow(1.0 - clamp(abs(normal.z), 0.0, 1.0), 1.5) * uRimF * (0.4 + diffuseColor.rgb);${contorno ? TAGLIO : ''}`,
     poi(sh) {
+      Object.assign(sh.uniforms, nitidezza)
+      sh.fragmentShader = 'uniform float uMinimoF; uniform float uRimF;\n' + sh.fragmentShader
       sh.vertexShader = ATTRIBUTI + (contorno ? 'varying vec4 vRettA;\n' : '') + sh.vertexShader.replace('#include <uv_vertex>', '#include <uv_vertex>\n' + VERTICE + 'vLampo = aLampo; vAlfa = aAlfa;' + (contorno ? ' vRettA = aRett;' : ''))
       if (contorno) {
         Object.assign(sh.uniforms, U_CONTORNO)
@@ -96,6 +101,16 @@ export function creaFigure(scena, { tex, norm, larga, alta, pezzi, maschera, max
     mesh, chi,
     o() { O.scala = 1; O.specchio = false; O.rosso = O.verde = O.blu = O.bianco = 0; O.trasparenza = 1; O.cosa = null; O.giro = 0; O.schiaccia = 1; return O },
     get quante() { return n },
+    // da vicino (lo scontro, `quanto` 1) la normal map finta e il contorno caldo quasi spenti, il colore più pieno: lo sprite
+    // resta come è disegnato. Ci si va in un terzo di secondo
+    nitido(quanto, dt) {
+      n0 += (quanto - n0) * Math.min(1, dt * 3)
+      const q = LUCE.nitidoScontro
+      nitidezza.uRimF.value = LUCE.rim + (q.rim - LUCE.rim) * n0
+      nitidezza.uMinimoF.value = LUCE.minimoFigure + (q.minimo - LUCE.minimoFigure) * n0
+      const r = 1 + (q.rilievo - 1) * n0
+      mat.normalScale.set(r, r)
+    },
     inizia() { n = 0 },
     // posa il pezzo `nome` coi piedi in (x, y, z). Torna l'indice dell'istanza, o -1 se il pezzo non c'è
     metti(nome, x, y, z, opz = this.o()) {

@@ -3,7 +3,10 @@
 // dell'energia delle abilità, in mezzo l'esperienza in una riga col livello e sotto le caselle (bevi, zaino, incanti,
 // mappa, gemme) in una cornice di pietra. I globi aprono la finestra dell'eroe; gli incanti da preparare hanno la loro casella. Tutto in CSS e SVG finché la cornice dipinta non è approvata (docs/sotterraneo/barra.md). Le regole non le
 // sa: dice solo cosa è stato toccato. `sopra`: sulla terra di sopra la mappa grande non c'è (la terra è già la mappa)
+import { computed } from 'vue'
 import Globo from './Globo.vue'
+import GloboVivo from './GloboVivo.vue'
+import { tema, globi } from '../tema/tema.js'
 import Glifo from './Glifo.vue'
 import Pixel from './Pixel.vue'
 import { BISACCIA } from './pixel.js'
@@ -33,6 +36,9 @@ defineProps({
   mappaSopra: { type: Boolean, default: false }, // sopra la casella della mappa apre la veduta d'insieme (il mondo in 3D)
 })
 defineEmits(['bevi', 'zaino', 'incanti', 'mappa', 'eroe', 'abilita'])
+// col tema dei pannelli i globi sono vivi (GloboVivo.vue, strada A o B); senza, quelli di sempre
+const vivo = computed(() => tema.value !== 'attuale')
+const IlGlobo = computed(() => (vivo.value ? GloboVivo : Globo))
 </script>
 
 <template>
@@ -42,8 +48,8 @@ defineEmits(['bevi', 'zaino', 'incanti', 'mappa', 'eroe', 'abilita'])
       <button type="button" class="sot-globo-tasto" data-azione="vita" :data-missioni-pronte="missioniPronte || null"
               :aria-label="`vita ${vita} su ${vitaMax}${missioniPronte ? `: ${missioniPronte} ${missioniPronte === 1 ? 'missione' : 'missioni'} da consegnare` : ''}`"
               @click="$emit('eroe')">
-        <Globo tipo="vita" :quota="vita / Math.max(1, vitaMax)" :numero="vita" :colpito="colpito"
-               :etichetta="`vita ${vita} su ${vitaMax}`" />
+        <component :is="IlGlobo" tipo="vita" :quota="vita / Math.max(1, vitaMax)" :numero="vita" :colpito="colpito"
+                   :etichetta="`vita ${vita} su ${vitaMax}`" v-bind="vivo ? { modo: globi } : {}" />
         <b v-if="missioniPronte" class="sot-pastiglia-missioni" aria-hidden="true"><Glifo nome="libro" :misura="12" />{{ missioniPronte }}</b>
       </button>
       <svg class="sot-reggi" viewBox="0 0 100 44" aria-hidden="true"><use href="#sot-reggi" /></svg>
@@ -107,8 +113,8 @@ defineEmits(['bevi', 'zaino', 'incanti', 'mappa', 'eroe', 'abilita'])
       <button type="button" class="sot-globo-tasto" data-azione="abilita" :data-punti-abilita="puntiAbilita || null"
               :aria-label="`energia ${energia} su ${energiaMax}${puntiAbilita ? `: ${puntiAbilita} da imparare` : ''}`"
               @click="$emit('abilita')">
-        <Globo tipo="energia" :quota="energia / Math.max(1, energiaMax)" :numero="energia"
-               :etichetta="`energia ${energia} su ${energiaMax}`" />
+        <component :is="IlGlobo" tipo="energia" :quota="energia / Math.max(1, energiaMax)" :numero="energia"
+                   :etichetta="`energia ${energia} su ${energiaMax}`" v-bind="vivo ? { modo: globi } : {}" />
         <b v-if="puntiAbilita" class="sot-punti" aria-hidden="true">+</b>
       </button>
       <svg class="sot-reggi" viewBox="0 0 100 44" aria-hidden="true"><use href="#sot-reggi" /></svg>
@@ -118,7 +124,9 @@ defineEmits(['bevi', 'zaino', 'incanti', 'mappa', 'eroe', 'abilita'])
     <svg width="0" height="0" class="sot-plancia-defs" aria-hidden="true">
       <defs>
         <linearGradient id="sot-pietra-reggi" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stop-color="#77717f" /><stop offset=".45" stop-color="#46414f" /><stop offset="1" stop-color="#211e26" />
+          <!-- i colori della pietra da variabili col ripiego di sempre: il tema dei pannelli li fa d'ottone -->
+          <stop offset="0" style="stop-color: var(--reggi-1, #77717f)" /><stop offset=".45" style="stop-color: var(--reggi-2, #46414f)" />
+          <stop offset="1" style="stop-color: var(--reggi-3, #211e26)" />
         </linearGradient>
         <g id="sot-reggi">
           <path d="M2 8C5 30 26 42 50 42S95 30 98 8L88 6C86 24 69 33 50 33S14 24 12 6Z"

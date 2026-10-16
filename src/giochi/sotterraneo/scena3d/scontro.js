@@ -26,6 +26,7 @@ export function creaScontro({ S, cam, eroe, getPiano, getCose, getFigure, anelli
 
   return {
     get palco() { return palco },
+    celle: 0,
     // a ogni fotogramma: il motore ha aperto (o chiuso) uno scontro? Il palco si chiude solo a racconto finito
     guarda(corsa, fx) {
       const sc = corsa.foglio && corsa.foglio.che === 'scontro' ? corsa.foglio : null
@@ -62,6 +63,10 @@ export function creaScontro({ S, cam, eroe, getPiano, getCose, getFigure, anelli
       let x = e.x, z = e.z, n = 1
       for (const s of palco.stati) { if (s.morente > 1.5) continue; const m = s.meta || s; x += m.x; z += m.z; n++ }
       v.set(x / n, 0, z / n)
+      // quanto è largo il palco: la telecamera lo vuole tutto, con una cella e mezza di margine (le figure sono alte)
+      let r = Math.max(Math.abs(e.x - v.x), Math.abs(e.z - v.z))
+      for (const s of palco.stati) { if (s.morente > 1.5) continue; const m = s.meta || s; r = Math.max(r, Math.abs(m.x - v.x), Math.abs(m.z - v.z)) }
+      this.celle = 2 * (r + 1.6)
       return true
     },
     tocca(pt, fx, { bersaglio, accorcia }) {

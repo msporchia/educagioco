@@ -20,7 +20,13 @@ const PANNELLI = [
   ['abilita', 'L\'albero delle abilità', 'PaginaAbilita.vue'],
   ['pozione', 'Quale pozione', 'ScegliPozione.vue'],
   ['dialogo', 'Il dialogo', 'Dialogo.vue, il minatore'],
-  ['barra', 'La barra in basso', 'BarraDiSotto.vue'],
+  ['barra', 'La barra in basso', 'BarraDiSotto.vue, coi globi vivi della strada A nei temi'],
+  ['barra-3d', 'La barra, globi in WebGL', 'la strada B dei globi (#globi=3d)'],
+  ['globi', 'I globi da vicino', 'GloboVivo.vue a 150 px: la strada A (canvas 2D) sopra, la B (WebGL) sotto'],
+  ['barra-danno', 'I globi: un colpo', 'il lampo rosso e la scossa, poi il livello scende'],
+  ['barra-cura', 'I globi: una cura', 'il liquido sale con le bolle e la luce'],
+  ['barra-energia', 'I globi: energia usata', 'il globo blu pulsa e cala'],
+  ['barra-bassa', 'I globi: vita bassa', 'il globo rosso batte come un cuore'],
   ['fine', 'Il cartello di fine', 'Fine.vue'],
   ['pausa', 'La pausa', 'giochi/VeloPausa.vue col suo slot'],
 ]
@@ -80,6 +86,8 @@ function disegna() {
     for (const [t, etichetta] of TEMI) {
       if (!scelte.temi.includes(t)) continue
       const [pannello, stato] = p.startsWith('domanda-') ? ['domanda', p.slice(8)] : [p, '']
+      // le righe della barra sono la stessa barra con un evento, o coi globi WebGL
+      const barra = p.startsWith('barra-') ? (p === 'barra-3d' ? '&globi=3d' : `&evento=${p.slice(6)}`) : ''
       const fig = document.createElement('figure')
       const L = scelte.larghezza, A = scelte.alto, S = scelte.scala
       fig.innerHTML = `<figcaption>${etichetta}</figcaption>`
@@ -92,7 +100,7 @@ function disegna() {
       f.width = L
       f.height = A
       f.style.transform = `scale(${S})`
-      f.src = `./pannello.html?p=${pannello}&tema=${t}${stato ? '&stato=' + stato : ''}`
+      f.src = `./pannello.html?p=${barra ? 'barra' : pannello}&tema=${t}${stato ? '&stato=' + stato : ''}${barra}`
       box.append(f)
       fig.append(box)
       colonne.append(fig)

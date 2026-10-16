@@ -9,6 +9,10 @@
   --sot-oro: #ffd23f;
   --sot-rosso: #e0644f;
   --sot-bordo: #ffffff1e;
+  /* quanto si alza dal fondo la barra coi globi, punta dei globi compresa: un pannello che poggia sulla barra finisce qui
+     sopra (docs/sotterraneo/barra.md). 70 px la barra, i globi a 3 px dal fondo, e un respiro di 6 px */
+  --globo: clamp(54px, 18.5vw, 74px);
+  --sot-sopra-barra: calc(max(70px, var(--globo) + 3px) + 6px + env(safe-area-inset-bottom));
 
   flex: 1; min-height: 0;
   display: flex; flex-direction: column;
@@ -298,7 +302,8 @@
   display: grid; gap: 8px; pointer-events: none;
 }
 .sot-terra-sopra { top: 0 }
-.sot-terra-sotto { bottom: 0; justify-items: start }
+/* in fondo, sopra la barra: i globi sporgono sulla terra di qualche pixel, e il dialogo resta sopra la loro punta */
+.sot-terra-sotto { bottom: 0; justify-items: start; padding-bottom: calc(10px + max(0px, var(--globo) + 3px - 70px)) }
 .sot-terra-sopra > *, .sot-terra-sotto > * { pointer-events: auto }
 .sot-terra-sopra .sot-ripresa { box-shadow: 0 10px 30px #000a }
 .sot-ripresa-tasti { display: grid; grid-template-columns: 1.4fr 1fr; gap: 8px }
@@ -562,8 +567,8 @@
 }
 /* l'altezza la limita già la modale: un secondo tetto in dvh qui sotto stringerebbe le risposte due volte */
 .sot-modale .sot-domanda { max-height: none }
-/* lo scontro sta in mezzo al campo, non in mezzo allo schermo: sotto c'è la barra coi globi (64 px, barra.md) */
-.sot-velo.sot-velo-scontro { padding-bottom: calc(16px + 64px + env(safe-area-inset-bottom)) }
+/* lo scontro sta in mezzo al campo, non in mezzo allo schermo: sotto c'è la barra coi globi (--sot-sopra-barra, barra.md) */
+.sot-velo.sot-velo-scontro { padding-bottom: calc(10px + var(--sot-sopra-barra)) }
 @keyframes sot-appare { from { opacity: 0 } }
 @keyframes sot-cresce { from { transform: scale(.94); opacity: 0 } }
 .sot-cambio-scheda .sot-cornice, .sot-cambio-scheda .sot-sipario { animation: none }
@@ -887,8 +892,8 @@
   animation: sot-cresce .16s ease-out;
 }
 .sot-cornice.sot-alta { height: 100% }
-/* il duello nella stessa cornice (Cornice.vue, `scontro`): sopra la barra coi globi (64 px); la modale di dentro non ha più carta, ombra né tetto suoi */
-.sot-sipario.sot-velo-scontro { padding-bottom: calc(10px + 64px + env(safe-area-inset-bottom)); z-index: 12 }
+/* il duello nella stessa cornice (Cornice.vue, `scontro`): sopra la barra e la punta dei globi (--sot-sopra-barra); la modale di dentro non ha più carta, ombra né tetto suoi */
+.sot-sipario.sot-velo-scontro { padding-bottom: calc(4px + var(--sot-sopra-barra)); z-index: 12 }
 .sot-modale.sot-modale-cornice { background: none; box-shadow: none; padding: 0; border-radius: 0; animation: none; max-height: none; overflow-y: auto; min-height: 0; flex: 1 1 auto }
 .sot-cornice:has(.sot-modale-cornice) { padding-top: 12px }
 .sot-angolo { position: absolute; width: 30px; height: 30px; z-index: 3; pointer-events: none }

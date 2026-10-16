@@ -43,7 +43,7 @@ Le scritte da titolo sono in un carattere con le grazie del sistema (`--lg-titol
 Noto Serif) in ottone a sbalzo: niente font scaricati, il file è uno. Il testo da leggere resta senza grazie, chiaro sulle
 tavole e scuro sulla targa. La grana è un `feTurbulence` in una piastrella SVG da 200 px (`--lg-grana`): il browser la
 disegna una volta; **frequenza per lato intera**, se no si vede la cucitura (provato 0,018 × 220: una riga a metà tasto).
-La barra in basso non cambia: è lei il modello.
+La barra in basso ha il suo foglio, sotto.
 
 ## Lo scontro nel 3D
 
@@ -57,6 +57,14 @@ quanto prima: i combattenti restano sopra.
 **2D e 3D adesso hanno lo stesso materiale, non la stessa forma**: nel 2D il duello è una finestra a quattro angoli col
 palco dentro, nel 3D una cornice aperta in fondo con la scena sopra. Renderli uguali vorrebbe dire portare anche il
 duello 2D in un pannello in fondo (la scelta resta all'utente).
+
+**Il pannello sta sopra la punta dei globi**, con la cornice intera e i quattro angoli, staccato di 6 px dai bordi
+(`--sot-sopra-barra`, [barra.md](barra.md#sopra-la-barra)); il pannello resta alto al più il 70% del campo, quindi su un
+telefono basso (360×640) con una domanda lunga la scena resta una striscia in cima, e la camera la inquadra lì.
+
+## La barra in basso
+
+Col tema anche la barra è legno e ottone, e i globi sono vivi: [barra.md](barra.md#col-tema-legno). `tema/barra.css`.
 
 ## Rilievo: cosa aggiunge
 

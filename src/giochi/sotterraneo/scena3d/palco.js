@@ -36,8 +36,9 @@ export function disponiPalco(pianta, ingombri, eroe, mostri) {
     // il grosso è largo due celle: chi viene dopo di lui sta una cella più in là (nel palco 2D «ne vale due»)
     let spinta = 0
     const posti = [p(-1.25, 0), ...mostri.map((m, i) => {
-      const q = p(POSTI[i % POSTI.length][0] - 0.25 + spinta, POSTI[i % POSTI.length][1])
-      if (m.grande) spinta += 1
+      // il grosso stesso sta un passo più in là dall'eroe (la sua spada copriva l'eroe), e chi viene dopo ancora di più
+      const q = p(POSTI[i % POSTI.length][0] - 0.25 + spinta + (m.grande ? 0.8 : 0), POSTI[i % POSTI.length][1])
+      if (m.grande) spinta += 1.6
       return q
     })]
     let voto = -(verticale ? 1.5 : 0) - Math.hypot(cx - cx0, cz - cz0) * 0.05 - (l < 0 ? 0.05 : 0)
