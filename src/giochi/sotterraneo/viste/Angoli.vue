@@ -1,8 +1,6 @@
 <script setup>
 // I quattro angoli d'oro delle finestre (Cornice.vue), disegnati qui una volta: niente immagini, il file resta uno.
-// `sopra`: solo i due in cima (il pannello dello scontro nel 3D, che in fondo poggia sulla barra)
-const props = defineProps({ sopra: { type: Boolean, default: false } })
-const ANGOLI = props.sopra ? ['sot-alto-sx', 'sot-alto-dx'] : ['sot-alto-sx', 'sot-alto-dx', 'sot-basso-sx', 'sot-basso-dx']
+const ANGOLI = ['sot-alto-sx', 'sot-alto-dx', 'sot-basso-sx', 'sot-basso-dx']
 </script>
 
 <template>
