@@ -476,7 +476,7 @@ function rettangoloDi(b) {
   for (const [x, z, h] of [[l.x, l.y + l.h, 0], [l.x + l.w, l.y + l.h, 0], [l.x, l.y, b.alto], [l.x + l.w, l.y, b.alto]]) { scena.aSchermo(x, y + h, z, pt); if (!pt.davanti) return null; punti.push([pt.x, pt.y]) }
   return rettangoloPosto(punti)
 }
-let contaDopo = 0
+let prossimeBussole = 0
 function dopo() {
   const veduta = props.veduta
   for (const b of bersagli.value) {
@@ -506,7 +506,7 @@ function dopo() {
     else scena.aSchermo(n.x, n.y, n.z, pt)
     el.style.transform = `translate(${Math.round(pt.x)}px, ${Math.round(pt.y)}px)`
   }
-  if ((contaDopo++ % 6) === 0) aggiornaBussole()
+  if (tempo >= prossimeBussole) { prossimeBussole = tempo + 0.1; aggiornaBussole() }   // a tempo, non a fotogrammi
 }
 function piazzaFumetto() {
   const b = aperto.value, f = fumEl.value, l = b.lotto

@@ -148,7 +148,7 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = {} }) {
   let vitaSorgenti = { camini: [], braci: [], fuochi: [], spruzzi: [] }
   // da dove si emette, adesso: solo dalle celle che si vedono
   const viste = { camini: [], braci: [], fuochi: [], spruzzi: [] }
-  let contaViste = 0
+  let prossimeViste = 0
   function sorgentiViste() {
     for (const k of Object.keys(viste)) { viste[k].length = 0; for (const v of vitaSorgenti[k]) if (nebbia.visto(v.x, v.z)) viste[k].push(v) }
     vita.sorgenti(viste)
@@ -166,9 +166,14 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = {} }) {
 
   let portale = null, raf = 0, prima = 0, tempo = 0, vivo = true, L = 0, A = 0
   const centro = new Vector3(), soleVista = new Vector3()
+  // la misura è quella del contenitore, mai della finestra, e la rilegge il ResizeObserver quando cambia (come giù)
+  const casa_ = canvas.parentElement || canvas
+  let rett = casa_.getBoundingClientRect()
+  const osserva = typeof ResizeObserver === 'function' ? new ResizeObserver(([e]) => { rett = e.contentRect }) : null
+  if (osserva) osserva.observe(casa_)
   function misura() {
-    const casa_ = canvas.parentElement || canvas
-    const r = casa_.getBoundingClientRect()
+    if (!osserva) rett = casa_.getBoundingClientRect()
+    const r = rett
     if (!r.width || !r.height) return false
     L = Math.round(r.width); A = Math.round(r.height)
     ctx.misura(L, A)
@@ -187,7 +192,8 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = {} }) {
     tempo += dt; U.uTempo.value = tempo
     if (passo) passo(dt, tempo)
     lavora()
-    if ((contaViste++ % 15) === 0) sorgentiViste()
+    // da dove si emette si riguarda a tempo (un quarto di secondo), non a fotogrammi: a 120 Hz sarebbe il doppio
+    if (tempo >= prossimeViste) { prossimeViste = tempo + 0.25; sorgentiViste() }
     // la veduta: niente pezzi vicini, tutto il mondo lontano, niente ombra rifatta
     const veduta = S.veduta
     for (const f of costruiti.values()) f.gruppo.visible = !veduta
@@ -269,6 +275,7 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = {} }) {
     distruggi() {
       vivo = false
       api.ferma()
+      if (osserva) osserva.disconnect()
       for (const p of [...costruiti.keys()]) buttaPezzo(p)
       for (const x of [natura, vita, lontano, nebbia, acqua, cielo, persone]) if (x) x.via()
       if (portale) portale.p.via()
