@@ -108,7 +108,7 @@ function costruisci(renderer, fisso) {
   postScena.add(quadro)
 
   let W = 1, H = 1, dpr = fisso || Math.min(DPR_MAX, window.devicePixelRatio || 1), D = 10
-  let cieloOra = null, ultimo = 0, mediaMs = 16, lenti = 0, svelti = 0, msScena = 0, msDisegno = 0
+  let scatti = 0, cieloOra = null, ultimo = 0, mediaMs = 16, lenti = 0, svelti = 0, msScena = 0, msDisegno = 0
   const X = x => (x - W / 2) * K
   const Y = y => (H / 2 - y) * K
 
@@ -125,13 +125,15 @@ function costruisci(renderer, fisso) {
 
   // quanto regge il telefono: se un fotogramma costa troppo si scende di pixel, se avanza si risale
   function adatta(ms) {
+    if (ms > 60) { if (++scatti === 1 || scatti % 20 === 0) console.info(`[spazio3d] fotogramma da ${Math.round(ms)} ms ignorato (n. ${scatti}): shader, scheda in secondo piano o pausa`); return }
     mediaMs += (ms - mediaMs) * 0.05
     if (fisso) return
     const tetto = Math.min(DPR_MAX, window.devicePixelRatio || 1)
-    if (mediaMs > 26) { if (++lenti > 90 && dpr > Math.min(DPR_MIN, tetto)) { dpr = Math.max(Math.min(DPR_MIN, tetto), dpr * 0.85); misura(); lenti = 0 } } else lenti = 0
-    if (mediaMs < 15 && dpr < tetto) { if (++svelti > 240) { dpr = Math.min(tetto, dpr * 1.1); misura(); svelti = 0 } } else svelti = 0
+    if (mediaMs > 26) { if (++lenti > 90 && dpr > Math.min(DPR_MIN, tetto)) { const era = dpr; dpr = Math.max(Math.min(DPR_MIN, tetto), dpr * 0.85); misura(); lenti = 0; console.info(`[spazio3d] pixel ratio ${era.toFixed(2)} → ${dpr.toFixed(2)}: media ${mediaMs.toFixed(1)} ms su ${W}×${H}`) } } else lenti = 0
+    if (mediaMs < 15 && dpr < tetto) { if (++svelti > 240) { const era = dpr; dpr = Math.min(tetto, dpr * 1.1); misura(); svelti = 0; console.info(`[spazio3d] pixel ratio ${era.toFixed(2)} → ${dpr.toFixed(2)}: media ${mediaMs.toFixed(1)} ms`) } } else svelti = 0
   }
 
+  console.info(`[spazio3d] parte a pixel ratio ${dpr} (schermo ${window.devicePixelRatio}, tetto ${DPR_MAX}, minimo ${DPR_MIN}${fisso ? ', fisso' : ''})`)
   return {
     ridimensiona(w, h) { W = Math.max(1, w); H = Math.max(1, h); misura() },
     // le forme di un cielo si fanno quando si entra, non al primo sasso
