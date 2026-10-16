@@ -80,7 +80,7 @@ export async function apriTelefono({ viewport = TELEFONO } = {}) {
 
 /* Apre il gioco e restituisce la pagina insieme all'elenco degli errori,
    che continua a riempirsi da solo mentre il test va avanti. */
-export async function apriGioco(browser, { viewport = TELEFONO, hash = '', attesa = '.carte',
+export async function apriGioco(browser, { viewport = TELEFONO, hash = '', attesa = '.carte', pixel = 2,
                                            giocatori = [GIOCATORE], userAgent,
                                            spiegazioni = false, indirizzo = GIOCO } = {}) {
   /* `userAgent` serve a una cosa sola, ma non c'è altro modo di provarla:
@@ -88,7 +88,8 @@ export async function apriGioco(browser, { viewport = TELEFONO, hash = '', attes
      il nastro «installalo» compare su Android e iPhone e non sul
      computer, e i passi da seguire sono diversi. Senza, il banco è sempre
      un computer e quella roba non la vede nessun test. */
-  const page = await browser.newPage({ viewport, deviceScaleFactor: 2, hasTouch: true,
+  // `pixel`: il deviceScaleFactor (2 un telefono; 1, 1.25 e 1.5 un monitor con lo zoom del sistema)
+  const page = await browser.newPage({ viewport, deviceScaleFactor: pixel, hasTouch: true,
                                        ...(userAgent ? { userAgent } : {}) })
   const errori = []
   page.on('pageerror', e => errori.push('errore JS: ' + e.message))
