@@ -19,17 +19,14 @@ const PX = 160, TELA_W = 240, TELA_H = 256, Y0 = -0.5
 
 // ---- la pelle a pannelli: linee, placche, rivetti, graffi (anche come rilievo) ----
 function pannelli() {
+  // pulita: un bianco pieno con poche linee di giunzione, se no il colore della tinta si sporca di grigio
   const cv = document.createElement('canvas'); cv.width = cv.height = 256
   const c = cv.getContext('2d'), r = seme(7)
-  c.fillStyle = '#c9cfd9'; c.fillRect(0, 0, 256, 256)
-  for (let i = 0; i < 36; i++) { const g = 170 + r() * 70; c.fillStyle = `rgb(${g},${g + 3},${g + 8})`; c.fillRect(r() * 256, r() * 256, 20 + r() * 55, 15 + r() * 40) }
-  c.strokeStyle = 'rgba(25,30,42,.8)'; c.lineWidth = 2
-  for (let x = 0; x <= 256; x += 64) { c.beginPath(); c.moveTo(x, 0); c.lineTo(x, 256); c.stroke() }
+  c.fillStyle = '#f4f6fb'; c.fillRect(0, 0, 256, 256)
+  for (let i = 0; i < 10; i++) { const g = 226 + r() * 26; c.fillStyle = `rgb(${g},${g + 2},${g + 5})`; c.fillRect(r() * 256, r() * 256, 40 + r() * 70, 30 + r() * 50) }
+  c.strokeStyle = 'rgba(40,52,84,.5)'; c.lineWidth = 2
+  for (let x = 0; x <= 256; x += 128) { c.beginPath(); c.moveTo(x, 0); c.lineTo(x, 256); c.stroke() }
   for (let y = 0; y <= 256; y += 64) { c.beginPath(); c.moveTo(0, y); c.lineTo(256, y); c.stroke() }
-  c.lineWidth = 1
-  for (let i = 0; i < 24; i++) { const x = r() * 256, y = r() * 256; c.beginPath(); c.moveTo(x, y); c.lineTo(x + (r() < 0.5 ? 0 : 25 + r() * 45), y + (r() < 0.5 ? 0 : 15 + r() * 30)); c.stroke() }
-  c.fillStyle = 'rgba(30,34,46,.8)'
-  for (let x = 8; x < 256; x += 32) for (let y = 8; y < 256; y += 32) { c.beginPath(); c.arc(x, y, 1.4, 0, 6.3); c.fill() }
   const colore = new CanvasTexture(cv); colore.colorSpace = SRGBColorSpace; colore.wrapS = colore.wrapT = RepeatWrapping
   const rilievo = new CanvasTexture(cv); rilievo.colorSpace = NoColorSpace; rilievo.wrapS = rilievo.wrapT = RepeatWrapping
   return { colore, rilievo }
@@ -124,11 +121,21 @@ function dipingiVetro(cv, crepato) {
   c.moveTo(x + 2, y); c.lineTo(x - 10, y + 14); c.stroke()
 }
 
+// il bordo che prende luce: stacca la nave dal fondo scuro (la sagoma e il colore sono quello che si legge in volo)
+function conBordo(m, forza = 0.5) {
+  m.onBeforeCompile = sh => {
+    sh.fragmentShader = sh.fragmentShader.replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
+  totalEmissiveRadiance += diffuseColor.rgb * pow(1. - clamp(dot(normal, normalize(vViewPosition)), 0., 1.), 2.2) * ${forza.toFixed(2)};`)
+  }
+  m.customProgramCacheKey = () => 'nave-bordo' + forza
+  return m
+}
+
 export function creaNave(scena) {
   const pelle = pannelli()
   const T0 = tinteNave(null, 0)
   const scafo = new MeshStandardMaterial({ color: T0.chiaro, metalness: 0.3, roughness: 0.55, map: pelle.colore,
-                                           bumpMap: pelle.rilievo, bumpScale: 1.2, envMapIntensity: 0.6 })
+                                           bumpMap: pelle.rilievo, bumpScale: 0.45, envMapIntensity: 0.9 })
   scafo.map = pelle.colore.clone(); scafo.map.repeat.set(2, 3); scafo.map.needsUpdate = true
   scafo.bumpMap = pelle.rilievo.clone(); scafo.bumpMap.repeat.set(2, 3); scafo.bumpMap.needsUpdate = true
   const scuro = new MeshStandardMaterial({ color: T0.scuro, metalness: 0.55, roughness: 0.5, map: pelle.colore,
@@ -148,6 +155,7 @@ export function creaNave(scena) {
   const vetroTex = new CanvasTexture(vetroTela); vetroTex.colorSpace = SRGBColorSpace
   const vetro = new MeshPhysicalMaterial({ color: 0x07142b, metalness: 0, roughness: 0.12, clearcoat: 0.6,
     emissive: new Color(0x2a6ad0), emissiveMap: vetroTex, emissiveIntensity: 0.8, envMapIntensity: 0.9 })
+  for (const m of [scafo, alaDx, alaSx]) conBordo(m, 0.55)
   const pelli = [scafo, scuro, accento, alaDx, alaSx]   // si accendono di rosso alla botta, di verde alla riparazione
 
   const nave = new Group()   // la posa: posizione, scala, inclinazione
@@ -173,8 +181,8 @@ export function creaNave(scena) {
 
   // la cabina, e il vetro che si crepa
   const cabina = e(new SphereGeometry(1, 28, 18), vetro, 0, 0.44, 0.15)
-  cabina.scale.set(0.19, 0.28, 0.12)
-  e(new TorusGeometry(0.2, 0.022, 8, 28), scuro, 0, 0.44, 0.13).scale.set(1, 1.45, 1)
+  cabina.scale.set(0.23, 0.33, 0.13)
+  e(new TorusGeometry(0.24, 0.025, 8, 28), scuro, 0, 0.44, 0.13).scale.set(1, 1.42, 1)
 
   // la torretta: ferma, il cannone gira (la spazzata del gioco, docs/asteroidi/volo.md)
   e(new CylinderGeometry(0.15, 0.17, 0.07, 20), scuro, 0, -0.12, 0.2, Math.PI / 2)
