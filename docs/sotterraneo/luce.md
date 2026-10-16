@@ -17,16 +17,23 @@ il disegno in `scena/tela.js`.
   l'eroe, è logico: non vedo dietro di me se la torcia è avanti a me»).
   Il cono guarda dove guarda l'eroe, apertura 220° (`APERTURA_CONO`: buio resta solo il settore alle spalle, non i fianchi; l'utente, 13 ottobre); l'alone
   è un cerchio piccolo attorno; **tutto il resto è ombra**, sempre.
-- **La torcia allunga il cono, non accende la stanza.** Prima con la torcia la
-  stanza si accendeva tutta e serviva solo nei corridoi, cioè non contava. Ora
-  la stanza non si accende mai tutta: la torcia fa vedere più lontano davanti,
-  e chi la porta deve voltarsi per guardare.
+- **La torcia allunga il cono, lo apre e copre le spalle; non accende la
+  stanza intera.** Prima con la torcia la stanza si accendeva tutta e serviva
+  solo nei corridoi, cioè non contava. Poi allungava il cono e basta, e
+  l'utente (16 ottobre 2026) l'ha voluta «molto più efficace»: **si illumina
+  di più ai lati e riduce le ombre alle spalle finché è accesa**. Senza torcia
+  resta il cono corto di 220°, e lì guardarsi attorno serve.
 
-  | | cono | alone | si vede davvero fino a |
-  |---|---|---|---|
-  | senza torcia | `RAGGIO` 3,2 | `ALONE` 1,5 (la cella dietro è un'ombra appena schiarita) | ~2,8 celle |
-  | agli sgoccioli | `RAGGIO_SGOCCIOLI` 4,4 | `ALONE_SGOCCIOLI` 1,8 | ~3,9 celle |
-  | torcia piena | `RAGGIO_TORCIA` 6,2 | `ALONE_TORCIA` 2,2 (le celle attorno, piene) | ~5,4 celle |
+  | | cono | apertura | alone | si vede davvero fino a |
+  |---|---|---|---|---|
+  | senza torcia | `RAGGIO` 3,2 | `APERTURA_CONO` 220° | `ALONE` 1,5 (la cella dietro è un'ombra appena schiarita) | ~2,8 celle |
+  | agli sgoccioli | `RAGGIO_SGOCCIOLI` 7 | `APERTURA_SGOCCIOLI` 260° | `ALONE_SGOCCIOLI` 2,8 | ~6 celle |
+  | torcia piena | `RAGGIO_TORCIA` 9,5 | `APERTURA_TORCIA` 300° | `ALONE_TORCIA` 3,8 (tre celle attorno piene, anche dietro) | ~8 celle |
+
+  Con la torcia l'arco sfuma solo nell'ultimo terzo (`SFUMA_ARCO_TORCIA` 0,35
+  contro 0,45): i fianchi sono pieni quanto il davanti, e dietro resta un
+  settore di 60° d'ombra oltre l'alone. Era 6,2 / 4,4 di cono e 2,2 / 1,8
+  d'alone, a 220° in tutti e tre gli stati.
 
   Agli sgoccioli (`torciaResta` ≤ 1 e niente alla cintura) il cono si accorcia
   da sé: si nota dalle caselle che si spengono, senza un avviso in più. Con una
@@ -76,6 +83,7 @@ il disegno in `scena/tela.js`.
 - **Un mostro sveglio che non è nella luce non va dritto all'eroe: cerca di
   arrivargli alle spalle** (l'utente: «i nemici fanno sneaking dietro di me; se
   riescono a colpirmi alle spalle partono loro attaccando il primo turno»).
+  **Solo senza torcia**: con la torcia accesa va dritto anche lui (sotto).
   `versoLeSpalle` in `motore/corsa.js`: punta alla cella dietro l'eroe
   (`DIETRO`, mezza cella), e se sta davanti (nell'ombra di lato, o oltre la
   punta del cono) gira largo sul fianco, a `FIANCO` celle, finché sta più
@@ -88,12 +96,23 @@ il disegno in `scena/tela.js`.
 - **L'agguato è già nello scontro** ([scontro.md](scontro.md#chi-parte)): vale
   per un mostro che ti raggiunge dal cono di 120° dietro il verso, lo specchio della luce. Col cono scatta da
   un mostro che esce dall'ombra alle spalle, mai da uno che si vede arrivare
-  davanti. Per questo vedere in anticipo (la torcia) e non farsi accerchiare
-  (voltarsi, mettere le spalle a un muro) servono.
+  davanti. Al buio, quindi, voltarsi e mettere le spalle a un muro servono:
+  è quello che l'agguato insegna (guardarsi attorno).
+- **Con la torcia accesa nessuno ti prende alle spalle** (l'utente, 16 ottobre
+  2026: «con la torcia accesa non dovrebbero proprio esserci agguati alle
+  spalle»). La regola è netta e sta nel motore: `alleSpalle` in
+  `motore/scontro.js` dice no finché `torciaAccesa` (piena o agli sgoccioli),
+  e `muoviMostri` non manda nessuno a `versoLeSpalle`: un mostro sveglio va
+  dritto all'eroe. **La sorpresa resta**: toccare un mostro che dorme apre lo
+  scontro col primo turno dell'eroe, con la torcia o senza. Senza torcia tutto
+  come prima. Il prezzo è che con la torcia l'agguato non insegna più a
+  guardarsi attorno: lo insegna il buio, che arriva quando la torcia finisce.
 - **La sveglia non dipende dalla luce** (`SVEGLIA`, sette celle nella sua
   stanza: [regole.md](regole.md#la-stanza-è-il-confine)), e **è più lunga del
   cono**: con la torcia si vede a ~5,4 celle, quindi un mostro in stanza si
-  sveglia prima di essere visto. Provato far dipendere la sveglia dalla luce:
+  sveglia prima di essere visto (con la torcia nuova, ~8 celle, quasi sempre
+  visto prima che si svegli: la sveglia resta quella, ed è da guardare se la
+  torcia rende il gioco troppo comodo, [da-fare.md](da-fare.md)). Provato far dipendere la sveglia dalla luce:
   senza torcia il gioco diventava **più facile** (la botola da 62 a 39 risposte
   obbligate, il cavaliere a 6/10 nelle cantine da 7 a 13 vinte su 20), il buio
   premiava invece di costare. Se si volesse un mostro visto dormire, è la
@@ -104,8 +123,15 @@ il disegno in `scena/tela.js`.
 ## Misurato
 
 - Il banco gioca a torcia spenta e non si volta mai: va dritto, e i mostri nel
-  buio gli arrivano alle spalle. Gli agguati sono circa un quarto degli
-  scontri (da ~10% con i mostri che vanno dritti). I numeri dei bersagli di
+  buio gli arrivano alle spalle. `npm run sotterraneo -- --torce 40` lo fa
+  scendere sempre con la torcia accesa, e la riga «agguati» dice quanti scontri
+  cominciano alle spalle. Al 16 ottobre, con dieci semi: a torcia spenta l'1%
+  (prima e dopo la torcia nuova), a torcia accesa dal 2% allo 0%; le discese
+  vinte non si muovono oltre il caso (a 8/10 la media 21% → 21% senza torcia,
+  19% → 18% con). I giocatori tipo invece la sentono: il curioso col cavaliere
+  (`unita/sotterraneo-roba`, sei storie) a 9/10 da 6·6·6·5·6·5·5 a tutte sei, a
+  4/10 nel fondo da 2 a 4 vittorie su 6 (il bersaglio vuole al più 3:
+  [da-fare.md](da-fare.md)). I numeri dei bersagli di
   `unita/sotterraneo` e `unita/sotterraneo-roba` sono in
   [scontro-bilancio.md](scontro-bilancio.md#la-luce-a-cono-e-gli-agguati).
 - La torcia costa 5 gemme a piano (l'erborista ne ha sempre, i pipistrelli e i
@@ -114,7 +140,9 @@ il disegno in `scena/tela.js`.
 
 Nei test: `unita/sotterraneo-piani` (§ 11 e 12: un relitto fa ombra come un muro, l'acqua no),
 `unita/sotterraneo-luce` (il cono davanti e l'ombra dietro con e
-senza torcia, la stanza che non si accende tutta, la sfumatura, la porta che
+senza torcia, i fianchi pieni e le spalle coperte con la torcia, sessanta mostri
+da dietro e di lato che con la torcia, piena o agli sgoccioli, non fanno mai
+agguato né giro largo e al buio sì, la sorpresa che resta, la stanza che non si accende tutta, la sfumatura, la porta che
 ferma la luce, il verso che segue il passo, il mostro fuori luce che punta
 alle spalle e quello in luce che va dritto, l'agguato da dietro e non da
 davanti), `unita/sotterraneo` (§ «la torcia conta»: la torcia che allunga il

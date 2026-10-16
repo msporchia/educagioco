@@ -50,8 +50,8 @@ Tutto in `src/giochi/sotterraneo/scena3d/`, un file per tema.
 | `trame.js`, `rumore.js` | le pitture fatte trame, la normal map finta dell'atlante, il rumore 2D e 3D |
 | `figure.js` | **tutte** le figure dell'atlante in un InstancedMesh (una chiamata) |
 | `cose.js` | quale figura per ogni cosa del motore, i chiarori, i segni sopra la testa; lo stato di disegno dei mostri |
-| `eroe.js` | l'eroe, le armi in mano, la torcia |
-| `luci.js` | la torcia (alone e cono, una passata d'ombra), la riserva fissa dei fuochi, lampo, magia, palco |
+| `eroe.js` | l'eroe, le armi in mano, la torcia in mano con la fiamma, le faville e il chiarore |
+| `luci.js` | la luce dell'eroe (alone e cono, una passata d'ombra, più forte con la torcia accesa, e il rimbalzo), la riserva fissa dei fuochi, lampo, magia, palco |
 | `segni.js` | fiamme, chiarori per terra, colonne di luce, anelli, bolla (istanziati) |
 | `particelle.js` | nebbia, l'aria del paesaggio (polvere, braci, gocce, neve, brina, lucciole, bolle: `ARIA`), scintille |
 | `arredo3d.js`, `raggi.js` | l'arredo modellato e fitto del paesaggio, le lame di luce dall'alto |
@@ -133,6 +133,25 @@ frequenza non cambia i passi.
   testa, in HTML: 💤, la corona e il nome del bersaglio di una missione e
   del grosso, i galloni del caporale, la barretta della vita.
 - **Niente bagliore, niente pannello di qualità**: una qualità sola.
+
+## La torcia
+
+- **Quello che si vede lo decide il motore**: la maschera è `forzaLuce`, e
+  con la torcia il cono è più lungo e più aperto e l'alone copre le spalle
+  ([luce.md](luce.md)). Il disegno lo segue, non lo allarga da sé.
+- **Con la torcia accesa la luce dell'eroe cambia, al buio resta quella di
+  prima** (`luci.torcia(…, accesa)`, `LUCE.torcia` in `costanti.js`): alone e
+  cono più forti e più lunghi, il cono più aperto e più morbido, le ombre più
+  nette, il colore più caldo, un tremolio più vivo e una luce che rimbalza dal
+  pavimento davanti (`rimbalzo`, senza ombre). Agli sgoccioli vale 0,6 della
+  torcia piena, e si passa da uno stato all'altro in un terzo di secondo.
+- **La torcia si vede in mano**: lo sprite della torcia dello zaino, piccolo,
+  dalla parte della mano libera e **fuori dalla sagoma** (dentro, il corpo
+  la copre: provato), con una fiamma come quelle dei muri (`creaFiamme`, una
+  sola, che si sposta con `sposta`), le faville e un chiarore caldo per terra.
+- Provato con più forza (alone ×1,8, rimbalzo 5): il pavimento attorno
+  all'eroe si bruciava d'arancio e la fiamma in mano spariva; tenuto ×1,35.
+- Gli scatti: `#torcia=accesa|sgoccioli|spenta` e `#verso=sx` (si gira).
 
 ## Il tocco
 

@@ -338,6 +338,22 @@ for (const [w, h, n] of [[390, 844, 3], [360, 640, 6]]) {
   await page.waitForSelector('.carte', { timeout: 8000 })
 }
 
+/* ── la torcia (docs/sotterraneo/grafica-3d.md, «La torcia»): accesa, in mano con la fiamma e le spalle in luce; spenta, niente ── */
+for (const t of ['accesa', 'spenta']) {
+  await entra(`sotterraneo3d=1&seme=11&stanza=sala&torcia=${t}`)
+  await page.waitForFunction(() => window.__sotterraneo3d && window.__sotterraneo3d.grafica().figure > 0, null, { timeout: 30000 })
+  await attendi(page, 1500)
+  const r = await page.evaluate(() => {
+    const s3 = window.__sotterraneo3d, c = s3.corsa, v = c.versoEroe
+    const x = Math.floor(c.eroe.x - v.dx * 2), y = Math.floor(c.eroe.y - v.dy * 2)
+    return { accesa: c.torciaAccesa, mano: !!s3.eroe.mano, dietro: c.luceDi(x, y) === 2 }
+  })
+  uguale(`torcia ${t}: il motore`, r.accesa, t === 'accesa')
+  uguale(`torcia ${t}: la torcia in mano`, r.mano, t === 'accesa')
+  uguale(`torcia ${t}: due celle alle spalle in luce`, r.dietro, t === 'accesa')
+  await scatto(page, `sotterraneo-3d-torcia-${t}`)
+}
+
 uguale('nessun errore in console', errori.join(' | '), '')
 await browser.close()
 riassunto('sotterraneo 3d')

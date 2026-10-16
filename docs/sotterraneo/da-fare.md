@@ -3,6 +3,22 @@
 Le voci aperte, ognuna con quello che serve per farla. Il progetto dettagliato
 dell'abisso sta in [abisso-progetto.md](abisso-progetto.md).
 
+## Da ritarare dopo la torcia del 16 ottobre 2026
+
+Non ritarato apposta (l'utente: «non stare a ritarare, fallo e basta»): la
+torcia ha cono 9,5, alone 3,8, apertura 300° e, accesa, niente agguati
+([luce.md](luce.md)). Da guardare quando si ritara:
+
+- Il curioso col cavaliere a 4/10 vince il fondo 4 volte su 6 (era 2): il
+  bersaglio di `unita/sotterraneo-roba` tiene per ora un posto in più per il
+  fondo. A 9/10 vince tutte le discese.
+- La sveglia (`SVEGLIA` 7) è ora più corta della vista con la torcia (~8): i
+  mostri si vedono dormire. Se la torcia rende il gioco comodo, le leve sono
+  il prezzo (5 gemme), quante ne lasciano i mostri, `ALONE_TORCIA` o
+  `APERTURA_TORCIA`; non la regola degli agguati, che è dell'utente.
+- Il banco (`npm run sotterraneo -- --torce 40`) non la sente: va dritto e
+  non si volta, e gli agguati erano già pochi (2% → 0%).
+
 ## Le botti da rompere (idea del 15 ottobre 2026)
 
 Più cose da fare e più divertimento per il bambino fra uno scontro e l'altro: **botti sparse nelle stanze che si
