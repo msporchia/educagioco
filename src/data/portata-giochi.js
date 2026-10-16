@@ -46,6 +46,7 @@ export const TAPPE_DEL_GIOCO = {
   codice: CODICE,
   survivors: SURVIVORS,
   sotterraneo: SOTTERRANEO,
+  sotterraneo3d: SOTTERRANEO,   // la stessa fila, in 3D
   passo: PASSO_PASSO,
   costruttore: COSTRUTTORE,
   arena: ARENA,
@@ -60,12 +61,15 @@ const CONTATORE_VECCHIO = {
   bancarella: 'clienti', generale: 'missioni',
 }
 
+// un gioco in prova che è un altro disegno di un gioco nuovo: si è provato se si è provato quello (la campagna è una)
+const GEMELLI = { sotterraneo3d: 'sotterraneo' }
+
 export function giaProvato (chiave) {
   const t = (state.profile && state.profile.totals) || {}
   const vecchio = CONTATORE_VECCHIO[chiave]
   if (vecchio) return (t[vecchio] || 0) > 0 ||
     (chiave === 'inglese' && (t.verbi || 0) > 0)
-  const g = GIOCHI_NUOVI.find(x => x.chiave === chiave)
+  const g = GIOCHI_NUOVI.find(x => x.chiave === (GEMELLI[chiave] || chiave))
   if (!g || !g.albo || typeof g.albo.provato !== 'function') return false
   try { return !!g.albo.provato(misure(state.profile)) } catch { return false }
 }

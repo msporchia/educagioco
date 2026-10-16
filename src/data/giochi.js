@@ -61,6 +61,12 @@ export const GIOCHI = [
     copertina: { fondo: '#c9a36b', disegno: '#b08850', scena: 'griglia' } },
   // i giochi di src/giochi/ si aggiungono da soli dal loro manifesto: ripeterli qui sarebbe tenerli allineati a mano
   ...GIOCHI_NUOVI.filter(g => !AL_POSTO_DI_UNO_VECCHIO.includes(g.chiave)).map(riga),
+  // lo stesso sotterraneo con la discesa disegnata in 3D, in prova sui telefoni: stessa avventura e stessa sosta (la chiave
+  // della campagna resta `sotterraneo`), la terra di sopra com'è (docs/sotterraneo/grafica-3d.md)
+  { chiave: 'sotterraneo3d', ico: '🗺️', nome: 'Sotterraneo 3D',
+    che: 'lo stesso sotterraneo, in 3D', area: 'avventure', come: 'domande', quiz: true,
+    sperimentale: true,
+    copertina: { fondo: '#3a3326', disegno: '#6b5443', scena: 'grotta' } },
 ]
 
 export const CHIAVI_GIOCHI = GIOCHI.map(g => g.chiave)

@@ -35,7 +35,9 @@ entrano energia e prezzi: solo fatti già decisi (`potenziabile: true`).
   in prova) disegnano invece con **`spazio3d/`**, il solo 3D del gioco
   (three.js, WebGL 2), che riceve dalla view la stessa scena in pixel e la
   traduce in mondo; senza WebGL tornano a `spazio.js`
-  ([../asteroidi/grafica-3d.md](../asteroidi/grafica-3d.md)).
+  ([../asteroidi/grafica-3d.md](../asteroidi/grafica-3d.md)). Il Sotterraneo 3D (gioco in prova) ha il suo
+  3D accanto al gioco, `giochi/sotterraneo/scena3d/`: la discesa del motore vero in WebGL, con le
+  figure dell'atlante istanziate e la maschera del visto ([../sotterraneo/grafica-3d.md](../sotterraneo/grafica-3d.md)).
 - **`corpo.js`** — **lo scheletro**: `persona()` per chi cammina su due
   gambe, `bestia()` per tutti gli altri. Chi lo usa scrive una *scheda di
   dati* e si ritrova ombra, respiro, lampo bianco della botta e

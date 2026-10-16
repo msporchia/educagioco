@@ -12,7 +12,7 @@ import { state, segna, segnaBest } from '../../store/profile.js'
 import { borsa } from '../../store/varieta.js'
 import { PAGA } from '../../data/paghe.js'
 import { progresso, aperta, adesso, chiusaPerEta, completa, scelta, ricorda, ritocca } from '../campagne.js'
-import { usaPausa } from '../pausa.js'
+import { usaPausa, CIECA } from '../pausa.js'
 import { prendiRipresa } from '../ripresa.js'
 import VeloPausa from '../VeloPausa.vue'
 import { domandaPerGioco } from '../../quiz/scelta.js'
@@ -52,6 +52,8 @@ import Foglio from './viste/Foglio.vue'
 import Icona from './viste/Icona.vue'
 import { occhio } from './viste/occhio.js'
 import Scontro from './viste/Scontro.vue'
+import Scontro3d from './viste/Scontro3d.vue'
+import Pannello3d from './viste/Pannello3d.vue'
 import { nuovoRacconto, modoDelColpo } from './viste/racconto.js'
 import { vistaDelloScontro, incantiAddosso } from './viste/campo.js'
 import Zaino from './viste/Zaino.vue'
@@ -75,6 +77,10 @@ import './stile-effetti.css'
 
 defineOptions({ name: 'IlSotterraneo' })
 const emit = defineEmits(['vai'])
+// `disegno: '3d'`: il Sotterraneo 3D dei giochi in prova (Gioco3d.vue), stessa avventura e stessa sosta; la discesa la disegna
+// scena3d/ invece di scena/tela.js. Senza, il Sotterraneo di sempre (docs/sotterraneo/grafica-3d.md)
+const props = defineProps({ disegno: { type: String, default: null } })
+const in3d = props.disegno === '3d'
 
 const CHIAVE = 'sotterraneo'
 // il dito si lascia dietro un click che va ingoiato (vedi giochi/fattoria)
@@ -182,7 +188,7 @@ let ultimoSalvato = 0
 // missioni fatte giù (la cosa trovata, il mostro col nome) passano subito nell'avventura: sopra si consegnano
 function salva({ subito = false, via } = {}) {
   const c = corsa.value
-  if (!c || c.finita || tappaIdx.value == null) return
+  if (!c || c.finita || tappaIdx.value == null || salendo) return
   ultimoSalvato = orologio
   nellAvventura({ roba: c.roba, crescita: c.crescita, sosta: scrivi(c, tappaIdx.value, { via }), ...fatteGiu(c),
                   ...conITrovati(c) }, { subito })
@@ -247,8 +253,11 @@ function salgoDalPortale() {
   salva({ subito: true, via: VIA_PORTALE })
   nellAvventura({ terra: { ...(qui.value.terra || {}), dove: [...PORTALE.accanto] } }, { subito: true })
   suono.nota(260, 880, 0.5, 'sine', 0.12)
+  // in 3D si vede il passaggio (il velo lampeggia, l'eroe ci si stringe dentro): la sosta è già scritta, non si riscrive
+  if (in3d && pittore && pittore.attraversa) { salendo = true; pittore.attraversa(allaMappa); return }
   allaMappa()
 }
+let salendo = false
 
 // riprendere non è ricominciare: il piano si rifà dal seme, e sopra ci si rimette quello che era successo. Dalla
 // carta in cima, da «riprendi da qui» e dal portale di sopra: è la stessa sosta. `ferma`: nasce dietro il velo
@@ -767,7 +776,9 @@ function comeColpisce(a) {
   const c = corsa.value
   const nodo = a.usata ? NODI[a.usata.id] : null
   const famiglia = c && c.mano && COSE[c.mano] ? COSE[c.mano].famiglia : null
-  return modoDelColpo({ nodo, famiglia, tinta: nodo ? tintaDi(nodo.id) : '#ffe39a' })
+  const modo = modoDelColpo({ nodo, famiglia, tinta: nodo ? tintaDi(nodo.id) : '#ffe39a' })
+  if (pittore && pittore.colpo) pittore.colpo(a, modo)   // il 3D: verso chi scatta, coi tempi e il colore dell'effetto
+  return modo
 }
 // il colore del ramo di un'abilità: il glifo che vola verso il mostro è di quel colore
 function tintaDi(id) {
@@ -1088,6 +1099,7 @@ function avvia(i, { prova = false } = {}) {
 
 function accendi() {
   if (!tela.value || !corsa.value) return
+  if (in3d) return accendi3d()
   // il canvas di prima è stato smontato tornando alle discese: il pittore va riagganciato al nuovo
   if (!pittore) pittore = new Tela(tela.value)
   else pittore.attacca(tela.value)
@@ -1099,11 +1111,55 @@ function accendi() {
   giro()
 }
 
+/* ═══════════ il disegno 3D (scena3d/, docs/sotterraneo/grafica-3d.md) ═══════════
+   Lo stesso posto della tela 2D: il pittore riceve la corsa a ogni fotogramma e la disegna. Il modulo (e three) si caricano solo
+   qui, la prima volta che si scende. Se il contesto WebGL si perde la discesa si salva come con la ✕ e si dice cosa è successo */
+const strato = ref(null)
+const perso3d = ref(false)
+const agganci = new Map()   // le scritte dello scontro sopra le figure (viste/Scontro3d.vue), anche prima che il pittore ci sia
+function aggancia(chi, el) {
+  if (el) agganci.set(chi, el); else agganci.delete(chi)
+  if (pittore && pittore.aggancia) pittore.aggancia(chi, el)
+}
+async function accendi3d() {
+  if (pittore && pittore.canvas !== tela.value) { pittore.distruggi(); pittore = null }
+  if (!pittore) {
+    let m = null
+    try { m = await import('./scena3d/indice.js') } catch (e) { perso3d.value = true; return }
+    if (!tela.value || !corsa.value || pittore) return
+    const dpr = Number(new URLSearchParams(location.hash.slice(1)).get('dpr')) || undefined   // `&dpr=2`: per le foto
+    pittore = m.creaSotterraneo3d(tela.value, { strato: strato.value, perso: siPerdeIl3d, dpr, cieca: CIECA,
+                                               bersaglio: scegliIlBersaglio, accorcia: () => racconto.accorcia() })
+    if (!pittore) { siPerdeIl3d(); return }
+    for (const [chi, el] of agganci) pittore.aggancia(chi, el)
+    if (typeof window !== 'undefined') window.__sotterraneo3d = pittore   // per le prove: grafica(), aSchermo(), statoDi()
+  }
+  pittore.misura()
+  pittore.zoomA(Number(new URLSearchParams(location.hash.slice(1)).get('zoom')) || pittore.scala)
+  pittore.mostra({ corsa: corsa.value, orologio, fx: racconto.fx })
+  pittore.avvia()
+  giro()
+}
+function siPerdeIl3d() {
+  salva({ subito: true })   // come la ✕: rientrando si riprende giù, anche dal Sotterraneo di sempre
+  cancelAnimationFrame(raf)
+  if (pittore) { try { pittore.distruggi() } catch (e) { /* il contesto è già andato */ } }
+  pittore = null
+  perso3d.value = true
+}
+
 // il tempo lo tiene questo file, non il motore: passo(dt) è pura, e il banco può farla girare mille volte in un millisecondo
 // misurato sul foglio vero (una quota fissa non funzionerebbe: una domanda disegnata è alta il doppio di due righe di
 // testo); rilettura ogni sei fotogrammi perché è una misura del DOM. Lo scontro non c'entra: sta al centro, misura zero.
 let altoFoglio = 0, contaGiri = 0
 function misuraFoglio() {
+  if (in3d) {
+    // in 3D anche il pannello dello scontro copre il fondo del campo: si misura quanto ne copre davvero
+    const f = document.querySelector('.sot-foglio, [data-pannello3d]')
+    const campo = tela.value && tela.value.getBoundingClientRect()
+    altoFoglio = f && campo ? Math.max(0, campo.bottom - f.getBoundingClientRect().top) : 0
+    return
+  }
   const f = document.querySelector('.sot-foglio')
   // il foglio sale dal fondo e copre prima la barra in basso, che sta già fuori dal campo
   const b = f && document.querySelector('[data-barra-giu]')
@@ -1120,7 +1176,7 @@ function giro() {
     prima = ora
     const c = corsa.value
     // `fermo` (giochi/pausa.js) vale uguale in tutti i giochi; il resto è roba del motore, in uno shallowRef che non avvisa
-    if (!c || c.finita || fermo.value) return
+    if (!c || c.finita || fermo.value || !pittore) return
     // l'orologio si muove DOPO: contarlo anche in pausa farebbe sparire all'istante la riga lasciata a metà
     orologio += dt
     c.passo(dt)
@@ -1129,7 +1185,7 @@ function giro() {
     // ogni tanto, non a ogni fotogramma: una discesa salvata sono un paio di chilobyte
     if (orologio - ultimoSalvato > 8) salva()
     pittore.segui(c.livello, c.eroe.x, c.eroe.y, altoFoglio)
-    pittore.mostra({ corsa: c, orologio })
+    pittore.mostra({ corsa: c, orologio, fx: racconto.fx })
     posaLaRotta(c)
     guarda(c)
   }
@@ -1483,7 +1539,10 @@ function ancora() {
 function allaMappa() {
   cancelAnimationFrame(raf)
   togli()
+  salendo = false
   if (pittore) pittore.ferma()
+  // il 3D si butta col campo: la scheda video non tiene un piano che nessuno guarda (alla prossima discesa si rifà)
+  if (in3d && pittore) { pittore.distruggi(); pittore = null }
   fine.value = null
   domanda.value = null
   corsa.value = null
@@ -1539,8 +1598,11 @@ function punto(e) {
 }
 
 function premi(e) {
+  if (in3d && e.pointerType === 'mouse' && e.button !== 0) return   // il mouse conta solo col tasto sinistro premuto
   dita.set(e.pointerId, e)
   if (zainoAperto.value || diarioGiu.value || preparatiAperti.value || paginaEroe.value || fine.value) return
+  // nello scontro in 3D il campo si tocca: un mostro lo fa bersaglio, altrove si accorcia il racconto
+  if (in3d && corsa.value && corsa.value.foglio && corsa.value.foglio.che === 'scontro') { if (pittore) pittore.premi(punto(e)); return }
   // un foglio da leggere, la mappa grande, un avviso: il tocco li chiude e intanto cammina
   if (!lasciaAndare()) return
   if (dita.size > 1) { premuto = false; return }
@@ -1594,8 +1656,9 @@ function zittisciIlFantasma(x, y) {
 
 function vai(p, preciso) {
   const c = corsa.value
-  if (!c || c.finita) return
-  c.vaiVerso(pittore.cellaDa(p.x, p.y), preciso)
+  if (!c || c.finita || !pittore) return
+  // in 3D il tocco è un punta-e-clicca (scena3d/azione.js): la cosa sotto il dito, con un margine, e poi la strada del motore
+  if (in3d) { if (preciso) pittore.premi(p); else pittore.trascina(p) } else c.vaiVerso(pittore.cellaDa(p.x, p.y), preciso)
   tic.value++
 }
 
@@ -1620,7 +1683,8 @@ function scesaDaProva() {
   const h = new URLSearchParams(location.hash.slice(1))
   const e = h.get('eroe')
   if (e && EROI.some(x => x.chiave === e)) { chiEro.value = ricorda(CHIAVE, 'eroe', e); scegliEroe.value = false }
-  const g = h.get('giu')
+  // `#sotterraneo3d=2` scende nel 3D (anche coi giochi in prova spenti), come `#giu=2`
+  const g = h.get('giu') ?? (in3d && h.get('sotterraneo3d') ? h.get('sotterraneo3d') : null)
   if (g == null || corsa.value) return
   const i = g === 'abisso' ? INDICE_ABISSO : Number(g)
   if (i === INDICE_ABISSO || (Number.isInteger(i) && i >= 0 && i < CAMPAGNA.length)) avvia(i, { prova: true })
@@ -1660,6 +1724,7 @@ onUnmounted(() => {
   cancelAnimationFrame(raf)
   racconto.ferma()
   if (pittore) pittore.ferma()
+  if (in3d && pittore) { pittore.distruggi(); pittore = null }
 })
 function ridimensiona() { if (pittore) pittore.misura() }
 </script>
@@ -1709,10 +1774,13 @@ function ridimensiona() { if (pittore) pittore.misura() }
       <template v-else>
         <div class="sot-campo">
           <!-- il campo si tocca coi puntatori: il click che il dito lascia finirebbe sul foglio appena aperto -->
-          <canvas ref="tela" class="sot-tela"
+          <canvas ref="tela" class="sot-tela" :data-tela="in3d ? '3d' : '2d'"
                   @pointerdown="premi" @pointermove="muovi" @pointerup="lascia"
                   @pointercancel="lascia" @touchend="nienteClickDalCampo"
                   @wheel.prevent="rotella"></canvas>
+          <!-- il 3D: le scritte sopra la scena (sonno, nomi, barre, mappina) e quelle dello scontro, agganciate alle figure -->
+          <div v-if="in3d" ref="strato" class="sot3d-strato" data-strato3d></div>
+          <Scontro3d v-if="in3d && nemico" v-bind="nemico" :fx="racconto.fx" :aggancia="aggancia" />
 
           <!-- le missioni prese che riguardano questa discesa: una riga ciascuna, in cima (motore/missioni.js) -->
           <ul v-if="ricordo.length" class="sot-ricordo" data-promemoria>
@@ -1774,9 +1842,10 @@ function ridimensiona() { if (pittore) pittore.misura() }
         <!-- lo scontro sta al centro, non sale dal basso: un mostro addosso arriva mentre si cammina, e in
              fondo allo schermo chi guarda il proprio eroe non lo vedrebbe. Niente classe `sot-foglio`
              apposta: `misuraFoglio()` cerca quella, e non trovandola la telecamera non fa spazio a un pannello -->
-        <Cornice v-if="nemico" scontro>
-          <div class="sot-modale sot-modale-cornice">
-            <Scontro v-bind="nemico" :fx="racconto.fx" @bersaglio="scegliIlBersaglio" @accorcia="racconto.accorcia" />
+        <!-- in 3D lo scontro è nella scena: qui in fondo restano la scelta e la domanda (viste/Pannello3d.vue) -->
+        <component :is="in3d ? Pannello3d : Cornice" v-if="nemico" scontro>
+          <div :class="in3d ? 'sot3d-scelta' : 'sot-modale sot-modale-cornice'">
+            <Scontro v-if="!in3d" v-bind="nemico" :fx="racconto.fx" @bersaglio="scegliIlBersaglio" @accorcia="racconto.accorcia" />
             <!-- prima si sceglie cosa fare (attacco, abilità, bere, scappare), poi compare la domanda per quel colpo
                  (docs/sotterraneo/abilita.md). Il pericolo non ha più un menu suo: è una riga sopra la stessa scelta -->
             <CaselleAbilita v-if="abilitaScontro && (!sceltaFatta || animando)" :key="animando ? 'racconto' : 'scelta'" v-bind="abilitaScontro"
@@ -1794,7 +1863,7 @@ function ridimensiona() { if (pittore) pittore.misura() }
               </div>
             </template>
           </div>
-        </Cornice>
+        </component>
 
         <Foglio v-else-if="foglio && foglio.che === 'porta'" em="🚪" titolo="Una porta chiusa">
           <div v-if="domanda" class="sot-domanda">
@@ -1972,6 +2041,12 @@ function ridimensiona() { if (pittore) pittore.misura() }
         </button>
       </VeloPausa>
       <LascioPerdere v-if="perdendo && siGioca" :nome="titolo" giu @si="lascioPerdere" @no="perdendo = false" />
+      <!-- il 3D si è fermato (la scheda video ha perso il contesto): la discesa è salvata, si esce pulito -->
+      <div v-if="perso3d" class="sot3d-senza sot3d-perso" data-perso-3d>
+        <h1>Il disegno 3D si è fermato</h1>
+        <p>La discesa è salvata: la riprendi da qui o dal Sotterraneo di sempre.</p>
+        <button type="button" class="sot-grosso" data-azione="esci-3d" @click="emit('vai', 'home')">torno ai giochi</button>
+      </div>
     </div>
   </div>
 </template>

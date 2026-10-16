@@ -55,7 +55,9 @@ al doppio click e a `./pubblica.sh`. La CI pubblica `dist-sito/` con accanto
   il build lo tiene così: la **versione sta nella pagina** (uno script in `index.html`,
   `__VERSIONE_PAGINA__`) e non nel JS; Vue è un file suo (`vendor`); three.js e il cielo 3D
   degli asteroidi un altro (`asteroidi-3d`, ~630 KB), nel gruppo degli asteroidi e non nella
-  base ([../asteroidi/grafica-3d.md](../asteroidi/grafica-3d.md)); il codice condiviso è un
+  base ([../asteroidi/grafica-3d.md](../asteroidi/grafica-3d.md)); il
+  disegno 3D del sotterraneo (`scena3d/`) un file suo (`sotterraneo-3d`) nel gruppo del sotterraneo, chiesto solo
+  scendendo nel Sotterraneo 3D (Gioco.vue lo importa a richiesta; il Sotterraneo di sempre non lo carica mai); il codice condiviso è un
   file suo (`comune`, ~2 MB) che non conosce i nomi dei giochi; il JS di avvio (`index`, 13 KB)
   porta solo le strade verso i giochi. Provato: toccando un solo gioco cambiano 3 file,
   ~100 KB (prima, con la versione nel JS e il codice condiviso nell'avvio, cambiavano tutti e

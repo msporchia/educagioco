@@ -30,6 +30,8 @@
    fila, aspettando `--attesa` fra l'uno e l'altro. Un selettore che non
    c'è viene detto e non ferma lo scatto.
 
+   `--aspetta 4000` aspetta tanto dopo l'apertura, prima dei tocchi e dello scatto.
+
    `--stampa '<espressione>'` scrive, dopo i tocchi, quanto vale nella pagina
    (in JSON): `--stampa 'window.__mate.grafica()'` dice quanto costa un
    fotogramma degli asteroidi in 3D.
@@ -71,6 +73,8 @@ const { page, errori } = await apriGioco(browser, {
   indirizzo: conDist ? `file://${dist}` : `http://localhost:${porta}/`,
 })
 await page.waitForTimeout(1200)                 // l'app aspetta il profilo
+// `--aspetta 4000`: prima dei tocchi e dello scatto (il 3D del sotterraneo ci mette un attimo a nascere)
+await page.waitForTimeout(Number(opz('aspetta', 0)))
 
 // `--storia N`: il sotterraneo sulla terra di sopra con N discese finite (test/aiuto/sotterraneo-semina.mjs)
 if (opz('storia', null) != null) {

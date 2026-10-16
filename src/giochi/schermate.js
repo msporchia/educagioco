@@ -8,6 +8,8 @@ const Conta = caricaQuando(() => import('./conta/Gioco.vue'))
 const PrimaDopo = caricaQuando(() => import('./prima-dopo/Gioco.vue'))
 const Fattoria = caricaQuando(() => import('./fattoria/Gioco.vue'))
 const Sotterraneo = caricaQuando(() => import('./sotterraneo/Gioco.vue'))
+// lo stesso sotterraneo con la discesa in 3D, gioco in prova (docs/sotterraneo/grafica-3d.md)
+const Sotterraneo3d = caricaQuando(() => import('./sotterraneo/Gioco3d.vue'))
 const Pozioni = caricaQuando(() => import('./pozioni/Gioco.vue'))
 const PassoPasso = caricaQuando(() => import('./passo-passo/Gioco.vue'))
 const Costruttore = caricaQuando(() => import('./costruttore/Gioco.vue'))
@@ -23,6 +25,7 @@ export const SCHERMATE = {
   prima: PrimaDopo,
   fattoria: Fattoria,
   sotterraneo: Sotterraneo,
+  sotterraneo3d: Sotterraneo3d,
   pozioni: Pozioni,
   passo: PassoPasso,
   costruttore: Costruttore,

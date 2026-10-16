@@ -12,7 +12,14 @@ rompono toccandole, e ogni tanto lasciano cadere qualcosa di basilare** (una mon
 ([giocatori-tipo.md](giocatori-tipo.md), `npm run taratura`): prima si decide cosa cade e quanto spesso, poi si
 rimisurano risposte e bottino per discesa. La prova di come si vede, modellata in 3D (la botte che si rompe in doghe),
 sta in `poc/sotterraneo-luce` ([poc/sotterraneo-luce.md](../../poc/sotterraneo-luce.md)); nel gioco vero la botte è
-ancora arredo fermo.
+ancora arredo fermo (nel Sotterraneo 3D c'è, modellata: `scena3d/botti.js`).
+
+## Il Sotterraneo 3D (fase 1 fatta il 15 ottobre 2026)
+
+La discesa è in 3D ([grafica-3d.md](grafica-3d.md)); resta, in quest'ordine: la terra di sopra in 3D, l'arredo per
+ambientazione modellato (oggi sono le figure dell'atlante), le armi dai pezzi nitidi, i muri obliqui, la prova su un
+telefono vero (i numeri di [grafica-3d.md](grafica-3d.md#quanto-costa) sono di SwiftShader). Le voci piccole stanno lì,
+in «Cosa manca».
 
 ## Dopo il giro del 14 ottobre 2026
 
