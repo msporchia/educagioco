@@ -83,6 +83,46 @@ restano in codice anche dopo: si muovono.
 - **A 320 px ci sta**: i globi scendono a 59 px e le caselle a una trentina
   di pixel l'una. La pagina non scorre di lato (`overflow-x: clip`).
 
+## Sopra la barra
+
+**Un pannello che poggia sulla barra finisce sopra la punta dei globi**, non sopra la barra: `--sot-sopra-barra` (in `.sot`,
+`stile.css`) è la barra (70 px) o la punta dei globi (`--globo` + 3 px), la più alta, più 6 px di respiro e l'area sicura.
+La usano il pannello dello scontro nel 3D (`stile-3d.css`), il duello 2D (`.sot-velo-scontro`) e il dialogo della terra
+(`.sot-terra-sotto`). Era il guasto del 16 ottobre: il bordo basso del pannello 3D finiva dietro i globi. La camera
+dello scontro misura il pannello da sé (`misuraFoglio`), quindi usa lo spazio che resta. Un foglio che sale dal basso
+(porta, forziere) copre la barra apposta, e lì i globi stanno sotto.
+
+## Col tema legno
+
+Col tema dei pannelli ([tema-pannelli.md](tema-pannelli.md), `tema/barra.css`) la barra ha le stesse misure e un altro
+materiale: legno scuro con le venature e un binario d'ottone coi rivetti in cima; le caselle sono tasselli di legno a
+sbalzo col filo d'ottone, che scendono di 2 px al tocco; il livello e la riga dell'esperienza sono targhe d'ottone; i globi
+stanno in un anello d'ottone coi quattro rivetti, sulle coppe d'ottone (i colori della coppa sono variabili `--reggi-…`
+col ripiego della pietra di sempre).
+
+### I globi vivi
+
+Col tema i globi sono `viste/GloboVivo.vue`: lo stesso contratto di `Globo.vue` (`data-globo`, `data-quota`, il numero in
+HTML in `.sot-globo-numero`), ma il vetro è un canvas piccolo. Come si muove lo dice `viste/globo/stato.js`, uguale per
+le due strade: un colpo fa il lampo rosso e la scossa del vetro, poi (0,22 s dopo) il livello scende morbido; una cura
+lo fa salire con le bolle e la luce; l'energia spesa pulsa di luce (e il guscio pulsa, CSS); sotto il 30% la vita batte
+come un cuore (CSS sul guscio, nessun ridisegno). Le onde si alzano a ogni cambio e si calmano: **fermo, il globo non
+chiede fotogrammi**, e a schermo nascosto nemmeno.
+
+- **A · canvas 2D** (`globo/pittore2d.js`, di difetto): il liquido col pelo a due onde, il pelo visto dall'alto come
+  un'ellisse chiara, le bolle, l'ombra della sfera, la finestra di luce e il punto duro del vetro.
+- **B · WebGL** (`globo/pittore3d.js`, `#globi=3d`): una sfera calcolata pixel per pixel (normale, fresnel, riflessi da
+  un ambiente finto), il liquido come volume tagliato da un piano ondulato visto dall'alto, più scuro in fondo, le bolle
+  dentro. **Un contesto WebGL solo, su una tela che non si vede**, per tutti e due i globi: si disegna lì e si copia nel
+  canvas del globo. Riusare il contesto del Sotterraneo 3D con lo scissor costerebbe un contesto in meno ma legherebbe la
+  barra alla scena (il suo post, i suoi stati, la perdita del contesto) e nel 2D non c'è: provato a pensarci, scartato.
+  Senza WebGL o col contesto perso, B ripiega su A.
+
+Costo: A sono qualche gradiente per fotogramma e solo durante un movimento (meno di un millisecondo per globo); B uno
+shader su 150×150 pixel veri a globo, uno shader da compilare all'avvio e un contesto in più (pochi MB). Tenere le due
+strade vuol dire due pittori da tenere uguali (colori in `COLORI` di `pittore2d.js`, movimento in `stato.js`, comuni).
+Le prove: `npm run pannelli`, righe «I globi da vicino» e «I globi: un colpo / una cura / energia usata / vita bassa».
+
 ## Sopra e sotto
 
 | | giù | sopra |
