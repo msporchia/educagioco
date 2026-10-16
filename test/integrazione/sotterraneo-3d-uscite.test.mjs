@@ -3,7 +3,7 @@
    (docs/sotterraneo/grafica-3d.md, «Uscire dal 3D»)
 
    Il portale si attraversa col dito: il velo lampeggia, l'eroe ci si stringe dentro, e a fotogramma finito il gioco
-   torna sulla terra di sopra (2D) buttando il 3D. Prima il ciclo di disegno continuava dopo aver buttato il piano
+   torna sopra buttando il 3D della discesa. Prima il ciclo di disegno continuava dopo aver buttato il piano
    («O is null», `piano.sorgenti`). Qui: il portale, la scala che sale del primo piano («lascio perdere») e lo
    svenimento all'ultima occasione (il cartello di fine, poi «esci»); ogni volta si arriva sopra, il 3D non c'è più e la console è pulita.
    `node test/esegui.mjs sotterraneo-3d-uscite`
@@ -50,11 +50,11 @@ async function entra(hash) {
   await page.waitForFunction(() => window.__sotterraneo3d && window.__sotterraneo3d.grafica().figure > 0, null, { timeout: 30000 })
   await attendi(page, 2500)   // la telecamera arriva morbida
 }
-// sopra: la terra di sopra 2D, e nessuna tela 3D rimasta
+// sopra: il mondo di sopra (in 3D anche lui, col Sotterraneo 3D), e nessuna tela della discesa rimasta
 async function sopra(chi) {
-  await page.waitForSelector('[data-terra]', { timeout: 15000 })
+  await page.waitForSelector('[data-mondo3d], [data-terra]', { timeout: 15000 })
   await attendi(page, 800)
-  uguale(`${chi}: si arriva sulla terra di sopra, senza il 3D`, await page.locator('[data-tela="3d"]').count(), 0)
+  uguale(`${chi}: si arriva sopra, senza la discesa in 3D`, await page.locator('[data-tela="3d"]').count(), 0)
   uguale(`${chi}: nessun errore in console`, errori.splice(0).join(' | '), '')
 }
 

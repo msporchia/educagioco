@@ -50,11 +50,13 @@ errori in console). I cheat: `#stanza=al-portale`, `#stanza=al-scala-su`.
 
 ## Le ombre
 
-- **Le ombre del cono sono VSM** (`VSMShadowMap` in `scena3d/contesto.js`).
-  Con PCF three confronta una texture di profondità filtrata LINEAR, e
-  Firefox lo dice in console («Depth texture comparison requests … LINEAR
-  filtering … implementation-defined»). VSM sfoca una texture di colore e non
-  confronta: niente avviso, e agli scatti le ombre sono le stesse (provato
-  affiancando PCF e VSM nella sala con la torcia).
-- `shadow.radius` con VSM è il raggio della sfocatura: con la torcia accesa
-  scende (ombre più nette, [luce.md](luce.md#la-torcia-nel-3d)).
+- **Le ombre del cono sono `BasicShadowMap`** (`scena3d/contesto.js`, che
+  serve anche al mondo di sopra). Con PCF three confronta una texture di
+  profondità filtrata LINEAR, e Firefox lo dice in console («Depth texture
+  comparison requests … LINEAR filtering … implementation-defined»). Provato
+  VSM: niente avviso e ombre uguali, ma disegna nella mappa d'ombra anche
+  tutto quello che la riceve, e il mondo di sopra (mezzo milione di
+  triangoli) raddoppiava il tempo di un fotogramma (`integrazione/sotterraneo-mondo`
+  da 145 s a oltre 300). Basic legge la profondità senza filtro: agli scatti
+  della sala con la torcia è uguale a PCF, i bordi sono netti come i pixel
+  degli sprite.
