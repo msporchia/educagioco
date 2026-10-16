@@ -322,7 +322,7 @@ for (const [w, h, n] of [[390, 844, 3], [360, 640, 6]]) {
   await page.setViewportSize({ width: w, height: h })
   await page.evaluate(q => { location.hash = q }, `sotterraneo3d=2&eroe=elfa&seme=7&stanza=sala&sotterraneo=branco&mostri=${n}&tipo=spirito-fuoco&dpr=1.5`)
   await page.waitForSelector('[data-scontro-3d]', { timeout: 15000 })
-  await attendi(page, 4000)   // i combattenti vanno ai loro posti e la telecamera ci arriva morbida
+  await attendi(page, 6500)   // i combattenti vanno ai loro posti e la telecamera ci arriva morbida (SwiftShader: pochi fotogrammi)
   const g = await g3d()
   dentro(`${w}×${h}: un pixel dello sprite è un numero intero di pixel`, Math.abs(g.pixelSprite - Math.round(g.pixelSprite)), 0, 0.2)
   dentro(`${w}×${h}: e non più di cinque`, g.pixelSprite, 1, 5.2)
