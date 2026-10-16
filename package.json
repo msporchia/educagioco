@@ -22,6 +22,7 @@
     "storie": "vite --open /strumenti/banco/storie.html",
     "ambienti": "vite --open /strumenti/banco/ambienti.html",
     "pannelli": "vite --open /strumenti/banco/pannelli.html",
+    "paesaggi": "node strumenti/tavola-paesaggi.mjs",
     "test": "node test/esegui.mjs unita",
     "test:unita": "node test/esegui.mjs unita",
     "test:browser": "node test/esegui.mjs integrazione",

@@ -1,99 +1,20 @@
-// Le trame generate a codice, nel colore dell'ambientazione (scena3d/aspetti.js): le lastre del pavimento, i mattoni dei muri,
+// Le trame generate a codice, nel colore dell'ambientazione (scena3d/aspetti.js): il pavimento e le pareti dello stile,
 // il legno delle botti, e la normal map finta dell'atlante (ogni figura un cuscino smussato ai bordi). Una volta per scenario.
 import { CanvasTexture, LinearFilter } from 'three'
-import { caso, frattale, normaliDa, trama } from './rumore.js'
+import { frattale, normaliDa, trama } from './rumore.js'
+import { PAVIMENTI, MURI } from './pitture.js'
 
-// ── lastre di pietra per il pavimento: una trama copre 2×2 celle; `braci` accende le crepe (fornace, inferno) ──
-export function pavimento(asp, lato = 512, seme = 3) {
-  const r = caso(seme)
-  const fbm = frattale(lato, seme, 5, 4), fine = frattale(lato, seme + 50, 3, 32)
-  const alt = new Float32Array(lato * lato), col = new Uint8ClampedArray(lato * lato * 4), rug = new Uint8ClampedArray(lato * lato * 4)
-  const em = asp.braci ? new Uint8ClampedArray(lato * lato * 4) : null
-  const macchie = frattale(lato, seme + 90, 2, 2)
-  const [pr, pg, pb] = asp.pietra, [fr, fg, fb] = asp.fuga
-  const file = 4, hf = lato / file
-  const tagli = []
-  for (let f = 0; f < file; f++) {
-    const xs = [0]; let x = 0
-    while (x < lato) { x += hf * (0.8 + r() * 1.1); xs.push(Math.min(lato, x)) }
-    if (lato - xs[xs.length - 2] < hf * 0.4) xs.splice(xs.length - 2, 1)
-    tagli.push({ xs, sfasa: Math.floor(r() * lato), tinte: xs.map(() => [r(), r(), r()]) })
-  }
-  for (let y = 0; y < lato; y++) {
-    const f = Math.floor(y / hf), fy = y - f * hf
-    const { xs, sfasa, tinte } = tagli[f]
-    for (let x0 = 0; x0 < lato; x0++) {
-      const x = (x0 + sfasa) % lato
-      let k = 0; while (xs[k + 1] <= x) k++
-      const bordo = Math.min(x - xs[k], xs[k + 1] - x, fy, hf - fy)
-      const n = fbm(x0, y), nf = fine(x0, y)
-      const bisello = Math.min(1, bordo / 9)
-      const lastra = bisello * bisello * (3 - 2 * bisello)
-      const crepa = Math.abs(n - 0.5) < 0.012 ? 0.5 : 0
-      const i = y * lato + x0
-      alt[i] = lastra * (0.75 + 0.25 * n) + nf * 0.08 - crepa * 0.3
-      const [a, b, c] = tinte[k]
-      const fuga = lastra < 0.2
-      const q = i * 4
-      if (fuga) {
-        const v = 1 + nf * 0.4
-        col[q] = 255 * fr * v; col[q + 1] = 255 * (fg + asp.muschio) * v; col[q + 2] = 255 * fb * v
-      } else {
-        const v = (0.36 + a * 0.12) * (0.8 + n * 0.35) * (0.9 + nf * 0.2) * (1 - crepa * 0.6)
-        col[q] = 255 * v * pr * (1.0 + b * 0.08); col[q + 1] = 255 * v * pg * 0.96; col[q + 2] = 255 * v * pb * (0.9 + c * 0.1)
-      }
-      col[q + 3] = 255
-      const ru = fuga ? 1 : 0.55 + (1 - n) * 0.35
-      rug[q] = 255; rug[q + 1] = ru * 255; rug[q + 2] = 0; rug[q + 3] = 255
-      if (em) {
-        // le braci: solo in qualche crepa (una macchia di rumore largo decide quali), dal rosso cupo all'arancio
-        const brace = crepa && macchie(x0, y) > 0.58 ? 1 : 0
-        const e = brace * asp.braci
-        em[q] = 255 * e; em[q + 1] = 255 * e * 0.32; em[q + 2] = 255 * e * 0.06; em[q + 3] = 255
-      }
-    }
-  }
-  return {
-    map: trama(col, lato, lato, { srgb: true }), normalMap: trama(normaliDa(alt, lato, lato, 3.2), lato, lato),
-    roughnessMap: trama(rug, lato, lato), emissiveMap: em ? trama(em, lato, lato, { srgb: true }) : null, celle: 2,
-  }
+// ── il pavimento e le pareti: il disegno dello stile del paesaggio (scena3d/pitture.js), fatto trama ──
+const fatte = t => ({
+  map: trama(t.col, t.w, t.h, { srgb: true }), normalMap: trama(normaliDa(t.alt, t.w, t.h, 3.2), t.w, t.h),
+  roughnessMap: trama(t.rug, t.w, t.h), emissiveMap: t.em ? trama(t.em, t.w, t.h, { srgb: true }) : null,
+})
+export function pavimento(asp) {
+  const t = (PAVIMENTI[asp.pav] || PAVIMENTI.cesto)(asp)
+  return { ...fatte(t), celle: t.celle }
 }
-
-// ── mattoni per le facce dei muri: una trama per faccia (1 di largo × alto), più scuri e umidi al piede ──
-export function muro(asp, alto = 1.25, lato = 256, seme = 11) {
-  const w = lato, h = Math.round(lato * alto)
-  const r = caso(seme)
-  const fbm = frattale(w, seme, 5, 4), fine = frattale(w, seme + 7, 3, 32)
-  const alt = new Float32Array(w * h), col = new Uint8ClampedArray(w * h * 4), rug = new Uint8ClampedArray(w * h * 4)
-  const [mr, mg, mb] = asp.muro
-  const hm = Math.round(h / 7)
-  const tinte = Array.from({ length: 64 }, () => [r(), r()])
-  for (let y = 0; y < h; y++) {
-    const f = Math.floor(y / hm), fy = y - f * hm
-    const lm = w / 2, sf = (f % 2) * lm * 0.5
-    for (let x = 0; x < w; x++) {
-      const xx = (x + sf) % w, k = Math.floor(xx / lm), fx = xx - k * lm
-      const bordo = Math.min(fx, lm - fx, fy, hm - fy)
-      const b = Math.min(1, bordo / 6)
-      const mattone = b * b * (3 - 2 * b)
-      const n = fbm(x, y % w), nf = fine(x, y % w)
-      const sbecco = n > 0.68 ? (n - 0.68) * 3 : 0
-      const i = y * w + x
-      alt[i] = mattone * (0.8 + 0.2 * n) - sbecco * mattone + nf * 0.1
-      const [a, c] = tinte[(f * 2 + k) % 64]
-      const fuga = mattone < 0.25
-      const v = fuga ? 0.1 + nf * 0.04 : (0.3 + a * 0.14) * (0.8 + n * 0.3) * (0.92 + nf * 0.16) * (1 - sbecco * 0.4)
-      const umido = Math.max(0, (0.25 - y / h) * 2.5)   // la riga 0 è il piede della faccia
-      const q = i * 4
-      col[q] = 255 * v * mr * (1.02 + c * 0.06) * (1 - umido * 0.35)
-      col[q + 1] = 255 * v * mg * 0.95 * (1 - umido * 0.3)
-      col[q + 2] = 255 * v * mb * 0.88 * (1 - umido * 0.2)
-      col[q + 3] = 255
-      const ru = fuga ? 1 : 0.7 + (1 - n) * 0.25 - umido * 0.35
-      rug[q] = 255; rug[q + 1] = Math.max(0.2, ru) * 255; rug[q + 2] = 0; rug[q + 3] = 255
-    }
-  }
-  return { map: trama(col, w, h, { srgb: true }), normalMap: trama(normaliDa(alt, w, h, 3.5), w, h), roughnessMap: trama(rug, w, h) }
+export function muro(asp) {
+  return fatte((MURI[asp.trama] || MURI.mattoni)(asp))
 }
 
 // ── il legno delle botti: venature, nodi, le fughe fra le doghe ──

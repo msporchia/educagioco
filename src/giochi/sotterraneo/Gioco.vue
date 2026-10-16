@@ -19,6 +19,7 @@ import { domandaPerGioco } from '../../quiz/scelta.js'
 import Domanda from '../../quiz/Domanda.vue'
 
 import { CAMPAGNA, QUANTE_TAPPE, stelleDella, L_ABISSO, INDICE_ABISSO } from './dati/campagna.js'
+import { inPaesaggio } from './dati/paesaggi.js'
 import { COSE } from './dati/cose.js'
 import { CURIOSITA_DI } from './dati/curiosita.js'
 import { EROI, DI_PARTENZA, eroeDi } from './dati/eroi.js'
@@ -988,12 +989,36 @@ function stanzaDaProva(c) {
     if (qui) luceDaProva(c, qui)
     return
   }
-  const s = q && c.livello.stanze.find(r => r.forma === q || r.ruolo === q)
+  // `corridoio`: l'eroe nel tratto più lungo di corridoio (fuori dalle stanze), per guardare le pareti strette
+  if (q === 'corridoio') {
+    const liv = c.livello, nelle = new Set(liv.stanze.flatMap(r => r.suolo.map(k => k.y * liv.largo + k.x)))
+    const fuori = (x, y) => liv.calpestabile(x, y) && !nelle.has(y * liv.largo + x)
+    let meglio = null, punti = -1
+    for (let y = 0; y < liv.alto; y++) for (let x = 0; x < liv.largo; x++) {
+      if (!fuori(x, y) || liv.robeSu(x, y).length) continue
+      let n = 0
+      for (let dy = -3; dy <= 3; dy++) for (let dx = -3; dx <= 3; dx++) if (fuori(x + dx, y + dy)) n++
+      if (n > punti) { punti = n; meglio = { x, y } }
+    }
+    if (!meglio) return
+    c.eroe = { x: meglio.x + 0.5, y: meglio.y + 0.5 }
+    c.segnaLaStanza()
+    c.aggiornaLuce()
+    return
+  }
+  // `grande`: la stanza più grande del piano (in ogni famiglia di piante, per i confronti fra paesaggi); `angolo`: il suo angolo in alto a sinistra
+  const s = q === 'grande' || q === 'angolo' ? c.livello.stanze.reduce((a, b) => (b.suolo.length > a.suolo.length ? b : a), c.livello.stanze[0])
+    : q && c.livello.stanze.find(r => r.forma === q || r.ruolo === q)
   if (!s) return
   // la cella della stanza più lontana da ogni mostro (al centro c'è spesso un branco: sarebbe uno scontro subito)
   const mostri = c.livello.robe.filter(r => r.che === 'mostro')
   const lontano = r => mostri.reduce((m, o) => Math.min(m, Math.hypot(o.x - r.x, o.y - r.y)), 99)
-  const dove = s.suolo.reduce((b, r) => (lontano(r) > lontano(b) ? r : b), s.suolo[0])
+  // `grande` sta in mezzo alla stanza (per le foto dei paesaggi: la stanza tutta intorno)
+  const mx = s.suolo.reduce((a, r) => a + r.x, 0) / s.suolo.length, my = s.suolo.reduce((a, r) => a + r.y, 0) / s.suolo.length
+  const quieti = s.suolo.filter(r => !c.livello.robeSu(r.x, r.y).length && lontano(r) >= 6)   // non accanto a un mostro: sarebbe uno scontro
+  const dove = q === 'angolo' ? s.suolo.filter(r => !c.livello.robeSu(r.x, r.y).length).reduce((b, r) => (r.x + r.y < b.x + b.y ? r : b), s.suolo[0])
+    : q === 'grande' && quieti.length ? quieti.reduce((b, r) => (Math.hypot(r.x - mx, r.y - my) < Math.hypot(b.x - mx, b.y - my) ? r : b), quieti[0])
+    : s.suolo.reduce((b, r) => (lontano(r) > lontano(b) ? r : b), s.suolo[0])
   c.eroe = { x: dove.x + 0.5, y: dove.y + 0.5 }
   c.segnaLaStanza()
   c.aggiornaLuce()
@@ -1088,7 +1113,9 @@ function avvia(i, { prova = false } = {}) {
   domanda.value = null
   chiudiLaBarra()
   // la discesa com'è adesso: finita la storia la zona con la sua fascia, prima quella della storia
-  const t = i === INDICE_ABISSO ? L_ABISSO : zonaDi(i, potenzaDi(qui.value, i, livelloOra.value, forzaOra.value))
+  let t = i === INDICE_ABISSO ? L_ABISSO : zonaDi(i, potenzaDi(qui.value, i, livelloOra.value, forzaOra.value))
+  // `#scenario=ghiaccio` (solo nel 3D, solo col cheat che scende): la discesa vestita da quel paesaggio (dati/paesaggi.js), per guardarlo
+  if (prova && in3d) t = inPaesaggio(t, new URLSearchParams(location.hash.slice(1)).get('scenario'))
   corsa.value = new Corsa(t, { seme: semeDallIndirizzo(), eroe: eroeQui(), roba: roba.value,
                                crescita: crescita.value, missioni: presePer(missioni.value, t.chiave), conti: qui.value.conti })
   borsellino = borsa(CHIAVE)

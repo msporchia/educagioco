@@ -14,7 +14,7 @@ vec3 tono(vec3 c){
 }
 void main(){
   vec2 c = vUv - 0.5; float r2 = dot(c, c);
-  float a = uAberr + 0.0025;
+  float a = uAberr + 0.001;   // poca di base: sui retini chiari del buco (neve, ghiaccio) faceva frange viola
   vec3 col = vec3(tono(texture2D(tScena, vUv - c*a*r2*4.0).rgb).r, tono(texture2D(tScena, vUv).rgb).g, tono(texture2D(tScena, vUv + c*a*r2*4.0).rgb).b);
   float l = dot(col, vec3(0.2126, 0.7152, 0.0722));
   col *= mix(vec3(0.86, 0.98, 1.12), vec3(1.0), smoothstep(0.0, 0.35, l));
