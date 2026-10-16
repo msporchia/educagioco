@@ -68,10 +68,10 @@ i triangoli contano, i millisecondi no). I triangoli contano anche la passata de
 | | cantine | cripta | fornace | inferno | grotta | neve | ghiaccio | palude | tempio | miniera |
 |---|---|---|---|---|---|---|---|---|---|---|
 | chiamate | 42 | 36 | 34 | 31 | 35 | 38 | 29 | 37 | 36 | 41 |
-| triangoli | 83k | 53k | 80k | 106k | 159k | 124k | 68k | 165k | 71k | 83k |
+| triangoli | 78k | 52k | 80k | 97k | 150k | 115k | 63k | 157k | 70k | 75k |
 
 Prima di questo lavoro una sala accesa costava 34–43 chiamate e 13–45k triangoli: le chiamate sono le stesse, i triangoli
-crescono nelle grotte (le pareti di roccia sono ~27k per piano, e la palude ha canne e radici). Le pareti si fanno in 30–100 ms
+crescono nelle grotte (le pareti di roccia sono ~17k per piano, i parapetti con una fila sola; la palude ha canne e radici). Le pareti si fanno in 30–100 ms
 alla nascita del piano, le trame una volta per paesaggio.
 
 ## Come si aggiunge un paesaggio

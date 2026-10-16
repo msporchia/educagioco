@@ -76,7 +76,7 @@ export function scolpisciPareti(pianta, { stile = 'blocchi', seme = 1, colore = 
     pos.push(p[0], p[1], p[2]); uv.push(u, v); cel.push(cella); chiavi.push(chiave)
     return pos.length / 3 - 1
   }
-  const [nc, nl, na] = st.seg
+  const [nc, nl0, na0] = st.seg
   for (const m of pianta.muri) {
     const c = m.basso ? 1 : 0, cella = pianta.id(m.x, m.y)
     // la cima: una griglia nc×nc
@@ -101,6 +101,8 @@ export function scolpisciPareti(pianta, { stile = 'blocchi', seme = 1, colore = 
       const [x0, z0, x1, z1] = k === 0 ? [m.x + 1, m.y, m.x, m.y] : k === 1 ? [m.x + 1, m.y + 1, m.x + 1, m.y]
         : k === 2 ? [m.x, m.y + 1, m.x + 1, m.y + 1] : [m.x, m.y, m.x, m.y + 1]
       const b1 = pos.length / 3
+      // un parapetto è basso: in alto gli basta una fila (i triangoli delle grotte stanno quasi tutti nei muri)
+      const nl = c ? Math.min(nl0, 2) : nl0, na = c ? 1 : na0
       for (let j = 0; j <= na; j++) for (let i = 0; i <= nl; i++) {
         const s = i / nl, x = x0 + (x1 - x0) * s, z = z0 + (z1 - z0) * s
         const top = altezza(x, z, c), t = j / na, y = top * t

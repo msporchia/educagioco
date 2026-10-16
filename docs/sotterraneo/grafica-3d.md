@@ -165,7 +165,7 @@ dicono niente del telefono), 390×844, sullo stesso inizio della prima discesa
 | gioco, all'arrivo | 34 | 13k |
 | gioco, una sala accesa tutta (fontana, colonne, botti; `luce=stanza`) | 34–43 | 13–41k |
 | gioco, nello scontro (tre mostri, la sala) | 33–48 | 40–44k |
-| i dieci paesaggi, la stanza più grande accesa tutta | 29–42 | 53–165k |
+| i dieci paesaggi, la stanza più grande accesa tutta | 29–42 | 52–157k |
 
 Il JS che prepara un fotogramma sta sotto il mezzo millisecondo, le chiamate
 a WebGL sotto il millisecondo. Le figure sono una chiamata sola (prima una
