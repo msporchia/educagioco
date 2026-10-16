@@ -33,6 +33,7 @@
    `--aspetta 4000` aspetta tanto dopo l'apertura, prima dei tocchi e dello scatto.
    `--sequenza 8 --ogni 120` fa otto scatti di fila dopo i tocchi (`<nome>-1.png`…), per guardare un'animazione.
 
+   `--esegui '<espressione>'` la valuta nella pagina prima dei tocchi.
    `--stampa '<espressione>'` scrive, dopo i tocchi, quanto vale nella pagina
    (in JSON): `--stampa 'window.__mate.grafica()'` dice quanto costa un
    fotogramma degli asteroidi in 3D.
@@ -159,6 +160,10 @@ if (domande.length) {
     await page.waitForSelector('.prova-velo', { state: 'hidden', timeout: 5000 })
   }
 }
+
+// `--esegui '<espressione>'`: prima dei tocchi, nella pagina (aprire un foglio dal motore, per guardare quello che viene dopo)
+const esegui = opz('esegui', null)
+if (esegui) { await page.evaluate(esegui).catch(e => errori.push('esegui: ' + e.message)); await page.waitForTimeout(attesa) }
 
 for (const sel of tocchi) {
   const el = await page.$(sel)
