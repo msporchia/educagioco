@@ -41,32 +41,33 @@ Tutto in `src/giochi/sotterraneo/scena3d/`, un file per tema.
 | `indice.js` | `creaSotterraneo3d`: la porta verso Gioco.vue (le stesse di scena/tela.js più il dito, il colpo, gli agganci, `grafica()`), il giro di ogni fotogramma |
 | `contesto.js`, `webgl.js` | il contesto WebGL 2 chiesto a mano, il renderer, il pixel ratio che si adatta, le misure; `haWebGL2` senza three |
 | `costanti.js` | telecamera, luce, misure, e `ACCESI`: **il punto unico dove si spegne un pezzo** |
-| `aspetti.js` | l'aspetto di ogni ambientazione (puro) |
+| `aspetti.js` | l'aspetto di ogni paesaggio (puro): [paesaggi-3d.md](paesaggi-3d.md) |
 | `pianta.js` | il livello del motore tradotto in pezzi: pavimento, muri alti e parapetti, colonne, acqua, torce (puro) |
 | `visibilita.js`, `maschera.js` | visto, ricordato, mai visto: la maschera scritta dalla luce del motore (pura) e iniettata nei materiali, col buco nei muri |
 | `piano.js` | un piano: costruisce e butta quello che sta fermo |
-| `terreno.js` | pavimento, muri (due chiamate), parapetti, colonne, staffe; i muri che si abbassano nello scontro |
-| `trame.js`, `rumore.js` | le trame generate nel colore dell'ambientazione, la normal map finta dell'atlante |
+| `terreno.js` | pavimento (anche sotto i muri), le pareti scolpite (quattro chiamate), colonne nella forma del paesaggio, staffe; i muri che si abbassano nello scontro (una trama letta dallo shader) |
+| `pareti.js`, `pitture.js` | la forma delle pareti (un campo continuo che sposta le facce) e i disegni di pavimento e pareti, per stile (puri) |
+| `trame.js`, `rumore.js` | le pitture fatte trame, la normal map finta dell'atlante, il rumore 2D e 3D |
 | `figure.js` | **tutte** le figure dell'atlante in un InstancedMesh (una chiamata) |
 | `cose.js` | quale figura per ogni cosa del motore, i chiarori, i segni sopra la testa; lo stato di disegno dei mostri |
 | `eroe.js` | l'eroe, le armi in mano, la torcia |
 | `luci.js` | la torcia (alone e cono, una passata d'ombra), la riserva fissa dei fuochi, lampo, magia, palco |
 | `segni.js` | fiamme, chiarori per terra, colonne di luce, anelli, bolla (istanziati) |
-| `particelle.js` | nebbia, polvere, scintille |
-| `acqua.js`, `relitti.js`, `fontana.js`, `portale.js`, `botti.js` | le pozze (lava nell'inferno), i relitti in codice, le cose di scena modellate, le botti di decoro |
+| `particelle.js` | nebbia, l'aria del paesaggio (polvere, braci, gocce, neve, brina, lucciole, bolle: `ARIA`), scintille |
+| `arredo3d.js`, `raggi.js` | l'arredo modellato e fitto del paesaggio, le lame di luce dall'alto |
+| `acqua.js`, `relitti.js`, `fontana.js`, `portale.js`, `botti.js` | le pozze con le rive storte (lava nell'inferno, il velo del tempio), i relitti in codice, le cose di scena modellate, le botti di decoro |
 | `palco.js`, `scontro.js`, `racconto.js` | dove stanno i combattenti (puro), il palco che si apre e si chiude col foglio del motore, il turno raccontato in scena |
 | `azione.js`, `dito.js` | il punta-e-clicca (puro) e la scelta di cosa sta sotto il dito |
 | `camera.js`, `post.js`, `contorno.js`, `etichette.js` | la telecamera, il passaggio finale, la mappina e le feste, i segni in HTML |
 
-Fuori da `scena3d/`: `Gioco3d.vue` (il cancello del WebGL), le righe `in3d`
+Fuori da `scena3d/`: `dati/paesaggi.js` (i paesaggi e il cheat, senza three), `Gioco3d.vue` (il cancello del WebGL), le righe `in3d`
 di `Gioco.vue`, `viste/Scontro3d.vue` (le scritte dello scontro sopra le
 figure), `viste/Pannello3d.vue` (la scelta e la domanda in fondo),
 `stile-3d.css`, `scena/minimappa.js` (la mappina, la stessa del 2D).
 
 **Per chi viene dopo**: la terra di sopra in 3D è una vista sua accanto a
 `viste/Terra.vue` (Gioco.vue la sceglie con lo stesso `in3d`); l'arredo per
-ambientazione si fa in `cose.js` (le figure) o in un file nuovo come
-`botti.js` (le forme), registrato in `piano.js`; gli effetti in `segni.js` e
+paesaggio si fa in `arredo3d.js` (una posa e una forma, [paesaggi-3d.md](paesaggi-3d.md)); gli effetti in `segni.js` e
 `particelle.js`; il tema dei pannelli in `stile-3d.css`, senza toccare i
 componenti.
 
@@ -134,21 +135,14 @@ dito. Il mouse conta solo col tasto sinistro premuto.
   **La scelta e la domanda** stanno in fondo (`viste/Pannello3d.vue`), coi
   componenti di sempre; la mappina nello scontro si toglie.
 
-## Ogni ambientazione ha il suo aspetto
+## Ogni paesaggio ha il suo aspetto
 
-`aspetti.js`, dalla chiave dello scenario del piano (nell'abisso cambia coi
-tratti) e dal colore della roccia dello scenario.
-
-| scenario | pietre | luce e aria | acqua |
-|---|---|---|---|
-| `cantine` | lastre e mattoni bruni, muschio nelle fughe | calda, nebbia leggera | azzurra |
-| `cripta` | pietra grigia fredda | ombre azzurre, nebbia più fitta | azzurra scura |
-| `fornace` | pietra rossiccia, qualche crepa accesa | aria calda | azzurra |
-| `inferno` | pietra quasi nera, lava nelle crepe | rossa | lava (anche la fonte) |
-
-Le botti di decoro stanno nelle cantine, nella cripta e nella fornace, mai
-nell'inferno ([arredo.md](arredo.md)). Restano decoro: romperle è una voce di
-[da-fare.md](da-fare.md).
+Dieci paesaggi, ognuno con la forma delle pareti, il disegno del pavimento, le colonne, la luce, l'aria e l'arredo suoi: i
+quattro delle discese (cantine, cripta, fornace, inferno) e sei solo del 3D che si aprono col cheat (grotta, nevi, ghiaccio,
+palude, tempio sommerso, miniera). Il paesaggio è lo scenario del piano, o il `paesaggio` della discesa o del tratto se lo
+dichiarano. Tutto in [paesaggi-3d.md](paesaggi-3d.md), con la tavola che li mette affiancati
+(`node strumenti/tavola-paesaggi.mjs`). Le botti di decoro restano solo nelle cantine ([arredo.md](arredo.md)); romperle è una
+voce di [da-fare.md](da-fare.md).
 
 ## Senza WebGL
 
@@ -171,6 +165,7 @@ dicono niente del telefono), 390×844, sullo stesso inizio della prima discesa
 | gioco, all'arrivo | 34 | 13k |
 | gioco, una sala accesa tutta (fontana, colonne, botti; `luce=stanza`) | 34–43 | 13–41k |
 | gioco, nello scontro (tre mostri, la sala) | 33–48 | 40–44k |
+| i dieci paesaggi, la stanza più grande accesa tutta | 29–42 | 53–165k |
 
 Il JS che prepara un fotogramma sta sotto il mezzo millisecondo, le chiamate
 a WebGL sotto il millisecondo. Le figure sono una chiamata sola (prima una
@@ -196,22 +191,22 @@ tirava dentro i dati in comune col 2D, e il 2D finiva per caricare three)
 
 - Le armi in mano (dell'eroe e dei mostri) vengono dall'atlante piccolo:
   ingrandite sono a blocchi (il 2D usa i pezzi nitidi, un'immagine in più).
-- I muri obliqui delle stanze smussate sono a gradini (il 2D ha i pezzi in
-  diagonale); le porte aperte non si disegnano; le ragnatele e la roba per
+- I muri obliqui delle stanze smussate sono a gradini nei paesaggi costruiti (in quelli di roccia gli spigoli si smussano,
+  [paesaggi-3d.md](paesaggi-3d.md)); le porte aperte non si disegnano; le ragnatele e la roba per
   terra di decoro (`perTerra`) non ci sono.
 - L'acqua delle pozze è piatta da lontano (un riflesso vero costerebbe una
   passata in più).
 - La terra di sopra resta in 2D: è la fase dopo.
 - Da provare su un telefono vero: i ms di SwiftShader non dicono niente.
 
-Nei test: `unita/sotterraneo-3d` (gli aspetti, la pianta di tutte le discese
+Nei test: `unita/sotterraneo-paesaggi` (i paesaggi: [paesaggi-3d.md](paesaggi-3d.md)), `unita/sotterraneo-3d` (gli aspetti, la pianta di tutte le discese
 e dell'abisso, la maschera, il palco con l'agio, il tocco, le figure in un
 InstancedMesh, le botti), `integrazione/sotterraneo-3d` (col dito vero: la
 carta solo coi giochi in prova, la terra di sopra 2D, la discesa in 3D e
 quanto costa, camminare, aprire una porta, lo scontro con una risposta
 sbagliata e una giusta, il mostro che cade, la scala che sale e quella che
 scende da una sosta scritta in Node, la sosta una sola col 2D, senza
-WebGL). Bersagli: la tela `[data-tela="3d"|"2d"]` (con `data-eroe`,
+WebGL, il ghiaccio e il tempio aperti col cheat). Bersagli: la tela `[data-tela="3d"|"2d"]` (con `data-eroe`,
 `data-eroe-schermo`, `data-scala` come il 2D), `[data-strato3d]`,
 `[data-scontro-3d]` (con `[data-mostro]`, `[data-vita]`, `[data-fila]`,
 `[data-eroe-scontro]`), `[data-pannello3d]`, `[data-senza-3d]`,
