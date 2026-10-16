@@ -96,13 +96,14 @@ posa in `POSE_ARREDO`, il nome in `ARREDI` e la sua forma in `forma()` (una geom
   tavolo delle cantine. Un paesaggio vero nel gioco vorrà il suo arredo da toccare.
 - Le alghe e le canne stanno ferme; nelle grotte i triangoli sono tanti (da provare su un telefono vero).
 
-## Proposta per il gioco (da decidere, non fatto)
+## Nel gioco, e la proposta per l'abisso
 
-Oggi le discese scelgono lo scenario del motore; un `paesaggio:` sulla discesa o sul tratto dell'abisso (già letto da
-`paesaggioDi`) vestirebbe il 3D senza toccare il 2D né l'equilibrio:
+**Fatto** (16 ottobre 2026, con il mondo di sopra): un `paesaggio:` sulla discesa (in `dati/campagna.js`, letto da `paesaggioDi`)
+veste il 3D senza toccare il 2D né i numeri (scenario, pianta e acqua restano del motore): la tana dei ragni (`gallerie`,
+cantine in caverna) è **grotta**, le sale allagate (`cisterna`, cripta in caverna con l'acqua) **tempio**, le miniere di brace
+(`fondo`, fornace in caverna) **miniera**. Il tempio sta su una pianta a caverna (la sua famiglia sarebbe `costruita`): le pareti
+sono a lastroni sulle grotte. Da decidere ancora:
 
-- la grotta della scaletta (`gallerie`, cantine in caverna) → **grotta**; la scala sommersa (`cisterna`, cripta con l'acqua) →
-  **tempio**; la miniera abbandonata (`fondo`, fornace in caverna) → **miniera**;
 - l'abisso, che cambia posto ogni quattro piani: dopo i tre tratti di oggi, **neve**, **ghiaccio** e **palude** come tratti nuovi,
   ognuno coi suoi abitanti; il mondo aperto (che nel repo non ha ancora un documento) potrebbe usare gli stessi dieci come zone.
 
