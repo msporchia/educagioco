@@ -338,7 +338,7 @@ for (const [w, h, n] of [[390, 844, 3], [360, 640, 6]]) {
   await page.waitForSelector('.carte', { timeout: 8000 })
 }
 
-/* ── la torcia (docs/sotterraneo/grafica-3d.md, «La torcia»): accesa, in mano con la fiamma e le spalle in luce; spenta, niente ── */
+/* ── la torcia (docs/sotterraneo/luce.md, «La torcia nel 3D»): accesa, in mano con la fiamma e le spalle in luce; spenta, niente ── */
 for (const t of ['accesa', 'spenta']) {
   await entra(`sotterraneo3d=1&seme=11&stanza=sala&torcia=${t}`)
   await page.waitForFunction(() => window.__sotterraneo3d && window.__sotterraneo3d.grafica().figure > 0, null, { timeout: 30000 })

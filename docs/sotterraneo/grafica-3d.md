@@ -146,22 +146,7 @@ frequenza non cambia i passi.
 
 ## La torcia
 
-- **Quello che si vede lo decide il motore**: la maschera è `forzaLuce`, e
-  con la torcia il cono è più lungo e più aperto e l'alone copre le spalle
-  ([luce.md](luce.md)). Il disegno lo segue, non lo allarga da sé.
-- **Con la torcia accesa la luce dell'eroe cambia, al buio resta quella di
-  prima** (`luci.torcia(…, accesa)`, `LUCE.torcia` in `costanti.js`): alone e
-  cono più forti e più lunghi, il cono più aperto e più morbido, le ombre più
-  nette, il colore più caldo, un tremolio più vivo e una luce che rimbalza dal
-  pavimento davanti (`rimbalzo`, senza ombre). Agli sgoccioli vale 0,6 della
-  torcia piena, e si passa da uno stato all'altro in un terzo di secondo.
-- **La torcia si vede in mano**: lo sprite della torcia dello zaino, piccolo,
-  dalla parte della mano libera e **fuori dalla sagoma** (dentro, il corpo
-  la copre: provato), con una fiamma come quelle dei muri (`creaFiamme`, una
-  sola, che si sposta con `sposta`), le faville e un chiarore caldo per terra.
-- Provato con più forza (alone ×1,8, rimbalzo 5): il pavimento attorno
-  all'eroe si bruciava d'arancio e la fiamma in mano spariva; tenuto ×1,35.
-- Gli scatti: `#torcia=accesa|sgoccioli|spenta` e `#verso=sx` (si gira).
+Come cambia la luce dell'eroe con la torcia, e la torcia in mano: [luce.md](luce.md#la-torcia-nel-3d).
 
 ## Il tocco
 

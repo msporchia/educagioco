@@ -57,4 +57,4 @@ errori in console). I cheat: `#stanza=al-portale`, `#stanza=al-scala-su`.
   confronta: niente avviso, e agli scatti le ombre sono le stesse (provato
   affiancando PCF e VSM nella sala con la torcia).
 - `shadow.radius` con VSM è il raggio della sfocatura: con la torcia accesa
-  scende (ombre più nette, [grafica-3d.md](grafica-3d.md#la-torcia)).
+  scende (ombre più nette, [luce.md](luce.md#la-torcia-nel-3d)).

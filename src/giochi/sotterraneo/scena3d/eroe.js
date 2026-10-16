@@ -77,7 +77,7 @@ export function disegnaEroe(e, corsa, { figure, luci, etichette, camera, dt, dtS
     if (corsa.mano) arma(corsa.mano, lato, e.specchio, 0.03)
   }
   // la torcia accesa (agli sgoccioli un po' meno): in mano dalla parte della mancina, con la fiamma, le faville e un chiarore
-  // caldo per terra; al buio niente fiamma, e la luce resta quella di prima (docs/sotterraneo/grafica-3d.md, «La torcia»)
+  // caldo per terra; al buio niente fiamma, e la luce resta quella di prima (docs/sotterraneo/luce.md, «La torcia nel 3D»)
   const accesa = corsa.torciaAccesa ? (corsa.torciaAgliSgoccioli ? 0.6 : 1) : 0
   const tremo = luci.torcia(x, z, e.lx, e.lz, t, dt, accesa)
   const q = luci.q
