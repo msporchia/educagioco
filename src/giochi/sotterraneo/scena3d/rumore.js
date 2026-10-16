@@ -71,3 +71,26 @@ export function trama(dati, w, h, { srgb = false, ripete = true, vicino = false,
   t.anisotropy = 4
   return t
 }
+
+// il rumore a valori in 3D, continuo nel mondo (le pareti scolpite e l'arredo: due celle vicine si toccano senza giunte)
+export function rumore3d(seme) {
+  const s = (seme * 374761393) | 0
+  const h = (x, y, z) => {
+    let n = (x * 73856093) ^ (y * 19349663) ^ (z * 83492791) ^ s
+    n = Math.imul(n ^ (n >>> 13), 1274126177)
+    return ((n ^ (n >>> 16)) >>> 0) / 4294967296
+  }
+  return (x, y, z) => {
+    const x0 = Math.floor(x), y0 = Math.floor(y), z0 = Math.floor(z)
+    let tx = x - x0, ty = y - y0, tz = z - z0
+    tx = tx * tx * (3 - 2 * tx); ty = ty * ty * (3 - 2 * ty); tz = tz * tz * (3 - 2 * tz)
+    const l = (a, b, t) => a + (b - a) * t
+    return l(l(l(h(x0, y0, z0), h(x0 + 1, y0, z0), tx), l(h(x0, y0 + 1, z0), h(x0 + 1, y0 + 1, z0), tx), ty),
+             l(l(h(x0, y0, z0 + 1), h(x0 + 1, y0, z0 + 1), tx), l(h(x0, y0 + 1, z0 + 1), h(x0 + 1, y0 + 1, z0 + 1), tx), ty), tz)
+  }
+}
+// tre ottave, centrato su 0 (da -0.5 a 0.5 circa)
+export function fbm3d(seme, ottave = 3) {
+  const f = Array.from({ length: ottave }, (_, i) => rumore3d(seme + i * 131))
+  return (x, y, z) => { let s = 0, a = 0.5, t = 0, k = 1; for (const g of f) { s += (g(x * k, y * k, z * k) - 0.5) * a; t += a; a *= 0.5; k *= 2.03 } return s / t }
+}
