@@ -22,7 +22,9 @@ export const PERSONAGGI = {
 // il vecchio minatore sta sulla mappa per conto suo (viste/Terra.vue), non fra i personaggi: dà la sua missione
 // come gli altri, e il diario deve poterlo nominare
 const IL_MINATORE = { nome: 'Il vecchio minatore', chi: 'il vecchio minatore' }
-export const personaDi = da => PERSONAGGI[da] || (da === 'minatore' ? IL_MINATORE : null)
+// anche l'incantatrice sta per conto suo (è una mercante, dati/mercanti.js): dà la missione del quaderno, e dopo vende le pergamene
+const L_INCANTATRICE = { nome: 'L\'incantatrice', chi: 'l\'incantatrice' }
+export const personaDi = da => PERSONAGGI[da] || (da === 'minatore' ? IL_MINATORE : da === 'incantatrice' ? L_INCANTATRICE : null)
 
 // quante missioni al massimo sono aperte insieme (prese, fatte da consegnare, o offerte con il «!»): oltre non se
 // ne propone un'altra finché non se ne consegna una (decisione dell'utente: «non proporgliele se sono troppe»)
@@ -36,6 +38,17 @@ export const TETTO = 3
 // più avanti nella fila di quella della missione: chi arriva alla discesa ha già avuto modo di averlo (guasti sotto).
 // `premio.monete`: le domande in più che la missione chiede (docs/sotterraneo/missioni.md, il conto)
 export const MISSIONI = [
+  // la prima missione dell'incantatrice: il premio è la prima pergamena del portale, e da lì le vende lei (dati/cose.js, `dopo`;
+  // docs/sotterraneo/portale-e-sosta.md, «La pergamena del portale»)
+  // `fuoriDalTetto`: non toglie un posto alle altre tre (motore/missioni.js, offerte)
+  { id: 'quaderno', da: 'incantatrice', discesa: 'altare', piano: 0, tipo: 'trova', fuoriDalTetto: true,
+    cosa: { nome: 'Il quaderno degli incantesimi', em: '📓' },
+    richiede: [],
+    dice: 'Che sbadata! Cercavo erbe nella cripta dell\'altare e ho perso il mio quaderno degli incantesimi, al primo piano. Me lo riporti? Dentro c\'è scritto come si fa una pergamena magica.',
+    grazie: 'Il mio quaderno! Questa è la prima pergamena del portale, ed è tua. Aprila laggiù quando vuoi tornare a casa: il portale ti aspetta, per farti tornare giù proprio lì. Adesso che ho il quaderno ne posso scrivere altre: se ne vuoi, vieni da me.',
+    ritorno: 'Quel quaderno con la copertina viola… è il mio!',
+    premio: { cosa: 'pergamena-portale' } },
+
   { id: 'badessa', da: 'eremita', discesa: 'altare', piano: 1, tipo: 'sconfiggi',
     mostro: { tipo: 'fantasma', nome: 'La Dama Grigia' },
     richiede: [],

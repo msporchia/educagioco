@@ -134,7 +134,8 @@ const note = computed(() => {
   if (!c || (s.che !== 'merce' && s.che !== 'riacquisto')) return []
   if (c.nonPuoi) return [{ em: '✋', testo: c.nonPuoi, tono: 'ambra', dato: 'data-non-puoi' }]
   // la nona pozione non si compra: il tetto lo dice chiaro, e come si fa posto
-  if (c.alTetto) return [{ em: '✋', testo: `Al massimo ${c.alTetto} pozioni: bevine una o buttala, poi torna.`, tono: 'ambra', dato: 'data-al-tetto' }]
+  if (c.alTetto) return [{ em: '✋', testo: c.tettoDi === 'pergamene' ? `Al massimo ${c.alTetto} pergamene: usane una, poi torna.`
+    : `Al massimo ${c.alTetto} pozioni: bevine una o buttala, poi torna.`, tono: 'ambra', dato: 'data-al-tetto' }]
   // si compra lo stesso: va nello zaino, e si indossa quando la caratteristica c'è
   if (c.serve) return [{ em: '🔒', testo: c.serve, tono: 'ambra', dato: 'data-serve' }]
   if (c.prova && c.prova.bloccata)
@@ -233,7 +234,7 @@ const tascheVuote = computed(() => !!props.tasche && !props.tasche.some(Boolean)
           <button type="button" class="sot-grosso sot-compra" data-azione="compra" :disabled="!puoiComprare(cosa)"
                   @click="compra">
             <template v-if="cosa.nonPuoi">non fa per te</template>
-            <template v-else-if="cosa.alTetto">hai già {{ cosa.alTetto }} pozioni</template>
+            <template v-else-if="cosa.alTetto">hai già {{ cosa.alTetto }} {{ cosa.tettoDi || 'pozioni' }}</template>
             <template v-else-if="!cosa.posso">ti mancano <span class="em">💎</span> {{ cosa.mancano }}</template>
             <template v-else>Compra <span class="em">💎</span> {{ cosa.costa ?? cosa.prezzo }}</template>
           </button>

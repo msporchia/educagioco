@@ -62,6 +62,61 @@ una strada per salire e tornare giù, la ✕ è andare via.
   scegliere riporta giù, e scegliere un eroe con una discesa lasciata con la ✕
   la riprende.
 
+## La pergamena del portale
+
+L'utente, 16 ottobre 2026: *«puoi prendere lo scroll del teleport, alla
+Diablo, così lo paghi e non lo spreci a cavolo»*; e *«chi ti dà la pergamena
+all'inizio te la dà come risultato di una missione, e poi ti dice che puoi
+comprarle da lei»*.
+
+- **Una cosa da zaino** (`pergamena-portale` in `dati/cose.js`, 📜, `usa:
+  'portale'`): si impila in una tasca, al più `PERGAMENE_MASSIME` (5); costa
+  `PREZZO_PERGAMENA` (25 gemme, cinque torce: una scelta). Niente energia,
+  niente abilità.
+- **La prima è il premio di una missione**: l'incantatrice ha perso il
+  quaderno degli incantesimi nella cripta, al primo piano (`quaderno` in
+  `dati/missioni.js`). C'è dall'inizio e **sta fuori dal tetto delle tre**
+  (`fuoriDalTetto`): insegna la pergamena, non toglie un favore della
+  storia. Consegnandolo lei dice che da adesso le scrive, e **solo da lì** la
+  vende: la linguetta «Pergamene» e il posto in cima al banco hanno `dopo:
+  'quaderno'` (`schedeDi`, `Bottega.sempreDi`, `dopoLaMissione`). Prima non
+  la vende nessuno, e per terra non si trova.
+- **Per terra, rara, solo dopo la missione** (`pergamenaCade` in
+  `motore/bottino.js`, il 3% di un forziere o di una curiosità; il tiro ha il
+  suo sale, come l'ampolla): mai dai mostri. Non si pesca sui banchi
+  (`A_SORTE` la lascia fuori).
+- **Si apre dallo zaino, fuori dallo scontro** («Apri il portale»,
+  `apriLaPergamena` in `motore/corsa.js`): nella cella libera davanti
+  all'eroe, o accanto, si accende un portale come quello fisso. Lo si tocca e
+  si sale. Nello scontro no («nello scontro no»), con un foglio aperto no,
+  e **uno per piano**: con uno già aperto la pergamena non si spende.
+- **Il gemello è gratis**: sopra c'è il gemello di sempre, e tornando giù si
+  è nel punto di prima, col portale della pergamena ancora aperto (è una cosa
+  nuova del piano: la sosta la tiene). Da lì si risale senza un'altra
+  pergamena, **finché non si lascia il piano** (`lasciaIlPiano` lo chiude).
+- **Nell'abisso non lascia il gemello** (`senzaGemello`): attraversarlo è
+  «torno su per stasera», la sera finisce e l'abisso si riprende come dopo
+  la risalita di sempre. Il portale fisso dell'abisso resta com'è.
+- **Dove si sbuca: l'ultimo posto sicuro** (`ultimoPostoSicuro` in
+  `motore/posto-sicuro.js`, per il portale fisso e per la pergamena). Oggi è
+  il villaggio, accanto al gemello; il mondo nuovo potrà scrivere la città o
+  la pietra del viaggio toccata per ultima in `avventura.mondo.sicuro`, e
+  finché il mondo in 3D non la sa raggiungere si torna al portale.
+- **Nel 3D** il portale della pergamena è lo stesso varco in piedi del
+  portale fisso ([grafica-3d-portale.md](grafica-3d-portale.md)): nasce
+  accendendosi dal basso, con le rune per terra che si disegnano in giro, e
+  se ne va col piano. Nel 2D è il disegno del portale di sempre.
+- **Il quaderno, a voce**: la richiesta, il ritorno e il grazie stanno nella
+  missione; sopra la testa dell'incantatrice c'è il segno delle missioni come
+  per gli altri (terra dipinta e mondo in 3D).
+
+Nei test: `unita/sotterraneo-pergamena` (la cosa, la missione e la bottega
+prima e dopo, il tetto, per terra solo dopo e mai dai mostri, aprirla, il
+gemello gratis con la sosta, lasciare il piano, l'abisso, l'ultimo posto
+sicuro), `integrazione/sotterraneo-pergamena` (col dito: lei non la vende
+prima del quaderno, dopo la si compra, giù la si apre dallo zaino, su e giù
+dal gemello e su di nuovo gratis).
+
 ## Lasciare a metà, e fermarsi
 
 - **Si esce e si riprende esattamente dove si era** (`motore/sosta.js`, una

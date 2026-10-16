@@ -15,12 +15,17 @@ import { seminato } from '../../src/giochi/sotterraneo/motore/livello.js'
 import { robaAttesa, crescitaAttesa, laStoria } from '../../src/giochi/sotterraneo/motore/storia.js'
 import { guastiDellaStoriaPrincipale } from '../../src/giochi/sotterraneo/dati/storia.js'
 import { avventuraDi } from '../../src/giochi/sotterraneo/motore/avventure.js'
-import { sbloccata, sbloccate, offerte, inMano, aperte, cosaDice, segnoDi, chiTiCerca, prendi, fatte, consegna,
+import { sbloccata, sbloccate as sbloccateTutte, offerte as offerteTutte, inMano, aperte as aperteTutte, cosaDice, segnoDi, chiTiCerca, prendi, fatte, consegna,
          presePer, diario, promemoria, inFrase, GLIFO, chiAspetta, daLui, robaDellaMissione, rotta, discesaDaSeguire,
          seguita, discesaDellaStoria, PRESA, FATTA, CONSEGNATA }
   from '../../src/giochi/sotterraneo/motore/missioni.js'
 import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifica.mjs'
 
+// il quaderno dell'incantatrice sta fuori dal tetto e fuori dall'albero (§ «il quaderno», in fondo): qui si guarda l'albero
+const senzaQuaderno = l => l.filter(m => m.id !== 'quaderno')
+const sbloccate = (...a) => senzaQuaderno(sbloccateTutte(...a))
+const offerte = (...a) => senzaQuaderno(offerteTutte(...a))
+const aperte = (...a) => senzaQuaderno(aperteTutte(...a))
 // le tappe di un'avventura col cursore a `n` (n discese finite, la n-esima è quella di adesso)
 const tappeAl = n => CAMPAGNA.map((t, i) => ({ chiave: t.chiave, nome: t.nome, aperta: i <= n, fatta: i < n }))
 const ids = lista => lista.map(m => m.id)
@@ -30,7 +35,7 @@ const palestra = (eroe, k) => new Corredo({ eroe, roba: robaAttesa(eroe, k, { po
 {
   const g = guastiDelleMissioni(Object.keys(DOVE_PERSONAGGI))
   controlla('le missioni stanno in piedi (requisiti, premi, monete)', !g.length, g.join(' · '))
-  uguale('diciassette missioni: dodici di prima e cinque da contare', MISSIONI.length, 17)
+  uguale('diciotto missioni: dodici di prima, cinque da contare e il quaderno', MISSIONI.length, 18)
   uguale('le cinque nuove sono «sconfiggi N» e radici', MISSIONI.filter(m => m.tipo === 'conta' && !m.richiede.some(r => r.consegnata)).length, 5)
   controlla('il minatore si nomina anche se non sta fra i personaggi', personaDi('minatore') && personaDi('minatore').nome === 'Il vecchio minatore')
 
@@ -84,7 +89,7 @@ const palestra = (eroe, k) => new Corredo({ eroe, roba: robaAttesa(eroe, k, { po
     controlla(`alla discesa ${n}: da una a tre insieme (sono ${sono})`, sono >= 1 && sono <= TETTO)
     controlla(`e sono tutte offerte, nessuna nascosta dal tetto`, offerte(stati, t).length === sono)
     // le prende tutte, le fa nella discesa che le riguarda, risalendo le consegna
-    for (const m of offerte(stati, t)) {
+    for (const m of offerteTutte(stati, t)) {
       stati = prendi(stati, m.id, t)
       controlla(`${m.id}: si sbloccava prima di scendere nella sua discesa`, CAMPAGNA.findIndex(x => x.chiave === m.discesa) <= n)
     }
@@ -280,13 +285,13 @@ const palestra = (eroe, k) => new Corredo({ eroe, roba: robaAttesa(eroe, k, { po
   uguale('la riga dice a chi tornare e cosa si ha', chiavi.torna, 'Torna dalla guardia della torre: hai il mazzo di chiavi della torre')
   uguale('per un mostro: hai battuto', diario({ rosicchione: FATTA }, t3).pronte[0].torna, 'Torna dal mugnaio: hai battuto Rosicchione')
   controlla('il goblin è da battere, con la sua corona e chi lo vuole', goblin.em === '👑' && goblin.chi === 'La ragazza del pozzo' && !goblin.tornaDa)
-  stessaLista('ti aspettano i funghi (libro e ascia sono nascosti dal tetto)', d.offerte.map(v => v.id), ['funghi'])
+  stessaLista('ti aspettano i funghi (libro e ascia sono nascosti dal tetto), e il quaderno, che sta fuori dal tetto', d.offerte.map(v => v.id), ['quaderno', 'funghi'])
   stessaLista('consegnate: la Dama Grigia, la collana, Rosicchione', d.consegnate.map(v => v.id), ['badessa', 'collana', 'rosicchione'])
   uguale('tre aperte, due in mano e due offerte: il tetto ne tiene tre', d.aperte, 3)
   uguale('tre sono nascoste dal tetto (ascia, libro, ratti)', d.nascoste, 3)
   uguale('il diario sa il tetto', d.tetto, TETTO)
-  uguale('un\'avventura nuova ha un diario quasi vuoto: la Dama Grigia e basta',
-         JSON.stringify(diario({}, tappeAl(0)).offerte.map(v => v.id)), '["badessa"]')
+  uguale('un\'avventura nuova ha un diario quasi vuoto: il quaderno dell\'incantatrice e la Dama Grigia',
+         JSON.stringify(diario({}, tappeAl(0)).offerte.map(v => v.id)), '["quaderno","badessa"]')
 
   // il promemoria in discesa
   const pm = (st, tappa, piano) => promemoria(st, tappa, piano)

@@ -3,6 +3,26 @@
 Le voci aperte, ognuna con quello che serve per farla. Il progetto dettagliato
 dell'abisso sta in [abisso-progetto.md](abisso-progetto.md).
 
+## La pergamena del portale (16 ottobre 2026)
+
+Fatta senza ritarare (l'utente: «fallo e basta»):
+[portale-e-sosta.md](portale-e-sosta.md#la-pergamena-del-portale). Resta:
+
+- **Da ritarare**: il prezzo (25 gemme), quanto cade (il 3% di forzieri e
+  curiosità, solo dopo il quaderno) e l'effetto sulle risalite: una
+  pergamena è una spesa e una cura gratis sopra a metà discesa, che il banco
+  e i giocatori tipo non sanno usare.
+- **Lo sprite**: si vede la sua emoji 📜; nel 3D per terra c'è solo il
+  chiarore.
+- **La casella della barra** come la pozione: per ora si apre dallo zaino.
+- **Il mondo nuovo**: una sola che vende (l'incantatrice del villaggio).
+  Le altre città potranno avere un suo banco dopo la missione; e
+  `ultimoPostoSicuro()` aspetta che il mondo scriva `mondo.sicuro` (la città o
+  la pietra toccata per ultima) e che `viste/Mondo3d.vue` ci porti l'eroe.
+- **L'abisso**: la pergamena là è «torno su per stasera» (niente gemello);
+  «ripartire dall'inizio del tratto» non c'è, si riprende come oggi dopo la
+  risalita.
+
 ## Da ritarare dopo la torcia del 16 ottobre 2026
 
 Non ritarato apposta (l'utente: «non stare a ritarare, fallo e basta»): la

@@ -4,7 +4,7 @@
 // La discesa (motore/corsa.js) e i mercanti di sopra (motore/bottega.js) la estendono; gira in Node.
 import { TASCHE, TASCHE_EXTRA_MAX, POZIONI_MASSIME, prezzoTasca } from '../dati/mondo.js'
 import { eroeDi, DI_PARTENZA, portaLa, nonLaPorta, FAMIGLIE, requisitoDi, livelloRichiesto } from '../dati/eroi.js'
-import { COSE, STANZE_TORCIA, aLivello, PESO_DELLA_DIFESA, CASELLE, CASELLE_DEL_TIPO, tipoDellaCasella } from '../dati/cose.js'
+import { COSE, STANZE_TORCIA, PERGAMENE_MASSIME, aLivello, PESO_DELLA_DIFESA, CASELLE, CASELLE_DEL_TIPO, tipoDellaCasella } from '../dati/cose.js'
 import { GEMME_PER_FORTUNA, VALORE_GEMME_MASSIMO, ATT_PER_PUNTO, SCHIVATA_PER_DESTREZZA, ENERGIA_PER_INTELLIGENZA } from '../dati/livelli.js'
 import { rileggiCrescita, piuDellaCrescita, caratteristica, chiTrattiene, puntiDaDare, riassegna, costoDelRiassegnare, trattoDegliElisir,
          ELISIR_MAX } from './crescita.js'
@@ -34,7 +34,9 @@ const DEL_CORPO = ['corpo', 'collo', 'dito', 'dito2']
 // Le pozioni dello stesso tipo stanno nella stessa tasca (l'utente, 9 ottobre): «Pozione ×3» è un posto solo. Lo zaino resta
 // una lista di chiavi, una per pezzo; i posti si contano e si mostrano raggruppando. Solo le pozioni (le torce non vanno in
 // tasca): ogni altra cosa, anche due spade uguali, occupa il suo.
-export const impilabile = k => !!(COSE[k] && ['cura', 'energia', 'cresci'].includes(COSE[k].usa))
+export const impilabile = k => !!(COSE[k] && ['cura', 'energia', 'cresci', 'portale'].includes(COSE[k].usa))
+// la pergamena del portale: una tasca sola, e al più PERGAMENE_MASSIME (dati/cose.js)
+export const ePergamena = k => !!(COSE[k] && COSE[k].usa === 'portale')
 // [{ k, n, i }]: una voce per tasca, nell'ordine in cui compaiono; `i` è il primo posto di quella cosa nella lista
 export function tascheDello(zaino) {
   const fuori = []
@@ -308,8 +310,15 @@ export class Corredo {
   // al più POZIONI_MASSIME cure in tasca, di ogni stadio (docs/sotterraneo/roba.md, «Le pozioni»)
   get pozioniDiCura() { return this.zaino.filter(eCura).length }
   get alTettoDelleCure() { return this.pozioniDiCura >= POZIONI_MASSIME }
-  // la riga di chi si vede dire di no: lo zaino pieno, o il tetto delle cure
-  perchéNonCiSta(k) { return eCura(k) && this.alTettoDelleCure ? `⚠️ al massimo ${POZIONI_MASSIME} pozioni` : '⚠️ lo zaino è pieno' }
+  get pergamene() { return this.zaino.filter(ePergamena).length }
+  // `k` non entra perché la sua scorta è al tetto (le cure, le pergamene), anche se nello zaino ci sarebbe posto
+  alTettoDi(k) { return (eCura(k) && this.alTettoDelleCure) || (ePergamena(k) && this.pergamene >= PERGAMENE_MASSIME) }
+  // la riga di chi si vede dire di no: lo zaino pieno, o il tetto delle cure o delle pergamene
+  perchéNonCiSta(k) {
+    if (eCura(k) && this.alTettoDelleCure) return `⚠️ al massimo ${POZIONI_MASSIME} pozioni`
+    if (ePergamena(k) && this.alTettoDi(k)) return `⚠️ al massimo ${PERGAMENE_MASSIME} pergamene`
+    return '⚠️ lo zaino è pieno'
+  }
 
   // La pagina dell'eroe: le quattro caratteristiche, quanto valgono e cosa cambierebbe dando un punto (prima → dopo):
   // l'attacco se è la caratteristica dell'arma in mano, la difesa quando la forza arriva al punto che la alza, la vita, la
@@ -469,7 +478,7 @@ export class Corredo {
     return true
   }
   // c'è posto per `k`? Una pozione uguale a una che c'è già ci sta sempre
-  cista(k) { return !(eCura(k) && this.alTettoDelleCure) && this.postiUsati([...this.zaino, k]) <= this.capienza }
+  cista(k) { return !this.alTettoDi(k) && this.postiUsati([...this.zaino, k]) <= this.capienza }
 
   // in tasca se c'è posto, se no dove dice nonCiSta
   inTasca(k) {
@@ -693,7 +702,7 @@ export class Corredo {
   quantoCosta(k) { const c = COSE[k]; return c && c.prezzoAcquisto ? c.prezzoAcquisto : this.prezzoDi(k) }
 
   nonCiStarebbe(k) {
-    if (eCura(k) && this.alTettoDelleCure) return true
+    if (this.alTettoDi(k)) return true
     const prova = this.copia()
     prova.prendi(k)
     return prova.postiUsati() > this.capienza

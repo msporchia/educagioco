@@ -53,9 +53,17 @@ export function costruisciPiano(scena, corsa, { maschera, luci, trameDi, legno, 
   const fonte = liv.robe.find(r => r.che === 'fonte')
   const fontana = fonte ? creaFontana(scena, { cella: fonte, condivise: luci.condivise, trama: trame.muro, conMaschera, maschera, aspetto, vuota: !!fonte.morto }) : null
   if (fontana) { fontana.roba = fonte; via.push(fontana.via); sorgenti.push(fontana.luce) }
-  const rp = liv.robe.find(r => r.che === 'portale')
-  const portale = rp ? creaPortale(scena, { cella: rp, conMaschera, maschera, trama: trame.muro }) : null
-  if (portale) { portale.roba = rp; via.push(portale.via); sorgenti.push(portale.luce) }
+  // i portali: quello fisso del piano, e quello della pergamena, che si apre (e se ne va) mentre si gioca: `sincronizzaPortali`
+  const portali = []
+  const nuovoPortale = (r, { apri = false } = {}) => {
+    const p = creaPortale(scena, { cella: r, conMaschera, maschera, trama: trame.muro })
+    p.roba = r
+    if (apri) p.apri()
+    portali.push(p); sorgenti.push(p.luce)
+    return p
+  }
+  for (const r of liv.robe) if (r.che === 'portale') nuovoPortale(r)
+  via.push(() => { for (const p of portali) p.via() })
 
   // l'arredo del paesaggio (scena3d/arredo3d.js): chi fa luce entra nella riserva dei fuochi
   let arredo = null
@@ -77,7 +85,19 @@ export function costruisciPiano(scena, corsa, { maschera, luci, trameDi, legno, 
   for (const r of liv.robe) if (r.che === 'arredo' || r.che === 'fonte' || r.che === 'portale') ingombri.add(pianta.id(r.x, r.y))
   for (const b of botti.botti) if (!b.rotta) ingombri.add(pianta.id(b.cella.x, b.cella.y))
   return {
-    liv, scenario: corsa.scenario, paesaggio, aspetto, pianta, vis, terreno, pozze, velo, raggi, arredo, botti, fiamme, fuochi, sorgenti, fontana, portale, nebbia, ingombri,
+    liv, scenario: corsa.scenario, paesaggio, aspetto, pianta, vis, terreno, pozze, velo, raggi, arredo, botti, fiamme, fuochi, sorgenti, fontana, portali, nebbia, ingombri,
+    get portale() { return portali[0] || null },
+    portaleDi(r) { return portali.find(p => p.roba === r) || null },
+    // a ogni fotogramma: un portale nuovo nel motore (la pergamena) nasce accendendosi, uno sparito (lasciato il piano) se ne va
+    sincronizzaPortali() {
+      for (const r of liv.robe) if (r.che === 'portale' && !portali.some(p => p.roba === r)) nuovoPortale(r, { apri: true })
+      for (let i = portali.length - 1; i >= 0; i--) {
+        const p = portali[i]
+        if (liv.robe.includes(p.roba)) continue
+        p.via(); portali.splice(i, 1)
+        const k = sorgenti.indexOf(p.luce); if (k >= 0) sorgenti.splice(k, 1)
+      }
+    },
     // le torce che stanno su un muro abbassato per lo scontro si spengono, e tornano
     torcia(i, su) { fiamme.accesa(i, su); if (sorgenti[i]) sorgenti[i].forza = su ? fuochi[i].forza : 0 },
     via() { for (const f of via) f() },

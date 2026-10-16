@@ -21,7 +21,7 @@ più nessuno.
 | chi | vende | in cima, sempre |
 |---|---|---|
 | ⚒️ l'armaiolo (il fabbro), sotto la tettoia a sinistra | il ferro: spade, asce, archi, scudi, corazze e giubbe di cuoio | — |
-| 🔮 l'incantatrice (`incantatrice`), alla porta della casa di destra | la magia: bacchette e bastoni, vesti di stoffa | boccetta blu e ampolla delle stelle (l'energia) |
+| 🔮 l'incantatrice (`incantatrice`), alla porta della casa di destra | la magia: bacchette e bastoni, vesti di stoffa | boccetta blu e ampolla delle stelle (l'energia); la pergamena del portale dopo la sua missione ([portale-e-sosta.md](portale-e-sosta.md#la-pergamena-del-portale)) |
 | 🌿 l'erborista (la guaritrice), al banco con le erbe | niente di pescato: solo quello che sta sempre in cima | le quattro cure (le grandi dopo qualche discesa finita), torcia |
 | 🧺 il rigattiere (il mercante), accanto al carro | anelli, collane (amuleti, medaglione), chiavi: tutti sotto la linguetta «Gioielli» | — e **compra** quello che hai in tasca, e te lo ridà (sotto) |
 

@@ -93,7 +93,7 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
   const centro = new Vector3()
   const scontro = creaScontro({ S, cam, eroe, getPiano: () => piano, getCose: () => cose, getFigure: () => figure, anelli, cieca })
   const torcia = (i, su) => piano && piano.torcia(i, su)   // le torce sui muri che si abbassano nello scontro
-  const salta = r => (piano.fontana && r === piano.fontana.roba) || (piano.portale && r === piano.portale.roba)
+  const salta = r => (piano.fontana && r === piano.fontana.roba) || !!piano.portaleDi(r)
 
   function nuovoPiano(corsa) {
     if (piano) piano.via()
@@ -181,7 +181,7 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
     if (fo && fo.roba.morto && fo.stato === 'piena') { if (fo.usa(eroe)) eroe.cura = 1.2 }
     for (const s of piano.sorgenti) if (s.cella != null) s.vis = piano.vis.ora[s.cella] || 0
     luci.distribuisci(piano.sorgenti, eroe.x, eroe.z, t)
-    disegnaEroe(eroe, corsa, { figure: figureEroe, luci, etichette, camera: cam, dt: dtVero, dtScena: dt, t, fontana: fo, portale: piano.portale, bersaglio: scontro.bersaglio(corsa),
+    disegnaEroe(eroe, corsa, { figure: figureEroe, luci, etichette, camera: cam, dt: dtVero, dtScena: dt, t, fontana: fo, portale: (passando && passando.portale) || piano.portale, bersaglio: scontro.bersaglio(corsa),
                        fiamma: fiammaEroe, aloni, scintille: ACCESI.scintille ? scintille : null })
     luci.spegni(dtVero)
     // le scintille delle torce: solo da quelle che si vedono adesso
@@ -208,7 +208,8 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
     polvere.aggiorna(t, centro, punti)
     scintille.aggiorna(dt, punti)
     if (fo) fo.aggiorna(dt, t, punti, vistaOra(piano.vis, fo.cella.x + 0.5, fo.cella.y + 0.5))
-    if (piano.portale) piano.portale.aggiorna(dt, t, punti, vistaOra(piano.vis, piano.portale.cella.x + 0.5, piano.portale.cella.y + 0.5))
+    piano.sincronizzaPortali()
+    for (const p of piano.portali) p.aggiorna(dt, t, punti, vistaOra(piano.vis, p.cella.x + 0.5, p.cella.y + 0.5))
     piano.terreno.aggiorna(dtVero, torcia)
     piano.botti.aggiorna(dt)
 
@@ -262,7 +263,7 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
       if (corsa.foglio) return
       const modellate = []
       if (piano.fontana) modellate.push([piano.fontana.roba, piano.fontana.gruppo])
-      if (piano.portale) modellate.push([piano.portale.roba, piano.portale.gruppo])
+      for (const p of piano.portali) modellate.push([p.roba, p.gruppo])
       const r = contorno.scegli(corsa, p, { figure, modellate })
       const botte = r ? null : botteAlDito(p)
       const cella = r || botte ? null : cam.cellaDa(p.x, p.y)
@@ -277,10 +278,12 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
     colpo(a, modo) { racconto.colpo(a, modo) },
     aggancia(chi, el) { scontro.aggancia(chi, el) },
     // il passaggio nel portale: il velo lampeggia e l'eroe ci si stringe dentro; `fatto` quando è dentro
-    attraversa(fatto) {
-      if (!piano || !piano.portale) return fatto && fatto()
-      piano.portale.attraversa()
-      passando = { t: 0, fatto: () => { aFotogrammaFinito = () => { passando = null; if (fatto) fatto() } } }
+    // `roba`: il portale che si attraversa (quello fisso o quello della pergamena); senza, il primo
+    attraversa(fatto, roba = null) {
+      const portale = piano && ((roba && piano.portaleDi(roba)) || piano.portale)
+      if (!portale) return fatto && fatto()
+      portale.attraversa()
+      passando = { t: 0, portale, fatto: () => { aFotogrammaFinito = () => { passando = null; if (fatto) fatto() } } }
       eroe.passaggio = passando
     },
     grafica() {

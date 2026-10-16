@@ -807,11 +807,13 @@ const rigaStoria = p => {
 
       <button v-for="m in mercanti" :key="'mercante-' + m.chiave" class="sot-minatore sot-mercante"
               :class="{ 'sot-buio': !trovati.has(m.chiave) }" :data-mercante="m.chiave" :data-saluta="salutano.has(m.chiave) ? 1 : 0" :aria-label="m.nome"
-              :tabindex="trovati.has(m.chiave) ? 0 : -1"
+              :tabindex="trovati.has(m.chiave) ? 0 : -1" :data-segno="segnoSopra(m.chiave)"
               :style="{ left: (m.piede.x + 0.5) * CELLA * S + 'px', top: (m.piede.y + 0.5) * CELLA * S + 'px' }"
               @click.stop="toccaMercante(m)">
         <span v-if="m.ritratto" class="sot-ritratto" :style="m.ritratto.gabbia"><i :style="posaDi(m.chiave, m.ritratto, m.saluta).pezzo"></i></span>
         <Pixel v-else :figura="m.figura" :scala="SCALA_EROE" />
+        <!-- anche una mercante può chiedere un favore (l'incantatrice e il suo quaderno) -->
+        <b v-if="segnoSopra(m.chiave)" class="sot-tre-punti sot-segno-missione" :class="'sot-segno-' + segnoSopra(m.chiave)">{{ glifoSopra(m.chiave) }}</b>
         <!-- chi cura chiama chi ne ha bisogno: un fumetto che resta finché serve, e toccarlo è toccare lei -->
         <span v-if="trovati.has(m.chiave) && richiamo(m.chiave)" class="sot-richiamo" data-richiamo :data-richiamo-di="curaDi(m.chiave).risorsa">{{ richiamo(m.chiave) }}</span>
       </button>

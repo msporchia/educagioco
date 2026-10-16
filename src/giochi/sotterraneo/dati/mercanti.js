@@ -30,8 +30,10 @@ export const MERCANTI = [
     dice: 'Bacchette per le mani, stoffa per le spalle, e una boccetta blu per quando la magia si spegne.',
     schede: [{ chiave: 'bacchette', nome: 'Bacchette e bastoni', em: '🪄', dove: ['mano'], famiglie: ['bacchette'] },
              { chiave: 'vesti', nome: 'Vesti', em: '🧥', dove: ['corpo'], famiglie: ['stoffa'] },
-             { chiave: 'energia', nome: 'Energia', em: '🧪', usa: ['energia'] }],
-    vende: { dove: ['mano', 'corpo'], famiglie: ['bacchette', 'stoffa'] }, sempre: ['pozione-blu', 'ampolla-blu'],
+             { chiave: 'energia', nome: 'Energia', em: '🧪', usa: ['energia'] },
+             // la pergamena del portale, solo dopo la sua missione (`dopo`: si mostra quando quella missione è consegnata)
+             { chiave: 'pergamene', nome: 'Pergamene', em: '📜', usa: ['portale'], dopo: 'quaderno' }],
+    vende: { dove: ['mano', 'corpo'], famiglie: ['bacchette', 'stoffa'] }, sempre: ['pozione-blu', 'ampolla-blu', 'pergamena-portale'],
     passo: ['mano', 'corpo'], altre: 1 },
 
   { chiave: 'erborista', nome: 'La guaritrice', em: '🌿', sprite: 'erborista',
@@ -60,7 +62,9 @@ export const vendeLa = (m, k) => !!COSE[k] && IN_VENDITA.includes(baseDi(k)) &&
 
 // le linguette che un eroe vede: quelle che non chiedono una famiglia, e quelle di una famiglia che porta (a un cavaliere
 // la bottega dell'incantatrice non mostra le bacchette)
-export const schedeDi = (m, eroe) => m.schede.filter(s => !s.famiglie || s.famiglie.some(f => portaLa(eroe, { famiglia: f })))
+// (`stati`: le missioni dell'avventura; una linguetta con `dopo` compare solo a quella missione consegnata)
+export const schedeDi = (m, eroe, stati = null) => m.schede.filter(s => (!s.famiglie || s.famiglie.some(f => portaLa(eroe, { famiglia: f }))) &&
+  (!s.dopo || (stati && stati[s.dopo] === 'consegnata')))
 
 // la linguetta di una cosa: la prima che ne raccoglie il posto o l'uso
 export const schedaDi = (m, k) => (COSE[k]
