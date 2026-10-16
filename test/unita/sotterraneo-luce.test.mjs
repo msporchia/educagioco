@@ -3,10 +3,11 @@
    Il cono davanti e l'ombra dietro (con e senza torcia), la torcia che allunga il cono ma non accende la stanza, il cono
    che sfuma ai bordi e si ferma a una porta chiusa, il verso che segue il passo (da fermo resta, toccando una cosa si
    gira), il mostro fuori luce che punta alle spalle e quello in luce che va dritto, l'agguato che scatta da dietro e non
-   da davanti.
+   da davanti; con la torcia accesa il cono quasi gira attorno, l'alone copre le spalle e nessuno arriva da dietro (né
+   agguato né giro largo), mentre la sorpresa dell'eroe resta.
    `node test/esegui.mjs sotterraneo-luce --niente-build` */
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
-import { RAGGIO, RAGGIO_TORCIA, RAGGIO_SGOCCIOLI, ALONE, ALONE_TORCIA, APERTURA_CONO, DIETRO, FIANCO, PASSO_EROE, PASSO_MOSTRO }
+import { RAGGIO, RAGGIO_TORCIA, RAGGIO_SGOCCIOLI, ALONE, ALONE_TORCIA, APERTURA_CONO, APERTURA_TORCIA, APERTURA_SGOCCIOLI, DIETRO, FIANCO, PASSO_EROE, PASSO_MOSTRO }
   from '../../src/giochi/sotterraneo/dati/mondo.js'
 import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
 import { Livello, seminato } from '../../src/giochi/sotterraneo/motore/livello.js'
@@ -62,11 +63,12 @@ const io = { x: lunga.x + 3, y: riga }   // tre celle di stanza dietro, sei dava
   controlla('senza torcia, la cella subito dietro è appena un alone', accesa(buio, io.x - 1, riga) && buio.forzaDi(io.x - 1, riga) < 0.7,
             String(buio.forzaDi(io.x - 1, riga)))
   uguale('con la torcia, cinque celle davanti si vede', accesa(torcia, io.x + 5, riga), true)
-  uguale('con la torcia, tre celle dietro è ombra', accesa(torcia, io.x - 3, riga), false)
+  controlla('con la torcia, tre celle dietro si vede ancora: l\'alone copre le spalle', accesa(torcia, io.x - 3, riga) && torcia.forzaDi(io.x - 3, riga) > 0.5,
+            String(torcia.forzaDi(io.x - 3, riga)))
   controlla('con la torcia, la cella subito dietro è accesa piena (circa una cella di alone)', torcia.forzaDi(io.x - 1, riga) > 0.9,
             String(torcia.forzaDi(io.x - 1, riga)))
-  controlla('la torcia allunga il cono: tanta luce in più davanti, quasi la stessa dietro',
-            torcia.raggioDellaLuce === RAGGIO_TORCIA && RAGGIO_TORCIA > RAGGIO + 2 && ALONE_TORCIA - ALONE < 1, `${RAGGIO} → ${RAGGIO_TORCIA}`)
+  controlla('la torcia allunga il cono di molto e allarga l\'alone di due celle e più',
+            torcia.raggioDellaLuce === RAGGIO_TORCIA && RAGGIO_TORCIA > RAGGIO + 5 && ALONE_TORCIA - ALONE >= 2, `${RAGGIO} → ${RAGGIO_TORCIA}, ${ALONE} → ${ALONE_TORCIA}`)
   const davanti = c => [...c.luce].filter(k => (k % c.livello.largo) > io.x).length
   controlla('e davanti si accendono più celle', davanti(torcia) > davanti(buio), `${davanti(buio)} → ${davanti(torcia)}`)
   const stanza = (c, st) => { let n = 0; for (let x = st.x; x < st.x + st.w; x++) for (let y = st.y; y < st.y + st.h; y++) if (accesa(c, x, y)) n++; return n }
@@ -78,6 +80,15 @@ const io = { x: lunga.x + 3, y: riga }   // tre celle di stanza dietro, sei dava
   uguale('a 45° dall\'asse si vede', accesa(aperta, largaIo.x + 3, largaIo.y + 3), true)
   uguale('a 90° dall\'asse (di lato) è luce: il buio è solo alle spalle', accesa(aperta, largaIo.x, largaIo.y + 3), true)
   controlla('l\'apertura è di 220 gradi: buio solo alle spalle', APERTURA_CONO === 220)
+  // con la torcia i fianchi sono pieni, e alle spalle resta solo un'ombra lontana
+  controlla('con la torcia il cono si apre di più (sgoccioli in mezzo), e un poco d\'ombra dietro resta',
+            APERTURA_CONO < APERTURA_SGOCCIOLI && APERTURA_SGOCCIOLI < APERTURA_TORCIA && APERTURA_TORCIA < 360, `${APERTURA_CONO} ${APERTURA_SGOCCIOLI} ${APERTURA_TORCIA}`)
+  // dall'angolo, guardando a destra: la cella cinque sotto è di lato (90°), oltre l'alone
+  const angolo = { x: larga.x, y: larga.y }, fianco = c => c.forzaDi(angolo.x, angolo.y + 5)
+  const fiancoTorcia = fianco(scena({ qui: angolo, torcia: 8 }))
+  controlla('con la torcia, di lato a cinque celle è luce quasi piena (quanto davanti alla stessa distanza)',
+            fiancoTorcia > 0.7 && Math.abs(fiancoTorcia - scena({ qui: angolo, torcia: 8 }).forzaDi(angolo.x + 5, angolo.y)) < 0.01, String(fiancoTorcia))
+  uguale('senza torcia, di lato a cinque celle è buio', accesa(scena({ qui: angolo }), angolo.x, angolo.y + 5), false)
 }
 
 /* ── ai bordi sfuma, e una porta chiusa ferma la luce ── */
@@ -112,7 +123,7 @@ const io = { x: lunga.x + 3, y: riga }   // tre celle di stanza dietro, sei dava
   passo(-1, 0)
   uguale('un passo a sinistra: guarda a sinistra', `${c.verso.dx},${c.verso.dy}`, '-1,0')
   controlla('e la luce è andata con lui: davanti a sinistra si vede, a destra no',
-            accesa(c, Math.floor(c.eroe.x) - 3, riga) && !accesa(c, Math.floor(c.eroe.x) + 3, riga))
+            accesa(c, Math.floor(c.eroe.x) - 3, riga) && !accesa(c, Math.floor(c.eroe.x) + 5, riga))
   for (let i = 0; i < 30; i++) c.passo(0.05)
   uguale('da fermo il verso resta', `${c.verso.dx},${c.verso.dy}`, '-1,0')
   passo(1, 0)
@@ -185,6 +196,55 @@ const io = { x: lunga.x + 3, y: riga }   // tre celle di stanza dietro, sei dava
     Object.assign(m, { fx: m.x + 0.5, fy: m.y + 0.5 })
     const meta = c.versoLeSpalle(m, larga)
     controlla('chi sta dietro punta alla cella subito dietro l\'eroe', Math.abs(meta.x - (c.eroe.x - DIETRO)) < 1e-9 && Math.abs(meta.y - c.eroe.y) < 1e-9)
+  }
+}
+
+/* ── con la torcia accesa nessuno arriva alle spalle: né agguato, né giro largo; la sorpresa resta ── */
+{
+  const centro = { x: larga.cx, y: larga.cy }
+  const prove = (torcia, sgoccioli = false) => {
+    let scontri = 0, agguati = 0, dritti = 0
+    for (let seme = 1; seme <= 60; seme++) {
+      const rnd = seminato(seme)
+      const c = scena({ qui: centro, torcia, verso: [{ dx: 1, dy: 0 }, { dx: -1, dy: 0 }, { dx: 0, dy: 1 }, { dx: 0.6, dy: -0.8 }][seme % 4] })
+      if (sgoccioli) c.torciaResta = 1
+      // dove sta il mostro: dietro, di sbieco o di lato, a tre celle e più, dentro la stanza
+      const ang = Math.PI * (0.5 + rnd()), dist = 3 + rnd() * 2
+      const v = c.versoEroe
+      const ax = v.dx * Math.cos(ang) - v.dy * Math.sin(ang), ay = v.dx * Math.sin(ang) + v.dy * Math.cos(ang)
+      const mx = Math.max(larga.x, Math.min(larga.x + larga.w - 1, Math.round(centro.x + ax * dist)))
+      const my = Math.max(larga.y, Math.min(larga.y + larga.h - 1, Math.round(centro.y + ay * dist)))
+      if (mx === centro.x && my === centro.y) continue
+      const m = c.livello.mostro('goblin', mx, my)
+      Object.assign(m, { ossa: 40, ossaMax: 40, att: 5, dif: 0, velocita: c.velocita, sveglio: true, stati: null })
+      c.livello.robe.push(m)
+      let giro = false
+      for (let i = 0; i < 400 && !c.foglio; i++) {
+        const e = c.eroe, prima = Math.hypot(m.fx != null ? m.fx - e.x : mx + 0.5 - e.x, m.fy != null ? m.fy - e.y : my + 0.5 - e.y)
+        c.muoviMostri(1 / 30)
+        if (Math.hypot(m.fx - e.x, m.fy - e.y) > prima + 1e-6) giro = true   // si allontana: sta girando largo
+      }
+      if (!c.foglio) continue
+      scontri++
+      if (c.foglio.agguato) agguati++
+      if (!giro) dritti++
+    }
+    return { scontri, agguati, dritti }
+  }
+  const conTorcia = prove(8), agliSgoccioli = prove(1, true), alBuio = prove(0)
+  controlla('con la torcia, sessanta mostri da dietro e di lato: tutti arrivano', conTorcia.scontri >= 55, JSON.stringify(conTorcia))
+  uguale('con la torcia accesa, nessun agguato', conTorcia.agguati, 0)
+  uguale('e nessuno gira largo per le spalle: vanno dritti', conTorcia.dritti, conTorcia.scontri)
+  uguale('agli sgoccioli è ancora accesa: nessun agguato', agliSgoccioli.agguati, 0)
+  controlla('al buio, dagli stessi posti, gli agguati ci sono come prima', alBuio.agguati > alBuio.scontri / 3, JSON.stringify(alBuio))
+  // la sorpresa: è l'eroe a toccare un mostro che dorme, con la torcia o senza
+  for (const torcia of [8, 0]) {
+    const c = scena({ qui: centro, torcia })
+    const m = c.livello.mostro('goblin', centro.x + 1, centro.y)
+    Object.assign(m, { ossa: 40, ossaMax: 40, att: 5, dif: 0, velocita: c.velocita, sveglio: false, stati: null, fx: m.x + 0.5, fy: m.y + 0.5 })
+    c.livello.robe.push(m)
+    c.scontro(m, { tocco: true })
+    uguale(`la sorpresa dell'eroe resta (${torcia ? 'con' : 'senza'} torcia)`, c.foglio.sorpresa, true)
   }
 }
 

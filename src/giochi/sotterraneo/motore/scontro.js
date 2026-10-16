@@ -61,6 +61,7 @@ export const MetodiDelloScontro = {
 
   // il mostro arriva dalla metà dietro il verso in cui l'eroe guarda (`versoEroe`: l'ultimo passo, o dove guarda lo sprite)
   alleSpalle(m) {
+    if (this.torciaAccesa) return false   // con la torcia accesa, piena o agli sgoccioli, nessuno ti prende alle spalle
     const v = this.versoEroe
     const dx = (m.fx != null ? m.fx : m.x + 0.5) - this.eroe.x, dy = (m.fy != null ? m.fy : m.y + 0.5) - this.eroe.y
     // solo dal cono di 120° dietro, lo specchio della luce: da un fianco l'alone lo fa vedere arrivare (docs/sotterraneo/luce.md)

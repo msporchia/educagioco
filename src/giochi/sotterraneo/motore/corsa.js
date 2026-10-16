@@ -5,7 +5,7 @@
 // a prendere la domanda vera da src/quiz/ e non nomina mai una materia qui.
 // `foglio` è un dato ({ che: 'scontro', chi }): finché è aperto il tempo è fermo.
 import {
-  TASCHE, RAGGIO, RAGGIO_TORCIA, RAGGIO_SGOCCIOLI, ALONE, ALONE_TORCIA, ALONE_SGOCCIOLI, APERTURA_CONO, SFUMA_CONO, SFUMA_ARCO, ALONE_SFUMA, FORZA_MINIMA, ROCCIA, ACQUA, DIETRO, FIANCO, ALLA_PAR, LARGO_DIETRO, SVEGLIA, PASSO_EROE, PASSO_MOSTRO, PASSO_RIENTRO,
+  TASCHE, RAGGIO, RAGGIO_TORCIA, RAGGIO_SGOCCIOLI, ALONE, ALONE_TORCIA, ALONE_SGOCCIOLI, APERTURA_CONO, APERTURA_TORCIA, APERTURA_SGOCCIOLI, SFUMA_CONO, SFUMA_ARCO, SFUMA_ARCO_TORCIA, ALONE_SFUMA, FORZA_MINIMA, ROCCIA, ACQUA, DIETRO, FIANCO, ALLA_PAR, LARGO_DIETRO, SVEGLIA, PASSO_EROE, PASSO_MOSTRO, PASSO_RIENTRO,
   CALMA, SORSO, RIPOSO_SCALA, VITA_PER_PIANO,
   ARREDO_DICE, ARREDO_LA_PRIMA_VOLTA,
 } from '../dati/mondo.js'
@@ -260,6 +260,8 @@ export class Corsa extends Corredo {
     return base + this.addosso('luce')
   }
   get aloneDellaLuce() { return !this.torciaAccesa ? ALONE : this.torciaAgliSgoccioli ? ALONE_SGOCCIOLI : ALONE_TORCIA }
+  // gradi da un bordo all'altro: la torcia apre i fianchi
+  get aperturaDellaLuce() { return !this.torciaAccesa ? APERTURA_CONO : this.torciaAgliSgoccioli ? APERTURA_SGOCCIOLI : APERTURA_TORCIA }
 
   // dove guarda l'eroe: l'ultimo passo; prima del primo, dove guarda lo sprite
   get versoEroe() { return this.verso || { dx: this.guarda === 'sx' ? -1 : 1, dy: 0 } }
@@ -288,7 +290,7 @@ export class Corsa extends Corredo {
     const porte = new Set(liv.robe.filter(r => r.che === 'porta' && !r.aperta).map(r => r.y * L + r.x))
     const cono = this.raggioDellaLuce, alone = this.aloneDellaLuce
     const v = this.versoEroe
-    const mezza = APERTURA_CONO / 2 * Math.PI / 180
+    const mezza = this.aperturaDellaLuce / 2 * Math.PI / 180, sfumaArco = this.torciaAccesa ? SFUMA_ARCO_TORCIA : SFUMA_ARCO
     const forza = new Map()
     const accendi = (x, y, f) => {
       if (x < 0 || y < 0 || x >= L || y >= A || f < FORZA_MINIMA) return
@@ -303,7 +305,7 @@ export class Corsa extends Corredo {
       if (d > 0 && d <= cono) {
         const ang = Math.acos(Math.max(-1, Math.min(1, (dx * v.dx + dy * v.dy) / d)))
         const lungo = Math.min(1, (cono - d) / (cono * SFUMA_CONO))
-        const largo = Math.min(1, (mezza - ang) / (mezza * SFUMA_ARCO))
+        const largo = Math.min(1, (mezza - ang) / (mezza * sfumaArco))
         f = Math.max(f, Math.max(0, lungo) * Math.max(0, largo))
       }
       if (f < FORZA_MINIMA) continue
@@ -371,7 +373,9 @@ export class Corsa extends Corredo {
 
   // le gemme si prendono camminandoci sopra: restano toccabili senza rubare il tocco a un forziere accanto
   cosaC(c, largo = 1.2) {
-    const dritto = this.livello.robe.find(r => r.x === c.x && r.y === c.y && this.toccabile(r))
+    // un mostro fermo sopra un portale o una fonte si tocca lui: è lui che sta in mezzo
+    const qui = this.livello.robe.filter(r => r.x === c.x && r.y === c.y && this.toccabile(r))
+    const dritto = qui.find(r => r.che === 'mostro') || qui[0]
     if (dritto) return dritto
     let vicina = null, quanto = 9
     for (const r of this.livello.robe) {
@@ -454,10 +458,11 @@ export class Corsa extends Corredo {
       const sveglio = !!(mia && sua && mia === sua && m.calmo <= 0 && (m.sveglio || vicino))
       m.sveglio = sveglio
 
-      // nella luce va dritto; nell'ombra cerca di arrivare alle spalle (docs/sotterraneo/luce.md)
+      // nella luce va dritto; nell'ombra cerca di arrivare alle spalle, ma con la torcia accesa non ci prova
+      // nemmeno: va dritto anche lui (docs/sotterraneo/luce.md)
       const nellaLuce = this.inLuce(m.y * this.livello.largo + m.x)
       const meta = !sveglio ? { x: m.casa.x + 0.5, y: m.casa.y + 0.5 }
-        : nellaLuce ? this.eroe : this.versoLeSpalle(m, sua)
+        : nellaLuce || this.torciaAccesa ? this.eroe : this.versoLeSpalle(m, sua)
       const dx = meta.x - m.fx, dy = meta.y - m.fy
       const d = Math.hypot(dx, dy)
 

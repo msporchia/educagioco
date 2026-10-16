@@ -23,14 +23,17 @@ export const prezzoTasca = extra => 30 * (extra + 1)
 
 // la luce è un cono davanti all'eroe (nel verso dell'ultimo passo) e un alone corto attorno; alle spalle è ombra
 // (docs/sotterraneo/luce.md). Lunghezze in celle: senza torcia il cono è corto, con la torcia lungo, all'ultima stanza
-// della torcia in mezzo; l'alone dietro è quasi niente senza torcia e circa una cella con. La torcia non accende più
-// la stanza: allunga il cono, e l'ombra c'è sempre
-export const RAGGIO = 3.2, RAGGIO_TORCIA = 6.2, RAGGIO_SGOCCIOLI = 4.4
-export const ALONE = 1.5, ALONE_TORCIA = 2.2, ALONE_SGOCCIOLI = 1.8, ALONE_SFUMA = 1   // l'alone sfuma per l'ultima cella
+// della torcia in mezzo; l'alone dietro è quasi niente senza torcia, e con la torcia tre celle piene: alle spalle resta
+// solo un'ombra tenue lontano (l'utente, 16 ottobre: «si illumina di più ai lati e riduce le ombre alle spalle»)
+export const RAGGIO = 3.2, RAGGIO_TORCIA = 9.5, RAGGIO_SGOCCIOLI = 7
+export const ALONE = 1.5, ALONE_TORCIA = 3.8, ALONE_SGOCCIOLI = 2.8, ALONE_SFUMA = 1   // l'alone sfuma per l'ultima cella
 // gradi, da un bordo all'altro: buio resta solo il settore alle spalle (140°), non i fianchi (l'utente, 13 ottobre: «a destra non si
 // vede nulla»; l'idea era l'ombra DIETRO l'eroe). L'agguato viene dai 120° dietro, dentro quel buio (motore/scontro.js)
 export const APERTURA_CONO = 220
-export const SFUMA_CONO = 0.6, SFUMA_ARCO = 0.45   // quanto del cono (in lunghezza, e in apertura) sfuma fino a spegnersi
+// con la torcia il cono si apre fin quasi a girare attorno, coi fianchi pieni e il bordo più morbido; con la torcia accesa
+// nessuno arriva alle spalle (motore/scontro.js, docs/sotterraneo/luce.md)
+export const APERTURA_TORCIA = 300, APERTURA_SGOCCIOLI = 260
+export const SFUMA_CONO = 0.6, SFUMA_ARCO = 0.45, SFUMA_ARCO_TORCIA = 0.35   // quanto del cono (in lunghezza, e in apertura) sfuma
 export const FORZA_MINIMA = 0.22       // sotto questa forza una cella non è in luce: resta ricordo
 // un mostro si sveglia quando ti avvicini a meno di SVEGLIA celle nella sua stanza, con la luce o senza: è quasi la
 // stanza di prima (la sveglia non dipende dalla luce, o la torcia cambierebbe l'equilibrio); si vede solo in luce
@@ -90,5 +93,8 @@ export function guastiDelMondo() {
   if (ALONE >= RAGGIO || ALONE_TORCIA >= RAGGIO_TORCIA) g.push('l\'alone attorno all\'eroe deve essere più corto del cono')
   if (ALONE_TORCIA <= ALONE) g.push('la torcia non allarga l\'alone')
   if (RAGGIO_SGOCCIOLI <= RAGGIO || RAGGIO_SGOCCIOLI >= RAGGIO_TORCIA) g.push('la torcia agli sgoccioli deve stare fra il buio e la torcia piena')
+  if (ALONE_SGOCCIOLI <= ALONE || ALONE_SGOCCIOLI >= ALONE_TORCIA) g.push('l\'alone agli sgoccioli deve stare fra il buio e la torcia piena')
+  if (!(APERTURA_CONO < APERTURA_SGOCCIOLI && APERTURA_SGOCCIOLI < APERTURA_TORCIA && APERTURA_TORCIA < 360))
+    g.push('l\'apertura del cono: buio, sgoccioli e torcia piena in fila, e un poco d\'ombra dietro resta')
   return g
 }
