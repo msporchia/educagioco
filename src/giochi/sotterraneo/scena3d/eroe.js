@@ -8,6 +8,7 @@ import { pezzoAndante } from '../dati/tessere.js'
 import { PIXEL_CELLA, ALLUNGA } from './costanti.js'
 import { muoviAssalto } from './racconto.js'
 import { barretta } from './etichette.js'
+import { verso } from './tempo.js'
 
 export function creaEroe() {
   return { x: 0, z: 0, dx: 0, dz: 0, vx: 0, vz: 1, lx: 0, lz: 1, t: 0, colpito: 0, cura: 0, gira: 0, assalto: null, meta: null,
@@ -20,16 +21,16 @@ export function disegnaEroe(e, corsa, { figure, luci, etichette, camera, dt, dtS
   if (e.px == null) { e.px = corsa.eroe.x; e.pz = corsa.eroe.y; e.x = e.px; e.z = e.pz }
   if (!e.meta) {
     // finito lo scontro torna dove lo tiene il motore camminando, non di colpo
-    if (e.ritorno && Math.hypot(corsa.eroe.x - e.x, corsa.eroe.y - e.z) > 0.05) { const k = Math.min(1, dtScena * 6); e.x += (corsa.eroe.x - e.x) * k; e.z += (corsa.eroe.y - e.z) * k }
+    if (e.ritorno && Math.hypot(corsa.eroe.x - e.x, corsa.eroe.y - e.z) > 0.05) { const k = verso(dtScena, 6); e.x += (corsa.eroe.x - e.x) * k; e.z += (corsa.eroe.y - e.z) * k }
     else { e.ritorno = false; e.x = corsa.eroe.x; e.z = corsa.eroe.y }
   }
-  else if (dtScena > 0) { e.x += (e.meta.x - e.x) * Math.min(1, dtScena * 6); e.z += (e.meta.z - e.z) * Math.min(1, dtScena * 6) }
+  else if (dtScena > 0) { const k = verso(dtScena, 6); e.x += (e.meta.x - e.x) * k; e.z += (e.meta.z - e.z) * k }
   e.cammina = Math.hypot(e.x - e.px, e.z - e.pz) > 0.001 || (!!e.meta && Math.hypot(e.meta.x - e.x, e.meta.z - e.z) > 0.08)
   e.px = e.x; e.pz = e.z
   // dove guarda: il verso del motore; nello scontro il bersaglio
   if (bersaglio && !e.assalto) { const dx = bersaglio.x - e.x, dz = (bersaglio.z - e.z) * 0.4, l = Math.hypot(dx, dz); if (l > 0.01) { e.vx = dx / l; e.vz = dz / l } }
   else if (!bersaglio && corsa.versoEroe) { const v = corsa.versoEroe, l = Math.hypot(v.dx, v.dy); if (l > 0.01) { e.vx = v.dx / l; e.vz = v.dy / l } }
-  const k = Math.min(1, dt * 9)
+  const k = verso(dt, 9)
   e.lx += (e.vx - e.lx) * k; e.lz += (e.vz - e.lz) * k
   const ll = Math.hypot(e.lx, e.lz) || 1; e.lx /= ll; e.lz /= ll
   e.colpito = Math.max(0, e.colpito - dt); e.cura = Math.max(0, e.cura - dt); e.gira = Math.max(0, e.gira - dt)
@@ -53,6 +54,7 @@ export function disegnaEroe(e, corsa, { figure, luci, etichette, camera, dt, dtS
   const chi = (corsa.io && corsa.io.sprite) || 'cavaliere'
   const fr = (e.t | 0)
   const nome = pezzoAndante(chi, e.cammina ? 'corsa' : 'fermo', fr)
+  e.nome = nome   // per le prove: lo sprite di adesso
   const giro = e.gira > 0 ? (0.5 - e.gira) * Math.PI * 4 : 0
   const o = figure.o()
   o.rosso = e.colpito * 2; o.verde = e.cura * 0.9; o.blu = e.cura * 1.3; o.trasparenza = trasparenza; o.specchio = e.specchio; o.giro = giro

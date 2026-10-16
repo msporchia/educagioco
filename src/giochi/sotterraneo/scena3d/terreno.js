@@ -13,6 +13,7 @@ import { GLSL_RUMORE } from './luci.js'
 import { scolpisciPareti } from './pareti.js'
 import { fbm3d } from './rumore.js'
 import { ALTO_MURO, PARAPETTO } from './costanti.js'
+import { verso } from './tempo.js'
 
 // le altezze dei muri nello shader: la cella di ogni vertice, e quanto è alta adesso (0..1 nella trama)
 const GLSL_ALTO_V = 'attribute float aCella; uniform sampler2D uAltoMuri; uniform vec2 uDimAlto;\n'
@@ -215,7 +216,7 @@ export function creaTerreno(scena, { pianta, aspetto, trame, maschera, seme = 1 
       for (let i = 0; i < alto.length; i++) {
         const d = meta[i] - alto[i]
         if (d === 0) continue
-        alto[i] = Math.abs(d) < 0.002 ? meta[i] : alto[i] + d * Math.min(1, dt * 5)
+        alto[i] = Math.abs(d) < 0.002 ? meta[i] : alto[i] + d * verso(dt, 5)
         mosso = true
         const c = alti[i]
         datiAlto[p.id(c.x, c.y) * 4] = Math.round(alto[i] * 255)

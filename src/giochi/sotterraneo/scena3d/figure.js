@@ -7,6 +7,7 @@ import { InstancedMesh, InstancedBufferAttribute, PlaneGeometry, MeshStandardMat
          DoubleSide, Matrix4, Vector3, Quaternion, Euler, Color } from 'three'
 import { conMaschera } from './maschera.js'
 import { LUCE, ALLUNGA, PIXEL_CELLA } from './costanti.js'
+import { verso } from './tempo.js'
 
 const VERTICE = /* glsl */`
 #ifdef USE_MAP
@@ -75,7 +76,7 @@ export function creaFigure(scena, { tex, norm, larga, alta, pezzi, maschera, max
     // da vicino (lo scontro, `quanto` 1) la normal map finta e il contorno caldo quasi spenti, il colore più pieno: lo sprite
     // resta come è disegnato. Ci si va in un terzo di secondo
     nitido(quanto, dt) {
-      n0 += (quanto - n0) * Math.min(1, dt * 3)
+      n0 += (quanto - n0) * verso(dt, 3)
       const q = LUCE.nitidoScontro
       nitidezza.uRimF.value = LUCE.rim + (q.rim - LUCE.rim) * n0
       nitidezza.uMinimoF.value = LUCE.minimoFigure + (q.minimo - LUCE.minimoFigure) * n0

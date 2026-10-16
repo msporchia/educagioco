@@ -56,7 +56,7 @@ export class StatoGlobo {
     this.bolle = this.bolle.filter(b => {
       if (b.d > 0) { b.d -= dt; return true }
       b.y += b.v * dt
-      b.x += Math.sin(this.t * 6 + b.v * 9) * 0.004
+      b.x += Math.sin(this.t * 6 + b.v * 9) * 0.24 * dt   // al secondo: a fotogramma andava il doppio a 120 Hz
       return b.y < pelo - b.r
     })
     return this.vivo()

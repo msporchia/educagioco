@@ -4,6 +4,7 @@
 // sta sotto il dito.
 import { PerspectiveCamera, Vector3, Vector2, Plane, Raycaster, MathUtils } from 'three'
 import { CAMERA } from './costanti.js'
+import { verso } from './tempo.js'
 
 export function creaCamera() {
   const camera = new PerspectiveCamera(CAMERA.fov, 1, 0.5, 200)
@@ -34,8 +35,8 @@ export function creaCamera() {
     // `centro` in mondo, `scontro` se si inquadra un combattimento, `coperto` i px coperti in basso, `scossa` 0..1
     // `celle`: quante ne servono nello scontro perché ci stiano tutti (mai meno di CAMERA.celleScontro)
     aggiorna(dt, centro, { scontro = false, celle = CAMERA.celleScontro, coperto = 0, scossa = 0, t = 0 } = {}) {
-      celleOra += ((scontro ? Math.max(CAMERA.celleScontro, celle) : CAMERA.celle) - celleOra) * Math.min(1, dt * 3)
-      spostaY += (coperto * 0.5 - spostaY) * Math.min(1, dt * 5)
+      celleOra += ((scontro ? Math.max(CAMERA.celleScontro, celle) : CAMERA.celle) - celleOra) * verso(dt, 3)
+      spostaY += (coperto * 0.5 - spostaY) * verso(dt, 5)
       if (Math.abs(spostaY) > 0.5) camera.setViewOffset(L, A, 0, spostaY, L, A)
       else if (camera.view) camera.clearViewOffset()
       // la distanza voluta, arrotondata a una scala intera (un pixel dello sprite = k pixel del disegno, k fra 1 e pixelMassimo),
@@ -48,10 +49,10 @@ export function creaCamera() {
       // se la scala intera porterebbe la telecamera troppo lontano o vicino (pochi pixel: un pixel ratio basso) non si arrotonda
       let dMeta = pxAlto / (tanV * k)
       if (dMeta < d0 * 0.8 || dMeta > d0 * 1.25) dMeta = d0
-      dOra = primo || !dOra ? dMeta : dOra + (dMeta - dOra) * Math.min(1, dt * 6)
+      dOra = primo || !dOra ? dMeta : dOra + (dMeta - dOra) * verso(dt, 6)
       off.multiplyScalar(dOra / d0)
       meta.copy(centro).add(off)
-      if (primo) { camera.position.copy(meta); primo = false } else camera.position.lerp(meta, Math.min(1, dt * 6))
+      if (primo) { camera.position.copy(meta); primo = false } else camera.position.lerp(meta, verso(dt, 6))
       const s2 = scossa * scossa
       camera.lookAt(camera.position.x, camera.position.y - off.y + CAMERA.guarda, camera.position.z - off.z)
       camera.position.x += s2 * 0.35 * Math.sin(t * 71.3); camera.position.y += s2 * 0.25 * Math.sin(t * 53.1 + 1)

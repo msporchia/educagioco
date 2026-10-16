@@ -17,6 +17,7 @@ import { SCALA_SU } from '../scena/scala-su.js'
 import { posaDi } from './pianta.js'
 import { esc, barretta } from './etichette.js'
 import { PIXEL_CELLA, ALLUNGA } from './costanti.js'
+import { verso } from './tempo.js'
 
 // i colori pronti una volta: a ogni fotogramma non si legge una stringa
 const AURA = { magico: new Color('#6f8dff'), raro: new Color('#ffd23f'), leggendario: new Color('#ff9a2e') }
@@ -32,7 +33,7 @@ export function creaCose({ figure, aloni, colonne, etichette, camera, apre = nul
   const punto = { x: 0, y: 0 }
   const stato = r => {
     let s = stati.get(r)
-    if (!s) { s = { x: r.fx ?? r.x + 0.5, z: r.fy ?? r.y + 0.5, t: Math.random() * 4, flash: 0, assalto: null, morente: 0, meta: null, alto: 1, specchio: false }; stati.set(r, s) }
+    if (!s) { s = { x: r.fx ?? r.x + 0.5, z: r.fy ?? r.y + 0.5, t: Math.random(), flash: 0, assalto: null, morente: 0, meta: null, alto: 1, specchio: false }; stati.set(r, s) }
     return s
   }
   // un segno scritto sopra (x, z) a quota `alto` (in celle), spostato di `dy` px
@@ -55,7 +56,9 @@ export function creaCose({ figure, aloni, colonne, etichette, camera, apre = nul
       const passi = !scheda.unaPosa && quantiFotogrammi(scheda.sprite, 'corsa') > 0
       const corre = s.corre && passi
       const posa = corre || (passi && (r.sveglio || scheda.fermoDaiPassi) && inCampo < 0) ? 'corsa' : 'fermo'
-      const fr = (s.t * (corre ? 9 : r.sveglio ? 8 : posa === 'corsa' ? 1.5 : 4)) | 0
+      // i fotogrammi al secondo del 2D (scena/tela.js): 8 da sveglio o di corsa, 1,5 i passi di chi dorme, 4 il respiro. `s.t` è in
+      // secondi: prima cresceva di 6 al secondo e qui si moltiplicava ancora, e i mostri giravano 48 pose al secondo
+      const fr = (s.t * (corre || r.sveglio ? 8 : posa === 'corsa' ? 1.5 : 4)) | 0
       nome = fotogrammaDi(scheda.sprite, posa, inCampo >= 0 && passi && !corre ? 0 : fr)
       const p = PEZZI[nome]
       scala = (r.missione ? BERSAGLIO.scala : 1) * fattoreDelMostro(r.tipo, p ? p[3] : 16, p ? p[2] : 0)
@@ -74,6 +77,7 @@ export function creaCose({ figure, aloni, colonne, etichette, camera, apre = nul
     const o = figure.o()
     o.scala = scala; o.specchio = specchio; o.bianco = s.flash * 2.5; o.trasparenza = trasparenza; o.cosa = morto ? null : r
     figure.metti(nome, x, 0, z, o)
+    s.nome = nome   // per le prove: lo sprite di adesso
     s.alto = figure.alto(nome, scala)
     // l'arma in pugno di una variante (dati/varianti.js, `MANI`): sulla sua mano, in proporzione
     const mano = MANI[r.tipo], corpo = PEZZI[nome], arma = r.arma && PEZZI[r.arma]
@@ -161,9 +165,9 @@ export function creaCose({ figure, aloni, colonne, etichette, camera, apre = nul
           const s = stato(r)
           s.dtScena = dtScena
           // fuori dal palco il mostro sta dove lo mette il motore; dentro, il palco lo porta al suo posto
-          if (s.meta) { s.x += (s.meta.x - s.x) * Math.min(1, dtScena * 5); s.z += (s.meta.z - s.z) * Math.min(1, dtScena * 5); s.corre = Math.hypot(s.meta.x - s.x, s.meta.z - s.z) > 0.08 }
+          if (s.meta) { const k = verso(dtScena, 5); s.x += (s.meta.x - s.x) * k; s.z += (s.meta.z - s.z) * k; s.corre = Math.hypot(s.meta.x - s.x, s.meta.z - s.z) > 0.08 }
           else { const nx = r.fx ?? r.x + 0.5, nz = r.fy ?? r.y + 0.5; s.corre = Math.hypot(nx - s.x, nz - s.z) > 0.002 && r.sveglio; s.x = nx; s.z = nz }
-          s.t += dtScena * 6; s.flash = Math.max(0, s.flash - dt * 7)
+          s.t += dtScena; s.flash = Math.max(0, s.flash - dt * 7)
           if (inCampo < 0) s.specchio = r.guarda === 'sx'
           const k = Math.floor(s.z) * liv.largo + Math.floor(s.x)
           const inLuce = corsa.inLuce(k)

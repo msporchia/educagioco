@@ -25,6 +25,7 @@ import { costruisciPiano } from './piano.js'
 import { creaScontro } from './scontro.js'
 import { creaContorno } from './contorno.js'
 import { ACCESI, POLVERE, SCINTILLE, FIGURE_MAX, ALONI_MAX } from './costanti.js'
+import { verso } from './tempo.js'
 
 const NIENTE = { emetti() {}, aggiorna() {}, aspetto() {}, via() {} }
 
@@ -137,7 +138,7 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
     if (!passando) azione.passo(corsa)
     const t = S.tempo
 
-    aggiornaVisibilita(piano.vis, { forza: corsa.forzaLuce, visto: corsa.visto, palco: scontro.punti(), k: Math.min(1, dtVero * 7) })
+    aggiornaVisibilita(piano.vis, { forza: corsa.forzaLuce, visto: corsa.visto, palco: scontro.punti(), k: verso(dtVero, 7) })
     scriviTexel(piano.vis); maschera.rinfresca()
 
     figure.inizia(); figureEroe.inizia(); aloni.inizia(); colonne.inizia(); etichette.inizia()
@@ -160,7 +161,7 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
     S.scossa = Math.max(0, S.scossa - dtVero * 2.2)
     cam.aggiorna(dtVero, centro, { scontro: !!scontro.palco, celle: scontro.celle, coperto, scossa: S.scossa, t })
     // la luce del palco: nello scontro una luce calda dalla parte della telecamera schiarisce i combattenti
-    luci.palco.intensity += ((scontro.palco ? 5 : 0) - luci.palco.intensity) * Math.min(1, dtVero * 4)
+    luci.palco.intensity += ((scontro.palco ? 5 : 0) - luci.palco.intensity) * verso(dtVero, 4)
     luci.palco.position.set(centro.x, 2.6, centro.z + 2.8)
     scontro.buco(maschera.uniforms, centro)
 
