@@ -3,16 +3,18 @@
 Le voci aperte, ognuna con quello che serve per farla. Il progetto dettagliato
 dell'abisso sta in [abisso-progetto.md](abisso-progetto.md).
 
-## Le botti da rompere (idea del 15 ottobre 2026)
+## Le botti da rompere (idea del 15 ottobre 2026, fatte nel 3D il 16)
 
-Più cose da fare e più divertimento per il bambino fra uno scontro e l'altro: **botti sparse nelle stanze che si
-rompono toccandole, e ogni tanto lasciano cadere qualcosa di basilare** (una moneta, una pozione piccola); in cambio
-**niente domanda per aprire libri, forzieri e simili** (oggi la apre una domanda, vedi [regole.md](regole.md) e
-[arredo.md](arredo.md)). Non è fatta: cambia quanto il bambino guadagna per piano, quindi **va ricalibrata**
-([giocatori-tipo.md](giocatori-tipo.md), `npm run taratura`): prima si decide cosa cade e quanto spesso, poi si
-rimisurano risposte e bottino per discesa. La prova di come si vede, modellata in 3D (la botte che si rompe in doghe),
-sta in `poc/sotterraneo-luce` ([poc/sotterraneo-luce.md](../../poc/sotterraneo-luce.md)); nel gioco vero la botte è
-ancora arredo fermo (nel Sotterraneo 3D c'è, modellata: `scena3d/botti.js`).
+**Fatto, solo nel Sotterraneo 3D**: botti in alcune stanze (una su quattro o cinque nelle cantine e nella miniera, rade e
+vecchie nella cripta e nel tempio, marce nella palude, un accampamento nella grotta, niente nel ghiaccio, nella neve, nella
+fornace e nell'inferno), si toccano, l'eroe le rompe, restano rotte (anche nella sosta), e **una su cinque lascia una
+boccetta o una o due gemme**, per terra come il bottino dei mostri. La regola è del motore (`motore/botti.js`, la tabella in
+`dati/botti.js`) ma **spenta di difetto**: la accende solo il 3D (`Corsa.botti`), il 2D e il banco non la conoscono, quindi
+`npm run taratura` e `npm run test:misure` misurano il gioco di prima ([paesaggi-3d.md](paesaggi-3d.md#le-botti)).
+
+**Resta**: ricalibrare il bottino coi giocatori tipo (`npm run taratura`, [giocatori-tipo.md](giocatori-tipo.md)) con le botti
+accese, e solo dopo accenderle nel gioco normale (il 2D vorrà le sue). L'altra metà dell'idea, **niente domanda per aprire
+libri, forzieri e simili** ([regole.md](regole.md), [arredo.md](arredo.md)), non è fatta: va decisa insieme alla taratura.
 
 ## Il Sotterraneo 3D (fase 1 fatta il 15 ottobre 2026)
 

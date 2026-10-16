@@ -55,7 +55,7 @@ Tutto in `src/giochi/sotterraneo/scena3d/`, un file per tema.
 | `segni.js` | fiamme, chiarori per terra, colonne di luce, anelli, bolla (istanziati) |
 | `particelle.js` | nebbia, l'aria del paesaggio (polvere, braci, gocce, neve, brina, lucciole, bolle: `ARIA`), scintille |
 | `arredo3d.js`, `raggi.js` | l'arredo modellato e fitto del paesaggio, le lame di luce dall'alto |
-| `acqua.js`, `relitti.js`, `fontana.js`, `portale.js`, `botti.js` | le pozze con le rive storte (lava nell'inferno, il velo del tempio), i relitti in codice, le cose di scena modellate, le botti di decoro |
+| `acqua.js`, `relitti.js`, `fontana.js`, `portale.js`, `botti.js` | le pozze con le rive storte (lava nell'inferno, il velo del tempio), i relitti in codice, le cose di scena modellate, le botti da rompere (lo stato è del motore: `motore/botti.js`) |
 | `palco.js`, `scontro.js`, `racconto.js` | dove stanno i combattenti (puro), il palco che si apre e si chiude col foglio del motore, il turno raccontato in scena |
 | `azione.js`, `dito.js` | il punta-e-clicca (puro) e la scelta di cosa sta sotto il dito |
 | `camera.js`, `post.js`, `contorno.js`, `etichette.js` | la telecamera, il passaggio finale, la mappina e le feste, i segni in HTML |
@@ -141,8 +141,8 @@ Dieci paesaggi, ognuno con la forma delle pareti, il disegno del pavimento, le c
 quattro delle discese (cantine, cripta, fornace, inferno) e sei solo del 3D che si aprono col cheat (grotta, nevi, ghiaccio,
 palude, tempio sommerso, miniera). Il paesaggio è lo scenario del piano, o il `paesaggio` della discesa o del tratto se lo
 dichiarano. Tutto in [paesaggi-3d.md](paesaggi-3d.md), con la tavola che li mette affiancati
-(`node strumenti/tavola-paesaggi.mjs`). Le botti di decoro restano solo nelle cantine ([arredo.md](arredo.md)); romperle è una
-voce di [da-fare.md](da-fare.md).
+(`node strumenti/tavola-paesaggi.mjs`). Le botti da rompere stanno in alcune stanze dei paesaggi dove hanno senso
+([paesaggi-3d.md](paesaggi-3d.md#le-botti)).
 
 ## Senza WebGL
 
