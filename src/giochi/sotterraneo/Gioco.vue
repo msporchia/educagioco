@@ -950,6 +950,25 @@ function corredoDaProva(c) {
   if (sola) c.mano = sola
 }
 
+// `#torcia=accesa` (piena, con una di scorta), `sgoccioli` (l'ultima stanza dell'ultima) o `spenta`: per guardare la luce coi suoi
+// tre stati senza camminare (docs/sotterraneo/luce.md)
+function torciaDaProva(c) {
+  const t = new URLSearchParams(location.hash.slice(1)).get('torcia')
+  if (!['accesa', 'sgoccioli', 'spenta'].includes(t)) return
+  c.torciaResta = t === 'spenta' ? 0 : t === 'sgoccioli' ? 1 : c.stanzeTorcia
+  c.torceInScorta = t === 'accesa' ? 1 : 0
+  c.aggiornaLuce()
+}
+
+// `#verso=sx` (o `dx`, `su`, `giu`): l'eroe guarda di là, come dopo un passo, per fotografare il cono girato
+function versoDaProva(c) {
+  const v = { sx: [-1, 0], dx: [1, 0], su: [0, -1], giu: [0, 1] }[new URLSearchParams(location.hash.slice(1)).get('verso')]
+  if (!v) return
+  c.verso = { dx: v[0], dy: v[1] }
+  if (v[0]) c.guarda = v[0] < 0 ? 'sx' : 'dx'
+  c.aggiornaLuce()
+}
+
 // `#abisso=12` comincia già a quel piano, per guardare una schermata senza aspettare due sere di discesa
 // `#piano=2` fa lo stesso in una discesa della storia (fino all'ultimo, dove aspetta il mostro grosso)
 function pianoDaProva(c) {
@@ -1121,8 +1140,10 @@ function avvia(i, { prova = false } = {}) {
                                crescita: crescita.value, missioni: presePer(missioni.value, t.chiave), conti: qui.value.conti })
   borsellino = borsa(CHIAVE)
   corredoDaProva(corsa.value)
+  torciaDaProva(corsa.value)
   pianoDaProva(corsa.value)
   stanzaDaProva(corsa.value)
+  versoDaProva(corsa.value)
   leggendarioDaProva(corsa.value)
   preparatiDaProva(corsa.value)
   brancoDaProva(corsa.value)
