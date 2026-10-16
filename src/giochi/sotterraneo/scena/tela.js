@@ -102,6 +102,9 @@ export class Tela {
     return { x: (x * T - this.vista.x) * this.scala, y: (y * T - this.vista.y) * this.scala }
   }
 
+  // sopra la testa dell'eroe, sopra la barretta della vita: il fumetto dei pensieri (Gioco.vue, docs/sotterraneo/pensieri.md)
+  testaDi(corsa) { return this.schermoDi(corsa.eroe.x, corsa.eroe.y - 1.3) }
+
   cellaDa(sx, sy) {
     return {
       x: Math.floor((sx / this.scala + this.vista.x) / T),

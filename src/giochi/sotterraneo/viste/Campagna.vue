@@ -22,8 +22,10 @@ const props = defineProps({
   puntiAbilita: { type: Number, default: 0 },
   forze: { type: Object, default: null },    // vita ed energia di chi ha lasciato la discesa dal portale: { vita, vitaMax, energia, energiaMax }
   annuncio: { type: Object, default: null }, // la zona appena nata che il minatore racconta (motore/zone.js): { chiave, nome, livello, detto, sentita }
+  pensiero: { type: Object, default: null },  // il pensiero dell'eroe sopra la testa (docs/sotterraneo/pensieri.md)
 })
-const emit = defineEmits(['gioca', 'riprendi', 'scorda', 'terra', 'bottega', 'segui', 'sentito', 'scheda', 'cura'])
+const emit = defineEmits(['gioca', 'riprendi', 'scorda', 'terra', 'bottega', 'segui', 'sentito', 'scheda', 'cura',
+                          'pensa', 'pensiero', 'pensiero-fine', 'trovati'])
 riprendiSeChiesta(() => props.ripresa, () => emit('riprendi'))
 
 const chiede = ref(null)   // quale tappa si sta per cominciare avendo una discesa in sospeso
@@ -44,12 +46,13 @@ function vaDa(chi) {
 
 // un tocco fuori dal diario (o dalla bottega, da Gioco.vue) lo chiude e passa alla terra: l'eroe va dove si è toccato
 function toccoDaFuori(x, y) { if (terraEl.value) terraEl.value.toccoDaFuori(x, y) }
+const vaDaMercante = k => { if (terraEl.value) terraEl.value.vaDaMercante(k) }
 function fuoriDalDiario(e) {
   diarioAperto.value = false
   if (e) toccoDaFuori(e.clientX, e.clientY)
 }
 const apriDiario = su => { diarioAperto.value = su === undefined ? !diarioAperto.value : !!su }
-defineExpose({ toccoDaFuori, apriDiario })
+defineExpose({ toccoDaFuori, apriDiario, vaDaMercante })
 
 function tocca(t) {
   if (!props.ripresa) return emit('gioca', t.indice)
@@ -71,7 +74,8 @@ function comincia() {
            :giaScesa="ripresa ? ripresa.tappa : null" :portale="portale"
            :annuncio="annuncio" :forze="forze" @sentito="$emit('sentito')" @cura="r => $emit('cura', r)"
            @scendi="tocca" @terra="v => $emit('terra', v)" @bottega="(k, s) => $emit('bottega', k, s)"
-           @riprendi="$emit('riprendi')">
+           @riprendi="$emit('riprendi')" :pensiero="pensiero" @pensa="$emit('pensa')" @pensiero="p => $emit('pensiero', p)"
+           @pensiero-fine="$emit('pensiero-fine')" @trovati="v => $emit('trovati', v)">
       <template #sopra>
         <div v-if="ripresa" class="sot-ripresa" data-ripresa="1">
           <p class="sot-dove">

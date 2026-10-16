@@ -208,6 +208,12 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
     avvia() { if (!raf && vivo) { prima = 0; raf = requestAnimationFrame(passo) } },
     ferma() { cancelAnimationFrame(raf); raf = 0 },
     schermoDi(x, y) { const p = cam.schermo(x, 0, y); return { x: p.x, y: p.y } },
+    // sopra la testa dell'eroe com'è disegnato (la sua altezza, sopra la barretta): il fumetto dei pensieri (Gioco.vue)
+    testaDi(corsa) {
+      const d = eroe && eroe.disegnato
+      const p = d ? cam.schermo(d.x, (eroe.alto || 1) + 0.3, d.z) : cam.schermo(corsa.eroe.x, 1.3, corsa.eroe.y)
+      return { x: p.x, y: p.y }
+    },
     cellaDa(px, py) { return cam.cellaDa(px, py) || { x: -1, y: -1 } },
     // il dito: un tocco (`p` in px nel campo) e il trascinare
     premi(p) {

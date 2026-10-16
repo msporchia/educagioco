@@ -105,6 +105,8 @@ if (opz('storia', null) != null) {
     missioni: Object.fromEntries((opz('missioni', '') || '').split(',').filter(Boolean).map(x => x.split(':'))),
     zaino: (opz('zaino', '') || '').split(',').filter(Boolean), punti: Number(opz('punti', 0)),
   })
+  // anche dopo la semina: la terra di sopra ha le sue attese (i pensieri dell'eroe da fermo, docs/sotterraneo/pensieri.md)
+  await page.waitForTimeout(Number(opz('aspetta', 0)))
 }
 
 const stili = opz('stili', null)
