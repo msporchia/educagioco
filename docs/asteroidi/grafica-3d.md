@@ -143,6 +143,11 @@ sassi cambia col posto.
   `tinteNave`; le tinte lucide fanno il metallo lucido.
 - Botta rossa, riparazione verde, scudo esagonale col gelo.
 
+- **L'hangar usa lo stesso pittore** quando il gioco è in 3D (`tre` in
+  `components/HangarAsteroidi.vue`): una scena con la sola nave sul suo cielo; senza
+  WebGL resta il disegno 2D. Lo scafo a tornio va dal basso al muso: nell'altro verso
+  le facce guardano dentro e si vede l'interno dello scafo dietro le ali.
+
 ## Quanto costa
 
 - **Una qualità sola**, niente bagliore (bloom) e niente pannello: il

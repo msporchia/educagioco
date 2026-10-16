@@ -10,9 +10,13 @@ import { Group, Mesh, LatheGeometry, BoxGeometry, CylinderGeometry, SphereGeomet
          NoColorSpace, RepeatWrapping, MeshStandardMaterial, MeshPhysicalMaterial, MeshBasicMaterial,
          ShaderMaterial, AdditiveBlending, DoubleSide, Color, Quaternion } from 'three'
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js'
-import { ali, strappa, SCHEGGE, PROPULSORI, statoScafo, tinteNave, mescola } from '../spazio.js'
+import { ali as aliDelDue, strappa, SCHEGGE, PROPULSORI, statoScafo, tinteNave, mescola } from '../spazio.js'
 import { traccia, dipingiAla, disegnaStemma } from '../livrea.js'
 import { seme, rgb } from './rumore.js'
+
+// le ali del 2D si attaccano a x = 0,30, dove sopra la vita lo scafo è già più stretto: restava un vuoto con il contorno
+// dipinto in vista. In 3D la radice entra nello scafo (stessi punti, solo i due attacchi più dentro)
+const ali = lv => aliDelDue(lv).map(a => a.map(([x, y], i) => (i === 0 || i === a.length - 1) ? [Math.min(x, 0.12), y] : [x, y]))
 
 // la tela delle ali: x da 0 a ±1,5, y (del 2D, in giù) da -0,5 a 1,1
 const PX = 160, TELA_W = 240, TELA_H = 256, Y0 = -0.5
@@ -165,20 +169,11 @@ export function creaNave(scena) {
 
   // lo scafo: un tornio sulla sagoma del 2D (muso a 1,18, il più largo a 0,36), schiacciato
   const profilo = [[0, 1.18], [0.09, 1.0], [0.21, 0.7], [0.3, 0.42], [0.35, 0], [0.36, -0.34], [0.3, -0.6], [0.24, -0.74], [0, -0.76]]
+    .reverse()   // dal basso al muso: nell'altro verso le facce guardavano dentro e si vedeva l'interno dello scafo, dietro le ali
     .map(([x, y]) => new Vector2(x, y))
   e(new LatheGeometry(profilo, 36), scafo).scale.set(1, 1, 0.6)
-  // i dettagli scuri in un pezzo solo: dorsale, vano, antenna, scatolette
-  const dett = [new BoxGeometry(0.06, 0.9, 0.06).translate(0, -0.1, 0.2), new BoxGeometry(0.2, 0.2, 0.04).translate(0, -0.48, 0.19),
-                new CylinderGeometry(0.012, 0.012, 0.4, 6).translate(0, 1.3, 0)]
-  const r = seme(31)
-  for (let i = 0; i < 10; i++) {   // le prese e le scatolette, sui fianchi dietro la torretta
-    const w = 0.03 + r() * 0.04, h = 0.05 + r() * 0.08, y = -0.68 + r() * 0.5, lato = i % 2 ? 1 : -1
-    dett.push(new BoxGeometry(w, h, 0.025).translate(lato * (0.1 + r() * 0.12), y, 0.18 + r() * 0.02))
-  }
-  e(mergeGeometries(dett.map(g => (g.index ? g.toNonIndexed() : g))), scuro)
-  // le fasce colorate lungo i fianchi
-  e(mergeGeometries([-1, 1].map(s => new BoxGeometry(0.03, 0.55, 0.05).translate(s * 0.31, -0.15, 0.08).toNonIndexed())), accento)
-
+  // un solo dettaglio scuro: l'antenna. Le scatolette sui fianchi, il vano e la dorsale facevano la nave a cubetti
+  e(new CylinderGeometry(0.012, 0.012, 0.4, 6).translate(0, 1.3, 0), scuro)
   // la cabina, e il vetro che si crepa
   const cabina = e(new SphereGeometry(1, 28, 18), vetro, 0, 0.44, 0.15)
   cabina.scale.set(0.23, 0.33, 0.13)
@@ -396,8 +391,10 @@ export function creaNave(scena) {
       }
       colpo += dt
       scudoMat.uniforms.uT.value = colpo
-      scudoMat.uniforms.uGelo.value = Math.min(1, n.gelo || 0) * (1 + Math.sin(t * 3) * 0.08)
-      scudo.visible = colpo < 1.7 || (n.gelo || 0) > 0
+      // le vite di scorta: lo stesso scudo, più tenue, sempre acceso (più scorta, più si vede)
+      const fisso = n.scorta > 0 ? 0.4 + 0.15 * Math.min(2, n.scorta) : 0
+      scudoMat.uniforms.uGelo.value = Math.max(Math.min(1, n.gelo || 0), fisso) * (1 + Math.sin(t * 3) * 0.08)
+      scudo.visible = colpo < 1.7 || (n.gelo || 0) > 0 || fisso > 0
     },
     // dove sono gli ugelli, per la luce dei motori
     lv: () => lvOra,
