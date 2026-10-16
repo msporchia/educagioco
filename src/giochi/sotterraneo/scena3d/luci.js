@@ -4,6 +4,7 @@
 // Nebbia, polvere e acqua sommano a mano le stesse luci (`condivise`), senza passare dal sistema di three.
 import { HemisphereLight, PointLight, SpotLight, Vector3, Color } from 'three'
 import { N_FUOCHI, MAX_LUCI, LUCE, ACCESI } from './costanti.js'
+import { verso } from './tempo.js'
 
 export const GLSL_RUMORE = /* glsl */`
 float hash13(vec3 p){ p = fract(p*0.1031); p += dot(p, p.zyx+31.32); return fract((p.x+p.y)*p.z); }
@@ -41,13 +42,16 @@ export function creaLuci(scena, aspetto) {
   const lampo = new PointLight(0xfff0d0, 0, 5, 1.5)
   const magia = new PointLight(0xffffff, 0, 4, 1.5)
   const palco = new PointLight(0xffe0bc, 0, 14, 1.0)
+  const rimbalzo = new PointLight(0xff9a50, 0, 6, 1.5)   // la torcia accesa: la luce che torna su dal pavimento
   const fuochi = Array.from({ length: N_FUOCHI }, () => new PointLight(0xff8a3c, 0, 7, 1.7))
-  scena.add(cielo, alone, cono, cono.target, lampo, magia, palco, ...fuochi)
-  const tinta = new Color(), base = new Color(0xffc488), tmp = new Vector3()
+  scena.add(cielo, alone, cono, cono.target, lampo, magia, palco, rimbalzo, ...fuochi)
+  const tinta = new Color(), base = new Color(0xffc488), calda = new Color(0xffa650), tmp = new Vector3()
+  const T = LUCE.torcia
 
   return {
-    condivise, alone, cono, lampo, magia, palco, cielo,
+    condivise, alone, cono, lampo, magia, palco, cielo, rimbalzo,
     tinta, tTinta: 0,
+    q: 0,   // quanto è accesa la torcia, inseguito: 0 al buio, 1 piena
     // le cose che fanno luce: { pos: Vector3, colore: Color, forza, vis (0..1, quanto si vede adesso), d (distanza²) }
     // si riempie una volta per piano; ogni fotogramma la riserva va alle più vicine che si vedono
     aspetto(a) { cielo.color.set(a.cielo); cielo.groundColor.set(a.terra); cielo.intensity = LUCE.ambiente * a.ambiente },
@@ -72,17 +76,25 @@ export function creaLuci(scena, aspetto) {
       const k = condivise.uLn.value; if (k >= MAX_LUCI) return
       condivise.uLp.value[k].copy(p); condivise.uLc.value[k].set(c.r * i, c.g * i, c.b * i); condivise.uLn.value++
     },
-    // la torcia dell'eroe: alone e cono nel punto (x, z), girati verso (vx, vz); il colore del colpo finché dura
-    torcia(x, z, vx, vz, t, dt) {
-      const tremo = 1 + Math.sin(t * 23) * 0.03 + Math.sin(t * 37.1) * 0.03
+    // la luce dell'eroe: alone e cono nel punto (x, z), girati verso (vx, vz); il colore del colpo finché dura. `accesa`: la
+    // torcia, 0 al buio, 1 piena, in mezzo agli sgoccioli: più forte, più lunga, più aperta, più calda e più viva (come il motore)
+    torcia(x, z, vx, vz, t, dt, accesa = 0) {
+      this.q += (accesa - this.q) * verso(dt, 3)
+      const q = this.q
+      const tremo = 1 + (Math.sin(t * 23) * 0.03 + Math.sin(t * 37.1) * 0.03) * (1 + q) + Math.sin(t * 11.3) * 0.04 * q
       this.tTinta = Math.max(0, this.tTinta - dt)
-      cono.color.copy(base).lerp(tinta, Math.min(1, this.tTinta * 3)); alone.color.copy(cono.color)
-      alone.position.set(x + vx * 0.3, 1.45, z + vz * 0.3 - 0.1); alone.intensity = LUCE.alone * tremo
-      cono.position.set(x, 1.15, z); cono.target.position.set(x + vx * 4, 0, z + vz * 4); cono.intensity = LUCE.cono * tremo
-      this.aggiungi(alone.position, alone.color, 0.3 * tremo)
+      cono.color.copy(base).lerp(calda, q * 0.6).lerp(tinta, Math.min(1, this.tTinta * 3)); alone.color.copy(cono.color)
+      alone.position.set(x + vx * 0.3, 1.45, z + vz * 0.3 - 0.1); alone.intensity = LUCE.alone * (1 + T.alone * q) * tremo
+      alone.distance = 10 + T.lungoAlone * q
+      cono.position.set(x, 1.15, z); cono.target.position.set(x + vx * 4, 0, z + vz * 4); cono.intensity = LUCE.cono * (1 + T.cono * q) * tremo
+      cono.distance = 17 + T.lungoCono * q; cono.angle = 1.12 + T.apre * q; cono.penumbra = 0.8 + 0.15 * q
+      cono.shadow.radius = 3 - 1.2 * q   // ombre più nette: la fiamma è più forte
+      rimbalzo.position.set(x + vx * 1.1, 0.3, z + vz * 1.1); rimbalzo.intensity = T.rimbalzo * q * tremo
+      this.aggiungi(alone.position, alone.color, 0.3 * (1 + 0.6 * q) * tremo)
       condivise.uConoP.value.copy(cono.position)
       condivise.uConoD.value.copy(tmp.copy(cono.target.position).sub(cono.position).normalize())
-      condivise.uConoC.value.set(1.0, 0.72, 0.42).multiplyScalar(0.5 * tremo)
+      condivise.uConoC.value.set(1.0, 0.72 - 0.08 * q, 0.42 - 0.1 * q).multiplyScalar(0.5 * (1 + 0.5 * q) * tremo)
+      return tremo
     },
     // il lampo e la magia si spengono da sé
     spegni(dt) {

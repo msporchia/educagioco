@@ -49,6 +49,11 @@ export function creaFiamme(scena, maschera, fuochi, tinta = null) {
     aggiorna(t) { mat.uniforms.uT.value = t },
     // una fiamma che sparisce (la sua torcia sta su un muro abbassato per lo scontro) o torna
     accesa(i, si) { const v = si ? fuochi[i].scala : 0; if (dati[i * 4] !== v) { dati[i * 4] = v; geo.attributes.aFiamma.needsUpdate = true } },
+    // una fiamma che si porta in giro (la torcia in mano all'eroe): il posto, e la cella dove legge la maschera
+    sposta(i, x, y, z) {
+      mesh.setMatrixAt(i, m.makeTranslation(x, y, z)); mesh.instanceMatrix.needsUpdate = true
+      dati[i * 4 + 2] = Math.floor(x) + 0.5; dati[i * 4 + 3] = Math.floor(z) + 0.5; geo.attributes.aFiamma.needsUpdate = true
+    },
     via() { scena.remove(mesh); geo.dispose(); mat.dispose() },
   }
 }

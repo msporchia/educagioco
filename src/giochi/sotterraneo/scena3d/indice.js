@@ -13,7 +13,7 @@ import { aspettoDi, paesaggioDi } from './aspetti.js'
 import { aggiornaVisibilita, scriviTexel, vistaOra } from './visibilita.js'
 import { pavimento, muro, legno as tramaLegno, normaliAtlante } from './trame.js'
 import { creaFigure } from './figure.js'
-import { creaAloni, creaColonne, creaAnelli } from './segni.js'
+import { creaAloni, creaColonne, creaAnelli, creaFiamme } from './segni.js'
 import { creaPolvere, creaScintille } from './particelle.js'
 import { creaPost } from './post.js'
 import { creaEtichette } from './etichette.js'
@@ -54,6 +54,9 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
   const polvere = ACCESI.polvere ? creaPolvere(scena, POLVERE, luci.condivise, maschera) : NIENTE
   const etichette = creaEtichette(strato)
   const eroe = creaEroe()
+  // la fiamma della torcia in mano all'eroe: una sola, si sposta con lui (scena3d/eroe.js)
+  const fiammaEroe = ACCESI.fiamme ? creaFiamme(scena, maschera, [{ scala: 0.85, cx: 0, cz: 0, x: 0, y: -9, z: 0 }]) : null
+  if (fiammaEroe) fiammaEroe.accesa(0, false)
   const S = { eroe, campo: null, scintille, luci, anelli, fermo: 0, scossa: 0, aberr: 0, rosso: 0, tBolla: 9, tempo: 0, colpoEroe: null, stato: null }
   const racconto = creaRacconto(S)
   const azione = creaAzione()
@@ -148,7 +151,8 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
     if (fo && fo.roba.morto && fo.stato === 'piena') { if (fo.usa(eroe)) eroe.cura = 1.2 }
     for (const s of piano.sorgenti) if (s.cella != null) s.vis = piano.vis.ora[s.cella] || 0
     luci.distribuisci(piano.sorgenti, eroe.x, eroe.z, t)
-    disegnaEroe(eroe, corsa, { figure: figureEroe, luci, etichette, camera: cam, dt: dtVero, dtScena: dt, t, fontana: fo, portale: piano.portale, bersaglio: scontro.bersaglio(corsa) })
+    disegnaEroe(eroe, corsa, { figure: figureEroe, luci, etichette, camera: cam, dt: dtVero, dtScena: dt, t, fontana: fo, portale: piano.portale, bersaglio: scontro.bersaglio(corsa),
+                       fiamma: fiammaEroe, aloni, scintille: ACCESI.scintille ? scintille : null })
     luci.spegni(dtVero)
     // le scintille delle torce: solo da quelle che si vedono adesso
     if (ACCESI.scintille) for (const s of piano.sorgenti) if (s.trema && s.vis > 0.2 && Math.random() < dt * 3) scintille.emetti(s.pos.x, s.pos.y - 0.05, s.pos.z - 0.15, 1, { forza: 0.3, su: 1.4, vita: 0.9, caldo: 0.3, taglia: 0.035 })
@@ -167,6 +171,7 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
 
     const punti = canvas.height * 1.5   // la misura delle particelle: in px del disegno
     piano.fiamme.aggiorna(t); piano.nebbia.aggiorna(t); piano.pozze.aggiorna(t)
+    if (fiammaEroe) fiammaEroe.aggiorna(t)
     if (piano.velo) piano.velo.aggiorna(t)
     if (piano.raggi) piano.raggi.aggiorna(t)
     polvere.aggiorna(t, centro, punti)
@@ -257,7 +262,7 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
       racconto.svuota()
       if (piano) piano.via()
       piano = null
-      for (const x of [aloni, colonne, anelli, scintille, polvere, etichette, contorno, figure, figureEroe]) if (x) x.via()
+      for (const x of [aloni, colonne, anelli, scintille, polvere, etichette, contorno, figure, figureEroe, fiammaEroe]) if (x) x.via()
       for (const t of trame.values()) for (const k of ['pav', 'muro']) for (const m of Object.values(t[k])) if (m && m.dispose) m.dispose()
       if (legno) { legno.map.dispose(); legno.normalMap.dispose() }
       if (tex) tex.dispose()

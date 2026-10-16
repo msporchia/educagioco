@@ -23,7 +23,10 @@ export const LUCE = {
   rim: 0.55,             // il contorno caldo che stacca le figure dal fondo
   // nello scontro, da vicino, la normal map finta e il contorno sporcano i colori e ammorbidiscono i bordi: si spengono quasi
   nitidoScontro: { rim: 0.12, rilievo: 0.25, minimo: 0.55 },
-  alone: 9, cono: 40,    // la torcia dell'eroe: l'alone corto senza ombre e il cono che le fa
+  alone: 9, cono: 40,    // la luce dell'eroe: l'alone corto senza ombre e il cono che le fa
+  // con la torcia accesa (in proporzione agli sgoccioli): quanto crescono alone e cono, quanto si allungano (celle) e si aprono
+  // (radianti), la luce che rimbalza dal pavimento e il chiarore caldo per terra (docs/sotterraneo/grafica-3d.md)
+  torcia: { alone: 0.35, cono: 0.5, lungoAlone: 5, lungoCono: 9, apre: 0.3, rimbalzo: 2.5, chiarore: 0.07 },
   ombra: 0.75,           // le ombre non sono mai nere
 }
 

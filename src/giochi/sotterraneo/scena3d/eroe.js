@@ -5,7 +5,7 @@ import { COSE } from '../dati/cose.js'
 import { impugnatura } from '../dati/impugna.js'
 import { PEZZI } from '../dati/atlante.js'
 import { pezzoAndante } from '../dati/tessere.js'
-import { PIXEL_CELLA, ALLUNGA } from './costanti.js'
+import { PIXEL_CELLA, ALLUNGA, LUCE } from './costanti.js'
 import { muoviAssalto } from './racconto.js'
 import { barretta } from './etichette.js'
 import { verso } from './tempo.js'
@@ -17,7 +17,8 @@ export function creaEroe() {
 
 // un passo del disegno: `corsa` il motore, `figure` quelle senza ombra (la torcia è sua), `fuori` dove si spinge fuori dalla
 // fontana (chi beve sta sulla sua cella), `scontro` se sta sul palco con un bersaglio da guardare
-export function disegnaEroe(e, corsa, { figure, luci, etichette, camera, dt, dtScena, t, fontana = null, bersaglio = null, portale = null }) {
+export function disegnaEroe(e, corsa, { figure, luci, etichette, camera, dt, dtScena, t, fontana = null, bersaglio = null, portale = null,
+                                         fiamma = null, aloni = null, scintille = null }) {
   if (e.px == null) { e.px = corsa.eroe.x; e.pz = corsa.eroe.y; e.x = e.px; e.z = e.pz }
   if (!e.meta) {
     // finito lo scontro torna dove lo tiene il motore camminando, non di colpo
@@ -75,7 +76,25 @@ export function disegnaEroe(e, corsa, { figure, luci, etichette, camera, dt, dtS
     if (corsa.mancina) arma(corsa.mancina, -lato, !e.specchio, -0.03)
     if (corsa.mano) arma(corsa.mano, lato, e.specchio, 0.03)
   }
-  luci.torcia(x, z, e.lx, e.lz, t, dt)
+  // la torcia accesa (agli sgoccioli un po' meno): in mano dalla parte della mancina, con la fiamma, le faville e un chiarore
+  // caldo per terra; al buio niente fiamma, e la luce resta quella di prima (docs/sotterraneo/grafica-3d.md, «La torcia»)
+  const accesa = corsa.torciaAccesa ? (corsa.torciaAgliSgoccioli ? 0.6 : 1) : 0
+  const tremo = luci.torcia(x, z, e.lx, e.lz, t, dt, accesa)
+  const q = luci.q
+  // la torcia (lo sprite dello zaino, piccolo) nella mano libera, fuori dalla sagoma o il corpo la copre; la fiamma sulla punta
+  const mx = x - lato * 0.42, base = 0.22 + su * 0.02, mz = z + 0.28
+  const my = base + (PEZZI.torcia ? PEZZI.torcia[3] / PIXEL_CELLA * ALLUNGA * 0.5 : 0.7) - 0.08
+  if (accesa && PEZZI.torcia) { o.specchio = e.specchio; o.giro = 0; figure.metti('torcia', mx, base, mz, { ...o, scala: 0.5 }) }
+  e.mano = accesa ? { x: mx, y: my, z: mz } : null
+  if (fiamma) {
+    fiamma.accesa(0, accesa > 0 && trasparenza > 0.5)
+    if (accesa) fiamma.sposta(0, mx, my, mz)
+  }
+  if (aloni && q > 0.02) aloni.metti(x, z + 0.05, 1.5 + 1.1 * q, '#ff9a48', LUCE.torcia.chiarore * q * tremo)
+  if (scintille && accesa && dtScena > 0) {
+    e.faville = (e.faville || 0) + dtScena * (4 + 3 * accesa)
+    while (e.faville >= 1) { e.faville--; scintille.emetti(mx, my + 0.22, mz, 1, { forza: 0.25, su: 1.1, vita: 0.7, caldo: 0.3, taglia: 0.03 }) }
+  }
   // sopra la testa, solo quando manca qualcosa e fuori dallo scontro (lì la vita sta nel globo)
   if (!bersaglio && corsa.vita < corsa.vitaMax) {
     const p = camera.schermo(x, e.alto + 0.12, z, e._schermo || (e._schermo = { x: 0, y: 0 }))
