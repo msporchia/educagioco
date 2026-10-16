@@ -627,7 +627,7 @@ watch(() => props.veduta, v => { if (v) { chiudi(); chiudiDialogo() } })
 </script>
 
 <template>
-  <div ref="vista" class="sot-terra sot3d-mondo" data-mondo3d :data-pronto="pronto ? 1 : 0" :data-veduta="veduta ? 1 : 0"
+  <div ref="vista" class="sot-terra sot3d-mondo" data-mondo3d :data-pronto="pronto ? 1 : 0" :data-in-veduta="veduta ? 1 : 0"
        @pointerdown="premi" @pointermove="muovi" @pointerup="lascia" @pointercancel="lascia" @click="toccaPrato" @wheel="rotella">
     <canvas ref="tela" class="sot3d-tela-mondo" data-tela="mondo"></canvas>
     <p v-if="!pronto && !perso" class="sot3d-attesa" data-mondo-attesa>La terra si prepara…</p>
