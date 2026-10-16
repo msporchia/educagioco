@@ -21,6 +21,7 @@
     "sprite:inutilizzati": "node strumenti/sprite/inutilizzati.mjs",
     "storie": "vite --open /strumenti/banco/storie.html",
     "ambienti": "vite --open /strumenti/banco/ambienti.html",
+    "paesaggi": "node strumenti/tavola-paesaggi.mjs",
     "test": "node test/esegui.mjs unita",
     "test:unita": "node test/esegui.mjs unita",
     "test:browser": "node test/esegui.mjs integrazione",
