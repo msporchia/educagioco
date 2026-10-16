@@ -19,12 +19,12 @@ import { creaPost } from './post.js'
 import { creaEtichette } from './etichette.js'
 import { creaCose } from './cose.js'
 import { creaEroe, disegnaEroe } from './eroe.js'
-import { creaRacconto } from './racconto.js'
+import { creaRacconto, assalto } from './racconto.js'
 import { creaAzione } from './azione.js'
 import { costruisciPiano } from './piano.js'
 import { creaScontro } from './scontro.js'
 import { creaContorno } from './contorno.js'
-import { ACCESI, POLVERE, SCINTILLE, FIGURE_MAX, ALONI_MAX } from './costanti.js'
+import { ACCESI, POLVERE, SCINTILLE, FIGURE_MAX, ALONI_MAX, MARGINE_DITO } from './costanti.js'
 
 const NIENTE = { emetti() {}, aggiorna() {}, aspetto() {}, via() {} }
 
@@ -38,7 +38,7 @@ export function creaSotterraneo3d(canvas, opz = {}) {
   }
 }
 
-function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, cieca = 320 }) {
+function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, cieca = 320, botteRotta = null }) {
   const { renderer } = ctx
   const scena = new Scene()
   scena.background = new Color(0)
@@ -95,6 +95,32 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
     azione.annulla()
   }
 
+  // l'eroe dà un colpo; se il motore la rompe (motore/botti.js: lascia il segno e, una volta su cinque, qualcosa per terra) la botte si
+  // sfascia: polvere di legno, una scossa piccola, il suono di chi ascolta (Gioco.vue)
+  const segatura = new Color('#c8a070')
+  function rompiBotte(b) {
+    assalto(eroe, b, 0.36, 0.16, 0.6)
+    setTimeout(() => {
+      const corsa = quadro && quadro.corsa
+      if (!piano || !corsa || b.rotta || !corsa.rompiBotte(b.i)) return
+      piano.botti.rompi(b)
+      scintille.emetti(b.x, 0.4, b.z, 26, { forza: 2.2, su: 1.4, vita: 0.5, caldo: 0.2, taglia: 0.05, tinta: segatura })
+      S.scossa = Math.min(1, S.scossa + 0.3); S.fermo = Math.max(S.fermo, 0.05)
+      if (botteRotta) botteRotta()
+    }, 160)
+  }
+  // la botte intera più vicina al dito (entro MARGINE_DITO px) fra quelle che si vedono o si ricordano
+  function botteAlDito(p) {
+    if (!piano) return null
+    let mig = null, dm = MARGINE_DITO
+    for (const b of piano.botti.botti) {
+      if (b.rotta || (piano.vis.ora[piano.pianta.id(b.cella.x, b.cella.y)] || 0) < 0.2) continue
+      const s = cam.schermo(b.x, 0.3, b.z), d = Math.hypot(s.x - p.x, s.y - p.y)
+      if (d < dm) { dm = d; mig = b }
+    }
+    return mig
+  }
+
   function misura() {
     const casa = canvas.parentElement || canvas
     const r = casa.getBoundingClientRect()
@@ -123,7 +149,8 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
     scontro.guarda(corsa, fx)
     if (fx) racconto.leggi(fx)
     racconto.aggiorna(dt)
-    if (!passando) azione.passo(corsa)
+    const daRompere = passando ? null : azione.passo(corsa)
+    if (daRompere) rompiBotte(daRompere)
     const t = S.tempo
 
     aggiornaVisibilita(piano.vis, { forza: corsa.forzaLuce, visto: corsa.visto, palco: scontro.punti(), k: Math.min(1, dtVero * 7) })
@@ -162,6 +189,7 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
     if (fo) fo.aggiorna(dt, t, punti, vistaOra(piano.vis, fo.cella.x + 0.5, fo.cella.y + 0.5))
     if (piano.portale) piano.portale.aggiorna(dt, t, punti, vistaOra(piano.vis, piano.portale.cella.x + 0.5, piano.portale.cella.y + 0.5))
     piano.terreno.aggiorna(dtVero, torcia)
+    piano.botti.aggiorna(dt)
 
     S.aberr *= Math.exp(-6 * dtVero); S.rosso *= Math.exp(-5 * dtVero)
     if (post) {
@@ -207,9 +235,10 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
       if (piano.fontana) modellate.push([piano.fontana.roba, piano.fontana.gruppo])
       if (piano.portale) modellate.push([piano.portale.roba, piano.portale.gruppo])
       const r = contorno.scegli(corsa, p, { figure, modellate })
-      const cella = r ? null : cam.cellaDa(p.x, p.y)
-      scontro.segnaTocco(r, cella)
-      azione.tocca(corsa, { roba: r, cella })
+      const botte = r ? null : botteAlDito(p)
+      const cella = r || botte ? null : cam.cellaDa(p.x, p.y)
+      scontro.segnaTocco(r || (botte && { x: botte.cella.x, y: botte.cella.y, fx: botte.x, fy: botte.z }), cella)
+      azione.tocca(corsa, { roba: r, cella, botte })
     },
     trascina(p) {
       const corsa = quadro && quadro.corsa
@@ -234,6 +263,8 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
     // per le prove: dove sta a schermo un punto del mondo, lo stato di disegno di una cosa, il palco
     aSchermo(x, y, z) { const p = cam.schermo(x, y, z); return [p.x, p.y] },
     statoDi(r) { return cose ? cose.stato(r) : null },
+    // le botti del piano: dove stanno e se sono rotte
+    botti() { return piano ? piano.botti.botti.map(b => ({ i: b.i, x: b.x, z: b.z, cella: b.cella, rotta: b.rotta, stanza: b.stanza, pezzi: b.pezzi.length })) : [] },
     get eroe() { return eroe },
     get corsa() { return quadro ? quadro.corsa : null },
     get palco() { return scontro.palco },

@@ -19,7 +19,7 @@ import { vicinoA, portaSullaStrada, creaAzione } from '../../src/giochi/sotterra
 import { usabile } from '../../src/giochi/sotterraneo/scena3d/dito.js'
 import { creaFigure } from '../../src/giochi/sotterraneo/scena3d/figure.js'
 import { creaMaschera } from '../../src/giochi/sotterraneo/scena3d/maschera.js'
-import { postiDelleBotti } from '../../src/giochi/sotterraneo/scena3d/botti.js'
+import { BOTTI_PER_PAESAGGIO } from '../../src/giochi/sotterraneo/dati/botti.js'
 import { AGIO, FIGURE_MAX } from '../../src/giochi/sotterraneo/scena3d/costanti.js'
 import { Scene, InstancedMesh } from 'three'
 import { controlla, uguale, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
@@ -32,7 +32,7 @@ const corsaDi = (tappa, seme) => new Corsa(tappa, { seme, rnd: seminato(seme) })
   for (const t of [...CAMPAGNA, ...TRATTI_DELL_ABISSO]) controlla(`${t.nome || t.scenario}: lo scenario ${t.scenario} ha il suo aspetto`, !!ASPETTI_3D[t.scenario])
   uguale('chi non dichiara lo scenario prende quello di ripiego', aspettoDi(null).chiave, 'cantine')
   uguale('la roccia viene dallo scenario vero', aspettoDi('cripta').roccia, SCENARI.cripta.colori.roccia)
-  controlla('nell\'inferno niente botti (docs/sotterraneo/arredo.md)', aspettoDi('inferno').botti === false)
+  controlla('nell\'inferno niente botti (docs/sotterraneo/arredo.md)', !BOTTI_PER_PAESAGGIO.inferno)
   controlla('nell\'inferno la fonte è lava', aspettoDi('inferno').acqua.lava === 1)
 }
 
@@ -176,19 +176,6 @@ for (const p of [0, 6, 12]) { const c = corsaDi(L_ABISSO, 5); if (p) { c.piano =
   uguale('un pezzo che non c\'è non si posa', f.metti('non-esiste', 0, 0, 0), -1)
 }
 
-/* ══════════ 7. le botti di decoro: contro i muri, mai sulle porte o sulla roba ══════════ */
-{
-  let tutte = 0
-  for (const { c } of piani) {
-    const liv = c.livello, pi = piantaDi(liv)
-    const posti = postiDelleBotti(pi, liv.stanze, liv.robe, 3)
-    tutte += posti.length
-    const occupate = new Set(liv.robe.map(r => pi.id(r.x, r.y)))
-    controlla('una botte sta su una cella libera di pavimento', posti.every(p => pi.calpestabile(p.cella.x, p.cella.y) && !occupate.has(pi.id(p.cella.x, p.cella.y))))
-    controlla('mai a meno di tre passi da una porta', posti.every(p => liv.robe.every(r => r.che !== 'porta' || Math.abs(r.x - p.cella.x) + Math.abs(r.y - p.cella.y) >= 3)))
-    uguale('lo stesso piano ha le stesse botti', JSON.stringify(postiDelleBotti(pi, liv.stanze, liv.robe, 3)), JSON.stringify(posti))
-  }
-  controlla('qualche botte c\'è', tutte > 0, tutte)
-}
+// le botti da rompere hanno il loro test: unita/sotterraneo-botti
 
 riassunto('sotterraneo 3d')

@@ -23,6 +23,7 @@ import { MONDO } from '../../src/giochi/sotterraneo/motore/avventure.js'
 import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
 import { scrivi } from '../../src/giochi/sotterraneo/motore/sosta.js'
 import { robaAttesa } from '../../src/giochi/sotterraneo/motore/storia.js'
+import { premioDellaBotte } from '../../src/giochi/sotterraneo/motore/botti.js'
 
 const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser)
@@ -276,6 +277,69 @@ for (const [k, pianta] of [['ghiaccio', 'caverna'], ['tempio', 'costruita']]) {
   await scatto(page, `sotterraneo-3d-${k}`)
   await page.locator('button[aria-label="indietro"]').first().click()
   await page.waitForSelector('.carte', { timeout: 8000 })
+}
+
+/* ---------- 8. le botti da rompere col dito (motore/botti.js): si rompe, resta rotta, e una su cinque lascia qualcosa di vero ---------- */
+{
+  // l'eroe accanto alla botte `i` (sulla cella libera più vicina), coi mostri tolti: qui si prova la botte, non lo scontro
+  const accanto = i => page.evaluate(k => {
+    const p = window.__sotterraneo3d, c = p.corsa, b = c.bottiQui()[k], liv = c.livello
+    // non si tolgono dalla lista (la sosta conta le cose per indice): si spengono
+    c.ricomparsa = false
+    for (const m of liv.robe) if (m.che === 'mostro') { m.presa = true; m.morto = true; m.sveglio = false }
+    const vicine = [[0, 1], [1, 0], [-1, 0], [0, -1], [1, 1], [-1, 1]].map(([dx, dy]) => ({ x: b.x + dx, y: b.y + dy }))
+      .filter(q => liv.calpestabile(q.x, q.y) && !c.bottiQui().some(o => o.x === q.x && o.y === q.y) && !liv.robeSu(q.x, q.y).length)
+    const d = vicine[0]
+    c.eroe = { x: d.x + 0.5, y: d.y + 0.5 }; c.strada = []; c.giraVerso(b.x - d.x, b.y - d.y); c.segnaLaStanza(); c.aggiornaLuce()
+    return true
+  }, i)
+  const rompiCol = async i => {
+    await accanto(i); await attendi(page, 1500)
+    const b = (await page.evaluate(() => window.__sotterraneo3d.botti())).find(q => q.i === i)
+    const box = await tela.boundingBox()
+    const [sx, sy] = await page.evaluate(([x, z]) => window.__sotterraneo3d.aSchermo(x, 0.3, z), [b.x, b.z])
+    await tocca(box.x + sx, box.y + sy)
+    await page.waitForFunction(k => window.__sotterraneo3d.botti().find(q => q.i === k).rotta, i, { timeout: 15000 })
+  }
+  let fatto = false
+  for (let seme = 11; seme < 40 && !fatto; seme++) {
+    await page.evaluate(() => history.replaceState(null, '', location.pathname + location.search))
+    await page.evaluate(h => { location.hash = h }, `sotterraneo3d=1&eroe=cavaliere&seme=${seme}&scenario=cantine`)
+    await page.waitForFunction(() => window.__sotterraneo3d && window.__sotterraneo3d.grafica().figure > 0 && window.__sotterraneo3d.corsa, null, { timeout: 15000 })
+    const info = await page.evaluate(() => { const c = window.__sotterraneo3d.corsa; return { seme: c.seme, piano: c.piano, n: c.bottiQui().length } })
+    const conPremio = [...Array(info.n).keys()].filter(i => premioDellaBotte(info.seme, info.piano, i))
+    const senza = [...Array(info.n).keys()].filter(i => !premioDellaBotte(info.seme, info.piano, i))
+    if (!conPremio.length || !senza.length) { await page.locator('button[aria-label="indietro"]').first().click(); await page.waitForSelector('.carte', { timeout: 8000 }); continue }
+    fatto = true
+    nota(`seme ${info.seme}: ${info.n} botti, con un premio la ${conPremio[0]}`)
+    // una botte senza premio: si rompe e basta
+    const prima = await page.evaluate(() => { const c = window.__sotterraneo3d.corsa; return { gemme: c.gemme, robe: c.livello.robe.filter(q => (q.che === 'gemme' || q.che === 'cosa') && !q.presa).length } })
+    await scatto(page, 'sotterraneo-3d-botte-0')
+    await rompiCol(senza[0])
+    await scatto(page, 'sotterraneo-3d-botte-1'); await attendi(page, 250); await scatto(page, 'sotterraneo-3d-botte-2'); await attendi(page, 1200); await scatto(page, 'sotterraneo-3d-botte-3')
+    const dopo = await page.evaluate(() => { const c = window.__sotterraneo3d.corsa; return { gemme: c.gemme, robe: c.livello.robe.filter(q => (q.che === 'gemme' || q.che === 'cosa') && !q.presa).length } })
+    uguale('la botte vuota non lascia niente', JSON.stringify(dopo), JSON.stringify(prima))
+    controlla('e resta a terra a pezzi', (await page.evaluate(k => window.__sotterraneo3d.botti().find(q => q.i === k).pezzi, senza[0])) > 0)
+    // quella col premio: per terra c'è qualcosa, e raccolto arriva davvero
+    await rompiCol(conPremio[0])
+    const preso = await page.evaluate(() => { const c = window.__sotterraneo3d.corsa; const r = c.livello.robe.filter(q => (q.che === 'gemme' || q.che === 'cosa') && !q.presa).pop(); return r && { che: r.che, x: r.x, y: r.y, cosa: r.cosa || null } })
+    controlla('la botte col premio lascia qualcosa per terra', !!preso)
+    if (preso) {
+      const contaPrima = await page.evaluate(() => { const c = window.__sotterraneo3d.corsa; return { gemme: c.gemme, zaino: JSON.stringify(c.zaino || []) + JSON.stringify(c.pozioni ?? '') } })
+      await fermo()
+      // l'eroe ci va come col tocco sul pavimento (la strada del motore): camminandoci sopra le gemme si prendono, la pozione si raccoglie
+      await page.evaluate(([x, y]) => window.__sotterraneo3d.corsa.vaiVerso({ x, y }, true), [preso.x, preso.y])
+      await page.waitForFunction(([x, y]) => window.__sotterraneo3d.corsa.livello.robe.filter(q => q.x === x && q.y === y && (q.che === 'gemme' || q.che === 'cosa')).every(q => q.presa), [preso.x, preso.y], { timeout: 15000 }).catch(() => {})
+      const contaDopo = await page.evaluate(() => { const c = window.__sotterraneo3d.corsa; return { gemme: c.gemme, zaino: JSON.stringify(c.zaino || []) + JSON.stringify(c.pozioni ?? '') } })
+      if (preso.che === 'gemme') controlla('le gemme della botte arrivano davvero', contaDopo.gemme > contaPrima.gemme, `${contaPrima.gemme} → ${contaDopo.gemme}`)
+      else controlla('la pozione della botte arriva davvero', contaDopo.zaino !== contaPrima.zaino)
+      await scatto(page, 'sotterraneo-3d-botte-premio')
+      await attendi(page, 500)
+    }
+    await page.locator('button[aria-label="indietro"]').first().click()
+    await page.waitForSelector('.carte', { timeout: 8000 })
+  }
+  controlla('un seme con le botti, una col premio e una senza', fatto)
 }
 
 uguale('nessun errore in console', errori.join(' | '), '')

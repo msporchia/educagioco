@@ -278,6 +278,7 @@ function riprendiDiscesa({ ferma = false } = {}) {
   fine.value = null
   domanda.value = null
   chiudiLaBarra()
+  c.botti = in3d   // le botti da rompere sono solo del 3D (motore/botti.js)
   corsa.value = c
   borsellino = borsa(CHIAVE)
   suono.nota(180, 90, 0.4, 'sawtooth', 0.12)
@@ -1118,6 +1119,7 @@ function avvia(i, { prova = false } = {}) {
   if (prova && in3d) t = inPaesaggio(t, new URLSearchParams(location.hash.slice(1)).get('scenario'))
   corsa.value = new Corsa(t, { seme: semeDallIndirizzo(), eroe: eroeQui(), roba: roba.value,
                                crescita: crescita.value, missioni: presePer(missioni.value, t.chiave), conti: qui.value.conti })
+  corsa.value.botti = in3d   // le botti da rompere sono solo del 3D (motore/botti.js)
   borsellino = borsa(CHIAVE)
   corredoDaProva(corsa.value)
   pianoDaProva(corsa.value)
@@ -1161,7 +1163,9 @@ async function accendi3d() {
     if (!tela.value || !corsa.value || pittore) return
     const dpr = Number(new URLSearchParams(location.hash.slice(1)).get('dpr')) || undefined   // `&dpr=2`: per le foto
     pittore = m.creaSotterraneo3d(tela.value, { strato: strato.value, perso: siPerdeIl3d, dpr, cieca: CIECA,
-                                               bersaglio: scegliIlBersaglio, accorcia: () => racconto.accorcia() })
+                                               bersaglio: scegliIlBersaglio, accorcia: () => racconto.accorcia(),
+                                               // una botte rotta (solo il 3D, un passatempo): un tonfo di legno e basta
+                                               botteRotta: () => { suono.nota(170, 70, 0.18, 'square', 0.09); suono.rumore(0.16, 0.1, 1600, 400) } })
     if (!pittore) { siPerdeIl3d(); return }
     for (const [chi, el] of agganci) pittore.aggancia(chi, el)
     if (typeof window !== 'undefined') window.__sotterraneo3d = pittore   // per le prove: grafica(), aSchermo(), statoDi()
