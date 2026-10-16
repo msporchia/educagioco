@@ -3,7 +3,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { piattaforma, installata, serveIlNastro } from './aiuto.js'
 import { daAprire } from './stato.js'
-import { versioneNuova, aggiornaOra } from '../aggiornamento.js'
+import { versioneNuova, aggiornando, aggiornaOra, lasciaStare, inMega } from '../aggiornamento.js'
 import { daLeggere } from '../store/posta.js'
 import { daLeggere as novitaDaLeggere } from './novita-bambini.js'
 import { novitaLette } from '../store/profile.js'
@@ -38,12 +38,32 @@ function spiegami () {
 
 function chiamaUnGrande () { emit('vai', 'genitori') }
 
+// un solo cartello per l'aggiornamento (docs/core/aggiornamento.md): la proposta, i passi e gli intoppi
+const questa = __VERSIONE__
+const ag = computed(() => aggiornando.value || {})
+const quota = computed(() => ag.value.totale ? Math.min(1, (ag.value.presi || 0) / ag.value.totale) : null)
+const guasto = computed(() => ['muto', 'interrotto', 'vecchia'].includes(ag.value.fase))
+const conto = computed(() => `${inMega(ag.value.presi)}${ag.value.totale ? ' di ' + inMega(ag.value.totale) : ''} MB`)
+const frase = computed(() => {
+  const a = ag.value, sito = a.sito?.etichetta
+  switch (a.fase) {
+    case 'chiedo': return { segno: '↻', titolo: 'Chiedo al sito che versione c\'è…' }
+    case 'gia': return { segno: '✓', titolo: 'Hai già l\'ultima', riga: `È quella del ${questa.etichetta}: sul sito non ce n'è una più nuova.` }
+    case 'scarico': return { segno: '⤓', titolo: 'Scarico la versione nuova', riga: `Quella del ${sito}. I progressi non si toccano.` }
+    case 'pronta': return { segno: '✓', titolo: 'Fatto: riparto', riga: `Con la versione del ${sito}.` }
+    case 'muto': return { segno: '📡', titolo: 'Il sito non risponde', riga: 'Forse sei senza connessione, o va troppo piano. Il gioco intanto funziona come prima.' }
+    case 'interrotto': return { segno: '📡', titolo: 'Lo scaricamento si è fermato', riga: `Arrivati ${conto.value}, poi la connessione si è persa. Il gioco resta com'era.` }
+    case 'vecchia': return { segno: '⏳', titolo: 'Il sito sta ancora cambiando versione', riga: `Dice di avere quella del ${sito}, ma mi ha dato ancora quella di prima. Di solito si sistema in qualche minuto.` }
+  }
+  return null
+})
+
 const novita = computed(() => novitaDaLeggere(novitaLette(), inCasa).flatMap(g => g.voci))
 const altre = computed(() => novita.value.length - 1)
 </script>
 
 <template>
-  <div v-if="mostraInstalla || versioneNuova || daLeggere || novita.length" class="nastri">
+  <div v-if="mostraInstalla || versioneNuova || aggiornando || daLeggere || novita.length" class="nastri">
     <button v-if="daLeggere" class="nastro posta" data-nastro="posta"
             data-azione="nastro-posta" @click="chiamaUnGrande">
       <span class="dentro">
@@ -71,12 +91,28 @@ const altre = computed(() => novita.value.length - 1)
               @click="nonMeLoDire">✕</button>
     </div>
 
-    <div v-if="versioneNuova" class="nastro nuovo" data-nastro="versione">
-      <div class="dentro">
-        <b>✨ C'è una versione nuova</b>
-        <i>È quella del {{ versioneNuova.etichetta }}: i progressi non si toccano</i>
+    <div v-if="versioneNuova || aggiornando" class="nastro nuovo" data-nastro="versione"
+         :data-aggiorna="aggiornando ? '' : null" :data-fase="aggiornando ? ag.fase : null">
+      <div class="dentro" aria-live="polite">
+        <template v-if="frase">
+          <b>{{ frase.segno }} {{ frase.titolo }}</b>
+          <i v-if="frase.riga">{{ frase.riga }}</i>
+          <template v-if="ag.fase === 'scarico'">
+            <div class="barra" :class="{ vaga: quota === null }">
+              <i :style="quota === null ? null : { width: Math.round(quota * 100) + '%' }"></i>
+            </div>
+            <i class="conto" data-scaricati>{{ conto }}</i>
+          </template>
+        </template>
+        <template v-else>
+          <b>✨ C'è una versione nuova</b>
+          <i>È quella del {{ versioneNuova.etichetta }}: i progressi non si toccano</i>
+        </template>
       </div>
-      <button class="ora" data-azione="aggiorna" @click="aggiornaOra()">Aggiorna</button>
+      <button v-if="guasto" class="ora" data-azione="riprova" @click="aggiornaOra()">Riprova</button>
+      <button v-else-if="!aggiornando" class="ora" data-azione="aggiorna" @click="aggiornaOra()">Aggiorna</button>
+      <button v-if="aggiornando && ag.fase !== 'pronta'" class="chiudi" aria-label="chiudi"
+              data-chiudi @click="lasciaStare()">✕</button>
     </div>
   </div>
 </template>
@@ -103,5 +139,14 @@ const altre = computed(() => novita.value.length - 1)
 .nuovo .ora { flex:none; padding:8px 14px; border-radius:999px; font-size:13px; font-weight:900;
               background:linear-gradient(180deg,var(--giallo),var(--arancio)); color:#5a3200;
               box-shadow:0 3px 0 #d97706 }
+.nuovo .chiudi { flex:none; width:26px; height:26px; border-radius:50%;
+                background:#ffffff90; color:#7a4b00; font-size:13px; font-weight:800 }
+.nuovo .barra { width:100%; height:10px; margin:5px 0 1px; border-radius:999px; overflow:hidden;
+                background:#ffffffcc; box-shadow:inset 0 0 0 1px #e6cf9d }
+.nuovo .barra i { display:block; height:100%; width:0; border-radius:999px; opacity:1;
+                  background:linear-gradient(90deg,var(--arancio),var(--giallo)); transition:width .2s }
+.nuovo .barra.vaga i { width:35%; animation:ag-vaga 1.3s ease-in-out infinite alternate }
+@keyframes ag-vaga { from { transform:translateX(-10%) } to { transform:translateX(200%) } }
+.nuovo .conto { font-weight:800; font-variant-numeric:tabular-nums }
 .nuovo .ora:active { transform:translateY(2px); box-shadow:0 1px 0 #d97706 }
 </style>

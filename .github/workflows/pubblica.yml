@@ -43,6 +43,8 @@ jobs:
       - run: npm run test:unita
       # il sito installato è spezzato in file (dist-sito/, docs/core/avvio-e-memoria.md); il file unico per il
       # doppio click resta, accanto, come giochi.html
+      # la stessa ora per tutti e due i build: se no a cavallo di un minuto il file unico e il sito hanno due versioni
+      - run: echo "EDUCAGIOCO_ORA=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_ENV"
       - run: npm run build
       - run: npm run build:sito
       - run: cp dist/index.html dist-sito/giochi.html

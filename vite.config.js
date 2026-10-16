@@ -11,11 +11,13 @@ const MESI = ['gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno',
               'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre']
 
 function versione () {
+  // una pubblicazione fa due build (file unico e sito): con la stessa ora, se no `versione.json` e `giochi.html` non coincidono mai
+  const ora = process.env.EDUCAGIOCO_ORA ? new Date(process.env.EDUCAGIOCO_ORA) : new Date()
   // l'ora di casa anche sul server di GitHub, che costruisce col fuso di Londra
   const parti = Object.fromEntries(new Intl.DateTimeFormat('en-GB', {
     timeZone: 'Europe/Rome', year: 'numeric', month: 'numeric', day: 'numeric',
     hour: 'numeric', minute: 'numeric', hourCycle: 'h23',
-  }).formatToParts(new Date()).map(p => [p.type, Number(p.value)]))
+  }).formatToParts(ora).map(p => [p.type, Number(p.value)]))
   const g = n => String(n).padStart(2, '0')
   const id = `${parti.year}.${g(parti.month)}.${g(parti.day)}.${g(parti.hour)}${g(parti.minute)}`
   const etichetta = `${parti.day} ${MESI[parti.month - 1]} alle ${g(parti.hour)}:${g(parti.minute)}`
