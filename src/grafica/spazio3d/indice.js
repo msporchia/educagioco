@@ -17,7 +17,7 @@ import { rgb } from './rumore.js'
 
 const K = 0.01                 // mondo per pixel
 const FOV = 50
-const DPR_MAX = 1.5, DPR_MIN = 1   // sotto 1 la tela è stirata e sfoca: meglio perdere fotogrammi che nitidezza
+const DPR_MAX = 3, DPR_START = 2, DPR_MIN = 1   // sotto 1 la tela è stirata e sfoca: meglio perdere fotogrammi che nitidezza
 
 const POST_F = /* glsl */`
 uniform sampler2D tScena; uniform float uAb, uT, uFlash, uLampo; uniform vec2 uRes; varying vec2 vU;
@@ -107,7 +107,7 @@ function costruisci(renderer, fisso) {
   const quadro = new Mesh(new PlaneGeometry(2, 2), post); quadro.frustumCulled = false
   postScena.add(quadro)
 
-  let W = 1, H = 1, dpr = fisso || Math.min(DPR_MAX, window.devicePixelRatio || 1), D = 10
+  let W = 1, H = 1, dpr = fisso || Math.min(DPR_START, window.devicePixelRatio || 1), D = 10
   let scatti = 0, cieloOra = null, ultimo = 0, mediaMs = 16, lenti = 0, svelti = 0, msScena = 0, msDisegno = 0
   const X = x => (x - W / 2) * K
   const Y = y => (H / 2 - y) * K

@@ -146,8 +146,9 @@ sassi cambia col posto.
 ## Quanto costa
 
 - **Una qualità sola**, niente bagliore (bloom) e niente pannello: il
-  pixel ratio parte da 1,5 (o meno, se lo schermo ne ha meno) e scende fino
-  a 1 (mai sotto: la tela stirata sfoca nave e sassi, scendendo a 0,6 sembrava «compressa») se un
+  pixel ratio parte da 2 (o meno, se lo schermo ne ha meno), sale fino a 3 se
+  il computer regge (con tetto a 1,5 uno schermo a 3 era sfocato: la tela
+  stirata) e scende fino a 1 (mai sotto: la tela stirata sfoca nave e sassi, scendendo a 0,6 sembrava «compressa») se un
   fotogramma costa più di 26 ms per una novantina di fotogrammi; risale piano sotto i 15 ms. Provato il bagliore nel
   prototipo: tolto, senza stava meglio. Provato il pannello delle tre
   qualità: non si distinguevano.
