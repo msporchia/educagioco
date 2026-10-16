@@ -17,7 +17,7 @@ import { rgb } from './rumore.js'
 
 const K = 0.01                 // mondo per pixel
 const FOV = 50
-const DPR_MAX = 1.5, DPR_MIN = 0.6
+const DPR_MAX = 1.5, DPR_MIN = 1   // sotto 1 la tela è stirata e sfoca: meglio perdere fotogrammi che nitidezza
 
 const POST_F = /* glsl */`
 uniform sampler2D tScena; uniform float uAb, uT, uFlash, uLampo; uniform vec2 uRes; varying vec2 vU;
@@ -128,7 +128,7 @@ function costruisci(renderer, fisso) {
     mediaMs += (ms - mediaMs) * 0.05
     if (fisso) return
     const tetto = Math.min(DPR_MAX, window.devicePixelRatio || 1)
-    if (mediaMs > 26) { if (++lenti > 40 && dpr > DPR_MIN) { dpr = Math.max(DPR_MIN, dpr * 0.85); misura(); lenti = 0 } } else lenti = 0
+    if (mediaMs > 26) { if (++lenti > 90 && dpr > Math.min(DPR_MIN, tetto)) { dpr = Math.max(Math.min(DPR_MIN, tetto), dpr * 0.85); misura(); lenti = 0 } } else lenti = 0
     if (mediaMs < 15 && dpr < tetto) { if (++svelti > 240) { dpr = Math.min(tetto, dpr * 1.1); misura(); svelti = 0 } } else svelti = 0
   }
 

@@ -147,8 +147,8 @@ sassi cambia col posto.
 
 - **Una qualità sola**, niente bagliore (bloom) e niente pannello: il
   pixel ratio parte da 1,5 (o meno, se lo schermo ne ha meno) e scende fino
-  a 0,6 se un fotogramma costa più di 26 ms per una quarantina di
-  fotogrammi; risale piano sotto i 15 ms. Provato il bagliore nel
+  a 1 (mai sotto: la tela stirata sfoca nave e sassi, scendendo a 0,6 sembrava «compressa») se un
+  fotogramma costa più di 26 ms per una novantina di fotogrammi; risale piano sotto i 15 ms. Provato il bagliore nel
   prototipo: tolto, senza stava meglio. Provato il pannello delle tre
   qualità: non si distinguevano.
 - **Misurato in Chrome senza schermo** (SwiftShader, cioè la CPU fa la
