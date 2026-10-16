@@ -715,10 +715,13 @@ export function misuraConLaRoba({ semi = 20, prove = [0.8, 0.6, 0.4], allenata =
 // bravura e per discesa, quante volte si arriva in fondo; e le gemme con cui si esce con la roba attesa
 // (`gemme[k]`, la media), che sono quelle che il banco del passo dopo deve far tornare
 export function misuraLaStoria({ eroe = 'cavaliere', semi = 20, prove = [0.8, 0.6, 0.4], scarti = [0, -1, 2],
-                                 livelli = [], come = 'minimo', quali = null, punti = null } = {}) {
+                                 livelli = [], come = 'minimo', quali = null, punti = null, torce = 0 } = {}) {
   const discese = quali || CAMPAGNA.map((_, k) => k)
   const vinte = {}
   const gemme = {}
+  // `torce`: si scende con una torcia accesa e tante alla cintura (la luce di chi la usa sempre); `agguati`: quanti scontri
+  // cominciano alle spalle, sulla roba attesa a 8/10 (docs/sotterraneo/luce.md)
+  const agguati = {}, scontri = {}
   const prove2 = [...scarti.map(s => ({ chiave: s, scarto: s, piu: 0 })),
                   ...livelli.map(l => ({ chiave: `L${l > 0 ? '+' : ''}${l}`, scarto: 0, piu: l }))]
   for (const { chiave, scarto, piu } of prove2) {
@@ -730,15 +733,16 @@ export function misuraLaStoria({ eroe = 'cavaliere', semi = 20, prove = [0.8, 0.
         let n = 0
         for (let s = 0; s < semi; s++) {
           const g = gioca(CAMPAGNA[k], { seme: 7000 + s * 89 + k * 11 + j * 5, bravura, eroe, come, punti,
-                                        roba: robaAttesa(eroe, riga), crescita })
+                                        roba: { ...robaAttesa(eroe, riga), torce: torce + (robaAttesa(eroe, riga).torce || 0) }, crescita })
           if (g.esito.vinta) n++
           if (chiave === 0 && j === 0) gemme[k] = (gemme[k] || 0) + g.esito.gemme / semi
+          if (chiave === 0 && j === 0) { agguati[k] = (agguati[k] || 0) + (g.scontri || []).filter(x => x.ag).length; scontri[k] = (scontri[k] || 0) + (g.scontri || []).length }
         }
         vinte[chiave][j][k] = n
       })
     }
   }
-  return { vinte, gemme, semi, prove, scarti, livelli, discese }
+  return { vinte, gemme, semi, prove, scarti, livelli, discese, agguati, scontri }
 }
 
 // Una strada (dati/strade.js, docs/sotterraneo/strade.md) in una discesa: l'eroe di quella classe, col livello atteso più `piu`, la

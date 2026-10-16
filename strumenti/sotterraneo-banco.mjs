@@ -10,6 +10,7 @@
 //   npm run sotterraneo -- --eroi mago,nano --discese 2,3   # solo quelli (le discese sono gli indici, 0 è la cripta)
 //   npm run sotterraneo -- --verifica           # solo i bersagli di misure/sotterraneo che la discesa non rispetta (con --semi 20 sono gli stessi semi)
 //   npm run sotterraneo -- --come tutto          # chi gira tutto, non chi va dritto alla scala
+//   npm run sotterraneo -- --torce 40            # con la torcia sempre accesa (e quaranta di scorta): la luce di chi la compra
 //   npm run sotterraneo -- --bravure 0.8,0.4     # altre percentuali di risposte giuste
 //   npm run sotterraneo -- --diag                # com'è fatta una discesa: domande, svenimenti, pozioni, vita a fine scontro, abilità
 //   npm run sotterraneo -- --zone 12,16,20,30    # le zone a quei livelli (--eroe-a 11,12,.. se l'eroe ha un altro livello)
@@ -211,6 +212,7 @@ const OPZ = {
   senzaAbilita: argv.includes('--senza-abilita'),
   senzaPreparati: argv.includes('--senza-preparati'),
   tara: valore('--tara', ''),
+  torce: Number(valore('--torce', 0)),   // `--torce 40`: si scende con la torcia accesa e quaranta di scorta (docs/sotterraneo/luce.md)
   taraOra: valore('--tara', ''),
 }
 const campagna = async radice => (await import(pathToFileURL(join(radice, SRC, 'dati/campagna.js')).href)).CAMPAGNA
@@ -538,7 +540,7 @@ async function misura(radice) {
   // la storia: roba e livello attesi, a scarti diversi
   const lavori = []
   for (const eroe of OPZ.eroi) for (const k of discese)
-    lavori.push({ ...base, che: 'storia', opz: { eroe, semi: OPZ.semi, prove: OPZ.prove, scarti: OPZ.scarti, livelli: OPZ.livelli, come: OPZ.come, quali: [k] }, k })
+    lavori.push({ ...base, che: 'storia', opz: { eroe, semi: OPZ.semi, prove: OPZ.prove, scarti: OPZ.scarti, livelli: OPZ.livelli, come: OPZ.come, quali: [k], torce: OPZ.torce }, k })
   const r = await inParallelo(lavori)
   const chiavi = [...OPZ.scarti, ...OPZ.livelli.map(l => `L${l > 0 ? '+' : ''}${l}`)]
   const righe = []
@@ -548,6 +550,11 @@ async function misura(radice) {
     const perEroe = discese.map(k => OPZ.eroi.map(e => lavori.reduce((n, l, x) => (l.k === k && l.opz.eroe === e ? n + r[x].vinte[ch][j][k] : n), 0)).join('·'))
     righe.push({ titolo: `${nome} a ${Math.round(b * 10)}/10`, celle, media: true, perEroe })
   })
+  // quanti scontri cominciano alle spalle (l'agguato), sulla roba attesa a 8/10, in percentuale degli scontri
+  if (OPZ.scarti.includes(0)) righe.push({ titolo: 'agguati (roba attesa, 8/10)', celle: discese.map(k => {
+    const ag = lavori.reduce((n, l, x) => (l.k === k ? n + (r[x].agguati[k] || 0) : n), 0), sc = lavori.reduce((n, l, x) => (l.k === k ? n + (r[x].scontri[k] || 0) : n), 0)
+    return sc ? Math.round(ag / sc * 100) : 0
+  }), media: true })
   // `--verifica`: invece della tabella, quali bersagli di `misure/sotterraneo` (la tabella della storia) la discesa non rispetta.
   // Solo quelli sui numeri di ogni discesa (a ogni eroe e in media); chiede da sé gli scarti 0, −1, 2 e i livelli −2 e +3
   if (argv.includes('--verifica')) {
