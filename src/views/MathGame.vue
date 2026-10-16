@@ -444,10 +444,13 @@ function rimettiCielo(d) {
    fuori dal bordo, spara a quello ed è la risposta; premere altrove porta la nave lì e
    basta, e finché il dito resta giù la nave lo segue. Il mouse conta solo premuto. */
 let dito = null                          // il puntatore che sta guidando
+const campoEl = ref(null)
 const dentroCampo = x => Math.max(nave.r * 1.4, Math.min(W - nave.r * 1.4, x))
+// le coordinate del campo, non della finestra: il campo può stare in una colonna
+function nelCampo(e) { const r = campoEl.value?.getBoundingClientRect(); return r ? [e.clientX - r.left, e.clientY - r.top] : [e.clientX, e.clientY] }
 function tocca(e) {
   if (fase.value !== 'gioco') return
-  const x = e.clientX, y = e.clientY
+  const [x, y] = nelCampo(e)
   dito = e.pointerId
   if (!comandiNuovi) {   // gli Asteroidi di sempre: solo sopra il sasso, e la nave sta ferma
     for (const a of asteroidi) if (!a.morto && (x - a.x) ** 2 + (y - a.y) ** 2 <= a.r * a.r) return colpisci(a)
@@ -460,7 +463,7 @@ function tocca(e) {
 }
 function guida(e) {
   if (e.pointerId !== dito || fase.value !== 'gioco' || fermo.value) return
-  nave.meta = dentroCampo(e.clientX)
+  nave.meta = dentroCampo(nelCampo(e)[0])
 }
 function lascia(e) { if (e.pointerId === dito) dito = null }
 
@@ -759,9 +762,12 @@ function esplodi(x, y, c, n = 22) {
 const anello = (x, y, c, max) => anelli.push({ x, y, r: 0, max, vita: 1, c })
 
 /* ---------- ciclo ---------- */
+let osservatore = null
 function ridimensiona() {
   const prima = W
-  W = window.innerWidth; H = window.innerHeight
+  // il campo, non la finestra: su un PC il gioco sta in una colonna (come nel Sotterraneo 3D)
+  const c = campoEl.value
+  W = c?.clientWidth || window.innerWidth; H = c?.clientHeight || window.innerHeight
   const cv = tela.value; if (!cv) return
   cv.width = Math.floor(W * devicePixelRatio); cv.height = Math.floor(H * devicePixelRatio)
   cv.style.width = W + 'px'; cv.style.height = H + 'px'
@@ -1296,6 +1302,7 @@ onMounted(() => {
   accendi3d()
   dalCheat()
   window.addEventListener('resize', ridimensiona)
+  if (window.ResizeObserver && campoEl.value) { osservatore = new ResizeObserver(() => ridimensiona()); osservatore.observe(campoEl.value) }
   window.addEventListener('pointermove', guida)
   window.addEventListener('pointerup', lascia)
   window.addEventListener('pointercancel', lascia)
@@ -1312,6 +1319,7 @@ onBeforeUnmount(() => {
 onUnmounted(() => {
   cancelAnimationFrame(raf)
   window.removeEventListener('resize', ridimensiona)
+  osservatore?.disconnect()
   window.removeEventListener('pointermove', guida)
   window.removeEventListener('pointerup', lascia)
   window.removeEventListener('pointercancel', lascia)
@@ -1342,7 +1350,7 @@ function dalCheat() {
 <template>
   <div class="schermo spazio">
     <!-- il cielo: in 3D se si può, se no il disegno 2D di sempre (docs/asteroidi/grafica-3d.md) -->
-    <div class="campo" @pointerdown="tocca">
+    <div class="campo" ref="campoEl" @pointerdown="tocca">
       <canvas ref="tela3d" v-show="usa3d" data-tela="3d"></canvas>
       <canvas ref="tela" v-show="!usa3d" data-tela="2d"></canvas>
     </div>

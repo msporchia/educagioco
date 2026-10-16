@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, watch } from 'vue'
+import { computed, nextTick, onMounted, watch } from 'vue'
 import { state, level, countMastered, nomeCorrente, livelloOra,
          mateProgresso, mercatoProgresso,
          tabellineIntere, genProgresso,
@@ -23,8 +23,7 @@ import { chiediRipresa } from '../giochi/ripresa.js'
 import { vociInMemoria, versione as sessioniCambiate } from '../store/sessioni.js'
 import { giro, ricarica } from '../store/varieta.js'
 import { chiaveDelGioco } from '../data/varieta.js'
-import Aggiorna from '../guide/Aggiorna.vue'
-import { aggiornando, aggiornaOra, daUnSito } from '../aggiornamento.js'
+import { aggiornaOra, daUnSito } from '../aggiornamento.js'
 
 const emit = defineEmits(['vai'])
 
@@ -138,6 +137,12 @@ const ripresa = computed(() => {
   const r = m && m.ripresa ? m.ripresa(progressoDi(g.chiave)) : null
   return r ? { ...g, punto: r.dove, immagine: r.immagine } : g
 })
+// il cartello dell'aggiornamento sta in cima (Nastri.vue): da giù in fondo lo si porta in vista
+function cercaVersione () {
+  aggiornaOra()
+  nextTick(() => document.querySelector('[data-nastro="versione"]')?.scrollIntoView?.({ block: 'center' }))
+}
+
 // la partita a metà riparte da sola, senza «torno da dove ero» (docs/core/ripresa.md)
 function riprendi (k) { chiediRipresa(k); emit('vai', k) }
 </script>
@@ -238,11 +243,10 @@ function riprendi (k) { chiediRipresa(k); emit('vai', k) }
         <span class="versione">aggiornato il {{ versione.etichetta
           }}<span v-if="versione.commit"> · {{ versione.commit }}</span></span>
         <button v-if="siCerca" type="button" class="cerca" data-azione="cerca-versione"
-                @click="aggiornaOra()">↻ cerca aggiornamenti</button>
+                @click="cercaVersione">↻ cerca aggiornamenti</button>
       </p>
     </div>
 
-    <Aggiorna v-if="aggiornando" />
   </div>
 </template>
 
