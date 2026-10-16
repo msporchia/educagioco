@@ -1,245 +1,249 @@
-/* ═══════════ il tema «pietra»: i pannelli del sotterraneo in 2D rifinito (docs/sotterraneo/tema-pannelli.md) ═══════════
-   Solo sotto `.sot[data-tema~="pietra"]` (anche «rilievo» lo porta): senza l'attributo non vale niente, e gli altri
-   giochi non lo vedono. Tre materiali e un metallo: la pietra (la domanda, il cartello di fine), il legno (le
-   finestre, i fogli), il ferro (le caselle, i gettoni), l'oro (bordi, tasti principali). La luce viene dall'alto a
-   sinistra, come il riflesso dei globi. Niente immagini: gradienti e due SVG minuscoli in data-URI */
-.sot[data-tema~="pietra"] {
-  /* la grana: rumore fine in una piastrella da 200 px che il browser disegna una volta (frequenza × lato intero, o la
-     piastrella mostra la cucitura) */
-  --pt-grana: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -.9 .5'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23f)'/%3E%3C/svg%3E");
-  /* le macchie larghe della pietra, solo sulle superfici grandi: sui tasti sembrerebbero sporco */
-  --pt-macchie: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='m'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.02' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 -.2 .1'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23m)'/%3E%3C/svg%3E");
-  --pt-vena: repeating-linear-gradient(93deg, #ffffff08 0 2px, transparent 2px 13px);
-  --pt-oro-bordo: linear-gradient(135deg, #f6d77a, #9a6b1f 28%, #ffe9a3 50%, #8a5a14 74%, #e8bf5a);
-  --pt-oro: linear-gradient(180deg, #fff1b8 0%, #f2cd62 34%, #d39a2e 66%, #a06a18 100%);
-  --pt-pietra: radial-gradient(130% 80% at 18% 0%, #6a645a55, transparent 62%), linear-gradient(180deg, #403c36, #2d2a26 55%, #211f1c);
-  --pt-legno: linear-gradient(180deg, #2e1e12, #1c130c 45%, #150e09);
-  --pt-titolo: "Palatino Linotype", Palatino, "Book Antiqua", "URW Palladio L", Georgia, "Noto Serif", serif;
-  --pt-oro-scritta: #ffe39a;
-  --pt-inciso: 0 1px 0 #000, 0 -1px 0 #ffffff12;
-  --pt-sbalzo: 0 2px 0 #000, 0 0 12px #ffd23f38;
-  --pt-bevel: inset 0 1px 0 #ffffff2e, inset 0 -2px 0 #0007;
-  --pt-incavo: inset 0 2px 6px #000c, inset 0 -1px 0 #ffffff14;
-  --pt-spessore: #17140f;                       /* il fianco di una lastra */
-  --pt-segno-giusta: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 28'%3E%3Ccircle cx='14' cy='15' r='12' fill='%23000' opacity='.45'/%3E%3Ccircle cx='14' cy='13.5' r='11.5' fill='%231d6b3e' stroke='%23ffe39a' stroke-width='2.2'/%3E%3Cpath d='M8.3 14l3.7 3.7 7.6-8.2' fill='none' stroke='%23fff' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  --pt-segno-sbagliata: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 28'%3E%3Ccircle cx='14' cy='15' r='12' fill='%23000' opacity='.45'/%3E%3Ccircle cx='14' cy='13.5' r='11.5' fill='%238a2418' stroke='%23ffc2b4' stroke-width='2.2'/%3E%3Cpath d='M9.5 9l9 9M18.5 9l-9 9' fill='none' stroke='%23fff' stroke-width='3.4' stroke-linecap='round'/%3E%3C/svg%3E");
+/* ═══════════ il tema «legno»: i pannelli del sotterraneo in legno e ottone (docs/sotterraneo/tema-pannelli.md) ═══════════
+   Solo sotto `.sot[data-tema~="legno"]` (anche «rilievo» lo porta): senza l'attributo non vale niente, e gli altri giochi
+   non lo vedono. Il materiale è quello della cornice (viste/Cornice.vue) e della barra: legno scuro con le venature, oro
+   e ottone per bordi, rivetti, targhe e tasti principali; il ferro nero solo per borchie e cardini (la ✕). Niente pietra:
+   nessun pannello sta in un posto di pietra. La luce viene dall'alto a sinistra, come il riflesso dei globi */
+.sot[data-tema~="legno"] {
+  /* la grana fine, in una piastrella da 200 px disegnata una volta (frequenza × lato intero, o si vede la cucitura) */
+  --lg-grana: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -.9 .5'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23f)'/%3E%3C/svg%3E");
+  --lg-vena: repeating-linear-gradient(93deg, #ffffff08 0 2px, transparent 2px 13px);              /* le venature della cornice */
+  --lg-vena-tavola: repeating-linear-gradient(91deg, #ffffff0a 0 1px, transparent 1px 7px, #0000001a 7px 9px, transparent 9px 17px);
+  --lg-legno: linear-gradient(180deg, #2e1e12, #1c130c 45%, #150e09);                               /* quello della cornice */
+  --lg-tavola: linear-gradient(180deg, #6a4a2c 0%, #523822 48%, #3e2a18 100%);                      /* una tavola, più chiara */
+  --lg-oro-bordo: linear-gradient(135deg, #f6d77a, #9a6b1f 28%, #ffe9a3 50%, #8a5a14 74%, #e8bf5a);
+  --lg-ottone: linear-gradient(180deg, #fbe39a 0%, #e2b452 38%, #b98428 68%, #8a5a14 100%);
+  --lg-ottone-scuro: linear-gradient(180deg, #8a6a24 0%, #6a4f16 55%, #4a360c 100%);
+  /* quattro rivetti d'ottone negli angoli, come livelli di fondo (nessun elemento in più) */
+  --lg-rivetto: radial-gradient(circle, #fff3c4 0 1px, #d9a640 1.6px, #6a440f 3px, #0006 3.6px, transparent 4px);
+  --lg-rivetti: var(--lg-rivetto) left 5px top 5px / 9px 9px no-repeat padding-box, var(--lg-rivetto) right 5px top 5px / 9px 9px no-repeat padding-box,
+                var(--lg-rivetto) left 5px bottom 5px / 9px 9px no-repeat padding-box, var(--lg-rivetto) right 5px bottom 5px / 9px 9px no-repeat padding-box;
+  --lg-titolo: "Palatino Linotype", Palatino, "Book Antiqua", "URW Palladio L", Georgia, "Noto Serif", serif;
+  --lg-oro-scritta: #ffe39a;
+  --lg-sbalzo: 0 2px 0 #000, 0 0 12px #ffd23f38;
+  --lg-incavo: inset 0 2px 6px #000c, inset 0 -1px 0 #ffffff14;
+  --lg-fianco: #1a0f07;                       /* lo spessore di una tavola */
+  --lg-segno-giusta: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 28'%3E%3Ccircle cx='14' cy='15' r='12' fill='%23000' opacity='.45'/%3E%3Ccircle cx='14' cy='13.5' r='11.5' fill='%23e2b452' stroke='%236a440f' stroke-width='1.6'/%3E%3Ccircle cx='14' cy='13.5' r='8.6' fill='%23f6d77a' stroke='%238a5a14' stroke-width='.8'/%3E%3Cpath d='M9 14l3.4 3.4 6.8-7.4' fill='none' stroke='%231d5a2e' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  --lg-segno-sbagliata: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 28'%3E%3Ccircle cx='14' cy='15' r='12' fill='%23000' opacity='.45'/%3E%3Ccircle cx='14' cy='13.5' r='11.5' fill='%236e1a12' stroke='%23d9a640' stroke-width='1.6'/%3E%3Cpath d='M9.6 9.1l8.8 8.8M18.4 9.1l-8.8 8.8' fill='none' stroke='%23ffd9cc' stroke-width='3.2' stroke-linecap='round'/%3E%3C/svg%3E");
 
-  /* ── la domanda comune (quiz/Domanda.vue): una tavola di pietra incisa, risposte a lastra ── */
-  --qz-carta-fondo: var(--pt-grana) padding-box, var(--pt-macchie) padding-box, var(--pt-pietra) padding-box, var(--pt-oro-bordo) border-box;
+  /* ── la domanda comune (quiz/Domanda.vue): una tavola di legno col bordo d'oro e i rivetti, la consegna su una targa d'ottone ── */
+  --qz-carta-fondo: var(--lg-rivetti), var(--lg-grana) padding-box, var(--lg-vena) padding-box, var(--lg-legno) padding-box, var(--lg-oro-bordo) border-box;
   --qz-carta-bordo: 2px solid transparent;
   --qz-carta-raggio: 12px;
-  --qz-carta-ombra: inset 0 1px 0 #ffffff24, inset 0 0 0 1px #0009, inset 0 0 30px #0008, 0 14px 34px #000c;
-  --qz-carta-testo: #f4ecd8;
+  --qz-carta-ombra: inset 0 0 0 1px #3a2614, inset 0 1px 0 2px #ffffff10, inset 0 0 30px #000b, 0 14px 34px #000c;
+  --qz-carta-testo: #f6ead0;
   --qz-oro: #f3cf6b;
-  --qz-consegna-colore: #fff8e6;
-  --qz-consegna-ombra: 0 1px 0 #000, 0 2px 6px #000a;
-  --qz-consegna-fondo: linear-gradient(180deg, #0000005e, #00000030);
-  --qz-consegna-spazio: 9px 12px 10px;
-  --qz-consegna-raggio: 7px;
-  --qz-consegna-incavo: var(--pt-incavo), 0 1px 0 #ffffff12;
+  --qz-consegna-colore: #2a1803;
+  --qz-consegna-ombra: 0 1px 0 #fff2c088;                                  /* inciso nell'ottone */
+  --qz-consegna-fondo: var(--lg-rivetto) left 4px center / 9px 9px no-repeat, var(--lg-rivetto) right 4px center / 9px 9px no-repeat,
+                       var(--lg-grana), var(--lg-ottone);
+  --qz-consegna-spazio: 8px 18px 9px;
+  --qz-consegna-raggio: 6px;
+  --qz-consegna-incavo: inset 0 1px 0 #fff8d6, inset 0 -2px 0 #7a4f1288, 0 0 0 1px #4a2e06, 0 3px 6px #000a;
   --qz-consegna-allinea: center;
-  --qz-soggetto-fondo: #00000040;
-  --qz-soggetto-bordo: 1px solid #0009;
-  --qz-soggetto-ombra: var(--pt-incavo);
+  --qz-soggetto-fondo: #0000004d;
+  --qz-soggetto-bordo: 1px solid #000a;
+  --qz-soggetto-ombra: var(--lg-incavo), 0 0 0 1px #c9963a44;
   --qz-soggetto-raggio: 9px;
   --qz-tasto-alto: 52px;
-  --qz-tasto-raggio: 10px;
-  --qz-tasto-bordo: 1px solid #0d0b08;
-  --qz-tasto-fondo: var(--pt-grana), linear-gradient(180deg, #6b655a 0%, #514c44 46%, #3e3a34 100%);
-  --qz-tasto-ombra: inset 0 1px 0 #ffffff3d, inset 0 -2px 0 #0000004d, 0 4px 0 var(--pt-spessore), 0 6px 10px #000a;
-  --qz-tasto-testo: #fffaf0;
-  --qz-tasto-ombra-testo: 0 1px 0 #000, 0 0 4px #0008;
+  --qz-tasto-raggio: 9px;
+  --qz-tasto-bordo: 1px solid #120a04;
+  --qz-tasto-fondo: var(--lg-grana), var(--lg-vena-tavola), var(--lg-tavola);
+  --qz-tasto-ombra: inset 0 0 0 1px #d9a64066, inset 0 1px 0 1px #ffffff26, inset 0 -2px 0 #0000004d, 0 4px 0 var(--lg-fianco), 0 6px 10px #000a;
+  --qz-tasto-testo: #fff6e2;
+  --qz-tasto-ombra-testo: 0 1px 0 #000, 0 0 4px #000a;
   --qz-tasto-peso: 750;
   --qz-tasto-moto: transform .08s ease-out, box-shadow .08s ease-out, filter .2s ease, opacity .2s ease;
   --qz-premuto: translateY(3px);
-  --qz-premuto-fondo: var(--pt-grana), linear-gradient(180deg, #5d584f, #46423b 50%, #36332e);
-  --qz-premuto-ombra: inset 0 2px 4px #0008, 0 1px 0 var(--pt-spessore), 0 2px 4px #000a;
-  --qz-giusta-fondo: var(--pt-grana), linear-gradient(180deg, #4aa56c 0%, #2f7d4c 50%, #1f5a35 100%);
-  --qz-giusta-bordo: #b8ffd0;
-  --qz-giusta-ombra: inset 0 1px 0 #ffffff55, 0 4px 0 #0d2a18, 0 0 0 2px #4ed68099, 0 0 22px #4ed680aa;
-  --qz-giusta-moto: pt-bene .26s ease-out;
-  --qz-sbagliata-fondo: var(--pt-grana), linear-gradient(180deg, #a2463a 0%, #7d2f25 50%, #5a1e17 100%);
-  --qz-sbagliata-bordo: #ffb3a6;
-  --qz-sbagliata-ombra: inset 0 1px 0 #ffffff3a, 0 4px 0 #2a0c08, 0 0 0 2px #ff6a5577, 0 0 18px #ff3b2a88;
-  --qz-sbagliata-moto: pt-trema .28s ease-out;
+  --qz-premuto-fondo: var(--lg-grana), var(--lg-vena-tavola), linear-gradient(180deg, #5a3e25, #45301c 50%, #34230f);
+  --qz-premuto-ombra: inset 0 0 0 1px #d9a64066, inset 0 2px 4px #0009, 0 1px 0 var(--lg-fianco), 0 2px 4px #000a;
+  --qz-giusta-fondo: var(--lg-grana), var(--lg-vena-tavola), linear-gradient(180deg, #4d7a3a 0%, #3a6330 50%, #29491f 100%);
+  --qz-giusta-bordo: #f3cf6b;
+  --qz-giusta-ombra: inset 0 0 0 1px #f3cf6b, inset 0 1px 0 1px #ffffff40, 0 4px 0 #15240c, 0 0 0 2px #a8d86e66, 0 0 22px #b8e07a99;
+  --qz-giusta-moto: lg-bene .26s ease-out;
+  --qz-sbagliata-fondo: var(--lg-grana), var(--lg-vena-tavola), linear-gradient(180deg, #7e3424 0%, #622519 50%, #461a10 100%);
+  --qz-sbagliata-bordo: #d9a640;
+  --qz-sbagliata-ombra: inset 0 0 0 1px #d9a64099, inset 0 1px 0 1px #ffffff26, 0 4px 0 #240905, 0 0 16px #c0302088;
+  --qz-sbagliata-moto: lg-trema .28s ease-out;
   --qz-spenta: .5;
-  --qz-spenta-filtro: grayscale(.7) brightness(.75);
+  --qz-spenta-filtro: grayscale(.6) brightness(.75);
   --qz-segno: '';
   --qz-segno-posto: relative;
-  --qz-segno-giusta: var(--pt-segno-giusta);
-  --qz-segno-sbagliata: var(--pt-segno-sbagliata);
-  --qz-esito-testo: #e9dfc8;
-  --qz-bene: #9ff5bd;
+  --qz-segno-giusta: var(--lg-segno-giusta);
+  --qz-segno-sbagliata: var(--lg-segno-sbagliata);
+  --qz-esito-testo: #ecdfc4;
+  --qz-bene: #c4ef9a;
   --qz-male: #ffb8a8;
 }
-@keyframes pt-bene { 40% { transform: scale(1.05) } }
-@keyframes pt-trema { 20% { transform: translateX(-5px) } 45% { transform: translateX(4px) } 70% { transform: translateX(-2px) } }
-.sot[data-tema~="pietra"] .sot-domanda .qz-carta { border-radius: 12px; padding: 12px 12px 11px }
-/* nel duello la tavola sta già in una cornice d'oro: lì basta il filo scuro, se no sono due bordi d'oro uno nell'altro */
-.sot[data-tema~="pietra"] .sot-modale-cornice .qz-carta {
-  --qz-carta-fondo: var(--pt-grana) padding-box, var(--pt-macchie) padding-box, var(--pt-pietra) padding-box, linear-gradient(#0b0a08, #0b0a08) border-box;
+@keyframes lg-bene { 40% { transform: scale(1.05) } }
+@keyframes lg-trema { 20% { transform: translateX(-5px) } 45% { transform: translateX(4px) } 70% { transform: translateX(-2px) } }
+.sot[data-tema~="legno"] .sot-domanda .qz-carta { border-radius: 12px; padding: 14px 14px 12px }
+/* nel duello la tavola sta già in una cornice d'oro: lì il bordo è un filo scuro, se no sono due bordi d'oro uno nell'altro */
+.sot[data-tema~="legno"] .sot-modale-cornice .qz-carta {
+  --qz-carta-fondo: var(--lg-grana) padding-box, var(--lg-vena) padding-box, var(--lg-legno) padding-box, linear-gradient(#0b0705, #0b0705) border-box;
 }
 
-/* ── le scritte da titolo: incise, d'oro, in un carattere con le grazie del sistema (niente font scaricati) ── */
-.sot[data-tema~="pietra"] :is(.sot-foglio h2, .sot-centrale h2, .sot-modale > h2, .sot-fine h2, .sot-scegli-titolo, .pa-foglio h2) {
-  font-family: "Emoji Gioco", var(--pt-titolo); font-weight: 700; letter-spacing: .03em; color: var(--pt-oro-scritta); text-shadow: var(--pt-sbalzo);
+/* ── le scritte da titolo: ottone a sbalzo, in un carattere con le grazie del sistema (niente font scaricati) ── */
+.sot[data-tema~="legno"] :is(.sot-foglio h2, .sot-centrale h2, .sot-modale > h2, .sot-fine h2, .sot-scegli-titolo, .pa-foglio h2) {
+  font-family: "Emoji Gioco", var(--lg-titolo); font-weight: 700; letter-spacing: .03em; color: var(--lg-oro-scritta); text-shadow: var(--lg-sbalzo);
 }
-.sot[data-tema~="pietra"] .sot-fine h2.sot-rosso { color: #ffb09f }
+.sot[data-tema~="legno"] .sot-fine h2.sot-rosso { color: #ffb09f }
 
-/* ── il legno: i fogli dal basso, le modali, le finestre (la cornice c'era già: qui la grana e lo smusso) ── */
-.sot[data-tema~="pietra"] :is(.sot-foglio, .sot-modale:not(.sot-modale-cornice), .sot-ripresa) {
+/* ── le finestre: i fogli dal basso, le modali e la ripresa prendono la cornice; la cornice prende la grana ── */
+.sot[data-tema~="legno"] :is(.sot-foglio, .sot-modale:not(.sot-modale-cornice), .sot-ripresa) {
   border: 2px solid transparent;
-  background: var(--pt-grana) padding-box, var(--pt-vena) padding-box, var(--pt-legno) padding-box, var(--pt-oro-bordo) border-box;
+  background: var(--lg-grana) padding-box, var(--lg-vena) padding-box, var(--lg-legno) padding-box, var(--lg-oro-bordo) border-box;
   box-shadow: inset 0 0 0 1px #3a2614, inset 0 1px 0 #ffffff1c, inset 0 0 30px #000b, 0 -10px 34px #000b;
 }
-.sot[data-tema~="pietra"] .sot-foglio { border-bottom: 0; border-radius: 18px 18px 0 0 }
-.sot[data-tema~="pietra"] .sot-modale:not(.sot-modale-cornice) { border-radius: 14px }
-.sot[data-tema~="pietra"] :is(.sot-foglio, .sot-centrale, .sot-modale) > p { color: #d8c8a4 }
-.sot[data-tema~="pietra"] .sot-cornice {
-  background: var(--pt-grana) padding-box, var(--pt-vena) padding-box, var(--pt-legno) padding-box, var(--pt-oro-bordo) border-box;
-  box-shadow: inset 0 0 0 2px #3a2614, inset 0 0 0 3px #c9963a44, inset 0 1px 0 4px #ffffff10, inset 0 0 40px #000c, 0 20px 60px #000d;
+.sot[data-tema~="legno"] .sot-foglio { border-bottom: 0; border-radius: 18px 18px 0 0 }
+.sot[data-tema~="legno"] .sot-modale:not(.sot-modale-cornice) { border-radius: 14px }
+.sot[data-tema~="legno"] :is(.sot-foglio, .sot-centrale, .sot-modale) > p { color: #d8c8a4 }
+.sot[data-tema~="legno"] .sot-cornice {
+  background: var(--lg-grana) padding-box, var(--lg-vena) padding-box, var(--lg-legno) padding-box, var(--lg-oro-bordo) border-box;
 }
-.sot[data-tema~="pietra"] :is(.sot-sipario, .sot-velo) { background: radial-gradient(120% 90% at 50% 40%, #05060aa8, #020203e8) }
+.sot[data-tema~="legno"] :is(.sot-sipario, .sot-velo) { background: radial-gradient(120% 90% at 50% 40%, #05060aa8, #020203e8) }
 
-/* ── la ✕: un borchione di ferro col filo d'oro; il bersaglio sale a 48 px senza spostare niente ── */
-.sot[data-tema~="pietra"] .sot-chiudi {
+/* ── la ✕: un borchione di ferro nero col filo d'oro; il bersaglio sale a 48 px senza spostare niente ── */
+.sot[data-tema~="legno"] .sot-chiudi {
   color: #ffe9b0; font-weight: 900; text-shadow: 0 1px 0 #000;
-  background: radial-gradient(circle at 38% 30%, #6a6560, #2b2825 60%, #151311); border: 2px solid #c9963a; border-radius: 50%;
+  background: radial-gradient(circle at 38% 30%, #55504c, #232120 60%, #0f0e0d); border: 2px solid #c9963a; border-radius: 50%;
   box-shadow: inset 0 1px 0 #ffffff40, inset 0 -2px 3px #0009, 0 0 0 1px #000, 0 3px 6px #000a;
 }
-.sot[data-tema~="pietra"] .sot-chiudi::after { content: ''; position: absolute; inset: -7px }
+.sot[data-tema~="legno"] .sot-chiudi::after { content: ''; position: absolute; inset: -7px }
 
-/* ── i tasti grossi: una lastra d'oro con lo spessore sotto; il chiaro è pietra. Premuti scendono di 3 px ── */
-.sot[data-tema~="pietra"] .sot-grosso {
+/* ── i tasti grossi: una lastra d'ottone col fianco sotto; il chiaro è una tavola. Premuti scendono di 3 px ── */
+.sot[data-tema~="legno"] .sot-grosso {
   position: relative; min-height: 50px; border: 1px solid #4a2e06; border-radius: 11px;
   color: #2a1803; text-shadow: 0 1px 0 #fff4c466; font-weight: 800; letter-spacing: .01em;
-  background: var(--pt-grana), var(--pt-oro);
+  background: var(--lg-grana), var(--lg-ottone);
   box-shadow: inset 0 1px 0 #fff8d6, inset 0 -2px 0 #7a4f1266, 0 4px 0 #5e3d0c, 0 6px 12px #000b;
   transition: transform .08s ease-out, box-shadow .08s ease-out;
 }
-.sot[data-tema~="pietra"] .sot-grosso.sot-chiaro {
-  color: #f6eedb; text-shadow: 0 1px 0 #000; border-color: #0d0b08;
-  background: var(--pt-grana), linear-gradient(180deg, #5f5a51, #47433c 50%, #37342f);
-  box-shadow: inset 0 1px 0 #ffffff33, inset 0 -2px 0 #0005, 0 4px 0 var(--pt-spessore), 0 6px 12px #000a;
+.sot[data-tema~="legno"] .sot-grosso.sot-chiaro {
+  color: #fff6e2; text-shadow: 0 1px 0 #000; border-color: #120a04;
+  background: var(--lg-grana), var(--lg-vena-tavola), var(--lg-tavola);
+  box-shadow: inset 0 0 0 1px #d9a64066, inset 0 1px 0 1px #ffffff22, 0 4px 0 var(--lg-fianco), 0 6px 12px #000a;
 }
-.sot[data-tema~="pietra"] .sot-grosso:active:not(:disabled) { transform: translateY(3px); box-shadow: inset 0 2px 4px #0007, 0 1px 0 #5e3d0c, 0 2px 4px #000a }
-.sot[data-tema~="pietra"] .sot-grosso.sot-chiaro:active:not(:disabled) { box-shadow: inset 0 2px 4px #0008, 0 1px 0 var(--pt-spessore), 0 2px 4px #000a }
-.sot[data-tema~="pietra"] .sot-grosso.sot-vendi-tasto { background: var(--pt-grana), linear-gradient(180deg, #b4f5cb, #4fbf78 50%, #2c8a50); color: #0b2614; box-shadow: inset 0 1px 0 #eafff1, 0 4px 0 #17532e, 0 6px 12px #000b }
-.sot[data-tema~="pietra"] .sot-grosso[disabled] { opacity: .5; filter: grayscale(.5) }
+.sot[data-tema~="legno"] .sot-grosso:active:not(:disabled) { transform: translateY(3px); box-shadow: inset 0 2px 4px #0007, 0 1px 0 #5e3d0c, 0 2px 4px #000a }
+.sot[data-tema~="legno"] .sot-grosso.sot-chiaro:active:not(:disabled) { box-shadow: inset 0 0 0 1px #d9a64066, inset 0 2px 4px #0009, 0 1px 0 var(--lg-fianco) }
+.sot[data-tema~="legno"] .sot-grosso.sot-vendi-tasto { background: var(--lg-grana), linear-gradient(180deg, #b4f5cb, #4fbf78 50%, #2c8a50); color: #0b2614; box-shadow: inset 0 1px 0 #eafff1, 0 4px 0 #17532e, 0 6px 12px #000b }
+.sot[data-tema~="legno"] .sot-grosso[disabled] { opacity: .5; filter: grayscale(.5) }
 
-/* ── le righe da scegliere (lo scontro, le pozioni, gli incanti): smalto scuro in un telaio di ferro, la principale d'oro ── */
-.sot[data-tema~="pietra"] .sot-scelta {
-  min-height: 52px; border: 1.5px solid #0b0a0d; border-radius: 9px;
-  background: var(--pt-grana), linear-gradient(180deg, #353047 0%, #241f33 55%, #191526 100%);
-  box-shadow: inset 0 1px 0 #ffffff26, inset 0 0 0 1px #8a7650aa, inset 0 -2px 0 #0007, 0 3px 0 #0a0910, 0 5px 9px #0009;
+/* ── le righe da scegliere (lo scontro, le pozioni, gli incanti): tavole col filo d'ottone e due rivetti; la principale d'ottone brunito ── */
+.sot[data-tema~="legno"] .sot-scelta {
+  min-height: 52px; border: 1px solid #120a04; border-radius: 9px;
+  background: var(--lg-grana), var(--lg-vena-tavola), linear-gradient(180deg, #4e3520 0%, #3b2716 55%, #2c1d10 100%);
+  box-shadow: inset 0 0 0 1px #d9a64066, inset 0 1px 0 1px #ffffff1e, inset 0 -2px 0 #0007, 0 3px 0 var(--lg-fianco), 0 5px 9px #0009;
   transition: transform .08s ease-out, box-shadow .08s ease-out, opacity .18s ease;
 }
-.sot[data-tema~="pietra"] .sot-scelta::before, .sot[data-tema~="pietra"] .sot-scelta::after {   /* le borchie, non più i rombi */
-  width: 6px; height: 6px; border-radius: 50%; transform: none; top: 5px; left: 5px;
+.sot[data-tema~="legno"] .sot-scelta::before, .sot[data-tema~="legno"] .sot-scelta::after {
+  width: 7px; height: 7px; border-radius: 50%; transform: none; top: 5px; left: 5px;
   background: radial-gradient(circle at 35% 30%, #fff3c4, #c9963a 60%, #5e3d0c); box-shadow: 0 1px 1px #000;
 }
-.sot[data-tema~="pietra"] .sot-scelta::after { top: auto; left: auto; bottom: 5px; right: 5px }
-.sot[data-tema~="pietra"] .sot-scelta.sot-pronta {
-  background: var(--pt-grana), linear-gradient(180deg, #6e5618 0%, #4a3a10 55%, #2e2408 100%);
-  box-shadow: inset 0 1px 0 #ffe9a088, inset 0 0 0 1px #f3cf6b, inset 0 -2px 0 #0007, 0 3px 0 #1d1604, 0 0 14px #ffd23f55, 0 5px 9px #0009;
+.sot[data-tema~="legno"] .sot-scelta::after { top: auto; left: auto; bottom: 5px; right: 5px }
+.sot[data-tema~="legno"] .sot-scelta.sot-pronta {
+  background: var(--lg-grana), var(--lg-ottone-scuro);
+  box-shadow: inset 0 0 0 1px #f3cf6b, inset 0 1px 0 1px #ffe9a066, inset 0 -2px 0 #0007, 0 3px 0 #2a1d06, 0 0 14px #ffd23f44, 0 5px 9px #0009;
 }
-.sot[data-tema~="pietra"] .sot-scelta:active:not(:disabled) { transform: translateY(2px); box-shadow: inset 0 2px 5px #000a, inset 0 0 0 1px #8a7650aa, 0 1px 0 #0a0910 }
-.sot[data-tema~="pietra"] .sot-scelta-testo b { font-size: 14px; letter-spacing: .01em; text-shadow: 0 1px 0 #000 }
-.sot[data-tema~="pietra"] .sot-scelta-bevi { box-shadow: inset 0 1px 0 #ffffff26, inset 0 0 0 1px #3fae68aa, inset 0 -2px 0 #0007, 0 3px 0 #0a0910, 0 5px 9px #0009 }
-.sot[data-tema~="pietra"] .sot-scelta-scappa { box-shadow: inset 0 1px 0 #ffffff26, inset 0 0 0 1px #c0503faa, inset 0 -2px 0 #0007, 0 3px 0 #0a0910, 0 5px 9px #0009 }
-.sot[data-tema~="pietra"] .sot-scelta-sep { height: 3px; background: linear-gradient(90deg, transparent, #8a5a14, #f3cf6b, #8a5a14, transparent) }
+.sot[data-tema~="legno"] .sot-scelta:active:not(:disabled) { transform: translateY(2px); box-shadow: inset 0 0 0 1px #d9a64066, inset 0 2px 5px #000a, 0 1px 0 var(--lg-fianco) }
+.sot[data-tema~="legno"] .sot-scelta-testo b { font-size: 14px; letter-spacing: .01em; text-shadow: 0 1px 0 #000 }
+.sot[data-tema~="legno"] .sot-scelta-testo small { color: #e9d6ae }
+.sot[data-tema~="legno"] .sot-scelta.sot-pronta .sot-scelta-testo small, .sot[data-tema~="legno"] .sot-scelta.sot-pronta .sot-scelta-costo { color: #ffe39a }
+.sot[data-tema~="legno"] .sot-scelta-bevi { box-shadow: inset 0 0 0 1px #6fce8a88, inset 0 1px 0 1px #ffffff1e, inset 0 -2px 0 #0007, 0 3px 0 var(--lg-fianco), 0 5px 9px #0009 }
+.sot[data-tema~="legno"] .sot-scelta-scappa { box-shadow: inset 0 0 0 1px #d0604a88, inset 0 1px 0 1px #ffffff1e, inset 0 -2px 0 #0007, 0 3px 0 var(--lg-fianco), 0 5px 9px #0009 }
+.sot[data-tema~="legno"] .sot-scelta-sep { height: 3px; background: linear-gradient(90deg, transparent, #8a5a14, #f3cf6b, #8a5a14, transparent) }
 
-/* ── il pericolo: una targa di smalto rosso con le borchie, che pulsa piano ── */
-.sot[data-tema~="pietra"] .sot-abilita > .sot-ringhio-detto {
-  position: relative; border: 2px solid #ff8a70; border-radius: 9px; color: #fff1ea; text-shadow: 0 1px 0 #000;
-  background: var(--pt-grana), radial-gradient(120% 100% at 50% 0%, #a2301f, #5a140c 70%, #3a0b06);
-  box-shadow: inset 0 1px 0 #ffffff40, inset 0 0 0 1px #000, 0 0 18px #e0432f88, 0 3px 0 #1e0503;
+/* ── il pericolo: una targa rossa col bordo d'ottone; il titolo inciso (in maiuscoletto: il testo resta «Attenzione!») ── */
+.sot[data-tema~="legno"] .sot-abilita > .sot-ringhio-detto {
+  position: relative; border: 2px solid #d9a640; border-radius: 9px; color: #fff1ea; text-shadow: 0 1px 0 #000;
+  background: var(--lg-grana), radial-gradient(120% 100% at 50% 0%, #9a2e1e, #5a140c 70%, #3a0b06);
+  box-shadow: inset 0 1px 0 #ffffff33, inset 0 0 0 1px #000, 0 0 18px #e0432f77, 0 3px 0 #1e0503;
 }
-.sot[data-tema~="pietra"] .sot-abilita > .sot-ringhio-detto > b { font-family: "Emoji Gioco", var(--pt-titolo); letter-spacing: .05em; font-variant: small-caps; color: #ffe0a0 }
+.sot[data-tema~="legno"] .sot-abilita > .sot-ringhio-detto > b { font-family: "Emoji Gioco", var(--lg-titolo); letter-spacing: .05em; font-variant: small-caps; color: #ffe39a }
 
-/* ── il ferro: le caselle di zaino e bottega sono incavi nel legno, col bordo della rarità ── */
-.sot[data-tema~="pietra"] .sot-casella {
-  border-radius: 9px;
-  background: var(--pt-grana), radial-gradient(circle at 50% 38%, #34374d, #10121b 74%);
+/* ── le caselle di zaino e bottega: incavi nel legno col bordo della rarità ── */
+.sot[data-tema~="legno"] .sot-casella {
+  border-radius: 9px; background: var(--lg-grana), radial-gradient(circle at 50% 38%, #34374d, #10121b 74%);
   box-shadow: inset 0 3px 8px #000d, inset 0 -1px 0 #ffffff12, inset 0 0 16px color-mix(in srgb, var(--sot-gradino, #000) 24%, transparent), 0 1px 0 #ffffff14;
 }
-.sot[data-tema~="pietra"] :is(.sot-intorno, .sot-albero) { background: var(--pt-grana), radial-gradient(70% 100% at 32% 50%, #3d2c1b, #120c08 78%) }
-.sot[data-tema~="pietra"] .sot-pannello { background: var(--pt-grana), linear-gradient(180deg, #231a12, #120d09); box-shadow: inset 0 1px 0 #ffffff14, 0 4px 12px #0009 }
+.sot[data-tema~="legno"] :is(.sot-intorno, .sot-albero) { background: var(--lg-grana), radial-gradient(70% 100% at 32% 50%, #3d2c1b, #120c08 78%) }
+.sot[data-tema~="legno"] .sot-pannello { background: var(--lg-grana), linear-gradient(180deg, #231a12, #120d09); box-shadow: inset 0 1px 0 #ffffff14, 0 4px 12px #0009 }
 
-/* ── le linguette: cuoio cucito, quella aperta una placca d'oro ── */
-.sot[data-tema~="pietra"] :is(.sot-scheda, .sot-linguetta) {
-  min-height: 42px; background: var(--pt-grana), linear-gradient(180deg, #3a2a1a, #1c140c);
+/* ── le linguette: cuoio, quella aperta una placca d'ottone ── */
+.sot[data-tema~="legno"] :is(.sot-scheda, .sot-linguetta) {
+  min-height: 42px; background: var(--lg-grana), linear-gradient(180deg, #3a2a1a, #1c140c);
   box-shadow: inset 0 1px 0 #ffffff1c, inset 0 0 0 2px #00000033, inset 0 -6px 0 -5px #c9963a55;
 }
-.sot[data-tema~="pietra"] :is(.sot-scheda.sot-attiva, .sot-linguetta.sot-su) {
-  background: var(--pt-grana), var(--pt-oro); text-shadow: 0 1px 0 #fff4c466;
+.sot[data-tema~="legno"] :is(.sot-scheda.sot-attiva, .sot-linguetta.sot-su) {
+  background: var(--lg-grana), var(--lg-ottone); text-shadow: 0 1px 0 #fff4c466;
   box-shadow: inset 0 1px 0 #fff8d6, inset 0 -2px 0 #7a4f1266, 0 0 12px #ffd23f55;
 }
 
-/* ── la pagina dell'eroe: le caratteristiche su placche di pietra ── */
-.sot[data-tema~="pietra"] .sot-eroe-car li {
-  border: 1px solid #0b0a08; border-radius: 10px;
-  background: var(--pt-grana), linear-gradient(180deg, #3b3731, #2a2723);
-  box-shadow: var(--pt-bevel), 0 2px 4px #0008;
+/* ── la pagina dell'eroe: le caratteristiche su tavolette ── */
+.sot[data-tema~="legno"] .sot-eroe-car li {
+  border: 1px solid #120a04; border-radius: 10px;
+  background: var(--lg-grana), var(--lg-vena-tavola), linear-gradient(180deg, #3e2a18, #2a1c10);
+  box-shadow: inset 0 0 0 1px #d9a64044, inset 0 1px 0 1px #ffffff14, 0 2px 4px #0008;
 }
-.sot[data-tema~="pietra"] .sot-eroe-punti:not(.sot-tenue) { background: var(--pt-grana), var(--pt-oro); box-shadow: inset 0 1px 0 #fff8d6, 0 3px 0 #5e3d0c }
+.sot[data-tema~="legno"] .sot-eroe-punti:not(.sot-tenue) { background: var(--lg-grana), var(--lg-ottone); box-shadow: inset 0 1px 0 #fff8d6, 0 3px 0 #5e3d0c }
 
-/* ── il dialogo: le domande da fare sono lastre di legno con la borchia d'oro ── */
-.sot[data-tema~="pietra"] .sot-dialogo { background: var(--pt-grana) padding-box, var(--pt-vena) padding-box, var(--pt-legno) padding-box, var(--pt-oro-bordo) border-box }
-.sot[data-tema~="pietra"] .sot-dialogo-nome { font-family: "Emoji Gioco", var(--pt-titolo) }
-.sot[data-tema~="pietra"] .sot-dialogo-scelta {
+/* ── il dialogo: le domande da fare sono tavole col filo d'ottone ── */
+.sot[data-tema~="legno"] .sot-dialogo { background: var(--lg-grana) padding-box, var(--lg-vena) padding-box, var(--lg-legno) padding-box, var(--lg-oro-bordo) border-box }
+.sot[data-tema~="legno"] .sot-dialogo-nome { font-family: "Emoji Gioco", var(--lg-titolo) }
+.sot[data-tema~="legno"] .sot-dialogo-scelta {
   min-height: 46px; border: 1px solid #0b0806; border-radius: 9px;
-  background: var(--pt-grana), linear-gradient(180deg, #4a3523, #2f2116 55%, #22180f);
-  box-shadow: inset 0 1px 0 #ffffff24, inset 0 0 0 1px #c9963a55, 0 3px 0 #120c07, 0 4px 8px #0008;
+  background: var(--lg-grana), var(--lg-vena-tavola), linear-gradient(180deg, #4a3523, #2f2116 55%, #22180f);
+  box-shadow: inset 0 0 0 1px #c9963a55, inset 0 1px 0 1px #ffffff1c, 0 3px 0 var(--lg-fianco), 0 4px 8px #0008;
   transition: transform .08s ease-out, box-shadow .08s ease-out;
 }
-.sot[data-tema~="pietra"] .sot-dialogo-scelta:active { transform: translateY(2px); box-shadow: inset 0 2px 4px #0009, 0 1px 0 #120c07 }
-.sot[data-tema~="pietra"] :is(.sot-scelta-prendi, .sot-scelta-consegna, .sot-scelta-bottega).sot-dialogo-scelta {
-  background: var(--pt-grana), linear-gradient(180deg, #6e5618, #4a3a10 55%, #2e2408); box-shadow: inset 0 1px 0 #ffe9a088, inset 0 0 0 1px #f3cf6b, 0 3px 0 #1d1604, 0 4px 8px #0008;
+.sot[data-tema~="legno"] .sot-dialogo-scelta:active { transform: translateY(2px); box-shadow: inset 0 2px 4px #0009, 0 1px 0 var(--lg-fianco) }
+.sot[data-tema~="legno"] :is(.sot-scelta-prendi, .sot-scelta-consegna, .sot-scelta-bottega).sot-dialogo-scelta {
+  background: var(--lg-grana), var(--lg-ottone-scuro); box-shadow: inset 0 0 0 1px #f3cf6b, inset 0 1px 0 1px #ffe9a055, 0 3px 0 #2a1d06, 0 4px 8px #0008;
 }
 
-/* ── la fila dei turni: gettoni di ferro, chi agisce in un castone d'oro ── */
-.sot[data-tema~="pietra"] .sot-turno {
-  background: radial-gradient(circle at 40% 30%, #3a3742, #121116 75%); border: 1px solid #000; border-radius: 7px;
-  box-shadow: inset 0 1px 0 #ffffff26, inset 0 0 0 1px #6a6472, 0 2px 3px #000c;
+/* ── lo scontro: i gettoni dei turni in legno col cerchio d'ottone, chi agisce in un castone d'oro; le barre della vita in un filo d'ottone ── */
+.sot[data-tema~="legno"] .sot-turno {
+  background: radial-gradient(circle at 40% 30%, #4a3320, #1a110a 75%); border: 1px solid #000; border-radius: 7px;
+  box-shadow: inset 0 1px 0 #ffffff22, inset 0 0 0 1px #9a7030, 0 2px 3px #000c;
 }
-.sot[data-tema~="pietra"] .sot-turno-eroe { box-shadow: inset 0 1px 0 #ffffff26, inset 0 0 0 1px #c9a24a, 0 2px 3px #000c }
-.sot[data-tema~="pietra"] .sot-turno.sot-adesso {
-  border: 2px solid transparent; background: radial-gradient(circle at 40% 30%, #4a3f22, #16120a 75%) padding-box, var(--pt-oro-bordo) border-box;
+.sot[data-tema~="legno"] .sot-turno-eroe { box-shadow: inset 0 1px 0 #ffffff26, inset 0 0 0 1px #f3cf6b, 0 2px 3px #000c }
+.sot[data-tema~="legno"] .sot-turno.sot-adesso {
+  border: 2px solid transparent; background: radial-gradient(circle at 40% 30%, #5a4320, #1a120a 75%) padding-box, var(--lg-oro-bordo) border-box;
   box-shadow: 0 0 12px #ffd23f88, 0 2px 4px #000c;
 }
+.sot[data-tema~="legno"] :is(.sot-vita, .sot3d-vita) { background: #1a0d08; box-shadow: 0 0 0 1px #000, 0 0 0 2px #b98428, 0 1px 3px 2px #000a }
+.sot[data-tema~="legno"] :is(.sot-m-nome, .sot3d-nome) { font-family: "Emoji Gioco", var(--lg-titolo); letter-spacing: .02em }
 
-/* ── il cartello di fine: la stessa tavola di pietra della domanda ── */
-.sot[data-tema~="pietra"] .sot-fine {
+/* ── lo scontro nel 3D (viste/Pannello3d.vue): il pannello in fondo prende la cornice, con gli angoli d'oro in cima ── */
+.sot[data-tema~="legno"] .sot3d-sotto {
+  border: 2px solid transparent; border-bottom: 0; border-radius: 16px 16px 0 0; padding: 14px 12px 10px;
+  background: var(--lg-grana) padding-box, var(--lg-vena) padding-box, var(--lg-legno) padding-box, var(--lg-oro-bordo) border-box;
+  box-shadow: inset 0 0 0 1px #3a2614, inset 0 1px 0 #ffffff1c, inset 0 0 30px #000b, 0 -10px 30px #000c;
+}
+.sot[data-tema~="legno"] .sot3d-sotto > .sot-angolo { display: block }
+.sot[data-tema~="legno"] .sot3d-sotto .qz-carta {
+  --qz-carta-fondo: var(--lg-grana) padding-box, var(--lg-vena) padding-box, var(--lg-legno) padding-box, linear-gradient(#0b0705, #0b0705) border-box;
+}
+
+/* ── il cartello di fine: la stessa tavola della domanda ── */
+.sot[data-tema~="legno"] .sot-fine {
   border: 2px solid transparent; border-radius: 14px;
-  background: var(--pt-grana) padding-box, var(--pt-macchie) padding-box, var(--pt-pietra) padding-box, var(--pt-oro-bordo) border-box;
-  box-shadow: inset 0 1px 0 #ffffff24, inset 0 0 30px #0008, 0 18px 50px #000d;
+  background: var(--lg-rivetti), var(--lg-grana) padding-box, var(--lg-vena) padding-box, var(--lg-legno) padding-box, var(--lg-oro-bordo) border-box;
+  box-shadow: inset 0 0 0 1px #3a2614, inset 0 0 30px #000b, 0 18px 50px #000d;
 }
-.sot[data-tema~="pietra"] .sot-fatti div { padding: 6px 8px; border-radius: 8px; background: #0000004d; box-shadow: var(--pt-incavo) }
-.sot[data-tema~="pietra"] .sot-racconto { color: #d8ccb0 }
+.sot[data-tema~="legno"] .sot-fatti div { padding: 6px 8px; border-radius: 8px; background: #0000004d; box-shadow: var(--lg-incavo), 0 0 0 1px #c9963a44 }
+.sot[data-tema~="legno"] .sot-racconto { color: #d8ccb0 }
 
-/* ── la pausa (giochi/VeloPausa.vue): dentro il sotterraneo i suoi tasti sono lastre ── */
-.sot[data-tema~="pietra"] .pa-foglio .bottone { border-radius: 12px; color: #2a1803; background: var(--pt-grana), var(--pt-oro); box-shadow: inset 0 1px 0 #fff8d6, 0 5px 0 #5e3d0c, 0 8px 14px #000b }
-.sot[data-tema~="pietra"] :is(.pa-esci, .sot-lascia) {
-  border-radius: 12px; border: 1px solid #0d0b08; color: #f6eedb;
-  background: var(--pt-grana), linear-gradient(180deg, #5f5a51, #37342f); box-shadow: inset 0 1px 0 #ffffff33, 0 4px 0 var(--pt-spessore);
+/* ── la pausa (giochi/VeloPausa.vue): dentro il sotterraneo i suoi tasti sono ottone e tavole ── */
+.sot[data-tema~="legno"] .pa-foglio .bottone { border-radius: 12px; color: #2a1803; background: var(--lg-grana), var(--lg-ottone); box-shadow: inset 0 1px 0 #fff8d6, 0 5px 0 #5e3d0c, 0 8px 14px #000b }
+.sot[data-tema~="legno"] :is(.pa-esci, .sot-lascia) {
+  border-radius: 12px; border: 1px solid #120a04; color: #fff6e2;
+  background: var(--lg-grana), var(--lg-vena-tavola), var(--lg-tavola); box-shadow: inset 0 0 0 1px #d9a64066, 0 4px 0 var(--lg-fianco);
 }
 
-/* ── la barra in basso: la pietra con la grana, le caselle scavate; il bersaglio delle caselle scende fino al bordo ── */
-.sot[data-tema~="pietra"] .sot-plancia {
-  background: var(--pt-grana), repeating-linear-gradient(90deg, transparent 0 44px, #00000055 44px 46px, #ffffff0d 46px 47px),
-              linear-gradient(180deg, #4d4956 0, #2f2c36 16%, #25222b 62%, #18161d);
-}
-.sot[data-tema~="pietra"] .sot-cella {
-  background: var(--pt-grana), radial-gradient(circle at 50% 36%, #302c3a, #111016 74%);
-  box-shadow: inset 0 0 0 1px #5e586a, inset 0 3px 7px #000d, inset 0 -1px 0 #ffffff10, 0 1px 0 #ffffff1a;
-}
-.sot[data-tema~="pietra"] .sot-cella::after { content: ''; position: absolute; left: -1px; right: -1px; top: 0; bottom: -6px }
-.sot[data-tema~="pietra"] :is(.sot-cella[aria-pressed="true"], .sot-cella.sot-pronta) {
-  box-shadow: inset 0 0 0 1.5px var(--sot-oro), inset 0 3px 7px #000d, 0 0 10px #ffd23f88;
-}
+/* ── la barra in basso resta com'è (è la sua cornice il modello): solo il bersaglio delle caselle scende fino al bordo ── */
+.sot[data-tema~="legno"] .sot-cella::after { content: ''; position: absolute; left: -1px; right: -1px; top: 0; bottom: -6px }
 
 @media (prefers-reduced-motion: reduce) {
-  .sot[data-tema~="pietra"] { --qz-giusta-moto: none; --qz-sbagliata-moto: none }
-  .sot[data-tema~="pietra"] :is(.sot-grosso, .sot-scelta, .sot-dialogo-scelta) { transition: none }
+  .sot[data-tema~="legno"] { --qz-giusta-moto: none; --qz-sbagliata-moto: none }
+  .sot[data-tema~="legno"] :is(.sot-grosso, .sot-scelta, .sot-dialogo-scelta) { transition: none }
 }
