@@ -12,17 +12,25 @@ const PANNELLI = [
   ['domanda-sbagliata', 'La domanda, risposta sbagliata', 'il segno, il tremolio, il perché e come si fa'],
   ['scontro', 'Lo scontro: cosa fare, col pericolo', 'CaselleAbilita.vue nella cornice del duello, la fila dei turni sul palco'],
   ['scontro-domanda', 'Lo scontro: la domanda del colpo', 'la scelta fatta sopra, la domanda sotto'],
+  ['scontro-3d', 'Lo scontro nel 3D: cosa fare', 'Pannello3d.vue in fondo, sopra la barra; la scena è un fondo finto (quella vera: scatta-app sotterraneo3d=1)'],
+  ['scontro-3d-domanda', 'Lo scontro nel 3D: la domanda', 'la scelta fatta e la domanda nel pannello in fondo'],
   ['zaino', 'Lo zaino', 'Zaino.vue con le schede dell\'eroe'],
   ['bottega', 'La bottega', 'Bottega.vue, l\'armaiolo'],
   ['eroe', 'La pagina dell\'eroe', 'PaginaEroe.vue'],
   ['abilita', 'L\'albero delle abilità', 'PaginaAbilita.vue'],
   ['pozione', 'Quale pozione', 'ScegliPozione.vue'],
   ['dialogo', 'Il dialogo', 'Dialogo.vue, il minatore'],
-  ['barra', 'La barra in basso', 'BarraDiSotto.vue'],
+  ['barra', 'La barra in basso', 'BarraDiSotto.vue, coi globi vivi della strada A nei temi'],
+  ['barra-3d', 'La barra, globi in WebGL', 'la strada B dei globi (#globi=3d)'],
+  ['globi', 'I globi da vicino', 'GloboVivo.vue a 150 px: la strada A (canvas 2D) sopra, la B (WebGL) sotto'],
+  ['barra-danno', 'I globi: un colpo', 'il lampo rosso e la scossa, poi il livello scende'],
+  ['barra-cura', 'I globi: una cura', 'il liquido sale con le bolle e la luce'],
+  ['barra-energia', 'I globi: energia usata', 'il globo blu pulsa e cala'],
+  ['barra-bassa', 'I globi: vita bassa', 'il globo rosso batte come un cuore'],
   ['fine', 'Il cartello di fine', 'Fine.vue'],
   ['pausa', 'La pausa', 'giochi/VeloPausa.vue col suo slot'],
 ]
-const TEMI = [['attuale', 'attuale'], ['pietra', 'A · pietra'], ['rilievo', 'B · rilievo']]
+const TEMI = [['attuale', 'attuale'], ['legno', 'A · legno'], ['rilievo', 'B · rilievo']]
 const LARGHEZZE = [[390, 'telefono 390'], [320, 'stretto 320'], [768, 'tablet 768'], [1100, 'scrivania 1100']]
 const SCALE = [[1, '100%'], [0.75, '75%'], [0.5, '50%']]
 
@@ -31,7 +39,7 @@ const scelte = {
   larghezza: Number(q.get('larghezza')) || 390,
   alto: Number(q.get('alto')) || 760,
   scala: Number(q.get('scala')) || 1,
-  temi: (q.get('temi') || 'attuale,pietra,rilievo').split(','),
+  temi: (q.get('temi') || 'attuale,legno,rilievo').split(','),
   solo: q.get('solo') ? q.get('solo').split(',') : null,
 }
 function scrivi() {
@@ -78,6 +86,8 @@ function disegna() {
     for (const [t, etichetta] of TEMI) {
       if (!scelte.temi.includes(t)) continue
       const [pannello, stato] = p.startsWith('domanda-') ? ['domanda', p.slice(8)] : [p, '']
+      // le righe della barra sono la stessa barra con un evento, o coi globi WebGL
+      const barra = p.startsWith('barra-') ? (p === 'barra-3d' ? '&globi=3d' : `&evento=${p.slice(6)}`) : ''
       const fig = document.createElement('figure')
       const L = scelte.larghezza, A = scelte.alto, S = scelte.scala
       fig.innerHTML = `<figcaption>${etichetta}</figcaption>`
@@ -90,7 +100,7 @@ function disegna() {
       f.width = L
       f.height = A
       f.style.transform = `scale(${S})`
-      f.src = `./pannello.html?p=${pannello}&tema=${t}${stato ? '&stato=' + stato : ''}`
+      f.src = `./pannello.html?p=${barra ? 'barra' : pannello}&tema=${t}${stato ? '&stato=' + stato : ''}${barra}`
       box.append(f)
       fig.append(box)
       colonne.append(fig)

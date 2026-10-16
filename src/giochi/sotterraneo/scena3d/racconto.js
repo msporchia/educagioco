@@ -46,11 +46,11 @@ export function creaRacconto(S) {
     S.scintille.emetti(v.x - dx / l * 0.2, 0.6, v.z + 0.1, Math.round(50 * forza), { forza: 3.4 * forza, su: 2, vita: 0.5, taglia: 0.1, tinta: c })
     S.luci.lampo.color.copy(c); S.luci.lampo.position.set(v.x - dx / l * 0.3, 0.8, v.z + 0.2); S.luci.lampo.intensity = 18 * forza
     S.fermo = Math.max(S.fermo, 0.07 * forza)
-    S.scossa = Math.min(1, S.scossa + 0.35 * forza); S.aberr = 0.014 * forza
+    S.scossa = Math.min(1, S.scossa + 0.35 * forza)
   }
   function ferito() {
     const e = S.eroe
-    e.colpito = 0.35; S.scossa = Math.min(1, S.scossa + 0.45); S.rosso = 1; S.fermo = Math.max(S.fermo, 0.07); S.aberr = 0.012
+    e.colpito = 0.35; S.scossa = Math.min(1, S.scossa + 0.45); S.rosso = 1; S.fermo = Math.max(S.fermo, 0.07)
     S.luci.lampo.color.set(0xff6040); S.luci.lampo.position.set(e.x, 0.8, e.z + 0.3); S.luci.lampo.intensity = 14
     S.scintille.emetti(e.x, 0.6, e.z + 0.1, 30, { forza: 2.4, su: 1.6, vita: 0.45, taglia: 0.07 })
   }

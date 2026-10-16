@@ -75,7 +75,8 @@ import LascioPerdere from './viste/LascioPerdere.vue'   // la frase chiara prima
 import './stile.css'
 import './stile-scontro.css'
 import './stile-effetti.css'
-import './tema/pietra.css'
+import './tema/legno.css'
+import './tema/barra.css'
 import './tema/rilievo.css'
 import { usaTema, ATTRIBUTO } from './tema/tema.js'
 
@@ -94,7 +95,7 @@ const FERMO_PX = 16   // sotto i 16px Android/iOS considerano il dito ancora fer
 
 const tela = ref(null)
 const radice = ref(null)
-const tema = usaTema(radice)
+const tema = usaTema(radice, in3d ? 'legno' : 'attuale')
 const corsa = shallowRef(null)
 // indice della campagna, o INDICE_ABISSO (−1); null vuol dire nessuna discesa
 const tappaIdx = ref(null)
@@ -1162,7 +1163,8 @@ async function accendi3d() {
     try { m = await import('./scena3d/indice.js') } catch (e) { perso3d.value = true; return }
     if (!tela.value || !corsa.value || pittore) return
     const dpr = Number(new URLSearchParams(location.hash.slice(1)).get('dpr')) || undefined   // `&dpr=2`: per le foto
-    pittore = m.creaSotterraneo3d(tela.value, { strato: strato.value, perso: siPerdeIl3d, dpr, cieca: CIECA,
+    const spegni = (new URLSearchParams(location.hash.slice(1)).get('spegni') || '').split(',').filter(Boolean)   // `&spegni=nebbia`: per misurare
+    pittore = m.creaSotterraneo3d(tela.value, { strato: strato.value, perso: siPerdeIl3d, dpr, spegni, cieca: CIECA,
                                                bersaglio: scegliIlBersaglio, accorcia: () => racconto.accorcia(),
                                                // una botte rotta (solo il 3D, un passatempo): un tonfo di legno e basta
                                                botteRotta: () => { suono.nota(170, 70, 0.18, 'square', 0.09); suono.rumore(0.16, 0.1, 1600, 400) } })
@@ -1773,7 +1775,7 @@ function ridimensiona() { if (pittore) pittore.misura() }
       <!-- vita, gemme e zaino stanno nella barra in basso; attacco e difesa nella pagina dell'eroe (docs/sotterraneo/barra.md) -->
     </Barra>
 
-    <!-- l'aspetto dei pannelli in prova (`#tema=pietra|rilievo`, docs/sotterraneo/tema-pannelli.md) -->
+    <!-- l'aspetto dei pannelli in prova (`#tema=legno|rilievo`, docs/sotterraneo/tema-pannelli.md) -->
     <div ref="radice" class="sot" :class="{ 'sot-cambio-scheda': cambioScheda }" :data-tema="ATTRIBUTO[tema]">
       <template v-if="!corsa">
         <!-- la chiave è l'eroe: cambiando avventura la terra di sopra rinasce con la nebbia e il posto suoi -->

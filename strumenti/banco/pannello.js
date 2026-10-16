@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════
    UN PANNELLO DEL SOTTERRANEO, DA SOLO — il riquadro di `pannelli.html`
 
-   `pannello.html?p=zaino&tema=pietra` monta un pannello solo, coi
+   `pannello.html?p=zaino&tema=legno` monta un pannello solo, coi
    componenti VERI di `src/giochi/sotterraneo/viste/` e la Domanda comune,
    dentro una radice `.sot` col tema chiesto: è il pezzo che il banco
    mette in un iframe (così le regole `@media` dei pannelli rispondono
@@ -12,20 +12,23 @@
    cavaliere a metà storia. I tasti non fanno niente: si guarda.
    Docs: docs/sotterraneo/tema-pannelli.md
    ═══════════════════════════════════════════════════════════════════ */
-import { createApp, h } from 'vue'
+import { createApp, h, reactive } from 'vue'
 import '../../src/emoji/emoji.css'
 import '../../src/style.css'
 import '../../src/giochi/sotterraneo/stile.css'
 import '../../src/giochi/sotterraneo/stile-scontro.css'
 import '../../src/giochi/sotterraneo/stile-effetti.css'
-import '../../src/giochi/sotterraneo/tema/pietra.css'
+import '../../src/giochi/sotterraneo/stile-3d.css'
+import '../../src/giochi/sotterraneo/tema/legno.css'
+import '../../src/giochi/sotterraneo/tema/barra.css'
 import '../../src/giochi/sotterraneo/tema/rilievo.css'
-import { ATTRIBUTO, TEMI } from '../../src/giochi/sotterraneo/tema/tema.js'
+import { ATTRIBUTO, temaDi, tema, globi } from '../../src/giochi/sotterraneo/tema/tema.js'
 import { accendiRilievo } from '../../src/giochi/sotterraneo/tema/rilievo.js'
 import Domanda from '../../src/quiz/Domanda.vue'
 import VeloPausa from '../../src/giochi/VeloPausa.vue'
 import Foglio from '../../src/giochi/sotterraneo/viste/Foglio.vue'
 import Cornice from '../../src/giochi/sotterraneo/viste/Cornice.vue'
+import Pannello3d from '../../src/giochi/sotterraneo/viste/Pannello3d.vue'
 import Zaino from '../../src/giochi/sotterraneo/viste/Zaino.vue'
 import LaBottega from '../../src/giochi/sotterraneo/viste/Bottega.vue'
 import PaginaEroe from '../../src/giochi/sotterraneo/viste/PaginaEroe.vue'
@@ -36,6 +39,7 @@ import CaselleAbilita from '../../src/giochi/sotterraneo/viste/CaselleAbilita.vu
 import FilaDeiTurni from '../../src/giochi/sotterraneo/viste/FilaDeiTurni.vue'
 import BarraDiSotto from '../../src/giochi/sotterraneo/viste/BarraDiSotto.vue'
 import Medaglione from '../../src/giochi/sotterraneo/viste/Medaglione.vue'
+import GloboVivo from '../../src/giochi/sotterraneo/viste/GloboVivo.vue'
 import Fine from '../../src/giochi/sotterraneo/viste/Fine.vue'
 import { COSE } from '../../src/giochi/sotterraneo/dati/cose.js'
 import { eroeDi } from '../../src/giochi/sotterraneo/dati/eroi.js'
@@ -50,7 +54,9 @@ import { quotaDi } from '../../src/giochi/sotterraneo/dati/livelli.js'
 
 const q = new URLSearchParams(location.search)
 const P = q.get('p') || 'domanda'
-const TEMA = TEMI.includes(q.get('tema')) ? q.get('tema') : 'attuale'
+const TEMA = temaDi(q.get('tema')) || 'attuale'
+tema.value = TEMA                                   // la barra sceglie i globi vivi da qui
+globi.value = q.get('globi') === '3d' ? '3d' : '2d'
 const nulla = () => {}
 
 // l'eroe tipo: il cavaliere con tre discese finite, al livello 8 e qualche cosa in tasca
@@ -83,7 +89,8 @@ const MOSTRI = [{ sprite: 'scheletro-fermo-0', em: '💀', nome: 'Scheletro' }, 
                 { sprite: 'ratto-fermo-0', em: '🐀', nome: 'Ratto' }]
 const TURNI = [{ chi: 'eroe' }, { chi: 0 }, { chi: 1 }, { chi: 2, salta: true }, { chi: 'eroe' }, { chi: 0 }, { chi: 1 }]
 // il fondale dello scontro, finto: i turni ci stanno sopra a destra come sul palco vero
-const palco = () => h('div', { class: 'banco-palco' }, [h(FilaDeiTurni, { turni: TURNI, mostri: MOSTRI, eroe: { sprite: 'cavaliere-fermo-0', em: '🛡️' } })])
+const palcoFila = () => h(FilaDeiTurni, { turni: TURNI, mostri: MOSTRI, eroe: { sprite: 'cavaliere-fermo-0', em: '🛡️' } })
+const palco = () => h('div', { class: 'banco-palco' }, [palcoFila()])
 
 function bottega() {
   const b = new Bottega({ eroe: EROE, roba, finite: 3, crescita })
@@ -110,6 +117,19 @@ function eroe() {
            puntiAbilita: puntiAbilita(c.crescita), costoRiassegnare: c.costoRiassegnare, missioni: 1 }
 }
 
+// i numeri della barra: `?evento=danno|cura|energia|bassa` li cambia dopo `&al=` ms (2200: lo scatto di scatta-app --pagina
+// cade a metà del movimento), per guardare come reagiscono i globi
+const B = reactive({ vita: 22, energia: 10, colpito: false })
+const EVENTI = { danno: () => { B.vita = 9; B.colpito = true; setTimeout(() => { B.colpito = false }, 380) }, cura: () => { B.vita = 28 },
+                 energia: () => { B.energia = 3 }, bassa: () => { B.vita = 5 } }
+if (EVENTI[q.get('evento')]) {
+  if (q.get('evento') === 'cura') B.vita = 8
+  setTimeout(EVENTI[q.get('evento')], Number(q.get('al')) || 2200)
+}
+const barra = () => h(BarraDiSotto, { vita: B.vita, vitaMax: 30, colpito: B.colpito, livello: 8, esperienza: 0.42, espFatta: 50,
+  espServe: 120, punti: 2, energia: B.energia, energiaMax: 12, puntiAbilita: 1, pozioni: 3, pieni: 5, tasche: 6, gemme: 240, preparabili: 2,
+  missioniPronte: 1, incanti: [{ id: 'scudo', nome: 'Scudo', glifo: 'scudo', tinta: '#5fb8ff', passi: 32, dura: 60 }] })
+
 const PANNELLI = {
   domanda: () => h(Foglio, { em: '🚪', titolo: 'Una porta chiusa' }, () => [
     h('div', { class: 'sot-domanda' }, [h(Domanda, { domanda: DOMANDA, gioco: 'prova', respiro: 600000 })]),
@@ -121,6 +141,16 @@ const PANNELLI = {
     h('div', { class: 'sot-scelta sot-pronta sot-scelta-fatta' }, [h(Medaglione, { glifo: 'spada', tinta: '#e0a23a', stato: 'preso', misura: 28 }),
       h('span', { class: 'sot-scelta-testo' }, [h('b', 'Attacco'), h('small', 'fai 7 di danno')])]),
     h('div', { class: 'sot-domanda' }, [h(Domanda, { domanda: DOMANDA, gioco: 'prova', respiro: 600000 })])])]),
+  // lo scontro nel 3D: la scena è un fondo finto (il 3D vero si guarda con scatta-app), sopra la fila dei turni, in fondo il pannello
+  'scontro-3d': () => [h('div', { class: 'sot-campo banco-campo banco-scena3d' }, [h('div', { class: 'sot3d-fila' }, [palcoFila()])]),
+    h(Pannello3d, { scontro: true }, () => [h('div', { class: 'sot3d-scelta' }, [h(CaselleAbilita, { ...scelte(), pericolo: { perche: 'duro', vita: 9, male: 12, bevuto: false } })])]),
+    barra()],
+  'scontro-3d-domanda': () => [h('div', { class: 'sot-campo banco-campo banco-scena3d' }, [h('div', { class: 'sot3d-fila' }, [palcoFila()])]),
+    h(Pannello3d, { scontro: true }, () => [h('div', { class: 'sot3d-scelta' }, [
+      h('div', { class: 'sot-scelta sot-pronta sot-scelta-fatta' }, [h(Medaglione, { glifo: 'spada', tinta: '#e0a23a', stato: 'preso', misura: 28 }),
+        h('span', { class: 'sot-scelta-testo' }, [h('b', 'Attacco'), h('small', 'fai 7 di danno')])]),
+      h('div', { class: 'sot-domanda' }, [h(Domanda, { domanda: DOMANDA, gioco: 'prova', respiro: 600000 })])])]),
+    barra()],
   zaino: () => h(Zaino, { eroe: eroeDi(EROE), mano: voce(c.mano), mancina: voce(c.mancina), corpo: voce(c.corpo), collo: voce(c.collo),
                           dito: voce(c.dito), dito2: voce(c.dito2), tasche: tasche(), att: c.att, dif: c.dif, vita: Math.round(c.vitaConLaRoba * 0.7), vitaMax: c.vitaConLaRoba,
                           gemme: c.gemme, piano: 2, piani: 4, punti: 2, puntiAbilita: 1, missioni: 1, costoTasca: c.costoTasca,
@@ -136,9 +166,12 @@ const PANNELLI = {
   dialogo: () => h('div', { class: 'sot-terra-sotto banco-sotto' }, [h(Dialogo, { chi: 'minatore', nome: 'Il minatore',
     pagine: [{ testo: 'Laggiù i topi hanno rosicchiato le mie corde. Se me ne riporti tre, ti do qualcosa di buono.' }],
     scelte: [{ che: 'prendi', testo: 'Ci penso io', premio: '💎 40' }, { che: 'bottega', testo: 'Fammi vedere la roba' }, { che: 'ciao', testo: 'Arrivederci' }] })]),
-  barra: () => [h('div', { class: 'sot-campo banco-campo' }), h(BarraDiSotto, { vita: 14, vitaMax: 30, livello: 8, esperienza: 0.42, espFatta: 50,
-    espServe: 120, punti: 2, energia: 7, energiaMax: 12, puntiAbilita: 1, pozioni: 3, pieni: 5, tasche: 6, gemme: 240, preparabili: 2,
-    missioniPronte: 1, incanti: [{ id: 'scudo', nome: 'Scudo', glifo: 'scudo', tinta: '#5fb8ff', passi: 32, dura: 60 }] })],
+  barra: () => [h('div', { class: 'sot-campo banco-campo' }), barra()],
+  // i globi vivi in grande, la strada A sopra e la B sotto, coi numeri della barra (e `?evento=`): per giudicarli da vicino
+  globi: () => h('div', { class: 'banco-globi' }, ['2d', '3d'].map(m => h('div', { class: 'banco-globi-riga' }, [
+    h('b', m === '2d' ? 'A · canvas 2D' : 'B · WebGL'),
+    h(GloboVivo, { tipo: 'vita', modo: m, quota: B.vita / 30, numero: B.vita, colpito: B.colpito }),
+    h(GloboVivo, { tipo: 'energia', modo: m, quota: B.energia / 12, numero: B.energia })]))),
   fine: () => h(Fine, { vinta: true, titolo: 'La scalinata antica', stelle: 2, monete: 12,
                         fatti: { piani: 4, quantiPiani: 4, domande: 23, mostri: 17, tesori: 3, esp: 140 } }),
   pausa: () => h(VeloPausa, { dove: 'La scalinata antica · piano 2 di 4' }, () => [

@@ -1,74 +1,62 @@
-/* ═══════════ il tema «rilievo»: la pietra con la profondità vera (docs/sotterraneo/tema-pannelli.md) ═══════════
-   Vale solo con `data-tema="pietra rilievo"`: prende tutto da pietra.css e aggiunge lo spessore. Tre mezzi, tutti
-   CSS: il fianco delle lastre (ombre impilate, un pixel l'una: si vede la faccia di lato), la lastra che si piega
-   verso il dito che la preme (`data-piega` e `--rl-x/--rl-y`, li mette viste/../tema/rilievo.js) e, col mouse, la
-   tavola che gira appena e i suoi strati che si staccano (la parallasse). Niente WebGL: il perché è nel documento */
+/* ═══════════ il tema «rilievo»: il legno e l'ottone con lo spessore vero (docs/sotterraneo/tema-pannelli.md) ═══════════
+   Vale solo con `data-tema="legno rilievo"`: prende tutto da legno.css e aggiunge due cose, tutte CSS: il fianco delle
+   tavole (ombre impilate, un pixel l'una: si vede la faccia di lato) e la tavola che si piega verso il dito che la preme
+   (`data-piega` e `--rl-x/--rl-y`, li mette tema/rilievo.js). Niente parallasse né pieghe al passaggio del mouse: sul
+   telefono non esistono, e su un monitor muovono la domanda mentre la si legge */
 .sot[data-tema~="rilievo"] {
-  /* il fianco di una lastra di pietra, alto 6 px, più scuro scendendo; poi l'ombra morbida sul fondo */
-  --rl-fianco: 0 1px 0 #2b2823, 0 2px 0 #25221e, 0 3px 0 #201d1a, 0 4px 0 #1b1916, 0 5px 0 #171512, 0 6px 0 #12100e,
+  /* il fianco di una tavola, alto 6 px, più scuro scendendo; poi l'ombra morbida sul fondo */
+  --rl-fianco: 0 1px 0 #2e1d10, 0 2px 0 #28190d, 0 3px 0 #22150b, 0 4px 0 #1c1209, 0 5px 0 #170f07, 0 6px 0 #120b05,
                0 7px 1px #000, 0 12px 16px #000b;
-  --rl-fianco-basso: 0 1px 0 #25221e, 0 2px 0 #171512, 0 3px 1px #000, 0 4px 6px #000a;
+  --rl-fianco-basso: 0 1px 0 #28190d, 0 2px 0 #170f07, 0 3px 1px #000, 0 4px 6px #000a;
   --rl-fianco-oro: 0 1px 0 #8a5a14, 0 2px 0 #7a4f12, 0 3px 0 #6a440f, 0 4px 0 #5e3d0c, 0 5px 0 #4e330a, 0 6px 0 #3e2808,
                    0 7px 1px #000, 0 12px 16px #000b;
   --rl-fianco-oro-basso: 0 1px 0 #6a440f, 0 2px 0 #3e2808, 0 3px 1px #000, 0 4px 6px #000a;
-  --rl-luce: radial-gradient(90% 70% at 16% 0%, #fff3d014, transparent 60%);   /* la torcia in alto a sinistra */
 
-  /* la domanda: risposte più spesse, la tavola con lo spessore di lato */
-  --qz-tasto-ombra: inset 0 1px 0 #ffffff47, inset 0 -2px 0 #0000004d, var(--rl-fianco);
-  --qz-premuto-ombra: inset 0 2px 4px #0008, var(--rl-fianco-basso);
-  --qz-giusta-ombra: inset 0 1px 0 #ffffff55, 0 1px 0 #1f5a35, 0 2px 0 #1a4c2d, 0 3px 0 #153f25, 0 4px 0 #10331d, 0 5px 0 #0d2a18,
-                     0 6px 1px #000, 0 0 0 2px #4ed68099, 0 0 24px #4ed680aa;
-  --qz-sbagliata-ombra: inset 0 1px 0 #ffffff3a, 0 1px 0 #5a1e17, 0 2px 0 #4c1913, 0 3px 0 #3f140f, 0 4px 0 #33100c, 0 5px 0 #2a0c08,
-                        0 6px 1px #000, 0 0 0 2px #ff6a5577, 0 0 20px #ff3b2a88;
-  --qz-carta-ombra: inset 0 1px 0 #ffffff2e, inset 0 0 0 1px #0009, inset 0 0 30px #0008,
-                    0 2px 0 #6a440f, 0 4px 0 #4e330a, 0 6px 0 #2e1e06, 0 7px 2px #000, 0 22px 40px #000d;
-  --qz-consegna-incavo: inset 0 3px 7px #000d, inset 0 -1px 0 #ffffff1c, 0 1px 0 #ffffff14;
+  /* la domanda: risposte più spesse, la tavola col suo spessore */
+  --qz-tasto-ombra: inset 0 0 0 1px #d9a64066, inset 0 1px 0 1px #ffffff2e, inset 0 -2px 0 #0000004d, var(--rl-fianco);
+  --qz-premuto-ombra: inset 0 0 0 1px #d9a64066, inset 0 2px 4px #0008, var(--rl-fianco-basso);
+  --qz-giusta-ombra: inset 0 0 0 1px #f3cf6b, inset 0 1px 0 1px #ffffff40, 0 1px 0 #29491f, 0 2px 0 #223d1a, 0 3px 0 #1c3215, 0 4px 0 #162810,
+                     0 5px 0 #11200c, 0 6px 1px #000, 0 0 0 2px #a8d86e66, 0 0 24px #b8e07a99;
+  --qz-sbagliata-ombra: inset 0 0 0 1px #d9a64099, inset 0 1px 0 1px #ffffff26, 0 1px 0 #461a10, 0 2px 0 #3c160d, 0 3px 0 #33120b, 0 4px 0 #2a0f09,
+                        0 5px 0 #240905, 0 6px 1px #000, 0 0 18px #c0302088;
+  --qz-carta-ombra: inset 0 0 0 1px #3a2614, inset 0 0 30px #000b, 0 2px 0 #6a440f, 0 4px 0 #4e330a, 0 6px 0 #2e1e06, 0 7px 2px #000, 0 22px 40px #000d;
+  --qz-consegna-incavo: inset 0 1px 0 #fff8d6, inset 0 -2px 0 #7a4f1288, 0 0 0 1px #4a2e06, 0 1px 0 1px #6a440f, 0 3px 0 1px #3e2808, 0 6px 8px #000b;
 }
-/* il tasto premuto scende di 5 px (il suo fianco) e si piega verso il dito; passandoci col mouse si piega soltanto.
-   Le pieghe si scrivono sul tasto, non sulla radice: una variabile che ne usa un'altra si risolve dove è dichiarata */
+/* il tasto premuto scende di 5 px (il suo fianco) e si piega verso il dito. Le pieghe si scrivono sul tasto, non sulla
+   radice: una variabile che ne usa un'altra si risolve dove è dichiarata */
 .sot[data-tema~="rilievo"] .qz-tasto { --qz-premuto: perspective(420px) translateY(5px) rotateX(var(--rl-x, 0deg)) rotateY(var(--rl-y, 0deg)) }
-.sot[data-tema~="rilievo"] .qz-tasto[data-piega]:not(:active) { --qz-tasto-posa: perspective(420px) translateY(-1px) rotateX(var(--rl-x, 0deg)) rotateY(var(--rl-y, 0deg)) }
-.sot[data-tema~="rilievo"] .qz-tasto.giusta, .sot[data-tema~="rilievo"] .qz-tasto.sbagliata { --qz-tasto-posa: none }
-/* la parallasse, solo col mouse: la tavola gira di due gradi e mezzo, la consegna e le risposte si staccano dal fondo */
-.sot[data-tema~="rilievo"] .qz-carta[data-piega] {
-  --qz-carta-posa: perspective(1100px) rotateX(var(--rl-x, 0deg)) rotateY(var(--rl-y, 0deg));
-  --qz-carta-strati: preserve-3d; --qz-consegna-posa: translateZ(22px); --qz-risposte-posa: translateZ(12px);
-}
-.sot[data-tema~="rilievo"] .qz-carta { transition: transform .25s ease-out }
 
 /* ── i tasti grossi e le righe da scegliere: il fianco più alto, e la stessa piega ── */
 .sot[data-tema~="rilievo"] .sot-grosso { margin-bottom: 4px; box-shadow: inset 0 1px 0 #fff8d6, inset 0 -2px 0 #7a4f1266, var(--rl-fianco-oro) }
-.sot[data-tema~="rilievo"] .sot-grosso.sot-chiaro { box-shadow: inset 0 1px 0 #ffffff33, inset 0 -2px 0 #0005, var(--rl-fianco) }
-.sot[data-tema~="rilievo"] .sot-grosso:active:not(:disabled) { transform: perspective(420px) translateY(5px) rotateX(var(--rl-x, 0deg)) rotateY(var(--rl-y, 0deg)); box-shadow: inset 0 2px 4px #0007, var(--rl-fianco-oro-basso) }
-.sot[data-tema~="rilievo"] .sot-grosso.sot-chiaro:active:not(:disabled) { box-shadow: inset 0 2px 4px #0008, var(--rl-fianco-basso) }
+.sot[data-tema~="rilievo"] .sot-grosso.sot-chiaro { box-shadow: inset 0 0 0 1px #d9a64066, inset 0 1px 0 1px #ffffff22, var(--rl-fianco) }
+.sot[data-tema~="rilievo"] .sot-grosso:active:not(:disabled) {
+  transform: perspective(420px) translateY(5px) rotateX(var(--rl-x, 0deg)) rotateY(var(--rl-y, 0deg));
+  box-shadow: inset 0 2px 4px #0007, var(--rl-fianco-oro-basso);
+}
+.sot[data-tema~="rilievo"] .sot-grosso.sot-chiaro:active:not(:disabled) { box-shadow: inset 0 0 0 1px #d9a64066, inset 0 2px 4px #0008, var(--rl-fianco-basso) }
 .sot[data-tema~="rilievo"] .sot-scelta {
   margin-bottom: 2px;
-  box-shadow: inset 0 1px 0 #ffffff26, inset 0 0 0 1px #8a7650aa, inset 0 -2px 0 #0007,
-              0 1px 0 #15121e, 0 2px 0 #110f18, 0 3px 0 #0d0b12, 0 4px 0 #09080d, 0 5px 1px #000, 0 9px 12px #000a;
+  box-shadow: inset 0 0 0 1px #d9a64066, inset 0 1px 0 1px #ffffff1e, inset 0 -2px 0 #0007,
+              0 1px 0 #22150b, 0 2px 0 #1c1209, 0 3px 0 #170f07, 0 4px 0 #120b05, 0 5px 1px #000, 0 9px 12px #000a;
 }
 .sot[data-tema~="rilievo"] .sot-scelta.sot-pronta {
-  box-shadow: inset 0 1px 0 #ffe9a088, inset 0 0 0 1px #f3cf6b, inset 0 -2px 0 #0007,
-              0 1px 0 #3a2d0a, 0 2px 0 #2e2408, 0 3px 0 #241c06, 0 4px 0 #1d1604, 0 5px 1px #000, 0 0 16px #ffd23f55, 0 9px 12px #000a;
+  box-shadow: inset 0 0 0 1px #f3cf6b, inset 0 1px 0 1px #ffe9a066, inset 0 -2px 0 #0007,
+              0 1px 0 #4a360c, 0 2px 0 #3a2a08, 0 3px 0 #2e2106, 0 4px 0 #241a04, 0 5px 1px #000, 0 0 16px #ffd23f44, 0 9px 12px #000a;
 }
-.sot[data-tema~="rilievo"] .sot-scelta:active:not(:disabled) { transform: perspective(420px) translateY(4px) rotateX(var(--rl-x, 0deg)) rotateY(var(--rl-y, 0deg)) }
-.sot[data-tema~="rilievo"] :is(.sot-grosso, .sot-scelta, .sot-dialogo-scelta, .sot-scheda, .sot-linguetta, .sot-cella, .sot-casella)[data-piega]:not(:active) {
-  transform: perspective(420px) translateY(-1px) rotateX(var(--rl-x, 0deg)) rotateY(var(--rl-y, 0deg));
+.sot[data-tema~="rilievo"] :is(.sot-scelta, .sot-dialogo-scelta):active:not(:disabled) {
+  transform: perspective(420px) translateY(4px) rotateX(var(--rl-x, 0deg)) rotateY(var(--rl-y, 0deg));
 }
 .sot[data-tema~="rilievo"] .sot-dialogo-scelta {
-  box-shadow: inset 0 1px 0 #ffffff24, inset 0 0 0 1px #c9963a55, 0 1px 0 #1d140c, 0 2px 0 #18110a, 0 3px 0 #140e08, 0 4px 0 #0f0a06, 0 5px 1px #000, 0 8px 10px #0009;
+  box-shadow: inset 0 0 0 1px #c9963a55, inset 0 1px 0 1px #ffffff1c, 0 1px 0 #22150b, 0 2px 0 #1c1209, 0 3px 0 #170f07, 0 4px 0 #120b05, 0 5px 1px #000, 0 8px 10px #0009;
 }
-.sot[data-tema~="rilievo"] .sot-dialogo-scelta:active { transform: perspective(420px) translateY(4px) rotateX(var(--rl-x, 0deg)) rotateY(var(--rl-y, 0deg)) }
+.sot[data-tema~="rilievo"] :is(.pa-esci, .sot-lascia) { box-shadow: inset 0 0 0 1px #d9a64066, var(--rl-fianco) }
 
-/* ── le finestre: la luce della torcia sul legno e un bordo che ha uno spessore ── */
-.sot[data-tema~="rilievo"] .sot-cornice {
-  background: var(--rl-luce) padding-box, var(--pt-grana) padding-box, var(--pt-vena) padding-box, var(--pt-legno) padding-box, var(--pt-oro-bordo) border-box;
+/* ── le finestre: un bordo d'oro che ha uno spessore ── */
+.sot[data-tema~="rilievo"] :is(.sot-cornice, .sot-fine) {
   box-shadow: inset 0 0 0 2px #3a2614, inset 0 0 0 3px #c9963a44, inset 0 0 40px #000c,
               0 2px 0 #6a440f, 0 4px 0 #4e330a, 0 6px 0 #2e1e06, 0 8px 2px #000, 0 26px 60px #000e;
 }
-.sot[data-tema~="rilievo"] .sot-cornice[data-piega] { transform: perspective(1400px) rotateX(var(--rl-x, 0deg)) rotateY(var(--rl-y, 0deg)) }
-.sot[data-tema~="rilievo"] .sot-cornice { transition: transform .25s ease-out }
-.sot[data-tema~="rilievo"] .sot-fine { box-shadow: inset 0 1px 0 #ffffff2e, inset 0 0 30px #0008, 0 2px 0 #6a440f, 0 4px 0 #4e330a, 0 6px 0 #2e1e06, 0 8px 2px #000, 0 26px 50px #000d }
-.sot[data-tema~="rilievo"] .sot-fine[data-piega] { transform: perspective(1100px) rotateX(var(--rl-x, 0deg)) rotateY(var(--rl-y, 0deg)) }
+.sot[data-tema~="rilievo"] .sot3d-sotto { box-shadow: inset 0 0 0 1px #3a2614, inset 0 0 30px #000b, 0 2px 0 #6a440f, 0 4px 0 #4e330a, 0 5px 2px #000, 0 -6px 24px #000a }
 .sot[data-tema~="rilievo"] :is(.sot-foglio h2, .sot-centrale h2, .sot-modale > h2, .sot-fine h2, .sot-scegli-titolo, .pa-foglio h2, .sot-targa-nome b) {
   text-shadow: 0 1px 0 #8a5a14, 0 2px 0 #5e3d0c, 0 3px 0 #000, 0 0 14px #ffd23f40;
 }
@@ -80,22 +68,8 @@
   box-shadow: 0 0 0 2px var(--sot-oro), 0 0 16px #ffd23f99, inset 0 2px 8px #000c, 0 3px 0 #5e3d0c, 0 8px 12px #000c;
 }
 
-/* ── le linguette: quella aperta sporge verso di te ── */
+/* ── le linguette: quella aperta sporge verso di te; il gettone di chi agisce si alza ── */
 .sot[data-tema~="rilievo"] :is(.sot-scheda.sot-attiva, .sot-linguetta.sot-su) {
   box-shadow: inset 0 1px 0 #fff8d6, inset 0 -2px 0 #7a4f1266, 0 -2px 0 #fff1b855, 0 3px 0 #5e3d0c, 0 0 14px #ffd23f66;
 }
-
-/* ── la barra: le caselle sono tasti a sbalzo sulla pietra, non buchi ── */
-.sot[data-tema~="rilievo"] .sot-cella {
-  background: var(--pt-grana), linear-gradient(180deg, #4a4555, #2c2934 55%, #1d1b23);
-  box-shadow: inset 0 1px 0 #ffffff33, inset 0 0 0 1px #6e687a, inset 0 -2px 0 #0007, 0 1px 0 #0b0a0e, 0 2px 0 #08070a, 0 3px 2px #000c;
-}
-.sot[data-tema~="rilievo"] .sot-cella:active:not(:disabled) { transform: translateY(2px); box-shadow: inset 0 2px 4px #000c, inset 0 0 0 1px #6e687a, 0 1px 0 #08070a }
-.sot[data-tema~="rilievo"] .sot-cella[aria-pressed="true"], .sot[data-tema~="rilievo"] .sot-cella.sot-pronta {
-  box-shadow: inset 0 0 0 1.5px var(--sot-oro), inset 0 1px 0 #ffffff33, 0 2px 0 #08070a, 0 0 10px #ffd23f88;
-}
 .sot[data-tema~="rilievo"] .sot-turno.sot-adesso { transform: translateY(-1px); box-shadow: 0 2px 0 #5e3d0c, 0 3px 0 #2e1e06, 0 0 12px #ffd23f88, 0 5px 6px #000c }
-
-@media (prefers-reduced-motion: reduce) {
-  .sot[data-tema~="rilievo"] :is(.qz-carta, .sot-cornice) { transition: none }
-}
