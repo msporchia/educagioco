@@ -127,6 +127,9 @@ onesti, test compresi.
 | 9 | **I salvataggi**: la chiave `sotterraneo3d` e «porta qui il tuo eroe»; il travaso del 2D solo il giorno che il mondo lo sostituisce | provarlo con l'eroe vero | 2–4 |
 | — | **La taratura**, segnalata e non fatta qui: banco e giocatori tipo nel mondo, fasce delle regioni, premi | i numeri giusti | 4–6 |
 
+**Fatte: la 0 e la 1** (16 ottobre 2026): il generatore, il seme 19 e cosa la geometria ha cambiato dei passaggi stanno in
+[mondo-aperto-generatore.md](mondo-aperto-generatore.md); di `aperta.js` è entrata solo la parte che fa la mappa.
+
 **In tutto 38–57 giorni più la taratura**: due mesi abbondanti di lavoro pieno. Il primo file da provare arriva alla
 fine della fase 2 (dodici giorni circa); il mondo pericoloso alla fine della 5. Senza mostri sopra (la scelta più
 piccola) la fase 5 sparisce e le quest perdono caccia, signori e tane.
