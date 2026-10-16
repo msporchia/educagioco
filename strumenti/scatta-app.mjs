@@ -31,6 +31,8 @@
    c'è viene detto e non ferma lo scatto.
 
    `--aspetta 4000` aspetta tanto dopo l'apertura, prima dei tocchi e dello scatto.
+   `--prima '<espressione>'` la fa nella pagina (e la aspetta) dopo `--aspetta` e prima dei tocchi: per portare l'eroe del mondo
+   di sopra in 3D davanti a un posto (`window.__mondo3d.vai('pietra:altare')`) o per aprire qualcosa a mano.
    `--sequenza 8 --ogni 120` fa otto scatti di fila dopo i tocchi (`<nome>-1.png`…), per guardare un'animazione.
 
    `--stampa '<espressione>'` scrive, dopo i tocchi, quanto vale nella pagina
@@ -87,6 +89,8 @@ const { page, errori } = pagina ? await apriPagina() : await apriGioco(browser, 
 await page.waitForTimeout(1200)                 // l'app aspetta il profilo
 // `--aspetta 4000`: prima dei tocchi e dello scatto (il 3D del sotterraneo ci mette un attimo a nascere)
 await page.waitForTimeout(Number(opz('aspetta', 0)))
+// `--prima '<espressione>'`: la si fa (e la si aspetta, se è una promessa) prima dei tocchi e dello scatto: `window.__mondo3d.vai('pietra:altare')`
+if (opz('prima', null)) await page.evaluate(opz('prima')).catch(e => errori.push('--prima: ' + e.message))
 
 // una pagina del server di Vite (un banco), senza il giocatore di prova dell'app
 async function apriPagina() {

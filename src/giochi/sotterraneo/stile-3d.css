@@ -65,3 +65,49 @@
 .sot3d-senza p { max-width: 320px; margin: 0; color: #b9a684 }
 .sot3d-senza .sot-grosso { max-width: 280px }
 .sot3d-perso { position: absolute; inset: 0; z-index: 40 }
+
+/* il mondo di sopra in 3D (viste/Mondo3d.vue, docs/sotterraneo/terra-di-sopra.md «Il mondo in 3D»): la tela sotto, sopra i bersagli
+   del dito (trasparenti, posati a ogni fotogramma), i nomi della veduta, il fumetto, le carte in cima e in fondo */
+.sot3d-mondo { background: #c9dcea }
+.sot3d-tela-mondo { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none }
+.sot3d-attesa { position: absolute; inset: 0; margin: 0; display: grid; place-items: center; color: #3b4a5a; font-weight: 700; font-size: 15px; z-index: 1 }
+.sot3d-eroe-mondo { position: absolute; width: 0; height: 0; pointer-events: none }
+.sot3d-bersagli { position: absolute; inset: 0; z-index: 2; overflow: hidden; pointer-events: none }
+.sot3d-bersaglio {
+  position: absolute; left: 0; top: 0; padding: 0; margin: 0; border: 0; background: none; color: inherit; font: inherit;
+  border-radius: 14px; pointer-events: auto; will-change: transform; -webkit-tap-highlight-color: transparent;
+}
+.sot3d-bersaglio[data-vis="0"], .sot3d-bersaglio.sot-buio { visibility: hidden; pointer-events: none }
+/* le persone vincono sul prato e sui posti: stanno sopra */
+.sot3d-bersaglio.sot3d-persona { z-index: 3 }
+.sot3d-bersaglio.sot3d-posto { z-index: 2 }
+.sot3d-bersaglio.sot3d-cosa { z-index: 1 }
+.sot3d-bersaglio:focus-visible { outline: 2px solid var(--sot-oro) }
+/* il segno sopra la testa e il richiamo di chi cura: in cima al rettangolo, al centro */
+.sot3d-bersaglio > .sot-tre-punti { right: auto; left: 50%; top: calc(var(--testa, 30px) - 28px); translate: -50% 0 }
+.sot3d-bersaglio > .sot-richiamo { right: auto; left: 50%; bottom: auto; top: calc(var(--testa, 30px) - 46px); translate: -50% 0 }
+.sot3d-segno-arrivo {
+  position: absolute; left: 0; top: 0; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; z-index: 1;
+  border: 2px solid #fffaf0; pointer-events: none; animation: sot-segno .5s ease-out forwards;
+}
+.sot3d-fumetto { left: 0; top: 0; z-index: 5 }
+.sot-fum-viaggio { margin-top: 6px; width: 100%; padding: 9px; font-size: 14px }
+.sot3d-fiocco { position: static; transform: none; justify-self: center }
+/* il viaggio fra le pietre: un lampo chiaro, poi si è arrivati */
+.sot3d-lampo { position: absolute; inset: 0; z-index: 6; pointer-events: none; background: radial-gradient(circle, #e8fbff, #bfe9ffcc 50%, #bfe9ff00);
+  animation: sot3d-lampo .7s ease-out forwards }
+@keyframes sot3d-lampo { from { opacity: 1 } to { opacity: 0 } }
+/* la veduta d'insieme: i nomi dei posti trovati sopra il mondo, il tuo segno, le pietre */
+.sot3d-veduta { position: absolute; inset: 0; z-index: 3; pointer-events: none; overflow: hidden }
+.sot3d-nome-posto {
+  position: absolute; left: 0; top: 0; translate: -50% -100%; padding: 2px 7px; margin: 0; border: 0; border-radius: 8px; white-space: nowrap;
+  font-family: "Emoji Gioco", var(--lg-titolo, Georgia, serif); font-weight: 700; font-size: 11.5px; line-height: 1.2; color: #2b2433; background: #fffaf0e6; box-shadow: 0 2px 6px #0004; pointer-events: auto;
+  will-change: transform;
+}
+.sot3d-nome-citta { font-size: 13.5px; background: #ffe7a8; border: 1px solid #8a6420; pointer-events: none }
+.sot3d-nome-dungeon { background: #2b2433e6; color: #ffe3a0 }
+.sot3d-nome-chiuso { color: #b9b0a4 }
+.sot3d-nome-regione { background: none; box-shadow: none; color: #1f3a22; font-style: italic; font-weight: 600; text-shadow: 0 0 3px #fff, 0 0 6px #fff; pointer-events: none }
+.sot3d-nome-pietra { padding: 0 5px; font-size: 13px; color: #5a6a7a; background: #e6eef6 }
+.sot3d-nome-accesa { color: #0b6a8a; background: #c8f4ff; box-shadow: 0 0 8px #7fe8ff }
+.sot3d-nome-tu { background: #ffd23f; border: 2px solid #2b2433; pointer-events: none }
