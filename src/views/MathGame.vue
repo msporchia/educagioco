@@ -186,7 +186,7 @@ let cielo = 'cintura', salto = 0   // il posto (data/asteroidi.js `cieloDi`) e i
    dello stato; lo traduce `sincronizzaNave()` qui sotto, i tre gradini
    stanno in `grafica/spazio.js`. */
 const nave = reactive({
-  x: 0, y: 0, r: 34, lv: 1, danno: 0, mira: -Math.PI / 2, spinta: 0,
+  x: 0, y: 0, r: 34, lv: comandiNuovi ? 3 : 1, danno: 0, scorta: 0, mira: -Math.PI / 2, spinta: 0,
   gelo: 0, botta: 0, riparata: 0, t: 0, livrea: null,
   // dove la porta il dito, quanto corre (per inclinarla), e lo scudo: quanti falsi ha
   // respinto, l'ultimo da che parte, e il lampo che svanisce
@@ -209,11 +209,12 @@ function conHangar(fn) {
   ritocca(CHIAVE, c => { c.hangar = hangarDi(c.hangar); esito = fn(c.hangar) }, { subito: true })
   return esito
 }
-// `CFG.vite` è il riferimento: le vite di scorta guadagnate col filotto
-// si vedono come una nave sana, non come una nave super
-const stazzaDi = livello => (livello >= 6 ? 3 : livello >= 3 ? 2 : 1)
+// `CFG.vite` è il riferimento: le vite di scorta guadagnate col filotto si vedono come una nave sana, e in 3D come uno scudo
+// sempre acceso. Negli Asteroidi 3D la nave è una sola, la più bella, dal primo livello (docs/asteroidi/grafica-3d.md)
+const stazzaDi = livello => (comandiNuovi || livello >= 6 ? 3 : livello >= 3 ? 2 : 1)
 function sincronizzaNave() {
   nave.danno = Math.max(0, Math.min(1, 1 - (hud.vite - 1) / Math.max(1, CFG.vite - 1)))
+  nave.scorta = Math.max(0, hud.vite - CFG.vite)
   const lv = stazzaDi(hud.livello)
   if (lv > nave.lv) {
     nave.lv = lv
@@ -444,10 +445,13 @@ function rimettiCielo(d) {
    fuori dal bordo, spara a quello ed è la risposta; premere altrove porta la nave lì e
    basta, e finché il dito resta giù la nave lo segue. Il mouse conta solo premuto. */
 let dito = null                          // il puntatore che sta guidando
+const campoEl = ref(null)
 const dentroCampo = x => Math.max(nave.r * 1.4, Math.min(W - nave.r * 1.4, x))
+// le coordinate del campo, non della finestra: il campo può stare in una colonna
+function nelCampo(e) { const r = campoEl.value?.getBoundingClientRect(); return r ? [e.clientX - r.left, e.clientY - r.top] : [e.clientX, e.clientY] }
 function tocca(e) {
   if (fase.value !== 'gioco') return
-  const x = e.clientX, y = e.clientY
+  const [x, y] = nelCampo(e)
   dito = e.pointerId
   if (!comandiNuovi) {   // gli Asteroidi di sempre: solo sopra il sasso, e la nave sta ferma
     for (const a of asteroidi) if (!a.morto && (x - a.x) ** 2 + (y - a.y) ** 2 <= a.r * a.r) return colpisci(a)
@@ -460,7 +464,7 @@ function tocca(e) {
 }
 function guida(e) {
   if (e.pointerId !== dito || fase.value !== 'gioco' || fermo.value) return
-  nave.meta = dentroCampo(e.clientX)
+  nave.meta = dentroCampo(nelCampo(e)[0])
 }
 function lascia(e) { if (e.pointerId === dito) dito = null }
 
@@ -759,9 +763,12 @@ function esplodi(x, y, c, n = 22) {
 const anello = (x, y, c, max) => anelli.push({ x, y, r: 0, max, vita: 1, c })
 
 /* ---------- ciclo ---------- */
+let osservatore = null
 function ridimensiona() {
   const prima = W
-  W = window.innerWidth; H = window.innerHeight
+  // il campo, non la finestra: su un PC il gioco sta in una colonna (come nel Sotterraneo 3D)
+  const c = campoEl.value
+  W = c?.clientWidth || window.innerWidth; H = c?.clientHeight || window.innerHeight
   const cv = tela.value; if (!cv) return
   cv.width = Math.floor(W * devicePixelRatio); cv.height = Math.floor(H * devicePixelRatio)
   cv.style.width = W + 'px'; cv.style.height = H + 'px'
@@ -1296,6 +1303,7 @@ onMounted(() => {
   accendi3d()
   dalCheat()
   window.addEventListener('resize', ridimensiona)
+  if (window.ResizeObserver && campoEl.value) { osservatore = new ResizeObserver(() => ridimensiona()); osservatore.observe(campoEl.value) }
   window.addEventListener('pointermove', guida)
   window.addEventListener('pointerup', lascia)
   window.addEventListener('pointercancel', lascia)
@@ -1312,6 +1320,7 @@ onBeforeUnmount(() => {
 onUnmounted(() => {
   cancelAnimationFrame(raf)
   window.removeEventListener('resize', ridimensiona)
+  osservatore?.disconnect()
   window.removeEventListener('pointermove', guida)
   window.removeEventListener('pointerup', lascia)
   window.removeEventListener('pointercancel', lascia)
@@ -1342,7 +1351,7 @@ function dalCheat() {
 <template>
   <div class="schermo spazio">
     <!-- il cielo: in 3D se si può, se no il disegno 2D di sempre (docs/asteroidi/grafica-3d.md) -->
-    <div class="campo" @pointerdown="tocca">
+    <div class="campo" ref="campoEl" @pointerdown="tocca">
       <canvas ref="tela3d" v-show="usa3d" data-tela="3d"></canvas>
       <canvas ref="tela" v-show="!usa3d" data-tela="2d"></canvas>
     </div>
@@ -1430,8 +1439,8 @@ function dalCheat() {
         <div class="hangar">
           <div class="titoletto">La tua astronave</div>
           <p>Le vite sono la nave: intatta, poi con un'<b>ala strappata</b> che
-            fuma e la spia che lampeggia, poi in fiamme. Se cresce di livello diventa più
-            grossa. A fine partita torna com'era.</p>
+            fuma e la spia che lampeggia, poi in fiamme.<template v-if="comandiNuovi"> Con una vita in più, uno <b>scudo</b> la avvolge sempre.</template><template v-else> Se cresce di livello diventa più
+            grossa.</template> A fine partita torna com'era.</p>
           <p>Ogni <b>cinque risposte giuste di fila</b> guadagni un gettone.
             Resta lì in basso finché non lo premi tu — anche per tutta la partita, se
             vuoi — e sbagliando non si perde.</p>
@@ -1446,7 +1455,7 @@ function dalCheat() {
       <!-- l'hangar: sempre sulla rotta, anche senza pezzi (docs/asteroidi/hangar.md) -->
       <button class="cosa-so al-hangar" data-azione="hangar" @click="hangarAperto = true">
         Hangar<i v-if="hangarMappa.nuovi.length" class="nuovi" data-nuovi>{{ hangarMappa.nuovi.length }}</i></button>
-      <HangarAsteroidi v-if="hangarAperto" @chiudi="chiudiHangar" />
+      <HangarAsteroidi v-if="hangarAperto" :tre="usa3d" @chiudi="chiudiHangar" />
     </div>
 
     <!-- cosa so: una pagina di progressi, non un velo sopra la partita —

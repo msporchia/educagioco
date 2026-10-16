@@ -5,8 +5,7 @@
 // roccia viene dallo scenario. Dato puro, gira in Node: unita/sotterraneo-3d e unita/sotterraneo-paesaggi. Le regole e come se
 // ne aggiunge uno: docs/sotterraneo/paesaggi-3d.md.
 import { SCENARI, SCENARIO } from '../dati/tessere.js'
-import { trattoDi } from '../dati/campagna.js'
-import { PAESAGGI } from '../dati/paesaggi.js'
+import { PAESAGGI, paesaggioDi } from '../dati/paesaggi.js'
 import { STILI_PARETE } from './pareti.js'
 import { PAVIMENTI, MURI } from './pitture.js'
 
@@ -14,11 +13,11 @@ import { PAVIMENTI, MURI } from './pitture.js'
 // coperta · fusto: la forma delle colonne (terreno.js) · aria: le particelle (particelle.js) · arredo: [tipo, quanto fitto] (arredo3d.js) ·
 // fiamma: il colore del fuoco delle torce · raggi: le lame di luce dall'alto · velo: l'acqua bassa su tutto il pavimento
 export const ASPETTI_3D = {
-  // le cantine: mattoni a cesto per terra, muri di mattoni dritti con i contrafforti, botti e casse, luce calda e polvere
+  // le cantine: mattoni a cesto per terra, muri di mattoni dritti con i contrafforti, le botti da rompere (scena3d/botti.js), luce calda e polvere
   cantine: {
     nome: 'le cantine',
     pav: 'cesto', trama: 'mattoni', parete: { stile: 'blocchi', varia: 0.2 }, fusto: 'tonda',
-    pietra: [1.0, 0.86, 0.72], fuga: [0.13, 0.12, 0.1], muschio: 0.06, braci: 0, botti: true,
+    pietra: [1.0, 0.86, 0.72], fuga: [0.13, 0.12, 0.1], muschio: 0.06, braci: 0,
     muro: [1.0, 0.86, 0.72], cima: '#5a463a', parapetto: '#6a5f55', colonna: '#8a7462',
     cielo: '#b8a894', terra: '#3a3430', ambiente: 1,
     torcia: '#ff8a3c', nebbia: { colore: [1, 0.9, 0.75], densita: 0.05 }, aria: 'polvere',
@@ -29,7 +28,7 @@ export const ASPETTI_3D = {
   cripta: {
     nome: 'la cripta',
     pav: 'lastroni', trama: 'lastre', parete: { stile: 'lastroni', varia: 0.1 }, fusto: 'quadra',
-    pietra: [0.8, 0.86, 0.95], fuga: [0.09, 0.11, 0.13], muschio: 0.1, braci: 0, botti: false,
+    pietra: [0.8, 0.86, 0.95], fuga: [0.09, 0.11, 0.13], muschio: 0.1, braci: 0,
     muro: [0.78, 0.84, 0.95], cima: '#5a626e', parapetto: '#5e656b', colonna: '#9aa0a6',
     cielo: '#8a9ab6', terra: '#20262e', ambiente: 0.85,
     torcia: '#ffa860', nebbia: { colore: [0.65, 0.78, 1.0], densita: 0.11 }, aria: 'polvere',
@@ -40,7 +39,7 @@ export const ASPETTI_3D = {
   fornace: {
     nome: 'la fornace',
     pav: 'grata', trama: 'lamiera', parete: { stile: 'lamiera', varia: 0.12 }, fusto: 'ferro',
-    pietra: [0.82, 0.8, 0.8], fuga: [0.12, 0.07, 0.05], muschio: 0, braci: 0.8, botti: false, metallo: 0.55,
+    pietra: [0.82, 0.8, 0.8], fuga: [0.12, 0.07, 0.05], muschio: 0, braci: 0.8, metallo: 0.55,
     muro: [0.8, 0.76, 0.74], cima: '#3a3230', parapetto: '#4a3a34', colonna: '#5a524e',
     cielo: '#c08060', terra: '#2a1a14', ambiente: 0.8,
     torcia: '#ff6a20', nebbia: { colore: [1, 0.5, 0.3], densita: 0.05 }, aria: 'braci',
@@ -51,7 +50,7 @@ export const ASPETTI_3D = {
   inferno: {
     nome: 'l\'inferno',
     pav: 'basalto', trama: 'ossidiana', parete: { stile: 'ossidiana', varia: 0.15 }, fusto: 'spina',
-    pietra: [0.62, 0.55, 0.58], fuga: [0.1, 0.03, 0.02], muschio: 0, braci: 0.75, botti: false, lucido: 0.6,
+    pietra: [0.62, 0.55, 0.58], fuga: [0.1, 0.03, 0.02], muschio: 0, braci: 0.75, lucido: 0.6,
     muro: [0.55, 0.48, 0.52], cima: '#2a1614', parapetto: '#3e2a28', colonna: '#3a2a2a',
     cielo: '#b05040', terra: '#2a0c08', ambiente: 0.8,
     torcia: '#ff4a18', nebbia: { colore: [1, 0.35, 0.15], densita: 0.08 }, aria: 'braci',
@@ -64,7 +63,7 @@ export const ASPETTI_3D = {
   grotta: {
     nome: 'la grotta',
     pav: 'terra', trama: 'roccia', parete: { stile: 'roccia', varia: 0.3, strati: 0.08 }, fusto: 'stalattite',
-    pietra: [0.72, 0.6, 0.48], fuga: [0.1, 0.09, 0.08], muschio: 0, braci: 0, botti: false, pozze: { colore: [0.04, 0.05, 0.06], quanto: 0.55 },
+    pietra: [0.72, 0.6, 0.48], fuga: [0.1, 0.09, 0.08], muschio: 0, braci: 0, pozze: { colore: [0.04, 0.05, 0.06], quanto: 0.55 },
     muro: [0.78, 0.76, 0.74], cima: '#7a7066', parapetto: '#5a4e44', colonna: '#7a6c5e',
     cielo: '#8a9aac', terra: '#22262a', ambiente: 0.85,
     torcia: '#ff9040', nebbia: { colore: [0.7, 0.85, 1.0], densita: 0.08 }, aria: 'gocce',
@@ -75,7 +74,7 @@ export const ASPETTI_3D = {
   neve: {
     nome: 'le nevi',
     pav: 'neve', trama: 'roccia', parete: { stile: 'neve', varia: 0.2, coperta: 1, da: 0.5 }, copre: [0.92, 0.95, 1.0], fusto: 'stalattite',
-    pietra: [0.74, 0.78, 0.86], fuga: [0.5, 0.55, 0.65], muschio: 0, braci: 0, botti: false,
+    pietra: [0.74, 0.78, 0.86], fuga: [0.5, 0.55, 0.65], muschio: 0, braci: 0,
     muro: [0.42, 0.44, 0.5], cima: '#e8f0f8', parapetto: '#c8d4e0', colonna: '#5a5e68',
     cielo: '#a8bcd8', terra: '#4a5468', ambiente: 0.9,
     torcia: '#ffb070', nebbia: { colore: [0.85, 0.92, 1.0], densita: 0.07 }, aria: 'neve',
@@ -86,7 +85,7 @@ export const ASPETTI_3D = {
   ghiaccio: {
     nome: 'il ghiaccio',
     pav: 'ghiaccio', trama: 'ghiaccio', parete: { stile: 'cristallo', varia: 0.25, coperta: 0.3, da: 0.7 }, copre: [0.85, 0.95, 1.0], fusto: 'cristallo',
-    pietra: [0.42, 0.62, 0.78], fuga: [0.6, 0.8, 0.9], muschio: 0, braci: 0, botti: false, lucido: 0.15,
+    pietra: [0.42, 0.62, 0.78], fuga: [0.6, 0.8, 0.9], muschio: 0, braci: 0, lucido: 0.15,
     muro: [0.55, 0.85, 1.0], cima: '#7ec0e4', parapetto: '#8cc4e4', colonna: '#9ad4f0',
     bagliore: [0.1, 0.35, 0.55],
     cielo: '#9ad0f0', terra: '#1a3a50', ambiente: 1.0,
@@ -98,7 +97,7 @@ export const ASPETTI_3D = {
   palude: {
     nome: 'la palude',
     pav: 'fango', trama: 'terra', parete: { stile: 'zolla', varia: 0.25, coperta: 0.55, da: 0.4 }, copre: [0.1, 0.17, 0.05], fusto: 'tronco',
-    pietra: [0.72, 0.68, 0.42], fuga: [0.08, 0.09, 0.05], muschio: 0, braci: 0, botti: false, pozze: { colore: [0.02, 0.035, 0.02], quanto: 0.95 },
+    pietra: [0.72, 0.68, 0.42], fuga: [0.08, 0.09, 0.05], muschio: 0, braci: 0, pozze: { colore: [0.02, 0.035, 0.02], quanto: 0.95 },
     muro: [0.7, 0.62, 0.44], cima: '#3a3420', parapetto: '#3a4426', colonna: '#4a3a28',
     cielo: '#7a9a6a', terra: '#1a2210', ambiente: 0.85,
     torcia: '#ffc060', fiamma: [0.55, 1.0, 0.35], nebbia: { colore: [0.6, 0.9, 0.45], densita: 0.13 }, aria: 'lucciole',
@@ -109,7 +108,7 @@ export const ASPETTI_3D = {
   tempio: {
     nome: 'il tempio sommerso',
     pav: 'anelli', trama: 'scolpita', parete: { stile: 'lastroni', varia: 0.12, coperta: 0.35, da: 0.6 }, copre: [0.15, 0.32, 0.22], fusto: 'scanalata',
-    pietra: [0.7, 0.86, 0.82], fuga: [0.05, 0.1, 0.1], muschio: 0.1, braci: 0, botti: false,
+    pietra: [0.7, 0.86, 0.82], fuga: [0.05, 0.1, 0.1], muschio: 0.1, braci: 0,
     muro: [0.66, 0.82, 0.8], cima: '#4a6a66', parapetto: '#4e6a68', colonna: '#9ab8b4',
     cielo: '#6ab0b8', terra: '#0a2028', ambiente: 1.0,
     torcia: '#70e0d0', fiamma: [0.35, 1.0, 0.85], nebbia: { colore: [0.4, 0.85, 0.9], densita: 0.1 }, aria: 'bolle',
@@ -121,7 +120,7 @@ export const ASPETTI_3D = {
   miniera: {
     nome: 'la miniera',
     pav: 'assi', trama: 'roccia', parete: { stile: 'roccia', varia: 0.22, strati: 0.12 }, fusto: 'puntello',
-    pietra: [0.95, 0.75, 0.52], fuga: [0.1, 0.08, 0.06], muschio: 0, braci: 0, botti: false,
+    pietra: [0.95, 0.75, 0.52], fuga: [0.1, 0.08, 0.06], muschio: 0, braci: 0,
     muro: [0.62, 0.56, 0.5], cima: '#5a4e44', parapetto: '#4a4038', colonna: '#6a4a2a',
     cielo: '#a09070', terra: '#2a2018', ambiente: 0.85,
     torcia: '#ffc050', fiamma: [1.0, 0.85, 0.4], nebbia: { colore: [1, 0.85, 0.6], densita: 0.07 }, aria: 'polvere',
@@ -136,7 +135,7 @@ export const ARREDI = ['contrafforti', 'sacchi', 'mensole', 'pilastri', 'nicchie
   'stalagmiti', 'funghi', 'sassi', 'abeti', 'cumuli', 'ghiaccioli', 'cristalli', 'canne', 'radici', 'archi', 'alghe', 'rocchi', 'travi',
   'binari', 'carrelli', 'ninfee']
 
-const CAMPI = ['nome', 'pav', 'trama', 'parete', 'fusto', 'colonna', 'botti', 'pietra', 'fuga', 'muro', 'cima', 'parapetto', 'cielo', 'terra',
+const CAMPI = ['nome', 'pav', 'trama', 'parete', 'fusto', 'colonna', 'pietra', 'fuga', 'muro', 'cima', 'parapetto', 'cielo', 'terra',
   'torcia', 'nebbia', 'aria', 'acqua', 'arredo']
 
 // lo scenario del motore di un paesaggio (se stesso, per i quattro del motore): dati/paesaggi.js
@@ -149,11 +148,8 @@ export function aspettoDi(scenario) {
   return { chiave, ...PAESAGGI[chiave], ...ASPETTI_3D[chiave], roccia: (sc.colori && sc.colori.roccia) || '#202020' }
 }
 
-// quale paesaggio si disegna in questo piano: quello del tratto dell'abisso o della discesa, se lo dichiarano; se no lo scenario
-export function paesaggioDi(corsa) {
-  const t = trattoDi(corsa.tappa, corsa.piano)
-  return (t && t.paesaggio) || (corsa.tappa && corsa.tappa.paesaggio) || corsa.scenario
-}
+// quale paesaggio si disegna in questo piano (dati/paesaggi.js: lo legge anche il motore, per le botti)
+export { paesaggioDi }
 
 // ogni scenario del gioco ha il suo aspetto, con tutti i campi; ogni nome di stile esiste: un nome sbagliato è rosso nei test,
 // non un piano grigio

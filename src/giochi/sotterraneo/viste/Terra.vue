@@ -5,7 +5,8 @@
 // Riceve le tappe già decise e dice solo «si scende qui» (`scendi`), «apro il banco di…» (`bottega`), «torno
 // giù dal portale» (`riprendi`) e «ricordati questo» (`terra`).
 // Le regole: docs/sotterraneo/terra-di-sopra.md.
-import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { RITMO } from '../dati/pensieri.js'
 import { MAPPA, LARGO, ALTO, CELLA, MASCHERA, POSTI, PARTENZA, MINATORE as DOVE_MINATORE, CARTELLO,
          MERCANTI as DOVE_MERCANTI, PORTALE as DOVE_PORTALE, PERSONAGGI as DOVE_PERSONAGGI } from '../dati/terra-mappa.js'
 import { PERSONAGGI, personaDi } from '../dati/missioni.js'
@@ -43,8 +44,12 @@ const props = defineProps({
   annuncio: { type: Object, default: null },
   // vita ed energia di chi ha lasciato la discesa dal portale, col massimo: { vita, vitaMax, energia, energiaMax }, o null (sopra si è in forze)
   forze: { type: Object, default: null },
+  // il pensiero dell'eroe (motore/pensieri.js, docs/sotterraneo/pensieri.md): { id, testo, icona, tono, segno }, o null
+  pensiero: { type: Object, default: null },
 })
-const emit = defineEmits(['scendi', 'terra', 'bottega', 'riprendi', 'sentito', 'cura'])
+// `pensa`: l'eroe è fermo da un po' e niente è aperto, Gioco.vue può scegliere un pensiero; `pensiero-fine`: il fumetto se ne va;
+// `pensiero`: toccato (col suo segno); `trovati`: i mercanti già visti nella nebbia (un pensiero non porta da chi non si conosce)
+const emit = defineEmits(['scendi', 'terra', 'bottega', 'riprendi', 'sentito', 'cura', 'pensa', 'pensiero', 'pensiero-fine', 'trovati'])
 
 const SCARTO_DITO = 16   // sotto, il dito è fermo (docs/core/il-dito.md)
 const minuscolo = s => s.charAt(0).toLowerCase() + s.slice(1)
@@ -195,8 +200,10 @@ async function toccoDaFuori(x, y) {
   if (b && mondoEl.value && mondoEl.value.contains(b)) b.click()
   else toccaPrato({ target: el, clientX: x, clientY: y })
 }
+// il tocco su un pensiero che porta a un mercante: l'eroe gli va accanto, senza aprire niente (il mercante si illumina, Gioco.vue)
+function vaDaMercante(k) { const m = mercanti.find(x => x.chiave === k); if (m && trovati.value.has(k)) vaiA(m.accanto) }
 // anche il diario manda l'eroe da chi aspetta (viste/Diario.vue, «vai da …»)
-defineExpose({ vaDa, toccoDaFuori })
+defineExpose({ vaDa, toccoDaFuori, vaDaMercante })
 // e la freccia azzurra porta ai piedi della discesa, dove si apre il fumetto
 const vaAllaDiscesa = chiave => { const p = posti.value.find(p => p.nome === POSTO_DI[chiave]); if (p) toccaPosto(p) }
 
@@ -406,6 +413,7 @@ function battito(ora) {
     if (!via.length) arriva()
   }
   salutaChiPassa(tempo)
+  pensaDaFermo(dt)
   const fr = Math.floor(tempo * (cammina.value ? 10 : 4)) % 4
   if (fr !== fotogramma.value) fotogramma.value = fr
   const k = 1 - Math.exp(-dt * MORBIDA)
@@ -415,6 +423,27 @@ function battito(ora) {
   posa()
 }
 
+/* ═══════════ i pensieri dell'eroe (docs/sotterraneo/pensieri.md) ═══════════
+   Si pensa da fermi, con niente aperto: allora ogni RITMO.ogni secondi si chiede a Gioco.vue (`pensa`). Il fumetto resta RITMO.dura
+   secondi del `tempo` dei fotogrammi (a schermo spento non scorre), e se ne va prima se l'eroe cammina o si apre qualcosa */
+let fermoDa = 0, prossimaDomanda = 0, pensieroDa = null
+const pensieroEl = ref(null)
+function pensaDaFermo(dt) {
+  const occupato = cammina.value || !!dialogo.value || !!aperto.value || !!avviso.value
+  if (props.pensiero) {
+    if (pensieroDa == null) pensieroDa = tempo
+    if (occupato || tempo - pensieroDa >= RITMO.dura) { pensieroDa = null; emit('pensiero-fine') }
+    fermoDa = 0
+    return
+  }
+  pensieroDa = null
+  fermoDa = occupato ? 0 : fermoDa + dt
+  if (fermoDa >= RITMO.primoSopra && tempo >= prossimaDomanda) { prossimaDomanda = tempo + RITMO.ogni; emit('pensa') }
+}
+watch(() => mercanti.filter(m => trovati.value.has(m.chiave)).map(m => m.chiave).join(','),
+      v => emit('trovati', v ? v.split(',') : []), { immediate: true })
+function toccaPensiero() { if (props.pensiero && props.pensiero.segno) emit('pensiero', props.pensiero) }
+
 // il DOM si sposta a mano, una volta per fotogramma: un ridisegno di Vue sessanta volte al secondo non serve a niente
 function posa() {
   if (mondoEl.value)
@@ -423,6 +452,13 @@ function posa() {
     eroeEl.value.style.transform = `translate3d(${Math.round(io.x * CELLA * S)}px, ${Math.round(io.y * CELLA * S)}px, 0)`
     const c = cellaDiMe(), k = `${c.x},${c.y}`
     if (k !== ultimaCella) { ultimaCella = k; eroeEl.value.dataset.cella = k }
+    // il fumetto del pensiero resta nello schermo: si sposta di lato quanto basta, la coda resta sull'eroe
+    const f = pensieroEl.value
+    if (f) {
+      const ex = io.x * CELLA * S - cam.x * S, w = f.offsetWidth
+      const sposta = Math.round(Math.max(8 - (ex - w / 2), Math.min(0, vL - 8 - (ex + w / 2))))
+      if (f._sposta !== sposta) { f._sposta = sposta; f.style.setProperty('--sposta', sposta + 'px') }
+    }
   }
   if (vista.value) vista.value.dataset.camera = `${Math.round(cam.x)},${Math.round(cam.y)}`
   aggiornaFuori()
@@ -806,6 +842,14 @@ const rigaStoria = p => {
                 :posa="cammina ? 'corsa' : 'fermo'" :fotogramma="fotogramma" />
         <span v-if="fiocco" :key="fiocco.n" class="sot-cura-fiocco" :class="'sot-cura-' + fiocco.risorsa" data-cura-fiocco
               :data-risorsa="fiocco.risorsa" @animationend="fiocco = null">{{ fiocco.testo }} {{ fiocco.risorsa === 'vita' ? '❤️' : '⚡' }}</span>
+        <!-- il pensiero dell'eroe: un fumetto a bolle sopra la testa; si tocca solo se ha un segno da accendere -->
+        <div v-if="pensiero" ref="pensieroEl" :key="pensiero.id + pensiero.testo" class="sot-pensiero sot-pensiero-sopra"
+             :class="['sot-pensiero-' + pensiero.tono, { 'sot-pensiero-tocca': pensiero.segno }]" data-pensiero
+             :data-pensiero-id="pensiero.id" :data-tono="pensiero.tono" :data-segno="pensiero.segno || null"
+             @click.stop="toccaPensiero">
+          <span class="em sot-pensiero-icona">{{ pensiero.icona }}</span><span class="sot-pensiero-testo">{{ pensiero.testo }}</span>
+          <i class="sot-pensiero-bolla"></i><i class="sot-pensiero-bolla sot-pensiero-bollina"></i>
+        </div>
       </div>
 
       <span v-if="segno" :key="'segno-' + segno.n" class="sot-segno"

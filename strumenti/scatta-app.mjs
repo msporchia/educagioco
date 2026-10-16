@@ -31,6 +31,8 @@
    c'è viene detto e non ferma lo scatto.
 
    `--aspetta 4000` aspetta tanto dopo l'apertura, prima dei tocchi e dello scatto.
+   `--prima '<espressione>'` la fa nella pagina (e la aspetta) dopo `--aspetta` e prima dei tocchi: per portare l'eroe del mondo
+   di sopra in 3D davanti a un posto (`window.__mondo3d.vai('pietra:altare')`) o per aprire qualcosa a mano.
    `--sequenza 8 --ogni 120` fa otto scatti di fila dopo i tocchi (`<nome>-1.png`…), per guardare un'animazione.
 
    `--esegui '<espressione>'` la valuta nella pagina prima dei tocchi.
@@ -38,7 +40,8 @@
    (in JSON): `--stampa 'window.__mate.grafica()'` dice quanto costa un
    fotogramma degli asteroidi in 3D.
    `--pagina strumenti/banco/pannello.html?p=zaino&tema=pietra` fotografa una pagina del server di Vite (un banco)
-   invece dell'app: niente giocatore di prova, niente `#`. `--alto 700` cambia l'altezza della finestra (844).
+   invece dell'app: niente giocatore di prova, niente `#`. `--alto 700` cambia l'altezza della finestra (844), `--pixel 1.25`
+   il deviceScaleFactor (2 di difetto, un telefono; 1, 1.25, 1.5 un monitor col suo zoom).
 
    `--stili '.qz-velo, .qz-velo *'` scrive accanto allo scatto (e a ogni `--domanda`) `<nome>.stili.json`: per ogni elemento trovato, in
    ordine, il suo stile calcolato (e quello di ::before e ::after). Due file uguali vogliono dire due schermate
@@ -75,21 +78,24 @@ const dist = conDist && opz('dist', '') && !opz('dist', '').startsWith('--') ? r
 if (conDist && !existsSync(dist)) { console.error(`manca ${dist}: prima npm run build`); process.exit(1) }
 const larghezza = Number(opz('larghezza', TELEFONO.width))
 const alto = Number(opz('alto', TELEFONO.height))
+const pixel = Number(opz('pixel', 2))   // il deviceScaleFactor: 1, 1.25, 1.5 per un monitor col suo zoom
 
 // lo stesso browser e la stessa partenza dei test (un giocatore di prova, le spiegazioni già viste): senza, un
 // browser nuovo si ferma su «come ti chiami?»
 const browser = await apriBrowser()
 const { page, errori } = pagina ? await apriPagina() : await apriGioco(browser, {
-  viewport: { width: larghezza, height: alto }, hash: dove, attesa: null,
+  viewport: { width: larghezza, height: alto }, hash: dove, attesa: null, pixel,
   indirizzo: conDist ? `file://${dist}` : `http://localhost:${porta}/`,
 })
 await page.waitForTimeout(1200)                 // l'app aspetta il profilo
 // `--aspetta 4000`: prima dei tocchi e dello scatto (il 3D del sotterraneo ci mette un attimo a nascere)
 await page.waitForTimeout(Number(opz('aspetta', 0)))
+// `--prima '<espressione>'`: la si fa (e la si aspetta, se è una promessa) prima dei tocchi e dello scatto: `window.__mondo3d.vai('pietra:altare')`
+if (opz('prima', null)) await page.evaluate(opz('prima')).catch(e => errori.push('--prima: ' + e.message))
 
 // una pagina del server di Vite (un banco), senza il giocatore di prova dell'app
 async function apriPagina() {
-  const p = await browser.newPage({ viewport: { width: larghezza, height: alto }, deviceScaleFactor: 2, hasTouch: true })
+  const p = await browser.newPage({ viewport: { width: larghezza, height: alto }, deviceScaleFactor: pixel, hasTouch: true })
   const e = []
   p.on('pageerror', x => e.push('errore JS: ' + x.message))
   p.on('console', m => m.type() === 'error' && e.push('console: ' + m.text()))
@@ -106,6 +112,8 @@ if (opz('storia', null) != null) {
     missioni: Object.fromEntries((opz('missioni', '') || '').split(',').filter(Boolean).map(x => x.split(':'))),
     zaino: (opz('zaino', '') || '').split(',').filter(Boolean), punti: Number(opz('punti', 0)),
   })
+  // anche dopo la semina: la terra di sopra ha le sue attese (i pensieri dell'eroe da fermo, docs/sotterraneo/pensieri.md)
+  await page.waitForTimeout(Number(opz('aspetta', 0)))
 }
 
 const stili = opz('stili', null)

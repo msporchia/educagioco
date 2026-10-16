@@ -3,7 +3,7 @@
 // dell'energia delle abilità, in mezzo l'esperienza in una riga col livello e sotto le caselle (bevi, zaino, incanti,
 // mappa, gemme) in una cornice di pietra. I globi aprono la finestra dell'eroe; gli incanti da preparare hanno la loro casella. Tutto in CSS e SVG finché la cornice dipinta non è approvata (docs/sotterraneo/barra.md). Le regole non le
 // sa: dice solo cosa è stato toccato. `sopra`: sulla terra di sopra la mappa grande non c'è (la terra è già la mappa)
-import { computed } from 'vue'
+import { computed, ref, onMounted, onBeforeUnmount } from 'vue'
 import Globo from './Globo.vue'
 import GloboVivo from './GloboVivo.vue'
 import { tema, globi } from '../tema/tema.js'
@@ -31,17 +31,48 @@ defineProps({
   gemme: { type: Number, default: 0 },
   preparabili: { type: Number, default: 0 },   // gli incantesimi che l'eroe sa e si possono preparare: sulla casella degli incanti
   missioniPronte: { type: Number, default: 0 }, // le missioni fatte, da consegnare: una pastiglia d'oro sul globo rosso
-  mappa: { type: Boolean, default: false },     // la mappina è aperta grande
+  mappa: { type: Boolean, default: false },     // la mappina è aperta grande (sopra, nel 3D: la veduta d'insieme)
   sopra: { type: Boolean, default: false },
+  mappaSopra: { type: Boolean, default: false }, // sopra la casella della mappa apre la veduta d'insieme (il mondo in 3D)
 })
 defineEmits(['bevi', 'zaino', 'incanti', 'mappa', 'eroe', 'abilita'])
 // col tema dei pannelli i globi sono vivi (GloboVivo.vue, strada A o B); senza, quelli di sempre
 const vivo = computed(() => tema.value !== 'attuale')
 const IlGlobo = computed(() => (vivo.value ? GloboVivo : Globo))
+
+// quanto si alza la barra dal fondo del gioco, punta dei globi compresa, misurato: lo scrive in `--sot-sopra-barra` sulla
+// radice `.sot`, e i pannelli che ci poggiano sopra finiscono lì (docs/sotterraneo/barra.md, «Sopra la barra»). Senza la
+// misura vale la stima in stile.css. Si misura la scatola dei globi (offsetTop), non il disegno: il battito li scala
+const RESPIRO = 6
+const nav = ref(null)
+let osserva = null, radiceSot = null
+function misura() {
+  const el = nav.value
+  radiceSot = el && el.closest('.sot')
+  if (!radiceSot) return
+  const lati = [...el.querySelectorAll('.sot-plancia-lato')]
+  const cima = el.getBoundingClientRect().top + Math.min(0, ...lati.map(l => l.offsetTop))
+  const su = Math.ceil(radiceSot.getBoundingClientRect().bottom - cima + RESPIRO)
+  if (su > RESPIRO) radiceSot.style.setProperty('--sot-sopra-barra', su + 'px')
+}
+onMounted(() => {
+  misura()
+  if (typeof ResizeObserver === 'function') {
+    osserva = new ResizeObserver(misura)
+    osserva.observe(nav.value)
+    for (const l of nav.value.querySelectorAll('.sot-plancia-lato')) osserva.observe(l)
+  }
+  addEventListener('resize', misura)
+})
+onBeforeUnmount(() => {
+  if (osserva) osserva.disconnect()
+  removeEventListener('resize', misura)
+  if (radiceSot) radiceSot.style.removeProperty('--sot-sopra-barra')
+})
 </script>
 
 <template>
-  <nav class="sot-plancia" data-barra-giu :data-barra="sopra ? 'sopra' : 'giu'" aria-label="la barra dell'eroe">
+  <nav ref="nav" class="sot-plancia" data-barra-giu :data-barra="sopra ? 'sopra' : 'giu'" aria-label="la barra dell'eroe">
     <div class="sot-plancia-lato sot-plancia-sx">
       <!-- la vita è un tasto: apre la finestra dell'eroe; la pastiglia d'oro dice che c'è una missione da consegnare -->
       <button type="button" class="sot-globo-tasto" data-azione="vita" :data-missioni-pronte="missioniPronte || null"
@@ -87,8 +118,8 @@ const IlGlobo = computed(() => (vivo.value ? GloboVivo : Globo))
                 @click="$emit('incanti')">
           <Glifo nome="incanto" :misura="19" /><b>{{ incanti.length }}/{{ preparabili }}</b>
         </button>
-        <button type="button" class="sot-cella" :class="{ 'sot-vuota': sopra }" data-casella-barra="mappa"
-                data-azione="mappina" :disabled="sopra" :aria-label="sopra ? 'la mappa: sei già sopra' : 'la mappa'"
+        <button type="button" class="sot-cella" :class="{ 'sot-vuota': sopra && !mappaSopra }" data-casella-barra="mappa"
+                data-azione="mappina" :disabled="sopra && !mappaSopra" :aria-label="sopra && !mappaSopra ? 'la mappa: sei già sopra' : 'la mappa'"
                 :aria-pressed="mappa ? 'true' : 'false'" @click="$emit('mappa')">
           <span class="em">🗺️</span>
         </button>

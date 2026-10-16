@@ -10,26 +10,27 @@ import { Group, Mesh, LatheGeometry, BoxGeometry, CylinderGeometry, SphereGeomet
          NoColorSpace, RepeatWrapping, MeshStandardMaterial, MeshPhysicalMaterial, MeshBasicMaterial,
          ShaderMaterial, AdditiveBlending, DoubleSide, Color, Quaternion } from 'three'
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js'
-import { ali, strappa, SCHEGGE, PROPULSORI, statoScafo, tinteNave, mescola } from '../spazio.js'
+import { ali as aliDelDue, strappa, SCHEGGE, PROPULSORI, statoScafo, tinteNave, mescola } from '../spazio.js'
 import { traccia, dipingiAla, disegnaStemma } from '../livrea.js'
 import { seme, rgb } from './rumore.js'
+
+// le ali del 2D si attaccano a x = 0,30, dove sopra la vita lo scafo è già più stretto: restava un vuoto con il contorno
+// dipinto in vista. In 3D la radice entra nello scafo (stessi punti, solo i due attacchi più dentro)
+const ali = lv => aliDelDue(lv).map(a => a.map(([x, y], i) => (i === 0 || i === a.length - 1) ? [Math.min(x, 0.12), y] : [x, y]))
 
 // la tela delle ali: x da 0 a ±1,5, y (del 2D, in giù) da -0,5 a 1,1
 const PX = 160, TELA_W = 240, TELA_H = 256, Y0 = -0.5
 
 // ---- la pelle a pannelli: linee, placche, rivetti, graffi (anche come rilievo) ----
 function pannelli() {
+  // pulita: un bianco pieno con poche linee di giunzione, se no il colore della tinta si sporca di grigio
   const cv = document.createElement('canvas'); cv.width = cv.height = 256
   const c = cv.getContext('2d'), r = seme(7)
-  c.fillStyle = '#c9cfd9'; c.fillRect(0, 0, 256, 256)
-  for (let i = 0; i < 36; i++) { const g = 170 + r() * 70; c.fillStyle = `rgb(${g},${g + 3},${g + 8})`; c.fillRect(r() * 256, r() * 256, 20 + r() * 55, 15 + r() * 40) }
-  c.strokeStyle = 'rgba(25,30,42,.8)'; c.lineWidth = 2
-  for (let x = 0; x <= 256; x += 64) { c.beginPath(); c.moveTo(x, 0); c.lineTo(x, 256); c.stroke() }
+  c.fillStyle = '#f4f6fb'; c.fillRect(0, 0, 256, 256)
+  for (let i = 0; i < 10; i++) { const g = 226 + r() * 26; c.fillStyle = `rgb(${g},${g + 2},${g + 5})`; c.fillRect(r() * 256, r() * 256, 40 + r() * 70, 30 + r() * 50) }
+  c.strokeStyle = 'rgba(40,52,84,.5)'; c.lineWidth = 2
+  for (let x = 0; x <= 256; x += 128) { c.beginPath(); c.moveTo(x, 0); c.lineTo(x, 256); c.stroke() }
   for (let y = 0; y <= 256; y += 64) { c.beginPath(); c.moveTo(0, y); c.lineTo(256, y); c.stroke() }
-  c.lineWidth = 1
-  for (let i = 0; i < 24; i++) { const x = r() * 256, y = r() * 256; c.beginPath(); c.moveTo(x, y); c.lineTo(x + (r() < 0.5 ? 0 : 25 + r() * 45), y + (r() < 0.5 ? 0 : 15 + r() * 30)); c.stroke() }
-  c.fillStyle = 'rgba(30,34,46,.8)'
-  for (let x = 8; x < 256; x += 32) for (let y = 8; y < 256; y += 32) { c.beginPath(); c.arc(x, y, 1.4, 0, 6.3); c.fill() }
   const colore = new CanvasTexture(cv); colore.colorSpace = SRGBColorSpace; colore.wrapS = colore.wrapT = RepeatWrapping
   const rilievo = new CanvasTexture(cv); rilievo.colorSpace = NoColorSpace; rilievo.wrapS = rilievo.wrapT = RepeatWrapping
   return { colore, rilievo }
@@ -124,11 +125,21 @@ function dipingiVetro(cv, crepato) {
   c.moveTo(x + 2, y); c.lineTo(x - 10, y + 14); c.stroke()
 }
 
+// il bordo che prende luce: stacca la nave dal fondo scuro (la sagoma e il colore sono quello che si legge in volo)
+function conBordo(m, forza = 0.5) {
+  m.onBeforeCompile = sh => {
+    sh.fragmentShader = sh.fragmentShader.replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
+  totalEmissiveRadiance += diffuseColor.rgb * pow(1. - clamp(dot(normal, normalize(vViewPosition)), 0., 1.), 2.2) * ${forza.toFixed(2)};`)
+  }
+  m.customProgramCacheKey = () => 'nave-bordo' + forza
+  return m
+}
+
 export function creaNave(scena) {
   const pelle = pannelli()
   const T0 = tinteNave(null, 0)
   const scafo = new MeshStandardMaterial({ color: T0.chiaro, metalness: 0.3, roughness: 0.55, map: pelle.colore,
-                                           bumpMap: pelle.rilievo, bumpScale: 1.2, envMapIntensity: 0.6 })
+                                           bumpMap: pelle.rilievo, bumpScale: 0.45, envMapIntensity: 0.9 })
   scafo.map = pelle.colore.clone(); scafo.map.repeat.set(2, 3); scafo.map.needsUpdate = true
   scafo.bumpMap = pelle.rilievo.clone(); scafo.bumpMap.repeat.set(2, 3); scafo.bumpMap.needsUpdate = true
   const scuro = new MeshStandardMaterial({ color: T0.scuro, metalness: 0.55, roughness: 0.5, map: pelle.colore,
@@ -148,6 +159,7 @@ export function creaNave(scena) {
   const vetroTex = new CanvasTexture(vetroTela); vetroTex.colorSpace = SRGBColorSpace
   const vetro = new MeshPhysicalMaterial({ color: 0x07142b, metalness: 0, roughness: 0.12, clearcoat: 0.6,
     emissive: new Color(0x2a6ad0), emissiveMap: vetroTex, emissiveIntensity: 0.8, envMapIntensity: 0.9 })
+  for (const m of [scafo, alaDx, alaSx]) conBordo(m, 0.55)
   const pelli = [scafo, scuro, accento, alaDx, alaSx]   // si accendono di rosso alla botta, di verde alla riparazione
 
   const nave = new Group()   // la posa: posizione, scala, inclinazione
@@ -157,24 +169,15 @@ export function creaNave(scena) {
 
   // lo scafo: un tornio sulla sagoma del 2D (muso a 1,18, il più largo a 0,36), schiacciato
   const profilo = [[0, 1.18], [0.09, 1.0], [0.21, 0.7], [0.3, 0.42], [0.35, 0], [0.36, -0.34], [0.3, -0.6], [0.24, -0.74], [0, -0.76]]
+    .reverse()   // dal basso al muso: nell'altro verso le facce guardavano dentro e si vedeva l'interno dello scafo, dietro le ali
     .map(([x, y]) => new Vector2(x, y))
   e(new LatheGeometry(profilo, 36), scafo).scale.set(1, 1, 0.6)
-  // i dettagli scuri in un pezzo solo: dorsale, vano, antenna, scatolette
-  const dett = [new BoxGeometry(0.06, 0.9, 0.06).translate(0, -0.1, 0.2), new BoxGeometry(0.2, 0.2, 0.04).translate(0, -0.48, 0.19),
-                new CylinderGeometry(0.012, 0.012, 0.4, 6).translate(0, 1.3, 0)]
-  const r = seme(31)
-  for (let i = 0; i < 10; i++) {   // le prese e le scatolette, sui fianchi dietro la torretta
-    const w = 0.03 + r() * 0.04, h = 0.05 + r() * 0.08, y = -0.68 + r() * 0.5, lato = i % 2 ? 1 : -1
-    dett.push(new BoxGeometry(w, h, 0.025).translate(lato * (0.1 + r() * 0.12), y, 0.18 + r() * 0.02))
-  }
-  e(mergeGeometries(dett.map(g => (g.index ? g.toNonIndexed() : g))), scuro)
-  // le fasce colorate lungo i fianchi
-  e(mergeGeometries([-1, 1].map(s => new BoxGeometry(0.03, 0.55, 0.05).translate(s * 0.31, -0.15, 0.08).toNonIndexed())), accento)
-
+  // un solo dettaglio scuro: l'antenna. Le scatolette sui fianchi, il vano e la dorsale facevano la nave a cubetti
+  e(new CylinderGeometry(0.012, 0.012, 0.4, 6).translate(0, 1.3, 0), scuro)
   // la cabina, e il vetro che si crepa
   const cabina = e(new SphereGeometry(1, 28, 18), vetro, 0, 0.44, 0.15)
-  cabina.scale.set(0.19, 0.28, 0.12)
-  e(new TorusGeometry(0.2, 0.022, 8, 28), scuro, 0, 0.44, 0.13).scale.set(1, 1.45, 1)
+  cabina.scale.set(0.23, 0.33, 0.13)
+  e(new TorusGeometry(0.24, 0.025, 8, 28), scuro, 0, 0.44, 0.13).scale.set(1, 1.42, 1)
 
   // la torretta: ferma, il cannone gira (la spazzata del gioco, docs/asteroidi/volo.md)
   e(new CylinderGeometry(0.15, 0.17, 0.07, 20), scuro, 0, -0.12, 0.2, Math.PI / 2)
@@ -299,8 +302,10 @@ export function creaNave(scena) {
     const T = tinteNave(L, st / 2)
     scafo.color.set(T.chiaro); scuro.color.set(T.scuro); accento.color.set(T.accento)
     const lucida = !!L?.scafoLucida, aliLucida = !!L?.aliLucida
-    scafo.metalness = lucida ? 0.8 : 0.3; scafo.roughness = lucida ? 0.25 : 0.55
-    alaDx.metalness = alaSx.metalness = aliLucida ? 0.75 : 0.3
+    // un metallo vede solo l'ambiente, che è quasi nero: meno metallo e più riflesso, se no il blu muore
+    scafo.metalness = lucida ? 0.55 : 0.3; scafo.roughness = lucida ? 0.32 : 0.55; scafo.envMapIntensity = lucida ? 2.4 : 0.9
+    alaDx.metalness = alaSx.metalness = aliLucida ? 0.55 : 0.3
+    alaDx.envMapIntensity = alaSx.envMapIntensity = aliLucida ? 2.2 : 0.9
     alaDx.roughness = alaSx.roughness = aliLucida ? 0.28 : 0.55
     const f = rgb(T.fiamma || '#4aa3ff')
     fiammaCol.setRGB(f[0], f[1], f[2])
@@ -386,8 +391,10 @@ export function creaNave(scena) {
       }
       colpo += dt
       scudoMat.uniforms.uT.value = colpo
-      scudoMat.uniforms.uGelo.value = Math.min(1, n.gelo || 0) * (1 + Math.sin(t * 3) * 0.08)
-      scudo.visible = colpo < 1.7 || (n.gelo || 0) > 0
+      // le vite di scorta: lo stesso scudo, più tenue, sempre acceso (più scorta, più si vede)
+      const fisso = n.scorta > 0 ? 0.4 + 0.15 * Math.min(2, n.scorta) : 0
+      scudoMat.uniforms.uGelo.value = Math.max(Math.min(1, n.gelo || 0), fisso) * (1 + Math.sin(t * 3) * 0.08)
+      scudo.visible = colpo < 1.7 || (n.gelo || 0) > 0 || fisso > 0
     },
     // dove sono gli ugelli, per la luce dei motori
     lv: () => lvOra,

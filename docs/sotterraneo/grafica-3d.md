@@ -5,9 +5,8 @@ Sotterraneo, con la discesa disegnata in WebGL (three.js) partendo dal
 prototipo approvato (`poc/sotterraneo-luce`, [../../poc/sotterraneo-luce.md](../../poc/sotterraneo-luce.md)).
 Il **Sotterraneo** di sempre (`sotterraneo`) resta com'era, in 2D, ed è
 quello dei bambini. Il motore, le domande, la barra e i pannelli sono gli
-stessi: cambia chi disegna la discesa. La terra di sopra (villaggio,
-mercanti, missioni, bottega, portale gemello) resta quella del 2D, e il 3D
-la attraversa così com'è (fase 1).
+stessi: cambia chi disegna la discesa. Sopra non c'è la terra dipinta ma il
+mondo generato, anch'esso in WebGL: [mondo-3d.md](mondo-3d.md).
 
 ## Un gioco in prova, la stessa partita
 
@@ -55,7 +54,7 @@ Tutto in `src/giochi/sotterraneo/scena3d/`, un file per tema.
 | `segni.js` | fiamme, chiarori per terra, colonne di luce, anelli, bolla (istanziati) |
 | `particelle.js` | nebbia, l'aria del paesaggio (polvere, braci, gocce, neve, brina, lucciole, bolle: `ARIA`), scintille |
 | `arredo3d.js`, `raggi.js` | l'arredo modellato e fitto del paesaggio, le lame di luce dall'alto |
-| `acqua.js`, `relitti.js`, `fontana.js`, `portale.js`, `botti.js` | le pozze con le rive storte (lava nell'inferno, il velo del tempio), i relitti in codice, le cose di scena modellate, le botti di decoro |
+| `acqua.js`, `relitti.js`, `fontana.js`, `portale.js`, `botti.js` | le pozze con le rive storte (lava nell'inferno, il velo del tempio), i relitti in codice, le cose di scena modellate, le botti da rompere (lo stato è del motore: `motore/botti.js`) |
 | `palco.js`, `scontro.js`, `racconto.js` | dove stanno i combattenti (puro), il palco che si apre e si chiude col foglio del motore, il turno raccontato in scena |
 | `azione.js`, `dito.js` | il punta-e-clicca (puro) e la scelta di cosa sta sotto il dito |
 | `camera.js`, `post.js`, `contorno.js`, `etichette.js` | la telecamera, il passaggio finale, la mappina e le feste, i segni in HTML |
@@ -65,8 +64,8 @@ di `Gioco.vue`, `viste/Scontro3d.vue` (le scritte dello scontro sopra le
 figure), `viste/Pannello3d.vue` (la scelta e la domanda in fondo),
 `stile-3d.css`, `scena/minimappa.js` (la mappina, la stessa del 2D).
 
-**Per chi viene dopo**: la terra di sopra in 3D è una vista sua accanto a
-`viste/Terra.vue` (Gioco.vue la sceglie con lo stesso `in3d`); l'arredo per
+**Per chi viene dopo**: il mondo di sopra in 3D è `viste/Mondo3d.vue` col disegno in
+`scena3d/mondo/` ([mondo-3d.md](mondo-3d.md)), che riusa di qui contesto e figure; l'arredo per
 paesaggio si fa in `arredo3d.js` (una posa e una forma, [paesaggi-3d.md](paesaggi-3d.md)); gli effetti in `segni.js` e
 `particelle.js`; il tema dei pannelli in `stile-3d.css`, senza toccare i
 componenti.
@@ -186,8 +185,8 @@ Dieci paesaggi, ognuno con la forma delle pareti, il disegno del pavimento, le c
 quattro delle discese (cantine, cripta, fornace, inferno) e sei solo del 3D che si aprono col cheat (grotta, nevi, ghiaccio,
 palude, tempio sommerso, miniera). Il paesaggio è lo scenario del piano, o il `paesaggio` della discesa o del tratto se lo
 dichiarano. Tutto in [paesaggi-3d.md](paesaggi-3d.md), con la tavola che li mette affiancati
-(`node strumenti/tavola-paesaggi.mjs`). Le botti di decoro restano solo nelle cantine ([arredo.md](arredo.md)); romperle è una
-voce di [da-fare.md](da-fare.md).
+(`node strumenti/tavola-paesaggi.mjs`). Le botti da rompere stanno in alcune stanze dei paesaggi dove hanno senso
+([paesaggi-3d.md](paesaggi-3d.md#le-botti)).
 
 ## Senza WebGL
 
@@ -218,14 +217,13 @@ che si adatta, `ACCESI`, il cheat `&spegni=` e il peso del file:
   terra di decoro (`perTerra`) non ci sono.
 - L'acqua delle pozze è piatta da lontano (un riflesso vero costerebbe una
   passata in più).
-- La terra di sopra resta in 2D: è la fase dopo.
 - Da provare su un telefono vero: i ms di SwiftShader non dicono niente.
 
 Nei test: `unita/sotterraneo-paesaggi` (i paesaggi: [paesaggi-3d.md](paesaggi-3d.md)), `unita/sotterraneo-3d` (gli aspetti, la pianta di tutte le discese
 e dell'abisso, la maschera, il palco con l'agio, il tocco, le figure in un
 InstancedMesh, le botti), `unita/sotterraneo-3d-tempo` e `integrazione/sotterraneo-3d-tempo`
 (lo sprite, l'affondo e la telecamera uguali a 60, 120 e 144 Hz, con un orologio finto), `integrazione/sotterraneo-3d` (col dito vero: la
-carta solo coi giochi in prova, la terra di sopra 2D, la discesa in 3D e
+carta solo coi giochi in prova, il mondo di sopra in 3D, la discesa in 3D e
 quanto costa, camminare, aprire una porta, lo scontro con una risposta
 sbagliata e una giusta, il mostro che cade, la scala che sale e quella che
 scende da una sosta scritta in Node, la sosta una sola col 2D, senza

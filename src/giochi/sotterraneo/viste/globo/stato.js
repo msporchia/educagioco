@@ -47,7 +47,7 @@ export class StatoGlobo {
     this.t += dt
     this.fase += dt * (2.2 + this.onda * 3)
     if (this.attesa > 0) this.attesa -= dt
-    else this.mostrato += (this.vero - this.mostrato) * Math.min(1, dt * INSEGUE)
+    else this.mostrato += (this.vero - this.mostrato) * (1 - Math.exp(-dt * INSEGUE))   // col tempo, non coi fotogrammi (docs/sotterraneo/grafica-3d.md)
     if (Math.abs(this.vero - this.mostrato) < 0.002) this.mostrato = this.vero
     this.onda = Math.max(0, this.onda - dt * CALMA * Math.max(0.3, this.onda))
     this.lampo = Math.max(0, this.lampo - dt * 2.6)

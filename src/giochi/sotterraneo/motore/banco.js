@@ -326,9 +326,10 @@ function sbriga(corsa, bravura, sorte, conto, st = {}, scontro = null) {
 // `stile`: come gioca un giocatore tipo (dati/giocatori-tipo.js; senza, il banco di sempre). Torna anche `scontri`: uno per scontro
 // (docs/sotterraneo/giocatori-tipo.md, «Cosa registra»). `risalita`: { spesa, finite, seme } per tornare su dal portale a spendere durante la discesa
 // (RISALITA, dati/giocatori-tipo.js); senza, si spende solo fra una discesa e l'altra. Torna anche `risalite`: una voce per spesa fatta
+// `guarda(corsa)`: chiamata a ogni giro col campo libero (nessun foglio aperto), senza toccare niente: i pensieri contano lì (unita/sotterraneo-pensieri)
 export function gioca(tappa, { bravura = 0.8, seme = 7, come = 'minimo', rnd = null, da = null,
                               eroe = undefined, fino = null, tettoGiri = TETTO_GIRI, roba = null,
-                              crescita = null, punti = null, strada = null, stile = null, risalita = null } = {}) {
+                              crescita = null, punti = null, strada = null, stile = null, risalita = null, guarda = null } = {}) {
   const st = stile || {}
   const sorte = rnd || seminato(seme * 31 + 17)
   const corsa = da || new Corsa(tappa, { seme, rnd: sorte, eroe, roba, crescita, ricomparsa: false })
@@ -455,6 +456,7 @@ export function gioca(tappa, { bravura = 0.8, seme = 7, come = 'minimo', rnd = n
       sbriga(corsa, bravura, sorte, conto, st, aperto && aperto.r)
       continue
     }
+    if (guarda) guarda(corsa)
     daiIPunti(corsa, punti, strada && strada.abilita)
     equipaggia(corsa, st, conto)
     contaLeArmi()

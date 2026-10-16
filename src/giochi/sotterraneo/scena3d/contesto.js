@@ -4,14 +4,15 @@
 import { WebGLRenderer, VSMShadowMap, ACESFilmicToneMapping } from 'three'
 import { DPR, LUCE, ACCESI } from './costanti.js'
 
-export function creaContesto(canvas, { perso, fisso } = {}) {
+// `antialias`: il mondo di sopra lo vuole (staccionate, corde, bordi dei tetti); le discese no (il passaggio finale le ammorbidisce)
+export function creaContesto(canvas, { perso, fisso, antialias = false } = {}) {
   let gl = null
   try {
-    gl = canvas.getContext('webgl2', { alpha: false, antialias: false, depth: true, stencil: false, premultipliedAlpha: true, powerPreference: 'high-performance' })
+    gl = canvas.getContext('webgl2', { alpha: false, antialias, depth: true, stencil: false, premultipliedAlpha: true, powerPreference: 'high-performance' })
   } catch (e) { gl = null }
   if (!gl || gl.isContextLost()) return null
   let renderer
-  try { renderer = new WebGLRenderer({ canvas, context: gl, antialias: false, alpha: false }) } catch (e) { return null }
+  try { renderer = new WebGLRenderer({ canvas, context: gl, antialias, alpha: false }) } catch (e) { return null }
   renderer.shadowMap.enabled = ACCESI.ombre
   renderer.shadowMap.type = VSMShadowMap   // PCF confronta una texture di profondità filtrata LINEAR: Firefox avvisa (docs/sotterraneo/grafica-3d.md)
   renderer.toneMapping = ACESFilmicToneMapping

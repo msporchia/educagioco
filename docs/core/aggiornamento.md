@@ -61,10 +61,15 @@ ref.
   pura perché altrimenti si proverebbe solo con un telefono in mano
   (`apriGioco(browser, { userAgent })` è nato per questo).
 
+- **Un'ora sola per build.** Una pubblicazione fa due build (file unico e sito):
+  se passano a cavallo di un minuto `giochi.html` e `versione.json` hanno due
+  id, la pagina si crede sempre vecchia e «Aggiorna» ricarica all'infinito.
+  `pubblica.sh` e la action fissano `EDUCAGIOCO_ORA` per tutti e due.
+
 ## «↻ cerca aggiornamenti»
 
 In fondo alla home accanto alla versione, e dietro «Aggiorna» del nastro
-(`aggiornaOra`, il foglio è `guide/Aggiorna.vue`). Chiede al sito che
+(`aggiornaOra`; i passi si vedono nello stesso cartello in cima alla home, `guide/Nastri.vue`: una forma sola, niente foglio al centro). Chiede al sito che
 versione ha, scarica la pagina **a mano** contando i megabyte (il totale è
 `peso` in `versione.json`: la lunghezza dichiarata dal sito è quella
 compressa), controlla che dentro ci sia l'id promesso, la mette **al posto

@@ -1,5 +1,8 @@
 # La terra di sopra
 
+**Nel Sotterraneo 3D** (in prova) la terra di sopra è il mondo generato, in WebGL: [mondo-3d.md](mondo-3d.md). Qui sotto la terra
+dipinta del Sotterraneo di sempre, che non cambia.
+
 Le discese non si scelgono da un elenco: si raggiungono a piedi su una mappa
 grande (la «terra di sopra»), nella nebbia, e chi le cerca ha qualcuno che
 gli indica la strada; nel villaggio stanno i mercanti. Il codice:

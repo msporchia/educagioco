@@ -143,12 +143,18 @@ sassi cambia col posto.
   `tinteNave`; le tinte lucide fanno il metallo lucido.
 - Botta rossa, riparazione verde, scudo esagonale col gelo.
 
+- **L'hangar usa lo stesso pittore** quando il gioco è in 3D (`tre` in
+  `components/HangarAsteroidi.vue`): una scena con la sola nave sul suo cielo; senza
+  WebGL resta il disegno 2D. Lo scafo a tornio va dal basso al muso: nell'altro verso
+  le facce guardano dentro e si vede l'interno dello scafo dietro le ali.
+
 ## Quanto costa
 
 - **Una qualità sola**, niente bagliore (bloom) e niente pannello: il
-  pixel ratio parte da 1,5 (o meno, se lo schermo ne ha meno) e scende fino
-  a 0,6 se un fotogramma costa più di 26 ms per una quarantina di
-  fotogrammi; risale piano sotto i 15 ms. Provato il bagliore nel
+  pixel ratio parte da 2 (o meno, se lo schermo ne ha meno), sale fino a 3 se
+  il computer regge (con tetto a 1,5 uno schermo a 3 era sfocato: la tela
+  stirata) e scende fino a 1 (mai sotto: la tela stirata sfoca nave e sassi, scendendo a 0,6 sembrava «compressa») se un
+  fotogramma costa più di 26 ms per una novantina di fotogrammi; risale piano sotto i 15 ms. Provato il bagliore nel
   prototipo: tolto, senza stava meglio. Provato il pannello delle tre
   qualità: non si distinguevano.
 - **Misurato in Chrome senza schermo** (SwiftShader, cioè la CPU fa la

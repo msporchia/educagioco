@@ -46,6 +46,9 @@ import { PORTALE } from './dati/terra-mappa.js'
 import { iconaDi } from './dati/terra.js'
 import { mercanteDi, schedeDi } from './dati/mercanti.js'
 import { Tela } from './scena/tela.js'
+import { situazioneDi, scegli as scegliPensiero, ricorda as ricordaPensiero, entraNelGiro, giroDi } from './motore/pensieri.js'
+import { RITMO } from './dati/pensieri.js'
+import { usaGuida } from '../guida.js'
 
 import Campagna from './viste/Campagna.vue'
 import Eroi from './viste/Eroi.vue'
@@ -259,6 +262,8 @@ function salgoDalPortale() {
   c.chiudi()
   salva({ subito: true, via: VIA_PORTALE })
   nellAvventura({ terra: { ...(qui.value.terra || {}), dove: [...PORTALE.accanto] } }, { subito: true })
+  // nel mondo in 3D si sbuca accanto al gemello, nella città che serve quel dungeon (viste/Mondo3d.vue lo trova)
+  if (in3d) nellAvventura({ mondo: { ...(qui.value.mondo || {}), dove: { portale: true } } }, { subito: true })
   suono.nota(260, 880, 0.5, 'sine', 0.12)
   // in 3D si vede il passaggio (il velo lampeggia, l'eroe ci si stringe dentro): la sosta è già scritta, non si riscrive
   if (in3d && pittore && pittore.attraversa) { salendo = true; pittore.attraversa(allaMappa); return }
@@ -279,8 +284,10 @@ function riprendiDiscesa({ ferma = false } = {}) {
   fine.value = null
   domanda.value = null
   chiudiLaBarra()
+  c.botti = in3d   // le botti da rompere sono solo del 3D (motore/botti.js)
   corsa.value = c
   borsellino = borsa(CHIAVE)
+  nuovoGiro({ nuovo: true })   // la stessa discesa è lo stesso giro: quello che si è già pensato non torna
   suono.nota(180, 90, 0.4, 'sawtooth', 0.12)
   nextTick(() => accendi())
   if (ferma) metti()
@@ -458,6 +465,14 @@ function vendiSopra(t) {
 
 // la terra di sopra si ricorda per avventura: la nebbia, dove si era, se il minatore ha già parlato
 const ricordaTerra = v => nellAvventura({ terra: v })
+// il mondo di sopra del 3D (viste/Mondo3d.vue) si ricorda accanto, in `mondo`: la terra dipinta del 2D resta com'è
+// (docs/sotterraneo/mondo-aperto-dati.md). La veduta d'insieme si apre dalla casella della mappa nella barra
+const ricordaMondo = v => nellAvventura({ mondo: v })
+const vedutaSopra = ref(false)
+// la domanda di una pietra del viaggio: una risposta giusta paga come giù, una sbagliata no (docs/apprendimento/calibrazione.md)
+function rispostaSopra({ giusto, saltata }) {
+  if (giusto && !saltata) { borsa(CHIAVE).paga(PAGA.mossa); suono.ok() } else if (!giusto) suono.no()
+}
 
 // il nome della discesa (una zona potenziata ha il suo, docs/sotterraneo/zone.md)
 const nomeGiu = dallaCorsa(c => c.tappa.nome, '')
@@ -1139,6 +1154,7 @@ function avvia(i, { prova = false } = {}) {
   if (prova && in3d) t = inPaesaggio(t, new URLSearchParams(location.hash.slice(1)).get('scenario'))
   corsa.value = new Corsa(t, { seme: semeDallIndirizzo(), eroe: eroeQui(), roba: roba.value,
                                crescita: crescita.value, missioni: presePer(missioni.value, t.chiave), conti: qui.value.conti })
+  corsa.value.botti = in3d   // le botti da rompere sono solo del 3D (motore/botti.js)
   borsellino = borsa(CHIAVE)
   corredoDaProva(corsa.value)
   torciaDaProva(corsa.value)
@@ -1148,6 +1164,7 @@ function avvia(i, { prova = false } = {}) {
   leggendarioDaProva(corsa.value)
   preparatiDaProva(corsa.value)
   brancoDaProva(corsa.value)
+  nuovoGiro({ nuovo: true })
   suono.nota(180, 90, 0.4, 'sawtooth', 0.12)
   nextTick(() => accendi())
 }
@@ -1185,7 +1202,9 @@ async function accendi3d() {
     const dpr = Number(new URLSearchParams(location.hash.slice(1)).get('dpr')) || undefined   // `&dpr=2`: per le foto
     const spegni = (new URLSearchParams(location.hash.slice(1)).get('spegni') || '').split(',').filter(Boolean)   // `&spegni=nebbia`: per misurare
     pittore = m.creaSotterraneo3d(tela.value, { strato: strato.value, perso: siPerdeIl3d, dpr, spegni, cieca: CIECA,
-                                               bersaglio: scegliIlBersaglio, accorcia: () => racconto.accorcia() })
+                                               bersaglio: scegliIlBersaglio, accorcia: () => racconto.accorcia(),
+                                               // una botte rotta (solo il 3D, un passatempo): un tonfo di legno e basta
+                                               botteRotta: () => { suono.nota(170, 70, 0.18, 'square', 0.09); suono.rumore(0.16, 0.1, 1600, 400) } })
     if (!pittore) { siPerdeIl3d(); return }
     for (const [chi, el] of agganci) pittore.aggancia(chi, el)
     if (typeof window !== 'undefined') window.__sotterraneo3d = pittore   // per le prove: grafica(), aSchermo(), statoDi()
@@ -1245,6 +1264,8 @@ function giro() {
     pittore.mostra({ corsa: c, orologio, fx: racconto.fx })
     posaLaRotta(c)
     guarda(c)
+    pensaGiu(c)
+    posaIlPensiero(c)
   }
   raf = requestAnimationFrame(passo)
 }
@@ -1432,6 +1453,7 @@ function chiudiLaBarra() {
   zainoAperto.value = false
   diarioGiu.value = false
   mappaGrande.value = false
+  vedutaSopra.value = false
   paginaEroe.value = false
   tesoriAperti.value = false
   zainoSopra.value = false
@@ -1525,6 +1547,7 @@ function scendi() {
   const e = corsa.value.scendi()
   tic.value++
   if (e?.che === 'finita') return chiudi()
+  nuovoGiro()      // un piano nuovo: il momento dell'entrata
   suono.livello()
   if (nellAbisso.value) segnaIlFondo(corsa.value.piano + 1)
   salva()          // un piano nuovo è il momento in cui si perde di più
@@ -1603,6 +1626,7 @@ function allaMappa() {
   fine.value = null
   domanda.value = null
   corsa.value = null
+  pensiero.value = null
   chiudiLaBarra()
 }
 
@@ -1644,6 +1668,90 @@ function chiudiLaScelta() {
   scegliEroe.value = false
   nextTick(riprendiSeUscito)
 }
+
+/* ═══════════ i pensieri dell'eroe (motore/pensieri.js, docs/sotterraneo/pensieri.md) ═══════════
+   Un fumetto a bolle sopra la testa, ogni tanto: come sta e cosa gli piacerebbe avere. Giù si guarda nel giro dei fotogrammi (tempo
+   di gioco, fermo con la pausa), mai con un pannello, uno scontro, un avviso o una festa a schermo; sopra lo chiede la terra quando
+   l'eroe è fermo (`pensa`). La memoria sta nell'avventura (`pensieri`). Un tocco su un pensiero col segno accende la cosa giusta
+   (la casella della barra, il mercante) per RITMO.segno secondi, e non apre niente. `#pensieri=no` li spegne (per le prove) */
+const pensieriSpenti = typeof location !== 'undefined' && new URLSearchParams(location.hash.slice(1)).get('pensieri') === 'no'
+const pensiero = ref(null)          // { id, testo, icona, tono, segno, giro }
+const pensieroEl = ref(null)
+let pensieroFino = 0, giroDa = 0, entrataDa = null, prossimoPensiero = 0
+const mercantiTrovati = ref([])
+const segnoAcceso = ref(null)       // il selettore della cosa accesa dal tocco
+let segnoFino = 0
+usaGuida(radice, computed(() => (segnoAcceso.value ? { dove: segnoAcceso.value } : null)))
+const SEGNI_DELLA_BARRA = { zaino: '[data-casella-barra="zaino"]', eroe: '[data-azione="eroe-pagina"]', abilita: '[data-azione="abilita"]',
+                            incanti: '[data-casella-barra="incanti"]', pozione: '[data-casella-barra="pozione"]' }
+// il giro della discesa (la tappa e il seme: ripresa è la stessa), e da quando si è entrati in un piano
+function giroGiu() { return corsa.value ? giroDi(tappaIdx.value, corsa.value.seme) : null }
+function nuovoGiro({ nuovo = false } = {}) {
+  pensiero.value = null
+  giroDa = orologio
+  entrataDa = orologio
+  if (nuovo && !pensieriSpenti) nellAvventura({ pensieri: entraNelGiro(qui.value.pensieri, giroGiu()) })
+}
+// giù: niente aperto, niente in corso, niente che si stia già leggendo
+const liberoGiu = () => siGioca.value && !fermo.value && !foglio.value && !zainoAperto.value && !diarioGiu.value && !preparatiAperti.value &&
+  !paginaEroe.value && !mappaGrande.value && !festa.value && !avviso.value && !sceltaPozione.value && !perdendo.value && !nemico.value
+function dillo(p) {
+  pensiero.value = p
+  nellAvventura({ pensieri: ricordaPensiero(qui.value.pensieri, p, { adesso: Date.now() }) })
+}
+function pensaGiu(c) {
+  if (pensieriSpenti) return
+  const libero = liberoGiu()
+  if (pensiero.value) {
+    if (!libero || orologio >= pensieroFino) pensiero.value = null
+    return
+  }
+  if (!libero) return
+  let momento = null
+  if (entrataDa != null && orologio - entrataDa >= RITMO.primoEntrata) { momento = 'entrata'; entrataDa = null }
+  else if (orologio - giroDa >= RITMO.primoCammino && orologio >= prossimoPensiero) { momento = 'cammino'; prossimoPensiero = orologio + RITMO.ogni }
+  if (!momento) return
+  const p = scegliPensiero(situazioneDi(c), qui.value.pensieri, { momento, adesso: Date.now(), giro: giroGiu() })
+  if (!p) return
+  pensieroFino = orologio + RITMO.dura
+  dillo(p)
+}
+// il fumetto sopra la testa, a ogni fotogramma: dentro il campo, e sotto i piedi se sopra non c'è posto (la coda segue l'eroe)
+function posaIlPensiero(c) {
+  const el = pensieroEl.value
+  if (!el || !pittore || !pittore.testaDi) return
+  const t = pittore.testaDi(c), W = tela.value ? tela.value.clientWidth : 0
+  const w = el.offsetWidth, h = el.offsetHeight
+  const left = Math.round(Math.max(6, Math.min(W - w - 6, t.x - w / 2)))
+  let top = Math.round(t.y - h - 8), sotto = false
+  if (top < 6) { const piedi = pittore.schermoDi(c.eroe.x, c.eroe.y + 0.6); top = Math.round(piedi.y + 10); sotto = true }
+  el.style.transform = `translate(${left}px, ${top}px)`
+  el.style.setProperty('--coda', Math.round(Math.max(14, Math.min(w - 14, t.x - left))) + 'px')
+  if ((el.dataset.sotto === '1') !== sotto) el.dataset.sotto = sotto ? '1' : '0'
+}
+// sopra: la terra chiede quando l'eroe è fermo da un po' (viste/Terra.vue, `pensa`); i numeri sono quelli della roba di sopra
+function pensaSopra() {
+  if (pensieriSpenti || pensiero.value || corsa.value || banco.value || zainoSopra.value || paginaEroe.value || preparatiAperti.value ||
+      scegliEroe.value || state.festa.length) return
+  const c = new Corredo({ eroe: eroeQui(), roba: roba.value, crescita: crescita.value })
+  const f = forze.value
+  const s = situazioneDi(c, { mercanti: mercantiTrovati.value, vita: f ? f.vita : 0, vitaMax: f ? f.vitaMax : 0 })
+  const p = scegliPensiero(s, qui.value.pensieri, { adesso: Date.now() })
+  if (p) dillo(p)
+}
+// il tocco: accende il segno (la casella della barra, o il mercante, e allora l'eroe gli va accanto); il fumetto se ne va
+function toccaPensiero(p = pensiero.value) {
+  if (!p || !p.segno) return
+  const k = p.segno.startsWith('mercante:') ? p.segno.slice(9) : null
+  segnoAcceso.value = k ? `[data-mercante="${k}"]` : SEGNI_DELLA_BARRA[p.segno] || null
+  clearTimeout(segnoFino)
+  segnoFino = setTimeout(() => { segnoAcceso.value = null }, RITMO.segno * 1000)
+  if (k && campagnaEl.value) campagnaEl.value.vaDaMercante(k)
+  pensiero.value = null
+  suoni.passo()
+}
+// la casella o il mercante toccati davvero: il segno ha fatto il suo
+watch([zainoAperto, paginaEroe, preparatiAperti, banco, zainoSopra], v => { if (v.some(Boolean)) segnoAcceso.value = null })
 
 /* ═══════════ il dito ═══════════ */
 const dita = new Map()
@@ -1800,13 +1908,17 @@ function ridimensiona() { if (pittore) pittore.misura() }
         <!-- la chiave è l'eroe: cambiando avventura la terra di sopra rinasce con la nebbia e il posto suoi -->
         <Campagna ref="campagnaEl" :key="eroeQui()" :tappe="tappe" :ripresa="ripresa" :eroe="eroeScheda" :abisso="abisso"
                   :roba="robaSopra" :terra="qui.terra || null" @terra="ricordaTerra"
+                  :disegno="in3d ? '3d' : null" :mondo="qui.mondo || null" @mondo="ricordaMondo"
+                  :veduta="vedutaSopra" @veduta="v => { vedutaSopra = v }" @risposta="rispostaSopra"
                   :punti="barra.punti" :punti-abilita="barra.puntiAbilita" @scheda="apriScheda"
                   :annuncio="annuncio" @sentito="annuncioSentito" :forze="forze" @cura="curaDa"
                   :missioni="missioni" :conti="conti" :azione-missione="azioneMissione" :segui="segui" @segui="seguiMissione"
-                  @gioca="i => avvia(i)" @riprendi="riprendiDiscesa" @scorda="scorda" @bottega="apriBottega" />
+                  @gioca="i => avvia(i)" @riprendi="riprendiDiscesa" @scorda="scorda" @bottega="apriBottega"
+                  :pensiero="pensiero" @pensa="pensaSopra" @pensiero="toccaPensiero" @pensiero-fine="pensiero = null"
+                  @trovati="v => (mercantiTrovati = v)" />
         <p v-if="detto" class="sot-avviso sot-avviso-sopra" data-detto-sopra>{{ detto }}</p>
         <!-- la stessa barra di giù (docs/sotterraneo/barra.md): sopra la vita è piena e la mappa grande non c'è -->
-        <BarraDiSotto sopra :vita="barra.vita" :vita-max="barra.vitaMax" :livello="barra.livello"
+        <BarraDiSotto sopra :mappa-sopra="in3d" :mappa="vedutaSopra" @mappa="vedutaSopra = !vedutaSopra" :vita="barra.vita" :vita-max="barra.vitaMax" :livello="barra.livello"
                       :esperienza="barra.esperienza" :esp-fatta="barra.espFatta" :esp-serve="barra.espServe" :punti="barra.punti" :pozioni="barra.pozioni" :pieni="barra.pieni"
                       :energia="barra.energia" :energia-max="barra.energiaMax" :punti-abilita="barra.puntiAbilita"
                       :tasche="barra.tasche" :gemme="barra.gemme" :preparabili="barra.preparabili" :missioni-pronte="barra.missioniPronte"
@@ -1852,6 +1964,16 @@ function ridimensiona() { if (pittore) pittore.misura() }
           <div v-if="rotta && !foglio && !zainoAperto" ref="rottaEl" class="sot-rotta" data-rotta
                :data-verso="rotta.verso" :data-missione-rotta="rotta.id" :aria-label="'Verso ' + rotta.nome">
             <i></i>
+          </div>
+
+          <!-- il pensiero dell'eroe, sopra la testa (docs/sotterraneo/pensieri.md): si tocca solo se ha un segno da accendere,
+               se no il tocco passa al campo -->
+          <div v-if="pensiero" ref="pensieroEl" :key="pensiero.id + pensiero.testo" class="sot-pensiero sot-pensiero-giu"
+               :class="['sot-pensiero-' + pensiero.tono, { 'sot-pensiero-tocca': pensiero.segno }]" data-pensiero
+               :data-pensiero-id="pensiero.id" :data-tono="pensiero.tono" :data-segno="pensiero.segno || null"
+               @pointerdown.stop @click.stop="toccaPensiero()">
+            <span class="em sot-pensiero-icona">{{ pensiero.icona }}</span><span class="sot-pensiero-testo">{{ pensiero.testo }}</span>
+            <i class="sot-pensiero-bolla"></i><i class="sot-pensiero-bolla sot-pensiero-bollina"></i>
           </div>
 
           <p class="sot-piede" :data-posto="eroe.posto || ''" :data-livello-posto="eroe.livelloPosto">

@@ -12,7 +12,8 @@ import { creaPozze } from './acqua.js'
 import { creaFiamme } from './segni.js'
 import { creaFontana } from './fontana.js'
 import { creaPortale } from './portale.js'
-import { creaBotti, postiDelleBotti } from './botti.js'
+import { creaBotti } from './botti.js'
+import { BOTTI_PER_PAESAGGIO } from '../dati/botti.js'
 import { creaNebbia } from './particelle.js'
 import { creaArredo3d } from './arredo3d.js'
 import { creaRaggi, postiDeiRaggi } from './raggi.js'
@@ -64,17 +65,19 @@ export function costruisciPiano(scena, corsa, { maschera, luci, trameDi, legno, 
   }
   const raggi = aspetto.raggi ? creaRaggi(scena, { posti: postiDeiRaggi(pianta, liv.stanze, seme), maschera, colore: aspetto.raggi.colore, forza: aspetto.raggi.forza }) : null
   if (raggi) via.push(raggi.via)
-  if (ACCESI.botti && aspetto.botti) {
-    via.push(creaBotti(scena, { posti: postiDelleBotti(pianta, liv.stanze || [], liv.robe, seme), legno: legno(), conMaschera, maschera }).via)
-  }
+  // le botti da rompere: le decide il motore (motore/botti.js), solo dove hanno senso e solo in alcune stanze
+  const posti = ACCESI.botti && corsa.bottiQui ? corsa.bottiQui() : []
+  const botti = creaBotti(scena, { posti, legno: posti.length ? legno() : null, conMaschera, maschera, regola: BOTTI_PER_PAESAGGIO[paesaggio] || null })
+  via.push(botti.via)
   const nebbia = creaNebbia(scena, pianta.W, pianta.H, ACCESI.nebbia ? FETTE : 0, luci.condivise, maschera, aspetto); via.push(nebbia.via)
 
   // dove nello scontro non si mette nessuno: l'arredo, la fonte e il portale modellati (sono cose posate, non pavimento libero;
   // i relitti e l'acqua non sono pavimento già da sé)
   const ingombri = new Set()
   for (const r of liv.robe) if (r.che === 'arredo' || r.che === 'fonte' || r.che === 'portale') ingombri.add(pianta.id(r.x, r.y))
+  for (const b of botti.botti) if (!b.rotta) ingombri.add(pianta.id(b.cella.x, b.cella.y))
   return {
-    liv, scenario: corsa.scenario, paesaggio, aspetto, pianta, vis, terreno, pozze, velo, raggi, arredo, fiamme, fuochi, sorgenti, fontana, portale, nebbia, ingombri,
+    liv, scenario: corsa.scenario, paesaggio, aspetto, pianta, vis, terreno, pozze, velo, raggi, arredo, botti, fiamme, fuochi, sorgenti, fontana, portale, nebbia, ingombri,
     // le torce che stanno su un muro abbassato per lo scontro si spengono, e tornano
     torcia(i, su) { fiamme.accesa(i, su); if (sorgenti[i]) sorgenti[i].forza = su ? fuochi[i].forza : 0 },
     via() { for (const f of via) f() },

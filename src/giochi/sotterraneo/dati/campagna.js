@@ -10,6 +10,7 @@
 // `portata`: niente `scuola` qui, quello che insegna questa campagna non lo dà nessuna scuola.
 import { MOSTRI, costoInRisposte } from './mostri.js'
 
+// `paesaggio`: come la veste il Sotterraneo 3D (docs/sotterraneo/paesaggi-3d.md); scenario, pianta e numeri restano del motore
 export const CAMPAGNA = [
   { chiave: 'altare', nome: 'La cripta dell\'altare', icona: '🕯️', dove: 'nella cripta',
     scenario: 'cripta', pianta: 'costruita',
@@ -35,7 +36,7 @@ export const CAMPAGNA = [
 
   // tutta in profondità: piani piccoli, tanti
   { chiave: 'gallerie', nome: 'La grotta della scaletta', icona: '🪨', dove: 'nella grotta',
-    scenario: 'cantine', pianta: 'caverna',
+    scenario: 'cantine', pianta: 'caverna', paesaggio: 'grotta',
     portata: 43,
     dritta: 'piani piccoli, uno sotto l\'altro, sempre più giù',
     piani: 5, misura: 28, giri: 2, dif: [0.28, 0.54], forza: 0.8, spinta: 6.5, livello: 5, caporali: 7, grosso: 4,
@@ -43,7 +44,7 @@ export const CAMPAGNA = [
 
   // lunga e stretta: un canale sott'acqua
   { chiave: 'cisterna', nome: 'La scala sommersa', icona: '💧', dove: 'nella scala sommersa',
-    scenario: 'cripta', pianta: 'caverna', acqua: true,
+    scenario: 'cripta', pianta: 'caverna', acqua: true, paesaggio: 'tempio',
     portata: 50,
     dritta: 'lunga e stretta, e in fondo gorgoglia qualcosa',
     piani: 3, misura: 40, largo: 64, alto: 24, giri: 3, dif: [0.36, 0.66], forza: 1.1, spinta: 7.7, livello: 6, caporali: 6.5, grosso: 4,
@@ -57,7 +58,7 @@ export const CAMPAGNA = [
     mostri: ['bestia-cornuta', 'negromante', 'troll-clava'], caporale: 'drago-lava', tettoBranco: 5, capo: 'troll' },
 
   { chiave: 'fondo', nome: 'La miniera abbandonata', icona: '⛏️', dove: 'nella miniera',
-    scenario: 'fornace', pianta: 'caverna',
+    scenario: 'fornace', pianta: 'caverna', paesaggio: 'miniera',
     portata: 64,
     dritta: 'stretta, profonda, e le pietre bruciano',
     piani: 4, misura: 40, giri: 3, dif: [0.52, 0.92], forza: 1.8, spinta: 9.5, livello: 10, caporali: 6.5, grosso: 3.5,
