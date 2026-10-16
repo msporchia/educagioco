@@ -7,14 +7,14 @@ import { GLSL_RUMORE } from './luci.js'
 import { GLSL_MASCHERA } from './maschera.js'
 
 // ── le fiamme: un quadrato rivolto alla telecamera col fuoco disegnato dal rumore ──
-export function creaFiamme(scena, maschera, fuochi) {
+export function creaFiamme(scena, maschera, fuochi, tinta = null) {
   const n = Math.max(1, fuochi.length)
   const geo = new PlaneGeometry(0.34, 0.55).translate(0, 0.2, 0)
   const dati = new Float32Array(n * 4)   // x scala, y seme, z/w la cella (dove si legge la maschera)
   fuochi.forEach((f, i) => { dati[i * 4] = f.scala; dati[i * 4 + 1] = Math.random() * 10; dati[i * 4 + 2] = f.cx + 0.5; dati[i * 4 + 3] = f.cz + 0.5 })
   geo.setAttribute('aFiamma', new InstancedBufferAttribute(dati, 4))
   const mat = new ShaderMaterial({
-    uniforms: { uT: { value: 0 }, ...maschera.uniforms },
+    uniforms: { uT: { value: 0 }, uTinta: { value: new Color(...(tinta || [1, 0.42, 0.1])) }, ...maschera.uniforms },
     vertexShader: /* glsl */`attribute vec4 aFiamma; varying vec2 vUv; varying float vSeme; varying float vVis; ${GLSL_MASCHERA}
       void main(){
         vUv = uv; vSeme = aFiamma.y;
@@ -23,7 +23,7 @@ export function creaFiamme(scena, maschera, fuochi) {
         mv.xy += position.xy * aFiamma.x;
         gl_Position = projectionMatrix * mv;
       }`,
-    fragmentShader: /* glsl */`uniform float uT; varying vec2 vUv; varying float vSeme; varying float vVis;
+    fragmentShader: /* glsl */`uniform float uT; uniform vec3 uTinta; varying vec2 vUv; varying float vSeme; varying float vVis;
       ${GLSL_RUMORE}
       void main(){
         if (vVis < 0.01) discard;
@@ -33,9 +33,9 @@ export function creaFiamme(scena, maschera, fuochi) {
         float corpo = 1.0 - smoothstep(largo*0.3, largo, abs(p.x + (n-0.5)*0.25*p.y));
         corpo *= smoothstep(0.0, 0.12, p.y) * (1.0 - smoothstep(0.35, 0.95, p.y + (n-0.5)*0.5));
         float cuore = corpo * (1.0 - smoothstep(0.0, 0.45, p.y));
-        vec3 c = mix(vec3(1.0, 0.22, 0.03), vec3(1.0, 0.75, 0.35), cuore);
+        vec3 c = mix(uTinta * vec3(1.0, 0.52, 0.3), mix(uTinta, vec3(1.0), 0.45), cuore);
         float alone = smoothstep(0.5, 0.0, length(vec2(p.x, p.y-0.3))) * 0.18;
-        gl_FragColor = vec4((c*corpo*1.8 + vec3(1.0,0.4,0.1)*alone) * vVis, 1.0);
+        gl_FragColor = vec4((c*corpo*1.8 + uTinta*alone) * vVis, 1.0);
       }`,
     transparent: true, depthWrite: false, blending: AdditiveBlending,
   })

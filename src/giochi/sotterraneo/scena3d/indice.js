@@ -9,7 +9,7 @@ import { creaContesto } from './contesto.js'
 import { creaCamera } from './camera.js'
 import { creaLuci } from './luci.js'
 import { creaMaschera } from './maschera.js'
-import { aspettoDi } from './aspetti.js'
+import { aspettoDi, paesaggioDi } from './aspetti.js'
 import { aggiornaVisibilita, scriviTexel, vistaOra } from './visibilita.js'
 import { pavimento, muro, legno as tramaLegno, normaliAtlante } from './trame.js'
 import { creaFigure } from './figure.js'
@@ -26,7 +26,7 @@ import { creaScontro } from './scontro.js'
 import { creaContorno } from './contorno.js'
 import { ACCESI, POLVERE, SCINTILLE, FIGURE_MAX, ALONI_MAX } from './costanti.js'
 
-const NIENTE = { emetti() {}, aggiorna() {}, via() {} }
+const NIENTE = { emetti() {}, aggiorna() {}, aspetto() {}, via() {} }
 
 export function creaSotterraneo3d(canvas, opz = {}) {
   const ctx = creaContesto(canvas, { perso: opz.perso, fisso: opz.dpr })
@@ -89,7 +89,7 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
   function nuovoPiano(corsa) {
     if (piano) piano.via()
     scontro.chiudi(true)
-    piano = costruisciPiano(scena, corsa, { maschera, luci, trameDi, legno: () => (legno || (legno = tramaLegno())) })
+    piano = costruisciPiano(scena, corsa, { maschera, luci, trameDi, polvere, legno: () => (legno || (legno = tramaLegno())) })
     eroe.px = null; eroe.ritorno = false
     cam.salta()
     azione.annulla()
@@ -115,7 +115,7 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
     const t0 = performance.now()
     renderer.info.reset()
     const corsa = quadro.corsa
-    if (!piano || piano.liv !== corsa.livello || piano.scenario !== corsa.scenario) nuovoPiano(corsa)
+    if (!piano || piano.liv !== corsa.livello || piano.paesaggio !== paesaggioDi(corsa)) nuovoPiano(corsa)
     S.tempo += dtVero
     let dt = dtVero
     if (S.fermo > 0) { S.fermo -= dtVero; dt = 0 }
@@ -155,6 +155,8 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
 
     const punti = canvas.height * 1.5   // la misura delle particelle: in px del disegno
     piano.fiamme.aggiorna(t); piano.nebbia.aggiorna(t); piano.pozze.aggiorna(t)
+    if (piano.velo) piano.velo.aggiorna(t)
+    if (piano.raggi) piano.raggi.aggiorna(t)
     polvere.aggiorna(t, centro, punti)
     scintille.aggiorna(dt, punti)
     if (fo) fo.aggiorna(dt, t, punti, vistaOra(piano.vis, fo.cella.x + 0.5, fo.cella.y + 0.5))

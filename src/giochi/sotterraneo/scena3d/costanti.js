@@ -44,6 +44,7 @@ export const ACCESI = {
   acqua: true,       // lo shader dell'acqua (fontana e pozze); spento resta un piano scuro
   post: true,        // il passaggio finale (vignetta, colore, grana, scossa); spento si disegna dritto sullo schermo
   botti: true,       // le botti di decoro
+  arredo: true,      // l'arredo modellato del paesaggio (scena3d/arredo3d.js)
 }
 
 // lo scontro: quanto agio vogliono i combattenti dai muri e dalle cose posate, e i posti dei mostri attorno al centro
