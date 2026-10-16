@@ -262,6 +262,8 @@ function salgoDalPortale() {
   c.chiudi()
   salva({ subito: true, via: VIA_PORTALE })
   nellAvventura({ terra: { ...(qui.value.terra || {}), dove: [...PORTALE.accanto] } }, { subito: true })
+  // nel mondo in 3D si sbuca accanto al gemello, nella città che serve quel dungeon (viste/Mondo3d.vue lo trova)
+  if (in3d) nellAvventura({ mondo: { ...(qui.value.mondo || {}), dove: { portale: true } } }, { subito: true })
   suono.nota(260, 880, 0.5, 'sine', 0.12)
   // in 3D si vede il passaggio (il velo lampeggia, l'eroe ci si stringe dentro): la sosta è già scritta, non si riscrive
   if (in3d && pittore && pittore.attraversa) { salendo = true; pittore.attraversa(allaMappa); return }
@@ -282,6 +284,7 @@ function riprendiDiscesa({ ferma = false } = {}) {
   fine.value = null
   domanda.value = null
   chiudiLaBarra()
+  c.botti = in3d   // le botti da rompere sono solo del 3D (motore/botti.js)
   corsa.value = c
   borsellino = borsa(CHIAVE)
   nuovoGiro({ nuovo: true })   // la stessa discesa è lo stesso giro: quello che si è già pensato non torna
@@ -462,6 +465,14 @@ function vendiSopra(t) {
 
 // la terra di sopra si ricorda per avventura: la nebbia, dove si era, se il minatore ha già parlato
 const ricordaTerra = v => nellAvventura({ terra: v })
+// il mondo di sopra del 3D (viste/Mondo3d.vue) si ricorda accanto, in `mondo`: la terra dipinta del 2D resta com'è
+// (docs/sotterraneo/mondo-aperto-dati.md). La veduta d'insieme si apre dalla casella della mappa nella barra
+const ricordaMondo = v => nellAvventura({ mondo: v })
+const vedutaSopra = ref(false)
+// la domanda di una pietra del viaggio: una risposta giusta paga come giù, una sbagliata no (docs/apprendimento/calibrazione.md)
+function rispostaSopra({ giusto, saltata }) {
+  if (giusto && !saltata) { borsa(CHIAVE).paga(PAGA.mossa); suono.ok() } else if (!giusto) suono.no()
+}
 
 // il nome della discesa (una zona potenziata ha il suo, docs/sotterraneo/zone.md)
 const nomeGiu = dallaCorsa(c => c.tappa.nome, '')
@@ -1123,6 +1134,7 @@ function avvia(i, { prova = false } = {}) {
   if (prova && in3d) t = inPaesaggio(t, new URLSearchParams(location.hash.slice(1)).get('scenario'))
   corsa.value = new Corsa(t, { seme: semeDallIndirizzo(), eroe: eroeQui(), roba: roba.value,
                                crescita: crescita.value, missioni: presePer(missioni.value, t.chiave), conti: qui.value.conti })
+  corsa.value.botti = in3d   // le botti da rompere sono solo del 3D (motore/botti.js)
   borsellino = borsa(CHIAVE)
   corredoDaProva(corsa.value)
   pianoDaProva(corsa.value)
@@ -1168,7 +1180,9 @@ async function accendi3d() {
     const dpr = Number(new URLSearchParams(location.hash.slice(1)).get('dpr')) || undefined   // `&dpr=2`: per le foto
     const spegni = (new URLSearchParams(location.hash.slice(1)).get('spegni') || '').split(',').filter(Boolean)   // `&spegni=nebbia`: per misurare
     pittore = m.creaSotterraneo3d(tela.value, { strato: strato.value, perso: siPerdeIl3d, dpr, spegni, cieca: CIECA,
-                                               bersaglio: scegliIlBersaglio, accorcia: () => racconto.accorcia() })
+                                               bersaglio: scegliIlBersaglio, accorcia: () => racconto.accorcia(),
+                                               // una botte rotta (solo il 3D, un passatempo): un tonfo di legno e basta
+                                               botteRotta: () => { suono.nota(170, 70, 0.18, 'square', 0.09); suono.rumore(0.16, 0.1, 1600, 400) } })
     if (!pittore) { siPerdeIl3d(); return }
     for (const [chi, el] of agganci) pittore.aggancia(chi, el)
     if (typeof window !== 'undefined') window.__sotterraneo3d = pittore   // per le prove: grafica(), aSchermo(), statoDi()
@@ -1416,6 +1430,7 @@ function chiudiLaBarra() {
   zainoAperto.value = false
   diarioGiu.value = false
   mappaGrande.value = false
+  vedutaSopra.value = false
   paginaEroe.value = false
   tesoriAperti.value = false
   zainoSopra.value = false
@@ -1870,6 +1885,8 @@ function ridimensiona() { if (pittore) pittore.misura() }
         <!-- la chiave è l'eroe: cambiando avventura la terra di sopra rinasce con la nebbia e il posto suoi -->
         <Campagna ref="campagnaEl" :key="eroeQui()" :tappe="tappe" :ripresa="ripresa" :eroe="eroeScheda" :abisso="abisso"
                   :roba="robaSopra" :terra="qui.terra || null" @terra="ricordaTerra"
+                  :disegno="in3d ? '3d' : null" :mondo="qui.mondo || null" @mondo="ricordaMondo"
+                  :veduta="vedutaSopra" @veduta="v => { vedutaSopra = v }" @risposta="rispostaSopra"
                   :punti="barra.punti" :punti-abilita="barra.puntiAbilita" @scheda="apriScheda"
                   :annuncio="annuncio" @sentito="annuncioSentito" :forze="forze" @cura="curaDa"
                   :missioni="missioni" :conti="conti" :azione-missione="azioneMissione" :segui="segui" @segui="seguiMissione"
@@ -1878,7 +1895,7 @@ function ridimensiona() { if (pittore) pittore.misura() }
                   @trovati="v => (mercantiTrovati = v)" />
         <p v-if="detto" class="sot-avviso sot-avviso-sopra" data-detto-sopra>{{ detto }}</p>
         <!-- la stessa barra di giù (docs/sotterraneo/barra.md): sopra la vita è piena e la mappa grande non c'è -->
-        <BarraDiSotto sopra :vita="barra.vita" :vita-max="barra.vitaMax" :livello="barra.livello"
+        <BarraDiSotto sopra :mappa-sopra="in3d" :mappa="vedutaSopra" @mappa="vedutaSopra = !vedutaSopra" :vita="barra.vita" :vita-max="barra.vitaMax" :livello="barra.livello"
                       :esperienza="barra.esperienza" :esp-fatta="barra.espFatta" :esp-serve="barra.espServe" :punti="barra.punti" :pozioni="barra.pozioni" :pieni="barra.pieni"
                       :energia="barra.energia" :energia-max="barra.energiaMax" :punti-abilita="barra.puntiAbilita"
                       :tasche="barra.tasche" :gemme="barra.gemme" :preparabili="barra.preparabili" :missioni-pronte="barra.missioniPronte"

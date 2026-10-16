@@ -77,7 +77,8 @@ export function stradaDellEroe(c) {
       if (s.arma.famiglie.includes(m.famiglia)) p += 4
       if ((m.mani || 1) === s.arma.mani) p += 2
     }
-    if (scudo === (s.mancina === 'scudo')) p += 1
+    // le mani vuote non dicono niente della mancina: a mani nude vince la prima strada della classe
+    if ((m || scudo) && scudo === (s.mancina === 'scudo')) p += 1
     p += albero.filter(id => s.abilita.includes(id)).length
     if (p > punti) { punti = p; meglio = s }
   }

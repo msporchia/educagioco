@@ -14,6 +14,7 @@
      node strumenti/tavola-paesaggi.mjs --grigio --nome tavola-grigia
      node strumenti/tavola-paesaggi.mjs --solo grotta,miniera --mostri --con '&sotterraneo=branco&mostri=3'
      node strumenti/tavola-paesaggi.mjs --stanza corridoio      # dove non c'è, la prima stanza
+     node strumenti/tavola-paesaggi.mjs --alle-botti --solo cantine,miniera   # nella stanza con le botti da rompere
 
    I mostri del piano si tolgono (uno sveglio aprirebbe lo scontro), tranne
    con `--mostri`. `--discesa 2` (l'indice della storia), `--seme 11`, `--larghezza 390`,
@@ -46,8 +47,21 @@ for (const k of chiavi) {
   const hash = `sotterraneo3d=${discesa}&eroe=cavaliere&stanza=${stanza}&luce=stanza&seme=${seme}&dpr=1&scenario=${k}${con}`
   const { page, errori } = await apriGioco(browser, { viewport: { width: larghezza, height: 844 }, hash, attesa: null, indirizzo: `file://${dist}` })
   await page.waitForTimeout(1500)
-  // i mostri via (tranne con `--mostri`): la foto è del posto, e uno che si sveglia apre lo scontro e avvicina la telecamera
-  if (!args.includes('--mostri')) await page.evaluate(() => { const c = window.__sotterraneo3d && window.__sotterraneo3d.corsa; if (c) { const r = c.livello.robe; for (let i = r.length - 1; i >= 0; i--) if (r[i].che === 'mostro') r.splice(i, 1) } }).catch(() => {})
+  // i mostri via (tranne con `--mostri`): la foto è del posto, e uno che si sveglia apre lo scontro e avvicina la telecamera.
+  // Restano nella lista, spenti (la sosta conta le cose per indice: toglierli la romperebbe)
+  if (!args.includes('--mostri')) await page.evaluate(() => { const c = window.__sotterraneo3d && window.__sotterraneo3d.corsa; if (c) { c.ricomparsa = false; for (const r of c.livello.robe) if (r.che === 'mostro') { r.presa = true; r.morto = true; r.sveglio = false } } }).catch(() => {})
+  // `--alle-botti`: l'eroe in mezzo alla prima stanza che ha le botti da rompere, accesa tutta (dove non ce ne sono resta dov'è)
+  if (args.includes('--alle-botti')) await page.evaluate(() => {
+    const p = window.__sotterraneo3d, c = p && p.corsa, b = p && p.botti()[0]
+    if (!c || !b) return
+    const s = c.livello.stanze.find(q => q.id === b.stanza)
+    const mx = s.suolo.reduce((a, q) => a + q.x, 0) / s.suolo.length, my = s.suolo.reduce((a, q) => a + q.y, 0) / s.suolo.length
+    const d = s.suolo.filter(q => !c.livello.robeSu(q.x, q.y).length).reduce((m, q) => (Math.hypot(q.x - mx, q.y - my) < Math.hypot(m.x - mx, m.y - my) ? q : m))
+    c.eroe = { x: d.x + 0.5, y: d.y + 0.5 }
+    const base = c.aggiornaLuce.bind(c)
+    c.aggiornaLuce = () => { base(); for (const [x, y] of c.livello.celleDellaLuce(s)) { const k = y * c.livello.largo + x; c.luce.add(k); c.forzaLuce.set(k, 1); c.visto[k] = 1 } }
+    c.segnaLaStanza(); c.aggiornaLuce()
+  }).catch(e => console.log('   (alle botti: ' + e.message + ')'))
   await page.waitForTimeout(Number(opz('aspetta', 6000)))
   const tela = await page.$('[data-tela="3d"]')
   const file = resolve(FOTO, `${k}.png`)

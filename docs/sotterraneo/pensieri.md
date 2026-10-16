@@ -6,7 +6,8 @@ entri in un dungeon e non hai la torcia magari un messaggio… "quanto vorrei av
 più: "vorrei tanto avere una torcia qui sotto", "mi hanno parlato di una spada dal fabbro"»*.
 
 Il codice: `dati/pensieri.js` (la tabella, le parole della roba, il ritmo), `motore/pensieri.js` (la situazione, la scelta, la
-memoria; puro, gira in Node), `Gioco.vue` (giù, e la scelta sopra), `viste/Terra.vue` (il fumetto sopra), lo stile in `stile.css`
+memoria; puro, gira in Node), `Gioco.vue` (giù, e la scelta sopra), `viste/Terra.vue` (il fumetto sopra nel Sotterraneo di sempre) e `viste/Mondo3d.vue` (lo
+stesso nel mondo generato del Sotterraneo 3D: le stesse porte `pensa`, `pensiero`, `pensiero-fine`, `trovati`), lo stile in `stile.css`
 (`.sot-pensiero`, col tema legno nel 3D).
 
 ## Dire cosa, non ordinare
@@ -117,4 +118,4 @@ Nei test: `[data-pensiero]` con `data-pensiero-id`, `data-tono`, `data-segno` (e
 segno acceso è `[data-indicato]`. `unita/sotterraneo-pensieri` (la tabella, ogni condizione, ogni classe e strada, gli accordi, il
 lessico, il ritmo, le discese del banco), `integrazione/sotterraneo-pensieri` (la torcia entrando nel 2D e nel 3D, sopra la testa e
 non addosso, la ripresa che non la ridice, il tocco sopra che illumina la guaritrice; `--scatti` lascia `sotterraneo-pensieri-2d`,
-`-3d`, `-sopra`, `-segno`).
+`-3d`, `-sopra`, `-segno`, `-mondo3d`; nel mondo 3D il pensiero dell'arma a mani vuote e il fabbro che si illumina).

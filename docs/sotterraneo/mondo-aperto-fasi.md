@@ -130,6 +130,13 @@ onesti, test compresi.
 **Fatte: la 0 e la 1** (16 ottobre 2026): il generatore, il seme 19 e cosa la geometria ha cambiato dei passaggi stanno in
 [mondo-aperto-generatore.md](mondo-aperto-generatore.md); di `aperta.js` è entrata solo la parte che fa la mappa.
 
+**Fatta la 2** (16 ottobre 2026, [mondo-3d.md](mondo-3d.md)): `viste/Mondo3d.vue` e `scena3d/mondo/` nel Sotterraneo 3D, il dito
+con le persone che vincono, le figure ancorate (A), la nebbia vera e salvata (`mondo` nell'avventura, la chiave `sotterraneo3d`
+resta la fase 9), la veduta, le tre città coi mercanti, dialoghi, bottega e missioni di oggi, i sette ingressi coi nomi nuovi e il
+ritorno, il gemello nella città giusta. Anticipati dalla 3 e dalla 4: i pezzi costruiti e buttati col mondo lontano, l'ombra che
+segue, le pietre con la domanda e il viaggio, le grate dei passaggi. Restano della 4 il capitano, la fontana che cura, i banchi
+per città da guardare; della 3 le misure sui due telefoni.
+
 **In tutto 38–57 giorni più la taratura**: due mesi abbondanti di lavoro pieno. Il primo file da provare arriva alla
 fine della fase 2 (dodici giorni circa); il mondo pericoloso alla fine della 5. Senza mostri sopra (la scelta più
 piccola) la fase 5 sparisce e le quest perdono caccia, signori e tane.

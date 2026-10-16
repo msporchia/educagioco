@@ -2,7 +2,8 @@
 // usa. Usarla è il motore (`vaiVerso`, che da vicino la apre come nel 2D): porte, forzieri, fonti, mostri fanno quello che fanno
 // nel gioco. Una cosa non ancora in luce (o di là da qualcosa): si va alla cella raggiungibile più vicina e lì si riprova. Un
 // tocco oltre una porta chiusa porta alla porta e prova ad aprirla. Un altro tocco annulla. Niente regole qui: solo quale
-// cella chiedere al motore. Puro, senza three: unita/sotterraneo-3d.
+// cella chiedere al motore. Una botte (scena3d/botti.js) è del disegno: ci si va, e arrivati `passo` la restituisce da rompere.
+// Puro, senza three: unita/sotterraneo-3d.
 import { percorso, raggiungibili } from '../../../motore/passi.js'
 
 // la cella libera più vicina a (x, z) a cui si arriva davvero
@@ -30,7 +31,7 @@ export function portaSullaStrada(corsa, c) {
 }
 
 export function creaAzione() {
-  let azione = null   // { roba } finché l'eroe ci sta andando
+  let azione = null   // { roba } o { botte } finché l'eroe ci sta andando
 
   function mira(corsa, r) {
     azione = { roba: r }
@@ -40,13 +41,20 @@ export function creaAzione() {
   }
 
   return {
-    get roba() { return azione ? azione.roba : null },
+    get roba() { return azione ? azione.roba || null : null },
+    get botte() { return azione ? azione.botte || null : null },
     annulla() { azione = null },
     // il dito si è posato: su una cosa (`roba`) o su una cella del pavimento (`cella`)
-    tocca(corsa, { roba = null, cella = null }) {
+    tocca(corsa, { roba = null, cella = null, botte = null }) {
       azione = null
       if (!corsa || corsa.foglio || corsa.finita) return
       if (roba) return mira(corsa, roba)
+      if (botte && !botte.rotta) {
+        azione = { botte }
+        const meta = vicinoA(corsa, botte.x, botte.z)
+        if (meta) corsa.vaiVerso(meta, false)
+        return
+      }
       if (!cella) return
       const porta = portaSullaStrada(corsa, cella)
       if (porta) return mira(corsa, porta)
@@ -57,11 +65,19 @@ export function creaAzione() {
       azione = null
       if (corsa && !corsa.foglio && !corsa.finita && cella) corsa.vaiVerso(cella, false)
     },
-    // a ogni fotogramma: arrivati (fermi) accanto alla cosa, ci si gira e la si usa col tocco del motore
+    // a ogni fotogramma: arrivati (fermi) accanto alla cosa, ci si gira e la si usa col tocco del motore; una botte si
+    // restituisce, da rompere a chi disegna (il motore non ne sa niente)
     passo(corsa) {
-      if (!azione || !corsa) return
-      if (corsa.foglio || corsa.finita) { azione = null; return }
-      if (corsa.strada && corsa.strada.length) return
+      if (!azione || !corsa) return null
+      if (corsa.foglio || corsa.finita) { azione = null; return null }
+      if (corsa.strada && corsa.strada.length) return null
+      if (azione.botte) {
+        const b = azione.botte
+        azione = null
+        if (b.rotta || Math.hypot(b.x - corsa.eroe.x, b.z - corsa.eroe.y) > 1.8) return null
+        corsa.giraVerso(b.x - corsa.eroe.x, b.z - corsa.eroe.y)
+        return b
+      }
       const r = azione.roba
       if (r.presa || r.morto) { azione = null; return }
       const x = r.fx ?? r.x + 0.5, z = r.fy ?? r.y + 0.5

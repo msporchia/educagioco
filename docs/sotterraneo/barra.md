@@ -85,12 +85,21 @@ restano in codice anche dopo: si muovono.
 
 ## Sopra la barra
 
-**Un pannello che poggia sulla barra finisce sopra la punta dei globi**, non sopra la barra: `--sot-sopra-barra` (in `.sot`,
-`stile.css`) è la barra (70 px) o la punta dei globi (`--globo` + 3 px), la più alta, più 6 px di respiro e l'area sicura.
-La usano il pannello dello scontro nel 3D (`stile-3d.css`), il duello 2D (`.sot-velo-scontro`) e il dialogo della terra
-(`.sot-terra-sotto`). Era il guasto del 16 ottobre: il bordo basso del pannello 3D finiva dietro i globi. La camera
-dello scontro misura il pannello da sé (`misuraFoglio`), quindi usa lo spazio che resta. Un foglio che sale dal basso
-(porta, forziere) copre la barra apposta, e lì i globi stanno sotto.
+**Un pannello che poggia sulla barra finisce sopra la punta dei globi**, non sopra la barra: `--sot-sopra-barra` sulla
+radice `.sot` è quanto si alza la barra dal fondo del gioco, punta dei globi compresa, più 6 px di respiro. **Si misura,
+non si stima**: `BarraDiSotto.vue` legge la cima della barra e dei globi (la loro scatola, `offsetTop`: il battito del
+cuore li scala e non deve far ballare i pannelli) e scrive il valore in px, a ogni cambio di misura (ResizeObserver) e di
+finestra; `stile.css` tiene solo la stima per il primo istante (70 px o la punta dei globi). La usano il pannello dello
+scontro nel 3D (`stile-3d.css`), il duello 2D (`.sot-velo-scontro`) e il dialogo della terra (`.sot-terra-sotto`). La
+camera dello scontro misura il pannello da sé (`misuraFoglio`), quindi usa lo spazio che resta. Un foglio che sale dal
+basso (porta, forziere) copre la barra apposta, e lì i globi stanno sotto.
+
+Due guasti: il 16 ottobre il pannello del 3D finiva dietro i globi su un telefono (era fermo a 64 px); poi, con la stima in
+CSS, su un monitor l'utente lo vedeva ancora sopra la calotta. In Chrome senza schermo, a 700–1861 px e a 1, 1,25 e 1,5
+di pixel ratio, la stima reggeva: la differenza vera è una barra più alta del solito (le scritte più grandi di un
+monitor, il minimo dei caratteri del browser), che la stima non vedeva e la misura sì. Nei test:
+`integrazione/sotterraneo-sopra-barra` (scontro 3D e 2D, la domanda, quale pozione, il dialogo, a sei misure, e con la
+barra alzata apposta): il rettangolo del pannello non tocca quello dei globi né della barra, e sopra resta scena.
 
 ## Col tema legno
 

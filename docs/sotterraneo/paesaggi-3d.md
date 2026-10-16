@@ -21,7 +21,7 @@ discese non cambiano. La mappa dei moduli sta in [grafica-3d.md](grafica-3d.md).
 
 | paesaggio | pareti (forma · trama) | pavimento | colonne | luce e aria | arredo |
 |---|---|---|---|---|---|
-| `cantine` | blocchi diritti · mattoni | mattoni a cesto, arancio | tonde | calda, polvere | contrafforti, mensole coi vasi, sacchi, botti |
+| `cantine` | blocchi diritti · mattoni | mattoni a cesto, arancio | tonde | calda, polvere | contrafforti, mensole coi vasi, sacchi |
 | `cripta` | lastroni a filo · blocchi incisi | lastroni lunghi con la cornice e le croci | quadre con basamento | fredda, nebbia fitta | pilastri, nicchie coi sarcofagi, ossa, candele |
 | `fornace` | lamiera · lamiere chiodate e ruggine | lamiera nera e grate sopra il fuoco (ardono) | di ferro ad anelli | rossa, braci che salgono | tubi, bocche accese, incudini |
 | `inferno` | ossidiana a scaglie · vetro nero con vene di lava | basalto a prismi con la lava nelle fessure | spine | rossa, braci | spuntoni, ossa |
@@ -60,6 +60,37 @@ l'acqua.
   ghiaccio fitte (sembravano piastrelle); l'aberrazione di base del passaggio finale (sui retini chiari del buco faceva frange
   viola, ora è più bassa).
 
+## Le botti
+
+Un passatempo, come in Diablo: ogni tanto una stanza ha qualche botte, e romperle fa perdere un po' di tempo. Il motore le conosce
+(`motore/botti.js`, la tabella in `dati/botti.js`), ma la regola è **spenta di difetto** e la accende solo il 3D (`Corsa.botti`):
+il 2D e il banco non le hanno, e le misure d'equilibrio restano quelle di prima.
+
+| paesaggio | stanze con le botti | come sono |
+|---|---|---|
+| cantine | una su quattro (a volte un magazzino, più gruppi) | nuove |
+| miniera | poco più di una su cinque (a volte un magazzino) | nuove |
+| palude | una su otto | marce, muschiose |
+| cripta, tempio | una su sedici | vecchie, grigie |
+| grotta | un accampamento, in metà dei piani | vecchie |
+| ghiaccio, neve, fornace, inferno | nessuna | — |
+
+- **Dove**: solo nel suolo delle stanze (mai nei corridoi), contro un muro o in un angolo, a gruppetti da uno a quattro; mai a
+  meno di tre passi da porte, scale, fonte, portale, mai sulla roba, mai sulla strada fra due di questi (il percorso obbligato).
+  Le decide il seme della discesa e il piano: ogni discesa ha le sue, lo stesso piano sempre le stesse.
+- **Rompere**: un tocco, l'eroe ci va (il punta-e-clicca), dà un colpo, la botte si sfascia in doghe e cerchi che restano per
+  terra; polvere di legno, una scossa piccola, un tonfo. Il motore la rompe solo se l'eroe ce l'ha accanto, una volta sola.
+- **Il bottino**: una su cinque lascia una boccetta (la pozione più piccola) o una o due gemme, per terra come il bottino dei
+  mostri, e si raccoglie allo stesso modo. Il tiro nasce dal seme, dal piano e dalla botte: rompere e riaprire non lo rifà.
+  Nient'altro: rompere non conta come mostro o tesoro, non dà esperienza, non tocca vita né energia.
+- **La sosta**: una botte rotta lascia nel piano un segno già preso (`{ che: 'botte', botte: i, presa: true }`), che la sosta
+  salva con le cose nuove del piano: nessun campo nuovo, `VERSIONE` non sale, e il 2D (che salta le cose prese) non lo vede.
+  Rientrando, la botte è a terra a pezzi.
+- **Non bloccano**: l'eroe ci passa attraverso, come prima. Farle bloccare vorrebbe che `buona()` del motore le conoscesse (le
+  strade, il palco, la ricerca dei mostri): si può, ma cambia le strade solo nel 3D; per ora no.
+- Una cosa trovata provando: togliere i mostri dalla lista `robe` (`splice`) rompe la sosta, che conta le cose per indice; la
+  tavola e il test li spengono (`presa`, `morto`) invece di toglierli.
+
 ## Quanto costa
 
 Dalla tavola (390×844, discesa 1, seme 11, la stanza più grande accesa tutta, senza mostri; SwiftShader, quindi le chiamate e
@@ -96,13 +127,14 @@ posa in `POSE_ARREDO`, il nome in `ARREDI` e la sua forma in `forma()` (una geom
   tavolo delle cantine. Un paesaggio vero nel gioco vorrà il suo arredo da toccare.
 - Le alghe e le canne stanno ferme; nelle grotte i triangoli sono tanti (da provare su un telefono vero).
 
-## Proposta per il gioco (da decidere, non fatto)
+## Nel gioco, e la proposta per l'abisso
 
-Oggi le discese scelgono lo scenario del motore; un `paesaggio:` sulla discesa o sul tratto dell'abisso (già letto da
-`paesaggioDi`) vestirebbe il 3D senza toccare il 2D né l'equilibrio:
+**Fatto** (16 ottobre 2026, con il mondo di sopra): un `paesaggio:` sulla discesa (in `dati/campagna.js`, letto da `paesaggioDi`)
+veste il 3D senza toccare il 2D né i numeri (scenario, pianta e acqua restano del motore): la tana dei ragni (`gallerie`,
+cantine in caverna) è **grotta**, le sale allagate (`cisterna`, cripta in caverna con l'acqua) **tempio**, le miniere di brace
+(`fondo`, fornace in caverna) **miniera**. Il tempio sta su una pianta a caverna (la sua famiglia sarebbe `costruita`): le pareti
+sono a lastroni sulle grotte. Da decidere ancora:
 
-- la grotta della scaletta (`gallerie`, cantine in caverna) → **grotta**; la scala sommersa (`cisterna`, cripta con l'acqua) →
-  **tempio**; la miniera abbandonata (`fondo`, fornace in caverna) → **miniera**;
 - l'abisso, che cambia posto ogni quattro piani: dopo i tre tratti di oggi, **neve**, **ghiaccio** e **palude** come tratti nuovi,
   ognuno coi suoi abitanti; il mondo aperto (che nel repo non ha ancora un documento) potrebbe usare gli stessi dieci come zone.
 
@@ -112,6 +144,9 @@ palude pianta, melma, serpente, granchio; nel tempio polpo, piranha, granchio, t
 
 ## Nei test
 
+`unita/sotterraneo-botti` (la tabella, dove stanno sui piani veri, il premio una su cinque e sempre piccolo, spenta di
+difetto, una volta sola, il segno nel piano, la sosta), `integrazione/sotterraneo-3d` (col dito vero: una botte senza premio
+che si rompe e resta a pezzi, una col premio che lascia qualcosa che arriva davvero; `window.__sotterraneo3d.botti()`). Poi:
 `unita/sotterraneo-paesaggi` (i dati senza guasti, ogni nome esiste, nessuna terna uguale; il cheat veste la discesa con gli
 stessi numeri; le pareti senza crepe, nei limiti, con le facce girate fuori, la roccia irregolare e i blocchi a filo; i
 pavimenti diversi nel disegno in grigio; l'arredo fitto, mai sulla roba, sulle porte o fuori dal pavimento; le lame del tempio),

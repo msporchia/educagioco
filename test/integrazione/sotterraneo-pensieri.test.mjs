@@ -96,5 +96,31 @@ async function sopraLaTesta(page, nome) {
   await page.close()
 }
 
+/* ---------- 4. sopra nel Sotterraneo 3D: il mondo generato (viste/Mondo3d.vue), lo stesso pensiero e lo stesso segno ---------- */
+{
+  // la bottega del cheat dà le gemme a mani nude; chiusa, l'eroe fermo pensa all'arma
+  const { page, errori } = await apriGioco(browser, { hash: 'sotterraneo3d=mondo&eroe=cavaliere&bottega=armaiolo&gemme=60&roba=nuda', attesa: '[data-mondo3d]' })
+  await page.waitForSelector('[data-chiudi]', { timeout: 15000 })
+  await page.click('[data-chiudi]')
+  await page.waitForSelector('[data-mondo3d][data-pronto="1"]', { timeout: 30000 })
+  await page.waitForSelector('[data-pensiero]', { timeout: 15000 }).catch(() => {})
+  uguale('mondo 3D: a mani vuote con le gemme, il pensiero dell\'arma', await page.locator('[data-pensiero]').getAttribute('data-pensiero-id').catch(() => null), 'arma-vecchia')
+  const t = await page.locator('[data-pensiero]').innerText().catch(() => '')
+  controlla('mondo 3D: una spada, dal fabbro (la prima strada del cavaliere)', /una spada/.test(t) && /dal fabbro/.test(t), t)
+  if (await page.locator('[data-pensiero]').count()) {
+    const f = await page.locator('[data-pensiero]').boundingBox()
+    const [ex, ey] = (await page.locator('[data-eroe-mondo]').getAttribute('data-schermo')).split(',').map(Number)
+    const v = await page.locator('[data-mondo3d]').boundingBox()
+    controlla('mondo 3D: il fumetto sta sopra l\'eroe', f.y + f.height < v.y + ey - 12, JSON.stringify({ f, ey }))
+    await scatto(page, 'sotterraneo-pensieri-mondo3d')
+    await page.click('[data-pensiero]')
+    await attendi(page, 400)
+    controlla('mondo 3D: toccato, il fabbro si illumina', await page.locator('[data-mercante="armaiolo"][data-indicato]').count() >= 1)
+    uguale('mondo 3D: e la bottega non si apre', await page.locator('[data-chiudi]').count(), 0)
+  }
+  controlla('mondo 3D: nessun errore', !errori.length, errori.join(' · '))
+  await page.close()
+}
+
 await browser.close()
 riassunto('i pensieri dell\'eroe, a schermo')

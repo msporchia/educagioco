@@ -2,8 +2,10 @@
 // Le discese sulla terra di sopra (viste/Terra.vue): riceve le tappe già decise, sceglie solo dove andare. La
 // discesa lasciata a metà sta in cima; scenderne un'altra avverte invece di buttare la partita in silenzio.
 import { riprendiSeChiesta } from '../../ripresa.js'
-import { ref, computed } from 'vue'
+import { ref, computed, defineAsyncComponent } from 'vue'
 import Terra from './Terra.vue'
+// il mondo di sopra in 3D (viste/Mondo3d.vue) si carica solo nel Sotterraneo 3D: il Sotterraneo di sempre non tira dentro three
+const Mondo3d = defineAsyncComponent(() => import('./Mondo3d.vue'))
 import Diario from './Diario.vue'
 import LascioPerdere from './LascioPerdere.vue'
 
@@ -22,10 +24,15 @@ const props = defineProps({
   puntiAbilita: { type: Number, default: 0 },
   forze: { type: Object, default: null },    // vita ed energia di chi ha lasciato la discesa dal portale: { vita, vitaMax, energia, energiaMax }
   annuncio: { type: Object, default: null }, // la zona appena nata che il minatore racconta (motore/zone.js): { chiave, nome, livello, detto, sentita }
+  // il Sotterraneo 3D: il mondo generato al posto della terra dipinta, col suo salvataggio (`mondo`) e la veduta d'insieme
+  disegno: { type: String, default: null },
+  mondo: { type: Object, default: null },
+  veduta: { type: Boolean, default: false },
   pensiero: { type: Object, default: null },  // il pensiero dell'eroe sopra la testa (docs/sotterraneo/pensieri.md)
 })
-const emit = defineEmits(['gioca', 'riprendi', 'scorda', 'terra', 'bottega', 'segui', 'sentito', 'scheda', 'cura',
+const emit = defineEmits(['gioca', 'riprendi', 'scorda', 'terra', 'bottega', 'segui', 'sentito', 'scheda', 'cura', 'mondo', 'risposta', 'veduta',
                           'pensa', 'pensiero', 'pensiero-fine', 'trovati'])
+const in3d = props.disegno === '3d'
 riprendiSeChiesta(() => props.ripresa, () => emit('riprendi'))
 
 const chiede = ref(null)   // quale tappa si sta per cominciare avendo una discesa in sospeso
@@ -69,11 +76,13 @@ function comincia() {
 <template>
   <div class="sot-tappe">
     <!-- la discesa lasciata dal portale è anche il portale gemello nel villaggio: tutti e due riprendono la stessa sosta -->
-    <Terra ref="terraEl" :tappe="tappe" :abisso="abisso" :eroe="eroe" :terra="terra" :roba="roba"
+    <component :is="in3d ? Mondo3d : Terra" ref="terraEl" :tappe="tappe" :abisso="abisso" :eroe="eroe" :roba="roba"
+           v-bind="in3d ? { mondo, veduta } : { terra }"
            :missioni="missioni" :azione-missione="azioneMissione" :segui="segui"
            :giaScesa="ripresa ? ripresa.tappa : null" :portale="portale"
            :annuncio="annuncio" :forze="forze" @sentito="$emit('sentito')" @cura="r => $emit('cura', r)"
            @scendi="tocca" @terra="v => $emit('terra', v)" @bottega="(k, s) => $emit('bottega', k, s)"
+           @mondo="v => $emit('mondo', v)" @risposta="r => $emit('risposta', r)" @veduta="v => $emit('veduta', v)"
            @riprendi="$emit('riprendi')" :pensiero="pensiero" @pensa="$emit('pensa')" @pensiero="p => $emit('pensiero', p)"
            @pensiero-fine="$emit('pensiero-fine')" @trovati="v => $emit('trovati', v)">
       <template #sopra>
@@ -98,7 +107,7 @@ function comincia() {
           </div>
         </div>
       </template>
-    </Terra>
+    </component>
 
     <Diario v-if="diarioAperto" :stati="missioni" :conti="conti" :tappe="tappe" :segui="segui" :punti="punti" :punti-abilita="puntiAbilita"
             @scheda="s => $emit('scheda', s)" @chiudi="diarioAperto = false"
