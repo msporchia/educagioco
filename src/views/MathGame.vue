@@ -1454,7 +1454,7 @@ function dalCheat() {
       <!-- l'hangar: sempre sulla rotta, anche senza pezzi (docs/asteroidi/hangar.md) -->
       <button class="cosa-so al-hangar" data-azione="hangar" @click="hangarAperto = true">
         Hangar<i v-if="hangarMappa.nuovi.length" class="nuovi" data-nuovi>{{ hangarMappa.nuovi.length }}</i></button>
-      <HangarAsteroidi v-if="hangarAperto" @chiudi="chiudiHangar" />
+      <HangarAsteroidi v-if="hangarAperto" :tre="usa3d" @chiudi="chiudiHangar" />
     </div>
 
     <!-- cosa so: una pagina di progressi, non un velo sopra la partita —
