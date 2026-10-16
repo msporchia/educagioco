@@ -86,6 +86,9 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
 
   const contorno = creaContorno({ canvas, strato, cam })
   let quadro = null, piano = null, raf = 0, prima = 0, coperto = 0, scala = 3, vivo = true, passando = null
+  // quello che si fa a fotogramma finito: chi lo chiama può buttare il 3D (il portale porta sopra), e il resto del
+  // fotogramma toccherebbe un piano che non c'è più
+  let aFotogrammaFinito = null
   const ZOOM = { 2: 1.3, 3: 1, 4: 0.84, 5: 0.72 }
   const centro = new Vector3()
   const scontro = creaScontro({ S, cam, eroe, getPiano: () => piano, getCose: () => cose, getFigure: () => figure, anelli, cieca })
@@ -126,7 +129,7 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
     const ms = prima ? ora - prima : 16
     const dtVero = Math.min(0.05, ms / 1000)
     prima = ora
-    if (!quadro || !quadro.corsa || !cose || !misura()) return
+    if (!vivo || !quadro || !quadro.corsa || !cose || !misura()) return
     const t0 = performance.now()
     renderer.info.reset()
     const corsa = quadro.corsa
@@ -193,6 +196,7 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
     if (post) post.disegna(scena, cam.camera); else renderer.render(scena, cam.camera)
     ctx.misure.msDisegno = performance.now() - t1
     ctx.conta(ms)
+    if (aFotogrammaFinito) { const f = aFotogrammaFinito; aFotogrammaFinito = null; f() }
   }
 
   const this_ = {
@@ -240,7 +244,7 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
     attraversa(fatto) {
       if (!piano || !piano.portale) return fatto && fatto()
       piano.portale.attraversa()
-      passando = { t: 0, fatto: () => { passando = null; if (fatto) fatto() } }
+      passando = { t: 0, fatto: () => { aFotogrammaFinito = () => { passando = null; if (fatto) fatto() } } }
       eroe.passaggio = passando
     },
     grafica() {

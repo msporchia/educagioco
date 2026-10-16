@@ -987,12 +987,13 @@ function pianoDaProva(c) {
 // `cappella`, `grotta`, `bilobata`, `galleria`, `antro`) o di quel ruolo (`anticamera`, `uscita`, `tesoro`...): per guardare i piani senza girarli (docs/sotterraneo/piani.md)
 function stanzaDaProva(c) {
   const q = new URLSearchParams(location.hash.slice(1)).get('stanza')
-  // `#stanza=relitto` (o `acqua`, `nicchia`, `portone`): l'eroe sta a tre celle dal primo relitto (o dalla prima pozza, davanti alla prima
+  // `#stanza=relitto` (o `acqua`, `nicchia`, `portone`, `al-portale`, `al-scala-su`): l'eroe sta a tre celle dal primo relitto (o dalla prima pozza, davanti alla prima
   // nicchia, al portone del grosso) e lo guarda, per vedere l'ombra che fa (docs/sotterraneo/piani-caverne.md)
   const liv = c.livello
   const bersaglio = q === 'relitto' ? liv.relitti[0] : q === 'acqua' ? liv.stanze.flatMap(r => r.acqua)[0]
     : q === 'nicchia' ? liv.stanze.flatMap(r => r.nicchie)[0]
-      : q === 'portone' ? liv.robe.find(r => r.che === 'porta' && r.pelle === 'bella') : null
+      : q === 'portone' ? liv.robe.find(r => r.che === 'porta' && r.pelle === 'bella')
+        : q === 'al-portale' || q === 'al-scala-su' ? liv.robe.find(r => r.che === q.slice(3)) : null
   if (bersaglio) {
     const quasi = []
     for (let dy = -3; dy <= 3; dy++) for (let dx = -3; dx <= 3; dx++) {

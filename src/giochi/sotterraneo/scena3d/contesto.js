@@ -1,7 +1,7 @@
 // Il contesto WebGL 2 e il renderer: il contesto si chiede a mano prima di three, così senza WebGL 2 si torna null in silenzio
 // (il gioco dice cosa succede, docs/sotterraneo/grafica-3d.md «Senza WebGL»). Il pixel ratio si adatta (DPR: parte da `max`,
 // scende a passi se i fotogrammi costano troppo, risale piano), e si misura quanto costa un fotogramma.
-import { WebGLRenderer, PCFShadowMap, ACESFilmicToneMapping } from 'three'
+import { WebGLRenderer, VSMShadowMap, ACESFilmicToneMapping } from 'three'
 import { DPR, LUCE, ACCESI } from './costanti.js'
 
 export function creaContesto(canvas, { perso, fisso } = {}) {
@@ -13,7 +13,7 @@ export function creaContesto(canvas, { perso, fisso } = {}) {
   let renderer
   try { renderer = new WebGLRenderer({ canvas, context: gl, antialias: false, alpha: false }) } catch (e) { return null }
   renderer.shadowMap.enabled = ACCESI.ombre
-  renderer.shadowMap.type = PCFShadowMap
+  renderer.shadowMap.type = VSMShadowMap   // PCF confronta una texture di profondità filtrata LINEAR: Firefox avvisa (docs/sotterraneo/grafica-3d.md)
   renderer.toneMapping = ACESFilmicToneMapping
   renderer.toneMappingExposure = LUCE.esposizione
   renderer.info.autoReset = false   // più passate per fotogramma: si azzera a mano
