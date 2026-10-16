@@ -18,7 +18,7 @@ ancora arredo fermo (nel Sotterraneo 3D c'è, modellata: `scena3d/botti.js`).
 
 La discesa è in 3D ([grafica-3d.md](grafica-3d.md)); resta, in quest'ordine: la terra di sopra in 3D, l'arredo per
 ambientazione modellato (oggi sono le figure dell'atlante), le armi dai pezzi nitidi, i muri obliqui, la prova su un
-telefono vero (i numeri di [grafica-3d.md](grafica-3d.md#quanto-costa) sono di SwiftShader). Le voci piccole stanno lì,
+telefono vero (i numeri di [grafica-3d-costi.md](grafica-3d-costi.md) sono di SwiftShader). Le voci piccole stanno lì,
 in «Cosa manca».
 
 ## Dopo il giro del 14 ottobre 2026

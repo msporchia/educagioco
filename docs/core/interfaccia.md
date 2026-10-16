@@ -157,6 +157,13 @@ Nei test: `button[aria-label="pausa"]`, `[data-pausa]`,
   «ci mette venti minuti» per sempre. Si conta il tempo **davanti agli
   occhi**, col tetto `TEMPO_MAX` (`src/quiz/nucleo/domanda.js`), e l'attesa
   dell'esito si congela e riparte da quello che restava.
+- **Un'animazione va col tempo, non coi fotogrammi.** Gli schermi vanno a
+  60, 120 o 144 Hz: un passo fisso a fotogramma (`x += 0.004`, `lerp(a, b,
+  0.1)`, `giro++ % n`) va il doppio su un monitor a 120 Hz. Si avanza di
+  `dt` secondi (col tetto per i salti di scheda) e ci si avvicina con
+  `1 - e^(-k·dt)`; lo sprite si sceglie dal tempo. La prova gira il gioco a
+  60, 120 e 144 Hz con un orologio finto
+  ([../sotterraneo/grafica-3d.md](../sotterraneo/grafica-3d.md#il-tempo-non-i-fotogrammi)).
 - **Una schermata appena comparsa non si tocca subito, e l'attesa si
   vede.** Due secondi muti dopo uno sbaglio sembrano un tasto rotto, il dito
   ripreme e il tocco atterra sulla schermata dopo, nello stesso punto.

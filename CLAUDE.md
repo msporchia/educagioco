@@ -158,6 +158,7 @@ Una riga ciascuna; il perché sta nel documento indicato.
   porta dietro lo stato; si azzera da sé con un `watch`. → `docs/core/interfaccia.md`
 - **Un `setTimeout` scatta anche a schermo spento** e `performance.now()`
   conta il telefono posato. → `docs/core/interfaccia.md`
+- **Un'animazione va col tempo, non coi fotogrammi**: a 120 Hz un passo fisso a fotogramma va il doppio. → `docs/core/interfaccia.md`
 - **Il click fantasma dopo un `pointerup` lo vede solo un tocco vero** (CDP),
   mai `page.click()`. → `docs/core/il-dito.md`
 - **La scala della tela sta nella trasformazione del contesto**, una volta

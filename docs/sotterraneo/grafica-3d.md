@@ -86,6 +86,18 @@ componenti.
   le scintille e i segni sono riserve riempite e svuotate, le geometrie si
   fanno una volta per piano.
 
+## Il tempo, non i fotogrammi
+
+Ogni cosa avanza di `dt` secondi (tetto 0,05: un salto di scheda non è un
+fotogramma lungo) e si avvicina alla meta con `verso(dt, k)` = `1 - e^(-k·dt)`
+(`tempo.js`): uguale a 60, 120 e 144 Hz. Lo sprite si sceglie dal tempo, ai
+fotogrammi al secondo del 2D (8 da sveglio, 4 il respiro, 1,5 i passi di chi
+dorme). Prima i mostri ne giravano sei volte tanti (48 pose al secondo da
+svegli: il tempo dello stato cresceva di 6 al secondo e si moltiplicava
+ancora), e su un monitor a 120 Hz, che li mostra tutti, sembravano frenetici
+(16 ottobre). Un tetto a 60 fotogrammi non serve: col tempo giusto la
+frequenza non cambia i passi.
+
 ## La vista
 
 - **La tela si misura sul suo contenitore** (il campo, nella colonna della
@@ -100,8 +112,7 @@ componenti.
   più di `CAMERA.pixelMassimo` (5); con un pixel ratio basso, dove
   l'arrotondamento sposterebbe la telecamera di più di un quarto, non si
   arrotonda. Le figure ritte si allungano di 1/cos 52°: il pixel è quadrato.
-  Niente aberrazione cromatica: lasciava agli sprite una scia di copie
-  colorate (l'«arma fantasma» dell'elfa nell'affondo).
+  Niente aberrazione cromatica (lasciava una scia colorata agli sprite).
 - **La telecamera** sta a 52° e vede almeno 15 celle in largo e in profondo
   (nello scontro 9,5), la distanza viene dalla forma dello schermo; si alza
   di metà di quanto coprono un foglio o il pannello dello scontro
@@ -175,47 +186,9 @@ voce di [da-fare.md](da-fare.md).
 
 ## Quanto costa
 
-Misurato in Chrome senza schermo (SwiftShader: la CPU fa la GPU, i ms non
-dicono niente del telefono), 390×844, sullo stesso inizio della prima discesa
-(seme 7):
-
-| | chiamate | triangoli |
-|---|---|---|
-| prototipo | 164 | 29k |
-| gioco, all'arrivo | 34 | 13k |
-| gioco, una sala accesa tutta (fontana, colonne, botti; `luce=stanza`) | 34–43 | 13–41k |
-| gioco, nello scontro (tre mostri, la sala) | 33–48 | 40–44k |
-| i dieci paesaggi, la stanza più grande accesa tutta | 29–42 | 52–157k |
-
-Il JS che prepara un fotogramma sta sotto il mezzo millisecondo, le chiamate
-a WebGL sotto il millisecondo. Le figure sono una chiamata sola (prima una
-per figura), i muri due, le colonne due, le fiamme una, la nebbia una; una
-sola passata d'ombra (il cono); luci a numero fisso. Il pixel ratio parte da
-1,5 e scende fino a 0,6 se una quarantina di fotogrammi costano più di 26 ms
-in media, risale piano sotto i 15 (cambia prima del disegno, mai dopo: la
-tela cambiata si svuota). **Il degrado a scalini non c'è** (l'utente vuole
-prima provare): se un telefono non regge, i pezzi si spengono in `ACCESI`.
-`window.__sotterraneo3d.grafica()` dice chiamate, triangoli, figure, pixel
-ratio, `pixelSprite` (quanti pixel del disegno fa un pixel dello sprite) e i
-ms; il cheat `&spegni=nebbia,post` spegne pezzi di `ACCESI` per misurare
-quanto costa ognuno.
-
-**Dove va il tempo** (SwiftShader, lo scontro della fornace a pixel ratio 1,5,
-ms a fotogramma): tutto acceso 160; senza nebbia 98, senza ombre 148, senza
-arredo 147, senza post 153; tutto spento 52. La nebbia (cinque fette a tutto
-schermo col rumore) era il pezzo più caro: ora i pixel che non si vedono
-saltano rumore e luci (sono zero comunque), e lo scontro è sceso a 112 (in
-esplorazione 62). Il passaggio finale prende la scena una volta sola invece
-di tre.
-
-**Il peso**: `dist/index.html` da 29 190 a 29 289 kB (+99 kB: il codice di
-`scena3d/` e delle viste nuove; three c'era già per gli Asteroidi 3D). Nel sito
-spezzato three resta in `asteroidi-3d` (640 kB), `scena3d/` sta in
-`sotterraneo-3d` (81 kB), chiesto solo scendendo nel Sotterraneo 3D: il
-Sotterraneo di sempre non lo carica, né carica three. Il 3D non ha un
-`manualChunks`: è il confine dell'import a richiesta (con un `manualChunks` si
-tirava dentro i dati in comune col 2D, e il 2D finiva per caricare three)
-([../core/avvio-e-memoria.md](../core/avvio-e-memoria.md)).
+Le chiamate, i triangoli, dove va il tempo di un fotogramma, il pixel ratio
+che si adatta, `ACCESI`, il cheat `&spegni=` e il peso del file:
+[grafica-3d-costi.md](grafica-3d-costi.md).
 
 ## Cosa manca
 
@@ -236,7 +209,8 @@ tirava dentro i dati in comune col 2D, e il 2D finiva per caricare three)
 
 Nei test: `unita/sotterraneo-paesaggi` (i paesaggi: [paesaggi-3d.md](paesaggi-3d.md)), `unita/sotterraneo-3d` (gli aspetti, la pianta di tutte le discese
 e dell'abisso, la maschera, il palco con l'agio, il tocco, le figure in un
-InstancedMesh, le botti), `integrazione/sotterraneo-3d` (col dito vero: la
+InstancedMesh, le botti), `unita/sotterraneo-3d-tempo` e `integrazione/sotterraneo-3d-tempo`
+(lo sprite, l'affondo e la telecamera uguali a 60, 120 e 144 Hz, con un orologio finto), `integrazione/sotterraneo-3d` (col dito vero: la
 carta solo coi giochi in prova, la terra di sopra 2D, la discesa in 3D e
 quanto costa, camminare, aprire una porta, lo scontro con una risposta
 sbagliata e una giusta, il mostro che cade, la scala che sale e quella che
