@@ -2,6 +2,7 @@
 // dati/tessere.js), la famiglia di piante che gli sta bene e se vuole l'acqua. I quattro del motore sono base di se stessi. Il
 // disegno di ognuno sta in scena3d/aspetti.js; qui solo quello che serve PRIMA di scendere (il cheat `#scenario=`, Gioco.vue),
 // così il 2D non si porta dietro il 3D. Dato puro. Vedi docs/sotterraneo/paesaggi-3d.md.
+import { trattoDi } from './campagna.js'
 export const PAESAGGI = {
   cantine: { base: 'cantine', pianta: 'costruita' },
   cripta: { base: 'cripta', pianta: 'costruita' },
@@ -21,4 +22,10 @@ export function inPaesaggio(tappa, chiave) {
   const p = PAESAGGI[chiave]
   if (!p || !tappa) return tappa
   return { ...tappa, scenario: p.base, pianta: p.pianta, acqua: !!p.acqua, paesaggio: chiave }
+}
+
+// quale paesaggio ha questo piano: quello del tratto dell'abisso o della discesa, se lo dichiarano; se no lo scenario
+export function paesaggioDi(corsa) {
+  const t = trattoDi(corsa.tappa, corsa.piano)
+  return (t && t.paesaggio) || (corsa.tappa && corsa.tappa.paesaggio) || corsa.scenario
 }
