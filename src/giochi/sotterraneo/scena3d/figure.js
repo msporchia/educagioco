@@ -4,7 +4,7 @@
 // svanisce). La normal map finta (trame.js, `normaliAtlante`) le fa prendere la luce di lato; un minimo di colore e un contorno
 // caldo le staccano dal fondo. Si riempie a ogni fotogramma (`inizia`, `metti`, `chiudi`): niente si alloca.
 import { InstancedMesh, InstancedBufferAttribute, PlaneGeometry, MeshStandardMaterial, MeshDepthMaterial, RGBADepthPacking,
-         DoubleSide, Matrix4, Vector3, Quaternion, Euler, Color } from 'three'
+         DoubleSide, Matrix4, Vector3, Vector2, Quaternion, Euler, Color } from 'three'
 import { conMaschera } from './maschera.js'
 import { LUCE, ALLUNGA, PIXEL_CELLA } from './costanti.js'
 
@@ -21,8 +21,32 @@ const RETINA = /* glsl */`
   if (vAlfa < 0.999) { float rA = fract(52.9829189 * fract(dot(floor(gl_FragCoord.xy), vec2(0.06711056, 0.00583715)))); if (rA > vAlfa) discard; }
 `
 
-// `pezzi`: nome → [x, y, w, h] nell'atlante (dati/atlante.js, PEZZI); `ombra`: se fanno ombra (l'eroe no: la torcia è sua)
-export function creaFigure(scena, { tex, norm, larga, alta, pezzi, maschera, max, ombra = true }) {
+// Il contorno (sopra, nel mondo di sopra: docs/sotterraneo/grafica-3d.md, «Le figure ancorate»): il cartello si allarga di un
+// pixel per lato e il pixel trasparente accanto a uno pieno diventa scuro; la luce di taglio viene dal lato del sole
+const CONTORNO = /* glsl */`
+  vec2 tMin = min(vRettA.xy, vRettA.xy + vRettA.zw) + uTexel, tMax = max(vRettA.xy, vRettA.xy + vRettA.zw) - uTexel;
+  float dentroC = step(tMin.x, vMapUv.x) * step(vMapUv.x, tMax.x) * step(tMin.y, vMapUv.y) * step(vMapUv.y, tMax.y);
+  vec4 sampledDiffuseColor = texture2D(map, clamp(vMapUv, tMin, tMax));
+  sampledDiffuseColor.a *= dentroC;
+  if (sampledDiffuseColor.a < 0.5) {
+    float vicini = 0.0;
+    for (int i = 0; i < 4; i++) {
+      vec2 d = i == 0 ? vec2(uTexel.x, 0.0) : i == 1 ? vec2(-uTexel.x, 0.0) : i == 2 ? vec2(0.0, uTexel.y) : vec2(0.0, -uTexel.y);
+      vec2 q = vMapUv + d;
+      float qd = step(tMin.x, q.x) * step(q.x, tMax.x) * step(tMin.y, q.y) * step(q.y, tMax.y);
+      vicini = max(vicini, texture2D(map, clamp(q, tMin, tMax)).a * qd);
+    }
+    if (vicini > 0.5) sampledDiffuseColor = vec4(0.06, 0.045, 0.04, 1.0);
+  }
+  diffuseColor *= sampledDiffuseColor;
+`
+const TAGLIO = /* glsl */`
+  outgoingLight += vec3(1.0, 0.92, 0.78) * pow(1.0 - clamp(abs(normal.z), 0.0, 1.0), 1.2) * max(0.0, dot(normalize(normal.xy + 1e-4), uSoleVista)) * uTaglio * diffuseColor.rgb;
+`
+
+// `pezzi`: nome → [x, y, w, h] nell'atlante (dati/atlante.js, PEZZI); `ombra`: se fanno ombra (l'eroe no: la torcia è sua);
+// `contorno`: il filo scuro attorno e la luce di taglio (le figure ancorate del mondo di sopra)
+export function creaFigure(scena, { tex, norm, larga, alta, pezzi, maschera, max, ombra = true, contorno = false }) {
   const geo = new PlaneGeometry(1, 1).translate(0, 0.5, 0)
   const rett = new Float32Array(max * 4), lampo = new Float32Array(max * 3), alfa = new Float32Array(max).fill(1)
   geo.setAttribute('aRett', new InstancedBufferAttribute(rett, 4))
@@ -31,18 +55,23 @@ export function creaFigure(scena, { tex, norm, larga, alta, pezzi, maschera, max
   const mat = conMaschera(new MeshStandardMaterial({
     map: tex, normalMap: norm, alphaTest: 0.5, side: DoubleSide, roughness: 0.75, metalness: 0,
   }), maschera, {
-    spinta: 0, chiave: 'figure',
+    spinta: 0, chiave: contorno ? 'figure-contorno' : 'figure',
     // né troppo buie né bruciate: fra il minimo e 1,3 volte il loro colore (il lampo del colpo, emissivo, resta sopra)
     prima: `
       outgoingLight = clamp(outgoingLight - totalEmissiveRadiance, diffuseColor.rgb * ${LUCE.minimoFigure.toFixed(2)}, diffuseColor.rgb * 1.3) + totalEmissiveRadiance;
-      outgoingLight += vec3(1.0, 0.82, 0.6) * pow(1.0 - clamp(abs(normal.z), 0.0, 1.0), 1.5) * ${LUCE.rim.toFixed(2)} * (0.4 + diffuseColor.rgb);`,
+      outgoingLight += vec3(1.0, 0.82, 0.6) * pow(1.0 - clamp(abs(normal.z), 0.0, 1.0), 1.5) * ${LUCE.rim.toFixed(2)} * (0.4 + diffuseColor.rgb);${contorno ? TAGLIO : ''}`,
     poi(sh) {
-      sh.vertexShader = ATTRIBUTI + sh.vertexShader.replace('#include <uv_vertex>', '#include <uv_vertex>\n' + VERTICE + 'vLampo = aLampo; vAlfa = aAlfa;')
+      sh.vertexShader = ATTRIBUTI + (contorno ? 'varying vec4 vRettA;\n' : '') + sh.vertexShader.replace('#include <uv_vertex>', '#include <uv_vertex>\n' + VERTICE + 'vLampo = aLampo; vAlfa = aAlfa;' + (contorno ? ' vRettA = aRett;' : ''))
+      if (contorno) {
+        Object.assign(sh.uniforms, U_CONTORNO)
+        sh.fragmentShader = 'varying vec4 vRettA;\nuniform vec2 uTexel;\nuniform vec2 uSoleVista;\nuniform float uTaglio;\n' + sh.fragmentShader.replace('#include <map_fragment>', CONTORNO)
+      }
       sh.fragmentShader = 'varying vec3 vLampo;\nvarying float vAlfa;\n' + sh.fragmentShader
         .replace('#include <clipping_planes_fragment>', '#include <clipping_planes_fragment>\n' + RETINA)
         .replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n totalEmissiveRadiance += vLampo * diffuseColor.rgb;')
     },
   })
+  const U_CONTORNO = { uTexel: { value: new Vector2(1 / larga, 1 / alta) }, uSoleVista: { value: new Vector2(-0.7, 0.7) }, uTaglio: { value: 0.9 } }
   const mesh = new InstancedMesh(geo, mat, max)
   mesh.count = 0
   mesh.frustumCulled = false
@@ -73,14 +102,16 @@ export function creaFigure(scena, { tex, norm, larga, alta, pezzi, maschera, max
       const { scala, specchio, rosso, verde, blu, bianco, trasparenza, cosa, giro, schiaccia } = opz
       const p = pezzi[nome]
       if (!p || n >= max) return -1
-      const [px, py, pw, ph] = p
+      let [px, py, pw, ph] = p
+      // col contorno il cartello prende un pixel in più per lato (il filo sta lì)
+      if (contorno) { px -= 1; py -= 1; pw += 2; ph += 2 }
       const u0 = (px + 0.01) / larga, u1 = (px + pw - 0.01) / larga
       const k = n * 4
       rett[k] = specchio ? u1 : u0; rett[k + 2] = specchio ? u0 - u1 : u1 - u0
       rett[k + 1] = 1 - (py + ph - 0.01) / alta; rett[k + 3] = (ph - 0.02) / alta
       lampo[n * 3] = bianco + rosso; lampo[n * 3 + 1] = bianco + verde; lampo[n * 3 + 2] = bianco + blu
       alfa[n] = trasparenza
-      pos.set(x, y, z)
+      pos.set(x, contorno ? y - ALLUNGA * scala * schiaccia / PIXEL_CELLA : y, z)
       q.setFromEuler(e.set(0, giro, 0))
       sc.set(pw / PIXEL_CELLA * scala, ph / PIXEL_CELLA * ALLUNGA * scala * schiaccia, 1)
       mesh.setMatrixAt(n, m.compose(pos, q, sc))
@@ -104,6 +135,8 @@ export function creaFigure(scena, { tex, norm, larga, alta, pezzi, maschera, max
       return null
     },
     colore: c,
+    // la luce di taglio: il verso del sole nello spazio della telecamera (x, y), e quanta
+    taglio(x, y, quanta = 0.9) { U_CONTORNO.uSoleVista.value.set(x, y).normalize(); U_CONTORNO.uTaglio.value = quanta },
     via() { scena.remove(mesh); geo.dispose(); mat.dispose(); if (mesh.customDepthMaterial) mesh.customDepthMaterial.dispose() },
   }
 }
