@@ -5,6 +5,7 @@ senza fondo sotto le sette discese. Il codice sta in `src/giochi/sotterraneo/`.
 
 - [presentazione.md](presentazione.md) — per chi arriva da fuori: cos'è, cosa allena, note per i genitori
 - [chi-cura.md](chi-cura.md) — la guaritrice e l'incantatrice curano gratis chi è salito dal portale (vita e energia), chiamano con un fumetto sopra la testa; salire non cura da sé
+- [pensieri.md](pensieri.md) — i pensieri dell'eroe: un fumetto sopra la testa, ogni tanto, che dice come sta e cosa vorrebbe («vorrei tanto una torcia, qui sotto»), su misura della sua strada; mai ordini, mai giudizi sull'oggetto; la tabella con le condizioni, il ritmo (al più tre a giro), il tocco che accende il segno, come si aggiunge un pensiero
 - [terra-di-sopra.md](terra-di-sopra.md) — la mappa da cui si scende: la vista che segue l'eroe, la maschera di dove si cammina e come si corregge, le discese sui posti, chi indica la strada, i mercanti, la nebbia, il portale gemello, le icone delle discese, la partenza nel villaggio
 - [terra-strumento.md](terra-strumento.md) — lo strumento che fa la terra di sopra dal foglietto: la giunta fra le due metà, la maschera, le icone delle discese
 - [regole.md](regole.md) — la discesa: scala e guardiano, quanto costa in domande, gli abitanti di ogni posto, la stanza come confine, lo scontro, gli svenimenti
