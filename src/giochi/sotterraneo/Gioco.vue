@@ -76,6 +76,7 @@ import './stile.css'
 import './stile-scontro.css'
 import './stile-effetti.css'
 import './tema/legno.css'
+import './tema/barra.css'
 import './tema/rilievo.css'
 import { usaTema, ATTRIBUTO } from './tema/tema.js'
 

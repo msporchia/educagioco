@@ -17,6 +17,20 @@ export const ATTRIBUTO = { attuale: null, legno: 'legno', rilievo: 'legno riliev
 
 export const tema = ref('attuale')
 let letto = false
+// i globi della barra col tema (docs/sotterraneo/barra.md, «I globi vivi»): '2d' la strada A, '3d' la strada B (WebGL),
+// col cheat `#globi=3d|2d`; si ricorda come il tema
+const CHIAVE_GLOBI = 'sotterraneo-globi'
+export const globi = ref('2d')
+let lettiGlobi = false
+async function leggiGlobi() {
+  let h = null
+  try { h = new URLSearchParams(location.hash.slice(1)).get('globi') } catch { h = null }
+  if (h === '2d' || h === '3d') { globi.value = h; save(CHIAVE_GLOBI, { globi: h }); return }
+  if (lettiGlobi) return
+  lettiGlobi = true
+  const c = await load(CHIAVE_GLOBI)
+  if (c && (c.globi === '2d' || c.globi === '3d')) globi.value = c.globi
+}
 
 function dallIndirizzo() {
   try { return new URLSearchParams(location.hash.slice(1)).get('tema') } catch { return null }
@@ -24,6 +38,7 @@ function dallIndirizzo() {
 
 // l'indirizzo vince e si ricorda; senza, quello ricordato. Mai il valore nudo: storage.js scarta i `true` soli
 export async function leggiTema(predefinito = 'attuale') {
+  leggiGlobi()
   const h = temaDi(dallIndirizzo())
   if (h) {
     tema.value = h
