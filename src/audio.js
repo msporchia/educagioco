@@ -8,10 +8,29 @@ export const acceso = ref(true)
 export function contesto() {
   try {
     AC = AC || new (window.AudioContext || window.webkitAudioContext)()
-    if (AC.state === 'suspended') AC.resume()
+    // `interrupted` è di iOS (una telefonata, lo schermo spento): anche lui si risveglia al tocco
+    if (AC.state !== 'running') AC.resume().catch(() => {})
     return AC
   } catch (e) { return null }
 }
+
+/** Com'è il contesto adesso, senza crearlo: per il registro (audio-log.js). */
+export function statoContesto() {
+  if (!AC) return null
+  return { stato: AC.state, campionamento: AC.sampleRate,
+           latenza: [AC.baseLatency, AC.outputLatency].map(n => (n == null ? '?' : n.toFixed(3))).join('/') }
+}
+
+// iPhone: col tasto del silenzioso attivo il Web Audio resta muto, a meno di dichiararsi «playback»
+try { if (typeof navigator !== 'undefined' && navigator.audioSession) navigator.audioSession.type = 'playback' } catch { /* non c'è */ }
+
+// il primo tocco crea e risveglia il contesto: la pronuncia che parte da sola dopo 260 ms
+// non è un gesto, e su un telefono un contesto nato fuori da un tocco resta muto
+if (typeof window !== 'undefined')
+  window.addEventListener('pointerdown', function sblocca() {
+    if (!contesto()) return
+    if (AC.state === 'running') window.removeEventListener('pointerdown', sblocca)
+  }, { passive: true })
 
 function nota(f1, f2, dur, tipo = 'triangle', vol = 0.14, ritardo = 0) {
   if (!acceso.value) return

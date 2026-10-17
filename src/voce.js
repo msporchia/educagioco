@@ -2,6 +2,7 @@
 import { SPRITE as SPRITE_EN, INDICE as INDICE_EN } from './data/voci.js'
 import { SPRITE as SPRITE_ES, INDICE as INDICE_ES } from './data/voci-es.js'
 import { acceso, contesto } from './audio.js'
+import { nota, guasto } from './audio-log.js'
 
 const VOCI = {
   en: { sprite: SPRITE_EN, indice: INDICE_EN },
@@ -38,14 +39,15 @@ async function prendiSprite(lingua, nome) {
 
   const ac = contesto()
   const sprite = vocabolario(lingua).sprite[nome]
-  if (!ac || !sprite) return null
+  if (!ac) { guasto('voce:' + lingua, 'AudioContext non disponibile'); return null }
+  if (!sprite) { guasto('voce:' + lingua, 'sprite mancante ' + nome); return null }
   const lavoro = byteDi(sprite).then(b => ac.decodeAudioData(b)).then(buf => {
     decodificati.set(id, buf)
     while (decodificati.size > QUANTI_TENERNE)
       decodificati.delete(decodificati.keys().next().value)
     inCorso.delete(id)
     return buf
-  }).catch(() => { inCorso.delete(id); return null })
+  }).catch(e => { inCorso.delete(id); guasto('voce:' + lingua, 'decodifica di ' + nome + ' fallita', e); return null })
   inCorso.set(id, lavoro)
   return lavoro
 }
@@ -61,24 +63,41 @@ export function prepara(parole, lingua = 'en') {
   }
 }
 
+// un contesto sospeso non suona e `resume()` può non rispondere mai: si aspetta poco
+async function sveglia(ac) {
+  if (ac.state === 'running') return true
+  try { await Promise.race([ac.resume(), new Promise(r => setTimeout(r, 700))]) } catch { /* lo dice lo stato */ }
+  return ac.state === 'running'
+}
+
 export async function pronuncia(parola, lingua = 'en') {
   const voce = vocabolario(lingua).indice[parola]
   if (!voce || !acceso.value) return
   const [nome, inizio, durata] = voce
   const ac = contesto()
-  if (!ac) return
+  if (!ac) { guasto('voce:' + lingua, 'AudioContext non disponibile'); return }
   const buf = await prendiSprite(lingua, nome)
   if (!buf || !acceso.value) return
+  if (!(await sveglia(ac))) guasto('voce:' + lingua, 'contesto non attivo (' + ac.state + ') per ' + parola)
 
   zittisci()
-  const src = ac.createBufferSource()
-  src.buffer = buf
-  const g = ac.createGain()
-  g.gain.value = 1
-  src.connect(g); g.connect(ac.destination)
-  src.start(0, inizio, durata + 0.06)   // margine in coda: il taglio secco mangia la fine della parola
-  ultima = src
-  src.onended = () => { if (ultima === src) ultima = null }
+  try {
+    const src = ac.createBufferSource()
+    src.buffer = buf
+    const g = ac.createGain()
+    g.gain.value = 1
+    src.connect(g); g.connect(ac.destination)
+    src.start(0, inizio, durata + 0.06)   // margine in coda: il taglio secco mangia la fine della parola
+    ultima = src
+    src.onended = () => { if (ultima === src) ultima = null }
+    nota('pronuncia', `${lingua}:${parola} · ${ac.state}`)
+    // l'orologio del contesto che non avanza vuol dire uscita audio ferma, e nessun errore lo dice
+    const t0 = ac.currentTime
+    setTimeout(() => {
+      if (ac.state === 'running' && ac.currentTime === t0)
+        guasto('voce:' + lingua, 'orologio audio fermo mentre si pronunciava ' + parola)
+    }, 500)
+  } catch (e) { guasto('voce:' + lingua, 'avvio della pronuncia fallito per ' + parola, e) }
 }
 
 export function zittisci() {
