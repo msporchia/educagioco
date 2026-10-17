@@ -6,6 +6,7 @@
 import { ref, shallowRef, computed, reactive, watch, onMounted, onBeforeUnmount, onUnmounted } from 'vue'
 import Barra from '../../components/Barra.vue'
 import TastoSalta from '../../components/TastoSalta.vue'
+import NonSiSente from '../../components/NonSiSente.vue'
 import { suono } from '../../audio.js'
 import { state, item, answer, segna, persist, flushNow, engProgresso, tuttoAperto, etaDelBambino }
   from '../../store/profile.js'
@@ -517,6 +518,9 @@ const conNo = () => { if (bolla.value && bolla.value.chiede) bolla.value = null 
 // rispondere chiude la domanda rimasta aperta: a quel punto guardare è gratis
 watch([esito, libroRisposta], () => conNo())
 
+// la domanda in cui la voce serve davvero: ascolto, o parola da sentire
+const dipendeDalSuono = computed(() => !!(d.value && suono.acceso.value && ((d.value.domanda && d.value.domanda.ascolta) || parla.value)))
+
 function ascolta() {
   const q = d.value
   if (!q || q.genere !== 'parola') return
@@ -589,6 +593,9 @@ onUnmounted(() => { clearTimeout(bollaTimer); zittisci() })
                :attesa="attesa" :giro="giro" :parla="parla"
                @opzione="i => rispondi(d.opzioni[i], i)" @metti="metti" @togli="togli"
                @consegna="rispondi(F.risposta(fila), null)" @tocca="tocca" @ascolta="ascolta" />
+      <!-- col suono rotto o dove non si può far rumore: docs/lingue/voce.md -->
+      <NonSiSente v-if="!pagina && !esito && dipendeDalSuono" lingua="en"
+                  @riprova="ascolta" @senza="prossima" />
       <!-- per provare i giochi: la leva di #admin, docs/core/comandi.md -->
       <TastoSalta v-if="!pagina && !esito" @salta="rispondi(null, null, { saltata: true })" />
     </div>

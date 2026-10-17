@@ -18,6 +18,7 @@ import { sosta, salvaSosta, buttaSosta } from '../giochi/campagne.js'
 import { scrivi as scriviSosta, leggi as leggiSosta, dice as diceSosta, chiaveSosta } from '../motore/lingua/sosta.js'
 import Barra from '../components/Barra.vue'
 import TastoSalta from '../components/TastoSalta.vue'
+import NonSiSente from '../components/NonSiSente.vue'
 import Ripresa from '../giochi/Ripresa.vue'
 
 // `libero`: aperto dall'inglese a mondi, solo per il gioco libero di chi l'aveva (docs/lingue/mondi.md)
@@ -121,7 +122,7 @@ function nuovoTurno() {
     const tipo = scegliTipo(v, {
       aperti: tappa.value.tipi,
       forza: strength(item(chiave), Date.now()),
-      haVoce: p => haVoce(p, L.id),
+      haVoce: p => suono.acceso.value && haVoce(p, L.id),
     })
     if (!tipo) continue
     turno.value = componi(v, tipo, L.nome)
@@ -458,6 +459,9 @@ onUnmounted(() => { clearTimeout(timerId); zittisci() })
           {{ o.testo }}
         </button>
       </div>
+
+      <NonSiSente v-if="turno && !svelato && suono.acceso.value && turno.domanda.ascolta" :lingua="L.id"
+                  @riprova="riascolta" @senza="nuovoTurno" />
 
       <TastoSalta v-if="turno && !svelato"
                   @salta="rispondi(turno.opzioni.find(x => x.giusta), { saltata: true })" />
