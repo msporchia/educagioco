@@ -106,7 +106,7 @@ function quando (iso) {
 
 async function copiaGuasti () {
   const testo = incidenti.value.map(g =>
-    `${g.quando} · ${g.dove} · ${g.versione}\n${g.testo}\n${g.pila || ''}`).join('\n\n')
+    `${g.quando} · ${g.dove} · ${g.versione}\n${g.testo}\n${g.pila || (g.dettagli || []).join('\n')}`).join('\n\n')
   try {
     await navigator.clipboard.writeText(testo)
     esito.value = { ok: true, testo: 'Copiato negli appunti.' }
@@ -790,7 +790,8 @@ async function rimetti(v) {
       <!-- solo se c'è qualcosa da dire: vedi docs/core/guasti.md -->
       <template v-if="incidenti.length">
         <h2>Se qualcosa si è rotto</h2>
-        <p class="mini">Gli errori che il gioco si è annotato da solo, con l'ora e la
+        <p class="mini">Gli errori che il gioco si è annotato da solo (anche l'audio che non
+          parte, o il «non si sente» toccato dal bambino), con l'ora e la
           versione: servono a capire cos'è successo su un telefono che non è il tuo.</p>
 
         <div class="carte">

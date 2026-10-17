@@ -47,3 +47,32 @@ npm run voci -- --tutto                   reincide da capo
   Cambiando voce o velocità la cache si invalida e si rifà tutto.
 - **Se in coda dice «non incise: …», si rilancia lo stesso comando**:
   capita quando il servizio taglia le ultime richieste di una serie lunga.
+
+## Quando non si sente
+
+Il browser non dice se il volume del telefono è a 0 o se si è in silenzio:
+non si può saperlo, quindi non lo si indovina. Si fa così:
+
+- **Un tasto sempre a portata** (`components/NonSiSente.vue`), sotto ogni
+  domanda che dipende dalla voce (ascolto, parola da sentire; non nelle
+  frasi in cui la voce non serve). «🔇 non posso ascoltare» apre due strade:
+  **«Continua senza audio»** spegne il suono del profilo (come il 🔊 in barra)
+  e il gioco cambia domanda — da lì le domande in ascolto non escono più;
+  **«Non si sente: riprova»** scrive nel registro e ripete la parola.
+- **Il registro** (`src/audio-log.js`): scrive nel libretto dei guasti
+  (`incidenti`, vedi [../core/guasti.md](../core/guasti.md)), una cosa sola
+  per i grandi: ogni guasto visto da `voce.js` (nessun
+  `AudioContext`, decodifica fallita, contesto non `running` dopo
+  `resume()`, orologio audio fermo mezzo secondo dopo l'avvio) e ogni
+  pressione di «non si sente», con lo stato del contesto, il browser e gli
+  ultimi 24 fatti. Si legge e si copia da *Genitori → Se qualcosa si è rotto*; le righe in
+  più stanno in `dettagli` e vanno nella copia.
+- **iPhone col silenzioso**: `navigator.audioSession.type = 'playback'` (Safari 16.4+) fa
+  suonare l'audio anche col tasto laterale attivo; altrove il silenzio non si può rilevare.
+- **Il primo tocco sveglia il contesto** (`audio.js`): la pronuncia che parte
+  da sola dopo 260 ms non è un gesto, e un contesto nato fuori da un tocco su
+  telefono resta `suspended`/`interrupted`. È l'ipotesi principale delle
+  tracce che non partono; il registro dirà se è quella.
+- Una domanda in ascolto non esce mai a suono spento (`haVoce` lo sa in tutti
+  e tre i giochi di lingua).
+- Nei test: `[data-azione="non-si-sente"]`, `nss-riprova`, `nss-senza`.
