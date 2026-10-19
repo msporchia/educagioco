@@ -53,9 +53,26 @@ c'è «Copia»); «Rifai» ripete. Un pezzo che il telefono non regge (la tela h
    rapporto riga per riga: vicino a 1 quella parte è imitata bene, lontano no (e allora per quella parte il computer non
    vale come telefono: si misura sul telefono).
 
-Provato il 19 ottobre 2026 senza telefono (solo che il giro funzioni): sulla RTX con CPU ×5 il pavimento è 4 ms a scena e tutto
-il resto sta sotto, a parte le 400 chiamate: la GPU del computer è tanto più forte che senza la zavorra non somiglia a un
-telefono.
+Le misure vere stanno in `strumenti/vecchio-telefono/log/` (Redmi Note 7, Pixel 9a, iPhone 12 Pro Max), e il `profilo.json` è tarato
+sul Redmi: CPU ×2,9, zavorra 16. **Quanto somiglia**: il rapporto computer/telefono sta fra 0,8 e 1,2 per pixel semplici,
+triangoli, chiamate, ombre e passaggio finale; **non somiglia** per gli shader pesanti (×0,36: la RTX li mangia) e le
+sfumature a schermo intero (×0,3), e il pavimento di un fotogramma è più alto (la zavorra costa CPU: JS ×1,56). Quindi il
+simulatore va bene per confrontare un degrado con la versione di prima su geometria, chiamate e pixel; per nebbia, esplosioni
+e sfumature vale il log del telefono vero.
+
+## Cosa dice il Note 7 (19 ottobre 2026)
+
+Contro un Pixel 9a (ms per scena): CPU 4,3 volte più lenta (469 contro 108); shader pesante 20,6 contro 5,9; 1200 scintille
+23,7 contro 7,6; 8 strati a schermo intero a pixel ratio vero 26,9 contro 9,1; 400 chiamate 19,6 contro 9. Pixel semplici,
+triangoli e passaggio finale solo il doppio. L'iPhone 12 Pro Max (pixel ratio 3) paga comunque 22 ms le sfumature a schermo intero.
+
+**Il perché degli Asteroidi 3D** (da `grafica/spazio3d/`): parte a pixel ratio 2 (`DPR_START`), fino a 1400 scintille additive
+più 400 di fumo fino a ~50 px, dipinte su una tela half-float e poi un passaggio finale a schermo intero con tre letture
+della tela e la grana. Sul Note 7 le sole scintille a pixel ratio 1,5 costano già 24 ms e a 2 sono ~1,8 volte i pixel: da
+sole oltre il fotogramma. Il gioco abbassa il pixel ratio solo dopo 90 fotogrammi lenti, a passi di ×0,85: durante
+un'esplosione non fa in tempo. **Sul Sotterraneo** il guaio probabile è la nebbia (shader pesante a tutto schermo) e l'ombra
+(15 ms a mappa 1024). Sono ipotesi da confermare togliendo il pezzo (`&spegni=nebbia,post` nel Sotterraneo 3D).
+
 
 ## Misurare
 

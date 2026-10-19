@@ -22,7 +22,7 @@ import { chromium } from 'playwright'
 
 const QUI = dirname(fileURLToPath(import.meta.url))
 const PROFILO = resolve(QUI, 'vecchio-telefono/profilo.json')
-const SCHERMO = { width: 393, height: 851 }, PIXEL = 2.75   // il Redmi Note 7: 1080×2340
+const SCHERMO = { width: 392, height: 774 }, PIXEL = 2.75   // il Redmi Note 7 visto da Chrome (la misura del 19/10: 392×774)
 const UA = 'Mozilla/5.0 (Linux; Android 10; Redmi Note 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Mobile Safari/537.36'
 const STIMA = { cpu: 6, zavorra: 4 }
 const SCALINI = [0, 1, 2, 4, 8, 16, 32, 64, 128, 256]
