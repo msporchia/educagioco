@@ -9,7 +9,7 @@
    al bordo, che il fumetto si apra sulla discesa e che una chiusa non
    faccia scendere, che il minatore parli, e che la nebbia si ricordi
    uscendo e rientrando. Si parte nel villaggio (docs/sotterraneo/
-   la-grande-storia.md), e la prima discesa è la cripta dell'altare.
+   la-grande-storia.md), e la prima discesa è la cripta dei re.
 
    I tocchi sono tocchi (`Input.dispatchTouchEvent` via CDP): il click che
    il dito si lascia dietro è proprio quello che apre il fumetto, e un
@@ -102,7 +102,7 @@ for (let n = 0; n < 4 && !(await page.locator('[data-dialogo] [data-detto]').cou
   await attendi(page, 360); await toccaIl('[data-dialogo-testo]')
 }
 const detto = await page.locator('[data-detto]').innerText()
-controlla('il minatore dice dove sta la prossima discesa', detto.includes('La cripta dell\'altare') && detto.includes('altare'), detto)
+controlla('il minatore dice dove sta la prossima discesa', detto.includes('La cripta dei re') && detto.includes('altare'), detto)
 controlla('e non parla più di sassi', !detto.includes('sassi'))
 {
   const [x, y] = (await cella()).split(',').map(Number)
@@ -127,7 +127,7 @@ await vaiA(POSTI.arco.piede)
 await toccaIl('[data-posto="arco"]')
 await page.waitForSelector('[data-fumetto-di="arco"]', { timeout: 15000 })
 const chiusa = await page.locator('[data-chiusa-perche]').innerText()
-controlla('la chiusa dice cosa la apre', chiusa.includes('la cripta dell\'altare'), chiusa)
+controlla('la chiusa dice cosa la apre', chiusa.includes('la cripta dei re'), chiusa)
 uguale('e non ha il tasto per scendere', await page.locator('[data-fumetto] [data-azione="scendi"]').count(), 0)
 // la discesa chiusa ha il disegno pulito (niente velo): il divieto compare quando l'eroe ci arriva, davanti all'ingresso
 uguale('arrivato, davanti alla discesa chiusa c\'è il cartello di divieto', await page.locator('[data-divieto="arco"] svg').count(), 1)
@@ -184,7 +184,7 @@ await toccaIl('[data-discesa="0"]')
 await page.waitForSelector('[data-fumetto-di="altare"] [data-azione="scendi"]', { timeout: 15000 })
 uguale('l\'eroe si ferma ai piedi dell\'altare', await cella(), POSTI.altare.piede.join(','))
 const fum = await page.locator('[data-fumetto]').innerText()
-controlla('il fumetto dice nome, dritta e piani', fum.includes('La cripta dell\'altare') && fum.includes('qualcuno che non dorme')
+controlla('il fumetto dice nome, dritta e piani', fum.includes('La cripta dei re') && fum.includes('qualcuno che non dorme')
           && fum.includes('2 piani'), fum)
 // niente targhette con disegnini sopra le discese: un pallino per terra davanti a quelle trovate e aperte
 uguale('sopra le discese non ci sono icone', await page.locator('[data-posto] .em').count(), 0)

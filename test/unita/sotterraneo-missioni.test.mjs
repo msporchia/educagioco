@@ -277,7 +277,7 @@ const palestra = (eroe, k) => new Corredo({ eroe, roba: robaAttesa(eroe, k, { po
   stessaLista('da fare: il goblin e le chiavi', d.inMano.map(v => v.id).sort(), ['chiavi', 'goblin'])
   const chiavi = d.inMano.find(v => v.id === 'chiavi')
   uguale('le chiavi sono fatte: si torna dalla guardia', chiavi.tornaDa, 'dalla guardia della torre')
-  controlla('con la discesa e il piano', chiavi.dove === 'La torre in rovina' && chiavi.piano === 3 && chiavi.discesa === 'torre')
+  controlla('con la discesa e il piano', chiavi.dove === 'La torre bruciata' && chiavi.piano === 3 && chiavi.discesa === 'torre')
   controlla('e il premio', chiavi.premio === '💎 20')
   const goblin = d.inMano.find(v => v.id === 'goblin')
   stessaLista('le fatte da consegnare sono a parte, in cima: le chiavi', d.pronte.map(v => v.id), ['chiavi'])

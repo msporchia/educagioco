@@ -25,6 +25,14 @@ conti: i mostri picchiano, le pozioni finiscono, e chi non ha gemme non resta bl
 - **Il 🧪 di sopra** con la vita sotto il massimo dice «la guaritrice ti cura, gratis» invece di «sei già in piena forma».
 - **Il giocatore finto** (`motore/banco.js`, le risalite) risale, compra e ritorna giù a vita e energia piene: la guaritrice è
   parte del giro. Le soglie con cui risale (`RISALITA`) non le ha toccate: la taratura va rifatta con questa regola.
+- **La fontana.** Nel mondo 3D le città hanno chi cura come sopra (la guaritrice la vita, l'incantatrice l'energia), ma il forte del
+  guado ha la guaritrice e non l'incantatrice: lì, al posto del pozzo della piazza, c'è la **fontana**, che cura vita ed energia insieme,
+  gratis e senza limiti, a chi è salito dal portale. La regola vale per ogni città: dove manca una delle due c'è l'acqua (`hoLaFontana`,
+  `motore/mondo-sopra.js`). Non ha un dialogo: si tocca, l'eroe ci va e un fumetto dice «L'acqua è chiara e fresca…» col tasto «bevo»
+  (`FONTANA` in `dati/dialoghi.js`); bevendo la sosta si scrive a vita ed energia piene (`curaDa('tutto')` in `Gioco.vue`) e sopra l'eroe
+  salgono i due numeri («+13 ❤️ +7 ⚡», `[data-cura-fiocco][data-risorsa="tutto"]`). Chi è ammaccato la sente chiamare come la guaritrice:
+  un fumetto celeste sopra la sua testa (`[data-richiamo-di="fontana"]`) finché serve, che tace mentre è aperta. In forze, il fumetto lo dice
+  e non c'è il tasto. Il modello: [mondo-3d.md](mondo-3d.md#il-capitano-e-la-fontana).
 - **Provato e scartato**: una finestra o una domanda che si apre da sola all'arrivo (contro
   [../core/interfaccia.md](../core/interfaccia.md#un-tocco-altrove-chiude): niente che copra il gioco senza essere chiamato);
   curare salendo dal portale (toglieva il senso alla guaritrice e il motivo di tornare su); una cura a pagamento (chi non ha
@@ -33,4 +41,4 @@ conti: i mostri picchiano, le pozioni finiscono, e chi non ha gemme non resta bl
 
 Nei test: `[data-richiamo]` (con `data-richiamo-di`), `[data-cura-fiocco]` (con `data-risorsa`), la domanda `[data-scelta="cura"]`,
 `[data-riga][data-cura]` e `[data-riga][data-in-forze]`; `unita/sotterraneo-dialoghi` (la domanda, il suo posto, il fumetto),
-`unita/sotterraneo-sosta` (salendo non si guarisce, `forzeDi`), `integrazione/sotterraneo-cura` (il giro intero col dito).
+`unita/sotterraneo-sosta` (salendo non si guarisce, `forzeDi`), `integrazione/sotterraneo-cura` (il giro intero col dito); la fontana: `[data-fontana]`, `[data-fumetto-di="fontana"]`, `[data-azione="bevi"]`, `unita/sotterraneo-citta`, `integrazione/sotterraneo-mondo`.

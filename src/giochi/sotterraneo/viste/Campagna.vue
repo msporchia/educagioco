@@ -109,7 +109,7 @@ function comincia() {
       </template>
     </component>
 
-    <Diario v-if="diarioAperto" :stati="missioni" :conti="conti" :tappe="tappe" :segui="segui" :punti="punti" :punti-abilita="puntiAbilita"
+    <Diario v-if="diarioAperto" :stati="missioni" :conti="conti" :tappe="tappe" :segui="segui" :punti="punti" :punti-abilita="puntiAbilita" :mondo="in3d"
             @scheda="s => $emit('scheda', s)" @chiudi="diarioAperto = false"
             @segui="id => $emit('segui', id)" @vai="vaDa" @fuori="fuoriDalDiario" />
 

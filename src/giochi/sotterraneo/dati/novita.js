@@ -17,7 +17,7 @@ export const NOVITA_DI = {
     reazioni: [
       { finite: 0, pagine: ['Non sei ancora sceso. Va bene: la prima porta perdona chi la prende con calma.'] },
       { finite: [1, 6], pagine: ['Ho sentito cadere {boss}: il pavimento ha tremato fin qui.', 'Ora tocca a {discesa}.'] },
-      { finite: 7, pagine: ['La mia miniera, in pace. Non pensavo di rivederla.', 'Resta il pozzo vecchio. Quello non l\'ho scavato io: era già lì.'] },
+      { finite: 7, pagine: ['Le mie miniere, in pace. Non pensavo di rivederle.', 'Resta il pozzo senza fondo. Quello non l\'ho scavato io: era già lì.'] },
       { livello: [5, 9], pagine: ['Hai il passo di chi sa dove mette i piedi. Si vede.'] },
       { livello: [10, 99], pagine: ['Ormai, quando scendi, la roccia ti conosce.'] },
     ],

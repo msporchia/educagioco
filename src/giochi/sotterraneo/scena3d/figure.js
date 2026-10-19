@@ -96,6 +96,7 @@ export function creaFigure(scena, { tex, norm, larga, alta, pezzi, maschera, max
   const chi = new Array(max).fill(null)   // istanza → la cosa del motore che disegna (per il dito), o null
   const m = new Matrix4(), pos = new Vector3(), q = new Quaternion(), e = new Euler(), sc = new Vector3(), c = new Color()
   let n = 0
+  const sale = (a, k) => { a.clearUpdateRanges(); a.addUpdateRange(0, n * k); a.needsUpdate = true }
   // le scelte di una figura, in un oggetto solo riusato (niente allocato a fotogramma): `o()` lo rimette com'era
   const O = { scala: 1, specchio: false, rosso: 0, verde: 0, blu: 0, bianco: 0, trasparenza: 1, cosa: null, giro: 0, schiaccia: 1 }
   return {
@@ -137,10 +138,11 @@ export function creaFigure(scena, { tex, norm, larga, alta, pezzi, maschera, max
     // l'altezza a schermo di un pezzo (in celle, coi piedi a terra): serve a mettere sopra la testa nomi e barre
     alto(nome, scala = 1) { const p = pezzi[nome]; return p ? p[3] / PIXEL_CELLA * ALLUNGA * scala : 1 },
     largo(nome, scala = 1) { const p = pezzi[nome]; return p ? p[2] / PIXEL_CELLA * scala : 1 },
+    // in GPU va solo la parte usata (`n` istanze delle `max`): senza, a ogni fotogramma partivano 70 kB anche per trenta figure
     chiudi() {
       mesh.count = n
-      mesh.instanceMatrix.needsUpdate = true
-      geo.attributes.aRett.needsUpdate = true; geo.attributes.aLampo.needsUpdate = true; geo.attributes.aAlfa.needsUpdate = true
+      if (!n) return
+      sale(mesh.instanceMatrix, 16); sale(geo.attributes.aRett, 4); sale(geo.attributes.aLampo, 3); sale(geo.attributes.aAlfa, 1)
     },
     // il dito: quale istanza sta sotto il raggio (la cosa che disegna), o null
     trova(raggio) {

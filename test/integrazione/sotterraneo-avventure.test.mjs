@@ -156,7 +156,7 @@ uguale('quella del cavaliere è cominciata',
 controlla('e dice a che punto è: discese, stelle, gemme', schedaCav.includes('1 di 7') && schedaCav.includes('⭐ 3')
           && schedaCav.includes('💎 60'), schedaCav)
 controlla('la roba principale addosso', await page.locator('.sot-eroe[data-eroe="cavaliere"] [data-addosso="spada"]').count() === 1)
-controlla('e la discesa a metà', schedaCav.includes('a metà: la scalinata antica'), schedaCav)
+controlla('e la discesa a metà', schedaCav.includes('a metà: le cantine dei goblin'), schedaCav)
 controlla('col pozzo ritagliato dalla mappa, non un\'emoji',
           await page.locator('.sot-eroe[data-eroe="cavaliere"] [data-a-meta] [data-ritaglio]').count() === 1)
 // la roba del seme: spada (braccio 2) e corazza (difesa 2) sopra i 18 · 3 · 1 di base del cavaliere
@@ -211,7 +211,7 @@ await attendi(page, 5200)   // sotto i cinque secondi non è una partita (store/
 await toccaIl('[data-pausa] [data-azione="esci"]')   // il velo copre anche la ✕: da lì si esce senza ripartire
 await page.waitForSelector('.carte', { timeout: 5000 })
 uguale('in home si riprende il sotterraneo', await page.locator('[data-riprendi]').getAttribute('data-riprendi'), 'sotterraneo')
-controlla('e dice la discesa a metà', (await page.locator('[data-riprendi]').innerText()).includes('scalinata antica'),
+controlla('e dice la discesa a metà', (await page.locator('[data-riprendi]').innerText()).includes('cantine dei goblin'),
           await page.locator('[data-riprendi]').innerText())
 uguale('con il pozzo ritagliato dalla mappa al posto della copertina',
        await page.locator('[data-riprendi] [data-ritaglio]').count(), 1)

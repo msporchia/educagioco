@@ -28,13 +28,13 @@ freccia), `motore/dialoghi.js` (`strada`).
   numero delle missioni da consegnare ([missioni.md](missioni.md)), non si prende né si consegna.
   È sempre lì, in cima.
 - **Finite le sette**, il
-  diario dice che è compiuta e lascia il pozzo vecchio: da lì in poi le zone
+  diario dice che è compiuta e lascia il pozzo senza fondo: da lì in poi le zone
   ([zone.md](zone.md)).
 
 ## Il diario
 
 In cima, sotto «La storia», una scheda d'oro: il titolo, «Porta 3 di 7 · La
-torre in rovina» e una freccina che pulsa con «Batti Fiammetta, in fondo». Un
+torre bruciata» e una freccina che pulsa con «Batti Fiammetta, in fondo». Un
 tocco apre il dettaglio: il minatore col suo detto, la discesa ritagliata
 dalla mappa con come arrivarci (`LUOGHI`), il mostro da battere, **«segui
 questa»** e **«vai alla discesa»** (l'eroe ci va e si apre il fumetto; giù,
@@ -54,7 +54,7 @@ chiusa. Titolo e testi non sono nel codice delle viste: vengono da `STORIA`.
   qui, in fondo aspetta Re Ossuto» sulla discesa di adesso, «la porta è
   chiusa: Re Ossuto è caduto» su quelle finite, e una discesa chiusa dice cosa
   la apre, **battere il grosso della precedente**, non fare missioni («Si apre
-  quando batti Re Ossuto in fondo alla cripta dell'altare»). Il grigio non è
+  quando batti Re Ossuto in fondo alla cripta dei re»). Il grigio non è
   chiuso: il pallino grigio vuol dire «ormai sei più forte di tutto, rende
   poco», e il minatore lo dice ([zone.md](zone.md#il-pallino-e-la-sentinella)).
 - **Il minatore** la dice ogni volta che si apre il suo dialogo (la pagina

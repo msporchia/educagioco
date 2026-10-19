@@ -28,6 +28,8 @@ export const LUCE = {
   // (radianti), la luce che rimbalza dal pavimento e il chiarore caldo per terra (docs/sotterraneo/grafica-3d.md)
   torcia: { alone: 0.35, cono: 0.5, lungoAlone: 5, lungoCono: 9, apre: 0.3, rimbalzo: 2.5, chiarore: 0.07 },
   ombra: 0.75,           // le ombre non sono mai nere
+  palco: 5,              // la luce calda dello scontro; senza (fascia bassa) l'emisferica cresce di tanto
+  palcoAmbiente: 0.35,
 }
 
 export const ALTO_MURO = 1.25
@@ -52,11 +54,19 @@ export const DPR = { max: 1.5, min: 0.6, lento: 26, svelto: 15 }   // `max` è q
 // sola. Un domani un telefono che non regge si aggiusta qui, senza cercare i pezzi nei file
 export const ACCESI = {
   ombre: true,       // l'ombra del cono (una passata sola)
+  ombraMappa: 1024,  // il lato della sua mappa
+  ombraOgni: 1,      // ogni quanti fotogrammi si ridisegna (2: a fotogrammi alterni)
   nebbia: true, polvere: true, scintille: true, fiamme: true,
+  ottaveNebbia: 4,   // gli strati di rumore di ogni pixel di nebbia
+  quanteScintille: 1,   // quante delle scintille chieste partono davvero (0,5: una su due)
   acqua: true,       // lo shader dell'acqua (fontana e pozze); spento resta un piano scuro
   post: true,        // il passaggio finale (vignetta, colore, grana, scossa); spento si disegna dritto sullo schermo
   botti: true,       // le botti di decoro
   arredo: true,      // l'arredo modellato del paesaggio (scena3d/arredo3d.js)
+  // le luci puntiformi: ognuna costa a ogni pixel di ogni materiale anche spenta (three le conta tutte), quindi si tolgono dalla scena
+  fuochi: N_FUOCHI,  // quante luci della riserva dei fuochi
+  lampi: true,       // spento: lampo e magia sono una luce sola, e il rimbalzo della torcia non c'è
+  palco: true,       // la luce calda dello scontro; spenta, la schiarita la fa l'emisferica
 }
 
 // La fascia grafica del telefono (store/qualita.js) decide quali pezzi di ACCESI restano: si riparte dai valori scritti sopra
@@ -64,7 +74,11 @@ export const ACCESI = {
 const ORIGINALI = { ...ACCESI }
 export function applicaFascia(spegniAMano = []) {
   Object.assign(ACCESI, ORIGINALI)
-  for (const k of [...profilo('sotterraneo').spegni, ...spegniAMano]) if (k in ACCESI) ACCESI[k] = false
+  // `fuochi:2` mette un numero, il nome solo spegne
+  for (const v of [...profilo('sotterraneo').spegni, ...spegniAMano]) {
+    const [k, n] = String(v).split(':')
+    if (k in ACCESI) ACCESI[k] = n != null && n !== '' && !Number.isNaN(Number(n)) ? Number(n) : (typeof ORIGINALI[k] === 'number' ? 0 : false)
+  }
 }
 
 // lo scontro: quanto agio vogliono i combattenti dai muri e dalle cose posate, e i posti dei mostri attorno al centro

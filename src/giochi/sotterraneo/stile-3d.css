@@ -111,3 +111,5 @@
 .sot3d-nome-pietra { padding: 0 5px; font-size: 13px; color: #5a6a7a; background: #e6eef6 }
 .sot3d-nome-accesa { color: #0b6a8a; background: #c8f4ff; box-shadow: 0 0 8px #7fe8ff }
 .sot3d-nome-tu { background: #ffd23f; border: 2px solid #2b2433; pointer-events: none }
+/* il fumetto sopra la fontana: acqua, non un personaggio (come quello della guaritrice e dell'incantatrice, stile.css) */
+.sot-richiamo[data-richiamo-di="fontana"], .sot-richiamo[data-richiamo-di="fontana"]::after { background: #d8f1ff }

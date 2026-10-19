@@ -6,18 +6,19 @@
 // Campagna.vue (`scendi`, `bottega`, `riprendi`, `sentito`, `cura`) più `mondo` (ricordati questo), `risposta` (la domanda di una
 // pietra: le monete) e `veduta` (chiudi la veduta d'insieme). Le regole: docs/sotterraneo/terra-di-sopra.md, «Il mondo in 3D».
 import { ref, shallowRef, computed, watch, onMounted, onBeforeUnmount, nextTick, markRaw } from 'vue'
-import { PERSONAGGI, personaDi } from '../dati/missioni.js'
+import { PERSONAGGI_DI_SOPRA, personaDi } from '../dati/missioni.js'
+import { FONTANA } from '../dati/dialoghi.js'
 import { MERCANTI, mercanteDi } from '../dati/mercanti.js'
 import { DUNGEON, CITTA } from '../dati/mondo-aperto.js'
 import { segnoDi, GLIFO, chiAspetta, presePer, discesaDaSeguire, discesaDellaStoria } from '../motore/missioni.js'
 import { apertura, scelte as scelteDi, risposta as rispostaDi, dopoLaPresa, dopoLaConsegna, novita as novitaDi,
-         curaDi, mancaA, richiamoDi, dopoLaCura } from '../motore/dialoghi.js'
+         curaDi, mancaA, richiamoDi, dopoLaCura, stradaDelCapitano } from '../motore/dialoghi.js'
 import { laStoria, dettoDelLivello } from '../motore/storia.js'
 import { DETTI_DEL_COLORE, C_E_UNA_NOTIZIA } from '../dati/zone.js'
 import { iconaDi } from '../dati/terra.js'
 import { ilMondo, aperturaDi, terraDelMondo, chiusoPerche, postiDi, cittaInCella, regioneInCella, portaleDella, minatoreDi,
          nomeDellaPietra, difDellaPietra, pietraAccanto, meteDelViaggio, nebbiaInBase64, nebbiaDaBase64, mondoNuovo,
-         frecceDelCartello, dungeonDi, VISTA_MONDO, PASSO_MONDO } from '../motore/mondo-sopra.js'
+         frecceDelCartello, dungeonDi, fontaneDi, curaDellaFontana, VISTA_MONDO, PASSO_MONDO } from '../motore/mondo-sopra.js'
 import { rettangoloPersona, rettangoloPosto, personaVicina, SCARTO_DITO } from '../scena3d/mondo/dito.js'
 import { domandaPerGioco } from '../../../quiz/scelta.js'
 import Domanda from '../../../quiz/Domanda.vue'
@@ -48,7 +49,7 @@ const minuscolo = s => s.charAt(0).toLowerCase() + s.slice(1)
 const RAGGIO_SALUTO = 6, RAGGIO_RIARMO = 9, DURATA_SALUTO = 1.4
 
 /* ═══════════ il mondo e chi ci sta (non reattivi: si leggono e basta) ═══════════ */
-let m = null, terra = null, nebbia = null, scena = null
+let m = null, terra = null, nebbia = null, scena = null, fontane = []
 const pronto = ref(false), perso = ref(false)
 const ap = computed(() => aperturaDi(props.tappe))
 const io = { x: 0, z: 0 }
@@ -75,7 +76,10 @@ function preparaBersagli() {
   const persona = (tipo, k, p, extra) => l.push({ chiave: `${tipo}:${p.citta || ''}:${k}`, tipo: 'persona', ruolo: tipo, k, citta: p.citta || null,
     piede: piede(p), accanto: { ...p.accanto }, alto: 2.2, ...extra })
   for (const p of postiDi(m, 'mercante')) { const me = mercanteDi(p.chiave); if (me) persona('mercante', p.chiave, p, { nome: me.nome, sprite: me.sprite }) }
-  for (const p of [...m.persone, ...m.citta.flatMap(c => c.persone)]) if (PERSONAGGI[p.chiave]) persona('personaggio', p.chiave, p, { nome: PERSONAGGI[p.chiave].nome, sprite: PERSONAGGI[p.chiave].sprite })
+  for (const p of [...m.persone, ...m.citta.flatMap(c => c.persone)]) {
+    const d = PERSONAGGI_DI_SOPRA[p.chiave]
+    if (d) persona('personaggio', p.chiave, p, { nome: d.nome, sprite: d.sprite, scala: d.scala || null, tinta: d.tinta || null })
+  }
   const mi = minatoreDi(m, ap.value.finite)
   if (mi) persona('minatore', 'minatore', mi, { nome: 'il vecchio minatore', sprite: 'minatore' })
   const posto = (tipo, p, extra) => l.push({ chiave: `${tipo}:${p.chiave}`, tipo: tipo === 'cartello' || tipo === 'bacheca' ? 'cosa' : 'posto', ruolo: tipo, k: p.chiave,
@@ -84,6 +88,7 @@ function preparaBersagli() {
   for (const p of postiDi(m, 'pietra')) posto('pietra', p, { alto: 1.6 })
   for (const p of postiDi(m, 'cartello')) posto('cartello', p, { alto: 1.7 })
   for (const p of postiDi(m, 'bacheca')) posto('bacheca', p, { alto: 2.1 })
+  for (const f of fontane) posto('fontana', { ...f, chiave: f.citta }, { alto: 2.4 })
   if (props.portale) {
     const p = portaleDella(m, props.portale.tappa, terra)
     if (p) posto('portale', p, { alto: 1.9 })
@@ -95,7 +100,8 @@ function preparaBersagli() {
   }
   bersagli.value = markRaw(l)
   persone.length = 0
-  for (const b of l) if (b.tipo === 'persona') persone.push({ chiave: b.chiave, fermo: `${b.sprite}-fermo-0`, saluto: `${b.sprite}-saluta-0`, pezzo: `${b.sprite}-fermo-0`, x: b.piede.x + 0.5, z: b.piede.y + 0.5, specchio: false })
+  for (const b of l) if (b.tipo === 'persona') persone.push({ chiave: b.chiave, fermo: `${b.sprite}-fermo-0`, saluto: `${b.sprite}-saluta-0`, pezzo: `${b.sprite}-fermo-0`, x: b.piede.x + 0.5, z: b.piede.y + 0.5, specchio: false,
+                                                          scala: b.scala, tinta: b.tinta })
 }
 const cellaDelBersaglio = b => (b.lotto ? { x: Math.floor(b.lotto.x + b.lotto.w / 2), y: Math.floor(b.lotto.y + b.lotto.h / 2) } : b.piede)
 const visto = c => nebbia[c.y * m.W + c.x] === 1
@@ -104,6 +110,7 @@ const visto = c => nebbia[c.y * m.W + c.x] === 1
 function prepara() {
   m = markRaw(ilMondo())
   terra = markRaw(terraDelMondo(m, ap.value.aperto))
+  fontane = markRaw(fontaneDi(m, terra))
   const s = props.mondo || {}
   nebbia = nebbiaDaBase64(s.nebbia, m.W, m.H)
   let primeAccese = []
@@ -280,7 +287,7 @@ const aperto = ref(null)             // il bersaglio col fumetto aperto
 const fumetto = ref(null)
 const LARGO_FUM = 244
 const ctx = () => ({ stati: props.missioni, tappe: props.tappe, abisso: !!props.abisso, eroe: props.eroe.chiave,
-                     roba: props.roba, annuncio: props.annuncio, novita: ascoltate.value, forze: props.forze })
+                     roba: props.roba, annuncio: props.annuncio, novita: ascoltate.value, forze: props.forze, mondo: true })
 const livelloDi = t => (t && !t.fatta && props.roba ? dettoDelLivello(props.eroe.chiave, props.roba, t, t.indice) : null)
 function rigaStoria(t) {
   const s = storia.value, porta = t && s.porte.find(x => x.chiave === t.chiave)
@@ -310,6 +317,7 @@ const fumettoDati = computed(() => {
   if (b.ruolo === 'pietra') return { tipo: 'pietra', nome: nomeDellaPietra(b.k), mete: meteDelViaggio(m, b.k, [...accese.value]) }
   if (b.ruolo === 'portale') return { tipo: 'portale', ...props.portale }
   if (b.ruolo === 'bacheca') return { tipo: 'bacheca' }
+  if (b.ruolo === 'fontana') return { tipo: 'fontana', ...FONTANA, ...curaDellaFontana(props.forze) }
   if (b.ruolo === 'grata') return { tipo: 'grata', nome: b.q.nome || 'Il passaggio', perche: chiusoPerche(b.q, ap.value) }
   if (b.ruolo === 'cartello') {
     const frecce = frecceDelCartello(m, b.citta).map(x => ({ ...x,
@@ -381,12 +389,20 @@ function parla(b) {
   saluta(b.chiave, tempo); vicini.add(b.chiave)
   const prima = chi === 'minatore' && !parlato.value
   if (prima) { parlato.value = true; salva() }
+  if (chi === 'capitano' && capitanoHaDaDire()) { ascoltate.value = { ...ascoltate.value, capitano: { n: 1, v: (props.tappe.find(t => t.adesso) || {}).chiave } }; salva() }
   if (chi === 'minatore' && props.annuncio && !props.annuncio.sentita) { avviso.value = ''; emit('sentito') }
-  dialogo.value = { chi, nome: chiParla(chi), pagine: apertura(chi, ctx(), { primaVolta: prima }), giro: ++giri, chieste: new Set(chi === 'minatore' ? ['strada'] : []) }
+  dialogo.value = { chi, nome: chiParla(chi), pagine: apertura(chi, ctx(), { primaVolta: prima }), giro: ++giri, chieste: new Set(chi === 'minatore' || chi === 'capitano' ? ['strada'] : []) }
 }
 function chiudiDialogo() { dialogo.value = null }
 const fiocco = ref(null)
 const richiamo = chi => (dialogo.value && dialogo.value.chi === chi ? null : richiamoDi(chi, props.forze))
+// la fontana beve tutto: vita ed energia insieme (un solo `cura`, 'tutto'); il numero sopra l'eroe dice quanto si è ripreso
+function bevi() {
+  const c = curaDellaFontana(props.forze)
+  if (!c.serve) return
+  emit('cura', 'tutto')
+  fiocco.value = { n: ++giri, risorsa: 'tutto', testo: [c.vita ? `+${c.vita} ❤️` : '', c.energia ? `+${c.energia} ⚡` : ''].filter(Boolean).join(' ') }
+}
 const scelteDelDialogo = computed(() => (dialogo.value ? scelteDi(dialogo.value.chi, ctx(), dialogo.value.chieste) : []))
 function rispondi(pagine, chieste) { const d = dialogo.value; if (d && pagine.length) dialogo.value = { ...d, pagine, giro: ++giri, chieste } }
 async function scegli(s) {
@@ -413,7 +429,11 @@ async function scegli(s) {
   if (s.che === 'prendi' && e === 'presa') return rispondi(dopoLaPresa(d.chi, s.missione), chieste)
   if (s.che === 'consegna' && e) { await nextTick(); rispondi(dopoLaConsegna(d.chi, s.missione, e, ctx()), chieste) }
 }
-const segnoSopra = b => (['minatore', 'personaggio', 'mercante'].includes(b.ruolo) ? segnoDi(b.k, props.missioni, props.tappe) : null)
+// il capitano ha un «!» finché non ha detto la porta di adesso (ne parla quando è una delle sue: stradaDelCapitano); la fa «ascoltare»
+// nel campo `novita` dell'avventura, con la discesa che ha detto
+const capitanoHaDaDire = () => !!stradaDelCapitano(ctx()).length && (ascoltate.value.capitano || {}).v !== (props.tappe.find(t => t.adesso) || {}).chiave
+const segnoSopra = b => (b.ruolo === 'personaggio' && b.k === 'capitano' ? (capitanoHaDaDire() ? 'nuova' : null)
+  : ['minatore', 'personaggio', 'mercante'].includes(b.ruolo) ? segnoDi(b.k, props.missioni, props.tappe) : null)
 
 /* ═══════════ il dito ═══════════ */
 const vista = ref(null), tela = ref(null), sopraEl = ref(null), sottoEl = ref(null)
@@ -627,7 +647,7 @@ async function nasci() {
   try { mod = await import('../scena3d/mondo/indice.js') } catch (e) { perso.value = true; return }
   if (!vista.value) return
   const h = new URLSearchParams(location.hash.slice(1))
-  scena = mod.creaMondo3d(tela.value, { m, nebbia, passo, dopo, dpr: Number(h.get('dpr')) || undefined, perso: () => { perso.value = true },
+  scena = mod.creaMondo3d(tela.value, { m, nebbia, passo, dopo, fontane, dpr: Number(h.get('dpr')) || undefined, perso: () => { perso.value = true },
     frecce: Object.fromEntries(m.citta.map(c => [c.chiave, frecceDelCartello(m, c.chiave).map(f => versoInRadianti(f.verso))])) })
   if (!scena) { perso.value = true; return }
   markRaw(scena)
@@ -697,7 +717,7 @@ watch(() => props.veduta, v => { if (v) { chiudi(); chiudiDialogo() } })
               :data-abisso="b.ruolo === 'ingresso' && b.k === 'abisso' ? 1 : null"
               :data-aperta="b.ruolo === 'ingresso' ? (datoDelPosto(b).aperto ? 1 : 0) : null"
               :data-pietra="b.ruolo === 'pietra' ? b.k : null" :data-accesa="b.ruolo === 'pietra' ? (accese.has(b.k) ? 1 : 0) : null"
-              :data-cartello="b.ruolo === 'cartello' ? b.citta : null" :data-bacheca="b.ruolo === 'bacheca' ? b.citta : null"
+              :data-cartello="b.ruolo === 'cartello' ? b.citta : null" :data-bacheca="b.ruolo === 'bacheca' ? b.citta : null" :data-fontana="b.ruolo === 'fontana' ? b.citta : null"
               :data-portale="b.ruolo === 'portale' ? '' : null" :data-grata="b.ruolo === 'grata' ? b.k : null"
               :data-divieto="b.ruolo === 'ingresso' && divieti.has(b.k) ? b.k : null"
               :data-trovato="trovati.has(b.chiave) ? 1 : 0" :data-saluta="b.tipo === 'persona' ? (salutano.has(b.chiave) ? 1 : 0) : null"
@@ -707,6 +727,7 @@ watch(() => props.veduta, v => { if (v) { chiudi(); chiudiDialogo() } })
         <b v-else-if="b.ruolo === 'minatore' && annuncio && !annuncio.sentita" class="sot-tre-punti sot-segno-missione sot-segno-nuova" data-segno-di="annuncio">!</b>
         <b v-else-if="segnoSopra(b)" class="sot-tre-punti sot-segno-missione" :class="'sot-segno-' + segnoSopra(b)">{{ GLIFO[segnoSopra(b)] }}</b>
         <span v-if="b.ruolo === 'mercante' && trovati.has(b.chiave) && richiamo(b.k)" class="sot-richiamo" data-richiamo :data-richiamo-di="curaDi(b.k).risorsa">{{ richiamo(b.k) }}</span>
+        <span v-else-if="b.ruolo === 'fontana' && trovati.has(b.chiave) && !(aperto && aperto.chiave === b.chiave) && curaDellaFontana(forze).serve" class="sot-richiamo" data-richiamo data-richiamo-di="fontana">{{ FONTANA.richiamo }}</span>
       </button>
     </div>
 
@@ -728,7 +749,7 @@ watch(() => props.veduta, v => { if (v) { chiudi(); chiudiDialogo() } })
     <div v-if="aperto && fumettoDati" ref="fumEl" class="sot-fumetto sot3d-fumetto" data-fumetto
          :data-fumetto-di="aperto.ruolo === 'ingresso' ? aperto.k : aperto.ruolo" :class="{ 'sot-tenue': fumettoDati.tipo === 'posto' && !fumettoDati.aperto }"
          style="visibility: hidden" @click.stop>
-      <FumettoMondo :f="fumettoDati" @scendi="scendi" @giu="giuDalPortale" @viaggio="viaggia" />
+      <FumettoMondo :f="fumettoDati" @scendi="scendi" @giu="giuDalPortale" @viaggio="viaggia" @bevi="bevi" />
     </div>
 
     <button v-for="f in fuori" :key="'fuori-' + f.chiave" class="sot-bussola" :class="{ 'sot-bussola-meta': f.meta }"
@@ -742,8 +763,8 @@ watch(() => props.veduta, v => { if (v) { chiudi(); chiudiDialogo() } })
 
     <div ref="sopraEl" class="sot-terra-sopra"><slot name="sopra" /></div>
     <div ref="sottoEl" class="sot-terra-sotto">
-      <span v-if="fiocco" :key="fiocco.n" class="sot-cura-fiocco sot3d-fiocco" :class="'sot-cura-' + fiocco.risorsa" data-cura-fiocco
-            :data-risorsa="fiocco.risorsa" @animationend="fiocco = null">{{ fiocco.testo }} {{ fiocco.risorsa === 'vita' ? '❤️' : '⚡' }}</span>
+      <span v-if="fiocco" :key="fiocco.n" class="sot-cura-fiocco sot3d-fiocco" :class="fiocco.risorsa === 'energia' ? 'sot-cura-energia' : 'sot-cura-vita'" data-cura-fiocco
+            :data-risorsa="fiocco.risorsa" @animationend="fiocco = null">{{ fiocco.testo }}<template v-if="fiocco.risorsa !== 'tutto'"> {{ fiocco.risorsa === 'vita' ? '❤️' : '⚡' }}</template></span>
       <p v-if="avviso" class="sot-trovato" data-avviso-terra>{{ avviso }}</p>
       <p v-else-if="veduta" class="sot-trovato sot-piano" data-veduta-dice>Tocca dove vuoi andare: ci vai a piedi.</p>
       <p v-else-if="primaVolta && pronto" class="sot-trovato sot-piano">Tocca dove vuoi andare.</p>

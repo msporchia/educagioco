@@ -155,38 +155,38 @@ export const STORIA = {
   // la prima volta che il minatore parla: la missione. La porta di adesso la dice la pagina dopo (motore/dialoghi.js, strada)
   affida: 'Sono sette porte. Io ti dico quale, e il diario ti ricorda la strada.',
   // finite le sette
-  fine: 'Le sette porte sono chiuse. Resta il pozzo vecchio: l\'abisso non si chiude, si tiene a bada.',
+  fine: 'Le sette porte sono chiuse. Resta il pozzo senza fondo: l\'abisso non si chiude, si tiene a bada.',
   // la porta c'è ma per l'età per ora non si scende
   ferma: 'Questa porta, per ora, resta chiusa.',
 }
 
 export const CAPITOLI = {
   altare: {
-    dice: 'Comincia dall\'altare. Nella cripta Re Ossuto non ha mai smesso di regnare: battilo, e la prima porta si chiude.',
+    dice: 'Comincia dalla cripta dei re. Re Ossuto non ha mai smesso di regnare: battilo, e la prima porta si chiude.',
     fatto: 'Re Ossuto è caduto, e la prima porta è chiusa.',
   },
   cantine: {
-    dice: 'Adesso la scalinata antica. In fondo c\'è Grumo, un orco grosso come una porta. Battilo, e anche questa si chiude.',
+    dice: 'Adesso le cantine dei goblin. In fondo c\'è Grumo, un orco grosso come una porta. Battilo, e anche questa si chiude.',
     fatto: 'Grumo non regna più sulle cantine. Due porte chiuse.',
   },
   torre: {
-    dice: 'Sotto la torre in rovina c\'è una fornace che nessuno ha acceso. Laggiù brucia Fiammetta: spegni lei, e la fornace tace.',
+    dice: 'Sotto la torre bruciata c\'è una fornace che nessuno ha acceso. Laggiù brucia Fiammetta: spegni lei, e la fornace tace.',
     fatto: 'La fornace è spenta. Tre porte chiuse, e le altre sono più profonde.',
   },
   gallerie: {
-    dice: 'Nella grotta della scaletta si scende e si scende ancora. In fondo tesse la sua tela Zannaverde: strappala.',
+    dice: 'Nella tana dei ragni si scende e si scende ancora. In fondo tesse la sua tela Zannaverde: strappala.',
     fatto: 'La tela è strappata. Quattro porte chiuse.',
   },
   cisterna: {
-    dice: 'Nello stagno una scala va sott\'acqua. Giù, nell\'acqua nera, aspetta Gorgo. Quando cade lui, lo stagno torna limpido.',
-    fatto: 'Lo stagno è tornato limpido. Cinque porte chiuse.',
+    dice: 'Le sale allagate sono piene d\'acqua nera. Giù in fondo aspetta Gorgo. Quando cade lui, l\'acqua torna limpida.',
+    fatto: 'Le sale allagate sono tornate limpide. Cinque porte chiuse.',
   },
   labirinto: {
-    dice: 'La botola nel prato porta a un labirinto. Ne è il padrone Minotto: trova la sua stanza, e battilo.',
+    dice: 'Oltre la porta dell\'inferno c\'è un labirinto. Ne è il padrone Minotto: trova la sua stanza, e battilo.',
     fatto: 'Il labirinto tace. Sei porte chiuse, ne resta una.',
   },
   fondo: {
-    dice: 'L\'ultima è la miniera abbandonata. Laggiù comanda Carbonchio, un drago di brace. Se cade lui, le porte sono chiuse.',
+    dice: 'L\'ultima porta è nelle miniere di brace. Laggiù comanda Carbonchio, un drago di lava. Se cade lui, le porte sono chiuse.',
     fatto: 'Carbonchio è caduto: le sette porte sono chiuse.',
   },
 }

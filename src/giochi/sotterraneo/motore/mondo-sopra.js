@@ -70,6 +70,31 @@ export function minatoreDi(m, finite) {
   return tutti.find(p => finite >= (p.dalla || 0)) || tutti[tutti.length - 1] || null
 }
 
+/* ── chi cura gratis in una città (docs/sotterraneo/chi-cura.md): la guaritrice la vita, l'incantatrice l'energia; dove manca una delle
+   due c'è la fontana della piazza, che le cura tutte e due. Si deriva dai mercanti della città e dal pozzo che il generatore le ha
+   già dato: il generatore non cambia ── */
+export const CURA_DEL_MERCANTE = { erborista: 'vita', incantatrice: 'energia' }
+export const hoLaFontana = chiaveDellaCitta => {
+  const c = CITTA.find(x => x.chiave === chiaveDellaCitta)
+  return !!c && Object.keys(CURA_DEL_MERCANTE).some(k => !c.mercanti.includes(k))
+}
+// le fontane del mondo: un posto per città che ne ha bisogno, al posto del pozzo (il suo 2×2, già un ingombro); `accanto` è la
+// cella dove ci si ferma a berne, sulla piazza sotto di lei (la prima che si cammina, se si dà la `terra`)
+export function fontaneDi(m, terra = null) {
+  return m.citta.filter(c => hoLaFontana(c.chiave)).map(c => {
+    const p = c.pozzo, piede = { x: p.x + 1, y: p.y + 1 }
+    const prove = [[1, 3], [0, 3], [2, 3], [-1, 2], [3, 2], [1, 4]].map(([dx, dy]) => ({ x: p.x + dx, y: p.y + dy }))
+    const accanto = (terra && prove.find(q => terra.passa(q.x, q.y))) || prove[0]
+    return { tipo: 'fontana', chiave: `fontana:${c.chiave}`, citta: c.chiave, regione: c.regione, x: p.x, y: p.y, w: 2, h: 2, piede, accanto }
+  })
+}
+// cosa serve a chi è salito dal portale: quanta vita e quanta energia mancano (forze di Gioco.vue, o null), e cosa dice il fumetto
+export function curaDellaFontana(forze) {
+  if (!forze) return { vita: 0, energia: 0, serve: false }
+  const vita = Math.max(0, forze.vitaMax - forze.vita), energia = Math.max(0, forze.energiaMax - forze.energia)
+  return { vita, energia, serve: vita > 0 || energia > 0 }
+}
+
 /* ── le pietre del viaggio: una per città e una davanti a ogni dungeon. Si accendono una volta con una domanda ── */
 export function nomeDellaPietra(chiave) {
   const c = CITTA.find(x => x.chiave === chiave)
