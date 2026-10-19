@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
-   I MOSTRI DEL MONDO DI SOPRA, COL DITO — docs/sotterraneo/mondo-aperto-mostri.md («La scena»)
+   I MOSTRI DEL MONDO DI SOPRA, COL DITO — docs/sotterraneo/mondo-aperto-mostri-scena.md
+   tempo: 480
 
    Nel Sotterraneo 3D i branchi dormono nelle regioni del mondo generato. Qui: entrando nei campi la riga in fondo dice la regione
    col suo colore; un branco vicino si sveglia e viene incontro, e lo scontro si apre sul prato, col pannello delle discese; un
@@ -12,7 +13,6 @@
    `[data-scontro-sopra]` col pannello `[data-pannello3d]` e `[data-scontro-3d]`, `[data-risveglio-sopra]` (`data-citta`) e il tasto
    `[data-azione="risveglio"]`, `[data-per-terra]` (`data-cosa`); `window.__mondo3d` (`porta`, `stato()`, `inScontro()`, `palco()`).
    `node test/esegui.mjs sotterraneo-mostri-sopra`
-   tempo: 420
    ═══════════════════════════════════════════════════════════════════ */
 import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, scegliAvventura, leggiProfilo, mondoPronto, scegliAttacco,
          toccaNelMondo, nelDialogo } from '../aiuto/browser.mjs'
@@ -188,11 +188,13 @@ await page.evaluate(p => window.__mondo3d.porta(p.x, p.z), VESPE)
   await aspettaLoScontro()
   const tipi = await page.evaluate(() => window.__mondo3d.palco().corsa.livello.robe.filter(r => r.che === 'mostro').map(r => r.tipo))
   controlla('in campo c\'è lo zombie che manca alla caccia', tipi.includes('zombie'), tipi.join())
+  const detto = page.waitForFunction(() => (document.querySelector('[data-detto-sopra]')?.innerText || '').includes('Fatto'), null, { timeout: 30000 })
+    .then(() => true, () => false)   // la riga resta due secondi: la si guarda mentre lo scontro finisce
   uguale('lo scontro si vince', await finoAllaFine(true), 'finito')
+  controlla('e la riga sopra il mondo dice che la caccia è fatta', await detto)
   await attendi(page, 1200)
   const a = await avventura()
   uguale('la caccia aperta è fatta', a.mondo?.quest?.stati?.[CACCIA], 'fatta')
-  controlla('e l\'avviso lo dice', (await page.locator('[data-detto-sopra]').innerText().catch(() => '')).includes('Fatto'), await page.locator('[data-detto-sopra]').innerText().catch(() => '—'))
   await page.waitForSelector('[data-per-terra][data-cosa="pozione"]', { state: 'attached', timeout: 15000 })
   const prima = (a.roba.zaino || []).filter(k => k === 'pozione').length
   await toccaNelMondo(page, '[data-per-terra][data-cosa="pozione"]', { tocca })

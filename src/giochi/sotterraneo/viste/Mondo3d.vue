@@ -32,6 +32,7 @@ import { creaMostriSopra } from './mondo-mostri.js'
 import { annuncioDi, alSicuro } from '../motore/aperta.js'
 import { fotoDelloScontro } from '../motore/aperta-scena.js'
 import { allaCitta } from '../motore/forze-sopra.js'
+import { SOPRA } from '../dati/mondo-aperto-mostri.js'
 
 const props = defineProps({
   tappe: { type: Array, required: true },
@@ -156,6 +157,7 @@ function prepara() {
   giro.value = s.giro || 0
   raggiungibili = markRaw(terra.raggiungibili(m.partenza))
   mostri = markRaw(creaMostriSopra({ m, eroe: props.eroe.chiave || 'eroe', giro: giro.value, salvato: s.sopra || null }))
+  fotoScontro = mostri.scontroRimesso   // i rimasti di uno scontro lasciato con la ✕ restano scritti finché non si riapre
   preparaBersagli()
   divieti.value = new Set((Array.isArray(s.divieti) ? s.divieti : []).filter(k => { const b = bersagli.value.find(x => x.chiave === `ingresso:${k}`); return b && !datoDelPosto(b).aperto }))
   // dove si era; salendo dal portale accanto al gemello, nella città che serve quel dungeon
@@ -165,7 +167,7 @@ function prepara() {
   if (d && d.portale && portale) qui = portale.accanto
   else if (d && Number.isInteger(d.x) && terra.passa(d.x, d.y)) qui = d
   // salendo dal portale si torna in città (un giro); se no si riparte da dove si era, e si è «lontani» se non si è in città
-  if (d && d.portale && portale) { giro.value++; allontanato = false; mostri.giro(giro.value) }
+  if (d && d.portale && portale) { giro.value++; allontanato = false; mostri.giro(giro.value); fotoScontro = null }
   else allontanato = lontanoDalleCitta(m, qui.x, qui.y)
   io.x = qui.x + 0.5; io.z = qui.y + 0.5
   trovati.value = new Set(bersagli.value.filter(b => visto(cellaDelBersaglio(b))).map(b => b.chiave))
@@ -341,6 +343,8 @@ function mostriDelPasso(dt, t) {
   scena.S.mostri = props.veduta ? [] : mostri.figure(io, t, visto, inCampo)
   scena.S.perTerra = props.veduta ? [] : mostri.perTerra(visto)
   if (t >= prossimiMostri) { prossimiMostri = t + 0.2; aggiornaMostriVisti() }   // i bersagli nel DOM: a tempo, non a fotogrammi
+  // i rimasti di uno scontro lasciato: se l'eroe se ne va lontano, non lo aspettano più
+  if (fotoScontro && !inScontro && Math.hypot(io.x - fotoScontro.x - 0.5, io.z - fotoScontro.y - 0.5) > SOPRA.insegue + 4) { fotoScontro = null; sporca = true }
 }
 function aggiornaMostriVisti() {
   const l = inScontro ? [] : scena.S.mostri.map(q => ({ i: q.i, sveglio: q.sveglio, caporale: q.caporale, signore: q.signore, nome: q.nome, tipo: mostri.stato.mostri[q.i].tipo }))
@@ -978,7 +982,7 @@ const firmaScena = computed(() => [props.veduta, props.roba && props.roba.mano, 
 watch(firmaScena, () => aggiornaScena())
 watch(() => props.veduta, v => { if (v) { chiudi(); chiudiDialogo() } })
 // un ritorno in città fa un giro nuovo: chi vive sopra rinasce (motore/aperta.js, nuovoGiro)
-watch(giro, g => { if (mostri) mostri.giro(g) })
+watch(giro, g => { if (mostri && g !== mostri.stato.giro) { mostri.giro(g); fotoScontro = null } })
 </script>
 
 <template>

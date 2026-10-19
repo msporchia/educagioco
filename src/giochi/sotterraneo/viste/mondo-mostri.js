@@ -9,13 +9,15 @@ import { COSE } from '../dati/cose.js'
 // `salvato`: `mondo.sopra` dell'avventura; con dentro lo scontro lasciato con la ✕ (`scontro`), i rimasti tornano accanto all'eroe
 export function creaMostriSopra({ m, eroe, giro, salvato = null }) {
   let stato = riprendiMondo({ mondo: m, eroe, giro, salvato })
-  if (salvato && salvato.eroe === eroe && salvato.giro === giro && salvato.scontro) rimettiLoScontro(stato, salvato.scontro)
+  const rimessi = salvato && salvato.eroe === eroe && salvato.giro === giro && salvato.scontro ? rimettiLoScontro(stato, salvato.scontro) : 0
   const memoria = new Map()
   let mira = null   // il mostro toccato a cui l'eroe sta andando incontro
 
   return {
     get stato() { return stato },
     get mira() { return mira },
+    // lo scontro lasciato con la ✕ che è stato rimesso (i rimasti accanto all'eroe), da tenere nel salvataggio finché non si riapre
+    scontroRimesso: rimessi ? salvato.scontro : null,
     lascia() { mira = null },
     // entrando in città il giro sale: quello che vive sopra rinasce (restano i passi, le forze e le cose per terra)
     giro(g) { if (g !== stato.giro) { stato = nuovoGiro(stato, g); memoria.clear(); mira = null } },

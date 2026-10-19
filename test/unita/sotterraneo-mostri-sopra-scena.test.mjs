@@ -141,6 +141,8 @@ const s0 = popolaMondo({ mondo: m, eroe: 'cavaliere', giro: 0 })
     controlla('accanto all\'eroe', rimessi.every(x => Math.hypot(x.fx - (scontro.x + 0.5), x.fy - (scontro.y + 0.5)) <= 3.5), rimessi.map(x => `${x.fx},${x.fy}`).join(' '))
     stessaLista('con le loro ferite', rimessi.map(x => x.ossa), scontro.campo.map(([, o]) => o))
     controlla('e i caduti ancora morti', caduti.every(i => v.stato.mostri[i].morto))
+    stessaLista('lo scontro rimesso resta da salvare finché non si riapre', v.scontroRimesso, scontro)
+    uguale('un giro dopo nessuno aspetta', creaMostriSopra({ m, eroe: 'cavaliere', giro: 1, salvato: salvo }).scontroRimesso, null)
     let ri = null
     for (let i = 0; i < 200 && !ri; i++) ri = v.passo(1 / 30, { x: scontro.x + 0.5, z: scontro.y + 0.5 })
     controlla('lo scontro si riapre da sé', ri && scontro.campo.some(([i]) => ri.campo.includes(i)), JSON.stringify(ri))
