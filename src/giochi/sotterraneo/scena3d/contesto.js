@@ -2,10 +2,12 @@
 // (il gioco dice cosa succede, docs/sotterraneo/grafica-3d.md «Senza WebGL»). Il pixel ratio si adatta (DPR: parte da `max`,
 // scende a passi se i fotogrammi costano troppo, risale piano), e si misura quanto costa un fotogramma.
 import { WebGLRenderer, BasicShadowMap, ACESFilmicToneMapping } from 'three'
-import { DPR, LUCE, ACCESI } from './costanti.js'
+import { DPR, LUCE, ACCESI, applicaFascia } from './costanti.js'
+import { profilo } from '../../../store/qualita.js'
 
 // `antialias`: il mondo di sopra lo vuole (staccionate, corde, bordi dei tetti); le discese no (il passaggio finale le ammorbidisce)
-export function creaContesto(canvas, { perso, fisso, antialias = false } = {}) {
+export function creaContesto(canvas, { perso, fisso, antialias = false, spegni = [] } = {}) {
+  applicaFascia(spegni)   // prima di tutto: `ombre` lo legge subito sotto
   let gl = null
   try {
     gl = canvas.getContext('webgl2', { alpha: false, antialias, depth: true, stencil: false, premultipliedAlpha: true, powerPreference: 'high-performance' })
@@ -21,7 +23,7 @@ export function creaContesto(canvas, { perso, fisso, antialias = false } = {}) {
   const perdi = e => { e.preventDefault(); perso?.() }
   canvas.addEventListener('webglcontextlost', perdi)
 
-  const dprMax = Math.min(window.devicePixelRatio || 1, DPR.max)
+  const dprMax = Math.min(window.devicePixelRatio || 1, DPR.max, profilo('sotterraneo').dprMax)
   let dpr = fisso || dprMax, dprNuovo = dpr
   let L = 0, A = 0, somma = 0, quanti = 0
   const misure = { chiamate: 0, triangoli: 0, msFotogramma: 0, msJs: 0, msDisegno: 0 }

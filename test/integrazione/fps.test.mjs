@@ -58,6 +58,20 @@ controlla('il bottone manda c\'è', await page.isVisible('[data-azione="benchmar
 await page.click('[data-azione="benchmark-chiudi"]')
 uguale('chiusa la misura', await page.locator('[data-benchmark]').count(), 0)
 
+/* ── LA FASCIA ── */
+await page.click('[data-azione="benchmark-chiudi"]').catch(() => {})
+controlla('la carta della fascia c\'è', await page.isVisible('[data-fascia]'))
+await page.click('[data-azione="rimisura-fascia"]')
+await page.waitForFunction(() => /punti/.test(document.querySelector('[data-fascia]').textContent), null, { timeout: 30000 })
+controlla('misurata: dice i punti', /punti, JS/.test(await page.textContent('[data-fascia]')))
+await page.click('[data-fascia-scelta="bassa"]')
+controlla('scelta a mano: bassa', /Qualità della grafica 3D: bassa/.test(await page.textContent('[data-fascia]')))
+await page.reload()
+await page.click('[data-azione="grandi"]'); await page.waitForSelector('.tastierino')
+for (const c of '0000') await page.click(`.tasto >> text="${c}"`)
+await page.click('.schede button[data-scheda="giochi"]')
+controlla('la scelta resta dopo la ricarica', /Qualità della grafica 3D: bassa/.test(await page.textContent('[data-fascia]')))
+
 controlla('niente errori', errori.length === 0)
 await browser.close()
 riassunto('il contafotogrammi')

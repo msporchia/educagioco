@@ -75,9 +75,10 @@ class Sciame {
   }
 }
 
-export function creaEffetti(scena) {
-  const fuoco = new Lotto(1400, FUOCO_F, AdditiveBlending)
-  const fumo = new Lotto(400, FUMO_F, NormalBlending)
+// `tetti`: quanti punti di fuoco e di fumo al massimo (la fascia del telefono, store/qualita.js): oltre il tetto le scintille non si disegnano
+export function creaEffetti(scena, tetti = { scintille: 1400, fumo: 400 }) {
+  const fuoco = new Lotto(tetti.scintille, FUOCO_F, AdditiveBlending)
+  const fumo = new Lotto(tetti.fumo, FUMO_F, NormalBlending)
   fumo.punti.renderOrder = 4
   scena.add(fumo.punti, fuoco.punti)
   const sciame = new Sciame(500)

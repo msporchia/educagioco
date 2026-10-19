@@ -11,13 +11,14 @@ import { creaSassi } from './sassi.js'
 import { creaNave } from './nave.js'
 import { creaMadre } from './madre.js'
 import { creaEffetti } from './effetti.js'
+import { profilo, fasciaAttiva } from '../../store/qualita.js'
 import { formaDi } from './forme.js'
 import { specieDi } from '../cieli.js'
 import { rgb } from './rumore.js'
 
 const K = 0.01                 // mondo per pixel
 const FOV = 50
-const DPR_MAX = 3, DPR_START = 2, DPR_MIN = 1   // sotto 1 la tela è stirata e sfoca: meglio perdere fotogrammi che nitidezza
+const DPR_MAX = 3, DPR_MIN = 1   // sotto 1 la tela è stirata e sfoca: meglio perdere fotogrammi che nitidezza
 
 const POST_F = /* glsl */`
 uniform sampler2D tScena; uniform float uAb, uT, uFlash, uLampo; uniform vec2 uRes; varying vec2 vU;
@@ -95,7 +96,8 @@ function costruisci(renderer, fisso) {
   const sassi = creaSassi(scena)
   const nave = creaNave(scena)
   const madre = creaMadre(scena)
-  const eff = creaEffetti(scena)
+  const fascia = profilo('asteroidi')   // pixel ratio di partenza, scintille e prontezza dell'adattamento: store/qualita.js
+  const eff = creaEffetti(scena, fascia)
 
   // la scena si dipinge su una tela di scorta, poi un passaggio solo fa vignetta, colore, grana e tono
   const tela = new WebGLRenderTarget(4, 4, { type: HalfFloatType, depthBuffer: true })
@@ -107,7 +109,7 @@ function costruisci(renderer, fisso) {
   const quadro = new Mesh(new PlaneGeometry(2, 2), post); quadro.frustumCulled = false
   postScena.add(quadro)
 
-  let W = 1, H = 1, dpr = fisso || Math.min(DPR_START, window.devicePixelRatio || 1), D = 10
+  let W = 1, H = 1, dpr = fisso || Math.min(fascia.dprPartenza, window.devicePixelRatio || 1), D = 10
   let scatti = 0, cieloOra = null, ultimo = 0, mediaMs = 16, lenti = 0, svelti = 0, msScena = 0, msDisegno = 0
   const X = x => (x - W / 2) * K
   const Y = y => (H / 2 - y) * K
@@ -129,11 +131,11 @@ function costruisci(renderer, fisso) {
     mediaMs += (ms - mediaMs) * 0.05
     if (fisso) return
     const tetto = Math.min(DPR_MAX, window.devicePixelRatio || 1)
-    if (mediaMs > 26) { if (++lenti > 90 && dpr > Math.min(DPR_MIN, tetto)) { const era = dpr; dpr = Math.max(Math.min(DPR_MIN, tetto), dpr * 0.85); misura(); lenti = 0; console.info(`[spazio3d] pixel ratio ${era.toFixed(2)} → ${dpr.toFixed(2)}: media ${mediaMs.toFixed(1)} ms su ${W}×${H}`) } } else lenti = 0
+    if (mediaMs > 26) { if (++lenti > fascia.lenti && dpr > Math.min(DPR_MIN, tetto)) { const era = dpr; dpr = Math.max(Math.min(DPR_MIN, tetto), dpr * fascia.passo); misura(); lenti = 0; console.info(`[spazio3d] pixel ratio ${era.toFixed(2)} → ${dpr.toFixed(2)}: media ${mediaMs.toFixed(1)} ms su ${W}×${H}`) } } else lenti = 0
     if (mediaMs < 15 && dpr < tetto) { if (++svelti > 240) { const era = dpr; dpr = Math.min(tetto, dpr * 1.1); misura(); svelti = 0; console.info(`[spazio3d] pixel ratio ${era.toFixed(2)} → ${dpr.toFixed(2)}: media ${mediaMs.toFixed(1)} ms`) } } else svelti = 0
   }
 
-  console.info(`[spazio3d] parte a pixel ratio ${dpr} (schermo ${window.devicePixelRatio}, tetto ${DPR_MAX}, minimo ${DPR_MIN}${fisso ? ', fisso' : ''})`)
+  console.info(`[spazio3d] parte a pixel ratio ${dpr} (fascia ${fasciaAttiva()}, schermo ${window.devicePixelRatio}, tetto ${DPR_MAX}, minimo ${DPR_MIN}${fisso ? ', fisso' : ''})`)
   return {
     ridimensiona(w, h) { W = Math.max(1, w); H = Math.max(1, h); misura() },
     // le forme di un cielo si fanno quando si entra, non al primo sasso

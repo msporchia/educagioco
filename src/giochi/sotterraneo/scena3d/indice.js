@@ -31,8 +31,7 @@ const NIENTE = { emetti() {}, aggiorna() {}, aspetto() {}, via() {} }
 
 export function creaSotterraneo3d(canvas, opz = {}) {
   // `spegni`: i pezzi di ACCESI da spegnere, per misurare quanto costa ognuno (il cheat `&spegni=nebbia,post`): mai per i bambini
-  for (const k of opz.spegni || []) if (k in ACCESI) ACCESI[k] = false
-  const ctx = creaContesto(canvas, { perso: opz.perso, fisso: opz.dpr })
+  const ctx = creaContesto(canvas, { perso: opz.perso, fisso: opz.dpr, spegni: opz.spegni })
   if (!ctx) return null
   try { return costruisci(canvas, ctx, opz) } catch (e) {
     console.warn('sotterraneo 3D: non parte', e)

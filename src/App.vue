@@ -99,6 +99,12 @@ function guardaLoSchermo() {
   window.addEventListener('pagehide', () => esciDalGioco())
 }
 
+// La fascia grafica del telefono si misura una volta (store/qualita.js): in home, a cose calme, un po' dopo l'ingresso
+let misuraQualita = 0
+watch(vista, v => {
+  clearTimeout(misuraQualita)
+  if (v === 'home') misuraQualita = setTimeout(() => import('./grafica/benchmark/qualita-rapida.js').then(m => m.assicuraFascia()).catch(() => {}), 4000)
+})
 watch(vista, v => { if (v === 'home') controlla() })   // uscire da un gioco è un buon momento per controllare
 </script>
 

@@ -29,6 +29,24 @@ apre le ultime sei, che restano anche dopo la chiusura dell'app; «svuota» le b
 posato). Costa un `requestAnimationFrame` solo da acceso. `components/ContaFps.vue`, nei test `[data-fps]`,
 `[data-azione="fps-misura"]`, `.carta[data-flag="fps"]`.
 
+## La fascia: misurare una volta e tenerla
+
+Un telefono non cambia prestazioni nel tempo, quindi non si misura a ogni partita: `grafica/benchmark/qualita-rapida.js` fa in
+meno di un secondo quattro prove del benchmark (pixel leggeri a pixel ratio 1,5, shader pesante, 8 strati sfumati, 500
+scintille additive; WebGL nudo, senza three) più un quarto della prova di CPU, e ne ricava la **fascia** (`alta`, `media`,
+`bassa`): somma dei ms sotto 28 alta, fino a 40 media, oltre bassa, e un JS lento (≥ 100 ms) scende di una fascia. Le soglie
+vengono dai log veri: Redmi Note 7 = 52 punti (bassa), iPhone 12 Pro Max = 23 e Pixel 9a = 19 (alta). `store/qualita.js` la tiene
+fuori dai profili (chiave `qualita`) e la rifà dopo 30 giorni, se cambia il pixel ratio dello schermo o se si alza
+`VERSIONE_MISURA`. Parte da sola in home dopo 4 secondi (mai sotto automazione: `navigator.webdriver`).
+
+Cosa cambia una fascia sta tutto in `PROFILI` di `store/qualita.js`: negli Asteroidi 3D il pixel ratio di partenza (2 / 1,5 / 1),
+il tetto delle scintille (1400 / 700 / 350) e del fumo, e quanto in fretta il gioco scende di pixel (90 fotogrammi lenti a passo
+×0,85 contro 20 a ×0,75); nel Sotterraneo 3D il pixel ratio massimo (1,5 / 1,25 / 1) e i pezzi di `ACCESI` spenti (ombre nella
+media, ombre e passaggio finale nella bassa). **I numeri di media e bassa sono un'ipotesi dai log: da provare sul Note 7** (col
+contatore fps e `Misura questo telefono`) e ritoccare. In zona dei grandi (scheda *giochi*) la carta «Qualità della grafica 3D»
+dice la fascia, la fa scegliere a mano (`auto`/`alta`/`media`/`bassa`) e la rimisura; il cheat `#…&qualita=bassa` vince su tutto,
+per provarla sul computer (`[data-fascia]`, `[data-fascia-scelta]`, `[data-azione="rimisura-fascia"]`).
+
 ## La misura a scene (il benchmark)
 
 Zona dei grandi → *giochi* → **Misura questo telefono** (`components/genitori/Benchmark.vue`, nei test

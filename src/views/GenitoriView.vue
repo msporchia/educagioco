@@ -23,6 +23,7 @@ import { giudiziAccesi, accendiGiudizi, leggi as leggiGiudizi,
          pacco as paccoGiudizi, verdettoDi } from '../store/giudizi.js'
 import { fpsAcceso, accendiFps } from '../store/fps.js'
 import Benchmark from '../components/genitori/Benchmark.vue'
+import { scelta as fasciaScelta, misura as fasciaMisura, FASCE, scegliFascia, fasciaAttiva } from '../store/qualita.js'
 import { GIOCHI } from '../data/giochi.js'
 import { INDIRIZZO, condividi, piattaforma, installata,
          CHI, CODICE, SEGNALA } from '../guide/aiuto.js'
@@ -143,6 +144,11 @@ function cambiaGiudizi() {
     : 'Spento: le domande tornano come prima.' }
 }
 
+const rimisurando = ref(false)
+async function rimisuraFascia() {   // la misura di un secondo (grafica/benchmark/qualita-rapida.js), anche se ce n'è già una
+  rimisurando.value = true
+  try { const { assicuraFascia } = await import('../grafica/benchmark/qualita-rapida.js'); await assicuraFascia({ forza: true }) } finally { rimisurando.value = false }
+}
 const misuraAperta = ref(false)   // la misura del telefono, a tutto schermo
 // del telefono, come i giudizi: docs/core/vecchio-telefono.md
 function cambiaFps() {
@@ -903,6 +909,21 @@ async function rimetti(v) {
                           : 'Spento: serve a chi prova i giochi su un telefono vecchio' }}</i>
           <span class="leva"><span class="pallina"></span></span>
         </button>
+
+ <div class="carta" data-fascia>
+          <span class="ico">🎚️</span>
+          <b>Qualità della grafica 3D: {{ fasciaAttiva() }}</b>
+          <i>{{ fasciaScelta === 'auto'
+                ? (fasciaMisura ? 'Scelta da sola, misurata il ' + new Date(fasciaMisura.quando).toLocaleDateString('it-IT') + ' (' + fasciaMisura.punti + ' punti, JS ' + fasciaMisura.js + ' ms)'
+                                : 'Scelta da sola: ancora da misurare, si fa in home')
+                : 'Scelta a mano' }}</i>
+          <div class="riga">
+            <button v-for="f in ['auto', ...FASCE]" :key="f" type="button" class="bottone chiaro" :class="{ attivo: fasciaScelta === f }"
+                    :data-fascia-scelta="f" @click="scegliFascia(f)">{{ f }}</button>
+            <button type="button" class="bottone chiaro" data-azione="rimisura-fascia" :disabled="rimisurando" @click="rimisuraFascia">
+              {{ rimisurando ? 'Misuro…' : 'Rimisura' }}</button>
+          </div>
+        </div>
 
         <button class="carta interruttore" data-azione="benchmark" @click="misuraAperta = true">
           <span class="ico">⏱️</span>
