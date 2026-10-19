@@ -14,6 +14,7 @@ nella stessa sequenza. Farmare dà vantaggi ma costa più operazioni: va bene co
   così non tornano tutti insieme né nell'ordine in cui sono morti, e le misure danno sempre lo stesso risultato.
 - **La manopola è una sola**: `RICOMPARSA_BASE` in `dati/mondo.js`, **200 passi**. Un piano girato tutto sono ~160 passi al banco, un bambino
   ne fa forse il doppio. **È da provare giocando.**
+- **Sopra, nel mondo aperto**, la base è 400 (`SOPRA.ricomparsa`) e un giro nuovo li fa tornare tutti: [mondo-aperto-mostri.md](mondo-aperto-mostri.md).
 - **Quando torna**: a ogni passo camminato e rientrando in un piano (ripresa dalla sosta, portale, scala che sale o che scende) si guardano i
   morti il cui `torna` è passato (`faiTornareIMostri`). Torna solo se il suo posto non è nella stanza dove sta l'eroe e non è in luce; se no
   aspetta il controllo dopo. Rientrando, gli scaduti tornano subito (salvo la stanza d'arrivo).

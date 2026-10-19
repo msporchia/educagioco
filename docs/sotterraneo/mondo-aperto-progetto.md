@@ -35,9 +35,8 @@ raccomandazione e il perché.
   (lo stesso conto del pallino, [zone.md](zone.md#il-pallino-e-la-sentinella)), come nelle terre selvagge.
 - **Le regioni hanno mostri**, le città no. Una regione è una stanza grande del motore (`dentro`, `stanzaDi`: i mostri
   non ne escono), a branchi sparsi, con le tane dei caporali: il motore aperto delle terre selvagge
-  (`motore/aperta.js`, ramo `terre-selvagge`). **Da decidere**: mostri anche sopra (raccomandato: senza, le fasce
-  degli anelli non vogliono dire niente e il mondo è una mappa da attraversare) o un mondo sicuro con i mostri solo nei
-  dungeon (costa una fase in meno, [mondo-aperto-fasi.md](mondo-aperto-fasi.md)).
+  (`motore/aperta.js`, ramo `terre-selvagge`). Deciso il 16 ottobre: mostri anche sopra; il motore è in
+  [mondo-aperto-mostri.md](mondo-aperto-mostri.md).
 
 | anello | regioni | fascia dei mostri di sopra | cosa c'è | età (`portata`) |
 |---|---|---|---|---|

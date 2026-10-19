@@ -135,10 +135,9 @@ ingrandirlo). `--seme N` un altro seme; `--semi 1-48` una riga per seme, un PNG 
 
 ## Da qui alle fasi dopo
 
-- **Il motore aperto delle terre selvagge** (`aperta.js`) è entrato solo per la parte che fa la mappa (il rumore, le
-  regioni, i confini, i valichi, le masse). La parte che vive dentro un `Livello` (i branchi per regione, la tana, la luce a
-  cerchio, l'annuncio della regione) aspetta la fase 5: vuole gli agganci in `corsa.js`, `livello.js`, `scontro.js` e i moduli
-  dei ponti dipinti, che il progetto non tiene.
+- **Il motore aperto delle terre selvagge** (`aperta.js`) è entrato prima per la parte che fa la mappa (il rumore, le
+  regioni, i confini, i valichi, le masse); i mostri (branchi per regione, la tana, l'annuncio) sono stati riscritti sul mondo
+  generato nella fase 5: [mondo-aperto-mostri.md](mondo-aperto-mostri.md). Popolarlo non cambia la pianta né la firma.
 - **L'A* di `creaTerra`** cerca il nodo migliore scorrendo l'elenco: sui 22 400 celle del mondo una strada lunga costa
   ~10 ms in Node. Da guardare sul telefono con la vista (fase 2).
 - **Gli abitanti** delle dieci regioni senza (il foglio di creature d'aperta campagna) e i **livelli** delle regioni sono

@@ -51,8 +51,10 @@ Tutto è stato guardato solo in Chrome senza GPU, mai su un telefono vero.
   `data/giochi.js`), quindi in home la partita a metà non mostra l'icona; quando l'avrà, `iconaDi(chiave, true)` è già pronta
   (le icone del mondo fotografate stanno in [mondo-3d.md](mondo-3d.md#le-icone-dei-posti)). La città non ha ancora un posto
   dove mostrarsi: le tre icone ci sono, nessuna schermata le chiede.
-- **Il mondo con i mostri sopra** (fase 5): branchi, tane, luce a cerchio, annuncio della regione, abitanti per le dieci
-  regioni che ne sono prive (il foglio delle creature d'aperta campagna).
+- **Il mondo con i mostri sopra** (fase 5): il motore è fatto ([mondo-aperto-mostri.md](mondo-aperto-mostri.md)); resta la scena (i
+  mostri e il palco sul terreno, il tocco, l'annuncio colorato, il risveglio in città, le forze di sopra curate in città), lo scontro
+  lasciato con la ✕ (da decidere), il signore del cimitero che stende chi ci va prima della cripta, e gli abitanti da dipingere (il
+  foglio delle creature d'aperta campagna: oggi specie del catalogo scelte per habitat).
 - **Le quest alla Diablo/WoW** ([mondo-aperto-quest.md](mondo-aperto-quest.md)): fatte le taglie della bacheca (consegna, esplora, trova
   chi, mappa, caccia, mostro col nome, recupera; 19 ottobre). Restano: caccia aperta, signore della regione e tana (spente, aspettano
   i mostri di sopra: `taglieDaContare`), le quest scritte a mano nelle regioni, scorta ed eventi di mondo; la taratura delle gemme col

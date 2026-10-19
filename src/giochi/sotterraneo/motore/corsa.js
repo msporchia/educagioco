@@ -110,7 +110,7 @@ export class Corsa extends Corredo {
     this.nuovoPiano()
     this.posaLeMissioni()
     // le torce comprate di sopra aspettano alla cintura: si scende con una accesa, come se la si fosse appena presa
-    if (!this.torciaAccesa && this.torceInScorta > 0) {
+    if (!this.torciaAccesa && this.torceInScorta > 0 && !tappa.palco) {   // sopra è giorno: la torcia resta alla cintura (motore/palco.js)
       this.torceInScorta--
       this.accendi('torcia')
     }
@@ -224,9 +224,10 @@ export class Corsa extends Corredo {
       livello: livelloDelPosto(t, p),   // dice i gradi dei mostri con le mani (dati/varianti.js)
       scenario: scenarioDi(t, p),
       pianta: piantaDi(t, p), acqua: conAcquaDi(t, p), densita: densitaDi(t, p),
+      palco: t.palco || null,   // lo scontro del mondo di sopra (motore/palco.js, motore/aperta.js)
     })
     // nell'abisso il primo piano non ha da dove risalire: là la strada su è il portale
-    if (p > 0 || !t.abisso) {
+    if (!t.palco && (p > 0 || !t.abisso)) {
       const dentro = livello.stanze[0]
       livello.robe = livello.robe.filter(r => !(r.che === 'gemme' && r.x === dentro.cx && r.y === dentro.cy))
       livello.robe.push({ che: 'scala-su', x: dentro.cx, y: dentro.cy, em: '🪜', nome: 'La scala che sale' })
@@ -850,6 +851,9 @@ export class Corsa extends Corredo {
       this.posaPezzo(pezzoNuovo({ livello: this.livelloDelTrovato('mostro', m.x, m.y), chi: 'mostro', fortuna: this.fortuna,
                                   rnd: () => this.rnd(), tua: k => this.porta(k) }), { x: m.x, y: m.y + 1 })
     }
+    // il signore di una regione di sopra (motore/aperta.js): un raro della fascia di sicuro, come il grosso ma al livello di un mostro
+    if (m.signore) this.posaPezzo(pezzoNuovo({ livello: this.livelloDelTrovato('mostro', m.x, m.y), chi: 'grosso', fortuna: this.fortuna,
+                                               rnd: () => this.rnd(), tua: k => this.porta(k) }), { x: m.x - 1, y: m.y })
     // l'elisir del toro: rarissimo, dal grosso o da un caporale (e dai forzieri)
     const chi = m.grosso ? 'grosso' : m.caporale ? 'caporale' : null
     if (chi && elisirCade(chi, this.seme, this.piano, m.x, m.y)) this.posaPezzo('elisir-toro', { x: m.x + 1, y: m.y + 1 })

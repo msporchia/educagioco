@@ -161,6 +161,14 @@ città solo se prima ci si è allontanati di `raggio + 8` celle o si è saliti d
 restano spenti dietro `MOTORI['mostri-sopra']` con l'aggancio `taglieDaContare` / `taglieDaBattere` + `azioneMissione(id, 'fatta')`.
 Restano della 6 le quest scritte a mano per le regioni, la scorta e gli eventi (rimandati), e la taratura delle gemme col banco.
 
+**Fatta la 5a, il motore** (19 ottobre 2026, [mondo-aperto-mostri.md](mondo-aperto-mostri.md)): `motore/aperta.js` riscritto sul mondo
+generato e non più dentro un `Livello` (le terre selvagge lo erano): branchi per regione da (eroe, giro), la tana col signore, la cintura
+attorno al villaggio e alla strada della cripta, sveglia, inseguimento dentro la regione, l'incontro, lo scontro dei dungeon su un palco
+di una stanza (`motore/palco.js`, gli agganci in `livello.js` e `corsa.js`), l'esito, la ricomparsa a passi, lo svenimento senza perdere
+rari e leggendari, l'annuncio, le taglie per le quest, lo stato in `mondo.sopra`, e il banco (`npm run sotterraneo -- --mondo`). Gli
+agganci in `scontro.js` e `sosta.js` che il progetto prevedeva non sono serviti: il palco è una stanza sola, e la superficie si salva nel
+campo `mondo`. Resta la 5b, la scena: i mostri e il palco disegnati sul terreno, il tocco, l'annuncio colorato, il risveglio in città.
+
 **In tutto 38–57 giorni più la taratura**: due mesi abbondanti di lavoro pieno. Il primo file da provare arriva alla
 fine della fase 2 (dodici giorni circa); il mondo pericoloso alla fine della 5. Senza mostri sopra (la scelta più
 piccola) la fase 5 sparisce e le quest perdono caccia, signori e tane.

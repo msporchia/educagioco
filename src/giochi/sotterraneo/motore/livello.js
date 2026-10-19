@@ -12,6 +12,7 @@ import { haLeVarianti, pescaLaVariante, pescaIlGrado, vesti, rangoDelGrado } fro
 import { GROSSI } from '../dati/grossi.js'
 import { raggiungibili } from '../../../motore/passi.js'
 import { costruisci, pezziDa, celleDi, pozza, CELLE_SALA } from './forme.js'
+import { scavaIlPalco, arredaIlPalco } from './palco.js'
 
 // un numero fisso per cella (senza consumare il caso del piano): da qui l'aspetto di un relitto
 const numeroDa = (x, y, sale) => {
@@ -45,8 +46,9 @@ export class Livello {
   // `guardiano`: chi porta la chiave della scala, dichiarato dalla tappa (l'unica cosa che non si può aggirare)
   constructor({ seme = 1, piano = 0, largo = 52, alto = 52, giri = 4,
                 guardiano = 'scheletro', crescita = null, branco = ['scheletro'], caporale = null, tettoBranco = 5, grosso = null, scenario = null, caporali = true,
-                pianta = 'costruita', acqua = false, densita = 1, livello = 1 } = {}) {
+                pianta = 'costruita', acqua = false, densita = 1, livello = 1, palco = null } = {}) {
     this.seme = seme
+    this.palco = palco   // lo scontro di sopra: una stanza sola col branco già fatto (motore/palco.js)
     this.piano = piano
     this.largo = largo
     this.alto = alto
@@ -104,6 +106,7 @@ export class Livello {
 
   // si ferma quando il pezzo è piccolo abbastanza: sotto quella misura le stanze diventano stanzini
   scava() {
+    if (this.palco) return scavaIlPalco(this)
     const foglie = []
     const taglia = (r, giri) => {
       const inAltezza = r.h > 15, inLarghezza = r.w > 15
@@ -633,6 +636,7 @@ export class Livello {
 
   // ruoli delle stanze prima, poi si riempie: se l'uscita si scegliesse dopo la roba, capiterebbe accanto all'ingresso
   arreda() {
+    if (this.palco) return arredaIlPalco(this)
     const st = this.stanze
     const ingresso = st[0]
     ingresso.ruolo = 'ingresso'
@@ -1194,6 +1198,7 @@ export class Livello {
   }
 
   guasti() {
+    if (this.palco) return []
     const g = []
     const partenza = this.stanze[0]
     if (!partenza) return ['nessuna stanza']
