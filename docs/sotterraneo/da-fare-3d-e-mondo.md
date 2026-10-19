@@ -44,12 +44,12 @@ Tutto è stato guardato solo in Chrome senza GPU, mai su un telefono vero.
 - **La pergamena del portale**: lo sprite disegnato (oggi l'emoji; a terra in 3D si vede solo il bagliore), la casella nella
   barra come la pozione (oggi si apre dallo zaino), un banco nelle altre città, l'abisso «dall'inizio del tratto» (oggi
   chiude la serata come il ritorno di sempre). Il pensiero «sono lontano da casa» per ricordare che si può usare.
-- **I nomi nuovi dei dungeon** (fase 8): nel mondo 3D ci sono già, ma il minatore, i capitoli e la carta della discesa a metà
-  dicono ancora i vecchi; vanno riscritti `VOLTI`, `LUOGHI`, `CAPITOLI` e i dialoghi.
+- **Le icone dei posti fotografate dai monumenti** (fine della fase 8): i nomi nuovi sono in ogni testo, ma il diario, la home e le
+  carte della discesa usano ancora i ritagli della mappa dipinta (`terra-icone.js`): `npm run scatti icone-mondo`.
 - **Il mondo con i mostri sopra** (fase 5): branchi, tane, luce a cerchio, annuncio della regione, abitanti per le dieci
   regioni che ne sono prive (il foglio delle creature d'aperta campagna).
 - **Le quest alla Diablo/WoW** ([mondo-aperto-quest.md](mondo-aperto-quest.md)): 13 tipi, taglie della bacheca da modelli con
-  id stabili; la bacheca c'è ma è vuota; mancano il capitano e la fontana che cura sopra. 8–12 giorni stimati.
+  id stabili; la bacheca c'è ma è vuota; il capitano (che dice la quinta e la sesta porta) e la fontana ci sono, mancano le quest vere. 8–12 giorni stimati.
 - **I paesaggi alle discese e all'abisso**: gallerie → grotta, cisterna → tempio, fondo → miniera (già fatti nel mondo
   3D) e per l'abisso i tratti neve, ghiaccio, palude con gli abitanti adatti ([paesaggi-3d.md](paesaggi-3d.md)).
 - **Le figure grandi a blocchi**: i grossi senza figura dipinta (Re Ossuto) sono lo sprite della specie ingrandito ~2,5

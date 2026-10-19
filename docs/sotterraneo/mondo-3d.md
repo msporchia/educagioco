@@ -19,6 +19,7 @@ sono ancora (la fase 5): il mondo si gira, si scende nei sette dungeon e si torn
 | `nebbia.js` | le due trame della nebbia e il velo di nuvole |
 | `terreno.js`, `acqua.js`, `lontano.js` | il terreno di un pezzo (e la gonna che chiude le fessure), il fuori mappa, le piazze, i campi; l'acqua e il cielo; il mondo a dettaglio basso |
 | `kit.js`, `ponti.js`, `monumenti.js` | case, botteghe, pozzo, mulino; ponti, grate, staccionate, cartello, bacheca, campo del minatore, antri; gli otto ingressi, la pietra del viaggio, il portale gemello |
+| `fontana.js` | la fontana della piazza, dove manca chi cura: vasca, stelo, coppa, e l'acqua che si muove |
 | `props-citta.js`, `props-modelli.js` | gli oggetti di scena delle tre città: dove stanno (puro, dalle celle del mondo) e i modelli (barili, carretti, bancarelle, rastrelliere, lanterne, tende, palizzata…) |
 | `natura.js`, `vita.js`, `persone.js`, `trame.js`, `veduta.js` | alberi e decoro a istanze; fumo, spruzzi, faville, fiamme, uccelli; le figure ancorate; le trame su canvas; la telecamera e la veduta |
 
@@ -63,8 +64,8 @@ paga la risposta giusta di una pietra.
   attorno, la luce di taglio dal lato del sole, un'ombra morbida a contatto e l'ombra vera; le persone a scala 1,25 dell'eroe.
   Chi saluta, i segni sopra la testa, chi cura e il richiamo sono quelli della terra dipinta.
 - **Le città**: il villaggio coi quattro mercanti, la ragazza, il minatore (sale al rifugio dopo la sesta porta); il forte e il
-  rifugio coi loro mercanti (lo stesso banco, decisione 10). Il capitano non c'è ancora (non ha lo sprite né dialoghi: fase 4).
-  La bacheca c'è, vuota (le taglie sono la fase 6). Il cartello indica i passaggi della città coi dungeon trovati oltre.
+  rifugio coi loro mercanti (lo stesso banco, decisione 10: il fabbro del forte apre la bottega del villaggio). Nel forte c'è il
+  capitano e la fontana (sotto). La bacheca c'è, vuota (le taglie sono la fase 6). Il cartello indica i passaggi della città coi dungeon trovati oltre.
 - **I sette dungeon e l'abisso** hanno i monumenti del prototipo (l'altare coi re, l'arco dei goblin, la torre annerita, la
   grotta con le radici e le ragnatele, la scala nel lago, la botola che fuma, la miniera con la brace, il pozzo) e i nomi nuovi.
   Arrivati a uno aperto il monumento si apre e il fumetto è quello di sempre (piani, livello, la storia, le missioni, «scendo»);
@@ -97,6 +98,24 @@ sotto le 700 facce. Le fiaccole e i bracieri accendono le fiamme di `vita.js` (`
   modello nuovo è una funzione in `MODELLI` (origine a terra, davanti verso +z, larghezza lungo x) e, se è largo più di una
   cella, una voce in `LARGHE`. Misurato (Chrome senza schermo, davanti alla piazza del villaggio): +3 chiamate e +23k triangoli
   rispetto al villaggio spoglio.
+
+## Il capitano e la fontana
+
+- **Il capitano del forte** è fra le persone fisse (`bersagli` di `Mondo3d.vue`, `PERSONAGGI_DI_SOPRA`): lo sprite della guardia, più
+  alto e col suo blu (`scala` e `tinta` dei bersagli, letti da `persone.js`); il posto lo dà il generatore (la città `forte`,
+  `persone: ['capitano']`). Ha il «!» finché non ha detto la porta di adesso, quando è la quinta o la sesta; cosa dice:
+  [dialoghi.md](dialoghi.md#il-capitano-del-forte).
+- **La fontana** sta dove il generatore ha già messo il pozzo (il 2×2 al centro della piazza, un ingombro): non cambia l'output del
+  generatore e non aggiunge posti. La regola (`hoLaFontana`, `fontaneDi` in `motore/mondo-sopra.js`) la deriva dai mercanti della
+  città: dove manca la guaritrice o l'incantatrice c'è l'acqua al posto del pozzo, e cura vita ed energia insieme, gratis, a chi è salito
+  dal portale ([chi-cura.md](chi-cura.md#la-fontana)). Oggi è solo il forte (non ha l'incantatrice). Il modello è
+  `scena3d/mondo/fontana.js`, tutto in codice come il kit: vasca bassa di pietra con l'acqua incassata, stelo, coppa alta con quattro
+  bocchette; si muovono le quattro cascatelle, il getto in cima, sedici gocce in tiro balistico dalla coppa alla vasca (col tempo del
+  gioco, non coi fotogrammi) e gli spruzzi di `vita.js`; i materiali sono i `mobili` del kit, quindi la nebbia la chiude intera come
+  gli altri oggetti.
+- Si tocca come una cosa (`tipo: 'cosa'`, dopo le persone): l'eroe ci va e si apre un fumetto con «bevo»; sopra, finché serve, il
+  richiamo come quello della guaritrice. Bevendo, `Gioco.vue` scrive la sosta a vita ed energia piene (`curaDa('tutto')`) e sopra
+  l'eroe salgono i due numeri.
 
 ## Le pietre del viaggio
 
@@ -138,10 +157,6 @@ in un pezzo solo (disegnato anche sotto i pezzi vicini). Il degrado a scalini no
 
 ## Cosa manca
 
-- I nomi nuovi stanno sopra; giù il titolo della discesa e le frasi del minatore e dei capitoli dicono ancora la geografia della
-  mappa dipinta (fase 8).
-- Il gemello sta nella città giusta, ma la guarigione gratis è di chi c'è (al rifugio non c'è il fabbro); la fontana che cura
-  dove manca la guaritrice non c'è ancora (fase 4).
 - La freccina verso la missione dice la direzione sul bordo, non la strada vera ([missioni-freccina.md](missioni-freccina.md)).
 - Le figure restano pixel art in un mondo liscio: ancorate reggono, da vedere sul telefono. Mai misurato su un telefono vero.
 
@@ -150,12 +165,16 @@ di ognuna, le facce dei modelli), `unita/sotterraneo-mondo-3d` (i pezzi, la divi
 dito, i ponti, il cartello), `unita/sotterraneo-mondo-salva` (la nebbia in base64, la prima volta, il gemello per città e il caso
 peggiore, le pietre, il minatore, le grate), `integrazione/sotterraneo-mondo` (col dito vero: il mondo e quanto costa,
 camminare, la ragazza, la bottega del fabbro, la pietra sbagliata e giusta, la veduta e il tocco lì, scendere nella cripta e
-risalire davanti, la nebbia salvata, il gemello nel villaggio). Bersagli: `[data-mondo3d]` (con `data-pronto`, `data-in-veduta`),
+risalire davanti, la nebbia salvata, il gemello nel villaggio; al forte la fontana che richiama e cura, il capitano col «!» e la
+quinta porta, il fabbro di sempre), `unita/sotterraneo-citta` (il capitano, la sua strada, la regola e il posto della fontana),
+`unita/sotterraneo-nomi` (i nomi nuovi in ogni testo). Bersagli: `[data-mondo3d]` (con `data-pronto`, `data-in-veduta`),
 `[data-eroe-mondo]` (`data-cella`, `data-cammina`, `data-schermo`), i bersagli `[data-bersaglio]` (`data-vis`, `data-trovato`)
 con `[data-personaggio]`, `[data-mercante]` e `data-citta`, `[data-minatore]`, `[data-posto]` (`data-discesa`, `data-abisso`,
-`data-aperta`, `data-divieto`), `[data-pietra]` (`data-accesa`), `[data-cartello]`, `[data-bacheca]`, `[data-portale]`,
-`[data-grata]`; `[data-fumetto-di]` (`pietra`, `portale`, `cartello`, `bacheca`, `grata` o la chiave del dungeon) con
-`[data-viaggio]`, `[data-nessuna-meta]`, `[data-bacheca-vuota]`, `[data-grata-perche]`; `[data-pietra-domanda]`, `[data-veduta]`
+`data-aperta`, `data-divieto`), `[data-pietra]` (`data-accesa`), `[data-cartello]`, `[data-bacheca]`, `[data-fontana]` (la città), `[data-portale]`,
+`[data-grata]`; `[data-fumetto-di]` (`pietra`, `portale`, `cartello`, `bacheca`, `fontana`, `grata` o la chiave del dungeon) con
+`[data-viaggio]`, `[data-nessuna-meta]`, `[data-bacheca-vuota]`, `[data-grata-perche]`, `[data-fontana-dice]` (`data-serve`) e il tasto
+`[data-azione="bevi"]`, `[data-richiamo-di="fontana"]`, `[data-cura-fiocco][data-risorsa="tutto"]`, `[data-segno="nuova"]` sul capitano;
+`[data-pietra-domanda]`, `[data-veduta]`
 coi `[data-nome-posto]`, `[data-mondo-attesa]`; `window.__mondo3d` (`vai(chiave)`, `porta(x, z)`, `io`) e
 `window.__sotterraneo3d.grafica()` (con `mondo: true`, `pezzi`, `msPezzi`, `veduta`). In `test/aiuto/browser.mjs`:
 `mondoPronto`, `fermoNelMondo`, `toccaNelMondo`, `scendiNelMondo` (`scendiNelSotterraneo` lo usa da solo).

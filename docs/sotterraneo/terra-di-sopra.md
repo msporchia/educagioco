@@ -103,14 +103,14 @@ forma e perché: [la-grande-storia.md](la-grande-storia.md#le-discese).
 
 | discesa | posto | passi da casa |
 |---|---|---|
-| La cripta dell'altare (`altare`) | la scala dietro l'altare fra le colonne, in cima a destra | 35 |
-| La scalinata antica (`cantine`) | la scala sotto l'arco di pietra, oltre il bosco | 42 |
-| La torre in rovina (`torre`) | la porta in basso della torre, in cima a destra | 45 |
-| La grotta della scaletta (`gallerie`) | il buco nella roccia con la scaletta | 48 |
-| La scala sommersa (`cisterna`) | la scala dentro lo stagno | 53 |
-| La botola segreta (`labirinto`) | la botola nel prato, in cima a sinistra | 57 |
-| La miniera abbandonata (`fondo`) | la miniera dentro il monte | 58 |
-| l'abisso | il pozzo vecchio d'ardesia, in cima a sinistra | 64 |
+| La cripta dei re (`altare`) | la scala dietro l'altare fra le colonne, in cima a destra | 35 |
+| Le cantine dei goblin (`cantine`) | la scala sotto l'arco di pietra, oltre il bosco | 42 |
+| La torre bruciata (`torre`) | la porta in basso della torre, in cima a destra | 45 |
+| La tana dei ragni (`gallerie`) | il buco nella roccia con la scaletta | 48 |
+| Le sale allagate (`cisterna`) | la scala dentro lo stagno | 53 |
+| La porta dell'inferno (`labirinto`) | la botola nel prato, in cima a sinistra | 57 |
+| Le miniere di brace (`fondo`) | la miniera dentro il monte | 58 |
+| l'abisso | il pozzo senza fondo d'ardesia, in cima a sinistra | 64 |
 
 - **Meno pozzi**: il pozzo dal tetto rosso è tornato disegno; i pozzi come
   discesa sono poco intuitivi (l'utente).
@@ -160,7 +160,7 @@ forma e perché: [la-grande-storia.md](la-grande-storia.md#le-discese).
 
 - **Il vecchio minatore**, nel villaggio dove parte la strada per il bosco:
   toccato, si parla ([dialoghi.md](dialoghi.md)) e dice dov'è la prossima
-  discesa aperta («La cripta dell'altare: su per il sentiero dei campi, oltre
+  discesa aperta («La cripta dei re: su per il sentiero dei campi, oltre
   il mulino, fino all'altare fra le due colonne…»); finite le sette, racconta
   la zona appena nata, col «!» sopra la testa finché non l'ha detta, e dice
   le zone verdi ([zone.md](zone.md#la-notizia)). Finché non ha parlato ha i puntini sopra la testa, e la prima
@@ -270,7 +270,7 @@ finché serve. Tutto in [chi-cura.md](chi-cura.md).
   dell'eroe, con un bagliore morbido che i pixel non hanno.
 - **Salendo dal portale si sbuca `accanto` a lui**. Toccandolo ci si va, e il
   fumetto dice dove riporta, col ritaglio della discesa: «Ti riporta giù: la
-  scalinata antica, piano 1, dove eri» e «torno giù», che riprende la sosta
+  le cantine dei goblin, piano 1, dove eri» e «torno giù», che riprende la sosta
   esattamente dov'era.
 - **C'è finché c'è la sosta, e solo se si è salita dal portale** (`via:
   'portale'`, o l'abisso risalito per la sera): uscire con la ✕ non lascia un
@@ -294,7 +294,7 @@ quale pozzo. Come si fanno: [terra-strumento.md](terra-strumento.md#le-icone).
   browser stira sfumando.
 - **Si scopre camminando** (`VISTA`, otto celle attorno all'eroe), e un
   posto è trovato quando se ne vede il cuore: lo dice una riga in fondo
-  («Hai trovato la scalinata antica!»). Un posto nel buio è prato come il resto.
+  («Hai trovato le cantine dei goblin!»). Un posto nel buio è prato come il resto.
 - **Si ricorda per avventura** ([avventure.md](avventure.md)), in
   `cfg.avventure[<eroe>].terra`: `{ nebbia, dove, parlato, divieti }`, la
   nebbia un bit per cella in esadecimale (768 caratteri); un codice della
