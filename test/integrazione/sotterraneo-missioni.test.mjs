@@ -118,7 +118,7 @@ for (let n = 0; n < 4; n++) {
 }
 await nelDialogo(page, null, { tocca: toccaIl })
 chiede += ' ' + await page.locator('[data-scelta="prendi"]').innerText()
-controlla('il dialogo dice cosa, dove, il premio e le monete', chiede.includes('Grattanaso') && chiede.includes('torre in rovina') &&
+controlla('il dialogo dice cosa, dove, il premio e le monete', chiede.includes('Grattanaso') && chiede.includes('torre bruciata') &&
           chiede.includes('primo piano') && chiede.includes(`💎 ${GOBLIN.premio.gemme}`) && (!GOBLIN.premio.monete || chiede.includes(`🪙 ${GOBLIN.premio.monete}`)), chiede)
 await toccaIl('[data-dialogo] [data-scelta="prendi"]')
 await attendi(page, 500)
@@ -153,7 +153,7 @@ stessaLista('la consegna sta nel suo elenco, le altre due fra le da fare', righe
 const ros = righe.find(r => r.id === 'rosicchione'), gob = righe.find(r => r.id === 'goblin')
 controlla('Rosicchione è fatta: torna dal mugnaio, hai battuto Rosicchione', ros.stato === 'fatta' && ros.testo.includes('Torna dal mugnaio: hai battuto Rosicchione'), ros.testo)
 controlla('il goblin è da fare, con la discesa, il piano e chi lo vuole', gob.stato === 'presa' && gob.testo.includes('da fare') &&
-          gob.testo.includes('La torre in rovina, piano 1') && gob.testo.toLowerCase().includes('ragazza del pozzo'), gob.testo)
+          gob.testo.includes('La torre bruciata, piano 1') && gob.testo.toLowerCase().includes('ragazza del pozzo'), gob.testo)
 controlla('ogni riga ha l\'icona ritagliata della discesa', righe.every(r => r.ritaglio))
 controlla('il premio è nella riga', ros.testo.includes('Amuleto azzurro') && ros.testo.includes(`🪙 ${ROSICCHIONE.premio.monete}`) && (!GOBLIN.premio.monete || gob.testo.includes(`🪙 ${GOBLIN.premio.monete}`)))
 controlla('tre in mano, e il diario dice perché non ne arrivano altre', (await page.locator('[data-diario-tetto]').innerText()).includes('3 missioni'))

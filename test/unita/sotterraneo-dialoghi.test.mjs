@@ -45,7 +45,7 @@ const che = s => s.map(x => x.che)
   uguale('e l\'ultima è sempre arrivederci', scelte('eremita', ctx(0)).at(-1).testo, ARRIVEDERCI)
   // presa: ricorda dov'è, con le parole del posto
   const presa = apertura('eremita', ctx(0, { badessa: PRESA }))
-  controlla('presa, ricorda dov\'è e a che piano', presa.length === 1 && /cripta dell'altare, al secondo piano/.test(presa[0].testo), testi(presa).join(' | '))
+  controlla('presa, ricorda dov\'è e a che piano', presa.length === 1 && /cripta dei re, al secondo piano/.test(presa[0].testo), testi(presa).join(' | '))
   stessaLista('e allora niente «ci penso io»', che(scelte('eremita', ctx(0, { badessa: PRESA }))), ['novita', 'racconta', 'ciao'])
   // fatta: se ne accorge, e la scelta è consegnarla
   const fatta = apertura('eremita', ctx(1, { badessa: FATTA }))
@@ -86,7 +86,7 @@ const che = s => s.map(x => x.che)
   uguale('poi va dritto al perché della porta di adesso', dopo[0].dato, 'storia')
   controlla('che è quello della torre', /Fiammetta/.test(dopo[0].testo), dopo[0].testo)
   const detto = dopo.find(p => p.dato === 'detto')
-  controlla('e la strada dice la discesa di adesso', detto.testo.startsWith('La torre in rovina:'), detto.testo)
+  controlla('e la strada dice la discesa di adesso', detto.testo.startsWith('La torre bruciata:'), detto.testo)
   // chi ti cerca al villaggio, una pagina per chi
   const cerca = strada(ctx(1, { collana: FATTA }))
   controlla('dice chi ti cerca', cerca.some(p => p.dato === 'ti-cerca' && /ragazza del pozzo ti aspetta/.test(p.testo)), testi(cerca).join(' | '))
@@ -190,7 +190,7 @@ const che = s => s.map(x => x.che)
   }
   // reagiscono a dove si è arrivati: la prima è la notizia fresca, col nome del grosso e della discesa nuova
   const dopoTorre = testi(novita('ragazza', ctx(3), null).pagine).join(' ')
-  controlla('finita la torre la ragazza parla di Fiammetta e della grotta', /Fiammetta/.test(dopoTorre) && /grotta della scaletta/.test(dopoTorre), dopoTorre)
+  controlla('finita la torre la ragazza parla di Fiammetta e della tana dei ragni', /Fiammetta/.test(dopoTorre) && /tana dei ragni/.test(dopoTorre), dopoTorre)
   controlla('la guardia, finita la torre, parla della fornace spenta', /fornace è spenta/.test(testi(novita('guardia', ctx(3), null).pagine).join(' ')))
   controlla('prima di scendere: un\'altra notizia', testi(novita('mugnaio', ctx(0), null).pagine).join(' ') !== dopoTorre)
   // un livello raggiunto cambia la pila: si riparte dalla notizia nuova

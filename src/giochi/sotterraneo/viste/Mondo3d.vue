@@ -280,7 +280,7 @@ const aperto = ref(null)             // il bersaglio col fumetto aperto
 const fumetto = ref(null)
 const LARGO_FUM = 244
 const ctx = () => ({ stati: props.missioni, tappe: props.tappe, abisso: !!props.abisso, eroe: props.eroe.chiave,
-                     roba: props.roba, annuncio: props.annuncio, novita: ascoltate.value, forze: props.forze })
+                     roba: props.roba, annuncio: props.annuncio, novita: ascoltate.value, forze: props.forze, mondo: true })
 const livelloDi = t => (t && !t.fatta && props.roba ? dettoDelLivello(props.eroe.chiave, props.roba, t, t.indice) : null)
 function rigaStoria(t) {
   const s = storia.value, porta = t && s.porte.find(x => x.chiave === t.chiave)
