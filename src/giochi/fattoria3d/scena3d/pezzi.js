@@ -3,7 +3,8 @@
 // Non sa le regole: legge lo stato e disegna. I cartelli sugli edifici (prezzo, cottura) sono qui.
 import * as THREE from 'three'
 import { creaCampo, aggiornaCampo, creaPasticceria, creaMongolfiera, creaBancarella, creaFontana, creaRecinto, muoviPecore,
-         sincronizzaPecore, fantasma } from './modelli.js'
+         sincronizzaPecore, fantasma, creaMulino, creaPanificio, creaConserviera, creaGelateria, creaAiuola, creaPanchina,
+         creaPozzo, creaSpaventapasseri, creaSegnaposto } from './modelli.js'
 import { EDIFICI, PEZZI } from '../dati/catalogo.js'
 import { RICETTE, FORNO_POSTI } from '../dati/ricette.js'
 import { MONGOLFIERA } from '../dati/regole.js'
@@ -14,8 +15,17 @@ const CREA = {
   recinto: c => creaRecinto(c && c.pecore),
   bancarella: () => creaBancarella(),
   fontana: () => creaFontana(),
+  aiuola: () => creaAiuola(),
+  panchina: () => creaPanchina(),
+  pozzo: () => creaPozzo(),
+  spaventapasseri: () => creaSpaventapasseri(),
 }
-const CREA_EDIFICIO = { pasticceria: creaPasticceria, mongolfiera: creaMongolfiera }
+const CREA_EDIFICIO = {
+  pasticceria: creaPasticceria, mongolfiera: creaMongolfiera,
+  mulino: creaMulino, panificio: creaPanificio, conserviera: creaConserviera, gelateria: creaGelateria,
+}
+/** Un tipo senza disegno non rompe la scena: una scatola grigia della sua misura. */
+const modelloDi = (tipo, d, c) => (CREA[tipo] ? CREA[tipo](c) : creaSegnaposto(d.w, d.d))
 
 export const centroDi = (c, d) => new THREE.Vector3(c.i + d.w / 2, 0, c.j + d.d / 2)
 
@@ -47,13 +57,13 @@ export class Pezzi {
   }
 
   _creaCosa(c) {
-    const d = PEZZI[c.tipo], grp = CREA[c.tipo](c)
+    const d = PEZZI[c.tipo], grp = modelloDi(c.tipo, d, c)
     grp.userData.bersaglio = { kind: 'cosa', id: c.id }
     grp.position.copy(centroDi(c, d)); this.scena.add(grp)
     this.voci.set(c.id, { id: c.id, kind: 'cosa', c, d, grp, badge: null, anello: null, salto: 0, nasce: undefined, richiamo: null, chiave: '' })
   }
   _creaEdificio(tipo, mio) {
-    const e = EDIFICI[tipo], grp = CREA_EDIFICIO[tipo]()
+    const e = EDIFICI[tipo], grp = CREA_EDIFICIO[tipo] ? CREA_EDIFICIO[tipo]() : creaSegnaposto(e.w, e.d)
     if (!mio) fantasma(grp)
     grp.userData.bersaglio = { kind: 'edificio', tipo }
     grp.position.copy(centroDi({ i: e.slot.i, j: e.slot.j }, e)); this.scena.add(grp)
@@ -67,7 +77,7 @@ export class Pezzi {
   }
 
   /** Il modello di un pezzo di quel tipo, per il fantasma di chi lo sta trascinando. */
-  modello(tipo, c) { return CREA[tipo](c) }
+  modello(tipo, c) { return modelloDi(tipo, PEZZI[tipo], c) }
 
   /** Un pezzo appena messo: compare con un piccolo rimbalzo. */
   fanNascere(id) { const v = this.voci.get(id); if (v) { v.nasce = 0; v.grp.scale.setScalar(0.01) } }
@@ -118,7 +128,7 @@ export class Pezzi {
       if (this.q.vento || chiave !== v.chiave) { v.chiave = chiave; aggiornaCampo(g, cr, tt, col, this.q.vento) }
     } else if (c.tipo === 'recinto') {
       muoviPecore(g, dt, tt, v.richiamo, c.pecore, adesso); v.richiamo = null
-    } else if (c.tipo === 'fontana') g.userData.anima(tt)
+    } else if (g.userData.anima) g.userData.anima(tt)              // fontana, spaventapasseri
   }
 
   _edificio(v, g, dt, tt, adesso) {
@@ -130,7 +140,7 @@ export class Pezzi {
       if (P.coda.length && tt - this.tFumo > 0.35) { this.tFumo = tt; this.fx.fumata(g.position.clone().add(g.userData.fumo)) }
       const pronti = this.m.prontiInForno(), prima = Object.keys(P.pronti).find(k => P.pronti[k] > 0)
       v.badge.imposta(pronti ? `${RICETTE[prima].emoji} ${pronti} pront${pronti === 1 ? 'o' : 'i'}!` : P.coda.length ? `🔥 ${Math.max(0, Math.ceil((P.coda[0].fine - adesso) / 1000))}s · ${P.coda.length}/${FORNO_POSTI}` : '', pronti ? 'pronto' : '')
-    } else {
+    } else if (v.tipo === 'mongolfiera') {
       const M = s.mongolfiera, volo = g.userData.volo
       let y = Math.sin(tt * 1.3) * 0.08, x = 0
       if (M.fine) {
@@ -141,6 +151,11 @@ export class Pezzi {
       volo.position.set(x, y, 0); volo.rotation.z = Math.sin(tt * 0.9) * 0.02
       g.userData.fiamma.scale.set(1, 1.2 + Math.sin(tt * 14) * 0.4, 1)
       v.badge.imposta(M.cassa ? '🧳 è tornata!' : M.fine ? `☁️ ${Math.max(0, Math.ceil((M.fine - adesso) / 1000))}s` : '', M.cassa ? 'pronto' : '')
+    } else {
+      // gli altri edifici: pale, cono che gira, fiamma del forno; e il fumo, se hanno un fumaiolo
+      if (g.userData.anima) g.userData.anima(dt, tt)
+      if (g.userData.fumo && tt - (v.tFumo || 0) > 0.6) { v.tFumo = tt; this.fx.fumata(g.position.clone().add(g.userData.fumo)) }
+      v.badge.imposta('', '')
     }
   }
 
