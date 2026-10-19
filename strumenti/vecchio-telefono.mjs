@@ -12,9 +12,9 @@
 //   node strumenti/vecchio-telefono.mjs 'mate3d=3&volo' --tocca 200,500 --secondi 20
 //   node strumenti/vecchio-telefono.mjs 'sotterraneo3d' --cpu 1,3,6 --zavorra 0,4   # una riga per ogni combinazione
 //
-// Senza taratura le leve partono da una stima (CPU ×6, zavorra 4) e lo strumento lo dice. `--esegui '<espressione>'` la fa
+// Senza taratura le leve partono da una stima (CPU ×3, zavorra 0) e lo strumento lo dice. `--esegui '<espressione>'` la fa
 // nella pagina dopo l'apertura (per scatenare le esplosioni), `--tocca x,y` tocca lì ogni due secondi, `--dist file` apre un
-// altro file costruito. Il pixel ratio dei giochi si adatta da sé: per vedere il costo vero a una risoluzione, il cheat `&dpr=N`.
+// altro file costruito; l'espressione può definire `window.__extra = () => …` e il risultato si stampa sotto la riga. Il pixel ratio dei giochi si adatta da sé: per vedere il costo vero a una risoluzione, il cheat `&dpr=N`.
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -24,15 +24,15 @@ const QUI = dirname(fileURLToPath(import.meta.url))
 const PROFILO = resolve(QUI, 'vecchio-telefono/profilo.json')
 const SCHERMO = { width: 392, height: 774 }, PIXEL = 2.75   // il Redmi Note 7 visto da Chrome (la misura del 19/10: 392×774)
 const UA = 'Mozilla/5.0 (Linux; Android 10; Redmi Note 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Mobile Safari/537.36'
-const STIMA = { cpu: 6, zavorra: 4 }
+const STIMA = { cpu: 3, zavorra: 0 }
 const SCALINI = [0, 1, 2, 4, 8, 16, 32, 64, 128, 256]
 
 const argv = process.argv.slice(2)
 const opz = (n, d = null) => { const i = argv.indexOf('--' + n); return i >= 0 && argv[i + 1] && !argv[i + 1].startsWith('--') ? argv[i + 1] : d }
 const lista = (n, d) => String(opz(n, d)).split(',').map(Number)
 const primo = argv[0]
-if (!primo || primo.startsWith('--')) { console.error("uso: node strumenti/vecchio-telefono.mjs calibra --log file | benchmark [--contro file] | '<cheat>' [--dist file] [--cpu 6] [--zavorra 4] [--gpu hw|sw] [--secondi 15] [--tocca x,y] [--esegui expr]"); process.exit(1) }
-const gpuModo = opz('gpu', 'hw')
+if (!primo || primo.startsWith('--')) { console.error("uso: node strumenti/vecchio-telefono.mjs calibra --log file | benchmark [--contro file] | '<cheat>' [--dist file] [--cpu 6] [--zavorra 4] [--gpu sw|hw] [--secondi 15] [--tocca x,y] [--esegui expr]"); process.exit(1) }
+const gpuModo = opz('gpu', 'sw')   // SwiftShader somiglia al Note 7 sui pixel (rapporto 1-1,5 sul riempimento e sullo shader pesante) e non serve la zavorra; 'hw' è la GPU vera, troppo forte
 const ARGOMENTI = gpuModo === 'sw' ? ['--use-angle=swiftshader', '--enable-unsafe-swiftshader']
   : ['--use-gl=angle', '--use-angle=vulkan', '--enable-features=Vulkan', '--ignore-gpu-blocklist']
 const leggiProfilo = () => existsSync(PROFILO) ? JSON.parse(readFileSync(PROFILO, 'utf8')) : {}
@@ -200,6 +200,8 @@ async function misura() {
     const nota = [g && g.dpr ? `dpr ${g.dpr}` : '', g && g.chiamate ? `${g.chiamate} chiamate` : '', g && g.triangoli ? `${g.triangoli} tri` : '',
       adatta.length ? `si adatta: ${adatta[adatta.length - 1]}` : ''].filter(Boolean).join(', ')
     console.log(`  ×${String(cpu).padEnd(4)} ${String(K).padEnd(7)} ${(1000 * dt.length / (somma || 1)).toFixed(0).padStart(4)} ${p(.5).toFixed(0).padStart(5)} ${p(.95).toFixed(0).padStart(5)} ${p(.99).toFixed(0).padStart(5)} ${String(lenti(33)).padStart(6)} ${String(lenti(50)).padStart(6)}  ${nota}`)
+    const extra = await page.evaluate(() => { try { return window.__extra?.() } catch (e) { return null } })   // l'espressione di --esegui può lasciare `window.__extra`: cosa stampare in più
+    if (extra != null) console.log('        ' + JSON.stringify(extra))
     await page.close(); await hog?.close()
   }
   await b.close()

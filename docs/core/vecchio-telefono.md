@@ -12,7 +12,7 @@ quando lì resta sotto i ~30 ms a fotogramma. Sul computer (RTX, 20 core) non si
 | schermo e pixel ratio | 393×851 a 2,75, touch, user agent Android | |
 | `--cpu N` | `Emulation.setCPUThrottlingRate`: il JS e la preparazione del fotogramma costano N volte | non rallenta i thread della GPU (con `--gpu sw`, SwiftShader, il disegno non è rallentato da questa leva) |
 | `--zavorra K` | un'altra pagina disegna K schermi pieni con uno shader pesante a ogni fotogramma: la GPU vera si divide col gioco | non imita la banda di memoria né il calore del telefono |
-| `--gpu sw` | SwiftShader: la CPU fa la GPU, deterministico ma sono ms di un'altra cosa (usata anche dalle misure in `grafica-3d-costi.md`) | |
+| `--gpu sw` (di difetto) | SwiftShader: la CPU fa la GPU. **Misurato contro il Note 7 (19/10): pixel e shader leggero ×1,0-1,4, shader pesante ×1,0, strati sfumati ×1,4-2,6, chiamate ×0,7-1,4; sovrastima i triangoli (×1,5-4,5) e le scintille grandi (×2-3).** Con CPU ×2,8 anche il JS torna (234 → ~470 ms). Nessun comando di sistema, e per i giochi è pessimista | |
 
 Un telefono non si imita davvero: serve a trovare **dove** scatta e **se un degrado aiuta**, e i numeri veri si confermano
 sul telefono (`chrome://inspect`, scheda Performance, [comandi.md](comandi.md)).
@@ -72,7 +72,7 @@ c'è «Copia»); «Rifai» ripete. Un pezzo che il telefono non regge (la tela h
    vale come telefono: si misura sul telefono).
 
 Le misure vere stanno in `strumenti/vecchio-telefono/log/` (Redmi Note 7, Pixel 9a, iPhone 12 Pro Max), e il `profilo.json` è tarato
-sul Redmi: CPU ×2,9, zavorra 16. **Quanto somiglia**: il rapporto computer/telefono sta fra 0,8 e 1,2 per pixel semplici,
+sul Redmi: con `--gpu sw` CPU ×2,8 e niente zavorra; con `--gpu hw` (la RTX) CPU ×2,9 e zavorra 16, che però sbaglia di tre volte gli shader pesanti. **Quanto somiglia**: il rapporto computer/telefono sta fra 0,8 e 1,2 per pixel semplici,
 triangoli, chiamate, ombre e passaggio finale; **non somiglia** per gli shader pesanti (×0,36: la RTX li mangia) e le
 sfumature a schermo intero (×0,3), e il pavimento di un fotogramma è più alto (la zavorra costa CPU: JS ×1,56). Quindi il
 simulatore va bene per confrontare un degrado con la versione di prima su geometria, chiamate e pixel; per nebbia, esplosioni
@@ -106,3 +106,21 @@ degrado con quello che c'era si usa `--dist` su due file.
 
 Provato il 19 ottobre 2026 (taratura inventata, solo per vedere che le leve muovano): il Sotterraneo 3D (seme 7) passa da
 55 fps (p95 33 ms) a 27 fps con CPU ×5 e a 13 con in più la zavorra 32; il pixel ratio scende da 1,4 a 1.
+
+## Cosa può dare problemi (e cosa si è visto)
+
+**Nell'emulazione** (SwiftShader, CPU ×2,8, 392×774 a 2,75), Asteroidi 3D, p50 di un fotogramma: fascia alta (pixel ratio 2) 83 ms,
+media 50, bassa (pixel ratio 1) 33: il pixel ratio è la leva che conta, il resto no. **Senza esplosioni è lo stesso**: l'emulazione
+sovrastima la scena di base (triangoli e passaggio finale ×2-4 contro il Note 7), quindi non separa le esplosioni; sul computer vero
+(RTX, nessun rallentamento) un'esplosione ogni 0,5 s porta da 59 a 39-51 fps. Il JS che prepara il fotogramma sta sotto il mezzo
+millisecondo e le chiamate a WebGL sotto i 5: il costo è la GPU, non il JS. Un'esplosione sono ~47 punti (le scintille 5-15 px, i
+quattro lampi fino a ~100 px, il fumo ~30 px) più, per ogni sasso, un anello d'urto additivo grande fino a 0,55 volte il lato corto:
+sono pochi pixel di punti ma qualche megapixel di anelli sovrapposti, e la prova «1200 scintille da 120 px» del benchmark è un caso
+peggiore, non l'esplosione vera. **Da confermare sul Note 7** con il contatore fps, una partita senza e una con esplosioni.
+
+**I rischi della fascia**: (1) misurata male e tenuta un mese (telefono occupato, appena aggiornato, in risparmio energetico): la
+misura si scarta se la scheda si nasconde o un fotogramma supera i 400 ms; resta il rischio di una fascia sbagliata, che i grandi
+correggono a mano o con «Rimisura»; (2) soglie ricavate da tre telefoni: un telefono di fascia media è un'ipotesi; (3) la prova di
+un secondo carica la GPU in home (un'attesa di 4 secondi, e non parte se si è già entrati in un gioco); (4) una fascia bassa
+toglie nitidezza (pixel ratio 1 su uno schermo a 2,75) e nel Sotterraneo le ombre; (5) lo shader compilato la prima volta in una
+scena (un anello, un guscio) è un fermo che il computer non vede (3 ms contro i 50-300 ms attesi su un Adreno): non misurato.

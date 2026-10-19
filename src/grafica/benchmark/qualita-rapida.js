@@ -33,10 +33,12 @@ async function prova(gl, canvas, dpr, giro, scalda = 80, misura = 120) {
   canvas.width = Math.round(innerWidth * dpr); canvas.height = Math.round(innerHeight * dpr); gl.viewport(0, 0, canvas.width, canvas.height)
   const px = new Uint8Array(4), ms = [], t0 = performance.now()
   for (let t = 0; ; t = performance.now() - t0) {
+    if (document.hidden) throw new Error('scheda nascosta')   // un telefono posato o un'altra app: la misura non vale
     if (t > scalda + misura) break
     const a = performance.now()
     giro(t / 1000); gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px)
     if (t > scalda) ms.push(performance.now() - a)
+    if (performance.now() - a > 400) throw new Error('fotogramma troppo lungo')   // il telefono sta facendo altro: non è lui
     await pausa()
   }
   return mediana(ms)

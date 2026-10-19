@@ -103,7 +103,7 @@ function guardaLoSchermo() {
 let misuraQualita = 0
 watch(vista, v => {
   clearTimeout(misuraQualita)
-  if (v === 'home') misuraQualita = setTimeout(() => import('./grafica/benchmark/qualita-rapida.js').then(m => m.assicuraFascia()).catch(() => {}), 4000)
+  if (v === 'home') misuraQualita = setTimeout(() => { if (vista.value === 'home' && !document.hidden) import('./grafica/benchmark/qualita-rapida.js').then(m => m.assicuraFascia()).catch(() => {}) }, 4000)
 })
 watch(vista, v => { if (v === 'home') controlla() })   // uscire da un gioco è un buon momento per controllare
 </script>
