@@ -234,6 +234,7 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = {}, fon
     vita.passo(dt, tempo, centro)
     // l'eroe e le persone
     eroe.x = S.io.x; eroe.z = S.io.z; eroe.verso = S.io.verso; eroe.sprite = S.io.sprite; eroe.mano = S.io.mano; eroe.mancina = S.io.mancina
+    eroe.nascosto = !!S.io.nascosto   // `#…&senzaeroe`: le foto delle icone (strumenti/scatti.mjs, icone-mondo)
     if (!eroe.stato) eroe.stato = { x: eroe.x, z: eroe.z, dx: 0, dz: 0, vx: 0, vz: 1, lx: 0, lz: 1, t: 0, colpito: 0, cura: 0, gira: 0, assalto: null, meta: null, passaggio: null, specchio: false, alto: 1.4, px: null, pz: null, cammina: false }
     centro.set(eroe.x, quota(eroe.x, eroe.z), eroe.z)
     cam.aggiorna(dt, centro, veduta, sole)

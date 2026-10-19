@@ -584,6 +584,15 @@ const exe = trovaChrome()
 const browser = await chromium.launch(exe ? { executablePath: exe } : {})
 let storte = 0
 
+/* `npm run scatti icone-mondo` non è una foto per i documenti: fotografa i monumenti del mondo 3D e riscrive il file di
+   dati delle icone (strumenti/icone-mondo.mjs). Per questo non gira con «tutte», solo se nominato. */
+const conIcone = filtro.includes('icone-mondo')
+if (conIcone) {
+  const { fotografaIcone, scriviIcone, FILE_ICONE } = await import('./icone-mondo.mjs')
+  scriviIcone(await fotografaIcone({ browser, gioco: GIOCO, profilo: PROFILO }))
+  console.log(`\nicone del mondo in ${FILE_ICONE}`)
+}
+
 for (const r of scelte) {
   const page = await browser.newPage({ viewport: TELEFONO, deviceScaleFactor: 2, hasTouch: true })
   /* il roster va scritto prima che parta l'app, come nei test: senza,
@@ -630,4 +639,4 @@ for (const r of scelte) {
 }
 
 await browser.close()
-console.log(`\n${scelte.length} foto in docs/img/${storte ? `, ${storte} con qualche intoppo` : ''}`)
+if (scelte.length || !conIcone) console.log(`\n${scelte.length} foto in docs/img/${storte ? `, ${storte} con qualche intoppo` : ''}`)

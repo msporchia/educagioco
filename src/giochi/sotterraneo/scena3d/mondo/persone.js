@@ -53,10 +53,12 @@ export function creaPersone(scena, { tex, norm, larga, alta, pezzi, trame, quota
           figure.metti(q.pezzo, q.x, y - (1 - e) * 2.2, q.z, o)
           if (e > 0.9) ombra(q.x, y, q.z, 1.05)
         }
-        finta.eroe.x = eroe.x; finta.eroe.y = eroe.z; finta.versoEroe.dx = eroe.verso.dx; finta.versoEroe.dy = eroe.verso.dy
-        finta.io.sprite = eroe.sprite; finta.mano = eroe.mano; finta.mancina = eroe.mancina
-        disegnaEroe(eroe.stato, finta, { figure: terra, luci: nessuna, etichette: niente, camera, dt, dtScena: dt, t })
-        ombra(eroe.stato.disegnato.x, quota(eroe.x, eroe.z), eroe.stato.disegnato.z + 0.1, 0.95)
+        if (!eroe.nascosto) {
+          finta.eroe.x = eroe.x; finta.eroe.y = eroe.z; finta.versoEroe.dx = eroe.verso.dx; finta.versoEroe.dy = eroe.verso.dy
+          finta.io.sprite = eroe.sprite; finta.mano = eroe.mano; finta.mancina = eroe.mancina
+          disegnaEroe(eroe.stato, finta, { figure: terra, luci: nessuna, etichette: niente, camera, dt, dtScena: dt, t })
+          ombra(eroe.stato.disegnato.x, quota(eroe.x, eroe.z), eroe.stato.disegnato.z + 0.1, 0.95)
+        }
       }
       figure.chiudi(); figureEroe.chiudi()
       ombre.count = nOmbre; ombre.instanceMatrix.needsUpdate = true

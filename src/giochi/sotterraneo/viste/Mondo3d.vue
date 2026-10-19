@@ -625,7 +625,7 @@ function aggiornaBussole() {
   const metaD = discesaDaSeguire(props.missioni, { x: io.x, y: io.z }, PIEDI(), props.segui, portaDellaStoria.value)
   if (metaD) {
     const b = bersagli.value.find(x => x.ruolo === 'ingresso' && x.k === metaD)
-    if (b) { scena.aSchermo(b.lotto.x + b.lotto.w / 2, scena.quota(b.lotto.x, b.lotto.y) + 1, b.lotto.y + b.lotto.h / 2, pt); alBordo(pt.x, pt.y, { chiave: metaD, meta: true, nome: dungeonDi(metaD).nome, immagine: iconaDi(metaD) }) }
+    if (b) { scena.aSchermo(b.lotto.x + b.lotto.w / 2, scena.quota(b.lotto.x, b.lotto.y) + 1, b.lotto.y + b.lotto.h / 2, pt); alBordo(pt.x, pt.y, { chiave: metaD, meta: true, nome: dungeonDi(metaD).nome, immagine: iconaDi(metaD, true) }) }
   }
   const ch = lista.map(l => `${l.chiave}:${l.x},${l.y},${l.gradi}`).join('|')
   if (ch !== fuoriChiave) { fuoriChiave = ch; fuori.value = lista }
@@ -652,6 +652,7 @@ async function nasci() {
   if (!scena) { perso.value = true; return }
   markRaw(scena)
   if (h.get('nebbia') === 'no') import('../scena3d/mondo/vesti.js').then(v => { v.U.uNebbia.value = 0 })
+  if (h.has('senzaeroe')) scena.S.io.nascosto = true
   scena.S.io.x = io.x; scena.S.io.z = io.z
   aggiornaScena()
   misura()

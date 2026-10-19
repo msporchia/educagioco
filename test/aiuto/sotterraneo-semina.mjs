@@ -9,7 +9,7 @@ import { PARTENZA } from '../../src/giochi/sotterraneo/dati/terra-mappa.js'
 
 // `zaino`: chiavi di pezzi da mettere in tasca in più (un bastone da guardare nel pannello, un elisir da bere); `punti`: quanti
 // punti delle caratteristiche tenere ancora da dare (si tolgono dalle ultime), per vedere cosa cambia sotto ogni «+»
-export async function seminaIlSotterraneo(page, { finite = 0, eroe = 'cavaliere', missioni = {}, parlato = true, gemme = 5, zaino = [], punti = 0 } = {}) {
+export function campagnaSeminata({ finite = 0, eroe = 'cavaliere', missioni = {}, parlato = true, gemme = 5, zaino = [], punti = 0 } = {}) {
   const k = Math.max(0, Math.min(finite, CAMPAGNA.length))
   const stelle = Object.fromEntries(Array.from({ length: k }, (_, i) => [i, 3]))
   const roba = robaAttesa(eroe, k, { gemme })
@@ -23,9 +23,14 @@ export async function seminaIlSotterraneo(page, { finite = 0, eroe = 'cavaliere'
   const avv = { tappa: k, libera: false, stelle, missioni, roba,
                 crescita,
                 terra: { nebbia: 'f'.repeat(768), dove: PARTENZA.piede, parlato } }
+  return { tappa: k, libera: false, stelle, cfg: { mondo: MONDO, eroe, avventure: { [eroe]: avv } } }
+}
+
+export async function seminaIlSotterraneo(page, opzioni = {}) {
+  const { eroe = 'cavaliere' } = opzioni
   await semina(page, {
     coins: 300, settings: { sperimentali: true },
-    campagne: { sotterraneo: { tappa: k, libera: false, stelle, cfg: { mondo: MONDO, eroe, avventure: { [eroe]: avv } } } },
+    campagne: { sotterraneo: campagnaSeminata({ ...opzioni, eroe }) },
   })
   await scegli(page, 'sotterraneo')
   await page.waitForSelector('[data-terra]', { timeout: 8000 })
