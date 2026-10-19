@@ -2,7 +2,7 @@
 // sa di three come renderer. Le regole le dice il motore (`motore`), le finestre le apre la vista (`ui`): qui si disegna, si
 // raggiunge una cosa e si fa il suo gesto. Vedi docs/fattoria3d/scena.md.
 //
-// `ui` (le porte verso Gioco.vue): cambio(), chiedi(titolo, testo, bottoni), scegliSeme(cb), apriPasticceria(),
+// `ui` (le porte verso Gioco.vue): cambio(), chiedi(titolo, testo, bottoni), scegliSeme(cb), apriMacchina(tipo),
 //   avviso(testo, conAnnulla), fogliAperti(), zonaDrop() → DOMRect|null, trascinando(info|null).
 import * as THREE from 'three'
 import { Terreno } from './terreno.js'
@@ -153,6 +153,7 @@ export class Mondo3d {
       if (l && !m.posseduto(l)) return this.azioni.offriLotto(l)               // ciò che sta in un terreno non tuo si compra
       return eroe.vaiA(this.celleDiServizio(b), () => this.azioni.abbatti(a), this.centroDi(b))
     }
+    if (b && b.kind === 'edificio' && this._edificioDaLontano(b.tipo)) return this.azioni.offriEdificio(b.tipo)   // dice livello o terreno, senza camminare
     if (b) return eroe.vaiA(this.celleDiServizio(b), () => this.azioni.fai(b), this.centroDi(b))
     const l = this.lottoSotto(x, y); if (l) return this.azioni.offriLotto(l)
     const p = this.puntaSuolo(x, y); if (!p) return
@@ -160,6 +161,10 @@ export class Mondo3d {
     for (let a = -2; a <= 2; a++) for (let b2 = -2; b2 <= 2; b2++) if (m.libera(i + a, j + b2)) cand.push([i + a, j + b2, Math.hypot(a, b2)])
     cand.sort((u, v) => u[2] - v[2])
     if (cand.length) eroe.vaiA([[cand[0][0], cand[0][1]]], null, null)
+  }
+  /** Un edificio che non è ancora tuo e che non si può comprare adesso (livello o terreno che mancano): l'eroe non ci cammina, sta fuori dal suo terreno. */
+  _edificioDaLontano(tipo) {
+    return !this.m.s.posseduti[tipo] && (EDIFICI[tipo].liv > this.m.livello() || this.m.lottiMancanti(tipo).length > 0)
   }
   _toccaCostruzione(x, y) {
     const b = this.bersaglioSotto(x, y)

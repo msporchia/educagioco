@@ -29,18 +29,23 @@ sempre ([../fattoria/regole.md](../fattoria/regole.md)); qui le differenze.
 |---|---|---|
 | un campo | 20 + 8 per ogni copia (anche nel magazzino) | il rincaro lineare della fattoria di sempre |
 | recinto / bancarella / fontana | 45 / 15 / 30 | fissi |
+| aiuola / panchina / pozzo / spaventapasseri | 6 / 10 / 18 / 12 | decorazioni, fissi |
+| pollaio / stalla | 55 / 90 | liberi nel terreno come il recinto; una bestia nel prezzo, le altre 12 / 30 ([animali.md](animali.md)) |
+| mulino / panificio / caseificio / conserviera / gelateria | 60 / 90 / 120 / 110 / 140 | unici, nel loro posto, in lotti da comprare prima |
 | pasticceria / mongolfiera | 80 / 100 | unici, nel loro posto |
 | un lotto di terreno | 40 + 20 per ogni lotto comprato oltre i nove di partenza | allargare costa sempre di più |
 | spostare o mettere via un pezzo | 1 | non è un tavolino da spostare per ore; rimetterlo dov'era è gratis |
 | un pezzo di strada | 1 | togliere è gratis |
 
-I numeri stanno in `dati/catalogo.js` e `dati/regole.js`. Sono da prova: se il gioco esce dalla prova vanno tarati sul
-metro di [calibrazione.md](../apprendimento/calibrazione.md) (una moneta = dieci secondi di esercizio).
+I numeri stanno in `dati/catalogo.js` e `dati/regole.js`. Misurati sul metro di [calibrazione.md](../apprendimento/calibrazione.md)
+(una moneta = dieci secondi di esercizio) con `npm run tara:fattoria3d`: ogni pezzo produttivo costa fra un quarto e due terzi
+del salto del suo livello (il campo 3 minuti di esercizio, il mulino 10, la gelateria 23), le decorazioni meno di un decimo. Il
+resto è in [livelli.md](livelli.md).
 
 ## I campi
 
 Quattro tessere per campo, un raccolto per tessera (`TESSERE`): una coltura matura per intero, e si taglia una tessera alla
-volta (`raccogliTessera`). Il tempo è vero (14–32 s in prova). Seminare è gratis. **Un campo che sta crescendo non
+volta (`raccogliTessera`). Il tempo è vero (16 s il grano e le carote, 64 s la lavanda: dieci colture, crescente col livello). Seminare è gratis. **Un campo che sta crescendo non
 si mette via**.
 
 ## Le pecore
@@ -53,12 +58,31 @@ si mette via**.
 - toccando il recinto l'eroe sceglie da solo (`provaCura`): prima tosa, poi nutre. Un recinto con le pecore **non si
   mette via** (si sposta).
 
-## La pasticceria
+## Gli animali da cortile
 
-Cinque ricette (`dati/ricette.js`), ognuna con raccolti precisi e un tempo. Il forno ha **tre posti** e cuoce **uno alla
-volta**: gli ingredienti si scalano subito, il successivo parte quando finisce il precedente. I pronti restano nel
-forno finché non si preme «Ritira tutto» e passano in dispensa. I prodotti per ora non servono a niente (sono il
-materiale per gli ordini, [da-fare.md](da-fare.md)).
+Pollaio (uova) e stalla (latte): una bestia nutrita fa il suo prodotto dopo un tempo e lo tiene finché non lo si raccoglie;
+niente muore. → [animali.md](animali.md)
+
+## I livelli
+
+Quasi tutto si apre con un **livello**, che sale spendendo monete qui dentro: pezzi, edifici, colture e ricette hanno un
+`liv`, e ciò che non è arrivato rifiuta con `non-sbloccato` e il livello a cui arriva. Ciò che si possiede resta: il livello
+vale solo per comprare, seminare e avviare. → [livelli.md](livelli.md)
+
+## Le macchine
+
+Pasticceria, mulino, panificio, caseificio, conserviera e gelateria sono **macchine** (`MACCHINE` in `dati/ricette.js`): ognuna ha le
+sue ricette (raccolti precisi e un tempo), **tre posti** nel forno e cuoce **uno alla volta**. Gli ingredienti si scalano
+subito, il successivo parte quando finisce il precedente; i pronti restano finché non si ritirano (`ritiraDa`) e passano
+in dispensa (`stato.prodotti`).
+
+- **Un ingrediente è un raccolto o il prodotto di un'altra macchina** (catena): grano → farina (mulino) → pane integrale
+  (panificio). Non di una ricetta della stessa macchina.
+- **Gli id delle ricette sono globali** (sono le chiavi di `prodotti`) e non coincidono con quelli delle colture.
+- Un edificio fuori dal quadrato di partenza si compra solo con **tutti i suoi lotti tuoi** (`lotto-non-tuo`, con
+  l'elenco `lotti`): meglio un rifiuto che dice cosa comprare che un edificio sospeso sul terreno altrui.
+- **Un ingrediente può anche essere `uova` o `latte`** delle bestie ([animali.md](animali.md)).
+- I prodotti servono al banco: li chiedono i clienti ([ordini.md](ordini.md)).
 
 ## La mongolfiera
 
@@ -67,7 +91,7 @@ Si caricano 2 raccolti, parte per 14 s e torna con una cassa: `+2 🧶`. Una cas
 ## I contatori
 
 `Gioco.vue` li muove dagli **eventi** del motore (`prendiEventi()`), non dai gesti: `fattoria3dTerre`, `…Pezzi` (pezzi e
-edifici messi), `…Raccolti` (tessere tagliate), `…Alberi`, `…Prodotti`. L'albo li legge dal blocco `albo` del
+edifici messi), `…Raccolti` (tessere tagliate), `…Alberi`, `…Prodotti`; sale anche l'evento `livello`. L'albo li legge dal blocco `albo` del
 manifesto (`gioco.js`); l'esperienza è modesta apposta, come nella fattoria di sempre.
 
 Nei test: `unita/fattoria3d` (le regole, a orologio finto) e `integrazione/fattoria3d` (il gioco col dito vero).

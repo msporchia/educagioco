@@ -7,11 +7,14 @@
 import { guastiDelMondo, LOTTI, LOTTI_INIZIALI, lottoPerId, idx, PARTENZA } from '../../src/giochi/fattoria3d/dati/mondo.js'
 import { guastiDelCatalogo, PEZZI, EDIFICI } from '../../src/giochi/fattoria3d/dati/catalogo.js'
 import { guastiDelleColture, COLTURE } from '../../src/giochi/fattoria3d/dati/colture.js'
-import { guastiDelleRicette, RICETTE, FORNO_POSTI } from '../../src/giochi/fattoria3d/dati/ricette.js'
+import { guastiDelleRicette, RICETTE, MACCHINE, FORNO_POSTI, emojiDi } from '../../src/giochi/fattoria3d/dati/ricette.js'
+import { guastiDeiLivelli, sogliaDi, livelloPer, roba, nomeDi, ULTIMO, costoDelLivello, livelloDellaRicetta } from '../../src/giochi/fattoria3d/dati/livelli.js'
+import { msDi } from '../../src/giochi/fattoria3d/dati/ordini.js'
+import { ANIMALI, PRODOTTI_ANIMALI, guastiDegliAnimali, postiAl, msDelProdotto } from '../../src/giochi/fattoria3d/dati/animali.js'
 import { guastiDelleRegole, COSTI, PECORE, MONGOLFIERA, LEGNA_PER_ALBERO } from '../../src/giochi/fattoria3d/dati/regole.js'
 import { generaAlberi, guastiDegliAlberi } from '../../src/giochi/fattoria3d/dati/alberi.js'
 import { Fattoria3d } from '../../src/giochi/fattoria3d/motore/fattoria3d.js'
-import { statoIniziale, normalizza } from '../../src/giochi/fattoria3d/motore/stato.js'
+import { statoIniziale, normalizza, bestieInForma, VERSIONE_STATO } from '../../src/giochi/fattoria3d/motore/stato.js'
 import manifesto from '../../src/giochi/fattoria3d/gioco.js'
 import { guastiDellAlbo } from '../../src/giochi/albo.js'
 import { controlla, uguale, stessaLista, riassunto } from '../aiuto/verifica.mjs'
@@ -24,10 +27,15 @@ function mondo({ monete = 1000, stato = null } = {}) {
   return { f, b, t }
 }
 // il campo di partenza e una cella libera e propria per un pezzo nuovo
+// porta la fattoria al livello n (l'esperienza è la spesa: qui la si mette in mano)
+const alLivello = (f, n) => { f.s.esperienza = sogliaDi(n); return f }
 const campoDi = f => f.s.cose.find(c => c.tipo === 'campo')
+// il primo posto libero e proprio per un pezzo di quel tipo (gli alberi stanno dove stanno)
+const postoPer = (f, tipo) => { for (let j = -3; j < 8; j++) for (let i = -6; i < 6; i++) if (f.puoMettere(tipo, i, j).ok) return [i, j]; return [0, 0] }
+const metti = (f, tipo) => f.mettiPezzo(tipo, ...postoPer(f, tipo))
 
 /* ══════════ 1. i dati ══════════ */
-const guasti = [...guastiDelMondo(), ...guastiDelCatalogo(), ...guastiDelleColture(), ...guastiDelleRicette(COLTURE),
+const guasti = [...guastiDelMondo(), ...guastiDelCatalogo(), ...guastiDelleColture(), ...guastiDelleRicette(COLTURE, EDIFICI), ...guastiDeiLivelli(), ...guastiDegliAnimali(PEZZI),
                 ...guastiDelleRegole(), ...guastiDegliAlberi()]
 controlla('i dati non hanno guasti', guasti.length === 0, guasti.join(' · '))
 stessaLista('quarantadue lotti, nove di partenza', [LOTTI.length, Object.keys(LOTTI_INIZIALI).length], [42, 9])
@@ -144,6 +152,7 @@ controlla('l\'albo del manifesto sta in piedi', gA.length === 0, gA.join(' · ')
 /* ══════════ 8. le pecore: agnello → adulta → tosata, e nascono ══════════ */
 {
   const { f, t } = mondo({ monete: 1000 })
+  alLivello(f, 5)
   f.compraEdificio('pasticceria')
   f.compraPezzo('recinto'); const r = f.mettiPezzo('recinto', -1, 2)
   controlla('il recinto sta in un posto proprio e libero', r.ok, r.motivo)
@@ -176,6 +185,7 @@ controlla('l\'albo del manifesto sta in piedi', gA.length === 0, gA.join(' · ')
 /* ══════════ 9. la pasticceria: ingredienti, coda, un forno alla volta, anche a pagina chiusa ══════════ */
 {
   const { f, t } = mondo({ monete: 1000 })
+  alLivello(f, 5)
   uguale('non si cuoce senza pasticceria', f.prepara('pane').motivo, 'non-tua')
   controlla('si compra', f.compraEdificio('pasticceria').ok && f.s.posseduti.pasticceria)
   uguale('due volte no', f.compraEdificio('pasticceria').motivo, 'gia-tuo')
@@ -204,6 +214,7 @@ controlla('l\'albo del manifesto sta in piedi', gA.length === 0, gA.join(' · ')
 /* ══════════ 10. la mongolfiera parte e torna con la cassa ══════════ */
 {
   const { f, t } = mondo({ monete: 1000 })
+  alLivello(f, 10)
   uguale('non parte se non è tua', f.carica().motivo, 'non-tua')
   f.compraEdificio('mongolfiera')
   uguale('né vuota', f.carica().motivo, 'manca-raccolto')
@@ -221,6 +232,7 @@ controlla('l\'albo del manifesto sta in piedi', gA.length === 0, gA.join(' · ')
 /* ══════════ 11. lo stato si salva e si rilegge uguale; uno rotto si rimette in forma ══════════ */
 {
   const { f, t } = mondo({ monete: 1000 })
+  alLivello(f, 5)
   f.compraPezzo('campo'); f.mettiPezzo('campo', -3, 1); f.semina(f.s.cose[1].id, 'mais')
   f.compraLotto('3_1'); f.disegnaStrada(-3, 3); f.abbatti(f.alberiNelTerreno()[0].n); f.compraEdificio('pasticceria')
   f.s.merci.grano = 4; f.prepara('pane')
@@ -243,6 +255,277 @@ controlla('l\'albo del manifesto sta in piedi', gA.length === 0, gA.join(' · ')
   controlla('si aggiungono cose di prova', n > 0 && f.cose.length === 1 + n)
   uguale('ma non finiscono nello stato salvato', f.serializza().cose.length, 1)
   stessaLista('e si tolgono tutte', [f.togliProve(), f.cose.length], [n, 1])
+}
+
+/* ══════════ 13. i livelli: l'esperienza è la spesa, le soglie salgono, la roba la dicono le cose ══════════ */
+{
+  controlla('almeno quindici livelli', ULTIMO >= 15, String(ULTIMO))
+  for (let l = 2; l <= ULTIMO + 3; l++) controlla(`la soglia del ${l} sale`, sogliaDi(l) > sogliaDi(l - 1))
+  controlla('il livello 2 sta intorno a 60 monete', sogliaDi(2) >= 40 && sogliaDi(2) <= 80, String(sogliaDi(2)))
+  controlla('il salto aggiunge il costo della roba produttiva (mulino al 3 → il 4 costa 60 in più)', costoDelLivello(3) === EDIFICI.mulino.prezzo && sogliaDi(4) - sogliaDi(3) >= EDIFICI.mulino.prezzo)
+  for (let l = 1; l <= ULTIMO + 2; l++) controlla(`livelloPer è l'inversa di sogliaDi (${l})`, livelloPer(sogliaDi(l)) === l && (l === 1 || livelloPer(sogliaDi(l) - 1) === l - 1))
+  uguale('dopo l\'ultimo si continua a salire', livelloPer(sogliaDi(ULTIMO + 5)), ULTIMO + 5)
+  stessaLista('dopo l\'ultimo non si apre altro', Object.values(roba(ULTIMO + 1)).map(v => v.length), [0, 0, 0, 0])
+  // roba: ogni cosa arriva una volta sola, al livello che dice
+  const viste = new Set()
+  for (let l = 1; l <= ULTIMO; l++) {
+    const r = roba(l)
+    controlla(`al livello ${l} arriva qualcosa e ha un nome`, Object.values(r).some(v => v.length) && !!nomeDi(l) && !/^Livello/.test(nomeDi(l)), nomeDi(l))
+    for (const p of r.pezzi) controlla(`il pezzo ${p.id} dichiara ${l}`, PEZZI[p.id].liv === l && !viste.has('p' + p.id) && !!viste.add('p' + p.id))
+    for (const e of r.edifici) controlla(`l'edificio ${e.id} dichiara ${l}`, EDIFICI[e.id].liv === l && !viste.has('e' + e.id) && !!viste.add('e' + e.id))
+    for (const c of r.colture) controlla(`la coltura ${c.id} dichiara ${l}`, COLTURE[c.id].liv === l && !viste.has('c' + c.id) && !!viste.add('c' + c.id))
+    for (const c of r.ricette) controlla(`la ricetta ${c.id} si fa dal ${l}`, livelloDellaRicetta(c.id) === l && !viste.has('r' + c.id) && !!viste.add('r' + c.id))
+  }
+  uguale('tutto quello che esiste arriva a un livello', viste.size, Object.keys(PEZZI).length + Object.keys(EDIFICI).length + Object.keys(COLTURE).length + Object.keys(RICETTE).length)
+  uguale('dieci colture', Object.keys(COLTURE).length, 10)
+  stessaLista('le dieci chiavi', Object.keys(COLTURE).sort(), ['carota', 'cipolla', 'fragola', 'grano', 'lavanda', 'mais', 'melanzana', 'patata', 'pomodoro', 'zucca'])
+  // l'esperienza: la spesa fatta qui dentro, e non scende mai
+  const { f, b } = mondo({ monete: 500 })
+  uguale('si parte da zero, livello 1', [f.esperienza(), f.livello()].join(), '0,1')
+  f.compraPezzo('campo'); uguale('comprare un campo è esperienza', f.esperienza(), PEZZI.campo.prezzo + PEZZI.campo.rincaro)
+  const m = f.mettiPezzo('campo', -3, 1).cosa
+  f.spostaPezzo(m.id, -3, 2); f.mettiVia(m.id)
+  uguale('spostare e mettere via non contano', f.esperienza(), PEZZI.campo.prezzo + PEZZI.campo.rincaro)
+  const prima = f.esperienza(); f.rimborsa(1)
+  uguale('un rimborso non la riduce', f.esperienza(), prima)
+  f.disegnaStrada(-3, 3); f.compraLotto('3_1')
+  uguale('strade e terra contano', f.esperienza(), prima + COSTI.strada + COSTI.lottoBase)
+  f.prendiEventi()
+  f.s.esperienza = sogliaDi(2) - 1; f.compraPezzo('aiuola') // liv 2: ancora chiusa a livello 1
+  uguale('a un soldo dal livello 2 si è ancora al 1', f.livello(), 1)
+  f.disegnaStrada(-3, 4)
+  controlla('con la spesa che passa la soglia si sale e c\'è l\'evento', f.livello() === 2 && f.prendiEventi().some(e => e.tipo === 'livello' && e.livello === 2))
+  controlla('l\'esperienza si salva', mondo({ stato: f.serializza() }).f.esperienza() === f.esperienza())
+}
+
+/* ══════════ 14. il gating: ciò che non è arrivato rifiuta, e dice a che livello arriva ══════════ */
+{
+  const { f } = mondo({ monete: 5000 })
+  for (const [tipo, d] of Object.entries(PEZZI)) {
+    if (d.liv === 1) continue
+    const r = f.compraPezzo(tipo)
+    controlla(`il pezzo ${tipo} è chiuso al livello 1`, !r.ok && r.motivo === 'non-sbloccato' && r.liv === d.liv)
+  }
+  stessaLista('un edificio chiuso', [f.compraEdificio('mulino').motivo, f.compraEdificio('mulino').liv], ['non-sbloccato', 3])
+  uguale('niente è stato pagato', f.monete(), 5000)
+  const c = campoDi(f)
+  uguale('il mais è chiuso al 1', f.semina(c.id, 'mais').motivo, 'non-sbloccato')
+  uguale('e dice il livello', f.semina(c.id, 'mais').liv, 2)
+  uguale('il campo è rimasto vuoto', f.campoVuoto(c), true)
+  uguale('la coltura sconosciuta resta sconosciuta', f.semina(c.id, 'cavolo').motivo, 'coltura')
+  uguale('seminaCampo è la stessa cosa', f.seminaCampo(c.id, 'lavanda').motivo, 'non-sbloccato')
+  controlla('al livello giusto si semina', alLivello(f, 2) && f.seminaCampo(c.id, 'mais').ok)
+  alLivello(f, 3)
+  f.compraEdificio('mulino')
+  uguale('la ricetta chiusa: la macchina è tua ma il livello no', alLivello(mondo({ monete: 5000 }).f, 2).avviaRicettaIn('pasticceria', 'pane').motivo, 'non-tua')
+  const g = mondo({ monete: 5000 }).f
+  alLivello(g, 5); g.compraEdificio('pasticceria'); g.s.merci.pomodoro = 5; g.s.merci.grano = 5
+  const r = g.avviaRicetta('tortaCarote')
+  stessaLista('una ricetta del livello 8 a livello 5', [r.ok, r.motivo, r.liv], [false, 'non-sbloccato', 8])
+  controlla('quella del livello 6 non ancora', g.avviaRicetta('pizza').motivo === 'non-sbloccato')
+  alLivello(g, 6)
+  controlla('al 6 la pizza parte', g.avviaRicetta('pizza').ok)
+  const pop = g.avviaRicetta('popcorn')
+  stessaLista('un ingrediente mancante dice quale', [pop.motivo, JSON.stringify(pop.mancano)], ['mancano-ingredienti', JSON.stringify({ mais: 2 })])
+}
+
+/* ══════════ 15. gli edifici fuori dal quadrato di partenza chiedono i loro lotti ══════════ */
+{
+  const { f } = mondo({ monete: 5000 })
+  alLivello(f, 3)
+  const r = f.compraEdificio('mulino')
+  stessaLista('il mulino vuole il suo lotto', [r.ok, r.motivo, r.lotti.join()], [false, 'lotto-non-tuo', '3_1'])
+  uguale('nessuna moneta spesa', f.monete(), 5000)
+  controlla('compro il lotto e poi il mulino', f.compraLotto('3_1').ok && f.compraEdificio('mulino').ok && f.s.posseduti.mulino)
+  controlla('le celle del mulino non si possono usare', !f.libera(-2, -7) && f.mettiPezzo('campo', -2, -7).motivo === 'non-in-magazzino')
+  for (const [tipo, e] of Object.entries(EDIFICI)) {
+    const lotti = f.lottiMancanti(tipo)
+    controlla(`i lotti mancanti di ${tipo} sono lotti veri e confinanti col terreno`, lotti.every(id => lottoPerId(id)))
+  }
+}
+
+/* ══════════ 16. le macchine in catena: grano → farina → pane integrale ══════════ */
+{
+  const { f, t } = mondo({ monete: 5000 })
+  alLivello(f, 7)
+  for (const id of ['3_1', '2_1']) f.compraLotto(id)
+  controlla('mulino e panificio comprati', f.compraEdificio('mulino').ok && f.compraEdificio('panificio').ok)
+  uguale('le macchine sono due diverse', f.macchina('mulino').tipo + f.macchina('panificio').tipo, 'mulinopanificio')
+  uguale('le ricette del mulino', f.ricetteDi('mulino').map(r => r.id).join(), 'farina,farinaMais')
+  controlla('ricetteDi dice se si può', f.ricetteDi('mulino').every(r => r.sbloccata && !r.ingredienti))
+  uguale('il pane integrale chiede farina che non c\'è', f.avviaRicettaIn('panificio', 'panIntegrale').motivo, 'mancano-ingredienti')
+  uguale('una ricetta dell\'altra macchina è sconosciuta qui', f.avviaRicettaIn('mulino', 'panIntegrale').motivo, 'sconosciuta')
+  f.s.merci.grano = 8
+  controlla('il mulino macina', f.avviaRicettaIn('mulino', 'farina').ok && f.avviaRicetta('farina').ok && f.s.merci.grano === 4)
+  t.ora += 2 * RICETTE.farina.ms + 1; f.tick()
+  uguale('due farine pronte nel mulino, non ancora in dispensa', [f.macchina('mulino').pronti.farina, f.s.prodotti.farina || 0].join(), '2,0')
+  uguale('ritirate', f.ritiraDa('mulino').n, 2)
+  uguale('e non due volte', f.ritiraDa('mulino').motivo, 'niente')
+  uguale('la farina è un prodotto', f.s.prodotti.farina, 2)
+  controlla('il panificio la usa: scala dai prodotti', f.avviaRicettaIn('panificio', 'panIntegrale').ok && !('farina' in f.s.prodotti))
+  t.ora += RICETTE.panIntegrale.ms + 1; f.tick()
+  f.ritiraDa('panificio')
+  uguale('pane integrale in dispensa', f.s.prodotti.panIntegrale, 1)
+  uguale('tre posti anche qui', f.macchina('panificio').posti, FORNO_POSTI)
+  f.s.prodotti.farina = 20; f.s.merci.patata = 1
+  f.avviaRicettaIn('panificio', 'panIntegrale'); f.avviaRicettaIn('panificio', 'panIntegrale'); f.avviaRicettaIn('panificio', 'focaccia')
+  uguale('il quarto trova il forno pieno', f.avviaRicettaIn('panificio', 'panIntegrale').motivo, 'forno-pieno')
+  // ogni ricetta è fattibile con ciò che dice: ingredienti da raccolti o da prodotti di un'altra macchina
+  for (const [id, r] of Object.entries(RICETTE)) for (const k of Object.keys(r.ing)) controlla(`${id}: ${k} è un raccolto, un prodotto delle bestie o di un'altra macchina`, !!COLTURE[k] || !!PRODOTTI_ANIMALI[k] || (!!RICETTE[k] && RICETTE[k].dove !== r.dove))
+}
+
+/* ══════════ 17. il vecchio stato (versione 1) si apre senza perdere niente ══════════ */
+{
+  const vecchio = {
+    v: 1, merci: { grano: 3, carota: 1, mais: 0, pomodoro: 0, zucca: 2 }, prodotti: { pane: 2 }, lana: 1, legna: 4,
+    posseduti: { pasticceria: true, mongolfiera: true },
+    lotti: { ...LOTTI_INIZIALI, '3_1': true }, strade: [], magazzino: { campo: 1 }, tagliati: [3],
+    cose: [{ id: 1, tipo: 'campo', i: -5, j: 0, tile: [null, null, null, null], coltura: 'zucca' }], prossimoId: 2,
+    pasticceria: { coda: [{ ric: 'popcorn', fine: 5000 }], pronti: { pane: 1 } },
+    mongolfiera: { fine: 7000, cassa: false },
+  }
+  const n = normalizza(JSON.parse(JSON.stringify(vecchio)))
+  controlla('l\'esperienza manca: parte da zero', n.esperienza === 0 && n.v >= 2)
+  controlla('i posseduti ci sono tutti e i vecchi restano', Object.keys(EDIFICI).every(t => t in n.posseduti) && n.posseduti.pasticceria && n.posseduti.mongolfiera && !n.posseduti.mulino)
+  stessaLista('la pasticceria è diventata una macchina, intera', [n.macchine.pasticceria.coda.length, n.macchine.pasticceria.pronti.pane, n.pasticceria === n.macchine.pasticceria], [1, 1, true])
+  controlla('la mongolfiera è com\'era', n.mongolfiera.fine === 7000)
+  stessaLista('le macchine nuove sono vuote', ['mulino', 'panificio', 'conserviera', 'gelateria'].map(t => n.macchine[t].coda.length + Object.keys(n.macchine[t].pronti).length), [0, 0, 0, 0])
+  controlla('merci, prodotti, lotti e cose restano', n.merci.zucca === 2 && n.prodotti.pane === 2 && n.lotti['3_1'] && n.cose[0].coltura === 'zucca' && n.magazzino.campo === 1 && n.tagliati[0] === 3)
+  const { f } = mondo({ stato: JSON.parse(JSON.stringify(vecchio)), monete: 0 })
+  uguale('il livello parte dal basso', f.livello(), 1)
+  uguale('ma la pasticceria che si possiede si vede', f.macchina('pasticceria').posseduta, true)
+  uguale('niente da avviare finché il livello non c\'è', f.avviaRicetta('pane').motivo, 'non-sbloccato')
+  uguale('la cosa seminata prima cresce lo stesso', f.cose[0].coltura, 'zucca')
+  const s2 = f.serializza()
+  controlla('la riscrittura non salva la pasticceria due volte', !('pasticceria' in s2) && 'macchine' in s2)
+  controlla('e si rilegge uguale', JSON.stringify(mondo({ stato: s2 }).f.serializza()) === JSON.stringify(s2))
+  for (const rotto of [{ macchine: 5 }, { macchine: { mulino: { coda: [{ ric: 'pane' }], pronti: { pane: 3, farina: 'x' } } } }, { esperienza: -4 }, { esperienza: 'x' }, { posseduti: [] }]) {
+    const x = normalizza(rotto)
+    controlla(`uno stato rotto si rimette in forma (${JSON.stringify(rotto)})`, x.esperienza >= 0 && x.macchine.mulino.coda.length === 0 && Object.keys(x.macchine.mulino.pronti).every(k => RICETTE[k].dove === 'mulino'))
+  }
+}
+
+/* ══════════ 18. gli animali da cortile: pollaio (uova) e stalla (latte) ══════════ */
+{
+  stessaLista('i pezzi: pollaio 3×2 e stalla 4×3, produttivi, al 6 e al 9', [PEZZI.pollaio, PEZZI.stalla].map(p => [p.w, p.d, p.produttivo, p.liv].join()), ['3,2,true,6', '4,3,true,9'])
+  stessaLista('il caseificio è una macchina 3×3 al livello 11', [EDIFICI.caseificio.w, EDIFICI.caseificio.d, EDIFICI.caseificio.liv, !!MACCHINE.caseificio], [3, 3, 11, true])
+  stessaLista('uova e latte arrivano dove arriva il loro pezzo', ['uova', 'latte'].map(k => livelloDellaRicetta('tortaSoffice') + k), [6 + 'uova', 6 + 'latte'])
+  uguale('la frittata (uova + cipolle) arriva al 9', livelloDellaRicetta('frittata'), 9)
+  uguale('il formaggio al 11, come il caseificio', livelloDellaRicetta('formaggio'), 11)
+  uguale('il gelato alla crema al 14', livelloDellaRicetta('gelatoCrema'), 14)
+  uguale('la scaletta ha ancora un solo pezzo produttivo per livello', [6, 9, 11].map(l => costoDelLivello(l)).join(), [PEZZI.pollaio.prezzo, PEZZI.stalla.prezzo, EDIFICI.caseificio.prezzo].join())
+
+  const { f, t } = mondo({ monete: 5000 })
+  uguale('il pollaio è chiuso al livello 1', f.compraPezzo('pollaio').motivo, 'non-sbloccato')
+  alLivello(f, 6)
+  f.compraLotto('3_1'); f.compraLotto('2_1')
+  controlla('comprato e messo, nasce con una gallina che ha fame', f.compraPezzo('pollaio').ok && metti(f, 'pollaio').ok)
+  const p = f.s.cose.find(c => c.tipo === 'pollaio')
+  stessaLista('una gallina con fame', p.bestie, [{ fine: null }])
+  uguale('niente da mangiare: lo dice', f.nutriBestie(p.id).motivo, 'manca-raccolto')
+  uguale('e cosa ci vuole', f.provaCuraBestie(p.id).mangia.join(), 'grano,mais')
+  uguale('niente da raccogliere', f.raccogliProdotti(p.id).motivo, 'niente')
+  f.s.merci.carota = 5
+  uguale('le carote non le mangia', f.nutriBestie(p.id).motivo, 'manca-raccolto')
+  f.s.merci.grano = 1; f.s.merci.mais = 3
+  uguale('mangia dalla scorta più grande fra quelle che mangia', f.nutriBestie(p.id).n, 1)
+  stessaLista('un mais in meno, il grano intatto, le carote intatte', [f.s.merci.mais, f.s.merci.grano, f.s.merci.carota], [2, 1, 5])
+  uguale('sta lavorando', f.statoBestia(p.bestie[0]), 'lavora')
+  stessaLista('a nutrire ancora: dice quanti secondi', [f.provaCuraBestie(p.id).motivo, f.provaCuraBestie(p.id).secondi], ['lavora', ANIMALI.pollaio.ms / 1000])
+  uguale('non si raccoglie prima del tempo', f.raccogliProdotti(p.id).motivo, 'niente')
+  uguale('non si mette via con le galline', f.mettiVia(p.id).motivo, 'ha-le-bestie')
+  t.ora += ANIMALI.pollaio.ms - 1
+  uguale('un attimo prima non c\'è', f.raccogliProdotti(p.id).motivo, 'niente')
+  t.ora += 1
+  stessaLista('allo scadere si raccoglie', [f.provaCuraBestie(p.id).azione, f.provaCuraBestie(p.id).n], ['raccogli', 1])
+  f.prendiEventi()
+  const r = f.raccogliProdotti(p.id)
+  stessaLista('un uovo in dispensa, e l\'evento', [r.ok, r.n, r.prodotto, f.s.prodotti.uova, f.prendiEventi().filter(e => e.tipo === 'uovo').map(e => e.n).join()], [true, 1, 'uova', 1, '1'])
+  uguale('la gallina ha di nuovo fame', f.statoBestia(p.bestie[0]), 'fame')
+  // tutto aspetta: un uovo pronto non scade e non si somma
+  f.nutriBestie(p.id); t.ora += ANIMALI.pollaio.ms * 100
+  stessaLista('passato un secolo l\'uovo è ancora uno solo', [f.bestiePronte(p).length, f.raccogliProdotti(p.id).n, f.s.prodotti.uova], [1, 1, 2])
+  // i posti: la seconda gallina chiede il livello, poi le monete
+  const x = f.compraBestia(p.id)
+  stessaLista('la seconda gallina si apre due livelli dopo il pollaio', [x.ok, x.motivo, x.liv], [false, 'non-sbloccato', 8])
+  alLivello(f, 8)
+  const m0 = f.monete()
+  controlla('al livello 8 si compra: costa e conta come esperienza', f.compraBestia(p.id).ok && m0 - f.monete() === ANIMALI.pollaio.prezzoBestia && p.bestie.length === 2)
+  uguale('la terza al 10', f.compraBestia(p.id).liv, 10)
+  alLivello(f, 10); f.compraBestia(p.id)
+  uguale('tre galline, il tetto', p.bestie.length, 3)
+  uguale('la quarta no', f.compraBestia(p.id).motivo, 'pieno')
+  f.s.merci.grano = 10
+  uguale('tutte e tre affamate: si nutrono tutte', f.nutriBestie(p.id).n, 3)
+  stessaLista('e il grano scende di tre', [f.s.merci.grano, f.s.merci.mais], [7, 1])
+  t.ora += ANIMALI.pollaio.ms
+  uguale('tre uova insieme', f.raccogliProdotti(p.id).n, 3)
+  f.s.merci.grano = 0; f.s.merci.mais = 1
+  uguale('con un solo raccolto se ne nutre una', f.nutriBestie(p.id).n, 1)
+
+  // la stalla: due raccolti per pasto
+  const g = alLivello(mondo({ monete: 5000 }).f, 9)
+  g.compraPezzo('stalla'); metti(g, 'stalla')
+  const s = g.s.cose.find(c => c.tipo === 'stalla')
+  g.s.merci.mais = 1
+  uguale('un solo mais non basta a una mucca', g.nutriBestie(s.id).motivo, 'manca-raccolto')
+  stessaLista('e dice che ne servono due', [g.provaCuraBestie(s.id).servono], [2])
+  g.s.merci.carota = 1
+  uguale('mais e carota insieme sì', g.nutriBestie(s.id).n, 1)
+  stessaLista('tolti entrambi', [g.s.merci.mais, g.s.merci.carota], [0, 0])
+  const gt = mondo({ monete: 5000 }); gt.f.s.esperienza = sogliaDi(9)
+  uguale('la stalla ha due posti, il secondo tre livelli dopo', [ANIMALI.stalla.posti, ANIMALI.stalla.livelliPosti[1]].join(), '2,3')
+  uguale('postiAl conta i posti aperti', [postiAl('stalla', 9, 9), postiAl('stalla', 9, 12), postiAl('pollaio', 6, 5), postiAl('pollaio', 6, 6), postiAl('pollaio', 6, 10)].join(), '1,2,0,1,3')
+  // il latte in dispensa
+  g.ora = () => 1_000_000 + ANIMALI.stalla.ms + 1
+  const rl = g.raccogliProdotti(s.id)
+  stessaLista('un latte e l\'evento', [rl.prodotto, g.s.prodotti.latte, g.prendiEventi().some(e => e.tipo === 'latte')], ['latte', 1, true])
+  uguale('prodottiDelCortile conta solo il pronto', g.prodottiDelCortile(), 0)
+}
+
+/* ══════════ 19. il caseificio e le ricette con uova e latte ══════════ */
+{
+  const { f, t } = mondo({ monete: 5000 })
+  alLivello(f, 11)
+  for (const id of ['3_1', '2_1', '5_2']) f.compraLotto(id)
+  controlla('il caseificio si compra, nel suo lotto', f.compraEdificio('caseificio').ok)
+  uguale('ricette del caseificio', f.ricetteDi('caseificio').map(r => r.id).join(), 'formaggio,burro,yogurt')
+  stessaLista('il formaggio chiede latte che non c\'è', [f.avviaRicettaIn('caseificio', 'formaggio').motivo, JSON.stringify(f.mancano('formaggio'))], ['mancano-ingredienti', JSON.stringify({ latte: 2 })])
+  f.s.prodotti.latte = 4
+  controlla('con il latte il formaggio parte e toglie il latte', f.avviaRicettaIn('caseificio', 'formaggio').ok && f.s.prodotti.latte === 2)
+  t.ora += RICETTE.formaggio.ms + 1; f.tick(); f.ritiraDa('caseificio')
+  uguale('formaggio in dispensa', f.s.prodotti.formaggio, 1)
+  f.s.prodotti.uova = 5; f.s.prodotti.farina = 1
+  uguale('la torta soffice non è della pasticceria che manca', f.avviaRicetta('tortaSoffice').motivo, 'non-tua')
+  controlla('gli ingredienti si dicono con l\'emoji giusta', emojiDi('uova', COLTURE) === '🥚' && emojiDi('latte', COLTURE) === '🥛')
+  for (const [id, r] of Object.entries(RICETTE)) controlla(`${id}: il tempo per averla si calcola`, Number.isFinite(msDi(id)) && msDi(id) >= r.ms, String(msDi(id)))
+  uguale('l\'uovo vale il suo tempo più un raccolto', msDelProdotto('uova'), ANIMALI.pollaio.ms + COLTURE.grano.ms)
+  // il posto del caseificio non è sopra a un altro edificio, e l'albero lì sopra è già giù
+  controlla('il posto del caseificio è libero da alberi', guastiDegliAlberi().length === 0)
+}
+
+/* ══════════ 20. lo stato v4: le bestie si salvano, un v3 si legge senza perdere niente ══════════ */
+{
+  const { f, t } = mondo({ monete: 5000 })
+  alLivello(f, 9); f.compraPezzo('pollaio'); metti(f, 'pollaio')
+  const p = f.s.cose.find(c => c.tipo === 'pollaio')
+  f.s.merci.grano = 3; f.nutriBestie(p.id)
+  const salvato = f.serializza()
+  uguale('la versione è 4', [salvato.v, VERSIONE_STATO].join(), '4,4')
+  const g = mondo({ stato: JSON.parse(JSON.stringify(salvato)) }).f
+  stessaLista('le bestie tornano com\'erano, anche a pagina chiusa', g.s.cose.find(c => c.tipo === 'pollaio').bestie, p.bestie)
+  controlla('e si rilegge uguale', JSON.stringify(g.serializza()) === JSON.stringify(salvato))
+  // un v3 (senza bestie né caseificio) si apre, e una cosa con le bestie rotte si rimette in forma
+  const v3 = JSON.parse(JSON.stringify(statoIniziale())); v3.v = 3; delete v3.macchine.caseificio; delete v3.posseduti.caseificio; v3.merci.grano = 7
+  const n = normalizza(v3)
+  controlla('il v3 perde niente e ha il caseificio vuoto', n.merci.grano === 7 && n.macchine.caseificio.coda.length === 0 && n.posseduti.caseificio === false && n.v === 4)
+  for (const rotto of [undefined, null, [], 5, [{ fine: 'x' }], [{ fine: -1 }, null, {}, { fine: 9 }, { fine: 9 }, { fine: 9 }]]) {
+    const b = bestieInForma('pollaio', rotto)
+    controlla(`bestie rotte si rimettono in forma (${JSON.stringify(rotto)})`, b.length >= 1 && b.length <= ANIMALI.pollaio.posti && b.every(x => x.fine === null || Number.isFinite(x.fine)))
+  }
+  const rotto = statoIniziale(); rotto.cose.push({ id: 9, tipo: 'stalla', i: -6, j: 5, bestie: 'no' }); rotto.prodotti.uova = 'molte'
+  const r = normalizza(JSON.parse(JSON.stringify(rotto)))
+  controlla('una stalla senza bestie ne ha una; i prodotti rotti spariscono', r.cose.find(c => c.tipo === 'stalla').bestie.length === 1 && !('uova' in r.prodotti))
 }
 
 riassunto('Fattoria 3D')

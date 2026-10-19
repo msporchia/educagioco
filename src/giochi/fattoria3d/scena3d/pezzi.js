@@ -3,19 +3,32 @@
 // Non sa le regole: legge lo stato e disegna. I cartelli sugli edifici (prezzo, cottura) sono qui.
 import * as THREE from 'three'
 import { creaCampo, aggiornaCampo, creaPasticceria, creaMongolfiera, creaBancarella, creaFontana, creaRecinto, muoviPecore,
-         sincronizzaPecore, fantasma } from './modelli.js'
+         sincronizzaPecore, fantasma, creaMulino, creaPanificio, creaConserviera, creaGelateria, creaAiuola, creaPanchina,
+         creaPozzo, creaSpaventapasseri, creaSegnaposto, creaPollaio, creaStalla, creaCaseificio, sincronizzaBestie, muoviBestie } from './modelli.js'
 import { EDIFICI, PEZZI } from '../dati/catalogo.js'
-import { RICETTE, FORNO_POSTI } from '../dati/ricette.js'
+import { RICETTE, MACCHINE } from '../dati/ricette.js'
 import { MONGOLFIERA } from '../dati/regole.js'
+import { ANIMALI, PRODOTTI_ANIMALI } from '../dati/animali.js'
 
 
 const CREA = {
   campo: () => creaCampo(Math.random() * 99 + 1),
   recinto: c => creaRecinto(c && c.pecore),
+  pollaio: c => creaPollaio(c && c.bestie),
+  stalla: c => creaStalla(c && c.bestie),
   bancarella: () => creaBancarella(),
   fontana: () => creaFontana(),
+  aiuola: () => creaAiuola(),
+  panchina: () => creaPanchina(),
+  pozzo: () => creaPozzo(),
+  spaventapasseri: () => creaSpaventapasseri(),
 }
-const CREA_EDIFICIO = { pasticceria: creaPasticceria, mongolfiera: creaMongolfiera }
+const CREA_EDIFICIO = {
+  pasticceria: creaPasticceria, mongolfiera: creaMongolfiera,
+  mulino: creaMulino, panificio: creaPanificio, conserviera: creaConserviera, gelateria: creaGelateria, caseificio: creaCaseificio,
+}
+/** Un tipo senza disegno non rompe la scena: una scatola grigia della sua misura. */
+const modelloDi = (tipo, d, c) => (CREA[tipo] ? CREA[tipo](c) : creaSegnaposto(d.w, d.d))
 
 export const centroDi = (c, d) => new THREE.Vector3(c.i + d.w / 2, 0, c.j + d.d / 2)
 
@@ -34,6 +47,7 @@ export class Pezzi {
       vivi.add(c.id)
       if (!this.voci.has(c.id)) this._creaCosa(c)
       else if (c.pecore) sincronizzaPecore(this.voci.get(c.id).grp, c.pecore)
+      else if (c.bestie) sincronizzaBestie(this.voci.get(c.id).grp, c.bestie)
     }
     for (const tipo of Object.keys(EDIFICI)) {
       vivi.add(tipo)
@@ -47,13 +61,13 @@ export class Pezzi {
   }
 
   _creaCosa(c) {
-    const d = PEZZI[c.tipo], grp = CREA[c.tipo](c)
+    const d = PEZZI[c.tipo], grp = modelloDi(c.tipo, d, c)
     grp.userData.bersaglio = { kind: 'cosa', id: c.id }
     grp.position.copy(centroDi(c, d)); this.scena.add(grp)
-    this.voci.set(c.id, { id: c.id, kind: 'cosa', c, d, grp, badge: null, anello: null, salto: 0, nasce: undefined, richiamo: null, chiave: '' })
+    this.voci.set(c.id, { id: c.id, kind: 'cosa', c, d, grp, badge: c.bestie ? this.fx.nuovoBadge() : null, anello: null, salto: 0, nasce: undefined, richiamo: null, chiave: '' })
   }
   _creaEdificio(tipo, mio) {
-    const e = EDIFICI[tipo], grp = CREA_EDIFICIO[tipo]()
+    const e = EDIFICI[tipo], grp = CREA_EDIFICIO[tipo] ? CREA_EDIFICIO[tipo]() : creaSegnaposto(e.w, e.d)
     if (!mio) fantasma(grp)
     grp.userData.bersaglio = { kind: 'edificio', tipo }
     grp.position.copy(centroDi({ i: e.slot.i, j: e.slot.j }, e)); this.scena.add(grp)
@@ -67,7 +81,7 @@ export class Pezzi {
   }
 
   /** Il modello di un pezzo di quel tipo, per il fantasma di chi lo sta trascinando. */
-  modello(tipo, c) { return CREA[tipo](c) }
+  modello(tipo, c) { return modelloDi(tipo, PEZZI[tipo], c) }
 
   /** Un pezzo appena messo: compare con un piccolo rimbalzo. */
   fanNascere(id) { const v = this.voci.get(id); if (v) { v.nasce = 0; v.grp.scale.setScalar(0.01) } }
@@ -118,19 +132,34 @@ export class Pezzi {
       if (this.q.vento || chiave !== v.chiave) { v.chiave = chiave; aggiornaCampo(g, cr, tt, col, this.q.vento) }
     } else if (c.tipo === 'recinto') {
       muoviPecore(g, dt, tt, v.richiamo, c.pecore, adesso); v.richiamo = null
-    } else if (c.tipo === 'fontana') g.userData.anima(tt)
+    } else if (c.bestie) {
+      muoviBestie(g, dt, tt, c.bestie, adesso)
+      // il cartello del cortile: quanto c'è da raccogliere, oppure i secondi che mancano, oppure che hanno fame
+      const A = ANIMALI[c.tipo], pronte = c.bestie.filter(b => b.fine !== null && b.fine <= adesso).length
+      const lavora = c.bestie.filter(b => b.fine !== null && b.fine > adesso).map(b => b.fine - adesso)
+      const fame = c.bestie.some(b => b.fine === null)
+      v.badge.imposta(pronte ? `${PRODOTTI_ANIMALI[A.prodotto].emoji} ${pronte} pront${pronte === 1 ? 'o' : 'i'}!`
+        : fame ? `${A.emoji} ha fame` : lavora.length ? `⏳ ${Math.ceil(Math.min(...lavora) / 1000)}s` : '', pronte ? 'pronto' : '')
+    } else if (g.userData.anima) g.userData.anima(tt)              // fontana, spaventapasseri
   }
 
   _edificio(v, g, dt, tt, adesso) {
     const s = this.m.s, e = v.d
-    if (!v.mio) { v.badge.imposta(`🪙 ${e.prezzo} · ${e.nome}`, 'vendita'); return }
-    if (v.tipo === 'pasticceria') {
-      const P = s.pasticceria
+    if (!v.mio) {
+      const chiuso = e.liv > this.m.livello()                                   // un fantasma dice il prezzo, o il livello a cui arriva
+      v.badge.imposta(chiuso ? `🔒 Livello ${e.liv} · ${e.nome}` : `🪙 ${e.prezzo} · ${e.nome}`, chiuso ? 'chiuso' : 'vendita'); return
+    }
+    if (MACCHINE[v.tipo]) {
+      // ogni macchina: pronti da ritirare, oppure la cottura in corso e i posti occupati
+      const Q = s.macchine[v.tipo], posti = MACCHINE[v.tipo].posti
       if (g.userData.gira) g.userData.gira.rotation.y += dt * 0.8
-      if (P.coda.length && tt - this.tFumo > 0.35) { this.tFumo = tt; this.fx.fumata(g.position.clone().add(g.userData.fumo)) }
-      const pronti = this.m.prontiInForno(), prima = Object.keys(P.pronti).find(k => P.pronti[k] > 0)
-      v.badge.imposta(pronti ? `${RICETTE[prima].emoji} ${pronti} pront${pronti === 1 ? 'o' : 'i'}!` : P.coda.length ? `🔥 ${Math.max(0, Math.ceil((P.coda[0].fine - adesso) / 1000))}s · ${P.coda.length}/${FORNO_POSTI}` : '', pronti ? 'pronto' : '')
-    } else {
+      if (g.userData.anima) g.userData.anima(dt, tt)
+      const cuoce = Q.coda.length > 0, cadenza = cuoce ? 0.35 : v.tipo === 'pasticceria' ? Infinity : 0.6   // gli altri fumano anche a riposo
+      if (g.userData.fumo && tt - (v.tFumo || 0) > cadenza) { v.tFumo = tt; this.fx.fumata(g.position.clone().add(g.userData.fumo)) }
+      const pronti = this.m.prontiIn(v.tipo), prima = Object.keys(Q.pronti).find(k => Q.pronti[k] > 0)
+      v.badge.imposta(pronti ? `${RICETTE[prima].emoji} ${pronti} pront${pronti === 1 ? 'o' : 'i'}!`
+        : cuoce ? `🔥 ${Math.max(0, Math.ceil(((Q.coda[0].fine || adesso) - adesso) / 1000))}s · ${Q.coda.length}/${posti}` : '', pronti ? 'pronto' : '')
+    } else if (v.tipo === 'mongolfiera') {
       const M = s.mongolfiera, volo = g.userData.volo
       let y = Math.sin(tt * 1.3) * 0.08, x = 0
       if (M.fine) {

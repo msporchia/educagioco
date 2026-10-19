@@ -20,6 +20,12 @@ const lottoCella = new Array(GW * GH).fill(null)
 for (const l of LOTTI) for (let a = 0; a < l.w; a++) for (let b = 0; b < l.d; b++) lottoCella[idx(l.i + a, l.j + b)] = l
 export const lottoDi = (i, j) => dentro(i, j) ? lottoCella[idx(i, j)] : null
 export const lottoPerId = id => LOTTI.find(l => l.id === id) || null
+// I lotti che un rettangolo di celle tocca (per i posti degli edifici: servono tutti tuoi per comprarli)
+export function lottiDelPosto(i, j, w, d) {
+  const out = new Map()
+  for (let a = 0; a < w; a++) for (let b = 0; b < d; b++) { const l = lottoDi(i + a, j + b); if (l) out.set(l.id, l) }
+  return [...out.values()]
+}
 export const vicinoDi = (l, da, db) => LOTTI.find(x => x.a === l.a + da && x.b === l.b + db) || null
 
 export const PARTENZA = { x: 0.5, z: 5.5 }                      // dove sta l'eroe all'inizio
@@ -39,11 +45,12 @@ export function stradeDiSerie() {
   return out
 }
 
-// dove non nasce nessun albero: le strade, i posti degli edifici unici, il campo di partenza e la partenza dell'eroe
-export function celleRiservate() {
+// dove non nasce nessun albero: le strade, i posti degli edifici unici, il campo di partenza e la partenza dell'eroe.
+// `tipi`: quali edifici contare (gli alberi si generano con i primi due soli, perché i numeri non cambino: vedi alberi.js)
+export function celleRiservate(tipi = Object.keys(EDIFICI)) {
   const r = new Set(stradeDiSerie())
   const rette = [
-    ...Object.values(EDIFICI).map(e => [e.slot.i, e.slot.j, e.w, e.d]),
+    ...tipi.map(t => EDIFICI[t]).map(e => [e.slot.i, e.slot.j, e.w, e.d]),
     [PEZZO_DI_PARTENZA.i, PEZZO_DI_PARTENZA.j, 2, 2],
     [-3, 3, 6, 5],
   ]
@@ -59,10 +66,18 @@ export function guastiDelMondo() {
   if (Object.keys(LOTTI_INIZIALI).length !== 9) g.push('il quadrato di partenza non è 3×3')
   const proprio = (i, j) => { const l = lottoDi(i, j); return !!l && !!LOTTI_INIZIALI[l.id] }
   if (!proprio(Math.floor(PARTENZA.x), Math.floor(PARTENZA.z))) g.push('l\'eroe parte fuori dal terreno suo')
+  const strade = stradeDiSerie()
   for (const [tipo, e] of Object.entries(EDIFICI)) {
+    let fuori = false
     for (let a = 0; a < e.w; a++) for (let b = 0; b < e.d; b++) {
-      if (!proprio(e.slot.i + a, e.slot.j + b)) g.push(`${tipo}: il posto esce dal quadrato di partenza`)
+      const i = e.slot.i + a, j = e.slot.j + b
+      if (!dentro(i, j)) fuori = true
+      else if (strade.has(idx(i, j))) g.push(`${tipo}: il posto è sopra una strada di serie`)
+      if (FISSI.some(f => i >= f.i && i < f.i + f.w && j >= f.j && j < f.j + f.d)) g.push(`${tipo}: il posto è sopra ${FISSI.find(f => i >= f.i && i < f.i + f.w && j >= f.j && j < f.j + f.d).tipo}`)
+      if (i >= PEZZO_DI_PARTENZA.i && i < PEZZO_DI_PARTENZA.i + 2 && j >= PEZZO_DI_PARTENZA.j && j < PEZZO_DI_PARTENZA.j + 2) g.push(`${tipo}: il posto è sopra il campo di partenza`)
     }
+    if (fuori) g.push(`${tipo}: il posto esce dal mondo`)
+    else if (!lottiDelPosto(e.slot.i, e.slot.j, e.w, e.d).length) g.push(`${tipo}: il posto non tocca nessun lotto`)
   }
   for (const f of FISSI) for (let a = 0; a < f.w; a++) for (let b = 0; b < f.d; b++) {
     if (!dentro(f.i + a, f.j + b)) g.push(`${f.tipo}: esce dal mondo`)

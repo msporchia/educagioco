@@ -3,27 +3,14 @@
 // Le finestre (la scelta del seme, la pasticceria, le conferme) sono della vista: si chiamano da `ui`.
 import * as THREE from 'three'
 import { COLTURE } from '../dati/colture.js'
-
 import { MONGOLFIERA } from '../dati/regole.js'
-import { EDIFICI } from '../dati/catalogo.js'
+import { EDIFICI, PEZZI } from '../dati/catalogo.js'
+import { MACCHINE } from '../dati/ricette.js'
+import { ANIMALI, PRODOTTI_ANIMALI } from '../dati/animali.js'
+import { lottoPerId } from '../dati/mondo.js'
+import { dettoDi, dettoDiRifiuto } from './detti.js'
 
-/** Cosa dire all'eroe quando una cosa non riesce: il motivo del motore in una riga per un bambino. */
-export function dettoDi(motivo, extra = {}) {
-  switch (motivo) {
-    case 'poche-monete': return `Ti mancano 🪙 ${extra.mancano}`
-    case 'manca-raccolto': return extra.per ? `Per ${extra.per} serve un raccolto` : 'Serve un raccolto'
-    case 'lana-ricresce': return `La lana ricresce… ${extra.secondi}s`
-    case 'sazie': return 'Sono tutte sazie'
-    case 'forno-pieno': return 'Il forno è pieno'
-    case 'mancano-ingredienti': return 'Mancano degli ingredienti'
-    case 'in-viaggio': return 'È ancora in viaggio…'
-    case 'non-confina': return 'Compra prima un terreno che confina con questo'
-    case 'occupato': case 'fuori-terreno': return 'Qui non si può: cerca un posto libero nei tuoi terreni'
-    case 'sta-crescendo': return 'Quello che sta crescendo non si mette via'
-    case 'ha-le-pecore': return 'Il recinto ha le pecore: spostalo, non si mette via'
-    default: return 'Non si può'
-  }
-}
+export { dettoDi, dettoDiRifiuto }
 
 export class Azioni {
   constructor(ctx) { this.c = ctx }
@@ -41,8 +28,9 @@ export class Azioni {
     switch (cosa.tipo) {
       case 'campo': return this.campo(cosa)
       case 'recinto': return this.cura(cosa)
-      case 'fontana': case 'bancarella':
-        pezzi.salta(cosa.id); fx.parla(cosa.tipo === 'fontana' ? 'Che bella!' : 'Mele buonissime!')
+      case 'pollaio': case 'stalla': return this.curaBestie(cosa)
+      case 'bancarella': pezzi.salta(cosa.id); return this.c.ui.apriBanco()      // il foglio degli ordini
+      case 'fontana': pezzi.salta(cosa.id); fx.parla('Che bella!')
     }
   }
 
@@ -105,6 +93,51 @@ export class Azioni {
     fx.parla(dettoDi(pr.motivo, { per: 'nutrirle', secondi: pr.secondi }))
   }
 
+  // ── il pollaio e la stalla: prima si raccoglie, poi si nutre; se non c'è altro, si dice perché (e si offre un'altra bestia) ──
+  curaBestie(c) {
+    const { eroe, fx, ui, pezzi } = this.c, p = this.centro(c), pr = this.m.provaCuraBestie(c.id), A = ANIMALI[c.tipo]
+    if (pr.azione === 'raccogli') {
+      return eroe.avvia('semina', 1.2, t => {
+        if (t <= 0.5 || eroe.az.fatto.has('r')) return
+        eroe.az.fatto.add('r'); const r = this.m.raccogliProdotti(c.id)
+        if (!r.ok) return
+        pezzi.sincronizza()
+        fx.volo('+' + r.n + ' ' + PRODOTTI_ANIMALI[r.prodotto].emoji, p, 1.8); fx.scoppietta(p.clone().setY(0.7), 0xfff2c4, 10, 1.4, 2.0); ui.cambio()
+      })
+    }
+    if (pr.azione === 'nutri') {
+      return eroe.avvia('semina', 1.0, t => {
+        if (t <= 0.5 || eroe.az.fatto.has('n')) return
+        eroe.az.fatto.add('n')
+        const r = this.m.nutriBestie(c.id)
+        if (!r.ok) return fx.parla(dettoDi(r.motivo, { per: 'nutrirle' }))
+        pezzi.sincronizza()
+        fx.volo('🍽️ ×' + r.n, p, 1.8); ui.cambio()
+      })
+    }
+    if (pr.motivo === 'lavora') return this.offriBestia(c, pr.secondi)
+    fx.parla(dettoDi(pr.motivo, { per: 'nutrirle', secondi: pr.secondi, servono: pr.servono, mangia: pr.mangia }))
+  }
+  /** Le bestie lavorano: la riga di cosa manca e, se c'è un posto, il tasto per comprarne un'altra (si chiude con «Chiudi»). */
+  offriBestia(c, secondi) {
+    const { fx, ui, pezzi, eroe } = this.c, m = this.m, A = ANIMALI[c.tipo], nome = A.emoji + ' ' + PEZZI[c.tipo].nome
+    const stato = `${c.bestie.length} su ${A.posti} ${A.bestie}. ${dettoDi('lavora', { secondi })}`
+    const fa = () => {
+      const r = m.compraBestia(c.id)
+      if (!r.ok) return this.dici(dettoDiRifiuto(r, { mancano: A.prezzoBestia - m.monete() }))
+      pezzi.sincronizza(); fx.scoppietta(this.centro(c).setY(0.8), 0xffd24a, 16, 2.4, 3); eroe.avvia('esulta', 0.9); ui.cambio()
+    }
+    if (c.bestie.length >= A.posti) return fx.parla(dettoDi('pieno', { secondi, bestie: A.bestie }))
+    if (c.bestie.length >= m.postiBestie(c)) {
+      const r = m.compraBestia(c.id)                               // rifiuta con `non-sbloccato` e il livello del prossimo posto
+      return ui.chiedi(nome, `${stato} Un'altra: ${dettoDiRifiuto(r).toLowerCase()}.`, [{ t: 'Chiudi', quieto: true }])
+    }
+    ui.chiedi(nome, stato, [
+      { t: `+ ${A.bestia[0].toUpperCase() + A.bestia.slice(1)} ${A.emoji} · 🪙 ${A.prezzoBestia}`, fn: fa },
+      { t: 'Chiudi', quieto: true },
+    ])
+  }
+
   // ── gli alberi ──
   abbatti(a) {
     const { eroe, fx, ui, terreno } = this.c
@@ -126,7 +159,7 @@ export class Azioni {
   edificio(tipo) {
     const { eroe, fx, ui } = this.c, m = this.m
     if (!m.s.posseduti[tipo]) return this.offriEdificio(tipo)
-    if (tipo === 'pasticceria') return ui.apriPasticceria()
+    if (MACCHINE[tipo]) return ui.apriMacchina(tipo)           // il menu della SUA macchina
     const centro = this.c.pezzi.centroDi({ kind: 'edificio', tipo })
     const M = m.s.mongolfiera
     if (M.cassa) {
@@ -139,28 +172,43 @@ export class Azioni {
     if (r.ok) { eroe.avvia('semina', 0.8); fx.volo('−' + MONGOLFIERA.carico + ' raccolti', centro, 3); ui.cambio() }
     else fx.parla(`Carica ${MONGOLFIERA.carico} raccolti sulla mongolfiera`)
   }
+  /** Un edificio non ancora tuo: dice il prezzo, il livello a cui arriva e (se manca) il terreno da comprare prima. */
   offriEdificio(tipo) {
-    const e = EDIFICI[tipo], { fx, ui, eroe, pezzi } = this.c
-    ui.chiedi(e.nome, `Vuoi comprarla per 🪙 ${e.prezzo}? Ce n'è una sola e resta qui.`, [
+    const e = EDIFICI[tipo], { fx, ui, eroe, pezzi } = this.c, m = this.m
+    const ok = { t: 'Ho capito', quieto: true }
+    if (e.liv > m.livello()) {
+      return ui.chiedi(e.nome, `Arriva al livello ${e.liv}. Poi costerà 🪙 ${e.prezzo}.`, [ok])
+    }
+    const lotti = m.lottiMancanti(tipo).map(lottoPerId).filter(Boolean)
+    if (lotti.length) {
+      const prossimo = lotti.find(l => m.confina(l))          // il primo che si può comprare adesso
+      const testo = `Sta su un terreno che non è ancora tuo. ${prossimo ? 'Compra prima il terreno qui accanto' : 'Allarga la fattoria fin qui'}, poi costerà 🪙 ${e.prezzo}.`
+      return ui.chiedi(e.nome, testo, prossimo
+        ? [{ t: 'Vai al terreno', fn: () => this.offriLotto(prossimo) }, { t: 'Non ora', quieto: true }]
+        : [ok])
+    }
+    ui.chiedi(e.nome, `Costa 🪙 ${e.prezzo}. Ce n'è uno solo e resta qui.`, [
       { t: `Compra · 🪙 ${e.prezzo}`, fn: () => {
         const r = this.m.compraEdificio(tipo)
-        if (!r.ok) return fx.parla(dettoDi(r.motivo, { mancano: e.prezzo - this.m.monete() }))
+        if (!r.ok) return this.dici(dettoDiRifiuto(r, { mancano: e.prezzo - this.m.monete() }))
         pezzi.sincronizza()
         fx.scoppietta(pezzi.centroDi({ kind: 'edificio', tipo }).setY(1), 0xffd24a, 24, 3.5, 4); eroe.avvia('esulta', 1); ui.cambio()
       } },
       { t: 'Non ora', quieto: true },
     ])
   }
+  /** Una riga che si vede sempre: nel fumetto dell'eroe, e nella barra del costruire se è aperta. */
+  dici(testo) { this.c.fx.parla(testo); this.c.ui.avviso(testo) }
 
   // ── il terreno ──
   offriLotto(l) {
     const { ui, fx, terreno } = this.c, m = this.m
-    if (!m.confina(l)) return fx.parla(dettoDi('non-confina'))
+    if (!m.confina(l)) return this.dici(dettoDi('non-confina'))
     const pr = m.prezzoLotto()
     ui.chiedi('Terreno', `Allarga la fattoria: un lotto in più dove camminare, costruire e disegnare strade. Costa 🪙 ${pr}.`, [
       { t: `Compra · 🪙 ${pr}`, fn: () => {
         const r = m.compraLotto(l.id)
-        if (!r.ok) return ui.avviso(dettoDi(r.motivo, { mancano: pr - m.monete() }))
+        if (!r.ok) return this.dici(dettoDiRifiuto(r, { mancano: pr - m.monete() }))
         fx.scoppietta(new THREE.Vector3(l.i + 2, 0.8, l.j + 2), 0xffd24a, 28, 4, 4)
         terreno.ridisegnaLotti(); ui.cambio()
       } },

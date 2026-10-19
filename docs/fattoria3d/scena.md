@@ -10,18 +10,22 @@ gli Asteroidi 3D e il Sotterraneo 3D: il 3D non si scrive a mano.
 |---|---|
 | `mondo3d.js` | **compone** tutto e fa il battito: renderer, luci, il tocco (`tocca`, `bersaglioSotto`), la coda di semina/raccolta, le opzioni (`applica`), le statistiche. L'unico che usa il renderer |
 | `terreno.js` | erba, strade, griglia, lotti non comprati, recinto, alberi, nuvole, i due edifici di scena |
-| `pezzi.js` | un gruppo per ogni cosa del motore e per i due edifici unici; li tiene allineati (`sincronizza`) e li anima (grano che cresce, pecore, fontana, fumo, il pallone); i cartelli sugli edifici |
+| `pezzi.js` | un gruppo per ogni cosa del motore e per i sette edifici unici (fantasmi finché non si comprano); li tiene allineati (`sincronizza`) e li anima (grano che cresce, pecore, galline e mucche, fontana, fumo, il pallone); i cartelli sugli edifici: prezzo o «🔒 Livello N» sul fantasma, pronti o cottura su ogni macchina, uova o latte pronti sul pollaio e sulla stalla |
 | `eroe.js` | il movimento (a piedi, o di corsa), il percorso, la posa del gesto (semina, falcia, abbatte, esulta) |
-| `azioni.js` | cosa fa l'eroe davanti a ogni cosa: anima il gesto e **a metà gesto chiede al motore di farlo davvero**; `dettoDi` traduce un rifiuto in una riga |
+| `azioni.js` | cosa fa l'eroe davanti a ogni cosa: anima il gesto e **a metà gesto chiede al motore di farlo davvero**; un edificio posseduto apre il menu della sua macchina, uno no offre l'acquisto (`offriEdificio`: livello, terreno da comprare prima, prezzo) |
+| `detti.js` | `dettoDi` / `dettoDiRifiuto`: un rifiuto del motore in una riga che dice cosa fare. Senza three: lo usa anche `Gioco.vue` |
 | `costruzione.js` | il trascinamento dei pezzi (dalla barra o riprendendone uno), il fantasma, le strade a pennello, l'annulla |
 | `dito.js` | i pointer sulla tela: tocco, mappa che scorre, pizzico, tenere premuto, riprendere un pezzo |
 | `camera.js` | la telecamera: segue, libera, in costruzione |
 | `effetti.js` | scintille e fumo, i testi che volano, il fumetto dell'eroe, i cartelli, l'albero che cade |
-| `modelli.js` | tutti i pezzi in codice (niente sprite, niente immagini: le trame sono canvas): campo a istanze con cinque colture, pasticceria, mongolfiera, bancarella, fontana, recinto e pecore con le loro fasi, fienile, casa, l'eroe |
+| `modelli.js` | tutti i pezzi in codice (niente sprite, niente immagini: le trame sono canvas): campo a istanze con dieci colture, i sette edifici (pasticceria, mongolfiera, mulino, panificio, caseificio, conserviera, gelateria), le quattro decorazioni (aiuola, panchina, pozzo, spaventapasseri), bancarella, fontana, recinto e pecore con le loro fasi, pollaio con le galline, stalla con le mucche ([animali.md](animali.md)), fienile, casa, l'eroe |
 | `webgl.js` | `haWebGL2()`: si chiede senza caricare three |
 
 La **vista** (`Gioco.vue` e `viste/`) apre le finestre e dice cosa si vuole; la scena la chiama attraverso `ui`
-(`cambio`, `chiedi`, `scegliSeme`, `apriPasticceria`, `avviso`, `fogliAperti`, `zonaDrop`, `trascinando`).
+(`cambio`, `chiedi`, `scegliSeme`, `apriMacchina`, `apriBanco` (un tocco sulla bancarella), `avviso`, `fogliAperti`, `zonaDrop`, `trascinando`).
+
+**Un tocco su un edificio non tuo** che non si può comprare adesso (livello o terreno che mancano) non fa camminare l'eroe, che sta fuori
+dal suo terreno: apre subito l'offerta, che dice il livello o manda al lotto da comprare prima (`_edificioDaLontano` in `mondo3d.js`).
 
 ## Costruire trascinando
 
