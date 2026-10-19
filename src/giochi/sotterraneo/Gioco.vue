@@ -11,7 +11,7 @@ import { suono } from '../../audio.js'
 import { state, segna, segnaBest } from '../../store/profile.js'
 import { borsa } from '../../store/varieta.js'
 import { PAGA } from '../../data/paghe.js'
-import { progresso, aperta, adesso, chiusaPerEta, completa, scelta, ricorda, ritocca } from '../campagne.js'
+import { progresso, aperta, adesso, completa, scelta, ricorda, ritocca } from '../campagne.js'
 import { usaPausa, CIECA } from '../pausa.js'
 import { prendiRipresa } from '../ripresa.js'
 import VeloPausa from '../VeloPausa.vue'
@@ -358,7 +358,6 @@ const tappe = computed(() => {
       aperta: aperta(CHIAVE, i, a.tappa),
       adesso: adesso(CHIAVE, i, a.tappa),
       stelle: a.stelle[i] || 0,
-      perEta: chiusaPerEta(CHIAVE, i),
       fatta: i < a.tappa,
       livello, colore: coloreDi(a, i, livelloOra.value, forzaOra.value),
       nuova: !!notizia.value && !notizia.value.sentita && notizia.value.indice === i,

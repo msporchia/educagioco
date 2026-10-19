@@ -5,8 +5,8 @@
    gioco fuori portata non è spento, è solo il conto che decide se la
    carta si offre da sola. Vedi docs/apprendimento/eta-e-portata.md. */
 import { giocoDaOffrire, filaConPortata, primaDaGiocare, arcoDelGioco,
-         statoDellaTappa, PASSATA, AVANTI } from './portata.js'
-import { state, etaDelBambino, saperiSpenti, tappaAperta, tuttoAperto,
+         statoDellaTappa, PASSATA } from './portata.js'
+import { state, etaDelBambino, saperiSpenti, tappaAperta,
          giocoAcceso, giocoForzato } from '../store/profile.js'
 import { eccezioniPerEta } from './partenze.js'
 import { misure } from '../store/progressi.js'
@@ -105,24 +105,12 @@ export const daDoveComincia = chiave =>
 export const arcoDi = chiave => arcoDelGioco(TAPPE_DEL_GIOCO[chiave] || [])
 
 
-// il lucchetto: passato nasce aperto, oltre la mira resta chiuso comunque (tuttoAperto() dei grandi passa davanti a tutto)
-const oltreLEta = stato => stato === AVANTI && !tuttoAperto()
-
+// il lucchetto: una tappa già passata nasce aperta; sopra la mira dell'età NON si chiude (chi ci arriva vincendo la tappa prima ha
+// dimostrato di reggerla): l'età decide da dove si comincia e se la carta si offre, mai quanto lontano si va
 export function apertaQui (tappa, i, fatte) {
   const stato = tappa ? statoDellaTappa(tappa, regole()) : null
-  if (stato === PASSATA) return true
-  if (oltreLEta(stato)) return false
-  return tappaAperta(i, fatte)
+  return stato === PASSATA || tappaAperta(i, fatte)
 }
-
-// perMerito: chi ha vinto la tappa prima va avanti oltre la mira (l'età resta ciò che decide se la carta si offre)
-const perMerito = chiave => !!(GIOCHI_NUOVI.find(g => g.chiave === chiave) || {}).perMerito
 
 export const tappaApertaQui = (chiave, i, fatte) =>
-  (perMerito(chiave) && tappaAperta(i, fatte)) || apertaQui((TAPPE_DEL_GIOCO[chiave] || [])[i], i, fatte)
-
-// due lucchetti diversi: quello di sempre si apre andando avanti, questo no («continua per aprirla» sarebbe falso)
-export const tappaChiusaPerEtaQui = (chiave, i) => {
-  const tappa = (TAPPE_DEL_GIOCO[chiave] || [])[i]
-  return !!tappa && !perMerito(chiave) && oltreLEta(statoDellaTappa(tappa, regole()))
-}
+  apertaQui((TAPPE_DEL_GIOCO[chiave] || [])[i], i, fatte)

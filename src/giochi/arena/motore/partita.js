@@ -9,7 +9,7 @@ import {
 } from '../dati/regole.js'
 import { pensaNemico, creaIA } from './nemico.js'
 
-const PASSO = 0.05                       // secondi di una fetta di tempo: la partita avanza a passi fissi
+export const PASSO = 0.05                       // secondi di una fetta di tempo: la partita avanza a passi fissi
 const SGUARDO = 80                       // fin dove una truppa vede un'altra truppa
 const MAX_EVENTI = 400
 const DIFESA = 190                       // chi è nella sua metà accorre ai nemici entro questa distanza dal suo castello
@@ -29,6 +29,7 @@ export class Partita {
     this.durata = sfida.durata ?? DURATA
     this.nemicoCfg = typeof sfida.nemico === 'object' ? sfida.nemico : { ...NEMICI[sfida.nemico || 'normale'] }
     this.truppeAmmesse = sfida.truppe || Object.keys(TRUPPE)
+    this.umano = !!sfida.umano       // due giocatori veri: il nemico non gioca da sé, lo muove un altro (docs/arena/multigiocatore.md)
     this.t = 0
     this.resto = this.durata
     this.fine = null
@@ -40,6 +41,12 @@ export class Partita {
       nem: this.nuovoLato('nem', this.nemicoCfg.moneteAlSecondo, sfida.monete ?? GIOCATORE.iniziali),
     }
     this.forza = { io: 1, nem: (this.nemicoCfg.forza ?? 1) * (sfida.forzaNemico ?? 1) }
+    if (this.umano) {
+      // in due non c'è un nemico: stesse monete e stessa forza per tutti e due. `ritmoMonete` rallenta la crescita, tarata
+      // per un campo fermo mentre si calcola: in due il campo corre anche mentre si calcola (docs/arena/multigiocatore.md)
+      for (const lato of ['io', 'nem']) this.lati[lato].alSecondo = GIOCATORE.moneteAlSecondo * (sfida.ritmoMonete ?? 1)
+      this.forza.nem = 1
+    }
     this.castelli = ['io', 'nem'].map(lato => this.nuovoCastello(lato))
     this.muri = ['io', 'nem'].map(lato => this.nuovoMuro(lato))
     this.caserme = []                // si parte senza: la prima mossa è costruire la cripta, scegliendo la truppa
@@ -159,7 +166,7 @@ export class Partita {
     }
     this.caserme = this.caserme.filter(viva)
     if (this.miniere.some(m => !viva(m))) { this.miniere = this.miniere.filter(viva); this.contaMiniere('io'); this.contaMiniere('nem') }
-    pensaNemico(this, dt)
+    if (!this.umano) pensaNemico(this, dt)
     this.controllaFine()
   }
 

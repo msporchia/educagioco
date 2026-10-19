@@ -6,7 +6,7 @@ import { ref, reactive, computed, onMounted, onBeforeUnmount, onUnmounted } from
 import { state, item, answer,
          segna, segnaBest, mateProgresso, tabellineIntere,
          asteroidiCompleta } from '../store/profile.js'
-import { apertaQui, tappaChiusaPerEtaQui } from '../data/portata-giochi.js'
+import { apertaQui } from '../data/portata-giochi.js'
 import { PAGA } from '../data/paghe.js'
 import { borsa } from '../store/varieta.js'
 import { createPicker } from '../store/srs.js'
@@ -128,11 +128,10 @@ const cheChiede = v => (v.tipo === 'mente'
   : v.T.nuova ? 'la tabellina del ' + v.T.nuova : 'tutte le tabelline')
 
 /* La rotta (docs/asteroidi/mappa.md): ogni tappa col suo stato già deciso.
-   Chiusa vince su superata: una tappa superata e poi chiusa dall'età resta chiusa. */
+   Chiusa vince su superata. */
 const statoVoce = v => (!apertaVoce(v) ? 'chiusa' : fattaVoce(v) ? 'fatta'
   : v.pos === dove.value ? 'ora' : 'aperta')
 function serveDi(v) {
-  if (tappaChiusaPerEtaQui(CHIAVE, v.pos)) return 'Questa tappa per ora è chiusa.'
   const prima = fila[dove.value]
   if (!prima) return 'Non ancora.'
   const altre = v.pos - dove.value - 1

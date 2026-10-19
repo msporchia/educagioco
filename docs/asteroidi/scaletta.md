@@ -28,8 +28,8 @@ Il volo infinito e l'astronave stanno in [volo.md](volo.md).
 - **Il Sole apre il capitolo del moltiplicare a mente**: 56:8 è la
   tabellina dell'8 girata, quindi moltiplicare e dividere a mente vengono
   dopo tutte le tabelline insieme.
-- **La fila e l'età dicono la stessa cosa.** Il cancello per età legge la
-  `portata` voce per voce, e la prima voce troppo avanti chiude la fila.
+- **La fila e l'età dicono la stessa cosa.** La `portata` voce per voce
+  decide la carta in home e da dove si comincia, non chiude la fila.
   Dentro la fila la portata non scende mai più di cinque punti da una
   voce alla dopo. «Due cifre» e «Riporti e prestiti» stanno a 55 e 58: in
   colonna si fanno in seconda, a mente in terza.

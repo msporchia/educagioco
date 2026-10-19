@@ -1,15 +1,18 @@
 // Tarare Castle Battle: ogni tappa ha la sua scheda del nemico, cercata giocando
 // per davvero con una bisezione su una manopola sola (`d`: 0 = nemico quasi inerme,
 // 1 = pari al giocatore bravo). Due promesse: il «bambino» di prova vince almeno la
-// quota della tappa, e chi non sbaglia mai e risponde svelto («misura») non vince più
-// della sua: in cima il nemico è quasi imbattibile. Vale la più dura. Vedi docs/arena/taratura.md.
-//   npm run tara:arena                  # tara tutto e riscrive dati/taratura.js
+// quota della tappa, e chi non sbaglia mai («misura») non vince più della sua (da `LIVELLI`,
+// un livello di difficoltà ciascuno). Vale la più dura. Vedi docs/arena/taratura.md.
+//   npm run tara:arena                  # tara i tre livelli (facile, medio, difficile) e riscrive dati/taratura.js
 //   npm run tara:arena -- --prova       # tara e stampa, senza scrivere niente
-//   npm run tara:arena -- --da 0.9 --a 0.5 --volte 150   # la rampa del bambino
-//   npm run tara:arena -- --bravo-da 0.8 --bravo-a 0.5 --bravo-dalla 10   # e quella di chi non sbaglia
+//   npm run tara:arena -- --livello medio   # solo quel livello (gli altri restano com'erano); con --misura, contro quel livello
+//   npm run tara:arena -- --livello medio --da 0.9 --a 0.5 --volte 150   # la rampa del bambino, per quel livello
 //   npm run tara:arena -- --duelli      # le truppe a duello, squadre uguali in campo aperto
+//   npm run tara:arena -- --duelli --budget 120   # ...a parità di monete (quante squadre si comprano con 120)
 //   npm run tara:arena -- --misura      # i giocatori finti contro la taratura di adesso, senza ritarare
 //   npm run tara:arena -- --misura --d 1 --furbizia 0   # contro un nemico fisso (la furbizia forzata)
+//   npm run tara:arena -- --misura --ricco 1.3   # nemico con il 30% di monete e di forza in più
+//   npm run tara:arena -- --misura --draghi   # e anche chi fa solo draghi, senza miniera
 //   npm run tara:arena -- --infinita    # i giocatori finti nella battaglia infinita, un terreno alla volta (non tara niente)
 import { writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
@@ -20,17 +23,20 @@ import { misuraParallela as misura, chiudiBanco } from './banco-parallelo.mjs'
 import { Partita } from '../src/giochi/arena/motore/partita.js'
 import { TRUPPE, GIOCATORE, TERRENI } from '../src/giochi/arena/dati/regole.js'
 import { firmaEquilibrio } from '../src/giochi/arena/motore/firma.js'
-import { NEMICO } from '../src/giochi/arena/dati/taratura.js'
+import { NEMICO, NEMICO_PER_LIVELLO } from '../src/giochi/arena/dati/taratura.js'
 
 const RADICE = join(dirname(fileURLToPath(import.meta.url)), '..')
 const argv = process.argv.slice(2)
 const prova = argv.includes('--prova')
 const opz = (nome, def) => { const i = argv.indexOf(nome); return i >= 0 ? Number(argv[i + 1]) : def }
-const DA = opz('--da', 0.9)         // la quota di vittorie del bambino nella prima tappa
-const A = opz('--a', 0.3)          // e nell'ultima (nella lava decide il bravo, e il bambino scende sotto)
-const BRAVO_DALLA = opz('--bravo-dalla', 10)  // la prima tappa (da 1) in cui conta anche il bravo: la lava
-const BRAVO_DA = opz('--bravo-da', 0.8)  // le vittorie massime di chi non sbaglia mai, in quella tappa
-const BRAVO_A = opz('--bravo-a', 0.5)    // e nell'ultima: in cima si vince solo rispondendo bene e svelti
+/* I tre livelli di difficoltà: per ognuno la rampa del bambino di prova (la quota di vittorie nella prima tappa e
+   nell'ultima) e il tetto di chi non sbaglia mai (`misura`), che conta dalla tappa `dalla` (da 1) e scende da `da` ad `a`.
+   Facile non ha tetto: il nemico lo regola solo il bambino. Il nemico non diventa più ricco ma più bravo (`nemicoDi`). */
+export const LIVELLI = {
+  facile:    { da: 0.95, a: 0.6,  bravo: null },
+  medio:     { da: 0.9,  a: 0.35, bravo: { dalla: 6, da: 0.85, a: 0.5 } },
+  difficile: { da: 0.7,  a: 0.15, bravo: { dalla: 3, da: 0.7,  a: 0.2 } },
+}
 const VOLTE = opz('--volte', 120)
 const GIRI = 8
 const D_MAX = 2
@@ -57,6 +63,7 @@ const vinte = async (tappa, d, pilota, volte = VOLTE) =>
    calibrazione di vita e danno si guarda qui (docs/arena/regole.md). Il golem non duella:
    ignora le truppe. */
 if (argv.includes('--duelli')) {
+  const BUDGET = opz('--budget', 0)   // se c'è: ogni parte spende quelle monete in squadre della stessa truppa (a parità di prezzo, non di squadre)
   const ids = Object.keys(TRUPPE).filter(id => TRUPPE[id].bers !== 'torri')
   const duello = (a, b, seme) => {
     const p = new Partita({ rnd: caso(seme) })
@@ -64,7 +71,10 @@ if (argv.includes('--duelli')) {
     for (const c of p.castelli) { c.hp = c.max = 1e7; c.liv = 0 }
     p.muoviCastello = () => {}                                   // i castelli non sparano: conta solo chi duella
     p.pensa = 1e9; p.nemicoCfg = { ...p.nemicoCfg, pensa: 1e9 }     // e il nemico non gioca
-    for (const x of [140, 180, 220]) { p.schiera('io', a, x, 330); p.schiera('nem', b, x, 210) }
+    const squadre = t => Math.max(1, Math.floor(BUDGET / TRUPPE[t].costo))
+    const mettile = (lato, t, y0, dy) => { for (let k = 0; k < squadre(t); k++) p.schiera(lato, t, 40 + (k % 9) * 28, y0 + dy * Math.floor(k / 9) * 14) }
+    if (BUDGET) { mettile('io', a, 330, 1); mettile('nem', b, 210, -1) }
+    else for (const x of [140, 180, 220]) { p.schiera('io', a, x, 330); p.schiera('nem', b, x, 210) }
     for (let t = 0; t < 120; t += 0.5) {
       p.avanza(0.5)
       const vivi = l => p.unita.filter(u => u.lato === l && u.hp > 0)
@@ -92,12 +102,17 @@ if (argv.includes('--duelli')) {
 /* Quanto vince ogni giocatore finto contro il nemico scritto adesso: per guardare una regola
    nuova (il rush contro l'economia, il pigro) prima di ritarare. */
 if (argv.includes('--misura')) {
+  // chi gioca come il bambino di casa: solo draghi (`--draghi`), tutto in truppe e mai la miniera; non entra nella firma
+  const EXTRA = argv.includes('--draghi') ? { draghi: { ...PILOTI.rush, truppa: 'drago' } } : {}
   const fisso = argv.includes('--d') ? nemicoDi(opz('--d', 1)) : null
+  const livelloMisura = argv.includes('--livello') ? argv[argv.indexOf('--livello') + 1] : 'medio'
   const furbo = argv.includes('--furbizia') ? { furbizia: opz('--furbizia', 0) } : {}
+  const ricco = opz('--ricco', 1)   // monete e forza del nemico moltiplicate (1 = come scritto): quanto vantaggio serve contro chi non sbaglia
   for (const [i, t] of CAMPAGNA.entries()) {
-    const sfida = { ...sfidaDi(t), nemico: { ...(fisso || NEMICO[t.chiave]), ...furbo } }
+    const base = { ...(fisso || NEMICO_PER_LIVELLO[livelloMisura][t.chiave]), ...furbo }
+    const sfida = { ...sfidaDi(t), nemico: { ...base, moneteAlSecondo: +(base.moneteAlSecondo * ricco).toFixed(3), forza: +(base.forza * ricco).toFixed(3) } }
     // con la durata media: verso i 180 secondi si vince ai punti, molto meno abbattendo il castello
-    const riga = (await Promise.all(Object.entries(PILOTI).map(async ([n, p]) => { const r = await misura({ volte: 80, sfida, pilota: p }); return `${n} ${Math.round(r.vinte / 80 * 100)}% ${r.secondi}s` }))).join(' · ')
+    const riga = (await Promise.all(Object.entries({ ...PILOTI, ...EXTRA }).map(async ([n, p]) => { const r = await misura({ volte: 80, sfida, pilota: p }); return `${n} ${Math.round(r.vinte / 80 * 100)}% ${r.secondi}s` }))).join(' · ')
     console.log(`${String(i + 1).padStart(2)} ${t.chiave.padEnd(12)} d=${sfida.nemico.d.toFixed(2)}  ${riga}`)
   }
   process.exit(0)
@@ -120,11 +135,6 @@ if (argv.includes('--infinita')) {
 }
 
 const rampa = (da, a) => i => da + (a - da) * (i / Math.max(1, CAMPAGNA.length - 1))
-const bersaglio = rampa(DA, A)
-const tettoBravo = i => {
-  const da = BRAVO_DALLA - 1, quante = CAMPAGNA.length - 1 - da
-  return i < da ? 1 : BRAVO_DA + (BRAVO_A - BRAVO_DA) * ((i - da) / Math.max(1, quante))
-}
 
 /* il `d` più alto a cui `pilota` vince ancora almeno `quota` (le vittorie scendono col `d`) */
 async function finoA(t, pilota, quota) {
@@ -138,33 +148,52 @@ async function finoA(t, pilota, quota) {
   return (basso + alto) / 2
 }
 
-const risultati = {}
-for (const [i, t] of CAMPAGNA.entries()) {
-  const mira = bersaglio(i), tetto = tettoBravo(i)
-  // la manopola non è vincolata a salire: con più truppe a disposizione anche il
-  // nemico è più forte a parità di `d`, e la rampa la fa la quota di vittorie.
-  // Il bambino dà il nemico più forte che gli lascia la quota; se a quel nemico il
-  // bravo vince più del suo tetto, si sale finché non ci sta (e il bambino scende)
-  const dBambino = await finoA(t, PILOTI.bambino, mira)
-  const dBravo = tetto >= 1 ? 0 : await finoA(t, PILOTI.misura, tetto + 0.001)
-  const d = risultati[t.chiave] = Math.max(dBambino, dBravo)
-  const chi = d > dBambino ? 'il bravo' : 'il bambino'
-  const riga = (await Promise.all(Object.entries(PILOTI).map(async ([n, p]) => `${n} ${Math.round(await vinte(t, d, p, 80) * 100)}%`))).join(' · ')
-  console.log(`${String(i + 1).padStart(2)} ${t.chiave.padEnd(12)} d=${d.toFixed(2)}  (bambino ≥ ${Math.round(mira * 100)}%, bravo ≤ ${Math.round(tetto * 100)}%: decide ${chi})  ${riga}`)
+const soloQuesto = argv.includes('--livello') ? argv[argv.indexOf('--livello') + 1] : null
+const tutti = {}
+for (const [livello, spec] of Object.entries(LIVELLI)) {
+  if (soloQuesto && soloQuesto !== livello) { tutti[livello] = NEMICO_PER_LIVELLO[livello]; continue }
+  const bersaglio = rampa(opz('--da', spec.da), opz('--a', spec.a))
+  const b = spec.bravo
+  const tettoBravo = i => {
+    if (!b) return 1
+    const da = b.dalla - 1, quante = CAMPAGNA.length - 1 - da
+    return i < da ? 1 : b.da + (b.a - b.da) * ((i - da) / Math.max(1, quante))
+  }
+  console.log(`\n── ${livello}: bambino ${Math.round(spec.da * 100)}% → ${Math.round(spec.a * 100)}%${b ? `, chi non sbaglia ≤ ${Math.round(b.da * 100)}% (il rush +10) → ${Math.round(b.a * 100)}% dalla tappa ${b.dalla}` : ''}`)
+  const risultati = tutti[livello] = {}
+  for (const [i, t] of CAMPAGNA.entries()) {
+    const mira = bersaglio(i), tetto = tettoBravo(i)
+    // la manopola non è vincolata a salire: con più truppe a disposizione anche il
+    // nemico è più forte a parità di `d`, e la rampa la fa la quota di vittorie.
+    // Il bambino dà il nemico più forte che gli lascia la quota; se a quel nemico il
+    // bravo vince più del suo tetto, si sale finché non ci sta (e il bambino scende)
+    const dBambino = await finoA(t, PILOTI.bambino, mira)
+    const dBravo = tetto >= 1 ? 0 : await finoA(t, PILOTI.misura, tetto + 0.001)
+    // anche chi mette tutto in truppe e non fa mai miniera (come i bambini che vincono «solo con i draghi») ha il suo tetto
+    // se nemmeno col nemico al massimo il rush scende sotto il tetto (la palude: le mummie battono tutto quello che c'è) non
+    // si guasta la taratura di chi gioca davvero: il tetto del rush non conta e il log lo dice
+    const dRushVero = tetto >= 1 ? 0 : await finoA(t, PILOTI.rush, Math.min(1, tetto + 0.1) + 0.001)
+    const dRush = dRushVero >= D_MAX ? 0 : dRushVero
+    const d = Math.max(dBambino, dBravo, dRush)
+    risultati[t.chiave] = nemicoDi(d)
+    const chi = d > dBambino ? (d > dBravo ? 'il rush' : 'il bravo') : 'il bambino'
+    const riga = (await Promise.all(Object.entries(PILOTI).map(async ([n, p]) => `${n} ${Math.round(await vinte(t, d, p, 80) * 100)}%`))).join(' · ')
+    console.log(`${String(i + 1).padStart(2)} ${t.chiave.padEnd(12)} d=${d.toFixed(2)}  (bambino ≥ ${Math.round(mira * 100)}%, bravo ≤ ${Math.round(tetto * 100)}%: decide ${chi}${dRushVero >= D_MAX ? '; IL RUSH NON SI FERMA' : ''})  ${riga}`)
+  }
 }
 
 if (!prova) {
-  const righe = CAMPAGNA.map(t => `  ${t.chiave}: ${JSON.stringify(nemicoDi(risultati[t.chiave])).replace(/"(\w+)":/g, '$1: ').replace(/,/g, ', ').replace(/\{/, '{ ').replace(/\}/, ' }')},`)
+  const scheda = r => `{\n${CAMPAGNA.map(t => `    ${t.chiave}: ${JSON.stringify(r[t.chiave]).replace(/"(\w+)":/g, '$1: ').replace(/,/g, ', ').replace(/\{/, '{ ').replace(/\}/, ' }')},`).join('\n')}\n  }`
   const file = join(RADICE, 'src/giochi/arena/dati/taratura.js')
   const intestazione = `/* GENERATO da strumenti/tara-arena.mjs (\`npm run tara:arena\`) — non si scrive a mano.
 
-   La scheda del nemico di ogni tappa, trovata giocando: \`forza\` (le sue truppe
-   rispetto alle tue), \`moneteAlSecondo\` e \`pensa\` (ogni quanti secondi decide)
-   sono funzione di una sola manopola \`d\` (0 = quasi inerme, 1 = pari al giocatore
-   bravo), cercata per bisezione perché il bambino di prova vinca la quota
-   che la tappa promette. Vedi docs/arena/taratura.md. */
+   La scheda del nemico di ogni tappa, per ognuno dei tre livelli di difficoltà (facile, medio, difficile): \`forza\`
+   (le sue truppe rispetto alle tue), \`moneteAlSecondo\` e \`pensa\` (ogni quanti secondi decide) sono funzione di una
+   sola manopola \`d\` (0 = quasi inerme, 1 = pari al giocatore bravo), cercata per bisezione perché il bambino di
+   prova vinca la quota che il livello promette in quella tappa. Vedi docs/arena/taratura.md. */
 `
-  writeFileSync(file, `${intestazione}export const NEMICO = {\n${righe.join('\n')}\n}\n// la firma dell'equilibrio al momento della taratura (motore/firma.js): se non torna, rilancia la taratura\nexport const FIRMA = '${firmaEquilibrio()}'\n`)
+  const corpo = Object.keys(LIVELLI).map(l => `  ${l}: ${scheda(tutti[l])},`).join('\n')
+  writeFileSync(file, `${intestazione}export const NEMICO_PER_LIVELLO = {\n${corpo}\n}\n// quello di mezzo è la scheda di sempre\nexport const NEMICO = NEMICO_PER_LIVELLO.medio\n// la firma dell'equilibrio al momento della taratura (motore/firma.js): se non torna, rilancia la taratura\nexport const FIRMA = '${firmaEquilibrio()}'\n`)
   console.log(`\nscritto ${file}`)
 }
 chiudiBanco()

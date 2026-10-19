@@ -16,7 +16,7 @@ raccomandazione e il perché.
 - **Nasce nel Sotterraneo 3D**, il gioco in prova; il Sotterraneo di sempre (2D, mappa dipinta, discese in fila) resta
   com'è finché non si decide altro.
 - **Le regole del sotterraneo non cambiano**: ogni cosa costa una risposta, la domanda è quella di oggi (`quiz/scelta.js`
-  col `dif` del posto), nessuna risposta sbagliata paga, l'età apre e chiude i posti come oggi (la `portata`).
+  col `dif` del posto), nessuna risposta sbagliata paga, l'età non chiude i posti (solo la storia).
 
 ## 1. La struttura del mondo
 
@@ -49,9 +49,7 @@ raccomandazione e il perché.
   (`LIVELLI_ATTESI` di oggi: 1 · 2 · 3 · 5 · 7 · 8 · 10 · 12), perché sopra si cammina verso il dungeon e lo si trova
   un poco più facile; le regioni senza dungeon stanno a metà fra le vicine. Il `dif` di una regione è l'inizio di quello
   del suo dungeon. Sono numeri da misurare col banco, non da credere (sotto, «Cosa va ricalibrato»).
-- **L'età chiude un passaggio, non una regione**: il ponte o il valico verso una marca chiusa per l'età ha la grata
-  calata e una guardia che dice «Questa strada, per ora, resta chiusa», senza promettere niente (come la porta chiusa
-  per l'età della storia, [la-storia-principale.md](la-storia-principale.md)).
+- **L'età non chiude passaggi**: si aprono solo per la storia (se ha finito le discese prima può andare anche oltre).
 
 ### Le città
 

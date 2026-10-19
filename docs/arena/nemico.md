@@ -59,9 +59,24 @@ difficoltà sale piano. Quando ragiona:
   con una caserma sola e poi con tre: le squadre morivano sotto il castello, che sotto casa
   picchia il triplo, e chi faceva economia vinceva sempre.
 
-Misurato con le stesse monete del giocatore (`npm run tara:arena -- --misura --d 1.5
+Misurato (vecchio giro, prima del nemico avanzato) con le stesse monete del giocatore (`npm run tara:arena -- --misura --d 1.5
 --furbizia 1` contro `--furbizia 0`): dalla quinta tappa il giocatore perfetto passa da
 vincere il 100% al 0-26%, il rush dal 100% allo 0%; chi fa economia vince ancora il 70-80%.
+
+## Il nemico avanzato (furbizia da 0,6)
+
+Dal 19 ottobre, con la furbizia da 0,6 in su (le tappe alte e il livello Difficile), il nemico fa due
+cose in più (`testa()` e `sostituisci()` in `nemico.js`), perché il campo sta fermo mentre il bambino
+calcola e chi gioca bene ha tutto il tempo che vuole: la difficoltà può venire solo dalla strategia.
+
+- **Vende una caserma per rifarla meglio.** Con le sei piazzole piene, se la truppa che conviene contro
+  le tue non c'è e una sua caserma è la peggiore contro quello che hai (e sta ancora bassa, livello 3 o
+  meno), la vende, ne riprende metà e la rifà. Mai due volte in 30 secondi.
+- **Più miniere quando è al sicuro:** il tetto delle miniere e il tempo per farle crescono con la furbizia.
+- **Non ricostruisce il muro a ogni colpo** (`MURO_OGNI`: crollato, e al più ogni 12 secondi): rifarlo di continuo
+  gli mangiava quasi metà delle entrate contro chi lo martella.
+- **I counter sono `BATTE`, riscritta dai duelli a parità di monete** ([regole.md](regole.md)): non esiste
+  la truppa perfetta, e il nemico costruisce quella che batte le tue, nuova o potenziata.
 
 ## La bomba del nemico
 
@@ -72,7 +87,7 @@ metà**, quando sono abbastanza fitte da valere la pena.
 
 Stesse regole, la scheda dell'ultima tappa e le truppe del terreno (`Partita.truppeAmmesse`): i ruoli si risolvono
 sulla lista ammessa e un passo che non c'è si salta. Le bestie cornute sono nel ruolo `veloce` (dove ci sono i
-mummie non ci sono le bestie) e in `BATTE` come terrestri a corto raggio. `VERSIONE_IA` 10.
+mummie non ci sono le bestie) e in `BATTE` come terrestri a corto raggio. `VERSIONE_IA` 12.
 
 ## Se si ritocca
 

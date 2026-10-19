@@ -1,6 +1,6 @@
 // L'avanzamento dei giochi nuovi, un posto solo: vedi docs/core/convenzione-giochi.md.
 import { state, persist, flushNow, tappaAperta } from '../store/profile.js'
-import { tappaApertaQui, tappaChiusaPerEtaQui } from '../data/portata-giochi.js'
+import { tappaApertaQui } from '../data/portata-giochi.js'
 import { GIOCHI } from '../data/giochi.js'   // tutti i giochi, non solo i nuovi: serve alla tabella dei record
 import { apriQuaderno, conRisultato, inParole, primatoInParole, dettagliInParole,
          sfideDi, sfidaDi, chiaveSfida }
@@ -23,9 +23,7 @@ export function progresso(chiave) {
 // `fatte`: di difetto il cursore della campagna; il sotterraneo passa quello dell'avventura aperta
 export const aperta = (chiave, indice, fatte = progresso(chiave).tappa) => tappaApertaQui(chiave, indice, fatte)
 
-export const chiusaPerEta = (chiave, indice) => tappaChiusaPerEtaQui(chiave, indice)
-
-// la prossima da giocare, SE si può giocare: sopra la mira dell'età resta chiusa
+// la prossima da giocare, SE si può giocare
 export const adesso = (chiave, indice, fatte = progresso(chiave).tappa) =>
   indice === fatte && aperta(chiave, indice, fatte)
 

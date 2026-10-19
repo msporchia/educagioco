@@ -19,20 +19,18 @@ const DUNGEON_DI = Object.fromEntries(DUNGEON.map(d => [d.chiave, d]))
 export const dungeonDi = chiave => DUNGEON_DI[chiave] || null
 export const dungeonDellIndice = i => DUNGEON.find(d => d.indice === i) || null
 
-/* ── i passaggi: aperti per la storia (le discese finite) e per l'età (la `portata` delle discese) ── */
-// `tappe` come le dà Gioco.vue: [{ indice, fatta, perEta }]. L'età è in fila come le discese: si guarda la tappa del passaggio
+/* ── i passaggi: aperti per la storia (le discese finite) ── */
+// `tappe` come le dà Gioco.vue: [{ indice, fatta }]
 export function aperturaDi(tappe = []) {
   const finite = tappe.filter(t => t.fatta).length
-  const apertaPerEta = k => { const t = tappe.find(x => x.indice === k); return !t || !t.perEta }
-  return { finite, apertaPerEta, aperto: q => passaggioAperto(q, { finite, apertaPerEta }) }
+  return { finite, aperto: q => passaggioAperto(q, { finite }) }
 }
 // la terra dove si cammina con quei passaggi: l'A* e la lisciatura di motore/terra.js su una maschera di qualunque misura.
 // Chi sta fermo è già un ingombro del generatore (`blocco`): niente ostacoli in più
 export const terraDelMondo = (m, aperto) => creaTerra(mascheraDelMondo(m, aperto))
 
-// perché un passaggio è chiuso, come la porta chiusa della storia: per l'età non promette niente
-export function chiusoPerche(q, { finite, apertaPerEta }) {
-  if (q.tappa != null && !apertaPerEta(q.tappa)) return 'Questa strada, per ora, resta chiusa.'
+// perché un passaggio è chiuso, come la porta chiusa della storia
+export function chiusoPerche(q, { finite }) {
   if (finite >= q.apre) return null
   const d = dungeonDellIndice(q.apre - 1)
   return d ? `Si apre quando finisci ${minuscolo(d.nome)}.` : 'Si apre più avanti nella storia.'

@@ -46,15 +46,14 @@ export function disegnaStrade(campagna = CAMPAGNA, scalini = SCALINI) {
 export const STRADE = disegnaStrade()
 
 /* Cosa apre una tappa. `fatta` dice se è vinta (o ereditata), `daFuori`
-   se l'età o i grandi la aprono comunque, `perEta` se l'età la chiude
-   comunque (vince su tutto, come in data/portata-giochi.js); `eredita` è
+   se l'età o i grandi la aprono comunque; `eredita` è
    il cursore di prima delle due strade: quello che era aperto resta
    aperto.
    - su ogni strada: fatta la tappa prima;
    - la prima del coniglio è aperta sempre, la prima del cane quando il
      coniglio ha fatto `apreIlCane`;
    - e una tappa fatta resta aperta. */
-export function aperture(S, { fatta, daFuori = () => false, perEta = () => false, eredita = 0 }) {
+export function aperture(S, { fatta, daFuori = () => false, eredita = 0 }) {
   const caneAperto = () => S.apreIlCane === null || fatta(S.apreIlCane)
   const perStrada = i => {
     const p = S.prima[i]
@@ -63,7 +62,6 @@ export function aperture(S, { fatta, daFuori = () => false, perEta = () => false
   }
   const aperta = i => {
     if (!(i >= 0 && i < S.quante)) return false
-    if (perEta(i)) return false
     // una tappa già fatta resta aperta anche se le si mette davanti una tappa nuova
     return daFuori(i) || i <= eredita || fatta(i) || perStrada(i)
   }
@@ -72,8 +70,7 @@ export function aperture(S, { fatta, daFuori = () => false, perEta = () => false
 
 /* La frase del fumetto su una tappa chiusa: chi tocca prima sulla stessa
    strada, e per la prima del cane quando comincia. `campagna` dà i nomi. */
-export function cosaManca(S, i, { fatta, aperta, perEta = () => false }, campagna = CAMPAGNA) {
-  if (perEta(i)) return 'Questa tappa per ora è chiusa.'
+export function cosaManca(S, i, { fatta, aperta }, campagna = CAMPAGNA) {
   // la prima non fatta della sua strada, andando indietro
   let k = i, altre = 0
   while (S.prima[k] !== null && !fatta(S.prima[k])) { k = S.prima[k]; altre++ }

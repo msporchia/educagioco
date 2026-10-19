@@ -12,7 +12,7 @@ sono ancora (la fase 5): il mondo si gira, si scende nei sette dungeon e si torn
 |---|---|
 | `viste/Mondo3d.vue` | la vista: l'eroe che cammina, chi sta dove, il dito, i dialoghi, il fumetto, le pietre, la veduta, il salvataggio. Le stesse porte di `Terra.vue` verso `Campagna.vue`, più `mondo`, `risposta`, `veduta` |
 | `viste/FumettoMondo.vue` | quello che dice il fumetto: un ingresso, una pietra, il portale, il cartello, la bacheca, una grata chiusa |
-| `motore/mondo-sopra.js` | puro: il mondo tenuto una volta, i passaggi aperti per storia ed età, la nebbia in base64, la prima volta, il portale nella città giusta, le pietre e il viaggio, il cartello |
+| `motore/mondo-sopra.js` | puro: il mondo tenuto una volta, i passaggi aperti per la storia, la nebbia in base64, la prima volta, il portale nella città giusta, le pietre e il viaggio, il cartello |
 | `scena3d/mondo/indice.js` | la porta verso la vista: lo stato `S` da disegnare, i pezzi costruiti e buttati, il giro di ogni fotogramma, `grafica()` |
 | `pezzi.js`, `dito.js`, `suolo.js` | puri: il mondo a pezzi di 32×28 celle; i bersagli del dito; l'altezza del terreno e dei ponti, il caso e il rumore |
 | `vesti.js` | quello che tutti i materiali hanno: il vento, l'ombra delle nuvole, la nebbia (superficie o oggetto intero) |
@@ -70,7 +70,7 @@ paga la risposta giusta di una pietra.
   uno chiuso pianta il divieto e dice cosa lo apre. Davanti a uno rosso la sentinella.
 - **Si torna** dove si era: risalendo, lasciando perdere o svenuti si è davanti all'ingresso; dal portale accanto al gemello,
   nella città che serve quel dungeon (il villaggio, se quella non si raggiunge).
-- **Le grate** dei passaggi fra gli anelli sono modellate: calate finché la storia o l'età non le alzano, e toccandole dicono
+- **Le grate** dei passaggi fra gli anelli sono modellate: calate finché la storia non le alza, e toccandole dicono
   perché.
 - **Gli antri** si vedono, chiusi (fase 7).
 

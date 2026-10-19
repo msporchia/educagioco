@@ -16,7 +16,7 @@ import { disponiScheda, stradaDaPunto, partenzaDa, durataViaggio, lungo, larghez
 import { disegnaDecoro, disegnaCoperchi, piediniChip, tracciato, STRATI, COLORI } from '../scena/scheda.js'
 
 const props = defineProps({
-  // [{ indice, nome, impara, capitolo, stato: vinto|adesso|aperto|spento, stelle, aMeta, perEta }]
+  // [{ indice, nome, impara, capitolo, stato: vinto|adesso|aperto|spento, stelle, aMeta }]
   livelli: { type: Array, required: true },
   capitoli: { type: Array, required: true },     // [{ chiave, nome, icona }]
   tappa: { type: Number, required: true },       // il livello da fare; livelli.length a fila finita
@@ -351,7 +351,7 @@ function entra() { emit('update:aperto', null); emit('libero') }
           <button v-if="libero.aperto" type="button" class="cst-fu-via" data-azione="costruisci" @click="entra">▶ costruisci</button>
         </template>
         <template v-else-if="fumetto.l.stato === 'spento'">
-          <b class="cst-fu-titolo" data-serve>🔒 {{ fumetto.l.perEta ? 'per ora è chiuso' : `prima il livello ${prossimo}` }}</b>
+          <b class="cst-fu-titolo" data-serve>🔒 prima il livello {{ prossimo }}</b>
           <span class="cst-fu-riga">Il {{ fumetto.l.indice + 1 }} è «{{ fumetto.l.nome }}»</span>
         </template>
         <template v-else>

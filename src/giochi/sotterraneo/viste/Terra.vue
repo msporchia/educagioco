@@ -29,7 +29,7 @@ import Portale from './Portale.vue'
 import Dialogo from './Dialogo.vue'
 
 const props = defineProps({
-  tappe: { type: Array, required: true },     // [{ indice, chiave, nome, icona, dritta, piani, aperta, adesso, stelle, perEta, fatta }]
+  tappe: { type: Array, required: true },     // [{ indice, chiave, nome, icona, dritta, piani, aperta, adesso, stelle, fatta }]
   abisso: { type: Object, default: null },    // { indice, nome, icona, dritta, fondo }, o null finché non si apre
   eroe: { type: Object, required: true },
   terra: { type: Object, default: null },     // { nebbia, dove, parlato } dell'avventura, o null la prima volta
@@ -743,13 +743,13 @@ const divieto = p => {
   return { left: (x + w * 0.05) * S + 'px', top: Math.min(y + h, r[1] + r[3]) * S + 'px' }
 }
 const nomeDi = p => p.cosa.nome
-// una chiusa dice cosa la apre; quella chiusa per l'età non promette niente («finisci quella di prima» sarebbe falso)
+// una chiusa dice cosa la apre
 // (la storia: si apre battendo il mostro grosso della discesa di prima, non facendo missioni)
 const storia = computed(() => laStoria(props.tappe))
 const chiusaPerche = p => {
   if (p.abisso) return POZZO_VECCHIO.chiuso
   const d = prev(p.tappa.indice)
-  if (p.tappa.perEta || !d) return 'Per ora non si scende.'
+  if (!d) return 'Per ora non si scende.'
   const g = storia.value.porte[p.tappa.indice - 1]
   return g && g.grosso ? `Si apre quando batti ${g.grosso} in fondo ${minuscolo(d.nome).replace(/^la /, 'alla ')}.`
     : `Si apre quando finisci ${minuscolo(d.nome)}.`

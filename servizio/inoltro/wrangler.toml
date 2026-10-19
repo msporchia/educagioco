@@ -1,0 +1,18 @@
+# Il servizio di inoltro delle sfide (docs/arena/multigiocatore.md). `npx wrangler dev` per provarlo in locale,
+# `npx wrangler deploy` per metterlo sul tuo account Cloudflare.
+name = "sfida"
+main = "src/index.js"
+compatibility_date = "2026-10-01"
+
+[[durable_objects.bindings]]
+name = "STANZE"
+class_name = "Stanza"
+
+[[durable_objects.bindings]]
+name = "LIMITE"
+class_name = "Limite"
+
+# il piano gratuito vuole i Durable Object con la memoria SQLite
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Stanza", "Limite"]

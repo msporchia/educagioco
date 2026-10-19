@@ -27,8 +27,7 @@ freccia), `motore/dialoghi.js` (`strada`).
 - **Non è una missione dei personaggi**: non entra nel tetto di tre né nel
   numero delle missioni da consegnare ([missioni.md](missioni.md)), non si prende né si consegna.
   È sempre lì, in cima.
-- **Chiusa per l'età**: la porta c'è, ma la riga dice «Questa porta, per ora,
-  resta chiusa» e nessuna freccia la indica (`ferma`). Finite le sette, il
+- **Finite le sette**, il
   diario dice che è compiuta e lascia il pozzo vecchio: da lì in poi le zone
   ([zone.md](zone.md)).
 

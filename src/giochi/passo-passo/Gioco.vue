@@ -8,7 +8,7 @@ import Barra from '../../components/Barra.vue'
 import { suono } from '../../audio.js'
 import { state, addCoins, segna, segnaBest, tuttoAperto, spendi } from '../../store/profile.js'
 import { progresso, stelleDi, completa, primatoDi, segnaPrimato, ricorda,
-         sosta, salvaSosta, chiusaPerEta } from '../campagne.js'
+         sosta, salvaSosta } from '../campagne.js'
 import { tappaApertaQui } from '../../data/portata-giochi.js'
 import { fraseDiFine, primatoInParole } from '../primati.js'
 
@@ -113,11 +113,10 @@ if (avanza.cfg.fila !== FILA_ATTUALE) {
    qui si apre andando avanti su una strada (docs/passo-passo/livelli.md) */
 if (typeof avanza.cfg.eredita !== 'number') ricorda(CHIAVE, 'eredita', avanza.tappa || 0)
 const fatta = i => stelleDi(CHIAVE, i) > 0 || i < ereditaDi(avanza)
-const perEta = i => chiusaPerEta(CHIAVE, i)
 // aperta dall'età o dai grandi anche senza averci giocato
 const daFuori = i => tappaApertaQui(CHIAVE, i, -1)
-// la strada del cane comincia finiti i piccoli del coniglio; l'età non ferma niente (perMerito)
-const strade = aperture(STRADE, { fatta, daFuori, perEta, eredita: ereditaDi(avanza) })
+// la strada del cane comincia finiti i piccoli del coniglio
+const strade = aperture(STRADE, { fatta, daFuori, eredita: ereditaDi(avanza) })
 const aperta = i => strade.aperta(i)
 const prossimaDopo = i => prossima(STRADE, i, aperta)
 // in fondo a una strada ▶ porta al sentiero del suo animale, se è aperto
@@ -187,7 +186,7 @@ const voci = computed(() => CAMPAGNA.map((t, i) => {
     indice: i, numero: STRADE.numero[i], nome: t.nome, icona: t.icona, racconto: t.racconto, stelle,
     stato: !qui ? 'chiusa' : i === adesso.value[STRADE.animale[i]] ? 'ora' : stelle > 0 ? 'fatta' : 'aperta',
     aMeta: !!quaderno.livelli[t.chiave],
-    serve: qui ? '' : cosaManca(STRADE, i, { fatta, aperta, perEta }),
+    serve: qui ? '' : cosaManca(STRADE, i, { fatta, aperta }),
     scalino: { icona: s.icona, nome: s.nome },
     nuovo: fatta(i) ? [] : concettiDi(t).filter(c => !viste.value.has(c)).map(c => SCALINI.find(x => x.chiave === c).dritta),
   }

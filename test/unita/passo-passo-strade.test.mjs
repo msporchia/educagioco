@@ -250,8 +250,6 @@ for (const [chi, av] of Object.entries(casi)) {
   uguale('il primo gregge chiuso dice quando comincia il cane',
          cosaManca(S, TAPPE_PRIME, { fatta: zero.fatta, aperta: zero.aperta }), 'Il cane comincia quando il coniglio finisce «Tutto insieme».')
   uguale('una del coniglio dice chi tocca prima', dice(indice('sassi-fiume')), 'Prima tocca a «Il viale», poi ad altre 2 tappe.')
-  controlla('chiusa per l\'età lo dice e basta',
-            cosaManca(S, 40, { fatta: r.fatta, aperta: r.aperta, perEta: () => true }) === 'Questa tappa per ora è chiusa.')
 }
 
 /* ══════════ la riga della home ══════════ */

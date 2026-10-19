@@ -30,3 +30,6 @@ __pycache__/
 .venv-emoji/
 dist-sito/
 dist-poc/
+
+# il servizio di inoltro delle sfide (Cloudflare)
+servizio/inoltro/.wrangler/

@@ -97,7 +97,7 @@ bambino:
 
 Sbagliarle non dà errore: si vede solo il giorno che un bambino di sei
 anni trova in home un gioco che non sa aprire. Gli altri campi letti
-dall'età e dai saperi (`posto`, `quiz`, `chiede`, `serve`, `perMerito`,
+dall'età e dai saperi (`posto`, `quiz`, `chiede`, `serve`,
 `sperimentale`) sono spiegati in [`../genitori/`](../genitori/); il blocco
 `senzaFine` in [primati.md](primati.md).
 

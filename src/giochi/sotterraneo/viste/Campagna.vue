@@ -10,7 +10,7 @@ import Diario from './Diario.vue'
 import LascioPerdere from './LascioPerdere.vue'
 
 const props = defineProps({
-  tappe: { type: Array, required: true },   // [{ indice, chiave, nome, icona, dritta, piani, aperta, adesso, stelle, perEta, fatta }]
+  tappe: { type: Array, required: true },   // [{ indice, chiave, nome, icona, dritta, piani, aperta, adesso, stelle, fatta }]
   ripresa: { type: Object, default: null }, // { tappa, chiave, nome, icona, immagine, piano, piani, vita, gemme, chi, via }
   eroe: { type: Object, required: true },   // la scheda di chi scende, da dati/eroi.js
   abisso: { type: Object, default: null },   // { indice, nome, icona, dritta, fondo }; in fondo, la ripresa è più urgente

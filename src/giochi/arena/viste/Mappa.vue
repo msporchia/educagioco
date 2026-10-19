@@ -11,8 +11,11 @@ const props = defineProps({
   scalini: { type: Array, required: true },   // [{ chiave, nome, icona, dritta, tappe: [] }]
   ripresa: { type: Object, default: null },   // { emoji, nome, dettaglio }
   infinita: { type: Object, default: null },  // { nome, icona, racconto, aperta, motivo }
+  livelli: { type: Array, default: () => [] },  // [{ chiave, nome, icona }]
+  livello: { type: String, default: 'medio' },
 })
-const emit = defineEmits(['gioca', 'riprendi', 'scorda'])
+const emit = defineEmits(['gioca', 'riprendi', 'scorda', 'livello'])
+const SFIDA = 'sfida'   // la sfida in due non ha un indice: Gioco.vue la riconosce da questo
 riprendiSeChiesta(() => props.ripresa, () => emit('riprendi'))
 
 const chiede = ref(null)   // quale partita si sta per cominciare avendone una in sospeso
@@ -24,6 +27,10 @@ const INFINITA = 'infinita'   // la battaglia infinita non ha un indice: Gioco.v
 function toccaInfinita() {
   if (!props.ripresa) return emit('gioca', INFINITA)
   chiede.value = { nome: props.infinita.nome, indice: INFINITA }
+}
+function toccaSfida() {
+  if (!props.ripresa) return emit('gioca', SFIDA)
+  chiede.value = { nome: 'La sfida in due', indice: SFIDA }
 }
 function vai() {
   const t = chiede.value
@@ -37,20 +44,6 @@ function vai() {
     <Ripresa :ripresa="ripresa" :chiede="chiede ? chiede.nome : ''"
              @riprendi="chiede = null; emit('riprendi')" @scorda="emit('scorda')"
              @comincia="vai" @annulla="chiede = null" />
-
-    <!-- la battaglia infinita: senza timer, nemico al massimo, un terreno diverso a ogni volta -->
-    <section v-if="infinita" class="ar-scalino">
-      <div class="ar-tappe">
-        <button class="ar-tappa tappa ar-infinita" :class="{ 'ar-chiusa': !infinita.aperta }" data-infinita
-                :disabled="!infinita.aperta" @click="toccaInfinita">
-          <span class="ar-faccia em">{{ infinita.aperta ? infinita.icona : '🔒' }}</span>
-          <span class="ar-testo">
-            <b>{{ infinita.nome }}</b>
-            <i>{{ infinita.aperta ? infinita.racconto : infinita.motivo }}</i>
-          </span>
-        </button>
-      </div>
-    </section>
 
     <section v-for="s in scalini" :key="s.chiave" class="ar-scalino">
       <h3>
@@ -71,6 +64,37 @@ function vai() {
             <template v-if="t.stelle">{{ '⭐'.repeat(t.stelle) }}</template>
             <template v-else>{{ t.operazioni.join(' ') }}</template>
           </span>
+        </button>
+      </div>
+    </section>
+
+    <!-- la battaglia infinita: senza timer, nemico al massimo, un terreno diverso a ogni volta -->
+    <section v-if="infinita" class="ar-scalino">
+      <div class="ar-tappe">
+        <button class="ar-tappa tappa ar-infinita" :class="{ 'ar-chiusa': !infinita.aperta }" data-infinita
+                :disabled="!infinita.aperta" @click="toccaInfinita">
+          <span class="ar-faccia em">{{ infinita.aperta ? infinita.icona : '🔒' }}</span>
+          <span class="ar-testo">
+            <b>{{ infinita.nome }}</b>
+            <i>{{ infinita.aperta ? infinita.racconto : infinita.motivo }}</i>
+          </span>
+        </button>
+        <!-- quanto è bravo il nemico: vale solo qui, la campagna è sempre la stessa -->
+        <div v-if="livelli.length && infinita.aperta" class="ar-livelli" role="group" aria-label="Difficoltà">
+          <button v-for="l in livelli" :key="l.chiave" type="button" class="ar-livello" :class="{ 'ar-livello-su': l.chiave === livello }"
+                  :data-livello="l.chiave" :aria-pressed="l.chiave === livello" @click="emit('livello', l.chiave)">
+            <span class="em">{{ l.icona }}</span> {{ l.nome }}
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- la sfida in due: un amico, un altro telefono -->
+    <section class="ar-scalino">
+      <div class="ar-tappe">
+        <button class="ar-tappa tappa ar-infinita" data-sfida-apri @click="toccaSfida">
+          <span class="ar-faccia em">⚔️</span>
+          <span class="ar-testo"><b>Sfida un amico</b><i>Due telefoni, la stessa battaglia: tu contro un altro bambino.</i></span>
         </button>
       </div>
     </section>

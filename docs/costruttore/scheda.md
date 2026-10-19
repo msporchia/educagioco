@@ -82,7 +82,7 @@ Lo decide `Gioco.vue`, la scheda lo dipinge.
 - **Su un led aperto**: numero e nome, «Impari: …» (il campo `impara` del
   livello), le stelle, il segno del lasciato a metà, «▶ costruisci».
 - **Su un led spento**: «🔒 prima il livello N» (N è quello da fare) e il
-  nome, senza tasto. Chiuso per età: «per ora è chiuso».
+  nome, senza tasto.
 - **Sul cantiere libero**: aperto, cosa si fa e «▶ costruisci»; chiuso,
   dopo quale livello si apre (`APRE_DOPO`).
 - **Si apre al `click`**, non al `pointerup` ([../core/il-dito.md](../core/il-dito.md)),

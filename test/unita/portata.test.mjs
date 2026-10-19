@@ -52,8 +52,8 @@ import { FILA as BANCARELLA } from '../../src/data/bancarella.js'
 import { TAPPE as GENERALE } from '../../src/data/generale.js'
 import { TAPPE_DEL_GIOCO } from '../../src/data/portata-giochi.js'
 import { GIOCHI, CHIAVI_GIOCHI } from '../../src/data/giochi.js'
-import { aperta, chiusaPerEta, adesso, completa } from '../../src/giochi/campagne.js'
-import { init, creaGiocatore, accendiTuttoAperto } from '../../src/store/profile.js'
+import { aperta, adesso, completa } from '../../src/giochi/campagne.js'
+import { init, creaGiocatore } from '../../src/store/profile.js'
 import { SAPERI } from '../../src/data/saperi.js'
 import { controlla, uguale, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
 
@@ -207,54 +207,38 @@ uguale('ogni fila sta sotto la chiave di un gioco',
 uguale('e senza fila c\'è solo chi si dichiara un posto',
        GIOCHI.filter(g => !g.posto && !TAPPE_DEL_GIOCO[g.chiave]).map(g => g.chiave).join(','), '')
 
-/* ═══════════ 4. CHIUSA PER ETÀ, CON UN BAMBINO VERO ═══════════
-   Una tappa chiusa lo è per due motivi, e a schermo non si dicono allo
-   stesso modo: non ci si è ancora arrivati, e sotto c'è scritto
-   «continua per aprirla»; oppure è sopra la mira, e lì non si scrive
-   niente, perché andando avanti non si apre
-   (`prima-dopo/viste/Mappa.vue`). Il motivo lo dà `chiusaPerEta`, e
-   non deve mai dire «per età» di una tappa che il lucchetto lascia
-   aperta.
-
-   E per la stessa ragione il segno della tappa di adesso non cade su
-   una tappa chiusa: finite quelle alla sua portata, per quel bambino il
-   gioco è finito lì, e il segno non indica niente. */
+/* ═══════════ 4. L'ETÀ NON CHIUDE LE TAPPE ═══════════
+   Sopra la mira una tappa non è chiusa: chi vince quella prima va avanti,
+   perché averla vinta è la prova che ci arriva (l'utente: un tetto d'età
+   sui livelli alti si tiene solo per un motivo molto valido). L'età decide
+   da dove si comincia (`PASSATA`) e se la carta si offre in home. Una tappa
+   è chiusa soltanto finché non ci si è arrivati. */
 await init()
-await creaGiocatore('Prova', true, 4)
-const righe = TAPPE_DEL_GIOCO.prima.map((_, i) =>
-  ({ aperta: aperta('prima', i), perEta: chiusaPerEta('prima', i) }))
-uguale('a quattro anni «Tutto mescolato» è chiusa per età', righe[9].perEta, true)
-controlla('la seconda è chiusa perché non ci è ancora arrivato, non per età',
-          !righe[1].aperta && !righe[1].perEta)
-controlla('chiusa per età vuol dire chiusa', righe.every(t => !t.perEta || !t.aperta))
-controlla('il segno di adesso sta sulla prima', adesso('prima', 0))
-const muro = righe.findIndex(t => t.perEta)       // la prima chiusa per età
-completa('prima', muro - 1, TAPPE_DEL_GIOCO.prima.length)
-controlla('finite quelle alla sua portata, il segno non sta su nessuna tappa',
-          TAPPE_DEL_GIOCO.prima.every((_, i) => !adesso('prima', i)))
-accendiTuttoAperto(true)
-controlla('coi lucchetti tolti dai grandi non è chiuso niente, per nessun motivo',
-          TAPPE_DEL_GIOCO.prima.every((_, i) => aperta('prima', i) && !chiusaPerEta('prima', i)))
-controlla('e il segno torna sulla prossima', adesso('prima', muro))
-
-/* ═══════════ 5. PER MERITO ═══════════
-   Il costruttore dichiara `perMerito`: chi ha vinto un livello apre il
-   successivo anche oltre la mira dell'età. A nove anni la fila si
-   fermava alla piramide, con le candeline chiuse davanti a chi aveva
-   appena vinto la scala e la piramide; adesso la mira decide solo se la
-   carta si offre in home. */
-accendiTuttoAperto(false)
 await creaGiocatore('Nove', true, 9)
 {
   const fila = TAPPE_DEL_GIOCO.costruttore
-  const oltre = fila.findIndex(t => statoDellaTappa(t, { eta: 9 }) === 'avanti')
+  const oltre = fila.findIndex(t => statoDellaTappa(t, { eta: 9 }) === AVANTI)
   controlla('a nove anni c\'è un livello del costruttore oltre la mira', oltre > 0, `indice ${oltre}`)
-  controlla('finché non ci si arriva è chiuso, ma non «per età»', !aperta('costruttore', oltre) && !chiusaPerEta('costruttore', oltre))
+  controlla('finché non ci si arriva è chiuso', !aperta('costruttore', oltre))
   completa('costruttore', oltre - 1, fila.length)
   controlla('vinto quello prima, si apre', aperta('costruttore', oltre))
   controlla('e il segno di adesso ci sta sopra', adesso('costruttore', oltre))
-  controlla('gli altri giochi restano come prima: a nove anni «Tutto mescolato» non è chiusa, ma una tappa oltre la mira sì',
-            TAPPE_DEL_GIOCO.prima.every((t, i) => statoDellaTappa(t, { eta: 9 }) !== 'avanti' || chiusaPerEta('prima', i)))
+}
+await creaGiocatore('Prova', true, 4)
+{
+  const fila = TAPPE_DEL_GIOCO.prima
+  const muro = fila.findIndex(t => statoDellaTappa(t, { eta: 4 }) === AVANTI)
+  controlla('a quattro anni «Prima e dopo» ha tappe oltre la mira', muro > 0, `indice ${muro}`)
+  controlla('la prima oltre la mira è chiusa finché non ci si arriva', !aperta('prima', muro))
+  completa('prima', muro - 1, fila.length)
+  controlla('vinta quella prima, la oltre-mira si apre e il segno ci sta sopra', aperta('prima', muro) && adesso('prima', muro))
+  controlla('ogni gioco fa lo stesso: nessuna tappa chiusa solo per età',
+            ['mate', 'arena', 'sotterraneo', 'passo'].every(k => {
+              const f = TAPPE_DEL_GIOCO[k]
+              const ultima = f.length - 1
+              completa(k, ultima - 1, f.length)
+              return aperta(k, ultima)
+            }))
 }
 
 riassunto('la portata delle tappe')

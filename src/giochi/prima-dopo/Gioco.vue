@@ -13,7 +13,7 @@ import { suono } from '../../audio.js'
 import { segna, segnaBest } from '../../store/profile.js'
 import { borsa } from '../../store/varieta.js'
 import { PAGA } from '../../data/paghe.js'
-import { aperta, adesso, chiusaPerEta, stelleDi, completa,
+import { aperta, adesso, stelleDi, completa,
          sosta, salvaSosta, buttaSosta } from '../campagne.js'
 
 import { CAMPAGNA, SCALINI, QUANTE_TAPPE, tappeDelloScalino } from './dati/campagna.js'
@@ -56,7 +56,6 @@ const scalini = computed(() => SCALINI.map(s => ({
   tappe: tappeDelloScalino(s.chiave).map(t => ({
     ...t,
     aperta: aperta(CHIAVE, t.indice),
-    perEta: chiusaPerEta(CHIAVE, t.indice),
     adesso: adesso(CHIAVE, t.indice),
     stelle: stelleDi(CHIAVE, t.indice),
   })),
