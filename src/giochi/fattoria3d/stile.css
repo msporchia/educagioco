@@ -1,0 +1,101 @@
+/* La fattoria 3D: tutto sotto il prefisso .f3- (due fogli che si contendono lo stesso nome si rompono a distanza di mesi).
+   Il contenitore è la colonna sotto la barra; la tela lo riempie e tutto il resto sta sopra, in assoluto dentro di lui. */
+.f3 { position: relative; flex: 1; min-height: 0; overflow: hidden; background: #bfe0f0; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.f3-tela { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+.f3-sopra { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 10; }
+.f3-senza { text-align: center; padding: 40px 24px; }
+.f3-senza .em { font-size: 64px; margin: 0; }
+
+.f3-hud { position: absolute; left: 8px; right: 60px; top: 8px; display: flex; gap: 6px; z-index: 20; pointer-events: none; flex-wrap: wrap; }
+.f3-hud span { background: rgba(255,251,240,.92); color: #3a2a1a; font: 800 16px "Emoji Gioco", system-ui, sans-serif; padding: 5px 11px; border-radius: 16px; box-shadow: 0 2px 6px rgba(0,0,0,.18); }
+.f3-angolo { position: absolute; right: 8px; top: 8px; z-index: 20; width: 44px; height: 44px; border: 0; border-radius: 22px; background: rgba(255,255,255,.75); font-size: 20px; touch-action: manipulation; }
+.f3-centra { position: absolute; left: 50%; transform: translateX(-50%); top: 60px; z-index: 29; min-height: 44px; border: 0; border-radius: 22px; padding: 0 16px; background: rgba(255,251,240,.95); color: #3a2a1a; font: 800 14px "Emoji Gioco", system-ui, sans-serif; box-shadow: 0 3px 10px rgba(0,0,0,.3); touch-action: manipulation; }
+
+/* la barra delle azioni */
+.f3-azioni-colonna { position: absolute; left: 50%; transform: translateX(-50%); bottom: calc(14px + env(safe-area-inset-bottom)); z-index: 30; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.f3-azioni { display: flex; gap: 4px; background: rgba(255,251,240,.92); padding: 6px; border-radius: 28px; box-shadow: 0 3px 10px rgba(0,0,0,.25); }
+.f3-azioni button { width: 60px; height: 56px; border-radius: 26px; border: 2px solid transparent; background: transparent; color: #3a2a1a; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0; touch-action: manipulation; position: relative; }
+.f3-azioni button > span { font-size: 24px; line-height: 1; } .f3-azioni button small { font: 700 10px "Emoji Gioco", system-ui, sans-serif; color: #7a5a3a; }
+.f3-azioni button.acceso { background: #9be07a; border-color: #5fae3a; }
+.f3-azioni .f3-seme { position: absolute; left: 2px; top: 2px; font-size: 15px !important; background: #fff; border-radius: 10px; padding: 0 2px; line-height: 1.1; }
+.f3-azioni .f3-n { position: absolute; right: 0; top: -2px; min-width: 20px; height: 20px; padding: 0 5px; box-sizing: border-box; border-radius: 10px; background: #e8472b; color: #fff; font: 800 12px/20px "Emoji Gioco", system-ui, sans-serif; font-style: normal; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,.35); }
+.f3-tutti { min-height: 44px; border: 0; border-radius: 22px; padding: 0 18px; background: #ffd36a; font: 800 15px "Emoji Gioco", system-ui, sans-serif; color: #3a2a1a; box-shadow: 0 3px 10px rgba(0,0,0,.3); touch-action: manipulation; }
+
+/* i fogli: sempre una colonna in fondo, con la ✕ in alto a destra */
+.f3-foglio, .f3-vassoio { position: absolute; left: 0; right: 0; bottom: 0; z-index: 35; background: rgba(255,247,230,.98); border-radius: 22px 22px 0 0; box-shadow: 0 -4px 16px rgba(0,0,0,.28); color: #3a2a1a; }
+.f3-foglio { padding: 14px 14px calc(18px + env(safe-area-inset-bottom)); max-height: 82%; overflow: auto; }
+.f3-foglio h2 { margin: 0 44px 10px 2px; font-size: 20px; }
+.f3-foglio h3 { margin: 12px 2px 6px; font-size: 13px; text-transform: uppercase; letter-spacing: .05em; color: #8a6a3a; }
+.f3-chiudi { position: absolute; right: 10px; top: 10px; width: 44px; height: 44px; border: 0; border-radius: 22px; background: #efe4cf; font-size: 18px; color: #5a3a2a; touch-action: manipulation; z-index: 2; }
+.f3-riduci { position: absolute; right: 60px; top: 10px; width: 44px; height: 44px; border: 0; border-radius: 22px; background: #efe4cf; font-size: 18px; color: #5a3a2a; touch-action: manipulation; z-index: 2; }
+.f3-nota { font-size: 12px; color: #7a5a3a; margin: 10px 2px 0; }
+
+.f3-semi { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.f3-semi button { display: flex; flex-direction: column; align-items: center; gap: 2px; border: 2px solid #e6cfa0; background: #fffdf6; border-radius: 16px; padding: 10px 4px; color: #3a2a1a; touch-action: manipulation; }
+.f3-semi button.ultimo { border-color: #f0a020; background: #fff3cf; }
+.f3-semi .em { font-size: 32px; line-height: 1; } .f3-semi b { font-size: 14px; } .f3-semi small { font-size: 12px; color: #7a5a3a; }
+
+/* la barra del costruire */
+.f3-vassoio { padding: 10px 0 calc(10px + env(safe-area-inset-bottom)); }
+.f3-vassoio.bersaglio { outline: 4px dashed #5fae3a; outline-offset: -6px; }
+.f3-testa { display: flex; align-items: center; gap: 8px; padding: 0 64px 8px 14px; }
+.f3-testa b { font-size: 17px; }
+.f3-vista { display: flex; gap: 4px; } .f3-vista button { border: 0; border-radius: 14px; padding: 6px 11px; font: 700 13px "Emoji Gioco", system-ui, sans-serif; background: #efe4cf; color: #5a3a2a; touch-action: manipulation; }
+.f3-vista button.acceso { background: #ffd36a; }
+.f3-carte { touch-action: pan-x; display: flex; gap: 8px; overflow-x: auto; padding: 2px 14px 6px; scroll-snap-type: x proximity; -webkit-overflow-scrolling: touch; }
+.f3-carte button { touch-action: pan-x !important; flex: 0 0 92px; display: flex; flex-direction: column; align-items: center; gap: 1px; border: 2px solid #e6cfa0; background: #fffdf6; border-radius: 16px; padding: 8px 4px; color: #3a2a1a; scroll-snap-align: start; }
+.f3-carte button.pieno { border-color: #5fae3a; background: #eefae3; }
+.f3-carte button.scelto { border-color: #5fae3a; background: #e6f7d8; box-shadow: 0 0 0 2px #9be07a; }
+.f3-carte .em { font-size: 28px; line-height: 1; } .f3-carte b { font-size: 13px; } .f3-carte small { font-size: 11px; color: #7a5a3a; }
+.f3-suggerimento { margin: 2px 14px 0; font-size: 13px; color: #6a4a2a; display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 36px; }
+.f3-suggerimento button { border: 0; border-radius: 14px; padding: 8px 12px; font: 800 13px "Emoji Gioco", system-ui, sans-serif; background: #ffd36a; color: #3a2a1a; white-space: nowrap; touch-action: manipulation; }
+.f3-trascinato { position: fixed; left: 0; top: 0; z-index: 50; font-size: 44px; pointer-events: none; filter: drop-shadow(0 4px 6px rgba(0,0,0,.4)); }
+.f3-zonavia { position: absolute; left: 0; right: 0; bottom: 0; z-index: 26; height: calc(96px + env(safe-area-inset-bottom)); display: flex; align-items: center; justify-content: center; background: rgba(255,247,230,.96); border-radius: 22px 22px 0 0; box-shadow: 0 -4px 16px rgba(0,0,0,.25); font: 700 15px "Emoji Gioco", system-ui, sans-serif; color: #5a3a2a; text-align: center; padding: 0 20px env(safe-area-inset-bottom); }
+.f3-zonavia.bersaglio { background: #e6f7d8; outline: 4px dashed #5fae3a; outline-offset: -6px; }
+
+/* la pasticceria */
+.f3-forno { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.f3-forno .posto { background: #fffdf6; border: 2px solid #e6cfa0; border-radius: 16px; padding: 8px 4px 6px; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.f3-forno .posto.vuoto { border-style: dashed; opacity: .7; } .f3-forno .em { font-size: 28px; line-height: 1.1; } .f3-forno small { font-size: 12px; color: #7a5a3a; }
+.f3-forno i { display: block; width: 80%; height: 6px; background: #eadfc6; border-radius: 3px; overflow: hidden; } .f3-forno u { display: block; height: 100%; background: #f0a020; }
+.f3-pronti { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; font-size: 14px; }
+.f3-pronti button { min-height: 44px; padding: 0 16px; border: 0; border-radius: 14px; background: #7ccf56; font: 800 15px "Emoji Gioco", system-ui, sans-serif; color: #123; touch-action: manipulation; }
+.f3-pronti button:disabled { background: #d8d2c4; color: #888; }
+.f3-ricette { display: flex; flex-direction: column; gap: 6px; }
+.f3-ricette .ricetta { display: flex; align-items: center; gap: 10px; background: #fffdf6; border: 2px solid #e6cfa0; border-radius: 16px; padding: 8px 10px; }
+.f3-ricette .em { font-size: 32px; } .f3-ricette .ricetta > div { flex: 1; display: flex; flex-direction: column; } .f3-ricette b { font-size: 15px; } .f3-ricette small { font-size: 12px; color: #7a5a3a; }
+.f3-ricette .manca { color: #c0392b; font-weight: 700; } .f3-ricette .ok { color: #2d7a2d; }
+.f3-ricette button { min-height: 46px; padding: 0 12px; border: 0; border-radius: 14px; background: #ffd36a; font: 800 14px "Emoji Gioco", system-ui, sans-serif; color: #3a2a1a; touch-action: manipulation; }
+.f3-ricette button:disabled { background: #e8e2d2; color: #999; }
+
+/* le opzioni */
+.f3-opzioni { max-height: 78%; }
+.f3-opzioni.ridotto { max-height: none; padding-bottom: calc(10px + env(safe-area-inset-bottom)); }
+.f3-stat { font: 13px/1.45 "Emoji Gioco", ui-monospace, monospace; background: #fff; border-radius: 12px; padding: 8px 10px; min-height: 40px; }
+.f3-grafico { display: flex; align-items: flex-end; height: 56px; margin-top: 6px; background: #fff; border-radius: 10px; overflow: hidden; }
+.f3-opzioni.ridotto .f3-grafico { height: 36px; }
+.f3-grafico u { display: block; flex: 1; min-width: 0; }
+.f3-preset { display: flex; gap: 8px; flex-wrap: wrap; }
+.f3-preset button, .f3-largo { flex: 1; min-height: 48px; border: 2px solid #e6cfa0; background: #fffdf6; border-radius: 14px; font: 700 15px "Emoji Gioco", system-ui, sans-serif; color: #3a2a1a; touch-action: manipulation; }
+.f3-preset button.acceso { background: #ffd36a; border-color: #f0a020; }
+.f3-riga { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 46px; border-bottom: 1px solid #eadfc6; font-size: 15px; }
+.f3-riga input[type=checkbox] { width: 26px; height: 26px; } .f3-riga select { font-size: 15px; padding: 6px; border-radius: 8px; } .f3-riga input[type=range] { width: 46%; }
+.f3-rapporto { width: 100%; box-sizing: border-box; margin-top: 8px; font: 11px/1.35 "Emoji Gioco", ui-monospace, monospace; border-radius: 10px; border: 1px solid #d8c8a0; padding: 6px; }
+
+/* il dialogo di conferma */
+.f3-velo { position: absolute; inset: 0; z-index: 40; display: flex; align-items: center; justify-content: center; background: rgba(20,30,20,.4); padding: 20px; }
+.f3-dialogo { background: #fffaf0; border-radius: 22px; padding: 20px; max-width: 340px; width: 100%; box-shadow: 0 8px 30px rgba(0,0,0,.35); color: #3a2a1a; }
+.f3-dialogo h2 { margin: 0 0 6px; font-size: 22px; } .f3-dialogo p { margin: 0 0 16px; font-size: 15px; line-height: 1.35; }
+.f3-dialogo-bottoni { display: flex; flex-direction: column; gap: 8px; }
+.f3-dialogo-bottoni button { min-height: 54px; border: 0; border-radius: 16px; font: 800 17px "Emoji Gioco", system-ui, sans-serif; background: #ffd36a; color: #3a2a1a; touch-action: manipulation; }
+.f3-dialogo-bottoni button.quieto { background: #efe4cf; font-weight: 600; }
+
+/* i segni sopra la scena (li crea scena3d/effetti.js) */
+.f3-badge { position: absolute; left: 0; top: 0; background: rgba(255,251,240,.95); color: #3a2a1a; font: 800 14px "Emoji Gioco", system-ui, sans-serif; padding: 3px 9px; border-radius: 12px; box-shadow: 0 2px 6px rgba(0,0,0,.22); white-space: nowrap; }
+.f3-badge.pronto { background: #ffe27a; animation: f3-salta .9s ease-in-out infinite; }
+.f3-badge.vendita { background: #ffd36a; }
+@keyframes f3-salta { 50% { margin-top: -8px; } }
+.f3-badge[hidden], .f3-fumetto[hidden] { display: none; }
+.f3-fumetto { position: absolute; transform: translate(-50%, -100%); background: rgba(255,251,240,.97); color: #3a2a1a; font: 700 15px "Emoji Gioco", system-ui, sans-serif; padding: 7px 13px; border-radius: 14px; box-shadow: 0 3px 10px rgba(0,0,0,.25); white-space: nowrap; }
+.f3-volo { position: absolute; transform: translate(-50%, -100%); font: 800 20px "Emoji Gioco", system-ui, sans-serif; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,.6); animation: f3-sale 1.4s ease-out forwards; }
+@keyframes f3-sale { to { margin-top: -60px; opacity: 0; } }
