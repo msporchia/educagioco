@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Misura del telefono</title>
+<style>body{font:16px system-ui;margin:16px;background:#111;color:#eee}button{font-size:20px;padding:12px 20px}pre{font-size:15px;white-space:pre-wrap}canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;z-index:-1}</style></head>
+<body>
+<!-- La misura di un telefono, uguale sul telefono e sul computer (strumenti/vecchio-telefono.mjs): quanto ci mette la CPU
+     (js) e quanto la GPU a riempire lo schermo (gpu). Si apre sul telefono, si tocca il bottone e si leggono i due numeri. -->
+<h2>Misura del telefono</h2>
+<button id="via">Misura</button>
+<pre id="out">Tieni lo schermo acceso, non toccare altro: ~15 secondi.</pre>
+<canvas id="c"></canvas>
+<script>
+const out = document.getElementById('out')
+const pausa = ms => new Promise(r => setTimeout(r, ms))
+
+function prova() {   // la CPU: numeri, oggetti da allocare e ordinare, stringhe (come fa il JS di un gioco)
+  let t = performance.now(), s = 0
+  for (let i = 0; i < 4e6; i++) s += Math.sin(i * 0.001) * Math.sqrt(i + 1)
+  const a = []
+  for (let i = 0; i < 150000; i++) a.push({ x: Math.cos(i) * 1000, y: i, n: 'k' + (i % 97) })
+  a.sort((p, q) => p.x - q.x)
+  let k = ''
+  for (let i = 0; i < 40000; i++) k = ('' + a[i].n + i).slice(-12)
+  return performance.now() - t + (s === 1 ? 1 : 0) + (k === 'x' ? 1 : 0)
+}
+async function js() {
+  prova()   // riscaldamento
+  const v = []
+  for (let i = 0; i < 5; i++) { v.push(prova()); await pausa(30) }
+  return v.sort((a, b) => a - b)[2]
+}
+
+async function gpu() {   // la GPU: tanti pixel con uno shader pesante, a schermo intero e alla risoluzione vera
+  const c = document.getElementById('c'), d = window.devicePixelRatio || 1
+  c.width = Math.round(innerWidth * d); c.height = Math.round(innerHeight * d)
+  const gl = c.getContext('webgl2', { alpha: false, antialias: false, powerPreference: 'high-performance' })
+  if (!gl) return null
+  const prog = gl.createProgram()
+  const sh = (t, src) => { const s = gl.createShader(t); gl.shaderSource(s, src); gl.compileShader(s); gl.attachShader(prog, s) }
+  sh(gl.VERTEX_SHADER, '#version 300 es\nin vec2 p; void main(){ gl_Position = vec4(p,0.,1.); }')
+  sh(gl.FRAGMENT_SHADER, `#version 300 es
+precision mediump float; uniform float t; out vec4 o;
+void main(){ vec2 u = gl_FragCoord.xy * 0.003; float v = 0.;
+  for (int i = 0; i < 160; i++) { u = vec2(sin(u.y * 1.7 + t), cos(u.x * 1.3 - t)) * 1.1 + u * 0.5; v += sin(u.x * u.y); }
+  o = vec4(fract(v), fract(v * 2.), fract(v * 3.), 1.); }`)
+  gl.linkProgram(prog); gl.useProgram(prog)
+  const b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b)
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW)
+  const l = gl.getAttribLocation(prog, 'p'); gl.enableVertexAttribArray(l); gl.vertexAttribPointer(l, 2, gl.FLOAT, false, 0, 0)
+  const ut = gl.getUniformLocation(prog, 't'), px = new Uint8Array(4)
+  gl.viewport(0, 0, c.width, c.height)
+  const giro = n => { const t0 = performance.now(); for (let i = 0; i < n; i++) { gl.uniform1f(ut, i * 0.1); gl.drawArrays(gl.TRIANGLES, 0, 3); gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px) } return (performance.now() - t0) / n }
+  giro(3)
+  const v = []
+  for (let i = 0; i < 5; i++) { v.push(giro(8)); await pausa(30) }
+  return { ms: v.sort((a, b) => a - b)[2], pixel: c.width * c.height }
+}
+
+async function misura() {
+  out.textContent = 'CPU…'
+  const j = await js()
+  out.textContent = 'GPU…'
+  const g = await gpu()
+  const r = { js: Math.round(j), gpu: g ? +g.ms.toFixed(1) : null, pixel: g && g.pixel, dpr: devicePixelRatio, schermo: innerWidth + 'x' + innerHeight }
+  window.__misura = r
+  out.textContent = `js ${r.js} ms (più basso = più svelto)\ngpu ${r.gpu} ms per schermo pieno (${r.pixel} pixel)\n\nper la calibrazione:\n--telefono js=${r.js},gpu=${r.gpu}`
+}
+document.getElementById('via').onclick = misura
+if (location.hash === '#auto') misura()
+</script></body></html>

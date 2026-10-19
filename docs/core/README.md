@@ -21,6 +21,7 @@ comandi, pubblicazione, grafica, e le regole comuni a tutti i giochi.
 - [creature.md](creature.md) — le creature dipinte in un catalogo solo (`sorgenti/creature/`): fotogrammi, passi dai video, `giochi`, come le prendono il sotterraneo e il castello, come se ne aggiunge una
 - [creature-catalogo-1.md](creature-catalogo-1.md), [creature-catalogo-2.md](creature-catalogo-2.md) — il catalogo descritto, generato dal JSON: com'è fatta ogni creatura, elemento, come combatte, dove sta bene, tenuta o scartata
 - [sprite-a-mano-dal-codice.md](sprite-a-mano-dal-codice.md) — disegnare uno sprite come dato nel codice, quando l'atlante non ce l'ha
+- [vecchio-telefono.md](vecchio-telefono.md) — il Redmi Note 7 come metro dei giochi 3D: come lo si imita sul computer, come si calibra, come si misura
 - [strumenti.md](strumenti.md) — voci, scatti e clip, icone, la guardia dei commenti
 - [convenzione-giochi.md](convenzione-giochi.md) — come è fatto un gioco nuovo in `src/giochi/`
 - [home.md](home.md) — la home: il profilo, «riprendi da qui», il carosello delle copertine, l'indice, come la aprono i test
