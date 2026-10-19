@@ -42,6 +42,7 @@ export function creaSotterraneo3d(canvas, opz = {}) {
 
 function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, cieca = 320, botteRotta = null }) {
   const { renderer } = ctx
+  renderer.shadowMap.autoUpdate = ACCESI.ombraOgni <= 1   // altrimenti la chiede il giro del fotogramma, qui sotto (il mondo di sopra fa da sé)
   const scena = new Scene()
   scena.background = new Color(0)
   const cam = creaCamera()

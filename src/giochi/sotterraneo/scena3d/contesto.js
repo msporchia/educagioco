@@ -16,7 +16,6 @@ export function creaContesto(canvas, { perso, fisso, antialias = false, spegni =
   let renderer
   try { renderer = new WebGLRenderer({ canvas, context: gl, antialias, alpha: false }) } catch (e) { return null }
   renderer.shadowMap.enabled = ACCESI.ombre
-  renderer.shadowMap.autoUpdate = ACCESI.ombraOgni <= 1   // altrimenti la chiede il giro del fotogramma (scena3d/indice.js)
   renderer.shadowMap.type = BasicShadowMap   // PCF filtra LINEAR una texture di profondità (Firefox avvisa), VSM costa il doppio (docs/sotterraneo/grafica-3d-portale.md)
   renderer.toneMapping = ACESFilmicToneMapping
   renderer.toneMappingExposure = LUCE.esposizione
