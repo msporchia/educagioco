@@ -7,6 +7,7 @@ lana, legna) e uno stato suo, e non tocca quelli della fattoria di sempre; le mo
 
 - [presentazione.md](presentazione.md) — per chi arriva da fuori: cosa si fa, cosa lo distingue dalla fattoria di sempre, note per i genitori
 - [regole.md](regole.md) — i principi: risorse separate, niente si vende, niente marcisce, quanto costa muovere, le pecore, la pasticceria, la mongolfiera
+- [livelli.md](livelli.md) — l'esperienza (la spesa), le soglie a formula, cosa arriva a ogni livello, il gating e le fattorie già salvate
 - [terreno.md](terreno.md) — i lotti da comprare, il recinto, gli alberi che si abbattono, le strade a pennello, la telecamera
 - [scena.md](scena.md) — il disegno: i moduli di `scena3d/`, il dito, costruire trascinando, le opzioni di qualità e il peso
 - [file.md](file.md) — dove sta cosa in `src/giochi/fattoria3d/`, e i bersagli dei test

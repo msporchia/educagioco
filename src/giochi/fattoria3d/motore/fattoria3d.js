@@ -1,11 +1,13 @@
 /* La Fattoria 3D: le regole, senza schermo (niente DOM, niente three, niente Vue) e senza sapere cos'è il profilo: le monete
    passano da una `borsa` che si passa da fuori ({ quante(), paga(n) }, paga(-n) incassa), e l'orologio da `ora()`.
    Tutto ciò che può non riuscire torna { ok: false, motivo } e non cambia niente; quello che riesce torna { ok: true, … }.
-   Gli eventi (`prendiEventi()`) dicono cosa è successo, per i contatori. Vedi docs/fattoria3d/regole.md. */
-import { GW, GH, LIM, LOTTI, idx, dentro, lottoDi, lottoPerId, vicinoDi, FISSI, stradeDiSerie } from '../dati/mondo.js'
+   Gli eventi (`prendiEventi()`) dicono cosa è successo, per i contatori. L'esperienza è la spesa in monete fatta qui dentro
+   (terra, pezzi, edifici, strade; non gli spostamenti, e i rimborsi non la riducono): da lei il livello, che apre le cose. Vedi docs/fattoria3d/regole.md. */
+import { GW, GH, LIM, LOTTI, idx, dentro, lottoDi, lottoPerId, lottiDelPosto, vicinoDi, FISSI, stradeDiSerie } from '../dati/mondo.js'
 import { PEZZI, EDIFICI } from '../dati/catalogo.js'
 import { COLTURE, TESSERE } from '../dati/colture.js'
-import { RICETTE, FORNO_POSTI } from '../dati/ricette.js'
+import { RICETTE, MACCHINE, TIPI_DI_MACCHINA } from '../dati/ricette.js'
+import { livelloPer, livelloDelPezzo, livelloDellaColtura, livelloDellaRicetta } from '../dati/livelli.js'
 import { COSTI, LEGNA_PER_ALBERO, PECORE, MONGOLFIERA } from '../dati/regole.js'
 import { generaAlberi } from '../dati/alberi.js'
 import { normalizza, nuoveTessere } from './stato.js'
@@ -27,7 +29,7 @@ export class Fattoria3d {
     this.tagliati = new Set(this.s.tagliati)
     for (const a of this.alberi) {
       if (this.tagliati.has(a.n)) a.tagliato = true
-      else if (dentro(a.i, a.j)) this.bloccoFisso[idx(a.i, a.j)] = 1
+      else if (!a.tagliato && dentro(a.i, a.j)) this.bloccoFisso[idx(a.i, a.j)] = 1
     }
     this.cellaEdificio = new Uint8Array(GW * GH)   // i posti degli edifici unici, comprati o no
     for (const e of Object.values(EDIFICI)) for (let a = 0; a < e.w; a++) for (let b = 0; b < e.d; b++) this.cellaEdificio[idx(e.slot.i + a, e.slot.j + b)] = 1
@@ -43,9 +45,26 @@ export class Fattoria3d {
   // ── la borsa ──
   monete() { return this.borsa.quante() }
   _paga(n) { if (n <= 0) return true; if (this.monete() < n) return false; return this.borsa.paga(n) !== false }
+  /** Paga e, se è una spesa «vera» (non uno spostamento), la conta nell'esperienza; sale di livello se serve. */
+  _spendi(n) {
+    if (!this._paga(n)) return false
+    if (n > 0) {
+      const prima = this.livello()
+      this.s.esperienza += n
+      const dopo = this.livello()
+      if (dopo > prima) this._evento('livello', { livello: dopo })
+    }
+    return true
+  }
   _rimborsa(n) { if (n > 0) this.borsa.paga(-n) }
   _evento(tipo, extra = {}) { this.eventi.push({ tipo, ...extra }) }
   prendiEventi() { const e = this.eventi; this.eventi = []; return e }
+
+  // ── il livello ──
+  esperienza() { return this.s.esperienza }
+  livello() { return livelloPer(this.s.esperienza) }
+  /** Il rifiuto di una cosa non ancora arrivata, o null se si può. */
+  _chiusa(liv) { return liv > this.livello() ? { ok: false, motivo: 'non-sbloccato', liv } : null }
 
   // ── il terreno ──
   posseduto(l) { return !!this.s.lotti[l.id] }
@@ -59,7 +78,7 @@ export class Fattoria3d {
     if (this.posseduto(l)) return { ok: false, motivo: 'gia-tuo' }
     if (!this.confina(l)) return { ok: false, motivo: 'non-confina' }
     const costo = this.prezzoLotto()
-    if (!this._paga(costo)) return { ok: false, motivo: 'poche-monete', costo }
+    if (!this._spendi(costo)) return { ok: false, motivo: 'poche-monete', costo }
     this.s.lotti[l.id] = true
     this._evento('terra')
     return { ok: true, costo, lotto: l }
@@ -88,7 +107,7 @@ export class Fattoria3d {
   disegnaStrada(i, j, { gratis = false } = {}) {
     if (!dentro(i, j) || this.strada[idx(i, j)]) return { ok: false, motivo: 'qui-no' }
     if (this.blocca(i, j)) return { ok: false, motivo: 'occupato' }
-    if (!gratis && !this._paga(COSTI.strada)) return { ok: false, motivo: 'poche-monete', costo: COSTI.strada }
+    if (!gratis && !this._spendi(COSTI.strada)) return { ok: false, motivo: 'poche-monete', costo: COSTI.strada }
     this.strada[idx(i, j)] = 1
     this._evento('strada')
     return { ok: true, costo: gratis ? 0 : COSTI.strada }
@@ -110,8 +129,10 @@ export class Fattoria3d {
   nelMagazzino(tipo) { return this.s.magazzino[tipo] || 0 }
   compraPezzo(tipo) {
     if (!PEZZI[tipo]) return { ok: false, motivo: 'sconosciuto' }
+    const chiuso = this._chiusa(livelloDelPezzo(tipo))
+    if (chiuso) return chiuso
     const costo = this.prezzoPezzo(tipo)
-    if (!this._paga(costo)) return { ok: false, motivo: 'poche-monete', costo }
+    if (!this._spendi(costo)) return { ok: false, motivo: 'poche-monete', costo }
     this.s.magazzino[tipo] = this.nelMagazzino(tipo) + 1
     return { ok: true, costo }
   }
@@ -173,11 +194,20 @@ export class Fattoria3d {
 
   // ── gli edifici unici ──
   edificio(tipo) { return { tipo, ...EDIFICI[tipo], posseduto: !!this.s.posseduti[tipo] } }
+  /** I lotti che il posto dell'edificio tocca e che non sono ancora tuoi (da comprare prima). */
+  lottiMancanti(tipo) {
+    const e = EDIFICI[tipo]
+    return e ? lottiDelPosto(e.slot.i, e.slot.j, e.w, e.d).filter(l => !this.posseduto(l)).map(l => l.id) : []
+  }
   compraEdificio(tipo) {
     const e = EDIFICI[tipo]
     if (!e) return { ok: false, motivo: 'sconosciuto' }
     if (this.s.posseduti[tipo]) return { ok: false, motivo: 'gia-tuo' }
-    if (!this._paga(e.prezzo)) return { ok: false, motivo: 'poche-monete', costo: e.prezzo }
+    const chiuso = this._chiusa(e.liv)
+    if (chiuso) return chiuso
+    const lotti = this.lottiMancanti(tipo)
+    if (lotti.length) return { ok: false, motivo: 'lotto-non-tuo', lotti, costo: e.prezzo }
+    if (!this._spendi(e.prezzo)) return { ok: false, motivo: 'poche-monete', costo: e.prezzo }
     this.s.posseduti[tipo] = true
     this._evento('pezzo', { tipo })
     return { ok: true, costo: e.prezzo }
@@ -207,10 +237,14 @@ export class Fattoria3d {
     if (!c || c.tipo !== 'campo') return { ok: false, motivo: 'sconosciuto' }
     if (!COLTURE[coltura]) return { ok: false, motivo: 'coltura' }
     if (!this.campoVuoto(c)) return { ok: false, motivo: 'non-vuoto' }
+    const chiuso = this._chiusa(livelloDellaColtura(coltura))
+    if (chiuso) return chiuso
     const t = this.ora()
     c.coltura = coltura; c.tile = Array.from({ length: TESSERE }, () => t)
     return { ok: true }
   }
+  seminaCampo(id, coltura) { return this.semina(id, coltura) }
+  colturaSbloccata(coltura) { return livelloDellaColtura(coltura) <= this.livello() }
   raccogliTessera(id, k) {
     const c = this.cosa(id)
     if (!c || c.tipo !== 'campo' || c.tile[k] === null) return { ok: false, motivo: 'vuota' }
@@ -285,26 +319,62 @@ export class Fattoria3d {
     return { ok: true, evento: 'cuore' }
   }
 
-  // ── la pasticceria: una coda di tre posti, si cuoce uno alla volta ──
-  ingredientiOk(ric) { return Object.entries(RICETTE[ric].ing).every(([k, n]) => this.s.merci[k] >= n) }
-  prepara(ric) {
-    const P = this.s.pasticceria, r = RICETTE[ric]
-    if (!r) return { ok: false, motivo: 'sconosciuta' }
-    if (!this.s.posseduti.pasticceria) return { ok: false, motivo: 'non-tua' }
-    if (P.coda.length >= FORNO_POSTI) return { ok: false, motivo: 'forno-pieno' }
-    if (!this.ingredientiOk(ric)) return { ok: false, motivo: 'mancano-ingredienti' }
-    for (const [k, n] of Object.entries(r.ing)) this.s.merci[k] -= n
-    P.coda.push({ ric, fine: null })
+  // ── le macchine: pasticceria, mulino, panificio, conserviera, gelateria. Tre posti nel forno, si cuoce uno alla volta ──
+  /** Cosa c'è in scorta per una ricetta: un raccolto (merci) o il prodotto di un'altra macchina (prodotti). */
+  scortaDi(k) { return COLTURE[k] ? this.s.merci[k] : (this.s.prodotti[k] || 0) }
+  _togli(k, n) { if (COLTURE[k]) this.s.merci[k] -= n; else { this.s.prodotti[k] -= n; if (!this.s.prodotti[k]) delete this.s.prodotti[k] } }
+  ingredientiOk(ric) { return Object.entries(RICETTE[ric].ing).every(([k, n]) => this.scortaDi(k) >= n) }
+  /** Quel che manca per una ricetta: { chiave: quanti }. */
+  mancano(ric) {
+    const out = {}
+    for (const [k, n] of Object.entries(RICETTE[ric].ing)) if (this.scortaDi(k) < n) out[k] = n - this.scortaDi(k)
+    return out
+  }
+  /** La macchina di un tipo: i posti, la coda e i pronti (vivi: sono lo stato). */
+  macchina(tipo) {
+    const m = MACCHINE[tipo]
+    if (!m) return null
+    const q = this.s.macchine[tipo]
+    return { tipo, posti: m.posti, posseduta: !!this.s.posseduti[tipo], coda: q.coda, pronti: q.pronti }
+  }
+  /** Le ricette di una macchina, con il livello vero, se sono aperte e se ora si possono avviare. */
+  ricetteDi(tipo) {
+    const m = MACCHINE[tipo]
+    if (!m) return []
+    return Object.entries(m.ricette).map(([id, r]) => {
+      const liv = livelloDellaRicetta(id)
+      return { id, nome: r.nome, emoji: r.emoji, ing: r.ing, ms: r.ms, liv, sbloccata: liv <= this.livello(), ingredienti: this.ingredientiOk(id), mancano: this.mancano(id) }
+    })
+  }
+  avviaRicettaIn(tipo, ric) {
+    const m = MACCHINE[tipo], r = RICETTE[ric]
+    if (!m || !r || r.dove !== tipo) return { ok: false, motivo: 'sconosciuta' }
+    if (!this.s.posseduti[tipo]) return { ok: false, motivo: 'non-tua' }
+    const chiuso = this._chiusa(livelloDellaRicetta(ric))
+    if (chiuso) return chiuso
+    const Q = this.s.macchine[tipo]
+    if (Q.coda.length >= m.posti) return { ok: false, motivo: 'forno-pieno' }
+    if (!this.ingredientiOk(ric)) return { ok: false, motivo: 'mancano-ingredienti', mancano: this.mancano(ric) }
+    for (const [k, n] of Object.entries(r.ing)) this._togli(k, n)
+    Q.coda.push({ ric, fine: null })
     this.tick()
     return { ok: true }
   }
-  ritira() {
-    const P = this.s.pasticceria; let n = 0
-    for (const [k, q] of Object.entries(P.pronti)) { this.s.prodotti[k] = (this.s.prodotti[k] || 0) + q; n += q; this._evento('prodotto', { ric: k, n: q }) }
-    P.pronti = {}
+  /** La ricetta, nella macchina a cui appartiene. */
+  avviaRicetta(ric) { return RICETTE[ric] ? this.avviaRicettaIn(RICETTE[ric].dove, ric) : { ok: false, motivo: 'sconosciuta' } }
+  ritiraDa(tipo) {
+    const Q = this.s.macchine[tipo]
+    if (!Q) return { ok: false, motivo: 'sconosciuta' }
+    let n = 0
+    for (const [k, q] of Object.entries(Q.pronti)) { this.s.prodotti[k] = (this.s.prodotti[k] || 0) + q; n += q; this._evento('prodotto', { ric: k, n: q, macchina: tipo }) }
+    Q.pronti = {}
     return n ? { ok: true, n } : { ok: false, motivo: 'niente' }
   }
-  prontiInForno() { return Object.values(this.s.pasticceria.pronti).reduce((a, n) => a + n, 0) }
+  prontiIn(tipo) { return Object.values(this.s.macchine[tipo].pronti).reduce((a, n) => a + n, 0) }
+  // le vecchie chiamate della pasticceria, che la scena e la vista usano ancora
+  prepara(ric) { return this.avviaRicettaIn('pasticceria', ric) }
+  ritira() { return this.ritiraDa('pasticceria') }
+  prontiInForno() { return this.prontiIn('pasticceria') }
 
   // ── la mongolfiera ──
   carica() {
@@ -325,12 +395,15 @@ export class Fattoria3d {
 
   // ── il tempo: la cottura che avanza e la mongolfiera che torna (si può chiamare quando si vuole) ──
   tick() {
-    const t = this.ora(), P = this.s.pasticceria; let cambiato = false
-    while (P.coda.length && P.coda[0].fine && P.coda[0].fine <= t) {
-      const r = P.coda.shift(); P.pronti[r.ric] = (P.pronti[r.ric] || 0) + 1; cambiato = true
-      if (P.coda[0]) P.coda[0].fine = r.fine + RICETTE[P.coda[0].ric].ms     // il successivo parte quando finisce il precedente
+    const t = this.ora(); let cambiato = false
+    for (const tipo of TIPI_DI_MACCHINA) {
+      const Q = this.s.macchine[tipo]
+      while (Q.coda.length && Q.coda[0].fine && Q.coda[0].fine <= t) {
+        const r = Q.coda.shift(); Q.pronti[r.ric] = (Q.pronti[r.ric] || 0) + 1; cambiato = true
+        if (Q.coda[0]) Q.coda[0].fine = r.fine + RICETTE[Q.coda[0].ric].ms     // il successivo parte quando finisce il precedente
+      }
+      if (Q.coda[0] && !Q.coda[0].fine) Q.coda[0].fine = t + RICETTE[Q.coda[0].ric].ms
     }
-    if (P.coda[0] && !P.coda[0].fine) P.coda[0].fine = t + RICETTE[P.coda[0].ric].ms
     const M = this.s.mongolfiera
     if (M.fine && t >= M.fine) { M.fine = null; M.cassa = true; cambiato = true }
     return cambiato
@@ -358,7 +431,7 @@ export class Fattoria3d {
       if (!ok) continue
       const c = { id: this.s.prossimoId++, tipo, i, j, prova: true }
       if (tipo === 'campo') {
-        const col = Object.keys(COLTURE)[Math.floor(this.rnd() * 5)], t0 = this.ora() - this.rnd() * COLTURE[col].ms * 1.1
+        const col = Object.keys(COLTURE)[Math.floor(this.rnd() * Object.keys(COLTURE).length)], t0 = this.ora() - this.rnd() * COLTURE[col].ms * 1.1
         c.coltura = col; c.tile = Array.from({ length: TESSERE }, () => t0)
       }
       if (tipo === 'recinto') { c.pecore = this.pecoreIniziali(); c.cibo = 0 }

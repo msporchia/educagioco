@@ -5,16 +5,18 @@ gioco.js             il manifesto: in prova, tappe 0, il blocco albo (cinque tra
 Gioco.vue            il coordinatore: monete vere, contatori, salvataggio, le finestre
 stile.css            tutto sotto il prefisso .f3-
 dati/
-  mondo.js           la griglia, i 42 lotti, il quadrato di partenza, i due edifici di scena, le strade di serie
-  catalogo.js        i pezzi (campo, recinto, bancarella, fontana) e i due edifici unici, con prezzi e misure
-  colture.js         le cinque colture: nome, emoji, tempo
-  ricette.js         le cinque ricette della pasticceria e i posti del forno
+  mondo.js           la griglia, i 42 lotti, il quadrato di partenza, i due edifici di scena, le strade di serie, i lotti di un posto
+  catalogo.js        gli otto pezzi (campo, recinto, bancarella, aiuola, panchina, fontana, pozzo, spaventapasseri) e i sei
+                     edifici unici (pasticceria, mongolfiera, mulino, panificio, conserviera, gelateria): prezzi, misure, `liv`, `slot`
+  colture.js         le dieci colture: nome, emoji, tempo, `liv`
+  ricette.js         le macchine e le loro ricette (`MACCHINE`, `RICETTE` a elenco unico con `dove`), i posti del forno
+  livelli.js         le soglie, `roba(liv)`, i nomi dei livelli, i guasti dei livelli
   regole.js          i costi, la legna, le pecore, la mongolfiera
   alberi.js          gli alberi (sempre gli stessi: un caso col seme)
   qualita.js         i preset di qualità, le scale, le ombre
 motore/
   fattoria3d.js      le regole: la classe Fattoria3d (borsa e orologio da fuori)
-  stato.js           lo stato salvato, `statoIniziale()` e `normalizza()` (un salvataggio rotto si rimette in forma)
+  stato.js           lo stato salvato (versione 2: esperienza, `posseduti`, `macchine`), `statoIniziale()` e `normalizza()` (un salvataggio rotto si rimette in forma)
   percorso.js        Dijkstra sulla griglia, le strade costano meno
 scena3d/             il disegno (vedi scena.md)
 viste/
