@@ -9,6 +9,7 @@
 //
 // `--apertura` apre la home, poi accende il profilo e solo allora apre il gioco: quello che pesa all'ingresso (la mappa
 // dell'inglese) altrimenti è già passato quando il profilo parte.
+// `--esegui '<espressione>'` la fa nella pagina quando il profilo parte (per scatenare qualcosa: le esplosioni degli Asteroidi 3D).
 // `--tocca x,y` tocca lì dopo l'apertura e poi ogni due secondi un po' più in là (l'eroe cammina); `--lento N`
 // rallenta la CPU di N volte. Un telefono non si imita davvero (la GPU, la memoria, il calore restano del computer):
 // per quello c'è chrome://inspect col telefono collegato (docs/core/comandi.md). Trovato così, il 14 ottobre 2026, lo
@@ -24,6 +25,7 @@ const file = resolve(opz('dist', 'dist/index.html'))
 const contro = opz('contro')
 const tocca = opz('tocca') ? opz('tocca').split(',').map(Number) : null
 const secondi = Number(opz('secondi', 12)), lento = Number(opz('lento', 1))
+const esegui = opz('esegui')
 const apertura = argv.includes('--apertura')   // registra l'APERTURA: parte dalla home e il profilo comincia prima di cambiare l'indirizzo
 
 async function profila(dist) {
@@ -37,6 +39,7 @@ async function profila(dist) {
   if (lento > 1) await s.send('Emulation.setCPUThrottlingRate', { rate: lento })
   await s.send('Profiler.enable'); await s.send('Profiler.start')
   if (apertura) await page.evaluate(h => { location.hash = h }, schermata)
+  if (esegui) await page.evaluate(esegui)
   if (tocca) await page.mouse.click(tocca[0], tocca[1])
   for (let t = 0; t < secondi; t += 2) {
     await page.waitForTimeout(2000)

@@ -1,0 +1,18 @@
+{
+  "hw": {
+    "cpu": 2.9,
+    "zavorra": 16,
+    "telefono": {
+      "js": 469,
+      "gpu": 12.9
+    }
+  },
+  "sw": {
+    "cpu": 2.81,
+    "zavorra": 0,
+    "telefono": {
+      "js": 469,
+      "gpu": 12.9
+    }
+  }
+}

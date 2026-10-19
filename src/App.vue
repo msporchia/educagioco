@@ -20,6 +20,7 @@ const AdminView = caricaQuando(() => import('./views/AdminView.vue'))
 import Traguardo from './components/Traguardo.vue'
 import Benvenuto from './components/Benvenuto.vue'
 import Scarico from './components/Scarico.vue'
+import ContaFps from './components/ContaFps.vue'
 import AvvisoMonete from './components/varieta/Avviso.vue'   // importarlo accende anche il filtro delle monete
 import { SCHERMATE } from './giochi/schermate.js'
 import { caricaQuando } from './giochi/carica.js'
@@ -98,11 +99,18 @@ function guardaLoSchermo() {
   window.addEventListener('pagehide', () => esciDalGioco())
 }
 
+// La fascia grafica del telefono si misura una volta (store/qualita.js): in home, a cose calme, un po' dopo l'ingresso
+let misuraQualita = 0
+watch(vista, v => {
+  clearTimeout(misuraQualita)
+  if (v === 'home') misuraQualita = setTimeout(() => { if (vista.value === 'home' && !document.hidden) import('./grafica/benchmark/qualita-rapida.js').then(m => m.assicuraFascia()).catch(() => {}) }, 4000)
+})
 watch(vista, v => { if (v === 'home') controlla() })   // uscire da un gioco è un buon momento per controllare
 </script>
 
 <template>
   <Scarico />
+  <ContaFps :vista="vista" />
   <div v-if="!pronto" class="schermo">
     <div class="centro"><h1>Un attimo…</h1></div>
   </div>

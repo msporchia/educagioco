@@ -43,8 +43,10 @@ export const FETTE = 5, POLVERE = 450, SCINTILLE = 1500
 export const FIGURE_MAX = 700       // le figure dell'atlante in scena nello stesso fotogramma
 export const ALONI_MAX = 96         // i chiarori per terra (rarità, missione, chiave, scala che sale)
 
+import { profilo } from '../../../store/qualita.js'
+
 // il pixel ratio si adatta: parte da `max`, scende a passi se un fotogramma costa più di `lento` ms, risale piano sotto `svelto`
-export const DPR = { max: 1.5, min: 0.6, lento: 26, svelto: 15 }
+export const DPR = { max: 1.5, min: 0.6, lento: 26, svelto: 15 }   // `max` è quello della fascia alta: le altre lo abbassano (store/qualita.js)
 
 // Il punto unico dove si spegne un pezzo (docs/sotterraneo/grafica-3d.md, «Quanto costa»): oggi tutto acceso, una qualità
 // sola. Un domani un telefono che non regge si aggiusta qui, senza cercare i pezzi nei file
@@ -55,6 +57,14 @@ export const ACCESI = {
   post: true,        // il passaggio finale (vignetta, colore, grana, scossa); spento si disegna dritto sullo schermo
   botti: true,       // le botti di decoro
   arredo: true,      // l'arredo modellato del paesaggio (scena3d/arredo3d.js)
+}
+
+// La fascia grafica del telefono (store/qualita.js) decide quali pezzi di ACCESI restano: si riparte dai valori scritti sopra
+// (il cheat `&spegni=` e una fascia precedente non si accumulano), poi si spegne quello della fascia e quello chiesto a mano.
+const ORIGINALI = { ...ACCESI }
+export function applicaFascia(spegniAMano = []) {
+  Object.assign(ACCESI, ORIGINALI)
+  for (const k of [...profilo('sotterraneo').spegni, ...spegniAMano]) if (k in ACCESI) ACCESI[k] = false
 }
 
 // lo scontro: quanto agio vogliono i combattenti dai muri e dalle cose posate, e i posti dei mostri attorno al centro
