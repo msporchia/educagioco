@@ -3,7 +3,8 @@
 import { Partita } from '../../src/giochi/arena/motore/partita.js'
 import { caso } from '../../src/giochi/arena/motore/banco.js'
 import { truppeDelTerreno, TERRENI } from '../../src/giochi/arena/dati/regole.js'
-import { Sessione, proponi, accetta, RITMO_MONETE, ritmoPer } from '../../src/giochi/arena/sfida/protocollo.js'
+import { CAMPI_UNITA, fotoDi, aPezzi, applicaFoto } from '../../src/giochi/arena/sfida/foto.js'
+import { Sessione, improntaDi, proponi, accetta, RITMO_MONETE, ritmoPer } from '../../src/giochi/arena/sfida/protocollo.js'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 
 const TERRENO = 'neve', SEME = 77
@@ -61,7 +62,25 @@ function simula({ secondi = 150, min = 0.06, max = 0.25, seme = 1, guasto = null
 }
 {
   const { host, ospite } = simula({ seme: 9, guasto: { chi: 'ospite', a: 40 } })
-  controlla('una copia che si guasta di nascosto viene scoperta', !!(host.rotta || ospite.rotta), `${host.confrontate}`)
+  controlla('una copia che si guasta di nascosto viene scoperta e riallineata, la sfida non finisce', !host.rotta && !ospite.rotta && host.riallineamenti === 1 && ospite.riallineamenti === 1, `${host.motivo} ${ospite.motivo} ${host.riallineamenti}/${ospite.riallineamenti}`)
+  controlla('dopo il riallineamento le impronte tornano a coincidere e la partita va avanti', host.confrontate > 20 && ospite.confrontate > 20 && host.p.t > 100 && !host.riallineo && !ospite.riallineo, `${host.confrontate} ${host.p.t.toFixed(0)}`)
+}
+{
+  // la fotografia porta tutto: ogni campo di un'unità, e il caso (se manca, le copie si separano di nuovo subito)
+  const { host, ospite } = simula({ seme: 3, secondi: 90 })
+  const mancano = new Set()
+  for (const u of host.p.unita) for (const c of Object.keys(u)) if (!CAMPI_UNITA.includes(c)) mancano.add(c)
+  controlla('la fotografia nomina ogni campo di un\'unità', mancano.size === 0 && host.p.unita.length > 0, [...mancano].join(','))
+  const testo = fotoDi(host.p, host.k)
+  const pezzi = aPezzi(testo, 1)
+  controlla('i pezzi stanno sotto i 512 byte del servizio', pezzi.every(m => JSON.stringify(m).length <= 512), String(Math.max(...pezzi.map(m => JSON.stringify(m).length))))
+  const copia = new Partita({ rnd: caso(SEME), sfida })
+  const k = applicaFoto(copia, pezzi.map(m => m.d).join(''))
+  uguale('rimessa dalla fotografia, la copia ha la stessa impronta', improntaDi(copia), improntaDi(host.p))
+  uguale('e lo stesso tick', k, host.k)
+  for (let i = 0; i < 400; i++) { host.p.avanza(0.05); copia.avanza(0.05) }
+  uguale('e da lì le due copie corrono uguali (anche il caso)', improntaDi(copia), improntaDi(host.p))
+  void ospite
 }
 {
   const s = new Sessione({ partita: new Partita({ rnd: caso(1), sfida }), ruolo: 'host', invia: () => {} })

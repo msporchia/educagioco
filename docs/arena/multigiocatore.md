@@ -44,7 +44,9 @@ partita: per questo il tick lo decide chi comanda e lo accetta chi riceve.
   andare veloce»: più piano 15 s, normale 10 s, svelto 6 s); la proposta lo porta e l'ospite lo accetta tra 0,05 e 1,5.
   Dieci secondi è una stima dell'utente: da rimisurare giocando.
 - **Chi crea la stanza (l'host) decide** terreno e ritmo; l'ospite accetta o rifiuta (versione diversa).
-- Un controllo ogni tanto (l'impronta dello stato) dice se le copie si sono separate; se succede, la sfida finisce.
+- Un controllo ogni tanto (l'impronta dello stato) dice se le copie si sono separate; se succede, **si torna a una sola**:
+  l'host manda la fotografia della sua partita (`sfida/foto.js`: tutto quello che cambia, caso compreso), l'ospite la prende e
+  riparte da lì. Vedi «Quando le copie si separano».
 
 ## Il protocollo (`sfida/protocollo.js`, provato in `unita/arena-sfida`)
 
@@ -52,8 +54,19 @@ Ognuno promette «fino al tick H non ti mando altre mosse» e manda le sue, cias
 0,3 s, a blocchi di 4): la partita avanza di un tick solo quando di tutte e due le parti si sa tutto, quindi una rete lenta
 rallenta il campo ma non separa le copie. Messaggi (testo JSON): `inizio` (firma, seme, terreno, ritmo) → `pronto` o
 `no` (versione diversa: uno dei due deve aggiornare il gioco), poi `k` (orizzonte e mosse) e ogni 5 secondi di gioco `i`
-(impronta dello stato: se differisce, la sfida finisce). Una mossa fuori dal tempo promesso, un'azione che non esiste o
+(impronta dello stato: se differisce, si riallineano). Una mossa fuori dal tempo promesso, un'azione che non esiste o
 un orizzonte lontano si rifiutano. Sono una trentina di messaggi al secondo al massimo; in media una decina.
+
+## Quando le copie si separano
+
+Succede (provato dal vivo coi telefoni: due motori diversi possono arrotondare un calcolo in modo diverso), e finire la sfida
+sarebbe una punizione per due bambini che non hanno fatto niente. Allora l'**host vince**: le due parti si fermano, l'host
+manda la sua fotografia a pezzi da ≤512 byte (il limite del servizio, 20 al secondo, così non serve rimettere online il
+servizio), l'ospite risponde `ok` e tutte e due riprendono. Un'ospite rimesso al tick dell'host può trovarsi indietro di
+qualche tick: per questo le mosse già fatte si tengono per 200 tick e quelle che valgono da lì in poi si rifanno.
+Il blocco dura un paio di secondi. Dopo 30 riallineamenti la sfida finisce comunque («le due partite si sono separate»):
+non è più un caso, è un guasto. Nei test: `unita/arena-sfida` (copia guastata, fotografia e caso).
+La fotografia nomina i campi di un'unità (`CAMPI_UNITA`): un campo nuovo in `Partita.schiera` va aggiunto lì (un test lo controlla).
 
 ## Nel gioco
 

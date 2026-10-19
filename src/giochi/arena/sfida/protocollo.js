@@ -4,10 +4,14 @@
 // Il mondo è uno solo: chi ospita è `io`, l'ospite è `nem`. Il motore gira a passi fissi (`PASSO`), quindi due copie
 // con le stesse mosse agli stessi tick restano identiche al bit (`unita/arena-lockstep`).
 import { PASSO } from '../motore/partita.js'
+import { fotoDi, aPezzi, applicaFoto } from './foto.js'
 
 export const RITARDO = 6          // tick di anticipo con cui una mossa si applica (0,3 s): il tempo di arrivare all'altro
 export const BLOCCO = 4           // quanti tick si promettono in più alla volta (0,2 s): meno messaggi, più ritardo
 export const OGNI_IMPRONTA = 100  // ogni quanti tick si confronta lo stato (5 s)
+const MAX_RIALLINEAMENTI = 30     // oltre, le copie si separano di continuo e non è più un caso: la sfida finisce
+const CADENZA_PEZZI = 0.05        // secondi fra un pezzo della fotografia e il prossimo (20 al secondo: il servizio ne ammette 30)
+const MEMORIA_MOSSE = 2 * 100     // tick di mosse già fatte che si tengono, per rifarle se l'ospite torna indietro
 const SOGLIA_ATTESA = 20          // tick d'anticipo oltre i quali un messaggio è troppo avanti per essere vero
 
 const AZIONI = ['costruisci', 'potenzia', 'vendi', 'miniera', 'ripara', 'castello', 'bomba', 'sbagliata']
@@ -69,6 +73,9 @@ export class Sessione {
     this.mosse = new Map()             // tick → [{ lato, azione, chi, dove }]
     this.impronte = { mie: new Map(), sue: new Map() }
     this.rotta = null
+    this.riallineo = null              // se le copie si sono separate: l'host manda la sua, l'ospite aspetta (vedi `confronta`)
+    this.riallineamenti = 0
+    this.arrivo = null                 // i pezzi della fotografia che arrivano all'ospite
     this.confrontate = 0               // quante impronte sono state messe a confronto: se resta zero non si è controllato niente
   }
 
@@ -101,9 +108,33 @@ export class Sessione {
       this.hoLoro = m.h
     } else if (m.t === 'i') {
       if (typeof m.v !== 'string' || !intero(m.k, 0, 1e7)) return this.rompi('impronta senza senso')
+      if (this.riallineo) return                                    // le impronte di prima della fotografia non contano più
       this.impronte.sue.set(m.k, m.v)
       this.confronta(m.k)
-    }
+    } else if (m.t === 's' && this.mio === 'nem') this.ricevePezzo(m)
+    else if (m.t === 'ok' && this.riallineo?.invio) this.riparti()
+  }
+
+  /* L'ospite mette insieme la fotografia dell'host e si rimette dov'è lui. Le mosse già fatte restano in memoria: l'ospite
+     può tornare indietro di qualche tick, e quelle dell'altro che valgono da lì in poi le rifà. */
+  ricevePezzo(m) {
+    if (!intero(m.id, 0, 1e6) || !intero(m.n, 1, 400) || !intero(m.i, 0, m.n - 1) || typeof m.d !== 'string' || m.d.length > 500) return this.rompi('foto senza senso')
+    this.riallineo = this.riallineo || { invio: null }
+    if (!this.arrivo || this.arrivo.id !== m.id) this.arrivo = { id: m.id, n: m.n, parti: [], quante: 0 }
+    if (this.arrivo.parti[m.i] === undefined) { this.arrivo.parti[m.i] = m.d; this.arrivo.quante++ }
+    if (this.arrivo.quante < this.arrivo.n) return
+    try { this.k = applicaFoto(this.p, this.arrivo.parti.join('')) } catch { return this.rompi('foto storta') }
+    this.arrivo = null
+    this.invia({ t: 'ok' })
+    this.riparti()
+  }
+
+  /* chi aveva fermato la partita la riprende: le impronte di prima non servono più */
+  riparti() {
+    this.riallineo = null
+    this.acc = 0
+    this.impronte.mie.clear(); this.impronte.sue.clear()
+    for (const k of this.mosse.keys()) if (k < this.k - MEMORIA_MOSSE) this.mosse.delete(k)
   }
 
   confronta(k) {
@@ -111,7 +142,12 @@ export class Sessione {
     if (mia === undefined || sua === undefined) return
     this.impronte.mie.delete(k); this.impronte.sue.delete(k)
     this.confrontate++
-    if (mia !== sua) this.rompi('le due partite si sono separate')
+    if (mia === sua) return
+    // Le copie si sono separate (la rete non c'entra: la rete ritarda e basta). Si torna a una sola: l'host manda la sua
+    // fotografia e l'ospite la prende, ferme tutte e due finché non è arrivata. Troppe volte di fila: è un guasto vero.
+    if (++this.riallineamenti > MAX_RIALLINEAMENTI) return this.rompi('le due partite si sono separate')
+    if (this.mio === 'io') this.riallineo = { invio: { pezzi: aPezzi(fotoDi(this.p, this.k), this.riallineamenti), i: 0, att: 0 } }
+    else this.riallineo = this.riallineo || { invio: null }
   }
 
   rompi(motivo) { this.rotta = motivo; this.alDivergere(motivo) }
@@ -119,8 +155,13 @@ export class Sessione {
   /* il tempo vero che passa: simula quanti tick si possono, e promette all'altro i prossimi */
   avanza(dt) {
     if (this.rotta) return
+    if (this.riallineo) {                                           // ferme: l'host manda la fotografia, l'ospite aspetta
+      const v = this.riallineo.invio
+      if (v) for (v.att += dt; v.att >= CADENZA_PEZZI && v.i < v.pezzi.length; v.att -= CADENZA_PEZZI) this.invia(v.pezzi[v.i++])
+      return
+    }
     this.acc = Math.min(this.acc + dt, 1)                          // dopo una lunga attesa non si recupera di colpo
-    while (this.acc >= PASSO && !this.p.fine && this.k < Math.min(this.hoMio, this.hoLoro)) {
+    while (this.acc >= PASSO && !this.riallineo && !this.p.fine && this.k < Math.min(this.hoMio, this.hoLoro)) {
       // due mosse sullo stesso tick: ogni copia le ha ricevute in un ordine suo, quindi si applicano sempre nello stesso
       // (prima chi ospita, poi l'ospite; le mosse di uno stesso giocatore restano come le ha date)
       const dovute = (this.mosse.get(this.k) || []).slice().sort((x, y) => (x.lato === 'io' ? 0 : 1) - (y.lato === 'io' ? 0 : 1))
@@ -128,11 +169,11 @@ export class Sessione {
         if (m.azione === 'sbagliata') this.p.sbagliata(m.lato, m.chi)
         else this.p.fai(m.lato, m.azione, m.chi, m.dove)
       }
-      this.mosse.delete(this.k)
       this.p.avanza(PASSO)
       this.k++
       this.acc -= PASSO
       if (this.k % OGNI_IMPRONTA === 0) {
+        for (const k of this.mosse.keys()) if (k < this.k - MEMORIA_MOSSE) this.mosse.delete(k)
         const v = improntaDi(this.p)
         this.impronte.mie.set(this.k, v)
         this.invia({ t: 'i', k: this.k, v })

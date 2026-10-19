@@ -10,12 +10,16 @@ import { TRUPPE, LIV_MAX, POSTI } from '../dati/regole.js'
 /* il caso che non cambia: stesso seme, stessa partita */
 export function caso(seme) {
   let s = seme | 0
-  return () => {
+  const prossimo = () => {
     s = (s + 0x6D2B79F5) | 0
     let t = Math.imul(s ^ (s >>> 15), 1 | s)
     t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296
   }
+  // dove è arrivato il caso, per rimettere una copia di una sfida in due al punto dell'altra (sfida/protocollo.js)
+  prossimo.stato = () => s
+  prossimo.imposta = v => { s = v | 0 }
+  return prossimo
 }
 
 /* I giocatori finti con cui si tara: `misura` non sbaglia e ragiona in fretta,
