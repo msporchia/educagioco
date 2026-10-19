@@ -149,6 +149,14 @@ il resto dei testi dicono i nomi nuovi, per tutti e due i sotterranei (un nome d
 la **strada** del minatore no, perché è geografia: `LUOGHI_MONDO` per il mondo aperto, `LUOGHI` resta alla mappa dipinta. Restano da
 fare le icone dei posti fotografate dai monumenti (`npm run scatti icone-mondo`): la home e il diario usano ancora i ritagli dipinti.
 
+**Fatta la 6, senza i mostri di sopra** (19 ottobre 2026, [mondo-aperto-quest.md](mondo-aperto-quest.md#fatto-le-taglie-della-bacheca-19-ottobre-2026)):
+la bacheca di ogni città appende tre taglie per giro (consegna, esplora, trova chi, mappa del tesoro e, nei dungeon, caccia, mostro col
+nome, recupera), con id che si rifanno (`t:<città>:<modello>:<parametro>:<giro>`) e stato in `mondo.quest`; danno gemme (`base × valore
+del livello`, tetto 6–40), mai monete né esperienza; tre in mano insieme a parte il tetto dei personaggi; il giro conta un ritorno in
+città solo se prima ci si è allontanati di `raggio + 8` celle o si è saliti dal portale. Caccia aperta, signore della regione e tana
+restano spenti dietro `MOTORI['mostri-sopra']` con l'aggancio `taglieDaContare` / `taglieDaBattere` + `azioneMissione(id, 'fatta')`.
+Restano della 6 le quest scritte a mano per le regioni, la scorta e gli eventi (rimandati), e la taratura delle gemme col banco.
+
 **In tutto 38–57 giorni più la taratura**: due mesi abbondanti di lavoro pieno. Il primo file da provare arriva alla
 fine della fase 2 (dodici giorni circa); il mondo pericoloso alla fine della 5. Senza mostri sopra (la scelta più
 piccola) la fase 5 sparisce e le quest perdono caccia, signori e tane.

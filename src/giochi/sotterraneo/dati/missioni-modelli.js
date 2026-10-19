@@ -177,7 +177,7 @@ const MODELLI = {
       return { tipo: 'trovachi', titolo: `Cerca ${minuscolo(v.nome)}`, em: '🗣️', dove: r.nome, regione: r.chiave, viandante: v, livello: livelloDellaRegione(r.chiave),
                dice: `${v.nome} è uscito a cercare ${v.perso} e non è più tornato. Dicono che sia ${articolata('in', r.nome)}. Trovalo e digli che a casa lo aspettano.`,
                grazie: 'Sta bene, e torna presto. Ecco la ricompensa di chi ha cercato.',
-               verbo: ['Da cercare', 'Trovato'], nota: `${articolata('in', r.nome)}` }
+               verbo: ['Da cercare', 'Trovato'], nota: 'si cerca e ci si parla' }
     },
   },
   // Una mappa strappata con una X: si va, si scava dove segna (una domanda), si torna. Il posto lo sceglie Mondo3d.vue sulla strada vera

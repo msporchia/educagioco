@@ -38,6 +38,8 @@ import { quotaDi } from './dati/livelli.js'
 import { LEGGENDARI } from './dati/pezzi.js'
 import { prendi as prendiMissione, consegna as consegnaMissione, fatte as missioniFatte, presePer, promemoria,
          rotta as rottaDi, seguita, diario, dopoLaMissione } from './motore/missioni.js'
+import { questDi, ripulisci, contiVivi } from './motore/taglie.js'
+import { eTaglia } from './dati/missioni-modelli.js'
 import { ultimoPostoSicuro } from './motore/posto-sicuro.js'
 import { Bottega, alGiroNuovo, robaRaraDi } from './motore/bottega.js'
 import { scrivi, leggi, dice, viaDi, forzeDi, PORTALE as VIA_PORTALE } from './motore/sosta.js'
@@ -204,17 +206,30 @@ function salva({ subito = false, via } = {}) {
                   ...conITrovati(c) }, { subito })
 }
 function fatteGiu(c) {
-  const n = c.missioniFatte.size ? missioniFatte(qui.value.missioni, [...c.missioniFatte]) : null
+  const n = c.missioniFatte.size ? missioniFatte(missioni.value, [...c.missioniFatte]) : null
   // «sconfiggi N»: il conto passa nell'avventura insieme alle fatte, così sopravvive a uscite, soste e svenimenti
   const k = Object.keys(c.conti).length ? { conti: { ...(qui.value.conti || {}), ...c.conti } } : {}
-  return { ...(n ? { missioni: n } : {}), ...k }
+  return { ...(n ? statiDaScrivere(n) : {}), ...k }
 }
 
 /* ═══════════ le missioni dei personaggi (motore/missioni.js) ═══════════
    Si prendono parlando con chi le dà (anche più insieme), si fanno giù (Corsa.missioni), si consegnano sopra: il
    premio va sulla roba dell'avventura, gemme o un gioiello, e a volte monete, che passano dalla borsa del gioco
    come ogni altra (docs/sotterraneo/missioni.md) */
-const missioni = computed(() => qui.value.missioni || {})
+// Nel Sotterraneo 3D le taglie della bacheca (motore/taglie.js) stanno nel campo `mondo.quest` e si fondono qui con le missioni dei
+// personaggi: il diario, la Corsa e la freccina le vedono come le altre, e il 2D non le vede (docs/sotterraneo/mondo-aperto-quest.md)
+const questSopra = computed(() => (in3d ? questDi(qui.value.mondo) : null))
+const missioni = computed(() => (questSopra.value ? { ...(qui.value.missioni || {}), ...questSopra.value.stati } : qui.value.missioni || {}))
+// Lo stato nuovo dopo un'azione, rimesso dove sta: le missioni dei personaggi in `missioni`, le taglie in `mondo.quest` (ripulito e contato)
+function statiDaScrivere(nuovi) {
+  if (!in3d) return { missioni: nuovi }
+  const normali = {}, taglie = {}
+  for (const [id, v] of Object.entries(nuovi)) (eTaglia(id) ? taglie : normali)[id] = v
+  const mondo = qui.value.mondo || {}, q = questDi(mondo)
+  const r = ripulisci(taglie, mondo.giro || 0, q.stati, q.fatte)
+  return { missioni: normali, mondo: { ...mondo, quest: r },
+           ...(Object.keys(qui.value.conti || {}).some(id => eTaglia(id)) ? { conti: contiVivi(qui.value.conti, r.stati) } : {}) }
+}
 // a che punto sono le «sconfiggi N»: quello dell'avventura, e giù quello della discesa che cammina (motore/missioni.js)
 const contiGiu = dallaCorsa(c => ({ ...c.conti }), {})
 const conti = computed(() => ({ ...(qui.value.conti || {}), ...contiGiu.value }))
@@ -228,16 +243,24 @@ function azioneMissione(id, azione) {
   if (azione === 'prendi') {
     const n = prendiMissione(missioni.value, id, tappe.value)
     if (!n) return null
-    nellAvventura({ missioni: n }, { subito: true })
+    nellAvventura(statiDaScrivere(n), { subito: true })
     suono.ok()
     return 'presa'
+  }
+  // una cosa fatta fuori da una discesa (un posto visto, una persona trovata, il tesoro scavato: viste/Mondo3d.vue) e, più avanti, la
+  // taglia dei mostri di sopra (motore/taglie.js, taglieDaContare)
+  if (azione === 'fatta') {
+    const n = missioniFatte(missioni.value, [id])
+    if (!n) return null
+    nellAvventura(statiDaScrivere(n), { subito: true })
+    return 'fatta'
   }
   const b = new Corredo({ eroe: eroeQui(), roba: roba.value, crescita: crescita.value })
   const r = consegnaMissione(missioni.value, id, b)
   if (!r) return null
   if (r.esito !== 'consegnata') { suono.no(); return { esito: r.esito, monete: 0 } }
   // la scelta di quale seguire cade con la missione consegnata
-  nellAvventura({ missioni: r.stati, roba: b.roba, ...(qui.value.segui === id ? { segui: null } : {}) }, { subito: true })
+  nellAvventura({ ...statiDaScrivere(r.stati), roba: b.roba, ...(qui.value.segui === id ? { segui: null } : {}) }, { subito: true })
   suono.livello()
   // le monete del regalo: quelle che il salvadanaio della varietà lascia passare, non una di più
   return { esito: 'consegnata', monete: r.monete ? borsa(CHIAVE).paga(r.monete) : 0 }
@@ -323,7 +346,7 @@ let forzeTenute = { chiave: null, valore: null }
 const forze = computed(() => {
   const dato = qui.value.sosta
   if (!dato || corsa.value || viaDi(dato) !== VIA_PORTALE) return null
-  const chiave = [dato, qui.value.roba, qui.value.missioni, qui.value.crescita]   // i dati salvati, non le copie rilette
+  const chiave = [dato, qui.value.roba, qui.value.missioni, qui.value.crescita, qui.value.mondo && qui.value.mondo.quest]   // i dati salvati, non le copie rilette
   if (forzeTenute.chiave && chiave.every((v, i) => v === forzeTenute.chiave[i])) return forzeTenute.valore
   const t = zonaDi(dato.tappa, dato.potenza)
   const valore = t ? forzeDi(dato, t, roba.value, presePer(missioni.value, t.chiave || ''), crescita.value) : null
@@ -480,7 +503,8 @@ function vendiSopra(t) {
 const ricordaTerra = v => nellAvventura({ terra: v })
 // il mondo di sopra del 3D (viste/Mondo3d.vue) si ricorda accanto, in `mondo`: la terra dipinta del 2D resta com'è
 // (docs/sotterraneo/mondo-aperto-dati.md). La veduta d'insieme si apre dalla casella della mappa nella barra
-const ricordaMondo = v => nellAvventura({ mondo: v })
+// (`quest` lo scrive Gioco.vue, non la vista: la vista manda il suo e il resto resta com'è)
+const ricordaMondo = v => nellAvventura({ mondo: { ...(qui.value.mondo || {}), ...v } })
 const vedutaSopra = ref(false)
 // la domanda di una pietra del viaggio: una risposta giusta paga come giù, una sbagliata no (docs/apprendimento/calibrazione.md)
 function rispostaSopra({ giusto, saltata }) {

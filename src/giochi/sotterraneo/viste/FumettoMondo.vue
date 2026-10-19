@@ -1,13 +1,13 @@
 <script setup>
 // Il fumetto del mondo di sopra in 3D (viste/Mondo3d.vue): sopra un ingresso, una pietra del viaggio, il portale gemello, il
 // cartello, la bacheca, la fontana o una grata chiusa. Non decide niente: Mondo3d.vue gli dà i dati già pronti e lui dice cosa si è toccato
-// (`scendi`, `giu`, `viaggio`, `bevi`). Gli stessi bersagli dei test del fumetto della terra dipinta (viste/Terra.vue).
+// (`scendi`, `giu`, `viaggio`, `bevi`, `taglia` per un foglio della bacheca, `scava` per la X). Gli stessi bersagli dei test del fumetto della terra dipinta (viste/Terra.vue).
 import { faccia, inFrase, titoloDi } from '../motore/missioni.js'
 
 defineProps({
   f: { type: Object, required: true },   // { tipo, … } (vedi fumetto in Mondo3d.vue)
 })
-defineEmits(['scendi', 'giu', 'viaggio', 'bevi'])
+defineEmits(['scendi', 'giu', 'viaggio', 'bevi', 'taglia', 'scava'])
 const minuscolo = s => s.charAt(0).toLowerCase() + s.slice(1)
 </script>
 
@@ -69,8 +69,28 @@ const minuscolo = s => s.charAt(0).toLowerCase() + s.slice(1)
   </template>
 
   <template v-else-if="f.tipo === 'bacheca'">
-    <b class="sot-fum-nome">La bacheca</b>
-    <i class="sot-fum-dritta" data-bacheca-vuota>Due fogli bianchi, e un chiodo. Per ora non c'è niente da fare: torna più avanti.</i>
+    <b class="sot-fum-nome"><span class="em">📜</span> {{ f.nome }}</b>
+    <i v-if="!f.voci.length" class="sot-fum-dritta" data-bacheca-vuota>Fogli bianchi, e un chiodo. Per ora non c'è niente da fare: torna più avanti.</i>
+    <ul v-else class="sot-taglie" data-taglie>
+      <li v-for="v in f.voci" :key="v.id" class="sot-taglia" :class="{ 'sot-taglia-spenta': v.piena }" :data-taglia="v.id" :data-stato="v.stato" :data-tipo="v.tipo">
+        <span class="em sot-taglia-em">{{ v.em }}</span>
+        <span class="sot-taglia-testo"><b>{{ v.titolo }}</b><i>{{ v.dove }}<template v-if="v.nota"> · {{ v.nota }}</template></i></span>
+        <span class="em sot-taglia-premio" data-premio-gemme>💎 {{ v.gemme }}</span>
+        <button v-if="v.azione === 'prendi'" type="button" class="sot-grosso sot-taglia-bottone" data-azione="prendi" :data-taglia-prendi="v.id"
+                @click="$emit('taglia', { id: v.id, azione: 'prendi' })">prendo</button>
+        <button v-else-if="v.azione === 'consegna'" type="button" class="sot-grosso sot-taglia-bottone sot-taglia-oro" data-azione="consegna" :data-taglia-consegna="v.id"
+                @click="$emit('taglia', { id: v.id, azione: 'consegna' })">consegno</button>
+        <small v-else-if="v.stato === 'presa'" class="sot-taglia-nota" data-taglia-in-corso>in corso</small>
+        <span v-else class="sot-taglia-piena" data-taglia-piena aria-hidden="true">🔒</span>
+      </li>
+    </ul>
+    <p v-if="f.voci.some(v => v.piena)" class="sot-fum-avviso" data-taglie-piene>Hai già tre taglie in mano: consegnane una, e potrai prenderne un'altra.</p>
+  </template>
+
+  <template v-else-if="f.tipo === 'scavo'">
+    <b class="sot-fum-nome"><span class="em">🗺️</span> La X della mappa</b>
+    <i class="sot-fum-dritta" data-scavo-dice>Il terreno qui è smosso. Scavi?</i>
+    <button class="sot-grosso" data-azione="scava" @click="$emit('scava')">scavo</button>
   </template>
 
   <template v-else-if="f.tipo === 'fontana'">

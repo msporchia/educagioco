@@ -137,11 +137,86 @@ Non si ricalibra qui; si segnala.
 In tutto **8–12 giorni** senza scorta ed eventi, più i testi e gli sprite dei personaggi nuovi. È la fase 6 di
 [mondo-aperto-fasi.md](mondo-aperto-fasi.md).
 
+## Fatto: le taglie della bacheca (19 ottobre 2026)
+
+La fase 6 nel mondo di sopra del Sotterraneo 3D, senza i mostri di sopra. Il codice: `dati/missioni-modelli.js` (i modelli, i testi, le
+gemme, `rifaDaId`), `motore/taglie.js` (lo stato, il tetto, la pulizia, l'aggancio dei mostri), `motore/taglie-bacheca.js` (cosa appende
+una bacheca, il posto sul prato), e gli agganci in `motore/missioni.js`, `Gioco.vue`, `Mondo3d.vue`, `FumettoMondo.vue`, `Diario.vue`.
+
+- **L'id dice tutto**: `t:<città>:<modello>:<parametro>:<giro>` (`t:villaggio:caccia:cantine.ratto:3`). Nel salvataggio sta solo lo
+  stato, `mondo.quest = { stati: { [id]: 'presa' | 'fatta' | 'consegnata' }, fatte }`; la quest si rifà dall'id (`rifaDaId`, i testi
+  scelti con un hash dell'id). **Gli id sono chiavi di salvataggio: un modello, un parametro o il senso di un testo non si rinomina.**
+  Un id che non si legge più (un modello tolto) si butta alla pulizia. Un salvataggio senza `quest` è nuovo, uno storto pure.
+- **La bacheca per (eroe, giro, città)**: `bachecaDi` appende tre fogli, scelti con un caso seminato da quella terna fra i candidati
+  della città (uno per famiglia di modelli finché si può). Ogni città serve le regioni che le sono più vicine, i dungeon di
+  `cittaDelDungeon` (il villaggio le prime quattro, il forte la cisterna e la porta dell'inferno, il rifugio le miniere) e le pietre
+  vicine. Non si propone quello che si è già visto (una regione, un ingresso, una pietra), né un posto che non si raggiunge coi
+  passaggi aperti, né un dungeon ancora chiuso. Prendendo un foglio non ne arriva un altro: un'altra bacheca si vede al giro dopo.
+- **Il giro** (`giro` in `mondo`) conta un ritorno in città solo se prima ci si è allontanati più di `raggio + 8` celle dal centro di
+  ogni città (`lontanoDalleCitta`), o si è saliti dal portale: passare il confine non fa cambiare la bacheca. Chi ricomincia dall'ingresso
+  di un dungeon (non dal portale) parte «lontano».
+- **Il tetto**: tre taglie in mano insieme (`TETTO_TAGLIE`, fatte da consegnare comprese), a parte il tetto delle missioni dei personaggi
+  (le taglie sono `fuoriDalTetto`). I fogli nuovi si vedono lo stesso ma non si prendono. Le consegnate dei due ultimi giri restano nel
+  diario, le altre si dimenticano (`ripulisci`), e `fatte` conta tutte le consegne.
+- **Si consegna alla bacheca**, quella da cui sono partite; la consegna fra città, a quella di laggiù (fatta e consegnata in un colpo).
+  La bacheca ha il «!» d'oro se c'è un foglio da prendere, il «?» d'oro che pulsa se c'è da consegnare, il «?» grigio se hai preso
+  qualcosa e non è fatto; il diario le mostra con 📜 e «vai dalla bacheca …»; «segui questa» dà la freccia sul bordo (azzurra, con la
+  faccia della taglia) e il cerchio nella veduta, verso il cuore della regione, l'ingresso, la pietra o la bacheca (dove andare, non cosa
+  si trova). La freccina dei dungeon è quella di sempre (`discesaDaSeguire`).
+
+### I tipi fatti
+
+| modello | cosa si fa | fatta quando | note |
+|---|---|---|---|
+| `consegna` | portare una cosa (🍞 ✉️ 🍎 📜 🧶 📦) a un'altra città | si tocca la bacheca di laggiù | in un colpo |
+| `esplora-regione` · `-ingresso` · `-pietra` | vedere un posto | la nebbia scopre il cuore della regione, l'ingresso, la pietra | da sé, camminando |
+| `trova-chi` | cercare una persona persa in una regione | le si parla | una figura dell'atlante che c'è solo a taglia in mano |
+| `mappa` | seguire la X e scavare | una domanda giusta alla X; sbagliando si riprova | la X (✕) è un segno sul prato, solo a taglia in mano |
+| `caccia` | battere N di una specie in un dungeon | N morti, anche tornati | è la «conta» di sempre (`Corsa.conti`) |
+| `mostro` | un mostro col nome e la corona, più duro | cade | come «sconfiggi» di sempre |
+| `recupera` | una cosa smarrita in un forziere d'oro | si apre | come «trova» di sempre |
+
+La caccia ha N sotto la **mediana di un giro intero** della discesa (dodici semi, tutti i piani; lo misura la unità): cantine ratti 9,
+goblin 12, melme 9; torre pipistrelli 5, spiriti di fuoco 8; tana dei ragni ragni 5, funghi 6, piante 5, melme rosa 5; sale allagate
+polpi 9, fantasmi azzurri 5, piranha 4; porta dell'inferno bestie cornute 15, negromanti 14, troll 14; miniere scorpioni 12, golem 8,
+spiriti elettrici 7. La cripta e l'abisso non hanno caccia (tre mostri per specie; l'abisso è un'altra cosa).
+
+### Le gemme
+
+Le taglie danno **solo gemme** (decisione del 16 ottobre: niente esperienza, e nessuna moneta, perché non c'è una domanda in più da
+ripagare: [missioni-monete.md](missioni-monete.md)). `gemme = base × valoreDelLivello(livello del posto)`, tetto 6–40
+(`gemmePer`). Il livello è quello atteso del dungeon (`LIVELLI_ATTESI`) o la fascia della regione (per la consegna, la più alta delle due città).
+
+| modello | base | esempio |
+|---|---|---|
+| consegna | 10 | villaggio → forte (livello 6): 16 |
+| trova chi · esplora | 8 | regione di livello 1: 8–9; di livello 9: 16–18 |
+| mappa | 12 | 12–26 |
+| recupera | 14 | 14–29 |
+| mostro col nome | 16 | 16–33 |
+| caccia | 1,6 a mostro | 9 ratti nelle cantine: 16; 15 bestie cornute: 40 (il tetto) |
+
+Misure (unità, tutte le bacheche di tre punti della storia, quattro eroi, 25 giri): consegna 16–20, esplora 8–19, trova chi 8–18, mappa
+12–26, recupera 14–29, mostro 16–33, caccia 11–40. Una taglia vale meno di un piano di roba per terra della discesa e più di una
+gemma: è un motivo per tornare in città, non un tesoro. **Ancora da misurare**: quanto un bambino che le fa tutte guadagna in più
+nel banco dei giocatori tipo (le taglie ripetute si sommano alle discese); la leva è `BASI` e il tetto.
+
+### L'aggancio coi mostri di sopra
+
+Tre modelli vogliono i mostri di sopra e restano **spenti** dietro `MOTORI['mostri-sopra'] = false` (`dati/missioni-modelli.js`): non
+si appendono e non si prendono. Quando il motore dei mostri di sopra (`motore/aperta.js`, non toccato qui) li fa cadere:
+
+- **caccia aperta** (`t:<città>:caccia-aperta:<regione>.<specie>:<giro>`, 6 da battere, provvisorio): a ogni mostro morto di una `specie`
+  in una `regione` chiama `taglieDaContare(stati, specie, regione)` → `[{ id, quanti }]`, scrive il conto in `conti[id]` (lo stesso
+  campo di giù) e a `quanti` dice `azioneMissione(id, 'fatta')`;
+- **signore della regione** (`signore`, il caporale della regione) e **ripulisci tana** (`tana`): `taglieDaBattere(stati, 'signore' |
+  'tana', regione)` → gli id da dichiarare `'fatta'` quando il caporale cade o la tana è vuota.
+
+`azioneMissione(id, 'fatta')` è in `Gioco.vue`: passa da `statiDaScrivere` e va in `mondo.quest` o in `missioni` a seconda dell'id. Accesi
+i tre tipi, le basi di `BASI` (provvisorie) e le N si tarano con i mostri veri; la unità prova già che accesi si appendono e si contano.
+
 ### Nei test
 
-`unita/sotterraneo-missioni` (allargato: ogni quest nuova ha un dove che esiste nel mondo, i requisiti si sbloccano
-nell'ordine della storia, un seguito sta sempre più lontano dal centro del padre o nella stessa città),
-`unita/sotterraneo-quest-modelli` (nuovo: ogni modello si riempie a ogni giro per ogni regione aperta, l'id si rilegge
-nella stessa quest, il premio torna col conto delle domande, una taglia scaduta se ne va e una presa resta),
-`integrazione/sotterraneo-missioni` (adattato alla tela: il «!» su un personaggio, il cerchio nella veduta, la consegna
-in un'altra città).
+`unita/sotterraneo-quest-modelli` (fatto: id stabili e unici, la stessa bacheca per (eroe, giro, città), le gemme nella banda, nessun modello impossibile, le cacce sotto la mediana, il mostro col nome battibile dai quattro eroi, lo stato e il salvataggio, i tre in mano, la pulizia, la regola del giro, l'aggancio) e `integrazione/sotterraneo-bacheca` (col dito vero: il «?» d'oro, il fumetto, la consegna e le gemme, un foglio nuovo, il diario, chi si era perso, la X con la domanda, il giro). Restano del piano le quest scritte a mano nel mondo: `unita/sotterraneo-missioni` allargato (ogni quest nuova ha un dove che esiste nel
+mondo, i requisiti si sbloccano nell'ordine della storia, un seguito sta più lontano dal centro del padre o nella stessa città) e
+`integrazione/sotterraneo-missioni` adattato alla tela (il «!» su un personaggio, il cerchio nella veduta, la consegna in un'altra città).

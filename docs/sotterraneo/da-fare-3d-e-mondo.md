@@ -51,8 +51,12 @@ Tutto è stato guardato solo in Chrome senza GPU, mai su un telefono vero.
   carte della discesa usano ancora i ritagli della mappa dipinta (`terra-icone.js`): `npm run scatti icone-mondo`.
 - **Il mondo con i mostri sopra** (fase 5): branchi, tane, luce a cerchio, annuncio della regione, abitanti per le dieci
   regioni che ne sono prive (il foglio delle creature d'aperta campagna).
-- **Le quest alla Diablo/WoW** ([mondo-aperto-quest.md](mondo-aperto-quest.md)): 13 tipi, taglie della bacheca da modelli con
-  id stabili; la bacheca c'è ma è vuota; il capitano (che dice la quinta e la sesta porta) e la fontana ci sono, mancano le quest vere. 8–12 giorni stimati.
+- **Le quest alla Diablo/WoW** ([mondo-aperto-quest.md](mondo-aperto-quest.md)): fatte le taglie della bacheca (consegna, esplora, trova
+  chi, mappa, caccia, mostro col nome, recupera; 19 ottobre). Restano: caccia aperta, signore della regione e tana (spente, aspettano
+  i mostri di sopra: `taglieDaContare`), le quest scritte a mano nelle regioni, scorta ed eventi di mondo; la taratura delle gemme col
+  banco dei giocatori tipo (quanto guadagna in più chi fa tutte le taglie); i personaggi nuovi delle città (cacciatrice, carovaniere) e
+  gli sprite veri di chi si perde (oggi lo sprite del boscaiolo, della ragazza, …); la X e il viandante non hanno un disegno 3D (sono
+  segni sul prato); «vai alla pietra» dal diario e la freccia sulla strada vera, non in linea d'aria.
 - **I paesaggi alle discese e all'abisso**: gallerie → grotta, cisterna → tempio, fondo → miniera (già fatti nel mondo
   3D) e per l'abisso i tratti neve, ghiaccio, palude con gli abitanti adatti ([paesaggi-3d.md](paesaggi-3d.md)).
 - **Le figure grandi a blocchi**: i grossi senza figura dipinta (Re Ossuto) sono lo sprite della specie ingrandito ~2,5
