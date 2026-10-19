@@ -17,6 +17,8 @@ const Inglese = caricaQuando(() => import('./inglese/Gioco.vue'))
 const Spagnolo = caricaQuando(() => import('./spagnolo/Gioco.vue'))
 const Arena = caricaQuando(() => import('./arena/Gioco.vue'))
 const Giardino = caricaQuando(() => import('./giardino/Gioco.vue'))
+// la fattoria disegnata in 3D, gioco in prova: stato e risorse suoi (docs/fattoria3d/)
+const Fattoria3d = caricaQuando(() => import('./fattoria3d/Gioco.vue'))
 
 export const SCHERMATE = {
   codice: CodiceSegreto,
@@ -33,4 +35,5 @@ export const SCHERMATE = {
   spagnolo: Spagnolo,    // idem per lo spagnolo
   arena: Arena,
   giardino: Giardino,
+  fattoria3d: Fattoria3d,
 }
