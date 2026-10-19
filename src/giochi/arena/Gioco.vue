@@ -350,7 +350,8 @@ function vendiSubito(posto) {
   salva()
 }
 
-/* il livello di difficoltà sta nel profilo: si cambia dalla mappa, fra una battaglia e l'altra */
+/* il livello di difficoltà vale solo per la battaglia infinita (la campagna è sempre il Medio, tarato per le sue tappe): sta nel
+   profilo e si cambia dalla mappa, fra una battaglia e l'altra */
 function scegliLivello(l) {
   livello.value = livelloValido(l)
   ritocca(CHIAVE, c => { c.livello = livello.value })
@@ -361,7 +362,7 @@ function avvia(indice) {
   if (indice === 'infinita') return avviaInfinita()
   if (indice === 'sfida') return apriSfida()
   infinita.value = null
-  comincia(new Partita({ sfida: sfidaDi(CAMPAGNA[indice], livello.value), registra: true, eviaIA: progresso(CHIAVE).ultimaIA || null }), indice)
+  comincia(new Partita({ sfida: sfidaDi(CAMPAGNA[indice]), registra: true, eviaIA: progresso(CHIAVE).ultimaIA || null }), indice)
 }
 
 /* ── la sfida in due ── */

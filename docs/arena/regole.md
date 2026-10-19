@@ -96,7 +96,7 @@ I numeri stanno in `src/giochi/arena/dati/regole.js`, il motore in
 ## La battaglia infinita e le truppe di un terreno
 
 La voce in cima alla mappa (`INFINITA` in `dati/campagna.js`): **niente timer**, il nemico alla
-**difficoltà massima** (la scheda dell'ultima tappa, `NEMICO.trono`, niente scale né crescita), finisce
+**difficoltà scelta** dal bambino (Facile, Medio, Difficile: la scheda dell'ultima tappa di quel livello, `NEMICO_PER_LIVELLO[livello].trono`, niente scale né crescita), finisce
 quando cade un castello. **Il terreno è diverso a ogni volta** (`terrenoDiverso`: bosco, palude,
 neve, lava; l'ultimo sta in `campagne.arena.ultimoTerreno`), e **ogni terreno ha una truppa firma**
 che altrove non si costruisce (`ESCLUSIVE` e `TRUPPE_DEL_TERRENO` in `dati/regole.js`):

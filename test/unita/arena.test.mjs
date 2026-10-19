@@ -381,14 +381,16 @@ controlla('stesso seme, stessa partita', JSON.stringify(uguali) === JSON.stringi
             LIVELLI.every(l => CAMPAGNA.every(t => sfidaDi(t, l.chiave).nemico.forza <= 1 && sfidaDi(t, l.chiave).nemico.moneteAlSecondo <= GIOCATORE.moneteAlSecondo + 1e-9)))
   uguale('le stesse truppe a ogni livello', sfidaDi(CAMPAGNA[5], 'facile').truppe, sfidaDi(CAMPAGNA[5], 'difficile').truppe)
   uguale('senza livello è il medio', sfidaDi(CAMPAGNA[5]).nemico, NEMICO_PER_LIVELLO.medio[CAMPAGNA[5].chiave])
-  const p = new Partita({ rnd: caso(8), sfida: sfidaDi(CAMPAGNA[2], 'difficile') })
+  const p = new Partita({ rnd: caso(8), sfida: sfidaInfinita('neve', 'difficile') })
   p.avanza(30)
-  const dato = scrivi(p, 2, 'difficile')
-  uguale('la sosta ricorda il livello', dato.livello, 'difficile')
+  const dato = scrivi(p, { infinita: 'neve' }, 'difficile')
+  uguale('la sosta della battaglia infinita ricorda il livello', dato.livello, 'difficile')
   const letto = leggi(dato)
-  uguale('e lo riprende col nemico di quel livello', letto.livello + '/' + (letto.partita.nemicoCfg.d === NEMICO_PER_LIVELLO.difficile.radura.d), 'difficile/true')
+  uguale('e lo riprende col nemico di quel livello', letto.livello + '/' + (letto.partita.nemicoCfg.d === NEMICO_PER_LIVELLO.difficile.trono.d), 'difficile/true')
+  const campagnaSalvata = scrivi((() => { const q = new Partita({ rnd: caso(9), sfida: sfidaDi(CAMPAGNA[2]) }); q.avanza(30); return q })(), 2, 'difficile')
+  uguale('una tappa della campagna è sempre del medio, qualunque livello si dica', leggi(campagnaSalvata).livello, 'medio')
   const vecchio = { ...dato }; delete vecchio.livello
-  uguale('una sosta senza livello è del medio', leggi(vecchio).livello, 'medio')
+  uguale('una sosta senza livello è del medio', leggi({ ...vecchio, terreno: 'neve', chiave: 'infinita' }).livello, 'medio')
 }
 
 /* ══════════ 7b. i dettagli ══════════ */

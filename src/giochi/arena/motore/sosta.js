@@ -47,8 +47,8 @@ export function leggi(dato, { campagna = CAMPAGNA, rnd = Math.random } = {}) {
     if (infinita && !TERRENI.includes(dato.terreno)) return null
     const indice = infinita ? -1 : campagna.findIndex(t => t.chiave === dato.chiave)
     if (indice < 0 && !infinita) return null
-    const livello = livelloValido(dato.livello)   // una sosta senza livello è di prima: il medio
-    const sfida = infinita ? sfidaInfinita(dato.terreno, livello) : sfidaDi(campagna[indice], livello)
+    const livello = infinita ? livelloValido(dato.livello) : livelloValido()     // il livello è della battaglia infinita; una sosta senza è del medio
+    const sfida = infinita ? sfidaInfinita(dato.terreno, livello) : sfidaDi(campagna[indice])
     if (!num(dato.t, 0, 1e5) || !num(dato.resto, 0, 1e4) || !num(dato.pensa, 0, 60)) return null
     for (const lato of ['io', 'nem']) {
       const l = dato.lati?.[lato]

@@ -18,11 +18,12 @@ e la bisezione non trova la quota.
 
 ## I tre livelli
 
-La difficoltà è un livello **per bambino** (`profile.campagne.arena.livello`, i tre pulsanti in cima alla
-mappa; una sosta si ricorda il suo): **Facile, Medio, Difficile**. Stesse truppe, stesse tappe, un'altra
-scheda del nemico per ogni tappa (`NEMICO_PER_LIVELLO` in `dati/taratura.js`, `NEMICO` è il medio, quello
-di prima). Il nemico non diventa più ricco ma più bravo: più furbo, più svelto, e dalla furbizia 0,6
-usa le mosse del [nemico avanzato](nemico.md).
+La difficoltà è un livello **per bambino** (`profile.campagne.arena.livello`, i tre pulsanti sulla voce della battaglia infinita
+nella mappa): **Facile, Medio, Difficile**. **Vale solo per la battaglia infinita** (l'utente: «il resto deve essere blindato a
+difficoltà prescelta, altrimenti non ha senso»): le dodici tappe usano sempre il Medio, tarato per la loro rampa, e la sfida in
+due non ha un nemico. Stesse truppe, un'altra scheda del nemico (`NEMICO_PER_LIVELLO` in `dati/taratura.js`, `NEMICO` è il
+medio); nella battaglia infinita conta la scheda dell'ultima tappa (`trono`) di quel livello. Il nemico non diventa più ricco ma
+più bravo: più furbo, più svelto, e dalla furbizia 0,6 usa le mosse del [nemico avanzato](nemico.md).
 
 `npm run tara:arena` cerca, tappa per tappa e livello per livello, per bisezione su una manopola `d`
 (0-2) quanto forte deve essere il nemico (fino a `d` = 1 salgono monete e forza fino alla parità col
