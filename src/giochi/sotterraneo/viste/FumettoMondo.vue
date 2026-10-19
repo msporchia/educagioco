@@ -1,13 +1,13 @@
 <script setup>
 // Il fumetto del mondo di sopra in 3D (viste/Mondo3d.vue): sopra un ingresso, una pietra del viaggio, il portale gemello, il
-// cartello, la bacheca o una grata chiusa. Non decide niente: Mondo3d.vue gli dà i dati già pronti e lui dice cosa si è toccato
-// (`scendi`, `giu`, `viaggio`). Gli stessi bersagli dei test del fumetto della terra dipinta (viste/Terra.vue).
+// cartello, la bacheca, la fontana o una grata chiusa. Non decide niente: Mondo3d.vue gli dà i dati già pronti e lui dice cosa si è toccato
+// (`scendi`, `giu`, `viaggio`, `bevi`). Gli stessi bersagli dei test del fumetto della terra dipinta (viste/Terra.vue).
 import { faccia, inFrase, titoloDi } from '../motore/missioni.js'
 
 defineProps({
   f: { type: Object, required: true },   // { tipo, … } (vedi fumetto in Mondo3d.vue)
 })
-defineEmits(['scendi', 'giu', 'viaggio'])
+defineEmits(['scendi', 'giu', 'viaggio', 'bevi'])
 const minuscolo = s => s.charAt(0).toLowerCase() + s.slice(1)
 </script>
 
@@ -71,6 +71,12 @@ const minuscolo = s => s.charAt(0).toLowerCase() + s.slice(1)
   <template v-else-if="f.tipo === 'bacheca'">
     <b class="sot-fum-nome">La bacheca</b>
     <i class="sot-fum-dritta" data-bacheca-vuota>Due fogli bianchi, e un chiodo. Per ora non c'è niente da fare: torna più avanti.</i>
+  </template>
+
+  <template v-else-if="f.tipo === 'fontana'">
+    <b class="sot-fum-nome"><span class="em">⛲</span> {{ f.nome }}</b>
+    <i class="sot-fum-dritta" data-fontana-dice :data-serve="f.serve ? 1 : 0">{{ f.serve ? f.dice : f.gia }}</i>
+    <button v-if="f.serve" class="sot-grosso" data-azione="bevi" @click="$emit('bevi')"><span class="em">💧</span> {{ f.bevi }}</button>
   </template>
 
   <template v-else-if="f.tipo === 'grata'">

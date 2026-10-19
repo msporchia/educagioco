@@ -6,6 +6,8 @@
 //   `saluti`   quando non ha niente da chiederti né da riprendere
 //   `presa`    quando accetti un suo favore
 //   `bottega`, `vendi`  le scelte dei mercanti (aprono il banco, o la linguetta delle tasche)
+//   `porte`    solo il capitano del forte: per le discese che racconta lui (la chiave della tappa), quello che dice della porta
+//              di adesso, in aggiunta alla strada (motore/dialoghi.js, stradaDelCapitano)
 //   `cura`     chi cura gratis (la guaritrice la vita, l'incantatrice l'energia): `risorsa`, la `domanda`, le `pagine` dette
 //              curando, `gia` quando non serve e `richiamo`, il fumetto sulla sua testa quando serve (motore/dialoghi.js)
 // «Novità?», con le frasi che ruotano e reagiscono, sta in dati/novita.js.
@@ -73,6 +75,32 @@ export const DIALOGHI = {
                         'Finché qualcuno scende, quello che sta là sotto resta là sotto.'] },
     ],
     presa: 'Va\', e che la luce ti accompagni.',
+  },
+
+  // il capitano del forte del guado (docs/sotterraneo/mondo-aperto-quest.md): sta nel mondo 3D, e apre la storia delle marche. La
+  // porta di adesso la dice lui quando è la quinta o la sesta; le altre le dice il minatore
+  capitano: {
+    domanda: 'Com\'è oltre il guado?',
+    saluti: [
+      { da: 0, testo: 'Capitano del forte del guado. Tengo il ponte: chi passa di qui, passa da me.' },
+      { da: 6, testo: 'Il guado è tranquillo, per la prima volta da anni. Anche questo è merito tuo.' },
+    ],
+    racconti: [
+      { da: 0, pagine: ['Il guado era la strada dei mercanti. Poi dall\'altra riva sono arrivate le bestie.',
+                        'Adesso il forte tiene il ponte, e io tengo il forte.'] },
+      { da: 4, pagine: ['Le sale allagate sono sotto la palude, e l\'acqua nera sale fino alle nostre botti.',
+                        'Chi scende torna con le scarpe fradice. Ma torna, se ha la testa a posto.'] },
+      { da: 5, pagine: ['Dalla piana delle ceneri viene un fumo che non è di nessun camino.',
+                        'I miei soldati dicono che laggiù si apre una porta. Io dico che è meglio non guardarla troppo.'] },
+      { da: 6, pagine: ['Il vecchio minatore è salito al rifugio del passo: ha una porta da indicarti anche lì.',
+                        'Passa dal valico del nord, e saluta la guaritrice da parte mia.'] },
+      { da: 7, pagine: ['Sette porte chiuse, e il forte ancora in piedi. Non pensavo di vederlo.',
+                        'Il pozzo senza fondo no: quello non lo chiude nessuno. Si tiene d\'occhio.'] },
+    ],
+    porte: {
+      cisterna: 'Sei passato dal ponte, e questo è già qualcosa. Oltre il ponte di corde c\'è la palude, e sotto la palude le sale allagate. Là dorme Gorgo, e l\'acqua nera sale fino ai miei stivali. Fermalo, e il guado respira.',
+      labirinto: 'La piana delle ceneri mi dà pensiero: ne viene un fumo che non è di nessun camino. C\'è una botola nel telaio, e la chiamano la porta dell\'inferno. Dietro ci sta Minotto. Battilo, e poi sali dal minatore, al rifugio.',
+    },
   },
 
   guardia: {
@@ -183,6 +211,16 @@ export const DIALOGHI = {
   },
 }
 
+// la fontana della piazza, dove in città manca chi cura (docs/sotterraneo/chi-cura.md): cura vita ed energia, gratis, a chi è salito dal
+// portale. Nessun dialogo: un fumetto col tasto «bevo»
+export const FONTANA = {
+  nome: 'La fontana',
+  richiamo: 'Sei ammaccato. Bevi alla fontana: è gratis.',
+  dice: 'L\'acqua è chiara e fresca. Chi sale dal portale ferito, o a secco, ne beve e si rimette in forze.',
+  gia: 'L\'acqua è chiara e fresca. Sei già in forze: ti servirà quando risali ammaccato.',
+  bevi: 'bevo',
+}
+
 export const ARRIVEDERCI = 'Arrivederci'
 // la domanda del minatore, quella che non manca mai: «cosa faccio adesso» (motore/dialoghi.js, strada)
 export const DOVE_VADO = 'Dove vado adesso?'
@@ -218,6 +256,8 @@ export function guastiDeiDialoghi(chi = []) {
       for (const p of [c.richiamo, ...(c.pagine || []), ...(c.gia || [])]) if (p && p.length > 150) g.push(`${k}: una frase della cura di ${p.length} caratteri`)
     }
     for (const v of d.racconti || []) if (v.pagine.length > 4) g.push(`${k}: un racconto di più di quattro pagine`)
+    for (const [t, testo] of Object.entries(d.porte || {}))
+      for (const f of testo.split(/(?<=[.!?…])\s+/)) if (f.length > 120) g.push(`${k}: una frase della porta «${t}» di ${f.length} caratteri`)
   }
   return g
 }

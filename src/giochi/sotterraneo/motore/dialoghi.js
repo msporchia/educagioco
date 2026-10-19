@@ -66,6 +66,19 @@ export function strada(ctx, { capitolo = true } = {}) {
   return pagine
 }
 
+// Il capitano del forte (dati/dialoghi.js, `porte`): quando la porta di adesso è una delle sue (la quinta e la sesta) la dice lui, col
+// perché a modo suo e la strada del mondo aperto; per le altre non dice niente, e parla chi sta più in là. Dopo la storia niente
+export function stradaDelCapitano(ctx) {
+  const d = DIALOGHI.capitano, t = (ctx.tappe || []).find(x => x.adesso)
+  const testo = t && !ctx.annuncio && d.porte[t.chiave]
+  if (!testo) return []
+  const pagine = inPagine(testo).map(p => ({ testo: p, dato: 'storia' }))
+  pagine.push({ testo: `${t.nome}: ${luogoDi(t.chiave, ctx.mondo)}.`, dato: 'detto' })
+  const s = !t.fatta && ctx.roba && ctx.eroe ? dettoDelLivello(ctx.eroe, ctx.roba, t, t.indice) : null
+  if (s) pagine.push({ testo: s.detto, dato: 'sotto-livello', manca: s.manca })
+  return pagine
+}
+
 // il mostro grosso che aspetta in fondo alla prossima discesa: chi gioca sa chi incontrerà prima di scendere
 function laggiuDalMinatore(ctx) {
   const t = (ctx.tappe || []).find(x => (ctx.annuncio ? x.chiave === ctx.annuncio.chiave : x.adesso))
@@ -153,6 +166,7 @@ export function apertura(chi, ctx, { primaVolta = false } = {}) {
     pagine.push({ testo: STORIA.affida, dato: 'storia' })
   }
   if (chi === 'minatore') pagine.push(...strada(ctx, { capitolo: !primaVolta }))
+  if (chi === 'capitano') pagine.push(...stradaDelCapitano(ctx))
   for (const v of cosaDice(chi, ctx.stati, ctx.tappe).voci) pagine.push(...dellaMissione(v, ctx))
   if (!pagine.length) {
     const s = perOra(d.saluti, finiteDi(ctx.tappe))
@@ -185,7 +199,7 @@ export function scelte(chi, ctx, chieste = new Set()) {
   if (d.bottega) s.push({ che: 'bottega', testo: d.bottega })
   if (cura && !(mancaA(chi, ctx.forze) > 0)) s.push(cura)
   if (d.vendi) s.push({ che: 'vendi', testo: d.vendi })
-  if (chi === 'minatore' && !chieste.has('strada')) s.push({ che: 'strada', testo: DOVE_VADO })
+  if (!chieste.has('strada') && (chi === 'minatore' || (chi === 'capitano' && stradaDelCapitano(ctx).length))) s.push({ che: 'strada', testo: DOVE_VADO })
   if (!chieste.has('novita') && NOVITA_DI[chi]) s.push({ che: 'novita', testo: NOVITA })
   if (!chieste.has('racconta') && (chi === 'minatore' || perOra(d.racconti, finiteDi(ctx.tappe))))
     s.push({ che: 'racconta', testo: d.domanda })
@@ -195,7 +209,7 @@ export function scelte(chi, ctx, chieste = new Set()) {
 
 // la risposta a una domanda che non fa niente se non parlare: la storia, o la strada
 export function risposta(chi, che, ctx) {
-  if (che === 'strada') return strada(ctx)
+  if (che === 'strada') return chi === 'capitano' ? stradaDelCapitano(ctx) : strada(ctx)
   if (che === 'novita') return novita(chi, ctx, ctx.novita && ctx.novita[chi]).pagine
   if (che !== 'racconta') return []
   if (chi === 'minatore') return laggiuDalMinatore(ctx).map(testo => ({ testo, dato: 'racconto' }))

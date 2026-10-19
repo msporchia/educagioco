@@ -24,7 +24,15 @@ export const PERSONAGGI = {
 const IL_MINATORE = { nome: 'Il vecchio minatore', chi: 'il vecchio minatore' }
 // anche l'incantatrice sta per conto suo (è una mercante, dati/mercanti.js): dà la missione del quaderno, e dopo vende le pergamene
 const L_INCANTATRICE = { nome: 'L\'incantatrice', chi: 'l\'incantatrice' }
-export const personaDi = da => PERSONAGGI[da] || (da === 'minatore' ? IL_MINATORE : da === 'incantatrice' ? L_INCANTATRICE : null)
+// chi sta nelle città del mondo aperto e non chiede favori: il capitano del forte del guado racconta la storia delle marche (porte 5 e
+// 6, dati/dialoghi.js). Lo sprite è quello della guardia, un poco più alto e col blu del suo mantello (`tinta`: lampo additivo,
+// scena3d/mondo/persone.js): niente figura nuova (docs/sotterraneo/mondo-3d.md, «Il capitano»)
+export const CITTADINI = {
+  capitano: { nome: 'Il capitano', chi: 'il capitano del forte', sprite: 'guardia', scala: 1.38, tinta: [0, 0.03, 0.14] },
+}
+// tutti quelli che stanno fermi sopra nel mondo 3D: chi dà favori e chi no
+export const PERSONAGGI_DI_SOPRA = { ...PERSONAGGI, ...CITTADINI }
+export const personaDi = da => PERSONAGGI_DI_SOPRA[da] || (da === 'minatore' ? IL_MINATORE : da === 'incantatrice' ? L_INCANTATRICE : null)
 
 // quante missioni al massimo sono aperte insieme (prese, fatte da consegnare, o offerte con il «!»): oltre non se
 // ne propone un'altra finché non se ne consegna una (decisione dell'utente: «non proporgliele se sono troppe»)
