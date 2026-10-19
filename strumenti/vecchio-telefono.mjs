@@ -2,11 +2,13 @@
 // dove scattano e provare come degradarli. Quattro leve: lo schermo e il pixel ratio del telefono (393×851 a 2,75), la CPU
 // rallentata (`Emulation.setCPUThrottlingRate`), una zavorra sulla GPU (un'altra pagina che disegna a vuoto: la GPU del
 // computer è un'altra cosa, così la si fa più lenta) o in alternativa SwiftShader (`--gpu sw`, la CPU fa la GPU).
-// Le leve si tarano sul telefono vero con una misura sola (strumenti/vecchio-telefono/benchmark.html), vedi docs/core/comandi.md:
+// Le leve si tarano sul log della misura fatta sul telefono vero (zona dei grandi → «Misura questo telefono», poi «Copia»),
+// vedi docs/core/vecchio-telefono.md:
 //
-//   node strumenti/vecchio-telefono.mjs calibra --telefono js=620,gpu=48     # i due numeri letti sul telefono
-//   node strumenti/vecchio-telefono.mjs calibra                              # senza numeri: la misura del computer
-//   node strumenti/vecchio-telefono.mjs 'sotterraneo3d=1&dpr=2' --dist      # fotogrammi, con la taratura salvata
+//   node strumenti/vecchio-telefono.mjs calibra --log telefono.txt      # il log copiato dal telefono (la riga DATI basta)
+//   node strumenti/vecchio-telefono.mjs benchmark                       # la stessa misura sul computer, con la taratura salvata
+//   node strumenti/vecchio-telefono.mjs benchmark --contro telefono.txt # e il confronto riga per riga col telefono
+//   node strumenti/vecchio-telefono.mjs 'sotterraneo3d=1&dpr=2' --dist  # fotogrammi di un gioco, con la taratura salvata
 //   node strumenti/vecchio-telefono.mjs 'mate3d=3&volo' --tocca 200,500 --secondi 20
 //   node strumenti/vecchio-telefono.mjs 'sotterraneo3d' --cpu 1,3,6 --zavorra 0,4   # una riga per ogni combinazione
 //
@@ -20,7 +22,6 @@ import { chromium } from 'playwright'
 
 const QUI = dirname(fileURLToPath(import.meta.url))
 const PROFILO = resolve(QUI, 'vecchio-telefono/profilo.json')
-const BANCO = 'file://' + resolve(QUI, 'vecchio-telefono/benchmark.html#auto')
 const SCHERMO = { width: 393, height: 851 }, PIXEL = 2.75   // il Redmi Note 7: 1080×2340
 const UA = 'Mozilla/5.0 (Linux; Android 10; Redmi Note 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Mobile Safari/537.36'
 const STIMA = { cpu: 6, zavorra: 4 }
@@ -30,7 +31,7 @@ const argv = process.argv.slice(2)
 const opz = (n, d = null) => { const i = argv.indexOf('--' + n); return i >= 0 && argv[i + 1] && !argv[i + 1].startsWith('--') ? argv[i + 1] : d }
 const lista = (n, d) => String(opz(n, d)).split(',').map(Number)
 const primo = argv[0]
-if (!primo || primo.startsWith('--')) { console.error("uso: node strumenti/vecchio-telefono.mjs calibra [--telefono js=…,gpu=…] | '<cheat>' [--dist file] [--cpu 6] [--zavorra 4] [--gpu hw|sw] [--secondi 15] [--tocca x,y] [--esegui expr]"); process.exit(1) }
+if (!primo || primo.startsWith('--')) { console.error("uso: node strumenti/vecchio-telefono.mjs calibra --log file | benchmark [--contro file] | '<cheat>' [--dist file] [--cpu 6] [--zavorra 4] [--gpu hw|sw] [--secondi 15] [--tocca x,y] [--esegui expr]"); process.exit(1) }
 const gpuModo = opz('gpu', 'hw')
 const ARGOMENTI = gpuModo === 'sw' ? ['--use-angle=swiftshader', '--enable-unsafe-swiftshader']
   : ['--use-gl=angle', '--use-angle=vulkan', '--enable-features=Vulkan', '--ignore-gpu-blocklist']
@@ -79,45 +80,87 @@ async function telefono(b, { cpu, K }) {
 }
 const mediana = v => v.slice().sort((a, b) => a - b)[Math.floor(v.length / 2)]
 
-async function bancoUna(b, cpu, K) {
-  const { p, hog } = await telefono(b, { cpu, K })
-  await p.goto(BANCO)
-  await p.waitForFunction(() => window.__misura, null, { timeout: 120000 })
-  const r = await p.evaluate(() => window.__misura)
-  await p.close(); await hog?.close()
-  return r
+// la misura dell'app (zona dei grandi → «Misura questo telefono»): `solo` = gli id da fare, `js` compreso; ritorna { dati, log }
+async function bancoUna(b, cpu, K, solo = null, corto = false) {
+  process.env.DIST = resolve(opz('dist', 'dist/index.html'))
+  const { apriGioco } = await import('../test/aiuto/browser.mjs')
+  const hog = await zavorra(b, K)
+  const { page } = await apriGioco(b, { viewport: SCHERMO, pixel: PIXEL, attesa: null, indirizzo: 'file://' + process.env.DIST, userAgent: UA })
+  await page.addInitScript(([so, co]) => { window.__benchmarkSolo = so; window.__benchmarkCorto = co }, [solo, corto])
+  await page.reload(); await page.waitForSelector('[data-azione="grandi"]', { timeout: 20000 })
+  await page.click('[data-azione="grandi"]'); await page.waitForSelector('.tastierino')
+  for (const c of '0000') await page.click(`.tasto >> text="${c}"`)
+  await page.click('.schede button[data-scheda="giochi"]'); await page.waitForSelector('[data-azione="benchmark"]')
+  const s = await page.context().newCDPSession(page)
+  if (cpu > 1) await s.send('Emulation.setCPUThrottlingRate', { rate: cpu })
+  await page.click('[data-azione="benchmark"]'); await page.click('[data-azione="benchmark-avvia"]')
+  await page.waitForSelector('[data-benchmark-log]', { timeout: 600000, state: 'attached' })
+  const dati = await page.evaluate(() => window.__benchmarkFluidita), log = await page.inputValue('[data-benchmark-log]')
+  await page.close(); await hog?.close()
+  return { dati, log }
+}
+const dellaRiga = (dati, id) => (dati.risultati || dati.r || []).find(r => (r.id || r[0]) === id)
+const msDi = (dati, id) => { const r = dellaRiga(dati, id); return r ? (r.ms ?? r[1]) : null }
+// la riga DATI di un log copiato dal telefono
+function leggiLog(file) {
+  const m = /DATI (\{.*\})/.exec(readFileSync(resolve(file), 'utf8'))
+  if (!m) { console.error(`${file}: non trovo la riga DATI`); process.exit(1) }
+  return JSON.parse(m[1])
 }
 async function calibra() {
   const b = await apri()
   console.log(`GPU del computer: ${await renderer(b)}  (--gpu ${gpuModo})`)
-  const fatti = await bancoUna(b, 1, 0)
-  console.log(`il computer, a vuoto: js ${fatti.js} ms, gpu ${fatti.gpu} ms (${fatti.pixel} pixel)`)
+  const lg = opz('log') ? leggiLog(opz('log')) : null
   const t = opz('telefono')
-  if (!t) { await b.close(); console.log('senza i numeri del telefono non c\'è taratura: apri strumenti/vecchio-telefono/benchmark.html sul telefono e rilancia con --telefono js=…,gpu=…'); return }
-  const tel = Object.fromEntries(t.split(',').map(x => x.split('=')).map(([k, v]) => [k, Number(v)]))
+  const tel = lg ? { js: lg.js, gpu: msDi(lg, 'pieno-nativo') }
+    : t ? Object.fromEntries(t.split(',').map(x => x.split('=')).map(([k, v]) => [k, Number(v)])) : null
+  if (!tel || !tel.js || !tel.gpu) { await b.close(); console.error('serve --log <file> (il log copiato dal telefono) oppure --telefono js=…,gpu=… (gpu = ms della prova «pixel, shader leggero, dpr nativo»)'); process.exit(1) }
+  const { dati: fatti } = await bancoUna(b, 1, 0, ['js', 'pieno-nativo'])
+  console.log(`il computer, a vuoto: js ${fatti.js} ms, pixel nativi ${msDi(fatti, 'pieno-nativo')} ms — telefono: js ${tel.js} ms, pixel nativi ${tel.gpu} ms`)
   // il rallentamento non è lineare e la misura balla: si prova, si corregge, e si tiene il tentativo che ci è andato più vicino
   let cpu = Math.min(30, Math.max(1, tel.js / fatti.js)), migliore = { cpu, errore: Infinity }
   for (let giro = 0; giro < 5; giro++) {
-    const r = await bancoUna(b, cpu, 0)
-    const errore = Math.abs(r.js - tel.js) / tel.js
-    console.log(`CPU ×${cpu.toFixed(2)} → js ${r.js} ms (telefono ${tel.js})`)
+    const { dati } = await bancoUna(b, cpu, 0, ['js'])
+    const errore = Math.abs(dati.js - tel.js) / tel.js
+    console.log(`CPU ×${cpu.toFixed(2)} → js ${dati.js} ms (telefono ${tel.js})`)
     if (errore < migliore.errore) migliore = { cpu, errore }
     if (errore < 0.08) break
-    cpu = Math.min(30, Math.max(1, cpu * (1 + 0.7 * (tel.js / r.js - 1))))   // a metà strada: smorza l'oscillare
+    cpu = Math.min(30, Math.max(1, cpu * (1 + 0.7 * (tel.js / dati.js - 1))))   // a metà strada: smorza l'oscillare
   }
   cpu = migliore.cpu
   let K = 0, meglio = Infinity
   for (const k of SCALINI) {
-    const r = await bancoUna(b, 1, k)
-    console.log(`zavorra ${k} → gpu ${r.gpu} ms (telefono ${tel.gpu})`)
-    if (Math.abs(r.gpu - tel.gpu) < meglio) { meglio = Math.abs(r.gpu - tel.gpu); K = k }
-    if (r.gpu >= tel.gpu) break
+    const { dati } = await bancoUna(b, 1, k, ['pieno-nativo'])
+    const ms = msDi(dati, 'pieno-nativo')
+    console.log(`zavorra ${k} → pixel nativi ${ms} ms (telefono ${tel.gpu})`)
+    if (Math.abs(ms - tel.gpu) < meglio) { meglio = Math.abs(ms - tel.gpu); K = k }
+    if (ms >= tel.gpu) break
   }
-  if (K === 0 && fatti.gpu > tel.gpu) console.log('attenzione: la GPU del computer è già più lenta del telefono (--gpu sw ha senso solo se la zavorra non basta)')
+  if (K === 0 && msDi(fatti, 'pieno-nativo') > tel.gpu) console.log('attenzione: la GPU del computer è già più lenta del telefono (--gpu sw ha senso solo se la zavorra non basta)')
   await b.close()
   const p = leggiProfilo(); p[gpuModo] = { cpu: +cpu.toFixed(2), zavorra: K, telefono: tel }
   writeFileSync(PROFILO, JSON.stringify(p, null, 2) + '\n')
   console.log(`\ntarato (${gpuModo}): CPU ×${cpu.toFixed(2)}, zavorra ${K} — salvato in strumenti/vecchio-telefono/profilo.json`)
+  console.log('controllo: `benchmark --contro <log>` mette a confronto tutte le prove; dove non tornano la taratura è solo approssimata')
+}
+
+// la misura dell'app sul computer rallentato, e (con --contro) riga per riga contro un log del telefono
+async function benchmark() {
+  const salvato = leggiProfilo()[gpuModo]
+  const cpu = Number(opz('cpu', salvato ? salvato.cpu : STIMA.cpu)), K = Number(opz('zavorra', salvato ? salvato.zavorra : STIMA.zavorra))
+  if (!salvato && !opz('cpu') && !opz('zavorra')) console.log(`NON TARATO: CPU ×${STIMA.cpu} e zavorra ${STIMA.zavorra} sono stime (calibra --log …)`)
+  const b = await apri()
+  console.log(`computer rallentato: CPU ×${cpu}, zavorra ${K}, GPU ${await renderer(b)} (--gpu ${gpuModo}); circa un minuto…`)
+  const { dati, log } = await bancoUna(b, cpu, K)
+  await b.close()
+  console.log('\n' + log)
+  if (opz('contro')) {
+    const tel = leggiLog(opz('contro'))
+    console.log('\nconfronto (ms di lavoro): prova | computer | telefono | rapporto')
+    for (const r of dati.risultati) { const t = msDi(tel, r.id); if (t != null && !r.errore) console.log(`  ${r.id.padEnd(20)} ${String(r.ms).padStart(6)} ${String(t).padStart(7)}   ×${(r.ms / t).toFixed(2)}`) }
+    console.log(`  ${'js'.padEnd(20)} ${String(dati.js).padStart(6)} ${String(tel.js).padStart(7)}   ×${(dati.js / tel.js).toFixed(2)}`)
+    console.log('rapporto vicino a 1 = il computer rallentato somiglia al telefono; lontano = quella parte non è imitata bene')
+  }
 }
 
 async function misura() {
@@ -163,4 +206,4 @@ async function misura() {
   console.log('p50/p95/p99 sono ms fra due fotogrammi (16 = 60 fps, 33 = 30 fps); liscio se p95 sta sotto i 20, a scatti sopra i 33')
 }
 
-if (primo === 'calibra') await calibra(); else await misura()
+if (primo === 'calibra') await calibra(); else if (primo === 'benchmark') await benchmark(); else await misura()

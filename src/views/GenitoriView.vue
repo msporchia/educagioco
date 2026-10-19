@@ -22,6 +22,7 @@ import { giudiziAccesi, accendiGiudizi, leggi as leggiGiudizi,
          dimentica as svuotaGiudizi, riga as rigaGiudizio,
          pacco as paccoGiudizi, verdettoDi } from '../store/giudizi.js'
 import { fpsAcceso, accendiFps } from '../store/fps.js'
+import Benchmark from '../components/genitori/Benchmark.vue'
 import { GIOCHI } from '../data/giochi.js'
 import { INDIRIZZO, condividi, piattaforma, installata,
          CHI, CODICE, SEGNALA } from '../guide/aiuto.js'
@@ -142,6 +143,7 @@ function cambiaGiudizi() {
     : 'Spento: le domande tornano come prima.' }
 }
 
+const misuraAperta = ref(false)   // la misura del telefono, a tutto schermo
 // del telefono, come i giudizi: docs/core/vecchio-telefono.md
 function cambiaFps() {
   accendiFps(!fpsAcceso.value)
@@ -901,7 +903,14 @@ async function rimetti(v) {
                           : 'Spento: serve a chi prova i giochi su un telefono vecchio' }}</i>
           <span class="leva"><span class="pallina"></span></span>
         </button>
+
+        <button class="carta interruttore" data-azione="benchmark" @click="misuraAperta = true">
+          <span class="ico">⏱️</span>
+          <b>Misura questo telefono</b>
+          <i>Un minuto di scene di prova a qualità diverse, e un resoconto da mandare: dice cosa lo fa andare a scatti</i>
+        </button>
       </div>
+      <Benchmark v-if="misuraAperta" :modulo="SEGNALA_GIUDIZI" @chiudi="misuraAperta = false" />
 
       <MoneteGiocoPerGioco :chi="chi" />
 
