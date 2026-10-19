@@ -17,6 +17,7 @@ import { creaMonumento, creaPietra, creaPortale } from './monumenti.js'
 import { fontana } from './fontana.js'
 import { creaNatura } from './natura.js'
 import { propsPerPezzo, disegnaProps } from './props-citta.js'
+import { disegnaPropsAperti } from './props-aperto.js'
 import { creaLontano } from './lontano.js'
 import { creaVita } from './vita.js'
 import { creaNebbia } from './nebbia.js'
@@ -88,6 +89,7 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = {}, fon
     for (const c of m.citta) if (Math.floor(c.centro.x / 32) + 5 * Math.floor(c.centro.y / 28) === p) { gruppo.add(creaPiazza(m, c, suolo, cant)); if (conFontana.has(c.chiave)) fatto.fontane.push(fontana(c.pozzo, cant, m, cose, kit, gruppo)); else pozzo(c.pozzo, cant, m) }
     for (const c of q.case) casa(c, cant, m, cose)
     disegnaProps(propsPerPezzo(m)[p], cant, m, cose)
+    disegnaPropsAperti(m, p, cant, cose)
     for (const pp of q.ponti) ponte(pp, cant, m)
     for (const g of q.grate) fatto.grate.push(grata(g, cant, m, kit, gruppo))
     for (const po of q.posti) {
