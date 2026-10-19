@@ -19,6 +19,7 @@ sono ancora (la fase 5): il mondo si gira, si scende nei sette dungeon e si torn
 | `nebbia.js` | le due trame della nebbia e il velo di nuvole |
 | `terreno.js`, `acqua.js`, `lontano.js` | il terreno di un pezzo (e la gonna che chiude le fessure), il fuori mappa, le piazze, i campi; l'acqua e il cielo; il mondo a dettaglio basso |
 | `kit.js`, `ponti.js`, `monumenti.js` | case, botteghe, pozzo, mulino; ponti, grate, staccionate, cartello, bacheca, campo del minatore, antri; gli otto ingressi, la pietra del viaggio, il portale gemello |
+| `props-citta.js`, `props-modelli.js` | gli oggetti di scena delle tre città: dove stanno (puro, dalle celle del mondo) e i modelli (barili, carretti, bancarelle, rastrelliere, lanterne, tende, palizzata…) |
 | `natura.js`, `vita.js`, `persone.js`, `trame.js`, `veduta.js` | alberi e decoro a istanze; fumo, spruzzi, faville, fiamme, uccelli; le figure ancorate; le trame su canvas; la telecamera e la veduta |
 
 `Campagna.vue` sceglie `Mondo3d.vue` con `disegno: '3d'` e la carica a richiesta (il Sotterraneo di sempre non tira dentro
@@ -74,6 +75,29 @@ paga la risposta giusta di una pietra.
   perché.
 - **Gli antri** si vedono, chiusi (fase 7).
 
+## Gli oggetti delle città
+
+Il mondo generato non li conosce (la firma della pianta e le nebbie salvate non cambiano): `props-citta.js` li deriva a scena da
+case, botteghe, piazza e strade con un caso suo (seme del mondo e indice della città), sempre uguali. Stanno su celle libere
+di erba entro la città: mai su una strada, un posto, il davanti di una porta, le zone `riservato` davanti alle botteghe né
+nell'acqua; non cambiano la mappa di blocco (stanno ai margini, a una cella dal muro). Si posano nel cantiere del pezzo
+(`disegnaProps`, tutto unito per materiale: nessuna mesh in più per oggetto, la nebbia li legge dall'`aBase`) e ogni modello è
+sotto le 700 facce. Le fiaccole e i bracieri accendono le fiamme di `vita.js` (`cose.fuochi`, al più otto per città).
+
+- **Tutte**: un'insegna a palo per bottega (moneta, foglia, ferro di cavallo, gemma), l'arredo di ogni bottega (il fabbro la
+  ruota di pietra, la rastrelliera e un'incudine; l'erborista scaffali e fiori), lanterne o torce attorno alla piazza,
+  panche, tavoli con le panche, bancarelle con la tendina a righe, due o tre cose ai fianchi di ogni casa, mai sul davanti.
+- **Il villaggio** (campi, carretti, fiori): orti con lo steccato, carretti col fieno, balle, cassette di fiori e vasi, bucato
+  steso, botti e sacchi, lanterne a palo.
+- **Il forte del guado** (palizzate, rastrelliere, tende): la palizzata attorno con i varchi alle strade, tende coniche,
+  rastrelliere d'armi, manichini, bandiere, torce con la fiamma, casse.
+- **Il rifugio del passo** (legna, pellicce, bracieri): cataste e ceppi con l'ascia, stanghe di pellicce, bracieri accesi,
+  sacchi e botti; non ha case, quindi molto sta sparso nei prati vicino alle botteghe.
+- **Per cambiarli**: il carattere sta in `MENU` (pesi, massimi, quanti sparsi), l'arredo delle botteghe in `ARREDO`; un
+  modello nuovo è una funzione in `MODELLI` (origine a terra, davanti verso +z, larghezza lungo x) e, se è largo più di una
+  cella, una voce in `LARGHE`. Misurato (Chrome senza schermo, davanti alla piazza del villaggio): +3 chiamate e +23k triangoli
+  rispetto al villaggio spoglio.
+
 ## Le pietre del viaggio
 
 Undici: una per città e una davanti a ogni ingresso. Toccata una spenta, una domanda col `dif` del posto (l'inizio del dungeon
@@ -121,7 +145,8 @@ in un pezzo solo (disegnato anche sotto i pezzi vicini). Il degrado a scalini no
 - La freccina verso la missione dice la direzione sul bordo, non la strada vera ([missioni-freccina.md](missioni-freccina.md)).
 - Le figure restano pixel art in un mondo liscio: ancorate reggono, da vedere sul telefono. Mai misurato su un telefono vero.
 
-Nei test: `unita/sotterraneo-mondo-3d` (i pezzi, la divisione del mondo, le istanze nel loro pezzo, le trame della nebbia, il
+Nei test: `unita/sotterraneo-mondo-props` (gli oggetti delle città: mai su strade, posti o porte, nel loro pezzo, il carattere
+di ognuna, le facce dei modelli), `unita/sotterraneo-mondo-3d` (i pezzi, la divisione del mondo, le istanze nel loro pezzo, le trame della nebbia, il
 dito, i ponti, il cartello), `unita/sotterraneo-mondo-salva` (la nebbia in base64, la prima volta, il gemello per città e il caso
 peggiore, le pietre, il minatore, le grate), `integrazione/sotterraneo-mondo` (col dito vero: il mondo e quanto costa,
 camminare, la ragazza, la bottega del fabbro, la pietra sbagliata e giusta, la veduta e il tocco lì, scendere nella cripta e

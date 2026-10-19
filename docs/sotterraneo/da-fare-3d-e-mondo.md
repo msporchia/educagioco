@@ -15,6 +15,8 @@ Tutto è stato guardato solo in Chrome senza GPU, mai su un telefono vero.
   che si voleva? ([luce.md](luce.md))
 - **Il villaggio 3D** e il mondo di sopra ([mondo-3d.md](mondo-3d.md)): leggibilità dell'eroe (~25 px su 390), stile degli sprite
   accanto al 3D liscio, nebbia, veduta, pietre del viaggio.
+- **Gli oggetti delle città** ([mondo-3d.md](mondo-3d.md#gli-oggetti-delle-città)): se a telefono si leggono (insegne, panche, bracieri
+  sono piccoli), se i bracieri e le torce non sono troppi, se il rifugio (poco spazio) sembra abbastanza suo.
 - **Il segno d'arrivo del tocco** nel villaggio (corretto: non vola più via) e il tocco su una botte.
 - **Il pannello sopra i globi su desktop** (misura vera della barra, non riprodotto in headless: se si vede ancora tagliato
   servono la riga «aggiornato il…» in fondo alla home, il carattere minimo e lo zoom del browser).
