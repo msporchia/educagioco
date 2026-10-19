@@ -1,0 +1,13 @@
+{
+  "name": "sfida",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "prova": "node prova.mjs"
+  },
+  "devDependencies": {
+    "wrangler": "^4"
+  }
+}

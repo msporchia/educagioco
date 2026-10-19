@@ -5,7 +5,7 @@
 // si perde: docs/arena/sosta.md.
 import { Partita } from './partita.js'
 import { TRUPPE, POSTI, BOMBA, TERRENI } from '../dati/regole.js'
-import { CAMPAGNA, INFINITA, sfidaDi, sfidaInfinita } from '../dati/campagna.js'
+import { CAMPAGNA, INFINITA, sfidaDi, sfidaInfinita, livelloValido } from '../dati/campagna.js'
 
 // sale quando un campo cambia significato: un salvataggio di un'altra
 // versione si butta e la tappa ricomincia
@@ -18,12 +18,13 @@ const r1 = n => Math.round(n * 10) / 10
 /* Torna `null` quando non c'è niente da ritrovare: partita finita o appena cominciata.
    `indice` è la tappa; la battaglia infinita (`INFINITA`, senza timer) passa `{ infinita: terreno }`:
    la sua sosta ha la chiave `infinita` e il terreno, e il tempo che resta non c'è (conta `t`). */
-export function scrivi(p, indice) {
+export function scrivi(p, indice, livello) {
   const infinita = indice && typeof indice === 'object' ? indice.infinita : null
   if (!p || p.fine || p.t < 5 || !(infinita ? TERRENI.includes(infinita) : CAMPAGNA[indice])) return null
   return {
     v: VERSIONE,
     chiave: infinita ? INFINITA.chiave : CAMPAGNA[indice].chiave,
+    livello: livelloValido(livello),
     ...(infinita ? { terreno: infinita } : {}),
     t: r1(p.t), resto: infinita ? 0 : r1(p.resto), pensa: r1(p.pensa),
     lati: { io: { monete: r1(p.lati.io.monete), bombe: p.lati.io.bombe, bombaT: r1(p.lati.io.bombaT) },
@@ -46,7 +47,8 @@ export function leggi(dato, { campagna = CAMPAGNA, rnd = Math.random } = {}) {
     if (infinita && !TERRENI.includes(dato.terreno)) return null
     const indice = infinita ? -1 : campagna.findIndex(t => t.chiave === dato.chiave)
     if (indice < 0 && !infinita) return null
-    const sfida = infinita ? sfidaInfinita(dato.terreno) : sfidaDi(campagna[indice])
+    const livello = livelloValido(dato.livello)   // una sosta senza livello è di prima: il medio
+    const sfida = infinita ? sfidaInfinita(dato.terreno, livello) : sfidaDi(campagna[indice], livello)
     if (!num(dato.t, 0, 1e5) || !num(dato.resto, 0, 1e4) || !num(dato.pensa, 0, 60)) return null
     for (const lato of ['io', 'nem']) {
       const l = dato.lati?.[lato]
@@ -105,7 +107,7 @@ export function leggi(dato, { campagna = CAMPAGNA, rnd = Math.random } = {}) {
                      cool: 0.5, fl: 0, colpo: 0, cammina: false, nasce: 0, vola: TRUPPE[u.id].vola, dirY: 0, r: 8 })
     }
     p.ia.passo = 99                // la scaletta del nemico non si salva: ripreso, va avanti con la regola di tutti i giorni
-    return { partita: p, indice, ...(infinita ? { terreno: dato.terreno } : {}) }
+    return { partita: p, indice, livello, ...(infinita ? { terreno: dato.terreno } : {}) }
   } catch {
     // un salvataggio storto non porta giù il gioco
     return null
