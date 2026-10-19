@@ -31,7 +31,16 @@ export class Regia {
   get mio() { return this.ruolo === 'host' ? 'io' : 'nem' }
   get silenzio() { return (Date.now() - this.ultimo) / 1000 }
 
+  /* per capire perché una sfida si è rotta: si legge sul cartello e in console */
+  diagnosi() {
+    const s = this.sessione
+    if (!s) return `ancora prima di partire, ${this.silenzio.toFixed(0)} s dall'ultima notizia`
+    return `a ${s.p.t.toFixed(0)} s di gioco (tick ${s.k}), ${s.riallineamenti} riallineamenti, ultima notizia ${this.silenzio.toFixed(0)} s fa, ` +
+           `l'altro ${s.fineAltro ? 'aveva annunciato la fine (' + s.fineAltro + ')' : 'non aveva annunciato la fine'}, qui ${s.p.fine ? 'era finita (' + s.p.fine + ')' : 'non era finita'}`
+  }
+
   cambia(stato, motivo = '') {
+    if (stato === 'rotta') { const d = this.diagnosi(); console.warn('[sfida] rotta:', motivo, '—', d); motivo = `${motivo} [${d}]` }
     this.stato = stato; this.motivo = motivo
     this.alCambio(stato)
   }
