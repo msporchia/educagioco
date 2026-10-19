@@ -23,6 +23,8 @@ conti: i mostri picchiano, le pozioni finiscono, e chi non ha gemme non resta bl
   ripetizioni a ogni passo; tace mentre ci si parla e scompare appena la sosta è a posto. Si vede solo se lei è già stata trovata
   nella nebbia, e solo con una discesa lasciata dal portale (l'abisso risalito per stasera conta: si è portati su ammaccati).
 - **Il 🧪 di sopra** con la vita sotto il massimo dice «la guaritrice ti cura, gratis» invece di «sei già in piena forma».
+- **Ferito sopra** (nel Sotterraneo 3D, uno scontro sul prato senza la sosta del portale): le ferite stanno in `mondo.sopra.forze`, e la
+  barra, i richiami, la guaritrice, l'incantatrice e la fontana le trattano come la sosta ([mondo-aperto-mostri-scena.md](mondo-aperto-mostri-scena.md#svenire-le-ferite-chi-cura)).
 - **Il giocatore finto** (`motore/banco.js`, le risalite) risale, compra e ritorna giù a vita e energia piene: la guaritrice è
   parte del giro. Le soglie con cui risale (`RISALITA`) non le ha toccate: la taratura va rifatta con questa regola.
 - **La fontana.** Nel mondo 3D le città hanno chi cura come sopra (la guaritrice la vita, l'incantatrice l'energia), ma il forte del

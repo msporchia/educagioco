@@ -124,7 +124,13 @@ node strumenti/vecchio-telefono.mjs 'sotterraneo3d=1&seme=11&sotterraneo=branco&
 … --scontro --ritmo ';'                       # fermo e basta (nessun attacco)
 … --scontro --ritmo ';' --spegni '-,fuochi:2,lampi,palco,nebbia' --secondi 2   # il banco con un pezzo spento per riga
 … --scontro --gpu hw --core 0 --cpu 5 --traccia 30   # la GPU vera e la CPU lenta: cosa tiene il filo principale
+# lo scontro di sopra, sul prato dei campi (il mondo dà anche lui `corsa`, `palco` e `banco()`): si aspetta il mondo, ci si porta alle vespe
+node strumenti/vecchio-telefono.mjs 'sotterraneo3d=mondo&eroe=cavaliere&qualita=bassa&dpr=1' --scontro --secondi 20 --esegui "new Promise(r => { const t = setInterval(() => { if (window.__mondo3d && window.__sotterraneo3d && window.__sotterraneo3d.pronto) { clearInterval(t); window.__mondo3d.porta(90.5, 43.5); setTimeout(() => { window.__extra = () => window.__sotterraneo3d.banco(30); r() }, 12000) } }, 300) })"
 ```
+
+Il 19/10 (fascia bassa, 4 core, CPU ×5): il banco della tela nello scontro di sopra 290 ms, il mondo fermo nello stesso posto 281; lo
+scontro sul prato costa poco più del mondo, ma il mondo costa circa tre volte lo scontro delle discese
+([../sotterraneo/mondo-aperto-mostri-scena.md](../sotterraneo/mondo-aperto-mostri-scena.md#quanto-costa)).
 
 `--fasi '<espressione>'` dà il nome di un fotogramma (la riga per fase), `--ritmo` le istruzioni ripetute, `--spegni` una riga per
 gruppo di pezzi di `ACCESI` (`+` li unisce, `-` nessuno, `fuochi:2` un numero), `--profilo N` le funzioni che tengono il filo

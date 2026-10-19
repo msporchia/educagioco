@@ -51,13 +51,14 @@ Tutto è stato guardato solo in Chrome senza GPU, mai su un telefono vero.
   `data/giochi.js`), quindi in home la partita a metà non mostra l'icona; quando l'avrà, `iconaDi(chiave, true)` è già pronta
   (le icone del mondo fotografate stanno in [mondo-3d.md](mondo-3d.md#le-icone-dei-posti)). La città non ha ancora un posto
   dove mostrarsi: le tre icone ci sono, nessuna schermata le chiede.
-- **Il mondo con i mostri sopra** (fase 5): il motore è fatto ([mondo-aperto-mostri.md](mondo-aperto-mostri.md)); resta la scena (i
-  mostri e il palco sul terreno, il tocco, l'annuncio colorato, il risveglio in città, le forze di sopra curate in città), lo scontro
-  lasciato con la ✕ (da decidere), il signore del cimitero che stende chi ci va prima della cripta, e gli abitanti da dipingere (il
-  foglio delle creature d'aperta campagna: oggi specie del catalogo scelte per habitat).
+- **Il mondo con i mostri sopra** (fase 5): fatti il motore e la scena ([mondo-aperto-mostri-scena.md](mondo-aperto-mostri-scena.md)).
+  Da guardare col dito sul Note 7: lo scontro sul prato col pannello, il tocco su un mostro che cammina, il 💤 e i galloni, gli fps del
+  mondo (in emulazione tre volte lo scontro delle discese, coi mostri o senza). Restano il signore del cimitero che stende chi ci va
+  prima della cripta, gli abitanti da dipingere (il foglio delle creature d'aperta campagna) e la taratura (quanto si combatte girando,
+  le basi delle taglie accese).
 - **Le quest alla Diablo/WoW** ([mondo-aperto-quest.md](mondo-aperto-quest.md)): fatte le taglie della bacheca (consegna, esplora, trova
-  chi, mappa, caccia, mostro col nome, recupera; 19 ottobre). Restano: caccia aperta, signore della regione e tana (spente, aspettano
-  i mostri di sopra: `taglieDaContare`), le quest scritte a mano nelle regioni, scorta ed eventi di mondo; la taratura delle gemme col
+  chi, mappa, caccia, mostro col nome, recupera; 19 ottobre) e, coi mostri di sopra, caccia aperta, signore della regione e tana.
+  Restano le quest scritte a mano nelle regioni, scorta ed eventi di mondo; la taratura delle gemme col
   banco dei giocatori tipo (quanto guadagna in più chi fa tutte le taglie); i personaggi nuovi delle città (cacciatrice, carovaniere) e
   gli sprite veri di chi si perde (oggi lo sprite del boscaiolo, della ragazza, …); la X e il viandante non hanno un disegno 3D (sono
   segni sul prato); «vai alla pietra» dal diario e la freccia sulla strada vera, non in linea d'aria.

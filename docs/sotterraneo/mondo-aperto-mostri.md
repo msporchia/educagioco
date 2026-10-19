@@ -3,7 +3,8 @@
 La fase 5 del progetto ([mondo-aperto-fasi.md](mondo-aperto-fasi.md#7-le-fasi)), la metà del **motore**: chi vive nelle regioni del
 mondo generato ([mondo-aperto-generatore.md](mondo-aperto-generatore.md)), dove dorme, quando si sveglia, chi entra nello scontro e cosa
 resta dopo. L'utente, 16 ottobre 2026: «mostri anche sopra: sì», alla Diablo, più ci si allontana dal villaggio più sale il livello.
-Puro, senza scena, gira in Node. La scena (fase 5, l'altra metà) legge questo file e basta.
+Puro, senza scena, gira in Node. La scena (fase 5, l'altra metà: [mondo-aperto-mostri-scena.md](mondo-aperto-mostri-scena.md)) legge
+questo file e basta.
 
 - `motore/aperta.js` — il motore: popolare, muovere, incontrare, lo scontro, l'esito, il salvataggio, l'annuncio, le taglie.
 - `motore/palco.js` — il palco dello scontro: un `Livello` di una stanza col branco già fatto (agganci in `livello.js` e `corsa.js`).
@@ -176,10 +177,10 @@ regioni (gli scheletri nel cimitero e nella valle delle ossa, i lupi in quattro)
 
 ## Cosa resta aperto
 
-- **La scena** (l'altra metà della fase 5): disegnare i mostri e il palco sul terreno, il tocco, l'annuncio colorato, il risveglio.
-- **Lo scontro lasciato con la ✕** non si salva a metà: oggi rientrando i mostri dormono a casa (come una fuga gratis). Da decidere
-  con la scena: salvare l'incontro e riaprirlo, o contarlo come una fuga.
-- **Le forze di sopra** vivono in `stato.forze` quando non si è saliti dal portale: chi cura in città deve curare anche lì.
+- **La scena** è fatta (19 ottobre 2026, [mondo-aperto-mostri-scena.md](mondo-aperto-mostri-scena.md)), sul contratto qui sopra e
+  senza toccare il motore: i mostri nel cerchio di luce, il tocco, l'annuncio colorato, lo scontro sul prato, il risveglio in città,
+  le forze di sopra curate in città. **Lo scontro lasciato con la ✕** vale come una fuga senza il graffio, coi rimasti che aspettano
+  accanto all'eroe (`mondo.sopra.scontro`, un campo in più accanto a `inSalvo`).
 - **Le tarature** sono quelle di `SOPRA` e `CURVA_DI_SOPRA`, misurate solo col banco: la ricomparsa a 400 passi, la cintura a 12, un branco
   ogni 110 celle, il signore all'inizio della fascia. Il giro della taratura vera (i giocatori tipo che girano il mondo prima di scendere,
   l'esperienza e le gemme in più all'ingresso) è la fase «La taratura» di [mondo-aperto-fasi.md](mondo-aperto-fasi.md).

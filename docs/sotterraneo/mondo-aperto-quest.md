@@ -203,8 +203,10 @@ nel banco dei giocatori tipo (le taglie ripetute si sommano alle discese); la le
 
 ### L'aggancio coi mostri di sopra
 
-Tre modelli vogliono i mostri di sopra e restano **spenti** dietro `MOTORI['mostri-sopra'] = false` (`dati/missioni-modelli.js`): non
-si appendono e non si prendono. Quando il motore dei mostri di sopra (`motore/aperta.js`, non toccato qui) li fa cadere:
+Tre modelli vogliono i mostri di sopra, dietro `MOTORI['mostri-sopra']` (`dati/missioni-modelli.js`): **accesi dal 19 ottobre 2026**,
+quando i mostri di sopra sono arrivati a schermo; spenti non si appendono e non si prendono. Chi li conta è la scena
+(`taglieDelloScontro` di `motore/aperta-scena.js`, chiamata da `Gioco.vue` a ogni scontro chiuso sul prato:
+[mondo-aperto-mostri-scena.md](mondo-aperto-mostri-scena.md#le-taglie)), con le taglie dei caduti che dà il motore (`motore/aperta.js`):
 
 - **caccia aperta** (`t:<città>:caccia-aperta:<regione>.<specie>:<giro>`, 6 da battere, provvisorio): a ogni mostro morto di una `specie`
   in una `regione` chiama `taglieDaContare(stati, specie, regione)` → `[{ id, quanti }]`, scrive il conto in `conti[id]` (lo stesso
@@ -212,8 +214,9 @@ si appendono e non si prendono. Quando il motore dei mostri di sopra (`motore/ap
 - **signore della regione** (`signore`, il caporale della regione) e **ripulisci tana** (`tana`): `taglieDaBattere(stati, 'signore' |
   'tana', regione)` → gli id da dichiarare `'fatta'` quando il caporale cade o la tana è vuota.
 
-`azioneMissione(id, 'fatta')` è in `Gioco.vue`: passa da `statiDaScrivere` e va in `mondo.quest` o in `missioni` a seconda dell'id. Accesi
-i tre tipi, le basi di `BASI` (provvisorie) e le N si tarano con i mostri veri; la unità prova già che accesi si appendono e si contano.
+`azioneMissione(id, 'fatta')` è in `Gioco.vue`: passa da `statiDaScrivere` e va in `mondo.quest` o in `missioni` a seconda dell'id. Le basi
+di `BASI` (provvisorie) e le N restano da tarare coi giocatori tipo; il diario mostra la caccia aperta col suo «N di M» e il signore e la
+tana con la faccia del loro caporale.
 
 ### Nei test
 

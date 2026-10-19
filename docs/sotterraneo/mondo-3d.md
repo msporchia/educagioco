@@ -3,9 +3,8 @@
 La fase 2 del mondo aperto ([mondo-aperto-fasi.md](mondo-aperto-fasi.md#7-le-fasi)): nel **Sotterraneo 3D** (`sotterraneo3d`, in
 prova) la terra di sopra non è più la mappa dipinta ma il mondo generato (seme 19, 160×140 celle, 5×5 regioni ad anelli:
 [mondo-aperto-generatore.md](mondo-aperto-generatore.md)) disegnato in WebGL, dal prototipo approvato `poc/mondo-sopra`. Il
-Sotterraneo di sempre resta sulla terra dipinta ([terra-di-sopra.md](terra-di-sopra.md)), identico. Mostri sopra non ce ne
-sono ancora a schermo (la fase 5): il mondo si gira, si scende nei sette dungeon e si torna. Il loro motore c'è
-([mondo-aperto-mostri.md](mondo-aperto-mostri.md)): la vista li disegna da lì.
+Sotterraneo di sempre resta sulla terra dipinta ([terra-di-sopra.md](terra-di-sopra.md)), identico. Dal 19 ottobre ci sono i mostri
+di sopra e lo scontro sul prato (la fase 5: [mondo-aperto-mostri-scena.md](mondo-aperto-mostri-scena.md)).
 
 ## Dove sta cosa
 
@@ -23,11 +22,11 @@ sono ancora a schermo (la fase 5): il mondo si gira, si scende nei sette dungeon
 | `fontana.js` | la fontana della piazza, dove manca chi cura: vasca, stelo, coppa, e l'acqua che si muove |
 | `props-citta.js`, `props-modelli.js` | gli oggetti di scena delle tre città: dove stanno (puro, dalle celle del mondo) e i modelli (barili, carretti, bancarelle, rastrelliere, lanterne, tende, palizzata…) |
 | `props-dove.js`, `props-aperto.js` | gli oggetti di scena fuori dalle città e lo scenario degli ingressi: dove stanno (puro: habitat, celle libere, strade, lotti) e le forme (lapidi, rovine, menhir, palafitte, fumarole, carrelli, accampamenti, cartelli…) |
-| `natura.js`, `vita.js`, `persone.js`, `trame.js`, `veduta.js` | alberi e decoro a istanze; fumo, spruzzi, faville, fiamme, uccelli; le figure ancorate; le trame su canvas; la telecamera e la veduta |
+| `natura.js`, `vita.js`, `persone.js`, `trame.js`, `veduta.js` | alberi e decoro a istanze; fumo, spruzzi, faville, fiamme, uccelli; le figure ancorate (anche i mostri); le trame su canvas; la telecamera e la veduta |
+| `mostri.js`, `palco.js` | i mostri di sopra a schermo (puro: il cerchio di luce, le figure) e il palco dello scontro posato sul prato ([mondo-aperto-mostri-scena.md](mondo-aperto-mostri-scena.md)) |
 
-`Campagna.vue` sceglie `Mondo3d.vue` con `disegno: '3d'` e la carica a richiesta (il Sotterraneo di sempre non tira dentro
-three). `Gioco.vue` passa `mondo`, la veduta (`vedutaSopra`, la casella della mappa nella barra di sopra, `mappaSopra`) e
-paga la risposta giusta di una pietra.
+`Campagna.vue` sceglie `Mondo3d.vue` con `disegno: '3d'` e la carica a richiesta (il Sotterraneo di sempre non tira dentro three).
+`Gioco.vue` passa `mondo`, la veduta (`vedutaSopra`, la casella della mappa nella barra di sopra, `mappaSopra`) e paga la pietra.
 
 ## Il salvataggio
 
@@ -74,9 +73,8 @@ paga la risposta giusta di una pietra.
   uno chiuso pianta il divieto e dice cosa lo apre. Davanti a uno rosso la sentinella.
 - **Si torna** dove si era: risalendo, lasciando perdere o svenuti si è davanti all'ingresso; dal portale accanto al gemello,
   nella città che serve quel dungeon (il villaggio, se quella non si raggiunge).
-- **Le grate** dei passaggi fra gli anelli sono modellate: calate finché la storia non le alza, e toccandole dicono
-  perché.
-- **Gli antri** si vedono, chiusi (fase 7).
+- **Le grate** dei passaggi fra gli anelli sono modellate: calate finché la storia non le alza, e toccandole dicono perché. **Gli
+  antri** si vedono, chiusi (fase 7).
 
 ## Gli oggetti delle città
 
@@ -229,8 +227,8 @@ in un pezzo solo (disegnato anche sotto i pezzi vicini). Il degrado a scalini no
 
 ## Cosa manca
 
-- La freccina verso la missione dice la direzione sul bordo, non la strada vera ([missioni-freccina.md](missioni-freccina.md)).
-- Le figure restano pixel art in un mondo liscio: ancorate reggono, da vedere sul telefono. Mai misurato su un telefono vero.
+La freccina dice la direzione sul bordo, non la strada vera ([missioni-freccina.md](missioni-freccina.md)); le figure pixel art in un
+mondo liscio, ancorate, reggono ma vanno viste sul telefono (mai misurato su uno vero). I mostri: [mondo-aperto-mostri-scena.md](mondo-aperto-mostri-scena.md).
 
 Nei test: `unita/sotterraneo-mondo-props` (gli oggetti delle città: mai su strade, posti o porte, nel loro pezzo, il carattere
 di ognuna, le facce dei modelli), `unita/sotterraneo-mondo-aperto-props` (quelli fuori dalle città: pianta e firma invariate, sempre uguali, mai su strade, lotti, città o davanti a una porta, un repertorio per habitat, uno scenario per ingresso, i costi), `unita/sotterraneo-mondo-3d` (i pezzi, la divisione del mondo, le istanze nel loro pezzo, le trame della nebbia, il

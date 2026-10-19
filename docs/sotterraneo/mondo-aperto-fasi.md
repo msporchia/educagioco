@@ -127,8 +127,7 @@ onesti, test compresi.
 | 9 | **I salvataggi**: la chiave `sotterraneo3d` e «porta qui il tuo eroe»; il travaso del 2D solo il giorno che il mondo lo sostituisce | provarlo con l'eroe vero | 2–4 |
 | — | **La taratura**, segnalata e non fatta qui: banco e giocatori tipo nel mondo, fasce delle regioni, premi | i numeri giusti | 4–6 |
 
-**Fatte: la 0 e la 1** (16 ottobre 2026): il generatore, il seme 19 e cosa la geometria ha cambiato dei passaggi stanno in
-[mondo-aperto-generatore.md](mondo-aperto-generatore.md); di `aperta.js` è entrata solo la parte che fa la mappa.
+**Fatte: la 0 e la 1** (16 ottobre 2026): il generatore e il seme 19 in [mondo-aperto-generatore.md](mondo-aperto-generatore.md).
 
 **Fatta la 2** (16 ottobre 2026, [mondo-3d.md](mondo-3d.md)): `viste/Mondo3d.vue` e `scena3d/mondo/` nel Sotterraneo 3D, il dito
 con le persone che vincono, le figure ancorate (A), la nebbia vera e salvata (`mondo` nell'avventura, la chiave `sotterraneo3d`
@@ -136,38 +135,30 @@ resta la fase 9), la veduta, le tre città coi mercanti, dialoghi, bottega e mis
 ritorno, il gemello nella città giusta. Anticipati dalla 3 e dalla 4: i pezzi costruiti e buttati col mondo lontano, l'ombra che
 segue, le pietre con la domanda e il viaggio, le grate dei passaggi. Restano della 3 le misure sui due telefoni.
 
-**Fatta la 4** (19 ottobre 2026, [mondo-3d.md](mondo-3d.md#il-capitano-e-la-fontana)): il capitano del forte (lo sprite della guardia, più
-alto e col suo blu; dice lui la quinta e la sesta porta, [dialoghi.md](dialoghi.md#il-capitano-del-forte)) e la fontana che cura
-([chi-cura.md](chi-cura.md)). Il progetto diceva «la fontana dove manca la guaritrice», ma la guaritrice sta in tutte e tre le città:
-la regola vera è che l'acqua prende il posto del pozzo dove manca **una** delle due (guaritrice o incantatrice), e cura vita ed energia
-insieme; oggi è solo il forte, che non ha l'incantatrice. I banchi per mercante restano com'erano (il fabbro del forte è quello del
-villaggio) e un passo di `integrazione/sotterraneo-mondo` lo prova. Il generatore non è stato toccato: capitano e fontana stanno dove
-lui ha già messo la persona e il pozzo.
+**Fatta la 4** (19 ottobre 2026, [mondo-3d.md](mondo-3d.md#il-capitano-e-la-fontana)): il capitano del forte (dice lui la quinta e la sesta
+porta, [dialoghi.md](dialoghi.md#il-capitano-del-forte)) e la fontana che cura ([chi-cura.md](chi-cura.md)): l'acqua prende il posto del
+pozzo dove manca **una** fra guaritrice e incantatrice (oggi il forte), e cura vita ed energia insieme. I banchi per mercante restano
+com'erano; il generatore non è stato toccato (capitano e fontana stanno dove lui ha già messo la persona e il pozzo).
 
 **Fatta la 8** (19 ottobre 2026, [dialoghi.md](dialoghi.md#i-nomi)): `CAMPAGNA`, `CAPITOLI`, `VOLTI`, le missioni, i dialoghi, le novità e
-il resto dei testi dicono i nomi nuovi, per tutti e due i sotterranei (un nome dice l'interno, e il 2D mostra le stesse discese);
-la **strada** del minatore no, perché è geografia: `LUOGHI_MONDO` per il mondo aperto, `LUOGHI` resta alla mappa dipinta. 
-
-**Fatta la 8 completa** (19 ottobre 2026): le icone dei posti sono fotografate dai monumenti con `npm run scatti icone-mondo`
-([mondo-3d.md](mondo-3d.md#le-icone-dei-posti)) e le legge il Sotterraneo 3D (diario, scelta degli eroi, carte della discesa,
-bussola); il 2D di sempre tiene i suoi ritagli dipinti. Resta solo la carta «riprendi» della home, che per il 3D non ha ancora un
-manifesto ([da-fare-3d-e-mondo.md](da-fare-3d-e-mondo.md)).
+il resto dei testi dicono i nomi nuovi, per tutti e due i sotterranei; la **strada** del minatore no, perché è geografia (`LUOGHI_MONDO`).
+Le icone dei posti sono fotografate dai monumenti (`npm run scatti icone-mondo`, [mondo-3d.md](mondo-3d.md#le-icone-dei-posti)); il 2D
+tiene i suoi ritagli dipinti. Resta la carta «riprendi» della home, che per il 3D non ha un manifesto ([da-fare-3d-e-mondo.md](da-fare-3d-e-mondo.md)).
 
 **Fatta la 6, senza i mostri di sopra** (19 ottobre 2026, [mondo-aperto-quest.md](mondo-aperto-quest.md#fatto-le-taglie-della-bacheca-19-ottobre-2026)):
 la bacheca di ogni città appende tre taglie per giro (consegna, esplora, trova chi, mappa del tesoro e, nei dungeon, caccia, mostro col
 nome, recupera), con id che si rifanno (`t:<città>:<modello>:<parametro>:<giro>`) e stato in `mondo.quest`; danno gemme (`base × valore
 del livello`, tetto 6–40), mai monete né esperienza; tre in mano insieme a parte il tetto dei personaggi; il giro conta un ritorno in
 città solo se prima ci si è allontanati di `raggio + 8` celle o si è saliti dal portale. Caccia aperta, signore della regione e tana
-restano spenti dietro `MOTORI['mostri-sopra']` con l'aggancio `taglieDaContare` / `taglieDaBattere` + `azioneMissione(id, 'fatta')`.
+dietro `MOTORI['mostri-sopra']`: accesi con la 5.
 Restano della 6 le quest scritte a mano per le regioni, la scorta e gli eventi (rimandati), e la taratura delle gemme col banco.
 
-**Fatta la 5a, il motore** (19 ottobre 2026, [mondo-aperto-mostri.md](mondo-aperto-mostri.md)): `motore/aperta.js` riscritto sul mondo
-generato e non più dentro un `Livello` (le terre selvagge lo erano): branchi per regione da (eroe, giro), la tana col signore, la cintura
-attorno al villaggio e alla strada della cripta, sveglia, inseguimento dentro la regione, l'incontro, lo scontro dei dungeon su un palco
-di una stanza (`motore/palco.js`, gli agganci in `livello.js` e `corsa.js`), l'esito, la ricomparsa a passi, lo svenimento senza perdere
-rari e leggendari, l'annuncio, le taglie per le quest, lo stato in `mondo.sopra`, e il banco (`npm run sotterraneo -- --mondo`). Gli
-agganci in `scontro.js` e `sosta.js` che il progetto prevedeva non sono serviti: il palco è una stanza sola, e la superficie si salva nel
-campo `mondo`. Resta la 5b, la scena: i mostri e il palco disegnati sul terreno, il tocco, l'annuncio colorato, il risveglio in città.
+**Fatta la 5** (19 ottobre 2026). Il motore ([mondo-aperto-mostri.md](mondo-aperto-mostri.md)): `motore/aperta.js` sul mondo generato,
+branchi da (eroe, giro), la tana col signore, la cintura, sveglia e inseguimento dentro la regione, lo scontro dei dungeon su un palco di
+una stanza (`motore/palco.js`), l'esito, la ricomparsa a passi, lo svenimento, `mondo.sopra`, il banco (`--mondo`); gli agganci in
+`scontro.js` e `sosta.js` non sono serviti. La scena ([mondo-aperto-mostri-scena.md](mondo-aperto-mostri-scena.md)): i mostri nel cerchio
+di luce, il tocco, l'annuncio colorato, lo scontro col pannello delle discese disegnato sul prato col mondo sotto, il risveglio in città,
+le ferite di sopra curate in città, il bottino per terra, la ✕ a metà come fuga senza il graffio, le taglie dei mostri accese.
 
 **In tutto 38–57 giorni più la taratura**: due mesi abbondanti di lavoro pieno. Il primo file da provare arriva alla
 fine della fase 2 (dodici giorni circa); il mondo pericoloso alla fine della 5. Senza mostri sopra (la scelta più
