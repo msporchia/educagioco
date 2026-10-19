@@ -19,6 +19,7 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { chromium } from 'playwright'
+import { spawnSync } from 'node:child_process'
 
 const QUI = dirname(fileURLToPath(import.meta.url))
 const PROFILO = resolve(QUI, 'vecchio-telefono/profilo.json')
@@ -32,10 +33,21 @@ const opz = (n, d = null) => { const i = argv.indexOf('--' + n); return i >= 0 &
 const lista = (n, d) => String(opz(n, d)).split(',').map(Number)
 const primo = argv[0]
 if (!primo || primo.startsWith('--')) { console.error("uso: node strumenti/vecchio-telefono.mjs calibra --log file | benchmark [--contro file] | '<cheat>' [--dist file] [--cpu 6] [--zavorra 4] [--gpu sw|hw] [--secondi 15] [--tocca x,y] [--esegui expr]"); process.exit(1) }
-const gpuModo = opz('gpu', 'sw')   // SwiftShader somiglia al Note 7 sui pixel (rapporto 1-1,5 sul riempimento e sullo shader pesante) e non serve la zavorra; 'hw' è la GPU vera, troppo forte
+const gpuModo = opz('gpu', 'sw')   // SwiftShader su pochi core (--core 4) somiglia al Note 7 sui pixel; 'hw' è la GPU vera, troppo forte (serve la zavorra)
 const ARGOMENTI = gpuModo === 'sw' ? ['--use-angle=swiftshader', '--enable-unsafe-swiftshader']
   : ['--use-gl=angle', '--use-angle=vulkan', '--enable-features=Vulkan', '--ignore-gpu-blocklist']
 const leggiProfilo = () => existsSync(PROFILO) ? JSON.parse(readFileSync(PROFILO, 'utf8')) : {}
+
+// `--core N`: lo strumento (e quindi Chrome e il suo SwiftShader) gira su N core soltanto, con `taskset`: è la leva sulla GPU senza
+// toccare il sistema. Di difetto il valore tarato (profilo.json); `--core 0` li lascia tutti. Chi lancia con `taskset` da sé va bene lo stesso.
+{
+  const voluti = Number(opz('core', (leggiProfilo()[gpuModo] || {}).core || 0))
+  if (voluti > 0 && !process.env.VT_CORE) {
+    const r = spawnSync('taskset', ['-c', `0-${voluti - 1}`, process.execPath, ...process.argv.slice(1)], { stdio: 'inherit', env: { ...process.env, VT_CORE: String(voluti) } })
+    if (r.error) console.error('taskset non c\'è: si va avanti su tutti i core (la GPU emulata sarà più veloce del vero)')
+    else process.exit(r.status ?? 1)
+  }
+}
 
 async function apri() {
   const exe = process.env.CHROME || ['/usr/bin/google-chrome', '/usr/bin/chromium', '/usr/bin/chromium-browser'].find(existsSync)
@@ -112,11 +124,11 @@ async function calibra() {
   console.log(`GPU del computer: ${await renderer(b)}  (--gpu ${gpuModo})`)
   const lg = opz('log') ? leggiLog(opz('log')) : null
   const t = opz('telefono')
-  const tel = lg ? { js: lg.js, gpu: msDi(lg, 'pieno-nativo') }
+  const tel = lg ? { js: lg.js, gpu: msDi(lg, 'pieno-1.5') }
     : t ? Object.fromEntries(t.split(',').map(x => x.split('=')).map(([k, v]) => [k, Number(v)])) : null
-  if (!tel || !tel.js || !tel.gpu) { await b.close(); console.error('serve --log <file> (il log copiato dal telefono) oppure --telefono js=…,gpu=… (gpu = ms della prova «pixel, shader leggero, dpr nativo»)'); process.exit(1) }
-  const { dati: fatti } = await bancoUna(b, 1, 0, ['js', 'pieno-nativo'])
-  console.log(`il computer, a vuoto: js ${fatti.js} ms, pixel nativi ${msDi(fatti, 'pieno-nativo')} ms — telefono: js ${tel.js} ms, pixel nativi ${tel.gpu} ms`)
+  if (!tel || !tel.js || !tel.gpu) { await b.close(); console.error('serve --log <file> (il log copiato dal telefono) oppure --telefono js=…,gpu=… (gpu = ms della prova «pixel, shader leggero, dpr 1,5»)'); process.exit(1) }
+  const { dati: fatti } = await bancoUna(b, 1, 0, ['js', 'pieno-1.5'])
+  console.log(`il computer, a vuoto: js ${fatti.js} ms, pixel (dpr 1,5) ${msDi(fatti, 'pieno-1.5')} ms — telefono: js ${tel.js} ms, pixel ${tel.gpu} ms`)
   // il rallentamento non è lineare e la misura balla: si prova, si corregge, e si tiene il tentativo che ci è andato più vicino
   let cpu = Math.min(30, Math.max(1, tel.js / fatti.js)), migliore = { cpu, errore: Infinity }
   for (let giro = 0; giro < 5; giro++) {
@@ -130,15 +142,15 @@ async function calibra() {
   cpu = migliore.cpu
   let K = 0, meglio = Infinity
   for (const k of SCALINI) {
-    const { dati } = await bancoUna(b, 1, k, ['pieno-nativo'])
-    const ms = msDi(dati, 'pieno-nativo')
+    const { dati } = await bancoUna(b, 1, k, ['pieno-1.5'])
+    const ms = msDi(dati, 'pieno-1.5')
     console.log(`zavorra ${k} → pixel nativi ${ms} ms (telefono ${tel.gpu})`)
     if (Math.abs(ms - tel.gpu) < meglio) { meglio = Math.abs(ms - tel.gpu); K = k }
     if (ms >= tel.gpu) break
   }
-  if (K === 0 && msDi(fatti, 'pieno-nativo') > tel.gpu) console.log('attenzione: la GPU del computer è già più lenta del telefono (--gpu sw ha senso solo se la zavorra non basta)')
+  if (K === 0 && msDi(fatti, 'pieno-1.5') > tel.gpu) console.log('attenzione: la GPU del computer è già più lenta del telefono (--gpu sw ha senso solo se la zavorra non basta)')
   await b.close()
-  const p = leggiProfilo(); p[gpuModo] = { cpu: +cpu.toFixed(2), zavorra: K, telefono: tel }
+  const p = leggiProfilo(); p[gpuModo] = { cpu: +cpu.toFixed(2), zavorra: K, ...(process.env.VT_CORE ? { core: Number(process.env.VT_CORE) } : {}), telefono: tel }
   writeFileSync(PROFILO, JSON.stringify(p, null, 2) + '\n')
   console.log(`\ntarato (${gpuModo}): CPU ×${cpu.toFixed(2)}, zavorra ${K} — salvato in strumenti/vecchio-telefono/profilo.json`)
   console.log('controllo: `benchmark --contro <log>` mette a confronto tutte le prove; dove non tornano la taratura è solo approssimata')

@@ -8,11 +8,12 @@
     }
   },
   "sw": {
-    "cpu": 2.81,
+    "cpu": 5.04,
     "zavorra": 0,
+    "core": 4,
     "telefono": {
       "js": 469,
-      "gpu": 12.9
+      "gpu": 9.3
     }
   }
 }

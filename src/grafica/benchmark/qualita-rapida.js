@@ -60,7 +60,7 @@ export const fasciaDa = (punti, js) => {
 
 // null se non c'è WebGL 2; altrimenti { fascia, punti, dettaglio, js, quando, gpu, dpr, v }
 export async function misuraRapida() {
-  const canvas = document.createElement('canvas')
+  const canvas = document.createElement('canvas')   // fuori pagina: misurato nella stessa sessione, dà gli stessi ms del benchmark a scene (±20%)
   let gl = null
   try { gl = canvas.getContext('webgl2', { alpha: false, antialias: false, powerPreference: 'high-performance' }) } catch (e) { gl = null }
   if (!gl) return null
@@ -106,7 +106,7 @@ export function assicuraFascia({ forza = false } = {}) {
   if (incorso) return incorso
   if (!forza && (!serveMisura() || (navigator.webdriver && !window.__qualitaMisura))) return Promise.resolve(null)   // i test non ne vogliono
   incorso = (async () => {
-    try { const m = await misuraRapida(); if (m) await salvaMisura(m); return m } catch (e) { return null } finally { incorso = null }
+    try { const m = await misuraRapida(); if (m) { window.__ultimaMisura = m; await salvaMisura(m) } return m } catch (e) { return null } finally { incorso = null }
   })()
   return incorso
 }

@@ -12,7 +12,7 @@ quando lì resta sotto i ~30 ms a fotogramma. Sul computer (RTX, 20 core) non si
 | schermo e pixel ratio | 393×851 a 2,75, touch, user agent Android | |
 | `--cpu N` | `Emulation.setCPUThrottlingRate`: il JS e la preparazione del fotogramma costano N volte | non rallenta i thread della GPU (con `--gpu sw`, SwiftShader, il disegno non è rallentato da questa leva) |
 | `--zavorra K` | un'altra pagina disegna K schermi pieni con uno shader pesante a ogni fotogramma: la GPU vera si divide col gioco | non imita la banda di memoria né il calore del telefono |
-| `--gpu sw` (di difetto) | SwiftShader: la CPU fa la GPU. **Misurato contro il Note 7 (19/10): pixel e shader leggero ×1,0-1,4, shader pesante ×1,0, strati sfumati ×1,4-2,6, chiamate ×0,7-1,4; sovrastima i triangoli (×1,5-4,5) e le scintille grandi (×2-3).** Con CPU ×2,8 anche il JS torna (234 → ~470 ms). Nessun comando di sistema, e per i giochi è pessimista | |
+| `--gpu sw` (di difetto) + `--core N` | SwiftShader: la CPU fa la GPU, e `taskset` (nessun comando di sistema) la limita a N core: con 4 core e CPU ×5 il computer somiglia al Note 7 sui pixel (shader leggero ×1,2, pesante ×1,2, JS ×0,96, triangoli ×0,9-1,9, chiamate ×0,6-1,2) e **sovrastima** strati sfumati (×2,2-5,7) e scintille grandi (×2,8-6,8): per i giochi è pessimista. Senza `--core` la macchina va 3 volte più forte, e un carico qualunque sul computer sposta i numeri | |
 
 Un telefono non si imita davvero: serve a trovare **dove** scatta e **se un degrado aiuta**, e i numeri veri si confermano
 sul telefono (`chrome://inspect`, scheda Performance, [comandi.md](comandi.md)).
@@ -74,7 +74,7 @@ c'è «Copia»); «Rifai» ripete. Un pezzo che il telefono non regge (la tela h
    vale come telefono: si misura sul telefono).
 
 Le misure vere stanno in `strumenti/vecchio-telefono/log/` (Redmi Note 7, Pixel 9a, iPhone 12 Pro Max), e il `profilo.json` è tarato
-sul Redmi: con `--gpu sw` CPU ×2,8 e niente zavorra; con `--gpu hw` (la RTX) CPU ×2,9 e zavorra 16, che però sbaglia di tre volte gli shader pesanti. **Quanto somiglia**: il rapporto computer/telefono sta fra 0,8 e 1,2 per pixel semplici,
+sul Redmi: con `--gpu sw` 4 core e CPU ×5,0 (tarato il 19/10; una taratura fatta a computer carico dà numeri sbagliati: ripetere a macchina calma); con `--gpu hw` (la RTX) CPU ×2,9 e zavorra 16, che però sbaglia di tre volte gli shader pesanti. **Quanto somiglia**: il rapporto computer/telefono sta fra 0,8 e 1,2 per pixel semplici,
 triangoli, chiamate, ombre e passaggio finale; **non somiglia** per gli shader pesanti (×0,36: la RTX li mangia) e le
 sfumature a schermo intero (×0,3), e il pavimento di un fotogramma è più alto (la zavorra costa CPU: JS ×1,56). Quindi il
 simulatore va bene per confrontare un degrado con la versione di prima su geometria, chiamate e pixel; per nebbia, esplosioni
@@ -111,7 +111,7 @@ Provato il 19 ottobre 2026 (taratura inventata, solo per vedere che le leve muov
 
 ## Cosa può dare problemi (e cosa si è visto)
 
-**Nell'emulazione** (SwiftShader, CPU ×2,8, 392×774 a 2,75), Asteroidi 3D, p50 di un fotogramma: fascia alta (pixel ratio 2) 83 ms,
+**Nell'emulazione** (SwiftShader, CPU ×2,8 su tutti i core, quindi più lenta di una taratura giusta di quanto il computer fosse carico; 392×774 a 2,75: i valori sono da rifare con `--core 4` e CPU ×5), Asteroidi 3D, p50 di un fotogramma: fascia alta (pixel ratio 2) 83 ms,
 media 50, bassa (pixel ratio 1) 33: il pixel ratio è la leva che conta, il resto no. **Senza esplosioni è lo stesso**: l'emulazione
 sovrastima la scena di base (triangoli e passaggio finale ×2-4 contro il Note 7), quindi non separa le esplosioni; sul computer vero
 (RTX, nessun rallentamento) un'esplosione ogni 0,5 s porta da 59 a 39-51 fps. Il JS che prepara il fotogramma sta sotto il mezzo
