@@ -68,4 +68,17 @@ niente), `nutriBestie(id)`, `raccogliProdotti(id)` (`{ ok, n, prodotto }`), `com
 - Il cartello sul pollaio e sulla stalla (`pezzi.js`): «🥚 N pronti!», «⏳ Ns», «🐔 ha fame». Peso: pollaio ~47 mesh,
   stalla ~57 (con le bestie al completo), caseificio ~32; geometrie delle bestie condivise, animazioni col tempo.
 
-Nei test: `unita/fattoria3d` (sezioni 18–20).
+## Il collegamento alla scena
+
+- **Il tocco** (`scena3d/azioni.js`, `curaBestie`): se c'è un prodotto pronto si raccoglie (gesto di semina, testo che vola
+  «+2 🥚»), altrimenti si nutre («🍽️ ×N»). Se le bestie lavorano si apre il dialogo `offriBestia`: quante sono, quanto manca e
+  il tasto «+ Gallina 🐔 · 🪙 12» (`compraBestia`); con il posto non ancora aperto dice il livello, col tetto raggiunto parla
+  e basta. Senza raccolti dice cosa serve (`manca-raccolto` con `servono` e `mangia`). Si chiude con «Chiudi» (il dialogo
+  delle conferme non ha ✕).
+- **La vista** (`Gioco.vue`): uova e latte stanno in `prodotti` e nel HUD (`emojiDi`, non `RICETTE`); gli eventi `uovo` e
+  `latte` muovono i contatori `fattoria3dUova` e `fattoria3dLatte`, che insieme fanno il traguardo `f3d-cortile`. Niente
+  esperienza dai contatori.
+- I motivi `ha-le-bestie`, `lavora`, `pieno` e `manca-raccolto` per le bestie sono in `scena3d/detti.js`.
+
+Nei test: `unita/fattoria3d` (sezioni 18–20); `integrazione/fattoria3d` (sezione «gli animali da cortile»: nutrire, uova,
+bestia comprata dal dialogo `[data-scelta="0"]`, latte, contatori, `[data-f3="prodotti"]`).

@@ -6,13 +6,13 @@ export const COLTURE = {
   grano:     { nome: 'Grano',      emoji: '🌾', ms: 20000, liv: 1 },
   carota:    { nome: 'Carote',     emoji: '🥕', ms: 16000, liv: 1 },
   mais:      { nome: 'Mais',       emoji: '🌽', ms: 24000, liv: 2 },
-  pomodoro:  { nome: 'Pomodori',   emoji: '🍅', ms: 26000, liv: 4 },
-  patata:    { nome: 'Patate',     emoji: '🥔', ms: 28000, liv: 6 },
-  zucca:     { nome: 'Zucche',     emoji: '🎃', ms: 32000, liv: 8 },
-  cipolla:   { nome: 'Cipolle',    emoji: '🧅', ms: 34000, liv: 9 },
-  fragola:   { nome: 'Fragole',    emoji: '🍓', ms: 36000, liv: 11 },
-  melanzana: { nome: 'Melanzane',  emoji: '🍆', ms: 38000, liv: 13 },
-  lavanda:   { nome: 'Lavanda',    emoji: '💜', ms: 40000, liv: 15 },
+  pomodoro:  { nome: 'Pomodori',   emoji: '🍅', ms: 28000, liv: 4 },
+  patata:    { nome: 'Patate',     emoji: '🥔', ms: 32000, liv: 6 },
+  zucca:     { nome: 'Zucche',     emoji: '🎃', ms: 38000, liv: 8 },
+  cipolla:   { nome: 'Cipolle',    emoji: '🧅', ms: 44000, liv: 9 },
+  fragola:   { nome: 'Fragole',    emoji: '🍓', ms: 50000, liv: 11 },
+  melanzana: { nome: 'Melanzane',  emoji: '🍆', ms: 56000, liv: 13 },
+  lavanda:   { nome: 'Lavanda',    emoji: '💜', ms: 64000, liv: 15 },
 }
 export const CHIAVI_COLTURE = Object.keys(COLTURE)
 export const TESSERE = 4          // un campo è fatto di quattro tessere: un raccolto ciascuna

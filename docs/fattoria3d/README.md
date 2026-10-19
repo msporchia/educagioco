@@ -7,7 +7,7 @@ lana, legna) e uno stato suo, e non tocca quelli della fattoria di sempre; le mo
 
 - [presentazione.md](presentazione.md) — per chi arriva da fuori: cosa si fa, cosa lo distingue dalla fattoria di sempre, note per i genitori
 - [regole.md](regole.md) — i principi: risorse separate, niente si vende, niente marcisce, quanto costa muovere, le pecore, la pasticceria, la mongolfiera
-- [livelli.md](livelli.md) — l'esperienza (la spesa), le soglie a formula, cosa arriva a ogni livello, il gating e le fattorie già salvate
+- [livelli.md](livelli.md) — l'esperienza (la spesa), le soglie a formula e la loro misura (`npm run tara:fattoria3d`), cosa arriva a ogni livello, il gating e le fattorie già salvate
 - [animali.md](animali.md) — pollaio e stalla: galline e mucche, uova e latte, i posti coi livelli, il caseificio e le ricette nuove
 - [ordini.md](ordini.md) — il banco della bancarella: chi chiede raccolti e prodotti, il premio in esperienza (mai monete), rifiutare, lo stato v3
 - [terreno.md](terreno.md) — i lotti da comprare, il recinto, gli alberi che si abbattono, le strade a pennello, la telecamera

@@ -16,6 +16,7 @@
 import { apriBrowser, apriGioco, azzera, semina, attendi, scatto, scegli, leggiProfilo } from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 import { PEZZI } from '../../src/giochi/fattoria3d/dati/catalogo.js'
+import { ANIMALI } from '../../src/giochi/fattoria3d/dati/animali.js'
 import { RICETTE } from '../../src/giochi/fattoria3d/dati/ricette.js'
 
 const browser = await apriBrowser()
@@ -329,6 +330,64 @@ controlla('il posto in riposo dice quando torna', /Torna fra 2:5\d|Torna fra 3:0
 uguale('cambiare non dà esperienza', await m3(() => window.__fattoria3d.motore.esperienza()), xpPrima)
 await scatto(page, 'fattoria3d-banco')
 await chiudiFoglio()
+
+/* ── gli animali da cortile (docs/fattoria3d/animali.md): nutrire, aspettare, raccogliere, comprare un'altra bestia ──
+   Il tocco arriva dove arriva l'eroe: qui si chiama `azioni.fai` come farebbe lui. I numeri vengono dai dati. */
+const passa = ms => m3(`(() => { const m = window.__fattoria3d.motore, o = m.ora; m.ora = () => o() + ${ms} })()`)
+const mettiCortile = tipo => m3(`(() => {
+  const { motore, mondo } = window.__fattoria3d; motore.s.magazzino['${tipo}'] = (motore.s.magazzino['${tipo}'] || 0) + 1
+  for (let i = -14; i < 14; i++) for (let j = -12; j < 12; j++) { const r = motore.mettiPezzo('${tipo}', i, j); if (r.ok) { mondo.pezzi.sincronizza(); mondo.cambiato(); return motore.cose.find(c => c.tipo === '${tipo}').id } }
+  return null
+})()`)
+const liberoDaGesti = () => page.waitForFunction(() => !window.__fattoria3d.mondo.eroe.az, null, { timeout: 15000 })   // un gesto in corso (anche l'esultare per un livello) fa ignorare il tocco
+const tocca3d = async id => { await liberoDaGesti(); await m3(`window.__fattoria3d.mondo.azioni.fai({ kind: 'cosa', id: ${JSON.stringify(id)} })`); await fermo(); await liberoDaGesti() }
+await m3(() => { const { motore, mondo } = window.__fattoria3d; motore.s.esperienza = 1e6; motore.borsa.paga(-1000); mondo.cambiato() })
+const AN = ANIMALI.pollaio, ST = ANIMALI.stalla
+const idP = await mettiCortile('pollaio')
+controlla('il pollaio si mette sul prato', !!idP)
+const bestieDi = id => m3(`window.__fattoria3d.motore.cose.find(c => c.id === ${JSON.stringify(id)}).bestie.map(b => b.fine)`)
+const unaTessera = () => m3(() => ({ ...window.__fattoria3d.motore.s.merci }))
+// senza raccolti da dare: dice cosa serve, la bestia ha ancora fame
+await m3(() => { const m = window.__fattoria3d.motore; for (const k of Object.keys(m.s.merci)) m.s.merci[k] = 0 })
+await tocca3d(idP)
+controlla('senza raccolti la gallina resta affamata', (await bestieDi(idP))[0] === null)
+// nutrire: scala i raccolti e la bestia comincia a lavorare
+await m3(`window.__fattoria3d.motore.s.merci['${AN.mangia[0]}'] = ${AN.pasti * 5}`)
+await tocca3d(idP)
+controlla('toccare il pollaio nutre la gallina', (await bestieDi(idP))[0] !== null)
+uguale('e il pasto scala dai raccolti', (await unaTessera())[AN.mangia[0]], AN.pasti * 4)
+// lavora: toccarlo apre la riga con il tasto per un'altra bestia
+await tocca3d(idP)
+await page.waitForSelector('[data-f3="dialogo"]', { timeout: 3000 })
+controlla('mentre lavora si vede il prezzo di un\'altra gallina', (await page.locator('[data-scelta="0"]').innerText()).includes('🪙 ' + AN.prezzoBestia))
+const monP = await monete()
+await page.locator('[data-scelta="0"]').click()
+await attendi(page, 400)
+uguale('comprarla aggiunge una bestia', (await bestieDi(idP)).length, 2)
+uguale('e costa quanto dicono i dati', monP - await monete(), AN.prezzoBestia)
+// il tempo passa: le uova aspettano, si raccolgono in un gesto, il contatore e il HUD le vedono
+await passa(AN.ms + 1000)
+await tocca3d(idP)
+uguale('raccogliere porta le uova in dispensa (la gallina nutrita)', (await stato()).prodotti.uova, 1)
+controlla('le bestie hanno di nuovo fame', (await bestieDi(idP)).every(f => f === null))
+await attendi(page, 500)
+controlla('il HUD mostra le uova', /🥚/.test(await page.locator('[data-f3="prodotti"]').innerText()))
+uguale('il contatore delle uova avanza', ((await leggiProfilo(page)).totals || {}).fattoria3dUova, 1)
+// la stalla: il latte
+const idS = await mettiCortile('stalla')
+controlla('la stalla si mette sul prato', !!idS)
+await m3(`window.__fattoria3d.motore.s.merci['${ST.mangia[0]}'] = ${ST.pasti * 3}`)
+await tocca3d(idS)
+controlla('toccare la stalla nutre la mucca', (await bestieDi(idS))[0] !== null)
+await passa(ST.ms + 1000)
+await tocca3d(idS)
+uguale('raccogliere porta il latte in dispensa', (await stato()).prodotti.latte, 1)
+await attendi(page, 500)
+uguale('il contatore del latte avanza', ((await leggiProfilo(page)).totals || {}).fattoria3dLatte, 1)
+controlla('il HUD mostra anche il latte', /🥛/.test(await page.locator('[data-f3="prodotti"]').innerText()))
+// un pollaio con le bestie non si mette via, e il tetto dei posti vale
+const via = await m3(`window.__fattoria3d.motore.mettiVia(${JSON.stringify(idP)})`)
+controlla('il pollaio con le bestie non si mette via', via.ok === false && via.motivo === 'ha-le-bestie')
 
 /* ── senza WebGL 2 si dice e si torna in home ── */
 const { page: senza } = await apriGioco(browser, { hash: 'fattoria3d&tela=niente', attesa: null })

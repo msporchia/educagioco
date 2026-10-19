@@ -4,8 +4,9 @@
 import * as THREE from 'three'
 import { COLTURE } from '../dati/colture.js'
 import { MONGOLFIERA } from '../dati/regole.js'
-import { EDIFICI } from '../dati/catalogo.js'
+import { EDIFICI, PEZZI } from '../dati/catalogo.js'
 import { MACCHINE } from '../dati/ricette.js'
+import { ANIMALI, PRODOTTI_ANIMALI } from '../dati/animali.js'
 import { lottoPerId } from '../dati/mondo.js'
 import { dettoDi, dettoDiRifiuto } from './detti.js'
 
@@ -27,6 +28,7 @@ export class Azioni {
     switch (cosa.tipo) {
       case 'campo': return this.campo(cosa)
       case 'recinto': return this.cura(cosa)
+      case 'pollaio': case 'stalla': return this.curaBestie(cosa)
       case 'bancarella': pezzi.salta(cosa.id); return this.c.ui.apriBanco()      // il foglio degli ordini
       case 'fontana': pezzi.salta(cosa.id); fx.parla('Che bella!')
     }
@@ -89,6 +91,51 @@ export class Azioni {
       })
     }
     fx.parla(dettoDi(pr.motivo, { per: 'nutrirle', secondi: pr.secondi }))
+  }
+
+  // ── il pollaio e la stalla: prima si raccoglie, poi si nutre; se non c'è altro, si dice perché (e si offre un'altra bestia) ──
+  curaBestie(c) {
+    const { eroe, fx, ui, pezzi } = this.c, p = this.centro(c), pr = this.m.provaCuraBestie(c.id), A = ANIMALI[c.tipo]
+    if (pr.azione === 'raccogli') {
+      return eroe.avvia('semina', 1.2, t => {
+        if (t <= 0.5 || eroe.az.fatto.has('r')) return
+        eroe.az.fatto.add('r'); const r = this.m.raccogliProdotti(c.id)
+        if (!r.ok) return
+        pezzi.sincronizza()
+        fx.volo('+' + r.n + ' ' + PRODOTTI_ANIMALI[r.prodotto].emoji, p, 1.8); fx.scoppietta(p.clone().setY(0.7), 0xfff2c4, 10, 1.4, 2.0); ui.cambio()
+      })
+    }
+    if (pr.azione === 'nutri') {
+      return eroe.avvia('semina', 1.0, t => {
+        if (t <= 0.5 || eroe.az.fatto.has('n')) return
+        eroe.az.fatto.add('n')
+        const r = this.m.nutriBestie(c.id)
+        if (!r.ok) return fx.parla(dettoDi(r.motivo, { per: 'nutrirle' }))
+        pezzi.sincronizza()
+        fx.volo('🍽️ ×' + r.n, p, 1.8); ui.cambio()
+      })
+    }
+    if (pr.motivo === 'lavora') return this.offriBestia(c, pr.secondi)
+    fx.parla(dettoDi(pr.motivo, { per: 'nutrirle', secondi: pr.secondi, servono: pr.servono, mangia: pr.mangia }))
+  }
+  /** Le bestie lavorano: la riga di cosa manca e, se c'è un posto, il tasto per comprarne un'altra (si chiude con «Chiudi»). */
+  offriBestia(c, secondi) {
+    const { fx, ui, pezzi, eroe } = this.c, m = this.m, A = ANIMALI[c.tipo], nome = A.emoji + ' ' + PEZZI[c.tipo].nome
+    const stato = `${c.bestie.length} su ${A.posti} ${A.bestie}. ${dettoDi('lavora', { secondi })}`
+    const fa = () => {
+      const r = m.compraBestia(c.id)
+      if (!r.ok) return this.dici(dettoDiRifiuto(r, { mancano: A.prezzoBestia - m.monete() }))
+      pezzi.sincronizza(); fx.scoppietta(this.centro(c).setY(0.8), 0xffd24a, 16, 2.4, 3); eroe.avvia('esulta', 0.9); ui.cambio()
+    }
+    if (c.bestie.length >= A.posti) return fx.parla(dettoDi('pieno', { secondi, bestie: A.bestie }))
+    if (c.bestie.length >= m.postiBestie(c)) {
+      const r = m.compraBestia(c.id)                               // rifiuta con `non-sbloccato` e il livello del prossimo posto
+      return ui.chiedi(nome, `${stato} Un'altra: ${dettoDiRifiuto(r).toLowerCase()}.`, [{ t: 'Chiudi', quieto: true }])
+    }
+    ui.chiedi(nome, stato, [
+      { t: `+ ${A.bestia[0].toUpperCase() + A.bestia.slice(1)} ${A.emoji} · 🪙 ${A.prezzoBestia}`, fn: fa },
+      { t: 'Chiudi', quieto: true },
+    ])
   }
 
   // ── gli alberi ──

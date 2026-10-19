@@ -37,13 +37,15 @@ sempre ([../fattoria/regole.md](../fattoria/regole.md)); qui le differenze.
 | spostare o mettere via un pezzo | 1 | non è un tavolino da spostare per ore; rimetterlo dov'era è gratis |
 | un pezzo di strada | 1 | togliere è gratis |
 
-I numeri stanno in `dati/catalogo.js` e `dati/regole.js`. Sono da prova: se il gioco esce dalla prova vanno tarati sul
-metro di [calibrazione.md](../apprendimento/calibrazione.md) (una moneta = dieci secondi di esercizio).
+I numeri stanno in `dati/catalogo.js` e `dati/regole.js`. Misurati sul metro di [calibrazione.md](../apprendimento/calibrazione.md)
+(una moneta = dieci secondi di esercizio) con `npm run tara:fattoria3d`: ogni pezzo produttivo costa fra un quarto e due terzi
+del salto del suo livello (il campo 3 minuti di esercizio, il mulino 10, la gelateria 23), le decorazioni meno di un decimo. Il
+resto è in [livelli.md](livelli.md).
 
 ## I campi
 
 Quattro tessere per campo, un raccolto per tessera (`TESSERE`): una coltura matura per intero, e si taglia una tessera alla
-volta (`raccogliTessera`). Il tempo è vero (16–40 s in prova, crescente col livello: dieci colture). Seminare è gratis. **Un campo che sta crescendo non
+volta (`raccogliTessera`). Il tempo è vero (16 s il grano e le carote, 64 s la lavanda: dieci colture, crescente col livello). Seminare è gratis. **Un campo che sta crescendo non
 si mette via**.
 
 ## Le pecore

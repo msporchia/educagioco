@@ -10,7 +10,7 @@ import { PRODOTTI_ANIMALI } from './animali.js'
 // Quanta esperienza (monete spese qui dentro) serve in tutto per un livello: una formula, non una tabella, così non
 // finiscono mai. Il livello 2 sta intorno a 60 monete (un secondo campo e un lotto); ogni salto aggiunge il costo di ciò
 // che il livello apre di produttivo (costoDelLivello).
-export const SOGLIA_A = 4, SOGLIA_B = 44
+export const SOGLIA_A = 1, SOGLIA_B = 47
 export const ALLUNGA = 1.25
 
 const passiFinoA = livello => ALLUNGA * (SOGLIA_A * (livello - 1) ** 2 + SOGLIA_B * (livello - 1))

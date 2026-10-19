@@ -11,12 +11,39 @@ Il codice è `dati/livelli.js`; l'esperienza e i rifiuti stanno in `motore/fatto
 
 ## Le soglie
 
-- **Una formula, non una tabella**: `1,25 · (4·(n-1)² + 44·(n-1))` arrotondata a dieci (`SOGLIA_A`, `SOGLIA_B`), così i
-  livelli non finiscono mai. Il livello 2 sta a 60 monete: un secondo campo e un lotto.
+- **Una formula, non una tabella**: `1,25 · ((n-1)² + 47·(n-1))` arrotondata a dieci (`SOGLIA_A`, `SOGLIA_B`), così i
+  livelli non finiscono mai. Il livello 2 sta a 60 monete (10 minuti di esercizio): un secondo campo e un lotto.
 - **La roba di un livello non paga il livello dopo**: ogni salto aggiunge il costo di ciò che il livello apre di
   **produttivo** (`costoDelLivello`: campo, recinto, edifici; le decorazioni no). Senza, si costruiva ciò che era appena
   arrivato ed eri già al livello dopo. Un guasto verifica che il resto del salto sia almeno `SOGLIA_B`.
 - Dopo l'ultimo livello (`ULTIMO`, oggi 15) la formula continua e non si apre altro.
+
+## La misura
+
+`npm run tara:fattoria3d` (logica in `motore/taratura.js`) stampa la tabella; `unita/fattoria3d-taratura` ne tiene ferme le
+promesse: **il livello 2 non oltre 10 minuti di esercizio, l'ultimo non oltre 5 ore e mezza, nessuna cosa chiesta con più di 2
+minuti di attesa in catena, nessun pezzo produttivo sopra i due terzi del salto del suo livello, nessun premio sopra il tetto.**
+Metro: 🪙6 al minuto. «Attesa» = maturazione più cottura in catena, campi e bestie in parallelo, una macchina alla volta.
+
+| livello | monete in tutto | minuti | attesa più lunga di ciò che apre |
+|---|---|---|---|
+| 2 | 60 | 10 | 24 s |
+| 3 | 120 | 20 | 30 s |
+| 4 | 250 | 42 | 28 s |
+| 5 | 365 | 61 | 32 s |
+| 6 | 515 | 86 | 57 s |
+| 7 | 640 | 107 | 45 s |
+| 8 | 800 | 133 | 52 s |
+| 9 | 880 | 147 | 76 s |
+| 10 | 1050 | 175 | — |
+| 11 | 1230 | 205 | 78 s |
+| 12 | 1440 | 240 | 62 s |
+| 13 | 1640 | 273 | 70 s |
+| 14 | 1730 | 288 | 78 s |
+| 15 | 1960 | 327 (5 h 27) | 78 s |
+
+Sono monete spese del tutto (pezzi, lotti, strade): ordini consegnati e lotti contano come esperienza e accorciano la strada.
+Provato: curva A=4, B=44 portava il 15 a 7 ore e 20: troppo; con A=1, B=47 il 2 resta a 60 (il test d'integrazione lo conta).
 
 ## Cosa arriva quando
 

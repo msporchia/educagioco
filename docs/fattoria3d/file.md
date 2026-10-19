@@ -2,7 +2,7 @@
 
 ```
 gioco.js             il manifesto: in prova, tappe 0, il blocco albo (cinque traguardi), il riassunto in home
-Gioco.vue            il coordinatore: monete vere, contatori, salvataggio, le finestre
+Gioco.vue            il coordinatore: monete vere, contatori (anche `fattoria3dUova`/`…Latte`), salvataggio, le finestre
 stile.css            tutto sotto il prefisso .f3-
 dati/
   mondo.js           la griglia, i 42 lotti, il quadrato di partenza, i due edifici di scena, le strade di serie, i lotti di un posto
@@ -21,7 +21,7 @@ motore/
   ordini.js          gli ordini: `nuovoOrdine` (puro, col caso da fuori) e `ordineInForma`
   stato.js           lo stato salvato (versione 4: esperienza, `posseduti`, `macchine`, `ordini`, `bestie` di pollaio e stalla), `statoIniziale()` e `normalizza()` (un salvataggio rotto si rimette in forma)
   percorso.js        Dijkstra sulla griglia, le strade costano meno
-scena3d/             il disegno (vedi scena.md); `detti.js` (senza three) traduce un rifiuto del motore in una riga, anche per la vista
+scena3d/             il disegno (vedi scena.md); `detti.js` (senza three) traduce un rifiuto del motore in una riga, anche per la vista; `azioni.js` fa il gesto davanti a ogni cosa, pollaio e stalla compresi ([animali.md](animali.md))
 viste/
   Hud.vue            il gettone del livello (⭐ N con la barra sottile, apre i livelli) e le scorte in alto; da livello 2 il tasto «🧺 Banco» col pallino degli ordini consegnabili
   BarraAzioni.vue    libero / semina / raccogli / costruisci, i numeri, «Tutti»

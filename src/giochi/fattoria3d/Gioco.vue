@@ -64,7 +64,7 @@ const ripresa = () => {
   const s = motore.s
   const unisci = (o, em) => Object.entries(o).filter(([, n]) => n > 0).map(([k, n]) => em(k) + ' ' + n).join('  ')
   foto.value = {
-    scorte: unisci(s.merci, k => COLTURE[k].emoji) || '🌾 0', prodotti: unisci(s.prodotti, k => RICETTE[k].emoji) || '🍞 0',
+    scorte: unisci(s.merci, k => COLTURE[k].emoji) || '🌾 0', prodotti: unisci(s.prodotti, k => emojiDi(k, COLTURE)) || '🍞 0',
     lana: s.lana, legna: s.legna, daFare: motore.daFare(), ...datiLivello(),
   }
   versione.value++
@@ -88,6 +88,8 @@ function contaEventi() {
   for (const e of motore.prendiEventi()) {
     if (EVENTI[e.tipo]) segna(EVENTI[e.tipo])
     else if (e.tipo === 'prodotto') segna('fattoria3dProdotti', e.n)
+    else if (e.tipo === 'uovo') segna('fattoria3dUova', e.n)
+    else if (e.tipo === 'latte') segna('fattoria3dLatte', e.n)
     else if (e.tipo === 'livello') salito(e.livello)
     else if (e.tipo === 'consegna') consegnato(e)
   }
@@ -220,7 +222,7 @@ const macchina = computed(() => {
   const tipo = macchinaAperta.value; if (!tipo) return null
   const M = motore.macchina(tipo), adesso = motore.ora(), s = motore.s, E = EDIFICI[tipo]
   const pronti = Object.entries(M.pronti).filter(([, n]) => n > 0)
-  const dispensa = Object.entries(s.prodotti).filter(([, n]) => n > 0).map(([k, n]) => RICETTE[k].emoji + ' ×' + n)
+  const dispensa = Object.entries(s.prodotti).filter(([, n]) => n > 0).map(([k, n]) => emojiDi(k, COLTURE) + ' ×' + n)
   return {
     tipo, titolo: E.emoji + ' ' + E.nome,
     forno: Array.from({ length: M.posti }, (_, k) => {
@@ -230,7 +232,7 @@ const macchina = computed(() => {
       const resto = Math.max(0, it.fine - adesso)
       return { emoji: r.emoji, testo: Math.ceil(resto / 1000) + 's', barra: 100 - 100 * resto / r.ms }
     }),
-    pronti: pronti.length ? 'Pronti: ' + pronti.map(([k, n]) => RICETTE[k].emoji + ' ×' + n).join('  ') : '',
+    pronti: pronti.length ? 'Pronti: ' + pronti.map(([k, n]) => emojiDi(k, COLTURE) + ' ×' + n).join('  ') : '',
     puoRitirare: pronti.length > 0,
     ricette: motore.ricetteDi(tipo).map(r => ({ k: r.id, nome: r.nome, emoji: r.emoji, ms: r.ms, liv: r.liv, sbloccata: r.sbloccata,
       ing: Object.entries(r.ing).map(([i, serve]) => ({ k: i, emoji: emojiDi(i, COLTURE), ha: motore.scortaDi(i), serve })),

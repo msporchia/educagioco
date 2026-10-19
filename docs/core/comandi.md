@@ -33,6 +33,7 @@ pubblicato.** Per controllare solo che il build passi:
 | comando | riscrive | quando |
 |---|---|---|
 | `npm run tara` | `src/data/taratura-castello.js` | dopo aver toccato prezzi, potenza delle torri o tappe del castello |
+| `npm run tara:fattoria3d` | niente (stampa soltanto) | dopo aver toccato un prezzo, un tempo o le soglie della fattoria 3D: per livello le monete spese in tutto, i minuti di esercizio equivalenti (🪙6 al minuto), cosa si apre e l'attesa più lunga in catena, più i controlli di scala (esce con 1 se uno è rosso; li tiene fermi anche `unita/fattoria3d-taratura`): [../fattoria3d/livelli.md](../fattoria3d/livelli.md) |
 | `npm run tara:arena` | `src/giochi/arena/dati/taratura.js` | dopo aver toccato regole, truppe, tappe o il nemico di Castle Battle (gioca migliaia di partite da cinque minuti col banco, su tutti i core: `strumenti/banco-parallelo.mjs`, stessi semi e stesso esito che in fila; da una ventina di minuti a pochi); `-- --misura` gioca i giocatori finti contro la taratura scritta senza ritarare (`--d`, `--furbizia` per un nemico fisso, `--draghi` per aggiungere chi costruisce solo draghi senza miniera) |
 | `npm run emoji` | `src/emoji/emoji.woff2`, `emoji.css`, `strumenti/emoji/elenco.json` | dopo aver scritto un'emoji nuova in `src/` ([emoji.md](emoji.md)); vuole Python con `fonttools` e `brotli` (si installano da soli in `.venv-emoji/`) |
 | `npm run voci` (`-- --lingua es`) | `src/data/voci.js`, `voci-es.js` | dopo aver aggiunto parole da pronunciare ([strumenti.md](strumenti.md)) |

@@ -7,7 +7,15 @@ import { emojiDi } from '../dati/ricette.js'
 export function dettoDi(motivo, extra = {}) {
   switch (motivo) {
     case 'poche-monete': return `Ti mancano 🪙 ${extra.mancano}`
-    case 'manca-raccolto': return extra.per ? `Per ${extra.per} serve un raccolto` : 'Serve un raccolto'
+    case 'manca-raccolto': {
+      if (extra.mangia && extra.servono) {
+        const cosa = extra.mangia.map(k => emojiDi(k, COLTURE)).join(' o ')
+        return `Hanno fame: servono ${extra.servono} ${extra.servono === 1 ? 'raccolto' : 'raccolti'} (${cosa}) per ognuna`
+      }
+      return extra.per ? `Per ${extra.per} serve un raccolto` : 'Serve un raccolto'
+    }
+    case 'lavora': return extra.secondi ? `Ci stanno lavorando… ${extra.secondi}s` : 'Ci stanno lavorando'
+    case 'pieno': return extra.bestie ? `Ci sono già tutte le ${extra.bestie} che ci stanno` : 'Non c\'è più posto'
     case 'lana-ricresce': return `La lana ricresce… ${extra.secondi}s`
     case 'sazie': return 'Sono tutte sazie'
     case 'forno-pieno': return 'Il forno è pieno'
@@ -24,6 +32,7 @@ export function dettoDi(motivo, extra = {}) {
     case 'non-confina': return 'Compra prima un terreno che confina con questo'
     case 'occupato': case 'fuori-terreno': return 'Qui non si può: cerca un posto libero nei tuoi terreni'
     case 'sta-crescendo': return 'Quello che sta crescendo non si mette via'
+    case 'ha-le-bestie': return 'Ci sono le bestie: spostalo, non si mette via'
     case 'ha-le-pecore': return 'Il recinto ha le pecore: spostalo, non si mette via'
     default: return 'Non si può'
   }
