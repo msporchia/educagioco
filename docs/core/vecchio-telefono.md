@@ -41,8 +41,10 @@ fuori dai profili (chiave `qualita`) e la rifà dopo 30 giorni, se cambia il pix
 
 Cosa cambia una fascia sta tutto in `PROFILI` di `store/qualita.js`: negli Asteroidi 3D il pixel ratio di partenza (2 / 1,5 / 1),
 il tetto delle scintille (1400 / 700 / 350) e del fumo, e quanto in fretta il gioco scende di pixel (90 fotogrammi lenti a passo
-×0,85 contro 20 a ×0,75); nel Sotterraneo 3D il pixel ratio massimo (1,5 / 1,25 / 1) e i pezzi di `ACCESI` spenti (ombre nella
-media, ombre e passaggio finale nella bassa). **I numeri di media e bassa sono un'ipotesi dai log: da provare sul Note 7** (col
+×0,85 contro 20 a ×0,75); nel Sotterraneo 3D il pixel ratio massimo (1,5 / 1,25 / 1), le fette di nebbia (5 / 3 / 2) e, nella bassa, il passaggio finale
+spento. **Botti, arredo e ombre restano in tutte le fasce**: dai log del Note 7 i triangoli costano poco (10k → 100k: +1,4 ms), pesano i
+pixel. Emulazione (SwiftShader, CPU ×2,8), p50 di un fotogramma: esplorazione alta 50 ms → bassa 17; scontro con 3 mostri alta 67 →
+bassa 17 (p95 67). L'emulazione sovrastima i triangoli, quindi sul telefono dovrebbe andare meglio. **I numeri di media e bassa sono un'ipotesi dai log: da provare sul Note 7** (col
 contatore fps e `Misura questo telefono`) e ritoccare. In zona dei grandi (scheda *giochi*) la carta «Qualità della grafica 3D»
 dice la fascia, la fa scegliere a mano (`auto`/`alta`/`media`/`bassa`) e la rimisura; il cheat `#…&qualita=bassa` vince su tutto,
 per provarla sul computer (`[data-fascia]`, `[data-fascia-scelta]`, `[data-azione="rimisura-fascia"]`).

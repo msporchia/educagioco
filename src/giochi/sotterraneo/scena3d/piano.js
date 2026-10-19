@@ -18,6 +18,7 @@ import { creaNebbia } from './particelle.js'
 import { creaArredo3d } from './arredo3d.js'
 import { creaRaggi, postiDeiRaggi } from './raggi.js'
 import { FETTE, ACCESI } from './costanti.js'
+import { profilo } from '../../../store/qualita.js'
 
 // `trameDi(aspetto)`: le trame dello scenario (si fanno una volta e si tengono), `legno`: quella delle botti
 export function costruisciPiano(scena, corsa, { maschera, luci, trameDi, legno, polvere = null }) {
@@ -77,7 +78,7 @@ export function costruisciPiano(scena, corsa, { maschera, luci, trameDi, legno, 
   const posti = ACCESI.botti && corsa.bottiQui ? corsa.bottiQui() : []
   const botti = creaBotti(scena, { posti, legno: posti.length ? legno() : null, conMaschera, maschera, regola: BOTTI_PER_PAESAGGIO[paesaggio] || null })
   via.push(botti.via)
-  const nebbia = creaNebbia(scena, pianta.W, pianta.H, ACCESI.nebbia ? FETTE : 0, luci.condivise, maschera, aspetto); via.push(nebbia.via)
+  const nebbia = creaNebbia(scena, pianta.W, pianta.H, ACCESI.nebbia ? Math.min(FETTE, profilo('sotterraneo').fetteNebbia) : 0, luci.condivise, maschera, aspetto); via.push(nebbia.via)
 
   // dove nello scontro non si mette nessuno: l'arredo, la fonte e il portale modellati (sono cose posate, non pavimento libero;
   // i relitti e l'acqua non sono pavimento già da sé)
