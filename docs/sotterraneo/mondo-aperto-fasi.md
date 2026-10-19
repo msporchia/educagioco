@@ -134,8 +134,20 @@ onesti, test compresi.
 con le persone che vincono, le figure ancorate (A), la nebbia vera e salvata (`mondo` nell'avventura, la chiave `sotterraneo3d`
 resta la fase 9), la veduta, le tre città coi mercanti, dialoghi, bottega e missioni di oggi, i sette ingressi coi nomi nuovi e il
 ritorno, il gemello nella città giusta. Anticipati dalla 3 e dalla 4: i pezzi costruiti e buttati col mondo lontano, l'ombra che
-segue, le pietre con la domanda e il viaggio, le grate dei passaggi. Restano della 4 il capitano, la fontana che cura, i banchi
-per città da guardare; della 3 le misure sui due telefoni.
+segue, le pietre con la domanda e il viaggio, le grate dei passaggi. Restano della 3 le misure sui due telefoni.
+
+**Fatta la 4** (19 ottobre 2026, [mondo-3d.md](mondo-3d.md#il-capitano-e-la-fontana)): il capitano del forte (lo sprite della guardia, più
+alto e col suo blu; dice lui la quinta e la sesta porta, [dialoghi.md](dialoghi.md#il-capitano-del-forte)) e la fontana che cura
+([chi-cura.md](chi-cura.md)). Il progetto diceva «la fontana dove manca la guaritrice», ma la guaritrice sta in tutte e tre le città:
+la regola vera è che l'acqua prende il posto del pozzo dove manca **una** delle due (guaritrice o incantatrice), e cura vita ed energia
+insieme; oggi è solo il forte, che non ha l'incantatrice. I banchi per mercante restano com'erano (il fabbro del forte è quello del
+villaggio) e un passo di `integrazione/sotterraneo-mondo` lo prova. Il generatore non è stato toccato: capitano e fontana stanno dove
+lui ha già messo la persona e il pozzo.
+
+**Fatta la 8** (19 ottobre 2026, [dialoghi.md](dialoghi.md#i-nomi)): `CAMPAGNA`, `CAPITOLI`, `VOLTI`, le missioni, i dialoghi, le novità e
+il resto dei testi dicono i nomi nuovi, per tutti e due i sotterranei (un nome dice l'interno, e il 2D mostra le stesse discese);
+la **strada** del minatore no, perché è geografia: `LUOGHI_MONDO` per il mondo aperto, `LUOGHI` resta alla mappa dipinta. Restano da
+fare le icone dei posti fotografate dai monumenti (`npm run scatti icone-mondo`): la home e il diario usano ancora i ritagli dipinti.
 
 **In tutto 38–57 giorni più la taratura**: due mesi abbondanti di lavoro pieno. Il primo file da provare arriva alla
 fine della fase 2 (dodici giorni circa); il mondo pericoloso alla fine della 5. Senza mostri sopra (la scelta più
@@ -216,12 +228,12 @@ Da aggiungere a [da-fare.md](da-fare.md) quando il progetto è deciso (non scrit
 
 - Scegliere il seme del mondo guardando la pianta (5×5 regioni, 160×140 celle).
 - Il foglio di creature d'aperta campagna (orsi, briganti, avvoltoi…) per le regioni senza abitanti.
-- Rinominare i sette dungeon e riscrivere `VOLTI`, `LUOGHI`, `CAPITOLI` e i dialoghi sulla geografia nuova.
+- ~~Rinominare i sette dungeon e riscrivere `VOLTI`, `LUOGHI`, `CAPITOLI` e i dialoghi sulla geografia nuova.~~ Fatto (fase 8).
 - Le figure ancorate (ombra, contorno, luce di taglio) e guardarle sul telefono.
 - La nebbia che non disegna quello che non si è visto, e il velo di nuvole.
 - Il bersaglio delle persone allargato e la loro priorità sul prato.
 - Le icone dei posti fotografate dai monumenti con un comando.
 - Misurare il mondo a pezzi su due telefoni veri.
 - Ritarare la storia, le zone e le missioni col curioso che attraversa le regioni.
-- I personaggi nuovi delle città (capitano, cacciatrice, carovaniere) e la bacheca, prima in codice.
+- I personaggi nuovi delle città (cacciatrice, carovaniere; il capitano c'è) e la bacheca, prima in codice.
 - Scorta ed eventi di mondo, dopo le quest semplici.

@@ -12,14 +12,14 @@ import { MOSTRI, costoInRisposte } from './mostri.js'
 
 // `paesaggio`: come la veste il Sotterraneo 3D (docs/sotterraneo/paesaggi-3d.md); scenario, pianta e numeri restano del motore
 export const CAMPAGNA = [
-  { chiave: 'altare', nome: 'La cripta dell\'altare', icona: '🕯️', dove: 'nella cripta',
+  { chiave: 'altare', nome: 'La cripta dei re', icona: '🕯️', dove: 'nella cripta',
     scenario: 'cripta', pianta: 'costruita',
     portata: 25,
     dritta: 'due piani di tombe, e qualcuno che non dorme',
     piani: 2, misura: 34, giri: 2, dif: [0.05, 0.22], forza: 0.25, livello: 1, gradi: 0,
     mostri: ['scheletro', 'zombie', 'fantasma'], caporale: 'scheletro-scudo', tettoBranco: 2, capo: 'scheletro' },
 
-  { chiave: 'cantine', nome: 'La scalinata antica', icona: '🪜', dove: 'giù per la scalinata',
+  { chiave: 'cantine', nome: 'Le cantine dei goblin', icona: '🪜', dove: 'giù nelle cantine',
     scenario: 'cantine', pianta: 'costruita',
     portata: 31,
     dritta: 'tante stanze, e tutte al buio',
@@ -27,7 +27,7 @@ export const CAMPAGNA = [
     mostri: ['ratto', 'goblin', 'melma'], caporale: 'orco', tettoBranco: 3, capo: 'orco' },
 
   // alta e stretta come la torre: le stanze una sopra l'altra
-  { chiave: 'torre', nome: 'La torre in rovina', icona: '🏰', dove: 'sotto la torre',
+  { chiave: 'torre', nome: 'La torre bruciata', icona: '🏰', dove: 'sotto la torre',
     scenario: 'fornace', pianta: 'costruita',
     portata: 37,
     dritta: 'stretta e alta: le scale non finiscono mai',
@@ -35,7 +35,7 @@ export const CAMPAGNA = [
     mostri: ['pipistrello', 'diavoletto', 'vespa', 'spirito-fuoco'], caporale: 'golem-magma', tettoBranco: 3, capo: 'troll' },
 
   // tutta in profondità: piani piccoli, tanti
-  { chiave: 'gallerie', nome: 'La grotta della scaletta', icona: '🪨', dove: 'nella grotta',
+  { chiave: 'gallerie', nome: 'La tana dei ragni', icona: '🪨', dove: 'nella tana',
     scenario: 'cantine', pianta: 'caverna', paesaggio: 'grotta',
     portata: 43,
     dritta: 'piani piccoli, uno sotto l\'altro, sempre più giù',
@@ -43,21 +43,21 @@ export const CAMPAGNA = [
     mostri: ['ragno', 'fungo', 'pianta', 'melma-rosa'], caporale: 'mostro-verde', tettoBranco: 4, capo: 'orco' },
 
   // lunga e stretta: un canale sott'acqua
-  { chiave: 'cisterna', nome: 'La scala sommersa', icona: '💧', dove: 'nella scala sommersa',
+  { chiave: 'cisterna', nome: 'Le sale allagate', icona: '💧', dove: 'nelle sale allagate',
     scenario: 'cripta', pianta: 'caverna', acqua: true, paesaggio: 'tempio',
     portata: 50,
     dritta: 'lunga e stretta, e in fondo gorgoglia qualcosa',
     piani: 3, misura: 40, largo: 64, alto: 24, giri: 3, dif: [0.36, 0.66], forza: 1.1, spinta: 7.7, livello: 6, caporali: 6.5, grosso: 4,
     mostri: ['granchio', 'piranha', 'polpo', 'fantasma-azzurro'], caporale: 'tartaruga', tettoBranco: 4, capo: 'gigante' },
 
-  { chiave: 'labirinto', nome: 'La botola segreta', icona: '🌀', dove: 'sotto la botola',
+  { chiave: 'labirinto', nome: 'La porta dell\'inferno', icona: '🌀', dove: 'oltre la porta dell\'inferno',
     scenario: 'inferno', pianta: 'costruita',
     portata: 57,
     dritta: 'un labirinto: senza mappina ci si perde',
     piani: 3, misura: 50, giri: 4, dif: [0.44, 0.78], forza: 1.25, spinta: 8.7, livello: 8, caporali: 6, grosso: 4,
     mostri: ['bestia-cornuta', 'negromante', 'troll-clava'], caporale: 'drago-lava', tettoBranco: 5, capo: 'troll' },
 
-  { chiave: 'fondo', nome: 'La miniera abbandonata', icona: '⛏️', dove: 'nella miniera',
+  { chiave: 'fondo', nome: 'Le miniere di brace', icona: '⛏️', dove: 'nelle miniere',
     scenario: 'fornace', pianta: 'caverna', paesaggio: 'miniera',
     portata: 64,
     dritta: 'stretta, profonda, e le pietre bruciano',

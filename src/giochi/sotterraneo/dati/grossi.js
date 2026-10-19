@@ -31,10 +31,10 @@ export const GROSSI = {
            pezzo: 'amuleto-di-gorgo', dice: 'Un polpo grosso come una barca, che gorgoglia nell\'acqua nera.' },
   minotto: { nome: 'Minotto', tipo: 'troll', figura: 'bestia-cornuta', ossa: 1.1, att: 1, tinta: '#d49a55',
              difese: { resiste: ['veleno'], teme: ['fuoco'], immune: ['stordisce'] },
-             pezzo: 'giubbone-di-minotto', dice: 'Ha le corna, e la botola è casa sua.' },
+             pezzo: 'giubbone-di-minotto', dice: 'Ha le corna, e la porta dell\'inferno è casa sua.' },
   carbonchio: { nome: 'Carbonchio', tipo: 'gigante', figura: 'drago-lava', ossa: 1.1, att: 1, tinta: '#ff5a1c',
                 difese: { resiste: ['fuoco'], teme: ['gelo'], immune: ['brucia'] },
-                pezzo: 'martello-di-carbonchio', dice: 'Il drago di lava della miniera: le sue squame sono carbone acceso.' },
+                pezzo: 'martello-di-carbonchio', dice: 'Il drago di lava delle miniere: le sue squame sono carbone acceso.' },
 }
 
 // Le difese di un mostro del piano (`m.tipo`, e `m.grosso` se è un grosso; `m.difese` se la sua variante le cambia): { resiste, teme, immune }

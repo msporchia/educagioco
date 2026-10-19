@@ -47,7 +47,9 @@ export function creaPersone(scena, { tex, norm, larga, alta, pezzi, trame, quota
         for (const q of persone) {
           if (!nebbia.visto(q.x, q.z)) continue
           const e = salita(q.x, q.z, t), o = figure.o(), y = quota(q.x, q.z)
-          o.scala = SCALA_PERSONE; o.specchio = !!q.specchio
+          o.scala = q.scala || SCALA_PERSONE; o.specchio = !!q.specchio
+          // un colore in più per chi lo vuole (il capitano: il blu del mantello, un lampo additivo piccolo sullo sprite della guardia)
+          if (q.tinta) { o.rosso = q.tinta[0]; o.verde = q.tinta[1]; o.blu = q.tinta[2] }
           figure.metti(q.pezzo, q.x, y - (1 - e) * 2.2, q.z, o)
           if (e > 0.9) ombra(q.x, y, q.z, 1.05)
         }

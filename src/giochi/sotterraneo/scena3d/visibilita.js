@@ -33,13 +33,16 @@ export function aggiornaVisibilita(v, { forza, visto, palco = null, k = 1 }) {
   return v
 }
 
-// i texel: R = adesso, G = ricordato, B = pavimento (nebbia e polvere stanno solo sopra il pavimento)
+// i texel: R = adesso, G = ricordato, B = pavimento (nebbia e polvere stanno solo sopra il pavimento). Torna true se un texel è
+// cambiato: solo allora la maschera torna in GPU (rimandarla a ogni fotogramma, ferma, su un telefono può fermare la GPU)
 export function scriviTexel(v) {
   const { ora, ric, pav, dati } = v
+  let cambiato = false
   for (let i = 0; i < ora.length; i++) {
-    const q = i * 4
-    dati[q] = ora[i] * 255; dati[q + 1] = ric[i] * 255; dati[q + 2] = pav[i] ? 255 : 0; dati[q + 3] = 255
+    const q = i * 4, r = (ora[i] * 255) | 0, g = (ric[i] * 255) | 0, b = pav[i] ? 255 : 0
+    if (dati[q] !== r || dati[q + 1] !== g || dati[q + 2] !== b || dati[q + 3] !== 255) { dati[q] = r; dati[q + 1] = g; dati[q + 2] = b; dati[q + 3] = 255; cambiato = true }
   }
+  return cambiato
 }
 
 // quanto si vede adesso una cella (per le fiamme, le particelle, la fontana: vive solo qui)

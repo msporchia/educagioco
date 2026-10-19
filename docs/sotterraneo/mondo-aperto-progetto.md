@@ -66,7 +66,8 @@ Tre città, una per lato del viaggio: si torna sempre a una città vicina, mai a
   non raddoppia l'offerta. **Da decidere**: un fabbro diverso, col suo banco (più Diablo, ma un campo nuovo e una
   taratura della bottega).
 - **In ogni città qualcuno cura gratis** chi è salito dal portale ([chi-cura.md](chi-cura.md)): la guaritrice dove
-  c'è, se no la fontana della piazza (una cosa di scena modellata, che cura come lei).
+  c'è e l'incantatrice dove c'è; dove ne manca una, la fontana della piazza (modellata, cura vita ed energia: fatta il 19 ottobre,
+  [chi-cura.md](chi-cura.md#la-fontana)).
 - **Il portale gemello sta nella città che serve quel dungeon**: si sale dal portale di un dungeon delle marche del sud e
   si sbuca al forte, non al villaggio. Ogni città ha il suo `PORTALE` (`piede`, `accanto`).
 
