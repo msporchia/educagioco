@@ -718,7 +718,7 @@ const nomiVeduta = computed(() => {
   // le bacheche già trovate (col segno: c'è un foglio da prendere, o da consegnare) e la meta della taglia che si segue: un cerchio sul posto
   for (const b of bersagli.value) if (b.ruolo === 'bacheca' && trovati.value.has(b.chiave)) {
     const sg = segniBacheca.value[b.citta]
-    l.push({ chiave: b.chiave, bersaglio: b.chiave, testo: `📜${sg ? ' ' + GLIFO[sg] : ''}`, classe: 'bacheca', x: b.lotto.x + 1, y: 1.5, z: b.lotto.y })
+    l.push({ chiave: b.chiave, bersaglio: b.chiave, testo: `📜${sg ? ' ' + GLIFO[sg] : ''}`, classe: 'bacheca', x: b.lotto.x + 1, y: 4, z: b.lotto.y - 1 })
   }
   const sg = taglieSeguita()
   const meta = sg && metaDellaTaglia(sg, props.missioni[sg.id])

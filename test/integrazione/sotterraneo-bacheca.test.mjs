@@ -36,10 +36,16 @@ async function tocca(x, y) {
   await attendi(page, 60)
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
 }
+// il fumetto si rimette a posto a ogni fotogramma (e sul computer di prova i fotogrammi sono lenti): si tocca quando il bersaglio sta fermo
 const toccaIl = async sel => {
   await page.waitForSelector(sel, { timeout: 10000 })
-  await attendi(page, 200)
-  const b = await page.locator(sel).first().boundingBox()
+  let b = null
+  for (let n = 0; n < 40; n++) {
+    const prima = await page.locator(sel).first().boundingBox()
+    await attendi(page, 300)
+    b = await page.locator(sel).first().boundingBox()
+    if (prima && b && Math.abs(prima.x - b.x) < 1 && Math.abs(prima.y - b.y) < 1) break
+  }
   await tocca(b.x + b.width / 2, b.y + b.height / 2)
 }
 const avventura = async () => (await leggiProfilo(page))?.campagne?.sotterraneo?.cfg?.avventure?.cavaliere || {}
@@ -140,7 +146,7 @@ await alla()
   await page.waitForSelector('[data-veduta]', { timeout: 5000 })
   await attendi(page, 2500)
   uguale('nella veduta il cerchio sul posto', await page.locator(`[data-nome-posto="taglia:${MAPPA}"]`).count(), 1)
-  uguale('e la bacheca del villaggio col suo segno', await page.locator('[data-nome-posto="bacheca:villaggio"]').innerText(), '📜 ?')
+  uguale('e la bacheca del villaggio col suo segno', await page.locator('[data-nome-posto="bacheca:bacheca:villaggio"]').innerText(), '📜 ?')
   await scatto(page, 'sotterraneo-bacheca-veduta')
   await page.evaluate(() => document.querySelector('[data-casella-barra="mappa"]').click())
   await attendi(page, 500)
