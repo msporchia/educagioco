@@ -27,17 +27,27 @@ function mossaValida(m, daTick) {
   return true
 }
 
-/* l'impronta di tutto quello che conta, senza arrotondare niente: due copie uguali la danno uguale */
+/* L'impronta: poche cifre che riassumono la partita (monete, vita di castelli e muri, caserme, truppe e dove stanno). Si confronta
+   con una tolleranza: uno scarto da ultima cifra non è una partita diversa, e se è l'inizio di una vera divergenza cresce da sé
+   fino a superarla (allora si riallinea). I conteggi (caserme, livelli, truppe) invece devono essere uguali. */
+const VOCI = 17
+const TOLLERANZA = 0.02                       // relativa; più 1 in assoluto
+const ESATTE = new Set([0, 7, 8, 9, 10, 11, 12])    // fine, caserme, livelli delle caserme, numero di truppe
 export function improntaDi(p) {
-  const s = JSON.stringify({
-    t: p.t, fine: p.fine, lati: p.lati,
-    castelli: p.castelli.map(c => [c.hp, c.liv]), muri: p.muri.map(m => [m.hp, m.crollato]),
-    caserme: p.caserme.map(c => [c.lato, c.id, c.posto, c.liv, c.hp, c.t]),
-    unita: p.unita.map(u => [u.id, u.lato, u.x, u.y, u.hp]),
-  })
-  let h = 2166136261
-  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619) }
-  return (h >>> 0).toString(36)
+  const v = [p.fine ? 1 : 0]
+  for (const l of ['io', 'nem']) v.push(p.lati[l].monete)
+  for (const l of ['io', 'nem']) v.push(p.castelli.find(c => c.lato === l).hp)
+  for (const l of ['io', 'nem']) v.push(p.muri.find(m => m.lato === l).hp)
+  for (const l of ['io', 'nem']) v.push(p.caserme.filter(c => c.lato === l).length)
+  for (const l of ['io', 'nem']) v.push(p.caserme.filter(c => c.lato === l).reduce((s, c) => s + c.liv, 0))
+  for (const l of ['io', 'nem']) v.push(p.unita.filter(u => u.lato === l).length)
+  for (const l of ['io', 'nem']) v.push(p.unita.filter(u => u.lato === l).reduce((s, u) => s + u.hp, 0))
+  for (const l of ['io', 'nem']) v.push(p.unita.filter(u => u.lato === l).reduce((s, u) => s + u.y, 0))
+  return v
+}
+export function impronteSimili(a, b) {
+  if (!Array.isArray(a) || !Array.isArray(b) || a.length !== VOCI || b.length !== VOCI) return false
+  return a.every((x, i) => (ESATTE.has(i) ? x === b[i] : Math.abs(x - b[i]) <= 1 + TOLLERANZA * Math.max(Math.abs(x), Math.abs(b[i]))))
 }
 
 /* chi propone e chi accetta: la firma delle regole (`firmaEquilibrio`) dice se le due copie giocano lo stesso gioco. Decide l'host:
@@ -107,7 +117,7 @@ export class Sessione {
       }
       this.hoLoro = m.h
     } else if (m.t === 'i') {
-      if (typeof m.v !== 'string' || !intero(m.k, 0, 1e7)) return this.rompi('impronta senza senso')
+      if (!Array.isArray(m.v) || m.v.length !== VOCI || !m.v.every(Number.isFinite) || !intero(m.k, 0, 1e7)) return this.rompi('impronta senza senso')
       if (this.riallineo) return                                    // le impronte di prima della fotografia non contano più
       this.impronte.sue.set(m.k, m.v)
       this.confronta(m.k)
@@ -142,8 +152,8 @@ export class Sessione {
     if (mia === undefined || sua === undefined) return
     this.impronte.mie.delete(k); this.impronte.sue.delete(k)
     this.confrontate++
-    if (mia === sua) return
-    // Le copie si sono separate (la rete non c'entra: la rete ritarda e basta). Si torna a una sola: l'host manda la sua
+    if (impronteSimili(mia, sua)) return
+    // Le copie si sono separate oltre la tolleranza (la rete non c'entra: la rete ritarda e basta). Si torna a una sola: l'host manda la sua
     // fotografia e l'ospite la prende, ferme tutte e due finché non è arrivata. Troppe volte di fila: è un guasto vero.
     if (++this.riallineamenti > MAX_RIALLINEAMENTI) return this.rompi('le due partite si sono separate')
     if (this.mio === 'io') this.riallineo = { invio: { pezzi: aPezzi(fotoDi(this.p, this.k), this.riallineamenti), i: 0, att: 0 } }

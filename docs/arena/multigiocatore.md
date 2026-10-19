@@ -59,6 +59,10 @@ un orizzonte lontano si rifiutano. Sono una trentina di messaggi al secondo al m
 
 ## Quando le copie si separano
 
+**Cosa si confronta** (`improntaDi`, 17 cifre per partita): monete, vita dei castelli e dei muri, numero e livello delle caserme, numero,
+vita totale e posizione (somma delle y) delle truppe, per ciascun lato. Conteggi e `fine` devono essere uguali; il resto con una
+tolleranza del 2% (+1): uno scarto da ultima cifra non fa niente, e se è l'inizio di una divergenza vera cresce da sé fino a superarla.
+
 Succede (provato dal vivo coi telefoni: due motori diversi possono arrotondare un calcolo in modo diverso), e finire la sfida
 sarebbe una punizione per due bambini che non hanno fatto niente. Allora l'**host vince**: le due parti si fermano, l'host
 manda la sua fotografia a pezzi da ≤512 byte (il limite del servizio, 20 al secondo, così non serve rimettere online il

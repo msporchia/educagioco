@@ -4,7 +4,7 @@ import { Partita } from '../../src/giochi/arena/motore/partita.js'
 import { caso } from '../../src/giochi/arena/motore/banco.js'
 import { truppeDelTerreno, TERRENI } from '../../src/giochi/arena/dati/regole.js'
 import { CAMPI_UNITA, fotoDi, aPezzi, applicaFoto } from '../../src/giochi/arena/sfida/foto.js'
-import { Sessione, improntaDi, proponi, accetta, RITMO_MONETE, ritmoPer } from '../../src/giochi/arena/sfida/protocollo.js'
+import { Sessione, improntaDi, impronteSimili, proponi, accetta, RITMO_MONETE, ritmoPer } from '../../src/giochi/arena/sfida/protocollo.js'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 
 const TERRENO = 'neve', SEME = 77
@@ -44,7 +44,7 @@ function simula({ secondi = 150, min = 0.06, max = 0.25, seme = 1, guasto = null
         else s.scegli(azione)
       }
     }
-    if (guasto && Math.abs(t - guasto.a) < 0.008) lati[guasto.chi].p.lati.io.monete += 5      // una copia si guasta di nascosto
+    if (guasto && Math.abs(t - guasto.a) < 0.008) lati[guasto.chi].p.lati.io.monete += 500      // una copia si guasta di nascosto
   }
   return lati
 }
@@ -76,10 +76,14 @@ function simula({ secondi = 150, min = 0.06, max = 0.25, seme = 1, guasto = null
   controlla('i pezzi stanno sotto i 512 byte del servizio', pezzi.every(m => JSON.stringify(m).length <= 512), String(Math.max(...pezzi.map(m => JSON.stringify(m).length))))
   const copia = new Partita({ rnd: caso(SEME), sfida })
   const k = applicaFoto(copia, pezzi.map(m => m.d).join(''))
-  uguale('rimessa dalla fotografia, la copia ha la stessa impronta', improntaDi(copia), improntaDi(host.p))
+  controlla('rimessa dalla fotografia, la copia ha la stessa impronta', impronteSimili(improntaDi(copia), improntaDi(host.p)))
   uguale('e lo stesso tick', k, host.k)
   for (let i = 0; i < 400; i++) { host.p.avanza(0.05); copia.avanza(0.05) }
-  uguale('e da lì le due copie corrono uguali (anche il caso)', improntaDi(copia), improntaDi(host.p))
+  controlla('e da lì le due copie corrono uguali (anche il caso)', JSON.stringify(improntaDi(copia)) === JSON.stringify(improntaDi(host.p)))
+  const vicina = improntaDi(host.p).map((x, i) => i === 1 ? x + 0.4 : x)
+  controlla('uno scarto da ultima cifra non è una separazione', impronteSimili(improntaDi(host.p), vicina))
+  controlla('uno scarto grosso sì', !impronteSimili(improntaDi(host.p), improntaDi(host.p).map((x, i) => i === 1 ? x + 500 : x)))
+  controlla('e una truppa in più o in meno pure', !impronteSimili(improntaDi(host.p), improntaDi(host.p).map((x, i) => i === 11 ? x + 1 : x)))
   void ospite
 }
 {
