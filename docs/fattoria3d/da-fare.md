@@ -5,8 +5,6 @@ Le voci aperte. Una riga ciascuna, e quando una si chiude si toglie.
 - **Misurare su un telefono vero.** Tutti i numeri di peso (draw call, fps, caldo, batteria) sono da SwiftShader; il
   pannello ⚙ e «Mostra il rapporto» servono a questo. Dopo la misura si decide se serve un degrado a scalini (ora non c'è: i
   pezzi si spengono a mano dalle opzioni).
-- **Gli ordini per i prodotti.** Pane, popcorn, pizza e torte finiscono in dispensa e non servono a niente. Manca chi li
-  chiede (clienti, un banco, le botteghe) e cosa si riceve: esperienza, non monete (niente si vende).
 - **A cosa serve la legna.** Si guadagna abbattendo e non si spende: pezzi o edifici che la chiedono oltre alle monete.
 - **Calibrare tempi e prezzi.** I tempi dei campi (14–32 s), della lana (25 s), del forno e del viaggio sono da prova; i
   prezzi vanno rapportati al metro di [calibrazione.md](../apprendimento/calibrazione.md) prima di aprirlo ai bambini.

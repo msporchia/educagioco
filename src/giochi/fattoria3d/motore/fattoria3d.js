@@ -12,6 +12,8 @@ import { COSTI, LEGNA_PER_ALBERO, PECORE, MONGOLFIERA } from '../dati/regole.js'
 import { generaAlberi } from '../dati/alberi.js'
 import { normalizza, nuoveTessere } from './stato.js'
 import { percorso } from './percorso.js'
+import { POSTI, RIPOSO_MS, LIVELLO_BANCO, clienteDi } from '../dati/ordini.js'
+import { nuovoOrdine } from './ordini.js'
 
 export class Fattoria3d {
   constructor({ stato = null, borsa, ora = Date.now, rnd = Math.random } = {}) {
@@ -48,13 +50,15 @@ export class Fattoria3d {
   /** Paga e, se è una spesa «vera» (non uno spostamento), la conta nell'esperienza; sale di livello se serve. */
   _spendi(n) {
     if (!this._paga(n)) return false
-    if (n > 0) {
-      const prima = this.livello()
-      this.s.esperienza += n
-      const dopo = this.livello()
-      if (dopo > prima) this._evento('livello', { livello: dopo })
-    }
+    if (n > 0) this._guadagna(n)
     return true
+  }
+  /** L'esperienza sale (di una spesa o di una consegna); se passa una soglia c'è l'evento `livello`. */
+  _guadagna(n) {
+    const prima = this.livello()
+    this.s.esperienza += n
+    const dopo = this.livello()
+    if (dopo > prima) this._evento('livello', { livello: dopo })
   }
   _rimborsa(n) { if (n > 0) this.borsa.paga(-n) }
   _evento(tipo, extra = {}) { this.eventi.push({ tipo, ...extra }) }
@@ -393,6 +397,66 @@ export class Fattoria3d {
     return { ok: true, lana: MONGOLFIERA.premioLana }
   }
 
+  // ── il banco: gli ordini (vedi docs/fattoria3d/ordini.md). Pagano esperienza, mai monete; niente scade ──
+  /** Il banco chiede solo da livello 2 e solo se la bancarella è messa su un terreno tuo. */
+  bancoAperto() { return this.livello() >= LIVELLO_BANCO && this.s.cose.some(c => c.tipo === 'bancarella') }
+  /** Riempie i posti vuoti il cui riposo è finito (un posto mai riempito o appena consegnato non ha riposo). */
+  _riempiOrdini() {
+    if (!this.bancoAperto()) return false
+    const O = this.s.ordini, t = this.ora(); let cambiato = false
+    for (let k = 0; k < POSTI; k++) {
+      if (O.aperti[k] || (O.riprende[k] !== null && t < O.riprende[k])) continue
+      const occupati = O.aperti.filter(Boolean).map(o => o.cliente)
+      O.aperti[k] = nuovoOrdine(this.livello(), this.rnd, O.prossimoId++, occupati)
+      O.riprende[k] = null; cambiato = true
+    }
+    return cambiato
+  }
+  /** Gli ordini del banco, un elemento per posto: l'ordine con cosa chiede, cosa si ha e se si può consegnare, oppure
+      { idx, attesa: true, restoMs } per un posto che riposa. Banco chiuso: []. */
+  ordini() {
+    this._riempiOrdini()
+    if (!this.bancoAperto()) return []
+    const t = this.ora()
+    return this.s.ordini.aperti.map((o, idx) => {
+      if (!o) return { idx, attesa: true, restoMs: Math.max(0, (this.s.ordini.riprende[idx] || t) - t) }
+      const chiede = Object.entries(o.chiede).map(([k, n]) => {
+        const r = COLTURE[k] || RICETTE[k], ha = this.scortaDi(k)
+        return { k, n, nome: r.nome, emoji: r.emoji, ha: Math.min(ha, n), manca: Math.max(0, n - ha), prodotto: !COLTURE[k] }
+      })
+      return { idx, id: o.id, cliente: clienteDi(o.cliente), chiede, premio: o.premio, liv: o.liv, pronto: chiede.every(c => !c.manca) }
+    })
+  }
+  /** Cosa manca per consegnare l'ordine di quel posto: { chiave: quanti }, vuoto se si può. */
+  mancanoPerOrdine(idx) {
+    const o = this.s.ordini.aperti[idx], out = {}
+    if (o) for (const [k, n] of Object.entries(o.chiede)) if (this.scortaDi(k) < n) out[k] = n - this.scortaDi(k)
+    return out
+  }
+  /** Consegna l'ordine: toglie la roba dalle scorte, dà l'esperienza (e il livello, se sale) e riempie subito il posto. */
+  consegna(idx) {
+    if (!this.bancoAperto()) return { ok: false, motivo: 'banco-chiuso' }
+    const o = this.s.ordini.aperti[idx]
+    if (!o) return { ok: false, motivo: 'sconosciuto' }
+    const mancano = this.mancanoPerOrdine(idx)
+    if (Object.keys(mancano).length) return { ok: false, motivo: 'mancano', mancano }
+    for (const [k, n] of Object.entries(o.chiede)) this._togli(k, n)
+    this.s.ordini.aperti[idx] = null; this.s.ordini.riprende[idx] = null
+    this._guadagna(o.premio)
+    this._evento('consegna', { cliente: o.cliente, premio: o.premio, chiede: { ...o.chiede } })
+    this._riempiOrdini()
+    return { ok: true, premio: o.premio, cliente: clienteDi(o.cliente) }
+  }
+  /** Manda via un ordine che non si vuole fare: gratis, ma il posto resta vuoto per RIPOSO_MS (un ordine in più non si compra). */
+  rifiuta(idx) {
+    if (!this.bancoAperto()) return { ok: false, motivo: 'banco-chiuso' }
+    if (!this.s.ordini.aperti[idx]) return { ok: false, motivo: 'sconosciuto' }
+    this.s.ordini.aperti[idx] = null; this.s.ordini.riprende[idx] = this.ora() + RIPOSO_MS
+    this._evento('rifiuto')
+    return { ok: true, restoMs: RIPOSO_MS }
+  }
+  cambia(idx) { return this.rifiuta(idx) }
+
   // ── il tempo: la cottura che avanza e la mongolfiera che torna (si può chiamare quando si vuole) ──
   tick() {
     const t = this.ora(); let cambiato = false
@@ -406,6 +470,7 @@ export class Fattoria3d {
     }
     const M = this.s.mongolfiera
     if (M.fine && t >= M.fine) { M.fine = null; M.cassa = true; cambiato = true }
+    if (this._riempiOrdini()) cambiato = true
     return cambiato
   }
 

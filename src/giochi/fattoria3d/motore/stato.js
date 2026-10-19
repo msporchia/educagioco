@@ -4,9 +4,12 @@ import { LOTTI_INIZIALI, PEZZO_DI_PARTENZA } from '../dati/mondo.js'
 import { CHIAVI_COLTURE, TESSERE } from '../dati/colture.js'
 import { TIPI_DI_EDIFICIO } from '../dati/catalogo.js'
 import { TIPI_DI_MACCHINA, RICETTE } from '../dati/ricette.js'
+import { POSTI } from '../dati/ordini.js'
+import { ordineInForma } from './ordini.js'
 
 // 2: l'esperienza, un `posseduti` per ogni edificio, le macchine per tipo (la pasticceria di prima è `macchine.pasticceria`)
-export const VERSIONE_STATO = 2
+// 3: il banco degli ordini (`ordini`); un v2 si legge senza perdere niente, il banco si riempie da sé
+export const VERSIONE_STATO = 3
 
 const vuote = () => Object.fromEntries(CHIAVI_COLTURE.map(k => [k, 0]))
 
@@ -32,6 +35,7 @@ export function statoIniziale() {
     prossimoId: 2,
     macchine: Object.fromEntries(TIPI_DI_MACCHINA.map(t => [t, macchinaVuota()])),
     mongolfiera: { fine: null, cassa: false },
+    ordini: { aperti: Array(POSTI).fill(null), riprende: Array(POSTI).fill(null), prossimoId: 1 },   // il banco: un ordine o null per posto; `riprende` è quando un posto vuoto si riempie
   })
 }
 
@@ -84,5 +88,12 @@ export function normalizza(letto) {
   }
   const m = oggetto(letto.mongolfiera)
   s.mongolfiera = { fine: Number.isFinite(m.fine) ? m.fine : null, cassa: !!m.cassa }
+  // il banco (assente prima del v3): ordini guasti diventano posti vuoti, che il banco riempie
+  const o = oggetto(letto.ordini)
+  for (let k = 0; k < POSTI; k++) {
+    s.ordini.aperti[k] = Array.isArray(o.aperti) ? ordineInForma(o.aperti[k]) : null
+    s.ordini.riprende[k] = Array.isArray(o.riprende) && Number.isFinite(o.riprende[k]) ? o.riprende[k] : null
+  }
+  s.ordini.prossimoId = Math.max(numero(o.prossimoId, 1), 1, ...s.ordini.aperti.map(x => x ? x.id + 1 : 1))
   return s
 }
