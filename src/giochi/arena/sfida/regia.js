@@ -25,6 +25,7 @@ export class Regia {
     this.sessione = null
     this.partita = null
     this.ultimo = Date.now()
+    this.chiusura = null               // com'è stato chiuso il collegamento di questo telefono ({ codice, ragione }), se lo è stato
     this.viaDa = 0                     // quando l'altro ha chiuso il collegamento a partita ancora in corso
   }
 
@@ -34,9 +35,10 @@ export class Regia {
   /* per capire perché una sfida si è rotta: si legge sul cartello e in console */
   diagnosi() {
     const s = this.sessione
+    const mia = this.chiusura ? `; mio collegamento chiuso: codice ${this.chiusura.codice}${this.chiusura.ragione ? ' «' + this.chiusura.ragione + '»' : ''}` : '; il mio collegamento era aperto'
     if (!s) return `ancora prima di partire, ${this.silenzio.toFixed(0)} s dall'ultima notizia`
     return `a ${s.p.t.toFixed(0)} s di gioco (tick ${s.k}), ${s.riallineamenti} riallineamenti, ultima notizia ${this.silenzio.toFixed(0)} s fa, ` +
-           `l'altro ${s.fineAltro ? 'aveva annunciato la fine (' + s.fineAltro + ')' : 'non aveva annunciato la fine'}, qui ${s.p.fine ? 'era finita (' + s.p.fine + ')' : 'non era finita'}`
+           `l'altro ${s.fineAltro ? 'aveva annunciato la fine (' + s.fineAltro + ')' : 'non aveva annunciato la fine'}, qui ${s.p.fine ? 'era finita (' + s.p.fine + ')' : 'non era finita'}${mia}`
   }
 
   cambia(stato, motivo = '') {

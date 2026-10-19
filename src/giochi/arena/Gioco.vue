@@ -395,8 +395,10 @@ function collegati(codice, host) {
   const r = new Regia({ canale: null, host, alCambio: () => cambioSfida(r) })
   r.canale = collega(codice, {
     alMessaggio: m => { if (regia.value === r) r.ricevi(m) },
-    allaChiusura: motivo => {
-      if (regia.value !== r || r.stato === 'finita' || r.stato === 'rotta') return
+    allaChiusura: (motivo, dettaglio) => {
+      if (regia.value !== r) return
+      r.chiusura = dettaglio                    // com'è stato chiuso il MIO collegamento: lo dice il cartello
+      if (r.stato === 'finita' || r.stato === 'rotta') return
       r.cambia('rotta', motivo === 'non entra' ? 'non trovo nessuna sfida con questo codice (o è già piena)' : 'il collegamento è caduto')
     },
   })

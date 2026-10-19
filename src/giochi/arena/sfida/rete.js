@@ -20,15 +20,16 @@ export async function creaStanza({ servizio = SERVIZIO, fetchImpl = globalThis.f
 export function collega(codice, { servizio = SERVIZIO, WebSocketImpl = globalThis.WebSocket, alMessaggio, allaChiusura, allApertura = () => {} }) {
   const ws = new WebSocketImpl(`${servizio.replace(/^http/, 'ws')}/entra/${codice}`)
   let aperto = false, chiuso = false
-  const fine = motivo => { if (!chiuso) { chiuso = true; allaChiusura(motivo) } }
+  // il codice e la ragione con cui il servizio (o la rete) ha chiuso: 1006 = caduta la rete, 1008 = troppi messaggi, 1009 = messaggio troppo grande
+  const fine = (motivo, e) => { if (!chiuso) { chiuso = true; allaChiusura(motivo, e ? { codice: e.code, ragione: e.reason || '', pulita: !!e.wasClean } : null) } }
   ws.addEventListener('open', () => { aperto = true; allApertura() })
   ws.addEventListener('message', e => {
     let m
     try { m = JSON.parse(e.data) } catch { return }
     if (m && typeof m === 'object') alMessaggio(m)
   })
-  ws.addEventListener('close', () => fine(aperto ? 'chiuso' : 'non entra'))
-  ws.addEventListener('error', () => fine(aperto ? 'errore' : 'non entra'))
+  ws.addEventListener('close', e => fine(aperto ? 'chiuso' : 'non entra', e))
+  ws.addEventListener('error', e => fine(aperto ? 'errore' : 'non entra', e))
   return {
     invia: m => { if (aperto && !chiuso) ws.send(JSON.stringify(m)) },
     chiudi: () => { chiuso = true; try { ws.close() } catch { /* già chiuso */ } },
