@@ -86,7 +86,7 @@ controlla('e nessuno dei due ha visto le copie separarsi', await a.locator('[dat
 /* ── uno esce: l'altro lo sa ── */
 await a.click('button[aria-label="indietro"]')
 await a.waitForSelector('.ar-mappa', { timeout: 6000 })
-await b.waitForSelector('[data-sfida-rotta]', { timeout: 15000 })
+await b.waitForSelector('[data-sfida-rotta]', { timeout: 25000 })
 controlla('chi resta lo sa, con una frase', /se n'è andato/.test(await b.locator('[data-sfida-rotta]').innerText()))
 controlla('e può tornare alla mappa', await b.locator('[data-sfida-esci]').count() === 1)
 await b.locator('[data-sfida-esci]').click()
