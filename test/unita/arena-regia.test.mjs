@@ -1,6 +1,6 @@
 /* La regia della sfida e il filo verso il servizio, con un servizio finto in memoria (quello vero fa lo stesso: assegna i
    ruoli, dice `pronti` quando sono in due, gira i messaggi e dice `via` quando uno se ne va). */
-import { Regia } from '../../src/giochi/arena/sfida/regia.js'
+import { Regia, TOLLERANZA_VIA } from '../../src/giochi/arena/sfida/regia.js'
 import { creaStanza, collega, CODICE } from '../../src/giochi/arena/sfida/rete.js'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 
@@ -50,7 +50,7 @@ function coppia({ firmaOspite = 'F', terreno = 'lava' } = {}) {
   s.gira()
   uguale('se uno se ne va a partita in corso, l\'altro non lo butta fuori subito (potrebbe aver solo finito prima)', ospite.stato, 'gioco')
   ospite.controlla()
-  uguale('e dopo qualche secondo senza che la partita finisca, sì', (ospite.viaDa -= 5000, ospite.controlla(), ospite.stato), 'rotta')
+  uguale('e dopo qualche secondo senza che la partita finisca, sì', (ospite.viaDa -= TOLLERANZA_VIA + 1000, ospite.controlla(), ospite.stato), 'rotta')
   controlla('con una frase da dire', /se n'è andato/.test(ospite.motivo), ospite.motivo)
 }
 {
