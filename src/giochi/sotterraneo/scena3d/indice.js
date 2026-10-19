@@ -289,7 +289,21 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
       const m = ctx.misure
       return { tre: true, chiamate: m.chiamate, triangoli: m.triangoli, dpr: ctx.dpr, ms: Math.round(m.msFotogramma * 10) / 10,
                msJs: Math.round(m.msJs * 100) / 100, msDisegno: Math.round(m.msDisegno * 100) / 100,
-               figure: figure ? figure.quante : 0, pixelSprite: Math.round(cam.pixelSprite * 100) / 100, scenario: piano ? piano.aspetto.chiave : null, palco: !!scontro.palco }
+               figure: figure ? figure.quante : 0, pixelSprite: Math.round(cam.pixelSprite * 100) / 100, scenario: piano ? piano.aspetto.chiave : null, palco: !!scontro.palco,
+               programmi: (renderer.info.programs || []).length }   // gli shader compilati: se crescono a ogni colpo, il telefono si ferma a compilare
+    },
+    // il banco: `n` disegni della scena così com'è, ognuno aspettato (la lettura di un pixel): i ms della tela da sola, senza
+    // la pagina attorno né i 60 Hz (docs/core/vecchio-telefono.md, «Lo scontro»); la mediana e il p90
+    banco(n = 20) {
+      const gl = ctx.gl, px = new Uint8Array(4), v = []
+      for (let i = 0; i < n + 2; i++) {
+        const t0 = performance.now()
+        if (post) post.disegna(scena, cam.camera); else renderer.render(scena, cam.camera)
+        gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px)
+        if (i >= 2) v.push(performance.now() - t0)
+      }
+      v.sort((x, y) => x - y)
+      return { ms: Math.round(v[n >> 1] * 10) / 10, p90: Math.round(v[Math.floor(n * 0.9)] * 10) / 10 }
     },
     // per le prove: dove sta a schermo un punto del mondo, lo stato di disegno di una cosa, il palco
     aSchermo(x, y, z) { const p = cam.schermo(x, y, z); return [p.x, p.y] },

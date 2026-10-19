@@ -42,7 +42,8 @@ fuori dai profili (chiave `qualita`) e la rifà dopo 30 giorni, se cambia il pix
 Cosa cambia una fascia sta tutto in `PROFILI` di `store/qualita.js`: negli Asteroidi 3D il pixel ratio di partenza (2 / 1,5 / 1),
 il tetto delle scintille (1400 / 700 / 350) e del fumo, e quanto in fretta il gioco scende di pixel (90 fotogrammi lenti a passo
 ×0,85 contro 20 a ×0,75); nel Sotterraneo 3D il pixel ratio massimo (1,5 / 1,25 / 1), le fette di nebbia (5 / 3 / 2) e, nella bassa, il passaggio finale
-spento. **Botti, arredo e ombre restano in tutte le fasce**: dai log del Note 7 i triangoli costano poco (10k → 100k: +1,4 ms), pesano i
+spento, due luci dei fuochi invece di sei, niente luci del rimbalzo e del palco (lampo e magia in una), l'ombra a 512 a fotogrammi
+alterni, meno scintille ([../sotterraneo/grafica-3d-costi.md](../sotterraneo/grafica-3d-costi.md), «La fascia bassa»). **Botti, arredo e ombre restano in tutte le fasce**: dai log del Note 7 i triangoli costano poco (10k → 100k: +1,4 ms), pesano i
 pixel. Emulazione (SwiftShader, CPU ×2,8), p50 di un fotogramma: esplorazione alta 50 ms → bassa 17; scontro con 3 mostri alta 67 →
 bassa 17 (p95 67). L'emulazione sovrastima i triangoli, quindi sul telefono dovrebbe andare meglio. **I numeri di media e bassa sono un'ipotesi dai log: da provare sul Note 7** (col
 contatore fps e `Misura questo telefono`) e ritoccare. In zona dei grandi (scheda *giochi*) la carta «Qualità della grafica 3D»
@@ -108,6 +109,41 @@ degrado con quello che c'era si usa `--dist` su due file.
 
 Provato il 19 ottobre 2026 (taratura inventata, solo per vedere che le leve muovano): il Sotterraneo 3D (seme 7) passa da
 55 fps (p95 33 ms) a 27 fps con CPU ×5 e a 13 con in più la zavorra 32; il pixel ratio scende da 1,4 a 1.
+
+## Lo scontro
+
+`node strumenti/vecchio-telefono.mjs '<cheat dello scontro>' --scontro` porta il Sotterraneo 3D in uno scontro ripetibile: un attacco
+con la risposta giusta ogni tre secondi (`--ogni`), l'eroe che non sviene (la vita torna piena: si misura il disegno, non lo scontro),
+una riga per fase (`fermo` col pannello, `racconto` mentre il colpo si racconta, `fuori`) e sotto il **banco della tela**:
+`window.__sotterraneo3d.banco(30)` disegna la scena ferma trenta volte aspettando ognuna (una lettura di un pixel), quindi dice i ms
+della sola tela senza i 60 Hz e senza la pagina. È la misura da usare per un degrado: i fps del simulatore a GPU finta balzano coi
+carichi del computer, il banco molto meno. Il cheat dello scontro:
+
+```bash
+node strumenti/vecchio-telefono.mjs 'sotterraneo3d=1&seme=11&sotterraneo=branco&mostri=3&tipo=scheletro&stanza=sala&qualita=bassa&dpr=1&eroe=cavaliere' --scontro --secondi 20
+… --scontro --ritmo ';'                       # fermo e basta (nessun attacco)
+… --scontro --ritmo ';' --spegni '-,fuochi:2,lampi,palco,nebbia' --secondi 2   # il banco con un pezzo spento per riga
+… --scontro --gpu hw --core 0 --cpu 5 --traccia 30   # la GPU vera e la CPU lenta: cosa tiene il filo principale
+```
+
+`--fasi '<espressione>'` dà il nome di un fotogramma (la riga per fase), `--ritmo` le istruzioni ripetute, `--spegni` una riga per
+gruppo di pezzi di `ACCESI` (`+` li unisce, `-` nessuno, `fuochi:2` un numero), `--profilo N` le funzioni che tengono il filo
+principale, `--traccia N` le voci della traccia di Chrome (`Commit`, `DoUpdateLayers`: il DOM composto sopra la tela), e sotto ogni
+riga i fotogrammi lunghi del filo (Long Animation Frames). `grafica().programmi` conta gli shader compilati: se cresce a ogni colpo
+il telefono si ferma a compilare (sull'Adreno 50-300 ms, il computer non lo vede); un test lo controlla.
+
+**Cosa si è visto il 19/10** (fascia bassa, pixel ratio 1, 4 core e CPU ×5, computer carico: contano i rapporti). Il filo principale
+non è il collo: con la GPU vera e la CPU ×5 lo scontro fermo sta a 60 fps (7 ms di filo a fotogramma, nessun fotogramma lungo),
+e anche il racconto (12 ms: JS 4, il resto è comporre il DOM sopra la tela). Il collo è la GPU: il banco dello scontro fermo è
+~100 ms, quello del racconto lo stesso +5-20% (le scintille sono una chiamata sola e piccole: ~8 px). Il DOM sopra la tela, nascosto,
+toglie ~12% ai fps ma niente al banco. Nessuno shader nuovo a ogni colpo (29 prima e dopo). **Sul telefono il racconto scende da
+48 a 15 fps, il simulatore no**: la differenza è dell'Adreno e si cerca sul telefono (sotto). Cosa pesa e cosa si è tolto:
+[../sotterraneo/grafica-3d-costi.md](../sotterraneo/grafica-3d-costi.md).
+
+**Da rifare sul Note 7, col contatore fps** (fascia bassa: zona dei grandi → «Qualità della grafica 3D» la dice): una misura (tocco
+sulla pastiglia, tocco per chiuderla) di dieci secondi fermi nello scontro col pannello delle abilità aperto, una di tre attacchi di
+fila (dal tocco sull'attacco a racconto finito), una camminando; il confronto è con 48 fps fermo e 15 nell'attacco. Se l'attacco resta
+sotto i 45 la misura «Misura questo telefono» non basta più: serve la scheda Performance di `chrome://inspect` durante un attacco.
 
 ## Cosa può dare problemi (e cosa si è visto)
 
