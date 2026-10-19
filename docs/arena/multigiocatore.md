@@ -81,7 +81,7 @@ La fotografia nomina i campi di un'unità (`CAMPI_UNITA`): un campo nuovo in `Pa
   disegno): si vede sempre in basso e in blu. Gioco.vue gioca da `mio` (`io` chi ospita, `nem` l'ospite) invece di un `io` fisso.
 - **Le mosse** passano da `eseguiMossa` e dalla sessione (la mossa giusta, la caserma che riposa dopo uno sbaglio, vendere); i conti
   restano a tutto schermo e il campo non si ferma. Non c'è il ⏸, né la sosta, né le stelle. Se l'altro tace oltre 15 secondi appare
-  «l'altro non risponde», se se ne va «la sfida è finita qui» (con quattro secondi di tolleranza: potrebbe aver solo finito prima).
+  «l'altro non risponde», se se ne va «la sfida è finita qui» (con quindici secondi di tolleranza: potrebbe aver solo finito prima; chi finisce lo dice all'altro con un messaggio `fine`, e l'altra copia chiude uguale).
 - **File:** `sfida/protocollo.js` (la sessione), `sfida/regia.js` (la trattativa: firma, seme, terreno, ritmo), `sfida/rete.js`
   (il filo verso il servizio, `SERVIZIO` è l'indirizzo), `scena/prospettiva.js`, `viste/Sfida.vue`.
 - **Nei test:** `[data-sfida-apri]` (la mappa), `[data-sfida-crea]`, `[data-sfida-entra]`, `[data-terreno=…]`, `[data-ritmo=…]`,

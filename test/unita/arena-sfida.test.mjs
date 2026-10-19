@@ -136,4 +136,18 @@ function simula({ secondi = 150, min = 0.06, max = 0.25, seme = 1, guasto = null
   for (let i = 0; i < 600; i++) { lati.host.avanza(0.05); lati.ospite.avanza(0.05); gira() }
   controlla('mosse sullo stesso tick da tutti e due: le copie restano uguali', !lati.host.rotta && !lati.ospite.rotta && lati.host.confrontate >= 2, `${lati.host.motivo} ${lati.ospite.motivo}`)
 }
+{
+  // una copia arriva alla fine prima dell'altra: l'altra chiude uguale
+  const filo = []
+  const mk = ruolo => new Sessione({ partita: new Partita({ rnd: caso(SEME), sfida }), ruolo, invia: m => filo.push({ a: ruolo === 'host' ? 'ospite' : 'host', m: JSON.parse(JSON.stringify(m)) }) })
+  const lati = { host: mk('host'), ospite: mk('ospite') }
+  const gira = () => { while (filo.length) { const { a, m } = filo.shift(); lati[a].ricevi(m) } }
+  for (let i = 0; i < 40; i++) { lati.host.avanza(0.05); lati.ospite.avanza(0.05); gira() }
+  lati.ospite.p.castelli.find(c => c.lato === 'nem').hp = 0          // solo sull'ospite il suo castello è caduto
+  for (let i = 0; i < 10; i++) { lati.host.avanza(0.05); lati.ospite.avanza(0.05); gira() }
+  controlla('se una copia finisce prima, l\'altra finisce con lei', !!lati.ospite.p.fine && lati.host.p.fine === lati.ospite.p.fine, `${lati.host.p.fine}/${lati.ospite.p.fine}`)
+  const s = new Sessione({ partita: new Partita({ rnd: caso(1), sfida }), ruolo: 'host', invia: () => {} })
+  s.ricevi({ t: 'fine', f: 'regalo' })
+  controlla('una fine che non esiste si rifiuta', s.rotta !== null)
+}
 riassunto('arena in due: il protocollo')

@@ -7,7 +7,7 @@ import { firmaEquilibrio } from '../motore/firma.js'
 import { TERRENI, truppeDelTerreno } from '../dati/regole.js'
 import { Sessione, proponi, accetta, ritmoPer } from './protocollo.js'
 
-export const TOLLERANZA_VIA = 4000   // ms: dopo il «via» dell'altro si aspetta di arrivare alla fine della partita
+export const TOLLERANZA_VIA = 15000  // ms: dopo il «via» dell'altro si aspetta di arrivare alla fine della partita
 export const SILENZIO = 15          // secondi senza messaggi dall'altro (durante il gioco ce ne sono sempre) prima di dire che non risponde
 
 /* chi sono: 'attesa' (collegato, da solo) → 'trattativa' (in due, si accordano) → 'gioco' → 'finita' | 'rotta' */

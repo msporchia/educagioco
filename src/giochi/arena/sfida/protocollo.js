@@ -85,6 +85,7 @@ export class Sessione {
     this.rotta = null
     this.riallineo = null              // se le copie si sono separate: l'host manda la sua, l'ospite aspetta (vedi `confronta`)
     this.riallineamenti = 0
+    this.annunciata = false            // ho già detto all'altro che la mia partita è finita
     this.arrivo = null                 // i pezzi della fotografia che arrivano all'ospite
     this.confrontate = 0               // quante impronte sono state messe a confronto: se resta zero non si è controllato niente
   }
@@ -121,6 +122,11 @@ export class Sessione {
       if (this.riallineo) return                                    // le impronte di prima della fotografia non contano più
       this.impronte.sue.set(m.k, m.v)
       this.confronta(m.k)
+    } else if (m.t === 'fine') {
+      // Una copia può arrivare alla fine qualche decimo prima dell'altra (le copie non sono più uguali al bit): chi finisce lo dice,
+      // e l'altra chiude uguale invece di restare in campo con un collegamento che non c'è più. Se finiscono tutte e due, vale l'host.
+      if (!['vinto', 'perso', 'pari'].includes(m.f)) return this.rompi('fine senza senso')
+      if (!this.p.fine || this.mio === 'nem') this.p.fine = m.f
     } else if (m.t === 's' && this.mio === 'nem') this.ricevePezzo(m)
     else if (m.t === 'ok' && this.riallineo?.invio) this.riparti()
   }
@@ -181,6 +187,7 @@ export class Sessione {
       }
       this.p.avanza(PASSO)
       this.k++
+      if (this.p.fine && !this.annunciata) { this.annunciata = true; this.invia({ t: 'fine', f: this.p.fine }) }
       this.acc -= PASSO
       if (this.k % OGNI_IMPRONTA === 0) {
         for (const k of this.mosse.keys()) if (k < this.k - MEMORIA_MOSSE) this.mosse.delete(k)
