@@ -13,6 +13,8 @@ import { STORIA } from '../dati/storia.js'
 import { laStoria } from './storia.js'
 import { seminato } from './livello.js'
 import { PASSI } from '../../../motore/passi.js'
+import { eTaglia } from '../dati/missioni-modelli.js'
+import { delleTaglie, prendiTaglia } from './taglie.js'
 
 export const PRESA = 'presa', FATTA = 'fatta', CONSEGNATA = 'consegnata'
 // una cosa che si vende o si trova solo dopo una missione (`dopo` in dati/cose.js: la pergamena del portale, dopo il quaderno)
@@ -52,8 +54,10 @@ export function sbloccate(stati, tappe) {
 }
 
 // quelle che l'eroe ha in mano: prese, o fatte e da consegnare (anche se uno stato di prima ne ha di più)
+// Le taglie della bacheca (motore/taglie.js) stanno nello stesso stato (`t:…`) e si rifanno dall'id: sono `fuoriDalTetto`, hanno il loro tetto
+const tutteLeMissioni = stati => [...MISSIONI, ...delleTaglie(stati)]
 export const inMano = stati =>
-  MISSIONI.filter(m => [PRESA, FATTA].includes(statoDi(stati, m.id))).sort(dellaStoria)
+  tutteLeMissioni(stati).filter(m => [PRESA, FATTA].includes(statoDi(stati, m.id))).sort(dellaStoria)
 
 // quelle che il mondo offre adesso, col «!»: le sbloccate, finché con quelle in mano non si arriva al TETTO.
 // Chi ne ha tante in mano non ne vede altre finché non ne consegna una
@@ -94,7 +98,7 @@ export function segnoDi(chi, stati, tappe) {
 }
 
 // chi aspetta una consegna adesso: le chiavi dei personaggi (e del minatore) con una missione fatta da riportare
-export const chiAspetta = stati => [...new Set(MISSIONI.filter(m => statoDi(stati, m.id) === FATTA).map(m => m.da))]
+export const chiAspetta = stati => [...new Set(tutteLeMissioni(stati).filter(m => statoDi(stati, m.id) === FATTA).map(m => m.da))]
 
 const maiuscola = s => s.charAt(0).toUpperCase() + s.slice(1)
 const ARTICOLO = /^(la|il|lo|le|i|gli|l')\b\s*/i
@@ -130,6 +134,7 @@ export function chiTiCerca(stati, tappe) {
 // le funzioni che cambiano lo stato tornano lo stato nuovo, o null se non c'era niente da fare. Si prende solo
 // una missione che il mondo offre adesso: sbloccata e dentro il tetto
 export function prendi(stati, id, tappe) {
+  if (eTaglia(id)) return prendiTaglia(stati, id)   // la bacheca decide cosa offre (motore/taglie-bacheca.js); qui il tetto delle tre
   if (!missioneDi(id) || statoDi(stati, id)) return null
   if (!offerte(stati, tappe).some(m => m.id === id)) return null
   return { ...(stati || {}), [id]: PRESA }
@@ -147,7 +152,9 @@ export function fatte(stati, ids) {
 // paga chi chiama (Gioco.vue, dalla borsa del gioco: passano dal salvadanaio della varietà come ogni altra)
 export function consegna(stati, id, corredo) {
   const m = missioneDi(id)
-  if (!m || statoDi(stati, id) !== FATTA) return null
+  // una consegna portata a destinazione si dà in un colpo (la bacheca di laggiù): è «fatta» arrivando
+  const alVolo = !!m && !!m.taglia && m.tipo === 'consegna' && statoDi(stati, id) === PRESA
+  if (!m || (statoDi(stati, id) !== FATTA && !alVolo)) return null
   const p = m.premio
   if (p.cosa) {
     // il gioiello del premio è a tono col livello dell'eroe (docs/sotterraneo/rarita.md)
@@ -161,7 +168,7 @@ export function consegna(stati, id, corredo) {
 
 // le missioni prese che riguardano questa discesa: la Corsa le mette nei piani
 export const presePer = (stati, chiaveTappa) =>
-  MISSIONI.filter(m => m.discesa === chiaveTappa && statoDi(stati, m.id) === PRESA)
+  tutteLeMissioni(stati).filter(m => m.discesa === chiaveTappa && statoDi(stati, m.id) === PRESA)
 
 /* ═══════════ la missione che le freccine seguono ═══════════ */
 
@@ -183,7 +190,11 @@ export const daLui = chi => chi.replace(/^la /, 'dalla ').replace(/^il /, 'dal '
 
 // la faccia di una cosa o di un mostro nel dettaglio: l'emoji e il nome del pezzo (la vista cerca `<sprite>-fermo-0`
 // per un mostro, e se l'atlante non ce l'ha ripiega sull'emoji)
-const cosaDi = m => (m.tipo === 'trova'
+const cosaDi = m => (m.tipo === 'trovachi'
+  ? { tipo: 'trovachi', nome: m.viandante.nome, em: m.em, sprite: m.viandante.sprite, verbo: m.verbo, nota: m.nota }
+  : ['consegna', 'esplora', 'mappa'].includes(m.tipo)
+  ? { tipo: m.tipo, nome: titoloDi(m), em: m.em, sprite: null, verbo: m.verbo, nota: m.nota }
+  : m.tipo === 'trova'
   ? { tipo: 'trova', nome: m.cosa.nome, em: m.cosa.em, sprite: null }
   : m.tipo === 'conta'
   ? { tipo: 'conta', nome: titoloDi(m), em: MOSTRI[m.specie].em, sprite: MOSTRI[m.specie].sprite }
@@ -197,14 +208,17 @@ function voceDiario(m, stato, segui = null, conti = {}) {
     titolo: titoloDi(m), em: faccia(m),
     ...(m.tipo === 'conta' ? { progresso: { fatti: Math.min(m.quanti, stato === FATTA || stato === CONSEGNATA ? m.quanti : conti[m.id] || 0), quanti: m.quanti } } : {}),
     chi: p.nome, chiFrase: p.chi, daChi: daLui(p.chi),
-    discesa: m.discesa, dove: nomeDiscesa(m.discesa), piano: m.tipo === 'conta' ? null : m.piano + 1,   // «sconfiggi N» vale in tutta la discesa
+    discesa: m.discesa, dove: m.dove || nomeDiscesa(m.discesa), piano: m.tipo === 'conta' || m.piano == null ? null : m.piano + 1,   // «sconfiggi N» vale in tutta la discesa
+    // una taglia: la dà una bacheca e si consegna a una bacheca (non sempre la stessa), non a un personaggio
+    ...(m.taglia ? { bacheca: true, vai: `bacheca:${m.consegnaA}`, daChi: daLui(personaDi(`bacheca:${m.consegnaA}`).chi) } : { vai: m.da }),
     premio: premioDetto(m.premio),
     // il dettaglio: cosa dice lui (la richiesta, e alla consegna il grazie), la cosa o il mostro, il premio per pezzi
     dice: m.dice, grazie: m.grazie, cosa: cosaDi(m),
     gemme: m.premio.gemme || 0, monete: m.premio.monete || 0,
     regalo: r ? { nome: r.nome, em: r.em, sprite: r.sprite || null } : null,
     seguibile: stato === PRESA && m.tipo !== 'conta', segui: stato === PRESA && segui === m.id,
-    ...(stato === FATTA ? { tornaDa: daLui(p.chi), torna: `Torna ${daLui(p.chi)}: ${m.tipo === 'trova' ? 'hai' : 'hai battuto'} ${inFrase(titoloDi(m))}` } : {}),
+    ...(stato === FATTA ? (m.taglia ? { tornaDa: daLui(personaDi(`bacheca:${m.consegnaA}`).chi), torna: m.torna }
+                                    : { tornaDa: daLui(p.chi), torna: `Torna ${daLui(p.chi)}: ${m.tipo === 'trova' ? 'hai' : 'hai battuto'} ${inFrase(titoloDi(m))}` }) : {}),
   }
 }
 
@@ -236,7 +250,7 @@ export function diario(stati, tappe, segui = null, conti = {}, mondo = false) {
   const offerta = offerte(stati, tappe).map(m => voceDiario(m, 'offerta', null, conti))
   // il tetto conta solo le missioni dell'albero (il quaderno dell'incantatrice sta fuori: `fuoriDalTetto`)
   const nelTetto = [...inMano(stati), ...offerte(stati, tappe)].filter(m => !m.fuoriDalTetto).length
-  const finite = MISSIONI.filter(m => statoDi(stati, m.id) === CONSEGNATA).sort(dellaStoria).map(m => voceDiario(m, CONSEGNATA, null, conti))
+  const finite = tutteLeMissioni(stati).filter(m => statoDi(stati, m.id) === CONSEGNATA).sort(dellaStoria).map(m => voceDiario(m, CONSEGNATA, null, conti))
   return {
     segui: sg, storia: storiaDelDiario(tappe, sg, mondo),
     inMano: mano, pronte: mano.filter(v => v.stato === FATTA), daFare: mano.filter(v => v.stato !== FATTA),
@@ -251,7 +265,7 @@ export function diario(stati, tappe, segui = null, conti = {}, mondo = false) {
 // Sul piano giusto dice cosa cercare (il forziere d'oro, il mostro con la corona), oltre quel piano dice di risalire (la scala che sale);
 // una volta fatta ricorda a chi riportarla. `piano` è quello di adesso, da 1 (null fuori da una discesa)
 export function promemoria(stati, chiaveTappa, piano = null, conti = {}) {
-  const queste = MISSIONI.filter(m => m.discesa === chiaveTappa && [PRESA, FATTA].includes(statoDi(stati, m.id))).sort(dellaStoria)
+  const queste = tutteLeMissioni(stati).filter(m => m.discesa === chiaveTappa && [PRESA, FATTA].includes(statoDi(stati, m.id))).sort(dellaStoria)
   return queste.map(m => {
     const em = faccia(m)
     const nome = inFrase(titoloDi(m))
@@ -318,7 +332,7 @@ export function discesaDaSeguire(stati, da, posti, segui = null, storia = null) 
   if (scelta === SEGUI_LA_STORIA && dellaStoria) return dellaStoria
   if (scelta && scelta !== SEGUI_LA_STORIA && posti[missioneDi(scelta).discesa]) return missioneDi(scelta).discesa
   let meglio = null
-  for (const m of MISSIONI) {
+  for (const m of tutteLeMissioni(stati)) {
     if (m.tipo === 'conta' || statoDi(stati, m.id) !== PRESA || !posti[m.discesa]) continue
     const d = distanza(da, posti[m.discesa])
     if (!meglio || d < meglio.distanza) meglio = { discesa: m.discesa, distanza: d }

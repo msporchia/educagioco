@@ -42,6 +42,10 @@ export const postiDi = (m, tipo) => m.posti.filter(p => p.tipo === tipo)
 export const cittaDi = (m, chiave) => m.citta.find(c => c.chiave === chiave) || null
 // la città di una cella (dentro la sua zona), o null
 export const cittaInCella = (m, x, y) => { const z = m.zonaCitta[y * m.W + x]; return z ? m.citta[z - 1] : null }
+// Il giro del mondo conta i ritorni in città (decisione del 16 ottobre), ma solo se prima ci si è allontanati: più di `raggio + 8` celle dal
+// centro di ogni città. Passare il confine di una zona a ogni passo non fa girare la bacheca (docs/sotterraneo/mondo-aperto-fasi.md)
+export const MARGINE_DEL_GIRO = 8
+export const lontanoDalleCitta = (m, x, y) => m.citta.every(c => Math.hypot(x - c.centro.x, y - c.centro.y) > c.raggio + MARGINE_DEL_GIRO)
 export const regioneInCella = (m, x, y) => m.regioni[m.reg[y * m.W + x]] || null
 
 // la città che serve un dungeon: le terre vicine il villaggio, le marche del sud e dell'ovest il forte, quelle del nord e

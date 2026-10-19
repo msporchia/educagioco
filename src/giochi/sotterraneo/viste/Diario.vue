@@ -59,7 +59,7 @@ const fatto = v => v.stato === 'fatta' || v.stato === 'consegnata'
 const nomeFigura = v => (v.cosa.sprite ? `${v.cosa.sprite}-fermo-0` : null)
 // «vai da …» c'è per chi aspetta qualcosa da te: un favore da chiederti, o la consegna di una missione fatta
 const puoiAndare = v => !props.giu && (v.stato === 'offerta' || v.stato === 'fatta')
-const vaDa = v => emit('vai', v.da)
+const vaDa = v => emit('vai', v.vai || v.da)
 </script>
 
 <template>
@@ -139,7 +139,8 @@ const vaDa = v => emit('vai', v.da)
 
       <!-- chi te l'ha data, e quello che ha detto: con la voce sua -->
       <div class="sot-dettaglio-chi" data-dettaglio-chi :data-chi="voce.da">
-        <span class="sot-dettaglio-ritratto"><Ritratto :chi="voce.da" :scala="3" /></span>
+        <span v-if="voce.bacheca" class="sot-dettaglio-ritratto em sot-dettaglio-bacheca">📜</span>
+        <span v-else class="sot-dettaglio-ritratto"><Ritratto :chi="voce.da" :scala="3" /></span>
         <div>
           <b>{{ voce.chi }}</b>
           <p class="sot-dettaglio-detto" data-racconto>«{{ voce.dice }}»</p>
@@ -161,9 +162,10 @@ const vaDa = v => emit('vai', v.da)
       <div class="sot-dettaglio-riga" data-dettaglio-cosa :data-tipo="voce.tipo">
         <span class="sot-dettaglio-icona"><Icona :sprite="nomeFigura(voce)" :em="voce.cosa.em" :scala="2" :emAlto="38" /></span>
         <span class="sot-testo">
-          <small>{{ voce.tipo === 'trova' ? (fatto(voce) ? 'Trovata' : 'Da trovare') : (fatto(voce) ? 'Battuti' : 'Da battere') }}</small>
+          <small>{{ voce.cosa.verbo ? voce.cosa.verbo[fatto(voce) ? 1 : 0] : voce.tipo === 'trova' ? (fatto(voce) ? 'Trovata' : 'Da trovare') : (fatto(voce) ? 'Battuti' : 'Da battere') }}</small>
           <b>{{ voce.cosa.nome }}</b>
           <i v-if="voce.progresso" data-progresso :data-fatti="voce.progresso.fatti">{{ voce.progresso.fatti }} di {{ voce.progresso.quanti }}</i>
+          <i v-else-if="voce.cosa.nota && !fatto(voce)">{{ voce.cosa.nota }}</i>
           <i v-else-if="!fatto(voce)">{{ voce.tipo === 'trova' ? 'in un forziere d\'oro' : 'il mostro con la corona' }}</i>
         </span>
       </div>

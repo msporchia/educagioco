@@ -31,7 +31,7 @@ paga la risposta giusta di una pietra.
 ## Il salvataggio
 
 - **Il campo `mondo` nell'avventura** (`profile.campagne.sotterraneo.cfg.avventure[eroe].mondo`), accanto a `terra` del 2D che
-  non si tocca: `{ nebbia, dove, giro, pietre, parlato, divieti, novita }`. La nebbia è un bit per cella in base64 (3 734
+  non si tocca: `{ nebbia, dove, giro, pietre, parlato, divieti, novita, quest }` (`quest` lo scrive `Gioco.vue`, le taglie: `{ stati, fatte }`). La nebbia è un bit per cella in base64 (3 734
   caratteri); un codice che non torna è nebbia nuova. `dove` è `{ x, y }`, o `{ portale: true }` salendo dal portale.
 - **Stessa chiave del Sotterraneo, per ora.** La chiave `sotterraneo3d` separata e «porta qui il tuo eroe» sono la fase 9
   (decisione 2 dell'utente): il campo `mondo` è lo stesso nei due casi, quindi quando arriva la chiave nuova si sposta l'avventura
@@ -66,7 +66,7 @@ paga la risposta giusta di una pietra.
   Chi saluta, i segni sopra la testa, chi cura e il richiamo sono quelli della terra dipinta.
 - **Le città**: il villaggio coi quattro mercanti, la ragazza, il minatore (sale al rifugio dopo la sesta porta); il forte e il
   rifugio coi loro mercanti (lo stesso banco, decisione 10: il fabbro del forte apre la bottega del villaggio). Nel forte c'è il
-  capitano e la fontana (sotto). La bacheca c'è, vuota (le taglie sono la fase 6). Il cartello indica i passaggi della città coi dungeon trovati oltre.
+  capitano e la fontana (sotto). La bacheca appende le taglie del giro (fase 6, sotto «La bacheca e le taglie»). Il cartello indica i passaggi della città coi dungeon trovati oltre.
 - **I sette dungeon e l'abisso** hanno i monumenti del prototipo (l'altare coi re, l'arco dei goblin, la torre annerita, la
   grotta con le radici e le ragnatele, la scala nel lago, la botola che fuma, la miniera con la brace, il pozzo) e i nomi nuovi.
   Arrivati a uno aperto il monumento si apre e il fumetto è quello di sempre (piani, livello, la storia, le missioni, «scendo»);
@@ -150,6 +150,22 @@ un albero (conta la distanza dal decoro che blocca); non cambiano la mappa di bl
   richiamo come quello della guaritrice. Bevendo, `Gioco.vue` scrive la sosta a vita ed energia piene (`curaDa('tutto')`) e sopra
   l'eroe salgono i due numeri.
 
+## La bacheca e le taglie
+
+- **Il fumetto della bacheca** (`FumettoMondo.vue`, `f.tipo === 'bacheca'`): una riga per foglio (faccia, titolo, dove, 💎), prima quelle da
+  consegnare qui (tasto «consegno», d'oro), poi quelle in corso, poi i tre fogli nuovi («prendo»); con tre taglie in mano i nuovi sono
+  spenti e una riga lo dice. La lista scorre dentro il fumetto (44% dell'altezza). `Mondo3d.vue` manda `taglia` (`{ id, azione }`) a
+  `azioneMissione` di `Gioco.vue`; le righe le fa `vociDellaBacheca` ([mondo-aperto-quest.md](mondo-aperto-quest.md)).
+- **Sul prato, solo a taglia in mano**: chi si era perso (`trova-chi`: una figura dell'atlante, `[data-viandante]`, parlargli fa la
+  taglia) e la X della mappa (`[data-scavo]`, un segno ✕ e un fumetto «scavo» che apre una domanda: giusto e si trova, sbagliato e si
+  riprova). Il posto lo sceglie `postoSulPrato` (vicino alla tana della regione, sulla strada vera) e non cambia. Sono bersagli nuovi
+  di `preparaBersagli`; il generatore e la pianta non cambiano.
+- **I segni**: la bacheca ha il «!», il «?» d'oro o il «?» grigio (`segnoDellaBacheca`); in veduta 📜 con lo stesso segno e, per la taglia
+  seguita, un cerchio (◎) sul posto; sul bordo la freccia azzurra con la faccia della taglia. «Esplora» si fa da sé quando la nebbia
+  scopre il posto (`controllaTaglie`).
+- **Il giro** (`giro` in `mondo`) è un ref; conta un ritorno in città solo dopo essersi allontanati più di `raggio + 8` celle (`lontanoDalleCitta`)
+  o salendo dal portale. Si salva con il resto del mondo.
+
 ## Le pietre del viaggio
 
 Undici: una per città e una davanti a ogni ingresso. Toccata una spenta, una domanda col `dif` del posto (l'inizio del dungeon
@@ -221,7 +237,7 @@ dito, i ponti, il cartello), `unita/sotterraneo-mondo-salva` (la nebbia in base6
 peggiore, le pietre, il minatore, le grate), `integrazione/sotterraneo-mondo` (col dito vero: il mondo e quanto costa,
 camminare, la ragazza, la bottega del fabbro, la pietra sbagliata e giusta, la veduta e il tocco lì, scendere nella cripta e
 risalire davanti, la nebbia salvata, il gemello nel villaggio; al forte la fontana che richiama e cura, il capitano col «!» e la
-quinta porta, il fabbro di sempre), `unita/sotterraneo-citta` (il capitano, la sua strada, la regola e il posto della fontana),
+quinta porta, il fabbro di sempre), `unita/sotterraneo-quest-modelli` e `integrazione/sotterraneo-bacheca` (le taglie: `[data-bacheca]` con `data-segno`, `[data-fumetto-di="bacheca"]`, `[data-taglia]` con `data-stato`, `[data-taglia-prendi]`, `[data-taglia-consegna]`, `[data-taglie-piene]`, `[data-viandante]`, `[data-scavo]`), `unita/sotterraneo-citta` (il capitano, la sua strada, la regola e il posto della fontana),
 `unita/sotterraneo-nomi` (i nomi nuovi in ogni testo). Bersagli: `[data-mondo3d]` (con `data-pronto`, `data-in-veduta`),
 `[data-eroe-mondo]` (`data-cella`, `data-cammina`, `data-schermo`), i bersagli `[data-bersaglio]` (`data-vis`, `data-trovato`)
 con `[data-personaggio]`, `[data-mercante]` e `data-citta`, `[data-minatore]`, `[data-posto]` (`data-discesa`, `data-abisso`,
@@ -229,7 +245,7 @@ con `[data-personaggio]`, `[data-mercante]` e `data-citta`, `[data-minatore]`, `
 `[data-grata]`; `[data-fumetto-di]` (`pietra`, `portale`, `cartello`, `bacheca`, `fontana`, `grata` o la chiave del dungeon) con
 `[data-viaggio]`, `[data-nessuna-meta]`, `[data-bacheca-vuota]`, `[data-grata-perche]`, `[data-fontana-dice]` (`data-serve`) e il tasto
 `[data-azione="bevi"]`, `[data-richiamo-di="fontana"]`, `[data-cura-fiocco][data-risorsa="tutto"]`, `[data-segno="nuova"]` sul capitano;
-`[data-pietra-domanda]`, `[data-veduta]`
-coi `[data-nome-posto]`, `[data-mondo-attesa]`; `window.__mondo3d` (`vai(chiave)`, `porta(x, z)`, `io`) e
+`[data-pietra-domanda]`, `[data-scavo-domanda]`, `[data-veduta]`
+coi `[data-nome-posto]`, `[data-mondo-attesa]`; `window.__mondo3d` (`vai(chiave)`, `porta(x, z)`, `io`, `giro()`) e
 `window.__sotterraneo3d.grafica()` (con `mondo: true`, `pezzi`, `msPezzi`, `veduta`). In `test/aiuto/browser.mjs`:
 `mondoPronto`, `fermoNelMondo`, `toccaNelMondo`, `scendiNelMondo` (`scendiNelSotterraneo` lo usa da solo).
