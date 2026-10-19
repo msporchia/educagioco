@@ -4,7 +4,8 @@ La fase 2 del mondo aperto ([mondo-aperto-fasi.md](mondo-aperto-fasi.md#7-le-fas
 prova) la terra di sopra non è più la mappa dipinta ma il mondo generato (seme 19, 160×140 celle, 5×5 regioni ad anelli:
 [mondo-aperto-generatore.md](mondo-aperto-generatore.md)) disegnato in WebGL, dal prototipo approvato `poc/mondo-sopra`. Il
 Sotterraneo di sempre resta sulla terra dipinta ([terra-di-sopra.md](terra-di-sopra.md)), identico. Mostri sopra non ce ne
-sono ancora (la fase 5): il mondo si gira, si scende nei sette dungeon e si torna.
+sono ancora a schermo (la fase 5): il mondo si gira, si scende nei sette dungeon e si torna. Il loro motore c'è
+([mondo-aperto-mostri.md](mondo-aperto-mostri.md)): la vista li disegna da lì.
 
 ## Dove sta cosa
 
