@@ -3,6 +3,7 @@ import App from './App.vue'
 import { installa, riparaSeChiesto } from './incidenti.js'
 import { avviaGiudizi } from './store/giudizi.js'
 import { avviaSalto } from './store/salto.js'
+import { avviaFps } from './store/fps.js'
 import { sorveglia } from './aggiornamento.js'
 import './emoji/emoji.css'
 import './style.css'
@@ -23,6 +24,7 @@ if (!riparaSeChiesto()) {   // prima di tutto: non ha senso montare l'app se la 
   installa(app, { versione: __VERSIONE__.id })   // PRIMA del mount: un errore nel primo disegno va preso
   avviaGiudizi()
   avviaSalto()
+  avviaFps()
   emojiPronte().then(() => app.mount('#app'))
 }
 

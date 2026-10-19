@@ -20,6 +20,7 @@ const AdminView = caricaQuando(() => import('./views/AdminView.vue'))
 import Traguardo from './components/Traguardo.vue'
 import Benvenuto from './components/Benvenuto.vue'
 import Scarico from './components/Scarico.vue'
+import ContaFps from './components/ContaFps.vue'
 import AvvisoMonete from './components/varieta/Avviso.vue'   // importarlo accende anche il filtro delle monete
 import { SCHERMATE } from './giochi/schermate.js'
 import { caricaQuando } from './giochi/carica.js'
@@ -103,6 +104,7 @@ watch(vista, v => { if (v === 'home') controlla() })   // uscire da un gioco è 
 
 <template>
   <Scarico />
+  <ContaFps :vista="vista" />
   <div v-if="!pronto" class="schermo">
     <div class="centro"><h1>Un attimo…</h1></div>
   </div>

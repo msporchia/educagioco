@@ -21,6 +21,7 @@ import { leggi as leggiIncidenti, dimentica as scordaIncidenti, ripara } from '.
 import { giudiziAccesi, accendiGiudizi, leggi as leggiGiudizi,
          dimentica as svuotaGiudizi, riga as rigaGiudizio,
          pacco as paccoGiudizi, verdettoDi } from '../store/giudizi.js'
+import { fpsAcceso, accendiFps } from '../store/fps.js'
 import { GIOCHI } from '../data/giochi.js'
 import { INDIRIZZO, condividi, piattaforma, installata,
          CHI, CODICE, SEGNALA } from '../guide/aiuto.js'
@@ -139,6 +140,14 @@ function cambiaGiudizi() {
   esito.value = { ok: true, testo: giudiziAccesi.value
     ? 'Acceso: sopra ogni domanda compaiono 😴 😰 🐛.'
     : 'Spento: le domande tornano come prima.' }
+}
+
+// del telefono, come i giudizi: docs/core/vecchio-telefono.md
+function cambiaFps() {
+  accendiFps(!fpsAcceso.value)
+  esito.value = { ok: true, testo: fpsAcceso.value
+    ? 'Acceso: in un angolo compare «fps». Un tocco avvia una misura, un secondo la chiude e la tiene.'
+    : 'Spento: il contatore sparisce.' }
 }
 
 const righeGiudizi = computed(() =>
@@ -881,6 +890,15 @@ async function rimetti(v) {
           <!-- lo leggono il Generale, il castello, le lingue, la bancarella e gli asteroidi -->
           <i>{{ aperto ? 'Segnato: nei giochi a tappe si apre tutto, anche quello che non ha ancora fatto'
                        : 'Le tappe si aprono una per volta, come adesso' }}</i>
+          <span class="leva"><span class="pallina"></span></span>
+        </button>
+
+        <button class="carta interruttore" :class="{ spento: !fpsAcceso }"
+                data-flag="fps" @click="cambiaFps">
+          <span class="ico">📈</span>
+          <b>Contatore di fluidità (fps)</b>
+          <i>{{ fpsAcceso ? 'Acceso: in un angolo i fotogrammi al secondo; un tocco avvia una misura, un altro la chiude e la tiene'
+                          : 'Spento: serve a chi prova i giochi su un telefono vecchio' }}</i>
           <span class="leva"><span class="pallina"></span></span>
         </button>
       </div>
