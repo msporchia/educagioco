@@ -8,6 +8,7 @@
 import { COSE } from './cose.js'
 import { MOSTRI } from './mostri.js'
 import { CAMPAGNA } from './campagna.js'
+import { rifaDaId, eTaglia, bachecaDiChi } from './missioni-modelli.js'
 
 // `chi` in mezzo a una frase («portala alla ragazza del pozzo»); quello che dicono sta in dati/dialoghi.js
 export const PERSONAGGI = {
@@ -32,7 +33,8 @@ export const CITTADINI = {
 }
 // tutti quelli che stanno fermi sopra nel mondo 3D: chi dà favori e chi no
 export const PERSONAGGI_DI_SOPRA = { ...PERSONAGGI, ...CITTADINI }
-export const personaDi = da => PERSONAGGI_DI_SOPRA[da] || (da === 'minatore' ? IL_MINATORE : da === 'incantatrice' ? L_INCANTATRICE : null)
+// `bacheca:<città>`: chi dà le taglie (dati/missioni-modelli.js), nominata nel diario come un personaggio
+export const personaDi = da => PERSONAGGI_DI_SOPRA[da] || (da === 'minatore' ? IL_MINATORE : da === 'incantatrice' ? L_INCANTATRICE : bachecaDiChi(da))
 
 // quante missioni al massimo sono aperte insieme (prese, fatte da consegnare, o offerte con il «!»): oltre non se
 // ne propone un'altra finché non se ne consegna una (decisione dell'utente: «non proporgliele se sono troppe»)
@@ -201,10 +203,11 @@ export const MISSIONI = [
 // risposte di fila, e un quarto in più basta a farlo notare
 export const PIU_DURO = { ossa: 1.25, att: 1 }
 
-export const missioneDi = id => MISSIONI.find(m => m.id === id) || null
+// una taglia della bacheca (`t:…`) si rifà dall'id (dati/missioni-modelli.js): non sta nell'elenco, sta nel salvataggio
+export const missioneDi = id => (eTaglia(id) ? rifaDaId(id) : MISSIONI.find(m => m.id === id) || null)
 // il titolo di una missione e la sua faccia: «Rosicchione», «8 ratti»
-export const titoloDi = m => (m.tipo === 'trova' ? m.cosa.nome : m.tipo === 'conta' ? `${m.quanti} ${m.nomi}` : m.mostro.nome)
-export const faccia = m => (m.tipo === 'trova' ? m.cosa.em : m.tipo === 'conta' ? MOSTRI[m.specie].em : '👑')
+export const titoloDi = m => (m.titolo ? m.titolo : m.tipo === 'trova' ? m.cosa.nome : m.tipo === 'conta' ? `${m.quanti} ${m.nomi}` : m.mostro.nome)
+export const faccia = m => (m.em ? m.em : m.tipo === 'trova' ? m.cosa.em : m.tipo === 'conta' ? MOSTRI[m.specie].em : '👑')
 
 export const missioniDi = chi => MISSIONI.filter(m => m.da === chi)
 
