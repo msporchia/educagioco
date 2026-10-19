@@ -17,6 +17,9 @@ Tutto è stato guardato solo in Chrome senza GPU, mai su un telefono vero.
   accanto al 3D liscio, nebbia, veduta, pietre del viaggio.
 - **Gli oggetti delle città** ([mondo-3d.md](mondo-3d.md#gli-oggetti-delle-città)): se a telefono si leggono (insegne, panche, bracieri
   sono piccoli), se i bracieri e le torce non sono troppi, se il rifugio (poco spazio) sembra abbastanza suo.
+- **I props fuori dalle città** ([mondo-3d.md](mondo-3d.md#i-props-fuori-dalle-città-e-attorno-agli-ingressi)): se a telefono si
+  leggono (menhir e cairn sono i più sobri, le ragnatele e le lapidi sottili), se i cimiteri sono abbastanza pieni, se le palafitte
+  e le ninfee non coprono troppo l'acqua. Il guado e il passo (le due città se ne mangiano quasi tutta l'erba) restano spogli.
 - **Il segno d'arrivo del tocco** nel villaggio (corretto: non vola più via) e il tocco su una botte.
 - **Il pannello sopra i globi su desktop** (misura vera della barra, non riprodotto in headless: se si vede ancora tagliato
   servono la riga «aggiornato il…» in fondo alla home, il carattere minimo e lo zoom del browser).

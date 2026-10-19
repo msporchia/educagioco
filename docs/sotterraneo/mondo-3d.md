@@ -21,6 +21,7 @@ sono ancora (la fase 5): il mondo si gira, si scende nei sette dungeon e si torn
 | `kit.js`, `ponti.js`, `monumenti.js` | case, botteghe, pozzo, mulino; ponti, grate, staccionate, cartello, bacheca, campo del minatore, antri; gli otto ingressi, la pietra del viaggio, il portale gemello |
 | `fontana.js` | la fontana della piazza, dove manca chi cura: vasca, stelo, coppa, e l'acqua che si muove |
 | `props-citta.js`, `props-modelli.js` | gli oggetti di scena delle tre città: dove stanno (puro, dalle celle del mondo) e i modelli (barili, carretti, bancarelle, rastrelliere, lanterne, tende, palizzata…) |
+| `props-dove.js`, `props-aperto.js` | gli oggetti di scena fuori dalle città e lo scenario degli ingressi: dove stanno (puro: habitat, celle libere, strade, lotti) e le forme (lapidi, rovine, menhir, palafitte, fumarole, carrelli, accampamenti, cartelli…) |
 | `natura.js`, `vita.js`, `persone.js`, `trame.js`, `veduta.js` | alberi e decoro a istanze; fumo, spruzzi, faville, fiamme, uccelli; le figure ancorate; le trame su canvas; la telecamera e la veduta |
 
 `Campagna.vue` sceglie `Mondo3d.vue` con `disegno: '3d'` e la carica a richiesta (il Sotterraneo di sempre non tira dentro
@@ -99,6 +100,38 @@ sotto le 700 facce. Le fiaccole e i bracieri accendono le fiamme di `vita.js` (`
   cella, una voce in `LARGHE`. Misurato (Chrome senza schermo, davanti alla piazza del villaggio): +3 chiamate e +23k triangoli
   rispetto al villaggio spoglio.
 
+## I props fuori dalle città e attorno agli ingressi
+
+Come quelli delle città: il generatore non li conosce (pianta, firma e nebbie salvate restano), `props-dove.js` li deriva a scena
+dalle celle (habitat della regione, erba libera, strade, lotti, alberi del decoro) con un caso suo, sempre uguali; `props-aperto.js`
+li posa nel cantiere del pezzo (`disegnaPropsAperti`: niente mesh per oggetto, la nebbia li legge dall'`aBase`). Mai su una strada,
+un lotto, un campo, un ponte o un valico, davanti a una porta (`riservato`), in una città (e tre celle attorno), nel villaggio, né dentro
+un albero (conta la distanza dal decoro che blocca); non cambiano la mappa di blocco. I pezzi lontani non li hanno.
+
+- **Come si scelgono**: per ogni regione fuori dal villaggio la `TABELLA` dell'habitat dice cosa e quanto spesso; a ogni cella una
+  prova per tipo, con una macchia di rumore che li raggruppa; prima i grandi (`FORME[tipo].R`, le celle che vogliono libere), poi i
+  piccoli negli spazi che restano. `DENSITA` e `PIU_GRANDI` pareggiano le prove che cadono su un albero o una strada. Lungo le strade
+  un cartello, un totem (nei posti di pietra) o una pietra miliare, ogni sei celle al meno, col davanti verso la strada.
+- **Per habitat**: cimitero (lapidi in fila coi tumuli, croci, cripte basse, il cancello rotto); rovine (arco spezzato, colonne
+  spezzate, muretti a secco, macerie); brughiera e colle dei corvi (menhir, cerchi di pietre, tumuli con la porta, erica fiorita);
+  bosco, foresta e bosco secco (tronchi caduti, ceppi grandi, funghi giganti, ragnatele fra due rami secchi); lago e palude
+  (palafitte, barche rovesciate, canneti, ninfee, pali storti); ceneri (fumarole che fumano, rocce spaccate che brillano, ossa di
+  bestia, tridenti piantati); monte e colline (carrelli, binari, travi, mucchi di minerale, argani, ometti di sassi); landa (menhir,
+  ossa, croci, tridenti); prati e campi (accampamenti col falò spento e i tronchi per sedersi, carri abbandonati, steccati rotti,
+  sacchi, cassette di mele).
+- **Gli ingressi** hanno il loro scenario in `SCENARI` (offset dal centro del lotto, che si cercano attorno al posto voluto se cade
+  su un albero o una strada): lapidi, croci, cripte e il cancello alla cripta dei re; palizzata, sacchi, teschi e un carro alle
+  cantine; travi bruciate e macerie annerite alla torre; ragnatele, bozzoli e funghi alla tana dei ragni; pozze, pali, canneti, ninfee
+  e la palafitta alle sale allagate; bracieri accesi, teschi su pali, tridenti, rocce spaccate e terra bruciata alla porta
+  dell'inferno; carrello, minerale, travi e lanterna alle miniere; il cerchio di menhir con ossa e croci al pozzo.
+- **Costo**: 550 oggetti in tutto il mondo, ~79k triangoli (senza ombra), il pezzo più carico ~7k, solo i materiali che i pezzi
+  hanno già (pietra, legno, liscio, luce dove brilla). Misurato (Chrome senza schermo, 390×844): +1 chiamata e +34k triangoli
+  davanti alla piazza del villaggio (361k in tutto con gli oggetti delle città), +10/+42k davanti alla cripta, +1/+32k alle sale
+  allagate, +3/+21k alla porta dell'inferno, +9/+24k alle miniere, +8/+39k al pozzo.
+- **Per cambiarli**: un tipo nuovo è una funzione in `FORME_DISEGNO` (origine a terra, davanti verso +z) e una voce in `FORME` e
+  nella `TABELLA` (o nei `SCENARI`); le fumarole e i bracieri mettono fumo, braci e fiamme in `cose` (le fiamme sono al più 24 in
+  tutto, tienine pochi per pezzo).
+
 ## Il capitano e la fontana
 
 - **Il capitano del forte** è fra le persone fisse (`bersagli` di `Mondo3d.vue`, `PERSONAGGI_DI_SOPRA`): lo sprite della guardia, più
@@ -161,7 +194,7 @@ in un pezzo solo (disegnato anche sotto i pezzi vicini). Il degrado a scalini no
 - Le figure restano pixel art in un mondo liscio: ancorate reggono, da vedere sul telefono. Mai misurato su un telefono vero.
 
 Nei test: `unita/sotterraneo-mondo-props` (gli oggetti delle città: mai su strade, posti o porte, nel loro pezzo, il carattere
-di ognuna, le facce dei modelli), `unita/sotterraneo-mondo-3d` (i pezzi, la divisione del mondo, le istanze nel loro pezzo, le trame della nebbia, il
+di ognuna, le facce dei modelli), `unita/sotterraneo-mondo-aperto-props` (quelli fuori dalle città: pianta e firma invariate, sempre uguali, mai su strade, lotti, città o davanti a una porta, un repertorio per habitat, uno scenario per ingresso, i costi), `unita/sotterraneo-mondo-3d` (i pezzi, la divisione del mondo, le istanze nel loro pezzo, le trame della nebbia, il
 dito, i ponti, il cartello), `unita/sotterraneo-mondo-salva` (la nebbia in base64, la prima volta, il gemello per città e il caso
 peggiore, le pietre, il minatore, le grate), `integrazione/sotterraneo-mondo` (col dito vero: il mondo e quanto costa,
 camminare, la ragazza, la bottega del fabbro, la pietra sbagliata e giusta, la veduta e il tocco lì, scendere nella cripta e
