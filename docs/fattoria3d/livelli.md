@@ -55,4 +55,11 @@ Un evento `livello` (`{ livello }`) esce a ogni salita, per la scena e i contato
 Gli alberi si generano come quando gli edifici erano due (i loro numeri sono chiavi di salvataggio); quelli che cadono sul
 posto di un edificio arrivato dopo nascono già `tagliato`, senza legna.
 
+## A schermo
+
+Il gettone «⭐ N» con la barra sottile sta nel HUD e apre `viste/Livelli.vue`. Salendo compare un avviso («Livello N: nome») e un
+pallino sul gettone finché non si apre il foglio. Ciò che non è arrivato resta visibile ma in grigio, con «Livello N»: le carte del
+costruire (non si trascinano), le colture nella scelta del seme, le ricette di una macchina, i fantasmi degli edifici. Toccarle dice
+il livello; un tasto grigio non è `disabled`, così il tocco ha una risposta.
+
 Nei test: `unita/fattoria3d` (sezioni 13–17: soglie, `roba`, gating, lotti, catena, vecchio stato).

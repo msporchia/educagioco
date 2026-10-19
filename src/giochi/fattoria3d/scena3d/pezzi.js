@@ -6,7 +6,7 @@ import { creaCampo, aggiornaCampo, creaPasticceria, creaMongolfiera, creaBancare
          sincronizzaPecore, fantasma, creaMulino, creaPanificio, creaConserviera, creaGelateria, creaAiuola, creaPanchina,
          creaPozzo, creaSpaventapasseri, creaSegnaposto } from './modelli.js'
 import { EDIFICI, PEZZI } from '../dati/catalogo.js'
-import { RICETTE, FORNO_POSTI } from '../dati/ricette.js'
+import { RICETTE, MACCHINE } from '../dati/ricette.js'
 import { MONGOLFIERA } from '../dati/regole.js'
 
 
@@ -133,13 +133,20 @@ export class Pezzi {
 
   _edificio(v, g, dt, tt, adesso) {
     const s = this.m.s, e = v.d
-    if (!v.mio) { v.badge.imposta(`🪙 ${e.prezzo} · ${e.nome}`, 'vendita'); return }
-    if (v.tipo === 'pasticceria') {
-      const P = s.pasticceria
+    if (!v.mio) {
+      const chiuso = e.liv > this.m.livello()                                   // un fantasma dice il prezzo, o il livello a cui arriva
+      v.badge.imposta(chiuso ? `🔒 Livello ${e.liv} · ${e.nome}` : `🪙 ${e.prezzo} · ${e.nome}`, chiuso ? 'chiuso' : 'vendita'); return
+    }
+    if (MACCHINE[v.tipo]) {
+      // ogni macchina: pronti da ritirare, oppure la cottura in corso e i posti occupati
+      const Q = s.macchine[v.tipo], posti = MACCHINE[v.tipo].posti
       if (g.userData.gira) g.userData.gira.rotation.y += dt * 0.8
-      if (P.coda.length && tt - this.tFumo > 0.35) { this.tFumo = tt; this.fx.fumata(g.position.clone().add(g.userData.fumo)) }
-      const pronti = this.m.prontiInForno(), prima = Object.keys(P.pronti).find(k => P.pronti[k] > 0)
-      v.badge.imposta(pronti ? `${RICETTE[prima].emoji} ${pronti} pront${pronti === 1 ? 'o' : 'i'}!` : P.coda.length ? `🔥 ${Math.max(0, Math.ceil((P.coda[0].fine - adesso) / 1000))}s · ${P.coda.length}/${FORNO_POSTI}` : '', pronti ? 'pronto' : '')
+      if (g.userData.anima) g.userData.anima(dt, tt)
+      const cuoce = Q.coda.length > 0, cadenza = cuoce ? 0.35 : v.tipo === 'pasticceria' ? Infinity : 0.6   // gli altri fumano anche a riposo
+      if (g.userData.fumo && tt - (v.tFumo || 0) > cadenza) { v.tFumo = tt; this.fx.fumata(g.position.clone().add(g.userData.fumo)) }
+      const pronti = this.m.prontiIn(v.tipo), prima = Object.keys(Q.pronti).find(k => Q.pronti[k] > 0)
+      v.badge.imposta(pronti ? `${RICETTE[prima].emoji} ${pronti} pront${pronti === 1 ? 'o' : 'i'}!`
+        : cuoce ? `🔥 ${Math.max(0, Math.ceil(((Q.coda[0].fine || adesso) - adesso) / 1000))}s · ${Q.coda.length}/${posti}` : '', pronti ? 'pronto' : '')
     } else if (v.tipo === 'mongolfiera') {
       const M = s.mongolfiera, volo = g.userData.volo
       let y = Math.sin(tt * 1.3) * 0.08, x = 0
@@ -151,11 +158,6 @@ export class Pezzi {
       volo.position.set(x, y, 0); volo.rotation.z = Math.sin(tt * 0.9) * 0.02
       g.userData.fiamma.scale.set(1, 1.2 + Math.sin(tt * 14) * 0.4, 1)
       v.badge.imposta(M.cassa ? '🧳 è tornata!' : M.fine ? `☁️ ${Math.max(0, Math.ceil((M.fine - adesso) / 1000))}s` : '', M.cassa ? 'pronto' : '')
-    } else {
-      // gli altri edifici: pale, cono che gira, fiamma del forno; e il fumo, se hanno un fumaiolo
-      if (g.userData.anima) g.userData.anima(dt, tt)
-      if (g.userData.fumo && tt - (v.tFumo || 0) > 0.6) { v.tFumo = tt; this.fx.fumata(g.position.clone().add(g.userData.fumo)) }
-      v.badge.imposta('', '')
     }
   }
 

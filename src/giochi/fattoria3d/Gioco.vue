@@ -11,17 +11,19 @@ import { load, save } from '../../store/storage.js'
 import { scelta, ricorda } from '../campagne.js'
 import { Fattoria3d } from './motore/fattoria3d.js'
 import { haWebGL2 } from './scena3d/webgl.js'
-import { dettoDi } from './scena3d/azioni.js'
-import { PEZZI } from './dati/catalogo.js'
+import { dettoDi, dettoDiRifiuto } from './scena3d/detti.js'
+import { PEZZI, EDIFICI } from './dati/catalogo.js'
 import { COLTURE } from './dati/colture.js'
-import { RICETTE, FORNO_POSTI } from './dati/ricette.js'
+import { RICETTE, emojiDi } from './dati/ricette.js'
+import { avanzamento, roba, nomeDi, livelloDelPezzo } from './dati/livelli.js'
 import { COSTI } from './dati/regole.js'
 import { qualitaIniziale } from './dati/qualita.js'
 import Hud from './viste/Hud.vue'
 import BarraAzioni from './viste/BarraAzioni.vue'
 import Vassoio from './viste/Vassoio.vue'
 import SceltaSeme from './viste/SceltaSeme.vue'
-import Pasticceria from './viste/Pasticceria.vue'
+import Macchina from './viste/Macchina.vue'
+import Livelli from './viste/Livelli.vue'
 import Dialogo from './viste/Dialogo.vue'
 import Opzioni from './viste/Opzioni.vue'
 import './stile.css'
@@ -54,21 +56,30 @@ const borsa = {
 
 // ── cosa si vede (il motore non è reattivo: si rilegge dopo ogni cambio e ogni quarto di secondo) ──
 const versione = ref(0)
-const foto = ref({ scorte: '', prodotti: '', lana: 0, legna: 0, daFare: { semina: 0, raccogli: 0 } })
+const foto = ref({ scorte: '', prodotti: '', lana: 0, legna: 0, daFare: { semina: 0, raccogli: 0 }, livello: 1, quanto: 0 })
+const datiLivello = () => { const a = avanzamento(motore.esperienza()); return { livello: a.livello, quanto: a.quanto } }
 const ripresa = () => {
   const s = motore.s
   const unisci = (o, em) => Object.entries(o).filter(([, n]) => n > 0).map(([k, n]) => em(k) + ' ' + n).join('  ')
   foto.value = {
     scorte: unisci(s.merci, k => COLTURE[k].emoji) || '🌾 0', prodotti: unisci(s.prodotti, k => RICETTE[k].emoji) || '🍞 0',
-    lana: s.lana, legna: s.legna, daFare: motore.daFare(),
+    lana: s.lana, legna: s.legna, daFare: motore.daFare(), ...datiLivello(),
   }
   versione.value++
 }
 const EVENTI = { terra: 'fattoria3dTerre', pezzo: 'fattoria3dPezzi', raccolto: 'fattoria3dRaccolti', albero: 'fattoria3dAlberi' }
+/** Un livello nuovo: un avviso che passa da sé e un pallino sul gettone finché non si apre il foglio. */
+function salito(livello) {
+  const testo = `Livello ${livello}: ${nomeDi(livello)}`
+  ui.avviso(testo)
+  toast.value = { testo, fine: performance.now() + DURATA_TOAST }
+  livelloNuovo.value = true
+}
 function contaEventi() {
   for (const e of motore.prendiEventi()) {
     if (EVENTI[e.tipo]) segna(EVENTI[e.tipo])
     else if (e.tipo === 'prodotto') segna('fattoria3dProdotti', e.n)
+    else if (e.tipo === 'livello') salito(e.livello)
   }
 }
 
@@ -92,7 +103,13 @@ const avvisoTesto = ref('')
 const avvisoAnnulla = ref(false)
 const trascinando = ref(null)            // { emoji, x, y, su, perMettereVia } mentre si trascina un pezzo
 const semiAperto = ref(false)
-const pasticceriaAperta = ref(false)
+const macchinaAperta = ref(null)         // il tipo della macchina di cui si vede il menu
+const macchinaMsg = ref('')
+const livelliAperto = ref(false)
+const livelloNuovo = ref(false)
+const toast = ref(null)                  // { testo, fine }: l'avviso del livello, sopra la scena
+const DURATA_TOAST = 4500, DURATA_AVVISO = 6000
+let avvisoFine = 0
 const opzioniAperte = ref(false)
 const opzioniRidotte = ref(false)
 const dialogo = ref(null)                // { titolo, testo, bottoni: [{ t, fn, quieto }] }
@@ -107,9 +124,12 @@ const ui = {
   cambio() { sporco = true; contaEventi(); ripresa() },
   chiedi(titolo, testo, bottoni) { dialogo.value = { titolo, testo, bottoni } },
   scegliSeme(cb) { quandoSeme = cb; semiAperto.value = true },
-  apriPasticceria() { pasticceriaAperta.value = true },
-  avviso(testo, conAnnulla = false) { avvisoTesto.value = testo || ''; avvisoAnnulla.value = !!conAnnulla },
-  fogliAperti: () => !!dialogo.value || semiAperto.value || pasticceriaAperta.value || (opzioniAperte.value && !opzioniRidotte.value),
+  apriMacchina(tipo) { macchinaMsg.value = ''; macchinaAperta.value = tipo },
+  avviso(testo, conAnnulla = false) {
+    avvisoTesto.value = testo || ''; avvisoAnnulla.value = !!conAnnulla
+    avvisoFine = testo && !conAnnulla ? performance.now() + DURATA_AVVISO : 0       // un avviso con «Annulla» resta finché c'è l'annulla
+  },
+  fogliAperti: () => !!dialogo.value || semiAperto.value || !!macchinaAperta.value || livelliAperto.value || (opzioniAperte.value && !opzioniRidotte.value),
   zonaDrop: () => ((costruendo.value ? vassoio.value?.radice : zonaVia.value) || null)?.getBoundingClientRect() || null,
   trascinando(info) { trascinando.value = info },
 }
@@ -133,7 +153,10 @@ function tutti() {
 // ── costruire ──
 const carte = computed(() => {
   void versione.value
-  const pezzi = Object.entries(PEZZI).map(([id, p]) => ({ id, emoji: p.emoji, nome: p.nome, pezzo: true,
+  const liv = motore.livello()
+  // dai dati, i più vicini per primi: ciò che non è ancora arrivato sta in fondo, in grigio
+  const pezzi = Object.entries(PEZZI).sort((a, b) => livelloDelPezzo(a[0]) - livelloDelPezzo(b[0])).map(([id, p]) => ({
+    id, emoji: p.emoji, nome: p.nome, pezzo: true, liv: livelloDelPezzo(id), bloccata: livelloDelPezzo(id) > liv,
     prezzo: '🪙 ' + motore.prezzoPezzo(id), nel_magazzino: motore.nelMagazzino(id) }))
   return [...pezzi,
     { id: 'strada', emoji: '🛣️', nome: 'Strada', pezzo: false, prezzo: `🪙 ${COSTI.strada}/pezzo`, nel_magazzino: 0 },
@@ -157,6 +180,7 @@ function chiudiCostruisci() {
 function cambiaVista(v) { vista.value = v; mondo.imposta({ vista: v, pan: { x: 0, z: 0 } }) }
 function scegliStrumento(id) { strumento.value = strumento.value === id ? null : id; mondo.imposta({ strumento: strumento.value }); avvisoTesto.value = '' }
 function cartaTocco(id) {
+  if (PEZZI[id] && livelloDelPezzo(id) > motore.livello()) return ui.avviso(dettoDi('non-sbloccato', { liv: livelloDelPezzo(id) }))
   if (motore.nelMagazzino(id) > 0) ui.avviso(`Trascina «${PEZZI[id].nome}» dalla barra fino alla mappa`)
   else comprare(id)
 }
@@ -166,7 +190,7 @@ function comprare(id) {
   ui.chiedi('Comprare: ' + nome, `Costa 🪙 ${pr}. Poi lo trascini sulla mappa dove vuoi.`, [
     { t: `Compra · 🪙 ${pr}`, fn: () => {
       const r = motore.compraPezzo(id)
-      if (!r.ok) return ui.avviso(dettoDi(r.motivo, { mancano: pr - motore.monete() }))
+      if (!r.ok) return ui.avviso(dettoDiRifiuto(r, { mancano: pr - motore.monete() }))
       ui.cambio(); ui.avviso(nome + ' comprato: trascinalo sulla mappa')
     } },
     { t: 'No', quieto: true },
@@ -177,15 +201,17 @@ function rispostaDialogo(i) {
   const b = d && d.bottoni[i]; if (b && b.fn) b.fn()
 }
 
-// ── la pasticceria ──
-const pasticceria = computed(() => {
+// ── il menu di una macchina ──
+const macchina = computed(() => {
   void versione.value
-  const P = motore.s.pasticceria, adesso = motore.ora(), s = motore.s
-  const pronti = Object.entries(P.pronti).filter(([, n]) => n > 0)
+  const tipo = macchinaAperta.value; if (!tipo) return null
+  const M = motore.macchina(tipo), adesso = motore.ora(), s = motore.s, E = EDIFICI[tipo]
+  const pronti = Object.entries(M.pronti).filter(([, n]) => n > 0)
   const dispensa = Object.entries(s.prodotti).filter(([, n]) => n > 0).map(([k, n]) => RICETTE[k].emoji + ' ×' + n)
   return {
-    forno: Array.from({ length: FORNO_POSTI }, (_, k) => {
-      const it = P.coda[k]; if (!it) return null
+    tipo, titolo: E.emoji + ' ' + E.nome,
+    forno: Array.from({ length: M.posti }, (_, k) => {
+      const it = M.coda[k]; if (!it) return null
       const r = RICETTE[it.ric]
       if (!it.fine) return { emoji: r.emoji, testo: 'in coda', barra: 0 }
       const resto = Math.max(0, it.fine - adesso)
@@ -193,23 +219,35 @@ const pasticceria = computed(() => {
     }),
     pronti: pronti.length ? 'Pronti: ' + pronti.map(([k, n]) => RICETTE[k].emoji + ' ×' + n).join('  ') : '',
     puoRitirare: pronti.length > 0,
-    ricette: Object.entries(RICETTE).map(([k, r]) => ({ k, nome: r.nome, emoji: r.emoji, ms: r.ms,
-      ing: Object.entries(r.ing).map(([i, n]) => ({ k: i, ha: s.merci[i], serve: n })),
-      puoi: motore.ingredientiOk(k) && P.coda.length < FORNO_POSTI })),
-    dispensa: dispensa.length ? 'In dispensa: ' + dispensa.join('  ') : 'La dispensa è vuota: i prodotti serviranno per gli ordini (da fare).',
+    ricette: motore.ricetteDi(tipo).map(r => ({ k: r.id, nome: r.nome, emoji: r.emoji, ms: r.ms, liv: r.liv, sbloccata: r.sbloccata,
+      ing: Object.entries(r.ing).map(([i, serve]) => ({ k: i, emoji: emojiDi(i, COLTURE), ha: motore.scortaDi(i), serve })),
+      manca: Object.entries(r.mancano).map(([i, n]) => `manca ${emojiDi(i, COLTURE)} ${n}`).join(' '),
+      puoi: r.sbloccata && r.ingredienti && M.coda.length < M.posti })),
+    dispensa: dispensa.length ? 'In dispensa: ' + dispensa.join('  ') : 'La dispensa è vuota.',
   }
 })
 function prepara(k) {
-  const r = motore.prepara(k)
-  if (!r.ok) return mondo.fx.parla(dettoDi(r.motivo))
-  ui.cambio()
+  const tipo = macchinaAperta.value
+  const r = motore.avviaRicettaIn(tipo, k)
+  if (!r.ok) return macchinaMsg.value = dettoDiRifiuto(r)
+  macchinaMsg.value = ''; ui.cambio()
 }
 function ritira() {
-  const r = motore.ritira()
+  const tipo = macchinaAperta.value
+  const r = motore.ritiraDa(tipo)
   if (!r.ok) return
-  ui.cambio(); mondo.fx.volo('+' + r.n + ' 🍰', mondo.pezzi.centroDi({ kind: 'edificio', tipo: 'pasticceria' }), 2.6)
+  macchinaMsg.value = ''
+  ui.cambio(); mondo.fx.volo('+' + r.n + ' ' + EDIFICI[tipo].emoji, mondo.pezzi.centroDi({ kind: 'edificio', tipo }), 2.6)
   mondo.eroe.avvia('esulta', 0.9)
 }
+
+// ── il foglio dei livelli ──
+const livelli = computed(() => {
+  void versione.value
+  const info = avanzamento(motore.esperienza())
+  return { info, ora: roba(info.livello), dopo: roba(info.livello + 1), nomeDopo: nomeDi(info.livello + 1) }
+})
+function apriLivelli() { livelloNuovo.value = false; livelliAperto.value = true }
 
 // ── le opzioni di qualità ──
 function cambiaOpzioni() { mondo.applica(q); save(CHIAVE_OPZIONI, { q: { ...q } }) }
@@ -232,6 +270,9 @@ let battito = 0
 function ritmo() {
   if (!motore) return
   contaEventi(); ripresa()
+  const t = performance.now()
+  if (toast.value && t >= toast.value.fine) toast.value = null
+  if (avvisoFine && t >= avvisoFine) { avvisoFine = 0; avvisoTesto.value = '' }
   cameraLibera.value = mondo.cameraLibera && !costruendo.value
   if (opzioniAperte.value) stat.value = mondo.statistiche()
   if (sporco) salva()
@@ -280,7 +321,8 @@ onBeforeUnmount(() => {
       <div ref="sopra" class="f3-sopra"></div>
 
       <template v-if="mondo || versione">
-        <Hud v-bind="foto" />
+        <Hud v-bind="foto" :nuovo="livelloNuovo" @livello="apriLivelli" />
+        <div v-if="toast" class="f3-toast" data-f3="avviso-livello">⭐ {{ toast.testo }}</div>
         <button class="f3-angolo" aria-label="opzioni" data-f3="apri-opzioni" @click="opzioniAperte = !opzioniAperte">⚙</button>
         <button v-if="cameraLibera" class="f3-centra" data-f3="centra" @click="mondo.tornaAllEroe()">⌖ Torna all'eroe</button>
 
@@ -299,8 +341,9 @@ onBeforeUnmount(() => {
         </div>
         <div v-if="trascinando && trascinando.su" class="f3-trascinato" :style="{ transform: `translate(${trascinando.x}px, ${trascinando.y - 56}px) translate(-50%, -50%)` }">{{ trascinando.emoji }}</div>
 
-        <SceltaSeme v-if="semiAperto" :seme="seme" @scegli="scegliSeme" @chiudi="semiAperto = false" />
-        <Pasticceria v-if="pasticceriaAperta" v-bind="pasticceria" @prepara="prepara" @ritira="ritira" @chiudi="pasticceriaAperta = false" />
+        <SceltaSeme v-if="semiAperto" :seme="seme" :livello="foto.livello" @scegli="scegliSeme" @chiudi="semiAperto = false" />
+        <Macchina v-if="macchina" :key="macchina.tipo" v-bind="macchina" :messaggio="macchinaMsg" @prepara="prepara" @ritira="ritira" @chiudi="macchinaAperta = null" />
+        <Livelli v-if="livelliAperto" v-bind="livelli" @chiudi="livelliAperto = false" />
         <Opzioni v-if="opzioniAperte" :q="q" :stat="stat" :conta="conta" :rapporto="rapporto" @cambia="cambiaOpzioni"
                  @stress="(t, n) => { mondo.stress(t, n); ui.cambio() }" @rapporto="creaRapporto" @ridotto="v => opzioniRidotte = v"
                  @chiudi="opzioniAperte = false; opzioniRidotte = false" />

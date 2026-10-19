@@ -7,6 +7,11 @@
 .f3-senza .em { font-size: 64px; margin: 0; }
 
 .f3-hud { position: absolute; left: 8px; right: 60px; top: 8px; display: flex; gap: 6px; z-index: 20; pointer-events: none; flex-wrap: wrap; }
+.f3-gettone { position: relative; pointer-events: auto; display: flex; flex-direction: column; align-items: stretch; gap: 3px; min-width: 56px; min-height: 36px; border: 0; background: rgba(255,251,240,.92); color: #3a2a1a; font: 800 16px "Emoji Gioco", system-ui, sans-serif; padding: 5px 11px 5px; border-radius: 16px; box-shadow: 0 2px 6px rgba(0,0,0,.18); touch-action: manipulation; }
+.f3-gettone i { display: block; height: 4px; border-radius: 2px; background: #eadfc6; overflow: hidden; } .f3-gettone u { display: block; height: 100%; background: #f0a020; }
+.f3-pallino { position: absolute; right: -3px; top: -3px; width: 14px; height: 14px; border-radius: 7px; background: #e8472b; border: 2px solid #fff; box-sizing: border-box; animation: f3-pulsa 1.2s ease-in-out infinite; }
+@keyframes f3-pulsa { 50% { transform: scale(1.25); } }
+.f3-toast { position: absolute; left: 50%; transform: translateX(-50%); top: 64px; z-index: 28; max-width: calc(100% - 32px); pointer-events: none; background: #ffe27a; color: #3a2a1a; font: 800 16px "Emoji Gioco", system-ui, sans-serif; padding: 9px 16px; border-radius: 18px; box-shadow: 0 3px 12px rgba(0,0,0,.3); text-align: center; }
 .f3-hud span { background: rgba(255,251,240,.92); color: #3a2a1a; font: 800 16px "Emoji Gioco", system-ui, sans-serif; padding: 5px 11px; border-radius: 16px; box-shadow: 0 2px 6px rgba(0,0,0,.18); }
 .f3-angolo { position: absolute; right: 8px; top: 8px; z-index: 20; width: 44px; height: 44px; border: 0; border-radius: 22px; background: rgba(255,255,255,.75); font-size: 20px; touch-action: manipulation; }
 .f3-centra { position: absolute; left: 50%; transform: translateX(-50%); top: 60px; z-index: 29; min-height: 44px; border: 0; border-radius: 22px; padding: 0 16px; background: rgba(255,251,240,.95); color: #3a2a1a; font: 800 14px "Emoji Gioco", system-ui, sans-serif; box-shadow: 0 3px 10px rgba(0,0,0,.3); touch-action: manipulation; }
@@ -28,11 +33,16 @@
 .f3-foglio h3 { margin: 12px 2px 6px; font-size: 13px; text-transform: uppercase; letter-spacing: .05em; color: #8a6a3a; }
 .f3-chiudi { position: absolute; right: 10px; top: 10px; width: 44px; height: 44px; border: 0; border-radius: 22px; background: #efe4cf; font-size: 18px; color: #5a3a2a; touch-action: manipulation; z-index: 2; }
 .f3-riduci { position: absolute; right: 60px; top: 10px; width: 44px; height: 44px; border: 0; border-radius: 22px; background: #efe4cf; font-size: 18px; color: #5a3a2a; touch-action: manipulation; z-index: 2; }
+.f3-colonna { display: flex; flex-direction: column; overflow: hidden; }
+.f3-colonna > h2 { flex: none; }
+.f3-corpo { flex: 0 1 auto; min-height: 0; overflow-y: auto; touch-action: pan-y; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+.f3-messaggio { margin: 8px 2px 0; padding: 8px 12px; border-radius: 12px; background: #ffe9b0; font-size: 14px; font-weight: 700; }
 .f3-nota { font-size: 12px; color: #7a5a3a; margin: 10px 2px 0; }
 
 .f3-semi { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .f3-semi button { display: flex; flex-direction: column; align-items: center; gap: 2px; border: 2px solid #e6cfa0; background: #fffdf6; border-radius: 16px; padding: 10px 4px; color: #3a2a1a; touch-action: manipulation; }
 .f3-semi button.ultimo { border-color: #f0a020; background: #fff3cf; }
+.f3-semi button.bloccato, .f3-carte button.bloccata, .f3-ricette .ricetta.chiusa { opacity: .55; filter: grayscale(.8); }
 .f3-semi .em { font-size: 32px; line-height: 1; } .f3-semi b { font-size: 14px; } .f3-semi small { font-size: 12px; color: #7a5a3a; }
 
 /* la barra del costruire */
@@ -66,7 +76,8 @@
 .f3-ricette .em { font-size: 32px; } .f3-ricette .ricetta > div { flex: 1; display: flex; flex-direction: column; } .f3-ricette b { font-size: 15px; } .f3-ricette small { font-size: 12px; color: #7a5a3a; }
 .f3-ricette .manca { color: #c0392b; font-weight: 700; } .f3-ricette .ok { color: #2d7a2d; }
 .f3-ricette button { min-height: 46px; padding: 0 12px; border: 0; border-radius: 14px; background: #ffd36a; font: 800 14px "Emoji Gioco", system-ui, sans-serif; color: #3a2a1a; touch-action: manipulation; }
-.f3-ricette button:disabled { background: #e8e2d2; color: #999; }
+.f3-ricette button.spenta { background: #e8e2d2; color: #999; }
+.f3-ricette .blocco { color: #8a6a3a; font-weight: 700; }
 
 /* le opzioni */
 .f3-opzioni { max-height: 78%; }
@@ -94,8 +105,17 @@
 .f3-badge { position: absolute; left: 0; top: 0; background: rgba(255,251,240,.95); color: #3a2a1a; font: 800 14px "Emoji Gioco", system-ui, sans-serif; padding: 3px 9px; border-radius: 12px; box-shadow: 0 2px 6px rgba(0,0,0,.22); white-space: nowrap; }
 .f3-badge.pronto { background: #ffe27a; animation: f3-salta .9s ease-in-out infinite; }
 .f3-badge.vendita { background: #ffd36a; }
+.f3-badge.chiuso { background: #dcd6c8; color: #6a5a4a; }
 @keyframes f3-salta { 50% { margin-top: -8px; } }
 .f3-badge[hidden], .f3-fumetto[hidden] { display: none; }
 .f3-fumetto { position: absolute; transform: translate(-50%, -100%); background: rgba(255,251,240,.97); color: #3a2a1a; font: 700 15px "Emoji Gioco", system-ui, sans-serif; padding: 7px 13px; border-radius: 14px; box-shadow: 0 3px 10px rgba(0,0,0,.25); white-space: nowrap; }
 .f3-volo { position: absolute; transform: translate(-50%, -100%); font: 800 20px "Emoji Gioco", system-ui, sans-serif; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,.6); animation: f3-sale 1.4s ease-out forwards; }
 @keyframes f3-sale { to { margin-top: -60px; opacity: 0; } }
+
+/* il foglio dei livelli */
+.f3-livelli .f3-nome { margin: 0 2px 8px; font-size: 15px; color: #7a5a3a; font-weight: 700; }
+.f3-barra-livello { height: 10px; border-radius: 5px; background: #eadfc6; overflow: hidden; margin: 0 2px; } .f3-barra-livello u { display: block; height: 100%; background: #f0a020; }
+.f3-roba { display: flex; flex-direction: column; gap: 6px; }
+.f3-roba > div { display: flex; align-items: center; gap: 10px; background: #fffdf6; border: 2px solid #e6cfa0; border-radius: 14px; padding: 6px 10px; }
+.f3-roba .em { font-size: 26px; } .f3-roba b { flex: 1; font-size: 15px; } .f3-roba small { font-size: 12px; color: #7a5a3a; }
+.f3-roba.chiusa > div { opacity: .55; filter: grayscale(.8); border-style: dashed; }
