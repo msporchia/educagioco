@@ -47,8 +47,10 @@ Tutto è stato guardato solo in Chrome senza GPU, mai su un telefono vero.
 - **La pergamena del portale**: lo sprite disegnato (oggi l'emoji; a terra in 3D si vede solo il bagliore), la casella nella
   barra come la pozione (oggi si apre dallo zaino), un banco nelle altre città, l'abisso «dall'inizio del tratto» (oggi
   chiude la serata come il ritorno di sempre). Il pensiero «sono lontano da casa» per ricordare che si può usare.
-- **Le icone dei posti fotografate dai monumenti** (fine della fase 8): i nomi nuovi sono in ogni testo, ma il diario, la home e le
-  carte della discesa usano ancora i ritagli della mappa dipinta (`terra-icone.js`): `npm run scatti icone-mondo`.
+- **La carta «riprendi» della home per il Sotterraneo 3D**: `sotterraneo3d` non ha un manifesto con `ripresa()` (è una riga di
+  `data/giochi.js`), quindi in home la partita a metà non mostra l'icona; quando l'avrà, `iconaDi(chiave, true)` è già pronta
+  (le icone del mondo fotografate stanno in [mondo-3d.md](mondo-3d.md#le-icone-dei-posti)). La città non ha ancora un posto
+  dove mostrarsi: le tre icone ci sono, nessuna schermata le chiede.
 - **Il mondo con i mostri sopra** (fase 5): branchi, tane, luce a cerchio, annuncio della regione, abitanti per le dieci
   regioni che ne sono prive (il foglio delle creature d'aperta campagna).
 - **Le quest alla Diablo/WoW** ([mondo-aperto-quest.md](mondo-aperto-quest.md)): 13 tipi, taglie della bacheca da modelli con

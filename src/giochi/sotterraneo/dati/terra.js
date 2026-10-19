@@ -2,6 +2,7 @@
 // minatore e il cartello. Dove stanno i posti, dove si cammina e la mappa stessa li dà dati/terra-mappa.js
 // (generato). Il criterio delle discese sui posti: docs/sotterraneo/terra-di-sopra.md.
 import { ICONE } from './terra-icone.js'
+import { ICONE_MONDO } from './icone-mondo.js'
 
 // in fila per strada dal villaggio, la prima la più vicina; l'abisso nel pozzo senza fondo, quello che dicono non
 // abbia fondo e il più lontano di tutti (docs/sotterraneo/la-grande-storia.md)
@@ -16,8 +17,9 @@ export const POSTO_DI = {
   abisso: 'pozzo-vecchio',
 }
 
-// l'icona di una discesa (la chiave della tappa, o 'abisso'): il suo posto ritagliato dalla mappa, non un'emoji
-export const iconaDi = chiave => ICONE[POSTO_DI[chiave]] || null
+// l'icona di una discesa (la chiave della tappa, o 'abisso'), non un'emoji: il suo posto ritagliato dalla mappa dipinta; nel
+// Sotterraneo 3D (`mondo`) il suo monumento fotografato nel mondo (dati/icone-mondo.js, generato). Le città: solo nel 3D
+export const iconaDi = (chiave, mondo = false) => (mondo && ICONE_MONDO[chiave]) || ICONE[POSTO_DI[chiave]] || null
 
 // come il minatore spiega la strada («Le cantine dei goblin: …») sulla mappa dipinta del Sotterraneo di sempre: parte dal villaggio,
 // dove sta lui. Il Sotterraneo 3D ha la sua geografia: LUOGHI_MONDO, sotto

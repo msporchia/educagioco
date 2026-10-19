@@ -156,6 +156,28 @@ Undici: una per città e una davanti a ogni ingresso. Toccata una spenta, una do
 che ha davanti, o della regione della città): giusta la runa si accende e paga come giù, sbagliata resta spenta e si riprova
 (niente si brucia). Toccata una accesa, il fumetto elenca le altre accese: il viaggio è subito e gratis (un lampo chiaro).
 
+## Le icone dei posti
+
+Le sette discese, l'abisso e le tre città hanno un'icona **fotografata nel mondo 3D**, non ritagliata dalla mappa dipinta.
+
+- **Il comando**: `npm run scatti icone-mondo` (`strumenti/icone-mondo.mjs`, chiamato da `strumenti/scatti.mjs`; non gira con «tutte»,
+  solo se nominato; `ICONE_DEBUG=1` lascia i PNG in `tmp/scatti/icone-mondo/`). Apre il file costruito sul mondo, con un profilo
+  che ha finito tutte le discese (nessun ingresso porta il divieto), porta la telecamera sul centro di ogni monumento o sulla
+  piazza della città, ritaglia, riduce a 112 px, ci mette un tondo sfumato come ai ritagli di prima e scrive
+  `dati/icone-mondo.js` (`ICONE_MONDO`, in WebP con perdita, ~4 KB l'una). Si rilancia quando un monumento cambia faccia.
+- **L'inquadratura è una per tutti**: finestra quadrata 440 px, inclinazione di serie; i dungeon allo zoom più vicino (0,7) col
+  62% centrale del quadro, le città al più lontano (1,5) col 90%. Giorno, ombra del sole, `&nebbia=no`, e `&senzaeroe` (il cheat
+  nuovo: l'eroe non si disegna, così la telecamera sta sul monumento e non su di lui) con l'interfaccia nascosta.
+- **Il file è generato** e porta la firma del suo contenuto: non si scrive a mano; `unita/sotterraneo-icone-mondo` la ricalcola, e
+  controlla che ci sia un'icona per posto, WebP 112×112, sotto i 9 KB l'una.
+- **Chi le usa**: `iconaDi(chiave, mondo)` in `dati/terra.js`. Nel Sotterraneo 3D (`mondo` vero) dà la fotografia, nel 2D di sempre
+  il ritaglio dipinto (`terra-icone.js`, intatto). Passano `in3d`: il diario (`:mondo`, anche quello dentro una discesa), la scelta
+  degli eroi («a metà»), la carta «riprendi» di `Campagna`, la bussola della meta. La **home** non le usa ancora: la sua carta
+  «riprendi» viene da `ripresa()` del manifesto del Sotterraneo (2D) e `sotterraneo3d` non ne ha uno
+  ([da-fare-3d-e-mondo.md](da-fare-3d-e-mondo.md)). Le icone sono stringhe: la home non importa three, e
+  `unita/sotterraneo-icone-mondo` lo prova camminando sulle importazioni statiche.
+- **Peso**: ~+60 KB nel file unico (le fotografie in base64, senza three).
+
 ## La nebbia
 
 Quello che non si è visto non si disegna, e sopra c'è un velo di nuvole chiare.
@@ -167,7 +189,7 @@ Quello che non si è visto non si disegna, e sopra c'è un velo di nuvole chiare
   (l'istanza, o l'attributo `aBase` del kit) e chiude tutto il pezzo se non si è visto; scoperto, sale dal terreno in 0,7 s.
   L'ombra usa lo stesso innesto: niente sagome bianche, nemmeno d'ombra. Le figure le salta la vista stessa.
 - **Il velo**: cartelli di nuvola orizzontali (una InstancedMesh) che svaniscono dove sotto si è visto.
-- Si scopre nel raggio di 10 celle (`VISTA_MONDO`). `#…&nebbia=no` la spegne per le foto.
+- Si scopre nel raggio di 10 celle (`VISTA_MONDO`). `#…&nebbia=no` la spegne per le foto (e `&senzaeroe` nasconde l'eroe).
 
 ## Quanto costa
 

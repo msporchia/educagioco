@@ -89,9 +89,9 @@ mondo è 2,3 volte più grande, quindi **si disegna a pezzi**:
 
 ### Le icone dei posti
 
-Oggi le icone dei dungeon sono ritagli della mappa dipinta (`terra-icone.js`) e le usano anche la home e la scelta
-degli eroi, che three non lo caricano. **Si fotografano i monumenti in 3D con un comando** (`npm run scatti icone-mondo`,
-con `strumenti/scatta-app.mjs`), in WebP piccole dentro un file di dati: niente una tantum, e la home resta senza three.
+Le icone dei dungeon erano ritagli della mappa dipinta (`terra-icone.js`) e le usano anche la home e la scelta degli eroi, che
+three non lo caricano. **Si fotografano i monumenti in 3D con un comando** (`npm run scatti icone-mondo`), in WebP piccole dentro
+un file di dati: niente una tantum, e la home resta senza three. Fatto: [mondo-3d.md](mondo-3d.md#le-icone-dei-posti).
 
 ## 6. Cosa si modella e cosa resta sprite
 
@@ -146,8 +146,12 @@ lui ha già messo la persona e il pozzo.
 
 **Fatta la 8** (19 ottobre 2026, [dialoghi.md](dialoghi.md#i-nomi)): `CAMPAGNA`, `CAPITOLI`, `VOLTI`, le missioni, i dialoghi, le novità e
 il resto dei testi dicono i nomi nuovi, per tutti e due i sotterranei (un nome dice l'interno, e il 2D mostra le stesse discese);
-la **strada** del minatore no, perché è geografia: `LUOGHI_MONDO` per il mondo aperto, `LUOGHI` resta alla mappa dipinta. Restano da
-fare le icone dei posti fotografate dai monumenti (`npm run scatti icone-mondo`): la home e il diario usano ancora i ritagli dipinti.
+la **strada** del minatore no, perché è geografia: `LUOGHI_MONDO` per il mondo aperto, `LUOGHI` resta alla mappa dipinta. 
+
+**Fatta la 8 completa** (19 ottobre 2026): le icone dei posti sono fotografate dai monumenti con `npm run scatti icone-mondo`
+([mondo-3d.md](mondo-3d.md#le-icone-dei-posti)) e le legge il Sotterraneo 3D (diario, scelta degli eroi, carte della discesa,
+bussola); il 2D di sempre tiene i suoi ritagli dipinti. Resta solo la carta «riprendi» della home, che per il 3D non ha ancora un
+manifesto ([da-fare-3d-e-mondo.md](da-fare-3d-e-mondo.md)).
 
 **In tutto 38–57 giorni più la taratura**: due mesi abbondanti di lavoro pieno. Il primo file da provare arriva alla
 fine della fase 2 (dodici giorni circa); il mondo pericoloso alla fine della 5. Senza mostri sopra (la scelta più
@@ -232,7 +236,7 @@ Da aggiungere a [da-fare.md](da-fare.md) quando il progetto è deciso (non scrit
 - Le figure ancorate (ombra, contorno, luce di taglio) e guardarle sul telefono.
 - La nebbia che non disegna quello che non si è visto, e il velo di nuvole.
 - Il bersaglio delle persone allargato e la loro priorità sul prato.
-- Le icone dei posti fotografate dai monumenti con un comando.
+- ~~Le icone dei posti fotografate dai monumenti con un comando.~~ Fatto (fase 8 completa).
 - Misurare il mondo a pezzi su due telefoni veri.
 - Ritarare la storia, le zone e le missioni col curioso che attraversa le regioni.
 - I personaggi nuovi delle città (cacciatrice, carovaniere; il capitano c'è) e la bacheca, prima in codice.

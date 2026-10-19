@@ -88,7 +88,7 @@ const vaDa = v => emit('vai', v.da)
 
       <!-- dove va la freccina: la discesa, e come ci si arriva -->
       <div v-if="storia.corrente" class="sot-dettaglio-riga" data-dettaglio-dove>
-        <img v-if="iconaDi(storia.corrente.chiave)" class="sot-ritaglio" :src="iconaDi(storia.corrente.chiave)" alt="" data-ritaglio>
+        <img v-if="iconaDi(storia.corrente.chiave, mondo)" class="sot-ritaglio" :src="iconaDi(storia.corrente.chiave, mondo)" alt="" data-ritaglio>
         <span class="sot-testo">
           <small>Dove</small>
           <b>{{ storia.corrente.nome }}</b>
@@ -149,7 +149,7 @@ const vaDa = v => emit('vai', v.da)
 
       <!-- dove: la discesa ritagliata dalla mappa, e il piano -->
       <div class="sot-dettaglio-riga" data-dettaglio-dove>
-        <img v-if="iconaDi(voce.discesa)" class="sot-ritaglio" :src="iconaDi(voce.discesa)" alt="" data-ritaglio>
+        <img v-if="iconaDi(voce.discesa, mondo)" class="sot-ritaglio" :src="iconaDi(voce.discesa, mondo)" alt="" data-ritaglio>
         <span class="sot-testo">
           <small>Dove</small>
           <b>{{ voce.dove }}</b>
@@ -202,7 +202,7 @@ const vaDa = v => emit('vai', v.da)
         <ul>
           <li data-storia :data-stato="storia.finita ? 'consegnata' : 'presa'" :data-segui="storia.segui ? 1 : null"
               role="button" tabindex="0" @click="storiaAperta = true" @keydown.enter="storiaAperta = true">
-            <img v-if="storia.corrente && iconaDi(storia.corrente.chiave)" class="sot-ritaglio" :src="iconaDi(storia.corrente.chiave)" alt="" data-ritaglio>
+            <img v-if="storia.corrente && iconaDi(storia.corrente.chiave, mondo)" class="sot-ritaglio" :src="iconaDi(storia.corrente.chiave, mondo)" alt="" data-ritaglio>
             <span v-else class="em">{{ storia.finita ? '✅' : '🚪' }}</span>
             <span class="sot-testo">
               <b>{{ storia.titolo }}</b>
@@ -225,7 +225,7 @@ const vaDa = v => emit('vai', v.da)
         <ul>
           <li v-for="v in d.pronte" :key="v.id" :data-missione="v.id" :data-stato="v.stato" role="button" tabindex="0"
               @click="aperta = v.id" @keydown.enter="aperta = v.id">
-            <img v-if="iconaDi(v.discesa)" class="sot-ritaglio" :src="iconaDi(v.discesa)" alt="" data-ritaglio>
+            <img v-if="iconaDi(v.discesa, mondo)" class="sot-ritaglio" :src="iconaDi(v.discesa, mondo)" alt="" data-ritaglio>
             <span class="sot-testo">
               <b><span class="em">{{ v.em }}</span> {{ v.titolo }}</b>
               <i>{{ v.dove }}<template v-if="v.piano">, piano {{ v.piano }}</template></i>
@@ -241,7 +241,7 @@ const vaDa = v => emit('vai', v.da)
         <ul>
           <li v-for="v in d.daFare" :key="v.id" :data-missione="v.id" :data-stato="v.stato" :data-segui="v.segui ? 1 : null"
               role="button" tabindex="0" @click="aperta = v.id" @keydown.enter="aperta = v.id">
-            <img v-if="iconaDi(v.discesa)" class="sot-ritaglio" :src="iconaDi(v.discesa)" alt="" data-ritaglio>
+            <img v-if="iconaDi(v.discesa, mondo)" class="sot-ritaglio" :src="iconaDi(v.discesa, mondo)" alt="" data-ritaglio>
             <span class="sot-testo">
               <b><span class="em">{{ v.em }}</span> {{ v.titolo }}</b>
               <i>{{ v.dove }}<template v-if="v.piano">, piano {{ v.piano }}</template> · {{ v.chi.toLowerCase() }}</i>
@@ -257,7 +257,7 @@ const vaDa = v => emit('vai', v.da)
         <ul>
           <li v-for="v in d.offerte" :key="v.id" :data-missione="v.id" data-stato="offerta"
               role="button" tabindex="0" @click="aperta = v.id" @keydown.enter="aperta = v.id">
-            <img v-if="iconaDi(v.discesa)" class="sot-ritaglio" :src="iconaDi(v.discesa)" alt="" data-ritaglio>
+            <img v-if="iconaDi(v.discesa, mondo)" class="sot-ritaglio" :src="iconaDi(v.discesa, mondo)" alt="" data-ritaglio>
             <span class="sot-testo">
               <b><span class="em">{{ v.em }}</span> {{ v.titolo }}</b>
               <i>{{ v.dove }}<template v-if="v.piano">, piano {{ v.piano }}</template></i>

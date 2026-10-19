@@ -172,7 +172,7 @@ const avventure = computed(() => EROI.map(e => {
     gemme: r.gemme,
     fondo: (a.abisso && a.abisso.fondo) || 0,
     aMeta: meta ? meta.nome : null,
-    aMetaIcona: meta ? iconaDi(meta.chiave) : null,
+    aMetaIcona: meta ? iconaDi(meta.chiave, in3d) : null,
   }
 }))
 
@@ -190,7 +190,7 @@ const conITrovati = c => {
 // la carta "riprendi" dice la sosta dell'avventura aperta (motore/sosta.js). Le gemme sono quelle della roba:
 // sopra si può essere passati da un mercante
 const conNome = d => (d ? { ...d, chi: d.eroe ? eroeDi(d.eroe).nome : '', gemme: roba.value.gemme,
-                              immagine: iconaDi(d.chiave) } : null)
+                              immagine: iconaDi(d.chiave, in3d) } : null)
 const ripresa = computed(() => conNome(dice(qui.value.sosta, CAMPAGNA)))
 let ultimoSalvato = 0
 
@@ -2203,7 +2203,7 @@ function ridimensiona() { if (pittore) pittore.misura() }
                @chiudi="zainoAperto = false" @fuori="toccoFuori" />
 
         <!-- il diario delle missioni, giù: lo stesso di sopra, senza «vai da» (chi aspetta sta sopra) -->
-        <Diario v-else-if="diarioGiu" giu :stati="missioni" :conti="conti" :tappe="tappe" :segui="segui" :punti="barra.punti" :punti-abilita="barra.puntiAbilita"
+        <Diario v-else-if="diarioGiu" giu :mondo="in3d" :stati="missioni" :conti="conti" :tappe="tappe" :segui="segui" :punti="barra.punti" :punti-abilita="barra.puntiAbilita"
                 @scheda="apriScheda" @chiudi="diarioGiu = false" @segui="seguiMissione" @fuori="toccoFuori" />
 
         <!-- gli incantesimi da preparare prima di uno scontro, dalla loro casella nella barra (docs/sotterraneo/orologio.md) -->
