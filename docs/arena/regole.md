@@ -81,15 +81,17 @@ I numeri stanno in `src/giochi/arena/dati/regole.js`, il motore in
 - **I raggi dei colpi ad area stanno in scala con le figure** (13-15): con le masse fitte
   un raggio di 26-30, quello di quando le figure erano grandi il doppio, prendeva sei
   omini a colpo e il drago spazzava tutto.
-- **Si controlla coi duelli** (`npm run tara:arena -- --duelli`): tre squadre per parte in
-  campo aperto, senza castelli né porte. Nessuna truppa deve vincerle tutte o perderle
-  tutte, e ci dev'essere il giro: gli arcieri fermano pipistrelli e drago, chi colpisce da
-  vicino batte arcieri e chi tira ad area, chi tira ad area batte gli arcieri, chi vola
-  batte chi colpisce solo a terra. Ultimo giro: arcieri 33%, opliti 50%, mummie 67%,
-  pipistrelli 50%, negromanti e diavoletti 33%, drago 83% (costa di più, e chi colpisce
-  solo a terra non lo tocca). Il golem non duella: ignora le truppe. Con le bestie cornute
-  (tre per squadra, 190 di vita e 13 di danno ciascuna, vanno a 56): 57%, come opliti e mummie; battono arcieri, mummie,
-  negromanti e diavoletti, perdono con opliti, pipistrelli e drago (`BATTE` in `motore/nemico.js`).
+- **Si controlla coi duelli a parità di monete** (`npm run tara:arena -- --duelli --budget 120`:
+  ogni parte spende 120 monete in squadre della stessa truppa, in campo aperto, senza castelli né
+  porte). A squadre uguali il drago vinceva l'86% perché costa il triplo: il conto giusto è il
+  prezzo. **Non esiste la truppa perfetta** (l'utente): nessuna deve stare sopra il ~70% né sotto
+  il ~30%, e deve esserci il giro. Ultimo giro (19/10): arcieri 57%, opliti 57%, mummie 57%,
+  bestie 29%, pipistrelli 71%, negromanti 43%, diavoletti 57%, drago 57%. Chi sta a terra e
+  tira (arcieri, negromanti) ferma chi vola; chi vola batte la fanteria; le masse veloci
+  (mummie) raggiungono chi tira; chi tira ad area ripulisce le masse. Il golem non duella:
+  ignora le truppe. Per ritoccare: `hp`, `dmg` e `costo` in `dati/regole.js`, poi si
+  rilancia il duello e `npm run tara:arena`. `BATTE` in `motore/nemico.js` è la stessa
+  tabella: va riletta se un giro cambia.
 
 ## La battaglia infinita e le truppe di un terreno
 
@@ -107,9 +109,9 @@ che altrove non si costruisce (`ESCLUSIVE` e `TRUPPE_DEL_TERRENO` in `dati/regol
 | lava | diavoletti | torre oscura |
 
 Arcieri, opliti, negromanti e drago sono di tutti. Le operazioni valgono tutte e quattro (`INFINITA.operazioni`),
-anche dove nessuna truppa ammessa porta `×`. **La campagna non cambia**: il golem e il diavoletto
-restano dov'erano, perché là le operazioni si insegnano per scalino e `operazionePer` ripiega su
-quelle note. Il nemico e i giocatori finti usano la stessa lista (`Partita.truppeAmmesse`).
+anche dove nessuna truppa ammessa porta `×`. **La campagna usa le stesse liste**, tolte le truppe la cui operazione non è ancora
+stata insegnata ([campagna.md](campagna.md)); nella battaglia infinita le operazioni valgono tutte
+e ci sono tutte le truppe del terreno. Il nemico e i giocatori finti usano la stessa lista (`Partita.truppeAmmesse`).
 
 - **Le bestie cornute completano la tana**: senza mummie e pipistrelli, in neve e in lava la tana non
   avrebbe truppe; sono per quei due terreni (`×`, 8 monete come le altre della tana: tre per squadra, 190 di
@@ -119,8 +121,7 @@ quelle note. Il nemico e i giocatori finti usano la stessa lista (`Partita.trupp
 - **Non c'è un record** (l'utente: «non ha senso per questo gioco»): a fine battaglia si dice solo il tempo
   di questa volta, niente `senzaFine` nel manifesto né riga nella tabella dei primati. Non ci sono nemmeno
   stelle, tappe o un finale di campagna.
-- **Si apre come una tappa dopo l'ultima** (`apertaQui(INFINITA, QUANTE_TAPPE, fatte)`): campagna finita e
-  portata dell'età (la stessa dell'ultima tappa, 70); chiusa, la voce ha il lucchetto.
+- **Si apre come una tappa dopo l'ultima** (`apertaQui(INFINITA, QUANTE_TAPPE, fatte)`): campagna finita; chiusa, la voce ha il lucchetto.
 - **Senza timer la partita non può restare in piedi per sempre**: `npm run tara:arena -- --infinita` misura i
   giocatori finti in ogni terreno col tetto di 30 minuti, e dice quante restano «aperte» (nessuna, all'ultimo giro).
 - La sosta ha chiave `infinita` e il terreno ([sosta.md](sosta.md)).

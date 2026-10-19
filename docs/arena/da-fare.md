@@ -15,8 +15,7 @@
 - `test/misure/arena.test.mjs`: le promesse della taratura (il bambino di prova
   vince la quota della tappa) come test d'equilibrio, oltre alla firma.
 - La bomba: scegliere il punto col dito (oggi lo sceglie il gioco), un effetto più epico e il suono.
-- Rimisurare la taratura: dal 15/10 il campo sta fermo mentre si calcola, ma i piloti finti
-  (`motore/banco.js`) hanno ancora il ritmo di quando andava a metà velocità. `npm run tara:arena`
-  e la firma vanno rifatte, e provato col dito di un bambino.
-- La lava non tiene chi non sbaglia mai: il nemico al massimo della bravura vince contro il rush ma perde contro l'economia, e il giocatore perfetto vince sempre ([taratura.md](taratura.md), [nemico.md](nemico.md)).
+- **Le bestie cornute** sono la truppa più debole a parità di monete (29%) e in neve e lava sono l'unica
+  della tana: da alzare un po' (`dmg` 18 → 21) e rimisurare coi duelli.
+- **Provare i tre livelli col dito di un bambino** e capire dove sta il Medio per lui; l'ultima misura è con piloti finti.
 - Idea dell'utente (13/10), da valutare: dare una priorità alle truppe, caserma per caserma, cioè dire a ciascuna cosa attaccare.

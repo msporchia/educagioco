@@ -35,6 +35,11 @@ grossi sono del castello.
   l'azione vuole `÷` ma la tappa arriva solo a `+` e `−`, si ripiega sulla più
   vicina (`÷` → `×` → `−` → `+`, la stessa scelta del castello): è
   `operazionePer` in `dati/campagna.js`.
+- **Un sapere spento non toglie il conto, lo cambia.** Se i genitori hanno spento le
+  divisioni (o le moltiplicazioni), `senzaSaperi` le toglie dalle operazioni ammesse e la
+  scelta ripiega sulla più vicina (`÷` → `×` → `−`), **con due gradi di peso in più**
+  (`PESO_DEL_RIPIEGO`): chi non ha fatto le divisioni a scuola riceve moltiplicazioni più
+  grosse, non meno lavoro. Lo stesso flag del castello (`contiPermessi`, `docs/genitori/`).
 - **Si chiede al modulo di quiz `conti`** (`src/quiz/moduli/conti.js`, solo su
   richiesta), non a un generatore del gioco: così arrivano il perché dopo lo
   sbaglio, lo SRS, l'età e i saperi spenti dai genitori.

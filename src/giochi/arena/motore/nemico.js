@@ -12,6 +12,8 @@ import { TRUPPE, LIV_MAX, BOMBA, CAMPO, EDIFICIO_DI, POSTI } from '../dati/regol
 
 // quante caserme al più: le piazzole meno una, che resta per la miniera
 const CASERME = POSTI.length - 1
+// ogni quanti secondi, al più, si rifà il muro crollato
+const MURO_OGNI = 12
 
 /* Una scaletta parla di ruoli, non di truppe: per ogni tappa il ruolo diventa la
    prima truppa che c'è (quelle di una tappa sono poche). */
@@ -64,13 +66,13 @@ export const CARATTERI = {
 
 /* sale a ogni ritocco del modo di giocare del nemico: entra nella firma dell'equilibrio (`firma.js`),
    così un'IA cambiata senza ritarare è un test rosso */
-export const VERSIONE_IA = 10
+export const VERSIONE_IA = 12
 
 /* `evita`: il carattere dell'ultima partita, per non giocare due volte di fila contro lo stesso */
 export function creaIA(rnd, evita = null) {
   const nomi = Object.keys(CARATTERI).filter(n => n !== evita)
   const nome = nomi[Math.floor(rnd() * nomi.length)]
-  return { nome, passo: 0, ...CARATTERI[nome] }
+  return { nome, passo: 0, venduto: -99, murata: -99, ...CARATTERI[nome] }
 }
 
 /* il ruolo di un passo → per costruire la truppa (meglio una che non ha ancora), per potenziare la
@@ -102,11 +104,17 @@ function emergenza(p) {
   const l = p.lati.nem
   const colpo = l.bombe > 0 ? p.puntoDellaBomba('nem') : null
   if (colpo && colpo.peso >= p.ia.bomba && p.fai('nem', 'bomba')) return true
-  const messi = p.riparabili('nem')
-  const muro = p.muro('nem')
-  const crollato = !!muro && muro.hp <= 0 && p.ia.riparaMuro
-  const quasiMorti = messi.some(e => e.hp < e.max * p.ia.riparaSotto)
-  if ((crollato || quasiMorti) && si(p, 'ripara') && p.fai('nem', 'ripara')) return true
+  // `ripara` rimette in sesto l'edificio messo peggio, muro compreso: chi martella il muro lo fa ricostruire ogni pochi
+  // secondi e gli mangia le monete (spendeva quasi metà delle entrate). Il muro si rifà solo se è crollato e non da poco
+  const peggiore = [...p.riparabili('nem')].sort((a, b) => a.hp / a.max - b.hp / b.max)[0]
+  if (peggiore) {
+    const muro = peggiore.tipo === 'muro'
+    const serve = muro ? peggiore.hp <= 0 && p.ia.riparaMuro && p.t - p.ia.murata > MURO_OGNI : peggiore.hp < peggiore.max * p.ia.riparaSotto
+    if (serve && si(p, 'ripara') && p.fai('nem', 'ripara')) {
+      if (muro) p.ia.murata = p.t
+      return true
+    }
+  }
   return false
 }
 
@@ -174,17 +182,18 @@ function mossa(p) {
 
 /* ── la testa: quando la furbizia vince il tiro, si ragiona invece di seguire la scaletta ── */
 
-/* chi batte chi: i duelli di docs/arena/regole.md (gli arcieri fermano chi vola, chi colpisce
-   da vicino batte chi tira, chi tira ad area le file, chi vola chi colpisce solo a terra) */
+/* chi batte chi: i duelli a parità di monete di docs/arena/regole.md (`npm run tara:arena -- --duelli --budget 120`).
+   Un giro, non una classifica: chi tira ferma chi vola, chi vola batte la fanteria, le masse veloci raggiungono chi tira,
+   chi tira ad area ripulisce le masse. Se i duelli cambiano si rilegge qui. */
 const BATTE = {
-  scheletri: ['pipistrelli', 'drago'],
-  guardiano: ['scheletri', 'negromante', 'diavoletto', 'golem', 'bestie'],
-  lupi: ['scheletri', 'negromante', 'diavoletto', 'golem'],
-  bestie: ['scheletri', 'negromante', 'diavoletto'],
-  negromante: ['scheletri', 'guardiano', 'lupi', 'pipistrelli'],
-  diavoletto: ['scheletri', 'guardiano', 'lupi'],
-  pipistrelli: ['guardiano', 'lupi', 'bestie', 'diavoletto', 'golem'],
-  drago: ['guardiano', 'lupi', 'bestie', 'diavoletto', 'golem'],
+  scheletri: ['guardiano', 'bestie', 'pipistrelli', 'drago'],
+  guardiano: ['lupi', 'bestie', 'negromante', 'diavoletto'],
+  lupi: ['scheletri', 'guardiano', 'bestie', 'negromante'],
+  bestie: ['lupi', 'negromante'],
+  pipistrelli: ['guardiano', 'lupi', 'bestie', 'diavoletto', 'drago'],
+  negromante: ['scheletri', 'pipistrelli', 'drago'],
+  diavoletto: ['scheletri', 'lupi', 'bestie', 'negromante'],
+  drago: ['guardiano', 'lupi', 'bestie', 'diavoletto'],
   golem: [],
 }
 
@@ -196,6 +205,20 @@ function convenienza(id, sue, dentro) {
   for (const u of dentro) v += (BATTE[id].includes(u.id) ? 0.5 : 0) - (BATTE[u.id].includes(id) ? 0.5 : 0)
   if (id === 'golem') v += sue.length <= 1 ? 1 : 0          // contro chi non ha esercito si va alle mura
   return v
+}
+
+/* Le sei piazzole sono piene e la truppa che serve contro di te non c'è: se una sua caserma è la peggiore contro
+   quello che hai e sta ancora bassa, la vende (ne riprende metà) per rifarla; mai due volte di fila in poco tempo.
+   Torna true se ha venduto. */
+function sostituisci(p, mie, sue, dentro) {
+  if (p.postiLiberi('nem').length || p.t - p.ia.venduto < 30) return false
+  const ordine = [...p.truppeAmmesse].sort((a, b) => convenienza(b, sue, dentro) - convenienza(a, sue, dentro))
+  const meglio = ordine.find(id => !mie.some(c => c.id === id))
+  if (!meglio || convenienza(meglio, sue, dentro) < 1) return false
+  const peggiore = [...mie].sort((a, b) => convenienza(a.id, sue, dentro) - convenienza(b.id, sue, dentro))[0]
+  if (!peggiore || convenienza(peggiore.id, sue, dentro) > -1 || peggiore.liv > 3) return false
+  p.ia.venduto = p.t
+  return p.fai('nem', 'vendi', peggiore.posto)
 }
 
 function testa(p) {
@@ -210,6 +233,7 @@ function testa(p) {
   const salibili = mie.filter(c => c.liv < LIV_MAX)
     .sort((a, b) => convenienza(b.id, sue, dentro) + b.liv * 0.3 - convenienza(a.id, sue, dentro) - a.liv * 0.3)
   const castello = p.castello('nem')
+  const f = p.nemicoCfg.furbizia || 0          // sopra 0,6 è il nemico «avanzato»: più miniere e rifà le caserme che non servono
   // la prima mossa è la cripta, come nella scaletta: provato lasciar scegliere, e contro chi non ha
   // ancora niente il golem sembrava il migliore e il nemico restava fermo a risparmiare
   if (!mie.length) {
@@ -217,6 +241,7 @@ function testa(p) {
     return !!id && si(p, 'costruisci', id) && p.fai('nem', 'costruisci', id)
   }
 
+  if (f >= 0.6 && sostituisci(p, mie, sue, dentro)) return true
   const obiettivi = []
   const vuoi = (azione, id) => { const pr = p.prezzo('nem', azione, id); if (pr !== null) obiettivi.push({ azione, id, prezzo: pr }) }
   if (mie.length < 2 && nuove.length) vuoi('costruisci', nuove[0])
@@ -226,16 +251,23 @@ function testa(p) {
     if (salibili.length) vuoi('potenzia', salibili[0].posto)
     if (castello.liv < Math.max(...sue.map(c => c.liv), 1)) vuoi('castello')
   }
+  // l'avversario ha molte più caserme di lui: niente economia finché non pareggia (provato il contrario: chi mette tutto
+  // in truppe e non fa mai miniera vinceva sempre, anche contro il nemico al massimo)
+  const dietro = livelli(sue) + sue.length - livelli(mie) - mie.length > 2
+  if (dietro) {
+    if (nuove.length && mie.length < CASERME) vuoi('costruisci', nuove[0])
+    if (salibili.length) vuoi('potenzia', salibili[0].posto)
+  }
   // l'avversario fa economia (più miniera): la si fa anche noi, se non c'è nessuno in casa. Provato
   // ad attaccarlo, prima con una caserma sola e poi con tre: le squadre morivano sotto il suo
   // castello, che sotto casa picchia il triplo, e chi faceva economia vinceva sempre
-  if (io.miniera > l.miniera && !dentro.length && p.ia.miniere >= 0.7) vuoi('miniera')
+  if (io.miniera > l.miniera && !dentro.length && !dietro && p.ia.miniere >= 0.7) vuoi('miniera')
   // al sicuro: le monete crescono, anche se l'avversario ha più caserme (chi attacca subito lo può punire)
-  if (!dentro.length && l.miniera < 1 + 2 * p.ia.miniere && p.t < 150 * p.ia.miniere) vuoi('miniera')
+  if (!dentro.length && !dietro && l.miniera < 1 + (2 + 2 * f) * p.ia.miniere && p.t < (150 + 100 * f) * p.ia.miniere) vuoi('miniera')
   if (mie.length < CASERME && nuove.length) vuoi('costruisci', nuove[0])
   if (castello.liv < Math.max(...sue.map(c => c.liv), 1) - 1) vuoi('castello')
   if (salibili.length) vuoi('potenzia', salibili[0].posto)
-  if (l.miniera < 1 + 5 * p.ia.miniere && p.t < 200 * p.ia.miniere) vuoi('miniera')
+  if (!dietro && l.miniera < 1 + (5 + 3 * f) * p.ia.miniere && p.t < (200 + 100 * f) * p.ia.miniere) vuoi('miniera')
   vuoi('castello')
 
   if (!obiettivi.length) return false

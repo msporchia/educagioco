@@ -5,13 +5,14 @@
    `node test/esegui.mjs arena`
    tempo: 5 */
 import { guastiDelleRegole, TRUPPE, EDIFICI, CAMPO, CRESCITA, BOMBA, CASTELLO, MURO, SQUADRA_MAX, TERRENI, ESCLUSIVE, TRUPPE_DEL_TERRENO, truppeDelTerreno } from '../../src/giochi/arena/dati/regole.js'
+import { GIOCATORE } from '../../src/giochi/arena/dati/regole.js'
 import { Partita } from '../../src/giochi/arena/motore/partita.js'
 import { caso, gioca } from '../../src/giochi/arena/motore/banco.js'
-import { CAMPAGNA, SCALINI, QUANTE_TAPPE, INFINITA, guastiDellaCampagna, operazioniDi, operazionePer, stellePer, sfidaDi, sfidaInfinita, terrenoDiverso }
+import { CAMPAGNA, SCALINI, QUANTE_TAPPE, INFINITA, scalinoDi, guastiDellaCampagna, operazioniDi, operazionePer, senzaSaperi, stellePer, sfidaDi, sfidaInfinita, terrenoDiverso, LIVELLI, livelloValido }
   from '../../src/giochi/arena/dati/campagna.js'
 import { scrivi, leggi, dice, VERSIONE } from '../../src/giochi/arena/motore/sosta.js'
 import { firmaEquilibrio } from '../../src/giochi/arena/motore/firma.js'
-import { FIRMA, NEMICO } from '../../src/giochi/arena/dati/taratura.js'
+import { FIRMA, NEMICO, NEMICO_PER_LIVELLO } from '../../src/giochi/arena/dati/taratura.js'
 import { guastiDeiDettagli, dettaglioTruppa, dettaglioAzione, ruoloDi } from '../../src/giochi/arena/motore/dettagli.js'
 import { guastiDelleFigure } from '../../src/giochi/arena/scena/figure.js'
 import manifesto from '../../src/giochi/arena/gioco.js'
@@ -229,10 +230,14 @@ controlla('stesso seme, stessa partita', JSON.stringify(uguali) === JSON.stringi
   uguale('dodici tappe', QUANTE_TAPPE, 12)
   controlla('la prima tappa è di sole somme', operazioniDi(CAMPAGNA[0]).join() === '+')
   controlla('la palude porta le moltiplicazioni', operazioniDi(CAMPAGNA[3]).includes('×'))
-  controlla('la neve porta le divisioni', operazioniDi(CAMPAGNA[6]).includes('÷'))
+  controlla('la neve porta le divisioni', operazioniDi(CAMPAGNA[7]).includes('÷'))
   uguale('un\'azione che vuole ÷ in una tappa di somme ripiega su +', operazionePer('÷', ['+']), '+')
   uguale('e in una di somme e sottrazioni su −', operazionePer('÷', ['+', '−']), '−')
   uguale('un\'operazione ammessa resta quella', operazionePer('×', ['+', '−', '×']), '×')
+  uguale('senza divisioni la neve non le chiede', senzaSaperi(operazioniDi(CAMPAGNA[7]), { div: false }).join(), '+,−,×')
+  uguale('e un\'azione che vuole ÷ ripiega su ×', operazionePer('÷', senzaSaperi(operazioniDi(CAMPAGNA[7]), { div: false })), '×')
+  uguale('senza né divisioni né moltiplicazioni ripiega su −', operazionePer('÷', senzaSaperi(operazioniDi(CAMPAGNA[7]), { div: false, mul: false })), '−')
+  uguale('coi saperi accesi non cambia niente', senzaSaperi(['+', '÷']).join(), '+,÷')
   uguale('vincere dà una stella', stellePer({ vinto: true, vitaBase: 0.2 }), 1)
   uguale('col castello oltre la metà due', stellePer({ vinto: true, vitaBase: 0.6 }), 2)
   uguale('col castello quasi intatto tre', stellePer({ vinto: true, vitaBase: 0.9 }), 3)
@@ -262,8 +267,12 @@ controlla('stesso seme, stessa partita', JSON.stringify(uguali) === JSON.stringi
   }
   controlla('le bestie cornute sono della tana, e solo di neve e lava', EDIFICI.tana.varianti.includes('bestie') && ESCLUSIVE.bestie.join() === 'neve,lava' &&
             !TRUPPE_DEL_TERRENO.bosco.includes('bestie') && !TRUPPE_DEL_TERRENO.palude.includes('bestie'))
-  controlla('la campagna non cambia: nessuna tappa ha le bestie, e lupi e golem stanno dove stavano',
-            CAMPAGNA.every(t => !t.truppe.includes('bestie')) && CAMPAGNA[3].truppe.includes('lupi') && CAMPAGNA[6].truppe.includes('diavoletto') && CAMPAGNA[11].truppe.includes('lupi'))
+  controlla('la campagna segue il terreno: le truppe di ogni scalino sono tutte di quel terreno',
+            CAMPAGNA.every(t => t.truppe.every(id => truppeDelTerreno(scalinoDi(t).vestito).includes(id))))
+  controlla('palude: mummie sì, pipistrelli e golem no', CAMPAGNA[3].truppe.includes('lupi') && !CAMPAGNA[3].truppe.includes('pipistrelli') && !CAMPAGNA[4].truppe.includes('golem'))
+  controlla('neve: bestie e golem, niente diavoletti né mummie', CAMPAGNA[7].truppe.includes('bestie') && CAMPAGNA[7].truppe.includes('golem') && !CAMPAGNA[7].truppe.includes('diavoletto') && !CAMPAGNA[7].truppe.includes('lupi'))
+  controlla('lava: diavoletti e bestie, niente golem', CAMPAGNA[11].truppe.includes('diavoletto') && CAMPAGNA[11].truppe.includes('bestie') && !CAMPAGNA[11].truppe.includes('golem'))
+  controlla('un\'operazione arriva solo con la truppa che la insegna: la ÷ col drago, alle nevi, non prima', operazioniDi(CAMPAGNA[6]).join() === '+,−,×' && operazioniDi(CAMPAGNA[7]).includes('÷') && CAMPAGNA.slice(0, 7).every(t => !operazioniDi(t).includes('÷')))
   controlla('le bestie hanno una figura, e non fanno la fiammata', guastiDelleFigure().length === 0)
   uguale('terreno diverso: mai lo stesso di fila', TERRENI.every(u => [0, 0.3, 0.6, 0.99].every(r => terrenoDiverso(u, () => r) !== u)), true)
   uguale('e senza ultimo ne dà uno vero', TERRENI.includes(terrenoDiverso(null, () => 0.5)), true)
@@ -325,7 +334,7 @@ controlla('stesso seme, stessa partita', JSON.stringify(uguali) === JSON.stringi
   const p = new Partita({ rnd: caso(21), sfida: sfidaInfinita('neve') })
   p.lati.io.monete = 100
   p.fai('io', 'costruisci', 'bestie'); p.fai('io', 'costruisci', 'golem')
-  p.avanza(60)
+  p.avanza(20)   // il nemico di oggi in un minuto abbatte le caserme di chi sta fermo: qui conta la sosta, non l'assedio
   const dato = scrivi(p, { infinita: 'neve' })
   controlla('si salva col suo terreno e senza il tempo che resta', dato && dato.chiave === 'infinita' && dato.terreno === 'neve' && dato.resto === 0)
   const letto = leggi(JSON.parse(JSON.stringify(dato)), { rnd: caso(1) })
@@ -341,6 +350,45 @@ controlla('stesso seme, stessa partita', JSON.stringify(uguali) === JSON.stringi
   const intruso = JSON.parse(JSON.stringify(dato)); intruso.caserme[0].id = 'lupi'
   uguale('e una truppa di un altro terreno pure', leggi(intruso), null)
   uguale('niente da salvare a battaglia appena cominciata', scrivi(new Partita({ rnd: caso(1), sfida: sfidaInfinita('neve') }), { infinita: 'neve' }), null)
+}
+
+/* ══════════ 6c. il nemico non spreca le monete sul muro ══════════ */
+{
+  const p = new Partita({ rnd: caso(31), sfida: sfidaDi(CAMPAGNA[5], 'difficile') })
+  p.ia.riparaMuro = true
+  let ripara = 0
+  const fai = p.fai.bind(p)
+  p.fai = (lato, azione, ...r) => { const ok = fai(lato, azione, ...r); if (ok && lato === 'nem' && azione === 'ripara') ripara++; return ok }
+  const muro = p.muro('nem')
+  for (let t = 0; t < 24 && !p.fine; t += 0.25) {          // chi martella il muro lo butta giù di continuo
+    muro.hp = 0; muro.crollato = true
+    p.lati.nem.monete = 100
+    p.avanza(0.25)
+  }
+  controlla('il muro che crolla di continuo si rifà al più ogni 12 secondi, non a ogni pensiero', ripara >= 1 && ripara <= 3, `riparazioni ${ripara}`)
+}
+
+/* ══════════ 7a. i livelli di difficoltà ══════════ */
+{
+  uguale('i livelli sono tre', LIVELLI.map(l => l.chiave).join(), 'facile,medio,difficile')
+  uguale('un livello sconosciuto vale il medio', livelloValido('impossibile'), 'medio')
+  uguale('e nessun livello vale il medio', livelloValido(undefined), 'medio')
+  controlla('ogni livello ha la scheda di ogni tappa', LIVELLI.every(l => CAMPAGNA.every(t => NEMICO_PER_LIVELLO[l.chiave][t.chiave])))
+  controlla('l\'ultima tappa: il difficile è più bravo del facile (pensa prima, più furbo)',
+            sfidaDi(CAMPAGNA[11], 'difficile').nemico.furbizia > sfidaDi(CAMPAGNA[11], 'facile').nemico.furbizia &&
+            sfidaDi(CAMPAGNA[11], 'difficile').nemico.pensa < sfidaDi(CAMPAGNA[11], 'facile').nemico.pensa)
+  controlla('e non più ricco oltre la parità: monete e forza al massimo come le tue',
+            LIVELLI.every(l => CAMPAGNA.every(t => sfidaDi(t, l.chiave).nemico.forza <= 1 && sfidaDi(t, l.chiave).nemico.moneteAlSecondo <= GIOCATORE.moneteAlSecondo + 1e-9)))
+  uguale('le stesse truppe a ogni livello', sfidaDi(CAMPAGNA[5], 'facile').truppe, sfidaDi(CAMPAGNA[5], 'difficile').truppe)
+  uguale('senza livello è il medio', sfidaDi(CAMPAGNA[5]).nemico, NEMICO_PER_LIVELLO.medio[CAMPAGNA[5].chiave])
+  const p = new Partita({ rnd: caso(8), sfida: sfidaDi(CAMPAGNA[2], 'difficile') })
+  p.avanza(30)
+  const dato = scrivi(p, 2, 'difficile')
+  uguale('la sosta ricorda il livello', dato.livello, 'difficile')
+  const letto = leggi(dato)
+  uguale('e lo riprende col nemico di quel livello', letto.livello + '/' + (letto.partita.nemicoCfg.d === NEMICO_PER_LIVELLO.difficile.radura.d), 'difficile/true')
+  const vecchio = { ...dato }; delete vecchio.livello
+  uguale('una sosta senza livello è del medio', leggi(vecchio).livello, 'medio')
 }
 
 /* ══════════ 7b. i dettagli ══════════ */
