@@ -15,6 +15,8 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { apriBrowser, apriGioco, azzera, semina, attendi, scatto, scegli, leggiProfilo } from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
+import { PEZZI } from '../../src/giochi/fattoria3d/dati/catalogo.js'
+import { RICETTE } from '../../src/giochi/fattoria3d/dati/ricette.js'
 
 const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser)
@@ -201,7 +203,7 @@ await chiudiFoglio()
 await toccaEl('[data-f3="az-libero"]')
 await toccaEl('[data-f3="az-costruisci"]')
 await page.waitForSelector('[data-f3="vassoio"]')
-uguale('il vassoio ha tutti gli otto pezzi e i due strumenti', await page.locator('[data-carta]').count(), 10)
+uguale('il vassoio ha tutti i pezzi dei dati e i due strumenti', await page.locator('[data-carta]').count(), Object.keys(PEZZI).length + 2)
 controlla('il recinto non è arrivato: carta in grigio col livello', await page.locator('[data-carta="recinto"].bloccata').count() === 1 && /Livello 4/.test(await page.locator('[data-carta="recinto"]').innerText()))
 const scorre = await page.evaluate(() => { const c = document.querySelector('.f3-carte'); return [c.scrollWidth, c.clientWidth, document.documentElement.scrollWidth, innerWidth] })
 controlla('la barra scorre di lato senza uscire dallo schermo', scorre[0] > scorre[1] && scorre[2] <= scorre[3], JSON.stringify(scorre))
@@ -215,7 +217,7 @@ await m3(() => { const { motore, mondo } = window.__fattoria3d; motore.s.possedu
 await m3(() => window.__fattoria3d.mondo.azioni.fai({ kind: 'edificio', tipo: 'pasticceria' }))
 await page.waitForSelector('[data-f3="macchina"][data-macchina="pasticceria"]', { timeout: 3000 })
 controlla('il menu della pasticceria porta anche il suo bersaglio', await page.locator('[data-f3="pasticceria"]').count() === 1)
-uguale('mostra tutte le ricette della pasticceria', await page.locator('[data-f3="macchina"] [data-ricetta]').count(), 5)
+uguale('mostra tutte le ricette della pasticceria', await page.locator('[data-f3="macchina"] [data-ricetta]').count(), Object.values(RICETTE).filter(r => r.dove === 'pasticceria').length)
 controlla('una ricetta chiusa dice il livello', /livello 5/.test(await page.locator('[data-f3="macchina"] .ricetta.chiusa').first().innerText()))
 await page.locator('[data-ricetta="pane"]').click({ force: true })
 await attendi(page, 300)
@@ -251,6 +253,81 @@ await m3(() => { const { motore, mondo } = window.__fattoria3d; motore.s.possedu
 await m3(() => window.__fattoria3d.mondo.azioni.fai({ kind: 'edificio', tipo: 'mulino' }))
 await page.waitForSelector('[data-f3="macchina"][data-macchina="mulino"]', { timeout: 3000 })
 uguale('il mulino mostra le sue ricette', await page.locator('[data-f3="macchina"] [data-ricetta]').count(), 2)
+await chiudiFoglio()
+
+/* ── il banco degli ordini (docs/fattoria3d/ordini.md): il tasto, il foglio, consegnare, la roba che manca, cambiare ──
+   Lo stato si prepara dalla console; il tasto «Consegna» si preme col dito vero. */
+const toccaSu = async sel => { await page.locator(sel).first().scrollIntoViewIfNeeded(); await toccaEl(sel) }
+// livello 1: il tasto non c'è ancora
+await m3(() => { const { motore, mondo } = window.__fattoria3d; motore.s.esperienza = 0; mondo.cambiato() })
+await attendi(page, 600)
+uguale('al livello 1 il tasto del banco non c\'è', await page.locator('[data-f3="apri-banco"]').count(), 0)
+// livello alto ma senza bancarella: il tasto c'è e il foglio spiega cosa fare
+await m3(() => { const { motore, mondo } = window.__fattoria3d; motore.s.esperienza = 1e6; mondo.cambiato() })
+await attendi(page, 600)
+controlla('dal livello 2 il tasto del banco c\'è', await page.locator('[data-f3="apri-banco"]').count() === 1)
+uguale('e senza bancarella non ha il pallino', await page.locator('[data-f3="banco-pronti"]').count(), 0)
+await toccaEl('[data-f3="apri-banco"]')
+await page.waitForSelector('[data-f3="banco"]', { timeout: 3000 })
+controlla('banco chiuso: il foglio dice di mettere una bancarella', /bancarella/i.test(await page.locator('[data-f3="banco-chiuso"]').innerText()))
+uguale('e non mostra ordini', await page.locator('[data-ordine]').count(), 0)
+await chiudiFoglio()
+controlla('la ✕ chiude il banco', await page.locator('[data-f3="banco"]').count() === 0)
+
+// la bancarella messa sul prato: il banco si riempie
+const messa = await m3(() => {
+  const { motore, mondo } = window.__fattoria3d; motore.s.magazzino.bancarella = (motore.s.magazzino.bancarella || 0) + 1
+  for (let i = -14; i < 14; i++) for (let j = -12; j < 12; j++) if (motore.mettiPezzo('bancarella', i, j).ok) { mondo.pezzi.sincronizza(); mondo.cambiato(); return true }
+  return false
+})
+controlla('una bancarella si mette sul prato', messa)
+await attendi(page, 600)
+uguale('i posti sono tre', await m3(() => window.__fattoria3d.motore.ordini().length), 3)
+// la roba per tutti e tre gli ordini
+await m3(() => {
+  const { motore, mondo } = window.__fattoria3d
+  for (const o of motore.ordini()) for (const c of o.chiede || []) { if (c.prodotto) motore.s.prodotti[c.k] = 9; else motore.s.merci[c.k] = 9 }
+  mondo.cambiato()
+})
+await attendi(page, 600)
+controlla('il pallino dice 3 ordini consegnabili', (await page.locator('[data-f3="banco-pronti"]').innerText()).trim() === '3')
+await toccaEl('[data-f3="apri-banco"]')
+await page.waitForSelector('[data-f3="banco"]', { timeout: 3000 })
+uguale('il foglio mostra i tre ordini', await page.locator('[data-ordine]').count(), 3)
+uguale('tutti consegnabili', await page.locator('[data-ordine][data-pronto="true"]').count(), 3)
+controlla('ogni ordine ha i suoi dischi', await page.locator('[data-ordine="0"] [data-chiede]').count() >= 1)
+controlla('il premio è in esperienza, non in monete', /^\+\d+ ⭐$/.test((await page.locator('[data-ordine="0"] [data-f3="premio"]').innerText()).trim()))
+
+// consegnare: l'esperienza sale del premio, la roba scende, il posto si riempie e il contatore avanza
+const ordPrima = await m3(() => { const m = window.__fattoria3d.motore, o = m.ordini()[0]; return { xp: m.esperienza(), premio: o.premio, id: o.id, ha: o.chiede.map(c => [c.k, c.prodotto, c.n]) } })
+const monetePrima = await monete()
+await toccaSu('[data-ordine="0"] [data-f3="consegna"]')
+await attendi(page, 500)
+const dopo = await m3(() => { const m = window.__fattoria3d.motore, o = m.ordini()[0]; return { xp: m.esperienza(), id: o.id, nuovo: !o.attesa } })
+uguale('consegnando, l\'esperienza sale del premio', dopo.xp - ordPrima.xp, ordPrima.premio)
+controlla('e il posto ha un ordine nuovo', dopo.nuovo && dopo.id !== ordPrima.id)
+controlla('il foglio dice a chi e quanto', /Consegnato a .+: \+\d+ ⭐/.test(await page.locator('[data-f3="banco-msg"]').innerText()))
+uguale('non entrano monete', await monete(), monetePrima)
+uguale('il contatore degli ordini avanza', ((await leggiProfilo(page)).totals || {}).fattoria3dOrdini, 1)
+
+// roba che manca: il tasto è grigio, il tocco non consegna e dice cosa manca
+await m3(() => { const m = window.__fattoria3d.motore; for (const k of Object.keys(m.s.merci)) m.s.merci[k] = 0; m.s.prodotti = {}; window.__fattoria3d.mondo.cambiato() })
+await attendi(page, 600)
+uguale('senza roba nessun ordine è consegnabile', await page.locator('[data-ordine][data-pronto="true"]').count(), 0)
+uguale('e il tasto è spento', await page.locator('[data-ordine="1"] [data-f3="consegna"]').getAttribute('aria-disabled'), 'true')
+const xpPrima = await m3(() => window.__fattoria3d.motore.esperienza())
+await toccaSu('[data-ordine="1"] [data-f3="consegna"]')
+await attendi(page, 300)
+controlla('toccarlo dice cosa manca', /Ti mancano/.test(await page.locator('[data-f3="banco-msg"]').innerText()))
+uguale('e non consegna niente', await m3(() => window.__fattoria3d.motore.esperienza()), xpPrima)
+uguale('il posto resta occupato', await page.locator('[data-ordine="1"][data-pronto="false"]').count(), 1)
+
+// cambiare: il posto riposa e mostra il conto alla rovescia
+await toccaSu('[data-ordine="1"] [data-f3="cambia"]')
+await attendi(page, 500)
+controlla('il posto in riposo dice quando torna', /Torna fra 2:5\d|Torna fra 3:00/.test(await page.locator('[data-ordine="1"] [data-f3="ordine-attesa"]').innerText()))
+uguale('cambiare non dà esperienza', await m3(() => window.__fattoria3d.motore.esperienza()), xpPrima)
+await scatto(page, 'fattoria3d-banco')
 await chiudiFoglio()
 
 /* ── senza WebGL 2 si dice e si torna in home ── */

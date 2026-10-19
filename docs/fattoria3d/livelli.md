@@ -30,15 +30,20 @@ i dati veri, quindi un elenco non si scrive due volte e non si scosta.
 - **I nomi stanno sulla cosa** (`NOMI`), l'ordine è la precedenza quando due cose arrivano insieme.
 
 ```
- 1 campo, grano, carote          9 cipolle, pozzo
+ 1 campo, grano, carote          9 stalla (latte), cipolle, pozzo, frittata, brioche
  2 mais, bancarella, aiuola     10 mongolfiera
- 3 mulino (farine)              11 fragole
+ 3 mulino (farine)              11 caseificio (formaggio, burro, yogurt), fragole
  4 recinto, pomodori            12 conserviera (passata, marmellata, cipolle)
  5 pasticceria (pane, popcorn)  13 melanzane (caponata), spaventapasseri
- 6 patate, panchina, pizza      14 gelateria (gelati di fragola, di carote)
+ 6 pollaio (uova), patate,      14 gelateria (gelati di fragola, di carote, alla crema)
+   panchina, pizza, torta soffice
  7 panificio                    15 lavanda (gelato alla lavanda)
  8 zucche, fontana, torte
 ```
+
+Pollaio, stalla e caseificio stanno **nei buchi** della scaletta (6, 9, 11: livelli senza una cosa produttiva), così i
+livelli restano quindici e le soglie dopo il 6 salgono del loro prezzo (55, 90, 120). Il livello di `uova` e `latte` è
+quello del pezzo che li fa, e `livelloDellaRicetta` li conta fra gli ingredienti ([animali.md](animali.md)).
 
 ## Il rifiuto
 
@@ -62,4 +67,4 @@ pallino sul gettone finché non si apre il foglio. Ciò che non è arrivato rest
 costruire (non si trascinano), le colture nella scelta del seme, le ricette di una macchina, i fantasmi degli edifici. Toccarle dice
 il livello; un tasto grigio non è `disabled`, così il tocco ha una risposta.
 
-Nei test: `unita/fattoria3d` (sezioni 13–17: soglie, `roba`, gating, lotti, catena, vecchio stato).
+Nei test: `unita/fattoria3d` (sezioni 13–20: soglie, `roba`, gating, lotti, catena, vecchio stato).

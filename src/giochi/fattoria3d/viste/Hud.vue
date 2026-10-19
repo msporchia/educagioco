@@ -9,8 +9,9 @@ defineProps({
   livello: { type: Number, default: 1 },
   quanto: { type: Number, default: 0 },            // 0..1, verso il prossimo livello
   nuovo: { type: Boolean, default: false },        // un livello nuovo che il bambino non ha ancora guardato
+  banco: { type: Object, default: () => ({ visibile: false, pronti: 0 }) },   // il tasto del banco: da livello 2; `pronti` = ordini consegnabili
 })
-defineEmits(['livello'])
+defineEmits(['livello', 'banco'])
 </script>
 
 <template>
@@ -19,6 +20,9 @@ defineEmits(['livello'])
       <b>⭐ {{ livello }}</b>
       <i><u :style="{ width: quanto * 100 + '%' }"></u></i>
       <em v-if="nuovo" class="f3-pallino" data-f3="livello-nuovo"></em>
+    </button>
+    <button v-if="banco.visibile" class="f3-banco-tasto" data-f3="apri-banco" aria-label="banco" @click="$emit('banco')">
+      🧺 Banco<em v-if="banco.pronti" class="f3-n" data-f3="banco-pronti">{{ banco.pronti }}</em>
     </button>
     <span data-f3="scorte">{{ scorte }}</span>
     <span data-f3="prodotti">{{ prodotti }}</span>

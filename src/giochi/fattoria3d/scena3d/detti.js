@@ -15,6 +15,8 @@ export function dettoDi(motivo, extra = {}) {
       const manca = Object.entries(extra.ingredienti || {}).map(([k, n]) => `${emojiDi(k, COLTURE)} ${n}`).join('  ')
       return manca ? `Ti mancano: ${manca}` : 'Mancano degli ingredienti'
     }
+    case 'banco-chiuso': return 'Il banco è chiuso: serve una bancarella'
+    case 'sconosciuto': return 'Questo ordine non c\'è più'
     case 'non-sbloccato': return extra.liv ? `Arriva al livello ${extra.liv}` : 'Non è ancora arrivato'
     case 'lotto-non-tuo': return 'Compra prima il terreno qui accanto'
     case 'non-tua': return 'Compra prima questo edificio'

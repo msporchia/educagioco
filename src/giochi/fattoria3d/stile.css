@@ -119,3 +119,21 @@
 .f3-roba > div { display: flex; align-items: center; gap: 10px; background: #fffdf6; border: 2px solid #e6cfa0; border-radius: 14px; padding: 6px 10px; }
 .f3-roba .em { font-size: 26px; } .f3-roba b { flex: 1; font-size: 15px; } .f3-roba small { font-size: 12px; color: #7a5a3a; }
 .f3-roba.chiusa > div { opacity: .55; filter: grayscale(.8); border-style: dashed; }
+
+/* il banco degli ordini */
+.f3-banco-tasto { position: relative; pointer-events: auto; min-height: 36px; border: 0; background: rgba(255,251,240,.92); color: #3a2a1a; font: 800 16px "Emoji Gioco", system-ui, sans-serif; padding: 5px 11px; border-radius: 16px; box-shadow: 0 2px 6px rgba(0,0,0,.18); touch-action: manipulation; }
+.f3-banco-tasto .f3-n { position: absolute; right: -4px; top: -6px; min-width: 20px; height: 20px; padding: 0 5px; box-sizing: border-box; border-radius: 10px; background: #e8472b; color: #fff; font: 800 12px/20px "Emoji Gioco", system-ui, sans-serif; font-style: normal; text-align: center; border: 2px solid #fff; }
+.f3-ordini { display: flex; flex-direction: column; gap: 8px; }
+.f3-ordini .ordine { background: #fffdf6; border: 2px solid #e6cfa0; border-radius: 16px; padding: 8px 10px; display: flex; flex-direction: column; gap: 6px; }
+.f3-ordini .ordine.pronto { border-color: #5fae3a; background: #f3fbe9; }
+.f3-ordini .ordine.attesa { flex-direction: row; align-items: center; gap: 10px; border-style: dashed; opacity: .75; }
+.f3-ordini .ordine.attesa > div { display: flex; flex-direction: column; }
+.f3-ordini .em { font-size: 28px; line-height: 1.1; } .f3-ordini b { font-size: 15px; } .f3-ordini small { font-size: 12px; color: #7a5a3a; }
+.f3-ordini .cliente { display: flex; align-items: center; gap: 8px; } .f3-ordini .premio { margin-left: auto; font: 800 15px "Emoji Gioco", system-ui, sans-serif; background: #ffe27a; border-radius: 12px; padding: 3px 10px; }
+.f3-ordini .dischi { display: flex; flex-wrap: wrap; gap: 6px; }
+.f3-ordini .disco { display: flex; align-items: center; gap: 4px; background: #fff; border: 2px solid #e6cfa0; border-radius: 14px; padding: 3px 9px; }
+.f3-ordini .disco .em { font-size: 24px; } .f3-ordini .disco.ok small { color: #2d7a2d; font-weight: 700; } .f3-ordini .disco.manca { border-color: #e0a090; } .f3-ordini .disco.manca small { color: #c0392b; font-weight: 700; }
+.f3-ordini .tasti { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.f3-ordini .consegna { flex: 1; min-height: 46px; border: 0; border-radius: 14px; background: #7ccf56; font: 800 15px "Emoji Gioco", system-ui, sans-serif; color: #123; touch-action: manipulation; }
+.f3-ordini .consegna.spenta { background: #e8e2d2; color: #999; }
+.f3-ordini .cambia { min-height: 46px; min-width: 76px; border: 0; border-radius: 14px; background: #efe4cf; font: 700 13px "Emoji Gioco", system-ui, sans-serif; color: #5a3a2a; touch-action: manipulation; }

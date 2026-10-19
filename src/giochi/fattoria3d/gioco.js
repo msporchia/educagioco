@@ -29,7 +29,7 @@ export default {
   },
 
   // I contatori li muove Gioco.vue con segna(): fattoria3dTerre (lotti comprati), …Pezzi (pezzi e edifici messi),
-  // …Raccolti (tessere tagliate), …Alberi (abbattuti), …Prodotti (usciti dal forno).
+  // …Raccolti (tessere tagliate), …Alberi (abbattuti), …Prodotti (usciti dal forno), …Ordini (consegnati al banco).
   albo: {
     area: { nome: 'La fattoria 3D', emoji: '🚜' },
 
@@ -54,6 +54,9 @@ export default {
       { id: 'f3d-forno', emoji: '🥧', nome: 'Dal forno',
         come: n => `Ritira ${n} cose dalla pasticceria`,
         soglie: [3, 15, 50], valore: m => m.tot('fattoria3dProdotti') },
+      { id: 'f3d-ordini', emoji: '🧺', nome: 'Ordini al banco',
+        come: n => `Consegna ${n} ordini al banco`,
+        soglie: [3, 15, 50], valore: m => m.tot('fattoria3dOrdini') },
     ],
   },
 }

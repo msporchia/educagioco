@@ -27,8 +27,8 @@ export class Azioni {
     switch (cosa.tipo) {
       case 'campo': return this.campo(cosa)
       case 'recinto': return this.cura(cosa)
-      case 'fontana': case 'bancarella':
-        pezzi.salta(cosa.id); fx.parla(cosa.tipo === 'fontana' ? 'Che bella!' : 'Mele buonissime!')
+      case 'bancarella': pezzi.salta(cosa.id); return this.c.ui.apriBanco()      // il foglio degli ordini
+      case 'fontana': pezzi.salta(cosa.id); fx.parla('Che bella!')
     }
   }
 

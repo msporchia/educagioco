@@ -68,8 +68,22 @@ ordine = { id, cliente: 'nonna', chiede: { grano: 2, pane: 1 }, premio: 7, liv: 
 - `consegna(idx)` / `rifiuta(idx)` / `cambia(idx)` → `{ ok, … }` o `{ ok: false, motivo }`; `mancanoPerOrdine(idx)`.
 - Eventi (`prendiEventi()`): `consegna` (`cliente`, `premio`, `chiede`), `rifiuto`, `livello` se si sale.
 
+## La vista
+
+`viste/Banco.vue`, aperto da `Gioco.vue`: toccando la bancarella messa (`azioni.js` → `ui.apriBanco()`) o il tasto «🧺 Banco»
+del `Hud` (da livello 2; il pallino rosso conta gli ordini `pronto`). Banco chiuso, il foglio dice cosa fare («Il banco arriva al
+livello 2» / «Metti una bancarella»). «Consegna» è `aria-disabled` finché manca roba, ma il tocco dice cosa manca; «Cambia» è
+`rifiuta`. Il premio si scrive «+N ⭐», mai monete. Il conto alla rovescia dei posti in riposo vive col battito da un quarto di
+secondo di `Gioco.vue`, che rilegge `ordini()`. L'evento `consegna` muove il contatore `fattoria3dOrdini` (traguardo `f3d-ordini`)
+e scrive «Consegnato a <cliente>: +N ⭐» nel foglio e in un avviso sopra la scena.
+
 ## Nei test
 
 `unita/fattoria3d-ordini`: dati senza guasti, ordini fattibili e dentro il tetto per ogni livello (con `rnd` finto), il
 banco chiuso senza bancarella o al livello 1, consegna e `mancano`, salto di livello consegnando, rifiuto con ritardo,
-salvataggio e migrazione dal v2. Per ora nessun bersaglio `[data-…]`: la vista non c'è ancora.
+salvataggio e migrazione dal v2.
+
+`integrazione/fattoria3d` (sezione «il banco»), bersagli: `[data-f3="apri-banco"]` (tasto nell'Hud, assente al livello 1),
+`[data-f3="banco-pronti"]` (il pallino), `[data-f3="banco"]` (il foglio), `[data-f3="banco-chiuso"]` (la spiegazione),
+`[data-ordine="<idx>"]` con `data-pronto`, `[data-chiede="<chiave>"]`, `[data-f3="consegna"]` (`data-puoi`), `[data-f3="cambia"]`,
+`[data-f3="ordine-attesa"]`, `[data-f3="banco-msg"]`, `[data-f3="premio"]`.

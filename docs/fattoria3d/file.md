@@ -6,10 +6,11 @@ Gioco.vue            il coordinatore: monete vere, contatori, salvataggio, le fi
 stile.css            tutto sotto il prefisso .f3-
 dati/
   mondo.js           la griglia, i 42 lotti, il quadrato di partenza, i due edifici di scena, le strade di serie, i lotti di un posto
-  catalogo.js        gli otto pezzi (campo, recinto, bancarella, aiuola, panchina, fontana, pozzo, spaventapasseri) e i sei
-                     edifici unici (pasticceria, mongolfiera, mulino, panificio, conserviera, gelateria): prezzi, misure, `liv`, `slot`
+  catalogo.js        i dieci pezzi (campo, recinto, pollaio, stalla, bancarella, aiuola, panchina, fontana, pozzo, spaventapasseri) e i sette
+                     edifici unici (pasticceria, mongolfiera, mulino, panificio, caseificio, conserviera, gelateria): prezzi, misure, `liv`, `slot`
   colture.js         le dieci colture: nome, emoji, tempo, `liv`
   ricette.js         le macchine e le loro ricette (`MACCHINE`, `RICETTE` a elenco unico con `dove`), i posti del forno
+  animali.js         pollaio e stalla: bestie, tempi, posti coi livelli, cosa mangiano; `uova` e `latte` (PRODOTTI_ANIMALI), i guasti
   livelli.js         le soglie, `roba(liv)`, i nomi dei livelli, i guasti dei livelli
   ordini.js          il banco: i clienti, i tempi, il premio (tetto 🪙6/min), `chiedibili(livello)`, i guasti
   regole.js          i costi, la legna, le pecore, la mongolfiera
@@ -18,15 +19,16 @@ dati/
 motore/
   fattoria3d.js      le regole: la classe Fattoria3d (borsa e orologio da fuori)
   ordini.js          gli ordini: `nuovoOrdine` (puro, col caso da fuori) e `ordineInForma`
-  stato.js           lo stato salvato (versione 3: esperienza, `posseduti`, `macchine`, `ordini`), `statoIniziale()` e `normalizza()` (un salvataggio rotto si rimette in forma)
+  stato.js           lo stato salvato (versione 4: esperienza, `posseduti`, `macchine`, `ordini`, `bestie` di pollaio e stalla), `statoIniziale()` e `normalizza()` (un salvataggio rotto si rimette in forma)
   percorso.js        Dijkstra sulla griglia, le strade costano meno
 scena3d/             il disegno (vedi scena.md); `detti.js` (senza three) traduce un rifiuto del motore in una riga, anche per la vista
 viste/
-  Hud.vue            il gettone del livello (⭐ N con la barra sottile, apre i livelli) e le scorte in alto
+  Hud.vue            il gettone del livello (⭐ N con la barra sottile, apre i livelli) e le scorte in alto; da livello 2 il tasto «🧺 Banco» col pallino degli ordini consegnabili
   BarraAzioni.vue    libero / semina / raccogli / costruisci, i numeri, «Tutti»
   Vassoio.vue        la barra del costruire: le carte (dai `PEZZI`, quelle non arrivate in grigio e non trascinabili), gli strumenti, la vista, l'annulla
   SceltaSeme.vue     «Cosa semini?»: le dieci colture dai dati, quelle non arrivate in grigio col livello
   Macchina.vue       il menu di una macchina (la sua, qualunque sia): forno a tre posti, pronti, tutte le ricette, le chiuse col livello
+  Banco.vue          il foglio «🧺 Il banco»: tre posti con cliente, dischi `emoji ×n` (`ha/n`), premio in ⭐, «Consegna» e «Cambia», il conto alla rovescia di un posto in riposo
   Livelli.vue        il foglio «⭐ Livello N»: cosa è arrivato, cosa arriva dopo (in grigio, col lucchetto), quanto manca
   Dialogo.vue        la conferma d'acquisto
   Opzioni.vue        il pannello ⚙

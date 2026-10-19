@@ -17,6 +17,7 @@ import { COLTURE } from './dati/colture.js'
 import { RICETTE, emojiDi } from './dati/ricette.js'
 import { avanzamento, roba, nomeDi, livelloDelPezzo } from './dati/livelli.js'
 import { COSTI } from './dati/regole.js'
+import { clienteDi, LIVELLO_BANCO } from './dati/ordini.js'
 import { qualitaIniziale } from './dati/qualita.js'
 import Hud from './viste/Hud.vue'
 import BarraAzioni from './viste/BarraAzioni.vue'
@@ -24,6 +25,7 @@ import Vassoio from './viste/Vassoio.vue'
 import SceltaSeme from './viste/SceltaSeme.vue'
 import Macchina from './viste/Macchina.vue'
 import Livelli from './viste/Livelli.vue'
+import Banco from './viste/Banco.vue'
 import Dialogo from './viste/Dialogo.vue'
 import Opzioni from './viste/Opzioni.vue'
 import './stile.css'
@@ -75,11 +77,19 @@ function salito(livello) {
   toast.value = { testo, fine: performance.now() + DURATA_TOAST }
   livelloNuovo.value = true
 }
+/** Un ordine consegnato: il contatore, una riga nel foglio del banco e un avviso sopra la scena. */
+function consegnato(e) {
+  segna('fattoria3dOrdini')
+  const testo = `Consegnato a ${clienteDi(e.cliente).nome}: +${e.premio} ⭐`
+  bancoMsg.value = testo
+  if (!toast.value || toast.value.fine < performance.now()) toast.value = { testo, fine: performance.now() + DURATA_TOAST }
+}
 function contaEventi() {
   for (const e of motore.prendiEventi()) {
     if (EVENTI[e.tipo]) segna(EVENTI[e.tipo])
     else if (e.tipo === 'prodotto') segna('fattoria3dProdotti', e.n)
     else if (e.tipo === 'livello') salito(e.livello)
+    else if (e.tipo === 'consegna') consegnato(e)
   }
 }
 
@@ -107,6 +117,8 @@ const macchinaAperta = ref(null)         // il tipo della macchina di cui si ved
 const macchinaMsg = ref('')
 const livelliAperto = ref(false)
 const livelloNuovo = ref(false)
+const bancoAperto = ref(false)             // il foglio del banco
+const bancoMsg = ref('')
 const toast = ref(null)                  // { testo, fine }: l'avviso del livello, sopra la scena
 const DURATA_TOAST = 4500, DURATA_AVVISO = 6000
 let avvisoFine = 0
@@ -125,11 +137,12 @@ const ui = {
   chiedi(titolo, testo, bottoni) { dialogo.value = { titolo, testo, bottoni } },
   scegliSeme(cb) { quandoSeme = cb; semiAperto.value = true },
   apriMacchina(tipo) { macchinaMsg.value = ''; macchinaAperta.value = tipo },
+  apriBanco() { apriBanco() },
   avviso(testo, conAnnulla = false) {
     avvisoTesto.value = testo || ''; avvisoAnnulla.value = !!conAnnulla
     avvisoFine = testo && !conAnnulla ? performance.now() + DURATA_AVVISO : 0       // un avviso con «Annulla» resta finché c'è l'annulla
   },
-  fogliAperti: () => !!dialogo.value || semiAperto.value || !!macchinaAperta.value || livelliAperto.value || (opzioniAperte.value && !opzioniRidotte.value),
+  fogliAperti: () => !!dialogo.value || semiAperto.value || !!macchinaAperta.value || livelliAperto.value || bancoAperto.value || (opzioniAperte.value && !opzioniRidotte.value),
   zonaDrop: () => ((costruendo.value ? vassoio.value?.radice : zonaVia.value) || null)?.getBoundingClientRect() || null,
   trascinando(info) { trascinando.value = info },
 }
@@ -249,6 +262,25 @@ const livelli = computed(() => {
 })
 function apriLivelli() { livelloNuovo.value = false; livelliAperto.value = true }
 
+// ── il banco degli ordini (docs/fattoria3d/ordini.md) ──
+const banco = computed(() => {
+  void versione.value                        // `ordini()` riempie da sé i posti il cui riposo è finito; il conto alla rovescia vive col battito
+  const aperto = motore.bancoAperto(), ordini = motore.ordini()
+  const perche = aperto ? '' : motore.livello() < LIVELLO_BANCO ? `Il banco arriva al livello ${LIVELLO_BANCO}.` : 'Metti una bancarella sulla mappa: i clienti si fermano lì a chiedere.'
+  return { aperto, perche, ordini, pronti: ordini.filter(o => o.pronto).length, visibile: motore.livello() >= LIVELLO_BANCO }
+})
+function apriBanco() { bancoMsg.value = ''; bancoAperto.value = true }
+function consegna(idx) {
+  const r = motore.consegna(idx)
+  if (!r.ok) return bancoMsg.value = r.motivo === 'mancano' ? dettoDi('mancano-ingredienti', { ingredienti: r.mancano }) : dettoDi(r.motivo)
+  ui.cambio()                                // `contaEventi` vede l'evento «consegna» e scrive l'esito
+}
+function cambiaOrdine(idx) {
+  const r = motore.rifiuta(idx)
+  if (!r.ok) return bancoMsg.value = dettoDi(r.motivo)
+  bancoMsg.value = 'Va bene: il posto si riempie fra qualche minuto.'; ui.cambio()
+}
+
 // ── le opzioni di qualità ──
 function cambiaOpzioni() { mondo.applica(q); save(CHIAVE_OPZIONI, { q: { ...q } }) }
 function creaRapporto() {
@@ -321,7 +353,7 @@ onBeforeUnmount(() => {
       <div ref="sopra" class="f3-sopra"></div>
 
       <template v-if="mondo || versione">
-        <Hud v-bind="foto" :nuovo="livelloNuovo" @livello="apriLivelli" />
+        <Hud v-bind="foto" :nuovo="livelloNuovo" :banco="banco" @livello="apriLivelli" @banco="apriBanco" />
         <div v-if="toast" class="f3-toast" data-f3="avviso-livello">⭐ {{ toast.testo }}</div>
         <button class="f3-angolo" aria-label="opzioni" data-f3="apri-opzioni" @click="opzioniAperte = !opzioniAperte">⚙</button>
         <button v-if="cameraLibera" class="f3-centra" data-f3="centra" @click="mondo.tornaAllEroe()">⌖ Torna all'eroe</button>
@@ -343,6 +375,8 @@ onBeforeUnmount(() => {
 
         <SceltaSeme v-if="semiAperto" :seme="seme" :livello="foto.livello" @scegli="scegliSeme" @chiudi="semiAperto = false" />
         <Macchina v-if="macchina" :key="macchina.tipo" v-bind="macchina" :messaggio="macchinaMsg" @prepara="prepara" @ritira="ritira" @chiudi="macchinaAperta = null" />
+        <Banco v-if="bancoAperto" v-bind="{ aperto: banco.aperto, perche: banco.perche, ordini: banco.ordini }" :messaggio="bancoMsg"
+               @consegna="consegna" @cambia="cambiaOrdine" @chiudi="bancoAperto = false" />
         <Livelli v-if="livelliAperto" v-bind="livelli" @chiudi="livelliAperto = false" />
         <Opzioni v-if="opzioniAperte" :q="q" :stat="stat" :conta="conta" :rapporto="rapporto" @cambia="cambiaOpzioni"
                  @stress="(t, n) => { mondo.stress(t, n); ui.cambio() }" @rapporto="creaRapporto" @ridotto="v => opzioniRidotte = v"
