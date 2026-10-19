@@ -330,7 +330,9 @@ function dillo(s, colore = null) { avviso.value = s; coloreAvviso.value = colore
 
 /* ═══════════ i mostri di sopra (docs/sotterraneo/mondo-aperto-mostri.md, «Cosa si aspetta dalla scena») ═══════════ */
 // a ogni fotogramma, col tempo vero: chi si sveglia e insegue, chi apre lo scontro; cosa si disegna (il cerchio di luce, la nebbia)
+let senzaMostri = false   // le prove che non sono uno scontro (la bacheca, il viaggio): `__mondo3d.senzaMostri()`
 function mostriDelPasso(dt, t) {
+  if (senzaMostri) { scena.S.mostri = []; if (mostriVisti.value.length) mostriVisti.value = []; return }
   if (!inScontro && !attesaScontro) {
     const inc = mostri.passo(dt, io, { fermo: !!(dialogo.value || domandaPietra.value || props.veduta || props.fermo) })
     if (inc) apriIncontro(inc)
@@ -933,7 +935,7 @@ async function nasci() {
       porta(x, z) { via = []; io.x = x; io.z = z; scena.salta(); ultimaCella = -1 },
       // i mostri di sopra (per le prove): lo stato del motore, chi si vede adesso (e dove sta a schermo), e l'eroe portato a `d` celle
       // dal mostro `i`, nella sua regione e fuori dalla cintura, su una cella dove si cammina
-      stato: () => mostri.stato, inScontro: () => inScontro, palco: () => scena.palcoSopra && scena.palcoSopra.pittore,
+      stato: () => mostri.stato, inScontro: () => inScontro, senzaMostri() { senzaMostri = true }, palco: () => scena.palcoSopra && scena.palcoSopra.pittore,
       mostri: () => scena.S.mostri.map(q => { scena.aSchermo(q.x, scena.quota(q.x, q.z) + 0.6, q.z, pt); return { i: q.i, x: q.x, z: q.z, sveglio: q.sveglio, alfa: q.alfa, schermo: [Math.round(pt.x), Math.round(pt.y)] } }),
       vicinoAl(i, d = 6) {
         const q = mostri.stato.mostri[i]

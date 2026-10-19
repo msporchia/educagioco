@@ -17,6 +17,7 @@ import { EROE_SUL_PALCO } from '../../src/giochi/sotterraneo/motore/palco.js'
 import { SOPRA } from '../../src/giochi/sotterraneo/dati/mondo-aperto-mostri.js'
 import { COSE } from '../../src/giochi/sotterraneo/dati/cose.js'
 import { robaAttesa, crescitaAttesa } from '../../src/giochi/sotterraneo/motore/storia.js'
+import { diario } from '../../src/giochi/sotterraneo/motore/missioni.js'
 import { controlla, uguale, stessaLista, riassunto } from '../aiuto/verifica.mjs'
 
 const m = ilMondo()
@@ -207,6 +208,12 @@ const s0 = popolaMondo({ mondo: m, eroe: 'cavaliere', giro: 0 })
   const e = esitoDelloScontro(s, corsa)
   const n = e.uccisi.filter(x => x.specie === 'zombie').length
   uguale('lo scontro vero: la caccia conta gli zombie caduti', taglieDelloScontro(e.uccisi, { stati, conti: {}, stato: s }).conti[caccia], n)
+  // il diario le sa mostrare: la caccia col suo conto, il signore e la tana col loro caporale
+  const d = diario({ [caccia]: 'presa', [sig]: 'presa', [tana]: 'fatta' }, [], null, { [caccia]: 4 }, true)
+  const v = id => d.inMano.find(x => x.id === id)
+  stessaLista('la caccia aperta: 4 di 6', v(caccia).progresso, { fatti: 4, quanti: 6 })
+  controlla('il signore ha la faccia del suo caporale', !!v(sig).cosa.sprite && v(sig).cosa.nome.startsWith('Il signore'), JSON.stringify(v(sig).cosa))
+  uguale('la tana fatta si consegna', v(tana).stato, 'fatta')
 }
 
 riassunto('i mostri di sopra a schermo')

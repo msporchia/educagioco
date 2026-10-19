@@ -70,6 +70,8 @@ await semina(page, {
 await scegli(page, 'sotterraneo3d')
 await scegliAvventura(page, 'cavaliere')
 await mondoPronto(page)
+// la bacheca non è uno scontro: i mostri di sopra (la X sta vicino alla tana della regione) si tolgono, li prova integrazione/sotterraneo-mostri-sopra
+await page.evaluate(() => window.__mondo3d.senzaMostri())
 await attendi(page, 2000)
 
 /* ---------- 1. la bacheca ha il «?» d'oro, e il fumetto le sue righe ---------- */
