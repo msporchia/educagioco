@@ -172,7 +172,7 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
     const t = S.tempo
 
     aggiornaVisibilita(piano.vis, { forza: corsa.forzaLuce, visto: corsa.visto, palco: scontro.punti(), k: verso(dtVero, 7) })
-    scriviTexel(piano.vis); maschera.rinfresca()
+    if (scriviTexel(piano.vis)) maschera.rinfresca()
 
     figure.inizia(); figureEroe.inizia(); aloni.inizia(); colonne.inizia(); etichette.inizia()
     cose.disegna(corsa, { t, dt: dtVero, dtScena: dt, palco: scontro.palco ? { campo: scontro.palco.campo, fx } : null, salta })
