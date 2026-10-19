@@ -82,14 +82,17 @@ senso, a sei «7×8» nemmeno, a otto vanno bene tutti e due.
   è ammorbidito dalla campana (`pesoDi`); in una campagna non c'è un «2%
   delle volte», c'è una fila che si macina tutta. Con l'ammissione (a nove
   anni `[18,5–87,5]`) la tabellina del 2, a 40, resterebbe dentro.
-- **Nessuna tappa esce mai dalla fila**: cambia il cancello
+- **Nessuna tappa esce mai dalla fila**: cambia lo stato
   (`statoDellaTappa`). `PASSATA` sotto (nasce aperta: «l'hai già
-  passato»), `IN_PORTATA`, `AVANTI` sopra (chiusa, «arriva più avanti»,
-  non «campagna finita»). `profile.campagne[<chiave>]` è un indice, e una
-  fila accorciata in testa sposterebbe l'avanzamento di tutti.
-- **Per merito** (`perMerito: true` nel manifesto): `AVANTI` non ferma chi
-  ci arriva vincendo la tappa prima. L'età decide ancora se la carta si
-  offre in home. Lo dicono il Robot e Passo passo.
+  passato»), `IN_PORTATA`, `AVANTI` sopra. `profile.campagne[<chiave>]` è
+  un indice, e una fila accorciata in testa sposterebbe l'avanzamento di tutti.
+- **L'età non chiude mai le tappe alte** (ogni gioco, nessun flag):
+  `AVANTI` non ferma chi ci arriva vincendo la tappa prima, perché averla
+  vinta è la prova che la regge (l'utente, ottobre 2026: «se è arrivata fin
+  lì può apprendere anche i livelli dopo»). L'età decide da dove si
+  comincia (`PASSATA`) e se la carta si offre in home, mai quanto lontano si
+  va. Un tetto si rimette solo con un motivo molto valido, per una tappa
+  precisa, e si scrive qui.
 - **La testa si taglia solo a quello che la scuola ha già dato**: la
   tappa dichiara `scuola: '<chiave di data/saperi.js>'`, e chi non la
   dichiara non si taglia mai in testa (`dog` a dieci anni serve: nessuna

@@ -119,8 +119,8 @@ for (const z of m.posti) controlla(`${z.tipo} ${z.chiave}: ci si arriva`, m.pass
   // con k discese finite le regioni raggiunte a piedi sono quelle che il grafo dei passaggi aperti dice, né una di più né una di meno
   const grafo = new Map(m.regioni.map(q => [q.chiave, []]))
   for (const q of m.passaggi) { grafo.get(q.da).push(q); grafo.get(q.a).push(q) }
-  const perEta = (finite, apertaPerEta) => {
-    const libera = m.calpestabileCon(q => passaggioAperto(q, { finite, apertaPerEta }))
+  const dopo = finite => {
+    const libera = m.calpestabileCon(q => passaggioAperto(q, { finite }))
     const d = passiDa(W, H, libera, m.partenza)
     const viste = new Set()
     for (let k = 0; k < W * H; k++) if (d[k] >= 0) viste.add(m.regioni[m.reg[k]].chiave)
@@ -129,30 +129,21 @@ for (const z of m.posti) controlla(`${z.tipo} ${z.chiave}: ci si arriva`, m.pass
       const qui = coda.shift()
       for (const q of grafo.get(qui)) {
         const altra = q.da === qui ? q.a : q.da
-        if (!vuole.has(altra) && passaggioAperto(q, { finite, apertaPerEta })) { vuole.add(altra); coda.push(altra) }
+        if (!vuole.has(altra) && passaggioAperto(q, { finite })) { vuole.add(altra); coda.push(altra) }
       }
     }
     return { viste: [...viste].sort(), vuole: [...vuole].sort() }
   }
   for (const finite of [0, 3, 4, 5, 6, 7]) {
-    const { viste, vuole } = perEta(finite)
+    const { viste, vuole } = dopo(finite)
     stessaLista(`con ${finite} discese finite si arriva dove portano i passaggi aperti`, viste, vuole)
   }
-  const a = perEta(3).viste, b = perEta(4).viste, c = perEta(6).viste, d = perEta(7).viste
+  const a = dopo(3).viste, b = dopo(4).viste, c = dopo(6).viste, d = dopo(7).viste
   uguale('prima del ponte del guado: il villaggio e le otto terre vicine', a.length, 9)
   stessaLista('battuto il quarto si aprono il sud e l\'ovest', b.filter(k => !a.includes(k)).map(k => regione(k).marca).filter((v, i, l) => l.indexOf(v) === i).sort(), ['ovest', 'sud'])
   stessaLista('battuto il sesto il nord', c.filter(k => !b.includes(k)).map(k => regione(k).marca).filter((v, i, l) => l.indexOf(v) === i), ['nord'])
   stessaLista('a storia finita l\'est, con l\'abisso', d.filter(k => !c.includes(k)).map(k => regione(k).marca).filter((v, i, l) => l.indexOf(v) === i), ['est'])
   uguale('a storia finita tutto il mondo', d.length, 25)
-  // l'età chiude un passaggio, non una regione: chiuse per l'età le discese dalla quinta in poi (l'età è in fila), si resta
-  // nell'anello 1 anche a storia finita; chiusa la settima, il nord resta fuori ma il sud e l'ovest no
-  const giovane = perEta(7, k => k < 4)
-  stessaLista('chiuse per l\'età dalla quinta in poi: il villaggio e le terre vicine', giovane.viste, giovane.vuole)
-  uguale('cioè nove regioni', giovane.viste.length, 9)
-  const senzaNord = perEta(7, k => k < 6)
-  stessaLista('chiusa la settima: si arriva dove portano i passaggi aperti', senzaNord.viste, senzaNord.vuole)
-  controlla('e il nord resta fuori (l\'est no: come l\'abisso, non ha età, e dal bosco secco ci si arriva)', senzaNord.viste.every(k => regione(k).marca !== 'nord'))
-  controlla('ma il sud e l\'ovest no', ['guado', 'palude', 'ceneri', 'lupi'].every(k => senzaNord.viste.includes(k)))
 }
 {
   // ogni passaggio fra anelli o fra marche ha la sua grata; dentro una marca o un anello no

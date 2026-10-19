@@ -6,7 +6,7 @@ import Barra from '../../components/Barra.vue'
 import { suono } from '../../audio.js'
 import { state, addCoins, segna, spendi } from '../../store/profile.js'
 import { load, save, flush } from '../../store/storage.js'
-import { progresso, aperta, adesso, chiusaPerEta, stelleDi, completa, scelta, ricorda,
+import { progresso, aperta, adesso, stelleDi, completa, scelta, ricorda,
          aiutiPresi, segnaAiutiPresi } from '../campagne.js'
 import { scrive as scriveNelProgramma, SVELA } from '../aiuti.js'
 import { scalaDi, applica } from './motore/aiuti.js'
@@ -98,8 +98,6 @@ const livelliScheda = computed(() => LIVELLI.map((l, i) => {
     indice: i, nome: l.nome, impara: l.impara, capitolo: l.capitolo, stelle,
     stato: !aperta(CHIAVE, i) ? 'spento' : stelle > 0 ? 'vinto' : adesso(CHIAVE, i) ? 'adesso' : 'aperto',
     aMeta: lasciatoAMeta(l, i),
-    /* chiuso per età: andare avanti non lo apre, quindi il fumetto non promette niente */
-    perEta: chiusaPerEta(CHIAVE, i),
   }
 }))
 const fumettoMappa = ref(null)

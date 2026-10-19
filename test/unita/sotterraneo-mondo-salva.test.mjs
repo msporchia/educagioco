@@ -82,8 +82,6 @@ uguale('e dopo la sesta porta al rifugio', minatoreDi(m, 6).citta, 'rifugio')
   const ponte = m.passaggi.find(q => q.nome === 'Il ponte del guado')
   controlla('la grata del guado è chiusa all\'inizio', !ap.aperto(ponte))
   controlla('e dice cosa la apre', /Si apre quando finisci la tana dei ragni/.test(chiusoPerche(ponte, ap)), chiusoPerche(ponte, ap))
-  const eta = aperturaDi(CAMPAGNA.map((t, i) => ({ indice: i, fatta: i < 4, perEta: i === 4 })))
-  uguale('chiusa per l\'età non promette niente', chiusoPerche(ponte, eta), 'Questa strada, per ora, resta chiusa.')
   const finite = aperturaDi(CAMPAGNA.map((t, i) => ({ indice: i, fatta: i < 4 })))
   controlla('finite quattro discese si alza', finite.aperto(ponte))
 }

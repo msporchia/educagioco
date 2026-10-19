@@ -21,11 +21,10 @@ una scheda e da un seme fisso, che gira in Node senza Vue, three o DOM. Nessuno 
   `difDi`: le domande di una regione sono l'inizio di quelle del dungeon della storia di quel livello.
 - **I passaggi** (`PASSAGGI`): fra quali regioni si passa, `ponte` (con il `modello`: arco, travi, passerella) o `valico`.
   Ogni altro confine è chiuso: un fiume senza ponte o una cresta senza valico.
-- **Le regole** (`regolaDi`): la marca dà quante discese finite aprono la grata (`apre`: sud e ovest 4, nord 6, est 7) e la
-  discesa la cui età la chiude (`tappa`); l'anello 1 l'età della cripta. Un passaggio segue la più chiusa delle due regioni,
-  per la storia e per l'età, così una marca chiusa resta chiusa da qualunque lato ci si arrivi. **La grata c'è solo dove le
-  due regole sono diverse** (`haGrata`): all'ingresso di una marca, fra due marche, e i due ponti del villaggio (l'età).
-  `passaggioAperto(p, { finite, apertaPerEta })` è la domanda che il gioco farà.
+- **Le regole** (`regolaDi`): la marca dà quante discese finite aprono la grata (`apre`: sud e ovest 4, nord 6, est 7) . Un
+  passaggio segue la più chiusa delle due regioni, così una marca chiusa resta chiusa da qualunque lato ci si arrivi. **La
+  grata c'è solo dove le due regole sono diverse** (`haGrata`): all'ingresso di una marca, fra due marche (sud e ovest, pure con la stessa `apre`) e fra un anello e l'altro (anche se si alza da sola). L'età non
+  chiude passaggi. `passaggioAperto(p, { finite })` è la domanda che il gioco farà.
 - **Le città** (`CITTA`): la regione, il passaggio che guardano (`verso`), il raggio della zona dei mercanti, i mercanti (le
   chiavi di `dati/mercanti.js`: il banco è per mercante), chi ci sta, il minatore (`minatore`: da quale discesa), le case.
 - **I dungeon** (`DUNGEON`): la chiave di sempre, l'indice della campagna (l'abisso −1), il nome nuovo, la regione, il
@@ -147,6 +146,6 @@ ingrandirlo). `--seme N` un altro seme; `--semi 1-48` una riga per seme, un PNG 
 
 Nei test: `unita/sotterraneo-mondo` (la pianta del seme senza guasti, la firma, lo stesso seme lo stesso mondo, niente
 import fuori dal repo, 5×5 e gli anelli, le fasce, i dungeon con le chiavi e i nomi nuovi nelle regioni del progetto e in
-fila, ogni posto raggiungibile, a ogni punto della storia e dell'età solo dove portano i passaggi aperti, la grata solo fra
+fila, ogni posto raggiungibile, a ogni punto della storia solo dove portano i passaggi aperti, la grata solo fra
 anelli e marche, i posti che non si pestano, chi sta fermo che non chiude strade, le città coi loro mercanti, le undici
 pietre, gli antri, gli anelli che si allontanano, `creaTerra` sulla maschera generata).

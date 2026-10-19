@@ -58,8 +58,6 @@ Lo decide `MathGame.vue` (`statoVoce`), la mappa lo dipinge:
   tappa ha **una stella sola** (superata o no, non c'è un «quanto bene»: il
   motore lo sa nei due conti in cima, vedi sopra), quindi sulla rotta non
   ci sono stelle vuote; sulle chiuse non c'è niente.
-- **Chiusa vince su superata**: una tappa superata e poi chiusa dall'età
-  resta chiusa, come prima.
 - **La rotta è d'oro fino alla tappa da fare**, tenue dopo: non guarda dove
   il razzo è andato a posarsi toccando una tappa (`oro` in
   `RottaAsteroidi.vue`), si allunga all'arrivo del volo dopo una vittoria.
@@ -75,8 +73,7 @@ Lo decide `MathGame.vue` (`statoVoce`), la mappa lo dipinge:
   nell'elenco non ci sono più le descrizioni: tutto quello che c'era sotto
   il nome sta qui.
 - **Su una chiusa dice cosa fare prima, senza tasto**: «Prima tocca a «X»,
-  poi ad altre 3 tappe.» (X è la tappa da fare adesso); chiusa dall'età,
-  «Questa tappa per ora è chiusa.» — andare avanti non la aprirebbe.
+  poi ad altre 3 tappe.» (X è la tappa da fare adesso).
 - **Si apre al `click`**, non al `pointerup`: il click che il dito si lascia
   dietro è proprio quello che lo apre ([../core/il-dito.md](../core/il-dito.md)).
   Il fumetto non compare mai sotto il dito (sta sopra la tappa, o sotto

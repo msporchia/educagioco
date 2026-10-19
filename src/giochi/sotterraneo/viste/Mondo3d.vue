@@ -292,7 +292,7 @@ function rigaStoria(t) {
 function chiusaPerche(d) {
   if (d.abisso) return 'Si apre quando hai finito tutte le discese.'
   const prima = DUNGEON.find(x => x.indice === d.t.indice - 1)
-  if (d.t.perEta || !prima) return 'Per ora non si scende.'
+  if (!prima) return 'Per ora non si scende.'
   const g = storia.value.porte[d.t.indice - 1]
   return g && g.grosso ? `Si apre quando batti ${g.grosso} in fondo ${minuscolo(prima.nome).replace(/^(la|le|il|i) /, (a, x) => ({ la: 'alla ', le: 'alle ', il: 'al ', i: 'ai ' })[x])}.`
     : `Si apre quando finisci ${minuscolo(prima.nome)}.`

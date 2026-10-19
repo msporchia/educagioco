@@ -57,7 +57,7 @@ const palestra = (eroe, k) => new Corredo({ eroe, roba: robaAttesa(eroe, k, { po
   controlla('la collana aspetta che la cripta sia finita', !sbloccata(missioneDi('collana'), nessuna, tappeAl(0)))
   controlla('e finita la cripta si sblocca da sola', sbloccata(missioneDi('collana'), nessuna, tappeAl(1)))
   controlla('anche la Dama Grigia, che non aspetta niente, c\'è dall\'inizio', sbloccata(missioneDi('badessa'), nessuna, tappeAl(0)))
-  // una discesa chiusa dall'età non apre le sue missioni, anche se il resto c'è
+  // una discesa chiusa non apre le sue missioni, anche se il resto c'è
   const chiusa = tappeAl(1).map(t => (t.chiave === 'cantine' ? { ...t, aperta: false } : t))
   controlla('con la discesa chiusa la collana non si sblocca', !sbloccata(missioneDi('collana'), nessuna, chiusa))
   // dalla missione consegnata

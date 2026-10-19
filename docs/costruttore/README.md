@@ -16,7 +16,7 @@ toccava ogni import, test e rimando.
 - [progetti.md](progetti.md) — perché i progetti devono servire: attrezzi, lo zaino di righe, annulla e la mano
 - [porto.md](porto.md) — il mondo che lavora da solo: turni, attori, mappe a coppie, i posti e le giornate
 - [algoritmi.md](algoritmi.md) — ordinare, cercare, le pile, la torre del casaro e la ricorsione
-- [campagna.md](campagna.md) — programmi fuori dal profilo, riordinare la fila, `perMerito`, stelle e 💡
+- [campagna.md](campagna.md) — programmi fuori dal profilo, riordinare la fila, si apre per merito, stelle e 💡
 - [scheda.md](scheda.md) — la scheda del robot: dove si sceglie il livello, chip e led, la corrente e il robot, il fumetto; e il robot disegnato, uguale in ogni schermata, con le sue pose
 - [livelli.md](livelli.md) — come si scrive un livello: i campi, le cinque regole, l'ordine dei capitoli
 

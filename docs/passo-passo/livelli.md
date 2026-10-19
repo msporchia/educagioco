@@ -150,7 +150,7 @@ Chi apre cosa:
 - **Il cane comincia quando il coniglio finisce «Tutto insieme»**
   (`apreIlCane`, la fine dei piccoli): l'unico punto dove le strade si
   toccano. Il primo gregge è tarato come «Tutto insieme» (portata 44).
-- **L'età non chiude niente** (`perMerito` nel manifesto): chi finisce una
+- **L'età non chiude niente**: chi finisce una
   tappa apre la dopo, a qualunque età; deciso dall'utente, «se ha finito
   tutti i livelli è giusto che sblocchi i livelli dopo». L'età decide solo
   da dove parte un bambino nuovo (una tappa passata nasce aperta) e se il

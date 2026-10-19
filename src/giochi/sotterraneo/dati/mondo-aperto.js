@@ -31,14 +31,12 @@ export const DUNGEON = [
 ]
 
 // le marche dell'anello 2, quattro regioni ciascuna in giro come le pale di un mulino (ognuna prende l'angolo da cui parte).
-// `apre`: quante discese finite servono perché i suoi passaggi alzino la grata; `tappa`: la discesa la cui età (la `portata`)
-// apre o chiude i passaggi verso di lei, la più bassa della marca (l'età chiude un passaggio, non una regione). L'est è
-// l'abisso: si apre a storia finita e non ha età, come l'abisso di oggi
+// `apre`: quante discese finite servono perché i suoi passaggi alzino la grata. L'est è l'abisso: si apre a storia finita
 export const MARCHE = {
-  nord: { nome: 'La marca del nord', apre: 6, tappa: 6 },
-  est: { nome: 'La marca dell\'est', apre: 7, tappa: null },
-  sud: { nome: 'La marca del sud', apre: 4, tappa: 4 },
-  ovest: { nome: 'La marca dell\'ovest', apre: 4, tappa: 5 },
+  nord: { nome: 'La marca del nord', apre: 6 },
+  est: { nome: 'La marca dell\'est', apre: 7 },
+  sud: { nome: 'La marca del sud', apre: 4 },
+  ovest: { nome: 'La marca dell\'ovest', apre: 4 },
 }
 
 // Le regioni. `colonna` e `riga` nella griglia 5×5 (la riga 0 in cima, a nord); l'anello è la distanza a scacchiera dal
@@ -112,32 +110,26 @@ export const PASSAGGI = [
   p('lupi', 'monte', 'valico'), p('landa', 'secco', 'valico'),
 ]
 
-// Quando un passaggio è aperto: la grata si alza quando le discese finite arrivano a `apre`, e resta giù per l'età se la
-// discesa `tappa` è chiusa per l'età del bambino. Un passaggio dentro un anello o dentro una marca segue la regione più
+// Quando un passaggio è aperto: la grata si alza quando le discese finite arrivano a `apre`. Un passaggio dentro un anello o dentro una marca segue la regione più
 // chiusa delle due; uno verso una marca segue la marca. L'anello 1 si apre con la prima discesa (la cripta)
 export const regolaDellaRegione = R => {
-  const m = R.marca ? MARCHE[R.marca] : anelloDi(R) === 1 ? { apre: 0, tappa: 0 } : { apre: 0, tappa: null }
-  return { apre: m.apre, tappa: m.tappa }
+  return { apre: R.marca ? MARCHE[R.marca].apre : 0 }
 }
-// un passaggio ha la grata solo dove le due regioni hanno regole diverse: all'ingresso di una marca, o del primo anello (l'età)
+// un passaggio ha la grata solo dove le due regioni hanno regole diverse: all'ingresso di una marca o di un anello, e fra due marche
 export function haGrata(passaggio, regioni = REGIONI_DEL_MONDO) {
   const di = k => regioni.find(x => x.chiave === k)
   const a = regolaDellaRegione(di(passaggio.da)), b = regolaDellaRegione(di(passaggio.a))
-  return a.apre !== b.apre || a.tappa !== b.tappa
+  const A = di(passaggio.da), B = di(passaggio.a)
+  return a.apre !== b.apre || A.marca !== B.marca || anelloDi(A) !== anelloDi(B)
 }
 export function regolaDi(passaggio, regioni = REGIONI_DEL_MONDO) {
   const di = k => regioni.find(x => x.chiave === k)
   const a = regolaDellaRegione(di(passaggio.da)), b = regolaDellaRegione(di(passaggio.a))
-  // la più chiusa delle due, per la storia e per l'età (l'età è in fila come le discese: chi ha chiusa la quinta ha chiusa la
-  // sesta), così una marca chiusa resta chiusa da qualunque lato ci si arrivi
-  const tappe = [a.tappa, b.tappa].filter(t => t != null)
-  return { apre: Math.max(a.apre, b.apre), tappa: tappe.length ? Math.max(...tappe) : null }
+  // la più chiusa delle due, così una marca chiusa resta chiusa da qualunque lato ci si arrivi
+  return { apre: Math.max(a.apre, b.apre) }
 }
-// aperto per chi ha finito `finite` discese; `apertaPerEta(k)` dice se la discesa k è aperta per l'età (di difetto sì)
-export const passaggioAperto = (passaggio, { finite = 0, apertaPerEta = () => true } = {}) => {
-  const { apre, tappa } = regolaDi(passaggio)
-  return finite >= apre && (tappa == null || apertaPerEta(tappa))
-}
+// aperto per chi ha finito `finite` discese
+export const passaggioAperto = (passaggio, { finite = 0 } = {}) => finite >= regolaDi(passaggio).apre
 
 export const anelloDi = R => Math.max(Math.abs(R.colonna - 2), Math.abs(R.riga - 2))
 export const fasciaDi = R => (R.livello ? [R.livello, R.livello + LARGA_REGIONE - 1] : null)

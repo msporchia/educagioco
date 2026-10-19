@@ -33,7 +33,6 @@ export default {
 
   piccoli: true,
   cresce: true,  // vedi docs/core/convenzione-giochi.md
-  perMerito: true,  // l'età non chiude le tappe: chi ci arriva va avanti (docs/passo-passo/livelli.md)
 
   riassunto(av = { tappa: 0, stelle: {} }) {
     const stelle = Object.values(av.stelle || {}).reduce((n, s) => n + s, 0)

@@ -14,7 +14,6 @@ export default {
   copertina: { fondo: '#1f6b4a', disegno: '#2f8a62', scena: 'circuito' },
   tappe: QUANTE_TAPPE,
   grandi: true,
-  perMerito: true, // vedi docs/costruttore/campagna.md
 
   riassunto(av = { tappa: 0, stelle: {} }) {
     const stelle = Object.values(av.stelle || {}).reduce((n, s) => n + s, 0)

@@ -35,9 +35,9 @@ vale un livello. Codice in `src/giochi/costruttore/` (`Gioco.vue`,
 
 ## Si apre per merito
 
-`perMerito: true` nel manifesto (`gioco.js`): un livello vinto apre il
-successivo anche oltre la portata dell'età — averlo vinto è la prova che il
-bambino ci arriva. L'età decide solo se la carta si offre in home. Come
+Un livello vinto apre il successivo, a qualunque età: se ha dimostrato di
+arrivare fin lì può imparare anche i livelli dopo. L'età decide solo se la
+carta si offre in home e da dove si comincia. Come
 funziona in generale: [../apprendimento/eta-e-portata.md](../apprendimento/eta-e-portata.md).
 
 ## Stelle, monete e il 💡

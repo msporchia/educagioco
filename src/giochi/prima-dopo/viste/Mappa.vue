@@ -2,7 +2,7 @@
 import Ripresa from '../../Ripresa.vue'
 // La mappa della campagna, calcata su codice-segreto/viste/Mappa.vue con
 // le carte più grandi: qui legge un bambino di quattro anni. Riceve
-// tutto già deciso (aperto, chiuso per età, stelle, colore).
+// tutto già deciso (aperto, stelle, colore).
 defineProps({
   scalini: { type: Array, required: true },   // [{ chiave, nome, icona, dritta, tappe: [] }]
   ripresa: { type: Object, default: null },   // la tappa lasciata a metà: docs/prima-dopo/sosta.md
@@ -31,9 +31,8 @@ defineEmits(['gioca', 'riprendi', 'scorda', 'comincia', 'annulla'])
           <span class="pd-faccia em">{{ t.aperta ? t.icona : '🔒' }}</span>
           <span class="pd-testo">
             <b>{{ t.nome }}</b>
-            <!-- chiusa per età non si scrive niente: per questo bambino il gioco finisce lì -->
             <i v-if="t.aperta">{{ t.racconto }}</i>
-            <i v-else-if="!t.perEta">continua per aprirla</i>
+            <i v-else>continua per aprirla</i>
           </span>
           <span class="pd-stelle em">{{ t.stelle ? '⭐'.repeat(t.stelle) : `${t.quante} 📖` }}</span>
         </button>
