@@ -28,6 +28,10 @@ import Dialogo from './Dialogo.vue'
 import Foglio from './Foglio.vue'
 import FumettoMondo from './FumettoMondo.vue'
 import { RITMO } from '../dati/pensieri.js'
+import { creaMostriSopra } from './mondo-mostri.js'
+import { annuncioDi, alSicuro } from '../motore/aperta.js'
+import { fotoDelloScontro } from '../motore/aperta-scena.js'
+import { allaCitta } from '../motore/forze-sopra.js'
 
 const props = defineProps({
   tappe: { type: Array, required: true },
@@ -44,9 +48,14 @@ const props = defineProps({
   forze: { type: Object, default: null },
   veduta: { type: Boolean, default: false },  // la veduta d'insieme, dalla casella «mappa grande» della barra
   pensiero: { type: Object, default: null },  // il pensiero dell'eroe sopra la testa (docs/sotterraneo/pensieri.md), come in Terra.vue
+  forza: { type: Number, default: 1 },        // il livello di forza dell'eroe (motore/forza.js): il colore dell'annuncio di una regione
+  fermo: { type: Boolean, default: false },   // un pannello di Gioco.vue è aperto sopra il mondo (bottega, zaino, eroe): i mostri aspettano
 })
 // `pensa`, `pensiero`, `pensiero-fine`, `trovati`: lo stesso contratto dei pensieri di viste/Terra.vue
-const emit = defineEmits(['scendi', 'mondo', 'bottega', 'riprendi', 'sentito', 'cura', 'risposta', 'veduta', 'pensa', 'pensiero', 'pensiero-fine', 'trovati'])
+// `scontro` ({ inc, stato, terra, verso }): un mostro di sopra apre uno scontro (Gioco.vue lo gioca, `apriPalco` lo disegna qui);
+// `raccogli` (i): la cosa per terra `i` è sotto i piedi dell'eroe. Le forze di sopra vanno in `mondo.sopra` col resto (salva)
+const emit = defineEmits(['scendi', 'mondo', 'bottega', 'riprendi', 'sentito', 'cura', 'risposta', 'veduta', 'pensa', 'pensiero', 'pensiero-fine', 'trovati',
+                          'scontro', 'raccogli'])
 const minuscolo = s => s.charAt(0).toLowerCase() + s.slice(1)
 const RAGGIO_SALUTO = 6, RAGGIO_RIARMO = 9, DURATA_SALUTO = 1.4
 
@@ -66,6 +75,11 @@ const trovati = ref(new Set())
 const parlato = ref(false), divieti = ref(new Set()), ascoltate = ref({}), accese = ref(new Set())
 const giro = ref(0)      // i ritorni in città (motore/mondo-sopra.js, lontanoDalleCitta): la bacheca cambia a ogni giro
 let allontanato = false, raggiungibili = null
+// i mostri di sopra (viste/mondo-mostri.js, motore/aperta.js): lo stato del motore, e lo scontro aperto (`inScontro`: lo gioca
+// Gioco.vue, lo disegna il palco della scena). `fotoScontro`: chi è in campo, salvato in `mondo.sopra.scontro` finché lo scontro c'è
+let mostri = null, inScontro = false, attesaScontro = false, inCampo = null, fotoScontro = null, prossimiMostri = 0
+const mostriVisti = ref([]), coseVisti = ref([])
+const elMostri = new Map(), elCose = new Map()
 
 const tappaDi = chiave => props.tappe.find(t => t.chiave === chiave) || null
 // un ingresso (il bersaglio, `k` la chiave della discesa): il dungeon coi nomi nuovi, la sua tappa, se è aperto
@@ -141,6 +155,7 @@ function prepara() {
   ascoltate.value = { ...(s.novita || {}) }
   giro.value = s.giro || 0
   raggiungibili = markRaw(terra.raggiungibili(m.partenza))
+  mostri = markRaw(creaMostriSopra({ m, eroe: props.eroe.chiave || 'eroe', giro: giro.value, salvato: s.sopra || null }))
   preparaBersagli()
   divieti.value = new Set((Array.isArray(s.divieti) ? s.divieti : []).filter(k => { const b = bersagli.value.find(x => x.chiave === `ingresso:${k}`); return b && !datoDelPosto(b).aperto }))
   // dove si era; salendo dal portale accanto al gemello, nella città che serve quel dungeon
@@ -150,7 +165,7 @@ function prepara() {
   if (d && d.portale && portale) qui = portale.accanto
   else if (d && Number.isInteger(d.x) && terra.passa(d.x, d.y)) qui = d
   // salendo dal portale si torna in città (un giro); se no si riparte da dove si era, e si è «lontani» se non si è in città
-  if (d && d.portale && portale) { giro.value++; allontanato = false }
+  if (d && d.portale && portale) { giro.value++; allontanato = false; mostri.giro(giro.value) }
   else allontanato = lontanoDalleCitta(m, qui.x, qui.y)
   io.x = qui.x + 0.5; io.z = qui.y + 0.5
   trovati.value = new Set(bersagli.value.filter(b => visto(cellaDelBersaglio(b))).map(b => b.chiave))
@@ -160,7 +175,7 @@ function salva() {
   if (!m) return
   sporca = false; ultimoSalvato = tempo
   emit('mondo', { nebbia: nebbiaInBase64(nebbia), dove: { x: Math.floor(io.x), y: Math.floor(io.z) }, giro: giro.value, pietre: [...accese.value],
-                  parlato: parlato.value, divieti: [...divieti.value], novita: ascoltate.value })
+                  parlato: parlato.value, divieti: [...divieti.value], novita: ascoltate.value, sopra: mostri.inSalvo(fotoScontro) })
 }
 
 /* ═══════════ il passo: l'eroe cammina, guarda, chi sta fermo saluta ═══════════ */
@@ -185,6 +200,7 @@ function arriva() {
   salva()
   const q = meta
   meta = null
+  if (q && q.tipo === 'terra') { emit('raccogli', q.i); salva(); return }   // Gioco.vue la mette in tasca (raccogliDaTerra)
   if (q) apri(q)
 }
 function passo(dt, t) {
@@ -199,7 +215,12 @@ function passo(dt, t) {
     if (!via.length) arriva()
   }
   const k = Math.floor(io.z) * m.W + Math.floor(io.x)
-  if (k !== ultimaCella) { ultimaCella = k; guarda() }
+  if (k !== ultimaCella) {
+    // una cella camminata è un passo per il motore (il mana, chi torna a casa); un salto (la pietra, il risveglio) no
+    if (ultimaCella >= 0 && !inScontro && mostri.passi(1, io, props.roba ? props.roba.energiaMax : null)) sporca = true
+    ultimaCella = k; guarda()
+  }
+  mostriDelPasso(dt, t)
   salutaChiPassa(t)
   pensaDaFermo(dt)
   if (sporca && t - ultimoSalvato > 3) salva()
@@ -226,7 +247,11 @@ function guarda() {
   // passo non fa girare la bacheca
   if (!citta && lontanoDalleCitta(m, c.x, c.y)) allontanato = true
   if (citta !== cittaOra) { if (citta && cittaOra === null && allontanato) { giro.value++; allontanato = false; sporca = true } cittaOra = citta }
-  if (r && r !== regioneOra) { if (regioneOra && !avviso.value) dillo(citta ? citta.nome : r.nome); regioneOra = r }
+  // entrando in una regione: il nome, la fascia e il colore per questo eroe (motore/aperta.js, annuncioDi); in città il suo nome
+  if (r && r !== regioneOra) {
+    if (regioneOra && !avviso.value) { const a = annuncioDi(m, io.x, io.z, props.forza); if (a) dillo(a.testo, a.colore || null) }
+    regioneOra = r
+  }
 }
 
 /* ═══════════ le taglie della bacheca (motore/taglie.js): cosa si fa da sé, camminando ═══════════ */
@@ -299,9 +324,87 @@ function piazzaPensiero() {
   if ((f.dataset.sotto === '1') !== sottoIPiedi) f.dataset.sotto = sottoIPiedi ? '1' : '0'
 }
 
-const avviso = ref(''), primaVolta = ref(!props.mondo)
+const avviso = ref(''), primaVolta = ref(!props.mondo), coloreAvviso = ref(null)
 let tAvviso = 0
-function dillo(s) { avviso.value = s; clearTimeout(tAvviso); tAvviso = setTimeout(() => { avviso.value = '' }, 2600) }
+function dillo(s, colore = null) { avviso.value = s; coloreAvviso.value = colore; clearTimeout(tAvviso); tAvviso = setTimeout(() => { avviso.value = '' }, colore ? 3400 : 2600) }
+
+/* ═══════════ i mostri di sopra (docs/sotterraneo/mondo-aperto-mostri.md, «Cosa si aspetta dalla scena») ═══════════ */
+// a ogni fotogramma, col tempo vero: chi si sveglia e insegue, chi apre lo scontro; cosa si disegna (il cerchio di luce, la nebbia)
+function mostriDelPasso(dt, t) {
+  if (!inScontro && !attesaScontro) {
+    const inc = mostri.passo(dt, io, { fermo: !!(dialogo.value || domandaPietra.value || props.veduta || props.fermo) })
+    if (inc) apriIncontro(inc)
+  }
+  const visto = (x, z) => scena.visto(x, z)
+  scena.S.mostri = props.veduta ? [] : mostri.figure(io, t, visto, inCampo)
+  scena.S.perTerra = props.veduta ? [] : mostri.perTerra(visto)
+  if (t >= prossimiMostri) { prossimiMostri = t + 0.2; aggiornaMostriVisti() }   // i bersagli nel DOM: a tempo, non a fotogrammi
+}
+function aggiornaMostriVisti() {
+  const l = inScontro ? [] : scena.S.mostri.map(q => ({ i: q.i, sveglio: q.sveglio, caporale: q.caporale, signore: q.signore, nome: q.nome, tipo: mostri.stato.mostri[q.i].tipo }))
+  const ch = l.map(q => `${q.i}:${q.sveglio ? 1 : 0}`).join('|')
+  if (ch !== mostriVisti.value.map(q => `${q.i}:${q.sveglio ? 1 : 0}`).join('|')) mostriVisti.value = l
+  const c = inScontro ? [] : scena.S.perTerra.map(x => ({ i: x.i, cosa: mostri.stato.perTerra[x.i].cosa }))
+  if (c.map(x => `${x.i}:${x.cosa}`).join('|') !== coseVisti.value.map(x => `${x.i}:${x.cosa}`).join('|')) coseVisti.value = c
+}
+// un mostro sveglio è arrivato addosso, o l'eroe ne ha toccato uno: lo scontro lo apre Gioco.vue (`scontro`), che poi chiama apriPalco
+function apriIncontro(inc) {
+  via = []; meta = null; cammina.value = false
+  chiudi(); chiudiDialogo()
+  attesaScontro = true
+  emit('scontro', { inc, stato: mostri.stato, terra, verso: { dx: verso.dx, dy: verso.dy } })
+}
+// il tocco su un mostro (il suo bersaglio, o il prato accanto ai suoi piedi): lo scontro se è a portata, se no l'eroe gli va incontro
+function toccaMostro(i) {
+  if (strisciato || inScontro || attesaScontro || props.veduta) return
+  chiudi(); chiudiDialogo()
+  const e = mostri.tocca(i, io, (x, y) => terra.passa(x, y))
+  if (!e) return
+  if (e.subito) { const inc = mostri.passo(1e-3, io); if (inc) apriIncontro(inc); return }
+  vaiA(e.cella)
+}
+const mostroVicino = p => {
+  let mig = null, dm = 1.3
+  for (const q of scena.S.mostri) { const d = Math.hypot(q.x - p.x, q.z - p.z); if (q.alfa > 0.3 && d < dm) { dm = d; mig = q } }
+  return mig
+}
+// Gioco.vue ha aperto lo scontro dell'incontro: il palco si posa sul prato (scena3d/mondo/palco.js) e torna il pittore che Gioco.vue
+// fa girare come quello delle discese. Si salva subito chi è in campo: se il telefono si spegne, rientrando si ricomincia da qui
+function apriPalco(corsa, opz = {}) {
+  attesaScontro = false
+  if (!scena || !scena.palcoSopra) return null
+  inScontro = true
+  inCampo = new Set(corsa.livello.robe.filter(r => r.che === 'mostro' && r.mondo != null).map(r => r.mondo))
+  const st = mostri.stato
+  scena.palcoSopra.apri({ io, passa: (x, y) => terra.passa(x, y), daDove: i => ({ x: st.mostri[i].fx, z: st.mostri[i].fy }), corsa, ...opz })
+  fotoScontro = fotoDelloScontro(corsa)
+  aggiornaMostriVisti()
+  salva()
+  return scena.palcoSopra.pittore
+}
+// finito lo scontro (l'esito l'ha già scritto Gioco.vue): il palco si chiude; svenuti ci si risveglia nella città più vicina.
+// `scontro`: chi è rimasto quando lo si è lasciato con la ✕ (motore/aperta-scena.js, lasciaLoScontro), o null
+function dopoLoScontro(e, scontro = null) {
+  if (scena && scena.palcoSopra) scena.palcoSopra.chiudi()
+  inScontro = false; attesaScontro = false; inCampo = null; fotoScontro = scontro
+  if (e && e.risveglio && scena) {
+    via = []; meta = null; cammina.value = false
+    io.x = e.risveglio.x + 0.5; io.z = e.risveglio.y + 0.5
+    scena.salta(); ultimaCella = -1
+    dillo(`Ti hanno portato ${allaCitta(e.risveglio.nome)}. Riposati, e torna più forte.`)
+  } else if (e && e.rimasti && e.rimasti.length) dillo('Qualcosa non ti stava in tasca: è rimasto per terra.')
+  aggiornaMostriVisti()
+  salva()
+}
+// la cosa per terra toccata: l'eroe ci va, e arrivato la raccoglie (arriva)
+function toccaCosa(i) {
+  if (strisciato || inScontro || props.veduta) return
+  const c = mostri.stato.perTerra[i]
+  if (!c) return
+  chiudi(); chiudiDialogo()
+  if (Math.hypot(io.x - (c.x + 0.5), io.z - (c.y + 0.5)) <= 1.2 && !via.length) { emit('raccogli', i); salva(); return }
+  vaiA({ x: c.x, y: c.y }, { tipo: 'terra', i })
+}
 
 /* ═══════════ il disegno della scena: cosa c'è adesso ═══════════ */
 const storia = computed(() => laStoria(props.tappe))
@@ -540,19 +643,19 @@ const segnoSopra = b => (b.ruolo === 'bacheca' ? segniBacheca.value[b.citta] || 
   : ['minatore', 'personaggio', 'mercante'].includes(b.ruolo) ? segnoDi(b.k, props.missioni, props.tappe) : null)
 
 /* ═══════════ il dito ═══════════ */
-const vista = ref(null), tela = ref(null), sopraEl = ref(null), sottoEl = ref(null)
+const vista = ref(null), tela = ref(null), sopraEl = ref(null), sottoEl = ref(null), stratoEl = ref(null)
 let giu = null, strisciato = false, ultimoTrascina = 0
 function premi(e) { if (e.pointerType === 'mouse' && e.button !== 0) return; giu = { x: e.clientX, y: e.clientY, mouse: e.pointerType === 'mouse' }; strisciato = false }
 function muovi(e) {
   if (!giu || (giu.mouse && !(e.buttons & 1))) return
   if (!strisciato && Math.hypot(e.clientX - giu.x, e.clientY - giu.y) > SCARTO_DITO) strisciato = true
-  if (!strisciato || props.veduta || dialogo.value || domandaPietra.value) return
+  if (!strisciato || props.veduta || dialogo.value || domandaPietra.value || inScontro) return
   // trascinando l'eroe insegue il dito (il mouse solo a tasto premuto)
   const t = performance.now()
   if (t - ultimoTrascina < 110) return
   ultimoTrascina = t
   const p = puntoDi(e.clientX, e.clientY)
-  if (p.x >= 0) { chiudi(); vaiA({ x: Math.floor(p.x), y: Math.floor(p.z) }) }
+  if (p.x >= 0) { chiudi(); mostri.lascia(); vaiA({ x: Math.floor(p.x), y: Math.floor(p.z) }) }
 }
 function lascia() { giu = null }
 const puntoDi = (cx, cy) => { const r = tela.value.getBoundingClientRect(); return scena.aTerra(cx - r.left, cy - r.top) }
@@ -561,6 +664,8 @@ let nSegno = 0
 // un tocco sul prato: chiude quello che è aperto e cammina; vicino ai piedi di qualcuno è un tocco su di lui
 function toccaPrato(e) {
   if (strisciato || !scena || !pronto.value) return
+  // nello scontro il prato è il palco: un mostro toccato è il bersaglio, altrove si accorcia il racconto (scena3d/scontro.js)
+  if (inScontro) { const r = tela.value.getBoundingClientRect(); scena.palcoSopra.pittore.premi({ x: e.clientX - r.left, y: e.clientY - r.top }); return }
   if (e.target.closest && e.target.closest('.sot-terra-sopra > *, .sot-terra-sotto > *, [data-fumetto], .sot-foglio')) return
   if (aperto.value) chiudi()
   chiudiDialogo()
@@ -571,7 +676,10 @@ function toccaPrato(e) {
   else {
     const vicino = personaVicina(p, bersagli.value.filter(b => b.tipo === 'persona' && trovati.value.has(b.chiave)))
     if (vicino) return tocca(vicino)
+    const mq = mostroVicino(p)
+    if (mq) return toccaMostro(mq.i)
   }
+  mostri.lascia()
   if (vaiA({ x: Math.floor(p.x), y: Math.floor(p.z) })) {
     const fin = via.at(-1) || { x: io.x, z: io.z }
     segno.value = { n: ++nSegno, x: fin.x, z: fin.z }
@@ -579,7 +687,8 @@ function toccaPrato(e) {
 }
 // un tocco su un bersaglio: l'eroe ci va, e arrivato si apre la sua cosa (un tocco nuovo annulla la meta di prima)
 function tocca(b) {
-  if (strisciato) return
+  if (strisciato || inScontro) return
+  mostri.lascia()
   chiudiDialogo()
   if (props.veduta) {
     emit('veduta', false)
@@ -617,7 +726,9 @@ async function toccoDaFuori(x, y) {
   const b = el.closest('[data-bersaglio]')
   if (b) b.click(); else toccaPrato({ target: el, clientX: x, clientY: y })
 }
-defineExpose({ vaDa, toccoDaFuori, vaDaMercante })
+// lo stato dei mostri di sopra, per chi cura in città e chi raccoglie da terra (Gioco.vue): lo cambia lui, poi `salvaSopra`
+const statoSopra = () => (mostri ? mostri.stato : null)
+defineExpose({ vaDa, toccoDaFuori, vaDaMercante, apriPalco, dopoLoScontro, statoSopra, salvaSopra: () => salva() })
 
 /* ═══════════ dopo ogni fotogramma: i bersagli, il fumetto, i nomi della veduta e le bussole, scritti nel DOM ═══════════ */
 let vL = 0, vA = 0, sopra = 0, sotto = 0
@@ -649,7 +760,7 @@ function dopo() {
   for (const b of bersagli.value) {
     const el = elementi.get(b.chiave)
     if (!el) continue
-    const r = trovati.value.has(b.chiave) && (!veduta || b.ruolo === 'pietra') ? rettangoloDi(b) : null
+    const r = !inScontro && trovati.value.has(b.chiave) && (!veduta || b.ruolo === 'pietra') ? rettangoloDi(b) : null
     const dentro = r && r.x + r.w > 0 && r.x < vL && r.y + r.h > sopra && r.y < vA - sotto
     mostraEl(el, dentro && !veduta)
     if (dentro) {
@@ -657,6 +768,7 @@ function dopo() {
       if (r.testa != null) { const t = Math.round(r.testa); if (el._t !== t) { el._t = t; el.style.setProperty('--testa', t + 'px') } }
     }
   }
+  posaMostri(veduta)
   if (eroeEl.value) {
     const c = cellaDiMe(), k = `${c.x},${c.y}`
     if (eroeEl.value.dataset.cella !== k) eroeEl.value.dataset.cella = k
@@ -676,6 +788,35 @@ function dopo() {
     el.style.transform = `translate(${Math.round(pt.x)}px, ${Math.round(pt.y)}px)`
   }
   if (tempo >= prossimeBussole) { prossimeBussole = tempo + 0.1; aggiornaBussole() }   // a tempo, non a fotogrammi
+}
+// i mostri e le cose per terra: il rettangolo della figura, come per le persone (scena3d/mondo/dito.js)
+function posaMostri(veduta) {
+  if (elMostri.size) {
+    const dove = new Map(scena.S.mostri.map(q => [q.i, q]))
+    for (const [i, el] of elMostri) {
+      const q = dove.get(i)
+      let rr = null
+      if (q && !veduta && !inScontro) {
+        const y = scena.quota(q.x, q.z)
+        scena.aSchermo(q.x, y, q.z, pt); scena.aSchermo(q.x, y + 1.3 * q.scala, q.z, pt2)
+        if (pt.davanti) { rr = rettangoloPersona(pt.x, pt.y, pt2.x, pt2.y); rr.testa = pt2.y - rr.y }
+      }
+      const dentro = rr && rr.x + rr.w > 0 && rr.x < vL && rr.y + rr.h > sopra && rr.y < vA - sotto
+      mostraEl(el, !!dentro)
+      if (dentro) { posa(el, rr); const t = Math.round(rr.testa); if (el._t !== t) { el._t = t; el.style.setProperty('--testa', t + 'px') } }
+    }
+  }
+  for (const [i, el] of elCose) {
+    const c = mostri.stato.perTerra[i]
+    let rr = null
+    if (c && !veduta && !inScontro) {
+      const x = c.x + 0.5, z = c.y + 0.5, y = scena.quota(x, z)
+      scena.aSchermo(x, y, z, pt); scena.aSchermo(x, y + 0.9, z, pt2)
+      if (pt.davanti) rr = rettangoloPersona(pt.x, pt.y, pt2.x, pt2.y)
+    }
+    mostraEl(el, !!rr)
+    if (rr) posa(el, rr)
+  }
 }
 function piazzaFumetto() {
   const b = aperto.value, f = fumEl.value, l = b.lotto
@@ -733,7 +874,7 @@ let fuoriChiave = ''
 const portaDellaStoria = computed(() => discesaDellaStoria(props.tappe))
 const PIEDI = () => Object.fromEntries(bersagli.value.filter(b => b.ruolo === 'ingresso').map(b => [b.k, { x: b.accanto.x + 0.5, y: b.accanto.y + 0.5 }]))
 function aggiornaBussole() {
-  if (props.veduta) { if (fuori.value.length) { fuori.value = []; fuoriChiave = '' } return }
+  if (props.veduta || inScontro) { if (fuori.value.length) { fuori.value = []; fuoriChiave = '' } return }
   const lista = [], cx = vL / 2, cy = (sopra + vA - sotto) / 2, M = 30
   const alBordo = (sx, sy, resto) => {
     const dx = sx - cx, dy = sy - cy, k = Math.min((dx > 0 ? vL - M - cx : cx - M) / Math.abs(dx || 1e-6), (dy > 0 ? vA - sotto - M - cy : cy - sopra - M) / Math.abs(dy || 1e-6))
@@ -773,7 +914,7 @@ async function nasci() {
   try { mod = await import('../scena3d/mondo/indice.js') } catch (e) { perso.value = true; return }
   if (!vista.value) return
   const h = new URLSearchParams(location.hash.slice(1))
-  scena = mod.creaMondo3d(tela.value, { m, nebbia, passo, dopo, fontane, dpr: Number(h.get('dpr')) || undefined, perso: () => { perso.value = true },
+  scena = mod.creaMondo3d(tela.value, { m, nebbia, passo, dopo, fontane, strato: stratoEl.value, dpr: Number(h.get('dpr')) || undefined, perso: () => { perso.value = true },
     frecce: Object.fromEntries(m.citta.map(c => [c.chiave, frecceDelCartello(m, c.chiave).map(f => versoInRadianti(f.verso))])) })
   if (!scena) { perso.value = true; return }
   markRaw(scena)
@@ -789,7 +930,25 @@ async function nasci() {
     window.__sotterraneo3d = scena
     window.__mondo3d = { scena, m, io, bersagli: () => bersagli.value, trovati: () => [...trovati.value], giro: () => giro.value,
       vai(chiave) { const b = bersagli.value.find(x => x.chiave === chiave || x.k === chiave); if (!b) return null; via = []; io.x = b.accanto.x + 0.5; io.z = b.accanto.y + 0.5 + 0.01; scena.salta(); ultimaCella = -1; return b.chiave },
-      porta(x, z) { via = []; io.x = x; io.z = z; scena.salta(); ultimaCella = -1 } }
+      porta(x, z) { via = []; io.x = x; io.z = z; scena.salta(); ultimaCella = -1 },
+      // i mostri di sopra (per le prove): lo stato del motore, chi si vede adesso (e dove sta a schermo), e l'eroe portato a `d` celle
+      // dal mostro `i`, nella sua regione e fuori dalla cintura, su una cella dove si cammina
+      stato: () => mostri.stato, inScontro: () => inScontro, palco: () => scena.palcoSopra && scena.palcoSopra.pittore,
+      mostri: () => scena.S.mostri.map(q => { scena.aSchermo(q.x, scena.quota(q.x, q.z) + 0.6, q.z, pt); return { i: q.i, x: q.x, z: q.z, sveglio: q.sveglio, alfa: q.alfa, schermo: [Math.round(pt.x), Math.round(pt.y)] } }),
+      vicinoAl(i, d = 6) {
+        const q = mostri.stato.mostri[i]
+        if (!q) return null
+        let mig = null
+        const R = Math.ceil(d) + 2
+        for (let dy = -R; dy <= R; dy++) for (let dx = -R; dx <= R; dx++) {
+          const x = Math.floor(q.fx) + dx, y = Math.floor(q.fy) + dy, dd = Math.hypot(x + 0.5 - q.fx, y + 0.5 - q.fy)
+          if (Math.abs(dd - d) > 0.8 || !terra.passa(x, y) || m.reg[y * m.W + x] !== q.regione || alSicuro(m, x + 0.5, y + 0.5)) continue
+          if (!mig || Math.abs(dd - d) < mig.s) mig = { x, y, s: Math.abs(dd - d) }
+        }
+        if (!mig) return null
+        via = []; io.x = mig.x + 0.5; io.z = mig.y + 0.5; scena.salta(); ultimaCella = -1
+        return { x: mig.x, y: mig.y }
+      } }
   }
 }
 // la freccia del cartello in radianti (0 = est, verso nord positivo: la z del mondo va a sud)
@@ -816,12 +975,17 @@ onBeforeUnmount(() => {
 const firmaScena = computed(() => [props.veduta, props.roba && props.roba.mano, props.roba && props.roba.mancina, accese.value.size, divieti.value.size, trovati.value.size, JSON.stringify(props.tappe.map(t => t.colore))].join('|'))
 watch(firmaScena, () => aggiornaScena())
 watch(() => props.veduta, v => { if (v) { chiudi(); chiudiDialogo() } })
+// un ritorno in città fa un giro nuovo: chi vive sopra rinasce (motore/aperta.js, nuovoGiro)
+watch(giro, g => { if (mostri) mostri.giro(g) })
 </script>
 
 <template>
   <div ref="vista" class="sot-terra sot3d-mondo" data-mondo3d :data-pronto="pronto ? 1 : 0" :data-in-veduta="veduta ? 1 : 0"
        @pointerdown="premi" @pointermove="muovi" @pointerup="lascia" @pointercancel="lascia" @click="toccaPrato" @wheel="rotella">
     <canvas ref="tela" class="sot3d-tela-mondo" data-tela="mondo"></canvas>
+    <!-- le scritte della scena (scena3d/etichette.js) e quelle dello scontro di sopra (viste/Scontro3d.vue, dal posto di Gioco.vue) -->
+    <div ref="stratoEl" class="sot3d-strato" data-strato3d></div>
+    <slot name="scontro" />
     <p v-if="!pronto && !perso" class="sot3d-attesa" data-mondo-attesa>La terra si prepara…</p>
     <div v-if="perso" class="sot3d-senza sot3d-perso" data-perso-3d>
       <h1>Il disegno 3D si è fermato</h1>
@@ -869,6 +1033,22 @@ watch(() => props.veduta, v => { if (v) { chiudi(); chiudiDialogo() } })
       <i class="sot-pensiero-bolla"></i><i class="sot-pensiero-bolla sot-pensiero-bollina"></i>
     </div>
 
+    <!-- i mostri di sopra nel cerchio di luce: si toccano (lo scontro, o l'eroe gli va incontro); il signore e i caporali col nome,
+         chi dorme col sonno. E il bottino rimasto per terra. Posati a ogni fotogramma come le persone -->
+    <div class="sot3d-bersagli">
+      <button v-for="q in mostriVisti" :key="'m' + q.i" :ref="el => (el ? elMostri.set(q.i, el) : elMostri.delete(q.i))" type="button"
+              class="sot3d-bersaglio sot3d-mostro" data-mostro-sopra :data-i="q.i" :data-tipo="q.tipo" :data-vis="0"
+              :data-sveglio="q.sveglio ? 1 : 0" :data-caporale="q.caporale ? 1 : null" :data-signore="q.signore ? 1 : null"
+              :aria-label="q.nome || q.tipo" @click.stop="toccaMostro(q.i)">
+        <b v-if="q.signore" class="sot3d-nome-mostro sot3d-signore" data-nome-signore>👑 {{ q.nome }}</b>
+        <b v-else-if="q.caporale" class="sot3d-gradi-mostro" aria-hidden="true"><i class="sot3d-galloni"></i></b>
+        <b v-if="!q.sveglio && !q.signore" class="sot3d-sonno-mostro em" aria-hidden="true">💤</b>
+      </button>
+      <button v-for="c in coseVisti" :key="'t' + c.i + c.cosa" :ref="el => (el ? elCose.set(c.i, el) : elCose.delete(c.i))" type="button"
+              class="sot3d-bersaglio sot3d-per-terra" data-per-terra :data-i="c.i" :data-cosa="c.cosa" :data-vis="0"
+              aria-label="raccogli" @click.stop="toccaCosa(c.i)"></button>
+    </div>
+
     <div v-if="veduta" class="sot3d-veduta" data-veduta>
       <button v-for="n in nomiVeduta" :key="n.chiave" :ref="el => (el ? nomiEl.set(n.chiave, el) : nomiEl.delete(n.chiave))" type="button"
               class="sot3d-nome-posto" :class="n.classe.split(' ').map(c => 'sot3d-nome-' + c)" :data-nome-posto="n.chiave"
@@ -894,7 +1074,7 @@ watch(() => props.veduta, v => { if (v) { chiudi(); chiudiDialogo() } })
     <div ref="sottoEl" class="sot-terra-sotto">
       <span v-if="fiocco" :key="fiocco.n" class="sot-cura-fiocco sot3d-fiocco" :class="fiocco.risorsa === 'energia' ? 'sot-cura-energia' : 'sot-cura-vita'" data-cura-fiocco
             :data-risorsa="fiocco.risorsa" @animationend="fiocco = null">{{ fiocco.testo }}<template v-if="fiocco.risorsa !== 'tutto'"> {{ fiocco.risorsa === 'vita' ? '❤️' : '⚡' }}</template></span>
-      <p v-if="avviso" class="sot-trovato" data-avviso-terra>{{ avviso }}</p>
+      <p v-if="avviso" class="sot-trovato" :class="coloreAvviso && 'sot3d-annuncio sot3d-annuncio-' + coloreAvviso" data-avviso-terra :data-annuncio="coloreAvviso">{{ avviso }}</p>
       <p v-else-if="veduta" class="sot-trovato sot-piano" data-veduta-dice>Tocca dove vuoi andare: ci vai a piedi.</p>
       <p v-else-if="primaVolta && pronto" class="sot-trovato sot-piano">Tocca dove vuoi andare.</p>
       <Dialogo v-if="dialogo" :chi="dialogo.chi" :nome="dialogo.nome" :pagine="dialogo.pagine" :giro="dialogo.giro"

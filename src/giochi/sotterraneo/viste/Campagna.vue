@@ -22,16 +22,19 @@ const props = defineProps({
   roba: { type: Object, default: null },     // quello che ci si porta dietro, già contato (schedaConLaRoba): { vita, att, dif, gemme, mano, mancina, corpo, tratti… }
   punti: { type: Number, default: 0 },          // le linguette del diario (viste/SchedeEroe.vue): i «+» delle altre schede
   puntiAbilita: { type: Number, default: 0 },
-  forze: { type: Object, default: null },    // vita ed energia di chi ha lasciato la discesa dal portale: { vita, vitaMax, energia, energiaMax }
+  forze: { type: Object, default: null },    // vita ed energia di chi ha lasciato la discesa dal portale, o ferito sopra: { vita, vitaMax, energia, energiaMax }
   annuncio: { type: Object, default: null }, // la zona appena nata che il minatore racconta (motore/zone.js): { chiave, nome, livello, detto, sentita }
   // il Sotterraneo 3D: il mondo generato al posto della terra dipinta, col suo salvataggio (`mondo`) e la veduta d'insieme
   disegno: { type: String, default: null },
   mondo: { type: Object, default: null },
   veduta: { type: Boolean, default: false },
   pensiero: { type: Object, default: null },  // il pensiero dell'eroe sopra la testa (docs/sotterraneo/pensieri.md)
+  // i mostri di sopra (viste/Mondo3d.vue): la forza dell'eroe per l'annuncio, e se un pannello sta sopra il mondo (i mostri aspettano)
+  forza: { type: Number, default: 1 },
+  fermo: { type: Boolean, default: false },
 })
 const emit = defineEmits(['gioca', 'riprendi', 'scorda', 'terra', 'bottega', 'segui', 'sentito', 'scheda', 'cura', 'mondo', 'risposta', 'veduta',
-                          'pensa', 'pensiero', 'pensiero-fine', 'trovati'])
+                          'pensa', 'pensiero', 'pensiero-fine', 'trovati', 'scontro', 'raccogli'])
 const in3d = props.disegno === '3d'
 riprendiSeChiesta(() => props.ripresa, () => emit('riprendi'))
 
@@ -59,7 +62,12 @@ function fuoriDalDiario(e) {
   if (e) toccoDaFuori(e.clientX, e.clientY)
 }
 const apriDiario = su => { diarioAperto.value = su === undefined ? !diarioAperto.value : !!su }
-defineExpose({ toccoDaFuori, apriDiario, vaDaMercante })
+// lo scontro di sopra (viste/Mondo3d.vue): Gioco.vue lo apre sul prato e lo chiude
+const apriPalco = (corsa, opz) => (terraEl.value && terraEl.value.apriPalco ? terraEl.value.apriPalco(corsa, opz) : null)
+const dopoLoScontro = (e, scontro) => { if (terraEl.value && terraEl.value.dopoLoScontro) terraEl.value.dopoLoScontro(e, scontro) }
+const statoSopra = () => (terraEl.value && terraEl.value.statoSopra ? terraEl.value.statoSopra() : null)
+const salvaSopra = () => { if (terraEl.value && terraEl.value.salvaSopra) terraEl.value.salvaSopra() }
+defineExpose({ toccoDaFuori, apriDiario, vaDaMercante, apriPalco, dopoLoScontro, statoSopra, salvaSopra })
 
 function tocca(t) {
   if (!props.ripresa) return emit('gioca', t.indice)
@@ -77,14 +85,16 @@ function comincia() {
   <div class="sot-tappe">
     <!-- la discesa lasciata dal portale è anche il portale gemello nel villaggio: tutti e due riprendono la stessa sosta -->
     <component :is="in3d ? Mondo3d : Terra" ref="terraEl" :tappe="tappe" :abisso="abisso" :eroe="eroe" :roba="roba"
-           v-bind="in3d ? { mondo, veduta } : { terra }"
+           v-bind="in3d ? { mondo, veduta, forza, fermo: fermo || diarioAperto || !!chiede || perdere } : { terra }"
            :missioni="missioni" :azione-missione="azioneMissione" :segui="segui"
            :giaScesa="ripresa ? ripresa.tappa : null" :portale="portale"
            :annuncio="annuncio" :forze="forze" @sentito="$emit('sentito')" @cura="r => $emit('cura', r)"
            @scendi="tocca" @terra="v => $emit('terra', v)" @bottega="(k, s) => $emit('bottega', k, s)"
            @mondo="v => $emit('mondo', v)" @risposta="r => $emit('risposta', r)" @veduta="v => $emit('veduta', v)"
            @riprendi="$emit('riprendi')" :pensiero="pensiero" @pensa="$emit('pensa')" @pensiero="p => $emit('pensiero', p)"
-           @pensiero-fine="$emit('pensiero-fine')" @trovati="v => $emit('trovati', v)">
+           @pensiero-fine="$emit('pensiero-fine')" @trovati="v => $emit('trovati', v)"
+           @scontro="v => $emit('scontro', v)" @raccogli="i => $emit('raccogli', i)">
+      <template #scontro><slot name="scontro" /></template>
       <template #sopra>
         <div v-if="ripresa" class="sot-ripresa" data-ripresa="1">
           <p class="sot-dove">

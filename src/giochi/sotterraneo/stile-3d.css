@@ -133,3 +133,20 @@
 .sot-taglia-spenta { opacity: .6 }
 .sot-taglia-piena { font-size: 14px }
 .sot-dettaglio-bacheca { font-size: 40px; line-height: 1; display: grid; place-items: center }
+
+/* i mostri di sopra (viste/Mondo3d.vue, docs/sotterraneo/mondo-aperto-mostri.md «La scena»): il bersaglio sotto la figura, il nome del
+   signore e dei caporali sopra la testa, il sonno di chi dorme; il bottino per terra; l'annuncio della regione col suo colore */
+.sot3d-bersaglio.sot3d-mostro { z-index: 2 }
+.sot3d-nome-mostro { position: absolute; left: 50%; top: calc(var(--testa, 30px) - 24px); translate: -50% 0; white-space: nowrap; pointer-events: none;
+  font-size: 11px; font-weight: 800; padding: 1px 7px; border-radius: 6px; color: #fff1d6; background: #2a160ee0; border: 1px solid #c9963a }
+.sot3d-nome-mostro.sot3d-signore { color: #ffe08a; border-color: #ffb43a; box-shadow: 0 0 8px #ffb43a77 }
+.sot3d-sonno-mostro { position: absolute; left: 62%; top: calc(var(--testa, 30px) - 14px); font-size: 13px; opacity: .85; pointer-events: none }
+.sot3d-gradi-mostro { position: absolute; left: 50%; top: calc(var(--testa, 30px) - 14px); translate: -50% 0; pointer-events: none }
+.sot3d-bersaglio.sot3d-per-terra { z-index: 1 }
+.sot3d-annuncio { font-weight: 700; border-width: 1.5px }
+.sot3d-annuncio-verde { border-color: #5fd35f }
+.sot3d-annuncio-arancio { border-color: #ffa53a }
+.sot3d-annuncio-rosso { border-color: #ff4a3a; box-shadow: 0 0 10px #ff4a3a55 }
+.sot3d-annuncio-grigio { border-color: #9a9a9a }
+/* lo scontro di sopra (viste/ScontroSopra.vue): i suoi pezzi stanno dove stanno nello scontro di giù */
+.sot3d-sopra-scontro { display: contents }

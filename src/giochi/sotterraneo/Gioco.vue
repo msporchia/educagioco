@@ -5,7 +5,7 @@
 // regole stanno in motore/, i numeri in dati/, il disegno in scena/, le
 // schermate in viste/. `corsa.chiesta` dice solo quanto dev'essere
 // difficile; qui si va a prendere una domanda vera dai moduli di quiz.
-import { ref, shallowRef, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
+import { ref, shallowRef, computed, onMounted, onBeforeUnmount, onUnmounted, watch, nextTick } from 'vue'
 import Barra from '../../components/Barra.vue'
 import { suono } from '../../audio.js'
 import { state, segna, segnaBest } from '../../store/profile.js'
@@ -41,6 +41,8 @@ import { prendi as prendiMissione, consegna as consegnaMissione, fatte as missio
 import { questDi, ripulisci, contiVivi } from './motore/taglie.js'
 import { eTaglia } from './dati/missioni-modelli.js'
 import { ultimoPostoSicuro } from './motore/posto-sicuro.js'
+import { forzeDiSopra, curaDiSopra, allaCitta } from './motore/forze-sopra.js'
+import { missioneDi } from './dati/missioni.js'
 import { Bottega, alGiroNuovo, robaRaraDi } from './motore/bottega.js'
 import { scrivi, leggi, dice, viaDi, forzeDi, PORTALE as VIA_PORTALE } from './motore/sosta.js'
 import { avventuraDi, scriviNellAvventura, vintaNellAvventura, azzeraIlVecchio, ricordaIlFondo, cominciata }
@@ -59,6 +61,7 @@ import Icona from './viste/Icona.vue'
 import { occhio } from './viste/occhio.js'
 import Scontro from './viste/Scontro.vue'
 import Scontro3d from './viste/Scontro3d.vue'
+import ScontroSopra from './viste/ScontroSopra.vue'
 import Pannello3d from './viste/Pannello3d.vue'
 import { nuovoRacconto, modoDelColpo } from './viste/racconto.js'
 import { vistaDelloScontro, incantiAddosso } from './viste/campo.js'
@@ -345,7 +348,8 @@ function riprendiSeUscito() {
 let forzeTenute = { chiave: null, valore: null }
 const forze = computed(() => {
   const dato = qui.value.sosta
-  if (!dato || corsa.value || viaDi(dato) !== VIA_PORTALE) return null
+  // senza il portale, nel mondo 3D: quelle che uno scontro sul prato ha lasciato (motore/forze-sopra.js), finché qualcuno non cura
+  if (!dato || corsa.value || viaDi(dato) !== VIA_PORTALE) return forzeDelMondo.value
   const chiave = [dato, qui.value.roba, qui.value.missioni, qui.value.crescita, qui.value.mondo && qui.value.mondo.quest]   // i dati salvati, non le copie rilette
   if (forzeTenute.chiave && chiave.every((v, i) => v === forzeTenute.chiave[i])) return forzeTenute.valore
   const t = zonaDi(dato.tappa, dato.potenza)
@@ -353,10 +357,24 @@ const forze = computed(() => {
   forzeTenute = { chiave, valore }
   return valore
 })
+const forzeDelMondo = computed(() => {
+  const s = in3d && !corsa.value && qui.value.mondo && qui.value.mondo.sopra
+  return s ? forzeDiSopra(s.forze, robaSopra.value.vita, robaSopra.value.energiaMax) : null
+})
 const ferito = computed(() => !!forze.value && forze.value.vita < forze.value.vitaMax)
 function curaDa(risorsa) {
   const f = forze.value
   if (!f) return
+  // ferito sopra senza il portale: si cura lo stato dei mostri di sopra (stato.forze), che il mondo salva in `mondo.sopra`
+  const dato = qui.value.sosta
+  if (!dato || viaDi(dato) !== VIA_PORTALE) {
+    const st = campagnaEl.value && campagnaEl.value.statoSopra()
+    if (!st) return
+    st.forze = curaDiSopra(st.forze, risorsa, f.vitaMax, f.energiaMax)
+    campagnaEl.value.salvaSopra()
+    suono.ok()
+    return
+  }
   // 'tutto': la fontana di una città senza guaritrice o incantatrice (viste/Mondo3d.vue) cura vita ed energia insieme
   const cura = risorsa === 'vita' ? { vita: f.vitaMax } : risorsa === 'energia' ? { energia: f.energiaMax } : { vita: f.vitaMax, energia: f.energiaMax }
   nellAvventura({ sosta: { ...qui.value.sosta, ...cura } }, { subito: true })
@@ -785,8 +803,8 @@ watch(() => eroe.value && eroe.value.vita, (ora, prima) => {
 })
 
 // chi riapre il telefono dopo mezz'ora non sta guardando il gioco: "piano 2 di 3 · ❤️ 24" fa tornare in mente dov'era
-const dovEravamo = dallaCorsa(c => `🕳️ piano ${c.piano + 1}`
-  + (c.senzaFondo ? '' : ` di ${c.quantiPiani}`)
+const dovEravamo = dallaCorsa(c => (c.tappa.palco ? `⚔️ ${c.tappa.nome}` : `🕳️ piano ${c.piano + 1}`
+  + (c.senzaFondo ? '' : ` di ${c.quantiPiani}`))
   + ` · ❤️ ${c.vita}`, '')
 
 // il foglio aperto è sempre lo stesso oggetto: si guarda `c.foglio` per conto proprio, per svegliarsi quando cambia dentro
@@ -857,6 +875,82 @@ watch(() => { tic.value; const f = corsa.value?.foglio; return f && f.che === 's
   const molti = f.campo.length > 1
   raccontaLoScontro(prima, f.apertura, { riga: f.agguato ? 'Alle spalle!' : f.sorpresa ? (molti ? 'Li hai sorpresi!' : 'Lo hai sorpreso!') : null })
 })
+/* ═══════════ lo scontro di sopra (docs/sotterraneo/mondo-aperto-mostri.md, «La scena») ═══════════
+   Nel mondo 3D un branco che arriva addosso, o un mostro toccato, apre uno scontro sul prato: la Corsa del palco (motore/aperta.js,
+   apriLoScontro) si gioca qui con la scelta, le domande e il racconto delle discese, e la disegna il mondo, che resta sotto
+   (scena3d/mondo/palco.js, il pittore di questo scontro). Finito, l'esito va nell'avventura (roba, crescita, le forze, le taglie) e il
+   mondo riprende. La ✕ a metà vale come una fuga senza il graffio: i rimasti aspettano accanto all'eroe (motore/aperta-scena.js) */
+const sopra = shallowRef(null)      // { stato, terra, portale, mod } dello scontro aperto, o null
+let motoreSopra = null              // motore/aperta-scena.js, chiesto la prima volta: il 2D non si porta dietro il mondo generato
+async function scontroSopra({ inc, stato, terra, verso }) {
+  if (corsa.value || sopra.value) return
+  const mod = motoreSopra || (motoreSopra = await import('./motore/aperta-scena.js'))
+  if (corsa.value || !campagnaEl.value) { if (campagnaEl.value) campagnaEl.value.dopoLoScontro(null); return }
+  // salito dal portale le forze sono quelle della sosta; se no quelle che il mondo tiene (stato.forze), o piene
+  const dato = qui.value.sosta, portale = !!dato && viaDi(dato) === VIA_PORTALE, f = portale ? forze.value : null
+  const c = mod.apriLoScontro(stato, inc, { eroe: eroeQui(), roba: roba.value, crescita: crescita.value, verso,
+                                           forze: f ? { vita: f.vita, energia: f.energia } : null, missioni: [], conti: qui.value.conti || {} })
+  chiudiBottega(); chiudiLaBarra(); diarioSopra(false)
+  domanda.value = null; fine.value = null; pensiero.value = null; detto.value = null
+  sopra.value = { stato, terra, portale, mod }
+  corsa.value = c
+  borsellino = borsa(CHIAVE)
+  pittore = campagnaEl.value.apriPalco(c, { bersaglio: scegliIlBersaglio, accorcia: () => racconto.accorcia() })
+  if (!pittore) { chiudiSopra({ lascia: true }); return }
+  for (const [chi, el] of agganci) pittore.aggancia(chi, el)
+  tic.value++
+  suono.nota(180, 90, 0.4, 'sawtooth', 0.12)
+  giro()
+}
+// lo scontro di sopra è finito quando il motore chiude il foglio e il racconto ha detto l'ultimo colpo (svenuti: il foglio del risveglio)
+watch([foglio, animando], () => {
+  const c = corsa.value
+  if (!sopra.value || !c || animando.value) return
+  if (c.foglio && c.foglio.che !== 'scontro' && c.foglio.che !== 'svenuto') { c.chiudi(); tic.value++; return }
+  if (!c.foglio) chiudiSopra()
+})
+// svenuti sopra: la città dove ci si risveglia (la più vicina a piedi), per il foglio
+const risveglioSopra = computed(() => {
+  tic.value
+  const s = sopra.value, c = corsa.value
+  if (!s || !c || !c.foglio || c.foglio.che !== 'svenuto' || racconto.fx.attivo) return null
+  const d = c.dalMondo || {}
+  const r = s.mod.cittaDelRisveglio(s.stato.mondo, d.x, d.y, s.terra)
+  return { citta: r.citta, nome: r.nome, dove: allaCitta(r.nome) }
+})
+// `lascia`: la ✕ a metà (o la schermata che se ne va): una fuga senza il graffio, i rimasti si ricordano dove sono
+function chiudiSopra({ lascia = false } = {}) {
+  const s = sopra.value, c = corsa.value
+  if (!s || !c) return
+  const { esito: e, scontro } = lascia ? s.mod.lasciaLoScontro(s.stato, c, { terra: s.terra })
+    : { esito: s.mod.esitoDelloScontro(s.stato, c, { terra: s.terra }), scontro: null }
+  // le taglie della bacheca: le caccie aperte contano, il signore e la tana si fanno (motore/aperta-scena.js)
+  const t = s.mod.taglieDelloScontro(e.uccisi, { stati: missioni.value, conti: qui.value.conti || {}, stato: s.stato })
+  nellAvventura({ roba: e.roba, crescita: e.crescita,
+                  ...(Object.keys(t.conti).length ? { conti: { ...(qui.value.conti || {}), ...t.conti } } : {}),
+                  ...(s.portale && qui.value.sosta ? { sosta: { ...qui.value.sosta, vita: e.forze.vita, energia: e.forze.energia } } : {}) }, { subito: true })
+  if (s.portale) s.stato.forze = null   // le forze stanno nella sosta del portale
+  if (e.uccisi.length) segna('sotMostri', e.uccisi.length)
+  const fatte = t.fatte.filter(id => azioneMissione(id, 'fatta'))
+  cancelAnimationFrame(raf)
+  pittore = null
+  corsa.value = null; sopra.value = null; domanda.value = null; sceltaPozione.value = false; avviso.value = null
+  chiudiLaBarra()
+  if (campagnaEl.value) campagnaEl.value.dopoLoScontro(e, scontro)
+  if (fatte.length) dilloSopra(`Fatto: ${(missioneDi(fatte[0]) || {}).titolo || 'la taglia'}. Passa dalla bacheca.`)
+}
+// la cosa rimasta per terra dopo uno scontro: in tasca o addosso come giù (motore/aperta.js, raccogliDaTerra), se c'è posto
+async function raccogliSopra(i) {
+  const st = campagnaEl.value && campagnaEl.value.statoSopra()
+  if (!st || corsa.value) return
+  const mod = motoreSopra || (motoreSopra = await import('./motore/aperta-scena.js'))
+  const k = st.perTerra[i] && st.perTerra[i].cosa
+  const r = mod.raccogliDaTerra(st, i, { eroe: eroeQui(), roba: roba.value, crescita: crescita.value })
+  if (r.presa) { nellAvventura({ roba: r.roba }, { subito: true }); suoni.bottino(); campagnaEl.value.salvaSopra() }
+  const a = r.avvisi.at(-1)
+  dilloSopra(a ? (typeof a === 'string' ? a : a.testo) : r.presa ? `Preso: ${(COSE[k] || {}).nome || ''}` : 'Non hai posto in tasca: fai spazio e torna a prenderlo.')
+}
+
 // toccare un mostro lo fa bersaglio: la scelta qui sotto si rifà coi numeri contro di lui
 function scegliIlBersaglio(i) {
   const c = corsa.value
@@ -1181,6 +1275,9 @@ function avvia(i, { prova = false } = {}) {
   if (!prova && z && z.colore === 'rosso') return
   togli()          // vedi `riprendiDiscesa`: si scende, non si scende in pausa
   scorda()
+  // si scende in piedi (la Corsa nasce con le forze piene): le ferite di uno scontro sul prato restano sopra, e tornando sono guarite
+  const ms = in3d && qui.value.mondo && qui.value.mondo.sopra
+  if (ms && ms.forze) nellAvventura({ mondo: { ...qui.value.mondo, sopra: { ...ms, forze: null } } })
   tappaIdx.value = i
   fine.value = null
   domanda.value = null
@@ -1270,7 +1367,8 @@ function misuraFoglio() {
     // in 3D conta solo il pannello dello scontro, che alza i combattenti; i fogli dell'esplorazione (porta, forziere, fonte…)
     // stanno sopra la scena come un velo e la telecamera non si muove (l'utente, 16 ottobre: «è più un overlay»)
     const f = corsa.value && corsa.value.foglio && corsa.value.foglio.che === 'scontro' ? document.querySelector('[data-pannello3d]') : null
-    const campo = tela.value && tela.value.getBoundingClientRect()
+    const dove = tela.value || (sopra.value && document.querySelector('[data-mondo3d]'))   // lo scontro di sopra sta sul mondo
+    const campo = dove && dove.getBoundingClientRect()
     altoFoglio = f && campo ? Math.max(0, campo.bottom - f.getBoundingClientRect().top) : 0
     return
   }
@@ -1293,7 +1391,7 @@ function giro() {
     if (!c || c.finita || fermo.value || !pittore) return
     // l'orologio si muove DOPO: contarlo anche in pausa farebbe sparire all'istante la riga lasciata a metà
     orologio += dt
-    c.passo(dt)
+    if (!sopra.value) c.passo(dt)   // sul palco di sopra non si cammina: finito lo scontro si torna al mondo
     // col foglio aperto la telecamera alza l'eroe (lo scontro no: sta al centro e non chiede spazio)
     if ((contaGiri++ % 6) === 0) misuraFoglio()
     // ogni tanto, non a ogni fotogramma: una discesa salvata sono un paio di chilobyte
@@ -1678,6 +1776,7 @@ function allaMappa() {
 // è un portale, e la terra di sopra con i suoi mercanti non è dietro l'angolo per chi finge di uscire. Rientrando si
 // è già giù (riprendiSeUscito). Finita la discesa (il cartello di fine) la ✕ porta alla mappa, com'è giusto
 function indietro() {
+  if (sopra.value) { chiudiSopra({ lascia: true }); return emit('vai', 'home') }   // lo scontro di sopra: i rimasti aspettano lì
   if (!corsa.value && !fine.value) return emit('vai', 'home')
   const c = corsa.value
   if (c && !c.finita && !fine.value) {
@@ -1924,6 +2023,8 @@ onMounted(() => {
   document.addEventListener('visibilitychange', seSparisce)
   addEventListener('pagehide', seSparisce)
 })
+// lo scontro di sopra si chiude prima che il mondo se ne vada (dopo, il suo salvataggio non c'è più): come la ✕
+onBeforeUnmount(() => { if (sopra.value) chiudiSopra({ lascia: true }) })
 onUnmounted(() => {
   salva({ subito: true })
   removeEventListener('resize', ridimensiona)
@@ -1947,7 +2048,8 @@ function ridimensiona() { if (pittore) pittore.misura() }
 
     <!-- l'aspetto dei pannelli in prova (`#tema=legno|rilievo`, docs/sotterraneo/tema-pannelli.md) -->
     <div ref="radice" class="sot" :class="{ 'sot-cambio-scheda': cambioScheda }" :data-tema="ATTRIBUTO[tema]">
-      <template v-if="!corsa">
+      <!-- lo scontro di sopra (`sopra`) si gioca sul mondo, che resta montato: il pannello è quello delle discese (viste/ScontroSopra.vue) -->
+      <template v-if="!corsa || sopra">
         <!-- la chiave è l'eroe: cambiando avventura la terra di sopra rinasce con la nebbia e il posto suoi -->
         <Campagna ref="campagnaEl" :key="eroeQui()" :tappe="tappe" :ripresa="ripresa" :eroe="eroeScheda" :abisso="abisso"
                   :roba="robaSopra" :terra="qui.terra || null" @terra="ricordaTerra"
@@ -1958,7 +2060,11 @@ function ridimensiona() { if (pittore) pittore.misura() }
                   :missioni="missioni" :conti="conti" :azione-missione="azioneMissione" :segui="segui" @segui="seguiMissione"
                   @gioca="i => avvia(i)" @riprendi="riprendiDiscesa" @scorda="scorda" @bottega="apriBottega"
                   :pensiero="pensiero" @pensa="pensaSopra" @pensiero="toccaPensiero" @pensiero-fine="pensiero = null"
-                  @trovati="v => (mercantiTrovati = v)" />
+                  @trovati="v => (mercantiTrovati = v)"
+                  :forza="forzaOra" :fermo="!!banco || zainoSopra || paginaEroe || preparatiAperti || scegliEroe || !!state.festa.length"
+                  @scontro="scontroSopra" @raccogli="raccogliSopra">
+          <template #scontro><Scontro3d v-if="sopra && nemico" v-bind="nemico" :fx="racconto.fx" :aggancia="aggancia" /></template>
+        </Campagna>
         <p v-if="detto" class="sot-avviso sot-avviso-sopra" data-detto-sopra>{{ detto }}</p>
         <!-- la stessa barra di giù (docs/sotterraneo/barra.md): sopra la vita è piena e la mappa grande non c'è -->
         <BarraDiSotto sopra :mappa-sopra="in3d" :mappa="vedutaSopra" @mappa="vedutaSopra = !vedutaSopra" :vita="barra.vita" :vita-max="barra.vitaMax" :livello="barra.livello"
@@ -1968,6 +2074,11 @@ function ridimensiona() { if (pittore) pittore.misura() }
                       @bevi="dilloSopra(ferito ? '❤️ la guaritrice ti cura, gratis' : barra.pozioni ? '❤️ sei già in piena forma' : '🧪 non hai pozioni')"
                       @zaino="apriScheda('zaino')"
                       @incanti="apriIncanti" @eroe="apriPaginaEroe()" @abilita="apriPaginaEroe('abilita')" />
+        <ScontroSopra v-if="sopra" :abilita="abilitaScontro" :scelta-fatta="sceltaFatta" :animando="animando" :domanda="domanda"
+                      :risveglio="risveglioSopra" :festa="festa" :avviso="avviso"
+                      :pozioni="sceltaPozione ? scelteDiPozione : null" :manca="eroe ? eroe.vitaMax - eroe.vita : 0"
+                      @scegli="scegliColpo" @bevi="beviNelloScontro" @bevi-energia="beviEnergiaNelloScontro" @scappa="scappa"
+                      @risposto="risposto" @risveglio="chiudiSopra()" @bevuta="bevutaScelta" @chiudi-pozioni="sceltaPozione = false" />
         <Zaino v-if="zainoDiSopra" v-bind="zainoDiSopra" :eroe="eroeScheda" :piano="0" sopra
                :punti="barra.punti" :punti-abilita="barra.puntiAbilita" :missioni="barra.missioniPronte" @scheda="apriScheda"
                @usa="usaSopra" @riponi="riponiSopra" @butta="() => {}" @tasca="compraTasca"
@@ -2257,10 +2368,10 @@ function ridimensiona() { if (pittore) pittore.misura() }
       <!-- sta in fondo e fuori da tutto: la domanda e il cartello di fine hanno già la loro pausa -->
       <VeloPausa v-if="inPausa && siGioca && !perdendo" :dove="dovEravamo" @riprendi="togli" @esci="indietro">
         <!-- da qui si può anche cambiare eroe, o lasciar perdere la discesa e risalire; nell'abisso la strada su è il portale -->
-        <button type="button" class="sot-lascia" data-azione="eroe-giu" @click.stop="cambioEroeDaGiu">
+        <button v-if="!sopra" type="button" class="sot-lascia" data-azione="eroe-giu" @click.stop="cambioEroeDaGiu">
           scelgo un altro eroe
         </button>
-        <button v-if="!nellAbisso" type="button" class="sot-lascia" data-azione="lascia-discesa" @click.stop="perdendo = true">
+        <button v-if="!nellAbisso && !sopra" type="button" class="sot-lascia" data-azione="lascia-discesa" @click.stop="perdendo = true">
           lascio perdere questa discesa
         </button>
       </VeloPausa>
