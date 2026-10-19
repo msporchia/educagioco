@@ -7,6 +7,8 @@
 export const PEZZI = {
   campo:           { nome: 'Campo',           emoji: '🌾', w: 2, d: 2, prezzo: 20, rincaro: 8, liv: 1, produttivo: true },
   recinto:         { nome: 'Recinto',         emoji: '🐑', w: 3, d: 3, prezzo: 45, rincaro: 0, liv: 4, produttivo: true },
+  pollaio:         { nome: 'Pollaio',         emoji: '🐔', w: 3, d: 2, prezzo: 55, rincaro: 0, liv: 6, produttivo: true },
+  stalla:          { nome: 'Stalla',          emoji: '🐄', w: 4, d: 3, prezzo: 90, rincaro: 0, liv: 9, produttivo: true },
   bancarella:      { nome: 'Bancarella',      emoji: '🍎', w: 2, d: 1, prezzo: 15, rincaro: 0, liv: 2 },
   aiuola:          { nome: 'Aiuola',          emoji: '🌷', w: 1, d: 1, prezzo: 6,  rincaro: 0, liv: 2 },
   panchina:        { nome: 'Panchina',        emoji: '🪑', w: 2, d: 1, prezzo: 10, rincaro: 0, liv: 6 },
@@ -26,6 +28,7 @@ export const EDIFICI = {
   panificio:   { nome: 'Panificio',   emoji: '🥖', w: 3, d: 3, prezzo: 90,  slot: { i: -5, j: -7 }, liv: 7 },
   conserviera: { nome: 'Conserviera', emoji: '🥫', w: 3, d: 3, prezzo: 110, slot: { i: 2,  j: -7 }, liv: 12 },
   gelateria:   { nome: 'Gelateria',   emoji: '🍦', w: 3, d: 3, prezzo: 140, slot: { i: -9, j: 0 },  liv: 14 },
+  caseificio:  { nome: 'Caseificio',  emoji: '🧀', w: 3, d: 3, prezzo: 120, slot: { i: 6,  j: -3 }, liv: 11 },
 }
 export const TIPI_DI_EDIFICIO = Object.keys(EDIFICI)
 

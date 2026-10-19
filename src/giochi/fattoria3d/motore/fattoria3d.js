@@ -10,6 +10,7 @@ import { RICETTE, MACCHINE, TIPI_DI_MACCHINA } from '../dati/ricette.js'
 import { livelloPer, livelloDelPezzo, livelloDellaColtura, livelloDellaRicetta } from '../dati/livelli.js'
 import { COSTI, LEGNA_PER_ALBERO, PECORE, MONGOLFIERA } from '../dati/regole.js'
 import { generaAlberi } from '../dati/alberi.js'
+import { ANIMALI, postiAl } from '../dati/animali.js'
 import { normalizza, nuoveTessere } from './stato.js'
 import { percorso } from './percorso.js'
 import { POSTI, RIPOSO_MS, LIVELLO_BANCO, clienteDi } from '../dati/ordini.js'
@@ -39,6 +40,7 @@ export class Fattoria3d {
     this.prove = []                                // le cose «di prova» (stress): non si salvano
     for (const c of this.s.cose) {
       if (c.tipo === 'recinto' && !c.pecore) c.pecore = this.pecoreIniziali()
+      if (ANIMALI[c.tipo] && !c.bestie) c.bestie = this.bestieIniziali()
       this._occupa(c, c.id)
     }
     this.tick()
@@ -157,12 +159,14 @@ export class Fattoria3d {
     const c = { id: this.s.prossimoId++, tipo, i, j }
     if (tipo === 'campo') c.tile = nuoveTessere()
     if (tipo === 'recinto') { c.pecore = this.pecoreIniziali(); c.cibo = 0 }
+    if (ANIMALI[tipo]) c.bestie = this.bestieIniziali()
     this.s.magazzino[tipo]--
     if (!this.s.magazzino[tipo]) delete this.s.magazzino[tipo]
     this.s.cose.push(c); this._occupa(c, c.id)
     this._evento('pezzo', { tipo })
     return { ok: true, cosa: c }
   }
+  bestieIniziali() { return [{ fine: null }] }          // una gallina o una mucca sono nel prezzo, con fame
   pecoreIniziali() { return [{ eta: 'adulta', t0: this.ora() }, { eta: 'agnello', cibo: 0 }] }
   spostaPezzo(id, i, j, { gratis = false } = {}) {
     const c = this.cosa(id)
@@ -185,6 +189,7 @@ export class Fattoria3d {
     if (!c) return { ok: false, motivo: 'sconosciuto' }
     if (!forza && c.tile && c.tile.some(t => t !== null)) return { ok: false, motivo: 'sta-crescendo' }
     if (!forza && c.pecore) return { ok: false, motivo: 'ha-le-pecore' }
+    if (!forza && c.bestie) return { ok: false, motivo: 'ha-le-bestie' }
     const costo = gratis ? 0 : COSTI.spostare
     if (!this._paga(costo)) return { ok: false, motivo: 'poche-monete', costo }
     this._libera(c)
@@ -321,6 +326,78 @@ export class Fattoria3d {
     c.cibo = (c.cibo || 0) + 1
     if (c.cibo >= PECORE.pastiPerNascere) { c.cibo = 0; c.pecore.push({ eta: 'agnello', cibo: 0 }); return { ok: true, evento: 'nata' } }
     return { ok: true, evento: 'cuore' }
+  }
+
+  // ── gli animali da cortile: il pollaio (uova) e la stalla (latte). Una bestia nutrita fa il suo prodotto dopo un tempo e
+  //    poi lo tiene finché non lo si raccoglie; niente muore, niente marcisce (docs/fattoria3d/animali.md) ──
+  /** La bestia è al lavoro (`fine` nel futuro), pronta (`fine` passata) o ha fame (`fine` null). */
+  statoBestia(b) { return b.fine === null ? 'fame' : b.fine <= this.ora() ? 'pronta' : 'lavora' }
+  bestiePronte(c) { return c.bestie.filter(b => this.statoBestia(b) === 'pronta') }
+  bestieAffamate(c) { return c.bestie.filter(b => b.fine === null) }
+  /** Quanti posti sono aperti oggi (la prima bestia è nel prezzo; le altre si aprono coi livelli). */
+  postiBestie(c) { return postiAl(c.tipo, livelloDelPezzo(c.tipo), this.livello()) }
+  /** Cosa c'è da mangiare per questa bestia: i raccolti che mangia, sommati. */
+  scortaDaMangiare(tipo) { return ANIMALI[tipo].mangia.reduce((n, k) => n + this.s.merci[k], 0) }
+  /** Toglie n raccolti fra quelli che mangia la bestia, dalla scorta più grande. */
+  _consumaTra(chiavi, n) {
+    if (chiavi.reduce((a, k) => a + this.s.merci[k], 0) < n) return false
+    for (let k = 0; k < n; k++) { const c = chiavi.slice().sort((a, b) => this.s.merci[b] - this.s.merci[a])[0]; this.s.merci[c]-- }
+    return true
+  }
+  /** Cosa si farebbe toccando il pollaio o la stalla: prima si raccoglie, poi si nutre. Niente cambia. */
+  provaCuraBestie(id) {
+    const c = this.cosa(id)
+    if (!c || !c.bestie) return { azione: null, motivo: 'sconosciuto' }
+    const A = ANIMALI[c.tipo], pronte = this.bestiePronte(c).length
+    if (pronte) return { azione: 'raccogli', n: pronte }
+    const fame = this.bestieAffamate(c).length
+    if (fame) {
+      const quante = Math.min(fame, Math.floor(this.scortaDaMangiare(c.tipo) / A.pasti))
+      return quante ? { azione: 'nutri', n: quante } : { azione: null, motivo: 'manca-raccolto', servono: A.pasti, mangia: A.mangia.slice() }
+    }
+    const t = this.ora(), resto = Math.min(...c.bestie.map(b => b.fine - t))
+    return { azione: null, motivo: 'lavora', secondi: Math.ceil(Math.max(0, resto) / 1000) }
+  }
+  /** Dà da mangiare a tutte le bestie che hanno fame, finché c'è da mangiare: ognuna comincia il suo lavoro. */
+  nutriBestie(id) {
+    const p = this.provaCuraBestie(id)
+    if (p.azione !== 'nutri') return { ok: false, motivo: p.motivo || 'niente-da-fare', ...(p.servono ? { servono: p.servono, mangia: p.mangia } : {}) }
+    const c = this.cosa(id), A = ANIMALI[c.tipo], t = this.ora()
+    let n = 0
+    for (const b of this.bestieAffamate(c)) {
+      if (!this._consumaTra(A.mangia, A.pasti)) break
+      b.fine = t + A.ms; n++
+    }
+    return { ok: true, n }
+  }
+  /** Raccoglie ciò che le bestie hanno fatto: va in dispensa (`prodotti`), le bestie hanno di nuovo fame. */
+  raccogliProdotti(id) {
+    const c = this.cosa(id)
+    if (!c || !c.bestie) return { ok: false, motivo: 'sconosciuto' }
+    const pronte = this.bestiePronte(c)
+    if (!pronte.length) return { ok: false, motivo: 'niente' }
+    const A = ANIMALI[c.tipo]
+    for (const b of pronte) b.fine = null
+    this.s.prodotti[A.prodotto] = (this.s.prodotti[A.prodotto] || 0) + pronte.length
+    this._evento(A.evento, { n: pronte.length })
+    return { ok: true, n: pronte.length, prodotto: A.prodotto }
+  }
+  /** Compra un'altra bestia per il pollaio o la stalla, se c'è un posto aperto dal livello. */
+  compraBestia(id) {
+    const c = this.cosa(id)
+    if (!c || !c.bestie) return { ok: false, motivo: 'sconosciuto' }
+    const A = ANIMALI[c.tipo]
+    if (c.bestie.length >= A.posti) return { ok: false, motivo: 'pieno' }
+    if (c.bestie.length >= this.postiBestie(c)) return { ok: false, motivo: 'non-sbloccato', liv: livelloDelPezzo(c.tipo) + A.livelliPosti[c.bestie.length] }
+    if (!this._spendi(A.prezzoBestia)) return { ok: false, motivo: 'poche-monete', costo: A.prezzoBestia }
+    c.bestie.push({ fine: null })
+    return { ok: true, costo: A.prezzoBestia }
+  }
+  /** Quante uova o quanto latte aspettano in tutta la fattoria (per un cartello). */
+  prodottiDelCortile() {
+    let n = 0
+    for (const c of this.cose) if (c.bestie) n += this.bestiePronte(c).length
+    return n
   }
 
   // ── le macchine: pasticceria, mulino, panificio, conserviera, gelateria. Tre posti nel forno, si cuoce uno alla volta ──
@@ -500,6 +577,7 @@ export class Fattoria3d {
         c.coltura = col; c.tile = Array.from({ length: TESSERE }, () => t0)
       }
       if (tipo === 'recinto') { c.pecore = this.pecoreIniziali(); c.cibo = 0 }
+      if (ANIMALI[tipo]) c.bestie = Array.from({ length: ANIMALI[tipo].posti }, (_, k) => ({ fine: k % 2 ? null : this.ora() - 1 }))
       this.prove.push(c); this._occupa(c, c.id); fatti++
     }
     return fatti

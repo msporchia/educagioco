@@ -5,6 +5,7 @@
 import { PEZZI, EDIFICI } from './catalogo.js'
 import { COLTURE } from './colture.js'
 import { RICETTE } from './ricette.js'
+import { PRODOTTI_ANIMALI } from './animali.js'
 
 // Quanta esperienza (monete spese qui dentro) serve in tutto per un livello: una formula, non una tabella, così non
 // finiscono mai. Il livello 2 sta intorno a 60 monete (un secondo campo e un lotto); ogni salto aggiunge il costo di ciò
@@ -22,7 +23,7 @@ export const livelloDellaColtura = chiave => (COLTURE[chiave] || {}).liv || 1
 export function livelloDellaRicetta(id, giri = 4) {
   const r = RICETTE[id]
   if (!r || giri <= 0) return Infinity
-  const ing = Object.keys(r.ing).map(k => COLTURE[k] ? livelloDellaColtura(k) : livelloDellaRicetta(k, giri - 1))
+  const ing = Object.keys(r.ing).map(k => COLTURE[k] ? livelloDellaColtura(k) : PRODOTTI_ANIMALI[k] ? livelloDelPezzo(PRODOTTI_ANIMALI[k].dove) : livelloDellaRicetta(k, giri - 1))
   return Math.max(r.liv || 1, livelloDelPezzo(r.dove), ...ing)
 }
 
@@ -87,11 +88,14 @@ export const NOMI = {
   recinto: 'Le pecore',
   pomodoro: 'I pomodori',
   pasticceria: 'La pasticceria',
+  pollaio: 'Il pollaio',
   patata: 'Le patate',
   panificio: 'Il panificio',
   zucca: 'Le zucche',
+  stalla: 'La stalla',
   cipolla: 'Le cipolle',
   mongolfiera: 'La mongolfiera',
+  caseificio: 'Il caseificio',
   fragola: 'Le fragole',
   conserviera: 'La conserviera',
   melanzana: 'Le melanzane',
@@ -137,6 +141,8 @@ export function guastiDeiLivelli() {
     const prod = r.edifici.length + r.pezzi.filter(p => p.produttivo).length
     if (l > 1 && prod > 1) g.push(`al livello ${l} arrivano ${prod} cose produttive: una sola`)
   }
+  // uova e latte nascono dove il livello li apre: il pezzo che li fa
+  for (const [k, p] of Object.entries(PRODOTTI_ANIMALI)) if (!PEZZI[p.dove]) g.push(`${k}: il pezzo ${p.dove} non esiste`)
   if (!roba(1).pezzi.some(p => p.id === 'campo')) g.push('al livello 1 non c\'è il campo')
   if (!roba(1).colture.length) g.push('al livello 1 non c\'è niente da seminare')
   // i nomi: solo di cose che arrivano
@@ -144,8 +150,8 @@ export function guastiDeiLivelli() {
   for (let l = 1; l <= ULTIMO; l++) { const r = roba(l); for (const c of [...r.pezzi, ...r.edifici, ...r.colture, ...r.ricette]) arrivano.add(c.id) }
   for (const id of Object.keys(NOMI)) if (!arrivano.has(id)) g.push(`c'è un nome per «${id}», che non arriva a nessun livello`)
   // gli id non si confondono fra gli elenchi
-  const tutti = [...Object.keys(PEZZI), ...Object.keys(EDIFICI), ...Object.keys(COLTURE), ...Object.keys(RICETTE)]
-  if (new Set(tutti).size !== tutti.length) g.push('un id compare in due elenchi (pezzi, edifici, colture, ricette)')
+  const tutti = [...Object.keys(PEZZI), ...Object.keys(EDIFICI), ...Object.keys(COLTURE), ...Object.keys(RICETTE), ...Object.keys(PRODOTTI_ANIMALI)]
+  if (new Set(tutti).size !== tutti.length) g.push('un id compare in due elenchi (pezzi, edifici, colture, ricette, prodotti delle bestie)')
   // una ricetta dichiara il livello vero: né prima della macchina, né prima dei suoi ingredienti
   for (const [id, r] of Object.entries(RICETTE)) {
     const vero = livelloDellaRicetta(id)

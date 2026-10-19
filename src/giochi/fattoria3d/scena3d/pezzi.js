@@ -4,15 +4,18 @@
 import * as THREE from 'three'
 import { creaCampo, aggiornaCampo, creaPasticceria, creaMongolfiera, creaBancarella, creaFontana, creaRecinto, muoviPecore,
          sincronizzaPecore, fantasma, creaMulino, creaPanificio, creaConserviera, creaGelateria, creaAiuola, creaPanchina,
-         creaPozzo, creaSpaventapasseri, creaSegnaposto } from './modelli.js'
+         creaPozzo, creaSpaventapasseri, creaSegnaposto, creaPollaio, creaStalla, creaCaseificio, sincronizzaBestie, muoviBestie } from './modelli.js'
 import { EDIFICI, PEZZI } from '../dati/catalogo.js'
 import { RICETTE, MACCHINE } from '../dati/ricette.js'
 import { MONGOLFIERA } from '../dati/regole.js'
+import { ANIMALI, PRODOTTI_ANIMALI } from '../dati/animali.js'
 
 
 const CREA = {
   campo: () => creaCampo(Math.random() * 99 + 1),
   recinto: c => creaRecinto(c && c.pecore),
+  pollaio: c => creaPollaio(c && c.bestie),
+  stalla: c => creaStalla(c && c.bestie),
   bancarella: () => creaBancarella(),
   fontana: () => creaFontana(),
   aiuola: () => creaAiuola(),
@@ -22,7 +25,7 @@ const CREA = {
 }
 const CREA_EDIFICIO = {
   pasticceria: creaPasticceria, mongolfiera: creaMongolfiera,
-  mulino: creaMulino, panificio: creaPanificio, conserviera: creaConserviera, gelateria: creaGelateria,
+  mulino: creaMulino, panificio: creaPanificio, conserviera: creaConserviera, gelateria: creaGelateria, caseificio: creaCaseificio,
 }
 /** Un tipo senza disegno non rompe la scena: una scatola grigia della sua misura. */
 const modelloDi = (tipo, d, c) => (CREA[tipo] ? CREA[tipo](c) : creaSegnaposto(d.w, d.d))
@@ -44,6 +47,7 @@ export class Pezzi {
       vivi.add(c.id)
       if (!this.voci.has(c.id)) this._creaCosa(c)
       else if (c.pecore) sincronizzaPecore(this.voci.get(c.id).grp, c.pecore)
+      else if (c.bestie) sincronizzaBestie(this.voci.get(c.id).grp, c.bestie)
     }
     for (const tipo of Object.keys(EDIFICI)) {
       vivi.add(tipo)
@@ -60,7 +64,7 @@ export class Pezzi {
     const d = PEZZI[c.tipo], grp = modelloDi(c.tipo, d, c)
     grp.userData.bersaglio = { kind: 'cosa', id: c.id }
     grp.position.copy(centroDi(c, d)); this.scena.add(grp)
-    this.voci.set(c.id, { id: c.id, kind: 'cosa', c, d, grp, badge: null, anello: null, salto: 0, nasce: undefined, richiamo: null, chiave: '' })
+    this.voci.set(c.id, { id: c.id, kind: 'cosa', c, d, grp, badge: c.bestie ? this.fx.nuovoBadge() : null, anello: null, salto: 0, nasce: undefined, richiamo: null, chiave: '' })
   }
   _creaEdificio(tipo, mio) {
     const e = EDIFICI[tipo], grp = CREA_EDIFICIO[tipo] ? CREA_EDIFICIO[tipo]() : creaSegnaposto(e.w, e.d)
@@ -128,6 +132,14 @@ export class Pezzi {
       if (this.q.vento || chiave !== v.chiave) { v.chiave = chiave; aggiornaCampo(g, cr, tt, col, this.q.vento) }
     } else if (c.tipo === 'recinto') {
       muoviPecore(g, dt, tt, v.richiamo, c.pecore, adesso); v.richiamo = null
+    } else if (c.bestie) {
+      muoviBestie(g, dt, tt, c.bestie, adesso)
+      // il cartello del cortile: quanto c'è da raccogliere, oppure i secondi che mancano, oppure che hanno fame
+      const A = ANIMALI[c.tipo], pronte = c.bestie.filter(b => b.fine !== null && b.fine <= adesso).length
+      const lavora = c.bestie.filter(b => b.fine !== null && b.fine > adesso).map(b => b.fine - adesso)
+      const fame = c.bestie.some(b => b.fine === null)
+      v.badge.imposta(pronte ? `${PRODOTTI_ANIMALI[A.prodotto].emoji} ${pronte} pront${pronte === 1 ? 'o' : 'i'}!`
+        : fame ? `${A.emoji} ha fame` : lavora.length ? `⏳ ${Math.ceil(Math.min(...lavora) / 1000)}s` : '', pronte ? 'pronto' : '')
     } else if (g.userData.anima) g.userData.anima(tt)              // fontana, spaventapasseri
   }
 

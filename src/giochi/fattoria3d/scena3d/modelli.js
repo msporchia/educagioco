@@ -509,6 +509,169 @@ export function muoviPecore (g, dt, t, verso, stati, adesso) {
   })
 }
 
+// ── gli animali da cortile: pollaio 3×2 (galline), stalla 4×3 (mucche), caseificio 3×3. Le bestie seguono gli stati del
+//    motore (`{ fine }`: null ha fame, passata è pronta) e si animano col tempo; un uovo o un secchio di latte ricorda che
+//    c'è da raccogliere. Poche mesh, geometrie condivise. Vedi docs/fattoria3d/animali.md ──
+const G_CORPO = new THREE.SphereGeometry(0.11, 8, 6), G_TESTA = new THREE.SphereGeometry(0.06, 7, 5)
+const G_BECCO = new THREE.ConeGeometry(0.022, 0.07, 4).rotateX(Math.PI / 2), G_CODA = new THREE.ConeGeometry(0.05, 0.15, 4)
+const G_ZAMPA = new THREE.CylinderGeometry(0.008, 0.008, 0.1, 3), G_UOVO = new THREE.SphereGeometry(0.045, 8, 6)
+function parte (g, geo, m, x, y, z) { const o = pronto(new THREE.Mesh(geo, m)); o.position.set(x, y, z); g.add(o); return o }
+
+export function creaGallina (k = 0) {
+  const g = new THREE.Group()
+  const penne = mat(k % 2 ? 0xb9703c : 0xf6f1e4), rosso = mat(0xd8352a), giallo = mat(0xf0b030)
+  const corpo = parte(g, G_CORPO, penne, 0, 0.17, 0); corpo.scale.set(1, 0.9, 1.25)
+  const coda = parte(g, G_CODA, penne, 0, 0.24, -0.15); coda.rotation.x = -0.9
+  const testa = new THREE.Group(); testa.position.set(0, 0.25, 0.13); g.add(testa)
+  parte(testa, G_TESTA, penne, 0, 0.03, 0.02)
+  parte(testa, G_BECCO, giallo, 0, 0.025, 0.1)
+  scatola(testa, 0.02, 0.04, 0.05, rosso, 0, 0.1, 0.02)
+  for (const s of [-1, 1]) parte(g, G_ZAMPA, giallo, s * 0.04, 0.05, 0.01)
+  const uovo = parte(g, G_UOVO, mat(0xfff4e0), 0.16, 0.045, 0.04); uovo.scale.set(0.85, 1, 0.85); uovo.visible = false
+  g.userData = { corpo, testa, uovo, dono: uovo, fase: Math.random() * 6, attesa: Math.random() * 2, meta: new THREE.Vector3(), zona: { x0: -1.15, x1: 1.15, z0: 0.15, z1: 0.8 } }
+  return g
+}
+
+export function creaPollaio (stati) {
+  const g = new THREE.Group()
+  const legno = mat(0xa4713e), chiaro = mat(0xc99a5c), terra = mat(0xcdb27a)
+  scatola(g, 3.0, 0.04, 2.0, mat(0x8fd05c), 0, 0.02, 0).receiveShadow = true
+  scatola(g, 2.5, 0.03, 0.8, terra, 0, 0.05, 0.5)                                      // il tratto di terra battuta dove razzolano
+  // la casetta su palafitte, dietro a sinistra
+  const casa = new THREE.Group(); casa.position.set(-0.6, 0, -0.45); g.add(casa)
+  for (const [x, z] of [[-0.5, -0.32], [0.5, -0.32], [-0.5, 0.32], [0.5, 0.32]]) cilindro(casa, 0.05, 0.05, 0.5, legno, x, 0.25, z, 5)
+  scatola(casa, 1.35, 0.8, 0.9, chiaro, 0, 0.9, 0)
+  scatola(casa, 0.34, 0.4, 0.06, mat(0x3a2a1a), 0.1, 0.85, 0.46)                         // la porticina
+  scatola(casa, 0.26, 0.22, 0.06, mat(0xa6d8ee), -0.4, 1.05, 0.46)
+  const falde = new THREE.Group(); falde.position.y = 0; casa.add(falde)
+  tetto(falde, 1.6, 1.15, 1.3, 0xb4553a, 0.6)
+  // la scaletta con i pioli, dalla porticina a terra
+  const scala = scatola(casa, 0.3, 0.05, 0.8, legno, 0.1, 0.45, 0.85); scala.rotation.x = -0.62
+  for (let n = 0; n < 4; n++) scatola(casa, 0.3, 0.025, 0.05, mat(0x6a4524), 0.1, 0.25 + n * 0.1, 1.15 - n * 0.14)
+  // la mangiatoia e il piccolo steccato a destra
+  scatola(g, 0.7, 0.1, 0.22, legno, 0.9, 0.1, -0.45); scatola(g, 0.6, 0.03, 0.14, mat(0xe0c060), 0.9, 0.16, -0.45)
+  for (const x of [0.55, 1.45]) cilindro(g, 0.035, 0.035, 0.35, legno, x, 0.2, 0.95, 5)
+  scatola(g, 1.0, 0.04, 0.04, legno, 1.0, 0.3, 0.95)
+  g.userData.bestie = []; g.userData.crea = creaGallina
+  g.userData.posto = k => new THREE.Vector3(-0.8 + k * 0.8, 0, 0.45 + (k % 2) * 0.12)
+  g.userData.altezza = 2.3
+  sincronizzaBestie(g, stati || [{ fine: null }])
+  return g
+}
+
+// la mucca: bianca a chiazze marroni (un po' diversa per posto), la testa che rumina
+const G_MUCCA = new THREE.SphereGeometry(0.3, 9, 7), G_ZAMPA_M = new THREE.CylinderGeometry(0.045, 0.04, 0.34, 5)
+const G_CORNO = new THREE.ConeGeometry(0.03, 0.12, 4)
+export function creaMucca (k = 0) {
+  const g = new THREE.Group()
+  const bianco = mat(0xf7f3ea), macchia = mat(k % 2 ? 0x6b4426 : 0x3a2a22), rosa = mat(0xf0b0a8), scuro = mat(0x2a2018)
+  const corpo = parte(g, G_MUCCA, bianco, 0, 0.55, 0); corpo.scale.set(0.8, 0.78, 1.45)
+  for (const [x, y, z, s] of [[0.2, 0.7, -0.1, 0.5], [-0.22, 0.6, 0.25, 0.42], [0.1, 0.82, 0.3, 0.3]]) { const m = parte(g, G_MUCCA, macchia, x * (k % 2 ? -1 : 1), y, z); m.scale.set(0.5 * s * 2, 0.32 * s * 2, 0.6 * s * 2) }
+  for (const [x, z] of [[0.17, 0.32], [-0.17, 0.32], [0.17, -0.32], [-0.17, -0.32]]) parte(g, G_ZAMPA_M, bianco, x, 0.17, z)
+  parte(g, G_UOVO, rosa, 0, 0.3, -0.2).scale.set(2, 1.2, 2)                              // la mammella
+  const coda = new THREE.Group(); coda.position.set(0, 0.7, -0.62); g.add(coda)
+  cilindro(coda, 0.015, 0.015, 0.4, bianco, 0, -0.2, 0, 4); parte(coda, G_TESTA, scuro, 0, -0.42, 0).scale.setScalar(0.6)
+  const testa = new THREE.Group(); testa.position.set(0, 0.78, 0.5); g.add(testa)
+  const t = parte(testa, G_MUCCA, bianco, 0, 0, 0.12); t.scale.set(0.5, 0.5, 0.62)
+  parte(testa, G_MUCCA, rosa, 0, -0.07, 0.3).scale.set(0.34, 0.26, 0.28)
+  for (const s of [-1, 1]) { const c = parte(testa, G_CORNO, mat(0xe8e0c8), s * 0.13, 0.17, 0.05); c.rotation.z = -s * 0.5; parte(testa, G_TESTA, bianco, s * 0.18, 0.08, 0.02).scale.set(1.1, 0.5, 0.6) }
+  for (const s of [-1, 1]) parte(testa, G_TESTA, scuro, s * 0.07, 0.06, 0.28).scale.setScalar(0.35)
+  const secchio = new THREE.Group(); secchio.position.set(0.5, 0, 0.3); g.add(secchio); secchio.visible = false
+  cilindro(secchio, 0.1, 0.08, 0.17, mat(0xdde4ea, { metalness: 0.4, roughness: 0.5 }), 0, 0.085, 0, 8)
+  cilindro(secchio, 0.085, 0.085, 0.02, mat(0xffffff), 0, 0.17, 0, 8)
+  g.userData = { corpo, testa, coda, dono: secchio, fase: Math.random() * 6, meta: new THREE.Vector3() }
+  return g
+}
+
+export function creaStalla (stati) {
+  const g = new THREE.Group()
+  const rosso = mat(0xa8392f), bianco = mat(0xf3e9d4), legno = mat(0x8a5a34)
+  scatola(g, 3.9, 0.04, 2.9, mat(0x8fd05c), 0, 0.02, 0).receiveShadow = true
+  scatola(g, 3.6, 1.5, 1.35, rosso, 0, 0.75, -0.85)
+  const falde = new THREE.Group(); falde.position.set(0, 0, -0.85); g.add(falde)
+  tetto(falde, 3.9, 1.8, 1.5, 0x8a5a34, 0.6)
+  scatola(g, 1.1, 1.1, 0.06, legno, 0, 0.55, -0.15)                                      // il portone con la croce bianca
+  for (const s of [1, -1]) { const x = scatola(g, 1.35, 0.07, 0.05, bianco, 0, 0.55, -0.11); x.rotation.z = s * 0.7 }
+  scatola(g, 1.1, 0.07, 0.05, bianco, 0, 1.12, -0.11)
+  scatola(g, 0.5, 0.45, 0.06, mat(0xa6d8ee), 1.25, 0.95, -0.15)
+  // la mangiatoia e due balle di fieno
+  scatola(g, 1.3, 0.22, 0.34, legno, 0, 0.11, 0.1); scatola(g, 1.2, 0.05, 0.24, mat(0xe0c060), 0, 0.23, 0.1)
+  for (const [x, z] of [[1.55, 0.55], [1.2, 0.95]]) { const b = cilindro(g, 0.27, 0.27, 0.5, mat(0xe0c060), x, 0.27, z, 8); b.rotation.z = Math.PI / 2 }
+  g.userData.bestie = []; g.userData.crea = creaMucca
+  g.userData.posto = k => new THREE.Vector3(-1.0 + k * 2.0, 0, 0.85)
+  g.userData.altezza = 2.9
+  sincronizzaBestie(g, stati || [{ fine: null }])
+  return g
+}
+
+/** Tiene tante bestie in scena quante ne dicono gli stati del motore (una compra ne aggiunge una). */
+export function sincronizzaBestie (g, stati) {
+  const u = g.userData, lista = u.bestie
+  while (lista.length < stati.length) {
+    const k = lista.length, b = u.crea(k)
+    b.position.copy(u.posto(k)); b.userData.casa = b.position.clone(); b.userData.meta.copy(b.position)
+    g.add(b); lista.push(b)
+  }
+  while (lista.length > stati.length) g.remove(lista.pop())
+}
+/** Le bestie si muovono col tempo: la gallina razzola e becca (di più se ha fame), la mucca rumina piano. Il dono (uovo,
+    secchio) si vede solo se c'è da raccogliere. */
+export function muoviBestie (g, dt, t, stati, adesso) {
+  g.userData.bestie.forEach((b, n) => {
+    const u = b.userData, st = stati[n] || { fine: null }
+    const pronta = st.fine !== null && st.fine <= adesso, fame = st.fine === null
+    u.dono.visible = pronta
+    if (u.zona) {                                               // la gallina
+      u.attesa -= dt
+      if (u.attesa <= 0) {
+        const z = u.zona
+        u.meta.set(z.x0 + Math.random() * (z.x1 - z.x0), 0, z.z0 + Math.random() * (z.z1 - z.z0))
+        u.attesa = pronta ? 6 + Math.random() * 4 : 1.5 + Math.random() * 3
+      }
+      const dx = u.meta.x - b.position.x, dz = u.meta.z - b.position.z, d = Math.hypot(dx, dz), mov = d > 0.05
+      if (mov) {
+        const v = Math.min(d, 0.35 * dt)
+        b.position.x += dx / d * v; b.position.z += dz / d * v
+        let da = Math.atan2(dx, dz) - b.rotation.y; da = Math.atan2(Math.sin(da), Math.cos(da)); b.rotation.y += da * Math.min(1, dt * 7)
+      }
+      u.fase += dt * (mov ? 9 : fame ? 7 : 4)
+      u.corpo.position.y = 0.17 + (mov ? Math.abs(Math.sin(u.fase)) * 0.015 : 0)
+      u.testa.rotation.x = mov ? Math.sin(u.fase * 1.2) * 0.12 : Math.max(0, Math.sin(u.fase)) * (fame ? 1.0 : 0.6)   // becca
+    } else {                                                    // la mucca
+      u.fase += dt
+      const ruminando = st.fine !== null && !pronta
+      u.testa.rotation.x = fame ? 0.55 + Math.sin(t * 0.9 + n) * 0.08 : 0.08 + Math.sin(t * (ruminando ? 1.3 : 0.7) + n) * 0.07
+      u.testa.position.y = 0.78 + Math.sin(t * 2.6 + n) * (ruminando ? 0.012 : 0.004)       // la mascella
+      u.coda.rotation.z = Math.sin(t * 1.1 + n * 2) * 0.35
+      u.corpo.position.y = 0.55 + Math.sin(t * 0.8 + n) * 0.006
+    }
+  })
+}
+
+export function creaCaseificio () {
+  const g = new THREE.Group()
+  const bianco = mat(0xf7f2e6), legno = mat(0x7b4a24), giallo = mat(0xf2c44a), scuro = mat(0xd9a82c)
+  lastra(g, 3.0, 2.9, 0xcfc3a8)
+  scatola(g, 2.3, 1.15, 1.6, bianco, 0.1, 0.575, -0.55)
+  const falde = new THREE.Group(); falde.position.set(0.1, 0, -0.55); g.add(falde)
+  const alt = tetto(falde, 2.5, 1.6, 1.15, 0x3f6fb5, 0.5)
+  scatola(g, 0.55, 0.9, 0.08, legno, 0.55, 0.45, 0.27)
+  scatola(g, 0.5, 0.4, 0.06, mat(0xa6d8ee), -0.4, 0.8, 0.27)
+  insegna(g, '🧀 FORMAGGI', 1.7, 0.34, 0.1, 1.28, 0.28, { w: 384, h: 76, sfondo: '#3f6fb5', px: 46 })
+  // le forme di formaggio davanti, su un bancale
+  scatola(g, 1.5, 0.1, 0.9, legno, 0.1, 0.05, 1.0)
+  for (const [x, z, n] of [[-0.35, 1.05, 3], [0.1, 1.0, 2], [0.55, 1.05, 3]]) for (let i = 0; i < n; i++) cilindro(g, 0.24, 0.24, 0.17, i % 2 ? scuro : giallo, x, 0.18 + i * 0.17, z, 10)
+  // la ruota ad acqua, a sinistra, che gira piano
+  const ruota = new THREE.Group(); ruota.position.set(-1.35, 0.8, -0.5); g.add(ruota)
+  const cerchio = pronto(new THREE.Mesh(new THREE.TorusGeometry(0.62, 0.05, 5, 16), legno)); cerchio.rotation.y = Math.PI / 2; ruota.add(cerchio)
+  for (let k = 0; k < 4; k++) { const r = scatola(ruota, 0.06, 1.24, 0.06, legno); r.rotation.x = k * Math.PI / 4 }
+  for (let k = 0; k < 8; k++) { const a = k * Math.PI / 4; scatola(ruota, 0.34, 0.16, 0.05, legno, 0, Math.cos(a) * 0.62, Math.sin(a) * 0.62).rotation.x = a }
+  scatola(g, 0.5, 0.06, 1.6, mat(0x6fb6e8, { transparent: true, opacity: 0.8 }), -1.35, 0.06, -0.2)   // il canaletto
+  g.userData.anima = (dt) => { ruota.rotation.x -= dt * 0.9 }
+  g.userData.altezza = 1.15 + alt + 0.9
+  return g
+}
+
 // ── fisse: il fienile, la casa ──
 export function creaFienile () {
   const g = new THREE.Group()

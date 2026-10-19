@@ -156,7 +156,7 @@ controlla('i prodotti arrivano con le macchine', chiedibili(ULTIMO).prodotti.len
   const { f } = mondo()
   f.ordini(); f.rifiuta(2)
   const salvato = f.serializza()
-  stessaLista('lo stato è alla versione 3', [salvato.v, VERSIONE_STATO], [3, 3])
+  stessaLista('lo stato è alla versione 4', [salvato.v, VERSIONE_STATO], [4, 4])
   const g = new Fattoria3d({ stato: JSON.parse(JSON.stringify(salvato)), borsa: f.borsa, ora: f.ora, rnd: sequenza(2) })
   uguale('gli ordini tornano com\'erano', JSON.stringify(g.s.ordini), JSON.stringify(salvato.ordini))
   controlla('l\'id dopo il riavvio non si ripete', g.s.ordini.prossimoId > Math.max(...g.s.ordini.aperti.filter(Boolean).map(o => o.id)))
@@ -166,7 +166,7 @@ controlla('i prodotti arrivano con le macchine', chiedibili(ULTIMO).prodotti.len
   const v2 = JSON.parse(JSON.stringify(statoIniziale()))
   delete v2.ordini; v2.v = 2; v2.esperienza = 123; v2.merci.grano = 4; v2.prodotti = { pane: 2 }; v2.legna = 5
   const n = normalizza(v2)
-  controlla('un v2 non perde niente', n.esperienza === 123 && n.merci.grano === 4 && n.prodotti.pane === 2 && n.legna === 5 && n.v === 3)
+  controlla('un v2 non perde niente', n.esperienza === 123 && n.merci.grano === 4 && n.prodotti.pane === 2 && n.legna === 5 && n.v === 4)
   controlla('e ha un banco vuoto pronto a riempirsi', n.ordini.aperti.length === POSTI && n.ordini.aperti.every(x => x === null))
   const { f } = mondo({ stato: v2, liv: 3 })
   controlla('il banco del v2 si riempie da solo', f.ordini().length === 3)

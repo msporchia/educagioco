@@ -4,12 +4,14 @@ import { LOTTI_INIZIALI, PEZZO_DI_PARTENZA } from '../dati/mondo.js'
 import { CHIAVI_COLTURE, TESSERE } from '../dati/colture.js'
 import { TIPI_DI_EDIFICIO } from '../dati/catalogo.js'
 import { TIPI_DI_MACCHINA, RICETTE } from '../dati/ricette.js'
+import { ANIMALI } from '../dati/animali.js'
 import { POSTI } from '../dati/ordini.js'
 import { ordineInForma } from './ordini.js'
 
 // 2: l'esperienza, un `posseduti` per ogni edificio, le macchine per tipo (la pasticceria di prima è `macchine.pasticceria`)
 // 3: il banco degli ordini (`ordini`); un v2 si legge senza perdere niente, il banco si riempie da sé
-export const VERSIONE_STATO = 3
+// 4: pollaio e stalla (`bestie` sulla cosa: [{ fine }], `fine` è quando il prodotto è pronto, null se ha fame); un v3 si legge uguale
+export const VERSIONE_STATO = 4
 
 const vuote = () => Object.fromEntries(CHIAVI_COLTURE.map(k => [k, 0]))
 
@@ -40,6 +42,13 @@ export function statoIniziale() {
 }
 
 export const nuoveTessere = () => Array.from({ length: TESSERE }, () => null)
+
+/** Le bestie di un pollaio o di una stalla, rimesse in forma: da una a `posti`, ognuna con la fine del suo lavoro o null. */
+export function bestieInForma(tipo, letto) {
+  const a = ANIMALI[tipo]
+  const l = Array.isArray(letto) ? letto.slice(0, a.posti).map(b => ({ fine: b && Number.isFinite(b.fine) ? b.fine : null })) : []
+  return l.length ? l : [{ fine: null }]
+}
 
 const numero = (v, d = 0) => Number.isFinite(v) && v >= 0 ? v : d
 const oggetto = v => v && typeof v === 'object' && !Array.isArray(v) ? v : {}
@@ -72,6 +81,7 @@ export function normalizza(letto) {
         x.pecore = Array.isArray(c.pecore) && c.pecore.length ? c.pecore.map(p => p && p.eta === 'agnello' ? { eta: 'agnello', cibo: numero(p.cibo) } : { eta: 'adulta', t0: numero(p && p.t0) }) : null
         x.cibo = numero(c.cibo)
       }
+      if (ANIMALI[c.tipo]) x.bestie = bestieInForma(c.tipo, c.bestie)
       return x
     })
     s.prossimoId = s.cose.reduce((m, c) => Math.max(m, c.id), 0) + 1
