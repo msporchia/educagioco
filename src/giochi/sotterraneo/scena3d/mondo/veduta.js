@@ -5,7 +5,7 @@
 // l'ombra non si rifà.
 import { PerspectiveCamera, Vector3, Vector2, MathUtils } from 'three'
 
-export const VISTA = { inclinazione: 52, fov: 34, largo: 15, fondo: 18, guarda: 0.5, zoomMin: 0.7, zoomMax: 1.5 }
+export const VISTA = { inclinazione: 52, fov: 34, largo: 15, fondo: 18, guarda: 0.5, zoomMin: 0.7, zoomMax: 1.5, scontro: 9.5 }
 export const VEDUTA = { inclinazione: 64 }
 export const SOLE = new Vector3(-0.42, 0.82, 0.38).normalize()
 
@@ -30,13 +30,16 @@ export function creaVeduta(m) {
     misura(l, a) { L = l; A = a; camera.aspect = l / Math.max(1, a); camera.updateProjectionMatrix() },
     copri(su, giu) { sopra = su; sotto = giu },
     salta() { primo = true },
-    // `centro` l'eroe (x, y, z), `veduta` se si guarda tutto il mondo; `sole` la luce che fa l'ombra
-    aggiorna(dt, centro, veduta, sole) {
+    // `centro` l'eroe (x, y, z), `veduta` se si guarda tutto il mondo; `sole` la luce che fa l'ombra; `palco`: lo scontro di sopra
+    // ({ celle, scossa }), che la telecamera inquadra da vicino come nelle discese (celle in largo e in profondo, mai meno di 9,5)
+    aggiorna(dt, centro, veduta, sole, palco = null) {
       const kv = veduta ? 1 : 0
       st.k += (kv - st.k) * (primo ? 1 : 1 - Math.exp(-dt * 3))
       const libero = Math.max(1, A - sopra - sotto)
+      const celle = palco ? Math.max(VISTA.scontro, palco.celle || 0) : 0
       const vicino = { x: centro.x, z: centro.z, y: centro.y + VISTA.guarda, inc: VISTA.inclinazione,
-                       d: distanza(Math.min(30, Math.max(VISTA.largo, camera.aspect * 18)), VISTA.fondo, VISTA.inclinazione) * zoom * Math.max(1, A / libero * 0.85) }
+                       d: (palco ? distanza(celle, celle, VISTA.inclinazione) : distanza(Math.min(30, Math.max(VISTA.largo, camera.aspect * 18)), VISTA.fondo, VISTA.inclinazione))
+                          * zoom * Math.max(1, A / libero * 0.85) }
       const lontano = { x: m.W / 2, z: m.H / 2 + 6, y: 0, inc: VEDUTA.inclinazione, d: distanza(m.W + 6, m.H + 10, VEDUTA.inclinazione) }
       const b = st.k, mix = (p, q) => p + (q - p) * b
       const t = { x: mix(vicino.x, lontano.x), z: mix(vicino.z, lontano.z), y: mix(vicino.y, lontano.y), inc: mix(vicino.inc, lontano.inc), d: mix(vicino.d, lontano.d) }
@@ -51,6 +54,10 @@ export function creaVeduta(m) {
       const i = MathUtils.degToRad(st.inc)
       camera.position.set(st.x, st.y + st.d * Math.sin(i), st.z + st.d * Math.cos(i))
       camera.lookAt(st.x, st.y, st.z)
+      // i colpi dello scontro scuotono la telecamera, come giù (la scossa al quadrato)
+      const s2 = palco && palco.scossa ? palco.scossa * palco.scossa : 0
+      if (s2) { camera.position.x += s2 * 0.35 * Math.sin(st.t * 71.3); camera.position.y += s2 * 0.25 * Math.sin(st.t * 53.1 + 1) }
+      st.t = (st.t || 0) + dt
       camera.updateMatrixWorld()
       // l'ombra: una mappa sola attorno a quello che si vede, agganciata alla griglia dei suoi texel (non tremola)
       if (sole) {
@@ -68,6 +75,8 @@ export function creaVeduta(m) {
       }
     },
     // dove cade a schermo (px nel campo) un punto del mondo
+    get L() { return L },
+    get A() { return A },
     schermo(x, y, z, fuori = { x: 0, y: 0, davanti: true }) {
       tmp.set(x, y, z).project(camera)
       fuori.x = (tmp.x + 1) / 2 * L; fuori.y = (1 - tmp.y) / 2 * A; fuori.davanti = tmp.z < 1

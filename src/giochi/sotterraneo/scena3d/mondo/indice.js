@@ -22,6 +22,7 @@ import { creaLontano } from './lontano.js'
 import { creaVita } from './vita.js'
 import { creaNebbia } from './nebbia.js'
 import { creaPersone } from './persone.js'
+import { creaPalcoSopra } from './palco.js'
 import { creaVeduta, SOLE } from './veduta.js'
 import { grigliaDi, dividiPerPezzo, lavoroDeiPezzi } from './pezzi.js'
 import { aTerra } from './dito.js'
@@ -40,7 +41,7 @@ export function creaMondo3d(canvas, opz) {
   }
 }
 
-function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = {}, fontane = [] }) {
+function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = {}, fontane = [], strato = null }) {
   const { renderer } = ctx
   renderer.toneMappingExposure = 1.05
   const scena = new Scene()
@@ -71,6 +72,7 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = {}, fon
   const S = {
     io: { x: m.partenza.x + 0.5, z: m.partenza.y + 0.5, verso: { dx: 0, dy: 1 }, sprite: 'cavaliere', mano: null, mancina: null },
     persone: [], accese: new Set(), aperti: new Set(), grate: new Map(), pallini: new Map(), divieti: new Set(), portale: null, veduta: false,
+    mostri: [], perTerra: [],   // i mostri di sopra e il bottino per terra, già nel cerchio e fuori dalla nebbia (mostri.js)
   }
   const eroe = { stato: null, x: 0, z: 0, verso: S.io.verso, sprite: 'cavaliere', mano: null, mancina: null }
 
@@ -161,12 +163,14 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = {}, fon
   }
 
   // l'atlante delle figure: finché non c'è, non si disegna (un istante, è già nel file)
-  let persone = null, tex = null, norm = null
+  let persone = null, palco = null, tex = null, norm = null
   const img = new Image()
   img.onload = () => {
     tex = new Texture(img); tex.colorSpace = SRGBColorSpace; tex.magFilter = tex.minFilter = NearestFilter; tex.generateMipmaps = false; tex.needsUpdate = true
     norm = normaliAtlante(img)
     persone = creaPersone(scena, { tex, norm, larga: img.width, alta: img.height, pezzi: PEZZI, trame, quota, nebbia })
+    // lo scontro di sopra (palco.js): nasce qui una volta, e resta spento finché non si combatte
+    if (strato) palco = creaPalcoSopra(scena, { tex, norm, larga: img.width, alta: img.height, pezzi: PEZZI, quota, cam, strato })
   }
   img.src = ATLANTE
 
@@ -234,14 +238,19 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = {}, fon
     vita.passo(dt, tempo, centro)
     // l'eroe e le persone
     eroe.x = S.io.x; eroe.z = S.io.z; eroe.verso = S.io.verso; eroe.sprite = S.io.sprite; eroe.mano = S.io.mano; eroe.mancina = S.io.mancina
-    eroe.nascosto = !!S.io.nascosto   // `#…&senzaeroe`: le foto delle icone (strumenti/scatti.mjs, icone-mondo)
+    // `#…&senzaeroe`: le foto delle icone (strumenti/scatti.mjs, icone-mondo); nello scontro l'eroe lo disegna il palco
+    const inScontro = !!(palco && palco.attivo)
+    eroe.nascosto = !!S.io.nascosto || inScontro
     if (!eroe.stato) eroe.stato = { x: eroe.x, z: eroe.z, dx: 0, dz: 0, vx: 0, vz: 1, lx: 0, lz: 1, t: 0, colpito: 0, cura: 0, gira: 0, assalto: null, meta: null, passaggio: null, specchio: false, alto: 1.4, px: null, pz: null, cammina: false }
-    centro.set(eroe.x, quota(eroe.x, eroe.z), eroe.z)
-    cam.aggiorna(dt, centro, veduta, sole)
+    const pc = inScontro ? palco.centro() : null
+    if (pc) centro.set(pc.x, quota(pc.x, pc.z), pc.z)
+    else centro.set(eroe.x, quota(eroe.x, eroe.z), eroe.z)
+    cam.aggiorna(dt, centro, veduta, sole, pc)
     U.uVeduta.value = cam.k
     soleVista.copy(SOLE).transformDirection(cam.camera.matrixWorldInverse)
     persone.taglio(soleVista.x, soleVista.y)
-    persone.disegna(S.persone, eroe, { t: tempo, dt, veduta, camera: cam })
+    persone.disegna(S.persone, eroe, { t: tempo, dt, veduta, camera: cam, mostri: S.mostri, perTerra: S.perTerra,
+                                       extra: inScontro ? o => palco.passo(dt, tempo, o, A * ctx.dpr * 1.5) : null })
     scena.fog.near = cam.d * 1.5; scena.fog.far = cam.d * 4.5
     cielo.mesh.position.copy(cam.camera.position)
     if (dopo) dopo(dt, tempo)
@@ -255,6 +264,22 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = {}, fon
   const fuoriTela = { x: -1, z: -1 }
   const api = {
     canvas, S, m, scena,
+    get palcoSopra() { return palco },   // lo scontro di sopra (palco.js): `pittore` per Gioco.vue, `apri`, `chiudi`
+    // come la scena delle discese, per le prove e per strumenti/vecchio-telefono.mjs (`--scontro`): il palco aperto e la sua corsa
+    get palco() { return palco && palco.attivo ? palco.pittore.palco : null },
+    get corsa() { return palco && palco.attivo ? palco.pittore.corsa : null },
+    // il banco: `n` disegni della scena così com'è, ognuno aspettato (docs/core/vecchio-telefono.md, «Lo scontro»)
+    banco(n = 20) {
+      const gl = ctx.gl, px = new Uint8Array(4), v = []
+      for (let i = 0; i < n + 2; i++) {
+        const t0 = performance.now()
+        renderer.render(scena, cam.camera)
+        gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px)
+        if (i >= 2) v.push(performance.now() - t0)
+      }
+      v.sort((x, y) => x - y)
+      return { ms: Math.round(v[n >> 1] * 10) / 10, p90: Math.round(v[Math.floor(n * 0.9)] * 10) / 10 }
+    },
     get tempo() { return tempo },
     get zoom() { return cam.zoom },
     set zoom(z) { cam.zoom = z },
@@ -278,7 +303,8 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = {}, fon
       return { tre: true, mondo: true, chiamate: ms.chiamate, triangoli: ms.triangoli, dpr: ctx.dpr, ms: Math.round(ms.msFotogramma * 10) / 10,
                msJs: Math.round(ms.msJs * 100) / 100, msDisegno: Math.round(ms.msDisegno * 100) / 100,
                figure: persone ? persone.figure.quante + persone.figureEroe.quante : 0, pezzi: [...costruiti.keys()].sort((a, b) => a - b),
-               msPezzi: Math.round(Math.max(0, ...[...costruiti.values()].map(f => f.ms))), veduta: cam.veduta, scenario: 'mondo' }
+               msPezzi: Math.round(Math.max(0, ...[...costruiti.values()].map(f => f.ms))), veduta: cam.veduta, scenario: 'mondo',
+               palco: !!(palco && palco.attivo), mostri: S.mostri.length }
     },
     get pronto() { return !!persone && costruiti.size >= Math.min(4, grigliaDi(m).n) },
     distruggi() {
@@ -286,7 +312,7 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = {}, fon
       api.ferma()
       if (osserva) osserva.disconnect()
       for (const p of [...costruiti.keys()]) buttaPezzo(p)
-      for (const x of [natura, vita, lontano, nebbia, acqua, cielo, persone]) if (x) x.via()
+      for (const x of [natura, vita, lontano, nebbia, acqua, cielo, persone, palco]) if (x) x.via()
       if (portale) portale.p.via()
       scena.remove(fuori.mesh); fuori.mesh.geometry.dispose()
       for (const x of Object.values(suolo)) x.dispose()

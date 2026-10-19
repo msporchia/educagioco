@@ -9,10 +9,10 @@ import { disegnaEroe } from '../eroe.js'
 import { SALITA } from './vesti.js'
 
 export const SCALA_PERSONE = 1.25
-const OMBRE_MAX = 80
+const OMBRE_MAX = 120
 
 // le figure del mondo di sopra non hanno la maschera delle discese: una bianca, che lascia tutto com'è
-function mascheraPiena() {
+export function mascheraPiena() {
   const t = new DataTexture(new Uint8Array([255, 255, 255, 255]), 1, 1, RGBAFormat); t.needsUpdate = true
   return { uniforms: { uMaschera: { value: t }, uDimMappa: { value: new Vector2(1, 1) }, uBucoUV: { value: new Vector2(0.5, 0.5) },
                        uBucoR: { value: 0 }, uBucoZ: { value: 0 }, uBucoForza: { value: 0 }, uRisB: { value: new Vector2(1, 1) } }, t }
@@ -21,7 +21,7 @@ function mascheraPiena() {
 export function creaPersone(scena, { tex, norm, larga, alta, pezzi, trame, quota, nebbia }) {
   const maschera = mascheraPiena()
   const base = { tex, norm, larga, alta, pezzi, maschera, contorno: true }
-  const figure = creaFigure(scena, { ...base, max: 96 })
+  const figure = creaFigure(scena, { ...base, max: 150 })
   const figureEroe = creaFigure(scena, { ...base, max: 8 })
   const geo = new PlaneGeometry(1, 1).rotateX(-Math.PI / 2)
   const mat = new MeshBasicMaterial({ map: trame.macchia, color: 0x000000, transparent: true, opacity: 0.42, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 })
@@ -40,10 +40,24 @@ export function creaPersone(scena, { tex, norm, larga, alta, pezzi, trame, quota
   return {
     figure, figureEroe,
     // `persone` [{ pezzo, x, z, specchio }], `eroe` { stato (di eroe.js), x, z, verso, sprite, mano, mancina }; `veduta`: dall'alto
-    // le figure non si vedono (troppo piccole: lì parlano i nomi)
-    disegna(persone, eroe, { t, dt, veduta, camera }) {
+    // le figure non si vedono (troppo piccole: lì parlano i nomi). `mostri` e `perTerra`: i mostri di sopra e le cose rimaste per terra
+    // (mostri.js, già filtrati dal cerchio e dalla nebbia); `extra(ombra)`: chi disegna anche lui (il palco dello scontro) e vuole l'ombra
+    disegna(persone, eroe, { t, dt, veduta, camera, mostri = [], perTerra = [], extra = null }) {
       figure.inizia(); figureEroe.inizia(); nOmbre = 0
       if (!veduta) {
+        // i mostri: come le persone, alla loro scala; al bordo del cerchio di luce svaniscono a retino
+        for (const q of mostri) {
+          const o = figure.o(), y = quota(q.x, q.z)
+          o.scala = q.scala; o.specchio = q.specchio; o.trasparenza = q.alfa
+          figure.metti(q.pezzo, q.x, y, q.z + 0.1, o)
+          if (q.alfa > 0.5) ombra(q.x, y, q.z + 0.1, 0.9 * Math.min(1.4, q.scala))
+        }
+        // il bottino che non stava in tasca: piccolo, che ondeggia sul prato
+        for (const c of perTerra) {
+          const o = figure.o(), y = quota(c.x, c.z)
+          o.scala = 0.8
+          figure.metti(c.pezzo, c.x, y + 0.1 + Math.sin(t * 2.6 + c.x) * 0.06, c.z, o)
+        }
         for (const q of persone) {
           if (!nebbia.visto(q.x, q.z)) continue
           const e = salita(q.x, q.z, t), o = figure.o(), y = quota(q.x, q.z)
@@ -60,6 +74,7 @@ export function creaPersone(scena, { tex, norm, larga, alta, pezzi, trame, quota
           ombra(eroe.stato.disegnato.x, quota(eroe.x, eroe.z), eroe.stato.disegnato.z + 0.1, 0.95)
         }
       }
+      if (extra && !veduta) extra(ombra)
       figure.chiudi(); figureEroe.chiudi()
       ombre.count = nOmbre; ombre.instanceMatrix.needsUpdate = true
     },
