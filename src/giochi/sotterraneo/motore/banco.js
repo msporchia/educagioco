@@ -120,7 +120,7 @@ function scudoMeglio(chi, k) {
 
 // i punti da dare, come li dà il banco (motore/crescita.js, COME_LI_DA): `come` per provare un altro modo; `strada`: la fila dei
 // nodi dell'albero di una strada (dati/strade.js) al posto di quella della classe
-function daiIPunti(corsa, come, strada = null) {
+export function daiIPunti(corsa, come, strada = null) {
   while (puntiDaDare(corsa.crescita) > 0) corsa.daiUnPunto(prossimoPunto(corsa.crescita, corsa.chiEro, come))
   // e i punti dell'albero, sulla strada della classe (motore/abilita.js, STRADA): a ogni livello nuovo, o la crescita attesa
   // con cui si entra in una discesa arriverebbe senza
@@ -197,7 +197,7 @@ function preparaLAbilita(corsa, f, st = {}) {
 }
 
 // senza questa funzione il banco gioca tutta la campagna a mani nude, misurando il costo di giocare male
-function equipaggia(corsa, st = {}, registro = null) {
+export function equipaggia(corsa, st = {}, registro = null) {
   for (let i = corsa.zaino.length - 1; i >= 0; i--) {
     const k = corsa.zaino[i]
     const c = COSE[k]
@@ -264,7 +264,7 @@ function misuraIlTurno(corsa, f, scontro, ossa, vita0) {
 }
 
 // `bravura`: 1 è un adulto attento, 0.75 un bambino normale. `conto` è il taccuino della discesa
-function sbriga(corsa, bravura, sorte, conto, st = {}, scontro = null) {
+export function sbriga(corsa, bravura, sorte, conto, st = {}, scontro = null) {
   const f = corsa.foglio
   if (!f) return false
   switch (f.che) {

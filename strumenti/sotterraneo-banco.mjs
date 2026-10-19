@@ -33,6 +33,7 @@
 //   npm run sotterraneo -- --domande             # le domande obbligate per discesa e per piano rispondendo sempre giusto: dritto alla scala e girando tutto, per eroe (il tetto è 85)
 //   npm run sotterraneo -- --costi               # l'energia: globo atteso, costo e lanci col globo pieno per classe e riga
 //   npm run sotterraneo -- --passi               # i passi che il giocatore finto fa davvero per piano e per discesa (dritto e giro), e quanto globo ridanno
+//   npm run sotterraneo -- --mondo               # il mondo aperto coi mostri: il curioso dalla città all'ingresso di ogni dungeon (per strada e passando dalle tane)
 //   npm run sotterraneo -- --senza-abilita       # il banco di prima: solo attacco, nessun albero
 //   npm run sotterraneo -- --senza-preparati     # il banco senza gli incanti preparati dal campo (resta il mana che torna camminando)
 //   npm run sotterraneo -- --contro <commit>     # le stesse misure sul commit, e «prima → dopo» nelle celle
@@ -87,6 +88,7 @@ if (argv[0] === '--lavoro') {
   else if (lavoro.che === 'strada') r = await strada(lavoro.opz)
   else if (lavoro.che === 'passi') r = await passiFatti(lavoro.opz)
   else if (lavoro.che === 'domande') r = await domandeDi(lavoro.opz)
+  else if (lavoro.che === 'mondo') r = (await mod('motore/banco-mondo.js')).misuraIlMondo(lavoro.opz)
   console.log(JSON.stringify(r))
 
   // le domande obbligate di una discesa rispondendo sempre giusto (la misura di `unita/sotterraneo`, «il minimo sta in una seduta»): dritto
@@ -412,6 +414,32 @@ async function misura(radice) {
       righe.push({ titolo: `   passi per discesa`, celle: discese.map(k => Math.round(somma(come, k, 'passi') / (OPZ.eroi.length * OPZ.semi))), numeri: true })
     }
     return { intestazione: nomi, titolo: `i passi che il giocatore finto fa davvero (${OPZ.eroi.length * OPZ.semi} partite a discesa, bravura ${OPZ.prove[0] * 10}/10)`, righe, numeri: true }
+  }
+
+  // `--mondo`: il mondo aperto coi mostri (docs/sotterraneo/mondo-aperto-mostri.md, «Le misure»): il curioso esce dalla città che serve
+  // il dungeon e va al suo ingresso, per strada (combatte chi lo raggiunge) o passando dalle tane (va incontro a chi vede); `--semi` storie
+  // per eroe, `--bravure` la prima. Le colonne sono i dungeon, l'abisso per ultimo
+  if (argv.includes('--mondo')) {
+    const ks = numeri('--discese', [0, 1, 2, 3, 4, 5, 6, 7])
+    const lavori = []
+    for (const come of ['strada', 'giro']) for (const eroe of OPZ.eroi) lavori.push({ ...base, che: 'mondo', opz: { eroi: [eroe], semi: OPZ.semi, discese: ks, modi: [come], bravura: OPZ.prove[0] }, come })
+    const r = await inParallelo(lavori)
+    const media = (come, k, f) => { const l = lavori.map((x, i) => (x.come === come ? r[i].find(y => y.k === k) : null)).filter(y => y && y[f] != null); return l.length ? l.reduce((n, y) => n + y[f], 0) / l.length : NaN }
+    const righe = []
+    for (const come of ['strada', 'giro']) {
+      righe.push({ titolo: come === 'strada' ? 'per strada: scontri a tragitto' : 'dalle tane: scontri a tragitto', celle: ks.map(k => +media(come, k, 'scontri').toFixed(1)), numeri: true })
+      righe.push({ titolo: '   mostri battuti (signori)', celle: ks.map(k => `${media(come, k, 'mostri').toFixed(1)} (${media(come, k, 'signori').toFixed(1)})`), numeri: true })
+      righe.push({ titolo: '   domande', celle: ks.map(k => Math.round(media(come, k, 'domande'))), numeri: true })
+      righe.push({ titolo: '   svenuti %', celle: ks.map(k => Math.round(media(come, k, 'svenuti') * 100)) })
+      righe.push({ titolo: '   vita % a fine scontro', celle: ks.map(k => (Number.isNaN(media(come, k, 'vitaFine')) ? '-' : Math.round(media(come, k, 'vitaFine') * 100))) })
+      righe.push({ titolo: '   vita % all\'ingresso (0 se svenuto)', celle: ks.map(k => Math.round(media(come, k, 'vitaArrivo') * 100)) })
+      righe.push({ titolo: '   pozioni bevute', celle: ks.map(k => +media(come, k, 'pozioni').toFixed(1)), numeri: true })
+      righe.push({ titolo: '   livelli presi', celle: ks.map(k => +media(come, k, 'livelli').toFixed(2)), numeri: true })
+      righe.push({ titolo: '   gemme raccolte', celle: ks.map(k => Math.round(media(come, k, 'gemme'))), numeri: true })
+      righe.push({ titolo: '   passi', celle: ks.map(k => Math.round(media(come, k, 'passi'))), numeri: true })
+    }
+    const CHIAVI = ['altare', 'cantine', 'torre', 'gallerie', 'cisterna', 'labirinto', 'fondo', 'abisso']
+    return { intestazione: ks.map(k => CHIAVI[k].slice(0, 7)), titolo: `il mondo aperto: il curioso dalla città al dungeon (${OPZ.eroi.length * OPZ.semi} tragitti a cella, ${Math.round(OPZ.prove[0] * 10)}/10)`, righe, larga: 11 }
   }
 
   // `--domande`: le domande obbligate per discesa e per piano rispondendo sempre giusto, dritto alla scala (minimo) e girando tutto, per
