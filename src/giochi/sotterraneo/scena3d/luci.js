@@ -37,16 +37,20 @@ export function creaLuci(scena, aspetto) {
   const alone = new PointLight(0xffb070, LUCE.alone, 10, 1.0)
   const cono = new SpotLight(0xffc488, LUCE.cono, 17, 1.12, 0.8, 1.3)
   cono.castShadow = ACCESI.ombre
-  cono.shadow.intensity = LUCE.ombra; cono.shadow.radius = 3; cono.shadow.mapSize.set(1024, 1024)
+  cono.shadow.intensity = LUCE.ombra; cono.shadow.radius = 3; cono.shadow.mapSize.set(ACCESI.ombraMappa, ACCESI.ombraMappa)
   cono.shadow.bias = -0.0015; cono.shadow.normalBias = 0.03; cono.shadow.camera.near = 0.1
   const lampo = new PointLight(0xfff0d0, 0, 5, 1.5)
-  const magia = new PointLight(0xffffff, 0, 4, 1.5)
+  // senza `lampi` la magia è il lampo stesso e il rimbalzo una luce fuori dalla scena (c'è, ma non illumina); senza `palco` idem
+  const magia = ACCESI.lampi ? new PointLight(0xffffff, 0, 4, 1.5) : lampo
   const palco = new PointLight(0xffe0bc, 0, 14, 1.0)
   const rimbalzo = new PointLight(0xff9a50, 0, 6, 1.5)   // la torcia accesa: la luce che torna su dal pavimento
-  const fuochi = Array.from({ length: N_FUOCHI }, () => new PointLight(0xff8a3c, 0, 7, 1.7))
-  scena.add(cielo, alone, cono, cono.target, lampo, magia, palco, rimbalzo, ...fuochi)
+  const fuochi = Array.from({ length: Math.max(0, Math.min(N_FUOCHI, ACCESI.fuochi)) }, () => new PointLight(0xff8a3c, 0, 7, 1.7))
+  scena.add(cielo, alone, cono, cono.target, lampo, ...fuochi)
+  if (ACCESI.lampi) scena.add(magia, rimbalzo)
+  if (ACCESI.palco) scena.add(palco)
   const tinta = new Color(), base = new Color(0xffc488), calda = new Color(0xffa650), tmp = new Vector3()
   const T = LUCE.torcia
+  let ambiente = cielo.intensity, qPalco = 0
 
   return {
     condivise, alone, cono, lampo, magia, palco, cielo, rimbalzo,
@@ -54,7 +58,14 @@ export function creaLuci(scena, aspetto) {
     q: 0,   // quanto è accesa la torcia, inseguito: 0 al buio, 1 piena
     // le cose che fanno luce: { pos: Vector3, colore: Color, forza, vis (0..1, quanto si vede adesso), d (distanza²) }
     // si riempie una volta per piano; ogni fotogramma la riserva va alle più vicine che si vedono
-    aspetto(a) { cielo.color.set(a.cielo); cielo.groundColor.set(a.terra); cielo.intensity = LUCE.ambiente * a.ambiente },
+    aspetto(a) { cielo.color.set(a.cielo); cielo.groundColor.set(a.terra); cielo.intensity = ambiente = LUCE.ambiente * a.ambiente },
+    // la luce dello scontro, che schiarisce i combattenti: calda dalla parte della telecamera sopra il centro (x, z); senza la luce
+    // del palco (la fascia bassa) la schiarita la dà l'emisferica, che non costa niente in più
+    schiarita(acceso, x, z, dt) {
+      qPalco += ((acceso ? 1 : 0) - qPalco) * verso(dt, 4)
+      if (ACCESI.palco) { palco.intensity = LUCE.palco * qPalco; palco.position.set(x, 2.6, z + 2.8) }
+      else cielo.intensity = ambiente * (1 + LUCE.palcoAmbiente * qPalco)
+    },
     distribuisci(sorgenti, ex, ez, t) {
       condivise.uLn.value = 0
       for (const s of sorgenti) s.d = s.vis > 0.2 ? (s.pos.x - ex) ** 2 + (s.pos.z - ez) ** 2 : Infinity

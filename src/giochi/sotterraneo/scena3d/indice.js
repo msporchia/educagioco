@@ -49,7 +49,7 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
   const maschera = creaMaschera()
   const post = ACCESI.post ? creaPost(renderer) : null
   const aloni = creaAloni(scena, ALONI_MAX), colonne = creaColonne(scena), anelli = creaAnelli(scena)
-  const scintille = ACCESI.scintille ? creaScintille(scena, SCINTILLE) : NIENTE
+  const scintille = ACCESI.scintille ? creaScintille(scena, Math.round(SCINTILLE * Math.min(1, ACCESI.quanteScintille))) : NIENTE
   const polvere = ACCESI.polvere ? creaPolvere(scena, POLVERE, luci.condivise, maschera) : NIENTE
   const etichette = creaEtichette(strato)
   const eroe = creaEroe()
@@ -84,6 +84,7 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
   img.src = ATLANTE
 
   const contorno = creaContorno({ canvas, strato, cam })
+  let giri = 0
   let quadro = null, piano = null, raf = 0, prima = 0, coperto = 0, scala = 3, vivo = true, passando = null
   // quello che si fa a fotogramma finito: chi lo chiama può buttare il 3D (il portale porta sopra), e il resto del
   // fotogramma toccherebbe un piano che non c'è più
@@ -194,9 +195,7 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
     S.scossa = Math.max(0, S.scossa - dtVero * 2.2)
     // quanto copre il pannello conta solo nello scontro: in esplorazione un foglio è un velo sopra la scena, e l'inquadratura resta
     cam.aggiorna(dtVero, centro, { scontro: !!scontro.palco, celle: scontro.celle, coperto: scontro.palco ? coperto : 0, scossa: S.scossa, t })
-    // la luce del palco: nello scontro una luce calda dalla parte della telecamera schiarisce i combattenti
-    luci.palco.intensity += ((scontro.palco ? 5 : 0) - luci.palco.intensity) * verso(dtVero, 4)
-    luci.palco.position.set(centro.x, 2.6, centro.z + 2.8)
+    luci.schiarita(!!scontro.palco, centro.x, centro.z, dtVero)
     scontro.buco(maschera.uniforms, centro)
 
     const punti = canvas.height * 1.5   // la misura delle particelle: in px del disegno
@@ -221,6 +220,8 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
     contorno.mappina(corsa, this_.mappaGrande, !!scontro.palco)
     contorno.dataset(corsa, eroe, scala)
     ctx.misure.msJs = performance.now() - t0
+    // l'ombra a fotogrammi alterni (fascia bassa): la mappa vecchia resta giusta con la sua luce, va solo un fotogramma indietro
+    if (ACCESI.ombre && ACCESI.ombraOgni > 1) renderer.shadowMap.needsUpdate = (giri++ % ACCESI.ombraOgni) === 0
     const t1 = performance.now()
     if (post) post.disegna(scena, cam.camera); else renderer.render(scena, cam.camera)
     ctx.misure.msDisegno = performance.now() - t1
@@ -298,6 +299,7 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
       const gl = ctx.gl, px = new Uint8Array(4), v = []
       for (let i = 0; i < n + 2; i++) {
         const t0 = performance.now()
+        if (ACCESI.ombre && ACCESI.ombraOgni > 1) renderer.shadowMap.needsUpdate = i % ACCESI.ombraOgni === 0
         if (post) post.disegna(scena, cam.camera); else renderer.render(scena, cam.camera)
         gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px)
         if (i >= 2) v.push(performance.now() - t0)
