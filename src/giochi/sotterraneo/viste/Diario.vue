@@ -24,10 +24,11 @@ const props = defineProps({
   giu: { type: Boolean, default: false },
   punti: { type: Number, default: 0 },          // le schede: i «+» delle altre
   puntiAbilita: { type: Number, default: 0 },
+  mondo: { type: Boolean, default: false },     // nel Sotterraneo 3D la strada è quella del mondo aperto (dati/terra.js, luogoDi)
 })
 const emit = defineEmits(['chiudi', 'segui', 'vai', 'fuori', 'scheda'])
 
-const d = computed(() => diario(props.stati, props.tappe, props.segui, props.conti))
+const d = computed(() => diario(props.stati, props.tappe, props.segui, props.conti, props.mondo))
 
 // il dettaglio: l'id della voce aperta (null = l'elenco). Si cerca fra tutte le voci a ogni giro, così se la voce
 // cambia sotto (consegnata mentre il diario è aperto) il dettaglio la segue, e se sparisce si torna all'elenco

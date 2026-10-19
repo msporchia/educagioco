@@ -334,7 +334,9 @@ const ferito = computed(() => !!forze.value && forze.value.vita < forze.value.vi
 function curaDa(risorsa) {
   const f = forze.value
   if (!f) return
-  nellAvventura({ sosta: { ...qui.value.sosta, ...(risorsa === 'vita' ? { vita: f.vitaMax } : { energia: f.energiaMax }) } }, { subito: true })
+  // 'tutto': la fontana di una città senza guaritrice o incantatrice (viste/Mondo3d.vue) cura vita ed energia insieme
+  const cura = risorsa === 'vita' ? { vita: f.vitaMax } : risorsa === 'energia' ? { energia: f.energiaMax } : { vita: f.vitaMax, energia: f.energiaMax }
+  nellAvventura({ sosta: { ...qui.value.sosta, ...cura } }, { subito: true })
   suono.ok()
 }
 

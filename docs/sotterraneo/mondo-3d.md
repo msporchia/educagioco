@@ -19,6 +19,9 @@ sono ancora (la fase 5): il mondo si gira, si scende nei sette dungeon e si torn
 | `nebbia.js` | le due trame della nebbia e il velo di nuvole |
 | `terreno.js`, `acqua.js`, `lontano.js` | il terreno di un pezzo (e la gonna che chiude le fessure), il fuori mappa, le piazze, i campi; l'acqua e il cielo; il mondo a dettaglio basso |
 | `kit.js`, `ponti.js`, `monumenti.js` | case, botteghe, pozzo, mulino; ponti, grate, staccionate, cartello, bacheca, campo del minatore, antri; gli otto ingressi, la pietra del viaggio, il portale gemello |
+| `fontana.js` | la fontana della piazza, dove manca chi cura: vasca, stelo, coppa, e l'acqua che si muove |
+| `props-citta.js`, `props-modelli.js` | gli oggetti di scena delle tre città: dove stanno (puro, dalle celle del mondo) e i modelli (barili, carretti, bancarelle, rastrelliere, lanterne, tende, palizzata…) |
+| `props-dove.js`, `props-aperto.js` | gli oggetti di scena fuori dalle città e lo scenario degli ingressi: dove stanno (puro: habitat, celle libere, strade, lotti) e le forme (lapidi, rovine, menhir, palafitte, fumarole, carrelli, accampamenti, cartelli…) |
 | `natura.js`, `vita.js`, `persone.js`, `trame.js`, `veduta.js` | alberi e decoro a istanze; fumo, spruzzi, faville, fiamme, uccelli; le figure ancorate; le trame su canvas; la telecamera e la veduta |
 
 `Campagna.vue` sceglie `Mondo3d.vue` con `disegno: '3d'` e la carica a richiesta (il Sotterraneo di sempre non tira dentro
@@ -62,8 +65,8 @@ paga la risposta giusta di una pietra.
   attorno, la luce di taglio dal lato del sole, un'ombra morbida a contatto e l'ombra vera; le persone a scala 1,25 dell'eroe.
   Chi saluta, i segni sopra la testa, chi cura e il richiamo sono quelli della terra dipinta.
 - **Le città**: il villaggio coi quattro mercanti, la ragazza, il minatore (sale al rifugio dopo la sesta porta); il forte e il
-  rifugio coi loro mercanti (lo stesso banco, decisione 10). Il capitano non c'è ancora (non ha lo sprite né dialoghi: fase 4).
-  La bacheca c'è, vuota (le taglie sono la fase 6). Il cartello indica i passaggi della città coi dungeon trovati oltre.
+  rifugio coi loro mercanti (lo stesso banco, decisione 10: il fabbro del forte apre la bottega del villaggio). Nel forte c'è il
+  capitano e la fontana (sotto). La bacheca c'è, vuota (le taglie sono la fase 6). Il cartello indica i passaggi della città coi dungeon trovati oltre.
 - **I sette dungeon e l'abisso** hanno i monumenti del prototipo (l'altare coi re, l'arco dei goblin, la torre annerita, la
   grotta con le radici e le ragnatele, la scala nel lago, la botola che fuma, la miniera con la brace, il pozzo) e i nomi nuovi.
   Arrivati a uno aperto il monumento si apre e il fumetto è quello di sempre (piani, livello, la storia, le missioni, «scendo»);
@@ -73,6 +76,79 @@ paga la risposta giusta di una pietra.
 - **Le grate** dei passaggi fra gli anelli sono modellate: calate finché la storia non le alza, e toccandole dicono
   perché.
 - **Gli antri** si vedono, chiusi (fase 7).
+
+## Gli oggetti delle città
+
+Il mondo generato non li conosce (la firma della pianta e le nebbie salvate non cambiano): `props-citta.js` li deriva a scena da
+case, botteghe, piazza e strade con un caso suo (seme del mondo e indice della città), sempre uguali. Stanno su celle libere
+di erba entro la città: mai su una strada, un posto, il davanti di una porta, le zone `riservato` davanti alle botteghe né
+nell'acqua; non cambiano la mappa di blocco (stanno ai margini, a una cella dal muro). Si posano nel cantiere del pezzo
+(`disegnaProps`, tutto unito per materiale: nessuna mesh in più per oggetto, la nebbia li legge dall'`aBase`) e ogni modello è
+sotto le 700 facce. Le fiaccole e i bracieri accendono le fiamme di `vita.js` (`cose.fuochi`, al più otto per città).
+
+- **Tutte**: un'insegna a palo per bottega (moneta, foglia, ferro di cavallo, gemma), l'arredo di ogni bottega (il fabbro la
+  ruota di pietra, la rastrelliera e un'incudine; l'erborista scaffali e fiori), lanterne o torce attorno alla piazza,
+  panche, tavoli con le panche, bancarelle con la tendina a righe, due o tre cose ai fianchi di ogni casa, mai sul davanti.
+- **Il villaggio** (campi, carretti, fiori): orti con lo steccato, carretti col fieno, balle, cassette di fiori e vasi, bucato
+  steso, botti e sacchi, lanterne a palo.
+- **Il forte del guado** (palizzate, rastrelliere, tende): la palizzata attorno con i varchi alle strade, tende coniche,
+  rastrelliere d'armi, manichini, bandiere, torce con la fiamma, casse.
+- **Il rifugio del passo** (legna, pellicce, bracieri): cataste e ceppi con l'ascia, stanghe di pellicce, bracieri accesi,
+  sacchi e botti; non ha case, quindi molto sta sparso nei prati vicino alle botteghe.
+- **Per cambiarli**: il carattere sta in `MENU` (pesi, massimi, quanti sparsi), l'arredo delle botteghe in `ARREDO`; un
+  modello nuovo è una funzione in `MODELLI` (origine a terra, davanti verso +z, larghezza lungo x) e, se è largo più di una
+  cella, una voce in `LARGHE`. Misurato (Chrome senza schermo, davanti alla piazza del villaggio): +3 chiamate e +23k triangoli
+  rispetto al villaggio spoglio.
+
+## I props fuori dalle città e attorno agli ingressi
+
+Come quelli delle città: il generatore non li conosce (pianta, firma e nebbie salvate restano), `props-dove.js` li deriva a scena
+dalle celle (habitat della regione, erba libera, strade, lotti, alberi del decoro) con un caso suo, sempre uguali; `props-aperto.js`
+li posa nel cantiere del pezzo (`disegnaPropsAperti`: niente mesh per oggetto, la nebbia li legge dall'`aBase`). Mai su una strada,
+un lotto, un campo, un ponte o un valico, davanti a una porta (`riservato`), in una città (e tre celle attorno), nel villaggio, né dentro
+un albero (conta la distanza dal decoro che blocca); non cambiano la mappa di blocco. I pezzi lontani non li hanno.
+
+- **Come si scelgono**: per ogni regione fuori dal villaggio la `TABELLA` dell'habitat dice cosa e quanto spesso; a ogni cella una
+  prova per tipo, con una macchia di rumore che li raggruppa; prima i grandi (`FORME[tipo].R`, le celle che vogliono libere), poi i
+  piccoli negli spazi che restano. `DENSITA` e `PIU_GRANDI` pareggiano le prove che cadono su un albero o una strada. Lungo le strade
+  un cartello, un totem (nei posti di pietra) o una pietra miliare, ogni sei celle al meno, col davanti verso la strada.
+- **Per habitat**: cimitero (lapidi in fila coi tumuli, croci, cripte basse, il cancello rotto); rovine (arco spezzato, colonne
+  spezzate, muretti a secco, macerie); brughiera e colle dei corvi (menhir, cerchi di pietre, tumuli con la porta, erica fiorita);
+  bosco, foresta e bosco secco (tronchi caduti, ceppi grandi, funghi giganti, ragnatele fra due rami secchi); lago e palude
+  (palafitte, barche rovesciate, canneti, ninfee, pali storti); ceneri (fumarole che fumano, rocce spaccate che brillano, ossa di
+  bestia, tridenti piantati); monte e colline (carrelli, binari, travi, mucchi di minerale, argani, ometti di sassi); landa (menhir,
+  ossa, croci, tridenti); prati e campi (accampamenti col falò spento e i tronchi per sedersi, carri abbandonati, steccati rotti,
+  sacchi, cassette di mele).
+- **Gli ingressi** hanno il loro scenario in `SCENARI` (offset dal centro del lotto, che si cercano attorno al posto voluto se cade
+  su un albero o una strada): lapidi, croci, cripte e il cancello alla cripta dei re; palizzata, sacchi, teschi e un carro alle
+  cantine; travi bruciate e macerie annerite alla torre; ragnatele, bozzoli e funghi alla tana dei ragni; pozze, pali, canneti, ninfee
+  e la palafitta alle sale allagate; bracieri accesi, teschi su pali, tridenti, rocce spaccate e terra bruciata alla porta
+  dell'inferno; carrello, minerale, travi e lanterna alle miniere; il cerchio di menhir con ossa e croci al pozzo.
+- **Costo**: 550 oggetti in tutto il mondo, ~79k triangoli (senza ombra), il pezzo più carico ~7k, solo i materiali che i pezzi
+  hanno già (pietra, legno, liscio, luce dove brilla). Misurato (Chrome senza schermo, 390×844): +1 chiamata e +34k triangoli
+  davanti alla piazza del villaggio (361k in tutto con gli oggetti delle città), +10/+42k davanti alla cripta, +1/+32k alle sale
+  allagate, +3/+21k alla porta dell'inferno, +9/+24k alle miniere, +8/+39k al pozzo.
+- **Per cambiarli**: un tipo nuovo è una funzione in `FORME_DISEGNO` (origine a terra, davanti verso +z) e una voce in `FORME` e
+  nella `TABELLA` (o nei `SCENARI`); le fumarole e i bracieri mettono fumo, braci e fiamme in `cose` (le fiamme sono al più 24 in
+  tutto, tienine pochi per pezzo).
+
+## Il capitano e la fontana
+
+- **Il capitano del forte** è fra le persone fisse (`bersagli` di `Mondo3d.vue`, `PERSONAGGI_DI_SOPRA`): lo sprite della guardia, più
+  alto e col suo blu (`scala` e `tinta` dei bersagli, letti da `persone.js`); il posto lo dà il generatore (la città `forte`,
+  `persone: ['capitano']`). Ha il «!» finché non ha detto la porta di adesso, quando è la quinta o la sesta; cosa dice:
+  [dialoghi.md](dialoghi.md#il-capitano-del-forte).
+- **La fontana** sta dove il generatore ha già messo il pozzo (il 2×2 al centro della piazza, un ingombro): non cambia l'output del
+  generatore e non aggiunge posti. La regola (`hoLaFontana`, `fontaneDi` in `motore/mondo-sopra.js`) la deriva dai mercanti della
+  città: dove manca la guaritrice o l'incantatrice c'è l'acqua al posto del pozzo, e cura vita ed energia insieme, gratis, a chi è salito
+  dal portale ([chi-cura.md](chi-cura.md#la-fontana)). Oggi è solo il forte (non ha l'incantatrice). Il modello è
+  `scena3d/mondo/fontana.js`, tutto in codice come il kit: vasca bassa di pietra con l'acqua incassata, stelo, coppa alta con quattro
+  bocchette; si muovono le quattro cascatelle, il getto in cima, sedici gocce in tiro balistico dalla coppa alla vasca (col tempo del
+  gioco, non coi fotogrammi) e gli spruzzi di `vita.js`; i materiali sono i `mobili` del kit, quindi la nebbia la chiude intera come
+  gli altri oggetti.
+- Si tocca come una cosa (`tipo: 'cosa'`, dopo le persone): l'eroe ci va e si apre un fumetto con «bevo»; sopra, finché serve, il
+  richiamo come quello della guaritrice. Bevendo, `Gioco.vue` scrive la sosta a vita ed energia piene (`curaDa('tutto')`) e sopra
+  l'eroe salgono i due numeri.
 
 ## Le pietre del viaggio
 
@@ -114,23 +190,24 @@ in un pezzo solo (disegnato anche sotto i pezzi vicini). Il degrado a scalini no
 
 ## Cosa manca
 
-- I nomi nuovi stanno sopra; giù il titolo della discesa e le frasi del minatore e dei capitoli dicono ancora la geografia della
-  mappa dipinta (fase 8).
-- Il gemello sta nella città giusta, ma la guarigione gratis è di chi c'è (al rifugio non c'è il fabbro); la fontana che cura
-  dove manca la guaritrice non c'è ancora (fase 4).
 - La freccina verso la missione dice la direzione sul bordo, non la strada vera ([missioni-freccina.md](missioni-freccina.md)).
 - Le figure restano pixel art in un mondo liscio: ancorate reggono, da vedere sul telefono. Mai misurato su un telefono vero.
 
-Nei test: `unita/sotterraneo-mondo-3d` (i pezzi, la divisione del mondo, le istanze nel loro pezzo, le trame della nebbia, il
+Nei test: `unita/sotterraneo-mondo-props` (gli oggetti delle città: mai su strade, posti o porte, nel loro pezzo, il carattere
+di ognuna, le facce dei modelli), `unita/sotterraneo-mondo-aperto-props` (quelli fuori dalle città: pianta e firma invariate, sempre uguali, mai su strade, lotti, città o davanti a una porta, un repertorio per habitat, uno scenario per ingresso, i costi), `unita/sotterraneo-mondo-3d` (i pezzi, la divisione del mondo, le istanze nel loro pezzo, le trame della nebbia, il
 dito, i ponti, il cartello), `unita/sotterraneo-mondo-salva` (la nebbia in base64, la prima volta, il gemello per città e il caso
 peggiore, le pietre, il minatore, le grate), `integrazione/sotterraneo-mondo` (col dito vero: il mondo e quanto costa,
 camminare, la ragazza, la bottega del fabbro, la pietra sbagliata e giusta, la veduta e il tocco lì, scendere nella cripta e
-risalire davanti, la nebbia salvata, il gemello nel villaggio). Bersagli: `[data-mondo3d]` (con `data-pronto`, `data-in-veduta`),
+risalire davanti, la nebbia salvata, il gemello nel villaggio; al forte la fontana che richiama e cura, il capitano col «!» e la
+quinta porta, il fabbro di sempre), `unita/sotterraneo-citta` (il capitano, la sua strada, la regola e il posto della fontana),
+`unita/sotterraneo-nomi` (i nomi nuovi in ogni testo). Bersagli: `[data-mondo3d]` (con `data-pronto`, `data-in-veduta`),
 `[data-eroe-mondo]` (`data-cella`, `data-cammina`, `data-schermo`), i bersagli `[data-bersaglio]` (`data-vis`, `data-trovato`)
 con `[data-personaggio]`, `[data-mercante]` e `data-citta`, `[data-minatore]`, `[data-posto]` (`data-discesa`, `data-abisso`,
-`data-aperta`, `data-divieto`), `[data-pietra]` (`data-accesa`), `[data-cartello]`, `[data-bacheca]`, `[data-portale]`,
-`[data-grata]`; `[data-fumetto-di]` (`pietra`, `portale`, `cartello`, `bacheca`, `grata` o la chiave del dungeon) con
-`[data-viaggio]`, `[data-nessuna-meta]`, `[data-bacheca-vuota]`, `[data-grata-perche]`; `[data-pietra-domanda]`, `[data-veduta]`
+`data-aperta`, `data-divieto`), `[data-pietra]` (`data-accesa`), `[data-cartello]`, `[data-bacheca]`, `[data-fontana]` (la città), `[data-portale]`,
+`[data-grata]`; `[data-fumetto-di]` (`pietra`, `portale`, `cartello`, `bacheca`, `fontana`, `grata` o la chiave del dungeon) con
+`[data-viaggio]`, `[data-nessuna-meta]`, `[data-bacheca-vuota]`, `[data-grata-perche]`, `[data-fontana-dice]` (`data-serve`) e il tasto
+`[data-azione="bevi"]`, `[data-richiamo-di="fontana"]`, `[data-cura-fiocco][data-risorsa="tutto"]`, `[data-segno="nuova"]` sul capitano;
+`[data-pietra-domanda]`, `[data-veduta]`
 coi `[data-nome-posto]`, `[data-mondo-attesa]`; `window.__mondo3d` (`vai(chiave)`, `porta(x, z)`, `io`) e
 `window.__sotterraneo3d.grafica()` (con `mondo: true`, `pezzi`, `msPezzi`, `veduta`). In `test/aiuto/browser.mjs`:
 `mondoPronto`, `fermoNelMondo`, `toccaNelMondo`, `scendiNelMondo` (`scendiNelSotterraneo` lo usa da solo).

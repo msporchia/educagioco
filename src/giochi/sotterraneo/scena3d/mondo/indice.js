@@ -14,7 +14,10 @@ import { creaAcqua, creaCielo } from './acqua.js'
 import { materialiDelKit, Cantiere, casa, bottega, pozzo, mulino } from './kit.js'
 import { ponte, grata, staccionate, cartello, bacheca, campoMinatore, antro } from './ponti.js'
 import { creaMonumento, creaPietra, creaPortale } from './monumenti.js'
+import { fontana } from './fontana.js'
 import { creaNatura } from './natura.js'
+import { propsPerPezzo, disegnaProps } from './props-citta.js'
+import { disegnaPropsAperti } from './props-aperto.js'
 import { creaLontano } from './lontano.js'
 import { creaVita } from './vita.js'
 import { creaNebbia } from './nebbia.js'
@@ -37,7 +40,7 @@ export function creaMondo3d(canvas, opz) {
   }
 }
 
-function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = {} }) {
+function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = {}, fontane = [] }) {
   const { renderer } = ctx
   renderer.toneMappingExposure = 1.05
   const scena = new Scene()
@@ -61,6 +64,7 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = {} }) {
   const natura = creaNatura(m, kit, scena)
   const vita = creaVita(scena, trame)
   const parti = dividiPerPezzo(m)
+  const conFontana = new Set(fontane.map(f => f.citta))   // le città dove l'acqua prende il posto del pozzo (fontana.js)
   const matCristallo = vesti(new MeshStandardMaterial({ color: 0xb78cff, emissive: 0x6a3cff, emissiveIntensity: 0.6, roughness: 0.2 }), { oggetto: 'istanza' })
   const quota = (x, z) => quotaA(m, x, z)
   // lo stato da disegnare, scritto da chi gioca (Mondo3d.vue): niente di reattivo, si legge a ogni fotogramma
@@ -77,13 +81,15 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = {} }) {
     const t0 = performance.now()
     const gruppo = new Group(), cant = new Cantiere(), q = parti[p]
     const cose = { camini: [], braci: [], fuochi: [], spruzzi: [], ruote: [], cristalli: [] }
-    const fatto = { gruppo, cose, monumenti: [], pietre: [], grate: [], marcatori: [], ms: 0 }
+    const fatto = { gruppo, cose, monumenti: [], pietre: [], grate: [], marcatori: [], fontane: [], ms: 0 }
     gruppo.add(terrenoDelPezzo(m, p, suolo.terreno, 2))
     const campi = campiDelPezzo(m, q.campi, suolo)
     if (campi) gruppo.add(campi)
     staccionate(q.campi, cant, m)
-    for (const c of m.citta) if (Math.floor(c.centro.x / 32) + 5 * Math.floor(c.centro.y / 28) === p) { gruppo.add(creaPiazza(m, c, suolo, cant)); pozzo(c.pozzo, cant, m) }
+    for (const c of m.citta) if (Math.floor(c.centro.x / 32) + 5 * Math.floor(c.centro.y / 28) === p) { gruppo.add(creaPiazza(m, c, suolo, cant)); if (conFontana.has(c.chiave)) fatto.fontane.push(fontana(c.pozzo, cant, m, cose, kit, gruppo)); else pozzo(c.pozzo, cant, m) }
     for (const c of q.case) casa(c, cant, m, cose)
+    disegnaProps(propsPerPezzo(m)[p], cant, m, cose)
+    disegnaPropsAperti(m, p, cant, cose)
     for (const pp of q.ponti) ponte(pp, cant, m)
     for (const g of q.grate) fatto.grate.push(grata(g, cant, m, kit, gruppo))
     for (const po of q.posti) {
@@ -204,6 +210,7 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = {} }) {
     // le cose che si muovono
     for (const f of costruiti.values()) {
       for (const r of f.cose.ruote) r.rotation.x -= dt * 0.9
+      for (const fo of f.fontane) fo.anima(tempo)
       for (const c of f.cristalli || []) { c.position.y = c.userData.y + Math.sin(tempo * 1.6) * 0.15; c.rotation.y = tempo * 0.8 }
       for (const mo of f.monumenti) {
         const voluto = S.aperti.has(mo.posto.chiave) ? 1 : 0

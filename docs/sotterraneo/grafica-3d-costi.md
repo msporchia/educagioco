@@ -33,6 +33,39 @@ saltano rumore e luci (sono zero comunque), e lo scontro è sceso a 112 (in
 esplorazione 62). Il passaggio finale prende la scena una volta sola invece
 di tre.
 
+## La fascia bassa (il Redmi Note 7)
+
+Sul Note 7, in fascia bassa (pixel ratio 1, due fette di nebbia, niente passaggio finale), lo scontro fermo stava a ~48 fps con
+cali a 30, e a ~15 durante un attacco. **Ogni luce puntiforme costa a ogni pixel di ogni materiale anche spenta**: three le conta
+tutte quelle in scena e lo shader le gira tutte, e la scena ne aveva undici (sei fuochi, l'alone, lampo, magia, palco, rimbalzo)
+più il cono con l'ombra; la Fattoria 3D, che lì sta a 60, ha un sole e l'emisferica. Il banco della tela
+([../core/vecchio-telefono.md](../core/vecchio-telefono.md), «Lo scontro»; scontro fermo con tre scheletri, 4 core e CPU ×5,
+pixel ratio 1, ms a fotogramma; tutto acceso ~100), un pezzo tolto alla volta:
+
+| tolto | ms | | tolto | ms |
+|---|---|---|---|---|
+| quattro fuochi (ne restano 2) | −14 | | la nebbia (2 fette) | −20 |
+| lampo e magia in una, niente rimbalzo | −7 | | l'arredo | −10 |
+| la luce del palco | −5 | | ombra a 512 | −4 |
+| le ombre (da sole) | −1 | | luci e ombre insieme | −37 |
+| polvere, botti | −3, −4 | | scintille, fiamme, acqua (fermo) | ~0 |
+
+Tutto spento resta ~43: pavimento, muri e figure con l'emisferica, l'alone e il cono. Nel racconto il banco cresce solo del 5-20%:
+le scintille sono una chiamata, ~8 px l'una, senza luci (la polvere sì, ma ha punti di 2 px). **Nella bassa si tolgono**
+(`SPEGNI_BASSA` in `store/qualita.js`, con i nomi di `ACCESI`): quattro dei sei fuochi (illuminano i due più vicini che si vedono;
+le fiamme degli altri restano), il rimbalzo e la luce del palco (al suo posto l'emisferica cresce del 35% nello scontro, `LUCE.palcoAmbiente`),
+la magia che diventa il lampo, l'ombra a 512 ridisegnata a fotogrammi alterni (va un fotogramma indietro), due strati di rumore nella
+nebbia invece di quattro (riscalati: la nebbia non si dirada), metà scintille. Si vede: le torce lontane non schiariscono più il
+pavimento e la nebbia è più liscia; il resto è uguale. **Prima → dopo** (banco, ms): scontro fermo 102-107 → 78, racconto 105-129
+→ ~80 (fps del simulatore 6 → 8), esplorazione 64-66 → 51-55 (14 → 17 fps); l'alta resta com'era (94 → 92). In tutte le fasce, senza
+cambiare niente a schermo: la maschera torna in GPU solo se un texel è cambiato (prima a ogni fotogramma), e delle figure va in GPU
+solo la parte usata (prima 70 kB a fotogramma per 700 posti).
+
+- provato due strati di rumore nella nebbia da soli: −2% nel simulatore (lì pesa la sfumatura, che il simulatore sovrastima); restano nella bassa perché il telefono è debole proprio sui calcoli (la prova «shader pesante»).
+- provato l'ombra a fotogrammi alterni da sola: −2%; pesa di più il leggerla in ogni pixel che il disegnarla.
+- provato a spegnere l'ombra solo nello scontro: no, cambiarla ricompila tutti gli shader (sull'Adreno un fermo di 50-300 ms a ogni scontro).
+- non provato: disegnare solo la parte sopra il pannello (sotto c'è il 20-50% dei pixel): il pannello misurato ogni sei fotogrammi lascerebbe vedere il nero quando si abbassa.
+
 **Il peso**: `dist/index.html` da 29 190 a 29 289 kB (+99 kB: il codice di
 `scena3d/` e delle viste nuove; three c'era già per gli Asteroidi 3D). Nel sito
 spezzato three resta in `asteroidi-3d` (640 kB), `scena3d/` sta in

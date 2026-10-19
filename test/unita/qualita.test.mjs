@@ -1,6 +1,7 @@
 /* La fascia grafica: le soglie danno ai tre telefoni veri la fascia giusta, e una misura vecchia si rifà. */
 import { fasciaDa, SOGLIE } from '../../src/grafica/benchmark/qualita-rapida.js'
-import { PROFILI, FASCE, serveMisura, salvaMisura, misura } from '../../src/store/qualita.js'
+import { PROFILI, FASCE, serveMisura, salvaMisura, misura, scelta } from '../../src/store/qualita.js'
+import { ACCESI, applicaFascia, N_FUOCHI } from '../../src/giochi/sotterraneo/scena3d/costanti.js'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 
 // somma dei ms di pieno-1.5, pesante-1, strati-1, scoppi-500 nei log veri (strumenti/vecchio-telefono/log/)
@@ -18,4 +19,23 @@ await salvaMisura({ fascia: 'bassa', punti: 50, js: 117, quando: Date.now(), dpr
 controlla('misurata adesso: non serve', !serveMisura(Date.now(), 2.75))
 controlla('dopo 31 giorni si rifà', serveMisura(Date.now() + 31 * 86400000, 2.75))
 controlla('se cambia lo schermo si rifà', serveMisura(Date.now(), 2))
+
+// il Sotterraneo 3D: la bassa spegne pezzi di ACCESI (anche numeri, `fuochi:2`), l'alta e la media li lasciano com'erano, e le
+// fasce e il cheat `&spegni=` non si accumulano (docs/sotterraneo/grafica-3d-costi.md, «La fascia bassa»)
+for (const f of FASCE) for (const v of PROFILI[f].sotterraneo.spegni) controlla(`${f}: «${v}» è un pezzo di ACCESI`, String(v).split(':')[0] in ACCESI, v)
+scelta.value = 'bassa'; applicaFascia()
+uguale('bassa: due fuochi', ACCESI.fuochi, 2)
+controlla('bassa: niente passaggio finale, lampi e palco', !ACCESI.post && !ACCESI.lampi && !ACCESI.palco)
+controlla('bassa: l\'ombra resta, più piccola e a fotogrammi alterni', ACCESI.ombre && ACCESI.ombraMappa === 512 && ACCESI.ombraOgni === 2)
+uguale('bassa: metà scintille', ACCESI.quanteScintille, 0.5)
+for (const f of ['alta', 'media']) {
+  scelta.value = f; applicaFascia()
+  controlla(`${f}: tutto come prima`, ACCESI.post && ACCESI.lampi && ACCESI.palco && ACCESI.fuochi === N_FUOCHI && ACCESI.ombraMappa === 1024 && ACCESI.ombraOgni === 1 && ACCESI.quanteScintille === 1 && ACCESI.ottaveNebbia === 4)
+}
+applicaFascia(['fuochi:3', 'nebbia', 'ombraMappa'])
+controlla('a mano: un numero, un nome spento, un numero senza valore va a zero', ACCESI.fuochi === 3 && !ACCESI.nebbia && ACCESI.ombraMappa === 0)
+applicaFascia()
+controlla('e la volta dopo si riparte da capo', ACCESI.fuochi === N_FUOCHI && ACCESI.nebbia)
+scelta.value = 'auto'
+
 riassunto('la fascia grafica')

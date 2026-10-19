@@ -8,7 +8,7 @@ import { MOSTRI } from '../dati/mostri.js'
 import { COSE, aLivello } from '../dati/cose.js'
 import { CAMPAGNA, guardianoDi } from '../dati/campagna.js'
 import { GROSSI, GROSSO_DELLA_DISCESA } from '../dati/grossi.js'
-import { LUOGHI, POSTO_DI } from '../dati/terra.js'
+import { luogoDi } from '../dati/terra.js'
 import { STORIA } from '../dati/storia.js'
 import { laStoria } from './storia.js'
 import { seminato } from './livello.js'
@@ -213,13 +213,13 @@ function voceDiario(m, stato, segui = null, conti = {}) {
 // offerte per il tetto: il diario lo dice, o chi ne ha tre in mano non capirebbe perché non ne arrivano
 // La missione principale nel diario (docs/sotterraneo/la-storia-principale.md): le sette porte, e per il capitolo di adesso la
 // discesa con dov'è e il mostro grosso che la chiude. Non conta fra le aperte né nel tetto: è sempre lì, in cima
-export function storiaDelDiario(tappe, segui = null) {
+export function storiaDelDiario(tappe, segui = null, mondo = false) {
   const s = laStoria(tappe)
   const c = s.corrente
   const g = c && GROSSI[GROSSO_DELLA_DISCESA[c.chiave]]
   return {
     ...s, segui: segui === SEGUI_LA_STORIA, fine: STORIA.fine, ferma: STORIA.ferma,
-    corrente: c && { ...c, luogo: LUOGHI[POSTO_DI[c.chiave]],
+    corrente: c && { ...c, luogo: luogoDi(c.chiave, mondo),
                      cosa: g ? { tipo: 'sconfiggi', nome: g.nome, em: MOSTRI[g.tipo].em, sprite: MOSTRI[g.tipo].sprite } : null },
   }
 }
@@ -230,7 +230,7 @@ export function discesaDellaStoria(tappe) {
   return c && !c.ferma ? c.chiave : null
 }
 
-export function diario(stati, tappe, segui = null, conti = {}) {
+export function diario(stati, tappe, segui = null, conti = {}, mondo = false) {
   const sg = seguita(stati, segui)
   const mano = inMano(stati).map(m => voceDiario(m, statoDi(stati, m.id), sg, conti))
   const offerta = offerte(stati, tappe).map(m => voceDiario(m, 'offerta', null, conti))
@@ -238,7 +238,7 @@ export function diario(stati, tappe, segui = null, conti = {}) {
   const nelTetto = [...inMano(stati), ...offerte(stati, tappe)].filter(m => !m.fuoriDalTetto).length
   const finite = MISSIONI.filter(m => statoDi(stati, m.id) === CONSEGNATA).sort(dellaStoria).map(m => voceDiario(m, CONSEGNATA, null, conti))
   return {
-    segui: sg, storia: storiaDelDiario(tappe, sg),
+    segui: sg, storia: storiaDelDiario(tappe, sg, mondo),
     inMano: mano, pronte: mano.filter(v => v.stato === FATTA), daFare: mano.filter(v => v.stato !== FATTA),
     offerte: offerta, consegnate: finite,
     aperte: nelTetto,

@@ -92,7 +92,8 @@ for (const p of [0, 6, 12]) { const c = corsaDi(L_ABISSO, 5); if (p) { c.piano =
   aggiornaVisibilita(v, { forza: c.forzaLuce, visto: c.visto, palco: [{ x: lontano.x + 0.5, z: lontano.y + 0.5 }], k: 1 })
   controlla('il palco si accende anche fuori dal cono', v.ora[pi.id(lontano.x, lontano.y)] > 0.9)
   uguale('ma non diventa ricordo', v.ric[pi.id(lontano.x, lontano.y)], 0)
-  scriviTexel(v)
+  controlla('la maschera cambiata va in GPU', scriviTexel(v))
+  controlla('ferma no: niente da rimandare', !scriviTexel(v))
   uguale('il texel del pavimento lo dice (B)', v.dati[pi.id(lontano.x, lontano.y) * 4 + 2], 255)
 }
 

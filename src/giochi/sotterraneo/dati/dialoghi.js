@@ -6,6 +6,8 @@
 //   `saluti`   quando non ha niente da chiederti né da riprendere
 //   `presa`    quando accetti un suo favore
 //   `bottega`, `vendi`  le scelte dei mercanti (aprono il banco, o la linguetta delle tasche)
+//   `porte`    solo il capitano del forte: per le discese che racconta lui (la chiave della tappa), quello che dice della porta
+//              di adesso, in aggiunta alla strada (motore/dialoghi.js, stradaDelCapitano)
 //   `cura`     chi cura gratis (la guaritrice la vita, l'incantatrice l'energia): `risorsa`, la `domanda`, le `pagine` dette
 //              curando, `gia` quando non serve e `richiamo`, il fumetto sulla sua testa quando serve (motore/dialoghi.js)
 // «Novità?», con le frasi che ruotano e reagiscono, sta in dati/novita.js.
@@ -31,13 +33,13 @@ export const DIALOGHI = {
       { da: 3, testo: 'Al pozzo passano tutti, e tutti parlano. Io ascolto.' },
     ],
     racconti: [
-      { da: 0, pagine: ['Dicono che di notte, dalla cripta dell\'altare, si senta piangere. Una voce di donna.',
+      { da: 0, pagine: ['Dicono che di notte, dalla cripta dei re, si senta piangere. Una voce di donna.',
                         'Il frate che sta lassù ne sa più di me.'] },
       { da: 2, pagine: ['Da quando i goblin salgono dalle discese, nessuno lascia più niente fuori di casa.',
                         'Mia nonna dice che una volta, sotto la torre, c\'erano solo topi.'] },
       { da: 4, pagine: ['Il pescatore giura che una notte l\'acqua dello stagno è diventata nera.',
                         'Da allora l\'acqua la prendo solo qui.'] },
-      { da: 6, pagine: ['Mio padre lavorava nella miniera. Il giorno che le pietre hanno preso fuoco da sole, sono scappati tutti.',
+      { da: 6, pagine: ['Mio padre lavorava nelle miniere di brace. Il giorno che le pietre hanno preso fuoco da sole, sono scappati tutti.',
                         'Dicono che laggiù comandi un re fatto di brace.'] },
     ],
     presa: 'Grazie! Ti aspetto qui, al pozzo.',
@@ -50,8 +52,8 @@ export const DIALOGHI = {
       { da: 0, pagine: ['Il mulino macina da cent\'anni, e da cent\'anni la ruota gira tranquilla.',
                         'Ma ultimamente l\'acqua porta su un odore di cantina. Non mi piace.'] },
       { da: 2, pagine: ['I ratti ci sono sempre stati. Ratti così grossi, mai.',
-                        'Salgono dalla torre in rovina. Qualcosa, là sotto, li fa crescere.'] },
-      { da: 5, pagine: ['La botola nel prato era chiusa da quando ero bambino.',
+                        'Salgono dalla torre bruciata. Qualcosa, là sotto, li fa crescere.'] },
+      { da: 5, pagine: ['La porta dell\'inferno, nel prato, era chiusa da quando ero bambino.',
                         'Adesso la trovo aperta ogni mattina, e ogni mattina la richiudo. Chi la apre?'] },
       { da: 7, pagine: ['Il grano di quest\'anno è il più bello che ricordi.',
                         'Dicono che sia merito tuo: i mostri sono tornati giù. Tutti, tranne quelli dell\'abisso.'] },
@@ -63,7 +65,7 @@ export const DIALOGHI = {
     domanda: 'Chi dorme sotto l\'altare?',
     saluti: [{ da: 0, testo: 'Sotto queste pietre dormono in tanti. Non tutti dormono tranquilli.' }],
     racconti: [
-      { da: 0, pagine: ['Sotto l\'altare c\'è una cripta, e nella cripta riposano i re di un tempo.',
+      { da: 0, pagine: ['Sotto l\'altare c\'è la cripta dei re, e là riposano i sovrani di un tempo.',
                         'Il più vecchio si chiamava Re Ossuto. Dicono che non abbia mai smesso di regnare.'] },
       { da: 1, pagine: ['Re Ossuto non comanda più. Ma la cripta era solo la prima porta.',
                         'Le discese sono sette, e sotto tutte c\'è il pozzo che non ha fondo.'] },
@@ -75,6 +77,32 @@ export const DIALOGHI = {
     presa: 'Va\', e che la luce ti accompagni.',
   },
 
+  // il capitano del forte del guado (docs/sotterraneo/mondo-aperto-quest.md): sta nel mondo 3D, e apre la storia delle marche. La
+  // porta di adesso la dice lui quando è la quinta o la sesta; le altre le dice il minatore
+  capitano: {
+    domanda: 'Com\'è oltre il guado?',
+    saluti: [
+      { da: 0, testo: 'Capitano del forte del guado. Tengo il ponte: chi passa di qui, passa da me.' },
+      { da: 6, testo: 'Il guado è tranquillo, per la prima volta da anni. Anche questo è merito tuo.' },
+    ],
+    racconti: [
+      { da: 0, pagine: ['Il guado era la strada dei mercanti. Poi dall\'altra riva sono arrivate le bestie.',
+                        'Adesso il forte tiene il ponte, e io tengo il forte.'] },
+      { da: 4, pagine: ['Le sale allagate sono sotto la palude, e l\'acqua nera sale fino alle nostre botti.',
+                        'Chi scende torna con le scarpe fradice. Ma torna, se ha la testa a posto.'] },
+      { da: 5, pagine: ['Dalla piana delle ceneri viene un fumo che non è di nessun camino.',
+                        'I miei soldati dicono che laggiù si apre una porta. Io dico che è meglio non guardarla troppo.'] },
+      { da: 6, pagine: ['Il vecchio minatore è salito al rifugio del passo: ha una porta da indicarti anche lì.',
+                        'Passa dal valico del nord, e saluta la guaritrice da parte mia.'] },
+      { da: 7, pagine: ['Sette porte chiuse, e il forte ancora in piedi. Non pensavo di vederlo.',
+                        'Il pozzo senza fondo no: quello non lo chiude nessuno. Si tiene d\'occhio.'] },
+    ],
+    porte: {
+      cisterna: 'Sei passato dal ponte, e questo è già qualcosa. Oltre il ponte di corde c\'è la palude, e sotto la palude le sale allagate. Là dorme Gorgo, e l\'acqua nera sale fino ai miei stivali. Fermalo, e il guado respira.',
+      labirinto: 'La piana delle ceneri mi dà pensiero: ne viene un fumo che non è di nessun camino. C\'è una botola nel telaio, e la chiamano la porta dell\'inferno. Dietro ci sta Minotto. Battilo, e poi sali dal minatore, al rifugio.',
+    },
+  },
+
   guardia: {
     domanda: 'Cosa c\'è sotto la torre?',
     saluti: [{ da: 0, testo: 'Faccio la guardia a una torre che cade a pezzi. Qualcuno deve pur farla.' }],
@@ -84,7 +112,7 @@ export const DIALOGHI = {
       { da: 2, pagine: ['Sotto la torre c\'è una fornace che nessuno accende da cent\'anni. Eppure è calda.',
                         'Dentro, dicono, si muove una melma di fuoco. La chiamano Fiammetta.'] },
       { da: 3, pagine: ['La fornace si è spenta. Stanotte, per la prima volta da anni, ho dormito.',
-                        'Ma dal prato, verso la botola, arrivano muggiti.'] },
+                        'Ma dal prato, verso la porta dell\'inferno, arrivano muggiti.'] },
       { da: 6, pagine: ['Ho fatto la guardia a questa torre per vent\'anni.',
                         'Adesso so che la guardia va fatta a quello che c\'è sotto. E quella, la fai tu.'] },
     ],
@@ -97,7 +125,7 @@ export const DIALOGHI = {
     racconti: [
       { da: 0, pagine: ['Nello stagno c\'è una scala che scende sott\'acqua. L\'ha costruita qualcuno, tanto tempo fa.',
                         'Io non ci scendo. I pesci sì: e non tornano.'] },
-      { da: 4, pagine: ['La scala sommersa porta a una cisterna, e la cisterna non è vuota.',
+      { da: 4, pagine: ['Le sale allagate sono una cisterna antica, e la cisterna non è vuota.',
                         'Laggiù c\'è una melma d\'acqua nera, Gorgo. Quando gorgoglia, lo stagno trema.'] },
       { da: 5, pagine: ['Lo stagno è tornato limpido: per la prima volta vedo il fondo.',
                         'E stanotte i pesci hanno abboccato. Tutti.'] },
@@ -109,9 +137,9 @@ export const DIALOGHI = {
     domanda: 'Cosa c\'è oltre il bosco?',
     saluti: [{ da: 0, testo: 'Il bosco è grande, ma le strade sono poche: chi le conosce non si perde.' }],
     racconti: [
-      { da: 0, pagine: ['Il sentiero del bosco porta all\'arco di pietra, e oltre l\'arco alla grotta.',
+      { da: 0, pagine: ['Nel bosco vecchio c\'è una grotta fra le radici: è la tana dei ragni.',
                         'Non uscire dal sentiero: qui gli alberi si somigliano tutti.'] },
-      { da: 3, pagine: ['Nella grotta della scaletta i piani sono piccoli e tanti: si scende, e si scende ancora.',
+      { da: 3, pagine: ['Nella tana dei ragni i piani sono piccoli e tanti: si scende, e si scende ancora.',
                         'In fondo tesse la tela Zannaverde, un ragno lungo come un carro. Mio padre l\'ha visto, e ci ha lasciato l\'ascia.'] },
       { da: 4, pagine: ['Le ragnatele nel bosco non ci sono più.',
                         'Gli uccelli sono tornati a cantare. Lo sentono anche loro, che qualcosa è cambiato.'] },
@@ -183,6 +211,16 @@ export const DIALOGHI = {
   },
 }
 
+// la fontana della piazza, dove in città manca chi cura (docs/sotterraneo/chi-cura.md): cura vita ed energia, gratis, a chi è salito dal
+// portale. Nessun dialogo: un fumetto col tasto «bevo»
+export const FONTANA = {
+  nome: 'La fontana',
+  richiamo: 'Sei ammaccato. Bevi alla fontana: è gratis.',
+  dice: 'L\'acqua è chiara e fresca. Chi sale dal portale ferito, o a secco, ne beve e si rimette in forze.',
+  gia: 'L\'acqua è chiara e fresca. Sei già in forze: ti servirà quando risali ammaccato.',
+  bevi: 'bevo',
+}
+
 export const ARRIVEDERCI = 'Arrivederci'
 // la domanda del minatore, quella che non manca mai: «cosa faccio adesso» (motore/dialoghi.js, strada)
 export const DOVE_VADO = 'Dove vado adesso?'
@@ -218,6 +256,8 @@ export function guastiDeiDialoghi(chi = []) {
       for (const p of [c.richiamo, ...(c.pagine || []), ...(c.gia || [])]) if (p && p.length > 150) g.push(`${k}: una frase della cura di ${p.length} caratteri`)
     }
     for (const v of d.racconti || []) if (v.pagine.length > 4) g.push(`${k}: un racconto di più di quattro pagine`)
+    for (const [t, testo] of Object.entries(d.porte || {}))
+      for (const f of testo.split(/(?<=[.!?…])\s+/)) if (f.length > 120) g.push(`${k}: una frase della porta «${t}» di ${f.length} caratteri`)
   }
   return g
 }
