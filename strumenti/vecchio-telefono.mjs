@@ -14,7 +14,15 @@
 //
 // Senza taratura le leve partono da una stima (CPU ×3, zavorra 0) e lo strumento lo dice. `--esegui '<espressione>'` la fa
 // nella pagina dopo l'apertura (per scatenare le esplosioni), `--tocca x,y` tocca lì ogni due secondi, `--dist file` apre un
-// altro file costruito; l'espressione può definire `window.__extra = () => …` e il risultato si stampa sotto la riga. Il pixel ratio dei giochi si adatta da sé: per vedere il costo vero a una risoluzione, il cheat `&dpr=N`.
+// altro file costruito; l'espressione può definire `window.__extra = () => …` e il risultato si stampa sotto la riga.
+// `--ritmo '<istruzioni>' --ogni 2500` le rifà nella pagina ogni tanti ms (un attacco dello scontro dopo l'altro), `--fasi
+// '<espressione>'` dà un nome a ogni fotogramma (una riga per nome: 'racconto' / 'fermo'); `--spegni ombre,nebbia` fa una riga per
+// ogni pezzo spento in più (`&spegni=` del Sotterraneo 3D, `-` è nessuno). `--scontro` è il Sotterraneo 3D in uno scontro: un attacco
+// giusto ogni `--ogni` ms (3000), le righe «fermo» e «racconto», e sotto ognuna il banco della tela da ferma (`banco()`, ms senza i
+// 60 Hz). Lo scontro: docs/core/vecchio-telefono.md, «Lo scontro». `--profilo 15` stampa le 15 funzioni che tengono di più il filo
+// principale (il profilatore di Chrome, tempo proprio) e le voci senza JS («(program)»: stili, impaginazione, disegno della pagina);
+// `--traccia 15` le 15 voci della traccia di Chrome (devtools.timeline) che durano di più sul filo principale, in ms a fotogramma
+// (le voci si annidano: «RunTask» contiene le altre), e quelle del filo che compone e disegna la pagina. Il pixel ratio dei giochi si adatta da sé: per vedere il costo vero a una risoluzione, il cheat `&dpr=N`.
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -90,6 +98,12 @@ async function telefono(b, { cpu, K }) {
   if (cpu > 1) await s.send('Emulation.setCPUThrottlingRate', { rate: cpu })
   return { p, hog: await zavorra(b, K) }
 }
+// lo scontro del Sotterraneo 3D: si sceglie l'attacco e, quando c'è la domanda, si tocca la risposta giusta; il racconto è in corso
+// finché c'è `[data-racconto]` (viste/Scontro3d.vue). L'eroe non sviene (la vita torna piena): si misura il disegno, non lo scontro
+const ATTACCO = `const c = window.__sotterraneo3d && window.__sotterraneo3d.corsa; if (c && c.vitaMax) c.vita = c.vitaMax
+  const a = document.querySelector('[data-caselle-abilita] [data-azione="attacco"]'); if (a) a.click()
+  setTimeout(() => { const g = document.querySelector('.sot-domanda .qz-tasto[data-giusta]'); if (g) g.click() }, 700)`
+const FASI_SCONTRO = `document.querySelector('[data-racconto]') ? 'racconto' : (window.__sotterraneo3d && window.__sotterraneo3d.palco ? 'fermo' : 'fuori')`
 const mediana = v => v.slice().sort((a, b) => a - b)[Math.floor(v.length / 2)]
 
 // la misura dell'app (zona dei grandi → «Misura questo telefono»): `solo` = gli id da fare, `js` compreso; ritorna { dati, log }
@@ -182,36 +196,93 @@ async function misura() {
   const cpus = lista('cpu', salvato ? salvato.cpu : STIMA.cpu), zavs = lista('zavorra', salvato ? salvato.zavorra : STIMA.zavorra)
   if (!salvato && !opz('cpu') && !opz('zavorra')) console.log(`NON TARATO: CPU ×${STIMA.cpu} e zavorra ${STIMA.zavorra} sono stime (calibra --telefono js=…,gpu=…)`)
   const tocca = opz('tocca') ? opz('tocca').split(',').map(Number) : null, secondi = Number(opz('secondi', 15))
-  const esegui = opz('esegui')
+  const scontro = argv.includes('--scontro')
+  const esegui = opz('esegui') || (scontro ? 'new Promise(r => setTimeout(r, 5000)).then(() => { window.__extra = () => window.__sotterraneo3d.banco(30) })' : null)
+  const ritmo = opz('ritmo') || (scontro ? ATTACCO : null), ogni = Number(opz('ogni', scontro ? 3000 : 2500))
+  const fasi = opz('fasi') || (scontro ? FASI_SCONTRO : null)
+  const spegni = opz('spegni') ? opz('spegni').split(',') : [null]
   process.env.DIST = dist
   const { apriGioco } = await import('../test/aiuto/browser.mjs')
   const b = await apri()
   console.log(`telefono ${SCHERMO.width}×${SCHERMO.height} a ${PIXEL}, GPU: ${await renderer(b)} (--gpu ${gpuModo}), ${secondi} s per riga`)
   console.log('  CPU  zavorra   fps   p50   p95   p99  >33ms  >50ms  note')
-  for (const cpu of cpus) for (const K of zavs) {
+  for (const cpu of cpus) for (const K of zavs) for (const sp of spegni) {
     const hog = await zavorra(b, K)
-    const { page } = await apriGioco(b, { viewport: SCHERMO, pixel: PIXEL, hash: primo, attesa: null, indirizzo: 'file://' + dist, userAgent: UA })
+    const hash = sp && sp !== '-' ? `${primo}&spegni=${sp.replace(/\+/g, ',')}` : primo
+    const { page } = await apriGioco(b, { viewport: SCHERMO, pixel: PIXEL, hash, attesa: null, indirizzo: 'file://' + dist, userAgent: UA })
     const adatta = []
     page.on('console', m => /pixel ratio/.test(m.text()) && adatta.push(m.text().replace(/^\[spazio3d\] /, '')))
-    await page.addInitScript(() => { window.__dt = []; let u = 0; (function f(t) { if (u) window.__dt.push(t - u); u = t; requestAnimationFrame(f) })(0) })
+    await page.addInitScript(fasi => {
+      const fase = fasi ? new Function(`try { return String(${fasi}) } catch (e) { return '?' }`) : () => ''
+      window.__dt = []; window.__fa = []; window.__ft = []; window.__lunghi = []; let u = 0
+      ;(function f(t) { if (u) { window.__dt.push(t - u); window.__fa.push(fase()); window.__ft.push(t) } u = t; requestAnimationFrame(f) })(0)
+      // i fotogrammi lunghi del filo principale (Long Animation Frames: più di 50 ms fra JS, stili, impaginazione e disegno della pagina)
+      try {
+        new PerformanceObserver(l => { for (const e of l.getEntries()) window.__lunghi.push({ t: e.startTime, d: e.duration, js: e.renderStart ? e.renderStart - e.startTime : e.duration,
+          stili: e.styleAndLayoutStart ? e.startTime + e.duration - e.styleAndLayoutStart : 0,
+          chi: e.scripts.map(x => [`${x.invoker} ${x.sourceFunctionName || ''}`.trim(), x.duration]) }) }).observe({ type: 'long-animation-frame', buffered: false })
+      } catch (e) { /* un Chrome vecchio non li ha */ }
+    }, fasi)
     await page.reload()
     await page.waitForTimeout(3500)
     const s = await page.context().newCDPSession(page)
     if (cpu > 1) await s.send('Emulation.setCPUThrottlingRate', { rate: cpu })
     if (esegui) await page.evaluate(esegui)
-    await page.evaluate(() => { window.__dt.length = 0 })
+    await s.send('Performance.enable')
+    const metriche = async () => Object.fromEntries((await s.send('Performance.getMetrics')).metrics.map(m => [m.name, m.value]))
+    const m0 = await metriche()
+    const profilo = Number(opz('profilo', 0))
+    if (profilo) { await s.send('Profiler.enable'); await s.send('Profiler.setSamplingInterval', { interval: 500 }); await s.send('Profiler.start') }
+    const traccia = Number(opz('traccia', 0))
+    if (traccia) await b.startTracing(page, { categories: ['devtools.timeline', 'disabled-by-default-devtools.timeline', 'gpu', 'cc', 'viz'] })
+    if (ritmo) await page.evaluate(([r, o]) => { const f = new Function(r); f(); setInterval(f, o) }, [ritmo, ogni])
+    await page.evaluate(() => { window.__dt.length = 0; window.__fa.length = 0; window.__ft.length = 0; window.__lunghi.length = 0 })
     for (let t = 0; t < secondi; t += 2) {
       if (tocca) await page.mouse.click(tocca[0] + (t % 4 ? 80 : -80), tocca[1] + (t % 6) * 30)
       await page.waitForTimeout(2000)
     }
-    const dt = await page.evaluate(() => window.__dt)
+    const [tutti, fa, ft, lunghi] = await page.evaluate(() => [window.__dt, window.__fa, window.__ft, window.__lunghi])
+    // la fase di un fotogramma lungo: quella del fotogramma disegnato subito dopo
+    const faseA = t => { const i = ft.findIndex(x => x >= t); return fa[i < 0 ? fa.length - 1 : i] }
+    const m1 = await metriche()
+    const prof = profilo ? (await s.send('Profiler.stop')).profile : null
+    const tr = traccia ? JSON.parse((await b.stopTracing()).toString()).traceEvents : null
     const g = await page.evaluate(() => { try { return (window.__sotterraneo3d?.grafica || window.__mate?.grafica)?.() } catch (e) { return null } })
-    const p = q => dt.slice().sort((a, c) => a - c)[Math.min(dt.length - 1, Math.floor(q * dt.length))] || 0
-    const somma = dt.reduce((a, c) => a + c, 0)
-    const lenti = x => dt.filter(d => d > x).length
-    const nota = [g && g.dpr ? `dpr ${g.dpr}` : '', g && g.chiamate ? `${g.chiamate} chiamate` : '', g && g.triangoli ? `${g.triangoli} tri` : '',
+    const nota = [sp && sp !== '-' ? `spegni ${sp}` : '', g && g.dpr ? `dpr ${g.dpr}` : '', g && g.chiamate ? `${g.chiamate} chiamate` : '', g && g.triangoli ? `${g.triangoli} tri` : '',
       adatta.length ? `si adatta: ${adatta[adatta.length - 1]}` : ''].filter(Boolean).join(', ')
-    console.log(`  ×${String(cpu).padEnd(4)} ${String(K).padEnd(7)} ${(1000 * dt.length / (somma || 1)).toFixed(0).padStart(4)} ${p(.5).toFixed(0).padStart(5)} ${p(.95).toFixed(0).padStart(5)} ${p(.99).toFixed(0).padStart(5)} ${String(lenti(33)).padStart(6)} ${String(lenti(50)).padStart(6)}  ${nota}`)
+    const nomi = fasi ? [...new Set(fa)].sort() : ['']
+    for (const nome of nomi) {
+      const dt = fasi ? tutti.filter((_, i) => fa[i] === nome) : tutti
+      const p = q => dt.slice().sort((a, c) => a - c)[Math.min(dt.length - 1, Math.floor(q * dt.length))] || 0
+      const somma = dt.reduce((a, c) => a + c, 0)
+      const lenti = x => dt.filter(d => d > x).length
+      console.log(`  ×${String(cpu).padEnd(4)} ${String(K).padEnd(7)} ${(1000 * dt.length / (somma || 1)).toFixed(0).padStart(4)} ${p(.5).toFixed(0).padStart(5)} ${p(.95).toFixed(0).padStart(5)} ${p(.99).toFixed(0).padStart(5)} ${String(lenti(33)).padStart(6)} ${String(lenti(50)).padStart(6)}  ${fasi ? `[${nome}: ${dt.length}] ` : ''}${nota}`)
+      const l = lunghi.filter(x => !fasi || faseA(x.t) === nome)
+      if (l.length) {
+        const media = k => (l.reduce((a, c) => a + c[k], 0) / l.length).toFixed(0)
+        const chi = new Map(); for (const x of l) for (const [k, d] of x.chi) chi.set(k, (chi.get(k) || 0) + d)
+        const primi = [...chi].sort((a, c) => c[1] - a[1]).slice(0, 4).map(([k, d]) => `${k.slice(0, 60)} ${(d / l.length).toFixed(0)}`).join('; ')
+        console.log(`        filo lungo (> 50 ms) in ${l.length} fotogrammi: ${media('d')} ms in media (JS ${media('js')}, stili e impaginazione ${media('stili')}); ${primi}`)
+      }
+    }
+    // il filo principale, in ms a fotogramma (tutte le fasi insieme): il JS, gli stili e l'impaginazione del DOM
+    const filo = k => ((m1[k] - m0[k]) * 1000 / Math.max(1, tutti.length)).toFixed(1)
+    console.log(`        filo principale a fotogramma: compiti ${filo('TaskDuration')} ms, JS ${filo('ScriptDuration')}, stili ${filo('RecalcStyleDuration')}, impaginazione ${filo('LayoutDuration')}`)
+    if (tr) {
+      // i fili per nome (CrRendererMain il principale, Compositor quello che compone), e quanto dura ogni voce completa (ph X)
+      const nomi = new Map(tr.filter(e => e.ph === 'M' && e.name === 'thread_name').map(e => [`${e.pid}:${e.tid}`, e.args.name]))
+      const per = new Map()
+      for (const e of tr) if (e.ph === 'X' && e.dur) { const f = nomi.get(`${e.pid}:${e.tid}`) || '?'; const k = `${f} ${e.name}`; per.set(k, (per.get(k) || 0) + e.dur) }
+      for (const [k, us] of [...per].filter(([k]) => /^(CrRendererMain|Compositor|VizCompositorThread|CrGpuMain)/.test(k)).sort((a, c) => c[1] - a[1]).slice(0, traccia))
+        console.log(`        ${(us / 1000 / Math.max(1, tutti.length)).toFixed(2).padStart(6)} ms/fot.  ${k.slice(0, 100)}`)
+    }
+    if (prof) {
+      // il tempo proprio di ogni funzione: i campioni sono nodi dell'albero, `timeDeltas` quanto è durato ognuno
+      const nodi = new Map(prof.nodes.map(n => [n.id, n])), tempo = new Map()
+      prof.samples.forEach((id, i) => { const f = nodi.get(id).callFrame, k = `${f.functionName || '(anonima)'} ${f.url.split('/').pop()}:${f.lineNumber + 1}`; tempo.set(k, (tempo.get(k) || 0) + (prof.timeDeltas[i] || 0)) })
+      const tot = [...tempo.values()].reduce((a, c) => a + c, 0)
+      for (const [k, us] of [...tempo].sort((a, c) => c[1] - a[1]).slice(0, profilo)) console.log(`        ${(100 * us / tot).toFixed(1).padStart(5)}%  ${(us / 1000 / Math.max(1, tutti.length)).toFixed(2).padStart(6)} ms/fot.  ${k.slice(0, 110)}`)
+    }
     const extra = await page.evaluate(() => { try { return window.__extra?.() } catch (e) { return null } })   // l'espressione di --esegui può lasciare `window.__extra`: cosa stampare in più
     if (extra != null) console.log('        ' + JSON.stringify(extra))
     await page.close(); await hog?.close()

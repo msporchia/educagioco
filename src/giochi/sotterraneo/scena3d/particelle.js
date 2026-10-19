@@ -5,6 +5,10 @@ import { BufferGeometry, BufferAttribute, PlaneGeometry, Mesh, Points, ShaderMat
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js'
 import { GLSL_RUMORE, GLSL_LUCI } from './luci.js'
 import { GLSL_MASCHERA } from './maschera.js'
+import { ACCESI } from './costanti.js'
+
+// il rumore della nebbia con meno strati (la fascia bassa): riscalato perché arrivi agli stessi valori, così la nebbia non si dirada
+const rumoreNebbia = o => GLSL_RUMORE.replace('i<4', `i<${o}`).replace('return s; }', `return s * ${((1 - 0.5 ** 4) / (1 - 0.5 ** o)).toFixed(4)}; }`)
 
 export function creaNebbia(scena, W, H, fette, condivise, maschera, aspetto) {
   if (!fette) return { aggiorna() {}, aspetto() {}, via() {} }
@@ -16,7 +20,7 @@ export function creaNebbia(scena, W, H, fette, condivise, maschera, aspetto) {
     vertexShader: /* glsl */`varying vec3 vW; void main(){ vec4 w = modelMatrix*vec4(position,1.0); vW = w.xyz; gl_Position = projectionMatrix*viewMatrix*w; }`,
     fragmentShader: /* glsl */`
       uniform float uT; uniform float uDens; uniform vec3 uTinta; ${GLSL_MASCHERA} varying vec3 vW;
-      ${GLSL_RUMORE}${GLSL_LUCI}
+      ${rumoreNebbia(Math.max(1, Math.min(4, ACCESI.ottaveNebbia)))}${GLSL_LUCI}
       void main(){
         vec4 m = texture2D(uMaschera, vW.xz / uDimMappa);
         // fuori da quello che si vede adesso la nebbia è zero: niente rumore né luci per i pixel bui (cinque fette a tutto
@@ -127,6 +131,9 @@ export function creaScintille(scena, max = 1200) {
   let prossima = 0, vive = 0
   const BIANCO = new Color(1, 1, 1)
   const emetti = (x, y, z, n, { forza = 3, su = 2, vita: v = 0.6, caldo = 1, taglia = 0.05, tinta: t = null } = {}) => {
+    // la fascia bassa ne fa partire meno (ACCESI.quanteScintille); una sola parte a caso, così le torce ne fanno ancora
+    const q = n * ACCESI.quanteScintille
+    n = Math.floor(q) + (Math.random() < q % 1 ? 1 : 0)
     for (let k = 0; k < n; k++) {
       const i = prossima; prossima = (prossima + 1) % max
       pos[i * 3] = x; pos[i * 3 + 1] = y; pos[i * 3 + 2] = z

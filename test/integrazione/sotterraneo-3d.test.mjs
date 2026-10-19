@@ -198,20 +198,39 @@ const ossa = () => page.evaluate(() => window.__sotterraneo3d.corsa.foglio ? win
   uguale('una risposta sbagliata non colpisce', (await ossa()).join(), prima.join())
   // fino a quattro risposte giuste: il ratto cade (la sua figura svanisce nella scena)
   let morti = 0
+  const programmi = []   // gli shader compilati dopo ogni colpo: un colpo non ne compila di nuovi (sull'Adreno è un fermo di 50-300 ms)
   for (let n = 0; n < 6 && morti === 0; n++) {
     await rispondi(true)
     await page.waitForSelector('[data-scontro-3d][data-racconto]', { timeout: 8000 }).catch(() => {})
     await attendi(page, 500)
     await scatto(page, 'sotterraneo-3d-colpo')
     await page.waitForFunction(() => !document.querySelector('[data-scontro-3d][data-racconto]'), null, { timeout: 20000 })
+    programmi.push((await g3d()).programmi)
     morti = await page.evaluate(() => window.__sotterraneo3d.corsa.livello.robe.filter(r => r.che === 'mostro' && r.morto).length)
     if (!morti) await page.waitForSelector('[data-caselle-abilita][data-pronto]', { timeout: 20000 }).catch(() => {})
   }
   controlla('rispondendo giusto un mostro cade', morti >= 1, morti)
+  controlla('dopo il primo colpo nessuno shader nuovo', programmi.length < 2 || programmi.slice(1).every(x => x === programmi[0]), programmi.join())
   controlla('e la sua figura nella scena svanisce', await page.evaluate(() => {
     const c = window.__sotterraneo3d.corsa, m = c.livello.robe.find(r => r.che === 'mostro' && r.morto)
     return window.__sotterraneo3d.statoDi(m).morente > 0
   }))
+}
+
+/* ---------- 4b. lo stesso scontro nella fascia bassa (docs/sotterraneo/grafica-3d-costi.md): meno luci, il colpo va uguale ---------- */
+await entra('sotterraneo3d=1&seme=11&sotterraneo=branco&mostri=2&tipo=ratto,goblin&stanza=sala&qualita=bassa')
+await page.waitForSelector('[data-caselle-abilita][data-pronto]', { timeout: 20000 })
+await attendi(page, 600)
+{
+  const prima = await g3d()
+  uguale('bassa: lo scontro sta nella scena', prima.palco, true)
+  await rispondi(true)
+  await page.waitForSelector('[data-scontro-3d][data-racconto]', { timeout: 8000 }).catch(() => {})
+  await attendi(page, 400)
+  await page.waitForFunction(() => !document.querySelector('[data-scontro-3d][data-racconto]'), null, { timeout: 20000 })
+  const dopo = await g3d()
+  controlla('bassa: il pixel ratio non passa 1', dopo.dpr <= 1, dopo.dpr)
+  nota(`fascia bassa nello scontro: ${dopo.chiamate} chiamate, ${dopo.programmi} shader, ${dopo.ms} ms`)
 }
 
 /* ---------- 5. la scala che sale e quella che scende, da una sosta scritta in Node ---------- */
