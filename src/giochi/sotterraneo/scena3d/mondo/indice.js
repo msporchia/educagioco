@@ -15,6 +15,7 @@ import { materialiDelKit, Cantiere, casa, bottega, pozzo, mulino } from './kit.j
 import { ponte, grata, staccionate, cartello, bacheca, campoMinatore, antro } from './ponti.js'
 import { creaMonumento, creaPietra, creaPortale } from './monumenti.js'
 import { creaNatura } from './natura.js'
+import { propsPerPezzo, disegnaProps } from './props-citta.js'
 import { creaLontano } from './lontano.js'
 import { creaVita } from './vita.js'
 import { creaNebbia } from './nebbia.js'
@@ -84,6 +85,7 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = {} }) {
     staccionate(q.campi, cant, m)
     for (const c of m.citta) if (Math.floor(c.centro.x / 32) + 5 * Math.floor(c.centro.y / 28) === p) { gruppo.add(creaPiazza(m, c, suolo, cant)); pozzo(c.pozzo, cant, m) }
     for (const c of q.case) casa(c, cant, m, cose)
+    disegnaProps(propsPerPezzo(m)[p], cant, m, cose)
     for (const pp of q.ponti) ponte(pp, cant, m)
     for (const g of q.grate) fatto.grate.push(grata(g, cant, m, kit, gruppo))
     for (const po of q.posti) {
