@@ -196,8 +196,11 @@ const cosaDi = m => (m.tipo === 'trovachi'
   ? { tipo: m.tipo, nome: titoloDi(m), em: m.em, sprite: null, verbo: m.verbo, nota: m.nota }
   : m.tipo === 'trova'
   ? { tipo: 'trova', nome: m.cosa.nome, em: m.cosa.em, sprite: null }
-  : m.tipo === 'conta'
+  : m.tipo === 'conta' || m.tipo === 'cacciaAperta'
   ? { tipo: 'conta', nome: titoloDi(m), em: MOSTRI[m.specie].em, sprite: MOSTRI[m.specie].sprite }
+  // le taglie dei mostri di sopra: il signore della regione (il suo caporale) e la tana da ripulire
+  : m.tipo === 'signore' || m.tipo === 'tana'
+  ? { tipo: 'sconfiggi', nome: titoloDi(m), em: m.em, sprite: m.caporale && MOSTRI[m.caporale] ? MOSTRI[m.caporale].sprite : null }
   : { tipo: 'sconfiggi', nome: m.mostro.nome, em: MOSTRI[m.mostro.tipo].em, sprite: MOSTRI[m.mostro.tipo].sprite })
 
 function voceDiario(m, stato, segui = null, conti = {}) {
@@ -206,7 +209,7 @@ function voceDiario(m, stato, segui = null, conti = {}) {
   return {
     id: m.id, stato, tipo: m.tipo, da: m.da,
     titolo: titoloDi(m), em: faccia(m),
-    ...(m.tipo === 'conta' ? { progresso: { fatti: Math.min(m.quanti, stato === FATTA || stato === CONSEGNATA ? m.quanti : conti[m.id] || 0), quanti: m.quanti } } : {}),
+    ...(m.tipo === 'conta' || m.tipo === 'cacciaAperta' ? { progresso: { fatti: Math.min(m.quanti, stato === FATTA || stato === CONSEGNATA ? m.quanti : conti[m.id] || 0), quanti: m.quanti } } : {}),
     chi: p.nome, chiFrase: p.chi, daChi: daLui(p.chi),
     discesa: m.discesa, dove: m.dove || nomeDiscesa(m.discesa), piano: m.tipo === 'conta' || m.piano == null ? null : m.piano + 1,   // «sconfiggi N» vale in tutta la discesa
     // una taglia: la dà una bacheca e si consegna a una bacheca (non sempre la stessa), non a un personaggio

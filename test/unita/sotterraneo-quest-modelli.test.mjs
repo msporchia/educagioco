@@ -74,9 +74,9 @@ const palestra = (eroe, k) => new Corredo({ eroe, roba: robaAttesa(eroe, k, { po
   }
   uguale('nessuna bacheca ha doppioni, più di tre fogli, o una taglia che non si rilegge uguale', storte, 0)
   controlla('ci sono taglie', quante > 1000, String(quante))
-  // ogni modello acceso esce prima o poi; quelli dei mostri di sopra, spenti, mai
+  // ogni modello acceso esce prima o poi (anche quelli dei mostri di sopra, accesi), uno spento mai
   for (const n of NOMI_MODELLI) controlla(`${n}: ${modelloAcceso(n) ? 'esce' : 'spento, non esce'}`, viste.has(n) === modelloAcceso(n))
-  controlla('«mostri-sopra» è spento', MOTORI['mostri-sopra'] === false)
+  controlla('«mostri-sopra» è acceso', MOTORI['mostri-sopra'] === true)
   nota('modelli visti:', [...viste].sort().join(' · '), `(${quante} taglie)`)
 }
 
@@ -339,12 +339,14 @@ const palestra = (eroe, k) => new Corredo({ eroe, roba: robaAttesa(eroe, k, { po
 /* ══════════ 9. l'aggancio per i mostri di sopra ══════════ */
 {
   // spento: nessuna taglia di quei tipi, e nessuno la conta
-  stessaLista('spento, la caccia aperta non si appende', rifaDaId('t:villaggio:caccia-aperta:accampamento.goblin:1') && prendiTaglia({}, 't:villaggio:caccia-aperta:accampamento.goblin:1'), null)
-  stessaLista('…e il signore nemmeno', prendiTaglia({}, 't:forte:signore:accampamento:1'), null)
-  stessaLista('niente da contare', taglieDaContare({}, 'goblin', 'accampamento'), [])
-  // acceso (come lo accende il motore dei mostri di sopra): le tre cose si appendono e si possono contare
-  MOTORI['mostri-sopra'] = true
+  MOTORI['mostri-sopra'] = false
   try {
+    stessaLista('spento, la caccia aperta non si appende', rifaDaId('t:villaggio:caccia-aperta:accampamento.goblin:1') && prendiTaglia({}, 't:villaggio:caccia-aperta:accampamento.goblin:1'), null)
+    stessaLista('…e il signore nemmeno', prendiTaglia({}, 't:forte:signore:accampamento:1'), null)
+    stessaLista('niente da contare', taglieDaContare({}, 'goblin', 'accampamento'), [])
+  } finally { MOTORI['mostri-sopra'] = true }
+  // acceso (i mostri di sopra a schermo li fanno cadere): le tre cose si appendono e si possono contare
+  {
     const caccia = 't:forte:caccia-aperta:accampamento.goblin:1', sig = 't:forte:signore:accampamento:1', tana = 't:forte:tana:accampamento:1'
     for (const id of [caccia, sig, tana]) controlla(`acceso: ${id} si legge e dà gemme`, !!rifaDaId(id) && rifaDaId(id).premio.gemme >= GEMME_MIN)
     let st = {}
@@ -357,8 +359,8 @@ const palestra = (eroe, k) => new Corredo({ eroe, roba: robaAttesa(eroe, k, { po
     const ctx = contesto(7, 3)
     controlla('acceso, le bacheche li possono appendere', [...Array(40).keys()].some(g => CITTA.some(c => bachecaDi(c, contesto(7, g)).some(t => ['cacciaAperta', 'signore', 'tana'].includes(t.tipo)))))
     controlla('(il contesto di prova c\'è)', !!ctx.m)
-  } finally { MOTORI['mostri-sopra'] = false }
-  controlla('rispento', !modelloAcceso('signore'))
+  }
+  controlla('acceso', modelloAcceso('signore'))
 }
 
 nota('regioni servite:', CITTA.map(c => `${c} ${regioniServite(m, c).length}`).join(' · '))

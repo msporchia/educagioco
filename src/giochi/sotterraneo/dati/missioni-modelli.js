@@ -11,9 +11,10 @@ import { LIVELLI_ATTESI } from './storia.js'
 import { valoreDelLivello } from './pezzi.js'
 
 /* ═══════════ gli interruttori ═══════════ */
-// I tipi che vogliono i mostri di sopra (la caccia aperta, il signore della regione, la tana da ripulire) restano spenti finché non
-// c'è chi li fa cadere: lo accende il motore dei mostri di sopra (docs/sotterraneo/mondo-aperto-quest.md, «L'aggancio coi mostri»)
-export const MOTORI = { 'mostri-sopra': false }
+// I tipi che vogliono i mostri di sopra (la caccia aperta, il signore della regione, la tana da ripulire): accesi dal 19 ottobre 2026,
+// quando i mostri di sopra sono arrivati a schermo e li fanno cadere (docs/sotterraneo/mondo-aperto-mostri.md, «Le taglie»). Spento,
+// nessuna bacheca li appende (docs/sotterraneo/mondo-aperto-quest.md, «L'aggancio coi mostri»)
+export const MOTORI = { 'mostri-sopra': true }
 
 export const PREFISSO = 't:'
 export const eTaglia = id => typeof id === 'string' && id.startsWith(PREFISSO)
@@ -27,7 +28,7 @@ export const GIRI_RICORDATI = 2    // le consegnate dei giri più vecchi si dime
 // un piano vale `(6 + 3 × piano) × valore`) e sopra una gemma sola: è l'incentivo a tornare in città, non a sedersi alla bacheca
 export const GEMME_MIN = 6, GEMME_MAX = 40
 export const BASI = { consegna: 10, trovachi: 8, esplora: 8, mappa: 12, recupera: 14, mostro: 16, caccia: 1.6,
-                      // spenti con 'mostri-sopra': provvisori, si tarano quando i mostri di sopra ci sono
+                      // quelli dei mostri di sopra ('mostri-sopra'): provvisori, da tarare col banco dei giocatori tipo
                       'caccia-aperta': 1.6, signore: 20, tana: 18 }
 export const gemmePer = (base, livello, quanti = 1) =>
   Math.max(GEMME_MIN, Math.min(GEMME_MAX, Math.round(base * quanti * valoreDelLivello(livello))))
@@ -234,7 +235,7 @@ const MODELLI = {
                grazie: 'Proprio quello! Ecco la paga promessa.' }
     },
   },
-  // — spenti con MOTORI['mostri-sopra'] —
+  // — quelli dei mostri di sopra, dietro MOTORI['mostri-sopra'] —
   'caccia-aperta': {
     sopra: true,
     fa: c => {
