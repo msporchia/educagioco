@@ -99,6 +99,14 @@ export const VOCI = [
   { id: 'fattoria:contadina', nome: 'Contadina', gioco: 'fattoria', categoria: 'personaggio', dove: 'aspetto alternativo dell\'eroe (ASPETTO_ERO in dati/compagni.js), oggi non scelto', file: `${MC}:creaContadino`, crea: () => creaContadino('contadina') },
   { id: 'fattoria:watson', nome: `${COMPAGNI.watson.nome} (bobtail)`, gioco: 'fattoria', categoria: 'animale', dove: `il cane di casa, arriva al livello ${COMPAGNI.watson.liv} (scena3d/compagni.js)`, file: `${MC}:creaCane`,
     crea: () => creaCane(), anima: (g, dt, t) => posaCane(g, { stato: 'sta', t }) },
+  // le pose di Watson, ferme nell'anteprima e mosse nella vista grande: per giudicarle senza giocare (posaCane)
+  ...[['seduto', 'siede', 0, 'quando il contadino lavora, o dopo averlo raggiunto'], ['sdraiato', 'dorme', 0, 'dorme se il contadino sta fermo da un quarto d\'ora'],
+    ['che cammina', 'vaga', 0.5, 'segue il contadino, va ai campi'], ['che corre', 'vaga', 1, 'corre dal contadino quando è lontano'],
+    ['che annusa', 'annusa', 0, 'annusa un campo, fermo a due celle'], ['che fa festa', 'festa', 0, 'appena toccato: «Bau!», cuoricini']].map(([nome, stato, vel, dove]) => ({
+    id: `fattoria:watson-${stato}${vel ? '-' + vel : ''}`, nome: `${COMPAGNI.watson.nome} ${nome}`, gioco: 'fattoria', categoria: 'animale', dove: `posa «${stato}»: ${dove}`, file: `${MC}:posaCane`,
+    crea: () => { const g = creaCane(); posaCane(g, { stato, vel, fase: 1.2, t: 0.4 }); return g },
+    anima: (g, dt, t) => posaCane(g, { stato, vel, fase: t * (vel > 0.7 ? 11 : 7), t }),
+  })),
   ...['briciola', 'zenzero', 'pepe'].map(id => ({
     id: `fattoria:${id}`, nome: `${COMPAGNI[id].nome} (gatto ${COMPAGNI[id].variante})`, gioco: 'fattoria', categoria: 'animale',
     dove: `gatto che gira per il terreno, arriva al livello ${COMPAGNI[id].liv} (scena3d/compagni.js)`, file: `${MC}:creaGatto`,
