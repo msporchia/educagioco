@@ -50,7 +50,12 @@ export class Regia {
   /* un messaggio dal servizio o dall'altro telefono */
   ricevi(m) {
     this.ultimo = Date.now()
-    if (m.t === 'ciao') { this.ruolo = m.ruolo; return }
+    if (m.t === 'ciao') {
+      this.ruolo = m.ruolo
+      // un tentativo di entrare che si è perso per strada può aver preso il posto: chi ha creato la stanza deve essere l'host, chi entra l'ospite
+      if ((this.host ? 'host' : 'ospite') !== m.ruolo) this.cambia('rotta', 'il collegamento si è confuso: riprova a creare o a entrare')
+      return
+    }
     if (m.t === 'pronti') {
       this.cambia('trattativa')
       if (this.ruolo === 'host') {

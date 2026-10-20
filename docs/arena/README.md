@@ -14,6 +14,7 @@ chi ci lavora. Cartella `src/giochi/arena/` (la chiave del gioco è `arena`;
 - [sosta.md](sosta.md) — la battaglia lasciata a metà: cosa si salva e cosa no
 - [grafica.md](grafica.md) — la corsia verticale, il castello sul bordo e le piazzole, gli edifici disegnati in codice, gli sprite che si riusano e quelli che mancano
 - [multigiocatore.md](multigiocatore.md) — la sfida in due: un servizio di inoltro su Cloudflare (`servizio/inoltro/`), due copie identiche della partita
+- [../core/amici.md](../core/amici.md) — (progetto) gli amici per tutta l'app: la sfida si fa con un invito invece del codice
 - [da-fare.md](da-fare.md) — le voci aperte
 
 Vedi anche: [`../apprendimento/calibrazione.md`](../apprendimento/calibrazione.md)
