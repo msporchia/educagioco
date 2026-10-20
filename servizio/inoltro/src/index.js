@@ -8,7 +8,7 @@
    manda di suoi: `{ t: 'ciao', ruolo }` a chi entra, `{ t: 'pronti' }` a tutti e due quando ci sono, `{ t: 'via' }`
    quando l'altro se ne va. */
 
-import { CHIAVE, ID, ammetti, altroDi, controllaMessaggio } from './coppia.js'
+import { CHIAVE, ID, MAX_CHIAVI, MAX_COLLEGAMENTI, dichiara, chiudi, inoltra, controllaMessaggio } from './presenza.js'
 import { CODICE, DURATA as DURATA_CODICE, CODICI_ORA, nuovoCodice as codiceBreve, contaErrore, bloccato } from './codici.js'
 
 const ALFABETO = 'ABCDEFGHJKLMNPQRSTUVWXYZ'      // senza la I e la O: si confondono con 1 e 0 a voce
@@ -84,11 +84,9 @@ async function amici(richiesta, url, env) {
     if (!r || !r.ok) { await errori.fetch('https://errori/sbaglio'); return json({ errore: 'codice non valido o scaduto' }, 404) }
     return json({ chiave: await r.text() })
   }
-  const m = url.pathname.match(/^\/amici\/coppia\/([a-z0-9]{32})$/)
-  if (m && CHIAVE.test(m[1])) {
+  if (url.pathname === '/amici/presenza') {
     if (richiesta.headers.get('upgrade') !== 'websocket') return json({ errore: 'serve un WebSocket' }, 426)
-    if (!ID.test(url.searchParams.get('id') || '')) return json({ errore: 'manca chi sei' }, 400)
-    return env.COPPIE.get(env.COPPIE.idFromName(m[1])).fetch('https://coppia/entra?id=' + url.searchParams.get('id'), richiesta)
+    return env.PRESENZA.get(env.PRESENZA.idFromName('sala')).fetch('https://presenza/entra', richiesta)
   }
   return json({ errore: 'non c\'è' }, 404)
 }
@@ -214,36 +212,50 @@ export class Errori {
   async alarm() { await this.stato.storage.deleteAll() }
 }
 
-/* Una amicizia: due telefoni che si inoltrano i messaggi e si dicono se l'altro c'è. Come la stanza, con l'API di ibernazione;
-   la logica sta in coppia.js. Non salva niente: finché non c'è nessuno, non esiste. */
-export class Coppia {
+/* Lo smistamento degli amici: UN oggetto per tutti i telefoni, ognuno con un solo collegamento. Dice a chi ha una chiave quando
+   l'altro c'è o se ne va, e gira i messaggi di quella chiave. Come la stanza, con l'API di ibernazione; la logica sta in
+   presenza.js. Non salva niente: finché non c'è nessuno, non esiste. Il traffico delle battaglie NON passa di qui (stanze a parte). */
+export class Presenza {
   constructor(stato) {
     this.stato = stato
     this.recenti = new Map()
   }
 
-  soci() { return this.stato.getWebSockets().map(ws => ({ ws, id: ws.deserializeAttachment()?.id })) }
+  /* i collegamenti presentati; quelli ancora anonimi non contano */
+  soci() {
+    const r = []
+    for (const ws of this.stato.getWebSockets()) {
+      const a = ws.deserializeAttachment()
+      if (a?.id) r.push({ ws, id: a.id, chiavi: a.chiavi || [] })
+    }
+    return r
+  }
 
-  async fetch(richiesta) {
-    const id = new URL(richiesta.url).searchParams.get('id')
-    const a = ammetti(this.soci().filter(s => s.id), id)
-    if (a.esito === 'piena') return new Response('amicizia piena', { status: 409 })
-    if (a.esito === 'sostituisce') { try { a.vecchio.ws.serializeAttachment({ id: null }); a.vecchio.ws.close(1000, 'sostituito') } catch { /* già chiuso */ } }
+  async fetch() {
+    if (this.stato.getWebSockets().length >= MAX_COLLEGAMENTI) return new Response('pieno', { status: 503 })
     const { 0: cliente, 1: server } = new WebSocketPair()
     this.stato.acceptWebSocket(server)
-    server.serializeAttachment({ id })
-    const altro = this.soci().find(s => s.ws !== server && s.id)
-    server.send(JSON.stringify({ t: 'ciao', altro: !!altro }))
-    if (altro) { try { altro.ws.send(JSON.stringify({ t: 'su' })) } catch { /* se n'è andato */ } }
+    server.serializeAttachment({ id: null, chiavi: [] })
     return new Response(null, { status: 101, webSocket: cliente })
   }
+
+  manda(invii) { for (const { a, msg } of invii) { try { a.send(JSON.stringify(msg)) } catch { /* se n'è andato */ } } }
 
   webSocketMessage(ws, messaggio) {
     const c = controllaMessaggio(messaggio, this.recenti.get(ws) || [], Date.now())
     if (!c.ok) return ws.close(c.codice, c.ragione)
     this.recenti.set(ws, c.recenti)
-    const altro = altroDi(this.soci().filter(s => s.id), ws)
-    if (altro) { try { altro.ws.send(messaggio) } catch { /* se n'è andato */ } }
+    const d = c.dato
+    const soci = this.soci()
+    if (d.k === 'dichiaro') {
+      if (!ID.test(d.id || '') || !Array.isArray(d.chiavi) || d.chiavi.length > MAX_CHIAVI || !d.chiavi.every(x => CHIAVE.test(x))) return ws.close(1003, 'non è un messaggio')
+      const r = dichiara(soci, ws, d.id, d.chiavi)
+      for (const vecchio of r.sostituiti) { try { vecchio.serializeAttachment({ id: null, chiavi: [] }); vecchio.close(1000, 'sostituito') } catch { /* già chiuso */ } }
+      ws.serializeAttachment({ id: d.id, chiavi: r.chiavi })
+      this.manda(r.invii)
+    } else if (d.k === 'a') {
+      this.manda(inoltra(soci, ws, d.chiave, d.m))
+    }
   }
 
   webSocketClose(ws) { this.finito(ws) }
@@ -251,8 +263,6 @@ export class Coppia {
 
   finito(ws) {
     this.recenti.delete(ws)
-    if (!ws.deserializeAttachment()?.id) return                     // un collegamento sostituito: l'altro non deve saperlo
-    const altro = altroDi(this.soci().filter(s => s.id), ws)
-    if (altro) { try { altro.ws.send(JSON.stringify({ t: 'giu' })) } catch { /* se n'è andato */ } }
+    this.manda(chiudi(this.soci(), ws))
   }
 }

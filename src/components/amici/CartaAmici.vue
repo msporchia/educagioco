@@ -56,7 +56,7 @@ async function manda() {
 
 function toglila(a) {
   if (daTogliere.value !== a.chiave) { daTogliere.value = a.chiave; return }
-  togliPonte(a.chiave); togli(a.chiave); daTogliere.value = null
+  togli(a.chiave); togliPonte(a.chiave); daTogliere.value = null
 }
 </script>
 

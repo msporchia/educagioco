@@ -21,8 +21,8 @@ name = "ERRORI"
 class_name = "Errori"
 
 [[durable_objects.bindings]]
-name = "COPPIE"
-class_name = "Coppia"
+name = "PRESENZA"
+class_name = "Presenza"
 
 # il piano gratuito vuole i Durable Object con la memoria SQLite
 [[migrations]]
@@ -33,3 +33,9 @@ new_sqlite_classes = ["Stanza", "Limite"]
 [[migrations]]
 tag = "v2"
 new_sqlite_classes = ["Codice", "Errori", "Coppia"]
+
+# gli amici con un collegamento solo per telefono: la presenza sostituisce la coppia (mai usata, niente da portare)
+[[migrations]]
+tag = "v3"
+new_sqlite_classes = ["Presenza"]
+deleted_classes = ["Coppia"]

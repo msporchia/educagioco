@@ -40,14 +40,15 @@ export async function riscattaCodice(codice, opzioni) {
 
 export const RITARDI = [2000, 4000, 8000, 16000, 32000, 60000]
 
-/* Il collegamento di una amicizia, che si rimette in piedi da solo. `alMessaggio(oggetto)` per quello che manda l'amico,
-   `alCambio()` quando cambia aperto/altro. `altro` = l'amico è collegato adesso. */
+/* L'UNICO collegamento di questo telefono verso il servizio degli amici (docs/core/amici.md), che si rimette in piedi da solo.
+   Dichiara chi è (`id`) e le chiavi delle sue amicizie (`chiavi()` le legge ogni volta: aggiungerne una è solo `imposta()`).
+   `alMessaggio(chiave, oggetto)` per quello che manda un amico, `alCambio()` quando cambia aperto/chi c'è. */
 export class Ponte {
-  constructor({ chiave, id, servizio, WebSocketImpl = globalThis.WebSocket, alMessaggio = () => {}, alCambio = () => {}, ritardi = RITARDI,
+  constructor({ id, chiavi = () => [], servizio, WebSocketImpl = globalThis.WebSocket, alMessaggio = () => {}, alCambio = () => {}, ritardi = RITARDI,
                 attesaApertura = 5000, visibile = () => typeof document === 'undefined' || !document.hidden }) {
-    Object.assign(this, { chiave, id, servizio, WebSocketImpl, alMessaggio, alCambio, ritardi, attesaApertura, visibile })
+    Object.assign(this, { id, chiavi, servizio, WebSocketImpl, alMessaggio, alCambio, ritardi, attesaApertura, visibile })
     this.aperto = false
-    this.altro = false
+    this.presenti = new Set()          // le chiavi il cui amico è collegato adesso
     this.fermo = true
     this.ws = null
     this.prova = 0
@@ -60,30 +61,40 @@ export class Ponte {
     clearTimeout(this.timer)
     if (this.fermo || this.ws || !this.visibile()) return
     let w
-    try { w = new this.WebSocketImpl(`${(this.servizio || indirizzo()).replace(/^http/, 'ws')}/amici/coppia/${this.chiave}?id=${this.id}`) } catch { return this.riprova() }
+    try { w = new this.WebSocketImpl(`${(this.servizio || indirizzo()).replace(/^http/, 'ws')}/amici/presenza`) } catch { return this.riprova() }
     this.ws = w
     const mio = () => this.ws === w
     const lento = setTimeout(() => { if (mio() && !this.aperto) { try { w.close() } catch { /* già chiuso */ } this.cadi() } }, this.attesaApertura)
-    w.addEventListener('open', () => { if (!mio()) return; clearTimeout(lento); this.aperto = true; this.prova = 0; this.alCambio() })
+    w.addEventListener('open', () => {
+      if (!mio()) return
+      clearTimeout(lento); this.aperto = true; this.prova = 0
+      this.dichiara()                                                    // chi sono e con chi sono in amicizia
+      this.alCambio()
+    })
     w.addEventListener('message', e => {
       if (!mio()) return
       let m
       try { m = JSON.parse(e.data) } catch { return }
       if (!m || typeof m !== 'object') return
-      if (m.t === 'ciao') { this.altro = !!m.altro; this.alCambio() }
-      else if (m.t === 'su') { this.altro = true; this.alCambio() }
-      else if (m.t === 'giu') { this.altro = false; this.alCambio() }
-      else this.alMessaggio(m)
+      if (m.t === 'ciao') { this.presenti = new Set(Array.isArray(m.presenti) ? m.presenti : []); this.alCambio() }
+      else if (m.t === 'su' && typeof m.chiave === 'string') { this.presenti.add(m.chiave); this.alCambio() }
+      else if (m.t === 'giu' && typeof m.chiave === 'string') { this.presenti.delete(m.chiave); this.alCambio() }
+      else if (m.t === 'da' && typeof m.chiave === 'string' && m.m && typeof m.m === 'object') this.alMessaggio(m.chiave, m.m)
     })
     const chiuso = () => { clearTimeout(lento); if (mio()) this.cadi() }
     w.addEventListener('close', chiuso)
     w.addEventListener('error', chiuso)
   }
 
+  dichiara() { this.manda({ k: 'dichiaro', id: this.id, chiavi: this.chiavi() }) }
+
+  /* le amicizie sono cambiate (una in più o in meno): si dice al servizio, a collegamento aperto */
+  imposta() { if (this.aperto) this.dichiara() }
+
   /* il collegamento è finito: si riprova più tardi, in silenzio */
   cadi() {
-    const c = this.aperto || this.altro
-    this.ws = null; this.aperto = false; this.altro = false
+    const c = this.aperto || this.presenti.size
+    this.ws = null; this.aperto = false; this.presenti = new Set()
     if (c) this.alCambio()
     this.riprova()
   }
@@ -98,16 +109,19 @@ export class Ponte {
   /* lo schermo torna acceso: si riprova subito invece di aspettare */
   riprendi() { this.prova = 0; this.apri() }
 
-  invia(oggetto) {
+  manda(oggetto) {
     if (!this.aperto || !this.ws) return false
     try { this.ws.send(JSON.stringify(oggetto)); return true } catch { return false }
   }
+
+  /* un messaggio per l'amico di quella amicizia */
+  invia(chiave, m) { return this.manda({ k: 'a', chiave, m }) }
 
   chiudi() {
     this.fermo = true
     clearTimeout(this.timer)
     const w = this.ws
-    this.ws = null; this.aperto = false; this.altro = false
+    this.ws = null; this.aperto = false; this.presenti = new Set()
     try { w?.close() } catch { /* già chiuso */ }
   }
 }

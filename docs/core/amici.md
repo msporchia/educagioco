@@ -40,8 +40,8 @@ Perché regge (non è un buco di sicurezza):
   tocca un nome online e libero.
 - **Ricevere**: **un cartello su qualunque schermata** («Leonardo ti invita a Castle Battle · Gioca / No grazie», montato una volta
   in `App.vue`, come `Avviso.vue`). «Gioca» apre il gioco già dentro la partita; sparisce da solo dopo 30 secondi.
-- **Si è raggiungibili mentre l'app è aperta** (se i grandi l'hanno acceso): il telefono tiene aperto un collegamento per amico
-  (pochi: tetto di 6), con rientro a ritardo crescente se cade. Se internet manca o il servizio è giù: nessun errore, nessun
+- **Si è raggiungibili mentre l'app è aperta** (se i grandi l'hanno acceso): il telefono tiene aperto **un collegamento solo**
+  (non uno per amico), con rientro a ritardo crescente se cade. Se internet manca o il servizio è giù: nessun errore, nessun
   cartello, la lista in grigio.
 
 ## Chi lo accende: i grandi, e di base è spento
@@ -96,12 +96,27 @@ Un test lo controlla (`integrazione/amici`: pagina senza rete, nessun cartello, 
 |---|---|
 | `POST /amici/codice` `{ chiave }` | un Durable Object `Codice` (uno per codice) tiene la chiave 2 ore e risponde `{ codice }`. Limite di codici per indirizzo, come le stanze |
 | `POST /amici/riscatta` `{ codice }` | risponde `{ chiave }` e cancella tutto; se non c'è, 404 e un tentativo sbagliato in più per quell'indirizzo |
-| `GET /amici/coppia/<chiave>` → WebSocket | un Durable Object `Coppia` con l'API di ibernazione (quiete = gratis): due collegamenti al massimo, nessun salvataggio |
+| `GET /amici/presenza` → WebSocket | un Durable Object `Presenza`, **uno solo per tutti i telefoni**, con l'API di ibernazione (quiete = gratis); nessun salvataggio; ≤ 3000 collegamenti |
 
-La `Coppia` è la `Stanza` di sempre più due avvisi: **inoltra** ogni messaggio (JSON, ≤ 512 byte, 10 al secondo) all'altro, e dice a
-chi entra se l'altro c'è (`{ t: 'ciao', altro: true|false }`) e a chi resta quando l'altro entra o esce (`{ t: 'su' }`,
-`{ t: 'giu' }`). Se la stessa persona rientra (un collegamento che cade e ritorna), il nuovo prende il posto del vecchio.
-Tutto il resto sta nei telefoni, e sono pochi messaggi con forma fissa (`src/amici/messaggi.js` li costruisce e li controlla):
+Ogni telefono ha **un collegamento** e dichiara chi è e le chiavi delle sue amicizie. Il servizio è una tabella in memoria («chi tiene
+quale chiave»; la logica pura è in `presenza.js`) e fa tre cose, senza leggere i messaggi: **avvisa** chi tiene una chiave quando l'altro
+c'è o se ne va, **inoltra** i messaggi di una chiave all'altro, e **controlla** forma, misura (≤ 512 byte) e ritmo (20 al secondo).
+Una chiave è di due persone: un terzo che la dichiara è rifiutato (`rifiutate` nel `ciao`). Chi rientra con lo stesso id prende il
+posto del suo vecchio collegamento, senza avvisi. Il traffico delle battaglie non passa di qui (stanze a parte): qui solo presenze e inviti.
+
+| Dal telefono | |
+|---|---|
+| `{ k: 'dichiaro', id, chiavi }` | chi sono e le mie chiavi (≤ 6); si rimanda a ogni amicizia in più o in meno, senza riaprire |
+| `{ k: 'a', chiave, m }` | un messaggio `m` per l'amico di quella chiave |
+
+| Dal servizio | |
+|---|---|
+| `{ t: 'ciao', presenti, rifiutate }` | risposta alla dichiarazione: le chiavi il cui amico c'è già, e quelle rifiutate |
+| `{ t: 'su', chiave }` / `{ t: 'giu', chiave }` | l'amico di quella chiave è arrivato / se n'è andato |
+| `{ t: 'da', chiave, m }` | un messaggio `m` dell'amico |
+
+Dentro `m` i telefoni si scambiano pochi messaggi con forma fissa (`src/amici/messaggi.js` li costruisce e li controlla; il servizio
+non li legge):
 
 | Messaggio | Quando |
 |---|---|
@@ -123,10 +138,10 @@ online) e per ogni amico la chiave dell'amicizia, l'id e il **nome** (quello che
 Non c'è altro: né account, né posta, né posizione. Eliminare un bambino non cancella ancora la sua chiave `amici:` (resta orfana).
 
 **Sul servizio**: niente di personale e niente di permanente. Un `Codice` tiene una chiave al massimo 2 ore (cancellata al riscatto o
-dall'allarme); `Errori` e `Limite` tengono un contatore per indirizzo IP (scade in 1-2 ore); una `Coppia` o una `Stanza` esiste finché
-c'è qualcuno collegato. Il servizio **inoltra senza leggere**: controlla solo misura (≤ 512 byte), forma JSON e ritmo (20 al secondo).
+dall'allarme); `Errori` e `Limite` tengono un contatore per indirizzo IP (scade in 1-2 ore); la `Presenza` e le `Stanza` tengono in memoria
+chi c'è collegato e niente altro. Il servizio **inoltra senza leggere**: controlla solo misura (≤ 512 byte), forma JSON e ritmo (20 al secondo).
 
-**Cosa viaggia** (sempre in TLS): al codice, la chiave (la vede il servizio, due ore); nelle amicizie, `presento` (id, nome, a cosa
+**Cosa viaggia** (sempre in TLS): al codice, la chiave (la vede il servizio, due ore); nelle amicizie, `dichiaro` (id e chiavi) e `presento` (id, nome, a cosa
 si gioca), `invito` (gioco, terreno, secondi, codice della stanza), `risposta` (sì/no); in battaglia, le mosse (tick, azione, truppa,
 piazzola). **Il solo dato personale è il nome**, e va al telefono dell'amico, non a un archivio. Cloudflare, che ospita, vede tutto
 quello che passa e i registri del tuo account contengono i percorsi (la chiave sta nell'indirizzo del collegamento): per questo
@@ -149,8 +164,8 @@ limitano chi lo fa a mano, non un attacco vero. Dove guardare: pannello Cloudfla
 
 ## File e test
 
-`servizio/inoltro/src/coppia.js` (due posti, chi rientra prende il suo, messaggi controllati; pura, senza Cloudflare), `codici.js`
-(5 lettere, scadenza, tentativi) e i Durable Object `Codice`, `Errori`, `Coppia` in `index.js`; `src/store/amici.js` (archivio per
+`servizio/inoltro/src/presenza.js` (chi tiene quale chiave, avvisi, inoltro, messaggi controllati; pura, senza Cloudflare), `codici.js`
+(5 lettere, scadenza, tentativi) e i Durable Object `Codice`, `Errori`, `Presenza` in `index.js`; `src/store/amici.js` (archivio per
 bambino, `AMICI_DI_BASE`); `src/amici/` — `rete.js` (codici e il `Ponte` che si rimette in piedi da solo), `servizio.js` (il motore:
 chi è online, gli inviti), `messaggi.js`, `giochi.js` (i giochi che ricevono inviti), `ingresso.js` («Gioca» → il gioco ritira i dati),
 `avvio.js`, `testi.js`; `components/amici/` — `ListaAmici.vue` (la lista in home), `InvitoAmico.vue` (il cartello, in `App.vue`),

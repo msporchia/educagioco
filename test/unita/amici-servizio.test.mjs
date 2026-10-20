@@ -1,19 +1,48 @@
 /* Le regole del servizio degli amici (`servizio/inoltro/src/coppia.js` e `codici.js`), senza Cloudflare: due posti, chi rientra
    prende il suo posto, i messaggi controllati; i codici brevi, i tentativi sbagliati. Docs: docs/core/amici.md */
-import { ammetti, altroDi, controllaMessaggio, MAX_BYTE, MAX_AL_SECONDO, ID, CHIAVE } from '../../servizio/inoltro/src/coppia.js'
+import { dichiara, chiudi, inoltra, controllaMessaggio, MAX_BYTE, MAX_AL_SECONDO, MAX_CHIAVI, ID, CHIAVE } from '../../servizio/inoltro/src/presenza.js'
 import { nuovoCodice, contaErrore, bloccato, CODICE, ALFABETO, ERRORI_AL_MINUTO } from '../../servizio/inoltro/src/codici.js'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 
+const ugualeJ = (cosa, a, b) => uguale(cosa, JSON.stringify(a), JSON.stringify(b))
 {
-  const a = { id: 'leonardo1' }, b = { id: 'melody001' }
-  uguale('il primo entra', ammetti([], 'leonardo1').esito, 'nuovo')
-  uguale('il secondo entra', ammetti([a], 'melody001').esito, 'nuovo')
-  uguale('un terzo non entra', ammetti([a, b], 'estraneo01').esito, 'piena')
-  const r = ammetti([a, b], 'melody001')
-  controlla('chi rientra con lo stesso id prende il posto del suo collegamento', r.esito === 'sostituisce' && r.vecchio === b)
-  controlla('anche se è solo, e il posto non si raddoppia', ammetti([a], 'leonardo1').esito === 'sostituisce')
-  const ws1 = {}, ws2 = {}, s1 = { id: 'leonardo1', ws: ws1 }, s2 = { id: 'melody001', ws: ws2 }
-  controlla('l\'altro di un collegamento è l\'altro', altroDi([s1, s2], ws1) === s2 && altroDi([s1], ws1) === null)
+  const K1 = 'a'.repeat(32), K2 = 'b'.repeat(32), K3 = 'c'.repeat(32)
+  const W = nome => ({ nome })
+  const [leo, mel, estraneo, leo2] = [W('leo'), W('mel'), W('estraneo'), W('leo2')]
+  const dest = (invii, ws) => invii.filter(i => i.a === ws).map(i => i.msg)
+  // un telefono solo: non c'è nessuno
+  let soci = []
+  let r = dichiara(soci, leo, 'leonardo1', [K1, K2])
+  ugualeJ('il primo si presenta: nessun amico c\'è', dest(r.invii, leo)[0].presenti, [])
+  soci = [{ ws: leo, id: 'leonardo1', chiavi: r.chiavi }]
+  // l'amico arriva: lui sa che c\'è, e chi c\'era lo sa
+  r = dichiara(soci, mel, 'melody001', [K1])
+  ugualeJ('chi arriva vede che l\'amico c\'è', dest(r.invii, mel)[0].presenti, [K1])
+  controlla('e chi c\'era riceve «su» per quella chiave sola', JSON.stringify(dest(r.invii, leo)) === JSON.stringify([{ t: 'su', chiave: K1 }]))
+  soci.push({ ws: mel, id: 'melody001', chiavi: r.chiavi })
+  // inoltro: solo sulle chiavi che si hanno, e solo all\'altro
+  controlla('un messaggio per un amico arriva all\'altro, incartato con la chiave', JSON.stringify(inoltra(soci, leo, K1, { k: 'invito' })) === JSON.stringify([{ a: mel, msg: { t: 'da', chiave: K1, m: { k: 'invito' } } }]))
+  controlla('su una chiave che non si ha non va da nessuna parte', inoltra(soci, mel, K2, { k: 'x' }).length === 0)
+  controlla('una chiave senza l\'altro collegato: nessuno', inoltra(soci, leo, K2, { k: 'x' }).length === 0)
+  controlla('un messaggio che non è un oggetto non si gira', inoltra(soci, leo, K1, 'ciao').length === 0 && inoltra(soci, leo, K1, [1]).length === 0)
+  // un terzo con la stessa chiave: è di due e basta
+  r = dichiara(soci, estraneo, 'estraneo01', [K1, K3])
+  ugualeJ('un terzo non entra in un\'amicizia di due', r.chiavi, [K3])
+  controlla('e nessuno lo vede', !r.invii.some(i => i.a === leo || i.a === mel))
+  // chi rientra con lo stesso id prende il suo posto, senza avvisi
+  r = dichiara(soci, leo2, 'leonardo1', [K1, K2])
+  ugualeJ('il vecchio collegamento dello stesso bambino va chiuso', r.sostituiti, [leo])
+  controlla('chi rientra ritrova l\'amico', dest(r.invii, leo2)[0].presenti.includes(K1))
+  // aggiungere e togliere un\'amicizia a collegamento aperto
+  r = dichiara([{ ws: mel, id: 'melody001', chiavi: [K1] }, { ws: leo2, id: 'leonardo1', chiavi: [K1] }], leo2, 'leonardo1', [K1, K2])
+  controlla('una chiave in più: nessun avviso a chi non c\'entra', r.invii.length === 1)
+  r = dichiara([{ ws: mel, id: 'melody001', chiavi: [K1] }, { ws: leo2, id: 'leonardo1', chiavi: [K1] }], leo2, 'leonardo1', [])
+  controlla('togliere un\'amicizia lo dice all\'altro («giù»)', JSON.stringify(dest(r.invii, mel)) === JSON.stringify([{ t: 'giu', chiave: K1 }]))
+  // chiusura
+  const chi = chiudi([{ ws: mel, id: 'melody001', chiavi: [K1] }, { ws: leo2, id: 'leonardo1', chiavi: [K1, K2] }], leo2)
+  controlla('se uno se ne va, l\'altro lo sa, per ogni chiave in comune', JSON.stringify(dest(chi, mel)) === JSON.stringify([{ t: 'giu', chiave: K1 }]))
+  controlla('un collegamento che non si è mai presentato non avvisa nessuno', chiudi([], W('x')).length === 0)
+  controlla('al massimo sei chiavi', dichiara([], W('x'), 'prova00001', ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'].map(c => c.repeat(32))).chiavi.length === MAX_CHIAVI)
   controlla('gli id sono corti, in minuscolo, senza simboli', ID.test('leonardo1') && !ID.test('Leo') && !ID.test('a b c d e f g h') && !ID.test('x'.repeat(40)))
   controlla('la chiave è di 32 caratteri', CHIAVE.test('a'.repeat(32)) && !CHIAVE.test('a'.repeat(31)) && !CHIAVE.test('A'.repeat(32)))
 }
