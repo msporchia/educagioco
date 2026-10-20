@@ -6,13 +6,18 @@
 import { PerspectiveCamera, Vector3, Vector2, MathUtils } from 'three'
 
 export const VISTA = { inclinazione: 52, fov: 34, largo: 15, fondo: 18, guarda: 0.5, zoomMin: 0.7, zoomMax: 1.5, scontro: 9.5 }
-export const VEDUTA = { inclinazione: 64 }
+export const VEDUTA = { inclinazione: 64, largo: 220 }
 export const SOLE = new Vector3(-0.42, 0.82, 0.38).normalize()
 
+// La veduta guarda il mondo intero quando lo schermo è largo; su un telefono in piedi una fascia larga almeno `VEDUTA.largo` celle
+// (il mondo è 504×300: intero, i nomi sarebbero briciole), centrata dove si è e che si sposta col dito (`sposta`)
+// Nel villaggio la telecamera si allontana e si ferma in mezzo alla fila delle botteghe: dalla partenza si vedono tutti senza girare
+// (`citta`: { x, largo } dal villaggio della pianta, e `k`, quanto si è dentro)
 export function creaVeduta(m) {
-  const camera = new PerspectiveCamera(VISTA.fov, 1, 0.5, 1400)
-  let L = 1, A = 1, sopra = 0, sotto = 0, zoom = 1, primo = true, ombra = 0
+  const camera = new PerspectiveCamera(VISTA.fov, 1, 0.5, 2400)
+  let L = 1, A = 1, sopra = 0, sotto = 0, zoom = 1, primo = true, ombra = 0, vx = null
   const st = { k: 0, x: 0, z: 0, y: 0, inc: VISTA.inclinazione, d: 40, spostaY: 0 }
+  const largaVeduta = () => Math.min(m.W + 6, Math.max(VEDUTA.largo, (m.H + 10) * camera.aspect * 1.25))
   const ndc = new Vector2(), o = new Vector3(), dir = new Vector3(), tmp = new Vector3()
 
   // la distanza per vedere `largo` × `fondo` con l'apertura e la forma dello schermo
@@ -30,23 +35,32 @@ export function creaVeduta(m) {
     misura(l, a) { L = l; A = a; camera.aspect = l / Math.max(1, a); camera.updateProjectionMatrix() },
     copri(su, giu) { sopra = su; sotto = giu },
     salta() { primo = true },
+    // la veduta si sposta di `dx` pixel a schermo (il dito che trascina): la fascia scorre lungo il mondo
+    sposta(dx) { if (vx != null) vx -= dx * largaVeduta() / Math.max(1, L) },
     // `centro` l'eroe (x, y, z), `veduta` se si guarda tutto il mondo; `sole` la luce che fa l'ombra; `palco`: lo scontro di sopra
-    // ({ celle, scossa }), che la telecamera inquadra da vicino come nelle discese (celle in largo e in profondo, mai meno di 9,5)
-    aggiorna(dt, centro, veduta, sole, palco = null) {
+    // ({ celle, scossa }), che la telecamera inquadra da vicino come nelle discese (celle in largo e in profondo, mai meno di 9,5);
+    // `citta`: { x, largo, k } nel villaggio
+    aggiorna(dt, centro, veduta, sole, palco = null, citta = null) {
       const kv = veduta ? 1 : 0
       st.k += (kv - st.k) * (primo ? 1 : 1 - Math.exp(-dt * 3))
       const libero = Math.max(1, A - sopra - sotto)
       const celle = palco ? Math.max(VISTA.scontro, palco.celle || 0) : 0
-      const vicino = { x: centro.x, z: centro.z, y: centro.y + VISTA.guarda, inc: VISTA.inclinazione,
-                       d: (palco ? distanza(celle, celle, VISTA.inclinazione) : distanza(Math.min(30, Math.max(VISTA.largo, camera.aspect * 18)), VISTA.fondo, VISTA.inclinazione))
+      const kc = !palco && citta ? citta.k : 0
+      const largo = Math.min(30, Math.max(VISTA.largo, camera.aspect * 18)) * (1 - kc) + (citta ? citta.largo : 0) * kc
+      const vicino = { x: centro.x + (citta ? citta.x - centro.x : 0) * kc, z: centro.z, y: centro.y + VISTA.guarda, inc: VISTA.inclinazione,
+                       d: (palco ? distanza(celle, celle, VISTA.inclinazione) : distanza(largo, VISTA.fondo, VISTA.inclinazione))
                           * zoom * Math.max(1, A / libero * 0.85) }
-      const lontano = { x: m.W / 2, z: m.H / 2 + 6, y: 0, inc: VEDUTA.inclinazione, d: distanza(m.W + 6, m.H + 10, VEDUTA.inclinazione) }
+      const lv = largaVeduta()
+      if (!veduta) vx = null
+      else vx = Math.min(m.W + 3 - lv / 2, Math.max(lv / 2 - 3, vx ?? centro.x))
+      // il mondo sta nello spazio libero fra le carte in cima e la barra in fondo, non sotto di loro
+      const lontano = { x: vx ?? Math.min(m.W + 3 - lv / 2, Math.max(lv / 2 - 3, centro.x)), z: m.H / 2 + 6, y: 0, inc: VEDUTA.inclinazione, d: distanza(lv, m.H + 10, VEDUTA.inclinazione) * Math.max(1, A / libero) }
       const b = st.k, mix = (p, q) => p + (q - p) * b
       const t = { x: mix(vicino.x, lontano.x), z: mix(vicino.z, lontano.z), y: mix(vicino.y, lontano.y), inc: mix(vicino.inc, lontano.inc), d: mix(vicino.d, lontano.d) }
       const k = primo ? 1 : 1 - Math.exp(-dt * (veduta ? 4 : 3.2))
       st.x += (t.x - st.x) * k; st.z += (t.z - st.z) * k; st.y += (t.y - st.y) * k; st.inc += (t.inc - st.inc) * k; st.d += (t.d - st.d) * k
-      // l'eroe sta a metà dello spazio libero, un poco più giù del mezzo (come sulla terra dipinta)
-      const voluto = (1 - b) * (A / 2 - (sopra + libero * 0.55))
+      // l'eroe sta a metà dello spazio libero, un poco più giù del mezzo (come sulla terra dipinta); nella veduta il mondo a metà
+      const voluto = A / 2 - (sopra + libero * (0.55 - 0.05 * b))
       st.spostaY += (voluto - st.spostaY) * (primo ? 1 : 1 - Math.exp(-dt * 5))
       if (Math.abs(st.spostaY) > 0.5) camera.setViewOffset(L, A, 0, st.spostaY, L, A)
       else if (camera.view) camera.clearViewOffset()

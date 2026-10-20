@@ -3,13 +3,23 @@
 // cielo è un gradiente con le nuvole che scorrono: dall'alto se ne vede poco, ma c'è. Dal prototipo poc/mondo-sopra/terreno.js.
 import { DataTexture, RedFormat, LinearFilter, ShaderMaterial, UniformsUtils, UniformsLib, Color, PlaneGeometry, Mesh,
          SphereGeometry, BackSide } from 'three'
-import { LIVELLO_ACQUA } from './suolo.js'
+import { LIVELLO_ACQUA, quotaDellaCella } from './suolo.js'
 import { U, GLSL_CIELO } from './vesti.js'
+
+// la profondità di un rettangolo di celle nella trama: le celle scritte (le zone caricate una volta) esatte, le altre dalla base
+// a passi di due celle (la stessa che legge il lontano: il fiume dei confini c'è già)
+function profondita(m, d, x0, y0, x1, y1) {
+  const { W } = m
+  for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
+    const k = y * W + x, q = m.zona[k] >= 0 ? m.quota[k] : quotaDellaCella(m, (y & ~1) * W + (x & ~1))
+    d[k] = Math.max(0, Math.min(255, (LIVELLO_ACQUA - q) / 0.9 * 255))
+  }
+}
 
 export function creaAcqua(m, sole) {
   const { W, H } = m
   const d = new Uint8Array(W * H)
-  for (let k = 0; k < W * H; k++) d[k] = Math.max(0, Math.min(255, (LIVELLO_ACQUA - m.quota[k]) / 0.9 * 255))
+  profondita(m, d, 0, 0, W - 1, H - 1)
   const tProf = new DataTexture(d, W, H, RedFormat)
   tProf.magFilter = tProf.minFilter = LinearFilter; tProf.needsUpdate = true
   const mat = new ShaderMaterial({
@@ -57,7 +67,12 @@ export function creaAcqua(m, sole) {
   mat.uniforms.tProf.value = tProf
   const g = new PlaneGeometry(W + 60, H + 60, 1, 1); g.rotateX(-Math.PI / 2); g.translate(W / 2, LIVELLO_ACQUA, H / 2)
   const mesh = new Mesh(g, mat)
-  return { mesh, via() { tProf.dispose(); mat.dispose(); g.dispose() } }
+  return {
+    mesh,
+    // una zona si è scritta: la sua profondità vera (il lago, le pozze)
+    aggiorna(R) { profondita(m, d, Math.max(0, R.x0), Math.max(0, R.y0), Math.min(W - 1, R.x1), Math.min(H - 1, R.y1)); tProf.needsUpdate = true },
+    via() { tProf.dispose(); mat.dispose(); g.dispose() },
+  }
 }
 
 // il cielo: si muove con la telecamera e non scrive la profondità

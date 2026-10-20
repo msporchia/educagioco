@@ -1,23 +1,27 @@
-// Il mondo di sopra in 3D: la porta verso viste/Mondo3d.vue. Riceve il mondo generato e la nebbia, e a ogni fotogramma chiede a chi
-// gioca di fare il suo passo (`passo`: l'eroe che cammina, chi saluta), poi disegna quello che trova nello stato `S` (chi sta dove,
-// le pietre accese, gli ingressi aperti, le grate, il portale). Chi gioca non disegna, e qui non si decide niente del gioco. I pezzi
-// del mondo si costruiscono attorno all'eroe uno per fotogramma (pezzi.js); il resto è il mondo lontano. docs/sotterraneo/grafica-3d.md.
+// Il mondo di sopra in 3D: la porta verso viste/Mondo3d.vue. Riceve il mondo a percorso (lo scheletro di motore/mondo-percorso.js)
+// e la nebbia, e a ogni fotogramma chiede a chi gioca di fare il suo passo (`passo`: l'eroe che cammina, chi saluta), poi disegna
+// quello che trova nello stato `S` (chi sta dove, le pietre accese, gli ingressi aperti, la porta delle terre, il portale). Chi
+// gioca non disegna, e qui non si decide niente del gioco. Le zone si caricano attorno all'eroe (quella dove si è e le due accanto,
+// una per fotogramma) e le altre si scaricano; i pezzi del mondo si costruiscono attorno all'eroe uno per fotogramma, solo nelle
+// zone caricate (pezzi.js); il resto è il mondo lontano. docs/sotterraneo/mondo-3d.md.
 import { Scene, Color, Fog, HemisphereLight, DirectionalLight, Group, Texture, SRGBColorSpace, NearestFilter, Vector3, Mesh,
          MeshStandardMaterial, MeshBasicMaterial, OctahedronGeometry, RingGeometry, CircleGeometry, CylinderGeometry } from 'three'
 import { ATLANTE, PEZZI } from '../../dati/atlante.js'
+import { caricaZona, scaricaZona, zonaDi, zoneAttorno } from '../../motore/mondo-percorso.js'
 import { creaContesto } from '../contesto.js'
 import { normaliAtlante } from '../trame.js'
-import { U, vesti } from './vesti.js'
+import { U, vesti, tramaDeiPezzi } from './vesti.js'
 import { creaTrame } from './trame.js'
 import { materialiDelSuolo, terrenoDelPezzo, creaFuori, creaPiazza, campiDelPezzo } from './terreno.js'
 import { creaAcqua, creaCielo } from './acqua.js'
 import { materialiDelKit, Cantiere, casa, bottega, pozzo, mulino } from './kit.js'
-import { ponte, grata, staccionate, cartello, bacheca, campoMinatore, antro } from './ponti.js'
-import { creaMonumento, creaPietra, creaPortale } from './monumenti.js'
+import { ponte, staccionate, cartello, bacheca, campoMinatore } from './ponti.js'
+import { creaMonumento, creaPietra, creaPortale, creaPortaDelleTerre } from './monumenti.js'
 import { fontana } from './fontana.js'
-import { creaNatura } from './natura.js'
+import { creaNatura, istanzeDelPezzo } from './natura.js'
 import { propsPerPezzo, disegnaProps } from './props-citta.js'
 import { disegnaPropsAperti } from './props-aperto.js'
+import { propsDellaZona } from './props-dove.js'
 import { creaLontano } from './lontano.js'
 import { creaVita } from './vita.js'
 import { creaNebbia } from './nebbia.js'
@@ -25,7 +29,7 @@ import { creaScia } from './scia.js'
 import { creaPersone } from './persone.js'
 import { creaPalcoSopra } from './palco.js'
 import { creaVeduta, SOLE } from './veduta.js'
-import { grigliaDi, dividiPerPezzo, lavoroDeiPezzi } from './pezzi.js'
+import { grigliaDi, pezzoDi, contenutoDelPezzo, lavoroDeiPezzi, costruibile, ancoraUguale } from './pezzi.js'
 import { aTerra } from './dito.js'
 import { quotaA, quotaTerreno, LIVELLO_ACQUA } from './suolo.js'
 
@@ -42,7 +46,9 @@ export function creaMondo3d(canvas, opz) {
   }
 }
 
-function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = {}, fontane = [], strato = null }) {
+// `zone(k, caricata)`: la scena ha caricato (o scaricato) la zona k, perché chi gioca rifaccia quello che ne dipende (la terra dove si
+// cammina, i mostri). `da`: dove sta l'eroe all'inizio (la sua zona si carica subito)
+function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = [], fontane = [], strato = null, zone: allaZona = null, da = null }) {
   const { renderer } = ctx
   renderer.toneMappingExposure = 1.05
   const scena = new Scene()
@@ -54,9 +60,23 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = {}, fon
   sole.shadow.mapSize.set(2048, 2048)
   sole.shadow.bias = -0.0004; sole.shadow.normalBias = 0.04; sole.shadow.radius = 3
   scena.add(sole, sole.target)
+  // la zona dove si parte, prima di tutto (il lontano e l'acqua la leggono già scritta)
+  const misureZone = []
+  const carica = k => {
+    const t0 = performance.now()
+    caricaZona(m, k)
+    const ms = performance.now() - t0
+    misureZone.push({ zona: k, ms: Math.round(ms) })
+    if (misureZone.length > 20) misureZone.shift()
+    return ms
+  }
+  const p0 = da || m.partenza
+  const z0 = zonaDi(m, Math.floor(p0.x), Math.floor(p0.y))
+  if (z0 >= 0 && !m.zonaCaricata[z0]) { carica(z0); if (allaZona) allaZona(z0, true) }
   const cam = creaVeduta(m)
   const trame = creaTrame()
   const suolo = materialiDelSuolo(trame), kit = materialiDelKit(trame)
+  const griglia = grigliaDi(m), tPezzi = tramaDeiPezzi(griglia.nx, griglia.nz)
   const nebbia = creaNebbia(m, scena, bit)
   const acqua = creaAcqua(m, SOLE), cielo = creaCielo()
   scena.add(acqua.mesh, cielo.mesh)
@@ -66,37 +86,41 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = {}, fon
   const natura = creaNatura(m, kit, scena)
   const vita = creaVita(scena, trame)
   const scia = creaScia(scena, (x, z) => quotaA(m, x, z))
-  const parti = dividiPerPezzo(m)
   const conFontana = new Set(fontane.map(f => f.citta))   // le città dove l'acqua prende il posto del pozzo (fontana.js)
   const matCristallo = vesti(new MeshStandardMaterial({ color: 0xb78cff, emissive: 0x6a3cff, emissiveIntensity: 0.6, roughness: 0.2 }), { oggetto: 'istanza' })
   const quota = (x, z) => quotaA(m, x, z)
+  const v = m.villaggio
+  // la telecamera nel villaggio: in mezzo alla fila di chi ci sta, larga quanto la fila (dalla pianta, docs/sotterraneo/mondo-a-percorso.md)
+  const fila = [...v.mercanti, ...v.persone, v.minatore].filter(Boolean).map(p => p.piede.x)
+  const citta = { x: (Math.min(...fila) + Math.max(...fila)) / 2 + 0.5, largo: Math.max(...fila) - Math.min(...fila) + 4, k: 0 }
   // lo stato da disegnare, scritto da chi gioca (Mondo3d.vue): niente di reattivo, si legge a ogni fotogramma
   const S = {
     io: { x: m.partenza.x + 0.5, z: m.partenza.y + 0.5, verso: { dx: 0, dy: 1 }, sprite: 'cavaliere', mano: null, mancina: null },
-    persone: [], accese: new Set(), aperti: new Set(), grate: new Map(), pallini: new Map(), divieti: new Set(), portale: null, veduta: false,
+    persone: [], accese: new Set(), aperti: new Set(), pallini: new Map(), divieti: new Set(), portale: null, veduta: false,
+    terre: false,              // la porta delle terre aperta (le tombe del vento ripulite: lo dice chi gioca)
     mostri: [], perTerra: [],   // i mostri di sopra e il bottino per terra, già nel cerchio e fuori dalla nebbia (mostri.js)
     scia: null, sciaDa: 0,      // la strada verso la meta: { luci, meta } (scia.js), e da quale luce si accende
   }
+  if (da) { S.io.x = da.x + 0.5; S.io.z = da.y + 0.5 }
   const eroe = { stato: null, x: 0, z: 0, verso: S.io.verso, sprite: 'cavaliere', mano: null, mancina: null }
 
-  // ── i pezzi costruiti: p → { gruppo, cose, monumenti, pietre, grate, ruote, cristalli, pallini, divieti } ──
+  // ── i pezzi costruiti: p → { gruppo, cose, monumenti, pietre, terre, marcatori, fontane, istanze, carichi, ms } ──
   const costruiti = new Map()
   let cambiati = true
   function costruisciPezzo(p) {
     const t0 = performance.now()
-    const gruppo = new Group(), cant = new Cantiere(), q = parti[p]
+    const gruppo = new Group(), cant = new Cantiere(), q = contenutoDelPezzo(m, p)
     const cose = { camini: [], braci: [], fuochi: [], spruzzi: [], ruote: [], cristalli: [] }
-    const fatto = { gruppo, cose, monumenti: [], pietre: [], grate: [], marcatori: [], fontane: [], ms: 0 }
+    const fatto = { gruppo, cose, monumenti: [], pietre: [], terre: [], marcatori: [], fontane: [], istanze: null, carichi: q.carichi, ms: 0 }
     gruppo.add(terrenoDelPezzo(m, p, suolo.terreno, 2))
     const campi = campiDelPezzo(m, q.campi, suolo)
     if (campi) gruppo.add(campi)
     staccionate(q.campi, cant, m)
-    for (const c of m.citta) if (Math.floor(c.centro.x / 32) + 5 * Math.floor(c.centro.y / 28) === p) { gruppo.add(creaPiazza(m, c, suolo, cant)); if (conFontana.has(c.chiave)) fatto.fontane.push(fontana(c.pozzo, cant, m, cose, kit, gruppo)); else pozzo(c.pozzo, cant, m) }
+    if (pezzoDi(m, v.piazza.x + v.piazza.w / 2, v.piazza.y + v.piazza.h / 2) === p) gruppo.add(creaPiazza(m, v, suolo, cant))
     for (const c of q.case) casa(c, cant, m, cose)
     disegnaProps(propsPerPezzo(m)[p], cant, m, cose)
     disegnaPropsAperti(m, p, cant, cose)
     for (const pp of q.ponti) ponte(pp, cant, m)
-    for (const g of q.grate) fatto.grate.push(grata(g, cant, m, kit, gruppo))
     for (const po of q.posti) {
       if (po.tipo === 'mercante') bottega(po, cant, m, cose)
       else if (po.tipo === 'ingresso') {
@@ -107,14 +131,16 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = {}, fon
         fatto.marcatori.push(marcatore(po, gruppo))
       } else if (po.tipo === 'pietra') fatto.pietre.push(creaPietra(po, cant, m, gruppo))
       else if (po.tipo === 'bacheca') bacheca(po, cant, m)
-      else if (po.tipo === 'cartello') cartello(po, frecce[po.citta] || [], cant, m)
-      else if (po.tipo === 'minatore' && po.tenda) campoMinatore(po, cant, m, cose)
-      else if (po.tipo === 'antro') antro(po, cant, m)
+      else if (po.tipo === 'cartello') cartello(po, Array.isArray(frecce) ? frecce : frecce[po.citta] || [], cant, m)
+      else if (po.tipo === 'minatore') campoMinatore({ tenda: { x: po.x - 0.2, y: po.y - 0.7 } }, cant, m, cose)
       else if (po.tipo === 'mulino') mulino(po, cant, m, cose, kit)
+      else if (po.tipo === 'pozzo') { if (conFontana.has(po.citta)) fatto.fontane.push(fontana(po, cant, m, cose, kit, gruppo)); else pozzo(po, cant, m) }
+      else if (po.tipo === 'terre') fatto.terre.push(creaPortaDelleTerre(po, cant, m, kit, gruppo))
     }
     for (const r of cose.ruote) gruppo.add(r)
     for (const c of cose.cristalli) { const me = new Mesh(new OctahedronGeometry(0.28), matCristallo); me.position.copy(c); me.castShadow = true; me.userData.y = c.y; gruppo.add(me); fatto.cristalli = [...(fatto.cristalli || []), me] }
     for (const me of cant.chiudi(kit.fermi, kit.ombraFermi)) gruppo.add(me)
+    fatto.istanze = istanzeDelPezzo(m, p, q)
     scena.add(gruppo)
     fatto.ms = performance.now() - t0
     return fatto
@@ -134,34 +160,62 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = {}, fon
     divieto.visible = false; gruppo.add(divieto)
     return { chiave: po.chiave, pallino, alone, divieto }
   }
+  const condivisi = new Set([...Object.values(kit.fermi), ...Object.values(kit.mobili), suolo.terreno, suolo.campo, suolo.piazza, matCristallo])
   function buttaPezzo(p) {
     const f = costruiti.get(p)
     scena.remove(f.gruppo)
     f.gruppo.traverse(o => {
       if (o.geometry) o.geometry.dispose()
-      if (o.material && ![...Object.values(kit.fermi), ...Object.values(kit.mobili), suolo.terreno, suolo.campo, suolo.piazza, matCristallo].includes(o.material)) o.material.dispose()
+      if (o.material && !condivisi.has(o.material)) o.material.dispose()
     })
     costruiti.delete(p)
   }
+  // le zone attorno all'eroe: quella dove si è subito, le accanto quando i pezzi vicini sono fatti; una per fotogramma. Le altre si
+  // scaricano (le celle restano scritte: ricaricando tornano uguali), e i loro pezzi si buttano col controllo dei carichi
+  let attorno = [], zonaQui = -1
+  const daPreparare = z0 >= 0 ? [z0] : []   // le zone appena caricate: i loro oggetti di scena si fanno al fotogramma dopo (props-dove.js)
+  function caricaUna(k) {
+    carica(k)
+    if (lontano.zonaScritta(k)) acqua.aggiorna(m.zone[k].rettangolo)
+    if (allaZona) allaZona(k, true)
+    daPreparare.push(k)
+    cambiati = true
+  }
+  function zone() {
+    const k = zonaDi(m, Math.floor(S.io.x), Math.floor(S.io.z))
+    if (k < 0) return false
+    zonaQui = k
+    attorno = zoneAttorno(m, k)
+    for (let z = 0; z < m.zone.length; z++) if (m.zonaCaricata[z] && !attorno.includes(z)) { scaricaZona(m, z); if (allaZona) allaZona(z, false); cambiati = true }
+    if (!m.zonaCaricata[k]) { caricaUna(k); return true }
+    return false
+  }
   function lavora() {
     if (S.veduta) return
-    const l = lavoroDeiPezzi(m, new Set(costruiti.keys()), S.io.x, S.io.z)
-    for (const p of l.butta) { buttaPezzo(p); cambiati = true }
-    if (l.costruisci != null) { costruiti.set(l.costruisci, costruisciPezzo(l.costruisci)); cambiati = true }
+    if (!zone()) {
+      // i pezzi che una zona caricata o scaricata ha reso vecchi
+      for (const [p, f] of costruiti) if (!ancoraUguale(m, p, f.carichi)) { buttaPezzo(p); cambiati = true }
+      while (daPreparare.length && !m.zonaCaricata[daPreparare[0]]) daPreparare.shift()
+      if (daPreparare.length) { propsDellaZona(m, daPreparare.shift()); return }
+      const l = lavoroDeiPezzi(m, new Set(costruiti.keys()), S.io.x, S.io.z, p => costruibile(m, p, attorno))
+      for (const p of l.butta) { buttaPezzo(p); cambiati = true }
+      if (l.costruisci != null) { costruiti.set(l.costruisci, costruisciPezzo(l.costruisci)); cambiati = true }
+      else { const manca = attorno.find(z => !m.zonaCaricata[z]); if (manca != null) caricaUna(manca) }
+    }
     if (!cambiati) return
     cambiati = false
-    natura.componi([...costruiti.keys()])
+    natura.componi([...costruiti.values()].map(f => f.istanze))
     const src = { camini: [], braci: [], fuochi: [], spruzzi: [] }
     for (const f of costruiti.values()) for (const k of Object.keys(src)) src[k].push(...f.cose[k])
     vitaSorgenti = src
-    for (let i = 0; i < U.uCostruiti.value.length; i++) U.uCostruiti.value[i] = costruiti.has(i) ? 1 : 0
+    tPezzi.segna(costruiti.keys())
   }
   let vitaSorgenti = { camini: [], braci: [], fuochi: [], spruzzi: [] }
   // da dove si emette, adesso: solo dalle celle che si vedono
   const viste = { camini: [], braci: [], fuochi: [], spruzzi: [] }
   let prossimeViste = 0
   function sorgentiViste() {
-    for (const k of Object.keys(viste)) { viste[k].length = 0; for (const v of vitaSorgenti[k]) if (nebbia.visto(v.x, v.z)) viste[k].push(v) }
+    for (const k of Object.keys(viste)) { viste[k].length = 0; for (const s of vitaSorgenti[k]) if (nebbia.visto(s.x, s.z)) viste[k].push(s) }
     vita.sorgenti(viste)
   }
 
@@ -177,7 +231,7 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = {}, fon
   }
   img.src = ATLANTE
 
-  let sciaPosata = null
+  let sciaPosata = null, vedutaPrima = false
   let portale = null, raf = 0, prima = 0, tempo = 0, vivo = true, L = 0, A = 0
   const centro = new Vector3(), soleVista = new Vector3()
   // la misura è quella del contenitore, mai della finestra, e la rilegge il ResizeObserver quando cambia (come giù)
@@ -194,6 +248,11 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = {}, fon
     cam.misura(L, A)
     vita.scala(A * ctx.dpr / (2 * Math.tan(cam.camera.fov * Math.PI / 360)))
     return true
+  }
+  // quanto si è dentro il villaggio (1 nella piazza, 0 a sei celle fuori dal suo recinto): la telecamera lo guarda intero
+  const dentroIlVillaggio = (x, z) => {
+    const dx = Math.max(v.x - x, 0, x - (v.x + v.w)), dz = Math.max(v.y - z, 0, z - (v.y + v.h))
+    return Math.max(0, 1 - Math.hypot(dx, dz) / 6)
   }
   function fotogramma(ora) {
     raf = requestAnimationFrame(fotogramma)
@@ -212,8 +271,7 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = {}, fon
     const veduta = S.veduta
     for (const f of costruiti.values()) f.gruppo.visible = !veduta
     lontano.terreni.forEach((t, p) => { t.visible = veduta || !costruiti.has(p) })
-    if (veduta) U.uCostruiti.value.fill(0)
-    else for (let i = 0; i < U.uCostruiti.value.length; i++) U.uCostruiti.value[i] = costruiti.has(i) ? 1 : 0
+    if (veduta !== vedutaPrima) { vedutaPrima = veduta; tPezzi.segna(veduta ? [] : costruiti.keys()) }
     renderer.shadowMap.autoUpdate = !veduta
     // le cose che si muovono
     for (const f of costruiti.values()) {
@@ -225,8 +283,8 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = {}, fon
         mo.k += (voluto - mo.k) * (1 - Math.exp(-dt * 2.5))
         mo.anim(mo.k, tempo)
       }
+      for (const te of f.terre) { te.k += ((S.terre ? 1 : 0) - te.k) * (1 - Math.exp(-dt * 1.5)); te.anim(te.k, tempo) }
       for (const p of f.pietre) p.aggiorna(S.accese.has(p.posto.chiave), tempo, nebbia.visto(p.x, p.z))
-      for (const g of f.grate) { const v = S.grate.get(g.q.id) ? 1 : 0; g.k0 = (g.k0 ?? v) + (v - (g.k0 ?? v)) * (1 - Math.exp(-dt * 2)); g.apri(Math.round(g.k0 * 100) / 100) }
       for (const mk of f.marcatori) {
         const p = S.pallini.get(mk.chiave)
         mk.pallino.visible = !!p; mk.alone.visible = !!p
@@ -251,7 +309,8 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = {}, fon
     const pc = inScontro ? palco.centro() : null
     if (pc) centro.set(pc.x, quota(pc.x, pc.z), pc.z)
     else centro.set(eroe.x, quota(eroe.x, eroe.z), eroe.z)
-    cam.aggiorna(dt, centro, veduta, sole, pc)
+    citta.k = S.io.nascosto ? 0 : dentroIlVillaggio(eroe.x, eroe.z)
+    cam.aggiorna(dt, centro, veduta, sole, pc, citta)
     U.uVeduta.value = cam.k
     soleVista.copy(SOLE).transformDirection(cam.camera.matrixWorldInverse)
     persone.taglio(soleVista.x, soleVista.y)
@@ -276,15 +335,15 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = {}, fon
     get corsa() { return palco && palco.attivo ? palco.pittore.corsa : null },
     // il banco: `n` disegni della scena così com'è, ognuno aspettato (docs/core/vecchio-telefono.md, «Lo scontro»)
     banco(n = 20) {
-      const gl = ctx.gl, px = new Uint8Array(4), v = []
+      const gl = ctx.gl, px = new Uint8Array(4), w = []
       for (let i = 0; i < n + 2; i++) {
         const t0 = performance.now()
         renderer.render(scena, cam.camera)
         gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px)
-        if (i >= 2) v.push(performance.now() - t0)
+        if (i >= 2) w.push(performance.now() - t0)
       }
-      v.sort((x, y) => x - y)
-      return { ms: Math.round(v[n >> 1] * 10) / 10, p90: Math.round(v[Math.floor(n * 0.9)] * 10) / 10 }
+      w.sort((x, y) => x - y)
+      return { ms: Math.round(w[n >> 1] * 10) / 10, p90: Math.round(w[Math.floor(n * 0.9)] * 10) / 10 }
     },
     get tempo() { return tempo },
     get zoom() { return cam.zoom },
@@ -294,6 +353,10 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = {}, fon
     avvia() { if (!raf && vivo) { prima = 0; raf = requestAnimationFrame(fotogramma) } },
     ferma() { cancelAnimationFrame(raf); raf = 0 },
     salta() { cam.salta() },
+    // la veduta scorre col dito (veduta.js): `dx` in pixel
+    spostaVeduta(dx) { cam.sposta(dx) },
+    // un salto (la pietra, il risveglio, le prove): la zona di arrivo si carica subito, non al fotogramma dopo
+    caricaQui(x, z) { const k = zonaDi(m, Math.floor(x), Math.floor(z)); if (k >= 0 && !m.zonaCaricata[k]) caricaUna(k); return k },
     quota,
     // le celle scoperte attorno a (x, z): entrano nelle trame della nebbia (e nel bit che si salva)
     scopri(x, z, r) { return nebbia.scopri(x, z, r, tempo) },
@@ -312,9 +375,11 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = {}, fon
                msJs: Math.round(ms.msJs * 100) / 100, msDisegno: Math.round(ms.msDisegno * 100) / 100,
                figure: persone ? persone.figure.quante + persone.figureEroe.quante : 0, pezzi: [...costruiti.keys()].sort((a, b) => a - b),
                msPezzi: Math.round(Math.max(0, ...[...costruiti.values()].map(f => f.ms))), veduta: cam.veduta, scenario: 'mondo',
-               palco: !!(palco && palco.attivo), mostri: S.mostri.length, scia: scia.quante }
+               palco: !!(palco && palco.attivo), mostri: S.mostri.length, scia: scia.quante,
+               // le zone: dove si è, quelle caricate, e quanto ci hanno messo le ultime a caricarsi (ms, una per fotogramma)
+               zona: zonaQui, zone: m.zonaCaricata.map((c, k) => (c ? k : -1)).filter(k => k >= 0), msZone: misureZone.slice() }
     },
-    get pronto() { return !!persone && costruiti.size >= Math.min(4, grigliaDi(m).n) },
+    get pronto() { return !!persone && costruiti.size >= Math.min(4, griglia.n) },
     distruggi() {
       vivo = false
       api.ferma()
@@ -324,7 +389,7 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = {}, fon
       if (portale) portale.p.via()
       scena.remove(fuori.mesh); fuori.mesh.geometry.dispose()
       for (const x of Object.values(suolo)) x.dispose()
-      kit.via(); matCristallo.dispose(); trame.via()
+      kit.via(); matCristallo.dispose(); trame.via(); tPezzi.via()
       if (tex) tex.dispose()
       if (norm) norm.dispose()
       ctx.via()

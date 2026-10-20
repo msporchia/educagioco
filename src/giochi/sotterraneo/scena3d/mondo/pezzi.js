@@ -1,7 +1,9 @@
-// Il mondo a pezzi (puro): un pezzo è un riquadro di 32×28 celle (la griglia 5×5 del mondo, una regione di misura), e di ogni
-// pezzo si sa cosa ci sta (le case, i campi, il decoro, i posti, i ponti, le grate). Si costruiscono i nove attorno all'eroe, al
-// più uno per fotogramma, il più vicino prima; si buttano quando sono a due pezzi di distanza. Il resto lo disegna il mondo
-// lontano (lontano.js), a dettaglio basso. Il perché: docs/sotterraneo/grafica-3d.md, «Il mondo di sopra».
+// Il mondo a pezzi (puro): un pezzo è un riquadro di 32×28 celle, e di ogni pezzo si sa cosa ci sta. Dallo scheletro del mondo
+// a percorso (motore/mondo-percorso.js) i posti e i ponti, sempre; dalle zone caricate le case, i campi e il decoro, che se ne
+// vanno con la zona. Si costruiscono i nove attorno all'eroe, al più uno per fotogramma, il più vicino prima, e solo quando le
+// zone attorno all'eroe che ci stanno sono caricate; si buttano a due pezzi di distanza, o quando una loro zona si carica o si
+// scarica. Il resto lo disegna il mondo lontano (lontano.js). docs/sotterraneo/mondo-3d.md, «Quanto costa».
+import { zonaDi } from '../../motore/mondo-percorso.js'
 
 export const PEZZO = { largo: 32, alto: 28 }
 
@@ -36,29 +38,80 @@ export function pezziAttorno(m, x, z) {
   }
   return l.sort((a, b) => a.d - b.d).map(v => v.p)
 }
-// cosa fare a questo fotogramma: il prossimo da costruire (o null) e quelli da buttare (a due pezzi o più dall'eroe)
-export function lavoroDeiPezzi(m, costruiti, x, z) {
+
+// le zone che hanno celle nel pezzo (dalla base: anche quelle non caricate), una volta per pezzo
+const ZONE = new WeakMap()
+export function zoneDelPezzo(m, p) {
+  let c = ZONE.get(m)
+  if (!c) ZONE.set(m, c = new Map())
+  if (c.has(p)) return c.get(p)
+  const r = rettangoloDi(m, p), s = new Set()
+  for (let y = r.z0; y < r.z1; y++) for (let x = r.x0; x < r.x1; x++) { const z = zonaDi(m, x, y); if (z >= 0) s.add(z) }
+  const l = [...s].sort((a, b) => a - b)
+  c.set(p, l)
+  return l
+}
+// si può costruire il pezzo: le sue zone fra quelle `attorno` all'eroe sono caricate (le altre, oltre una cresta, si disegnano
+// dalla base, senza decoro), e almeno una lo è
+export function costruibile(m, p, attorno) {
+  const z = zoneDelPezzo(m, p)
+  return z.some(k => m.zonaCaricata[k]) && z.every(k => !attorno.includes(k) || m.zonaCaricata[k])
+}
+// cosa fare a questo fotogramma: il prossimo da costruire (o null) e quelli da buttare (a due pezzi o più dall'eroe).
+// `puo(p)`: se il pezzo si può costruire adesso (le sue zone caricate)
+export function lavoroDeiPezzi(m, costruiti, x, z, puo = () => true) {
   const qui = pezzoDi(m, x, z)
   const butta = [...costruiti].filter(p => distanzaPezzi(m, p, qui) >= 2)
-  const costruisci = pezziAttorno(m, x, z).find(p => !costruiti.has(p)) ?? null
+  const costruisci = pezziAttorno(m, x, z).find(p => !costruiti.has(p) && puo(p)) ?? null
   return { costruisci, butta }
 }
 
-// cosa sta in ogni pezzo: ogni cosa va nel pezzo del suo centro (una casa sul confine sta tutta in uno)
+// cosa sta in ogni pezzo dallo scheletro (i posti, le città no: sono un lotto intero; i ponti dei confini). Ogni cosa va nel
+// pezzo del suo centro
+const SCHELETRO = new WeakMap()
 export function dividiPerPezzo(m) {
+  if (SCHELETRO.has(m)) return SCHELETRO.get(m)
   const { n } = grigliaDi(m)
-  const pezzi = Array.from({ length: n }, () => ({ case: [], campi: [], decoro: [], posti: [], ponti: [], grate: [] }))
-  const metti = (lista, cosa, x, z) => pezzi[pezzoDi(m, x, z)][lista].push(cosa)
-  for (const c of m.case) metti('case', c, c.x + c.w / 2, c.y + c.h / 2)
-  for (const c of m.campi) metti('campi', c, c.x + c.w / 2, c.y + c.h / 2)
-  for (const d of m.decoro) metti('decoro', d, d.x, d.y)
-  for (const p of m.posti) if (p.tipo !== 'citta') metti('posti', p, p.x + p.w / 2, p.y + p.h / 2)
-  for (const q of m.passaggi) {
+  const pezzi = Array.from({ length: n }, () => ({ posti: [], ponti: [] }))
+  for (const p of m.posti) if (p.tipo !== 'citta') pezzi[pezzoDi(m, p.x + p.w / 2, p.y + p.h / 2)].posti.push(p)
+  for (const q of m.confini) {
     const c = q.celle || []
-    if (!c.length) continue
+    if (q.tipo !== 'ponte' || !c.length) continue
     const cx = c.reduce((s, v) => s + v.x, 0) / c.length + 0.5, cz = c.reduce((s, v) => s + v.y, 0) / c.length + 0.5
-    if (q.tipo === 'ponte') metti('ponti', q, cx, cz)
-    if (q.conGrata) metti('grate', q, cx, cz)
+    pezzi[pezzoDi(m, cx, cz)].ponti.push(q)
   }
+  SCHELETRO.set(m, pezzi)
   return pezzi
 }
+// quello che una zona caricata mette in ogni pezzo (le liste di `m.carico[k]`): pezzo → { case, campi, decoro }. Si rifà se la
+// zona si ricarica (un `carico` nuovo)
+const ZONA = new WeakMap()
+export function dividiLaZona(m, k) {
+  const c = m.carico[k]
+  if (!c) return new Map()
+  if (ZONA.has(c)) return ZONA.get(c)
+  const l = new Map()
+  const metti = (lista, cosa, x, z) => {
+    const p = pezzoDi(m, x, z)
+    if (!l.has(p)) l.set(p, { case: [], campi: [], decoro: [] })
+    l.get(p)[lista].push(cosa)
+  }
+  for (const q of c.case) metti('case', q, q.x + q.w / 2, q.y + q.h / 2)
+  for (const q of c.campi) metti('campi', q, q.x + q.w / 2, q.y + q.h / 2)
+  for (const d of c.decoro) metti('decoro', d, d.x, d.y)
+  ZONA.set(c, l)
+  return l
+}
+// tutto quello che sta nel pezzo adesso: lo scheletro e le zone caricate. `carichi`: i carichi da cui viene (per sapere quando
+// rifarlo)
+export function contenutoDelPezzo(m, p) {
+  const s = dividiPerPezzo(m)[p], fuori = { posti: s.posti, ponti: s.ponti, case: [], campi: [], decoro: [], carichi: [] }
+  for (const k of zoneDelPezzo(m, p)) {
+    fuori.carichi.push(m.carico[k])
+    const q = dividiLaZona(m, k).get(p)
+    if (q) { fuori.case.push(...q.case); fuori.campi.push(...q.campi); fuori.decoro.push(...q.decoro) }
+  }
+  return fuori
+}
+// le zone del pezzo sono ancora caricate come quando lo si è costruito?
+export const ancoraUguale = (m, p, carichi) => zoneDelPezzo(m, p).every((k, i) => m.carico[k] === carichi[i])

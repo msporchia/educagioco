@@ -3,7 +3,8 @@
 // piazze, campi) dove la cella non vista è velo di nuvole chiare, sfumato ai bordi; un OGGETTO (case, alberi, monumenti) che si
 // vede tutto intero o niente, letto alla cella della sua base (l'istanza, o l'attributo `aBase` per il kit unito), e che entrando
 // in vista sale dal terreno. Le uniform sono una copia sola per tutti. docs/sotterraneo/grafica-3d.md, «La nebbia di sopra».
-import { Vector2, MeshDepthMaterial, RGBADepthPacking } from 'three'
+import { Vector2, MeshDepthMaterial, RGBADepthPacking, DataTexture, RedFormat, UnsignedByteType, NearestFilter } from 'three'
+import { PEZZO } from './pezzi.js'
 
 export const U = {
   uTempo: { value: 0 },
@@ -12,7 +13,17 @@ export const U = {
   uNebbia: { value: 1 },        // 0 spenta (per le foto col cheat), 1 accesa
   uVeduta: { value: 0 },        // 0..1, quanto si è saliti nella veduta: il fuori mappa si sbiadisce
   uMappa: { value: new Vector2(1, 1) },
-  uCostruiti: { value: new Float32Array(25) },   // 1 per i pezzi costruiti vicino all'eroe: il mondo lontano lì si toglie
+  uPezzi: { value: null },      // un texel per pezzo (pezzi.js): 1 dove il pezzo vicino è costruito, e lì il mondo lontano si toglie
+}
+// la trama dei pezzi costruiti, una per mondo: `segna(costruiti)` la riscrive (solo quando cambia qualcosa, non a fotogramma)
+export function tramaDeiPezzi(nx, nz) {
+  const dati = new Uint8Array(nx * nz), t = new DataTexture(dati, nx, nz, RedFormat, UnsignedByteType)
+  t.magFilter = t.minFilter = NearestFilter; t.needsUpdate = true
+  U.uPezzi.value = t
+  return {
+    segna(costruiti) { dati.fill(0); for (const p of costruiti) dati[p] = 255; t.needsUpdate = true },
+    via() { if (U.uPezzi.value === t) U.uPezzi.value = null; t.dispose() },
+  }
 }
 export const SALITA = 0.7        // secondi: quanto ci mette un oggetto a salire dal terreno entrando in vista
 
@@ -53,11 +64,13 @@ export const GLSL_CIELO = /* glsl */`
 // la cella della base: quando si è vista, e quanto è salito (0 ancora sotto, 1 su)
 const GLSL_OGGETTO = /* glsl */`
   uniform sampler2D uQuando; uniform float uNebbiaO; uniform vec2 uMappaO; uniform float uTempoO;
-  uniform float uCostruiti[25];
+  uniform sampler2D uPezzi;
   bool fuoriMappa (vec2 xz) { return xz.x < 0.0 || xz.y < 0.0 || xz.x >= uMappaO.x || xz.y >= uMappaO.y; }
   bool costruito (vec2 xz) {
     if (fuoriMappa(xz)) return false;
-    return uCostruiti[int(floor(xz.x / 32.0)) + 5 * int(floor(xz.y / 28.0))] > 0.5;
+    ivec2 n = textureSize(uPezzi, 0);
+    ivec2 p = clamp(ivec2(floor(xz.x / ${PEZZO.largo}.0), floor(xz.y / ${PEZZO.alto}.0)), ivec2(0), n - 1);
+    return texelFetch(uPezzi, p, 0).r > 0.5;
   }
   float salito (vec2 xz) {
     if (uNebbiaO < 0.5 || fuoriMappa(xz)) return 1.0;

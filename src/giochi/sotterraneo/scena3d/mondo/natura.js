@@ -1,13 +1,13 @@
 // La natura e il decoro sparso del mondo di sopra: alberi, cespugli, canne, sassi e rupi, ruderi, lapidi, covoni, botti, le
-// colture dei campi, l'erba a ciuffi e i fiori. Tutto a istanze: le istanze di ogni pezzo di mondo si calcolano una volta, e una
-// InstancedMesh per tipo (una sola per tutto il mondo vicino) prende quelle dei pezzi costruiti (`componi`). La nebbia legge la
-// cella di ogni istanza: un albero si vede o no tutto intero, e sale dal terreno. Dal prototipo poc/mondo-sopra/natura.js.
+// colture dei campi, l'erba a ciuffi e i fiori. Tutto a istanze: le istanze di un pezzo di mondo si calcolano quando si costruisce
+// (dalle zone caricate), e una InstancedMesh per tipo (una sola per tutto il mondo vicino) prende quelle dei pezzi costruiti
+// (`componi`). La nebbia legge la cella di ogni istanza: un albero si vede o no tutto intero, e sale dal terreno. Dal prototipo
+// poc/mondo-sopra/natura.js.
 import { IcosahedronGeometry, DodecahedronGeometry, OctahedronGeometry, ConeGeometry, SphereGeometry, CircleGeometry, BufferGeometry, Float32BufferAttribute,
          InstancedMesh, MeshStandardMaterial, DoubleSide, Matrix4, Quaternion, Euler, Vector3, Color } from 'three'
 import { mergeGeometries, mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
-import { ERBA } from '../../motore/mondo-aperto.js'
-import { caso, fbm, rumore, quotaTerreno } from './suolo.js'
-import { grigliaDi, pezzoDi } from './pezzi.js'
+import { caso, fbm, rumore, quotaTerreno, ERBA } from './suolo.js'
+import { rettangoloDi } from './pezzi.js'
 import { Cantiere, scatola, cilindro } from './kit.js'
 import { vesti, ombraDi } from './vesti.js'
 
@@ -97,36 +97,39 @@ const TINTA = { villaggio: [0.5, 0.72, 0.28], campi: [0.62, 0.76, 0.28], fruttet
 const FIORITI = new Set(['prato', 'campi', 'villaggio', 'lago', 'frutteto'])
 const COL_FIORI = [[1, 0.95, 0.95], [0.95, 0.85, 0.2], [0.85, 0.35, 0.6], [0.55, 0.6, 0.98], [0.98, 0.5, 0.3]]
 
-// le istanze di ogni pezzo, per tipo: { tipo: { m: Float32Array(16 n), c: Float32Array(3 n), n } }. Si calcolano una volta
-const ISTANZE = new WeakMap()
-export function istanzeDelMondo(m) {
-  if (ISTANZE.has(m)) return ISTANZE.get(m)
-  const { n } = grigliaDi(m), liste = Array.from({ length: n }, () => ({}))
+// le istanze di un pezzo, per tipo: { tipo: { m: Float32Array(16 n), c: Float32Array(3 n), n } }. Si calcolano quando il pezzo si
+// costruisce, da quello che ci sta (`q`: il decoro e i campi delle zone caricate, contenutoDelPezzo) e dalle sue celle scritte (l'erba
+// e i fiori); se ne vanno col pezzo
+export function istanzeDelPezzo(m, p, q) {
+  const liste = {}
   const M4 = new Matrix4(), Q = new Quaternion(), E = new Euler(), P = new Vector3(), S = new Vector3()
   const metti = (tipo, x, y, z, s, rot, r, g, b, sy = 1) => {
-    const l = (liste[pezzoDi(m, x, z)][tipo] ||= { m: [], c: [] })
+    const l = (liste[tipo] ||= { m: [], c: [] })
     M4.compose(P.set(x, y, z), Q.setFromEuler(E.set(0, rot, 0)), S.set(s, s * sy, s))
     l.m.push(...M4.elements); l.c.push(r, g, b)
   }
   const vario = c => 0.82 + c * 0.36
-  for (const d of m.decoro) { const v = vario(d.c); metti(d.tipo, d.x, quotaTerreno(m, d.x, d.y) - (d.tipo === 'rupe' ? 0.3 : 0.02), d.y, d.s, d.r, v, v * (0.95 + d.c * 0.1), v) }
-  const r = caso(m.seme * 31 + 5)
-  for (const c of m.campi) {
+  for (const d of q.decoro) { const v = vario(d.c); metti(d.tipo, d.x, quotaTerreno(m, d.x, d.y) - (d.tipo === 'rupe' ? 0.3 : 0.02), d.y, d.s, d.r, v, v * (0.95 + d.c * 0.1), v) }
+  const r = caso(m.seme * 31 + 5 + p * 7919)
+  for (const c of q.campi) {
     const lungo = c.file === 'x', nf = Math.floor((lungo ? c.h : c.w) / 0.55), np = Math.floor((lungo ? c.w : c.h) / 0.42)
-    for (let f = 0; f < nf; f++) for (let q = 0; q < np; q++) {
-      const a = (f + 0.5) * 0.55 + 0.05, b = (q + 0.5) * 0.42 + 0.05
-      const x = c.x + (lungo ? b : a), z = c.y + (lungo ? a : b), y = quotaTerreno(m, x, z) + 0.03, k = r()
-      if (c.coltura === 'grano') metti('grano', x + (r() - 0.5) * 0.1, y, z + (r() - 0.5) * 0.1, 1, r() * 6.28, 1.0 + k * 0.1, 0.82, 0.4)
-      else if (c.coltura === 'cavoli') { if (q % 2 === 0) metti('cavolo', x, y, z, 0.8 + r() * 0.3, r() * 6.28, 0.75, 1.05 + k * 0.1, 0.75) }
-      else if (c.coltura === 'vigna') metti('vite', x, y, z, 1, 0, vario(k), vario(k), vario(k))
-      else if (c.coltura === 'frutteto') { if ((q + f) % 3 === 0) metti('frutto', x, y, z, 0.7 + r() * 0.2, r() * 6.28, vario(k), vario(k), vario(k)) }
-      else if ((q + f) % 2 === 0) metti(r() < 0.4 ? 'zucca' : 'cavolo', x, y, z, 0.8 + r() * 0.4, r() * 6.28, 0.9, 1, 0.9)
+    for (let f = 0; f < nf; f++) for (let k = 0; k < np; k++) {
+      const a = (f + 0.5) * 0.55 + 0.05, b = (k + 0.5) * 0.42 + 0.05
+      const x = c.x + (lungo ? b : a), z = c.y + (lungo ? a : b), y = quotaTerreno(m, x, z) + 0.03, w = r()
+      if (c.coltura === 'grano') metti('grano', x + (r() - 0.5) * 0.1, y, z + (r() - 0.5) * 0.1, 1, r() * 6.28, 1.0 + w * 0.1, 0.82, 0.4)
+      else if (c.coltura === 'cavoli') { if (k % 2 === 0) metti('cavolo', x, y, z, 0.8 + r() * 0.3, r() * 6.28, 0.75, 1.05 + w * 0.1, 0.75) }
+      else if (c.coltura === 'vigna') metti('vite', x, y, z, 1, 0, vario(w), vario(w), vario(w))
+      else if (c.coltura === 'frutteto') { if ((k + f) % 3 === 0) metti('frutto', x, y, z, 0.7 + r() * 0.2, r() * 6.28, vario(w), vario(w), vario(w)) }
+      else if ((k + f) % 2 === 0) metti(r() < 0.4 ? 'zucca' : 'cavolo', x, y, z, 0.8 + r() * 0.4, r() * 6.28, 0.9, 1, 0.9)
     }
   }
-  // l'erba e i fiori: sulle celle d'erba libere, più fitta nei prati
-  for (let k = 0; k < m.W * m.H; k++) {
+  // l'erba e i fiori: sulle celle d'erba libere delle zone caricate, più fitta nei prati
+  const R = rettangoloDi(m, p)
+  for (let y = R.z0; y < R.z1; y++) for (let x = R.x0; x < R.x1; x++) {
+    const k = y * m.W + x
+    if (m.zona[k] < 0 || !m.zonaCaricata[m.zona[k]]) continue
     if (m.terreno[k] !== ERBA || m.strada[k] || m.blocco[k] || m.campo[k] || m.ponte[k] >= 0 || m.isola[k]) continue
-    const x = k % m.W, y = (k / m.W) | 0, h = m.regioni[m.reg[k]].habitat, t = TINTA[h] || TINTA.prato
+    const h = m.regioni[m.reg[k]].habitat, t = TINTA[h] || TINTA.prato
     const fitta = (FITTA[h] || 1.5) * (0.5 + fbm(x, y, 970, 6)), quanti = Math.floor(fitta) + (r() < fitta % 1 ? 1 : 0)
     for (let i = 0; i < quanti; i++) {
       const px = x + r(), pz = y + r(), s = 0.7 + r() * 0.6, v = 0.85 + s * 0.2
@@ -137,15 +140,12 @@ export function istanzeDelMondo(m) {
       for (let i = 0; i < 3; i++) { const px = x + r(), pz = y + r(); metti('fiore', px, quotaTerreno(m, px, pz) - 0.02, pz, 0.8 + r() * 0.5, r() * 6.28, ...c) }
     }
   }
-  const fuori = liste.map(l => Object.fromEntries(Object.entries(l).map(([t, v]) => [t, { m: new Float32Array(v.m), c: new Float32Array(v.c), n: v.c.length / 3 }])))
-  ISTANZE.set(m, fuori)
-  return fuori
+  return Object.fromEntries(Object.entries(liste).map(([t, v]) => [t, { m: new Float32Array(v.m), c: new Float32Array(v.c), n: v.c.length / 3 }]))
 }
 
-// le InstancedMesh, una per tipo, grandi quanto servono per tutto il mondo; `componi(pezzi)` le riempie coi pezzi costruiti
+// le InstancedMesh, una per tipo, per tutto il mondo vicino: `componi(istanze)` le riempie con quelle dei pezzi costruiti (una lista
+// di `istanzeDelPezzo`). Crescono quando non bastano, e non calano
 export function creaNatura(m, kit, scena) {
-  const pezzi = istanzeDelMondo(m), totali = {}
-  for (const l of pezzi) for (const [t, v] of Object.entries(l)) totali[t] = (totali[t] || 0) + v.n
   const mats = {}, ombre = {}
   const matDi = tipo => {
     if (DI_PIETRA.has(tipo)) return [kit.mobili.pietra, kit.ombraMobili]
@@ -161,25 +161,34 @@ export function creaNatura(m, kit, scena) {
     }
     return [mats[chiave], ombre[chiave]]
   }
-  const pool = {}
-  for (const [tipo, tot] of Object.entries(totali)) {
-    if (!GEO[tipo] || !tot) continue
+  const pool = {}, geo = {}
+  const imDi = (tipo, serve) => {
+    const vecchia = pool[tipo]
+    if (vecchia && vecchia.instanceMatrix.count >= serve) return vecchia
+    if (!GEO[tipo]) return null
+    if (vecchia) { scena.remove(vecchia); vecchia.dispose() }
     const [mat, ombra] = matDi(tipo)
-    const im = new InstancedMesh(GEO[tipo](), mat, tot)
+    const im = new InstancedMesh(geo[tipo] ||= GEO[tipo](), mat, Math.ceil(Math.max(64, serve) * 1.4))
     im.count = 0; im.visible = false; im.frustumCulled = false
     im.setColorAt(0, new Color(1, 1, 1))
     im.castShadow = !BASSI.has(tipo); im.receiveShadow = true
     im.customDepthMaterial = ombra
-    scena.add(im); pool[tipo] = im
+    scena.add(im)
+    return (pool[tipo] = im)
   }
   return {
-    pool, conta: totali,
-    // le istanze dei pezzi `costruiti` nei loro tipi (una volta per pezzo costruito o buttato, non a fotogramma)
-    componi(costruiti) {
-      for (const [tipo, im] of Object.entries(pool)) {
+    pool,
+    // le istanze dei pezzi costruiti nei loro tipi (una volta per pezzo costruito o buttato, non a fotogramma)
+    componi(istanze) {
+      const tot = {}
+      for (const l of istanze) for (const [t, v] of Object.entries(l)) tot[t] = (tot[t] || 0) + v.n
+      for (const t of Object.keys(pool)) if (!tot[t]) { pool[t].count = 0; pool[t].visible = false }
+      for (const [tipo, n0] of Object.entries(tot)) {
+        const im = imDi(tipo, n0)
+        if (!im) continue
         let n = 0
-        for (const p of costruiti) {
-          const v = pezzi[p][tipo]
+        for (const l of istanze) {
+          const v = l[tipo]
           if (!v) continue
           im.instanceMatrix.array.set(v.m, n * 16); im.instanceColor.array.set(v.c, n * 3); n += v.n
         }
@@ -188,7 +197,8 @@ export function creaNatura(m, kit, scena) {
       }
     },
     via() {
-      for (const im of Object.values(pool)) { scena.remove(im); im.geometry.dispose(); im.dispose() }
+      for (const im of Object.values(pool)) { scena.remove(im); im.dispose() }
+      for (const g of Object.values(geo)) g.dispose()
       for (const x of [...Object.values(mats), ...Object.values(ombre)]) x.dispose()
     },
   }
