@@ -9,7 +9,7 @@ gli Asteroidi 3D e il Sotterraneo 3D: il 3D non si scrive a mano.
 | file | cosa tiene |
 |---|---|
 | `mondo3d.js` | **compone** tutto e fa il battito: renderer, luci, il tocco (`tocca`, `bersaglioSotto`), la coda di semina/raccolta, le opzioni (`applica`), le statistiche. L'unico che usa il renderer |
-| `terreno.js` | erba, strade, griglia, lotti non comprati, recinto, alberi, nuvole, i due edifici di scena |
+| `terreno.js` | erba, strade, griglia, lotti non comprati, recinto, alberi, i due edifici di scena |
 | `pezzi.js` | un gruppo per ogni cosa del motore e per i sette edifici unici (fantasmi finché non si comprano); li tiene allineati (`sincronizza`) e li anima (grano che cresce, pecore, galline e mucche, fontana, fumo, il pallone); i cartelli sugli edifici: prezzo o «🔒 Livello N» sul fantasma, pronti o cottura su ogni macchina, uova o latte pronti sul pollaio e sulla stalla, e su recinto, pollaio e stalla il cartello col conto «🐄 2/4» e il pulsante «＋ 🪙 N» che compra una bestia ([animali.md](animali.md)); il cartello si nasconde col pezzo sollevato |
 | `eroe.js` | il movimento (a piedi, o di corsa), il percorso, la posa del gesto (semina, falcia, abbatte, esulta) |
 | `azioni.js` | cosa fa l'eroe davanti a ogni cosa: anima il gesto e **a metà gesto chiede al motore di farlo davvero**; un edificio posseduto apre il menu della sua macchina, uno no offre l'acquisto (`offriEdificio`: livello, terreno da comprare prima, prezzo) |
@@ -88,7 +88,7 @@ edificio o un lotto da comprare lo chiude; la ✕ c'è lo stesso. Nessun «annul
 ## Qualità e peso
 
 Il pannello ⚙ (`viste/Opzioni.vue`, dati in `dati/qualita.js`) ha tre preset (basso / medio / alto), gli interruttori che
-pesano (risoluzione 0,75×…nativa, ombre e loro qualità, vento, scintille, alberi, ciuffi, nuvole, nebbia), la
+pesano (risoluzione 0,75×…nativa, ombre e loro qualità, vento, scintille, alberi, ciuffi, nebbia), la
 distanza della telecamera, le prove di stress (+10 campi, +3 recinti, non si salvano) e le statistiche vive: fps, il
 fotogramma peggiore degli ultimi due secondi, il lavoro del JS (non la GPU: quella si deduce dal peggiore), draw call,
 triangoli, geometrie, texture. «Mostra il rapporto» scrive dispositivo, GPU, fps e impostazioni da incollare.
@@ -100,11 +100,8 @@ in `dati/qualita.js`, che si alza quando cambiano i valori di partenza, così ch
 - **ciuffi d'erba**: un gruppetto di tre fili su metà delle celle del prato, a istanze, che sparisce dove sta una strada, un
   pezzo, un albero o un sasso (si rifà a ogni cambio, `ridisegnaErba`), più quelli fuori dal mondo;
 - **vento**: i ciuffi ondeggiano nel vertex shader (fase per ciuffo, raffiche) e il grano maturo si piega di una decina di gradi;
-- **nuvole**: undici, basse (12–15 di quota, dentro la vista di una camera vicina) e un po' trasparenti, ognuna con la sua
-  **ombra morbida sul prato** spostata lungo la direzione del sole; due disegni in tutto (macchie e ombre, a istanze);
 - **scintille e fumo**: solo nei momenti del gioco (semina, raccolto, acquisto, fumo dei forni), non a ciclo continuo.
-Prima di questo non si vedeva niente: le nuvole stavano a quota 28–36, **sopra la telecamera** (che guarda in giù da 18) e
-lontane, i ciuffi solo fuori dal mondo (sottili e dello stesso verde del prato), il vento del grano muoveva la punta di 5 cm.
+Prima di questo non si vedeva niente: i ciuffi solo fuori dal mondo (sottili e dello stesso verde del prato), il vento del grano muoveva la punta di 5 cm.
 
 - Il motore sta in piedi con **molte cose** perché campi, alberi, sassi, ciuffi, strade e recinto sono a istanze: ~100–260 draw call
   e ~20–50k triangoli con una sola ombra a 1024 (misurato in Chrome senza schermo, SwiftShader: i ms non dicono niente
@@ -121,3 +118,5 @@ lontane, i ciuffi solo fuori dal mondo (sottili e dello stesso verde del prato),
 `motore`, `mondo` e le opzioni `q` (i test lo usano: un orologio spostato con `motore.ora = () => Date.now() + 60000` fa
 passare il tempo dei campi). `node test/esegui.mjs fattoria3d --scatti` lascia le foto in
 `test/scatti/`.
+
+- **Provate e tolte, le nuvole**: undici macchie basse con l'ombra sul prato, due disegni a istanze. Pesavano e non davano l'impressione giusta di cielo (provato: non si rimettono senza un'idea diversa).

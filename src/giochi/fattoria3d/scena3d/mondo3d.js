@@ -199,13 +199,6 @@ export class Mondo3d {
   applicabile(c) { return c.tipo === 'campo' && (this.cmd.modo === 'semina' ? this.m.campoVuoto(c) : this.cmd.modo === 'raccogli' ? this.m.campoMaturo(c) : false) }
   _accoda(id) { if (!this.coda.includes(id)) { this.coda.push(id); this.pezzi.segnaCoda(id, true) } }
   svuotaCoda() { for (const id of this.coda) this.pezzi.segnaCoda(id, false); this.coda.length = 0 }
-  /** Mette in coda tutti i campi adatti, dal più vicino. Torna quanti. */
-  tutti() {
-    const { eroe, m } = this
-    const lista = m.cose.filter(c => this.applicabile(c)).sort((a, b) => Math.hypot(a.i - eroe.x, a.j - eroe.z) - Math.hypot(b.i - eroe.x, b.j - eroe.z))
-    lista.forEach(c => this._accoda(c.id))
-    return lista.length
-  }
   _eseguiInCoda(id) {
     const c = this.m.cosa(id); const { eroe } = this
     if (!c || eroe.az || !this.applicabile(c)) return

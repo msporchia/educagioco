@@ -31,7 +31,7 @@ scena3d/             il disegno (vedi scena.md); `visita.js` è la visita a un v
   scena3d/modelli-passaggi.js   ponte, passerella e tavolo con le panche: presi dal Sotterraneo 3D e rifatti con i materiali della fattoria (scena.md)
 viste/
   Hud.vue            il gettone del livello (⭐ N con la barra sottile, apre i livelli) e le scorte in alto; da livello 2 il tasto «🧺 Banco» col pallino degli ordini consegnabili
-  BarraAzioni.vue    libero / semina / raccogli / costruisci, i numeri, «Tutti»
+  BarraAzioni.vue    libero / semina / raccogli / costruisci, i numeri
   Vassoio.vue        la barra del costruire: le carte (dai `PEZZI`, quelle non arrivate in grigio e non trascinabili; ogni carta si trascina anche se non è pagata: paga il rilascio), gli strumenti, la vista
   SceltaSeme.vue     «Cosa semini?»: le dieci colture dai dati, quelle non arrivate in grigio col livello
   Macchina.vue       il menu di una macchina (la sua, qualunque sia): l'insegna col suo colore (`[data-macchina]` in stile.css), il forno a tre vani con barra e timer, i pronti, le ricette come schede con i gettoni tondi degli ingredienti; le chiuse velate col lucchetto e il livello
@@ -54,7 +54,6 @@ Registrazione: `src/giochi/indice.js` (il manifesto, in coda) e `src/giochi/sche
 |---|---|
 | `[data-f3="campo"] canvas` | il contenitore e la tela |
 | `[data-f3="az-libero|az-semina|az-raccogli|az-costruisci"]` | i tasti delle azioni (`.acceso` se armato); `.f3-n` è il numero rosso |
-| `[data-f3="tutti"]` | «▶ Tutti», solo con semina o raccogli armati |
 | `[data-f3="scorte|prodotti|lana"]` | il HUD |
 | `[data-f3="semi"]`, `[data-seme="carota"]` | la scelta del seme |
 | `[data-f3="vassoio"]`, `[data-carta="campo"]`, `[data-vista="vicino"]` | la barra del costruire, le carte, la vista |

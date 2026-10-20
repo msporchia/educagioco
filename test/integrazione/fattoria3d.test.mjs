@@ -464,11 +464,11 @@ controlla('il cartello conta 2 e il prezzo sale', (await cartelloDi('🐔').inne
 // il tempo passa: le uova aspettano, si raccolgono in un gesto, il contatore e il HUD le vedono
 await passa(AN.ms + 1000)
 await tocca3d(idP)
-uguale('raccogliere porta le uova in dispensa (la gallina nutrita)', (await stato()).prodotti.uova, 1)
+uguale('raccogliere porta le uova in dispensa (le due galline nutrite: quella di partenza e quella comprata, che ha avuto la sua pappa)', (await stato()).prodotti.uova, 2)
 controlla('le bestie hanno di nuovo fame', (await bestieDi(idP)).every(f => f === null))
 await attendi(page, 500)
 controlla('il HUD mostra le uova', /🥚/.test(await page.locator('[data-f3="prodotti"]').innerText()))
-uguale('il contatore delle uova avanza', ((await leggiProfilo(page)).totals || {}).fattoria3dUova, 1)
+uguale('il contatore delle uova avanza', ((await leggiProfilo(page)).totals || {}).fattoria3dUova, 2)
 // la stalla: il latte
 const idS = await mettiCortile('stalla')
 controlla('la stalla si mette sul prato', !!idS)

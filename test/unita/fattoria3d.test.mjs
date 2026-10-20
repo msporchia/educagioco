@@ -550,12 +550,14 @@ controlla('l\'albo del manifesto sta in piedi', gA.length === 0, gA.join(' · ')
   stessaLista('passato un secolo l\'uovo è ancora uno solo', [f.bestiePronte(p).length, f.raccogliProdotti(p.id).n, f.s.prodotti.uova], [1, 1, 2])
   // le altre galline si comprano dentro il pollaio, senza livelli: ognuna costa di più, fino alla capienza
   uguale('la capienza è nei dati', ANIMALI.pollaio.posti, 6)
-  const prezzi = []
-  for (let k = 1; k < ANIMALI.pollaio.posti; k++) { const m0 = f.monete(), x = f.compraBestia(p.id); prezzi.push(x.ok ? m0 - f.monete() : x.motivo) }
+  const prezzi = [], pappe = []
+  f.s.merci.grano = 20
+  for (let k = 1; k < ANIMALI.pollaio.posti; k++) { const m0 = f.monete(), x = f.compraBestia(p.id); prezzi.push(x.ok ? m0 - f.monete() : x.motivo); pappe.push(x.pappa) }
+  controlla('ogni acquisto porta un giro di pappa: la bestia nuova comincia a lavorare', pappe.every(Boolean) && p.bestie.slice(1).every(b => b.fine !== null))
   stessaLista('cinque galline in più, ognuna più cara della precedente', prezzi, [1, 2, 3, 4, 5].map(n => prezzoDellaBestia('pollaio', n)))
   controlla('i prezzi salgono di un passo fisso', prezzi.every((x, i) => !i || x - prezzi[i - 1] === ANIMALI.pollaio.rincaroBestia) && prezzi[0] === ANIMALI.pollaio.prezzoBestia)
   stessaLista('sei galline, il tetto: la settima no', [p.bestie.length, f.compraBestia(p.id).motivo, f.infoBestie(p).pieno], [6, 'pieno', true])
-  f.s.merci.grano = 10
+  f.s.merci.grano = 10; for (const b of p.bestie) b.fine = null
   uguale('tutte e sei affamate: si nutrono tutte', f.nutriBestie(p.id).n, 6)
   stessaLista('e il grano scende di sei', [f.s.merci.grano, f.s.merci.mais], [4, 1])
   t.ora += ANIMALI.pollaio.ms

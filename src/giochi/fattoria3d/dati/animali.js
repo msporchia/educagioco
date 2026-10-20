@@ -14,8 +14,8 @@ export const ANIMALI = {
     mangia: ['grano', 'mais'],    // cosa si dà da mangiare (dalla scorta più grande di queste)
     pasti: 1,                     // raccolti per pasto
     posti: 6,                     // galline al massimo (la capienza del pollaio)
-    prezzoBestia: 15,             // la seconda gallina; ogni altra costa `rincaroBestia` in più della precedente
-    rincaroBestia: 8,
+    prezzoBestia: 25,             // la seconda gallina; ogni altra costa `rincaroBestia` in più della precedente
+    rincaroBestia: 12,
   },
   stalla: {
     bestia: 'mucca', bestie: 'mucche', emoji: '🐄', prodotto: 'latte', evento: 'latte',
@@ -23,15 +23,15 @@ export const ANIMALI = {
     mangia: ['mais', 'carota'],
     pasti: 2,
     posti: 4,
-    prezzoBestia: 30,
-    rincaroBestia: 15,
+    prezzoBestia: 60,
+    rincaroBestia: 30,
   },
 }
 export const TIPI_DI_ANIMALI = Object.keys(ANIMALI)
 
 /** Tutti i pezzi che tengono bestie, con la stessa forma: il recinto (pecore, `PECORE.max` posti) e i due del cortile. */
 export const CORTILE = {
-  recinto: { bestia: 'pecora', bestie: 'pecore', emoji: '🐑', posti: PECORE.max, prezzoBestia: 20, rincaroBestia: 10 },
+  recinto: { bestia: 'pecora', bestie: 'pecore', emoji: '🐑', posti: PECORE.max, prezzoBestia: 40, rincaroBestia: 20 },
   ...ANIMALI,
 }
 export const TIPI_DEL_CORTILE = Object.keys(CORTILE)

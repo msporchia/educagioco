@@ -28,7 +28,7 @@ sempre ([../fattoria/regole.md](../fattoria/regole.md)); qui le differenze.
 | cosa | costo | perché |
 |---|---|---|
 | un campo | 20 + 8 per ogni copia (anche nel magazzino) | il rincaro lineare della fattoria di sempre |
-| recinto / bancarella / bacheca / fontana | 45 / 15 / 12 / 30 | fissi; nel recinto una pecora, le altre si comprano (20, 30, 40) |
+| recinto / bancarella / bacheca / fontana | 45 / 15 / 12 / 30 | fissi; nel recinto una pecora, le altre si comprano (40, 60, 80) |
 | aiuola / panchina / pozzo / spaventapasseri | 6 / 10 / 18 / 12 | decorazioni, fissi |
 | passerella / ponte / tavolo | 8 / 14 / 18 | decorazioni (liv 3 / 5 / 4), fisse |
 | pollaio / stalla | 55 / 90 | liberi nel terreno come il recinto; una bestia nel prezzo, le altre una per volta, sempre più care ([animali.md](animali.md)) |
@@ -65,7 +65,7 @@ gobba) in `dati/catalogo.js`. Sono **decorazione per fare camminamenti**: niente
 ## Le pecore
 
 `agnello → adulta → tosata → lana che ricresce`, e a volte ne nasce una nuova (`PECORE` in `dati/regole.js`). **Si parte con
-una pecora adulta** (nel prezzo del recinto); **le altre si comprano dal cartello sopra il recinto** (adulte, 🪙20, 30, 40, fino a
+una pecora adulta** (nel prezzo del recinto); **le altre si comprano dal cartello sopra il recinto** (adulte, 🪙40, 60, 80, fino a
 quattro: [animali.md](animali.md)), come le galline e le mucche. Con due adulte le nascite ricominciano:
 
 - un agnello **cresce dopo due pasti** (ogni pasto un raccolto qualsiasi, dalla scorta più grande);

@@ -466,7 +466,9 @@ export class Fattoria3d {
     if (c.pecore) c.pecore.push({ eta: 'adulta', t0: this.ora() })
     else c.bestie.push({ fine: null })
     this._evento('bestia', { tipo: c.tipo })
-    return { ok: true, costo: q.prezzo, n: q.n + 1 }
+    // ogni acquisto porta anche un giro di pappa (se c'è da mangiare): le bestie affamate, o un pasto al recinto
+    const pappa = c.pecore ? this.nutri(id) : this.nutriBestie(id)
+    return { ok: true, costo: q.prezzo, n: q.n + 1, pappa: !!pappa.ok }
   }
   /** Quante uova o quanto latte aspettano in tutta la fattoria (per un cartello). */
   prodottiDelCortile() {

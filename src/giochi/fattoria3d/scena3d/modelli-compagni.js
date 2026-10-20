@@ -387,9 +387,12 @@ export function posaGatto (g, { stato = 'sta', vel = 0, fase = 0, t = 0, p = 0 }
   } else { u.corpo.scale.y = 1 + resp * 0.012; u.testa.rotation.y = Math.sin(t * 0.7) * 0.3; onda(1, 0.35) }
 }
 
+const SCALA_CANE = 0.8          // Watson è un cane grande, ma in scena doveva stare più piccolo del contadino
+
 /** Il modello di un compagno dai dati (`dati/compagni.js`). */
 export function creaCompagno (c) {
   const g = c.tipo === 'cane' ? creaCane() : creaGatto(c.variante)
+  if (c.tipo === 'cane') g.scale.setScalar(SCALA_CANE)
   g.userData.id = c.id
   return g
 }

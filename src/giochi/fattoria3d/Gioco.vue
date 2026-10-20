@@ -171,10 +171,6 @@ function scegliSeme(k) {
   semiAperto.value = false; seme.value = k; mondo.imposta({ seme: k })
   const f = quandoSeme; quandoSeme = null; f && f(k)
 }
-function tutti() {
-  const n = mondo.tutti()
-  mondo.fx.parla(n ? `Faccio ${n} ${n === 1 ? 'cosa' : 'cose'}` : 'Non c\'è niente da fare')
-}
 
 // ── costruire ──
 const carte = computed(() => {
@@ -366,7 +362,7 @@ onBeforeUnmount(() => {
         <button v-if="cameraLibera" class="f3-centra" data-f3="centra" @click="mondo.tornaAllEroe()">⌖ Torna all'eroe</button>
 
         <BarraAzioni v-if="!costruendo && !trascinando" :modo="modo" :seme="COLTURE[seme].emoji" :da-fare="foto.daFare"
-                     @modo="impostaModo" @semina="apriSemina" @tutti="tutti" @costruisci="apriCostruisci" />
+                     @modo="impostaModo" @semina="apriSemina" @costruisci="apriCostruisci" />
 
         <Vassoio v-if="costruendo" ref="vassoio" :carte="carte" :strumento="strumento" :vista="vista" :testo="suggerimento"
                  :bersaglio="!!(trascinando && trascinando.perMettereVia)"

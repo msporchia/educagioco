@@ -19,8 +19,8 @@ sempre ([../fattoria/animali.md](../fattoria/animali.md)) ma più semplici delle
 - **Altre bestie si comprano dentro l'edificio, quando si vuole.** Recinto, pollaio e stalla funzionano allo stesso modo
   (`CORTILE` in `dati/animali.js`): una bestia nel prezzo del pezzo, le altre una per volta fino alla **capienza** (`posti`):
   recinto 4 pecore, pollaio 6 galline, stalla 4 mucche. **Il livello apre il pezzo, non i posti.** Ogni bestia costa
-  più della precedente: `prezzoBestia + rincaroBestia · (n − 1)` con `n` le bestie già dentro (pecora 20, 30, 40;
-  gallina 15, 23, 31, 39, 47; mucca 30, 45, 60). Conta come esperienza. Pieno rifiuta con `pieno`, senza monete con
+  più della precedente: `prezzoBestia + rincaroBestia · (n − 1)` con `n` le bestie già dentro (pecora 40, 60, 80;
+  gallina 25, 37, 49, 61, 73; mucca 60, 90, 120). Conta come esperienza. Pieno rifiuta con `pieno`, senza monete con
   `poche-monete` e il `costo`. Una pecora comprata è **adulta** (la lana ricresce da quel momento); le nascite restano
   ([regole.md](regole.md), «Le pecore»).
 - **Un pollaio o una stalla con le bestie non si mette via** (`ha-le-bestie`), si sposta, come il recinto.
@@ -102,3 +102,5 @@ emoji, n, max, pieno, prezzo }` (`prezzo` è null se pieno; null l'intero risult
 Nei test: `unita/fattoria3d` (sezioni 8 e 18–20); `integrazione/fattoria3d` (sezione «gli animali da cortile»: nutrire, uova,
 bestie comprate dal cartello — `[data-f3="cartello-bestie"]` con `data-n`/`data-max`, `[data-f3="compra-bestia"]` con
 `aria-disabled` —, latte, il recinto da una pecora a quattro, contatori, `[data-f3="prodotti"]`).
+
+Ogni acquisto di una bestia porta **un giro di pappa** (`pappa` nel risultato di `compraBestia`): le bestie affamate del pollaio o della stalla si nutrono dalla scorta, il recinto riceve un pasto (cresce l'agnello o avanza la nascita). Senza raccolti da dare, niente pappa (non è un rifiuto).

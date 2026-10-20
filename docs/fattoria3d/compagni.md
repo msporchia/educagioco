@@ -71,3 +71,4 @@ i compagni sono nella tela.
 - Watson e le sue pose si sono guardati nel catalogo 3D, **non ancora col dito**: in gioco va giudicato per primo e
   severamente (`#fattoria3d`, serve un livello 3: `window.__fattoria3d.motore.s.esperienza = …`).
 - La posizione non si salva; i nomi sono dei dati. Un compagno in più è una voce di `COMPAGNI` col suo `liv` (uno per livello).
+- **Misura di Watson**: in scena è al 80% (`SCALA_CANE` in `modelli-compagni.js`): il bobtail è grande, ma accanto al contadino doveva sembrare più piccolo.

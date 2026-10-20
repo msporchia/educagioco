@@ -128,7 +128,7 @@ export class Azioni {
     if (!r.ok) return this.dici(dettoDiRifiuto(r, { mancano: (r.costo || 0) - m.monete(), bestie: q.bestie }))
     const p = this.centro(c)
     pezzi.sincronizza(); pezzi.salta(id)
-    fx.scoppietta(p.clone().setY(0.8), 0xffd24a, 16, 2.4, 3); fx.volo('+1 ' + q.emoji, p, 1.8)
+    fx.scoppietta(p.clone().setY(0.8), 0xffd24a, 16, 2.4, 3); fx.volo('+1 ' + q.emoji + (r.pappa ? ' 🍽️' : ''), p, 1.8)
     if (!eroe.az) eroe.avvia('esulta', 0.9)
     ui.cambio()
   }

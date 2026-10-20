@@ -1,6 +1,6 @@
 // Il terreno: l'erba, le strade (una per cella, a istanze), la griglia che si accende mentre si costruisce, i lotti non comprati
 // (un velo scuro), il recinto basso attorno a quelli comprati, gli alberi e i sassi e cespugli (a istanze: si tolgono uno alla volta
-// azzerando l'istanza, anche nei lotti comprati), i ciuffi d'erba che ondeggiano col vento, le nuvole con la loro ombra sul prato e i
+// azzerando l'istanza, anche nei lotti comprati), i ciuffi d'erba che ondeggiano col vento e i
 // due edifici di scena. Non sa le regole: legge dal motore cosa è tuo.
 import * as THREE from 'three'
 import { mat, FORME, creaFienile, creaCasa } from './modelli.js'
@@ -26,12 +26,11 @@ export class Terreno {
     this.istanzeAlberi = []
     this.decori = { alberi: [], erba: [] }
     this.istanzeOstacoli = []
-    this.nuvole = []
     this.fumi = []; this.tFumo = 0      // i camini di scena: dove esce il fumo, e quando è uscito l'ultimo
     this.texture = []
     this.tempo = 0
     this.vento = { uT: { value: 0 }, uV: { value: 1 } }       // il tempo e l'intensità del vento, letti dal materiale dei ciuffi
-    this._suolo(); this._strade(); this._griglia(); this._lotti(); this._alberi(); this._ostacoli(); this._erba(); this._nuvole(); this._fisse()
+    this._suolo(); this._strade(); this._griglia(); this._lotti(); this._alberi(); this._ostacoli(); this._erba(); this._fisse()
     this.ridisegnaLotti(); this.ridisegnaStrade(); this.ridisegnaErba()
   }
 
@@ -209,43 +208,6 @@ export class Terreno {
 
   togliAlbero(n) { for (const x of this.istanzeAlberi) { x.setMatrixAt(n, ZERO); x.instanceMatrix.needsUpdate = true } }
 
-  // le nuvole: bassa quota (sotto la camera quando è alta, sopra quando è vicina), bianche e un po' trasparenti, con la loro ombra
-  // morbida sul prato nel punto dove la proietterebbe il sole. Un solo disegno per le macchie e uno per le ombre (a istanze).
-  _nuvole() {
-    const N = 11, MACCHIE = 5
-    let r = 29
-    const caso = () => { r = (r * 9301 + 49297) % 233280; return r / 233280 }
-    const morbida = (centro, bordo) => {
-      const c = document.createElement('canvas'); c.width = c.height = 64
-      const x = c.getContext('2d'), g = x.createRadialGradient(32, 32, 2, 32, 32, 31)
-      g.addColorStop(0, centro); g.addColorStop(1, bordo); x.fillStyle = g; x.fillRect(0, 0, 64, 64)
-      const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; this.texture.push(t); return t
-    }
-    this.macchie = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 9, 6), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.45, depthWrite: false, fog: false }), N * MACCHIE)
-    this.ombreNuvole = new THREE.InstancedMesh(new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2),
-      new THREE.MeshBasicMaterial({ map: morbida('rgba(20,40,20,0.30)', 'rgba(20,40,20,0)'), transparent: true, depthWrite: false }), N)
-    for (const m of [this.macchie, this.ombreNuvole]) m.frustumCulled = false
-    this.macchie.renderOrder = 5
-    this.gruppoNuvole = new THREE.Group(); this.gruppoNuvole.add(this.macchie, this.ombreNuvole); this.scena.add(this.gruppoNuvole)
-    for (let n = 0; n < N; n++) {
-      const blob = Array.from({ length: MACCHIE }, (_, k) => ({ x: (k - 2) * 1.9 + (caso() - 0.5), y: caso() * 0.7, z: (caso() - 0.5) * 2.6, sx: 2.1 + caso() * 1.4, sz: 1.7 + caso() * 1.2 }))
-      this.nuvole.push({ x: -45 + caso() * 90, z: -30 + caso() * 60, y: 12.5 + caso() * 3, v: 0.9 + caso() * 0.9, blob })
-    }
-    this._muoviNuvole(0)
-  }
-  _muoviNuvole(dt) {
-    const d = new THREE.Object3D(); let k = 0
-    this.nuvole.forEach((n, ni) => {
-      n.x += dt * n.v; if (n.x > 48) n.x = -48
-      for (const b of n.blob) {
-        d.position.set(n.x + b.x, n.y + b.y, n.z + b.z); d.rotation.set(0, 0, 0); d.scale.set(b.sx, 0.75, b.sz); d.updateMatrix(); this.macchie.setMatrixAt(k++, d.matrix)
-      }
-      // l'ombra cade lungo la direzione del sole (8, -17, -6): spostata di quota/17 in quella direzione
-      d.position.set(n.x + 8 * n.y / 17, 0.07, n.z - 6 * n.y / 17); d.scale.set(11, 1, 6.2); d.updateMatrix(); this.ombreNuvole.setMatrixAt(ni, d.matrix)
-    })
-    this.macchie.instanceMatrix.needsUpdate = true; this.ombreNuvole.instanceMatrix.needsUpdate = true
-  }
-
   // il fienile e la casa: solo di scena
   _fisse() {
     for (const f of FISSI) {
@@ -259,14 +221,12 @@ export class Terreno {
   muovi(dt, fx = null) {
     this.tempo += dt; this.vento.uT.value = this.tempo
     if (fx && this.fumi.length && this.tempo - this.tFumo > 0.9) { this.tFumo = this.tempo; for (const p of this.fumi) fx.fumata(p) }
-    if (this.gruppoNuvole.visible) this._muoviNuvole(dt)
   }
 
-  /** Accende e spegne i pezzi che pesano (le opzioni): alberi, ciuffi, nuvole; e il vento che muove i ciuffi (il grano è dei pezzi). */
+  /** Accende e spegne i pezzi che pesano (le opzioni): alberi e ciuffi; e il vento che muove i ciuffi (il grano è dei pezzi). */
   applica(q) {
     for (const m of this.decori.alberi) m.visible = q.alberi
     for (const m of this.decori.erba) m.visible = q.erba
-    this.gruppoNuvole.visible = q.nuvole
     this.vento.uV.value = q.vento ? 1 : 0
   }
 

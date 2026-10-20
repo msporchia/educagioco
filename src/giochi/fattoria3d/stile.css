@@ -24,7 +24,6 @@
 .f3-azioni button.acceso { background: #9be07a; border-color: #5fae3a; }
 .f3-azioni .f3-seme { position: absolute; left: 2px; top: 2px; font-size: 15px !important; background: #fff; border-radius: 10px; padding: 0 2px; line-height: 1.1; }
 .f3-azioni .f3-n { position: absolute; right: 0; top: -2px; min-width: 20px; height: 20px; padding: 0 5px; box-sizing: border-box; border-radius: 10px; background: #e8472b; color: #fff; font: 800 12px/20px "Emoji Gioco", system-ui, sans-serif; font-style: normal; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,.35); }
-.f3-tutti { min-height: 44px; border: 0; border-radius: 22px; padding: 0 18px; background: #ffd36a; font: 800 15px "Emoji Gioco", system-ui, sans-serif; color: #3a2a1a; box-shadow: 0 3px 10px rgba(0,0,0,.3); touch-action: manipulation; }
 
 /* i fogli: sempre una colonna in fondo, con la ✕ in alto a destra */
 .f3-foglio, .f3-vassoio { position: absolute; left: 0; right: 0; bottom: 0; z-index: 35; background: rgba(255,247,230,.98); border-radius: 22px 22px 0 0; box-shadow: 0 -4px 16px rgba(0,0,0,.28); color: #3a2a1a; }
