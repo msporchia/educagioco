@@ -102,6 +102,15 @@ e poi di E; `Mondo3d.vue` e `scena3d/mondo/indice.js` sono di D e poi di E.
 - **Test**: lo stesso (eroe, chiave, rifatti) la stessa forma e lo stesso mazzo, un `rifatti` in più un'altra; uscire col portale,
   lasciar perdere o svenire non aumenta `rifatti`; la prima ripulitura delle sette dà le stelle e la storia, la seconda no; un
   dungeon nuovo non tocca `tappa` né le stelle; i sei boss con le difese e la figura; nessuna specie fuori dalla sua zona.
+- **Fatto** (20 ottobre 2026): [dungeon-che-si-rigenerano.md](dungeon-che-si-rigenerano.md) ha le regole, i tredici dungeon, i
+  numeri da tarare e il contratto. In breve: `semeDelDungeon`, `tappaDelMondo(chiave, { eroe, rifatti, terra, livello, storia })`,
+  `dungeonDellAvventura`, `ripulito`, `dopoLaDiscesa`, `tappaDellaSosta` in `motore/rigenera.js`; si salva
+  `mondo.dungeon[chiave] = { rifatti }` e, nella sosta, `dungeon: { chiave, rifatti, terra, storia? }` (la chiave in `tappa` per i
+  sei nuovi). `Gioco.vue` dà `dungeonDelMondo` (i tredici per chiave) a `Campagna.vue` come `dungeon`, scende con `avvia(chiave)` e
+  scrive il rifatti in `chiudi()`. Restano: a **D** passare `dungeon` da Campagna a `Mondo3d.vue`, i sei ingressi coi monumenti e le
+  icone, la sentinella nel 3D; a **B** tenere `mondo.dungeon` nel travaso e `cittaDelDungeon` dei sei; a **E** `terraOra()` in
+  `Gioco.vue` e `mondi[t].dungeon`; alla taratura le leve di `dati/dungeon-del-mondo.js`. Il 2D non cambia (`npm run taratura --
+  --presto` uguale).
 
 ### D. La scena — 3 giorni, dopo A (il villaggio e i monumenti anche prima)
 

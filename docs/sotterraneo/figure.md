@@ -106,6 +106,10 @@ sua base sarebbe una spada qualunque con un nome importante. Un pezzo col
 nome nuovo vuole la sua riga in un foglietto, e `guastiDelleCose` si accorge
 se manca.
 
+**I pezzi dei sei grossi dei dungeon nuovi** ([dungeon-che-si-rigenerano.md](dungeon-che-si-rigenerano.md)) non hanno ancora la
+figura chiamata come loro: `figura` in `DEI_GROSSI` dice quale figura dei fogli vestono (un aspetto della loro base), e `componi` e
+`guastiDelleCose` leggono quella. Quando la loro sarà ritagliata, si toglie `figura`.
+
 Due scelte da rifare quando ci saranno figure migliori:
 
 - **Gli anelli dipinti sono quattro** (`amuleto-33`…`36`). L'Anello di
