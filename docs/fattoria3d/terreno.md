@@ -21,8 +21,8 @@ lotto che confina** con uno proprio (`confina`), così il terreno resta d'un pez
 ## Il recinto basso
 
 Un recinto di legno corre lungo ogni lato di un lotto proprio che confina con uno non proprio o con il bordo del
-mondo (`ricostruisciRecinti`, a istanze: pali e travi). Si rifà a ogni acquisto. I lotti non comprati sono erba alta
-scura con cespugli e sassi, anch'essi a istanze (`ridisegnaLotti`), e un velo scuro sul prato.
+mondo (`ricostruisciRecinti`, a istanze: pali e travi). Si rifà a ogni acquisto. I lotti non comprati hanno un velo
+scuro sul prato (`ridisegnaLotti`).
 
 ## Gli alberi
 
@@ -31,10 +31,21 @@ tagliati si salvano come numeri (`stato.tagliati`). Tre per lotto, tranne dove s
 campo di partenza o la partenza dell'eroe (`celleRiservate`); **fuori dal mondo c'è il bosco**, che non si abbatte.
 
 - Toccare un albero nel terreno proprio: l'eroe lo raggiunge, alza l'**ascia** (quattro colpi), l'albero cade lontano
-  da lui e dà **🪵 2** (`LEGNA_PER_ALBERO`); la cella torna libera. Il motore decide (`abbatti`), la scena disegna
+  da lui; il colpo costa **🪙 3** (`COSTI.albero`) e non dà niente (non c'è legna); la cella torna libera. Senza monete
+  l'ascia non si alza e l'eroe dice «Per tagliare un albero servono 🪙 3». Il motore decide (`abbatti`), la scena disegna
   (`togliAlbero`, `Effetti.cade`).
 - Ogni albero è un'istanza di tre mesh (tronco e due chiome): abbatterlo è azzerare l'istanza.
-- La legna per ora non serve a niente ([da-fare.md](da-fare.md)).
+
+## I sassi e i cespugli
+
+Pochi per lotto (2–5, `dati/ostacoli.js`), sempre gli stessi, **anche dopo aver comprato il lotto**: un lotto appena tuo non è
+vuoto, ma nemmeno un campo minato (mai due vicini, mai sulle strade di serie, sui posti degli edifici, sul campo e sulla
+partenza, sul fienile e la casa, né sotto un albero; i lotti stretti fra edifici ne hanno meno). Bloccano il costruire e il
+passo come un albero (`bloccoFisso`). Si toccano nel terreno proprio: l'eroe arriva, si china (gesto breve) e **🪙 1** li toglie
+(`togliOstacolo`; evento `sasso`, contatore `fattoria3dSassi`). L'id di salvataggio è la **cella** (`idx(i, j)`), non l'ordine:
+`stato.ostacoli` salva i tolti, e un edificio nuovo non fa scorrere gli altri. Un salvataggio con un pezzo o una strada
+sopra un sasso toglie il sasso da sé, gratis. Un tocco su un sasso in un lotto non tuo apre l'acquisto del lotto, come un
+albero. Il dito è largo: oltre al raggio sul disegno basta la cella (`bersaglioSotto`).
 
 ## Le strade
 

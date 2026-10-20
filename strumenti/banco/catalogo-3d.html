@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Il catalogo 3D</title>
+<!-- ═══════════════════════════════════════════════════════════════════
+     IL CATALOGO 3D — tutti i modelli 3D costruiti, e dove si usano
+
+     Una griglia di anteprime (un solo contesto WebGL per tutte), con il
+     gioco che le usa (Fattoria 3D, Sotterraneo 3D o tutti e due). Si
+     tocca una scheda per girarla col dito e zoomare; in fondo la sezione
+     «Si assomigliano» mette accanto cose dello stesso genere di giochi
+     diversi, perché chi guarda decida se vale la pena usarle anche di là.
+
+         npm run catalogo3d              apre questa pagina
+         npm run catalogo3d:scheda       il PNG contatto in tmp/scatti/
+
+     Non si apre col doppio click: servono i moduli veri dei giochi, e da
+     file:// non si caricano. Come aggiungere una voce: docs/core/catalogo-3d.md
+     ═══════════════════════════════════════════════════════════════════ -->
+<style>
+  :root {
+    --fondo: #f1f3f6; --carta: #ffffff; --riga: #d9dee6; --testo: #1d2330; --tenue: #667085;
+    --fattoria: #2e8b3d; --sotterraneo: #7a45c8; --entrambi: #e0801a; --errore: #c0392b; --acceso: #1d6fd6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-tema="chiaro"]) { --fondo: #12151c; --carta: #1b202b; --riga: #2c3342; --testo: #e6e9f2; --tenue: #98a2b8; }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--fondo); color: var(--testo); font: 15px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  header { padding: 14px 16px 6px; max-width: 1400px; margin: 0 auto; }
+  h1 { margin: 0 0 2px; font-size: 20px; }
+  .sotto { color: var(--tenue); font-size: 13px; margin: 0 0 10px; }
+  .barra { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 8px; }
+  .barra input[type=search], .barra select { font: inherit; padding: 8px 10px; border: 1px solid var(--riga); border-radius: 8px; background: var(--carta); color: var(--testo); min-width: 0; }
+  .barra input[type=search] { flex: 1 1 180px; }
+  .chip { font: inherit; font-size: 14px; padding: 7px 12px; border-radius: 999px; border: 1px solid var(--riga); background: var(--carta); color: var(--testo); cursor: pointer; }
+  .chip[aria-pressed=true] { background: var(--acceso); border-color: var(--acceso); color: #fff; }
+  .note { max-width: 1400px; margin: 0 auto; padding: 0 16px; }
+  .nota { background: #fff4d6; color: #5c4400; border: 1px solid #ecd38a; border-radius: 8px; padding: 8px 12px; margin: 0 0 8px; font-size: 13px; }
+  @media (prefers-color-scheme: dark) { :root:not([data-tema="chiaro"]) .nota { background: #3a3014; color: #f0dca0; border-color: #6b5a22; } }
+  main { max-width: 1400px; margin: 0 auto; padding: 8px 16px 40px; }
+  h2 { font-size: 16px; margin: 22px 0 8px; }
+  .griglia { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); }
+  .scheda { background: var(--carta); border: 1px solid var(--riga); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; cursor: pointer; text-align: left; padding: 0; font: inherit; color: inherit; }
+  .scheda:focus-visible { outline: 3px solid var(--acceso); }
+  .scheda[hidden] { display: none; }
+  .scheda canvas { width: 100%; aspect-ratio: 1; display: block; background: #eef1f5; }
+  .scheda .testo { padding: 8px 10px 10px; display: flex; flex-direction: column; gap: 3px; }
+  .scheda b { font-size: 14px; }
+  .riga-badge { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+  .badge { font-size: 11px; font-weight: 700; color: #fff; padding: 2px 8px; border-radius: 999px; }
+  .badge.fattoria { background: var(--fattoria); } .badge.sotterraneo { background: var(--sotterraneo); } .badge.entrambi { background: var(--entrambi); }
+  .cat { font-size: 11px; color: var(--tenue); text-transform: uppercase; letter-spacing: .04em; }
+  .dove { font-size: 12px; color: var(--tenue); }
+  .file { font: 11px ui-monospace, Menlo, monospace; color: var(--tenue); word-break: break-all; }
+  .conti { font-size: 11px; color: var(--tenue); }
+  .errore-scheda { color: var(--errore); font-size: 12px; padding: 10px; word-break: break-word; }
+  .coppie { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); }
+  .coppia { background: var(--carta); border: 1px solid var(--riga); border-radius: 12px; padding: 10px; }
+  .coppia .due { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .coppia .lato { cursor: pointer; }
+  .coppia canvas { width: 100%; aspect-ratio: 1; display: block; border-radius: 8px; background: #eef1f5; }
+  .coppia .etichetta { font-size: 13px; margin-top: 4px; }
+  .coppia h3 { margin: 0 0 8px; font-size: 13px; color: var(--tenue); font-weight: 600; }
+  .vuoto { color: var(--tenue); font-size: 14px; padding: 8px 0; }
+  /* la vista grande */
+  .velo { position: fixed; inset: 0; z-index: 10; background: var(--fondo); display: flex; flex-direction: column; }
+  .velo[hidden] { display: none; }
+  .velo .testa { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-bottom: 1px solid var(--riga); }
+  .velo .testa b { flex: 1; font-size: 16px; }
+  .velo .x { font: inherit; font-size: 22px; line-height: 1; border: 0; background: transparent; color: var(--testo); width: 44px; height: 44px; cursor: pointer; border-radius: 8px; }
+  .velo .vista { flex: 1; min-height: 0; position: relative; touch-action: none; }
+  .velo .vista canvas { position: absolute; inset: 0; width: 100% !important; height: 100% !important; display: block; }
+  .velo .info { padding: 10px 14px calc(12px + env(safe-area-inset-bottom)); border-top: 1px solid var(--riga); display: flex; flex-direction: column; gap: 3px; max-height: 38vh; overflow: auto; }
+  .velo .aiuto { position: absolute; left: 10px; bottom: 8px; font-size: 12px; color: var(--tenue); pointer-events: none; }
+  /* la scheda contatto (?scheda=1): senza controlli */
+  body.contatto header .barra, body.contatto .sotto { display: none; }
+  body.contatto .griglia { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+  body.contatto .scheda .dove, body.contatto .scheda .file, body.contatto .scheda .conti { display: none; }
+</style>
+</head>
+<body>
+  <header>
+    <h1>Il catalogo 3D</h1>
+    <p class="sotto" id="riassunto">Carico i modelli…</p>
+    <div class="barra" id="filtri-gioco" role="group" aria-label="Gioco"></div>
+    <div class="barra">
+      <input type="search" id="cerca" placeholder="Cerca per nome, luogo, file…" autocomplete="off">
+      <select id="categoria" aria-label="Categoria"></select>
+    </div>
+  </header>
+  <div class="note" id="note"></div>
+  <main>
+    <div class="griglia" id="griglia"></div>
+    <p class="vuoto" id="vuoto" hidden>Nessun modello con questi filtri.</p>
+    <h2 id="titolo-coppie" hidden>Si assomigliano: valuta</h2>
+    <div class="coppie" id="coppie"></div>
+  </main>
+
+  <div class="velo" id="velo" hidden role="dialog" aria-modal="true" aria-label="Modello">
+    <div class="testa"><b id="v-nome"></b><button class="x" id="v-x" aria-label="Chiudi">✕</button></div>
+    <div class="vista" id="v-vista"><span class="aiuto">trascina per girare · pizzica o rotella per zoomare</span></div>
+    <div class="info" id="v-info"></div>
+  </div>
+
+  <script type="module">
+    import { avvia } from './catalogo-3d.js'
+    avvia()
+  </script>
+</body>
+</html>

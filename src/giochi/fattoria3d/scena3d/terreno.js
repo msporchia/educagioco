@@ -1,9 +1,10 @@
 // Il terreno: l'erba, le strade (una per cella, a istanze), la griglia che si accende mentre si costruisce, i lotti non comprati
-// (scuri, con cespugli e sassi), il recinto basso attorno a quelli comprati, gli alberi (a istanze: si abbattono uno alla volta
-// azzerando l'istanza), i ciuffi d'erba, le nuvole e i due edifici di scena. Non sa le regole: legge dal motore cosa è tuo.
+// (un velo scuro), il recinto basso attorno a quelli comprati, gli alberi e i sassi e cespugli (a istanze: si tolgono uno alla volta
+// azzerando l'istanza, anche nei lotti comprati), i ciuffi d'erba che ondeggiano col vento, le nuvole con la loro ombra sul prato e i
+// due edifici di scena. Non sa le regole: legge dal motore cosa è tuo.
 import * as THREE from 'three'
 import { mat, FORME, creaFienile, creaCasa } from './modelli.js'
-import { LOTTI, LIM, LOTTO, GW, GH, I0, J0, dentro, FISSI } from '../dati/mondo.js'
+import { LOTTI, LIM, LOTTO, GW, GH, I0, J0, dentro, idx, FISSI } from '../dati/mondo.js'
 
 const ZERO = new THREE.Matrix4().makeScale(0, 0, 0)
 
@@ -23,10 +24,13 @@ export class Terreno {
     this.scena = scena; this.m = motore
     this.istanzeAlberi = []
     this.decori = { alberi: [], erba: [] }
+    this.istanzeOstacoli = []
     this.nuvole = []
     this.texture = []
-    this._suolo(); this._strade(); this._griglia(); this._lotti(); this._alberi(); this._nuvole(); this._fisse()
-    this.ridisegnaLotti(); this.ridisegnaStrade()
+    this.tempo = 0
+    this.vento = { uT: { value: 0 }, uV: { value: 1 } }       // il tempo e l'intensità del vento, letti dal materiale dei ciuffi
+    this._suolo(); this._strade(); this._griglia(); this._lotti(); this._alberi(); this._ostacoli(); this._erba(); this._nuvole(); this._fisse()
+    this.ridisegnaLotti(); this.ridisegnaStrade(); this.ridisegnaErba()
   }
 
   _suolo() {
@@ -52,6 +56,7 @@ export class Terreno {
       const t = 0.93 + ((i * 7 + j * 13) % 9) * 0.014; this.stradeMesh.setColorAt(n, c.setRGB(t, t * 0.99, t * 0.96)); n++
     }
     this.stradeMesh.count = n; this.stradeMesh.instanceMatrix.needsUpdate = true; this.stradeMesh.instanceColor.needsUpdate = true
+    if (this.ciuffi) this.ridisegnaErba()                 // un ciuffo non cresce sulla strada
   }
 
   // la griglia di costruzione: un riquadro per lotto, solo mentre si costruisce
@@ -75,32 +80,19 @@ export class Terreno {
   // i lotti non comprati e il recinto basso attorno a quelli comprati
   _lotti() {
     this.velo = new THREE.InstancedMesh(new THREE.PlaneGeometry(LOTTO, LOTTO), new THREE.MeshStandardMaterial({ color: 0x35542a, transparent: true, opacity: 0.74, roughness: 1, depthWrite: false }), LOTTI.length)
-    this.cespugli = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(0.4, 0), mat(0xffffff), LOTTI.length * 7)
-    this.sassi = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(0.3, 0), mat(0x8d8d88), LOTTI.length * 3)
-    for (const m of [this.velo, this.cespugli, this.sassi]) { m.frustumCulled = false; m.receiveShadow = true }
-    this.cespugli.castShadow = true; this.sassi.castShadow = true
-    this.cespugli.setColorAt(0, new THREE.Color())
+    this.velo.frustumCulled = false; this.velo.receiveShadow = true
     this.pali = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.06, 0.07, 0.7, 6).translate(0, 0.35, 0), mat(0x7a5232), 800)
     this.travi = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 0.07, 0.05), mat(0x93622f), 1600)
     for (const m of [this.pali, this.travi]) { m.castShadow = true; m.frustumCulled = false }
-    this.scena.add(this.velo, this.cespugli, this.sassi, this.pali, this.travi)
+    this.scena.add(this.velo, this.pali, this.travi)
   }
   ridisegnaLotti() {
-    const d = new THREE.Object3D(), col = new THREE.Color(); let nv = 0, nb = 0, ns = 0
+    const d = new THREE.Object3D(); let nv = 0
     for (const l of LOTTI) {
       if (this.m.posseduto(l)) continue
       d.position.set(l.i + 2, 0.05, l.j + 2); d.rotation.set(-Math.PI / 2, 0, 0); d.scale.set(1, 1, 1); d.updateMatrix(); this.velo.setMatrixAt(nv++, d.matrix)
-      let r = l.a * 131 + l.b * 17 + 5
-      const caso = () => { r = (r * 9301 + 49297) % 233280; return r / 233280 }
-      for (let k = 0; k < 7; k++) {
-        d.position.set(l.i + 0.4 + caso() * 3.2, 0.25, l.j + 0.4 + caso() * 3.2); d.rotation.set(0, caso() * 6, 0); d.scale.setScalar(0.6 + caso() * 0.8); d.updateMatrix()
-        this.cespugli.setMatrixAt(nb, d.matrix); this.cespugli.setColorAt(nb, col.setHSL(0.3, 0.5, 0.18 + caso() * 0.12)); nb++
-      }
-      for (let k = 0; k < 3; k++) { d.position.set(l.i + 0.4 + caso() * 3.2, 0.14, l.j + 0.4 + caso() * 3.2); d.rotation.set(0, caso() * 6, 0); d.scale.set(1, 0.7, 1); d.updateMatrix(); this.sassi.setMatrixAt(ns++, d.matrix) }
     }
-    this.velo.count = nv; this.cespugli.count = nb; this.sassi.count = ns
-    for (const x of [this.velo, this.cespugli, this.sassi]) x.instanceMatrix.needsUpdate = true
-    this.cespugli.instanceColor.needsUpdate = true
+    this.velo.count = nv; this.velo.instanceMatrix.needsUpdate = true
     this.ricostruisciRecinti()
     if (this.griglia.visible) this.mostraGriglia(true)
   }
@@ -136,28 +128,120 @@ export class Terreno {
     this.istanzeAlberi = [tronchi, chiome, chiome2]
     this.scena.add(tronchi, chiome, chiome2); this.decori.alberi = this.istanzeAlberi
     for (const a of alberi) if (a.tagliato) this.togliAlbero(a.n)
-    // ciuffi d'erba nella parte selvatica
+  }
+  // i sassi e i cespugli: pochi per lotto, anche dopo l'acquisto. Si tolgono toccandoli (🪙 1): l'istanza si azzera, come un albero.
+  _ostacoli() {
+    const lista = this.m.ostacoli
+    const cespugli = lista.filter(o => o.tipo === 'cespuglio'), sassi = lista.filter(o => o.tipo === 'sasso')
+    const mc = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(0.4, 0), mat(0xffffff), Math.max(1, cespugli.length))
+    const ms = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(0.32, 0), mat(0xffffff), Math.max(1, sassi.length))
+    this.istanzeOstacoli = [mc, ms]
+    this._indiceOstacoli = new Map([[mc, cespugli.map(o => o.n)], [ms, sassi.map(o => o.n)]])
+    mc.count = cespugli.length; ms.count = sassi.length
+    const d = new THREE.Object3D(), col = new THREE.Color()
+    cespugli.forEach((o, k) => {
+      d.position.set(o.x, 0.28, o.z); d.rotation.set(0, o.ang, 0); d.scale.set(1.15 * o.s, 0.85 * o.s, 1.15 * o.s); d.updateMatrix()
+      mc.setMatrixAt(k, d.matrix); mc.setColorAt(k, col.setHSL(0.27 + o.c * 0.06, 0.55, 0.26 + o.c * 0.12))
+    })
+    sassi.forEach((o, k) => {
+      d.position.set(o.x, 0.15, o.z); d.rotation.set(o.c * 2, o.ang, 0); d.scale.set(1.1 * o.s, 0.75 * o.s, 1 * o.s); d.updateMatrix()
+      ms.setMatrixAt(k, d.matrix); ms.setColorAt(k, col.setHSL(0.1, 0.05, 0.5 + o.c * 0.14))
+    })
+    for (const x of this.istanzeOstacoli) { x.castShadow = true; x.receiveShadow = true; x.frustumCulled = false; x.instanceMatrix.needsUpdate = true; if (x.instanceColor) x.instanceColor.needsUpdate = true }
+    this.scena.add(mc, ms)
+    for (const o of lista) if (o.tolto) this.togliOstacolo(o.n)
+  }
+  /** Il numero (nella lista del motore) dell'ostacolo che sta nell'istanza `k` della mesh `mesh`. */
+  ostacoloDi(mesh, k) { return (this._indiceOstacoli.get(mesh) || [])[k] }
+  togliOstacolo(n) {
+    for (const [mesh, ns] of this._indiceOstacoli) { const k = ns.indexOf(n); if (k >= 0) { mesh.setMatrixAt(k, ZERO); mesh.instanceMatrix.needsUpdate = true } }
+  }
+
+  // i ciuffi d'erba: un gruppetto di tre fili, a istanze, su ogni cella del prato che non sia occupata (si rifanno a ogni cambio) e
+  // fuori dal mondo. Ondeggiano col vento nel vertex shader: ogni ciuffo ha la sua fase, e la punta si muove più della base.
+  _erba() {
+    const lame = [[0, 0.0, 0.0, 0.5], [2.1, 0.22, 0.08, 0.38], [4.2, -0.2, -0.1, 0.32]].map(([ang, dx, dz, h]) => {
+      const g = new THREE.ConeGeometry(0.07, h, 3).translate(0, h / 2, 0).rotateZ(0.12).rotateY(ang).translate(dx * 0.5, 0, dz * 0.5)
+      return g.toNonIndexed()
+    })
+    const pos = lame.flatMap(g => Array.from(g.attributes.position.array))
+    const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); geo.computeVertexNormals()
+    const materiale = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 1, flatShading: true, side: THREE.DoubleSide })
+    materiale.onBeforeCompile = sh => {
+      sh.uniforms.uT = this.vento.uT; sh.uniforms.uV = this.vento.uV
+      sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nuniform float uT;\nuniform float uV;')
+        .replace('#include <begin_vertex>', `#include <begin_vertex>
+          float fase = instanceMatrix[3].x * 0.8 + instanceMatrix[3].z * 0.6;
+          float raffica = 0.6 + 0.4 * sin(uT * 0.7 + fase * 0.3);
+          transformed.x += sin(uT * 2.4 + fase) * 0.34 * position.y * uV * raffica;
+          transformed.z += cos(uT * 1.9 + fase * 1.3) * 0.2 * position.y * uV * raffica;`)
+    }
+    // dentro il mondo: una candidata per cella (il caso la tiene o no); fuori: sparsi dove c'è il bosco
     let r = 11
     const caso = () => { r = (r * 9301 + 49297) % 233280; return r / 233280 }
-    const ciuffi = new THREE.InstancedMesh(FORME.ciuffo, mat(0x4f9a2c), 500)
-    for (let n = 0; n < 500; n++) {
-      const x = (caso() - 0.5) * 70, z = (caso() - 0.5) * 56
-      d.position.set(x, 0, z); d.rotation.set(0, caso() * 6, (caso() - 0.5) * 0.4)
-      d.scale.setScalar(dentro(Math.floor(x), Math.floor(z)) ? 0 : 0.7 + caso() * 0.8); d.updateMatrix(); ciuffi.setMatrixAt(n, d.matrix)
+    this.cespiErba = []
+    for (let j = LIM.j0; j < LIM.j1; j++) for (let i = LIM.i0; i < LIM.i1; i++) {
+      const tieni = caso() < 0.5, x = i + 0.15 + caso() * 0.7, z = j + 0.15 + caso() * 0.7, ang = caso() * 6.3, sc = 0.9 + caso() * 0.6, c = caso()
+      if (tieni) this.cespiErba.push({ i, j, x, z, ang, sc, c, dentro: true })
     }
-    this.scena.add(ciuffi); this.decori.erba = [ciuffi]
+    for (let n = 0; n < 360; n++) {
+      const x = (caso() - 0.5) * 76, z = (caso() - 0.5) * 62, ang = caso() * 6.3, sc = 1 + caso() * 0.7, c = caso()
+      if (dentro(Math.floor(x), Math.floor(z))) continue
+      this.cespiErba.push({ x, z, ang, sc, c, dentro: false })
+    }
+    const ciuffi = new THREE.InstancedMesh(geo, materiale, this.cespiErba.length)
+    ciuffi.receiveShadow = true; ciuffi.frustumCulled = false
+    const col = new THREE.Color()
+    this.cespiErba.forEach((e, k) => ciuffi.setColorAt(k, col.setHSL(0.25 + e.c * 0.06, 0.6, 0.27 + e.c * 0.13)))
+    this.scena.add(ciuffi); this.decori.erba = [ciuffi]; this.ciuffi = ciuffi
   }
+  /** Un ciuffo non cresce dove sta una cosa: strada, pezzo, edificio, albero, sasso. Si rilegge a ogni cambio. */
+  ridisegnaErba() {
+    const d = new THREE.Object3D(), m = this.m
+    this.cespiErba.forEach((e, k) => {
+      const libera = !e.dentro || (!m.strada[idx(e.i, e.j)] && !m.cellaCosa[idx(e.i, e.j)] && !m.bloccoFisso[idx(e.i, e.j)] && !m.cellaEdificio[idx(e.i, e.j)])
+      d.position.set(e.x, 0, e.z); d.rotation.set(0, e.ang, 0); d.scale.setScalar(libera ? e.sc : 0); d.updateMatrix(); this.ciuffi.setMatrixAt(k, d.matrix)
+    })
+    this.ciuffi.instanceMatrix.needsUpdate = true; this.ciuffi.instanceColor.needsUpdate = true
+  }
+
   togliAlbero(n) { for (const x of this.istanzeAlberi) { x.setMatrixAt(n, ZERO); x.instanceMatrix.needsUpdate = true } }
 
-  // nuvole piatte che scorrono (nessuna ombra: solo un po' di vita)
+  // le nuvole: bassa quota (sotto la camera quando è alta, sopra quando è vicina), bianche e un po' trasparenti, con la loro ombra
+  // morbida sul prato nel punto dove la proietterebbe il sole. Un solo disegno per le macchie e uno per le ombre (a istanze).
   _nuvole() {
-    this.gruppoNuvole = new THREE.Group(); this.scena.add(this.gruppoNuvole)
-    const m = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.85, fog: false })
-    for (let n = 0; n < 7; n++) {
-      const g = new THREE.Group()
-      for (let k = 0; k < 4; k++) { const s = new THREE.Mesh(new THREE.SphereGeometry(2 + Math.random() * 1.5, 8, 6), m); s.position.set(k * 2.2 - 3, Math.random(), Math.random() * 1.5); s.scale.y = 0.5; g.add(s) }
-      g.position.set((Math.random() - 0.5) * 120, 28 + Math.random() * 8, -20 - Math.random() * 40); this.gruppoNuvole.add(g); this.nuvole.push(g)
+    const N = 11, MACCHIE = 5
+    let r = 29
+    const caso = () => { r = (r * 9301 + 49297) % 233280; return r / 233280 }
+    const morbida = (centro, bordo) => {
+      const c = document.createElement('canvas'); c.width = c.height = 64
+      const x = c.getContext('2d'), g = x.createRadialGradient(32, 32, 2, 32, 32, 31)
+      g.addColorStop(0, centro); g.addColorStop(1, bordo); x.fillStyle = g; x.fillRect(0, 0, 64, 64)
+      const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; this.texture.push(t); return t
     }
+    this.macchie = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 9, 6), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.45, depthWrite: false, fog: false }), N * MACCHIE)
+    this.ombreNuvole = new THREE.InstancedMesh(new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2),
+      new THREE.MeshBasicMaterial({ map: morbida('rgba(20,40,20,0.30)', 'rgba(20,40,20,0)'), transparent: true, depthWrite: false }), N)
+    for (const m of [this.macchie, this.ombreNuvole]) m.frustumCulled = false
+    this.macchie.renderOrder = 5
+    this.gruppoNuvole = new THREE.Group(); this.gruppoNuvole.add(this.macchie, this.ombreNuvole); this.scena.add(this.gruppoNuvole)
+    for (let n = 0; n < N; n++) {
+      const blob = Array.from({ length: MACCHIE }, (_, k) => ({ x: (k - 2) * 1.9 + (caso() - 0.5), y: caso() * 0.7, z: (caso() - 0.5) * 2.6, sx: 2.1 + caso() * 1.4, sz: 1.7 + caso() * 1.2 }))
+      this.nuvole.push({ x: -45 + caso() * 90, z: -30 + caso() * 60, y: 12.5 + caso() * 3, v: 0.9 + caso() * 0.9, blob })
+    }
+    this._muoviNuvole(0)
+  }
+  _muoviNuvole(dt) {
+    const d = new THREE.Object3D(); let k = 0
+    this.nuvole.forEach((n, ni) => {
+      n.x += dt * n.v; if (n.x > 48) n.x = -48
+      for (const b of n.blob) {
+        d.position.set(n.x + b.x, n.y + b.y, n.z + b.z); d.rotation.set(0, 0, 0); d.scale.set(b.sx, 0.75, b.sz); d.updateMatrix(); this.macchie.setMatrixAt(k++, d.matrix)
+      }
+      // l'ombra cade lungo la direzione del sole (8, -17, -6): spostata di quota/17 in quella direzione
+      d.position.set(n.x + 8 * n.y / 17, 0.07, n.z - 6 * n.y / 17); d.scale.set(11, 1, 6.2); d.updateMatrix(); this.ombreNuvole.setMatrixAt(ni, d.matrix)
+    })
+    this.macchie.instanceMatrix.needsUpdate = true; this.ombreNuvole.instanceMatrix.needsUpdate = true
   }
 
   // il fienile e la casa: solo di scena
@@ -168,13 +252,17 @@ export class Terreno {
     }
   }
 
-  muovi(dt) { for (const n of this.nuvole) { n.position.x += dt * 0.6; if (n.position.x > 70) n.position.x = -70 } }
+  muovi(dt) {
+    this.tempo += dt; this.vento.uT.value = this.tempo
+    if (this.gruppoNuvole.visible) this._muoviNuvole(dt)
+  }
 
-  /** Accende e spegne i pezzi che pesano (le opzioni): alberi, ciuffi, nuvole. */
+  /** Accende e spegne i pezzi che pesano (le opzioni): alberi, ciuffi, nuvole; e il vento che muove i ciuffi (il grano è dei pezzi). */
   applica(q) {
     for (const m of this.decori.alberi) m.visible = q.alberi
     for (const m of this.decori.erba) m.visible = q.erba
     this.gruppoNuvole.visible = q.nuvole
+    this.vento.uV.value = q.vento ? 1 : 0
   }
 
   via() {

@@ -17,6 +17,7 @@ comandi, pubblicazione, grafica, e le regole comuni a tutti i giochi.
 - [emoji.md](emoji.md) — il font Twemoji dentro il file, `npm run emoji`, la licenza, le trappole
 - [grafica.md](grafica.md) — `src/grafica/`: tela, telecamera, pittori, scheletri, sprite e tessere
 - [passi.md](passi.md) — `src/motore/passi.js`: celle raggiungibili, percorso, la cella da cui toccare una cosa
+- [catalogo-3d.md](catalogo-3d.md) — la pagina con tutti i modelli 3D e il gioco che li usa (`npm run catalogo3d`), il formato `VOCI`, chi mantiene cosa
 - [sprite.md](sprite.md) — gli strumenti degli sprite e il banco `npm run mondo`
 - [creature.md](creature.md) — le creature dipinte in un catalogo solo (`sorgenti/creature/`): fotogrammi, passi dai video, `giochi`, come le prendono il sotterraneo e il castello, come se ne aggiunge una
 - [creature-catalogo-1.md](creature-catalogo-1.md), [creature-catalogo-2.md](creature-catalogo-2.md) — il catalogo descritto, generato dal JSON: com'è fatta ogni creatura, elemento, come combatte, dove sta bene, tenuta o scartata

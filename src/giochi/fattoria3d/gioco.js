@@ -1,6 +1,6 @@
 /* Il manifesto della fattoria 3D (dato puro, calco codice-segreto/). Come la fattoria di sempre non è una campagna: tappe 0, è
    il posto dove si spendono le monete. In prova (`sperimentale`): sta dietro l'interruttore dei giochi in prova dei genitori.
-   Usa risorse sue (raccolti, prodotti, lana, legna) e uno stato suo, `campagne.fattoria3d.cfg.stato`: non tocca quelli della
+   Usa risorse sue (raccolti, prodotti, lana) e uno stato suo, `campagne.fattoria3d.cfg.stato`: non tocca quelli della
    fattoria di sempre. Le monete sono quelle vere. Vedi docs/fattoria3d/. */
 import { normalizza } from './motore/stato.js'
 import { LOTTI_INIZIALI } from './dati/mondo.js'
@@ -29,8 +29,9 @@ export default {
   },
 
   // I contatori li muove Gioco.vue con segna(): fattoria3dTerre (lotti comprati), …Pezzi (pezzi e edifici messi),
-  // …Raccolti (tessere tagliate), …Alberi (abbattuti), …Prodotti (usciti dal forno), …Ordini (consegnati al banco),
+  // …Raccolti (tessere tagliate), …Alberi (abbattuti), …Sassi (sassi e cespugli tolti), …Prodotti (usciti dal forno), …Ordini (consegnati al banco),
   // …Uova e …Latte (raccolti dal pollaio e dalla stalla).
+  // …Visite (entrate in un villaggio col trattore) e …Aiuti (una cassa riempita, un baratto, un acquisto dai vicini).
   albo: {
     area: { nome: 'La fattoria 3D', emoji: '🚜' },
 
@@ -61,6 +62,9 @@ export default {
       { id: 'f3d-ordini', emoji: '🧺', nome: 'Ordini al banco',
         come: n => `Consegna ${n} ordini al banco`,
         soglie: [3, 15, 50], valore: m => m.tot('fattoria3dOrdini') },
+      { id: 'f3d-vicinato', emoji: '🚜', nome: 'Buon vicinato',
+        come: n => `Visita i vicini e aiutali (${n} fra visite e aiuti)`,
+        soglie: [8, 30, 100], valore: m => m.tot('fattoria3dVisite') + m.tot('fattoria3dAiuti') },
     ],
   },
 }

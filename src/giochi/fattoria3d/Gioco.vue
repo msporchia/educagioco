@@ -1,7 +1,7 @@
 <script setup>
 /* La fattoria 3D (in prova) — il coordinatore: le regole sono in motore/fattoria3d.js, il disegno in scena3d/, le tabelle in dati/,
    le finestre in viste/. È l'unico file che sa delle monete vere (state.profile.coins), dei contatori (segna) e del salvataggio
-   (profile.campagne.fattoria3d.cfg.stato). Usa raccolti, prodotti, lana e legna suoi: non tocca quelli della fattoria di sempre.
+   (profile.campagne.fattoria3d.cfg.stato). Usa raccolti, prodotti e lana suoi: non tocca quelli della fattoria di sempre.
    Senza WebGL 2 non si apre niente: lo si dice e si torna in home. Vedi docs/fattoria3d/. */
 import { ref, reactive, computed, onMounted, onBeforeUnmount } from 'vue'
 import Barra from '../../components/Barra.vue'
@@ -18,7 +18,7 @@ import { RICETTE, emojiDi } from './dati/ricette.js'
 import { avanzamento, roba, nomeDi, livelloDelPezzo } from './dati/livelli.js'
 import { COSTI } from './dati/regole.js'
 import { clienteDi, LIVELLO_BANCO } from './dati/ordini.js'
-import { qualitaIniziale } from './dati/qualita.js'
+import { qualitaIniziale, VERSIONE_OPZIONI } from './dati/qualita.js'
 import Hud from './viste/Hud.vue'
 import BarraAzioni from './viste/BarraAzioni.vue'
 import Vassoio from './viste/Vassoio.vue'
@@ -28,6 +28,9 @@ import Livelli from './viste/Livelli.vue'
 import Banco from './viste/Banco.vue'
 import Dialogo from './viste/Dialogo.vue'
 import Opzioni from './viste/Opzioni.vue'
+import Mappa from './viste/Mappa.vue'
+import Visita from './viste/Visita.vue'
+import { usaVisite } from './visite.js'
 import './stile.css'
 
 // App.vue passa a tutte le schermate `disegno` e `lingua`: qui non servono
@@ -58,18 +61,18 @@ const borsa = {
 
 // ── cosa si vede (il motore non è reattivo: si rilegge dopo ogni cambio e ogni quarto di secondo) ──
 const versione = ref(0)
-const foto = ref({ scorte: '', prodotti: '', lana: 0, legna: 0, daFare: { semina: 0, raccogli: 0 }, livello: 1, quanto: 0 })
+const foto = ref({ scorte: '', prodotti: '', lana: 0, daFare: { semina: 0, raccogli: 0 }, livello: 1, quanto: 0 })
 const datiLivello = () => { const a = avanzamento(motore.esperienza()); return { livello: a.livello, quanto: a.quanto } }
 const ripresa = () => {
   const s = motore.s
   const unisci = (o, em) => Object.entries(o).filter(([, n]) => n > 0).map(([k, n]) => em(k) + ' ' + n).join('  ')
   foto.value = {
     scorte: unisci(s.merci, k => COLTURE[k].emoji) || '🌾 0', prodotti: unisci(s.prodotti, k => emojiDi(k, COLTURE)) || '🍞 0',
-    lana: s.lana, legna: s.legna, daFare: motore.daFare(), ...datiLivello(),
+    lana: s.lana, daFare: motore.daFare(), ...datiLivello(),
   }
   versione.value++
 }
-const EVENTI = { terra: 'fattoria3dTerre', pezzo: 'fattoria3dPezzi', raccolto: 'fattoria3dRaccolti', albero: 'fattoria3dAlberi' }
+const EVENTI = { terra: 'fattoria3dTerre', pezzo: 'fattoria3dPezzi', raccolto: 'fattoria3dRaccolti', albero: 'fattoria3dAlberi', sasso: 'fattoria3dSassi', visita: 'fattoria3dVisite', aiuto: 'fattoria3dAiuti' }
 /** Un livello nuovo: un avviso che passa da sé e un pallino sul gettone finché non si apre il foglio. */
 function salito(livello) {
   const testo = `Livello ${livello}: ${nomeDi(livello)}`
@@ -101,6 +104,7 @@ function salva({ subito = false } = {}) {
   if (!motore) return
   sporco = false
   ricorda(CHIAVE, 'stato', motore.serializza())
+  if (visite.vicini.value) ricorda(CHIAVE, 'vicini', visite.serializza())          // i vicini stanno a parte, accanto allo stato
   if (subito) flushNow()                   // `ricorda` scrive con ritardo: uscendo, la pagina può sparire prima
 }
 function seSparisce(e) { if (e?.type === 'pagehide' || document.visibilityState === 'hidden') salva({ subito: true }) }
@@ -112,7 +116,6 @@ const costruendo = ref(false)
 const vista = ref('vicino')
 const strumento = ref(null)              // null | 'strada' | 'gomma'
 const avvisoTesto = ref('')
-const avvisoAnnulla = ref(false)
 const trascinando = ref(null)            // { emoji, x, y, su, perMettereVia } mentre si trascina un pezzo
 const semiAperto = ref(false)
 const macchinaAperta = ref(null)         // il tipo della macchina di cui si vede il menu
@@ -140,14 +143,22 @@ const ui = {
   scegliSeme(cb) { quandoSeme = cb; semiAperto.value = true },
   apriMacchina(tipo) { macchinaMsg.value = ''; macchinaAperta.value = tipo },
   apriBanco() { apriBanco() },
-  avviso(testo, conAnnulla = false) {
-    avvisoTesto.value = testo || ''; avvisoAnnulla.value = !!conAnnulla
-    avvisoFine = testo && !conAnnulla ? performance.now() + DURATA_AVVISO : 0       // un avviso con «Annulla» resta finché c'è l'annulla
+  apriMappa() { visite.apriMappa() },                 // il trattore: la mappa dei villaggi (docs/fattoria3d/vicini.md)
+  avviso(testo) {
+    avvisoTesto.value = testo || ''
+    avvisoFine = testo ? performance.now() + DURATA_AVVISO : 0
   },
-  fogliAperti: () => !!dialogo.value || semiAperto.value || !!macchinaAperta.value || livelliAperto.value || bancoAperto.value || (opzioniAperte.value && !opzioniRidotte.value),
+  chiudiCostruzione() { if (costruendo.value) chiudiCostruisci() },       // un tocco sulla mappa, non su un pezzo né su un lotto
+  fogliAperti: () => !!dialogo.value || semiAperto.value || !!macchinaAperta.value || livelliAperto.value || bancoAperto.value || mappaAperta.value || (opzioniAperte.value && !opzioniRidotte.value),
   zonaDrop: () => ((costruendo.value ? vassoio.value?.radice : zonaVia.value) || null)?.getBoundingClientRect() || null,
   trascinando(info) { trascinando.value = info },
 }
+
+// ── le visite ai vicini (visite.js): la mappa del trattore, la scena del villaggio, la cassa e il mercato ──
+const telaVisita = ref(null), sopraVisita = ref(null)
+const visite = usaVisite({ dammi: () => ({ motore, mondo }), tela: telaVisita, sopra: sopraVisita, q, versione, cambio: () => ui.cambio() })
+const { inVisita, mappaAperta, mappaMsg, fase: faseVisita, verso: versoVisita, scheda: schedaVisita, foglio: foglioVisita, storia: storiaVisita,
+        messaggio: msgVisita, elenco: elencoVicini, chiave: chiaveTela } = visite
 
 // ── la barra delle azioni ──
 function impostaModo(m) {
@@ -181,7 +192,7 @@ const suggerimento = computed(() => {
   if (avvisoTesto.value) return avvisoTesto.value
   if (strumento.value === 'strada') return `Trascina il dito sulla mappa per disegnare la strada (🪙 ${COSTI.strada} a pezzo).`
   if (strumento.value === 'gomma') return 'Trascina sulle strade che hai disegnato per toglierle.'
-  return 'Trascina un pezzo dalla barra alla mappa. Un pezzo già messo si riprende e si sposta; un terreno scuro si compra toccandolo.'
+  return 'Trascina un pezzo dalla barra alla mappa: lo paghi quando lo lasci. Un pezzo già messo si riprende e si sposta; un terreno scuro si compra toccandolo; un tocco sulla mappa chiude.'
 })
 function apriCostruisci() {
   if (mondo.eroe.az) return
@@ -196,20 +207,8 @@ function cambiaVista(v) { vista.value = v; mondo.imposta({ vista: v, pan: { x: 0
 function scegliStrumento(id) { strumento.value = strumento.value === id ? null : id; mondo.imposta({ strumento: strumento.value }); avvisoTesto.value = '' }
 function cartaTocco(id) {
   if (PEZZI[id] && livelloDelPezzo(id) > motore.livello()) return ui.avviso(dettoDi('non-sbloccato', { liv: livelloDelPezzo(id) }))
-  if (motore.nelMagazzino(id) > 0) ui.avviso(`Trascina «${PEZZI[id].nome}» dalla barra fino alla mappa`)
-  else comprare(id)
-}
-/** Un pezzo non ancora pagato: la conferma arriva appena si comincia a trascinarlo (o si tocca). Pagato, sta nel magazzino. */
-function comprare(id) {
-  const pr = motore.prezzoPezzo(id), nome = PEZZI[id].nome
-  ui.chiedi('Comprare: ' + nome, `Costa 🪙 ${pr}. Poi lo trascini sulla mappa dove vuoi.`, [
-    { t: `Compra · 🪙 ${pr}`, fn: () => {
-      const r = motore.compraPezzo(id)
-      if (!r.ok) return ui.avviso(dettoDiRifiuto(r, { mancano: pr - motore.monete() }))
-      ui.cambio(); ui.avviso(nome + ' comprato: trascinalo sulla mappa')
-    } },
-    { t: 'No', quieto: true },
-  ])
+  const costo = motore.costoDiMettere(id)
+  ui.avviso(`Trascina «${PEZZI[id].nome}» dalla barra fino alla mappa${costo ? `: costa 🪙 ${costo} e lo paghi quando lo lasci` : ''}`)
 }
 function rispostaDialogo(i) {
   const d = dialogo.value; dialogo.value = null
@@ -284,7 +283,7 @@ function cambiaOrdine(idx) {
 }
 
 // ── le opzioni di qualità ──
-function cambiaOpzioni() { mondo.applica(q); save(CHIAVE_OPZIONI, { q: { ...q } }) }
+function cambiaOpzioni() { mondo.applica(q); save(CHIAVE_OPZIONI, { v: VERSIONE_OPZIONI, q: { ...q } }) }
 function creaRapporto() {
   const st = mondo.statistiche()
   rapporto.value = [
@@ -312,16 +311,20 @@ function ritmo() {
   if (sporco) salva()
 }
 
-function indietro() { salva({ subito: true }); emit('vai', 'home') }
+function indietro() {
+  if (inVisita.value) return void visite.torna()          // in visita, «indietro» riporta a casa, non in home
+  salva({ subito: true }); emit('vai', 'home')
+}
 
 onMounted(async () => {
   if (!puo.value) return
   motore = new Fattoria3d({ stato: scelta(CHIAVE, 'stato', null), borsa })
-  try { const c = await load(CHIAVE_OPZIONI); if (c && c.q) Object.assign(q, c.q) } catch (e) { /* le opzioni di serie */ }
+  try { const c = await load(CHIAVE_OPZIONI); if (c && c.q && c.v === VERSIONE_OPZIONI) Object.assign(q, c.q) } catch (e) { /* le opzioni di serie */ }
   const { Mondo3d } = await import('./scena3d/mondo3d.js')          // three si scarica solo qui
   if (!vivo) return
   mondo = new Mondo3d({ canvas: tela.value, sopra: sopra.value, motore, ui, qualita: q })
   mondo.avvia()
+  visite.avvia(scelta(CHIAVE, 'vicini', null))
   ripresa()
   battito = setInterval(ritmo, 250)
   document.addEventListener('visibilitychange', seSparisce)
@@ -334,6 +337,7 @@ onBeforeUnmount(() => {
   document.removeEventListener('visibilitychange', seSparisce)
   removeEventListener('pagehide', seSparisce)
   if (motore) salva({ subito: true })
+  visite.via()
   mondo?.via()
   delete window.__fattoria3d
 })
@@ -355,6 +359,7 @@ onBeforeUnmount(() => {
       <div ref="sopra" class="f3-sopra"></div>
 
       <template v-if="mondo || versione">
+        <div class="f3-casa" v-show="!inVisita">
         <Hud v-bind="foto" :nuovo="livelloNuovo" :banco="banco" @livello="apriLivelli" @banco="apriBanco" />
         <div v-if="toast" class="f3-toast" data-f3="avviso-livello">⭐ {{ toast.testo }}</div>
         <button class="f3-angolo" aria-label="opzioni" data-f3="apri-opzioni" @click="opzioniAperte = !opzioniAperte">⚙</button>
@@ -364,9 +369,9 @@ onBeforeUnmount(() => {
                      @modo="impostaModo" @semina="apriSemina" @tutti="tutti" @costruisci="apriCostruisci" />
 
         <Vassoio v-if="costruendo" ref="vassoio" :carte="carte" :strumento="strumento" :vista="vista" :testo="suggerimento"
-                 :con-annulla="avvisoAnnulla" :bersaglio="!!(trascinando && trascinando.perMettereVia)"
-                 @chiudi="chiudiCostruisci" @vista="cambiaVista" @strumento="scegliStrumento" @annulla="mondo.annulla()"
-                 @carta-tocco="cartaTocco" @compra="comprare" @inizia="(id, x, y) => mondo.iniziaDaCarta(id, x, y)"
+                 :bersaglio="!!(trascinando && trascinando.perMettereVia)"
+                 @chiudi="chiudiCostruisci" @vista="cambiaVista" @strumento="scegliStrumento"
+                 @carta-tocco="cartaTocco" @inizia="(id, x, y) => mondo.iniziaDaCarta(id, x, y)"
                  @muovi="(x, y) => mondo.muoviTrascinamento(x, y)" @rilascia="(x, y) => mondo.rilascia(x, y)"
                  @annulla-trascinamento="mondo.annullaTrascinamento()" />
         <!-- fuori da Costruisci, un pezzo sollevato tenendo premuto si rilascia sulla mappa o su questa fascia -->
@@ -384,6 +389,17 @@ onBeforeUnmount(() => {
                  @stress="(t, n) => { mondo.stress(t, n); ui.cambio() }" @rapporto="creaRapporto" @ridotto="v => opzioniRidotte = v"
                  @chiudi="opzioniAperte = false; opzioniRidotte = false" />
         <Dialogo v-if="dialogo" v-bind="{ titolo: dialogo.titolo, testo: dialogo.testo, bottoni: dialogo.bottoni }" @scelta="rispostaDialogo" />
+        <Mappa v-if="mappaAperta" :elenco="elencoVicini" :messaggio="mappaMsg" @vai="visite.vai" @chiudi="mappaAperta = false" />
+        </div>
+
+        <!-- la visita a un vicino: la sua tela e i suoi fogli, mentre la fattoria di casa aspetta ferma -->
+        <template v-if="inVisita">
+          <canvas :key="chiaveTela" ref="telaVisita" class="f3-vic-tela" data-f3="tela-visita"></canvas>
+          <div ref="sopraVisita" class="f3-vic-sopra"></div>
+          <Visita :fase="faseVisita" :verso="versoVisita" :scheda="schedaVisita" :foglio="foglioVisita" :storia="storiaVisita" :messaggio="msgVisita" :toast="toast"
+                  @torna="visite.torna()" @apri="f => { msgVisita = ''; foglioVisita = f }" @chiudi-foglio="foglioVisita = null" @chiudi-storia="storiaVisita = false"
+                  @aiuta="visite.aiuta" @compra="visite.compra" @vendi="visite.vendi" />
+        </template>
       </template>
     </div>
   </div>

@@ -21,12 +21,13 @@ domande, e non ce ne saranno.
 - **Il banco degli ordini.** Dal livello 2, con una bancarella: tre clienti chiedono raccolti e prodotti. Consegnare paga
   **esperienza** (mai monete) e fa salire di livello; rifiutare è gratis ma il posto resta vuoto qualche minuto.
 - **Si allarga e si costruisce.** I terreni si comprano a lotti dentro un recinto basso; i pezzi si trascinano dalla barra,
-  si spostano tenendoli premuti, le strade si disegnano col dito; gli alberi si abbattono e danno legna.
+  si pagano quando li lasci sulla mappa (niente conferme), si spostano tenendoli premuti, le strade si disegnano col dito; alberi, sassi e
+  cespugli si tolgono toccandoli, per poche monete.
 
 ## Cosa lo distingue dalla fattoria di sempre
 
 Il contadino cammina e lavora (non si tocca da lontano), il mondo si guarda dall'alto e si gira, si allarga comprando
-terreno e non solo riempiendo un campo. Ha **risorse sue** (raccolti, prodotti, lana, legna) e uno stato suo: i due mondi non si
+terreno e non solo riempiendo un campo. Ha **risorse sue** (raccolti, prodotti, lana) e uno stato suo: i due mondi non si
 mescolano. Niente si vende, niente marcisce, niente muore.
 
 ## Come si tocca

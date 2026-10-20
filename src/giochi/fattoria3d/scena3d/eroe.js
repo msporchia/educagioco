@@ -2,6 +2,8 @@
 // falcia, abbatte, esulta). Decide il movimento e la posa, non le regole: la strada la dice il motore, e cosa succede alla fine
 // di un gesto lo dice chi l'ha chiesto (`fn` a ogni passo del gesto, `fine` alla fine).
 import { creaEroe } from './modelli.js'
+import { creaContadino } from './modelli-compagni.js'
+import { ASPETTO_ERO } from '../dati/compagni.js'
 import { PARTENZA } from '../dati/mondo.js'
 
 const VEL = 4.8, VEL_STRADA = 6.6, FATTORE_CORSA = 1.75, CORSA_DA = 9
@@ -10,7 +12,8 @@ const ang = (a, b, k) => { let d = b - a; d = Math.atan2(Math.sin(d), Math.cos(d
 export class Eroe {
   constructor(scena, motore, effetti) {
     this.m = motore; this.fx = effetti
-    this.grp = creaEroe(); scena.add(this.grp)
+    try { this.grp = creaContadino(ASPETTO_ERO) } catch (e) { this.grp = creaEroe() }      // il vecchio resta come ripiego (una trama canvas che non parte)
+    scena.add(this.grp)
     this.x = PARTENZA.x; this.z = PARTENZA.z; this.dir = Math.PI
     this.percorso = []; this.dopo = null; this.verso = null; this.az = null
     this.fase = 0; this.vel = 0; this.corsa = false
@@ -67,7 +70,7 @@ export class Eroe {
 
   _posa(tt) {
     const u = this.grp.userData
-    u.gambe.forEach(g => { g.rotation.x = 0 }); u.bracci.forEach(b => b.rotation.set(0, 0, 0)); u.busto.rotation.set(0, 0, 0); u.busto.position.y = 0.34
+    u.testa.rotation.set(0, 0, 0); u.gambe.forEach(g => { g.rotation.x = 0 }); u.bracci.forEach(b => b.rotation.set(0, 0, 0)); u.busto.rotation.set(0, 0, 0); u.busto.scale.set(1, 1, 1); u.busto.position.y = 0.34
     this.grp.position.y = 0; u.falce.visible = false; u.ascia.visible = false
     const a = this.az
     if (a) {
@@ -95,6 +98,7 @@ export class Eroe {
       u.gambe[0].rotation.x = s * (0.8 + 0.4 * c); u.gambe[1].rotation.x = -s * (0.8 + 0.4 * c)
       u.bracci[0].rotation.x = -s * (0.7 + 0.6 * c); u.bracci[1].rotation.x = s * (0.7 + 0.6 * c)
       u.busto.position.y = 0.34 + Math.abs(s) * (0.045 + 0.04 * c); u.busto.rotation.x = 0.1 + 0.25 * c
-    } else { u.busto.position.y = 0.34 + Math.sin(tt * 2) * 0.005 }
+      u.testa.rotation.z = Math.sin(s * 0.5) * 0.06; u.testa.rotation.x = -0.05 - 0.1 * c
+    } else { u.busto.position.y = 0.34 + Math.sin(tt * 2) * 0.005; u.busto.scale.y = 1 + Math.sin(tt * 2) * 0.012; u.testa.rotation.y = Math.sin(tt * 0.6) * 0.12 }
   }
 }

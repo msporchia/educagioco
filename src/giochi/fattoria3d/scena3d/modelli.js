@@ -111,7 +111,7 @@ export function aggiornaCampo (g, crescita, t, coltura = 'grano', vento = true) 
     const c = crescita[p.k]
     if (c < 0) { steli.setMatrixAt(n, ZERO); spighe.setMatrixAt(n, ZERO); frutti.setMatrixAt(n, ZERO); return }
     const h = 0.1 + (C.h - 0.1) * Math.sqrt(c)
-    const sway = vento ? Math.sin(t * 1.7 + p.fase) * 0.06 * (0.3 + c) : 0
+    const sway = vento ? (Math.sin(t * 1.9 + p.fase) * 0.11 + Math.sin(t * 0.8 + p.x * 2.2) * 0.07) * (0.3 + c) : 0     // il vento si vede da lontano: ~10° alla punta di un campo maturo
     const largo = C.l || LARGO[C.frutto] || 1
     D.position.set(p.x, 0.1, p.z); D.rotation.set(0, 0, sway); D.scale.set(largo, h, largo); D.updateMatrix(); steli.setMatrixAt(n, D.matrix)
     const m = Math.min(1, Math.max(0, (c - 0.62) / 0.38))
@@ -410,6 +410,40 @@ export function creaBancarella () {
   return g
 }
 
+// ── il trattore: 2×2, rosso con le ruote grandi dietro; si tocca e porta ai vicini ──
+export function creaTrattore () {
+  const g = new THREE.Group()
+  const rosso = mat(0xd23a2a), scuro = mat(0x2a2622), giallo = mat(0xf0c030), vetro = mat(0xbfe3f0, { roughness: 0.3 }), grigio = mat(0x8a8a8a)
+  scatola(g, 0.8, 0.42, 1.35, rosso, 0, 0.58, 0.28)                                    // il cofano
+  scatola(g, 0.82, 0.05, 1.0, grigio, 0, 0.82, 0.38)                                   // la griglia in cima
+  scatola(g, 0.7, 0.55, 0.6, rosso, 0, 0.95, -0.42)                                    // la cabina
+  scatola(g, 0.74, 0.06, 0.66, scuro, 0, 1.25, -0.42)                                  // il tettuccio
+  scatola(g, 0.6, 0.32, 0.02, vetro, 0, 1.0, -0.12)                                    // il parabrezza
+  cilindro(g, 0.035, 0.035, 0.45, scuro, 0.25, 1.05, 0.55, 6)                           // lo scarico
+  for (const x of [-0.5, 0.5]) {
+    const dietro = cilindro(g, 0.5, 0.5, 0.22, scuro, x, 0.5, -0.55, 16); dietro.rotation.z = Math.PI / 2
+    const c1 = cilindro(g, 0.24, 0.24, 0.24, giallo, x, 0.5, -0.55, 12); c1.rotation.z = Math.PI / 2
+    const davanti = cilindro(g, 0.3, 0.3, 0.16, scuro, x * 0.92, 0.3, 0.85, 14); davanti.rotation.z = Math.PI / 2
+    const c2 = cilindro(g, 0.14, 0.14, 0.18, giallo, x * 0.92, 0.3, 0.85, 10); c2.rotation.z = Math.PI / 2
+  }
+  scatola(g, 0.09, 0.09, 0.09, giallo, 0.28, 0.72, 1.0)                                // un faro
+  scatola(g, 0.09, 0.09, 0.09, giallo, -0.28, 0.72, 1.0)
+  g.userData.altezza = 1.8
+  return g
+}
+
+// ── la cassa di un vicino (1×1): una cassa di legno con le assi e un nastro giallo; si riempie toccandola ──
+export function creaCassa () {
+  const g = new THREE.Group()
+  const legno = mat(0xb9803f), scuro = mat(0x8a5a2b), nastro = mat(0xf0c030)
+  scatola(g, 0.8, 0.5, 0.8, legno, 0, 0.25, 0)
+  for (const y of [0.1, 0.4]) scatola(g, 0.84, 0.06, 0.84, scuro, 0, y, 0)
+  for (const [x, z] of [[-0.39, -0.39], [0.39, -0.39], [-0.39, 0.39], [0.39, 0.39]]) scatola(g, 0.08, 0.52, 0.08, scuro, x, 0.26, z)
+  scatola(g, 0.86, 0.04, 0.16, nastro, 0, 0.52, 0)
+  g.userData.altezza = 1.1
+  return g
+}
+
 // ── la fontana: 2×2 ──
 export function creaFontana () {
   const g = new THREE.Group()
@@ -431,7 +465,7 @@ export function creaFontana () {
 }
 
 // ── la pecora e il recinto 3×3: agnello → adulta → tosata, la lana ricresce ──
-const iniziali = () => [{ eta: 'adulta', t0: Date.now() }, { eta: 'agnello', cibo: 0 }]    // solo per il fantasma del recinto
+const iniziali = () => [{ eta: 'adulta', t0: Date.now() }]    // solo per il fantasma del recinto
 export function creaPecora () {
   const g = new THREE.Group()
   const lana = mat(0xf5f1e6), scuro = mat(0x3a3a3a), pelle = mat(0xf0b8b0)
@@ -553,7 +587,7 @@ export function creaPollaio (stati) {
   for (const x of [0.55, 1.45]) cilindro(g, 0.035, 0.035, 0.35, legno, x, 0.2, 0.95, 5)
   scatola(g, 1.0, 0.04, 0.04, legno, 1.0, 0.3, 0.95)
   g.userData.bestie = []; g.userData.crea = creaGallina
-  g.userData.posto = k => new THREE.Vector3(-0.8 + k * 0.8, 0, 0.45 + (k % 2) * 0.12)
+  g.userData.posto = k => new THREE.Vector3(-0.9 + (k % 3) * 0.9, 0, 0.35 + Math.floor(k / 3) * 0.36 + (k % 2) * 0.06)   // sei galline: due file di tre sulla terra battuta
   g.userData.altezza = 2.3
   sincronizzaBestie(g, stati || [{ fine: null }])
   return g
@@ -596,9 +630,9 @@ export function creaStalla (stati) {
   scatola(g, 0.5, 0.45, 0.06, mat(0xa6d8ee), 1.25, 0.95, -0.15)
   // la mangiatoia e due balle di fieno
   scatola(g, 1.3, 0.22, 0.34, legno, 0, 0.11, 0.1); scatola(g, 1.2, 0.05, 0.24, mat(0xe0c060), 0, 0.23, 0.1)
-  for (const [x, z] of [[1.55, 0.55], [1.2, 0.95]]) { const b = cilindro(g, 0.27, 0.27, 0.5, mat(0xe0c060), x, 0.27, z, 8); b.rotation.z = Math.PI / 2 }
+  for (const [x, z] of [[1.75, 0.1], [-1.75, 0.1]]) { const b = cilindro(g, 0.27, 0.27, 0.5, mat(0xe0c060), x, 0.27, z, 8); b.rotation.z = Math.PI / 2 }
   g.userData.bestie = []; g.userData.crea = creaMucca
-  g.userData.posto = k => new THREE.Vector3(-1.0 + k * 2.0, 0, 0.85)
+  g.userData.posto = k => new THREE.Vector3(-1.5 + k * 1.0, 0, 0.7)       // quattro mucche in fila davanti al fienile
   g.userData.altezza = 2.9
   sincronizzaBestie(g, stati || [{ fine: null }])
   return g

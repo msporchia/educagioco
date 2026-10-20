@@ -3,10 +3,12 @@
 
    Il test unitario prova le regole; questo dice che **il gioco vero sta in
    piedi nel browser**: è in prova (carta dietro l'interruttore), si apre sul
-   prato in WebGL, un pezzo non pagato chiede la conferma appena lo si comincia
-   a trascinare e poi si trascina dalla barra fino alla mappa, si semina e si
-   raccoglie armando l'azione, le monete sono quelle vere e il resto (raccolti,
-   terra, alberi) sta nello stato suo e sopravvive a un ricaricamento. Senza
+   prato in WebGL, un pezzo si trascina dalla barra fino alla mappa e si paga al
+   rilascio (senza conferme; un rilascio che non va non perde niente), un tocco
+   sulla mappa chiude il vassoio, si semina e si raccoglie armando l'azione, un
+   albero costa monete e non dà legna, sassi e cespugli si tolgono per una
+   moneta, le monete sono quelle vere e il resto (raccolti, terra, alberi, sassi)
+   sta nello stato suo e sopravvive a un ricaricamento. Senza
    WebGL 2 si dice e si torna in home.
    Il dito è vero (`Input.dispatchTouchEvent`): un `page.click()` non trascina
    e non porta i pointer del tocco (docs/core/il-dito.md).
@@ -85,35 +87,78 @@ uguale('quattro carote in scorta', raccolto.merci.carota, 4)
 controlla('lo vede anche il HUD', /🥕 4/.test(await page.locator('[data-f3="scorte"]').innerText()))
 await toccaEl('[data-f3="az-libero"]')
 
-/* ── costruire trascinando: la conferma arriva appena si comincia, poi si trascina dalla barra alla mappa ── */
+/* ── costruire trascinando: si paga al rilascio, senza conferma; un rilascio che non va non perde niente ── */
 await toccaEl('[data-f3="az-costruisci"]')
 await page.waitForSelector('[data-f3="vassoio"]')
+controlla('il vassoio non ha più «↶ Annulla»', await page.locator('[data-f3="annulla"]').count() === 0)
 const prima = await monete()
 const carta = await page.locator('[data-carta="campo"]').boundingBox()
 const cx = carta.x + carta.width / 2, cy = carta.y + carta.height / 2
-await giu(cx, cy); for (let k = 1; k <= 6; k++) { await muovi(cx, cy - k * 12); await attendi(page, 30) } await su()
-await page.waitForSelector('[data-f3="dialogo"]', { timeout: 3000 })
-controlla('un pezzo non pagato chiede la conferma appena lo si trascina', /Comprare: Campo/.test(await page.locator('.f3-dialogo h2').innerText()))
-await page.locator('[data-scelta="0"]').click()
-await attendi(page, 400)
-const dopoAcquisto = await stato()
-uguale('il campo comprato sta nel magazzino', dopoAcquisto.magazzino.campo, 1)
-controlla('le monete vere sono scese del prezzo', prima - await monete() === 28, `da ${prima} a ${await monete()}`)
-// si trascina dalla barra alla mappa, in un posto libero e proprio (il fantasma sta 1,6 celle sopra il dito)
 await page.evaluate(() => { window.__fattoria3d.mondo.imposta({ vista: 'vicino' }) })
 await attendi(page, 1500)
-const meta = await schermoDi(-2, 2.6)
-await trascina([cx, cy], meta)
+// dove cadrebbe il dito per mettere un campo 2×2 con l'angolo in (i, j): il fantasma sta 1,6 celle sopra il dito
+const dito = (i, j) => schermoDi(i + 1, j + 1 + 1.6)
+// un posto buono per un campo (dentro il terreno tuo, libero, a schermo sopra il vassoio), il più vicino all'eroe
+const posto = await page.evaluate(() => {
+  const { motore, mondo } = window.__fattoria3d, e = mondo.eroe, r = mondo.canvas.getBoundingClientRect(), top = document.querySelector('[data-f3="vassoio"]').getBoundingClientRect().top
+  const buoni = []
+  for (let i = -14; i < 13; i++) for (let j = -12; j < 11; j++) {
+    if (!motore.puoMettere('campo', i, j).ok) continue
+    const [px, py, v] = mondo.proietta({ x: i + 1, y: 0, z: j + 2.6 })
+    if (v && px > 60 && px < r.width - 60 && py > 130 && r.top + py < top - 40) buoni.push({ i, j, d: Math.hypot(i + 1 - e.x, j + 1 - e.z) })
+  }
+  buoni.sort((a, b) => a.d - b.d)
+  return buoni[0]
+})
+controlla('c\'è un posto libero a schermo per un campo', !!posto)
+// 1. su un posto occupato (il campo di partenza) il rilascio non perde niente e non chiede conferme
+await trascina([cx, cy], await dito(-5, 0))
+await attendi(page, 400)
+const rifiutato = await stato()
+controlla('un rilascio non valido non cambia niente: né pezzi, né magazzino, né monete', rifiutato.cose.length === 1 && !rifiutato.magazzino.campo && await monete() === prima)
+controlla('e non compare nessuna conferma', await page.locator('[data-f3="dialogo"]').count() === 0)
+// 2. senza monete il rilascio dice cosa servono e non cambia niente
+await page.evaluate(() => { const m = window.__fattoria3d.motore; m.borsa.paga(m.monete() - 5) })
+await trascina([cx, cy], await dito(posto.i, posto.j))
+await attendi(page, 300)
+controlla('senza monete: «Servono 🪙 28», niente cambia', /Servono 🪙 28/.test(await page.locator('.f3-suggerimento span').innerText()) && (await stato()).cose.length === 1 && await monete() === 5)
+await page.evaluate(n => { window.__fattoria3d.motore.borsa.paga(-n) }, prima - 5)
+// 3. con le monete: si paga e si mette in un gesto, senza dialogo
+await attendi(page, 900)       // il profilo si salva a ritardo: si legge dopo
+const m0 = await monete()
+await trascina([cx, cy], await dito(posto.i, posto.j))
 await attendi(page, 500)
+await attendi(page, 900)
 const costruito = await stato()
 uguale('un campo in più sulla mappa', costruito.cose.length, 2)
-uguale('e il magazzino è vuoto', costruito.magazzino.campo || 0, 0)
-controlla('compare «↶ Annulla»', await page.locator('[data-f3="annulla"]').count() === 1)
+uguale('il magazzino resta vuoto: compra e mette in un gesto', costruito.magazzino.campo || 0, 0)
+controlla('le monete vere sono scese del prezzo', m0 - await monete() === 28, `da ${m0} a ${await monete()}`)
+controlla('nessuna conferma d\'acquisto', await page.locator('[data-f3="dialogo"]').count() === 0)
+controlla('e niente «↶ Annulla»', await page.locator('[data-f3="annulla"]').count() === 0)
 await scatto(page, 'fattoria3d-costruito')
-await page.locator('[data-f3="annulla"]').click()
+// il campo di prova se ne va (com'era prima), e le monete tornano: lo stato dei test dopo è quello di prima
+await page.evaluate(() => { const { motore, mondo } = window.__fattoria3d, c = motore.s.cose[1]; motore.mettiVia(c.id, { gratis: true }); motore.s.magazzino = {}; motore.rimborsa(28); mondo.cambiato() })
 await attendi(page, 300)
-const annullato = await stato()
-controlla('annullare rimette il pezzo nel magazzino', annullato.cose.length === 1 && annullato.magazzino.campo === 1)
+// 4. una strisciata sulla mappa la sposta ma non chiude il vassoio; un tocco vero sì
+await trascina(await schermoDi(0, 3), await schermoDi(0, 5.5))
+await attendi(page, 300)
+controlla('una strisciata sulla mappa non chiude il vassoio', await page.locator('[data-f3="vassoio"]').count() === 1)
+await attendi(page, 600)
+const vuota = await page.evaluate(() => {          // una cella tua e libera, a schermo sopra il vassoio, dove un tocco non apre niente
+  const { motore, mondo } = window.__fattoria3d, r = mondo.canvas.getBoundingClientRect(), top = document.querySelector('[data-f3="vassoio"]').getBoundingClientRect().top
+  for (let i = -14; i < 14; i++) for (let j = -12; j < 12; j++) {
+    if (!motore.libera(i, j) || motore.cellaEdificio[(j + 13) * 32 + (i + 16)] || motore.ostacoloSu(i, j)) continue
+    const [px, py, v] = mondo.proietta({ x: i + 0.5, y: 0, z: j + 0.5 })
+    if (v && px > 60 && px < r.width - 60 && py > 140 && r.top + py < top - 60) return { x: i + 0.5, z: j + 0.5 }
+  }
+  return null
+})
+await tocca(...await schermoDi(vuota.x, vuota.z))
+await attendi(page, 400)
+controlla('un tocco sulla mappa chiude il vassoio', await page.locator('[data-f3="vassoio"]').count() === 0)
+// 5. la ✕ lavora ancora
+await toccaEl('[data-f3="az-costruisci"]')
+await page.waitForSelector('[data-f3="vassoio"]')
 await toccaEl('[data-chiudi]')
 await attendi(page, 300)
 controlla('la ✕ chiude il vassoio', await page.locator('[data-f3="vassoio"]').count() === 0)
@@ -128,16 +173,44 @@ const albero = await page.evaluate(() => {
   const a = (vis[0] || { a: motore.alberiNelTerreno()[0] }).a
   return { n: a.n, i: a.i, j: a.j }
 })
+const COSTO_ALBERO = 3                              // COSTI.albero (dati/regole.js)
+// senza monete l'ascia non si alza e l'eroe dice cosa serve
+const monDa = await monete()
+await page.evaluate(() => { const m = window.__fattoria3d.motore; m.borsa.paga(m.monete() - 1) })
 await tocca(...await schermoDi(albero.i + 0.5, albero.j + 0.5))
 await fermo()
+controlla('con una moneta sola l\'albero resta in piedi e l\'eroe dice cosa servono', !(await stato()).tagliati.includes(albero.n) && /servono 🪙 3/.test(await page.locator('.f3-fumetto').innerText()))
+await page.evaluate(n => { window.__fattoria3d.motore.borsa.paga(-n) }, monDa - 1)
+await attendi(page, 900)
+const monPrimaAlbero = await monete()
+await tocca(...await schermoDi(albero.i + 0.5, albero.j + 0.5))
+await fermo()
+await attendi(page, 900)
 const tagliato = await stato()
-controlla('l\'albero è abbattuto e c\'è la legna', tagliato.tagliati.includes(albero.n) && tagliato.legna === 2)
-controlla('la legna si vede nel HUD', /🪵 2/.test(await page.locator('[data-f3="lana"]').innerText()))
+controlla('l\'albero è abbattuto e costa monete, niente legna', tagliato.tagliati.includes(albero.n) && !('legna' in tagliato) && monPrimaAlbero - await monete() === COSTO_ALBERO, `da ${monPrimaAlbero} a ${await monete()}`)
+controlla('nel HUD non c\'è più la legna', !/🪵/.test(await page.locator('[data-f3="hud"]').innerText()))
+
+// un sasso o un cespuglio del terreno tuo: si tocca, costa 🪙 1 e la cella torna libera
+const sasso = await page.evaluate(() => {
+  const { motore, mondo } = window.__fattoria3d, r = mondo.canvas.getBoundingClientRect(), e = mondo.eroe
+  const vis = motore.ostacoliNelTerreno().map(o => ({ o, p: mondo.proietta({ x: o.i + 0.5, y: 0, z: o.j + 0.5 }) }))
+    .filter(({ p }) => p[2] && p[0] > 40 && p[0] < r.width - 40 && p[1] > 90 && p[1] < r.height - 170)
+    .sort((u, v) => Math.hypot(u.o.i - e.x, u.o.j - e.z) - Math.hypot(v.o.i - e.x, v.o.j - e.z))
+  const o = (vis[0] || { o: motore.ostacoliNelTerreno()[0] }).o
+  return { n: o.n, id: o.id, i: o.i, j: o.j }
+})
+const monPrimaSasso = await monete()
+controlla('il sasso blocca la cella', await page.evaluate(({ i, j }) => !window.__fattoria3d.motore.libera(i, j), sasso))
+await tocca(...await schermoDi(sasso.i + 0.5, sasso.j + 0.5))
+await fermo()
+const senzaSasso = await stato()
+controlla('tolto: la cella è libera, il suo id è salvato, costa 🪙 1', senzaSasso.ostacoli.includes(sasso.id) && await page.evaluate(({ i, j }) => window.__fattoria3d.motore.libera(i, j), sasso) && monPrimaSasso - await monete() === 1)
 // un lotto comprabile che stia bene a schermo (i posti degli edifici nuovi sono a nord: ci cade il tocco su un fantasma)
 const lottoNord = await page.evaluate(() => {
   const { motore, mondo } = window.__fattoria3d, r = mondo.canvas.getBoundingClientRect()
   const c = Array.from({ length: 42 }, (_, n) => { const a = n % 7, b = Math.floor(n / 7); return { id: a + '_' + b, a, b, i: -14 + a * 4, j: -12 + b * 4, w: 4, d: 4 } }).filter(l => !motore.posseduto(l) && motore.confina(l)).map(l => ({ l, p: mondo.proietta({ x: l.i + 2, y: 0, z: l.j + 2 }) }))
     .filter(({ l, p }) => p[2] && p[0] > 60 && p[0] < r.width - 60 && p[1] > 110 && p[1] < r.height - 190 && !motore.lottiMancanti('mulino').includes(l.id) && !['mulino', 'panificio', 'conserviera', 'gelateria'].some(t => motore.lottiMancanti(t).includes(l.id)))
+  c.sort((u, v) => v.l.j - u.l.j)       // il più a sud: lontano dai fantasmi alti degli edifici
   return c.length ? { i: c[0].l.i + 2, j: c[0].l.j + 2 } : null
 })
 await tocca(...await schermoDi(lottoNord.i, lottoNord.j))
@@ -151,7 +224,7 @@ uguale('il lotto è tuo', Object.keys(comprato.lotti).length, 10)
 /* ── i contatori e le monete: l'albo li legge, e lo stato sta nel profilo ── */
 await attendi(page, 600)
 const profilo = await leggiProfilo(page)
-controlla('i contatori sono saliti', profilo.totals.fattoria3dRaccolti === 4 && profilo.totals.fattoria3dAlberi === 1 && profilo.totals.fattoria3dTerre === 1,
+controlla('i contatori sono saliti', profilo.totals.fattoria3dRaccolti === 4 && profilo.totals.fattoria3dAlberi === 1 && profilo.totals.fattoria3dTerre === 1 && profilo.totals.fattoria3dSassi === 1 && profilo.totals.fattoria3dPezzi === 1,
          JSON.stringify(profilo.totals))
 const st = profilo.campagne.fattoria3d && profilo.campagne.fattoria3d.cfg.stato
 controlla('lo stato è in campagne.fattoria3d.cfg.stato', !!st && st.merci.carota === 4, '')
@@ -168,6 +241,7 @@ await page.waitForFunction(() => !!(window.__fattoria3d && window.__fattoria3d.m
 const riletto = await stato()
 uguale('dopo il ricaricamento i lotti sono quelli di prima', Object.keys(riletto.lotti).length, 10)
 uguale('e l\'albero è ancora a terra', riletto.tagliati.includes(albero.n), true)
+uguale('e il sasso tolto non è tornato', riletto.ostacoli.includes(sasso.id), true)
 uguale('e le carote in scorta', riletto.merci.carota, 4)
 await scatto(page, 'fattoria3d-ritorno')
 
@@ -356,15 +430,31 @@ await m3(`window.__fattoria3d.motore.s.merci['${AN.mangia[0]}'] = ${AN.pasti * 5
 await tocca3d(idP)
 controlla('toccare il pollaio nutre la gallina', (await bestieDi(idP))[0] !== null)
 uguale('e il pasto scala dai raccolti', (await unaTessera())[AN.mangia[0]], AN.pasti * 4)
-// lavora: toccarlo apre la riga con il tasto per un'altra bestia
+// lavora: toccarlo dice quanto manca e basta; le bestie in più si comprano dal cartello sopra il pollaio (niente dialogo, niente conferma)
 await tocca3d(idP)
-await page.waitForSelector('[data-f3="dialogo"]', { timeout: 3000 })
-controlla('mentre lavora si vede il prezzo di un\'altra gallina', (await page.locator('[data-scelta="0"]').innerText()).includes('🪙 ' + AN.prezzoBestia))
+controlla('toccare il pollaio che lavora non apre dialoghi', await page.locator('[data-f3="dialogo"]').count() === 0)
+const cartelloDi = e => page.locator('[data-f3="cartello-bestie"]', { hasText: e })
+const compraDa = e => cartelloDi(e).locator('[data-f3="compra-bestia"]')
+const scena3 = id => m3(`(() => { const v = window.__fattoria3d.mondo.pezzi.voce(${JSON.stringify(id)}); return v.grp.userData.bestie ? v.grp.userData.bestie.length : v.grp.userData.pecore.length })()`)
+await attendi(page, 400)
+controlla('il cartello dice quante galline e quanto costa un\'altra', (await cartelloDi('🐔').innerText()).includes(`1/${AN.posti}`) && (await compraDa('🐔').innerText()).includes('🪙 ' + AN.prezzoBestia))
+uguale('nella scena c\'è una gallina sola', await scena3(idP), 1)
+// senza monete il pulsante è grigio ma risponde, e non compra
+await m3(() => { const m = window.__fattoria3d.motore; m.borsa.paga(m.monete()) })
+await attendi(page, 400)
+uguale('senza monete il pulsante è spento (aria-disabled)', await compraDa('🐔').getAttribute('aria-disabled'), 'true')
+await compraDa('🐔').dispatchEvent('click')
+await attendi(page, 300)
+uguale('e non compra', (await bestieDi(idP)).length, 1)
+await m3(() => { const m = window.__fattoria3d.motore; m.borsa.paga(-1000) })
+await attendi(page, 400)
 const monP = await monete()
-await page.locator('[data-scelta="0"]').click()
+await compraDa('🐔').dispatchEvent('click')
 await attendi(page, 400)
 uguale('comprarla aggiunge una bestia', (await bestieDi(idP)).length, 2)
 uguale('e costa quanto dicono i dati', monP - await monete(), AN.prezzoBestia)
+uguale('nella scena le galline sono due', await scena3(idP), 2)
+controlla('il cartello conta 2 e il prezzo sale', (await cartelloDi('🐔').innerText()).includes(`2/${AN.posti}`) && (await compraDa('🐔').innerText()).includes('🪙 ' + (AN.prezzoBestia + AN.rincaroBestia)))
 // il tempo passa: le uova aspettano, si raccolgono in un gesto, il contatore e il HUD le vedono
 await passa(AN.ms + 1000)
 await tocca3d(idP)
@@ -385,6 +475,21 @@ uguale('raccogliere porta il latte in dispensa', (await stato()).prodotti.latte,
 await attendi(page, 500)
 uguale('il contatore del latte avanza', ((await leggiProfilo(page)).totals || {}).fattoria3dLatte, 1)
 controlla('il HUD mostra anche il latte', /🥛/.test(await page.locator('[data-f3="prodotti"]').innerText()))
+// la stalla e il recinto funzionano allo stesso modo: una bestia nel prezzo, le altre dal cartello, fino alla capienza
+await compraDa('🐄').dispatchEvent('click')
+await attendi(page, 300)
+uguale('una seconda mucca dal cartello della stalla', [(await bestieDi(idS)).length, await scena3(idS)].join(), '2,2')
+const idR = await mettiCortile('recinto')
+controlla('il recinto si mette sul prato', !!idR)
+const pecoreDi = id => m3(`window.__fattoria3d.motore.cose.find(c => c.id === ${JSON.stringify(id)}).pecore.map(p => p.eta)`)
+uguale('il recinto parte con una pecora sola', (await pecoreDi(idR)).join(), 'adulta')
+await attendi(page, 300)
+await compraDa('🐑').dispatchEvent('click')
+await attendi(page, 300)
+uguale('la seconda pecora arriva adulta, anche nella scena', [(await pecoreDi(idR)).join(), await scena3(idR)].join(), 'adulta,adulta,2')
+for (let k = 0; k < 4; k++) await compraDa('🐑').dispatchEvent('click')
+await attendi(page, 300)
+uguale('al tetto le pecore sono quattro e il pulsante sparisce', [(await pecoreDi(idR)).length, await compraDa('🐑').isHidden()].join(), '4,true')
 // un pollaio con le bestie non si mette via, e il tetto dei posti vale
 const via = await m3(`window.__fattoria3d.motore.mettiVia(${JSON.stringify(idP)})`)
 controlla('il pollaio con le bestie non si mette via', via.ok === false && via.motivo === 'ha-le-bestie')

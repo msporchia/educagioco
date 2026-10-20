@@ -81,6 +81,7 @@ scrivono niente: stanno in [sprite.md](sprite.md).
 | `npm run vetrina` | i personaggi a poligoni del Generale |
 | `npm run storie` | le scene di «Prima e dopo» |
 | `npm run ambienti` | i paesaggi delle domande sugli animali |
+| `npm run catalogo3d` · `npm run catalogo3d:scheda` (`-- --gioco fattoria`, `--larghezza`, `--pixel`) | il catalogo di tutti i modelli 3D (Fattoria 3D e Sotterraneo 3D) e dove si usano, con la scheda delle somiglianze; la scheda è un PNG contatto per gioco in `tmp/scatti/catalogo-3d-<gioco>.png`, senza build ([catalogo-3d.md](catalogo-3d.md)) |
 | `npm run pannelli` | i pannelli del sotterraneo (domanda, scontro 2D e 3D, i globi vivi e come reagiscono, zaino, bottega, eroe, albero, pozioni, dialogo, barra, fine, pausa) nei tre temi affiancati, coi componenti veri, a 390/320/768/1100 px ([../sotterraneo/tema-pannelli.md](../sotterraneo/tema-pannelli.md)) |
 | `npm run simula` | il tower defense giocato a mente, senza browser |
 | `npm run dps` | quanto fa male ogni torre, per livello e ramo, col motore vero sulle carte, quanto rende un ⚡, e quanto rende un ⚡ cumulato salendo (un minuto) |

@@ -6,20 +6,20 @@ sempre ([../fattoria/regole.md](../fattoria/regole.md)); qui le differenze.
 
 ## Risorse sue, monete vere
 
-- **Raccolti, prodotti, lana, legna, terra e pezzi stanno nello stato suo**, `profile.campagne.fattoria3d.cfg.stato`
+- **Raccolti, prodotti, lana, terra e pezzi stanno nello stato suo**, `profile.campagne.fattoria3d.cfg.stato`
   (scritto da `Gioco.vue` con `ricorda`, a ritardo e subito quando la pagina sparisce). Non si leggono né si scrivono
   quelli di `campagne.fattoria`: le due fattorie non si fanno casino a vicenda.
 - **Le monete sono le vere** (`state.profile.coins`). Il motore non le conosce: passano da una `borsa` (`quante()`,
-  `paga(n)`) che gli dà `Gioco.vue`. Un rimborso (la monetina di uno spostamento annullato) **non conta come
-  guadagnata**: non gonfia `totals.monete`.
-- **Niente si vende**: il verso è sempre monete → cose. Le monete entrano solo dagli esercizi degli altri giochi.
+  `paga(n)`) che gli dà `Gioco.vue`. Un rimborso (`rimborsa`) **non conta come
+  guadagnato**: non gonfia `totals.monete`.
+- **Niente si vende**: il verso è sempre monete → cose. Le monete entrano solo dagli esercizi degli altri giochi. Anche con i vicini ([vicini.md](vicini.md)): vendere dà esperienza e roba, mai monete.
 
 ## Cosa non succede mai
 
 - **Niente marcisce.** Un campo maturo resta maturo, il forno tiene i pronti finché non si ritirano, la lana pronta
   aspetta la forbice. Il tempo avanza anche a pagina chiusa: i campi leggono `ora()`, la cottura si rimette in pari
   con `tick()`.
-- **Niente si perde.** Un pezzo messo via va nel magazzino e si ripiazza gratis. Annullare rimette tutto com'era.
+- **Niente si perde.** Un pezzo messo via va nel magazzino e si ripiazza gratis. Non c'è un «annulla»: si paga al rilascio, e un rilascio che non va non costa niente.
 - **Un rifiuto dice cosa fare** (`dettoDi` in `scena3d/azioni.js`): «Servono raccolti», «Compra prima un terreno che
   confina con questo», non un «no» nudo.
 
@@ -28,12 +28,15 @@ sempre ([../fattoria/regole.md](../fattoria/regole.md)); qui le differenze.
 | cosa | costo | perché |
 |---|---|---|
 | un campo | 20 + 8 per ogni copia (anche nel magazzino) | il rincaro lineare della fattoria di sempre |
-| recinto / bancarella / fontana | 45 / 15 / 30 | fissi |
+| recinto / bancarella / fontana | 45 / 15 / 30 | fissi; nel recinto una pecora, le altre si comprano (20, 30, 40) |
 | aiuola / panchina / pozzo / spaventapasseri | 6 / 10 / 18 / 12 | decorazioni, fissi |
-| pollaio / stalla | 55 / 90 | liberi nel terreno come il recinto; una bestia nel prezzo, le altre 12 / 30 ([animali.md](animali.md)) |
+| pollaio / stalla | 55 / 90 | liberi nel terreno come il recinto; una bestia nel prezzo, le altre una per volta, sempre più care ([animali.md](animali.md)) |
 | mulino / panificio / caseificio / conserviera / gelateria | 60 / 90 / 120 / 110 / 140 | unici, nel loro posto, in lotti da comprare prima |
 | pasticceria / mongolfiera | 80 / 100 | unici, nel loro posto |
 | un lotto di terreno | 40 + 20 per ogni lotto comprato oltre i nove di partenza | allargare costa sempre di più |
+| **un pezzo nuovo** | il prezzo, **pagato quando lo lasci sulla mappa** (`compraEMetti`) | niente conferma: il prezzo è sulla carta; senza monete il fantasma è rosso e il rilascio dice «Servono 🪙 N» |
+| tagliare un albero | 3 | trenta secondi di esercizio: un albero si toglie, non dà niente (niente legna) |
+| togliere un sasso o un cespuglio | 1 | pochi per lotto, restano anche dopo l'acquisto del lotto |
 | spostare o mettere via un pezzo | 1 | non è un tavolino da spostare per ore; rimetterlo dov'era è gratis |
 | un pezzo di strada | 1 | togliere è gratis |
 
@@ -50,11 +53,14 @@ si mette via**.
 
 ## Le pecore
 
-`agnello → adulta → tosata → lana che ricresce`, e a volte ne nasce una nuova (`PECORE` in `dati/regole.js`):
+`agnello → adulta → tosata → lana che ricresce`, e a volte ne nasce una nuova (`PECORE` in `dati/regole.js`). **Si parte con
+una pecora adulta** (nel prezzo del recinto); **le altre si comprano dal cartello sopra il recinto** (adulte, 🪙20, 30, 40, fino a
+quattro: [animali.md](animali.md)), come le galline e le mucche. Con due adulte le nascite ricominciano:
 
 - un agnello **cresce dopo due pasti** (ogni pasto un raccolto qualsiasi, dalla scorta più grande);
 - l'adulta ha la lana che ricresce in 25 s e si tosa: `+1 🧶` a pecora;
-- **due adulte nutrite due volte fanno nascere un agnellino**, fino a quattro pecore per recinto;
+- **due adulte nutrite due volte fanno nascere un agnellino**, fino a quattro pecore per recinto (acquisti e nascite dividono lo
+  stesso tetto);
 - toccando il recinto l'eroe sceglie da solo (`provaCura`): prima tosa, poi nutre. Un recinto con le pecore **non si
   mette via** (si sposta).
 
@@ -91,7 +97,7 @@ Si caricano 2 raccolti, parte per 14 s e torna con una cassa: `+2 🧶`. Una cas
 ## I contatori
 
 `Gioco.vue` li muove dagli **eventi** del motore (`prendiEventi()`), non dai gesti: `fattoria3dTerre`, `…Pezzi` (pezzi e
-edifici messi), `…Raccolti` (tessere tagliate), `…Alberi`, `…Prodotti`; sale anche l'evento `livello`. L'albo li legge dal blocco `albo` del
+edifici messi), `…Visite` e `…Aiuti` ([vicini.md](vicini.md)), `…Raccolti` (tessere tagliate), `…Alberi`, `…Prodotti`; sale anche l'evento `livello`. L'albo li legge dal blocco `albo` del
 manifesto (`gioco.js`); l'esperienza è modesta apposta, come nella fattoria di sempre.
 
 Nei test: `unita/fattoria3d` (le regole, a orologio finto) e `integrazione/fattoria3d` (il gioco col dito vero).

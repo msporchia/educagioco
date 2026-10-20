@@ -83,7 +83,7 @@ function scriviServiceWorker () {
           // il disegno 3D del sotterraneo: il file che Gioco.vue chiede a richiesta scendendo nel Sotterraneo 3D
           const sot3d = o.type === 'chunk' && /\/giochi\/sotterraneo\/scena3d\/indice\.js/.test(o.facadeModuleId || '')
           // il disegno 3D della fattoria 3D: il file che Gioco.vue chiede a richiesta, nel gruppo del suo gioco
-          const fat3d = o.type === 'chunk' && /\/giochi\/fattoria3d\/scena3d\/mondo3d\.js/.test(o.facadeModuleId || '')
+          const fat3d = o.type === 'chunk' && /\/giochi\/fattoria3d\/scena3d\/(?:mondo3d|visita)\.js/.test(o.facadeModuleId || '')
           return ['./' + nome, o.type === 'asset' ? o.source.length : o.code.length,
                   gioco ? gioco[1] : tre ? 'mate' : sot3d ? 'sotterraneo' : fat3d ? 'fattoria3d' : (vecchio && VECCHI[vecchio[1]]) || GRUPPI.get(nome) || '']
         })
@@ -349,7 +349,7 @@ export default defineConfig({
                // tirava dentro i dati in comune col 2D, e il Sotterraneo di sempre caricava three)
                if (/giochi\/sotterraneo\/scena3d\/indice\.js/.test(c.facadeModuleId || '')) return 'assets/sotterraneo-3d-[hash].js'
                // idem per il disegno 3D della fattoria 3D (three sta in asteroidi-3d, nel gruppo 'mate': si scarica anche da lì)
-               if (/giochi\/fattoria3d\/scena3d\/mondo3d\.js/.test(c.facadeModuleId || '')) return 'assets/fattoria3d-3d-[hash].js'
+               if (/giochi\/fattoria3d\/scena3d\/(?:mondo3d|visita)\.js/.test(c.facadeModuleId || '')) return 'assets/fattoria3d-3d-[hash].js'
                return m ? `assets/gioco-${m[1]}${m[2] || ''}-[hash].js` : 'assets/[name]-[hash].js'
              } } },
            target: 'es2020', assetsInlineLimit: SPEZZATO ? 4096 : 100000000, cssCodeSplit: false,

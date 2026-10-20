@@ -1,6 +1,7 @@
 // Costruire: si trascina un pezzo (dalla barra, o riprendendone uno già messo) fino a dove si vuole e al rilascio si
-// costruisce; il fantasma mostra dove va, verde se ci sta. E le strade a pennello. Le regole di cosa ci sta sono del motore
-// (`puoMettere`): qui si guida il fantasma, si chiede e si racconta. Un'azione si può annullare (↶).
+// costruisce (e, se il pezzo non è ancora pagato, paga: un solo gesto); il fantasma mostra dove va, verde se ci sta e se bastano le
+// monete. E le strade a pennello. Le regole di cosa ci sta sono del motore (`puoCompraEMettere`): qui si guida il fantasma, si chiede
+// e si racconta.
 import { PEZZI } from '../dati/catalogo.js'
 
 import { dentro } from '../dati/mondo.js'
@@ -23,18 +24,21 @@ export class Costruzione {
   constructor(ctx) {
     this.c = ctx
     this.D = { attivo: false, tipo: null, spostando: null, i: 0, j: 0, ok: false, fant: null }
-    this.ultima = null
     this.tratto = null; this.ultimaCella = null
   }
   get m() { return this.c.m }
   get attivo() { return this.D.attivo }
 
   // ── il fantasma ──
-  _valido() { const D = this.D; return this.m.puoMettere(D.tipo, D.i, D.j, D.spostando ? D.spostando.id : 0) }
+  /** Un pezzo già messo si sposta (🪙 1 al rilascio); uno della barra si compra e si mette: rosso anche se mancano le monete. */
+  _valido() {
+    const D = this.D
+    return D.spostando ? this.m.puoMettere(D.tipo, D.i, D.j, D.spostando.id) : this.m.puoCompraEMettere(D.tipo, D.i, D.j)
+  }
   _aggiorna() {
     const D = this.D; if (!D.fant) return
     const d = PEZZI[D.tipo]; D.fant.position.set(D.i + d.w / 2, 0, D.j + d.d / 2)
-    const p = this._valido(); D.ok = p.ok; D.motivo = p.motivo; tingi(D.fant, p.ok)
+    const p = this._valido(); D.ok = p.ok; D.motivo = p.motivo; D.costo = p.costo; D.liv = p.liv; tingi(D.fant, p.ok)
   }
   _suDito(x, y) {
     const p = this.c.puntaSuolo(x, y); if (!p) return
@@ -57,15 +61,16 @@ export class Costruzione {
     D.fant.visible = !su
     if (!su) this._suDito(x, y)
     ui.trascinando({ emoji: PEZZI[D.tipo].emoji, x, y, su, perMettereVia: su && !!D.spostando })
+    const prezzo = !D.spostando && D.costo ? ` (🪙 ${D.costo})` : ''
     ui.avviso(su ? (D.spostando ? 'Rilascia qui per mettere via (🪙 1)' : 'Portalo sulla mappa e rilascia')
-                 : (D.ok ? 'Rilascia per costruire qui' : dettoDi(D.motivo)))
+                 : (D.ok ? 'Rilascia per costruire qui' + prezzo : dettoDi(D.motivo, { costo: D.costo, liv: D.liv })))
   }
   /** Il dito si stacca: se ci sta si costruisce o si sposta, sulla barra si rimette via, altrimenti niente cambia. */
   rilascia(x, y) {
     const D = this.D; if (!D.attivo) return
     const su = this._sulBordo(y), { ui, fx } = this.c, m = this.m
     this._suDito(x, y)                                              // ricalcola dove sta, con la mappa di adesso
-    const ok = D.ok, motivo = D.motivo, tipo = D.tipo, c0 = D.spostando, i = D.i, j = D.j
+    const ok = D.ok, motivo = D.motivo, costo = D.costo, liv = D.liv, tipo = D.tipo, c0 = D.spostando, i = D.i, j = D.j
     this._fine()
     if (c0) {
       if (su) {
@@ -74,19 +79,17 @@ export class Costruzione {
         this.c.cambiato(); return ui.avviso(PEZZI[tipo].nome + ' messo via: lo ritrovi in Costruisci')
       }
       if (!ok) return ui.avviso(dettoDi(motivo))
-      const da = { i: c0.i, j: c0.j }, r = m.spostaPezzo(c0.id, i, j)
+      const r = m.spostaPezzo(c0.id, i, j)
       if (!r.ok) return ui.avviso(dettoDi(r.motivo, { mancano: 1 }))
-      if (r.costo) this.ultima = { tipo: 'sposta', id: c0.id, da, costo: r.costo }
-      this.c.cambiato(); return ui.avviso('Spostato', !!this.ultima)
+      this.c.cambiato(); return ui.avviso('Spostato')
     }
     if (su) return ui.avviso('')
-    if (!ok) return ui.avviso(dettoDi(motivo))
-    const r = m.mettiPezzo(tipo, i, j)
-    if (!r.ok) return ui.avviso(dettoDi(r.motivo))
+    if (!ok) return ui.avviso(dettoDi(motivo, { costo, liv }))     // un rilascio che non va non perde niente
+    const r = m.compraEMetti(tipo, i, j)
+    if (!r.ok) return ui.avviso(dettoDi(r.motivo, { costo: r.costo, liv: r.liv }))
     this.c.pezzi.sincronizza(); this.c.pezzi.fanNascere(r.cosa.id)
     fx.scoppietta(this.c.pezzi.centroDi({ kind: 'cosa', id: r.cosa.id }).setY(0.5), 0xfff2a0, 14, 2.4, 3)
-    this.ultima = { tipo: 'nuovo', id: r.cosa.id }
-    this.c.cambiato(); ui.avviso(PEZZI[tipo].nome + ' costruito', true)
+    this.c.cambiato(); ui.avviso(PEZZI[tipo].nome + ' costruito' + (r.costo ? ` (🪙 ${r.costo})` : ''))
   }
   annullaTrascinamento() { if (this.D.attivo) this._fine() }
   _fine() {
@@ -118,23 +121,8 @@ export class Costruzione {
   finisciTratto(gesto) {
     this.ultimaCella = null
     if (this.tratto && this.tratto.celle.length) {
-      this.ultima = { tipo: 'strada', celle: this.tratto.celle, costo: this.tratto.costo }
-      this.c.ui.avviso(gesto === 'strada' ? `Strada fatta (🪙 ${this.tratto.costo})` : 'Tolta', true)
+      this.c.ui.avviso(gesto === 'strada' ? `Strada fatta (🪙 ${this.tratto.costo})` : 'Tolta')
     }
     this.tratto = null
   }
-
-  /** ↶ l'ultima cosa fatta torna com'era (e la monetina torna indietro). */
-  annulla() {
-    const u = this.ultima, m = this.m; if (!u) return
-    this.ultima = null
-    if (u.tipo === 'nuovo') m.mettiVia(u.id, { gratis: true, forza: true })
-    else if (u.tipo === 'sposta') { m.spostaPezzo(u.id, u.da.i, u.da.j, { gratis: true }); m.rimborsa(u.costo) }
-    else if (u.tipo === 'strada') {
-      for (const c of u.celle) { if (c.aggiunta) m.togliStrada(c.i, c.j); else m.disegnaStrada(c.i, c.j, { gratis: true }) }
-      m.rimborsa(u.costo); this.c.terreno.ridisegnaStrade()
-    }
-    this.c.cambiato(); this.c.ui.avviso('Annullato')
-  }
-  dimentica() { this.ultima = null }
 }

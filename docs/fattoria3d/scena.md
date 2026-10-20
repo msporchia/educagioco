@@ -10,15 +10,16 @@ gli Asteroidi 3D e il Sotterraneo 3D: il 3D non si scrive a mano.
 |---|---|
 | `mondo3d.js` | **compone** tutto e fa il battito: renderer, luci, il tocco (`tocca`, `bersaglioSotto`), la coda di semina/raccolta, le opzioni (`applica`), le statistiche. L'unico che usa il renderer |
 | `terreno.js` | erba, strade, griglia, lotti non comprati, recinto, alberi, nuvole, i due edifici di scena |
-| `pezzi.js` | un gruppo per ogni cosa del motore e per i sette edifici unici (fantasmi finché non si comprano); li tiene allineati (`sincronizza`) e li anima (grano che cresce, pecore, galline e mucche, fontana, fumo, il pallone); i cartelli sugli edifici: prezzo o «🔒 Livello N» sul fantasma, pronti o cottura su ogni macchina, uova o latte pronti sul pollaio e sulla stalla |
+| `pezzi.js` | un gruppo per ogni cosa del motore e per i sette edifici unici (fantasmi finché non si comprano); li tiene allineati (`sincronizza`) e li anima (grano che cresce, pecore, galline e mucche, fontana, fumo, il pallone); i cartelli sugli edifici: prezzo o «🔒 Livello N» sul fantasma, pronti o cottura su ogni macchina, uova o latte pronti sul pollaio e sulla stalla, e su recinto, pollaio e stalla il cartello col conto «🐄 2/4» e il pulsante «＋ 🪙 N» che compra una bestia ([animali.md](animali.md)); il cartello si nasconde col pezzo sollevato |
 | `eroe.js` | il movimento (a piedi, o di corsa), il percorso, la posa del gesto (semina, falcia, abbatte, esulta) |
 | `azioni.js` | cosa fa l'eroe davanti a ogni cosa: anima il gesto e **a metà gesto chiede al motore di farlo davvero**; un edificio posseduto apre il menu della sua macchina, uno no offre l'acquisto (`offriEdificio`: livello, terreno da comprare prima, prezzo) |
 | `detti.js` | `dettoDi` / `dettoDiRifiuto`: un rifiuto del motore in una riga che dice cosa fare. Senza three: lo usa anche `Gioco.vue` |
-| `costruzione.js` | il trascinamento dei pezzi (dalla barra o riprendendone uno), il fantasma, le strade a pennello, l'annulla |
+| `costruzione.js` | il trascinamento dei pezzi (dalla barra o riprendendone uno), il fantasma, le strade a pennello; al rilascio compra e mette in un gesto |
 | `dito.js` | i pointer sulla tela: tocco, mappa che scorre, pizzico, tenere premuto, riprendere un pezzo |
 | `camera.js` | la telecamera: segue, libera, in costruzione |
-| `effetti.js` | scintille e fumo, i testi che volano, il fumetto dell'eroe, i cartelli, l'albero che cade |
+| `effetti.js` | scintille e fumo, i testi che volano, il fumetto dell'eroe, i cartelli (`nuovoBadge`; `nuovoCartello` per le bestie, con un pulsante vero), l'albero che cade |
 | `modelli.js` | tutti i pezzi in codice (niente sprite, niente immagini: le trame sono canvas): campo a istanze con dieci colture, i sette edifici (pasticceria, mongolfiera, mulino, panificio, caseificio, conserviera, gelateria), le quattro decorazioni (aiuola, panchina, pozzo, spaventapasseri), bancarella, fontana, recinto e pecore con le loro fasi, pollaio con le galline, stalla con le mucche ([animali.md](animali.md)), fienile, casa, l'eroe |
+| `compagni.js`, `modelli-compagni.js` | Watson e i gatti che girano per la fattoria, e il contadino con la sua faccia: il comportamento, i corpi e le pose ([compagni.md](compagni.md)) |
 | `webgl.js` | `haWebGL2()`: si chiede senza caricare three |
 
 La **vista** (`Gioco.vue` e `viste/`) apre le finestre e dice cosa si vuole; la scena la chiama attraverso `ui`
@@ -30,23 +31,38 @@ dal suo terreno: apre subito l'offerta, che dice il livello o manda al lotto da 
 ## Costruire trascinando
 
 Si **trascina una carta dalla barra fino alla mappa** (verso l'alto; di lato scorre la barra) e al rilascio si
-costruisce. Il fantasma sta 1,6 celle sopra il dito, verde se ci sta (`puoMettere` del motore), rosso se no. **Un pezzo
-non pagato chiede la conferma appena si comincia a trascinarlo**; pagato sta nel magazzino (`📦 ×1`) e si trascina quando
-si vuole. Rilasciato sulla barra torna nel magazzino (🪙 1); un rilascio non valido non perde niente. Un pezzo già
-messo si riprende **trascinandolo** (in costruzione) o **tenendolo premuto mezzo secondo** (fuori: vibra, compaiono la
-griglia e la fascia «📦 metti via»). Dopo ogni mossa «↶ Annulla».
+costruisce. Il fantasma sta 1,6 celle sopra il dito, verde se ci sta **e se bastano le monete** (`puoCompraEMettere` del
+motore: posto, livello, prezzo), rosso se no; sulla carta c'è già il prezzo. **Si paga al rilascio, senza conferme**:
+`compraEMetti` compra (se il pezzo non è già nel magazzino) e mette in un solo gesto, e se qualcosa non va non cambia niente
+(«Servono 🪙 N»). Le conferme restano solo per i lotti di terreno e gli edifici unici, che costano tanto e dicono il prezzo.
+Il magazzino (`📦 ×1`: pezzi già pagati, messi via) c'è ancora e un pezzo lì si mette gratis. Rilasciato sulla barra torna
+nel magazzino (🪙 1); un rilascio non valido non perde niente. Un pezzo già messo si riprende **trascinandolo** (in
+costruzione) o **tenendolo premuto mezzo secondo** (fuori: vibra, compaiono la griglia e la fascia «📦 metti via»); spostarlo
+costa 🪙 1. **Il vassoio si chiude da solo**: un tocco vero sulla mappa (sotto i 16 px, non una strisciata) che non cade su un
+edificio o un lotto da comprare lo chiude; la ✕ c'è lo stesso. Nessun «annulla».
 
 ## Qualità e peso
 
 Il pannello ⚙ (`viste/Opzioni.vue`, dati in `dati/qualita.js`) ha tre preset (basso / medio / alto), gli interruttori che
-pesano (risoluzione 0,75×…nativa, ombre e loro qualità, ondeggio del grano, particelle, alberi, ciuffi, nuvole, nebbia), la
+pesano (risoluzione 0,75×…nativa, ombre e loro qualità, vento, scintille, alberi, ciuffi, nuvole, nebbia), la
 distanza della telecamera, le prove di stress (+10 campi, +3 recinti, non si salvano) e le statistiche vive: fps, il
 fotogramma peggiore degli ultimi due secondi, il lavoro del JS (non la GPU: quella si deduce dal peggiore), draw call,
 triangoli, geometrie, texture. «Mostra il rapporto» scrive dispositivo, GPU, fps e impostazioni da incollare.
 **Il punto di partenza lo dà la fascia grafica del telefono** (`fasciaAttiva()` di `store/qualita.js`: bassa → basso,
-media e alta → medio); le scelte si ricordano in `store/storage.js` (`fattoria3d-opz`).
+media e alta → medio); le scelte si ricordano in `store/storage.js` (`fattoria3d-opz`, con una versione: `VERSIONE_OPZIONI`
+in `dati/qualita.js`, che si alza quando cambiano i valori di partenza, così chi aveva salvato un preset vuoto riparte da quello nuovo).
 
-- Il motore sta in piedi con **molte cose** perché campi, alberi, strade e recinto sono a istanze: ~100–260 draw call
+**Cosa si deve vedere** (medio e alto: tutto acceso; il basso tiene spenti ombre, vento e scintille, e lo dice nelle opzioni):
+- **ciuffi d'erba**: un gruppetto di tre fili su metà delle celle del prato, a istanze, che sparisce dove sta una strada, un
+  pezzo, un albero o un sasso (si rifà a ogni cambio, `ridisegnaErba`), più quelli fuori dal mondo;
+- **vento**: i ciuffi ondeggiano nel vertex shader (fase per ciuffo, raffiche) e il grano maturo si piega di una decina di gradi;
+- **nuvole**: undici, basse (12–15 di quota, dentro la vista di una camera vicina) e un po' trasparenti, ognuna con la sua
+  **ombra morbida sul prato** spostata lungo la direzione del sole; due disegni in tutto (macchie e ombre, a istanze);
+- **scintille e fumo**: solo nei momenti del gioco (semina, raccolto, acquisto, fumo dei forni), non a ciclo continuo.
+Prima di questo non si vedeva niente: le nuvole stavano a quota 28–36, **sopra la telecamera** (che guarda in giù da 18) e
+lontane, i ciuffi solo fuori dal mondo (sottili e dello stesso verde del prato), il vento del grano muoveva la punta di 5 cm.
+
+- Il motore sta in piedi con **molte cose** perché campi, alberi, sassi, ciuffi, strade e recinto sono a istanze: ~100–260 draw call
   e ~20–50k triangoli con una sola ombra a 1024 (misurato in Chrome senza schermo, SwiftShader: i ms non dicono niente
   del telefono). **Da misurare su un telefono vero.**
 - **Il peso nel sito spezzato**: `fattoria3d-3d-*.js` (~50 kB, il disegno) e `gioco-fattoria3d-*.js` (~40 kB) stanno nel

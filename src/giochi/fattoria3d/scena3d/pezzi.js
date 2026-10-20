@@ -4,7 +4,7 @@
 import * as THREE from 'three'
 import { creaCampo, aggiornaCampo, creaPasticceria, creaMongolfiera, creaBancarella, creaFontana, creaRecinto, muoviPecore,
          sincronizzaPecore, fantasma, creaMulino, creaPanificio, creaConserviera, creaGelateria, creaAiuola, creaPanchina,
-         creaPozzo, creaSpaventapasseri, creaSegnaposto, creaPollaio, creaStalla, creaCaseificio, sincronizzaBestie, muoviBestie } from './modelli.js'
+         creaPozzo, creaSpaventapasseri, creaTrattore, creaSegnaposto, creaPollaio, creaStalla, creaCaseificio, sincronizzaBestie, muoviBestie } from './modelli.js'
 import { EDIFICI, PEZZI } from '../dati/catalogo.js'
 import { RICETTE, MACCHINE } from '../dati/ricette.js'
 import { MONGOLFIERA } from '../dati/regole.js'
@@ -22,6 +22,7 @@ const CREA = {
   panchina: () => creaPanchina(),
   pozzo: () => creaPozzo(),
   spaventapasseri: () => creaSpaventapasseri(),
+  trattore: () => creaTrattore(),
 }
 const CREA_EDIFICIO = {
   pasticceria: creaPasticceria, mongolfiera: creaMongolfiera,
@@ -37,6 +38,7 @@ export class Pezzi {
     this.scena = scena; this.m = motore; this.fx = effetti; this.vista = vista; this.q = qualita
     this.voci = new Map()           // id (numero) o tipo (edificio) → voce
     this.tFumo = 0
+    this.sulCompraBestia = null     // la porta verso il pulsante «＋» dei cartelli: la mette il mondo (scena3d/azioni.js `compraBestia`)
     this.sincronizza()
   }
 
@@ -64,7 +66,7 @@ export class Pezzi {
     const d = PEZZI[c.tipo], grp = modelloDi(c.tipo, d, c)
     grp.userData.bersaglio = { kind: 'cosa', id: c.id }
     grp.position.copy(centroDi(c, d)); this.scena.add(grp)
-    this.voci.set(c.id, { id: c.id, kind: 'cosa', c, d, grp, badge: c.bestie ? this.fx.nuovoBadge() : null, anello: null, salto: 0, nasce: undefined, richiamo: null, chiave: '' })
+    this.voci.set(c.id, { id: c.id, kind: 'cosa', c, d, grp, badge: c.bestie || c.pecore ? this.fx.nuovoCartello(() => this.sulCompraBestia && this.sulCompraBestia(c.id)) : null, anello: null, salto: 0, nasce: undefined, richiamo: null, chiave: '' })
   }
   _creaEdificio(tipo, mio) {
     const e = EDIFICI[tipo], grp = CREA_EDIFICIO[tipo] ? CREA_EDIFICIO[tipo]() : creaSegnaposto(e.w, e.d)
@@ -115,7 +117,7 @@ export class Pezzi {
       if (v.badge && !v.badge.el.hidden && g.visible) {
         const [x, y, visto] = this.vista.proietta(g.position, g.userData.altezza || 1.6)
         v.badge.metti(x, y, visto)
-      }
+      } else if (v.badge && !g.visible) v.badge.el.style.visibility = 'hidden'      // un pezzo sollevato non lascia il suo cartello (e il suo «＋») a mezz'aria
     }
   }
 
@@ -132,6 +134,9 @@ export class Pezzi {
       if (this.q.vento || chiave !== v.chiave) { v.chiave = chiave; aggiornaCampo(g, cr, tt, col, this.q.vento) }
     } else if (c.tipo === 'recinto') {
       muoviPecore(g, dt, tt, v.richiamo, c.pecore, adesso); v.richiamo = null
+      const lana = this.m.lanaPronta(c).length
+      v.badge.imposta(lana ? `🧶 ${lana} pront${lana === 1 ? 'a' : 'e'}!` : '', lana ? 'pronto' : '')
+      this._conto(v, c)
     } else if (c.bestie) {
       muoviBestie(g, dt, tt, c.bestie, adesso)
       // il cartello del cortile: quanto c'è da raccogliere, oppure i secondi che mancano, oppure che hanno fame
@@ -140,7 +145,14 @@ export class Pezzi {
       const fame = c.bestie.some(b => b.fine === null)
       v.badge.imposta(pronte ? `${PRODOTTI_ANIMALI[A.prodotto].emoji} ${pronte} pront${pronte === 1 ? 'o' : 'i'}!`
         : fame ? `${A.emoji} ha fame` : lavora.length ? `⏳ ${Math.ceil(Math.min(...lavora) / 1000)}s` : '', pronte ? 'pronto' : '')
+      this._conto(v, c)
     } else if (g.userData.anima) g.userData.anima(tt)              // fontana, spaventapasseri
+  }
+
+  /** Il conto «🐄 2/4» e il prezzo sul pulsante del cartello; il pulsante è spento (grigio, ma tocca) se mancano monete. */
+  _conto(v, c) {
+    const q = this.m.infoBestie(c)
+    v.badge.bestie(q, !q.pieno && this.m.monete() < q.prezzo)
   }
 
   _edificio(v, g, dt, tt, adesso) {
