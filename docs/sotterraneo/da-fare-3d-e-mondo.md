@@ -67,8 +67,8 @@ Tutto è stato guardato solo in Chrome senza GPU, mai su un telefono vero.
 - **Le figure grandi a blocchi**: i grossi senza figura dipinta (Re Ossuto) sono lo sprite della specie ingrandito ~2,5
   volte; le armi in mano nel 3D sono a blocchi (il foglio nitido misura 11 848×2 331 e non entra come texture su un
   telefono: andrebbe ritagliato). Paladino, Luna e runico si distinguono nei pensieri solo dai nodi dell'albero.
-- **Il mondo di sopra**: l'anello acceso dal tocco su un mercante si vede poco mentre l'eroe cammina; la freccina della
-  missione indica la direzione sul bordo, non la strada vera.
+- **Il mondo di sopra**: l'anello acceso dal tocco su un mercante si vede poco mentre l'eroe cammina. La strada verso la meta
+  (luci, velo, «portami lì») va guardata col dito: [mondo-3d-la-meta.md](mondo-3d-la-meta.md#cosa-resta-da-guardare-col-dito).
 
 ## Da ritarare (non è stato rimisurato niente in questo giro)
 

@@ -46,6 +46,10 @@ non una strada**: niente percorso disegnato, e una freccina sola per volta.
   entrata di tanto, cede quando esce davvero) e le due non si vedono mai
   insieme.
 
+- **Nel mondo 3D** la freccia azzurra sul bordo resta, e in più c'è la carta della meta in cima (nome, passi, «portami lì»),
+  la scia di luci per terra e la strada aperta fra le nuvole: [mondo-3d-la-meta.md](mondo-3d-la-meta.md). Toccata, la freccia
+  della meta è «portami lì».
+
 ## Quale seguire
 
 Con più missioni prese le freccine ne indicano una. Di difetto resta la regola di
