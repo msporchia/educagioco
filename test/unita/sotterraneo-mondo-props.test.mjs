@@ -9,7 +9,7 @@
    nel pezzo della sua cella; ogni città ha il suo carattere; ogni
    modello ha un nome e poche facce.
    ═══════════════════════════════════════════════════════════════════ */
-import { ilMondo } from '../../src/giochi/sotterraneo/motore/mondo-sopra.js'
+import { ilMondo } from '../../src/giochi/sotterraneo/motore/mondo-sopra-anelli.js'
 import { ERBA } from '../../src/giochi/sotterraneo/motore/mondo-aperto.js'
 import { propsDellaCitta, propsPerPezzo } from '../../src/giochi/sotterraneo/scena3d/mondo/props-citta.js'
 import { MODELLI } from '../../src/giochi/sotterraneo/scena3d/mondo/props-modelli.js'

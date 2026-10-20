@@ -6,7 +6,7 @@
    di motore/terra.js), le grate chiuse che la fermano, le celle del
    velo che si apre attorno, le luci della scia e i passi detti.
    ═══════════════════════════════════════════════════════════════════ */
-import { ilMondo, aperturaDi, terraDelMondo, postiDi } from '../../src/giochi/sotterraneo/motore/mondo-sopra.js'
+import { ilMondo, aperturaDi, terraDelMondo, postiDi } from '../../src/giochi/sotterraneo/motore/mondo-sopra-anelli.js'
 import { campoVersoLaMeta, celleDelVelo, luciDellaStrada, piuVicina, passiDetti } from '../../src/giochi/sotterraneo/motore/meta-sopra.js'
 import { creaTerra } from '../../src/giochi/sotterraneo/motore/terra.js'
 import { trameDellaNebbia, segnaScoperte, apriIlVelo, MAI } from '../../src/giochi/sotterraneo/scena3d/mondo/nebbia.js'

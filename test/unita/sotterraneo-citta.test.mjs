@@ -1,14 +1,14 @@
 /* ═══════════════════════════════════════════════════════════════════
-   LE CITTÀ DEL MONDO 3D: IL CAPITANO E LA FONTANA — docs/sotterraneo/mondo-aperto-quest.md, chi-cura.md, mondo-3d.md
+   IL VILLAGGIO DEL MONDO 3D: IL CAPITANO E LA FONTANA — docs/sotterraneo/mondo-aperto-quest.md, chi-cura.md, mondo-3d.md
 
-   Il capitano del forte del guado apre la storia delle marche: dice lui la quinta e la sesta porta (con la strada del mondo
-   aperto), per le altre sta zitto e saluta; il suo sprite è quello della guardia, col suo blu e un po' più alto. La fontana prende
-   il posto del pozzo nelle città dove manca la guaritrice o l'incantatrice (oggi il forte, che non ha l'incantatrice), cura vita
-   ed energia insieme, e sta dove il generatore ha già messo il pozzo: il generatore non cambia. Il disegno e il tocco col dito
+   Una città sola, il villaggio (le decisioni del 20 ottobre): il capitano, venuto dal forte che non c'è più, sta nella piazza e
+   dice lui la quinta e la sesta porta (con la strada del mondo a percorso), per le altre sta zitto e saluta; il suo sprite è
+   quello della guardia, col suo blu e un po' più alto. La fontana prende il posto del pozzo dove manca la guaritrice o
+   l'incantatrice: il villaggio le ha tutte e due, quindi oggi nessuna fontana (la regola resta). Il disegno e il tocco col dito
    sono in integrazione/sotterraneo-mondo.
    ═══════════════════════════════════════════════════════════════════ */
 import { ilMondo, terraDelMondo, fontaneDi, hoLaFontana, curaDellaFontana, postiDi, CURA_DEL_MERCANTE } from '../../src/giochi/sotterraneo/motore/mondo-sopra.js'
-import { CITTA } from '../../src/giochi/sotterraneo/dati/mondo-aperto.js'
+import { VILLAGGIO } from '../../src/giochi/sotterraneo/dati/mondo-aperto.js'
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { PERSONAGGI, PERSONAGGI_DI_SOPRA, CITTADINI, personaDi } from '../../src/giochi/sotterraneo/dati/missioni.js'
 import { DIALOGHI, FONTANA, guastiDeiDialoghi } from '../../src/giochi/sotterraneo/dati/dialoghi.js'
@@ -21,17 +21,17 @@ import { controlla, uguale as uguale0, stessaLista, riassunto } from '../aiuto/v
 const uguale = (nome, a, b) => uguale0(nome, JSON.stringify(a), JSON.stringify(b))
 
 const m = ilMondo()
-const aperta = terraDelMondo(m, () => true)
+const aperta = terraDelMondo(m)
 const testi = pagine => pagine.map(p => p.testo).join(' | ')
 const ctxCon = finite => ({ stati: {}, mondo: true, tappe: CAMPAGNA.map((t, i) => ({ ...t, indice: i, fatta: i < finite, aperta: i <= finite, adesso: i === finite })) })
 
 /* ── il capitano: chi è, dov'è ── */
 {
-  stessaLista('il forte ha il capitano, e basta', CITTA.find(c => c.chiave === 'forte').persone, ['capitano'])
-  const forte = m.citta.find(c => c.chiave === 'forte')
-  const q = forte.persone.find(p => p.chiave === 'capitano')
-  controlla('il generatore l\'ha messo nel forte', !!q && q.citta === 'forte', JSON.stringify(q))
-  controlla('dove ci si ferma a parlargli, ci si arriva dalla piazza (coi passaggi aperti)', aperta.raggiungibili(m.partenza).has(q.accanto.y * m.W + q.accanto.x))
+  stessaLista('nella pianta del villaggio ci sono la ragazza e il capitano', VILLAGGIO.lotti.filter(l => l.tipo === 'persona').map(l => l.chiave).sort(), ['capitano', 'ragazza'])
+  uguale('una città sola', m.citta.map(c => c.chiave), ['villaggio'])
+  const q = m.villaggio.persone.find(p => p.chiave === 'capitano')
+  controlla('il generatore l\'ha messo nel villaggio', !!q && q.citta === 'villaggio', JSON.stringify(q))
+  controlla('dove ci si ferma a parlargli, ci si arriva dalla piazza', aperta.raggiungibili(m.partenza).has(q.accanto.y * m.W + q.accanto.x))
   controlla('il suo ingombro non chiude strade: la cella dei piedi è occupata, quella accanto no', !aperta.passa(q.piede.x, q.piede.y) && aperta.passa(q.accanto.x, q.accanto.y))
   controlla('è fra chi sta sopra, ma non fra chi dà favori (la mappa dipinta non lo conosce)', !!PERSONAGGI_DI_SOPRA.capitano && !PERSONAGGI.capitano)
   uguale('il suo nome', personaDi('capitano').nome, 'Il capitano')
@@ -75,18 +75,11 @@ const ctxCon = finite => ({ stati: {}, mondo: true, tappe: CAMPAGNA.map((t, i) =
 {
   stessaLista('chi cura: la guaritrice la vita, l\'incantatrice l\'energia', Object.entries(CURA_DEL_MERCANTE).map(e => e.join(':')), ['erborista:vita', 'incantatrice:energia'])
   uguale('il villaggio ha tutte e due: niente fontana', hoLaFontana('villaggio'), false)
-  uguale('il forte non ha l\'incantatrice: la fontana', hoLaFontana('forte'), true)
-  uguale('il rifugio ha tutte e due', hoLaFontana('rifugio'), false)
+  uguale('il forte di prima è il villaggio: niente fontana', hoLaFontana('forte'), false)
   uguale('una città che non c\'è non ha niente', hoLaFontana('nessuna'), false)
-  const f = fontaneDi(m, aperta)
-  stessaLista('una fontana, quella del forte', f.map(x => x.citta), ['forte'])
-  const forte = m.citta.find(c => c.chiave === 'forte'), p = forte.pozzo
-  uguale('sta dove il generatore ha messo il pozzo', [f[0].x, f[0].y, f[0].w, f[0].h], [p.x, p.y, 2, 2])
-  controlla('il pozzo è già un ingombro: non serve altro, e non si cammina sopra', !aperta.passa(f[0].piede.x, f[0].piede.y))
-  controlla('ci si ferma accanto, in piazza, e ci si arriva', aperta.passa(f[0].accanto.x, f[0].accanto.y) && aperta.raggiungibili(m.partenza).has(f[0].accanto.y * m.W + f[0].accanto.x))
-  controlla('dentro la piazza', Math.hypot(f[0].accanto.x - forte.piazza.x, f[0].accanto.y - forte.piazza.y) <= forte.piazza.r + 1)
-  uguale('senza la terra, la prima cella provata', fontaneDi(m)[0].accanto, { x: p.x + 1, y: p.y + 3 })
-  uguale('non aggiunge posti al mondo: il generatore è quello di prima', postiDi(m, 'fontana').length, 0)
+  stessaLista('nessuna fontana nel mondo', fontaneDi(m, aperta), [])
+  controlla('il pozzo del villaggio c\'è (la fontana ci starebbe), e non ci si cammina sopra', !!m.villaggio.pozzo && !aperta.passa(m.villaggio.pozzo.x, m.villaggio.pozzo.y))
+  uguale('non aggiunge posti al mondo', postiDi(m, 'fontana').length, 0)
   // cosa serve a chi sale
   uguale('senza sosta del portale si è in forze', curaDellaFontana(null), { vita: 0, energia: 0, serve: false })
   const forze = { vita: 7, vitaMax: 20, energia: 3, energiaMax: 10 }

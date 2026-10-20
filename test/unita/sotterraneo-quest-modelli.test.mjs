@@ -10,7 +10,7 @@ import { missioneDi, personaDi } from '../../src/giochi/sotterraneo/dati/mission
 import { rifaDaId, idDi, eTaglia, NOMI_MODELLI, modelloAcceso, CACCE, BASI, GEMME_MIN, GEMME_MAX, gemmePer, MOTORI, TETTO_TAGLIE, PER_BACHECA,
          GIRI_RICORDATI, guastiDelleTaglie, livelloDelDungeon, livelloDellaRegione, hash } from '../../src/giochi/sotterraneo/dati/missioni-modelli.js'
 import { valoreDelLivello } from '../../src/giochi/sotterraneo/dati/pezzi.js'
-import { ilMondo, terraDelMondo, aperturaDi, lontanoDalleCitta, MARGINE_DEL_GIRO } from '../../src/giochi/sotterraneo/motore/mondo-sopra.js'
+import { ilMondo, terraDelMondo, aperturaDi, lontanoDalleCitta, MARGINE_DEL_GIRO } from '../../src/giochi/sotterraneo/motore/mondo-sopra-anelli.js'
 import { bachecaDi, candidati, vociDellaBacheca, segnoDellaBacheca, postoSulPrato, regioniServite } from '../../src/giochi/sotterraneo/motore/taglie-bacheca.js'
 import { questDi, prendiTaglia, ripulisci, contiVivi, esploratePronte, prese, delleTaglie, taglieDaContare, taglieDaBattere, taglieInMano, QUEST_NUOVA }
   from '../../src/giochi/sotterraneo/motore/taglie.js'

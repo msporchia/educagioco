@@ -7,7 +7,7 @@
    rimasti tornano accanto all'eroe, svegli e feriti), le forze di sopra per la barra e chi cura, e il conto delle taglie della
    bacheca (la caccia aperta, il signore, la tana) dai mostri caduti.
    ═══════════════════════════════════════════════════════════════════ */
-import { ilMondo, terraDelMondo, aperturaDi } from '../../src/giochi/sotterraneo/motore/mondo-sopra.js'
+import { ilMondo, terraDelMondo, aperturaDi } from '../../src/giochi/sotterraneo/motore/mondo-sopra-anelli.js'
 import { popolaMondo, incontro, muoviMostri, apriLoScontro, esitoDelloScontro, inSalvo, tanaDi, alSicuro } from '../../src/giochi/sotterraneo/motore/aperta.js'
 import { fotoDelloScontro, lasciaLoScontro, rimettiLoScontro, doveToccare, taglieDelloScontro } from '../../src/giochi/sotterraneo/motore/aperta-scena.js'
 import { forzeDiSopra, curaDiSopra, allaCitta } from '../../src/giochi/sotterraneo/motore/forze-sopra.js'

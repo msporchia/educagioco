@@ -8,7 +8,7 @@
    rettangolo di almeno 72×96 px. Il suolo dove si cammina e dove cade
    il tocco. Il cartello indica i passaggi coi posti oltre.
    ═══════════════════════════════════════════════════════════════════ */
-import { ilMondo, frecceDelCartello, postiDi } from '../../src/giochi/sotterraneo/motore/mondo-sopra.js'
+import { ilMondo, frecceDelCartello, postiDi } from '../../src/giochi/sotterraneo/motore/mondo-sopra-anelli.js'
 import { PEZZO, grigliaDi, pezzoDi, rettangoloDi, pezziAttorno, lavoroDeiPezzi, dividiPerPezzo, distanzaPezzi } from '../../src/giochi/sotterraneo/scena3d/mondo/pezzi.js'
 import { rettangoloPersona, rettangoloPosto, sceltaDelTocco, personaVicina, aTerra, PERSONA } from '../../src/giochi/sotterraneo/scena3d/mondo/dito.js'
 import { quotaA, quotaTerreno, pontiDi } from '../../src/giochi/sotterraneo/scena3d/mondo/suolo.js'

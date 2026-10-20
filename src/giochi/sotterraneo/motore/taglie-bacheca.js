@@ -4,7 +4,7 @@
 import { CAMPAGNA } from '../dati/campagna.js'
 import { MOSTRI } from '../dati/mostri.js'
 import { rifaDaId, idDi, casoDa, hash, modelloAcceso, CACCE, COSE_PERSE, PER_BACHECA, TETTO_TAGLIE, MOTORI } from '../dati/missioni-modelli.js'
-import { cittaDelDungeon } from './mondo-sopra.js'
+import { cittaDelDungeon } from './mondo-sopra-anelli.js'
 import { taglieInMano } from './taglie.js'
 
 const statoDi = (stati, id) => (stati && typeof stati === 'object' ? stati[id] || null : null)

@@ -11,7 +11,7 @@
    è quello dei dungeon; svenendo si perdono metà gemme e le tasche, ma
    non i pezzi rari né i leggendari. La mappa non cambia.
    ═══════════════════════════════════════════════════════════════════ */
-import { ilMondo, terraDelMondo } from '../../src/giochi/sotterraneo/motore/mondo-sopra.js'
+import { ilMondo, terraDelMondo } from '../../src/giochi/sotterraneo/motore/mondo-sopra-anelli.js'
 import { popolaMondo, spaziDi, alSicuro, inSalvo, riprendiMondo, nuovoGiro, mostriVicini, muoviMostri, cammina, incontro, apriLoScontro,
          esitoDelloScontro, annuncioDi, coloreDellaRegione, perdeSvenendo, taglieDaContare, tanaDi, crescitaDiSopra, abitantiDi, dellaRegione,
          cittaDelRisveglio } from '../../src/giochi/sotterraneo/motore/aperta.js'

@@ -3,7 +3,7 @@
 // di sopra (motore/aperta.js). Due modi: `strada` va dritto per la strada e combatte solo chi lo raggiunge; `giro` passa dalla tana di ogni
 // regione che attraversa e va incontro a ogni branco che vede (il curioso dei dungeon, che apre tutto). Gli scontri li gioca il banco di
 // sempre (motore/banco.js, sbriga). Conta scontri, domande, vita all'arrivo, svenimenti, esperienza. Gira in Node; nessuno lo usa nel gioco.
-import { ilMondo, terraDelMondo, cittaDelDungeon, cittaDi, PASSO_MONDO } from './mondo-sopra.js'
+import { ilMondo, terraDelMondo, cittaDelDungeon, cittaDi, PASSO_MONDO } from './mondo-sopra-anelli.js'
 import { DUNGEON, passaggioAperto } from '../dati/mondo-aperto.js'
 import { SOPRA } from '../dati/mondo-aperto-mostri.js'
 import { popolaMondo, cammina, muoviMostri, incontro, apriLoScontro, esitoDelloScontro, alSicuro } from './aperta.js'

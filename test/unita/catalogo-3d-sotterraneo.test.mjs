@@ -17,7 +17,7 @@ import { FORME, TABELLA, SCENARI } from '../../src/giochi/sotterraneo/scena3d/mo
 import { GEO } from '../../src/giochi/sotterraneo/scena3d/mondo/natura.js'
 import { ARREDI } from '../../src/giochi/sotterraneo/scena3d/aspetti.js'
 import { DISEGNI } from '../../src/giochi/sotterraneo/dati/relitti.js'
-import { ilMondo } from '../../src/giochi/sotterraneo/motore/mondo-sopra.js'
+import { ilMondo } from '../../src/giochi/sotterraneo/motore/mondo-sopra-anelli.js'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 
 const CATEGORIE = ['edificio', 'prop', 'pianta', 'personaggio', 'animale', 'effetto', 'altro']
