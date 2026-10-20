@@ -4,7 +4,7 @@ import { dati, carica, accendi, mettiOnline, aggiungi, impara, togli, casuale, M
 import { leggi, presento, invito, risposta } from '../../src/amici/messaggi.js'
 import { Ponte } from '../../src/amici/rete.js'
 import { creaCodice, riscattaCodice } from '../../src/amici/rete.js'
-import { stato, avvia, ferma, invita, rispondi, diciGioco, DURATA_INVITO } from '../../src/amici/servizio.js'
+import { stato, avvia, ferma, invita, rispondi, diciGioco, aggiungiPonte, togliPonte, DURATA_INVITO } from '../../src/amici/servizio.js'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 
 const pausa = ms => new Promise(r => setTimeout(r, ms))
@@ -66,45 +66,48 @@ const ultimo = () => Finto.tutti[Finto.tutti.length - 1]
 /* ── il collegamento ── */
 {
   let cambi = 0; const visti = []
-  const p = new Ponte({ chiave: K1, id: 'leonardo1', servizio: 'https://s.example', WebSocketImpl: Finto, ritardi: [5, 10, 20], attesaApertura: 40,
-                        alMessaggio: m => visti.push(m), alCambio: () => cambi++ })
+  let chiavi = [K1]
+  const p = new Ponte({ id: 'leonardo1', chiavi: () => chiavi, servizio: 'https://s.example', WebSocketImpl: Finto, ritardi: [5, 10, 20], attesaApertura: 40,
+                        alMessaggio: (c, m) => visti.push([c, m]), alCambio: () => cambi++ })
   p.avvia()
-  uguale('l\'indirizzo ha la chiave e chi sono', ultimo().url, `wss://s.example/amici/coppia/${K1}?id=leonardo1`)
-  controlla('prima che si apra non si manda niente', p.invia({ k: 'x' }) === false)
+  uguale('l\'indirizzo è quello della presenza, uno solo per tutti', ultimo().url, 'wss://s.example/amici/presenza')
+  controlla('prima che si apra non si manda niente', p.invia(K1, { k: 'x' }) === false)
   ultimo().apri()
-  controlla('aperto, ma l\'amico non c\'è', p.aperto && !p.altro)
-  ultimo().ricevi({ t: 'ciao', altro: false }); ultimo().ricevi({ t: 'su' })
-  controlla('«su»: l\'amico c\'è', p.altro)
-  ultimo().ricevi({ k: 'invito', gioco: 'arena', dati: {} }); ultimo().ricevi('non json'); ultimo().ricevi('5')
-  controlla('i messaggi veri passano, i guasti si ignorano', visti.length === 1 && visti[0].k === 'invito')
-  controlla('si manda JSON', p.invia({ k: 'ciao' }) && ultimo().mandati[0].k === 'ciao')
-  ultimo().ricevi({ t: 'giu' })
-  controlla('«giù»: l\'amico non c\'è più', !p.altro)
+  controlla('aperto, si dichiara chi si è e con quali chiavi', p.aperto && ultimo().mandati[0].k === 'dichiaro' && ultimo().mandati[0].id === 'leonardo1' && ultimo().mandati[0].chiavi[0] === K1)
+  ultimo().ricevi({ t: 'ciao', presenti: [], rifiutate: [] })
+  controlla('nessun amico c\'è', p.presenti.size === 0)
+  ultimo().ricevi({ t: 'su', chiave: K1 })
+  controlla('«su»: l\'amico di quella chiave c\'è', p.presenti.has(K1))
+  ultimo().ricevi({ t: 'da', chiave: K1, m: { k: 'invito', gioco: 'arena', dati: {} } }); ultimo().ricevi('non json'); ultimo().ricevi('5'); ultimo().ricevi({ t: 'da', chiave: K1, m: 'testo' })
+  controlla('i messaggi veri passano con la chiave, i guasti si ignorano', visti.length === 1 && visti[0][0] === K1 && visti[0][1].k === 'invito')
+  controlla('si manda a un amico incartando con la sua chiave', p.invia(K1, { k: 'ciao' }) && JSON.stringify(ultimo().mandati.at(-1)) === JSON.stringify({ k: 'a', chiave: K1, m: { k: 'ciao' } }))
+  chiavi = [K1, K2]; p.imposta()
+  controlla('un\'amicizia in più si dice al servizio, senza riaprire', ultimo().mandati.at(-1).k === 'dichiaro' && ultimo().mandati.at(-1).chiavi.length === 2)
+  ultimo().ricevi({ t: 'giu', chiave: K1 })
+  controlla('«giù»: l\'amico non c\'è più', !p.presenti.has(K1))
   const n = Finto.tutti.length
   ultimo().cadi()
   controlla('il collegamento cade: non c\'è più, e nessun errore', !p.aperto && cambi > 0)
   await pausa(30)
   controlla('dopo un po\' ne apre un altro da solo', Finto.tutti.length === n + 1)
-  // un collegamento che non si apre mai: si lascia e si riprova
   const n2 = Finto.tutti.length
   await pausa(120)
-  controlla('un collegamento che non si apre si lascia e se ne prova un altro', Finto.tutti.length > n2 && Finto.tutti[n2 - 1 + 0] !== undefined)
+  controlla('un collegamento che non si apre si lascia e se ne prova un altro', Finto.tutti.length > n2)
   p.chiudi()
   const n3 = Finto.tutti.length
   await pausa(60)
   controlla('chiuso, non riprova più', Finto.tutti.length === n3 && !p.aperto)
   // schermo spento: non si riprova
   let acceso = false
-  const q = new Ponte({ chiave: K2, id: 'leonardo1', servizio: 'https://s.example', WebSocketImpl: Finto, visibile: () => acceso })
+  const q = new Ponte({ id: 'leonardo1', servizio: 'https://s.example', WebSocketImpl: Finto, visibile: () => acceso })
   const n4 = Finto.tutti.length
   q.avvia()
   controlla('a schermo spento non si apre niente', Finto.tutti.length === n4)
   acceso = true; q.riprendi()
   controlla('acceso, si apre subito', Finto.tutti.length === n4 + 1)
   q.chiudi()
-  // un WebSocket che lancia: nessun errore, solo un altro tentativo
   class Rotto { constructor() { throw new Error('no') } }
-  const r = new Ponte({ chiave: K2, id: 'leonardo1', servizio: 'https://s.example', WebSocketImpl: Rotto, ritardi: [5] })
+  const r = new Ponte({ id: 'leonardo1', servizio: 'https://s.example', WebSocketImpl: Rotto, ritardi: [5] })
   let lanciato = false
   try { r.avvia() } catch { lanciato = true }
   controlla('un WebSocket che si rompe non lancia', !lanciato)
@@ -136,53 +139,61 @@ const ultimo = () => Finto.tutti[Finto.tutti.length - 1]
   controlla('spento (i grandi non hanno acceso): nessun collegamento, nessun errore', Finto.tutti.length === 0 && stato.acceso === false && stato.amici.length === 0)
   await accendi(true); aggiungi(K1); aggiungi(K2)
   avvia({ nome: 'Leonardo', WebSocketImpl: Finto, servizio: 'https://s.example', ritardi: [5] })
-  uguale('acceso: un collegamento per amico', Finto.tutti.length, 2)
+  uguale('acceso: UN collegamento solo, anche con due amici', Finto.tutti.length, 1)
   controlla('gli amici sono in lista ma offline, «in attesa» finché non si sa chi sono', stato.amici.length === 2 && stato.amici.every(a => !a.online && a.inAttesa))
-  const [w1, w2] = Finto.tutti
-  w1.apri(); w1.ricevi({ t: 'ciao', altro: true })
-  controlla('quando l\'amico c\'è ci si presenta con il nome', w1.mandati[0]?.k === 'presento' && w1.mandati[0].nome === 'Leonardo' && w1.mandati[0].id === dati.id)
-  w1.ricevi({ k: 'presento', id: 'melody001', nome: 'Melody', gioco: null })
+  const w = Finto.tutti[0]
+  w.apri()
+  controlla('ci si dichiara con tutte le chiavi', w.mandati[0].k === 'dichiaro' && w.mandati[0].chiavi.length === 2)
+  w.ricevi({ t: 'ciao', presenti: [K1], rifiutate: [] })
+  const prima = w.mandati.find(m => m.k === 'a' && m.chiave === K1)
+  controlla('un amico già c\'è: ci si presenta con il nome, solo a lui', prima?.m.k === 'presento' && prima.m.nome === 'Leonardo' && prima.m.id === dati.id && !w.mandati.some(m => m.k === 'a' && m.chiave === K2))
+  w.ricevi({ t: 'da', chiave: K1, m: { k: 'presento', id: 'melody001', nome: 'Melody', gioco: null } })
   const a1 = stato.amici.find(a => a.chiave === K1)
   controlla('si presenta lui: online, con il nome, e il nome si tiene', a1.online && a1.nome === 'Melody' && dati.amici.find(a => a.chiave === K1).nome === 'Melody')
   controlla('l\'altro non è online', !stato.amici.find(a => a.chiave === K2).online)
-  w1.ricevi({ k: 'presento', id: 'melody001', nome: 'Melody', gioco: 'arena' })
+  w.ricevi({ t: 'da', chiave: K1, m: { k: 'presento', id: 'melody001', nome: 'Melody', gioco: 'arena' } })
   uguale('si vede a cosa sta giocando', stato.amici.find(a => a.chiave === K1).gioco, 'arena')
-  w1.ricevi({ t: 'giu' })
+  w.ricevi({ t: 'giu', chiave: K1 })
   controlla('se esce torna in grigio, ma il nome resta', !stato.amici.find(a => a.chiave === K1).online && stato.amici.find(a => a.chiave === K1).nome === 'Melody')
-  w1.ricevi({ t: 'su' }); w1.ricevi({ k: 'presento', id: 'melody001', nome: 'Melody', gioco: null })
+  w.ricevi({ t: 'su', chiave: K1 })
+  controlla('quando rientra ci si ripresenta', w.mandati.filter(m => m.k === 'a' && m.chiave === K1 && m.m.k === 'presento').length === 2)
+  w.ricevi({ t: 'da', chiave: K1, m: { k: 'presento', id: 'melody001', nome: 'Melody', gioco: null } })
 
   const dati1 = { terreno: 'bosco', secondi: 10, codice: 'KXRNM' }
-  w1.ricevi(invito('arena', dati1))
-  controlla('un invito arriva con il nome dell\'amico', stato.invito?.nome === 'Melody' && stato.invito.gioco === 'arena' && stato.invito.dati.codice === 'KXRNM')
-  w1.ricevi(invito('arena', { ...dati1, codice: 'ZZZZZ' }))
+  w.ricevi({ t: 'da', chiave: K1, m: invito('arena', dati1) })
+  controlla('un invito arriva con il nome dell\'amico', stato.invito?.nome === 'Melody' && stato.invito.gioco === 'arena' && stato.invito.dati.codice === 'KXRNM' && stato.invito.chiave === K1)
+  w.ricevi({ t: 'da', chiave: K1, m: invito('arena', { ...dati1, codice: 'ZZZZZ' }) })
   uguale('uno alla volta: il secondo non lo sostituisce', stato.invito.dati.codice, 'KXRNM')
   const preso = rispondi(true)
-  controlla('accettando torna l\'invito, e si risponde sì', preso?.dati.codice === 'KXRNM' && stato.invito === null && w1.mandati.at(-1).k === 'risposta' && w1.mandati.at(-1).ok === true)
-  w1.ricevi(invito('arena', dati1))
-  controlla('rifiutando non torna niente, e si risponde no', rispondi(false) === null && w1.mandati.at(-1).ok === false)
-  w1.ricevi(invito('gioco-che-non-esiste', {})); w1.ricevi(invito('arena', { terreno: 'luna' })); w1.ricevi(invito('arena', { ...dati1, codice: 'abc' }))
-  controlla('un invito che non capiamo non si mostra', stato.invito === null)
-  w1.ricevi({ k: 'chat', testo: 'ciao' })
-  controlla('e una chat non esiste: non si mostra niente', stato.invito === null)
+  controlla('accettando torna l\'invito, e si risponde sì a quell\'amico', preso?.dati.codice === 'KXRNM' && stato.invito === null && w.mandati.at(-1).chiave === K1 && w.mandati.at(-1).m.ok === true)
+  w.ricevi({ t: 'da', chiave: K1, m: invito('arena', dati1) })
+  controlla('rifiutando non torna niente, e si risponde no', rispondi(false) === null && w.mandati.at(-1).m.ok === false)
+  for (const m of [invito('gioco-che-non-esiste', {}), invito('arena', { terreno: 'luna' }), invito('arena', { ...dati1, codice: 'abc' }), { k: 'chat', testo: 'ciao' }]) w.ricevi({ t: 'da', chiave: K1, m })
+  controlla('un invito che non capiamo e una chat non si mostrano', stato.invito === null)
 
-  controlla('si invita un amico online', invita(K1, 'arena', dati1) && w1.mandati.at(-1).k === 'invito' && w1.mandati.at(-1).dati.codice === 'KXRNM')
+  controlla('si invita un amico online', invita(K1, 'arena', dati1) && w.mandati.at(-1).chiave === K1 && w.mandati.at(-1).m.dati.codice === 'KXRNM')
   controlla('non si invita uno offline', invita(K2, 'arena', dati1) === false)
   controlla('né con dati che non vanno', invita(K1, 'arena', { terreno: 'luna' }) === false)
-  w1.ricevi(risposta(false))
+  w.ricevi({ t: 'da', chiave: K1, m: risposta(false) })
   controlla('la sua risposta arriva a chi ha invitato', stato.risposta?.ok === false && stato.risposta.chiave === K1)
   diciGioco('arena')
-  uguale('si dice agli amici a cosa si gioca', w1.mandati.at(-1).gioco, 'arena')
+  controlla('si dice agli amici a cosa si gioca (a chi c\'è)', w.mandati.at(-1).chiave === K1 && w.mandati.at(-1).m.gioco === 'arena')
 
-  // il cartello scompare da solo
-  w1.ricevi(invito('arena', dati1))
+  w.ricevi({ t: 'da', chiave: K1, m: invito('arena', dati1) })
   controlla('l\'invito dura trenta secondi', DURATA_INVITO === 30000 && stato.invito !== null)
+  // un'amicizia nuova mentre si gioca
+  const K3 = 'c'.repeat(32)
+  aggiungi(K3); aggiungiPonte()
+  controlla('un\'amicizia nuova si dichiara senza riaprire', Finto.tutti.length === 1 && w.mandati.at(-1).k === 'dichiaro' && w.mandati.at(-1).chiavi.includes(K3))
+  togli(K3); togliPonte(K3)
+  controlla('e una tolta si dice allo stesso modo', !w.mandati.at(-1).chiavi.includes(K3))
   ferma()
-  controlla('fermo: chiusi i collegamenti e via l\'invito', w1.chiuso && w2.chiuso && stato.invito === null && stato.acceso === false)
+  controlla('fermo: chiuso il collegamento e via l\'invito', w.chiuso && stato.invito === null && stato.acceso === false)
 
   // senza rete: nulla si rompe
   Finto.tutti.length = 0
   avvia({ nome: 'Leonardo', WebSocketImpl: Finto, servizio: 'https://s.example', ritardi: [5] })
-  Finto.tutti.forEach(w => w.cadi())
+  Finto.tutti.forEach(x => x.cadi())
   controlla('senza rete gli amici restano in lista, in grigio, senza errori', stato.amici.length === 2 && stato.amici.every(a => !a.online))
   ferma()
   await mettiOnline(false)
