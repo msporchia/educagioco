@@ -11,6 +11,8 @@ import { rettangoloDi } from './pezzi.js'
 import { Cantiere, scatola, cilindro } from './kit.js'
 import { vesti, ombraDi } from './vesti.js'
 
+// le chiome piccole e i cespugli a `det` 0 (20 facce): nel mondo a percorso i boschi sono fitti, e a 80 facce l'una il bosco vecchio
+// passava i 400k triangoli
 function blob(r, seme, det = 1, storto = 0.18) {
   let g = new IcosahedronGeometry(r, det)
   g.deleteAttribute('uv'); g.deleteAttribute('normal')
@@ -42,16 +44,16 @@ function forma(f) {
 }
 const TRONCO = [0.45, 0.33, 0.24]
 export const GEO = {
-  tondo: () => forma(c => { c.metti('x', cilindro(0.08, 0.13, 1.0, 7), 0, 0.5, 0, TRONCO); c.metti('x', blob(0.62, 1), 0, 1.35, 0, [0.40, 0.64, 0.27]); c.metti('x', blob(0.46, 2), 0.32, 1.1, 0.16, [0.36, 0.60, 0.25]); c.metti('x', blob(0.42, 3), -0.3, 1.15, -0.12, [0.43, 0.68, 0.29]) }),
+  tondo: () => forma(c => { c.metti('x', cilindro(0.08, 0.13, 1.0, 7), 0, 0.5, 0, TRONCO); c.metti('x', blob(0.62, 1), 0, 1.35, 0, [0.40, 0.64, 0.27]); c.metti('x', blob(0.46, 2, 0), 0.32, 1.1, 0.16, [0.36, 0.60, 0.25]); c.metti('x', blob(0.42, 3, 0), -0.3, 1.15, -0.12, [0.43, 0.68, 0.29]) }),
   frutto: () => forma(c => { c.metti('x', cilindro(0.07, 0.11, 0.8, 7), 0, 0.4, 0, TRONCO); c.metti('x', blob(0.55, 4), 0, 1.1, 0, [0.44, 0.66, 0.28]); for (let i = 0; i < 9; i++) { const a = i * 2.4, h = 0.9 + (i % 3) * 0.17; c.metti('x', new OctahedronGeometry(0.07), Math.cos(a) * 0.5, h, Math.sin(a) * 0.5, [0.9, 0.2, 0.15]) } }),
   pino: () => forma(c => { c.metti('x', cilindro(0.07, 0.11, 0.7, 6), 0, 0.35, 0, TRONCO); for (const [r, h, y] of [[0.62, 0.95, 0.95], [0.5, 0.85, 1.45], [0.34, 0.75, 1.95]]) c.metti('x', new ConeGeometry(r, h, 8), 0, y, 0, [0.20, 0.44, 0.24]) }),
   abete: () => forma(c => { c.metti('x', cilindro(0.07, 0.1, 0.5, 6), 0, 0.25, 0, TRONCO); for (const [r, h, y] of [[0.52, 1.2, 0.95], [0.4, 1.0, 1.65], [0.26, 0.85, 2.3]]) c.metti('x', new ConeGeometry(r, h, 7), 0, y, 0, [0.17, 0.37, 0.31]) }),
-  salice: () => forma(c => { c.metti('x', cilindro(0.1, 0.16, 1.1, 7), 0, 0.55, 0, TRONCO); c.metti('x', blob(0.72, 5), 0, 1.55, 0, [0.52, 0.72, 0.34], { s: [1.1, 0.75, 1.1] }); for (let i = 0; i < 7; i++) { const a = i * Math.PI * 2 / 7; c.metti('x', blob(0.28, 6 + i, 1, 0.1), Math.cos(a) * 0.7, 1.05, Math.sin(a) * 0.7, [0.56, 0.75, 0.36], { s: [0.8, 1.9, 0.8] }) } }),
+  salice: () => forma(c => { c.metti('x', cilindro(0.1, 0.16, 1.1, 7), 0, 0.55, 0, TRONCO); c.metti('x', blob(0.72, 5), 0, 1.55, 0, [0.52, 0.72, 0.34], { s: [1.1, 0.75, 1.1] }); for (let i = 0; i < 7; i++) { const a = i * Math.PI * 2 / 7; c.metti('x', blob(0.28, 6 + i, 0, 0.1), Math.cos(a) * 0.7, 1.05, Math.sin(a) * 0.7, [0.56, 0.75, 0.36], { s: [0.8, 1.9, 0.8] }) } }),
   secco: () => forma(c => { c.metti('x', cilindro(0.06, 0.13, 1.5, 6), 0, 0.75, 0, [0.42, 0.36, 0.32]); for (const [a, h, l, t] of [[0.3, 1.0, 0.7, 0.8], [2.4, 1.2, 0.6, 0.9], [4.2, 0.8, 0.55, 0.7], [1.3, 1.4, 0.45, 0.6]]) c.metti('x', cilindro(0.025, 0.05, l, 5), Math.cos(a) * l * 0.4 * Math.sin(t), h + l * 0.4 * Math.cos(t), Math.sin(a) * l * 0.4 * Math.sin(t), [0.42, 0.36, 0.32], { ry: -a, rz: -t, ordine: 'YZX' }) }),
-  cespuglio: () => forma(c => { c.metti('x', blob(0.32, 7), 0, 0.2, 0, [0.36, 0.58, 0.25]); c.metti('x', blob(0.25, 8), 0.25, 0.15, 0.1, [0.40, 0.62, 0.28]); c.metti('x', blob(0.22, 9), -0.2, 0.14, 0.12, [0.33, 0.55, 0.24]) }),
+  cespuglio: () => forma(c => { c.metti('x', blob(0.32, 7), 0, 0.2, 0, [0.36, 0.58, 0.25]); c.metti('x', blob(0.25, 8, 0), 0.25, 0.15, 0.1, [0.40, 0.62, 0.28]); c.metti('x', blob(0.22, 9, 0), -0.2, 0.14, 0.12, [0.33, 0.55, 0.24]) }),
   erica: () => forma(c => { c.metti('x', blob(0.26, 13, 1, 0.25), 0, 0.14, 0, [0.62, 0.42, 0.62], { s: [1.2, 0.6, 1] }); c.metti('x', blob(0.18, 14), 0.22, 0.1, 0.08, [0.7, 0.48, 0.66], { s: [1, 0.6, 1] }) }),
   canne: () => forma(c => { for (let i = 0; i < 9; i++) { const a = i * 2.39, r = 0.08 + (i % 3) * 0.08, h = 0.7 + (i % 4) * 0.13; c.metti('x', new ConeGeometry(0.025, h, 4), Math.cos(a) * r, h / 2, Math.sin(a) * r, [0.46, 0.62, 0.3], { rz: Math.cos(a) * 0.12, rx: Math.sin(a) * 0.12 }); if (i % 3 === 0) c.metti('x', cilindro(0.04, 0.04, 0.16, 5), Math.cos(a) * r * 1.05, h * 0.82, Math.sin(a) * r * 1.05, [0.45, 0.3, 0.18]) } }),
-  funghi: () => forma(c => { for (const [x, z, s] of [[0, 0, 1], [0.18, 0.1, 0.7], [-0.12, 0.15, 0.6]]) { c.metti('x', cilindro(0.03 * s, 0.04 * s, 0.14 * s, 6), x, 0.07 * s, z, [0.95, 0.92, 0.85]); c.metti('x', new SphereGeometry(0.09 * s, 8, 4, 0, Math.PI * 2, 0, Math.PI / 2), x, 0.13 * s, z, [0.85, 0.2, 0.15]) } }),
+  funghi: () => forma(c => { for (const [x, z, s] of [[0, 0, 1], [0.18, 0.1, 0.7], [-0.12, 0.15, 0.6]]) { c.metti('x', cilindro(0.03 * s, 0.04 * s, 0.14 * s, 4), x, 0.07 * s, z, [0.95, 0.92, 0.85]); c.metti('x', new SphereGeometry(0.09 * s, 6, 3, 0, Math.PI * 2, 0, Math.PI / 2), x, 0.13 * s, z, [0.85, 0.2, 0.15]) } }),
   sasso: () => forma(c => c.metti('x', sasso(0.24, 1), 0, 0, 0, [0.66, 0.64, 0.6])),
   masso: () => forma(c => c.metti('x', sasso(0.5, 2), 0, 0, 0, [0.45, 0.43, 0.41])),
   rupe: () => forma(c => c.metti('x', sasso(0.9, 3), 0, 0, 0, [0.36, 0.345, 0.33])),
