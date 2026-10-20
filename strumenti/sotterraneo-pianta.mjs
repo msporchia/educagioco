@@ -13,7 +13,7 @@
      npm run pianta -- --conta --semi 1-20            # le stanze per discesa: quante hanno 0, 1, 2-3, 4+ mostri (tutti i piani, nessun disegno)
      npm run pianta -- --conta --discesa 3 --semi 1-40 --zona 20   # e sotto la tabella dei muri obliqui per scena
      npm run pianta -- --mondo [--seme 7 | --semi 1-16]   # il mondo aperto: strumenti/sotterraneo-pianta-mondo.mjs
-     npm run pianta -- --percorso [--seme 5 | --terra 2]  # il mondo a percorso in prova: strumenti/sotterraneo-pianta-percorso.mjs
+     npm run pianta -- --percorso [--seme 5 | --terra 2]  # il mondo a percorso: strumenti/sotterraneo-pianta-percorso.mjs
 
    `--discesa` è l'indice della storia (0 la cripta … 6 la miniera), o
    `abisso`; `--piano` da 0, o `ultimo` (quello del mostro grosso, il
@@ -37,7 +37,7 @@ const FUORI = resolve(QUI, '../tmp/piante')
 const args = process.argv.slice(2)
 // il mondo aperto ha la sua pianta (strumenti/sotterraneo-pianta-mondo.mjs)
 if (args.includes('--mondo')) { await import('./sotterraneo-pianta-mondo.mjs'); process.exit(0) }
-// il mondo a percorso, in prova (strumenti/sotterraneo-pianta-percorso.mjs)
+// il mondo a percorso (strumenti/sotterraneo-pianta-percorso.mjs)
 if (args.includes('--percorso')) { await import('./sotterraneo-pianta-percorso.mjs'); process.exit(0) }
 const opz = (nome, difetto) => { const i = args.indexOf('--' + nome); return i >= 0 && args[i + 1] && !args[i + 1].startsWith('--') ? args[i + 1] : difetto }
 
