@@ -24,6 +24,7 @@ const pezzo = t => `pezzo del vassoio, livello ${PEZZI[t].liv}, ${PEZZI[t].w}×$
 const unico = t => `edificio unico al posto ${EDIFICI[t].slot.i},${EDIFICI[t].slot.j}, livello ${EDIFICI[t].liv} (fantasma finché non si compra)`
 const celle = d => `${d.w}×${d.d}`
 const FINE = Date.now() - 1000          // «pronta»: la gallina mostra l'uovo, la mucca il secchio
+const statiStalla = () => [{ fine: FINE }, { fine: null }, { fine: Date.now() + 9e6 }, { fine: null }]   // la stalla piena: pronta, fame, al lavoro, fame
 
 /** Le animazioni che il gioco fa nei pezzi.js, riprese una per una (le firme di `userData.anima` non sono uguali). */
 const animaCosa = (g, dt, t) => g.userData.anima && g.userData.anima(t)                     // fontana, spaventapasseri
@@ -52,10 +53,10 @@ export const VOCI = [
     file: `${M}:creaPollaio`, misure: celle(PEZZI.pollaio),
     crea: () => creaPollaio([{ fine: FINE }, { fine: null }, { fine: Date.now() + 9e6 }, { fine: null }]),
     anima: (g, dt, t) => muoviBestie(g, dt, t, [{ fine: FINE }, { fine: null }, { fine: Date.now() + 9e6 }, { fine: null }], Date.now()) },
-  { id: 'fattoria:stalla', nome: 'Stalla', gioco: 'fattoria', categoria: 'edificio', dove: pezzo('stalla') + ': il fienile con fino a quattro mucche in fila',
+  { id: 'fattoria:stalla', nome: 'Stalla', gioco: 'fattoria', categoria: 'edificio', dove: pezzo('stalla') + ': il fienile e il cortile steccato (col cancelletto) con fino a quattro mucche in fila',
     file: `${M}:creaStalla`, misure: celle(PEZZI.stalla),
-    crea: () => creaStalla([{ fine: FINE }, { fine: null }, { fine: Date.now() + 9e6 }]),
-    anima: (g, dt, t) => muoviBestie(g, dt, t, [{ fine: FINE }, { fine: null }, { fine: Date.now() + 9e6 }], Date.now()) },
+    crea: () => creaStalla(statiStalla()),
+    anima: (g, dt, t) => muoviBestie(g, dt, t, statiStalla(), Date.now()) },
   { id: 'fattoria:bancarella', nome: 'Bancarella', gioco: 'fattoria', categoria: 'prop', dove: pezzo('bancarella') + ' (con la scritta in trama canvas)', file: `${M}:creaBancarella`, misure: celle(PEZZI.bancarella), crea: () => creaBancarella() },
   { id: 'fattoria:aiuola', nome: 'Aiuola', gioco: 'fattoria', categoria: 'pianta', dove: pezzo('aiuola'), file: `${M}:creaAiuola`, misure: celle(PEZZI.aiuola), crea: () => creaAiuola() },
   { id: 'fattoria:panchina', nome: 'Panchina', gioco: 'fattoria', categoria: 'prop', dove: pezzo('panchina'), file: `${M}:creaPanchina`, misure: celle(PEZZI.panchina), crea: () => creaPanchina() },

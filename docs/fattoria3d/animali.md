@@ -73,14 +73,17 @@ emoji, n, max, pieno, prezzo }` (`prezzo` è null se pieno; null l'intero risult
   quattro mucche in fila davanti al fienile (le balle di fieno stanno ai lati), recinto le pecore a coppie.
 - **Pollaio**: casetta di legno su palafitte con scaletta e tetto rosso, terra battuta davanti, mangiatoia; le galline
   (bianche e brune a turno) razzolano e beccano di più se hanno fame; un uovo accanto alla gallina pronta.
-- **Stalla**: fienile rosso con tetto di legno e portone a croce, mangiatoia e balle; le mucche (bianche con chiazze,
-  una bruna e una scura) ruminano piano, scodinzolano, abbassano la testa se hanno fame; un secchio di latte accanto
-  alla pronta.
+- **Stalla**: fienile rosso con tetto di legno e portone a croce, mangiatoia contro il muro e due balle negli angoli; davanti un
+  cortile di terra battuta chiuso da uno steccato basso (dal muro al muro, col cancelletto in mezzo), dentro l'impronta 4×3:
+  le quattro mucche stanno in fila lì, rinchiuse. Le mucche (bianche con chiazze, una bruna e una scura) ruminano piano,
+  scodinzolano, abbassano la testa se hanno fame; un secchio di latte accanto alla pronta. Le zampe entrano nella pancia
+  e finiscono in uno zoccolo scuro; le chiazze sono colori per faccia sul corpo stesso (non sporgono; due disegni, per
+  posto pari e dispari); il collo lega la testa e la coda nasce dal dorso.
 - **Caseificio**: casetta bianca col tetto di tegole blu, forme di formaggio gialle su un bancale, la ruota ad acqua che
   gira piano.
 - Il cartello sopra recinto, pollaio e stalla (`pezzi.js`, `Effetti.nuovoCartello`): in alto lo stato («🥚 N pronti!», «⏳ Ns»,
   «🐔 ha fame», «🧶 pronta!» per le pecore), sotto il conto «🐄 2/4» e il pulsante «＋ 🪙 40». Peso: pollaio ~47 mesh
-  con una gallina (+~8 per ogni altra), stalla ~57 con le bestie al completo, caseificio ~32; geometrie delle bestie condivise, animazioni col tempo.
+  con una gallina (+~8 per ogni altra), stalla ~110 con le quattro mucche (steccato e cancelletto compresi), caseificio ~32; geometrie delle bestie condivise, animazioni col tempo.
 
 ## Il collegamento alla scena
 
