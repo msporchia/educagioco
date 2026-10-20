@@ -518,13 +518,15 @@ export async function toccaNelMondo(page, sel, { tocca = null } = {}) {
   const b = await page.locator(sel).first().boundingBox()
   await (tocca || ((x, y) => page.mouse.click(x, y)))(b.x + b.width / 2, b.y + b.height * 0.6)
 }
-/* Scende in una discesa dal mondo: l'eroe si porta alla pietra davanti all'ingresso (`__mondo3d.vai`, il viaggio delle
-   prove: la strada a piedi la prova integrazione/sotterraneo-mondo), poi si tocca l'ingresso e «scendo» nel fumetto */
+/* Scende in una discesa dal mondo: l'eroe si porta davanti all'ingresso (`__mondo3d.vai`, il salto delle prove, che carica la sua
+   zona: le pietre del mondo a percorso, `pietra:zona:<zona>`, stanno a metà zona, lontane dai dungeon; la strada a piedi la prova
+   integrazione/sotterraneo-mondo), poi si tocca l'ingresso e «scendo» nel fumetto. `quale`: l'indice della storia, 'abisso', o la
+   chiave di un ingresso */
 export async function scendiNelMondo(page, quale, { scendi = true, tocca = null } = {}) {
   const { CAMPAGNA } = await import('../../src/giochi/sotterraneo/dati/campagna.js')
-  const chiave = quale === 'abisso' ? 'abisso' : CAMPAGNA[quale].chiave
+  const chiave = quale === 'abisso' ? 'abisso' : typeof quale === 'string' ? quale : CAMPAGNA[quale].chiave
   await mondoPronto(page)
-  await page.evaluate(k => window.__mondo3d.vai('pietra:' + k), chiave)
+  await page.evaluate(k => window.__mondo3d.vai('ingresso:' + k), chiave)
   await attendi(page, 1500)
   await page.waitForFunction(() => window.__sotterraneo3d.pronto, null, { timeout: 30000 })
   await toccaNelMondo(page, `[data-posto="${chiave}"]`, { tocca })

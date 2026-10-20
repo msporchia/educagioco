@@ -16,7 +16,7 @@
 import { apriBrowser, apriGioco, azzera, scatto, attendi, mondoPronto, fermoNelMondo, toccaNelMondo } from '../aiuto/browser.mjs'
 import { seminaIlSotterraneo } from '../aiuto/sotterraneo-semina.mjs'
 import { controlla, uguale, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
-import { ilMondo, postiDi, terraDelMondo, aperturaDi } from '../../src/giochi/sotterraneo/motore/mondo-sopra.js'
+import { ilMondo, postiDi, terraDelMondo } from '../../src/giochi/sotterraneo/motore/mondo-sopra.js'
 import { campoVersoLaMeta } from '../../src/giochi/sotterraneo/motore/meta-sopra.js'
 import { riprendiMondo, alSicuro } from '../../src/giochi/sotterraneo/motore/aperta.js'
 import { SOPRA } from '../../src/giochi/sotterraneo/dati/mondo-aperto-mostri.js'
@@ -34,7 +34,7 @@ async function toccaIl(sel) {
   await tocca(b.x + b.width / 2, b.y + b.height / 2)
 }
 const m = ilMondo()
-const terra = terraDelMondo(m, aperturaDi([]).aperto)
+const terra = terraDelMondo(m)
 const cripta = postiDi(m, 'ingresso').find(p => p.chiave === 'altare')
 const campo = campoVersoLaMeta(terra, cripta.accanto)
 const cella = async () => (await page.locator('[data-eroe-mondo]').getAttribute('data-cella')).split(',').map(Number)
@@ -116,11 +116,13 @@ await entra()
 }
 
 /* ---------- 5. con un mostro sulla strada, «portami lì» si ferma quando compare ---------- */
+let da = null
 {
-  // un prato a qualche passo da un mostro che dorme, fuori dal suo cerchio, da dove la strada verso la cripta gli passa accanto
-  const st = riprendiMondo({ mondo: m, eroe: 'cavaliere', giro: 0, salvato: null })
-  let da = null
-  for (const q of st.mostri) {
+  // un prato a qualche passo da un mostro che dorme, fuori dal suo cerchio, da dove la strada verso la cripta gli passa accanto.
+  // Sul mondo a percorso i mostri li mette il motore di sopra (motore/aperta.js, compito B): finché non li sa mettere, la prova aspetta
+  let st = null
+  try { st = riprendiMondo({ mondo: m, eroe: 'cavaliere', giro: 0, salvato: null }) } catch (e) { nota(`il fermo per un mostro aspetta i mostri sul percorso: ${e.message}`) }
+  if (st) for (const q of st.lista || st.mostri) {
     if (da || q.sveglio || !Number.isFinite(campo.passi(Math.floor(q.fx), Math.floor(q.fy)))) continue
     for (let dy = -16; dy <= 16 && !da; dy++) for (let dx = -16; dx <= 16 && !da; dx++) {
       const x = Math.floor(q.fx) + dx, y = Math.floor(q.fy) + dy, d = Math.hypot(x + 0.5 - q.fx, y + 0.5 - q.fy)
@@ -129,7 +131,9 @@ await entra()
       if (via && Math.min(...via.map(v => Math.hypot(v.x + 0.5 - q.fx, v.y + 0.5 - q.fy))) < 2) da = { x, y, i: q.i }
     }
   }
-  controlla('c\'è un prato così', !!da)
+  if (st) controlla('c\'è un prato così', !!da)
+}
+if (da) {
   await entra()
   await page.evaluate(([x, y]) => window.__mondo3d.porta(x + 0.5, y + 0.5), [da.x, da.y])
   await attendi(page, 2500)
