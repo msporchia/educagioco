@@ -5,7 +5,9 @@
 // `ctx` è { stati, tappe, abisso, eroe, roba, annuncio, forze }: lo stato delle missioni, le tappe dell'avventura, se l'abisso è
 // aperto, chi scende e la sua roba contata (schedaConLaRoba), per la frase di chi è sotto il livello; e, finita la
 // storia, la zona appena nata (motore/zone.js, docs/sotterraneo/zone.md); `novita` quante volte si è chiesto «Novità?»
-// a ognuno ({ [chi]: { n, v } }, in `terra.novita` dell'avventura). `mondo`: nel Sotterraneo 3D, che ha la sua geografia (luogoDi).
+// a ognuno ({ [chi]: { n, v } }, in `terra.novita` dell'avventura). `mondo`: nel Sotterraneo 3D, che ha la sua geografia (luogoDi); lì
+// `forza` (motore/forza.js) fa dire in quale zona stanno i mostri giusti per l'eroe, `terra` in quale terra si è, `terre` che la porta delle
+// terre in fondo alla landa è aperta.
 import { DIALOGHI, ARRIVEDERCI, DOVE_VADO, LE_LUCI, perOra } from '../dati/dialoghi.js'
 import { missioneDi, premioDetto } from '../dati/missioni.js'
 import { cosaDice, chiTiCerca, titoloDi, inFrase } from './missioni.js'
@@ -17,6 +19,8 @@ import { dettoDelLivello } from './storia.js'
 import { CAPITOLI, STORIA } from '../dati/storia.js'
 import { NOVITA, NOVITA_DI } from '../dati/novita.js'
 import { CAMPAGNA } from '../dati/campagna.js'
+import { ZONE_DEL_MONDO, saltoDellaTerra } from '../dati/mondo-aperto.js'
+import { articolata } from '../dati/missioni-modelli.js'
 
 export const finiteDi = tappe => (tappe || []).filter(t => t.fatta).length
 const maiuscola = s => s.charAt(0).toUpperCase() + s.slice(1)
@@ -32,6 +36,29 @@ export function inPagine(testo, max = 120) {
     else pagine.push({ testo: f, n: 1 })
   }
   return pagine.map(p => p.testo)
+}
+
+/* ═══════════ il mondo a percorso: dove farsi le ossa ═══════════ */
+
+// La zona dove stanno i mostri della forza dell'eroe, nella terra `terra`: l'ultima che comincia non oltre la sua forza (le fasce
+// salgono di zona in zona lungo la strada maestra: docs/sotterraneo/mondo-a-percorso.md)
+export function zonaPerTe(forza, terra = 1) {
+  const s = saltoDellaTerra(terra)
+  let z = ZONE_DEL_MONDO[0]
+  for (const Z of ZONE_DEL_MONDO) if (Z.fascia[0] + s <= forza) z = Z
+  return z
+}
+// come ci si arriva, con quello che si vede: appena fuori dal cancello, o oltre il ponte o il valico che la apre
+export function stradaDellaZona(Z) {
+  const i = ZONE_DEL_MONDO.indexOf(Z)
+  return i <= 0 ? 'appena fuori dal cancello' : `oltre ${minuscola(ZONE_DEL_MONDO[i - 1].confine.nome)}`
+}
+const minuscola = t => t.charAt(0).toLowerCase() + t.slice(1)
+// la pagina del consiglio: «I mostri della tua forza stanno nel bosco vecchio, oltre il ponte del mulino.»
+export function consiglioDellaZona(ctx) {
+  if (!ctx.mondo || !Number.isFinite(ctx.forza)) return null
+  const Z = zonaPerTe(ctx.forza, ctx.terra || 1)
+  return { testo: `I mostri della tua forza stanno ${articolata('in', Z.nome)}, ${stradaDellaZona(Z)}.`, dato: 'zona', zona: Z.chiave }
 }
 
 /* ═══════════ il minatore: la strada, e cosa c'è laggiù ═══════════ */
@@ -63,12 +90,14 @@ export function strada(ctx, { capitolo = true } = {}) {
   } else {
     pagine.push({ testo: 'Le discese aperte le hai fatte tutte. Tornaci quando vuoi: là sotto cambia sempre.', dato: 'detto' })
   }
+  const consiglio = consiglioDellaZona(ctx)
+  if (consiglio) pagine.push(consiglio)
   for (const r of chiTiCerca(ctx.stati, ctx.tappe)) pagine.push({ testo: r, dato: 'ti-cerca' })
   return pagine
 }
 
-// Il capitano del forte (dati/dialoghi.js, `porte`): quando la porta di adesso è una delle sue (la quinta e la sesta) la dice lui, col
-// perché a modo suo e la strada del mondo aperto; per le altre non dice niente, e parla chi sta più in là. Dopo la storia niente
+// Il capitano (dati/dialoghi.js, `porte`): quando la porta di adesso è una delle sue (la quinta e la sesta) la dice lui, col perché a modo
+// suo, la strada del mondo e la zona per l'eroe; per le altre non dice niente, e parla il minatore. Dopo la storia niente
 export function stradaDelCapitano(ctx) {
   const d = DIALOGHI.capitano, t = (ctx.tappe || []).find(x => x.adesso)
   const testo = t && !ctx.annuncio && d.porte[t.chiave]
@@ -78,6 +107,8 @@ export function stradaDelCapitano(ctx) {
   if (ctx.mondo) pagine.push({ testo: LE_LUCI, dato: 'luci' })
   const s = !t.fatta && ctx.roba && ctx.eroe ? dettoDelLivello(ctx.eroe, ctx.roba, t, t.indice) : null
   if (s) pagine.push({ testo: s.detto, dato: 'sotto-livello', manca: s.manca })
+  const z = consiglioDellaZona(ctx)
+  if (z) pagine.push(z)
   return pagine
 }
 
@@ -167,6 +198,8 @@ export function apertura(chi, ctx, { primaVolta = false } = {}) {
     for (const testo of d.presentazione || []) pagine.push({ testo })
     pagine.push({ testo: STORIA.affida, dato: 'storia' })
   }
+  // la porta delle terre aperta in fondo alla landa: la annunciano il minatore e il capitano, per primi
+  if (ctx.mondo && ctx.terre && d.terre) pagine.push({ testo: d.terre, dato: 'terre' })
   if (chi === 'minatore') pagine.push(...strada(ctx, { capitolo: !primaVolta }))
   if (chi === 'capitano') pagine.push(...stradaDelCapitano(ctx))
   for (const v of cosaDice(chi, ctx.stati, ctx.tappe).voci) pagine.push(...dellaMissione(v, ctx))

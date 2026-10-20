@@ -6,8 +6,9 @@
 //   `saluti`   quando non ha niente da chiederti né da riprendere
 //   `presa`    quando accetti un suo favore
 //   `bottega`, `vendi`  le scelte dei mercanti (aprono il banco, o la linguetta delle tasche)
-//   `porte`    solo il capitano del forte: per le discese che racconta lui (la chiave della tappa), quello che dice della porta
+//   `porte`    solo il capitano: per le discese che racconta lui (la chiave della tappa), quello che dice della porta
 //              di adesso, in aggiunta alla strada (motore/dialoghi.js, stradaDelCapitano)
+//   `terre`    il minatore e il capitano, nel mondo 3D: la porta delle terre aperta in fondo alla landa (ctx.terre)
 //   `cura`     chi cura gratis (la guaritrice la vita, l'incantatrice l'energia): `risorsa`, la `domanda`, le `pagine` dette
 //              curando, `gia` quando non serve e `richiamo`, il fumetto sulla sua testa quando serve (motore/dialoghi.js)
 // «Novità?», con le frasi che ruotano e reagiscono, sta in dati/novita.js.
@@ -24,6 +25,7 @@ export const DIALOGHI = {
     ],
     saluti: [{ da: 0, testo: 'Ancora qui? Le discese non si chiudono da sole.' }],
     presa: 'La lanterna del nonno. Se la riporti su, mi riporti su anche lui.',
+    terre: 'Laggiù, in fondo alla landa, si è aperta una porta di pietra. Le rune dicono che di là c\'è un\'altra terra: le stesse strade, mostri più forti.',
   },
 
   ragazza: {
@@ -77,30 +79,31 @@ export const DIALOGHI = {
     presa: 'Va\', e che la luce ti accompagni.',
   },
 
-  // il capitano del forte del guado (docs/sotterraneo/mondo-aperto-quest.md): sta nel mondo 3D, e apre la storia delle marche. La
-  // porta di adesso la dice lui quando è la quinta o la sesta; le altre le dice il minatore
+  // il capitano (docs/sotterraneo/mondo-aperto-quest.md): sta nel villaggio del mondo 3D, venuto dal forte del guado che non c'è più
+  // (le decisioni del 20 ottobre). La porta di adesso la dice lui quando è la quinta o la sesta; le altre le dice il minatore
   capitano: {
     domanda: 'Com\'è oltre il guado?',
     saluti: [
-      { da: 0, testo: 'Capitano del forte del guado. Tengo il ponte: chi passa di qui, passa da me.' },
-      { da: 6, testo: 'Il guado è tranquillo, per la prima volta da anni. Anche questo è merito tuo.' },
+      { da: 0, testo: 'Capitano della guardia. Il forte del guado è caduto, e adesso la strada maestra la tengo d\'occhio da qui.' },
+      { da: 6, testo: 'La strada maestra è tranquilla, per la prima volta da anni. Anche questo è merito tuo.' },
     ],
     racconti: [
       { da: 0, pagine: ['Il guado era la strada dei mercanti. Poi dall\'altra riva sono arrivate le bestie.',
-                        'Adesso il forte tiene il ponte, e io tengo il forte.'] },
-      { da: 4, pagine: ['Le sale allagate sono sotto la palude, e l\'acqua nera sale fino alle nostre botti.',
+                        'Il forte non ha tenuto, e sono tornato al villaggio. Ma la strada la conosco palmo a palmo.'] },
+      { da: 4, pagine: ['Le sale allagate sono sotto la palude, e l\'acqua nera sale fino alle radici delle canne.',
                         'Chi scende torna con le scarpe fradice. Ma torna, se ha la testa a posto.'] },
       { da: 5, pagine: ['Dalla piana delle ceneri viene un fumo che non è di nessun camino.',
                         'I miei soldati dicono che laggiù si apre una porta. Io dico che è meglio non guardarla troppo.'] },
-      { da: 6, pagine: ['Il vecchio minatore è salito al rifugio del passo: ha una porta da indicarti anche lì.',
-                        'Passa dal valico del nord, e saluta la guaritrice da parte mia.'] },
-      { da: 7, pagine: ['Sette porte chiuse, e il forte ancora in piedi. Non pensavo di vederlo.',
+      { da: 6, pagine: ['Sei porte chiuse. La settima è su, sul monte: il minatore te la spiega.',
+                        'Passa il valico del passo, e copriti bene: lassù tira vento.'] },
+      { da: 7, pagine: ['Sette porte chiuse, e il villaggio ancora in piedi. Non pensavo di vederlo.',
                         'Il pozzo senza fondo no: quello non lo chiude nessuno. Si tiene d\'occhio.'] },
     ],
     porte: {
-      cisterna: 'Sei passato dal ponte, e questo è già qualcosa. Oltre il ponte di corde c\'è la palude, e sotto la palude le sale allagate. Là dorme Gorgo, e l\'acqua nera sale fino ai miei stivali. Fermalo, e il guado respira.',
-      labirinto: 'La piana delle ceneri mi dà pensiero: ne viene un fumo che non è di nessun camino. C\'è una botola nel telaio, e la chiamano la porta dell\'inferno. Dietro ci sta Minotto. Battilo, e poi sali dal minatore, al rifugio.',
+      cisterna: 'Su per la salita della brughiera, e poi oltre il ponte del guado: lì comincia la palude. Sotto la palude ci sono le sale allagate, e là dorme Gorgo. L\'acqua nera sale fino alle radici delle canne. Fermalo, e il guado respira.',
+      labirinto: 'La piana delle ceneri mi dà pensiero: ne viene un fumo che non è di nessun camino. C\'è una botola nel telaio, e la chiamano la porta dell\'inferno. Dietro ci sta Minotto. Battilo, e poi torna dal minatore.',
     },
+    terre: 'I miei vecchi soldati giurano che in fondo alla landa si è aperta una porta di pietra, con le rune. Di là c\'è un\'altra terra, e bestie più forti.',
   },
 
   guardia: {
@@ -260,6 +263,7 @@ export function guastiDeiDialoghi(chi = []) {
     for (const v of d.racconti || []) if (v.pagine.length > 4) g.push(`${k}: un racconto di più di quattro pagine`)
     for (const [t, testo] of Object.entries(d.porte || {}))
       for (const f of testo.split(/(?<=[.!?…])\s+/)) if (f.length > 120) g.push(`${k}: una frase della porta «${t}» di ${f.length} caratteri`)
+    if (d.terre) for (const f of d.terre.split(/(?<=[.!?…])\s+/)) if (f.length > 120) g.push(`${k}: una frase della porta delle terre di ${f.length} caratteri`)
   }
   return g
 }

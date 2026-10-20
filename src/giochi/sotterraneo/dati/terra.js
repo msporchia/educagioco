@@ -34,19 +34,25 @@ export const LUOGHI = {
   'pozzo-vecchio': 'oltre il bosco fino in cima, e poi a sinistra: il pozzo col tetto d\'ardesia',
 }
 
-// La strada nel mondo aperto del Sotterraneo 3D (docs/sotterraneo/mondo-aperto-quest.md): per chiave del dungeon, coi nomi delle
-// regioni (che compaiono in fondo entrando), dei ponti e dei valichi, mai coi punti cardinali. Le prime quattro partono dal
-// villaggio, dove sta il minatore; le due del capitano dal forte del guado, le ultime dal rifugio del passo, dove il minatore sale
-// dopo la sesta porta. Il 2D di sempre tiene LUOGHI: i nomi dei dungeon sono gli stessi, la geografia no
+// La strada nel mondo a percorso del Sotterraneo 3D (docs/sotterraneo/mondo-a-percorso.md): per chiave del dungeon, con la zona dove sta
+// (che compare in fondo entrando) e il ponte o il valico che ci porta, mai coi punti cardinali né con destra e sinistra (la strada fa la
+// serpentina: la sinistra di chi cammina non è quella dello schermo). Tutte partono dal villaggio, dove stanno il minatore e il capitano.
+// Il 2D di sempre tiene LUOGHI: i nomi dei dungeon sono gli stessi, la geografia no
 export const LUOGHI_MONDO = {
-  altare: 'passa i campi e il ponte di travi verso il cimitero vecchio: l\'altare fra le colonne, con la scala dietro la pietra',
-  cantine: 'dai campi, oltre il ponte di travi, al colle delle rovine: sotto l\'arco di pietra con la grata',
-  torre: 'dal colle delle rovine, oltre il valico, nella brughiera: la torre annerita, e la porta in basso',
-  gallerie: 'dal cimitero vecchio giù al lago, e oltre il valico nel bosco vecchio: la grotta fra le radici',
-  cisterna: 'oltre il ponte del guado, al forte, e poi il ponte di corde verso la palude: la scala che scende nel lago',
-  labirinto: 'dal forte del guado, oltre il ponte di travi, nella piana delle ceneri: la botola nel telaio, che fuma',
-  fondo: 'dal rifugio del passo, oltre i ponti di corde della gola dei venti e della vetta dei troll, fino al monte: la miniera coi binari',
-  abisso: 'dal rifugio del passo, oltre il valico dei corvi, per la foresta nera e la valle delle ossa, nella landa vecchia: il pozzo col tetto d\'ardesia',
+  altare: 'esci dal cancello e segui la strada maestra nei prati del cimitero: poco dopo c\'è l\'altare fra le colonne, con la scala dietro la pietra',
+  cantine: 'nei prati del cimitero, lungo la strada maestra oltre la pietra runica: l\'arco di pietra delle cantine',
+  torre: 'oltre il ponte del mulino, nel bosco vecchio: accanto alla strada la torre annerita, con la porta in basso',
+  gallerie: 'in fondo al bosco vecchio, oltre la sua pietra runica: la grotta fra le radici',
+  cerchio: 'su per la salita della brughiera: i menhir in cerchio accanto alla strada, con la botola in mezzo',
+  corvaia: 'in fondo alla brughiera, prima del ponte del guado: il pozzo dei corvi',
+  cisterna: 'oltre il ponte del guado, nella palude: dopo la sua pietra runica, la scala che scende nell\'acqua',
+  palafitta: 'in fondo alla palude, prima della passerella delle ceneri: la palafitta sull\'acqua',
+  labirinto: 'oltre la passerella delle ceneri, nella piana delle ceneri: la botola nel telaio, che fuma',
+  fornace: 'in fondo alla piana delle ceneri, prima del valico del passo: la fornace con le fumarole',
+  fondo: 'su per il valico del passo, sul monte: dopo la sua pietra runica, la miniera coi binari',
+  cava: 'in fondo al monte, prima del ponte sulla gola: la miniera con la brina',
+  abisso: 'oltre il ponte sulla gola, nella landa vecchia: il pozzo col tetto d\'ardesia',
+  tombe: 'in fondo alla landa vecchia, dove finisce la strada maestra: la tomba nel vento',
 }
 // la strada di una discesa (la chiave della tappa, o 'abisso'): nel mondo 3D quella del mondo aperto, se no quella della mappa dipinta
 export const luogoDi = (chiave, mondo = false) => (mondo ? LUOGHI_MONDO[chiave] : LUOGHI[POSTO_DI[chiave]])

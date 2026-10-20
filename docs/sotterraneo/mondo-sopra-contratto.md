@@ -70,8 +70,13 @@ com'era. Salvando: `emit('mondo', mondoDaSalvare(m, { nebbia, dove, giro, pietre
 | `frecceDelCartello`: una freccia per passaggio, tre cartelli | una, la strada maestra, nel villaggio |
 | `dungeonDi(k).regione` (dalla scheda) | `ingressoDi(m, k).regione` (dal mondo); `dungeonDi(k).zona` dalla scheda |
 | `DUNGEON`, `CITTA` di `dati/mondo-aperto.js` | `INGRESSI_DEL_MONDO` (14), `VILLAGGIO`, `ZONE_DEL_MONDO` |
-| `m.regioni[r].anello`, `R.marca` | `R.zona` (indice), `R.zonaChiave`; la fascia è della zona: `m.zone[k].fascia`, `livelloDi(m, x, y)` |
+| `m.regioni[r].anello`, `R.marca` | `R.zona` (indice), `R.zonaChiave`; la fascia è della zona: `m.zone[k].fascia`, `livelloDi(m, x, y)`. Un `R.anello < 1` (fuori dal villaggio, `props-dove.js`) è `R.chiave !== 'villaggio'` |
+| `m.regioni[r].cx cy` al centro della regione | `R.cx cy` sulla strada a metà del luogo, `R.tana` il suo cuore (per la veduta e le taglie) |
 | `m.antri` | `[]`: non ci sono più |
+| `stato.mostri.find(…)`, `for (q of stato.mostri)` | `stato.lista` (le zone non caricate fanno i buchi in `stato.mostri`) |
+| l'annuncio a ogni cambio di regione | a ogni cambio di `annuncioDi(…).zona` |
+| `cittaDelRisveglio(m, x, y, terra)` | il villaggio sempre (gli altri parametri si ignorano) |
+| la meta oltre una grata: niente strada | `metaVicina(m, terra, meta)`: la strada maestra fin dove è caricata (sotto) |
 
 ## `motore/aperta.js`: i mostri
 
@@ -94,6 +99,20 @@ caricata e uguale ricaricandola: la scena lo usa come prima (`[data-mostro-sopra
 **`stato.mostri` ha i buchi** (le zone non caricate): si legge per indice, **per scorrerli si usa `stato.lista`**. Anche `stato.branchi`
 è per indice (un oggetto). Un mostro sta nella sua zona (non ne esce inseguendo) e mai a meno di quattro celle da un ponte o da un varco.
 
+**Quanti** (seme 8, 110 celle a branco): 1 899 mostri in tutto il mondo, 363 in memoria dal villaggio, ~900 con tre zone caricate;
+`muoviMostri` 35–50 µs a fotogramma. I numeri e il banco in [mondo-aperto-mostri.md](mondo-aperto-mostri.md#le-misure).
+
+## La meta, i dialoghi, i testi
+
+- **`metaVicina(m, terra, meta)`** (`motore/meta-sopra.js`): una meta in una zona mai caricata non ha campo (la terra lì è roccia); la
+  vista dà al campo il punto della strada maestra più vicino a lei fra quelli dove si cammina (`{ x, y, lontana: true }`), e rifà la meta
+  dopo ogni `seguiLEroe` con `caricate`. Così la scia e «portami lì» vanno avanti a pezzi lungo la strada.
+- **I dialoghi** (`motore/dialoghi.js`) leggono dal `ctx` due campi nuovi che la vista passa nel 3D: `forza` (`forzaDelCorredo`, la
+  stessa dell'annuncio) fa dire al minatore e al capitano «I mostri della tua forza stanno nel bosco vecchio, oltre il ponte del mulino»
+  (`dato: 'zona'`); `terre` (le tombe ripulite, compito E) fa annunciare per prima cosa la porta delle terre (`dato: 'terre'`). Senza i
+  due campi i dialoghi sono quelli di prima. `terra` (1 di difetto) sposta le fasce del consiglio.
+- **`LUOGHI_MONDO`** (`dati/terra.js`) ha la strada dei quattordici dungeon con la zona e il ponte o il valico, senza destra né sinistra.
+
 ## Le taglie
 
 - `regioniServite(m, 'villaggio')`: tutti i luoghi fuori dal villaggio, di tutte le zone (la tana e il centro di ogni luogo stanno
@@ -112,5 +131,18 @@ se D ha già finito): `motore/mondo-aperto.js`, `motore/mondo-sopra-anelli.js`, 
 finti `aperturaDi` e `chiusoPerche` qui. I test di D che oggi importano `mondo-sopra-anelli.js` (`unita/sotterraneo-mondo-3d`,
 `-mondo-props`, `catalogo-3d-sotterraneo`) tornano a `mondo-sopra.js` con la scena.
 
+## Cosa resta a D ed E
+
+- **D (la scena)**: `Mondo3d.vue` sulle funzioni qui sopra (la tabella vecchio → nuovo), `seguiLEroe` a ogni cella con la terra e i pezzi
+  rifatti, `mondoDaSalvato` all'apertura e `mondoDaSalvare` salvando, `forza` nel `ctx` dei dialoghi, l'annuncio per zona; poi il mondo ad
+  anelli da cancellare (sopra) e `integrazione/sotterraneo-mondo`, `-bacheca`, `-mostri-sopra`, `-mondo-meta` sul percorso (oggi rossi:
+  importano `mondo-sopra.js` e trovano il percorso con la scena di prima).
+- **E (le terre)**: `ilMondo({ terra })` dà già la terra giusta (una per volta); `mondoDaSalvato` vale per `mondi[t]` uguale; il `ctx.terre`
+  e il `ctx.terra` dei dialoghi; `riprendiMondo` e le taglie sono per terra solo perché lo stato si salva nel `mondo` di quella terra.
+- **La taratura** (dopo B e C): `cellePerBranco` per zona, la cintura, i prati — i numeri fuori bersaglio in
+  [mondo-aperto-mostri.md](mondo-aperto-mostri.md#le-misure).
+
 Nei test: `unita/sotterraneo-mondo-salva` (la nebbia, la prima volta, il travaso di un salvataggio di oggi, una città sola, le pietre,
-il cartello, le zone che seguono l'eroe, nessuna grata).
+il cartello, le zone che seguono l'eroe, nessuna grata), `-mondo-mostri` (le zone, i morti per zona, le fasce), `-mostri-sopra-scena`,
+`-meta-sopra` (la meta lontana a pezzi), `-quest-modelli` (gli id di prima), `-citta` (il capitano nel villaggio, la zona per te, la porta
+delle terre).

@@ -14,7 +14,8 @@ import { PERSONAGGI, PERSONAGGI_DI_SOPRA, CITTADINI, personaDi } from '../../src
 import { DIALOGHI, FONTANA, guastiDeiDialoghi } from '../../src/giochi/sotterraneo/dati/dialoghi.js'
 import { LUOGHI_MONDO } from '../../src/giochi/sotterraneo/dati/terra.js'
 import { PEZZI } from '../../src/giochi/sotterraneo/dati/atlante.js'
-import { apertura, scelte, risposta, stradaDelCapitano } from '../../src/giochi/sotterraneo/motore/dialoghi.js'
+import { apertura, scelte, risposta, stradaDelCapitano, strada, zonaPerTe, consiglioDellaZona } from '../../src/giochi/sotterraneo/motore/dialoghi.js'
+import { ZONE_DEL_MONDO } from '../../src/giochi/sotterraneo/dati/mondo-aperto.js'
 import { guastiDelleMissioni } from '../../src/giochi/sotterraneo/dati/missioni.js'
 import { controlla, uguale as uguale0, stessaLista, riassunto } from '../aiuto/verifica.mjs'
 // anche per le liste e gli oggetti: si confronta il JSON
@@ -50,7 +51,7 @@ const ctxCon = finite => ({ stati: {}, mondo: true, tappe: CAMPAGNA.map((t, i) =
   uguale('le prime pagine sono la storia', cis.slice(0, cis.findIndex(p => p.dato === 'detto')).every(p => p.dato === 'storia'), true)
   uguale('e in fondo le luci azzurre e «portami lì»', cis.at(-1).dato, 'luci')
   const lab = stradaDelCapitano(ctxCon(5))
-  controlla('alla sesta Minotto, e manda dal minatore al rifugio', /Minotto/.test(testi(lab)) && /rifugio/.test(testi(lab)), testi(lab))
+  controlla('alla sesta Minotto, e rimanda dal minatore', /Minotto/.test(testi(lab)) && /minatore/.test(testi(lab)), testi(lab))
   uguale('con la sua strada', lab.find(p => p.dato === 'detto').testo, `La porta dell'inferno: ${LUOGHI_MONDO.labirinto}.`)
   uguale('dopo la sesta non dice più la strada', stradaDelCapitano(ctxCon(6)).length, 0)
   uguale('nemmeno finita la storia, con una zona nata', stradaDelCapitano({ ...ctxCon(4), annuncio: { chiave: 'cantine' } }).length, 0)
@@ -90,4 +91,29 @@ const ctxCon = finite => ({ stati: {}, mondo: true, tappe: CAMPAGNA.map((t, i) =
   controlla('le frasi della fontana stanno in una riga di fumetto', Object.values(FONTANA).every(t => typeof t === 'string' && t.length <= 110), JSON.stringify(FONTANA))
 }
 
-riassunto('le città del mondo 3D: il capitano e la fontana')
+/* ── la zona dove andare, e la porta delle terre ── */
+{
+  uguale('alla forza 1: i prati', zonaPerTe(1).chiave, 'prati')
+  uguale('alla 4: il bosco', zonaPerTe(4).chiave, 'bosco')
+  uguale('alla 12: il monte', zonaPerTe(12).chiave, 'monte')
+  uguale('alla 30: la landa (la prima terra finisce lì)', zonaPerTe(30).chiave, 'landa')
+  uguale('nella seconda terra, alla 16: di nuovo i prati', zonaPerTe(16, 2).chiave, 'prati')
+  const c = { ...ctxCon(2), forza: 6 }
+  uguale('il consiglio, con parole da bambino', consiglioDellaZona(c).testo, 'I mostri della tua forza stanno nella brughiera, oltre la salita della brughiera.')
+  uguale('nei prati: appena fuori dal cancello', consiglioDellaZona({ ...c, forza: 1 }).testo, 'I mostri della tua forza stanno nei prati del cimitero, appena fuori dal cancello.')
+  uguale('il minatore lo dice dopo la strada', strada(c).filter(p => p.dato === 'zona').map(p => p.zona).join(), 'brughiera')
+  uguale('anche il capitano, alla sua porta', stradaDelCapitano({ ...ctxCon(4), forza: 8 }).filter(p => p.dato === 'zona').map(p => p.zona).join(), 'palude')
+  uguale('senza la forza non lo dice', strada(ctxCon(2)).some(p => p.dato === 'zona'), false)
+  uguale('nel Sotterraneo di sempre nemmeno', strada({ ...c, mondo: false }).some(p => p.dato === 'zona'), false)
+  const terre = { ...ctxCon(7), terre: true }
+  for (const chi of ['minatore', 'capitano']) {
+    const a = apertura(chi, terre)
+    controlla(`${chi}: annuncia la porta delle terre, per prima cosa`, a[0].dato === 'terre' && /porta/.test(a[0].testo) && /landa/.test(a[0].testo), testi(a))
+    uguale(`${chi}: senza la porta aperta non ne parla`, apertura(chi, ctxCon(7)).some(p => p.dato === 'terre'), false)
+  }
+  const tutti = [...Object.values(LUOGHI_MONDO), ...DIALOGHI.capitano.saluti.map(x => x.testo), ...DIALOGHI.capitano.racconti.flatMap(x => x.pagine), ...Object.values(DIALOGHI.capitano.porte)]
+  stessaLista('nessuna riga sulle grate, sul forte che c\'è o sul rifugio', tutti.filter(t => /grat|rifugio|al forte|nel forte|marc[ah]e?\b/i.test(t)), [])
+  for (const Z of ZONE_DEL_MONDO.slice(1)) controlla(`la strada di ${Z.nome} nomina la zona`, Object.values(LUOGHI_MONDO).some(t => t.includes(Z.nome.toLowerCase().replace(/^(il|la|i|le) /, ''))))
+}
+
+riassunto('il villaggio del mondo 3D: il capitano e la fontana')

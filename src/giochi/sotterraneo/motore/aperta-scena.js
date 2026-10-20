@@ -34,7 +34,7 @@ export function lasciaLoScontro(stato, corsa, { terra = null } = {}) {
 }
 
 // rientrando: i rimasti dello scontro lasciato tornano accanto all'eroe (x, y), svegli e con le loro ferite, sulle celle della loro
-// regione dove possono camminare; chi nel frattempo è morto o non c'è più resta com'è. Torna quanti ne ha rimessi
+// zona dove possono camminare; chi nel frattempo è morto o non c'è più (la sua zona buttata) resta com'è. Torna quanti ne ha rimessi
 export function rimettiLoScontro(stato, scontro) {
   if (!scontro || !Array.isArray(scontro.campo) || !Number.isInteger(scontro.x) || !Number.isInteger(scontro.y)) return 0
   const m = stato.mondo, { casa } = spaziDi(m)
@@ -47,7 +47,7 @@ export function rimettiLoScontro(stato, scontro) {
     for (; k < POSTI_SUL_PALCO.length * 2 && !dove; k++) {
       const [dx, dy] = POSTI_SUL_PALCO[k % POSTI_SUL_PALCO.length]
       const x = scontro.x + dx * (k < POSTI_SUL_PALCO.length ? 1 : -1), y = scontro.y + dy
-      if (x >= 0 && y >= 0 && x < m.W && y < m.H && casa[y * m.W + x] === q.regione) dove = { x, y }
+      if (x >= 0 && y >= 0 && x < m.W && y < m.H && casa[y * m.W + x] === q.zona) dove = { x, y }
     }
     if (!dove) continue
     q.fx = dove.x + 0.5; q.fy = dove.y + 0.5
@@ -90,7 +90,7 @@ export function taglieDelloScontro(uccisi, { stati = {}, conti = {}, stato = nul
   if (stato) for (const r of new Set((uccisi || []).map(t => t.regione))) {
     const tana = tanaDi(stato, r)
     if (!tana || tana.branco == null) continue
-    if (stato.branchi[tana.branco].every(i => stato.mostri[i].morto)) for (const id of taglieDaBattere(stati, 'tana', r)) fai(id)
+    if ((stato.branchi[tana.branco] || []).every(i => !stato.mostri[i] || stato.mostri[i].morto)) for (const id of taglieDaBattere(stati, 'tana', r)) fai(id)
   }
   return { conti: nuovi, fatte }
 }

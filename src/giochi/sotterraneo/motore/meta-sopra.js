@@ -1,6 +1,8 @@
 // La strada verso la meta del mondo di sopra (la porta della storia, la discesa di una missione, la taglia seguita), senza disegno:
-// il campo delle distanze dalla meta sulla terra coi passaggi aperti, la strada da qualunque cella, le celle del velo che si apre
-// attorno, le luci della scia e i passi detti. Gira in Node (unita/sotterraneo-meta-sopra). docs/sotterraneo/mondo-3d-la-meta.md
+// il campo delle distanze dalla meta sulla terra delle zone caricate, la strada da qualunque cella (e, per una meta lontana, fin dove
+// la strada maestra è caricata), le celle del velo che si apre attorno, le luci della scia e i passi detti. Gira in Node
+// (unita/sotterraneo-meta-sopra). docs/sotterraneo/mondo-3d-la-meta.md
+import { baseDi } from './mondo-percorso.js'
 const OTTO = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]]
 const R2 = Math.SQRT2
 
@@ -61,6 +63,23 @@ export function campoVersoLaMeta(terra, meta) {
     return via
   }
   return { meta: { x: meta.x, y: meta.y }, D, passi, strada }
+}
+
+// La meta da dare al campo: lei, se ci si cammina; se sta in una zona mai caricata (la terra lì è roccia), il punto della strada maestra
+// più vicino a lei lungo l'arco fra quelli dove si cammina adesso. Arrivati lì la zona dopo è caricata (seguiLEroe), la terra cambia e
+// la meta si rifà: la scia va avanti lungo la strada, a pezzi. Torna { x, y, lontana } o null
+export function metaVicina(m, terra, meta) {
+  if (!meta) return null
+  if (terra.passa(meta.x, meta.y)) return { x: meta.x, y: meta.y, lontana: false }
+  const s = baseDi(m, meta.x, meta.y).arco
+  let meglio = null
+  for (const p of m.tracciato) {
+    const x = Math.round(p.x), y = Math.round(p.y)
+    if (!terra.passa(x, y)) continue
+    const d = Math.abs(p.s - s)
+    if (!meglio || d < meglio.d) meglio = { x, y, d }
+  }
+  return meglio ? { x: meglio.x, y: meglio.y, lontana: true } : null
 }
 
 // Le celle del velo che si apre lungo la strada (gli indici, in ordine e senza doppioni): tutte quelle col centro entro `raggio`
