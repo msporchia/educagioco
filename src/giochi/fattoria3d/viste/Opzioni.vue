@@ -21,7 +21,7 @@ function tocca(chiave, valore) {
   emit('cambia')
 }
 const interruttori = [['ombre', 'Ombre'], ['vento', "Vento: grano ed erba ondeggiano"], ['particelle', 'Scintille e fumo'], ['alberi', 'Alberi'],
-                      ['erba', "Ciuffi d'erba nei prati"], ['nuvole', 'Nuvole e la loro ombra'], ['nebbia', 'Nebbia in lontananza']]
+                      ['erba', "Ciuffi d'erba nei prati"], ['nebbia', 'Nebbia in lontananza']]
 const grafico = computed(() => (props.stat.grafico || []).map(ms => ({ h: Math.min(100, ms * 2), c: ms > 33 ? '#d8452a' : ms > 18 ? '#e6a030' : '#5fae3a' })))
 </script>
 
@@ -46,7 +46,7 @@ const grafico = computed(() => (props.stat.grafico || []).map(ms => ({ h: Math.m
         <select :value="q.ombraRes" @change="tocca('ombraRes', Number($event.target.value))"><option v-for="[v, t] in OMBRE" :key="v" :value="v">{{ t }}</option></select></label>
       <label v-for="[k, nome] in interruttori" :key="k" class="f3-riga"><span>{{ nome }}</span>
         <input type="checkbox" :checked="q[k]" @change="tocca(k, $event.target.checked)"></label>
-      <p class="f3-nota">«Basso» tiene spenti ombre, vento e scintille per risparmiare il telefono; ciuffi e nuvole restano accesi (costano un disegno l'uno).</p>
+      <p class="f3-nota">«Basso» tiene spenti ombre, vento e scintille per risparmiare il telefono; i ciuffi restano accesi (costano un disegno l'uno).</p>
       <label class="f3-riga"><span>Distanza della telecamera <b>{{ q.camera }}</b></span>
         <input type="range" :min="DISTANZA.min" :max="DISTANZA.max" step="1" :value="q.camera" @input="tocca('camera', Number($event.target.value))"></label>
       <h3>Prova di stress</h3>

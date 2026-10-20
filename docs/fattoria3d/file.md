@@ -8,10 +8,11 @@ stile-vicini.css    la mappa, il viaggio, la visita (`.f3-vic-`)
 visite.js            il filo fra `Gioco.vue` e le visite (`usaVisite`): mappa, viaggio, la scena a richiesta, cassa e mercato
 dati/
   mondo.js           la griglia, i 42 lotti, il quadrato di partenza, i due edifici di scena, le strade di serie, i lotti di un posto
-  catalogo.js        i dieci pezzi (campo, recinto, pollaio, stalla, bancarella, aiuola, panchina, fontana, pozzo, spaventapasseri) e i sette
-                     edifici unici (pasticceria, mongolfiera, mulino, panificio, caseificio, conserviera, gelateria): prezzi, misure, `liv`, `slot`
-  colture.js         le dieci colture: nome, emoji, tempo, `liv`
-  ricette.js         le macchine e le loro ricette (`MACCHINE`, `RICETTE` a elenco unico con `dove`), i posti del forno
+  carte.js           le carte del menu «Costruisci qui»: `carteDi(categoria, stato)`, `schedeDi`, `DISEGNI` (carta → pezzo dell'atlante 2D), `STRUMENTI`, i guasti
+  catalogo.js        i pezzi (ora con la `categoria` di ogni pezzo e edificio, `CATEGORIE`; ora anche passerella, ponte e tavolo; i primi due `calpestabile`, con `alzato`: regole.md) — dieci all'inizio:  (campo, recinto, pollaio, stalla, bancarella, bacheca, aiuola, panchina, fontana, pozzo, spaventapasseri) e i sette
+                     edifici unici (pasticceria = il Pastificio, mongolfiera, mulino, panificio, caseificio, conserviera = la Cucina, gelateria: gli id sono quelli dei salvataggi): prezzi, misure, `liv`, `slot`
+  colture.js         le dieci colture: nome, emoji, `pezzo` (la faccia nell'atlante 2D), tempo, `liv`
+  ricette.js         le macchine e le loro ricette, quelle della 2D (`MACCHINE`, `RICETTE` a elenco unico con `dove`; `pezzo`/`aspetta`; `merceDi`, `pezzoDi`; `MERCI_VECCHIE`/`nuovoId` per i salvataggi di prima: merci-e-ricette.md), i posti del forno
   animali.js         pollaio e stalla: bestie, tempi, capienza e prezzo di ogni bestia in più, cosa mangiano; `CORTILE` (anche il recinto) e `prezzoDellaBestia`; `uova` e `latte` (PRODOTTI_ANIMALI), i guasti
   compagni.js        Watson e i gatti: i dati, il livello a cui arrivano, le scelte pure (meta, cosa fare), `ASPETTO_ERO` ([compagni.md](compagni.md))
   livelli.js         le soglie, `roba(liv)`, i nomi dei livelli, i guasti dei livelli
@@ -23,18 +24,23 @@ dati/
   vicini.js          i villaggi dei vicini e il formato di una fattoria visitabile (snapshot, `normalizzaFattoriaVisitabile`, i numeri di prezzi, premi e doni), i guasti ([vicini.md](vicini.md))
 motore/
   fattoria3d.js      le regole: la classe Fattoria3d (borsa e orologio da fuori)
-  ordini.js          gli ordini: `nuovoOrdine` (puro, col caso da fuori) e `ordineInForma`
-  stato.js           lo stato salvato (esperienza, `posseduti`, `macchine`, `ordini`, `bestie` di pollaio e stalla; la versione sta in `VERSIONE_STATO`), `statoIniziale()` e `normalizza()` (un salvataggio rotto si rimette in forma)
+  ordini.js          gli ordini: `nuovoOrdine` (puro, col caso da fuori) e `ordineInForma`; i posti crescono col livello (`POSTI(livello)` in `dati/ordini.js`)
+  stato.js           lo stato salvato (esperienza, `posseduti`, `macchine`, `ordini`, `bestie` di pollaio e stalla; la versione sta in `VERSIONE_STATO`), `statoIniziale()` e `normalizza()` (un salvataggio rotto si rimette in forma; un v6 passa dagli id vecchi ai nuovi, v7)
   percorso.js        Dijkstra sulla griglia, le strade costano meno
   vicini.js          i vicini: la classe `Vicini` (entra, aiuta la cassa, compra, vende), `normalizzaVicini` (lo stato a parte), `motoreDiVisita` (la scena di sola lettura da uno snapshot), `esportaLaMiaFattoria`
-scena3d/             il disegno (vedi scena.md); `visita.js` è la visita a un vicino, una sottoclasse di `Mondo3d` su un motore di sola lettura ([vicini.md](vicini.md)); `compagni.js` e `modelli-compagni.js` per i compagni e il contadino ([compagni.md](compagni.md)); `detti.js` (senza three) traduce un rifiuto del motore in una riga, anche per la vista; `azioni.js` fa il gesto davanti a ogni cosa, pollaio e stalla compresi ([animali.md](animali.md))
+scena3d/             il disegno (vedi scena.md); `facce.js` la faccia di una merce su una tela per i pezzi di HTML sopra la scena (il «+1» di `fx.volo`); `visita.js` è la visita a un vicino, una sottoclasse di `Mondo3d` su un motore di sola lettura ([vicini.md](vicini.md)); `modelli-colture.js` il campo e le dieci colture (ri-esportati da `modelli.js`); `compagni.js` e `modelli-compagni.js` per i compagni e il contadino ([compagni.md](compagni.md)); `detti.js` (senza three) traduce un rifiuto del motore in una riga, anche per la vista; `azioni.js` fa il gesto davanti a ogni cosa, pollaio e stalla compresi ([animali.md](animali.md))
+  scena3d/modelli-passaggi.js   ponte, passerella e tavolo con le panche: presi dal Sotterraneo 3D e rifatti con i materiali della fattoria (scena.md)
 viste/
-  Hud.vue            il gettone del livello (⭐ N con la barra sottile, apre i livelli) e le scorte in alto; da livello 2 il tasto «🧺 Banco» col pallino degli ordini consegnabili
-  BarraAzioni.vue    libero / semina / raccogli / costruisci, i numeri, «Tutti»
-  Vassoio.vue        la barra del costruire: le carte (dai `PEZZI`, quelle non arrivate in grigio e non trascinabili; ogni carta si trascina anche se non è pagata: paga il rilascio), gli strumenti, la vista
+  Faccia.vue         la faccia di una merce (`k` la chiave, `n` il numerino): il pezzo dell'atlante 2D con `Provino.vue`, l'emoji come ripiego; la usano HUD, banco, macchina, semi, livelli, visita
+  Hud.vue            il gettone del livello (⭐ N con la barra sottile, apre i livelli) e le scorte in alto (ognuna con la sua faccia); da livello 2 il tasto «🧺 Banco» col pallino degli ordini consegnabili
+  BarraAzioni.vue    libero / semina / raccogli / costruisci, i numeri
+  CostruisciQui.vue  il foglio «Cosa costruiamo?» (si apre tenendo premuto su un posto libero): le schede per categoria e la griglia di carte con il disegno d'atlante della 2D (`Provino.vue`), il prezzo o «📦 ×N», le chiuse col lucchetto che tremano e dicono il livello ([scena.md](scena.md))
+  BarraStrade.vue    il pennello delle strade: strada, gomma, «Fatto»
   SceltaSeme.vue     «Cosa semini?»: le dieci colture dai dati, quelle non arrivate in grigio col livello
   Macchina.vue       il menu di una macchina (la sua, qualunque sia): l'insegna col suo colore (`[data-macchina]` in stile.css), il forno a tre vani con barra e timer, i pronti, le ricette come schede con i gettoni tondi degli ingredienti; le chiuse velate col lucchetto e il livello
-  Banco.vue          il foglio «🧺 Il banco»: tre posti, ognuno col ritratto del cliente e un fumetto con i gettoni `emoji ×n` (`ha/n`), il premio in ⭐, «Consegna» e «Cambia», il conto alla rovescia di un posto in riposo
+  Bacheca.vue        il foglio «Gli ordini» a bacheca ([ordini.md](ordini.md)): i biglietti colorati sulla tavola (3–8, uno per posto), il dettaglio di quello scelto con le merci, il cestino e «Consegna», l'indicatore delle consegne; stile in `stile-bacheca.css`
+  MerceBacheca.vue   una merce in un cerchio (`k`, `emoji`, `n`): provvisoria, stessa API di `Faccia.vue`
+  Banco.vue          il vecchio foglio del banco (tre posti con fumetto): non più agganciato, da togliere
   Livelli.vue        il foglio «Livello N»: la scala, con la scatola aperta di ciò che è arrivato e quella chiusa (in grigio, col lucchetto) di ciò che arriva dopo, quanto manca
   Dialogo.vue        la conferma d'acquisto (non più per le bestie)
   Opzioni.vue        il pannello ⚙
@@ -53,16 +59,19 @@ Registrazione: `src/giochi/indice.js` (il manifesto, in coda) e `src/giochi/sche
 |---|---|
 | `[data-f3="campo"] canvas` | il contenitore e la tela |
 | `[data-f3="az-libero|az-semina|az-raccogli|az-costruisci"]` | i tasti delle azioni (`.acceso` se armato); `.f3-n` è il numero rosso |
-| `[data-f3="tutti"]` | «▶ Tutti», solo con semina o raccogli armati |
 | `[data-f3="scorte|prodotti|lana"]` | il HUD |
 | `[data-f3="semi"]`, `[data-seme="carota"]` | la scelta del seme |
-| `[data-f3="vassoio"]`, `[data-carta="campo"]`, `[data-vista="vicino"]` | la barra del costruire, le carte, la vista |
+| `[data-f3="costruisci-qui"]`, `[data-f3="costruisci-velo"]`, `[data-scheda="campi"]`, `[data-carta="campo"]` | il foglio «Costruisci qui» (si apre con `premuto` ~0,45 s su un posto libero, o col tasto 🏗️), il velo che si tocca per chiuderlo, una scheda (`campi`, `animali`, `edifici`, `decori`, `passaggi`; `.acceso`) e una carta (anche `strada` e `gomma`; `data-cat` la scheda) |
+| `[data-f3="costruisci-msg"]`, `[data-carta].trema` | la riga sotto le carte (livello che manca, «Servono 🪙 N») e la carta chiusa che trema |
+| `[data-f3="zona-via"]` | la fascia in basso mentre un pezzo è sollevato o il fantasma aspetta un posto (toccarla annulla il fantasma) |
+| `[data-f3="barra-strade"]`, `[data-strumento="strada"]`, `[data-f3="strade-fatto"]` | la barra del pennello |
 | `[data-f3="dialogo"]`, `[data-scelta="0"]` | la conferma (solo lotti e edifici unici); la prima scelta è «Compra · 🪙 N» |
 | `[data-f3="cartello-bestie"]` (`data-n`, `data-max`), `[data-f3="compra-bestia"]` (`aria-disabled`) | il cartello sopra recinto, pollaio e stalla e il suo «＋ 🪙 N»; si tocca con `dispatchEvent('click')` perché può stare fuori dallo schermo |
 | `[data-f3="macchina"][data-macchina="<tipo>"]`, `[data-ricetta="pane"]`, `[data-f3="ritira"]` | il menu di una macchina; `[data-puoi="true|false"]` sulla ricetta (un tasto spento resta toccabile: dice perché in `[data-f3="macchina-msg"]`) |
-| `[data-f3="pasticceria"]` | il corpo del menu, solo se la macchina è la pasticceria (un elemento ha un solo `data-f3`) |
+| `[data-f3="pasticceria"]` | il corpo del menu, solo se la macchina è la pasticceria (il Pastificio; un elemento ha un solo `data-f3`) |
+| `[data-merce="<id>"]` | la faccia di una merce (`viste/Faccia.vue`): HUD, banco, macchina, scelta del seme, livelli, cassa e mercato; il volo «+1» sopra la scena |
 | `[data-f3="livello"]`, `[data-f3="livello-nuovo"]`, `[data-f3="livelli"]`, `[data-f3="avviso-livello"]` | il gettone, il suo pallino, il foglio dei livelli, l'avviso che compare a ogni salita |
-| `[data-carta].bloccata`, `[data-seme].bloccato`, `[data-f3="semi-msg"]` | una carta o una coltura non ancora arrivata, e la riga che dice il livello |
+| `[data-carta].bloccata`, `[data-seme].bloccato`, `[data-f3="semi-msg"]` | una carta o una coltura non ancora arrivata, e la riga che dice il livello (la scelta dei semi) |
 | `[data-f3="apri-opzioni"]`, `[data-f3="opzioni"]`, `[data-preset="basso"]` | le opzioni |
 | `[data-f3="centra"]` | «⌖ Torna all'eroe» |
 | `[data-chiudi]` | la ✕ di ogni foglio |

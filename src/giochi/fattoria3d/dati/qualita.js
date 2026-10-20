@@ -1,14 +1,14 @@
 /* Le opzioni di qualità della scena (pannello ⚙): i preset, le scale della risoluzione, la qualità delle ombre. Dato puro.
    Il punto di partenza lo sceglie la fascia grafica del telefono (store/qualita.js); poi si ritocca a mano e si ricorda. */
 export const PRESET = {
-  basso: { scala: 1,   ombre: false, ombraRes: 512,  vento: false, erba: true,  nuvole: true,  particelle: false, alberi: true, nebbia: true },
-  medio: { scala: 1.5, ombre: true,  ombraRes: 1024, vento: true,  erba: true,  nuvole: true,  particelle: true,  alberi: true, nebbia: true },
-  alto:  { scala: 3,   ombre: true,  ombraRes: 2048, vento: true,  erba: true,  nuvole: true,  particelle: true,  alberi: true, nebbia: true },
+  basso: { scala: 1,   ombre: false, ombraRes: 512,  vento: false, erba: true,  particelle: false, alberi: true, nebbia: true },
+  medio: { scala: 1.5, ombre: true,  ombraRes: 1024, vento: true,  erba: true,  particelle: true,  alberi: true, nebbia: true },
+  alto:  { scala: 3,   ombre: true,  ombraRes: 2048, vento: true,  erba: true,  particelle: true,  alberi: true, nebbia: true },
 }
-// Il basso spegne solo ciò che costa a ogni fotogramma (ombre, vento che rimette a posto i campi, particelle): ciuffi e nuvole sono
-// uno o due disegni in tutto, e restano. Le scelte salvate sono di una versione: se cambiano i valori di partenza si alza, e chi
+// Il basso spegne solo ciò che costa a ogni fotogramma (ombre, vento che rimette a posto i campi, particelle): i ciuffi sono
+// un disegno solo, e restano. Niente nuvole: provate, pesanti e non davano l'impressione giusta. Le scelte salvate sono di una versione: se cambiano i valori di partenza si alza, e chi
 // aveva salvato un preset che non mostrava niente riparte da quello della sua fascia.
-export const VERSIONE_OPZIONI = 2
+export const VERSIONE_OPZIONI = 3
 export const SCALE = [[0.75, '0,75×'], [1, '1×'], [1.5, '1,5×'], [2, '2×'], [3, 'nativa']]
 export const OMBRE = [[512, 'bassa'], [1024, 'media'], [2048, 'alta']]
 export const DISTANZA = { min: 12, max: 40, di_serie: 22 }

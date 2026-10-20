@@ -5,9 +5,11 @@
    `node test/esegui.mjs fattoria3d`
    tempo: 1 */
 import { guastiDelMondo, LOTTI, LOTTI_INIZIALI, lottoPerId, idx, PARTENZA } from '../../src/giochi/fattoria3d/dati/mondo.js'
-import { guastiDelCatalogo, PEZZI, EDIFICI } from '../../src/giochi/fattoria3d/dati/catalogo.js'
+import { guastiDelCatalogo, PEZZI, EDIFICI, CATEGORIE } from '../../src/giochi/fattoria3d/dati/catalogo.js'
+import { carteDi, schedeDi, DISEGNI, STRUMENTI, guastiDelleCarte } from '../../src/giochi/fattoria3d/dati/carte.js'
+import { PEZZI as ATLANTE_PEZZI } from '../../src/giochi/fattoria/dati/atlante.js'
 import { guastiDelleColture, COLTURE } from '../../src/giochi/fattoria3d/dati/colture.js'
-import { guastiDelleRicette, RICETTE, MACCHINE, FORNO_POSTI, emojiDi } from '../../src/giochi/fattoria3d/dati/ricette.js'
+import { guastiDelleRicette, RICETTE, MACCHINE, FORNO_POSTI, emojiDi, nuovoId, MERCI_VECCHIE } from '../../src/giochi/fattoria3d/dati/ricette.js'
 import { guastiDeiLivelli, sogliaDi, livelloPer, roba, nomeDi, ULTIMO, costoDelLivello, livelloDellaRicetta } from '../../src/giochi/fattoria3d/dati/livelli.js'
 import { msDi } from '../../src/giochi/fattoria3d/dati/ordini.js'
 import { ANIMALI, CORTILE, PRODOTTI_ANIMALI, guastiDegliAnimali, prezzoDellaBestia, msDelProdotto } from '../../src/giochi/fattoria3d/dati/animali.js'
@@ -237,7 +239,7 @@ controlla('l\'albo del manifesto sta in piedi', gA.length === 0, gA.join(' · ')
 /* ══════════ 8. le pecore: agnello → adulta → tosata, e nascono ══════════ */
 {
   const { f, t } = mondo({ monete: 1000 })
-  alLivello(f, 5)
+  alLivello(f, EDIFICI.pasticceria.liv)
   f.compraEdificio('pasticceria')
   f.compraPezzo('recinto'); const r = f.mettiPezzo('recinto', -1, 2)
   controlla('il recinto sta in un posto proprio e libero', r.ok, r.motivo)
@@ -280,31 +282,31 @@ controlla('l\'albo del manifesto sta in piedi', gA.length === 0, gA.join(' · ')
   uguale('una cosa che non tiene bestie non si compra', povero.compraBestia(campoDi(povero).id).motivo, 'sconosciuto')
 }
 
-/* ══════════ 9. la pasticceria: ingredienti, coda, un forno alla volta, anche a pagina chiusa ══════════ */
+/* ══════════ 9. il pastificio (id `pasticceria`): ingredienti, coda, un forno alla volta, anche a pagina chiusa ══════════ */
 {
   const { f, t } = mondo({ monete: 1000 })
-  alLivello(f, 5)
-  uguale('non si cuoce senza pasticceria', f.prepara('pane').motivo, 'non-tua')
+  alLivello(f, EDIFICI.pasticceria.liv)
+  uguale('non si cuoce senza pastificio', f.prepara('pasta').motivo, 'non-tua')
   controlla('si compra', f.compraEdificio('pasticceria').ok && f.s.posseduti.pasticceria)
   uguale('due volte no', f.compraEdificio('pasticceria').motivo, 'gia-tuo')
-  uguale('senza ingredienti no', f.prepara('pane').motivo, 'mancano-ingredienti')
-  f.s.merci.grano = 10; f.s.merci.mais = 2
-  controlla('si prepara e si scalano gli ingredienti', f.prepara('pane').ok && f.s.merci.grano === 8)
-  controlla('il primo parte subito', f.s.pasticceria.coda[0].fine === t.ora + RICETTE.pane.ms)
-  f.prepara('popcorn'); f.prepara('pane')
+  uguale('senza ingredienti no', f.prepara('pasta').motivo, 'mancano-ingredienti')
+  f.s.prodotti.farina = 10; f.s.prodotti.uova = 5
+  controlla('si prepara e si scalano gli ingredienti (farina 2, uova 1)', f.prepara('pasta').ok && f.s.prodotti.farina === 8 && f.s.prodotti.uova === 4)
+  controlla('il primo parte subito', f.s.pasticceria.coda[0].fine === t.ora + RICETTE.pasta.ms)
+  f.prepara('pasta'); f.prepara('pasta')
   uguale('tre in coda', f.s.pasticceria.coda.length, 3)
-  uguale('al quarto il forno è pieno', f.prepara('pane').motivo, 'forno-pieno')
-  uguale('e gli ingredienti non si sono scalati', f.s.merci.grano, 10 - 2 - 2)
+  uguale('al quarto il forno è pieno', f.prepara('pasta').motivo, 'forno-pieno')
+  uguale('e gli ingredienti non si sono scalati', f.s.prodotti.farina, 10 - 3 * 2)
   // la pagina chiusa: passa tutto il tempo, poi si riapre
-  t.ora += RICETTE.pane.ms + 1
+  t.ora += RICETTE.pasta.ms + 1
   f.tick()
-  stessaLista('il pane è uscito, il popcorn cuoce', [f.s.pasticceria.pronti.pane, f.s.pasticceria.coda[0].ric], [1, 'popcorn'])
-  controlla('il successivo è partito quando finiva il precedente', f.s.pasticceria.coda[0].fine === 1_000_000 + RICETTE.pane.ms + RICETTE.popcorn.ms)
+  stessaLista('la prima pasta è uscita, la seconda cuoce', [f.s.pasticceria.pronti.pasta, f.s.pasticceria.coda.length], [1, 2])
+  controlla('il successivo è partito quando finiva il precedente', f.s.pasticceria.coda[0].fine === 1_000_000 + 2 * RICETTE.pasta.ms)
   t.ora += 100000
   f.tick()
-  stessaLista('a tempo passato è tutto pronto', [f.s.pasticceria.coda.length, f.s.pasticceria.pronti.pane, f.s.pasticceria.pronti.popcorn], [0, 2, 1])
+  stessaLista('a tempo passato è tutto pronto', [f.s.pasticceria.coda.length, f.s.pasticceria.pronti.pasta], [0, 3])
   const rit = f.ritira()
-  controlla('si ritira tutto in dispensa', rit.ok && rit.n === 3 && f.s.prodotti.pane === 2 && f.s.prodotti.popcorn === 1 && f.prontiInForno() === 0)
+  controlla('si ritira tutto in dispensa', rit.ok && rit.n === 3 && f.s.prodotti.pasta === 3 && f.prontiInForno() === 0)
   uguale('e non si ritira due volte', f.ritira().motivo, 'niente')
   controlla('gli eventi dicono i prodotti', f.prendiEventi().filter(e => e.tipo === 'prodotto').reduce((n, e) => n + e.n, 0) === 3)
 }
@@ -330,10 +332,10 @@ controlla('l\'albo del manifesto sta in piedi', gA.length === 0, gA.join(' · ')
 /* ══════════ 11. lo stato si salva e si rilegge uguale; uno rotto si rimette in forma ══════════ */
 {
   const { f, t } = mondo({ monete: 1000 })
-  alLivello(f, 5)
+  alLivello(f, EDIFICI.pasticceria.liv)
   f.compraPezzo('campo'); f.mettiPezzo('campo', -3, 1); f.semina(f.s.cose[1].id, 'mais')
   f.compraLotto('3_1'); f.disegnaStrada(-3, 3); f.abbatti(f.alberiNelTerreno()[0].n); f.compraEdificio('pasticceria')
-  f.s.merci.grano = 4; f.prepara('pane')
+  f.s.prodotti.farina = 4; f.s.prodotti.uova = 1; f.prepara('pasta')
   const s1 = f.serializza()
   const g = mondo({ stato: JSON.parse(JSON.stringify(s1)) }).f
   uguale('la lettura rifà lo stesso stato', JSON.stringify(g.serializza()), JSON.stringify(s1))
@@ -415,16 +417,16 @@ controlla('l\'albo del manifesto sta in piedi', gA.length === 0, gA.join(' · ')
   controlla('al livello giusto si semina', alLivello(f, 2) && f.seminaCampo(c.id, 'mais').ok)
   alLivello(f, 3)
   f.compraEdificio('mulino')
-  uguale('la ricetta chiusa: la macchina è tua ma il livello no', alLivello(mondo({ monete: 5000 }).f, 2).avviaRicettaIn('pasticceria', 'pane').motivo, 'non-tua')
+  uguale('la ricetta chiusa: la macchina è tua ma il livello no', alLivello(mondo({ monete: 5000 }).f, 2).avviaRicettaIn('pasticceria', 'pasta').motivo, 'non-tua')
   const g = mondo({ monete: 5000 }).f
-  alLivello(g, 5); g.compraEdificio('pasticceria'); g.s.merci.pomodoro = 5; g.s.merci.grano = 5
-  const r = g.avviaRicetta('tortaCarote')
-  stessaLista('una ricetta del livello 8 a livello 5', [r.ok, r.motivo, r.liv], [false, 'non-sbloccato', 8])
-  controlla('quella del livello 6 non ancora', g.avviaRicetta('pizza').motivo === 'non-sbloccato')
-  alLivello(g, 6)
-  controlla('al 6 la pizza parte', g.avviaRicetta('pizza').ok)
-  const pop = g.avviaRicetta('popcorn')
-  stessaLista('un ingrediente mancante dice quale', [pop.motivo, JSON.stringify(pop.mancano)], ['mancano-ingredienti', JSON.stringify({ mais: 2 })])
+  alLivello(g, EDIFICI.pasticceria.liv); g.compraEdificio('pasticceria'); g.s.prodotti.farina = 5; g.s.prodotti.salsa = 1; g.s.prodotti.formaggio = 1
+  const r = g.avviaRicetta('pizza')
+  stessaLista('una ricetta del livello 12 a livello 6', [r.ok, r.motivo, r.liv], [false, 'non-sbloccato', RICETTE.pizza.liv])
+  controlla('quella del livello 6 sì: la pasta, ma le uova mancano', g.avviaRicetta('pasta').motivo === 'mancano-ingredienti')
+  alLivello(g, RICETTE.pizza.liv)
+  controlla('al suo livello la pizza parte', g.avviaRicetta('pizza').ok)
+  const pas = g.avviaRicetta('pasta')
+  stessaLista('un ingrediente mancante dice quale', [pas.motivo, JSON.stringify(pas.mancano)], ['mancano-ingredienti', JSON.stringify({ uova: 1 })])
 }
 
 /* ══════════ 15. gli edifici fuori dal quadrato di partenza chiedono i loro lotti ══════════ */
@@ -442,17 +444,17 @@ controlla('l\'albo del manifesto sta in piedi', gA.length === 0, gA.join(' · ')
   }
 }
 
-/* ══════════ 16. le macchine in catena: grano → farina → pane integrale ══════════ */
+/* ══════════ 16. le macchine in catena: grano → farina → pane ══════════ */
 {
   const { f, t } = mondo({ monete: 5000 })
   alLivello(f, 7)
   for (const id of ['3_1', '2_1']) f.compraLotto(id)
   controlla('mulino e panificio comprati', f.compraEdificio('mulino').ok && f.compraEdificio('panificio').ok)
   uguale('le macchine sono due diverse', f.macchina('mulino').tipo + f.macchina('panificio').tipo, 'mulinopanificio')
-  uguale('le ricette del mulino', f.ricetteDi('mulino').map(r => r.id).join(), 'farina,farinaMais')
+  uguale('le ricette del mulino', f.ricetteDi('mulino').map(r => r.id).join(), 'farina,pastone')
   controlla('ricetteDi dice se si può', f.ricetteDi('mulino').every(r => r.sbloccata && !r.ingredienti))
-  uguale('il pane integrale chiede farina che non c\'è', f.avviaRicettaIn('panificio', 'panIntegrale').motivo, 'mancano-ingredienti')
-  uguale('una ricetta dell\'altra macchina è sconosciuta qui', f.avviaRicettaIn('mulino', 'panIntegrale').motivo, 'sconosciuta')
+  uguale('il pane chiede farina che non c\'è', f.avviaRicettaIn('panificio', 'pane').motivo, 'mancano-ingredienti')
+  uguale('una ricetta dell\'altra macchina è sconosciuta qui', f.avviaRicettaIn('mulino', 'pane').motivo, 'sconosciuta')
   f.s.merci.grano = 8
   controlla('il mulino macina', f.avviaRicettaIn('mulino', 'farina').ok && f.avviaRicetta('farina').ok && f.s.merci.grano === 4)
   t.ora += 2 * RICETTE.farina.ms + 1; f.tick()
@@ -460,16 +462,16 @@ controlla('l\'albo del manifesto sta in piedi', gA.length === 0, gA.join(' · ')
   uguale('ritirate', f.ritiraDa('mulino').n, 2)
   uguale('e non due volte', f.ritiraDa('mulino').motivo, 'niente')
   uguale('la farina è un prodotto', f.s.prodotti.farina, 2)
-  controlla('il panificio la usa: scala dai prodotti', f.avviaRicettaIn('panificio', 'panIntegrale').ok && !('farina' in f.s.prodotti))
-  t.ora += RICETTE.panIntegrale.ms + 1; f.tick()
+  controlla('il panificio la usa: scala dai prodotti', f.avviaRicettaIn('panificio', 'pane').ok && !('farina' in f.s.prodotti))
+  t.ora += RICETTE.pane.ms + 1; f.tick()
   f.ritiraDa('panificio')
-  uguale('pane integrale in dispensa', f.s.prodotti.panIntegrale, 1)
+  uguale('pane in dispensa', f.s.prodotti.pane, 1)
   uguale('tre posti anche qui', f.macchina('panificio').posti, FORNO_POSTI)
-  f.s.prodotti.farina = 20; f.s.merci.patata = 1
-  f.avviaRicettaIn('panificio', 'panIntegrale'); f.avviaRicettaIn('panificio', 'panIntegrale'); f.avviaRicettaIn('panificio', 'focaccia')
-  uguale('il quarto trova il forno pieno', f.avviaRicettaIn('panificio', 'panIntegrale').motivo, 'forno-pieno')
-  // ogni ricetta è fattibile con ciò che dice: ingredienti da raccolti o da prodotti di un'altra macchina
-  for (const [id, r] of Object.entries(RICETTE)) for (const k of Object.keys(r.ing)) controlla(`${id}: ${k} è un raccolto, un prodotto delle bestie o di un'altra macchina`, !!COLTURE[k] || !!PRODOTTI_ANIMALI[k] || (!!RICETTE[k] && RICETTE[k].dove !== r.dove))
+  f.s.prodotti.farina = 20
+  f.avviaRicettaIn('panificio', 'pane'); f.avviaRicettaIn('panificio', 'pane'); f.avviaRicettaIn('panificio', 'pane')
+  uguale('il quarto trova il forno pieno', f.avviaRicettaIn('panificio', 'pane').motivo, 'forno-pieno')
+  // ogni ricetta è fattibile con ciò che dice: ingredienti da raccolti, da prodotti delle bestie o di una macchina (anche la stessa: pasta → lasagne)
+  for (const [id, r] of Object.entries(RICETTE)) for (const k of Object.keys(r.ing)) controlla(`${id}: ${k} è un raccolto, un prodotto delle bestie o di una ricetta`, !!COLTURE[k] || !!PRODOTTI_ANIMALI[k] || (!!RICETTE[k] && k !== id))
 }
 
 /* ══════════ 17. il vecchio stato (versione 1) si apre senza perdere niente ══════════ */
@@ -490,18 +492,44 @@ controlla('l\'albo del manifesto sta in piedi', gA.length === 0, gA.join(' · ')
     controlla(`gli ostacoli rotti si rimettono in forma (${JSON.stringify(rotto)})`, Array.isArray(x.ostacoli) && x.ostacoli.every(Number.isInteger) && new Set(x.ostacoli).size === x.ostacoli.length)
   }
   controlla('i posseduti ci sono tutti e i vecchi restano', Object.keys(EDIFICI).every(t => t in n.posseduti) && n.posseduti.pasticceria && n.posseduti.mongolfiera && !n.posseduti.mulino)
-  stessaLista('la pasticceria è diventata una macchina, intera', [n.macchine.pasticceria.coda.length, n.macchine.pasticceria.pronti.pane, n.pasticceria === n.macchine.pasticceria], [1, 1, true])
+  // il popcorn e il pane pronto stavano nella pasticceria: oggi sono della cucina di altri (mulino, panificio), e arrivano in dispensa
+  stessaLista('la pasticceria è una macchina; ciò che cuoceva e ciò che era pronto, cugini di altre macchine, è in dispensa', [n.macchine.pasticceria.coda.length, Object.keys(n.macchine.pasticceria.pronti).length, n.pasticceria === n.macchine.pasticceria, n.prodotti.pastone, n.prodotti.pane], [0, 0, true, 1, 3])
   controlla('la mongolfiera è com\'era', n.mongolfiera.fine === 7000)
   stessaLista('le macchine nuove sono vuote', ['mulino', 'panificio', 'conserviera', 'gelateria'].map(t => n.macchine[t].coda.length + Object.keys(n.macchine[t].pronti).length), [0, 0, 0, 0])
-  controlla('merci, prodotti, lotti e cose restano', n.merci.zucca === 2 && n.prodotti.pane === 2 && n.lotti['3_1'] && n.cose[0].coltura === 'zucca' && n.magazzino.campo === 1 && n.tagliati[0] === 3)
+  controlla('merci, prodotti, lotti e cose restano', n.merci.zucca === 2 && n.prodotti.pane === 3 && n.lotti['3_1'] && n.cose[0].coltura === 'zucca' && n.magazzino.campo === 1 && n.tagliati[0] === 3)
   const { f } = mondo({ stato: JSON.parse(JSON.stringify(vecchio)), monete: 0 })
   uguale('il livello parte dal basso', f.livello(), 1)
   uguale('ma la pasticceria che si possiede si vede', f.macchina('pasticceria').posseduta, true)
-  uguale('niente da avviare finché il livello non c\'è', f.avviaRicetta('pane').motivo, 'non-sbloccato')
+  uguale('niente da avviare finché il livello non c\'è', f.avviaRicetta('pasta').motivo, 'non-sbloccato')
   uguale('la cosa seminata prima cresce lo stesso', f.cose[0].coltura, 'zucca')
   const s2 = f.serializza()
   controlla('la riscrittura non salva la pasticceria due volte', !('pasticceria' in s2) && 'macchine' in s2)
   controlla('e si rilegge uguale', JSON.stringify(mondo({ stato: s2 }).f.serializza()) === JSON.stringify(s2))
+  // gli id di prima della 2D (stato v6): ogni cosa diventa il suo cugino, un pezzo per un pezzo; se il cugino sta in un'altra macchina va in dispensa
+  {
+    const v6 = {
+      v: 6, merci: { grano: 1 }, prodotti: { farina: 2, farinaMais: 1, panIntegrale: 2, tortaCarote: 1, tortaSoffice: 2, gelatoCrema: 1, popcorn: 3, yogurt: 1 },
+      posseduti: { mulino: true, gelateria: true, panificio: true },
+      macchine: {
+        mulino: { coda: [{ ric: 'farinaMais', fine: 9000 }, { ric: 'farina', fine: null }], pronti: { farinaMais: 1, farina: 1 } },
+        panificio: { coda: [{ ric: 'panIntegrale', fine: 9500 }, { ric: 'focaccia', fine: null }], pronti: { grissini: 2 } },
+        gelateria: { coda: [], pronti: { gelatoFragola: 1, gelatoLavanda: 2 } },
+        pasticceria: { coda: [{ ric: 'pizza', fine: 4000 }, { ric: 'tortaSoffice', fine: null }, { ric: 'frittata', fine: null }], pronti: {} },
+      },
+      ordini: { aperti: [{ id: 4, cliente: 'nonna', chiede: { tortaCarote: 1, tortaZucca: 2, carota: 3 } }, null, null], riprende: [null, null, null], prossimoId: 5 },
+    }
+    const n = normalizza(JSON.parse(JSON.stringify(v6)))
+    stessaLista('le scorte: ognuno nel suo cugino', ['farina', 'pastone', 'pane', 'torta', 'gelato', 'frullato'].map(k => n.prodotti[k] || 0), [2, 1 + 3, 2, 3 + 1, 1, 1])        // pastone: farinaMais + popcorn; torta: due cugine nelle scorte e quella in forno che cambia macchina
+    stessaLista('il mulino: la farina di mais è la pappa di mais, la sua prima cottura tiene l\'orario', [n.macchine.mulino.coda.map(x => x.ric).join(), n.macchine.mulino.coda[0].fine, n.macchine.mulino.pronti.pastone, n.macchine.mulino.pronti.farina], ['pastone,farina', 9000, 1, 1])
+    stessaLista('il panificio: il pane integrale è pane (e la focaccia, che parte dopo); i grissini pronti sono pane', [n.macchine.panificio.coda.map(x => x.ric).join(), n.macchine.panificio.coda[0].fine, n.macchine.panificio.coda[1].fine, n.macchine.panificio.pronti.pane], ['pane,pane', 9500, null, 2])
+    stessaLista('la gelateria: i gelati pronti sono gelato', [n.macchine.gelateria.pronti.gelato, Object.keys(n.macchine.gelateria.pronti).join()], [3, 'gelato'])
+    stessaLista('la pasticceria: la pizza resta in forno, la frittata è pasta (anche lei del pastificio), la torta è del panificio e va in dispensa', [n.macchine.pasticceria.coda.map(x => x.ric).join(), n.macchine.pasticceria.coda[0].fine, n.macchine.pasticceria.coda[1].fine], ['pizza,pasta', 4000, null])
+    const o = n.ordini.aperti[0]
+    stessaLista('l\'ordine aperto chiede i cugini, sommati', [JSON.stringify(o.chiede), o.cliente], [JSON.stringify({ torta: 3, carota: 3 }), 'nonna'])
+    controlla('niente id vecchi in giro', [...Object.keys(n.prodotti), ...Object.keys(o.chiede), ...n.macchine.pasticceria.coda.map(x => x.ric)].every(k => !(k in MERCI_VECCHIE)))
+    uguale('e si rilegge uguale', JSON.stringify(normalizza(JSON.parse(JSON.stringify(n))).prodotti), JSON.stringify(n.prodotti))
+    uguale('nuovoId lascia stare gli id di oggi', ['pane', 'pizza', 'grano', 'uova', 'xyz'].map(nuovoId).join(), 'pane,pizza,grano,uova,xyz')
+  }
   for (const rotto of [{ macchine: 5 }, { macchine: { mulino: { coda: [{ ric: 'pane' }], pronti: { pane: 3, farina: 'x' } } } }, { esperienza: -4 }, { esperienza: 'x' }, { posseduti: [] }]) {
     const x = normalizza(rotto)
     controlla(`uno stato rotto si rimette in forma (${JSON.stringify(rotto)})`, x.esperienza >= 0 && x.macchine.mulino.coda.length === 0 && Object.keys(x.macchine.mulino.pronti).every(k => RICETTE[k].dove === 'mulino'))
@@ -510,13 +538,13 @@ controlla('l\'albo del manifesto sta in piedi', gA.length === 0, gA.join(' · ')
 
 /* ══════════ 18. gli animali da cortile: pollaio (uova) e stalla (latte) ══════════ */
 {
-  stessaLista('i pezzi: pollaio 3×2 e stalla 4×3, produttivi, al 6 e al 9', [PEZZI.pollaio, PEZZI.stalla].map(p => [p.w, p.d, p.produttivo, p.liv].join()), ['3,2,true,6', '4,3,true,9'])
+  stessaLista('i pezzi: pollaio 3×2 e stalla 4×3, produttivi, al 5 e al 9', [PEZZI.pollaio, PEZZI.stalla].map(p => [p.w, p.d, p.produttivo, p.liv].join()), ['3,2,true,5', '4,3,true,9'])
   stessaLista('il caseificio è una macchina 3×3 al livello 11', [EDIFICI.caseificio.w, EDIFICI.caseificio.d, EDIFICI.caseificio.liv, !!MACCHINE.caseificio], [3, 3, 11, true])
-  stessaLista('uova e latte arrivano dove arriva il loro pezzo', ['uova', 'latte'].map(k => livelloDellaRicetta('tortaSoffice') + k), [6 + 'uova', 6 + 'latte'])
-  uguale('la frittata (uova + cipolle) arriva al 9', livelloDellaRicetta('frittata'), 9)
+  uguale('la pasta (farina + uova) arriva con il pastificio, al 6: le uova c\'erano già dal 5', livelloDellaRicetta('pasta'), 6)
+  uguale('la torta aspetta il burro, quindi il caseificio: al 11', livelloDellaRicetta('torta'), 11)
   uguale('il formaggio al 11, come il caseificio', livelloDellaRicetta('formaggio'), 11)
-  uguale('il gelato alla crema al 14', livelloDellaRicetta('gelatoCrema'), 14)
-  uguale('la scaletta ha ancora un solo pezzo produttivo per livello', [6, 9, 11].map(l => costoDelLivello(l)).join(), [PEZZI.pollaio.prezzo, PEZZI.stalla.prezzo, EDIFICI.caseificio.prezzo].join())
+  uguale('il gelato al 14, come la gelateria', livelloDellaRicetta('gelato'), 14)
+  uguale('la scaletta ha ancora un solo pezzo produttivo per livello', [5, 9, 11].map(l => costoDelLivello(l)).join(), [PEZZI.pollaio.prezzo, PEZZI.stalla.prezzo, EDIFICI.caseificio.prezzo].join())
 
   const { f, t } = mondo({ monete: 5000 })
   uguale('il pollaio è chiuso al livello 1', f.compraPezzo('pollaio').motivo, 'non-sbloccato')
@@ -550,12 +578,14 @@ controlla('l\'albo del manifesto sta in piedi', gA.length === 0, gA.join(' · ')
   stessaLista('passato un secolo l\'uovo è ancora uno solo', [f.bestiePronte(p).length, f.raccogliProdotti(p.id).n, f.s.prodotti.uova], [1, 1, 2])
   // le altre galline si comprano dentro il pollaio, senza livelli: ognuna costa di più, fino alla capienza
   uguale('la capienza è nei dati', ANIMALI.pollaio.posti, 6)
-  const prezzi = []
-  for (let k = 1; k < ANIMALI.pollaio.posti; k++) { const m0 = f.monete(), x = f.compraBestia(p.id); prezzi.push(x.ok ? m0 - f.monete() : x.motivo) }
+  const prezzi = [], pappe = []
+  f.s.merci.grano = 20
+  for (let k = 1; k < ANIMALI.pollaio.posti; k++) { const m0 = f.monete(), x = f.compraBestia(p.id); prezzi.push(x.ok ? m0 - f.monete() : x.motivo); pappe.push(x.pappa) }
+  controlla('ogni acquisto porta un giro di pappa: la bestia nuova comincia a lavorare', pappe.every(Boolean) && p.bestie.slice(1).every(b => b.fine !== null))
   stessaLista('cinque galline in più, ognuna più cara della precedente', prezzi, [1, 2, 3, 4, 5].map(n => prezzoDellaBestia('pollaio', n)))
   controlla('i prezzi salgono di un passo fisso', prezzi.every((x, i) => !i || x - prezzi[i - 1] === ANIMALI.pollaio.rincaroBestia) && prezzi[0] === ANIMALI.pollaio.prezzoBestia)
   stessaLista('sei galline, il tetto: la settima no', [p.bestie.length, f.compraBestia(p.id).motivo, f.infoBestie(p).pieno], [6, 'pieno', true])
-  f.s.merci.grano = 10
+  f.s.merci.grano = 10; for (const b of p.bestie) b.fine = null
   uguale('tutte e sei affamate: si nutrono tutte', f.nutriBestie(p.id).n, 6)
   stessaLista('e il grano scende di sei', [f.s.merci.grano, f.s.merci.mais], [4, 1])
   t.ora += ANIMALI.pollaio.ms
@@ -594,15 +624,15 @@ controlla('l\'albo del manifesto sta in piedi', gA.length === 0, gA.join(' · ')
   alLivello(f, 11)
   for (const id of ['3_1', '2_1', '5_2']) f.compraLotto(id)
   controlla('il caseificio si compra, nel suo lotto', f.compraEdificio('caseificio').ok)
-  uguale('ricette del caseificio', f.ricetteDi('caseificio').map(r => r.id).join(), 'formaggio,burro,yogurt')
+  uguale('ricette del caseificio', f.ricetteDi('caseificio').map(r => r.id).join(), 'burro,formaggio')
   stessaLista('il formaggio chiede latte che non c\'è', [f.avviaRicettaIn('caseificio', 'formaggio').motivo, JSON.stringify(f.mancano('formaggio'))], ['mancano-ingredienti', JSON.stringify({ latte: 2 })])
   f.s.prodotti.latte = 4
   controlla('con il latte il formaggio parte e toglie il latte', f.avviaRicettaIn('caseificio', 'formaggio').ok && f.s.prodotti.latte === 2)
   t.ora += RICETTE.formaggio.ms + 1; f.tick(); f.ritiraDa('caseificio')
   uguale('formaggio in dispensa', f.s.prodotti.formaggio, 1)
   f.s.prodotti.uova = 5; f.s.prodotti.farina = 1
-  uguale('la torta soffice non è della pasticceria che manca', f.avviaRicetta('tortaSoffice').motivo, 'non-tua')
-  controlla('gli ingredienti si dicono con l\'emoji giusta', emojiDi('uova', COLTURE) === '🥚' && emojiDi('latte', COLTURE) === '🥛')
+  uguale('la pasta non è del pastificio che manca', f.avviaRicetta('pasta').motivo, 'non-tua')
+  controlla('gli ingredienti si dicono con l\'emoji giusta', emojiDi('uova') === '🥚' && emojiDi('latte') === '🥛')
   for (const [id, r] of Object.entries(RICETTE)) controlla(`${id}: il tempo per averla si calcola`, Number.isFinite(msDi(id)) && msDi(id) >= r.ms, String(msDi(id)))
   uguale('l\'uovo vale il suo tempo più un raccolto', msDelProdotto('uova'), ANIMALI.pollaio.ms + COLTURE.grano.ms)
   // il posto del caseificio non è sopra a un altro edificio, e l'albero lì sopra è già giù
@@ -640,6 +670,64 @@ controlla('l\'albo del manifesto sta in piedi', gA.length === 0, gA.join(' · ')
   const rotto = statoIniziale(); rotto.cose.push({ id: 9, tipo: 'stalla', i: -6, j: 5, bestie: 'no' }); rotto.prodotti.uova = 'molte'
   const r = normalizza(JSON.parse(JSON.stringify(rotto)))
   controlla('una stalla senza bestie ne ha una; i prodotti rotti spariscono', r.cose.find(c => c.tipo === 'stalla').bestie.length === 1 && !('uova' in r.prodotti))
+}
+
+/* ══════════ ponte, passerella e tavolo: i pezzi calpestabili non fermano il passo ══════════ */
+{
+  const p = PEZZI.ponte, pa = PEZZI.passerella, t = PEZZI.tavolo
+  stessaLista('ponte 3×1, passerella 1×3, tavolo 3×2: decorazioni, a poco prezzo', [p, pa, t].map(x => [x.w, x.d, !x.produttivo, x.prezzo <= 25].join()), ['3,1,true,true', '1,3,true,true', '3,2,true,true'])
+  stessaLista('calpestabili sono solo ponte e passerella', Object.keys(PEZZI).filter(k => PEZZI[k].calpestabile), ['passerella', 'ponte'])
+  const { f } = mondo({ monete: 500 })
+  alLivello(f, 8)
+  // un posto con una cella libera prima e dopo il ponte, sulla stessa riga
+  let ci = null, cj = null
+  for (let j = -3; j < 8 && ci === null; j++) for (let i = -6; i < 4; i++) if (f.puoMettere('ponte', i, j).ok && f.libera(i - 1, j) && f.libera(i + p.w, j) && [0, 1, 2].every(a => !f.eStrada(i + a, j))) { ci = i; cj = j; break }
+  controlla('c\'è un posto per il ponte', ci !== null)
+  const r = f.compraEMetti('ponte', ci, cj)
+  controlla('il ponte si compra e si mette', r.ok && r.costo === p.prezzo && f.cosaSu(ci, cj).tipo === 'ponte')
+  const celleP = [0, 1, 2].map(a => [ci + a, cj])
+  controlla('chi cammina ci passa sopra: le celle sono libere per il passo', celleP.every(([i, j]) => f.libera(i, j)))
+  controlla('…ma per il costruire sono occupate (nessun pezzo, nessuna strada sopra)', celleP.every(([i, j]) => f.blocca(i, j)) && f.puoMettere('aiuola', ci + 1, cj).motivo === 'occupato' && f.disegnaStrada(ci + 1, cj).motivo === 'occupato')
+  const via = f.percorsoVerso([ci - 1, cj], [[ci + p.w, cj]])
+  controlla('il percorso attraversa il ponte', !!via && celleP.every(([i, j]) => via.some(([a, b]) => a === i && b === j)))
+  controlla('e conta come strada (si va più in fretta)', celleP.every(([i, j]) => f.sullaStrada(i, j)) && !f.eStrada(ci, cj))
+  stessaLista('la gobba: le quote per cella e fuori dal ponte niente', [f.quotaPasso(ci + 0.5, cj + 0.5), f.quotaPasso(ci + 1.5, cj + 0.5), f.quotaPasso(ci + 2.5, cj + 0.5), f.quotaPasso(ci - 0.5, cj + 0.5)].map(x => +x.toFixed(4)), [...p.alzato, 0])
+  // il tavolo, invece, ferma il passo
+  const tt = mondo({ monete: 500 }).f; alLivello(tt, 8)
+  const [ti, tj] = postoPer(tt, 'tavolo')
+  controlla('il tavolo si mette e blocca anche il passo', tt.compraEMetti('tavolo', ti, tj).ok && !tt.libera(ti, tj) && tt.blocca(ti + 1, tj + 1) && tt.quotaPasso(ti + 0.5, tj + 0.5) === 0)
+  // mettere via il ponte libera la cella del tutto, e un salvataggio lo rimette com'era
+  const id = f.cosaSu(ci, cj).id
+  const rilettura = mondo({ stato: JSON.parse(JSON.stringify(f.serializza())), monete: 500 }).f
+  controlla('riletto da un salvataggio, il ponte è ancora calpestabile', rilettura.libera(ci + 1, cj) && rilettura.blocca(ci + 1, cj) && +rilettura.quotaPasso(ci + 1.5, cj + 0.5).toFixed(4) === p.alzato[1])
+  f.mettiVia(id, { gratis: true })
+  controlla('messo via, la cella torna terra', f.cosaSu(ci, cj) === null && f.quotaPasso(ci + 1.5, cj + 0.5) === 0 && !f.blocca(ci + 1, cj))
+}
+
+/* ══════════ il menu «Costruisci qui»: le carte dai dati (docs/fattoria3d/scena.md) ══════════ */
+{
+  controlla('le carte non hanno guasti', guastiDelleCarte().length === 0, guastiDelleCarte().join('; '))
+  controlla('ogni pezzo e ogni edificio ha una categoria valida', [...Object.values(PEZZI), ...Object.values(EDIFICI)].every(d => !!CATEGORIE[d.categoria]))
+  controlla('ogni scheda ha almeno una carta', Object.keys(CATEGORIE).every(c => schedeDi(statoMenu({ livello: 99 }))[c].length > 0))
+  const tutte = Object.values(schedeDi(statoMenu({ livello: 99 }))).flat().filter(c => c.genere !== 'strumento')
+  uguale('ogni pezzo e ogni edificio unico sta in una scheda sola', tutte.length, Object.keys(PEZZI).length + Object.keys(EDIFICI).length)
+  controlla('le carte di una scheda stanno in ordine di livello', Object.keys(CATEGORIE).every(c => { const l = carteDi(c, statoMenu({ livello: 99 })).filter(x => x.genere !== 'strumento').map(x => x.liv); return l.every((v, k) => !k || v >= l[k - 1]) }))
+  controlla('i disegni dell\'atlante della fattoria di sempre esistono', Object.values(DISEGNI).every(d => !!ATLANTE_PEZZI[d]), Object.values(DISEGNI).filter(d => !ATLANTE_PEZZI[d]).join(', '))
+  const c1 = carteDi('campi', statoMenu({ livello: 1 }))
+  controlla('il campo è aperto al livello 1 e costa il suo prezzo', c1[0].id === 'campo' && !c1[0].bloccata && c1[0].etichetta === '🪙 ' + PEZZI.campo.prezzo)
+  const an = carteDi('animali', statoMenu({ livello: 1 }))
+  controlla('il recinto è chiuso al livello 1 e dice il suo livello', an.find(c => c.id === 'recinto').bloccata && an.find(c => c.id === 'recinto').liv === PEZZI.recinto.liv)
+  controlla('un pezzo nel magazzino mostra «📦 ×N» invece del prezzo', carteDi('campi', statoMenu({ livello: 1, magazzino: { campo: 2 } }))[0].etichetta === '📦 ×2')
+  controlla('un edificio già comprato non si offre più', !carteDi('edifici', statoMenu({ livello: 99, posseduti: { mulino: true } })).some(c => c.id === 'mulino') && carteDi('edifici', statoMenu({ livello: 99 })).some(c => c.id === 'mulino'))
+  controlla('la scheda delle strade ha la strada e la gomma, sempre aperte', Object.keys(STRUMENTI).every(k => { const c = carteDi('passaggi', statoMenu({ livello: 1 })).find(x => x.id === k); return c && c.genere === 'strumento' && !c.bloccata }))
+  // dal menu: la cella premuta decide dove va il pezzo (la logica sta in scena3d/costruzione.js `daMenu`, che qui non si carica: stessa regola, sul motore)
+  const { f } = mondo({ monete: 1000 })
+  const [pi, pj] = postoPer(f, 'campo')
+  controlla('una cella libera accoglie il pezzo: il motore lo compra e lo mette in un gesto', f.puoCompraEMettere('campo', pi, pj).ok && f.compraEMetti('campo', pi, pj).ok)
+  controlla('una cella occupata non lo accoglie e non perde niente', !f.puoMettere('campo', pi, pj).ok && f.nelMagazzino('campo') === 0)
+}
+function statoMenu({ livello, magazzino = {}, posseduti = {} }) {
+  return { livello, prezzoPezzo: t => PEZZI[t].prezzo, nelMagazzino: t => magazzino[t] || 0, posseduti }
 }
 
 riassunto('Fattoria 3D')

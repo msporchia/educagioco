@@ -28,11 +28,12 @@ sempre ([../fattoria/regole.md](../fattoria/regole.md)); qui le differenze.
 | cosa | costo | perché |
 |---|---|---|
 | un campo | 20 + 8 per ogni copia (anche nel magazzino) | il rincaro lineare della fattoria di sempre |
-| recinto / bancarella / fontana | 45 / 15 / 30 | fissi; nel recinto una pecora, le altre si comprano (20, 30, 40) |
+| recinto / bancarella / bacheca / fontana | 45 / 15 / 12 / 30 | fissi; nel recinto una pecora, le altre si comprano (40, 60, 80) |
 | aiuola / panchina / pozzo / spaventapasseri | 6 / 10 / 18 / 12 | decorazioni, fissi |
+| passerella / ponte / tavolo | 8 / 14 / 18 | decorazioni (liv 3 / 5 / 4), fisse |
 | pollaio / stalla | 55 / 90 | liberi nel terreno come il recinto; una bestia nel prezzo, le altre una per volta, sempre più care ([animali.md](animali.md)) |
-| mulino / panificio / caseificio / conserviera / gelateria | 60 / 90 / 120 / 110 / 140 | unici, nel loro posto, in lotti da comprare prima |
-| pasticceria / mongolfiera | 80 / 100 | unici, nel loro posto |
+| mulino / panificio / caseificio / cucina / gelateria | 60 / 90 / 120 / 110 / 140 | unici, nel loro posto, in lotti da comprare prima (la cucina ha ancora l'id `conserviera`) |
+| pastificio (id `pasticceria`) / mongolfiera | 80 / 100 | unici, nel loro posto |
 | un lotto di terreno | 40 + 20 per ogni lotto comprato oltre i nove di partenza | allargare costa sempre di più |
 | **un pezzo nuovo** | il prezzo, **pagato quando lo lasci sulla mappa** (`compraEMetti`) | niente conferma: il prezzo è sulla carta; senza monete il fantasma è rosso e il rilascio dice «Servono 🪙 N» |
 | tagliare un albero | 3 | trenta secondi di esercizio: un albero si toglie, non dà niente (niente legna) |
@@ -51,10 +52,20 @@ Quattro tessere per campo, un raccolto per tessera (`TESSERE`): una coltura matu
 volta (`raccogliTessera`). Il tempo è vero (16 s il grano e le carote, 64 s la lavanda: dieci colture, crescente col livello). Seminare è gratis. **Un campo che sta crescendo non
 si mette via**.
 
+## I pezzi calpestabili
+
+Passerella (1×3) e ponte (3×1) hanno `calpestabile: true` e `alzato` (la quota di chi ci cammina; per il ponte una per cella, la
+gobba) in `dati/catalogo.js`. Sono **decorazione per fare camminamenti**: niente acqua sotto, niente altre regole.
+- **Il passo li attraversa**: `libera` (eroe, compagni, celle di servizio) li conta libere; **il costruire no**: `blocca`, `puoMettere`
+  e `disegnaStrada` le trovano occupate, quindi sopra non si mette nient'altro e non si sposta un pezzo lì sopra.
+- **Contano come strada nel percorso** (`sullaStrada`: costo ridotto e passo svelto), ma non sono strada (`eStrada` resta 0, non si
+  salvano in `strade`, non si tolgono col pennello).
+- Si **toccano per salirci**: l'eroe va su una loro cella (`celleDiServizio`). Il tavolo, invece, è un pezzo qualunque: ferma il passo.
+
 ## Le pecore
 
 `agnello → adulta → tosata → lana che ricresce`, e a volte ne nasce una nuova (`PECORE` in `dati/regole.js`). **Si parte con
-una pecora adulta** (nel prezzo del recinto); **le altre si comprano dal cartello sopra il recinto** (adulte, 🪙20, 30, 40, fino a
+una pecora adulta** (nel prezzo del recinto); **le altre si comprano dal cartello sopra il recinto** (adulte, 🪙40, 60, 80, fino a
 quattro: [animali.md](animali.md)), come le galline e le mucche. Con due adulte le nascite ricominciano:
 
 - un agnello **cresce dopo due pasti** (ogni pasto un raccolto qualsiasi, dalla scorta più grande);
@@ -77,14 +88,14 @@ vale solo per comprare, seminare e avviare. → [livelli.md](livelli.md)
 
 ## Le macchine
 
-Pasticceria, mulino, panificio, caseificio, conserviera e gelateria sono **macchine** (`MACCHINE` in `dati/ricette.js`): ognuna ha le
+Mulino, pastificio (id `pasticceria`), panificio, caseificio, cucina (id `conserviera`) e gelateria sono **macchine** con le ricette della fattoria di sempre ([merci-e-ricette.md](merci-e-ricette.md)) (`MACCHINE` in `dati/ricette.js`): ognuna ha le
 sue ricette (raccolti precisi e un tempo), **tre posti** nel forno e cuoce **uno alla volta**. Gli ingredienti si scalano
 subito, il successivo parte quando finisce il precedente; i pronti restano finché non si ritirano (`ritiraDa`) e passano
 in dispensa (`stato.prodotti`).
 
 - **Un ingrediente è un raccolto o il prodotto di un'altra macchina** (catena): grano → farina (mulino) → pane integrale
-  (panificio). Non di una ricetta della stessa macchina.
-- **Gli id delle ricette sono globali** (sono le chiavi di `prodotti`) e non coincidono con quelli delle colture.
+  (panificio); può anche uscire dalla stessa macchina (la pasta per le lasagne, come in 2D).
+- **Gli id delle ricette sono globali** (sono le chiavi di `prodotti`), sono quelli della 2D e non coincidono con quelli delle colture.
 - Un edificio fuori dal quadrato di partenza si compra solo con **tutti i suoi lotti tuoi** (`lotto-non-tuo`, con
   l'elenco `lotti`): meglio un rifiuto che dice cosa comprare che un edificio sospeso sul terreno altrui.
 - **Un ingrediente può anche essere `uova` o `latte`** delle bestie ([animali.md](animali.md)).

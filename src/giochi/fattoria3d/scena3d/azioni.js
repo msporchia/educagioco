@@ -1,6 +1,6 @@
 // Cosa fa l'eroe davanti a ogni cosa: gli passa il gesto (anima), a metà gesto chiede al motore di farlo davvero e racconta
 // il risultato (testi che volano, scintille). Le regole sono del motore; qui si decide solo cosa mostrare e cosa dire.
-// Le finestre (la scelta del seme, la pasticceria, le conferme) sono della vista: si chiamano da `ui`.
+// Le finestre (la scelta del seme, il menu delle macchine, le conferme) sono della vista: si chiamano da `ui`.
 import * as THREE from 'three'
 import { COLTURE } from '../dati/colture.js'
 import { MONGOLFIERA, COSTI } from '../dati/regole.js'
@@ -30,7 +30,7 @@ export class Azioni {
       case 'campo': return this.campo(cosa)
       case 'recinto': return this.cura(cosa)
       case 'pollaio': case 'stalla': return this.curaBestie(cosa)
-      case 'bancarella': pezzi.salta(cosa.id); return this.c.ui.apriBanco()      // il foglio degli ordini
+      case 'bacheca': case 'bancarella': pezzi.salta(cosa.id); return this.c.ui.apriBanco()      // il foglio degli ordini
       case 'fontana': pezzi.salta(cosa.id); fx.parla('Che bella!'); return
       case 'trattore': pezzi.salta(cosa.id); return this.c.ui.apriMappa && this.c.ui.apriMappa()      // porta ai vicini (docs/fattoria3d/vicini.md)
     }
@@ -62,7 +62,7 @@ export class Azioni {
         const r = this.m.raccogliTessera(c.id, k); if (!r.ok) return
         eroe.az.fatto.add(k)
         const q = new THREE.Vector3(p.x + (k % 2 ? 0.5 : -0.5), 0.3, p.z + (k < 2 ? -0.5 : 0.5)), col = COLTURE[r.coltura]
-        fx.scoppietta(q, this.c.colore(r.coltura), 10, 1.8, 2.6); fx.volo('+1 ' + col.emoji, q, 1.0); ui.cambio()
+        fx.scoppietta(q, this.c.colore(r.coltura), 10, 1.8, 2.6); fx.volo(col.pezzo ? '+1' : '+1 ' + col.emoji, q, 1.0, r.coltura); ui.cambio()
       })
     })
   }
@@ -104,7 +104,7 @@ export class Azioni {
         eroe.az.fatto.add('r'); const r = this.m.raccogliProdotti(c.id)
         if (!r.ok) return
         pezzi.sincronizza()
-        fx.volo('+' + r.n + ' ' + PRODOTTI_ANIMALI[r.prodotto].emoji, p, 1.8); fx.scoppietta(p.clone().setY(0.7), 0xfff2c4, 10, 1.4, 2.0); ui.cambio()
+        fx.volo('+' + r.n + (PRODOTTI_ANIMALI[r.prodotto].pezzo ? '' : ' ' + PRODOTTI_ANIMALI[r.prodotto].emoji), p, 1.8, r.prodotto); fx.scoppietta(p.clone().setY(0.7), 0xfff2c4, 10, 1.4, 2.0); ui.cambio()
       })
     }
     if (pr.azione === 'nutri') {
@@ -123,12 +123,12 @@ export class Azioni {
       cammina fino all'edificio). Se mancano monete dice quante. */
   compraBestia(id) {
     const { fx, ui, pezzi, eroe, cmd } = this.c, m = this.m, c = m.cosa(id), q = c && m.infoBestie(c)
-    if (!q || cmd.costruendo || ui.fogliAperti()) return
+    if (!q || cmd.strumento || ui.fogliAperti()) return
     const r = m.compraBestia(id)
     if (!r.ok) return this.dici(dettoDiRifiuto(r, { mancano: (r.costo || 0) - m.monete(), bestie: q.bestie }))
     const p = this.centro(c)
     pezzi.sincronizza(); pezzi.salta(id)
-    fx.scoppietta(p.clone().setY(0.8), 0xffd24a, 16, 2.4, 3); fx.volo('+1 ' + q.emoji, p, 1.8)
+    fx.scoppietta(p.clone().setY(0.8), 0xffd24a, 16, 2.4, 3); fx.volo('+1 ' + q.emoji + (r.pappa ? ' 🍽️' : ''), p, 1.8)
     if (!eroe.az) eroe.avvia('esulta', 0.9)
     ui.cambio()
   }

@@ -24,10 +24,9 @@
 .f3-azioni button.acceso { background: #9be07a; border-color: #5fae3a; }
 .f3-azioni .f3-seme { position: absolute; left: 2px; top: 2px; font-size: 15px !important; background: #fff; border-radius: 10px; padding: 0 2px; line-height: 1.1; }
 .f3-azioni .f3-n { position: absolute; right: 0; top: -2px; min-width: 20px; height: 20px; padding: 0 5px; box-sizing: border-box; border-radius: 10px; background: #e8472b; color: #fff; font: 800 12px/20px "Emoji Gioco", system-ui, sans-serif; font-style: normal; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,.35); }
-.f3-tutti { min-height: 44px; border: 0; border-radius: 22px; padding: 0 18px; background: #ffd36a; font: 800 15px "Emoji Gioco", system-ui, sans-serif; color: #3a2a1a; box-shadow: 0 3px 10px rgba(0,0,0,.3); touch-action: manipulation; }
 
 /* i fogli: sempre una colonna in fondo, con la ✕ in alto a destra */
-.f3-foglio, .f3-vassoio { position: absolute; left: 0; right: 0; bottom: 0; z-index: 35; background: rgba(255,247,230,.98); border-radius: 22px 22px 0 0; box-shadow: 0 -4px 16px rgba(0,0,0,.28); color: #3a2a1a; }
+.f3-foglio { position: absolute; left: 0; right: 0; bottom: 0; z-index: 35; background: rgba(255,247,230,.98); border-radius: 22px 22px 0 0; box-shadow: 0 -4px 16px rgba(0,0,0,.28); color: #3a2a1a; }
 .f3-foglio { padding: 14px 14px calc(18px + env(safe-area-inset-bottom)); max-height: 82%; overflow: auto; }
 .f3-foglio h2 { margin: 0 44px 10px 2px; font-size: 20px; }
 .f3-foglio h3 { margin: 12px 2px 6px; font-size: 13px; text-transform: uppercase; letter-spacing: .05em; color: #8a6a3a; }
@@ -42,25 +41,45 @@
 .f3-semi { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .f3-semi button { display: flex; flex-direction: column; align-items: center; gap: 2px; border: 2px solid #e6cfa0; background: #fffdf6; border-radius: 16px; padding: 10px 4px; color: #3a2a1a; touch-action: manipulation; }
 .f3-semi button.ultimo { border-color: #f0a020; background: #fff3cf; }
-.f3-semi button.bloccato, .f3-carte button.bloccata { opacity: .55; filter: grayscale(.8); }
+.f3-semi button.bloccato { opacity: .55; filter: grayscale(.8); }
 .f3-semi .em { font-size: 32px; line-height: 1; } .f3-semi b { font-size: 14px; } .f3-semi small { font-size: 12px; color: #7a5a3a; }
 
-/* la barra del costruire */
-.f3-vassoio { padding: 10px 0 calc(10px + env(safe-area-inset-bottom)); }
-.f3-vassoio.bersaglio { outline: 4px dashed #5fae3a; outline-offset: -6px; }
-.f3-testa { display: flex; align-items: center; gap: 8px; padding: 0 64px 8px 14px; }
-.f3-testa b { font-size: 17px; }
-.f3-vista { display: flex; gap: 4px; } .f3-vista button { border: 0; border-radius: 14px; padding: 6px 11px; font: 700 13px "Emoji Gioco", system-ui, sans-serif; background: #efe4cf; color: #5a3a2a; touch-action: manipulation; }
-.f3-vista button.acceso { background: #ffd36a; }
-.f3-carte { touch-action: pan-x; display: flex; gap: 8px; overflow-x: auto; padding: 2px 14px 6px; scroll-snap-type: x proximity; -webkit-overflow-scrolling: touch; }
-.f3-carte button { touch-action: pan-x !important; flex: 0 0 92px; display: flex; flex-direction: column; align-items: center; gap: 1px; border: 2px solid #e6cfa0; background: #fffdf6; border-radius: 16px; padding: 8px 4px; color: #3a2a1a; scroll-snap-align: start; }
-.f3-carte button.pieno { border-color: #5fae3a; background: #eefae3; }
-.f3-carte button.scelto { border-color: #5fae3a; background: #e6f7d8; box-shadow: 0 0 0 2px #9be07a; }
-.f3-carte .em { font-size: 28px; line-height: 1; } .f3-carte b { font-size: 13px; } .f3-carte small { font-size: 11px; color: #7a5a3a; }
-.f3-suggerimento { margin: 2px 14px 0; font-size: 13px; color: #6a4a2a; display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 36px; }
-.f3-suggerimento button { border: 0; border-radius: 14px; padding: 8px 12px; font: 800 13px "Emoji Gioco", system-ui, sans-serif; background: #ffd36a; color: #3a2a1a; white-space: nowrap; touch-action: manipulation; }
+/* il menu «Costruisci qui»: un velo che si tocca per chiudere e il foglio con le schede e la griglia di carte */
+.f3-velo { position: absolute; inset: 0; z-index: 34; background: rgba(40,28,12,.38); animation: f3-velo .18s ease-out; }
+.f3-costruisci { min-height: 56%; max-height: 78%; transform-origin: 50% 100%; animation: f3-sale .2s ease-out; }
+@keyframes f3-velo { from { opacity: 0; } to { opacity: 1; } }
+@keyframes f3-sale { from { opacity: 0; transform: translateY(14px) scale(.96); } to { opacity: 1; transform: none; } }
+.f3-schede { flex: none; display: flex; gap: 4px; overflow-x: auto; touch-action: pan-x; margin: 0 -14px 10px; padding: 2px 14px 4px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.f3-schede::-webkit-scrollbar { display: none; }
+.f3-schede button { flex: none; display: flex; align-items: center; gap: 5px; border: 2px solid transparent; border-radius: 18px; padding: 8px 9px; background: #efe4cf; color: #5a3a2a; font: 800 13px "Emoji Gioco", system-ui, sans-serif; touch-action: pan-x; min-height: 40px; }
+.f3-schede button .em { font-size: 16px; line-height: 1; }
+.f3-schede button.acceso { background: #ffd36a; border-color: #e0a020; color: #3a2a1a; }
+.f3-griglia-carte { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding-bottom: 4px; animation: f3-velo .15s ease-out; }
+.f3-griglia-carte .carta { display: flex; flex-direction: column; align-items: center; gap: 3px; border: 2px solid #e6cfa0; background: #fffdf6; border-radius: 16px; padding: 8px 4px 9px; color: #3a2a1a; touch-action: manipulation; min-width: 0; }
+.f3-griglia-carte .carta:active { transform: scale(.97); }
+.f3-griglia-carte .carta.magazzino { border-color: #5fae3a; background: #eefae3; }
+.f3-griglia-carte .carta.bloccata { opacity: .6; filter: grayscale(.75); }
+.f3-griglia-carte .carta.trema { animation: f3-trema .4s ease-in-out; }
+@keyframes f3-trema { 0%, 100% { transform: none; } 20% { transform: translateX(-5px) rotate(-2deg); } 45% { transform: translateX(5px) rotate(2deg); } 70% { transform: translateX(-3px); } }
+.f3-griglia-carte .disegno { width: 64px; height: 64px; border-radius: 14px; display: flex; align-items: center; justify-content: center; background: #f1ead8; }
+.f3-griglia-carte .disegno .em { font-size: 34px; line-height: 1; }
+.f3-griglia-carte .carta[data-cat="campi"] .disegno { background: #e6f1c6; }
+.f3-griglia-carte .carta[data-cat="animali"] .disegno { background: #f8e3cc; }
+.f3-griglia-carte .carta[data-cat="edifici"] .disegno { background: #f3d9d3; }
+.f3-griglia-carte .carta[data-cat="decori"] .disegno { background: #fbe0ec; }
+.f3-griglia-carte .carta[data-cat="passaggi"] .disegno { background: #dfe6ee; }
+.f3-griglia-carte .carta b { font-size: 13px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.f3-griglia-carte .carta small { font-size: 12px; color: #7a5a3a; font-weight: 700; }
+.f3-griglia-carte .carta small.prezzo { padding: 1px 8px; border-radius: 10px; background: #fff0c4; color: #5a3a1a; }
+.f3-barra-strade { position: absolute; left: 50%; transform: translateX(-50%); bottom: calc(14px + env(safe-area-inset-bottom)); z-index: 30; display: flex; flex-direction: column; align-items: center; gap: 8px; width: calc(100% - 28px); max-width: 420px; }
+.f3-barra-strade .f3-suggerimento { margin: 0; padding: 6px 12px; border-radius: 14px; background: rgba(255,251,240,.94); box-shadow: 0 2px 8px rgba(0,0,0,.25); font-size: 13px; font-weight: 700; color: #5a3a2a; text-align: center; }
+.f3-strumenti { display: flex; gap: 4px; background: rgba(255,251,240,.94); padding: 6px; border-radius: 28px; box-shadow: 0 3px 10px rgba(0,0,0,.25); }
+.f3-strumenti button { width: 72px; height: 56px; border-radius: 26px; border: 2px solid transparent; background: transparent; color: #3a2a1a; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0; touch-action: manipulation; }
+.f3-strumenti button > span { font-size: 24px; line-height: 1; } .f3-strumenti button small { font: 700 10px "Emoji Gioco", system-ui, sans-serif; color: #7a5a3a; }
+.f3-strumenti button.acceso { background: #9be07a; border-color: #5fae3a; }
+.f3-strumenti button.fatto { background: #ffd36a; }
 .f3-trascinato { position: fixed; left: 0; top: 0; z-index: 50; font-size: 44px; pointer-events: none; filter: drop-shadow(0 4px 6px rgba(0,0,0,.4)); }
-.f3-zonavia { position: absolute; left: 0; right: 0; bottom: 0; z-index: 26; height: calc(96px + env(safe-area-inset-bottom)); display: flex; align-items: center; justify-content: center; background: rgba(255,247,230,.96); border-radius: 22px 22px 0 0; box-shadow: 0 -4px 16px rgba(0,0,0,.25); font: 700 15px "Emoji Gioco", system-ui, sans-serif; color: #5a3a2a; text-align: center; padding: 0 20px env(safe-area-inset-bottom); }
+.f3-zonavia { border: 0; width: 100%; touch-action: manipulation; position: absolute; left: 0; right: 0; bottom: 0; z-index: 26; height: calc(96px + env(safe-area-inset-bottom)); display: flex; align-items: center; justify-content: center; background: rgba(255,247,230,.96); border-radius: 22px 22px 0 0; box-shadow: 0 -4px 16px rgba(0,0,0,.25); font: 700 15px "Emoji Gioco", system-ui, sans-serif; color: #5a3a2a; text-align: center; padding: 0 20px env(safe-area-inset-bottom); }
 .f3-zonavia.bersaglio { background: #e6f7d8; outline: 4px dashed #5fae3a; outline-offset: -6px; }
 
 /* i fogli di gioco (macchine, banco, livelli): l'insegna in cima col colore del posto, poi il corpo che scorre. Ogni foglio ha le sue
@@ -230,4 +249,5 @@
 @keyframes f3-scorri { to { background-position: 28px 0; } }
 @keyframes f3-scuoti { 0%, 60%, 100% { transform: rotate(0); } 68% { transform: rotate(-12deg); } 76% { transform: rotate(10deg); } 84% { transform: rotate(-6deg); } }
 @keyframes f3-su { 50% { transform: translateY(-5px); } }
+@media (prefers-reduced-motion: reduce) { .f3-velo, .f3-costruisci, .f3-griglia-carte, .f3-griglia-carte .carta.trema { animation: none !important; } }
 @media (prefers-reduced-motion: reduce) { .f3-foglio *, .f3-cartello * { animation: none !important; transition: none !important; } }

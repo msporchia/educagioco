@@ -4,7 +4,7 @@
    Gli eventi (`prendiEventi()`) dicono cosa è successo, per i contatori. L'esperienza è la spesa in monete fatta qui dentro
    (terra, pezzi, edifici, strade; non gli spostamenti, e i rimborsi non la riducono): da lei il livello, che apre le cose. Vedi docs/fattoria3d/regole.md. */
 import { GW, GH, LIM, LOTTI, idx, dentro, lottoDi, lottoPerId, lottiDelPosto, vicinoDi, FISSI, stradeDiSerie } from '../dati/mondo.js'
-import { PEZZI, EDIFICI } from '../dati/catalogo.js'
+import { PEZZI, EDIFICI, quotaDelPezzo } from '../dati/catalogo.js'
 import { COLTURE, TESSERE } from '../dati/colture.js'
 import { RICETTE, MACCHINE, TIPI_DI_MACCHINA } from '../dati/ricette.js'
 import { livelloPer, livelloDelPezzo, livelloDellaColtura, livelloDellaRicetta } from '../dati/livelli.js'
@@ -14,7 +14,7 @@ import { generaOstacoli } from '../dati/ostacoli.js'
 import { ANIMALI, CORTILE, prezzoDellaBestia } from '../dati/animali.js'
 import { normalizza, nuoveTessere } from './stato.js'
 import { percorso } from './percorso.js'
-import { POSTI, RIPOSO_MS, LIVELLO_BANCO, clienteDi } from '../dati/ordini.js'
+import { POSTI, RIPOSO_MS, LIVELLO_BANCO, PEZZI_DEL_BANCO, clienteDi, tipoDelOrdine } from '../dati/ordini.js'
 import { nuovoOrdine } from './ordini.js'
 
 export class Fattoria3d {
@@ -44,6 +44,7 @@ export class Fattoria3d {
     this.cellaEdificio = new Uint8Array(GW * GH)   // i posti degli edifici unici, comprati o no
     for (const e of Object.values(EDIFICI)) for (let a = 0; a < e.w; a++) for (let b = 0; b < e.d; b++) this.cellaEdificio[idx(e.slot.i + a, e.slot.j + b)] = 1
     this.cellaCosa = new Int32Array(GW * GH)       // l'id della cosa che sta su una cella, 0 = niente
+    this.cellaPasso = new Float32Array(GW * GH)    // > 0 dove sta un pezzo calpestabile (ponte, passerella): di quanto alza chi ci cammina
     this.prove = []                                // le cose «di prova» (stress): non si salvano
     for (const c of this.s.cose) {
       if (c.tipo === 'recinto' && !c.pecore) c.pecore = this.pecoreIniziali()
@@ -109,14 +110,23 @@ export class Fattoria3d {
     const c = this.cellaCosa[k]
     return c !== 0 && c !== ignora
   }
-  libera(i, j) { return !this.blocca(i, j) }
+  /** Il passo: come `blocca`, ma un pezzo calpestabile (ponte, passerella) non ferma chi cammina. Il costruire usa `blocca`. */
+  libera(i, j) {
+    if (!dentro(i, j)) return false
+    const k = idx(i, j)
+    return this.cellaPasso[k] > 0 ? this.cellaPropria(i, j) : !this.blocca(i, j)
+  }
+  /** Una cella dove si cammina in fretta: la strada, o un pezzo calpestabile (conta come strada nel percorso). */
+  sullaStrada(i, j) { return dentro(i, j) && (this.strada[idx(i, j)] > 0 || this.cellaPasso[idx(i, j)] > 0) }
+  /** Di quanto si alza chi sta in quel punto (0 per terra, > 0 su un ponte o una passerella). */
+  quotaPasso(x, z) { const i = Math.floor(x), j = Math.floor(z); return dentro(i, j) ? this.cellaPasso[idx(i, j)] : 0 }
   cosaSu(i, j) { const id = dentro(i, j) ? this.cellaCosa[idx(i, j)] : 0; return id ? this.cosa(id) : null }
   _occupa(c, id) {
     const d = PEZZI[c.tipo]
-    for (let a = 0; a < d.w; a++) for (let b = 0; b < d.d; b++) this.cellaCosa[idx(c.i + a, c.j + b)] = id
+    for (let a = 0; a < d.w; a++) for (let b = 0; b < d.d; b++) { this.cellaCosa[idx(c.i + a, c.j + b)] = id; this.cellaPasso[idx(c.i + a, c.j + b)] = quotaDelPezzo(d, a, b) }
   }
   /** Il percorso (celle) da una cella alla più vicina delle mete, o null. */
-  percorsoVerso(da, mete) { return percorso((i, j) => this.libera(i, j), (i, j) => this.eStrada(i, j), da, mete) }
+  percorsoVerso(da, mete) { return percorso((i, j) => this.libera(i, j), (i, j) => this.sullaStrada(i, j), da, mete) }
 
   // ── le strade ──
   disegnaStrada(i, j, { gratis = false } = {}) {
@@ -213,7 +223,7 @@ export class Fattoria3d {
   }
   _libera(c) {
     const d = PEZZI[c.tipo]
-    for (let a = 0; a < d.w; a++) for (let b = 0; b < d.d; b++) this.cellaCosa[idx(c.i + a, c.j + b)] = 0
+    for (let a = 0; a < d.w; a++) for (let b = 0; b < d.d; b++) { this.cellaCosa[idx(c.i + a, c.j + b)] = 0; this.cellaPasso[idx(c.i + a, c.j + b)] = 0 }
   }
   /** Rimette un pezzo nel magazzino. Un campo che sta crescendo e un recinto con le pecore non si mettono via. */
   mettiVia(id, { gratis = false, forza = false } = {}) {
@@ -456,7 +466,9 @@ export class Fattoria3d {
     if (c.pecore) c.pecore.push({ eta: 'adulta', t0: this.ora() })
     else c.bestie.push({ fine: null })
     this._evento('bestia', { tipo: c.tipo })
-    return { ok: true, costo: q.prezzo, n: q.n + 1 }
+    // ogni acquisto porta anche un giro di pappa (se c'è da mangiare): le bestie affamate, o un pasto al recinto
+    const pappa = c.pecore ? this.nutri(id) : this.nutriBestie(id)
+    return { ok: true, costo: q.prezzo, n: q.n + 1, pappa: !!pappa.ok }
   }
   /** Quante uova o quanto latte aspettano in tutta la fattoria (per un cartello). */
   prodottiDelCortile() {
@@ -465,7 +477,7 @@ export class Fattoria3d {
     return n
   }
 
-  // ── le macchine: pasticceria, mulino, panificio, conserviera, gelateria. Tre posti nel forno, si cuoce uno alla volta ──
+  // ── le macchine: mulino, pastificio (id pasticceria), panificio, caseificio, cucina (id conserviera), gelateria. Tre posti nel forno, si cuoce uno alla volta ──
   /** Cosa c'è in scorta per una ricetta: un raccolto (merci) o il prodotto di un'altra macchina (prodotti). */
   scortaDi(k) { return COLTURE[k] ? this.s.merci[k] : (this.s.prodotti[k] || 0) }
   _togli(k, n) { if (COLTURE[k]) this.s.merci[k] -= n; else { this.s.prodotti[k] -= n; if (!this.s.prodotti[k]) delete this.s.prodotti[k] } }
@@ -540,13 +552,21 @@ export class Fattoria3d {
   }
 
   // ── il banco: gli ordini (vedi docs/fattoria3d/ordini.md). Pagano esperienza, mai monete; niente scade ──
-  /** Il banco chiede solo da livello 2 e solo se la bancarella è messa su un terreno tuo. */
-  bancoAperto() { return this.livello() >= LIVELLO_BANCO && this.s.cose.some(c => c.tipo === 'bancarella') }
+  /** Il banco chiede solo da livello 2 e solo se c'è una bacheca (o una bancarella, che apre lo stesso banco) messa su un terreno tuo. */
+  bancoAperto() { return this.livello() >= LIVELLO_BANCO && this.s.cose.some(c => PEZZI_DEL_BANCO.includes(c.tipo)) }
+  /** I posti crescono col livello (dati/ordini.js `POSTI`); un elenco più lungo (uno stato letto) non si accorcia mai. Torna quanti sono. */
+  _allungaPosti() {
+    const O = this.s.ordini, posti = Math.max(O.aperti.length, POSTI(this.livello()))
+    while (O.aperti.length < posti) O.aperti.push(null)
+    while (O.riprende.length < posti) O.riprende.push(null)
+    return posti
+  }
   /** Riempie i posti vuoti il cui riposo è finito (un posto mai riempito o appena consegnato non ha riposo). */
   _riempiOrdini() {
     if (!this.bancoAperto()) return false
     const O = this.s.ordini, t = this.ora(); let cambiato = false
-    for (let k = 0; k < POSTI; k++) {
+    const posti = this._allungaPosti()
+    for (let k = 0; k < posti; k++) {
       if (O.aperti[k] || (O.riprende[k] !== null && t < O.riprende[k])) continue
       const occupati = O.aperti.filter(Boolean).map(o => o.cliente)
       O.aperti[k] = nuovoOrdine(this.livello(), this.rnd, O.prossimoId++, occupati)
@@ -566,7 +586,7 @@ export class Fattoria3d {
         const r = COLTURE[k] || RICETTE[k], ha = this.scortaDi(k)
         return { k, n, nome: r.nome, emoji: r.emoji, ha: Math.min(ha, n), manca: Math.max(0, n - ha), prodotto: !COLTURE[k] }
       })
-      return { idx, id: o.id, cliente: clienteDi(o.cliente), chiede, premio: o.premio, liv: o.liv, pronto: chiede.every(c => !c.manca) }
+      return { idx, id: o.id, cliente: clienteDi(o.cliente), chiede, premio: o.premio, liv: o.liv, tipo: tipoDelOrdine(o.chiede), pronto: chiede.every(c => !c.manca) }
     })
   }
   /** Cosa manca per consegnare l'ordine di quel posto: { chiave: quanti }, vuoto se si può. */
@@ -653,6 +673,7 @@ export class Fattoria3d {
   serializza() {
     const s = this.s
     this.tick()
+    this._allungaPosti()                     // così la lettura rifà lo stesso stato (`normalizza` allunga allo stesso modo)
     s.strade = []
     for (let k = 0; k < this.strada.length; k++) if (this.strada[k] === 1) s.strade.push(k)
     return JSON.parse(JSON.stringify(s))

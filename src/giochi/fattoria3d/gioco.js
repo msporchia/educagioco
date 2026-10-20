@@ -54,7 +54,7 @@ export default {
         come: n => `Abbatti ${n} alberi`,
         soglie: [5, 20, 50], valore: m => m.tot('fattoria3dAlberi') },
       { id: 'f3d-forno', emoji: '🥧', nome: 'Dal forno',
-        come: n => `Ritira ${n} cose dalla pasticceria`,
+        come: n => `Ritira ${n} cose dalle macchine`,
         soglie: [3, 15, 50], valore: m => m.tot('fattoria3dProdotti') },
       { id: 'f3d-cortile', emoji: '🥚', nome: 'Il cortile',
         come: n => `Raccogli ${n} fra uova e latte`,

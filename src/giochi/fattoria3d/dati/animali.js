@@ -14,8 +14,8 @@ export const ANIMALI = {
     mangia: ['grano', 'mais'],    // cosa si dà da mangiare (dalla scorta più grande di queste)
     pasti: 1,                     // raccolti per pasto
     posti: 6,                     // galline al massimo (la capienza del pollaio)
-    prezzoBestia: 15,             // la seconda gallina; ogni altra costa `rincaroBestia` in più della precedente
-    rincaroBestia: 8,
+    prezzoBestia: 25,             // la seconda gallina; ogni altra costa `rincaroBestia` in più della precedente
+    rincaroBestia: 12,
   },
   stalla: {
     bestia: 'mucca', bestie: 'mucche', emoji: '🐄', prodotto: 'latte', evento: 'latte',
@@ -23,15 +23,15 @@ export const ANIMALI = {
     mangia: ['mais', 'carota'],
     pasti: 2,
     posti: 4,
-    prezzoBestia: 30,
-    rincaroBestia: 15,
+    prezzoBestia: 60,
+    rincaroBestia: 30,
   },
 }
 export const TIPI_DI_ANIMALI = Object.keys(ANIMALI)
 
 /** Tutti i pezzi che tengono bestie, con la stessa forma: il recinto (pecore, `PECORE.max` posti) e i due del cortile. */
 export const CORTILE = {
-  recinto: { bestia: 'pecora', bestie: 'pecore', emoji: '🐑', posti: PECORE.max, prezzoBestia: 20, rincaroBestia: 10 },
+  recinto: { bestia: 'pecora', bestie: 'pecore', emoji: '🐑', posti: PECORE.max, prezzoBestia: 40, rincaroBestia: 20 },
   ...ANIMALI,
 }
 export const TIPI_DEL_CORTILE = Object.keys(CORTILE)
@@ -42,10 +42,10 @@ export function prezzoDellaBestia(tipo, n) {
   return a && n >= 1 && n < a.posti ? a.prezzoBestia + a.rincaroBestia * (n - 1) : null
 }
 
-// I prodotti degli animali: l'id è la chiave di `stato.prodotti`; `dove` è il pezzo che li fa.
+// I prodotti degli animali: l'id è la chiave di `stato.prodotti` (è anche quello della 2D); `pezzo` la faccia nell'atlante; `dove` il pezzo che li fa.
 export const PRODOTTI_ANIMALI = {
-  uova:  { nome: 'Uova',  emoji: '🥚', dove: 'pollaio' },
-  latte: { nome: 'Latte', emoji: '🥛', dove: 'stalla' },
+  uova:  { nome: 'Uova',  emoji: '🥚', pezzo: 'merce_uova', dove: 'pollaio' },
+  latte: { nome: 'Latte', emoji: '🥛', pezzo: 'latte', dove: 'stalla' },
 }
 
 /** Quanto ci vuole per averne uno: il suo tempo più il raccolto che mangia (il primo della lista), per i calcoli degli ordini. */
@@ -72,7 +72,7 @@ export function guastiDegliAnimali(pezzi) {
   }
   for (const [k, p] of Object.entries(PRODOTTI_ANIMALI)) {
     if (COLTURE[k]) g.push(`${k}: un prodotto con l'id di una coltura`)
-    if (!p.nome || !p.emoji || !ANIMALI[p.dove]) g.push(`${k}: nome, emoji o pezzo sbagliati`)
+    if (!p.nome || !p.emoji || !p.pezzo || !ANIMALI[p.dove]) g.push(`${k}: nome, emoji o pezzo sbagliati`)
   }
   return g
 }

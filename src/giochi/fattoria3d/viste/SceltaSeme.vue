@@ -4,6 +4,7 @@
 import { ref } from 'vue'
 import { COLTURE } from '../dati/colture.js'
 import { livelloDellaColtura } from '../dati/livelli.js'
+import Faccia from './Faccia.vue'
 
 const props = defineProps({ seme: { type: String, default: 'grano' }, livello: { type: Number, default: 1 } })
 const emit = defineEmits(['scegli', 'chiudi'])
@@ -23,7 +24,7 @@ function tocca(k) {
       <div class="f3-semi">
         <!-- aria-disabled e non disabled: toccare una coltura chiusa deve dire il livello -->
         <button v-for="(c, k) in COLTURE" :key="k" :class="{ ultimo: k === seme, bloccato: chiusa(k) }" :aria-disabled="chiusa(k)" :data-seme="k" @click="tocca(k)">
-          <span class="em">{{ c.emoji }}</span><b>{{ c.nome }}</b>
+          <span class="em"><Faccia :k="k" :emoji="c.emoji" :lato="44" /></span><b>{{ c.nome }}</b>
           <small v-if="chiusa(k)">🔒 Livello {{ livelloDellaColtura(k) }}</small><small v-else>⏱️ {{ c.ms / 1000 }}s</small>
         </button>
       </div>

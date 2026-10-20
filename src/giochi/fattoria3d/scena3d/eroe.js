@@ -1,7 +1,6 @@
 // L'eroe: cammina lungo un percorso (o corre, se la meta è lontana), si gira verso la cosa, e fa il gesto del momento (semina,
 // falcia, abbatte, esulta). Decide il movimento e la posa, non le regole: la strada la dice il motore, e cosa succede alla fine
 // di un gesto lo dice chi l'ha chiesto (`fn` a ogni passo del gesto, `fine` alla fine).
-import { creaEroe } from './modelli.js'
 import { creaContadino } from './modelli-compagni.js'
 import { ASPETTO_ERO } from '../dati/compagni.js'
 import { PARTENZA } from '../dati/mondo.js'
@@ -12,11 +11,12 @@ const ang = (a, b, k) => { let d = b - a; d = Math.atan2(Math.sin(d), Math.cos(d
 export class Eroe {
   constructor(scena, motore, effetti) {
     this.m = motore; this.fx = effetti
-    try { this.grp = creaContadino(ASPETTO_ERO) } catch (e) { this.grp = creaEroe() }      // il vecchio resta come ripiego (una trama canvas che non parte)
+    this.grp = creaContadino(ASPETTO_ERO)
     scena.add(this.grp)
     this.x = PARTENZA.x; this.z = PARTENZA.z; this.dir = Math.PI
     this.percorso = []; this.dopo = null; this.verso = null; this.az = null
     this.fase = 0; this.vel = 0; this.corsa = false
+    this.rialzo = 0                     // sale e scende dolcemente sopra un ponte o una passerella (motore.quotaPasso)
     this.alVia = null                   // chi vuole saperlo quando parte un nuovo percorso (la camera torna a seguirlo)
     this.grp.position.set(this.x, 0, this.z)
   }
@@ -51,7 +51,7 @@ export class Eroe {
       if (a.t >= a.dur) { const f = a.fine; this.az = null; f && f() }
     } else if (this.percorso.length) {
       const [px, pz] = this.percorso[0], dx = px - this.x, dz = pz - this.z, d = Math.hypot(dx, dz)
-      const vel = (this.m.eStrada(Math.floor(this.x), Math.floor(this.z)) ? VEL_STRADA : VEL) * (this.corsa ? FATTORE_CORSA : 1)
+      const vel = (this.m.sullaStrada(Math.floor(this.x), Math.floor(this.z)) ? VEL_STRADA : VEL) * (this.corsa ? FATTORE_CORSA : 1)
       const v = Math.min(d, vel * dt)
       if (d > 0.001) { this.x += dx / d * v; this.z += dz / d * v; this.dir = ang(this.dir, Math.atan2(dx, dz), Math.min(1, dt * 14)); this.vel = v / dt; this.fase += dt * 12 * vel / VEL }
       if (d - v < 0.01) {
@@ -65,13 +65,14 @@ export class Eroe {
       }
     }
     this.grp.position.x = this.x; this.grp.position.z = this.z; this.grp.rotation.y = this.dir
+    this.rialzo += (this.m.quotaPasso(this.x, this.z) - this.rialzo) * Math.min(1, dt * 14)
     this._posa(tt)
   }
 
   _posa(tt) {
     const u = this.grp.userData
     u.testa.rotation.set(0, 0, 0); u.gambe.forEach(g => { g.rotation.x = 0 }); u.bracci.forEach(b => b.rotation.set(0, 0, 0)); u.busto.rotation.set(0, 0, 0); u.busto.scale.set(1, 1, 1); u.busto.position.y = 0.34
-    this.grp.position.y = 0; u.falce.visible = false; u.ascia.visible = false
+    this.grp.position.y = this.rialzo; u.falce.visible = false; u.ascia.visible = false
     const a = this.az
     if (a) {
       const p = a.t / a.dur
@@ -91,7 +92,7 @@ export class Eroe {
         u.busto.rotation.x = 0.1 + col * 0.35; u.gambe[0].rotation.x = 0.3; u.gambe[1].rotation.x = -0.3
       } else if (a.tipo === 'esulta') {
         const s = Math.sin(Math.min(1, p) * Math.PI)
-        this.grp.position.y = s * 0.35; u.bracci.forEach(b => { b.rotation.x = -2.6 * s })
+        this.grp.position.y = this.rialzo + s * 0.35; u.bracci.forEach(b => { b.rotation.x = -2.6 * s })
       }
     } else if (this.vel > 0.1) {
       const s = Math.sin(this.fase), c = this.corsa ? 1 : 0

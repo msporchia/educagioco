@@ -5,7 +5,7 @@
    regalano qualcosa (premi, doni), così uno snapshot altrui non può pagare più del banco. Dato puro, niente disegno.
    Vedi docs/fattoria3d/vicini.md. */
 import { COLTURE } from './colture.js'
-import { RICETTE } from './ricette.js'
+import { RICETTE, nuovoId } from './ricette.js'
 import { PRODOTTI_ANIMALI } from './animali.js'
 import { PEZZI, EDIFICI } from './catalogo.js'
 import { LOTTI, LOTTI_INIZIALI, lottiDelPosto, lottoDi, dentro } from './mondo.js'
@@ -80,9 +80,10 @@ function vendeInForma(letto) {
   const out = [], visti = new Set()
   for (const v of (Array.isArray(letto) ? letto : [])) {
     if (out.length >= VOCI_MAX) break
-    if (!v || !eMerce(v.k) || visti.has(v.k) || !Number.isFinite(livelloDellaMerce(v.k))) continue
-    visti.add(v.k)
-    out.push({ k: v.k, n: intero(v.n, 1, QUANTI_MAX, 3), prezzo: intero(v.prezzo, prezzoMinimo(v.k), 999, prezzoPer(v.k)) })
+    const k = v && nuovoId(v.k)              // uno snapshot di prima della 2D parla ancora con gli id di allora
+    if (!v || !eMerce(k) || visti.has(k) || !Number.isFinite(livelloDellaMerce(k))) continue
+    visti.add(k)
+    out.push({ k, n: intero(v.n, 1, QUANTI_MAX, 3), prezzo: intero(v.prezzo, prezzoMinimo(k), 999, prezzoPer(k)) })
   }
   return out
 }
@@ -91,12 +92,13 @@ function compraInForma(letto) {
   const out = []
   for (const v of (Array.isArray(letto) ? letto : [])) {
     if (out.length >= VOCI_MAX) break
-    if (!v || !eMerce(v.k)) continue
-    const n = intero(v.n, 1, QUANTI_MAX, 3), x = { k: v.k, n, premio: intero(v.premio, 1, premioMassimo(v.k, n), premioMassimo(v.k, n)), da: null }
-    const d = oggetto(v.da)
-    if (eMerce(d.k)) {
-      const tetto = donoMassimo(v.k, n, d.k)
-      if (tetto >= 1) x.da = { k: d.k, n: intero(d.n, 1, tetto, tetto) }
+    const k = v && nuovoId(v.k)
+    if (!v || !eMerce(k)) continue
+    const n = intero(v.n, 1, QUANTI_MAX, 3), x = { k, n, premio: intero(v.premio, 1, premioMassimo(k, n), premioMassimo(k, n)), da: null }
+    const d = oggetto(v.da), dk = nuovoId(d.k)
+    if (eMerce(dk)) {
+      const tetto = donoMassimo(k, n, dk)
+      if (tetto >= 1) x.da = { k: dk, n: intero(d.n, 1, tetto, tetto) }
     }
     out.push(x)
   }
@@ -107,8 +109,9 @@ function chiedeInForma(letto) {
   const out = [], visti = new Set()
   for (const v of (Array.isArray(letto) ? letto : [])) {
     if (out.length >= CHIEDE_MAX) break
-    if (!v || !eMerce(v.k) || visti.has(v.k)) continue
-    visti.add(v.k); out.push({ k: v.k, n: intero(v.n, 1, QUANTI_MAX, 2) })
+    const k = v && nuovoId(v.k)
+    if (!v || !eMerce(k) || visti.has(k)) continue
+    visti.add(k); out.push({ k, n: intero(v.n, 1, QUANTI_MAX, 2) })
   }
   return out
 }
@@ -139,8 +142,8 @@ export function normalizzaFattoriaVisitabile(letto) {
     const posti = { cassa: postoInForma(oggetto(l.posti).cassa, POSTO_CASSA, lotti), mercato: postoInForma(oggetto(l.posti).mercato, POSTO_MERCATO, lotti) }
     const m = oggetto(l.mercato), c = oggetto(l.cassa)
     const chiede = chiedeInForma(c.chiede)
-    const dono = oggetto(c.dono)
-    const donoOk = eMerce(dono.k) && chiede.length && donoCassaMassimo(chiede, dono.k) >= 1
+    const dono = oggetto(c.dono), donoK = nuovoId(dono.k)
+    const donoOk = eMerce(donoK) && chiede.length && donoCassaMassimo(chiede, donoK) >= 1
     return {
       v: VERSIONE_VISITA,
       id: l.id,
@@ -160,7 +163,7 @@ export function normalizzaFattoriaVisitabile(letto) {
       },
       cassa: {
         chiede,
-        dono: donoOk ? { k: dono.k, n: intero(dono.n, 1, donoCassaMassimo(chiede, dono.k), donoCassaMassimo(chiede, dono.k)) } : null,
+        dono: donoOk ? { k: donoK, n: intero(dono.n, 1, donoCassaMassimo(chiede, donoK), donoCassaMassimo(chiede, donoK)) } : null,
         rinnovoMs: intero(c.rinnovoMs, 60_000, 3_600_000, RINNOVO_CASSA_MS),
       },
     }
@@ -205,10 +208,10 @@ const DA_SCRIVERE = [
       { tipo: 'pozzo', i: -3, j: 4 }, { tipo: 'panchina', i: 3, j: 7 },
     ],
     mercato: {
-      vende: [vende('farina', 4, 1), vende('farinaMais', 3, 1), vende('panIntegrale', 2, 1)],
-      compra: [scambio('grano', 8, 'farina', 2), scambio('mais', 6, 'farinaMais', 1), scambio('patata', 5, 'farina', 1)],
+      vende: [vende('farina', 4, 1), vende('pastone', 3, 1), vende('pane', 2, 1)],
+      compra: [scambio('grano', 9, 'farina', 2), scambio('mais', 9, 'pastone', 1), scambio('patata', 5, 'farina', 1)],
     },
-    cassa: { chiede: [{ k: 'grano', n: 6 }, { k: 'mais', n: 3 }, { k: 'farina', n: 1 }], dono: { k: 'farinaMais', n: 2 } },
+    cassa: { chiede: [{ k: 'grano', n: 6 }, { k: 'mais', n: 3 }, { k: 'farina', n: 1 }], dono: { k: 'pastone', n: 1 } },
   },
   {
     v: 1, id: 'zio-beppe', nome: 'Le pecore di Zio Beppe', tema: 'pecore', liv: 11,
@@ -220,10 +223,10 @@ const DA_SCRIVERE = [
       campo(2, 3, 'zucca'), campo(4, 3, 'cipolla', 0.6), { tipo: 'fontana', i: -3, j: 6 }, { tipo: 'panchina', i: 3, j: 7 },
     ],
     mercato: {
-      vende: [vende('tortaCarote', 2, 1.2), vende('frittata', 2, 1.2), vende('latte', 3, 1.2)],
-      compra: [scambio('zucca', 6, 'latte', 1), scambio('cipolla', 6, 'tortaCarote', 1), scambio('patata', 8, 'latte', 1)],
+      vende: [vende('torta', 2, 1.2), vende('pasta', 2, 1.2), vende('latte', 3, 1.2)],
+      compra: [scambio('zucca', 6, 'latte', 1), scambio('cipolla', 6, 'pane', 1), scambio('patata', 8, 'latte', 1)],
     },
-    cassa: { chiede: [{ k: 'zucca', n: 3 }, { k: 'pane', n: 2 }, { k: 'patata', n: 3 }], dono: { k: 'frittata', n: 1 } },
+    cassa: { chiede: [{ k: 'zucca', n: 3 }, { k: 'pane', n: 2 }, { k: 'patata', n: 3 }], dono: { k: 'pasta', n: 1 } },
   },
   {
     v: 1, id: 'villa-dolce', nome: 'Villa Dolce', tema: 'frutteto', liv: 13,
@@ -236,10 +239,10 @@ const DA_SCRIVERE = [
       { tipo: 'aiuola', i: -5, j: 5 }, { tipo: 'aiuola', i: -4, j: 5 }, { tipo: 'aiuola', i: 4, j: 5 }, { tipo: 'panchina', i: 3, j: 7 },
     ],
     mercato: {
-      vende: [vende('marmellata', 2, 1.5), vende('gelatoFragola', 2, 1.5), vende('melanzana', 3, 1.5), vende('lavanda', 2, 1.5)],
+      vende: [vende('crostata', 2, 1.5), vende('gelato', 2, 1.5), vende('melanzana', 3, 1.5), vende('lavanda', 2, 1.5)],
       compra: [scambio('fragola', 6, 'melanzana', 2), scambio('cipolla', 8, 'lavanda', 1), scambio('zucca', 8, 'fragola', 2)],
     },
-    cassa: { chiede: [{ k: 'fragola', n: 4 }, { k: 'cipolla', n: 3 }, { k: 'pizza', n: 1 }], dono: { k: 'marmellata', n: 1 } },
+    cassa: { chiede: [{ k: 'fragola', n: 4 }, { k: 'cipolla', n: 3 }, { k: 'pizza', n: 1 }], dono: { k: 'crostata', n: 1 } },
   },
 ]
 

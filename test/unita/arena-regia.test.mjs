@@ -90,9 +90,40 @@ function coppia({ firmaOspite = 'F', terreno = 'lava' } = {}) {
   uguale('si riceve solo quello che è un oggetto', visti.length, 1)
   Finto.ultimo.ev.close()
   uguale('e la chiusura si dice', chiuso, 'chiuso')
-  const c2 = collega('ZZZZZ', { servizio: 'https://s.example', WebSocketImpl: Finto, alMessaggio: () => {}, allaChiusura: m => { chiuso = m } })
+  const c2 = collega('ZZZZZ', { servizio: 'https://s.example', WebSocketImpl: Finto, tentativi: 1, alMessaggio: () => {}, allaChiusura: m => { chiuso = m } })
   Finto.ultimo.ev.error()
   uguale('un codice che non entra si dice', chiuso, 'non entra')
+
+  // un telefono che perde una richiesta: il primo collegamento non si apre mai, il secondo sì
+  const quanti = { n: 0 }
+  class Lento extends Finto { constructor(u) { super(u); quanti.n++; Lento.tutti.push(this) } }
+  Lento.tutti = []
+  let aperto3 = false, chiuso3 = null; const visti3 = []
+  const c3 = collega('KXRNM', { servizio: 'https://s.example', WebSocketImpl: Lento, attesa: 50, pausa: 5, allApertura: () => { aperto3 = true },
+                                alMessaggio: m => visti3.push(m), allaChiusura: m => { chiuso3 = m } })
+  await new Promise(r => setTimeout(r, 80))
+  uguale('un collegamento che non si apre si lascia e se ne prova un altro', quanti.n, 2)
+  Lento.tutti[1].ev.open()
+  Lento.tutti[0].ev.message({ data: '{"t":"vecchio"}' })
+  Lento.tutti[1].ev.message({ data: '{"t":"ciao","ruolo":"ospite"}' })
+  controlla('il secondo si apre e porta i messaggi; quello lasciato non conta più', aperto3 && visti3.length === 1 && visti3[0].t === 'ciao' && chiuso3 === null)
+  Lento.tutti[0].ev.close()
+  controlla('la chiusura di un tentativo lasciato non chiude il collegamento', chiuso3 === null)
+  c3.invia({ t: 'x' })
+  uguale('si scrive sul secondo', Lento.tutti[1].mandati.length, 1)
+
+  // tutti i tentativi persi: si dice «non entra»
+  Lento.tutti = []; quanti.n = 0; let chiuso4 = null
+  collega('KXRNM', { servizio: 'https://s.example', WebSocketImpl: Lento, tentativi: 3, attesa: 20, pausa: 2, alMessaggio: () => {}, allaChiusura: m => { chiuso4 = m } })
+  await new Promise(r => setTimeout(r, 150))
+  controlla('dopo tre tentativi persi si dice che non entra', quanti.n === 3 && chiuso4 === 'non entra', `${quanti.n} ${chiuso4}`)
+
+  // una creazione di stanza persa si rifà
+  let chiamate = 0
+  const dopoUna = await creaStanza({ servizio: 'http://x', attesa: 20, fetchImpl: (u, { signal }) => (++chiamate === 1
+    ? new Promise((_, no) => signal.addEventListener('abort', () => no(new Error('abort'))))
+    : Promise.resolve({ ok: true, status: 200, json: async () => ({ codice: 'KXRNM' }) })) })
+  controlla('una richiesta di creazione persa si rifà, e il codice arriva', dopoUna === 'KXRNM' && chiamate === 2)
 }
 {
   // chi finisce prima chiude: l'altro, che ha ancora qualche tick, non deve vedere «se n'è andato»

@@ -8,10 +8,13 @@ pagina mostra, non impone il riuso.
 ```bash
 npm run catalogo3d          # apre strumenti/banco/catalogo-3d.html (Vite)
 npm run catalogo3d:scheda   # PNG contatto in tmp/scatti/catalogo-3d-<gioco>.png
+npm run catalogo3d:scheda -- --gioco fattoria --q watson --angolo 90 --alto 10 --vicino 1.5 --pixel 2
+                            # una voce da vicino, di fianco e bassa: per giudicare un modello
 ```
 
 La scheda (`strumenti/catalogo-3d-scheda.mjs`) serve Vite da sé, non vuole la
-build, e dice le voci che non si creano. `CHROME=…` forza il browser.
+build, e dice le voci che non si creano; con `--q` scrive anche mesh e triangoli
+di ogni voce (quelli che si disegnano: una mesh spenta non conta). `CHROME=…` forza il browser.
 
 ## Com'è fatta
 
@@ -20,7 +23,9 @@ build, e dice le voci che non si creano. `CHROME=…` forza il browser.
   telefono i contesti WebGL sono pochi). Toccando una scheda si apre la vista
   grande (stesso renderer, rotazione col dito, zoom, animazione).
 - Filtri per gioco, categoria e testo; anche da indirizzo
-  (`?gioco=fattoria&cat=prop&q=pozzo`, `&scheda=1` senza controlli).
+  (`?gioco=fattoria&cat=prop&q=pozzo`, `&scheda=1` senza controlli;
+  `&angolo=` gradi attorno, 0 davanti, `&alto=` gradi sopra l'orizzonte e
+  `&vicino=` per la telecamera delle anteprime).
 - «Si assomigliano: valuta»: coppie di giochi diversi con la stessa
   `categoria` e un nome che condivide la radice (le prime cinque lettere).
   Le voci `entrambi` non entrano: sono già in comune.
@@ -55,6 +60,9 @@ stesse geometrie. Un modello che vuole un canvas lo fa da sé: siamo in pagina.
 - `catalogo-3d/sotterraneo.js`: chi lavora sul Sotterraneo 3D.
 - Un modello che compare in entrambi i giochi: una voce sola con
   `gioco: 'entrambi'`, nel file di chi l'ha costruito.
+- Un modello **copiato** da un gioco all'altro (ponte, passerella e tavolo: Sotterraneo → Fattoria) sta in entrambi i file con **id
+  diversi** (`fattoria:ponte`, `sot:kit:ponte-arco`), tutti e due `gioco: 'entrambi'`, ognuno col `file:` della sua copia; la pagina
+  non li accoppia da sé.
 - Nei test: `test/unita/catalogo-3d.test.mjs` controlla solo il formato e che
   `file:` esista e nomini qualcosa che c'è scritto dentro (niente three, niente
   browser). Che nessun modello manchi non lo controlla nessuno.

@@ -3,6 +3,7 @@
 // ricevono fatti già decisi. `vista.proietta(p, extra)` dice dove cade un punto del mondo sullo schermo.
 import * as THREE from 'three'
 import { mat, FORME } from './modelli.js'
+import { tela } from './facce.js'
 
 const geoP = new THREE.BoxGeometry(0.08, 0.08, 0.08)
 const geoFumo = new THREE.SphereGeometry(0.16, 6, 5)
@@ -32,11 +33,14 @@ export class Effetti {
     this.particelle.push({ m, v: new THREE.Vector3(0.15, 0.7, 0.05), vita: 1.8, fumo: true })
   }
 
-  /** Un testo che sale e svanisce, sopra un punto del mondo. */
-  volo(testo, pos, extra = 1.6) {
+  /** Un testo che sale e svanisce, sopra un punto del mondo. `k`: una merce, di cui si disegna la faccia dopo il testo (se non ce
+      l'ha, il testo porta già la sua emoji). */
+  volo(testo, pos, extra = 1.6, k = null) {
     const [x, y, visto] = this.vista.proietta(pos, extra)
     if (!visto) return
     const el = document.createElement('div'); el.className = 'f3-volo'; el.textContent = testo
+    const faccia = k && tela(k, 30)
+    if (faccia) { el.append(' ', faccia); el.dataset.merce = k }
     el.style.left = x + 'px'; el.style.top = y + 'px'; this.sopra.appendChild(el)
     setTimeout(() => el.remove(), 1500)
   }

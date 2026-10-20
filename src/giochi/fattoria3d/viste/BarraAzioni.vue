@@ -1,17 +1,16 @@
 <script setup>
 // Le azioni in basso: libero, semina, raccogli (si armano e poi si toccano i campi) e costruisci. Il numero rosso dice quanti
-// campi aspettano. «Tutti» mette in coda tutti quelli adatti. Non tocca il gioco: dice cosa si vuole con gli `emit`.
+// campi aspettano. Non tocca il gioco: dice cosa si vuole con gli `emit`.
 defineProps({
   modo: { type: String, default: 'libero' },
   seme: { type: String, default: '🌾' },
   daFare: { type: Object, default: () => ({ semina: 0, raccogli: 0 }) },
 })
-defineEmits(['modo', 'semina', 'tutti', 'costruisci'])
+defineEmits(['modo', 'semina', 'costruisci'])
 </script>
 
 <template>
   <div class="f3-azioni-colonna">
-    <button v-if="modo !== 'libero'" class="f3-tutti" data-f3="tutti" @click="$emit('tutti')">▶ Tutti</button>
     <div class="f3-azioni" data-f3="azioni">
       <button :class="{ acceso: modo === 'libero' }" data-f3="az-libero" @click="$emit('modo', 'libero')"><span>✋</span><small>Libero</small></button>
       <button :class="{ acceso: modo === 'semina' }" data-f3="az-semina" @click="$emit('semina')">

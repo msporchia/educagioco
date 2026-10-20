@@ -33,7 +33,7 @@ const schermoDi = (x, z) => page.evaluate(([x, z]) => {
 const stato = () => page.evaluate(() => JSON.parse(JSON.stringify(window.__fattoria3d.motore.s)))
 const fermo = async () => { await attendi(page, 400); for (let i = 0; i < 100; i++) { if (await page.evaluate(() => { const m = window.__fattoria3d.mondo; return m.eroe.fermo })) break; await attendi(page, 150) } await attendi(page, 250) }
 const monete = () => page.evaluate(() => window.__fattoria3d.motore.monete())          // quelle vere, vive
-const tele = () => page.locator('canvas').count()
+const tele = () => page.locator('canvas.f3-tela, canvas.f3-vic-tela').count()   // le tele di scena: i canvas dei disegni delle merci non contano
 
 await scegli(page, 'fattoria3d')
 await page.waitForSelector('[data-f3="campo"] canvas', { timeout: 10000 })
@@ -162,7 +162,7 @@ await page.waitForSelector('[data-f3="torna-casa"]', { timeout: 15000 })
 await page.locator('[data-f3="storia-ok"]').click()
 await page.locator('.barra-app button').first().click()           // la freccia in alto a sinistra
 await page.waitForFunction(() => !document.querySelector('[data-f3="visita"]') && window.__fattoria3d.mondo.vivo === true, null, { timeout: 8000 })
-controlla('«indietro» in visita porta a casa, non in home', await page.locator('[data-f3="campo"] canvas').count() === 1 && await page.locator('.carte').count() === 0)
+controlla('«indietro» in visita porta a casa, non in home', await page.locator('[data-f3="campo"] canvas.f3-tela').count() === 1 && await page.locator('.carte').count() === 0)
 
 controlla('nessun errore in console', errori.length === 0, errori.join(' · '))
 await browser.close()

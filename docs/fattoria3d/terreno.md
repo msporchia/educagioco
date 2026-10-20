@@ -38,6 +38,8 @@ campo di partenza o la partenza dell'eroe (`celleRiservate`); **fuori dal mondo 
 
 ## I sassi e i cespugli
 
+Il cespuglio è quello del Sotterraneo (tre macchie tonde un po' storte, `dal-sotterraneo.js:geometriaCespuglio`), a istanze come prima: lo stesso verde per istanza, la stessa cella-id. La casa di scena (4×3) è la casa di legno del Sotterraneo, con il camino che fuma ([scena.md](scena.md)).
+
 Pochi per lotto (2–5, `dati/ostacoli.js`), sempre gli stessi, **anche dopo aver comprato il lotto**: un lotto appena tuo non è
 vuoto, ma nemmeno un campo minato (mai due vicini, mai sulle strade di serie, sui posti degli edifici, sul campo e sulla
 partenza, sul fienile e la casa, né sotto un albero; i lotti stretti fra edifici ne hanno meno). Bloccano il costruire e il
@@ -58,5 +60,4 @@ va più in fretta** (6,6 contro 4,8) **e il percorso le preferisce** (costano il
 
 Segue l'eroe da sopra (distanza di serie 22: si vede una zona intera). Un dito che scorre la **stacca** (camera
 «libera») e compare «⌖ Torna all'eroe»; mandare l'eroe da qualche parte la rimette a seguirlo. Due dita zoomano. **Il
-contadino corre** quando il percorso supera 9 celle (1,75×). In costruzione la telecamera si alza e inquadra attorno
-all'eroe («Vicino») o tutto il terreno proprio («Tutto»), con due dita si sposta.
+contadino corre** quando il percorso supera 9 celle (1,75×). Non c'è più una telecamera «in costruzione»: si costruisce premendo dove si vuole ([scena.md](scena.md)); col pennello delle strade due dita spostano la vista.

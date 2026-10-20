@@ -1,6 +1,7 @@
-// Il dito sulla tela: un tocco fa la cosa (l'eroe ci va), un dito che scorre sposta la mappa, due dita zoomano (e in costruzione
-// la spostano), tenere premuto su un pezzo lo solleva per spostarlo o metterlo via, e in costruzione si riprende un pezzo
-// trascinandolo o si disegna la strada a pennello. Soglia di 16 px fra tocco e trascinamento (docs/core/il-dito.md).
+// Il dito sulla tela: un tocco fa la cosa (l'eroe ci va), un dito che scorre sposta la mappa, due dita zoomano. Tenere premuto su un
+// pezzo lo solleva per spostarlo o metterlo via; tenere premuto su un posto libero del proprio terreno apre il menu «Costruisci qui»;
+// col pennello delle strade si disegna; col fantasma del menu parcheggiato lo si trascina o lo si tocca dove va. Soglia di 16 px fra
+// tocco e trascinamento (docs/core/il-dito.md).
 // Il dito non è un mouse: niente click, solo pointer events. Non sa le regole: chiama il mondo.
 const SOGLIA = 16, SOGLIA_PREMUTO = 10, ATTESA_PREMUTO = 450
 
@@ -27,7 +28,7 @@ export class Dito {
   get _pennello() { const s = this.w.cmd.strumento; return s === 'strada' || s === 'gomma' ? s : null }
 
   _giu(e) {
-    const w = this.w, { cmd, ui } = w
+    const w = this.w, { ui } = w
     this.canvas.setPointerCapture(e.pointerId); this.punti.set(e.pointerId, [e.clientX, e.clientY])
     if (this.punti.size === 2) {
       this.pinch0 = this._distanza(); this.zoom0 = w.camera.zoom; this.inizio = null; this.centroPrima = this._centro()
@@ -36,31 +37,37 @@ export class Dito {
     this.inizio = { x: e.clientX, y: e.clientY }; this.trascina = false
     clearTimeout(this.lungo)
     if (ui.fogliAperti()) return
-    if (cmd.costruendo) {
-      if (this._pennello) w.costruzione.pennello(e.clientX, e.clientY, this._pennello)
-      else { const b = w.bersaglioSotto(e.clientX, e.clientY); this.inizio.cand = b && b.kind === 'cosa' ? w.m.cosa(b.id) : null }
-      return
-    }
-    const b = w.bersaglioSotto(e.clientX, e.clientY)
+    if (w.costruzione.parcheggiato) { this.inizio.parcheggio = true; return }          // il fantasma del menu: lo si trascina o si tocca dove va
+    if (this._pennello) { w.costruzione.pennello(e.clientX, e.clientY, this._pennello); return }
+    const b = w.bersaglioSotto(e.clientX, e.clientY), ini = this.inizio
     if (b && b.kind === 'cosa') {                       // tenere premuto su un pezzo lo solleva: si sposta o si mette via
-      const ini = this.inizio, c = w.m.cosa(b.id)
+      const c = w.m.cosa(b.id)
       this.lungo = setTimeout(() => {
         if (this.inizio !== ini || this.trascina || this.punti.size !== 1 || w.costruzione.attivo) return
         try { navigator.vibrate && navigator.vibrate(30) } catch (x) { /* niente vibrazione */ }
         ini.lungo = true; w.svuotaCoda(); w.costruzione.inizia(c.tipo, c, ini.x, ini.y)
+      }, ATTESA_PREMUTO)
+    } else if (!b) {                                    // tenere premuto su un posto libero del terreno tuo: il menu «Costruisci qui»
+      const p = w.puntaSuolo(e.clientX, e.clientY); if (!p) return
+      const i = Math.floor(p.x), j = Math.floor(p.z)
+      if (!w.m.cellaPropria(i, j) || w.m.blocca(i, j) || w.compagni.bersaglio(w._raggio(e.clientX, e.clientY))) return
+      this.lungo = setTimeout(() => {
+        if (this.inizio !== ini || this.trascina || this.punti.size !== 1 || w.costruzione.attivo || ui.fogliAperti()) return
+        try { navigator.vibrate && navigator.vibrate(30) } catch (x) { /* niente vibrazione */ }
+        ini.menu = true; w.svuotaCoda(); ui.apriCostruisci(i, j)
       }, ATTESA_PREMUTO)
     }
   }
 
   _muovi(e) {
     if (!this.punti.has(e.pointerId)) return
-    const w = this.w, { cmd, ui } = w
+    const w = this.w, { ui } = w
     this.punti.set(e.pointerId, [e.clientX, e.clientY])
     if (this.punti.size === 2) {
       w.camera.zoom = Math.max(0.55, Math.min(1.7, this.zoom0 * this.pinch0 / Math.max(1, this._distanza())))
-      if (cmd.costruendo) {                             // due dita che scorrono spostano la vista
+      if (this._pennello) {                             // col pennello il dito disegna: due dita spostano la vista
         const c = this._centro(), p0 = w.puntaSuolo(this.centroPrima[0], this.centroPrima[1]), p1 = w.puntaSuolo(c[0], c[1])
-        if (p0 && p1) { cmd.pan.x -= p1.x - p0.x; cmd.pan.z -= p1.z - p0.z }
+        if (p0 && p1) w.camera.trascina(p0, p1)
         this.centroPrima = c
       }
       return
@@ -70,13 +77,8 @@ export class Dito {
     const d = Math.hypot(e.clientX - this.inizio.x, e.clientY - this.inizio.y)
     if (this.lungo && d > SOGLIA_PREMUTO) { clearTimeout(this.lungo); this.lungo = 0 }
     if (!this.trascina && d > SOGLIA) this.trascina = true
-    if (cmd.costruendo) {
-      if (this._pennello) return w.costruzione.pennello(e.clientX, e.clientY, this._pennello)
-      if (w.costruzione.attivo) w.costruzione.muovi(e.clientX, e.clientY)
-      else if (this.trascina && this.inizio.cand) w.costruzione.inizia(this.inizio.cand.tipo, this.inizio.cand, e.clientX, e.clientY)
-      else if (this.trascina) this._mappa(e)
-      return
-    }
+    if (this.inizio.parcheggio) { if (this.trascina) w.costruzione.muovi(e.clientX, e.clientY); return }
+    if (this._pennello) { if (!ui.fogliAperti()) w.costruzione.pennello(e.clientX, e.clientY, this._pennello); return }
     if (!this.trascina || ui.fogliAperti()) return
     this._mappa(e)                                      // un dito che scorre sposta la mappa: per andare lontano si tocca poi la meta
   }
@@ -86,24 +88,26 @@ export class Dito {
     this.inizio.u = { x: e.clientX, y: e.clientY }
     const p0 = w.puntaSuolo(prima.x, prima.y), p1 = w.puntaSuolo(e.clientX, e.clientY)
     if (!p0 || !p1) return
-    if (w.cmd.costruendo) { w.cmd.pan.x -= p1.x - p0.x; w.cmd.pan.z -= p1.z - p0.z; return }
     w.camera.trascina(p0, p1)
   }
 
   _fine(e) {
     if (!this.punti.has(e.pointerId)) return
     this.punti.delete(e.pointerId)
-    const w = this.w, { cmd } = w, su = e.type === 'pointerup'
+    const w = this.w, su = e.type === 'pointerup'
     clearTimeout(this.lungo); this.lungo = 0
-    if (!su && w.costruzione.attivo) w.costruzione.annullaTrascinamento()
+    if (!su && w.costruzione.attivo && !w.costruzione.parcheggiato) w.costruzione.annullaTrascinamento()
+    if (this.inizio && this.inizio.parcheggio) {                                 // il fantasma del menu: trascinato si rilascia dove si è, toccato va dove si tocca
+      if (su) { if (this.trascina) w.costruzione.rilascia(e.clientX, e.clientY); else w.costruzione.tocco(e.clientX, e.clientY) }
+      this.inizio = null; return
+    }
     if (w.costruzione.attivo && this.inizio && this.inizio.lungo) {              // sollevato tenendo premuto: si rilascia dove si è
       w.costruzione.rilascia(e.clientX, e.clientY); this.inizio = null; return
     }
-    if (cmd.costruendo && this.inizio && su) {
-      if (w.costruzione.attivo) w.costruzione.rilascia(e.clientX, e.clientY)
-      else if (this._pennello) w.costruzione.finisciTratto(this._pennello)
-      else if (!this.trascina) w.tocca(e.clientX, e.clientY)
-    } else if (this.inizio && !this.trascina && su) w.tocca(e.clientX, e.clientY)
+    if (this.inizio && su) {
+      if (this._pennello) w.costruzione.finisciTratto(this._pennello)
+      else if (!this.trascina && !this.inizio.menu) w.tocca(e.clientX, e.clientY)
+    }
     this.inizio = null
   }
 }

@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Diagnosi del collegamento</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { font: 16px/1.45 system-ui, sans-serif; margin: 0; padding: 16px; max-width: 640px; margin-inline: auto; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  p.sotto { margin: 0 0 16px; opacity: .75; }
+  button { font: inherit; font-weight: 600; padding: 14px 18px; border-radius: 12px; border: 0; background: #2f6fed; color: #fff; width: 100%; margin: 6px 0; }
+  button:disabled { opacity: .5; }
+  button.chiaro { background: #8884; color: inherit; }
+  .prova { border: 1px solid #8886; border-radius: 12px; padding: 10px 12px; margin: 10px 0; }
+  .prova h2 { font-size: 16px; margin: 0 0 2px; }
+  .prova .cosa { font-size: 13px; opacity: .7; margin: 0 0 6px; word-break: break-all; }
+  .riga { font-variant-numeric: tabular-nums; }
+  .ok { color: #1a8f3c; } .male { color: #d4351c; font-weight: 700; } .poco { color: #b8860b; font-weight: 700; }
+  pre { white-space: pre-wrap; font-size: 13px; background: #8882; padding: 10px; border-radius: 10px; }
+</style>
+</head>
+<body>
+<h1>Diagnosi del collegamento</h1>
+<p class="sotto">Prova il collegamento di questo telefono verso il sito dei giochi, il servizio delle sfide, Tally e due siti di controllo. Dura circa un minuto: lascia lo schermo acceso.</p>
+<button id="via">Avvia la diagnosi</button>
+<div id="prove"></div>
+<button id="copia" class="chiaro" hidden>Copia il risultato</button>
+<pre id="testo" hidden></pre>
+<script>
+'use strict'
+const QUANTE = 8              // richieste per ogni indirizzo
+const ATTESA = 8000           // ms prima di dire «timeout»
+const SERVIZIO = 'https://sfida.educagioco.workers.dev'
+const BASE = location.origin + location.pathname.replace(/[^/]*$/, '')
+const dopo = ms => new Promise(r => setTimeout(r, ms))
+const mediana = a => { const s = [...a].sort((x, y) => x - y); return s.length ? s[Math.floor(s.length / 2)] : null }
+
+/* gli indirizzi: `cors` = si può leggere la risposta; senza, basta sapere che è arrivata (conta il tempo) */
+const INDIRIZZI = [
+  { id: 'nas', titolo: 'Il sito dei giochi (NAS)', url: () => `${BASE}versione.json?d=${Math.random()}`, cors: true, nota: 'se qui va male, il problema è tra il telefono e il NAS (wifi di casa, Tailscale)' },
+  { id: 'worker', titolo: 'Il servizio delle sfide (Cloudflare)', url: () => `${SERVIZIO}/?d=${Math.random()}`, cors: true, nota: 'se qui va male e il resto bene, è Cloudflare o un filtro su workers.dev' },
+  { id: 'tally', titolo: 'Tally (segnalazioni)', url: () => 'https://tally.so/r/D4OO1q', cors: false, nota: 'serve solo per le segnalazioni' },
+  { id: 'wiki', titolo: 'Controllo: Wikipedia (per nome)', url: () => `https://www.wikipedia.org/?d=${Math.random()}`, cors: false, nota: 'un sito qualunque: se va male anche questo, è la rete del telefono' },
+  { id: 'ip', titolo: 'Controllo: Cloudflare per numero (senza DNS)', url: () => `https://1.1.1.1/cdn-cgi/trace?d=${Math.random()}`, cors: false, nota: 'se va bene e quello per nome va male, è il DNS' },
+]
+const risultati = {}
+const quadro = document.getElementById('prove')
+
+function carta(id, titolo, nota) {
+  const d = document.createElement('div')
+  d.className = 'prova'
+  d.innerHTML = `<h2></h2><p class="cosa"></p><div class="riga"></div>`
+  d.querySelector('h2').textContent = titolo
+  d.querySelector('.cosa').textContent = nota
+  quadro.appendChild(d)
+  return d.querySelector('.riga')
+}
+
+async function provaIndirizzo(def) {
+  const riga = carta(def.id, def.titolo, def.nota)
+  const tempi = [], errori = []
+  for (let i = 0; i < QUANTE; i++) {
+    const t0 = performance.now(), ctl = new AbortController(), t = setTimeout(() => ctl.abort(), ATTESA)
+    try {
+      await fetch(def.url(), { cache: 'no-store', mode: def.cors ? 'cors' : 'no-cors', signal: ctl.signal })
+      tempi.push(Math.round(performance.now() - t0))
+    } catch (e) {
+      errori.push(e.name === 'AbortError' ? 'timeout' : 'errore')
+    }
+    clearTimeout(t)
+    riga.textContent = `${i + 1}/${QUANTE}… andate ${tempi.length}, fallite ${errori.length}`
+    await dopo(250)
+  }
+  const male = errori.length, tutte = !male
+  risultati[def.id] = { titolo: def.titolo, ok: tempi.length, falliti: male, timeout: errori.filter(e => e === 'timeout').length, min: Math.min(...tempi), mediana: mediana(tempi), max: Math.max(...tempi) }
+  const r = risultati[def.id]
+  riga.innerHTML = ''
+  const s = document.createElement('span')
+  s.className = tutte ? 'ok' : male >= QUANTE / 2 ? 'male' : 'poco'
+  s.textContent = `${r.ok}/${QUANTE} andate` + (male ? `, ${r.falliti} fallite (${r.timeout} timeout)` : '')
+  riga.append(s, document.createTextNode(tempi.length ? ` — tempi ms: min ${r.min}, tipico ${r.mediana}, max ${r.max}` : ''))
+}
+
+/* due collegamenti aperti da questo telefono verso la stessa stanza, come fanno due giocatori: uno manda, l'altro rimanda */
+async function provaCollegamento(secondi) {
+  const riga = carta('ws', 'Collegamento tenuto aperto (come una sfida)', `crea una stanza, apre due collegamenti e si scambiano 10 messaggi al secondo per ${secondi} s: dice se cade e quanto ci mette un messaggio ad andare e tornare`)
+  const r = { aperto: false, apertura: null, inviati: 0, tornati: 0, rtt: [], chiusura: null, chiusoAl: null, errore: null }
+  risultati.collegamento = r
+  let codice
+  try {
+    const t0 = performance.now()
+    const c = await (await fetch(`${SERVIZIO}/crea`, { cache: 'no-store' })).json()
+    codice = c.codice
+    r.creazione = Math.round(performance.now() - t0)
+  } catch (e) { r.errore = 'non riesco a creare la stanza'; riga.innerHTML = `<span class="male">${r.errore}</span>`; return }
+  const ws = u => new Promise((si, no) => { const w = new WebSocket(u); const t = setTimeout(() => no(new Error('apertura lenta')), ATTESA); w.onopen = () => { clearTimeout(t); si(w) }; w.onerror = () => { clearTimeout(t); no(new Error('apertura fallita')) } })
+  let a, b
+  const inizio = performance.now()
+  try {
+    a = await ws(`${SERVIZIO.replace(/^http/, 'ws')}/entra/${codice}`)
+    b = await ws(`${SERVIZIO.replace(/^http/, 'ws')}/entra/${codice}`)
+    r.aperto = true; r.apertura = Math.round(performance.now() - inizio)
+  } catch (e) { r.errore = e.message; riga.innerHTML = `<span class="male">${e.message}</span>`; return }
+  let finito = false
+  const chiuso = nome => e => { if (!finito && !r.chiusura) { r.chiusura = `${nome}: codice ${e.code}${e.reason ? ' «' + e.reason + '»' : ''}`; r.chiusoAl = Math.round((performance.now() - inizio) / 1000) } }
+  a.onclose = chiuso('primo'); b.onclose = chiuso('secondo')
+  b.onmessage = e => { const m = JSON.parse(e.data); if (m.t === 'p') try { b.send(JSON.stringify({ t: 'e', n: m.n, c: m.c })) } catch { /* chiuso */ } }
+  a.onmessage = e => { const m = JSON.parse(e.data); if (m.t === 'e') { r.tornati++; r.rtt.push(Math.round(performance.now() - m.c)) } }
+  const fine = performance.now() + secondi * 1000
+  let n = 0
+  while (performance.now() < fine && !r.chiusura) {
+    try { a.send(JSON.stringify({ t: 'p', n: n++, c: performance.now() })); r.inviati++ } catch { break }
+    riga.textContent = `${Math.round((fine - performance.now()) / 1000)} s… inviati ${r.inviati}, tornati ${r.tornati}${r.chiusura ? ', CHIUSO' : ''}`
+    await dopo(100)
+  }
+  await dopo(1500)
+  finito = true
+  try { a.close(); b.close() } catch { /* già chiusi */ }
+  r.persi = r.inviati - r.tornati
+  r.mediana = mediana(r.rtt); r.max = r.rtt.length ? Math.max(...r.rtt) : null
+  const ok = !r.chiusura && r.persi <= 1
+  riga.innerHTML = ''
+  const s = document.createElement('span')
+  s.className = ok ? 'ok' : 'male'
+  s.textContent = r.chiusura ? `CADUTO a ${r.chiusoAl} s — ${r.chiusura}` : `rimasto aperto, persi ${r.persi} messaggi su ${r.inviati}`
+  riga.append(s, document.createTextNode(` — apertura ${r.apertura} ms, andata e ritorno ms: tipico ${r.mediana}, max ${r.max}`))
+}
+
+function riassunto() {
+  const c = navigator.connection || {}
+  const righe = [`Diagnosi del collegamento — ${new Date().toLocaleString('it-IT')}`, `Pagina: ${location.href}`, `Telefono: ${navigator.userAgent}`,
+    `Rete dichiarata: ${c.effectiveType || '?'} (rtt ${c.rtt ?? '?'} ms, ${c.downlink ?? '?'} Mbit/s, risparmio dati ${c.saveData ? 'sì' : 'no'}), online: ${navigator.onLine}`]
+  for (const id of ['nas', 'worker', 'tally', 'wiki', 'ip']) {
+    const r = risultati[id]
+    if (r) righe.push(`${r.titolo}: ${r.ok}/${QUANTE} andate, ${r.falliti} fallite (${r.timeout} timeout), ms ${r.min}/${r.mediana}/${r.max}`)
+  }
+  const w = risultati.collegamento
+  if (w) righe.push(`Collegamento aperto: ${w.errore || (w.chiusura ? 'CADUTO a ' + w.chiusoAl + ' s — ' + w.chiusura : 'rimasto aperto')}, apertura ${w.apertura} ms, persi ${w.persi}/${w.inviati}, andata e ritorno ms ${w.mediana}/${w.max}`)
+  return righe.join('\n')
+}
+
+document.getElementById('via').onclick = async function () {
+  this.disabled = true; this.textContent = 'In corso…'
+  quadro.innerHTML = ''
+  for (const k of Object.keys(risultati)) delete risultati[k]
+  for (const def of INDIRIZZI) await provaIndirizzo(def)
+  await provaCollegamento(30)
+  const t = document.getElementById('testo')
+  t.textContent = riassunto(); t.hidden = false
+  const cp = document.getElementById('copia'); cp.hidden = false
+  cp.onclick = () => { try { navigator.clipboard.writeText(t.textContent); cp.textContent = 'Copiato' } catch { cp.textContent = 'Seleziona il testo qui sotto e copialo' } }
+  this.disabled = false; this.textContent = 'Ripeti la diagnosi'
+}
+</script>
+</body>
+</html>

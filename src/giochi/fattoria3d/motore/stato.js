@@ -3,9 +3,10 @@
 import { LOTTI_INIZIALI, PEZZO_DI_PARTENZA } from '../dati/mondo.js'
 import { CHIAVI_COLTURE, TESSERE } from '../dati/colture.js'
 import { TIPI_DI_EDIFICIO } from '../dati/catalogo.js'
-import { TIPI_DI_MACCHINA, RICETTE } from '../dati/ricette.js'
+import { TIPI_DI_MACCHINA, MACCHINE, RICETTE, nuovoId } from '../dati/ricette.js'
 import { ANIMALI } from '../dati/animali.js'
 import { POSTI } from '../dati/ordini.js'
+import { livelloPer } from '../dati/livelli.js'
 import { ordineInForma } from './ordini.js'
 
 // 2: l'esperienza, un `posseduti` per ogni edificio, le macchine per tipo (la pasticceria di prima è `macchine.pasticceria`)
@@ -14,7 +15,9 @@ import { ordineInForma } from './ordini.js'
 // 5: le bestie si comprano dentro l'edificio (recinto 4 pecore, pollaio 6 galline, stalla 4 mucche), niente posti per livello: la
 //    forma dei dati non cambia, un v4 si legge uguale e ciò che si aveva resta (anche un recinto con più pecore di una)
 // 6: niente legna (il campo di un vecchio stato si ignora), e `ostacoli`: gli id (le celle) dei sassi e dei cespugli già tolti
-export const VERSIONE_STATO = 6
+// 7: le merci e le ricette sono quelle della fattoria di sempre (docs/fattoria3d/merci-e-ricette.md): `normalizza` traduce gli id
+//    di prima (`MERCI_VECCHIE`) nelle scorte, nelle code e nei pronti, negli ordini aperti e nello stato dei vicini, un pezzo per un pezzo
+export const VERSIONE_STATO = 7
 
 const vuote = () => Object.fromEntries(CHIAVI_COLTURE.map(k => [k, 0]))
 
@@ -41,7 +44,7 @@ export function statoIniziale() {
     prossimoId: 2,
     macchine: Object.fromEntries(TIPI_DI_MACCHINA.map(t => [t, macchinaVuota()])),
     mongolfiera: { fine: null, cassa: false },
-    ordini: { aperti: Array(POSTI).fill(null), riprende: Array(POSTI).fill(null), prossimoId: 1 },   // il banco: un ordine o null per posto; `riprende` è quando un posto vuoto si riempie
+    ordini: { aperti: Array(POSTI(1)).fill(null), riprende: Array(POSTI(1)).fill(null), prossimoId: 1 },   // il banco: un ordine o null per posto; `riprende` è quando un posto vuoto si riempie
   })
 }
 
@@ -63,7 +66,9 @@ export function normalizza(letto) {
   if (!letto || typeof letto !== 'object') return base
   const s = base
   for (const k of CHIAVI_COLTURE) s.merci[k] = numero(oggetto(letto.merci)[k])
-  for (const [k, n] of Object.entries(oggetto(letto.prodotti))) if (numero(n) > 0) s.prodotti[k] = numero(n)
+  for (const [vecchio, n] of Object.entries(oggetto(letto.prodotti))) {
+    if (numero(n) > 0) { const k = nuovoId(vecchio); s.prodotti[k] = (s.prodotti[k] || 0) + numero(n) }
+  }
   s.lana = numero(letto.lana)
   s.esperienza = numero(letto.esperienza)
   for (const t of TIPI_DI_EDIFICIO) s.posseduti[t] = !!oggetto(letto.posseduti)[t]
@@ -91,21 +96,40 @@ export function normalizza(letto) {
     })
     s.prossimoId = s.cose.reduce((m, c) => Math.max(m, c.id), 0) + 1
   }
-  // le macchine: un v1 aveva solo `pasticceria` in radice
+  // le macchine: un v1 aveva solo `pasticceria` in radice. Un v6 aveva altre ricette: ogni cosa in forno o pronta diventa il suo cugino di
+  // oggi (`nuovoId`); se il cugino sta in un'altra macchina (il pane, che era della pasticceria) arriva subito in dispensa, se no resta
+  // dov'era. Niente si perde: ciò che non entra nei tre posti va fra i pronti, e i pronti si ritirano.
   const macchine = oggetto(letto.macchine)
-  for (const t of TIPI_DI_MACCHINA) {
+  const vecchie = new Set([...Object.keys(macchine), ...(letto.pasticceria ? ['pasticceria'] : [])])
+  for (const t of TIPI_DI_MACCHINA) s.macchine[t] = macchinaVuota()
+  const alloggia = (t, ric, n, fine) => {
+    const id = nuovoId(ric), r = RICETTE[id]
+    if (!r || !(n >= 1)) return
+    if (r.dove !== t) { s.prodotti[id] = (s.prodotti[id] || 0) + n; return }
+    const Q = s.macchine[t]
+    for (let i = 0; i < n; i++) {
+      if (Q.coda.length < MACCHINE[t].posti) Q.coda.push({ ric: id, fine: Q.coda.length === 0 && Number.isFinite(fine) ? fine : null })
+      else Q.pronti[id] = (Q.pronti[id] || 0) + 1
+    }
+  }
+  for (const t of vecchie) {
     const p = oggetto(macchine[t] || (t === 'pasticceria' ? letto.pasticceria : null))
-    s.macchine[t] = {
-      coda: Array.isArray(p.coda) ? p.coda.filter(x => x && typeof x.ric === 'string' && RICETTE[x.ric] && RICETTE[x.ric].dove === t)
-        .map(x => ({ ric: x.ric, fine: Number.isFinite(x.fine) ? x.fine : null })) : [],
-      pronti: Object.fromEntries(Object.entries(oggetto(p.pronti)).filter(([k, n]) => RICETTE[k] && RICETTE[k].dove === t && numero(n) > 0).map(([k, n]) => [k, numero(n)])),
+    if (Array.isArray(p.coda)) for (const x of p.coda) if (x && typeof x.ric === 'string') alloggia(MACCHINE[t] ? t : '', x.ric, 1, x.fine)
+    for (const [k, n] of Object.entries(oggetto(p.pronti))) {
+      const id = nuovoId(k), r = RICETTE[id]
+      if (!r || !(numero(n) > 0)) continue
+      if (r.dove !== t || !MACCHINE[t]) s.prodotti[id] = (s.prodotti[id] || 0) + numero(n)
+      else s.macchine[t].pronti[id] = (s.macchine[t].pronti[id] || 0) + numero(n)
     }
   }
   const m = oggetto(letto.mongolfiera)
   s.mongolfiera = { fine: Number.isFinite(m.fine) ? m.fine : null, cassa: !!m.cassa }
   // il banco (assente prima del v3): ordini guasti diventano posti vuoti, che il banco riempie
   const o = oggetto(letto.ordini)
-  for (let k = 0; k < POSTI; k++) {
+  // i posti sono almeno quelli del livello e mai meno di quelli salvati (un ordine non si perde); un elenco corto si riempie
+  const posti = Math.max(Math.min(16, Array.isArray(o.aperti) ? o.aperti.length : 0), POSTI(livelloPer(s.esperienza)))
+  s.ordini.aperti = Array(posti).fill(null); s.ordini.riprende = Array(posti).fill(null)
+  for (let k = 0; k < posti; k++) {
     s.ordini.aperti[k] = Array.isArray(o.aperti) ? ordineInForma(o.aperti[k]) : null
     s.ordini.riprende[k] = Array.isArray(o.riprende) && Number.isFinite(o.riprende[k]) ? o.riprende[k] : null
   }

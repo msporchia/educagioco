@@ -3,6 +3,7 @@
 // gli stati già decisi (le tessere del campo, le pecore). Vedi docs/fattoria3d/scena.md.
 import * as THREE from 'three'
 import { PECORE } from '../dati/regole.js'
+import { casaDiLegno, bancoDellaGuaritrice, bachecaDelleTaglie } from './dal-sotterraneo.js'
 
 // ── materiali e mattoncini ──
 const cache = new Map()
@@ -56,82 +57,8 @@ function insegna (g, testo, larg, alt, x, y, z, o) {
   m.position.set(x, y, z); g.add(m); return m
 }
 
-// ── il campo: 2×2 celle, quattro tessere, le piante sono istanze; cinque colture che si vedono diverse ──
-const STELO = new THREE.CylinderGeometry(0.012, 0.022, 1, 4).translate(0, 0.5, 0)
-const SPIGA = new THREE.ConeGeometry(0.05, 0.22, 5).translate(0, 0.11, 0)
-const FRUTTO = new THREE.IcosahedronGeometry(0.07, 0).translate(0, 0.0, 0)
-const PER_TESSERA = 8
-/** Come appare ogni coltura: altezza dello stelo, colori da acerbo a maturo, e il frutto: 'spiga' (cono in cima), 'radice'
-    (cono capovolto a terra), 'sfera' (a mezza altezza), 'terra' (sfera a fior di terra: tuberi, bulbi), 'pendulo' (frutto
-    allungato che pende). `l` è la larghezza dello stelo (di serie 2 per 'sfera', 'terra' e 'pendulo', 1 per gli altri). Tempi e nomi sono di dati/colture.js. */
-export const ASPETTO = {
-  grano:    { h: 0.9,  a: 0x5fae3a, b: 0xe6b93c, frutto: 'spiga',  fc: 0xe6b93c, fs: 1 },
-  carota:   { h: 0.3,  a: 0x4aa83a, b: 0x4aa83a, frutto: 'radice', fc: 0xf08a24, fs: 1.5 },
-  mais:     { h: 1.25, a: 0x4f9a3a, b: 0x8fa83a, frutto: 'spiga',  fc: 0xf2d23a, fs: 1.7 },
-  pomodoro: { h: 0.5,  a: 0x4a9a3a, b: 0x4a9a3a, frutto: 'sfera',  fc: 0xd8352a, fs: 1 },
-  zucca:    { h: 0.22, a: 0x5aa03a, b: 0x5aa03a, frutto: 'sfera',  fc: 0xf09a20, fs: 2.4 },
-  patata:   { h: 0.3,  a: 0x2f6a30, b: 0x3a6a2c, frutto: 'terra',  fc: 0xd8b25a, fs: 1.5, l: 2.4 },
-  fragola:  { h: 0.12, a: 0x4a9a3a, b: 0x4a9a3a, frutto: 'sfera',  fc: 0xd8203a, fs: 1.0, l: 2.6 },
-  melanzana:{ h: 0.62, a: 0x4a8a3a, b: 0x4a8a3a, frutto: 'pendulo', fc: 0x5a2a7a, fs: 1.9, l: 1.8 },
-  cipolla:  { h: 0.36, a: 0x7cc04a, b: 0x9ab04a, frutto: 'terra',  fc: 0xe8d29a, fs: 1.4, l: 0.8 },
-  lavanda:  { h: 0.55, a: 0x6a8a5a, b: 0x7a9a6a, frutto: 'spiga',  fc: 0x8a5ac8, fs: 1.3, l: 1.4 },
-}
-const LARGO = { sfera: 2, terra: 2, pendulo: 2 }
-export function creaCampo (seme = 1) {
-  const g = new THREE.Group()
-  scatola(g, 2, 0.1, 2, mat(0x6e4a2a), 0, 0.05, 0)
-  for (const z of [-0.75, -0.25, 0.25, 0.75]) scatola(g, 1.84, 0.07, 0.17, mat(0x553720), 0, 0.12, z)
-  const legno = mat(0x9a6a36)
-  scatola(g, 2.1, 0.17, 0.08, legno, 0, 0.085, 1.0); scatola(g, 2.1, 0.17, 0.08, legno, 0, 0.085, -1.0)
-  scatola(g, 0.08, 0.17, 2.1, legno, 1.0, 0.085, 0); scatola(g, 0.08, 0.17, 2.1, legno, -1.0, 0.085, 0)
-  const n = 4 * PER_TESSERA
-  const steli = new THREE.InstancedMesh(STELO, mat(0xffffff), n)
-  const spighe = new THREE.InstancedMesh(SPIGA, mat(0xffffff), n)
-  const frutti = new THREE.InstancedMesh(FRUTTO, mat(0xffffff), n)
-  for (const m of [steli, spighe, frutti]) { m.castShadow = true; m.frustumCulled = false; m.setColorAt(0, new THREE.Color()) }
-  const pos = []
-  let r = seme * 9301 + 49297
-  const caso = () => { r = (r * 9301 + 49297) % 233280; return r / 233280 }
-  for (let k = 0; k < 4; k++) {
-    const cx = (k % 2 ? 0.5 : -0.5), cz = (k < 2 ? -0.5 : 0.5)
-    for (let a = 0; a < PER_TESSERA; a++) pos.push({ x: cx + (caso() - 0.5) * 0.78, z: cz + (caso() - 0.5) * 0.78, k, fase: caso() * 6.28 })
-  }
-  g.add(steli, spighe, frutti)
-  g.userData.grano = { steli, spighe, frutti, pos }
-  return g
-}
-const D = new THREE.Object3D(), CA = new THREE.Color(), CB = new THREE.Color(), CO = new THREE.Color(), CF = new THREE.Color()
-const ZERO = new THREE.Matrix4().makeScale(0, 0, 0)
-/** crescita: quattro numeri, -1 = vuota, 0..1 = cresce (1 = matura). `vento` false = niente ondeggio. */
-export function aggiornaCampo (g, crescita, t, coltura = 'grano', vento = true) {
-  const { steli, spighe, frutti, pos } = g.userData.grano
-  const C = ASPETTO[coltura] || ASPETTO.grano
-  CA.set(C.a); CB.set(C.b); CF.set(C.fc)
-  pos.forEach((p, n) => {
-    const c = crescita[p.k]
-    if (c < 0) { steli.setMatrixAt(n, ZERO); spighe.setMatrixAt(n, ZERO); frutti.setMatrixAt(n, ZERO); return }
-    const h = 0.1 + (C.h - 0.1) * Math.sqrt(c)
-    const sway = vento ? (Math.sin(t * 1.9 + p.fase) * 0.11 + Math.sin(t * 0.8 + p.x * 2.2) * 0.07) * (0.3 + c) : 0     // il vento si vede da lontano: ~10° alla punta di un campo maturo
-    const largo = C.l || LARGO[C.frutto] || 1
-    D.position.set(p.x, 0.1, p.z); D.rotation.set(0, 0, sway); D.scale.set(largo, h, largo); D.updateMatrix(); steli.setMatrixAt(n, D.matrix)
-    const m = Math.min(1, Math.max(0, (c - 0.62) / 0.38))
-    steli.setColorAt(n, CO.copy(CA).lerp(CB, m))
-    const f = c > 0.55 ? Math.min(1, (c - 0.55) / 0.4) : 0
-    spighe.setMatrixAt(n, ZERO); frutti.setMatrixAt(n, ZERO)
-    if (C.frutto === 'spiga') {
-      D.position.set(p.x - Math.sin(sway) * h, 0.1 + Math.cos(sway) * h, p.z); D.rotation.set(0, 0, sway); D.scale.setScalar(f * C.fs); D.updateMatrix(); spighe.setMatrixAt(n, D.matrix); spighe.setColorAt(n, CF)
-    } else if (C.frutto === 'radice') {
-      D.position.set(p.x, 0.17 + 0.0, p.z); D.rotation.set(Math.PI, 0, 0); D.scale.setScalar(f * C.fs); D.updateMatrix(); spighe.setMatrixAt(n, D.matrix); spighe.setColorAt(n, CF)
-    } else if (C.frutto === 'terra') {
-      D.position.set(p.x, 0.1 + f * 0.03, p.z); D.rotation.set(0, p.fase, 0); D.scale.set(f * C.fs, f * C.fs * 0.8, f * C.fs); D.updateMatrix(); frutti.setMatrixAt(n, D.matrix); frutti.setColorAt(n, CF)
-    } else if (C.frutto === 'pendulo') {
-      D.position.set(p.x + 0.05, 0.1 + h * 0.62, p.z + 0.03); D.rotation.set(0, p.fase, 0); D.scale.set(f * C.fs, f * C.fs * 1.7, f * C.fs); D.updateMatrix(); frutti.setMatrixAt(n, D.matrix); frutti.setColorAt(n, CF)
-    } else {
-      D.position.set(p.x + 0.05, 0.1 + h * 0.5 + f * 0.04, p.z + 0.03); D.rotation.set(0, p.fase, 0); D.scale.setScalar(f * C.fs); D.updateMatrix(); frutti.setMatrixAt(n, D.matrix); frutti.setColorAt(n, CF)
-    }
-  })
-  for (const m of [steli, spighe, frutti]) { m.instanceMatrix.needsUpdate = true; m.instanceColor.needsUpdate = true }
-}
+// ── il campo e le dieci colture: in modelli-colture.js ──
+export { ASPETTO, creaCampo, aggiornaCampo } from './modelli-colture.js'
 
 // ── la pasticceria: 4×3, la porta davanti ──
 export function creaPasticceria () {
@@ -394,8 +321,11 @@ export function creaSpaventapasseri () {
   return g
 }
 
-// ── la bancarella: 2×1 ──
-export function creaBancarella () {
+// ── la bancarella: 2×1. Il banco della guaritrice del Sotterraneo (dal-sotterraneo.js); il disegno di prima resta per il catalogo ──
+export function creaBancarella () { return bancoDellaGuaritrice() }
+/** La bacheca delle taglie: 2×1; `userData.mostraFogli(n)` accende i foglietti appuntati (gli ordini aperti). */
+export function creaBacheca () { return bachecaDelleTaglie() }
+export function creaBancarellaVecchia () {
   const g = new THREE.Group()
   const legno = mat(0x8a5a2b), rosso = mat(0xd24a3a), bianco = mat(0xfff7ea)
   scatola(g, 1.7, 0.5, 0.55, legno, 0, 0.25, 0.1)
@@ -593,19 +523,45 @@ export function creaPollaio (stati) {
   return g
 }
 
-// la mucca: bianca a chiazze marroni (un po' diversa per posto), la testa che rumina
-const G_MUCCA = new THREE.SphereGeometry(0.3, 9, 7), G_ZAMPA_M = new THREE.CylinderGeometry(0.045, 0.04, 0.34, 5)
-const G_CORNO = new THREE.ConeGeometry(0.03, 0.12, 4)
+// la mucca: bianca a chiazze marroni (un po' diversa per posto), la testa che rumina. Le chiazze sono colori per faccia sul
+// corpo stesso (niente mesh sovrapposte: non sporgono); le zampe entrano nella pancia e finiscono in uno zoccolo scuro.
+const G_ZAMPA_M = new THREE.CylinderGeometry(0.055, 0.046, 0.34, 5), G_ZOCCOLO = new THREE.CylinderGeometry(0.05, 0.054, 0.08, 5)
+const G_MUCCA = new THREE.SphereGeometry(0.3, 9, 7), G_CORNO = new THREE.ConeGeometry(0.03, 0.12, 4)
+const SCALA_CORPO = [0.8, 0.78, 1.45]
+// chiazze: centro (nel corpo, in metri dal centro) e raggio; due disegni, uno per parità del posto
+const CHIAZZE = [
+  [[0.2, 0.2, -0.12, 0.2], [-0.24, 0.05, 0.22, 0.17], [0.05, 0.24, 0.3, 0.1], [-0.08, 0.2, -0.38, 0.12]],
+  [[-0.2, 0.22, 0.05, 0.22], [0.25, 0.0, -0.2, 0.16], [0.12, 0.1, 0.38, 0.12], [-0.05, -0.12, -0.3, 0.1]]]
+const MANTI = new Map()
+function mantoDelCorpo (k) {
+  const v = k % 2
+  if (!MANTI.has(v)) {
+    const geo = new THREE.SphereGeometry(0.3, 14, 10).toNonIndexed(), pos = geo.attributes.position
+    const bianco = new THREE.Color(0xf7f3ea), macchia = new THREE.Color(v ? 0x6b4426 : 0x3a2a22), col = new Float32Array(pos.count * 3)
+    for (let f = 0; f < pos.count; f += 3) {
+      let x = 0, y = 0, z = 0
+      for (let n = 0; n < 3; n++) { x += pos.getX(f + n); y += pos.getY(f + n); z += pos.getZ(f + n) }
+      x = x / 3 * SCALA_CORPO[0]; y = y / 3 * SCALA_CORPO[1]; z = z / 3 * SCALA_CORPO[2]
+      const c = CHIAZZE[v].some(([cx, cy, cz, r]) => Math.hypot(x - cx, y - cy, z - cz) < r) ? macchia : bianco
+      for (let n = 0; n < 3; n++) { col[(f + n) * 3] = c.r; col[(f + n) * 3 + 1] = c.g; col[(f + n) * 3 + 2] = c.b }
+    }
+    geo.setAttribute('color', new THREE.BufferAttribute(col, 3))
+    MANTI.set(v, geo)
+  }
+  return MANTI.get(v)
+}
 export function creaMucca (k = 0) {
   const g = new THREE.Group()
-  const bianco = mat(0xf7f3ea), macchia = mat(k % 2 ? 0x6b4426 : 0x3a2a22), rosa = mat(0xf0b0a8), scuro = mat(0x2a2018)
-  const corpo = parte(g, G_MUCCA, bianco, 0, 0.55, 0); corpo.scale.set(0.8, 0.78, 1.45)
-  for (const [x, y, z, s] of [[0.2, 0.7, -0.1, 0.5], [-0.22, 0.6, 0.25, 0.42], [0.1, 0.82, 0.3, 0.3]]) { const m = parte(g, G_MUCCA, macchia, x * (k % 2 ? -1 : 1), y, z); m.scale.set(0.5 * s * 2, 0.32 * s * 2, 0.6 * s * 2) }
-  for (const [x, z] of [[0.17, 0.32], [-0.17, 0.32], [0.17, -0.32], [-0.17, -0.32]]) parte(g, G_ZAMPA_M, bianco, x, 0.17, z)
-  parte(g, G_UOVO, rosa, 0, 0.3, -0.2).scale.set(2, 1.2, 2)                              // la mammella
-  const coda = new THREE.Group(); coda.position.set(0, 0.7, -0.62); g.add(coda)
+  const bianco = mat(0xf7f3ea), rosa = mat(0xf0b0a8), scuro = mat(0x2a2018)
+  const corpo = parte(g, mantoDelCorpo(k), mat(0xffffff, { vertexColors: true }), 0, 0.42, 0); corpo.scale.set(...SCALA_CORPO)
+  for (const [x, z] of [[0.12, 0.25], [-0.12, 0.25], [0.12, -0.25], [-0.12, -0.25]]) {
+    parte(g, G_ZAMPA_M, bianco, x, 0.23, z); parte(g, G_ZOCCOLO, scuro, x, 0.04, z)
+  }
+  parte(g, G_UOVO, rosa, 0, 0.17, -0.2).scale.set(2, 1.2, 2)                              // la mammella
+  const coda = new THREE.Group(); coda.position.set(0, 0.59, -0.27); coda.rotation.x = 0.35; g.add(coda)   // nasce dal dorso e pende dietro
   cilindro(coda, 0.015, 0.015, 0.4, bianco, 0, -0.2, 0, 4); parte(coda, G_TESTA, scuro, 0, -0.42, 0).scale.setScalar(0.6)
-  const testa = new THREE.Group(); testa.position.set(0, 0.78, 0.5); g.add(testa)
+  parte(g, G_MUCCA, bianco, 0, 0.55, 0.38).scale.set(0.45, 0.4, 0.55)                    // il collo: lega la testa al corpo
+  const testa = new THREE.Group(); testa.position.set(0, 0.65, 0.5); g.add(testa)
   const t = parte(testa, G_MUCCA, bianco, 0, 0, 0.12); t.scale.set(0.5, 0.5, 0.62)
   parte(testa, G_MUCCA, rosa, 0, -0.07, 0.3).scale.set(0.34, 0.26, 0.28)
   for (const s of [-1, 1]) { const c = parte(testa, G_CORNO, mat(0xe8e0c8), s * 0.13, 0.17, 0.05); c.rotation.z = -s * 0.5; parte(testa, G_TESTA, bianco, s * 0.18, 0.08, 0.02).scale.set(1.1, 0.5, 0.6) }
@@ -617,22 +573,36 @@ export function creaMucca (k = 0) {
   return g
 }
 
+const G_PALO = new THREE.CylinderGeometry(0.04, 0.045, 0.68, 6)
 export function creaStalla (stati) {
   const g = new THREE.Group()
-  const rosso = mat(0xa8392f), bianco = mat(0xf3e9d4), legno = mat(0x8a5a34)
+  const rosso = mat(0xa8392f), bianco = mat(0xf3e9d4), legno = mat(0x8a5a34), paglia = mat(0xe0c060)
   scatola(g, 3.9, 0.04, 2.9, mat(0x8fd05c), 0, 0.02, 0).receiveShadow = true
-  scatola(g, 3.6, 1.5, 1.35, rosso, 0, 0.75, -0.85)
-  const falde = new THREE.Group(); falde.position.set(0, 0, -0.85); g.add(falde)
-  tetto(falde, 3.9, 1.8, 1.5, 0x8a5a34, 0.6)
-  scatola(g, 1.1, 1.1, 0.06, legno, 0, 0.55, -0.15)                                      // il portone con la croce bianca
-  for (const s of [1, -1]) { const x = scatola(g, 1.35, 0.07, 0.05, bianco, 0, 0.55, -0.11); x.rotation.z = s * 0.7 }
-  scatola(g, 1.1, 0.07, 0.05, bianco, 0, 1.12, -0.11)
-  scatola(g, 0.5, 0.45, 0.06, mat(0xa6d8ee), 1.25, 0.95, -0.15)
-  // la mangiatoia e due balle di fieno
-  scatola(g, 1.3, 0.22, 0.34, legno, 0, 0.11, 0.1); scatola(g, 1.2, 0.05, 0.24, mat(0xe0c060), 0, 0.23, 0.1)
-  for (const [x, z] of [[1.75, 0.1], [-1.75, 0.1]]) { const b = cilindro(g, 0.27, 0.27, 0.5, mat(0xe0c060), x, 0.27, z, 8); b.rotation.z = Math.PI / 2 }
+  scatola(g, 3.6, 0.02, 1.7, mat(0xcdb27a), 0, 0.05, 0.55)                               // la terra battuta del cortile
+  scatola(g, 3.6, 1.5, 1.2, rosso, 0, 0.75, -0.9)
+  const falde = new THREE.Group(); falde.position.set(0, 0, -0.9); g.add(falde)
+  tetto(falde, 3.9, 1.55, 1.5, 0x8a5a34, 0.6)
+  scatola(g, 1.1, 1.1, 0.06, legno, 0, 0.55, -0.27)                                      // il portone con la croce bianca
+  for (const s of [1, -1]) { const x = scatola(g, 1.35, 0.07, 0.05, bianco, 0, 0.55, -0.23); x.rotation.z = s * 0.7 }
+  scatola(g, 1.1, 0.07, 0.05, bianco, 0, 1.12, -0.23)
+  scatola(g, 0.5, 0.45, 0.06, mat(0xa6d8ee), 1.25, 0.95, -0.27)
+  // la mangiatoia contro il muro (le mucche le stanno davanti) e due balle di fieno negli angoli
+  scatola(g, 1.5, 0.2, 0.26, legno, 0, 0.1, -0.16); scatola(g, 1.4, 0.05, 0.18, paglia, 0, 0.21, -0.16)
+  for (const x of [1.62, -1.62]) { const b = cilindro(g, 0.2, 0.2, 0.4, paglia, x, 0.24, -0.08, 8); b.rotation.z = Math.PI / 2 }
+  // lo steccato basso che chiude il cortile, dal muro del fienile al muro, col cancelletto in mezzo davanti
+  const X = 1.85, Zf = 1.42, Zm = -0.28, Gx = 0.38
+  const palo = (x, z) => parte(g, G_PALO, legno, x, 0.34, z)
+  const sbarra = (lx, lz, x, z, y, m = legno) => scatola(g, lx, 0.06, lz, m, x, y, z)
+  for (const s of [-1, 1]) {
+    for (const x of [X, 1.36, 0.87, Gx]) palo(s * x, Zf)                                // il davanti, due tratti
+    for (let n = 0; n < 5; n++) palo(s * X, Zf - (Zf - Zm) * (n + 1) / 5)                // il fianco, fino al fienile
+    for (const y of [0.26, 0.5]) { sbarra(X - Gx, 0.05, s * (X + Gx) / 2, Zf, y); sbarra(0.05, Zf - Zm, s * X, (Zf + Zm) / 2, y) }
+  }
+  const cancello = mat(0xc99a5c)                                                          // il cancelletto: telaio chiaro con la crociera
+  for (const y of [0.22, 0.52]) sbarra(2 * Gx - 0.08, 0.05, 0, Zf, y, cancello)
+  const cr = sbarra(0.78, 0.04, 0, Zf, 0.37, cancello); cr.rotation.z = 0.44
   g.userData.bestie = []; g.userData.crea = creaMucca
-  g.userData.posto = k => new THREE.Vector3(-1.5 + k * 1.0, 0, 0.7)       // quattro mucche in fila davanti al fienile
+  g.userData.posto = k => new THREE.Vector3(-1.35 + k * 0.9, 0.05, 0.45)  // quattro mucche in fila nel cortile, davanti al fienile
   g.userData.altezza = 2.9
   sincronizzaBestie(g, stati || [{ fine: null }])
   return g
@@ -675,9 +645,9 @@ export function muoviBestie (g, dt, t, stati, adesso) {
       u.fase += dt
       const ruminando = st.fine !== null && !pronta
       u.testa.rotation.x = fame ? 0.55 + Math.sin(t * 0.9 + n) * 0.08 : 0.08 + Math.sin(t * (ruminando ? 1.3 : 0.7) + n) * 0.07
-      u.testa.position.y = 0.78 + Math.sin(t * 2.6 + n) * (ruminando ? 0.012 : 0.004)       // la mascella
+      u.testa.position.y = 0.65 + Math.sin(t * 2.6 + n) * (ruminando ? 0.012 : 0.004)       // la mascella
       u.coda.rotation.z = Math.sin(t * 1.1 + n * 2) * 0.35
-      u.corpo.position.y = 0.55 + Math.sin(t * 0.8 + n) * 0.006
+      u.corpo.position.y = 0.42 + Math.sin(t * 0.8 + n) * 0.006
     }
   })
 }
@@ -719,7 +689,9 @@ export function creaFienile () {
   g.userData.altezza = 3.6
   return g
 }
-export function creaCasa () {
+/** La casa di legno del Sotterraneo (dal-sotterraneo.js), 4×3, con il camino: `userData.fumo` è dove esce il fumo. */
+export function creaCasa () { return casaDiLegno() }
+export function creaCasaVecchia () {
   const g = new THREE.Group()
   scatola(g, 3.4, 1.4, 2.2, mat(0xf2e6cf), 0, 0.7, 0)
   tetto(g, 3.8, 2.7, 1.4, 0xc4553a, 0.55)
@@ -736,45 +708,6 @@ export const FORME = {
   chioma: new THREE.ConeGeometry(0.62, 1.2, 6).translate(0, 1.2, 0),
   chioma2: new THREE.ConeGeometry(0.46, 0.95, 6).translate(0, 1.85, 0),
   ciuffo: new THREE.ConeGeometry(0.05, 0.28, 4).translate(0, 0.14, 0),
-}
-
-// ── l'eroe: tutto primitive, con i perni per camminare, seminare, falciare ──
-export function creaEroe () {
-  const g = new THREE.Group()
-  const pelle = mat(0xf2c7a0), salopette = mat(0x3a62b0), maglia = mat(0xd24a3a), paglia = mat(0xe6c36a), scuro = mat(0x2a2018)
-  const gambe = [-1, 1].map(s => {
-    const p = new THREE.Group(); p.position.set(s * 0.09, 0.34, 0); g.add(p)
-    scatola(p, 0.13, 0.3, 0.15, salopette, 0, -0.15, 0); scatola(p, 0.14, 0.07, 0.2, scuro, 0, -0.32, 0.03); return p
-  })
-  const busto = new THREE.Group(); busto.position.y = 0.34; g.add(busto)
-  scatola(busto, 0.36, 0.34, 0.2, maglia, 0, 0.17, 0)
-  scatola(busto, 0.36, 0.2, 0.21, salopette, 0, 0.1, 0)
-  for (const s of [-1, 1]) scatola(busto, 0.06, 0.2, 0.22, salopette, s * 0.1, 0.27, 0)
-  const testa = new THREE.Group(); testa.position.y = 0.5; busto.add(testa)
-  sfera(testa, 0.16, pelle, 0, 0.14, 0, 1, 1, 1, 12)
-  sfera(testa, 0.02, scuro, 0.06, 0.16, 0.14, 1, 1, 1, 6); sfera(testa, 0.02, scuro, -0.06, 0.16, 0.14, 1, 1, 1, 6)
-  cilindro(testa, 0.27, 0.27, 0.03, paglia, 0, 0.27, 0, 14)
-  cilindro(testa, 0.14, 0.15, 0.13, paglia, 0, 0.34, 0, 12)
-  cilindro(testa, 0.145, 0.155, 0.04, mat(0xd24a3a), 0, 0.3, 0, 12)
-  const bracci = [-1, 1].map(s => {
-    const p = new THREE.Group(); p.position.set(s * 0.23, 0.3, 0); busto.add(p)
-    scatola(p, 0.09, 0.28, 0.1, maglia, 0, -0.13, 0); sfera(p, 0.055, pelle, 0, -0.29, 0, 1, 1, 1, 8); return p
-  })
-  // la falce: nel pugno destro, solo mentre si taglia
-  const falce = new THREE.Group(); falce.visible = false
-  bracci[1].add(falce); falce.position.set(0, -0.29, 0)
-  cilindro(falce, 0.018, 0.018, 1.1, mat(0x9a6a36), 0, -0.4, 0, 5)
-  const lama = pronto(new THREE.Mesh(new THREE.TorusGeometry(0.3, 0.022, 4, 14, Math.PI * 0.7), mat(0xcfd6dc, { metalness: 0.5, roughness: 0.4 })))
-  lama.rotation.set(Math.PI / 2, 0, Math.PI * 0.15); lama.position.set(0, -0.94, 0.0)
-  falce.add(lama)
-  // l'ascia: nel pugno destro, solo mentre si abbatte
-  const ascia = new THREE.Group(); ascia.visible = false
-  bracci[1].add(ascia); ascia.position.set(0, -0.29, 0)
-  cilindro(ascia, 0.022, 0.022, 0.7, mat(0x9a6a36), 0, -0.25, 0, 5)
-  scatola(ascia, 0.05, 0.16, 0.2, mat(0xcfd6dc, { metalness: 0.5, roughness: 0.4 }), 0, -0.56, 0.1)
-  g.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true } })
-  g.userData = { gambe, busto, testa, bracci, falce, ascia }
-  return g
 }
 
 // ── il fantasma di un pezzo che si sta per mettere: semitrasparente, verde se ci sta e rosso se no ──

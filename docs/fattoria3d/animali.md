@@ -19,8 +19,8 @@ sempre ([../fattoria/animali.md](../fattoria/animali.md)) ma più semplici delle
 - **Altre bestie si comprano dentro l'edificio, quando si vuole.** Recinto, pollaio e stalla funzionano allo stesso modo
   (`CORTILE` in `dati/animali.js`): una bestia nel prezzo del pezzo, le altre una per volta fino alla **capienza** (`posti`):
   recinto 4 pecore, pollaio 6 galline, stalla 4 mucche. **Il livello apre il pezzo, non i posti.** Ogni bestia costa
-  più della precedente: `prezzoBestia + rincaroBestia · (n − 1)` con `n` le bestie già dentro (pecora 20, 30, 40;
-  gallina 15, 23, 31, 39, 47; mucca 30, 45, 60). Conta come esperienza. Pieno rifiuta con `pieno`, senza monete con
+  più della precedente: `prezzoBestia + rincaroBestia · (n − 1)` con `n` le bestie già dentro (pecora 40, 60, 80;
+  gallina 25, 37, 49, 61, 73; mucca 60, 90, 120). Conta come esperienza. Pieno rifiuta con `pieno`, senza monete con
   `poche-monete` e il `costo`. Una pecora comprata è **adulta** (la lana ricresce da quel momento); le nascite restano
   ([regole.md](regole.md), «Le pecore»).
 - **Un pollaio o una stalla con le bestie non si mette via** (`ha-le-bestie`), si sposta, come il recinto.
@@ -31,16 +31,18 @@ sempre ([../fattoria/animali.md](../fattoria/animali.md)) ma più semplici delle
 `uova` e `latte` (`PRODOTTI_ANIMALI`) non hanno una macchina e non si chiedono da soli al banco: servono alle ricette
 ([ricette.js](../../src/giochi/fattoria3d/dati/ricette.js)). Il loro livello è quello del pezzo che li fa
 (`livelloDellaRicetta` lo sa), e per il premio degli ordini valgono il loro tempo più il primo raccolto che mangiano
-(`msDelProdotto`: 45 s un uovo, 88 s un latte).
+(`msDelProdotto`: 45 s un uovo, 88 s un latte). Ognuno ha la sua faccia nell'atlante (`pezzo`: `merce_uova`, `latte`).
+
+Le ricette sono quelle della fattoria di sempre ([merci-e-ricette.md](merci-e-ricette.md)):
 
 | ricetta | macchina | ingredienti | livello |
 |---|---|---|---|
-| torta soffice | pasticceria | uova 2, farina 1 | 6 |
-| frittata | pasticceria | uova 2, cipolle 1 | 9 |
-| brioche | panificio | farina 2, uova 1, latte 1 | 9 |
-| formaggio / burro | **caseificio** | latte 2 | 11 |
-| yogurt alla fragola | caseificio | latte 1, fragole 1 | 11 |
-| gelato alla crema | gelateria | latte 2, uova 1 | 14 |
+| pasta | pastificio | farina 2, uova 1 | 6 |
+| torta | panificio | farina 2, uova 1, burro 1 | 11 |
+| burro | **caseificio** | latte 1 | 11 |
+| formaggio | caseificio | latte 2 | 11 |
+| frullato | gelateria | fragole 2, latte 1 | 14 |
+| gelato | gelateria | latte 2, fragola 1 (in 2D lo zucchero) | 14 |
 
 Il **caseificio** è un edificio unico 3×3 (🪙120, livello 11, posto `{ i: 6, j: -3 }` nel lotto `5_2`, accanto al quadrato di
 partenza): una macchina come le altre, tre posti nel forno. Il suo lotto è da comprare prima (`lotto-non-tuo`).
@@ -73,14 +75,17 @@ emoji, n, max, pieno, prezzo }` (`prezzo` è null se pieno; null l'intero risult
   quattro mucche in fila davanti al fienile (le balle di fieno stanno ai lati), recinto le pecore a coppie.
 - **Pollaio**: casetta di legno su palafitte con scaletta e tetto rosso, terra battuta davanti, mangiatoia; le galline
   (bianche e brune a turno) razzolano e beccano di più se hanno fame; un uovo accanto alla gallina pronta.
-- **Stalla**: fienile rosso con tetto di legno e portone a croce, mangiatoia e balle; le mucche (bianche con chiazze,
-  una bruna e una scura) ruminano piano, scodinzolano, abbassano la testa se hanno fame; un secchio di latte accanto
-  alla pronta.
+- **Stalla**: fienile rosso con tetto di legno e portone a croce, mangiatoia contro il muro e due balle negli angoli; davanti un
+  cortile di terra battuta chiuso da uno steccato basso (dal muro al muro, col cancelletto in mezzo), dentro l'impronta 4×3:
+  le quattro mucche stanno in fila lì, rinchiuse. Le mucche (bianche con chiazze, una bruna e una scura) ruminano piano,
+  scodinzolano, abbassano la testa se hanno fame; un secchio di latte accanto alla pronta. Le zampe entrano nella pancia
+  e finiscono in uno zoccolo scuro; le chiazze sono colori per faccia sul corpo stesso (non sporgono; due disegni, per
+  posto pari e dispari); il collo lega la testa e la coda nasce dal dorso.
 - **Caseificio**: casetta bianca col tetto di tegole blu, forme di formaggio gialle su un bancale, la ruota ad acqua che
   gira piano.
 - Il cartello sopra recinto, pollaio e stalla (`pezzi.js`, `Effetti.nuovoCartello`): in alto lo stato («🥚 N pronti!», «⏳ Ns»,
   «🐔 ha fame», «🧶 pronta!» per le pecore), sotto il conto «🐄 2/4» e il pulsante «＋ 🪙 40». Peso: pollaio ~47 mesh
-  con una gallina (+~8 per ogni altra), stalla ~57 con le bestie al completo, caseificio ~32; geometrie delle bestie condivise, animazioni col tempo.
+  con una gallina (+~8 per ogni altra), stalla ~110 con le quattro mucche (steccato e cancelletto compresi), caseificio ~32; geometrie delle bestie condivise, animazioni col tempo.
 
 ## Il collegamento alla scena
 
@@ -99,3 +104,5 @@ emoji, n, max, pieno, prezzo }` (`prezzo` è null se pieno; null l'intero risult
 Nei test: `unita/fattoria3d` (sezioni 8 e 18–20); `integrazione/fattoria3d` (sezione «gli animali da cortile»: nutrire, uova,
 bestie comprate dal cartello — `[data-f3="cartello-bestie"]` con `data-n`/`data-max`, `[data-f3="compra-bestia"]` con
 `aria-disabled` —, latte, il recinto da una pecora a quattro, contatori, `[data-f3="prodotti"]`).
+
+Ogni acquisto di una bestia porta **un giro di pappa** (`pappa` nel risultato di `compraBestia`): le bestie affamate del pollaio o della stalla si nutrono dalla scorta, il recinto riceve un pasto (cresce l'agnello o avanza la nascita). Senza raccolti da dare, niente pappa (non è un rifiuto).

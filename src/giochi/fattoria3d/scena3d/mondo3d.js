@@ -23,8 +23,8 @@ const CIELO = new THREE.Color(0xbfe0f0)
 export class Mondo3d {
   constructor({ canvas, sopra, motore, ui, qualita }) {
     this.canvas = canvas; this.sopra = sopra; this.m = motore; this.ui = ui; this.q = qualita
-    // cosa sta facendo il bambino: lo imposta la vista (barra delle azioni, vassoio)
-    this.cmd = { modo: 'libero', seme: 'grano', costruendo: false, strumento: null, vista: 'vicino', pan: { x: 0, z: 0 } }
+    // cosa sta facendo il bambino: lo imposta la vista (barra delle azioni, pennello delle strade)
+    this.cmd = { modo: 'libero', seme: 'grano', strumento: null }
     this.rect = canvas.getBoundingClientRect()
 
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' })
@@ -130,7 +130,10 @@ export class Mondo3d {
   /** Le celle da cui si può servire una cosa: il davanti per gli edifici, tutta la cornice per il resto. */
   celleDiServizio(b) {
     let i, j, w, d, davanti = false
-    if (b.kind === 'cosa') { const c = this.m.cosa(b.id), x = PEZZI[c.tipo]; i = c.i; j = c.j; w = x.w; d = x.d }
+    if (b.kind === 'cosa') {
+      const c = this.m.cosa(b.id), x = PEZZI[c.tipo]; i = c.i; j = c.j; w = x.w; d = x.d
+      if (x.calpestabile) { const su = []; for (let a = 0; a < w; a++) for (let b2 = 0; b2 < d; b2++) su.push([i + a, j + b2]); return su }   // un ponte si tocca per salirci
+    }
     else if (b.kind === 'edificio') { const e = EDIFICI[b.tipo]; i = e.slot.i; j = e.slot.j; w = e.w; d = e.d; davanti = true }
     else { const a = b.kind === 'ostacolo' ? this.m.ostacoli[b.n] : this.m.alberi[b.n]; i = a.i; j = a.j; w = 1; d = 1 }
     const out = []
@@ -150,7 +153,6 @@ export class Mondo3d {
   tocca(x, y) {
     const { cmd, ui, m, eroe } = this
     if (ui.fogliAperti()) return
-    if (cmd.costruendo) return this._toccaCostruzione(x, y)
     const amico = this.compagni.bersaglio(this._raggio(x, y))           // Watson e i gatti si accarezzano prima di tutto
     if (amico) return this.compagni.tocca(amico)
     const b = this.bersaglioSotto(x, y)
@@ -184,25 +186,10 @@ export class Mondo3d {
   _edificioDaLontano(tipo) {
     return !this.m.s.posseduti[tipo] && (EDIFICI[tipo].liv > this.m.livello() || this.m.lottiMancanti(tipo).length > 0)
   }
-  _toccaCostruzione(x, y) {
-    const b = this.bersaglioSotto(x, y)
-    if (b && b.kind === 'edificio') return this.azioni.fai(b)                 // un edificio unico: si compra anche da qui
-    if (b && b.kind === 'ostacolo') { const o = this.m.ostacoli[b.n], l = lottoDi(o.i, o.j); if (l && !this.m.posseduto(l)) this.azioni.offriLotto(l); return this.ui.chiudiCostruzione() }
-    if (!b) { const l = this.lottoSotto(x, y); if (l) return this.azioni.offriLotto(l) }
-    this.ui.chiudiCostruzione()                                               // un tocco vero sulla mappa (non una strisciata: `dito.js` lo distingue) chiude il vassoio
-  }
-
   // ── semina e raccogli armati: la coda ──
   applicabile(c) { return c.tipo === 'campo' && (this.cmd.modo === 'semina' ? this.m.campoVuoto(c) : this.cmd.modo === 'raccogli' ? this.m.campoMaturo(c) : false) }
   _accoda(id) { if (!this.coda.includes(id)) { this.coda.push(id); this.pezzi.segnaCoda(id, true) } }
   svuotaCoda() { for (const id of this.coda) this.pezzi.segnaCoda(id, false); this.coda.length = 0 }
-  /** Mette in coda tutti i campi adatti, dal più vicino. Torna quanti. */
-  tutti() {
-    const { eroe, m } = this
-    const lista = m.cose.filter(c => this.applicabile(c)).sort((a, b) => Math.hypot(a.i - eroe.x, a.j - eroe.z) - Math.hypot(b.i - eroe.x, b.j - eroe.z))
-    lista.forEach(c => this._accoda(c.id))
-    return lista.length
-  }
   _eseguiInCoda(id) {
     const c = this.m.cosa(id); const { eroe } = this
     if (!c || eroe.az || !this.applicabile(c)) return
@@ -216,19 +203,13 @@ export class Mondo3d {
 
   // ── cosa sta facendo il bambino: la vista lo dice, qui si applica ──
   imposta(nuovo) {
-    const c = this.cmd, costruiva = c.costruendo
+    const c = this.cmd
     Object.assign(c, nuovo)
-    if (nuovo.modo) this.svuotaCoda()
-    if (c.costruendo && !costruiva) { this.svuotaCoda(); this.camera.zoom = 1; c.pan = { x: 0, z: 0 }; this.terreno.mostraGriglia(true) }
-    if (!c.costruendo && costruiva) { this.costruzione.annullaTrascinamento(); this.camera.zoom = 1; this.terreno.mostraGriglia(false) }
-  }
-  rettangoloVista() {
-    if (this.cmd.vista === 'tutto') {
-      const mie = this.m.lottiMiei()
-      const i = Math.min(...mie.map(l => l.i)), j = Math.min(...mie.map(l => l.j))
-      return { i, j, w: Math.max(...mie.map(l => l.i + l.w)) - i, d: Math.max(...mie.map(l => l.j + l.d)) - j }
+    if (nuovo.modo) { this.svuotaCoda(); this.costruzione.annullaTrascinamento() }
+    if ('strumento' in nuovo) {                                 // il pennello delle strade: la griglia c'è finché si disegna
+      if (c.strumento) { this.svuotaCoda(); this.costruzione.annullaTrascinamento() }
+      this.terreno.mostraGriglia(!!c.strumento || this.costruzione.attivo)
     }
-    return { i: this.eroe.x - 5, j: this.eroe.z - 6, w: 10, d: 12 }          // «vicino»: attorno all'eroe
   }
   get cameraLibera() { return this.camera.libera.on }
 
@@ -255,12 +236,11 @@ export class Mondo3d {
       if (c && this.applicabile(c)) eroe.vaiA(this.celleDiServizio({ kind: 'cosa', id }), () => this._eseguiInCoda(id), this.pezzi.centroDi({ kind: 'cosa', id }))
     }
     this.pezzi.aggiorna(dt, tt)
-    this.terreno.muovi(dt)
+    this.terreno.muovi(dt, this.fx)
     this.fx.aggiorna(dt, eroe.posizione)
     this._badgeLotti()
     this.camera.muovi(dt, {
       eroe: { x: eroe.x, z: eroe.z, vel: eroe.vel }, distanza: this.q.camera,
-      costruzione: this.cmd.costruendo ? { pan: this.cmd.pan, rettangolo: this.rettangoloVista() } : null,
     })
     this.renderer.render(this.scena, this.camera.cam)
     this._misura(dtReale, performance.now() - inizio, ts)
@@ -270,7 +250,7 @@ export class Mondo3d {
   _badgeLotti() {
     const m = this.m, e = this.eroe
     for (const l of LOTTI) {
-      const mostra = !m.posseduto(l) && m.confina(l) && (this.cmd.costruendo || Math.hypot(l.i + 2 - e.x, l.j + 2 - e.z) < 8)
+      const mostra = !m.posseduto(l) && m.confina(l) && (this.cmd.strumento || this.costruzione.attivo || Math.hypot(l.i + 2 - e.x, l.j + 2 - e.z) < 8)
       let b = this.badgeLotti[l.id]
       if (!mostra) { if (b) b.el.hidden = true; continue }
       b = this.badgeLotti[l.id] || (this.badgeLotti[l.id] = this.fx.nuovoBadge())
@@ -320,10 +300,26 @@ export class Mondo3d {
   adattaSenzaRect() { if (this.rect) this.renderer.setSize(Math.max(1, Math.round(this.rect.width)), Math.max(1, Math.round(this.rect.height)), false) }
   stress(tipo, n) { if (tipo) this.m.aggiungiProve(tipo, n); else this.m.togliProve(); this.pezzi.sincronizza() }
 
-  // ── il trascinamento dalla barra (la vista passa le coordinate della pagina) ──
-  iniziaDaCarta(tipo, x, y) { this.costruzione.inizia(tipo, null, x, y) }
-  muoviTrascinamento(x, y) { this.costruzione.muovi(x, y) }
-  rilascia(x, y) { this.costruzione.rilascia(x, y) }
+  // ── costruire: il menu «Costruisci qui» (viste/CostruisciQui.vue) e il fantasma che resta se la cella non basta ──
+  /** La cella dove il tasto 🏗️ costruisce: davanti all'eroe, o la più vicina libera nel terreno tuo. */
+  cellaDavanti() {
+    const e = this.eroe, m = this.m
+    const i0 = Math.floor(e.x + Math.sin(e.dir) * 1.6), j0 = Math.floor(e.z + Math.cos(e.dir) * 1.6)
+    let meglio = null
+    for (let r = 0; r <= 4 && !meglio; r++) {
+      let d = 1e9
+      for (let a = -r; a <= r; a++) for (let b = -r; b <= r; b++) {
+        if (Math.max(Math.abs(a), Math.abs(b)) !== r) continue
+        const i = i0 + a, j = j0 + b
+        if (!m.cellaPropria(i, j) || m.blocca(i, j)) continue
+        const dd = Math.hypot(i + 0.5 - e.x, j + 0.5 - e.z)
+        if (dd < d) { d = dd; meglio = [i, j] }
+      }
+    }
+    return meglio || e.cella()
+  }
+  /** Una scelta del menu: sulla cella premuta. Dice com'è andata (vedi `Costruzione.daMenu`). */
+  costruisciQui(tipo, i, j) { return this.costruzione.daMenu(tipo, i, j) }
   annullaTrascinamento() { this.costruzione.annullaTrascinamento() }
   tornaAllEroe() { this.camera.segui() }
 

@@ -26,16 +26,22 @@ scintille e `ui.avviso` («Watson è arrivato!»). Il controllo è una volta al 
   sorriso), cappello di paglia col nastro, salopette con toppe, stivali, fazzoletto rosso al collo. `ASPETTO_ERO` in
   `dati/compagni.js` sceglie `'contadino'` o `'contadina'` (trecce, nastro rosa, ciglia, un fiore sul cappello); non c'è
   schermata di scelta. Ha gli **stessi perni** del vecchio (`gambe`, `busto`, `testa`, `bracci`, `falce`, `ascia`), quindi
-  `eroe.js` e i gesti non sono cambiati; `creaEroe` di `modelli.js` resta come ripiego se la trama non parte. In più
+  `eroe.js` e i gesti non sono cambiati (il vecchio a scatole, `creaEroe`, è stato tolto: aveva la testa staccata). In più
   respira da fermo e inclina la testa camminando (poche righe in `Eroe._posa`).
-- **Watson** (`creaCane`): pelo grigio e bianco arruffato (icosaedri a facce piatte e ciuffi a cono), macchia scura sulla
-  testa, orecchie penzolanti, **il ciuffo bianco copre gli occhi** (se ne vedono solo due puntini sotto), naso nero,
-  **nessuna coda: un moncherino**. Cane grosso e goffo: il trotto dondola il sedere. Pose: sta, siede, annusa, dorme
-  raggomitolato, fa festa (scodinzola col sedere, lingua fuori), trotta.
+- **Watson** (`creaCane`): fatto sulla foto del cane vero. Testa grande, tonda e **bianca** con la **frangia** che ricade
+  sugli occhi e ne copre la metà di sopra (sotto si vedono due occhietti neri lucidi: da davanti dice «è lui», dall'alto
+  restano coperti come nella foto), **orecchie ardesia** larghe e penzolanti che schiariscono in punta, l'ardesia ai lati
+  della testa, **naso nero grande**, bocca aperta con la **lingua** sempre un po' fuori. Petto, collo e zampe davanti
+  bianchi; la **giacca grigio-azzurra** parte da dietro le spalle e copre fianchi, sedere (più alto delle spalle) e
+  cosce; zampe corte e grosse, piedi bianchi, **niente coda** (un moncherino nel pelo). Il pelo sono **ciocche**: coni a
+  cinque facce che ricadono, piantati su volumi morbidi e fusi in **un mesh per pezzo** coi colori nei vertici (radice
+  scura, punta chiara); le macchie sono una regola sulla posizione, sfumata a ciocche. Pose: sta (ansima), siede,
+  annusa, dorme sdraiato col mento sulle zampe, fa festa (scodinzola col sedere, lingua fuori), trotta (la frangia e le
+  orecchie ballano). Il catalogo 3D ha una voce per posa (`npm run catalogo3d:scheda -- --gioco fattoria --q watson`).
 - **I gatti** (`creaGatto(variante)`): corpo lungo, orecchie a punta, coda in tre pezzi che ondeggia, occhi con la fessura.
   Pose: sta, siede (coda attorno), si lava (zampa su), dorme a pagnotta, si stiracchia, fa le fusa, cammina basso.
-- **Il costo**: Watson ~35 mesh, un gatto ~32, il contadino ~38; geometrie e materiali condivisi, nessuna luce, nessuna
-  texture oltre alla faccia. In più una sfera **invisibile** (`userData.colpo`) fa da bersaglio del dito: il gatto è piccolo.
+- **Il costo**: Watson 17 mesh e ~6000 triangoli (il pelo; il test tiene il tetto a 8000), un gatto ~32 mesh, il
+  contadino ~38; geometrie e materiali condivisi, nessuna luce, nessuna texture oltre alla faccia. In più una sfera **invisibile** (`userData.colpo`) fa da bersaglio del dito: il gatto è piccolo.
 - Le pose (`posaCane`, `posaGatto`) sono funzioni senza memoria: stato, velocità, fase del passo e tempo; si provano in node.
 
 ## Come si muovono
@@ -51,7 +57,7 @@ Le scelte sono pure (`decidiCane`, `decidiGatto`, `scegliMeta`, tutte col `rnd` 
   salto, scendono da soli; se la panchina sparisce scendono subito). **Scappano dal cane** se gli si avvicina. Non salgono
   sulla bancarella: ha la merce sul bancone.
 - **Toccarli**: `Mondo3d.tocca` chiede prima a `compagni.bersaglio(raggio)`. Watson: «Bau!», cuoricini, fa festa. Il gatto:
-  «Prrr…», cuoricini, fusa. In costruzione non si accarezzano (il tocco chiude il vassoio come sempre).
+  «Prrr…», cuoricini, fusa. Col foglio «Costruisci qui» aperto non si accarezzano (i fogli fermano il tocco sulla mappa).
 
 ## Nei test
 
@@ -62,8 +68,7 @@ i compagni sono nella tela.
 
 ## Da sapere
 
-- Provato solo in node, **mai visto a schermo**: proporzioni, verso della faccia e pose vanno guardati col dito
-  (`#fattoria3d`, serve un livello 3 o 5: `window.__fattoria3d.motore.s.esperienza = …`). Watson va giudicato per primo e
-  severamente: pelo grigio-bianco arruffato, coda assente, occhi sotto il pelo
-  (come lo racconta la fattoria 2D: `docs/fattoria/animali.md`).
+- Watson e le sue pose si sono guardati nel catalogo 3D, **non ancora col dito**: in gioco va giudicato per primo e
+  severamente (`#fattoria3d`, serve un livello 3: `window.__fattoria3d.motore.s.esperienza = …`).
 - La posizione non si salva; i nomi sono dei dati. Un compagno in più è una voce di `COMPAGNI` col suo `liv` (uno per livello).
+- **Misura di Watson**: in scena è al 80% (`SCALA_CANE` in `modelli-compagni.js`): il bobtail è grande, ma accanto al contadino doveva sembrare più piccolo.

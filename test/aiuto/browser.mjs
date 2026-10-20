@@ -82,7 +82,7 @@ export async function apriTelefono({ viewport = TELEFONO } = {}) {
    che continua a riempirsi da solo mentre il test va avanti. */
 export async function apriGioco(browser, { viewport = TELEFONO, hash = '', attesa = '.carte', pixel = 2,
                                            giocatori = [GIOCATORE], userAgent,
-                                           spiegazioni = false, indirizzo = GIOCO } = {}) {
+                                           spiegazioni = false, indirizzo = GIOCO, amiciDecisi = true } = {}) {
   /* `userAgent` serve a una cosa sola, ma non c'è altro modo di provarla:
      alcune schermate cambiano a seconda del telefono che si ha in mano —
      il nastro «installalo» compare su Android e iPhone e non sul
@@ -124,6 +124,17 @@ export async function apriGioco(browser, { viewport = TELEFONO, hash = '', attes
      rigioca a ogni giro. Quindi il banco parte come se le avesse già
      viste tutte; `spiegazioni: true` le rimette, ed è quello che fa il
      test che le prova (`integrazione/guide`). */
+  /* Gli amici online sono spenti di base e si chiedono ai grandi (docs/core/amici.md): un profilo che c'era già e non ha mai risposto
+     fa comparire un avviso nella posta dei grandi. Il banco parte come se i grandi avessero già risposto (spento), se no ogni
+     test che guarda la posta o i nastri troverebbe una nota che non cerca; `amiciDecisi: false` la rimette. */
+  if (giocatori && amiciDecisi) {
+    await page.addInitScript(elenco => {
+      try {
+        for (const id of elenco) if (!localStorage.getItem('amici:' + id))
+          localStorage.setItem('amici:' + id, JSON.stringify({ id: 'banco' + id.replace(/[^a-z0-9]/g, '').padEnd(8, '0').slice(0, 10), deciso: true, attivo: false, online: true, amici: [] }))
+      } catch (e) { /* senza localStorage il test lo dirà da solo */ }
+    }, giocatori)
+  }
   if (!spiegazioni) {
     await page.addInitScript(() => {
       try { localStorage.setItem('guide-viste', '1') } catch (e) { /* niente */ }
