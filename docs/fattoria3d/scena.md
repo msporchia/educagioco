@@ -14,9 +14,9 @@ gli Asteroidi 3D e il Sotterraneo 3D: il 3D non si scrive a mano.
 | `eroe.js` | il movimento (a piedi, o di corsa), il percorso, la posa del gesto (semina, falcia, abbatte, esulta) |
 | `azioni.js` | cosa fa l'eroe davanti a ogni cosa: anima il gesto e **a metà gesto chiede al motore di farlo davvero**; un edificio posseduto apre il menu della sua macchina, uno no offre l'acquisto (`offriEdificio`: livello, terreno da comprare prima, prezzo) |
 | `detti.js` | `dettoDi` / `dettoDiRifiuto`: un rifiuto del motore in una riga che dice cosa fare. Senza three: lo usa anche `Gioco.vue` |
-| `costruzione.js` | il trascinamento dei pezzi (dalla barra o riprendendone uno), il fantasma, le strade a pennello; al rilascio compra e mette in un gesto |
-| `dito.js` | i pointer sulla tela: tocco, mappa che scorre, pizzico, tenere premuto, riprendere un pezzo |
-| `camera.js` | la telecamera: segue, libera, in costruzione |
+| `costruzione.js` | cosa fa una carta del menu sulla cella premuta (`daMenu`), il fantasma (anche «parcheggiato», che aspetta un posto), riprendere e spostare un pezzo, le strade a pennello; al rilascio compra e mette in un gesto |
+| `dito.js` | i pointer sulla tela: tocco, mappa che scorre, pizzico, tenere premuto (su un pezzo lo riprende, su un posto libero apre «Costruisci qui»), il fantasma parcheggiato, il pennello delle strade |
+| `camera.js` | la telecamera: segue l'eroe, o libera se un dito la sposta |
 | `effetti.js` | scintille e fumo, i testi che volano, il fumetto dell'eroe, i cartelli (`nuovoBadge`; `nuovoCartello` per le bestie, con un pulsante vero), l'albero che cade |
 | `modelli.js` | tutti i pezzi in codice (niente sprite, niente immagini: le trame sono canvas): il campo (ri-esportato da `modelli-colture.js`), i sette edifici (pasticceria, mongolfiera, mulino, panificio, caseificio, conserviera, gelateria), le quattro decorazioni (aiuola, panchina, pozzo, spaventapasseri), bancarella, fontana, recinto e pecore con le loro fasi, pollaio con le galline, stalla con le mucche ([animali.md](animali.md)), fienile; `creaCasa`, `creaBancarella` e `creaBacheca` sono dei sottili rimandi a `dal-sotterraneo.js`, e `creaCasaVecchia` e `creaBancarellaVecchia` sono i disegni di prima, tenuti per il catalogo |
 | `modelli-colture.js` | il campo 2×2 e le dieci colture, a istanze: vedi «Le colture» qui sotto |
@@ -69,21 +69,36 @@ dell'esplorazione: nel gruppo `fattoria3d` finirebbe mezzo sotterraneo. Cambia l
 shading e la palette della fattoria) e le misure (casa 4×3, banco e bacheca 2×1), la forma è la stessa. I file del sotterraneo non si
 toccano. Il cespuglio ha i vertici in grigio (luce e ombra) e il verde lo mette l'istanza come prima (`terreno.js`, `_ostacoli`).
 - **La casa** ha il camino e `userData.fumo`: il terreno ci fa uscire una fumata ogni ~0,9 s (`Terreno.muovi(dt, fx)`).
-- **La bacheca** ha i foglietti a parte (`userData.mostraFogli(n)`): `pezzi.js` ne accende tanti quanti gli ordini aperti
-  (ogni mezzo secondo) e scrive sul cartello «🧺 N pronti!» quando ce ne sono di consegnabili.
+- **La bacheca** ha i foglietti a parte (`userData.mostraFogli(n, colori)`, fino a sei, due mesh l'uno con una geometria e tre materiali condivisi): `pezzi.js` ne accende tanti quanti gli ordini aperti
+  (ogni mezzo secondo, al massimo sei) e li colora come i biglietti del foglio (`tipo` dell'ordine: verde, rosa, giallo) e scrive sul cartello «🧺 N pronti!» quando ce ne sono di consegnabili.
 
-## Costruire trascinando
+## Costruire: «Costruisci qui»
 
-Si **trascina una carta dalla barra fino alla mappa** (verso l'alto; di lato scorre la barra) e al rilascio si
-costruisce. Il fantasma sta 1,6 celle sopra il dito, verde se ci sta **e se bastano le monete** (`puoCompraEMettere` del
-motore: posto, livello, prezzo), rosso se no; sulla carta c'è già il prezzo. **Si paga al rilascio, senza conferme**:
-`compraEMetti` compra (se il pezzo non è già nel magazzino) e mette in un solo gesto, e se qualcosa non va non cambia niente
-(«Servono 🪙 N»). Le conferme restano solo per i lotti di terreno e gli edifici unici, che costano tanto e dicono il prezzo.
-Il magazzino (`📦 ×1`: pezzi già pagati, messi via) c'è ancora e un pezzo lì si mette gratis. Rilasciato sulla barra torna
-nel magazzino (🪙 1); un rilascio non valido non perde niente. Un pezzo già messo si riprende **trascinandolo** (in
-costruzione) o **tenendolo premuto mezzo secondo** (fuori: vibra, compaiono la griglia e la fascia «📦 metti via»); spostarlo
-costa 🪙 1. **Il vassoio si chiude da solo**: un tocco vero sulla mappa (sotto i 16 px, non una strisciata) che non cade su un
-edificio o un lotto da comprare lo chiude; la ✕ c'è lo stesso. Nessun «annulla».
+**Si tiene premuto** (~0,45 s, vibra) **su un posto libero del proprio terreno** e si apre il foglio «Cosa costruiamo?»
+(`viste/CostruisciQui.vue`, `dito.js` ricorda la cella premuta); il tasto 🏗️ della barra apre lo stesso foglio per la cella
+davanti all'eroe (`cellaDavanti`). Un dito che scorre prima della soglia non lo apre (il dito non è un mouse); un lotto non tuo si
+compra toccandolo; tenuto premuto su un pezzo lo riprende, come prima.
+- **Le schede** (`CATEGORIE` in `dati/catalogo.js`: 🌾 Campi, 🐑 Animali, 🏠 Edifici, 🌷 Decori, 🛣️ Strade) e sotto **le carte**, tre
+  per riga, dai dati (`dati/carte.js`: ogni pezzo e ogni edificio unico ha la sua `categoria`, ordinati per livello; un edificio
+  già comprato non si offre). La carta ha il disegno dell'atlante della fattoria di sempre (`DISEGNI`, mostrato da `Provino.vue`
+  della 2D, non modificato) o l'emoji su una piastrella del colore della scheda (passerella, trattore, strada e gomma); nome, prezzo
+  (o «📦 ×N» se il pezzo è già nel magazzino) e, se non è ancora arrivata, la velatura col lucchetto: **toccarla la fa tremare e
+  dice il livello**. Le schede scorrono di lato, il corpo in verticale; un tocco sul velo o la ✕ lo chiudono.
+- **Scegliere una carta la posa sulla cella premuta** (`Costruzione.daMenu`): fra i modi di posarla che coprono la cella prende il
+  più centrato che ci sta, **compra e mette in un gesto** (`compraEMetti`, senza conferme) e il foglio si chiude. Se mancano le
+  monete il foglio resta e dice «Servono 🪙 N». Se la cella non basta (occupata, fuori terreno) il foglio si chiude e **il fantasma
+  resta lì**, verde o rosso: lo si **trascina** (sta 1,6 celle sopra il dito) e al rilascio in un posto buono paga e mette; un
+  rilascio che non va lo lascia dov'è, un **tocco** su un posto buono costruisce lì e **su uno che non va annulla** (senza perdere
+  niente), come la fascia «✖️ … per annullare» in basso (si tocca, o ci si rilascia sopra).
+- **Gli edifici unici** (mulino, ecc.) aprono la loro offerta (`offriEdificio`: livello, terreno da comprare prima, prezzo). **La
+  strada e la gomma** attivano il pennello: il foglio si chiude e compare `viste/BarraStrade.vue` (strada, gomma, «Fatto»); il dito
+  sulla mappa disegna e due dita la spostano.
+- **Il prezzo e il rincaro** sono quelli di sempre (`prezzoPezzo`, `puoCompraEMettere`). Un pezzo già messo si riprende **tenendolo
+  premuto** (vibra, compaiono la griglia e la fascia «📦 metti via») e si trascina; spostarlo costa 🪙 1. Nessun «annulla».
+- **Non c'è più la telecamera «costruzione»** (alta, «Vicino» / «Tutto») né la barra: il posto si sceglie premendo dove lo si vuole.
+  Il fantasma si sistema sulla mappa di sempre (la telecamera segue l'eroe, due dita zoomano).
+- Il foglio si rifà dai dati a ogni cambio: una carta nuova nel catalogo compare da sola, e il test fallisce se manca la categoria.
+  Provato: una barra in basso con tutte le carte in fila: infinita e bruttina, per questo è un foglio a schede.
 
 ## Qualità e peso
 

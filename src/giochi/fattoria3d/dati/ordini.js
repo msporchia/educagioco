@@ -22,7 +22,11 @@ export const CLIENTI = [
 ]
 export const clienteDi = id => CLIENTI.find(c => c.id === id) || CLIENTI[0]
 
-export const POSTI = 3                 // ordini aperti insieme
+// Gli ordini aperti insieme crescono col livello: una bacheca piena di bigliettini. [dal livello, posti]; il premio resta quello di sempre.
+export const POSTI_PER_LIVELLO = [[1, 3], [5, 4], [8, 5], [11, 6], [14, 8]]
+export const POSTI_MAX = POSTI_PER_LIVELLO[POSTI_PER_LIVELLO.length - 1][1]
+/** Quanti ordini si aprono insieme a questo livello (non scende mai: il livello non scende). */
+export const POSTI = livello => POSTI_PER_LIVELLO.reduce((n, [da, posti]) => (livello >= da ? posti : n), POSTI_PER_LIVELLO[0][1])
 export const LIVELLO_BANCO = 2         // il livello della bacheca e della bancarella: da lì il banco chiede
 export const PEZZI_DEL_BANCO = ['bacheca', 'bancarella']   // i pezzi che aprono il banco: basta averne uno in mappa (la bacheca è il pezzo vero, la bancarella resta per chi l'ha già)
 export const RIPOSO_MS = 3 * 60_000    // un ordine rifiutato lascia il posto vuoto per tre minuti
@@ -51,6 +55,12 @@ export const minutiDi = chiede => Object.entries(chiede).reduce((n, [k, q]) => n
 export const tettoDi = chiede => MONETE_AL_MINUTO * minutiDi(chiede)
 /** L'esperienza che rende un ordine: sempre un intero, almeno 1, mai sopra il tetto. */
 export const premioDi = chiede => Math.max(1, Math.floor(tettoDi(chiede) * FRAZIONE_DEL_TETTO))
+/** Il colore del biglietto: rosa se chiede un prodotto delle macchine, giallo se è una cosa sola (un ordine facile, il primo che
+    si impara), verde se sono più raccolti. Lo usano il foglio degli ordini e i foglietti sulla bacheca in scena. */
+export const tipoDelOrdine = chiede => {
+  const k = Object.keys(chiede)
+  return k.some(eProdotto) ? 'rosa' : k.length === 1 ? 'giallo' : 'verde'
+}
 /** Da che livello si può chiedere: il più alto fra le cose chieste (e almeno il banco). */
 export const livelloDelOrdine = chiede => Math.max(LIVELLO_BANCO, ...Object.keys(chiede).map(livelloDi))
 
@@ -65,8 +75,8 @@ export function guastiDegliOrdini() {
   if (new Set(CLIENTI.map(c => c.id)).size !== CLIENTI.length) g.push('due clienti con lo stesso id')
   if (CLIENTI.length < 8 || CLIENTI.length > 10) g.push(`i clienti sono ${CLIENTI.length}: da 8 a 10`)
   for (const c of CLIENTI) if (!c.nome || !c.emoji) g.push(`${c.id}: manca nome o emoji`)
-  if (CLIENTI.length <= POSTI) g.push('i clienti non bastano a riempire il banco')
-  if (!(POSTI >= 1)) g.push('nessun posto al banco')
+  if (CLIENTI.length <= POSTI_MAX) g.push('i clienti non bastano a riempire il banco')
+  for (let l = 1; l <= 40; l++) if (!(POSTI(l) >= 1) || POSTI(l) < POSTI(l - 1 || 1)) g.push(`i posti al livello ${l} non crescono`)
   if (!(MONETE_AL_MINUTO === 6)) g.push('il cambio è 🪙6 al minuto (calibrazione)')
   if (!(FRAZIONE_DEL_TETTO > 0 && FRAZIONE_DEL_TETTO <= 1)) g.push('la frazione del tetto sta fra 0 e 1')
   for (const k of [...Object.keys(COLTURE), ...Object.keys(RICETTE)]) {

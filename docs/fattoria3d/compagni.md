@@ -57,7 +57,7 @@ Le scelte sono pure (`decidiCane`, `decidiGatto`, `scegliMeta`, tutte col `rnd` 
   salto, scendono da soli; se la panchina sparisce scendono subito). **Scappano dal cane** se gli si avvicina. Non salgono
   sulla bancarella: ha la merce sul bancone.
 - **Toccarli**: `Mondo3d.tocca` chiede prima a `compagni.bersaglio(raggio)`. Watson: «Bau!», cuoricini, fa festa. Il gatto:
-  «Prrr…», cuoricini, fusa. In costruzione non si accarezzano (il tocco chiude il vassoio come sempre).
+  «Prrr…», cuoricini, fusa. Col foglio «Costruisci qui» aperto non si accarezzano (i fogli fermano il tocco sulla mappa).
 
 ## Nei test
 

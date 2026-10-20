@@ -2,7 +2,7 @@
    `rnd`, così i test lo tengono fermo). Chi tiene gli ordini aperti è la Fattoria3d. Vedi docs/fattoria3d/ordini.md. */
 import { CLIENTI, clienteDi, CHIEDE_MAX, QUANTI_RACCOLTI, QUANTI_PRODOTTI, chiedibili, premioDi, livelloDelOrdine } from '../dati/ordini.js'
 import { COLTURE } from '../dati/colture.js'
-import { RICETTE } from '../dati/ricette.js'
+import { RICETTE, nuovoId } from '../dati/ricette.js'
 
 const scegli = (v, rnd) => v[Math.min(v.length - 1, Math.floor(rnd() * v.length))]
 const fra = ([a, b], rnd) => a + Math.min(b - a, Math.floor(rnd() * (b - a + 1)))
@@ -29,8 +29,9 @@ export function nuovoOrdine(livello, rnd, id, clientiOccupati = []) {
 export function ordineInForma(o) {
   if (!o || typeof o !== 'object' || !o.chiede || typeof o.chiede !== 'object' || Array.isArray(o.chiede)) return null
   const chiede = {}
-  for (const [k, n] of Object.entries(o.chiede)) {
-    if ((COLTURE[k] || RICETTE[k]) && Number.isInteger(n) && n >= 1 && n <= 20) chiede[k] = n
+  for (const [vecchio, n] of Object.entries(o.chiede)) {
+    const k = nuovoId(vecchio)           // un ordine di prima della 2D chiede il cugino di oggi (stesso mestiere, un pezzo per un pezzo)
+    if ((COLTURE[k] || RICETTE[k]) && Number.isInteger(n) && n >= 1 && n <= 20) chiede[k] = Math.min(20, (chiede[k] || 0) + n)
   }
   if (!Object.keys(chiede).length) return null
   const cliente = typeof o.cliente === 'string' ? clienteDi(o.cliente).id : CLIENTI[0].id

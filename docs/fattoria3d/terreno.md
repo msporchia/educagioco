@@ -60,5 +60,4 @@ va più in fretta** (6,6 contro 4,8) **e il percorso le preferisce** (costano il
 
 Segue l'eroe da sopra (distanza di serie 22: si vede una zona intera). Un dito che scorre la **stacca** (camera
 «libera») e compare «⌖ Torna all'eroe»; mandare l'eroe da qualche parte la rimette a seguirlo. Due dita zoomano. **Il
-contadino corre** quando il percorso supera 9 celle (1,75×). In costruzione la telecamera si alza e inquadra attorno
-all'eroe («Vicino») o tutto il terreno proprio («Tutto»), con due dita si sposta.
+contadino corre** quando il percorso supera 9 celle (1,75×). Non c'è più una telecamera «in costruzione»: si costruisce premendo dove si vuole ([scena.md](scena.md)); col pennello delle strade due dita spostano la vista.

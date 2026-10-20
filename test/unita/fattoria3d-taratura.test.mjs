@@ -20,7 +20,7 @@ controlla('ogni livello costa più del precedente', t.every((r, i) => !i || r.so
 
 // catena: un raccolto è il suo tempo, un prodotto è più lungo dei suoi ingredienti
 uguale('un raccolto matura nel suo tempo', catenaMs('grano'), COLTURE.grano.ms)
-controlla('la farina arriva dopo il grano, il pane integrale dopo la farina', catenaMs('farina') > catenaMs('grano') && catenaMs('panIntegrale') > catenaMs('farina'))
+controlla('la farina arriva dopo il grano, il pane dopo la farina, la lasagna dopo la pasta', catenaMs('farina') > catenaMs('grano') && catenaMs('pane') > catenaMs('farina') && catenaMs('lasagne') > catenaMs('pasta'))
 controlla(`nessuna cosa chiesta fa attendere più di ${TETTO_ATTESA_MS / 1000} secondi in catena`, t.every(r => r.lenta <= TETTO_ATTESA_MS))
 controlla('le prime colture si contano in secondi, le ultime restano sotto i due minuti', COLTURE.carota.ms <= 20000 && Math.max(...Object.values(COLTURE).map(c => c.ms)) < TETTO_ATTESA_MS)
 

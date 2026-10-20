@@ -3,6 +3,7 @@
 // in esperienza (la stella), mai monete. «Consegna» è spento finché manca roba, ma toccarlo dice cosa manca; «Cambia» manda via
 // l'ordine (il posto riposa qualche minuto). Un posto che riposa mostra il conto alla rovescia. Riceve una fotografia già pronta
 // e dice cosa si vuole con gli `emit`. Banco chiuso (livello, bacheca o bancarella che mancano): spiega cosa fare. Vedi docs/fattoria3d/ordini.md.
+import Faccia from './Faccia.vue'
 defineProps({
   aperto: { type: Boolean, default: false },
   perche: { type: String, default: '' },           // banco chiuso: cosa fare per aprirlo
@@ -41,7 +42,7 @@ const tinta = id => 't' + ([...String(id)].reduce((n, c) => n + c.charCodeAt(0),
                   <div class="cliente"><b>{{ o.cliente.nome }}</b><span class="premio" data-f3="premio">+{{ o.premio }} ⭐</span></div>
                   <div class="dischi">
                     <span v-for="c in o.chiede" :key="c.k" class="f3-gt grande" :class="c.manca ? 'manca' : 'ok'" :data-chiede="c.k">
-                      <span class="e">{{ c.emoji }}</span><b class="x">×{{ c.n }}</b><small>{{ c.ha }}/{{ c.n }}</small>
+                      <span class="e"><Faccia :k="c.k" :emoji="c.emoji" :lato="40" /></span><b class="x">×{{ c.n }}</b><small>{{ c.ha }}/{{ c.n }}</small>
                     </span>
                   </div>
                 </div>

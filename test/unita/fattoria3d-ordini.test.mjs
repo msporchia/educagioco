@@ -3,7 +3,7 @@
    rifiutare lascia il posto vuoto un po', e il salvataggio (v2 → v3) non perde niente.
    `node test/esegui.mjs fattoria3d-ordini`
    tempo: 1 */
-import { guastiDegliOrdini, CLIENTI, POSTI, RIPOSO_MS, LIVELLO_BANCO, PEZZI_DEL_BANCO, chiedibili, premioDi, tettoDi, livelloDi, livelloDelOrdine } from '../../src/giochi/fattoria3d/dati/ordini.js'
+import { guastiDegliOrdini, CLIENTI, POSTI, POSTI_MAX, POSTI_PER_LIVELLO, tipoDelOrdine, RIPOSO_MS, LIVELLO_BANCO, PEZZI_DEL_BANCO, chiedibili, premioDi, tettoDi, livelloDi, livelloDelOrdine } from '../../src/giochi/fattoria3d/dati/ordini.js'
 import { PEZZI } from '../../src/giochi/fattoria3d/dati/catalogo.js'
 import { COLTURE } from '../../src/giochi/fattoria3d/dati/colture.js'
 import { RICETTE } from '../../src/giochi/fattoria3d/dati/ricette.js'
@@ -30,7 +30,11 @@ const dai = (f, chiede) => { for (const [k, n] of Object.entries(chiede)) { if (
 const guasti = guastiDegliOrdini()
 controlla('i dati del banco non hanno guasti', guasti.length === 0, guasti.join(' · '))
 controlla('i clienti sono da otto a dieci', CLIENTI.length >= 8 && CLIENTI.length <= 10)
-uguale('il banco ha tre posti', POSTI, 3)
+stessaLista('il banco ha tre posti fino al livello 4', [1, 2, 4].map(POSTI), [3, 3, 3])
+stessaLista('e i posti crescono col livello', [5, 7, 8, 10, 11, 13, 14, ULTIMO].map(POSTI), [4, 4, 5, 5, 6, 6, 8, 8])
+controlla('i posti non scendono mai e il massimo è quello della tabella', Array.from({ length: ULTIMO }, (_, i) => POSTI(i + 1)).every((n, i, v) => !i || n >= v[i - 1]) && POSTI(ULTIMO) === POSTI_MAX && POSTI_MAX === POSTI_PER_LIVELLO.at(-1)[1])
+controlla('i biglietti hanno tre colori: rosa coi prodotti, giallo una cosa sola, verde più raccolti', tipoDelOrdine({ pane: 1 }) === 'rosa' && tipoDelOrdine({ grano: 1, pane: 1 }) === 'rosa'
+  && tipoDelOrdine({ grano: 2 }) === 'giallo' && tipoDelOrdine({ grano: 2, mais: 1 }) === 'verde')
 controlla('al livello del banco si chiedono solo raccolti', chiedibili(LIVELLO_BANCO).prodotti.length === 0 && chiedibili(LIVELLO_BANCO).raccolti.length >= 2)
 controlla('i prodotti arrivano con le macchine', chiedibili(ULTIMO).prodotti.length === Object.keys(RICETTE).length && chiedibili(5).prodotti.length > 0)
 
@@ -180,16 +184,38 @@ controlla('i prodotti arrivano con le macchine', chiedibili(ULTIMO).prodotti.len
   delete v2.ordini; v2.v = 2; v2.esperienza = 123; v2.merci.grano = 4; v2.prodotti = { pane: 2 }; v2.legna = 5
   const n = normalizza(v2)
   controlla('un v2 non perde niente', n.esperienza === 123 && n.merci.grano === 4 && n.prodotti.pane === 2 && !('legna' in n) && n.v === VERSIONE_STATO)
-  controlla('e ha un banco vuoto pronto a riempirsi', n.ordini.aperti.length === POSTI && n.ordini.aperti.every(x => x === null))
+  controlla('e ha un banco vuoto pronto a riempirsi', n.ordini.aperti.length === POSTI(1) && n.ordini.aperti.every(x => x === null))
   const { f } = mondo({ stato: v2, liv: 3 })
   controlla('il banco del v2 si riempie da solo', f.ordini().length === 3)
+}
+{
+  // i posti crescono col livello: l'elenco corto si riempie, il lungo non si perde
+  const alto = mondo({ liv: 14 })
+  uguale('al livello 14 il banco ha otto ordini', alto.f.ordini().filter(o => !o.attesa).length, POSTI(14))
+  const clienti = alto.f.ordini().map(o => o.cliente.id)
+  controlla('e sono tutti di clienti diversi', new Set(clienti).size === clienti.length, clienti.join())
+  const salvato = JSON.parse(JSON.stringify(alto.f.serializza()))
+  const letto = normalizza(salvato)
+  uguale('un salvataggio con otto ordini li tiene tutti', letto.ordini.aperti.filter(Boolean).length, POSTI(14))
+  const corto = JSON.parse(JSON.stringify(salvato)); corto.ordini.aperti = corto.ordini.aperti.slice(0, 3); corto.ordini.riprende = corto.ordini.riprende.slice(0, 3)
+  uguale('uno corto, a livello alto, si allunga ai posti del livello', normalizza(corto).ordini.aperti.length, POSTI(14))
+  const lungo = JSON.parse(JSON.stringify(statoIniziale())); lungo.esperienza = 0
+  lungo.ordini.aperti = [0, 1, 2, 3, 4].map(i => ({ id: i + 1, cliente: CLIENTI[i].id, chiede: { grano: 1 } })); lungo.ordini.riprende = [null, null, null, null, null]
+  const l = normalizza(lungo)
+  controlla('uno più lungo dei posti del livello non perde ordini', l.ordini.aperti.filter(Boolean).length === 5)
+  // salendo di livello i posti nuovi si aprono da soli
+  const { f, t } = mondo({ liv: 4 })
+  uguale('al livello 4 i posti sono tre', f.ordini().length, 3)
+  f.s.esperienza = sogliaDi(5); t.ora += 1
+  uguale('salendo al 5 se ne apre un quarto', f.ordini().filter(o => !o.attesa).length, POSTI(5))
+  uguale('e il rifiuto di un posto nuovo ha il suo riposo', f.rifiuta(3).ok && f.ordini()[3].attesa === true, true)
 }
 {
   // un salvataggio rotto non dà mai un'eccezione
   const rotti = [null, 5, 'x', [], { ordini: 3 }, { ordini: { aperti: 'a' } }, { ordini: { aperti: [null, 4, { chiede: 1 }, { chiede: { pane: -1, inesistente: 2 } }], riprende: ['x', NaN, 9], prossimoId: -4 } },
     { ordini: { aperti: [{ id: 'a', cliente: 7, chiede: { grano: 2, pane: 1.5 } }] } }]
   let eccezioni = 0, sballati = 0
-  for (const r of rotti) { try { const n = normalizza(r); if (n.ordini.aperti.length !== POSTI || n.ordini.prossimoId < 1 || n.ordini.aperti.some(o => o && !Object.keys(o.chiede).length)) sballati++ } catch { eccezioni++ } }
+  for (const r of rotti) { try { const n = normalizza(r); if (n.ordini.aperti.length < POSTI(1) || n.ordini.prossimoId < 1 || n.ordini.aperti.some(o => o && !Object.keys(o.chiede).length)) sballati++ } catch { eccezioni++ } }
   stessaLista('un salvataggio rotto non fa eccezioni né ordini vuoti', [eccezioni, sballati], [0, 0])
   const o = ordineInForma({ id: 3, cliente: 'sconosciuto', chiede: { grano: 2, pane: 1.5, zzz: 1 } })
   controlla('un ordine mezzo guasto tiene il buono e si ricalcola', o && Object.keys(o.chiede).join() === 'grano' && o.premio === premioDi({ grano: 2 }) && o.cliente === CLIENTI[0].id)

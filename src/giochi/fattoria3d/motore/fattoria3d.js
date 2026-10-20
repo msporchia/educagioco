@@ -14,7 +14,7 @@ import { generaOstacoli } from '../dati/ostacoli.js'
 import { ANIMALI, CORTILE, prezzoDellaBestia } from '../dati/animali.js'
 import { normalizza, nuoveTessere } from './stato.js'
 import { percorso } from './percorso.js'
-import { POSTI, RIPOSO_MS, LIVELLO_BANCO, PEZZI_DEL_BANCO, clienteDi } from '../dati/ordini.js'
+import { POSTI, RIPOSO_MS, LIVELLO_BANCO, PEZZI_DEL_BANCO, clienteDi, tipoDelOrdine } from '../dati/ordini.js'
 import { nuovoOrdine } from './ordini.js'
 
 export class Fattoria3d {
@@ -477,7 +477,7 @@ export class Fattoria3d {
     return n
   }
 
-  // ── le macchine: pasticceria, mulino, panificio, conserviera, gelateria. Tre posti nel forno, si cuoce uno alla volta ──
+  // ── le macchine: mulino, pastificio (id pasticceria), panificio, caseificio, cucina (id conserviera), gelateria. Tre posti nel forno, si cuoce uno alla volta ──
   /** Cosa c'è in scorta per una ricetta: un raccolto (merci) o il prodotto di un'altra macchina (prodotti). */
   scortaDi(k) { return COLTURE[k] ? this.s.merci[k] : (this.s.prodotti[k] || 0) }
   _togli(k, n) { if (COLTURE[k]) this.s.merci[k] -= n; else { this.s.prodotti[k] -= n; if (!this.s.prodotti[k]) delete this.s.prodotti[k] } }
@@ -554,11 +554,19 @@ export class Fattoria3d {
   // ── il banco: gli ordini (vedi docs/fattoria3d/ordini.md). Pagano esperienza, mai monete; niente scade ──
   /** Il banco chiede solo da livello 2 e solo se c'è una bacheca (o una bancarella, che apre lo stesso banco) messa su un terreno tuo. */
   bancoAperto() { return this.livello() >= LIVELLO_BANCO && this.s.cose.some(c => PEZZI_DEL_BANCO.includes(c.tipo)) }
+  /** I posti crescono col livello (dati/ordini.js `POSTI`); un elenco più lungo (uno stato letto) non si accorcia mai. Torna quanti sono. */
+  _allungaPosti() {
+    const O = this.s.ordini, posti = Math.max(O.aperti.length, POSTI(this.livello()))
+    while (O.aperti.length < posti) O.aperti.push(null)
+    while (O.riprende.length < posti) O.riprende.push(null)
+    return posti
+  }
   /** Riempie i posti vuoti il cui riposo è finito (un posto mai riempito o appena consegnato non ha riposo). */
   _riempiOrdini() {
     if (!this.bancoAperto()) return false
     const O = this.s.ordini, t = this.ora(); let cambiato = false
-    for (let k = 0; k < POSTI; k++) {
+    const posti = this._allungaPosti()
+    for (let k = 0; k < posti; k++) {
       if (O.aperti[k] || (O.riprende[k] !== null && t < O.riprende[k])) continue
       const occupati = O.aperti.filter(Boolean).map(o => o.cliente)
       O.aperti[k] = nuovoOrdine(this.livello(), this.rnd, O.prossimoId++, occupati)
@@ -578,7 +586,7 @@ export class Fattoria3d {
         const r = COLTURE[k] || RICETTE[k], ha = this.scortaDi(k)
         return { k, n, nome: r.nome, emoji: r.emoji, ha: Math.min(ha, n), manca: Math.max(0, n - ha), prodotto: !COLTURE[k] }
       })
-      return { idx, id: o.id, cliente: clienteDi(o.cliente), chiede, premio: o.premio, liv: o.liv, pronto: chiede.every(c => !c.manca) }
+      return { idx, id: o.id, cliente: clienteDi(o.cliente), chiede, premio: o.premio, liv: o.liv, tipo: tipoDelOrdine(o.chiede), pronto: chiede.every(c => !c.manca) }
     })
   }
   /** Cosa manca per consegnare l'ordine di quel posto: { chiave: quanti }, vuoto se si può. */
@@ -665,6 +673,7 @@ export class Fattoria3d {
   serializza() {
     const s = this.s
     this.tick()
+    this._allungaPosti()                     // così la lettura rifà lo stesso stato (`normalizza` allunga allo stesso modo)
     s.strade = []
     for (let k = 0; k < this.strada.length; k++) if (this.strada[k] === 1) s.strade.push(k)
     return JSON.parse(JSON.stringify(s))

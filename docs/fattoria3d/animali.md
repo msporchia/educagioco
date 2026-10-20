@@ -31,16 +31,18 @@ sempre ([../fattoria/animali.md](../fattoria/animali.md)) ma più semplici delle
 `uova` e `latte` (`PRODOTTI_ANIMALI`) non hanno una macchina e non si chiedono da soli al banco: servono alle ricette
 ([ricette.js](../../src/giochi/fattoria3d/dati/ricette.js)). Il loro livello è quello del pezzo che li fa
 (`livelloDellaRicetta` lo sa), e per il premio degli ordini valgono il loro tempo più il primo raccolto che mangiano
-(`msDelProdotto`: 45 s un uovo, 88 s un latte).
+(`msDelProdotto`: 45 s un uovo, 88 s un latte). Ognuno ha la sua faccia nell'atlante (`pezzo`: `merce_uova`, `latte`).
+
+Le ricette sono quelle della fattoria di sempre ([merci-e-ricette.md](merci-e-ricette.md)):
 
 | ricetta | macchina | ingredienti | livello |
 |---|---|---|---|
-| torta soffice | pasticceria | uova 2, farina 1 | 6 |
-| frittata | pasticceria | uova 2, cipolle 1 | 9 |
-| brioche | panificio | farina 2, uova 1, latte 1 | 9 |
-| formaggio / burro | **caseificio** | latte 2 | 11 |
-| yogurt alla fragola | caseificio | latte 1, fragole 1 | 11 |
-| gelato alla crema | gelateria | latte 2, uova 1 | 14 |
+| pasta | pastificio | farina 2, uova 1 | 6 |
+| torta | panificio | farina 2, uova 1, burro 1 | 11 |
+| burro | **caseificio** | latte 1 | 11 |
+| formaggio | caseificio | latte 2 | 11 |
+| frullato | gelateria | fragole 2, latte 1 | 14 |
+| gelato | gelateria | latte 2, fragola 1 (in 2D lo zucchero) | 14 |
 
 Il **caseificio** è un edificio unico 3×3 (🪙120, livello 11, posto `{ i: 6, j: -3 }` nel lotto `5_2`, accanto al quadrato di
 partenza): una macchina come le altre, tre posti nel forno. Il suo lotto è da comprare prima (`lotto-non-tuo`).

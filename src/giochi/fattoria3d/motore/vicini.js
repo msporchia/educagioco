@@ -5,7 +5,7 @@
    Il verso è quello di tutto il gioco: niente si vende per monete. Aiutare dà ESPERIENZA e roba del vicino; le monete escono
    (si compra), non entrano mai. */
 import { COLTURE } from '../dati/colture.js'
-import { RICETTE, emojiDi } from '../dati/ricette.js'
+import { RICETTE, emojiDi, nuovoId } from '../dati/ricette.js'
 import { PRODOTTI_ANIMALI } from '../dati/animali.js'
 import { PEZZI, EDIFICI } from '../dati/catalogo.js'
 import { lottoDi, dentro, idx, stradeDiSerie } from '../dati/mondo.js'
@@ -24,6 +24,12 @@ const ORA_VISITA = 1_000_000_000_000        // l'orologio della scena di una vis
 const oggetto = v => v && typeof v === 'object' && !Array.isArray(v) ? v : {}
 const numero = (v, d = 0) => Number.isFinite(v) && v >= 0 ? v : d
 const contatori = v => Object.fromEntries(Object.entries(oggetto(v)).filter(([k, n]) => typeof k === 'string' && k.length < 40 && numero(n) > 0).map(([k, n]) => [k, Math.floor(numero(n))]))
+/** Come `contatori`, ma le chiavi sono merci: quelle di prima della 2D si traducono (e si sommano). Per cassa e mercato. */
+const contatoriDiMerci = v => {
+  const out = {}
+  for (const [k, n] of Object.entries(contatori(v))) { const nuovo = nuovoId(k); out[nuovo] = (out[nuovo] || 0) + n }
+  return out
+}
 
 // ── lo stato che si salva (profile.campagne.fattoria3d.cfg.vicini), a parte da quello della fattoria ──
 export const statoVicini = () => ({ v: VERSIONE_VICINI, visite: {}, cassa: {}, mercato: {} })
@@ -35,11 +41,11 @@ export function normalizzaVicini(letto) {
   s.visite = contatori(letto.visite)
   for (const [id, c] of Object.entries(oggetto(letto.cassa)).slice(0, 40)) {
     const x = oggetto(c)
-    s.cassa[id] = { date: contatori(x.date), riapre: Number.isFinite(x.riapre) ? x.riapre : null }
+    s.cassa[id] = { date: contatoriDiMerci(x.date), riapre: Number.isFinite(x.riapre) ? x.riapre : null }
   }
   for (const [id, m] of Object.entries(oggetto(letto.mercato)).slice(0, 40)) {
     const x = oggetto(m)
-    s.mercato[id] = { venduti: contatori(x.venduti), scambi: contatori(x.scambi), rinnovo: Number.isFinite(x.rinnovo) ? x.rinnovo : null }
+    s.mercato[id] = { venduti: contatoriDiMerci(x.venduti), scambi: contatori(x.scambi), rinnovo: Number.isFinite(x.rinnovo) ? x.rinnovo : null }
   }
   return s
 }

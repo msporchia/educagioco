@@ -156,7 +156,7 @@ export class Pezzi {
       if (tt - (v.tOrdini ?? -9) > 0.5) {
         v.tOrdini = tt
         const aperti = this.m.ordini().filter(o => !o.attesa), pronti = aperti.filter(o => o.pronto).length
-        g.userData.mostraFogli(aperti.length)
+        g.userData.mostraFogli(Math.min(aperti.length, g.userData.fogli.length), aperti.map(o => o.tipo))
         v.badge.imposta(pronti ? `🧺 ${pronti} pront${pronti === 1 ? 'o' : 'i'}!` : '', pronti ? 'pronto' : '')
       }
     } else if (g.userData.anima) g.userData.anima(tt)              // fontana, spaventapasseri

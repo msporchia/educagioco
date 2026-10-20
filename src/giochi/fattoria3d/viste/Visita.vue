@@ -3,6 +3,7 @@
 // la storia del vicino, i due fogli e il viaggio del trattore. Riceve una fotografia già pronta (`motore/vicini.js` `scheda()`) e dice
 // cosa si vuole con gli `emit`: i conti sono del motore. Vedi docs/fattoria3d/vicini.md.
 import '../stile-vicini.css'
+import Faccia from './Faccia.vue'
 defineProps({
   fase: { type: String, default: 'visita' },        // andata | visita | ritorno
   verso: { type: String, default: '' },             // dove si va, scritto sul cartello del viaggio
@@ -50,7 +51,7 @@ const dati = c => c.righe.reduce((n, r) => n + r.dato, 0), tutti = c => c.righe.
           <p v-if="scheda.cassa.chiusa" class="f3-messaggio" data-f3="cassa-chiusa">La cassa è piena, grazie! Riapre fra {{ tempo(scheda.cassa.restoMs) }}.</p>
           <div class="f3-vic-righe">
             <div v-for="r in scheda.cassa.righe" :key="r.k" class="f3-vic-riga" :class="{ finita: r.finita }" :data-chiede="r.k">
-              <span class="em" aria-hidden="true">{{ r.emoji }}</span>
+              <span class="em" aria-hidden="true"><Faccia :k="r.k" :emoji="r.emoji" :lato="40" /></span>
               <span class="testo">
                 <b>{{ r.nome }}: {{ r.dato }}/{{ r.n }}</b>
                 <small :class="r.ha > 0 ? 'ok' : 'manca'">Ne hai {{ r.ha }}</small>
@@ -60,7 +61,7 @@ const dati = c => c.righe.reduce((n, r) => n + r.dato, 0), tutti = c => c.righe.
               <button :class="{ spenta: !r.puoi }" :aria-disabled="!r.puoi" :data-puoi="r.puoi" :data-aiuta="r.k" @click="$emit('aiuta', r.k)">{{ r.finita ? '✓ Fatto' : '🤝 Dai' }}</button>
             </div>
           </div>
-          <p v-if="scheda.cassa.dono" class="f3-vic-dono" data-f3="cassa-dono">A cassa piena {{ scheda.proprietario.nome }} ti regala {{ scheda.cassa.dono.emoji }} ×{{ scheda.cassa.dono.n }}.</p>
+          <p v-if="scheda.cassa.dono" class="f3-vic-dono" data-f3="cassa-dono">A cassa piena {{ scheda.proprietario.nome }} ti regala <Faccia :k="scheda.cassa.dono.k" :emoji="scheda.cassa.dono.emoji" :lato="26" /> ×{{ scheda.cassa.dono.n }}.</p>
           <p class="f3-nota">Ogni consegna dà esperienza ⭐ ({{ dati(scheda.cassa) }}/{{ tutti(scheda.cassa) }} pezzi), mai monete.</p>
         </div>
       </div>
@@ -74,7 +75,7 @@ const dati = c => c.righe.reduce((n, r) => n + r.dato, 0), tutti = c => c.righe.
           <h3>Compri da lui</h3>
           <div class="f3-vic-righe">
             <div v-for="v in scheda.mercato.vende" :key="v.k" class="f3-vic-riga" :data-vende="v.k">
-              <span class="em" aria-hidden="true">{{ v.emoji }}</span>
+              <span class="em" aria-hidden="true"><Faccia :k="v.k" :emoji="v.emoji" :lato="40" /></span>
               <span class="testo"><b>{{ v.nome }}</b><small>{{ v.esaurito ? 'Finito' : v.rimasti + ' disponibili' }} · ne hai {{ v.ha }}</small></span>
               <button :class="{ spenta: !v.puoi }" :aria-disabled="!v.puoi" :data-puoi="v.puoi" :data-compra="v.k" @click="$emit('compra', v.k)">🪙 {{ v.prezzo }}</button>
             </div>
@@ -82,10 +83,10 @@ const dati = c => c.righe.reduce((n, r) => n + r.dato, 0), tutti = c => c.righe.
           <h3>Gli vendi</h3>
           <div class="f3-vic-righe">
             <div v-for="b in scheda.mercato.compra" :key="b.i" class="f3-vic-riga" :data-baratto="b.i">
-              <span class="em" aria-hidden="true">{{ b.emoji }}</span>
+              <span class="em" aria-hidden="true"><Faccia :k="b.k" :emoji="b.emoji" :lato="40" /></span>
               <span class="testo">
-                <b>Dai {{ b.emoji }} ×{{ b.n }}</b>
-                <small>Ricevi +{{ b.premio }} ⭐<template v-if="b.da"> e {{ b.da.emoji }} ×{{ b.da.n }}</template></small>
+                <b>Dai <Faccia :k="b.k" :emoji="b.emoji" :lato="24" /> ×{{ b.n }}</b>
+                <small>Ricevi +{{ b.premio }} ⭐<template v-if="b.da"> e <Faccia :k="b.da.k" :emoji="b.da.emoji" :lato="20" /> ×{{ b.da.n }}</template></small>
                 <small :class="b.ha >= b.n ? 'ok' : 'manca'">Ne hai {{ b.ha }} · {{ b.rimasti > 0 ? b.rimasti + (b.rimasti === 1 ? ' volta' : ' volte') : 'finito' }}</small>
               </span>
               <button :class="{ spenta: !b.puoi }" :aria-disabled="!b.puoi" :data-puoi="b.puoi" :data-vendi="b.i" @click="$emit('vendi', b.i)">Scambia</button>

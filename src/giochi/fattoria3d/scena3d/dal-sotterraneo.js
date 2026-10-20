@@ -127,27 +127,35 @@ export function bancoDellaGuaritrice () {
 }
 
 // ── la bacheca delle taglie (ponti.js: bacheca): due pali, la tavola col tettuccio. I foglietti appuntati sono a parte, perché
-// il loro numero cambia: `userData.mostraFogli(n)` ne accende da 0 a 3. 2×1 celle. ──
-export const FOGLI_BACHECA = 3
+// il loro numero e il loro colore cambiano: `userData.mostraFogli(n, colori)` ne accende da 0 a 6, ognuno verde, rosa o giallo come
+// il biglietto nel foglio degli ordini (dati/ordini.js `tipoDelOrdine`). Una geometria e tre materiali per tutte le bacheche. 2×1 celle. ──
+export const FOGLI_BACHECA = 6
+let _geoFoglio = null, _geoSpillo = null, _matFogli = null, _matSpillo = null
+function partiDeiFogli () {
+  if (!_geoFoglio) {
+    _geoFoglio = new THREE.BoxGeometry(0.4, 0.4, 0.02); _geoSpillo = new THREE.SphereGeometry(0.035, 6, 5)
+    const m = c => new THREE.MeshStandardMaterial({ color: c, roughness: 0.95, side: THREE.DoubleSide })
+    _matFogli = { verde: m(0xb7e08a), rosa: m(0xf3b0c4), giallo: m(0xf7e28a) }; _matSpillo = new THREE.MeshStandardMaterial({ color: 0xd24a3a, roughness: 0.6 })
+  }
+}
 export function bachecaDelleTaglie () {
   const c = new Cantiere()
   for (const s of [-1, 1]) c.metti(scatola(0.12, 1.9, 0.12), 0x6b4c37, s * 0.8, 0.95, 0)
   c.metti(scatola(1.7, 1.0, 0.08), 0x9a7650, 0, 1.25, 0.04)
   for (const s of [-1, 1]) c.metti(scatola(2.0, 0.05, 0.42), 0x8c4a3a, 0, 2.01, s * 0.15, { rx: s * 0.5, doppio: true })
   const g = c.chiudi()
-  const carta = new THREE.MeshStandardMaterial({ color: 0xf4ebcd, roughness: 0.95, side: THREE.DoubleSide })
-  const riga = new THREE.MeshStandardMaterial({ color: 0x6b5a40, roughness: 1 })
-  const spillo = new THREE.MeshStandardMaterial({ color: 0xd24a3a, roughness: 0.6 })
-  const fogli = [[-0.55, 1.34, 0.08], [0.02, 1.2, -0.05], [0.56, 1.34, 0.06]].map(([x, y, r]) => {
+  partiDeiFogli()
+  // due file da tre, appena storti: 6 posti, 2 mesh l'uno (il biglietto e la puntina)
+  const fogli = [[-0.55, 1.5, 0.06], [0, 1.52, -0.04], [0.55, 1.5, 0.05], [-0.55, 1.0, -0.05], [0, 0.98, 0.07], [0.55, 1.0, -0.03]].map(([x, y, r]) => {
     const f = new THREE.Group(); f.position.set(x, y, 0.1); f.rotation.z = r
-    const foglio = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.52, 0.02), carta); foglio.castShadow = true; f.add(foglio)
-    for (const dy of [0.1, 0, -0.1]) { const r2 = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.025, 0.005), riga); r2.position.set(0, dy, 0.013); f.add(r2) }
-    const p = new THREE.Mesh(new THREE.SphereGeometry(0.035, 6, 5), spillo); p.position.set(0, 0.22, 0.02); f.add(p)
+    const foglio = new THREE.Mesh(_geoFoglio, _matFogli.verde); foglio.castShadow = true; f.add(foglio)
+    const p = new THREE.Mesh(_geoSpillo, _matSpillo); p.position.set(0, 0.16, 0.02); f.add(p)
+    f.userData.carta = foglio
     g.add(f); return f
   })
   g.userData.fogli = fogli
-  g.userData.mostraFogli = n => fogli.forEach((f, i) => { f.visible = i < n })
-  g.userData.mostraFogli(FOGLI_BACHECA)
+  g.userData.mostraFogli = (n, colori = []) => fogli.forEach((f, i) => { f.visible = i < n; f.userData.carta.material = _matFogli[colori[i]] || _matFogli.verde })
+  g.userData.mostraFogli(3)
   g.userData.altezza = 2.3
   return g
 }

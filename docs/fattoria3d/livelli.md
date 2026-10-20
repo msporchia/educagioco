@@ -57,15 +57,16 @@ i dati veri, quindi un elenco non si scrive due volte e non si scosta.
 - **I nomi stanno sulla cosa** (`NOMI`), l'ordine è la precedenza quando due cose arrivano insieme.
 
 ```
- 1 campo, grano, carote          9 stalla (latte), cipolle, pozzo, frittata, brioche
+ 1 campo, grano, carote          9 stalla (latte), cipolle, pozzo
  2 mais, bancarella, aiuola     10 mongolfiera
- 3 mulino (farine), passerella  11 caseificio (formaggio, burro, yogurt), fragole
- 4 recinto, pomodori, tavolo   12 conserviera (passata, marmellata, cipolle)
- 5 pasticceria (pane, popcorn), ponte  13 melanzane (caponata), spaventapasseri
- 6 pollaio (uova), patate,      14 gelateria (gelati di fragola, di carote, alla crema)
-   panchina, pizza, torta soffice
- 7 panificio                    15 lavanda (gelato alla lavanda)
- 8 zucche, fontana, torte
+ 3 mulino (farina, pappa di mais), passerella
+                                11 caseificio (burro, formaggio), fragole, torta, crostata
+ 4 recinto, pomodori, tavolo   12 cucina (salsa, polenta, minestrone), pizza, lasagne
+ 5 pollaio (uova), ponte        13 melanzane (parmigiana), spaventapasseri
+ 6 pastificio (pasta), patate,  14 gelateria (frullato, gelato)
+   panchina
+ 7 panificio (pane)             15 lavanda
+ 8 zucche, fontana
 ```
 
 Il livello apre il **pezzo** (pollaio, stalla, recinto); le bestie in più dentro non hanno livello: si comprano a monete
@@ -73,8 +74,9 @@ Il livello apre il **pezzo** (pollaio, stalla, recinto); le bestie in più dentr
 
 Le decorazioni nuove (passerella al 3, tavolo al 4, ponte al 5) non spostano la scaletta: non sono produttive, quindi non si sommano ai salti.
 
-Pollaio, stalla e caseificio stanno **nei buchi** della scaletta (6, 9, 11: livelli senza una cosa produttiva), così i
-livelli restano quindici e le soglie dopo il 6 salgono del loro prezzo (55, 90, 120). Il livello di `uova` e `latte` è
+Pollaio, stalla e caseificio stanno **nei buchi** della scaletta (5, 9, 11: livelli senza una cosa produttiva), così i
+livelli restano quindici e le soglie dopo il 5 salgono del loro prezzo (55, 90, 120). Il pollaio è al 5 e il pastificio al 6 (era il
+contrario, con la pasticceria): la pasta vuole le uova, e una macchina non si compra prima della sua prima ricetta. Il livello di `uova` e `latte` è
 quello del pezzo che li fa, e `livelloDellaRicetta` li conta fra gli ingredienti ([animali.md](animali.md)).
 
 ## Il rifiuto

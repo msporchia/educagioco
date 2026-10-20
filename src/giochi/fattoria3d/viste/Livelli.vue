@@ -3,6 +3,7 @@
 // aperta con ciò che è arrivato), sotto il gradino successivo con la sua scatola ancora chiusa (col lucchetto, in grigio) e poi
 // un gradino segreto. Solo lettura; la ✕ in alto a destra.
 import { computed } from 'vue'
+import Faccia from './Faccia.vue'
 
 const props = defineProps({
   info: { type: Object, required: true },          // avanzamento(): { livello, nome, manca, quanto }
@@ -15,8 +16,8 @@ defineEmits(['chiudi'])
 const voci = r => [
   ...r.pezzi.map(c => ({ k: 'p' + c.id, emoji: c.emoji, nome: c.nome, cosa: 'da costruire' })),
   ...r.edifici.map(c => ({ k: 'e' + c.id, emoji: c.emoji, nome: c.nome, cosa: 'edificio' })),
-  ...r.colture.map(c => ({ k: 'c' + c.id, emoji: c.emoji, nome: c.nome, cosa: 'da seminare' })),
-  ...r.ricette.map(c => ({ k: 'r' + c.id, emoji: c.emoji, nome: c.nome, cosa: 'ricetta' })),
+  ...r.colture.map(c => ({ k: 'c' + c.id, merce: c.id, emoji: c.emoji, nome: c.nome, cosa: 'da seminare' })),
+  ...r.ricette.map(c => ({ k: 'r' + c.id, merce: c.id, emoji: c.emoji, nome: c.nome, cosa: 'ricetta' })),
   ...(r.compagni || []).map(c => ({ k: 'a' + c.id, emoji: c.tipo === 'cane' ? '🐕' : '🐈', nome: c.nome, cosa: 'arriva in fattoria' })),
 ]
 const arrivate = computed(() => voci(props.ora))
@@ -41,7 +42,7 @@ const prossime = computed(() => voci(props.dopo))
             <p class="f3-nota">Spendi ancora 🪙 {{ info.manca }} qui dentro per il livello {{ info.livello + 1 }}.</p>
             <h3>📦 Arrivato con questo livello</h3>
             <div class="f3-roba">
-              <div v-for="(c, n) in arrivate" :key="c.k" class="dono" :style="{ '--i': n }"><span class="em">{{ c.emoji }}</span><b>{{ c.nome }}</b><small>{{ c.cosa }}</small></div>
+              <div v-for="(c, n) in arrivate" :key="c.k" class="dono" :style="{ '--i': n }"><span class="em"><Faccia v-if="c.merce" :k="c.merce" :emoji="c.emoji" :lato="38" /><template v-else>{{ c.emoji }}</template></span><b>{{ c.nome }}</b><small>{{ c.cosa }}</small></div>
             </div>
           </div>
         </li>
@@ -51,7 +52,7 @@ const prossime = computed(() => voci(props.dopo))
             <p class="f3-nome">{{ nomeDopo }}</p>
             <h3><span class="regalo" aria-hidden="true">🎁</span> Dopo, al livello {{ info.livello + 1 }}</h3>
             <div class="f3-roba chiusa">
-              <div v-for="(c, n) in prossime" :key="c.k" class="dono" :style="{ '--i': n + 2 }"><span class="em">{{ c.emoji }}</span><b>{{ c.nome }}</b><small>🔒 {{ c.cosa }}</small></div>
+              <div v-for="(c, n) in prossime" :key="c.k" class="dono" :style="{ '--i': n + 2 }"><span class="em"><Faccia v-if="c.merce" :k="c.merce" :emoji="c.emoji" :lato="38" /><template v-else>{{ c.emoji }}</template></span><b>{{ c.nome }}</b><small>🔒 {{ c.cosa }}</small></div>
             </div>
           </div>
         </li>
