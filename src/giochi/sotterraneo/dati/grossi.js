@@ -35,6 +35,26 @@ export const GROSSI = {
   carbonchio: { nome: 'Carbonchio', tipo: 'gigante', figura: 'drago-lava', ossa: 1.1, att: 1, tinta: '#ff5a1c',
                 difese: { resiste: ['fuoco'], teme: ['gelo'], immune: ['brucia'] },
                 pezzo: 'martello-di-carbonchio', dice: 'Il drago di lava delle miniere: le sue squame sono carbone acceso.' },
+  // i sei dei dungeon nuovi del mondo a percorso (solo del 3D, dati/dungeon-del-mondo.js): creature del catalogo ingrandite con la
+  // corona, sulle basi e coi numeri dei sette (il troll fino al 9, poi il gigante); da tarare col banco a lavoro finito
+  barbamuschio: { nome: 'Barbamuschio', tipo: 'troll', figura: 'golem-muschio', ossa: 1.1, att: 1, tinta: '#6fbf4a',
+                  difese: { resiste: ['veleno', 'fisico'], teme: ['fuoco'], immune: ['stordisce', 'avvelena'] },
+                  pezzo: 'scudo-di-barbamuschio', dice: 'Un golem di pietra coperto di muschio: quando cammina, il prato trema.' },
+  piumanera: { nome: 'Piumanera', genere: 'f', tipo: 'troll', figura: 'grifone', ossa: 1.1, att: 1, tinta: '#8c7bd6',
+               difese: { resiste: ['gelo'], teme: ['fulmine'], immune: ['stordisce'] },
+               pezzo: 'medaglione-di-piumanera', dice: 'Un grifone con le penne nere come la notte, e un becco che spacca i sassi.' },
+  sibilla: { nome: 'Sibilla', genere: 'f', tipo: 'gigante', figura: 'serpente', ossa: 1.1, att: 1, tinta: '#9ad14a',
+             difese: { resiste: ['veleno'], teme: ['gelo'], immune: ['avvelena'] },
+             pezzo: 'giubba-di-sibilla', dice: 'Un serpente lungo come il ponte del guado, che sibila nel fango.' },
+  brontolava: { nome: 'Brontolava', tipo: 'gigante', figura: 'golem-magma', ossa: 1.15, att: 1, tinta: '#ff7a2c',
+                difese: { resiste: ['fuoco', 'fisico'], teme: ['gelo'], immune: ['brucia', 'stordisce'] },
+                pezzo: 'scudo-di-brontolava', dice: 'Un golem di lava che brontola come una pentola: dove passa, la pietra si scioglie.' },
+  brinaldo: { nome: 'Brinaldo', tipo: 'gigante', figura: 'golem-ghiaccio', ossa: 1.15, att: 1, tinta: '#8fd8ff',
+              difese: { resiste: ['gelo'], teme: ['fuoco'], immune: ['gela', 'stordisce'] },
+              pezzo: 'amuleto-di-brinaldo', dice: 'Un golem di ghiaccio: ogni cosa che tocca diventa brina.' },
+  falcenera: { nome: 'Falcenera', genere: 'f', tipo: 'gigante', figura: 'mietitore', ossa: 1.2, att: 2, tinta: '#b58cff',
+               difese: { resiste: ['gelo'], teme: ['sacro'], immune: ['avvelena', 'sanguina'] },
+               pezzo: 'scudo-di-falcenera', dice: 'Il mietitore delle tombe del vento, con la falce più lunga di un albero.' },
 }
 
 // Le difese di un mostro del piano (`m.tipo`, e `m.grosso` se è un grosso; `m.difese` se la sua variante le cambia): { resiste, teme, immune }
@@ -48,6 +68,8 @@ export function difeseDi(m) {
 export const GROSSO_DELLA_DISCESA = {
   altare: 'ossuto', cantine: 'grumo', torre: 'fiammetta', gallerie: 'zannaverde',
   cisterna: 'gorgo', labirinto: 'minotto', fondo: 'carbonchio',
+  // i dungeon nuovi del 3D (dati/dungeon-del-mondo.js)
+  cerchio: 'barbamuschio', corvaia: 'piumanera', palafitta: 'sibilla', fornace: 'brontolava', cava: 'brinaldo', tombe: 'falcenera',
 }
 
 // nell'abisso uno ogni cinque piani (il 5°, il 10°…), a giro: tornano più forti, perché cresce il piano
