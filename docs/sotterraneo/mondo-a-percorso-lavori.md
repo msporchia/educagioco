@@ -1,9 +1,10 @@
 # Il mondo a percorso: i lavori
 
 Come si costruisce [mondo-a-percorso.md](mondo-a-percorso.md): cosa cambia modulo per modulo, il salvataggio e la migrazione, quanto
-costa, e la spartizione in cinque compiti con file disgiunti. Il prototipo (`strumenti/sotterraneo-percorso/`, `npm run pianta --
---percorso`) è la forma da portare nel gioco, non il codice da copiare: il generatore vero tiene la quota, il decoro, i campi fuori
-dal villaggio e le misure di oggi.
+costa, e la spartizione in cinque compiti con file disgiunti. **Il compito A è fatto** (20 ottobre): il generatore a blocchi
+`motore/mondo-percorso.js` e il suo contratto in [mondo-aperto-generatore.md](mondo-aperto-generatore.md), che vale sopra questa
+pagina dove le due non tornano (una città sola, 504×300, le funzioni di caricamento: le decisioni in
+[mondo-a-percorso.md](mondo-a-percorso.md#decisioni-del-20-ottobre)). Il prototipo è stato tolto.
 
 ## La mappa di impatto
 
@@ -70,9 +71,10 @@ e poi di E; `Mondo3d.vue` e `scena3d/mondo/indice.js` sono di D e poi di E.
 
 ### A. Il generatore (il contratto) — 2–3 giorni
 
-- **File suoi**: `dati/mondo-aperto.js`, `motore/mondo-aperto.js`, `strumenti/sotterraneo-pianta-mondo.mjs`,
-  `strumenti/sotterraneo-percorso/` (da togliere a lavoro fatto, con la sua riga in `sotterraneo-pianta.mjs`),
-  `test/unita/sotterraneo-mondo.test.mjs`, `docs/sotterraneo/mondo-aperto-generatore.md` (riscritto).
+- **Fatto** in `dati/mondo-aperto.js` (la seconda metà), il nuovo `motore/mondo-percorso.js`, `strumenti/sotterraneo-pianta-percorso.mjs`,
+  il nuovo `test/unita/sotterraneo-mondo-percorso.test.mjs`, `docs/sotterraneo/mondo-aperto-generatore.md` (riscritto). Il mondo
+  ad anelli (`motore/mondo-aperto.js`, la prima metà della scheda, `sotterraneo-pianta-mondo.mjs`, `unita/sotterraneo-mondo`) resta
+  finché B e D non migrano: lo toglie chi migra l'ultimo.
 - **Il contratto**: `generaMondoAperto(seme, { terra })` con `zone` (chiave, nome, fascia nella terra, `s0 s1`), `regioni` (i luoghi,
   con `zona`), `reg`, `zona` e `arco` per cella, `cintura`, `confini` (al posto di `passaggi`, senza grata), `citta` (villaggio dalla
   pianta, avamposti), `posti` (`pietra` con chiave `zona:<chiave>` o della città, `ingresso` ×14 con `zona` e `livello`, `terre` la

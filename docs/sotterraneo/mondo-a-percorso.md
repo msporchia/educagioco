@@ -1,13 +1,14 @@
 # Il mondo a percorso
 
-Il progetto della forma nuova del mondo di sopra del Sotterraneo 3D, **non ancora costruito**. L'utente, 20 ottobre 2026: «darei un
+Il progetto della forma nuova del mondo di sopra del Sotterraneo 3D: **il generatore c'è** (compito A,
+[mondo-aperto-generatore.md](mondo-aperto-generatore.md)), il gioco ci arriva coi compiti B–E. L'utente, 20 ottobre 2026: «darei un
 po' più di forma al mondo e non lo farei così a cerchio, lascia che ci sia un po' di strada da fare che giustifica un cambio di
 terreno», una pietra runica al centro di ogni zona per tornare alla base, i dungeon legati alla forza della zona e rigenerati dopo il
 boss, nessun passaggio chiuso, il villaggio con una forma standard e tutti quasi di fronte. Lo stesso giorno ha approvato lo schizzo
 della **serpentina a sette zone** e ha chiesto le **terre successive**. La spartizione del lavoro, il salvataggio e la migrazione:
 [mondo-a-percorso-lavori.md](mondo-a-percorso-lavori.md).
 
-**Cosa supera.** Di [mondo-aperto-progetto.md](mondo-aperto-progetto.md) e [mondo-aperto-generatore.md](mondo-aperto-generatore.md):
+**Cosa supera.** Di [mondo-aperto-progetto.md](mondo-aperto-progetto.md) e del generatore ad anelli (`motore/mondo-aperto.js`):
 la griglia 5×5 ad anelli, le marche, le grate e `regolaDi` (via tutte), il seme 19, i passi 7–9 dell'algoritmo per il villaggio,
 gli antri (ne prende il posto il secondo dungeon di ogni zona), le pietre davanti a ogni ingresso. Di
 [mondo-aperto-mostri.md](mondo-aperto-mostri.md): le fasce per anello (ora per zona) e la cintura (ora un dato del generatore).
@@ -27,9 +28,9 @@ est, la fila di mezzo torna verso ovest (3, 4, 5), si sale a ovest, la fila alta
   largo 40–55 celle: c'è spazio per uscire di strada a cercare i mostri.
 - **Fra due zone un confine di traverso**, un fiume col suo ponte o una cresta col suo valico, **sempre aperto**: è il segno che il
   terreno cambia, non una porta. Chi è troppo debole resta di qua perché di là i mostri sono più forti, non perché è chiuso.
-- **Le misure** (prototipo, seme 8): 352×216 celle (3,4 volte il mondo di oggi), strada maestra di 1 092 celle, da una pietra alla
-  dopo **140–164 passi**, cioè 31–36 secondi a piedi senza fermarsi (`PASSO_MONDO` 4,5) e uno o due minuti giocando, con uno
-  scontro o una deviazione; la cripta a 63 passi dalla piazza, l'ultimo dungeon a 949. Ogni zona ha 5 700–8 100 celle d'erba.
+- **Le misure** (seme 8): 504×300 celle (6,75 volte il mondo ad anelli), strada maestra di 1 548 celle, da una pietra alla dopo
+  **202–227 passi**, cioè 45–50 secondi a piedi senza fermarsi (`PASSO_MONDO` 4,5) e due o tre minuti giocando; la cripta a 76
+  passi dalla piazza, l'ultimo dungeon a 1 362. Ogni zona ha 11 000–14 000 celle d'erba.
 - **La strada resta leggibile**: una strada maestra larga due celle che attraversa tutte le zone, una stradina per ogni dungeon, la
   pietra della zona accanto alla strada a metà zona. «Portami lì» e la bussola (un altro lavoro) seguono la strada maestra.
 
@@ -50,13 +51,12 @@ est, la fila di mezzo torna verso ovest (3, 4, 5), si sale a ovest, la fila alta
 - **Il livello dei mostri sale con la strada**: all'entrata della zona l'inizio della fascia, in fondo la fine; dentro un luogo
   come oggi dai passi. La curva della forza (`CURVA_DI_SOPRA`) arriva al 15 con la curva delle zone (`CURVA_DELLE_ZONE`).
 - **La cintura** resta (12 celle attorno al villaggio, alla strada fino alla cripta e alla pietra dei prati): il generatore la
-  scrive come maschera (`m.cintura`), la legge `aperta.js`. Attorno al forte e al rifugio il margine di 5.
-- **Le pietre runiche**: una al centro di ogni zona, accanto alla strada, più una per città (dieci). Si accendono con la domanda
+  scrive come maschera (`m.cintura`), la legge `aperta.js`.
+- **Le pietre runiche**: una al centro di ogni zona, accanto alla strada, più quella del villaggio (otto). Si accendono con la domanda
   come oggi (il `dif` della zona); da una accesa si va al villaggio sempre, e alle altre accese. Toccata quella del villaggio, si
   va alle pietre accese delle zone: è il «tornare avanti» dopo la spesa.
-- **Le città**: il villaggio all'inizio; il forte del guado e il rifugio del passo restano, come **avamposti sulla strada maestra**
-  all'entrata della zona 4 e della zona 6, con la forma del villaggio in piccolo (sotto). Il portale gemello sta nella città che
-  serve la zona: il villaggio per le zone 1–3, il forte per la 4 e la 5, il rifugio per la 6 e la 7.
+- **Una città sola, il villaggio**, all'inizio (decisione del 20 ottobre): il forte e il rifugio non ci sono più, il capitano sta
+  nel villaggio, il portale gemello è sempre lì. Le pietre di zona riportano al villaggio.
 
 ## I dungeon
 
@@ -153,14 +153,11 @@ la strada maestra, dritta verso i prati. La pianta, uscita da `npm run pianta --
   della città; `props-citta.js` non mette orti, bucato né carretti sul davanti (solo ai fianchi e dietro); `accanto` sta sempre a
   sud del `piede`, sulla piazza; nessun lotto fra la piazza e la telecamera. Nel villaggio la telecamera si allontana un poco
   (vede la fila intera, 26 celle, dal centro della piazza).
-- **Gli avamposti** (il forte, il rifugio): la stessa fila in piccolo, 24×14, a fianco della strada maestra che attraversa la loro
-  piazza: fino a quattro posti col davanti a sud (prima i mercanti, poi il capitano o il minatore), la pietra, il portale, la
-  bacheca e, dove manca chi cura, la fontana in mezzo.
 
 ## Le terre successive
 
 Ripulite **le tombe del vento** (il boss della terra), in fondo alla strada si apre **la porta delle terre**: un arco di pietra
-con le rune, che il capitano annuncia al forte e il minatore al villaggio («laggiù, in fondo alla landa, si è aperta una porta»).
+con le rune, che il capitano e il minatore annunciano al villaggio («laggiù, in fondo alla landa, si è aperta una porta»).
 Attraversarla porta al villaggio di **un'altra terra: la stessa mappa, le stesse zone e gli stessi dungeon, i mostri più forti**.
 
 - **`livelloDellaTerra`** (1 la prima, 2 la seconda…) è un parametro del generatore che non cambia la mappa: sposta le fasce dei
@@ -179,28 +176,40 @@ Attraversarla porta al villaggio di **un'altra terra: la stessa mappa, le stesse
   le porte sono ripetibili dal primo giro. `XP_AREA` e le medaglie leggono quello di oggi; una terra nuova raggiunta si segna con
   `segnaBest('sotTerra', t)`, e se debba valere una medaglia lo decide l'utente.
 
+## Decisioni del 20 ottobre
+
+Viste le piante del prototipo, l'utente ha deciso (dove contrasta, vale questo e non il resto del documento):
+
+1. **Il mondo era ancora un po' piccolo**: ora 504×300 (il tracciato stirato di 1,43), da una pietra alla dopo 202–227 passi,
+   45–50 s a piedi.
+2. **Si genera a blocchi**: lo scheletro di tutto il mondo e le zone una per una (quella dove si è e le accanto), le lontane si
+   buttano. Il contratto: [mondo-aperto-generatore.md](mondo-aperto-generatore.md).
+3. **Una città sola, il villaggio**: niente forte né rifugio, quindi niente avamposti. Nel villaggio i quattro mercanti, la ragazza,
+   il minatore, la bacheca, il capitano (venuto dal forte), il portale gemello, la pietra. Le pietre di zona portano al villaggio e
+   alle altre accese. Le taglie salvate col forte o il rifugio si rileggono sul villaggio (`cittaDiOggi`). La domanda 4 è chiusa.
+4. **Nessuna grata**: le zone si attraversano sempre (era già il progetto).
+5. **Quattordici ingressi**, due per zona, coi nomi e le chiavi della tabella sopra.
+6. **Le terre** col parametro `terra`: la stessa mappa e la stessa firma, +14 livelli a terra fino alla quinta.
+7. **La taratura dopo**, a lavoro finito: i numeri restano quelli di questo documento.
+
 ## L'anteprima
 
-`npm run pianta -- --percorso` (`--seme N`, `--semi 1-12` per sceglierlo, `--terra 2`, `--scala 5`) genera il prototipo
-(`strumenti/sotterraneo-percorso/`: `scheda.mjs` i dati, `genera.mjs` il generatore puro) e scrive `tmp/scatti/percorso-<seme>.png`:
-le zone colorate col numero e la fascia, la strada maestra, i ponti e i valichi, la cintura a puntini, le pietre, i dungeon col
-livello (rossi quelli della storia col capitolo, arancio i nuovi), le città, le tane, la porta delle terre, e accanto il villaggio
-ingrandito. Sul terminale la pianta del villaggio, i passi da pietra a pietra, i passi dei dungeon e i guasti: un posto che non si
-raggiunge, una scorciatoia fra le file, due pietre a meno di 130 o più di 220 passi, la storia non in fila, la cripta oltre 75 passi
-o fuori dalla cintura, una zona senza dungeon. I semi 1–10 non hanno guasti; l'8 ha le distanze più pari (149, 164, 150, 147, 162,
-140) e ci mette ~0,4 s in Node. Non tocca il gioco: è il contratto che il compito A porta in `motore/mondo-aperto.js`.
+`npm run pianta -- --percorso` (`--seme N`, `--semi 1-12` per sceglierlo, `--terra 2`, `--scala 5`) genera il mondo col
+generatore vero (`motore/mondo-percorso.js`) e scrive `tmp/scatti/percorso-<seme>.png`: le zone colorate col numero e la fascia,
+la strada maestra, i ponti e i valichi, la cintura a puntini, le pietre, i dungeon col livello (rossi quelli della storia col
+capitolo, arancio i nuovi), il villaggio, le tane, campi e case, la porta delle terre, e accanto il villaggio ingrandito. Sul
+terminale la pianta del villaggio, i passi, i ms di ogni zona e i guasti ([mondo-aperto-generatore.md](mondo-aperto-generatore.md#i-guasti)).
+Il prototipo che l'aveva disegnata la prima volta (`strumenti/sotterraneo-percorso/`) è stato tolto.
 
 ## Domande aperte
 
 1. **Le cantine nei prati e la torre nel bosco?** Raccomando sì: le porte della storia restano in fila anche a piedi e coi livelli
    di oggi. L'alternativa (lo schizzo: la tana prima della torre) vuole l'ordine della storia cambiato, e con lui `tappa`, stelle e
    `completa` che oggi contano le porte in fila.
-2. **La strada: 140–165 passi da pietra a pietra** (mezzo minuto a piedi, uno o due giocando) in un mondo 3,4 volte quello di oggi.
-   Raccomando questa; il doppio vorrebbe un mondo di 420×260 celle, più tempo per generarlo sul telefono e più nebbia da salvare.
+2. ~~La strada fra due pietre~~ **decisa**: più lunga, 202–227 passi su 504×300 (le decisioni del 20 ottobre).
 3. **Nel 3D anche la prima volta delle sette porte con i livelli della zona** (4, 8, 10, 12 invece di 3, 7, 8, 10)? Raccomando sì,
    perché è la regola «legati alla forza della zona» e i mostri di sopra fanno salire l'eroe; costa una taratura della storia col
    banco. L'alternativa è tenere i numeri di oggi per la prima volta e la zona dalla seconda.
-4. **Il forte e il rifugio come avamposti sulla strada?** Raccomando sì: tengono le taglie e i loro id, il capitano, la cura a metà
-   strada. L'alternativa è il solo villaggio, con le pietre per tornarci.
+4. ~~Il forte e il rifugio come avamposti~~ **decisa**: il solo villaggio, con le pietre per tornarci.
 5. **I sei dungeon nuovi con «una creatura in una zona sola»**, cioè le specie di sopra della zona finché non c'è il foglio delle
    creature d'aperta campagna? Raccomando sì; se no i sei aspettano quel foglio.
