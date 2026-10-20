@@ -28,6 +28,8 @@ const props = defineProps({
   disegno: { type: String, default: null },
   mondo: { type: Object, default: null },
   veduta: { type: Boolean, default: false },
+  // i tredici dungeon del mondo a percorso per chiave (Gioco.vue, docs/sotterraneo/dungeon-che-si-rigenerano.md): da passare al mondo
+  dungeon: { type: Array, default: null },
   pensiero: { type: Object, default: null },  // il pensiero dell'eroe sopra la testa (docs/sotterraneo/pensieri.md)
   // i mostri di sopra (viste/Mondo3d.vue): la forza dell'eroe per l'annuncio, e se un pannello sta sopra il mondo (i mostri aspettano)
   forza: { type: Number, default: 1 },
@@ -70,14 +72,14 @@ const salvaSopra = () => { if (terraEl.value && terraEl.value.salvaSopra) terraE
 defineExpose({ toccoDaFuori, apriDiario, vaDaMercante, apriPalco, dopoLoScontro, statoSopra, salvaSopra })
 
 function tocca(t) {
-  if (!props.ripresa) return emit('gioca', t.indice)
+  if (!props.ripresa) return emit('gioca', t.indice ?? t.chiave)   // un dungeon nuovo del mondo non ha indice: si scende per chiave
   chiede.value = t
 }
 
 function comincia() {
   const t = chiede.value
   chiede.value = null
-  emit('gioca', t.indice)
+  emit('gioca', t.indice ?? t.chiave)
 }
 </script>
 
