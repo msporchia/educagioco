@@ -1,7 +1,7 @@
 # Il mondo a percorso: i lavori
 
 Come si costruisce [mondo-a-percorso.md](mondo-a-percorso.md): cosa cambia modulo per modulo, il salvataggio e la migrazione, quanto
-costa, e la spartizione in cinque compiti con file disgiunti. **I compiti A e B sono fatti** (20 ottobre): il generatore a blocchi
+costa, e la spartizione in cinque compiti con file disgiunti. **I compiti A, B e D sono fatti** (20 ottobre): il generatore a blocchi
 `motore/mondo-percorso.js` e il suo contratto in [mondo-aperto-generatore.md](mondo-aperto-generatore.md), che vale sopra questa
 pagina dove le due non tornano (una città sola, 504×300, le funzioni di caricamento: le decisioni in
 [mondo-a-percorso.md](mondo-a-percorso.md#decisioni-del-20-ottobre)); il motore di sopra (B) in
@@ -119,6 +119,8 @@ e poi di E; `Mondo3d.vue` e `scena3d/mondo/indice.js` sono di D e poi di E.
   --presto` uguale).
 
 ### D. La scena — 3 giorni, dopo A (il villaggio e i monumenti anche prima)
+
+- **Fatto** (20 ottobre): [mondo-3d.md](mondo-3d.md) e [mondo-3d-oggetti.md](mondo-3d-oggetti.md); il mondo ad anelli cancellato.
 
 - **File suoi**: `scena3d/mondo/*` (`indice.js` compreso), `viste/Mondo3d.vue`, `viste/FumettoMondo.vue`, `strumenti/icone-mondo.mjs`
   e il generato `dati/icone-mondo.js`, `dati/terra.js` (`iconaDi`), i test `unita/sotterraneo-mondo-3d`, `-mondo-props`,

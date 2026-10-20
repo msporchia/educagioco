@@ -171,12 +171,11 @@ il banco della tela ferma (20 disegni) e il tempo di una zona.
 
 ## Cosa manca
 
-- **Aspetta il motore di sopra (B)**: i mostri sul percorso (`motore/aperta.js` è ancora sul mondo ad anelli: finché non li sa mettere
-  la vista resta senza mostri e lo dice nella console) e le taglie della bacheca (`motore/taglie-bacheca.js`: sul percorso la bacheca
-  è vuota). Quando ci sono, la vista non cambia: `creaMostriSopra` e `vociDellaBacheca` come prima.
+- **I mostri e la bacheca** stanno sul percorso col motore di sopra (B, [mondo-sopra-contratto.md](mondo-sopra-contratto.md)): la vista
+  non è cambiata (`creaMostriSopra`, `vociDellaBacheca`); se il motore non li sa mettere su una mappa, la vista resta senza mostri e lo
+  dice nella console, e il resto si gioca.
 - **Aspetta le terre (E)**: `S.terre` (la porta aperta) e passarla; la tinta della terra in `vesti.js`.
-- **Il mondo ad anelli** (`motore/mondo-aperto.js`, `mondo-sopra-anelli.js`, la prima metà della scheda) resta finché `aperta.js`,
-  `banco-mondo.js` e `taglie-bacheca.js` lo importano: lo cancella chi li migra.
+- **Il mondo ad anelli è stato tolto** (il generatore, la prima metà della scheda, il motore di prima, la sua pianta e il suo test).
 - Le figure pixel art in un mondo liscio vanno viste sul telefono.
 
 Nei test: `unita/sotterraneo-mondo-3d` (i pezzi su 504×300, le zone caricate e i pezzi che le aspettano, i carichi che rifanno un

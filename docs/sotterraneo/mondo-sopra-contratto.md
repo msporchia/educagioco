@@ -121,22 +121,18 @@ caricata e uguale ricaricandola: la scena lo usa come prima (`[data-mostro-sopra
   caricate**, che direbbe «non si raggiunge» a tutto quello che è lontano.
 - Gli id di prima si rifanno tutti: `t:forte:…` e `t:rifugio:…` si leggono sul villaggio (`cittaDiOggi`) e si consegnano lì.
 
-## Cosa si cancella, e chi
+## Cosa si è cancellato
 
-Il mondo ad anelli resta finché la scena lo importa: **lo cancella D** quando `Mondo3d.vue` e `scena3d/mondo/*` sono sul percorso (o B,
-se D ha già finito): `motore/mondo-aperto.js`, `motore/mondo-sopra-anelli.js`, la prima metà di `dati/mondo-aperto.js` (`MONDO_APERTO`,
-`LARGA_REGIONE`, `FASCE_DEGLI_ANELLI`, `DUNGEON`, `MARCHE`, `REGIONI_DEL_MONDO`, `PASSAGGI`, `regolaDellaRegione`, `haGrata`, `regolaDi`,
-`passaggioAperto`, `anelloDi`, `fasciaDi`, `CITTA`; restano `difDi`, `BOTTEGHE`, `PERSONE`, `PERSONE_NUOVE`, `HABITAT`, `LOTTI`),
-`strumenti/sotterraneo-pianta-mondo.mjs` e la riga `--mondo` di `sotterraneo-pianta.mjs`, `test/unita/sotterraneo-mondo.test.mjs`; i
-finti `aperturaDi` e `chiusoPerche` qui. I test di D che oggi importano `mondo-sopra-anelli.js` (`unita/sotterraneo-mondo-3d`,
-`-mondo-props`, `catalogo-3d-sotterraneo`) tornano a `mondo-sopra.js` con la scena.
+Il mondo ad anelli, col compito D (la scena sul percorso, 20 ottobre): `motore/mondo-aperto.js`, `motore/mondo-sopra-anelli.js`, la prima
+metà di `dati/mondo-aperto.js` (restano `difDi`, `BOTTEGHE`, `PERSONE`, `PERSONE_NUOVE`, `HABITAT`, `LOTTI`),
+`strumenti/sotterraneo-pianta-mondo.mjs` e la riga `--mondo` della pianta, `test/unita/sotterraneo-mondo.test.mjs`, i finti `aperturaDi`
+e `chiusoPerche`. La scena carica le zone da sé (una per fotogramma) e lo dice alla vista, che rifà la terra: fa quello che `seguiLEroe`
+farebbe a ogni cella, senza caricarne tre in un fotogramma ([mondo-3d.md](mondo-3d.md#le-zone-e-i-pezzi)).
 
 ## Cosa resta a D ed E
 
-- **D (la scena)**: `Mondo3d.vue` sulle funzioni qui sopra (la tabella vecchio → nuovo), `seguiLEroe` a ogni cella con la terra e i pezzi
-  rifatti, `mondoDaSalvato` all'apertura e `mondoDaSalvare` salvando, `forza` nel `ctx` dei dialoghi, l'annuncio per zona; poi il mondo ad
-  anelli da cancellare (sopra) e `integrazione/sotterraneo-mondo`, `-bacheca`, `-mostri-sopra`, `-mondo-meta` sul percorso (oggi rossi:
-  importano `mondo-sopra.js` e trovano il percorso con la scena di prima).
+- **D (la scena)**: fatto ([mondo-3d.md](mondo-3d.md)): `Mondo3d.vue` su queste funzioni, `mondoDaSalvato` e `mondoDaSalvare`, la terra
+  rifatta quando la scena carica una zona, `forza` nel `ctx`, l'annuncio per zona, `metaVicina`; il mondo ad anelli cancellato.
 - **E (le terre)**: `ilMondo({ terra })` dà già la terra giusta (una per volta); `mondoDaSalvato` vale per `mondi[t]` uguale; il `ctx.terre`
   e il `ctx.terra` dei dialoghi; `riprendiMondo` e le taglie sono per terra solo perché lo stato si salva nel `mondo` di quella terra.
 - **La taratura** (dopo B e C): `cellePerBranco` per zona, la cintura, i prati — i numeri fuori bersaglio in
