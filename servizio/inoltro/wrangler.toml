@@ -12,7 +12,24 @@ class_name = "Stanza"
 name = "LIMITE"
 class_name = "Limite"
 
+[[durable_objects.bindings]]
+name = "CODICI"
+class_name = "Codice"
+
+[[durable_objects.bindings]]
+name = "ERRORI"
+class_name = "Errori"
+
+[[durable_objects.bindings]]
+name = "COPPIE"
+class_name = "Coppia"
+
 # il piano gratuito vuole i Durable Object con la memoria SQLite
 [[migrations]]
 tag = "v1"
 new_sqlite_classes = ["Stanza", "Limite"]
+
+# gli amici (docs/core/amici.md): i codici brevi, i tentativi sbagliati e le amicizie
+[[migrations]]
+tag = "v2"
+new_sqlite_classes = ["Codice", "Errori", "Coppia"]

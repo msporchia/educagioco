@@ -5,7 +5,7 @@
 // potenziare, riparare…) si paga con monete di battaglia E con un calcolo:
 // il calcolo lo chiede `domande.js`, il campo intanto rallenta (non si ferma:
 // la pressione resta). Vedi docs/arena/regole.md.
-import { ref, shallowRef, computed, onMounted, onUnmounted } from 'vue'
+import { ref, shallowRef, computed, watch, onMounted, onUnmounted } from 'vue'
 import Barra from '../../components/Barra.vue'
 import { suono } from '../../audio.js'
 import { segna, state, etaDelBambino, contiPermessi } from '../../store/profile.js'
@@ -19,6 +19,9 @@ import Domanda from '../../quiz/Domanda.vue'
 import { Giostra } from './scena/giostra.js'
 import { vistaDa, eventiDa } from './scena/prospettiva.js'
 import { Regia, SILENZIO } from './sfida/regia.js'
+import { dati as datiAmici } from '../../store/amici.js'
+import { stato as amiciStato, invita, diciGioco } from '../../amici/servizio.js'
+import { ingresso, prendiIngresso } from '../../amici/ingresso.js'
 import { creaStanza, collega } from './sfida/rete.js'
 
 import { CAMPAGNA, SCALINI, QUANTE_TAPPE, INFINITA, tappeDelloScalino, scalinoDi, scalinoDelTerreno, terrenoDiverso, operazioniDi, operazionePer, senzaSaperi, PESO_DEL_RIPIEGO, stellePer, sfidaDi, sfidaInfinita, LIVELLI, livelloValido } from './dati/campagna.js'
@@ -53,6 +56,8 @@ const regia = shallowRef(null)
 const statoSfida = ref('')            // lo stato della regia, per la schermata (la regia non è reattiva)
 const motivoSfida = ref('')
 const faseSfida = ref('scelta')       // scelta | creo | attesa | entro
+const invitato = ref('')              // il nome dell'amico invitato, mentre lo si aspetta
+let scadenzaInvito = 0
 const codiceSfida = ref('')
 const errore = ref('')
 const altroMuto = ref(false)          // l'altro non manda niente da troppo
@@ -385,6 +390,40 @@ async function creaSfida({ terreno, secondi }) {
   collegati(codiceSfida.value, { terreno, secondiARisposta: secondi })
 }
 
+/* Un amico invitato (docs/core/amici.md): si prepara la stanza, ci si siede, e solo allora parte l'invito con il codice dentro. */
+async function invitaAmico({ chiave, terreno, secondi }) {
+  chiudiSfida()
+  const a = amiciStato.amici.find(x => x.chiave === chiave)
+  faseSfida.value = 'creo'
+  try { codiceSfida.value = await creaStanza() } catch (e) { errore.value = e.message; faseSfida.value = 'errore'; return }
+  collegati(codiceSfida.value, { terreno, secondiARisposta: secondi })
+  const r = regia.value
+  for (let t = 0; regia.value === r && r.ruolo !== 'host' && t < 120; t++) await new Promise(res => setTimeout(res, 100))
+  if (regia.value !== r) return                                    // annullato nel frattempo
+  if (r.ruolo !== 'host' || !invita(chiave, 'arena', { terreno, secondi, codice: codiceSfida.value })) {
+    chiudiSfida(); errore.value = 'Non riesco a invitare adesso. Riprova fra un poco.'; faseSfida.value = 'errore'; return
+  }
+  invitato.value = a?.nome || 'il tuo amico'
+  faseSfida.value = 'attesa'
+  clearTimeout(scadenzaInvito)
+  scadenzaInvito = setTimeout(() => finisceInvito(`${invitato.value} non risponde`), 45000)
+}
+function finisceInvito(motivo) {
+  if (!invitato.value || faseSfida.value !== 'attesa') return
+  chiudiSfida(); errore.value = motivo; faseSfida.value = 'errore'
+}
+watch(() => amiciStato.risposta, r => { if (r && !r.ok) finisceInvito(`${invitato.value} adesso non può giocare`) })
+
+/* «Gioca» su un invito: si lascia quello che si stava facendo (la battaglia a metà si salva) e si entra nella stanza dell'amico */
+function entraDaInvito(d) {
+  if (!d) return
+  if (vista.value === 'campo') indietro()
+  apriSfida()
+  entraSfida(d.codice)
+}
+watch(ingresso, i => { if (i?.gioco === 'arena') entraDaInvito(prendiIngresso('arena')) })
+const amiciPerSfida = computed(() => (datiAmici.attivo && datiAmici.online ? amiciStato.amici.filter(a => !a.inAttesa) : []))
+
 function entraSfida(codice) {
   faseSfida.value = 'entro'
   codiceSfida.value = codice
@@ -428,6 +467,8 @@ function cambioSfida(r) {
 
 /* via la sfida (finita, annullata o caduta): il collegamento si chiude */
 function chiudiSfida() {
+  invitato.value = ''
+  clearTimeout(scadenzaInvito)
   const r = regia.value
   regia.value = null
   statoSfida.value = ''
@@ -671,6 +712,7 @@ function ancora() {
 
 function allaMappa() {
   chiudiSfida()
+  diciGioco(null)
   clearTimeout(attesa); attesa = 0
   togli()
   giostra.ferma()
@@ -713,6 +755,8 @@ function gancioDiProva() {
 }
 
 onMounted(() => {
+  diciGioco('arena')
+  entraDaInvito(prendiIngresso('arena'))
   gancioDiProva()
   addEventListener('resize', ridimensiona)
   document.addEventListener('visibilitychange', seSparisce)
@@ -742,6 +786,7 @@ onUnmounted(() => {
              :livelli="LIVELLI" :livello="livello" @livello="scegliLivello" @gioca="avvia" @riprendi="riprendiPartita" @scorda="scorda" />
 
       <Sfida v-else-if="vista === 'sfida'" :fase="faseVista" :codice="codiceSfida" :messaggio="messaggioSfida" :terreni="TERRENI_SFIDA"
+             :amici="amiciPerSfida" :invitato="invitato" @invita="invitaAmico"
              @crea="creaSfida" @entra="entraSfida" @indietro="indietro" />
 
       <CampoVista v-else :key="chiaveCampo" :cruscotto="cruscotto" :pannello="pannello" :avviso="avviso"
