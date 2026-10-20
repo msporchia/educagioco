@@ -116,6 +116,32 @@ chi accetta fa `collega(codice)`. Se l'amico dice no, o non risponde in 45 secon
 Un gioco nuovo (la fattoria, i record) si aggiunge in `src/amici/giochi.js`: nome, come si costruisce l'invito, cosa fare quando
 arriva. Il servizio non cambia.
 
+## Cosa sta dove, cosa viaggia, quanto costa (verificato sulla documentazione di Cloudflare il 20/10/2026)
+
+**Sul telefono** (archivio, chiave `amici:<bambino>`, fuori dai backup): un id casuale del bambino, le tre risposte (deciso, attivo,
+online) e per ogni amico la chiave dell'amicizia, l'id e il **nome** (quello che ha scritto il genitore nel profilo, ≤ 20 caratteri).
+Non c'è altro: né account, né posta, né posizione. Eliminare un bambino non cancella ancora la sua chiave `amici:` (resta orfana).
+
+**Sul servizio**: niente di personale e niente di permanente. Un `Codice` tiene una chiave al massimo 2 ore (cancellata al riscatto o
+dall'allarme); `Errori` e `Limite` tengono un contatore per indirizzo IP (scade in 1-2 ore); una `Coppia` o una `Stanza` esiste finché
+c'è qualcuno collegato. Il servizio **inoltra senza leggere**: controlla solo misura (≤ 512 byte), forma JSON e ritmo (20 al secondo).
+
+**Cosa viaggia** (sempre in TLS): al codice, la chiave (la vede il servizio, due ore); nelle amicizie, `presento` (id, nome, a cosa
+si gioca), `invito` (gioco, terreno, secondi, codice della stanza), `risposta` (sì/no); in battaglia, le mosse (tick, azione, truppa,
+piazzola). **Il solo dato personale è il nome**, e va al telefono dell'amico, non a un archivio. Cloudflare, che ospita, vede tutto
+quello che passa e i registri del tuo account contengono i percorsi (la chiave sta nell'indirizzo del collegamento): per questo
+l'account è tuo e la chiave si butta con «Togli».
+
+**Limiti del piano gratuito** (oltre, le operazioni falliscono **senza addebiti**; si azzera a mezzanotte UTC; il piano a pagamento è
+un'altra cosa e non c'è finché non lo si sceglie): Workers 100.000 richieste al giorno; Durable Object 100.000 richieste al giorno
+(un messaggio in arrivo conta 1/20) e 13.000 GB·s al giorno (128 MB: circa 28 ore di collegamenti *attivi*; un collegamento fermo
+e ibernato non costa tempo). Una battaglia in due manda circa 20 messaggi al secondo: **1 richiesta al secondo, 3.600 all'ora, 450 GB·s
+all'ora**. Una famiglia con quattro bambini e dieci ore di battaglia al giorno sta a ~36.000 richieste e ~4.500 GB·s: un terzo del
+limite. La presenza (collegamenti quasi fermi) pesa pochissimo; un telefono che non riesce a collegarsi riprova al massimo una volta
+al minuto. **Il rischio vero non è il costo ma l'abuso**: l'indirizzo del servizio è nel codice, e chi lo martella può finire le
+richieste del giorno e fermare tutti fino a mezzanotte. I tetti per indirizzo (codici 30 all'ora, tentativi 10 al minuto, stanze 30 all'ora)
+limitano chi lo fa a mano, non un attacco vero. Dove guardare: pannello Cloudflare → *Workers & Pages* → `sfida` → *Metrics*.
+
 ## Cosa questo apre (non è in questo lavoro)
 
 - **Rientro automatico** nella stanza dopo una caduta: l'`id` del bambino dice che è lo stesso giocatore.
