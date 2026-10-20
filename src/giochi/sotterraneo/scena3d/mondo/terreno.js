@@ -4,7 +4,7 @@
 // (vesti.js). Le celle di una zona mai caricata si leggono dalla loro base (suolo.js). Dal prototipo poc/mondo-sopra/terreno.js.
 import { BufferGeometry, BufferAttribute, Float32BufferAttribute, Mesh, MeshStandardMaterial, Vector2, PlaneGeometry } from 'three'
 import { fbm, quotaTerreno, quotaDellaCella, cellaDaDisegnare, ACQUA, ROCCIA } from './suolo.js'
-import { rettangoloDi, PEZZO } from './pezzi.js'
+import { rettangoloDi } from './pezzi.js'
 import { vesti } from './vesti.js'
 import { scatola } from './kit.js'
 
@@ -72,7 +72,8 @@ const bilineare = (arr, comp, F, x, z, out) => {
   return out
 }
 
-// il materiale del terreno; `lontano`: quello dei pezzi a dettaglio basso, che sparisce sotto i pezzi costruiti (`uPezzi`)
+// il materiale del terreno; `lontano`: quello dei pezzi a dettaglio basso (un programma a parte; dove il pezzo vicino è costruito il
+// pezzo lontano si spegne: lontano.js)
 export function materialeTerreno(trame, { lontano = false } = {}) {
   const mat = new MeshStandardMaterial({ roughness: 0.95, metalness: 0, normalMap: trame.roccia.normalMap, normalScale: new Vector2(1, 1) })
   mat.name = lontano ? 'terreno-lontano' : 'terreno'
@@ -87,12 +88,7 @@ export function materialeTerreno(trame, { lontano = false } = {}) {
           vPeso = peso; vTinta = tinta; vRipido = 1.0 - normal.y;`)
       sh.fragmentShader = sh.fragmentShader
         .replace('#include <common>', `#include <common>
-          uniform sampler2D tErba, tTerra, tSabbia, tRoccia; varying vec4 vPeso; varying vec3 vTinta; varying float vRipido;
-          ${lontano ? 'uniform sampler2D uPezzi;' : ''}`)
-        .replace('#include <clipping_planes_fragment>', `#include <clipping_planes_fragment>
-          ${lontano ? `{ ivec2 n = textureSize(uPezzi, 0);
-            ivec2 pz = clamp(ivec2(floor(vMondo.x / ${PEZZO.largo}.0), floor(vMondo.z / ${PEZZO.alto}.0)), ivec2(0), n - 1);
-            if (vMondo.x >= 0.0 && vMondo.z >= 0.0 && texelFetch(uPezzi, pz, 0).r > 0.5) discard; }` : ''}`)
+          uniform sampler2D tErba, tTerra, tSabbia, tRoccia; varying vec4 vPeso; varying vec3 vTinta; varying float vRipido;`)
         .replace('#include <map_fragment>', `
           vec2 uvT = vMondo.xz * 0.5;
           vec3 ce = mix(texture(tErba, uvT * 0.7).rgb, texture(tErba, mat2(0.8, 0.6, -0.6, 0.8) * uvT * 0.27 + 0.37).rgb, 0.5), ct = texture(tTerra, uvT).rgb, cs = texture(tSabbia, uvT).rgb, cr = texture(tRoccia, uvT * 0.45 + vec2(0.0, vMondo.y * 0.08)).rgb;

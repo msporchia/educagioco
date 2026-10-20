@@ -90,14 +90,16 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = [], fon
   const matCristallo = vesti(new MeshStandardMaterial({ color: 0xb78cff, emissive: 0x6a3cff, emissiveIntensity: 0.6, roughness: 0.2 }), { oggetto: 'istanza' })
   const quota = (x, z) => quotaA(m, x, z)
   const v = m.villaggio
-  // la telecamera nel villaggio: in mezzo alla fila di chi ci sta, larga quanto la fila (dalla pianta, docs/sotterraneo/mondo-a-percorso.md)
-  const fila = [...v.mercanti, ...v.persone, v.minatore].filter(Boolean).map(p => p.piede.x)
-  const citta = { x: (Math.min(...fila) + Math.max(...fila)) / 2 + 0.5, largo: Math.max(...fila) - Math.min(...fila) + 4, k: 0 }
+  // la telecamera nel villaggio: in mezzo alla fila di chi ci sta (e della bacheca e del cartello), larga quanto la fila più un
+  // margine, perché chi sta ai capi non finisca sotto le bussole del bordo (dalla pianta, docs/sotterraneo/mondo-a-percorso.md)
+  const fila = [...v.mercanti, ...v.persone, v.minatore, v.bacheca, v.cartello].filter(Boolean).flatMap(p => [p.piede.x, p.x + (p.w || 1)])
+  const citta = { x: (Math.min(...fila) + Math.max(...fila)) / 2, largo: Math.max(...fila) - Math.min(...fila) + 5, k: 0 }
   // lo stato da disegnare, scritto da chi gioca (Mondo3d.vue): niente di reattivo, si legge a ogni fotogramma
   const S = {
     io: { x: m.partenza.x + 0.5, z: m.partenza.y + 0.5, verso: { dx: 0, dy: 1 }, sprite: 'cavaliere', mano: null, mancina: null },
     persone: [], accese: new Set(), aperti: new Set(), pallini: new Map(), divieti: new Set(), portale: null, veduta: false,
     terre: false,              // la porta delle terre aperta (le tombe del vento ripulite: lo dice chi gioca)
+    inCammino: false,          // l'eroe sta camminando: le zone accanto aspettano che si fermi, o che arrivi vicino al confine
     mostri: [], perTerra: [],   // i mostri di sopra e il bottino per terra, già nel cerchio e fuori dalla nebbia (mostri.js)
     scia: null, sciaDa: 0,      // la strada verso la meta: { luci, meta } (scia.js), e da quale luce si accende
   }
@@ -190,6 +192,9 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = [], fon
     if (!m.zonaCaricata[k]) { caricaUna(k); return true }
     return false
   }
+  // l'eroe sta a meno di CONFINE_VICINO celle dal confine fra la sua zona e la zona `z`
+  const CONFINE_VICINO = 60
+  const vicinoAlConfine = z => m.confini.some(c => (c.i === Math.min(z, zonaQui)) && Math.abs(z - zonaQui) === 1 && Math.hypot(c.x - S.io.x, c.y - S.io.z) < CONFINE_VICINO)
   function lavora() {
     if (S.veduta) return
     if (!zone()) {
@@ -200,7 +205,12 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = [], fon
       const l = lavoroDeiPezzi(m, new Set(costruiti.keys()), S.io.x, S.io.z, p => costruibile(m, p, attorno))
       for (const p of l.butta) { buttaPezzo(p); cambiati = true }
       if (l.costruisci != null) { costruiti.set(l.costruisci, costruisciPezzo(l.costruisci)); cambiati = true }
-      else { const manca = attorno.find(z => !m.zonaCaricata[z]); if (manca != null) caricaUna(manca) }
+      else {
+        // una zona accanto si carica quando l'eroe è fermo (un dialogo, uno scontro, una pausa: il fotogramma lungo non si sente), o
+        // quando si avvicina al confine: sul telefono una zona sono 0,2–0,6 s (docs/sotterraneo/mondo-3d.md, «Quanto costa»)
+        const manca = attorno.find(z => !m.zonaCaricata[z])
+        if (manca != null && (!S.inCammino || vicinoAlConfine(manca))) caricaUna(manca)
+      }
     }
     if (!cambiati) return
     cambiati = false
@@ -270,7 +280,9 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = [], fon
     // la veduta: niente pezzi vicini, tutto il mondo lontano, niente ombra rifatta
     const veduta = S.veduta
     for (const f of costruiti.values()) f.gruppo.visible = !veduta
-    lontano.terreni.forEach((t, p) => { t.visible = veduta || !costruiti.has(p) })
+    // il terreno lontano: a pezzi nella vista vicina (spento sotto quelli costruiti), a blocchi nella veduta (lontano.js)
+    lontano.terreni.forEach((t, p) => { t.visible = !veduta && !costruiti.has(p) })
+    for (const b of lontano.blocchi) b.visible = veduta
     if (veduta !== vedutaPrima) { vedutaPrima = veduta; tPezzi.segna(veduta ? [] : costruiti.keys()) }
     renderer.shadowMap.autoUpdate = !veduta
     // le cose che si muovono

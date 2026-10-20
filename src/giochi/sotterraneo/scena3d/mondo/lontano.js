@@ -21,6 +21,7 @@ const TETTI = [[0.80, 0.42, 0.30], [0.66, 0.36, 0.28], [0.85, 0.52, 0.34], [0.50
 const COLORE = { mercante: [0.7, 0.4, 0.32], ingresso: [0.62, 0.6, 0.58], pietra: [0.66, 0.68, 0.72], mulino: [0.72, 0.6, 0.45], minatore: [0.8, 0.72, 0.56],
   bacheca: [0.6, 0.45, 0.3], terre: [0.7, 0.68, 0.66], pozzo: [0.78, 0.76, 0.72] }
 const ALTO = { torre: 4.4, botola: 0.3, menhir: 2.2, palafitta: 1.6, fumarola: 0.8, tomba: 1.6 }
+const BLOCCO = 4
 const hash = (a, b, c) => { let h = (Math.imul(a | 0, 374761393) + Math.imul(b | 0, 668265263) + Math.imul(c | 0, 1274126177)) | 0; h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967296 }
 
 const bianca = g => { g.setAttribute('color', new Float32BufferAttribute(new Float32Array(g.attributes.position.count * 3).fill(1), 3)); return g }
@@ -56,10 +57,19 @@ function alberiDi(m, x0, z0, x1, z1, fuori) {
 }
 
 export function creaLontano(m, scena, mats, { quotaFuori = null, M = 0 } = {}) {
-  // il terreno lontano è a pezzi anch'esso: dove c'è il pezzo vicino si spegne, e fuori vista si taglia
-  const { n } = grigliaDi(m)
-  const fai = p => { const t = terrenoDelPezzo(m, p, mats.lontano, 0.5); t.receiveShadow = false; scena.add(t); return t }
-  const terreni = Array.from({ length: n }, (_, p) => fai(p))
+  // il terreno lontano due volte: a pezzi (`terreni`, uno per pezzo, spento dove il pezzo vicino è costruito: niente frammenti
+  // disegnati due volte) per la vista vicina, e a blocchi di 4×4 pezzi (`blocchi`, dodici) per la veduta, che vede quasi tutto il
+  // mondo: un pezzo per chiamata erano più di cento chiamate. Provato: i soli blocchi con lo scarto per pixel sotto i pezzi vicini
+  // (`uPezzi`): lo scarto spegne il test di profondità anticipato, e il disegno costava il doppio (SwiftShader, CPU ×5)
+  const { n, nx, nz } = grigliaDi(m)
+  const rettangoli = []
+  for (let j = 0; j < nz; j += BLOCCO) for (let i = 0; i < nx; i += BLOCCO) {
+    const a = rettangoloDi(m, j * nx + i), b = rettangoloDi(m, Math.min(nz - 1, j + BLOCCO - 1) * nx + Math.min(nx - 1, i + BLOCCO - 1))
+    rettangoli.push({ x0: a.x0, z0: a.z0, x1: b.x1, z1: b.z1 })
+  }
+  const fai = (r, vis) => { const t = terrenoDelPezzo(m, r, mats.lontano, 0.5); t.receiveShadow = false; t.visible = vis; scena.add(t); return t }
+  const terreni = Array.from({ length: n }, (_, p) => fai(p, true))
+  const blocchi = rettangoli.map(r => fai(r, false))
   const matL = vesti(new MeshStandardMaterial({ vertexColors: true, roughness: 0.9, flatShading: true }), { oggetto: 'istanza', lontano: true })
   matL.name = 'lontano'
   const M4 = new Matrix4(), Q = new Quaternion(), E = new Euler(), P = new Vector3(), S = new Vector3(), C = new Color()
@@ -132,20 +142,17 @@ export function creaLontano(m, scena, mats, { quotaFuori = null, M = 0 } = {}) {
 
   const scritte = m.zone.map((_, k) => !!m.zonaCaricata[k])
   return {
-    terreni,
-    get mesh() { return [...terreni, imAlberi, imScatole, imTetti] },
+    terreni, blocchi,
+    get mesh() { return [...terreni, ...blocchi, imAlberi, imScatole, imTetti] },
     // una zona si è caricata: se era la prima volta, le sue celle sono scritte e il lontano lì si rifà (terreno, alberi, case)
     zonaScritta(k) {
       if (scritte[k]) return false
       scritte[k] = true
       const R = m.zone[k].rettangolo
-      terreni.forEach((t, p) => {
-        const r = rettangoloDi(m, p)
-        if (r.x1 < R.x0 || r.x0 > R.x1 + 1 || r.z1 < R.y0 || r.z0 > R.y1 + 1) return
-        const vis = t.visible
-        scena.remove(t); t.geometry.dispose()
-        terreni[p] = fai(p); terreni[p].visible = vis
-      })
+      const tocca = r => !(r.x1 < R.x0 || r.x0 > R.x1 + 1 || r.z1 < R.y0 || r.z0 > R.y1 + 1)
+      const rifai = (lista, i, r) => { const vis = lista[i].visible; scena.remove(lista[i]); lista[i].geometry.dispose(); lista[i] = fai(r, vis) }
+      terreni.forEach((_, p) => { if (tocca(rettangoloDi(m, p))) rifai(terreni, p, p) })
+      rettangoli.forEach((r, b) => { if (tocca(r)) rifai(blocchi, b, r) })
       perZona[k] = alberiDellaZona(k)
       imAlberi = riempi(imAlberi, geoAlbero, [...boscoFuori, ...perZona.flat()])
       st = scatoleETetti()
@@ -153,7 +160,7 @@ export function creaLontano(m, scena, mats, { quotaFuori = null, M = 0 } = {}) {
       return true
     },
     via() {
-      for (const me of terreni) { scena.remove(me); me.geometry.dispose() }
+      for (const me of [...terreni, ...blocchi]) { scena.remove(me); me.geometry.dispose() }
       for (const me of [imAlberi, imScatole, imTetti]) { scena.remove(me); me.dispose() }
       for (const g of [geoAlbero, geoScatola, geoTetto]) g.dispose()
       matL.dispose()
