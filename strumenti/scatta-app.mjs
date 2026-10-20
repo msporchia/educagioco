@@ -17,7 +17,7 @@
    server di Vite: è quello che provano i test, e non serve una porta.
 
    `--storia N` apre il sotterraneo sulla terra di sopra con N discese finite, come le avrebbe un eroe in regola
-   (`--eroe mago`, `--missioni collana:consegnata,rosicchione:presa`, `--non-parlato` se il minatore non ha ancora
+   (`--gioco sotterraneo3d` lo apre nel mondo 3D di sopra; `--eroe mago`, `--missioni collana:consegnata,rosicchione:presa`, `--non-parlato` se il minatore non ha ancora
    detto niente): il diario e i dialoghi si guardano senza giocare la storia. `--zaino bastone-magico,elisir-toro` mette quei
    pezzi in tasca in più (una chiave composta, `spada@7.m.fuoco`, va bene), per guardarli nel pannello o berli; `--punti 3` lascia tre
    punti delle caratteristiche da dare, per vedere cosa cambia sotto ogni «+».
@@ -108,7 +108,7 @@ async function apriPagina() {
 if (opz('storia', null) != null) {
   const { seminaIlSotterraneo } = await import('../test/aiuto/sotterraneo-semina.mjs')
   await seminaIlSotterraneo(page, {
-    finite: Number(opz('storia')), eroe: opz('eroe', 'cavaliere'), parlato: !args.includes('--non-parlato'),
+    finite: Number(opz('storia')), eroe: opz('eroe', 'cavaliere'), gioco: opz('gioco', 'sotterraneo'), parlato: !args.includes('--non-parlato'),
     missioni: Object.fromEntries((opz('missioni', '') || '').split(',').filter(Boolean).map(x => x.split(':'))),
     zaino: (opz('zaino', '') || '').split(',').filter(Boolean), punti: Number(opz('punti', 0)),
   })
