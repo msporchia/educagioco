@@ -8,6 +8,9 @@
    manda di suoi: `{ t: 'ciao', ruolo }` a chi entra, `{ t: 'pronti' }` a tutti e due quando ci sono, `{ t: 'via' }`
    quando l'altro se ne va. */
 
+import { CHIAVE, ID, ammetti, altroDi, controllaMessaggio } from './coppia.js'
+import { CODICE, DURATA as DURATA_CODICE, CODICI_ORA, nuovoCodice as codiceBreve, contaErrore, bloccato } from './codici.js'
+
 const ALFABETO = 'ABCDEFGHJKLMNPQRSTUVWXYZ'      // senza la I e la O: si confondono con 1 e 0 a voce
 const LUNGHEZZA = 5
 const MAX_BYTE = 512                             // una mossa sono poche decine di byte
@@ -16,7 +19,7 @@ const ATTESA = 5 * 60 * 1000                     // una stanza in cui non entra 
 const DURATA = 60 * 60 * 1000                    // e comunque dopo un'ora
 const CREAZIONI_ORA = 30                         // stanze create all'ora da uno stesso indirizzo
 
-const CORS = { 'access-control-allow-origin': '*', 'access-control-allow-methods': 'GET, OPTIONS' }
+const CORS = { 'access-control-allow-origin': '*', 'access-control-allow-methods': 'GET, POST, OPTIONS', 'access-control-allow-headers': 'content-type' }
 const json = (dato, stato = 200) => new Response(JSON.stringify(dato), { status: stato, headers: { 'content-type': 'application/json', ...CORS } })
 
 function nuovoCodice() {
@@ -42,6 +45,8 @@ export default {
       return json({ errore: 'riprova' }, 503)
     }
 
+    if (url.pathname.startsWith('/amici/')) return amici(richiesta, url, env)
+
     const m = url.pathname.match(/^\/entra\/([A-Z]{5})$/)
     if (m) {
       if (richiesta.headers.get('upgrade') !== 'websocket') return json({ errore: 'serve un WebSocket' }, 426)
@@ -51,6 +56,41 @@ export default {
 
     return json({ servizio: 'sfida', ok: true })
   },
+}
+
+/* Gli amici (docs/core/amici.md): due richieste per abbinarsi (un codice breve che scade) e una stanza per amicizia. */
+async function amici(richiesta, url, env) {
+  const ip = richiesta.headers.get('cf-connecting-ip') || 'sconosciuto'
+  if (url.pathname === '/amici/codice' && richiesta.method === 'POST') {
+    let corpo
+    try { corpo = await richiesta.json() } catch { return json({ errore: 'richiesta storta' }, 400) }
+    if (!CHIAVE.test(corpo?.chiave || '')) return json({ errore: 'chiave storta' }, 400)
+    const limite = env.LIMITE.get(env.LIMITE.idFromName('amici:' + ip))
+    if (!(await (await limite.fetch('https://limite/conta')).json()).ok) return json({ errore: 'troppi codici, riprova fra un po\'' }, 429)
+    for (let tentativo = 0; tentativo < 5; tentativo++) {          // un codice già in uso si cambia
+      const codice = codiceBreve(crypto.getRandomValues(new Uint8Array(LUNGHEZZA)))
+      const r = await env.CODICI.get(env.CODICI.idFromName(codice)).fetch('https://codice/metti', { method: 'POST', body: corpo.chiave })
+      if (r.ok) return json({ codice, scade: Date.now() + DURATA_CODICE })
+    }
+    return json({ errore: 'riprova' }, 503)
+  }
+  if (url.pathname === '/amici/riscatta' && richiesta.method === 'POST') {
+    let corpo
+    try { corpo = await richiesta.json() } catch { return json({ errore: 'richiesta storta' }, 400) }
+    const errori = env.ERRORI.get(env.ERRORI.idFromName(ip))
+    if ((await (await errori.fetch('https://errori/stato')).json()).bloccato) return json({ errore: 'troppi tentativi, riprova fra un minuto' }, 429)
+    const codice = String(corpo?.codice || '').toUpperCase()
+    const r = CODICE.test(codice) ? await env.CODICI.get(env.CODICI.idFromName(codice)).fetch('https://codice/prendi', { method: 'POST' }) : null
+    if (!r || !r.ok) { await errori.fetch('https://errori/sbaglio'); return json({ errore: 'codice non valido o scaduto' }, 404) }
+    return json({ chiave: await r.text() })
+  }
+  const m = url.pathname.match(/^\/amici\/coppia\/([a-z0-9]{32})$/)
+  if (m && CHIAVE.test(m[1])) {
+    if (richiesta.headers.get('upgrade') !== 'websocket') return json({ errore: 'serve un WebSocket' }, 426)
+    if (!ID.test(url.searchParams.get('id') || '')) return json({ errore: 'manca chi sei' }, 400)
+    return env.COPPIE.get(env.COPPIE.idFromName(m[1])).fetch('https://coppia/entra?id=' + url.searchParams.get('id'), richiesta)
+  }
+  return json({ errore: 'non c\'è' }, 404)
 }
 
 /* Una stanza. Usa l'API di ibernazione: a stanza ferma non si paga il tempo di calcolo. Il segno «aperta» sta
@@ -129,4 +169,90 @@ export class Limite {
   }
 
   async alarm() { await this.stato.storage.deleteAll() }
+}
+
+/* Un codice breve: tiene la chiave per due ore e la consegna una volta sola. */
+export class Codice {
+  constructor(stato) { this.stato = stato }
+
+  async fetch(richiesta) {
+    const percorso = new URL(richiesta.url).pathname
+    if (percorso === '/metti') {
+      if (await this.stato.storage.get('chiave')) return new Response('occupato', { status: 409 })
+      await this.stato.storage.put('chiave', await richiesta.text())
+      await this.stato.storage.setAlarm(Date.now() + DURATA_CODICE)
+      return new Response('ok')
+    }
+    if (percorso === '/prendi') {
+      const chiave = await this.stato.storage.get('chiave')
+      if (!chiave) return new Response('non c\'è', { status: 404 })
+      await this.stato.storage.deleteAll()                          // uso singolo
+      return new Response(chiave)
+    }
+    return new Response('?', { status: 404 })
+  }
+
+  async alarm() { await this.stato.storage.deleteAll() }
+}
+
+/* I codici sbagliati di un indirizzo nell'ultimo minuto: troppi e per un minuto non si prova più. */
+export class Errori {
+  constructor(stato) { this.stato = stato }
+
+  async fetch(richiesta) {
+    const ora = Date.now()
+    const stato = await this.stato.storage.get('errori')
+    if (new URL(richiesta.url).pathname === '/sbaglio') {
+      const nuovo = contaErrore(stato, ora)
+      await this.stato.storage.put('errori', nuovo)
+      await this.stato.storage.setAlarm(nuovo.da + 2 * 60 * 1000)
+      return new Response('ok')
+    }
+    return new Response(JSON.stringify({ bloccato: bloccato(stato, ora) }))
+  }
+
+  async alarm() { await this.stato.storage.deleteAll() }
+}
+
+/* Una amicizia: due telefoni che si inoltrano i messaggi e si dicono se l'altro c'è. Come la stanza, con l'API di ibernazione;
+   la logica sta in coppia.js. Non salva niente: finché non c'è nessuno, non esiste. */
+export class Coppia {
+  constructor(stato) {
+    this.stato = stato
+    this.recenti = new Map()
+  }
+
+  soci() { return this.stato.getWebSockets().map(ws => ({ ws, id: ws.deserializeAttachment()?.id })) }
+
+  async fetch(richiesta) {
+    const id = new URL(richiesta.url).searchParams.get('id')
+    const a = ammetti(this.soci().filter(s => s.id), id)
+    if (a.esito === 'piena') return new Response('amicizia piena', { status: 409 })
+    if (a.esito === 'sostituisce') { try { a.vecchio.ws.serializeAttachment({ id: null }); a.vecchio.ws.close(1000, 'sostituito') } catch { /* già chiuso */ } }
+    const { 0: cliente, 1: server } = new WebSocketPair()
+    this.stato.acceptWebSocket(server)
+    server.serializeAttachment({ id })
+    const altro = this.soci().find(s => s.ws !== server && s.id)
+    server.send(JSON.stringify({ t: 'ciao', altro: !!altro }))
+    if (altro) { try { altro.ws.send(JSON.stringify({ t: 'su' })) } catch { /* se n'è andato */ } }
+    return new Response(null, { status: 101, webSocket: cliente })
+  }
+
+  webSocketMessage(ws, messaggio) {
+    const c = controllaMessaggio(messaggio, this.recenti.get(ws) || [], Date.now())
+    if (!c.ok) return ws.close(c.codice, c.ragione)
+    this.recenti.set(ws, c.recenti)
+    const altro = altroDi(this.soci().filter(s => s.id), ws)
+    if (altro) { try { altro.ws.send(messaggio) } catch { /* se n'è andato */ } }
+  }
+
+  webSocketClose(ws) { this.finito(ws) }
+  webSocketError(ws) { this.finito(ws) }
+
+  finito(ws) {
+    this.recenti.delete(ws)
+    if (!ws.deserializeAttachment()?.id) return                     // un collegamento sostituito: l'altro non deve saperlo
+    const altro = altroDi(this.soci().filter(s => s.id), ws)
+    if (altro) { try { altro.ws.send(JSON.stringify({ t: 'giu' })) } catch { /* se n'è andato */ } }
+  }
 }
