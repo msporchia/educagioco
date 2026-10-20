@@ -1,6 +1,6 @@
 <script setup>
 // Il fumetto del mondo di sopra in 3D (viste/Mondo3d.vue): sopra un ingresso, una pietra del viaggio, il portale gemello, il
-// cartello, la bacheca, la fontana o una grata chiusa. Non decide niente: Mondo3d.vue gli dà i dati già pronti e lui dice cosa si è toccato
+// cartello, la bacheca, la fontana o la porta delle terre. Non decide niente: Mondo3d.vue gli dà i dati già pronti e lui dice cosa si è toccato
 // (`scendi`, `giu`, `viaggio`, `bevi`, `taglia` per un foglio della bacheca, `scava` per la X). Gli stessi bersagli dei test del fumetto della terra dipinta (viste/Terra.vue).
 import { faccia, inFrase, titoloDi } from '../motore/missioni.js'
 
@@ -63,7 +63,7 @@ const minuscolo = s => s.charAt(0).toLowerCase() + s.slice(1)
 
   <template v-else-if="f.tipo === 'cartello'">
     <b class="sot-fum-nome">Il cartello</b>
-    <p v-for="x in f.frecce" :key="x.passaggio" class="sot-fum-freccia" :class="{ 'sot-fum-freccia-meta': x.meta }" :data-freccia="x.verso">
+    <p v-for="x in f.frecce" :key="x.verso + x.nome" class="sot-fum-freccia" :class="{ 'sot-fum-freccia-meta': x.meta }" :data-freccia="x.verso">
       <b class="em">{{ x.verso }}</b> {{ x.detto }}<template v-if="x.nomi.length"><br><i>{{ x.nomi.join(' · ') }}</i></template>
       <!-- la freccia che porta alla meta di adesso: lo stesso azzurro delle luci per terra (docs/sotterraneo/mondo-3d-la-meta.md) -->
       <template v-if="x.meta && f.meta"><br><b class="sot-fum-di-qui" data-freccia-meta>◎ di qui per {{ f.meta.minuscolo }}: segui le luci azzurre</b></template>
@@ -104,8 +104,9 @@ const minuscolo = s => s.charAt(0).toLowerCase() + s.slice(1)
     <button v-if="f.serve" class="sot-grosso" data-azione="bevi" @click="$emit('bevi')"><span class="em">💧</span> {{ f.bevi }}</button>
   </template>
 
-  <template v-else-if="f.tipo === 'grata'">
-    <b class="sot-fum-nome"><span class="em">🔒</span> {{ f.nome }}</b>
-    <p class="sot-fum-chiusa" data-grata-perche>{{ f.perche }}</p>
+  <!-- la porta delle terre, in fondo alla landa: si apre ripulite le tombe del vento; passarla è delle terre successive -->
+  <template v-else-if="f.tipo === 'terre'">
+    <b class="sot-fum-nome"><span class="em">🌀</span> {{ f.nome }}</b>
+    <i class="sot-fum-dritta" data-terre-dice :data-aperta="f.aperta ? 1 : 0">{{ f.dice }}</i>
   </template>
 </template>

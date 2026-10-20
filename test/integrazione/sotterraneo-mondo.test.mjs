@@ -1,18 +1,21 @@
 /* ═══════════════════════════════════════════════════════════════════
-   IL MONDO DI SOPRA IN 3D, COL DITO — docs/sotterraneo/terra-di-sopra.md
-   («Il mondo in 3D») e docs/sotterraneo/grafica-3d.md
+   IL MONDO DI SOPRA IN 3D, COL DITO — docs/sotterraneo/mondo-3d.md
 
-   Nel Sotterraneo 3D la terra di sopra è il mondo generato (seme 19),
-   disegnato in WebGL: non c'è più la mappa dipinta. Qui si entra, si
+   Nel Sotterraneo 3D la terra di sopra è il mondo a percorso (seme 8,
+   504×300, sette zone), disegnato in WebGL: non c'è più la mappa dipinta.
+   Qui si entra e si vedono tutti quelli del villaggio senza muoversi, si
    guarda quanto costa, si cammina col dito, si parla alla ragazza del
    pozzo toccandola, si apre la bottega del fabbro, si accende la pietra
    del villaggio con una domanda, si apre la veduta d'insieme e un tocco
    lì manda l'eroe a piedi, si scende nella cripta dei re e si risale
    lasciandola perdere: si torna davanti al suo ingresso, con la nebbia e
    la pietra salvate. Con la sosta del portale il gemello sta nel
-   villaggio. Si tocca come un telefono (`Input.dispatchTouchEvent`).
+   villaggio; il capitano sta nel villaggio. Un salto in una zona lontana
+   la carica (e dice quanto ci ha messo), coi quattordici ingressi e le
+   pietre di zona; nessuna grata. Si tocca come un telefono
+   (`Input.dispatchTouchEvent`).
    `node test/esegui.mjs sotterraneo-mondo`
-   tempo: 300
+   tempo: 480
    ═══════════════════════════════════════════════════════════════════ */
 import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, scegliAvventura, leggiProfilo, mondoPronto,
          fermoNelMondo, toccaNelMondo, nelDialogo, scendiNelSotterraneo, lasciaLaDiscesa } from '../aiuto/browser.mjs'
@@ -23,7 +26,8 @@ import { scrivi, PORTALE as VIA_PORTALE } from '../../src/giochi/sotterraneo/mot
 import { robaAttesa, crescitaAttesa } from '../../src/giochi/sotterraneo/motore/storia.js'
 import { seminato } from '../../src/giochi/sotterraneo/motore/livello.js'
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
-import { ilMondo, postiDi, terraDelMondo, aperturaDi } from '../../src/giochi/sotterraneo/motore/mondo-sopra.js'
+import { ilMondo, postiDi, terraDelMondo } from '../../src/giochi/sotterraneo/motore/mondo-sopra.js'
+import { INGRESSI_DEL_MONDO } from '../../src/giochi/sotterraneo/dati/mondo-aperto.js'
 
 const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser)
@@ -34,7 +38,7 @@ async function tocca(x, y) {
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
 }
 const m = ilMondo()
-const terra = terraDelMondo(m, aperturaDi([]).aperto)
+const terra = terraDelMondo(m)
 // una cella dove si cammina, a qualche passo da (x, y) verso (dx, dy)
 const cellaVerso = (x, y, dx, dy) => { for (let k = 6; k >= 3; k--) for (const s of [0, 1, -1, 2, -2]) { const c = { x: x + dx * k + dy * s, y: y + dy * k + dx * s }; if (terra.passa(c.x, c.y)) return c } return null }
 const g3d = () => page.evaluate(() => window.__sotterraneo3d.grafica())
@@ -62,6 +66,18 @@ uguale('e non la terra dipinta', await page.locator('[data-terra]').count(), 0)
   dentro('sotto le 150 chiamate', g.chiamate, 10, 150)
   dentro('sotto i 400 mila triangoli', g.triangoli, 1000, 400000)
   nota(`dal villaggio: ${g.chiamate} chiamate, ${Math.round(g.triangoli / 1000)}k triangoli, ${g.figure} figure, un pezzo in ${g.msPezzi} ms (SwiftShader)`)
+  // dalla partenza si vedono tutti quelli del villaggio, senza muoversi né girare, e il tocco va a ognuno (non a chi gli sta accanto)
+  const gente = await page.evaluate(() => [...document.querySelectorAll('[data-bersaglio][data-citta="villaggio"]')].filter(e => e.matches('[data-personaggio],[data-mercante],[data-minatore]')).map(e => {
+    const r = e.getBoundingClientRect(), t = document.elementFromPoint(r.x + r.width / 2, r.y + r.height * 0.6)
+    return { chi: e.dataset.personaggio || e.dataset.mercante || 'minatore', vis: e.dataset.vis, suo: t === e || e.contains(t) }
+  }))
+  uguale('nel villaggio ci sono i quattro mercanti, la ragazza, il capitano e il minatore', gente.map(q => q.chi).sort().join(','), ['armaiolo', 'capitano', 'erborista', 'incantatrice', 'minatore', 'ragazza', 'rigattiere'].sort().join(','))
+  controlla('tutti a schermo dalla partenza', gente.every(q => q.vis === '1'), JSON.stringify(gente.filter(q => q.vis !== '1')))
+  controlla('e ognuno si tocca lui', gente.every(q => q.suo), JSON.stringify(gente.filter(q => !q.suo)))
+  uguale('niente grate', await page.locator('[data-grata]').count(), 0)
+  uguale('i quattordici ingressi, ognuno con la sua zona', await page.locator('[data-posto][data-zona]').count(), Object.keys(INGRESSI_DEL_MONDO).length)
+  uguale('otto pietre: il villaggio e una per zona', await page.locator('[data-pietra]').count(), 8)
+  uguale('le pietre di zona', await page.locator('[data-pietra^="zona:"][data-zona]').count(), 7)
 }
 await scatto(page, 'sotterraneo-mondo-villaggio')
 
@@ -127,15 +143,17 @@ await attendi(page, 500)
   nota(`la veduta: ${g.chiamate} chiamate, ${Math.round(g.triangoli / 1000)}k triangoli`)
   controlla('il nome del villaggio nella veduta', await page.locator('[data-nome-posto="citta:villaggio"]').count() === 1)
   await scatto(page, 'sotterraneo-mondo-veduta')
+  // nella veduta una cella è meno di due pixel e i nomi dei posti coprono quello che hanno attorno: si tocca la strada maestra, a una
+  // trentina di celle dal villaggio, e l'eroe ci va (a qualche cella da dove si è toccato: il tocco cade sul terreno che sale)
   const [x0, y0] = await cella()
-  const meta = cellaVerso(x0, y0, 0, 1)
+  const t = m.tracciato.find(q => q.s >= 30), meta = { x: Math.round(t.x), y: Math.round(t.y) }
   const p = await schermoDi(meta.x + 0.5, meta.y + 0.5)
   await tocca(p.x, p.y)
   await attendi(page, 500)
   uguale('toccando, la veduta si chiude', await page.locator('[data-veduta]').count(), 0)
   await fermoNelMondo(page)
   const [x1, y1] = await cella()
-  controlla('e l\'eroe ci è andato a piedi', Math.hypot(x1 - meta.x, y1 - meta.y) <= 1.5, `${x0},${y0} → ${x1},${y1} (toccato ${meta.x},${meta.y})`)
+  controlla('e l\'eroe ci è andato a piedi', Math.hypot(x1 - meta.x, y1 - meta.y) <= 6 && Math.hypot(x1 - x0, y1 - y0) > 20, `${x0},${y0} → ${x1},${y1} (toccato ${meta.x},${meta.y})`)
 }
 
 /* ---------- 7. la cripta dei re: si tocca l'ingresso, si scende in 3D, si lascia perdere e si torna davanti ---------- */
@@ -152,7 +170,8 @@ await attendi(page, 500)
   controlla('risalendo si è davanti all\'ingresso della cripta', Math.hypot(x - ing.accanto.x, y - ing.accanto.y) <= 2, `${x},${y}`)
   const p = await leggiProfilo(page)
   const mo = p?.campagne?.sotterraneo?.cfg?.avventure?.cavaliere?.mondo
-  uguale('la nebbia del mondo è salvata in base64 (un bit per cella)', mo?.nebbia?.length, 3734)
+  uguale('la nebbia del mondo è salvata in base64 (un bit per cella, 504×300)', mo?.nebbia?.length, Math.ceil(Math.ceil(m.W * m.H / 8) * 4 / 3))
+  uguale('con la firma della mappa', mo?.firma, m.firma)
   controlla('e la pietra accesa resta accesa', (mo?.pietre || []).includes('villaggio'))
   uguale('il campo del 2D non si tocca', p?.campagne?.sotterraneo?.cfg?.avventure?.cavaliere?.terra, undefined)
   await scatto(page, 'sotterraneo-mondo-ritorno')
@@ -180,12 +199,11 @@ await attendi(page, 500)
   await scatto(page, 'sotterraneo-mondo-portale')
 }
 
-/* ---------- 9. il forte del guado: il capitano, la fontana che cura, il fabbro di sempre ---------- */
+/* ---------- 9. il capitano sta nel villaggio (il forte non c'è più), e nel villaggio non c'è la fontana: ha chi cura ---------- */
 {
-  // quattro porte chiuse e una discesa lasciata dal portale nelle sale allagate (la quinta), ammaccato e a secco: il gemello è nel forte
+  // quattro porte chiuse e una discesa lasciata dal portale nelle sale allagate (la quinta): il gemello è nel villaggio, il capitano ha il «!»
   const k = 4, roba = robaAttesa('cavaliere', k, { gemme: 5 }), crescita = crescitaAttesa('cavaliere', k)
   const c = new Corsa(CAMPAGNA[k], { seme: 21, eroe: 'cavaliere', roba, crescita, rnd: seminato(21) })
-  c.vita = Math.max(1, Math.floor(c.vitaMax / 3)); c.energia = 0
   const sosta = scrivi(c, k, { via: VIA_PORTALE })
   const stelle = Object.fromEntries(Array.from({ length: k }, (_, i) => [i, 3]))
   const a = { tappa: k, libera: false, stelle, missioni: {}, roba, crescita, sosta, mondo: { dove: { portale: true } } }
@@ -195,37 +213,12 @@ await attendi(page, 500)
   await scegli(page, 'sotterraneo3d')
   await mondoPronto(page)
   await attendi(page, 2000)
-  uguale('il gemello della quinta discesa sta nel forte', await page.locator('[data-portale][data-citta="forte"]').count(), 1)
-  const sostaOra = async () => (await leggiProfilo(page))?.campagne?.sotterraneo?.cfg?.avventure?.cavaliere?.sosta || {}
-
-  // la fontana: al posto del pozzo, richiama chi è ammaccato, e un tocco la apre
-  uguale('nel forte c\'è la fontana', await page.locator('[data-fontana="forte"]').count(), 1)
-  uguale('e non nel villaggio, che ha chi cura', await page.locator('[data-fontana="villaggio"]').count(), 0)
-  uguale('chi risale ammaccato è richiamato dalla fontana', await page.locator('[data-fontana="forte"] [data-richiamo-di="fontana"]').count(), 1)
-  await scatto(page, 'sotterraneo-mondo-fontana')
-  await toccaNelMondo(page, '[data-fontana="forte"]', { tocca })
-  await page.waitForSelector('[data-fumetto-di="fontana"]', { timeout: 30000 })
-  uguale('toccata, il fumetto dice che l\'acqua serve', await page.locator('[data-fontana-dice]').getAttribute('data-serve'), '1')
-  uguale('e il richiamo tace mentre è aperto', await page.locator('[data-richiamo-di="fontana"]').count(), 0)
-  await scatto(page, 'sotterraneo-mondo-fontana-fumetto')
-  await page.click('[data-fumetto] [data-azione="bevi"]')
-  await page.waitForSelector('[data-cura-fiocco][data-risorsa="tutto"]', { timeout: 5000 })
-  controlla('bevendo sale il numero, per la vita e per l\'energia', /❤️/.test(await page.locator('[data-cura-fiocco]').innerText()) && /⚡/.test(await page.locator('[data-cura-fiocco]').innerText()))
-  const dopo = await sostaOra()
-  controlla('la sosta è a vita piena', dopo.vita >= c.vitaMax, `${dopo.vita} su ${c.vitaMax}`)
-  controlla('e a energia piena', dopo.energia >= c.energiaMax && c.energiaMax > 0, `${dopo.energia} su ${c.energiaMax}`)
-  uguale('il fumetto adesso dice che si è in forze', await page.locator('[data-fontana-dice]').getAttribute('data-serve'), '0')
-  uguale('senza il tasto', await page.locator('[data-fumetto] [data-azione="bevi"]').count(), 0)
-  await page.evaluate(() => document.querySelector('[data-mondo3d]').click())
-  await attendi(page, 300)
-
-  // il capitano: il «!» finché non ha detto la quinta porta, poi parla di Gorgo e dà la strada del mondo aperto
-  await page.evaluate(() => window.__mondo3d.vai('personaggio:forte:capitano'))
-  await attendi(page, 1200)
-  uguale('il capitano ha il «!»', await page.locator('[data-personaggio="capitano"]').getAttribute('data-segno'), 'nuova')
+  uguale('il gemello della quinta discesa sta nel villaggio', await page.locator('[data-portale][data-citta="villaggio"]').count(), 1)
+  uguale('nessuna fontana: il villaggio ha la guaritrice e l\'incantatrice', await page.locator('[data-fontana]').count(), 0)
+  uguale('il capitano sta nel villaggio', await page.locator('[data-personaggio="capitano"][data-citta="villaggio"]').count(), 1)
+  uguale('e ha il «!»', await page.locator('[data-personaggio="capitano"]').getAttribute('data-segno'), 'nuova')
   await toccaNelMondo(page, '[data-personaggio="capitano"]', { tocca })
   await page.waitForSelector('[data-dialogo="capitano"]', { timeout: 30000 })
-  // le pagine una dopo l'altra, fino alle domande: si legge ognuna prima di passare alla prossima
   let detto = ''
   for (let n = 0; n < 12; n++) {
     await attendi(page, 380)
@@ -233,24 +226,30 @@ await attendi(page, 500)
     if (await page.locator('[data-dialogo][data-ultima]').count()) break
     await page.click('[data-dialogo-testo]')
   }
-  controlla('dice la quinta porta e la strada del mondo aperto', detto.includes('Gorgo') && detto.includes('Le sale allagate') && detto.includes('ponte del guado'), detto)
+  controlla('dice la quinta porta', detto.includes('Gorgo') && detto.includes('Le sale allagate'), detto)
   await scatto(page, 'sotterraneo-mondo-capitano')
   await page.click('[data-dialogo] [data-scelta="ciao"]')
   await page.waitForSelector('[data-dialogo]', { state: 'detached', timeout: 5000 })
   uguale('detto, il «!» se ne va', await page.locator('[data-personaggio="capitano"]').getAttribute('data-segno'), null)
-  const mo = (await leggiProfilo(page))?.campagne?.sotterraneo?.cfg?.avventure?.cavaliere?.mondo
-  uguale('e si ricorda quale porta ha detto', mo?.novita?.capitano?.v, 'cisterna')
+}
 
-  // il fabbro del forte è lo stesso del villaggio: stesso banco
-  await page.evaluate(() => window.__mondo3d.vai('mercante:forte:armaiolo'))   // la bussola della discesa della storia sta sul bordo, proprio sopra di lui
-  await attendi(page, 1500)
-  await toccaNelMondo(page, '[data-mercante="armaiolo"][data-citta="forte"]', { tocca })
-  await page.waitForSelector('[data-dialogo="armaiolo"]', { timeout: 60000 })
-  await nelDialogo(page, '[data-scelta="bottega"]')
-  await page.waitForSelector('[data-bottega][data-mercante-aperto="armaiolo"]', { timeout: 8000 })
-  controlla('il fabbro del forte apre la bottega di sempre', true)
-  await page.click('[data-bottega] [data-chiudi]')
-  await attendi(page, 500)
+/* ---------- 10. un salto lontano: la zona si carica (una per fotogramma), il cartello della zona, i suoi pezzi ---------- */
+{
+  await page.evaluate(() => window.__mondo3d.senzaMostri())
+  await page.evaluate(() => window.__mondo3d.vai('ingresso:palafitta'))
+  const annuncio = await page.waitForSelector('[data-annuncio-zona][data-zona="palude"]', { timeout: 20000 }).then(() => true).catch(() => false)
+  controlla('entrando, il cartello della zona dice il suo nome', annuncio)
+  await page.waitForFunction(() => window.__sotterraneo3d.pronto && window.__sotterraneo3d.grafica().zone.includes(3), null, { timeout: 30000 })
+  await attendi(page, 2500)
+  const g = await g3d()
+  uguale('l\'eroe è nella palude', g.zona, 3)
+  controlla('caricate la palude e le due accanto, e basta', g.zone.join() === '2,3,4', g.zone.join())
+  controlla('e i pezzi attorno', g.pezzi.length >= 6, g.pezzi.join())
+  dentro('sotto le 150 chiamate', g.chiamate, 10, 150)
+  dentro('sotto i 400 mila triangoli', g.triangoli, 1000, 400000)
+  const ms = g.msZone.map(z => z.ms)
+  nota(`nella palude: ${g.chiamate} chiamate, ${Math.round(g.triangoli / 1000)}k triangoli; una zona si carica in ${Math.min(...ms)}–${Math.max(...ms)} ms (SwiftShader, un fotogramma)`)
+  await scatto(page, 'sotterraneo-mondo-palude')
 }
 
 uguale('nessun errore in console', errori.join(' | '), '')

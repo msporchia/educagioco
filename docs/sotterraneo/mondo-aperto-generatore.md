@@ -11,10 +11,9 @@ funzioni restituiscono è il **contratto** per il motore di sopra (compito B), l
 - `motore/mondo-percorso.js` — il generatore; `motore/mondo-aperto-strade.js` — l'A* e i passi da una cella (non cambia).
 - `strumenti/sotterraneo-pianta-percorso.mjs` — la pianta in PNG e la pianta del villaggio (`npm run pianta -- --percorso`).
 
-**Il mondo ad anelli c'è ancora** (`motore/mondo-aperto.js`, la prima metà di `dati/mondo-aperto.js`: `REGIONI_DEL_MONDO`,
-`MARCHE`, `PASSAGGI`, `regolaDi`, `haGrata`, `passaggioAperto`, `anelloDi`, `FASCE_DEGLI_ANELLI`, `CITTA`, `DUNGEON`): lo usano
-`mondo-sopra.js`, `aperta.js`, la scena e i loro test. **Lo cancella chi migra l'ultimo** (B o D), con
-`strumenti/sotterraneo-pianta-mondo.mjs`, `unita/sotterraneo-mondo` e la riga `--mondo` di `sotterraneo-pianta.mjs`.
+**Il mondo ad anelli non c'è più** (tolto il 20 ottobre 2026 col compito D: `motore/mondo-aperto.js`, la prima metà della scheda,
+`motore/mondo-sopra-anelli.js`, `strumenti/sotterraneo-pianta-mondo.mjs`, `unita/sotterraneo-mondo`, la riga `--mondo` della pianta);
+le chiavi delle sue regioni restano quelle dei luoghi, e `unita/sotterraneo-mondo-percorso` le tiene scritte.
 
 ## Le misure
 
@@ -178,7 +177,7 @@ scheletro sta nei salvataggi** (`mondo.firma`): cambiarla rifà nebbia, `dove` e
 - **D (scena)**: i pezzi su 504×300 e solo nelle zone caricate, il lontano e la veduta da `baseDi` e dal `tracciato`, il
   villaggio dalla pianta (`posti` con `citta: 'villaggio'`), i ponti dai `confini` (nessuna grata), il mulino col `verso`, la porta
   delle terre, i sei monumenti nuovi, le icone; via le grate e gli antri.
-- **Chi migra l'ultimo** cancella il mondo ad anelli (sopra, «Il mondo ad anelli c'è ancora»).
+- **Il mondo ad anelli** è stato cancellato da D, l'ultimo a migrare (sopra).
 
 Nei test: `unita/sotterraneo-mondo-percorso` (le firme del seme scelto, nessun guasto, lo stesso seme lo stesso mondo, niente
 import fuori dal repo né DOM, le misure, **a blocchi come tutto insieme** e le liste che calano scaricando, la terra 2 con la

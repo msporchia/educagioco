@@ -1,7 +1,7 @@
 // I mostri del mondo di sopra a schermo (docs/sotterraneo/mondo-aperto-mostri.md, «La scena»): dallo stato del motore
 // (motore/aperta.js, `mostriVicini`) la lista delle figure da posare, ancorate come le persone (persone.js). Si vede solo chi sta
 // dentro il cerchio di luce attorno all'eroe (SOPRA.vista) e dove la nebbia è già aperta; al bordo del cerchio sfuma. Chi dorme
-// respira piano, chi è sveglio corre; il caporale e il signore della regione sono più grandi. Puro, senza three: unita/sotterraneo-mondo-mostri-scena.
+// respira piano, chi è sveglio corre; il caporale e il signore della regione sono più grandi. Puro, senza three: unita/sotterraneo-mostri-sopra-scena.
 import { MOSTRI } from '../../dati/mostri.js'
 import { PEZZI } from '../../dati/atlante.js'
 import { fotogrammaDi, quantiFotogrammi } from '../../dati/fotogrammi.js'

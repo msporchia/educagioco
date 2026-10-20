@@ -87,7 +87,7 @@ function comincia() {
   <div class="sot-tappe">
     <!-- la discesa lasciata dal portale è anche il portale gemello nel villaggio: tutti e due riprendono la stessa sosta -->
     <component :is="in3d ? Mondo3d : Terra" ref="terraEl" :tappe="tappe" :abisso="abisso" :eroe="eroe" :roba="roba"
-           v-bind="in3d ? { mondo, veduta, forza, fermo: fermo || diarioAperto || !!chiede || perdere } : { terra }"
+           v-bind="in3d ? { mondo, veduta, forza, fermo: fermo || diarioAperto || !!chiede || perdere, dungeon } : { terra }"
            :missioni="missioni" :azione-missione="azioneMissione" :segui="segui"
            :giaScesa="ripresa ? ripresa.tappa : null" :portale="portale"
            :annuncio="annuncio" :forze="forze" @sentito="$emit('sentito')" @cura="r => $emit('cura', r)"

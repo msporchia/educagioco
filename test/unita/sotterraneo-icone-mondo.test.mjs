@@ -14,16 +14,16 @@ import { ICONE_MONDO, FIRMA } from '../../src/giochi/sotterraneo/dati/icone-mond
 import { ICONE } from '../../src/giochi/sotterraneo/dati/terra-icone.js'
 import { iconaDi, POSTO_DI } from '../../src/giochi/sotterraneo/dati/terra.js'
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
-import { DUNGEON } from '../../src/giochi/sotterraneo/dati/mondo-aperto.js'
+import { INGRESSI_DEL_MONDO } from '../../src/giochi/sotterraneo/dati/mondo-aperto.js'
 import { controlla, uguale, stessaLista, riassunto } from '../aiuto/verifica.mjs'
 
 const RADICE = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 
-// le chiavi: le sette discese, l'abisso e le tre città
-const CITTA = ['villaggio', 'forte', 'rifugio']
-stessaLista('un\'icona per ogni discesa, l\'abisso e le tre città',
-            Object.keys(ICONE_MONDO).sort(), [...CAMPAGNA.map(t => t.chiave), 'abisso', ...CITTA].sort())
-stessaLista('le discese sono quelle del mondo', DUNGEON.map(d => d.chiave).sort(), [...CAMPAGNA.map(t => t.chiave), 'abisso'].sort())
+// le chiavi: i quattordici ingressi del mondo a percorso (le sette discese, l'abisso, i sei nuovi) e il villaggio, l'unica città
+const CITTA = ['villaggio']
+stessaLista('un\'icona per ogni ingresso e per il villaggio',
+            Object.keys(ICONE_MONDO).sort(), [...Object.keys(INGRESSI_DEL_MONDO), ...CITTA].sort())
+controlla('fra gli ingressi ci sono le sette discese e l\'abisso', [...CAMPAGNA.map(t => t.chiave), 'abisso'].every(k => INGRESSI_DEL_MONDO[k]))
 
 // ogni icona è un WebP vero, quadrato, 112 px, piccolo
 function misureWebp(uri) {
@@ -44,7 +44,7 @@ for (const [k, uri] of Object.entries(ICONE_MONDO)) {
   controlla(`${k}: sotto i 9 KB (${m.byte} byte)`, m.byte <= 9 * 1024)
   totale += m.byte
 }
-controlla(`tutte insieme sotto i 90 KB (${Math.round(totale / 1024)} KB)`, totale <= 90 * 1024)
+controlla(`tutte insieme sotto i 130 KB (${Math.round(totale / 1024)} KB)`, totale <= 130 * 1024)
 
 // la firma: il file non si scrive a mano
 const firma = createHash('sha1').update(JSON.stringify(ICONE_MONDO)).digest('hex').slice(0, 12)

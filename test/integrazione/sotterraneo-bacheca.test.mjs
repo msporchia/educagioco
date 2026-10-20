@@ -17,7 +17,7 @@ import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, scegli
 import { controlla, uguale, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
 import { MONDO } from '../../src/giochi/sotterraneo/motore/avventure.js'
 import { rifaDaId } from '../../src/giochi/sotterraneo/dati/missioni-modelli.js'
-import { ilMondo, terraDelMondo, aperturaDi, lontanoDalleCitta, MARGINE_DEL_GIRO } from '../../src/giochi/sotterraneo/motore/mondo-sopra.js'
+import { ilMondo, terraDelMondo, lontanoDalleCitta, MARGINE_DEL_GIRO } from '../../src/giochi/sotterraneo/motore/mondo-sopra.js'
 
 const FATTA = 't:villaggio:esplora-regione:lago:0'         // da consegnare qui
 const MAPPA = 't:villaggio:mappa:mulino:0'                  // si scava
@@ -25,7 +25,7 @@ const CERCA = 't:villaggio:trova-chi:campi:0'               // si parla
 const premio = id => rifaDaId(id).premio.gemme
 
 const m = ilMondo()
-const terra = terraDelMondo(m, aperturaDi([]).aperto)
+const terra = terraDelMondo(m)
 const villaggio = m.citta.find(c => c.chiave === 'villaggio')
 
 const browser = await apriBrowser()
