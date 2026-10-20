@@ -24,8 +24,9 @@ funzioni restituiscono è il **contratto** per il motore di sopra (compito B), l
   piedi (`PASSO_MONDO` 4,5). Col prototipo erano 140–164 su 352×216: i passi crescono col lato, 1,43 × 150 ≈ 215.
 - **Erba per zona 11–14 mila celle** (il prototipo 5,7–8 mila, il mondo ad anelli 15 mila in tutto): ~83 mila in tutto.
   `cellePerBranco` del motore di sopra va rifatto per zona (compito B).
-- **Il tempo**: lo scheletro ~50 ms in Node, una zona 25–100 ms (la prima di più: il villaggio, i campi), il mondo intero con
-  le misure ~0,5–1 s. Sul Note 7 si stima ×3–5: una zona 0,1–0,5 s, lo scheletro 0,15–0,25 s. Si misura col dito (compito D).
+- **Il tempo**, in Node: lo scheletro 70–85 ms a freddo; una zona 25–100 ms a motore caldo, ~130 ms la prima a freddo; partire
+  (scheletro, prati e bosco) ~0,35 s; il mondo intero con le misure ~0,5–1 s. Sul Note 7 si stima ×3–5: una zona 0,1–0,5 s,
+  partire 1–1,7 s, quindi la zona dove si è prima e le accanto dopo, a pezzi o in un worker (compito D, da misurare col dito).
 - **La memoria**: le celle sono array tipizzati allocati interi (~20 byte a cella, ~3 MB) più le basi tenute (~3 MB); le liste
   pesanti (decoro ~6 000 oggetti, case, campi) sono per zona e si buttano.
 
