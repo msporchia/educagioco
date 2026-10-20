@@ -27,12 +27,12 @@ export function campagnaSeminata({ finite = 0, eroe = 'cavaliere', missioni = {}
 }
 
 export async function seminaIlSotterraneo(page, opzioni = {}) {
-  const { eroe = 'cavaliere' } = opzioni
+  const { eroe = 'cavaliere', gioco = 'sotterraneo' } = opzioni
   await semina(page, {
     coins: 300, settings: { sperimentali: true },
     campagne: { sotterraneo: campagnaSeminata({ ...opzioni, eroe }) },
   })
-  await scegli(page, 'sotterraneo')
-  await page.waitForSelector('[data-terra]', { timeout: 8000 })
+  await scegli(page, gioco)
+  await page.waitForSelector(gioco === 'sotterraneo3d' ? '[data-mondo3d][data-pronto]' : '[data-terra]', { timeout: 20000 })
   await attendi(page, 600)
 }
