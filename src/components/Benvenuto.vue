@@ -9,6 +9,8 @@ import SceltaAspetto from './SceltaAspetto.vue'
 import ManopolaEta from './eta/Manopola.vue'
 import Prova from '../quiz/Prova.vue'
 import VeloGuide from '../guide/VeloGuide.vue'
+import { ricordaScelta, AMICI_DI_BASE } from '../store/amici.js'
+import { PASSO } from '../amici/testi.js'
 
 const props = defineProps({
   primo: { type: Boolean, default: true },   // false = si aggiunge un fratello dalle impostazioni
@@ -20,6 +22,8 @@ const occupato = ref(false)
 const aspetto = ref(PERSONE[0])   // preselezionato: non cambia cosa vede/sa, solo la faccia in mappa
 const anni = ref(4)   // si parte da quattro, non da vuoto: premere senza leggere sbaglia dalla parte giusta
 const passo = ref(1)
+const amici = ref(AMICI_DI_BASE)   // la domanda ai genitori: di base spento (docs/core/amici.md)
+const leggiAmici = ref(false)
 const spiegami = ref(false)
 const prova = ref(null)   // { sorgente|chiave, nome } | null
 
@@ -37,6 +41,7 @@ async function entra() {
   occupato.value = true
   // entra: true anche aggiungendo un fratello: si aggiunge un bambino perché vuole giocare adesso
   try {
+    ricordaScelta(amici.value)   // il profilo non esiste ancora: la risposta la prende il suo primo `carica`
     await creaGiocatore(pulito.value, true, anni.value, aspetto.value)
     emit('fatto')
   } finally { occupato.value = false }
@@ -81,6 +86,18 @@ async function entra() {
       <div class="manopola-posto">
         <ManopolaEta :anni="anni" :giochi="daQuellEta.giochi" :sa="daQuellEta.sa"
                      @scegli="anni = $event" @prova="prova = $event" />
+      </div>
+
+      <!-- una domanda per i grandi, preselezionata sulla risposta prudente (come la manopola): docs/core/amici.md -->
+      <div class="amici-domanda" data-amici-domanda>
+        <b>👫 {{ PASSO.titolo }}</b>
+        <p v-if="!leggiAmici" class="mini">Invitare un amico a giocare, solo con chi i grandi abbinano con un codice, in alcuni giochi.
+          <button type="button" class="leggi" data-azione="amici-leggi" @click="leggiAmici = true">Leggi tutto</button></p>
+        <p v-else class="mini">{{ PASSO.corpo }}</p>
+        <div class="scelta" role="group" aria-label="Amici online">
+          <button type="button" :class="{ su: !amici }" :aria-pressed="!amici" data-azione="amici-piu-tardi" @click="amici = false">{{ PASSO.piuTardi }}</button>
+          <button type="button" :class="{ su: amici }" :aria-pressed="amici" data-azione="amici-attiva" @click="amici = true">{{ PASSO.attiva }}</button>
+        </div>
       </div>
 
       <button class="via in-fondo" type="button" :disabled="occupato"
@@ -134,4 +151,10 @@ form { display:flex; flex-direction:column; align-items:center; gap:14px; width:
 .che-roba:active { transform:translateY(1px) }
 
 .manopola-posto { width:min(360px, 92vw) }
+.amici-domanda { width:100%; max-width:420px; display:flex; flex-direction:column; gap:6px; padding:10px 12px; border-radius:14px; background:#ffffffaa; text-align:left }
+.amici-domanda p { margin:0 }
+.amici-domanda .leggi { border:0; background:none; color:inherit; text-decoration:underline; font:inherit; padding:0 }
+.amici-domanda .scelta { display:flex; gap:8px }
+.amici-domanda .scelta button { flex:1; min-height:44px; border:2px solid #c9c2b0; border-radius:12px; background:#fff; font:inherit; font-weight:700 }
+.amici-domanda .scelta .su { border-color:#7a5cf0; background:#7a5cf0; color:#fff }
 </style>

@@ -25,6 +25,10 @@ const pulisci = a => (Array.isArray(a) ? a : []).filter(x => x && /^[a-z0-9]{32}
   .map(x => ({ chiave: x.chiave, id: /^[a-z0-9]{8,32}$/.test(x.id || '') ? x.id : null, nome: String(x.nome || '').slice(0, NOME_MAX), visto: Number(x.visto) || 0 }))
   .slice(0, MAX_AMICI)
 
+// La risposta data nel modulo del bambino nuovo, prima che il suo profilo esista: la prende il primo `carica` di quel profilo
+let sceltaPendente = null
+export const ricordaScelta = si => { sceltaPendente = si === null ? null : !!si }
+
 export async function carica(giocatore) {
   dati.giocatore = giocatore
   const d = giocatore ? await load(PREFISSO + giocatore) : null
@@ -33,7 +37,10 @@ export async function carica(giocatore) {
   dati.attivo = d?.attivo === true
   dati.online = d?.online !== false
   dati.amici = pulisci(d?.amici)
-  if (giocatore && !d) scrivi()
+  if (giocatore && !d) {
+    if (sceltaPendente !== null) { dati.attivo = sceltaPendente; dati.deciso = true; sceltaPendente = null }
+    scrivi()
+  }
 }
 
 // mai il booleano nudo: storage.js scarta un `true` salvato da solo (docs/core/archivio.md)

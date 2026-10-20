@@ -35,6 +35,7 @@ import Prova from '../quiz/Prova.vue'
 import ComeVa from '../quiz/ComeVa.vue'
 import MoneteGiocoPerGioco from '../components/varieta/Tetti.vue'
 import ArchivioGenitori from '../components/genitori/Archivio.vue'
+import CartaAmici from '../components/amici/CartaAmici.vue'
 
 const emit = defineEmits(['vai'])
 
@@ -682,6 +683,8 @@ async function rimetti(v) {
         </button>
       </div>
 
+      <h2>Giocare con gli amici</h2>
+      <div class="carte"><CartaAmici /></div>
 
       <h2>Progressi</h2>
       <p class="mini">Monete, animali, campagne e traguardi: si salvano su un file, si

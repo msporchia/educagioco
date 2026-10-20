@@ -1,6 +1,6 @@
 # Gli amici
 
-**Stato: progetto, da fare** (20 ottobre 2026; scelte dell'utente). Una lista di amici **per tutta l'app**, non per un gioco: ogni
+**Stato: fatto** (20 ottobre 2026; scelte dell'utente). **Da mettere online: il servizio** (`cd servizio/inoltro && npx wrangler deploy`, lo fa l'utente; senza, gli amici restano in grigio e non succede niente). Una lista di amici **per tutta l'app**, non per un gioco: ogni
 bambino ha i suoi amici, con il nome, e sa chi è online. Ci si invita a un gioco, a chi riceve compare un cartello e accetta.
 Oggi per sfidarsi in Castle Battle ci si passa un codice di cinque lettere ([../arena/multigiocatore.md](../arena/multigiocatore.md));
 con gli amici il codice sparisce. Servono il servizio su Cloudflare e internet: tutto il resto dell'app resta com'è, offline.
@@ -55,8 +55,10 @@ Le funzioni online sono **una cosa da chiedere ai genitori**, come l'età. Due l
 Una chat non c'è e non ci sarà (inviti e risposte sono di forma fissa): l'unica cosa da zittire sono gli inviti.
 
 **Si chiede nel modulo del bambino nuovo** (`Benvenuto.vue`, che si fa al primo avvio e a ogni bambino aggiunto, ed è per i
-genitori: «Lo possono cambiare mamma e papà»): un terzo passo dopo l'età, «Amici online» — una frase che dice cos'è (invitare un
-amico a giocare, solo con chi i genitori abbinano) e due tasti, *Attiva* e *Più tardi*. **Il tasto già scelto è «Più tardi»** (la
+genitori: «Lo possono cambiare mamma e papà»): una riga nel passo dell'età (non un passo a parte: ogni prova che crea un bambino
+preme «Si gioca!»), «Giocare con gli amici» — due righe che dicono cos'è, «Leggi tutto» per il testo intero, e due tasti, *Attiva* e
+*Più tardi*. Il profilo non esiste ancora quando si risponde: la risposta aspetta in `ricordaScelta` e la prende il primo `carica`
+di quel profilo. **Il tasto già scelto è «Più tardi»** (la
 regola della manopola: premere senza leggere sbaglia dalla parte prudente); il valore di partenza sta in una costante sola
 (`AMICI_DI_BASE`), e quando si vorrà che di base sia attivo basta cambiare quella. Attivare non espone nessuno: un amico c'è solo
 dopo che un grande ha fatto l'abbinamento col codice.
@@ -106,7 +108,10 @@ Tutto il resto sta nei telefoni, e sono pochi messaggi con forma fissa (`src/ami
 | `{ k: 'presento', id, nome, gioco }` | entrando, quando l'altro entra (`su`), e quando cambia qualcosa. `nome` ≤ 20 caratteri, `gioco` = a cosa sta giocando o `null` |
 | `{ k: 'invito', gioco, dati }` | `dati` per Castle Battle: `{ terreno, secondi }` |
 | `{ k: 'risposta', ok }` | accetto / no grazie |
-| `{ k: 'stanza', codice }` | per Castle Battle: chi invita crea la stanza di sempre (`creaStanza`) e manda il codice; chi accetta fa `collega(codice)`. Il lockstep non cambia |
+
+Per Castle Battle non c'è un messaggio a parte per la stanza: chi invita crea la stanza di sempre (`creaStanza`), **si siede** (il
+suo collegamento deve essere `host`) e solo allora manda l'invito con il `codice` dentro (`dati: { terreno, secondi, codice }`);
+chi accetta fa `collega(codice)`. Se l'amico dice no, o non risponde in 45 secondi, la stanza si chiude. Il lockstep non cambia.
 
 Un gioco nuovo (la fattoria, i record) si aggiunge in `src/amici/giochi.js`: nome, come si costruisce l'invito, cosa fare quando
 arriva. Il servizio non cambia.
@@ -118,9 +123,17 @@ arriva. Il servizio non cambia.
 
 ## File e test
 
-`servizio/inoltro/src/coppia.js` (la logica: due posti, avvisi, rientro; pura, senza Cloudflare) e `codici.js`; `src/store/amici.js`;
-`src/amici/` (i collegamenti con rientro a ritardo crescente, i messaggi, il registro dei giochi); `components/Amici.vue` (la lista) e
-`components/InvitoAmico.vue` (il cartello). Test: `unita/amici-coppia` (la logica con collegamenti finti: ciao/su/giù, rientro, terzo
-collegamento rifiutato), `unita/amici-codici` (uso singolo, scadenza, tentativi), `unita/amici-store` (il nome che si impara e si
-aggiorna), `integrazione/amici` (**serve il servizio nuovo online**; due pagine nel browser). Bersagli: `[data-amici]`,
-`[data-amico=<id>]`, `[data-invito]`, `[data-invito-gioca]`, `[data-invito-no]`; nei grandi `.carta[data-flag="amici"]`.
+`servizio/inoltro/src/coppia.js` (due posti, chi rientra prende il suo, messaggi controllati; pura, senza Cloudflare), `codici.js`
+(5 lettere, scadenza, tentativi) e i Durable Object `Codice`, `Errori`, `Coppia` in `index.js`; `src/store/amici.js` (archivio per
+bambino, `AMICI_DI_BASE`); `src/amici/` — `rete.js` (codici e il `Ponte` che si rimette in piedi da solo), `servizio.js` (il motore:
+chi è online, gli inviti), `messaggi.js`, `giochi.js` (i giochi che ricevono inviti), `ingresso.js` («Gioca» → il gioco ritira i dati),
+`avvio.js`, `testi.js`; `components/amici/` — `ListaAmici.vue` (la lista in home), `InvitoAmico.vue` (il cartello, in `App.vue`),
+`CartaAmici.vue` (i grandi); in `arena/` la lista nella schermata Sfida e `invitaAmico` in `Gioco.vue`.
+Test: `unita/amici-servizio` (le regole del servizio), `unita/amici` (archivio, messaggi, `Ponte`, codici, motore, con collegamenti
+finti), `integrazione/amici` (due pagine e il servizio: `SERVIZIO=http://localhost:8787` con `wrangler dev` in `servizio/inoltro`, o
+quello pubblicato; senza servizio **salta**), e `servizio/inoltro/prova.mjs` (le regole contro il servizio vero, in locale o online).
+Il banco (`test/aiuto/browser.mjs`) parte con la domanda già risposta (spento); `amiciDecisi: false` rimette l'avviso nella posta.
+Bersagli: `[data-azione="amici"]` (la riga in home), `[data-amici]` e `[data-amico]` (la lista), `[data-invito]`, `[data-invito-gioca]`,
+`[data-invito-no]`, `[data-sfida-amici]`, `[data-sfida-invitato]`; nei grandi `.carta[data-flag="amici"]` con `[data-azione="amici-attiva"|
+"amici-invita"|"amici-riscatta"|"amici-togli"]`, `[data-amici-codice]`, `[data-amici-codice-input]`, `[data-amici-messaggio]`; nel modulo
+del bambino `[data-amici-domanda]`.

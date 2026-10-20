@@ -14,6 +14,7 @@ export const stato = reactive({ acceso: false, amici: [], invito: null, risposta
 let ponti = new Map()                    // chiave → Ponte
 let presenti = new Map()                 // chiave → { gioco } di chi si è presentato su questo collegamento
 let io = { nome: '', gioco: null }
+let puoGiocare = () => true               // il bambino ha quel gioco in casa? (i grandi possono averlo spento)
 let opzioni = {}                         // WebSocketImpl, servizio, ritardi: per le prove
 let scadenza = 0
 
@@ -35,6 +36,7 @@ function arrivato(chiave, m) {
     presenti.set(chiave, { gioco: l.gioco })
   } else if (l.k === 'invito') {
     if (!sappiamo(l.gioco) || !GIOCHI[l.gioco].valida(l.dati) || stato.invito) return      // uno alla volta; roba che non capiamo, non si mostra
+    if (!puoGiocare(l.gioco)) { ponti.get(chiave)?.invia(risposta(false)); return }          // un gioco che i grandi hanno spento: «non può ora»
     const a = dati.amici.find(x => x.chiave === chiave)
     stato.invito = { chiave, nome: a?.nome || 'Un amico', gioco: l.gioco, dati: l.dati }
     clearTimeout(scadenza)
@@ -59,8 +61,9 @@ function nuovoPonte(a) {
 }
 
 /* Si parte per il bambino di turno, se i grandi hanno acceso «Amici online» e lui è online. Si può richiamare: ricomincia da capo. */
-export function avvia({ nome = '', gioco = null, ...prove } = {}) {
+export function avvia({ nome = '', gioco = null, puoGiocare: puo = () => true, ...prove } = {}) {
   ferma()
+  puoGiocare = puo
   opzioni = prove
   io = { nome, gioco }
   if (!dati.attivo || !dati.online) { aggiorna(); return }
