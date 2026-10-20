@@ -67,7 +67,7 @@ chiave), `Gioco.vue` (scendere, riprendere, chiudere).
   suoi luoghi (`ABITANTI_DI_SOPRA`), a parte i caporali; mai un capo. I luoghi delle terre selvagge (le rovine, l'accampamento, il
   bosco secco, le colline, la gola, la vetta) non danno niente finché i loro abitanti stanno nella scheda del generatore.
 - **La prima volta** (`rifatti` 0) gli abitanti di sempre; poi **tre del mazzo**, con almeno uno di quelli di sempre (il tema
-  resta: la tana ha sempre un ragno, un fungo o una pianta), che costano uguale (`guastiDegliAbitanti`), in un ordine che dipende da
+  resta: nella tana c'è sempre qualcuno della tana), che costano uguale (`guastiDegliAbitanti`), in un ordine che dipende da
   eroe, dungeon e terra: mai la terna di sempre, mai due volte di fila la stessa. Il caporale gira fra quelli della zona,
   cominciando dal suo e saltando chi sta per strada.
 - **«Una creatura in una zona sola»** (la proposta 5 del progetto): nei sei nuovi la regola di [mostri.md](mostri.md) «in un posto
