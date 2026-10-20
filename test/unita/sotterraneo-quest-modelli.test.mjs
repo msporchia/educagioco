@@ -1,7 +1,8 @@
 /* Le taglie della bacheca nel mondo di sopra (docs/sotterraneo/mondo-aperto-quest.md, «Le taglie»): gli id che dicono tutto e non cambiano,
    la stessa bacheca per (eroe, giro, città), le gemme nella banda, nessun modello impossibile (un dungeon che c'è, una specie che
    ci abita, una caccia sotto la mediana di un giro intero, un posto sul prato che si raggiunge), lo stato che si salva e si rilegge,
-   i tre in mano, la pulizia dei giri vecchi, la regola del giro e l'aggancio per i mostri di sopra.
+   i tre in mano, la pulizia dei giri vecchi, la regola del giro e l'aggancio per i mostri di sopra. Sul mondo a percorso: una città sola,
+   e gli id di prima (col forte, col rifugio, con la pietra davanti a un dungeon) che si rifanno sul villaggio e sulle zone.
    `node test/esegui.mjs sotterraneo-quest-modelli --niente-build` */
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { EROI } from '../../src/giochi/sotterraneo/dati/eroi.js'
@@ -10,7 +11,7 @@ import { missioneDi, personaDi } from '../../src/giochi/sotterraneo/dati/mission
 import { rifaDaId, idDi, eTaglia, NOMI_MODELLI, modelloAcceso, CACCE, BASI, GEMME_MIN, GEMME_MAX, gemmePer, MOTORI, TETTO_TAGLIE, PER_BACHECA,
          GIRI_RICORDATI, guastiDelleTaglie, livelloDelDungeon, livelloDellaRegione, hash } from '../../src/giochi/sotterraneo/dati/missioni-modelli.js'
 import { valoreDelLivello } from '../../src/giochi/sotterraneo/dati/pezzi.js'
-import { ilMondo, terraDelMondo, aperturaDi, lontanoDalleCitta, MARGINE_DEL_GIRO } from '../../src/giochi/sotterraneo/motore/mondo-sopra.js'
+import { ilMondoIntero, terraDelMondo, lontanoDalleCitta, MARGINE_DEL_GIRO } from '../../src/giochi/sotterraneo/motore/mondo-sopra.js'
 import { bachecaDi, candidati, vociDellaBacheca, segnoDellaBacheca, postoSulPrato, regioniServite } from '../../src/giochi/sotterraneo/motore/taglie-bacheca.js'
 import { questDi, prendiTaglia, ripulisci, contiVivi, esploratePronte, prese, delleTaglie, taglieDaContare, taglieDaBattere, taglieInMano, QUEST_NUOVA }
   from '../../src/giochi/sotterraneo/motore/taglie.js'
@@ -24,14 +25,11 @@ import { inMano, presePer, prendi, fatte, consegna, diario, promemoria, chiAspet
 import { velocitaDel } from '../../src/giochi/sotterraneo/motore/scontro.js'
 import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
 
-const m = ilMondo()
+const m = ilMondoIntero()
 const tappeAl = n => CAMPAGNA.map((t, i) => ({ chiave: t.chiave, nome: t.nome, aperta: i <= n, fatta: i < n }))
-const terre = {}, distanze = {}
-const terraA = finite => terre[finite] || (terre[finite] = terraDelMondo(m, aperturaDi(Array.from({ length: finite }, () => ({ fatta: true }))).aperto))
-const contesto = (finite, giro, eroe = 'cavaliere', extra = {}) => {
-  const dist = distanze[finite] || (distanze[finite] = terraA(finite).raggiungibili(m.partenza))
-  return { m, eroe, giro, tappe: tappeAl(finite), stati: {}, raggiunge: (x, y) => dist.has(y * m.W + x), ...extra }
-}
+// niente si chiude più: la bacheca non chiede se un posto si raggiunge
+const terraA = () => terraDelMondo(m)
+const contesto = (finite, giro, eroe = 'cavaliere', extra = {}) => ({ m, eroe, giro, tappe: tappeAl(finite), stati: {}, ...extra })
 const CITTA = m.citta.map(c => c.chiave)
 const palestra = (eroe, k) => new Corredo({ eroe, roba: robaAttesa(eroe, k, { pozioni: false }) })
 
@@ -44,7 +42,8 @@ const palestra = (eroe, k) => new Corredo({ eroe, roba: robaAttesa(eroe, k, { po
     't:villaggio:esplora-ingresso:torre:3': ['esplora', 'torre'], 't:forte:esplora-pietra:rifugio:4': ['esplora', 'rifugio'],
     't:villaggio:trova-chi:brughiera:1': ['trovachi', 'brughiera'], 't:villaggio:mappa:bosco:1': ['mappa', 'bosco'],
     't:villaggio:caccia:cantine.ratto:3': ['conta', 'cantine'], 't:villaggio:mostro:torre.pipistrello:3': ['sconfiggi', 'torre'],
-    't:villaggio:recupera:gallerie.2:3': ['trova', 'gallerie'],
+    't:villaggio:recupera:gallerie.2:3': ['trova', 'gallerie'], 't:villaggio:esplora-pietra:palude:5': ['esplora', 'zona:palude'],
+    't:villaggio:esplora-ingresso:cerchio:2': ['esplora', 'cerchio'],
   }
   for (const [id, [tipo, dove]] of Object.entries(FISSI)) {
     const t = rifaDaId(id)
@@ -73,9 +72,10 @@ const palestra = (eroe, k) => new Corredo({ eroe, roba: robaAttesa(eroe, k, { po
     for (const t of l) { viste.add(t.modello); if (JSON.stringify(rifaDaId(t.id)) !== JSON.stringify(t) || t.citta !== c || t.giro !== giro) storte++ }
   }
   uguale('nessuna bacheca ha doppioni, più di tre fogli, o una taglia che non si rilegge uguale', storte, 0)
-  controlla('ci sono taglie', quante > 1000, String(quante))
+  controlla('ci sono taglie (una bacheca sola)', quante > 500, String(quante))
   // ogni modello acceso esce prima o poi (anche quelli dei mostri di sopra, accesi), uno spento mai
-  for (const n of NOMI_MODELLI) controlla(`${n}: ${modelloAcceso(n) ? 'esce' : 'spento, non esce'}`, viste.has(n) === modelloAcceso(n))
+  // la consegna no: con una città sola nessuna bacheca la appende più, e si leggono quelle prese prima
+  for (const n of NOMI_MODELLI) controlla(`${n}: ${modelloAcceso(n) && n !== 'consegna' ? 'esce' : 'non esce'}`, viste.has(n) === (modelloAcceso(n) && n !== 'consegna'))
   controlla('«mostri-sopra» è acceso', MOTORI['mostri-sopra'] === true)
   nota('modelli visti:', [...viste].sort().join(' · '), `(${quante} taglie)`)
 }
@@ -108,7 +108,7 @@ const palestra = (eroe, k) => new Corredo({ eroe, roba: robaAttesa(eroe, k, { po
   const stampa = Object.entries(per).map(([k, v]) => `${k} ${Math.min(...v)}–${Math.max(...v)}`).join(' · ')
   nota('gemme per modello:', stampa)
   // la regola: base × valoreDelLivello(livello del posto), tetto 6–40; la caccia 1,6 a mostro
-  uguale('consegna al forte: 10 × valore del livello 6', rifaDaId('t:villaggio:consegna:forte:1').premio.gemme, Math.round(10 * valoreDelLivello(6)))
+  uguale('una consegna di prima, per il forte: 10 × valore del livello del villaggio', rifaDaId('t:villaggio:consegna:forte:1').premio.gemme, gemmePer(10, 1))
   uguale('caccia ai ratti: 1,6 × 9 × valore del livello 2', rifaDaId('t:villaggio:caccia:cantine.ratto:3').premio.gemme, Math.round(1.6 * 9 * valoreDelLivello(2)))
   uguale('la caccia più cara si ferma al tetto', rifaDaId('t:rifugio:caccia:labirinto.bestia-cornuta:1').premio.gemme, GEMME_MAX)
   uguale('il minimo c\'è', gemmePer(1, 1), GEMME_MIN)
@@ -161,7 +161,7 @@ const palestra = (eroe, k) => new Corredo({ eroe, roba: robaAttesa(eroe, k, { po
     }
     if (t.tipo === 'esplora') controlla(`${t.id}: il posto da vedere c'è`, !!t.bersaglio && !!t.bersaglio.chiave)
   }
-  uguale('si trova un esempio di ogni tipo acceso', Object.keys(unaDi).length, NOMI_MODELLI.filter(modelloAcceso).length)
+  uguale('si trova un esempio di ogni tipo acceso (tranne la consegna)', Object.keys(unaDi).length, NOMI_MODELLI.filter(n => modelloAcceso(n) && n !== 'consegna').length)
 
   // il mostro col nome si può battere con la roba attesa, da tutti e quattro gli eroi, senza svenire (come le missioni di oggi)
   let provati = 0
@@ -263,11 +263,9 @@ const palestra = (eroe, k) => new Corredo({ eroe, roba: robaAttesa(eroe, k, { po
   for (const v of voci) tre = prendiTaglia(tre, v.id)
   const v3 = vociDellaBacheca('villaggio', { ...ctx, stati: tre })
   uguale('con tre in mano, nessun altro foglio è prendibile', v3.filter(v => v.azione === 'prendi').length, 0)
-  // una consegna si dà alla bacheca di laggiù, non a quella da cui è partita
+  // una consegna presa prima per il forte (che non c'è più) si dà al villaggio
   const cn = 't:villaggio:consegna:forte:5', st = prendiTaglia({}, cn)
-  const aq = vociDellaBacheca('forte', { ...contesto(4, 5), stati: st })
-  controlla('al forte la consegna è da dare', aq.some(v => v.id === cn && v.azione === 'consegna'))
-  controlla('al villaggio non c\'è niente da consegnare', !vociDellaBacheca('villaggio', { ...contesto(4, 5), stati: st }).some(v => v.id === cn))
+  controlla('la consegna per il forte si dà al villaggio', vociDellaBacheca('villaggio', { ...contesto(4, 5), stati: st }).some(v => v.id === cn && v.azione === 'consegna'))
   // «esplora»: fatta quando il posto è visto
   const es = 't:villaggio:esplora-regione:lago:4'
   stessaLista('esplora non è fatta se non si vede', esploratePronte(prendiTaglia({}, es), () => false), [])
@@ -361,6 +359,23 @@ const palestra = (eroe, k) => new Corredo({ eroe, roba: robaAttesa(eroe, k, { po
     controlla('(il contesto di prova c\'è)', !!ctx.m)
   }
   controlla('acceso', modelloAcceso('signore'))
+}
+
+/* ══════════ 10. gli id di prima, sul mondo a percorso ══════════ */
+{
+  stessaLista('una città sola', CITTA, ['villaggio'])
+  uguale('il villaggio serve tutti i luoghi', regioniServite(m, 'villaggio').length, m.regioni.length - 1)
+  for (const id of ['t:forte:esplora-regione:bosco:2', 't:rifugio:caccia:labirinto.bestia-cornuta:1', 't:forte:signore:accampamento:1', 't:rifugio:mappa:vetta:3']) {
+    const t = rifaDaId(id)
+    controlla(`${id}: si rifà, sul villaggio`, !!t && t.id === id && t.citta === 'villaggio' && t.da === 'bacheca:villaggio' && t.consegnaA === 'villaggio', JSON.stringify(t && [t.citta, t.da, t.consegnaA]))
+  }
+  uguale('la pietra davanti alla cripta (un id di prima) è la pietra dei prati', rifaDaId('t:villaggio:esplora-pietra:altare:1').bersaglio.chiave, 'zona:prati')
+  uguale('la pietra del rifugio è quella del villaggio', rifaDaId('t:forte:esplora-pietra:rifugio:4').bersaglio.chiave, 'villaggio')
+  uguale('il diario dice chi le dà: la bacheca del villaggio', personaDi(rifaDaId('t:forte:esplora-regione:bosco:2').da).nome, 'La bacheca del villaggio')
+  for (const R of m.regioni.filter(r => r.chiave !== 'villaggio'))
+    uguale(`${R.chiave}: il livello delle taglie è l'inizio della fascia che gli dà il generatore`, livelloDellaRegione(R.chiave), Math.max(1, R.fascia[0]))
+  const nuovi = bachecaDi('villaggio', contesto(7, 3)).concat(...[...Array(30).keys()].map(g => bachecaDi('villaggio', contesto(7, g))))
+  controlla('le bacheche nuove non nominano più il forte né il rifugio', nuovi.every(t => !/forte|rifugio/.test(t.id)))
 }
 
 nota('regioni servite:', CITTA.map(c => `${c} ${regioniServite(m, c).length}`).join(' · '))

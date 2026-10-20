@@ -15,7 +15,7 @@ import { mkdirSync, writeFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { campagnaSeminata } from '../test/aiuto/sotterraneo-semina.mjs'
-import { CAMPAGNA } from '../src/giochi/sotterraneo/dati/campagna.js'
+import { INGRESSI_DEL_MONDO } from '../src/giochi/sotterraneo/dati/mondo-aperto.js'
 
 const RADICE = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 export const FILE_ICONE = resolve(RADICE, 'src/giochi/sotterraneo/dati/icone-mondo.js')
@@ -31,9 +31,9 @@ const QUADRO = {
 }
 const QUALITA = 0.82
 
-// I posti: le sette discese e l'abisso per chiave (`ingresso:<chiave>` nel mondo), le città per chiave
-export const CHIAVI_DUNGEON = [...CAMPAGNA.map(t => t.chiave), 'abisso']
-export const CHIAVI_CITTA = ['villaggio', 'forte', 'rifugio']
+// I posti: i quattordici ingressi per chiave (`ingresso:<chiave>` nel mondo: le sette discese, l'abisso e i sei nuovi), il villaggio
+export const CHIAVI_DUNGEON = Object.keys(INGRESSI_DEL_MONDO)
+export const CHIAVI_CITTA = ['villaggio']
 
 export const firmaDi = icone => createHash('sha1').update(JSON.stringify(icone)).digest('hex').slice(0, 12)
 
@@ -41,7 +41,7 @@ export function scriviIcone(icone) {
   const righe = Object.entries(icone).map(([k, v]) => `  ${JSON.stringify(k)}: '${v}',`)
   writeFileSync(FILE_ICONE, `/* GENERATO da strumenti/icone-mondo.mjs (\`npm run scatti icone-mondo\`) — non si scrive a mano.
 
-   Le icone dei posti del mondo di sopra in 3D, fotografate dai monumenti e dalle città del mondo vero: ${CHIAVI_DUNGEON.length} discese e
+   Le icone dei posti del mondo di sopra in 3D, fotografate dai monumenti e dalle città del mondo vero: ${CHIAVI_DUNGEON.length} ingressi e
    ${CHIAVI_CITTA.length} città, ${PIXEL}×${PIXEL} in WebP. Chi le legge (iconaDi in dati/terra.js, nel Sotterraneo 3D) non carica three.
    Il Sotterraneo di sempre tiene i suoi ritagli dipinti (dati/terra-icone.js). Vedi docs/sotterraneo/mondo-3d.md.
    firma: ${firmaDi(icone)}
@@ -69,7 +69,7 @@ async function pezziFermi(page) {
 /* `browser` di Playwright, `gioco` l'indirizzo del file, `profilo` il profilo finto di scatti.mjs. Torna le icone. */
 export async function fotografaIcone({ browser, gioco, profilo }) {
   const p = structuredClone(profilo)
-  p.campagne = { ...p.campagne, sotterraneo: campagnaSeminata({ finite: CAMPAGNA.length }) }
+  p.campagne = { ...p.campagne, sotterraneo: campagnaSeminata({ finite: CHIAVI_DUNGEON.filter(k => INGRESSI_DEL_MONDO[k].indice >= 0).length }) }
   p.settings = { ...p.settings, sperimentali: true }
   const page = await browser.newPage({ viewport: { width: LATO, height: LATO }, deviceScaleFactor: 2 })
   await page.addInitScript(x => {
@@ -92,7 +92,7 @@ export async function fotografaIcone({ browser, gioco, profilo }) {
   const dove = await page.evaluate(([dungeon, citta]) => {
     const M = window.__mondo3d, r = {}
     for (const b of M.bersagli()) if (b.ruolo === 'ingresso' && dungeon.includes(b.k)) r[b.k] = { x: b.lotto.x + b.lotto.w / 2, z: b.lotto.y + b.lotto.h / 2 }
-    for (const c of M.m.citta) if (citta.includes(c.chiave)) r[c.chiave] = { x: c.piazza.x, z: c.piazza.y }
+    for (const c of M.m.citta) if (citta.includes(c.chiave)) r[c.chiave] = { x: c.piazza.x + c.piazza.w / 2, z: c.piazza.y + c.piazza.h / 2 }
     return r
   }, [CHIAVI_DUNGEON, CHIAVI_CITTA])
 

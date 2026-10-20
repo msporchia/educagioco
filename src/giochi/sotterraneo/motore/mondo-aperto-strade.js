@@ -1,4 +1,4 @@
-// La strada sulla griglia del mondo aperto, per il generatore (motore/mondo-aperto.js): A* col costo di ogni cella (le strade si
+// La strada sulla griglia del mondo di sopra, per il generatore (motore/mondo-percorso.js): A* col costo di ogni cella (le strade si
 // tracciano dove costa meno, e quelle già tracciate costano poco: così si uniscono in una rete), le celle raggiungibili e i
 // passi da una cella a tutte. Dal prototipo (poc/mondo-sopra/strada.js); il cammino dell'eroe resta motore/terra.js. Pura.
 const DIR = [[1, 0, 1], [-1, 0, 1], [0, 1, 1], [0, -1, 1], [1, 1, Math.SQRT2], [-1, 1, Math.SQRT2], [1, -1, Math.SQRT2], [-1, -1, Math.SQRT2]]

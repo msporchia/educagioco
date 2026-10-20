@@ -1,12 +1,12 @@
-// Il terreno del mondo di sopra: un pezzo alla volta (pezzi.js), a due vertici per cella vicino all'eroe e a uno da lontano, con
-// quattro trame mescolate per vertice (erba, terra battuta, sabbia, roccia) e la tinta della regione; il fuori mappa (colline e
-// monti oltre la cornice); le piazze di ciottoli e i campi arati. Tutto è superficie: la nebbia ci passa sopra a velo
-// (vesti.js). Dal prototipo poc/mondo-sopra/terreno.js.
-import { BufferGeometry, BufferAttribute, Float32BufferAttribute, Mesh, MeshStandardMaterial, Vector2, CircleGeometry, TorusGeometry } from 'three'
-import { ERBA, ACQUA, ROCCIA } from '../../motore/mondo-aperto.js'
-import { fbm, quotaTerreno } from './suolo.js'
-import { rettangoloDi, PEZZO } from './pezzi.js'
+// Il terreno del mondo di sopra: un pezzo alla volta (pezzi.js), a due vertici per cella vicino all'eroe e a uno ogni due celle
+// da lontano, con quattro trame mescolate per vertice (erba, terra battuta, sabbia, roccia) e la tinta del luogo; il fuori mappa
+// (colline e monti oltre la cornice); la piazza di ciottoli e i campi arati. Tutto è superficie: la nebbia ci passa sopra a velo
+// (vesti.js). Le celle di una zona mai caricata si leggono dalla loro base (suolo.js). Dal prototipo poc/mondo-sopra/terreno.js.
+import { BufferGeometry, BufferAttribute, Float32BufferAttribute, Mesh, MeshStandardMaterial, Vector2, PlaneGeometry } from 'three'
+import { fbm, quotaTerreno, quotaDellaCella, cellaDaDisegnare, ACQUA, ROCCIA } from './suolo.js'
+import { rettangoloDi } from './pezzi.js'
 import { vesti } from './vesti.js'
+import { scatola } from './kit.js'
 
 const TINTE = {
   villaggio: [0.56, 0.74, 0.30], campi: [0.66, 0.78, 0.30], frutteto: [0.58, 0.76, 0.32], prato: [0.62, 0.78, 0.32],
@@ -15,44 +15,56 @@ const TINTE = {
   roccia: [0.58, 0.60, 0.40], landa: [0.74, 0.64, 0.36], ceneri: [0.54, 0.52, 0.44], secco: [0.70, 0.62, 0.36],
 }
 
-// i pesi delle trame e la tinta, per cella (una volta per mondo); poi il vertice li prende interpolati
-const PESI = new WeakMap()
-function pesiDelleCelle(m) {
-  if (PESI.has(m)) return PESI.get(m)
-  const { W, H } = m, N = W * H
-  const peso = new Float32Array(N * 4), tinta = new Float32Array(N * 3)
-  const riva = k => { const x = k % W, y = (k / W) | 0; for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) { const a = x + i, b = y + j; if ((i || j) && a >= 0 && b >= 0 && a < W && b < H && m.terreno[b * W + a] === ACQUA && m.ponte[b * W + a] < 0) return true } return false }
-  for (let k = 0; k < N; k++) {
-    const t = m.terreno[k], s = m.strada[k], x = k % W, y = (k / W) | 0
-    let e = 0, tb = 0, sa = 0, ro = 0
-    if (t === ROCCIA) ro = 1
-    else if (t === ACQUA) sa = 1
-    else if (m.campo[k] || s === 3) tb = 1
-    else if (s === 2) { tb = 0.95; e = 0.05 }
-    else if (s === 1) { tb = 0.7; e = 0.3 }
-    else if (riva(k)) { sa = 0.75; e = 0.25 }
-    else { e = 1; const n = fbm(x, y, 900, 9); if (n > 0.62) { tb = (n - 0.62) * 1.4; e -= tb } }
-    peso.set([e, tb, sa, ro], k * 4)
-    const T = TINTE[m.regioni[m.reg[k]].habitat] || TINTE.villaggio, v = 0.88 + fbm(x, y, 901, 14) * 0.24
-    tinta.set([T[0] * v, T[1] * v, T[2] * v], k * 3)
-  }
-  // la tinta si mescola fra le regioni: il confine non si vede come una riga
-  const t2 = new Float32Array(N * 3)
-  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
-    let r = 0, g = 0, b = 0, n = 0
-    for (let j = -3; j <= 3; j++) for (let i = -3; i <= 3; i++) {
-      const q = (Math.min(H - 1, Math.max(0, y + j)) * W + Math.min(W - 1, Math.max(0, x + i))) * 3
-      r += tinta[q]; g += tinta[q + 1]; b += tinta[q + 2]; n++
-    }
-    t2[(y * W + x) * 3] = r / n; t2[(y * W + x) * 3 + 1] = g / n; t2[(y * W + x) * 3 + 2] = b / n
-  }
-  const fuori = { peso, tinta: t2 }
-  PESI.set(m, fuori)
-  return fuori
+// i pesi delle trame di una cella (erba, terra battuta, sabbia, roccia): `riva` se tocca l'acqua
+function pesiDellaCella(c, riva, x, y, out) {
+  let e = 0, tb = 0, sa = 0, ro = 0
+  if (c.terreno === ROCCIA) ro = 1
+  else if (c.terreno === ACQUA) sa = 1
+  else if (c.campo || c.strada === 3) tb = 1
+  else if (c.strada === 2) { tb = 0.95; e = 0.05 }
+  else if (c.strada === 1) { tb = 0.7; e = 0.3 }
+  else if (riva) { sa = 0.75; e = 0.25 }
+  else { e = 1; const n = fbm(x, y, 900, 9); if (n > 0.62) { tb = (n - 0.62) * 1.4; e -= tb } }
+  out[0] = e; out[1] = tb; out[2] = sa; out[3] = ro
+  return out
 }
-const bilineare = (arr, comp, W, H, x, z, out) => {
-  const fx = Math.min(W - 1.001, Math.max(0, x - 0.5)), fz = Math.min(H - 1.001, Math.max(0, z - 0.5))
-  const x0 = Math.floor(fx), z0 = Math.floor(fz), tx = fx - x0, tz = fz - z0
+const tintaDi = (h, x, y, out) => { const T = TINTE[h] || TINTE.villaggio, v = 0.88 + fbm(x, y, 901, 14) * 0.24; out[0] = T[0] * v; out[1] = T[1] * v; out[2] = T[2] * v; return out }
+
+// i pesi delle trame e la tinta, per cella, in una finestra attorno al pezzo (MARGINE celle in più: la tinta si mescola fra i
+// luoghi su 7×7 celle, e il vertice prende i valori interpolati)
+const MARGINE = 4
+function finestra(m, x0, z0, x1, z1) {
+  const X0 = Math.max(0, x0 - MARGINE), Z0 = Math.max(0, z0 - MARGINE), X1 = Math.min(m.W, x1 + MARGINE), Z1 = Math.min(m.H, z1 + MARGINE)
+  const w = X1 - X0, h = Z1 - Z0, n = w * h
+  const cel = new Array(n), peso = new Float32Array(n * 4), tinta = new Float32Array(n * 3), p4 = [0, 0, 0, 0], t3 = [0, 0, 0]
+  for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) cel[j * w + i] = cellaDaDisegnare(m, (Z0 + j) * m.W + X0 + i)
+  for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) {
+    const l = j * w + i
+    let riva = false
+    for (let b = -1; b <= 1 && !riva; b++) for (let a = -1; a <= 1; a++) {
+      if (!a && !b) continue
+      const ii = i + a, jj = j + b
+      if (ii < 0 || jj < 0 || ii >= w || jj >= h) continue
+      const q = cel[jj * w + ii]
+      if (q.terreno === ACQUA && q.ponte < 0) { riva = true; break }
+    }
+    peso.set(pesiDellaCella(cel[l], riva, X0 + i, Z0 + j, p4), l * 4)
+    tinta.set(tintaDi(cel[l].habitat, X0 + i, Z0 + j, t3), l * 3)
+  }
+  const t2 = new Float32Array(n * 3)
+  for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) {
+    let r = 0, g = 0, b = 0, c = 0
+    for (let b2 = -3; b2 <= 3; b2++) for (let a = -3; a <= 3; a++) {
+      const q = (Math.min(h - 1, Math.max(0, j + b2)) * w + Math.min(w - 1, Math.max(0, i + a))) * 3
+      r += tinta[q]; g += tinta[q + 1]; b += tinta[q + 2]; c++
+    }
+    t2[(j * w + i) * 3] = r / c; t2[(j * w + i) * 3 + 1] = g / c; t2[(j * w + i) * 3 + 2] = b / c
+  }
+  return { X0, Z0, w, h, peso, tinta: t2 }
+}
+const bilineare = (arr, comp, F, x, z, out) => {
+  const fx = Math.min(F.w - 1.001, Math.max(0, x - 0.5 - F.X0)), fz = Math.min(F.h - 1.001, Math.max(0, z - 0.5 - F.Z0))
+  const x0 = Math.floor(fx), z0 = Math.floor(fz), tx = fx - x0, tz = fz - z0, W = F.w
   for (let c = 0; c < comp; c++) {
     const a = arr[(z0 * W + x0) * comp + c], b = arr[(z0 * W + x0 + 1) * comp + c], d = arr[((z0 + 1) * W + x0) * comp + c], e = arr[((z0 + 1) * W + x0 + 1) * comp + c]
     out[c] = (a * (1 - tx) + b * tx) * (1 - tz) + (d * (1 - tx) + e * tx) * tz
@@ -60,7 +72,8 @@ const bilineare = (arr, comp, W, H, x, z, out) => {
   return out
 }
 
-// il materiale del terreno; `lontano`: quello dei pezzi a dettaglio basso, che sparisce sotto i pezzi costruiti
+// il materiale del terreno; `lontano`: quello dei pezzi a dettaglio basso (un programma a parte; dove il pezzo vicino è costruito il
+// pezzo lontano si spegne: lontano.js)
 export function materialeTerreno(trame, { lontano = false } = {}) {
   const mat = new MeshStandardMaterial({ roughness: 0.95, metalness: 0, normalMap: trame.roccia.normalMap, normalScale: new Vector2(1, 1) })
   mat.name = lontano ? 'terreno-lontano' : 'terreno'
@@ -75,11 +88,7 @@ export function materialeTerreno(trame, { lontano = false } = {}) {
           vPeso = peso; vTinta = tinta; vRipido = 1.0 - normal.y;`)
       sh.fragmentShader = sh.fragmentShader
         .replace('#include <common>', `#include <common>
-          uniform sampler2D tErba, tTerra, tSabbia, tRoccia; varying vec4 vPeso; varying vec3 vTinta; varying float vRipido;
-          ${lontano ? 'uniform float uCostruiti[25];' : ''}`)
-        .replace('#include <clipping_planes_fragment>', `#include <clipping_planes_fragment>
-          ${lontano ? `{ int pz = int(clamp(floor(vMondo.x / ${PEZZO.largo}.0), 0.0, 4.0)) + 5 * int(clamp(floor(vMondo.z / ${PEZZO.alto}.0), 0.0, 4.0));
-            if (vMondo.x >= 0.0 && vMondo.z >= 0.0 && uCostruiti[pz] > 0.5) discard; }` : ''}`)
+          uniform sampler2D tErba, tTerra, tSabbia, tRoccia; varying vec4 vPeso; varying vec3 vTinta; varying float vRipido;`)
         .replace('#include <map_fragment>', `
           vec2 uvT = vMondo.xz * 0.5;
           vec3 ce = mix(texture(tErba, uvT * 0.7).rgb, texture(tErba, mat2(0.8, 0.6, -0.6, 0.8) * uvT * 0.27 + 0.37).rgb, 0.5), ct = texture(tTerra, uvT).rgb, cs = texture(tSabbia, uvT).rgb, cr = texture(tRoccia, uvT * 0.45 + vec2(0.0, vMondo.y * 0.08)).rgb;
@@ -96,31 +105,55 @@ export function materialeTerreno(trame, { lontano = false } = {}) {
   })
 }
 
-// un pezzo di terreno (o il rettangolo { x0, z0, x1, z1 }): `res` vertici per cella; i bordi hanno una gonna che scende, così fra un pezzo vicino e uno lontano (che
-// hanno vertici diversi) non si apre una fessura
+// la roccia si rompe: un rumore fitto la fa scabra (lo stesso in ogni pezzo: i bordi combaciano)
+const scabra = (x, z, ro) => (ro > 0.05 ? ro * (fbm(x, z, 950, 2.2) - 0.5) * 1.1 + ro * fbm(x, z, 951, 0.7) * 0.25 : 0)
+
+// un pezzo di terreno (o il rettangolo { x0, z0, x1, z1 }): `res` vertici per cella (0,5: uno ogni due celle, il lontano); i bordi
+// hanno una gonna che scende, così fra un pezzo vicino e uno lontano (che hanno vertici diversi) non si apre una fessura
 export function terrenoDelPezzo(m, p, mat, res = 2) {
-  const { peso, tinta } = pesiDelleCelle(m)
   const { x0, z0, x1, z1 } = typeof p === 'number' ? rettangoloDi(m, p) : p
-  const NX = (x1 - x0) * res + 1, NZ = (z1 - z0) * res + 1
+  const NX = Math.round((x1 - x0) * res) + 1, NZ = Math.round((z1 - z0) * res) + 1
   const nv = NX * NZ + 2 * (NX + NZ)
   const pos = new Float32Array(nv * 3), pes = new Float32Array(nv * 4), tin = new Float32Array(nv * 3), uv = new Float32Array(nv * 2)
-  const p4 = [0, 0, 0, 0], t3 = [0, 0, 0]
-  const vertice = (v, x, z, giu) => {
-    bilineare(peso, 4, m.W, m.H, x, z, p4); bilineare(tinta, 3, m.W, m.H, x, z, t3)
-    let y = quotaTerreno(m, x, z)
-    // la roccia si rompe: un rumore fitto la fa scabra (lo stesso in ogni pezzo: i bordi combaciano)
-    if (p4[3] > 0.05) y += p4[3] * (fbm(x, z, 950, 2.2) - 0.5) * 1.1 + p4[3] * fbm(x, z, 951, 0.7) * 0.25
+  const p4 = [0, 0, 0, 0], t3 = [0, 0, 0], c = {}
+  // vicino: le celle della finestra, interpolate; lontano: la cella sotto il vertice e basta (sono 45 000 vertici in tutto il mondo)
+  const F = res >= 1 ? finestra(m, x0, z0, x1, z1) : null
+  // l'altezza in (x, z), e i pesi e la tinta lì (in p4 e t3)
+  const altezza = (x, z) => {
+    let y
+    if (F) { bilineare(F.peso, 4, F, x, z, p4); bilineare(F.tinta, 3, F, x, z, t3); y = quotaTerreno(m, x, z) }
+    else {
+      const cx = Math.min(m.W - 1, Math.max(0, Math.round(x))), cz = Math.min(m.H - 1, Math.max(0, Math.round(z))), k = cz * m.W + cx
+      cellaDaDisegnare(m, k, c); pesiDellaCella(c, false, cx, cz, p4); tintaDi(c.habitat, cx, cz, t3)
+      y = quotaDellaCella(m, k)
+    }
+    return y + scabra(x, z, p4[3])
+  }
+  // le altezze con un giro di vertici in più attorno: le normali si fanno da lì, così due pezzi accanto hanno la stessa normale sul
+  // bordo comune (calcolate dai soli triangoli del pezzo, e con la gonna, il bordo veniva scuro: una riga a ogni giunta)
+  const PX = NX + 2, alte = new Float32Array(PX * (NZ + 2))
+  for (let j = -1; j <= NZ; j++) for (let i = -1; i <= NX; i++) {
+    if (i < 0 || j < 0 || i >= NX || j >= NZ) alte[(j + 1) * PX + i + 1] = altezza(x0 + i / res, z0 + j / res)
+  }
+  const nor = new Float32Array(nv * 3), d = 2 / res
+  const vertice = (v, x, z, giu, i, j) => {
+    const y = altezza(x, z)
     pos[v * 3] = x; pos[v * 3 + 1] = y - giu; pos[v * 3 + 2] = z
     pes.set(p4, v * 4); tin.set(t3, v * 3); uv[v * 2] = x * 0.5; uv[v * 2 + 1] = z * 0.5
+    if (!giu) alte[(j + 1) * PX + i + 1] = y
   }
-  for (let j = 0; j < NZ; j++) for (let i = 0; i < NX; i++) vertice(j * NX + i, x0 + i / res, z0 + j / res, 0)
+  for (let j = 0; j < NZ; j++) for (let i = 0; i < NX; i++) vertice(j * NX + i, x0 + i / res, z0 + j / res, 0, i, j)
+  for (let j = 0; j < NZ; j++) for (let i = 0; i < NX; i++) {
+    const a = (j + 1) * PX + i + 1, nx = alte[a - 1] - alte[a + 1], nz = alte[a - PX] - alte[a + PX], l = Math.hypot(nx, d, nz)
+    nor.set([nx / l, d / l, nz / l], (j * NX + i) * 3)
+  }
   const idx = []
-  for (let j = 0; j < NZ - 1; j++) for (let i = 0; i < NX - 1; i++) { const a = j * NX + i, b = a + 1, c = a + NX, d = c + 1; idx.push(a, c, b, b, c, d) }
+  for (let j = 0; j < NZ - 1; j++) for (let i = 0; i < NX - 1; i++) { const a = j * NX + i, b = a + 1, c2 = a + NX, d = c2 + 1; idx.push(a, c2, b, b, c2, d) }
   // la gonna: i quattro bordi, un vertice sotto ciascuno
   let v = NX * NZ
   const gonna = bordo => {
     const s = v
-    for (const [i, j] of bordo) vertice(v++, x0 + i / res, z0 + j / res, 1.2)
+    for (const [i, j] of bordo) { nor.set(nor.subarray((j * NX + i) * 3, (j * NX + i) * 3 + 3), v * 3); vertice(v++, x0 + i / res, z0 + j / res, 1.2, i, j) }
     for (let k = 0; k < bordo.length - 1; k++) {
       const a = bordo[k][1] * NX + bordo[k][0], b = bordo[k + 1][1] * NX + bordo[k + 1][0]
       idx.push(a, b, s + k, b, s + k + 1, s + k)
@@ -133,8 +166,8 @@ export function terrenoDelPezzo(m, p, mat, res = 2) {
   g.setAttribute('peso', new BufferAttribute(pes.subarray(0, v * 4), 4))
   g.setAttribute('tinta', new BufferAttribute(tin.subarray(0, v * 3), 3))
   g.setAttribute('uv', new BufferAttribute(uv.subarray(0, v * 2), 2))
+  g.setAttribute('normal', new BufferAttribute(nor.subarray(0, v * 3), 3))
   g.setIndex(idx)
-  g.computeVertexNormals()
   const mesh = new Mesh(g, mat)
   mesh.receiveShadow = true
   return mesh
@@ -180,7 +213,6 @@ export function creaFuori(m, mat) {
   return { mesh, quotaFuori, M }
 }
 
-// la piazza di una città: un tondo di ciottoli appena sopra il terreno spianato, col cordolo (che va nel kit)
 // i materiali delle superfici, uno per tipo e condivisi da tutti i pezzi
 export function materialiDelSuolo(trame) {
   return {
@@ -190,15 +222,22 @@ export function materialiDelSuolo(trame) {
   }
 }
 
-export function creaPiazza(m, c, mats, cant) {
-  const y = quotaTerreno(m, c.piazza.x, c.piazza.y) + 0.03, r = c.piazza.r
-  const g = new CircleGeometry(r, 40)
+// la piazza del villaggio: un rettangolo di ciottoli appena sopra il terreno spianato, coi cordoli lungo i lati (nel kit). Il
+// lato a est resta aperto verso il cancello
+export function creaPiazza(m, v, mats, cant) {
+  const p = v.piazza, y = quotaTerreno(m, p.x + p.w / 2, p.y + p.h / 2) + 0.03
+  const g = new PlaneGeometry(p.w, p.h, 1, 1)
   const uv = g.attributes.uv
-  for (let i = 0; i < uv.count; i++) uv.setXY(i, (uv.getX(i) - 0.5) * r * 1.2, (uv.getY(i) - 0.5) * r * 1.2)
-  g.rotateX(-Math.PI / 2); g.translate(c.piazza.x, y, c.piazza.y)
+  for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * p.w * 0.6, uv.getY(i) * p.h * 0.6)
+  g.rotateX(-Math.PI / 2); g.translate(p.x + p.w / 2, y, p.y + p.h / 2)
   const mesh = new Mesh(g, mats.piazza); mesh.receiveShadow = true
-  cant.base(c.piazza.x, y + 0.02, c.piazza.y, 0)
-  cant.metti('liscio', new TorusGeometry(r, 0.09, 5, 40), 0, 0, 0, [0.62, 0.62, 0.62], { rx: Math.PI / 2 })
+  cant.base(p.x + p.w / 2, y + 0.02, p.y + p.h / 2, 0)
+  const col = [0.62, 0.62, 0.62], fila = (x, z, w, d) => cant.metti('liscio', scatola(w, 0.1, d), x, 0.02, z, col)
+  // il cancello sta sul lato est: lì il cordolo si apre per tre celle
+  const cz = v.cancello.y - (p.y + p.h / 2), su = cz - 1.5 + p.h / 2, giu = p.h / 2 - cz - 1.5
+  fila(0, -p.h / 2, p.w + 0.18, 0.18); fila(0, p.h / 2, p.w + 0.18, 0.18); fila(-p.w / 2, 0, 0.18, p.h)
+  if (su > 0.2) fila(p.w / 2, -p.h / 2 + su / 2, 0.18, su)
+  if (giu > 0.2) fila(p.w / 2, p.h / 2 - giu / 2, 0.18, giu)
   return mesh
 }
 

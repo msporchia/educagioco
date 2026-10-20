@@ -148,10 +148,11 @@ una bacheca, il posto sul prato), e gli agganci in `motore/missioni.js`, `Gioco.
   scelti con un hash dell'id). **Gli id sono chiavi di salvataggio: un modello, un parametro o il senso di un testo non si rinomina.**
   Un id che non si legge più (un modello tolto) si butta alla pulizia. Un salvataggio senza `quest` è nuovo, uno storto pure.
 - **La bacheca per (eroe, giro, città)**: `bachecaDi` appende tre fogli, scelti con un caso seminato da quella terna fra i candidati
-  della città (uno per famiglia di modelli finché si può). Ogni città serve le regioni che le sono più vicine, i dungeon di
-  `cittaDelDungeon` (il villaggio le prime quattro, il forte la cisterna e la porta dell'inferno, il rifugio le miniere) e le pietre
-  vicine. Non si propone quello che si è già visto (una regione, un ingresso, una pietra), né un posto che non si raggiunge coi
-  passaggi aperti, né un dungeon ancora chiuso. Prendendo un foglio non ne arriva un altro: un'altra bacheca si vede al giro dopo.
+  della città (uno per famiglia di modelli finché si può). Sul mondo a percorso la città è una, il villaggio, e serve tutti i luoghi
+  (le chiavi delle regioni di prima), le pietre delle zone (`esplora-pietra` col parametro della zona) e i quattordici ingressi (le
+  cacce, i mostri col nome e le cose smarrite restano dei sette della storia). Non si propone quello che si è già visto (un luogo, un
+  ingresso, una pietra), né un dungeon ancora chiuso. La consegna fra città non esce più; quelle prese prima per il forte o il
+  rifugio si consegnano al villaggio, e ogni id `t:forte:…` o `t:rifugio:…` si legge sul villaggio (`cittaDiOggi`). Prendendo un foglio non ne arriva un altro: un'altra bacheca si vede al giro dopo.
 - **Il giro** (`giro` in `mondo`) conta un ritorno in città solo se prima ci si è allontanati più di `raggio + 8` celle dal centro di
   ogni città (`lontanoDalleCitta`), o si è saliti dal portale: passare il confine non fa cambiare la bacheca. Chi ricomincia dall'ingresso
   di un dungeon (non dal portale) parte «lontano».

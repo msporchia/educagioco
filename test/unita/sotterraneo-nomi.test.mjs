@@ -6,7 +6,7 @@
    geografia no (LUOGHI per la mappa dipinta, LUOGHI_MONDO per il mondo aperto). Le chiavi non cambiano mai. Nessun testo del
    gioco dice più un nome di prima.
    ═══════════════════════════════════════════════════════════════════ */
-import { DUNGEON } from '../../src/giochi/sotterraneo/dati/mondo-aperto.js'
+import { INGRESSI_DEL_MONDO } from '../../src/giochi/sotterraneo/dati/mondo-aperto.js'
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { LUOGHI, LUOGHI_MONDO, POSTO_DI, POZZO_VECCHIO, luogoDi } from '../../src/giochi/sotterraneo/dati/terra.js'
 import { CAPITOLI, STORIA } from '../../src/giochi/sotterraneo/dati/storia.js'
@@ -23,8 +23,8 @@ const NUOVI = ['La cripta dei re', 'Le cantine dei goblin', 'La torre bruciata',
                'La porta dell\'inferno', 'Le miniere di brace']
 stessaLista('le sette tappe hanno i nomi nuovi', CAMPAGNA.map(t => t.nome), NUOVI)
 stessaLista('le chiavi non sono cambiate', CAMPAGNA.map(t => t.chiave), ['altare', 'cantine', 'torre', 'gallerie', 'cisterna', 'labirinto', 'fondo'])
-for (const t of CAMPAGNA) uguale(`${t.chiave}: lo stesso nome nel mondo 3D e nelle tappe`, DUNGEON.find(d => d.chiave === t.chiave).nome, t.nome)
-uguale('il pozzo ha lo stesso nome chiuso e nel mondo', POZZO_VECCHIO.nome, DUNGEON.find(d => d.chiave === 'abisso').nome)
+for (const t of CAMPAGNA) uguale(`${t.chiave}: lo stesso nome nel mondo 3D e nelle tappe`, INGRESSI_DEL_MONDO[t.chiave].nome, t.nome)
+uguale('il pozzo ha lo stesso nome chiuso e nel mondo', POZZO_VECCHIO.nome, INGRESSI_DEL_MONDO.abisso.nome)
 
 // nessun testo nomina un posto con il nome di prima
 const VECCHI = /scalinata|torre in rovina|grotta della scaletta|scala sommersa|botola segreta|miniera abbandonata|pozzo vecchio|cripta dell'altare|vecchia miniera/i

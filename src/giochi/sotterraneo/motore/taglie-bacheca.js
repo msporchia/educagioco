@@ -1,58 +1,61 @@
 // La bacheca col mondo davanti, senza schermo (docs/sotterraneo/mondo-aperto-quest.md, «Le taglie»): quali taglie appende una bacheca per
-// (eroe, giro, città) guardando il mondo generato (motore/mondo-aperto.js), le righe che mostra, il segno sopra di lei, e il posto sul
-// prato del viandante e della X. Lo stato e le consegne stanno in motore/taglie.js. Gira in Node (unita/sotterraneo-quest-modelli).
+// (eroe, giro, città) guardando il mondo a percorso (motore/mondo-percorso.js: basta lo scheletro, nessuna zona caricata), le righe che
+// mostra, il segno sopra di lei, e il posto sul prato del viandante e della X. Lo stato e le consegne stanno in motore/taglie.js. Gira in Node (unita/sotterraneo-quest-modelli).
 import { CAMPAGNA } from '../dati/campagna.js'
 import { MOSTRI } from '../dati/mostri.js'
 import { rifaDaId, idDi, casoDa, hash, modelloAcceso, CACCE, COSE_PERSE, PER_BACHECA, TETTO_TAGLIE, MOTORI } from '../dati/missioni-modelli.js'
-import { cittaDelDungeon } from './mondo-sopra.js'
 import { taglieInMano } from './taglie.js'
 
 const statoDi = (stati, id) => (stati && typeof stati === 'object' ? stati[id] || null : null)
 const FATTA = 'fatta'
 
 /* ═══════════ chi serve quali posti ═══════════ */
-// Ogni posto del mondo è servito dalla città più vicina: le regioni (dal loro centro), le pietre. I dungeon da `cittaDelDungeon`
-// (le terre vicine il villaggio, le marche del sud e dell'ovest il forte, quelle del nord il rifugio)
+// Ogni posto del mondo è servito dalla città più vicina: con una città sola, il villaggio serve tutti i luoghi (dalla loro tana), le pietre
+// delle zone e i quattordici ingressi
 const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y)
 export function cittaPiuVicina(m, p) {
   let meglio = null
   for (const c of m.citta) { const d = dist(p, c.centro); if (!meglio || d < meglio.d) meglio = { c, d } }
   return meglio.c.chiave
 }
-export const regioniServite = (m, citta) => m.regioni.filter(r => r.anello >= 1 && cittaPiuVicina(m, r.tana) === citta)
+const tanaO = r => r.tana || { x: r.cx, y: r.cy }
+export const regioniServite = (m, citta) => m.regioni.filter(r => r.chiave !== 'villaggio' && cittaPiuVicina(m, tanaO(r)) === citta)
 const centroDi = p => ({ x: Math.floor(p.x + p.w / 2), y: Math.floor(p.y + p.h / 2) })
 
 /* ═══════════ cosa appende una bacheca ═══════════ */
 // `ctx`: { m, eroe, giro, tappe: [{ chiave, aperta }], stati, visto(x, y), raggiunge(x, y) } — visto e raggiunge di difetto dicono
-// «non visto» e «raggiungibile» (la bacheca di un test)
+// «non visto» e «raggiungibile». Niente si chiude più: `raggiunge` non va dato con la terra delle zone caricate, che direbbe «no» a
+// tutto quello che è lontano
 const tutti = () => true
 export function candidati(citta, ctx) {
   const { m, tappe = [], giro = 0, eroe = '' } = ctx
   const visto = ctx.visto || (() => false), raggiunge = ctx.raggiunge || tutti
   const l = []
   const aggiungi = (modello, param) => { if (modelloAcceso(modello)) l.push({ modello, param }) }
-  const regioni = regioniServite(m, citta).filter(r => raggiunge(r.tana.x, r.tana.y))
+  const regioni = regioniServite(m, citta).filter(r => raggiunge(tanaO(r).x, tanaO(r).y))
   const aperta = k => { const t = tappe.find(x => x.chiave === k); return !!(t && t.aperta) }
   for (const c of m.citta) if (c.chiave !== citta && raggiunge(c.pietra.accanto.x, c.pietra.accanto.y)) aggiungi('consegna', c.chiave)
   for (const r of regioni) {
-    if (!visto(r.tana.x, r.tana.y)) aggiungi('esplora-regione', r.chiave)
+    if (!visto(tanaO(r).x, tanaO(r).y)) aggiungi('esplora-regione', r.chiave)
     aggiungi('trova-chi', r.chiave)
     aggiungi('mappa', r.chiave)
   }
-  for (const p of m.posti.filter(x => x.tipo === 'ingresso' && x.indice >= 0)) {
-    if (cittaDelDungeon(m, p.chiave) !== citta) continue
+  // gli ingressi: da trovare tutti tranne l'abisso; nei sette della storia aperti anche la caccia, il mostro col nome e la cosa smarrita
+  for (const p of m.posti.filter(x => x.tipo === 'ingresso' && x.indice !== -1)) {
+    if (cittaPiuVicina(m, p) !== citta) continue
     const c = centroDi(p)
     if (!visto(c.x, c.y) && raggiunge(p.accanto.x, p.accanto.y)) aggiungi('esplora-ingresso', p.chiave)
-    if (!aperta(p.chiave)) continue
+    if (!(p.indice >= 0) || !aperta(p.chiave)) continue
     const t = CAMPAGNA.find(x => x.chiave === p.chiave)
     for (const s of Object.keys(CACCE[p.chiave] || {})) aggiungi('caccia', `${p.chiave}.${s}`)
     for (const s of t.mostri) if (!MOSTRI[s].capo) aggiungi('mostro', `${p.chiave}.${s}`)
     aggiungi('recupera', `${p.chiave}.${hash(`${eroe}|${giro}|${p.chiave}`) % COSE_PERSE.length}`)
   }
-  for (const p of m.posti.filter(x => x.tipo === 'pietra')) {
-    if (p.chiave === citta || cittaPiuVicina(m, { x: p.x, y: p.y }) !== citta) continue
+  // le pietre delle zone (quella del villaggio si vede da sé): il parametro è la zona
+  for (const p of m.posti.filter(x => x.tipo === 'pietra' && x.zona && x.chiave.startsWith('zona:'))) {
+    if (cittaPiuVicina(m, { x: p.x, y: p.y }) !== citta) continue
     const c = centroDi(p)
-    if (!visto(c.x, c.y) && raggiunge(p.accanto.x, p.accanto.y)) aggiungi('esplora-pietra', p.chiave)
+    if (!visto(c.x, c.y) && raggiunge(p.accanto.x, p.accanto.y)) aggiungi('esplora-pietra', p.zona)
   }
   if (MOTORI['mostri-sopra']) {
     for (const r of regioni) {
@@ -106,15 +109,23 @@ export function segnoDellaBacheca(citta, ctx) {
 }
 
 /* ═══════════ dove stanno il viandante e la X ═══════════ */
-// Un posto per taglia, sul prato, scelto con un caso suo (stesso id, stesso posto) vicino al centro della regione; `terra` è quella
-// del mondo (motore/terra.js). Non è mai un posto di città: le regioni servite non lo sono. Torna { piede, accanto } o null
+// Un posto per taglia, sul prato, scelto con un caso suo (stesso id, stesso posto) vicino alla tana del luogo: la cella dove si cammina del
+// luogo più vicina al punto voluto (ogni erba di una zona si raggiunge dalla sua strada: il generatore toglie quella che no). `terra` è
+// quella del mondo (motore/terra.js); se la zona del luogo non è mai stata caricata non c'è ancora, e torna null: la scena chiede di nuovo
+// quando la zona si carica. Torna { piede, accanto } o null
 export function postoSulPrato(m, terra, t) {
-  const r = m.regioni.find(x => x.chiave === t.regione)
-  if (!r) return null
-  const rnd = casoDa(t.id + '|posto')
+  const ri = m.regioni.findIndex(x => x.chiave === t.regione)
+  const r = m.regioni[ri]
+  if (!r || r.chiave === 'villaggio') return null
+  const rnd = casoDa(t.id + '|posto'), o = tanaO(r)
   const dx = Math.round((rnd() - 0.5) * 12), dy = Math.round((rnd() - 0.5) * 12)
-  const voglio = { x: Math.max(1, Math.min(m.W - 2, r.tana.x + dx)), y: Math.max(1, Math.min(m.H - 3, r.tana.y + dy)) }
-  const c = terra.arrivo(m.partenza, voglio)
+  const voglio = { x: Math.max(1, Math.min(m.W - 2, o.x + dx)), y: Math.max(1, Math.min(m.H - 3, o.y + dy)) }
+  const va = (x, y) => x >= 0 && y >= 0 && x < m.W && y < m.H && terra.passa(x, y) && m.reg[y * m.W + x] === ri && !m.strada[y * m.W + x]
+  let c = null
+  for (let d = 0; d <= 14 && !c; d++) for (let j = -d; j <= d && !c; j++) for (let i = -d; i <= d; i++) {
+    if (Math.max(Math.abs(i), Math.abs(j)) !== d || !va(voglio.x + i, voglio.y + j)) continue
+    c = { x: voglio.x + i, y: voglio.y + j }; break
+  }
   if (!c) return null
   const accanto = terra.passa(c.x, c.y + 1) ? { x: c.x, y: c.y + 1 } : c
   return { piede: c, accanto }

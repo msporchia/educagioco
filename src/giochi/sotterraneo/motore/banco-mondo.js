@@ -1,11 +1,14 @@
-// Il banco del mondo aperto (docs/sotterraneo/mondo-aperto-mostri.md, «Le misure»): il curioso esce dalla città che serve il dungeon k
-// con la roba e la crescita con cui la sua storia ci arriva (motore/storie.js, ingressoDelCurioso), e cammina fino all'ingresso coi mostri
-// di sopra (motore/aperta.js). Due modi: `strada` va dritto per la strada e combatte solo chi lo raggiunge; `giro` passa dalla tana di ogni
-// regione che attraversa e va incontro a ogni branco che vede (il curioso dei dungeon, che apre tutto). Gli scontri li gioca il banco di
-// sempre (motore/banco.js, sbriga). Conta scontri, domande, vita all'arrivo, svenimenti, esperienza. Gira in Node; nessuno lo usa nel gioco.
-import { ilMondo, terraDelMondo, cittaDelDungeon, cittaDi, PASSO_MONDO } from './mondo-sopra.js'
-import { DUNGEON, passaggioAperto } from '../dati/mondo-aperto.js'
+// Il banco del mondo a percorso (docs/sotterraneo/mondo-aperto-mostri.md, «Le misure»): il curioso parte dalla pietra accesa più avanti
+// prima del dungeon k (quella della sua zona se il dungeon le sta dopo, se no quella della zona prima, o il villaggio), con la roba e la
+// crescita con cui la sua storia ci arriva (motore/storie.js, ingressoDelCurioso), e cammina fino all'ingresso coi mostri di sopra
+// (motore/aperta.js). Due modi: `strada` va dritto per la strada e combatte solo chi lo raggiunge; `giro` passa dalla tana di ogni luogo
+// della zona che attraversa e va incontro a ogni branco che vede (il curioso dei dungeon, che apre tutto). Gli scontri li gioca il banco
+// di sempre (motore/banco.js, sbriga). Conta scontri, domande, vita all'arrivo, svenimenti, esperienza. Il mondo è caricato tutto. Gira in
+// Node; nessuno lo usa nel gioco.
+import { ilMondoIntero, terraDelMondo, ingressoDi, baseDi, PASSO_MONDO } from './mondo-sopra.js'
+import { INGRESSI_DEL_MONDO } from '../dati/mondo-aperto.js'
 import { SOPRA } from '../dati/mondo-aperto-mostri.js'
+import { campoVersoLaMeta } from './meta-sopra.js'
 import { popolaMondo, cammina, muoviMostri, incontro, apriLoScontro, esitoDelloScontro, alSicuro } from './aperta.js'
 import { sbriga, equipaggia, daiIPunti } from './banco.js'
 import { ingressoDelCurioso } from './storie.js'
@@ -15,16 +18,26 @@ import { Corredo } from './corredo.js'
 
 const TETTO_SCONTRI = 60   // un tragitto che non finisce
 // i dungeon nell'ordine della storia, l'abisso per ultimo (k = 7)
-const META = [...DUNGEON.filter(d => d.indice >= 0).sort((a, b) => a.indice - b.indice), DUNGEON.find(d => d.indice < 0)]
+const META = [...Object.entries(INGRESSI_DEL_MONDO).filter(([, d]) => d.indice >= 0).sort((a, b) => a[1].indice - b[1].indice), Object.entries(INGRESSI_DEL_MONDO).find(([, d]) => d.indice === -1)]
+  .map(([chiave, d]) => ({ chiave, ...d }))
+const arcoDi = (m, c) => baseDi(m, c.x, c.y).arco
+// la pietra da cui parte chi va al dungeon: la più avanti lungo la strada fra quelle che stanno prima di lui (il villaggio se nessuna)
+export function pietraDiPartenza(m, chiave) {
+  const s = arcoDi(m, ingressoDi(m, chiave).accanto)
+  let meglio = m.villaggio.pietra
+  for (const p of m.pietre) if (p.zona && arcoDi(m, p.accanto) < s && (meglio === m.villaggio.pietra || arcoDi(m, p.accanto) > arcoDi(m, meglio.accanto))) meglio = p
+  return meglio
+}
 
-// Un tragitto: dalla pietra della città che serve il dungeon k al suo ingresso. `come`: 'strada' o 'giro'. `bravura`: le risposte giuste
+// Un tragitto: dalla pietra di partenza all'ingresso del dungeon k. `come`: 'strada' o 'giro'. `bravura`: le risposte giuste
 export function tragitto({ k, eroe = 'cavaliere', seme = 1, come = 'strada', bravura = GIOCATORI_TIPO.curioso.bravura, ingresso = null }) {
-  const m = ilMondo()
+  const m = ilMondoIntero()
   const d = META[k]
-  const terra = terraDelMondo(m, q => passaggioAperto(q, { finite: k }))
-  const citta = cittaDi(m, cittaDelDungeon(m, d.chiave))
-  const da = (citta.pietra || citta.portale).accanto
-  const meta = m.ingressi.find(i => i.chiave === d.chiave).accanto
+  const terra = terraDelMondo(m)
+  const ing = ingressoDi(m, d.chiave)
+  const partenza = pietraDiPartenza(m, d.chiave)
+  const da = partenza.accanto
+  const meta = ing.accanto
   const st = stileDi('curioso')
   const sorte = seminato(seme * 7919 + k * 31 + (come === 'giro' ? 5 : 0))
   let { roba, crescita } = ingresso || ingressoDelCurioso(k, { eroe, seme })
@@ -33,15 +46,18 @@ export function tragitto({ k, eroe = 'cavaliere', seme = 1, come = 'strada', bra
   roba = c0.roba
   const stato = popolaMondo({ mondo: m, eroe, giro: seme * 101 + k })
   stato.forze = { vita: c0.vitaConLaRoba, energia: c0.energiaMax }
-  const r = { k, come, scontri: 0, mostri: 0, signori: 0, domande: 0, giuste: 0, svenuto: 0, esp: 0, gemme: 0, pozioni: 0, passi: 0, vitaFine: [], vitaArrivo: 0,
+  const r = { k, come, zona: ing.zona, da: partenza.chiave, scontri: 0, mostri: 0, signori: 0, domande: 0, giuste: 0, svenuto: 0, esp: 0, gemme: 0, pozioni: 0, passi: 0, vitaFine: [], vitaArrivo: 0,
               livello0: c0.livelloEroe, livello: c0.livelloEroe, arrivato: 0, guasto: null }
 
-  // le tappe: dritto all'ingresso, o (giro) prima la tana di ogni regione che la strada attraversa, nell'ordine
+  // le tappe: dritto all'ingresso, o (giro) prima la tana di ogni luogo che la strada attraversa, nell'ordine. La strada verso una tappa
+  // la dà il campo delle distanze (motore/meta-sopra.js: l'A* su 504×300 celle costa troppo per rifarlo a ogni scontro)
+  const campi = new Map()
+  const campoDi = t => { const c = `${t.x},${t.y}`; if (!campi.has(c)) campi.set(c, campoVersoLaMeta(terra, t)); return campi.get(c) }
   const tappe = [meta]
   if (come === 'giro') {
-    const via = terra.strada(da, meta) || []
+    const via = (campoDi(meta) && campoDi(meta).strada(da)) || []
     const viste = []
-    for (const c of via) { const R = m.regioni[m.reg[c.y * m.W + c.x]]; if (R && R.anello && !viste.includes(R)) viste.push(R) }
+    for (const c of via) { const R = m.regioni[m.reg[c.y * m.W + c.x]]; if (R && R.chiave !== 'villaggio' && !viste.includes(R)) viste.push(R) }
     const tane = viste.map(R => stato.tane.find(t => t.chiave === R.chiave)).filter(Boolean)
       .map(t => ({ x: t.x, y: t.y })).filter(c => terra.passa(c.x, c.y))
     tappe.unshift(...tane)
@@ -80,13 +96,13 @@ export function tragitto({ k, eroe = 'cavaliere', seme = 1, come = 'strada', bra
     cammina(stato, l, { x: pos.x, y: pos.y, energiaMax })
     muoviMostri(stato, pos, l * dt)
   }
-  // il prossimo branco da andare a prendere (giro): il più vicino che si vede, della regione dove si è
+  // il prossimo branco da andare a prendere (giro): il più vicino che si vede, della zona dove si è
   const daPrendere = lasciati => {
     if (come !== 'giro' || alSicuro(m, pos.x, pos.y)) return null
-    const mia = m.reg[Math.floor(pos.y) * m.W + Math.floor(pos.x)]
+    const mia = m.zona[Math.floor(pos.y) * m.W + Math.floor(pos.x)]
     let meglio = null, d0 = SOPRA.vista
-    for (const q of stato.mostri) {
-      if (q.morto || q.regione !== mia || lasciati.has(q.i)) continue
+    for (const q of stato.lista) {
+      if (q.morto || q.zona !== mia || lasciati.has(q.i)) continue
       const d = Math.hypot(q.fx - pos.x, q.fy - pos.y)
       if (d < d0) { d0 = d; meglio = q }
     }
@@ -109,7 +125,7 @@ export function tragitto({ k, eroe = 'cavaliere', seme = 1, come = 'strada', bra
       const chi = preda ? `p${preda.i}` : 't'
       if (!via || !via.length || chi !== verso_ || (preda && giri % 3 === 0)) {
         const fine = preda ? { x: Math.floor(preda.fx), y: Math.floor(preda.fy) } : t
-        via = terra.strada(qui, preda && terra.passa(fine.x, fine.y) ? fine : t)
+        via = preda && terra.passa(fine.x, fine.y) ? terra.strada(qui, fine) : (campoDi(t) ? campoDi(t).strada(qui) : null)
         verso_ = chi
         if (!via || !via.length) { if (preda) { lasciati.add(preda.i); via = null; continue } r.guasto = 'non si arriva'; break }
       }
@@ -130,7 +146,7 @@ export function tragitto({ k, eroe = 'cavaliere', seme = 1, come = 'strada', bra
   }
 }
 
-// le misure per anello: `semi` storie per eroe, i due modi, i dungeon dall'1 all'abisso. Torna una riga per (come, k)
+// le misure per dungeon (e la sua zona): `semi` storie per eroe, i due modi, i dungeon dall'1 all'abisso. Torna una riga per (come, k)
 export function misuraIlMondo({ eroi = ['cavaliere', 'elfa', 'mago', 'nano'], semi = 6, discese = [0, 1, 2, 3, 4, 5, 6, 7], modi = ['strada', 'giro'], bravura = GIOCATORI_TIPO.curioso.bravura } = {}) {
   const righe = []
   for (const come of modi) for (const k of discese) {
@@ -138,7 +154,7 @@ export function misuraIlMondo({ eroi = ['cavaliere', 'elfa', 'mago', 'nano'], se
     for (const eroe of eroi) for (let s = 1; s <= semi; s++) tutti.push(tragitto({ k, eroe, seme: s, come, bravura }))
     const media = f => tutti.reduce((n, x) => n + f(x), 0) / tutti.length
     const fini = tutti.flatMap(x => x.vitaFine)
-    righe.push({ come, k, dungeon: META[k].chiave, anello: k <= 3 ? 1 : 2, tragitti: tutti.length,
+    righe.push({ come, k, dungeon: META[k].chiave, zona: tutti[0].zona, da: tutti[0].da, tragitti: tutti.length,
                  scontri: media(x => x.scontri), mostri: media(x => x.mostri), signori: media(x => x.signori), domande: media(x => x.domande),
                  svenuti: media(x => x.svenuto), vitaArrivo: media(x => (x.svenuto ? 0 : x.vitaArrivo)), vitaFine: fini.length ? fini.reduce((a, b) => a + b, 0) / fini.length : null,
                  livelli: media(x => x.livello - x.livello0), esp: media(x => x.esp), gemme: media(x => x.gemme), pozioni: media(x => x.pozioni), passi: media(x => x.passi),

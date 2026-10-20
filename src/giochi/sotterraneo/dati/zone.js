@@ -84,6 +84,56 @@ export const VOLTI = {
     { nome: 'La cripta della corona nera', dritta: 'cinque piani di ossa, e una corona nera',
       annuncio: 'Re Ossuto si è fatto una corona nuova, nera come il carbone. Adesso comanda anche le ossa del cimitero vecchio.' },
   ],
+  // i sei dungeon nuovi del mondo a percorso (dati/dungeon-del-mondo.js): il primo volto è il dungeon com'è, gli altri due le sue
+  // rigenerazioni (motore/rigenera.js, voltoDelDungeon). Solo del 3D
+  cerchio: [
+    { nome: 'Il cerchio di pietre', dritta: 'tre piani sotto i menhir, e la pietra che respira',
+      annuncio: 'Sotto il cerchio di pietre c\'è una botola, e sotto la botola dorme Barbamuschio, un golem tutto coperto di muschio.' },
+    { nome: 'Il cerchio delle radici', dritta: 'tre piani, e le radici bucano i muri',
+      annuncio: 'Le radici del cerchio di pietre sono scese fino in fondo. Barbamuschio si è svegliato, e gli è cresciuto il muschio anche sugli occhi.' },
+    { nome: 'Il cerchio della nebbia verde', dritta: 'tre piani di nebbia verde: si vede poco',
+      annuncio: 'Dalla botola del cerchio di pietre esce una nebbia verde. Barbamuschio la respira, e diventa più grosso.' },
+  ],
+  corvaia: [
+    { nome: 'Il pozzo dei corvi', dritta: 'tre piani stretti, e ali che sbattono al buio',
+      annuncio: 'Nel pozzo dei corvi ha fatto il nido Piumanera, un grifone con le penne nere come la notte.' },
+    { nome: 'Il pozzo delle piume', dritta: 'tre piani coperti di piume nere',
+      annuncio: 'Dal pozzo dei corvi volano fuori piume nere, a mucchi. Piumanera ha cambiato le penne, e adesso sono dure come il ferro.' },
+    { nome: 'Il pozzo degli stridi', dritta: 'tre piani, e uno strido che fa tremare le pareti',
+      annuncio: 'Di notte, dal pozzo dei corvi, si sente uno strido che sveglia tutta la brughiera. È Piumanera che chiama i suoi.' },
+  ],
+  palafitta: [
+    { nome: 'La palafitta', dritta: 'tre piani di fango sotto le assi',
+      annuncio: 'Sotto la palafitta della palude striscia Sibilla, un serpente lungo come il ponte del guado.' },
+    { nome: 'La palafitta sommersa', dritta: 'l\'acqua è salita: tre piani di fango e canne',
+      annuncio: 'La palude è salita fin sopra le assi della palafitta. Sibilla nuota là sotto, e non ha mai fame come adesso.' },
+    { nome: 'La palafitta delle sanguisughe', dritta: 'tre piani di fango, e qualcosa si attacca alle gambe',
+      annuncio: 'Chi passa vicino alla palafitta esce dall\'acqua pieno di sanguisughe. Sibilla ha cambiato la pelle, e la nuova è più dura.' },
+  ],
+  fornace: [
+    { nome: 'La fornace', dritta: 'tre piani di griglie sopra il fuoco',
+      annuncio: 'Nella piana delle ceneri la fornace si è riaccesa da sola. Dentro brontola Brontolava, un golem di lava che non si spegne mai.' },
+    { nome: 'La fornace delle colate', dritta: 'tre piani, e la lava cola dalle pareti',
+      annuncio: 'Dalle fumarole della fornace cola lava fino alla strada. Brontolava ha mangiato tutto il carbone, e ne vuole ancora.' },
+    { nome: 'La fornace dei mantici', dritta: 'tre piani, e un vento caldo che soffia a colpi',
+      annuncio: 'La fornace soffia come un mantice: si sente fino alle colline. Brontolava si è fatto più grosso, e più caldo.' },
+  ],
+  cava: [
+    { nome: 'La cava gelata', dritta: 'tre piani di ghiaccio sotto la miniera',
+      annuncio: 'In fondo alla cava gelata ha messo radici Brinaldo, un golem di ghiaccio: ogni cosa che tocca diventa brina.' },
+    { nome: 'La cava dei cristalli', dritta: 'tre piani, e cristalli che tagliano',
+      annuncio: 'Nella cava gelata sono cresciuti cristalli lunghi come lance. Brinaldo ci si specchia, e diventa più freddo.' },
+    { nome: 'La cava della tormenta', dritta: 'tre piani di vento e di neve',
+      annuncio: 'Dalla cava gelata esce una tormenta che non smette mai. Brinaldo è là sotto che soffia.' },
+  ],
+  tombe: [
+    { nome: 'Le tombe del vento', dritta: 'tre piani di tombe, e il vento che fischia',
+      annuncio: 'In fondo alla landa, nelle tombe del vento, aspetta Falcenera: il mietitore che comanda tutta questa terra.' },
+    { nome: 'Le tombe dei sussurri', dritta: 'tre piani, e voci che chiamano il tuo nome',
+      annuncio: 'Dalle tombe del vento escono sussurri che chiamano per nome chi passa. Falcenera ha affilato la sua falce.' },
+    { nome: 'Le tombe della luna nera', dritta: 'tre piani al buio, e una luna nera sopra',
+      annuncio: 'Sopra le tombe del vento si è alzata una luna nera. Falcenera ha chiamato a sé tutte le ombre della landa.' },
+  ],
 }
 export const voltoDi = (chiave, volta) => {
   const v = VOLTI[chiave]

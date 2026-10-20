@@ -226,7 +226,7 @@ function componi(k) {
   }
   const c = { ...b, chiave: k, base, liv, rarita, unico, storia, abilita: {} }
   // il pezzo col nome ha la sua figura, chiamata come lui; uno trovato ne prende una fra quelle della sua base
-  c.sprite = unico || aspettoDi(k, base, rarita, abilita) || b.sprite
+  c.sprite = (unico && (UNICI[unico].figura || unico)) || aspettoDi(k, base, rarita, abilita) || b.sprite   // `figura`: una dei fogli, finché la sua non c'è
   // il livello sul numero principale, anche per un pezzo comune
   // (e un'arma a due mani anche quanto cresce lo scudo che non porta)
   if (b.dove === 'mano') c.att = (c.att || 0) + Math.floor((liv - 1) / ATT_OGNI_LIVELLI) +
@@ -390,7 +390,7 @@ export function guastiDelleCose(nomi = null) {
     if (c.sprite && !nomi.includes(c.sprite))
       g.push(`${k}: nell'atlante non c'è lo sprite "${c.sprite}"`)
   if (nomi) for (const k of Object.keys(UNICI))
-    if (!nomi.includes(k)) g.push(`${k}: ha il nome proprio, ma nell'atlante non c'è la sua figura`)
+    if (!nomi.includes(UNICI[k].figura || k)) g.push(`${k}: ha il nome proprio, ma nell'atlante non c'è la sua figura`)
   for (const [base, figure] of Object.entries(ASPETTI)) {
     if (!BASI[base] || !BASI[base].dove) g.push(`aspetti di "${base}": non è un pezzo che si indossa`)
     if (nomi) for (const f of figure) if (!nomi.includes(f.sprite)) g.push(`${base}: nell'atlante non c'è l'aspetto "${f.sprite}"`)

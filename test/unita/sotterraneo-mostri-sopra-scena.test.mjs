@@ -7,7 +7,7 @@
    rimasti tornano accanto all'eroe, svegli e feriti), le forze di sopra per la barra e chi cura, e il conto delle taglie della
    bacheca (la caccia aperta, il signore, la tana) dai mostri caduti.
    ═══════════════════════════════════════════════════════════════════ */
-import { ilMondo, terraDelMondo, aperturaDi } from '../../src/giochi/sotterraneo/motore/mondo-sopra.js'
+import { ilMondoIntero, terraDelMondo } from '../../src/giochi/sotterraneo/motore/mondo-sopra.js'
 import { popolaMondo, incontro, muoviMostri, apriLoScontro, esitoDelloScontro, inSalvo, tanaDi, alSicuro } from '../../src/giochi/sotterraneo/motore/aperta.js'
 import { fotoDelloScontro, lasciaLoScontro, rimettiLoScontro, doveToccare, taglieDelloScontro } from '../../src/giochi/sotterraneo/motore/aperta-scena.js'
 import { forzeDiSopra, curaDiSopra, allaCitta } from '../../src/giochi/sotterraneo/motore/forze-sopra.js'
@@ -20,11 +20,11 @@ import { robaAttesa, crescitaAttesa } from '../../src/giochi/sotterraneo/motore/
 import { diario } from '../../src/giochi/sotterraneo/motore/missioni.js'
 import { controlla, uguale, stessaLista, riassunto } from '../aiuto/verifica.mjs'
 
-const m = ilMondo()
-const terra = terraDelMondo(m, aperturaDi([]).aperto)
+const m = ilMondoIntero()
+const terra = terraDelMondo(m)
 const forte = { eroe: 'cavaliere', roba: robaAttesa('cavaliere', 7), crescita: crescitaAttesa('cavaliere', 7) }
 const giocaFinoInFondo = (corsa, giusto = () => true) => { for (let i = 0; i < 400 && corsa.foglio && corsa.foglio.che === 'scontro'; i++) corsa.rispondi(giusto()) }
-// una cella da cui il branco di `q` arriva addosso: a cinque o sei passi, nella sua regione, fuori dalla cintura, e senza niente in
+// una cella da cui il branco di `q` arriva addosso: a cinque o sei passi, nel suo luogo, fuori dalla cintura, e senza niente in
 // mezzo (si prova: in quattro secondi c'è l'incontro)
 function cellaVicina(q) {
   for (let dy = -7; dy <= 7; dy++) for (let dx = -7; dx <= 7; dx++) {
@@ -50,8 +50,8 @@ function cellaVicina(q) {
 /* ── chi si disegna, e come ── */
 const s0 = popolaMondo({ mondo: m, eroe: 'cavaliere', giro: 0 })
 {
-  const q = s0.mostri.find(x => !x.caporale && !x.signore && m.regioni[x.regione].chiave === 'campi')
-  const sig = s0.mostri.find(x => x.signore)
+  const q = s0.lista.find(x => !x.caporale && !x.signore && m.regioni[x.regione].chiave === 'campi')
+  const sig = s0.lista.find(x => x.signore)
   const f = figuraDiSopra(q, 0), fc = figuraDiSopra(q, 0, true)
   controlla('chi dorme respira (la posa da fermo)', f.pezzo.includes('-fermo-'), f.pezzo)
   controlla('chi corre corre', fc.pezzo.includes('-corsa-') || fc.pezzo.includes('-fermo-'), fc.pezzo)
@@ -89,7 +89,7 @@ const s0 = popolaMondo({ mondo: m, eroe: 'cavaliere', giro: 0 })
 
 /* ── il passo a ogni fotogramma: col tempo vero, non coi fotogrammi ── */
 {
-  const q = s0.mostri.find(x => !x.caporale && m.regioni[x.regione].chiave === 'campi' && cellaVicina(x))
+  const q = s0.lista.find(x => !x.caporale && m.regioni[x.regione].chiave === 'campi' && cellaVicina(x))
   const io = cellaVicina(q)
   const a = creaMostriSopra({ m, eroe: 'cavaliere', giro: 0 }), b = creaMostriSopra({ m, eroe: 'cavaliere', giro: 0 })
   const qa = a.stato.mostri[q.i], qb = b.stato.mostri[q.i]
@@ -117,7 +117,7 @@ const s0 = popolaMondo({ mondo: m, eroe: 'cavaliere', giro: 0 })
 /* ── la ✕ a metà: una fuga senza il graffio, e i rimasti che aspettano ── */
 {
   const s = popolaMondo({ mondo: m, eroe: 'cavaliere', giro: 0 })
-  const q = s.mostri.find(x => !x.caporale && m.regioni[x.regione].chiave === 'colle' && s.branchi[x.branco].length >= 2 && cellaVicina(x))
+  const q = s.lista.find(x => !x.caporale && m.regioni[x.regione].chiave === 'colle' && s.branchi[x.branco].length >= 2 && cellaVicina(x))
   const io = cellaVicina(q)
   const inc = incontro(s, { x: q.fx - 1, y: q.fy }, { tocco: q.i })
   const corsa = apriLoScontro(s, inc, forte)
@@ -146,7 +146,7 @@ const s0 = popolaMondo({ mondo: m, eroe: 'cavaliere', giro: 0 })
     let ri = null
     for (let i = 0; i < 200 && !ri; i++) ri = v.passo(1 / 30, { x: scontro.x + 0.5, z: scontro.y + 0.5 })
     controlla('lo scontro si riapre da sé', ri && scontro.campo.some(([i]) => ri.campo.includes(i)), JSON.stringify(ri))
-    controlla('un altro eroe non li trova', creaMostriSopra({ m, eroe: 'mago', giro: 0, salvato: salvo }).stato.mostri.every(x => !x.sveglio))
+    controlla('un altro eroe non li trova', creaMostriSopra({ m, eroe: 'mago', giro: 0, salvato: salvo }).stato.lista.every(x => !x.sveglio))
     void r
   } else controlla('(lo scontro è finito al primo colpo: niente da lasciare)', true)
   // svenuti resta svenuto anche con la ✕
@@ -192,7 +192,7 @@ const s0 = popolaMondo({ mondo: m, eroe: 'cavaliere', giro: 0 })
   // il signore della regione, e la tana col suo branco tutto a terra
   const tn = tanaDi(s, 'rovine')
   const delSignore = s.branchi[tn.branco]
-  const signore = s.mostri.find(x => x.branco === tn.branco && x.signore)
+  const signore = s.lista.find(x => x.branco === tn.branco && x.signore)
   const tg = { specie: signore.tipo, regione: 'rovine', anello: 2, livello: signore.livello, caporale: true, signore: true, id: signore.id }
   for (const i of delSignore) if (i !== signore.i) s.mostri[i].morto = false
   signore.morto = true
@@ -203,7 +203,7 @@ const s0 = popolaMondo({ mondo: m, eroe: 'cavaliere', giro: 0 })
   t = taglieDelloScontro([tg], { stati, conti: {}, stato: s })
   controlla('tutto il branco del signore a terra: la tana è ripulita', t.fatte.includes(tana))
   // con lo scontro vero: l'esito dà le taglie, e la caccia le conta
-  const q = s.mostri.find(x => !x.caporale && m.regioni[x.regione].chiave === 'rovine' && x.tipo === 'zombie' && !x.morto)
+  const q = s.lista.find(x => !x.caporale && m.regioni[x.regione].chiave === 'rovine' && x.tipo === 'zombie' && !x.morto)
   const inc = incontro(s, { x: q.fx - 1, y: q.fy }, { tocco: q.i })
   const corsa = apriLoScontro(s, inc, forte)
   giocaFinoInFondo(corsa)

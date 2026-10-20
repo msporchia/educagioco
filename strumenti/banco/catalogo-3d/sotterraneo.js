@@ -50,12 +50,12 @@ import { Group, Mesh, MeshStandardMaterial, MeshBasicMaterial, CircleGeometry, O
 import { U } from '../../../src/giochi/sotterraneo/scena3d/mondo/vesti.js'
 import { creaTrame } from '../../../src/giochi/sotterraneo/scena3d/mondo/trame.js'
 import { materialiDelKit, Cantiere, casa, bottega, pozzo, mulino, tetto } from '../../../src/giochi/sotterraneo/scena3d/mondo/kit.js'
-import { ponte, grata, staccionate, cartello, bacheca, campoMinatore, antro } from '../../../src/giochi/sotterraneo/scena3d/mondo/ponti.js'
-import { creaMonumento, creaPietra, creaPortale as creaPortaleDiSopra } from '../../../src/giochi/sotterraneo/scena3d/mondo/monumenti.js'
+import { ponte, staccionate, cartello, bacheca, campoMinatore } from '../../../src/giochi/sotterraneo/scena3d/mondo/ponti.js'
+import { creaMonumento, creaPietra, creaPortale as creaPortaleDiSopra, creaPortaDelleTerre } from '../../../src/giochi/sotterraneo/scena3d/mondo/monumenti.js'
 import { fontana as fontanaDellaPiazza } from '../../../src/giochi/sotterraneo/scena3d/mondo/fontana.js'
 import { MODELLI } from '../../../src/giochi/sotterraneo/scena3d/mondo/props-modelli.js'
 import { disegnaPropsAperti } from '../../../src/giochi/sotterraneo/scena3d/mondo/props-aperto.js'
-import { PROPS, FORME as FORME_APERTE, TABELLA, SCENARI } from '../../../src/giochi/sotterraneo/scena3d/mondo/props-dove.js'
+import { FORME as FORME_APERTE, TABELLA, SCENARI } from '../../../src/giochi/sotterraneo/scena3d/mondo/props-dove.js'
 import { GEO } from '../../../src/giochi/sotterraneo/scena3d/mondo/natura.js'
 import { caso, LIVELLO_ACQUA } from '../../../src/giochi/sotterraneo/scena3d/mondo/suolo.js'
 import { creaBotti } from '../../../src/giochi/sotterraneo/scena3d/botti.js'
@@ -100,9 +100,10 @@ const MAT_CRISTALLO = () => new MeshStandardMaterial({ color: 0xb78cff, emissive
    `centro` [x, z]: dove sta il centro del pezzo nelle coordinate del mondo che il codice usa (si toglie, così il modello sta
    sull'origine); `rialza`: di quanto alzarlo (i ponti scendono sotto il livello dell'acqua); `acqua`: un disco d'acqua a
    quel livello, per i pezzi che ci stanno dentro */
-function pezzo(f, { centro = [0, 0], rialza = 0, acqua = 0, quota = 0, passaggi = [] } = {}) {
+function pezzo(f, { centro = [0, 0], rialza = 0, acqua = 0, quota = 0, confini = [] } = {}) {
   const { kit } = contesto()
-  const m = { W: 8, H: 8, quota: new Float32Array(64).fill(quota), passaggi }
+  // un mondo finto di 8×8 celle, tutte scritte (`zona` 0: suolo.js non va a cercare la base del generatore)
+  const m = { W: 8, H: 8, quota: new Float32Array(64).fill(quota), zona: new Int8Array(64), ponte: new Int8Array(64).fill(-1), confini }
   const cant = new Cantiere(), cose = coseVuote(), esterno = new Group(), g = new Group(), anima = []
   g.position.set(-centro[0], rialza, -centro[1])
   esterno.add(g)
@@ -129,9 +130,9 @@ const cellePonte = (lungoX, L) => Array.from({ length: L * 2 }, (_, i) => (lungo
 function ponteDi(modello, verso, L, quota, arco) {
   return () => {
     const lungoX = verso === 'est', celle = cellePonte(lungoX, L)
-    const q = { id: 0, tipo: 'ponte', modello, verso, celle, quota, arco, conGrata: false }
+    const q = { i: 0, tipo: 'ponte', modello, verso, celle, quota, arco }
     const centro = lungoX ? [L / 2, 1] : [1, L / 2]
-    return pezzo(({ cant, m }) => ponte(q, cant, m), { centro, rialza: 1.15, acqua: 5, passaggi: [q] })
+    return pezzo(({ cant, m }) => ponte(q, cant, m), { centro, rialza: 1.15, acqua: 5, confini: [q] })
   }
 }
 
@@ -168,56 +169,47 @@ const VOCI_KIT = [
     }),
     dove: 'Sopra ogni casa e il mulino: due lastre di tegole (o di paglia) con lo sbalzo e i due timpani. Qui da solo, senza i muri' },
   { id: 'sot:kit:ponte-arco', nome: 'Ponte ad arco di pietra', categoria: 'edificio', file: MONDO + 'ponti.js:ponte', crea: ponteDi('arco', 'sud', 6, 0.13, 0.45),
-    dove: 'Sui fiumi grandi: dal villaggio ai campi, dal villaggio alla valle del mulino, dal bosco vecchio al guado. Parapetto di pietra, arcata sotto' },
+    dove: 'Sui fiumi fra due zone: il ponte del mulino (dai prati al bosco vecchio) e il ponte del guado (dalla brughiera alla palude). Parapetto di pietra, arcata sotto' },
   { id: 'sot:kit:ponte-travi', nome: 'Ponte di travi', categoria: 'edificio', file: MONDO + 'ponti.js:ponte', crea: ponteDi('travi', 'est', 5, 0.13, 0.12),
-    dove: 'Dal cimitero ai campi, dai campi al colle, dal frutteto alla valle del mulino, dal guado alla piana delle ceneri: assi su due travi e pali nell\'acqua' },
+    dove: 'Un modello pronto per i fiumi stretti fra due zone (oggi nessun confine lo usa): assi su due travi e pali nell\'acqua' },
   { id: 'sot:kit:ponte-passerella', nome: 'Passerella di corde', categoria: 'edificio', file: MONDO + 'ponti.js:ponte', crea: ponteDi('passerella', 'sud', 5, 0.13, 0.12),
-    dove: 'Sui valichi stretti: dal passo alla gola dei venti, alla vetta dei troll, al monte; dal guado alla palude, all\'accampamento, al bosco secco. Assi e corde' },
-  { id: 'sot:kit:grata', nome: 'Grata di un passaggio', categoria: 'edificio', file: MONDO + 'ponti.js:grata',
-    crea: () => pezzo(({ cant, m, kit, g, anima }) => {
-      const q = { id: 0, tipo: 'valico', conGrata: true, centro: { x: 3, y: 3 }, rive: [{ x: 2, y: 3 }, { x: 4, y: 3 }] }
-      const fatto = grata(q, cant, m, kit, g)
-      anima.push(t => fatto.apri(0.5 + 0.5 * Math.sin(t)))
-    }, { centro: [3.5, 3.5] }),
-    dove: 'Ai passaggi fra due anelli del mondo (sui ponti e ai valichi: villaggio-campi, colle-passo, passo-colle dei corvi, lupi-monte…): due pilastri e la grata di ferro, che si alza quando la storia o l\'età aprono la strada' },
+    dove: 'La passerella delle ceneri (dalla palude alla piana delle ceneri) e il ponte sulla gola (dal monte alla landa vecchia): assi e corde' },
   { id: 'sot:kit:staccionata', nome: 'Staccionata di un campo', categoria: 'prop', file: MONDO + 'ponti.js:staccionate',
     crea: () => pezzo(({ cant, m }) => staccionate([{ x: -3, y: -2, w: 6, h: 4 }], cant, m)),
-    dove: 'Attorno a ogni campo coltivato (grano, cavoli, vigna, zucche): pali e due traverse' },
+    dove: 'Attorno a ogni campo coltivato dei prati (grano, cavoli, vigna, zucche, il frutteto): pali e due traverse' },
   { id: 'sot:kit:cartello', nome: 'Cartello all\'incrocio', categoria: 'prop', file: MONDO + 'ponti.js:cartello',
     crea: () => pezzo(({ cant, m }) => cartello({ x: -0.5, y: -0.5 }, [0, 1.9, 3.6], cant, m)),
-    dove: 'L\'incrocio di ogni città: un palo con una freccia per ogni passaggio, che indica i posti oltre' },
+    dove: 'Al cancello del villaggio: un palo con la freccia della strada maestra, che dice le zone e i dungeon lungo la strada' },
   { id: 'sot:kit:bacheca', nome: 'Bacheca delle taglie', categoria: 'prop', file: MONDO + 'ponti.js:bacheca',
     crea: () => pezzo(({ cant, m }) => bacheca({ x: -1, y: -0.5, w: 2, h: 1 }, cant, m)),
-    dove: 'In piazza, in ogni città: la tavola col tettuccio e i fogli appesi (le missioni)' },
+    dove: 'Sul lato est della piazza del villaggio: la tavola col tettuccio e i fogli appesi (le taglie)' },
   { id: 'sot:kit:campo-minatore', nome: 'Campo del minatore', categoria: 'edificio', file: MONDO + 'ponti.js:campoMinatore',
     crea: () => pezzo(({ cant, m, cose }) => campoMinatore({ tenda: { x: 0, y: 0 } }, cant, m, cose), { centro: [2, 1.5] }),
-    dove: 'Fuori dal villaggio, dove sta il minatore: la tenda, il carretto col minerale e il falò' },
-  { id: 'sot:kit:antro-tomba', nome: 'Antro: tomba', categoria: 'edificio', file: MONDO + 'ponti.js:antro',
-    crea: () => pezzo(({ cant, m }) => antro({ x: -1, y: -1, w: 2, h: 2, forma: 'tomba' }, cant, m)),
-    dove: 'Le porte piccole fra un dungeon e l\'altro, nel cimitero vecchio, nella valle delle ossa, nella landa e nella piana delle ceneri: un sarcofago di pietra' },
-  { id: 'sot:kit:antro-cantina', nome: 'Antro: cantina', categoria: 'edificio', file: MONDO + 'ponti.js:antro',
-    crea: () => pezzo(({ cant, m }) => antro({ x: -1, y: -1, w: 2, h: 2, forma: 'cantina' }, cant, m)),
-    dove: 'Le porte piccole nei campi, sul colle delle rovine, nel frutteto e nelle rovine: la botola inclinata di una cantina' },
-  { id: 'sot:kit:antro-grotta', nome: 'Antro: grotta', categoria: 'edificio', file: MONDO + 'ponti.js:antro',
-    crea: () => pezzo(({ cant, m }) => antro({ x: -1, y: -1, w: 2, h: 2, forma: 'grotta' }, cant, m)),
-    dove: 'Le porte piccole di quasi tutto il mondo selvaggio (brughiera, bosco, lago, passo, monte, foresta, palude…): una bocca di sassi con le assi' },
+    dove: 'In mezzo alla fila del villaggio, dove sta il vecchio minatore: la tenda, il carretto col minerale e il falò' },
 ]
 
-/* ═══════════════════ i monumenti (monumenti.js): i dungeon, la pietra, il portale ═══════════════════ */
+/* ═══════════════════ i monumenti (monumenti.js): i dungeon, la pietra, il portale, la porta delle terre ═══════════════════ */
 
-// gli otto ingressi: misure e nomi come nel generatore
+// i quattordici ingressi: misure e nomi come nel generatore (dati/mondo-aperto.js, INGRESSI_DEL_MONDO). Quando un monumento è di un
+// altro dungeon (il pozzo, la miniera), la voce ha l'id della chiave
 const INGRESSI = [
-  ['altare', 'altare', 3, 2, 'La cripta dei re (il cimitero vecchio)', 'un altare fra due colonne con la corona; la lastra scivola'],
-  ['cantine', 'arco', 3, 2, 'Le cantine dei goblin (il colle delle rovine)', 'un arco di pietra con la grata e due teschi sui pilastri; la grata si alza'],
-  ['torre', 'torre', 3, 3, 'La torre bruciata (la brughiera)', 'una torre tonda di blocchi con la cima rotta e annerita; la porta si apre'],
+  ['altare', 'altare', 3, 2, 'La cripta dei re (i prati del cimitero)', 'un altare fra due colonne con la corona; la lastra scivola'],
+  ['cantine', 'arco', 3, 2, 'Le cantine dei goblin (i prati del cimitero)', 'un arco di pietra con la grata e due teschi sui pilastri; la grata si alza'],
+  ['torre', 'torre', 3, 3, 'La torre bruciata (il bosco vecchio)', 'una torre tonda di blocchi con la cima rotta e annerita; la porta si apre'],
   ['gallerie', 'grotta', 4, 2, 'La tana dei ragni (il bosco vecchio)', 'la bocca di una grotta fra le radici e le ragnatele; le assi si spostano'],
+  ['cerchio', 'menhir', 3, 3, 'Il cerchio di pietre (la brughiera)', 'sette menhir col muschio in tondo e in mezzo la lastra con la botola; la botola si apre e la runa brilla'],
+  ['corvaia', 'pozzo', 2, 2, 'Il pozzo dei corvi (la brughiera)', 'un pozzo di pietra scura col tetto nero, i corvi appollaiati e le penne per terra', 'corvaia'],
   ['cisterna', 'stagno', 3, 2, 'Le sale allagate (la palude)', 'una scala che scende nell\'acqua fra due pilastri; le rune si accendono'],
+  ['palafitta', 'palafitta', 3, 2, 'La palafitta (la palude)', 'la capanna sui pali nello stagno, con la scaletta; nel ballatoio la botola si apre'],
   ['labirinto', 'botola', 2, 2, 'La porta dell\'inferno (la piana delle ceneri)', 'una botola nel telaio di pietra con le corna; si apre sul rosso'],
+  ['fornace', 'fumarola', 3, 2, 'La fornace (la piana delle ceneri)', 'un forno di pietra a cupola col camino e la bocca che brilla, le fumarole ai lati; la porta di ferro si alza'],
   ['fondo', 'miniera', 4, 2, 'Le miniere di brace (il monte)', 'l\'imbocco di una miniera coi binari e il carrello; il carrello esce'],
+  ['cava', 'miniera', 4, 2, 'La cava gelata (il monte)', 'l\'imbocco della miniera con la brina sulle travi, i ghiaccioli e i cristalli azzurri; il carrello esce', 'cava'],
   ['abisso', 'pozzo', 2, 2, 'Il pozzo senza fondo (la landa vecchia)', 'un pozzo col tetto d\'ardesia, la manovella e il secchio'],
+  ['tombe', 'tomba', 3, 2, 'Le tombe del vento (la landa vecchia)', 'il mausoleo di pietra col frontone, due colonne e le bandiere strappate; la lastra della porta scorre'],
 ]
-const VOCI_INGRESSI = INGRESSI.map(([chiave, monumento, w, h, luogo, cosa]) => ({
-  id: 'sot:monumenti:' + monumento, nome: 'Ingresso: ' + luogo.split(' (')[0].replace(/^L[ae] /, '').replace(/^Il /, ''), categoria: 'edificio', file: MONDO + 'monumenti.js:creaMonumento',
+const VOCI_INGRESSI = INGRESSI.map(([chiave, monumento, w, h, luogo, cosa, id]) => ({
+  id: 'sot:monumenti:' + (id || monumento), nome: 'Ingresso: ' + luogo.split(' (')[0].replace(/^L[ae] /, '').replace(/^Il /, ''), categoria: 'edificio', file: MONDO + 'monumenti.js:creaMonumento',
   dove: `${luogo}: ${cosa}`,
   crea: () => pezzo(({ cant, m, kit, g, anima }) => {
     const fatto = creaMonumento({ x: -w / 2, y: -h / 2, w, h, chiave, monumento }, cant, m, kit, g)
@@ -227,25 +219,37 @@ const VOCI_INGRESSI = INGRESSI.map(([chiave, monumento, w, h, luogo, cosa]) => (
 
 const VOCI_MONUMENTI = [
   ...VOCI_INGRESSI,
-  { id: 'sot:monumenti:pietra-del-viaggio', nome: 'Pietra del viaggio', categoria: 'prop', file: MONDO + 'monumenti.js:creaPietra',
+  { id: 'sot:monumenti:pietra-del-viaggio', nome: 'Pietra del villaggio', categoria: 'prop', file: MONDO + 'monumenti.js:creaPietra',
     crea: () => pezzo(({ cant, m, g, anima }) => {
-      const fatto = creaPietra({ x: -1, y: -1, w: 2, h: 2 }, cant, m, g)
+      const fatto = creaPietra({ x: -1, y: -1, w: 2, h: 2, chiave: 'villaggio' }, cant, m, g)
       anima.push(t => fatto.aggiorna(true, t, true))
     }),
-    dove: 'Davanti a ogni ingresso e in ogni città: sei sassi ritti attorno a una pietra piatta con la runa, che si accende quando ci si è già passati (il viaggio veloce)' },
+    dove: 'Nel villaggio, accanto al cancello: sei sassi ritti attorno a una pietra piatta con la runa, che si accende (il viaggio alle pietre delle zone)' },
+  { id: 'sot:monumenti:pietra-di-zona', nome: 'Pietra runica di una zona', categoria: 'prop', file: MONDO + 'monumenti.js:creaPietraDiZona',
+    crea: () => pezzo(({ cant, m, g, anima }) => {
+      const fatto = creaPietra({ x: -1, y: -1, w: 2, h: 2, chiave: 'zona:prati' }, cant, m, g)
+      anima.push(t => fatto.aggiorna(true, t, true))
+    }),
+    dove: 'Al mezzo di ogni zona, accanto alla strada maestra (sette): la lastra alta sullo zoccolo tondo con le rune, che si accendono; da lì si torna al villaggio' },
+  { id: 'sot:monumenti:porta-delle-terre', nome: 'La porta delle terre', categoria: 'edificio', file: MONDO + 'monumenti.js:creaPortaDelleTerre',
+    crea: () => pezzo(({ cant, m, kit, g, anima }) => {
+      const fatto = creaPortaDelleTerre({ x: -1.5, y: -1, w: 3, h: 2, chiave: 'porta-delle-terre' }, cant, m, kit, g)
+      anima.push(t => fatto.anim(0.5 + 0.5 * Math.sin(t * 0.6), t))
+    }),
+    dove: 'In fondo alla landa vecchia, dopo le tombe del vento: un arco di pietra con le rune; aperto, dentro gira un velo chiaro (le terre successive)' },
   { id: 'sot:monumenti:portale-di-sopra', nome: 'Portale gemello (di sopra)', categoria: 'effetto', file: MONDO + 'monumenti.js:creaPortale',
     crea: () => {
       const f = creaPortaleDiSopra(0, 0, 0)
       f.gruppo.userData.anima = t => f.aggiorna(t)
       return f.gruppo
     },
-    dove: 'Nel villaggio, nel forte del guado e nel rifugio del passo: l\'anello di pietra ritto col velo che gira, dove si esce dalle discese' },
+    dove: 'Nel villaggio, a ovest della piazza: l\'anello di pietra ritto col velo che gira, dove si esce dalle discese' },
   { id: 'sot:monumenti:fontana-della-piazza', nome: 'Fontana della piazza', categoria: 'edificio', file: MONDO + 'fontana.js:fontana',
     crea: () => pezzo(({ cant, m, cose, kit, g, anima }) => {
       const f = fontanaDellaPiazza({ x: -1, y: -1 }, cant, m, cose, kit, g)
       anima.push(t => f.anima(t))
     }),
-    dove: 'Il centro della piazza di una città dove manca chi cura (la guaritrice o l\'incantatrice): al posto del pozzo, cura gratis chi è salito dal portale. Vasca, coppa alta, quattro cascate, gocce' },
+    dove: 'Dove manca chi cura (la guaritrice o l\'incantatrice) prende il posto del pozzo e cura gratis chi è salito dal portale; il villaggio di oggi li ha tutti e due. Vasca, coppa alta, quattro cascate, gocce' },
 ]
 
 /* ═══════════════════ gli oggetti delle città (props-modelli.js) ═══════════════════ */
@@ -300,6 +304,8 @@ export const NOMI_HABITAT = {
 export const NOMI_INGRESSO = {
   altare: 'la cripta dei re', arco: 'le cantine dei goblin', torre: 'la torre bruciata', grotta: 'la tana dei ragni', stagno: 'le sale allagate',
   botola: 'la porta dell\'inferno', miniera: 'le miniere di brace', pozzo: 'il pozzo senza fondo',
+  menhir: 'il cerchio di pietre', corvaia: 'il pozzo dei corvi', palafitta: 'la palafitta', fumarola: 'la fornace', cava: 'la cava gelata',
+  tomba: 'le tombe del vento',
 }
 // nome, categoria, cos'è; il dove si ricava da TABELLA e SCENARI (si tiene da solo)
 const FORME_NOME = {
@@ -367,8 +373,7 @@ function propAperto(tipo) {
     const acqua = !!FORME_APERTE[tipo].acqua
     // l'acqua sta 0,35 sopra il fondo: le palafitte e i pali ci si piantano dentro
     return pezzo(({ cant, m, cose }) => {
-      PROPS.set(m, [{ tipo, x: 0, z: 0, giro: 0, seme: 11, pezzo: 0 }])
-      disegnaPropsAperti(m, 0, cant, cose)
+      disegnaPropsAperti(m, 0, cant, cose, [{ tipo, x: 0, z: 0, giro: 0, seme: 11, pezzo: 0 }])
     }, { quota: acqua ? LIVELLO_ACQUA - 0.35 : 0, rialza: acqua ? 0.35 : 0, acqua: acqua ? 2.2 : 0 })
   }
 }

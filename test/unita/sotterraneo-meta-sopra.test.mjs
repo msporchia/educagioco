@@ -3,17 +3,19 @@
 
    Il campo delle distanze dalla meta, la strada da una cella qualunque
    (sempre dove si cammina, mai un angolo tagliato, lunga quanto l'A*
-   di motore/terra.js), le grate chiuse che la fermano, le celle del
-   velo che si apre attorno, le luci della scia e i passi detti.
+   di motore/terra.js), la meta lontana in una zona non caricata che
+   si raggiunge a pezzi lungo la strada maestra, le celle del velo che
+   si apre attorno, le luci della scia e i passi detti.
    ═══════════════════════════════════════════════════════════════════ */
-import { ilMondo, aperturaDi, terraDelMondo, postiDi } from '../../src/giochi/sotterraneo/motore/mondo-sopra.js'
-import { campoVersoLaMeta, celleDelVelo, luciDellaStrada, piuVicina, passiDetti } from '../../src/giochi/sotterraneo/motore/meta-sopra.js'
+import { ilMondo, terraDelMondo, postiDi, seguiLEroe, zonaDi } from '../../src/giochi/sotterraneo/motore/mondo-sopra.js'
+import { campoVersoLaMeta, metaVicina, celleDelVelo, luciDellaStrada, piuVicina, passiDetti } from '../../src/giochi/sotterraneo/motore/meta-sopra.js'
 import { creaTerra } from '../../src/giochi/sotterraneo/motore/terra.js'
+import { baseDi } from '../../src/giochi/sotterraneo/motore/mondo-percorso.js'
 import { trameDellaNebbia, segnaScoperte, apriIlVelo, MAI } from '../../src/giochi/sotterraneo/scena3d/mondo/nebbia.js'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 
 const m = ilMondo()
-const terra = terraDelMondo(m, aperturaDi([]).aperto)
+const terra = terraDelMondo(m)
 const cripta = postiDi(m, 'ingresso').find(p => p.chiave === 'altare')
 const lunga = via => via.reduce((s, c, i) => s + (i === 0 ? 0 : Math.hypot(c.x - via[i - 1].x, c.y - via[i - 1].y)), 0)
 
@@ -46,13 +48,26 @@ const lunga = via => via.reduce((s, c, i) => s + (i === 0 ? 0 : Math.hypot(c.x -
   controlla('la cripta è vicina: meno di cento passi dalla piazza', passi < 100, Math.round(passi))
 }
 
-/* ── le grate chiuse fermano la strada: oltre l'anello aperto non ci si arriva ── */
+/* ── una meta lontana, in una zona non caricata: la strada maestra fin dove si cammina, poi la zona dopo ── */
 {
-  const lontano = postiDi(m, 'ingresso').find(p => p.chiave === 'fondo')
-  const chiusa = campoVersoLaMeta(terra, lontano.accanto)
-  controlla('con le grate calate la miniera non si raggiunge', !chiusa || chiusa.strada(m.partenza) === null)
-  const aperta = campoVersoLaMeta(terraDelMondo(m, () => true), lontano.accanto)
-  controlla('con le grate alzate sì', !!aperta.strada(m.partenza))
+  const lontano = postiDi(m, 'ingresso').find(p => p.chiave === 'labirinto')
+  uguale('la porta dell\'inferno, nelle ceneri mai caricate, non ha campo', campoVersoLaMeta(terra, lontano.accanto), null)
+  const v = metaVicina(m, terra, lontano.accanto)
+  controlla('la meta vicina sta sulla strada maestra, dove si cammina', !!v && v.lontana && terra.passa(v.x, v.y), JSON.stringify(v))
+  uguale('in fondo al bosco, l\'ultima zona caricata', zonaDi(m, v.x, v.y), 1)
+  controlla('e ci si arriva dalla piazza', !!campoVersoLaMeta(terra, v).strada(m.partenza))
+  uguale('una meta dove si cammina è lei', JSON.stringify(metaVicina(m, terra, cripta.accanto)), JSON.stringify({ ...cripta.accanto, lontana: false }))
+  // arrivati lì si carica la zona dopo, e la meta va avanti: a pezzi si arriva alla porta
+  let qui = v, giri = 0
+  for (; giri < 6; giri++) {
+    seguiLEroe(m, qui.x, qui.y)
+    const t = terraDelMondo(m), p = metaVicina(m, t, lontano.accanto)
+    if (!p.lontana) { qui = p; break }
+    controlla(`a pezzi: il punto ${giri + 1} va avanti`, baseDi(m, p.x, p.y).arco > baseDi(m, qui.x, qui.y).arco)
+    qui = p
+  }
+  uguale('in pochi pezzi la porta è sulla terra', `${qui.x},${qui.y}`, `${lontano.accanto.x},${lontano.accanto.y}`)
+  seguiLEroe(m, m.partenza.x, m.partenza.y)
   uguale('una meta dove non si cammina non ha campo', campoVersoLaMeta(creaTerra(['#.', '..']), { x: 0, y: 0 }), null)
 }
 

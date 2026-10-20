@@ -1,14 +1,13 @@
-// Il resto del kit del mondo di sopra: i ponti (arco di pietra, travi, passerella di corde), le grate dei passaggi fra gli anelli
-// (due pilastri e la grata che si alza quando la storia o l'età la apre), le staccionate dei campi, il cartello e la bacheca
-// della città, il campo del minatore e gli antri chiusi (fase 7). Le parti ferme nel cantiere (kit.js), quelle che si muovono a
-// parte. Dal prototipo poc/mondo-sopra/kit.js.
-import { Shape, Path, ExtrudeGeometry, Group, DodecahedronGeometry, OctahedronGeometry, SphereGeometry, CircleGeometry } from 'three'
-import { Cantiere, scatola, cilindro, triangolo, COLORI } from './kit.js'
-import { quotaTerreno, LIVELLO_ACQUA, pontiDi, caso } from './suolo.js'
+// Il resto del kit del mondo di sopra: i ponti dei confini fra le zone (arco di pietra, travi, passerella di corde: nessuna grata,
+// si passa sempre), le staccionate dei campi, il cartello e la bacheca del villaggio, il campo del minatore. Le parti ferme nel
+// cantiere (kit.js), quelle che si muovono a parte. Dal prototipo poc/mondo-sopra/kit.js.
+import { Shape, Path, ExtrudeGeometry, DodecahedronGeometry, OctahedronGeometry, SphereGeometry } from 'three'
+import { scatola, cilindro, triangolo, COLORI } from './kit.js'
+import { quotaTerreno, LIVELLO_ACQUA, pontiDi } from './suolo.js'
 
 // ── i ponti: si costruiscono lungo la x locale e si girano verso sud quando il fiume corre da ovest a est ──
 export function ponte(q, cant, m) {
-  const p = pontiDi(m).get(q.id)
+  const p = pontiDi(m).get(q.i)
   if (!p) return
   const L = p.lungoX ? p.x1 - p.x0 : p.y1 - p.y0
   const cx = (p.x0 + p.x1) / 2, cz = (p.y0 + p.y1) / 2
@@ -55,38 +54,6 @@ export function ponte(q, cant, m) {
       }
     }
   }
-}
-
-// ── la grata di un passaggio fra due anelli: due pilastri fermi e la grata di ferro che si alza (`apri(k)`, 0..1) ──
-export function grata(q, cant, m, kit, gruppo) {
-  let cx, cz, y, ang, largo
-  const p = pontiDi(m).get(q.id)
-  if (p) {
-    cx = (p.x0 + p.x1) / 2; cz = (p.y0 + p.y1) / 2; y = p.quota + p.arco; largo = 1.15
-    ang = p.lungoX ? Math.PI / 2 : 0   // la grata attraversa il piano del ponte
-  } else {
-    const c = q.centro, [a, b] = q.rive
-    cx = c.x + 0.5; cz = c.y + 0.5; y = quotaTerreno(m, cx, cz); largo = 2.1
-    // la grata sta di traverso alla strada da una riva all'altra: la x locale va perpendicolare
-    ang = Math.atan2(-(b.x - a.x), -(b.y - a.y))
-  }
-  cant.base(cx, y, cz, ang)
-  for (const s of [-1, 1]) {
-    cant.metti('pietra', scatola(0.5, 2.9, 0.5, 1.2), s * (largo + 0.25), 1.45, 0, [0.7, 0.68, 0.64])
-    cant.metti('pietra', scatola(0.62, 0.22, 0.62, 1.2), s * (largo + 0.25), 3.0, 0, [0.6, 0.58, 0.55])
-  }
-  cant.metti('pietra', scatola(largo * 2 + 1.1, 0.36, 0.42, 1.4), 0, 2.75, 0, [0.66, 0.64, 0.6])
-  const c = new Cantiere()
-  c.base(0, 0, 0, 0).qui(cx, cz)
-  const n = Math.round(largo * 2 / 0.3)
-  for (let i = 0; i <= n; i++) c.metti('liscio', scatola(0.06, 2.5, 0.06), -largo + i * (largo * 2 / n), 1.25, 0, COLORI.ferro)
-  for (let j = 0; j < 4; j++) c.metti('liscio', scatola(largo * 2, 0.06, 0.06), 0, 0.3 + j * 0.65, 0, COLORI.ferro)
-  for (let i = 0; i <= n; i++) c.metti('liscio', new OctahedronGeometry(0.06), -largo + i * (largo * 2 / n), 0.02, 0, COLORI.ferro, { s: [1, 2, 1] })
-  const perno = new Group()
-  for (const me of c.chiudi(kit.mobili, kit.ombraMobili)) perno.add(me)
-  perno.position.set(cx, y, cz); perno.rotation.y = ang
-  gruppo.add(perno)
-  return { q, perno, y0: y, x: cx, z: cz, y, k: -1, apri(k) { if (k !== this.k) { this.k = k; perno.position.y = y + k * 2.3 } } }
 }
 
 // ── la staccionata attorno ai campi: pali e due traverse ──
@@ -147,26 +114,3 @@ export function campoMinatore(mi, cant, m, cose) {
   for (const s of [0, 1]) cant.metti('stoffa', new SphereGeometry(0.22, 8, 6), -1.0 + s * 0.45, 0.18, -0.9, [0.75, 0.66, 0.5], { s: [1, 0.8, 1] })
 }
 
-// ── gli antri: le porte piccole fra un dungeon e l'altro (una tomba, una cantina, una grotta). Chiusi: si entra con la fase 7 ──
-export function antro(a, cant, m) {
-  const x = a.x + a.w / 2, z = a.y + a.h / 2, r = caso(a.x * 31 + a.y)
-  cant.base(x, quotaTerreno(m, x, z), z, 0)
-  if (a.forma === 'tomba') {
-    cant.metti('pietra', scatola(1.7, 0.9, 1.2, 1.2), 0, 0.45, -0.2, [0.62, 0.6, 0.58])
-    cant.metti('pietra', scatola(1.9, 0.18, 1.4, 1.2), 0, 0.95, -0.2, [0.55, 0.53, 0.52])
-    cant.metti('pietra', scatola(0.75, 0.78, 0.06, 1), 0, 0.4, 0.42, [0.42, 0.4, 0.4])
-    cant.metti('liscio', scatola(0.1, 0.4, 0.02), 0, 1.2, -0.2, [0.7, 0.68, 0.64])
-  } else if (a.forma === 'cantina') {
-    cant.metti('pietra', scatola(1.5, 0.22, 1.3, 1.2), 0, 0.1, 0, [0.6, 0.58, 0.55])
-    for (const s of [-1, 1]) cant.metti('legno', scatola(0.6, 0.06, 1.1, 0.8), s * 0.32, 0.32, 0, [0.55, 0.4, 0.28], { rz: s * 0.25 })
-    cant.metti('liscio', scatola(1.3, 0.05, 0.08), 0, 0.42, 0.2, COLORI.ferro)
-    cant.metti('liscio', scatola(1.3, 0.05, 0.08), 0, 0.42, -0.25, COLORI.ferro)
-  } else {
-    for (let i = 0; i < 7; i++) {
-      const t = Math.PI * i / 6
-      cant.metti('liscio', new DodecahedronGeometry(0.42 + r() * 0.2, 0), Math.cos(t) * 1.0, Math.sin(t) * 0.9, -0.3, [0.56 + r() * 0.06, 0.54, 0.5])
-    }
-    cant.metti('luce', new CircleGeometry(0.75, 14, 0, Math.PI), 0, 0, -0.25, [0.04, 0.03, 0.03])
-    for (let i = 0; i < 3; i++) cant.metti('legno', scatola(1.3, 0.16, 0.06), 0, 0.25 + i * 0.32, -0.12, [0.6, 0.46, 0.32], { rz: (i % 2 ? 0.1 : -0.12) })
-  }
-}

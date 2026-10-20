@@ -1,5 +1,5 @@
 // Una tela RGBA che si scrive in PNG senza browser né dipendenze (zlib è nel Node), con un carattere di 3×5 pixel per le
-// etichette. La usa `npm run pianta -- --mondo`; serve a chi vuole guardare una pianta con Read senza fare la build.
+// etichette. La usa `npm run pianta -- --percorso`; serve a chi vuole guardare una pianta con Read senza fare la build.
 import { writeFileSync } from 'node:fs'
 import { deflateSync } from 'node:zlib'
 

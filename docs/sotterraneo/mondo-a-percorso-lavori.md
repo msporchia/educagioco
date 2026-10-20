@@ -1,9 +1,11 @@
 # Il mondo a percorso: i lavori
 
 Come si costruisce [mondo-a-percorso.md](mondo-a-percorso.md): cosa cambia modulo per modulo, il salvataggio e la migrazione, quanto
-costa, e la spartizione in cinque compiti con file disgiunti. Il prototipo (`strumenti/sotterraneo-percorso/`, `npm run pianta --
---percorso`) è la forma da portare nel gioco, non il codice da copiare: il generatore vero tiene la quota, il decoro, i campi fuori
-dal villaggio e le misure di oggi.
+costa, e la spartizione in cinque compiti con file disgiunti. **I compiti A, B e D sono fatti** (20 ottobre): il generatore a blocchi
+`motore/mondo-percorso.js` e il suo contratto in [mondo-aperto-generatore.md](mondo-aperto-generatore.md), che vale sopra questa
+pagina dove le due non tornano (una città sola, 504×300, le funzioni di caricamento: le decisioni in
+[mondo-a-percorso.md](mondo-a-percorso.md#decisioni-del-20-ottobre)); il motore di sopra (B) in
+[mondo-sopra-contratto.md](mondo-sopra-contratto.md). Il prototipo è stato tolto.
 
 ## La mappa di impatto
 
@@ -70,9 +72,10 @@ e poi di E; `Mondo3d.vue` e `scena3d/mondo/indice.js` sono di D e poi di E.
 
 ### A. Il generatore (il contratto) — 2–3 giorni
 
-- **File suoi**: `dati/mondo-aperto.js`, `motore/mondo-aperto.js`, `strumenti/sotterraneo-pianta-mondo.mjs`,
-  `strumenti/sotterraneo-percorso/` (da togliere a lavoro fatto, con la sua riga in `sotterraneo-pianta.mjs`),
-  `test/unita/sotterraneo-mondo.test.mjs`, `docs/sotterraneo/mondo-aperto-generatore.md` (riscritto).
+- **Fatto** in `dati/mondo-aperto.js` (la seconda metà), il nuovo `motore/mondo-percorso.js`, `strumenti/sotterraneo-pianta-percorso.mjs`,
+  il nuovo `test/unita/sotterraneo-mondo-percorso.test.mjs`, `docs/sotterraneo/mondo-aperto-generatore.md` (riscritto). Il mondo
+  ad anelli (`motore/mondo-aperto.js`, la prima metà della scheda, `sotterraneo-pianta-mondo.mjs`, `unita/sotterraneo-mondo`) resta
+  finché B e D non migrano: lo toglie chi migra l'ultimo.
 - **Il contratto**: `generaMondoAperto(seme, { terra })` con `zone` (chiave, nome, fascia nella terra, `s0 s1`), `regioni` (i luoghi,
   con `zona`), `reg`, `zona` e `arco` per cella, `cintura`, `confini` (al posto di `passaggi`, senza grata), `citta` (villaggio dalla
   pianta, avamposti), `posti` (`pietra` con chiave `zona:<chiave>` o della città, `ingresso` ×14 con `zona` e `livello`, `terre` la
@@ -84,6 +87,9 @@ e poi di E; `Mondo3d.vue` e `scena3d/mondo/indice.js` sono di D e poi di E.
 
 ### B. Il motore di sopra — 2 giorni, dopo A
 
+- **Fatto** (20 ottobre): il contratto e la tabella vecchio → nuovo per la scena in [mondo-sopra-contratto.md](mondo-sopra-contratto.md);
+  i mostri per zona e le misure in [mondo-aperto-mostri.md](mondo-aperto-mostri.md); il travaso in [mondo-aperto-dati.md](mondo-aperto-dati.md).
+  Il motore di prima resta in `motore/mondo-sopra-anelli.js` finché la scena lo importa (lo cancella D, col mondo ad anelli).
 - **File suoi**: `motore/mondo-sopra.js`, `motore/aperta.js`, `dati/mondo-aperto-mostri.js`, `motore/taglie-bacheca.js`,
   `dati/missioni-modelli.js`, `motore/banco-mondo.js`, i loro test (`unita/sotterraneo-mondo-salva`, `-mondo-mostri`,
   `-quest-modelli`, `-citta`, `-mostri-sopra-scena`), `docs/sotterraneo/mondo-aperto-mostri.md`.
@@ -102,8 +108,19 @@ e poi di E; `Mondo3d.vue` e `scena3d/mondo/indice.js` sono di D e poi di E.
 - **Test**: lo stesso (eroe, chiave, rifatti) la stessa forma e lo stesso mazzo, un `rifatti` in più un'altra; uscire col portale,
   lasciar perdere o svenire non aumenta `rifatti`; la prima ripulitura delle sette dà le stelle e la storia, la seconda no; un
   dungeon nuovo non tocca `tappa` né le stelle; i sei boss con le difese e la figura; nessuna specie fuori dalla sua zona.
+- **Fatto** (20 ottobre 2026): [dungeon-che-si-rigenerano.md](dungeon-che-si-rigenerano.md) ha le regole, i tredici dungeon, i
+  numeri da tarare e il contratto. In breve: `semeDelDungeon`, `tappaDelMondo(chiave, { eroe, rifatti, terra, livello, storia })`,
+  `dungeonDellAvventura`, `ripulito`, `dopoLaDiscesa`, `tappaDellaSosta` in `motore/rigenera.js`; si salva
+  `mondo.dungeon[chiave] = { rifatti }` e, nella sosta, `dungeon: { chiave, rifatti, terra, storia? }` (la chiave in `tappa` per i
+  sei nuovi). `Gioco.vue` dà `dungeonDelMondo` (i tredici per chiave) a `Campagna.vue` come `dungeon`, scende con `avvia(chiave)` e
+  scrive il rifatti in `chiudi()`. Restano: a **D** passare `dungeon` da Campagna a `Mondo3d.vue`, i sei ingressi coi monumenti e le
+  icone, la sentinella nel 3D; a **B** tenere `mondo.dungeon` nel travaso e `cittaDelDungeon` dei sei; a **E** `terraOra()` in
+  `Gioco.vue` e `mondi[t].dungeon`; alla taratura le leve di `dati/dungeon-del-mondo.js`. Il 2D non cambia (`npm run taratura --
+  --presto` uguale).
 
 ### D. La scena — 3 giorni, dopo A (il villaggio e i monumenti anche prima)
+
+- **Fatto** (20 ottobre): [mondo-3d.md](mondo-3d.md) e [mondo-3d-oggetti.md](mondo-3d-oggetti.md); il mondo ad anelli cancellato.
 
 - **File suoi**: `scena3d/mondo/*` (`indice.js` compreso), `viste/Mondo3d.vue`, `viste/FumettoMondo.vue`, `strumenti/icone-mondo.mjs`
   e il generato `dati/icone-mondo.js`, `dati/terra.js` (`iconaDi`), i test `unita/sotterraneo-mondo-3d`, `-mondo-props`,

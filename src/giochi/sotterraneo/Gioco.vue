@@ -31,7 +31,8 @@ import { robaAttesa } from './motore/storia.js'
 import { puntiAbilita, caselleDella, gradoDi } from './motore/abilita.js'
 import { NODI, RAMI, preparabile } from './dati/abilita.js'
 import { zonaDi } from './dati/zone.js'
-import { notiziaDi, potenzaDi, livelloDellaZona, coloreDi, zoneConForza, zoneConSentita } from './motore/zone.js'
+import { notiziaDi, potenzaDi, livelloDellaZona, coloreDi, coloreDellaFascia, zoneConForza, zoneConSentita } from './motore/zone.js'
+import { dungeonDellAvventura, tappaDellaSosta, dopoLaDiscesa, CHIAVI_DEI_DUNGEON } from './motore/rigenera.js'
 import { forzaDi, forzaDelCorredo } from './motore/forza.js'
 import { pescaLeggendario } from './motore/bottino.js'
 import { quotaDi } from './dati/livelli.js'
@@ -312,7 +313,7 @@ let salendo = false
 // della pausa e riparte al tocco (docs/core/ripresa.md), quando non c'è stato un tocco su «torno giù» a chiederlo
 function riprendiDiscesa({ ferma = false } = {}) {
   const dato = qui.value.sosta
-  const t = dato ? zonaDi(dato.tappa, dato.potenza) : null
+  const t = dato ? tappaDellaSosta(dato) : null
   const c = t ? leggi(dato, t, roba.value, presePer(missioni.value, t.chiave || ''), crescita.value, qui.value.conti) : null
   if (!c) { scorda(); return }
   togli()   // il telefono posato sulla mappa lascia acceso il freno, o si ritroverebbe dietro un velo non chiesto
@@ -352,7 +353,7 @@ const forze = computed(() => {
   if (!dato || corsa.value || viaDi(dato) !== VIA_PORTALE) return forzeDelMondo.value
   const chiave = [dato, qui.value.roba, qui.value.missioni, qui.value.crescita, qui.value.mondo && qui.value.mondo.quest]   // i dati salvati, non le copie rilette
   if (forzeTenute.chiave && chiave.every((v, i) => v === forzeTenute.chiave[i])) return forzeTenute.valore
-  const t = zonaDi(dato.tappa, dato.potenza)
+  const t = tappaDellaSosta(dato)
   const valore = t ? forzeDi(dato, t, roba.value, presePer(missioni.value, t.chiave || ''), crescita.value) : null
   forzeTenute = { chiave, valore }
   return valore
@@ -390,10 +391,19 @@ const livelloOra = computed(() => livelloDella(crescita.value))
 // il livello di forza (motore/forza.js, docs/sotterraneo/forza.md): quanto vale l'eroe con la roba e le abilità di adesso. I
 // colori dei pallini si leggono da lì; le fasce, da quello più alto raggiunto (rilevato qui sotto, sulla terra di sopra)
 const forzaOra = computed(() => forzaDi(eroeQui(), roba.value, crescita.value))
-const notizia = computed(() => notiziaDi(qui.value, livelloOra.value, forzaOra.value))
+// nel 3D le zone non rinascono: ogni dungeon ha il livello della sua zona (motore/rigenera.js), e il minatore non ha la notizia
+const notizia = computed(() => (in3d ? null : notiziaDi(qui.value, livelloOra.value, forzaOra.value)))
+// Il dungeon del mondo a percorso (solo nel 3D, docs/sotterraneo/dungeon-che-si-rigenerano.md): la storia la prima volta delle sette,
+// se no la ripetuta della volta `rifatti` (mondo.dungeon). La terra è la prima finché non ci sono le terre dopo (compito E)
+const terraOra = () => 1
+const nelMondo = k => (in3d ? dungeonDellAvventura(qui.value, k, { eroe: eroeQui(), terra: terraOra() }) : null)
+const ripetuta = (d, extra) => ({ ...d.tappa, ...extra, livello: d.livello, colore: coloreDellaFascia(d.livello, forzaOra.value),
+                                   nuova: false, rifatti: d.rifatti, zona: d.zona })
 const tappe = computed(() => {
   const a = qui.value
   return CAMPAGNA.map((t, i) => {
+    const d = nelMondo(i)
+    if (d && !d.storia) return ripetuta(d, { indice: i, aperta: aperta(CHIAVE, i, a.tappa), adesso: adesso(CHIAVE, i, a.tappa), stelle: a.stelle[i] || 0, fatta: i < a.tappa })
     const potenza = potenzaDi(a, i, livelloOra.value, forzaOra.value)
     const livello = livelloDellaZona(a, i, livelloOra.value, forzaOra.value)
     return {
@@ -404,9 +414,18 @@ const tappe = computed(() => {
       fatta: i < a.tappa,
       livello, colore: coloreDi(a, i, livelloOra.value, forzaOra.value),
       nuova: !!notizia.value && !notizia.value.sentita && notizia.value.indice === i,
+      ...(d ? { rifatti: d.rifatti, zona: d.zona } : {}),
     }
   })
 })
+// I tredici dungeon del mondo, per chiave (i sette come in `tappe`, i sei nuovi senza indice, aperti da subito): li legge il mondo di
+// sopra (viste/Campagna.vue → Mondo3d.vue), e un tocco su uno di loro scende con la sua chiave (`avvia`). Null nel 2D
+const dungeonDelMondo = computed(() => (in3d
+  ? CHIAVI_DEI_DUNGEON.map(k => {
+    const i = CAMPAGNA.findIndex(t => t.chiave === k)
+    return i >= 0 ? tappe.value[i] : ripetuta(nelMondo(k), { indice: null, aperta: true, adesso: false, stelle: 0, fatta: false })
+  })
+  : null))
 // quello che racconta il minatore della zona appena nata; sentito, il segno sopra la sua testa si spegne
 const annuncio = computed(() => (notizia.value
   ? { chiave: notizia.value.chiave, nome: notizia.value.nome, livello: notizia.value.da,
@@ -1269,9 +1288,12 @@ function brancoDaProva(c) {
 }
 
 function avvia(i, { prova = false } = {}) {
+  // un dungeon del mondo si chiede anche per chiave (i sei nuovi non hanno indice): una delle sette torna il suo indice
+  if (typeof i === 'string') { const j = CAMPAGNA.findIndex(t => t.chiave === i); if (j >= 0) i = j }
+  const z = typeof i === 'string' ? (dungeonDelMondo.value || []).find(d => d.chiave === i) : tappe.value[i]
+  if (typeof i === 'string' && !z) return   // una chiave che non è un dungeon, o un nuovo nel 2D
   // una discesa rossa non si scende: la guardia sta davanti all'ingresso (viste/Terra.vue, docs/sotterraneo/zone.md).
   // `prova`: il cheat `#giu=` scende lo stesso, per guardarla
-  const z = tappe.value[i]
   if (!prova && z && z.colore === 'rosso') return
   togli()          // vedi `riprendiDiscesa`: si scende, non si scende in pausa
   scorda()
@@ -1283,10 +1305,11 @@ function avvia(i, { prova = false } = {}) {
   domanda.value = null
   chiudiLaBarra()
   // la discesa com'è adesso: finita la storia la zona con la sua fascia, prima quella della storia
-  let t = i === INDICE_ABISSO ? L_ABISSO : zonaDi(i, potenzaDi(qui.value, i, livelloOra.value, forzaOra.value))
+  // nel 3D il dungeon del mondo, col suo seme fisso finché non lo si ripulisce (motore/rigenera.js)
+  let t = i === INDICE_ABISSO ? L_ABISSO : in3d ? nelMondo(i).tappa : zonaDi(i, potenzaDi(qui.value, i, livelloOra.value, forzaOra.value))
   // `#scenario=ghiaccio` (solo nel 3D, solo col cheat che scende): la discesa vestita da quel paesaggio (dati/paesaggi.js), per guardarlo
   if (prova && in3d) t = inPaesaggio(t, new URLSearchParams(location.hash.slice(1)).get('scenario'))
-  corsa.value = new Corsa(t, { seme: semeDallIndirizzo(), eroe: eroeQui(), roba: roba.value,
+  corsa.value = new Corsa(t, { seme: semeDallIndirizzo() ?? t.seme ?? null, eroe: eroeQui(), roba: roba.value,
                                crescita: crescita.value, missioni: presePer(missioni.value, t.chiave), conti: qui.value.conti })
   corsa.value.botti = in3d   // le botti da rompere sono solo del 3D (motore/botti.js)
   corsa.value.pergameneTrovabili = dopoLaMissione(COSE['pergamena-portale'].dopo, missioni.value)   // si trova solo dopo la missione dell'incantatrice
@@ -1715,6 +1738,9 @@ function chiudi({ senzaCartello = false } = {}) {
   nellAvventura({ roba: c.roba, crescita: c.crescita, botteghe: alGiroNuovo(qui.value.botteghe), ...fatteGiu(c), ...conITrovati(c) })
   const e = c.esito
   const stelle = stelleDella(e)
+  // un dungeon del mondo ripulito (battuto il grosso, uscendo dalla scala in fondo) rientrando è un altro: un rifatti in più
+  const dopo = dopoLaDiscesa(qui.value.mondo, c.tappa, { ...e, grossoBattuto: !c.livello.robe.some(r => r.che === 'mostro' && r.grosso && !r.morto) })
+  if (in3d && dopo.mondo) nellAvventura({ mondo: dopo.mondo })
   // l'abisso non si butta (finisce la sera, non la discesa): si scrive il punto da cui si rientra
   const eraIlFondo = fondoDellAbisso.value   // il record DI PRIMA: segnaIlFondo lo sposta subito dopo
   if (nellAbisso.value) {
@@ -1995,6 +2021,7 @@ function scesaDaProva() {
   if (g == null || corsa.value) return
   const i = g === 'abisso' ? INDICE_ABISSO : Number(g)
   if (i === INDICE_ABISSO || (Number.isInteger(i) && i >= 0 && i < CAMPAGNA.length)) avvia(i, { prova: true })
+  else if (in3d && CHIAVI_DEI_DUNGEON.includes(g)) avvia(g, { prova: true })   // `#sotterraneo3d=cerchio`: un dungeon del mondo per chiave
 }
 scesaDaProva()
 // `#bottega=armaiolo` (o `incantatrice`) apre subito quel banco (`&scheda=difese`), con l'eroe a `&livello=12` e `&roba=rara` (un raro per posto), `&roba=nuda`
@@ -2053,7 +2080,7 @@ function ridimensiona() { if (pittore) pittore.misura() }
         <!-- la chiave è l'eroe: cambiando avventura la terra di sopra rinasce con la nebbia e il posto suoi -->
         <Campagna ref="campagnaEl" :key="eroeQui()" :tappe="tappe" :ripresa="ripresa" :eroe="eroeScheda" :abisso="abisso"
                   :roba="robaSopra" :terra="qui.terra || null" @terra="ricordaTerra"
-                  :disegno="in3d ? '3d' : null" :mondo="qui.mondo || null" @mondo="ricordaMondo"
+                  :disegno="in3d ? '3d' : null" :mondo="qui.mondo || null" @mondo="ricordaMondo" :dungeon="dungeonDelMondo"
                   :veduta="vedutaSopra" @veduta="v => { vedutaSopra = v }" @risposta="rispostaSopra"
                   :punti="barra.punti" :punti-abilita="barra.puntiAbilita" @scheda="apriScheda"
                   :annuncio="annuncio" @sentito="annuncioSentito" :forze="forze" @cura="curaDa"
