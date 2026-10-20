@@ -15,6 +15,7 @@ export const PEZZI = {
   fontana:         { nome: 'Fontana',         emoji: '⛲', w: 2, d: 2, prezzo: 30, rincaro: 0, liv: 8 },
   pozzo:           { nome: 'Pozzo',           emoji: '🪣', w: 1, d: 1, prezzo: 18, rincaro: 0, liv: 9 },
   spaventapasseri: { nome: 'Spaventapasseri', emoji: '🧑‍🌾', w: 1, d: 1, prezzo: 12, rincaro: 0, liv: 13 },
+  trattore:        { nome: 'Trattore',        emoji: '🚜', w: 2, d: 2, prezzo: 40, rincaro: 0, liv: 7 },     // si tocca e porta ai vicini (docs/fattoria3d/vicini.md)
 }
 export const TIPI_DI_PEZZO = Object.keys(PEZZI)
 

@@ -10,9 +10,10 @@ import { guastiDelleColture, COLTURE } from '../../src/giochi/fattoria3d/dati/co
 import { guastiDelleRicette, RICETTE, MACCHINE, FORNO_POSTI, emojiDi } from '../../src/giochi/fattoria3d/dati/ricette.js'
 import { guastiDeiLivelli, sogliaDi, livelloPer, roba, nomeDi, ULTIMO, costoDelLivello, livelloDellaRicetta } from '../../src/giochi/fattoria3d/dati/livelli.js'
 import { msDi } from '../../src/giochi/fattoria3d/dati/ordini.js'
-import { ANIMALI, PRODOTTI_ANIMALI, guastiDegliAnimali, postiAl, msDelProdotto } from '../../src/giochi/fattoria3d/dati/animali.js'
-import { guastiDelleRegole, COSTI, PECORE, MONGOLFIERA, LEGNA_PER_ALBERO } from '../../src/giochi/fattoria3d/dati/regole.js'
+import { ANIMALI, CORTILE, PRODOTTI_ANIMALI, guastiDegliAnimali, prezzoDellaBestia, msDelProdotto } from '../../src/giochi/fattoria3d/dati/animali.js'
+import { guastiDelleRegole, COSTI, PECORE, MONGOLFIERA } from '../../src/giochi/fattoria3d/dati/regole.js'
 import { generaAlberi, guastiDegliAlberi } from '../../src/giochi/fattoria3d/dati/alberi.js'
+import { generaOstacoli, guastiDegliOstacoli, PER_LOTTO } from '../../src/giochi/fattoria3d/dati/ostacoli.js'
 import { Fattoria3d } from '../../src/giochi/fattoria3d/motore/fattoria3d.js'
 import { statoIniziale, normalizza, bestieInForma, VERSIONE_STATO } from '../../src/giochi/fattoria3d/motore/stato.js'
 import manifesto from '../../src/giochi/fattoria3d/gioco.js'
@@ -20,10 +21,12 @@ import { guastiDellAlbo } from '../../src/giochi/albo.js'
 import { controlla, uguale, stessaLista, riassunto } from '../aiuto/verifica.mjs'
 
 /* un mondo con le monete e l'orologio in mano */
-function mondo({ monete = 1000, stato = null } = {}) {
+function mondo({ monete = 1000, stato = null, ostacoli = false } = {}) {
   const b = { monete }
   const t = { ora: 1_000_000 }
   const f = new Fattoria3d({ stato, borsa: { quante: () => b.monete, paga: n => { b.monete -= n; return true } }, ora: () => t.ora, rnd: () => 0.5 })
+  // i test dei pezzi mettono le cose dove dicono le coordinate: sassi e cespugli (sezione 6-bis) li si toglie, se non servono
+  if (!ostacoli) for (const o of f.ostacoli) if (!o.tolto) f._togliSenzaPagare(o)
   return { f, b, t }
 }
 // il campo di partenza e una cella libera e propria per un pezzo nuovo
@@ -36,10 +39,11 @@ const metti = (f, tipo) => f.mettiPezzo(tipo, ...postoPer(f, tipo))
 
 /* ══════════ 1. i dati ══════════ */
 const guasti = [...guastiDelMondo(), ...guastiDelCatalogo(), ...guastiDelleColture(), ...guastiDelleRicette(COLTURE, EDIFICI), ...guastiDeiLivelli(), ...guastiDegliAnimali(PEZZI),
-                ...guastiDelleRegole(), ...guastiDegliAlberi()]
+                ...guastiDelleRegole(), ...guastiDegliAlberi(), ...guastiDegliOstacoli()]
 controlla('i dati non hanno guasti', guasti.length === 0, guasti.join(' · '))
 stessaLista('quarantadue lotti, nove di partenza', [LOTTI.length, Object.keys(LOTTI_INIZIALI).length], [42, 9])
 controlla('gli alberi sono sempre gli stessi', JSON.stringify(generaAlberi()) === JSON.stringify(generaAlberi()))
+controlla('e i sassi e i cespugli pure', JSON.stringify(generaOstacoli()) === JSON.stringify(generaOstacoli()))
 controlla('il manifesto è in prova e senza tappe', manifesto.sperimentale === true && manifesto.tappe === 0 && manifesto.chiave === 'fattoria3d')
 const gA = guastiDellAlbo([manifesto])
 controlla('l\'albo del manifesto sta in piedi', gA.length === 0, gA.join(' · '))
@@ -116,15 +120,17 @@ controlla('l\'albo del manifesto sta in piedi', gA.length === 0, gA.join(' · ')
   uguale('quattro eventi di raccolto', f.prendiEventi().filter(e => e.tipo === 'raccolto').length, 4)
 }
 
-/* ══════════ 6. gli alberi: solo dentro il terreno proprio, e danno legna ══════════ */
+/* ══════════ 6. gli alberi: solo dentro il terreno proprio, costano monete e non danno legna ══════════ */
 {
-  const { f } = mondo()
+  const { f, b } = mondo()
   const mio = f.alberiNelTerreno()
   controlla('ce ne sono nel terreno di partenza', mio.length >= 3, String(mio.length))
   const a = mio[0]
   controlla('un albero in piedi blocca la cella', !f.libera(a.i, a.j))
+  const prima = b.monete
   const r = f.abbatti(a.n)
-  controlla('abbattuto: legna e cella libera', r.ok && r.legna === LEGNA_PER_ALBERO && f.s.legna === LEGNA_PER_ALBERO && f.libera(a.i, a.j))
+  controlla('abbattuto: costa COSTI.albero, niente legna, cella libera', r.ok && r.costo === COSTI.albero && prima - b.monete === COSTI.albero && !('legna' in f.s) && !('legna' in r) && f.libera(a.i, a.j))
+  controlla('conta come spesa (esperienza) e c\'è l\'evento', f.esperienza() === COSTI.albero && f.prendiEventi().some(e => e.tipo === 'albero'))
   uguale('due volte no', f.abbatti(a.n).motivo, 'gia-tagliato')
   const fuori = f.alberi.find(x => x.tagliabile && !f.cellaPropria(x.i, x.j))
   uguale('un albero in un lotto non tuo non si abbatte', f.abbatti(fuori.n).motivo, 'fuori-terreno')
@@ -133,6 +139,85 @@ controlla('l\'albo del manifesto sta in piedi', gA.length === 0, gA.join(' · ')
   const salvato = f.serializza()
   const g = mondo({ stato: salvato }).f
   controlla('l\'albero tagliato resta tagliato dopo il salvataggio', g.alberi[a.n].tagliato === true && g.libera(a.i, a.j))
+  // senza monete il colpo non parte e non cambia niente
+  const povero = mondo({ monete: COSTI.albero - 1 })
+  const b2 = povero.f.alberiNelTerreno()[0], es = povero.f.esperienza()
+  const no = povero.f.abbatti(b2.n)
+  controlla('senza monete rifiuta e dice quanto costa', !no.ok && no.motivo === 'poche-monete' && no.costo === COSTI.albero && !povero.f.alberi[b2.n].tagliato && povero.b.monete === COSTI.albero - 1 && povero.f.esperienza() === es)
+}
+
+/* ══════════ 6-bis. sassi e cespugli: pochi per lotto, restano dopo l'acquisto, si tolgono per 🪙 1 ══════════ */
+{
+  const tutti = generaOstacoli()
+  controlla('due-cinque per lotto (meno dove i posti riservati non lasciano spazio)', LOTTI.every(l => {
+    const n = tutti.filter(o => o.i >= l.i && o.i < l.i + l.w && o.j >= l.j && o.j < l.j + l.d).length
+    return n <= PER_LOTTO.max
+  }) && LOTTI.filter(l => tutti.filter(o => o.i >= l.i && o.i < l.i + l.w && o.j >= l.j && o.j < l.j + l.d).length >= PER_LOTTO.min).length >= LOTTI.length - 12)    // gli altri sono i lotti stretti fra edifici, strade e alberi
+  controlla('ci sono sia sassi sia cespugli', tutti.some(o => o.tipo === 'sasso') && tutti.some(o => o.tipo === 'cespuglio'))
+  const { f, b } = mondo({ ostacoli: true })
+  const nel = f.ostacoliNelTerreno(), fuoriTerreno = f.ostacoli.find(o => !f.cellaPropria(o.i, o.j))
+  controlla('anche nel terreno di partenza ce ne sono', nel.length >= 5, String(nel.length))
+  const o = nel[0]
+  controlla('uno in piedi blocca la cella e il pezzo', !f.libera(o.i, o.j) && f.puoMettere('aiuola', o.i, o.j).motivo === 'occupato' && f.disegnaStrada(o.i, o.j).motivo === 'occupato')
+  uguale('uno in un lotto non tuo non si tocca', f.togliOstacolo(fuoriTerreno.n).motivo, 'fuori-terreno')
+  const prima = b.monete
+  const r = f.togliOstacolo(o.n)
+  controlla('tolto: costa 🪙 1, la cella è libera e c\'è l\'evento', r.ok && r.costo === COSTI.ostacolo && prima - b.monete === COSTI.ostacolo && f.libera(o.i, o.j) && f.prendiEventi().some(e => e.tipo === 'sasso'))
+  uguale('due volte no', f.togliOstacolo(o.n).motivo, 'gia-tolto')
+  controlla('ora ci si può mettere un pezzo', f.puoMettere('aiuola', o.i, o.j).ok)
+  // l'acquisto di un lotto non li fa sparire
+  const dentroLotto = (l, x) => x.i >= l.i && x.i < l.i + 4 && x.j >= l.j && x.j < l.j + 4 && !x.tolto
+  const nord = LOTTI.find(l => !f.posseduto(l) && f.confina(l) && f.ostacoli.some(x => dentroLotto(l, x))), qui = f.ostacoli.filter(x => dentroLotto(nord, x))
+  f.compraLotto(nord.id)
+  controlla('comprare il lotto non li toglie: ci sono ancora e bloccano', qui.length >= 1 && qui.every(x => !x.tolto && !f.libera(x.i, x.j)))
+  // si salva l'id e si rilegge
+  const g = mondo({ stato: f.serializza(), ostacoli: true }).f
+  controlla('quello tolto resta tolto dopo il salvataggio, gli altri no', g.ostacoli[o.n].tolto === true && g.libera(o.i, o.j) && g.ostacoli.filter(x => x.tolto).length === 1)
+  // senza monete non si tocca
+  const p = mondo({ monete: 0, ostacoli: true }).f
+  const po = p.ostacoliNelTerreno()[0]
+  const no = p.togliOstacolo(po.n)
+  controlla('senza monete rifiuta e non cambia niente', !no.ok && no.motivo === 'poche-monete' && no.costo === COSTI.ostacolo && !p.ostacoli[po.n].tolto && !p.libera(po.i, po.j))
+  // un vecchio salvataggio con un pezzo e una strada dove ora c'è un sasso: il sasso se ne va da sé, gratis
+  const q = f.ostacoliNelTerreno()[0], saved = f.serializza()
+  saved.cose.push({ id: saved.prossimoId, tipo: 'aiuola', i: q.i, j: q.j }); saved.prossimoId++
+  const h = mondo({ stato: saved, ostacoli: true }).f
+  controlla('il pezzo salvato sopra un sasso vince: il sasso è tolto, senza pagare', h.ostacoli[q.n].tolto === true && h.s.ostacoli.includes(q.id) && h.cosaSu(q.i, q.j).tipo === 'aiuola')
+}
+
+/* ══════════ 6-ter. pagare al posizionamento: compra e metti in un gesto, senza conferma ══════════ */
+{
+  const { f, b } = mondo({ monete: 500 })
+  const [i, j] = postoPer(f, 'aiuola'), prezzo = f.prezzoPezzo('aiuola')
+  alLivello(f, 2)
+  const m0 = b.monete
+  const r = f.compraEMetti('aiuola', i, j)
+  controlla('compra e mette: il pezzo è sulla mappa, il magazzino vuoto, monete scalate', r.ok && r.costo === prezzo && m0 - b.monete === prezzo && f.cosaSu(i, j).tipo === 'aiuola' && f.nelMagazzino('aiuola') === 0)
+  controlla('conta come spesa e dà l\'evento «pezzo»', f.esperienza() >= prezzo && f.prendiEventi().some(e => e.tipo === 'pezzo' && e.pezzo === 'aiuola'))
+  // un posto non valido non perde niente
+  const m1 = b.monete
+  const no = f.compraEMetti('aiuola', i, j)
+  controlla('su un posto occupato rifiuta, non paga e non lascia pezzi nel magazzino', !no.ok && no.motivo === 'occupato' && b.monete === m1 && f.nelMagazzino('aiuola') === 0)
+  uguale('fuori terreno nemmeno', f.compraEMetti('aiuola', -13, -11).motivo, 'fuori-terreno')
+  // senza monete: rifiuta con il prezzo, il fantasma sarebbe rosso, e non cambia niente
+  const povero = mondo({ monete: 3 }); alLivello(povero.f, 2)
+  const [pi, pj] = postoPer(povero.f, 'aiuola')
+  const pp = povero.f.puoCompraEMettere('aiuola', pi, pj), n0 = povero.f.s.cose.length
+  controlla('puoCompraEMettere dice poche-monete col prezzo', !pp.ok && pp.motivo === 'poche-monete' && pp.costo === 6)
+  const pr = povero.f.compraEMetti('aiuola', pi, pj)
+  controlla('compraEMetti rifiuta e non cambia niente', !pr.ok && pr.motivo === 'poche-monete' && povero.b.monete === 3 && povero.f.s.cose.length === n0 && povero.f.esperienza() === sogliaDi(2))
+  // un pezzo non ancora arrivato col livello
+  uguale('un pezzo chiuso dal livello rifiuta', mondo({ monete: 500 }).f.compraEMetti('recinto', ...postoPer(mondo().f, 'recinto')).motivo, 'non-sbloccato')
+  // un pezzo già nel magazzino si mette gratis
+  const mg = mondo({ monete: 500 }); alLivello(mg.f, 2); mg.f.compraPezzo('aiuola')
+  const mm = mg.b.monete, [gi, gj] = postoPer(mg.f, 'aiuola')
+  const rg = mg.f.compraEMetti('aiuola', gi, gj)
+  controlla('dal magazzino si mette senza pagare di nuovo', rg.ok && rg.costo === 0 && mg.b.monete === mm && mg.f.nelMagazzino('aiuola') === 0)
+  // spostare e rimettere via costano ancora 1
+  const sp = mg.f.spostaPezzo(rg.cosa.id, ...postoPer(mg.f, 'campo').map((v, k) => v + (k ? 0 : 3)))
+  controlla('spostare costa ancora una monetina', sp.ok === false || sp.costo === COSTI.spostare)
+  const via = mg.f.mettiVia(rg.cosa.id)
+  controlla('e mettere via pure', via.ok && via.costo === COSTI.spostare && mg.f.nelMagazzino('aiuola') === 1)
 }
 
 /* ══════════ 7. le strade ══════════ */
@@ -157,29 +242,42 @@ controlla('l\'albo del manifesto sta in piedi', gA.length === 0, gA.join(' · ')
   f.compraPezzo('recinto'); const r = f.mettiPezzo('recinto', -1, 2)
   controlla('il recinto sta in un posto proprio e libero', r.ok, r.motivo)
   const id = r.cosa.id, rec = r.cosa
-  stessaLista('parte con un\'adulta e un agnello', rec.pecore.map(p => p.eta), ['adulta', 'agnello'])
+  stessaLista('parte con una sola pecora, adulta (nel prezzo)', rec.pecore.map(p => p.eta), ['adulta'])
+  stessaLista('il quadro: 1 su 4, la prossima costa quanto dicono i dati', [f.infoBestie(rec).n, f.infoBestie(rec).max, f.infoBestie(rec).prezzo], [1, PECORE.max, CORTILE.recinto.prezzoBestia])
+  uguale('con una sola adulta non c\'è da nutrire', f.provaCura(id).motivo, 'lana-ricresce')
+  // la seconda pecora si compra dentro il recinto, senza conferma né livelli: adulta, e conta come esperienza
+  const m0 = f.monete(), e0 = f.esperienza()
+  const c2 = f.compraBestia(id)
+  controlla('la seconda pecora costa il prezzo dei dati ed è adulta', c2.ok && c2.n === 2 && m0 - f.monete() === CORTILE.recinto.prezzoBestia && f.esperienza() - e0 === CORTILE.recinto.prezzoBestia && rec.pecore[1].eta === 'adulta')
+  stessaLista('e le bestie sono due, con il prezzo che sale', [rec.pecore.length, f.infoBestie(rec).prezzo], [2, CORTILE.recinto.prezzoBestia + CORTILE.recinto.rincaroBestia])
   uguale('senza raccolti non si nutre', f.provaCura(id).motivo, 'manca-raccolto')
   f.s.merci.grano = 5
-  uguale('c\'è da nutrire l\'agnello', f.provaCura(id).azione, 'nutri')
-  uguale('un pasto', f.nutri(id).evento, 'pasto')
-  uguale('un\'altra e cresce', f.nutri(id).evento, 'cresciuta')
-  stessaLista('ora sono due adulte', rec.pecore.map(p => p.eta), ['adulta', 'adulta'])
-  uguale('lana non ancora pronta', f.provaCura(id).azione, 'nutri')   // due adulte: si può far nascere
+  uguale('due adulte nutrite fanno nascere: c\'è da nutrire', f.provaCura(id).azione, 'nutri')
   uguale('un pasto per la nascita', f.nutri(id).evento, 'cuore')
   uguale('e nasce', f.nutri(id).evento, 'nata')
-  uguale('un agnello in più', rec.pecore.length, 3)
-  const grano = f.s.merci.grano
-  controlla('ogni pasto è costato un raccolto', grano === 5 - 4, String(grano))
+  stessaLista('un agnello in più', [rec.pecore.length, rec.pecore[2].eta], [3, 'agnello'])
+  uguale('un pasto all\'agnello', f.nutri(id).evento, 'pasto')
+  uguale('un altro e cresce', f.nutri(id).evento, 'cresciuta')
+  stessaLista('ora sono tre adulte', rec.pecore.map(p => p.eta), ['adulta', 'adulta', 'adulta'])
+  controlla('ogni pasto è costato un raccolto', f.s.merci.grano === 5 - 4, String(f.s.merci.grano))
   t.ora += PECORE.laneMs + 1
-  uguale('passato il tempo la lana è pronta (due adulte)', f.lanaPronta(rec).length, 2)
+  uguale('passato il tempo la lana è pronta (tre adulte)', f.lanaPronta(rec).length, 3)
   uguale('si tosa prima di nutrire', f.provaCura(id).azione, 'tosa')
   const tos = f.tosa(id)
-  controlla('tosate: due lane', tos.ok && tos.n === 2 && f.s.lana === 2)
+  controlla('tosate: tre lane', tos.ok && tos.n === 3 && f.s.lana === 3)
   uguale('subito dopo non c\'è più lana', f.lanaPronta(rec).length, 0)
-  // quattro pecore al massimo
+  // quattro pecore al massimo: la quarta si compra, la quinta no, e le nascite si fermano al tetto
+  controlla('la quarta si compra', f.compraBestia(id).ok && rec.pecore.length === PECORE.max)
+  uguale('la quinta no', f.compraBestia(id).motivo, 'pieno')
+  stessaLista('pieno: niente prezzo', [f.infoBestie(rec).pieno, f.infoBestie(rec).prezzo], [true, null])
   f.s.merci.grano = 20
   for (let k = 0; k < 10; k++) f.nutri(id)
   controlla('non più di quattro per recinto', rec.pecore.length <= PECORE.max, String(rec.pecore.length))
+  // senza monete la bestia non si compra, e il rifiuto dice quanto manca
+  const povero = mondo({ monete: 0 }).f
+  povero.s.cose.push({ id: 7, tipo: 'recinto', i: -1, j: 2, pecore: [{ eta: 'adulta', t0: 0 }], cibo: 0 })
+  stessaLista('senza monete: poche-monete e il costo', [povero.compraBestia(7).motivo, povero.compraBestia(7).costo], ['poche-monete', CORTILE.recinto.prezzoBestia])
+  uguale('una cosa che non tiene bestie non si compra', povero.compraBestia(campoDi(povero).id).motivo, 'sconosciuto')
 }
 
 /* ══════════ 9. la pasticceria: ingredienti, coda, un forno alla volta, anche a pagina chiusa ══════════ */
@@ -265,7 +363,7 @@ controlla('l\'albo del manifesto sta in piedi', gA.length === 0, gA.join(' · ')
   controlla('il salto aggiunge il costo della roba produttiva (mulino al 3 → il 4 costa 60 in più)', costoDelLivello(3) === EDIFICI.mulino.prezzo && sogliaDi(4) - sogliaDi(3) >= EDIFICI.mulino.prezzo)
   for (let l = 1; l <= ULTIMO + 2; l++) controlla(`livelloPer è l'inversa di sogliaDi (${l})`, livelloPer(sogliaDi(l)) === l && (l === 1 || livelloPer(sogliaDi(l) - 1) === l - 1))
   uguale('dopo l\'ultimo si continua a salire', livelloPer(sogliaDi(ULTIMO + 5)), ULTIMO + 5)
-  stessaLista('dopo l\'ultimo non si apre altro', Object.values(roba(ULTIMO + 1)).map(v => v.length), [0, 0, 0, 0])
+  stessaLista('dopo l\'ultimo non si apre altro', Object.values(roba(ULTIMO + 1)).map(v => v.length), [0, 0, 0, 0, 0])
   // roba: ogni cosa arriva una volta sola, al livello che dice
   const viste = new Set()
   for (let l = 1; l <= ULTIMO; l++) {
@@ -386,6 +484,11 @@ controlla('l\'albo del manifesto sta in piedi', gA.length === 0, gA.join(' · ')
   }
   const n = normalizza(JSON.parse(JSON.stringify(vecchio)))
   controlla('l\'esperienza manca: parte da zero', n.esperienza === 0 && n.v >= 2)
+  controlla('la legna di un salvataggio vecchio si ignora, senza errori, e gli ostacoli tolti ripartono vuoti', !('legna' in n) && n.v === VERSIONE_STATO && Array.isArray(n.ostacoli) && n.ostacoli.length === 0)
+  for (const rotto of [{ ostacoli: 'x' }, { ostacoli: [1.5, 'a', null, 7, 7] }, { ostacoli: {} }]) {
+    const x = normalizza(rotto)
+    controlla(`gli ostacoli rotti si rimettono in forma (${JSON.stringify(rotto)})`, Array.isArray(x.ostacoli) && x.ostacoli.every(Number.isInteger) && new Set(x.ostacoli).size === x.ostacoli.length)
+  }
   controlla('i posseduti ci sono tutti e i vecchi restano', Object.keys(EDIFICI).every(t => t in n.posseduti) && n.posseduti.pasticceria && n.posseduti.mongolfiera && !n.posseduti.mulino)
   stessaLista('la pasticceria è diventata una macchina, intera', [n.macchine.pasticceria.coda.length, n.macchine.pasticceria.pronti.pane, n.pasticceria === n.macchine.pasticceria], [1, 1, true])
   controlla('la mongolfiera è com\'era', n.mongolfiera.fine === 7000)
@@ -445,21 +548,18 @@ controlla('l\'albo del manifesto sta in piedi', gA.length === 0, gA.join(' · ')
   // tutto aspetta: un uovo pronto non scade e non si somma
   f.nutriBestie(p.id); t.ora += ANIMALI.pollaio.ms * 100
   stessaLista('passato un secolo l\'uovo è ancora uno solo', [f.bestiePronte(p).length, f.raccogliProdotti(p.id).n, f.s.prodotti.uova], [1, 1, 2])
-  // i posti: la seconda gallina chiede il livello, poi le monete
-  const x = f.compraBestia(p.id)
-  stessaLista('la seconda gallina si apre due livelli dopo il pollaio', [x.ok, x.motivo, x.liv], [false, 'non-sbloccato', 8])
-  alLivello(f, 8)
-  const m0 = f.monete()
-  controlla('al livello 8 si compra: costa e conta come esperienza', f.compraBestia(p.id).ok && m0 - f.monete() === ANIMALI.pollaio.prezzoBestia && p.bestie.length === 2)
-  uguale('la terza al 10', f.compraBestia(p.id).liv, 10)
-  alLivello(f, 10); f.compraBestia(p.id)
-  uguale('tre galline, il tetto', p.bestie.length, 3)
-  uguale('la quarta no', f.compraBestia(p.id).motivo, 'pieno')
+  // le altre galline si comprano dentro il pollaio, senza livelli: ognuna costa di più, fino alla capienza
+  uguale('la capienza è nei dati', ANIMALI.pollaio.posti, 6)
+  const prezzi = []
+  for (let k = 1; k < ANIMALI.pollaio.posti; k++) { const m0 = f.monete(), x = f.compraBestia(p.id); prezzi.push(x.ok ? m0 - f.monete() : x.motivo) }
+  stessaLista('cinque galline in più, ognuna più cara della precedente', prezzi, [1, 2, 3, 4, 5].map(n => prezzoDellaBestia('pollaio', n)))
+  controlla('i prezzi salgono di un passo fisso', prezzi.every((x, i) => !i || x - prezzi[i - 1] === ANIMALI.pollaio.rincaroBestia) && prezzi[0] === ANIMALI.pollaio.prezzoBestia)
+  stessaLista('sei galline, il tetto: la settima no', [p.bestie.length, f.compraBestia(p.id).motivo, f.infoBestie(p).pieno], [6, 'pieno', true])
   f.s.merci.grano = 10
-  uguale('tutte e tre affamate: si nutrono tutte', f.nutriBestie(p.id).n, 3)
-  stessaLista('e il grano scende di tre', [f.s.merci.grano, f.s.merci.mais], [7, 1])
+  uguale('tutte e sei affamate: si nutrono tutte', f.nutriBestie(p.id).n, 6)
+  stessaLista('e il grano scende di sei', [f.s.merci.grano, f.s.merci.mais], [4, 1])
   t.ora += ANIMALI.pollaio.ms
-  uguale('tre uova insieme', f.raccogliProdotti(p.id).n, 3)
+  uguale('sei uova insieme', f.raccogliProdotti(p.id).n, 6)
   f.s.merci.grano = 0; f.s.merci.mais = 1
   uguale('con un solo raccolto se ne nutre una', f.nutriBestie(p.id).n, 1)
 
@@ -473,9 +573,14 @@ controlla('l\'albo del manifesto sta in piedi', gA.length === 0, gA.join(' · ')
   g.s.merci.carota = 1
   uguale('mais e carota insieme sì', g.nutriBestie(s.id).n, 1)
   stessaLista('tolti entrambi', [g.s.merci.mais, g.s.merci.carota], [0, 0])
-  const gt = mondo({ monete: 5000 }); gt.f.s.esperienza = sogliaDi(9)
-  uguale('la stalla ha due posti, il secondo tre livelli dopo', [ANIMALI.stalla.posti, ANIMALI.stalla.livelliPosti[1]].join(), '2,3')
-  uguale('postiAl conta i posti aperti', [postiAl('stalla', 9, 9), postiAl('stalla', 9, 12), postiAl('pollaio', 6, 5), postiAl('pollaio', 6, 6), postiAl('pollaio', 6, 10)].join(), '1,2,0,1,3')
+  // la stalla tiene quattro mucche, si comprano subito (al livello del pezzo) e il prezzo sale
+  uguale('la stalla ha quattro posti', ANIMALI.stalla.posti, 4)
+  const mucche = []
+  for (let k = 1; k < ANIMALI.stalla.posti; k++) { const m0 = g.monete(), x = g.compraBestia(s.id); mucche.push(x.ok ? m0 - g.monete() : x.motivo) }
+  stessaLista('tre mucche in più al livello 9', mucche, [1, 2, 3].map(n => prezzoDellaBestia('stalla', n)))
+  stessaLista('quattro: la quinta no', [s.bestie.length, g.compraBestia(s.id).motivo], [4, 'pieno'])
+  uguale('il quadro della stalla', JSON.stringify(g.infoBestie(s)), JSON.stringify({ tipo: 'stalla', bestia: 'mucca', bestie: 'mucche', emoji: '🐄', n: 4, max: 4, pieno: true, prezzo: null }))
+  uguale('un campo non ha un quadro di bestie', g.infoBestie(campoDi(g)), null)
   // il latte in dispensa
   g.ora = () => 1_000_000 + ANIMALI.stalla.ms + 1
   const rl = g.raccogliProdotti(s.id)
@@ -504,21 +609,30 @@ controlla('l\'albo del manifesto sta in piedi', gA.length === 0, gA.join(' · ')
   controlla('il posto del caseificio è libero da alberi', guastiDegliAlberi().length === 0)
 }
 
-/* ══════════ 20. lo stato v4: le bestie si salvano, un v3 si legge senza perdere niente ══════════ */
+/* ══════════ 20. lo stato: le bestie si salvano, un v3 o un v4 si leggono senza perdere niente ══════════ */
 {
   const { f, t } = mondo({ monete: 5000 })
   alLivello(f, 9); f.compraPezzo('pollaio'); metti(f, 'pollaio')
   const p = f.s.cose.find(c => c.tipo === 'pollaio')
   f.s.merci.grano = 3; f.nutriBestie(p.id)
   const salvato = f.serializza()
-  uguale('la versione è 4', [salvato.v, VERSIONE_STATO].join(), '4,4')
+  uguale('lo stato salvato ha la versione dei dati', salvato.v, VERSIONE_STATO)
   const g = mondo({ stato: JSON.parse(JSON.stringify(salvato)) }).f
   stessaLista('le bestie tornano com\'erano, anche a pagina chiusa', g.s.cose.find(c => c.tipo === 'pollaio').bestie, p.bestie)
   controlla('e si rilegge uguale', JSON.stringify(g.serializza()) === JSON.stringify(salvato))
   // un v3 (senza bestie né caseificio) si apre, e una cosa con le bestie rotte si rimette in forma
   const v3 = JSON.parse(JSON.stringify(statoIniziale())); v3.v = 3; delete v3.macchine.caseificio; delete v3.posseduti.caseificio; v3.merci.grano = 7
   const n = normalizza(v3)
-  controlla('il v3 perde niente e ha il caseificio vuoto', n.merci.grano === 7 && n.macchine.caseificio.coda.length === 0 && n.posseduti.caseificio === false && n.v === 4)
+  controlla('il v3 perde niente e ha il caseificio vuoto', n.merci.grano === 7 && n.macchine.caseificio.coda.length === 0 && n.posseduti.caseificio === false && n.v === VERSIONE_STATO)
+  // un v4: il recinto con un'adulta e un agnello, tre galline, una mucca; niente si perde e niente si sposta
+  const v4 = JSON.parse(JSON.stringify(statoIniziale())); v4.v = 4
+  v4.cose.push({ id: 5, tipo: 'recinto', i: -1, j: 2, pecore: [{ eta: 'adulta', t0: 7 }, { eta: 'agnello', cibo: 1 }], cibo: 1 },
+    { id: 6, tipo: 'pollaio', i: 2, j: 6, bestie: [{ fine: null }, { fine: 123 }, { fine: null }] }, { id: 7, tipo: 'stalla', i: -6, j: 5, bestie: [{ fine: 55 }] })
+  const n4 = normalizza(JSON.parse(JSON.stringify(v4)))
+  stessaLista('il v4 si apre: pecore, galline e mucche come prima', [n4.v, n4.cose.find(c => c.id === 5).pecore.length, n4.cose.find(c => c.id === 5).cibo, n4.cose.find(c => c.id === 6).bestie.map(b => b.fine), n4.cose.find(c => c.id === 7).bestie[0].fine], [VERSIONE_STATO, 2, 1, [null, 123, null], 55])
+  const f4 = mondo({ stato: JSON.parse(JSON.stringify(v4)), monete: 500 }).f
+  stessaLista('e le bestie in più si comprano da subito (2 su 4, 3 su 6, 1 su 4)', [5, 6, 7].map(i => { const q = f4.infoBestie(f4.cosa(i)); return q.n + '/' + q.max }), ['2/4', '3/6', '1/4'])
+  controlla('e un salvataggio v4 si rilegge uguale', JSON.stringify(f4.serializza().cose.slice(1)) === JSON.stringify(n4.cose.slice(1)))
   for (const rotto of [undefined, null, [], 5, [{ fine: 'x' }], [{ fine: -1 }, null, {}, { fine: 9 }, { fine: 9 }, { fine: 9 }]]) {
     const b = bestieInForma('pollaio', rotto)
     controlla(`bestie rotte si rimettono in forma (${JSON.stringify(rotto)})`, b.length >= 1 && b.length <= ANIMALI.pollaio.posti && b.every(x => x.fine === null || Number.isFinite(x.fine)))

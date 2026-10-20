@@ -3,10 +3,10 @@
 // Le finestre (la scelta del seme, la pasticceria, le conferme) sono della vista: si chiamano da `ui`.
 import * as THREE from 'three'
 import { COLTURE } from '../dati/colture.js'
-import { MONGOLFIERA } from '../dati/regole.js'
+import { MONGOLFIERA, COSTI } from '../dati/regole.js'
 import { EDIFICI, PEZZI } from '../dati/catalogo.js'
 import { MACCHINE } from '../dati/ricette.js'
-import { ANIMALI, PRODOTTI_ANIMALI } from '../dati/animali.js'
+import { PRODOTTI_ANIMALI } from '../dati/animali.js'
 import { lottoPerId } from '../dati/mondo.js'
 import { dettoDi, dettoDiRifiuto } from './detti.js'
 
@@ -21,6 +21,7 @@ export class Azioni {
     const { eroe, pezzi, fx } = this.c
     if (eroe.az) return
     if (b.kind === 'albero') return this.abbatti(this.m.alberi[b.n])
+    if (b.kind === 'ostacolo') return this.togli(this.m.ostacoli[b.n])
     eroe.faccia(pezzi.centroDi(b))
     if (b.kind === 'edificio') return this.edificio(b.tipo)
     const cosa = this.m.cosa(b.id)
@@ -30,7 +31,8 @@ export class Azioni {
       case 'recinto': return this.cura(cosa)
       case 'pollaio': case 'stalla': return this.curaBestie(cosa)
       case 'bancarella': pezzi.salta(cosa.id); return this.c.ui.apriBanco()      // il foglio degli ordini
-      case 'fontana': pezzi.salta(cosa.id); fx.parla('Che bella!')
+      case 'fontana': pezzi.salta(cosa.id); fx.parla('Che bella!'); return
+      case 'trattore': pezzi.salta(cosa.id); return this.c.ui.apriMappa && this.c.ui.apriMappa()      // porta ai vicini (docs/fattoria3d/vicini.md)
     }
   }
 
@@ -93,9 +95,9 @@ export class Azioni {
     fx.parla(dettoDi(pr.motivo, { per: 'nutrirle', secondi: pr.secondi }))
   }
 
-  // ── il pollaio e la stalla: prima si raccoglie, poi si nutre; se non c'è altro, si dice perché (e si offre un'altra bestia) ──
+  // ── il pollaio e la stalla: prima si raccoglie, poi si nutre; se non c'è altro, si dice perché. Le bestie si comprano dal cartello ──
   curaBestie(c) {
-    const { eroe, fx, ui, pezzi } = this.c, p = this.centro(c), pr = this.m.provaCuraBestie(c.id), A = ANIMALI[c.tipo]
+    const { eroe, fx, ui, pezzi } = this.c, p = this.centro(c), pr = this.m.provaCuraBestie(c.id)
     if (pr.azione === 'raccogli') {
       return eroe.avvia('semina', 1.2, t => {
         if (t <= 0.5 || eroe.az.fatto.has('r')) return
@@ -115,35 +117,30 @@ export class Azioni {
         fx.volo('🍽️ ×' + r.n, p, 1.8); ui.cambio()
       })
     }
-    if (pr.motivo === 'lavora') return this.offriBestia(c, pr.secondi)
     fx.parla(dettoDi(pr.motivo, { per: 'nutrirle', secondi: pr.secondi, servono: pr.servono, mangia: pr.mangia }))
   }
-  /** Le bestie lavorano: la riga di cosa manca e, se c'è un posto, il tasto per comprarne un'altra (si chiude con «Chiudi»). */
-  offriBestia(c, secondi) {
-    const { fx, ui, pezzi, eroe } = this.c, m = this.m, A = ANIMALI[c.tipo], nome = A.emoji + ' ' + PEZZI[c.tipo].nome
-    const stato = `${c.bestie.length} su ${A.posti} ${A.bestie}. ${dettoDi('lavora', { secondi })}`
-    const fa = () => {
-      const r = m.compraBestia(c.id)
-      if (!r.ok) return this.dici(dettoDiRifiuto(r, { mancano: A.prezzoBestia - m.monete() }))
-      pezzi.sincronizza(); fx.scoppietta(this.centro(c).setY(0.8), 0xffd24a, 16, 2.4, 3); eroe.avvia('esulta', 0.9); ui.cambio()
-    }
-    if (c.bestie.length >= A.posti) return fx.parla(dettoDi('pieno', { secondi, bestie: A.bestie }))
-    if (c.bestie.length >= m.postiBestie(c)) {
-      const r = m.compraBestia(c.id)                               // rifiuta con `non-sbloccato` e il livello del prossimo posto
-      return ui.chiedi(nome, `${stato} Un'altra: ${dettoDiRifiuto(r).toLowerCase()}.`, [{ t: 'Chiudi', quieto: true }])
-    }
-    ui.chiedi(nome, stato, [
-      { t: `+ ${A.bestia[0].toUpperCase() + A.bestia.slice(1)} ${A.emoji} · 🪙 ${A.prezzoBestia}`, fn: fa },
-      { t: 'Chiudi', quieto: true },
-    ])
+  /** Il pulsante «＋ 🪙 N» del cartello su un recinto, un pollaio o una stalla: compra una bestia subito, senza conferma (non
+      cammina fino all'edificio). Se mancano monete dice quante. */
+  compraBestia(id) {
+    const { fx, ui, pezzi, eroe, cmd } = this.c, m = this.m, c = m.cosa(id), q = c && m.infoBestie(c)
+    if (!q || cmd.costruendo || ui.fogliAperti()) return
+    const r = m.compraBestia(id)
+    if (!r.ok) return this.dici(dettoDiRifiuto(r, { mancano: (r.costo || 0) - m.monete(), bestie: q.bestie }))
+    const p = this.centro(c)
+    pezzi.sincronizza(); pezzi.salta(id)
+    fx.scoppietta(p.clone().setY(0.8), 0xffd24a, 16, 2.4, 3); fx.volo('+1 ' + q.emoji, p, 1.8)
+    if (!eroe.az) eroe.avvia('esulta', 0.9)
+    ui.cambio()
   }
 
   // ── gli alberi ──
+  /** Tagliare un albero costa monete (`COSTI.albero`) e non dà niente: libera la cella. Senza monete l'eroe lo dice e non alza l'ascia. */
   abbatti(a) {
     const { eroe, fx, ui, terreno } = this.c
     if (!a || eroe.az) return
     const p = this.m.puoAbbattere(a.n)
     if (!p.ok) return
+    if (this.m.monete() < COSTI.albero) return this.dici(dettoDi('poche-monete', { costo: COSTI.albero, per: 'tagliare un albero' }))
     eroe.faccia(new THREE.Vector3(a.i + 0.5, 0, a.j + 0.5))
     eroe.avvia('abbatti', 1.7, t => {
       if (t <= 0.62 || eroe.az.fatto.has('c')) return
@@ -151,7 +148,27 @@ export class Azioni {
       const r = this.m.abbatti(a.n)
       if (!r.ok) return
       terreno.togliAlbero(a.n); fx.cade(a, { x: eroe.x, z: eroe.z })
-      fx.volo('+' + r.legna + ' 🪵', new THREE.Vector3(a.i + 0.5, 0, a.j + 0.5), 1.8); ui.cambio()
+      fx.volo('−🪙 ' + r.costo, new THREE.Vector3(a.i + 0.5, 0, a.j + 0.5), 1.8); ui.cambio()
+    })
+  }
+
+  // ── i sassi e i cespugli: un gesto breve, 🪙 1, e la cella torna libera ──
+  togli(o) {
+    const { eroe, fx, ui, terreno } = this.c
+    if (!o || eroe.az) return
+    const p = this.m.puoTogliere(o.n)
+    if (!p.ok) return
+    if (this.m.monete() < COSTI.ostacolo) return this.dici(dettoDi('poche-monete', { costo: COSTI.ostacolo, per: o.tipo === 'sasso' ? 'togliere il sasso' : 'togliere il cespuglio' }))
+    const centro = new THREE.Vector3(o.i + 0.5, 0, o.j + 0.5)
+    eroe.faccia(centro)
+    eroe.avvia('semina', 0.9, t => {
+      if (t <= 0.5 || eroe.az.fatto.has('o')) return
+      eroe.az.fatto.add('o')
+      const r = this.m.togliOstacolo(o.n)
+      if (!r.ok) return fx.parla(dettoDiRifiuto(r, { costo: r.costo, per: 'togliere questo' }))
+      terreno.togliOstacolo(o.n); terreno.ridisegnaErba()
+      fx.scoppietta(centro.clone().setY(0.3), o.tipo === 'sasso' ? 0xb8b6ae : 0x5f9a3a, 10, 1.6, 2)
+      fx.volo('−🪙 ' + r.costo, centro, 1.2); ui.cambio()
     })
   }
 

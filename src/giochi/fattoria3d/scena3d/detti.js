@@ -3,10 +3,12 @@
 import { COLTURE } from '../dati/colture.js'
 import { emojiDi } from '../dati/ricette.js'
 
-/** `extra`: mancano (monete), per, secondi, liv (il livello a cui arriva), ingredienti ({ chiave: quanti }). */
+/** `extra`: costo (le monete che servono: «Servono 🪙 N»), mancano (monete), per, secondi, liv (il livello a cui arriva), ingredienti ({ chiave: quanti }). */
 export function dettoDi(motivo, extra = {}) {
   switch (motivo) {
-    case 'poche-monete': return `Ti mancano 🪙 ${extra.mancano}`
+    case 'poche-monete':
+      if (extra.costo && extra.per) return `Per ${extra.per} servono 🪙 ${extra.costo}`
+      return extra.costo ? `Servono 🪙 ${extra.costo}` : `Ti mancano 🪙 ${extra.mancano}`
     case 'manca-raccolto': {
       if (extra.mangia && extra.servono) {
         const cosa = extra.mangia.map(k => emojiDi(k, COLTURE)).join(' o ')

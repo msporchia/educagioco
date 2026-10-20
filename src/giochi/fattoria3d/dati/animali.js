@@ -1,8 +1,11 @@
 /* Gli animali da cortile: il pollaio (galline, uova) e la stalla (mucche, latte). Sono pezzi del catalogo come il recinto, ma
    più semplici delle pecore: una bestia nutrita ci mette un tempo e poi ha il suo prodotto, che aspetta finché non lo si
    raccoglie. I prodotti (`uova`, `latte`) stanno in `stato.prodotti` come quelli delle macchine ma non sono ricette: sono
-   ingredienti delle ricette. Il tempo e i posti sono da prova. Vedi docs/fattoria3d/animali.md. */
+   ingredienti delle ricette. Il tempo è da prova. Vedi docs/fattoria3d/animali.md.
+   Le bestie si comprano dentro l'edificio (recinto, pollaio, stalla allo stesso modo): una è nel prezzo del pezzo, le altre una
+   per volta, ognuna più cara della precedente, fino alla capienza (`posti`); il livello apre il pezzo, non i posti. */
 import { COLTURE } from './colture.js'
+import { PECORE } from './regole.js'
 
 export const ANIMALI = {
   pollaio: {
@@ -10,21 +13,34 @@ export const ANIMALI = {
     ms: 25000,                    // dal pasto all'uovo
     mangia: ['grano', 'mais'],    // cosa si dà da mangiare (dalla scorta più grande di queste)
     pasti: 1,                     // raccolti per pasto
-    posti: 3,                     // galline al massimo
-    livelliPosti: [0, 2, 4],      // a quanti livelli DOPO quello del pezzo si apre ogni posto: il primo è nel prezzo
-    prezzoBestia: 12,
+    posti: 6,                     // galline al massimo (la capienza del pollaio)
+    prezzoBestia: 15,             // la seconda gallina; ogni altra costa `rincaroBestia` in più della precedente
+    rincaroBestia: 8,
   },
   stalla: {
     bestia: 'mucca', bestie: 'mucche', emoji: '🐄', prodotto: 'latte', evento: 'latte',
     ms: 40000,
     mangia: ['mais', 'carota'],
     pasti: 2,
-    posti: 2,
-    livelliPosti: [0, 3],
+    posti: 4,
     prezzoBestia: 30,
+    rincaroBestia: 15,
   },
 }
 export const TIPI_DI_ANIMALI = Object.keys(ANIMALI)
+
+/** Tutti i pezzi che tengono bestie, con la stessa forma: il recinto (pecore, `PECORE.max` posti) e i due del cortile. */
+export const CORTILE = {
+  recinto: { bestia: 'pecora', bestie: 'pecore', emoji: '🐑', posti: PECORE.max, prezzoBestia: 20, rincaroBestia: 10 },
+  ...ANIMALI,
+}
+export const TIPI_DEL_CORTILE = Object.keys(CORTILE)
+
+/** Quanto costa la prossima bestia di un pezzo che ne ha già `n` (la prima è nel prezzo del pezzo); null se è pieno. */
+export function prezzoDellaBestia(tipo, n) {
+  const a = CORTILE[tipo]
+  return a && n >= 1 && n < a.posti ? a.prezzoBestia + a.rincaroBestia * (n - 1) : null
+}
 
 // I prodotti degli animali: l'id è la chiave di `stato.prodotti`; `dove` è il pezzo che li fa.
 export const PRODOTTI_ANIMALI = {
@@ -38,12 +54,6 @@ export function msDelProdotto(k) {
   return a ? a.ms + a.pasti * COLTURE[a.mangia[0]].ms : Infinity
 }
 
-/** Quanti posti sono aperti, dato il livello a cui il pollaio (o la stalla) si è comprato e quello di oggi. */
-export function postiAl(tipo, livelloDelPezzo, livello) {
-  const a = ANIMALI[tipo]
-  return a ? a.livelliPosti.filter(o => livelloDelPezzo + o <= livello).length : 0
-}
-
 export function guastiDegliAnimali(pezzi) {
   const g = []
   for (const [t, a] of Object.entries(ANIMALI)) {
@@ -52,8 +62,12 @@ export function guastiDegliAnimali(pezzi) {
     if (!(a.ms >= 1000)) g.push(`${t}: tempo sotto il secondo`)
     if (!(a.pasti >= 1)) g.push(`${t}: nessun pasto`)
     if (!a.mangia.length || a.mangia.some(k => !COLTURE[k])) g.push(`${t}: mangia qualcosa che non è un raccolto`)
-    if (a.livelliPosti.length !== a.posti || a.livelliPosti[0] !== 0 || a.livelliPosti.some((o, i) => i && o <= a.livelliPosti[i - 1])) g.push(`${t}: i livelli dei posti non tornano`)
-    if (!(a.prezzoBestia > 0)) g.push(`${t}: la bestia non costa`)
+  }
+  for (const [t, a] of Object.entries(CORTILE)) {
+    if (!(a.posti >= 2)) g.push(`${t}: la capienza non basta per comprare una bestia`)
+    if (!(a.prezzoBestia > 0) || !(a.rincaroBestia >= 0)) g.push(`${t}: il prezzo della bestia non torna`)
+  }
+  for (const [t, a] of Object.entries(ANIMALI)) {
     if (!PRODOTTI_ANIMALI[a.prodotto] || PRODOTTI_ANIMALI[a.prodotto].dove !== t) g.push(`${t}: il prodotto non torna`)
   }
   for (const [k, p] of Object.entries(PRODOTTI_ANIMALI)) {

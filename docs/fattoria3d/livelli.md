@@ -68,6 +68,9 @@ i dati veri, quindi un elenco non si scrive due volte e non si scosta.
  8 zucche, fontana, torte
 ```
 
+Il livello apre il **pezzo** (pollaio, stalla, recinto); le bestie in più dentro non hanno livello: si comprano a monete
+([animali.md](animali.md)), contano come esperienza ma non spostano la scaletta (la taratura conta solo i pezzi produttivi).
+
 Pollaio, stalla e caseificio stanno **nei buchi** della scaletta (6, 9, 11: livelli senza una cosa produttiva), così i
 livelli restano quindici e le soglie dopo il 6 salgono del loro prezzo (55, 90, 120). Il livello di `uova` e `latte` è
 quello del pezzo che li fa, e `livelloDellaRicetta` li conta fra gli ingredienti ([animali.md](animali.md)).
@@ -85,11 +88,13 @@ Un evento `livello` (`{ livello }`) esce a ogni salita, per la scena e i contato
 ## Gli alberi sui posti nuovi
 
 Gli alberi si generano come quando gli edifici erano due (i loro numeri sono chiavi di salvataggio); quelli che cadono sul
-posto di un edificio arrivato dopo nascono già `tagliato`, senza legna.
+posto di un edificio arrivato dopo nascono già `tagliato` (senza costo).
 
 ## A schermo
 
-Il gettone «⭐ N» con la barra sottile sta nel HUD e apre `viste/Livelli.vue`. Salendo compare un avviso («Livello N: nome») e un
+Il gettone «⭐ N» con la barra sottile sta nel HUD e apre `viste/Livelli.vue`: una **scala** col livello di adesso in cima
+(numero grande che batte, barra a strisce che scorre, la scatola già aperta con ciò che è arrivato), sotto il gradino
+successivo con la scatola ancora chiusa (lucchetto, grigio) e un gradino segreto. Salendo compare un avviso («Livello N: nome») e un
 pallino sul gettone finché non si apre il foglio. Ciò che non è arrivato resta visibile ma in grigio, con «Livello N»: le carte del
 costruire (non si trascinano), le colture nella scelta del seme, le ricette di una macchina, i fantasmi degli edifici. Toccarle dice
 il livello; un tasto grigio non è `disabled`, così il tocco ha una risposta.

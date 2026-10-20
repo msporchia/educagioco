@@ -42,7 +42,7 @@
 .f3-semi { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .f3-semi button { display: flex; flex-direction: column; align-items: center; gap: 2px; border: 2px solid #e6cfa0; background: #fffdf6; border-radius: 16px; padding: 10px 4px; color: #3a2a1a; touch-action: manipulation; }
 .f3-semi button.ultimo { border-color: #f0a020; background: #fff3cf; }
-.f3-semi button.bloccato, .f3-carte button.bloccata, .f3-ricette .ricetta.chiusa { opacity: .55; filter: grayscale(.8); }
+.f3-semi button.bloccato, .f3-carte button.bloccata { opacity: .55; filter: grayscale(.8); }
 .f3-semi .em { font-size: 32px; line-height: 1; } .f3-semi b { font-size: 14px; } .f3-semi small { font-size: 12px; color: #7a5a3a; }
 
 /* la barra del costruire */
@@ -63,21 +63,69 @@
 .f3-zonavia { position: absolute; left: 0; right: 0; bottom: 0; z-index: 26; height: calc(96px + env(safe-area-inset-bottom)); display: flex; align-items: center; justify-content: center; background: rgba(255,247,230,.96); border-radius: 22px 22px 0 0; box-shadow: 0 -4px 16px rgba(0,0,0,.25); font: 700 15px "Emoji Gioco", system-ui, sans-serif; color: #5a3a2a; text-align: center; padding: 0 20px env(safe-area-inset-bottom); }
 .f3-zonavia.bersaglio { background: #e6f7d8; outline: 4px dashed #5fae3a; outline-offset: -6px; }
 
-/* la pasticceria */
-.f3-forno { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-.f3-forno .posto { background: #fffdf6; border: 2px solid #e6cfa0; border-radius: 16px; padding: 8px 4px 6px; display: flex; flex-direction: column; align-items: center; gap: 2px; }
-.f3-forno .posto.vuoto { border-style: dashed; opacity: .7; } .f3-forno .em { font-size: 28px; line-height: 1.1; } .f3-forno small { font-size: 12px; color: #7a5a3a; }
-.f3-forno i { display: block; width: 80%; height: 6px; background: #eadfc6; border-radius: 3px; overflow: hidden; } .f3-forno u { display: block; height: 100%; background: #f0a020; }
-.f3-pronti { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; font-size: 14px; }
-.f3-pronti button { min-height: 44px; padding: 0 16px; border: 0; border-radius: 14px; background: #7ccf56; font: 800 15px "Emoji Gioco", system-ui, sans-serif; color: #123; touch-action: manipulation; }
-.f3-pronti button:disabled { background: #d8d2c4; color: #888; }
-.f3-ricette { display: flex; flex-direction: column; gap: 6px; }
-.f3-ricette .ricetta { display: flex; align-items: center; gap: 10px; background: #fffdf6; border: 2px solid #e6cfa0; border-radius: 16px; padding: 8px 10px; }
-.f3-ricette .em { font-size: 32px; } .f3-ricette .ricetta > div { flex: 1; display: flex; flex-direction: column; } .f3-ricette b { font-size: 15px; } .f3-ricette small { font-size: 12px; color: #7a5a3a; }
-.f3-ricette .manca { color: #c0392b; font-weight: 700; } .f3-ricette .ok { color: #2d7a2d; }
-.f3-ricette button { min-height: 46px; padding: 0 12px; border: 0; border-radius: 14px; background: #ffd36a; font: 800 14px "Emoji Gioco", system-ui, sans-serif; color: #3a2a1a; touch-action: manipulation; }
-.f3-ricette button.spenta { background: #e8e2d2; color: #999; }
-.f3-ricette .blocco { color: #8a6a3a; font-weight: 700; }
+/* i fogli di gioco (macchine, banco, livelli): l'insegna in cima col colore del posto, poi il corpo che scorre. Ogni foglio ha le sue
+   quattro tinte: --a e --b per l'insegna e le barre, --c per i fondi chiari, --d per i bordi, --t per il testo sull'insegna. */
+.f3-macchina, .f3-banco, .f3-livelli { --a: #e6b84a; --b: #a8741b; --c: #fbefd0; --d: #ecd9a8; --t: #fff; padding: 0; overflow: hidden; }
+.f3-macchina[data-macchina="mulino"]      { --a: #7fa9c4; --b: #4a6c82; --c: #e8f2f8; --d: #c3d8e6; }
+.f3-macchina[data-macchina="panificio"]   { --a: #dba23c; --b: #9a6513; --c: #fbefd0; --d: #ecd9a8; }
+.f3-macchina[data-macchina="conserviera"] { --a: #dd5a48; --b: #8f2a1f; --c: #fde4df; --d: #f2c4bc; }
+.f3-macchina[data-macchina="gelateria"]   { --a: #ec86ae; --b: #b24676; --c: #fde8f1; --d: #f4c6da; }
+.f3-macchina[data-macchina="caseificio"]  { --a: #f0cb40; --b: #b8921a; --c: #fff6cf; --d: #f0e09a; --t: #4a3a00; }
+.f3-macchina[data-macchina="pasticceria"] { --a: #dc55b0; --b: #8e1f6d; --c: #fbe0f1; --d: #f0bddf; }
+.f3-banco   { --a: #e8695a; --b: #b03a2e; --c: #fdeae6; --d: #f2cdc6; }
+.f3-livelli { --a: #ffc93a; --b: #e08a10; --c: #fff6d6; --d: #f2dfa0; --t: #4a3000; }
+.f3-insegna { position: relative; flex: none; display: grid; grid-template-columns: auto 1fr; grid-template-areas: "em t" "em s"; align-items: center; column-gap: 14px; padding: 26px 64px 14px 16px; margin-bottom: 8px; color: var(--t); background: linear-gradient(180deg, var(--a), var(--b)); border-radius: 22px 22px 0 0; box-shadow: 0 3px 8px rgba(0,0,0,.18); }
+.f3-insegna::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 13px; border-radius: 22px 22px 0 0; background: repeating-linear-gradient(90deg, rgba(255,255,255,.6) 0 20px, rgba(255,255,255,.12) 20px 40px); }
+.f3-insegna-em { grid-area: em; width: 74px; height: 74px; border-radius: 50%; display: grid; place-items: center; font-size: 42px; line-height: 1; background: #fffdf6; box-shadow: 0 3px 0 rgba(0,0,0,.22), inset 0 0 0 4px var(--c); animation: f3-ondeggia 3.2s ease-in-out infinite; }
+.f3-foglio .f3-insegna h2 { grid-area: t; margin: 0; font-size: 25px; line-height: 1.1; text-shadow: 0 2px 0 rgba(0,0,0,.22); }
+.f3-insegna small { grid-area: s; font-size: 14px; font-weight: 800; opacity: .92; }
+.f3-macchina .f3-corpo, .f3-banco .f3-corpo, .f3-livelli .f3-corpo { padding: 0 14px calc(16px + env(safe-area-inset-bottom)); }
+
+/* il gettone tondo di un ingrediente: verde se basta, rosso se manca (usato dalle schede e dal banco) */
+.f3-gt { position: relative; display: inline-flex; flex-direction: column; align-items: center; gap: 1px; }
+.f3-gt .e { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; font-size: 24px; line-height: 1; background: #fff; border: 3px solid #5fae3a; box-shadow: 0 2px 0 rgba(0,0,0,.14); }
+.f3-gt.manca .e { border-color: #e0604f; background: #fff1ee; }
+.f3-gt small { font-size: 12px; font-weight: 800; color: #2d7a2d; } .f3-gt.manca small { color: #c0392b; }
+.f3-gt.grande .e { width: 52px; height: 52px; font-size: 30px; }
+.f3-gt .x { position: absolute; right: -8px; top: -5px; min-width: 24px; height: 22px; padding: 0 5px; box-sizing: border-box; border-radius: 11px; background: #3a2a1a; color: #fff; font-size: 12px; line-height: 22px; text-align: center; }
+
+/* il forno: tre vani con la barra di cottura e il timer */
+.f3-forno { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.f3-forno .posto { display: flex; flex-direction: column; align-items: center; gap: 5px; animation: f3-compari .35s both; animation-delay: calc(var(--i, 0) * 70ms); }
+.f3-forno .vano { width: 100%; aspect-ratio: 1 / 1.02; display: grid; place-items: center; border-radius: 40px 40px 12px 12px; border: 4px solid var(--b); background: radial-gradient(circle at 50% 110%, #6a4430, #2f2018 75%); box-shadow: inset 0 0 14px rgba(0,0,0,.55); box-sizing: border-box; }
+.f3-forno .em { font-size: 34px; line-height: 1; }
+.f3-forno .posto.vuoto .vano { background: transparent; border: 3px dashed var(--a); box-shadow: none; opacity: .75; }
+.f3-forno .posto.vuoto .em { color: var(--b); font-size: 26px; font-weight: 800; }
+.f3-forno .posto.cuoce .vano { background: radial-gradient(circle at 50% 110%, #ffb04a, #8a3414 72%); animation: f3-brace 1.6s ease-in-out infinite; }
+.f3-forno .posto.cuoce .em { animation: f3-sobbalza 1.2s ease-in-out infinite; }
+.f3-forno i { display: block; width: 100%; height: 10px; border-radius: 5px; background: #eadfc6; overflow: hidden; box-shadow: inset 0 1px 2px rgba(0,0,0,.22); }
+.f3-forno u { display: block; height: 100%; border-radius: 5px; background: linear-gradient(90deg, var(--a), var(--b)); transition: width .4s linear; }
+.f3-forno small { font-size: 13px; font-weight: 800; color: var(--b); }
+.f3-pronti { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 12px; padding: 7px 7px 7px 14px; border-radius: 28px; background: var(--c); border: 2px dashed var(--a); font-size: 14px; font-weight: 700; }
+.f3-pronti.c { background: #eefad9; border: 2px solid #5fae3a; animation: f3-batti-lieve 1.4s ease-in-out infinite; }
+.f3-pronti button { flex: none; min-height: 48px; padding: 0 16px; border: 0; border-radius: 24px; background: linear-gradient(#8de060, #5fb83a); box-shadow: 0 3px 0 #3f8a22; font: 800 15px "Emoji Gioco", system-ui, sans-serif; color: #123; touch-action: manipulation; transition: transform .08s, box-shadow .08s; }
+.f3-pronti button:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 0 0 #3f8a22; }
+.f3-pronti button:disabled { background: #ddd6c6; box-shadow: 0 3px 0 #bdb5a2; color: #9a9283; }
+
+/* le ricette: schede con la foto del piatto, i gettoni e un tasto grande */
+.f3-ricette { display: flex; flex-direction: column; gap: 12px; }
+.f3-ricette .ricetta { display: grid; grid-template-columns: 72px 1fr; grid-template-areas: "foto dati" "tasto tasto"; gap: 8px 12px; align-items: center; padding: 10px; border-radius: 20px; background: #fffdf6; border: 2px solid var(--d); box-shadow: 0 3px 0 var(--d); animation: f3-compari .35s both; animation-delay: calc(var(--i, 0) * 45ms); }
+.f3-ricette .ricetta.pronta { border-color: #5fae3a; box-shadow: 0 3px 0 #9be07a; background: linear-gradient(#fffdf6, #f3fbe9); }
+.f3-ricette .foto { grid-area: foto; position: relative; width: 72px; height: 72px; display: grid; place-items: center; border-radius: 22px; background: radial-gradient(circle at 35% 30%, #fff, var(--c)); box-shadow: inset 0 0 0 3px var(--d); }
+.f3-ricette .foto .em { font-size: 42px; line-height: 1; }
+.f3-ricette .dati { grid-area: dati; display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.f3-ricette .dati b { font-size: 17px; }
+.f3-ricette .gettoni { display: flex; flex-wrap: wrap; gap: 6px; }
+.f3-ricette .tempo { font-size: 13px; font-weight: 700; color: #7a5a3a; }
+.f3-ricette .prepara { grid-area: tasto; min-height: 52px; border: 0; border-radius: 26px; background: linear-gradient(#ffe27a, #ffc533); box-shadow: 0 4px 0 #c98f0a; font: 800 17px "Emoji Gioco", system-ui, sans-serif; color: #3a2a1a; touch-action: manipulation; transition: transform .08s, box-shadow .08s; }
+.f3-ricette .prepara:active { transform: translateY(4px); box-shadow: 0 0 0 #c98f0a; }
+.f3-ricette .prepara.spenta { background: #e8e2d2; box-shadow: 0 4px 0 #cfc7b2; color: #9a9283; }
+.f3-ricette .ricetta.chiusa { border-style: dashed; box-shadow: none; background: repeating-linear-gradient(135deg, #f4eedc 0 10px, #ece4cc 10px 20px); }
+.f3-ricette .chiusa .foto .em { filter: grayscale(1) opacity(.45); }
+.f3-ricette .chiusa .gettoni { opacity: .5; }
+.f3-ricette .lucchetto { position: absolute; right: -6px; bottom: -6px; width: 32px; height: 32px; display: grid; place-items: center; border-radius: 50%; background: #fff; font-size: 18px; box-shadow: 0 2px 4px rgba(0,0,0,.28); }
+.f3-ricette .blocco { font-size: 13px; font-weight: 800; color: #8a6a3a; }
+.f3-ricette .manca { color: #c0392b; }
 
 /* le opzioni */
 .f3-opzioni { max-height: 78%; }
@@ -112,28 +160,74 @@
 .f3-volo { position: absolute; transform: translate(-50%, -100%); font: 800 20px "Emoji Gioco", system-ui, sans-serif; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,.6); animation: f3-sale 1.4s ease-out forwards; }
 @keyframes f3-sale { to { margin-top: -60px; opacity: 0; } }
 
-/* il foglio dei livelli */
-.f3-livelli .f3-nome { margin: 0 2px 8px; font-size: 15px; color: #7a5a3a; font-weight: 700; }
-.f3-barra-livello { height: 10px; border-radius: 5px; background: #eadfc6; overflow: hidden; margin: 0 2px; } .f3-barra-livello u { display: block; height: 100%; background: #f0a020; }
-.f3-roba { display: flex; flex-direction: column; gap: 6px; }
-.f3-roba > div { display: flex; align-items: center; gap: 10px; background: #fffdf6; border: 2px solid #e6cfa0; border-radius: 14px; padding: 6px 10px; }
-.f3-roba .em { font-size: 26px; } .f3-roba b { flex: 1; font-size: 15px; } .f3-roba small { font-size: 12px; color: #7a5a3a; }
-.f3-roba.chiusa > div { opacity: .55; filter: grayscale(.8); border-style: dashed; }
+/* il foglio dei livelli: una scala, il livello di adesso in cima con la scatola aperta e sotto quella ancora chiusa */
+.f3-scala { list-style: none; margin: 0; padding: 0; position: relative; display: flex; flex-direction: column; gap: 14px; }
+.f3-scala::before { content: ""; position: absolute; left: 25px; top: 28px; bottom: 28px; width: 6px; border-radius: 3px; background: repeating-linear-gradient(180deg, var(--a) 0 10px, transparent 10px 18px); opacity: .6; }
+.f3-scala .gradino { position: relative; display: grid; grid-template-columns: 56px 1fr; gap: 10px; align-items: start; animation: f3-compari .4s both; animation-delay: calc(var(--i, 0) * 90ms); }
+.f3-scala .numero { position: relative; z-index: 1; justify-self: center; width: 52px; height: 52px; display: grid; place-items: center; border-radius: 50%; font: 900 24px "Emoji Gioco", system-ui, sans-serif; color: var(--t); background: linear-gradient(var(--a), var(--b)); border: 4px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,.3); }
+.f3-scala .ora .numero { width: 56px; height: 56px; font-size: 28px; animation: f3-batti 1.8s ease-in-out infinite; }
+.f3-scala .dopo .numero, .f3-scala .lontano .numero { background: #cfc6b0; color: #fff; }
+.f3-scala .scheda { min-width: 0; padding: 10px 12px; border-radius: 20px; background: #fffdf6; border: 2px solid var(--d); box-shadow: 0 3px 0 var(--d); }
+.f3-scala .ora .scheda { border-color: var(--a); background: linear-gradient(#fffdf6, var(--c)); }
+.f3-scala .lontano { opacity: .5; } .f3-scala .lontano .scheda { border-style: dashed; box-shadow: none; }
+.f3-livelli .f3-nome { margin: 0 0 8px; font-size: 16px; color: #7a5a3a; font-weight: 800; }
+.f3-barra-livello { height: 14px; border-radius: 7px; background: #eadfc6; overflow: hidden; box-shadow: inset 0 1px 3px rgba(0,0,0,.2); }
+.f3-barra-livello u { display: block; height: 100%; border-radius: 7px; background: repeating-linear-gradient(135deg, var(--a) 0 10px, var(--b) 10px 20px); background-size: 28px 28px; animation: f3-scorri 1.2s linear infinite; transition: width .6s ease-out; }
+.f3-roba { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; }
+.f3-roba .dono { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 4px; text-align: center; border-radius: 16px; background: #fff; border: 2px solid var(--d); animation: f3-compari .35s both; animation-delay: calc(var(--i, 0) * 70ms); }
+.f3-roba .em { font-size: 34px; line-height: 1; } .f3-roba b { font-size: 13px; } .f3-roba small { font-size: 11px; color: #7a5a3a; font-weight: 700; }
+.f3-roba.chiusa .dono { background: #f1ebdc; border-style: dashed; }
+.f3-roba.chiusa .em { filter: grayscale(1) opacity(.5); }
+.f3-scala .regalo { display: inline-block; font-size: 20px; animation: f3-scuoti 2.4s ease-in-out infinite; transform-origin: 50% 80%; }
 
 /* il banco degli ordini */
 .f3-banco-tasto { position: relative; pointer-events: auto; min-height: 36px; border: 0; background: rgba(255,251,240,.92); color: #3a2a1a; font: 800 16px "Emoji Gioco", system-ui, sans-serif; padding: 5px 11px; border-radius: 16px; box-shadow: 0 2px 6px rgba(0,0,0,.18); touch-action: manipulation; }
 .f3-banco-tasto .f3-n { position: absolute; right: -4px; top: -6px; min-width: 20px; height: 20px; padding: 0 5px; box-sizing: border-box; border-radius: 10px; background: #e8472b; color: #fff; font: 800 12px/20px "Emoji Gioco", system-ui, sans-serif; font-style: normal; text-align: center; border: 2px solid #fff; }
-.f3-ordini { display: flex; flex-direction: column; gap: 8px; }
-.f3-ordini .ordine { background: #fffdf6; border: 2px solid #e6cfa0; border-radius: 16px; padding: 8px 10px; display: flex; flex-direction: column; gap: 6px; }
-.f3-ordini .ordine.pronto { border-color: #5fae3a; background: #f3fbe9; }
-.f3-ordini .ordine.attesa { flex-direction: row; align-items: center; gap: 10px; border-style: dashed; opacity: .75; }
+.f3-ordini { display: flex; flex-direction: column; gap: 12px; }
+.f3-ordini .ordine { display: flex; flex-direction: column; gap: 10px; padding: 10px; border-radius: 22px; background: #fffdf6; border: 2px solid var(--d); box-shadow: 0 3px 0 var(--d); animation: f3-compari .35s both; animation-delay: calc(var(--i, 0) * 80ms); }
+.f3-ordini .ordine.pronto { border-color: #5fae3a; background: linear-gradient(#fffdf6, #f3fbe9); box-shadow: 0 3px 0 #9be07a; }
+.f3-ordini .ordine.attesa { flex-direction: row; align-items: center; gap: 12px; border-style: dashed; box-shadow: none; opacity: .8; }
 .f3-ordini .ordine.attesa > div { display: flex; flex-direction: column; }
-.f3-ordini .em { font-size: 28px; line-height: 1.1; } .f3-ordini b { font-size: 15px; } .f3-ordini small { font-size: 12px; color: #7a5a3a; }
-.f3-ordini .cliente { display: flex; align-items: center; gap: 8px; } .f3-ordini .premio { margin-left: auto; font: 800 15px "Emoji Gioco", system-ui, sans-serif; background: #ffe27a; border-radius: 12px; padding: 3px 10px; }
-.f3-ordini .dischi { display: flex; flex-wrap: wrap; gap: 6px; }
-.f3-ordini .disco { display: flex; align-items: center; gap: 4px; background: #fff; border: 2px solid #e6cfa0; border-radius: 14px; padding: 3px 9px; }
-.f3-ordini .disco .em { font-size: 24px; } .f3-ordini .disco.ok small { color: #2d7a2d; font-weight: 700; } .f3-ordini .disco.manca { border-color: #e0a090; } .f3-ordini .disco.manca small { color: #c0392b; font-weight: 700; }
-.f3-ordini .tasti { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.f3-ordini .consegna { flex: 1; min-height: 46px; border: 0; border-radius: 14px; background: #7ccf56; font: 800 15px "Emoji Gioco", system-ui, sans-serif; color: #123; touch-action: manipulation; }
-.f3-ordini .consegna.spenta { background: #e8e2d2; color: #999; }
-.f3-ordini .cambia { min-height: 46px; min-width: 76px; border: 0; border-radius: 14px; background: #efe4cf; font: 700 13px "Emoji Gioco", system-ui, sans-serif; color: #5a3a2a; touch-action: manipulation; }
+.f3-ordini .sgabello { font-size: 38px; opacity: .6; }
+.f3-ordini b { font-size: 15px; } .f3-ordini small { font-size: 12px; color: #7a5a3a; font-weight: 700; }
+.f3-ordini .scena { display: flex; align-items: flex-start; gap: 14px; }
+.f3-ordini .ritratto { flex: none; width: 64px; height: 64px; display: grid; place-items: center; border-radius: 50%; border: 4px solid #fff; box-shadow: 0 0 0 3px var(--d), 0 3px 6px rgba(0,0,0,.2); }
+.f3-ordini .ritratto .em { font-size: 38px; line-height: 1; }
+.f3-ordini .t0 { background: #ffd9c2; } .f3-ordini .t1 { background: #cfe8ff; } .f3-ordini .t2 { background: #e1f5c9; } .f3-ordini .t3 { background: #f3d6ff; } .f3-ordini .t4 { background: #fff0b3; }
+.f3-ordini .fumetto { position: relative; flex: 1; min-width: 0; padding: 8px 10px 10px; border-radius: 18px; background: #fff; border: 2px solid var(--d); }
+.f3-ordini .fumetto::before { content: ""; position: absolute; left: -9px; top: 24px; width: 14px; height: 14px; background: #fff; border-left: 2px solid var(--d); border-bottom: 2px solid var(--d); transform: rotate(45deg); }
+.f3-ordini .cliente { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px; }
+.f3-ordini .premio { display: inline-flex; align-items: center; min-height: 28px; padding: 0 10px; border-radius: 14px; background: radial-gradient(#fff3a8, #ffd23a); box-shadow: 0 2px 0 #d9a40a; font: 800 15px "Emoji Gioco", system-ui, sans-serif; white-space: nowrap; transform: rotate(3deg); }
+.f3-ordini .dischi { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
+.f3-ordini .tasti { display: flex; align-items: center; gap: 8px; }
+.f3-ordini .consegna { flex: 1; min-height: 52px; border: 0; border-radius: 26px; background: linear-gradient(#8de060, #5fb83a); box-shadow: 0 4px 0 #3f8a22; font: 800 17px "Emoji Gioco", system-ui, sans-serif; color: #123; touch-action: manipulation; transition: transform .08s, box-shadow .08s; }
+.f3-ordini .consegna:active { transform: translateY(4px); box-shadow: 0 0 0 #3f8a22; }
+.f3-ordini .consegna.spenta { background: #e8e2d2; box-shadow: 0 4px 0 #cfc7b2; color: #9a9283; }
+.f3-ordini .cambia { min-height: 52px; min-width: 84px; border: 0; border-radius: 26px; background: #efe4cf; box-shadow: 0 4px 0 #d8c8a8; font: 700 14px "Emoji Gioco", system-ui, sans-serif; color: #5a3a2a; touch-action: manipulation; transition: transform .08s, box-shadow .08s; }
+.f3-ordini .cambia:active { transform: translateY(4px); box-shadow: 0 0 0 #d8c8a8; }
+
+/* il cartello su un recinto, un pollaio o una stalla (lo crea scena3d/effetti.js `nuovoCartello`): lo stato, il conto e il «＋ 🪙 N».
+   Solo il pulsante prende il dito: il resto lascia passare il tocco alla tela. */
+.f3-badge.f3-cartello { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 0; border-radius: 0; background: none; box-shadow: none; }
+.f3-cartello .stato { padding: 2px 9px; border-radius: 12px; background: rgba(255,251,240,.95); box-shadow: 0 2px 6px rgba(0,0,0,.22); font-weight: 800; }
+.f3-cartello .stato.pronto { background: #ffe27a; animation: f3-su .9s ease-in-out infinite; }
+.f3-cartello .stato[hidden] { display: none; }
+.f3-cartello .riga { display: flex; align-items: center; gap: 6px; padding: 3px 4px 3px 11px; border-radius: 26px; background: rgba(255,251,240,.96); box-shadow: 0 2px 8px rgba(0,0,0,.3); }
+.f3-cartello .riga.piena { padding-right: 11px; background: #e6f7d8; }
+.f3-cartello .conto { font-weight: 800; white-space: nowrap; }
+.f3-cartello .compra { pointer-events: auto; min-height: 44px; min-width: 84px; padding: 0 12px; border: 0; border-radius: 22px; background: linear-gradient(#8de060, #5fb83a); box-shadow: 0 3px 0 #3f8a22; font: 800 15px "Emoji Gioco", system-ui, sans-serif; color: #123; white-space: nowrap; touch-action: manipulation; transition: transform .08s, box-shadow .08s; }
+.f3-cartello .compra:active { transform: translateY(3px); box-shadow: 0 0 0 #3f8a22; }
+.f3-cartello .compra.spento { background: #e8e2d2; box-shadow: 0 3px 0 #cfc7b2; color: #8a8272; }
+.f3-cartello .compra[hidden] { display: none; }
+
+/* le animazioni lievi dei fogli: vanno col tempo (CSS), e chi le soffre le spegne dal telefono */
+@keyframes f3-compari { from { opacity: 0; transform: translateY(8px) scale(.96); } to { opacity: 1; transform: none; } }
+@keyframes f3-ondeggia { 50% { transform: rotate(-5deg) scale(1.05); } }
+@keyframes f3-batti { 50% { transform: scale(1.1); } }
+@keyframes f3-batti-lieve { 50% { box-shadow: 0 0 0 4px rgba(95,174,58,.28); } }
+@keyframes f3-brace { 50% { filter: brightness(1.25); } }
+@keyframes f3-sobbalza { 50% { transform: translateY(-3px); } }
+@keyframes f3-scorri { to { background-position: 28px 0; } }
+@keyframes f3-scuoti { 0%, 60%, 100% { transform: rotate(0); } 68% { transform: rotate(-12deg); } 76% { transform: rotate(10deg); } 84% { transform: rotate(-6deg); } }
+@keyframes f3-su { 50% { transform: translateY(-5px); } }
+@media (prefers-reduced-motion: reduce) { .f3-foglio *, .f3-cartello * { animation: none !important; transition: none !important; } }

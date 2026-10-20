@@ -1,7 +1,8 @@
 <script setup>
 // La barra del costruire: le carte dei pezzi (si trascinano fino alla mappa; di lato scorre la barra), gli strumenti per le strade,
-// la vista (vicino / tutto), il suggerimento con l'annulla e la ✕ in alto a destra. Qui si decide solo se un dito che sale è un
-// trascinamento: cosa farne lo dice chi la usa, con gli `emit`.
+// la vista (vicino / tutto), il suggerimento e la ✕ in alto a destra (un tocco sulla mappa lo chiude lo stesso). Qui si decide solo
+// se un dito che sale è un trascinamento: cosa farne lo dice chi la usa, con gli `emit`. Un pezzo non pagato si trascina uguale: lo
+// paga il rilascio, se il posto è buono.
 import { ref } from 'vue'
 
 const SCARTO_DITO = 16          // la soglia fra tocco e strisciata si misura sul dito (docs/core/il-dito.md)
@@ -11,15 +12,14 @@ const props = defineProps({
   strumento: { type: String, default: null },
   vista: { type: String, default: 'vicino' },
   testo: { type: String, default: '' },
-  conAnnulla: { type: Boolean, default: false },
   bersaglio: { type: Boolean, default: false },  // un pezzo trascinato che si può rimettere via, sopra la barra
 })
-const emit = defineEmits(['chiudi', 'vista', 'strumento', 'annulla', 'carta-tocco', 'compra', 'inizia', 'muovi', 'rilascia', 'annulla-trascinamento'])
+const emit = defineEmits(['chiudi', 'vista', 'strumento', 'carta-tocco', 'inizia', 'muovi', 'rilascia', 'annulla-trascinamento'])
 
 const radice = ref(null)
 defineExpose({ radice })
 
-/** Un dito su una carta: se sale è un trascinamento (prima la conferma d'acquisto se non è pagato), se scorre di lato è la barra. */
+/** Un dito su una carta: se sale è un trascinamento, se scorre di lato è la barra. */
 function giu(e, c) {
   const x0 = e.clientX, y0 = e.clientY, id = e.pointerId
   let iniziato = false, fatto = false
@@ -29,7 +29,6 @@ function giu(e, c) {
     const dx = ev.clientX - x0, dy = ev.clientY - y0
     if (!fatto && dy < -SCARTO_DITO && -dy > Math.abs(dx)) {
       fatto = true
-      if (!c.nel_magazzino) { smonta(); return emit('compra', c.id) }
       iniziato = true; emit('inizia', c.id, ev.clientX, ev.clientY)
     }
   }
@@ -66,7 +65,6 @@ function giu(e, c) {
     </div>
     <div class="f3-suggerimento">
       <span>{{ testo }}</span>
-      <button v-if="conAnnulla" data-f3="annulla" @click="$emit('annulla')">↶ Annulla</button>
     </div>
   </div>
 </template>

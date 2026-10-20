@@ -22,6 +22,8 @@
     "sprite:inutilizzati": "node strumenti/sprite/inutilizzati.mjs",
     "storie": "vite --open /strumenti/banco/storie.html",
     "ambienti": "vite --open /strumenti/banco/ambienti.html",
+    "catalogo3d": "vite --open /strumenti/banco/catalogo-3d.html",
+    "catalogo3d:scheda": "node strumenti/catalogo-3d-scheda.mjs",
     "pannelli": "vite --open /strumenti/banco/pannelli.html",
     "paesaggi": "node strumenti/tavola-paesaggi.mjs",
     "test": "node test/esegui.mjs unita",

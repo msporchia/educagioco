@@ -11,7 +11,10 @@ import { ordineInForma } from './ordini.js'
 // 2: l'esperienza, un `posseduti` per ogni edificio, le macchine per tipo (la pasticceria di prima è `macchine.pasticceria`)
 // 3: il banco degli ordini (`ordini`); un v2 si legge senza perdere niente, il banco si riempie da sé
 // 4: pollaio e stalla (`bestie` sulla cosa: [{ fine }], `fine` è quando il prodotto è pronto, null se ha fame); un v3 si legge uguale
-export const VERSIONE_STATO = 4
+// 5: le bestie si comprano dentro l'edificio (recinto 4 pecore, pollaio 6 galline, stalla 4 mucche), niente posti per livello: la
+//    forma dei dati non cambia, un v4 si legge uguale e ciò che si aveva resta (anche un recinto con più pecore di una)
+// 6: niente legna (il campo di un vecchio stato si ignora), e `ostacoli`: gli id (le celle) dei sassi e dei cespugli già tolti
+export const VERSIONE_STATO = 6
 
 const vuote = () => Object.fromEntries(CHIAVI_COLTURE.map(k => [k, 0]))
 
@@ -26,13 +29,14 @@ function conAlias(s) {
 export function statoIniziale() {
   return conAlias({
     v: VERSIONE_STATO,
-    merci: vuote(), prodotti: {}, lana: 0, legna: 0,
+    merci: vuote(), prodotti: {}, lana: 0,
     esperienza: 0,             // monete spese in questo gioco; non scende mai (dati/livelli.js ne ricava il livello)
     posseduti: Object.fromEntries(TIPI_DI_EDIFICIO.map(t => [t, false])),
     lotti: { ...LOTTI_INIZIALI },
     strade: [],                // le celle (indice di griglia) disegnate dal bambino
     magazzino: {},             // pezzi pagati e non ancora messi: { campo: 1 }
     tagliati: [],              // i numeri degli alberi abbattuti
+    ostacoli: [],              // gli id (le celle) dei sassi e dei cespugli tolti
     cose: [{ id: 1, tipo: PEZZO_DI_PARTENZA.tipo, i: PEZZO_DI_PARTENZA.i, j: PEZZO_DI_PARTENZA.j, tile: nuoveTessere() }],
     prossimoId: 2,
     macchine: Object.fromEntries(TIPI_DI_MACCHINA.map(t => [t, macchinaVuota()])),
@@ -60,7 +64,7 @@ export function normalizza(letto) {
   const s = base
   for (const k of CHIAVI_COLTURE) s.merci[k] = numero(oggetto(letto.merci)[k])
   for (const [k, n] of Object.entries(oggetto(letto.prodotti))) if (numero(n) > 0) s.prodotti[k] = numero(n)
-  s.lana = numero(letto.lana); s.legna = numero(letto.legna)
+  s.lana = numero(letto.lana)
   s.esperienza = numero(letto.esperienza)
   for (const t of TIPI_DI_EDIFICIO) s.posseduti[t] = !!oggetto(letto.posseduti)[t]
   const lotti = oggetto(letto.lotti)
@@ -68,6 +72,7 @@ export function normalizza(letto) {
   s.strade = Array.isArray(letto.strade) ? letto.strade.filter(Number.isInteger) : []
   for (const [k, n] of Object.entries(oggetto(letto.magazzino))) if (numero(n) > 0) s.magazzino[k] = numero(n)
   s.tagliati = Array.isArray(letto.tagliati) ? letto.tagliati.filter(Number.isInteger) : []
+  s.ostacoli = Array.isArray(letto.ostacoli) ? [...new Set(letto.ostacoli.filter(Number.isInteger))] : []
   if (Array.isArray(letto.cose)) {
     let id = 1
     s.cose = letto.cose.filter(c => c && typeof c.tipo === 'string' && Number.isInteger(c.i) && Number.isInteger(c.j)).map(c => {

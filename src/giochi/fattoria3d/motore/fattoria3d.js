@@ -8,9 +8,10 @@ import { PEZZI, EDIFICI } from '../dati/catalogo.js'
 import { COLTURE, TESSERE } from '../dati/colture.js'
 import { RICETTE, MACCHINE, TIPI_DI_MACCHINA } from '../dati/ricette.js'
 import { livelloPer, livelloDelPezzo, livelloDellaColtura, livelloDellaRicetta } from '../dati/livelli.js'
-import { COSTI, LEGNA_PER_ALBERO, PECORE, MONGOLFIERA } from '../dati/regole.js'
+import { COSTI, PECORE, MONGOLFIERA } from '../dati/regole.js'
 import { generaAlberi } from '../dati/alberi.js'
-import { ANIMALI, postiAl } from '../dati/animali.js'
+import { generaOstacoli } from '../dati/ostacoli.js'
+import { ANIMALI, CORTILE, prezzoDellaBestia } from '../dati/animali.js'
 import { normalizza, nuoveTessere } from './stato.js'
 import { percorso } from './percorso.js'
 import { POSTI, RIPOSO_MS, LIVELLO_BANCO, clienteDi } from '../dati/ordini.js'
@@ -27,12 +28,18 @@ export class Fattoria3d {
     this.strada = new Uint8Array(GW * GH)          // 0 niente, 1 disegnata, 2 di serie
     for (const k of stradeDiSerie()) this.strada[k] = 2
     for (const k of this.s.strade) if (!this.strada[k]) this.strada[k] = 1
-    this.bloccoFisso = new Uint8Array(GW * GH)     // fienile, casa e gli alberi in piedi
+    this.bloccoFisso = new Uint8Array(GW * GH)     // fienile, casa, gli alberi in piedi e i sassi e cespugli ancora lì
     for (const f of FISSI) for (let a = 0; a < f.w; a++) for (let b = 0; b < f.d; b++) this.bloccoFisso[idx(f.i + a, f.j + b)] = 1
     this.tagliati = new Set(this.s.tagliati)
     for (const a of this.alberi) {
       if (this.tagliati.has(a.n)) a.tagliato = true
       else if (!a.tagliato && dentro(a.i, a.j)) this.bloccoFisso[idx(a.i, a.j)] = 1
+    }
+    this.ostacoli = generaOstacoli()
+    this.tolti = new Set(this.s.ostacoli)
+    for (const o of this.ostacoli) {
+      if (this.tolti.has(o.id)) o.tolto = true
+      else this.bloccoFisso[o.id] = 1
     }
     this.cellaEdificio = new Uint8Array(GW * GH)   // i posti degli edifici unici, comprati o no
     for (const e of Object.values(EDIFICI)) for (let a = 0; a < e.w; a++) for (let b = 0; b < e.d; b++) this.cellaEdificio[idx(e.slot.i + a, e.slot.j + b)] = 1
@@ -43,6 +50,8 @@ export class Fattoria3d {
       if (ANIMALI[c.tipo] && !c.bestie) c.bestie = this.bestieIniziali()
       this._occupa(c, c.id)
     }
+    // un salvataggio di prima può avere un pezzo o una strada dove ora c'è un sasso: il sasso sparisce (gratis, e per sempre)
+    for (const o of this.ostacoli) if (!o.tolto && (this.cellaCosa[o.id] || this.strada[o.id])) this._togliSenzaPagare(o)
     this.tick()
   }
 
@@ -63,7 +72,7 @@ export class Fattoria3d {
     if (dopo > prima) this._evento('livello', { livello: dopo })
   }
   _rimborsa(n) { if (n > 0) this.borsa.paga(-n) }
-  _evento(tipo, extra = {}) { this.eventi.push({ tipo, ...extra }) }
+  _evento(tipo, extra = {}) { this.eventi.push({ ...extra, tipo }) }          // il `tipo` dell'evento vince su un campo omonimo (prima 'pezzo' diventava 'campo' e il contatore non saliva)
   prendiEventi() { const e = this.eventi; this.eventi = []; return e }
 
   // ── il livello ──
@@ -163,11 +172,34 @@ export class Fattoria3d {
     this.s.magazzino[tipo]--
     if (!this.s.magazzino[tipo]) delete this.s.magazzino[tipo]
     this.s.cose.push(c); this._occupa(c, c.id)
-    this._evento('pezzo', { tipo })
+    this._evento('pezzo', { pezzo: tipo })
     return { ok: true, cosa: c }
   }
+  /** Quanto costa mettere ora un pezzo di quel tipo: 0 se è già pagato (nel magazzino). */
+  costoDiMettere(tipo) { return this.nelMagazzino(tipo) > 0 ? 0 : this.prezzoPezzo(tipo) }
+  /** Si può pagare e mettere qui? Come `puoMettere`, più il livello e le monete: per il fantasma rosso. */
+  puoCompraEMettere(tipo, i, j) {
+    const p = this.puoMettere(tipo, i, j)
+    if (!p.ok) return p
+    const chiuso = this._chiusa(livelloDelPezzo(tipo))
+    if (chiuso) return chiuso
+    const costo = this.costoDiMettere(tipo)
+    if (costo > this.monete()) return { ok: false, motivo: 'poche-monete', costo }
+    return { ok: true, costo }
+  }
+  /** Compra (se non è già nel magazzino) e mette in un solo gesto. Se qualcosa non va non cambia niente e non si paga. */
+  compraEMetti(tipo, i, j) {
+    const p = this.puoCompraEMettere(tipo, i, j)
+    if (!p.ok) return p
+    if (!(this.nelMagazzino(tipo) > 0)) {
+      const c = this.compraPezzo(tipo)
+      if (!c.ok) return c
+    }
+    const r = this.mettiPezzo(tipo, i, j)
+    return r.ok ? { ...r, costo: p.costo } : r
+  }
   bestieIniziali() { return [{ fine: null }] }          // una gallina o una mucca sono nel prezzo, con fame
-  pecoreIniziali() { return [{ eta: 'adulta', t0: this.ora() }, { eta: 'agnello', cibo: 0 }] }
+  pecoreIniziali() { return [{ eta: 'adulta', t0: this.ora() }] }                // una pecora è nel prezzo del recinto, come una gallina nel pollaio
   spostaPezzo(id, i, j, { gratis = false } = {}) {
     const c = this.cosa(id)
     if (!c) return { ok: false, motivo: 'sconosciuto' }
@@ -218,7 +250,7 @@ export class Fattoria3d {
     if (lotti.length) return { ok: false, motivo: 'lotto-non-tuo', lotti, costo: e.prezzo }
     if (!this._spendi(e.prezzo)) return { ok: false, motivo: 'poche-monete', costo: e.prezzo }
     this.s.posseduti[tipo] = true
-    this._evento('pezzo', { tipo })
+    this._evento('pezzo', { pezzo: tipo })
     return { ok: true, costo: e.prezzo }
   }
 
@@ -273,17 +305,39 @@ export class Fattoria3d {
     if (!this.cellaPropria(a.i, a.j)) return { ok: false, motivo: 'fuori-terreno' }
     return { ok: true }
   }
+  /** Un colpo d'ascia costa `COSTI.albero`: senza monete rifiuta e non cambia niente. */
   abbatti(n) {
     const p = this.puoAbbattere(n)
     if (!p.ok) return p
+    if (!this._spendi(COSTI.albero)) return { ok: false, motivo: 'poche-monete', costo: COSTI.albero }
     const a = this.alberi[n]
     a.tagliato = true; this.tagliati.add(n); this.s.tagliati.push(n)
     this.bloccoFisso[idx(a.i, a.j)] = 0
-    this.s.legna += LEGNA_PER_ALBERO
     this._evento('albero')
-    return { ok: true, legna: LEGNA_PER_ALBERO }
+    return { ok: true, costo: COSTI.albero }
   }
   alberiNelTerreno() { return this.alberi.filter(a => a.tagliabile && !a.tagliato && this.cellaPropria(a.i, a.j)) }
+
+  // ── i sassi e i cespugli: pochi per lotto, restano anche dopo l'acquisto; si tolgono toccandoli, 🪙 1 l'uno ──
+  ostacoloSu(i, j) { const o = dentro(i, j) ? this.ostacoli.find(x => x.id === idx(i, j)) : null; return o && !o.tolto ? o : null }
+  puoTogliere(n) {
+    const o = this.ostacoli[n]
+    if (!o) return { ok: false, motivo: 'sconosciuto' }
+    if (o.tolto) return { ok: false, motivo: 'gia-tolto' }
+    if (!this.cellaPropria(o.i, o.j)) return { ok: false, motivo: 'fuori-terreno' }
+    return { ok: true }
+  }
+  togliOstacolo(n) {
+    const p = this.puoTogliere(n)
+    if (!p.ok) return p
+    if (!this._spendi(COSTI.ostacolo)) return { ok: false, motivo: 'poche-monete', costo: COSTI.ostacolo }
+    const o = this.ostacoli[n]
+    this._togliSenzaPagare(o)
+    this._evento('sasso')
+    return { ok: true, costo: COSTI.ostacolo, tipo: o.tipo }
+  }
+  _togliSenzaPagare(o) { o.tolto = true; this.tolti.add(o.id); if (!this.s.ostacoli.includes(o.id)) this.s.ostacoli.push(o.id); this.bloccoFisso[o.id] = 0 }
+  ostacoliNelTerreno() { return this.ostacoli.filter(o => !o.tolto && this.cellaPropria(o.i, o.j)) }
 
   // ── le pecore ──
   lanaPronta(c) { const t = this.ora(); return c.pecore.filter(p => p.eta === 'adulta' && t - p.t0 >= PECORE.laneMs) }
@@ -334,8 +388,6 @@ export class Fattoria3d {
   statoBestia(b) { return b.fine === null ? 'fame' : b.fine <= this.ora() ? 'pronta' : 'lavora' }
   bestiePronte(c) { return c.bestie.filter(b => this.statoBestia(b) === 'pronta') }
   bestieAffamate(c) { return c.bestie.filter(b => b.fine === null) }
-  /** Quanti posti sono aperti oggi (la prima bestia è nel prezzo; le altre si aprono coi livelli). */
-  postiBestie(c) { return postiAl(c.tipo, livelloDelPezzo(c.tipo), this.livello()) }
   /** Cosa c'è da mangiare per questa bestia: i raccolti che mangia, sommati. */
   scortaDaMangiare(tipo) { return ANIMALI[tipo].mangia.reduce((n, k) => n + this.s.merci[k], 0) }
   /** Toglie n raccolti fra quelli che mangia la bestia, dalla scorta più grande. */
@@ -382,16 +434,29 @@ export class Fattoria3d {
     this._evento(A.evento, { n: pronte.length })
     return { ok: true, n: pronte.length, prodotto: A.prodotto }
   }
-  /** Compra un'altra bestia per il pollaio o la stalla, se c'è un posto aperto dal livello. */
+  // ── le bestie, una sola API per recinto (pecore), pollaio (galline) e stalla (mucche): una è nel prezzo del pezzo, le altre si
+  //    comprano quando si vuole, ognuna più cara della precedente, fino alla capienza dell'edificio. Il livello apre il pezzo,
+  //    non i posti (docs/fattoria3d/animali.md) ──
+  /** Quante bestie ha un pezzo (0 se non ne tiene). */
+  numeroBestie(c) { return c.pecore ? c.pecore.length : c.bestie ? c.bestie.length : 0 }
+  /** Il quadro delle bestie di un pezzo: { tipo, bestia, bestie, emoji, n, max, pieno, prezzo (null se pieno) }, o null. */
+  infoBestie(c) {
+    const A = c && CORTILE[c.tipo]
+    if (!A || !(c.pecore || c.bestie)) return null
+    const n = this.numeroBestie(c)
+    return { tipo: c.tipo, bestia: A.bestia, bestie: A.bestie, emoji: A.emoji, n, max: A.posti, pieno: n >= A.posti, prezzo: prezzoDellaBestia(c.tipo, n) }
+  }
+  /** Compra un'altra bestia per il recinto, il pollaio o la stalla (senza conferma): { ok, costo, n } o un rifiuto
+      (`sconosciuto`, `pieno`, `poche-monete` con `costo`). Conta come esperienza. */
   compraBestia(id) {
-    const c = this.cosa(id)
-    if (!c || !c.bestie) return { ok: false, motivo: 'sconosciuto' }
-    const A = ANIMALI[c.tipo]
-    if (c.bestie.length >= A.posti) return { ok: false, motivo: 'pieno' }
-    if (c.bestie.length >= this.postiBestie(c)) return { ok: false, motivo: 'non-sbloccato', liv: livelloDelPezzo(c.tipo) + A.livelliPosti[c.bestie.length] }
-    if (!this._spendi(A.prezzoBestia)) return { ok: false, motivo: 'poche-monete', costo: A.prezzoBestia }
-    c.bestie.push({ fine: null })
-    return { ok: true, costo: A.prezzoBestia }
+    const c = this.cosa(id), q = c && this.infoBestie(c)
+    if (!q) return { ok: false, motivo: 'sconosciuto' }
+    if (q.pieno) return { ok: false, motivo: 'pieno' }
+    if (!this._spendi(q.prezzo)) return { ok: false, motivo: 'poche-monete', costo: q.prezzo }
+    if (c.pecore) c.pecore.push({ eta: 'adulta', t0: this.ora() })
+    else c.bestie.push({ fine: null })
+    this._evento('bestia', { tipo: c.tipo })
+    return { ok: true, costo: q.prezzo, n: q.n + 1 }
   }
   /** Quante uova o quanto latte aspettano in tutta la fattoria (per un cartello). */
   prodottiDelCortile() {

@@ -5,8 +5,9 @@ export const COSTI = {
   strada: 1,          // a pezzo
   lottoBase: 40,      // il primo lotto comprato
   lottoRincaro: 20,   // ogni lotto già comprato in più (oltre quelli di partenza)
+  albero: 3,          // un colpo d'ascia: tre monete (30 s di esercizio); la legna non c'è, il prato si libera e basta
+  ostacolo: 1,        // un sasso o un cespuglio tolto
 }
-export const LEGNA_PER_ALBERO = 2
 
 export const PECORE = {
   laneMs: 25000,      // quanto ci mette una pecora tosata a rifare la lana (un numero da prova)

@@ -1,6 +1,7 @@
 # Gli animali da cortile
 
 Seconda filiera della fattoria 3D, accanto alle pecore: il **pollaio** (galline → uova) e la **stalla** (mucche → latte).
+Le bestie di tutti e tre i pezzi (anche le pecore del recinto) si comprano allo stesso modo, dal cartello sopra l'edificio.
 I numeri sono in `dati/animali.js`, le regole in `motore/fattoria3d.js` (sezione «gli animali da cortile»), il disegno in
 `scena3d/modelli.js` (`creaPollaio`, `creaStalla`, `creaGallina`, `creaMucca`). Ispirati alle bestie della fattoria di
 sempre ([../fattoria/animali.md](../fattoria/animali.md)) ma più semplici delle pecore: niente nascite, niente fasi di crescita.
@@ -15,10 +16,13 @@ sempre ([../fattoria/animali.md](../fattoria/animali.md)) ma più semplici delle
 - **Il prodotto aspetta**: una bestia pronta non ne fa un altro, non lo perde, non marcisce; anche a pagina chiusa conta
   l'orologio (`fine` è un'ora assoluta). Si raccoglie col tocco: tutto il pronto del pezzo in un gesto, e va in
   `stato.prodotti` (`uova`, `latte`). Le bestie hanno di nuovo fame. **Niente muore.**
-- **Altre bestie si comprano coi livelli.** I posti si aprono a quanti livelli *dopo* quello del pezzo dice
-  `livelliPosti`: pollaio `[0, 2, 4]` (3 galline, al 6, 8, 10), stalla `[0, 3]` (2 mucche, al 9 e 12). Una bestia in più
-  costa 🪙12 (gallina) o 🪙30 (mucca), conta come esperienza; un posto non aperto rifiuta con `non-sbloccato` e il livello,
-  uno sopra il tetto con `pieno`.
+- **Altre bestie si comprano dentro l'edificio, quando si vuole.** Recinto, pollaio e stalla funzionano allo stesso modo
+  (`CORTILE` in `dati/animali.js`): una bestia nel prezzo del pezzo, le altre una per volta fino alla **capienza** (`posti`):
+  recinto 4 pecore, pollaio 6 galline, stalla 4 mucche. **Il livello apre il pezzo, non i posti.** Ogni bestia costa
+  più della precedente: `prezzoBestia + rincaroBestia · (n − 1)` con `n` le bestie già dentro (pecora 20, 30, 40;
+  gallina 15, 23, 31, 39, 47; mucca 30, 45, 60). Conta come esperienza. Pieno rifiuta con `pieno`, senza monete con
+  `poche-monete` e il `costo`. Una pecora comprata è **adulta** (la lana ricresce da quel momento); le nascite restano
+  ([regole.md](regole.md), «Le pecore»).
 - **Un pollaio o una stalla con le bestie non si mette via** (`ha-le-bestie`), si sposta, come il recinto.
 - Nutrire dà da mangiare **a tutte le bestie che hanno fame**, finché c'è da mangiare (una gallina per raccolto).
 
@@ -44,20 +48,29 @@ partenza): una macchina come le altre, tre posti nel forno. Il suo lotto è da c
 **Un ordine può chiedere una ricetta con le uova senza che si abbia il pollaio**: come per le altre macchine, è un ordine
 che si può rifiutare.
 
-## Lo stato (v4)
+## Lo stato (dal v4)
 
 Sulla cosa `pollaio`/`stalla`: `bestie: [{ fine }]`, `fine` è l'ora a cui il prodotto è pronto, o `null` se ha fame (stato
 `'fame'` / `'lavora'` / `'pronta'` in `statoBestia`). `bestieInForma` (in `motore/stato.js`) ne tiene da una a `posti`,
-mai un'eccezione; un v3 si apre uguale (il caseificio e i prodotti nuovi si riempiono da sé).
+mai un'eccezione; un v3 si apre uguale (il caseificio e i prodotti nuovi si riempiono da sé). Il v5 non cambia la forma:
+una stalla da 2 mucche o un pollaio da 3 galline del v4 restano com'erano e ora hanno posto per le altre.
 
 ## L'API del motore
 
 `provaCuraBestie(id)` (`{ azione: 'raccogli'|'nutri'|null, n, motivo }`: prima si raccoglie, poi si nutre, senza cambiare
-niente), `nutriBestie(id)`, `raccogliProdotti(id)` (`{ ok, n, prodotto }`), `compraBestia(id)`, `postiBestie(c)`,
-`bestiePronte(c)`, `prodottiDelCortile()`. Eventi: `uovo` e `latte` (`{ n }`), per i contatori.
+niente), `nutriBestie(id)`, `raccogliProdotti(id)` (`{ ok, n, prodotto }`), `prodottiDelCortile()`. Eventi: `uovo` e `latte`
+(`{ n }`), per i contatori; `bestia` (`{ tipo }`) a ogni acquisto, senza contatore.
+
+**Una sola API per tutte le specie** (recinto, pollaio, stalla): `numeroBestie(c)`, `infoBestie(c)` → `{ tipo, bestia, bestie,
+emoji, n, max, pieno, prezzo }` (`prezzo` è null se pieno; null l'intero risultato se la cosa non tiene bestie) e
+`compraBestia(id)` → `{ ok, costo, n }` o un rifiuto (`sconosciuto`, `pieno`, `poche-monete` + `costo`). `postiBestie` e
+`livelliPosti` non ci sono più.
 
 ## Il disegno
 
+- **Il modello mostra tante bestie quante ne hai** (`sincronizzaBestie`, `sincronizzaPecore`): la nuova compare nel posto
+  libero (`userData.posto(k)`) e si muove a modo suo. Posti: pollaio due file di tre galline sulla terra battuta, stalla
+  quattro mucche in fila davanti al fienile (le balle di fieno stanno ai lati), recinto le pecore a coppie.
 - **Pollaio**: casetta di legno su palafitte con scaletta e tetto rosso, terra battuta davanti, mangiatoia; le galline
   (bianche e brune a turno) razzolano e beccano di più se hanno fame; un uovo accanto alla gallina pronta.
 - **Stalla**: fienile rosso con tetto di legno e portone a croce, mangiatoia e balle; le mucche (bianche con chiazze,
@@ -65,20 +78,24 @@ niente), `nutriBestie(id)`, `raccogliProdotti(id)` (`{ ok, n, prodotto }`), `com
   alla pronta.
 - **Caseificio**: casetta bianca col tetto di tegole blu, forme di formaggio gialle su un bancale, la ruota ad acqua che
   gira piano.
-- Il cartello sul pollaio e sulla stalla (`pezzi.js`): «🥚 N pronti!», «⏳ Ns», «🐔 ha fame». Peso: pollaio ~47 mesh,
-  stalla ~57 (con le bestie al completo), caseificio ~32; geometrie delle bestie condivise, animazioni col tempo.
+- Il cartello sopra recinto, pollaio e stalla (`pezzi.js`, `Effetti.nuovoCartello`): in alto lo stato («🥚 N pronti!», «⏳ Ns»,
+  «🐔 ha fame», «🧶 pronta!» per le pecore), sotto il conto «🐄 2/4» e il pulsante «＋ 🪙 40». Peso: pollaio ~47 mesh
+  con una gallina (+~8 per ogni altra), stalla ~57 con le bestie al completo, caseificio ~32; geometrie delle bestie condivise, animazioni col tempo.
 
 ## Il collegamento alla scena
 
-- **Il tocco** (`scena3d/azioni.js`, `curaBestie`): se c'è un prodotto pronto si raccoglie (gesto di semina, testo che vola
-  «+2 🥚»), altrimenti si nutre («🍽️ ×N»). Se le bestie lavorano si apre il dialogo `offriBestia`: quante sono, quanto manca e
-  il tasto «+ Gallina 🐔 · 🪙 12» (`compraBestia`); con il posto non ancora aperto dice il livello, col tetto raggiunto parla
-  e basta. Senza raccolti dice cosa serve (`manca-raccolto` con `servono` e `mangia`). Si chiude con «Chiudi» (il dialogo
-  delle conferme non ha ✕).
+- **Il tocco sull'edificio** (`scena3d/azioni.js`, `curaBestie`): se c'è un prodotto pronto si raccoglie (gesto di semina, testo che
+  vola «+2 🥚»), altrimenti si nutre («🍽️ ×N»); se lavorano dice quanto manca; senza raccolti dice cosa serve
+  (`manca-raccolto` con `servono` e `mangia`). Niente più dialogo: comprare non passa di qui.
+- **Il pulsante «＋ 🪙 N» del cartello** (`azioni.compraBestia(id)`): compra subito, senza conferma e senza camminare fino
+  all'edificio; compare la bestia, scintille e «+1 🐄». Se mancano monete dice quante (`Ti mancano 🪙 N`) e il pulsante è
+  grigio (`aria-disabled`, ma risponde). Pieno, il pulsante sparisce e il conto diventa verde. Ignorato in Costruisci e con un
+  foglio aperto. Il cartello prende il dito solo col pulsante (`pointer-events`), il resto lascia passare il tocco alla tela.
 - **La vista** (`Gioco.vue`): uova e latte stanno in `prodotti` e nel HUD (`emojiDi`, non `RICETTE`); gli eventi `uovo` e
   `latte` muovono i contatori `fattoria3dUova` e `fattoria3dLatte`, che insieme fanno il traguardo `f3d-cortile`. Niente
   esperienza dai contatori.
 - I motivi `ha-le-bestie`, `lavora`, `pieno` e `manca-raccolto` per le bestie sono in `scena3d/detti.js`.
 
-Nei test: `unita/fattoria3d` (sezioni 18–20); `integrazione/fattoria3d` (sezione «gli animali da cortile»: nutrire, uova,
-bestia comprata dal dialogo `[data-scelta="0"]`, latte, contatori, `[data-f3="prodotti"]`).
+Nei test: `unita/fattoria3d` (sezioni 8 e 18–20); `integrazione/fattoria3d` (sezione «gli animali da cortile»: nutrire, uova,
+bestie comprate dal cartello — `[data-f3="cartello-bestie"]` con `data-n`/`data-max`, `[data-f3="compra-bestia"]` con
+`aria-disabled` —, latte, il recinto da una pecora a quattro, contatori, `[data-f3="prodotti"]`).
