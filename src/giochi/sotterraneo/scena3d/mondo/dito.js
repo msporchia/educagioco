@@ -15,6 +15,21 @@ export function rettangoloPersona(px, py, tx, ty, { largo = PERSONA.largo, alto 
   const cx = (px + tx) / 2, giu = py + 10
   return { x: cx - w / 2, y: giu - h, w, h }
 }
+// Le persone vicine a schermo (il villaggio visto intero, dove stanno a tre celle l'una dall'altra) avrebbero i rettangoli uno sopra
+// l'altro, e il tocco andrebbe a chi sta sopra nel DOM: due rettangoli che si toccano si dividono a metà fra i due piedi, così ognuno
+// prende il suo lato (più stretto dei 72 px, ma di nessun altro). `l`: [{ r, px }] col piede a schermo `px`; cambia i rettangoli
+export function spartisciPersone(l) {
+  const s = l.filter(q => q.r).sort((a, b) => a.px - b.px)
+  for (let i = 0; i < s.length; i++) for (let j = i + 1; j < s.length; j++) {
+    const a = s[i].r, b = s[j].r
+    if (b.x >= a.x + a.w) continue
+    if (b.y >= a.y + a.h || a.y >= b.y + b.h) continue
+    const m = (s[i].px + s[j].px) / 2
+    if (a.x + a.w > m) a.w = Math.max(8, m - a.x)
+    if (b.x < m) { b.w = Math.max(8, b.x + b.w - m); b.x = m }
+  }
+  return l
+}
 // il rettangolo di un posto: attorno ai punti dati (gli angoli del lotto a terra e la cima), con un margine
 export function rettangoloPosto(punti, margine = 8) {
   let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity

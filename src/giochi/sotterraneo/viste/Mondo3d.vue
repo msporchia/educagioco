@@ -21,7 +21,7 @@ import { iconaDi } from '../dati/terra.js'
 import { ilMondo, seguiLEroe, terraDelMondo, zonaDi, postiDi, cittaInCella, regioneInCella, zonaInCella, portaleDella, minatoreDi, ingressoDi,
          nomeDellaPietra, difDellaPietra, pietraAccanto, meteDelViaggio, mondoDaSalvato, mondoDaSalvare, lontanoDalleCitta,
          frecceDelCartello, dungeonDi, dungeonDellIndice, fontaneDi, curaDellaFontana, VISTA_MONDO, PASSO_MONDO } from '../motore/mondo-sopra.js'
-import { rettangoloPersona, rettangoloPosto, personaVicina, SCARTO_DITO } from '../scena3d/mondo/dito.js'
+import { rettangoloPersona, rettangoloPosto, personaVicina, spartisciPersone, SCARTO_DITO } from '../scena3d/mondo/dito.js'
 import { domandaPerGioco } from '../../../quiz/scelta.js'
 import Domanda from '../../../quiz/Domanda.vue'
 import Dialogo from './Dialogo.vue'
@@ -37,6 +37,7 @@ import { campoVersoLaMeta, celleDelVelo, luciDellaStrada, piuVicina, passiDetti,
 
 const props = defineProps({
   tappe: { type: Array, required: true },
+  dungeon: { type: Array, default: null },   // i tredici dungeon del mondo per chiave (Gioco.vue), coi sei nuovi senza indice
   abisso: { type: Object, default: null },
   eroe: { type: Object, required: true },
   mondo: { type: Object, default: null },     // { nebbia, dove, giro, pietre, parlato, divieti, novita } dell'avventura, o null la prima volta
@@ -86,7 +87,9 @@ let mostri = null, inScontro = false, attesaScontro = false, inCampo = null, fot
 const mostriVisti = ref([]), coseVisti = ref([])
 const elMostri = new Map(), elCose = new Map()
 
-const tappaDi = chiave => props.tappe.find(t => t.chiave === chiave) || null
+// la tappa di un ingresso: dai tredici dungeon del mondo (Gioco.vue, `dungeonDelMondo`: i sette come le tappe, i sei nuovi per
+// chiave, docs/sotterraneo/dungeon-che-si-rigenerano.md), o dalle tappe se quella lista non c'è
+const tappaDi = chiave => (props.dungeon && props.dungeon.find(t => t.chiave === chiave)) || props.tappe.find(t => t.chiave === chiave) || null
 // un ingresso (il bersaglio, `k` la chiave della discesa): il dungeon coi nomi nuovi, la sua tappa, se è aperto. I sei dungeon nuovi
 // (nessun indice) si aprono quando Gioco.vue ne dà la tappa (dati/dungeon-del-mondo.js, il compito C)
 const datoDelPosto = b => {
@@ -248,7 +251,7 @@ function passo(dt, t) {
   pensaDaFermo(dt)
   if (sporca && t - ultimoSalvato > 3) salva()
   const S = scena.S
-  S.io.x = io.x; S.io.z = io.z; S.io.verso = verso
+  S.io.x = io.x; S.io.z = io.z; S.io.verso = verso; S.inCammino = via.length > 0
   for (const q of persone) { q.pezzo = salutano.value.has(q.chiave) ? q.saluto : q.fermo; q.specchio = io.x < q.x - 0.2 }
 }
 // le celle nuove attorno all'eroe: si trova quello che ci sta, si annuncia la regione, si conta il giro delle città
@@ -488,7 +491,8 @@ const ctxBacheca = () => ({ m, eroe: props.eroe.chiave, giro: giro.value, tappe:
                             visto: (x, y) => nebbia[y * m.W + x] === 1 })
 const ctx = () => ({ stati: props.missioni, tappe: props.tappe, abisso: !!props.abisso, eroe: props.eroe.chiave,
                      roba: props.roba, annuncio: props.annuncio, novita: ascoltate.value, forze: props.forze, mondo: true })
-const livelloDi = t => (t && !t.fatta && props.roba ? dettoDelLivello(props.eroe.chiave, props.roba, t, t.indice) : null)
+// sotto il livello di una discesa della storia (i sei nuovi non hanno l'eroe atteso: lo dice il colore del pallino)
+const livelloDi = t => (t && !t.fatta && t.indice != null && t.indice >= 0 && props.roba ? dettoDelLivello(props.eroe.chiave, props.roba, t, t.indice) : null)
 function rigaStoria(t) {
   const s = storia.value, porta = t && s.porte.find(x => x.chiave === t.chiave)
   if (!porta || s.finita || !t.aperta) return null
@@ -811,6 +815,7 @@ function rettangoloDi(b) {
     if (!pt.davanti) return null
     const r = rettangoloPersona(pt.x, pt.y, pt2.x, pt2.y)
     r.testa = pt2.y - r.y   // dove sta la testa nel rettangolo: lì sopra il segno («!», «…»)
+    r.px = pt.x            // il piede a schermo: fra due persone vicine il confine sta a metà (spartisciPersone)
     return r
   }
   const l = b.lotto, y = scena.quota(l.x + l.w / 2, l.y + l.h / 2), punti = []
@@ -818,17 +823,25 @@ function rettangoloDi(b) {
   return rettangoloPosto(punti)
 }
 let prossimeBussole = 0
+const daPosare = []
 function dopo() {
   const veduta = props.veduta
+  daPosare.length = 0
   for (const b of bersagli.value) {
     const el = elementi.get(b.chiave)
     if (!el) continue
     const r = !inScontro && trovati.value.has(b.chiave) && (!veduta || b.ruolo === 'pietra') ? rettangoloDi(b) : null
+    daPosare.push({ el, r, px: r && b.tipo === 'persona' ? r.px : null })
+  }
+  // le persone vicine si dividono lo spazio fra i loro piedi (scena3d/mondo/dito.js)
+  spartisciPersone(daPosare.filter(q => q.px != null))
+  for (const { el, r, px } of daPosare) {
     const dentro = r && r.x + r.w > 0 && r.x < vL && r.y + r.h > sopra && r.y < vA - sotto
     mostraEl(el, dentro && !veduta)
     if (dentro) {
       posa(el, r)
       if (r.testa != null) { const t = Math.round(r.testa); if (el._t !== t) { el._t = t; el.style.setProperty('--testa', t + 'px') } }
+      if (px != null) { const c = Math.round(px - r.x); if (el._c !== c) { el._c = c; el.style.setProperty('--cx', c + 'px') } }
     }
   }
   posaMostri(veduta)
@@ -1142,7 +1155,7 @@ onBeforeUnmount(() => {
   }
 })
 // quello che cambia fuori (la storia, le missioni, la veduta, la roba): la scena lo legge al fotogramma dopo
-const firmaScena = computed(() => [props.veduta, props.roba && props.roba.mano, props.roba && props.roba.mancina, accese.value.size, divieti.value.size, trovati.value.size, JSON.stringify(props.tappe.map(t => t.colore))].join('|'))
+const firmaScena = computed(() => [props.veduta, props.roba && props.roba.mano, props.roba && props.roba.mancina, accese.value.size, divieti.value.size, trovati.value.size, JSON.stringify((props.dungeon || props.tappe).map(t => t.colore))].join('|'))
 watch(firmaScena, () => aggiornaScena())
 watch(() => props.veduta, v => { if (v) { chiudi(); chiudiDialogo() } })
 // un ritorno in città fa un giro nuovo: chi vive sopra rinasce (motore/aperta.js, nuovoGiro)

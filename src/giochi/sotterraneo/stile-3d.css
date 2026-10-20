@@ -83,9 +83,9 @@
 .sot3d-bersaglio.sot3d-posto { z-index: 2 }
 .sot3d-bersaglio.sot3d-cosa { z-index: 1 }
 .sot3d-bersaglio:focus-visible { outline: 2px solid var(--sot-oro) }
-/* il segno sopra la testa e il richiamo di chi cura: in cima al rettangolo, al centro */
-.sot3d-bersaglio > .sot-tre-punti { right: auto; left: 50%; top: calc(var(--testa, 30px) - 28px); translate: -50% 0 }
-.sot3d-bersaglio > .sot-richiamo { right: auto; left: 50%; bottom: auto; top: calc(var(--testa, 30px) - 46px); translate: -50% 0 }
+/* il segno sopra la testa e il richiamo di chi cura: in cima al rettangolo, sopra il piede (`--cx`: il rettangolo può essere tagliato da un lato) */
+.sot3d-bersaglio > .sot-tre-punti { right: auto; left: var(--cx, 50%); top: calc(var(--testa, 30px) - 28px); translate: -50% 0 }
+.sot3d-bersaglio > .sot-richiamo { right: auto; left: var(--cx, 50%); bottom: auto; top: calc(var(--testa, 30px) - 46px); translate: -50% 0 }
 .sot3d-segno-arrivo {
   position: absolute; left: 0; top: 0; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; z-index: 1;
   border: 2px solid #fffaf0; pointer-events: none; animation: sot-segno .5s ease-out forwards;
