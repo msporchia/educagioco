@@ -88,10 +88,10 @@ function metti(obj) {
   return { centro, r, dist, box }
 }
 
-/** Quante Mesh e quanti triangoli: un'istanza vale il numero delle sue istanze. */
+/** Quante Mesh e quanti triangoli si disegnano: un'istanza vale il numero delle sue istanze, una mesh spenta non conta. */
 function conta(obj) {
   let mesh = 0, tri = 0
-  obj.traverse(o => {
+  obj.traverseVisible(o => {
     if (!o.isMesh) return
     mesh++
     const g = o.geometry, n = g && (g.index ? g.index.count : g.attributes.position ? g.attributes.position.count : 0) / 3
