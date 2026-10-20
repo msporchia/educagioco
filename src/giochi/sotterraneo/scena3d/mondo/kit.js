@@ -146,9 +146,12 @@ export function casa(c, cant, m, cose) {
   const cima = tetto(cant, bw, bd, z0 + alt, 0.75 + r() * 0.45 + Math.min(bw, bd) * 0.1, 0.28, paglia ? 'paglia' : 'tegole',
     paglia ? [0.9, 0.8, 0.55] : scegli(r, COLORI.tegole), colMuro, legnosa ? 'legno' : 'intonaco', lungoX)
   const px = (r() - 0.5) * (bw - 1.2)
-  cant.metti('legno', scatola(0.62, 1.0, 0.08, 1), px, z0 + 0.5, bd / 2 + 0.03, COLORI.legnoScuro)
-  cant.metti('pietra', scatola(0.8, 0.1, 0.12, 1), px, z0 + 1.05, bd / 2 + 0.04, COLORI.pietra)
-  cant.metti('pietra', scatola(0.8, 0.08, 0.35, 1), px, 0.04, bd / 2 + 0.2, COLORI.pietra)
+  // le case del fondale del villaggio non hanno porta (`senzaPorta`): sono lo sfondo, non ci si entra
+  if (!c.senzaPorta) {
+    cant.metti('legno', scatola(0.62, 1.0, 0.08, 1), px, z0 + 0.5, bd / 2 + 0.03, COLORI.legnoScuro)
+    cant.metti('pietra', scatola(0.8, 0.1, 0.12, 1), px, z0 + 1.05, bd / 2 + 0.04, COLORI.pietra)
+    cant.metti('pietra', scatola(0.8, 0.08, 0.35, 1), px, 0.04, bd / 2 + 0.2, COLORI.pietra)
+  }
   const imposte = scegli(r, COLORI.imposte)
   const finestra = (x, y, z, ry) => {
     cant.metti('liscio', scatola(0.42, 0.44, 0.05), x, y, z, COLORI.vetro, { ry })
@@ -232,26 +235,35 @@ export function pozzo(p, cant, m) {
   cant.metti('legno', cilindro(0.13, 0.11, 0.2, 8), 0.25, 0.85, 0.32, COLORI.legno)
 }
 
-// ── il mulino: casa di pietra e legno sulla riva, la ruota nell'acqua (a parte: gira) ──
+// ── il mulino: casa di pietra e legno sulla riva, la ruota nell'acqua (a parte: gira). `verso` è il lato dell'acqua con la ruota
+// (o, e, n, s: motore/mondo-percorso.js); la porta guarda a sud, o a ovest se l'acqua è a sud ──
 export function mulino(mu, cant, m, cose, kit) {
   const cx = mu.x + 1.5, cz = mu.y + 1.5, y = quotaTerreno(m, cx, cz)
-  cant.base(cx, y, cz, 0)
+  const verso = mu.verso || (mu.lato < 0 ? 'o' : 'e'), lungoZ = verso === 'n' || verso === 's'
+  const fuori = { o: [-1, 0], e: [1, 0], n: [0, -1], s: [0, 1] }[verso]
+  cant.base(cx, y, cz, verso === 's' ? -Math.PI / 2 : 0)
   cant.metti('pietra', scatola(2.6, 1.2, 2.6, 1.4), 0, 0.6, 0, [0.78, 0.75, 0.7])
   cant.metti('legno', scatola(2.5, 1.2, 2.5, 1.2), 0, 1.8, 0, COLORI.legno)
-  tetto(cant, 2.5, 2.5, 2.4, 1.3, 0.3, 'tegole', [0.6, 0.34, 0.26], COLORI.legno, 'legno', mu.lato < 0)
+  // il colmo del tetto va di traverso all'acqua, così la ruota sta sotto una falda
+  tetto(cant, 2.5, 2.5, 2.4, 1.3, 0.3, 'tegole', [0.6, 0.34, 0.26], COLORI.legno, 'legno', verso === 'n')
   cant.metti('legno', scatola(0.6, 1.0, 0.08), 0.4, 0.5, 1.33, COLORI.legnoScuro)
   cant.metti('liscio', scatola(0.45, 0.45, 0.05), -0.5, 1.8, 1.27, COLORI.vetro)
   cose.camini.push(cant.dove(0.6, 3.6, -0.6))
   cant.metti('pietra', scatola(0.32, 1.2, 0.32), 0.6, 3.1, -0.6, [0.7, 0.66, 0.62])
-  cant.metti('legno', cilindro(0.08, 0.08, 1.2, 8), mu.lato * 1.6, LIVELLO_ACQUA + 0.75 - y, 0, COLORI.legnoScuro, { rz: Math.PI / 2 })
+  // l'asse della ruota esce dal muro verso l'acqua (in coordinate del mondo: il cantiere qui torna dritto)
+  cant.base(cx, y, cz, 0)
+  cant.metti('legno', cilindro(0.08, 0.08, 1.2, 8), fuori[0] * 1.6, LIVELLO_ACQUA + 0.75 - y, fuori[1] * 1.6, COLORI.legnoScuro, lungoZ ? { rx: Math.PI / 2 } : { rz: Math.PI / 2 })
   const r = new Cantiere(), R = 1.15
   for (const s of [-0.22, 0.22]) r.metti('legno', new TorusGeometry(R, 0.05, 6, 24), s, 0, 0, COLORI.legnoScuro, { ry: Math.PI / 2 })
   for (let i = 0; i < 6; i++) r.metti('legno', scatola(0.06, R * 2, 0.08), 0, 0, 0, COLORI.legno, { rx: i * Math.PI / 6 })
   for (let i = 0; i < 12; i++) { const a = i * Math.PI / 6; r.metti('legno', scatola(0.5, 0.06, 0.32), 0, Math.cos(a) * R, Math.sin(a) * R, COLORI.legno, { rx: a }) }
   r.metti('legno', cilindro(0.12, 0.12, 0.55, 8), 0, 0, 0, COLORI.legnoScuro, { rz: Math.PI / 2 })
   const [ruota] = r.chiudi(kit.mobili, kit.ombraMobili)
-  ruota.position.set(mu.ruota.x, LIVELLO_ACQUA + 0.75, mu.ruota.y)
+  const rp = mu.ruota || { x: cx + fuori[0] * 2.1, y: cz + fuori[1] * 2.1 }
+  ruota.position.set(rp.x, LIVELLO_ACQUA + 0.75, rp.y)
+  // girata per l'acqua a nord o a sud: prima si orienta (y), poi gira sul suo asse (x), che indice.js fa avanzare
+  ruota.rotation.order = 'YXZ'; ruota.rotation.y = lungoZ ? Math.PI / 2 : 0
   cose.ruote.push(ruota)
-  cose.spruzzi.push(new Vector3(mu.ruota.x, LIVELLO_ACQUA + 0.05, mu.ruota.y))
+  cose.spruzzi.push(new Vector3(rp.x, LIVELLO_ACQUA + 0.05, rp.y))
   return ruota
 }
