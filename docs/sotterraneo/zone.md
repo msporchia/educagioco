@@ -13,6 +13,9 @@ e una storia nuovi che il minatore racconta. Il pallino davanti a ogni
 discesa dice il gruppo col colore; davanti alla troppo forte sta una
 sentinella che non fa passare.
 
+**Nel Sotterraneo 3D le zone non rinascono**: ogni dungeon ha il livello della sua zona del mondo e si rigenera quando lo si
+ripulisce ([dungeon-che-si-rigenerano.md](dungeon-che-si-rigenerano.md)); il minatore non ha la notizia. Quello che segue è il 2D.
+
 Provato: la zona sveglia che segue l'eroe (una alla volta, al livello
 dell'eroe, a giro): l'utente vuole fasce fisse, che si vedano avanzare.
 

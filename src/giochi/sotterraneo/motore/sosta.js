@@ -5,8 +5,7 @@
 // salvataggio vecchio non si legge più: si ricomincia — un campo che non torna è un gioco rotto.
 import { Corsa } from './corsa.js'
 import { CALMA } from '../dati/mondo.js'
-import { INDICE_ABISSO, L_ABISSO } from '../dati/campagna.js'
-import { zonaPotenziata } from '../dati/zone.js'
+import { tappaDellaSosta } from './rigenera.js'
 
 // la 6: la vita in più della discesa (`vitaPiu`) al posto di quella intera (`vitaBase`), da quando l'eroe ha i livelli.
 // La 5: ogni piano ha la scala che sale (una cosa in più nel piano: gli indici delle cose di una sosta di prima non
@@ -106,6 +105,8 @@ export function scrivi(corsa, tappa, { anchePerFinite = false, via = USCITA } = 
     via: via === PORTALE ? PORTALE : USCITA,
     tappa,
     ...(corsa.tappa && corsa.tappa.potenza ? { potenza: corsa.tappa.potenza } : {}),
+    // un dungeon del mondo a percorso (motore/rigenera.js): quale, e quante volte rifatto. `tappa` è il suo indice, o la chiave per i nuovi
+    ...(corsa.tappa && corsa.tappa.delMondo ? { dungeon: { ...corsa.tappa.delMondo } } : {}),
     seme: corsa.seme,
     piano: corsa.piano,
     fondo: corsa.fondo,   // il più profondo toccato: scendere ancora è nuovo, rifare un piano no
@@ -215,11 +216,10 @@ export function forzeDi(dato, tappa, roba = null, missioni = [], crescita = null
 }
 
 // due righe per la carta "riprendi" e per il portale di sopra: cosa si sta lasciando in sospeso, e come (`via`)
-export function dice(dato, campagna) {
+export function dice(dato) {
   if (!dato || dato.v !== VERSIONE) return null
-  // l'abisso non sta nella campagna: senza questa riga la carta "riprendi" sparirebbe in silenzio
-  const t = dato.tappa === INDICE_ABISSO ? L_ABISSO
-    : dato.potenza && campagna[dato.tappa] ? zonaPotenziata(dato.tappa, dato.potenza) : campagna[dato.tappa]
+  // l'abisso non sta nella campagna, e un dungeon nuovo del mondo nemmeno: senza tappaDellaSosta la carta "riprendi" sparirebbe in silenzio
+  const t = tappaDellaSosta(dato)
   if (!t) return null
   return {
     tappa: dato.tappa,

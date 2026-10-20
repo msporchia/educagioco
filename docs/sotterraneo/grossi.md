@@ -24,6 +24,9 @@ nello scontro e nella barra in cima).
 | la botola segreta | Minotto | la bestia cornuta | troll | il Giubbone di Minotto (difesa, vita, rigenera) |
 | la miniera abbandonata | Carbonchio | il drago di lava | gigante | il Martello di Carbonchio (attacco, fuoco) |
 
+I sei dei dungeon nuovi del 3D (Barbamuschio, Piumanera, Sibilla, Brontolava, Brinaldo, Falcenera: il golem di muschio, il grifone,
+il serpente, il golem di magma, il golem di ghiaccio, il mietitore) stanno in [dungeon-che-si-rigenerano.md](dungeon-che-si-rigenerano.md#i-tredici-dungeon).
+
 - **La creatura giusta** (12 ottobre 2026, l'utente: «Zannaverde il ragno, Carbonchio il drago di lava, Minotto la bestia cornuta, Gorgo il
   polpo, Fiammetta lo spirito di fuoco, Grumo l'orco, Re Ossuto lo scheletro, ingranditi con la corona»). `figura` in `dati/grossi.js` dice quale
   creatura del catalogo comune veste ([../core/creature.md](../core/creature.md)); senza, quella di `tipo`. **Re Ossuto è il negromante**: uno scheletro

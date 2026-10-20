@@ -182,7 +182,9 @@ import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifi
   // la figura: la creatura che veste (`figura`: il ragno di Zannaverde, il drago di lava di Carbonchio…, senza, la specie di `tipo`), del
   // catalogo comune, ingrandita a coprire due caselle di altezza (con la corona), a meno che l'atlante abbia il suo dipinto
   // (`grosso-<chiave>-fermo-0`), che prende il posto del ripiego da solo
-  const FIGURA = { ossuto: 'negromante', grumo: 'orco', fiammetta: 'spirito-fuoco', zannaverde: 'ragno', gorgo: 'polpo', minotto: 'bestia-cornuta', carbonchio: 'drago-lava' }
+  const FIGURA = { ossuto: 'negromante', grumo: 'orco', fiammetta: 'spirito-fuoco', zannaverde: 'ragno', gorgo: 'polpo', minotto: 'bestia-cornuta', carbonchio: 'drago-lava',
+                   // i sei dei dungeon nuovi del 3D (dati/dungeon-del-mondo.js)
+                   barbamuschio: 'golem-muschio', piumanera: 'grifone', sibilla: 'serpente', brontolava: 'golem-magma', brinaldo: 'golem-ghiaccio', falcenera: 'mietitore' }
   for (const [k, x] of Object.entries(GROSSI)) {
     const f = figuraDelGrosso(k)
     controlla(`${k}: ha una figura`, !!f)
