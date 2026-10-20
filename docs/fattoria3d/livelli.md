@@ -59,9 +59,9 @@ i dati veri, quindi un elenco non si scrive due volte e non si scosta.
 ```
  1 campo, grano, carote          9 stalla (latte), cipolle, pozzo, frittata, brioche
  2 mais, bancarella, aiuola     10 mongolfiera
- 3 mulino (farine)              11 caseificio (formaggio, burro, yogurt), fragole
- 4 recinto, pomodori            12 conserviera (passata, marmellata, cipolle)
- 5 pasticceria (pane, popcorn)  13 melanzane (caponata), spaventapasseri
+ 3 mulino (farine), passerella  11 caseificio (formaggio, burro, yogurt), fragole
+ 4 recinto, pomodori, tavolo   12 conserviera (passata, marmellata, cipolle)
+ 5 pasticceria (pane, popcorn), ponte  13 melanzane (caponata), spaventapasseri
  6 pollaio (uova), patate,      14 gelateria (gelati di fragola, di carote, alla crema)
    panchina, pizza, torta soffice
  7 panificio                    15 lavanda (gelato alla lavanda)
@@ -70,6 +70,8 @@ i dati veri, quindi un elenco non si scrive due volte e non si scosta.
 
 Il livello apre il **pezzo** (pollaio, stalla, recinto); le bestie in più dentro non hanno livello: si comprano a monete
 ([animali.md](animali.md)), contano come esperienza ma non spostano la scaletta (la taratura conta solo i pezzi produttivi).
+
+Le decorazioni nuove (passerella al 3, tavolo al 4, ponte al 5) non spostano la scaletta: non sono produttive, quindi non si sommano ai salti.
 
 Pollaio, stalla e caseificio stanno **nei buchi** della scaletta (6, 9, 11: livelli senza una cosa produttiva), così i
 livelli restano quindici e le soglie dopo il 6 salgono del loro prezzo (55, 90, 120). Il livello di `uova` e `latte` è

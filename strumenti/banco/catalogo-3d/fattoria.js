@@ -1,4 +1,5 @@
 /* Le voci della Fattoria 3D per il catalogo (strumenti/banco/catalogo-3d.html). Formato e regole: docs/core/catalogo-3d.md.
+   Casa, bancarella, bacheca e cespuglio sono le copie adattate di scena3d/dal-sotterraneo.js (`gioco: 'entrambi'`, `file` punta lì).
    Niente copie dei modelli: `crea` chiama i costruttori veri di scena3d/ (modelli.js, modelli-compagni.js) e, per ciò che il
    gioco monta a istanze (alberi, sassi, cespugli), ricompone la stessa forma con le stesse geometrie. `dove` si ricava dai dati
    (dati/catalogo.js, colture.js, compagni.js), così non invecchia quando un livello si sposta. Chi aggiunge un `crea…` nuovo a
@@ -8,9 +9,11 @@ import {
   ASPETTO, FORME, mat, creaCampo, aggiornaCampo, creaPasticceria, creaMongolfiera, creaMulino, creaPanificio, creaConserviera,
   creaGelateria, creaCaseificio, creaSegnaposto, creaAiuola, creaPanchina, creaPozzo, creaSpaventapasseri, creaBancarella,
   creaFontana, creaPecora, creaRecinto, muoviPecore, creaGallina, creaPollaio, creaStalla, muoviBestie, creaMucca,
-  creaFienile, creaCasa, creaTrattore, creaCassa,
+  creaFienile, creaCasa, creaTrattore, creaCassa, creaBacheca, creaCasaVecchia, creaBancarellaVecchia,
 } from '../../../src/giochi/fattoria3d/scena3d/modelli.js'
 import { creaContadino, creaCane, posaCane, creaGatto, posaGatto } from '../../../src/giochi/fattoria3d/scena3d/modelli-compagni.js'
+import { creaPonte, creaPasserella, creaTavolo } from '../../../src/giochi/fattoria3d/scena3d/modelli-passaggi.js'
+import { geometriaCespuglio } from '../../../src/giochi/fattoria3d/scena3d/dal-sotterraneo.js'
 import { PEZZI, EDIFICI } from '../../../src/giochi/fattoria3d/dati/catalogo.js'
 import { COLTURE } from '../../../src/giochi/fattoria3d/dati/colture.js'
 import { COMPAGNI } from '../../../src/giochi/fattoria3d/dati/compagni.js'
@@ -20,6 +23,8 @@ const M = 'src/giochi/fattoria3d/scena3d/modelli.js'
 const MC = 'src/giochi/fattoria3d/scena3d/modelli-compagni.js'
 const MCO = 'src/giochi/fattoria3d/scena3d/modelli-colture.js'
 const T = 'src/giochi/fattoria3d/scena3d/terreno.js'
+const D = 'src/giochi/fattoria3d/scena3d/dal-sotterraneo.js'      // le copie adattate dei modelli del Sotterraneo (docs/fattoria3d/scena.md)
+const MP = 'src/giochi/fattoria3d/scena3d/modelli-passaggi.js'
 
 const pezzo = t => `pezzo del vassoio, livello ${PEZZI[t].liv}, ${PEZZI[t].w}×${PEZZI[t].d} celle`
 const unico = t => `edificio unico al posto ${EDIFICI[t].slot.i},${EDIFICI[t].slot.j}, livello ${EDIFICI[t].liv} (fantasma finché non si compra)`
@@ -67,12 +72,23 @@ export const VOCI = [
     file: `${M}:creaStalla`, misure: celle(PEZZI.stalla),
     crea: () => creaStalla(statiStalla()),
     anima: (g, dt, t) => muoviBestie(g, dt, t, statiStalla(), Date.now()) },
-  { id: 'fattoria:bancarella', nome: 'Bancarella', gioco: 'fattoria', categoria: 'prop', dove: pezzo('bancarella') + ' (con la scritta in trama canvas)', file: `${M}:creaBancarella`, misure: celle(PEZZI.bancarella), crea: () => creaBancarella() },
+  { id: 'fattoria:bancarella', nome: 'Banco della guaritrice (la bancarella)', gioco: 'entrambi', categoria: 'prop',
+    dove: pezzo('bancarella') + ': il banco della guaritrice del Sotterraneo (tendone a strisce, boccette, erbe, frutta); apre il banco degli ordini come la bacheca',
+    file: `${D}:bancoDellaGuaritrice`, misure: celle(PEZZI.bancarella), crea: () => creaBancarella() },
+  { id: 'fattoria:bacheca', nome: 'Bacheca delle taglie (gli ordini)', gioco: 'entrambi', categoria: 'prop',
+    dove: pezzo('bacheca') + ': la bacheca del Sotterraneo; i foglietti appuntati sono gli ordini aperti (qui tre), toccarla apre il banco',
+    file: `${D}:bachecaDelleTaglie`, misure: celle(PEZZI.bacheca), crea: () => creaBacheca() },
+  { id: 'fattoria:bancarella-vecchia', nome: 'Bancarella (vecchia)', gioco: 'fattoria', categoria: 'prop', dove: 'non più montata: il disegno di prima del banco della guaritrice, tenuto per il confronto',
+    file: `${M}:creaBancarellaVecchia`, misure: celle(PEZZI.bancarella), crea: () => creaBancarellaVecchia() },
   { id: 'fattoria:aiuola', nome: 'Aiuola', gioco: 'fattoria', categoria: 'pianta', dove: pezzo('aiuola'), file: `${M}:creaAiuola`, misure: celle(PEZZI.aiuola), crea: () => creaAiuola() },
   { id: 'fattoria:panchina', nome: 'Panchina', gioco: 'fattoria', categoria: 'prop', dove: pezzo('panchina'), file: `${M}:creaPanchina`, misure: celle(PEZZI.panchina), crea: () => creaPanchina() },
   { id: 'fattoria:fontana', nome: 'Fontana', gioco: 'fattoria', categoria: 'prop', dove: pezzo('fontana') + ', con le gocce che zampillano', file: `${M}:creaFontana`, misure: celle(PEZZI.fontana), crea: () => creaFontana(), anima: animaCosa },
   { id: 'fattoria:pozzo', nome: 'Pozzo', gioco: 'fattoria', categoria: 'prop', dove: pezzo('pozzo'), file: `${M}:creaPozzo`, misure: celle(PEZZI.pozzo), crea: () => creaPozzo() },
   { id: 'fattoria:spaventapasseri', nome: 'Spaventapasseri', gioco: 'fattoria', categoria: 'prop', dove: pezzo('spaventapasseri') + ', dondola piano', file: `${M}:creaSpaventapasseri`, misure: celle(PEZZI.spaventapasseri), crea: () => creaSpaventapasseri(), anima: animaCosa },
+  // preso dal Sotterraneo 3D e rifatto con i materiali della fattoria (docs/fattoria3d/scena.md): la voce del sotterraneo è `sot:kit:ponte-arco` / `sot:props:tavolo`
+  { id: 'fattoria:ponte', nome: 'Ponte ad arco', gioco: 'entrambi', categoria: 'prop', dove: pezzo('ponte') + ', calpestabile (gobba alta ' + PEZZI.ponte.alzato[1] + '), conta come strada; dal ponte ad arco del mondo di sopra del sotterraneo', file: `${MP}:creaPonte`, misure: celle(PEZZI.ponte), crea: () => creaPonte() },
+  { id: 'fattoria:passerella', nome: 'Passerella di assi', gioco: 'entrambi', categoria: 'prop', dove: pezzo('passerella') + ', calpestabile, conta come strada; dalla passerella di corde del mondo di sopra del sotterraneo', file: `${MP}:creaPasserella`, misure: celle(PEZZI.passerella), crea: () => creaPasserella() },
+  { id: 'fattoria:tavolo', nome: 'Tavolo con le panche', gioco: 'entrambi', categoria: 'prop', dove: pezzo('tavolo') + '; dal tavolo con le panche delle città del sotterraneo', file: `${MP}:creaTavolo`, misure: celle(PEZZI.tavolo), crea: () => creaTavolo() },
   { id: 'fattoria:segnaposto', nome: 'Segnaposto grigio', gioco: 'fattoria', categoria: 'altro', dove: 'ripiego: lo mostra la scena per un tipo di pezzo senza disegno (pezzi.js, modelloDi)', file: `${M}:creaSegnaposto`, misure: '2×2', crea: () => creaSegnaposto(2, 2) },
 
   { id: 'fattoria:trattore', nome: 'Trattore', gioco: 'fattoria', categoria: 'altro', dove: 'in lavorazione: il costruttore c\'è in modelli.js, non è ancora montato in scena', file: `${M}:creaTrattore`, crea: () => creaTrattore() },
@@ -90,11 +106,13 @@ export const VOCI = [
 
   // ── solo di scena: nascono col terreno ──
   ...FISSI.map(f => ({
-    id: `fattoria:${f.tipo}`, nome: f.tipo === 'fienile' ? 'Fienile' : 'Casa del contadino', gioco: 'fattoria', categoria: 'edificio',
-    dove: `scenario fisso (non si compra) al posto ${f.i},${f.j}, ${f.w}×${f.d} celle (terreno.js, _fisse)`,
-    file: `${M}:${f.tipo === 'fienile' ? 'creaFienile' : 'creaCasa'}`, misure: `${f.w}×${f.d}`, crea: () => f.tipo === 'fienile' ? creaFienile() : creaCasa(),
+    id: `fattoria:${f.tipo}`, nome: f.tipo === 'fienile' ? 'Fienile' : 'Casa di legno', gioco: f.tipo === 'fienile' ? 'fattoria' : 'entrambi', categoria: 'edificio',
+    dove: `scenario fisso (non si compra) al posto ${f.i},${f.j}, ${f.w}×${f.d} celle (terreno.js, _fisse)` + (f.tipo === 'fienile' ? '' : ': la casa di legno del Sotterraneo, col fumo dal camino'),
+    file: f.tipo === 'fienile' ? `${M}:creaFienile` : `${D}:casaDiLegno`, misure: `${f.w}×${f.d}`, crea: () => f.tipo === 'fienile' ? creaFienile() : creaCasa(),
     anima: animaEdificio,
   })),
+  { id: 'fattoria:casa-vecchia', nome: 'Casa del contadino (vecchia)', gioco: 'fattoria', categoria: 'edificio', dove: 'non più montata: la casa di prima, a scatole, tenuta per il confronto',
+    file: `${M}:creaCasaVecchia`, misure: '4×3', crea: () => creaCasaVecchia() },
 
   // ── gli animali ──
   { id: 'fattoria:pecora', nome: 'Pecora', gioco: 'fattoria', categoria: 'animale', dove: 'dentro il recinto (si tosa, fa gli agnelli)', file: `${M}:creaPecora`, crea: () => creaPecora() },
@@ -127,7 +145,9 @@ export const VOCI = [
   // ── il terreno: a istanze nel gioco, qui un esemplare con le stesse geometrie ──
   { id: 'fattoria:albero', nome: 'Abete', gioco: 'fattoria', categoria: 'pianta', dove: 'alberi del bosco e dei lotti, si abbattono con l\'ascia (terreno.js, _alberi; geometrie FORME di modelli.js)', file: `${T}:_alberi`, misure: '1×1',
     crea: () => { const g = new THREE.Group(), c = mat(new THREE.Color().setHSL(0.29, 0.5, 0.35).getHex()); g.add(mesh(FORME.tronco, mat(0x7a5232)), mesh(FORME.chioma, c), mesh(FORME.chioma2, c)); return g } },
-  { id: 'fattoria:cespuglio', nome: 'Cespuglio', gioco: 'fattoria', categoria: 'pianta', dove: 'ostacolo nei lotti, si toglie toccandolo (terreno.js, _ostacoli)', file: `${T}:_ostacoli`, misure: '1×1',
+  { id: 'fattoria:cespuglio', nome: 'Cespuglio', gioco: 'entrambi', categoria: 'pianta', dove: 'ostacolo nei lotti, si toglie toccandolo (terreno.js, _ostacoli); la geometria è quella del cespuglio del Sotterraneo, verde della palette del terreno', file: `${D}:geometriaCespuglio`, misure: '1×1',
+    crea: () => mesh(geometriaCespuglio(), mat(new THREE.Color().setHSL(0.3, 0.55, 0.32).getHex(), { vertexColors: true }), 0, 0, 0, 1.2, 1.05, 1.2) },
+  { id: 'fattoria:cespuglio-vecchio', nome: 'Cespuglio (vecchio)', gioco: 'fattoria', categoria: 'pianta', dove: 'non più montato: la palla verde di prima, tenuta per il confronto', file: `${T}:_ostacoli`, misure: '1×1',
     crea: () => mesh(new THREE.IcosahedronGeometry(0.4, 0), mat(new THREE.Color().setHSL(0.3, 0.55, 0.32).getHex()), 0, 0.28, 0, 1.15, 0.85, 1.15) },
   { id: 'fattoria:sasso', nome: 'Sasso', gioco: 'fattoria', categoria: 'prop', dove: 'ostacolo nei lotti, si toglie toccandolo (terreno.js, _ostacoli)', file: `${T}:_ostacoli`, misure: '1×1',
     crea: () => mesh(new THREE.IcosahedronGeometry(0.32, 0), mat(new THREE.Color().setHSL(0.1, 0.05, 0.57).getHex()), 0, 0.15, 0, 1.1, 0.75, 1) },

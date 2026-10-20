@@ -23,7 +23,8 @@ export const CLIENTI = [
 export const clienteDi = id => CLIENTI.find(c => c.id === id) || CLIENTI[0]
 
 export const POSTI = 3                 // ordini aperti insieme
-export const LIVELLO_BANCO = 2         // il livello della bancarella: da lì il banco chiede
+export const LIVELLO_BANCO = 2         // il livello della bacheca e della bancarella: da lì il banco chiede
+export const PEZZI_DEL_BANCO = ['bacheca', 'bancarella']   // i pezzi che aprono il banco: basta averne uno in mappa (la bacheca è il pezzo vero, la bancarella resta per chi l'ha già)
 export const RIPOSO_MS = 3 * 60_000    // un ordine rifiutato lascia il posto vuoto per tre minuti
 export const CHIEDE_MAX = 3            // al più tre cose diverse in un ordine
 export const QUANTI_RACCOLTI = [1, 4]  // quantità di un raccolto: da 1 a 4

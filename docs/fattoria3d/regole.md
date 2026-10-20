@@ -28,8 +28,9 @@ sempre ([../fattoria/regole.md](../fattoria/regole.md)); qui le differenze.
 | cosa | costo | perché |
 |---|---|---|
 | un campo | 20 + 8 per ogni copia (anche nel magazzino) | il rincaro lineare della fattoria di sempre |
-| recinto / bancarella / fontana | 45 / 15 / 30 | fissi; nel recinto una pecora, le altre si comprano (20, 30, 40) |
+| recinto / bancarella / bacheca / fontana | 45 / 15 / 12 / 30 | fissi; nel recinto una pecora, le altre si comprano (20, 30, 40) |
 | aiuola / panchina / pozzo / spaventapasseri | 6 / 10 / 18 / 12 | decorazioni, fissi |
+| passerella / ponte / tavolo | 8 / 14 / 18 | decorazioni (liv 3 / 5 / 4), fisse |
 | pollaio / stalla | 55 / 90 | liberi nel terreno come il recinto; una bestia nel prezzo, le altre una per volta, sempre più care ([animali.md](animali.md)) |
 | mulino / panificio / caseificio / conserviera / gelateria | 60 / 90 / 120 / 110 / 140 | unici, nel loro posto, in lotti da comprare prima |
 | pasticceria / mongolfiera | 80 / 100 | unici, nel loro posto |
@@ -50,6 +51,16 @@ resto è in [livelli.md](livelli.md).
 Quattro tessere per campo, un raccolto per tessera (`TESSERE`): una coltura matura per intero, e si taglia una tessera alla
 volta (`raccogliTessera`). Il tempo è vero (16 s il grano e le carote, 64 s la lavanda: dieci colture, crescente col livello). Seminare è gratis. **Un campo che sta crescendo non
 si mette via**.
+
+## I pezzi calpestabili
+
+Passerella (1×3) e ponte (3×1) hanno `calpestabile: true` e `alzato` (la quota di chi ci cammina; per il ponte una per cella, la
+gobba) in `dati/catalogo.js`. Sono **decorazione per fare camminamenti**: niente acqua sotto, niente altre regole.
+- **Il passo li attraversa**: `libera` (eroe, compagni, celle di servizio) li conta libere; **il costruire no**: `blocca`, `puoMettere`
+  e `disegnaStrada` le trovano occupate, quindi sopra non si mette nient'altro e non si sposta un pezzo lì sopra.
+- **Contano come strada nel percorso** (`sullaStrada`: costo ridotto e passo svelto), ma non sono strada (`eStrada` resta 0, non si
+  salvano in `strade`, non si tolgono col pennello).
+- Si **toccano per salirci**: l'eroe va su una loro cella (`celleDiServizio`). Il tavolo, invece, è un pezzo qualunque: ferma il passo.
 
 ## Le pecore
 

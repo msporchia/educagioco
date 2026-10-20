@@ -3,7 +3,8 @@
    rifiutare lascia il posto vuoto un po', e il salvataggio (v2 → v3) non perde niente.
    `node test/esegui.mjs fattoria3d-ordini`
    tempo: 1 */
-import { guastiDegliOrdini, CLIENTI, POSTI, RIPOSO_MS, LIVELLO_BANCO, chiedibili, premioDi, tettoDi, livelloDi, livelloDelOrdine } from '../../src/giochi/fattoria3d/dati/ordini.js'
+import { guastiDegliOrdini, CLIENTI, POSTI, RIPOSO_MS, LIVELLO_BANCO, PEZZI_DEL_BANCO, chiedibili, premioDi, tettoDi, livelloDi, livelloDelOrdine } from '../../src/giochi/fattoria3d/dati/ordini.js'
+import { PEZZI } from '../../src/giochi/fattoria3d/dati/catalogo.js'
 import { COLTURE } from '../../src/giochi/fattoria3d/dati/colture.js'
 import { RICETTE } from '../../src/giochi/fattoria3d/dati/ricette.js'
 import { sogliaDi, livelloPer, ULTIMO } from '../../src/giochi/fattoria3d/dati/livelli.js'
@@ -15,11 +16,11 @@ import { controlla, uguale, stessaLista, riassunto } from '../aiuto/verifica.mjs
 // un caso ripetibile: una sequenza fissa di numeri fra 0 e 1
 const sequenza = (seme = 7) => { let x = seme; return () => (x = (x * 16807) % 2147483647) / 2147483647 }
 
-function mondo({ monete = 1000, stato = null, liv = 2, bancarella = true, rnd = sequenza() } = {}) {
+function mondo({ monete = 1000, stato = null, liv = 2, bancarella = true, pezzo = 'bacheca', rnd = sequenza() } = {}) {
   const b = { monete }, t = { ora: 1_000_000 }
   const f = new Fattoria3d({ stato, borsa: { quante: () => b.monete, paga: n => { b.monete -= n; return true } }, ora: () => t.ora, rnd })
   f.s.esperienza = sogliaDi(liv)
-  if (bancarella && !f.s.cose.some(c => c.tipo === 'bancarella')) f.s.cose.push({ id: f.s.prossimoId++, tipo: 'bancarella', i: 0, j: 0 })
+  if (bancarella && !f.s.cose.some(c => c.tipo === pezzo)) f.s.cose.push({ id: f.s.prossimoId++, tipo: pezzo, i: 0, j: 0 })
   f.tick()
   return { f, b, t }
 }
@@ -74,10 +75,22 @@ controlla('i prodotti arrivano con le macchine', chiedibili(ULTIMO).prodotti.len
 /* ══════════ 4. il banco si apre ══════════ */
 {
   const senza = mondo({ bancarella: false })
-  controlla('senza bancarella il banco è chiuso', !senza.f.bancoAperto() && senza.f.ordini().length === 0)
+  controlla('senza bacheca né bancarella il banco è chiuso', !senza.f.bancoAperto() && senza.f.ordini().length === 0)
   uguale('e non si consegna', senza.f.consegna(0).motivo, 'banco-chiuso')
   const basso = mondo({ liv: 1 })
-  controlla('al livello 1 il banco è chiuso anche con la bancarella', !basso.f.bancoAperto() && basso.f.ordini().length === 0)
+  controlla('al livello 1 il banco è chiuso anche con la bacheca', !basso.f.bancoAperto() && basso.f.ordini().length === 0)
+  // la bacheca è il pezzo del banco; la bancarella apre lo stesso banco (chi l'ha già non perde niente)
+  controlla('la bacheca è nei pezzi del banco, come la bancarella', PEZZI_DEL_BANCO.includes('bacheca') && PEZZI_DEL_BANCO.includes('bancarella'))
+  controlla('ogni pezzo del banco esiste nel catalogo, al livello del banco', PEZZI_DEL_BANCO.every(t => PEZZI[t] && PEZZI[t].liv === LIVELLO_BANCO))
+  controlla('la bacheca è 2×1 e costa poco', PEZZI.bacheca.w === 2 && PEZZI.bacheca.d === 1 && PEZZI.bacheca.prezzo < PEZZI.bancarella.prezzo)
+  const conBancarella = mondo({ pezzo: 'bancarella' })
+  controlla('con la sola bancarella il banco è aperto e ha tre ordini', conBancarella.f.bancoAperto() && conBancarella.f.ordini().length === 3)
+  const sotto = mondo({ bancarella: false })
+  sotto.f.s.cose.push({ id: sotto.f.s.prossimoId++, tipo: 'panchina', i: 0, j: 0 })
+  controlla('un altro pezzo non apre il banco', !sotto.f.bancoAperto())
+  const compra = mondo({ bancarella: false })
+  const r = compra.f.compraEMetti('bacheca', 3, 3)
+  controlla('la bacheca si compra e si mette al livello 2', r.ok && compra.f.bancoAperto() && compra.f.ordini().length === 3, JSON.stringify(r))
   const { f } = mondo()
   const o = f.ordini()
   controlla('col banco aperto ci sono tre ordini', o.length === 3 && o.every(x => !x.attesa && x.chiede.length >= 1))

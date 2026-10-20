@@ -18,7 +18,7 @@ domande, e non ce ne saranno.
   farina pane integrale. Tre posti nel forno, una cottura alla volta, e i pronti aspettano.
 - **Gli animali.** Le pecore (lana che ricresce, agnellini), le galline del pollaio (uova) e le mucche della stalla (latte):
   mangiano i raccolti e restituiscono i prodotti, che servono alle ricette.
-- **Il banco degli ordini.** Dal livello 2, con una bancarella: tre clienti chiedono raccolti e prodotti. Consegnare paga
+- **Il banco degli ordini.** Dal livello 2, con una bacheca (o una bancarella): tre clienti chiedono raccolti e prodotti. Consegnare paga
   **esperienza** (mai monete) e fa salire di livello; rifiutare è gratis ma il posto resta vuoto qualche minuto.
 - **Si allarga e si costruisce.** I terreni si comprano a lotti dentro un recinto basso; i pezzi si trascinano dalla barra,
   si pagano quando li lasci sulla mappa (niente conferme), si spostano tenendoli premuti, le strade si disegnano col dito; alberi, sassi e

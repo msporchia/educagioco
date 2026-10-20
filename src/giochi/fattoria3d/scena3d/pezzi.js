@@ -2,9 +2,10 @@
 // animati ogni fotogramma (il grano che cresce, le pecore che vagano, la fontana, il fumo del forno, il pallone che parte).
 // Non sa le regole: legge lo stato e disegna. I cartelli sugli edifici (prezzo, cottura) sono qui.
 import * as THREE from 'three'
-import { creaCampo, aggiornaCampo, creaPasticceria, creaMongolfiera, creaBancarella, creaFontana, creaRecinto, muoviPecore,
+import { creaCampo, aggiornaCampo, creaPasticceria, creaMongolfiera, creaBancarella, creaBacheca, creaFontana, creaRecinto, muoviPecore,
          sincronizzaPecore, fantasma, creaMulino, creaPanificio, creaConserviera, creaGelateria, creaAiuola, creaPanchina,
          creaPozzo, creaSpaventapasseri, creaTrattore, creaSegnaposto, creaPollaio, creaStalla, creaCaseificio, sincronizzaBestie, muoviBestie } from './modelli.js'
+import { creaPonte, creaPasserella, creaTavolo } from './modelli-passaggi.js'
 import { EDIFICI, PEZZI } from '../dati/catalogo.js'
 import { RICETTE, MACCHINE } from '../dati/ricette.js'
 import { MONGOLFIERA } from '../dati/regole.js'
@@ -17,12 +18,16 @@ const CREA = {
   pollaio: c => creaPollaio(c && c.bestie),
   stalla: c => creaStalla(c && c.bestie),
   bancarella: () => creaBancarella(),
+  bacheca: () => creaBacheca(),
   fontana: () => creaFontana(),
   aiuola: () => creaAiuola(),
   panchina: () => creaPanchina(),
   pozzo: () => creaPozzo(),
   spaventapasseri: () => creaSpaventapasseri(),
   trattore: () => creaTrattore(),
+  ponte: () => creaPonte(),
+  passerella: () => creaPasserella(),
+  tavolo: () => creaTavolo(),
 }
 const CREA_EDIFICIO = {
   pasticceria: creaPasticceria, mongolfiera: creaMongolfiera,
@@ -66,7 +71,7 @@ export class Pezzi {
     const d = PEZZI[c.tipo], grp = modelloDi(c.tipo, d, c)
     grp.userData.bersaglio = { kind: 'cosa', id: c.id }
     grp.position.copy(centroDi(c, d)); this.scena.add(grp)
-    this.voci.set(c.id, { id: c.id, kind: 'cosa', c, d, grp, badge: c.bestie || c.pecore ? this.fx.nuovoCartello(() => this.sulCompraBestia && this.sulCompraBestia(c.id)) : null, anello: null, salto: 0, nasce: undefined, richiamo: null, chiave: '' })
+    this.voci.set(c.id, { id: c.id, kind: 'cosa', c, d, grp, badge: c.bestie || c.pecore ? this.fx.nuovoCartello(() => this.sulCompraBestia && this.sulCompraBestia(c.id)) : c.tipo === 'bacheca' ? this.fx.nuovoBadge() : null, anello: null, salto: 0, nasce: undefined, richiamo: null, chiave: '' })
   }
   _creaEdificio(tipo, mio) {
     const e = EDIFICI[tipo], grp = CREA_EDIFICIO[tipo] ? CREA_EDIFICIO[tipo]() : creaSegnaposto(e.w, e.d)
@@ -146,6 +151,14 @@ export class Pezzi {
       v.badge.imposta(pronte ? `${PRODOTTI_ANIMALI[A.prodotto].emoji} ${pronte} pront${pronte === 1 ? 'o' : 'i'}!`
         : fame ? `${A.emoji} ha fame` : lavora.length ? `⏳ ${Math.ceil(Math.min(...lavora) / 1000)}s` : '', pronte ? 'pronto' : '')
       this._conto(v, c)
+    } else if (c.tipo === 'bacheca') {
+      // i foglietti sono gli ordini aperti; sul cartello quelli che si possono consegnare adesso (come le macchine, i pronti)
+      if (tt - (v.tOrdini ?? -9) > 0.5) {
+        v.tOrdini = tt
+        const aperti = this.m.ordini().filter(o => !o.attesa), pronti = aperti.filter(o => o.pronto).length
+        g.userData.mostraFogli(aperti.length)
+        v.badge.imposta(pronti ? `🧺 ${pronti} pront${pronti === 1 ? 'o' : 'i'}!` : '', pronti ? 'pronto' : '')
+      }
     } else if (g.userData.anima) g.userData.anima(tt)              // fontana, spaventapasseri
   }
 

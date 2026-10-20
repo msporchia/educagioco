@@ -2,7 +2,7 @@
 // Il foglio del banco: tre posti, ognuno con un cliente (il ritratto) che chiede qualche raccolto o prodotto in un fumetto e paga
 // in esperienza (la stella), mai monete. «Consegna» è spento finché manca roba, ma toccarlo dice cosa manca; «Cambia» manda via
 // l'ordine (il posto riposa qualche minuto). Un posto che riposa mostra il conto alla rovescia. Riceve una fotografia già pronta
-// e dice cosa si vuole con gli `emit`. Banco chiuso (livello o bancarella che mancano): spiega cosa fare. Vedi docs/fattoria3d/ordini.md.
+// e dice cosa si vuole con gli `emit`. Banco chiuso (livello, bacheca o bancarella che mancano): spiega cosa fare. Vedi docs/fattoria3d/ordini.md.
 defineProps({
   aperto: { type: Boolean, default: false },
   perche: { type: String, default: '' },           // banco chiuso: cosa fare per aprirlo

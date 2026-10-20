@@ -130,7 +130,10 @@ export class Mondo3d {
   /** Le celle da cui si può servire una cosa: il davanti per gli edifici, tutta la cornice per il resto. */
   celleDiServizio(b) {
     let i, j, w, d, davanti = false
-    if (b.kind === 'cosa') { const c = this.m.cosa(b.id), x = PEZZI[c.tipo]; i = c.i; j = c.j; w = x.w; d = x.d }
+    if (b.kind === 'cosa') {
+      const c = this.m.cosa(b.id), x = PEZZI[c.tipo]; i = c.i; j = c.j; w = x.w; d = x.d
+      if (x.calpestabile) { const su = []; for (let a = 0; a < w; a++) for (let b2 = 0; b2 < d; b2++) su.push([i + a, j + b2]); return su }   // un ponte si tocca per salirci
+    }
     else if (b.kind === 'edificio') { const e = EDIFICI[b.tipo]; i = e.slot.i; j = e.slot.j; w = e.w; d = e.d; davanti = true }
     else { const a = b.kind === 'ostacolo' ? this.m.ostacoli[b.n] : this.m.alberi[b.n]; i = a.i; j = a.j; w = 1; d = 1 }
     const out = []
@@ -255,7 +258,7 @@ export class Mondo3d {
       if (c && this.applicabile(c)) eroe.vaiA(this.celleDiServizio({ kind: 'cosa', id }), () => this._eseguiInCoda(id), this.pezzi.centroDi({ kind: 'cosa', id }))
     }
     this.pezzi.aggiorna(dt, tt)
-    this.terreno.muovi(dt)
+    this.terreno.muovi(dt, this.fx)
     this.fx.aggiorna(dt, eroe.posizione)
     this._badgeLotti()
     this.camera.muovi(dt, {

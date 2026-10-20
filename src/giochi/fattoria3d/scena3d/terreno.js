@@ -4,6 +4,7 @@
 // due edifici di scena. Non sa le regole: legge dal motore cosa è tuo.
 import * as THREE from 'three'
 import { mat, FORME, creaFienile, creaCasa } from './modelli.js'
+import { geometriaCespuglio } from './dal-sotterraneo.js'
 import { LOTTI, LIM, LOTTO, GW, GH, I0, J0, dentro, idx, FISSI } from '../dati/mondo.js'
 
 const ZERO = new THREE.Matrix4().makeScale(0, 0, 0)
@@ -26,6 +27,7 @@ export class Terreno {
     this.decori = { alberi: [], erba: [] }
     this.istanzeOstacoli = []
     this.nuvole = []
+    this.fumi = []; this.tFumo = 0      // i camini di scena: dove esce il fumo, e quando è uscito l'ultimo
     this.texture = []
     this.tempo = 0
     this.vento = { uT: { value: 0 }, uV: { value: 1 } }       // il tempo e l'intensità del vento, letti dal materiale dei ciuffi
@@ -133,14 +135,14 @@ export class Terreno {
   _ostacoli() {
     const lista = this.m.ostacoli
     const cespugli = lista.filter(o => o.tipo === 'cespuglio'), sassi = lista.filter(o => o.tipo === 'sasso')
-    const mc = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(0.4, 0), mat(0xffffff), Math.max(1, cespugli.length))
+    const mc = new THREE.InstancedMesh(geometriaCespuglio(), mat(0xffffff, { vertexColors: true }), Math.max(1, cespugli.length))   // il cespuglio del Sotterraneo (dal-sotterraneo.js)
     const ms = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(0.32, 0), mat(0xffffff), Math.max(1, sassi.length))
     this.istanzeOstacoli = [mc, ms]
     this._indiceOstacoli = new Map([[mc, cespugli.map(o => o.n)], [ms, sassi.map(o => o.n)]])
     mc.count = cespugli.length; ms.count = sassi.length
     const d = new THREE.Object3D(), col = new THREE.Color()
     cespugli.forEach((o, k) => {
-      d.position.set(o.x, 0.28, o.z); d.rotation.set(0, o.ang, 0); d.scale.set(1.15 * o.s, 0.85 * o.s, 1.15 * o.s); d.updateMatrix()
+      d.position.set(o.x, 0, o.z); d.rotation.set(0, o.ang, 0); d.scale.set(1.2 * o.s, 1.05 * o.s, 1.2 * o.s); d.updateMatrix()
       mc.setMatrixAt(k, d.matrix); mc.setColorAt(k, col.setHSL(0.27 + o.c * 0.06, 0.55, 0.26 + o.c * 0.12))
     })
     sassi.forEach((o, k) => {
@@ -249,11 +251,14 @@ export class Terreno {
     for (const f of FISSI) {
       const g = f.tipo === 'fienile' ? creaFienile() : creaCasa()
       g.position.set(f.i + f.w / 2, 0, f.j + f.d / 2); this.scena.add(g)
+      if (g.userData.fumo) this.fumi.push(g.position.clone().add(g.userData.fumo))      // il camino della casa
     }
   }
 
-  muovi(dt) {
+  /** `fx`: gli effetti, per il fumo del camino (di tanto in tanto, piano). */
+  muovi(dt, fx = null) {
     this.tempo += dt; this.vento.uT.value = this.tempo
+    if (fx && this.fumi.length && this.tempo - this.tFumo > 0.9) { this.tFumo = this.tempo; for (const p of this.fumi) fx.fumata(p) }
     if (this.gruppoNuvole.visible) this._muoviNuvole(dt)
   }
 

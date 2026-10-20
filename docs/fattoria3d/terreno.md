@@ -38,6 +38,8 @@ campo di partenza o la partenza dell'eroe (`celleRiservate`); **fuori dal mondo 
 
 ## I sassi e i cespugli
 
+Il cespuglio è quello del Sotterraneo (tre macchie tonde un po' storte, `dal-sotterraneo.js:geometriaCespuglio`), a istanze come prima: lo stesso verde per istanza, la stessa cella-id. La casa di scena (4×3) è la casa di legno del Sotterraneo, con il camino che fuma ([scena.md](scena.md)).
+
 Pochi per lotto (2–5, `dati/ostacoli.js`), sempre gli stessi, **anche dopo aver comprato il lotto**: un lotto appena tuo non è
 vuoto, ma nemmeno un campo minato (mai due vicini, mai sulle strade di serie, sui posti degli edifici, sul campo e sulla
 partenza, sul fienile e la casa, né sotto un albero; i lotti stretti fra edifici ne hanno meno). Bloccano il costruire e il

@@ -8,7 +8,7 @@ stile-vicini.css    la mappa, il viaggio, la visita (`.f3-vic-`)
 visite.js            il filo fra `Gioco.vue` e le visite (`usaVisite`): mappa, viaggio, la scena a richiesta, cassa e mercato
 dati/
   mondo.js           la griglia, i 42 lotti, il quadrato di partenza, i due edifici di scena, le strade di serie, i lotti di un posto
-  catalogo.js        i dieci pezzi (campo, recinto, pollaio, stalla, bancarella, aiuola, panchina, fontana, pozzo, spaventapasseri) e i sette
+  catalogo.js        i pezzi (ora anche passerella, ponte e tavolo; i primi due `calpestabile`, con `alzato`: regole.md) — dieci all'inizio:  (campo, recinto, pollaio, stalla, bancarella, bacheca, aiuola, panchina, fontana, pozzo, spaventapasseri) e i sette
                      edifici unici (pasticceria, mongolfiera, mulino, panificio, caseificio, conserviera, gelateria): prezzi, misure, `liv`, `slot`
   colture.js         le dieci colture: nome, emoji, tempo, `liv`
   ricette.js         le macchine e le loro ricette (`MACCHINE`, `RICETTE` a elenco unico con `dove`), i posti del forno
@@ -28,6 +28,7 @@ motore/
   percorso.js        Dijkstra sulla griglia, le strade costano meno
   vicini.js          i vicini: la classe `Vicini` (entra, aiuta la cassa, compra, vende), `normalizzaVicini` (lo stato a parte), `motoreDiVisita` (la scena di sola lettura da uno snapshot), `esportaLaMiaFattoria`
 scena3d/             il disegno (vedi scena.md); `visita.js` è la visita a un vicino, una sottoclasse di `Mondo3d` su un motore di sola lettura ([vicini.md](vicini.md)); `modelli-colture.js` il campo e le dieci colture (ri-esportati da `modelli.js`); `compagni.js` e `modelli-compagni.js` per i compagni e il contadino ([compagni.md](compagni.md)); `detti.js` (senza three) traduce un rifiuto del motore in una riga, anche per la vista; `azioni.js` fa il gesto davanti a ogni cosa, pollaio e stalla compresi ([animali.md](animali.md))
+  scena3d/modelli-passaggi.js   ponte, passerella e tavolo con le panche: presi dal Sotterraneo 3D e rifatti con i materiali della fattoria (scena.md)
 viste/
   Hud.vue            il gettone del livello (⭐ N con la barra sottile, apre i livelli) e le scorte in alto; da livello 2 il tasto «🧺 Banco» col pallino degli ordini consegnabili
   BarraAzioni.vue    libero / semina / raccogli / costruisci, i numeri, «Tutti»

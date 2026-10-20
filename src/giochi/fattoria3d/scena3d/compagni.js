@@ -87,7 +87,8 @@ export class Compagni {
       if (verso) c.dir = ang(c.dir, Math.atan2(verso[0] - c.x, verso[1] - c.z), Math.min(1, dt * 4))
     }
     g.position.x = c.x; g.position.z = c.z; g.rotation.y = c.dir
-    if (!c.salto) g.position.y = c.sopra ? c.sopra.y : 0
+    c.rialzo = (c.rialzo || 0) + (this.m.quotaPasso(c.x, c.z) - (c.rialzo || 0)) * Math.min(1, dt * 14)     // su un ponte si sale
+    if (!c.salto) g.position.y = c.sopra ? c.sopra.y : c.rialzo
     const vmax = c.tipo === 'cane' ? VEL.cane.corsa : VEL.gatto.fugge
     const pose = { stato: c.stato, vel: c.velo / vmax, fase: c.fase, t: this.t, p: Math.min(1, c.tStato / (c.dur || 1)) }
     if (c.velo > 0) pose.stato = 'vaga'

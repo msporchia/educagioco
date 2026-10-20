@@ -60,6 +60,9 @@ stesse geometrie. Un modello che vuole un canvas lo fa da sé: siamo in pagina.
 - `catalogo-3d/sotterraneo.js`: chi lavora sul Sotterraneo 3D.
 - Un modello che compare in entrambi i giochi: una voce sola con
   `gioco: 'entrambi'`, nel file di chi l'ha costruito.
+- Un modello **copiato** da un gioco all'altro (ponte, passerella e tavolo: Sotterraneo → Fattoria) sta in entrambi i file con **id
+  diversi** (`fattoria:ponte`, `sot:kit:ponte-arco`), tutti e due `gioco: 'entrambi'`, ognuno col `file:` della sua copia; la pagina
+  non li accoppia da sé.
 - Nei test: `test/unita/catalogo-3d.test.mjs` controlla solo il formato e che
   `file:` esista e nomini qualcosa che c'è scritto dentro (niente three, niente
   browser). Che nessun modello manchi non lo controlla nessuno.

@@ -3,6 +3,7 @@
 // gli stati già decisi (le tessere del campo, le pecore). Vedi docs/fattoria3d/scena.md.
 import * as THREE from 'three'
 import { PECORE } from '../dati/regole.js'
+import { casaDiLegno, bancoDellaGuaritrice, bachecaDelleTaglie } from './dal-sotterraneo.js'
 
 // ── materiali e mattoncini ──
 const cache = new Map()
@@ -320,8 +321,11 @@ export function creaSpaventapasseri () {
   return g
 }
 
-// ── la bancarella: 2×1 ──
-export function creaBancarella () {
+// ── la bancarella: 2×1. Il banco della guaritrice del Sotterraneo (dal-sotterraneo.js); il disegno di prima resta per il catalogo ──
+export function creaBancarella () { return bancoDellaGuaritrice() }
+/** La bacheca delle taglie: 2×1; `userData.mostraFogli(n)` accende i foglietti appuntati (gli ordini aperti). */
+export function creaBacheca () { return bachecaDelleTaglie() }
+export function creaBancarellaVecchia () {
   const g = new THREE.Group()
   const legno = mat(0x8a5a2b), rosso = mat(0xd24a3a), bianco = mat(0xfff7ea)
   scatola(g, 1.7, 0.5, 0.55, legno, 0, 0.25, 0.1)
@@ -685,7 +689,9 @@ export function creaFienile () {
   g.userData.altezza = 3.6
   return g
 }
-export function creaCasa () {
+/** La casa di legno del Sotterraneo (dal-sotterraneo.js), 4×3, con il camino: `userData.fumo` è dove esce il fumo. */
+export function creaCasa () { return casaDiLegno() }
+export function creaCasaVecchia () {
   const g = new THREE.Group()
   scatola(g, 3.4, 1.4, 2.2, mat(0xf2e6cf), 0, 0.7, 0)
   tetto(g, 3.8, 2.7, 1.4, 0xc4553a, 0.55)
