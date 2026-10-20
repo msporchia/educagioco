@@ -149,7 +149,7 @@ confine che non porta da una riva all'altra.
 
 ## Il seme
 
-**Seme 8, firme `521a0901` (scheletro) e `79338d7b` (celle)**, scelto il 20 ottobre 2026 con `--semi 1-12` sulla misura 504×300:
+**Seme 8, firme `521a0901` (scheletro) e `cf2f657b` (celle)**, scelto il 20 ottobre 2026 con `--semi 1-12` sulla misura 504×300:
 nessuno dei dodici ha guasti; l'8 è quello del prototipo approvato e ha le pietre più pari (202–227) con la cripta a 76 passi.
 Chi cambia il generatore o la scheda vede le firme diventare rosse in `unita/sotterraneo-mondo-percorso`: si riguarda la pianta,
 se il seme non regge se ne sceglie un altro col foglio, si scrivono le firme nuove in `MONDO_PERCORSO`. **La firma dello

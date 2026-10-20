@@ -178,7 +178,7 @@ export function scheletroDelMondo(seme = MONDO_PERCORSO.seme, { terra = 1 } = {}
       const lim = lc + 1.2 * (rumore(x, y, seme + 21, 6) - 0.5), dd = Math.abs(s - sB)
       if (dd > lim) continue
       if (C.tipo === 'ponte') {
-        if (d1 <= 1.6) { bP[k] = zc; if (dd <= lim - 1) bT[k] = ACQUA }
+        if (d1 <= 1.6) { bP[k] = zc; if (dd <= lim * 0.6) bT[k] = ACQUA }   // il piano sopra l'acqua, le due teste sull'erba
         else { bT[k] = ACQUA; bProf[k] = lim - dd }
       } else if (d1 <= 3.2) bV[k] = zc
       else { bT[k] = ROCCIA; bProf[k] = lim - dd }

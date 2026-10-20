@@ -221,7 +221,7 @@ export const LOTTI = { pietra: [2, 2], antro: [2, 2], bacheca: [2, 1], cartello:
 // `firma` è dello scheletro (si salva col mondo), `firmaCelle` di tutte le zone caricate: chi cambia il generatore le vede
 // cambiare in unita/sotterraneo-mondo-percorso e sa che il mondo dei bambini cambia (`npm run pianta -- --percorso` le stampa)
 export const MONDO_PERCORSO = { seme: 8, largo: 504, alto: 300, su: [352, 216], mezza: 29, salto: 14, terre: 5,
-  firma: '521a0901', firmaCelle: '79338d7b' }
+  firma: '521a0901', firmaCelle: 'cf2f657b' }
 
 // La strada maestra: i punti per cui passa la curva, dal cancello del villaggio alla fine della landa (sulla misura `su`, la
 // riga 0 a nord). Tre file: in basso verso est (villaggio, prati, bosco), si sale a est, in mezzo verso ovest (brughiera,
