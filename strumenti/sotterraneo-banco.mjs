@@ -33,7 +33,7 @@
 //   npm run sotterraneo -- --domande             # le domande obbligate per discesa e per piano rispondendo sempre giusto: dritto alla scala e girando tutto, per eroe (il tetto è 85)
 //   npm run sotterraneo -- --costi               # l'energia: globo atteso, costo e lanci col globo pieno per classe e riga
 //   npm run sotterraneo -- --passi               # i passi che il giocatore finto fa davvero per piano e per discesa (dritto e giro), e quanto globo ridanno
-//   npm run sotterraneo -- --mondo               # il mondo aperto coi mostri: il curioso dalla città all'ingresso di ogni dungeon (per strada e passando dalle tane)
+//   npm run sotterraneo -- --mondo               # il mondo a percorso coi mostri: il curioso dalla pietra all'ingresso di ogni dungeon (per strada e passando dalle tane)
 //   npm run sotterraneo -- --senza-abilita       # il banco di prima: solo attacco, nessun albero
 //   npm run sotterraneo -- --senza-preparati     # il banco senza gli incanti preparati dal campo (resta il mana che torna camminando)
 //   npm run sotterraneo -- --contro <commit>     # le stesse misure sul commit, e «prima → dopo» nelle celle
@@ -416,8 +416,8 @@ async function misura(radice) {
     return { intestazione: nomi, titolo: `i passi che il giocatore finto fa davvero (${OPZ.eroi.length * OPZ.semi} partite a discesa, bravura ${OPZ.prove[0] * 10}/10)`, righe, numeri: true }
   }
 
-  // `--mondo`: il mondo aperto coi mostri (docs/sotterraneo/mondo-aperto-mostri.md, «Le misure»): il curioso esce dalla città che serve
-  // il dungeon e va al suo ingresso, per strada (combatte chi lo raggiunge) o passando dalle tane (va incontro a chi vede); `--semi` storie
+  // `--mondo`: il mondo a percorso coi mostri (docs/sotterraneo/mondo-aperto-mostri.md, «Le misure»): il curioso esce dalla pietra accesa
+  // più avanti prima del dungeon e va al suo ingresso, per strada (combatte chi lo raggiunge) o passando dalle tane (va incontro a chi vede); `--semi` storie
   // per eroe, `--bravure` la prima. Le colonne sono i dungeon, l'abisso per ultimo
   if (argv.includes('--mondo')) {
     const ks = numeri('--discese', [0, 1, 2, 3, 4, 5, 6, 7])
@@ -439,7 +439,7 @@ async function misura(radice) {
       righe.push({ titolo: '   passi', celle: ks.map(k => Math.round(media(come, k, 'passi'))), numeri: true })
     }
     const CHIAVI = ['altare', 'cantine', 'torre', 'gallerie', 'cisterna', 'labirinto', 'fondo', 'abisso']
-    return { intestazione: ks.map(k => CHIAVI[k].slice(0, 7)), titolo: `il mondo aperto: il curioso dalla città al dungeon (${OPZ.eroi.length * OPZ.semi} tragitti a cella, ${Math.round(OPZ.prove[0] * 10)}/10)`, righe, larga: 11 }
+    return { intestazione: ks.map(k => CHIAVI[k].slice(0, 7)), titolo: `il mondo a percorso: il curioso dalla pietra al dungeon (${OPZ.eroi.length * OPZ.semi} tragitti a cella, ${Math.round(OPZ.prove[0] * 10)}/10)`, righe, larga: 11 }
   }
 
   // `--domande`: le domande obbligate per discesa e per piano rispondendo sempre giusto, dritto alla scala (minimo) e girando tutto, per
