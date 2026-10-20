@@ -11,6 +11,7 @@
    «turno» (`conRenderer`): le anteprime aspettano che si chiuda.
 
    Indirizzo: `?gioco=fattoria|sotterraneo|entrambi`, `&cat=prop`, `&q=testo`,
+   `&angolo=`, `&alto=`, `&vicino=`, `&lato=` (la telecamera delle anteprime),
    `&scheda=1` (senza controlli, per la scheda contatto: `window.__catalogo3d.pronto`
    diventa true a fine lavoro).
    ═══════════════════════════════════════════════════════════════════ */
@@ -19,11 +20,16 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 
 const GIOCHI = ['tutti', 'fattoria', 'sotterraneo', 'entrambi']
 const NOME_GIOCO = { fattoria: 'Fattoria', sotterraneo: 'Sotterraneo', entrambi: 'Entrambi' }
-const LATO = 400                                   // lato dell'anteprima, in pixel veri
 const $ = id => document.getElementById(id)
 const el = (tag, cls, testo) => { const e = document.createElement(tag); if (cls) e.className = cls; if (testo != null) e.textContent = testo; return e }
 const pausa = () => new Promise(r => setTimeout(r))
 const parametri = new URLSearchParams(location.search)
+// da dove guarda la telecamera delle anteprime: `&angolo=` gradi attorno (0 = davanti), `&alto=` gradi sopra l'orizzonte, `&vicino=` zoom
+const VERSO = parametri.has('angolo') || parametri.has('alto')
+  ? new THREE.Vector3().setFromSphericalCoords(1, THREE.MathUtils.degToRad(90 - Number(parametri.get('alto') ?? 26)), THREE.MathUtils.degToRad(Number(parametri.get('angolo') ?? 38)))
+  : new THREE.Vector3(0.78, 0.62, 1).normalize()
+const VICINO = Number(parametri.get('vicino')) || 1
+const LATO = Number(parametri.get('lato')) || 400     // lato dell'anteprima, in pixel veri
 
 // ══════════ le voci ══════════
 async function caricaVoci() {
@@ -77,7 +83,7 @@ function metti(obj) {
   sole.position.set(centro.x + r * 1.6, box.min.y + r * 3, centro.z + r * 1.2); sole.target.position.copy(centro)
   const s = sole.shadow.camera; s.left = s.bottom = -r * 1.7; s.right = s.top = r * 1.7; s.near = 0.1; s.far = r * 9; s.updateProjectionMatrix()
   const dist = r / Math.sin(THREE.MathUtils.degToRad(camera.fov / 2)) * 1.08
-  camera.position.copy(centro).add(new THREE.Vector3(0.78, 0.62, 1).normalize().multiplyScalar(dist))
+  camera.position.copy(centro).add(VERSO.clone().multiplyScalar(dist / VICINO))
   camera.near = Math.max(0.02, dist / 200); camera.far = dist * 20; camera.lookAt(centro); camera.updateProjectionMatrix()
   return { centro, r, dist, box }
 }

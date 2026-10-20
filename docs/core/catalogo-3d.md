@@ -8,6 +8,8 @@ pagina mostra, non impone il riuso.
 ```bash
 npm run catalogo3d          # apre strumenti/banco/catalogo-3d.html (Vite)
 npm run catalogo3d:scheda   # PNG contatto in tmp/scatti/catalogo-3d-<gioco>.png
+npm run catalogo3d:scheda -- --gioco fattoria --q watson --angolo 90 --alto 10 --vicino 1.5 --pixel 2
+                            # una voce da vicino, di fianco e bassa: per giudicare un modello
 ```
 
 La scheda (`strumenti/catalogo-3d-scheda.mjs`) serve Vite da sé, non vuole la
@@ -20,7 +22,9 @@ build, e dice le voci che non si creano. `CHROME=…` forza il browser.
   telefono i contesti WebGL sono pochi). Toccando una scheda si apre la vista
   grande (stesso renderer, rotazione col dito, zoom, animazione).
 - Filtri per gioco, categoria e testo; anche da indirizzo
-  (`?gioco=fattoria&cat=prop&q=pozzo`, `&scheda=1` senza controlli).
+  (`?gioco=fattoria&cat=prop&q=pozzo`, `&scheda=1` senza controlli;
+  `&angolo=` gradi attorno, 0 davanti, `&alto=` gradi sopra l'orizzonte e
+  `&vicino=` per la telecamera delle anteprime).
 - «Si assomigliano: valuta»: coppie di giochi diversi con la stessa
   `categoria` e un nome che condivide la radice (le prime cinque lettere).
   Le voci `entrambi` non entrano: sono già in comune.
