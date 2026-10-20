@@ -35,8 +35,9 @@ motore/
 scena3d/             il disegno (vedi scena.md); `facce.js` la faccia di una merce su una tela per i pezzi di HTML sopra la scena (il «+1» di `fx.volo`); `visita.js` è la visita a un vicino, una sottoclasse di `Mondo3d` su un motore di sola lettura ([vicini.md](vicini.md)); `anteprime.js` e `anteprime-pura.js` le foto dei modelli per le carte (senza three: l'inquadratura e la cache; [scena.md](scena.md) «Le anteprime»); `modelli-colture.js` il campo e le quindici colture (ri-esportati da `modelli.js`); `compagni.js` e `modelli-compagni.js` per i compagni e il contadino ([compagni.md](compagni.md)); `detti.js` (senza three) traduce un rifiuto del motore in una riga, anche per la vista; `ottimizza.js` spegne l'ombra alle mesh piccole di un modello appena creato ([scena.md](scena.md) «Qualità e peso»); `azioni.js` fa il gesto davanti a ogni cosa, pollaio e stalla compresi ([animali.md](animali.md))
   scena3d/modelli-passaggi.js   ponte, passerella e tavolo con le panche: presi dal Sotterraneo 3D e rifatti con i materiali della fattoria (scena.md)
 viste/
-  Faccia.vue         la faccia di una merce (`k` la chiave, `n` il numerino): il pezzo dell'atlante 2D con `Provino.vue`, l'emoji come ripiego; la usano HUD, banco, macchina, semi, livelli, visita
-  Hud.vue            il gettone del livello (⭐ N con la barra sottile, apre i livelli) e le scorte in alto (ognuna con la sua faccia); da livello 2 il tasto «🧺 Banco» col pallino degli ordini consegnabili
+  Faccia.vue         la faccia di una merce (`k` la chiave, `n` il numerino): il pezzo dell'atlante 2D con `Provino.vue`, l'emoji come ripiego; la usano inventario, banco, macchina, semi, livelli, visita
+  Hud.vue            il gettone del livello (⭐ N con la barra sottile, apre i livelli), il tasto «🎒 Inventario» (pallino se è entrata roba dall'ultima apertura) e, da livello 2, «🧺 Banco» col pallino degli ordini consegnabili. Niente liste di scorte sul prato
+  Inventario.vue     il foglio delle scorte a schede (🌾 raccolti, 🧺 prodotti, 🧶 lana e altro): gettoni con faccia e numero, un tocco dice nome e a cosa serve; solo lettura, niente vendere. Il conto sta in `inventario-puro.js` (stile: `stile-inventario.css`)
   BarraAzioni.vue    libero / semina / raccogli / costruisci, i numeri
   CostruisciQui.vue  il foglio «Cosa costruiamo?» (si apre tenendo premuto su un posto libero): le schede per categoria e la griglia di carte con l'anteprima 3D del modello (`anteprima(tipo)`, emoji come segnaposto), il prezzo o «📦 ×N», le chiuse col lucchetto che tremano e dicono il livello ([scena.md](scena.md))
   BarraStrade.vue    il pennello delle strade: strada, gomma, «Fatto»
@@ -65,7 +66,8 @@ Registrazione: `src/giochi/indice.js` (il manifesto, in coda) e `src/giochi/sche
 |---|---|
 | `[data-f3="campo"] canvas` | il contenitore e la tela |
 | `[data-f3="az-libero|az-semina|az-raccogli|az-costruisci"]` | i tasti delle azioni (`.acceso` se armato); `.f3-n` è il numero rosso |
-| `[data-f3="scorte|prodotti|lana"]` | il HUD |
+| `[data-f3="apri-inventario"]`, `inventario-nuovo` (il pallino) | il tasto nell'HUD |
+| `[data-f3="inventario"]`, `[data-scheda-inv="raccolti|prodotti|altro"]`, `inventario-riga`, `inventario-vuoto`; i gettoni `button[data-merce="<id>"]` con `data-n` | il foglio dell'inventario (le colture arrivate al livello, le vuote velate) |
 | `[data-f3="semi"]`, `[data-seme="carota"]` | la scelta del seme |
 | `[data-f3="costruisci-qui"]`, `[data-f3="costruisci-velo"]`, `[data-scheda="campi"]`, `[data-carta="campo"]` | il foglio «Costruisci qui» (si apre con `premuto` ~0,45 s su un posto libero, o col tasto 🏗️), il velo che si tocca per chiuderlo, una scheda (`campi`, `animali`, `edifici`, `decori`, `passaggi`; `.acceso`) e una carta (anche `strada` e `gomma`; `data-cat` la scheda) |
 | `[data-f3="costruisci-msg"]`, `[data-carta].trema` | la riga sotto le carte (livello che manca, «Servono 🪙 N») e la carta chiusa che trema |
@@ -78,7 +80,7 @@ Registrazione: `src/giochi/indice.js` (il manifesto, in coda) e `src/giochi/sche
 | `[data-f3="trascina-fantasma"]` | la faccia della carta in mano, solo mentre si trascina |
 | `[data-f3="pasticceria"]` | il corpo del menu, solo se la macchina è la pasticceria (il Pastificio; un elemento ha un solo `data-f3`) |
 | `[data-f3="mongolfiera"]` (`data-stato`), `[data-f3="mongolfiera-cassa"]` (`data-fila`, `data-cassa`, `data-piena`, `data-pronta`), `[data-f3="mongolfiera-carica"]` (`data-puoi`), `[data-f3="mongolfiera-parti"]`, `-piene`, `-tutto`, `-fila-bonus`, `-msg`, `-viaggio`, `-chiusa` | il foglio della mongolfiera ([mongolfiera.md](mongolfiera.md)) |
-| `[data-merce="<id>"]` | la faccia di una merce (`viste/Faccia.vue`): HUD, banco, macchina, scelta del seme, livelli, cassa e mercato; il volo «+1» sopra la scena |
+| `[data-merce="<id>"]` | la faccia di una merce (`viste/Faccia.vue`; anche il gettone dell'inventario ha lo stesso attributo: per il gettone `button[data-merce]`): inventario, banco, macchina, scelta del seme, livelli, cassa e mercato; il volo «+1» sopra la scena |
 | `[data-f3="livello"]`, `[data-f3="livello-nuovo"]`, `[data-f3="livelli"]`, `[data-f3="avviso-livello"]` | il gettone, il suo pallino, il foglio dei livelli, l'avviso che compare a ogni salita |
 | `[data-carta].bloccata`, `[data-seme].bloccato`, `[data-f3="semi-msg"]` | una carta o una coltura non ancora arrivata, e la riga che dice il livello (la scelta dei semi) |
 | `[data-f3="apri-opzioni"]`, `[data-f3="opzioni"]`, `[data-preset="basso"]` | le opzioni |

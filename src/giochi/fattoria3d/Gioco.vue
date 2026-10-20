@@ -29,6 +29,8 @@ import { schedeDi } from './dati/carte.js'
 import SceltaSeme from './viste/SceltaSeme.vue'
 import Macchina from './viste/Macchina.vue'
 import Livelli from './viste/Livelli.vue'
+import Inventario from './viste/Inventario.vue'
+import { schedeDellInventario, robaNuova, contoDi } from './viste/inventario-puro.js'
 import Bacheca from './viste/Bacheca.vue'
 import Mongolfiera from './viste/Mongolfiera.vue'
 import Dialogo from './viste/Dialogo.vue'
@@ -65,15 +67,15 @@ const borsa = {
 
 // ── cosa si vede (il motore non è reattivo: si rilegge dopo ogni cambio e ogni quarto di secondo) ──
 const versione = ref(0)
-const foto = ref({ scorte: [], prodotti: [], lana: 0, daFare: { semina: 0, raccogli: 0 }, livello: 1, quanto: 0 })
+const foto = ref({ robaNuova: false, daFare: { semina: 0, raccogli: 0 }, livello: 1, quanto: 0 })
 const datiLivello = () => { const a = avanzamento(motore.esperienza()); return { livello: a.livello, quanto: a.quanto } }
 let ultimaFoto = ''
+let inventarioVisto = null               // il conto di quando si è guardato l'inventario l'ultima volta (in memoria, non si salva)
 const ripresa = () => {
   const s = motore.s
-  const elenco = o => Object.entries(o).filter(([, n]) => n > 0).map(([k, n]) => ({ k, n }))      // [{ k, n }]: la faccia la disegna il HUD
+  if (!inventarioVisto) inventarioVisto = contoDi(s)           // il primo sguardo è la base: «nuovo» è ciò che arriva dopo
   const nuova = {
-    scorte: elenco(s.merci), prodotti: elenco(s.prodotti),
-    lana: s.lana, daFare: motore.daFare(), ...datiLivello(),
+    robaNuova: !inventarioAperto.value && robaNuova(inventarioVisto, s), daFare: motore.daFare(), ...datiLivello(),
   }
   const firma = JSON.stringify(nuova)
   if (firma !== ultimaFoto) { ultimaFoto = firma; foto.value = nuova }      // niente nuova foto se è uguale: il HUD non si rifà ogni quarto di secondo
@@ -127,6 +129,7 @@ const semiAperto = ref(false)
 const macchinaAperta = ref(null)         // il tipo della macchina di cui si vede il menu
 const macchinaMsg = ref('')
 const livelliAperto = ref(false)
+const inventarioAperto = ref(false)
 const livelloNuovo = ref(false)
 const bancoAperto = ref(false)             // il foglio del banco
 const bancoMsg = ref('')
@@ -162,7 +165,7 @@ const ui = {
     avvisoFine = testo ? performance.now() + DURATA_AVVISO : 0
   },
   apriCostruisci(i, j) { apriCostruisci(i, j) },                           // tenere premuto su un posto libero del terreno tuo
-  fogliAperti: () => !!dialogo.value || !!costruisciQui.value || semiAperto.value || !!macchinaAperta.value || livelliAperto.value || bancoAperto.value || nave.value || mappaAperta.value || (opzioniAperte.value && !opzioniRidotte.value),
+  fogliAperti: () => !!dialogo.value || !!costruisciQui.value || semiAperto.value || !!macchinaAperta.value || livelliAperto.value || inventarioAperto.value || bancoAperto.value || nave.value || mappaAperta.value || (opzioniAperte.value && !opzioniRidotte.value),
   zonaDrop: () => (zonaVia.value || null)?.getBoundingClientRect() || null,
   trascinando(info) { trascinando.value = info },
 }
@@ -254,6 +257,11 @@ function ritira() {
   ui.cambio(); mondo.fx.volo('+' + r.n + ' ' + EDIFICI[tipo].emoji, mondo.pezzi.centroDi({ kind: 'edificio', tipo }), 2.6)
   mondo.eroe.avvia('esulta', 0.9)
 }
+
+// ── l'inventario: le scorte a schede (si calcola solo a foglio aperto) ──
+const inventario = computed(() => { void versione.value; return inventarioAperto.value ? schedeDellInventario(motore.s, motore.livello()) : null })
+function apriInventario() { inventarioVisto = contoDi(motore.s); inventarioAperto.value = true; ripresa() }
+function chiudiInventario() { inventarioVisto = contoDi(motore.s); inventarioAperto.value = false; ripresa() }
 
 // ── il foglio dei livelli ──
 const livelli = computed(() => {
@@ -398,7 +406,7 @@ onBeforeUnmount(() => {
 
       <template v-if="mondo || versione">
         <div class="f3-casa" v-show="!inVisita">
-        <Hud v-bind="foto" :nuovo="livelloNuovo" :banco="banco" @livello="apriLivelli" @banco="apriBanco" />
+        <Hud v-bind="foto" :nuovo="livelloNuovo" :banco="banco" @livello="apriLivelli" @banco="apriBanco" @inventario="apriInventario" />
         <div v-if="toast" class="f3-toast" data-f3="avviso-livello">⭐ {{ toast.testo }}</div>
         <button class="f3-angolo" aria-label="opzioni" data-f3="apri-opzioni" @click="opzioniAperte = !opzioniAperte">⚙</button>
         <button v-if="cameraLibera" class="f3-centra" data-f3="centra" @click="mondo.tornaAllEroe()">⌖ Torna all'eroe</button>
@@ -421,6 +429,7 @@ onBeforeUnmount(() => {
                @consegna="consegna" @cambia="cambiaOrdine" @chiudi="bancoAperto = false" />
         <Mongolfiera v-if="nave" v-bind="{ nave: mongolfiera, traguardo: traguardoNave, livelloIngresso: LIVELLO_MONGOLFIERA }" :messaggio="naveMsg"
                      @carica="caricaCassa" @parti="partiMongolfiera" @chiudi="nave = false" />
+        <Inventario v-if="inventarioAperto && inventario" :schede="inventario" @chiudi="chiudiInventario" />
         <Livelli v-if="livelliAperto" v-bind="livelli" @chiudi="livelliAperto = false" />
         <Opzioni v-if="opzioniAperte" :q="q" :stat="stat" :conta="conta" :rapporto="rapporto" @cambia="cambiaOpzioni"
                  @stress="(t, n) => { mondo.stress(t, n); ui.cambio() }" @rapporto="creaRapporto" @ridotto="v => opzioniRidotte = v"

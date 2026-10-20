@@ -88,7 +88,14 @@ await tocca(...await schermoDi(campo.i + 1, campo.j + 1))
 await fermo()
 const raccolto = await stato()
 uguale('quattro carote in scorta', raccolto.merci.carota, 4)
-controlla('lo vede anche il HUD (la faccia della carota e il numero)', await page.locator('[data-f3="scorte"] [data-merce="carota"]').count() === 1 && /4/.test(await page.locator('[data-f3="scorte"]').innerText()))
+controlla('il HUD non ha più liste di scorte, solo il tasto dell\'inventario', await page.locator('[data-f3="hud"] [data-merce]').count() === 0 && await page.locator('[data-f3="apri-inventario"]').isVisible())
+controlla('è entrata roba: il tasto ha il pallino', await page.locator('[data-f3="inventario-nuovo"]').count() === 1)
+await toccaEl('[data-f3="apri-inventario"]')
+controlla('l\'inventario mostra la carota con la faccia e il numero', await page.locator('[data-f3="inventario"] button[data-merce="carota"][data-n="4"]').count() === 1)
+await toccaEl('[data-f3="inventario"] button[data-merce="carota"]')
+controlla('un tocco dice il nome e a cosa serve', /Carote/.test(await page.locator('[data-f3="inventario-riga"]').innerText()))
+await toccaEl('[data-f3="inventario"] [data-chiudi]')
+controlla('chiuso l\'inventario il pallino è spento', await page.locator('[data-f3="inventario-nuovo"]').count() === 0)
 await toccaEl('[data-f3="az-libero"]')
 
 /* ── costruire: tenere premuto su un posto libero apre «Costruisci qui»; la carta va sulla cella premuta ──
@@ -358,6 +365,14 @@ await scatto(page, 'fattoria3d-ritorno')
    Lo stato si prepara dalla console (`__fattoria3d`); i tasti dei fogli si premono davvero. Le cose sul prato
    (un edificio) si aprono con `azioni.fai`: arrivarci a piedi è già provato dal resto. */
 const m3 = fn => page.evaluate(fn)
+/** Apre l'inventario sulla scheda e dice se il gettone c'è; poi lo richiude. */
+const vediInventario = async (scheda, k) => {
+  await toccaEl('[data-f3="apri-inventario"]')
+  await toccaEl(`[data-scheda-inv="${scheda}"]`)
+  const c = await page.locator(`[data-f3="inventario"] button[data-merce="${k}"]`).count() === 1
+  await toccaEl('[data-f3="inventario"] [data-chiudi]')
+  return c
+}
 const chiudiFoglio = async () => { await page.locator('[data-chiudi]').first().click(); await attendi(page, 300) }
 // un livello che sale: l'avviso, il pallino sul gettone, e il foglio lo toglie
 await m3(() => { const m = window.__fattoria3d.motore; m.s.esperienza = 58; m._spendi(5) })
@@ -637,7 +652,7 @@ await tocca3d(idP)
 uguale('raccogliere porta le uova in dispensa (le due galline nutrite: quella di partenza e quella comprata, che ha avuto la sua pappa)', (await stato()).prodotti.uova, 2)
 controlla('le bestie hanno di nuovo fame', (await bestieDi(idP)).every(f => f === null))
 await attendi(page, 500)
-controlla('il HUD mostra le uova (la loro faccia)', await page.locator('[data-f3="prodotti"] [data-merce="uova"]').count() === 1)
+controlla('l\'inventario mostra le uova (la loro faccia)', await vediInventario('altro', 'uova'))
 uguale('il contatore delle uova avanza', ((await leggiProfilo(page)).totals || {}).fattoria3dUova, 2)
 // la stalla: il latte
 const idS = await mettiCortile('stalla')
@@ -650,7 +665,7 @@ await tocca3d(idS)
 uguale('raccogliere porta il latte in dispensa', (await stato()).prodotti.latte, 1)
 await attendi(page, 500)
 uguale('il contatore del latte avanza', ((await leggiProfilo(page)).totals || {}).fattoria3dLatte, 1)
-controlla('il HUD mostra anche il latte', await page.locator('[data-f3="prodotti"] [data-merce="latte"]').count() === 1)
+controlla('l\'inventario mostra anche il latte', await vediInventario('altro', 'latte'))
 // la stalla e il recinto funzionano allo stesso modo: una bestia nel prezzo, le altre dal cartello, fino alla capienza
 await compraDa('stalla').dispatchEvent('click')
 await attendi(page, 300)
