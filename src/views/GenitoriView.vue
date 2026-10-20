@@ -36,6 +36,7 @@ import ComeVa from '../quiz/ComeVa.vue'
 import MoneteGiocoPerGioco from '../components/varieta/Tetti.vue'
 import ArchivioGenitori from '../components/genitori/Archivio.vue'
 import CartaAmici from '../components/amici/CartaAmici.vue'
+import GiochiImpostazioni from '../components/genitori/Giochi.vue'
 
 const emit = defineEmits(['vai'])
 
@@ -865,6 +866,9 @@ async function rimetti(v) {
       <!-- ══════════ scheda: giochi e domande ══════════ -->
       <template v-else-if="scheda === 'giochi'">
       <!-- l'unico posto dove si tara: vedi docs/genitori/manopola.md, docs/genitori/quadro.md -->
+      <h2>I giochi di {{ chi }}</h2>
+      <GiochiImpostazioni />
+
       <h2>Quanti anni ha</h2>
       <p class="mini">È la taratura, non un'anagrafe: decide quali giochi trova in home
         e quanto sono difficili le domande. Sotto c'è il quadro di quell'età — e ogni
