@@ -21,6 +21,7 @@ import { disegnaPropsAperti } from './props-aperto.js'
 import { creaLontano } from './lontano.js'
 import { creaVita } from './vita.js'
 import { creaNebbia } from './nebbia.js'
+import { creaScia } from './scia.js'
 import { creaPersone } from './persone.js'
 import { creaPalcoSopra } from './palco.js'
 import { creaVeduta, SOLE } from './veduta.js'
@@ -64,6 +65,7 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = {}, fon
   const lontano = creaLontano(m, scena, suolo, { quotaFuori: fuori.quotaFuori, M: fuori.M })
   const natura = creaNatura(m, kit, scena)
   const vita = creaVita(scena, trame)
+  const scia = creaScia(scena, (x, z) => quotaA(m, x, z))
   const parti = dividiPerPezzo(m)
   const conFontana = new Set(fontane.map(f => f.citta))   // le città dove l'acqua prende il posto del pozzo (fontana.js)
   const matCristallo = vesti(new MeshStandardMaterial({ color: 0xb78cff, emissive: 0x6a3cff, emissiveIntensity: 0.6, roughness: 0.2 }), { oggetto: 'istanza' })
@@ -73,6 +75,7 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = {}, fon
     io: { x: m.partenza.x + 0.5, z: m.partenza.y + 0.5, verso: { dx: 0, dy: 1 }, sprite: 'cavaliere', mano: null, mancina: null },
     persone: [], accese: new Set(), aperti: new Set(), grate: new Map(), pallini: new Map(), divieti: new Set(), portale: null, veduta: false,
     mostri: [], perTerra: [],   // i mostri di sopra e il bottino per terra, già nel cerchio e fuori dalla nebbia (mostri.js)
+    scia: null, sciaDa: 0,      // la strada verso la meta: { luci, meta } (scia.js), e da quale luce si accende
   }
   const eroe = { stato: null, x: 0, z: 0, verso: S.io.verso, sprite: 'cavaliere', mano: null, mancina: null }
 
@@ -174,6 +177,7 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = {}, fon
   }
   img.src = ATLANTE
 
+  let sciaPosata = null
   let portale = null, raf = 0, prima = 0, tempo = 0, vivo = true, L = 0, A = 0
   const centro = new Vector3(), soleVista = new Vector3()
   // la misura è quella del contenitore, mai della finestra, e la rilegge il ResizeObserver quando cambia (come giù)
@@ -236,6 +240,8 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = {}, fon
     if (!pv && portale) { scena.remove(portale.p.gruppo); portale.p.via(); portale = null }
     if (portale) { portale.p.gruppo.visible = nebbia.visto(portale.x, portale.z) && !veduta; portale.p.aggiorna(tempo) }
     vita.passo(dt, tempo, centro)
+    if (S.scia !== sciaPosata) { sciaPosata = S.scia; scia.posa(S.scia && S.scia.luci, S.scia && S.scia.meta) }
+    scia.da(S.sciaDa)
     // l'eroe e le persone
     eroe.x = S.io.x; eroe.z = S.io.z; eroe.verso = S.io.verso; eroe.sprite = S.io.sprite; eroe.mano = S.io.mano; eroe.mancina = S.io.mancina
     // `#…&senzaeroe`: le foto delle icone (strumenti/scatti.mjs, icone-mondo); nello scontro l'eroe lo disegna il palco
@@ -291,6 +297,8 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = {}, fon
     quota,
     // le celle scoperte attorno a (x, z): entrano nelle trame della nebbia (e nel bit che si salva)
     scopri(x, z, r) { return nebbia.scopri(x, z, r, tempo) },
+    // il velo della strada verso la meta: quelle celle si disegnano come viste, ma non si salvano (nebbia.js, apriIlVelo)
+    apriLaStrada(celle) { nebbia.strada(celle, tempo) },
     visto: (x, z) => nebbia.visto(x, z),
     aSchermo(x, y, z, fuori) { return cam.schermo(x, y, z, fuori) },
     // il punto del terreno sotto il dito (px nel campo), o null
@@ -304,7 +312,7 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = {}, fon
                msJs: Math.round(ms.msJs * 100) / 100, msDisegno: Math.round(ms.msDisegno * 100) / 100,
                figure: persone ? persone.figure.quante + persone.figureEroe.quante : 0, pezzi: [...costruiti.keys()].sort((a, b) => a - b),
                msPezzi: Math.round(Math.max(0, ...[...costruiti.values()].map(f => f.ms))), veduta: cam.veduta, scenario: 'mondo',
-               palco: !!(palco && palco.attivo), mostri: S.mostri.length }
+               palco: !!(palco && palco.attivo), mostri: S.mostri.length, scia: scia.quante }
     },
     get pronto() { return !!persone && costruiti.size >= Math.min(4, grigliaDi(m).n) },
     distruggi() {
@@ -312,7 +320,7 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = {}, fon
       api.ferma()
       if (osserva) osserva.disconnect()
       for (const p of [...costruiti.keys()]) buttaPezzo(p)
-      for (const x of [natura, vita, lontano, nebbia, acqua, cielo, persone, palco]) if (x) x.via()
+      for (const x of [natura, vita, scia, lontano, nebbia, acqua, cielo, persone, palco]) if (x) x.via()
       if (portale) portale.p.via()
       scena.remove(fuori.mesh); fuori.mesh.geometry.dispose()
       for (const x of Object.values(suolo)) x.dispose()

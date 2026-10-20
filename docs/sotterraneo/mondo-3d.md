@@ -227,7 +227,7 @@ in un pezzo solo (disegnato anche sotto i pezzi vicini). Il degrado a scalini no
 
 ## Cosa manca
 
-La freccina dice la direzione sul bordo, non la strada vera ([missioni-freccina.md](missioni-freccina.md)); le figure pixel art in un
+Dove andare (la carta della meta, «portami lì», le luci e il velo della strada) sta in [mondo-3d-la-meta.md](mondo-3d-la-meta.md); le figure pixel art in un
 mondo liscio, ancorate, reggono ma vanno viste sul telefono (mai misurato su uno vero). I mostri: [mondo-aperto-mostri-scena.md](mondo-aperto-mostri-scena.md).
 
 Nei test: `unita/sotterraneo-mondo-props` (gli oggetti delle città: mai su strade, posti o porte, nel loro pezzo, il carattere

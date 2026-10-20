@@ -150,3 +150,30 @@
 .sot3d-annuncio-grigio { border-color: #9a9a9a }
 /* lo scontro di sopra (viste/ScontroSopra.vue): i suoi pezzi stanno dove stanno nello scontro di giù */
 .sot3d-sopra-scontro { display: contents }
+
+/* la meta di adesso (viste/Mondo3d.vue, docs/sotterraneo/mondo-3d-la-meta.md): in cima, l'icona del posto, il nome, i passi e
+   «portami lì». Azzurra come la bussola della meta e le luci per terra */
+.sot3d-meta {
+  display: grid; grid-template-columns: 52px 1fr auto; align-items: center; gap: 0 10px; padding: 7px 8px 7px 7px; border-radius: 16px;
+  background: linear-gradient(160deg, #14304a, var(--sot-carta) 75%); border: 2px solid #7fd0ff; box-shadow: 0 6px 18px #0007, 0 0 12px #7fd0ff55;
+  animation: sot-appare .3s backwards;
+}
+.sot3d-meta-icona { width: 52px; height: 52px; border-radius: 50%; overflow: hidden; display: grid; place-items: center; background: #7fd0ff; border: 2px solid #14304a }
+.sot3d-meta-icona img { width: 100%; height: 100%; object-fit: cover }
+.sot3d-meta-icona .em { font-size: 30px; line-height: 1 }
+.sot3d-meta-icona.sot3d-meta-consegna { background: #ffd23f; border-color: #2b2433 }
+.sot3d-meta-icona b { font-size: 28px; font-weight: 800; color: #2b2433 }
+.sot3d-meta-testo { display: grid; min-width: 0; line-height: 1.15 }
+.sot3d-meta-testo b { font-size: 15.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.sot3d-meta-testo i { font-style: normal; font-size: 13px; color: #a8dcff }
+.sot-grosso.sot3d-meta-vai { width: auto; min-height: 48px; margin: 0; padding: 8px 13px; font-size: 15px; white-space: nowrap; background: #7fd0ff; color: #0c2236 }
+.sot3d-meta[data-guidato="1"] .sot3d-meta-vai { background: #ffffff22; color: inherit }
+/* nella veduta la meta si tocca (è «portami lì») e pulsa, anche sotto le nuvole */
+.sot3d-nome-posto.sot3d-nome-meta { pointer-events: auto; padding: 4px 10px; font-size: 14px; box-shadow: 0 0 0 3px #7fd0ff66, 0 0 14px 4px #7fd0ffaa;
+  animation: sot3d-meta-pulsa 1.2s ease-in-out infinite }
+@keyframes sot3d-meta-pulsa { 50% { box-shadow: 0 0 0 6px #7fd0ff33, 0 0 20px 8px #7fd0ffcc } }
+/* il cartello: la freccia che porta alla meta */
+.sot-fum-freccia-meta { padding: 3px 6px; margin-left: -6px; border-radius: 8px; background: #d8f1ff }
+.sot-fum-freccia b.sot-fum-di-qui { display: inline; width: auto; font-size: 12.5px; color: #0b4a6a; padding-left: 22px }
+.sot-fum-freccia[data-meta-qui] b.sot-fum-di-qui { padding-left: 0 }
+@media (prefers-reduced-motion: reduce) { .sot3d-meta, .sot3d-nome-posto.sot3d-nome-meta { animation: none } }
