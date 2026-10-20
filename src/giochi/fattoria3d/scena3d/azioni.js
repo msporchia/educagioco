@@ -3,7 +3,7 @@
 // Le finestre (la scelta del seme, il menu delle macchine, le conferme) sono della vista: si chiamano da `ui`.
 import * as THREE from 'three'
 import { COLTURE } from '../dati/colture.js'
-import { MONGOLFIERA, COSTI } from '../dati/regole.js'
+import { COSTI } from '../dati/regole.js'
 import { EDIFICI, PEZZI } from '../dati/catalogo.js'
 import { MACCHINE } from '../dati/ricette.js'
 import { PRODOTTI_ANIMALI } from '../dati/animali.js'
@@ -85,7 +85,7 @@ export class Azioni {
         if (!r.ok) return fx.parla(dettoDi(r.motivo, { per: 'nutrirle' }))
         pezzi.richiama(c.id, { x: eroe.x - p.x, z: eroe.z - p.z })
         pezzi.sincronizza()
-        const testo = { cresciuta: '🐑 è cresciuta!', nata: '🐣 è nata una pecorella!', pasto: '🍼 +1', cuore: '❤️' }[r.evento]
+        const testo = { cresciuta: '🐑 è cresciuta!', nata: '🐣 è nata una pecorella!', pasto: '🍼 +1', cuore: '❤️', lana: '🍽️ ×' + r.n }[r.evento]
         fx.volo(testo, p, 1.8)
         if (r.evento === 'cresciuta') fx.scoppietta(p.clone().setY(0.8), 0xffd24a, 12, 1.6, 2.4)
         if (r.evento === 'nata') fx.scoppietta(p.clone().setY(0.8), 0xff9ab8, 14, 1.6, 2.4)
@@ -174,20 +174,10 @@ export class Azioni {
 
   // ── gli edifici unici ──
   edificio(tipo) {
-    const { eroe, fx, ui } = this.c, m = this.m
+    const { ui } = this.c, m = this.m
     if (!m.s.posseduti[tipo]) return this.offriEdificio(tipo)
     if (MACCHINE[tipo]) return ui.apriMacchina(tipo)           // il menu della SUA macchina
-    const centro = this.c.pezzi.centroDi({ kind: 'edificio', tipo })
-    const M = m.s.mongolfiera
-    if (M.cassa) {
-      const r = m.ritiraCassa()
-      if (r.ok) { fx.volo('+' + r.lana + ' 🧶', centro, 3); eroe.avvia('esulta', 0.9); ui.cambio() }
-      return
-    }
-    if (M.fine) return fx.parla(dettoDi('in-viaggio'))
-    const r = m.carica()
-    if (r.ok) { eroe.avvia('semina', 0.8); fx.volo('−' + MONGOLFIERA.carico + ' raccolti', centro, 3); ui.cambio() }
-    else fx.parla(`Carica ${MONGOLFIERA.carico} raccolti sulla mongolfiera`)
+    if (tipo === 'mongolfiera') return ui.apriMongolfiera()   // la nave: il foglio con la stiva di casse
   }
   /** Un edificio non ancora tuo: dice il prezzo, il livello a cui arriva e (se manca) il terreno da comprare prima. */
   offriEdificio(tipo) {

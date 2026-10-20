@@ -62,25 +62,26 @@ export class Effetti {
         b.testo = testo + classe; el.textContent = testo; el.className = 'f3-badge ' + classe; el.hidden = !testo
       },
       metti(x, y, visto, centrato = false) {
-        el.style.transform = `translate(${x}px, ${y}px) translate(-50%, ${centrato ? '-50%' : '-100%'})`
-        el.style.visibility = visto ? 'visible' : 'hidden'
+        // a telecamera ferma il cartello sta dov'era: niente scrittura nello stile (il browser rifarebbe lo stile di ogni cartello a ogni fotogramma)
+        const pos = `translate(${Math.round(x * 4) / 4}px, ${Math.round(y * 4) / 4}px) translate(-50%, ${centrato ? '-50%' : '-100%'})`
+        if (pos !== b.pos) { b.pos = pos; el.style.transform = pos }
+        if (visto !== b.visto) { b.visto = visto; el.style.visibility = visto ? 'visible' : 'hidden' }
       },
       togli() { el.remove() },
     }
     return b
   }
 
-  /** Il cartello di un recinto, un pollaio o una stalla: una riga di stato (pronto, ha fame, secondi), il conto «🐄 2/4» e il
+  /** Il cartello di un recinto, un pollaio o una stalla: una riga di stato (pronto, ha fame, secondi), il
       pulsante «＋ 🪙 40» che compra una bestia (`sulCompra`, senza conferma). Stessa forma di un badge: `imposta`, `metti`, `togli`;
       in più `bestie(q, povero)`. Il pulsante è l'unica parte che prende il dito: il resto lascia passare il tocco alla tela. */
-  nuovoCartello(sulCompra) {
-    const el = document.createElement('div'); el.className = 'f3-badge f3-cartello'; el.dataset.f3 = 'cartello-bestie'
+  nuovoCartello(sulCompra, tipo = '') {
+    const el = document.createElement('div'); el.className = 'f3-badge f3-cartello'; el.dataset.f3 = 'cartello-bestie'; el.dataset.pezzo = tipo
     const stato = document.createElement('span'); stato.className = 'stato'; stato.hidden = true
     const riga = document.createElement('div'); riga.className = 'riga'
-    const conto = document.createElement('span'); conto.className = 'conto'
     const tasto = document.createElement('button'); tasto.type = 'button'; tasto.className = 'compra'; tasto.dataset.f3 = 'compra-bestia'
     tasto.addEventListener('click', e => { e.stopPropagation(); sulCompra() })
-    riga.append(conto, tasto); el.append(stato, riga); this.sopra.appendChild(el)
+    riga.append(tasto); el.append(stato, riga); this.sopra.appendChild(el)
     const b = {
       el, testo: '', chiave: '',
       imposta(testo, classe = '') {
@@ -88,19 +89,19 @@ export class Effetti {
         b.testo = testo + classe; stato.textContent = testo; stato.className = 'stato ' + classe; stato.hidden = !testo
       },
       bestie(q, povero) {
-        const chiave = `${q.n}/${q.max}/${q.prezzo}/${povero}`
+        const chiave = `${q.pieno}/${q.prezzo}/${povero}`
         if (b.chiave === chiave) return
         b.chiave = chiave
-        conto.textContent = `${q.emoji} ${q.n}/${q.max}`
-        el.dataset.n = String(q.n); el.dataset.max = String(q.max)
         tasto.hidden = q.pieno; tasto.textContent = q.pieno ? '' : `＋ 🪙 ${q.prezzo}`
         tasto.setAttribute('aria-disabled', povero ? 'true' : 'false'); tasto.classList.toggle('spento', !!povero)
         tasto.setAttribute('aria-label', q.pieno ? '' : `compra una ${q.bestia}`)
-        riga.classList.toggle('piena', q.pieno)
+        riga.hidden = q.pieno                                  // pieno: niente pulsante, niente riga
       },
       metti(x, y, visto, centrato = false) {
-        el.style.transform = `translate(${x}px, ${y}px) translate(-50%, ${centrato ? '-50%' : '-100%'})`
-        el.style.visibility = visto ? 'visible' : 'hidden'
+        // a telecamera ferma il cartello sta dov'era: niente scrittura nello stile (il browser rifarebbe lo stile di ogni cartello a ogni fotogramma)
+        const pos = `translate(${Math.round(x * 4) / 4}px, ${Math.round(y * 4) / 4}px) translate(-50%, ${centrato ? '-50%' : '-100%'})`
+        if (pos !== b.pos) { b.pos = pos; el.style.transform = pos }
+        if (visto !== b.visto) { b.visto = visto; el.style.visibility = visto ? 'visible' : 'hidden' }
       },
       togli() { el.remove() },
     }

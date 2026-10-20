@@ -11,6 +11,7 @@ import {
   creaFontana, creaPecora, creaRecinto, muoviPecore, creaGallina, creaPollaio, creaStalla, muoviBestie, creaMucca,
   creaFienile, creaCasa, creaTrattore, creaCassa, creaBacheca, creaCasaVecchia, creaBancarellaVecchia,
 } from '../../../src/giochi/fattoria3d/scena3d/modelli.js'
+import { creaZuccherificio, creaTelaio, creaSartoria, creaTintoria } from '../../../src/giochi/fattoria3d/scena3d/modelli-macchine.js'
 import { creaContadino, creaCane, posaCane, creaGatto, posaGatto } from '../../../src/giochi/fattoria3d/scena3d/modelli-compagni.js'
 import { creaPonte, creaPasserella, creaTavolo } from '../../../src/giochi/fattoria3d/scena3d/modelli-passaggi.js'
 import { geometriaCespuglio } from '../../../src/giochi/fattoria3d/scena3d/dal-sotterraneo.js'
@@ -20,6 +21,7 @@ import { COMPAGNI } from '../../../src/giochi/fattoria3d/dati/compagni.js'
 import { FISSI } from '../../../src/giochi/fattoria3d/dati/mondo.js'
 
 const M = 'src/giochi/fattoria3d/scena3d/modelli.js'
+const MM = 'src/giochi/fattoria3d/scena3d/modelli-macchine.js'
 const MC = 'src/giochi/fattoria3d/scena3d/modelli-compagni.js'
 const MCO = 'src/giochi/fattoria3d/scena3d/modelli-colture.js'
 const T = 'src/giochi/fattoria3d/scena3d/terreno.js'
@@ -103,6 +105,10 @@ export const VOCI = [
   { id: 'fattoria:conserviera', nome: 'Cucina (id conserviera)', gioco: 'fattoria', categoria: 'edificio', dove: unico('conserviera'), file: `${M}:creaConserviera`, misure: celle(EDIFICI.conserviera), crea: () => creaConserviera(), anima: animaEdificio },
   { id: 'fattoria:gelateria', nome: 'Gelateria', gioco: 'fattoria', categoria: 'edificio', dove: unico('gelateria') + ': il cono che gira sul tetto', file: `${M}:creaGelateria`, misure: celle(EDIFICI.gelateria), crea: () => creaGelateria(), anima: animaEdificio },
   { id: 'fattoria:caseificio', nome: 'Caseificio', gioco: 'fattoria', categoria: 'edificio', dove: unico('caseificio') + ': la ruota del formaggio', file: `${M}:creaCaseificio`, misure: celle(EDIFICI.caseificio), crea: () => creaCaseificio(), anima: animaEdificio },
+  { id: 'fattoria:telaio', nome: 'Telaio', gioco: 'fattoria', categoria: 'edificio', dove: unico('telaio') + ': la navetta che scorre sul telaio, balle di lana', file: `${MM}:creaTelaio`, misure: celle(EDIFICI.telaio), crea: () => creaTelaio(), anima: animaEdificio },
+  { id: 'fattoria:zuccherificio', nome: 'Zuccherificio', gioco: 'fattoria', categoria: 'edificio', dove: unico('zuccherificio') + ': la ciminiera che fuma, la ruota dentata', file: `${MM}:creaZuccherificio`, misure: celle(EDIFICI.zuccherificio), crea: () => creaZuccherificio(), anima: animaEdificio },
+  { id: 'fattoria:sartoria', nome: 'Sartoria', gioco: 'fattoria', categoria: 'edificio', dove: unico('sartoria') + ': il manichino che gira, l\'ago nel rocchetto', file: `${MM}:creaSartoria`, misure: celle(EDIFICI.sartoria), crea: () => creaSartoria(), anima: animaEdificio },
+  { id: 'fattoria:tintoria', nome: 'Tintoria', gioco: 'fattoria', categoria: 'edificio', dove: unico('tintoria') + ': le vasche colorate, le stoffe che ondeggiano', file: `${MM}:creaTintoria`, misure: celle(EDIFICI.tintoria), crea: () => creaTintoria(), anima: animaEdificio },
 
   // ── solo di scena: nascono col terreno ──
   ...FISSI.map(f => ({
@@ -136,7 +142,7 @@ export const VOCI = [
     crea: () => { const g = creaCane(); posaCane(g, { stato, vel, fase: 1.2, t: 0.4 }); return g },
     anima: (g, dt, t) => posaCane(g, { stato, vel, fase: t * (vel > 0.7 ? 11 : 7), t }),
   })),
-  ...['briciola', 'zenzero', 'pepe'].map(id => ({
+  ...['sherlock', 'irene', 'pepe'].map(id => ({
     id: `fattoria:${id}`, nome: `${COMPAGNI[id].nome} (gatto ${COMPAGNI[id].variante})`, gioco: 'fattoria', categoria: 'animale',
     dove: `gatto che gira per il terreno, arriva al livello ${COMPAGNI[id].liv} (scena3d/compagni.js)`, file: `${MC}:creaGatto`,
     crea: () => creaGatto(COMPAGNI[id].variante), anima: (g, dt, t) => posaGatto(g, { stato: 'sta', t }),

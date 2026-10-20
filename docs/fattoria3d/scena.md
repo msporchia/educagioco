@@ -10,7 +10,7 @@ gli Asteroidi 3D e il Sotterraneo 3D: il 3D non si scrive a mano.
 |---|---|
 | `mondo3d.js` | **compone** tutto e fa il battito: renderer, luci, il tocco (`tocca`, `bersaglioSotto`), la coda di semina/raccolta, le opzioni (`applica`), le statistiche. L'unico che usa il renderer |
 | `terreno.js` | erba, strade, griglia, lotti non comprati, recinto, alberi, i due edifici di scena |
-| `pezzi.js` | un gruppo per ogni cosa del motore e per i sette edifici unici (fantasmi finché non si comprano); li tiene allineati (`sincronizza`) e li anima (grano che cresce, pecore, galline e mucche, fontana, fumo, il pallone); i cartelli sugli edifici: prezzo o «🔒 Livello N» sul fantasma, pronti o cottura su ogni macchina, uova o latte pronti sul pollaio e sulla stalla, e su recinto, pollaio e stalla il cartello col conto «🐄 2/4» e il pulsante «＋ 🪙 N» che compra una bestia ([animali.md](animali.md)); il cartello si nasconde col pezzo sollevato |
+| `pezzi.js` | un gruppo per ogni cosa del motore e per gli undici edifici unici (fantasmi finché non si comprano); li tiene allineati (`sincronizza`) e li anima (grano che cresce, pecore, galline e mucche, fontana, fumo, il pallone che parte e torna: [mongolfiera.md](mongolfiera.md)); i cartelli sugli edifici: «🎈 N casse pronte!» o «🎈 in viaggio · m:ss» sulla mongolfiera, prezzo o «🔒 Livello N» sul fantasma, pronti o cottura su ogni macchina, uova o latte pronti sul pollaio e sulla stalla, e su recinto, pollaio e stalla il cartello col pulsante «＋ 🪙 N» che compra una bestia (niente conto «n/max»; «ha fame» se c'è una bestia o una pecora tosata da nutrire) ([animali.md](animali.md)); le bestie affamate sono magre e basse, con una transizione morbida (`muoviBestie`, `muoviPecore`: «La fame si vede»); il cartello si nasconde col pezzo sollevato |
 | `eroe.js` | il movimento (a piedi, o di corsa), il percorso, la posa del gesto (semina, falcia, abbatte, esulta) |
 | `azioni.js` | cosa fa l'eroe davanti a ogni cosa: anima il gesto e **a metà gesto chiede al motore di farlo davvero**; un edificio posseduto apre il menu della sua macchina, uno no offre l'acquisto (`offriEdificio`: livello, terreno da comprare prima, prezzo) |
 | `detti.js` | `dettoDi` / `dettoDiRifiuto`: un rifiuto del motore in una riga che dice cosa fare. Senza three: lo usa anche `Gioco.vue` |
@@ -18,8 +18,9 @@ gli Asteroidi 3D e il Sotterraneo 3D: il 3D non si scrive a mano.
 | `dito.js` | i pointer sulla tela: tocco, mappa che scorre, pizzico, tenere premuto (su un pezzo lo riprende, su un posto libero apre «Costruisci qui»), il fantasma parcheggiato, il pennello delle strade |
 | `camera.js` | la telecamera: segue l'eroe, o libera se un dito la sposta |
 | `effetti.js` | scintille e fumo, i testi che volano, il fumetto dell'eroe, i cartelli (`nuovoBadge`; `nuovoCartello` per le bestie, con un pulsante vero), l'albero che cade |
-| `modelli.js` | tutti i pezzi in codice (niente sprite, niente immagini: le trame sono canvas): il campo (ri-esportato da `modelli-colture.js`), i sette edifici (pasticceria, mongolfiera, mulino, panificio, caseificio, conserviera, gelateria), le quattro decorazioni (aiuola, panchina, pozzo, spaventapasseri), bancarella, fontana, recinto e pecore con le loro fasi, pollaio con le galline, stalla con le mucche ([animali.md](animali.md)), fienile; `creaCasa`, `creaBancarella` e `creaBacheca` sono dei sottili rimandi a `dal-sotterraneo.js`, e `creaCasaVecchia` e `creaBancarellaVecchia` sono i disegni di prima, tenuti per il catalogo |
-| `modelli-colture.js` | il campo 2×2 e le dieci colture, a istanze: vedi «Le colture» qui sotto |
+| `modelli.js` | tutti i pezzi in codice (niente sprite, niente immagini: le trame sono canvas): il campo (ri-esportato da `modelli-colture.js`), i sette edifici (pasticceria, mongolfiera, mulino, panificio, caseificio, conserviera, gelateria; i mattoncini sono esportati per `modelli-macchine.js`), le quattro decorazioni (aiuola, panchina, pozzo, spaventapasseri), bancarella, fontana, recinto e pecore con le loro fasi, pollaio con le galline, stalla con le mucche ([animali.md](animali.md)), fienile; `creaCasa`, `creaBancarella` e `creaBacheca` sono dei sottili rimandi a `dal-sotterraneo.js`, e `creaCasaVecchia` e `creaBancarellaVecchia` sono i disegni di prima, tenuti per il catalogo |
+| `modelli-macchine.js` | i quattro edifici nuovi, 3×3 con `anima`, `fumo` e `altezza` come gli altri: zuccherificio (capannone, ciminiera, barbabietole e sacchi, ruota dentata), telaio (capanna col grande telaio e la navetta, balle di lana), sartoria (casetta, manichino che gira, ago nel rocchetto), tintoria (capanno con tre vasche colorate, stoffe stese) |
+| `modelli-colture.js` | il campo 2×2 e le quindici colture, a istanze: vedi «Le colture» qui sotto |
 | `modelli-passaggi.js` | ponte ad arco (3×1, la gobba), passerella di assi su pali con la corda (1×3) e tavolo con le panche (3×2): vedi sotto |
 | `dal-sotterraneo.js` | la casa di legno, il banco della guaritrice, la bacheca delle taglie e il cespuglio, presi dal Sotterraneo 3D (copie adattate: vedi sotto). Un `Cantiere` che unisce i pezzi in una mesh per materiale, colori nei vertici |
 | `compagni.js`, `modelli-compagni.js` | Watson e i gatti che girano per la fattoria, e il contadino con la sua faccia: il comportamento, i corpi e le pose ([compagni.md](compagni.md)) |
@@ -27,6 +28,8 @@ gli Asteroidi 3D e il Sotterraneo 3D: il 3D non si scrive a mano.
 
 La **vista** (`Gioco.vue` e `viste/`) apre le finestre e dice cosa si vuole; la scena la chiama attraverso `ui`
 (`cambio`, `chiedi`, `scegliSeme`, `apriMacchina`, `apriBanco` (un tocco sulla bacheca o sulla bancarella), `avviso`, `fogliAperti`, `zonaDrop`, `trascinando`).
+
+**Il foglio di una macchina** (`apriMacchina(tipo)`) non è nella scena: è `viste/Macchina.vue`, con posti, pronti e carte da trascinare; il dito che lo trascina è del foglio e non tocca la scena sotto ([file.md](file.md), «Il foglio della macchina»).
 
 **Un tocco su un edificio non tuo** che non si può comprare adesso (livello o terreno che mancano) non fa camminare l'eroe, che sta fuori
 dal suo terreno: apre subito l'offerta, che dice il livello o manda al lotto da comprare prima (`_edificioDaLontano` in `mondo3d.js`).
@@ -37,6 +40,10 @@ Un campo ha quattro tessere e le piante a istanze: **una `InstancedMesh` per for
 pannocchia, zucca, bacca, melanzana…), condivisa da tutte le colture; ogni coltura è una ricetta che posa le sue forme
 attorno a ogni pianta (`RICETTE` in `modelli-colture.js`, l'aspetto in `ASPETTO`). Quante istanze servono lo si conta una
 volta provando ogni coltura matura; `count` dice quante se ne disegnano e una forma che non serve è spenta.
+- **Le ultime cinque** (cavolfiore, peperone, aglio, barbabietola, riso) usano le stesse forme (nessuna nuova): il peperone è la
+  `melanzana` allargata e corta, la barbabietola ha i piccioli rossi (`filo`) e la radice è una `sfera`, il riso ha una lastra
+  d'acqua per tessera (una `sfera` schiacciata) e le spighe in testa ai culmi, al massimo come il grano (80); il campo di riso
+  si posa da sé (`CRESCE_DA_SE`), come il pomodoro.
 - **Le piante stanno in fila sulle porche** (`disp: 'file'`), come in un orto; il grano è fitto a griglia smossa (5×4 per
   tessera), la cipolla è rimasta com'era (otto a caso).
 - **La crescita si legge**: la pianta cresce di scala, le foglie arrivano una alla volta, il frutto compare oltre 0,55 e
@@ -80,8 +87,7 @@ davanti all'eroe (`cellaDavanti`). Un dito che scorre prima della soglia non lo 
 compra toccandolo; tenuto premuto su un pezzo lo riprende, come prima.
 - **Le schede** (`CATEGORIE` in `dati/catalogo.js`: 🌾 Campi, 🐑 Animali, 🏠 Edifici, 🌷 Decori, 🛣️ Strade) e sotto **le carte**, tre
   per riga, dai dati (`dati/carte.js`: ogni pezzo e ogni edificio unico ha la sua `categoria`, ordinati per livello; un edificio
-  già comprato non si offre). La carta ha il disegno dell'atlante della fattoria di sempre (`DISEGNI`, mostrato da `Provino.vue`
-  della 2D, non modificato) o l'emoji su una piastrella del colore della scheda (passerella, trattore, strada e gomma); nome, prezzo
+  già comprato non si offre). La carta mostra **il modello 3D vero** (vedi «Le anteprime»); l'emoji su una piastrella del colore della scheda sta solo per gli strumenti (strada e gomma) e come segnaposto finché l'immagine non è pronta o se non riesce; nome, prezzo
   (o «📦 ×N» se il pezzo è già nel magazzino) e, se non è ancora arrivata, la velatura col lucchetto: **toccarla la fa tremare e
   dice il livello**. Le schede scorrono di lato, il corpo in verticale; un tocco sul velo o la ✕ lo chiudono.
 - **Scegliere una carta la posa sulla cella premuta** (`Costruzione.daMenu`): fra i modi di posarla che coprono la cella prende il
@@ -99,6 +105,24 @@ compra toccandolo; tenuto premuto su un pezzo lo riprende, come prima.
   Il fantasma si sistema sulla mappa di sempre (la telecamera segue l'eroe, due dita zoomano).
 - Il foglio si rifà dai dati a ogni cambio: una carta nuova nel catalogo compare da sola, e il test fallisce se manca la categoria.
   Provato: una barra in basso con tutte le carte in fila: infinita e bruttina, per questo è un foglio a schede.
+
+## Le anteprime (le carte e l'insegna delle macchine)
+
+Una carta mostra il modello vero che poi si vede in scena, non un'icona: `scena3d/anteprime.js` lo fotografa una volta per tipo e la
+foto (dataURL PNG, 192×192) resta in cache per la sessione. `Mondo3d.anteprima(tipo)` → `Promise<dataURL|null>` (e `anteprimaPronta(tipo)`
+subito, se c'è); `Gioco.vue` le passa come funzioni a `CostruisciQui.vue` e a `Macchina.vue`, che non importano three.
+- **Nessun contesto WebGL in più**: si disegna col renderer della scena stessa, in un render target (sRGB, 4 campioni), e si rimette tutto
+  com'era (target, colore di fondo, ombre). La foto si legge con `readRenderTargetPixels`, si capovolge e si copia in un canvas 2D. Il
+  catalogo 3D (`strumenti/banco`) fa altrimenti perché ha un renderer suo; qui il telefono ne ha già uno (due in visita).
+- **Una per fotogramma** (`requestAnimationFrame`, coda in `anteprime-pura.js`, senza three: `creaCache`): il menu chiede prima la
+  scheda aperta e poi le altre, e non blocca la scena. Finché non è pronta la carta mostra l'emoji sbiadita; poi l'immagine entra con una
+  dissolvenza (`img[data-anteprima="pronta"]`). Costo: ~25 render una tantum (circa 0,3 s l'uno in SwiftShader, 9 s in tutto; su una GPU vera molto meno).
+- **L'inquadratura** (`inquadra(box)` in `anteprime-pura.js`) guarda a tre quarti dall'alto e trova la distanza minima per cui gli otto
+  angoli della scatola stanno nel quadro col 10% di margine, centrando la figura vista: un 1×1 e un 4×3 riempiono uguale. La scena di posa
+  ha solo sole e emisferica (senza ombre) e un disco d'ombra morbida sotto.
+- **I modelli** vengono da `Pezzi.modelloAnteprima(tipo)`: gli stessi creatori della scena, il campo con il grano maturo, il recinto con
+  due pecore, pollaio e stalla con due bestie. Non ci sono animazioni: un istante fisso.
+- Se `anteprima` torna `null` (un guasto) resta l'emoji. Il tono (ACES) non si applica in un render target: i colori sono un filo più piatti che in scena.
 
 ## Qualità e peso
 
@@ -119,8 +143,32 @@ in `dati/qualita.js`, che si alza quando cambiano i valori di partenza, così ch
 Prima di questo non si vedeva niente: i ciuffi solo fuori dal mondo (sottili e dello stesso verde del prato), il vento del grano muoveva la punta di 5 cm.
 
 - Il motore sta in piedi con **molte cose** perché campi, alberi, sassi, ciuffi, strade e recinto sono a istanze: ~100–260 draw call
-  e ~20–50k triangoli con una sola ombra a 1024 (misurato in Chrome senza schermo, SwiftShader: i ms non dicono niente
-  del telefono). **Da misurare su un telefono vero.**
+  e ~20–50k triangoli con una sola ombra a 1024 **a fattoria quasi vuota** (misurato in Chrome senza schermo, SwiftShader: i ms non dicono niente
+  del telefono); con tutto comprato sono ~1400 draw call: sotto. **Da misurare su un telefono vero.**
+- **Il peso con la fattoria piena (20/10/2026).** Uno stato pieno (tutti i lotti, 11 edifici, 7 campi, recinto, pollaio, stalla, ponte,
+  passerella, tavolo, aiuole, bacheca, quattro compagni, 19 cartelli) fa **~1140 mesh, ~1870 draw call, ~255k triangoli e ~7500 chiamate a WebGL a
+  fotogramma** (prima ~100–260 draw call). Misurato con Chrome sulla GPU vera (RTX 5060: il JS e il driver si vedono, la GPU no) e la CPU
+  rallentata ×6 (`Emulation.setCPUThrottlingRate`, un PC debole; i ms ballano se la macchina fa altro, **valgono i conti**):
+
+  | colpevole | cosa costa (stato pieno, medio) |
+  |---|---|
+  | **1. la passata dell'ombra** | 1870 → 960 draw call senza ombre (**−49%**), 255k → 129k triangoli, 7500 → 3570 chiamate GL: ogni mesh si disegna due volte; ~1050 mesh proiettavano. A CPU ×6: 12 fps → 15 senza ombre (con la macchina quieta 12 → 49) |
+  | **2. troppe mesh piccole** | edifici 17–45 mesh l'uno (11 edifici: ~320 mesh), ponte 57, passerella 41, recinto 53, stalla 68, campo 26 (di cui 17 istanze) × 7: sono ~960 draw call anche senza ombre; quasi la metà con raggio sotto i 35 cm |
+  | **3. i triangoli dei compagni e dei campi** | un gatto ~7000 triangoli (3 gatti = 21k, ×2 con l'ombra), il cane 6000; i 7 campi ~38k per fotogramma. Costano alla GPU, non al JS |
+  | non sono loro | `updateMatrixWorld` di tutta la scena 0,18 ms; `proietta` 1 µs; JS della logica (eroe, pezzi, effetti, cartelli) ~1,5 ms; DOM/Vue: stile 0,2–0,8 ms a fotogramma (19 cartelli), layout 0; `ripresa()`/HUD invisibili nel profilo |
+
+  **Rimedi applicati** (stesso stato, CPU ×6, conti medi per fotogramma): ogni mesh con raggio sotto 35 cm non proietta ombra
+  (`scena3d/ottimizza.js`, 1048 → 498 «con ombra»: **1870 → 1380 draw call, 255k → 174k triangoli, 7500 → 6000 chiamate GL**, nel campo
+  restano i fili a istanze solo per le chiome); l'ombra si ridisegna a comando (`shadowMap.autoUpdate = false`, `needsUpdate` a ogni
+  fotogramma di serie) e **il degrado adattivo** (`dati/degrado.js`, puro, `unita/fattoria3d-degrado`) la fa ogni 2–4 fotogrammi: **livello 1 =
+  1170 draw call (−38% sull'inizio), livello 3 = 1100, livello 5 = 1070**; se gli fps medi di 2 s stanno sotto 30 scende di un livello (prima l'ombra
+  più rada, poi un po' di risoluzione: ×0,8 a gradino, mai sotto 0,75×, e **solo se la strozzatura non è la CPU**: se il JS riempie il fotogramma i
+  pixel non servono), sale dopo 10 s tutti a 55+ e ogni ricaduta raddoppia l'attesa (tetto 80 s); `q.scala` e `q.ombre` salvati non si toccano, il
+  livello vive in memoria e lo dicono le opzioni. I cartelli non riscrivono più lo stile se non si sono mossi, `proietta` non alloca, la foto del HUD
+  non si rifà se è uguale. Il pannello ⚙ e «Mostra il rapporto» ora dicono anche: JS di logica e di disegno e il resto del fotogramma, programmi,
+  quante cose per tipo, mesh e chi proietta ombra, pixel ratio scelto e usato, livello del degrado.
+  **Provato e non fatto**: `matrixAutoUpdate = false` sui gruppi fermi (0,18 ms in tutto: non vale il rischio con i modelli che altri toccano);
+  nascondere i cartelli lontani (non pesano). Le proposte per il giro dopo sono in [da-fare.md](da-fare.md).
 - **Il peso nel sito spezzato**: `fattoria3d-3d-*.js` (~50 kB, il disegno) e `gioco-fattoria3d-*.js` (~40 kB) stanno nel
   gruppo `fattoria3d`; **three sta in `asteroidi-3d` (640 kB, gruppo `mate`)** e lo prende anche questo gioco. Il file
   del 3D si chiede a richiesta, quindi senza WebGL 2 o senza entrarci non si scarica (e `vite.config.js` lo sa, come per

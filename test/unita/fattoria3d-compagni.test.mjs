@@ -19,13 +19,13 @@ const { Compagni } = await import('../../src/giochi/fattoria3d/scena3d/compagni.
 const g = guastiDeiCompagni()
 controlla('i dati dei compagni non hanno guasti', g.length === 0, g.join(' · '))
 controlla('i dati dei livelli reggono con i compagni', guastiDeiLivelli().length === 0, guastiDeiLivelli().join(' · '))
-uguale('al livello 2 non c\'è nessuno', compagniAl(2).length, 0)
-uguale('Watson arriva al 3', compagniAl(3)[0].id, 'watson')
-uguale('al livello 5 sono due, il gatto è il secondo', compagniAl(5).map(c => c.id).join(), 'watson,briciola')
+uguale('al livello 1 c\'è già Watson', compagniAl(1).map(c => c.id).join(), 'watson')
+uguale('al 2 si aggiunge Sherlock', compagniAl(2).map(c => c.id).join(), 'watson,sherlock')
+uguale('al 3 anche Irene', compagniAl(3).map(c => c.id).join(), 'watson,sherlock,irene')
 uguale('al 13 sono quattro', compagniAl(13).length, 4)
-uguale('«soloQuesto»: al 9 arriva solo Zenzero', compagniAl(9, true).map(c => c.id).join(), 'zenzero')
-uguale('roba(5) li raccoglie', roba(5).compagni.map(c => c.id).join(), 'briciola')
-controlla('un livello coi soli compagni non è «vuoto» per il conto di roba', roba(3).compagni.length === 1 && !vuoto({ pezzi: [], edifici: [], colture: [], ricette: [] }) === false)
+uguale('«soloQuesto»: al 3 arriva solo Irene', compagniAl(3, true).map(c => c.id).join(), 'irene')
+uguale('roba(2) li raccoglie', roba(2).compagni.map(c => c.id).join(), 'sherlock')
+controlla('un livello coi soli compagni non è «vuoto» per il conto di roba', roba(3).compagni.length === 1 && roba(3).compagni[0].id === 'irene' && !vuoto({ pezzi: [], edifici: [], colture: [], ricette: [] }) === false)
 controlla('i quattro compagni sono due specie e tre mantelli', new Set(Object.values(COMPAGNI).map(c => c.variante)).size === 4)
 controlla('l\'aspetto del contadino è uno dei due', ['contadino', 'contadina'].includes(ASPETTO_ERO))
 
@@ -86,16 +86,16 @@ controlla('l\'aspetto del contadino è uno dei due', ['contadino', 'contadina'].
   // niente coda a vista: il punto più indietro è il moncherino, che non sporge più di un palmo oltre il corpo
   const dietro = (() => { const b = new THREE.Box3().setFromObject(creaCane()); return -b.min.z })()
   dentro('Watson: dietro non sporge niente di lungo (il bobtail non ha coda)', dietro, 0.3, 0.75)
-  for (const v of ['bianconero', 'rosso', 'nero']) {
+  for (const v of ['bianconero', 'calico', 'nero']) {
     const gg = creaGatto(v); posaGatto(gg, { stato: 'sta' }); const m = misure(gg)
     dentro(`gatto ${v}: piedi a terra`, m.sotto, -0.02, 0.03)
-    dentro(`gatto ${v}: piccolo`, m.altezza, 0.3, 0.75)
-    dentro(`gatto ${v}: pochi mesh`, m.mesh, 15, 45)
+    dentro(`gatto ${v}: piccolo (orecchie grandi e coda alta: fino a 80 cm, meno di Watson)`, m.altezza, 0.3, 0.8)
+    dentro(`gatto ${v}: pochi mesh (pelo fuso per pezzo)`, m.mesh, 12, 45)
   }
-  const gatto = creaGatto('rosso'), cane2 = creaCane()
+  const gatto = creaGatto('calico'), cane2 = creaCane()
   controlla('ogni compagno ha la zona del tocco', !!gatto.userData.colpo && !!cane2.userData.colpo && gatto.userData.colpo.visible === false)
-  uguale('creaCompagno per un cane', creaCompagno(compagniAl(3)[0]).userData.tipo, 'cane')
-  uguale('creaCompagno per un gatto', creaCompagno(compagniAl(5)[1]).userData.tipo, 'gatto')
+  uguale('creaCompagno per un cane', creaCompagno(compagniAl(1)[0]).userData.tipo, 'cane')
+  uguale('creaCompagno per un gatto', creaCompagno(compagniAl(2)[1]).userData.tipo, 'gatto')
   // geometrie condivise: due cani non ne duplicano
   const geoA = new Set(), geoB = new Set()
   creaCane().traverse(o => o.isMesh && geoA.add(o.geometry.uuid)); creaCane().traverse(o => o.isMesh && geoB.add(o.geometry.uuid))
@@ -111,7 +111,7 @@ controlla('l\'aspetto del contadino è uno dei due', ['contadino', 'contadina'].
   posaCane(cane2, { stato: 'siede' }); const seduto = misure(cane2)
   controlla('Watson seduto è più basso di dietro e non affonda nel suolo', seduto.sotto > -0.05, String(seduto.sotto))
   posaCane(cane2, { stato: 'dorme' }); controlla('Watson che dorme sta basso (meno di due terzi di quando sta in piedi: la testa grande non si schiaccia)', misure(cane2).altezza < 0.66 * cane.altezza, String(misure(cane2).altezza))
-  posaGatto(gatto, { stato: 'dorme' }); controlla('il gatto che dorme sta sotto i 30 cm', misure(gatto).altezza < 0.35, String(misure(gatto).altezza))
+  posaGatto(gatto, { stato: 'dorme' }); controlla('il gatto che dorme sta basso (sotto i 48 cm: le orecchie grandi contano)', misure(gatto).altezza < 0.48 && misure(gatto).sotto > -0.03, String(misure(gatto).altezza))
 }
 
 /* ══════════ 5. tre minuti sulla scena, col motore vero ══════════ */
@@ -148,12 +148,12 @@ controlla('l\'aspetto del contadino è uno dei due', ['contadino', 'contadina'].
   controlla('…e quasi mai su una cella bloccata (a un pezzo appena messo sotto i piedi ci si sposta)', fuori < 40, `${fuori} fotogrammi su ${3600 * 4}`)
   controlla('si sono mossi davvero', c.lista.every(k => Math.hypot(k.x - 0.5, k.z + 6.5) > 0.5 || k.stato !== 'sta'))
   // l'arrivo di un livello nuovo
-  const f2 = mondoVero(sogliaDi(2)), av2 = []
+  const f2 = mondoVero(sogliaDi(1)), av2 = []
   const c2 = new Compagni(new THREE.Scene(), f2, eroe, fx, { avviso: t => av2.push(t) }, rnd)
-  uguale('al livello 2 non c\'è nessuno', c2.lista.length, 0)
-  f2.s.esperienza = sogliaDi(3); c2.aggiorna(0.05, 1); c2.aggiorna(0.05, 2); for (let n = 0; n < 30; n++) c2.aggiorna(0.05, 2 + n * 0.05)
-  uguale('salendo al 3 arriva Watson', c2.lista.map(k => k.def.id).join(), 'watson')
-  uguale('…con il suo avviso', av2.join('|'), 'Watson è arrivato!')
+  uguale('al livello 1 c\'è già Watson, senza avviso', c2.lista.map(k => k.def.id).join() + av2.length, 'watson0')
+  f2.s.esperienza = sogliaDi(2); c2.aggiorna(0.05, 1); c2.aggiorna(0.05, 2); for (let n = 0; n < 30; n++) c2.aggiorna(0.05, 2 + n * 0.05)
+  uguale('salendo al 2 arriva Sherlock', c2.lista.map(k => k.def.id).join(), 'watson,sherlock')
+  uguale('…con il suo avviso', av2.join('|'), 'Sherlock, il gatto, è arrivato!')
   // il tocco
   const volati = []; c2.fx = { ...fx, volo: t => volati.push(t) }
   c2.tocca(c2.lista[0]); uguale('toccato, Watson abbaia', volati[0], 'Bau!'); uguale('…e fa festa', c2.lista[0].stato, 'festa')

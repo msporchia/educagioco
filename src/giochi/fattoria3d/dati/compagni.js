@@ -6,14 +6,14 @@
 // Com'è fatto il contadino: 'contadino' (cappello di paglia) o 'contadina' (trecce, nastro rosa). Niente schermata di scelta.
 export const ASPETTO_ERO = 'contadino'
 
-// `liv`: il livello a cui arriva (come `liv` sui pezzi: `roba(liv)` lo raccoglie). Il bobtail ha un nome vero, quello della fattoria 2D.
+// `liv`: il livello a cui arriva (come `liv` sui pezzi: `roba(liv)` lo raccoglie). Il bobtail e il gatto bianco e nero hanno il nome vero di casa (Watson, Sherlock, Irene) e arrivano per primi (livelli 1-3).
 export const COMPAGNI = {
-  watson: { nome: 'Watson', tipo: 'cane',  variante: 'bobtail',   liv: 3,  verso: 'Bau!', arrivo: 'Watson è arrivato!' },
-  briciola: { nome: 'Briciola', tipo: 'gatto', variante: 'bianconero', liv: 5,  verso: 'Prrr…', arrivo: 'Briciola, il gatto, è arrivata!' },
-  zenzero: { nome: 'Zenzero', tipo: 'gatto', variante: 'rosso',      liv: 9,  verso: 'Prrr…', arrivo: 'Zenzero, il gatto rosso, è arrivato!' },
+  watson: { nome: 'Watson', tipo: 'cane',  variante: 'bobtail',   liv: 1,  verso: 'Bau!', arrivo: 'Watson è arrivato!' },
+  sherlock: { nome: 'Sherlock', tipo: 'gatto', variante: 'bianconero', liv: 2,  verso: 'Prrr…', arrivo: 'Sherlock, il gatto, è arrivato!' },
+  irene:   { nome: 'Irene',   tipo: 'gatto', variante: 'calico',     liv: 3,  verso: 'Prrr…', arrivo: 'Irene, la gattina, è arrivata!' },
   pepe:    { nome: 'Pepe',    tipo: 'gatto', variante: 'nero',       liv: 13, verso: 'Prrr…', arrivo: 'Pepe, il gatto nero, è arrivato!' },
 }
-export const VARIANTI_GATTO = ['bianconero', 'rosso', 'nero']
+export const VARIANTI_GATTO = ['bianconero', 'calico', 'nero']
 
 /** I compagni che ci sono a questo livello (o prima), nell'ordine di arrivo. `soloQuesto`: quelli che arrivano proprio ora. */
 export function compagniAl(livello, soloQuesto = false) {
@@ -102,7 +102,7 @@ export function guastiDeiCompagni() {
     if (!['cane', 'gatto'].includes(c.tipo)) g.push(`${id}: tipo sconosciuto «${c.tipo}»`)
     if (c.tipo === 'gatto' && !VARIANTI_GATTO.includes(c.variante)) g.push(`${id}: variante «${c.variante}» sconosciuta`)
     if (c.tipo === 'cane' && c.variante !== 'bobtail') g.push(`${id}: l'unico cane è il bobtail`)
-    if (!(c.liv >= 2)) g.push(`${id}: livello ${c.liv} (da 2 in su)`)
+    if (!(c.liv >= 1)) g.push(`${id}: livello ${c.liv} (da 1 in su)`)
     if (liv.has(c.liv)) g.push(`${id}: due compagni arrivano al livello ${c.liv}`)
     liv.add(c.liv)
   }

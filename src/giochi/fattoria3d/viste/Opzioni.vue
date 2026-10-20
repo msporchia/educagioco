@@ -32,8 +32,11 @@ const grafico = computed(() => (props.stat.grafico || []).map(ms => ({ h: Math.m
     <button class="f3-chiudi" data-chiudi aria-label="chiudi" @click="$emit('chiudi')">✕</button>
     <div class="f3-stat">
       <b>{{ stat.fps.toFixed(0) }}</b> fps · fotogramma peggiore <b>{{ stat.peggiore.toFixed(0) }}</b> ms (1%: {{ stat.p1.toFixed(0) }}) · lavoro JS <b>{{ stat.cpu.toFixed(1) }}</b> ms<br>
-      {{ stat.calls }} draw call · {{ (stat.triangoli / 1000).toFixed(0) }}k triangoli · {{ stat.geometrie }} geometrie · {{ stat.texture }} texture · {{ (stat.dpr || 1).toFixed(2) }} px/px
+      {{ stat.calls }} draw call · {{ (stat.triangoli / 1000).toFixed(0) }}k triangoli · {{ stat.geometrie }} geometrie · {{ stat.texture }} texture · {{ stat.programmi }} programmi · {{ (stat.dpr || 1).toFixed(2) }} px/px<br>
+      JS: scena <b>{{ stat.cpu.toFixed(1) }}</b> ms (logica {{ stat.logica.toFixed(1) }} + disegno {{ stat.disegno.toFixed(1) }}) · il resto {{ stat.fuori.toFixed(1) }} ms<br>
+      {{ stat.campi }} campi · {{ stat.edifici }} edifici · {{ stat.altri }} pezzi · {{ stat.compagni }} compagni · {{ stat.cartelli }} cartelli · {{ stat.mesh }} mesh ({{ stat.ombre }} con ombra)
     </div>
+    <p v-if="stat.degrado" class="f3-nota" data-f3="degrado">{{ stat.degrado }} (la tua scelta di qualità non è cambiata)</p>
     <div class="f3-grafico"><u v-for="(g, i) in grafico" :key="i" :style="{ height: g.h + '%', background: g.c }"></u></div>
     <template v-if="!ridotto">
       <h3>Qualità</h3>

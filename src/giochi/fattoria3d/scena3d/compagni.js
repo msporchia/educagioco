@@ -6,6 +6,7 @@ import * as THREE from 'three'
 import { compagniAl, scegliMeta, cellaLiberaVicina, cellaDi, decidiCane, decidiGatto, durataDi } from '../dati/compagni.js'
 import { creaCompagno, posaCane, posaGatto } from './modelli-compagni.js'
 import { PEZZI } from '../dati/catalogo.js'
+import { alleggeriOmbre } from './ottimizza.js'
 
 const CASA = [0.5, -6.5]                       // davanti alla porta della casa
 const VEL = { cane: { vaga: 2.4, segue: 3.6, corsa: 5.6 }, gatto: { vaga: 1.5, fugge: 3.8 } }
@@ -23,7 +24,7 @@ export class Compagni {
   sync(senzaAvviso = false) {
     for (const d of compagniAl(this.m.livello())) {
       if (this.lista.some(c => c.def.id === d.id)) continue
-      const grp = creaCompagno(d); this.scena.add(grp)
+      const grp = creaCompagno(d); alleggeriOmbre(grp); this.scena.add(grp)
       const c = { def: d, grp, tipo: d.tipo, x: CASA[0], z: CASA[1], dir: 0, stato: 'sta', tStato: 0, dur: 2, percorso: [], poi: null,
                   velo: 0, fase: Math.random() * 6, corsa: false, sopra: null, salto: null, guarda: null, controllo: 0 }
       this.lista.push(c)

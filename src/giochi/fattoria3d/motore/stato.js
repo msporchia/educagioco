@@ -8,6 +8,10 @@ import { ANIMALI } from '../dati/animali.js'
 import { POSTI } from '../dati/ordini.js'
 import { livelloPer } from '../dati/livelli.js'
 import { ordineInForma } from './ordini.js'
+import { stivaInForma } from './mongolfiera.js'
+import { RIPOSO_MS } from '../dati/mongolfiera.js'
+
+const LANA_DEL_SEGNAPOSTO = 2     // il premio della cassa del segnaposto di prima (v7)
 
 // 2: l'esperienza, un `posseduti` per ogni edificio, le macchine per tipo (la pasticceria di prima è `macchine.pasticceria`)
 // 3: il banco degli ordini (`ordini`); un v2 si legge senza perdere niente, il banco si riempie da sé
@@ -43,7 +47,7 @@ export function statoIniziale() {
     cose: [{ id: 1, tipo: PEZZO_DI_PARTENZA.tipo, i: PEZZO_DI_PARTENZA.i, j: PEZZO_DI_PARTENZA.j, tile: nuoveTessere() }],
     prossimoId: 2,
     macchine: Object.fromEntries(TIPI_DI_MACCHINA.map(t => [t, macchinaVuota()])),
-    mongolfiera: { fine: null, cassa: false },
+    mongolfiera: { stiva: null, via: null, riposo: null, giri: 0 },   // la nave (docs/fattoria3d/mongolfiera.md): il carico da riempire, quando è partita e quando torna, i viaggi fatti
     ordini: { aperti: Array(POSTI(1)).fill(null), riprende: Array(POSTI(1)).fill(null), prossimoId: 1 },   // il banco: un ordine o null per posto; `riprende` è quando un posto vuoto si riempie
   })
 }
@@ -88,7 +92,7 @@ export function normalizza(letto) {
         if (typeof c.coltura === 'string') x.coltura = c.coltura
       }
       if (c.tipo === 'recinto') {
-        x.pecore = Array.isArray(c.pecore) && c.pecore.length ? c.pecore.map(p => p && p.eta === 'agnello' ? { eta: 'agnello', cibo: numero(p.cibo) } : { eta: 'adulta', t0: numero(p && p.t0) }) : null
+        x.pecore = Array.isArray(c.pecore) && c.pecore.length ? c.pecore.map(p => p && p.eta === 'agnello' ? { eta: 'agnello', cibo: numero(p.cibo) } : { eta: 'adulta', t0: p && p.t0 === null ? null : numero(p && p.t0) }) : null
         x.cibo = numero(c.cibo)
       }
       if (ANIMALI[c.tipo]) x.bestie = bestieInForma(c.tipo, c.bestie)
@@ -122,8 +126,16 @@ export function normalizza(letto) {
       else s.macchine[t].pronti[id] = (s.macchine[t].pronti[id] || 0) + numero(n)
     }
   }
+  // la mongolfiera: il segnaposto di prima (`fine`, `cassa`: carichi 2 raccolti, torna una cassa di lana) si chiude senza lamentele; un
+  // viaggio in corso o una cassa da ritirare valgono la lana che avrebbero dato (+2), così niente si perde. I campi nuovi si riempiono.
   const m = oggetto(letto.mongolfiera)
-  s.mongolfiera = { fine: Number.isFinite(m.fine) ? m.fine : null, cassa: !!m.cassa }
+  if (m.cassa || Number.isFinite(m.fine)) s.lana += LANA_DEL_SEGNAPOSTO
+  const riposo = Number.isFinite(m.riposo) ? m.riposo : null
+  s.mongolfiera = {
+    stiva: riposo === null ? stivaInForma(m.stiva) : null,
+    via: riposo === null ? null : (Number.isFinite(m.via) ? m.via : riposo - RIPOSO_MS),
+    riposo, giri: Number.isInteger(m.giri) && m.giri > 0 ? m.giri : 0,
+  }
   // il banco (assente prima del v3): ordini guasti diventano posti vuoti, che il banco riempie
   const o = oggetto(letto.ordini)
   // i posti sono almeno quelli del livello e mai meno di quelli salvati (un ordine non si perde); un elenco corto si riempie

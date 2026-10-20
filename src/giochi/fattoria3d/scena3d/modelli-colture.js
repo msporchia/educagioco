@@ -156,6 +156,11 @@ export const ASPETTO = {
   melanzana:{ h: 0.7,  a: 0x3f7a36, b: 0x3f7a36, fc: 0x4a1f66, fs: 1,   disp: 'file', n: 2, v: 0.3 },
   cipolla:  { h: 0.36, a: 0x7cc04a, b: 0x9ab04a, fc: 0xe8d29a, fs: 1.4, disp: 'sparso', frutto: 'terra', l: 0.8 },
   lavanda:  { h: 0.42, a: 0x6a9a5a, b: 0x7a9a6a, fc: 0x8a5ac8, fs: 1,   disp: 'file', n: 2, v: 0.7 },
+  cavolfiore:   { h: 0.3,  a: 0x7a9a6c, b: 0x6f9a62, fc: 0xf3efe0, fs: 1, disp: 'file', n: 2, v: 0.1 },
+  peperone:     { h: 0.5,  a: 0x3f8a34, b: 0x3f8a34, fc: 0xd8281e, fs: 1, disp: 'file', n: 2, v: 0.2 },
+  aglio:        { h: 0.4,  a: 0x7cc04a, b: 0x9ab04a, fc: 0xf0ead8, fs: 1, disp: 'file', n: 4, v: 0.6 },
+  barbabietola: { h: 0.3,  a: 0x4f8a3a, b: 0x5a8a40, fc: 0x8a1f4a, fs: 1, disp: 'file', n: 3, v: 0.3 },
+  riso:         { h: 0.55, a: 0x8ec060, b: 0xd8c870, fc: 0xe6c85a, fs: 0.8, disp: 'file', n: 5, v: 1 },
 }
 
 // ── chi posa le parti: la pianta (P) e il pezzo attorno a lei ──
@@ -289,6 +294,66 @@ const RICETTE = {
       if (fiore) posa.metti('spighetta', spiga, Math.sin(yaw) * Math.sin(lean) * l, 0.02 + Math.cos(lean) * l, Math.cos(yaw) * Math.sin(lean) * l, lean, yaw, 0, 0.22 * fiore * A.fs)
     }
   },
+  cavolfiore (p, c, f, m, A) {                                        // rosetta di foglie grandi, la testa bianca nel mezzo
+    const verde = mix(C1, A.a, A.b, m)
+    for (let j = 0; j < quante(8, c); j++) {
+      const l = 0.27 - (j % 2) * 0.04
+      posa.metti('foglia', verde, 0, 0.02 + (j % 2) * 0.03, 0, -0.95 + (j % 3) * 0.12 + (1 - f) * 0.15, j * 0.785 + p.fase, 0, l * 0.9, l, l)
+    }
+    if (f <= 0) return
+    const s = f * A.fs, testa = mix(C2, 0xa8c890, A.fc, tra(f, 0.2, 0.8))
+    posa.metti('sfera', testa, 0, 0.1 + 0.03 * s, 0, 0, p.fase, 0, 0.09 * s, 0.07 * s, 0.09 * s)
+    for (let k = 0; k < 3; k++) {                                       // i cimini sulla testa
+      const yaw = k * 2.1 + p.fase
+      posa.metti('sfera', testa, Math.sin(yaw) * 0.05 * s, 0.13 + 0.03 * s, Math.cos(yaw) * 0.05 * s, 0, yaw, 0, 0.045 * s, 0.04 * s, 0.045 * s)
+    }
+  },
+  peperone (p, c, f, m, A) {                                          // arbusto con i frutti penduli: rossi, gialli o ancora verdi
+    const verde = C1.set(A.a), H = A.h
+    posa.metti('fusto', C3.set(0x4a6a34), 0, 0, 0, 0, 0, 0, 0.02, H, 0.02)
+    for (let j = 0; j < quante(8, c); j++) {
+      const l = 0.18 - j * 0.006
+      posa.metti('foglia', verde, 0, (0.18 + j * 0.1) * H, 0, 0.3 + (j % 2) * 0.15, j * 2.4, 0, l * 0.7, l, l)
+    }
+    const ALTI = p.i % 2 ? [0.55, 0.42] : [0.55, 0.42, 0.68]
+    ALTI.forEach((y, k) => {
+      const soglia = k * 0.2, g = tra(f, soglia, soglia + 0.5)
+      if (g <= 0) return
+      const yaw = 0.7 + k * 2.3, x = Math.sin(yaw) * 0.07, z = Math.cos(yaw) * 0.07, yy = y * H, s = g * A.fs
+      posa.metti('melanzana', mix(C2, 0x5a9a34, (p.i + k) % 2 ? 0xf0b81e : A.fc, tra(f, soglia, soglia + 0.6)), x, yy, z, -0.15, yaw, 0, 1.5 * s, 0.85 * s, 1.5 * s)
+      posa.metti('calice', verde, x, yy, z, -0.15, yaw, 0, 0.06 * s, 0.09 * s, 0.06 * s)
+    })
+  },
+  aglio (p, c, f, m, A) {                                             // steli sottili, il bulbo bianco a fior di terra
+    const verde = mix(C1, A.a, A.b, m)
+    for (let j = 0; j < quante(4, c); j++) {
+      const lean = 0.08 + (j % 2) * 0.16
+      posa.metti('filo', verde, 0, 0.02, 0, lean, j * 1.6 + p.fase, 0, 0.009, A.h * (0.75 + 0.25 * ((j * 3) % 4) / 3), 0.009)
+    }
+    if (f > 0) posa.metti('sfera', mix(C2, 0xdde8c0, A.fc, tra(f, 0.2, 0.9)), 0, 0.02, 0, 0, p.fase, 0, 0.055 * f * A.fs, 0.042 * f * A.fs, 0.055 * f * A.fs)
+  },
+  barbabietola (p, c, f, m, A) {                                      // ciuffo di foglie sui piccioli rossi, la radice viola-rosa che spunta
+    const verde = mix(C1, A.a, A.b, m)
+    for (let j = 0; j < quante(5, c); j++) {
+      const yaw = j * 1.26 + p.fase, lean = 0.35 + (j % 2) * 0.15
+      posa.metti('filo', C3.set(0xb02a40), 0, 0.03, 0, lean, yaw, 0, 0.009, 0.12, 0.009)
+      posa.metti('foglia', verde, Math.sin(yaw) * 0.045, 0.14, Math.cos(yaw) * 0.045, -0.7 + (j % 2) * 0.25, yaw, 0, 0.12, 0.2, 0.19)
+    }
+    if (f > 0) posa.metti('sfera', mix(C2, 0xc87a8c, A.fc, tra(f, 0.2, 0.9)), 0, 0.02 + 0.015 * f, 0, 0, p.fase, 0, 0.06 * f * A.fs, 0.052 * f * A.fs, 0.06 * f * A.fs)
+  },
+  riso (p, c, f, m, A, sway) {                                        // un campo sott'acqua: la lastra azzurra sotto, i culmi chiari che si piegano
+    if (p.i % (2 * A.n) === 0) {                                      // una lastra per tessera, a coordinate del campo
+      posa.su(0, 0, 0)
+      posa.metti('sfera', C3.set(0x6fb0cc), p.k % 2 ? 0.5 : -0.5, 0.12, p.k < 2 ? -0.5 : 0.5, 0, 0, 0, 0.47, 0.03, 0.47)
+    }
+    posa.su(p.x, p.y, p.z, p.fase, sway, 0.22 + 0.78 * Math.sqrt(c))
+    const verde = mix(C1, A.a, A.b, m)
+    for (let j = 0; j < quante(3, c); j++) {
+      const lean = 0.1 + j * 0.12
+      posa.metti('filo', verde, 0, 0.01, 0, lean, j * 2.1 + p.fase, 0, 0.007, A.h * p.hj, 0.007)
+      if (f > 0 && j < 2) posa.metti('spiga', mix(C2, A.a, A.fc, m), Math.sin(j * 2.1 + p.fase) * Math.sin(lean) * A.h * p.hj, 0.01 + Math.cos(lean) * A.h * p.hj, Math.cos(j * 2.1 + p.fase) * Math.sin(lean) * A.h * p.hj, 0.7 * m + 0.1, j * 2.1 + p.fase, 0, f * A.fs)
+    }
+  },
   cipolla (p, c, f, m, A, sway) {                                     // com'era: lo stelo e il bulbo, a coordinate del campo
     posa.su(0, 0, 0)
     const h = 0.1 + (A.h - 0.1) * Math.sqrt(c)
@@ -296,7 +361,7 @@ const RICETTE = {
     if (f > 0) posa.metti('sfera', C2.set(A.fc), p.x, 0.1 + f * 0.03, p.z, 0, p.fase, 0, 0.07 * f * A.fs, 0.07 * f * A.fs * 0.8, 0.07 * f * A.fs)
   },
 }
-const CRESCE_DA_SE = new Set(['pomodoro', 'cipolla'])                  // queste si posano da sole
+const CRESCE_DA_SE = new Set(['pomodoro', 'cipolla', 'riso'])                  // queste si posano da sole
 
 /** Dove stanno le piante. 'sparso' è la vecchia disposizione (otto a caso per tessera, lo stesso caso di prima). */
 function disponi (disp, n, nz, seme) {

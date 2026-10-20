@@ -50,6 +50,10 @@ export const EDIFICI = {
   conserviera: { nome: 'Cucina',      emoji: '🍳', w: 3, d: 3, prezzo: 110, slot: { i: 2,  j: -7 }, categoria: 'edifici', liv: 12 },
   gelateria:   { nome: 'Gelateria',   emoji: '🍦', w: 3, d: 3, prezzo: 140, slot: { i: -9, j: 0 }, categoria: 'edifici',  liv: 14 },
   caseificio:  { nome: 'Caseificio',  emoji: '🧀', w: 3, d: 3, prezzo: 120, slot: { i: 6,  j: -3 }, categoria: 'edifici', liv: 11 },
+  telaio:        { nome: 'Telaio',        emoji: '🧵', w: 3, d: 3, prezzo: 70,  slot: { i: -9, j: -4 }, categoria: 'edifici', liv: 8 },
+  zuccherificio: { nome: 'Zuccherificio', emoji: '🧂', w: 3, d: 3, prezzo: 130, slot: { i: 6,  j: 4 },  categoria: 'edifici', liv: 13 },
+  sartoria:      { nome: 'Sartoria',      emoji: '🧥', w: 3, d: 3, prezzo: 150, slot: { i: 6,  j: 0 },  categoria: 'edifici', liv: 15 },
+  tintoria:      { nome: 'Tintoria',      emoji: '🧴', w: 3, d: 3, prezzo: 160, slot: { i: -9, j: 4 },  categoria: 'edifici', liv: 16 },
 }
 export const TIPI_DI_EDIFICIO = Object.keys(EDIFICI)
 

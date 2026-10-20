@@ -21,7 +21,7 @@ sempre ([../fattoria/animali.md](../fattoria/animali.md)) ma più semplici delle
   recinto 4 pecore, pollaio 6 galline, stalla 4 mucche. **Il livello apre il pezzo, non i posti.** Ogni bestia costa
   più della precedente: `prezzoBestia + rincaroBestia · (n − 1)` con `n` le bestie già dentro (pecora 40, 60, 80;
   gallina 25, 37, 49, 61, 73; mucca 60, 90, 120). Conta come esperienza. Pieno rifiuta con `pieno`, senza monete con
-  `poche-monete` e il `costo`. Una pecora comprata è **adulta** (la lana ricresce da quel momento); le nascite restano
+  `poche-monete` e il `costo`. Una pecora comprata è **adulta e affamata** (la lana parte dal primo pasto, che l'acquisto dà da sé se c'è un raccolto); le nascite restano
   ([regole.md](regole.md), «Le pecore»).
 - **Un pollaio o una stalla con le bestie non si mette via** (`ha-le-bestie`), si sposta, come il recinto.
 - Nutrire dà da mangiare **a tutte le bestie che hanno fame**, finché c'è da mangiare (una gallina per raccolto).
@@ -84,8 +84,17 @@ emoji, n, max, pieno, prezzo }` (`prezzo` è null se pieno; null l'intero risult
 - **Caseificio**: casetta bianca col tetto di tegole blu, forme di formaggio gialle su un bancale, la ruota ad acqua che
   gira piano.
 - Il cartello sopra recinto, pollaio e stalla (`pezzi.js`, `Effetti.nuovoCartello`): in alto lo stato («🥚 N pronti!», «⏳ Ns»,
-  «🐔 ha fame», «🧶 pronta!» per le pecore), sotto il conto «🐄 2/4» e il pulsante «＋ 🪙 40». Peso: pollaio ~47 mesh
+  «🐔 ha fame», «🧶 pronta!» e «🐑 ha fame» per le pecore), sotto il pulsante «＋ 🪙 40»; **niente conto «n/max»**: quando il pezzo è pieno il pulsante e la riga spariscono. Peso: pollaio ~47 mesh
   con una gallina (+~8 per ogni altra), stalla ~110 con le quattro mucche (steccato e cancelletto compresi), caseificio ~32; geometrie delle bestie condivise, animazioni col tempo.
+
+## La fame si vede
+
+Una bestia con fame (`fine === null`; per la pecora un'adulta tosata, `t0 === null`) ha il **corpo più magro**: mucca e pecora al
+80% in larghezza e altezza (la testa non cambia, le zampe si vedono di più), la gallina appena (~86%); sta **più bassa**, la testa
+giù, e si muove **al 70%** della velocità (la mucca ha un tempo suo, `fase`, per non far scattare le fasi). Una sazia, al lavoro o
+pronta ha il corpo pieno. Il passaggio è morbido (`magro` rincorre 0/1 col `dt`). Nella pecora la lana è separata: cresce da 0 a piena
+durante il timer (scala proporzionale), e senza lana si vede la pelle, più sottile se ha fame. Le costole non ci sono: il manto della mucca è
+colorato per faccia sulla geometria condivisa, non si cambia per bestia (resta da fare, se la magrezza da sola non basta).
 
 ## Il collegamento alla scena
 
@@ -102,7 +111,7 @@ emoji, n, max, pieno, prezzo }` (`prezzo` è null se pieno; null l'intero risult
 - I motivi `ha-le-bestie`, `lavora`, `pieno` e `manca-raccolto` per le bestie sono in `scena3d/detti.js`.
 
 Nei test: `unita/fattoria3d` (sezioni 8 e 18–20); `integrazione/fattoria3d` (sezione «gli animali da cortile»: nutrire, uova,
-bestie comprate dal cartello — `[data-f3="cartello-bestie"]` con `data-n`/`data-max`, `[data-f3="compra-bestia"]` con
+bestie comprate dal cartello — `[data-f3="cartello-bestie"][data-pezzo="pollaio|stalla|recinto"]`, `[data-f3="compra-bestia"]` con
 `aria-disabled` —, latte, il recinto da una pecora a quattro, contatori, `[data-f3="prodotti"]`).
 
 Ogni acquisto di una bestia porta **un giro di pappa** (`pappa` nel risultato di `compraBestia`): le bestie affamate del pollaio o della stalla si nutrono dalla scorta, il recinto riceve un pasto (cresce l'agnello o avanza la nascita). Senza raccolti da dare, niente pappa (non è un rifiuto).

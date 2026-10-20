@@ -61,7 +61,10 @@
 .f3-griglia-carte .carta.bloccata { opacity: .6; filter: grayscale(.75); }
 .f3-griglia-carte .carta.trema { animation: f3-trema .4s ease-in-out; }
 @keyframes f3-trema { 0%, 100% { transform: none; } 20% { transform: translateX(-5px) rotate(-2deg); } 45% { transform: translateX(5px) rotate(2deg); } 70% { transform: translateX(-3px); } }
-.f3-griglia-carte .disegno { width: 64px; height: 64px; border-radius: 14px; display: flex; align-items: center; justify-content: center; background: #f1ead8; }
+.f3-griglia-carte .disegno { position: relative; width: 72px; height: 72px; border-radius: 14px; display: flex; align-items: center; justify-content: center; background: #f1ead8; overflow: hidden; }
+.f3-griglia-carte .disegno .em.attesa { opacity: .45; }
+.f3-griglia-carte .disegno .anteprima { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; opacity: 0; transition: opacity .25s ease-out; }
+.f3-griglia-carte .disegno .anteprima.vista { opacity: 1; }
 .f3-griglia-carte .disegno .em { font-size: 34px; line-height: 1; }
 .f3-griglia-carte .carta[data-cat="campi"] .disegno { background: #e6f1c6; }
 .f3-griglia-carte .carta[data-cat="animali"] .disegno { background: #f8e3cc; }
@@ -90,12 +93,18 @@
 .f3-macchina[data-macchina="conserviera"] { --a: #dd5a48; --b: #8f2a1f; --c: #fde4df; --d: #f2c4bc; }
 .f3-macchina[data-macchina="gelateria"]   { --a: #ec86ae; --b: #b24676; --c: #fde8f1; --d: #f4c6da; }
 .f3-macchina[data-macchina="caseificio"]  { --a: #f0cb40; --b: #b8921a; --c: #fff6cf; --d: #f0e09a; --t: #4a3a00; }
+.f3-macchina[data-macchina="telaio"]      { --a: #b98a5a; --b: #76512a; --c: #f6ead9; --d: #e3cdb0; }
+.f3-macchina[data-macchina="zuccherificio"] { --a: #8fb6d8; --b: #4d7aa3; --c: #eaf3fa; --d: #c9ddee; }
+.f3-macchina[data-macchina="sartoria"]    { --a: #b07ed6; --b: #6f3f98; --c: #f1e6fa; --d: #dcc3ee; }
+.f3-macchina[data-macchina="tintoria"]    { --a: #4fb6b0; --b: #247873; --c: #e0f5f3; --d: #b3e0dc; }
 .f3-macchina[data-macchina="pasticceria"] { --a: #dc55b0; --b: #8e1f6d; --c: #fbe0f1; --d: #f0bddf; }
 .f3-banco   { --a: #e8695a; --b: #b03a2e; --c: #fdeae6; --d: #f2cdc6; }
 .f3-livelli { --a: #ffc93a; --b: #e08a10; --c: #fff6d6; --d: #f2dfa0; --t: #4a3000; }
 .f3-insegna { position: relative; flex: none; display: grid; grid-template-columns: auto 1fr; grid-template-areas: "em t" "em s"; align-items: center; column-gap: 14px; padding: 26px 64px 14px 16px; margin-bottom: 8px; color: var(--t); background: linear-gradient(180deg, var(--a), var(--b)); border-radius: 22px 22px 0 0; box-shadow: 0 3px 8px rgba(0,0,0,.18); }
 .f3-insegna::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 13px; border-radius: 22px 22px 0 0; background: repeating-linear-gradient(90deg, rgba(255,255,255,.6) 0 20px, rgba(255,255,255,.12) 20px 40px); }
 .f3-insegna-em { grid-area: em; width: 74px; height: 74px; border-radius: 50%; display: grid; place-items: center; font-size: 42px; line-height: 1; background: #fffdf6; box-shadow: 0 3px 0 rgba(0,0,0,.22), inset 0 0 0 4px var(--c); animation: f3-ondeggia 3.2s ease-in-out infinite; }
+.f3-insegna-em.con3d { overflow: hidden; }
+.f3-insegna-em img { width: 100%; height: 100%; pointer-events: none; }
 .f3-foglio .f3-insegna h2 { grid-area: t; margin: 0; color: var(--t); font-size: 25px; line-height: 1.1; text-shadow: 0 2px 0 rgba(0,0,0,.22); }
 .f3-insegna small { grid-area: s; font-size: 14px; font-weight: 800; opacity: .92; }
 .f3-macchina .f3-corpo, .f3-banco .f3-corpo, .f3-livelli .f3-corpo { padding: 0 14px calc(16px + env(safe-area-inset-bottom)); }
@@ -225,15 +234,14 @@
 .f3-ordini .cambia { min-height: 52px; min-width: 84px; border: 0; border-radius: 26px; background: #efe4cf; box-shadow: 0 4px 0 #d8c8a8; font: 700 14px "Emoji Gioco", system-ui, sans-serif; color: #5a3a2a; touch-action: manipulation; transition: transform .08s, box-shadow .08s; }
 .f3-ordini .cambia:active { transform: translateY(4px); box-shadow: 0 0 0 #d8c8a8; }
 
-/* il cartello su un recinto, un pollaio o una stalla (lo crea scena3d/effetti.js `nuovoCartello`): lo stato, il conto e il «＋ 🪙 N».
+/* il cartello su un recinto, un pollaio o una stalla (lo crea scena3d/effetti.js `nuovoCartello`): lo stato e il «＋ 🪙 N».
    Solo il pulsante prende il dito: il resto lascia passare il tocco alla tela. */
 .f3-badge.f3-cartello { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 0; border-radius: 0; background: none; box-shadow: none; }
 .f3-cartello .stato { padding: 2px 9px; border-radius: 12px; background: rgba(255,251,240,.95); box-shadow: 0 2px 6px rgba(0,0,0,.22); font-weight: 800; }
 .f3-cartello .stato.pronto { background: #ffe27a; animation: f3-su .9s ease-in-out infinite; }
 .f3-cartello .stato[hidden] { display: none; }
-.f3-cartello .riga { display: flex; align-items: center; gap: 6px; padding: 3px 4px 3px 11px; border-radius: 26px; background: rgba(255,251,240,.96); box-shadow: 0 2px 8px rgba(0,0,0,.3); }
-.f3-cartello .riga.piena { padding-right: 11px; background: #e6f7d8; }
-.f3-cartello .conto { font-weight: 800; white-space: nowrap; }
+.f3-cartello .riga { display: flex; align-items: center; gap: 6px; padding: 3px 4px; border-radius: 26px; background: rgba(255,251,240,.96); box-shadow: 0 2px 8px rgba(0,0,0,.3); }
+.f3-cartello .riga[hidden] { display: none; }
 .f3-cartello .compra { pointer-events: auto; min-height: 44px; min-width: 84px; padding: 0 12px; border: 0; border-radius: 22px; background: linear-gradient(#8de060, #5fb83a); box-shadow: 0 3px 0 #3f8a22; font: 800 15px "Emoji Gioco", system-ui, sans-serif; color: #123; white-space: nowrap; touch-action: manipulation; transition: transform .08s, box-shadow .08s; }
 .f3-cartello .compra:active { transform: translateY(3px); box-shadow: 0 0 0 #3f8a22; }
 .f3-cartello .compra.spento { background: #e8e2d2; box-shadow: 0 3px 0 #cfc7b2; color: #8a8272; }
@@ -249,5 +257,6 @@
 @keyframes f3-scorri { to { background-position: 28px 0; } }
 @keyframes f3-scuoti { 0%, 60%, 100% { transform: rotate(0); } 68% { transform: rotate(-12deg); } 76% { transform: rotate(10deg); } 84% { transform: rotate(-6deg); } }
 @keyframes f3-su { 50% { transform: translateY(-5px); } }
+@media (prefers-reduced-motion: reduce) { .f3-griglia-carte .disegno .anteprima { transition: none; } }
 @media (prefers-reduced-motion: reduce) { .f3-velo, .f3-costruisci, .f3-griglia-carte, .f3-griglia-carte .carta.trema { animation: none !important; } }
 @media (prefers-reduced-motion: reduce) { .f3-foglio *, .f3-cartello * { animation: none !important; transition: none !important; } }

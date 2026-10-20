@@ -49,7 +49,7 @@ resto è in [livelli.md](livelli.md).
 ## I campi
 
 Quattro tessere per campo, un raccolto per tessera (`TESSERE`): una coltura matura per intero, e si taglia una tessera alla
-volta (`raccogliTessera`). Il tempo è vero (16 s il grano e le carote, 64 s la lavanda: dieci colture, crescente col livello). Seminare è gratis. **Un campo che sta crescendo non
+volta (`raccogliTessera`). Il tempo è vero (16 s il grano e le carote, 70 s il riso: quindici colture, crescente col livello). Seminare è gratis. **Un campo che sta crescendo non
 si mette via**.
 
 ## I pezzi calpestabili
@@ -64,15 +64,19 @@ gobba) in `dati/catalogo.js`. Sono **decorazione per fare camminamenti**: niente
 
 ## Le pecore
 
-`agnello → adulta → tosata → lana che ricresce`, e a volte ne nasce una nuova (`PECORE` in `dati/regole.js`). **Si parte con
-una pecora adulta** (nel prezzo del recinto); **le altre si comprano dal cartello sopra il recinto** (adulte, 🪙40, 60, 80, fino a
+`agnello → adulta → tosata (ha fame) → pasto → lana che ricresce`, e a volte ne nasce una nuova (`PECORE` in `dati/regole.js`). **Si parte con
+una pecora adulta, con fame** (nel prezzo del recinto); **le altre si comprano dal cartello sopra il recinto** (adulte, 🪙40, 60, 80, fino a
 quattro: [animali.md](animali.md)), come le galline e le mucche. Con due adulte le nascite ricominciano:
 
 - un agnello **cresce dopo due pasti** (ogni pasto un raccolto qualsiasi, dalla scorta più grande);
-- l'adulta ha la lana che ricresce in 25 s e si tosa: `+1 🧶` a pecora;
+- **dopo la tosa la pecora ha fame** (`t0: null`), come una gallina o una mucca: la lana ricresce in 25 s, ma **dal pasto**, non dalla tosa
+  (`pastiPerLana`: un raccolto qualsiasi, dalla scorta più grande). Una pecora affamata non fa lana, e il tempo che passa non cambia
+  niente: niente muore, niente marcisce, una pappa a ogni giro. Si tosa: `+1 🧶` a pecora;
 - **due adulte nutrite due volte fanno nascere un agnellino**, fino a quattro pecore per recinto (acquisti e nascite dividono lo
   stesso tetto);
-- toccando il recinto l'eroe sceglie da solo (`provaCura`): prima tosa, poi nutre. Un recinto con le pecore **non si
+- toccando il recinto l'eroe sceglie da solo (`provaCura`): prima tosa (se c'è lana pronta), poi **nutre le tosate affamate** (tutte in un gesto,
+  finché c'è da mangiare), poi l'agnello o la nascita; se tutte sono al lavoro dice «la lana ricresce, ancora N s». La pecora comprata arriva
+  con fame e il giro di pappa dell'acquisto le dà il primo pasto. Un recinto con le pecore **non si
   mette via** (si sposta).
 
 ## Gli animali da cortile
@@ -88,13 +92,14 @@ vale solo per comprare, seminare e avviare. → [livelli.md](livelli.md)
 
 ## Le macchine
 
-Mulino, pastificio (id `pasticceria`), panificio, caseificio, cucina (id `conserviera`) e gelateria sono **macchine** con le ricette della fattoria di sempre ([merci-e-ricette.md](merci-e-ricette.md)) (`MACCHINE` in `dati/ricette.js`): ognuna ha le
+Mulino, pastificio (id `pasticceria`), panificio, caseificio, cucina (id `conserviera`), gelateria, telaio, zuccherificio, sartoria e tintoria sono **macchine** con le ricette della fattoria di sempre ([merci-e-ricette.md](merci-e-ricette.md)) (`MACCHINE` in `dati/ricette.js`): ognuna ha le
 sue ricette (raccolti precisi e un tempo), **tre posti** nel forno e cuoce **uno alla volta**. Gli ingredienti si scalano
 subito, il successivo parte quando finisce il precedente; i pronti restano finché non si ritirano (`ritiraDa`) e passano
 in dispensa (`stato.prodotti`).
 
 - **Un ingrediente è un raccolto o il prodotto di un'altra macchina** (catena): grano → farina (mulino) → pane integrale
-  (panificio); può anche uscire dalla stessa macchina (la pasta per le lasagne, come in 2D).
+  (panificio); può anche uscire dalla stessa macchina (la pasta per le lasagne, come in 2D). **Un solo ingrediente è un contatore**: la
+  lana (`stato.lana`, quella della tosa), per telaio e sartoria: `scortaDi` e `_togli` la trattano come le altre merci ([merci-e-ricette.md](merci-e-ricette.md)).
 - **Gli id delle ricette sono globali** (sono le chiavi di `prodotti`), sono quelli della 2D e non coincidono con quelli delle colture.
 - Un edificio fuori dal quadrato di partenza si compra solo con **tutti i suoi lotti tuoi** (`lotto-non-tuo`, con
   l'elenco `lotti`): meglio un rifiuto che dice cosa comprare che un edificio sospeso sul terreno altrui.
@@ -103,7 +108,9 @@ in dispensa (`stato.prodotti`).
 
 ## La mongolfiera
 
-Si caricano 2 raccolti, parte per 14 s e torna con una cassa: `+2 🧶`. Una cassa da ritirare impedisce un nuovo carico.
+È la nave: un carico di tre file di casse (una merce per fila, solo prodotti finiti, mai impossibili al livello) che si riempie un po' alla volta; ogni cassa
+rende subito esperienza ⭐ (mai monete, sotto il tetto di 🪙6 al minuto), fila piena +25%, tutto pieno +50% e un decoro in regalo; a tutto pieno parte e torna
+dopo due minuti con un carico nuovo. Il segnaposto di prima (2 raccolti, 14 s, `+2 🧶`) non c'è più. Tutto in [mongolfiera.md](mongolfiera.md).
 
 ## I contatori
 

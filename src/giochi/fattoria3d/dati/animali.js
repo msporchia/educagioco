@@ -48,6 +48,13 @@ export const PRODOTTI_ANIMALI = {
   latte: { nome: 'Latte', emoji: '🥛', pezzo: 'latte', dove: 'stalla' },
 }
 
+/** La lana è l'unica merce delle bestie che non sta in `stato.prodotti`: il contatore `stato.lana` (la tosa, la mongolfiera). È l'ingrediente del
+    telaio e della sartoria, come nella 2D. `dove` è il pezzo che la fa; `ms` quanto ci vuole per averne una: il tempo della lana (PECORE.laneMs) più i pasti che chiede,
+    contati sul grano come per le uova (`msDelProdotto`). */
+export const LANA = {
+  lana: { nome: 'Lana', emoji: '🧶', pezzo: 'merce_lana', dove: 'recinto', ms: PECORE.laneMs + (PECORE.pastiPerLana || 0) * COLTURE.grano.ms },
+}
+
 /** Quanto ci vuole per averne uno: il suo tempo più il raccolto che mangia (il primo della lista), per i calcoli degli ordini. */
 export function msDelProdotto(k) {
   const p = PRODOTTI_ANIMALI[k], a = p && ANIMALI[p.dove]
@@ -69,6 +76,10 @@ export function guastiDegliAnimali(pezzi) {
   }
   for (const [t, a] of Object.entries(ANIMALI)) {
     if (!PRODOTTI_ANIMALI[a.prodotto] || PRODOTTI_ANIMALI[a.prodotto].dove !== t) g.push(`${t}: il prodotto non torna`)
+  }
+  for (const [k, p] of Object.entries(LANA)) {
+    if (COLTURE[k] || PRODOTTI_ANIMALI[k]) g.push(`${k}: la lana con l'id di un'altra merce`)
+    if (!p.nome || !p.emoji || !p.pezzo || !CORTILE[p.dove]) g.push(`${k}: nome, emoji o pezzo sbagliati`)
   }
   for (const [k, p] of Object.entries(PRODOTTI_ANIMALI)) {
     if (COLTURE[k]) g.push(`${k}: un prodotto con l'id di una coltura`)

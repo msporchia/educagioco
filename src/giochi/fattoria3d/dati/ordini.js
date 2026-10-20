@@ -4,7 +4,7 @@
    Vedi docs/fattoria3d/ordini.md. */
 import { COLTURE } from './colture.js'
 import { RICETTE } from './ricette.js'
-import { PRODOTTI_ANIMALI, msDelProdotto } from './animali.js'
+import { PRODOTTI_ANIMALI, LANA, msDelProdotto } from './animali.js'
 import { livelloDellaColtura, livelloDellaRicetta } from './livelli.js'
 
 // Il paese: chi passa al banco. Nessuno chiede una cosa sola per mestiere: il banco è per tutti.
@@ -43,6 +43,7 @@ export const FRAZIONE_DEL_TETTO = 0.5
 export function msDi(k, giri = 5) {
   if (COLTURE[k]) return COLTURE[k].ms
   if (PRODOTTI_ANIMALI[k]) return msDelProdotto(k)      // uova e latte: ingredienti, mai chiesti da soli
+  if (LANA[k]) return LANA[k].ms                         // la lana: un'altra tosa (l'ingrediente del telaio, mai chiesta da sola)
   const r = RICETTE[k]
   if (!r || giri <= 0) return Infinity
   return r.ms + Object.entries(r.ing).reduce((n, [i, q]) => n + q * msDi(i, giri - 1), 0)

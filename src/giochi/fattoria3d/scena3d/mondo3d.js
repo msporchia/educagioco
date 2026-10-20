@@ -7,6 +7,7 @@
 import * as THREE from 'three'
 import { Terreno } from './terreno.js'
 import { Pezzi } from './pezzi.js'
+import { creaAnteprime } from './anteprime.js'
 import { Eroe } from './eroe.js'
 import { Compagni } from './compagni.js'
 import { Effetti } from './effetti.js'
@@ -17,8 +18,10 @@ import { Dito } from './dito.js'
 import { ASPETTO, fantasma } from './modelli.js'
 import { PEZZI, EDIFICI } from '../dati/catalogo.js'
 import { LOTTI, lottoDi } from '../dati/mondo.js'
+import { LIVELLI, scalaPer, nuovoDegrado, passoDegrado, descriviDegrado } from '../dati/degrado.js'
 
 const CIELO = new THREE.Color(0xbfe0f0)
+const _v = new THREE.Vector3()        // di scorta per `proietta`: niente oggetti nuovi a ogni cartello a ogni fotogramma
 
 export class Mondo3d {
   constructor({ canvas, sopra, motore, ui, qualita }) {
@@ -29,6 +32,9 @@ export class Mondo3d {
 
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' })
     this.renderer.shadowMap.enabled = true; this.renderer.shadowMap.type = THREE.PCFShadowMap
+    // l'ombra si ridisegna a comando (`_fotogramma`): a ogni fotogramma di serie, più di rado se la macchina non regge (dati/degrado.js)
+    this.renderer.shadowMap.autoUpdate = false
+    this.deg = nuovoDegrado(0); this.livello = 0; this.legatoCpu = false; this.nFot = 0; this.ombraSporca = true
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping; this.renderer.toneMappingExposure = 1.05
     this.scena = new THREE.Scene()
     this.scena.background = CIELO; this.scena.fog = new THREE.Fog(CIELO, 38, 90)
@@ -63,13 +69,20 @@ export class Mondo3d {
     this.coda = []                 // gli id dei campi che l'eroe farà uno dopo l'altro (semina o raccogli armati)
     this.badgeLotti = {}
 
-    this.stat = { dts: new Float32Array(120), cpus: new Float32Array(120), n: 0, info: { calls: 0, triangoli: 0, geometrie: 0, texture: 0, dpr: 1 }, fps: 0, nF: 0, tF: 0 }
+    this.stat = { dts: new Float32Array(120), cpus: new Float32Array(120), logiche: new Float32Array(120), n: 0, info: { calls: 0, triangoli: 0, geometrie: 0, texture: 0, dpr: 1 }, fps: 0, nF: 0, tF: 0 }
     this.t0 = performance.now(); this.tPrima = this.t0; this.giroId = 0; this.vivo = false
     this.ro = typeof ResizeObserver === 'function' ? new ResizeObserver(() => this.adatta()) : null
     this.ro?.observe(canvas)
     this.applica(qualita)
     this.adatta()
   }
+
+  /** L'anteprima 3D (dataURL PNG) di un pezzo o di un edificio, in cache per tipo; le fa col renderer di questa scena, un tipo per fotogramma. */
+  anteprima(tipo) {
+    if (!this._anteprime) this._anteprime = creaAnteprime(this.renderer, t => this.pezzi.modelloAnteprima(t))
+    return this._anteprime.chiedi(tipo)
+  }
+  anteprimaPronta(tipo) { return this._anteprime ? this._anteprime.leggi(tipo) : null }
 
   /** Il gruppo dei pezzi in scena: una visita ne usa uno suo (scena3d/visita.js). */
   creaPezzi() { return new Pezzi(this.scena, this.m, this.fx, this.vista, this.q) }
@@ -78,13 +91,13 @@ export class Mondo3d {
   adatta() {
     this.rect = this.canvas.getBoundingClientRect()
     const l = Math.max(1, Math.round(this.rect.width)), a = Math.max(1, Math.round(this.rect.height))
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, this.q.scala))
+    this.renderer.setPixelRatio(this.scalaViva())
     this.renderer.setSize(l, a, false)
     this.camera.adatta(l, a)
   }
   /** Dove cade sullo schermo (px della tela) un punto del mondo, alzato di `extra`. */
   proietta(p, extra = 0) {
-    const v = new THREE.Vector3(p.x, p.y + extra, p.z).project(this.camera.cam)
+    const v = _v.set(p.x, p.y + extra, p.z).project(this.camera.cam)
     return [(v.x * 0.5 + 0.5) * this.rect.width, (-v.y * 0.5 + 0.5) * this.rect.height, v.z < 1]
   }
   _raggio(cx, cy) {
@@ -199,7 +212,7 @@ export class Mondo3d {
   }
 
   /** Dopo che il motore ha cambiato qualcosa che si vede: i gruppi, il terreno, i cartelli. */
-  cambiato() { this.pezzi.sincronizza(); this.terreno.ridisegnaStrade(); this.ui.cambio() }
+  cambiato() { this.pezzi.sincronizza(); this.terreno.ridisegnaStrade(); this.ombraSporca = true; this.ui.cambio() }
 
   // ── cosa sta facendo il bambino: la vista lo dice, qui si applica ──
   imposta(nuovo) {
@@ -242,8 +255,12 @@ export class Mondo3d {
     this.camera.muovi(dt, {
       eroe: { x: eroe.x, z: eroe.z, vel: eroe.vel }, distanza: this.q.camera,
     })
+    const fineLogica = performance.now()
+    // l'ombra: subito se qualcosa è cambiato, altrimenti ogni `ombraOgni` fotogrammi (1 = sempre)
+    this.renderer.shadowMap.needsUpdate = this.q.ombre && (this.ombraSporca || this.nFot++ % LIVELLI[this.livello].ombraOgni === 0)
+    this.ombraSporca = false
     this.renderer.render(this.scena, this.camera.cam)
-    this._misura(dtReale, performance.now() - inizio, ts)
+    this._misura(dtReale, performance.now() - inizio, ts, fineLogica - inizio)
   }
 
   /** I cartelli del prezzo dei soli lotti che confinano coi tuoi, vicini all'eroe (o tutti, in costruzione). */
@@ -260,22 +277,53 @@ export class Mondo3d {
     }
   }
 
-  _misura(dtReale, cpu, ts) {
+  _misura(dtReale, cpu, ts, logica = 0) {
     const s = this.stat, i = s.n % 120
-    s.dts[i] = dtReale; s.cpus[i] = cpu; s.n++; s.nF++
+    s.dts[i] = dtReale; s.cpus[i] = cpu; s.logiche[i] = logica; s.n++; s.nF++
     if (ts - s.tF > 500) {
       s.fps = s.nF * 1000 / (ts - s.tF); s.nF = 0; s.tF = ts
       const r = this.renderer.info
-      s.info = { calls: r.render.calls, triangoli: r.render.triangles, geometrie: r.memory.geometries, texture: r.memory.textures, dpr: this.renderer.getPixelRatio() }
+      s.info = { calls: r.render.calls, triangoli: r.render.triangles, geometrie: r.memory.geometries, texture: r.memory.textures, dpr: this.renderer.getPixelRatio(), programmi: r.programs ? r.programs.length : 0 }
+      this._degrada(ts / 1000, s.fps)
     }
   }
+  /** Il degrado adattivo (dati/degrado.js): una lettura di fps ogni mezzo secondo. Cambia il pixel ratio e la cadenza dell'ombra, mai le scelte salvate. */
+  _degrada(t, fps) {
+    const attivo = typeof document === 'undefined' || document.visibilityState !== 'hidden'
+    const r = passoDegrado(this.deg, { t, fps, attivo })
+    this.deg = r.stato
+    if (r.cambio) {
+      this.livello = this.deg.livello
+      // se il JS riempie il fotogramma la strozzatura è la CPU (draw call): togliere pixel non serve, restano solo le ombre più rade
+      const s = this.stat, k = Math.min(s.n, 120), somma = a => { let x = 0; for (let n = 0; n < k; n++) x += a[n]; return x }
+      this.legatoCpu = k > 20 && somma(s.cpus) > 0.8 * somma(s.dts)
+      this.renderer.setPixelRatio(this.scalaViva()); this.adattaSenzaRect()
+      this.ombraSporca = true
+      this.stat.info.dpr = this.renderer.getPixelRatio()
+    }
+  }
+  /** Il pixel ratio in uso: la scelta (o lo schermo) meno i gradini del degrado. `q.scala` non cambia. */
+  scalaViva() { return scalaPer(window.devicePixelRatio || 1, this.q.scala, this.legatoCpu ? 0 : this.livello) }
   /** Le statistiche per il pannello delle opzioni: fps, il fotogramma peggiore, il lavoro del JS, e cosa si disegna. */
   statistiche() {
     const s = this.stat, k = Math.min(s.n, 120)
     const dts = [...s.dts.slice(0, k)].sort((a, b) => b - a)
-    const cpu = k ? [...s.cpus.slice(0, k)].reduce((a, b) => a + b, 0) / k : 0
+    const media = a => k ? [...a.slice(0, k)].reduce((x, y) => x + y, 0) / k : 0
+    const cpu = media(s.cpus), logica = media(s.logiche), dtMedio = media(s.dts)
     return { fps: s.fps, peggiore: dts[0] || 0, p1: dts[Math.floor(dts.length * 0.01)] || 0, cpu, ...s.info,
-             grafico: Array.from({ length: 120 }, (_, n) => s.dts[(s.n + n) % 120]), cose: this.m.cose.length, prove: this.m.prove.length }
+             // il JS della scena, diviso: la logica (eroe, pezzi, effetti, cartelli) e il disegno (three e le chiamate a WebGL); `fuori` è il resto
+             // del fotogramma (la GPU che finisce, la pagina, Vue): se il JS è poco e `fuori` è tanto, la strozzatura non è il JS
+             logica, disegno: Math.max(0, cpu - logica), fuori: Math.max(0, dtMedio - cpu),
+             grafico: Array.from({ length: 120 }, (_, n) => s.dts[(s.n + n) % 120]), cose: this.m.cose.length, prove: this.m.prove.length,
+             livello: this.livello, scalaViva: this.renderer.getPixelRatio(), ombraOgni: LIVELLI[this.livello].ombraOgni, degrado: descriviDegrado(this.livello) }
+  }
+  /** Quante cose di ogni tipo ci sono in scena (per il rapporto): campi, edifici comprati, altri pezzi, compagni, cartelli, mesh e chi proietta ombra. */
+  conteggi() {
+    let campi = 0, edifici = 0, altri = 0
+    for (const v of this.pezzi.voci.values()) { if (v.kind === 'edificio') { if (v.mio) edifici++ } else if (v.c.tipo === 'campo') campi++; else altri++ }
+    let mesh = 0, ombre = 0, istanze = 0
+    this.scena.traverse(o => { if (o.isMesh) { mesh++; if (o.castShadow) ombre++; if (o.isInstancedMesh) istanze++ } })
+    return { campi, edifici, altri, compagni: this.compagni.lista.length, cartelli: this.sopra.querySelectorAll('.f3-badge').length, mesh, ombre, istanze }
   }
   gpu() {
     try {
@@ -287,8 +335,8 @@ export class Mondo3d {
   // ── le opzioni di qualità ──
   applica(q) {
     this.q = q
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, q.scala)); this.adattaSenzaRect()
-    this.sole.castShadow = q.ombre
+    this.renderer.setPixelRatio(this.scalaViva()); this.adattaSenzaRect()
+    this.sole.castShadow = q.ombre; this.ombraSporca = true
     if (this.sole.shadow.mapSize.x !== q.ombraRes) {
       this.sole.shadow.mapSize.set(q.ombraRes, q.ombraRes)
       if (this.sole.shadow.map) { this.sole.shadow.map.dispose(); this.sole.shadow.map = null }
@@ -326,6 +374,7 @@ export class Mondo3d {
   via() {
     this.ferma(); this.ro?.disconnect(); this.dito.via()
     this.pezzi.via(); this.fx.via(); this.terreno.via(); this.compagni.via()
+    this._anteprime?.via()
     try { this.renderer.dispose() } catch (e) { /* già andato */ }
   }
 }

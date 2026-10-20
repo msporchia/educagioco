@@ -6,11 +6,12 @@ lana) e uno stato suo, e non tocca quelli della fattoria di sempre; le monete so
 `src/giochi/fattoria3d/`.
 
 - [presentazione.md](presentazione.md) — per chi arriva da fuori: cosa si fa, cosa lo distingue dalla fattoria di sempre, note per i genitori
-- [regole.md](regole.md) — i principi: risorse separate, niente si vende, niente marcisce, quanto costa muovere, le pecore, le macchine, la mongolfiera
+- [regole.md](regole.md) — i principi: risorse separate, niente si vende, niente marcisce, quanto costa muovere, le pecore, le macchine
 - [livelli.md](livelli.md) — l'esperienza (la spesa), le soglie a formula e la loro misura (`npm run tara:fattoria3d`), cosa arriva a ogni livello, il gating e le fattorie già salvate
 - [merci-e-ricette.md](merci-e-ricette.md) — le merci e le ricette sono quelle della 2D: la faccia di ogni merce (`Faccia.vue`), le macchine e le ricette giuste, gli scarti, i vecchi salvataggi
 - [animali.md](animali.md) — pollaio e stalla: galline e mucche, uova e latte, i posti coi livelli, il caseificio e le ricette nuove
 - [ordini.md](ordini.md) — il banco della bancarella: chi chiede raccolti e prodotti, il premio in esperienza (mai monete), rifiutare, lo stato v3
+- [mongolfiera.md](mongolfiera.md) — la nave: tre file di casse da riempire un po' alla volta, i bonus, la sorpresa della fiera, il viaggio e il ritorno, il segnaposto di prima che si chiude
 - [vicini.md](vicini.md) — il trattore e i villaggi dei vicini: la fattoria visitabile come dato (snapshot), la cassa, il mercato che compra e che vende, la visita di sola lettura, e come domani entrerà quella di un amico
 - [terreno.md](terreno.md) — i lotti da comprare, il recinto, gli alberi che si abbattono, le strade a pennello, la telecamera
 - [compagni.md](compagni.md) — Watson e i gatti che girano per la fattoria, il contadino nuovo: quando arrivano, come sono fatti, come si muovono

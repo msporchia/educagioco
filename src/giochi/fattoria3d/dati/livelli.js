@@ -5,7 +5,7 @@
 import { PEZZI, EDIFICI } from './catalogo.js'
 import { COLTURE } from './colture.js'
 import { RICETTE } from './ricette.js'
-import { PRODOTTI_ANIMALI } from './animali.js'
+import { PRODOTTI_ANIMALI, LANA } from './animali.js'
 import { compagniAl } from './compagni.js'
 
 // Quanta esperienza (monete spese qui dentro) serve in tutto per un livello: una formula, non una tabella, così non
@@ -24,7 +24,7 @@ export const livelloDellaColtura = chiave => (COLTURE[chiave] || {}).liv || 1
 export function livelloDellaRicetta(id, giri = 4) {
   const r = RICETTE[id]
   if (!r || giri <= 0) return Infinity
-  const ing = Object.keys(r.ing).map(k => COLTURE[k] ? livelloDellaColtura(k) : PRODOTTI_ANIMALI[k] ? livelloDelPezzo(PRODOTTI_ANIMALI[k].dove) : livelloDellaRicetta(k, giri - 1))
+  const ing = Object.keys(r.ing).map(k => COLTURE[k] ? livelloDellaColtura(k) : PRODOTTI_ANIMALI[k] ? livelloDelPezzo(PRODOTTI_ANIMALI[k].dove) : LANA[k] ? livelloDelPezzo(LANA[k].dove) : livelloDellaRicetta(k, giri - 1))
   return Math.max(r.liv || 1, livelloDelPezzo(r.dove), ...ing)
 }
 
@@ -93,6 +93,7 @@ export const NOMI = {
   pollaio: 'Il pollaio',
   patata: 'Le patate',
   panificio: 'Il panificio',
+  telaio: 'Il telaio',
   zucca: 'Le zucche',
   stalla: 'La stalla',
   cipolla: 'Le cipolle',
@@ -100,9 +101,12 @@ export const NOMI = {
   caseificio: 'Il caseificio',
   fragola: 'Le fragole',
   conserviera: 'La cucina',
+  zuccherificio: 'Lo zuccherificio',
   melanzana: 'Le melanzane',
   gelateria: 'La gelateria',
+  sartoria: 'La sartoria',
   lavanda: 'La lavanda',
+  tintoria: 'La tintoria',
 }
 
 export function nomeDi(livello) {
@@ -152,7 +156,7 @@ export function guastiDeiLivelli() {
   for (let l = 1; l <= ULTIMO; l++) { const r = roba(l); for (const c of [...r.pezzi, ...r.edifici, ...r.colture, ...r.ricette]) arrivano.add(c.id) }
   for (const id of Object.keys(NOMI)) if (!arrivano.has(id)) g.push(`c'è un nome per «${id}», che non arriva a nessun livello`)
   // gli id non si confondono fra gli elenchi
-  const tutti = [...Object.keys(PEZZI), ...Object.keys(EDIFICI), ...Object.keys(COLTURE), ...Object.keys(RICETTE), ...Object.keys(PRODOTTI_ANIMALI)]
+  const tutti = [...Object.keys(PEZZI), ...Object.keys(EDIFICI), ...Object.keys(COLTURE), ...Object.keys(RICETTE), ...Object.keys(PRODOTTI_ANIMALI), ...Object.keys(LANA)]
   if (new Set(tutti).size !== tutti.length) g.push('un id compare in due elenchi (pezzi, edifici, colture, ricette, prodotti delle bestie)')
   // una ricetta dichiara il livello vero: né prima della macchina, né prima dei suoi ingredienti
   for (const [id, r] of Object.entries(RICETTE)) {

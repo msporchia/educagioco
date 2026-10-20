@@ -141,6 +141,8 @@ export function creaMongolfiera () {
 // ── gli edifici unici nuovi: 3×3, il fronte verso +z. Dentro l'impronta (±1,5), come la mongolfiera ──
 /** Un edificio che si anima da sé: `anima(dt, tt)` lo chiama pezzi.js. `fumo` è il punto del mondo (relativo) da cui sale. */
 function lastra (g, w, d, colore = 0xc9b79a) { return scatola(g, w, 0.1, d, mat(colore), 0, 0.05, 0) }
+// i mattoncini, per i modelli delle macchine in modelli-macchine.js
+export { pronto, scatola, cilindro, cono, sfera, tetto, insegna, lastra }
 
 export function creaMulino () {
   const g = new THREE.Group()
@@ -413,7 +415,7 @@ export function creaPecora () {
     const p = new THREE.Group(); p.position.set(x, 0.26, z); g.add(p)
     cilindro(p, 0.025, 0.025, 0.26, scuro, 0, -0.13, 0, 5); zampe.push(p)
   }
-  g.userData = { zampe, corpo, testa, fiocchi, pelle: pelleM, k: 1, fase: 0, attesa: 1, meta: new THREE.Vector3() }
+  g.userData = { zampe, corpo, testa, fiocchi, pelle: pelleM, k: 1, magro: 0, fase: 0, attesa: 1, meta: new THREE.Vector3() }
   return g
 }
 export function creaRecinto (stati) {
@@ -448,12 +450,16 @@ export function sincronizzaPecore (g, stati) {
 export function muoviPecore (g, dt, t, verso, stati, adesso) {
   g.userData.pecore.forEach((p, n) => {
     const u = p.userData, st = stati[n] || { eta: 'adulta', t0: adesso }
-    // lo stato: la taglia cresce piano, la lana ricresce, la pelle si vede se tosata
-    const livello = st.eta === 'adulta' ? Math.max(0, Math.min(1, (adesso - st.t0) / PECORE.laneMs)) : 0.7
+    // lo stato: la taglia cresce piano; la lana ricresce dal pasto (`t0` null: tosata e affamata, niente lana); se ha fame il corpo è
+    // magro (la pelle si assottiglia, il ventre sale), la postura bassa e i passi lenti; la transizione è morbida
+    const fame = st.eta === 'adulta' && st.t0 == null
+    const livello = st.eta === 'adulta' ? (st.t0 == null ? 0 : Math.max(0, Math.min(1, (adesso - st.t0) / PECORE.laneMs))) : 0.7
     u.k += ((st.eta === 'agnello' ? 0.62 : 1) - u.k) * Math.min(1, dt * 3)
+    u.magro += ((fame ? 1 : 0) - u.magro) * Math.min(1, dt * 2.5)
+    const m = u.magro, lento = 1 - 0.3 * m
     p.scale.setScalar(u.k); u.testa.scale.setScalar(st.eta === 'agnello' ? 1.3 : 1)
-    u.fiocchi.visible = livello > 0.1; u.fiocchi.scale.setScalar(0.6 + 0.4 * livello)
-    u.pelle.visible = livello < 0.6
+    u.fiocchi.visible = livello > 0.05; u.fiocchi.scale.setScalar(Math.max(0.01, 0.25 + 0.75 * livello))   // la lana cresce con la lana
+    u.pelle.visible = livello < 0.6; u.pelle.scale.set(1.25 * (1 - 0.2 * m), 0.9 * (1 - 0.2 * m), 0.95)
     // il movimento
     u.attesa -= dt
     if (verso && !u.corri && n === 0) { u.meta.set(Math.max(-1.1, Math.min(1.1, verso.x)), 0, Math.max(-1.1, Math.min(1.1, verso.z))); u.corri = 2.2; u.attesa = 3 }
@@ -462,14 +468,14 @@ export function muoviPecore (g, dt, t, verso, stati, adesso) {
     const dx = u.meta.x - p.position.x, dz = u.meta.z - p.position.z, d = Math.hypot(dx, dz)
     const mov = d > 0.06
     if (mov) {
-      const v = Math.min(d, (u.corri ? 1.3 : 0.45) * dt)
+      const v = Math.min(d, (u.corri ? 1.3 : 0.45) * lento * dt)
       p.position.x += dx / d * v; p.position.z += dz / d * v
       const a = Math.atan2(dx, dz); let da = a - p.rotation.y; da = Math.atan2(Math.sin(da), Math.cos(da)); p.rotation.y += da * Math.min(1, dt * 6)
     }
-    u.fase += dt * (mov ? (u.corri ? 12 : 6) : 0)
+    u.fase += dt * lento * (mov ? (u.corri ? 12 : 6) : 0)
     u.zampe.forEach((z, k) => { z.rotation.x = mov ? Math.sin(u.fase + (k % 3 ? Math.PI : 0)) * 0.5 : 0 })
-    u.corpo.position.y = 0.34 + (mov ? Math.abs(Math.sin(u.fase)) * 0.03 : 0)
-    u.testa.rotation.x = mov ? 0 : Math.max(0, Math.sin(t * 0.8 + p.position.x * 3)) * 0.5   // ogni tanto bruca
+    u.corpo.position.y = 0.34 - 0.03 * m + (mov ? Math.abs(Math.sin(u.fase)) * 0.03 : 0)
+    u.testa.rotation.x = mov ? 0.35 * m : (Math.max(0, Math.sin(t * 0.8 * lento + p.position.x * 3)) * 0.5) * (1 - m) + 0.5 * m   // ogni tanto bruca; affamata, la testa sta giù
   })
 }
 
@@ -492,7 +498,7 @@ export function creaGallina (k = 0) {
   scatola(testa, 0.02, 0.04, 0.05, rosso, 0, 0.1, 0.02)
   for (const s of [-1, 1]) parte(g, G_ZAMPA, giallo, s * 0.04, 0.05, 0.01)
   const uovo = parte(g, G_UOVO, mat(0xfff4e0), 0.16, 0.045, 0.04); uovo.scale.set(0.85, 1, 0.85); uovo.visible = false
-  g.userData = { corpo, testa, uovo, dono: uovo, fase: Math.random() * 6, attesa: Math.random() * 2, meta: new THREE.Vector3(), zona: { x0: -1.15, x1: 1.15, z0: 0.15, z1: 0.8 } }
+  g.userData = { corpo, testa, uovo, dono: uovo, magro: 0, fase: Math.random() * 6, attesa: Math.random() * 2, meta: new THREE.Vector3(), zona: { x0: -1.15, x1: 1.15, z0: 0.15, z1: 0.8 } }
   return g
 }
 
@@ -569,7 +575,7 @@ export function creaMucca (k = 0) {
   const secchio = new THREE.Group(); secchio.position.set(0.5, 0, 0.3); g.add(secchio); secchio.visible = false
   cilindro(secchio, 0.1, 0.08, 0.17, mat(0xdde4ea, { metalness: 0.4, roughness: 0.5 }), 0, 0.085, 0, 8)
   cilindro(secchio, 0.085, 0.085, 0.02, mat(0xffffff), 0, 0.17, 0, 8)
-  g.userData = { corpo, testa, coda, dono: secchio, fase: Math.random() * 6, meta: new THREE.Vector3() }
+  g.userData = { corpo, testa, coda, dono: secchio, magro: 0, fase: Math.random() * 6, meta: new THREE.Vector3() }
   return g
 }
 
@@ -638,16 +644,23 @@ export function muoviBestie (g, dt, t, stati, adesso) {
         b.position.x += dx / d * v; b.position.z += dz / d * v
         let da = Math.atan2(dx, dz) - b.rotation.y; da = Math.atan2(Math.sin(da), Math.cos(da)); b.rotation.y += da * Math.min(1, dt * 7)
       }
+      u.magro += ((fame ? 1 : 0) - u.magro) * Math.min(1, dt * 2.5)       // affamata: corpo più asciutto e più basso (poco, è piccola)
+      const m = u.magro
+      u.corpo.scale.set(1 - 0.14 * m, 0.9 - 0.12 * m, 1.25 - 0.08 * m)
       u.fase += dt * (mov ? 9 : fame ? 7 : 4)
-      u.corpo.position.y = 0.17 + (mov ? Math.abs(Math.sin(u.fase)) * 0.015 : 0)
+      u.corpo.position.y = 0.17 - 0.012 * m + (mov ? Math.abs(Math.sin(u.fase)) * 0.015 : 0)
       u.testa.rotation.x = mov ? Math.sin(u.fase * 1.2) * 0.12 : Math.max(0, Math.sin(u.fase)) * (fame ? 1.0 : 0.6)   // becca
     } else {                                                    // la mucca
-      u.fase += dt
+      // affamata: il corpo si smagrisce (larghezza e altezza al 80%, la testa non cambia), si abbassa e si muove più piano.
+      // Il tempo dell'animazione è `u.fase`, che avanza più lenta: cambiare velocità non fa scattare le fasi.
+      u.magro += ((fame ? 1 : 0) - u.magro) * Math.min(1, dt * 2.5)
+      const m = u.magro, ph = u.fase += dt * (1 - 0.3 * m)
+      u.corpo.scale.set(SCALA_CORPO[0] * (1 - 0.2 * m), SCALA_CORPO[1] * (1 - 0.2 * m), SCALA_CORPO[2])
       const ruminando = st.fine !== null && !pronta
-      u.testa.rotation.x = fame ? 0.55 + Math.sin(t * 0.9 + n) * 0.08 : 0.08 + Math.sin(t * (ruminando ? 1.3 : 0.7) + n) * 0.07
-      u.testa.position.y = 0.65 + Math.sin(t * 2.6 + n) * (ruminando ? 0.012 : 0.004)       // la mascella
-      u.coda.rotation.z = Math.sin(t * 1.1 + n * 2) * 0.35
-      u.corpo.position.y = 0.42 + Math.sin(t * 0.8 + n) * 0.006
+      u.testa.rotation.x = fame ? 0.55 + Math.sin(ph * 0.9 + n) * 0.08 : 0.08 + Math.sin(ph * (ruminando ? 1.3 : 0.7) + n) * 0.07
+      u.testa.position.y = 0.65 - 0.05 * m + Math.sin(ph * 2.6 + n) * (ruminando ? 0.012 : 0.004)       // la mascella
+      u.coda.rotation.z = Math.sin(ph * 1.1 + n * 2) * 0.35 * (1 - 0.4 * m)
+      u.corpo.position.y = 0.42 - 0.04 * m + Math.sin(ph * 0.8 + n) * 0.006
     }
   })
 }

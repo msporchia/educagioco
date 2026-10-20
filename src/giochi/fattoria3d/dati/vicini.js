@@ -217,13 +217,13 @@ const DA_SCRIVERE = [
     v: 1, id: 'zio-beppe', nome: 'Le pecore di Zio Beppe', tema: 'pecore', liv: 11,
     proprietario: { nome: 'Zio Beppe', emoji: '👴' },
     storia: ['Ehi, benvenuta in campagna! Le mie pecore brucano da stamattina.', 'Là in alto vedi la mongolfiera: da lassù la fattoria sembra un francobollo.'],
-    edifici: ['mongolfiera'],
+    edifici: ['mongolfiera', 'telaio'],
     cose: [
       { tipo: 'recinto', i: -5, j: 0, pecore: 4 }, { tipo: 'recinto', i: -5, j: 3, pecore: 3 }, { tipo: 'recinto', i: 2, j: 0, pecore: 4 },
       campo(2, 3, 'zucca'), campo(4, 3, 'cipolla', 0.6), { tipo: 'fontana', i: -3, j: 6 }, { tipo: 'panchina', i: 3, j: 7 },
     ],
     mercato: {
-      vende: [vende('torta', 2, 1.2), vende('pasta', 2, 1.2), vende('latte', 3, 1.2)],
+      vende: [vende('torta', 2, 1.2), vende('pasta', 2, 1.2), vende('latte', 3, 1.2), vende('stoffa', 2, 1.2)],
       compra: [scambio('zucca', 6, 'latte', 1), scambio('cipolla', 6, 'pane', 1), scambio('patata', 8, 'latte', 1)],
     },
     cassa: { chiede: [{ k: 'zucca', n: 3 }, { k: 'pane', n: 2 }, { k: 'patata', n: 3 }], dono: { k: 'pasta', n: 1 } },
@@ -232,14 +232,14 @@ const DA_SCRIVERE = [
     v: 1, id: 'villa-dolce', nome: 'Villa Dolce', tema: 'frutteto', liv: 13,
     proprietario: { nome: 'Villa Dolce', emoji: '🌻' },
     storia: ['Benvenuti a Villa Dolce! Qui le fragole si raccolgono una per una, a mano.', 'E in fondo c\'è la gelateria: il gelato lo facciamo solo con frutta vera.'],
-    edifici: ['gelateria'],
+    edifici: ['gelateria', 'zuccherificio'],
     cose: [
       campo(-5, 0, 'fragola'), campo(-3, 0, 'fragola', 0.7), campo(-5, 2, 'fragola'), campo(-3, 2, 'fragola', 0.5),
       campo(2, 0, 'fragola'), campo(4, 0, 'fragola', 0.8), { tipo: 'fontana', i: 2, j: 2 },
       { tipo: 'aiuola', i: -5, j: 5 }, { tipo: 'aiuola', i: -4, j: 5 }, { tipo: 'aiuola', i: 4, j: 5 }, { tipo: 'panchina', i: 3, j: 7 },
     ],
     mercato: {
-      vende: [vende('crostata', 2, 1.5), vende('gelato', 2, 1.5), vende('melanzana', 3, 1.5), vende('lavanda', 2, 1.5)],
+      vende: [vende('crostata', 2, 1.5), vende('gelato', 2, 1.5), vende('zucchero', 3, 1.5), vende('melanzana', 3, 1.5), vende('lavanda', 2, 1.5)],
       compra: [scambio('fragola', 6, 'melanzana', 2), scambio('cipolla', 8, 'lavanda', 1), scambio('zucca', 8, 'fragola', 2)],
     },
     cassa: { chiede: [{ k: 'fragola', n: 4 }, { k: 'cipolla', n: 3 }, { k: 'pizza', n: 1 }], dono: { k: 'crostata', n: 1 } },

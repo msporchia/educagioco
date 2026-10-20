@@ -4,6 +4,7 @@
 import { creaContadino } from './modelli-compagni.js'
 import { ASPETTO_ERO } from '../dati/compagni.js'
 import { PARTENZA } from '../dati/mondo.js'
+import { alleggeriOmbre } from './ottimizza.js'
 
 const VEL = 4.8, VEL_STRADA = 6.6, FATTORE_CORSA = 1.75, CORSA_DA = 9
 const ang = (a, b, k) => { let d = b - a; d = Math.atan2(Math.sin(d), Math.cos(d)); return a + d * k }
@@ -12,6 +13,7 @@ export class Eroe {
   constructor(scena, motore, effetti) {
     this.m = motore; this.fx = effetti
     this.grp = creaContadino(ASPETTO_ERO)
+    alleggeriOmbre(this.grp)
     scena.add(this.grp)
     this.x = PARTENZA.x; this.z = PARTENZA.z; this.dir = Math.PI
     this.percorso = []; this.dopo = null; this.verso = null; this.az = null

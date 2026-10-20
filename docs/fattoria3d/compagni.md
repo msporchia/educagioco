@@ -12,12 +12,12 @@ mostra con 🐕/🐈). Non contano per `vuoto()` né per le «cose produttive» 
 
 | livello | chi | mantello |
 |--:|---|---|
-| 3 | Watson | bobtail |
-| 5 | Briciola | gatto bianco e nero |
-| 9 | Zenzero | gatto rosso |
+| 1 | Watson | bobtail |
+| 2 | Sherlock | gatto bianco e nero (tuxedo): il gatto vero di casa, come Watson |
+| 3 | Irene | gattina calico (bianca, arancione e nera): l'altra gatta vera di casa |
 | 13 | Pepe | gatto nero |
 
-Al caricamento ci sono tutti quelli del livello, senza avviso. Salendo di livello il nuovo compare con uno sbuffo di
+I tre animali veri di casa (Watson, Sherlock, Irene) arrivano per primi, perché i bambini ci tengono. I gatti sono in scala 1,15 (`SCALA_GATTO`, come `SCALA_CANE` per Watson) per riconoscersi dalla telecamera di serie. Al caricamento ci sono tutti quelli del livello, senza avviso. Salendo di livello il nuovo compare con uno sbuffo di
 scintille e `ui.avviso` («Watson è arrivato!»). Il controllo è una volta al secondo (`Compagni.sync`).
 
 ## Com'è fatto il disegno
@@ -38,9 +38,19 @@ scintille e `ui.avviso` («Watson è arrivato!»). Il controllo è una volta al 
   scura, punta chiara); le macchie sono una regola sulla posizione, sfumata a ciocche. Pose: sta (ansima), siede,
   annusa, dorme sdraiato col mento sulle zampe, fa festa (scodinzola col sedere, lingua fuori), trotta (la frangia e le
   orecchie ballano). Il catalogo 3D ha una voce per posa (`npm run catalogo3d:scheda -- --gioco fattoria --q watson`).
-- **I gatti** (`creaGatto(variante)`): corpo lungo, orecchie a punta, coda in tre pezzi che ondeggia, occhi con la fessura.
+- **I gatti** (`creaGatto(variante)`): di cartone morbido. Testa tonda e grande con le guance piene, orecchie triangolari grandi
+  rosa dentro, occhi enormi con la fessura e il riflesso, nasino a triangolo e bocca a «w» (una **trama canvas trasparente** sul
+  davanti della testa, una per mantello, più una a occhi chiusi che si accende solo mentre dorme), sei baffi in un mesh. Il pelo è
+  liscio: palle e tubi fusi in un mesh per pezzo (corpo, testa, ogni zampa, ogni segmento di coda) col mantello nei vertici:
+  Sherlock (variante `bianconero`, dalla foto) nero con la striscia bianca dalla fronte al muso, bavaglino bianco, davanti
+  bianche dal gomito, dietro nere con la zampetta bianca; Irene (`calico`) bianca sotto e a chiazze grandi arancioni e nere sopra,
+  una guancia più nera dell'altra, davanti con le righe arancioni, coda ad anelli; Pepe nero lucido col ciuffo bianco sul petto
+  e occhi gialli. Sherlock da seduto sta composto (davanti ravvicinate, testa quasi ferma). Corpo ovale, zampe sottili con la zampetta tonda, coda
+  lunga a tre pezzi. Seduto: petto in su, zampe davanti lunghe (`scale.y` 1,5) e coda a terra; dorme: ciambella con la testa
+  sulle zampe e occhi chiusi. Trovato: la coda avvolta del tutto attorno al corpo non si ottiene con tre perni che piegano sullo
+  stesso piano, resta un uncino. Gli orecchi grandi spingono l'altezza a ~75 cm in piedi e ~46 cm sdraiato (il test lo sa).
   Pose: sta, siede (coda attorno), si lava (zampa su), dorme a pagnotta, si stiracchia, fa le fusa, cammina basso.
-- **Il costo**: Watson 17 mesh e ~6000 triangoli (il pelo; il test tiene il tetto a 8000), un gatto ~32 mesh, il
+- **Il costo**: Watson 17 mesh e ~6000 triangoli (il pelo; il test tiene il tetto a 8000), un gatto 15 mesh e ~5400 triangoli (lisci), il
   contadino ~38; geometrie e materiali condivisi, nessuna luce, nessuna texture oltre alla faccia. In più una sfera **invisibile** (`userData.colpo`) fa da bersaglio del dito: il gatto è piccolo.
 - Le pose (`posaCane`, `posaGatto`) sono funzioni senza memoria: stato, velocità, fase del passo e tempo; si provano in node.
 
@@ -69,6 +79,6 @@ i compagni sono nella tela.
 ## Da sapere
 
 - Watson e le sue pose si sono guardati nel catalogo 3D, **non ancora col dito**: in gioco va giudicato per primo e
-  severamente (`#fattoria3d`, serve un livello 3: `window.__fattoria3d.motore.s.esperienza = …`).
+  severamente (`#fattoria3d`, serve un livello 1: `window.__fattoria3d.motore.s.esperienza = …`).
 - La posizione non si salva; i nomi sono dei dati. Un compagno in più è una voce di `COMPAGNI` col suo `liv` (uno per livello).
 - **Misura di Watson**: in scena è al 80% (`SCALA_CANE` in `modelli-compagni.js`): il bobtail è grande, ma accanto al contadino doveva sembrare più piccolo.

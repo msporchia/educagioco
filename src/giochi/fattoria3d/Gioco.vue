@@ -17,6 +17,8 @@ import { COLTURE } from './dati/colture.js'
 import { RICETTE, emojiDi } from './dati/ricette.js'
 import { avanzamento, roba, nomeDi } from './dati/livelli.js'
 import { clienteDi, LIVELLO_BANCO } from './dati/ordini.js'
+import { PEZZI } from './dati/catalogo.js'
+import { LIVELLO_MONGOLFIERA } from './dati/mongolfiera.js'
 import manifesto from './gioco.js'
 import { qualitaIniziale, VERSIONE_OPZIONI } from './dati/qualita.js'
 import Hud from './viste/Hud.vue'
@@ -28,6 +30,7 @@ import SceltaSeme from './viste/SceltaSeme.vue'
 import Macchina from './viste/Macchina.vue'
 import Livelli from './viste/Livelli.vue'
 import Bacheca from './viste/Bacheca.vue'
+import Mongolfiera from './viste/Mongolfiera.vue'
 import Dialogo from './viste/Dialogo.vue'
 import Opzioni from './viste/Opzioni.vue'
 import Mappa from './viste/Mappa.vue'
@@ -64,16 +67,19 @@ const borsa = {
 const versione = ref(0)
 const foto = ref({ scorte: [], prodotti: [], lana: 0, daFare: { semina: 0, raccogli: 0 }, livello: 1, quanto: 0 })
 const datiLivello = () => { const a = avanzamento(motore.esperienza()); return { livello: a.livello, quanto: a.quanto } }
+let ultimaFoto = ''
 const ripresa = () => {
   const s = motore.s
   const elenco = o => Object.entries(o).filter(([, n]) => n > 0).map(([k, n]) => ({ k, n }))      // [{ k, n }]: la faccia la disegna il HUD
-  foto.value = {
+  const nuova = {
     scorte: elenco(s.merci), prodotti: elenco(s.prodotti),
     lana: s.lana, daFare: motore.daFare(), ...datiLivello(),
   }
+  const firma = JSON.stringify(nuova)
+  if (firma !== ultimaFoto) { ultimaFoto = firma; foto.value = nuova }      // niente nuova foto se è uguale: il HUD non si rifà ogni quarto di secondo
   versione.value++
 }
-const EVENTI = { terra: 'fattoria3dTerre', pezzo: 'fattoria3dPezzi', raccolto: 'fattoria3dRaccolti', albero: 'fattoria3dAlberi', sasso: 'fattoria3dSassi', visita: 'fattoria3dVisite', aiuto: 'fattoria3dAiuti' }
+const EVENTI = { terra: 'fattoria3dTerre', pezzo: 'fattoria3dPezzi', raccolto: 'fattoria3dRaccolti', albero: 'fattoria3dAlberi', sasso: 'fattoria3dSassi', visita: 'fattoria3dVisite', aiuto: 'fattoria3dAiuti', cassa: 'fattoria3dMongolfiera', fiera: 'fattoria3dFiere' }
 /** Un livello nuovo: un avviso che passa da sé e un pallino sul gettone finché non si apre il foglio. */
 function salito(livello) {
   const testo = `Livello ${livello}: ${nomeDi(livello)}`
@@ -124,6 +130,8 @@ const livelliAperto = ref(false)
 const livelloNuovo = ref(false)
 const bancoAperto = ref(false)             // il foglio del banco
 const bancoMsg = ref('')
+const nave = ref(false)                    // il foglio della mongolfiera (docs/fattoria3d/mongolfiera.md)
+const naveMsg = ref('')
 const toast = ref(null)                  // { testo, fine }: l'avviso del livello, sopra la scena
 const DURATA_TOAST = 4500, DURATA_AVVISO = 6000
 let avvisoFine = 0
@@ -131,10 +139,14 @@ const opzioniAperte = ref(false)
 const opzioniRidotte = ref(false)
 const dialogo = ref(null)                // { titolo, testo, bottoni: [{ t, fn, quieto }] }
 const cameraLibera = ref(false)
-const stat = ref({ fps: 0, peggiore: 0, p1: 0, cpu: 0, calls: 0, triangoli: 0, geometrie: 0, texture: 0, dpr: 1, grafico: [] })
+const stat = ref({ fps: 0, peggiore: 0, p1: 0, cpu: 0, logica: 0, disegno: 0, fuori: 0, calls: 0, triangoli: 0, geometrie: 0, texture: 0, programmi: 0, dpr: 1, scalaViva: 1, livello: 0, ombraOgni: 1, degrado: '', grafico: [], campi: 0, edifici: 0, altri: 0, compagni: 0, cartelli: 0, mesh: 0, ombre: 0, istanze: 0 })
 const q = reactive(qualitaIniziale(fasciaAttiva()))
 const rapporto = ref('')
 let quandoSeme = null
+
+// le anteprime 3D dei pezzi per le carte (il file del 3D arriva a richiesta: la vista non importa three)
+const anteprima = tipo => (mondo ? mondo.anteprima(tipo) : Promise.resolve(null))
+const anteprimaPronta = tipo => (mondo && mondo.anteprimaPronta(tipo)) || null
 
 // ── le porte che il mondo 3D usa verso la vista ──
 const ui = {
@@ -143,13 +155,14 @@ const ui = {
   scegliSeme(cb) { quandoSeme = cb; semiAperto.value = true },
   apriMacchina(tipo) { macchinaMsg.value = ''; macchinaAperta.value = tipo },
   apriBanco() { apriBanco() },
+  apriMongolfiera() { naveMsg.value = ''; nave.value = true },
   apriMappa() { visite.apriMappa() },                 // il trattore: la mappa dei villaggi (docs/fattoria3d/vicini.md)
   avviso(testo) {
     avvisoTesto.value = testo || ''
     avvisoFine = testo ? performance.now() + DURATA_AVVISO : 0
   },
   apriCostruisci(i, j) { apriCostruisci(i, j) },                           // tenere premuto su un posto libero del terreno tuo
-  fogliAperti: () => !!dialogo.value || !!costruisciQui.value || semiAperto.value || !!macchinaAperta.value || livelliAperto.value || bancoAperto.value || mappaAperta.value || (opzioniAperte.value && !opzioniRidotte.value),
+  fogliAperti: () => !!dialogo.value || !!costruisciQui.value || semiAperto.value || !!macchinaAperta.value || livelliAperto.value || bancoAperto.value || nave.value || mappaAperta.value || (opzioniAperte.value && !opzioniRidotte.value),
   zonaDrop: () => (zonaVia.value || null)?.getBoundingClientRect() || null,
   trascinando(info) { trascinando.value = info },
 }
@@ -277,17 +290,47 @@ function cambiaOrdine(idx) {
   bancoMsg.value = 'Va bene: il posto si riempie fra qualche minuto.'; ui.cambio()
 }
 
+// ── la mongolfiera: la nave, tre file di casse (docs/fattoria3d/mongolfiera.md) ──
+const mongolfiera = computed(() => { void versione.value; return motore.vistaMongolfiera() })
+function caricaCassa(i, c) {
+  const r = motore.caricaCassa(i, c)
+  if (!r.ok) return naveMsg.value = r.motivo === 'mancano' ? dettoDi('mancano-ingredienti', { ingredienti: r.mancano }) : dettoDi(r.motivo)
+  const testo = [`+${r.xp} ⭐`, r.bonusFila ? `fila piena +${r.bonusFila}` : '', r.bonusTutto ? `tutto pieno +${r.bonusTutto}` : ''].filter(Boolean).join(' · ')
+  naveMsg.value = r.pieno
+    ? `Tutto pieno! ${testo}.${r.sorpresa ? ` Sorpresa della fiera: ${PEZZI[r.sorpresa].emoji} ${PEZZI[r.sorpresa].nome} nel magazzino.` : ''} La mongolfiera parte e torna con un nuovo carico.`
+    : testo + '.'
+  ui.cambio()
+  mondo.fx.volo('+' + r.xp + ' ⭐', mondo.pezzi.centroDi({ kind: 'edificio', tipo: 'mongolfiera' }), 3)
+  mondo.eroe.avvia('esulta', 0.9)
+}
+function partiMongolfiera() {
+  const r = motore.partiMongolfiera()
+  if (!r.ok) return naveMsg.value = dettoDi(r.motivo)
+  naveMsg.value = `Partita con ${r.piene} casse su ${r.di}: torna con un nuovo carico.`; ui.cambio()
+}
+/** Le casse messe sulla mongolfiera verso la prossima soglia del traguardo «Sulla mongolfiera» (gioco.js). Niente premi nuovi. */
+const traguardoNave = computed(() => {
+  void versione.value
+  const soglie = manifesto.albo.traguardi.find(t => t.id === 'f3d-mongolfiera').soglie
+  const fatte = Math.max(0, (state.profile.totals || {}).fattoria3dMongolfiera || 0)
+  const meta = soglie.find(x => fatte < x) ?? soglie[soglie.length - 1]
+  return { fatte: Math.min(fatte, meta), meta }
+})
+
 // ── le opzioni di qualità ──
 function cambiaOpzioni() { mondo.applica(q); save(CHIAVE_OPZIONI, { v: VERSIONE_OPZIONI, q: { ...q } }) }
 function creaRapporto() {
-  const st = mondo.statistiche()
+  const st = mondo.statistiche(), cn = mondo.conteggi()
   rapporto.value = [
     `Fattoria 3D — ${new Date().toISOString().slice(0, 16)}`,
     `Dispositivo: ${navigator.userAgent}`,
-    `Schermo: ${innerWidth}×${innerHeight} @${devicePixelRatio} · pixel ratio usato ${st.dpr.toFixed(2)}`,
+    `Schermo: ${innerWidth}×${innerHeight} @${devicePixelRatio} · pixel ratio scelto ${q.scala} · usato ${st.dpr.toFixed(2)} (degrado: livello ${st.livello}, ombre ogni ${st.ombraOgni})`,
     `GPU: ${mondo.gpu()}`,
+    `Preset: ${q.preset} · ombre ${q.ombre ? q.ombraRes : 'spente'}`,
     `fps ${st.fps.toFixed(0)} · peggiore ${st.peggiore.toFixed(0)} ms · 1% ${st.p1.toFixed(0)} ms`,
-    `draw call ${st.calls} · triangoli ${st.triangoli} · cose in scena ${st.cose} (di prova ${st.prove})`,
+    `JS per fotogramma: scena ${st.cpu.toFixed(1)} ms (logica ${st.logica.toFixed(1)} + disegno ${st.disegno.toFixed(1)}) · il resto del fotogramma (GPU, pagina, Vue) ${st.fuori.toFixed(1)} ms`,
+    `draw call ${st.calls} · triangoli ${st.triangoli} · geometrie ${st.geometrie} · texture ${st.texture} · programmi ${st.programmi}`,
+    `In scena: ${cn.campi} campi, ${cn.edifici} edifici, ${cn.altri} altri pezzi, ${cn.compagni} compagni, ${cn.cartelli} cartelli · ${cn.mesh} mesh (${cn.ombre} proiettano ombra, ${cn.istanze} a istanze) · ${st.cose} cose del motore (di prova ${st.prove})`,
     `Impostazioni: ${JSON.stringify(q)}`,
   ].join('\n')
 }
@@ -302,7 +345,7 @@ function ritmo() {
   if (toast.value && t >= toast.value.fine) toast.value = null
   if (avvisoFine && t >= avvisoFine) { avvisoFine = 0; avvisoTesto.value = '' }
   cameraLibera.value = mondo.cameraLibera
-  if (opzioniAperte.value) stat.value = mondo.statistiche()
+  if (opzioniAperte.value) stat.value = { ...mondo.statistiche(), ...mondo.conteggi() }
   if (sporco) salva()
 }
 
@@ -371,11 +414,13 @@ onBeforeUnmount(() => {
         </button>
         <div v-if="trascinando && trascinando.su" class="f3-trascinato" :style="{ transform: `translate(${trascinando.x}px, ${trascinando.y - 56}px) translate(-50%, -50%)` }">{{ trascinando.emoji }}</div>
 
-        <CostruisciQui v-if="costruisciQui" :schede="schede" :messaggio="costruisciQui.msg" @scegli="sceglieCarta" @chiudi="chiudiCostruisci" />
+        <CostruisciQui v-if="costruisciQui" :schede="schede" :messaggio="costruisciQui.msg" :anteprima="anteprima" :anteprima-pronta="anteprimaPronta" @scegli="sceglieCarta" @chiudi="chiudiCostruisci" />
         <SceltaSeme v-if="semiAperto" :seme="seme" :livello="foto.livello" @scegli="scegliSeme" @chiudi="semiAperto = false" />
-        <Macchina v-if="macchina" :key="macchina.tipo" v-bind="macchina" :messaggio="macchinaMsg" @prepara="prepara" @ritira="ritira" @chiudi="macchinaAperta = null" />
+        <Macchina v-if="macchina" :key="macchina.tipo" v-bind="macchina" :messaggio="macchinaMsg" :anteprima="anteprima" :anteprima-pronta="anteprimaPronta" @prepara="prepara" @ritira="ritira" @chiudi="macchinaAperta = null" />
         <Bacheca v-if="bancoAperto" v-bind="{ aperto: banco.aperto, perche: banco.perche, ordini: banco.ordini, traguardo: traguardoOrdini }" :messaggio="bancoMsg"
                @consegna="consegna" @cambia="cambiaOrdine" @chiudi="bancoAperto = false" />
+        <Mongolfiera v-if="nave" v-bind="{ nave: mongolfiera, traguardo: traguardoNave, livelloIngresso: LIVELLO_MONGOLFIERA }" :messaggio="naveMsg"
+                     @carica="caricaCassa" @parti="partiMongolfiera" @chiudi="nave = false" />
         <Livelli v-if="livelliAperto" v-bind="livelli" @chiudi="livelliAperto = false" />
         <Opzioni v-if="opzioniAperte" :q="q" :stat="stat" :conta="conta" :rapporto="rapporto" @cambia="cambiaOpzioni"
                  @stress="(t, n) => { mondo.stress(t, n); ui.cambio() }" @rapporto="creaRapporto" @ridotto="v => opzioniRidotte = v"

@@ -4,13 +4,13 @@
 import { PEZZI, EDIFICI } from '../dati/catalogo.js'
 import { COLTURE } from '../dati/colture.js'
 import { RICETTE } from '../dati/ricette.js'
-import { ANIMALI, PRODOTTI_ANIMALI } from '../dati/animali.js'
+import { ANIMALI, PRODOTTI_ANIMALI, LANA } from '../dati/animali.js'
 import { ULTIMO, sogliaDi, roba } from '../dati/livelli.js'
 import { MONETE_AL_MINUTO, premioDi, tettoDi } from '../dati/ordini.js'
 
 // Le promesse di scala (minuti di esercizio, ms di attesa)
 export const TETTO_LIVELLO_2_MIN = 10
-export const TETTO_ULTIMO_MIN = 330          // 5 ore e mezza
+export const TETTO_ULTIMO_MIN = 420          // 7 ore (erano 5 e mezza fino ai quindici livelli: telaio, zuccherificio, sartoria e tintoria ne hanno aggiunto un sedicesimo)
 export const TETTO_ATTESA_MS = 120_000       // per cosa chiesta, in catena
 export const TETTO_PREZZO_SUL_SALTO = 0.65   // un pezzo produttivo non costa più dei due terzi del salto del suo livello
 
@@ -19,6 +19,7 @@ export const TETTO_PREZZO_SUL_SALTO = 0.65   // un pezzo produttivo non costa pi
 export function catenaMs(k, giri = 6) {
   if (giri <= 0) return Infinity
   if (COLTURE[k]) return COLTURE[k].ms
+  if (LANA[k]) return LANA[k].ms
   const p = PRODOTTI_ANIMALI[k]
   if (p) { const a = ANIMALI[p.dove]; return a.ms + COLTURE[a.mangia[0]].ms }
   const r = RICETTE[k]

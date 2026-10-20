@@ -6,10 +6,12 @@ import { creaCampo, aggiornaCampo, creaPasticceria, creaMongolfiera, creaBancare
          sincronizzaPecore, fantasma, creaMulino, creaPanificio, creaConserviera, creaGelateria, creaAiuola, creaPanchina,
          creaPozzo, creaSpaventapasseri, creaTrattore, creaSegnaposto, creaPollaio, creaStalla, creaCaseificio, sincronizzaBestie, muoviBestie } from './modelli.js'
 import { creaPonte, creaPasserella, creaTavolo } from './modelli-passaggi.js'
+import { creaZuccherificio, creaTelaio, creaSartoria, creaTintoria } from './modelli-macchine.js'
 import { EDIFICI, PEZZI } from '../dati/catalogo.js'
 import { RICETTE, MACCHINE } from '../dati/ricette.js'
-import { MONGOLFIERA } from '../dati/regole.js'
+import { SALITA_MS } from '../dati/mongolfiera.js'
 import { ANIMALI, PRODOTTI_ANIMALI } from '../dati/animali.js'
+import { alleggeriOmbre } from './ottimizza.js'
 
 
 const CREA = {
@@ -32,6 +34,7 @@ const CREA = {
 const CREA_EDIFICIO = {
   pasticceria: creaPasticceria, mongolfiera: creaMongolfiera,
   mulino: creaMulino, panificio: creaPanificio, conserviera: creaConserviera, gelateria: creaGelateria, caseificio: creaCaseificio,
+  telaio: creaTelaio, zuccherificio: creaZuccherificio, sartoria: creaSartoria, tintoria: creaTintoria,
 }
 /** Un tipo senza disegno non rompe la scena: una scatola grigia della sua misura. */
 const modelloDi = (tipo, d, c) => (CREA[tipo] ? CREA[tipo](c) : creaSegnaposto(d.w, d.d))
@@ -69,13 +72,15 @@ export class Pezzi {
 
   _creaCosa(c) {
     const d = PEZZI[c.tipo], grp = modelloDi(c.tipo, d, c)
+    alleggeriOmbre(grp)
     grp.userData.bersaglio = { kind: 'cosa', id: c.id }
     grp.position.copy(centroDi(c, d)); this.scena.add(grp)
-    this.voci.set(c.id, { id: c.id, kind: 'cosa', c, d, grp, badge: c.bestie || c.pecore ? this.fx.nuovoCartello(() => this.sulCompraBestia && this.sulCompraBestia(c.id)) : c.tipo === 'bacheca' ? this.fx.nuovoBadge() : null, anello: null, salto: 0, nasce: undefined, richiamo: null, chiave: '' })
+    this.voci.set(c.id, { id: c.id, kind: 'cosa', c, d, grp, badge: c.bestie || c.pecore ? this.fx.nuovoCartello(() => this.sulCompraBestia && this.sulCompraBestia(c.id), c.tipo) : c.tipo === 'bacheca' ? this.fx.nuovoBadge() : null, anello: null, salto: 0, nasce: undefined, richiamo: null, chiave: '' })
   }
   _creaEdificio(tipo, mio) {
     const e = EDIFICI[tipo], grp = CREA_EDIFICIO[tipo] ? CREA_EDIFICIO[tipo]() : creaSegnaposto(e.w, e.d)
     if (!mio) fantasma(grp)
+    alleggeriOmbre(grp)
     grp.userData.bersaglio = { kind: 'edificio', tipo }
     grp.position.copy(centroDi({ i: e.slot.i, j: e.slot.j }, e)); this.scena.add(grp)
     this.voci.set(tipo, { id: tipo, kind: 'edificio', tipo, mio, d: e, grp, badge: this.fx.nuovoBadge(), anello: null })
@@ -89,6 +94,20 @@ export class Pezzi {
 
   /** Il modello di un pezzo di quel tipo, per il fantasma di chi lo sta trascinando. */
   modello(tipo, c) { return modelloDi(tipo, PEZZI[tipo], c) }
+
+  /** Il modello per l'anteprima del menu (anteprime.js): un pezzo o un edificio, disposto com'è «a regime» — il campo maturo, il
+      recinto con due pecore, pollaio e stalla con due bestie. Fermo a un istante: niente animazione. */
+  modelloAnteprima(tipo) {
+    const d = PEZZI[tipo]
+    if (d) {
+      const adulte = [{ eta: 'adulta', t0: 0 }, { eta: 'adulta', t0: 0 }], bestie = [{ fine: null }, { fine: null }]
+      const g = tipo === 'campo' ? creaCampo(7) : modelloDi(tipo, d, { pecore: adulte, bestie })
+      if (tipo === 'campo') aggiornaCampo(g, [1, 1, 1, 1], 0, 'grano', false)
+      return g
+    }
+    const e = EDIFICI[tipo]; if (!e) return null
+    return CREA_EDIFICIO[tipo] ? CREA_EDIFICIO[tipo]() : creaSegnaposto(e.w, e.d)
+  }
 
   /** Un pezzo appena messo: compare con un piccolo rimbalzo. */
   fanNascere(id) { const v = this.voci.get(id); if (v) { v.nasce = 0; v.grp.scale.setScalar(0.01) } }
@@ -122,7 +141,7 @@ export class Pezzi {
       if (v.badge && !v.badge.el.hidden && g.visible) {
         const [x, y, visto] = this.vista.proietta(g.position, g.userData.altezza || 1.6)
         v.badge.metti(x, y, visto)
-      } else if (v.badge && !g.visible) v.badge.el.style.visibility = 'hidden'      // un pezzo sollevato non lascia il suo cartello (e il suo «＋») a mezz'aria
+      } else if (v.badge && !g.visible) { v.badge.el.style.visibility = 'hidden'; v.badge.visto = false }      // un pezzo sollevato non lascia il suo cartello (e il suo «＋») a mezz'aria
     }
   }
 
@@ -140,7 +159,8 @@ export class Pezzi {
     } else if (c.tipo === 'recinto') {
       muoviPecore(g, dt, tt, v.richiamo, c.pecore, adesso); v.richiamo = null
       const lana = this.m.lanaPronta(c).length
-      v.badge.imposta(lana ? `🧶 ${lana} pront${lana === 1 ? 'a' : 'e'}!` : '', lana ? 'pronto' : '')
+      const fame = c.pecore.some(p => p.eta === 'adulta' && p.t0 == null)
+      v.badge.imposta(lana ? `🧶 ${lana} pront${lana === 1 ? 'a' : 'e'}!` : fame ? '🐑 ha fame' : '', lana ? 'pronto' : '')
       this._conto(v, c)
     } else if (c.bestie) {
       muoviBestie(g, dt, tt, c.bestie, adesso)
@@ -162,7 +182,7 @@ export class Pezzi {
     } else if (g.userData.anima) g.userData.anima(tt)              // fontana, spaventapasseri
   }
 
-  /** Il conto «🐄 2/4» e il prezzo sul pulsante del cartello; il pulsante è spento (grigio, ma tocca) se mancano monete. */
+  /** Il prezzo sul pulsante del cartello; il pulsante è spento (grigio, ma tocca) se mancano monete. */
   _conto(v, c) {
     const q = this.m.infoBestie(c)
     v.badge.bestie(q, !q.pieno && this.m.monete() < q.prezzo)
@@ -185,16 +205,22 @@ export class Pezzi {
       v.badge.imposta(pronti ? `${RICETTE[prima].emoji} ${pronti} pront${pronti === 1 ? 'o' : 'i'}!`
         : cuoce ? `🔥 ${Math.max(0, Math.ceil(((Q.coda[0].fine || adesso) - adesso) / 1000))}s · ${Q.coda.length}/${posti}` : '', pronti ? 'pronto' : '')
     } else if (v.tipo === 'mongolfiera') {
+      // da ferma sale e scende piano; a tutto pieno (o con «Parti!») sale in alto e si allontana, e torna prima della fine del riposo
       const M = s.mongolfiera, volo = g.userData.volo
       let y = Math.sin(tt * 1.3) * 0.08, x = 0
-      if (M.fine) {
-        const sec = (adesso - M.fine + MONGOLFIERA.viaggioMs) / 1000, resta = (M.fine - adesso) / 1000
-        const q = Math.min(Math.min(1, sec / 4), Math.min(1, resta / 4)); y += q * q * 40; x = q * 18
+      if (M.riposo !== null) {
+        const q = Math.max(0, Math.min(1, (adesso - (M.via ?? adesso)) / SALITA_MS, (M.riposo - adesso) / SALITA_MS))
+        const dolce = q * q * (3 - 2 * q); y += dolce * 40; x = dolce * 18
         volo.visible = q < 0.995
       } else volo.visible = true
-      volo.position.set(x, y, 0); volo.rotation.z = Math.sin(tt * 0.9) * 0.02
+      volo.position.set(x, y, 0); volo.rotation.z = Math.sin(tt * 0.9) * 0.02 + (M.riposo !== null ? x * 0.004 : 0)
       g.userData.fiamma.scale.set(1, 1.2 + Math.sin(tt * 14) * 0.4, 1)
-      v.badge.imposta(M.cassa ? '🧳 è tornata!' : M.fine ? `☁️ ${Math.max(0, Math.ceil((M.fine - adesso) / 1000))}s` : '', M.cassa ? 'pronto' : '')
+      if (tt - (v.tNave ?? -9) > 0.5) {                        // il cartello: le casse che si possono riempire adesso, oppure il viaggio
+        v.tNave = tt
+        const nave = this.m.vistaMongolfiera()
+        v.badge.imposta(nave.stato === 'viaggio' ? `🎈 in viaggio · ${Math.floor(Math.ceil(nave.restoMs / 1000) / 60)}:${String(Math.ceil(nave.restoMs / 1000) % 60).padStart(2, '0')}`
+          : nave.pronte ? `🎈 ${nave.pronte} cass${nave.pronte === 1 ? 'a pronta' : 'e pronte'}!` : '', nave.stato !== 'viaggio' && nave.pronte ? 'pronto' : '')
+      }
     }
   }
 

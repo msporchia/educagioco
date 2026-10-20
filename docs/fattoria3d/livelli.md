@@ -16,12 +16,12 @@ Il codice è `dati/livelli.js`; l'esperienza e i rifiuti stanno in `motore/fatto
 - **La roba di un livello non paga il livello dopo**: ogni salto aggiunge il costo di ciò che il livello apre di
   **produttivo** (`costoDelLivello`: campo, recinto, edifici; le decorazioni no). Senza, si costruiva ciò che era appena
   arrivato ed eri già al livello dopo. Un guasto verifica che il resto del salto sia almeno `SOGLIA_B`.
-- Dopo l'ultimo livello (`ULTIMO`, oggi 15) la formula continua e non si apre altro.
+- Dopo l'ultimo livello (`ULTIMO`, oggi 16) la formula continua e non si apre altro.
 
 ## La misura
 
 `npm run tara:fattoria3d` (logica in `motore/taratura.js`) stampa la tabella; `unita/fattoria3d-taratura` ne tiene ferme le
-promesse: **il livello 2 non oltre 10 minuti di esercizio, l'ultimo non oltre 5 ore e mezza, nessuna cosa chiesta con più di 2
+promesse: **il livello 2 non oltre 10 minuti di esercizio, l'ultimo non oltre 7 ore (erano 5 e mezza coi quindici livelli: il sedicesimo e i quattro edifici di telaio, zuccherificio, sartoria e tintoria hanno aggiunto ~75 minuti), nessuna cosa chiesta con più di 2
 minuti di attesa in catena, nessun pezzo produttivo sopra i due terzi del salto del suo livello, nessun premio sopra il tetto.**
 Metro: 🪙6 al minuto. «Attesa» = maturazione più cottura in catena, campi e bestie in parallelo, una macchina alla volta.
 
@@ -30,17 +30,18 @@ Metro: 🪙6 al minuto. «Attesa» = maturazione più cottura in catena, campi e
 | 2 | 60 | 10 | 24 s |
 | 3 | 120 | 20 | 30 s |
 | 4 | 250 | 42 | 28 s |
-| 5 | 365 | 61 | 32 s |
-| 6 | 515 | 86 | 57 s |
-| 7 | 640 | 107 | 45 s |
-| 8 | 800 | 133 | 52 s |
-| 9 | 880 | 147 | 76 s |
-| 10 | 1050 | 175 | — |
-| 11 | 1230 | 205 | 78 s |
-| 12 | 1440 | 240 | 62 s |
-| 13 | 1640 | 273 | 70 s |
-| 14 | 1730 | 288 | 78 s |
-| 15 | 1960 | 327 (5 h 27) | 78 s |
+| 5 | 365 | 61 | — |
+| 6 | 490 | 82 | 52 s |
+| 7 | 640 | 107 | 36 s |
+| 8 | 800 | 133 | 53 s |
+| 9 | 950 | 158 | 44 s |
+| 10 | 1120 | 187 | 46 s |
+| 11 | 1300 | 217 | 77 s |
+| 12 | 1510 | 252 | 86 s |
+| 13 | 1710 | 285 | 83 s |
+| 14 | 1930 | 322 | 72 s |
+| 15 | 2160 | 360 (6 h) | 71 s |
+| 16 | 2400 | 400 (6 h 40) | 77 s |
 
 Sono monete spese del tutto (pezzi, lotti, strade): ordini consegnati e lotti contano come esperienza e accorciano la strada.
 Provato: curva A=4, B=44 portava il 15 a 7 ore e 20: troppo; con A=1, B=47 il 2 resta a 60 (il test d'integrazione lo conta).
@@ -58,15 +59,17 @@ i dati veri, quindi un elenco non si scrive due volte e non si scosta.
 
 ```
  1 campo, grano, carote          9 stalla (latte), cipolle, pozzo
- 2 mais, bancarella, aiuola     10 mongolfiera
+ 2 mais, bancarella, aiuola     10 mongolfiera, aglio
  3 mulino (farina, pappa di mais), passerella
-                                11 caseificio (burro, formaggio), fragole, torta, crostata
- 4 recinto, pomodori, tavolo   12 cucina (salsa, polenta, minestrone), pizza, lasagne
- 5 pollaio (uova), ponte        13 melanzane (parmigiana), spaventapasseri
- 6 pastificio (pasta), patate,  14 gelateria (frullato, gelato)
+                                11 caseificio (burro, formaggio), fragole, barbabietola, torta, crostata
+ 4 recinto, pomodori, tavolo   12 cucina (salsa, polenta, minestrone), peperoni, pizza, lasagne
+ 5 pollaio (uova), ponte        13 zuccherificio (zucchero, marmellata, biscotti),
+                                   melanzane (parmigiana, conserva), spaventapasseri
+ 6 pastificio (pasta), patate,  14 gelateria (succo, frullato, gelato)
    panchina
- 7 panificio (pane)             15 lavanda
- 8 zucche, fontana
+ 7 panificio (pane)             15 sartoria (maglione, sciarpa, berretto), lavanda, riso
+ 8 telaio (stoffa), zucche,     16 tintoria (tintura, sapone, sacchetto, maglione alla lavanda)
+   cavolfiori, fontana
 ```
 
 Il livello apre il **pezzo** (pollaio, stalla, recinto); le bestie in più dentro non hanno livello: si comprano a monete
@@ -75,7 +78,8 @@ Il livello apre il **pezzo** (pollaio, stalla, recinto); le bestie in più dentr
 Le decorazioni nuove (passerella al 3, tavolo al 4, ponte al 5) non spostano la scaletta: non sono produttive, quindi non si sommano ai salti.
 
 Pollaio, stalla e caseificio stanno **nei buchi** della scaletta (5, 9, 11: livelli senza una cosa produttiva), così i
-livelli restano quindici e le soglie dopo il 5 salgono del loro prezzo (55, 90, 120). Il pollaio è al 5 e il pastificio al 6 (era il
+livelli restano quindici e le soglie dopo il 5 salgono del loro prezzo (55, 90, 120). Lo stesso hanno fatto telaio (8, 🪙70), zuccherificio (13, 🪙130) e
+sartoria (15, 🪙150); la tintoria (🪙160) vuole la lavanda, che è del 15, e **ha aperto un sedicesimo livello**: la scaletta ne ha 16. Il pollaio è al 5 e il pastificio al 6 (era il
 contrario, con la pasticceria): la pasta vuole le uova, e una macchina non si compra prima della sua prima ricetta. Il livello di `uova` e `latte` è
 quello del pezzo che li fa, e `livelloDellaRicetta` li conta fra gli ingredienti ([animali.md](animali.md)).
 

@@ -8,14 +8,15 @@ import { PEZZI, EDIFICI, quotaDelPezzo } from '../dati/catalogo.js'
 import { COLTURE, TESSERE } from '../dati/colture.js'
 import { RICETTE, MACCHINE, TIPI_DI_MACCHINA } from '../dati/ricette.js'
 import { livelloPer, livelloDelPezzo, livelloDellaColtura, livelloDellaRicetta } from '../dati/livelli.js'
-import { COSTI, PECORE, MONGOLFIERA } from '../dati/regole.js'
+import { COSTI, PECORE } from '../dati/regole.js'
 import { generaAlberi } from '../dati/alberi.js'
 import { generaOstacoli } from '../dati/ostacoli.js'
-import { ANIMALI, CORTILE, prezzoDellaBestia } from '../dati/animali.js'
+import { ANIMALI, CORTILE, LANA, prezzoDellaBestia } from '../dati/animali.js'
 import { normalizza, nuoveTessere } from './stato.js'
 import { percorso } from './percorso.js'
 import { POSTI, RIPOSO_MS, LIVELLO_BANCO, PEZZI_DEL_BANCO, clienteDi, tipoDelOrdine } from '../dati/ordini.js'
 import { nuovoOrdine } from './ordini.js'
+import { vistaDellaMongolfiera, caricaLaCassa, partiLaMongolfiera, aggiornaMongolfiera } from './mongolfiera.js'
 
 export class Fattoria3d {
   constructor({ stato = null, borsa, ora = Date.now, rnd = Math.random } = {}) {
@@ -209,7 +210,7 @@ export class Fattoria3d {
     return r.ok ? { ...r, costo: p.costo } : r
   }
   bestieIniziali() { return [{ fine: null }] }          // una gallina o una mucca sono nel prezzo, con fame
-  pecoreIniziali() { return [{ eta: 'adulta', t0: this.ora() }] }                // una pecora è nel prezzo del recinto, come una gallina nel pollaio
+  pecoreIniziali() { return [{ eta: 'adulta', t0: null }] }                      // una pecora è nel prezzo del recinto, con fame come una gallina nel pollaio
   spostaPezzo(id, i, j, { gratis = false } = {}) {
     const c = this.cosa(id)
     if (!c) return { ok: false, motivo: 'sconosciuto' }
@@ -349,37 +350,51 @@ export class Fattoria3d {
   _togliSenzaPagare(o) { o.tolto = true; this.tolti.add(o.id); if (!this.s.ostacoli.includes(o.id)) this.s.ostacoli.push(o.id); this.bloccoFisso[o.id] = 0 }
   ostacoliNelTerreno() { return this.ostacoli.filter(o => !o.tolto && this.cellaPropria(o.i, o.j)) }
 
-  // ── le pecore ──
-  lanaPronta(c) { const t = this.ora(); return c.pecore.filter(p => p.eta === 'adulta' && t - p.t0 >= PECORE.laneMs) }
+  // ── le pecore: dopo la tosa hanno fame (`t0: null`); il pasto fa partire la lana (`t0` = quando ha mangiato) ──
+  lanaPronta(c) { const t = this.ora(); return c.pecore.filter(p => p.eta === 'adulta' && p.t0 != null && t - p.t0 >= PECORE.laneMs) }
+  /** Le adulte tosate che aspettano da mangiare (senza lana in crescita). */
+  pecoreAffamate(c) { return c.pecore.filter(p => p.eta === 'adulta' && p.t0 == null) }
   _adulte(c) { return c.pecore.filter(p => p.eta === 'adulta').length }
+  _pastoAlRecinto(c) { return c.pecore.some(p => p.eta === 'agnello') || (this._adulte(c) >= 2 && c.pecore.length < PECORE.max) }
   curaNecessaria(c) {
-    return this.lanaPronta(c).length > 0 || c.pecore.some(p => p.eta === 'agnello') || (this._adulte(c) >= 2 && c.pecore.length < PECORE.max)
+    return this.lanaPronta(c).length > 0 || this.pecoreAffamate(c).length > 0 || this._pastoAlRecinto(c)
   }
-  /** Cosa si farebbe toccando il recinto: prima si tosa, poi si nutre (se c'è da nutrire e un raccolto). Niente cambia. */
+  /** Cosa si farebbe toccando il recinto: prima si tosa, poi si nutre (le affamate, poi l'agnello o la nascita, se c'è un raccolto). Niente cambia. */
   provaCura(id) {
     const c = this.cosa(id)
     if (!c || c.tipo !== 'recinto') return { azione: null, motivo: 'sconosciuto' }
     if (this.lanaPronta(c).length) return { azione: 'tosa' }
-    if (c.pecore.some(p => p.eta === 'agnello') || (this._adulte(c) >= 2 && c.pecore.length < PECORE.max)) {
-      return this.totScorte() >= 1 ? { azione: 'nutri' } : { azione: null, motivo: 'manca-raccolto' }
+    const fame = this.pecoreAffamate(c).length
+    if (fame) {
+      const quante = Math.min(fame, Math.floor(this.totScorte() / PECORE.pastiPerLana))
+      return quante ? { azione: 'nutri', n: quante } : { azione: null, motivo: 'manca-raccolto' }
     }
-    const t = this.ora(), resti = c.pecore.filter(p => p.eta === 'adulta').map(p => PECORE.laneMs - (t - p.t0))
-    return resti.length ? { azione: null, motivo: 'lana-ricresce', secondi: Math.ceil(Math.min(...resti) / 1000) } : { azione: null, motivo: 'sazie' }
+    if (this._pastoAlRecinto(c)) return this.totScorte() >= 1 ? { azione: 'nutri' } : { azione: null, motivo: 'manca-raccolto' }
+    const t = this.ora(), resti = c.pecore.filter(p => p.eta === 'adulta' && p.t0 != null).map(p => PECORE.laneMs - (t - p.t0))
+    return resti.length ? { azione: null, motivo: 'lana-ricresce', secondi: Math.ceil(Math.max(0, Math.min(...resti)) / 1000) } : { azione: null, motivo: 'sazie' }
   }
+  /** La tosa: la lana passa alla scorta e la pecora ha fame (`t0: null`) finché non mangia. */
   tosa(id) {
     const c = this.cosa(id), pronte = c ? this.lanaPronta(c) : []
     if (!pronte.length) return { ok: false, motivo: 'non-pronta' }
-    const t = this.ora()
-    for (const p of pronte) p.t0 = t
+    for (const p of pronte) p.t0 = null
     this.s.lana += pronte.length
     this._evento('tosa', { n: pronte.length })
     return { ok: true, n: pronte.length }
   }
-  /** Un pasto: l'agnello cresce dopo due, due adulte ne fanno nascere uno. Torna cosa è successo. */
+  /** Un pasto: alle tosate (ognuna, finché c'è da mangiare: parte la lana); poi l'agnello cresce dopo due, due adulte ne fanno nascere uno. Torna cosa è successo. */
   nutri(id) {
     const c = this.cosa(id)
     const p = this.provaCura(id)
     if (!c || p.azione !== 'nutri') return { ok: false, motivo: p.motivo || 'niente-da-fare' }
+    if (this.pecoreAffamate(c).length) {
+      let n = 0
+      for (const x of this.pecoreAffamate(c)) {
+        if (!this.consuma(PECORE.pastiPerLana)) break
+        x.t0 = this.ora(); n++
+      }
+      return n ? { ok: true, evento: 'lana', n } : { ok: false, motivo: 'manca-raccolto' }
+    }
     if (!this.consuma(1)) return { ok: false, motivo: 'manca-raccolto' }
     const agnello = c.pecore.find(x => x.eta === 'agnello')
     if (agnello) {
@@ -463,7 +478,7 @@ export class Fattoria3d {
     if (!q) return { ok: false, motivo: 'sconosciuto' }
     if (q.pieno) return { ok: false, motivo: 'pieno' }
     if (!this._spendi(q.prezzo)) return { ok: false, motivo: 'poche-monete', costo: q.prezzo }
-    if (c.pecore) c.pecore.push({ eta: 'adulta', t0: this.ora() })
+    if (c.pecore) c.pecore.push({ eta: 'adulta', t0: null })     // arriva con fame: il giro di pappa qui sotto le dà il primo pasto
     else c.bestie.push({ fine: null })
     this._evento('bestia', { tipo: c.tipo })
     // ogni acquisto porta anche un giro di pappa (se c'è da mangiare): le bestie affamate, o un pasto al recinto
@@ -479,8 +494,8 @@ export class Fattoria3d {
 
   // ── le macchine: mulino, pastificio (id pasticceria), panificio, caseificio, cucina (id conserviera), gelateria. Tre posti nel forno, si cuoce uno alla volta ──
   /** Cosa c'è in scorta per una ricetta: un raccolto (merci) o il prodotto di un'altra macchina (prodotti). */
-  scortaDi(k) { return COLTURE[k] ? this.s.merci[k] : (this.s.prodotti[k] || 0) }
-  _togli(k, n) { if (COLTURE[k]) this.s.merci[k] -= n; else { this.s.prodotti[k] -= n; if (!this.s.prodotti[k]) delete this.s.prodotti[k] } }
+  scortaDi(k) { return COLTURE[k] ? this.s.merci[k] : LANA[k] ? this.s.lana : (this.s.prodotti[k] || 0) }
+  _togli(k, n) { if (COLTURE[k]) this.s.merci[k] -= n; else if (LANA[k]) this.s.lana -= n; else { this.s.prodotti[k] -= n; if (!this.s.prodotti[k]) delete this.s.prodotti[k] } }
   ingredientiOk(ric) { return Object.entries(RICETTE[ric].ing).every(([k, n]) => this.scortaDi(k) >= n) }
   /** Quel che manca per una ricetta: { chiave: quanti }. */
   mancano(ric) {
@@ -534,22 +549,13 @@ export class Fattoria3d {
   ritira() { return this.ritiraDa('pasticceria') }
   prontiInForno() { return this.prontiIn('pasticceria') }
 
-  // ── la mongolfiera ──
-  carica() {
-    const M = this.s.mongolfiera
-    if (!this.s.posseduti.mongolfiera) return { ok: false, motivo: 'non-tua' }
-    if (M.cassa) return { ok: false, motivo: 'cassa-da-ritirare' }
-    if (M.fine) return { ok: false, motivo: 'in-viaggio' }
-    if (!this.consuma(MONGOLFIERA.carico)) return { ok: false, motivo: 'manca-raccolto' }
-    M.fine = this.ora() + MONGOLFIERA.viaggioMs
-    return { ok: true }
-  }
-  ritiraCassa() {
-    const M = this.s.mongolfiera
-    if (!M.cassa) return { ok: false, motivo: 'niente' }
-    M.cassa = false; this.s.lana += MONGOLFIERA.premioLana
-    return { ok: true, lana: MONGOLFIERA.premioLana }
-  }
+  // ── la mongolfiera: la nave, tre file di casse da riempire un po' alla volta (docs/fattoria3d/mongolfiera.md) ──
+  /** Tutto quello che il foglio vuole sapere: lo stato (`non-tua`, `terra`, `viaggio`, `vuota`), le file con le casse e i conti. */
+  vistaMongolfiera() { return vistaDellaMongolfiera(this) }
+  /** Mette sulla mongolfiera la cassa `c` della fila `i`: { ok, xp, bonusFila, bonusTutto, sorpresa, pieno } o { ok: false, motivo, mancano? }. */
+  caricaCassa(i, c) { return caricaLaCassa(this, i, c) }
+  /** «Parti!» a metà: restano i ⭐ delle casse messe, niente bonus del tutto. */
+  partiMongolfiera() { return partiLaMongolfiera(this) }
 
   // ── il banco: gli ordini (vedi docs/fattoria3d/ordini.md). Pagano esperienza, mai monete; niente scade ──
   /** Il banco chiede solo da livello 2 e solo se c'è una bacheca (o una bancarella, che apre lo stesso banco) messa su un terreno tuo. */
@@ -630,8 +636,7 @@ export class Fattoria3d {
       }
       if (Q.coda[0] && !Q.coda[0].fine) Q.coda[0].fine = t + RICETTE[Q.coda[0].ric].ms
     }
-    const M = this.s.mongolfiera
-    if (M.fine && t >= M.fine) { M.fine = null; M.cassa = true; cambiato = true }
+    if (aggiornaMongolfiera(this)) cambiato = true
     if (this._riempiOrdini()) cambiato = true
     return cambiato
   }

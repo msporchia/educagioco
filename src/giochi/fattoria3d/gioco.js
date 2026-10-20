@@ -30,7 +30,7 @@ export default {
 
   // I contatori li muove Gioco.vue con segna(): fattoria3dTerre (lotti comprati), …Pezzi (pezzi e edifici messi),
   // …Raccolti (tessere tagliate), …Alberi (abbattuti), …Sassi (sassi e cespugli tolti), …Prodotti (usciti dal forno), …Ordini (consegnati al banco),
-  // …Uova e …Latte (raccolti dal pollaio e dalla stalla).
+  // …Uova e …Latte (raccolti dal pollaio e dalla stalla), …Mongolfiera (casse messe sulla mongolfiera) e …Fiere (le sorprese della fiera ricevute).
   // …Visite (entrate in un villaggio col trattore) e …Aiuti (una cassa riempita, un baratto, un acquisto dai vicini).
   albo: {
     area: { nome: 'La fattoria 3D', emoji: '🚜' },
@@ -62,6 +62,9 @@ export default {
       { id: 'f3d-ordini', emoji: '🧺', nome: 'Ordini al banco',
         come: n => `Consegna ${n} ordini al banco`,
         soglie: [3, 15, 50], valore: m => m.tot('fattoria3dOrdini') },
+      { id: 'f3d-mongolfiera', emoji: '🎈', nome: 'Sulla mongolfiera',
+        come: n => `Metti ${n} casse sulla mongolfiera`,
+        soglie: [10, 40, 120], valore: m => m.tot('fattoria3dMongolfiera') },
       { id: 'f3d-vicinato', emoji: '🚜', nome: 'Buon vicinato',
         come: n => `Visita i vicini e aiutali (${n} fra visite e aiuti)`,
         soglie: [8, 30, 100], valore: m => m.tot('fattoria3dVisite') + m.tot('fattoria3dAiuti') },

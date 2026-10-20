@@ -5,10 +5,11 @@
    catena (grano → farina → pane). `liv` è il livello a cui la ricetta si può fare; dati/livelli.js lo controlla contro quello
    della macchina e degli ingredienti. Gli id delle ricette sono globali: sono le chiavi di `stato.prodotti`. `pezzo` è la faccia
    nell'atlante (come in 2D), `aspetta` quella che un foglio futuro porterà (intanto vale l'emoji).
+   La lana (LANA, dati/animali.js) è l'ingrediente del telaio e della sartoria: sta nel contatore `stato.lana`, non in `stato.prodotti`.
    Gli id delle macchine `pasticceria` e `conserviera` sono quelli dei salvataggi: oggi si chiamano Pastificio e Cucina, come in 2D.
    Vedi docs/fattoria3d/merci-e-ricette.md, regole.md e livelli.md. */
 import { COLTURE } from './colture.js'
-import { PRODOTTI_ANIMALI } from './animali.js'
+import { PRODOTTI_ANIMALI, LANA } from './animali.js'
 
 export const FORNO_POSTI = 3
 
@@ -20,6 +21,7 @@ export const MACCHINE = {
   } },
   pasticceria: { posti: FORNO_POSTI, ricette: {          // il Pastificio della 2D
     pasta:       { nome: 'Pasta',           emoji: '🍝', pezzo: 'merce_pasta',       ing: { farina: 2, uova: 1 },             ms: 7000,  liv: 6 },
+    biscotti:    { nome: 'Biscotti',        emoji: '🍪', pezzo: 'merce_biscotti',    ing: { farina: 1, burro: 1, zucchero: 1 }, ms: 6000, liv: 13 },
     pizza:       { nome: 'Pizza',           emoji: '🍕', pezzo: 'merce_pizza',       ing: { farina: 1, salsa: 1, formaggio: 1 }, ms: 9000, liv: 12 },
     lasagne:     { nome: 'Lasagne',         emoji: '🍱', pezzo: 'merce_lasagne',     ing: { pasta: 1, salsa: 1, formaggio: 1 },  ms: 12000, liv: 12 },
   } },
@@ -33,14 +35,34 @@ export const MACCHINE = {
     formaggio:   { nome: 'Formaggio',       emoji: '🧀', pezzo: 'merce_formaggio',   ing: { latte: 2 },                       ms: 10000, liv: 11 },
   } },
   conserviera: { posti: FORNO_POSTI, ricette: {          // la Cucina della 2D: dove le colture si incontrano
-    salsa:       { nome: 'Salsa di pomodoro', emoji: '🥫', pezzo: 'merce_salsa',     ing: { pomodoro: 2, cipolla: 1 },        ms: 6000,  liv: 12 },
+    salsa:       { nome: 'Salsa di pomodoro', emoji: '🥫', pezzo: 'merce_salsa',     ing: { pomodoro: 2, cipolla: 1, aglio: 1 }, ms: 6000,  liv: 12 },
     polenta:     { nome: 'Polenta e formaggio', emoji: '🍛', pezzo: 'merce_polenta', ing: { mais: 2, formaggio: 1 },          ms: 8000,  liv: 12 },
-    minestrone:  { nome: 'Minestrone',      emoji: '🍜', pezzo: 'merce_minestrone',  ing: { patata: 1, carota: 1, zucca: 1 }, ms: 6000,  liv: 12 },
+    minestrone:  { nome: 'Minestrone',      emoji: '🍜', pezzo: 'merce_minestrone',  ing: { patata: 1, carota: 1, cavolfiore: 1 }, ms: 6000,  liv: 12 },
+    conserva:    { nome: 'Conserva d\'orto', emoji: '🥗', pezzo: 'merce_conserva', ing: { melanzana: 1, peperone: 1, zucca: 1 }, ms: 7000, liv: 13 },
     parmigiana:  { nome: 'Parmigiana di melanzane', emoji: '🥘', aspetta: 'merce_parmigiana', ing: { melanzana: 2, salsa: 1, formaggio: 1 }, ms: 9000, liv: 13 },
   } },
   gelateria: { posti: FORNO_POSTI, ricette: {
+    succo:       { nome: 'Succo',           emoji: '🧃', pezzo: 'merce_succo',       ing: { carota: 1, barbabietola: 1 },     ms: 4000,  liv: 14 },
     frullato:    { nome: 'Frullato',        emoji: '🥤', pezzo: 'merce_frullato',    ing: { fragola: 2, latte: 1 },           ms: 5000,  liv: 14 },
-    gelato:      { nome: 'Gelato',          emoji: '🍨', pezzo: 'merce_gelato',      ing: { latte: 2, fragola: 1 },           ms: 8000,  liv: 14 },
+    gelato:      { nome: 'Gelato',          emoji: '🍨', pezzo: 'merce_gelato',      ing: { latte: 2, zucchero: 1 },          ms: 8000,  liv: 14 },
+  } },
+  telaio: { posti: FORNO_POSTI, ricette: {               // la lana delle pecore (non c'è cotone: nemmeno in 2D)
+    stoffa:      { nome: 'Stoffa',          emoji: '🧵', pezzo: 'merce_stoffa',      ing: { lana: 2 },                        ms: 8000,  liv: 8 },
+  } },
+  zuccherificio: { posti: FORNO_POSTI, ricette: {
+    zucchero:    { nome: 'Zucchero',        emoji: '🧂', pezzo: 'merce_zucchero',    ing: { barbabietola: 2 },                ms: 6000,  liv: 13 },
+    marmellata:  { nome: 'Marmellata',      emoji: '🫙', pezzo: 'merce_marmellata',  ing: { fragola: 2, zucchero: 1 },        ms: 8000,  liv: 13 },
+  } },
+  sartoria: { posti: FORNO_POSTI, ricette: {
+    maglione:    { nome: 'Maglione',        emoji: '🧥', pezzo: 'merce_maglione',    ing: { stoffa: 2 },                      ms: 10000, liv: 15 },
+    sciarpa_lana: { nome: 'Sciarpa di lana', emoji: '🧣', pezzo: 'merce_sciarpa_lana', ing: { stoffa: 1, lana: 1 },            ms: 6000,  liv: 15 },
+    berretto:    { nome: 'Berretto',        emoji: '🧢', pezzo: 'merce_berretto',    ing: { stoffa: 1 },                      ms: 5000,  liv: 15 },
+  } },
+  tintoria: { posti: FORNO_POSTI, ricette: {
+    tintura:     { nome: 'Tintura',         emoji: '🧴', pezzo: 'merce_tintura',     ing: { lavanda: 2 },                     ms: 5000,  liv: 16 },
+    sapone:      { nome: 'Sapone',          emoji: '🧼', pezzo: 'merce_sapone',      ing: { tintura: 1, burro: 1 },           ms: 5000,  liv: 16 },
+    sacchetto:   { nome: 'Sacchetto profumato', emoji: '👝', pezzo: 'merce_sacchetto', ing: { lavanda: 2, stoffa: 1 },         ms: 5000,  liv: 16 },
+    maglione_lavanda: { nome: 'Maglione alla lavanda', emoji: '💜', pezzo: 'merce_maglione_lavanda', ing: { maglione: 1, tintura: 1 }, ms: 6000, liv: 16 },
   } },
 }
 export const TIPI_DI_MACCHINA = Object.keys(MACCHINE)
@@ -56,13 +78,13 @@ export const MERCI_VECCHIE = {
   farinaMais: 'pastone', popcorn: 'pastone',
   panIntegrale: 'pane', focaccia: 'pane', grissini: 'pane',
   tortaCarote: 'torta', tortaZucca: 'torta', tortaSoffice: 'torta', brioche: 'torta',
-  frittata: 'pasta', passata: 'salsa', cipolleSottOlio: 'salsa', caponata: 'parmigiana', marmellata: 'crostata',
+  frittata: 'pasta', passata: 'salsa', cipolleSottOlio: 'salsa', caponata: 'parmigiana',
   gelatoFragola: 'gelato', gelatoCarota: 'gelato', gelatoLavanda: 'gelato', gelatoCrema: 'gelato', yogurt: 'frullato',
 }
 export const nuovoId = k => (typeof k === 'string' && Object.prototype.hasOwnProperty.call(MERCI_VECCHIE, k)) ? MERCI_VECCHIE[k] : k
 
 /** Una merce qualunque (raccolto, prodotto di una macchina, uova o latte) o null: ha `nome`, `emoji` e `pezzo` (o `aspetta`). */
-export const merceDi = k => COLTURE[k] || RICETTE[k] || PRODOTTI_ANIMALI[k] || null
+export const merceDi = k => COLTURE[k] || RICETTE[k] || PRODOTTI_ANIMALI[k] || LANA[k] || null
 /** L'emoji di una cosa che sta nella scorta, per i testi (la faccia disegnata è `viste/Faccia.vue`). */
 export const emojiDi = k => (merceDi(k) || {}).emoji || '❔'
 /** Il pezzo dell'atlante che disegna la merce, o null se aspetta il suo foglio (allora vale l'emoji). */
@@ -74,7 +96,7 @@ export function guastiDelleRicette(colture, edifici) {
   if (quante !== Object.keys(RICETTE).length) g.push('due ricette con lo stesso id in macchine diverse')
   for (const [k, r] of Object.entries(RICETTE)) {
     if (colture[k]) g.push(`${k}: una ricetta con l'id di una coltura`)
-    if (PRODOTTI_ANIMALI[k]) g.push(`${k}: una ricetta con l'id di un prodotto delle bestie`)
+    if (PRODOTTI_ANIMALI[k] || LANA[k]) g.push(`${k}: una ricetta con l'id di un prodotto delle bestie`)
     if (!r.nome || !r.emoji) g.push(`${k}: manca nome o emoji`)
     if (!r.pezzo && !r.aspetta) g.push(`${k}: senza pezzo e senza dire quale aspetta: un'emoji per sempre`)
     if (r.pezzo && r.aspetta) g.push(`${k}: ha il pezzo e aspetta ancora: togli «aspetta»`)
@@ -83,19 +105,19 @@ export function guastiDelleRicette(colture, edifici) {
     const ing = Object.entries(r.ing)
     if (!ing.length) g.push(`${k}: senza ingredienti`)
     for (const [i, n] of ing) {
-      if (!colture[i] && !RICETTE[i] && !PRODOTTI_ANIMALI[i]) g.push(`${k}: ingrediente ${i} sconosciuto`)
+      if (!colture[i] && !RICETTE[i] && !PRODOTTI_ANIMALI[i] && !LANA[i]) g.push(`${k}: ingrediente ${i} sconosciuto`)
       if (i === k) g.push(`${k}: è ingrediente di sé stessa`)
       if (!(n >= 1)) g.push(`${k}: quantità di ${i} impossibile`)
     }
   }
   // in un testo «manca 🌾 2» deve dire una cosa sola: nessuna emoji di ripiego è di due merci
   const viste = new Map()
-  for (const [k, m] of [...Object.entries(colture), ...Object.entries(PRODOTTI_ANIMALI), ...Object.entries(RICETTE)]) {
+  for (const [k, m] of [...Object.entries(colture), ...Object.entries(PRODOTTI_ANIMALI), ...Object.entries(LANA), ...Object.entries(RICETTE)]) {
     if (viste.has(m.emoji)) g.push(`${k} e ${viste.get(m.emoji)}: la stessa emoji ${m.emoji}`)
     viste.set(m.emoji, k)
   }
   for (const [vecchio, nuovo] of Object.entries(MERCI_VECCHIE)) {
-    if (RICETTE[vecchio] || colture[vecchio] || PRODOTTI_ANIMALI[vecchio]) g.push(`${vecchio}: un vecchio id che è anche una merce di oggi`)
+    if (RICETTE[vecchio] || colture[vecchio] || PRODOTTI_ANIMALI[vecchio] || LANA[vecchio]) g.push(`${vecchio}: un vecchio id che è anche una merce di oggi`)
     if (!RICETTE[nuovo]) g.push(`${vecchio}: diventa ${nuovo}, che non è una ricetta`)
   }
   for (const [t, m] of Object.entries(MACCHINE)) {
