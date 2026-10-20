@@ -1,0 +1,553 @@
+/* ═══════════════════════════════════════════════════════════════════
+   IL CATALOGO 3D — le voci del Sotterraneo
+
+   Tutti i modelli 3D in codice del Sotterraneo 3D, uno per voce, per la
+   pagina `strumenti/banco/catalogo-3d.html` (la fa la sessione della
+   Fattoria 3D; l'altra metà dei dati è `catalogo-3d/fattoria.js`). Serve a
+   vedere cosa c'è, dove si usa, e a dire «questo vale la pena usarlo anche
+   di là». Non è un gioco: non decide niente.
+
+   ── il contratto ──
+   `VOCI` è un array di oggetti
+     id         stabile e unico (`sot:kit:pozzo`, `sot:props:carretto`…)
+     nome       come lo si chiama a voce
+     gioco      'sotterraneo' (qui sempre: l'utente sceglie i riusi)
+     categoria  'edificio' | 'prop' | 'pianta' | 'personaggio' | 'animale' | 'effetto' | 'altro'
+     dove       una riga: in che città, regione o discesa si vede, e cos'è
+     file       'src/…/file.js:funzione' — il pezzo di codice che lo fa
+     crea()     torna un THREE.Object3D nuovo, in piedi sull'origine (il
+                suolo a y = 0, il centro a x = z = 0, il davanti verso +z),
+                SINCRONO: si può chiamare con o senza `await`. La prima
+                chiamata prepara le trame e i materiali del kit (serve un
+                canvas: nel browser c'è; in Node si usano trame vuote, la
+                forma c'è tutta e il colore pure)
+   Il resto (le misure, il numero di mesh) lo calcola la pagina sull'oggetto
+   costruito: qui non si scrive a mano un numero che cambia col codice.
+
+   ── l'animazione (facoltativa) ──
+   Se un oggetto ha qualcosa che si muove (l'acqua della fontana, la grata
+   che si alza, la ruota del mulino, il velo del portale), `userData.anima`
+   è una funzione `(t) => …` con il tempo in secondi: la pagina può chiamarla
+   a ogni fotogramma. Senza, il modello sta fermo e va bene lo stesso.
+
+   ── la luce e la nebbia ──
+   I materiali del kit leggono la nebbia dell'esplorazione (`vesti.js`); qui
+   si spegne (`U.uNebbia = 0`): ogni cosa si vede intera. I materiali sono
+   quelli del gioco, le luci sono quelle della pagina.
+
+   ── cosa è fuori, e perché ──
+   · persone, mostri, eroe, armi: sono sprite ancorati (figure dell'atlante
+     su un piano), non geometrie: non c'è un modello da mostrare
+   · pareti, pavimenti, colonne e terreno (`pareti.js`, `terreno.js`,
+     `mondo/terreno.js`, `mondo/lontano.js`): si scolpiscono su una pianta
+     intera, non esistono da soli
+   · l'acqua, il cielo, la nebbia, le particelle, le luci, il fumo e le
+     fiamme (`vita.js`, `particelle.js`…): sono effetti di scena, non oggetti
+   · `scatola`, `cilindro`, `triangolo`, `Cantiere` (`kit.js`): sono gli
+     attrezzi con cui si fanno i modelli, non modelli
+   ═══════════════════════════════════════════════════════════════════ */
+import { Group, Mesh, MeshStandardMaterial, MeshBasicMaterial, CircleGeometry, OctahedronGeometry, DoubleSide, Matrix4, Vector3 } from 'three'
+import { U } from '../../../src/giochi/sotterraneo/scena3d/mondo/vesti.js'
+import { creaTrame } from '../../../src/giochi/sotterraneo/scena3d/mondo/trame.js'
+import { materialiDelKit, Cantiere, casa, bottega, pozzo, mulino, tetto } from '../../../src/giochi/sotterraneo/scena3d/mondo/kit.js'
+import { ponte, grata, staccionate, cartello, bacheca, campoMinatore, antro } from '../../../src/giochi/sotterraneo/scena3d/mondo/ponti.js'
+import { creaMonumento, creaPietra, creaPortale as creaPortaleDiSopra } from '../../../src/giochi/sotterraneo/scena3d/mondo/monumenti.js'
+import { fontana as fontanaDellaPiazza } from '../../../src/giochi/sotterraneo/scena3d/mondo/fontana.js'
+import { MODELLI } from '../../../src/giochi/sotterraneo/scena3d/mondo/props-modelli.js'
+import { disegnaPropsAperti } from '../../../src/giochi/sotterraneo/scena3d/mondo/props-aperto.js'
+import { PROPS, FORME as FORME_APERTE, TABELLA, SCENARI } from '../../../src/giochi/sotterraneo/scena3d/mondo/props-dove.js'
+import { GEO } from '../../../src/giochi/sotterraneo/scena3d/mondo/natura.js'
+import { caso, LIVELLO_ACQUA } from '../../../src/giochi/sotterraneo/scena3d/mondo/suolo.js'
+import { creaBotti } from '../../../src/giochi/sotterraneo/scena3d/botti.js'
+import { creaArredo3d } from '../../../src/giochi/sotterraneo/scena3d/arredo3d.js'
+import { creaRelitti } from '../../../src/giochi/sotterraneo/scena3d/relitti.js'
+import { creaPortale } from '../../../src/giochi/sotterraneo/scena3d/portale.js'
+import { creaFontana } from '../../../src/giochi/sotterraneo/scena3d/fontana.js'
+import { creaMaschera } from '../../../src/giochi/sotterraneo/scena3d/maschera.js'
+import { legno as trameDelLegno, muro as trameDelMuro } from '../../../src/giochi/sotterraneo/scena3d/trame.js'
+import { ASPETTI_3D } from '../../../src/giochi/sotterraneo/scena3d/aspetti.js'
+import { MAX_LUCI } from '../../../src/giochi/sotterraneo/scena3d/costanti.js'
+import { ASPETTI as ASPETTI_RELITTI } from '../../../src/giochi/sotterraneo/dati/relitti.js'
+import { BOTTI_PER_PAESAGGIO } from '../../../src/giochi/sotterraneo/dati/botti.js'
+
+const MONDO = 'src/giochi/sotterraneo/scena3d/mondo/'
+const SCENA = 'src/giochi/sotterraneo/scena3d/'
+
+/* ── il contesto: trame, materiali del kit, maschera tutta aperta. Una volta sola ── */
+let contestoPronto = null
+function contesto() {
+  if (contestoPronto) return contestoPronto
+  const conCanvas = typeof document !== 'undefined'
+  const vuota = () => ({ map: null, normalMap: null, roughnessMap: null, emissiveMap: null })
+  const trame = conCanvas ? creaTrame()
+    : { pietra: vuota(), legno: vuota(), intonaco: vuota(), tegole: vuota(), paglia: vuota(), stoffa: vuota() }
+  U.uNebbia.value = 0   // niente nebbia dell'esplorazione: ogni cosa si vede tutta e subito
+  // una maschera di un texel bianco: «tutto visto adesso». Le cose delle discese la leggono per accendersi
+  const maschera = creaMaschera()
+  maschera.metti({ dati: new Uint8Array([255, 255, 255, 255]), W: 1, H: 1 })
+  contestoPronto = {
+    trame, kit: materialiDelKit(trame), maschera,
+    legno: conCanvas ? trameDelLegno() : vuota(),
+    muroDi: aspetto => (conCanvas ? trameDelMuro(aspetto) : vuota()),
+  }
+  return contestoPronto
+}
+
+const coseVuote = () => ({ camini: [], braci: [], fuochi: [], spruzzi: [], ruote: [], cristalli: [] })
+const MAT_CRISTALLO = () => new MeshStandardMaterial({ color: 0xb78cff, emissive: 0x6a3cff, emissiveIntensity: 0.6, roughness: 0.2 })
+
+/* Un pezzo del mondo di sopra: `f({ cant, m, cose, kit, g })` posa le sue forme nel cantiere, le parti che si muovono vanno in `g`.
+   `centro` [x, z]: dove sta il centro del pezzo nelle coordinate del mondo che il codice usa (si toglie, così il modello sta
+   sull'origine); `rialza`: di quanto alzarlo (i ponti scendono sotto il livello dell'acqua); `acqua`: un disco d'acqua a
+   quel livello, per i pezzi che ci stanno dentro */
+function pezzo(f, { centro = [0, 0], rialza = 0, acqua = 0, quota = 0, passaggi = [] } = {}) {
+  const { kit } = contesto()
+  const m = { W: 8, H: 8, quota: new Float32Array(64).fill(quota), passaggi }
+  const cant = new Cantiere(), cose = coseVuote(), esterno = new Group(), g = new Group(), anima = []
+  g.position.set(-centro[0], rialza, -centro[1])
+  esterno.add(g)
+  f({ cant, m, cose, kit, g, anima })
+  for (const me of cant.chiudi(kit.fermi, kit.ombraFermi)) g.add(me)
+  for (const r of cose.ruote) g.add(r)
+  for (const c of cose.cristalli) { const me = new Mesh(new OctahedronGeometry(0.28), MAT_CRISTALLO()); me.position.copy(c); g.add(me) }
+  if (acqua) {
+    const d = new Mesh(new CircleGeometry(acqua, 28).rotateX(-Math.PI / 2), new MeshBasicMaterial({ color: 0x3c86b8, transparent: true, opacity: 0.55, depthWrite: false }))
+    d.position.set(0, LIVELLO_ACQUA + rialza, 0); esterno.add(d)
+  }
+  if (anima.length) esterno.userData.anima = t => { for (const a of anima) a(t) }
+  return esterno
+}
+
+/* ═══════════════════ il kit del mondo di sopra (kit.js, ponti.js) ═══════════════════ */
+
+// le quattro case: l'aspetto viene dal seme (muro d'intonaco, a graticcio, di legno; tetto di tegole o di paglia)
+const casaDi = (seme, w = 4, h = 3) => () => pezzo(({ cant, m, cose }) => casa({ seme, verso: 's', w, h, x: -w / 2, y: -h / 2, regione: 'villaggio' }, cant, m, cose))
+const bottegaDi = (tipo, w, h, chiave) => () => pezzo(({ cant, m, cose }) => bottega({ x: -w / 2, y: -h / 2, w, h, chiave, bottega: tipo }, cant, m, cose))
+
+// i ponti: una passerella di celle (2 di larghezza); i nomi dei lati e il livello sono quelli del generatore
+const cellePonte = (lungoX, L) => Array.from({ length: L * 2 }, (_, i) => (lungoX ? { x: i % L, y: Math.floor(i / L) } : { x: i % 2, y: Math.floor(i / 2) }))
+function ponteDi(modello, verso, L, quota, arco) {
+  return () => {
+    const lungoX = verso === 'est', celle = cellePonte(lungoX, L)
+    const q = { id: 0, tipo: 'ponte', modello, verso, celle, quota, arco, conGrata: false }
+    const centro = lungoX ? [L / 2, 1] : [1, L / 2]
+    return pezzo(({ cant, m }) => ponte(q, cant, m), { centro, rialza: 1.15, acqua: 5, passaggi: [q] })
+  }
+}
+
+const VOCI_KIT = [
+  { id: 'sot:kit:casa-intonaco', nome: 'Casa d\'intonaco con tegole', categoria: 'edificio', file: MONDO + 'kit.js:casa', crea: casaDi(14),
+    dove: 'Il villaggio e le altre città (villaggio, forte del guado, rifugio del passo): case d\'intonaco chiaro, imposte colorate, camino. Anche sparse nel mondo (campi, valle del mulino, frutteto)' },
+  { id: 'sot:kit:casa-graticcio', nome: 'Casa a graticcio, a due piani', categoria: 'edificio', file: MONDO + 'kit.js:casa', crea: casaDi(16, 5, 4),
+    dove: 'Le case grandi delle città (villaggio e forte del guado): travi in vista sul muro, due file di finestre' },
+  { id: 'sot:kit:casa-paglia', nome: 'Casa col tetto di paglia', categoria: 'edificio', file: MONDO + 'kit.js:casa', crea: casaDi(18),
+    dove: 'Una casa su quattro, nel villaggio, nei campi e nella valle del mulino: stesso muro, tetto di paglia' },
+  { id: 'sot:kit:casa-legno', nome: 'Casa di legno', categoria: 'edificio', file: MONDO + 'kit.js:casa', crea: casaDi(7),
+    dove: 'Una casa su cinque nelle città e nei dintorni: muri di tronchi, tetto a falde' },
+  { id: 'sot:kit:bottega-bancarella', nome: 'Bancarella del mercante', categoria: 'edificio', file: MONDO + 'kit.js:bottega', crea: bottegaDi('bancarella', 3, 2, 'rigattiere'),
+    dove: 'Il mercante (il rigattiere) nel villaggio e nel rifugio del passo: banco con la merce, tendone rosso a falda' },
+  { id: 'sot:kit:bottega-erbe', nome: 'Banco della guaritrice', categoria: 'edificio', file: MONDO + 'kit.js:bottega', crea: bottegaDi('erbe', 3, 2, 'erborista'),
+    dove: 'La guaritrice (l\'erborista) nel villaggio, nel forte del guado e nel rifugio del passo: tendone verde, boccette ed erbe appese' },
+  { id: 'sot:kit:bottega-fucina', nome: 'Fucina del fabbro', categoria: 'edificio', file: MONDO + 'kit.js:bottega', crea: bottegaDi('fucina', 4, 3, 'armaiolo'),
+    dove: 'Il fabbro (l\'armaiolo) nel villaggio e nel forte del guado: forgia di pietra con la brace e il camino, mantice, spade appese' },
+  { id: 'sot:kit:bottega-torretta', nome: 'Torretta dell\'incantatrice', categoria: 'edificio', file: MONDO + 'kit.js:bottega', crea: bottegaDi('torretta', 3, 3, 'incantatrice'),
+    dove: 'L\'incantatrice nel villaggio e nel rifugio del passo: torre tonda viola col tetto a cono e il cristallo che fluttua in cima' },
+  { id: 'sot:kit:pozzo', nome: 'Pozzo della piazza', categoria: 'edificio', file: MONDO + 'kit.js:pozzo',
+    crea: () => pezzo(({ cant, m }) => pozzo({ x: -1, y: -1 }, cant, m)),
+    dove: 'Il centro della piazza di ogni città (2×2 celle); dove manca chi cura prende il suo posto la fontana' },
+  { id: 'sot:kit:mulino', nome: 'Mulino con la ruota', categoria: 'edificio', file: MONDO + 'kit.js:mulino',
+    crea: () => pezzo(({ cant, m, cose, kit, anima }) => {
+      const ruota = mulino({ x: -1.5, y: -1.5, w: 3, h: 3, lato: -1, ruota: { x: -2, y: 0 } }, cant, m, cose, kit)
+      anima.push(t => { ruota.rotation.x = t * 0.8 })
+    }, { acqua: 3 }),
+    dove: 'La valle del mulino: casa di pietra e legno sulla riva del fiume, la ruota che gira nell\'acqua' },
+  { id: 'sot:kit:tetto', nome: 'Tetto a falde coi timpani', categoria: 'edificio', file: MONDO + 'kit.js:tetto',
+    crea: () => pezzo(({ cant }) => {
+      cant.base(0, 0, 0, 0)
+      tetto(cant, 3.2, 2.4, 0, 1.0, 0.28, 'tegole', [0.8, 0.42, 0.3], [0.96, 0.92, 0.82], 'intonaco', true)
+    }),
+    dove: 'Sopra ogni casa e il mulino: due lastre di tegole (o di paglia) con lo sbalzo e i due timpani. Qui da solo, senza i muri' },
+  { id: 'sot:kit:ponte-arco', nome: 'Ponte ad arco di pietra', categoria: 'edificio', file: MONDO + 'ponti.js:ponte', crea: ponteDi('arco', 'sud', 6, 0.13, 0.45),
+    dove: 'Sui fiumi grandi: dal villaggio ai campi, dal villaggio alla valle del mulino, dal bosco vecchio al guado. Parapetto di pietra, arcata sotto' },
+  { id: 'sot:kit:ponte-travi', nome: 'Ponte di travi', categoria: 'edificio', file: MONDO + 'ponti.js:ponte', crea: ponteDi('travi', 'est', 5, 0.13, 0.12),
+    dove: 'Dal cimitero ai campi, dai campi al colle, dal frutteto alla valle del mulino, dal guado alla piana delle ceneri: assi su due travi e pali nell\'acqua' },
+  { id: 'sot:kit:ponte-passerella', nome: 'Passerella di corde', categoria: 'edificio', file: MONDO + 'ponti.js:ponte', crea: ponteDi('passerella', 'sud', 5, 0.13, 0.12),
+    dove: 'Sui valichi stretti: dal passo alla gola dei venti, alla vetta dei troll, al monte; dal guado alla palude, all\'accampamento, al bosco secco. Assi e corde' },
+  { id: 'sot:kit:grata', nome: 'Grata di un passaggio', categoria: 'edificio', file: MONDO + 'ponti.js:grata',
+    crea: () => pezzo(({ cant, m, kit, g, anima }) => {
+      const q = { id: 0, tipo: 'valico', conGrata: true, centro: { x: 3, y: 3 }, rive: [{ x: 2, y: 3 }, { x: 4, y: 3 }] }
+      const fatto = grata(q, cant, m, kit, g)
+      anima.push(t => fatto.apri(0.5 + 0.5 * Math.sin(t)))
+    }, { centro: [3.5, 3.5] }),
+    dove: 'Ai passaggi fra due anelli del mondo (sui ponti e ai valichi: villaggio-campi, colle-passo, passo-colle dei corvi, lupi-monte…): due pilastri e la grata di ferro, che si alza quando la storia o l\'età aprono la strada' },
+  { id: 'sot:kit:staccionata', nome: 'Staccionata di un campo', categoria: 'prop', file: MONDO + 'ponti.js:staccionate',
+    crea: () => pezzo(({ cant, m }) => staccionate([{ x: -3, y: -2, w: 6, h: 4 }], cant, m)),
+    dove: 'Attorno a ogni campo coltivato (grano, cavoli, vigna, zucche): pali e due traverse' },
+  { id: 'sot:kit:cartello', nome: 'Cartello all\'incrocio', categoria: 'prop', file: MONDO + 'ponti.js:cartello',
+    crea: () => pezzo(({ cant, m }) => cartello({ x: -0.5, y: -0.5 }, [0, 1.9, 3.6], cant, m)),
+    dove: 'L\'incrocio di ogni città: un palo con una freccia per ogni passaggio, che indica i posti oltre' },
+  { id: 'sot:kit:bacheca', nome: 'Bacheca delle taglie', categoria: 'prop', file: MONDO + 'ponti.js:bacheca',
+    crea: () => pezzo(({ cant, m }) => bacheca({ x: -1, y: -0.5, w: 2, h: 1 }, cant, m)),
+    dove: 'In piazza, in ogni città: la tavola col tettuccio e i fogli appesi (le missioni)' },
+  { id: 'sot:kit:campo-minatore', nome: 'Campo del minatore', categoria: 'edificio', file: MONDO + 'ponti.js:campoMinatore',
+    crea: () => pezzo(({ cant, m, cose }) => campoMinatore({ tenda: { x: 0, y: 0 } }, cant, m, cose), { centro: [2, 1.5] }),
+    dove: 'Fuori dal villaggio, dove sta il minatore: la tenda, il carretto col minerale e il falò' },
+  { id: 'sot:kit:antro-tomba', nome: 'Antro: tomba', categoria: 'edificio', file: MONDO + 'ponti.js:antro',
+    crea: () => pezzo(({ cant, m }) => antro({ x: -1, y: -1, w: 2, h: 2, forma: 'tomba' }, cant, m)),
+    dove: 'Le porte piccole fra un dungeon e l\'altro, nel cimitero vecchio, nella valle delle ossa, nella landa e nella piana delle ceneri: un sarcofago di pietra' },
+  { id: 'sot:kit:antro-cantina', nome: 'Antro: cantina', categoria: 'edificio', file: MONDO + 'ponti.js:antro',
+    crea: () => pezzo(({ cant, m }) => antro({ x: -1, y: -1, w: 2, h: 2, forma: 'cantina' }, cant, m)),
+    dove: 'Le porte piccole nei campi, sul colle delle rovine, nel frutteto e nelle rovine: la botola inclinata di una cantina' },
+  { id: 'sot:kit:antro-grotta', nome: 'Antro: grotta', categoria: 'edificio', file: MONDO + 'ponti.js:antro',
+    crea: () => pezzo(({ cant, m }) => antro({ x: -1, y: -1, w: 2, h: 2, forma: 'grotta' }, cant, m)),
+    dove: 'Le porte piccole di quasi tutto il mondo selvaggio (brughiera, bosco, lago, passo, monte, foresta, palude…): una bocca di sassi con le assi' },
+]
+
+/* ═══════════════════ i monumenti (monumenti.js): i dungeon, la pietra, il portale ═══════════════════ */
+
+// gli otto ingressi: misure e nomi come nel generatore
+const INGRESSI = [
+  ['altare', 'altare', 3, 2, 'La cripta dei re (il cimitero vecchio)', 'un altare fra due colonne con la corona; la lastra scivola'],
+  ['cantine', 'arco', 3, 2, 'Le cantine dei goblin (il colle delle rovine)', 'un arco di pietra con la grata e due teschi sui pilastri; la grata si alza'],
+  ['torre', 'torre', 3, 3, 'La torre bruciata (la brughiera)', 'una torre tonda di blocchi con la cima rotta e annerita; la porta si apre'],
+  ['gallerie', 'grotta', 4, 2, 'La tana dei ragni (il bosco vecchio)', 'la bocca di una grotta fra le radici e le ragnatele; le assi si spostano'],
+  ['cisterna', 'stagno', 3, 2, 'Le sale allagate (la palude)', 'una scala che scende nell\'acqua fra due pilastri; le rune si accendono'],
+  ['labirinto', 'botola', 2, 2, 'La porta dell\'inferno (la piana delle ceneri)', 'una botola nel telaio di pietra con le corna; si apre sul rosso'],
+  ['fondo', 'miniera', 4, 2, 'Le miniere di brace (il monte)', 'l\'imbocco di una miniera coi binari e il carrello; il carrello esce'],
+  ['abisso', 'pozzo', 2, 2, 'Il pozzo senza fondo (la landa vecchia)', 'un pozzo col tetto d\'ardesia, la manovella e il secchio'],
+]
+const VOCI_INGRESSI = INGRESSI.map(([chiave, monumento, w, h, luogo, cosa]) => ({
+  id: 'sot:monumenti:' + monumento, nome: 'Ingresso: ' + luogo.split(' (')[0].replace(/^L[ae] /, '').replace(/^Il /, ''), categoria: 'edificio', file: MONDO + 'monumenti.js:creaMonumento',
+  dove: `${luogo}: ${cosa}`,
+  crea: () => pezzo(({ cant, m, kit, g, anima }) => {
+    const fatto = creaMonumento({ x: -w / 2, y: -h / 2, w, h, chiave, monumento }, cant, m, kit, g)
+    anima.push(t => fatto.anim(0.5 + 0.5 * Math.sin(t * 0.8), t))
+  }),
+}))
+
+const VOCI_MONUMENTI = [
+  ...VOCI_INGRESSI,
+  { id: 'sot:monumenti:pietra-del-viaggio', nome: 'Pietra del viaggio', categoria: 'prop', file: MONDO + 'monumenti.js:creaPietra',
+    crea: () => pezzo(({ cant, m, g, anima }) => {
+      const fatto = creaPietra({ x: -1, y: -1, w: 2, h: 2 }, cant, m, g)
+      anima.push(t => fatto.aggiorna(true, t, true))
+    }),
+    dove: 'Davanti a ogni ingresso e in ogni città: sei sassi ritti attorno a una pietra piatta con la runa, che si accende quando ci si è già passati (il viaggio veloce)' },
+  { id: 'sot:monumenti:portale-di-sopra', nome: 'Portale gemello (di sopra)', categoria: 'effetto', file: MONDO + 'monumenti.js:creaPortale',
+    crea: () => {
+      const f = creaPortaleDiSopra(0, 0, 0)
+      f.gruppo.userData.anima = t => f.aggiorna(t)
+      return f.gruppo
+    },
+    dove: 'Nel villaggio, nel forte del guado e nel rifugio del passo: l\'anello di pietra ritto col velo che gira, dove si esce dalle discese' },
+  { id: 'sot:monumenti:fontana-della-piazza', nome: 'Fontana della piazza', categoria: 'edificio', file: MONDO + 'fontana.js:fontana',
+    crea: () => pezzo(({ cant, m, cose, kit, g, anima }) => {
+      const f = fontanaDellaPiazza({ x: -1, y: -1 }, cant, m, cose, kit, g)
+      anima.push(t => f.anima(t))
+    }),
+    dove: 'Il centro della piazza di una città dove manca chi cura (la guaritrice o l\'incantatrice): al posto del pozzo, cura gratis chi è salito dal portale. Vasca, coppa alta, quattro cascate, gocce' },
+]
+
+/* ═══════════════════ gli oggetti delle città (props-modelli.js) ═══════════════════ */
+
+const OGGETTI_CITTA = {
+  barile: ['Barile', 'prop', 'Ai muri delle case e attorno alle botteghe delle tre città (villaggio, forte del guado, rifugio del passo): un barile in piedi coi cerchi di ferro'],
+  botti: ['Botti', 'prop', 'Ai muri di tutte e tre le città: due botti in piedi e una sdraiata sopra'],
+  sacchi: ['Sacchi', 'prop', 'Ai muri delle case e davanti alle bancarelle delle tre città: un mucchio di sacchi di farina legati'],
+  casse: ['Casse', 'prop', 'Ai muri del forte del guado e del villaggio, davanti alle bancarelle: tre casse impilate coi rinforzi'],
+  carretto: ['Carretto col fieno', 'prop', 'Il villaggio (ai muri e nei prati): carretto a due ruote con il fieno, le stanghe verso il lato'],
+  balle: ['Balle di paglia', 'prop', 'Il villaggio, nei prati e vicino ai campi: tre balle legate impilate'],
+  legna: ['Legna', 'prop', 'Ai muri di tutte e tre le città: una catasta di tronchi con le teste chiare'],
+  catasta: ['Catasta grande', 'prop', 'Il rifugio del passo (ai muri, nel piazzale e attorno alle botteghe): cinque file di tronchi con due ceppi'],
+  ceppo: ['Ceppo con l\'ascia', 'prop', 'Il rifugio del passo, ai muri e nel piazzale: un ceppo con l\'ascia piantata'],
+  panca: ['Panca', 'prop', 'In piazza in tutte e tre le città, e davanti alle torrette: un\'asse su due sostegni'],
+  tavolo: ['Tavolo con le panche', 'prop', 'Ai muri delle case e nel piazzale delle tre città: tavolo di legno con due panche e due boccali'],
+  bancarella: ['Bancarella della piazza', 'prop', 'In piazza nel villaggio (due) e nel rifugio del passo (una): banco con la merce e la tendina a righe colorata'],
+  scaffale: ['Scaffale delle erbe', 'prop', 'Attorno alla bottega della guaritrice: tre ripiani con barattoli ed erbe'],
+  rastrelliera: ['Rastrelliera d\'armi', 'prop', 'Il forte del guado (ai muri e nel piazzale) e davanti alla fucina: spade, lance e scudi appoggiati'],
+  manichino: ['Manichino da allenamento', 'prop', 'Il forte del guado, ai muri e nel piazzale: palo, traversa, corpo di paglia e scudo'],
+  lanterna: ['Lanterna', 'prop', 'I lampioni della piazza del villaggio e davanti alla torretta dell\'incantatrice: palo con la lanterna accesa'],
+  torcia: ['Torcia', 'prop', 'I lampioni della piazza del forte del guado e il suo piazzale: palo con la coppa di ferro e la fiamma'],
+  braciere: ['Braciere', 'prop', 'I lampioni della piazza del rifugio del passo, i suoi muri e le sue botteghe: treppiede di ferro con la brace'],
+  fiori: ['Cassetta di fiori', 'pianta', 'Ai muri delle case del villaggio e davanti alla bottega della guaritrice: cassetta di legno con fiori colorati'],
+  vaso: ['Vasi di fiori', 'pianta', 'Ai muri del villaggio e davanti alle botteghe della guaritrice e dell\'incantatrice: due vasi di terracotta con le piantine'],
+  orto: ['Orto con lo steccato', 'pianta', 'Il villaggio, attorno alle case e nei prati: aiuola con tre file di verdure e uno steccato basso'],
+  bucato: ['Stenditoio col bucato', 'prop', 'Il villaggio, ai muri e nei prati: due pali, la corda e quattro panni colorati'],
+  insegna: ['Insegna di bottega', 'prop', 'Davanti a ogni bottega (fucina, bancarella, guaritrice, torretta): palo, braccio e cartello col segno della merce (qui quello del mercante)'],
+  ruota: ['Affilatoio', 'prop', 'Davanti alla fucina del fabbro (villaggio, forte del guado): ruota di pietra fra due cavalletti e il secchio'],
+  incudine: ['Incudine', 'prop', 'Davanti alla fucina del fabbro: ceppo, incudine di ferro e il martello'],
+  carbone: ['Cassetta di carbone', 'prop', 'Davanti alla fucina del fabbro: cassa di legno colma di carbone nero'],
+  pellicce: ['Banco di pellicce', 'prop', 'Il rifugio del passo, ai muri e davanti alle botteghe: due montanti, una stanga e tre pelli stese'],
+  slitta: ['Slitta carica', 'prop', 'Il rifugio del passo: slitta coi pattini, una cassa, sacchi e una pelliccia'],
+  tenda: ['Tenda di tela', 'prop', 'Il forte del guado, nel piazzale (tre): cono di tela a otto spicchi, l\'ingresso scuro, il palo col pennone'],
+  bandiera: ['Bandiera', 'prop', 'Il forte del guado, in piazza (due): asta di legno su un basamento di sassi con la bandiera'],
+  palizzata: ['Tratto di palizzata', 'prop', 'Il forte del guado, tutto attorno alla città: quattro pali appuntiti e due traverse'],
+}
+const VOCI_CITTA = Object.entries(OGGETTI_CITTA).map(([tipo, [nome, categoria, dove]]) => ({
+  id: 'sot:props:' + tipo.replace(/_/g, '-'), nome, categoria, dove, file: MONDO + 'props-modelli.js:' + (tipo === 'palizzata' ? 'palizzata' : 'MODELLI.' + tipo),
+  crea: () => pezzo(({ cant, cose }) => { cant.base(0, 0, 0, 0); MODELLI[tipo](cant, caso(7), { bottega: 'bancarella', fuoco: true }, cose) }),
+}))
+
+/* ═══════════════════ i props fuori dalle città (props-aperto.js) ═══════════════════ */
+
+// come si chiama l'habitat e dove si trova (i nomi delle regioni del generatore)
+export const NOMI_HABITAT = {
+  cimitero: 'il cimitero vecchio', rovine: 'il colle delle rovine e le rovine del guado', brughiera: 'la brughiera e il colle dei corvi',
+  bosco: 'il bosco vecchio', foresta: 'la foresta nera e il bosco dei lupi', secco: 'il bosco secco', palude: 'la palude', lago: 'il lago',
+  ceneri: 'la valle delle ossa e la piana delle ceneri', landa: 'la landa vecchia', monte: 'il passo, il monte e la vetta dei troll',
+  roccia: 'la gola dei venti e le colline di roccia', prato: 'i prati (valle del mulino, guado, accampamento)', frutteto: 'il frutteto', campi: 'i campi',
+}
+export const NOMI_INGRESSO = {
+  altare: 'la cripta dei re', arco: 'le cantine dei goblin', torre: 'la torre bruciata', grotta: 'la tana dei ragni', stagno: 'le sale allagate',
+  botola: 'la porta dell\'inferno', miniera: 'le miniere di brace', pozzo: 'il pozzo senza fondo',
+}
+// nome, categoria, cos'è; il dove si ricava da TABELLA e SCENARI (si tiene da solo)
+const FORME_NOME = {
+  tomba: ['Tomba con la lapide', 'prop', 'una lastra di pietra con la lapide e la croce'],
+  cripta: ['Piccola cripta', 'edificio', 'un mausoleo basso con la porta scura'],
+  cancello: ['Cancello del cimitero', 'prop', 'due pilastri e il cancello di ferro, con le inferriate'],
+  croce: ['Croce di legno', 'prop', 'una croce di legno storta, piantata in terra'],
+  arcoRotto: ['Arco spezzato', 'edificio', 'un arco di pietra mezzo crollato'],
+  colonnaRotta: ['Colonna rotta', 'prop', 'una colonna spezzata con i rocchi per terra'],
+  muretto: ['Muretto di sassi', 'prop', 'un tratto di muro a secco, mezzo franato'],
+  macerie: ['Macerie', 'prop', 'un mucchio di pietre cadute'],
+  menhir: ['Menhir', 'prop', 'una pietra alta e ritta, col muschio'],
+  cerchio: ['Cerchio di pietre', 'prop', 'sassi ritti in cerchio attorno a una pietra piatta'],
+  tumulo: ['Tumulo', 'prop', 'una collinetta d\'erba con la pietra d\'ingresso'],
+  cespoErica: ['Cespo d\'erica', 'pianta', 'un cespuglio fitto di erica fiorita'],
+  tronco: ['Tronco caduto', 'prop', 'un albero abbattuto, con i rami e il muschio'],
+  ceppoGrande: ['Ceppo grande', 'prop', 'un ceppo largo con gli anelli visibili'],
+  funghiGiganti: ['Funghi giganti', 'pianta', 'funghi alti come una persona, rossi a puntini'],
+  ragnatela: ['Ragnatela fra i rami', 'prop', 'una grande ragnatela tesa fra due alberi'],
+  accampamento: ['Accampamento', 'prop', 'una tenda, un falò spento e un tronco per sedersi'],
+  carro: ['Carro abbandonato', 'prop', 'un carro di legno con una ruota rotta'],
+  recinto: ['Recinto', 'prop', 'uno steccato di pali e traverse'],
+  cassaMele: ['Cassa di mele', 'prop', 'una cassa piena di mele rosse'],
+  palafitta: ['Palafitta', 'edificio', 'una capanna su pali dentro l\'acqua, con la scaletta'],
+  barca: ['Barca', 'prop', 'una barca di legno con i remi, tirata a riva'],
+  canneto: ['Canneto', 'pianta', 'un ciuffo di canne con le spighe marroni'],
+  ninfee: ['Ninfee', 'pianta', 'foglie tonde sull\'acqua con qualche fiore'],
+  palo: ['Palo nell\'acqua', 'prop', 'pali di legno piantati nell\'acqua, col muschio'],
+  fumarola: ['Fumarola', 'effetto', 'un cono di pietra nera che fuma e brilla di giallo e rosso'],
+  rocciaSpaccata: ['Roccia spaccata', 'prop', 'un masso nero spaccato in due'],
+  ossa: ['Ossa', 'prop', 'un teschio e qualche osso sparso'],
+  tridente: ['Tridente piantato', 'prop', 'un tridente di ferro piantato nella cenere'],
+  carrello: ['Carrello da miniera', 'prop', 'un carrello di legno su ruote di ferro, pieno di sassi'],
+  binari: ['Binari', 'prop', 'un tratto di binario con le traversine'],
+  travi: ['Travi di sostegno', 'prop', 'un telaio di travi che puntella un\'apertura'],
+  minerale: ['Vena di minerale', 'prop', 'un masso con i cristalli azzurri'],
+  argano: ['Argano', 'prop', 'un argano di legno con la corda e il secchio'],
+  cairn: ['Cairn', 'prop', 'sassi impilati a torre'],
+  cartello: ['Cartello stradale', 'prop', 'un palo con la freccia di legno'],
+  totem: ['Totem', 'prop', 'un palo intagliato con le facce'],
+  miliare: ['Pietra miliare', 'prop', 'una pietra a punta che segna la strada'],
+  teschio: ['Teschio su palo', 'prop', 'un teschio d\'animale sopra un palo'],
+  braciere: ['Braciere dei dungeon', 'prop', 'un braciere di ferro con la brace accesa'],
+  pozza: ['Pozza', 'prop', 'una pozza d\'acqua scura'],
+  bozzolo: ['Bozzolo di ragno', 'prop', 'un bozzolo bianco appeso, avvolto di fili'],
+  palizzata: ['Palizzata dei dungeon', 'prop', 'pali appuntiti piantati a recinto'],
+  sacchi: ['Sacchi', 'prop', 'un mucchio di sacchi'],
+  trave: ['Trave caduta', 'prop', 'una trave di legno annerita, di traverso'],
+  crepa: ['Crepa nel terreno', 'effetto', 'una spaccatura nera nel suolo'],
+  lanterna: ['Lanterna su palo', 'prop', 'un palo con la lanterna accesa'],
+}
+// quale pezzo di codice disegna il tipo (qualche nome è diverso dal tipo)
+const NOME_FUNZIONE_APERTO = { ragnatela: 'ragnatelaRami', croce: 'croce' }
+const dovePropsAperti = tipo => {
+  const habitat = Object.entries(TABELLA).filter(([, l]) => l.some(([t]) => t === tipo)).map(([h]) => NOMI_HABITAT[h])
+  const ingressi = Object.entries(SCENARI).filter(([, l]) => l.some(([t]) => t === tipo)).map(([i]) => NOMI_INGRESSO[i])
+  const parti = []
+  if (['cartello', 'totem', 'miliare'].includes(tipo)) parti.push('lungo le strade del mondo, a una decina di celle l\'uno dall\'altro')
+  if (habitat.length) parti.push('sparso in ' + habitat.join('; '))
+  if (ingressi.length) parti.push('attorno all\'ingresso di ' + ingressi.join(', '))
+  return (parti.length ? parti.join(' · ') : 'nel mondo di sopra') + ': ' + FORME_NOME[tipo][2]
+}
+function propAperto(tipo) {
+  return () => {
+    const acqua = !!FORME_APERTE[tipo].acqua
+    // l'acqua sta 0,35 sopra il fondo: le palafitte e i pali ci si piantano dentro
+    return pezzo(({ cant, m, cose }) => {
+      PROPS.set(m, [{ tipo, x: 0, z: 0, giro: 0, seme: 11, pezzo: 0 }])
+      disegnaPropsAperti(m, 0, cant, cose)
+    }, { quota: acqua ? LIVELLO_ACQUA - 0.35 : 0, rialza: acqua ? 0.35 : 0, acqua: acqua ? 2.2 : 0 })
+  }
+}
+const VOCI_APERTI = Object.keys(FORME_NOME).map(tipo => ({
+  id: 'sot:aperto:' + tipo.replace(/([A-Z])/g, c => '-' + c.toLowerCase()), nome: FORME_NOME[tipo][0], categoria: FORME_NOME[tipo][1],
+  dove: dovePropsAperti(tipo), file: MONDO + 'props-aperto.js:' + (NOME_FUNZIONE_APERTO[tipo] || tipo), crea: propAperto(tipo),
+}))
+
+/* ═══════════════════ la natura (natura.js, GEO) ═══════════════════ */
+
+// quale materiale (come in creaNatura): la pietra e il legno e la paglia hanno quelli del kit, il resto il colore nei vertici
+const NATURA = {
+  tondo: ['Albero a chioma tonda', 'pianta', 'liscio', 'Il villaggio, i campi, le rovine, il frutteto, i prati, il bosco vecchio e il lago'],
+  frutto: ['Albero da frutto', 'pianta', 'liscio', 'Il frutteto, in file: chioma tonda con le mele rosse'],
+  pino: ['Pino', 'pianta', 'liscio', 'La brughiera, il bosco vecchio, i prati, le colline di roccia, il monte e la foresta nera'],
+  abete: ['Abete', 'pianta', 'liscio', 'Il bosco vecchio, il monte e la foresta nera: tre coni sovrapposti, verde azzurro'],
+  salice: ['Salice', 'pianta', 'liscio', 'Il lago e la palude: chioma bassa con i rami che cadono'],
+  secco: ['Albero secco', 'pianta', 'liscio', 'Il cimitero, le rovine, la brughiera, la piana delle ceneri, la landa e il bosco secco: tronco nudo e rami storti'],
+  cespuglio: ['Cespuglio', 'pianta', 'liscio', 'Quasi ovunque: villaggio, cimitero, campi, rovine, frutteto, prati, boschi, lago, monte'],
+  erica: ['Erica', 'pianta', 'liscio', 'La brughiera e il colle dei corvi: macchie basse viola'],
+  canne: ['Canne', 'pianta', 'liscio', 'Il lago e la palude, a ciuffi: canne con le spighe'],
+  funghi: ['Funghi', 'pianta', 'liscio', 'Il bosco vecchio, la foresta nera e la palude: tre funghi rossi a puntini'],
+  sasso: ['Sasso', 'altro', 'roccia', 'Le rovine, la brughiera, le colline di roccia, il monte, la piana delle ceneri e i prati: un sasso piccolo'],
+  masso: ['Masso', 'altro', 'roccia', 'Le colline di roccia, il monte, la brughiera, la foresta e la piana delle ceneri: un sasso grande'],
+  rupe: ['Rupe', 'altro', 'roccia', 'Il bordo di ogni regione (in tutto il mondo) e le montagne: una roccia alta quanto una casa'],
+  brace: ['Brace', 'effetto', 'roccia', 'La piana delle ceneri: un sasso nero con il cuore arancione'],
+  ceppo: ['Ceppo', 'prop', 'legno', 'La foresta nera e il bosco secco: un ceppo basso con gli anelli'],
+  covone: ['Covone', 'prop', 'paglia', 'I campi di grano: un covone di paglia a cono'],
+  botte: ['Botte', 'prop', 'legno', 'Il frutteto: una botte col cerchio di ferro'],
+  cassa: ['Cassa', 'prop', 'legno', 'Nei dintorni delle città e dei campi: una cassa di legno'],
+  spaventapasseri: ['Spaventapasseri', 'prop', 'liscio', 'Nei campi: palo, traversa, camicia rossa e cappello'],
+  rudere: ['Rudere', 'prop', 'pietra', 'Le rovine (colle e guado): un muro basso, mezzo crollato'],
+  colonna: ['Colonna', 'prop', 'pietra', 'Le rovine e il cimitero: una colonna ritta e un rocchio caduto'],
+  lapide: ['Lapide', 'prop', 'pietra', 'Il cimitero vecchio: una lapide ad arco su un po\' d\'erba'],
+  ossa: ['Ossa', 'prop', 'liscio', 'La piana delle ceneri, la landa e il bosco secco: un teschio e due ossa'],
+  zucca: ['Zucca', 'pianta', 'liscio', 'I campi di zucche (campi, valle del mulino): una zucca arancione'],
+  vite: ['Vite', 'pianta', 'liscio', 'La vigna dei campi: un palo con la vite'],
+  fiore: ['Fiore', 'pianta', 'liscio', 'I prati e le zone fiorite (campi, villaggio, lago, frutteto): un fiorellino bianco'],
+  grano: ['Grano', 'pianta', 'grano', 'I campi di grano (campi, valle del mulino, villaggio): un ciuffo di spighe dorate'],
+  cavolo: ['Cavolo', 'pianta', 'liscio', 'I campi di cavoli e di zucche: un cavolo verde'],
+  erba: ['Ciuffo d\'erba', 'pianta', 'erba', 'Su tutte le celle d\'erba del mondo, più fitta nei prati: fili che si piegano col vento'],
+}
+const VOCI_NATURA = Object.entries(NATURA).map(([tipo, [nome, categoria, mat, dove]]) => ({
+  id: 'sot:natura:' + tipo, nome, categoria, dove, file: MONDO + 'natura.js:GEO.' + tipo,
+  crea: () => {
+    const { kit } = contesto()
+    const materiale = tipo === 'rudere' || tipo === 'colonna' || tipo === 'lapide' ? kit.mobili.pietra
+      : tipo === 'botte' || tipo === 'cassa' || tipo === 'ceppo' ? kit.mobili.legno
+      : tipo === 'covone' ? kit.mobili.paglia
+      : new MeshStandardMaterial({ vertexColors: true, roughness: mat === 'roccia' ? 0.95 : 0.85, flatShading: mat === 'roccia', side: mat === 'erba' || mat === 'grano' ? DoubleSide : 0 })
+    const me = new Mesh(GEO[tipo](), materiale)
+    me.castShadow = me.receiveShadow = true
+    const g = new Group(); g.add(me)
+    return g
+  },
+}))
+
+/* ═══════════════════ le discese (scena3d/): botti, arredo, relitti, portale, fonte ═══════════════════ */
+
+const nomiAspetti = chi => chi.map(k => ASPETTI_3D[k].nome).join(', ')
+
+// una discesa vista da un oggetto solo: quello che i creatori vogliono è «dentro il gruppo»
+const nelGruppo = f => { const g = new Group(); f(g); return g }
+
+function botteDi(rotta) {
+  return () => nelGruppo(g => {
+    const { legno, maschera } = contesto()
+    creaBotti(g, { posti: [{ fx: 0, fy: 0, giro: 0.3, scala: 1, x: 0, y: 0, stanza: 0, rotta }], legno, conMaschera: mat => mat, maschera, regola: BOTTI_PER_PAESAGGIO.cantine })
+  })
+}
+const dovePaesaggiBotti = nomiAspetti(Object.keys(BOTTI_PER_PAESAGGIO))
+
+// l'arredo: una pianta finta, una sala 8×5 col muro intorno, dove ogni tipo trova il suo posto; poi si tiene un'istanza sola
+function piantaFinta() {
+  const W = 10, H = 7, dentro = (x, y) => x >= 1 && y >= 1 && x <= 8 && y <= 5
+  const pavimento = [], muri = []
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) (dentro(x, y) ? pavimento : muri).push({ x, y, basso: false })
+  return { W, H, id: (x, y) => y * W + x, calpestabile: dentro, roccia: (x, y) => !dentro(x, y), colonna: new Uint8Array(W * H), muri, pavimento, acqua: [{ x: 4, y: 3 }] }
+}
+function arredoDi(tipo, paesaggio) {
+  return () => nelGruppo(g => {
+    const { legno, muroDi } = contesto(), pianta = piantaFinta()
+    const aspetto = { ...ASPETTI_3D[paesaggio], arredo: [[tipo, 1]] }
+    const liv = { stanze: tipo === 'carrelli' ? [{ suolo: pianta.pavimento }] : [] }
+    creaArredo3d(g, { pianta, liv, aspetto, seme: 3, trame: { muro: muroDi(aspetto) }, legno, conMaschera: mat => mat, maschera: null })
+    // l'arredo è istanziato: ne resta uno solo, sull'origine
+    for (const im of g.children) if (im.isInstancedMesh) {
+      im.count = 1; im.setMatrixAt(0, new Matrix4()); im.instanceMatrix.needsUpdate = true; im.frustumCulled = false
+    }
+  })
+}
+// nome, categoria, cos'è (il dove si ricava da ASPETTI_3D)
+const ARREDO = {
+  contrafforti: ['Contrafforte', 'prop', 'un pilastro addossato al muro, con la base e il capitello'],
+  sacchi: ['Sacchi', 'prop', 'tre sacchi di farina legati'],
+  mensole: ['Mensole coi vasi', 'prop', 'due ripiani di legno a muro con boccette di terracotta'],
+  pilastri: ['Pilastro a muro', 'prop', 'una lesena di pietra, alta fino al soffitto'],
+  nicchie: ['Nicchia col sarcofago', 'prop', 'una nicchia nel muro con il sarcofago e il suo coperchio'],
+  ossa: ['Ossa e teschio', 'prop', 'ossa sparse e un teschio'],
+  candele: ['Candele', 'prop', 'tre candele di cera con la fiamma, fanno luce'],
+  tubi: ['Tubi di rame', 'prop', 'tubi di rame che corrono lungo il muro, con la valvola'],
+  bocche: ['Bocca della fornace', 'prop', 'una bocca di ferro nel muro con il fuoco dietro la griglia, fa luce'],
+  incudini: ['Incudine', 'prop', 'un ceppo con incudine e martello'],
+  spuntoni: ['Spuntoni neri', 'prop', 'cinque spine di roccia nera con la brace dentro'],
+  stalagmiti: ['Stalagmiti', 'altro', 'tre punte di roccia che salgono dal pavimento'],
+  funghi: ['Funghi luminosi', 'pianta', 'tre funghi che brillano, fanno luce'],
+  sassi: ['Sassolini', 'altro', 'quattro sassi piccoli sul pavimento'],
+  abeti: ['Abete con la neve', 'pianta', 'un abetino a tre strati con la neve sui rami'],
+  cumuli: ['Cumulo di neve', 'altro', 'un mucchio di neve a cupola'],
+  ghiaccioli: ['Ghiaccioli', 'altro', 'sei ghiaccioli appesi al soffitto contro il muro'],
+  cristalli: ['Cristalli di ghiaccio', 'altro', 'un gruppo di cristalli azzurri che brillano'],
+  canne: ['Canne di palude', 'pianta', 'un ciuffo di canne con le spighe'],
+  radici: ['Radici che pendono', 'pianta', 'radici che scendono dal soffitto lungo il muro'],
+  ninfee: ['Ninfee', 'pianta', 'tre foglie tonde sull\'acqua e un bocciolo'],
+  archi: ['Arco sommerso', 'prop', 'un arco di pietra con il fondo scuro e l\'acqua dentro'],
+  alghe: ['Alghe', 'pianta', 'nastri d\'alga verde che ondeggiano'],
+  rocchi: ['Rocchi di colonna', 'prop', 'due rocchi di colonna caduti'],
+  travi: ['Telaio di travi', 'prop', 'due montanti e una trave, con la lanterna appesa'],
+  binari: ['Binario', 'prop', 'un tratto di rotaia con le traversine, nei corridoi'],
+  carrelli: ['Carrello da miniera', 'prop', 'un carrello con le ruote di ferro e due sassi dentro'],
+}
+// il paesaggio con cui si mostra: il primo che lo usa
+const PAESAGGIO_ARREDO = tipo => Object.keys(ASPETTI_3D).find(k => (ASPETTI_3D[k].arredo || []).some(([t]) => t === tipo))
+const VOCI_ARREDO = Object.entries(ARREDO).map(([tipo, [nome, categoria, cosa]]) => ({
+  id: 'sot:arredo:' + tipo, nome, categoria, file: SCENA + 'arredo3d.js:creaArredo3d', crea: arredoDi(tipo, PAESAGGIO_ARREDO(tipo)),
+  dove: 'Nelle discese (' + nomiAspetti(Object.keys(ASPETTI_3D).filter(k => (ASPETTI_3D[k].arredo || []).some(([t]) => t === tipo))) + '): ' + cosa,
+}))
+
+// i relitti in codice: la forma, il paesaggio in cui compare, e quanto è lungo (in celle)
+const RELITTI = {
+  macerie: ['Macerie', 1, 'cantine', 'un mucchio di sassi caduti'],
+  crollo: ['Crollo', 2, 'cantine', 'un grande crollo di pietre, lungo due celle'],
+  roccia: ['Roccia', 1, 'cantine', 'un masso grosso, rimasto lì da sempre'],
+  trave: ['Trave marcia', 2, 'cantine', 'una trave di legno crollata di traverso'],
+  stalagmite: ['Stalagmite', 1, 'cripta', 'una stalagmite con la sua piccola'],
+  carro: ['Carro rotto', 2, 'fornace', 'un carro di legno con le ruote di ferro'],
+  binari: ['Binari', 2, 'fornace', 'un tratto di rotaia con le traversine'],
+}
+const VOCI_RELITTI = Object.entries(RELITTI).map(([disegno, [nome, lungo, scenario, cosa]]) => {
+  const dove = Object.entries(ASPETTI_RELITTI).filter(([, fam]) => Object.values(fam).some(cl => Object.values(cl).some(l => l.some(a => a.disegno === disegno)))).map(([s]) => s)
+  return {
+    id: 'sot:relitti:' + disegno, nome, categoria: 'prop', file: SCENA + 'relitti.js:creaRelitti',
+    dove: 'Nelle discese, in mezzo alle stanze (' + dove.join(', ') + '): ' + cosa,
+    crea: () => nelGruppo(g => { creaRelitti(g, [{ disegno, x: -lungo / 2, y: -0.5, w: lungo, h: 1 }], scenario, contesto().maschera) }),
+  }
+})
+
+const VOCI_DISCESE = [
+  { id: 'sot:discese:botte', nome: 'Botte da rompere', categoria: 'prop', file: SCENA + 'botti.js:creaBotti', crea: botteDi(false),
+    dove: 'Nelle stanze delle discese (' + dovePaesaggiBotti + '): una botte di doghe coi cerchi di ferro, si rompe a colpi e lascia un premio' },
+  { id: 'sot:discese:botte-rotta', nome: 'Botte rotta', categoria: 'prop', file: SCENA + 'botti.js:creaBotti', crea: botteDi(true),
+    dove: 'Le stesse stanze, dopo il colpo: le doghe e i cerchi sparsi per terra, fermi' },
+  ...VOCI_ARREDO,
+  ...VOCI_RELITTI,
+  { id: 'sot:discese:portale', nome: 'Portale delle discese', categoria: 'edificio', file: SCENA + 'portale.js:creaPortale',
+    crea: () => nelGruppo(g => {
+      const { muroDi } = contesto()
+      const p = creaPortale(g, { cella: { x: -0.5, y: -0.5 }, trama: muroDi(ASPETTI_3D.cantine) })
+      g.userData.anima = t => p.aggiorna(0.016, t, 400, 1)
+    }),
+    dove: 'In ogni discesa, quando si è finito il piano e si può uscire: due pilastri con le rune, l\'architrave, il velo viola che gira e il cerchio di rune per terra' },
+  { id: 'sot:discese:fonte', nome: 'Fonte che cura', categoria: 'edificio', file: SCENA + 'fontana.js:creaFontana',
+    crea: () => nelGruppo(g => {
+      const { muroDi } = contesto(), aspetto = ASPETTI_3D.cantine
+      // la riserva delle luci che l'acqua somma a mano (luci.js): vuota, la fonte non ne ha bisogno per vedersi
+      const condivise = {
+        uLp: { value: Array.from({ length: MAX_LUCI }, () => new Vector3()) }, uLc: { value: Array.from({ length: MAX_LUCI }, () => new Vector3()) },
+        uLn: { value: 0 }, uConoP: { value: new Vector3() }, uConoD: { value: new Vector3(0, 0, -1) }, uConoC: { value: new Vector3() },
+      }
+      const f = creaFontana(g, { cella: { x: -0.5, y: -0.5 }, condivise, trama: muroDi(aspetto), conMaschera: mat => mat, maschera: contesto().maschera, aspetto })
+      g.userData.anima = t => f.aggiorna(0.016, t, 400, 1)
+    }),
+    dove: 'In alcuni piani delle discese: vasca di pietra con la coppa, il velo d\'acqua che cade e le gocce; bevuta, cura e si svuota (nell\'inferno è una coppa di lava)' },
+]
+
+/* ═══════════════════ l'elenco ═══════════════════ */
+
+const comune = v => ({ gioco: 'sotterraneo', ...v })
+export const VOCI = [...VOCI_KIT, ...VOCI_MONUMENTI, ...VOCI_CITTA, ...VOCI_APERTI, ...VOCI_NATURA, ...VOCI_DISCESE].map(comune)
+
+// quello che serve al test: le tabelle da confrontare con quelle del gioco
+export const TABELLE = { OGGETTI_CITTA, FORME_NOME, NATURA, ARREDO, RELITTI, INGRESSI, NOMI_HABITAT, NOMI_INGRESSO }

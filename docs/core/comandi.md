@@ -77,6 +77,7 @@ scrivono niente: stanno in [sprite.md](sprite.md).
 |---|---|
 | `npm run mondo` | il banco degli sprite ([sprite.md](sprite.md)) |
 | `npm run sprite:inutilizzati` (`-- --pixel --provino`, `--gioco=fattoria`, `--json`) | il rapporto delle immagini generate che nessun gioco usa: file di `sorgenti/` che nessuno legge, voci dell'atlante che nessun file di `src/` nomina, figure di `roba.json` mai ritagliate, creature senza gioco; con `--pixel` anche le macchie dei fogli che nessun ritaglio copre (Python + pillow), con `--provino` i fogli da guardare in `tmp/inutilizzati/`. Non scrive niente di versionato ([sprite.md](sprite.md#gli-inutilizzati)) |
+| `strumenti/banco/catalogo-3d/sotterraneo.js` | le voci del catalogo 3D (`VOCI`: id, nome, gioco, categoria, dove, file, `crea()` sincrono che torna un Object3D sull'origine, `userData.anima(t)` se si muove): ogni modello in codice del Sotterraneo 3D; un test (`unita/catalogo-3d-sotterraneo`) controlla che nessun modello nuovo del gioco resti fuori. Si guardano tutte, disegnate davvero in WebGL, da `strumenti/banco/catalogo-3d-prova.html` (`?solo=kit`; l'esito in `window.__prova`; `node strumenti/scatta-app.mjs --pagina strumenti/banco/catalogo-3d-prova.html --aspetta 25000 --stampa 'JSON.stringify(window.__prova)'`) |
 | `npm run vetrina` | i personaggi a poligoni del Generale |
 | `npm run storie` | le scene di «Prima e dopo» |
 | `npm run ambienti` | i paesaggi delle domande sugli animali |
