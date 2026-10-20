@@ -595,7 +595,7 @@ export function creaPollaio (stati) {
 
 // la mucca: bianca a chiazze marroni (un po' diversa per posto), la testa che rumina. Le chiazze sono colori per faccia sul
 // corpo stesso (niente mesh sovrapposte: non sporgono); le zampe entrano nella pancia e finiscono in uno zoccolo scuro.
-const G_ZAMPA_M = new THREE.CylinderGeometry(0.055, 0.046, 0.46, 5), G_ZOCCOLO = new THREE.CylinderGeometry(0.05, 0.054, 0.08, 5)
+const G_ZAMPA_M = new THREE.CylinderGeometry(0.055, 0.046, 0.34, 5), G_ZOCCOLO = new THREE.CylinderGeometry(0.05, 0.054, 0.08, 5)
 const G_MUCCA = new THREE.SphereGeometry(0.3, 9, 7), G_CORNO = new THREE.ConeGeometry(0.03, 0.12, 4)
 const SCALA_CORPO = [0.8, 0.78, 1.45]
 // chiazze: centro (nel corpo, in metri dal centro) e raggio; due disegni, uno per parità del posto
@@ -623,15 +623,15 @@ function mantoDelCorpo (k) {
 export function creaMucca (k = 0) {
   const g = new THREE.Group()
   const bianco = mat(0xf7f3ea), rosa = mat(0xf0b0a8), scuro = mat(0x2a2018)
-  const corpo = parte(g, mantoDelCorpo(k), mat(0xffffff, { vertexColors: true }), 0, 0.55, 0); corpo.scale.set(...SCALA_CORPO)
+  const corpo = parte(g, mantoDelCorpo(k), mat(0xffffff, { vertexColors: true }), 0, 0.42, 0); corpo.scale.set(...SCALA_CORPO)
   for (const [x, z] of [[0.12, 0.25], [-0.12, 0.25], [0.12, -0.25], [-0.12, -0.25]]) {
-    parte(g, G_ZAMPA_M, bianco, x, 0.29, z); parte(g, G_ZOCCOLO, scuro, x, 0.04, z)
+    parte(g, G_ZAMPA_M, bianco, x, 0.23, z); parte(g, G_ZOCCOLO, scuro, x, 0.04, z)
   }
-  parte(g, G_UOVO, rosa, 0, 0.3, -0.2).scale.set(2, 1.2, 2)                              // la mammella
-  const coda = new THREE.Group(); coda.position.set(0, 0.72, -0.27); coda.rotation.x = 0.35; g.add(coda)   // nasce dal dorso e pende dietro
+  parte(g, G_UOVO, rosa, 0, 0.17, -0.2).scale.set(2, 1.2, 2)                              // la mammella
+  const coda = new THREE.Group(); coda.position.set(0, 0.59, -0.27); coda.rotation.x = 0.35; g.add(coda)   // nasce dal dorso e pende dietro
   cilindro(coda, 0.015, 0.015, 0.4, bianco, 0, -0.2, 0, 4); parte(coda, G_TESTA, scuro, 0, -0.42, 0).scale.setScalar(0.6)
-  parte(g, G_MUCCA, bianco, 0, 0.68, 0.38).scale.set(0.45, 0.4, 0.55)                    // il collo: lega la testa al corpo
-  const testa = new THREE.Group(); testa.position.set(0, 0.78, 0.5); g.add(testa)
+  parte(g, G_MUCCA, bianco, 0, 0.55, 0.38).scale.set(0.45, 0.4, 0.55)                    // il collo: lega la testa al corpo
+  const testa = new THREE.Group(); testa.position.set(0, 0.65, 0.5); g.add(testa)
   const t = parte(testa, G_MUCCA, bianco, 0, 0, 0.12); t.scale.set(0.5, 0.5, 0.62)
   parte(testa, G_MUCCA, rosa, 0, -0.07, 0.3).scale.set(0.34, 0.26, 0.28)
   for (const s of [-1, 1]) { const c = parte(testa, G_CORNO, mat(0xe8e0c8), s * 0.13, 0.17, 0.05); c.rotation.z = -s * 0.5; parte(testa, G_TESTA, bianco, s * 0.18, 0.08, 0.02).scale.set(1.1, 0.5, 0.6) }
@@ -715,9 +715,9 @@ export function muoviBestie (g, dt, t, stati, adesso) {
       u.fase += dt
       const ruminando = st.fine !== null && !pronta
       u.testa.rotation.x = fame ? 0.55 + Math.sin(t * 0.9 + n) * 0.08 : 0.08 + Math.sin(t * (ruminando ? 1.3 : 0.7) + n) * 0.07
-      u.testa.position.y = 0.78 + Math.sin(t * 2.6 + n) * (ruminando ? 0.012 : 0.004)       // la mascella
+      u.testa.position.y = 0.65 + Math.sin(t * 2.6 + n) * (ruminando ? 0.012 : 0.004)       // la mascella
       u.coda.rotation.z = Math.sin(t * 1.1 + n * 2) * 0.35
-      u.corpo.position.y = 0.55 + Math.sin(t * 0.8 + n) * 0.006
+      u.corpo.position.y = 0.42 + Math.sin(t * 0.8 + n) * 0.006
     }
   })
 }
