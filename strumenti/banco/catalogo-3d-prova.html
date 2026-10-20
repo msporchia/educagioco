@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prova delle voci del catalogo 3D</title>
+<style>
+  :root { --fondo: #14161b; --carta: #1b1e25; --riga: #2c313a; --testo: #e2e5e0; --tenue: #98a09c; --male: #ff8a7a; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 18px; background: var(--fondo); color: var(--testo); font: 13px/1.4 system-ui, sans-serif; }
+  h1 { font-size: 17px; margin: 0 0 4px; }
+  p { margin: 0 0 14px; color: var(--tenue); max-width: 80ch; }
+  #esito { margin: 0 0 14px; font-weight: 600; }
+  #esito.male { color: var(--male); }
+  #griglia { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; }
+  figure { margin: 0; background: var(--carta); border: 1px solid var(--riga); border-radius: 4px; padding: 6px; }
+  figure.male { border-color: var(--male); }
+  canvas { width: 100%; height: auto; display: block; background: #2a3038; border-radius: 3px; }
+  figcaption { font-size: 11px; color: var(--tenue); margin-top: 4px; word-break: break-all; }
+</style>
+</head>
+<body>
+<h1>Prova delle voci del catalogo 3D</h1>
+<p>Costruisce ogni voce di <code>catalogo-3d/sotterraneo.js</code> e la disegna davvero in WebGL, con le trame vere del gioco: dove un modello non si costruisce, o uno shader non compila, o il riquadro resta vuoto, lo dice. <code>?solo=kit</code> tiene le voci il cui id contiene quel testo; <code>?t=2</code> è il tempo dell'animazione. Il risultato sta in <code>window.__prova</code>.</p>
+<div id="esito">in corso…</div>
+<div id="griglia"></div>
+<script type="module">
+import { WebGLRenderer, Scene, PerspectiveCamera, HemisphereLight, DirectionalLight, Box3, Vector3, Color } from 'three'
+import { VOCI } from './catalogo-3d/sotterraneo.js'
+
+const url = new URLSearchParams(location.search)
+const solo = url.get('solo') || '', tempo = Number(url.get('t') || 2)
+const LATO = 240
+const errori = []
+const vecchio = console.error
+console.error = (...a) => { errori.push(a.map(String).join(' ').slice(0, 300)); vecchio.apply(console, a) }
+
+const renderer = new WebGLRenderer({ antialias: true, preserveDrawingBuffer: true })
+renderer.setSize(LATO, LATO, false); renderer.setPixelRatio(1)
+const scena = new Scene(); scena.background = new Color(0x2a3038)
+scena.add(new HemisphereLight(0xcfe4ff, 0x6a5a3a, 1.6))
+const sole = new DirectionalLight(0xfff1dc, 2.4); sole.position.set(4, 8, 6); scena.add(sole)
+const cam = new PerspectiveCamera(34, 1, 0.05, 200)
+
+const griglia = document.getElementById('griglia')
+const risultato = { totale: 0, buoni: 0, vuoti: [], rotti: [], errori }
+window.__prova = risultato
+
+const voci = VOCI.filter(v => v.id.includes(solo))
+for (const v of voci) {
+  risultato.totale++
+  const fig = document.createElement('figure'), tela = document.createElement('canvas'), did = document.createElement('figcaption')
+  tela.width = tela.height = LATO; did.textContent = v.id
+  fig.append(tela, did); griglia.append(fig)
+  const prima = errori.length
+  try {
+    const o = v.crea()
+    if (o.userData.anima) o.userData.anima(tempo)
+    scena.add(o)
+    const scatola = new Box3().setFromObject(o), c = scatola.getCenter(new Vector3()), d = scatola.getSize(new Vector3())
+    const r = Math.max(d.x, d.y, d.z, 0.5) * 0.9 / Math.tan(17 * Math.PI / 180)
+    cam.position.set(c.x + r * 0.55, c.y + r * 0.5 + d.y * 0.2, c.z + r * 0.8); cam.lookAt(c)
+    renderer.render(scena, cam)
+    const cx = tela.getContext('2d'); cx.drawImage(renderer.domElement, 0, 0, LATO, LATO)
+    // vuoto = nessun pixel diverso dal fondo
+    const px = cx.getImageData(0, 0, LATO, LATO).data
+    let diversi = 0
+    for (let i = 0; i < px.length; i += 4) if (Math.abs(px[i] - 0x2a) + Math.abs(px[i + 1] - 0x30) + Math.abs(px[i + 2] - 0x38) > 12) diversi++
+    scena.remove(o)
+    if (diversi < 60) { risultato.vuoti.push(v.id); fig.classList.add('male') } else risultato.buoni++
+  } catch (e) {
+    risultato.rotti.push(v.id + ': ' + e.message); fig.classList.add('male')
+  }
+  if (errori.length > prima) { fig.classList.add('male'); risultato.rotti.push(v.id + ': console.error ' + errori[errori.length - 1]) }
+  await new Promise(r => setTimeout(r, 0))
+}
+const bene = !risultato.vuoti.length && !risultato.rotti.length
+const esito = document.getElementById('esito')
+esito.textContent = `${risultato.buoni} su ${risultato.totale} voci disegnate` + (bene ? '' : ` — vuote: ${risultato.vuoti.join(', ') || 'nessuna'}; rotte: ${risultato.rotti.length}`)
+esito.classList.toggle('male', !bene)
+risultato.finito = true
+</script>
+</body>
+</html>
