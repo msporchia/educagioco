@@ -18,9 +18,18 @@ export function trameDellaNebbia(nebbia) {
   for (let k = 0; k < N; k++) { visto[k] = nebbia[k] ? 255 : 0; quando[k] = nebbia[k] ? -100 : MAI }
   return { visto, quando }
 }
-// le celle appena scoperte entrano nelle due trame, col tempo della scoperta (puro)
+// le celle appena scoperte entrano nelle due trame, col tempo della scoperta (puro). Una cella già aperta dal velo della strada
+// tiene il suo tempo: quello che c'è sopra è già salito
 export function segnaScoperte(nuove, W, { visto, quando }, tempo) {
-  for (const c of nuove) { const k = c.y * W + c.x; visto[k] = 255; quando[k] = tempo }
+  for (const c of nuove) { const k = c.y * W + c.x; if (!visto[k]) quando[k] = tempo; visto[k] = 255 }
+}
+// Il velo della strada verso la meta (docs/sotterraneo/mondo-3d-la-meta.md): le celle `celle` (indici) si disegnano come viste,
+// senza entrare nel bit che si salva; quelle del velo di prima che nessuno ha visto davvero tornano nuvola (puro)
+export function apriIlVelo(prima, celle, nebbia, { visto, quando }, tempo) {
+  const ora = new Set(celle)
+  for (const k of prima) if (!ora.has(k) && !nebbia[k]) { visto[k] = 0; quando[k] = MAI }
+  for (const k of ora) if (!visto[k]) { visto[k] = 255; quando[k] = tempo }
+  return ora
 }
 export { MAI }
 
@@ -74,6 +83,7 @@ export function creaNebbia(m, scena, nebbia) {
   velo.frustumCulled = false; velo.renderOrder = 7
   scena.add(velo)
 
+  let aperte = new Set()   // le celle del velo della strada (apriIlVelo)
   return {
     velo,
     visto: (x, z) => { const cx = Math.floor(x), cz = Math.floor(z); return cx >= 0 && cz >= 0 && cx < W && cz < H && nebbia[cz * W + cx] === 1 },
@@ -86,6 +96,11 @@ export function creaNebbia(m, scena, nebbia) {
       segnaScoperte(nuove, W, dati, tempo)
       tVisto.needsUpdate = true; tQuando.needsUpdate = true
       return nuove
+    },
+    // la strada verso la meta: si apre il suo velo (e si chiude quello di prima)
+    strada(celle, tempo) {
+      aperte = apriIlVelo(aperte, celle, nebbia, dati, tempo)
+      tVisto.needsUpdate = true; tQuando.needsUpdate = true
     },
     via() { scena.remove(velo); geo.dispose(); mat.dispose(); velo.dispose(); tVisto.dispose(); tQuando.dispose() },
   }
