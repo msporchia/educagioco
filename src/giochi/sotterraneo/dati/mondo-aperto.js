@@ -1,138 +1,11 @@
-// La scheda del mondo aperto (docs/sotterraneo/mondo-aperto-generatore.md): il seme, le misure, le venticinque regioni con il
-// loro anello e la loro fascia, i passaggi fra le regioni (ponti e valichi, con la grata che li chiude per la storia o per
-// l'età), le tre città coi loro mercanti, gli ingressi dei sette dungeon e dell'abisso coi nomi nuovi, chi sta fermo vicino
-// a quale ingresso. Il generatore che ne fa la mappa è motore/mondo-aperto.js. Dato puro: nessun import da Vue, three o DOM.
-// Il nome non è `dati/mondo.js`: quello tiene già le misure del sotterraneo di sempre.
+// La scheda del mondo di sopra del Sotterraneo 3D (docs/sotterraneo/mondo-aperto-generatore.md): il mondo a percorso, da cui
+// motore/mondo-percorso.js fa la mappa. Le parti di sempre (le botteghe, chi sta fermo, gli habitat, i lotti, le domande di un
+// livello) e, sotto, la serpentina: le misure e il seme, il tracciato, i luoghi, le zone, i quattordici ingressi, il villaggio, le
+// terre. Il mondo ad anelli che c'era prima è stato tolto il 20 ottobre 2026 (docs/sotterraneo/mondo-a-percorso.md). Dato puro:
+// nessun import da Vue, three o DOM. Il nome non è `dati/mondo.js`: quello tiene già le misure del sotterraneo di sempre.
 import { CAMPAGNA } from './campagna.js'
 import { LIVELLI_ATTESI } from './storia.js'
 
-// la mappa non cambia mai: il seme si sceglie guardando le piante (`npm run pianta -- --mondo --semi 1-16`). `firma` è quella
-// del mondo di oggi: chi cambia il generatore o la scheda la vede cambiare (unita/sotterraneo-mondo), e sa che il mondo dei
-// bambini (e la nebbia salvata) cambia con lei. La nuova la stampa `npm run pianta -- --mondo`
-export const MONDO_APERTO = { seme: 19, largo: 160, alto: 140, griglia: [5, 5], firma: '02904a7d' }
-
-// quanto è larga la fascia di livelli di una regione: `livello` è l'inizio, la fine `livello + LARGA_REGIONE - 1`. Tre, così
-// l'anello 1 sta in 1–6 e l'anello 2 in 6–13 come vuole il progetto (docs/sotterraneo/mondo-aperto-progetto.md)
-export const LARGA_REGIONE = 3
-export const FASCE_DEGLI_ANELLI = { 0: null, 1: [1, 6], 2: [6, 13] }
-
-// i dungeon nel mondo: la chiave della storia (non cambia mai: è l'indice della campagna, delle missioni, delle soste), il nome
-// nuovo, la regione dove sta, il monumento che lo segna di sopra e quanto è grande il suo lotto (w×h celle). `appoggio`: il
-// lato di dietro si appoggia alla roccia (la grotta, la miniera) o all'acqua (la scala nel lago). L'abisso ha indice −1
-export const DUNGEON = [
-  { chiave: 'altare', indice: 0, nome: 'La cripta dei re', regione: 'cimitero', monumento: 'altare', w: 3, h: 2 },
-  { chiave: 'cantine', indice: 1, nome: 'Le cantine dei goblin', regione: 'colle', monumento: 'arco', w: 3, h: 2 },
-  { chiave: 'torre', indice: 2, nome: 'La torre bruciata', regione: 'brughiera', monumento: 'torre', w: 3, h: 3 },
-  { chiave: 'gallerie', indice: 3, nome: 'La tana dei ragni', regione: 'bosco', monumento: 'grotta', w: 4, h: 2, appoggio: 'roccia' },
-  { chiave: 'cisterna', indice: 4, nome: 'Le sale allagate', regione: 'palude', monumento: 'stagno', w: 3, h: 2, appoggio: 'acqua' },
-  { chiave: 'labirinto', indice: 5, nome: 'La porta dell\'inferno', regione: 'ceneri', monumento: 'botola', w: 2, h: 2 },
-  { chiave: 'fondo', indice: 6, nome: 'Le miniere di brace', regione: 'monte', monumento: 'miniera', w: 4, h: 2, appoggio: 'roccia' },
-  { chiave: 'abisso', indice: -1, nome: 'Il pozzo senza fondo', regione: 'landa', monumento: 'pozzo', w: 2, h: 2 },
-]
-
-// le marche dell'anello 2, quattro regioni ciascuna in giro come le pale di un mulino (ognuna prende l'angolo da cui parte).
-// `apre`: quante discese finite servono perché i suoi passaggi alzino la grata. L'est è l'abisso: si apre a storia finita
-export const MARCHE = {
-  nord: { nome: 'La marca del nord', apre: 6 },
-  est: { nome: 'La marca dell\'est', apre: 7 },
-  sud: { nome: 'La marca del sud', apre: 4 },
-  ovest: { nome: 'La marca dell\'ovest', apre: 4 },
-}
-
-// Le regioni. `colonna` e `riga` nella griglia 5×5 (la riga 0 in cima, a nord); l'anello è la distanza a scacchiera dal
-// centro. `livello`: l'inizio della fascia dei mostri di sopra (quella di un dungeon è il suo livello atteso meno uno, le altre
-// stanno fra le vicine: lo controlla il test). `habitat`: il decoro e la quota (HABITAT, sotto). `antri`: quanti ingressi
-// piccoli ha. `abitanti` e `caporale`: chi ci vive, per le sei regioni che vengono dalle terre selvagge; le altre li aspettano
-// (il foglio di creature d'aperta campagna, docs/sotterraneo/da-fare.md)
-const r = (chiave, nome, colonna, riga, habitat, livello, extra = {}) => ({ chiave, nome, colonna, riga, habitat, livello, antri: 2, ...extra })
-export const REGIONI_DEL_MONDO = [
-  r('villaggio', 'Il villaggio', 2, 2, 'villaggio', 0, { antri: 0 }),
-  // l'anello 1: le otto terre vicine
-  r('cimitero', 'Il cimitero vecchio', 1, 1, 'cimitero', 1, { antri: 1 }),
-  r('campi', 'I campi', 2, 1, 'campi', 1, { antri: 1 }),
-  r('colle', 'Il colle delle rovine', 3, 1, 'rovine', 1),
-  r('brughiera', 'La brughiera', 3, 2, 'brughiera', 2),
-  r('frutteto', 'Il frutteto', 3, 3, 'frutteto', 2, { antri: 1 }),
-  r('mulino', 'La valle del mulino', 2, 3, 'prato', 3, { antri: 1 }),
-  r('bosco', 'Il bosco vecchio', 1, 3, 'bosco', 4),
-  r('lago', 'Il lago', 1, 2, 'lago', 2),
-  // l'anello 2: le sedici delle marche, ognuna in fila dall'ingresso verso l'angolo dopo. Il nord, dal rifugio verso ovest: il
-  // monte all'angolo, perché le miniere (la settima) stiano oltre la porta dell'inferno (la sesta)
-  r('passo', 'Il passo', 3, 0, 'monte', 9, { marca: 'nord', antri: 1 }),
-  r('gola', 'La gola dei venti', 2, 0, 'roccia', 9, { marca: 'nord', abitanti: ['grifone', 'pipistrello', 'vespa'], caporale: 'drago' }),
-  r('vetta', 'La vetta dei troll', 1, 0, 'monte', 10, { marca: 'nord', abitanti: ['troll-clava', 'orco', 'golem'], caporale: 'golem-lava', antri: 3 }),
-  r('monte', 'Il monte', 0, 0, 'monte', 9, { marca: 'nord' }),
-  // l'est, dal valico del passo verso sud: l'abisso è il posto più lontano
-  r('corvi', 'Il colle dei corvi', 4, 0, 'brughiera', 10, { marca: 'est' }),
-  r('foresta', 'La foresta nera', 4, 1, 'foresta', 10, { marca: 'est' }),
-  r('ossa', 'La valle delle ossa', 4, 2, 'ceneri', 11, { marca: 'est' }),
-  r('landa', 'La landa vecchia', 4, 3, 'landa', 11, { marca: 'est', antri: 3 }),
-  // il sud, dal forte verso est
-  r('guado', 'Il guado', 1, 4, 'prato', 6, { marca: 'sud', antri: 1 }),
-  r('palude', 'La palude', 2, 4, 'palude', 6, { marca: 'sud' }),
-  r('accampamento', 'Il prato dell\'accampamento', 3, 4, 'prato', 7, { marca: 'sud', abitanti: ['goblin', 'lupo', 'cinghiale'], caporale: 'orco' }),
-  r('secco', 'Il bosco secco', 4, 4, 'secco', 8, { marca: 'sud', abitanti: ['ragno', 'vespa', 'pianta'], caporale: 'ent', antri: 3 }),
-  // l'ovest, dal forte verso nord
-  r('ceneri', 'La piana delle ceneri', 0, 4, 'ceneri', 7, { marca: 'ovest' }),
-  r('rovine', 'Le rovine del guado', 0, 3, 'rovine', 7, { marca: 'ovest', abitanti: ['scheletro', 'zombie', 'fantasma'], caporale: 'scheletro-scudo' }),
-  r('colline', 'Le colline di roccia', 0, 2, 'roccia', 8, { marca: 'ovest', abitanti: ['scorpione', 'serpente', 'golem-pietra'], caporale: 'golem-muschio' }),
-  r('lupi', 'Il bosco dei lupi', 0, 1, 'foresta', 9, { marca: 'ovest', antri: 3 }),
-]
-
-// I passaggi fra le regioni: dove un confine (sempre un fiume o una cresta di roccia) si passa. `tipo`: `ponte` (il confine è
-// un fiume, `modello` dice quale ponte: arco di pietra, travi, passerella di corde) o `valico` (una cresta aperta). Gli altri
-// confini non si passano. `nome` per i passaggi che la storia nomina. Quando si aprono e per chi, lo dice `regolaDi` più sotto:
-// dai passaggi dipende tutto il resto (lo prova il test: ogni regione si raggiunge dalla piazza solo attraversandoli)
-const p = (da, a, tipo, modello = null, extra = {}) => ({ da, a, tipo, modello, ...extra })
-export const PASSAGGI = [
-  // il villaggio sta in un'isola, con un ponte d'arco a nord e uno a sud. Le discese sono in fila per passi (la prima la più
-  // vicina), e le quattro dell'anello 1 stanno a nord-ovest, nord-est, est e sud-ovest: con un ponte a est la torre (la terza)
-  // starebbe più vicina delle cantine, con uno a ovest il bosco (la quarta) più vicino della torre
-  p('villaggio', 'campi', 'ponte', 'arco'), p('villaggio', 'mulino', 'ponte', 'arco'),
-  // l'anello 1 in giro, da una terra vicina all'altra, tranne fra il mulino e il bosco (un fiume senza ponte): al bosco si
-  // arriva dal lago, cioè dal cimitero, il giro lungo
-  p('cimitero', 'campi', 'ponte', 'travi'), p('campi', 'colle', 'ponte', 'travi'),
-  p('colle', 'brughiera', 'valico'), p('brughiera', 'frutteto', 'valico'),
-  p('frutteto', 'mulino', 'ponte', 'travi'),
-  p('bosco', 'lago', 'valico'), p('lago', 'cimitero', 'valico'),
-  // dall'anello 1 alle marche, in due punti soli e con la grata: il ponte del guado porta al forte (che serve il sud e l'ovest),
-  // il valico del nord al rifugio (il nord, e oltre il suo valico l'est)
-  p('bosco', 'guado', 'ponte', 'arco', { nome: 'Il ponte del guado' }),
-  p('colle', 'passo', 'valico', null, { nome: 'Il valico del nord' }),
-  // dentro le marche
-  p('passo', 'gola', 'ponte', 'passerella'), p('gola', 'vetta', 'ponte', 'passerella'), p('vetta', 'monte', 'ponte', 'passerella'),
-  p('corvi', 'foresta', 'valico'), p('foresta', 'ossa', 'valico'), p('ossa', 'landa', 'valico'),
-  p('guado', 'palude', 'ponte', 'passerella'), p('palude', 'accampamento', 'ponte', 'passerella'), p('accampamento', 'secco', 'ponte', 'passerella'),
-  p('ceneri', 'rovine', 'valico'), p('rovine', 'colline', 'valico'), p('colline', 'lupi', 'valico'),
-  // fra una marca e l'altra, agli angoli
-  p('passo', 'corvi', 'valico', null, { nome: 'Il valico del passo' }),
-  p('guado', 'ceneri', 'ponte', 'travi'),
-  p('lupi', 'monte', 'valico'), p('landa', 'secco', 'valico'),
-]
-
-// Quando un passaggio è aperto: la grata si alza quando le discese finite arrivano a `apre`. Un passaggio dentro un anello o dentro una marca segue la regione più
-// chiusa delle due; uno verso una marca segue la marca. L'anello 1 si apre con la prima discesa (la cripta)
-export const regolaDellaRegione = R => {
-  return { apre: R.marca ? MARCHE[R.marca].apre : 0 }
-}
-// un passaggio ha la grata solo dove le due regioni hanno regole diverse: all'ingresso di una marca o di un anello, e fra due marche
-export function haGrata(passaggio, regioni = REGIONI_DEL_MONDO) {
-  const di = k => regioni.find(x => x.chiave === k)
-  const a = regolaDellaRegione(di(passaggio.da)), b = regolaDellaRegione(di(passaggio.a))
-  const A = di(passaggio.da), B = di(passaggio.a)
-  return a.apre !== b.apre || A.marca !== B.marca || anelloDi(A) !== anelloDi(B)
-}
-export function regolaDi(passaggio, regioni = REGIONI_DEL_MONDO) {
-  const di = k => regioni.find(x => x.chiave === k)
-  const a = regolaDellaRegione(di(passaggio.da)), b = regolaDellaRegione(di(passaggio.a))
-  // la più chiusa delle due, così una marca chiusa resta chiusa da qualunque lato ci si arrivi
-  return { apre: Math.max(a.apre, b.apre) }
-}
-// aperto per chi ha finito `finite` discese
-export const passaggioAperto = (passaggio, { finite = 0 } = {}) => finite >= regolaDi(passaggio).apre
-
-export const anelloDi = R => Math.max(Math.abs(R.colonna - 2), Math.abs(R.riga - 2))
-export const fasciaDi = R => (R.livello ? [R.livello, R.livello + LARGA_REGIONE - 1] : null)
 // le domande di una regione: l'inizio di quelle del dungeon della storia di quel livello (l'ultimo che non lo supera)
 export function difDi(R) {
   if (!R.livello) return null
@@ -141,17 +14,6 @@ export function difDi(R) {
   return CAMPAGNA[k].dif[0]
 }
 
-// Le città: dove stanno (la regione, e verso quale passaggio: la città sta all'ingresso della marca che serve), chi ci sta (le
-// chiavi di dati/mercanti.js: il banco è per mercante, non per città), chi ci sta in più. `raggio`: la zona dei mercanti, dove
-// non ci sono mostri né decoro che ingombra. `minatore`: il vecchio minatore ci sta dalla discesa `minatore` in poi
-export const CITTA = [
-  { chiave: 'villaggio', nome: 'Il villaggio', regione: 'villaggio', raggio: 13,
-    mercanti: ['rigattiere', 'erborista', 'armaiolo', 'incantatrice'], persone: ['ragazza'], minatore: 0, case: 14 },
-  { chiave: 'forte', nome: 'Il forte del guado', regione: 'guado', verso: 'Il ponte del guado', raggio: 10,
-    mercanti: ['armaiolo', 'erborista'], persone: ['capitano'], case: 6 },
-  { chiave: 'rifugio', nome: 'Il rifugio del passo', regione: 'passo', verso: 'Il valico del nord', raggio: 10,
-    mercanti: ['erborista', 'incantatrice', 'rigattiere'], persone: [], minatore: 6, case: 5 },
-]
 // le botteghe di sopra: com'è fatto il banco di ogni mercante (lo disegna il 3D) e dove sta rispetto alla piazza
 export const BOTTEGHE = {
   rigattiere: { bottega: 'bancarella', w: 3, h: 2, verso: [-1, -7], dietro: true },
@@ -210,10 +72,8 @@ export const HABITAT = {
 // i lotti di chi non è un mercante né un ingresso: w×h celle
 export const LOTTI = { pietra: [2, 2], antro: [2, 2], bacheca: [2, 1], cartello: [1, 1], tenda: [3, 2], mulino: [3, 3] }
 
-/* ── Il mondo a percorso (docs/sotterraneo/mondo-a-percorso.md): la scheda del generatore nuovo, motore/mondo-percorso.js.
-   Sopra c'è ancora la scheda del mondo ad anelli (regioni, marche, passaggi, città): la usano mondo-sopra.js, aperta.js e la
-   scena finché i compiti B e D non passano al percorso; poi si toglie (docs/sotterraneo/mondo-aperto-generatore.md). Restano
-   HABITAT, LOTTI, BOTTEGHE, PERSONE e PERSONE_NUOVE, che il percorso legge. ── */
+/* ── Il mondo a percorso (docs/sotterraneo/mondo-a-percorso.md): la scheda del generatore, motore/mondo-percorso.js. Sopra le
+   parti che legge anche lui (HABITAT, LOTTI, BOTTEGHE, PERSONE e PERSONE_NUOVE) ── */
 
 // Le misure e il seme. Il tracciato è scritto sulla misura del prototipo (352×216, `su`) e si stira su `largo`×`alto`: la
 // forma è quella approvata, il mondo più grande perché fra due pietre ci siano ~200–230 passi (45–50 s a piedi). `mezza`: la

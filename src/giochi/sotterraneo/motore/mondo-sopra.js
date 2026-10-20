@@ -227,9 +227,6 @@ export function frecceDelCartello(m, chiaveCitta) {
             posti: m.ingressi.map(i => i.chiave), citta: [] }]
 }
 
-/* ── TRANSITORIO: le grate non ci sono più. Restano finché viste/Mondo3d.vue le chiama (compito D), e non chiudono niente ── */
-export const aperturaDi = (tappe = []) => ({ finite: tappe.filter(t => t.fatta).length, aperto: () => true })
-export const chiusoPerche = () => null
 
 // per gli strumenti e i test: il mondo intero, tutte le zone caricate (in Node, ~1 s)
 export function ilMondoIntero(opz) { return caricaTutto(ilMondo(opz)) }

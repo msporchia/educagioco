@@ -13,7 +13,7 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { ilMondo, ilMondoIntero, seguiLEroe, terraDelMondo, nebbiaInBase64, nebbiaDaBase64, mondoNuovo, mondoDaSalvato, mondoDaSalvare,
          cittaDelDungeon, portaleDella, postiDi, nomeDellaPietra, difDellaPietra, meteDelViaggio, pietraAccanto, minatoreDi, capitanoDi,
-         pietreDiOggi, frecceDelCartello, aperturaDi, chiusoPerche, dungeonDi, dungeonDellIndice, cittaDi, zonaInCella,
+         pietreDiOggi, frecceDelCartello, dungeonDi, dungeonDellIndice, cittaDi, zonaInCella,
          VISTA_MONDO } from '../../src/giochi/sotterraneo/motore/mondo-sopra.js'
 import { INGRESSI_DEL_MONDO, ZONE_DEL_MONDO } from '../../src/giochi/sotterraneo/dati/mondo-aperto.js'
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
@@ -151,8 +151,8 @@ const tappeCon = finite => CAMPAGNA.map((t, i) => ({ indice: i, chiave: t.chiave
   const dist = terra.raggiungibili(m.partenza)
   for (const c of m.confini) controlla(`${c.nome}: si passa sempre, da una riva all'altra`, c.rive.every(r => dist.has(r.y * m.W + r.x)))
   controlla('ogni ingresso si raggiunge dalla piazza', m.ingressi.every(q => dist.has(q.accanto.y * m.W + q.accanto.x)))
-  const ap = aperturaDi([])
-  controlla('le grate di prima non chiudono niente', ap.aperto({}) && chiusoPerche({}, ap) === null)
+  const sopra = await import('../../src/giochi/sotterraneo/motore/mondo-sopra.js')
+  controlla('le grate di prima non ci sono più (né aperturaDi né chiusoPerche)', !('aperturaDi' in sopra) && !('chiusoPerche' in sopra))
   seguiLEroe(m, m.partenza.x, m.partenza.y)
 }
 

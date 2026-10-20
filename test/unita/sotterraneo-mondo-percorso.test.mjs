@@ -18,7 +18,9 @@ import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { scheletroDelMondo, caricaZona, scaricaZona, caricaTutto, tieniAttorno, zonaDi, zoneAttorno, livelloDi, baseDi, listaDi,
   misuraDelMondo, generaMondoPercorso, mascheraDelMondo, ERBA, ACQUA, ROCCIA } from '../../src/giochi/sotterraneo/motore/mondo-percorso.js'
-import { MONDO_PERCORSO, ZONE_DEL_MONDO, INGRESSI_DEL_MONDO, VILLAGGIO, LUOGHI, REGIONI_DEL_MONDO, cittaDiOggi, pietraDiOggi } from '../../src/giochi/sotterraneo/dati/mondo-aperto.js'
+import { MONDO_PERCORSO, ZONE_DEL_MONDO, INGRESSI_DEL_MONDO, VILLAGGIO, LUOGHI, cittaDiOggi, pietraDiOggi } from '../../src/giochi/sotterraneo/dati/mondo-aperto.js'
+// le regioni del mondo ad anelli (tolto il 20 ottobre 2026), con le chiavi e i nomi: le taglie salvate le nominano, non cambiano più
+const REGIONI_DI_PRIMA = [["villaggio","Il villaggio"],["cimitero","Il cimitero vecchio"],["campi","I campi"],["colle","Il colle delle rovine"],["brughiera","La brughiera"],["frutteto","Il frutteto"],["mulino","La valle del mulino"],["bosco","Il bosco vecchio"],["lago","Il lago"],["passo","Il passo"],["gola","La gola dei venti"],["vetta","La vetta dei troll"],["monte","Il monte"],["corvi","Il colle dei corvi"],["foresta","La foresta nera"],["ossa","La valle delle ossa"],["landa","La landa vecchia"],["guado","Il guado"],["palude","La palude"],["accampamento","Il prato dell'accampamento"],["secco","Il bosco secco"],["ceneri","La piana delle ceneri"],["rovine","Le rovine del guado"],["colline","Le colline di roccia"],["lupi","Il bosco dei lupi"]].map(([chiave, nome]) => ({ chiave, nome }))
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { MOSTRI } from '../../src/giochi/sotterraneo/dati/mostri.js'
 import { creaTerra } from '../../src/giochi/sotterraneo/motore/terra.js'
@@ -124,7 +126,7 @@ for (const Z of m.zone) {
   controlla(`${Z.nome}: la sua pietra`, m.pietre.some(q => q.chiave === `zona:${Z.chiave}` && q.zona === Z.chiave))
 }
 {
-  const vecchie = REGIONI_DEL_MONDO.map(r => r.chiave).sort()
+  const vecchie = REGIONI_DI_PRIMA.map(r => r.chiave).sort()
   stessaLista('i luoghi sono le regioni di prima, con le chiavi di prima', m.regioni.map(r => r.chiave).sort(), vecchie)
   for (const R of m.regioni.slice(1)) {
     controlla(`${R.chiave}: la tana del signore`, !!R.tana)
@@ -132,7 +134,7 @@ for (const Z of m.zone) {
     uguale(`${R.chiave}: sta nella sua zona`, m.zone[R.zona].luoghi.includes(R.chiave), true)
     for (const k of [...(R.abitanti || []), ...(R.caporale ? [R.caporale] : [])]) controlla(`${R.chiave}: ${k} è nel catalogo dei mostri`, !!MOSTRI[k])
   }
-  for (const [k, L] of Object.entries(LUOGHI)) uguale(`${k}: il nome di prima`, L.nome, REGIONI_DEL_MONDO.find(r => r.chiave === k).nome)
+  for (const [k, L] of Object.entries(LUOGHI)) uguale(`${k}: il nome di prima`, L.nome, REGIONI_DI_PRIMA.find(r => r.chiave === k).nome)
 }
 uguale('sei confini', m.confini.length, 6)
 for (const c of m.confini) {
