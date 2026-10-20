@@ -2,6 +2,8 @@
 // Niente di Castle Battle qui dentro: due funzioni e un canale che manda e riceve oggetti. `WebSocket` e `fetch` si possono
 // passare da fuori, per provarlo senza rete.
 export const SERVIZIO = 'https://sfida.educagioco.workers.dev'
+// per provare con il servizio in locale (`wrangler dev`): una prova mette qui l'indirizzo prima che la pagina parta
+export const indirizzo = () => globalThis.__SERVIZIO_SFIDE__ || SERVIZIO
 export const CODICE = /^[A-Z]{5}$/
 
 // Un telefono può perdere una richiesta ogni tanto, a caso (visto dal vivo: 1 su 4 sul telefono di una bambina, verso qualunque
@@ -12,7 +14,7 @@ const ATTESA_APERTURA = 4000        // ms
 
 /* una stanza nuova: torna il codice di 5 lettere, o un errore con la frase da dire al bambino. Una richiesta persa si rifà
    (creare una stanza due volte non fa danni: quella senza risposta scade da sola). */
-export async function creaStanza({ servizio = SERVIZIO, fetchImpl = globalThis.fetch, tentativi = TENTATIVI, attesa = ATTESA_CREAZIONE } = {}) {
+export async function creaStanza({ servizio = indirizzo(), fetchImpl = globalThis.fetch, tentativi = TENTATIVI, attesa = ATTESA_CREAZIONE } = {}) {
   let r = null, corpo = null
   for (let i = 0; i < tentativi && !r; i++) {
     const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), attesa)
@@ -34,7 +36,7 @@ export async function creaStanza({ servizio = SERVIZIO, fetchImpl = globalThis.f
 /* entra nella stanza: `canale.invia(oggetto)`, `canale.chiudi()`; `alMessaggio(oggetto)` e `allaChiusura(motivo, dettaglio)` dicono
    cosa arriva. Un collegamento che non si apre in `attesa` ms si lascia e se ne prova un altro (fino a `tentativi`); un codice che
    non esiste o una stanza piena non si aprono mai: `allaChiusura('non entra')` dopo l'ultimo tentativo */
-export function collega(codice, { servizio = SERVIZIO, WebSocketImpl = globalThis.WebSocket, alMessaggio, allaChiusura, allApertura = () => {},
+export function collega(codice, { servizio = indirizzo(), WebSocketImpl = globalThis.WebSocket, alMessaggio, allaChiusura, allApertura = () => {},
                                   tentativi = TENTATIVI, attesa = ATTESA_APERTURA, pausa = 300 }) {
   let ws = null, aperto = false, chiuso = false, provati = 0, timer = 0
   // il codice e la ragione con cui il servizio (o la rete) ha chiuso: 1006 = caduta la rete, 1008 = troppi messaggi, 1009 = messaggio troppo grande
