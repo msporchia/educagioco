@@ -1,0 +1,81 @@
+/* Il foglio della mongolfiera (viste/Mongolfiera.vue): l'insegna col cielo, le nuvolette e il pallone grande; la stiva di cassette di
+   legno, una fila per merce. Prefisso .f3-mg-; i fogli veri (.f3-foglio, .f3-colonna, .f3-chiudi, .f3-corpo, .f3-messaggio, .f3-nota)
+   vengono da stile.css. Tutto si muove col tempo (CSS); prefers-reduced-motion lo ferma. */
+.f3-mg.f3-foglio { padding: 0; overflow: hidden; color: #3a2a1a; background: #fbf3df; --legno: #b98a4a; --legno-scuro: #7b5224; --cielo-a: #8fd0f5; --cielo-b: #3d8fd0; }
+.f3-mg .f3-corpo { padding: 0 12px calc(16px + env(safe-area-inset-bottom)); }
+.f3-mg .f3-messaggio { margin: 8px 0 0; }
+.f3-mg .f3-nota { margin: 10px 2px 0; }
+
+/* l'insegna: il cielo, tre nuvole che passano piano, il pallone grande che sale e scende */
+.f3-mg-cielo { position: relative; flex: none; overflow: hidden; display: flex; align-items: center; gap: 14px; min-height: 104px; padding: 18px 64px 14px 16px; margin-bottom: 8px;
+  background: linear-gradient(180deg, var(--cielo-b), var(--cielo-a) 80%, #d6efff); border-radius: 22px 22px 0 0; box-shadow: 0 3px 8px rgba(0,0,0,.18); color: #fff; }
+.f3-mg-cielo .titolo { position: relative; z-index: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.f3-foglio .f3-mg-cielo h2 { margin: 0; font-size: 25px; line-height: 1.1; color: #fff; text-shadow: 0 2px 0 rgba(20,60,110,.45); }
+.f3-mg-cielo small { font-size: 14px; font-weight: 800; text-shadow: 0 1px 0 rgba(20,60,110,.4); }
+.f3-mg-cielo .nuvola { position: absolute; height: 18px; border-radius: 12px; background: rgba(255,255,255,.85); box-shadow: 14px -8px 0 -2px rgba(255,255,255,.85), 30px 0 0 -3px rgba(255,255,255,.8); animation: f3-mg-nuvola 22s linear infinite; }
+.f3-mg-cielo .n1 { width: 44px; top: 16px; left: -60px; }
+.f3-mg-cielo .n2 { width: 34px; top: 62px; left: -60px; animation-duration: 30s; animation-delay: -12s; opacity: .8; }
+.f3-mg-cielo .n3 { width: 52px; top: 36px; left: -60px; animation-duration: 38s; animation-delay: -25s; opacity: .65; }
+@keyframes f3-mg-nuvola { to { transform: translateX(560px); } }
+.f3-mg-pallone { position: relative; z-index: 1; flex: none; width: 66px; height: 78px; margin-bottom: 14px; border-radius: 50% 50% 46% 46% / 54% 54% 46% 46%; animation: f3-mg-su-giu 3.6s ease-in-out infinite;
+  background: repeating-conic-gradient(from -20deg at 50% 62%, #e8503a 0 30deg, #fff3d6 30deg 60deg); box-shadow: inset -9px -8px 0 rgba(0,0,0,.14), 0 3px 0 rgba(0,0,0,.18); }
+.f3-mg-pallone .cesta { position: absolute; left: 50%; bottom: -16px; width: 22px; height: 15px; margin-left: -11px; border-radius: 3px 3px 7px 7px; background: repeating-linear-gradient(90deg, var(--legno) 0 4px, var(--legno-scuro) 4px 5px); box-shadow: 0 2px 0 rgba(0,0,0,.25); }
+.f3-mg-pallone .cesta::before, .f3-mg-pallone .cesta::after { content: ""; position: absolute; top: -9px; width: 1.5px; height: 10px; background: #4a3a2a; }
+.f3-mg-pallone .cesta::before { left: 4px; transform: rotate(14deg); } .f3-mg-pallone .cesta::after { right: 4px; transform: rotate(-14deg); }
+@keyframes f3-mg-su-giu { 50% { transform: translateY(-6px) rotate(1.5deg); } }
+.f3-mg-x.f3-chiudi { top: 14px; right: 14px; background: #fff; box-shadow: 0 2px 0 rgba(0,0,0,.2); }
+
+/* il carico in corso: quanto è pieno e che bonus c'è a tutto pieno */
+.f3-mg-stato { display: flex; flex-direction: column; gap: 8px; margin: 10px 0 12px; }
+.f3-mg-barra { display: flex; flex-direction: column; gap: 4px; font: 800 14px "Emoji Gioco", system-ui, sans-serif; }
+.f3-mg-barra i, .f3-mg-conta i { display: block; height: 11px; border-radius: 6px; background: #e3d6b8; overflow: hidden; box-shadow: inset 0 1px 2px rgba(0,0,0,.28); }
+.f3-mg-barra u, .f3-mg-conta u { display: block; height: 100%; border-radius: 6px; background: linear-gradient(90deg, #7ac4f2, #2f86d0); transition: width .5s ease; }
+.f3-mg-tutto { display: flex; flex-direction: column; gap: 1px; padding: 8px 12px; border-radius: 14px; border: 2px dashed #c9b787; background: #fffaf0; font-size: 14px; color: #7a5a3a; }
+.f3-mg-tutto small { font-size: 12px; font-weight: 700; }
+.f3-mg-tutto.acceso { border: 2px solid #e6b84a; background: linear-gradient(180deg, #fff2bd, #ffe27a); color: #5a3a00; animation: f3-mg-lampo 1.6s ease-in-out infinite; }
+.f3-mg .xp { font-weight: 700; opacity: .85; }
+
+/* una fila: la merce, quante per cassa, il bonus della fila; sotto le cassette */
+.f3-mg-fila { margin-top: 10px; padding: 10px; border-radius: 18px; background: #fffdf6; border: 2px solid #ecd9a8; box-shadow: 0 3px 0 #ecd9a8; animation: f3-compari .35s both; }
+.f3-mg-fila.piena { border-color: #5fae3a; box-shadow: 0 3px 0 #5fae3a; background: #f3fbe9; }
+.f3-mg-testa { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.f3-mg-testa .nome { flex: 1 1 110px; min-width: 0; display: flex; flex-direction: column; font-size: 16px; }
+.f3-mg-testa .nome small { font-size: 12px; font-weight: 800; color: #7a5a3a; }
+.f3-mg-premio { flex: none; padding: 3px 10px; border-radius: 12px; background: #efe4cf; font: 800 12px "Emoji Gioco", system-ui, sans-serif; color: #7a5a3a; }
+.f3-mg-premio.acceso { background: #5fae3a; color: #fff; animation: f3-batti .9s ease-in-out 2; }
+.f3-mg-casse { display: grid; grid-template-columns: repeat(auto-fit, minmax(98px, 1fr)); gap: 10px; margin-top: 10px; }
+.f3-mg-cassa { display: flex; flex-direction: column; align-items: center; gap: 4px; animation: f3-compari .35s both; animation-delay: calc(var(--i, 0) * 70ms); }
+/* la cassetta di legno: assi, bordo scuro, un nastro di corda */
+.f3-mg-cassa .cassetta { position: relative; width: 78px; height: 66px; display: grid; place-items: center; border-radius: 8px; border: 4px solid var(--legno-scuro);
+  background: repeating-linear-gradient(180deg, #d3a965 0 12px, #c29553 12px 14px); box-shadow: 0 3px 0 rgba(0,0,0,.25), inset 0 0 0 2px rgba(255,255,255,.18); }
+.f3-mg-cassa.pronta .cassetta { border-color: #3fae3a; animation: f3-sobbalza 1.4s ease-in-out infinite; }
+.f3-mg-cassa.piena .cassetta { border-color: #3fae3a; filter: saturate(1.1); }
+.f3-mg-cassa .timbro { position: absolute; right: -9px; bottom: -9px; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: #3fae3a; color: #fff; font: 800 17px/1 "Emoji Gioco", system-ui, sans-serif; border: 2px solid #fff; box-shadow: 0 2px 3px rgba(0,0,0,.4); animation: f3-mg-timbra .4s cubic-bezier(.3,1.6,.5,1) both; }
+@keyframes f3-mg-timbra { from { transform: scale(2.4) rotate(-20deg); opacity: 0; } to { transform: none; opacity: 1; } }
+.f3-mg-cassa .conto { font: 800 15px "Emoji Gioco", system-ui, sans-serif; }
+.f3-mg-cassa .conto.ok { color: #2d7a2d; } .f3-mg-cassa .conto.manca { color: #c0392b; }
+.f3-mg-cassa .premio { font: 800 13px "Emoji Gioco", system-ui, sans-serif; color: #7a5a3a; }
+.f3-mg-cassa .a-bordo { min-height: 44px; display: grid; place-items: center; font: 800 14px "Emoji Gioco", system-ui, sans-serif; color: #2d7a2d; }
+.f3-mg-cassa .metti { width: 100%; min-height: 44px; padding: 4px 6px; border: 0; border-radius: 14px; background: linear-gradient(180deg, #7ed957, #3fae3a); color: #fff; font: 800 13px/1.15 "Emoji Gioco", system-ui, sans-serif;
+  text-shadow: 0 1px 0 rgba(0,0,0,.25); box-shadow: 0 3px 0 #2a7a28, 0 5px 8px rgba(0,0,0,.2); touch-action: manipulation; }
+.f3-mg-cassa .metti:active { transform: translateY(2px); box-shadow: 0 1px 0 #2a7a28; }
+.f3-mg-cassa .metti.spenta { background: linear-gradient(180deg, #d4dacb, #b0b8a6); box-shadow: 0 3px 0 #858c7b, 0 5px 8px rgba(0,0,0,.15); color: #f4f4ee; text-shadow: none; }
+
+.f3-mg-parti { display: block; margin: 14px auto 0; min-height: 44px; padding: 6px 18px; border: 0; border-radius: 14px; background: #efe4cf; color: #5a3a2a; font: 800 14px "Emoji Gioco", system-ui, sans-serif; box-shadow: 0 2px 0 rgba(0,0,0,.2); touch-action: manipulation; }
+.f3-mg-nota { text-align: center; }
+.f3-mg-conta { display: flex; flex-direction: column; gap: 4px; margin-top: 14px; font: 800 12px "Emoji Gioco", system-ui, sans-serif; color: #7a5a3a; }
+
+/* il viaggio: il pallone vola da una parte all'altra del cielo */
+.f3-mg-viaggio { position: relative; overflow: hidden; margin-top: 10px; padding: 52px 14px 14px; display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; border-radius: 18px;
+  background: linear-gradient(180deg, #8fd0f5, #d6efff); border: 2px solid #bfe0f5; }
+.f3-mg-viaggio .vola { position: absolute; top: 8px; left: -40px; font-size: 38px; line-height: 1; animation: f3-mg-vola 9s ease-in-out infinite; }
+.f3-mg-viaggio b { font-size: 20px; color: #1d4f80; } .f3-mg-viaggio small { font-size: 13px; font-weight: 700; color: #2f5f8a; }
+@keyframes f3-mg-vola { 0% { transform: translate(0, 12px); } 50% { transform: translate(calc(min(100vw, 520px) - 40px), -6px); } 100% { transform: translate(0, 12px); } }
+@keyframes f3-mg-lampo { 50% { box-shadow: 0 0 0 4px rgba(255,210,70,.45); } }
+
+@media (min-width: 700px) {
+  .f3-mg.f3-foglio { left: 0; right: 0; margin: 0 auto; max-width: 720px; border-radius: 22px 22px 0 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .f3-mg *, .f3-mg *::before, .f3-mg *::after { animation: none !important; transition: none !important; }
+}
