@@ -427,9 +427,10 @@ const FORME_DISEGNO = { tomba, cripta, cancello, croce: (c, r) => croce(c, 0, 0,
   tronco, ceppoGrande, funghiGiganti, ragnatela: ragnatelaRami, accampamento, carro, recinto, cassaMele, palafitta, barca, canneto, ninfee, palo, fumarola, rocciaSpaccata, ossa, tridente,
   carrello, binari, travi, minerale, argano, cairn, cartello, totem, miliare, teschio, braciere, pozza, bozzolo, palizzata, sacchi, trave, crepa, lanterna }
 
-// Disegna nel cantiere i props di un pezzo. `cose` riceve il fumo delle fumarole e le braci dei bracieri
-export function disegnaPropsAperti(m, p, cant, cose) {
-  for (const o of propsDelPezzo(m, p)) {
+// Disegna nel cantiere i props di un pezzo (quelli delle zone caricate, o `lista`). `cose` riceve il fumo delle fumarole e le braci
+// dei bracieri
+export function disegnaPropsAperti(m, p, cant, cose, lista = propsDelPezzo(m, p)) {
+  for (const o of lista) {
     const f = FORME_DISEGNO[o.tipo]
     if (!f) continue
     const q = quotaProp(m, o)
