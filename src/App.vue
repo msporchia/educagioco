@@ -1,6 +1,9 @@
 <script setup>
 import { ref, watch, onMounted } from 'vue'
 import { init, state } from './store/profile.js'
+import { riavviaAmici } from './amici/avvio.js'
+import { schermoAcceso } from './amici/servizio.js'
+import { ingresso } from './amici/ingresso.js'
 import { initPosta } from './store/posta.js'
 import { entra as entraNelGioco, esci as esciDalGioco } from './store/sessioni.js'
 import { fotografa } from './quiz/fotografia.js'
@@ -21,6 +24,7 @@ import Traguardo from './components/Traguardo.vue'
 import Benvenuto from './components/Benvenuto.vue'
 import Scarico from './components/Scarico.vue'
 import ContaFps from './components/ContaFps.vue'
+import InvitoAmico from './components/amici/InvitoAmico.vue'
 import AvvisoMonete from './components/varieta/Avviso.vue'   // importarlo accende anche il filtro delle monete
 import { SCHERMATE } from './giochi/schermate.js'
 import { caricaQuando } from './giochi/carica.js'
@@ -73,6 +77,9 @@ onMounted(async () => {
     if (vista.value !== 'admin') vista.value = 'home'   // admin: cambiare bambino è previsto lì
   })
   guardaLoSchermo()
+  // gli amici partono dopo che l'app è pronta e non la aspettano; offline non succede niente
+  setTimeout(riavviaAmici, 0)
+  watch(() => state.player, () => setTimeout(riavviaAmici, 0))
 })
 function vai(v) { vista.value = v }
 
@@ -94,7 +101,7 @@ function guardaLoSchermo() {
   if (typeof document === 'undefined') return
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'hidden') esciDalGioco()
-    else apriSessione(vista.value)
+    else { apriSessione(vista.value); schermoAcceso() }
   })
   window.addEventListener('pagehide', () => esciDalGioco())
 }
@@ -105,6 +112,8 @@ watch(vista, v => {
   clearTimeout(misuraQualita)
   if (v === 'home') misuraQualita = setTimeout(() => { if (vista.value === 'home' && !document.hidden) import('./grafica/benchmark/qualita-rapida.js').then(m => m.assicuraFascia()).catch(() => {}) }, 4000)
 })
+// «Gioca» su un invito: si apre il gioco, che ritira i dati dell'ingresso quando è pronto
+watch(ingresso, i => { if (i && Object.prototype.hasOwnProperty.call(viste, i.gioco)) vista.value = i.gioco })
 watch(vista, v => { if (v === 'home') controlla() })   // uscire da un gioco è un buon momento per controllare
 </script>
 
@@ -124,5 +133,6 @@ watch(vista, v => { if (v === 'home') controlla() })   // uscire da un gioco è 
     <!-- key = state.player: il cartello di un traguardo non deve sopravvivere al cambio di bambino -->
     <Traguardo :key="state.player" />
     <AvvisoMonete :key="'monete' + state.player" />
+    <InvitoAmico :key="'amici' + state.player" />
   </template>
 </template>

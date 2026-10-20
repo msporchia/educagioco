@@ -92,6 +92,13 @@ La fotografia nomina i campi di un'unità (`CAMPI_UNITA`): un campo nuovo in `Pa
 - **Provato: due mondi specchiati** (ognuno `io` nel suo): il motore non è simmetrico (ordine di elaborazione, caso), lo stato era uguale
   in 4 partite su 8. Per questo il mondo è uno solo.
 
+## Gli amici
+
+Il codice di cinque lettere resta, ma c'è anche l'invito a un amico (lista, cartello, «Gioca»): [../core/amici.md](../core/amici.md).
+Un collegamento che non si apre in 4 secondi si lascia e se ne prova un altro (fino a 3 volte), e una creazione di stanza persa si
+rifà: un telefono può perdere una richiesta su quattro, a ondate, e non deve rompere la sfida. Quando una sfida si rompe il cartello
+dice a che punto era e com'è stato chiuso il collegamento (codice e ragione): serve a capire se è la rete, il servizio o l'altro telefono.
+
 ## Da fare
 
 - Provare con due telefoni, ognuno col proprio hotspot, e rimisurare i dieci secondi a risposta.
