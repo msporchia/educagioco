@@ -6,7 +6,7 @@
 // aperto, chi scende e la sua roba contata (schedaConLaRoba), per la frase di chi è sotto il livello; e, finita la
 // storia, la zona appena nata (motore/zone.js, docs/sotterraneo/zone.md); `novita` quante volte si è chiesto «Novità?»
 // a ognuno ({ [chi]: { n, v } }, in `terra.novita` dell'avventura). `mondo`: nel Sotterraneo 3D, che ha la sua geografia (luogoDi).
-import { DIALOGHI, ARRIVEDERCI, DOVE_VADO, perOra } from '../dati/dialoghi.js'
+import { DIALOGHI, ARRIVEDERCI, DOVE_VADO, LE_LUCI, perOra } from '../dati/dialoghi.js'
 import { missioneDi, premioDetto } from '../dati/missioni.js'
 import { cosaDice, chiTiCerca, titoloDi, inFrase } from './missioni.js'
 import { GROSSI, GROSSO_DELLA_DISCESA } from '../dati/grossi.js'
@@ -55,6 +55,7 @@ export function strada(ctx, { capitolo = true } = {}) {
     // la storia: perché questa porta, e chi la chiude (dati/storia.js, CAPITOLI)
     if (capitolo && CAPITOLI[t.chiave]) for (const testo of inPagine(CAPITOLI[t.chiave].dice)) pagine.push({ testo, dato: 'storia' })
     pagine.push({ testo: `${t.nome}: ${luogoDi(t.chiave, ctx.mondo)}.`, dato: 'detto' })
+    if (ctx.mondo) pagine.push({ testo: LE_LUCI, dato: 'luci' })
     const s = !t.fatta && ctx.roba && ctx.eroe ? dettoDelLivello(ctx.eroe, ctx.roba, t, t.indice) : null
     if (s) pagine.push({ testo: s.detto, dato: 'sotto-livello', manca: s.manca })
   } else if (ctx.abisso) {
@@ -74,6 +75,7 @@ export function stradaDelCapitano(ctx) {
   if (!testo) return []
   const pagine = inPagine(testo).map(p => ({ testo: p, dato: 'storia' }))
   pagine.push({ testo: `${t.nome}: ${luogoDi(t.chiave, ctx.mondo)}.`, dato: 'detto' })
+  if (ctx.mondo) pagine.push({ testo: LE_LUCI, dato: 'luci' })
   const s = !t.fatta && ctx.roba && ctx.eroe ? dettoDelLivello(ctx.eroe, ctx.roba, t, t.indice) : null
   if (s) pagine.push({ testo: s.detto, dato: 'sotto-livello', manca: s.manca })
   return pagine

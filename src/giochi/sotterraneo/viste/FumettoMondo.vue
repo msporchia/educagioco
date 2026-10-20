@@ -63,8 +63,13 @@ const minuscolo = s => s.charAt(0).toLowerCase() + s.slice(1)
 
   <template v-else-if="f.tipo === 'cartello'">
     <b class="sot-fum-nome">Il cartello</b>
-    <p v-for="x in f.frecce" :key="x.passaggio" class="sot-fum-freccia" :data-freccia="x.verso">
+    <p v-for="x in f.frecce" :key="x.passaggio" class="sot-fum-freccia" :class="{ 'sot-fum-freccia-meta': x.meta }" :data-freccia="x.verso">
       <b class="em">{{ x.verso }}</b> {{ x.detto }}<template v-if="x.nomi.length"><br><i>{{ x.nomi.join(' · ') }}</i></template>
+      <!-- la freccia che porta alla meta di adesso: lo stesso azzurro delle luci per terra (docs/sotterraneo/mondo-3d-la-meta.md) -->
+      <template v-if="x.meta && f.meta"><br><b class="sot-fum-di-qui" data-freccia-meta>◎ di qui per {{ f.meta.minuscolo }}: segui le luci azzurre</b></template>
+    </p>
+    <p v-if="f.meta && f.meta.qui" class="sot-fum-freccia sot-fum-freccia-meta" data-meta-qui>
+      <b class="sot-fum-di-qui">◎ {{ f.meta.nome }} è da queste parti: segui le luci azzurre per terra</b>
     </p>
   </template>
 

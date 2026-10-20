@@ -20,7 +20,7 @@ import { DETTI_DEL_COLORE, C_E_UNA_NOTIZIA } from '../dati/zone.js'
 import { iconaDi } from '../dati/terra.js'
 import { ilMondo, aperturaDi, terraDelMondo, chiusoPerche, postiDi, cittaInCella, regioneInCella, portaleDella, minatoreDi,
          nomeDellaPietra, difDellaPietra, pietraAccanto, meteDelViaggio, nebbiaInBase64, nebbiaDaBase64, mondoNuovo, lontanoDalleCitta,
-         frecceDelCartello, dungeonDi, fontaneDi, curaDellaFontana, VISTA_MONDO, PASSO_MONDO } from '../motore/mondo-sopra.js'
+         frecceDelCartello, dungeonDi, cittaDi, fontaneDi, curaDellaFontana, VISTA_MONDO, PASSO_MONDO } from '../motore/mondo-sopra.js'
 import { rettangoloPersona, rettangoloPosto, personaVicina, SCARTO_DITO } from '../scena3d/mondo/dito.js'
 import { domandaPerGioco } from '../../../quiz/scelta.js'
 import Domanda from '../../../quiz/Domanda.vue'
@@ -33,6 +33,7 @@ import { annuncioDi, alSicuro } from '../motore/aperta.js'
 import { fotoDelloScontro } from '../motore/aperta-scena.js'
 import { allaCitta } from '../motore/forze-sopra.js'
 import { SOPRA } from '../dati/mondo-aperto-mostri.js'
+import { campoVersoLaMeta, celleDelVelo, luciDellaStrada, piuVicina, passiDetti, ARRIVATO_META } from '../motore/meta-sopra.js'
 
 const props = defineProps({
   tappe: { type: Array, required: true },
@@ -78,6 +79,7 @@ const giro = ref(0)      // i ritorni in città (motore/mondo-sopra.js, lontanoD
 let allontanato = false, raggiungibili = null
 // i mostri di sopra (viste/mondo-mostri.js, motore/aperta.js): lo stato del motore, e lo scontro aperto (`inScontro`: lo gioca
 // Gioco.vue, lo disegna il palco della scena). `fotoScontro`: chi è in campo, salvato in `mondo.sopra.scontro` finché lo scontro c'è
+const inScontroV = ref(false)   // lo stesso, per il disegno (la carta della meta si nasconde)
 let mostri = null, inScontro = false, attesaScontro = false, inCampo = null, fotoScontro = null, prossimiMostri = 0
 const mostriVisti = ref([]), coseVisti = ref([])
 const elMostri = new Map(), elCose = new Map()
@@ -185,6 +187,7 @@ const cellaDiMe = () => ({ x: Math.floor(io.x), y: Math.floor(io.z) })
 const verso = { dx: 0, dy: 1 }
 let tempo = 0, ultimaCella = -1, regioneOra = null, cittaOra = null
 function vaiA(c, cosa = null) {
+  guidato.value = false
   let da = cellaDiMe()
   if (!terra.passa(da.x, da.y)) { const s = terra.arrivo(m.partenza, da); if (s) { io.x = s.x + 0.5; io.z = s.y + 0.5; da = s } }
   const arrivo = terra.arrivo(da, c)
@@ -198,7 +201,7 @@ function vaiA(c, cosa = null) {
   return true
 }
 function arriva() {
-  cammina.value = false
+  cammina.value = false; guidato.value = false
   salva()
   const q = meta
   meta = null
@@ -342,6 +345,12 @@ function mostriDelPasso(dt, t) {
   const visto = (x, z) => scena.visto(x, z)
   scena.S.mostri = props.veduta ? [] : mostri.figure(io, t, visto, inCampo)
   scena.S.perTerra = props.veduta ? [] : mostri.perTerra(visto)
+  // «portami lì» si ferma quando compare un mostro che prima non si vedeva: decide il bambino (docs/sotterraneo/mondo-3d-la-meta.md)
+  if (guidato.value && scena.S.mostri.some(q => q.alfa > 0.3 && !guidaVisti.has(q.i))) {
+    via = []; meta = null; cammina.value = false; guidato.value = false; fermato.value = 'mostro'
+    salva()
+    dillo('Un mostro sulla strada! Affrontalo, o tocca «portami lì» per andare avanti.')
+  }
   if (t >= prossimiMostri) { prossimiMostri = t + 0.2; aggiornaMostriVisti() }   // i bersagli nel DOM: a tempo, non a fotogrammi
   // i rimasti di uno scontro lasciato: se l'eroe se ne va lontano, non lo aspettano più
   if (fotoScontro && !inScontro && Math.hypot(io.x - fotoScontro.x - 0.5, io.z - fotoScontro.y - 0.5) > SOPRA.insegue + 4) { fotoScontro = null; sporca = true }
@@ -355,7 +364,7 @@ function aggiornaMostriVisti() {
 }
 // un mostro sveglio è arrivato addosso, o l'eroe ne ha toccato uno: lo scontro lo apre Gioco.vue (`scontro`), che poi chiama apriPalco
 function apriIncontro(inc) {
-  via = []; meta = null; cammina.value = false
+  via = []; meta = null; cammina.value = false; guidato.value = false
   chiudi(); chiudiDialogo()
   attesaScontro = true
   emit('scontro', { inc, stato: mostri.stato, terra, verso: { dx: verso.dx, dy: verso.dy } })
@@ -379,7 +388,7 @@ const mostroVicino = p => {
 function apriPalco(corsa, opz = {}) {
   attesaScontro = false
   if (!scena || !scena.palcoSopra) return null
-  inScontro = true
+  inScontro = true; inScontroV.value = true
   inCampo = new Set(corsa.livello.robe.filter(r => r.che === 'mostro' && r.mondo != null).map(r => r.mondo))
   const st = mostri.stato
   scena.palcoSopra.apri({ io, passa: (x, y) => terra.passa(x, y), daDove: i => ({ x: st.mostri[i].fx, z: st.mostri[i].fy }), corsa, ...opz })
@@ -392,7 +401,7 @@ function apriPalco(corsa, opz = {}) {
 // `scontro`: chi è rimasto quando lo si è lasciato con la ✕ (motore/aperta-scena.js, lasciaLoScontro), o null
 function dopoLoScontro(e, scontro = null) {
   if (scena && scena.palcoSopra) scena.palcoSopra.chiudi()
-  inScontro = false; attesaScontro = false; inCampo = null; fotoScontro = scontro
+  inScontro = false; inScontroV.value = false; attesaScontro = false; inCampo = null; fotoScontro = scontro
   if (e && e.risveglio && scena) {
     via = []; meta = null; cammina.value = false
     io.x = e.risveglio.x + 0.5; io.z = e.risveglio.y + 0.5
@@ -479,10 +488,12 @@ const fumettoDati = computed(() => {
   if (b.ruolo === 'fontana') return { tipo: 'fontana', ...FONTANA, ...curaDellaFontana(props.forze) }
   if (b.ruolo === 'grata') return { tipo: 'grata', nome: b.q.nome || 'Il passaggio', perche: chiusoPerche(b.q, ap.value) }
   if (b.ruolo === 'cartello') {
+    const q = metaOra.value, qui = !!(q && q.regione && cittaDi(m, b.citta).regione === q.regione)
     const frecce = frecceDelCartello(m, b.citta).map(x => ({ ...x,
       detto: x.citta.length ? `verso ${x.citta.map(c => minuscolo(CITTA.find(y => y.chiave === c).nome)).join(' e ')}` : x.posti.length ? 'verso le terre oltre il fiume' : 'verso i campi e le valli',
-      nomi: x.posti.filter(k => trovati.value.has(`ingresso:${k}`)).map(k => dungeonDi(k).nome) }))
-    return { tipo: 'cartello', frecce }
+      nomi: x.posti.filter(k => trovati.value.has(`ingresso:${k}`)).map(k => dungeonDi(k).nome),
+      meta: !!(q && q.regione && x.regioni.includes(q.regione)) }))
+    return { tipo: 'cartello', frecce, meta: q ? { nome: q.nome, minuscolo: minuscolo(q.nome), qui } : null }
   }
   return null
 })
@@ -708,7 +719,7 @@ function tocca(b) {
   if (aperto.value && aperto.value !== b) chiudi()
   vaiA(b.accanto, b)
 }
-function toccaNome(n) { const b = bersagli.value.find(x => x.chiave === n.bersaglio); if (b) tocca(b); else if (n.x != null) { emit('veduta', false); vaiA({ x: Math.floor(n.x), y: Math.floor(n.z) }) } }
+function toccaNome(n) { if (n.meta) return portami({ sempre: true }); const b = bersagli.value.find(x => x.chiave === n.bersaglio); if (b) tocca(b); else if (n.x != null) { emit('veduta', false); vaiA({ x: Math.floor(n.x), y: Math.floor(n.z) }) } }
 function scendi() {
   const b = aperto.value
   const d = b && datoDelPosto(b)
@@ -850,15 +861,100 @@ function metaDellaTaglia(t, stato) {
 }
 const taglieSeguita = () => { const t = props.segui ? missioneDi(props.segui) : null; return t && t.taglia && !t.discesa && ['presa', 'fatta'].includes(props.missioni[t.id]) ? t : null }
 
+/* ═══════════ la meta: dove andare adesso, e la strada vera fin lì (docs/sotterraneo/mondo-3d-la-meta.md) ═══════════ */
+// `metaOra`: { chiave, nome, immagine | em | consegna, cella (dove ci si ferma), b (il bersaglio che si apre arrivati), regione }
+const metaOra = shallowRef(null), guidato = ref(false), fermato = ref(null)
+// i passi si scrivono nel DOM (come i rettangoli dei bersagli): un ref rifarebbe tutta la vista a ogni cella camminata
+const passiEl = ref(null)
+let passiMeta = Infinity
+let campo = null, luci = [], guidaVisti = new Set()
+const VELO_META = 2.5   // le celle aperte attorno alla strada, in celle
+const daQui = (a, b) => Math.hypot(a.piede.x - io.x, a.piede.y - io.z) - Math.hypot(b.piede.x - io.x, b.piede.y - io.z)
+const nomeDi = b => (b.ruolo === 'bacheca' ? personaDi(`bacheca:${b.citta}`).nome : b.nome || '')
+// nell'ordine delle bussole: chi aspetta una consegna, la taglia seguita, la discesa (della missione presa o della storia)
+function trovaLaMeta() {
+  const chi = chiAspetta(props.missioni)
+  if (chi.length) {
+    const b = bersagli.value.filter(x => ['personaggio', 'minatore', 'mercante', 'bacheca'].includes(x.ruolo) && chi.includes(x.k)).sort(daQui)[0]
+    if (b) return { chiave: 'chi:' + b.chiave, nome: nomeDi(b).replace(/^./, c => c.toUpperCase()), consegna: true, cella: b.accanto, b, regione: (regioneInCella(m, b.piede.x, b.piede.y) || {}).chiave }
+  }
+  const sg = taglieSeguita(), pm = sg && metaDellaTaglia(sg, props.missioni[sg.id])
+  if (pm) {
+    const alla = props.missioni[sg.id] === 'fatta' || sg.tipo === 'consegna'
+    const b = alla ? bersagli.value.find(x => x.ruolo === 'bacheca' && x.citta === sg.consegnaA)
+      : sg.tipo === 'esplora' && sg.bersaglio.tipo !== 'regione' ? bersagli.value.find(x => x.ruolo === sg.bersaglio.tipo && x.k === sg.bersaglio.chiave) : null
+    return { chiave: 'taglia:' + sg.id, nome: sg.titolo, em: sg.em, cella: pm, b: b || null, regione: (regioneInCella(m, pm.x, pm.y) || {}).chiave }
+  }
+  const k = discesaDaSeguire(props.missioni, { x: io.x, y: io.z }, PIEDI(), props.segui, portaDellaStoria.value)
+  const b = k && bersagli.value.find(x => x.ruolo === 'ingresso' && x.k === k)
+  return b ? { chiave: k, nome: dungeonDi(k).nome, immagine: iconaDi(k, true), cella: b.accanto, b, regione: dungeonDi(k).regione } : null
+}
+// a tempo (con le bussole): la meta, i passi che mancano, da quale luce si accende la scia. Da fermi e lontani dalla scia se ne fa
+// una nuova da qui; camminando no (la strada si rifà solo quando serve, non a ogni cella)
+function aggiornaMeta() {
+  const q = trovaLaMeta()
+  if (!q) { if (metaOra.value) { metaOra.value = null; campo = null; luci = []; posaLaStrada(null) } return }
+  if (!metaOra.value || metaOra.value.chiave !== q.chiave) {
+    metaOra.value = markRaw(q)
+    const fine = terra.passa(q.cella.x, q.cella.y) ? q.cella : terra.arrivo(m.partenza, q.cella)
+    campo = fine ? campoVersoLaMeta(terra, fine) : null
+    rifaiLaStrada()
+  }
+  const c = cellaDiMe(), n = campo ? campo.passi(c.x, c.y) : Infinity
+  const tondo = Number.isFinite(n) ? Math.round(n) : Infinity
+  if (tondo !== passiMeta || (passiEl.value && passiEl.value.dataset.passi == null && Number.isFinite(tondo))) {
+    passiMeta = tondo
+    if (passiEl.value) { passiEl.value.textContent = passiDetti(tondo); if (Number.isFinite(tondo)) passiEl.value.dataset.passi = tondo; else delete passiEl.value.dataset.passi }
+  }
+  const v = piuVicina(luci, io.x, io.z)
+  if (v.i >= 0) scena.S.sciaDa = v.i
+  if (!cammina.value && Number.isFinite(n) && n >= ARRIVATO_META && (v.i < 0 || v.d > 4)) rifaiLaStrada()
+}
+// la strada dalla cella dell'eroe alla meta (la discesa del campo, lisciata come i passi dell'A*): la scia, il velo, i punti da camminare
+function rifaiLaStrada() {
+  const da = cellaDiMe()
+  const via = campo && terra.passa(da.x, da.y) ? campo.strada(da) : null
+  if (!via) { luci = []; posaLaStrada(null); return null }
+  const punti = [da, ...terra.liscia(da, via)].map(p => ({ x: p.x + 0.5, z: p.y + 0.5 }))
+  luci = luciDellaStrada(punti)
+  posaLaStrada({ luci, meta: punti[punti.length - 1], velo: celleDelVelo([da, ...via], m.W, m.H, VELO_META) })
+  return punti
+}
+function posaLaStrada(st) {
+  if (!scena) return
+  scena.S.scia = st ? { luci: st.luci, meta: st.meta } : null
+  scena.S.sciaDa = 0
+  scena.apriLaStrada(st ? st.velo : [])
+}
+// «portami lì»: l'eroe cammina lungo la scia fino alla meta, e arrivato si apre quello che c'è (il fumetto della discesa, la
+// bacheca, chi aspetta). Si ferma da sé se compare un mostro (mostriDelPasso); toccato di nuovo mentre si cammina, si ferma.
+// `sempre`: dalla veduta o dalla bussola, che non fermano
+function portami({ sempre = false } = {}) {
+  if (guidato.value && !sempre) { via = []; meta = null; cammina.value = false; guidato.value = false; salva(); return }
+  const q = metaOra.value
+  if (!q || inScontro || attesaScontro) return
+  if (props.veduta) emit('veduta', false)
+  chiudi(); chiudiDialogo(); mostri.lascia()
+  avviso.value = ''; fermato.value = null
+  if (q.b && Math.hypot(io.x - (q.b.accanto.x + 0.5), io.z - (q.b.accanto.y + 0.5)) <= 1.5) { via = []; cammina.value = false; return apri(q.b) }
+  const punti = rifaiLaStrada()
+  if (!punti) return q.b ? tocca(q.b) : vaiA(q.cella)
+  via = punti.slice(1); meta = q.b || null; primaVolta.value = false
+  guidaVisti = new Set(scena.S.mostri.filter(x => x.alfa > 0.3).map(x => x.i))
+  if (!via.length) return arriva()
+  cammina.value = true; guidato.value = true
+}
+
 // la veduta: i nomi delle città, dei dungeon trovati, delle regioni viste e le pietre accese
 const nomiVeduta = computed(() => {
   if (!props.veduta || !m) return []
   const l = []
   for (const c of m.citta) if (visto({ x: c.centro.x, y: c.centro.y })) l.push({ chiave: 'citta:' + c.chiave, testo: c.nome, classe: 'citta', x: c.centro.x + 0.5, y: 3, z: c.centro.y - 2 })
+  const q = metaOra.value
   for (const b of bersagli.value) {
     if (!trovati.value.has(b.chiave)) continue
     const l0 = b.lotto
-    if (b.ruolo === 'ingresso') l.push({ chiave: b.chiave, bersaglio: b.chiave, testo: dungeonDi(b.k).nome, classe: datoDelPosto(b).aperto ? 'dungeon' : 'dungeon chiuso', x: l0.x + l0.w / 2, y: 3, z: l0.y })
+    if (b.ruolo === 'ingresso' && !(q && q.b === b)) l.push({ chiave: b.chiave, bersaglio: b.chiave, testo: dungeonDi(b.k).nome, classe: datoDelPosto(b).aperto ? 'dungeon' : 'dungeon chiuso', x: l0.x + l0.w / 2, y: 3, z: l0.y })
     if (b.ruolo === 'pietra') l.push({ chiave: b.chiave, bersaglio: b.chiave, testo: accese.value.has(b.k) ? '✦' : '·', classe: accese.value.has(b.k) ? 'pietra accesa' : 'pietra', x: l0.x + 1, y: 1.5, z: l0.y + 1 })
   }
   for (const r of m.regioni) if (r.anello > 0 && visto({ x: r.cx, y: r.cy })) l.push({ chiave: 'regione:' + r.chiave, testo: r.nome, classe: 'regione', x: r.cx + 0.5, y: 1, z: r.cy + 0.5 })
@@ -867,8 +963,13 @@ const nomiVeduta = computed(() => {
     const sg = segniBacheca.value[b.citta]
     l.push({ chiave: b.chiave, bersaglio: b.chiave, testo: `📜${sg ? ' ' + GLIFO[sg] : ''}`, classe: 'bacheca', x: b.lotto.x + 1, y: 4, z: b.lotto.y - 1 })
   }
+  // la meta di adesso, anche sotto le nuvole: un tocco è «portami lì»
+  if (q) {
+    const p = q.b && q.b.lotto ? { x: q.b.lotto.x + q.b.lotto.w / 2, z: q.b.lotto.y } : { x: q.cella.x + 0.5, z: q.cella.y + 0.5 }
+    l.push({ chiave: q.chiave.startsWith('taglia:') ? q.chiave : 'meta:' + q.chiave, testo: `◎ ${q.nome}`, classe: 'meta', meta: true, x: p.x, y: 3.5, z: p.z })
+  }
   const sg = taglieSeguita()
-  const meta = sg && metaDellaTaglia(sg, props.missioni[sg.id])
+  const meta = sg && !(q && q.chiave === 'taglia:' + sg.id) && metaDellaTaglia(sg, props.missioni[sg.id])
   if (meta) l.push({ chiave: 'taglia:' + sg.id, testo: `${sg.em} ◎`, classe: 'meta', x: meta.x + 0.5, y: 1.5, z: meta.y + 0.5 })
   l.push({ chiave: 'eroe', testo: 'tu', classe: 'tu', x: io.x, y: 2.5, z: io.z })
   return l
@@ -880,6 +981,7 @@ let fuoriChiave = ''
 const portaDellaStoria = computed(() => discesaDellaStoria(props.tappe))
 const PIEDI = () => Object.fromEntries(bersagli.value.filter(b => b.ruolo === 'ingresso').map(b => [b.k, { x: b.accanto.x + 0.5, y: b.accanto.y + 0.5 }]))
 function aggiornaBussole() {
+  if (!inScontro) aggiornaMeta()
   if (props.veduta || inScontro) { if (fuori.value.length) { fuori.value = []; fuoriChiave = '' } return }
   const lista = [], cx = vL / 2, cy = (sopra + vA - sotto) / 2, M = 30
   const alBordo = (sx, sy, resto) => {
@@ -1070,13 +1172,31 @@ watch(giro, g => { if (mostri && g !== mostri.stato.giro) { mostri.giro(g); foto
     <button v-for="f in fuori" :key="'fuori-' + f.chiave" class="sot-bussola" :class="{ 'sot-bussola-meta': f.meta }"
             :data-consegna-fuori="f.meta ? null : f.chiave" :data-meta-fuori="f.meta ? f.chiave : null"
             :aria-label="f.meta ? 'La meta della tua missione: ' + f.nome : 'Hai una consegna per ' + f.nome"
-            :style="{ left: f.x + 'px', top: f.y + 'px' }" @click.stop="vaDa(f.chiave)">
+            :style="{ left: f.x + 'px', top: f.y + 'px' }" @click.stop="f.meta && metaOra && (metaOra.chiave === f.chiave) ? portami({ sempre: true }) : vaDa(f.chiave)">
       <i class="sot-bussola-freccia" :style="{ transform: `rotate(${f.gradi}deg) translateX(28px)` }"></i>
       <b v-if="!f.meta">?</b>
       <b v-else><img v-if="f.immagine" class="sot-ritaglio" :src="f.immagine" alt="" data-ritaglio><span v-else-if="f.em" class="em">{{ f.em }}</span></b>
     </button>
 
-    <div ref="sopraEl" class="sot-terra-sopra"><slot name="sopra" /></div>
+    <div ref="sopraEl" class="sot-terra-sopra">
+      <slot name="sopra" />
+      <!-- la meta di adesso: cosa, quanto lontano, e «portami lì» (docs/sotterraneo/mondo-3d-la-meta.md) -->
+      <div v-if="metaOra && pronto && !inScontroV" class="sot3d-meta" data-meta-carta :data-meta="metaOra.chiave"
+           :data-guidato="guidato ? 1 : 0" :data-fermato="fermato" @click.stop>
+        <span class="sot3d-meta-icona" :class="{ 'sot3d-meta-consegna': metaOra.consegna }" aria-hidden="true">
+          <img v-if="metaOra.immagine" :src="metaOra.immagine" alt="" data-ritaglio>
+          <b v-else-if="metaOra.consegna">?</b>
+          <span v-else class="em">{{ metaOra.em }}</span>
+        </span>
+        <span class="sot3d-meta-testo">
+          <b data-meta-nome>{{ metaOra.nome }}</b>
+          <i ref="passiEl" data-meta-passi></i>
+        </span>
+        <button type="button" class="sot-grosso sot3d-meta-vai" data-azione="portami" @click.stop="portami()">
+          <template v-if="guidato">✋ fermati</template><template v-else><span class="em">👣</span> portami lì</template>
+        </button>
+      </div>
+    </div>
     <div ref="sottoEl" class="sot-terra-sotto">
       <span v-if="fiocco" :key="fiocco.n" class="sot-cura-fiocco sot3d-fiocco" :class="fiocco.risorsa === 'energia' ? 'sot-cura-energia' : 'sot-cura-vita'" data-cura-fiocco
             :data-risorsa="fiocco.risorsa" @animationend="fiocco = null">{{ fiocco.testo }}<template v-if="fiocco.risorsa !== 'tutto'"> {{ fiocco.risorsa === 'vita' ? '❤️' : '⚡' }}</template></span>

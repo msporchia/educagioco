@@ -224,6 +224,8 @@ export const FONTANA = {
 export const ARRIVEDERCI = 'Arrivederci'
 // la domanda del minatore, quella che non manca mai: «cosa faccio adesso» (motore/dialoghi.js, strada)
 export const DOVE_VADO = 'Dove vado adesso?'
+// nel mondo 3D, dopo la strada della porta di adesso: le luci per terra e il tasto in cima (docs/sotterraneo/mondo-3d-la-meta.md)
+export const LE_LUCI = 'Per terra ci sono le luci azzurre: seguile e ci arrivi. Se ti perdi, tocca «portami lì» in alto, e ti ci porto io.'
 
 // l'ultima voce con `da` non oltre le discese finite (le voci stanno in ordine)
 export const perOra = (voci, finite) => {
