@@ -6,7 +6,7 @@
 // generato): chi sceglie *quali* taglie offre una bacheca è motore/taglie.js.
 import { MOSTRI } from './mostri.js'
 import { CAMPAGNA } from './campagna.js'
-import { DUNGEON, CITTA, REGIONI_DEL_MONDO, anelloDi } from './mondo-aperto.js'
+import { LUOGHI, ZONE_DEL_MONDO, INGRESSI_DEL_MONDO, VILLAGGIO, cittaDiOggi, pietraDiOggi } from './mondo-aperto.js'
 import { LIVELLI_ATTESI } from './storia.js'
 import { valoreDelLivello } from './pezzi.js'
 
@@ -33,14 +33,26 @@ export const BASI = { consegna: 10, trovachi: 8, esplora: 8, mappa: 12, recupera
 export const gemmePer = (base, livello, quanti = 1) =>
   Math.max(GEMME_MIN, Math.min(GEMME_MAX, Math.round(base * quanti * valoreDelLivello(livello))))
 
-const DUNGEON_DI = Object.fromEntries(DUNGEON.map(d => [d.chiave, d]))
-const REGIONE_DI = Object.fromEntries(REGIONI_DEL_MONDO.map(r => [r.chiave, r]))
-const CITTA_DI = Object.fromEntries(CITTA.map(c => [c.chiave, c]))
+// Il mondo a percorso dalla scheda, senza generarlo (docs/sotterraneo/mondo-a-percorso.md): i luoghi tengono le chiavi delle regioni di
+// prima, con la loro zona e l'inizio della loro fascia (in fila nella zona, come li mette il generatore: lo controlla il test); i
+// dungeon sono i quattordici con la loro zona; la città è una, il villaggio, e le chiavi di prima (`forte`, `rifugio`) si leggono lì
+const DUNGEON_DI = Object.fromEntries(Object.entries(INGRESSI_DEL_MONDO).map(([k, d]) => [k, { chiave: k, ...d,
+  zona: (ZONE_DEL_MONDO.find(z => z.dungeon.some(x => x.chiave === k)) || {}).chiave || null }]))
+const REGIONE_DI = {}
+for (const Z of ZONE_DEL_MONDO) Z.luoghi.forEach((k, n) => {
+  REGIONE_DI[k] = { chiave: k, ...LUOGHI[k], zona: Z.chiave, livello: Math.round(Z.fascia[0] + (Z.fascia[1] - Z.fascia[0]) * n / Z.luoghi.length) }
+})
+const CITTA_DI = { villaggio: { chiave: 'villaggio', nome: VILLAGGIO.nome, regione: 'villaggio' } }
+const cittaDi = k => CITTA_DI[cittaDiOggi(k)] || null
 export const regioneDi = k => REGIONE_DI[k] || null
-export const cittaDelleTaglie = k => CITTA_DI[k] || null
-export const livelloDelDungeon = k => (DUNGEON_DI[k] && DUNGEON_DI[k].indice >= 0 ? LIVELLI_ATTESI[DUNGEON_DI[k].indice] : LIVELLI_ATTESI[LIVELLI_ATTESI.length - 1])
+export const cittaDelleTaglie = cittaDi
+export const livelloDelDungeon = k => {
+  const d = DUNGEON_DI[k]
+  if (!d || d.indice === -1) return LIVELLI_ATTESI[LIVELLI_ATTESI.length - 1]
+  return d.indice != null ? LIVELLI_ATTESI[d.indice] : d.livello
+}
 export const livelloDellaRegione = k => Math.max(1, (REGIONE_DI[k] && REGIONE_DI[k].livello) || 1)
-export const livelloDellaCitta = k => livelloDellaRegione(CITTA_DI[k] && CITTA_DI[k].regione)
+export const livelloDellaCitta = () => 1
 
 /* ═══════════ la caccia nei dungeon ═══════════ */
 // Per ogni dungeon le specie da battere e **quanti**: sotto la mediana dei mostri di quella specie in un giro intero della discesa
@@ -117,28 +129,29 @@ const scegli = (lista, id, sale = '') => lista[hash(id + sale) % lista.length]
 /* ═══════════ i modelli ═══════════ */
 // Ogni modello: `quando` (se serve un dungeon, i mostri di sopra), e `fa(c)` che riempie la quest dal parametro `p` (stringa), la città
 // e l'id; torna null se il parametro non va (un id stantio o storto non rompe niente). I campi in comune li aggiunge `taglia()`.
-const bacheca = k => ({ nome: `La bacheca ${articolata('di', CITTA_DI[k].nome)}`, chi: `la bacheca ${articolata('di', CITTA_DI[k].nome)}` })
+const bacheca = k => ({ nome: `La bacheca ${articolata('di', cittaDi(k).nome)}`, chi: `la bacheca ${articolata('di', cittaDi(k).nome)}` })
 export const bachecaDi = bacheca
-const aCitta = k => articolata('a', CITTA_DI[k].nome)
+const aCitta = k => articolata('a', cittaDi(k).nome)
 
 const MODELLI = {
-  // Porta una cosa da una città a un'altra: si consegna alla bacheca di laggiù (fatta e consegnata in un colpo)
+  // Porta una cosa da una città a un'altra: si consegna alla bacheca di laggiù (fatta e consegnata in un colpo). Con una città sola nessuna
+  // bacheca la appende più; quelle prese prima (`t:villaggio:consegna:forte:…`) si consegnano al villaggio
   consegna: {
     fa: c => {
-      if (!CITTA_DI[c.p] || c.p === c.citta) return null
-      const og = scegli(COSE_PORTATE, c.id)
+      if (!cittaDi(c.p) || c.p === c.citta) return null
+      const og = scegli(COSE_PORTATE, c.id), a = cittaDiOggi(c.p)
       const dove = aCitta(c.p)
-      return { tipo: 'consegna', titolo: `${og.nome} ${dove}`, em: og.em, dove: CITTA_DI[c.p].nome, aCitta: c.p, consegnaA: c.p,
+      return { tipo: 'consegna', titolo: `${og.nome} ${dove}`, em: og.em, dove: cittaDi(c.p).nome, aCitta: a, consegnaA: a,
                livello: Math.max(livelloDellaCitta(c.p), livelloDellaCitta(c.citta)),
                dice: `Serve qualcuno che porti ${minuscolo(og.nome)} ${dove}. Si consegna alla bacheca di laggiù. La strada è lunga, la paga è giusta.`,
                grazie: 'Consegna ricevuta. Il fattorino è pagato: ecco le gemme.',
-               verbo: ['Da portare', 'Portato'], nota: `alla bacheca ${articolata('di', CITTA_DI[c.p].nome)}` }
+               verbo: ['Da portare', 'Portato'], nota: `alla bacheca ${articolata('di', cittaDi(c.p).nome)}` }
     },
   },
   'esplora-regione': {
     fa: c => {
       const r = REGIONE_DI[c.p]
-      if (!r || anelloDi(r) < 1) return null
+      if (!r) return null
       return { tipo: 'esplora', titolo: `Vedi ${minuscolo(r.nome)}`, em: '🔭', dove: r.nome, regione: r.chiave, bersaglio: { tipo: 'regione', chiave: r.chiave },
                livello: livelloDellaRegione(r.chiave),
                dice: `Nessuno ha ancora disegnato ${minuscolo(r.nome)} sulla mappa. Vacci, guardati attorno, e torna a raccontarlo.`,
@@ -149,21 +162,26 @@ const MODELLI = {
   'esplora-ingresso': {
     fa: c => {
       const d = DUNGEON_DI[c.p]
-      if (!d || d.indice < 0) return null
-      return { tipo: 'esplora', titolo: `Trova ${minuscolo(d.nome)}`, em: '🔭', dove: d.nome, regione: d.regione, discesa: null, bersaglio: { tipo: 'ingresso', chiave: d.chiave },
+      if (!d || d.indice === -1) return null
+      return { tipo: 'esplora', titolo: `Trova ${minuscolo(d.nome)}`, em: '🔭', dove: d.nome, zona: d.zona, discesa: null, bersaglio: { tipo: 'ingresso', chiave: d.chiave },
                livello: livelloDelDungeon(d.chiave),
                dice: `Si dice che ${minuscolo(d.nome)} abbia un ingresso nascosto. Trovalo, e dicci dov'è.`,
                grazie: 'Ora lo possiamo segnare sulla mappa. Ecco il compenso.',
                verbo: ['Da trovare', 'Trovato'], nota: 'si trova camminando' }
     },
   },
+  // la pietra di una zona (il parametro è la zona: `t:villaggio:esplora-pietra:palude:3`); gli id di prima nominano una città (la pietra
+  // del villaggio) o un dungeon (la pietra della sua zona)
   'esplora-pietra': {
     fa: c => {
-      const nome = CITTA_DI[c.p] ? `la pietra ${articolata('di', CITTA_DI[c.p].nome)}` : DUNGEON_DI[c.p] ? `la pietra davanti ${articolata('a', DUNGEON_DI[c.p].nome)}` : null
-      if (!nome) return null
-      const liv = CITTA_DI[c.p] ? livelloDellaCitta(c.p) : livelloDelDungeon(c.p)
-      return { tipo: 'esplora', titolo: `Trova ${nome}`, em: '🔭', dove: CITTA_DI[c.p] ? CITTA_DI[c.p].nome : DUNGEON_DI[c.p].nome,
-               regione: CITTA_DI[c.p] ? CITTA_DI[c.p].regione : DUNGEON_DI[c.p].regione, bersaglio: { tipo: 'pietra', chiave: c.p }, livello: liv,
+      const Z = ZONE_DEL_MONDO.find(z => z.chiave === c.p)
+      const chiave = Z ? `zona:${Z.chiave}` : cittaDi(c.p) ? 'villaggio' : DUNGEON_DI[c.p] ? pietraDiOggi(c.p) : null
+      if (!chiave) return null
+      const zz = chiave === 'villaggio' ? null : ZONE_DEL_MONDO.find(z => `zona:${z.chiave}` === chiave)
+      const nome = zz ? `la pietra ${articolata('di', zz.nome)}` : `la pietra ${articolata('di', VILLAGGIO.nome)}`
+      const liv = zz ? Math.max(1, zz.fascia[0]) : 1
+      return { tipo: 'esplora', titolo: `Trova ${nome}`, em: '🔭', dove: zz ? zz.nome : VILLAGGIO.nome,
+               zona: zz ? zz.chiave : null, bersaglio: { tipo: 'pietra', chiave }, livello: liv,
                dice: `Le pietre del viaggio non si trovano da sole. Cerca ${nome}: chi la trova non la dimentica.`,
                grazie: 'Una pietra in più sulla mappa. Ecco il compenso.',
                verbo: ['Da trovare', 'Trovata'], nota: 'si trova camminando' }
@@ -173,7 +191,7 @@ const MODELLI = {
   'trova-chi': {
     fa: c => {
       const r = REGIONE_DI[c.p]
-      if (!r || anelloDi(r) < 1) return null
+      if (!r) return null
       const v = scegli(VIANDANTI, c.id)
       return { tipo: 'trovachi', titolo: `Cerca ${minuscolo(v.nome)}`, em: '🗣️', dove: r.nome, regione: r.chiave, viandante: v, livello: livelloDellaRegione(r.chiave),
                dice: `${v.nome} è uscito a cercare ${v.perso} e non è più tornato. Dicono che sia ${articolata('in', r.nome)}. Trovalo e digli che a casa lo aspettano.`,
@@ -185,7 +203,7 @@ const MODELLI = {
   mappa: {
     fa: c => {
       const r = REGIONE_DI[c.p]
-      if (!r || anelloDi(r) < 1) return null
+      if (!r) return null
       return { tipo: 'mappa', titolo: `La mappa ${articolata('di', r.nome)}`, em: '🗺️', dove: r.nome, regione: r.chiave, livello: livelloDellaRegione(r.chiave),
                dice: `Sul foglio c'è una mappa strappata con una X, ${articolata('in', r.nome)}. Seguila, scava dove segna la X, e riporta quello che trovi.`,
                grazie: 'Il tesoro esiste davvero! Ecco la tua parte.',
@@ -200,7 +218,7 @@ const MODELLI = {
       const t = CAMPAGNA.find(x => x.chiave === k), cac = CACCE[k] && CACCE[k][specie]
       if (!t || !cac || !MOSTRI[specie]) return null
       const [quanti, nomi] = cac
-      return { tipo: 'conta', specie, quanti, nomi, titolo: `${quanti} ${nomi}`, em: MOSTRI[specie].em, dove: t.nome, discesa: k, piano: 0, regione: DUNGEON_DI[k].regione,
+      return { tipo: 'conta', specie, quanti, nomi, titolo: `${quanti} ${nomi}`, em: MOSTRI[specie].em, dove: t.nome, discesa: k, piano: 0, zona: DUNGEON_DI[k].zona,
                livello: livelloDelDungeon(k), gemmeSu: quanti,
                dice: `Cacciatori cercasi: ${quanti} ${nomi} ${articolata('in', t.nome)}. Sconfiggili tutti, anche in più discese, e torna qui.`,
                grazie: 'Bel lavoro. La paga di chi non si tira indietro.' }
@@ -215,7 +233,7 @@ const MODELLI = {
       if (!t || !t.mostri.includes(specie) || !MOSTRI[specie] || MOSTRI[specie].capo || k === 'abisso') return null
       const nome = `${scegli(SOPRANNOMI, c.id)}, ${definito(MOSTRI[specie].nome)}`
       const piano = hash(c.id + 'p') % Math.min(t.piani, 3)
-      return { tipo: 'sconfiggi', mostro: { tipo: specie, nome }, titolo: nome, em: '👑', dove: t.nome, discesa: k, piano, regione: DUNGEON_DI[k].regione,
+      return { tipo: 'sconfiggi', mostro: { tipo: specie, nome }, titolo: nome, em: '👑', dove: t.nome, discesa: k, piano, zona: DUNGEON_DI[k].zona,
                livello: livelloDelDungeon(k),
                dice: `Una taglia: ${nome}, ${articolata('in', t.nome)}, al ${['primo', 'secondo', 'terzo'][piano]} piano. Ha la corona in testa. Battilo.`,
                grazie: 'La taglia è tua. Ecco le gemme promesse.' }
@@ -230,7 +248,7 @@ const MODELLI = {
       const cosa = COSE_PERSE[Number(p)]
       if (!t || !cosa) return null
       const piano = hash(c.id + 'p') % Math.min(t.piani, 3)
-      return { tipo: 'trova', cosa, titolo: cosa.nome, em: cosa.em, dove: t.nome, discesa: k, piano, regione: DUNGEON_DI[k].regione, livello: livelloDelDungeon(k),
+      return { tipo: 'trova', cosa, titolo: cosa.nome, em: cosa.em, dove: t.nome, discesa: k, piano, zona: DUNGEON_DI[k].zona, livello: livelloDelDungeon(k),
                dice: `${cosa.nome} è finito ${articolata('in', t.nome)}, al ${['primo', 'secondo', 'terzo'][piano]} piano. Chi lo riporta ha la sua paga.`,
                grazie: 'Proprio quello! Ecco la paga promessa.' }
     },
@@ -280,17 +298,18 @@ export function rifaDaId(id) {
   if (!eTaglia(id)) return null
   const [, citta, modello, p, giro] = String(id).split(':')
   const mod = MODELLI[modello]
-  if (!mod || !CITTA_DI[citta] || p == null || !/^\d+$/.test(giro || '')) return null
+  if (!mod || !cittaDi(citta) || p == null || !/^\d+$/.test(giro || '')) return null
   const c = mod.fa({ id, citta, p, giro: Number(giro) })
   if (!c) return null
   const { gemmeSu, livello, ...resto } = c
   const gemme = gemmePer(baseDi(modello), livello, gemmeSu || 1)
-  const consegnaA = c.consegnaA || citta
+  // la città di oggi: un id col forte o col rifugio si legge, si fa e si consegna al villaggio (l'id resta quello salvato)
+  const qui = cittaDiOggi(citta), consegnaA = c.consegnaA || qui
   return {
-    id, taglia: true, modello, citta, giro: Number(giro), param: p,
-    da: `bacheca:${citta}`, consegnaA, discesa: null, piano: null, regione: null, ...resto,
+    id, taglia: true, modello, citta: qui, giro: Number(giro), param: p,
+    da: `bacheca:${qui}`, consegnaA, discesa: null, piano: null, regione: null, zona: null, ...resto,
     premio: { gemme },
-    ritorno: '', torna: `Passa dalla bacheca ${articolata('di', CITTA_DI[consegnaA].nome)}: hai finito`,
+    ritorno: '', torna: `Passa dalla bacheca ${articolata('di', cittaDi(consegnaA).nome)}: hai finito`,
     richiede: [], fuoriDalTetto: true,   // le taglie hanno il loro tetto (TETTO_TAGLIE), a parte quello dei personaggi
   }
 }
@@ -299,7 +318,7 @@ export function rifaDaId(id) {
 // `bacheca:<città>`: chi dà le taglie. Il diario e le frasi la nominano come un personaggio (dati/missioni.js, personaDi)
 export const bachecaDiChi = da => {
   const m = /^bacheca:(\w+)$/.exec(da || '')
-  return m && CITTA_DI[m[1]] ? bacheca(m[1]) : null
+  return m && cittaDi(m[1]) ? bacheca(m[1]) : null
 }
 
 /* ═══════════ i guasti ═══════════ */
