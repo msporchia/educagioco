@@ -8,7 +8,7 @@ import {
   ASPETTO, FORME, mat, creaCampo, aggiornaCampo, creaPasticceria, creaMongolfiera, creaMulino, creaPanificio, creaConserviera,
   creaGelateria, creaCaseificio, creaSegnaposto, creaAiuola, creaPanchina, creaPozzo, creaSpaventapasseri, creaBancarella,
   creaFontana, creaPecora, creaRecinto, muoviPecore, creaGallina, creaPollaio, creaStalla, muoviBestie, creaMucca,
-  creaFienile, creaCasa, creaEroe, creaTrattore, creaCassa,
+  creaFienile, creaCasa, creaTrattore, creaCassa,
 } from '../../../src/giochi/fattoria3d/scena3d/modelli.js'
 import { creaContadino, creaCane, posaCane, creaGatto, posaGatto } from '../../../src/giochi/fattoria3d/scena3d/modelli-compagni.js'
 import { PEZZI, EDIFICI } from '../../../src/giochi/fattoria3d/dati/catalogo.js'
@@ -97,7 +97,6 @@ export const VOCI = [
   // ── chi gira per la fattoria ──
   { id: 'fattoria:contadino', nome: 'Contadino (l\'eroe)', gioco: 'fattoria', categoria: 'personaggio', dove: 'il giocatore, sempre in scena (eroe.js); semina, falcia, abbatte', file: `${MC}:creaContadino`, crea: () => creaContadino('contadino') },
   { id: 'fattoria:contadina', nome: 'Contadina', gioco: 'fattoria', categoria: 'personaggio', dove: 'aspetto alternativo dell\'eroe (ASPETTO_ERO in dati/compagni.js), oggi non scelto', file: `${MC}:creaContadino`, crea: () => creaContadino('contadina') },
-  { id: 'fattoria:eroe-vecchio', nome: 'Contadino (vecchio, a scatole)', gioco: 'fattoria', categoria: 'personaggio', dove: 'ripiego di eroe.js se la faccia a trama canvas non parte', file: `${M}:creaEroe`, crea: () => creaEroe() },
   { id: 'fattoria:watson', nome: `${COMPAGNI.watson.nome} (bobtail)`, gioco: 'fattoria', categoria: 'animale', dove: `il cane di casa, arriva al livello ${COMPAGNI.watson.liv} (scena3d/compagni.js)`, file: `${MC}:creaCane`,
     crea: () => creaCane(), anima: (g, dt, t) => posaCane(g, { stato: 'sta', t }) },
   ...['briciola', 'zenzero', 'pepe'].map(id => ({

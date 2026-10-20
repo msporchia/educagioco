@@ -1,7 +1,6 @@
 // L'eroe: cammina lungo un percorso (o corre, se la meta è lontana), si gira verso la cosa, e fa il gesto del momento (semina,
 // falcia, abbatte, esulta). Decide il movimento e la posa, non le regole: la strada la dice il motore, e cosa succede alla fine
 // di un gesto lo dice chi l'ha chiesto (`fn` a ogni passo del gesto, `fine` alla fine).
-import { creaEroe } from './modelli.js'
 import { creaContadino } from './modelli-compagni.js'
 import { ASPETTO_ERO } from '../dati/compagni.js'
 import { PARTENZA } from '../dati/mondo.js'
@@ -12,7 +11,7 @@ const ang = (a, b, k) => { let d = b - a; d = Math.atan2(Math.sin(d), Math.cos(d
 export class Eroe {
   constructor(scena, motore, effetti) {
     this.m = motore; this.fx = effetti
-    try { this.grp = creaContadino(ASPETTO_ERO) } catch (e) { this.grp = creaEroe() }      // il vecchio resta come ripiego (una trama canvas che non parte)
+    this.grp = creaContadino(ASPETTO_ERO)
     scena.add(this.grp)
     this.x = PARTENZA.x; this.z = PARTENZA.z; this.dir = Math.PI
     this.percorso = []; this.dopo = null; this.verso = null; this.az = null

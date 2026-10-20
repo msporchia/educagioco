@@ -13,7 +13,6 @@ const ctx = new Proxy({}, { get: (_, k) => k === 'canvas' ? {} : () => {}, set: 
 globalThis.document = { createElement: () => ({ width: 0, height: 0, getContext: () => ctx }) }
 const THREE = await import('three')
 const { creaContadino, creaCane, creaGatto, posaCane, posaGatto, creaCompagno, misure } = await import('../../src/giochi/fattoria3d/scena3d/modelli-compagni.js')
-const { creaEroe } = await import('../../src/giochi/fattoria3d/scena3d/modelli.js')
 const { Compagni } = await import('../../src/giochi/fattoria3d/scena3d/compagni.js')
 
 /* ══════════ 1. i dati ══════════ */
@@ -68,7 +67,7 @@ controlla('l\'aspetto del contadino è uno dei due', ['contadino', 'contadina'].
 
 /* ══════════ 4. i modelli ══════════ */
 {
-  const vecchio = misure(creaEroe())
+  const vecchio = { altezza: 1.26 }                       // l'eroe a scatole di prima, tolto: i gesti e la camera sono tarati su lui
   for (const aspetto of ['contadino', 'contadina']) {
     const m = misure(creaContadino(aspetto))
     dentro(`${aspetto}: l'altezza è vicina a quella di prima`, m.altezza, vecchio.altezza - 0.2, vecchio.altezza + 0.1)

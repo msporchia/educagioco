@@ -738,45 +738,6 @@ export const FORME = {
   ciuffo: new THREE.ConeGeometry(0.05, 0.28, 4).translate(0, 0.14, 0),
 }
 
-// ── l'eroe: tutto primitive, con i perni per camminare, seminare, falciare ──
-export function creaEroe () {
-  const g = new THREE.Group()
-  const pelle = mat(0xf2c7a0), salopette = mat(0x3a62b0), maglia = mat(0xd24a3a), paglia = mat(0xe6c36a), scuro = mat(0x2a2018)
-  const gambe = [-1, 1].map(s => {
-    const p = new THREE.Group(); p.position.set(s * 0.09, 0.34, 0); g.add(p)
-    scatola(p, 0.13, 0.3, 0.15, salopette, 0, -0.15, 0); scatola(p, 0.14, 0.07, 0.2, scuro, 0, -0.32, 0.03); return p
-  })
-  const busto = new THREE.Group(); busto.position.y = 0.34; g.add(busto)
-  scatola(busto, 0.36, 0.34, 0.2, maglia, 0, 0.17, 0)
-  scatola(busto, 0.36, 0.2, 0.21, salopette, 0, 0.1, 0)
-  for (const s of [-1, 1]) scatola(busto, 0.06, 0.2, 0.22, salopette, s * 0.1, 0.27, 0)
-  const testa = new THREE.Group(); testa.position.y = 0.5; busto.add(testa)
-  sfera(testa, 0.16, pelle, 0, 0.14, 0, 1, 1, 1, 12)
-  sfera(testa, 0.02, scuro, 0.06, 0.16, 0.14, 1, 1, 1, 6); sfera(testa, 0.02, scuro, -0.06, 0.16, 0.14, 1, 1, 1, 6)
-  cilindro(testa, 0.27, 0.27, 0.03, paglia, 0, 0.27, 0, 14)
-  cilindro(testa, 0.14, 0.15, 0.13, paglia, 0, 0.34, 0, 12)
-  cilindro(testa, 0.145, 0.155, 0.04, mat(0xd24a3a), 0, 0.3, 0, 12)
-  const bracci = [-1, 1].map(s => {
-    const p = new THREE.Group(); p.position.set(s * 0.23, 0.3, 0); busto.add(p)
-    scatola(p, 0.09, 0.28, 0.1, maglia, 0, -0.13, 0); sfera(p, 0.055, pelle, 0, -0.29, 0, 1, 1, 1, 8); return p
-  })
-  // la falce: nel pugno destro, solo mentre si taglia
-  const falce = new THREE.Group(); falce.visible = false
-  bracci[1].add(falce); falce.position.set(0, -0.29, 0)
-  cilindro(falce, 0.018, 0.018, 1.1, mat(0x9a6a36), 0, -0.4, 0, 5)
-  const lama = pronto(new THREE.Mesh(new THREE.TorusGeometry(0.3, 0.022, 4, 14, Math.PI * 0.7), mat(0xcfd6dc, { metalness: 0.5, roughness: 0.4 })))
-  lama.rotation.set(Math.PI / 2, 0, Math.PI * 0.15); lama.position.set(0, -0.94, 0.0)
-  falce.add(lama)
-  // l'ascia: nel pugno destro, solo mentre si abbatte
-  const ascia = new THREE.Group(); ascia.visible = false
-  bracci[1].add(ascia); ascia.position.set(0, -0.29, 0)
-  cilindro(ascia, 0.022, 0.022, 0.7, mat(0x9a6a36), 0, -0.25, 0, 5)
-  scatola(ascia, 0.05, 0.16, 0.2, mat(0xcfd6dc, { metalness: 0.5, roughness: 0.4 }), 0, -0.56, 0.1)
-  g.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true } })
-  g.userData = { gambe, busto, testa, bracci, falce, ascia }
-  return g
-}
-
 // ── il fantasma di un pezzo che si sta per mettere: semitrasparente, verde se ci sta e rosso se no ──
 export function fantasma(g) {
   g.traverse(o => {

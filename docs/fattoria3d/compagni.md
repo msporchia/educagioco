@@ -26,7 +26,7 @@ scintille e `ui.avviso` («Watson è arrivato!»). Il controllo è una volta al 
   sorriso), cappello di paglia col nastro, salopette con toppe, stivali, fazzoletto rosso al collo. `ASPETTO_ERO` in
   `dati/compagni.js` sceglie `'contadino'` o `'contadina'` (trecce, nastro rosa, ciglia, un fiore sul cappello); non c'è
   schermata di scelta. Ha gli **stessi perni** del vecchio (`gambe`, `busto`, `testa`, `bracci`, `falce`, `ascia`), quindi
-  `eroe.js` e i gesti non sono cambiati; `creaEroe` di `modelli.js` resta come ripiego se la trama non parte. In più
+  `eroe.js` e i gesti non sono cambiati (il vecchio a scatole, `creaEroe`, è stato tolto: aveva la testa staccata). In più
   respira da fermo e inclina la testa camminando (poche righe in `Eroe._posa`).
 - **Watson** (`creaCane`): pelo grigio e bianco arruffato (icosaedri a facce piatte e ciuffi a cono), macchia scura sulla
   testa, orecchie penzolanti, **il ciuffo bianco copre gli occhi** (se ne vedono solo due puntini sotto), naso nero,
