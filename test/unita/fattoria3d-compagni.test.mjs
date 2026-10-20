@@ -82,6 +82,7 @@ controlla('l\'aspetto del contadino è uno dei due', ['contadino', 'contadina'].
   dentro('Watson: è un cane grande (lungo)', cane.lunghezza, 0.9, 1.6)
   dentro('Watson: ma non è alto più dell\'eroe', cane.altezza, 0.7, 1.1)
   dentro('Watson: pochi mesh', cane.mesh, 15, 45)
+  dentro('Watson: il pelo a ciocche resta sotto gli 8000 triangoli', cane.triangoli, 3000, 8000)
   // niente coda a vista: il punto più indietro è il moncherino, che non sporge più di un palmo oltre il corpo
   const dietro = (() => { const b = new THREE.Box3().setFromObject(creaCane()); return -b.min.z })()
   dentro('Watson: dietro non sporge niente di lungo (il bobtail non ha coda)', dietro, 0.3, 0.75)
@@ -109,7 +110,7 @@ controlla('l\'aspetto del contadino è uno dei due', ['contadino', 'contadina'].
   uguale('le pose non producono numeri sbagliati', guasto, '')
   posaCane(cane2, { stato: 'siede' }); const seduto = misure(cane2)
   controlla('Watson seduto è più basso di dietro e non affonda nel suolo', seduto.sotto > -0.05, String(seduto.sotto))
-  posaCane(cane2, { stato: 'dorme' }); controlla('Watson che dorme sta basso', misure(cane2).altezza < 0.6, String(misure(cane2).altezza))
+  posaCane(cane2, { stato: 'dorme' }); controlla('Watson che dorme sta basso (meno di due terzi di quando sta in piedi: la testa grande non si schiaccia)', misure(cane2).altezza < 0.66 * cane.altezza, String(misure(cane2).altezza))
   posaGatto(gatto, { stato: 'dorme' }); controlla('il gatto che dorme sta sotto i 30 cm', misure(gatto).altezza < 0.35, String(misure(gatto).altezza))
 }
 
