@@ -18,7 +18,7 @@ import { apertura, scelte as scelteDi, risposta as rispostaDi, dopoLaPresa, dopo
 import { laStoria, dettoDelLivello } from '../motore/storia.js'
 import { DETTI_DEL_COLORE, C_E_UNA_NOTIZIA } from '../dati/zone.js'
 import { iconaDi } from '../dati/terra.js'
-import { ilMondo, seguiLEroe, terraDelMondo, zonaDi, postiDi, cittaInCella, regioneInCella, zonaInCella, portaleDella, minatoreDi, ingressoDi,
+import { ilMondo, seguiLEroe, terraDelMondo, zonaDi, baseDi, postiDi, cittaInCella, regioneInCella, zonaInCella, portaleDella, minatoreDi, ingressoDi,
          nomeDellaPietra, difDellaPietra, pietraAccanto, meteDelViaggio, mondoDaSalvato, mondoDaSalvare, lontanoDalleCitta,
          frecceDelCartello, dungeonDi, dungeonDellIndice, fontaneDi, curaDellaFontana, VISTA_MONDO, PASSO_MONDO } from '../motore/mondo-sopra.js'
 import { rettangoloPersona, rettangoloPosto, personaVicina, spartisciPersone, SCARTO_DITO } from '../scena3d/mondo/dito.js'
@@ -33,7 +33,7 @@ import { annuncioDi, alSicuro } from '../motore/aperta.js'
 import { fotoDelloScontro } from '../motore/aperta-scena.js'
 import { allaCitta } from '../motore/forze-sopra.js'
 import { SOPRA } from '../dati/mondo-aperto-mostri.js'
-import { campoVersoLaMeta, celleDelVelo, luciDellaStrada, piuVicina, passiDetti, ARRIVATO_META } from '../motore/meta-sopra.js'
+import { campoVersoLaMeta, metaVicina, celleDelVelo, luciDellaStrada, piuVicina, passiDetti, ARRIVATO_META } from '../motore/meta-sopra.js'
 
 const props = defineProps({
   tappe: { type: Array, required: true },
@@ -225,6 +225,8 @@ function arriva() {
   const q = meta
   meta = null
   if (q && q.tipo === 'terra') { emit('raccogli', q.i); salva(); return }   // Gioco.vue la mette in tasca (raccogliDaTerra)
+  // arrivati fin dove la strada era caricata: la zona dopo si carica (da fermi), la meta si rifà e «portami lì» riprende da sé
+  if (q && q.tipo === 'avanti') { const c = cellaDiMe(); if (Math.hypot(c.x - q.da.x, c.y - q.da.y) > 3) setTimeout(() => { if (!via.length && !inScontro && !dialogo.value) portami({ sempre: true }) }, 600); return }
   if (q) apri(q)
 }
 function passo(dt, t) {
@@ -490,7 +492,8 @@ const LARGO_FUM = 244
 const ctxBacheca = () => ({ m, eroe: props.eroe.chiave, giro: giro.value, tappe: props.tappe, stati: props.missioni,
                             visto: (x, y) => nebbia[y * m.W + x] === 1 })
 const ctx = () => ({ stati: props.missioni, tappe: props.tappe, abisso: !!props.abisso, eroe: props.eroe.chiave,
-                     roba: props.roba, annuncio: props.annuncio, novita: ascoltate.value, forze: props.forze, mondo: true })
+                     roba: props.roba, annuncio: props.annuncio, novita: ascoltate.value, forze: props.forze, mondo: true,
+                     forza: props.forza })   // la forza: il minatore e il capitano dicono in che zona stanno i mostri giusti per te
 // sotto il livello di una discesa della storia (i sei nuovi non hanno l'eroe atteso: lo dice il colore del pallino)
 const livelloDi = t => (t && !t.fatta && t.indice != null && t.indice >= 0 && props.roba ? dettoDelLivello(props.eroe.chiave, props.roba, t, t.indice) : null)
 function rigaStoria(t) {
@@ -926,7 +929,7 @@ const metaOra = shallowRef(null), guidato = ref(false), fermato = ref(null)
 // i passi si scrivono nel DOM (come i rettangoli dei bersagli): un ref rifarebbe tutta la vista a ogni cella camminata
 const passiEl = ref(null)
 let passiMeta = Infinity
-let campo = null, luci = [], guidaVisti = new Set()
+let campo = null, luci = [], guidaVisti = new Set(), terraDelCampo = null, restoDellaStrada = 0
 const VELO_META = 2.5   // le celle aperte attorno alla strada, in celle
 const daQui = (a, b) => Math.hypot(a.piede.x - io.x, a.piede.y - io.z) - Math.hypot(b.piede.x - io.x, b.piede.y - io.z)
 const nomeDi = b => (b.ruolo === 'bacheca' ? personaDi(`bacheca:${b.citta}`).nome : b.nome || '')
@@ -953,13 +956,19 @@ function trovaLaMeta() {
 function aggiornaMeta() {
   const q = trovaLaMeta()
   if (!q) { if (metaOra.value) { metaOra.value = null; campo = null; luci = []; posaLaStrada(null) } return }
-  if (!metaOra.value || metaOra.value.chiave !== q.chiave) {
+  // una meta in una zona mai caricata: il campo va fin dove la strada maestra è caricata (metaVicina), e si rifà quando la terra cambia
+  // (una zona caricata): la scia va avanti a pezzi; i passi detti contano anche il resto della strada, lungo l'arco
+  if (!metaOra.value || metaOra.value.chiave !== q.chiave || terraDelCampo !== terra) {
+    const nuova = !metaOra.value || metaOra.value.chiave !== q.chiave
     metaOra.value = markRaw(q)
-    const fine = terra.passa(q.cella.x, q.cella.y) ? q.cella : terra.arrivo(m.partenza, q.cella)
+    terraDelCampo = terra
+    const v = metaVicina(m, terra, q.cella)
+    const fine = v && (terra.passa(v.x, v.y) ? v : terra.arrivo(m.partenza, v))
     campo = fine ? campoVersoLaMeta(terra, fine) : null
-    rifaiLaStrada()
+    restoDellaStrada = v && v.lontana && fine ? Math.abs(baseDi(m, q.cella.x, q.cella.y).arco - baseDi(m, fine.x, fine.y).arco) : 0
+    if (nuova || !cammina.value) rifaiLaStrada()
   }
-  const c = cellaDiMe(), n = campo ? campo.passi(c.x, c.y) : Infinity
+  const c = cellaDiMe(), n = campo ? campo.passi(c.x, c.y) + restoDellaStrada : Infinity
   const tondo = Number.isFinite(n) ? Math.round(n) : Infinity
   if (tondo !== passiMeta || (passiEl.value && passiEl.value.dataset.passi == null && Number.isFinite(tondo))) {
     passiMeta = tondo
@@ -998,7 +1007,8 @@ function portami({ sempre = false } = {}) {
   if (q.b && Math.hypot(io.x - (q.b.accanto.x + 0.5), io.z - (q.b.accanto.y + 0.5)) <= 1.5) { via = []; cammina.value = false; return apri(q.b) }
   const punti = rifaiLaStrada()
   if (!punti) return q.b ? tocca(q.b) : vaiA(q.cella)
-  via = punti.slice(1); meta = q.b || null; primaVolta.value = false
+  // una meta lontana (in una zona non ancora caricata): si va fin dove arriva la strada, e lì si riparte (arriva, «avanti»)
+  via = punti.slice(1); meta = restoDellaStrada > 0 ? { tipo: 'avanti', da: cellaDiMe() } : q.b || null; primaVolta.value = false
   guidaVisti = new Set(scena.S.mostri.filter(x => x.alfa > 0.3).map(x => x.i))
   if (!via.length) return arriva()
   cammina.value = true; guidato.value = true
