@@ -1,10 +1,11 @@
 # Il mondo a percorso: i lavori
 
 Come si costruisce [mondo-a-percorso.md](mondo-a-percorso.md): cosa cambia modulo per modulo, il salvataggio e la migrazione, quanto
-costa, e la spartizione in cinque compiti con file disgiunti. **Il compito A è fatto** (20 ottobre): il generatore a blocchi
+costa, e la spartizione in cinque compiti con file disgiunti. **I compiti A e B sono fatti** (20 ottobre): il generatore a blocchi
 `motore/mondo-percorso.js` e il suo contratto in [mondo-aperto-generatore.md](mondo-aperto-generatore.md), che vale sopra questa
 pagina dove le due non tornano (una città sola, 504×300, le funzioni di caricamento: le decisioni in
-[mondo-a-percorso.md](mondo-a-percorso.md#decisioni-del-20-ottobre)). Il prototipo è stato tolto.
+[mondo-a-percorso.md](mondo-a-percorso.md#decisioni-del-20-ottobre)); il motore di sopra (B) in
+[mondo-sopra-contratto.md](mondo-sopra-contratto.md). Il prototipo è stato tolto.
 
 ## La mappa di impatto
 
@@ -86,6 +87,9 @@ e poi di E; `Mondo3d.vue` e `scena3d/mondo/indice.js` sono di D e poi di E.
 
 ### B. Il motore di sopra — 2 giorni, dopo A
 
+- **Fatto** (20 ottobre): il contratto e la tabella vecchio → nuovo per la scena in [mondo-sopra-contratto.md](mondo-sopra-contratto.md);
+  i mostri per zona e le misure in [mondo-aperto-mostri.md](mondo-aperto-mostri.md); il travaso in [mondo-aperto-dati.md](mondo-aperto-dati.md).
+  Il motore di prima resta in `motore/mondo-sopra-anelli.js` finché la scena lo importa (lo cancella D, col mondo ad anelli).
 - **File suoi**: `motore/mondo-sopra.js`, `motore/aperta.js`, `dati/mondo-aperto-mostri.js`, `motore/taglie-bacheca.js`,
   `dati/missioni-modelli.js`, `motore/banco-mondo.js`, i loro test (`unita/sotterraneo-mondo-salva`, `-mondo-mostri`,
   `-quest-modelli`, `-citta`, `-mostri-sopra-scena`), `docs/sotterraneo/mondo-aperto-mostri.md`.

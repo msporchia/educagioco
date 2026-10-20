@@ -155,7 +155,7 @@ chiavi restano (sono nei salvataggi e negli sprite).
 |---|---|---|
 | `badessa` (missione) | la Badessa Grigia | la Dama Grigia |
 | `eremita` | l'eremita | il frate (dell'altare) |
-| `capitano` | (nuovo, 19 ottobre, solo nel mondo 3D) | il capitano del forte |
+| `capitano` | (nuovo, 19 ottobre, solo nel mondo 3D) | il capitano (della guardia) |
 | `armaiolo` | l'armaiolo | il fabbro |
 | `incantatrice` | (nuova, 13 ottobre) | l'incantatrice |
 | `erborista` | l'erborista | la guaritrice |
@@ -174,13 +174,18 @@ test (`unita/sotterraneo-nomi`) controlla che nessun testo dica un nome di prima
 
 ## Il capitano del forte
 
-Solo nel mondo 3D, nel forte del guado (`PERSONAGGI_DI_SOPRA`, `CITTADINI` in `dati/missioni.js`: non chiede favori, la mappa dipinta
-non lo conosce). Lo sprite è quello della guardia, più alto (1,38 contro 1,25) e col blu del suo mantello (un lampo additivo piccolo,
-`tinta`); niente figura nuova. Apre la storia delle marche: quando la porta di adesso è la quinta (le sale allagate) o la sesta (la
-porta dell'inferno) la dice lui, a modo suo (`DIALOGHI.capitano.porte`, `stradaDelCapitano` in `motore/dialoghi.js`), con la strada
-del mondo aperto e, se serve, la frase di chi è sotto il livello; per le altre saluta e racconta (`racconti`, da 0 a 7 porte finite).
-Finché non l'ha detta ha il «!» sopra la testa; si ricorda quale ha detto in `mondo.novita.capitano.v` (la chiave della discesa). La
-sesta porta lo manda dal minatore, che sale al rifugio.
+Solo nel mondo 3D, nel villaggio: veniva dal forte del guado, che sul mondo a percorso non c'è più (le decisioni del 20 ottobre,
+[mondo-a-percorso.md](mondo-a-percorso.md#decisioni-del-20-ottobre)). `PERSONAGGI_DI_SOPRA`, `CITTADINI` in `dati/missioni.js`: non chiede
+favori, la mappa dipinta non lo conosce. Lo sprite è quello della guardia, più alto (1,38 contro 1,25) e col blu del suo mantello (un
+lampo additivo piccolo, `tinta`); niente figura nuova. Quando la porta di adesso è la quinta (le sale allagate) o la sesta (la porta
+dell'inferno) la dice lui, a modo suo (`DIALOGHI.capitano.porte`, `stradaDelCapitano` in `motore/dialoghi.js`), con la strada del mondo
+e, se serve, la frase di chi è sotto il livello; per le altre saluta e racconta (`racconti`, da 0 a 7 porte finite). Finché non l'ha
+detta ha il «!» sopra la testa; si ricorda quale ha detto in `mondo.novita.capitano.v` (la chiave della discesa).
+
+**Nel mondo a percorso** il minatore e il capitano dicono anche, dopo la strada, la zona dove stanno i mostri della forza dell'eroe
+(`consiglioDellaZona`, `ctx.forza`: «I mostri della tua forza stanno nel bosco vecchio, oltre il ponte del mulino.»), e per prima cosa la
+porta delle terre quando si è aperta (`DIALOGHI.<chi>.terre`, `ctx.terre`). La strada (`LUOGHI_MONDO`) dice la zona e il ponte o il valico,
+mai i punti cardinali né destra e sinistra: la strada fa la serpentina, e la sinistra di chi cammina non è quella dello schermo.
 
 ## Provato e scartato
 
