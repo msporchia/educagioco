@@ -18,7 +18,8 @@ gli Asteroidi 3D e il Sotterraneo 3D: il 3D non si scrive a mano.
 | `dito.js` | i pointer sulla tela: tocco, mappa che scorre, pizzico, tenere premuto, riprendere un pezzo |
 | `camera.js` | la telecamera: segue, libera, in costruzione |
 | `effetti.js` | scintille e fumo, i testi che volano, il fumetto dell'eroe, i cartelli (`nuovoBadge`; `nuovoCartello` per le bestie, con un pulsante vero), l'albero che cade |
-| `modelli.js` | tutti i pezzi in codice (niente sprite, niente immagini: le trame sono canvas): campo a istanze con dieci colture, i sette edifici (pasticceria, mongolfiera, mulino, panificio, caseificio, conserviera, gelateria), le quattro decorazioni (aiuola, panchina, pozzo, spaventapasseri), bancarella, fontana, recinto e pecore con le loro fasi, pollaio con le galline, stalla con le mucche ([animali.md](animali.md)), fienile, casa, l'eroe |
+| `modelli.js` | tutti i pezzi in codice (niente sprite, niente immagini: le trame sono canvas): il campo (ri-esportato da `modelli-colture.js`), i sette edifici (pasticceria, mongolfiera, mulino, panificio, caseificio, conserviera, gelateria), le quattro decorazioni (aiuola, panchina, pozzo, spaventapasseri), bancarella, fontana, recinto e pecore con le loro fasi, pollaio con le galline, stalla con le mucche ([animali.md](animali.md)), fienile, casa, l'eroe |
+| `modelli-colture.js` | il campo 2×2 e le dieci colture, a istanze: vedi «Le colture» qui sotto |
 | `compagni.js`, `modelli-compagni.js` | Watson e i gatti che girano per la fattoria, e il contadino con la sua faccia: il comportamento, i corpi e le pose ([compagni.md](compagni.md)) |
 | `webgl.js` | `haWebGL2()`: si chiede senza caricare three |
 
@@ -27,6 +28,25 @@ La **vista** (`Gioco.vue` e `viste/`) apre le finestre e dice cosa si vuole; la 
 
 **Un tocco su un edificio non tuo** che non si può comprare adesso (livello o terreno che mancano) non fa camminare l'eroe, che sta fuori
 dal suo terreno: apre subito l'offerta, che dice il livello o manda al lotto da comprare prima (`_edificioDaLontano` in `mondo3d.js`).
+
+## Le colture
+
+Un campo ha quattro tessere e le piante a istanze: **una `InstancedMesh` per forma** (fusto, foglia, nastro, spiga,
+pannocchia, zucca, bacca, melanzana…), condivisa da tutte le colture; ogni coltura è una ricetta che posa le sue forme
+attorno a ogni pianta (`RICETTE` in `modelli-colture.js`, l'aspetto in `ASPETTO`). Quante istanze servono lo si conta una
+volta provando ogni coltura matura; `count` dice quante se ne disegnano e una forma che non serve è spenta.
+- **Le piante stanno in fila sulle porche** (`disp: 'file'`), come in un orto; il grano è fitto a griglia smossa (5×4 per
+  tessera), la cipolla è rimasta com'era (otto a caso).
+- **La crescita si legge**: la pianta cresce di scala, le foglie arrivano una alla volta, il frutto compare oltre 0,55 e
+  matura di colore (pomodori e fragole dal verde, la spiga dal verde all'oro); i pomodori arrivano uno alla volta, il palo
+  c'è già dalla semina.
+- **Il colore che deve variare per istanza** (il verde che matura) sta nel colore dell'istanza; dove una forma ha due
+  colori fissi (la pannocchia con le brattee, la zucca col picciolo) sono colori ai vertici, e l'istanza li tinge appena.
+- **Il peso**: un campo maturo fa 1,3–5,5k triangoli (il grano il più caro), ~11–13 mesh contando il letto; prima erano
+  ~1,6k per tutte. Il catalogo li scrive: `npm run catalogo3d:scheda -- --gioco fattoria --q "campo di"` (anche le voci
+  «in crescita», a quattro età).
+- **La patata è marrone chiaro dorato** (`0xe6c065`), come la buccia di una patata a pasta gialla appena cavata: si legge
+  sulla terra scura, e non va al giallo pieno, che la farebbe un formaggio o un limone.
 
 ## Costruire trascinando
 

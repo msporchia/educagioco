@@ -18,11 +18,13 @@ import { FISSI } from '../../../src/giochi/fattoria3d/dati/mondo.js'
 
 const M = 'src/giochi/fattoria3d/scena3d/modelli.js'
 const MC = 'src/giochi/fattoria3d/scena3d/modelli-compagni.js'
+const MCO = 'src/giochi/fattoria3d/scena3d/modelli-colture.js'
 const T = 'src/giochi/fattoria3d/scena3d/terreno.js'
 
 const pezzo = t => `pezzo del vassoio, livello ${PEZZI[t].liv}, ${PEZZI[t].w}×${PEZZI[t].d} celle`
 const unico = t => `edificio unico al posto ${EDIFICI[t].slot.i},${EDIFICI[t].slot.j}, livello ${EDIFICI[t].liv} (fantasma finché non si compra)`
 const celle = d => `${d.w}×${d.d}`
+const CRESCITE = [0.75, 1, 0.2, 0.45]    // le tessere: dietro a sinistra, dietro a destra, davanti a sinistra, davanti a destra
 const FINE = Date.now() - 1000          // «pronta»: la gallina mostra l'uovo, la mucca il secchio
 const statiStalla = () => [{ fine: FINE }, { fine: null }, { fine: Date.now() + 9e6 }, { fine: null }]   // la stalla piena: pronta, fame, al lavoro, fame
 
@@ -35,13 +37,21 @@ const mesh = (geo, m, x = 0, y = 0, z = 0, sx = 1, sy = 1, sz = 1) => {
 }
 
 export const VOCI = [
-  // ── le colture: lo stesso campo, dieci aspetti (ASPETTO in modelli.js), cresciuto del tutto ──
+  // ── le colture: lo stesso campo, dieci aspetti (ASPETTO in modelli-colture.js), cresciuto del tutto ──
   ...Object.keys(ASPETTO).map(k => ({
     id: `fattoria:campo-${k}`, nome: `Campo di ${COLTURE[k].nome.toLowerCase()}`, gioco: 'fattoria', categoria: 'pianta',
     dove: `pezzo «campo» ${celle(PEZZI.campo)} quando ci si semina ${COLTURE[k].nome.toLowerCase()} (dal livello ${COLTURE[k].liv}), qui maturo`,
-    file: `${M}:creaCampo`, misure: celle(PEZZI.campo),
+    file: `${MCO}:creaCampo`, misure: celle(PEZZI.campo),
     crea: () => { const g = creaCampo(3); aggiornaCampo(g, [1, 1, 1, 1], 0, k, false); return g },
     anima: (g, dt, t) => aggiornaCampo(g, [1, 1, 1, 1], t, k, true),
+  })),
+  // le stesse, a quattro età: davanti appena spuntata (0,2) e a metà (0,45), dietro col frutto (0,75) e matura (1)
+  ...Object.keys(ASPETTO).map(k => ({
+    id: `fattoria:crescita-${k}`, nome: `Campo di ${COLTURE[k].nome.toLowerCase()} in crescita`, gioco: 'fattoria', categoria: 'pianta',
+    dove: `il campo di ${COLTURE[k].nome.toLowerCase()} mentre cresce: tessere a 0,2 e 0,45 davanti, 0,75 e 1 dietro`,
+    file: `${MCO}:aggiornaCampo`, misure: celle(PEZZI.campo),
+    crea: () => { const g = creaCampo(3); aggiornaCampo(g, CRESCITE, 0, k, false); return g },
+    anima: (g, dt, t) => aggiornaCampo(g, CRESCITE, t, k, true),
   })),
 
   // ── i pezzi che il bambino mette dove vuole ──

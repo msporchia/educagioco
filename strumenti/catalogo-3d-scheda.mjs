@@ -47,13 +47,17 @@ try {
     page.on('console', m => m.type() === 'error' && errori.push('console: ' + m.text()))
     await page.goto(`http://localhost:${porta}/strumenti/banco/catalogo-3d.html?scheda=1&gioco=${gioco}${q ? '&lato=800&q=' + encodeURIComponent(q) : ''}${vista}`, { waitUntil: 'load', timeout: 90000 })
     await page.waitForFunction(() => window.__catalogo3d && window.__catalogo3d.pronto, null, { timeout: 180000 })
-    const { n, falliti } = await page.evaluate(() => ({ n: window.__catalogo3d.voci.filter(v => !document.querySelector(`[data-id="${CSS.escape(v.id)}"]`).hidden).length, falliti: window.__catalogo3d.errori }))
+    const { n, falliti, pesi } = await page.evaluate(() => {
+      const viste = window.__catalogo3d.voci.filter(v => !document.querySelector(`[data-id="${CSS.escape(v.id)}"]`).hidden)
+      return { n: viste.length, falliti: window.__catalogo3d.errori, pesi: viste.map(v => `${v.nome}: ${v.mesh} mesh, ${v.tri} triangoli`) }
+    })
     const file = resolve(SCATTI, `catalogo-3d-${gioco}${coda}.png`)
     if (q) {                                     // poche voci: schede grandi, solo la griglia (niente coppie)
       await page.addStyleTag({ content: 'body.contatto .griglia { grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)) }' })
       await page.locator('#griglia').screenshot({ path: file })
     } else await page.screenshot({ path: file, fullPage: true })
     console.log(`${errori.length ? '✗' : '✓'} ${gioco}: ${n} modelli → ${file}`)
+    if (q) for (const p of pesi) console.log('   ' + p)              // con --q: quanto pesa ogni voce
     for (const f of falliti) console.log('   non si crea: ' + f)
     for (const e of errori.slice(0, 8)) console.log('   ' + e)
     guasti += falliti.length + errori.length

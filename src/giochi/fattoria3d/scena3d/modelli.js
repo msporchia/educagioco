@@ -56,82 +56,8 @@ function insegna (g, testo, larg, alt, x, y, z, o) {
   m.position.set(x, y, z); g.add(m); return m
 }
 
-// ── il campo: 2×2 celle, quattro tessere, le piante sono istanze; cinque colture che si vedono diverse ──
-const STELO = new THREE.CylinderGeometry(0.012, 0.022, 1, 4).translate(0, 0.5, 0)
-const SPIGA = new THREE.ConeGeometry(0.05, 0.22, 5).translate(0, 0.11, 0)
-const FRUTTO = new THREE.IcosahedronGeometry(0.07, 0).translate(0, 0.0, 0)
-const PER_TESSERA = 8
-/** Come appare ogni coltura: altezza dello stelo, colori da acerbo a maturo, e il frutto: 'spiga' (cono in cima), 'radice'
-    (cono capovolto a terra), 'sfera' (a mezza altezza), 'terra' (sfera a fior di terra: tuberi, bulbi), 'pendulo' (frutto
-    allungato che pende). `l` è la larghezza dello stelo (di serie 2 per 'sfera', 'terra' e 'pendulo', 1 per gli altri). Tempi e nomi sono di dati/colture.js. */
-export const ASPETTO = {
-  grano:    { h: 0.9,  a: 0x5fae3a, b: 0xe6b93c, frutto: 'spiga',  fc: 0xe6b93c, fs: 1 },
-  carota:   { h: 0.3,  a: 0x4aa83a, b: 0x4aa83a, frutto: 'radice', fc: 0xf08a24, fs: 1.5 },
-  mais:     { h: 1.25, a: 0x4f9a3a, b: 0x8fa83a, frutto: 'spiga',  fc: 0xf2d23a, fs: 1.7 },
-  pomodoro: { h: 0.5,  a: 0x4a9a3a, b: 0x4a9a3a, frutto: 'sfera',  fc: 0xd8352a, fs: 1 },
-  zucca:    { h: 0.22, a: 0x5aa03a, b: 0x5aa03a, frutto: 'sfera',  fc: 0xf09a20, fs: 2.4 },
-  patata:   { h: 0.3,  a: 0x2f6a30, b: 0x3a6a2c, frutto: 'terra',  fc: 0xd8b25a, fs: 1.5, l: 2.4 },
-  fragola:  { h: 0.12, a: 0x4a9a3a, b: 0x4a9a3a, frutto: 'sfera',  fc: 0xd8203a, fs: 1.0, l: 2.6 },
-  melanzana:{ h: 0.62, a: 0x4a8a3a, b: 0x4a8a3a, frutto: 'pendulo', fc: 0x5a2a7a, fs: 1.9, l: 1.8 },
-  cipolla:  { h: 0.36, a: 0x7cc04a, b: 0x9ab04a, frutto: 'terra',  fc: 0xe8d29a, fs: 1.4, l: 0.8 },
-  lavanda:  { h: 0.55, a: 0x6a8a5a, b: 0x7a9a6a, frutto: 'spiga',  fc: 0x8a5ac8, fs: 1.3, l: 1.4 },
-}
-const LARGO = { sfera: 2, terra: 2, pendulo: 2 }
-export function creaCampo (seme = 1) {
-  const g = new THREE.Group()
-  scatola(g, 2, 0.1, 2, mat(0x6e4a2a), 0, 0.05, 0)
-  for (const z of [-0.75, -0.25, 0.25, 0.75]) scatola(g, 1.84, 0.07, 0.17, mat(0x553720), 0, 0.12, z)
-  const legno = mat(0x9a6a36)
-  scatola(g, 2.1, 0.17, 0.08, legno, 0, 0.085, 1.0); scatola(g, 2.1, 0.17, 0.08, legno, 0, 0.085, -1.0)
-  scatola(g, 0.08, 0.17, 2.1, legno, 1.0, 0.085, 0); scatola(g, 0.08, 0.17, 2.1, legno, -1.0, 0.085, 0)
-  const n = 4 * PER_TESSERA
-  const steli = new THREE.InstancedMesh(STELO, mat(0xffffff), n)
-  const spighe = new THREE.InstancedMesh(SPIGA, mat(0xffffff), n)
-  const frutti = new THREE.InstancedMesh(FRUTTO, mat(0xffffff), n)
-  for (const m of [steli, spighe, frutti]) { m.castShadow = true; m.frustumCulled = false; m.setColorAt(0, new THREE.Color()) }
-  const pos = []
-  let r = seme * 9301 + 49297
-  const caso = () => { r = (r * 9301 + 49297) % 233280; return r / 233280 }
-  for (let k = 0; k < 4; k++) {
-    const cx = (k % 2 ? 0.5 : -0.5), cz = (k < 2 ? -0.5 : 0.5)
-    for (let a = 0; a < PER_TESSERA; a++) pos.push({ x: cx + (caso() - 0.5) * 0.78, z: cz + (caso() - 0.5) * 0.78, k, fase: caso() * 6.28 })
-  }
-  g.add(steli, spighe, frutti)
-  g.userData.grano = { steli, spighe, frutti, pos }
-  return g
-}
-const D = new THREE.Object3D(), CA = new THREE.Color(), CB = new THREE.Color(), CO = new THREE.Color(), CF = new THREE.Color()
-const ZERO = new THREE.Matrix4().makeScale(0, 0, 0)
-/** crescita: quattro numeri, -1 = vuota, 0..1 = cresce (1 = matura). `vento` false = niente ondeggio. */
-export function aggiornaCampo (g, crescita, t, coltura = 'grano', vento = true) {
-  const { steli, spighe, frutti, pos } = g.userData.grano
-  const C = ASPETTO[coltura] || ASPETTO.grano
-  CA.set(C.a); CB.set(C.b); CF.set(C.fc)
-  pos.forEach((p, n) => {
-    const c = crescita[p.k]
-    if (c < 0) { steli.setMatrixAt(n, ZERO); spighe.setMatrixAt(n, ZERO); frutti.setMatrixAt(n, ZERO); return }
-    const h = 0.1 + (C.h - 0.1) * Math.sqrt(c)
-    const sway = vento ? (Math.sin(t * 1.9 + p.fase) * 0.11 + Math.sin(t * 0.8 + p.x * 2.2) * 0.07) * (0.3 + c) : 0     // il vento si vede da lontano: ~10° alla punta di un campo maturo
-    const largo = C.l || LARGO[C.frutto] || 1
-    D.position.set(p.x, 0.1, p.z); D.rotation.set(0, 0, sway); D.scale.set(largo, h, largo); D.updateMatrix(); steli.setMatrixAt(n, D.matrix)
-    const m = Math.min(1, Math.max(0, (c - 0.62) / 0.38))
-    steli.setColorAt(n, CO.copy(CA).lerp(CB, m))
-    const f = c > 0.55 ? Math.min(1, (c - 0.55) / 0.4) : 0
-    spighe.setMatrixAt(n, ZERO); frutti.setMatrixAt(n, ZERO)
-    if (C.frutto === 'spiga') {
-      D.position.set(p.x - Math.sin(sway) * h, 0.1 + Math.cos(sway) * h, p.z); D.rotation.set(0, 0, sway); D.scale.setScalar(f * C.fs); D.updateMatrix(); spighe.setMatrixAt(n, D.matrix); spighe.setColorAt(n, CF)
-    } else if (C.frutto === 'radice') {
-      D.position.set(p.x, 0.17 + 0.0, p.z); D.rotation.set(Math.PI, 0, 0); D.scale.setScalar(f * C.fs); D.updateMatrix(); spighe.setMatrixAt(n, D.matrix); spighe.setColorAt(n, CF)
-    } else if (C.frutto === 'terra') {
-      D.position.set(p.x, 0.1 + f * 0.03, p.z); D.rotation.set(0, p.fase, 0); D.scale.set(f * C.fs, f * C.fs * 0.8, f * C.fs); D.updateMatrix(); frutti.setMatrixAt(n, D.matrix); frutti.setColorAt(n, CF)
-    } else if (C.frutto === 'pendulo') {
-      D.position.set(p.x + 0.05, 0.1 + h * 0.62, p.z + 0.03); D.rotation.set(0, p.fase, 0); D.scale.set(f * C.fs, f * C.fs * 1.7, f * C.fs); D.updateMatrix(); frutti.setMatrixAt(n, D.matrix); frutti.setColorAt(n, CF)
-    } else {
-      D.position.set(p.x + 0.05, 0.1 + h * 0.5 + f * 0.04, p.z + 0.03); D.rotation.set(0, p.fase, 0); D.scale.setScalar(f * C.fs); D.updateMatrix(); frutti.setMatrixAt(n, D.matrix); frutti.setColorAt(n, CF)
-    }
-  })
-  for (const m of [steli, spighe, frutti]) { m.instanceMatrix.needsUpdate = true; m.instanceColor.needsUpdate = true }
-}
+// ── il campo e le dieci colture: in modelli-colture.js ──
+export { ASPETTO, creaCampo, aggiornaCampo } from './modelli-colture.js'
 
 // ── la pasticceria: 4×3, la porta davanti ──
 export function creaPasticceria () {

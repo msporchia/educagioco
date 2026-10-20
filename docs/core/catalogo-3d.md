@@ -13,7 +13,8 @@ npm run catalogo3d:scheda -- --gioco fattoria --q watson --angolo 90 --alto 10 -
 ```
 
 La scheda (`strumenti/catalogo-3d-scheda.mjs`) serve Vite da sé, non vuole la
-build, e dice le voci che non si creano. `CHROME=…` forza il browser.
+build, e dice le voci che non si creano; con `--q` scrive anche mesh e triangoli
+di ogni voce (quelli che si disegnano: una mesh spenta non conta). `CHROME=…` forza il browser.
 
 ## Com'è fatta
 
