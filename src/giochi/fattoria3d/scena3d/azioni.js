@@ -30,7 +30,7 @@ export class Azioni {
       case 'campo': return this.campo(cosa)
       case 'recinto': return this.cura(cosa)
       case 'pollaio': case 'stalla': return this.curaBestie(cosa)
-      case 'bancarella': pezzi.salta(cosa.id); return this.c.ui.apriBanco()      // il foglio degli ordini
+      case 'bacheca': case 'bancarella': pezzi.salta(cosa.id); return this.c.ui.apriBanco()      // il foglio degli ordini
       case 'fontana': pezzi.salta(cosa.id); fx.parla('Che bella!'); return
       case 'trattore': pezzi.salta(cosa.id); return this.c.ui.apriMappa && this.c.ui.apriMappa()      // porta ai vicini (docs/fattoria3d/vicini.md)
     }

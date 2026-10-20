@@ -267,7 +267,7 @@ function apriLivelli() { livelloNuovo.value = false; livelliAperto.value = true 
 const banco = computed(() => {
   void versione.value                        // `ordini()` riempie da sé i posti il cui riposo è finito; il conto alla rovescia vive col battito
   const aperto = motore.bancoAperto(), ordini = motore.ordini()
-  const perche = aperto ? '' : motore.livello() < LIVELLO_BANCO ? `Il banco arriva al livello ${LIVELLO_BANCO}.` : 'Metti una bancarella sulla mappa: i clienti si fermano lì a chiedere.'
+  const perche = aperto ? '' : motore.livello() < LIVELLO_BANCO ? `Il banco arriva al livello ${LIVELLO_BANCO}.` : 'Metti una bacheca (o una bancarella) sulla mappa: i clienti si fermano lì a chiedere.'
   return { aperto, perche, ordini, pronti: ordini.filter(o => o.pronto).length, visibile: motore.livello() >= LIVELLO_BANCO }
 })
 function apriBanco() { bancoMsg.value = ''; bancoAperto.value = true }

@@ -6,10 +6,13 @@ Chi chiede i raccolti e i prodotti delle macchine. Dati in `dati/ordini.js`, reg
 
 ## Le regole
 
-- **Il banco lavora se c'è la bancarella**: il livello è almeno 2 (`LIVELLO_BANCO`, quello della bancarella) **e** una
-  bancarella è messa sulla mappa (una `cosa` di tipo `bancarella` in `stato.cose`). Perché: dà un senso al pezzo, che
-  prima era una decorazione, e un bambino che non l'ha comprata non vede un'interfaccia che non ha chiesto. Messa via la
-  bancarella il banco si chiude (`ordini()` torna `[]`) ma gli ordini restano salvati e tornano rimettendola.
+- **Il banco lavora se c'è una bacheca o una bancarella**: il livello è almeno 2 (`LIVELLO_BANCO`, quello dei due pezzi) **e**
+  una `cosa` di tipo `bacheca` o `bancarella` è messa sulla mappa (`PEZZI_DEL_BANCO` in `dati/ordini.js`, letto da `bancoAperto()`).
+  La **bacheca** (2×1, 🪙 12, livello 2, 📋) è il pezzo vero del banco: i foglietti appuntati sono gli ordini aperti e sul suo
+  cartello compare «🧺 N pronti!» come per le macchine. La **bancarella** resta nel vassoio come arredo e apre lo stesso banco: chi
+  l'aveva già messa non perde niente. Perché: dà un senso al pezzo, che prima era una decorazione, e un bambino che non l'ha
+  comprato non vede un'interfaccia che non ha chiesto. Messi via tutti e due il banco si chiude (`ordini()` torna `[]`) ma gli
+  ordini restano salvati e tornano rimettendone uno.
 - **Tre ordini aperti** (`POSTI`), ciascuno di un cliente diverso (dieci personaggi del paese, `CLIENTI`: nome ed emoji,
   nessuno chiede per mestiere: il banco è per tutti).
 - **Un ordine chiede 1–3 cose diverse**: raccolti (1–4 ciascuno) o prodotti (1–2 ciascuno). Non c'è un elenco di ordini: si
@@ -70,9 +73,9 @@ ordine = { id, cliente: 'nonna', chiede: { grano: 2, pane: 1 }, premio: 7, liv: 
 
 ## La vista
 
-`viste/Banco.vue`, aperto da `Gioco.vue`: toccando la bancarella messa (`azioni.js` → `ui.apriBanco()`) o il tasto «🧺 Banco»
+`viste/Banco.vue`, aperto da `Gioco.vue`: toccando la bacheca o la bancarella messa (`azioni.js` → `ui.apriBanco()`) o il tasto «🧺 Banco»
 del `Hud` (da livello 2; il pallino rosso conta gli ordini `pronto`). Banco chiuso, il foglio dice cosa fare («Il banco arriva al
-livello 2» / «Metti una bancarella»). «Consegna» è `aria-disabled` finché manca roba, ma il tocco dice cosa manca; «Cambia» è
+livello 2» / «Metti una bacheca (o una bancarella)»). «Consegna» è `aria-disabled` finché manca roba, ma il tocco dice cosa manca; «Cambia» è
 `rifiuta`. Il premio si scrive «+N ⭐», mai monete. Il conto alla rovescia dei posti in riposo vive col battito da un quarto di
 secondo di `Gioco.vue`, che rilegge `ordini()`. L'evento `consegna` muove il contatore `fattoria3dOrdini` (traguardo `f3d-ordini`)
 e scrive «Consegnato a <cliente>: +N ⭐» nel foglio e in un avviso sopra la scena.
@@ -80,7 +83,7 @@ e scrive «Consegnato a <cliente>: +N ⭐» nel foglio e in un avviso sopra la s
 ## Nei test
 
 `unita/fattoria3d-ordini`: dati senza guasti, ordini fattibili e dentro il tetto per ogni livello (con `rnd` finto), il
-banco chiuso senza bancarella o al livello 1, consegna e `mancano`, salto di livello consegnando, rifiuto con ritardo,
+banco chiuso senza bacheca né bancarella o al livello 1, aperto con una sola delle due, la bacheca che si compra e si mette, consegna e `mancano`, salto di livello consegnando, rifiuto con ritardo,
 salvataggio e migrazione dal v2.
 
 `integrazione/fattoria3d` (sezione «il banco»), bersagli: `[data-f3="apri-banco"]` (tasto nell'Hud, assente al livello 1),

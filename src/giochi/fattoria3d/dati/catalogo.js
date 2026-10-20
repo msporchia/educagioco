@@ -9,13 +9,23 @@ export const PEZZI = {
   recinto:         { nome: 'Recinto',         emoji: '🐑', w: 3, d: 3, prezzo: 45, rincaro: 0, liv: 4, produttivo: true },
   pollaio:         { nome: 'Pollaio',         emoji: '🐔', w: 3, d: 2, prezzo: 55, rincaro: 0, liv: 6, produttivo: true },
   stalla:          { nome: 'Stalla',          emoji: '🐄', w: 4, d: 3, prezzo: 90, rincaro: 0, liv: 9, produttivo: true },
-  bancarella:      { nome: 'Bancarella',      emoji: '🍎', w: 2, d: 1, prezzo: 15, rincaro: 0, liv: 2 },
+  bancarella:      { nome: 'Bancarella',      emoji: '🍎', w: 2, d: 1, prezzo: 15, rincaro: 0, liv: 2 },   // apre il banco degli ordini, come la bacheca (motore: bancoAperto)
+  bacheca:         { nome: 'Bacheca',         emoji: '📋', w: 2, d: 1, prezzo: 12, rincaro: 0, liv: 2 },   // il pezzo del banco: i clienti appuntano qui gli ordini (ordini.md)
   aiuola:          { nome: 'Aiuola',          emoji: '🌷', w: 1, d: 1, prezzo: 6,  rincaro: 0, liv: 2 },
   panchina:        { nome: 'Panchina',        emoji: '🪑', w: 2, d: 1, prezzo: 10, rincaro: 0, liv: 6 },
   fontana:         { nome: 'Fontana',         emoji: '⛲', w: 2, d: 2, prezzo: 30, rincaro: 0, liv: 8 },
   pozzo:           { nome: 'Pozzo',           emoji: '🪣', w: 1, d: 1, prezzo: 18, rincaro: 0, liv: 9 },
   spaventapasseri: { nome: 'Spaventapasseri', emoji: '🧑‍🌾', w: 1, d: 1, prezzo: 12, rincaro: 0, liv: 13 },
+  passerella:      { nome: 'Passerella',      emoji: '🪵', w: 1, d: 3, prezzo: 8,  rincaro: 0, liv: 3, calpestabile: true, alzato: 0.18 },   // calpestabili: non fermano il passo, contano come strada (regole.md)
+  ponte:           { nome: 'Ponte',           emoji: '🌉', w: 3, d: 1, prezzo: 14, rincaro: 0, liv: 5, calpestabile: true, alzato: [0.25, 0.36, 0.25] },   // la gobba: una quota per cella lungo il lato lungo
+  tavolo:          { nome: 'Tavolo',          emoji: '🍽️', w: 3, d: 2, prezzo: 18, rincaro: 0, liv: 4 },
   trattore:        { nome: 'Trattore',        emoji: '🚜', w: 2, d: 2, prezzo: 40, rincaro: 0, liv: 7 },     // si tocca e porta ai vicini (docs/fattoria3d/vicini.md)
+}
+/** Di quanto si alza chi cammina sulla cella (a, b) del pezzo (0 se non è calpestabile). `alzato` è un numero, o una quota per cella
+    lungo il lato lungo (la gobba di un ponte). */
+export function quotaDelPezzo(d, a, b) {
+  if (!d.calpestabile) return 0
+  return Array.isArray(d.alzato) ? d.alzato[d.w >= d.d ? a : b] || 0 : d.alzato
 }
 export const TIPI_DI_PEZZO = Object.keys(PEZZI)
 
@@ -43,6 +53,11 @@ export function guastiDelCatalogo() {
     if (!(d.w >= 1 && d.d >= 1)) g.push(`${tipo}: misure impossibili`)
     if (!(d.prezzo > 0)) g.push(`${tipo}: prezzo non positivo`)
     if (!(Number.isInteger(d.liv) && d.liv >= 1)) g.push(`${tipo}: manca il livello`)
+    if (d.calpestabile) {
+      const q = [].concat(d.alzato), lungo = Math.max(d.w, d.d)
+      if (q.length !== (Array.isArray(d.alzato) ? lungo : 1) || !q.every(x => x > 0 && x < 0.5)) g.push(`${tipo}: calpestabile senza una quota sensata (alzato)`)
+    }
+    if (d.calpestabile && (d.produttivo || d.slot)) g.push(`${tipo}: un pezzo calpestabile è solo decorazione`)
   }
   for (const t of TIPI_DI_PEZZO) if (EDIFICI[t]) g.push(`${t}: sia pezzo sia edificio`)
   for (const [tipo, e] of Object.entries(EDIFICI)) {

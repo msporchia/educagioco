@@ -642,4 +642,36 @@ controlla('l\'albo del manifesto sta in piedi', gA.length === 0, gA.join(' · ')
   controlla('una stalla senza bestie ne ha una; i prodotti rotti spariscono', r.cose.find(c => c.tipo === 'stalla').bestie.length === 1 && !('uova' in r.prodotti))
 }
 
+/* ══════════ ponte, passerella e tavolo: i pezzi calpestabili non fermano il passo ══════════ */
+{
+  const p = PEZZI.ponte, pa = PEZZI.passerella, t = PEZZI.tavolo
+  stessaLista('ponte 3×1, passerella 1×3, tavolo 3×2: decorazioni, a poco prezzo', [p, pa, t].map(x => [x.w, x.d, !x.produttivo, x.prezzo <= 25].join()), ['3,1,true,true', '1,3,true,true', '3,2,true,true'])
+  stessaLista('calpestabili sono solo ponte e passerella', Object.keys(PEZZI).filter(k => PEZZI[k].calpestabile), ['passerella', 'ponte'])
+  const { f } = mondo({ monete: 500 })
+  alLivello(f, 8)
+  // un posto con una cella libera prima e dopo il ponte, sulla stessa riga
+  let ci = null, cj = null
+  for (let j = -3; j < 8 && ci === null; j++) for (let i = -6; i < 4; i++) if (f.puoMettere('ponte', i, j).ok && f.libera(i - 1, j) && f.libera(i + p.w, j) && [0, 1, 2].every(a => !f.eStrada(i + a, j))) { ci = i; cj = j; break }
+  controlla('c\'è un posto per il ponte', ci !== null)
+  const r = f.compraEMetti('ponte', ci, cj)
+  controlla('il ponte si compra e si mette', r.ok && r.costo === p.prezzo && f.cosaSu(ci, cj).tipo === 'ponte')
+  const celleP = [0, 1, 2].map(a => [ci + a, cj])
+  controlla('chi cammina ci passa sopra: le celle sono libere per il passo', celleP.every(([i, j]) => f.libera(i, j)))
+  controlla('…ma per il costruire sono occupate (nessun pezzo, nessuna strada sopra)', celleP.every(([i, j]) => f.blocca(i, j)) && f.puoMettere('aiuola', ci + 1, cj).motivo === 'occupato' && f.disegnaStrada(ci + 1, cj).motivo === 'occupato')
+  const via = f.percorsoVerso([ci - 1, cj], [[ci + p.w, cj]])
+  controlla('il percorso attraversa il ponte', !!via && celleP.every(([i, j]) => via.some(([a, b]) => a === i && b === j)))
+  controlla('e conta come strada (si va più in fretta)', celleP.every(([i, j]) => f.sullaStrada(i, j)) && !f.eStrada(ci, cj))
+  stessaLista('la gobba: le quote per cella e fuori dal ponte niente', [f.quotaPasso(ci + 0.5, cj + 0.5), f.quotaPasso(ci + 1.5, cj + 0.5), f.quotaPasso(ci + 2.5, cj + 0.5), f.quotaPasso(ci - 0.5, cj + 0.5)].map(x => +x.toFixed(4)), [...p.alzato, 0])
+  // il tavolo, invece, ferma il passo
+  const tt = mondo({ monete: 500 }).f; alLivello(tt, 8)
+  const [ti, tj] = postoPer(tt, 'tavolo')
+  controlla('il tavolo si mette e blocca anche il passo', tt.compraEMetti('tavolo', ti, tj).ok && !tt.libera(ti, tj) && tt.blocca(ti + 1, tj + 1) && tt.quotaPasso(ti + 0.5, tj + 0.5) === 0)
+  // mettere via il ponte libera la cella del tutto, e un salvataggio lo rimette com'era
+  const id = f.cosaSu(ci, cj).id
+  const rilettura = mondo({ stato: JSON.parse(JSON.stringify(f.serializza())), monete: 500 }).f
+  controlla('riletto da un salvataggio, il ponte è ancora calpestabile', rilettura.libera(ci + 1, cj) && rilettura.blocca(ci + 1, cj) && +rilettura.quotaPasso(ci + 1.5, cj + 0.5).toFixed(4) === p.alzato[1])
+  f.mettiVia(id, { gratis: true })
+  controlla('messo via, la cella torna terra', f.cosaSu(ci, cj) === null && f.quotaPasso(ci + 1.5, cj + 0.5) === 0 && !f.blocca(ci + 1, cj))
+}
+
 riassunto('Fattoria 3D')
