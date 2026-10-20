@@ -1,0 +1,80 @@
+/* Il foglio degli ordini a bacheca (viste/Bacheca.vue): un pannello di legno, il titolo su un'asse inchiodata, la tavola scura con i
+   bigliettini appuntati e il dettaglio di quello scelto. Prefisso .f3-bac-; i fogli veri (.f3-foglio, .f3-colonna, .f3-chiudi,
+   .f3-corpo, .f3-messaggio, .f3-nota) vengono da stile.css. Telefono prima: il dettaglio sta sotto la tavola; da 700 px a destra. */
+.f3-bac.f3-foglio { padding: 0; overflow: hidden; color: #3a2a1a;
+  background: repeating-linear-gradient(90deg, #a77440 0 58px, #9a6a38 58px 60px), #a77440; border-top: 5px solid #6b4423; }
+.f3-bac-asse { position: relative; flex: none; display: flex; align-items: center; justify-content: center; min-height: 58px; margin: 10px 10px 8px; padding: 6px 12px;
+  background: repeating-linear-gradient(180deg, #d7a766 0 11px, #cc9a58 11px 12px), #d7a766; border-radius: 10px; box-shadow: 0 3px 0 #6b4423, 0 5px 10px rgba(0,0,0,.28);
+  /* i due chiodi alle estremità */
+  background-image: radial-gradient(circle at 12px 50%, #5a3a1c 0 3px, transparent 3.5px), radial-gradient(circle at calc(100% - 12px) 50%, #5a3a1c 0 3px, transparent 3.5px), repeating-linear-gradient(180deg, #d7a766 0 11px, #cc9a58 11px 12px); }
+.f3-foglio .f3-bac-asse h2 { margin: 0; font-size: 22px; line-height: 1.1; color: #4a2c12; text-shadow: 0 1px 0 rgba(255,255,255,.4); }
+/* l'indicatore delle consegne verso il traguardo: in alto a sinistra, con la sua barra */
+.f3-bac-conta { position: absolute; left: 26px; top: 8px; bottom: 8px; display: flex; flex-direction: column; justify-content: center; gap: 4px; width: 92px; font: 800 12px "Emoji Gioco", system-ui, sans-serif; color: #4a2c12; }
+.f3-bac-conta i { display: block; height: 9px; border-radius: 5px; background: rgba(60,30,10,.35); overflow: hidden; box-shadow: inset 0 1px 2px rgba(0,0,0,.35); }
+.f3-bac-conta u { display: block; height: 100%; border-radius: 5px; background: linear-gradient(180deg, #7ac4f2, #2f86d0); transition: width .5s ease; }
+.f3-bac-x.f3-chiudi { background: #e0402f; color: #fff; top: 17px; right: 18px; width: 44px; height: 44px; font-weight: 800; box-shadow: 0 2px 0 #8d241a; }
+.f3-bac .f3-corpo { padding: 0 10px calc(14px + env(safe-area-inset-bottom)); }
+.f3-bac .f3-messaggio { margin: 0 0 8px; }
+
+.f3-bac-scheda { display: flex; flex-direction: column; gap: 10px; }
+/* la tavola: assi di legno scuro, cornice più chiara */
+.f3-bac-tavola { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px 8px; padding: 14px 8px 10px; border-radius: 12px; border: 5px solid #6b4423; box-shadow: inset 0 3px 10px rgba(0,0,0,.5), 0 2px 0 #55341a;
+  background: repeating-linear-gradient(180deg, #4b3320 0 46px, #3a2616 46px 49px), #4b3320; align-content: start; }
+.f3-bac-casella { position: relative; min-height: 86px; display: grid; }
+.f3-bac-bigl { position: relative; box-sizing: border-box; min-height: 86px; border: 0; border-radius: 4px; padding: 14px 4px 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  font: 800 15px "Emoji Gioco", system-ui, sans-serif; color: #3a2a1a; background: #bfe79a; transform: rotate(var(--r, 0deg)); box-shadow: 1px 4px 6px rgba(0,0,0,.5);
+  touch-action: manipulation; transition: transform .18s ease, box-shadow .18s ease; }
+.f3-bac-bigl.verde { background: #bfe79a; } .f3-bac-bigl.rosa { background: #f7bccf; } .f3-bac-bigl.giallo { background: #fbe99a; }
+.f3-bac-bigl .em { font-size: 30px; line-height: 1; }
+.f3-bac-bigl .stella { font-size: 15px; }
+.f3-bac-bigl .puntina { position: absolute; left: 50%; top: -7px; width: 14px; height: 14px; margin-left: -7px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #ff8a78, #d4301f 60%, #8d1a10); box-shadow: 0 3px 3px rgba(0,0,0,.45); }
+.f3-bac-bigl.sel { transform: translateY(-5px) scale(1.07) rotate(0deg); box-shadow: 0 0 0 3px #ffd36a, 0 10px 14px rgba(0,0,0,.55); z-index: 2; }
+.f3-bac-bigl .spunta { position: absolute; right: -6px; bottom: -6px; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: #3fae3a; color: #fff; font: 800 16px/1 "Emoji Gioco", system-ui, sans-serif; border: 2px solid #fff; box-shadow: 0 2px 3px rgba(0,0,0,.4); }
+.f3-bac-bigl.attesa { background: #cfcac0; color: #6e675a; cursor: default; box-shadow: 1px 3px 5px rgba(0,0,0,.4); }
+.f3-bac-bigl.attesa b { font-size: 14px; } .f3-bac-bigl.attesa small { font-size: 13px; font-weight: 800; }
+.f3-bac-bigl.attesa .puntina { background: radial-gradient(circle at 35% 30%, #b9b3a8, #8d877b 70%); }
+/* un biglietto che si strappa e uno che compare */
+.f3-bac-b-leave-active { transition: transform .3s ease-in, opacity .3s ease-in; transform-origin: 50% 0; }
+.f3-bac-b-leave-to { opacity: 0; transform: translate(26px, 50px) rotate(24deg) scale(.8); }
+.f3-bac-b-enter-active { transition: transform .35s cubic-bezier(.3,1.5,.5,1), opacity .2s ease-out; }
+.f3-bac-b-enter-from { opacity: 0; transform: translateY(-26px) scale(.7) rotate(-6deg); }
+/* le stelline della consegna: partono dal centro del biglietto */
+.f3-bac-festa { position: absolute; left: 50%; top: 50%; width: 0; height: 0; z-index: 5; pointer-events: none; }
+.f3-bac-festa i { position: absolute; left: -11px; top: -11px; font-size: 22px; font-style: normal; line-height: 1; opacity: 0; animation: f3-bac-vola 1s ease-out both; }
+@keyframes f3-bac-vola { 0% { opacity: 0; transform: translate(0, 0) scale(.4) rotate(0); } 15% { opacity: 1; } 100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(1.3) rotate(220deg); } }
+
+/* il dettaglio dell'ordine scelto: su carta, attaccato in basso così «Consegna» resta sempre in vista */
+.f3-bac-dettaglio { position: sticky; bottom: 0; z-index: 3; display: flex; flex-direction: column; }
+.f3-bac-carta { background: #fff7e4; border: 4px solid #6b4423; border-radius: 14px; padding: 10px 12px 12px; box-shadow: 0 -3px 12px rgba(0,0,0,.25), 0 2px 0 #55341a; display: flex; flex-direction: column; gap: 10px; }
+.f3-bac-vuoto { margin: 0; padding: 14px; text-align: center; font-weight: 800; background: #fff7e4; border-radius: 14px; border: 4px solid #6b4423; }
+.f3-bac-chi { display: flex; align-items: center; gap: 10px; }
+.f3-bac-chi .ritratto { flex: none; width: 60px; height: 60px; border-radius: 50%; display: grid; place-items: center; font-size: 36px; line-height: 1; background: #ffe9b0; box-shadow: inset 0 0 0 4px #e6b84a, 0 2px 0 rgba(0,0,0,.2); }
+.f3-bac-chi .nome { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; font: 800 17px "Emoji Gioco", system-ui, sans-serif; }
+.f3-bac-chi .nome b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.f3-bac-chi .premio { align-self: flex-start; background: #ffe27a; border-radius: 12px; padding: 2px 10px; font-size: 16px; }
+.f3-bac-chi .cestino { flex: none; width: 48px; height: 48px; border: 0; border-radius: 14px; background: #efe4cf; font-size: 24px; line-height: 1; box-shadow: 0 2px 0 rgba(0,0,0,.2); touch-action: manipulation; }
+.f3-bac-merci { display: flex; flex-wrap: wrap; gap: 12px 16px; justify-content: center; --mb: 58px; padding: 4px 0; }
+.f3-bac-merci .merce { position: relative; display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 62px; }
+.f3-bac-merci .merce.ok .f3-mb { box-shadow: 0 2px 0 rgba(0,0,0,.18), inset 0 0 0 3px #5fae3a; }
+.f3-bac-merci .merce.manca .f3-mb { box-shadow: 0 2px 0 rgba(0,0,0,.18), inset 0 0 0 3px #e0604f; background: #fff1ee; }
+.f3-bac-merci .segno { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; background: #3fae3a; color: #fff; font: 800 15px/1 "Emoji Gioco", system-ui, sans-serif; }
+.f3-bac-merci small { font: 800 15px "Emoji Gioco", system-ui, sans-serif; color: #c0392b; min-height: 24px; line-height: 24px; }
+.f3-bac-carta .consegna { min-height: 56px; border: 0; border-radius: 16px; background: linear-gradient(180deg, #7ed957, #3fae3a); color: #fff; font: 800 20px "Emoji Gioco", system-ui, sans-serif; text-shadow: 0 2px 0 rgba(0,0,0,.25);
+  box-shadow: 0 4px 0 #2a7a28, 0 6px 10px rgba(0,0,0,.25); touch-action: manipulation; }
+.f3-bac-carta .consegna:active { transform: translateY(2px); box-shadow: 0 2px 0 #2a7a28; }
+.f3-bac-carta .consegna.spenta { background: linear-gradient(180deg, #cfd6c5, #aeb6a4); box-shadow: 0 4px 0 #858c7b, 0 6px 10px rgba(0,0,0,.2); color: #f4f4ee; text-shadow: none; }
+.f3-bac-nota { color: #f3e2c2; margin: 0 2px; }
+
+/* tablet: la tavola a sinistra e il dettaglio a destra */
+@media (min-width: 700px) {
+  .f3-bac.f3-foglio { left: 0; right: 0; margin: 0 auto; max-width: 940px; border-radius: 22px 22px 0 0; }
+  .f3-bac-scheda { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 14px; align-items: start; }
+  .f3-bac-tavola { gap: 18px 12px; padding: 18px 12px 14px; }
+  .f3-bac-casella, .f3-bac-bigl { min-height: 104px; }
+  .f3-bac-dettaglio { position: sticky; top: 0; bottom: auto; }
+  .f3-bac-nota { grid-column: 1 / -1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .f3-bac *, .f3-bac-festa i { animation: none !important; transition: none !important; }
+  .f3-bac-festa { display: none; }
+}
