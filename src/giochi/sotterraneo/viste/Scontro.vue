@@ -17,6 +17,7 @@ import Palco from './Palco.vue'
 import FilaDeiTurni from './FilaDeiTurni.vue'
 import Scene from './Scene.vue'
 import SegniAddosso from './SegniAddosso.vue'
+import MossaAnnunciata from './MossaAnnunciata.vue'
 
 const props = defineProps({
   mostri: { type: Array, required: true },    // [{ i, nome, sprite, em, grosso, chiave, ossa, ossaMax, morto, stati, colpisce, salta, bersaglio, colpito }] nell'ordine dei posti
@@ -166,6 +167,11 @@ function punto(chi) {
             </span>
             <SegniAddosso :stati="statiDi(m)" :largo="largoDi(m, k)" />
             <i class="sot-anello" aria-hidden="true"></i>
+            <!-- la mossa che farà al suo turno (docs/sotterraneo/mosse.md): il segno sopra la testa e un anello del suo colore -->
+            <template v-if="pulita(m) && m.mossa">
+              <i class="sot-anello-mossa" :style="{ '--tinta': m.mossa.colore }" aria-hidden="true"></i>
+              <MossaAnnunciata class="sot-mossa-sopra" :mossa="m.mossa" />
+            </template>
             <span v-if="pulita(m) && m.segni.length" class="sot-m-segni" data-segni>
               <span v-for="g in m.segni" :key="g.tipo + g.glifo" class="sot-segno-pre" :class="'sot-segno-pre-' + g.tipo" :style="{ '--tinta': g.tinta }"
                     :data-segno-pre="g.tipo" :title="g.dice">

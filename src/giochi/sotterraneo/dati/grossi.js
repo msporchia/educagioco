@@ -9,6 +9,7 @@
 // del chiarore che gli sta intorno, per distinguere due grossi della stessa specie (Re Ossuto e Carbonchio).
 // `difese`: le sue resistenze, debolezze e immunità (dati/elementi.js) al posto di quelle della specie: Carbonchio, il re di
 // brace, non brucia; senza `difese` ha quelle di `tipo`.
+// `ruolo: 'superboss'`: tre mosse invece di due (dati/mosse.js, docs/sotterraneo/mosse.md): l'ultimo della storia e il più forte dei sei nuovi.
 import { MOSTRI } from './mostri.js'
 import { guastiDelleDifese } from './elementi.js'
 import { DEI_GROSSI } from './pezzi.js'
@@ -32,7 +33,7 @@ export const GROSSI = {
   minotto: { nome: 'Minotto', tipo: 'troll', figura: 'bestia-cornuta', ossa: 1.1, att: 1, tinta: '#d49a55',
              difese: { resiste: ['veleno'], teme: ['fuoco'], immune: ['stordisce'] },
              pezzo: 'giubbone-di-minotto', dice: 'Ha le corna, e la porta dell\'inferno è casa sua.' },
-  carbonchio: { nome: 'Carbonchio', tipo: 'gigante', figura: 'drago-lava', ossa: 1.1, att: 1, tinta: '#ff5a1c',
+  carbonchio: { nome: 'Carbonchio', tipo: 'gigante', figura: 'drago-lava', ossa: 1.1, att: 1, tinta: '#ff5a1c', ruolo: 'superboss',
                 difese: { resiste: ['fuoco'], teme: ['gelo'], immune: ['brucia'] },
                 pezzo: 'martello-di-carbonchio', dice: 'Il drago di lava delle miniere: le sue squame sono carbone acceso.' },
   // i sei dei dungeon nuovi del mondo a percorso (solo del 3D, dati/dungeon-del-mondo.js): creature del catalogo ingrandite con la
@@ -52,7 +53,7 @@ export const GROSSI = {
   brinaldo: { nome: 'Brinaldo', tipo: 'gigante', figura: 'golem-ghiaccio', ossa: 1.15, att: 1, tinta: '#8fd8ff',
               difese: { resiste: ['gelo'], teme: ['fuoco'], immune: ['gela', 'stordisce'] },
               pezzo: 'amuleto-di-brinaldo', dice: 'Un golem di ghiaccio: ogni cosa che tocca diventa brina.' },
-  falcenera: { nome: 'Falcenera', genere: 'f', tipo: 'gigante', figura: 'mietitore', ossa: 1.2, att: 2, tinta: '#b58cff',
+  falcenera: { nome: 'Falcenera', genere: 'f', tipo: 'gigante', figura: 'mietitore', ossa: 1.2, att: 2, tinta: '#b58cff', ruolo: 'superboss',
                difese: { resiste: ['gelo'], teme: ['sacro'], immune: ['avvelena', 'sanguina'] },
                pezzo: 'scudo-di-falcenera', dice: 'Il mietitore delle tombe del vento, con la falce più lunga di un albero.' },
 }

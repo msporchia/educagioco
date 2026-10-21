@@ -1,7 +1,8 @@
 # Le mosse dei mostri
 
 Richiesta dell'utente: tutti i nemici hanno un solo attacco; i boss e i mostri più forti ne avrebbero due, i super boss tre, così
-possono curarsi un po' o lanciare un incantesimo base. Questo è il progetto e la prova in 3D, **non ancora nel gioco**.
+possono curarsi un po' o lanciare un incantesimo base. Questo è il progetto e la prova in 3D; **nel gioco dal 21 ottobre 2026**,
+con gli adattamenti scritti in `docs/sotterraneo/mosse.md` (una riga per specie invece delle espressioni sul nome, niente «in area»).
 
 File: `mosse.js` (dati e regola di scelta, senza three.js), `mosse-anim.js` (le animazioni), `mosse-pagina.js` + `../mosse-3d.html`
 (la pagina di prova). Il gioco vero non è toccato: gli aggiornamenti sono elencati in fondo.
@@ -79,7 +80,7 @@ Per gli scatti: `--prima 'window.__mosse.vaiA("cura",0.7)'` avanza fino alla pro
 - Il danno sui bambini: il colpo ×1,4 e l'incantesimo che ignora la parata sono le mosse che possono sorprendere. Per questo si annunciano sempre; se ancora duro,
   l'incantesimo a 0,6 o niente `ignoraScudo` sulla barriera.
 
-## Per portarlo nel gioco (non scritto)
+## Per portarlo nel gioco (fatto: docs/sotterraneo/mosse.md)
 
 1. **`dati/mostri.js`**: un campo `mosse: ['mazzata', 'urlo-guerra']` per specie (ids di `MOSSE`, i dati veri in un file nuovo `dati/mosse.js`, copia di `mosse.js`
    senza il resto) e `ruolo` (oggi si deduce da `capo` e dal grosso). `dati/grossi.js` (`difeseDi` e simili): le mosse del grosso, scelte dalla creatura che veste.

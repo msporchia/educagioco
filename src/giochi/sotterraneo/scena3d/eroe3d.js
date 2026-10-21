@@ -85,13 +85,13 @@ export function creaEroe3d(scena) {
   return {
     get altezza() { return altezza },
     /** Un passo. `p`: { x, z, trasparenza, dt, t, alto } con `alto` quanto è alto lo sprite che sostituisce (per la scala). */
-    aggiorna(e, corsa, { x, z, trasparenza, dt, alto }) {
+    aggiorna(e, corsa, { x, z, y = 0, trasparenza, dt, alto }) {
       const nuova = CHIAVI.includes(corsa.io && corsa.io.sprite) ? corsa.io.sprite : 'cavaliere'
       if (nuova !== chiave) { chiave = nuova; monta(corsa) } else equipa(corsa)
       radice.visible = trasparenza > 0.02
       const k = (alto || 1.4) * ALTEZZA_SPRITE / altezza
       radice.scale.setScalar(k)
-      radice.position.set(x, 0, z)
+      radice.position.set(x, y, z)
       g.rotation.y = Math.atan2(e.lx, e.lz)
       // le pose: guardia di fondo; se cammina la marcia sulle gambe e sulle braccia; se assalta il colpo
       posaGuardia(g, e.t * 0.12)
@@ -115,6 +115,8 @@ export function creaEroe3d(scena) {
       }
       radice.updateMatrixWorld(true)
     },
+    /** Non si disegna (la veduta dall'alto, uno scontro che lo disegna altrove). */
+    nascondi() { radice.visible = false },
     /** Dov'è la mano sinistra nel mondo (per la torcia). */
     manoSinistra(fuori) {
       const b = g && g.userData.bracci[0]

@@ -6,6 +6,7 @@
 import { DataTexture, RGBAFormat, Vector2, InstancedMesh, PlaneGeometry, MeshBasicMaterial, Matrix4, Quaternion, Vector3, Euler } from 'three'
 import { creaFigure } from '../figure.js'
 import { disegnaEroe } from '../eroe.js'
+import { creaEroe3d, eroe3dAcceso } from '../eroe3d.js'
 import { SALITA } from './vesti.js'
 
 export const SCALA_PERSONE = 1.25
@@ -35,6 +36,9 @@ export function creaPersone(scena, { tex, norm, larga, alta, pezzi, trame, quota
   const terra = { metti: (n, x, y, z, o) => figureEroe.metti(n, x, y + quota(x, z - 0.1), z, o), o: () => figureEroe.o(), alto: (n, s) => figureEroe.alto(n, s) }
   const finta = { eroe: { x: 0, y: 0 }, versoEroe: { dx: 0, dy: 1 }, io: { sprite: 'cavaliere' }, mano: null, mancina: null, vita: 1, vitaMax: 1 }
   const nessuna = { torcia() {} }, niente = { metti() {} }
+  // in prova: l'eroe è il modello 3D delle discese, posato sul terreno (`#eroe2d` torna allo sprite)
+  const eroe3d = eroe3dAcceso() ? creaEroe3d(scena) : null
+  const quotaEroe = (x, z) => quota(x, z - 0.1)
   const salita = (x, z, t) => { const k = Math.max(0, Math.min(1, (t - nebbia.quando(x, z)) / SALITA)); return k * k * (3 - 2 * k) }
 
   return {
@@ -44,6 +48,7 @@ export function creaPersone(scena, { tex, norm, larga, alta, pezzi, trame, quota
     // (mostri.js, già filtrati dal cerchio e dalla nebbia); `extra(ombra)`: chi disegna anche lui (il palco dello scontro) e vuole l'ombra
     disegna(persone, eroe, { t, dt, veduta, camera, mostri = [], perTerra = [], extra = null }) {
       figure.inizia(); figureEroe.inizia(); nOmbre = 0
+      if (eroe3d && (veduta || eroe.nascosto)) eroe3d.nascondi()
       if (!veduta) {
         // i mostri: come le persone, alla loro scala; al bordo del cerchio di luce svaniscono a retino
         for (const q of mostri) {
@@ -69,8 +74,8 @@ export function creaPersone(scena, { tex, norm, larga, alta, pezzi, trame, quota
         }
         if (!eroe.nascosto) {
           finta.eroe.x = eroe.x; finta.eroe.y = eroe.z; finta.versoEroe.dx = eroe.verso.dx; finta.versoEroe.dy = eroe.verso.dy
-          finta.io.sprite = eroe.sprite; finta.mano = eroe.mano; finta.mancina = eroe.mancina
-          disegnaEroe(eroe.stato, finta, { figure: terra, luci: nessuna, etichette: niente, camera, dt, dtScena: dt, t })
+          finta.io.sprite = eroe.sprite; finta.mano = eroe.mano; finta.mancina = eroe.mancina; finta.corpo = eroe.corpo
+          disegnaEroe(eroe.stato, finta, { figure: terra, luci: nessuna, etichette: niente, camera, dt, dtScena: dt, t, modello: eroe3d, quota: quotaEroe })
           ombra(eroe.stato.disegnato.x, quota(eroe.x, eroe.z), eroe.stato.disegnato.z + 0.1, 0.95)
         }
       }
@@ -79,6 +84,6 @@ export function creaPersone(scena, { tex, norm, larga, alta, pezzi, trame, quota
       ombre.count = nOmbre; ombre.instanceMatrix.needsUpdate = true
     },
     taglio(x, y) { figure.taglio(x, y); figureEroe.taglio(x, y) },
-    via() { figure.via(); figureEroe.via(); scena.remove(ombre); geo.dispose(); mat.dispose(); ombre.dispose(); maschera.t.dispose() },
+    via() { if (eroe3d) eroe3d.toglie(); figure.via(); figureEroe.via(); scena.remove(ombre); geo.dispose(); mat.dispose(); ombre.dispose(); maschera.t.dispose() },
   }
 }

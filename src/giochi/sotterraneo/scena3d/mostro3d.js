@@ -7,6 +7,7 @@ import { Group, Box3, Vector3, Color } from 'three'
 import { idDi, costruisci, ALTEZZA } from './mostri3d/registro.js'
 import { verso } from './tempo.js'
 import { ferme, salda } from './salda3d.js'
+import { conMosse } from './mostri3d/mosse-anim.js'
 
 export const mostri3dAccesi = () => typeof location === 'undefined' || !/[#&?]sprite\b/.test(location.hash + location.search)
 
@@ -75,13 +76,16 @@ export function creaMostri3d(scena, { quanti = () => 12 } = {}) {
   let usate = 0
   const modellati = []           // [roba, radice] per il dito, di questo fotogramma
 
-  function prendi(s, id) {
-    if (s.m3d && s.m3d.id === id && !s.m3d.guasto) { s.m3d.presa = true; return s.m3d }
+  // chi ha più mosse (dati/mosse.js) ha istanze sue, preparate con le animazioni delle mosse (mostri3d/mosse-anim.js): la riserva
+  // è per modello e per elenco di mosse, e il comune resta com'era
+  function prendi(s, id, mosse) {
+    const chiave = mosse && mosse.length > 1 ? `${id}|${mosse.map(m => m.id).join(',')}` : id
+    if (s.m3d && s.m3d.chiave === chiave && !s.m3d.guasto) { s.m3d.presa = true; return s.m3d }
     if (s.m3d) { s.m3d.chi = null; s.m3d = null }
-    let lista = riserve.get(id)
-    if (!lista) riserve.set(id, lista = [])
+    let lista = riserve.get(chiave)
+    if (!lista) riserve.set(chiave, lista = [])
     let ist = lista.find(i => !i.chi && !i.presa)
-    if (!ist) { ist = nuovaIstanza(scena, id); if (!ist) return null; lista.push(ist) }
+    if (!ist) { ist = nuovaIstanza(scena, id); if (!ist) return null; ist.chiave = chiave; ist.mosse = chiave === id ? null : mosse; lista.push(ist) }
     ist.chi = s; ist.presa = true; s.m3d = ist
     return ist
   }
@@ -94,12 +98,13 @@ export function creaMostri3d(scena, { quanti = () => 12 } = {}) {
     get pieno() { return usate >= quanti() },
     /**
      * Un mostro in scena. `p`: { x, z, alto (dello sprite, in celle), verso: {x, z} chi guardare (o null), t, dt, trasparenza, morente
-     * (secondi da quando cade, 0 in piedi), bianco (il lampo), tinta, forzaTinta, attacco (0..1 o -1) }. Torna l'altezza vera, o -1 se
-     * il modello non c'è (e allora si disegna lo sprite).
+     * (secondi da quando cade, 0 in piedi), bianco (il lampo), tinta, forzaTinta, attacco (0..1 o -1), mosse (dati/mosse.js), mossa
+     * ({ id, p }: la mossa che fa adesso, al posto dell'attacco), annuncio (l'id della mossa annunciata: l'anello a terra) }. Torna
+     * l'altezza vera, o -1 se il modello non c'è (e allora si disegna lo sprite).
      */
     metti(r, s, id, p) {
       if (usate >= quanti()) return -1
-      const ist = prendi(s, id)
+      const ist = prendi(s, id, p.mosse)
       if (!ist) return -1
       usate++
       const { radice, piega, g } = ist
@@ -108,6 +113,12 @@ export function creaMostri3d(scena, { quanti = () => 12 } = {}) {
         const k0 = (p.alto || 1) * ALTEZZA_SPRITE * (ALTEZZA[id.split('+')[0]] || 1) / ist.alto
         const k = Math.min(k0, LARGO_MAX * Math.max(1, p.alto / 1.6) / ist.largo)
         radice.scale.setScalar(k)
+        // le animazioni delle mosse si preparano la prima volta, quando si sa quanto è grande (l'anello e il bagliore ne dipendono);
+        // l'icona sopra la testa no: la scrive la vista (viste/MossaAnnunciata.vue)
+        if (ist.mosse && !ist.pronte) {
+          ist.pronte = true
+          try { conMosse(g, { chiave: id }, { scala: k, mosse: ist.mosse, icona: false }) } catch (e) { console.warn(`mostri 3D: ${id} senza mosse`, e) }
+        }
         // dove guarda: il bersaglio (l'eroe) un po' girato verso la telecamera, se no di lato come lo sprite; ci si gira in fretta
         // la velocità di adesso (dalle posizioni, smussata): chi cammina guarda dove va
         if (s.px3d != null && p.dt > 0) {
@@ -126,8 +137,12 @@ export function creaMostri3d(scena, { quanti = () => 12 } = {}) {
         // l'idle con la sua fase; chi cade si ferma all'istante della caduta e si rovescia all'indietro, poi sprofonda un poco
         if (!p.morente) s.tCaduta = p.t
         const t = p.morente > 0 ? s.tCaduta : p.t
-        g.userData.anima(t + (s.fase3d ??= Math.random() * 7))
-        if (p.attacco >= 0 && g.userData.attacca) g.userData.attacca(p.attacco)
+        const u = g.userData
+        if (u.annuncia) u.annuncia(p.annuncio || null)
+        u.anima(t + (s.fase3d ??= Math.random() * 7))
+        const mossa = p.mossa && u.mosse && u.mosse[p.mossa.id]
+        if (mossa) mossa.anima(p.mossa.p)
+        else if (p.attacco >= 0 && u.attacca) u.attacca(p.attacco)
         piega.rotation.x = -1.35 * c
         radice.position.set(p.x, -0.12 * ist.alto * k * c, p.z)
         tingi(ist, p.bianco, p.tinta, p.forzaTinta, p.trasparenza)
@@ -155,6 +170,8 @@ export function creaMostri3d(scena, { quanti = () => 12 } = {}) {
       o.updateWorldMatrix(true, false)
       return o.getWorldPosition(fuori)
     },
+    /** Una mossa del modello (mostri3d/mosse-anim.js): { tipo, durata (s), arrivo (frazione) } o null (chi non ha le mosse, o lo sprite). */
+    mossaDi(s, id) { const u = s && s.m3d && s.m3d.g.userData; return (u && u.mosse && u.mosse[id]) || null },
     /** L'attacco che il modello dichiara: { tipo, durata (s), arrivo (frazione), proiettile } o null. */
     attaccoDi(s) { const u = s && s.m3d && s.m3d.g.userData; return (u && u.attacca && u.attacco) || null },
     /** Il petto del modello nel mondo (per gli effetti), o null. */

@@ -350,6 +350,7 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
       racconto.svuota()
       if (effetti3d) effetti3d.svuota()
       if (mostri3d) mostri3d.via()
+      cam.ripristina()
       if (piano) piano.via()
       piano = null
       for (const x of [aloni, colonne, anelli, scintille, polvere, etichette, contorno, figure, figureEroe, fiammaEroe]) if (x) x.via()

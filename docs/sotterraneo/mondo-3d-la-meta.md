@@ -10,7 +10,8 @@ storia che decide la porta in [la-storia-principale.md](la-storia-principale.md)
 
 | file | cosa tiene |
 |---|---|
-| `motore/meta-sopra.js` | puro: quale meta (`metaScelta`), il campo delle distanze, la strada da qualunque cella, il velo, le luci, i passi detti |
+| `motore/meta-sopra.js` | puro: quale meta (`metaScelta`), il campo delle distanze (il più corto, per i mostri e il banco), il velo, le luci, i passi detti |
+| `motore/strada-sopra.js` | puro: i costi di cammino (strada, erba, vicino ai muri), il campo pesato della scia e il tragitto a tocco (`campoPesato`, `stradaPesata`), la lisciatura che non taglia fuori strada |
 | `viste/Mondo3d.vue` | la meta sul mondo (`trovaLaMeta`, `aggiornaMeta`), la carta in cima, la meta nella veduta e sul bordo, la freccia del cartello |
 | `scena3d/mondo/scia.js` | le luci per terra (una InstancedMesh) e il fascio sopra la meta |
 | `scena3d/mondo/nebbia.js` | il velo della strada nelle trame della nebbia (`apriIlVelo`), che non tocca il bit salvato |
@@ -33,15 +34,24 @@ persone restano: dicono che c'è qualcosa, non decidono la meta. La terra dipint
 
 ## La strada vera
 
-- **Il campo delle distanze** (`campoVersoLaMeta`): una volta per meta, le distanze da lei a ogni cella sulla terra coi passaggi
-  aperti dalla storia (`terraDelMondo`), con le regole dell'A* di `motore/terra.js` (otto direzioni, √2 in diagonale, mai un
-  angolo tagliato). Pochi millisecondi; poi la strada da qualunque cella è una discesa del campo, e i passi sono una lettura.
+- **Il campo delle distanze** (`campoVersoLaMeta(terra, meta, stradaDelMondo(m))`): una volta per meta, da lei a ogni cella sulla
+  terra (`terraDelMondo`), con le mosse dell'A* di `motore/terra.js` (otto direzioni, √2 in diagonale, mai un angolo tagliato)
+  ma con un **costo per cella**. Una decina di millisecondi (a caldo, in Node); poi la strada da qualunque cella è una discesa
+  del campo, e i passi una lettura. Senza il terzo parametro è il più corto, quello dei mostri e del banco (`motore/terra.js`
+  e il 2D non cambiano).
+- **Il costo** (`strada-sopra.js`, `LIVELLI`): strada 1, erba 1,7; sull'erba +5, +1,5, +0,5 a 1, 2, 3 celle da un ostacolo (casa,
+  albero, acqua, roccia), sulla strada +0,7 e +0,2. Il tragitto va per la strada e non passa fra due case a meno di tre celle
+  se girarci attorno costa poco; **non è mai più lungo di 1,4 volte il più corto più 4 celle** (`LIMITE`, `MARGINE`: se il costo
+  forte sfora, si prova uno lieve, poi il più corto). Misurato su 30 coppie: in media 1,21×, al più 1,37×; 88% di celle di
+  strada (il più corto 8%), 1% di erba a ridosso di un muro (il più corto 38%). Il cammino a tocco (`vaiA`) usa le stesse regole
+  (`stradaPesata`). La lisciatura (`liscia`) taglia solo dove la linea è libera e non costa più della strada.
+- **I passi** del campo sono la lunghezza del tragitto scelto, non del più corto; la distanza detta e `data-passi` la seguono.
   Una grata calata la ferma: oltre non c'è strada, e non si indica.
 - **Una meta in una zona non caricata** (`metaVicina`): il campo va fin dove la strada maestra è caricata; quando la terra cambia
   (una zona nuova) la meta si rifà da sé, e la scia va avanti a pezzi.
 - **La strada si rifà da dove si è** quando cambia la meta, e quando l'eroe è **fermo** a più di quattro celle dalla scia
   (camminando no: la strada non si ricalcola a ogni cella).
-- **I passi** sono celle, detti a cinque per volta perché il numero non balli: «a 45 passi», «qui vicino» sotto i dieci, «sei
+- **Detti** come celle, a cinque per volta perché il numero non balli: «a 45 passi», «qui vicino» sotto i dieci, «sei
   arrivato» sotto i tre (`passiDetti`).
 
 ## La carta in cima
@@ -85,7 +95,7 @@ volta per meta; il velo riscrive le trame della nebbia solo quando la strada cam
 - Se la carta in cima toglie troppo mondo sui telefoni bassi (con la ripresa di una discesa sono due carte).
 
 Nei test: `unita/sotterraneo-meta-sopra` (quale meta: dal selettore, di difetto la storia, nessuna comodità, la scelta che decade;
-il campo e la strada: dove si cammina, mai un salto né un angolo tagliato, lunga quanto l'A*, le grate che la fermano; il velo
+il campo e la strada: dove si cammina, mai un salto né un angolo tagliato, non oltre il limite sul più corto, sulla strada e lontano dai muri (30 coppie, una mappa a mano con la L, il varco di due celle, il varco largo), i passi, i tempi; il velo
 nelle trame, che non tocca il bit e si richiude; le luci; i passi detti) e `integrazione/sotterraneo-mondo-meta` (col dito vero:
 la carta col nome, i passi e l'icona di almeno 44 px, senza tasti; la scia e quanto costa; il velo che non trova la cripta per
 finta; la veduta con la meta sotto le nuvole e il tocco che manda a piedi; il cartello; la meta che resta la storia con una

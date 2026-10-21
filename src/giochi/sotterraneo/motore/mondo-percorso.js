@@ -5,7 +5,7 @@
 // decoro, la quota, la cintura) leggendo solo lo scheletro e funzioni pure delle coordinate: per questo una zona esce uguale
 // qualunque altra zona sia caricata, e caricarle una per una dà lo stesso mondo che caricarle tutte. Puro: gira in Node.
 import { MONDO_PERCORSO, TRACCIATO, LUOGHI, ZONE_DEL_MONDO, INGRESSI_DEL_MONDO, VILLAGGIO, PERSONE, PERSONE_NUOVE, MULINO,
-  PORTA_DELLE_TERRE, TERRE, HABITAT, BOTTEGHE, fasciaNellaTerra, saltoDellaTerra, difDellaZona } from '../dati/mondo-aperto.js'
+  PORTA_DELLE_TERRE, TERRE, HABITAT, BOTTEGHE, fasciaNellaTerra, saltoDellaTerra, difDellaZona, nellaPiazza } from '../dati/mondo-aperto.js'
 import { MERCANTI } from '../dati/mercanti.js'
 import { cerca, passiDa } from './mondo-aperto-strade.js'
 
@@ -209,13 +209,19 @@ export function scheletroDelMondo(seme = MONDO_PERCORSO.seme, { terra = 1 } = {}
   const riserva = (x, y, w, h) => { for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) if (dentro(x + i, y + j)) sR[id(x + i, y + j)] = 1 }
 
   const posti = []
+  // la piazza tonda della pianta (le celle col centro dentro), in coordinate del mondo; `x y w h` il rettangolo che la contiene
+  const PZ = { cx: vx + V.piazza.cx, cy: vy + V.piazza.cy, raggi: V.piazza.raggi }
+  const inPiazza = []
+  for (let y = 0; y < V.h; y++) for (let x = 0; x < V.w; x++) if (nellaPiazza(PZ, vx + x + 0.5, vy + y + 0.5)) inPiazza.push([vx + x, vy + y])
+  const pxs = inPiazza.map(c => c[0]), pys = inPiazza.map(c => c[1])
   const villaggio = { chiave: V.chiave, nome: V.nome, x: vx, y: vy, w: V.w, h: V.h, zona: 0,
-    centro: { x: vx + (V.w >> 1), y: vy + V.piazza.y + (V.piazza.h >> 1) }, raggio: Math.ceil(Math.hypot(V.w, V.h) / 2),
-    piazza: { x: vx + V.piazza.x, y: vy + V.piazza.y, w: V.piazza.w, h: V.piazza.h }, partenza: { x: vx + V.partenza.x, y: vy + V.partenza.y },
+    centro: { x: Math.floor(PZ.cx), y: Math.floor(PZ.cy) }, raggio: Math.ceil(Math.hypot(V.w, V.h) / 2),
+    piazza: { x: Math.min(...pxs), y: Math.min(...pys), w: Math.max(...pxs) - Math.min(...pxs) + 1, h: Math.max(...pys) - Math.min(...pys) + 1, ...PZ },
+    partenza: { x: vx + V.partenza.x, y: vy + V.partenza.y },
     cancello: { x: vx + V.cancello.x, y: vy + V.cancello.y }, mercanti: [], persone: [],
-    case: V.case.map((c, n) => ({ x: vx + c.x, y: vy + c.y, w: c.w, h: c.h, verso: 'n', senzaPorta: true, regione: 'villaggio', seme: 1000 + n })),
+    case: V.case.map((c, n) => ({ x: vx + c.x, y: vy + c.y, w: c.w, h: c.h, verso: c.verso, giro: c.giro || 0, regione: 'villaggio', seme: 1000 + n })),
+    orto: { x: vx + V.orto.x, y: vy + V.orto.y, w: V.orto.w, h: V.orto.h },
     alberi: V.alberi.map(([x, y]) => ({ x: vx + x, y: vy + y })) }
-  for (let y = 0; y < V.piazza.h; y++) for (let x = 0; x < V.piazza.w; x++) sS[id(vx + V.piazza.x + x, vy + V.piazza.y + y)] = 3
   for (const l of V.lotti) {
     if (l.tipo !== 'portale') occupa(vx + l.x, vy + l.y, l.w, l.h)
     const q = { ...l, citta: 'villaggio', regione: 'villaggio', zona: zone[0].chiave, x: vx + l.x, y: vy + l.y,
@@ -230,12 +236,32 @@ export function scheletroDelMondo(seme = MONDO_PERCORSO.seme, { terra = 1 } = {}
     if (l.tipo === 'minatore') { q.dalla = 0; villaggio.minatore = q }
     if (l.tipo === 'pietra') q.dif = zone[0].dif
     if (['portale', 'pietra', 'bacheca', 'cartello', 'pozzo'].includes(l.tipo)) villaggio[l.tipo] = q
-    if (l.tipo !== 'portale') riserva(q.x - 1, q.y + l.h, l.w + 2, Math.max(1, q.accanto.y - q.y - l.h + 1))
+    // tenuti liberi: la fila davanti al lotto e dove si ferma l'eroe
+    if (l.tipo !== 'portale') { riserva(q.x - 1, q.y + l.h, l.w + 2, 1); riserva(q.accanto.x - 1, q.accanto.y - 1, 3, 2) }
     posti.push(q)
   }
   for (const c of villaggio.case) occupa(c.x, c.y, c.w, c.h)
+  occupa(villaggio.orto.x, villaggio.orto.y, villaggio.orto.w, villaggio.orto.h)
   for (const a of villaggio.alberi) occupa(a.x, a.y, 1, 1, 2)
-  for (let x = vx + V.piazza.x + V.piazza.w; x <= Math.round(sx[0]); x++) for (const y of [vy + V.cancello.y, vy + V.cancello.y - 1]) sS[id(x, y)] = 2
+  // la piazza (non sotto il pozzo e chi ci sta), e la stradina che ne esce curvando fino alla strada maestra: le celle a meno di
+  // tre quarti di cella dalla curva
+  for (const [x, y] of inPiazza) if (!sB[id(x, y)]) sS[id(x, y)] = 3
+  {
+    const Q = V.strada.map(([x, y]) => [vx + x, vy + y])
+    for (let i = 0; i < Q.length - 1; i++) {
+      const p0 = Q[Math.max(0, i - 1)], p1 = Q[i], p2 = Q[i + 1], p3 = Q[Math.min(Q.length - 1, i + 2)]
+      const passi = Math.ceil(Math.hypot(p2[0] - p1[0], p2[1] - p1[1]) * 8)
+      for (let j = 0; j <= passi; j++) {
+        const t = j / passi, f = (a, b, c, d) => 0.5 * (2 * b + (-a + c) * t + (2 * a - 5 * b + 4 * c - d) * t * t + (-a + 3 * b - 3 * c + d) * t * t * t)
+        const x = f(p0[0], p1[0], p2[0], p3[0]), y = f(p0[1], p1[1], p2[1], p3[1])
+        for (let b = Math.floor(y - 1); b <= Math.ceil(y + 1); b++) for (let a = Math.floor(x - 1); a <= Math.ceil(x + 1); a++) {
+          if (!dentro(a, b) || Math.hypot(a + 0.5 - x, b + 0.5 - y) > 0.75) continue
+          const k = id(a, b)
+          if (!sS[k] && !sB[k]) sS[k] = 2
+        }
+      }
+    }
+  }
   posti.unshift({ tipo: 'citta', chiave: 'villaggio', nome: V.nome, regione: 'villaggio', zona: zone[0].chiave, x: vx, y: vy, w: V.w, h: V.h,
     piede: { ...villaggio.partenza }, accanto: { ...villaggio.partenza } })
   const partenza = villaggio.partenza
