@@ -94,7 +94,7 @@ for (const [nome, crea] of Object.entries(TIPI)) {
   // le bestie: ogni gallina e mucca è sua (numeri a caso diversi), la lista delle pecore e delle bestie non è condivisa
   const g1 = M.creaGallina(0), g2 = M.creaGallina(0)
   controlla('gallina: fase e attesa a caso diverse', g1.userData.fase !== g2.userData.fase && g1.userData.attesa !== g2.userData.attesa)
-  controlla('gallina: corpo, testa e dono sono suoi', g1.userData.corpo.parent === g1 && g1.userData.dono === g1.userData.uovo && g1.userData.uovo.parent === g1 && g1.userData.meta !== g2.userData.meta)
+  controlla('gallina: corpo, testa e dono sono suoi', g1.userData.corpo.parent === g1.userData.alto && g1.userData.alto.parent === g1 && g1.userData.dono === g1.userData.uovo && g1.userData.uovo.parent === g1 && g1.userData.meta !== g2.userData.meta)
   const m1 = M.creaMucca(0), m2 = M.creaMucca(2), m3 = M.creaMucca(1)
   controlla('mucca: lo stesso mantello condivide il corpo, l\'altro no', m1.userData.corpo.geometry === m2.userData.corpo.geometry && m1.userData.corpo.geometry !== m3.userData.corpo.geometry)
   const r1 = M.creaRecinto([{ eta: 'adulta', t0: 0 }, { eta: 'adulta', t0: 0 }]), r2 = M.creaRecinto([{ eta: 'adulta', t0: 0 }])

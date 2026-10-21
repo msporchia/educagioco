@@ -13,6 +13,7 @@ Le voci aperte. Una riga ciascuna, e quando una si chiude si toglie.
 - **La bacheca degli ordini non è stata vista.** `Bacheca.vue` (360 px e tablet) è scritta ma non guardata su uno schermo né provata col dito: il dettaglio attaccato
   in basso copre parte della tavola quando i biglietti sono otto; il test d'integrazione del banco è aggiornato ma non eseguito. Quando `Faccia.vue` c'è,
   `MerceBacheca.vue` si sostituisce con una riga e `Banco.vue` si toglie. I posti per livello (3/4/5/6/8) sono da giocare.
+- **I tre stadi delle bestie non sono visti dalla telecamera di gioco.** Guardati nel catalogo 3D (una voce per stadio, da vicino e a 40°) e provati nei test unitari, non dalla distanza di serie (~22) né su un telefono: da giudicare se alone, secchio, uovo enorme e nuvola ×1,3 bastano a colpo d'occhio, e se la mucca pronta (corpo +12%) si distingue abbastanza ([animali.md](animali.md) «I tre stadi»).
 - **Il primo giro.** Nessuna guida: un bambino che apre per la prima volta vede il prato e le azioni, e basta
   ([../core/guida.md](../core/guida.md)).
 - **Gli edifici liberi non sono stati visti col dito né su un telefono** ([edifici-liberi.md](edifici-liberi.md)): provati nei test unitari e in Chrome (dev server: acquisto dal menu, il «!» sul tasto e sulle carte, nessun fantasma);
@@ -45,7 +46,7 @@ Le voci aperte. Una riga ciascuna, e quando una si chiude si toglie.
   con il mestiere giusto (pasta, forno, pentole).
 - **L'atlante nel sito spezzato.** `atlante.js` della 2D lo importa anche la 3D (`Faccia.vue`, `facce.js`, `Provino.vue`): il modulo diventa un
   file condiviso nella base e il PNG resta nel gruppo `fattoria`. Da guardare con `node strumenti/prova-sito.mjs` (offline, solo la 3D).
-- **Il foglio della macchina non è stato visto né provato col dito vero** (scritto senza build: `integrazione/fattoria3d` ha il tocco e due trascinate da eseguire): da guardare a 360 px, a 820 px e in orizzontale. Manca «accelera» (il motore non anticipa una cottura) e il ritiro di un solo pronto; `stile.css` ha ancora le regole morte `.f3-forno`, `.f3-pronti`, `.f3-ricette`, `.f3-gt` di prima, da togliere.
+- **Il foglio della macchina e i vani dei posti da comprare non sono stati visti col dito vero** (scritto senza build: `integrazione/fattoria3d` ha il tocco e due trascinate da eseguire): da guardare a 360 px, a 820 px e in orizzontale. Manca «accelera» (il motore non anticipa una cottura) e il ritiro di un solo pronto; `stile.css` ha ancora le regole morte `.f3-forno`, `.f3-pronti`, `.f3-ricette`, `.f3-gt` di prima, da togliere.
 - **La mongolfiera non è stata vista.** `Mongolfiera.vue` (360 px e tablet, cielo, cassette, pallone) è scritta ma non guardata su uno schermo né provata col dito
   (la build era vietata mentre altri lavoravano): il dito sul foglio e il pallone che parte e torna nella scena sono da guardare ([mongolfiera.md](mongolfiera.md)). Da giocare: i pezzi
   per cassa (1–2 sotto il livello 14, 1–3 dopo), il riposo di 2 minuti, le soglie del traguardo «Sulla mongolfiera» (10, 40, 120 casse). Manca la quarta fila alta della 2D e un test d'integrazione col dito.
@@ -59,4 +60,4 @@ Le voci aperte. Una riga ciascuna, e quando una si chiude si toglie.
   4. **LOD e cartelli**: oltre una certa distanza dalla camera (zoom lontano) i pezzi piccoli non si disegnano e non proiettano; i cartelli non servono oltre i 18 m.
   5. **L'antialias**: `antialias: true` non si cambia a runtime; sul basso (e sui PC integrati) un renderer senza MSAA o con FXAA a posteriori. Da misurare sulla GPU integrata dell'utente.
   6. **L'ombra con la camera che segue**: oggi si ridisegna a intervalli; con il sole agganciato alla griglia (passo di 2 celle) basterebbe ridisegnarla solo quando cambia qualcosa o la griglia scatta.
-- **«Quando ci premi» non è stato visto col dito** ([compagni.md](compagni.md)): le pose (rotola, zampa, riporta, sbadiglio, struscio, naso a naso) sono guardate solo dal catalogo 3D e provate in node; da giudicare in gioco i tempi, il gesto «chiama» del contadino e se il bastoncino ai piedi si legge.
+- **«Quando ci premi» non è stato visto col dito** ([compagni.md](compagni.md)): le pose (rotola, zampa, riporta, sbadiglio, struscio, naso a naso) sono guardate solo dal catalogo 3D e provate in node; da giudicare in gioco i tempi, il gesto «chiama» del contadino (anche per i gatti, ora chiamati per nome) e se il bastoncino ai piedi si legge.

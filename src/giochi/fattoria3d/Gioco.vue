@@ -14,7 +14,8 @@ import { haWebGL2 } from './scena3d/webgl.js'
 import { dettoDi, dettoDiRifiuto } from './scena3d/detti.js'
 import { EDIFICI, avvisoEdificiNuovi } from './dati/catalogo.js'
 import { COLTURE } from './dati/colture.js'
-import { RICETTE, emojiDi } from './dati/ricette.js'
+import { RICETTE, emojiDi, dentroDi, PRONTO_DA_RITIRARE } from './dati/ricette.js'
+import { POSTI_MASSIMI, prezzoDelPosto } from './dati/posti.js'
 import { avanzamento, roba, nomeDi } from './dati/livelli.js'
 import { clienteDi, LIVELLO_BANCO } from './dati/ordini.js'
 import { PEZZI } from './dati/catalogo.js'
@@ -69,6 +70,7 @@ const borsa = {
 
 // ── cosa si vede (il motore non è reattivo: si rilegge dopo ogni cambio e ogni quarto di secondo) ──
 const versione = ref(0)
+const scorteSeme = computed(() => { void versione.value; return { ...motore.s.merci } })      // i raccolti già in scorta, per le carte del «Cosa semini?»
 const foto = ref({ robaNuova: false, daFare: { semina: 0, raccogli: 0 }, livello: 1, quanto: 0, daCostruire: 0 })
 const datiLivello = () => { const a = avanzamento(motore.esperienza()); return { livello: a.livello, quanto: a.quanto } }
 let ultimaFoto = ''
@@ -241,8 +243,13 @@ const macchina = computed(() => {
   const pronti = Object.entries(M.pronti).filter(([, n]) => n > 0)
   const dispensa = Object.entries(s.prodotti).filter(([, n]) => n > 0).map(([k, n]) => ({ k, n }))
   return {
-    tipo, titolo: E.emoji + ' ' + E.nome,
-    forno: Array.from({ length: M.posti }, (_, k) => {
+    tipo, titolo: E.emoji + ' ' + E.nome, dentro: dentroDi(tipo), prontoTesto: PRONTO_DA_RITIRARE,
+    // i posti comprati (e una coda più lunga di quelli: lavora fino in fondo), poi i vani chiusi col prezzo; il prossimo si compra con un tocco
+    bloccati: Array.from({ length: POSTI_MASSIMI - M.posti }, (_, k) => {
+      const n = M.posti + k + 1, prezzo = prezzoDelPosto(n - 1)
+      return { n, prezzo, prossimo: k === 0, puoi: motore.monete() >= prezzo }
+    }),
+    forno: Array.from({ length: Math.max(M.posti, M.coda.length) }, (_, k) => {
       const it = M.coda[k]; if (!it) return null
       const r = RICETTE[it.ric]
       if (!it.fine) return { k: it.ric, emoji: r.emoji, testo: 'in coda', barra: 0 }
@@ -263,7 +270,13 @@ const macchina = computed(() => {
 function prepara(k) {
   const tipo = macchinaAperta.value
   const r = motore.avviaRicettaIn(tipo, k)
-  if (!r.ok) return macchinaMsg.value = dettoDiRifiuto(r)
+  if (!r.ok) return macchinaMsg.value = dettoDiRifiuto(r, { compra: motore.postiDi(tipo) < POSTI_MASSIMI })
+  macchinaMsg.value = ''; ui.cambio()
+}
+function compraPosto() {
+  const tipo = macchinaAperta.value
+  const r = motore.compraPosto(tipo)
+  if (!r.ok) return macchinaMsg.value = dettoDiRifiuto(r, { costo: r.costo })
   macchinaMsg.value = ''; ui.cambio()
 }
 function ritira() {
@@ -440,8 +453,8 @@ onBeforeUnmount(() => {
         <div v-if="trascinando && trascinando.su" class="f3-trascinato" :style="{ transform: `translate(${trascinando.x}px, ${trascinando.y - 56}px) translate(-50%, -50%)` }">{{ trascinando.emoji }}</div>
 
         <CostruisciQui v-if="costruisciQui" :schede="schede" :messaggio="costruisciQui.msg" :anteprima="anteprima" :anteprima-pronta="anteprimaPronta" @scegli="sceglieCarta" @chiudi="chiudiCostruisci" />
-        <SceltaSeme v-if="semiAperto" :seme="seme" :livello="foto.livello" @scegli="scegliSeme" @chiudi="semiAperto = false" />
-        <Macchina v-if="macchina" :key="macchina.tipo" v-bind="macchina" :messaggio="macchinaMsg" :anteprima="anteprima" :anteprima-pronta="anteprimaPronta" @prepara="prepara" @ritira="ritira" @chiudi="macchinaAperta = null" />
+        <SceltaSeme v-if="semiAperto" :seme="seme" :livello="foto.livello" :scorte="scorteSeme" @scegli="scegliSeme" @chiudi="semiAperto = false" />
+        <Macchina v-if="macchina" :key="macchina.tipo" v-bind="macchina" :messaggio="macchinaMsg" :anteprima="anteprima" :anteprima-pronta="anteprimaPronta" @prepara="prepara" @compra="compraPosto" @ritira="ritira" @chiudi="macchinaAperta = null" />
         <Bacheca v-if="bancoAperto" v-bind="{ aperto: banco.aperto, perche: banco.perche, ordini: banco.ordini, traguardo: traguardoOrdini }" :messaggio="bancoMsg"
                @consegna="consegna" @cambia="cambiaOrdine" @chiudi="bancoAperto = false" />
         <Mongolfiera v-if="nave" v-bind="{ nave: mongolfiera, traguardo: traguardoNave, livelloIngresso: LIVELLO_MONGOLFIERA }" :messaggio="naveMsg"

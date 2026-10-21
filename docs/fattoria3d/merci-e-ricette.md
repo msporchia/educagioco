@@ -13,7 +13,7 @@ lavanda…) e le disegnava con le emoji; la 2D ha una catena curata ([../fattori
 - **`viste/Faccia.vue`** disegna la merce (`k` = la chiave 3D) con `Provino.vue` della 2D, che non si tocca: la 3D importa la
   vista e i dati dell'atlante, non mezza fattoria. L'**emoji è il ripiego dichiarato**: una merce senza `pezzo` ha `aspetta`
   (il pezzo che un foglio futuro porterà), come in 2D ([../fattoria/sprite.md](../fattoria/sprite.md)). Oggi solo la parmigiana.
-- **Dove si vede**: il foglio dell'inventario (il HUD non mostra più scorte), i dischi del banco, ingredienti, ricette, forno e pronti di ogni macchina, la scelta
+- **Dove si vede**: il foglio dell'inventario (il HUD non mostra più scorte), i dischi del banco, ingredienti, ricette, posti (col nome della macchina: «Nel forno», «Al telaio»…) e pronti di ogni macchina, la scelta
   del seme, i fogli dei livelli, la cassa e il mercato dei vicini, il volo «+1» sopra la scena. Restano emoji i **testi**
   (messaggi, fumetti, il badge «🍞 2 pronti!» sopra una macchina): una riga non è un disegno.
 - **Le emoji di ripiego sono tutte diverse** fra loro (`guastiDelleRicette`): in una riga di testo «manca 🌾 2» deve dire una cosa sola.
