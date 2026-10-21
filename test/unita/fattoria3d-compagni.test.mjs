@@ -5,7 +5,7 @@
    tempo: 1 */
 import { COMPAGNI, compagniAl, scegliMeta, cellaLiberaVicina, decidiCane, decidiGatto, durataDi, guastiDeiCompagni, ASPETTO_ERO,
   INTERAZIONI_CANE, scegliInterazioneCane, sequenzaCane, sequenzaRichiamo, sequenzaSonno, sequenzaSveglia, carezzaCane, scegliRispostaGatto, sequenzaGatto,
-  sequenzaGattoSopra, incontroGattoCane, sequenzaIncontro, scegliMetaAttorno, SOGLIA_RICHIAMO } from '../../src/giochi/fattoria3d/dati/compagni.js'
+  sequenzaGattoSopra, incontroGattoCane, sequenzaIncontro, scegliMetaAttorno, SOGLIA_RICHIAMO, chiamaIlGatto, sequenzaGattoChiamato } from '../../src/giochi/fattoria3d/dati/compagni.js'
 import { roba, sogliaDi, guastiDeiLivelli, vuoto } from '../../src/giochi/fattoria3d/dati/livelli.js'
 import { Fattoria3d } from '../../src/giochi/fattoria3d/motore/fattoria3d.js'
 import { controlla, uguale, dentro, riassunto } from '../aiuto/verifica.mjs'
@@ -231,6 +231,21 @@ const generatore = seme => () => (seme = (seme * 16807) % 2147483647) / 21474836
   for (const v of ['bianconero', 'calico', 'nero']) for (const r of ['avvicina', 'fusaQui', 'volta', 'buffo'])
     controlla(`${v}/${r}: i passi hanno durata e i versi cadono dentro`, sequenzaGatto(r, v, false, () => 0.3).every(x => x.va || (x.dur > 0 && (x.ev || []).every(([t]) => t < x.dur))))
 
+  // i gatti chiamati per nome: solo fermi e lontani, poi ognuno risponde a modo suo (la chiamata non li obbliga)
+  uguale('il gatto lontano e il contadino fermo: lo chiama', chiamaIlGatto(SOGLIA_RICHIAMO + 0.1, true), true)
+  uguale('…già vicino: niente chiamata', chiamaIlGatto(SOGLIA_RICHIAMO, true), false)
+  uguale('…e se il contadino si muove: il vecchio «Prrr…» sul posto', chiamaIlGatto(8, false), false)
+  for (const v of ['bianconero', 'calico', 'nero']) for (const r of ['avvicina', 'fusaQui', 'volta', 'buffo']) {
+    const q = sequenzaGattoChiamato(r, v, () => 0.3)
+    controlla(`${v}/${r} chiamato: prima alza la testa verso di lui, poi la risposta di sempre`, q[0].guarda === 'eroe' && q[0].dur >= 0.4 && q[0].dur <= 0.8 && !q[0].va
+      && JSON.stringify(q.slice(1)) === JSON.stringify(sequenzaGatto(r, v, false, () => 0.3)), JSON.stringify(q[0]))
+    controlla(`${v}/${r} chiamato: nessuna corsa`, q.every(x => !(x.va && x.va.corsa)))
+  }
+  dentro('l\'attesa va da 0,4 a 0,8 secondi', sequenzaGattoChiamato('volta', 'nero', () => 0)[0].dur, 0.4, 0.4001); dentro('…fino a 0,8', sequenzaGattoChiamato('volta', 'nero', () => 0.999)[0].dur, 0.79, 0.8)
+  controlla('chi si avvicina cammina fino a circa una cella (non oltre due)', ['bianconero', 'calico', 'nero'].every(v => sequenzaGattoChiamato('avvicina', v, () => 0.3).find(x => x.va).va.r[1] <= 1.7))
+  const indole = v => conta(v, 20000)
+  controlla('le indoli restano diverse anche chiamati: Pepe si volta più di Sherlock e Irene viene e fa la buffa', indole('nero').volta > indole('bianconero').volta * 2 && indole('calico').buffo > indole('bianconero').buffo * 1.5)
+  controlla('…e nessuno è obbligato a venire: ognuno ha una probabilità minore di uno', ['bianconero', 'calico', 'nero'].every(v => indole(v).avvicina < 0.8))
   // l'incontro gatto-cane: cooldown, di rado, la fuga quasi mai
   const rr = generatore(21); let ora = 0, prossimo = 0, saluti = 0, fughe = 0, prove = 0; const esiti = { struscia: 0, zampata: 0, lecca: 0 }, intervalli = []; let ultimoEsito = null
   for (let n = 0; n < 40000; n++) {
@@ -321,6 +336,27 @@ const generatore = seme => () => (seme = (seme * 16807) % 2147483647) / 21474836
   uguale('dopo sei carezze ravvicinate Watson si addormenta contento', cane.stato, 'dorme')
   passa(3); versi.length = 0; c.tocca(cane); uguale('toccato che dorme: si sveglia con uno sbadiglio', cane.stato, 'sbadiglia')
   passa(4)
+  // 3b. un gatto lontano: «Sherlock!», il gesto, e dopo un'attesa il gatto risponde (Sherlock quasi sempre viene)
+  {
+    const sh = gatti.find(k => k.def.id === 'sherlock')
+    sh.x = eroe.x + 8; sh.z = eroe.z - 2; sh.percorso = []; sh.seq = null; sh.stato = 'sta'; sh.tStato = 0; sh.dur = 99; sh.sopra = null
+    if (!f.libera(Math.floor(sh.x), Math.floor(sh.z))) { const v = cellaLiberaVicina((i, j) => f.libera(i, j), sh.x, sh.z); sh.x = v[0] + 0.5; sh.z = v[1] + 0.5 }
+    eroe.az = null; dette.length = 0
+    c.tocca(sh)
+    uguale('toccato lontano: il contadino lo chiama per nome', dette[0], 'Sherlock!')
+    uguale('…si gira verso di lui e fa il gesto', [eroe.guardato.x === sh.x, eroe.az?.tipo].join(), 'true,chiama')
+    uguale('…e il gatto prima alza la testa (non parte subito)', [sh.stato, sh.seq?.[0].guarda].join(), 'sta,eroe')
+    const d0 = Math.hypot(sh.x - eroe.x, sh.z - eroe.z)
+    passa(0.3); controlla('durante l\'attesa non si è mosso', Math.abs(Math.hypot(sh.x - eroe.x, sh.z - eroe.z) - d0) < 0.05)
+    passa(6); controlla('…poi risponde a modo suo (la sequenza è finita o in corso, mai bloccata)', !sh.seq || sh.seq.length > 0)
+    // vicino: niente chiamata
+    sh.x = eroe.x + 1.2; sh.z = eroe.z - 0.5; sh.percorso = []; sh.seq = null; eroe.az = null; dette.length = 0
+    c.tocca(sh); uguale('un gatto già vicino non è chiamato', dette.length, 0)
+    // il contadino non è fermo: il vecchio «Prrr…» sul posto, senza chiamata
+    sh.x = eroe.x + 8; sh.z = eroe.z - 2; sh.seq = null; eroe.percorso = [[0, 0]]; dette.length = 0
+    c.tocca(sh); uguale('se il contadino cammina, nessuna chiamata', dette.length, 0); eroe.percorso = []
+    passa(5)
+  }
   // 4. i gatti: ogni tocco una risposta, nessuna si pianta
   for (let giro = 0; giro < 30; giro++) for (const g of gatti) { if (g.sopra) continue; g.seq = null; c.tocca(g); passa(2); eroe.az = null }
   passa(10)

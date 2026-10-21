@@ -197,7 +197,7 @@ export class Pezzi {
     const s = this.m.s
     if (MACCHINE[v.tipo]) {
       // ogni macchina: pronti da ritirare, oppure la cottura in corso e i posti occupati
-      const Q = s.macchine[v.tipo], posti = MACCHINE[v.tipo].posti
+      const Q = s.macchine[v.tipo], posti = Math.max(this.m.postiDi(v.tipo), Q.coda.length)
       if (g.userData.gira) g.userData.gira.rotation.y += dt * 0.8
       if (g.userData.anima) g.userData.anima(dt, tt)
       const cuoce = Q.coda.length > 0, cadenza = cuoce ? 0.35 : v.tipo === 'pasticceria' ? Infinity : 0.6   // gli altri fumano anche a riposo

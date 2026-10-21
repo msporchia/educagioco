@@ -16,6 +16,8 @@ import { creaContadino, creaCane, posaCane, creaGatto, posaGatto } from '../../.
 import { creaPonte, creaPasserella, creaTavolo } from '../../../src/giochi/fattoria3d/scena3d/modelli-passaggi.js'
 import { creaStagno } from '../../../src/giochi/fattoria3d/scena3d/modelli-acqua.js'
 import { geometriaCespuglio } from '../../../src/giochi/fattoria3d/scena3d/dal-sotterraneo.js'
+import { ANIMALI } from '../../../src/giochi/fattoria3d/dati/animali.js'
+import { PECORE } from '../../../src/giochi/fattoria3d/dati/regole.js'
 import { PEZZI, EDIFICI } from '../../../src/giochi/fattoria3d/dati/catalogo.js'
 import { COLTURE } from '../../../src/giochi/fattoria3d/dati/colture.js'
 import { COMPAGNI } from '../../../src/giochi/fattoria3d/dati/compagni.js'
@@ -42,6 +44,23 @@ const unico = t => `edificio unico, si mette dove si vuole nel terreno proprio (
 const celle = d => `${d.w}×${d.d}`
 const CRESCITE = [0.75, 1, 0.2, 0.45]    // le tessere: dietro a sinistra, dietro a destra, davanti a sinistra, davanti a destra
 const FINE = Date.now() - 1000          // «pronta»: la gallina mostra l'uovo, la mucca il secchio
+// i tre stadi di un animale (docs/fattoria3d/animali.md, «I tre stadi»): 'fame', 'lavora' (a metà, p = 0,5) e 'pronta'. Lo stato si ricalcola a ogni fotogramma
+// (l'ora passa), e il modello è fermo in un punto (niente passeggiate) e già nello stadio, anche nella scheda che non anima.
+const MS = { gallina: ANIMALI.pollaio.ms, mucca: ANIMALI.stalla.ms }
+const statoBestia = (specie, stadio) => { const t = Date.now(); return { fine: stadio === 'fame' ? null : stadio === 'pronta' ? t - 1000 : t + MS[specie] * 0.5 } }
+const statoPecora = (stadio) => { const t = Date.now(); return { eta: 'adulta', t0: stadio === 'fame' ? null : stadio === 'pronta' ? t - PECORE.laneMs - 1000 : t - PECORE.laneMs * 0.5 } }
+function inStadio (specie, stadio) {
+  const fai = specie === 'gallina' ? () => creaGallina(0) : specie === 'mucca' ? () => creaMucca(0) : () => creaPecora()
+  const passo = (g, dt, t) => specie === 'pecora' ? muoviPecore({ userData: { pecore: [g] } }, dt, t, null, [statoPecora(stadio)], Date.now()) : muoviBestie({ userData: { bestie: [g] } }, dt, t, [statoBestia(specie, stadio)], Date.now())
+  return {
+    crea: () => { const g = fai(); g.userData.attesa = 1e9; g.userData.zona && (g.userData.zona = { x0: 0, x1: 0, z0: 0, z1: 0 }); passo(g, 0.016, 0.6); return g },
+    anima: (g, dt, t) => { g.userData.attesa = 1e9; passo(g, dt, t + 0.6) },
+  }
+}
+const NOMI_STADIO = { fame: 'ha fame', lavora: 'al lavoro (a metà)', pronta: 'pronta' }
+const stadi = (specie, nome, file, dove) => ['fame', 'lavora', 'pronta'].map(st => ({
+  id: `fattoria:${specie}-${st}`, nome: `${nome} · ${NOMI_STADIO[st]}`, gioco: 'fattoria', categoria: 'animale', dove: `${dove}: lo stadio «${NOMI_STADIO[st]}» (bestie-puro.js)`, file, ...inStadio(specie, st),
+}))
 const statiStalla = () => [{ fine: FINE }, { fine: null }, { fine: Date.now() + 9e6 }, { fine: null }]   // la stalla piena: pronta, fame, al lavoro, fame
 
 /** Le animazioni che il gioco fa nei pezzi.js, riprese una per una (le firme di `userData.anima` non sono uguali). */
@@ -139,6 +158,9 @@ export const VOCI = [
   { id: 'fattoria:mucca', nome: 'Mucca', gioco: 'fattoria', categoria: 'animale', dove: 'nella stalla (col secchio del latte da raccogliere)', file: `${M}:creaMucca`,
     crea: () => { const g = creaMucca(0); g.userData.dono.visible = true; return g } },
   { id: 'fattoria:mucca-2', nome: 'Mucca (variante)', gioco: 'fattoria', categoria: 'animale', dove: 'nella stalla, altri posti: le chiazze cambiano', file: `${M}:creaMucca`, crea: () => creaMucca(1) },
+  ...stadi('gallina', 'Gallina', `${M}:creaGallina`, 'nel pollaio'),
+  ...stadi('mucca', 'Mucca', `${M}:creaMucca`, 'nella stalla'),
+  ...stadi('pecora', 'Pecora', `${M}:creaPecora`, 'dentro il recinto'),
 
   // ── chi gira per la fattoria ──
   // il contadino e la contadina, vestibili (dati/abiti.js, docs/fattoria3d/guardaroba.md): l'abito di serie e qualche altro per giudicare i capi

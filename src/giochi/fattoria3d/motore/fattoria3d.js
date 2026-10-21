@@ -7,6 +7,7 @@ import { LIM, chiave, cellaDa, lottoDaChiave, cellaDaId, idCella, dentro, lotto,
 import { PEZZI, EDIFICI, quotaDelPezzo, edificiDaCostruire } from '../dati/catalogo.js'
 import { COLTURE, TESSERE } from '../dati/colture.js'
 import { RICETTE, MACCHINE, TIPI_DI_MACCHINA } from '../dati/ricette.js'
+import { POSTI_MASSIMI, postiInForma, prezzoDelPosto } from '../dati/posti.js'
 import { livelloPer, livelloDelPezzo, livelloDellaColtura, livelloDellaRicetta } from '../dati/livelli.js'
 import { COSTI, PECORE, prezzoDelLotto } from '../dati/regole.js'
 import { generaLotto } from '../dati/lotti.js'
@@ -587,7 +588,7 @@ export class Fattoria3d {
     return n
   }
 
-  // ── le macchine: mulino, pastificio (id pasticceria), panificio, caseificio, cucina (id conserviera), gelateria. Tre posti nel forno, si cuoce uno alla volta ──
+  // ── le macchine: mulino, pastificio (id pasticceria), panificio, caseificio, cucina (id conserviera), gelateria. Un posto di partenza, gli altri si comprano (dati/posti.js); si cuoce uno alla volta ──
   /** Cosa c'è in scorta per una ricetta: un raccolto (merci) o il prodotto di un'altra macchina (prodotti). */
   scortaDi(k) { return COLTURE[k] ? this.s.merci[k] : LANA[k] ? this.s.lana : (this.s.prodotti[k] || 0) }
   _togli(k, n) { if (COLTURE[k]) this.s.merci[k] -= n; else if (LANA[k]) this.s.lana -= n; else { this.s.prodotti[k] -= n; if (!this.s.prodotti[k]) delete this.s.prodotti[k] } }
@@ -603,7 +604,23 @@ export class Fattoria3d {
     const m = MACCHINE[tipo]
     if (!m) return null
     const q = this.s.macchine[tipo]
-    return { tipo, posti: m.posti, posseduta: !!this.s.posseduti[tipo], coda: q.coda, pronti: q.pronti }
+    return { tipo, posti: postiInForma(q.posti), posseduta: !!this.s.posseduti[tipo], coda: q.coda, pronti: q.pronti }
+  }
+  /** Quanti posti ha ora la macchina di un tipo (da 1 a 6; 0 se non è una macchina). Una coda più lunga dei posti pagati lavora fino in fondo. */
+  postiDi(tipo) { const q = this.s.macchine[tipo]; return q ? postiInForma(q.posti) : 0 }
+  /** Il prezzo del prossimo posto della macchina (null al tetto o se non è una macchina). */
+  prezzoProssimoPosto(tipo) { return MACCHINE[tipo] ? prezzoDelPosto(this.postiDi(tipo)) : null }
+  /** Compra il prossimo posto di una macchina (senza conferma): { ok, costo, posti } o un rifiuto (`sconosciuta`, `non-posseduta`, `pieno` al sesto,
+      `poche-monete` con `costo`). Conta come esperienza; l'evento `posto` porta il tipo e il numero. */
+  compraPosto(tipo) {
+    if (!MACCHINE[tipo]) return { ok: false, motivo: 'sconosciuta' }
+    if (!this.s.posseduti[tipo]) return { ok: false, motivo: 'non-posseduta' }
+    const posti = this.postiDi(tipo), costo = prezzoDelPosto(posti)
+    if (posti >= POSTI_MASSIMI || costo === null) return { ok: false, motivo: 'pieno' }
+    if (!this._spendi(costo)) return { ok: false, motivo: 'poche-monete', costo }
+    this.s.macchine[tipo].posti = posti + 1
+    this._evento('posto', { macchina: tipo, posti: posti + 1 })
+    return { ok: true, costo, posti: posti + 1 }
   }
   /** Le ricette di una macchina, con il livello vero, se sono aperte e se ora si possono avviare. */
   ricetteDi(tipo) {
@@ -621,7 +638,7 @@ export class Fattoria3d {
     const chiuso = this._chiusa(livelloDellaRicetta(ric))
     if (chiuso) return chiuso
     const Q = this.s.macchine[tipo]
-    if (Q.coda.length >= m.posti) return { ok: false, motivo: 'forno-pieno' }
+    if (Q.coda.length >= this.postiDi(tipo)) return { ok: false, motivo: 'forno-pieno' }
     if (!this.ingredientiOk(ric)) return { ok: false, motivo: 'mancano-ingredienti', mancano: this.mancano(ric) }
     for (const [k, n] of Object.entries(r.ing)) this._togli(k, n)
     Q.coda.push({ ric, fine: null })

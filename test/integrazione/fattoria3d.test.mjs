@@ -604,8 +604,10 @@ await attendi(page, 700)
 await page.locator('[data-f3="ritira"]').click()
 await attendi(page, 300)
 uguale('«Ritira tutto» porta la pasta in dispensa', (await stato()).prodotti.pasta, 1)
-// il foglio come in Hay Day: i tre posti della fila, la pila dei pronti, il numero sulla carta, e il dito che trascina (docs/fattoria3d/file.md)
-uguale('la fila ha i suoi tre posti, tutti liberi', await page.locator('[data-f3="posto"][data-stato="libero"]').count(), 3)
+// il foglio come in Hay Day: il posto di partenza e i cinque vani da comprare, la pila dei pronti, il numero sulla carta, e il dito che trascina (docs/fattoria3d/file.md)
+uguale('la fila parte con un posto, libero', await page.locator('[data-f3="posto"][data-stato="libero"]').count() + ':' + await page.locator('[data-f3="posto"]').count(), '1:1')
+uguale('…e cinque vani chiusi col prezzo, il primo in evidenza (🪙 20)', [await page.locator('[data-f3="posto-chiuso"]').count(), await page.locator('[data-f3="posto-chiuso"][data-prossimo="true"]').count(), (await page.locator('[data-f3="posto-chiuso"][data-prossimo="true"]').innerText()).replace(/\s+/g, ' ').trim()].join('|'), '5|1|＋ 🪙 20')
+uguale('la sezione porta il nome della macchina: il pastificio ha il forno', (await page.locator('[data-f3="macchina-dentro"]').textContent()).trim(), 'Nel forno')
 controlla('c\'è la pila dei pronti', await page.locator('[data-f3="pronti"]').count() === 1)
 await m3(() => { const { motore, mondo } = window.__fattoria3d; motore.s.prodotti.farina = 4; motore.s.prodotti.uova = 3; mondo.cambiato() })
 await attendi(page, 300)
@@ -615,6 +617,19 @@ await toccaEl('[data-ricetta="pasta"]')
 await attendi(page, 300)
 uguale('un tocco sulla carta la mette in fila', (await stato()).macchine.pasticceria.coda.length, 1)
 controlla('il primo posto non è più libero', (await page.locator('[data-f3="posto"][data-posto="0"]').getAttribute('data-stato')) !== 'libero')
+// il secondo posto si compra con un tocco sul vano: senza monete il rifiuto dice quante servono e non cambia niente; con le monete il vano diventa libero
+const espPrima = (await stato()).esperienza
+await m3(() => { const m = window.__fattoria3d.motore; m.borsa.paga(m.monete() - 5); window.__fattoria3d.mondo.cambiato() })
+await attendi(page, 200)
+await toccaEl('[data-f3="posto-chiuso"][data-prossimo="true"]'); await attendi(page, 300)
+controlla('senza monete: «Servono 🪙 20», il posto non c\'è', /Servono.*20/.test(await page.locator('[data-f3="macchina-msg"]').innerText()) && (await stato()).macchine.pasticceria.posti === 1 && await mon() === 5)
+await m3(() => { const m = window.__fattoria3d.motore; m.borsa.paga(-(5000 + 20)); window.__fattoria3d.mondo.cambiato() })
+await attendi(page, 200)
+const prePosto = await mon()
+await toccaEl('[data-f3="posto-chiuso"][data-prossimo="true"]'); await attendi(page, 300)
+const conPosto = await stato()
+controlla('con le monete il secondo posto si compra (🪙 20, senza conferma) e conta come esperienza', conPosto.macchine.pasticceria.posti === 2 && prePosto - await mon() === 20 && conPosto.esperienza - espPrima === 20, JSON.stringify([conPosto.macchine.pasticceria.posti, prePosto - await mon(), conPosto.esperienza - espPrima]))
+uguale('ora i posti sono due e i vani chiusi quattro, col prossimo a 🪙 40', [await page.locator('[data-f3="posto"]').count(), await page.locator('[data-f3="posto-chiuso"]').count(), (await page.locator('[data-f3="posto-chiuso"][data-prossimo="true"]').innerText()).replace(/\s+/g, ' ').trim()].join('|'), '2|4|＋ 🪙 40')
 // il dito tenuto e poi trascinato: la carta è un fantasma che segue, e lasciata su un posto libero va in fila
 const centro = async sel => { const r = await page.locator(sel).boundingBox(); return [r.x + r.width / 2, r.y + r.height / 2] }
 async function portaCarta(sel, verso) {
@@ -626,7 +641,7 @@ async function portaCarta(sel, verso) {
 let lascia = await portaCarta('[data-ricetta="pasta"]', await centro('[data-f3="posto"][data-posto="1"]'))
 controlla('mentre si trascina c\'è il fantasma', await page.locator('[data-f3="trascina-fantasma"]').count() === 1)
 await lascia(); await attendi(page, 300)
-uguale('lasciata su un posto, va in fila', (await stato()).macchine.pasticceria.coda.length, 2)
+{ const q = (await stato()).macchine.pasticceria; uguale('lasciata su un posto, va in fila (la prima pasta può aver finito: contano anche i pronti)', q.coda.length + (q.pronti.pasta || 0), 2) }
 controlla('finito il gesto il fantasma sparisce', await page.locator('[data-f3="trascina-fantasma"]').count() === 0)
 // lasciata altrove non succede niente: né ingredienti persi né posti presi
 await m3(() => { const { motore, mondo } = window.__fattoria3d; motore.s.prodotti.farina = 4; motore.s.prodotti.uova = 3; mondo.cambiato() })

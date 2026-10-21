@@ -1,4 +1,4 @@
-/* Le macchine: ogni edificio produttivo ha le sue ricette, tre posti nel forno e cuoce uno alla volta. Le ricette sono quelle
+/* Le macchine: ogni edificio produttivo ha le sue ricette, un posto di partenza (gli altri si comprano fino a sei: dati/posti.js) e lavora uno alla volta. Le ricette sono quelle
    della fattoria di sempre (src/giochi/fattoria/dati/coltivazioni.js): stesso id, stessi ingredienti, stesse quantità (N → 1);
    cambiano solo i tempi, in scala 3D (i minuti della 2D diventano secondi). Una ricetta chiede raccolti (le chiavi di COLTURE),
    prodotti di un'altra macchina (le chiavi di un'altra ricetta) oppure uova e latte (dati/animali.js): è così che nasce la
@@ -11,7 +11,28 @@
 import { COLTURE } from './colture.js'
 import { PRODOTTI_ANIMALI, LANA } from './animali.js'
 
-export const FORNO_POSTI = 3
+import { POSTI_DI_PARTENZA } from './posti.js'
+
+/** I posti con cui ogni macchina parte: uno (gli altri si comprano fino a sei: dati/posti.js). */
+export const FORNO_POSTI = POSTI_DI_PARTENZA
+
+/** Come si chiama, per ogni macchina, il posto dove lavora (la sezione dei posti nel foglio): non tutte hanno un forno. `dentro` è la scritta
+    della sezione, `pronto` quella dei pronti. Vedi docs/fattoria3d/merci-e-ricette.md. */
+export const LAVORAZIONE = {
+  mulino:        { dentro: 'Alla macina' },
+  pasticceria:   { dentro: 'Nel forno' },            // il Pastificio: biscotti, pizza e lasagne al forno
+  panificio:     { dentro: 'Nel forno' },
+  caseificio:    { dentro: 'Nel paiolo' },
+  conserviera:   { dentro: 'Sul fuoco' },
+  gelateria:     { dentro: 'Nella gelatiera' },
+  telaio:        { dentro: 'Al telaio' },
+  zuccherificio: { dentro: 'Nella caldaia' },
+  sartoria:      { dentro: 'In sartoria' },
+  tintoria:      { dentro: 'Nella tinozza' },
+}
+export const PRONTO_DA_RITIRARE = 'Pronto da ritirare'
+/** La scritta della sezione dei posti di una macchina (mai «forno» se non è un forno). */
+export const dentroDi = tipo => (LAVORAZIONE[tipo] || {}).dentro || 'Al lavoro'
 
 // Una riga per ricetta: i minuti della 2D diventano secondi (`ms`).
 export const MACCHINE = {
@@ -122,7 +143,10 @@ export function guastiDelleRicette(colture, edifici) {
   }
   for (const [t, m] of Object.entries(MACCHINE)) {
     if (edifici && !edifici[t]) g.push(`${t}: macchina senza edificio`)
-    if (!(m.posti >= 1)) g.push(`${t}: nessun posto nel forno`)
+    if (!(m.posti >= 1)) g.push(`${t}: nessun posto di partenza`)
+    const dentro = (LAVORAZIONE[t] || {}).dentro
+    if (!dentro) g.push(`${t}: la sezione dei posti non ha un nome`)
+    else if (/forno/i.test(dentro) && !['pasticceria', 'panificio'].includes(t)) g.push(`${t}: «${dentro}» ma non è un forno`)
     if (!Object.keys(m.ricette).length) g.push(`${t}: nessuna ricetta`)
   }
   return g

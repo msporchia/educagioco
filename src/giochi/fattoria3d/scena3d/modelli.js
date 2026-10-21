@@ -3,6 +3,8 @@
 // gli stati già decisi (le tessere del campo, le pecore). Vedi docs/fattoria3d/scena.md.
 import * as THREE from 'three'
 import { PECORE } from '../dati/regole.js'
+import { ANIMALI } from '../dati/animali.js'
+import { statoDaFine, statoPecora, progressoBestia, progressoPecora, stadioBestia, profiloBestia, avvicina } from './bestie-puro.js'
 import { casaDiLegno, bancoDellaGuaritrice, bachecaDelleTaglie } from './dal-sotterraneo.js'
 import { fondiPerMateriale } from './fondi.js'
 import { memoModello } from './cache-modelli.js'
@@ -425,14 +427,17 @@ function costruisciPecora () {
   const testa = new THREE.Group(); testa.position.set(0, 0.06, 0.26); corpo.add(testa)
   sfera(testa, 0.09, scuro, 0, 0, 0.04, 0.9, 1, 1.1, 8)
   sfera(testa, 0.012, mat(0xffffff), 0.05, 0.03, 0.12, 1, 1, 1, 4); sfera(testa, 0.012, mat(0xffffff), -0.05, 0.03, 0.12, 1, 1, 1, 4)
-  scatola(testa, 0.05, 0.03, 0.08, scuro, 0.12, 0.0, 0).rotation.z = 0.5; scatola(testa, 0.05, 0.03, 0.08, scuro, -0.12, 0.0, 0).rotation.z = -0.5
+  const orecchie = [scatola(testa, 0.05, 0.03, 0.08, scuro, 0.12, 0.0, 0), scatola(testa, 0.05, 0.03, 0.08, scuro, -0.12, 0.0, 0)]
+  orecchie[0].rotation.z = 0.5; orecchie[1].rotation.z = -0.5
+  const ricci = [[0.2, 0.2, 0.02], [-0.17, 0.2, 0.12], [0.02, 0.23, -0.16]].map(([x, y, z]) => sfera(corpo, 0.1, lana, x, y, z, 1, 1, 1, 8))   // i riccioli di quando è pronta
   const zampe = []
   for (const [x, z] of [[0.1, 0.12], [-0.1, 0.12], [0.1, -0.12], [-0.1, -0.12]]) {
     const p = new THREE.Group(); p.position.set(x, 0.26, z); g.add(p)
     cilindro(p, 0.025, 0.025, 0.26, scuro, 0, -0.13, 0, 5); zampe.push(p)
   }
-  fondiPerMateriale(fiocchi); fondiPerMateriale(testa)                              // la lana e la testa si muovono per intero
-  g.userData = { zampe, corpo, testa, fiocchi, pelle: pelleM, k: 1, magro: 0, fase: 0, attesa: 1, meta: new THREE.Vector3() }
+  fondiPerMateriale(fiocchi); fondiPerMateriale(testa, { escludi: orecchie })       // la lana e la testa si muovono per intero; le orecchie si abbassano da sole
+  g.userData = { zampe, corpo, testa, fiocchi, ricci, orecchie, pelle: pelleM, k: 1, fase: 0, attesa: 1, meta: new THREE.Vector3() }
+  segniDiPronta(g, g.userData, { raggio: 0.4, yAlone: 0.05, scint: [0.1, 0.62, 0], sbuffo: [0, 0.4, 0], rSbuffo: 0.4 })
   return g
 }
 function costruisciRecinto () {
@@ -470,16 +475,21 @@ export function sincronizzaPecore (g, stati) {
 export function muoviPecore (g, dt, t, verso, stati, adesso) {
   g.userData.pecore.forEach((p, n) => {
     const u = p.userData, st = stati[n] || { eta: 'adulta', t0: adesso }
-    // lo stato: la taglia cresce piano; la lana ricresce dal pasto (`t0` null: tosata e affamata, niente lana); se ha fame il corpo è
-    // magro (la pelle si assottiglia, il ventre sale), la postura bassa e i passi lenti; la transizione è morbida
-    const fame = st.eta === 'adulta' && st.t0 == null
-    const livello = st.eta === 'adulta' ? (st.t0 == null ? 0 : Math.max(0, Math.min(1, (adesso - st.t0) / PECORE.laneMs))) : 0.7
+    // lo stato: la taglia cresce piano; la lana ricresce dal pasto (`t0` null: tosata e affamata, niente lana) in tre stadi
+    // (bestie-puro.js, docs/fattoria3d/animali.md): a fame pelle rosa magra e orecchie giù, poi la nuvola che si ingrossa a gradini,
+    // da pronta grande, coi riccioli e lo scintillio. Il profilo è smussato col tempo, e raccogliere (tosare) è uno sbuffo.
+    const adulta = st.eta === 'adulta'
+    const stato = adulta ? statoPecora(st.t0, adesso, PECORE.laneMs) : 'lavora', livello = adulta ? progressoPecora(st.t0, adesso, PECORE.laneMs) : 0.6
+    const stadio = stadioBestia(stato, livello)
+    const pr = avvicina(u.pr || (u.pr = {}), profiloBestia('pecora', stadio, livello, u.tg || (u.tg = {})), dt, VELOCI)
     u.k += ((st.eta === 'agnello' ? 0.62 : 1) - u.k) * Math.min(1, dt * 3)
-    u.magro += ((fame ? 1 : 0) - u.magro) * Math.min(1, dt * 2.5)
-    const m = u.magro, lento = 1 - 0.3 * m
+    const lento = pr.lento
     p.scale.setScalar(u.k); u.testa.scale.setScalar(st.eta === 'agnello' ? 1.3 : 1)
-    u.fiocchi.visible = livello > 0.05; u.fiocchi.scale.setScalar(Math.max(0.01, 0.25 + 0.75 * livello))   // la lana cresce con la lana
-    u.pelle.visible = livello < 0.6; u.pelle.scale.set(1.25 * (1 - 0.2 * m), 0.9 * (1 - 0.2 * m), 0.95)
+    u.fiocchi.visible = pr.lana > 0.03; u.fiocchi.scale.setScalar(Math.max(0.01, pr.lana))
+    u.ricci.forEach((r, i) => { const q = pr['ricci' + i]; r.visible = q > 0.03; r.scale.setScalar(Math.max(0.01, q)) })
+    u.pelle.visible = pr.lana < 0.9; u.pelle.scale.set(1.25 * pr.pelleX, 0.9 * pr.pelleY, 0.95 * pr.pelleZ)
+    u.orecchie[0].rotation.z = pr.orecchie; u.orecchie[1].rotation.z = -pr.orecchie
+    animaSegni(u, pr, stadio, dt, t, n)
     // il movimento
     u.attesa -= dt
     if (verso && !u.corri && n === 0) { u.meta.set(Math.max(-1.1, Math.min(1.1, verso.x)), 0, Math.max(-1.1, Math.min(1.1, verso.z))); u.corri = 2.2; u.attesa = 3 }
@@ -494,8 +504,8 @@ export function muoviPecore (g, dt, t, verso, stati, adesso) {
     }
     u.fase += dt * lento * (mov ? (u.corri ? 12 : 6) : 0)
     u.zampe.forEach((z, k) => { z.rotation.x = mov ? Math.sin(u.fase + (k % 3 ? Math.PI : 0)) * 0.5 : 0 })
-    u.corpo.position.y = 0.34 - 0.03 * m + (mov ? Math.abs(Math.sin(u.fase)) * 0.03 : 0)
-    u.testa.rotation.x = mov ? 0.35 * m : (Math.max(0, Math.sin(t * 0.8 * lento + p.position.x * 3)) * 0.5) * (1 - m) + 0.5 * m   // ogni tanto bruca; affamata, la testa sta giù
+    u.corpo.position.y = 0.34 + pr.corpoY + (mov ? Math.abs(Math.sin(u.fase)) * 0.03 : 0)
+    u.testa.rotation.x = pr.testaX + (mov ? 0.35 * (1 - pr.f) : (Math.max(0, Math.sin(t * 0.8 * lento + p.position.x * 3)) * 0.5) * pr.f)   // ogni tanto bruca; affamata, la testa sta giù
   })
 }
 
@@ -507,19 +517,48 @@ const G_BECCO = new THREE.ConeGeometry(0.022, 0.07, 4).rotateX(Math.PI / 2), G_C
 const G_ZAMPA = new THREE.CylinderGeometry(0.008, 0.008, 0.1, 3), G_UOVO = new THREE.SphereGeometry(0.045, 8, 6)
 function parte (g, geo, m, x, y, z) { const o = pronto(new THREE.Mesh(geo, m)); o.position.set(x, y, z); g.add(o); return o }
 
+// i segni dello stadio «pronta», uguali per ogni bestia (docs/fattoria3d/animali.md, «I tre stadi»): un alone chiaro a terra, uno
+// scintillio che compare ogni tanto, e lo sbuffo di quando si raccoglie. Sono mesh sue (niente fusione), geometrie e materiali condivisi.
+const G_ALONE = new THREE.CircleGeometry(1, 20).rotateX(-Math.PI / 2), G_SCINT = new THREE.OctahedronGeometry(0.06, 0)
+const M_ALONE = new THREE.MeshBasicMaterial({ color: 0xffe27a, transparent: true, opacity: 0.5, depthWrite: false })
+const M_SCINT = new THREE.MeshBasicMaterial({ color: 0xfff3a0 }), M_SBUFFO = new THREE.MeshBasicMaterial({ color: 0xffffff })
+const VELOCI = { dono: true, uovo: true }                     // il prodotto compare e sparisce in fretta (profilo: bestie-puro.js `avvicina`)
+function segniDiPronta (g, u, { raggio, yAlone, scint, sbuffo, rSbuffo }) {
+  const alone = new THREE.Mesh(G_ALONE, M_ALONE); alone.position.y = yAlone; alone.visible = false; g.add(alone)
+  const scintilla = new THREE.Mesh(G_SCINT, M_SCINT); scintilla.position.set(...scint); scintilla.visible = false; g.add(scintilla)
+  const sb = new THREE.Mesh(G_TESTA, M_SBUFFO); sb.position.set(...sbuffo); sb.visible = false; g.add(sb)
+  Object.assign(u, { alone, scintilla, sbuffo: sb, aloneR: raggio, scintY: scint[1], rSbuffo, sb: 0, stadio: -1 })
+}
+/** Alone, scintillio e sbuffo del raccolto (si chiama dopo il profilo: `pr` è il profilo smussato). */
+function animaSegni (u, pr, stadio, dt, t, n) {
+  if (u.stadio === 2 && stadio < 2) u.sb = 1                  // appena raccolta: lo sbuffo (l'uovo, il latte, la lana volano via)
+  u.stadio = stadio
+  const ka = pr.alone * u.aloneR * (1 + 0.05 * Math.sin(t * 3 + n))
+  u.alone.visible = ka > 0.02; u.alone.scale.set(ka, 1, ka)
+  const imp = Math.max(0, Math.sin(t * 2.4 + n * 2.1)), ks = pr.scintilla * imp * imp * 1.3
+  u.scintilla.visible = ks > 0.03; u.scintilla.scale.setScalar(ks); u.scintilla.rotation.y += dt * 5; u.scintilla.position.y = u.scintY + imp * 0.06
+  if (u.sb > 0) {
+    u.sb = Math.max(0, u.sb - dt * 2.2); const q = 1 - u.sb, k = Math.sin(Math.PI * q) * (0.4 + 0.8 * q) * u.rSbuffo
+    u.sbuffo.visible = k > 0.01; u.sbuffo.scale.setScalar(k)
+  } else u.sbuffo.visible = false
+}
+
 function costruisciGallina (k = 0) {
   const g = new THREE.Group()
   const penne = mat(k % 2 ? 0xb9703c : 0xf6f1e4), rosso = mat(0xd8352a), giallo = mat(0xf0b030)
-  const corpo = parte(g, G_CORPO, penne, 0, 0.17, 0); corpo.scale.set(1, 0.9, 1.25)
-  const coda = parte(g, G_CODA, penne, 0, 0.24, -0.15); coda.rotation.x = -0.9
-  const testa = new THREE.Group(); testa.position.set(0, 0.25, 0.13); g.add(testa)
+  const alto = new THREE.Group(); g.add(alto)                                          // tutto ciò che si alza insieme al corpo
+  const corpo = parte(alto, G_CORPO, penne, 0, 0.17, 0); corpo.scale.set(1, 0.9, 1.25)
+  const coda = parte(alto, G_CODA, penne, 0, 0.24, -0.15); coda.rotation.x = -0.9
+  const testa = new THREE.Group(); testa.position.set(0, 0.25, 0.13); alto.add(testa)
   parte(testa, G_TESTA, penne, 0, 0.03, 0.02)
   parte(testa, G_BECCO, giallo, 0, 0.025, 0.1)
-  scatola(testa, 0.02, 0.04, 0.05, rosso, 0, 0.1, 0.02)
-  for (const s of [-1, 1]) parte(g, G_ZAMPA, giallo, s * 0.04, 0.05, 0.01)
-  const uovo = parte(g, G_UOVO, mat(0xfff4e0), 0.16, 0.045, 0.04); uovo.scale.set(0.85, 1, 0.85); uovo.visible = false
-  fondiPerMateriale(testa); fondiPerMateriale(g, { escludi: [corpo, testa, uovo] })       // restano sciolti ciò che si piega e il dono
-  g.userData = { corpo, testa, uovo, dono: uovo, magro: 0, fase: Math.random() * 6, attesa: Math.random() * 2, meta: new THREE.Vector3(), zona: { x0: -1.15, x1: 1.15, z0: 0.15, z1: 0.8 } }
+  const cresta = scatola(testa, 0.02, 0.04, 0.05, rosso, 0, 0.1, 0.02)
+  const zampe = []
+  for (const s of [-1, 1]) zampe.push(parte(g, G_ZAMPA, giallo, s * 0.04, 0.05, 0.01))
+  const uovo = parte(g, G_UOVO, mat(0xffd98a), 0, 0.047, 0.0); uovo.scale.set(0.85, 1.05, 0.85); uovo.visible = false
+  fondiPerMateriale(testa, { escludi: [cresta] })                                      // la testa si muove per intero; la cresta si drizza da sola
+  g.userData = { alto, corpo, testa, coda, cresta, zampe, uovo, dono: uovo, specie: 'gallina', ms: ANIMALI.pollaio.ms, fase: Math.random() * 6, attesa: Math.random() * 2, meta: new THREE.Vector3(), zona: { x0: -1.15, x1: 1.15, z0: 0.15, z1: 0.8 } }
+  segniDiPronta(g, g.userData, { raggio: 0.3, yAlone: 0.085, scint: [0.12, 0.5, 0], sbuffo: [0, 0.15, 0], rSbuffo: 0.2 })
   return g
 }
 
@@ -586,7 +625,9 @@ function costruisciMucca (k = 0) {
   for (const [x, z] of [[0.12, 0.25], [-0.12, 0.25], [0.12, -0.25], [-0.12, -0.25]]) {
     parte(g, G_ZAMPA_M, bianco, x, 0.23, z); parte(g, G_ZOCCOLO, scuro, x, 0.04, z)
   }
-  parte(g, G_UOVO, rosa, 0, 0.17, -0.2).scale.set(2, 1.2, 2)                              // la mammella
+  const mammella = parte(g, G_UOVO, mat(0xff8aa0), 0, 0.15, -0.2); mammella.scale.set(0.1, 0.1, 0.1)       // la mammella rosea: cresce col latte
+  const pallida = parte(g, G_UOVO, mat(0xcdb7b3), 0, 0.15, -0.2); pallida.scale.set(1.3, 1.5, 1.3)         // …e quella flaccida e pallida di quando ha fame
+  const goccia = parte(g, G_TESTA, mat(0xffffff, { emissive: 0x808080 }), 0, 0.1, -0.2); goccia.scale.setScalar(0.3); goccia.visible = false
   const coda = new THREE.Group(); coda.position.set(0, 0.59, -0.27); coda.rotation.x = 0.35; g.add(coda)   // nasce dal dorso e pende dietro
   cilindro(coda, 0.015, 0.015, 0.4, bianco, 0, -0.2, 0, 4); parte(coda, G_TESTA, scuro, 0, -0.42, 0).scale.setScalar(0.6)
   parte(g, G_MUCCA, bianco, 0, 0.55, 0.38).scale.set(0.45, 0.4, 0.55)                    // il collo: lega la testa al corpo
@@ -595,11 +636,12 @@ function costruisciMucca (k = 0) {
   parte(testa, G_MUCCA, rosa, 0, -0.07, 0.3).scale.set(0.34, 0.26, 0.28)
   for (const s of [-1, 1]) { const c = parte(testa, G_CORNO, mat(0xe8e0c8), s * 0.13, 0.17, 0.05); c.rotation.z = -s * 0.5; parte(testa, G_TESTA, bianco, s * 0.18, 0.08, 0.02).scale.set(1.1, 0.5, 0.6) }
   for (const s of [-1, 1]) parte(testa, G_TESTA, scuro, s * 0.07, 0.06, 0.28).scale.setScalar(0.35)
-  const secchio = new THREE.Group(); secchio.position.set(0.5, 0, 0.3); g.add(secchio); secchio.visible = false
+  const secchio = new THREE.Group(); secchio.position.set(0.46, 0, 0.3); g.add(secchio); secchio.visible = false
   cilindro(secchio, 0.1, 0.08, 0.17, mat(0xdde4ea, { metalness: 0.4, roughness: 0.5 }), 0, 0.085, 0, 8)
   cilindro(secchio, 0.085, 0.085, 0.02, mat(0xffffff), 0, 0.17, 0, 8)
-  fondiPerMateriale(testa); fondiPerMateriale(coda); fondiPerMateriale(g, { escludi: [corpo, testa, coda, secchio] })
-  g.userData = { corpo, testa, coda, dono: secchio, magro: 0, fase: Math.random() * 6, meta: new THREE.Vector3() }
+  fondiPerMateriale(testa); fondiPerMateriale(coda); fondiPerMateriale(g, { escludi: [corpo, testa, coda, secchio, mammella, pallida, goccia] })
+  g.userData = { corpo, testa, coda, mammella, pallida, goccia, dono: secchio, specie: 'mucca', ms: ANIMALI.stalla.ms, fase: Math.random() * 6, meta: new THREE.Vector3() }
+  segniDiPronta(g, g.userData, { raggio: 0.5, yAlone: 0.03, scint: [0.46, 0.4, 0.3], sbuffo: [0.46, 0.2, 0.3], rSbuffo: 0.24 })
   return g
 }
 
@@ -650,45 +692,65 @@ export function sincronizzaBestie (g, stati) {
   }
   while (lista.length > stati.length) g.remove(lista.pop())
 }
-/** Le bestie si muovono col tempo: la gallina razzola e becca (di più se ha fame), la mucca rumina piano. Il dono (uovo,
-    secchio) si vede solo se c'è da raccogliere. */
+/** Le bestie si muovono col tempo e mostrano il loro stadio (docs/fattoria3d/animali.md, «I tre stadi»): a fame brulle, al lavoro
+    in crescita continua col progresso, pronte piene e col prodotto in vista (uovo enorme, secchio del latte). Il profilo è puro
+    (bestie-puro.js); qui lo si smussa col tempo e lo si applica ai pezzi, senza allocare. */
 export function muoviBestie (g, dt, t, stati, adesso) {
   g.userData.bestie.forEach((b, n) => {
     const u = b.userData, st = stati[n] || { fine: null }
-    const pronta = st.fine !== null && st.fine <= adesso, fame = st.fine === null
-    u.dono.visible = pronta
-    if (u.zona) {                                               // la gallina
-      u.attesa -= dt
-      if (u.attesa <= 0) {
-        const z = u.zona
-        u.meta.set(z.x0 + Math.random() * (z.x1 - z.x0), 0, z.z0 + Math.random() * (z.z1 - z.z0))
-        u.attesa = pronta ? 6 + Math.random() * 4 : 1.5 + Math.random() * 3
-      }
-      const dx = u.meta.x - b.position.x, dz = u.meta.z - b.position.z, d = Math.hypot(dx, dz), mov = d > 0.05
-      if (mov) {
-        const v = Math.min(d, 0.35 * dt)
-        b.position.x += dx / d * v; b.position.z += dz / d * v
-        let da = Math.atan2(dx, dz) - b.rotation.y; da = Math.atan2(Math.sin(da), Math.cos(da)); b.rotation.y += da * Math.min(1, dt * 7)
-      }
-      u.magro += ((fame ? 1 : 0) - u.magro) * Math.min(1, dt * 2.5)       // affamata: corpo più asciutto e più basso (poco, è piccola)
-      const m = u.magro
-      u.corpo.scale.set(1 - 0.14 * m, 0.9 - 0.12 * m, 1.25 - 0.08 * m)
-      u.fase += dt * (mov ? 9 : fame ? 7 : 4)
-      u.corpo.position.y = 0.17 - 0.012 * m + (mov ? Math.abs(Math.sin(u.fase)) * 0.015 : 0)
-      u.testa.rotation.x = mov ? Math.sin(u.fase * 1.2) * 0.12 : Math.max(0, Math.sin(u.fase)) * (fame ? 1.0 : 0.6)   // becca
-    } else {                                                    // la mucca
-      // affamata: il corpo si smagrisce (larghezza e altezza al 80%, la testa non cambia), si abbassa e si muove più piano.
-      // Il tempo dell'animazione è `u.fase`, che avanza più lenta: cambiare velocità non fa scattare le fasi.
-      u.magro += ((fame ? 1 : 0) - u.magro) * Math.min(1, dt * 2.5)
-      const m = u.magro, ph = u.fase += dt * (1 - 0.3 * m)
-      u.corpo.scale.set(SCALA_CORPO[0] * (1 - 0.2 * m), SCALA_CORPO[1] * (1 - 0.2 * m), SCALA_CORPO[2])
-      const ruminando = st.fine !== null && !pronta
-      u.testa.rotation.x = fame ? 0.55 + Math.sin(ph * 0.9 + n) * 0.08 : 0.08 + Math.sin(ph * (ruminando ? 1.3 : 0.7) + n) * 0.07
-      u.testa.position.y = 0.65 - 0.05 * m + Math.sin(ph * 2.6 + n) * (ruminando ? 0.012 : 0.004)       // la mascella
-      u.coda.rotation.z = Math.sin(ph * 1.1 + n * 2) * 0.35 * (1 - 0.4 * m)
-      u.corpo.position.y = 0.42 - 0.04 * m + Math.sin(ph * 0.8 + n) * 0.006
-    }
+    const stato = statoDaFine(st.fine, adesso), p = progressoBestia(st.fine, adesso, u.ms), stadio = stadioBestia(stato, p)
+    const pr = avvicina(u.pr || (u.pr = {}), profiloBestia(u.specie, stadio, p, u.tg || (u.tg = {})), dt, VELOCI)
+    if (u.zona) animaGallina(b, u, pr, stadio, dt, t, n)
+    else animaMucca(b, u, pr, stadio, dt, t, n)
+    animaSegni(u, pr, stadio, dt, t, n)
   })
+}
+function animaGallina (b, u, pr, stadio, dt, t, n) {
+  u.attesa -= dt
+  const cova = pr.passo > 0.05
+  if (u.attesa <= 0) {
+    const z = u.zona
+    if (cova) u.meta.set(z.x0 + Math.random() * (z.x1 - z.x0), 0, z.z0 + Math.random() * (z.z1 - z.z0))
+    u.attesa = stadio === 0 ? 1 + Math.random() * 2 : 3 + Math.random() * 3                // a fame è agitata, sazia più calma
+  }
+  const dx = u.meta.x - b.position.x, dz = u.meta.z - b.position.z, d = Math.hypot(dx, dz), mov = cova && d > 0.05
+  if (mov) {
+    const v = Math.min(d, 0.35 * pr.passo * pr.lento * dt)
+    b.position.x += dx / d * v; b.position.z += dz / d * v
+    let da = Math.atan2(dx, dz) - b.rotation.y; da = Math.atan2(Math.sin(da), Math.cos(da)); b.rotation.y += da * Math.min(1, dt * 7)
+  }
+  u.fase += dt * (mov ? 9 * pr.lento : 4 + 3 * (1 - pr.f))
+  u.corpo.scale.set(pr.sx, 0.9 * pr.sy, 1.25 * pr.sz)
+  u.alto.position.y = pr.altoY + (mov ? Math.abs(Math.sin(u.fase)) * 0.015 : 0)
+  u.alto.position.z = pr.altoZ
+  u.alto.rotation.z = pr.ondeggia * Math.sin(t * 3 + n) * 0.1                              // sull'uovo dondola, comica
+  u.testa.position.set(0, pr.testaY, pr.testaZ)
+  const becca = (1 - pr.f) * (1 - pr.f)
+  u.testa.rotation.x = pr.testaX + (mov ? Math.sin(u.fase * 1.2) * 0.12 : Math.max(0, Math.sin(u.fase)) * becca)
+  u.cresta.scale.set(pr.crestaL, pr.cresta, 1); u.cresta.position.y = 0.08 + 0.02 * pr.cresta
+  u.coda.rotation.x = pr.codaR
+  const sw = pr.ondeggia * Math.sin(t * 5 + n) * 0.15
+  u.zampe.forEach((z, i) => {
+    const s = i ? 1 : -1
+    z.position.set(s * pr.gX, pr.gAlt - pr.gLen / 2, 0.01); z.scale.y = pr.gLen / 0.1; z.rotation.z = s * (pr.gAperta + sw)
+  })
+  const e = u.uovo; e.visible = pr.uovo > 0.03
+  e.scale.set(0.85 * pr.uovo, 1.05 * pr.uovo, 0.85 * pr.uovo); e.position.y = 0.0473 * pr.uovo; e.position.z = pr.uovoZ
+}
+function animaMucca (b, u, pr, stadio, dt, t, n) {
+  // il tempo dell'animazione è `u.fase`, che avanza più lenta a fame: cambiare velocità non fa scattare le fasi
+  const ph = u.fase += dt * pr.lento
+  u.corpo.scale.set(SCALA_CORPO[0] * pr.sx, SCALA_CORPO[1] * pr.sy, SCALA_CORPO[2] * pr.sz)
+  u.corpo.position.y = 0.42 + pr.corpoY + Math.sin(ph * 0.8 + n) * 0.006
+  u.testa.rotation.x = pr.testaX + Math.sin(ph * (stadio === 1 ? 1.3 : 0.7) + n) * (stadio === 0 ? 0.03 : 0.07)
+  u.testa.position.y = 0.65 + pr.testaY + Math.sin(ph * 2.6 + n) * (stadio === 1 ? 0.012 : 0.004)    // la mascella
+  u.coda.rotation.z = Math.sin(ph * (stadio === 2 ? 2.4 : 1.1) + n * 2) * 0.7 * pr.coda
+  const m = pr.mammella; u.mammella.visible = m > 0.03; u.mammella.scale.set(3.6 * m, 2.8 * m, 3.4 * m)
+  const q = pr.pallida; u.pallida.visible = q > 0.03; u.pallida.scale.set(1.3 * q, 1.5 * q, 1.3 * q)
+  const c = (t * 0.9 + n * 0.37) % 1                                                      // ogni tanto una goccia di latte cade
+  u.goccia.visible = pr.goccia > 0.5 && c < 0.4
+  if (u.goccia.visible) u.goccia.position.y = 0.1 - (c / 0.4) * (c / 0.4) * 0.09
+  const d = u.dono; d.visible = pr.dono > 0.03; d.scale.setScalar(pr.dono * 1.5)           // il secchio del latte, più grande del vero
 }
 
 function costruisciCaseificio () {
