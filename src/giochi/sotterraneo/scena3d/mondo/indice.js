@@ -101,6 +101,7 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = [], fon
     terre: false,              // la porta delle terre aperta (le tombe del vento ripulite: lo dice chi gioca)
     inCammino: false,          // l'eroe sta camminando: le zone accanto aspettano che si fermi, o che arrivi vicino al confine
     mostri: [], perTerra: [],   // i mostri di sopra e il bottino per terra, già nel cerchio e fuori dalla nebbia (mostri.js)
+    taneSpente: null,           // i luoghi il cui signore è morto (Set di chiavi di regione): il fumo e le braci della loro tana si spengono
     scia: null, sciaDa: 0,      // la strada verso la meta: { luci, meta } (scia.js), e da quale luce si accende
   }
   if (da) { S.io.x = da.x + 0.5; S.io.z = da.y + 0.5 }
@@ -225,7 +226,7 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = [], fon
   const viste = { camini: [], braci: [], fuochi: [], spruzzi: [] }
   let prossimeViste = 0
   function sorgentiViste() {
-    for (const k of Object.keys(viste)) { viste[k].length = 0; for (const s of vitaSorgenti[k]) if (nebbia.visto(s.x, s.z)) viste[k].push(s) }
+    for (const k of Object.keys(viste)) { viste[k].length = 0; for (const s of vitaSorgenti[k]) if (nebbia.visto(s.x, s.z) && !(s.tana && S.taneSpente && S.taneSpente.has(s.tana))) viste[k].push(s) }
     vita.sorgenti(viste)
   }
 

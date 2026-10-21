@@ -117,7 +117,7 @@ export const cellePerBranco = k => (Array.isArray(SOPRA.cellePerBranco) ? SOPRA.
 // dell'avventura (il seme del contenuto), `giro`: quante volte si è entrati in città. `seme`: per le prove, al posto di (eroe, giro)
 function statoNuovo(m, eroe, giro, seme) {
   const base = seme != null ? seme >>> 0 : fnv(m.seme, eroe, giro)
-  return { v: VERSIONE_SOPRA, mondo: m, eroe, giro, base, mostri: [], lista: [], branchi: {}, tane: [], zone: new Set(), mortiFuori: {},
+  return { v: VERSIONE_SOPRA, mondo: m, eroe, giro, base, mostri: [], lista: [], branchi: {}, tane: [], zone: new Set(), mortiFuori: {}, signoriMorti: new Set(),
            passi: 0, forze: null, perTerra: [], manaResto: 0 }
 }
 export function popolaMondo({ mondo: m, eroe = 'eroe', giro = 0, seme = null }) {
@@ -232,6 +232,7 @@ function popolaZona(stato, k) {
       const q = stato.mostri[k * BLOCCO_ZONA + jj]
       if (!q || (torna >= 0 && torna <= stato.passi)) continue
       q.morto = true; q.torna = torna >= 0 ? torna : null
+      if (q.signore) stato.signoriMorti.add(stato.mondo.regioni[q.regione].chiave)
     }
     delete stato.mortiFuori[Z.chiave]
   }
@@ -243,6 +244,7 @@ function dimenticaZona(stato, k) {
   for (let i = k * BLOCCO_ZONA; i < (k + 1) * BLOCCO_ZONA; i++) {
     const q = stato.mostri[i]
     if (!q) continue
+    if (q.morto && q.signore) stato.signoriMorti.add(stato.mondo.regioni[q.regione].chiave)
     if (q.morto && (q.torna == null || q.torna > stato.passi)) morti.push([i - k * BLOCCO_ZONA, q.torna == null ? -1 : q.torna])
     delete stato.mostri[i]
   }
@@ -300,6 +302,14 @@ export function mostriVicini(stato, x, y, raggio = SOPRA.vista) {
   allineaZone(stato)
   const r2 = raggio * raggio
   return stato.lista.filter(q => !q.morto && (q.fx - x) * (q.fx - x) + (q.fy - y) * (q.fy - y) <= r2)
+}
+// i luoghi il cui signore è morto, anche di zone dimenticate (`signoriMorti`: lo scrive chi lo uccide, o lo ritrova morto): la tana
+// resta, è il suo segno di vita che si spegne (il fumo, le braci) e quello della veduta che si fa grigio. Non si salva
+// È vivo il signore di quel luogo? true/false, o null se non lo si sa (zona dimenticata e mai vista morta: un salvato non ricorda i signori)
+export const signoreVivo = (stato, chiaveRegione) => {
+  if (stato.signoriMorti.has(chiaveRegione)) return false
+  const t = tanaDi(stato, chiaveRegione)
+  return t && t.signore ? t.signore.vivo : null
 }
 // la tana di un luogo (per la veduta e per le quest), con il suo signore vivo o no; null se la sua zona non è caricata
 export const tanaDi = (stato, chiaveRegione) => {
@@ -507,6 +517,7 @@ export function esitoDelloScontro(stato, corsa) {
     if (!q) continue
     if (r.morto) {
       q.morto = true; q.sveglio = false; q.morti++
+      if (q.signore) stato.signoriMorti.add(m.regioni[q.regione].chiave)
       q.torna = q.caporale || q.signore ? null : Math.round(stato.passi + SOPRA.ricomparsa * (1 + tiroDalSeme(47, stato.base, q.i, q.morti)))
       uccisi.push(tagliaDi(q, m.regioni[q.regione], m.zone[q.zona]))
     } else {
