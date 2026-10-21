@@ -94,9 +94,24 @@ vale solo per comprare, seminare e avviare. → [livelli.md](livelli.md)
 ## Le macchine
 
 Mulino, pastificio (id `pasticceria`), panificio, caseificio, cucina (id `conserviera`), gelateria, telaio, zuccherificio, sartoria e tintoria sono **macchine** con le ricette della fattoria di sempre ([merci-e-ricette.md](merci-e-ricette.md)) (`MACCHINE` in `dati/ricette.js`): ognuna ha le
-sue ricette (raccolti precisi e un tempo), **tre posti** nel forno e cuoce **uno alla volta**. Gli ingredienti si scalano
+sue ricette (raccolti precisi e un tempo), **un posto di partenza** e cuoce **uno alla volta**. Gli ingredienti si scalano
 subito, il successivo parte quando finisce il precedente; i pronti restano finché non si ritirano (`ritiraDa`) e passano
 in dispensa (`stato.prodotti`).
+
+- **I posti si comprano, per macchina, fino a sei** (`dati/posti.js`): è la fila della 2D tale e quale ([../fattoria/macchine.md](../fattoria/macchine.md), «La fila»),
+  perché il metro è lo stesso (🪙1 = 10 s di esercizio): si parte con **un** posto, il 2º, 3º, 4º, 5º e 6º costano **🪙20 · 40 · 80 · 160 · 320**
+  (`PREZZI_DEI_POSTI`; un test li confronta con `PREZZI_DELLA_FILA` della 2D). In tutto 🪙620 per macchina, sotto le due ore di esercizio (🪙720):
+  `guastiDeiPosti`. La fila è autonomia, e l'autonomia si compra; qui c'è una macchina per tipo, quindi una fila lunga lascia solo
+  caricare di più (non va più svelta). `compraPosto(tipo)` paga (**conta come esperienza**, come ogni acquisto, quindi fa salire di livello; la
+  scala di `npm run tara:fattoria3d` non lo conta, ed è verde), senza conferma; rifiuti `non-posseduta`, `pieno` (al sesto), `poche-monete` (con `costo`);
+  evento `posto` (`macchina`, `posti`), nessun traguardo. `postiDi(tipo)` dice quanti sono; `avviaRicettaIn` rifiuta con `forno-pieno` quando la coda li riempie.
+- **Lo stato**: `stato.macchine[tipo].posti` (default 1, tetto 6, `normalizza` lo rimette in forma). Niente salto di versione: un vecchio stato senza il campo vale 1, ma
+  **una coda già lunga (fino a tre, quando i posti erano tre) lavora fino in fondo**; poi si torna ai posti pagati, come fa la 2D.
+- **Nel foglio** i posti oltre quelli posseduti sono vani chiusi col prezzo («＋ 🪙 20», `data-f3="posto-chiuso"`), il prossimo in evidenza
+  (`data-prossimo`): un tocco compra, un rifiuto dice «Servono 🪙 N». Il cartello sopra la macchina conta «posti occupati» sui posti veri.
+- **Ogni macchina ha il suo nome per la sezione dei posti** (`LAVORAZIONE`, `dentroDi(tipo)` in `dati/ricette.js`): mulino «Alla macina», pastificio e panificio
+  «Nel forno», caseificio «Nel paiolo», cucina «Sul fuoco», gelateria «Nella gelatiera», telaio «Al telaio», zuccherificio «Nella caldaia», sartoria «In sartoria»,
+  tintoria «Nella tinozza»; i pronti dicono tutti «Pronto da ritirare». Un test controlla che ognuna ne abbia uno e che solo i forni dicano «forno».
 
 - **Un ingrediente è un raccolto o il prodotto di un'altra macchina** (catena): grano → farina (mulino) → pane integrale
   (panificio); può anche uscire dalla stessa macchina (la pasta per le lasagne, come in 2D). **Un solo ingrediente è un contatore**: la

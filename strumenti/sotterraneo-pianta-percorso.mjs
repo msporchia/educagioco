@@ -12,6 +12,7 @@
      npm run pianta -- --percorso --semi 1-12   # una riga per seme, per scegliere
      npm run pianta -- --percorso --terra 2     # le fasce della seconda terra
      npm run pianta -- --percorso --scala 3     # pixel per cella (di difetto 3)
+     npm run pianta -- --percorso --oggetti     # e sotto la pianta del villaggio i suoi oggetti di scena
 
    La lancia strumenti/sotterraneo-pianta.mjs quando trova `--percorso`.
    ═══════════════════════════════════════════════════════════════════ */
@@ -21,6 +22,7 @@ import { dirname, resolve } from 'node:path'
 import { generaMondoPercorso, listaDi, ERBA, ACQUA, ROCCIA } from '../src/giochi/sotterraneo/motore/mondo-percorso.js'
 import { MONDO_PERCORSO } from '../src/giochi/sotterraneo/dati/mondo-aperto.js'
 import { Tela } from './png.mjs'
+import { propsDellaCitta } from '../src/giochi/sotterraneo/scena3d/mondo/props-citta.js'
 
 const QUI = dirname(fileURLToPath(import.meta.url))
 const FUORI = resolve(QUI, '../tmp/scatti')
@@ -128,14 +130,14 @@ function disegna(m, file) {
 }
 
 // la pianta del villaggio in caratteri: la stessa del documento
-function villaggioInCaratteri(m) {
+function villaggioInCaratteri(m, oggetti = false) {
   const v = m.villaggio, SEGNI = { mercante: '$', persona: '@', minatore: 'M', bacheca: 'B', cartello: 'T', portale: 'O', pietra: 'P', pozzo: 'W' }
   const righe = []
   for (let y = 0; y < v.h; y++) {
     let s = ''
     for (let x = 0; x < v.w; x++) {
       const k = (v.y + y) * m.W + v.x + x
-      s += m.strada[k] === 3 ? 'o' : m.strada[k] ? '+' : m.blocco[k] === 2 ? 't' : m.blocco[k] ? '#' : '.'
+      s += m.strada[k] === 3 ? 'o' : m.strada[k] ? '+' : m.blocco[k] === 2 ? 't' : m.blocco[k] ? '#' : oggetti && m.riservato[k] ? ',' : '.'
     }
     righe.push([...s])
   }
@@ -144,9 +146,12 @@ function villaggioInCaratteri(m) {
     righe[z.piede.y - v.y][z.piede.x - v.x] = segno
   }
   righe[m.partenza.y - v.y][m.partenza.x - v.x] = '*'
+  // gli oggetti di scena (scena3d/mondo/props-citta.js) al posto delle celle libere: la lettera del tipo, minuscola
+  if (oggetti) for (const o of propsDellaCitta(m)) for (const [x, y] of o.celle) righe[y - v.y][x - v.x] = { lanterna: 'l', panca: 'n', tavolo: 'k', insegna: 'i', orto: 'u' }[o.tipo] || o.tipo[0]
   console.log('     ' + [...Array(v.w).keys()].map(i => (i % 10 ? ' ' : String(i / 10))).join(''))
   console.log('     ' + [...Array(v.w).keys()].map(i => i % 10).join(''))
   righe.forEach((r, y) => console.log(String(y).padStart(3) + '  ' + r.join('')))
+  if (oggetti) console.log(', tenuto libero  l lanterna  n panca  k tavolo  i insegna  u orto  (gli altri: l\'iniziale)')
   console.log('o piazza  + strada  # lotto  t albero  * partenza  I incantatrice  E erborista  M minatore  R rigattiere  C capitano  A armaiolo  W pozzo  @ ragazza  O portale  B bacheca  T cartello  P pietra')
 }
 
@@ -173,6 +178,7 @@ if (opz('semi')) {
 } else {
   const m = generaMondoPercorso(Number(opz('seme', MONDO_PERCORSO.seme)), { terra })
   villaggioInCaratteri(m)
+  if (args.includes('--oggetti')) villaggioInCaratteri(m, true)
   racconta(m)
   const file = resolve(FUORI, `percorso-${m.seme}${terra > 1 ? '-terra' + terra : ''}.png`)
   disegna(m, file)

@@ -2,12 +2,13 @@
 // da lontano, con quattro trame mescolate per vertice (erba, terra battuta, sabbia, roccia) e la tinta del luogo; il fuori mappa
 // (colline e monti oltre la cornice); la piazza di ciottoli e i campi arati. Tutto è superficie: la nebbia ci passa sopra a velo
 // (vesti.js). Le celle di una zona mai caricata si leggono dalla loro base (suolo.js). Dal prototipo poc/mondo-sopra/terreno.js.
-import { BufferGeometry, BufferAttribute, Float32BufferAttribute, Mesh, MeshStandardMaterial, Vector2, PlaneGeometry } from 'three'
+import { BufferGeometry, BufferAttribute, Float32BufferAttribute, Mesh, MeshStandardMaterial, Vector2 } from 'three'
 import { fbm, quotaTerreno, quotaDellaCella, cellaDaDisegnare, ACQUA, ROCCIA } from './suolo.js'
 import { rettangoloDi } from './pezzi.js'
 import { vesti } from './vesti.js'
 import { scatola } from './kit.js'
 import { forzaDellaTana } from './props-tana-dati.js'
+import { raggioDellaPiazza } from '../../dati/mondo-aperto.js'
 
 const TINTE = {
   villaggio: [0.56, 0.74, 0.30], campi: [0.66, 0.78, 0.30], frutteto: [0.58, 0.76, 0.32], prato: [0.62, 0.78, 0.32],
@@ -230,22 +231,28 @@ export function materialiDelSuolo(trame) {
   }
 }
 
-// la piazza del villaggio: un rettangolo di ciottoli appena sopra il terreno spianato, coi cordoli lungo i lati (nel kit). Il
-// lato a est resta aperto verso il cancello
+// la piazza del villaggio: un disco irregolare di ciottoli appena sopra il terreno spianato (il bordo coi raggi della pianta,
+// dati/mondo-aperto.js), col cordolo tutto attorno tranne dove esce la stradina
 export function creaPiazza(m, v, mats, cant) {
-  const p = v.piazza, y = quotaTerreno(m, p.x + p.w / 2, p.y + p.h / 2) + 0.03
-  const g = new PlaneGeometry(p.w, p.h, 1, 1)
-  const uv = g.attributes.uv
-  for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * p.w * 0.6, uv.getY(i) * p.h * 0.6)
-  g.rotateX(-Math.PI / 2); g.translate(p.x + p.w / 2, y, p.y + p.h / 2)
+  const P = v.piazza, N = 48, y = quotaTerreno(m, P.cx, P.cy) + 0.03
+  const bordo = []
+  for (let i = 0; i < N; i++) { const a = i / N * Math.PI * 2, r = raggioDellaPiazza(P, a) - 0.05; bordo.push([P.cx + Math.cos(a) * r, P.cy - Math.sin(a) * r]) }
+  const pos = [P.cx, y, P.cy], uv = [P.cx * 0.6, P.cy * 0.6], idx = []
+  for (const [x, z] of bordo) { pos.push(x, y, z); uv.push(x * 0.6, z * 0.6) }
+  for (let i = 0; i < N; i++) idx.push(0, 1 + i, 1 + ((i + 1) % N))
+  const g = new BufferGeometry()
+  g.setAttribute('position', new Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new Float32BufferAttribute(uv, 2))
+  g.setIndex(idx); g.computeVertexNormals()
   const mesh = new Mesh(g, mats.piazza); mesh.receiveShadow = true
-  cant.base(p.x + p.w / 2, y + 0.02, p.y + p.h / 2, 0)
-  const col = [0.62, 0.62, 0.62], fila = (x, z, w, d) => cant.metti('liscio', scatola(w, 0.1, d), x, 0.02, z, col)
-  // il cancello sta sul lato est: lì il cordolo si apre per tre celle
-  const cz = v.cancello.y - (p.y + p.h / 2), su = cz - 1.5 + p.h / 2, giu = p.h / 2 - cz - 1.5
-  fila(0, -p.h / 2, p.w + 0.18, 0.18); fila(0, p.h / 2, p.w + 0.18, 0.18); fila(-p.w / 2, 0, 0.18, p.h)
-  if (su > 0.2) fila(p.w / 2, -p.h / 2 + su / 2, 0.18, su)
-  if (giu > 0.2) fila(p.w / 2, p.h / 2 - giu / 2, 0.18, giu)
+  cant.base(0, 0, 0, 0).qui(P.cx, P.cy)
+  const col = [0.62, 0.62, 0.62]
+  for (let i = 0; i < N; i++) {
+    const [xa, za] = bordo[i], [xb, zb] = bordo[(i + 1) % N], xm = (xa + xb) / 2, zm = (za + zb) / 2
+    // dove il bordo tocca la stradina il cordolo si apre
+    const fx = Math.floor(xm + (xm - P.cx) * 0.12), fz = Math.floor(zm + (zm - P.cy) * 0.12)
+    if (m.strada[fz * m.W + fx] === 2) continue
+    cant.metti('liscio', scatola(Math.hypot(xb - xa, zb - za) + 0.06, 0.1, 0.18), xm, y + 0.07, zm, col, { ry: -Math.atan2(zb - za, xb - xa) })
+  }
   return mesh
 }
 

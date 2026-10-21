@@ -17,7 +17,7 @@ export function statiDel(m) {
   const st = m.stati || {}
   return [
     st.veleno && st.veleno.scambi > 0 ? { chiave: 'veleno', fuoco: !!st.veleno.fuoco, glifo: st.veleno.fuoco ? 'fiamma' : 'veleno', t: st.veleno.scambi, n: `${st.veleno.quanto} di danno · ${turniDi(st.veleno.scambi)}`, dice: `subisce ${st.veleno.quanto} di danno a ogni turno` } : null,
-    st.debole > 0 ? { chiave: 'debole', gelo: !!st.gelo, glifo: st.gelo ? 'fiocco' : 'fiacco', t: st.debole, n: `fa metà danno · ${turniDi(st.debole)}`, dice: st.gelo ? 'gelato: i suoi colpi fanno la metà del danno' : 'i suoi colpi fanno la metà del danno' } : null,
+    st.debole > 0 ? { chiave: 'debole', gelo: !!st.gelo, da: st.gelo ? null : st.deboleDa || null, glifo: st.gelo ? 'fiocco' : st.deboleDa === 'radici' ? 'radici' : 'fiacco', t: st.debole, n: `fa metà danno · ${turniDi(st.debole)}`, dice: st.gelo ? 'gelato: i suoi colpi fanno la metà del danno' : 'i suoi colpi fanno la metà del danno' } : null,
     st.sanguina && st.sanguina.scambi > 0 ? { chiave: 'sanguina', glifo: 'sangue', t: st.sanguina.scambi, n: `${st.sanguina.quanto * st.sanguina.pile} di danno · ${turniDi(st.sanguina.scambi)}`, dice: `sanguina: ${st.sanguina.quanto * st.sanguina.pile} di danno a ogni turno` } : null,
     st.esposto && st.esposto.scambi > 0 ? { chiave: 'esposto', glifo: 'radici', t: st.esposto.scambi, n: `+${st.esposto.piu}% danno · ${turniDi(st.esposto.scambi)}`, dice: 'bloccato: subisce più danno' } : null,
     st.fermo > 0 ? { chiave: 'fermo', gelo: !!st.gelo, glifo: st.gelo ? 'fiocco' : 'stelle', t: st.fermo, n: `stordito · ${turniDi(st.fermo)}`, dice: st.gelo ? 'chiuso nel ghiaccio: non può attaccare' : 'stordito: non può attaccare' } : null,
@@ -33,9 +33,10 @@ export function statoNuovo(chiave, m, nodo) {
   if (vero) return vero
   const fuoco = chiave === 'veleno' && !!nodo && nodo.elemento === 'fuoco'
   const gelo = (chiave === 'debole' || chiave === 'fermo') && !!nodo && nodo.elemento === 'gelo'
-  const glifo = { veleno: fuoco ? 'fiamma' : 'veleno', debole: gelo ? 'fiocco' : 'fiacco', sanguina: 'sangue', esposto: 'radici',
+  const da = chiave === 'debole' && !gelo && !!nodo && nodo.effetto === 'radici' ? 'radici' : null
+  const glifo = { veleno: fuoco ? 'fiamma' : 'veleno', debole: gelo ? 'fiocco' : da ? 'radici' : 'fiacco', sanguina: 'sangue', esposto: 'radici',
                   fermo: gelo ? 'fiocco' : 'stelle', rotto: 'scudo-rotto' }[chiave]
-  return { chiave, fuoco, gelo, glifo, t: 0, n: '', dice: '' }
+  return { chiave, fuoco, gelo, da, glifo, t: 0, n: '', dice: '' }
 }
 
 // I segni di chi resiste, teme o è immune a quello che sta per arrivare (`foglio.colpiti[i]` con `elemento`, `effetto`,
@@ -192,6 +193,8 @@ export function vistaDelloScontro(c) {
       ossa: Math.max(0, m.ossa), ossaMax: m.ossaMax, morto: !!m.morto,
       stati: m.morto ? [] : statiDel(m),
       colpisce: mi ? mi.colpisce : 0, salta: !!(mi && mi.salta),
+      // la mossa che farà al suo turno, se ne ha più d'una (dati/mosse.js): l'annuncio sopra la testa
+      mossa: (mi && mi.mossa) || null, rinforzato: !!(mi && mi.rinforzato),
       bersaglio: f.chi === m, colpito: colpiti.has(m) ? colpiti.get(m) : 0, segni: m.morto ? [] : segni.get(m) || [],
     }
   })

@@ -78,7 +78,7 @@ già in sequenza **non la riavvia** (tranne Watson che dorme: si sveglia con uno
 lavorare** durante una sequenza (non per il gesto «chiama»), la sequenza si ferma e il compagno torna a seguire/sedersi. Se il contadino
 non sta fermo già al tocco, resta il vecchio «Bau!»/«Prrr…» sul posto (e da lontano, «Watson!» e Watson torna a seguire).
 
-- **Il richiamo**: oltre 4 celle (`SOGLIA_RICHIAMO`) il contadino si gira verso Watson, dice «Watson!» (`fx.parla`, gesto `chiama` in `eroe.js`:
+- **Il richiamo**: oltre 2,5 celle (`SOGLIA_RICHIAMO`: appena non è accanto) il contadino si gira verso Watson, dice «Watson!» (`fx.parla`, gesto `chiama` in `eroe.js`:
   braccio alzato e mano alla bocca, 0,9 s), Watson alza la testa 0,4 s, **corre** (la corsa di sempre) fino a 1–1,9 celle dal contadino
   (`scegliMetaAttorno`) e fa la festa. Funziona anche con la camera staccata: conta la distanza in celle, non lo schermo.
 - **La festa di Watson** (`sequenzaCane`, 2–4 s): si apre sempre con la base (scodinzola col sedere e «Bau!»), poi **una** di otto,
@@ -88,6 +88,11 @@ non sta fermo già al tocco, resta il vecchio «Bau!»/«Prrr…» sul posto (e 
   **gira** (rincorre il moncherino due giri, poi stordito che ride), **sbadiglia** (annusa la mano, poi bocca spalancata e occhi chiusi, «Hrrr»).
 - **Le carezze**: `carezzaCane` conta i tocchi ravvicinati (entro 10 s l'uno dall'altro, in memoria, non salvato): alla **sesta** Watson si
   siede e **si addormenta contento** («Zzz…»); toccato che dorme si sveglia con uno sbadiglio.
+- **I gatti chiamati per nome**: come per Watson, se il contadino è **fermo** e il gatto è **oltre 2,5 celle** (`chiamaIlGatto`, stessa `SOGLIA_RICHIAMO`) il contadino si gira,
+  dice «Sherlock!», «Irene!» o «Pepe!» (il nome in `COMPAGNI`; gesto `chiama`, 0,9 s) e **poi** il gatto risponde (`sequenzaGattoChiamato`): alza la testa e lo guarda
+  0,4–0,8 s (le orecchie verso di lui), poi fa la risposta della sua indole, qui sotto. **La chiamata non li obbliga**: Sherlock quasi sempre viene, Irene viene e fa la buffa,
+  Pepe spesso si volta e resta dov'è. Chi viene **cammina** (mai la corsa di Watson) fino a ~1 cella. Un gatto già a ≤ 2,5 celle non è chiamato: risponde subito;
+  se il contadino non sta fermo, il vecchio «Prrr…» sul posto. Le mete degli animali evitano anche dove gli altri **stanno andando** (`_altri`): due gatti chiamati insieme non arrivano nella stessa cella.
 - **I gatti** (`scegliRispostaGatto`, indole per mantello in `INDOLE_GATTO`; [si avvicina, fusa dov'è, si volta, cosa buffa]):
   media ~55/20/15/10. **Sherlock** 60/20/12/8 (si avvicina a 1,5 celle e si **siede composto**, senza strusciarsi), **Irene** 55/15/10/20
   (si struscia e metà volte si rotola; la cosa buffa è sua), **Pepe** 40/20/30/10 (schivo: spesso si volta). *Si avvicina*: cammina (non corre)
@@ -105,8 +110,8 @@ non sta fermo già al tocco, resta il vecchio «Bau!»/«Prrr…» sul posto (e 
 `test/unita/fattoria3d-compagni.test.mjs` (con un canvas finto): dati e livelli, la meta mai su una cella bloccata, le
 decisioni con un `rnd` finto, ingombro e mesh dei modelli, pose (anche quelle nuove) senza numeri sbagliati, tre minuti di scena col motore
 vero (nessun compagno su una cella bloccata, l'arrivo con l'avviso, il tocco, il raggio), le scelte di «Quando ci premi» (percentuali su un
-campione grande, mai due feste uguali, cooldown dell'incontro) e cinque minuti di tocchi su Watson lontano/vicino e sui gatti (richiamo a ≤ 2 celle, carezze,
-nessuna sequenza che non finisce, nessuno su una cella bloccata). `integrazione/fattoria3d`: toccare Watson lontano fa dire «Watson!» e lo porta vicino. Non c'è un bersaglio `[data-…]`:
+campione grande, mai due feste uguali, cooldown dell'incontro) e cinque minuti di tocchi su Watson lontano/vicino e sui gatti (richiamo a ≤ 2 celle, il gatto lontano chiamato per nome e quello vicino no, carezze,
+nessuna sequenza che non finisce, nessuno su una cella bloccata). `unita/fattoria3d-compagni` controlla anche la chiamata (solo fermi e oltre la soglia, i nomi, l'attesa 0,4–0,8 s, le indoli ancora diverse). `integrazione/fattoria3d`: toccare Watson lontano fa dire «Watson!» e lo porta vicino. Non c'è un bersaglio `[data-…]`:
 i compagni sono nella tela.
 
 ## Da sapere

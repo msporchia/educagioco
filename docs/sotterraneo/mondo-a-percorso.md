@@ -125,34 +125,48 @@ Due per zona, quattordici. **Un po' più forti dei mostri della zona**: il livel
 
 ## Il villaggio
 
-Una forma fissa, la stessa per tutti i semi: **un ferro di cavallo aperto a sud**, verso la telecamera. Tutti stanno sul davanti
-della loro bottega, in fila, col banco o la porta verso la piazza: dal centro della piazza si vedono tutti senza girare. Niente
-campi, niente orti: quattro case senza porta dietro le botteghe (il fondale) e qualche albero agli angoli. Dal cancello a est parte
-la strada maestra, dritta verso i prati. La pianta, uscita da `npm run pianta -- --percorso` (40×26 celle, la riga 0 a nord):
+Una forma fissa, la stessa per tutti i semi, di **24×20 celle**: una schermata o poco più, con la telecamera normale. **Una piazza
+tonda col pozzo in mezzo e, attorno, le botteghe a ventaglio aperto a sud**, verso la telecamera: a profondità diverse e ognuna
+girata appena verso il pozzo (`giro`), col banco o la porta verso la piazza, così dalla partenza (a sud del pozzo) si vedono tutti
+senza girare. Dietro e ai lati cinque case con la porta verso la piazza, che non vendono niente; in un angolo un orto, solo come
+cornice; agli angoli gli alberi. Dalla piazza esce a sud-est la stradina che curva fino al cancello, a est, dove parte la strada
+maestra verso i prati. La pianta, uscita da `npm run pianta -- --percorso` (la riga 0 a nord):
 
 ```
-     0         1         2         3
-     0123456789012345678901234567890123456789
-  2  .t....####..........####................     #: le case del fondale
-  8  .....###..................####..........
-  9  .....###..#E#..###...#R#..####..W#......     E erborista e R rigattiere dietro il banco
- 10  .....###..###..###...###..####..##......
- 11  .......I..........M..........A....@.....     I incantatrice, M minatore, A armaiolo davanti alla porta, @ la ragazza
- 12  ....ooooooooooooooooooooooooooooooooB#..     B la bacheca
- 15  ..O.oooooooooooooo*ooooooooooooooooo++++     O il portale gemello, * la partenza, ++ il cancello e la strada
- 18  ....oooooooooooooooooooooooooooooooo.T..     T il cartello
- 21  ...............................##.......
- 22  ...............................#P.......     P la pietra del villaggio
+     0         1         2
+     012345678901234567890123
+  0  t..........t.####......t
+  1  ...####.t....####.t.....     #: le case, i lotti delle botteghe e l'orto
+  2  ...####..###.####...###.
+  3  ...####..###........###.
+  4  ###.........M.......###.     M il minatore davanti alla sua tenda
+  5  ###...........#R#.......     R il rigattiere dietro il banco
+  6  ###...#E#.oooo###C......     E l'erborista dietro il banco, C il capitano
+  7  ......###ooooooo..####.t
+  8  ........oooooooooo####..
+  9  ....###ooooW#ooooo####..     W il pozzo in mezzo alla piazza
+ 10  ....###oooo##@ooooA.....     @ la ragazza del pozzo, A l'armaiolo davanti alla fucina
+ 11  t...###ooooooooooo...###
+ 12  .......Ioooooooooo...###     I l'incantatrice davanti alla torretta
+ 13  ........oooo*oooo++.T...     * la partenza, T il cartello
+ 14  .####.....oooo...+++++++     ++ la stradina fino al cancello (23,15)
+ 15  .####.O........B#...++++     O il portale gemello, B la bacheca
+ 16  .####....##.............
+ 17  .........#P.............     P la pietra del villaggio
 ```
 
-- **L'ordine da ovest a est**: chi cura (incantatrice, erborista) accanto al portale, perché chi sale dal portale si cura subito;
-  al centro il minatore (la storia), davanti alla partenza; poi chi vende (rigattiere, armaiolo); il pozzo con la ragazza, la
-  bacheca, il cartello e la pietra verso il cancello, cioè sulla strada per uscire.
-- **I vincoli per il generatore** (al posto dei passi 7a e 9): la pianta si stampa dalla scheda (`VILLAGGIO`: piazza, lotti con
-  `piede`, `accanto` e il verso, case, alberi), non si sceglie a punteggio; il terreno sotto si spiana; nessun campo nella zona
-  della città; `props-citta.js` non mette orti, bucato né carretti sul davanti (solo ai fianchi e dietro); `accanto` sta sempre a
-  sud del `piede`, sulla piazza; nessun lotto fra la piazza e la telecamera. Nel villaggio la telecamera si allontana un poco
-  (vede la fila intera, 26 celle, dal centro della piazza).
+- **Chi sta dove**: chi cura (l'incantatrice, l'erborista) a ovest, verso il portale, perché chi sale dal portale si cura subito;
+  in fondo, al centro, il minatore (la storia); a est chi vende (il rigattiere, l'armaiolo) e il capitano; la ragazza al pozzo,
+  accanto alla partenza; a sud, sul davanti, solo cose basse: la bacheca e la pietra, che si guardano uscendo, e il portale.
+- **Le misure**: chi ci sta è al più 6 celle a destra o a sinistra della partenza (la telecamera ne vede 15 in largo) e al più 9
+  più su; la bacheca, la pietra e il portale al più 5. Le botteghe non stanno in fila: quattro profondità diverse.
+- **I vincoli per il generatore**: la pianta si stampa dalla scheda (`VILLAGGIO`: la piazza col centro e dodici raggi raccordati,
+  `nellaPiazza`; i lotti con `piede`, `accanto` e `giro`; la stradina come curva; le case con `verso` e `giro`; l'orto; gli
+  alberi), non si sceglie a punteggio; il terreno sotto si spiana; nessun campo; nessun lotto sulla piazza (tranne il pozzo e la
+  ragazza, che ci stanno sopra) né sulla stradina; `accanto` di chi ci sta è a sud del `piede`, sulla piazza; `props-citta.js` non
+  mette bucato, carretti né niente di alto sul davanti o davanti a chi ci sta.
+- **Provato**: la fila di botteghe a nord di una piazza rettangolare di 32×9 (40×26 in tutto) si leggeva come un rettangolo e
+  costringeva la telecamera ad allontanarsi per vederla intera.
 
 ## Le terre successive
 

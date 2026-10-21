@@ -15,6 +15,11 @@ import { creaRacconto } from '../racconto.js'
 import { creaScontro } from '../scontro.js'
 import { EROE_SUL_PALCO } from '../../motore/palco.js'
 import { mascheraPiena } from './persone.js'
+import { creaEroe3d, eroe3dAcceso } from '../eroe3d.js'
+import { creaMostri3d, mostri3dAccesi } from '../mostro3d.js'
+import { creaGestore, statoDi } from '../effetti3d/gestore.js'
+import { ACCESI } from '../costanti.js'
+import { statiDel } from '../../viste/campo.js'
 
 // Dove sta il palco nel mondo: la cella dell'eroe sul palco cade sui suoi piedi. Torna l'origine (da sommare alle coordinate del
 // palco) e la pianta per scena3d/palco.js: una cella del palco si calpesta se si calpesta il mondo sotto il suo centro. Puro
@@ -57,13 +62,33 @@ export function creaPalcoSopra(scena, { tex, norm, larga, alta, pezzi, quota, ca
   const luce = () => ({ color: new Color(), position: new Vector3(), intensity: 0 })
   const luci = { lampo: luce(), magia: luce(), tinta: new Color(), tTinta: 0, q: 0, torcia: () => 1 }
   const eroe = creaEroe()
-  const cose = creaCose({ figure: fig, aloni, colonne, etichette, camera: camPalco })
-  const S = { eroe, campo: null, scintille, luci, anelli, fermo: 0, scossa: 0, rosso: 0, tBolla: 9, tempo: 0, colpoEroe: null, stato: cose.stato }
+  // i modelli 3D e gli effetti 3D come nello scontro delle discese (scena3d/indice.js, docs/sotterraneo/mostri-3d.md): dentro il gruppo
+  // del palco, quindi sul prato dove si è; lo sprite resta se il modello manca (`#sprite`, `#eroe2d` li spengono)
+  const eroe3d = eroe3dAcceso() ? creaEroe3d(gruppo) : null
+  const mostri3d = mostri3dAccesi() && ACCESI.mostri3d > 0 ? creaMostri3d(gruppo, { quanti: () => ACCESI.mostri3d }) : null
+  const effetti3d = ACCESI.effetti3d ? creaGestore(gruppo, { camera: cam.camera }) : null
+  const cose = creaCose({ figure: fig, aloni, colonne, etichette, camera: camPalco, mostri3d, vicino: () => eroe.disegnato })
+  const S = { eroe, campo: null, scintille, luci, anelli, fermo: 0, scossa: 0, rosso: 0, tBolla: 9, tempo: 0, colpoEroe: null, stato: cose.stato,
+              mostri3d, effetti3d, eroe3d }
   const racconto = creaRacconto(S)
   let piano = null
   let opz = { bersaglio: null, accorcia: null }
   const scontro = creaScontro({ S, cam: camPalco, eroe, getPiano: () => piano, getCose: () => cose, getFigure: () => figure, anelli, cieca: 320 })
   let quadro = null, coperto = 0, attivo = false, centroPalco = new Vector3()
+  // gli stati addosso ai mostri dello scontro, in 3D (come in scena3d/indice.js): quelli che il racconto mostra adesso, o la verità del motore
+  const chiaviStati = [], piedi = new Vector3()
+  function statiAddosso(fx) {
+    const palco = scontro.palco
+    if (!palco) { effetti3d.spegniStati(); return }
+    palco.campo.forEach((r, k) => {
+      const s = cose.stato(r)
+      chiaviStati.length = 0
+      if (!(fx && fx.attivo ? fx.morti[k] : r.morto)) {
+        for (const x of (fx && fx.attivo && fx.stati[k]) || statiDel(r)) { const c = statoDi(x); if (c && !chiaviStati.includes(c)) chiaviStati.push(c) }
+      }
+      effetti3d.tieniStati(s, chiaviStati, () => ({ piedi: piedi.set(s.x + (s.dx || 0), 0, s.z + (s.dz || 0)), alto: Math.max(0.8, s.in3d ? s.alto : s.alto * 0.72) }))
+    })
+  }
 
   const pittore = {
     canvas: null, numerini: [], colonne: [], mappaGrande: false, scala: 3,
@@ -113,6 +138,7 @@ export function creaPalcoSopra(scena, { tex, norm, larga, alta, pezzi, quota, ca
       if (!attivo) return
       scontro.chiudi()
       racconto.svuota()
+      if (effetti3d) { effetti3d.spegniStati(); effetti3d.svuota() }
       attivo = false
       gruppo.visible = false
       quadro = null
@@ -132,9 +158,10 @@ export function creaPalcoSopra(scena, { tex, norm, larga, alta, pezzi, quota, ca
       scontro.guarda(corsa, fx)
       if (fx) racconto.leggi(fx)
       racconto.aggiorna(dt)
+      if (effetti3d) { statiAddosso(fx); effetti3d.aggiorna(dt) }
       figure.inizia(); figureEroe.inizia(); aloni.inizia(); colonne.inizia(); etichette.inizia()
       cose.disegna(corsa, { t, dt: dtVero, dtScena: dt, palco: scontro.palco ? { campo: scontro.palco.campo, fx } : null, salta: null })
-      disegnaEroe(eroe, corsa, { figure: figE, luci, etichette, camera: camPalco, dt: dtVero, dtScena: dt, t, bersaglio: scontro.bersaglio(corsa), aloni, scintille })
+      disegnaEroe(eroe, corsa, { figure: figE, luci, etichette, camera: camPalco, dt: dtVero, dtScena: dt, t, bersaglio: scontro.bersaglio(corsa), aloni, scintille, modello: eroe3d })
       scontro.segni(corsa, dtVero, null, t)
       // gli anelli stanno per terra: alla quota del prato sotto di loro
       for (const k of ['tocco', 'arrivo', 'bersaglio']) { const a = anelli[k]; if (a.visible) a.position.y = 0.04 + suolo(a.position.x, a.position.z) }
@@ -159,6 +186,9 @@ export function creaPalcoSopra(scena, { tex, norm, larga, alta, pezzi, quota, ca
     via() {
       for (const x of [figure, figureEroe, aloni, colonne, anelli, scintille, etichette]) x.via()
       maschera.t.dispose()
+      if (effetti3d) effetti3d.svuota()
+      if (mostri3d) mostri3d.via()
+      if (eroe3d) eroe3d.toglie()
       scena.remove(gruppo)
     },
   }

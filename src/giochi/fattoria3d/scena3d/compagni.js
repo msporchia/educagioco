@@ -5,6 +5,7 @@
 import * as THREE from 'three'
 import { compagniAl, scegliMeta, scegliMetaAttorno, cellaLiberaVicina, cellaDi, decidiCane, decidiGatto, durataDi, SOGLIA_RICHIAMO, DIST_INCONTRO,
   scegliInterazioneCane, sequenzaCane, sequenzaRichiamo, sequenzaSonno, sequenzaSveglia, carezzaCane, scegliRispostaGatto, sequenzaGatto,
+  chiamaIlGatto, sequenzaGattoChiamato,
   sequenzaGattoSopra, incontroGattoCane, sequenzaIncontro } from '../dati/compagni.js'
 import { creaCompagno, posaCane, posaGatto } from './modelli-compagni.js'
 import { PEZZI } from '../dati/catalogo.js'
@@ -50,7 +51,7 @@ export class Compagni {
     const h = raggio.intersectObjects(zone, false)[0]
     return h ? this.lista.find(c => c.grp.userData.colpo === h.object) : null
   }
-  /** Si fa toccare. Watson: lontano lo chiama il contadino e arriva di corsa, poi fa una festa (sempre diversa); i gatti rispondono a modo
+  /** Si fa toccare. Watson: lontano lo chiama il contadino e arriva di corsa, poi fa una festa (sempre diversa); i gatti, se lontani, li chiama per nome e rispondono a modo
       loro (si avvicinano, restano lì, si voltano, fanno una cosa buffa). Se l'eroe non sta fermo, il vecchio «Bau!» o «Prrr…» sul posto. */
   tocca(c) {
     if (c.salto || (c.seq && !(c.tipo === 'cane' && c.stato === 'dorme' && !c.seq.incontro))) return        // già occupato: un tocco non lo riavvia
@@ -73,6 +74,10 @@ export class Compagni {
     if (c.sopra) return this._avviaSeq(c, sequenzaGattoSopra())            // si sveglia stiracchiandosi e resta dov'è
     if (!e.fermo) return this._toccaSemplice(c)
     const r = scegliRispostaGatto(dist, this.rnd, c.def.variante)
+    if (chiamaIlGatto(dist, e.fermo)) {                                      // lontano: il contadino lo chiama per nome, poi il gatto risponde a modo suo
+      e.faccia({ x: c.x, z: c.z }); this.fx.parla(c.def.nome + '!'); e.avvia('chiama', 0.9)
+      return this._avviaSeq(c, sequenzaGattoChiamato(r, c.def.variante, this.rnd))
+    }
     this._avviaSeq(c, sequenzaGatto(r, c.def.variante, dist <= 1.3, this.rnd))
   }
   _toccaSemplice(c) {
@@ -112,7 +117,7 @@ export class Compagni {
   _fineSeq(c) {
     c.seq = null; c.sub = ''; c.guarda = null; c.velo = 0
     const e = this.eroe
-    if (c.tipo === 'cane' && e.fermo && Math.hypot(e.x - c.x, e.z - c.z) < SOGLIA_RICHIAMO) return this._stato(c, 'siede')
+    if (c.tipo === 'cane' && e.fermo && Math.hypot(e.x - c.x, e.z - c.z) < 4) return this._stato(c, 'siede')      // finita la festa, se è vicino si siede (non è la soglia del richiamo)
     this._decidi(c)
   }
   _interrompi(c) { c.seq = null; c.percorso = []; c.poi = null; c.corsa = false; c.sub = ''; c.velo = 0; this._decidi(c) }
@@ -277,7 +282,13 @@ export class Compagni {
   }
 
   // ── cosa fare adesso ──
-  _altri(c) { return this.lista.filter(o => o !== c).map(o => [o.x, o.z, 1.3]) }
+  /** Da dove stare lontani scegliendo una meta: gli altri compagni dove sono e, se camminano, dove stanno andando (se no due arrivano nella stessa cella). */
+  _altri(c) {
+    return this.lista.filter(o => o !== c).flatMap(o => {
+      const fine = o.percorso && o.percorso.length ? o.percorso[o.percorso.length - 1] : null
+      return fine ? [[o.x, o.z, 1.3], [fine[0], fine[1], 1.3]] : [[o.x, o.z, 1.3]]
+    })
+  }
   _vai(c, meta, stato, { poi = null, corsa = false, guarda = null } = {}) {
     if (!meta) { this._stato(c, 'sta'); return false }
     const via = this.m.percorsoVerso(cellaDi(c.x, c.z), [meta])

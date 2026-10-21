@@ -10,6 +10,12 @@
 .fm-vano { width: 100%; aspect-ratio: 1 / .92; display: grid; place-items: center; border-radius: 34px 34px 12px 12px; border: 4px solid var(--b);
   background: radial-gradient(circle at 50% 110%, var(--d), var(--c) 75%); box-shadow: inset 0 3px 8px rgba(0,0,0,.18); transition: transform .15s, box-shadow .15s; }
 .fm-piu { font-size: 28px; font-weight: 800; color: var(--b); opacity: .7; line-height: 1; }
+.fm-posto.chiuso { appearance: none; background: none; border: 0; padding: 0; font: inherit; cursor: pointer; opacity: .6; -webkit-tap-highlight-color: transparent; }
+.fm-posto.chiuso .fm-vano { background: rgba(120, 90, 50, .07); border: 3px dotted var(--a); box-shadow: none; }
+.fm-posto.chiuso.prossimo { opacity: 1; }
+.fm-posto.chiuso.prossimo .fm-vano { border-style: solid; border-color: var(--b); animation: fm-chiama .9s ease-in-out infinite; }
+.fm-posto.chiuso.povero.prossimo .fm-vano { animation: none; }
+.fm-etichetta { flex: 1 0 100%; font-size: 11px; font-weight: 800; color: var(--b); text-transform: uppercase; letter-spacing: .04em; }
 .fm-posto.libero .fm-vano { background: transparent; border: 3px dashed var(--a); box-shadow: none; }
 .fm-posto.cuoce .fm-vano { background: radial-gradient(circle at 50% 110%, #ffb04a, #8a3414 72%); animation: f3-brace 1.6s ease-in-out infinite; }
 .fm-posto.cuoce .f3-faccia { animation: f3-sobbalza 1.2s ease-in-out infinite; }

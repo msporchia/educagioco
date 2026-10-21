@@ -8,6 +8,7 @@ import { onUnmounted } from 'vue'
 import FilaDeiTurni from './FilaDeiTurni.vue'
 import Glifo from './Glifo.vue'
 import SegniAddosso from './SegniAddosso.vue'
+import MossaAnnunciata from './MossaAnnunciata.vue'
 
 const props = defineProps({
   mostri: { type: Array, required: true },
@@ -45,6 +46,8 @@ onUnmounted(() => { props.aggancia('eroe', null); for (const m of props.mostri) 
          :data-bersaglio="pulita(m) && m.bersaglio ? '' : null" :data-colpito="pulita(m) && m.colpito ? m.colpito : null"
          :data-morto="mortoDi(m) ? '' : null" :data-grande="m.grosso || null" :data-porta-chiave="m.chiave ? '' : null">
       <span v-if="!mortoDi(m) && (m.grado || m.bersaglio || m.grosso)" class="sot-m-nome" :class="m.grado && ['sot-grado', 'sot-grado-' + m.grado]" data-nome-mostro>{{ m.etichetta }}</span>
+      <!-- la mossa che farà al suo turno (docs/sotterraneo/mosse.md); l'anello a terra lo disegna la scena -->
+      <MossaAnnunciata v-if="pulita(m) && m.mossa" class="sot3d-mossa" :mossa="m.mossa" />
       <span class="sot-m-corpo sot3d-corpo">
         <span v-if="pulita(m) && m.segni.length" class="sot-m-segni" data-segni>
           <span v-for="g in m.segni" :key="g.tipo + g.glifo" class="sot-segno-pre" :class="'sot-segno-pre-' + g.tipo" :style="{ '--tinta': g.tinta }" :data-segno-pre="g.tipo" :title="g.dice">

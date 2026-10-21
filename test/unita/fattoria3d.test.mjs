@@ -9,7 +9,9 @@ import { guastiDelCatalogo, PEZZI, EDIFICI, CATEGORIE, edificiDaCostruire, avvis
 import { carteDi, schedeDi, schedeSegnalate, DISEGNI, STRUMENTI, guastiDelleCarte } from '../../src/giochi/fattoria3d/dati/carte.js'
 import { PEZZI as ATLANTE_PEZZI } from '../../src/giochi/fattoria/dati/atlante.js'
 import { guastiDelleColture, COLTURE } from '../../src/giochi/fattoria3d/dati/colture.js'
-import { guastiDelleRicette, RICETTE, MACCHINE, FORNO_POSTI, emojiDi, nuovoId, MERCI_VECCHIE } from '../../src/giochi/fattoria3d/dati/ricette.js'
+import { guastiDeiPosti, POSTI_DI_PARTENZA, POSTI_MASSIMI, PREZZI_DEI_POSTI, TOTALE_DEI_POSTI, prezzoDelPosto, postiInForma } from '../../src/giochi/fattoria3d/dati/posti.js'
+import { POSTI_DI_PARTENZA as POSTI_DI_PARTENZA_2D, POSTI_MASSIMI as POSTI_MASSIMI_2D, PREZZI_DELLA_FILA } from '../../src/giochi/fattoria/dati/coda.js'
+import { guastiDelleRicette, RICETTE, MACCHINE, FORNO_POSTI, LAVORAZIONE, dentroDi, PRONTO_DA_RITIRARE, TIPI_DI_MACCHINA, emojiDi, nuovoId, MERCI_VECCHIE } from '../../src/giochi/fattoria3d/dati/ricette.js'
 import { guastiDeiLivelli, sogliaDi, livelloPer, roba, nomeDi, ULTIMO, costoDelLivello, livelloDellaRicetta } from '../../src/giochi/fattoria3d/dati/livelli.js'
 import { msDi } from '../../src/giochi/fattoria3d/dati/ordini.js'
 import { ANIMALI, CORTILE, PRODOTTI_ANIMALI, LANA, guastiDegliAnimali, prezzoDellaBestia, msDelProdotto } from '../../src/giochi/fattoria3d/dati/animali.js'
@@ -318,9 +320,11 @@ controlla('l\'albo del manifesto sta in piedi', gA.length === 0, gA.join(' · ')
   f.s.prodotti.farina = 10; f.s.prodotti.uova = 5
   controlla('si prepara e si scalano gli ingredienti (farina 2, uova 1)', f.prepara('pasta').ok && f.s.prodotti.farina === 8 && f.s.prodotti.uova === 4)
   controlla('il primo parte subito', f.s.pasticceria.coda[0].fine === t.ora + RICETTE.pasta.ms)
+  uguale('con un solo posto il secondo trova la fila piena', f.prepara('pasta').motivo, 'forno-pieno')
+  controlla('si compra il secondo e il terzo posto', f.compraPosto('pasticceria').ok && f.compraPosto('pasticceria').ok && f.postiDi('pasticceria') === 3)
   f.prepara('pasta'); f.prepara('pasta')
   uguale('tre in coda', f.s.pasticceria.coda.length, 3)
-  uguale('al quarto il forno è pieno', f.prepara('pasta').motivo, 'forno-pieno')
+  uguale('al quarto la fila è piena', f.prepara('pasta').motivo, 'forno-pieno')
   uguale('e gli ingredienti non si sono scalati', f.s.prodotti.farina, 10 - 3 * 2)
   // la pagina chiusa: passa tutto il tempo, poi si riapre
   t.ora += RICETTE.pasta.ms + 1
@@ -449,6 +453,7 @@ controlla('l\'albo del manifesto sta in piedi', gA.length === 0, gA.join(' · ')
   controlla('quella del livello 6 sì: la pasta, ma le uova mancano', g.avviaRicetta('pasta').motivo === 'mancano-ingredienti')
   alLivello(g, RICETTE.pizza.liv)
   controlla('al suo livello la pizza parte', g.avviaRicetta('pizza').ok)
+  g.compraPosto('pasticceria')
   const pas = g.avviaRicetta('pasta')
   stessaLista('un ingrediente mancante dice quale', [pas.motivo, JSON.stringify(pas.mancano)], ['mancano-ingredienti', JSON.stringify({ uova: 1 })])
 }
@@ -545,6 +550,7 @@ controlla('l\'albo del manifesto sta in piedi', gA.length === 0, gA.join(' · ')
   uguale('il pane chiede farina che non c\'è', f.avviaRicettaIn('panificio', 'pane').motivo, 'mancano-ingredienti')
   uguale('una ricetta dell\'altra macchina è sconosciuta qui', f.avviaRicettaIn('mulino', 'pane').motivo, 'sconosciuta')
   f.s.merci.grano = 8
+  f.compraPosto('mulino')
   controlla('il mulino macina', f.avviaRicettaIn('mulino', 'farina').ok && f.avviaRicetta('farina').ok && f.s.merci.grano === 4)
   t.ora += 2 * RICETTE.farina.ms + 1; f.tick()
   uguale('due farine pronte nel mulino, non ancora in dispensa', [f.macchina('mulino').pronti.farina, f.s.prodotti.farina || 0].join(), '2,0')
@@ -555,12 +561,62 @@ controlla('l\'albo del manifesto sta in piedi', gA.length === 0, gA.join(' · ')
   t.ora += RICETTE.pane.ms + 1; f.tick()
   f.ritiraDa('panificio')
   uguale('pane in dispensa', f.s.prodotti.pane, 1)
-  uguale('tre posti anche qui', f.macchina('panificio').posti, FORNO_POSTI)
+  uguale('un posto di partenza anche qui', f.macchina('panificio').posti, FORNO_POSTI)
+  f.compraPosto('panificio'); f.compraPosto('panificio')
   f.s.prodotti.farina = 20
   f.avviaRicettaIn('panificio', 'pane'); f.avviaRicettaIn('panificio', 'pane'); f.avviaRicettaIn('panificio', 'pane')
   uguale('il quarto trova il forno pieno', f.avviaRicettaIn('panificio', 'pane').motivo, 'forno-pieno')
   // ogni ricetta è fattibile con ciò che dice: ingredienti da raccolti, da prodotti delle bestie o di una macchina (anche la stessa: pasta → lasagne)
   for (const [id, r] of Object.entries(RICETTE)) for (const k of Object.keys(r.ing)) controlla(`${id}: ${k} è un raccolto, un prodotto delle bestie o di una ricetta`, !!COLTURE[k] || !!PRODOTTI_ANIMALI[k] || !!LANA[k] || (!!RICETTE[k] && k !== id))
+}
+
+/* ══════════ 16-bis. i posti delle macchine: uno di partenza, gli altri si comprano uno alla volta fino a sei (dati/posti.js) ══════════ */
+{
+  controlla('i dati dei posti non hanno guasti', guastiDeiPosti().length === 0, guastiDeiPosti().join(' · '))
+  controlla('i posti e i prezzi sono quelli della fila della 2D', POSTI_DI_PARTENZA === POSTI_DI_PARTENZA_2D && POSTI_MASSIMI === POSTI_MASSIMI_2D && JSON.stringify(PREZZI_DEI_POSTI) === JSON.stringify(PREZZI_DELLA_FILA))
+  uguale('si parte da un posto', FORNO_POSTI, 1)
+  controlla('i prezzi crescono: 20·40·80·160·320', PREZZI_DEI_POSTI.join('·') === '20·40·80·160·320' && PREZZI_DEI_POSTI.every((p, i) => !i || p > PREZZI_DEI_POSTI[i - 1]))
+  uguale('il totale per macchina (620) sta sotto le due ore di esercizi (720 monete)', [TOTALE_DEI_POSTI, TOTALE_DEI_POSTI <= 720].join(), '620,true')
+  uguale('prezzoDelPosto: il secondo, il sesto, nessun settimo', [prezzoDelPosto(1), prezzoDelPosto(5), prezzoDelPosto(6)].join(), '20,320,')
+  uguale('postiInForma rimette in forma', [postiInForma(undefined), postiInForma(null), postiInForma(-4), postiInForma(2.9), postiInForma(99), postiInForma('x')].join(), '1,1,1,2,6,1')
+  const { f } = mondo({ monete: 5000 })
+  alLivello(f, 12)
+  uguale('una macchina che non si ha non vende posti', f.compraPosto('mulino').motivo, 'non-posseduta')
+  uguale('…e una cosa che non è una macchina nemmeno', f.compraPosto('campo').motivo, 'sconosciuta')
+  f.compraLotto('3_1')
+  controlla('si compra il mulino', f.compraEdificio('mulino').ok)
+  uguale('parte con un posto', [f.postiDi('mulino'), f.macchina('mulino').posti].join(), '1,1')
+  const pagati = [], esp0 = f.esperienza()
+  for (let k = 0; k < 5; k++) { const m0 = f.monete(), r = f.compraPosto('mulino'); pagati.push(r.ok ? m0 - f.monete() : r.motivo) }
+  uguale('cinque acquisti in ordine, ai prezzi crescenti', pagati.join(), '20,40,80,160,320')
+  uguale('…la spesa conta come esperienza', f.esperienza() - esp0, 620)
+  uguale('sei posti e basta', [f.postiDi('mulino'), f.compraPosto('mulino').motivo].join(), '6,pieno')
+  uguale('un\'altra macchina ha i suoi posti', [f.postiDi('panificio'), f.postiDi('mulino')].join(), '1,6')
+  f.s.merci.grano = 30
+  let ok = 0; for (let k = 0; k < 7; k++) if (f.avviaRicettaIn('mulino', 'farina').ok) ok++
+  uguale('sei in fila, il settimo trova la fila piena', [ok, f.avviaRicettaIn('mulino', 'farina').motivo].join(), '6,forno-pieno')
+  // le monete che mancano: rifiuto col prezzo, senza toccare niente
+  const pm = mondo({ monete: 1000 }), povero = pm.f
+  alLivello(povero, 3); povero.compraLotto('3_1'); povero.compraEdificio('mulino'); pm.b.monete = 30
+  const m1 = povero.monete(), r = povero.compraPosto('mulino')
+  uguale('il secondo posto costa 20: con 30 si compra, il terzo (40) no', [r.ok, povero.compraPosto('mulino').motivo, povero.compraPosto('mulino').costo, povero.postiDi('mulino'), m1 - povero.monete()].join(), 'true,poche-monete,40,2,20')
+  // gli eventi
+  const ev = f.prendiEventi ? f.prendiEventi() : f.eventi
+  controlla('ogni acquisto emette «posto» con la macchina', ev.filter(e => e.tipo === 'posto').length === 5 && ev.filter(e => e.tipo === 'posto').every(e => e.macchina === 'mulino'))
+  // il salvataggio: i posti si rileggono, uno storto torna in forma, un vecchio stato senza campo ne ha uno
+  const letto = normalizza(JSON.parse(JSON.stringify(f.s)))
+  uguale('i posti si salvano e si rileggono', letto.macchine.mulino.posti, 6)
+  const storto = JSON.parse(JSON.stringify(f.s)); storto.macchine.mulino.posti = 'tanti'; storto.macchine.panificio = { coda: [], pronti: {}, posti: 99 }
+  const ls = normalizza(storto)
+  uguale('un valore storto torna a uno, uno troppo grande al tetto', [ls.macchine.mulino.posti, ls.macchine.panificio.posti].join(), '1,6')
+  const senza = JSON.parse(JSON.stringify(f.s)); delete senza.macchine.mulino.posti
+  uguale('uno stato senza il campo vale un posto', normalizza(senza).macchine.mulino.posti, 1)
+  controlla('normalizza non lancia su macchine guaste', [null, 'x', [], { macchine: 3 }, { macchine: { mulino: 4 } }].every(v => { try { return normalizza(v).macchine.mulino.posti === 1 } catch (e) { return false } }))
+  // i nomi delle sezioni: ognuna ha il suo, e solo i forni dicono «forno»
+  controlla('ogni macchina ha il nome della sua sezione', TIPI_DI_MACCHINA.every(t => typeof LAVORAZIONE[t]?.dentro === 'string' && dentroDi(t) === LAVORAZIONE[t].dentro && LAVORAZIONE[t].dentro.length > 3))
+  stessaLista('solo il pastificio e il panificio dicono «forno»', TIPI_DI_MACCHINA.filter(t => /forno/i.test(dentroDi(t))), ['pasticceria', 'panificio'])
+  uguale('mulino, telaio, gelateria, cucina: ognuno il suo', ['mulino', 'telaio', 'gelateria', 'conserviera', 'tintoria'].map(dentroDi).join('|'), 'Alla macina|Al telaio|Nella gelatiera|Sul fuoco|Nella tinozza')
+  uguale('i pronti hanno la scritta comune', PRONTO_DA_RITIRARE, 'Pronto da ritirare')
 }
 
 /* ══════════ 17. il vecchio stato (versione 1) si apre senza perdere niente ══════════ */
@@ -643,7 +699,8 @@ controlla('l\'albo del manifesto sta in piedi', gA.length === 0, gA.join(' · ')
   controlla('gli altri non ci sono, e posseduti dice «in mappa»', !dove('gelateria') && !dove('pasticceria') && n.posseduti.mulino && n.posseduti.panificio && n.posseduti.mongolfiera && !n.posseduti.gelateria)
   stessaLista('i pezzi di prima restano com\'erano, con gli stessi id', [n.cose.filter(c => c.tipo === 'campo').map(c => c.id).join(), n.cose.find(c => c.id === 2).coltura], ['1,2', 'mais'])
   controlla('gli id nuovi non toccano i vecchi', new Set(n.cose.map(c => c.id)).size === n.cose.length && n.prossimoId > Math.max(...n.cose.map(c => c.id)))
-  uguale('coda, pronti e stiva invariati', JSON.stringify([n.macchine.mulino, n.macchine.panificio.pronti, n.mongolfiera]), JSON.stringify([v8.macchine.mulino, v8.macchine.panificio.pronti, v8.mongolfiera]))
+  uguale('un vecchio stato senza posti ne ha uno, ma la coda più lunga resta tutta', [n.macchine.mulino.posti, n.macchine.mulino.coda.length].join(), '1,2')
+  uguale('coda, pronti e stiva invariati', JSON.stringify([n.macchine.mulino.coda, n.macchine.mulino.pronti, n.macchine.panificio.pronti, n.mongolfiera]), JSON.stringify([v8.macchine.mulino.coda, v8.macchine.mulino.pronti, v8.macchine.panificio.pronti, v8.mongolfiera]))
   controlla('magazzino, strade, alberi tagliati, ostacoli, lotti e prodotti come prima', JSON.stringify([n.magazzino, n.strade, n.tagliati, n.ostacoli, Object.keys(n.lotti), n.prodotti]) === JSON.stringify([v8.magazzino, v8.strade, v8.tagliati, v8.ostacoli, Object.keys(v8.lotti), v8.prodotti]))
   // nel motore l'edificio occupa le sue celle di una volta e la macchina funziona
   const { f } = mondo({ stato: JSON.parse(JSON.stringify(v8)), monete: 50 })

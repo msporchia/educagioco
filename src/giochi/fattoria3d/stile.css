@@ -51,7 +51,9 @@
 .f3-semi button { display: flex; flex-direction: column; align-items: center; gap: 2px; border: 2px solid #e6cfa0; background: #fffdf6; border-radius: 16px; padding: 10px 4px; color: #3a2a1a; touch-action: manipulation; }
 .f3-semi button.ultimo { border-color: #f0a020; background: #fff3cf; }
 .f3-semi button.bloccato { opacity: .55; filter: grayscale(.8); }
-.f3-semi .em { font-size: 32px; line-height: 1; } .f3-semi b { font-size: 14px; } .f3-semi small { font-size: 12px; color: #7a5a3a; }
+.f3-semi .em { position: relative; font-size: 32px; line-height: 1; }
+.f3-seme-n { position: absolute; right: -14px; bottom: -6px; min-width: 24px; height: 24px; padding: 0 6px; box-sizing: border-box; border-radius: 12px; background: #3a2a1a; color: #fff; border: 2px solid #fff; font: 800 13px/20px "Emoji Gioco", system-ui, sans-serif; text-align: center; font-style: normal; }
+.f3-seme-n.zero { background: #b9a98e; } .f3-semi b { font-size: 14px; } .f3-semi small { font-size: 12px; color: #7a5a3a; }
 
 /* il menu «Costruisci qui»: un velo che si tocca per chiudere e il foglio con le schede e la griglia di carte */
 .f3-velo { position: absolute; inset: 0; z-index: 34; background: rgba(40,28,12,.38); animation: f3-velo .18s ease-out; }

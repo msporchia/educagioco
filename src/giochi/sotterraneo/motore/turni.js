@@ -36,8 +36,8 @@ export function chiAgisce(fila) {
   return meglio
 }
 
-// ha giocato il suo turno: aspetterà ancora 100/velocità
-export const agisci = (fila, id) => fila.map(a => (a.id === id ? { ...a, fatti: a.fatti + 1 } : a))
+// ha giocato il suo turno: aspetterà ancora 100/velocità (`passo` volte: l'attacco forte di un mostro, 1,5, dati/mosse.js)
+export const agisci = (fila, id, passo = 1) => fila.map(a => (a.id === id ? { ...a, fatti: a.fatti + passo } : a))
 export const togli = (fila, id) => fila.filter(a => a.id !== id)
 
 // gli id dei prossimi `n` turni, in ordine, come andrebbero se nessuno cadesse o cambiasse velocità

@@ -96,7 +96,7 @@ export function decidiGatto(s, rnd = Math.random) {
 // ── quando ci premi (docs/fattoria3d/compagni.md): sequenze di passi, scelte pure ──
 // Un passo: { stato, dur, sub?, guarda?: 'eroe'|'altro'|'via', ev?: [[secondi, nome]] } oppure { va: { r: [min, max], corsa?, verso?: 'cane'|'lontano' } }.
 // I nomi degli eventi li esegue `Compagni._evento`: bau bau2 bauP cuori raffica hrr ciu zzz prrr miao mrr posa.
-export const SOGLIA_RICHIAMO = 4                 // celle: oltre, il contadino chiama Watson
+export const SOGLIA_RICHIAMO = 2.5                 // celle: oltre, il contadino chiama Watson
 export const INTERAZIONI_CANE = ['festa', 'zampa', 'rotola', 'salta', 'riporta', 'starnuta', 'gira', 'sbadiglia']
 export const CAREZZE_PER_SONNO = 6, FINESTRA_CAREZZE = 10
 
@@ -168,6 +168,12 @@ export function sequenzaGatto(risposta, variante, vicino, rnd = Math.random) {
   if (risposta === 'volta') return [{ stato: 'stiracchia', dur: 2.4, guarda: g, ev: [[1.0, 'mrr']] }, { stato: 'volta', dur: 1.6, guarda: 'via' }]
   return rnd() < 0.5 ? [{ stato: 'miao', dur: 2.2, guarda: g, ev: [[0.5, 'miao']] }] : [{ stato: 'rotola', dur: 2.6, guarda: g, ev: [[0.8, 'cuori']] }]
 }
+/** Il contadino chiama il gatto per nome? Solo se sta fermo e il gatto è oltre la soglia del richiamo (come per Watson); altrimenti il gatto risponde e basta. */
+export const chiamaIlGatto = (distanza, eroeFermo) => !!eroeFermo && distanza > SOGLIA_RICHIAMO
+/** Il gatto chiamato per nome: prima alza la testa e guarda il contadino (0,4–0,8 s, le orecchie verso di lui), poi risponde a modo suo con la
+    stessa `risposta` della sua indole. Non è un obbligo: Pepe può voltarsi e non venire. Chi si avvicina cammina, non corre. */
+export const sequenzaGattoChiamato = (risposta, variante, rnd = Math.random) =>
+  [{ stato: 'sta', dur: 0.4 + rnd() * 0.4, guarda: 'eroe' }, ...sequenzaGatto(risposta, variante, false, rnd)]
 /** Un gatto che dorme sul suo posto si sveglia stiracchiandosi e resta lì. */
 export const sequenzaGattoSopra = () => [{ stato: 'stiracchia', dur: 2.4, guarda: 'eroe', ev: [[1.0, 'mrr']] }, { stato: 'dorme', dur: 7 }]
 
