@@ -163,6 +163,7 @@ export const ASPETTO = {
   aglio:        { h: 0.4,  a: 0x7cc04a, b: 0x9ab04a, fc: 0xf0ead8, fs: 1, disp: 'file', n: 4, v: 0.6 },
   barbabietola: { h: 0.3,  a: 0x4f8a3a, b: 0x5a8a40, fc: 0x8a1f4a, fs: 1, disp: 'file', n: 3, v: 0.3 },
   riso:         { h: 0.55, a: 0x8ec060, b: 0xd8c870, fc: 0xe6c85a, fs: 0.8, disp: 'file', n: 5, v: 1 },
+  erba:         { h: 0.5,  a: 0x4faa4a, b: 0x3f9a5a, fc: 0x8a6ad0, fs: 0.8, disp: 'fitto', n: 5, nz: 4, v: 1.2 },      // l'erba medica: fitta e bassa, con la spiga viola (la ricetta è quella del grano)
 }
 
 // ── chi posa le parti: la pianta (P) e il pezzo attorno a lei ──

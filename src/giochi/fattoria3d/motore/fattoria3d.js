@@ -11,7 +11,8 @@ import { POSTI_MASSIMI, postiInForma, prezzoDelPosto } from '../dati/posti.js'
 import { livelloPer, livelloDelPezzo, livelloDellaColtura, livelloDellaRicetta } from '../dati/livelli.js'
 import { COSTI, PECORE, prezzoDelLotto } from '../dati/regole.js'
 import { generaLotto } from '../dati/lotti.js'
-import { biomaDi, acquaDelLotto } from '../dati/biomi.js'
+import { biomaDi, biomaVecchio, acquaDelLotto, tipoAcqua } from '../dati/biomi.js'
+import { provaPesca, lanciaLenza, ritiraPesca, bancoDi, lenzeInAcqua, ripulisciPesca, riesaminaPesca, postiDiPesca } from './pesca.js'
 import { ANIMALI, CORTILE, LANA, prezzoDellaBestia } from '../dati/animali.js'
 import { normalizza, nuoveTessere } from './stato.js'
 import { percorso } from './percorso.js'
@@ -50,6 +51,7 @@ export class Fattoria3d {
     this.alberiPerId = new Map(); this.ostacoliPerId = new Map(); this.ostacoloPerCella = new Map()
     this.lottiAperti = new Map()                   // chiave del lotto → { l, dati }
     this._acquaCache = new Map()
+    this.vecchi = new Set(this.s.vecchi)           // i lotti comprati prima della geografia grande dove ora c'è il mare o un lago: si generano alla vecchia
     for (const k of this.propri) this._apriAnello(lottoDaChiave(k))
     this.tick()
   }
@@ -93,7 +95,8 @@ export class Fattoria3d {
     for (const k of this.propri) { const l = lottoDaChiave(k); for (const [a, b] of VICINI_4) { const v = vicinoDi(l, a, b); if (!this.propri.has(v.k)) out.set(v.k, v) } }
     return (this._comprabili = [...out.values()])
   }
-  biomaDi(l) { return biomaDi(l.a, l.b) }
+  /** Il bioma di un lotto, come lo vede il motore (un lotto di un salvataggio di prima resta quello di prima). */
+  biomaDi(l) { return this.vecchi.has(l.id) ? biomaVecchio(l.a, l.b) : biomaDi(l.a, l.b) }
   /** Apre (genera) i lotti entro due lotti da `l`: alberi, sassi, acqua. Vale per i lotti tuoi e per l'anello che si vede davanti. */
   _apriAnello(l) {
     for (let db = -2; db <= 2; db++) for (let da = -2; da <= 2; da++) {
@@ -102,7 +105,7 @@ export class Fattoria3d {
     }
   }
   _apri(l) {
-    const dati = generaLotto(l.a, l.b)
+    const dati = generaLotto(l.a, l.b, { vecchio: this.vecchi.has(l.id) })
     this.lottiAperti.set(l.k, { l, dati })
     for (const a of dati.alberi) {
       if (this.tagliati.has(a.n)) a.tagliato = true
@@ -138,7 +141,7 @@ export class Fattoria3d {
   _acquaDi(l) {
     let a = this._acquaCache.get(l.k)
     if (a === undefined) {
-      const celle = biomaDi(l.a, l.b) === 'laghetto' ? acquaDelLotto(l) : []
+      const celle = acquaDelLotto(l, this.vecchi.has(l.id))
       a = celle.length ? new Set(celle.map(([i, j]) => chiave(i, j))) : null
       this._acquaCache.set(l.k, a)
     }
@@ -221,6 +224,7 @@ export class Fattoria3d {
   compraPezzo(tipo) {
     if (!PEZZI[tipo] && !EDIFICI[tipo]) return { ok: false, motivo: 'sconosciuto' }
     if (EDIFICI[tipo] && (this.s.posseduti[tipo] || this.nelMagazzino(tipo) > 0)) return { ok: false, motivo: 'gia-tuo' }       // uno per tipo
+    if (PEZZI[tipo] && PEZZI[tipo].unico && (this.nelMagazzino(tipo) > 0 || this.s.cose.some(c => c.tipo === tipo))) return { ok: false, motivo: 'gia-tuo' }       // il porticciolo è uno solo
     const chiuso = this._chiusa(livelloDelPezzo(tipo))
     if (chiuso) return chiuso
     const costo = this.prezzoPezzo(tipo)
@@ -240,10 +244,20 @@ export class Fattoria3d {
     }
     if (acqua && !d.suAcqua) return { ok: false, motivo: 'acqua' }
     if (acqua && !terra && !this._appoggioPerPonte(d, i, j)) return { ok: false, motivo: 'acqua' }
+    if (d.riva && !this._toccaAcqua(d, i, j)) return { ok: false, motivo: 'serve-riva' }
+    if (d.unico && !ignora && this.s.cose.some(c => c.tipo === tipo)) return { ok: false, motivo: 'gia-tuo' }
     for (let a = 0; a < d.w; a++) for (let b = 0; b < d.d; b++) {
       if (this._bloccaSenzaAcqua(i + a, j + b, ignora) || (d.acqua && this.strada.get(chiave(i + a, j + b)) === 2)) return { ok: false, motivo: 'occupato' }
     }
     return { ok: true }
+  }
+  /** L'impronta ha una cella d'acqua, o ne tocca una di lato: il porticciolo si mette sulla riva. */
+  _toccaAcqua(d, i, j) {
+    for (let a = -1; a <= d.w; a++) for (let b = -1; b <= d.d; b++) {
+      if ((a < 0 || a >= d.w) && (b < 0 || b >= d.d)) continue          // gli angoli non toccano di lato
+      if (this.acqua(i + a, j + b)) return true
+    }
+    return false
   }
   /** Un ponte tutto sull'acqua regge solo se tocca un altro ponte (una cella calpestabile accanto al suo ingombro). */
   _appoggioPerPonte(d, i, j) {
@@ -305,6 +319,7 @@ export class Fattoria3d {
     const costo = gratis || c.prova ? 0 : COSTI.spostare
     if (!this._paga(costo)) return { ok: false, motivo: 'poche-monete', costo }
     this._libera(c); c.i = i; c.j = j; this._occupa(c, c.id)
+    riesaminaPesca(this)
     return { ok: true, costo }
   }
   _libera(c) {
@@ -328,6 +343,7 @@ export class Fattoria3d {
     this.s.cose = this.s.cose.filter(x => x.id !== id)
     this.prove = this.prove.filter(x => x.id !== id)
     this.s.magazzino[c.tipo] = this.nelMagazzino(c.tipo) + 1
+    riesaminaPesca(this)
     return { ok: true, costo }
   }
   /** Il rimborso di un'azione annullata (la monetina dello spostamento). */
@@ -360,14 +376,17 @@ export class Fattoria3d {
     return this.compraEMetti(tipo, i, j)
   }
 
-  // ── i raccolti e le scorte ──
-  totScorte() { return Object.values(this.s.merci).reduce((a, n) => a + n, 0) }
-  /** Toglie n raccolti qualsiasi, dalla scorta più grande: per tutto ciò che «mangia» un raccolto. */
-  consuma(n) {
-    if (this.totScorte() < n) return false
-    for (let k = 0; k < n; k++) { const [c] = Object.entries(this.s.merci).sort((a, b) => b[1] - a[1])[0]; this.s.merci[c]-- }
+  // ── il mangime: le bestie non mangiano raccolti ma il mangime della 2D (becchime, foraggio: li fa il fienile, dati/mangime.js) ──
+  /** Quanto mangime c'è per chi mangia `chiavi`: i pezzi in dispensa, sommati. */
+  scortaMangime(chiavi) { return chiavi.reduce((n, k) => n + this.scortaDi(k), 0) }
+  /** Toglie n pezzi di mangime fra `chiavi`, dalla scorta più grande; se non bastano torna false e non toglie niente. */
+  _consumaTra(chiavi, n) {
+    if (this.scortaMangime(chiavi) < n) return false
+    for (let k = 0; k < n; k++) { const c = chiavi.slice().sort((a, b) => this.scortaDi(b) - this.scortaDi(a))[0]; this._togli(c, 1) }
     return true
   }
+  /** Il rifiuto di chi non ha da dare da mangiare: dice quanti pezzi e di quale mangime (`dettoDi` aggiunge dove si fa). */
+  _senzaMangime(chiavi, servono) { return { motivo: 'manca-mangime', servono, mangia: chiavi.slice() } }
 
   // ── i campi ──
   msDi(c) { return COLTURE[c.coltura || 'grano'].ms }
@@ -462,10 +481,10 @@ export class Fattoria3d {
     if (this.lanaPronta(c).length) return { azione: 'tosa' }
     const fame = this.pecoreAffamate(c).length
     if (fame) {
-      const quante = Math.min(fame, Math.floor(this.totScorte() / PECORE.pastiPerLana))
-      return quante ? { azione: 'nutri', n: quante } : { azione: null, motivo: 'manca-raccolto' }
+      const quante = Math.min(fame, Math.floor(this.scortaMangime(PECORE.mangia) / PECORE.pastiPerLana))
+      return quante ? { azione: 'nutri', n: quante } : { azione: null, ...this._senzaMangime(PECORE.mangia, PECORE.pastiPerLana) }
     }
-    if (this._pastoAlRecinto(c)) return this.totScorte() >= 1 ? { azione: 'nutri' } : { azione: null, motivo: 'manca-raccolto' }
+    if (this._pastoAlRecinto(c)) return this.scortaMangime(PECORE.mangia) >= 1 ? { azione: 'nutri' } : { azione: null, ...this._senzaMangime(PECORE.mangia, 1) }
     const t = this.ora(), resti = c.pecore.filter(p => p.eta === 'adulta' && p.t0 != null).map(p => PECORE.laneMs - (t - p.t0))
     return resti.length ? { azione: null, motivo: 'lana-ricresce', secondi: Math.ceil(Math.max(0, Math.min(...resti)) / 1000) } : { azione: null, motivo: 'sazie' }
   }
@@ -482,16 +501,16 @@ export class Fattoria3d {
   nutri(id) {
     const c = this.cosa(id)
     const p = this.provaCura(id)
-    if (!c || p.azione !== 'nutri') return { ok: false, motivo: p.motivo || 'niente-da-fare' }
+    if (!c || p.azione !== 'nutri') return { ok: false, motivo: p.motivo || 'niente-da-fare', ...(p.servono ? { servono: p.servono, mangia: p.mangia } : {}) }
     if (this.pecoreAffamate(c).length) {
       let n = 0
       for (const x of this.pecoreAffamate(c)) {
-        if (!this.consuma(PECORE.pastiPerLana)) break
+        if (!this._consumaTra(PECORE.mangia, PECORE.pastiPerLana)) break
         x.t0 = this.ora(); n++
       }
-      return n ? { ok: true, evento: 'lana', n } : { ok: false, motivo: 'manca-raccolto' }
+      return n ? { ok: true, evento: 'lana', n } : { ok: false, ...this._senzaMangime(PECORE.mangia, PECORE.pastiPerLana) }
     }
-    if (!this.consuma(1)) return { ok: false, motivo: 'manca-raccolto' }
+    if (!this._consumaTra(PECORE.mangia, 1)) return { ok: false, ...this._senzaMangime(PECORE.mangia, 1) }
     const agnello = c.pecore.find(x => x.eta === 'agnello')
     if (agnello) {
       agnello.cibo = (agnello.cibo || 0) + 1
@@ -509,14 +528,8 @@ export class Fattoria3d {
   statoBestia(b) { return b.fine === null ? 'fame' : b.fine <= this.ora() ? 'pronta' : 'lavora' }
   bestiePronte(c) { return c.bestie.filter(b => this.statoBestia(b) === 'pronta') }
   bestieAffamate(c) { return c.bestie.filter(b => b.fine === null) }
-  /** Cosa c'è da mangiare per questa bestia: i raccolti che mangia, sommati. */
-  scortaDaMangiare(tipo) { return ANIMALI[tipo].mangia.reduce((n, k) => n + this.s.merci[k], 0) }
-  /** Toglie n raccolti fra quelli che mangia la bestia, dalla scorta più grande. */
-  _consumaTra(chiavi, n) {
-    if (chiavi.reduce((a, k) => a + this.s.merci[k], 0) < n) return false
-    for (let k = 0; k < n; k++) { const c = chiavi.slice().sort((a, b) => this.s.merci[b] - this.s.merci[a])[0]; this.s.merci[c]-- }
-    return true
-  }
+  /** Cosa c'è da mangiare per questa bestia: il mangime che mangia, sommato. */
+  scortaDaMangiare(tipo) { return this.scortaMangime(ANIMALI[tipo].mangia) }
   /** Cosa si farebbe toccando il pollaio o la stalla: prima si raccoglie, poi si nutre. Niente cambia. */
   provaCuraBestie(id) {
     const c = this.cosa(id)
@@ -526,7 +539,7 @@ export class Fattoria3d {
     const fame = this.bestieAffamate(c).length
     if (fame) {
       const quante = Math.min(fame, Math.floor(this.scortaDaMangiare(c.tipo) / A.pasti))
-      return quante ? { azione: 'nutri', n: quante } : { azione: null, motivo: 'manca-raccolto', servono: A.pasti, mangia: A.mangia.slice() }
+      return quante ? { azione: 'nutri', n: quante } : { azione: null, ...this._senzaMangime(A.mangia, A.pasti) }
     }
     const t = this.ora(), resto = Math.min(...c.bestie.map(b => b.fine - t))
     return { azione: null, motivo: 'lavora', secondi: Math.ceil(Math.max(0, resto) / 1000) }
@@ -740,18 +753,36 @@ export class Fattoria3d {
   }
   cambia(idx) { return this.rifiuta(idx) }
 
+  // ── la pesca: molo e porticciolo, un banco per lotto d'acqua tuo (motore/pesca.js, docs/fattoria3d/geografia-e-pesca.md) ──
+  /** Cosa si farebbe toccando la cella d'acqua (i, j): { ok, azione: 'lancia' | 'ritira' | 'aspetta' | 'riposo', sta, … } o un rifiuto. Niente cambia. */
+  provaPesca(i, j) { return provaPesca(this, i, j) }
+  /** Lancia la lenza in (i, j). */
+  lanciaLenza(i, j) { return lanciaLenza(this, i, j) }
+  /** Ritira il pesce del banco (id del lotto d'acqua) se abbocca. */
+  ritiraPesca(lotto) { return ritiraPesca(this, lotto) }
+  /** Il banco di un lotto: { stato: 'calmo' | 'attesa' | 'abbocca' | 'riposo', restoMs }. */
+  bancoDi(lotto) { return bancoDi(this, lotto) }
+  /** Le lenze in acqua o col pesce all'amo: [{ lotto, i, j, stato, restoMs }]. */
+  lenze() { return lenzeInAcqua(this) }
+  /** I posti da cui si lancia (i moli e il porticciolo). */
+  postiDiPesca() { return postiDiPesca(this) }
+  /** Di che acqua è la cella: 'mare' o 'dolce'. */
+  tipoAcqua(i, j) { return tipoAcqua(i, j) }
+
   // ── il tempo: la cottura che avanza e la mongolfiera che torna (si può chiamare quando si vuole) ──
   tick() {
     const t = this.ora(); let cambiato = false
     for (const tipo of TIPI_DI_MACCHINA) {
       const Q = this.s.macchine[tipo]
       while (Q.coda.length && Q.coda[0].fine && Q.coda[0].fine <= t) {
-        const r = Q.coda.shift(); Q.pronti[r.ric] = (Q.pronti[r.ric] || 0) + 1; cambiato = true
+        const r = Q.coda.shift(), prodotto = RICETTE[r.ric].da || r.ric         // `da`: due strade per lo stesso prodotto (foraggio di carote e d'erba medica)
+        Q.pronti[prodotto] = (Q.pronti[prodotto] || 0) + 1; cambiato = true
         if (Q.coda[0]) Q.coda[0].fine = r.fine + RICETTE[Q.coda[0].ric].ms     // il successivo parte quando finisce il precedente
       }
       if (Q.coda[0] && !Q.coda[0].fine) Q.coda[0].fine = t + RICETTE[Q.coda[0].ric].ms
     }
     if (aggiornaMongolfiera(this)) cambiato = true
+    ripulisciPesca(this)
     if (this._riempiOrdini()) cambiato = true
     return cambiato
   }

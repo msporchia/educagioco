@@ -5,7 +5,9 @@
 import { PEZZI, EDIFICI } from './catalogo.js'
 import { COLTURE } from './colture.js'
 import { RICETTE } from './ricette.js'
-import { PRODOTTI_ANIMALI, LANA } from './animali.js'
+import { PRODOTTI_ANIMALI, LANA, ANIMALI } from './animali.js'
+import { PECORE } from './regole.js'
+import { ricetteDelMangime } from './mangime.js'
 import { compagniAl } from './compagni.js'
 import { abitiAl } from './abiti.js'
 
@@ -28,6 +30,9 @@ export function livelloDellaRicetta(id, giri = 4) {
   const ing = Object.keys(r.ing).map(k => COLTURE[k] ? livelloDellaColtura(k) : PRODOTTI_ANIMALI[k] ? livelloDelPezzo(PRODOTTI_ANIMALI[k].dove) : LANA[k] ? livelloDelPezzo(LANA[k].dove) : livelloDellaRicetta(k, giri - 1))
   return Math.max(r.liv || 1, livelloDelPezzo(r.dove), ...ing)
 }
+
+/** Da che livello c'è un mangime (becchime, foraggio): la sua ricetta più precoce, cioè la strada che si apre per prima. */
+export const livelloDelMangime = k => Math.min(...ricetteDelMangime(k).map(([id]) => livelloDellaRicetta(id)))
 
 // Quanto costa comprare una volta ciò che il livello apre di produttivo; le decorazioni non contano.
 export const costoDelLivello = livello =>
@@ -87,7 +92,9 @@ export const vuoto = r => !r.pezzi.length && !r.edifici.length && !r.colture.len
 // precedenza quando due cose arrivano insieme.
 export const NOMI = {
   campo: 'Il primo campo',
+  fienile: 'Il fienile',
   mais: 'Il mais',
+  erba: 'L\'erba medica',
   mulino: 'Il mulino',
   recinto: 'Le pecore',
   pomodoro: 'I pomodori',
@@ -109,6 +116,8 @@ export const NOMI = {
   sartoria: 'La sartoria',
   lavanda: 'La lavanda',
   tintoria: 'La tintoria',
+  friggitoria: 'La friggitoria',
+  sushi_bar: 'Il sushi bar',
 }
 
 export function nomeDi(livello) {
@@ -160,6 +169,11 @@ export function guastiDeiLivelli() {
   // gli id non si confondono fra gli elenchi
   const tutti = [...Object.keys(PEZZI), ...Object.keys(EDIFICI), ...Object.keys(COLTURE), ...Object.keys(RICETTE), ...Object.keys(PRODOTTI_ANIMALI), ...Object.keys(LANA)]
   if (new Set(tutti).size !== tutti.length) g.push('un id compare in due elenchi (pezzi, edifici, colture, ricette, prodotti delle bestie)')
+  // il mangime c'è prima del recinto che lo chiede, o insieme (docs/fattoria3d/mangime-e-catena.md)
+  const mangia = { recinto: PECORE.mangia, ...Object.fromEntries(Object.entries(ANIMALI).map(([t, a]) => [t, a.mangia])) }
+  for (const [tipo, cibi] of Object.entries(mangia)) for (const k of cibi) {
+    if (!(livelloDelMangime(k) <= livelloDelPezzo(tipo))) g.push(`${tipo}: si compra al ${livelloDelPezzo(tipo)} e il suo ${k} arriva al ${livelloDelMangime(k)}`)
+  }
   // una ricetta dichiara il livello vero: né prima della macchina, né prima dei suoi ingredienti
   for (const [id, r] of Object.entries(RICETTE)) {
     const vero = livelloDellaRicetta(id)

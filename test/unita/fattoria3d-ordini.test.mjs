@@ -36,7 +36,8 @@ controlla('i posti non scendono mai e il massimo è quello della tabella', Array
 controlla('i biglietti hanno tre colori: rosa coi prodotti, giallo una cosa sola, verde più raccolti', tipoDelOrdine({ pane: 1 }) === 'rosa' && tipoDelOrdine({ grano: 1, pane: 1 }) === 'rosa'
   && tipoDelOrdine({ grano: 2 }) === 'giallo' && tipoDelOrdine({ grano: 2, mais: 1 }) === 'verde')
 controlla('al livello del banco si chiedono solo raccolti', chiedibili(LIVELLO_BANCO).prodotti.length === 0 && chiedibili(LIVELLO_BANCO).raccolti.length >= 2)
-controlla('i prodotti arrivano con le macchine', chiedibili(ULTIMO).prodotti.length === Object.keys(RICETTE).length && chiedibili(5).prodotti.length > 0)
+controlla('i prodotti arrivano con le macchine', chiedibili(ULTIMO).prodotti.length === Object.values(RICETTE).filter(r => !r.mangime).length && chiedibili(5).prodotti.length > 0)
+controlla('il mangime (erba medica, becchime, foraggio) non si chiede mai', ['erba', 'becchime', 'foraggio', 'foraggio_carote'].every(k => !chiedibili(ULTIMO).raccolti.includes(k) && !chiedibili(ULTIMO).prodotti.includes(k)))
 
 /* ══════════ 2. ordini mai impossibili, premio dentro il tetto ══════════ */
 {
@@ -60,8 +61,10 @@ controlla('i prodotti arrivano con le macchine', chiedibili(ULTIMO).prodotti.len
   }
   controlla('nessun ordine impossibile al suo livello', male.length === 0, male.slice(0, 5).join(' · '))
   controlla('il premio non supera mai 🪙6 al minuto', tetto.length === 0, tetto.slice(0, 3).join(' · '))
-  controlla('in tutto il gioco si chiede ogni raccolto e ogni prodotto', [...Object.keys(COLTURE), ...Object.keys(RICETTE)].every(k => visti.has(k)),
-    [...Object.keys(COLTURE), ...Object.keys(RICETTE)].filter(k => !visti.has(k)).join(','))
+  const chiedibile = k => !(COLTURE[k] || RICETTE[k]).mangime            // il mangime lo mangiano le bestie: non lo chiede nessuno
+  controlla('in tutto il gioco si chiede ogni raccolto e ogni prodotto', [...Object.keys(COLTURE), ...Object.keys(RICETTE)].filter(chiedibile).every(k => visti.has(k)),
+    [...Object.keys(COLTURE), ...Object.keys(RICETTE)].filter(chiedibile).filter(k => !visti.has(k)).join(','))
+  controlla('e il mangime non compare mai in un ordine', ['erba', 'becchime', 'foraggio', 'foraggio_carote'].every(k => !visti.has(k)))
   controlla('i prodotti si chiedono davvero', conProdotti > 100)
   controlla('un prodotto vale più dei suoi ingredienti crudi (la catena si paga)', premioDi({ panIntegrale: 1 }) > premioDi({ farina: 2 }) * 0 && premioDi({ pane: 1 }) >= premioDi({ grano: 2 }))
 }

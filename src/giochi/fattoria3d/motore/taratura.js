@@ -8,10 +8,11 @@ import { ANIMALI, PRODOTTI_ANIMALI, LANA } from '../dati/animali.js'
 import { ULTIMO, sogliaDi, roba } from '../dati/livelli.js'
 import { COSTI, prezzoDelLotto } from '../dati/regole.js'
 import { MONETE_AL_MINUTO, premioDi, tettoDi } from '../dati/ordini.js'
+import { attesaDelMangime } from '../dati/mangime.js'
 
 // Le promesse di scala (minuti di esercizio, ms di attesa)
 export const TETTO_LIVELLO_2_MIN = 10
-export const TETTO_ULTIMO_MIN = 420          // 7 ore (erano 5 e mezza fino ai quindici livelli: telaio, zuccherificio, sartoria e tintoria ne hanno aggiunto un sedicesimo)
+export const TETTO_ULTIMO_MIN = 510          // 8 ore e mezza (erano 5 e mezza fino ai quindici livelli, 7 coi sedici: la friggitoria e il sushi bar ne hanno aggiunto un diciassettesimo e un diciottesimo, ~45 minuti ciascuno)
 export const TETTO_ATTESA_MS = 120_000       // per cosa chiesta, in catena
 export const TETTO_PREZZO_SUL_SALTO = 0.65   // un pezzo produttivo non costa più dei due terzi del salto del suo livello
 
@@ -31,7 +32,8 @@ export function catenaMs(k, giri = 6) {
   if (COLTURE[k]) return COLTURE[k].ms
   if (LANA[k]) return LANA[k].ms
   const p = PRODOTTI_ANIMALI[k]
-  if (p) { const a = ANIMALI[p.dove]; return a.ms + COLTURE[a.mangia[0]].ms }
+  if (p && p.ms) return p.ms                                                    // il pesce: una lenza (dati/pesca.js)
+  if (p) { const a = ANIMALI[p.dove]; return a.ms + attesaDelMangime(a.mangia[0], a.pasti) }      // il suo tempo più il mangime che mangia (raccolti insieme, poi tante cotture quante i pasti)
   const r = RICETTE[k]
   if (!r) return Infinity
   const pronti = Math.max(...Object.entries(r.ing).map(([i, n]) => catenaMs(i, giri - 1) + (RICETTE[i] ? (n - 1) * RICETTE[i].ms : 0)))
@@ -73,7 +75,7 @@ export function guastiDellaScala() {
   if (COSTI.lottoEsperienzaMax > sogliaDi(ULTIMO) * TETTO_ESPERIENZA_LOTTO) g.push(`un lotto dà ${COSTI.lottoEsperienzaMax} di esperienza, più di un terzo della scala (${sogliaDi(ULTIMO)})`)
   for (const k of Object.keys(RICETTE)) if (premioDi({ [k]: 1 }) > tettoDi({ [k]: 1 }) + 1e-9) g.push(`${k}: il premio supera il tetto`)
   // le colture non si accorciano salendo di livello, e le ultime si contano in minuti più che in secondi
-  const cs = Object.values(COLTURE).sort((a, b) => a.liv - b.liv)
+  const cs = Object.values(COLTURE).filter(c => !c.mangime).sort((a, b) => a.liv - b.liv)      // l'erba medica è la strada svelta del foraggio: fuori dalla regola
   for (let i = 1; i < cs.length; i++) if (cs[i].liv > cs[i - 1].liv && cs[i].ms < cs[i - 1].ms) g.push(`${cs[i].nome} matura prima di ${cs[i - 1].nome}, che arriva prima`)
   return g
 }

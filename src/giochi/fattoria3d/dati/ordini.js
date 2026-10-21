@@ -68,7 +68,8 @@ export const livelloDelOrdine = chiede => Math.max(LIVELLO_BANCO, ...Object.keys
 /** Cosa si può chiedere a questo livello: { raccolti: [chiavi], prodotti: [chiavi] } (solo ciò che si fa davvero). */
 export function chiedibili(livello) {
   const ok = k => Number.isFinite(livelloDi(k)) && livelloDi(k) <= livello
-  return { raccolti: Object.keys(COLTURE).filter(ok), prodotti: Object.keys(RICETTE).filter(ok) }
+  /* il mangime (erba medica, becchime, foraggio: `mangime: true`) lo mangiano le bestie e non lo chiede nessuno: né il banco né la mongolfiera */
+  return { raccolti: Object.keys(COLTURE).filter(k => ok(k) && !COLTURE[k].mangime), prodotti: Object.keys(RICETTE).filter(k => ok(k) && !RICETTE[k].mangime) }
 }
 
 export function guastiDegliOrdini() {

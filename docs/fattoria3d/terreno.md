@@ -18,8 +18,9 @@ d'un pezzo. Il prezzo sale a ogni lotto e si auto-limita (`prezzoLotto`, `prezzo
   lotto non confina dice «Compra prima un terreno che confina con questo». Un tocco più in là dell'anello di due lotti
   attorno ai tuoi non apre niente.
 - Il cartello `🪙 40` compare solo sui lotti acquistabili vicini al contadino (o tutti quelli della finestra, in costruzione); un
-  laghetto lo dice: «🪙 N · 🏞️ laghetto».
-- **I biomi**: prato (~69%), bosco (~15%, alberi più fitti), laghetto (~15%); i 42 lotti storici sono sempre prato.
+  laghetto, un lago, il mare o la spiaggia lo dice: «🪙 N · 🏞️ laghetto», «🏞️ lago», «🌊 mare», «🏖️ spiaggia».
+- **I biomi**: prato (~69%), bosco (~15%, alberi più fitti), laghetto (~15%) nella fascia di mezzo (a da 0 a 7); i 42 lotti storici sono sempre prato. **A ovest (a ≤ −2) c'è il mare**, con la
+  costa e la spiaggia al lotto a = −1, **a est (a ≥ 8) i laghi grandi**: fatti di celle e non di lotti, e si pescano ([geografia-e-pesca.md](geografia-e-pesca.md)).
 
 ## Il recinto basso
 

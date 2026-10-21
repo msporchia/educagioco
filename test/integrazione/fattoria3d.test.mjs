@@ -792,16 +792,16 @@ const AN = ANIMALI.pollaio, ST = ANIMALI.stalla
 const idP = await mettiCortile('pollaio')
 controlla('il pollaio si mette sul prato', !!idP)
 const bestieDi = id => m3(`window.__fattoria3d.motore.cose.find(c => c.id === ${JSON.stringify(id)}).bestie.map(b => b.fine)`)
-const unaTessera = () => m3(() => ({ ...window.__fattoria3d.motore.s.merci }))
-// senza raccolti da dare: dice cosa serve, la bestia ha ancora fame
-await m3(() => { const m = window.__fattoria3d.motore; for (const k of Object.keys(m.s.merci)) m.s.merci[k] = 0 })
+const unaTessera = () => m3(() => ({ ...window.__fattoria3d.motore.s.prodotti }))      // il mangime sta in dispensa, non fra i raccolti (docs/fattoria3d/mangime-e-catena.md)
+// senza mangime da dare: dice cosa serve, la bestia ha ancora fame (anche con i raccolti che prima si mangiavano)
+await m3(() => { const m = window.__fattoria3d.motore; for (const k of Object.keys(m.s.merci)) m.s.merci[k] = 5; delete m.s.prodotti.becchime; delete m.s.prodotti.foraggio })
 await tocca3d(idP)
-controlla('senza raccolti la gallina resta affamata', (await bestieDi(idP))[0] === null)
-// nutrire: scala i raccolti e la bestia comincia a lavorare
-await m3(`window.__fattoria3d.motore.s.merci['${AN.mangia[0]}'] = ${AN.pasti * 5}`)
+controlla('senza becchime la gallina resta affamata, anche coi raccolti', (await bestieDi(idP))[0] === null)
+// nutrire: scala il mangime e la bestia comincia a lavorare
+await m3(`window.__fattoria3d.motore.s.prodotti['${AN.mangia[0]}'] = ${AN.pasti * 5}`)
 await tocca3d(idP)
 controlla('toccare il pollaio nutre la gallina', (await bestieDi(idP))[0] !== null)
-uguale('e il pasto scala dai raccolti', (await unaTessera())[AN.mangia[0]], AN.pasti * 4)
+uguale('e il pasto scala dal mangime', (await unaTessera())[AN.mangia[0]], AN.pasti * 4)
 // lavora: toccarlo dice quanto manca e basta; le bestie in più si comprano dal cartello sopra il pollaio (niente dialogo, niente conferma)
 await tocca3d(idP)
 controlla('toccare il pollaio che lavora non apre dialoghi', await page.locator('[data-f3="dialogo"]').count() === 0)
@@ -838,7 +838,7 @@ uguale('il contatore delle uova avanza', ((await leggiProfilo(page)).totals || {
 // la stalla: il latte
 const idS = await mettiCortile('stalla')
 controlla('la stalla si mette sul prato', !!idS)
-await m3(`window.__fattoria3d.motore.s.merci['${ST.mangia[0]}'] = ${ST.pasti * 3}`)
+await m3(`window.__fattoria3d.motore.s.prodotti['${ST.mangia[0]}'] = ${ST.pasti * 3}`)
 await tocca3d(idS)
 controlla('toccare la stalla nutre la mucca', (await bestieDi(idS))[0] !== null)
 await passa(ST.ms + 1000)
@@ -931,6 +931,62 @@ controlla('il pollaio con le bestie non si mette via', via.ok === false && via.m
     controlla('…e fa festa (una sequenza in corso)', await page.evaluate(() => !!window.__fattoria3d.mondo.compagni.lista.find(c => c.tipo === 'cane').seq))
     await attendi(page, 5000)
     await fermo()
+  }
+}
+
+/* ── la pesca: il molo sul lago, un tocco sull'acqua, il galleggiante, il pesce (docs/fattoria3d/geografia-e-pesca.md) ──
+   Scritto senza poterlo eseguire (la build era vietata): i controlli sul motore e sulla scena sono quelli provati nel dev server. */
+{
+  await fermo()
+  const pronto = await page.evaluate(() => {
+    const { motore, mondo } = window.__fattoria3d
+    motore.s.esperienza = Math.max(motore.s.esperienza, 5000); motore.borsa.paga(-3000)                      // il livello e le monete ci sono: la prova è sul gesto, non sul prezzo
+    for (const id of ['5_3', '6_3', '7_3', '8_3', '9_3']) motore.compraLotto(id)
+    for (const o of motore.ostacoli) if (!o.tolto) motore._togliSenzaPagare(o)
+    for (const a of motore.alberi) if (!a.tagliato) { a.tagliato = true; motore.tagliati.add(a.n); motore.s.tagliati.push(a.n) }
+    mondo.terreno.ridisegnaTutto()
+    let posto = null
+    for (let j = 0; j < 4 && !posto; j++) for (let i = 17; i < 30 && !posto; i++) if (!motore.acqua(i, j) && motore.acqua(i + 1, j) && motore.acqua(i + 2, j) && motore.puoMettere('molo', i, j).ok) posto = [i, j]
+    if (!posto) return null
+    const m = motore.compraEMetti('molo', posto[0], posto[1]); mondo.cambiato()
+    mondo.eroe.x = posto[0] - 1.5; mondo.eroe.z = posto[1] + 0.5; mondo.eroe.percorso = []; mondo.camera.segui()
+    return { posto, ok: m.ok }
+  })
+  controlla('un lago a est e un posto dove il molo parte dalla riva', !!pronto && pronto.ok, JSON.stringify(pronto))
+  if (pronto && pronto.ok) {
+    await attendi(page, 1500)
+    const [mi, mj] = pronto.posto
+    controlla('il molo è una cosa in scena, calpestabile', await page.evaluate(([i, j]) => { const { motore, mondo } = window.__fattoria3d, c = motore.cosaDi('molo'); return !!c && !!mondo.pezzi.voce(c.id) && motore.libera(i + 1, j) && motore.quotaPasso(i + 1.5, j + 0.5) > 0 }, [mi, mj]))
+    const [px, py] = await schermoDi(mi + 3.5, mj + 0.5)
+    await page.evaluate(([x, y]) => { const r = window.__fattoria3d.mondo.canvas.getBoundingClientRect(); window.__fattoria3d.mondo.tocca(x, y) }, [px, py])      // l'acqua accanto al molo: va in punta e lancia
+    await page.waitForFunction(() => window.__fattoria3d.motore.lenze().length === 1, null, { timeout: 9000 }).catch(() => {})
+    uguale('toccando l\'acqua parte la lenza (una sola)', await page.evaluate(() => window.__fattoria3d.motore.lenze().length), 1)
+    controlla('il galleggiante è in scena e il contadino ha la canna alzata', await page.evaluate(() => { const { mondo } = window.__fattoria3d; return mondo.pesca3d.oggetti.size >= 0 && !!mondo.eroe.pescando }))
+    await scatto(page, 'fattoria3d-pesca')
+    // il tempo passa (anche a pagina chiusa: l'ora è assoluta): il pesce abbocca e il contadino, ancora lì, lo ritira da sé
+    await page.evaluate(() => { const m = window.__fattoria3d.motore, o = m.ora; window.__oraPrimaPesca = o; m.ora = () => o() + 30000 })         // si somma all'orologio di adesso: più avanti di prima, mai indietro
+    await page.waitForFunction(() => (window.__fattoria3d.motore.s.prodotti.pesce || 0) >= 1, null, { timeout: 40000 }).catch(() => {})
+    await fermo()                                                    // lo strappo e l'esultanza finiscono
+    const diag = () => page.evaluate(() => { const { motore, mondo } = window.__fattoria3d; return JSON.stringify({ pesca: motore.s.pesca, pesce: motore.s.prodotti.pesce, pescando: !!mondo.eroe.pescando, az: mondo.eroe.az && mondo.eroe.az.tipo, og: [...mondo.pesca3d.oggetti.values()].map(o => o.stato) }) })
+    controlla('il pesce è nell\'inventario', await page.evaluate(() => (window.__fattoria3d.motore.s.prodotti.pesce || 0) >= 1), await diag())
+    uguale('il banco si ripopola (riposo)', await page.evaluate(() => window.__fattoria3d.motore.bancoDi(Object.keys(window.__fattoria3d.motore.s.pesca)[0]).stato), 'riposo')
+    await attendi(page, 1500)                                        // il profilo si salva dopo un attimo
+    controlla('il contatore dei pesci avanza', ((await leggiProfilo(page)).totals || {}).fattoria3dPesci >= 1)
+    await page.evaluate(() => { window.__fattoria3d.motore.ora = window.__oraPrimaPesca })
+    // il mare: senza porticciolo non si pesca, col porticciolo sì (resa 3)
+    const mare = await page.evaluate(() => {
+      const { motore, mondo } = window.__fattoria3d
+      for (const id of ['4_3', '1_3', '0_3', '-1_3', '-2_3']) motore.compraLotto(id)
+      for (const o of motore.ostacoli) if (!o.tolto) motore._togliSenzaPagare(o)
+      mondo.terreno.ridisegnaTutto()
+      const senza = motore.provaPesca(-19, 0).motivo
+      const molo = motore.compraEMetti('molo', -17, 0), port = motore.compraEMetti('porticciolo', -17, 1); mondo.cambiato()
+      const con = motore.provaPesca(-19, 0)
+      return { senza, molo: molo.ok, port: port.ok, con: con.ok && con.mare && con.resa === 3 && con.azione === 'lancia' }
+    })
+    uguale('il mare senza porticciolo: serve il porticciolo', mare.senza, 'serve-porticciolo')
+    controlla('col porticciolo il mare si pesca (resa 3)', mare.molo && mare.port && mare.con, JSON.stringify(mare))
+    controlla('i pesciolini sono in scena (una InstancedMesh sola)', await page.evaluate(() => window.__fattoria3d.mondo.terreno.pesci.mesh.isInstancedMesh))
   }
 }
 

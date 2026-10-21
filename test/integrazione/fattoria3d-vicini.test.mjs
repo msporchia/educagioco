@@ -15,6 +15,9 @@ import { apriBrowser, apriGioco, azzera, semina, attendi, scatto, scegli, leggiP
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 import { sogliaDi } from '../../src/giochi/fattoria3d/dati/livelli.js'
 import { PEZZI } from '../../src/giochi/fattoria3d/dati/catalogo.js'
+import { vicinoPerId } from '../../src/giochi/fattoria3d/dati/vicini.js'
+
+const rita = vicinoPerId('nonna-rita')
 
 const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser)
@@ -118,7 +121,7 @@ await page.evaluate(() => { window.__fattoria3d.motore.s.merci.mais = 2 })
 await attendi(page, 500)                                          // il battito rilegge le scorte
 await page.locator('[data-aiuta="mais"]').click()
 await attendi(page, 300)
-controlla('cassa piena: il vicino lo dice e regala', /Cassa piena/.test(await page.locator('[data-f3="visita-msg"]').innerText()) && ((await stato()).prodotti.uova || 0) >= 1)
+controlla('cassa piena: il vicino lo dice e regala', /Cassa piena/.test(await page.locator('[data-f3="visita-msg"]').innerText()) && ((await stato()).merci[rita.cassa.dono.k] || 0) >= rita.cassa.dono.n)       // il dono di Rita è un raccolto (patate), non più l'uovo
 controlla('a cassa piena il tasto non c\'è più da usare e si dice quando riapre', /Riapre fra/.test(await page.locator('[data-f3="cassa-chiusa"]').innerText()))
 uguale('le monete non si toccano aiutando', await monete(), mon0)
 await page.locator('[data-f3="cassa"] [data-chiudi]').click()
@@ -131,9 +134,10 @@ const prima = await monete(), xpPrima = (await stato()).esperienza
 await page.locator('[data-compra="uova"]').click()
 await attendi(page, 400)
 const dopoCompra = await monete()
-controlla('comprare costa monete (il prezzo scritto) e mette la roba nelle scorte', dopoCompra < prima && (await stato()).prodotti.uova >= 2, `${prima} → ${dopoCompra}`)
+controlla('comprare costa monete (il prezzo scritto) e mette la roba nelle scorte', dopoCompra < prima && (await stato()).prodotti.uova >= 1, `${prima} → ${dopoCompra}`)
 uguale('comprare non è esperienza', (await stato()).esperienza, xpPrima)
-await page.evaluate(() => { window.__fattoria3d.motore.s.merci.grano = 6 })
+const baratto0 = rita.mercato.compra[0]          // il primo scambio di Rita: i numeri dai dati
+await page.evaluate(b => { window.__fattoria3d.motore.s.merci[b.k] = b.n }, baratto0)
 await attendi(page, 500)
 const moneteVendi = await monete()
 await page.locator('[data-vendi="0"]').click()

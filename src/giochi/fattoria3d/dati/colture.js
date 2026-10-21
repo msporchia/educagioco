@@ -1,4 +1,4 @@
-/* Le quindici colture: quanto ci mette a maturare (tempo vero), come si chiama e a che livello si semina (`liv`: da questo
+/* Le sedici colture: quanto ci mette a maturare (tempo vero), come si chiama e a che livello si semina (`liv`: da questo
    campo lo legge dati/livelli.js, vedi docs/fattoria3d/livelli.md). Come appare nel campo (altezza, colori, frutto) è del
    disegno, scena3d/modelli.js. `pezzo` è la faccia nell'atlante della 2D (docs/fattoria3d/merci-e-ricette.md). In prova i tempi sono corti: da rivedere con la calibrazione
    (docs/apprendimento/calibrazione.md) se il gioco esce dalla prova. */
@@ -18,6 +18,9 @@ export const COLTURE = {
   melanzana: { nome: 'Melanzane',  emoji: '🍆', pezzo: 'raccolto_melanzane', ms: 56000, liv: 13 },
   lavanda:   { nome: 'Lavanda',    emoji: '💐', pezzo: 'raccolto_lavanda', ms: 64000, liv: 15 },
   riso:      { nome: 'Riso',       emoji: '🍚', pezzo: 'raccolto_riso', ms: 70000, liv: 15 },
+  // L'erba medica non è cibo per nessuno e non la chiede nessuno (`mangime: true`): serve solo al fienile, dove diventa foraggio. Come in 2D è la più
+  // svelta (4 minuti contro i 6 delle carote), quindi sta fuori dalla regola «chi arriva dopo matura dopo» (motore/taratura.js).
+  erba:      { nome: 'Erba medica', emoji: '🌿', pezzo: 'raccolto_erba', ms: 12000, liv: 9, mangime: true },
 }
 export const CHIAVI_COLTURE = Object.keys(COLTURE)
 export const TESSERE = 4          // un campo è fatto di quattro tessere: un raccolto ciascuna

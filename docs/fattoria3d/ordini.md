@@ -21,7 +21,8 @@ Chi chiede i raccolti e i prodotti delle macchine. Dati in `dati/ordini.js`, reg
 - **Mai un ordine impossibile**: si chiede solo ciò che `livelloDellaColtura`/`livelloDellaRicetta` (macchina e ingredienti
   compresi) dicono fattibile al livello di chi gioca. Al livello 2 sono solo raccolti; i prodotti arrivano man mano che
   arrivano le macchine. Un ordine dichiara il suo `liv` (il più alto fra le cose chieste) e non supera mai quello di chi
-  l'ha ricevuto. Con i prodotti disponibili, uno slot su due ne chiede uno: se no le macchine non servirebbero.
+  l'ha ricevuto. Con i prodotti disponibili, uno slot su due ne chiede uno: se no le macchine non servirebbero. **Il mangime non si chiede mai**
+  (`mangime: true`: l'erba medica, becchime e foraggio: [mangime-e-catena.md](mangime-e-catena.md)); un ordine già aperto con la pappa di mais si consegna ancora.
 - **Consegnare** (`consegna(idx)`) toglie la roba dalle scorte (`merci` o `prodotti`), dà esperienza, riempie subito il
   posto con un ordine nuovo. Se manca roba non cambia niente: `{ ok: false, motivo: 'mancano', mancano: { chiave: n } }`.
   Altri motivi: `banco-chiuso`, `sconosciuto` (posto vuoto o fuori numero).

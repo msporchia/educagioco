@@ -15,6 +15,7 @@ import { Compagni } from './compagni.js'
 import { Effetti } from './effetti.js'
 import { Camera } from './camera.js'
 import { Azioni } from './azioni.js'
+import { Pesca3d } from './pesca3d.js'
 import { Costruzione } from './costruzione.js'
 import { Dito } from './dito.js'
 import { ASPETTO, fantasma } from './modelli.js'
@@ -24,6 +25,8 @@ import { abitoDaChiave } from '../dati/abiti.js'
 import { LIVELLI, scalaPer, nuovoDegrado, passoDegrado, descriviDegrado } from '../dati/degrado.js'
 
 const CIELO = new THREE.Color(0xbfe0f0)
+/** Cosa dice il cartello di un lotto in vendita oltre al prezzo (il prato e il bosco non dicono niente). */
+export const NOME_BIOMA = { laghetto: '🏞️ laghetto', lago: '🏞️ lago', mare: '🌊 mare', costa: '🏖️ spiaggia' }
 const _c = new THREE.Vector3()        // il corpo del contadino per `contadinoSotto`
 const _v = new THREE.Vector3()        // di scorta per `proietta`: niente oggetti nuovi a ogni cartello a ogni fotogramma
 
@@ -60,11 +63,12 @@ export class Mondo3d {
     this.eroe = new Eroe(this.scena, motore, this.fx, abito)
     this.eroe.alVia = () => this.camera.segui()
     this.compagni = new Compagni(this.scena, motore, this.eroe, this.fx, ui)
+    this.pesca3d = new Pesca3d(this.scena, motore, this.eroe, this.fx, this.vista)          // i galleggianti, il filo e il cartello «abbocca!»
 
     this.ctx = {
       m: motore, ui, fx: this.fx, scena: this.scena, terreno: this.terreno, pezzi: this.pezzi, eroe: this.eroe, cmd: this.cmd,
       puntaSuolo: (x, y) => this.puntaSuolo(x, y),
-      camera: this.camera,
+      camera: this.camera, pesca: this.pesca3d,
       rettangolo: () => this.canvas.getBoundingClientRect(),
       misure: tipo => PEZZI[tipo] || EDIFICI[tipo],
       colore: k => ASPETTO[k].fc,
@@ -72,6 +76,7 @@ export class Mondo3d {
       creaFantasma: (tipo, c) => { const g = this.pezzi.modello(tipo, c); fantasma(g); return g },
     }
     this.azioni = new Azioni(this.ctx)
+    this.pesca3d.sulAbbocca = lotto => this.azioni.ritira(lotto)
     this.costruzione = new Costruzione(this.ctx)
     this.pezzi.sulCompraBestia = id => this.azioni.compraBestia(id)
     this.dito = new Dito(this)
@@ -209,10 +214,15 @@ export class Mondo3d {
       if (!m.posseduto(l)) return this.azioni.offriLotto(l)
       return eroe.vaiA(this.celleDiServizio(b), () => this.azioni.togli(o), this.centroDi(b))
     }
+    if (b && b.kind === 'cosa' && PEZZI[m.cosa(b.id)?.tipo]?.acqua) {            // l'acqua costruita (stagno, laghetto): si pesca nella cella toccata
+      const p = this.puntaSuolo(x, y)
+      if (p && m.acqua(Math.floor(p.x), Math.floor(p.z))) return this.azioni.pescaSu(Math.floor(p.x), Math.floor(p.z))
+    }
     if (b) return eroe.vaiA(this.celleDiServizio(b), () => this.azioni.fai(b), this.centroDi(b))
     const l = this.lottoSotto(x, y); if (l) return this.azioni.offriLotto(l)
     const p = this.puntaSuolo(x, y); if (!p) return
     const i = Math.floor(p.x), j = Math.floor(p.z), cand = []
+    if (m.acqua(i, j) && m.cellaPropria(i, j)) return this.azioni.pescaSu(i, j)          // l'acqua di un lago o del mare tuo: la pesca
     for (let a = -2; a <= 2; a++) for (let b2 = -2; b2 <= 2; b2++) if (m.libera(i + a, j + b2)) cand.push([i + a, j + b2, Math.hypot(a, b2)])
     cand.sort((u, v) => u[2] - v[2])
     if (cand.length) eroe.vaiA([[cand[0][0], cand[0][1]]], null, null)
@@ -230,7 +240,7 @@ export class Mondo3d {
   }
 
   /** Dopo che il motore ha cambiato qualcosa che si vede: i gruppi, il terreno, i cartelli. */
-  cambiato() { this.pezzi.sincronizza(); this.terreno.ridisegnaStrade(); this.ombraSporca = true; this.ui.cambio() }
+  cambiato() { this.pezzi.sincronizza(); this.terreno.ridisegnaStrade(); this.terreno.pesci.ridisegna(this.terreno.lottiInFinestra()); this.ombraSporca = true; this.ui.cambio() }
 
   // ── cosa sta facendo il bambino: la vista lo dice, qui si applica ──
   imposta(nuovo) {
@@ -261,6 +271,7 @@ export class Mondo3d {
     if (m.tick()) ui.cambio()
     eroe.aggiorna(dt, tt)
     this.compagni.aggiorna(dt, tt)
+    this.pesca3d.aggiorna(dt, tt)
     if (this.coda.length && eroe.fermo && !eroe.dopo && !ui.fogliAperti()) {          // il prossimo della coda
       const id = this.coda.shift(); this.pezzi.segnaCoda(id, false)
       const c = m.cosa(id)
@@ -300,7 +311,7 @@ export class Mondo3d {
     for (const l of m.lottiComprabili()) {
       if (!(tutti ? this.terreno.dentroFinestra(l.i, l.j) : Math.hypot(l.i + 2 - e.x, l.j + 2 - e.z) < 8)) continue
       const b = this.badgeLotti[l.id] || (this.badgeLotti[l.id] = this.fx.nuovoBadge())
-      b.imposta(`🪙 ${m.prezzoLotto()}${m.biomaDi(l) === 'laghetto' ? ' · 🏞️ laghetto' : ''}`, 'vendita')
+      b.imposta(`🪙 ${m.prezzoLotto()}${NOME_BIOMA[m.biomaDi(l)] ? ' · ' + NOME_BIOMA[m.biomaDi(l)] : ''}`, 'vendita')
       const [x, y, visto] = this.proietta(new THREE.Vector3(l.i + 2, 0, l.j + 2), 0.6)
       b.metti(x, y, visto && x > 20 && x < this.rect.width - 20 && y > 20 && y < this.rect.height - 100, true)
       mostrati.add(l.id)
@@ -329,6 +340,7 @@ export class Mondo3d {
       const s = this.stat, k = Math.min(s.n, 120), somma = a => { let x = 0; for (let n = 0; n < k; n++) x += a[n]; return x }
       this.legatoCpu = k > 20 && somma(s.cpus) > 0.8 * somma(s.dts)
       this.renderer.setPixelRatio(this.scalaViva()); this.adattaSenzaRect()
+      this.terreno.pesci.degrada(this.livello > 0)                // i pesci sono i primi a spegnersi se la macchina non regge
       this.ombraSporca = true
       this.stat.info.dpr = this.renderer.getPixelRatio()
     }
@@ -407,7 +419,7 @@ export class Mondo3d {
 
   via() {
     this.ferma(); this.ro?.disconnect(); this.dito.via()
-    this.pezzi.via(); this.fx.via(); this.terreno.via(); this.compagni.via()
+    this.pezzi.via(); this.fx.via(); this.terreno.via(); this.compagni.via(); this.pesca3d.via()
     this._anteprime?.via()
     try { this.renderer.dispose() } catch (e) { /* già andato */ }
   }

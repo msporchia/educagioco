@@ -53,7 +53,7 @@ const geos = g => new Set(meshes(g).map(o => o.geometry))
 /* ══════════ 3. i creatori veri ══════════ */
 const TIPI = {
   pasticceria: M.creaPasticceria, mongolfiera: M.creaMongolfiera, mulino: M.creaMulino, panificio: M.creaPanificio, conserviera: M.creaConserviera,
-  gelateria: M.creaGelateria, caseificio: M.creaCaseificio, telaio: MM.creaTelaio, zuccherificio: MM.creaZuccherificio, sartoria: MM.creaSartoria, tintoria: MM.creaTintoria,
+  gelateria: M.creaGelateria, caseificio: M.creaCaseificio, telaio: MM.creaTelaio, zuccherificio: MM.creaZuccherificio, sartoria: MM.creaSartoria, tintoria: MM.creaTintoria, 'fienile-macchina': MM.creaFienileMacchina,
   ponte: MP.creaPonte, passerella: MP.creaPasserella, tavolo: MP.creaTavolo, aiuola: M.creaAiuola, panchina: M.creaPanchina, pozzo: M.creaPozzo,
   spaventapasseri: M.creaSpaventapasseri, fontana: M.creaFontana, trattore: M.creaTrattore, fienile: M.creaFienile, cassa: M.creaCassa, casa: M.creaCasa,
   bancarella: M.creaBancarella, bacheca: M.creaBacheca, recinto: () => M.creaRecinto([{ eta: 'adulta', t0: 0 }]), pollaio: () => M.creaPollaio([{ fine: null }]),
@@ -82,6 +82,7 @@ for (const [nome, crea] of Object.entries(TIPI)) {
   prova('zuccherificio', MM.creaZuccherificio, g => g.userData.ruota.rotation, 'x')
   prova('sartoria', MM.creaSartoria, g => g.userData.man.rotation, 'y')
   prova('tintoria', MM.creaTintoria, g => g.userData.panni[1].rotation, 'y')
+  prova('fienile (macchina)', MM.creaFienileMacchina, g => g.userData.balla.rotation, 'x')
   const pa = M.creaPanificio(); pa.userData.anima(0.1, 1); controlla('panificio: la bocca si accende (resta un nodo del clone)', pa.userData.bocca.parent === pa)
   const pas = M.creaPasticceria(); controlla('pasticceria: il dolce che gira è un nodo del clone', pas.userData.gira.parent === pas)
   const mo = M.creaMongolfiera(); controlla('mongolfiera: volo e fiamma sono nodi del clone', mo.userData.volo.parent === mo && mo.userData.fiamma.parent === mo.userData.volo)

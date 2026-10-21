@@ -6,13 +6,15 @@
    per volta, ognuna più cara della precedente, fino alla capienza (`posti`); il livello apre il pezzo, non i posti. */
 import { COLTURE } from './colture.js'
 import { PECORE } from './regole.js'
+import { PESCI } from './pesca.js'
+import { lavoroDelMangime, MANGIMI_DEL_FIENILE } from './mangime.js'
 
 export const ANIMALI = {
   pollaio: {
     bestia: 'gallina', bestie: 'galline', emoji: '🐔', prodotto: 'uova', evento: 'uovo',
     ms: 25000,                    // dal pasto all'uovo
-    mangia: ['grano', 'mais'],    // cosa si dà da mangiare (dalla scorta più grande di queste)
-    pasti: 1,                     // raccolti per pasto
+    mangia: ['becchime'],         // il mangime della 2D (ricette del fienile): 2 becchimi → 1 uovo
+    pasti: 2,                     // pezzi di mangime per pasto
     posti: 6,                     // galline al massimo (la capienza del pollaio)
     prezzoBestia: 25,             // la seconda gallina; ogni altra costa `rincaroBestia` in più della precedente
     rincaroBestia: 12,
@@ -20,7 +22,7 @@ export const ANIMALI = {
   stalla: {
     bestia: 'mucca', bestie: 'mucche', emoji: '🐄', prodotto: 'latte', evento: 'latte',
     ms: 40000,
-    mangia: ['mais', 'carota'],
+    mangia: ['foraggio'],         // 2 foraggi → 1 latte
     pasti: 2,
     posti: 4,
     prezzoBestia: 60,
@@ -46,19 +48,21 @@ export function prezzoDellaBestia(tipo, n) {
 export const PRODOTTI_ANIMALI = {
   uova:  { nome: 'Uova',  emoji: '🥚', pezzo: 'merce_uova', dove: 'pollaio' },
   latte: { nome: 'Latte', emoji: '🥛', pezzo: 'latte', dove: 'stalla' },
+  ...PESCI,                   // il pesce si pesca dal molo, non lo fa una bestia: ha `ms` suo (dati/pesca.js)
 }
 
 /** La lana è l'unica merce delle bestie che non sta in `stato.prodotti`: il contatore `stato.lana` (la tosa, la mongolfiera). È l'ingrediente del
-    telaio e della sartoria, come nella 2D. `dove` è il pezzo che la fa; `ms` quanto ci vuole per averne una: il tempo della lana (PECORE.laneMs) più i pasti che chiede,
-    contati sul grano come per le uova (`msDelProdotto`). */
+    telaio e della sartoria, come nella 2D. `dove` è il pezzo che la fa; `ms` quanto ci vuole per averne una: il tempo della lana (PECORE.laneMs) più il foraggio
+    che la tosata chiede, contato come per le uova (`msDelProdotto`). */
 export const LANA = {
-  lana: { nome: 'Lana', emoji: '🧶', pezzo: 'merce_lana', dove: 'recinto', ms: PECORE.laneMs + (PECORE.pastiPerLana || 0) * COLTURE.grano.ms },
+  lana: { nome: 'Lana', emoji: '🧶', pezzo: 'merce_lana', dove: 'recinto', ms: PECORE.laneMs + (PECORE.pastiPerLana || 0) * lavoroDelMangime(PECORE.mangia[0]) },
 }
 
-/** Quanto ci vuole per averne uno: il suo tempo più il raccolto che mangia (il primo della lista), per i calcoli degli ordini. */
+/** Quanto ci vuole per averne uno: il suo tempo più il mangime che mangia (il primo della lista, `pasti` pezzi), per i calcoli degli ordini. */
 export function msDelProdotto(k) {
   const p = PRODOTTI_ANIMALI[k], a = p && ANIMALI[p.dove]
-  return a ? a.ms + a.pasti * COLTURE[a.mangia[0]].ms : Infinity
+  if (p && p.ms) return p.ms
+  return a ? a.ms + lavoroDelMangime(a.mangia[0], a.pasti) : Infinity
 }
 
 export function guastiDegliAnimali(pezzi) {
@@ -68,8 +72,9 @@ export function guastiDegliAnimali(pezzi) {
     if (!a.bestia || !a.bestie || !a.emoji) g.push(`${t}: manca nome o emoji`)
     if (!(a.ms >= 1000)) g.push(`${t}: tempo sotto il secondo`)
     if (!(a.pasti >= 1)) g.push(`${t}: nessun pasto`)
-    if (!a.mangia.length || a.mangia.some(k => !COLTURE[k])) g.push(`${t}: mangia qualcosa che non è un raccolto`)
+    if (!a.mangia.length || a.mangia.some(k => !MANGIMI_DEL_FIENILE.includes(k))) g.push(`${t}: mangia qualcosa che il fienile non fa`)
   }
+  if (!PECORE.mangia.length || PECORE.mangia.some(k => !MANGIMI_DEL_FIENILE.includes(k))) g.push('le pecore mangiano qualcosa che il fienile non fa')
   for (const [t, a] of Object.entries(CORTILE)) {
     if (!(a.posti >= 2)) g.push(`${t}: la capienza non basta per comprare una bestia`)
     if (!(a.prezzoBestia > 0) || !(a.rincaroBestia >= 0)) g.push(`${t}: il prezzo della bestia non torna`)
@@ -83,7 +88,7 @@ export function guastiDegliAnimali(pezzi) {
   }
   for (const [k, p] of Object.entries(PRODOTTI_ANIMALI)) {
     if (COLTURE[k]) g.push(`${k}: un prodotto con l'id di una coltura`)
-    if (!p.nome || !p.emoji || !p.pezzo || !ANIMALI[p.dove]) g.push(`${k}: nome, emoji o pezzo sbagliati`)
+    if (!p.nome || !p.emoji || !p.pezzo || !(ANIMALI[p.dove] || PESCI[k])) g.push(`${k}: nome, emoji o pezzo sbagliati`)
   }
   return g
 }

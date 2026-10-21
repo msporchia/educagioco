@@ -12,12 +12,9 @@ import { sequenza } from '../dati/semi.js'
 /** Il tempo dell'acqua, condiviso: il terreno lo scrive a ogni fotogramma, lo shader lo legge (lo stesso per i laghi del terreno e gli stagni). */
 export const uTAcqua = { value: 0 }
 
-let ACQUA = null
-/** L'unico materiale dell'acqua del gioco: i laghi del terreno lo usano a istanze, gli stagni come mesh qualunque. */
-export function materialeAcqua () {
-  if (ACQUA) return ACQUA
-  ACQUA = new THREE.MeshStandardMaterial({ color: 0x4ba6d6, transparent: true, opacity: 0.84, roughness: 0.3, depthWrite: false })
-  ACQUA.onBeforeCompile = sh => {
+/** Lo scintillio dell'acqua nello shader (`uTAcqua`): onde che scorrono sul colore, niente riflessioni e niente luci in più. Lo stesso per tutta l'acqua del gioco. */
+function conOnde (materiale, ampiezza = 1) {
+  materiale.onBeforeCompile = sh => {
     sh.uniforms.uT = uTAcqua
     sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec2 vWP;')
       .replace('#include <begin_vertex>', `#include <begin_vertex>
@@ -29,9 +26,25 @@ export function materialeAcqua () {
     sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying vec2 vWP;\nuniform float uT;')
       .replace('#include <color_fragment>', `#include <color_fragment>
         float onda = sin(vWP.x * 2.6 + uT * 1.3) * sin(vWP.y * 2.9 - uT * 1.1) + 0.5 * sin((vWP.x + vWP.y) * 4.1 + uT * 2.0);
-        diffuseColor.rgb += vec3(0.05, 0.08, 0.10) * onda;`)
+        diffuseColor.rgb += vec3(0.05, 0.08, 0.10) * onda * ${ampiezza.toFixed(2)};`)
   }
+  return materiale
+}
+
+let ACQUA = null
+/** L'unico materiale dell'acqua del gioco: i laghi del terreno lo usano a istanze, gli stagni come mesh qualunque. */
+export function materialeAcqua () {
+  if (ACQUA) return ACQUA
+  ACQUA = conOnde(new THREE.MeshStandardMaterial({ color: 0x4ba6d6, transparent: true, opacity: 0.84, roughness: 0.3, depthWrite: false }))
   return ACQUA
+}
+
+let MARE = null
+/** Il mare lontano: opaco, con il colore nei vertici (turchese in riva, blu al largo) e lo stesso scintillio dell'acqua. Un piano solo, senza istanze per lotto. */
+export function materialeMare () {
+  if (MARE) return MARE
+  MARE = conOnde(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.32, metalness: 0 }), 0.45)
+  return MARE
 }
 
 const N = 44                                           // i punti del contorno

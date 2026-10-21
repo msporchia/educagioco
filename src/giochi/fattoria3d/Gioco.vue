@@ -106,6 +106,7 @@ function contaEventi() {
     else if (e.tipo === 'prodotto') segna('fattoria3dProdotti', e.n)
     else if (e.tipo === 'uovo') segna('fattoria3dUova', e.n)
     else if (e.tipo === 'latte') segna('fattoria3dLatte', e.n)
+    else if (e.tipo === 'pesce') segna('fattoria3dPesci', e.n)
     else if (e.tipo === 'livello') salito(e.livello)
     else if (e.tipo === 'consegna') consegnato(e)
   }

@@ -19,6 +19,7 @@ export class Eroe {
     this.x = PARTENZA.x; this.z = PARTENZA.z; this.dir = Math.PI
     this.percorso = []; this.dopo = null; this.verso = null; this.az = null
     this.fase = 0; this.vel = 0; this.corsa = false
+    this.pescando = null                // dove ha lanciato la lenza ({ x, z }): finché sta fermo tiene la canna alzata
     this.rialzo = 0                     // sale e scende dolcemente sopra un ponte o una passerella (motore.quotaPasso)
     this.alVia = null                   // chi vuole saperlo quando parte un nuovo percorso (la camera torna a seguirlo)
     this.grp.position.set(this.x, 0, this.z)
@@ -44,6 +45,7 @@ export class Eroe {
   /** Va alla più vicina fra le celle `celle` e, arrivato, chiama `dopo` (e si gira verso `verso`). Torna se ci arriva. */
   vaiA(celle, dopo, verso) {
     this.alVia?.()
+    this.pescando = null                             // si cammina: la canna si abbassa (la lenza resta in acqua)
     const via = this.m.percorsoVerso(this.cella(), celle)
     if (!via) { this.fx.parla('Non ci arrivo…'); return false }
     this.percorso = via.map(([i, j]) => [i + 0.5, j + 0.5])
@@ -54,7 +56,7 @@ export class Eroe {
     if (!this.percorso.length && dopo) { this.dopo = null; dopo() }
     return true
   }
-  ferma() { this.percorso = []; this.dopo = null; this.verso = null; this.corsa = false }
+  ferma() { this.percorso = []; this.dopo = null; this.verso = null; this.corsa = false; this.pescando = null }
 
   avvia(tipo, dur, fn, fine) { this.az = { tipo, t: 0, dur, fn, fine, fatto: new Set() } }
 
@@ -84,10 +86,16 @@ export class Eroe {
     this._tt = tt; this._posa(tt)
   }
 
+  /** Dove finisce la canna alzata (punta rossa), nello spazio del mondo: da lì parte il filo. `fuori`: un Vector3 da riempire. */
+  puntaCanna(fuori) {
+    const s = Math.sin(this.dir), c = Math.cos(this.dir), lx = 0.22, lz = 1.3
+    return fuori.set(this.x + lx * c + lz * s, this.rialzo + 1.2, this.z + lz * c - lx * s)
+  }
+
   _posa(tt) {
     const u = this.grp.userData
     u.testa.rotation.set(0, 0, 0); u.gambe.forEach(g => { g.rotation.x = 0 }); u.bracci.forEach(b => b.rotation.set(0, 0, 0)); u.busto.rotation.set(0, 0, 0); u.busto.scale.set(1, 1, 1); u.busto.position.y = 0.34
-    this.grp.position.y = this.rialzo; u.falce.visible = false; u.ascia.visible = false
+    this.grp.position.y = this.rialzo; u.falce.visible = false; u.ascia.visible = false; u.canna.visible = false
     const a = this.az
     if (a) {
       const p = a.t / a.dur
@@ -109,10 +117,25 @@ export class Eroe {
         const s = Math.sin(Math.min(1, p) * Math.PI)
         u.bracci[1].rotation.x = -2.4 * s; u.bracci[1].rotation.z = -0.25 * s; u.bracci[0].rotation.x = -1.9 * s
         u.testa.rotation.x = -0.18 * s; u.busto.rotation.x = -0.08 * s
+      } else if (a.tipo === 'pesca') {                                          // il lancio: la canna si porta indietro e poi in avanti, e resta alzata
+        u.canna.visible = true
+        const indietro = Math.min(1, p / 0.45), avanti = Math.min(1, Math.max(0, (p - 0.45) / 0.2))
+        u.bracci[1].rotation.x = p < 0.45 ? -1.2 - 1.5 * indietro : -2.7 + 0.7 * avanti; u.bracci[0].rotation.x = -0.3
+        u.busto.rotation.x = p < 0.45 ? -0.12 * indietro : -0.12 + 0.3 * avanti
+        u.gambe[0].rotation.x = 0.2; u.gambe[1].rotation.x = -0.2
+      } else if (a.tipo === 'ritira') {                                         // lo strappo: la canna si alza di scatto, poi si abbassa
+        u.canna.visible = true
+        const strappo = Math.sin(Math.min(1, p) * Math.PI)
+        u.bracci[1].rotation.x = -2.0 - 0.7 * strappo; u.bracci[0].rotation.x = -0.4 - 0.5 * strappo
+        u.busto.rotation.x = -0.25 * strappo; u.gambe[0].rotation.x = 0.2; u.gambe[1].rotation.x = -0.2
       } else if (a.tipo === 'esulta') {
         const s = Math.sin(Math.min(1, p) * Math.PI)
         this.grp.position.y = this.rialzo + s * 0.35; u.bracci.forEach(b => { b.rotation.x = -2.6 * s })
       }
+    } else if (this.pescando && this.vel < 0.1) {                                // la lenza è in acqua: canna alzata, il galleggiante dondola
+      u.canna.visible = true
+      u.bracci[1].rotation.x = -2.0 + Math.sin(tt * 2.2) * 0.035; u.bracci[0].rotation.x = -0.3
+      u.busto.rotation.x = 0.1; u.gambe[0].rotation.x = 0.15; u.gambe[1].rotation.x = -0.15; u.testa.rotation.x = 0.1
     } else if (this.vel > 0.1) {
       const s = Math.sin(this.fase), c = this.corsa ? 1 : 0
       u.gambe[0].rotation.x = s * (0.8 + 0.4 * c); u.gambe[1].rotation.x = -s * (0.8 + 0.4 * c)

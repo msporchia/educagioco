@@ -2,7 +2,9 @@
 // serve» una merce e se è entrata roba nuova. Vedi docs/fattoria3d/file.md («Il foglio dell'inventario»).
 import { COLTURE } from '../dati/colture.js'
 import { RICETTE, merceDi } from '../dati/ricette.js'
-import { PRODOTTI_ANIMALI, LANA } from '../dati/animali.js'
+import { PRODOTTI_ANIMALI, LANA, CORTILE } from '../dati/animali.js'
+import { PECORE } from '../dati/regole.js'
+import { PESCI } from '../dati/pesca.js'
 import { EDIFICI } from '../dati/catalogo.js'
 import { livelloDellaColtura } from '../dati/livelli.js'
 
@@ -31,14 +33,22 @@ export const tipiDi = voci => voci.filter(v => v.n > 0).length
 /** Le ricette (nomi) che usano la merce come ingrediente, nell'ordine dei dati. */
 export const serveA = k => Object.values(RICETTE).filter(r => r.ing && r.ing[k]).map(r => r.nome)
 
+/** Le bestie che mangiano quel mangime (becchime: galline; foraggio: pecore e mucche), nell'ordine del cortile. */
+export const bestieChe = k => Object.entries(CORTILE).filter(([t, a]) => (t === 'recinto' ? PECORE.mangia : a.mangia).includes(k)).map(([, a]) => a.bestie)
+
 /** Il «nome — a cosa serve» di una merce, in una frase per bambini. */
 export function dettaglioDi(k) {
   const m = merceDi(k); if (!m) return ''
   const r = RICETTE[k], usi = serveA(k), dove = r && EDIFICI[r.dove]
   const parti = []
   if (dove) parti.push(`Si prepara: ${dove.nome}.`)
+  else if (PESCI[k]) parti.push('Si pesca dal molo, nei laghi, nei laghetti e nel mare.')
   else if (PRODOTTI_ANIMALI[k] || LANA[k]) { const p = EDIFICI[(PRODOTTI_ANIMALI[k] || LANA[k]).dove]; if (p) parti.push(`Lo fanno gli animali: ${p.nome}.`) }
-  parti.push(usi.length ? `Serve per: ${usi.join(', ')}.` : 'Non serve per cucinare: si consegna al banco o in mongolfiera.')
+  const mangiano = bestieChe(k)
+  if (mangiano.length) parti.push(`Mangime per ${mangiano.join(' e ')}.`)
+  if (usi.length) parti.push(`Serve per: ${usi.join(', ')}.`)
+  else if (!mangiano.length && !m.mangime) parti.push('Non serve per cucinare: si consegna al banco o in mongolfiera.')
+  if (m.mangime && !mangiano.length && usi.length) parti.push('Non si consegna: serve a fare il mangime.')
   return parti.join(' ')
 }
 
