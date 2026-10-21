@@ -52,7 +52,7 @@ const props = defineProps({
 const emit = defineEmits(['scendi', 'terra', 'bottega', 'riprendi', 'sentito', 'cura', 'pensa', 'pensiero', 'pensiero-fine', 'trovati'])
 
 const SCARTO_DITO = 16   // sotto, il dito è fermo (docs/core/il-dito.md)
-const minuscolo = s => s.charAt(0).toLowerCase() + s.slice(1)
+const minuscolo = s => { const t = String(s ?? ''); return t.charAt(0).toLowerCase() + t.slice(1) }   // un nome che manca non rompe la pagina
 const L = MASCHERA[0].length, A = MASCHERA.length
 // chi sta fermo non si attraversa: il minatore, i mercanti e chi dà le missioni
 const mondo = creaTerra(MASCHERA, {
