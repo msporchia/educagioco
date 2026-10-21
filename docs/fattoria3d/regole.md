@@ -57,11 +57,11 @@ si mette via**.
 
 Passerella (1×3) e ponte (3×1) hanno `calpestabile: true` e `alzato` (la quota di chi ci cammina; per il ponte una per cella, la
 gobba) in `dati/catalogo.js`. Sono **decorazione per fare camminamenti**: niente acqua sotto, niente altre regole.
-- **Il passo li attraversa**: `libera` (eroe, compagni, celle di servizio) li conta libere; **il costruire no**: `blocca`, `puoMettere`
+- **Il passo li attraversa**: `libera` (contadino, compagni, celle di servizio) li conta libere; **il costruire no**: `blocca`, `puoMettere`
   e `disegnaStrada` le trovano occupate, quindi sopra non si mette nient'altro e non si sposta un pezzo lì sopra.
 - **Contano come strada nel percorso** (`sullaStrada`: costo ridotto e passo svelto), ma non sono strada (`eStrada` resta 0, non si
   salvano in `strade`, non si tolgono col pennello).
-- Si **toccano per salirci**: l'eroe va su una loro cella (`celleDiServizio`). Il tavolo, invece, è un pezzo qualunque: ferma il passo.
+- Si **toccano per salirci**: il contadino va su una loro cella (`celleDiServizio`). Il tavolo, invece, è un pezzo qualunque: ferma il passo.
 
 ## Le pecore
 
@@ -75,7 +75,7 @@ quattro: [animali.md](animali.md)), come le galline e le mucche. Con due adulte 
   niente: niente muore, niente marcisce, una pappa a ogni giro. Si tosa: `+1 🧶` a pecora;
 - **due adulte nutrite due volte fanno nascere un agnellino**, fino a quattro pecore per recinto (acquisti e nascite dividono lo
   stesso tetto);
-- toccando il recinto l'eroe sceglie da solo (`provaCura`): prima tosa (se c'è lana pronta), poi **nutre le tosate affamate** (tutte in un gesto,
+- toccando il recinto il contadino sceglie da solo (`provaCura`): prima tosa (se c'è lana pronta), poi **nutre le tosate affamate** (tutte in un gesto,
   finché c'è da mangiare), poi l'agnello o la nascita; se tutte sono al lavoro dice «la lana ricresce, ancora N s». La pecora comprata arriva
   con fame e il giro di pappa dell'acquisto le dà il primo pasto. Un recinto con le pecore **non si
   mette via** (si sposta).

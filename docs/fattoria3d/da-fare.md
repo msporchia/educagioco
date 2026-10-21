@@ -17,7 +17,7 @@ Le voci aperte. Una riga ciascuna, e quando una si chiude si toglie.
   ([../core/guida.md](../core/guida.md)).
 - **Gli edifici liberi non sono stati visti col dito né su un telefono** ([edifici-liberi.md](edifici-liberi.md)): provati nei test unitari e in Chrome (dev server: acquisto dal menu, il «!» sul tasto e sulle carte, nessun fantasma);
   `integrazione/fattoria3d` è aggiornato (la gelateria dal menu, il «!», nessun fantasma) ma **non eseguito** (la build era vietata). Da guardare: il «!» e la riga «Serve il Panificio» nel banco su 360 px, il rimbalzo dell'edificio
-  appena posato, trascinare un edificio 3×3 in un terreno stretto. Un edificio guarda sempre verso +z (non si ruota: vedi sotto), quindi il suo davanti può finire contro un muro di alberi (allora l'eroe lo serve da un altro lato).
+  appena posato, trascinare un edificio 3×3 in un terreno stretto. Un edificio guarda sempre verso +z (non si ruota: vedi sotto), quindi il suo davanti può finire contro un muro di alberi (allora il contadino lo serve da un altro lato).
 - **Il pezzo al dito e lo scorrimento ai bordi non sono stati provati su un telefono** ([scena.md](scena.md), «Costruire»): provati in Chrome (dev server, dito vero via CDP: presa, +3 celle, camera a ~7,7 celle/s a 18 px dal bordo, ferma fuori fascia e a dito alzato, pennello compreso) e nei test unitari;
   `integrazione/fattoria3d` è aggiornato ma **non eseguito sulla build** (vietata). Da sentire col dito: i 40 px di rialzo, la fascia di 72 px (la barra in alto è stimata 64 px), le 2–12 celle/s.
 - **Ruotare i pezzi** (anche gli edifici, che oggi guardano tutti verso +z). E, se serve sistemare un fantasma lontano, una vista «tutto» a un tasto (la telecamera alta del costruire è stata tolta con la barra).
@@ -59,3 +59,4 @@ Le voci aperte. Una riga ciascuna, e quando una si chiude si toglie.
   4. **LOD e cartelli**: oltre una certa distanza dalla camera (zoom lontano) i pezzi piccoli non si disegnano e non proiettano; i cartelli non servono oltre i 18 m.
   5. **L'antialias**: `antialias: true` non si cambia a runtime; sul basso (e sui PC integrati) un renderer senza MSAA o con FXAA a posteriori. Da misurare sulla GPU integrata dell'utente.
   6. **L'ombra con la camera che segue**: oggi si ridisegna a intervalli; con il sole agganciato alla griglia (passo di 2 celle) basterebbe ridisegnarla solo quando cambia qualcosa o la griglia scatta.
+- **«Quando ci premi» non è stato visto col dito** ([compagni.md](compagni.md)): le pose (rotola, zampa, riporta, sbadiglio, struscio, naso a naso) sono guardate solo dal catalogo 3D e provate in node; da giudicare in gioco i tempi, il gesto «chiama» del contadino e se il bastoncino ai piedi si legge.

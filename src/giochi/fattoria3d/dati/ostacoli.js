@@ -1,7 +1,7 @@
 /* I sassi e i cespugli: pochi per lotto, sempre gli stessi, anche dopo aver comprato il lotto. Il bambino li toglie toccandoli,
    per 🪙 1 ciascuno. L'id di salvataggio è la cella (`idCella`): non dipende dall'ordine di generazione, quindi un edificio nuovo
    che toglie un posto non fa scorrere gli altri; nei lotti storici è l'indice di sempre, negli altri la chiave impacchettata.
-   Mai sulle strade di serie, sui posti degli edifici, sul campo di partenza, sulla partenza dell'eroe, sul fienile e la casa, sull'acqua,
+   Mai sulle strade di serie, sui posti degli edifici, sul campo di partenza, sulla partenza del contadino, sul fienile e la casa, sull'acqua,
    né sotto un albero. Vedi docs/fattoria3d/terreno.md e mondo-infinito.md. */
 import { LOTTI_STORICI, FISSI, chiave, idCella, celleRiservate } from './mondo.js'
 

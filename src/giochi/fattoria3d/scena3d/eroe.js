@@ -10,9 +10,10 @@ const VEL = 4.8, VEL_STRADA = 6.6, FATTORE_CORSA = 1.75, CORSA_DA = 9
 const ang = (a, b, k) => { let d = b - a; d = Math.atan2(Math.sin(d), Math.cos(d)); return a + d * k }
 
 export class Eroe {
-  constructor(scena, motore, effetti) {
-    this.m = motore; this.fx = effetti
-    this.grp = creaContadino(ASPETTO_ERO)
+  /** `abito`: com'è vestito (dati/abiti.js, con la persona); senza, l'abito di serie di `ASPETTO_ERO`. */
+  constructor(scena, motore, effetti, abito = null) {
+    this.m = motore; this.fx = effetti; this.scena = scena
+    this.grp = creaContadino(abito || ASPETTO_ERO)
     alleggeriOmbre(this.grp)
     scena.add(this.grp)
     this.x = PARTENZA.x; this.z = PARTENZA.z; this.dir = Math.PI
@@ -21,6 +22,18 @@ export class Eroe {
     this.rialzo = 0                     // sale e scende dolcemente sopra un ponte o una passerella (motore.quotaPasso)
     this.alVia = null                   // chi vuole saperlo quando parte un nuovo percorso (la camera torna a seguirlo)
     this.grp.position.set(this.x, 0, this.z)
+  }
+
+  /** Cambia l'abito a caldo: il corpo nuovo prende il posto del vecchio (posizione, direzione, passo, gesto e rialzo restano). Il vecchio
+      non si smaltisce: geometrie e materiali sono della cache dei modelli. */
+  vesti(abito) {
+    const vecchio = this.grp, nuovo = creaContadino(abito)
+    alleggeriOmbre(nuovo)
+    nuovo.position.copy(vecchio.position); nuovo.rotation.copy(vecchio.rotation); nuovo.scale.copy(vecchio.scale)
+    vecchio.parent?.add(nuovo); vecchio.removeFromParent()
+    this.grp = nuovo
+    this._posa(this._tt || 0)
+    return nuovo
   }
 
   get posizione() { return this.grp.position }
@@ -68,7 +81,7 @@ export class Eroe {
     }
     this.grp.position.x = this.x; this.grp.position.z = this.z; this.grp.rotation.y = this.dir
     this.rialzo += (this.m.quotaPasso(this.x, this.z) - this.rialzo) * Math.min(1, dt * 14)
-    this._posa(tt)
+    this._tt = tt; this._posa(tt)
   }
 
   _posa(tt) {
@@ -92,6 +105,10 @@ export class Eroe {
         const col = Math.pow(Math.max(0, Math.sin(p * Math.PI * 4)), 2)             // quattro colpi
         u.bracci[1].rotation.x = -2.5 + col * 1.9; u.bracci[0].rotation.x = -1.2 + col * 1.0
         u.busto.rotation.x = 0.1 + col * 0.35; u.gambe[0].rotation.x = 0.3; u.gambe[1].rotation.x = -0.3
+      } else if (a.tipo === 'chiama') {                                         // chiama Watson: una mano alla bocca, l'altro braccio alzato
+        const s = Math.sin(Math.min(1, p) * Math.PI)
+        u.bracci[1].rotation.x = -2.4 * s; u.bracci[1].rotation.z = -0.25 * s; u.bracci[0].rotation.x = -1.9 * s
+        u.testa.rotation.x = -0.18 * s; u.busto.rotation.x = -0.08 * s
       } else if (a.tipo === 'esulta') {
         const s = Math.sin(Math.min(1, p) * Math.PI)
         this.grp.position.y = this.rialzo + s * 0.35; u.bracci.forEach(b => { b.rotation.x = -2.6 * s })

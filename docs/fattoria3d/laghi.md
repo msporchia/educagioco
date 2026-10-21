@@ -20,7 +20,7 @@ generatore: è il posto candidato per la pesca. `generaLotto` espone tutti e due
   («Qui c'è l'acqua: serve un ponte», in `detti.js`), niente strada a pennello. Alberi e sassi non nascono sull'acqua.
 - **Ponte e passerella** hanno `suAcqua: true` in `dati/catalogo.js`: possono avere l'ingombro sull'acqua, purché almeno una cella sia
   terra, oppure tocchino di lato un altro ponte (`_appoggioPerPonte`): un ponte tutto sull'acqua senza appoggio non regge. Sono
-  calpestabili: l'eroe e i compagni attraversano l'acqua sopra di loro (`cellaPasso`, che vince su `blocca`). Un ponte da 3 supera i 2
+  calpestabili: il contadino e i compagni attraversano l'acqua sopra di loro (`cellaPasso`, che vince su `blocca`). Un ponte da 3 supera i 2
   dello stagno (un'estremità sulla riva, l'altra sull'acqua accanto alla riva opposta).
 - Toglierlo richiude il passaggio; non si mette altro sul ponte.
 
@@ -73,7 +73,7 @@ cinque schede che scorrono di lato, e un pezzo d'acqua è una decorazione come l
    `moloDelPezzo(c)` accanto a `moloDelLotto`.
 1. **Un pezzo `molo`** (decoro calpestabile come la passerella, 1×2, `suAcqua`) che si mette dalla riva; nel `puoMettere` basta il
    flag e il posto candidato (`generaLotto(...).molo`) suggerisce dove.
-2. **Un'azione «pesca»** dell'eroe in fondo al molo (`azioni.js`, come `semina`): il motore decide (`pesca(id)`), la scena anima la
+2. **Un'azione «pesca»** del contadino in fondo al molo (`azioni.js`, come `semina`): il motore decide (`pesca(id)`), la scena anima la
    canna; costo in attesa, non in monete.
 3. **Un prodotto `pesce`** (e merci derivate) in `dati/ricette.js` e `ordini`: il pesce che la 2D usa alla friggitoria, al sushi bar
    e alla peschiera ([merci-e-ricette.md](merci-e-ricette.md), [da-fare.md](da-fare.md)).
@@ -85,6 +85,6 @@ Niente di questo cambia i salvataggi: servono solo un pezzo nuovo, un'azione e u
 ## Nei test
 
 `unita/fattoria3d` (il blocco «stagno e laghetto»: misure, `acqua`, ponte sopra, rifiuti, percorso, salvataggio) e `integrazione/fattoria3d` (la carta
-`[data-carta="stagno"]`, messa con un tocco vero, il ponte sopra, l'eroe che ci sale).
+`[data-carta="stagno"]`, messa con un tocco vero, il ponte sopra, il contadino che ci sale).
 `unita/fattoria3d-mondo` (sezioni 6, 7 e 9: biomi e proporzioni, forma e margini, molo, `puoMettere` con acqua e ponti, percorso che
 attraversa la passerella e non l'acqua, Villa Dolce con il suo laghetto e la sua passerella nel lotto `2_-1`).
