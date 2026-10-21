@@ -13,6 +13,14 @@ scelta fatta). Finché non c'è una risposta, i giri che ne dipendono restano fe
 
 Indicazione: **c fino ai P0, poi b**, e la 2D resta leggibile (non cancellata) un periodo dopo il passaggio.
 
+**Deciso dall'utente (21/10/2026): b, si converte.** La conversione è volutamente **imprecisa nei piazzamenti** e **fedele in tutto il resto**:
+prezzi e merci sono gli stessi, quindi **quello che il bambino ha già comprato resta suo**. Regola di `statoDa2D`: (1) livello e esperienza si portano;
+(2) **ogni cosa posseduta** (campi, macchine, recinti, bestie, decori che hanno un equivalente 3D) diventa **un pezzo nel magazzino, gratis da ripiazzare**
+(niente costo di spostamento: la fattoria si riparte «da disfare»); (3) le scorte di raccolti e prodotti si portano uguali; (4) **gli sblocchi si contano**,
+non si rifanno: livello, premi dei livelli già presi, ricette e colture aperte; (5) cosa non ha equivalente 3D (cuccia, decori senza modello) si traduce
+nel pezzo più vicino o si registra come «da regalare» quando il modello arriva (mai monete: le monete vengono solo dagli esercizi). I piazzamenti 2D→3D
+non si convertono (la griglia è un'altra). Resta aperto solo D14 (quando si spegne la 2D).
+
 ## D2 — La scala dei livelli e dei prezzi
 
 | opzione | pro | contro |
