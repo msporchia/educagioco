@@ -3,7 +3,8 @@
 Nel Sotterraneo 3D (gioco in prova, [grafica-3d.md](grafica-3d.md)) i mostri non sono più sprite ma i modelli in codice dei
 prototipi approvati (`poc/mostri-3d/`, `poc/mostri-3d.html` e le pagine per zona), con il loro respiro e il loro attacco; le
 abilità dell'eroe, i colpi dei mostri e gli stati addosso sono gli effetti 3D di `poc/effetti-3d/` (provati in `poc/arena-3d.html`).
-L'eroe era già passato al 3D (`scena3d/eroe3d.js`, dai prototipi di eroi, armi, armature e copricapi). Il 2D di sempre non cambia.
+L'eroe era già passato al 3D (`scena3d/eroe3d.js`, dai prototipi di eroi, armi, armature e copricapi); la roba che porta è la
+figura del suo oggetto, con l'alone della rarità ([roba-3d.md](roba-3d.md)). Il 2D di sempre non cambia.
 
 ## Prototipi e copie: `npm run promuovi3d`
 
@@ -14,6 +15,7 @@ I prototipi in `poc/` restano autonomi e non si toccano per il gioco. Il gioco u
 | `scena3d/eroi3d/` | `poc/eroi-3d`, `armi-3d`, `armature-3d`, `copricapi-3d` | i quattro eroi, le armi della collezione, le armature, i copricapi |
 | `scena3d/mostri3d/` | `poc/mostri-3d` (mostri, prati, bosco, palude, ceneri, draghi, monte, landa) | i mostri, più `elenchi.js` (generato) con gli elenchi per zona |
 | `scena3d/effetti3d/` | `poc/effetti-3d` (lancio, mischia, aure) | gli effetti delle abilità e degli stati |
+| `scena3d/roba3d/` | `poc/roba-3d` (aloni, e lame, bastoni, scudi, vesti, gioielli se pronti) | le figure della roba e gli aloni della rarità, più `moduli.js` e `catalogo-roba.js` (generati): [roba-3d.md](roba-3d.md) |
 
 `strumenti/promuovi-3d.mjs` parte dalle radici di ogni gruppo, segue gli import (solo il referenziato: `mosse*.js` e le pagine
 non entrano), mette tutto in una cartella per gruppo riscrivendo gli import, premette la riga «Generato da…» e mette
