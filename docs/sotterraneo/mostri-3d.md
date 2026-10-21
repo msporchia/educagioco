@@ -119,7 +119,9 @@ Misurato con SwiftShader (`&dpr=1`, 390×844, le cantine, `luce=stanza`; i ms no
 | 8 mostri 3D, saldati | 458 | 104k | 53 ms |
 | scontro con 3 mostri (6 modelli in vista) | 257 | 39k | — |
 
-Un mostro costa da 8 (il fantasma) a 141 (il drago grande) chiamate, in media una cinquantina. `&spegni=mostri3d:6` ne tiene sei,
+Un mostro costa da 8 (il fantasma) a 141 (il drago grande) chiamate, in media una cinquantina; l'eroe 3D una cinquantina
+anch'esso (non saldato: le sue pose muovono pezzi che l'idle non muove). Per questo `integrazione/sotterraneo-3d` misura i
+paesaggi con `&sprite&eroe2d` e lo scontro fino a 260 chiamate (con gli sprite stava sotto 140). `&spegni=mostri3d:6` ne tiene sei,
 `&spegni=mostri3d` nessuno, `&spegni=effetti3d` toglie gli effetti 3D. Le copie pesano nel file unico (eroi, mostri, effetti).
 
 ## Cosa manca

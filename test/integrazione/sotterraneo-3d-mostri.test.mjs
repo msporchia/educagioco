@@ -40,8 +40,9 @@ await entra('sotterraneo3d=0&seme=7&stanza=sala&dpr=1&luce=stanza&sotterraneo=br
   await attendi(page, 150)
   controlla('e in scena c\'è', (await grafica()).effetti3d > 0)
   await scatto(page, 'sotterraneo-3d-mostri-palla')
-  await attendi(page, 1200)
-  controlla('finito, si libera', (await grafica()).effetti3d === 0, String((await grafica()).effetti3d))
+  // il tempo della scena va a fotogrammi (al più 50 ms l'uno): SwiftShader carico ne fa pochi, si aspetta che finisca
+  const libero = await page.waitForFunction(() => window.__sotterraneo3d.grafica().effetti3d === 0, null, { timeout: 15000 }).then(() => true, () => false)
+  controlla('finito, si libera', libero, String((await grafica()).effetti3d))
   await page.evaluate(() => window.__sotterraneo3d.prova('cura', 0, '#7dffa0'))
   await attendi(page, 300)
   await scatto(page, 'sotterraneo-3d-mostri-cura')
