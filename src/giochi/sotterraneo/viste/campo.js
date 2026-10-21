@@ -205,7 +205,9 @@ export function vistaDelloScontro(c) {
     turni: (f.turni || []).map(t => (t.chi === 'eroe' ? { chi: 'eroe', salta: false } : { chi: indice(t.chi), salta: !!t.salta })),
     apertura: { agguato: !!f.agguato, sorpresa: !!f.sorpresa, mostri: f.campo.length },
     palco: palcoDi(c),
-    eroe: { sprite: c.io.sprite ? pezzoAndante(c.io.sprite, 'fermo', 0) : null, em: c.io.em, vita: c.vita, vitaMax: c.vitaMax },
+    eroe: { sprite: c.io.sprite ? pezzoAndante(c.io.sprite, 'fermo', 0) : null, em: c.io.em, vita: c.vita, vitaMax: c.vitaMax,
+            // chi è e cosa ha in mano e addosso: per il ritratto 3D della fila dei turni (viste/anteprima3d.js)
+            chi: c.io.sprite || null, mano: c.mano || null, mancina: c.mancina || null, corpo: c.corpo || null },
     mie: statiMiei(f.io || {}, c),
     incanti: incantiAddosso(c),
   }

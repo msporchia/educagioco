@@ -37,7 +37,7 @@ const colore = computed(() => (props.cosa && !props.ombra ? GRADINI[gradinoDi(pr
           :style="colore ? { '--sot-gradino': colore } : null"
           :data-rarita="cosa && !ombra ? gradinoDi(cosa) : null" :data-ruolo="ruolo || null">
     <span class="sot-casella-dentro">
-      <Icona v-if="cosa" :sprite="cosa.sprite" :em="cosa.em" :scala="scala" :emAlto="piccola ? 22 : 28" />
+      <Icona v-if="cosa" :sprite="cosa.sprite" :em="cosa.em" :scala="scala" :emAlto="piccola ? 22 : 28" :cosa3d="cosa" :lato="piccola ? 42 : 62" />
       <b v-else class="em sot-casella-ombra">{{ vuota }}</b>
       <b v-if="segno" class="sot-casella-segno em">{{ segno }}</b>
     </span>
