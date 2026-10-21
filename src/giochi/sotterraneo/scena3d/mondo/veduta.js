@@ -61,6 +61,8 @@ export function creaVeduta(m, quota = () => 0) {
       st.x += l.x - libera.x; st.z += l.z - libera.z
       libera.x = l.x; libera.z = l.z
     },
+    // la vista in (x, z) di colpo (le prove, e il banco delle foto: nel gioco è il dito a spostarla)
+    guarda(x, z, eroe) { const l = limitaVista(x, z, eroe, m.W, m.H); libera.on = true; libera.x = l.x; libera.z = l.z },
     segui() { libera.on = false },
     misura(l, a) { L = l; A = a; camera.aspect = l / Math.max(1, a); camera.updateProjectionMatrix() },
     copri(su, giu) { sopra = su; sotto = giu },
