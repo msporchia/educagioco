@@ -3,17 +3,23 @@
 // gioco usa, seguendo gli import a partire dalle radici di ogni gruppo (solo il referenziato), li mette in una cartella sola per
 // gruppo riscrivendo gli import relativi e premette a ognuno la riga «Generato da…». I prototipi restano autonomi e non si toccano:
 // si cambia il prototipo e si rilancia. Per i mostri scrive anche `mostri3d/elenchi.js`, gli elenchi che ci sono davvero: una
-// zona ancora a metà (un file che manca o non si importa) resta fuori senza rompere il gioco, e entra al rilancio.
+// zona ancora a metà (un file che manca o non si importa) resta fuori senza rompere il gioco, e entra al rilancio. Per la roba
+// (docs/sotterraneo/roba-3d.md) scrive `roba3d/moduli.js` coi moduli delle famiglie che ci sono e si costruiscono, e
+// `roba3d/catalogo-roba.js` al posto di roba.json (i dati delle figure li tiene dati/figure3d.js, `npm run roba3d`).
 //
 //   npm run promuovi3d                 riscrive le copie
 //   npm run promuovi3d -- --controlla  non scrive: esce con 1 se una copia è diversa dal prototipo (o manca, o è in più)
-import { readFileSync, writeFileSync, existsSync, readdirSync, unlinkSync, mkdirSync } from 'node:fs'
+import { readFileSync, writeFileSync, existsSync, readdirSync, unlinkSync, mkdirSync, rmSync } from 'node:fs'
 import { resolve, dirname, basename, relative } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 
 const RADICE = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const SCENA = 'src/giochi/sotterraneo/scena3d'
 export const SEGNO = 'Generato da strumenti/promuovi-3d.mjs'
+
+// i moduli della roba: uno per famiglia di figure (il prefisso dell'id → la famiglia sta in strumenti/mappa-roba3d.mjs)
+export const FAMIGLIE_ROBA = ['lame', 'bastoni', 'scudi', 'vesti', 'gioielli']
+const CATALOGO_ROBA = 'catalogo-roba.js'
 
 // I gruppi: dove vanno e da quali file si parte. `elenchi`: per i mostri, il file → l'export con l'elenco delle creature
 export const GRUPPI = [
@@ -30,9 +36,16 @@ export const GRUPPI = [
                'ceneri.js': ['ceneri', 'MOSTRI_CENERI'], 'monte.js': ['monte', 'MOSTRI_MONTE'], 'landa.js': ['landa', 'MOSTRI_LANDA'] } },
   { nome: 'effetti', dest: `${SCENA}/effetti3d`,
     radici: ['poc/effetti-3d/lancio.js', 'poc/effetti-3d/mischia.js', 'poc/effetti-3d/aure.js'] },
+  // la roba: gli aloni sempre, i moduli delle famiglie (FAMIGLIE_ROBA) solo se ci sono, si importano e costruiscono una figura
+  { nome: 'roba', dest: `${SCENA}/roba3d`,
+    radici: ['poc/roba-3d/aloni.js', ...FAMIGLIE_ROBA.map(f => `poc/roba-3d/${f}.js`)],
+    facoltative: FAMIGLIE_ROBA.map(f => `poc/roba-3d/${f}.js`), moduli: true },
 ]
 
 const IMPORT = /(\bfrom\s*|\bimport\s*\(?\s*)(['"])([^'"]+)\2/g
+const testoCatalogo = figure3d => `// ${SEGNO}: non si tocca a mano. Il catalogo delle figure come lo leggono i prototipi (roba.json), dai\n` +
+  `// dati di dati/figure3d.js (\`npm run roba3d\`): senza le descrizioni e i rettangoli, che il disegno non usa.\n` +
+  `import { FIGURE3D } from '${figure3d}'\n\nexport default { figure: Object.entries(FIGURE3D).map(([id, f]) => ({ id, ...f })) }\n`
 const testata = sorgente => `// ${SEGNO} da ${sorgente}: non si tocca a mano (si cambia il prototipo e si rilancia \`npm run promuovi3d\`).\n`
 
 /** I file di un gruppo, seguendo gli import relativi: { percorso relativo alla radice → testo riscritto }. Fallisce su un nome doppio. */
@@ -48,6 +61,7 @@ function raccogli(radici) {
     if (nomi.has(nome) && nomi.get(nome) !== rel) throw new Error(`due file con lo stesso nome: ${nomi.get(nome)} e ${rel}`)
     nomi.set(nome, rel)
     const riscritto = testo.replace(IMPORT, (tutto, prima, q, spec) => {
+      if (spec.endsWith('/roba.json')) return `${prima}${q}./${CATALOGO_ROBA}${q}`
       if (!spec.startsWith('.')) {
         if (spec !== 'three' && !spec.startsWith('three/')) throw new Error(`${rel}: importa «${spec}», fuori da three`)
         return tutto
@@ -77,6 +91,39 @@ async function zonaPronta(rel, elenchi) {
   }
 }
 
+/** Un modulo della roba è pronto se la sua copia si importa (in una cartella di prova sotto tmp/), esporta `crea` e costruisce
+ *  almeno una figura della sua famiglia: un modulo a metà resta fuori, e le sue figure ripiegano sulla base (roba3d.js). */
+async function moduloPronto(rel) {
+  const famiglia = basename(rel, '.js')
+  const prova = resolve(RADICE, 'tmp/promuovi-prova', famiglia)
+  try {
+    const file = raccogli([rel])
+    rmSync(prova, { recursive: true, force: true }); mkdirSync(prova, { recursive: true })
+    for (const [r, t] of file) writeFileSync(resolve(prova, basename(r)), t)
+    const figure3d = pathToFileURL(resolve(RADICE, 'src/giochi/sotterraneo/dati/figure3d.js')).href
+    writeFileSync(resolve(prova, CATALOGO_ROBA), testoCatalogo(figure3d))
+    const m = await import(pathToFileURL(resolve(prova, `${famiglia}.js`)).href + `?${Date.now()}`)
+    if (typeof m.crea !== 'function') throw new Error('non esporta crea')
+    const { FIGURE3D } = await import(figure3d)
+    const figure = Object.entries(FIGURE3D).filter(([, f]) => f.famiglia === famiglia).map(([id, f]) => ({ id, ...f }))
+    if (!figure.some(f => { try { return !!(m.crea(f) && m.crea(f).isObject3D) } catch (e) { return false } })) throw new Error('non costruisce nessuna figura')
+    return true
+  } catch (e) {
+    console.warn(`  ${rel}: non è pronto (${String(e.message).split('\n')[0]}), resta fuori`)
+    return false
+  } finally {
+    rmSync(prova, { recursive: true, force: true })
+  }
+}
+
+function moduliDi(radici) {
+  const ci = FAMIGLIE_ROBA.filter(f => radici.includes(`poc/roba-3d/${f}.js`))
+  return `// ${SEGNO}: non si tocca a mano (\`npm run promuovi3d\`). I moduli 3D delle famiglie della roba che ci sono adesso; chi\n` +
+    `// manca (${FAMIGLIE_ROBA.filter(f => !ci.includes(f)).join(', ') || 'nessuno'}) ripiega sulla base in roba3d.js (docs/sotterraneo/roba-3d.md).\n` +
+    ci.map(f => `import * as ${f} from './${f}.js'`).join('\n') + (ci.length ? '\n\n' : '\n') +
+    `export const MODULI = { ${ci.join(', ')} }\n`
+}
+
 function elenchiDi(gruppo, file) {
   const righe = [], voci = []
   for (const rel of file.keys()) {
@@ -98,11 +145,14 @@ export async function promuovi({ scrivi = true } = {}) {
   for (const g of GRUPPI) {
     let radici = g.radici
     for (const f of g.facoltative || []) {
-      if (!existsSync(resolve(RADICE, f)) || !(await zonaPronta(f, g.elenchi))) radici = radici.filter(r => r !== f)
+      const pronta = existsSync(resolve(RADICE, f)) && (g.moduli ? await moduloPronto(f) : await zonaPronta(f, g.elenchi))
+      if (!pronta) radici = radici.filter(r => r !== f)
     }
     const file = raccogli(radici)
     const voluti = new Map([...file].map(([rel, testo]) => [basename(rel), testo]))
     if (g.elenchi) voluti.set('elenchi.js', elenchiDi({ ...g, radici }, file))
+    if (g.moduli) voluti.set('moduli.js', moduliDi(radici))
+    if ([...voluti.values()].some(t => t.includes(`'./${CATALOGO_ROBA}'`))) voluti.set(CATALOGO_ROBA, testoCatalogo('../../dati/figure3d.js'))
     const cartella = resolve(RADICE, g.dest)
     if (scrivi) mkdirSync(cartella, { recursive: true })
     for (const [nome, testo] of voluti) {
