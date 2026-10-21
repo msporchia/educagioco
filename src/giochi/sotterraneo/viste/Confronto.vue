@@ -69,7 +69,7 @@ const mani = computed(() => {
           <span class="em">🔄</span> l'altro anello
         </button>
         <div v-for="v in vecchi" :key="v.chiave" class="sot-cart-pezzo" :style="{ '--sot-gradino': colore(v) }" :data-pezzo="v.chiave">
-          <i class="sot-tab-icona"><Icona :sprite="v.sprite" :em="v.em" :scala="scala(v)" :emAlto="22" /></i>
+          <i class="sot-tab-icona"><Icona :sprite="v.sprite" :em="v.em" :scala="scala(v)" :emAlto="22" :cosa3d="v" :lato="29" /></i>
           <span><b>{{ v.nome }}</b><em>{{ tipoDi(v) }} · liv. {{ v.liv || 1 }} · {{ GRADINI[gradinoDi(v)].nome }}<template v-if="requisitoScritto(v)"> · {{ requisitoScritto(v) }}</template></em></span>
         </div>
         <div v-if="!vecchi.length" class="sot-cart-pezzo sot-tab-niente" data-niente>
@@ -84,7 +84,7 @@ const mani = computed(() => {
       <div class="sot-cartellino sot-cart-questo" data-colonna="questo" :style="{ '--sot-gradino': colore(cosa) }">
         <small>Questo</small>
         <div class="sot-cart-pezzo" :data-pezzo="cosa.chiave">
-          <i class="sot-tab-icona"><Icona :sprite="cosa.sprite" :em="cosa.em" :scala="scala(cosa)" :emAlto="22" /></i>
+          <i class="sot-tab-icona"><Icona :sprite="cosa.sprite" :em="cosa.em" :scala="scala(cosa)" :emAlto="22" :cosa3d="cosa" :lato="29" /></i>
           <span><b>{{ cosa.nome }}</b><em>{{ tipoDi(cosa) }} · liv. {{ cosa.liv || 1 }} · {{ GRADINI[gradinoDi(cosa)].nome }}<template v-if="requisitoScritto(cosa)"> · {{ requisitoScritto(cosa) }}</template></em></span>
         </div>
         <ul class="sot-cart-numeri">

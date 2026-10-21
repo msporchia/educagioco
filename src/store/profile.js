@@ -8,7 +8,7 @@ import { newItem, record as srsRecord, isMastered, strength } from './srs.js'
 import { acceso as suonoAcceso } from '../audio.js'
 import { CHIAVI_GIOCHI, eSperimentale, serveA } from '../data/giochi.js'
 import { SAPERI } from '../data/saperi.js'
-import { nascitaValida, etaAnagrafica, etaVoluta } from '../data/nascita.js'
+import { nascitaValida, etaDiClasse, etaVoluta } from '../data/nascita.js'
 import { CAMPAGNE as GIORNATE_BANCARELLA } from '../data/bancarella.js'
 import { eccezioniDi, eccezioniPerEta, spostandoLEta,
          rimettendoLEta, partenzaPerEta } from '../data/partenze.js'
@@ -149,11 +149,11 @@ export async function creaGiocatore(nome, entra = true, partenza = null, aspetto
     fresco.settings = { ...fresco.settings, giochi, sa }
     if (eta) fresco.settings.eta = eta
   }
-  // la data di nascita (facoltativa): l'età si terrà aggiornata da sola; lo scarto è quanto si è tarato sopra o sotto i suoi anni
+  // la data di nascita (facoltativa): l'età si terrà aggiornata da sola; lo scarto è quanto si è tarato sopra o sotto la sua classe
   if (nascitaValida(nascita)) {
     fresco.settings.nascita = { m: nascita.m, a: nascita.a }
-    const e = etaAnagrafica(nascita)
-    fresco.settings.scarto = fresco.settings.eta ? Math.max(-3, Math.min(3, fresco.settings.eta - e.anni)) : 0
+    const e = etaDiClasse(nascita)
+    fresco.settings.scarto = fresco.settings.eta && e != null ? Math.max(-3, Math.min(3, fresco.settings.eta - e)) : 0
   }
   // un nome che PERSONE non ha (mai dovrebbe capitare, da un tasto che
   // mostra solo quelli) si ignora invece di scriverlo: meglio ricadere
@@ -536,7 +536,7 @@ export const quantiGiochiAccesi = () => CHIAVI_GIOCHI.filter(giocoAcceso).length
 
 // L'unica manopola dell'età: vedi docs/genitori/manopola.md e spostandoLEta in data/partenze.js
 /* ── LA DATA DI NASCITA ──
-   `settings.nascita = { m, a }` (mese 0-11 e anno) e `settings.scarto` (quanti anni sopra o sotto i suoi si è tarato). L'età che
+   `settings.nascita = { m, a }` (mese 0-11 e anno) e `settings.scarto` (di quante classi sopra o sotto la sua si è tarato). L'età che
    i giochi leggono resta `settings.eta`: la data dice a quale età *dovrebbe* essere, e `store/compleanno.js` avvisa quando non lo è.
    Docs: docs/genitori/riordino.md. */
 export const nascitaDelBambino = () => {
@@ -550,8 +550,8 @@ export const scartoDelBambino = () => {
 // a quale età dovrebbe essere tarato, se c'è la data (null se non c'è)
 export const etaDaNascita = () => etaVoluta(nascitaDelBambino(), scartoDelBambino())
 function segnaLoScarto(s) {
-  const e = etaAnagrafica(s.nascita)
-  if (e) s.scarto = Math.max(-3, Math.min(3, Number(s.eta) - e.anni))
+  const e = etaDiClasse(s.nascita)
+  if (e != null) s.scarto = Math.max(-3, Math.min(3, Number(s.eta) - e))
 }
 /* La data si dice una volta e basta; quello che il gioco usa non si sposta (lo sposta `spostaLEta`, con la conferma): lo scarto
    si ricalcola in modo che l'età di adesso resti com'è. */

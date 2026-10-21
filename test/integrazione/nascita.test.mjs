@@ -12,8 +12,9 @@ import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 
 const browser = await apriBrowser()
 const oggi = new Date()
-/* nato questo mese, `n` anni fa: oggi ha esattamente n anni */
-const nato = n => ({ m: oggi.getMonth(), a: oggi.getFullYear() - n })
+/* la classe in cui sta adesso corrisponde a `n` anni (terza = 8): si cambia a settembre, quindi conta l'anno scolastico, non l'anno */
+const annoScol = oggi.getMonth() >= 8 ? oggi.getFullYear() : oggi.getFullYear() - 1
+const nato = n => ({ m: oggi.getMonth(), a: annoScol - n })
 
 const digita = async (page, pin) => { for (const c of pin) await page.click(`.tasto >> text="${c}"`) }
 async function daiGrandi(page, scheda = 'giochi') {
@@ -34,7 +35,7 @@ async function daiGrandi(page, scheda = 'giochi') {
   await page.selectOption('[data-nascita-mese]', String(nato(7).m))
   await page.selectOption('[data-nascita-anno]', String(nato(7).a))
   await page.waitForSelector('[data-nascita-eta]', { timeout: 3000 })
-  controlla('con la data dice quanti anni ha', /7 anni/.test(await page.locator('[data-nascita-eta]').innerText()))
+  controlla('con la data dice in che classe è', /seconda elementare/.test(await page.locator('[data-nascita-eta]').innerText()))
   uguale('e la manopola si mette lì', (await page.locator('[data-eta-ora]').innerText()).trim(), '7 anni')
   await page.click('[data-azione="si-gioca"]')
   await page.waitForSelector('.carte', { timeout: 8000 })

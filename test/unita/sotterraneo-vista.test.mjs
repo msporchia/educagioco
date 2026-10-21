@@ -5,11 +5,12 @@
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
 import { seminato } from '../../src/giochi/sotterraneo/motore/livello.js'
-import { disponi, piazza, ZOCCOLO, vistaDelloScontro, statiDel, segniDel } from '../../src/giochi/sotterraneo/viste/campo.js'
+import { disponi, piazza, ZOCCOLO, vistaDelloScontro, statiDel, statoNuovo, segniDel } from '../../src/giochi/sotterraneo/viste/campo.js'
 import { nuovoRacconto, modoDelColpo } from '../../src/giochi/sotterraneo/viste/racconto.js'
 import { NODI } from '../../src/giochi/sotterraneo/dati/abilita.js'
 import { EFFETTI, CORPI, SEGNI, effettoDi, effettoDelColpo, aureDelNodo, statiDelNodo, guastiDegliEffetti } from '../../src/giochi/sotterraneo/dati/effetti.js'
 import { sogliaDi } from '../../src/giochi/sotterraneo/dati/livelli.js'
+import { statoDi } from '../../src/giochi/sotterraneo/scena3d/effetti3d/gestore.js'
 import { readFileSync } from 'node:fs'
 import { controlla, uguale, stessaLista, riassunto } from '../aiuto/verifica.mjs'
 
@@ -232,6 +233,12 @@ function scena(n, { grosso = -1 } = {}) {
   const f = statiDel({ stati: { debole: 2 } })
   uguale('chi colpisce a metà senza gelo è fiacco, non gelato', f[0].glifo + '/' + f[0].gelo, 'fiacco/false')
   uguale('stordito: le stelle', statiDel({ stati: { fermo: 1 } })[0].glifo, 'stelle')
+  // i Rovi (debole da `radici`): le spine ai piedi per tutti i turni, non la freccia del fiacco; il Grido resta fiacco
+  const rovi = statiDel({ stati: { debole: 3, deboleDa: 'radici' } })[0]
+  uguale('i Rovi lasciano le radici ai piedi', rovi.glifo + '/' + rovi.da, 'radici/radici')
+  uguale('i Rovi in 3D sono radici ai piedi', statoDi(rovi), 'bloccato')
+  uguale('il Grido resta fiacco in 3D', statoDi(statiDel({ stati: { debole: 3, deboleDa: null } })[0]), 'fiacco')
+  uguale('lo stato che il racconto posa subito per i Rovi è lo stesso', statoNuovo('debole', { stati: {} }, { effetto: 'radici' }).glifo, 'radici')
   uguale('sanguina: il sangue', statiDel({ stati: { sanguina: { quanto: 2, scambi: 2, pile: 1 } } })[0].glifo, 'sangue')
   const resiste = segniDel({ elemento: 'fuoco', effetto: 'resiste', rifiutati: [] })
   const teme = segniDel({ elemento: 'gelo', effetto: 'teme', rifiutati: [] })

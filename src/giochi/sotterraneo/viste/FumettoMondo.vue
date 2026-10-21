@@ -8,7 +8,7 @@ defineProps({
   f: { type: Object, required: true },   // { tipo, … } (vedi fumetto in Mondo3d.vue)
 })
 defineEmits(['scendi', 'giu', 'viaggio', 'bevi', 'taglia', 'scava'])
-const minuscolo = s => s.charAt(0).toLowerCase() + s.slice(1)
+const minuscolo = s => { const t = String(s ?? ''); return t.charAt(0).toLowerCase() + t.slice(1) }   // un nome che manca non rompe la pagina
 </script>
 
 <template>

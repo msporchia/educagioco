@@ -4,7 +4,7 @@ import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { state, esportaTutto, resetPlayer, nomeCorrente,
          rinominaGiocatore, eliminaGiocatore, cestinaOra, ripristinaCestinato,
          spostaLEta,
-         etaDelBambino,
+         etaDelBambino, nascitaDelBambino,
          tuttoAperto, accendiTuttoAperto,
          sperimentaliAccesi, accendiSperimentali,
          ritocca, accendiSapere, saperiSpenti, fissaGioco, fissaSapere,
@@ -33,7 +33,7 @@ import { anniInLettere } from '../components/eta/lettere.js'
 import Benvenuto from '../components/Benvenuto.vue'
 import Prova from '../quiz/Prova.vue'
 import ComeVa from '../quiz/ComeVa.vue'
-import MoneteGiocoPerGioco from '../components/varieta/Tetti.vue'
+import MoneteGlobali from '../components/varieta/Tetti.vue'
 import ArchivioGenitori from '../components/genitori/Archivio.vue'
 import CartaAmici from '../components/amici/CartaAmici.vue'
 import GiochiImpostazioni from '../components/genitori/Giochi.vue'
@@ -617,7 +617,8 @@ async function rimetti(v) {
         <button :class="{ ora: scheda === 'bambini' }" data-scheda="bambini" @click="scheda = 'bambini'"><span aria-hidden="true">👶</span>Bambino</button>
         <button :class="{ ora: scheda === 'giochi' }" data-scheda="giochi" @click="scheda = 'giochi'"><span aria-hidden="true">🎮</span>Giochi</button>
         <button :class="{ ora: scheda === 'comeva' }" data-scheda="comeva" @click="scheda = 'comeva'"><span aria-hidden="true">📊</span>Come va</button>
-        <button :class="{ ora: scheda === 'casa' }" data-scheda="casa" @click="scheda = 'casa'"><span aria-hidden="true">🏠</span>Casa</button>
+        <button :class="{ ora: scheda === 'salvataggi' }" data-scheda="salvataggi" @click="scheda = 'salvataggi'"><span aria-hidden="true">💾</span>Salvataggi</button>
+        <button :class="{ ora: scheda === 'impostazioni' }" data-scheda="impostazioni" @click="scheda = 'impostazioni'"><span aria-hidden="true">🔧</span>Impostazioni</button>
       </nav>
 
       <!-- ══════════ scheda: i bambini ══════════ -->
@@ -683,18 +684,19 @@ async function rimetti(v) {
 
       <div class="carte"><Nascita @applica="applicaAnni" @cambiato="giroEta++" /></div>
 
-      <h2>Età e giochi in casa</h2>
-      <p class="mini">Decide quali giochi trova in home e quanto sono difficili le domande.
-        Sotto c'è il quadro di quell'età: ogni riga si può correggere con la ✎.</p>
-
-      <ManopolaEta :anni="anniOra" :giochi="settaggi.giochi || {}"
-                   :sa="settaggi.sa || {}" :ritocchi="settaggi.ritocchi || {}"
-                   :risposte="state.profile?.items || {}"
-                   :sperimentali="inProva" conferma tarabile
-                   @scegli="applicaAnni" @prova="prova = $event"
-                   @ritocca="ritoccaDalQuadro" @gioco="fissaDalQuadro"
-                   @sapere="fissaSapereDalQuadro"
-                   @rimetti="rimettiTutto" />
+      <details class="tendina senza-ritaglio" data-eta-mano :open="!nascitaDelBambino()">
+        <summary>🎚️ Tara a mano: troppo facili o troppo difficili?</summary>
+        <p class="mini">I giochi si tarano sulla sua classe. Se per {{ chi }} sono troppo facili o troppo difficili,
+          sposta la manopola: sotto vedi cosa cambia, e ogni riga si può correggere con la ✎.</p>
+        <ManopolaEta :anni="anniOra" :con-data="!!nascitaDelBambino()" :giochi="settaggi.giochi || {}"
+                     :sa="settaggi.sa || {}" :ritocchi="settaggi.ritocchi || {}"
+                     :risposte="state.profile?.items || {}"
+                     :sperimentali="inProva" conferma tarabile
+                     @scegli="applicaAnni" @prova="prova = $event"
+                     @ritocca="ritoccaDalQuadro" @gioco="fissaDalQuadro"
+                     @sapere="fissaSapereDalQuadro"
+                     @rimetti="rimettiTutto" />
+      </details>
 
       <h2>Giocare con gli amici</h2>
       <div class="carte"><CartaAmici /></div>
@@ -706,6 +708,42 @@ async function rimetti(v) {
           <i>Nome, faccia ed età: poi tocca a lui giocare</i>
         </button>
       </div>
+
+      </template>
+
+      <!-- ══════════ scheda: i salvataggi (il telefono, non un bambino) ══════════ -->
+      <template v-else-if="scheda === 'salvataggi'">
+      <h2>Salva e rimetti</h2>
+      <p class="mini">Monete, animali, campagne e traguardi di tutti: si salvano su un file e si
+        rimettono da un file.</p>
+
+      <div class="carte">
+        <button v-if="copia" class="carta avviso-copia" type="button" data-copia-avviso @click="esporta">
+          <span class="ico">💾</span>
+          <b>{{ copia === 'mai' ? 'I progressi non sono mai stati salvati su un file' : `Ultimo salvataggio: ${giorniCopia} giorni fa` }}</b>
+          <i>Se il telefono si rompe è tutto lì dentro. Tocca per salvare adesso.</i>
+        </button>
+        <button class="carta" @click="esporta">
+          <span class="ico">💾</span>
+          <b>Salva su file</b>
+          <i>Scarica tutto: {{ chiGioca }}</i>
+        </button>
+
+        <!-- Solo dove il foglio di condivisione esiste (i telefoni): sul
+             computer «scarica» è già la cosa giusta, e una carta in più
+             sarebbe solo un'altra decisione da prendere. -->
+        <button v-if="puoMandareFile" class="carta" data-azione="manda-salvataggio"
+                @click="mandaSalvataggio">
+          <span class="ico">📤</span>
+          <b>Mandalo dove vuoi</b>
+          <i>A te stesso in chat, nel cloud, sull'altro telefono</i>
+        </button>
+
+        <ArchivioGenitori @esito="v => esito = v" />
+
+      </div>
+
+
 
       <!-- le cose che cancellano, chiuse: a un tocco da quelle innocue non ci stanno più -->
       <details class="tendina delicata" data-delicata>
@@ -777,40 +815,9 @@ async function rimetti(v) {
       </details>
       </template>
 
-      <!-- ══════════ scheda: la casa (il telefono, non un bambino) ══════════ -->
-      <template v-else-if="scheda === 'casa'">
+      <!-- ══════════ scheda: le impostazioni (il telefono, non un bambino) ══════════ -->
+      <template v-else-if="scheda === 'impostazioni'">
       <p class="mini">Quello che riguarda il telefono e chi lo usa, non un bambino solo.</p>
-      <h2>Salvataggio</h2>
-      <p class="mini">Monete, animali, campagne e traguardi di tutti: si salvano su un file e si
-        rimettono da un file.</p>
-
-      <div class="carte">
-        <button v-if="copia" class="carta avviso-copia" type="button" data-copia-avviso @click="esporta">
-          <span class="ico">💾</span>
-          <b>{{ copia === 'mai' ? 'I progressi non sono mai stati salvati su un file' : `Ultimo salvataggio: ${giorniCopia} giorni fa` }}</b>
-          <i>Se il telefono si rompe è tutto lì dentro. Tocca per salvare adesso.</i>
-        </button>
-        <button class="carta" @click="esporta">
-          <span class="ico">💾</span>
-          <b>Salva su file</b>
-          <i>Scarica tutto: {{ chiGioca }}</i>
-        </button>
-
-        <!-- Solo dove il foglio di condivisione esiste (i telefoni): sul
-             computer «scarica» è già la cosa giusta, e una carta in più
-             sarebbe solo un'altra decisione da prendere. -->
-        <button v-if="puoMandareFile" class="carta" data-azione="manda-salvataggio"
-                @click="mandaSalvataggio">
-          <span class="ico">📤</span>
-          <b>Mandalo dove vuoi</b>
-          <i>A te stesso in chat, nel cloud, sull'altro telefono</i>
-        </button>
-
-        <ArchivioGenitori @esito="v => esito = v" />
-
-      </div>
-
-
       <h2>Passa il gioco</h2>
       <p class="mini">Non c'è un negozio da cui scaricarlo: si passa l'indirizzo, e chi lo
         riceve se lo aggiunge alla schermata del telefono. È gratis e non chiede niente
@@ -900,8 +907,33 @@ async function rimetti(v) {
       </div>
 
       <details class="tendina sviluppo" data-sviluppo>
-        <summary>🛠️ Per chi sviluppa</summary>
+        <summary>🛠️ Avanzate</summary>
+        <p class="mini">Cose che di base non si toccano: i giochi ancora in prova, le tappe aperte, gli strumenti per chi sviluppa.</p>
         <div class="carte">
+
+        <button class="carta interruttore" :class="{ spento: !inProva }"
+                data-flag="sperimentali" @click="cambiaProva">
+          <span class="ico">🧪</span>
+          <b>Mostra i giochi in prova</b>
+          <i>{{ inProva ? (sperimentali.length === 1
+                            ? '1 gioco in prova, ed è nelle impostazioni dei giochi'
+                            : sperimentali.length + ' giochi in prova, e sono nelle impostazioni dei giochi')
+                        : 'Nascosti: non compaiono in home e nemmeno fra le impostazioni dei giochi' }}</i>
+          <span class="leva"><span class="pallina"></span></span>
+        </button>
+
+        <button class="carta interruttore" :class="{ spento: !aperto }"
+                data-flag="tuttoAperto" @click="cambiaAperto">
+          <span class="ico">🔓</span>
+          <b>Sblocca tutti i livelli</b>
+          <!-- lo leggono il Generale, il castello, le lingue, la bancarella e gli asteroidi -->
+          <i>{{ aperto ? 'Segnato: nei giochi a tappe si apre tutto, anche quello che non ha ancora fatto'
+                       : 'Le tappe si aprono una per volta, come adesso' }}</i>
+          <span class="leva"><span class="pallina"></span></span>
+        </button>
+
+      
+        <MoneteGlobali :chi="chi" />
         <button class="carta interruttore" :class="{ spento: !fpsAcceso }"
                 data-flag="fps" @click="cambiaFps">
           <span class="ico">📈</span>
@@ -941,33 +973,6 @@ async function rimetti(v) {
       <!-- l'unico posto dove si tara: vedi docs/genitori/manopola.md, docs/genitori/quadro.md -->
       <h2>I giochi di {{ chi }}</h2>
       <GiochiImpostazioni />
-
-      <h2>Interruttori di casa</h2>
-      <p class="mini">Non dipendono dall'età e non sono di un gioco solo.</p>
-
-      <div class="carte">
-        <button class="carta interruttore" :class="{ spento: !inProva }"
-                data-flag="sperimentali" @click="cambiaProva">
-          <span class="ico">🧪</span>
-          <b>Mostra i giochi in prova</b>
-          <i>{{ inProva ? (sperimentali.length === 1
-                            ? '1 gioco in prova, ed è nel quadro qui sopra'
-                            : sperimentali.length + ' giochi in prova, e sono nel quadro qui sopra')
-                        : 'Nascosti: non compaiono in home e nemmeno nel quadro' }}</i>
-          <span class="leva"><span class="pallina"></span></span>
-        </button>
-
-        <button class="carta interruttore" :class="{ spento: !aperto }"
-                data-flag="tuttoAperto" @click="cambiaAperto">
-          <span class="ico">🔓</span>
-          <b>Sblocca tutti i livelli</b>
-          <!-- lo leggono il Generale, il castello, le lingue, la bancarella e gli asteroidi -->
-          <i>{{ aperto ? 'Segnato: nei giochi a tappe si apre tutto, anche quello che non ha ancora fatto'
-                       : 'Le tappe si aprono una per volta, come adesso' }}</i>
-          <span class="leva"><span class="pallina"></span></span>
-        </button>
-
-      </div>
 
       <MoneteGiocoPerGioco :chi="chi" />
 
@@ -1104,6 +1109,7 @@ async function rimetti(v) {
 .tendina[open] > summary::after { content:"▾" }
 .tendina > .carte, .tendina > h2, .tendina > p, .tendina > template { margin-left:10px; margin-right:10px }
 .tendina > .carte { width:auto; padding-bottom:12px }
+.tendina.senza-ritaglio { overflow:visible }   /* il cartello «Applica» della manopola è sticky: un overflow lo ancora alla tendina */
 .tendina.delicata > summary { color:#b4302e }
 
 .schede { display:flex; gap:6px; width:100%; max-width:400px; margin:-4px 0 2px }

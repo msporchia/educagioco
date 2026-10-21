@@ -21,7 +21,7 @@ import { iconaDi } from '../dati/terra.js'
 import { ilMondo, seguiLEroe, terraDelMondo, zonaDi, baseDi, postiDi, cittaInCella, regioneInCella, zonaInCella, portaleDella, minatoreDi, ingressoDi,
          nomeDellaPietra, difDellaPietra, pietraAccanto, meteDelViaggio, mondoDaSalvato, mondoDaSalvare, lontanoDalleCitta,
          frecceDelCartello, dungeonDi, dungeonDellIndice, fontaneDi, curaDellaFontana, VISTA_MONDO, PASSO_MONDO } from '../motore/mondo-sopra.js'
-import { rettangoloPersona, rettangoloPosto, personaVicina, spartisciPersone, SCARTO_DITO } from '../scena3d/mondo/dito.js'
+import { rettangoloPersona, rettangoloPosto, personaVicina, spartisciPersone, eTrascinare, zoomDaPizzico } from '../scena3d/mondo/dito.js'
 import { domandaPerGioco } from '../../../quiz/scelta.js'
 import Domanda from '../../../quiz/Domanda.vue'
 import Dialogo from './Dialogo.vue'
@@ -60,7 +60,7 @@ const props = defineProps({
 // `raccogli` (i): la cosa per terra `i` è sotto i piedi dell'eroe. Le forze di sopra vanno in `mondo.sopra` col resto (salva)
 const emit = defineEmits(['scendi', 'mondo', 'bottega', 'riprendi', 'sentito', 'cura', 'risposta', 'veduta', 'pensa', 'pensiero', 'pensiero-fine', 'trovati',
                           'scontro', 'raccogli'])
-const minuscolo = s => s.charAt(0).toLowerCase() + s.slice(1)
+const minuscolo = s => { const t = String(s ?? ''); return t.charAt(0).toLowerCase() + t.slice(1) }   // un nome che manca non rompe la pagina
 const RAGGIO_SALUTO = 6, RAGGIO_RIARMO = 9, DURATA_SALUTO = 1.4
 // quanto è alto il bersaglio di un ingresso, per monumento (scena3d/mondo/monumenti.js)
 const ALTO_DEL_MONUMENTO = { torre: 4.8, botola: 1.6, menhir: 2.6, palafitta: 3.4, fumarola: 2.6, tomba: 3.2 }
@@ -217,6 +217,7 @@ function vaiA(c, cosa = null) {
   via = (sp ? sp.liscia(strada) : terra.liscia(da, strada)).map(p => ({ x: p.x + 0.5, z: p.y + 0.5 }))
   meta = cosa
   primaVolta.value = false
+  if (scena) scena.cam.segui()   // mandato l'eroe da qualche parte, la vista torna a seguirlo (come nella fattoria)
   if (!via.length) arriva()
   else cammina.value = true
   return true
@@ -707,22 +708,54 @@ const segnoSopra = b => (b.ruolo === 'bacheca' ? segniBacheca.value[b.citta] || 
 
 /* ═══════════ il dito ═══════════ */
 const vista = ref(null), tela = ref(null), sopraEl = ref(null), sottoEl = ref(null), stratoEl = ref(null)
-let giu = null, strisciato = false, ultimoTrascina = 0
-function premi(e) { if (e.pointerType === 'mouse' && e.button !== 0) return; giu = { x: e.clientX, y: e.clientY, mouse: e.pointerType === 'mouse' }; strisciato = false }
-function muovi(e) {
-  if (!giu || (giu.mouse && !(e.buttons & 1))) return
-  if (!strisciato && Math.hypot(e.clientX - giu.x, e.clientY - giu.y) > SCARTO_DITO) { strisciato = true; giu.ultimo = giu.x }
-  // nella veduta il dito che trascina fa scorrere il mondo (su un telefono in piedi non ci sta tutto: scena3d/mondo/veduta.js)
-  if (strisciato && props.veduta && scena) { scena.spostaVeduta(e.clientX - (giu.ultimo ?? e.clientX)); giu.ultimo = e.clientX; return }
-  if (!strisciato || props.veduta || dialogo.value || domandaPietra.value || inScontro) return
-  // trascinando l'eroe insegue il dito (il mouse solo a tasto premuto)
-  const t = performance.now()
-  if (t - ultimoTrascina < 110) return
-  ultimoTrascina = t
-  const p = puntoDi(e.clientX, e.clientY)
-  if (p.x >= 0) { chiudi(); mostri.lascia(); vaiA({ x: Math.floor(p.x), y: Math.floor(p.z) }) }
+let giu = null, strisciato = false, pizzico = null
+const punti = new Map()   // le dita sulla vista (il mouse no: non pizzica)
+// un tocco cammina; un dito che oltre i 16 px scorre sposta la vista (e l'eroe resta dov'è, come nella fattoria); due dita zoomano
+// (docs/sotterraneo/mondo-3d-telecamera.md). Nella veduta il dito scorre il mondo, come prima
+function premi(e) {
+  if (e.pointerType === 'mouse' && e.button !== 0) return
+  const su = e.target.closest ? e.target.closest('.sot-terra-sopra > *, .sot-terra-sotto > *, [data-fumetto], .sot-foglio, [data-torna-eroe]') : null
+  if (su && e.target.closest('.sot-foglio, [data-torna-eroe]')) { giu = null; strisciato = false; return }   // un foglio aperto o il tasto: non sono della vista
+  if (e.pointerType !== 'mouse') {
+    if (e.isPrimary) { punti.clear(); pizzico = null }   // il primo dito di un gesto nuovo: quello che era rimasto non si è mai alzato
+    punti.set(e.pointerId, { x: e.clientX, y: e.clientY })
+  }
+  if (punti.size >= 2) {
+    giu = null; strisciato = true   // il pizzico non è un tocco: il click che segue non cammina
+    if (punti.size === 2 && scena && !props.veduta && !inScontro) {
+      const [a, b] = [...punti.values()]
+      pizzico = { d0: Math.hypot(a.x - b.x, a.y - b.y), z0: scena.zoom }
+    }
+    return
+  }
+  if (su) { giu = null; strisciato = false; return }   // una carta o un fumetto: il dito che parte di lì non sposta la vista
+  giu = { x: e.clientX, y: e.clientY, mouse: e.pointerType === 'mouse' }; strisciato = false
 }
-function lascia() { giu = null }
+function muovi(e) {
+  if (punti.has(e.pointerId)) punti.set(e.pointerId, { x: e.clientX, y: e.clientY })
+  if (pizzico) {
+    if (punti.size === 2 && scena) { const [a, b] = [...punti.values()]; scena.zoom = zoomDaPizzico(pizzico.z0, pizzico.d0, Math.hypot(a.x - b.x, a.y - b.y)) }
+    return
+  }
+  if (!giu || (giu.mouse && !(e.buttons & 1))) return
+  if (!strisciato && eTrascinare(giu.x, giu.y, e.clientX, e.clientY)) { strisciato = true; giu.ultimo = giu.x; giu.px = giu.x; giu.py = giu.y }
+  if (!strisciato || !scena) return
+  // nella veduta il dito che trascina fa scorrere il mondo (su un telefono in piedi non ci sta tutto: scena3d/mondo/veduta.js)
+  if (props.veduta) { scena.spostaVeduta(e.clientX - (giu.ultimo ?? e.clientX)); giu.ultimo = e.clientX; return }
+  if (dialogo.value || domandaPietra.value || inScontro) return
+  // altrimenti sposta la vista: il punto del terreno sotto il dito resta sotto il dito
+  const a = puntoDi(giu.px, giu.py), b = puntoDi(e.clientX, e.clientY)
+  giu.px = e.clientX; giu.py = e.clientY
+  if (a.x >= 0 && b.x >= 0) scena.cam.trascina(b.x - a.x, b.z - a.z, io)
+}
+// «torna all'eroe»: compare quando la vista è lontana dall'eroe (più di tre celle) e non si è in veduta
+const vistaLontana = ref(false), sottoPx = ref(0)
+function tornaAllEroe() { if (scena) scena.cam.segui() }
+function lascia(e) {
+  if (e) punti.delete(e.pointerId)
+  giu = null
+  if (!punti.size) pizzico = null
+}
 const puntoDi = (cx, cy) => { const r = tela.value.getBoundingClientRect(); return scena.aTerra(cx - r.left, cy - r.top) }
 const segno = ref(null)
 let nSegno = 0
@@ -737,6 +770,7 @@ function toccaPrato(e) {
   avviso.value = ''
   const p = puntoDi(e.clientX, e.clientY)
   if (p.x < 0) return
+  scena.cam.segui()
   if (props.veduta) emit('veduta', false)
   else {
     const vicino = personaVicina(p, bersagli.value.filter(b => b.tipo === 'persona' && trovati.value.has(b.chiave)))
@@ -753,6 +787,7 @@ function toccaPrato(e) {
 // un tocco su un bersaglio: l'eroe ci va, e arrivato si apre la sua cosa (un tocco nuovo annulla la meta di prima)
 function tocca(b) {
   if (strisciato || inScontro) return
+  if (scena) scena.cam.segui()
   mostri.lascia()
   chiudiDialogo()
   if (props.veduta) {
@@ -824,6 +859,8 @@ let prossimeBussole = 0
 const daPosare = []
 function dopo() {
   const veduta = props.veduta
+  const lib = scena.cam.libera, lontana = !veduta && lib.on && Math.hypot(lib.x - io.x, lib.z - io.z) > 3
+  if (lontana !== vistaLontana.value) vistaLontana.value = lontana
   daPosare.length = 0
   for (const b of bersagli.value) {
     const el = elementi.get(b.chiave)
@@ -1082,6 +1119,7 @@ function misura() {
   vL = r.width; vA = r.height
   sopra = sopraEl.value ? sopraEl.value.offsetHeight : 0
   sotto = sottoEl.value ? sottoEl.value.offsetHeight : 0
+  sottoPx.value = sotto
   if (scena) { scena.copri(sopra, sotto); scena.misura() }
 }
 let osserva = null, attesa = 0
@@ -1175,6 +1213,9 @@ watch(giro, g => { if (mostri && g !== mostri.stato.giro) { mostri.giro(g); foto
     <i ref="eroeEl" class="sot3d-eroe-mondo" data-eroe-mondo :data-cammina="cammina ? 1 : 0" aria-hidden="true"></i>
     <span v-if="segno" ref="segnoEl" :key="'segno-' + segno.n" class="sot3d-segno-arrivo"></span>
     <span v-if="lampo" :key="'lampo-' + lampo" class="sot3d-lampo" aria-hidden="true"></span>
+    <!-- la vista spostata dal dito: un tocco per tornare all'eroe -->
+    <button v-if="vistaLontana && !inScontroV" type="button" class="sot3d-torna" data-torna-eroe :style="{ bottom: sottoPx + 12 + 'px' }"
+            @pointerdown.stop @click.stop="tornaAllEroe"><span aria-hidden="true">⌖</span> torna all'eroe</button>
 
     <!-- i bersagli: chi sta fermo, gli ingressi, le pietre, il portale, il cartello, la bacheca, le grate chiuse. Stanno nel DOM
          anche nel buio (`sot-buio` lascia passare il tocco): le prove ci camminano incontro come sulla terra dipinta -->

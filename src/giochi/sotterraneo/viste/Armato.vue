@@ -10,6 +10,9 @@ import { pezzoAndante } from '../dati/tessere.js'
 import { PEZZI } from '../dati/atlante.js'
 import { COSE } from '../dati/cose.js'
 import { impugnatura } from '../dati/impugna.js'
+import { usaAnteprima } from './anteprima3d.js'
+import Quadro3d from './Quadro3d.vue'
+import { chiaveDellEroe, EROI } from '../scena3d/anteprime3d-pura.js'
 
 const props = defineProps({
   eroe: { type: Object, required: true },        // la scheda: sprite, em
@@ -18,6 +21,8 @@ const props = defineProps({
   scala: { type: Number, default: 3 },           // intera: uno sprite a scala storta esce a pixel disuguali
   posa: { type: String, default: 'fermo' },      // 'corsa' quando cammina: l'arma resta in pugno
   fotogramma: { type: Number, default: 0 },
+  corpo: { type: String, default: null },        // l'armatura: si vede solo nel ritratto 3D
+  in3d: { type: Boolean, default: false },       // nel Sotterraneo 3D: il ritratto è l'eroe 3D vestito (viste/anteprima3d.js)
 })
 
 const T = 16       // la casella del campo, in pixel di sprite
@@ -47,10 +52,15 @@ function posato(chiave, verso, dy = 0, specchia = false) {
 
 const inPugno = computed(() => (props.mano ? posato(props.mano, 1) : null))
 const inBraccio = computed(() => (props.mancina && !dueMani.value ? posato(props.mancina, -1, 0, true) : null))
+
+// il ritratto 3D, quando c'è: sopra lo sprite, che resta sotto (nascosto) finché l'immagine non arriva
+const chi = computed(() => [props.eroe.sprite, props.eroe.chiave].find(k => EROI.includes(k)) || null)
+const tre = usaAnteprima(() => (props.in3d && props.posa === 'fermo' && chi.value
+  ? chiaveDellEroe(chi.value, { mano: props.mano, mancina: props.mancina, corpo: props.corpo }) : null))
 </script>
 
 <template>
-  <span class="sot-armato" :style="{ width: larga + 'px', height: (ALTO * scala) + 'px' }">
+  <span class="sot-armato" :class="{ 'sot-armato-3d': tre }" :data-anteprima="tre ? '3d' : null" :style="{ width: larga + 'px', height: (ALTO * scala) + 'px' }">
     <span class="sot-ritratto" :style="corpo ? { ...corpo.gabbia, left: MARGINE * scala + 'px' } : null">
       <i v-if="corpo" :style="corpo.pezzo"></i>
       <b v-else class="em">{{ eroe.em }}</b>
@@ -64,5 +74,6 @@ const inBraccio = computed(() => (props.mancina && !dueMani.value ? posato(props
           :style="{ ...inPugno.gabbia, ...inPugno.posto }">
       <i :style="inPugno.pezzo"></i>
     </span>
+    <Quadro3d v-if="tre" class="sot-armato-img" :immagine="tre" />
   </span>
 </template>

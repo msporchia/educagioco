@@ -12,7 +12,7 @@ import { ABITANTI_DI_SOPRA, CURVA_DI_SOPRA, SOPRA } from '../dati/mondo-aperto-m
 import { ERBA, livelloDi, zonaDi } from './mondo-percorso.js'
 import { Livello, seminato } from './livello.js'
 import { Corsa } from './corsa.js'
-import { PALCO } from './palco.js'
+import { PALCO, EROE_SUL_PALCO } from './palco.js'
 import { tiroDalSeme } from './bottino.js'
 
 // 2 dal mondo a percorso (i morti per zona); un salvato di prima (1, i morti per indice del mondo ad anelli) vale come storto
@@ -152,6 +152,16 @@ function popolaZona(stato, k) {
     if (!per.has(r)) per.set(r, [])
     per.get(r).push(c)
   }
+  // la tana di ogni luogo della zona, prima di tutto: i branchi stanno lontani da tutte, non solo dalla propria. E le ancore dei branchi
+  // già messi, di tutta la zona (SOPRA.fraBranchi vale anche fra un luogo e l'altro)
+  const tane = new Map(), ancore = []
+  m.regioni.forEach((R, r) => {
+    const celle = per.get(r) || []
+    if (R.zona !== k || !fuoriDalVillaggio(R) || !abitantiDi(R) || !celle.length) return
+    const kt = R.tana ? R.tana.y * m.W + R.tana.x : -1
+    tane.set(r, kt >= 0 && nido[kt] && m.reg[kt] === r ? kt : celle.reduce((p, q) => (m.arco[q] > m.arco[p] ? q : p)))
+  })
+  const dellaTana = [...tane.values()]
   m.regioni.forEach((R, r) => {
     if (R.zona !== k || !fuoriDalVillaggio(R)) return
     const chi = abitantiDi(R), celle = per.get(r) || []
@@ -202,8 +212,7 @@ function popolaZona(stato, k) {
     }
 
     // la tana: quella che il generatore riserva al luogo, o se lì non si può la cella più avanti lungo la strada
-    const kt = R.tana ? R.tana.y * m.W + R.tana.x : -1
-    const tana = kt >= 0 && nido[kt] && m.reg[kt] === r ? kt : celle.reduce((p, q) => (m.arco[q] > m.arco[p] ? q : p))
+    const tana = tane.get(r)
     const Lt = Math.max(fa, Math.min(R.fascia[1], R.fascia[0] + SOPRA.signore.livello))
     const g = SOPRA.guardieDelSignore
     const [g0, g1] = (Array.isArray(g) ? g[Math.min(k, g.length - 1)] : null) || [1, 1]
@@ -213,16 +222,16 @@ function popolaZona(stato, k) {
 
     // i branchi sparsi: uno ogni cellePerBranco celle, lontani fra loro e dalla tana
     const quanti = Math.round(celle.length / cellePerBranco(k))
-    const ancore = []
+    let nuovi = 0
     const lontano = (c, l, d) => l.every(q => Math.hypot(q % m.W - c % m.W, ((q / m.W) | 0) - ((c / m.W) | 0)) >= d)
     for (const c of mescola([...celle], rnd)) {
-      if (ancore.length >= quanti) break
-      if (!libera(c) || !lontano(c, [tana], SOPRA.dallaTana) || !lontano(c, ancore, SOPRA.fraBranchi)) continue
+      if (nuovi >= quanti) break
+      if (!libera(c) || !lontano(c, dellaTana, SOPRA.dallaTana) || !lontano(c, ancore, SOPRA.fraBranchi)) continue
       const L = livelloIn(c)
       const tetto = Math.max(2, Math.min(crescitaDiSopra(L).branco, MOSTRI_IN_CAMPO - 1))
       const n = 2 + Math.floor(Math.pow(rnd(), 1.6) * (tetto - 1))
       const tipi = Array.from({ length: n }, () => chi.mostri[Math.floor(rnd() * chi.mostri.length)])
-      if (mettiIlBranco(tipi, c, L).length) ancore.push(c)
+      if (mettiIlBranco(tipi, c, L).length) { ancore.push(c); nuovi++ }
     }
   })
   // i morti di quando la zona era stata buttata: chi deve ancora tornare torna morto
@@ -436,8 +445,12 @@ export function incontro(stato, { x, y }, { tocco = null } = {}) {
     }
   }
   if (!chi) return null
+  // o sono fuori o sono dentro: ogni vivo della zona entro SOPRA.dentro celle dall'eroe o da chi apre entra (di qualunque branco, anche
+  // se dorme), i più vicini all'eroe fino al massimo
+  const daChi = q => Math.hypot(q.fx - chi.fx, q.fy - chi.fy)
   const altri = stato.lista.filter(q => q !== chi && !q.morto && q.zona === chi.zona &&
-    ((q.branco === chi.branco && lontano(q) <= RAGGIO_SCONTRO) || (q.sveglio && lontano(q) <= SOPRA.aUnPasso)))
+    ((q.branco === chi.branco && lontano(q) <= RAGGIO_SCONTRO) || (q.sveglio && lontano(q) <= SOPRA.aUnPasso) ||
+     lontano(q) <= SOPRA.dentro || daChi(q) <= SOPRA.dentro))
     .sort((p, q) => lontano(p) - lontano(q))
   const campo = [chi, ...altri].slice(0, MOSTRI_IN_CAMPO).map(q => q.i)
   return { chi: chi.i, campo, tocco: toccato, regione: m.regioni[chi.regione].chiave, zona: m.zone[chi.zona].chiave, x, y }
@@ -474,7 +487,29 @@ export function apriLoScontro(stato, inc, { eroe = 'cavaliere', roba = null, cre
   corsa.dalMondo = { x: inc.x, y: inc.y, regione: R.chiave }
   const primo = corsa.livello.robe.find(r => r.che === 'mostro' && r.mondo === chi.i)
   corsa.scontro(primo, { tocco: inc.tocco })
+  scostaChiNonEntra(stato, inc)
   return corsa
+}
+
+// Chi era vicino ma non è entrato (il campo era pieno) non resta a guardare dentro l'area del palco: viene portato appena fuori, alla cella
+// calpestabile più vicina della sua zona, e lì sta (nessuno si muove durante lo scontro). Finito, riprende a rincorrere come sempre.
+// L'area è quella del palco posata sul mondo con l'eroe sulla sua cella (EROE_SUL_PALCO), più un giro di margine
+export function scostaChiNonEntra(stato, inc) {
+  const m = stato.mondo, { casa } = spaziDi(m)
+  const dentro = new Set(inc.campo)
+  const x0 = Math.floor(inc.x) - EROE_SUL_PALCO.x - 1, x1 = x0 + PALCO.largo + 1
+  const y0 = Math.floor(inc.y) - EROE_SUL_PALCO.y - 1, y1 = y0 + PALCO.alto + 1
+  const sulPalco = (x, y) => x >= x0 && x <= x1 && y >= y0 && y <= y1
+  for (const q of stato.lista) {
+    if (q.morto || dentro.has(q.i) || !sulPalco(Math.floor(q.fx), Math.floor(q.fy))) continue
+    let meglio = null, dm = Infinity
+    for (let y = y0 - 5; y <= y1 + 5; y++) for (let x = x0 - 5; x <= x1 + 5; x++) {
+      if (sulPalco(x, y) || x < 0 || y < 0 || x >= m.W || y >= m.H || casa[y * m.W + x] !== q.zona) continue
+      const d = Math.hypot(x + 0.5 - q.fx, y + 0.5 - q.fy)
+      if (d < dm) { dm = d; meglio = [x + 0.5, y + 0.5] }
+    }
+    if (meglio) { q.fx = meglio[0]; q.fy = meglio[1] }
+  }
 }
 
 // Una taglia: cosa vale un mostro ucciso per una quest di caccia (docs/sotterraneo/mondo-aperto-quest.md). L'esito ne dà una per morto.

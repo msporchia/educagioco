@@ -36,7 +36,7 @@ const affianca = computed(() => !!(props.prova && props.prova.prima && props.pro
     <Confronto v-if="affianca" :cosa="cosa" :prova="prova" :scambiabile="scambiabile" @scambia="$emit('scambia')" />
     <template v-else>
       <div class="sot-pannello-testa">
-        <span class="sot-pannello-icona"><Icona :sprite="cosa.sprite" :em="cosa.em" :scala="scala" :emAlto="26" /></span>
+        <span class="sot-pannello-icona"><Icona :sprite="cosa.sprite" :em="cosa.em" :scala="scala" :emAlto="26" :cosa3d="cosa" :lato="50" /></span>
         <span class="sot-pannello-nome">
           <b>{{ cosa.nome }}</b>
           <i>{{ comeEDi(cosa) }}</i>

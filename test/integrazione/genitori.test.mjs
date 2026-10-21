@@ -149,10 +149,10 @@ await page.waitForSelector('.fermo .barretta.muta', { state: 'attached', timeout
 await digita('0000')
 await page.waitForSelector('.carte', { timeout: 5000 })
 await apriTendine(page)      // le cose che cancellano stanno nella «Zona delicata», chiusa di partenza
-// il salvataggio sta in «Casa» (è del telefono), le cose che cancellano nel bambino
+// il salvataggio e le cose che cancellano stanno in «Salvataggi» (sono del telefono)
 const testoQui = () => page.evaluate(() => document.body.innerText)
 let dentro = await testoQui()
-await page.click('[data-scheda="casa"]'); await page.waitForTimeout(150); await apriTendine(page)
+await page.click('[data-scheda="salvataggi"]'); await page.waitForTimeout(150); await apriTendine(page)
 dentro += await testoQui()
 await page.click('[data-scheda="bambini"]'); await page.waitForTimeout(150)
 controlla('con 0000 si entra', dentro.includes('Salva su file'))
@@ -207,7 +207,7 @@ const moneteVere = (await leggiProfilo(page)).coins
 controlla('il seme si è preso le medaglie che gli spettano', moneteVere >= 777,
   `${moneteVere} monete`)
 const scaricato = page.waitForEvent('download', { timeout: 8000 })
-await apriScheda('casa')
+await apriScheda('salvataggi')
 await page.click('.carta >> text="Salva su file"')
 const dl = await scaricato
 await apriScheda('bambini')
@@ -243,7 +243,7 @@ if (dati) {
 }
 
 /* ── 4. cancellare chiede conferma ── */
-await apriTendine(page)      // «Zona delicata» nasce chiusa
+await apriScheda('salvataggi')   // «Zona delicata» nasce chiusa; apriScheda apre le tendine
 await page.click('.carta.pericolo')
 await page.waitForSelector('.carta.pericolo.aperta', { timeout: 5000 })
 controlla('cancellare chiede conferma invece di fare e basta',
@@ -271,7 +271,7 @@ uguale('dopo la cancellazione le monete sono a zero', monete, 0)
 await vaiAiGenitori()
 await digita('0000')
 await page.waitForSelector('.carte', { timeout: 5000 })
-await apriScheda('casa')                         // il salvataggio sta in Casa
+await apriScheda('salvataggi')
 await page.setInputFiles('input[type=file]', salvataggio)
 // lo stesso id c'è già (appena cancellato, non eliminato): chiede conferma
 // prima di sovrascriverlo (docs/genitori/cestino-e-posta.md)
@@ -298,7 +298,7 @@ writeFileSync(finto, JSON.stringify({ ciao: 'mondo' }))
 await vaiAiGenitori()
 await digita('0000')
 await page.waitForSelector('.carte', { timeout: 5000 })
-await apriScheda('casa')
+await apriScheda('salvataggi')
 await page.setInputFiles('input[type=file]', finto)
 await page.waitForTimeout(400)
 controlla('un file estraneo viene rifiutato', await page.isVisible('.avviso'))
@@ -421,14 +421,14 @@ if (IN_PROVA.length) {
 
   await vaiAiGenitori()
   await digita('0000')
-  await apriScheda('giochi')
+  await apriScheda('impostazioni')
   await page.waitForSelector('.carta[data-flag="sperimentali"]', { timeout: 5000 })
   await apriScheda('bambini')               // il quadro sta col bambino, l'interruttore con i giochi
   await apriBlocco('giochi')
   uguale('e non c\'è nemmeno la sua riga nel quadro',
          await page.locator(suaRiga).count(), 0)
 
-  await apriScheda('giochi')
+  await apriScheda('impostazioni')
   await page.click('.carta[data-flag="sperimentali"]')
   await page.waitForTimeout(300)
   await apriScheda('bambini')
@@ -451,7 +451,7 @@ if (IN_PROVA.length) {
   await vaiAiGenitori()
   await digita('0000')
   await taraGioco(primo.chiave, 'difetto')          // riacceso il singolo
-  await apriScheda('giochi')
+  await apriScheda('impostazioni')
   await page.click('.carta[data-flag="sperimentali"]')
   await page.waitForTimeout(200)
   controlla('richiuso il cancello, sparisce di nuovo', !(await inHome(suaCarta)))
@@ -467,7 +467,7 @@ if (IN_PROVA.length) {
 {
   await vaiAiGenitori()
   await digita('0000')
-  await apriScheda('giochi')
+  await apriScheda('impostazioni')
   await page.waitForSelector('.carta[data-flag="sperimentali"]', { timeout: 5000 })
   uguale('non c\'è nessun interruttore per il calcolo a mente',
          await page.locator('.carta[data-flag="mente"]').count(), 0)
@@ -507,12 +507,12 @@ if (IN_PROVA.length) {
 await vaiAiGenitori()
 await digita('0000')
 await page.waitForSelector('nav.barra-giu', { timeout: 5000 })
-/* Quattro, nella barra in basso, e rispondono a domande diverse: *chi è*, *cosa gli arriva*, *come sta andando*, *cosa riguarda il telefono*. «Come va» è tornata dopo essere stata
+/* Cinque, nella barra in basso, e rispondono a domande diverse: *chi è*, *cosa gli arriva*, *come sta andando*, *cosa riguarda il telefono*. «Come va» è tornata dopo essere stata
    sospesa — mostrava solo i segnali, e tre righe senza il resto non
    dicono se sono tre su dieci o tre su centoventi. Quello che fa
    adesso lo prova `integrazione/come-va`; qui basta che ci sia. */
-controlla('le schede sono quattro nella barra in basso: bambino, giochi, come va, casa',
-  (await page.locator('nav.barra-giu [data-scheda]').count()) === 4)
+controlla('le schede sono cinque nella barra in basso: bambino, giochi, come va, salvataggi, impostazioni',
+  (await page.locator('nav.barra-giu [data-scheda]').count()) === 5)
 uguale('e «Come va» è una di loro',
   await page.locator('[data-scheda="comeva"]').count(), 1)
 /* «Cosa sa» era la scheda delle domande detta in un altro modo, e
@@ -808,7 +808,7 @@ uguale('e il flag vecchio sparisce', migrato.settings.divisioni, undefined)
 await vaiAiGenitori()
 await digita('0000')
 await page.waitForSelector('.carte', { timeout: 5000 })
-await apriScheda('casa')
+await apriScheda('impostazioni')
 await page.click('.carta[data-azione="cambia-codice"]')
 await page.waitForSelector('.tastierino', { timeout: 5000 })
 
@@ -821,7 +821,7 @@ controlla('e si resta a scegliere il codice nuovo', await page.isVisible('.tasti
 
 await digita('1234')
 await digita('1234')
-await apriScheda('casa')
+await apriScheda('impostazioni')
 await page.waitForSelector('.carta[data-azione="cambia-codice"]', { timeout: 5000 })
 controlla('due volte uguali lo cambiano',
   (await page.evaluate(() => document.body.innerText)).includes('Codice cambiato'))
@@ -835,18 +835,18 @@ await page.waitForTimeout(200)
 controlla('il vecchio codice non apre più', await page.isVisible('.tastierino'))
 await digita('1234')
 await page.waitForSelector('.carte', { timeout: 5000 })
-await apriScheda('casa')
+await apriScheda('impostazioni')
 controlla('quello nuovo apre, anche dopo un riavvio',
   await page.isVisible('.carta[data-azione="cambia-codice"]'))
 
 /* rimesso com'era: il codice sta fuori dai profili apposta, quindi
    nemmeno «cancella i progressi» lo riporterebbe a 0000 */
-await apriScheda('casa')
+await apriScheda('impostazioni')
 await page.click('.carta[data-azione="cambia-codice"]')
 await page.waitForSelector('.tastierino', { timeout: 5000 })
 await digita('0000')
 await digita('0000')
-await apriScheda('casa')
+await apriScheda('impostazioni')
 await page.waitForSelector('.carta[data-azione="cambia-codice"]', { timeout: 5000 })
 
 /* ── 9. il modo di dirlo ──
@@ -859,7 +859,7 @@ await page.waitForSelector('.carta[data-azione="cambia-codice"]', { timeout: 500
    è il dato che nessun genitore saprebbe scrivere a mano, ed è tutto il
    motivo per cui il link si costruisce invece di essere una costante. */
 const segnala = '.carta[data-azione="segnala"]'
-await apriScheda('casa')
+await apriScheda('impostazioni')
 controlla('si può segnalare anche senza nessun guasto in archivio',
   await page.isVisible(segnala))
 const dove = await page.getAttribute(segnala, 'href')

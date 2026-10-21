@@ -90,7 +90,7 @@ const stato = n => {
   if (g(n.id)) return 'preso'
   return perchéNonImpari(props.crescita, props.eroe.chiave, n.id) ? 'chiuso' : 'pronto'
 }
-const maiuscola = t => t.charAt(0).toUpperCase() + t.slice(1)
+const maiuscola = t => { const s = String(t ?? ''); return s.charAt(0).toUpperCase() + s.slice(1) }
 // sotto un medaglione ancora da prendere: il livello, se è quello che manca (il grado dopo lo dice il riquadro in fondo)
 const quando = n => {
   const p = !g(n.id) && perchéNonImpari(props.crescita, props.eroe.chiave, n.id).match(/^dal livello (\d+)/)

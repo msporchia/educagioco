@@ -24,6 +24,8 @@ Il codice: `motore/scontro.js` (i metodi dello scontro, attaccati a `Corsa`),
   si sveglia), misurati una volta sola all'inizio. Chi è fuori resta fuori:
   **nessun rinforzo** a scontro aperto. Dividere un gruppo grande è una cosa da
   fare apposta, avvicinandosi piano e con la luce.
+  Nel mondo di sopra il raggio è 6 (`SOPRA.dentro`), dall'eroe o da chi apre, e vale per ogni mostro vivo della zona, anche di altri
+  branchi; chi resta fuori per il tetto dei sette viene scostato fuori dal palco ([mondo-aperto-mostri.md](mondo-aperto-mostri.md)).
 - **Al massimo sette posti** (`MOSTRI_IN_CAMPO`, da sei il 13 ottobre perché i branchi delle discese tarde arrivano a sei): sette figure stanno a 390 px (il palco, `viste/campo.js`). Se il
   raggio ne prende di più, entrano i più vicini, chi ha aperto lo scontro sempre
   primo. **Il mostro grosso vale due posti** (`postiDi`): con lui, cinque o sei mostri.

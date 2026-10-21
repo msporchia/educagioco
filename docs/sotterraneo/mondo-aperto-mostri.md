@@ -29,8 +29,9 @@ Il Sotterraneo 2D e le discese non cambiano: gli agganci si accendono solo con `
   per zona (`mortiFuori`, e nel salvataggio): ricaricandola tornano morti, con lo stesso indice (`zona × 1000 + j`).
 - **Dove nasce un branco**: sull'erba della zona, almeno 2 celle da una strada e 4 da un ingresso, una pietra o chi sta fermo; mai sulle
   strade vere (inseguendo però ci passa). L'erba di una zona si raggiunge tutta dalla sua strada: il generatore toglie quella che no.
-- **Quanti**: un branco ogni `cellePerBranco` celle d'erba dove può nascere, **per zona** (oggi 110 in tutte: la leva), a 9 celle l'uno
-  dall'altro e 8 dalla tana; da due a `branco` mostri (la curva: 2 al livello 1, 6 dal 10), pesati verso i piccoli come nelle terre
+- **Quanti**: un branco ogni `cellePerBranco` celle d'erba dove può nascere, **per zona** (oggi 110 in tutte: la leva), a **14 celle**
+  l'uno dall'altro (anche fra un luogo e l'altro della stessa zona, non oltre un confine di zona) e **12 dalla tana**, perché i branchi
+  non si pestino i piedi (la distanza, non `cellePerBranco`, è il tetto: abbassare 110 non aggiunge un branco); da due a `branco` mostri (la curva: 2 al livello 1, 6 dal 10), pesati verso i piccoli come nelle terre
   selvagge.
 - **La fascia è della zona e sale lungo la strada** (la scheda, `ZONE_DEL_MONDO`: prati 1–3, bosco 3–5 … landa 13–15): all'entrata della
   zona l'inizio della fascia, in fondo la fine (`livelloDi` del generatore, dall'arco della strada maestra). **Ogni terra dopo** la
@@ -48,7 +49,12 @@ Il Sotterraneo 2D e le discese non cambiano: gli agganci si accendono solo con `
   suo branco, e gli va incontro a 3,1 celle al secondo (l'eroe ne fa 4,5: si può scappare). Oltre 11 celle, o se l'eroe passa in
   un'altra zona o al sicuro, torna a casa a 2,2.
 - **Lo scontro**: si apre se un mostro sveglio arriva a 0,9 celle o se l'eroe ne tocca uno a 1,6. Entra il branco di chi apre (entro
-  `RAGGIO_SCONTRO` 4,5) e chi è già sveglio e a 2,5 celle, della stessa zona, al più sette (`MOSTRI_IN_CAMPO`); chi apre è il primo.
+  `RAGGIO_SCONTRO` 4,5) e **ogni vivo della stessa zona a `SOPRA.dentro` = 6 celle dall'eroe o da chi apre**, di qualunque branco e anche se
+  dorme (o dentro o fuori: se l'eroe è andato così vicino, è colpa sua), al più sette (`MOSTRI_IN_CAMPO`), i più vicini all'eroe; chi apre è
+  il primo. **Chi era vicino ma non ci sta** (campo pieno) non resta a guardare dentro il palco: `apriLoScontro` lo porta alla cella
+  calpestabile più vicina della sua zona fuori dall'area del palco (17 × 11 celle con l'eroe a `EROE_SUL_PALCO`, più un giro di margine,
+  `scostaChiNonEntra`); lì sta fermo (nessuno si muove durante lo scontro) e a scontro chiuso riprende a rincorrere. Provato un mostro
+  «inattesa» da non disegnare: costa un campo nello stato e un'eccezione nella scena; scostarlo no.
   È lo scontro dei dungeon, giocato da una `Corsa` vera sul palco, coi suoi turni, l'agguato alle spalle (il verso dell'eroe nel mondo
   è ruotato sul palco), la sorpresa del tocco, la fuga, le pozioni, le abilità. Sopra è giorno: la torcia resta alla cintura.
 - **Vinto**: cade quello che cade nei dungeon e si raccoglie da sé (le gemme col loro valore, le cose che vanno addosso o in tasca);
@@ -128,9 +134,9 @@ specie, regione, signore, zona })` (ogni filtro può mancare): «cinque lupi nel
 
 ## Le misure
 
-**Quanti, e quanto costano** (seme 8, `unita/sotterraneo-mondo-mostri`): con 110 celle a branco in ogni zona, 1 899 mostri in 642 branchi
-in tutto il mondo (prati 148, bosco 227, brughiera 300, palude 293, ceneri 294, monte 309, landa 328; l'erba di una zona è 11–14 mila
-celle), contro i ~220 del mondo ad anelli: **in memoria** 363 dal villaggio (prati e bosco) e ~900 con tre zone caricate. Popolare una
+**Quanti, e quanto costano** (`unita/sotterraneo-mondo-mostri`): con i branchi a 14 celle (e 12 dalla tana) 1 123 mostri in 380 branchi
+in tutto il mondo (prati 91, bosco 147, brughiera 156, palude 173, ceneri 167, monte 185, landa 204; l'erba di una zona è 11–14 mila
+celle), contro i 1 899 in 642 con 9 e 8 (21 ottobre 2026): **in memoria** 225 dal villaggio (prati e bosco) e ~500 con tre zone caricate. Popolare una
 zona 10–40 ms in Node; `muoviMostri` con ~900 mostri 35–50 µs a fotogramma, `inSalvo` un centinaio di byte. La leva è `cellePerBranco`.
 
 `npm run sotterraneo -- --mondo` (`--semi 8 --bravure 0.9`, i quattro eroi, 32 tragitti a cella): il curioso parte dalla pietra accesa più
@@ -185,3 +191,8 @@ dalla zona, la fascia che sale lungo la zona e di zona in zona, la seconda terra
 l'annuncio con la zona, uno scontro vinto col bottino e le taglie, la ricomparsa a passi e mai a secondi né sotto gli occhi, il
 salvataggio per zona riletto e quello di prima buttato, i mostri di una zona scaricata dimenticati e i morti ricordati, quanto costa
 `muoviMostri`, svenendo restano rari e leggendari e ci si risveglia al villaggio, il signore che non torna).
+
+**Dopo i branchi radi e lo scontro che prende i vicini** (21 ottobre, `--semi 8 --bravure 0.9`, a 9/10, la colonna `cantine`…`fondo` del banco):
+per strada gli scontri a tragitto scendono (1,9 · 1,1 · 1,9 · 1,1 · 2,4 · 2,3 invece di 2,6 · 1,8 · 3 · 2,4 · 3,3 · 3,6) e gli svenuti con loro
+(94 · 13 · 31 · 0 · 6 · 3 % contro 94 · 13 · 38 · 3 · 6 · 19 %); dalle tane si sviene meno (100 · 63 · 84 · 66 · 31 · 38 % contro 100 · 84 · 94
+· 97 · 63 · 84 %) perché ci sono molti meno branchi, benché ogni scontro sia più pieno. Nessuna ritaratura: restano le cantine (94%).

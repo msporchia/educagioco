@@ -11,7 +11,8 @@ import Mattonelle from './Mattonelle.vue'
 import Settimana from './Settimana.vue'
 import MappaTabelline from '../components/MappaTabelline.vue'
 import TempoDiGioco from '../components/TempoDiGioco.vue'
-import { state, ritocca, azzeraConto, etaDelBambino } from '../store/profile.js'
+import { state, ritocca, azzeraConto, etaDelBambino, accendiSapere, sapereAcceso } from '../store/profile.js'
+import { TIPI } from './saperi.js'
 import { leggiSessioni } from '../store/sessioni.js'
 import { leggiIstantanee, laPiuRecenteDa } from '../store/istantanee.js'
 
@@ -51,7 +52,7 @@ const mattonelle = computed(() => mattonelleOra({
   righe: righe.value, now: adesso.value,
   prima: laPiuRecenteDa(foto.value, DUE_SETTIMANE, adesso.value),
 }))
-const settimana = computed(() => settimanaDi({
+const settimanaGrezza = computed(() => settimanaDi({
   righe: elenco.value.viste,
   items: state.profile.items || {},
   prima: laPiuRecenteDa(foto.value, UNA_SETTIMANA, adesso.value),
@@ -60,6 +61,21 @@ const settimana = computed(() => settimanaDi({
   voci: voci.value,
   now: adesso.value,
 }))
+
+// una domanda spenta non si lamenta più: esce dalle difficili e sta in «Le hai spente tu», da dove si riaccende
+const settimana = computed(() => {
+  giro.value
+  const s = settimanaGrezza.value
+  return { ...s, difficili: s.difficili.filter(r => sapereAcceso(r.tipo)) }
+})
+const spente = computed(() => {
+  giro.value
+  return Object.entries(state.profile.settings.sa || {})
+    .filter(([k, v]) => v === false && TIPI.some(t => t.chiave === k))
+    .map(([k]) => ({ tipo: k, nome: TIPI.find(t => t.chiave === k).nome }))
+})
+function spegni(r) { accendiSapere(r.tipo, false); giro.value++ }
+function riaccendi(x) { accendiSapere(x.tipo, true); giro.value++ }
 
 const dentro = computed(() => materia.value &&
   [...mattonelle.value.viste, ...mattonelle.value.nonAncora].find(m => m.id === materia.value))
@@ -128,7 +144,8 @@ function vaBene(r) {
       <Mattonelle :viste="mattonelle.viste" :non-ancora="mattonelle.nonAncora" @apri="entra" />
 
       <Settimana :chi="chi" :settimana="settimana" :eta="eta" :alleggerite="alleggerite"
-                 @prova="provaRiga" @rimanda="rimanda" @va-bene="vaBene" />
+                 @prova="provaRiga" @rimanda="rimanda" @va-bene="vaBene"
+                 :spente="spente" @spegni="spegni" @riaccendi="riaccendi" />
 
       <h2>Quanto ha giocato</h2>
       <TempoDiGioco />

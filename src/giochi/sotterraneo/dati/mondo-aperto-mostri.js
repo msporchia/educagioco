@@ -58,13 +58,14 @@ export const SOPRA = {
   // quanti branchi: uno ogni tante celle d'erba dove può nascere, per zona (i prati, il bosco, la brughiera, la palude, le ceneri, il
   // monte, la landa: la leva del numero dei mostri), e almeno così lontani fra loro e dalla tana
   cellePerBranco: [110, 110, 110, 110, 110, 110, 110],
-  fraBranchi: 9,
-  dallaTana: 8,
+  fraBranchi: 14,
+  dallaTana: 12,
   // svegliarsi, inseguire, toccare: come nelle terre selvagge (SVEGLIA di dati/mondo.js è 7; oltre INSEGUE si torna a casa)
   sveglia: 7,
   insegue: 11,
   contatto: 0.9,         // a questa distanza un mostro sveglio apre lo scontro
   tocco: 1.6,            // fin dove arriva il tocco dell'eroe su un mostro
+  dentro: 6,             // o dentro o fuori: ogni vivo entro tante celle dall'eroe o da chi apre entra nello scontro (fino al massimo)
   aUnPasso: 2.5,         // chi è già sveglio e così vicino entra nello scontro anche se è di un altro branco
   passoMostro: 3.1,      // celle al secondo (PASSO_MOSTRO), più lento dell'eroe (PASSO_MONDO 4,5)
   passoRientro: 2.2,

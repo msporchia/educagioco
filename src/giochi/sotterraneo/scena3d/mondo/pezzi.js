@@ -65,6 +65,15 @@ export function lavoroDeiPezzi(m, costruiti, x, z, puo = () => true) {
   const costruisci = pezziAttorno(m, x, z).find(p => !costruiti.has(p) && puo(p)) ?? null
   return { costruisci, butta }
 }
+// Lo stesso con la vista spostata dal dito: si costruiscono i pezzi attorno a dove si guarda (`fuoco`), e di quelli dell'eroe resta
+// solo il suo, perché non si ricostruisca tornando; si butta quello che è a due pezzi o più da tutti e due. Senza `fuoco`, come sopra
+export function lavoroDeiPezziVista(m, costruiti, eroe, fuoco, puo = () => true) {
+  if (!fuoco) return lavoroDeiPezzi(m, costruiti, eroe.x, eroe.z, puo)
+  const suo = pezzoDi(m, eroe.x, eroe.z), vista = pezzoDi(m, fuoco.x, fuoco.z)
+  const butta = [...costruiti].filter(p => p !== suo && distanzaPezzi(m, p, vista) >= 2)
+  const lista = [suo, ...pezziAttorno(m, fuoco.x, fuoco.z)]
+  return { costruisci: lista.find(p => !costruiti.has(p) && puo(p)) ?? null, butta }
+}
 
 // cosa sta in ogni pezzo dallo scheletro (i posti, le città no: sono un lotto intero; i ponti dei confini). Ogni cosa va nel
 // pezzo del suo centro

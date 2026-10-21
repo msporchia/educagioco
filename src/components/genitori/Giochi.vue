@@ -1,13 +1,15 @@
 <script setup>
 // I giochi nelle impostazioni dei grandi, come li vede il bambino (docs/genitori/giochi.md): lo stesso carosello della home con i
-// giochi che in casa non ci sono in grigio, e sotto le impostazioni di quello che sta in mezzo: «In casa» a tre posizioni (come dice
-// l'età · acceso · spento), il tempo che ci passa, e le domande che chiede, ognuna con dove altro vale.
+// giochi che in home non ci sono in grigio, e sotto le impostazioni di quello che sta in mezzo: «Nella home» (default, oppure acceso o
+// spento a mano), il tempo che ci passa, le monete di questo gioco e le domande che chiede, ognuna con dove altro vale.
 import { ref, computed, onMounted, watch } from 'vue'
 import Carosello from '../home/Carosello.vue'
+import Monete from '../varieta/Tetti.vue'
 import { GIOCHI, serveA } from '../../data/giochi.js'
 import { state, nomeCorrente, etaDelBambino, giocoAcceso, fissaGioco, sapereAcceso, accendiSapere, saperiCheMancano,
          sperimentaliAccesi, ritoccoSapere, ritocca } from '../../store/profile.js'
 import { inCasa } from '../../data/portata-giochi.js'
+import { paga } from '../../data/varieta.js'
 import { eccezioniPerEta } from '../../data/partenze.js'
 import { sapereDi } from '../../data/saperi.js'
 import { pescaDaTutte } from '../../data/domande-dei-giochi.js'
@@ -26,10 +28,9 @@ const salvato = k => (state.profile.settings.giochi || {})[k]
 const spentoDallEta = k => eccezioniPerEta(etaDelBambino()).giochi[k] === false
 const modo = k => (salvato(k) === true ? 'acceso' : salvato(k) === false && !spentoDallEta(k) ? 'spento' : 'segui')
 const COME = { segui: 'difetto', acceso: 'si', spento: 'no' }
-const imposta = m => fissaGioco(chiave.value, COME[m])
-const MODI = [
-  { k: 'segui', nome: 'Come dice l\'età' }, { k: 'acceso', nome: 'Acceso' }, { k: 'spento', nome: 'Spento' },
-]
+// toccare di nuovo quello già scelto torna al default: due scelte sole, e si capisce subito quale è
+const imposta = m => fissaGioco(chiave.value, COME[modo(chiave.value) === m && m !== 'segui' ? 'segui' : m])
+const MODI = [{ k: 'acceso', nome: 'Acceso' }, { k: 'spento', nome: 'Spento' }]
 
 // i grigi del carosello: quelli che in casa non ci sono, comunque sia andata
 const spenti = computed(() => GIOCHI.filter(g => !inCasa(g.chiave)).map(g => g.chiave))
@@ -39,12 +40,13 @@ const esito = computed(() => {
   if (!k) return ''
   const m = modo(k)
   const eta = etaDelBambino()
-  if (g_serve(k).length) return `Non è in casa: gli serve ${g_serve(k).join(', ')}, che è spento.`
-  if (!sperimentaliAccesi() && gioco.value?.sperimentale) return 'È un gioco in prova: sta in casa solo se accendi «I giochi in prova» (Interruttori di casa).'
+  if (g_serve(k).length) return `Non compare in home: gli serve ${g_serve(k).join(', ')}, che è spento.`
+  if (!sperimentaliAccesi() && gioco.value?.sperimentale) return 'È un gioco in prova: compare solo se li accendi in Impostazioni › Avanzate.'
   if (m === 'spento') return `Non compare in home. I progressi di ${chi.value} restano.`
-  if (m === 'acceso') return spentoDallEta(k) ? `Sta in casa anche se a ${eta} anni non ci starebbe.` : 'Sta sempre in casa.'
-  return inCasa(k) ? `A ${eta} anni è in casa. Se l'età cambia, cambia da solo.` : `A ${eta} anni non è ancora in casa. Si apre da solo quando l'età lo porta.`
+  if (m === 'acceso') return spentoDallEta(k) ? `Compare in home anche se a ${eta} anni non sarebbe adatto.` : 'Compare sempre in home.'
+  return inCasa(k) ? `A ${eta} anni è adatto, quindi compare in home. Se l'età cambia, cambia da solo.` : `A ${eta} anni non è ancora adatto, quindi non compare. Si apre da solo quando l'età lo porta.`
 })
+const monetePagano = computed(() => !!gioco.value && paga(gioco.value) && inCasa(chiave.value))
 const g_serve = k => saperiCheMancano(k).map(c => (sapereDi(c) || {}).nome || c)
 
 /* ── il tempo ── */
@@ -78,7 +80,7 @@ const saperi = computed(() => saperiDelGioco(chiave.value).map(k => {
 
 <template>
   <div class="giochi-impostazioni" data-giochi-impostazioni>
-    <p class="mini">I giochi come li vede {{ chi }}: quelli in grigio in casa non ci sono. Scorri e tocca per le impostazioni di quello in mezzo.</p>
+    <p class="mini">I giochi come li vede {{ chi }}: quelli in grigio in home non ci sono. Scorri e tocca per le impostazioni di quello in mezzo.</p>
     <Carosello imposta :giochi="GIOCHI" :spenti="spenti" :in-mezzo="chiave" @cambia="k => chiave = k" @apri="() => {}" />
 
     <div v-if="gioco" class="pannello" :data-pannello-gioco="gioco.chiave">
@@ -86,10 +88,14 @@ const saperi = computed(() => saperiDelGioco(chiave.value).map(k => {
       <p class="mini che">{{ gioco.che }}</p>
 
       <div class="blocco">
-        <b>In casa</b>
-        <div class="seg" role="group" aria-label="In casa">
-          <button v-for="m in MODI" :key="m.k" type="button" :class="{ su: modo(chiave) === m.k }" :aria-pressed="modo(chiave) === m.k"
-                  :data-gioco-modo="m.k" @click="imposta(m.k)">{{ m.nome }}</button>
+        <b>Nella home di {{ chi }}</b>
+        <div class="scelte" role="group" aria-label="Nella home">
+          <button type="button" class="seg1" :class="{ su: modo(chiave) === 'segui' }" :aria-pressed="modo(chiave) === 'segui'"
+                  data-gioco-modo="segui" @click="imposta('segui')">Default</button>
+          <div class="seg">
+            <button v-for="m in MODI" :key="m.k" type="button" :class="{ su: modo(chiave) === m.k }" :aria-pressed="modo(chiave) === m.k"
+                    :data-gioco-modo="m.k" @click="imposta(m.k)">{{ m.nome }}</button>
+          </div>
         </div>
         <p class="esito" data-gioco-esito>{{ esito }}</p>
       </div>
@@ -110,10 +116,15 @@ const saperi = computed(() => saperiDelGioco(chiave.value).map(k => {
         </div>
       </div>
 
+      <Monete v-if="gioco && monetePagano" :gioco="chiave" :chi="chi" />
+
       <div class="blocco" data-gioco-domande>
         <b>Le domande di questo gioco</b>
         <p v-if="tutte" class="mini">Pesca da tutte le domande dei quiz, quelle che l'età lascia: si regolano nella sezione «Le domande dei quiz» qui sotto.</p>
         <template v-else-if="saperi.length">
+          <p class="mini">Sono tarate sull'età: di solito non c'è niente da fare. Se una gli va male la trovi in <b>Come va › Difficili</b>, e lì si può spostare o spegnere.</p>
+          <details class="tutte" data-gioco-tutte>
+          <summary>Vedi e ritocca tutte ({{ saperi.length }})</summary>
           <ul class="domande">
             <li v-for="s in saperi" :key="s.chiave" :class="{ spenta: !sapereAcceso(s.chiave) }" :data-gioco-sapere="s.chiave">
               <span class="testo"><b>{{ s.nome }}</b><i v-if="s.ex">{{ s.ex }}</i>
@@ -129,6 +140,7 @@ const saperi = computed(() => saperiDelGioco(chiave.value).map(k => {
             </li>
           </ul>
           <p class="mini">Le domande sono le stesse in ogni gioco che le usa: spegnerne una vale per tutti, e lo dice accanto.</p>
+          </details>
         </template>
         <p v-else class="mini">Questo gioco non fa domande di scuola, o non le ha ancora elencate qui.</p>
       </div>
@@ -144,7 +156,10 @@ const saperi = computed(() => saperiDelGioco(chiave.value).map(k => {
 .che { margin:-8px 0 0 }
 .blocco { display:flex; flex-direction:column; gap:6px }
 .blocco > b { font-size:12px; text-transform:uppercase; letter-spacing:.05em; color:#8a8576 }
-.seg { display:flex; gap:2px; padding:3px; border-radius:999px; background:#ece6d8 }
+.scelte { display:flex; gap:8px; align-items:center }
+.seg1 { flex:none; min-height:46px; padding:0 16px; border:2px solid #ece6d8; border-radius:999px; background:none; font:inherit; font-size:13px; color:#6c6757; touch-action:manipulation }
+.seg1.su { background:#fff; border-color:#6c8cff; color:#2b2a33; font-weight:700 }
+.seg { flex:1; display:flex; gap:2px; padding:3px; border-radius:999px; background:#ece6d8 }
 .seg button { flex:1; min-height:40px; border:0; border-radius:999px; background:none; font:inherit; font-size:13px; color:#6c6757; touch-action:manipulation }
 .seg button.su { background:#fff; color:#2b2a33; font-weight:700; box-shadow:0 1px 2px #0002 }
 .esito { margin:0; padding:7px 10px; border-radius:10px; background:#f4f0ff; color:#4a3fd1; font-size:13px }
@@ -159,6 +174,7 @@ const saperi = computed(() => saperiDelGioco(chiave.value).map(k => {
 .num div { flex:1; padding:6px; border-radius:10px; background:#f7f2e8; text-align:center }
 .num b { display:block; font-size:14px }
 .num small { font-size:10px; color:#8a8576 }
+.tutte > summary { min-height:40px; display:flex; align-items:center; font-size:13px; font-weight:700; color:#4a3fd1; cursor:pointer }
 .domande { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px }
 .domande li { display:flex; align-items:flex-start; gap:10px; padding:8px 0; border-bottom:1px solid #f1ebdf }
 .domande li:last-child { border-bottom:0 }
