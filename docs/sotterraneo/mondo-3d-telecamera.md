@@ -41,7 +41,8 @@ già a ~25, poco più di 1). Più largo di così c'è la veduta d'insieme, la ca
 schermo gira.
 
 Provato e tolto: la telecamera del villaggio che si allontanava e si fermava in mezzo alla fila delle botteghe per farle vedere tutte
-senza girare (con il villaggio compatto non serve, e con lo zoom il bambino sceglie da sé).
+senza girare (il villaggio tondo, 24×20, sta in ~15 celle, e con lo zoom il bambino sceglie da sé).
+Non fatto: la telecamera più bassa (36°) dello scontro sul prato, come nelle discese: gli sprite si allungano con l'inclinazione (`scena3d/camera.js`), e il palco del mondo non lo sa; va provato a parte.
 
 Nei test: `unita/sotterraneo-mondo-vista` (il gesto sotto e sopra i 16 px, il pizzico, i limiti dello zoom e del trascinare, la
 vista che si stacca e torna, i pezzi attorno a dove si guarda), `integrazione/sotterraneo-mondo-vista` (col dito vero, CDP: il

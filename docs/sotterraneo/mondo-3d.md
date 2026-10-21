@@ -60,8 +60,9 @@ celle aprendo il mondo. Si salva arrivando, scoprendo (al più ogni tre secondi)
 
 - **La telecamera** sta a 52°, vede almeno 15 celle in largo e 18 in profondo, segue l'eroe morbida e lo tiene a metà dello spazio
   libero fra le carte in cima e in fondo (`copri`); col dialogo aperto si allontana un poco. **Il dito la sposta, due dita la
-  zoomano**: [mondo-3d-telecamera.md](mondo-3d-telecamera.md). Nel villaggio è quella di ovunque: niente più la telecamera che si
-  allontanava e si fermava in mezzo alla fila (chi sta fuori vista si raggiunge trascinando, o toccando).
+  zoomano**: [mondo-3d-telecamera.md](mondo-3d-telecamera.md). Nel villaggio è quella di ovunque: è fatto per stare in ~15 celle di
+  larghezza (24×20, la piazza tonda), e non c'è più la telecamera che si allontanava (la fila delle botteghe di prima); chi sta fuori
+  vista si raggiunge trascinando, o toccando.
   Due persone vicine a schermo si dividono il rettangolo a metà fra i piedi (`spartisciPersone`): il tocco va a ognuno, non a chi sta
   sopra nel DOM. Lo stesso fra una persona e la bacheca o il cartello accanto (fra il piede e il centro della cosa).
 - **La veduta d'insieme** (la casella «mappa grande»): il mondo intero su uno schermo largo, su un telefono in piedi una fascia di
