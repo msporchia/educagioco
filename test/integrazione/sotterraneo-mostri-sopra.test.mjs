@@ -121,7 +121,7 @@ await page.evaluate(p => window.__mondo3d.porta(p.x, p.z), VESPE)
   const g = await g3d()
   nota(`lo scontro sul prato: ${g.chiamate} chiamate, ${Math.round(g.triangoli / 1000)}k triangoli, ${g.figure} figure`)
   uguale('lo disegna il palco del mondo', g.palco, true)
-  controlla('sotto le 150 chiamate', g.chiamate < 150, g.chiamate)
+  controlla('sotto le 260 chiamate', g.chiamate < 260, g.chiamate)   // coi mostri e l'eroe in 3D: come lo scontro delle discese (sotterraneo-3d)
   controlla('e i 400 mila triangoli', g.triangoli < 400000, g.triangoli)
   // il secondo mostro toccato nella scena è il bersaglio
   await page.waitForSelector('[data-caselle-abilita][data-pronto]', { timeout: 20000 })
