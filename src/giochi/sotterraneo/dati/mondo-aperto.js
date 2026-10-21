@@ -14,12 +14,12 @@ export function difDi(R) {
   return CAMPAGNA[k].dif[0]
 }
 
-// le botteghe di sopra: com'è fatto il banco di ogni mercante (lo disegna il 3D) e dove sta rispetto alla piazza
+// le botteghe di sopra: com'è fatto il banco di ogni mercante (lo disegna il 3D); dove stanno lo dice la pianta del villaggio
 export const BOTTEGHE = {
-  rigattiere: { bottega: 'bancarella', w: 3, h: 2, verso: [-1, -7], dietro: true },
-  erborista: { bottega: 'erbe', w: 3, h: 2, verso: [-8, -1], dietro: true },
-  armaiolo: { bottega: 'fucina', w: 4, h: 3, verso: [6, -3] },
-  incantatrice: { bottega: 'torretta', w: 3, h: 3, verso: [-6, 5] },
+  rigattiere: { bottega: 'bancarella', w: 3, h: 2 },
+  erborista: { bottega: 'erbe', w: 3, h: 2 },
+  armaiolo: { bottega: 'fucina', w: 4, h: 3 },
+  incantatrice: { bottega: 'torretta', w: 3, h: 3 },
 }
 
 // Chi sta fermo fuori dalle città, vicino al posto delle sue missioni (le chiavi di dati/missioni.js). Il capitano è nuovo:
@@ -81,7 +81,7 @@ export const LOTTI = { pietra: [2, 2], antro: [2, 2], bacheca: [2, 1], cartello:
 // `firma` è dello scheletro (si salva col mondo), `firmaCelle` di tutte le zone caricate: chi cambia il generatore le vede
 // cambiare in unita/sotterraneo-mondo-percorso e sa che il mondo dei bambini cambia (`npm run pianta -- --percorso` le stampa)
 export const MONDO_PERCORSO = { seme: 8, largo: 504, alto: 300, su: [352, 216], mezza: 29, salto: 14, terre: 5,
-  firma: '521a0901', firmaCelle: 'cf2f657b' }
+  firma: '1ab5aff5', firmaCelle: '178a0fc6' }
 
 // La strada maestra: i punti per cui passa la curva, dal cancello del villaggio alla fine della landa (sulla misura `su`, la
 // riga 0 a nord). Tre file: in basso verso est (villaggio, prati, bosco), si sale a est, in mezzo verso ovest (brughiera,
@@ -180,32 +180,48 @@ export const INGRESSI_DEL_MONDO = {
   tombe: { indice: null, nome: 'Le tombe del vento', livello: 15, paesaggio: 'tempio', boss: 'nuovo', monumento: 'tomba', w: 3, h: 2, finale: true },
 }
 
-// Il villaggio, l'unica città: una pianta fissa di 40×26 celle (la riga 0 a nord, la telecamera guarda da sud), un ferro di
-// cavallo aperto a sud. La fila delle botteghe a nord della piazza col davanti a sud, il cancello a est da cui parte la strada.
-// `piede`: dove sta chi ci lavora (dietro il banco o davanti alla porta); `accanto`: dove si ferma l'eroe, sempre a sud del
-// piede e sulla piazza. Il capitano è venuto dal forte, che non c'è più. Niente campi: case senza porta e alberi agli angoli
+// Il villaggio, l'unica città: una pianta fissa di 24×20 celle (la riga 0 a nord, la telecamera guarda da sud). Una piazza
+// tonda col pozzo in mezzo e, attorno, le botteghe a ventaglio aperto a sud: a profondità diverse, ognuna girata appena verso la
+// piazza (`giro`, in radianti: 0 il davanti a sud, più di 0 verso est). `piazza`: il centro e i raggi ogni 30° (da est, verso
+// nord), raccordati; `strada`: la stradina dalla piazza al cancello, a est, dove parte la strada maestra. `piede`: dove sta chi
+// ci lavora (dietro il banco o davanti alla porta); `accanto`: dove si ferma l'eroe (per chi ci sta, a sud del piede e sulla
+// piazza). Le case con la porta verso la piazza (`verso` e `giro`) non vendono niente; l'orto è solo la cornice in un angolo.
+// Il capitano è venuto dal forte, che non c'è più. docs/sotterraneo/mondo-a-percorso.md, «Il villaggio»
 export const VILLAGGIO = {
-  chiave: 'villaggio', nome: 'Il villaggio', w: 40, h: 26,
-  piazza: { x: 4, y: 12, w: 32, h: 9 },
-  partenza: { x: 18, y: 15 },
-  cancello: { x: 39, y: 16 },
+  chiave: 'villaggio', nome: 'Il villaggio', w: 24, h: 20,
+  piazza: { cx: 12.5, cy: 10.5, raggi: [5.8, 5.2, 4.3, 4.3, 4.6, 4.8, 5.5, 5.4, 4.8, 4.2, 4.5, 5.4] },
+  partenza: { x: 12, y: 13 },
+  cancello: { x: 23, y: 15 },
+  strada: [[16.6, 13.2], [18.8, 14.4], [21, 15], [24.5, 15]],
   lotti: [
-    { tipo: 'mercante', chiave: 'incantatrice', x: 5, y: 8, w: 3, h: 3, piede: { x: 7, y: 11 }, accanto: { x: 7, y: 13 } },
-    { tipo: 'mercante', chiave: 'erborista', x: 10, y: 9, w: 3, h: 2, piede: { x: 11, y: 9 }, accanto: { x: 11, y: 12 } },
-    { tipo: 'minatore', chiave: 'minatore', x: 15, y: 9, w: 3, h: 2, piede: { x: 18, y: 11 }, accanto: { x: 18, y: 13 } },
-    { tipo: 'mercante', chiave: 'rigattiere', x: 21, y: 9, w: 3, h: 2, piede: { x: 22, y: 9 }, accanto: { x: 22, y: 12 } },
-    { tipo: 'persona', chiave: 'capitano', x: 25, y: 11, w: 1, h: 1, piede: { x: 25, y: 11 }, accanto: { x: 25, y: 13 } },
-    { tipo: 'mercante', chiave: 'armaiolo', x: 26, y: 8, w: 4, h: 3, piede: { x: 29, y: 11 }, accanto: { x: 29, y: 13 } },
-    { tipo: 'pozzo', chiave: 'pozzo', x: 32, y: 9, w: 2, h: 2, piede: { x: 32, y: 9 }, accanto: { x: 33, y: 12 } },
-    { tipo: 'persona', chiave: 'ragazza', x: 34, y: 11, w: 1, h: 1, piede: { x: 34, y: 11 }, accanto: { x: 34, y: 13 } },
-    { tipo: 'portale', chiave: 'villaggio', x: 2, y: 15, w: 1, h: 1, piede: { x: 2, y: 15 }, accanto: { x: 4, y: 15 } },
-    { tipo: 'bacheca', chiave: 'bacheca:villaggio', x: 36, y: 12, w: 2, h: 1, piede: { x: 36, y: 12 }, accanto: { x: 36, y: 14 } },
-    { tipo: 'cartello', chiave: 'cartello:villaggio', x: 37, y: 18, w: 1, h: 1, piede: { x: 37, y: 18 }, accanto: { x: 36, y: 19 } },
-    { tipo: 'pietra', chiave: 'villaggio', x: 31, y: 21, w: 2, h: 2, piede: { x: 32, y: 22 }, accanto: { x: 32, y: 20 } },
+    { tipo: 'mercante', chiave: 'incantatrice', x: 4, y: 9, w: 3, h: 3, giro: 0.8, piede: { x: 7, y: 12 }, accanto: { x: 8, y: 13 } },
+    { tipo: 'mercante', chiave: 'erborista', x: 6, y: 6, w: 3, h: 2, giro: 0.4, piede: { x: 7, y: 6 }, accanto: { x: 8, y: 9 } },
+    { tipo: 'minatore', chiave: 'minatore', x: 9, y: 2, w: 3, h: 2, piede: { x: 12, y: 4 }, accanto: { x: 12, y: 6 } },
+    { tipo: 'mercante', chiave: 'rigattiere', x: 14, y: 5, w: 3, h: 2, giro: -0.25, piede: { x: 15, y: 5 }, accanto: { x: 15, y: 8 } },
+    { tipo: 'persona', chiave: 'capitano', x: 17, y: 6, w: 1, h: 1, piede: { x: 17, y: 6 }, accanto: { x: 16, y: 8 } },
+    { tipo: 'mercante', chiave: 'armaiolo', x: 18, y: 7, w: 4, h: 3, giro: -0.35, piede: { x: 18, y: 10 }, accanto: { x: 17, y: 11 } },
+    { tipo: 'pozzo', chiave: 'pozzo', x: 11, y: 9, w: 2, h: 2, piede: { x: 11, y: 9 }, accanto: { x: 11, y: 12 } },
+    { tipo: 'persona', chiave: 'ragazza', x: 13, y: 10, w: 1, h: 1, piede: { x: 13, y: 10 }, accanto: { x: 13, y: 12 } },
+    { tipo: 'portale', chiave: 'villaggio', x: 6, y: 15, w: 1, h: 1, piede: { x: 6, y: 15 }, accanto: { x: 8, y: 15 } },
+    { tipo: 'bacheca', chiave: 'bacheca:villaggio', x: 15, y: 15, w: 2, h: 1, piede: { x: 15, y: 15 }, accanto: { x: 15, y: 16 } },
+    { tipo: 'cartello', chiave: 'cartello:villaggio', x: 20, y: 13, w: 1, h: 1, piede: { x: 20, y: 13 }, accanto: { x: 20, y: 14 } },
+    { tipo: 'pietra', chiave: 'villaggio', x: 9, y: 16, w: 2, h: 2, piede: { x: 10, y: 17 }, accanto: { x: 10, y: 15 } },
   ],
-  case: [{ x: 6, y: 2, w: 4, h: 3 }, { x: 13, y: 3, w: 3, h: 3 }, { x: 20, y: 2, w: 4, h: 3 }, { x: 28, y: 3, w: 3, h: 3 }],
-  alberi: [[1, 2], [2, 6], [37, 3], [36, 7], [1, 23], [11, 24], [27, 24], [38, 24], [34, 3]],
+  case: [
+    { x: 0, y: 4, w: 3, h: 3, verso: 'e', giro: -0.45 }, { x: 3, y: 1, w: 4, h: 3, verso: 's', giro: 0.3 },
+    { x: 13, y: 0, w: 4, h: 3, verso: 's', giro: -0.12 }, { x: 20, y: 2, w: 3, h: 3, verso: 's', giro: -0.5 },
+    { x: 21, y: 11, w: 3, h: 2, verso: 'o', giro: 0.4 },
+  ],
+  orto: { x: 1, y: 14, w: 4, h: 3 },
+  alberi: [[0, 0], [8, 1], [11, 0], [18, 1], [23, 0], [23, 7], [0, 11], [0, 18], [7, 19], [19, 18], [23, 18]],
 }
+// la piazza: il raggio verso l'angolo `a` (0 a est, π/2 a nord), raccordato fra i raggi della scheda; se il punto (x, y) ci sta
+export function raggioDellaPiazza(P, a) {
+  const n = P.raggi.length, t = (((a / (2 * Math.PI)) % 1) + 1) % 1 * n, i = Math.floor(t), f = t - i
+  const r = k => P.raggi[((k % n) + n) % n], p0 = r(i - 1), p1 = r(i), p2 = r(i + 1), p3 = r(i + 2)
+  return 0.5 * (2 * p1 + (-p0 + p2) * f + (2 * p0 - 5 * p1 + 4 * p2 - p3) * f * f + (-p0 + 3 * p1 - 3 * p2 + p3) * f * f * f)
+}
+export const nellaPiazza = (P, x, y) => Math.hypot(x - P.cx, y - P.cy) <= raggioDellaPiazza(P, Math.atan2(P.cy - y, x - P.cx))
 
 // le città che non ci sono più: le loro chiavi stanno ancora nelle taglie salvate (`t:forte:…`) e nelle pietre accese, e si
 // rileggono sul villaggio. Una pietra accesa davanti a un dungeon (`altare`) è ora la pietra della sua zona

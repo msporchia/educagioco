@@ -18,7 +18,7 @@ import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { scheletroDelMondo, caricaZona, scaricaZona, caricaTutto, tieniAttorno, zonaDi, zoneAttorno, livelloDi, baseDi, listaDi,
   misuraDelMondo, generaMondoPercorso, mascheraDelMondo, ERBA, ACQUA, ROCCIA } from '../../src/giochi/sotterraneo/motore/mondo-percorso.js'
-import { MONDO_PERCORSO, ZONE_DEL_MONDO, INGRESSI_DEL_MONDO, VILLAGGIO, LUOGHI, cittaDiOggi, pietraDiOggi } from '../../src/giochi/sotterraneo/dati/mondo-aperto.js'
+import { MONDO_PERCORSO, ZONE_DEL_MONDO, INGRESSI_DEL_MONDO, VILLAGGIO, LUOGHI, cittaDiOggi, pietraDiOggi, nellaPiazza } from '../../src/giochi/sotterraneo/dati/mondo-aperto.js'
 // le regioni del mondo ad anelli (tolto il 20 ottobre 2026), con le chiavi e i nomi: le taglie salvate le nominano, non cambiano più
 const REGIONI_DI_PRIMA = [["villaggio","Il villaggio"],["cimitero","Il cimitero vecchio"],["campi","I campi"],["colle","Il colle delle rovine"],["brughiera","La brughiera"],["frutteto","Il frutteto"],["mulino","La valle del mulino"],["bosco","Il bosco vecchio"],["lago","Il lago"],["passo","Il passo"],["gola","La gola dei venti"],["vetta","La vetta dei troll"],["monte","Il monte"],["corvi","Il colle dei corvi"],["foresta","La foresta nera"],["ossa","La valle delle ossa"],["landa","La landa vecchia"],["guado","Il guado"],["palude","La palude"],["accampamento","Il prato dell'accampamento"],["secco","Il bosco secco"],["ceneri","La piana delle ceneri"],["rovine","Le rovine del guado"],["colline","Le colline di roccia"],["lupi","Il bosco dei lupi"]].map(([chiave, nome]) => ({ chiave, nome }))
 import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
@@ -212,23 +212,46 @@ for (const z of m.posti) controlla(`${z.tipo} ${z.chiave}: ci si arriva dalla pi
   const v = m.villaggio
   uguale('una città sola', m.citta.length, 1)
   controlla('niente forte né rifugio', !m.posti.some(q => q.citta === 'forte' || q.citta === 'rifugio' || q.chiave === 'forte' || q.chiave === 'rifugio'))
-  stessaLista('40×26', [v.w, v.h], [40, 26])
+  stessaLista('24×20: sta in una schermata o due', [v.w, v.h], [24, 20])
   for (const l of VILLAGGIO.lotti) {
     const q = m.posti.find(z => z.tipo === l.tipo && z.chiave === l.chiave && z.citta === 'villaggio')
-    controlla(`${l.tipo} ${l.chiave}: dove dice la pianta`, q && q.x === v.x + l.x && q.y === v.y + l.y && q.accanto.x === v.x + l.accanto.x && q.accanto.y === v.y + l.accanto.y)
+    controlla(`${l.tipo} ${l.chiave}: dove dice la pianta`, q && q.x === v.x + l.x && q.y === v.y + l.y && q.accanto.x === v.x + l.accanto.x && q.accanto.y === v.y + l.accanto.y && (q.giro || 0) === (l.giro || 0))
   }
   stessaLista('i quattro mercanti', v.mercanti.map(q => q.chiave).sort(), ['armaiolo', 'erborista', 'incantatrice', 'rigattiere'])
   stessaLista('la ragazza del pozzo e il capitano', v.persone.map(q => q.chiave).sort(), ['capitano', 'ragazza'])
   for (const t of ['minatore', 'portale', 'pietra', 'bacheca', 'cartello', 'pozzo']) controlla(`il villaggio ha ${t}`, !!v[t])
+  // chi ci sta si trova senza girare: dalla partenza tutti entro la larghezza della telecamera (15 celle) e poche file più su
   for (const q of [...v.mercanti, ...v.persone, v.minatore]) {
     controlla(`${q.chiave}: chi lo cerca si ferma davanti, a sud`, q.accanto.y > q.piede.y)
     uguale(`${q.chiave}: e sulla piazza`, m.strada[id(q.accanto.x, q.accanto.y)], 3)
+    controlla(`${q.chiave}: a poche celle dalla partenza`, Math.abs(q.piede.x - m.partenza.x) <= 6 && m.partenza.y - q.piede.y <= 9 && q.piede.y - m.partenza.y <= 2, `${q.piede.x - m.partenza.x},${q.piede.y - m.partenza.y}`)
   }
-  let campi = 0, piazza = 0
-  for (let y = v.y; y < v.y + v.h; y++) for (let x = v.x; x < v.x + v.w; x++) { const k = id(x, y); if (m.campo[k]) campi++; if (m.strada[k] === 3) piazza++ }
+  for (const q of [v.bacheca, v.pietra, v.portale]) controlla(`${q.tipo}: si vede dalla partenza`, Math.abs(q.piede.x - m.partenza.x) <= 6 && Math.abs(q.piede.y - m.partenza.y) <= 5)
+  // la piazza tonda: le celle della pianta, a parte il pozzo e chi ci sta; la stradina ne esce e arriva alla strada maestra
+  let campi = 0, piazza = 0, attese = 0, suStrada = 0
+  for (let y = v.y; y < v.y + v.h; y++) for (let x = v.x; x < v.x + v.w; x++) {
+    const k = id(x, y)
+    if (m.campo[k]) campi++
+    if (m.strada[k] === 3) piazza++
+    if (nellaPiazza(v.piazza, x + 0.5, y + 0.5) && m.blocco[k] !== 1) attese++
+    if (m.blocco[k] === 1 && m.strada[k]) suStrada++
+  }
   uguale('niente campi nel villaggio', campi, 0)
-  uguale('la piazza della pianta', piazza, VILLAGGIO.piazza.w * VILLAGGIO.piazza.h)
+  uguale('la piazza della pianta', piazza, attese)
+  controlla('una piazza vera, non un cortile', piazza >= 70 && piazza <= 160, piazza)
+  controlla('non è un rettangolo: gli angoli del suo rettangolo sono erba', [[0, 0], [v.piazza.w - 1, 0], [0, v.piazza.h - 1], [v.piazza.w - 1, v.piazza.h - 1]].every(([a, b]) => m.strada[id(v.piazza.x + a, v.piazza.y + b)] !== 3))
+  uguale('nessun lotto sulla piazza o sulla stradina', suStrada, 0)
   controlla('dal cancello parte la strada maestra', m.strada[id(v.cancello.x, v.cancello.y)] === 2)
+  {
+    const strada = (x, y) => x >= 0 && y >= 0 && x < W && y < H && m.strada[id(x, y)] > 0
+    const giro = passiDa(W, H, strada, m.partenza)
+    controlla('dalla piazza al cancello si va sempre su strada', giro[id(v.cancello.x, v.cancello.y)] > 0)
+  }
+  // le botteghe guardano la piazza: quelle ai lati girate verso il centro, a profondità diverse
+  for (const q of v.mercanti) controlla(`${q.chiave}: girata verso la piazza`, Math.abs(q.giro || 0) < 1 && Math.sign(q.giro || 0) === Math.sign(Math.round(v.piazza.cx - (q.x + q.w / 2))))
+  controlla('le botteghe non stanno in fila', new Set([...v.mercanti, v.minatore].map(q => q.piede.y)).size >= 4)
+  for (const c of v.case) controlla(`la casa in ${c.x - v.x},${c.y - v.y}: porta verso la piazza`, ['s', 'e', 'o'].includes(c.verso))
+  controlla('l\'orto sta nel suo angolo, sul bordo del villaggio', v.orto.x - v.x <= 2 || v.orto.x + v.orto.w >= v.x + v.w - 2)
   controlla('il villaggio è spianato', [...v.mercanti, v.pietra].every(q => Math.abs(m.quota[id(q.accanto.x, q.accanto.y)] - v.quota) < 0.01))
 }
 
