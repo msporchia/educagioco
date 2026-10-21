@@ -8,7 +8,7 @@ import { COLTURE } from './colture.js'
 import { RICETTE, nuovoId } from './ricette.js'
 import { PRODOTTI_ANIMALI } from './animali.js'
 import { PEZZI, EDIFICI } from './catalogo.js'
-import { LOTTI, LOTTI_INIZIALI, lottiDelPosto, lottoDi, dentro } from './mondo.js'
+import { LOTTI_INIZIALI, lottiDelPosto, lottoDi, lottoPerId, dentro } from './mondo.js'
 import { livelloDelPezzo, livelloDellaColtura, livelloDellaRicetta } from './livelli.js'
 import { tettoDi } from './ordini.js'
 
@@ -62,7 +62,7 @@ const TEMI = ['orto', 'mulino', 'pecore', 'frutteto', 'misto']
 function coseInForma(letto) {
   const out = []
   for (const c of (Array.isArray(letto) ? letto : []).slice(0, COSE_MAX)) {
-    if (!c || !TIPI_COSE.includes(c.tipo) || !Number.isInteger(c.i) || !Number.isInteger(c.j)) continue
+    if (!c || !TIPI_COSE.includes(c.tipo) || !Number.isInteger(c.i) || !Number.isInteger(c.j) || Math.abs(c.i) > 40000 || Math.abs(c.j) > 40000) continue
     const x = { tipo: c.tipo, i: c.i, j: c.j }
     if (c.tipo === 'campo') {
       x.coltura = COLTURE[c.coltura] ? c.coltura : 'grano'
@@ -135,10 +135,10 @@ export function normalizzaFattoriaVisitabile(letto) {
     if (typeof l.id !== 'string' || !/^[a-z0-9-]{1,32}$/.test(l.id)) return null
     const p = oggetto(l.proprietario)
     const lotti = { ...LOTTI_INIZIALI }
-    for (const id of Array.isArray(l.lotti) ? l.lotti : []) if (LOTTI.some(x => x.id === id)) lotti[id] = true
+    for (const id of (Array.isArray(l.lotti) ? l.lotti : []).slice(0, 400)) { const lo = lottoPerId(id); if (lo) lotti[lo.id] = true }
     const edifici = [...new Set(Array.isArray(l.edifici) ? l.edifici.filter(t => EDIFICI[t]) : [])]
     for (const t of edifici) for (const lo of lottiDelPosto(EDIFICI[t].slot.i, EDIFICI[t].slot.j, EDIFICI[t].w, EDIFICI[t].d)) lotti[lo.id] = true
-    const cose = coseInForma(l.cose).filter(c => { const m = PEZZI[c.tipo]; return lottiDelPosto(c.i, c.j, m.w, m.d).length > 0 })
+    const cose = coseInForma(l.cose).filter(c => { const m = PEZZI[c.tipo]; return lottiDelPosto(c.i, c.j, m.w, m.d).some(lo => lotti[lo.id]) })
     const posti = { cassa: postoInForma(oggetto(l.posti).cassa, POSTO_CASSA, lotti), mercato: postoInForma(oggetto(l.posti).mercato, POSTO_MERCATO, lotti) }
     const m = oggetto(l.mercato), c = oggetto(l.cassa)
     const chiede = chiedeInForma(c.chiede)
@@ -173,7 +173,7 @@ export function normalizzaFattoriaVisitabile(letto) {
 }
 
 // ── i quattro villaggi del computer ──
-// Le coordinate sono celle della griglia (vedi dati/mondo.js): il quadrato di partenza va da i −6..5, j −4..7; le strade di serie
+// Le coordinate sono celle del mondo (vedi dati/mondo.js; `lotti` aggiunge lotti `a_b` oltre ai nove di partenza): il quadrato di partenza va da i −6..5, j −4..7; le strade di serie
 // sono la riga j=−1 e le colonne i −1..0 da j=−1 a 7; la cassa sta in (−2,5) e il banco del mercato in (1..2,5).
 const campo = (i, j, coltura, cresc = 1) => ({ tipo: 'campo', i, j, coltura, cresc })
 const scambio = (k, n, d, nd) => ({ k, n, premio: premioMassimo(k, n), da: d ? { k: d, n: Math.min(nd, Math.max(1, donoMassimo(k, n, d))) } : null })
@@ -233,7 +233,9 @@ const DA_SCRIVERE = [
     proprietario: { nome: 'Villa Dolce', emoji: '🌻' },
     storia: ['Benvenuti a Villa Dolce! Qui le fragole si raccolgono una per una, a mano.', 'E in fondo c\'è la gelateria: il gelato lo facciamo solo con frutta vera.'],
     edifici: ['gelateria', 'zuccherificio'],
+    lotti: ['2_1', '2_0', '2_-1'],          // a nord: il lotto 2_-1 è un laghetto, e una passerella lo attraversa (dati/biomi.js)
     cose: [
+      { tipo: 'passerella', i: -5, j: -16 },
       campo(-5, 0, 'fragola'), campo(-3, 0, 'fragola', 0.7), campo(-5, 2, 'fragola'), campo(-3, 2, 'fragola', 0.5),
       campo(2, 0, 'fragola'), campo(4, 0, 'fragola', 0.8), { tipo: 'fontana', i: 2, j: 2 },
       { tipo: 'aiuola', i: -5, j: 5 }, { tipo: 'aiuola', i: -4, j: 5 }, { tipo: 'aiuola', i: 4, j: 5 }, { tipo: 'panchina', i: 3, j: 7 },

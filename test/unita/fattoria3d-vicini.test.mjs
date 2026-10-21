@@ -13,7 +13,7 @@ import { COLTURE } from '../../src/giochi/fattoria3d/dati/colture.js'
 import { RICETTE } from '../../src/giochi/fattoria3d/dati/ricette.js'
 import { sogliaDi, livelloDelPezzo } from '../../src/giochi/fattoria3d/dati/livelli.js'
 import { premioDi, tettoDi } from '../../src/giochi/fattoria3d/dati/ordini.js'
-import { PARTENZA, LOTTI, lottoDi, idx, dentro } from '../../src/giochi/fattoria3d/dati/mondo.js'
+import { PARTENZA, lottoDi, dentro } from '../../src/giochi/fattoria3d/dati/mondo.js'
 import { controlla, uguale, stessaLista, riassunto } from '../aiuto/verifica.mjs'
 
 /* una fattoria di casa, con le monete e l'orologio in mano; `liv` la porta a quel livello */
@@ -231,7 +231,7 @@ for (const f of VICINI) {
   // niente si sovrappone: tante celle occupate quante ne dicono le misure
   let atteso = 0, occupate = 0
   for (const c of f.cose) { const d = PEZZI[c.tipo]; atteso += d.w * d.d }
-  for (let j = -13; j < 13; j++) for (let i = -16; i < 16; i++) if (dentro(i, j) && m.cosaSu(i, j)) occupate++
+  for (let j = -24; j < 24; j++) for (let i = -24; i < 24; i++) if (dentro(i, j) && m.cosaSu(i, j)) occupate++
   uguale(`${f.id}: nessuna cosa sopra un'altra`, occupate, atteso)
   uguale(`${f.id}: tante cose quante ne dice lo snapshot`, m.cose.length, f.cose.length)
   controlla(`${f.id}: dentro la sua terra niente alberi né sassi che si sovrappongano`, m.alberiNelTerreno().length === 0 && m.ostacoliNelTerreno().length === 0)
@@ -284,7 +284,7 @@ for (const f of VICINI) {
   controlla('la cassa e il banco non stanno sopra una cosa', (() => {
     const mo = motoreDiVisita(snap); let occ = 0, att = 0
     for (const c of snap.cose) att += PEZZI[c.tipo].w * PEZZI[c.tipo].d
-    for (let j = -13; j < 13; j++) for (let i = -16; i < 16; i++) if (dentro(i, j) && mo.cosaSu(i, j)) occ++
+    for (let j = -24; j < 24; j++) for (let i = -24; i < 24; i++) if (dentro(i, j) && mo.cosaSu(i, j)) occ++
     const cassa = snap.posti.cassa, mer = snap.posti.mercato
     return occ === att && !mo.cosaSu(cassa.i, cassa.j) && !mo.cosaSu(mer.i, mer.j)
   })())

@@ -16,8 +16,8 @@ export const PEZZI = {
   fontana:         { nome: 'Fontana',         emoji: '⛲', w: 2, d: 2, prezzo: 30, rincaro: 0, categoria: 'decori', liv: 8 },
   pozzo:           { nome: 'Pozzo',           emoji: '🪣', w: 1, d: 1, prezzo: 18, rincaro: 0, categoria: 'decori', liv: 9 },
   spaventapasseri: { nome: 'Spaventapasseri', emoji: '🧑‍🌾', w: 1, d: 1, prezzo: 12, rincaro: 0, categoria: 'decori', liv: 13 },
-  passerella:      { nome: 'Passerella',      emoji: '🪵', w: 1, d: 3, prezzo: 8,  rincaro: 0, categoria: 'passaggi', liv: 3, calpestabile: true, alzato: 0.18 },   // calpestabili: non fermano il passo, contano come strada (regole.md)
-  ponte:           { nome: 'Ponte',           emoji: '🌉', w: 3, d: 1, prezzo: 14, rincaro: 0, categoria: 'passaggi', liv: 5, calpestabile: true, alzato: [0.25, 0.36, 0.25] },   // la gobba: una quota per cella lungo il lato lungo
+  passerella:      { nome: 'Passerella',      emoji: '🪵', w: 1, d: 3, prezzo: 8,  rincaro: 0, categoria: 'passaggi', liv: 3, calpestabile: true, suAcqua: true, alzato: 0.18 },   // calpestabili: non fermano il passo, contano come strada (regole.md)
+  ponte:           { nome: 'Ponte',           emoji: '🌉', w: 3, d: 1, prezzo: 14, rincaro: 0, categoria: 'passaggi', liv: 5, calpestabile: true, suAcqua: true, alzato: [0.25, 0.36, 0.25] },   // la gobba: una quota per cella lungo il lato lungo
   tavolo:          { nome: 'Tavolo',          emoji: '🍽️', w: 3, d: 2, prezzo: 18, rincaro: 0, categoria: 'decori', liv: 4 },
   trattore:        { nome: 'Trattore',        emoji: '🚜', w: 2, d: 2, prezzo: 40, rincaro: 0, categoria: 'edifici', liv: 7 },     // si tocca e porta ai vicini (docs/fattoria3d/vicini.md)
 }

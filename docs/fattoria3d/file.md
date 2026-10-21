@@ -8,7 +8,9 @@ stile-vicini.css    la mappa, il viaggio, la visita (`.f3-vic-`)
 stile-macchina.css  il foglio di una macchina (`.fm-`): fila, pronti, carte, fantasma; i colori del tema restano in stile.css
 visite.js            il filo fra `Gioco.vue` e le visite (`usaVisite`): mappa, viaggio, la scena a richiesta, cassa e mercato
 dati/
-  mondo.js           la griglia, i 42 lotti, il quadrato di partenza, i due edifici di scena, le strade di serie, i lotti di un posto
+  mondo.js           le coordinate (lotti `a_b` qualunque, chiavi di cella, id salvati), i 42 lotti storici, il quadrato di partenza, i due edifici di scena, le strade di serie
+  lotti.js           `generaLotto(a, b)`: bioma, acqua, molo, alberi e sassi di un lotto (puro)
+  biomi.js           prato / bosco / laghetto e lo stagno ([laghi.md](laghi.md)); semi.js: il caso del mondo
   carte.js           le carte del menu «Costruisci qui»: `carteDi(categoria, stato)`, `schedeDi`, `DISEGNI` (carta → pezzo dell'atlante 2D, ormai solo come dato: la carta mostra il modello 3D), `STRUMENTI`, i guasti
   catalogo.js        i pezzi (ora con la `categoria` di ogni pezzo e edificio, `CATEGORIE`; ora anche passerella, ponte e tavolo; i primi due `calpestabile`, con `alzato`: regole.md) — dieci all'inizio:  (campo, recinto, pollaio, stalla, bancarella, bacheca, aiuola, panchina, fontana, pozzo, spaventapasseri) e gli undici
                      edifici unici (pasticceria = il Pastificio, mongolfiera, mulino, panificio, caseificio, conserviera = la Cucina, gelateria, telaio, zuccherificio, sartoria, tintoria: gli id sono quelli dei salvataggi): prezzi, misure, `liv`, `slot`
@@ -18,10 +20,10 @@ dati/
   compagni.js        Watson e i gatti: i dati, il livello a cui arrivano, le scelte pure (meta, cosa fare), `ASPETTO_ERO` ([compagni.md](compagni.md))
   livelli.js         le soglie, `roba(liv)`, i nomi dei livelli, i guasti dei livelli
   ordini.js          il banco: i clienti, i tempi, il premio (tetto 🪙6/min), `chiedibili(livello)`, i guasti
-  regole.js          i costi (anche l'albero 🪙 3 e il sasso 🪙 1), le pecore
+  regole.js          i costi (anche l'albero 🪙 3 e il sasso 🪙 1, il prezzo dei lotti), le pecore
   mongolfiera.js     la nave: file, casse, pezzi, bonus, il riposo, la sorpresa (`SORPRESE`), `merceDaCassa`, `premioDellaCassa`, i guasti col tetto ([mongolfiera.md](mongolfiera.md))
-  alberi.js          gli alberi (sempre gli stessi: un caso col seme)
-  ostacoli.js        i sassi e i cespugli (2–5 per lotto, sempre gli stessi; l'id è la cella), i guasti
+  alberi.js          gli alberi storici (sempre gli stessi: un caso col seme) e quelli dei lotti nuovi
+  ostacoli.js        i sassi e i cespugli di un lotto (2–5 sul prato; l'id è la cella), i guasti
   qualita.js         i preset di qualità, le scale, le ombre
   degrado.js         il degrado adattivo (senza three): fps → livello → risoluzione e cadenza dell'ombra
   vicini.js          i villaggi dei vicini e il formato di una fattoria visitabile (snapshot, `normalizzaFattoriaVisitabile`, i numeri di prezzi, premi e doni), i guasti ([vicini.md](vicini.md))

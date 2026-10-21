@@ -1,6 +1,6 @@
 /* Lo stato che si salva (in profile.campagne.fattoria3d.cfg.stato) e come si rimette in forma quando si legge: un salvataggio
    di ieri non ha bisogno di migrazioni, i campi che mancano si riempiono. Dato + funzioni pure. */
-import { LOTTI_INIZIALI, PEZZO_DI_PARTENZA } from '../dati/mondo.js'
+import { LOTTI_INIZIALI, PEZZO_DI_PARTENZA, lottoPerId } from '../dati/mondo.js'
 import { CHIAVI_COLTURE, TESSERE } from '../dati/colture.js'
 import { TIPI_DI_EDIFICIO } from '../dati/catalogo.js'
 import { TIPI_DI_MACCHINA, MACCHINE, RICETTE, nuovoId } from '../dati/ricette.js'
@@ -21,7 +21,9 @@ const LANA_DEL_SEGNAPOSTO = 2     // il premio della cassa del segnaposto di pri
 // 6: niente legna (il campo di un vecchio stato si ignora), e `ostacoli`: gli id (le celle) dei sassi e dei cespugli già tolti
 // 7: le merci e le ricette sono quelle della fattoria di sempre (docs/fattoria3d/merci-e-ricette.md): `normalizza` traduce gli id
 //    di prima (`MERCI_VECCHIE`) nelle scorte, nelle code e nei pronti, negli ordini aperti e nello stato dei vicini, un pezzo per un pezzo
-export const VERSIONE_STATO = 7
+// 8: il mondo senza confini: i lotti `a_b` hanno coordinate intere qualunque; gli id di strade, sassi e alberi valgono una cella (nei lotti storici
+//    come prima, fuori la chiave impacchettata di dati/mondo.js). Niente da tradurre: un v7 si legge uguale
+export const VERSIONE_STATO = 8
 
 const vuote = () => Object.fromEntries(CHIAVI_COLTURE.map(k => [k, 0]))
 
@@ -77,7 +79,7 @@ export function normalizza(letto) {
   s.esperienza = numero(letto.esperienza)
   for (const t of TIPI_DI_EDIFICIO) s.posseduti[t] = !!oggetto(letto.posseduti)[t]
   const lotti = oggetto(letto.lotti)
-  s.lotti = Object.keys(lotti).length ? Object.fromEntries(Object.entries(lotti).filter(([, v]) => v).map(([k]) => [k, true])) : s.lotti
+  s.lotti = Object.keys(lotti).length ? Object.fromEntries(Object.entries(lotti).filter(([k, v]) => v && lottoPerId(k)).map(([k]) => [k, true])) : s.lotti
   s.strade = Array.isArray(letto.strade) ? letto.strade.filter(Number.isInteger) : []
   for (const [k, n] of Object.entries(oggetto(letto.magazzino))) if (numero(n) > 0) s.magazzino[k] = numero(n)
   s.tagliati = Array.isArray(letto.tagliati) ? letto.tagliati.filter(Number.isInteger) : []

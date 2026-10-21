@@ -33,6 +33,7 @@ export function dettoDi(motivo, extra = {}) {
     case 'in-viaggio': return 'È ancora in viaggio…'
     case 'non-confina': return 'Compra prima un terreno che confina con questo'
     case 'occupato': case 'fuori-terreno': return 'Qui non si può: cerca un posto libero nei tuoi terreni'
+    case 'acqua': return 'Qui c\'è l\'acqua: serve un ponte'
     case 'sta-crescendo': return 'Quello che sta crescendo non si mette via'
     case 'ha-le-bestie': return 'Ci sono le bestie: spostalo, non si mette via'
     case 'ha-le-pecore': return 'Il recinto ha le pecore: spostalo, non si mette via'

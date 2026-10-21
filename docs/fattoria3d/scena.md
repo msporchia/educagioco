@@ -9,7 +9,7 @@ gli Asteroidi 3D e il Sotterraneo 3D: il 3D non si scrive a mano.
 | file | cosa tiene |
 |---|---|
 | `mondo3d.js` | **compone** tutto e fa il battito: renderer, luci, il tocco (`tocca`, `bersaglioSotto`), la coda di semina/raccolta, le opzioni (`applica`), le statistiche. L'unico che usa il renderer |
-| `terreno.js` | erba, strade, griglia, lotti non comprati, recinto, alberi, i due edifici di scena |
+| `terreno.js` | erba, strade, griglia, lotti non comprati, recinto, alberi, sassi, laghetti, i due edifici di scena: a istanze, per una finestra di 9×9 lotti attorno alla camera ([mondo-infinito.md](mondo-infinito.md)) |
 | `pezzi.js` | un gruppo per ogni cosa del motore e per gli undici edifici unici (fantasmi finché non si comprano); li tiene allineati (`sincronizza`) e li anima (grano che cresce, pecore, galline e mucche, fontana, fumo, il pallone che parte e torna: [mongolfiera.md](mongolfiera.md)); i cartelli sugli edifici: «🎈 N casse pronte!» o «🎈 in viaggio · m:ss» sulla mongolfiera, prezzo o «🔒 Livello N» sul fantasma, pronti o cottura su ogni macchina, uova o latte pronti sul pollaio e sulla stalla, e su recinto, pollaio e stalla il cartello col pulsante «＋ 🪙 N» che compra una bestia (niente conto «n/max»; «ha fame» se c'è una bestia o una pecora tosata da nutrire) ([animali.md](animali.md)); le bestie affamate sono magre e basse, con una transizione morbida (`muoviBestie`, `muoviPecore`: «La fame si vede»); il cartello si nasconde col pezzo sollevato |
 | `eroe.js` | il movimento (a piedi, o di corsa), il percorso, la posa del gesto (semina, falcia, abbatte, esulta) |
 | `azioni.js` | cosa fa l'eroe davanti a ogni cosa: anima il gesto e **a metà gesto chiede al motore di farlo davvero**; un edificio posseduto apre il menu della sua macchina, uno no offre l'acquisto (`offriEdificio`: livello, terreno da comprare prima, prezzo) |
@@ -137,7 +137,7 @@ in `dati/qualita.js`, che si alza quando cambiano i valori di partenza, così ch
 
 **Cosa si deve vedere** (medio e alto: tutto acceso; il basso tiene spenti ombre, vento e scintille, e lo dice nelle opzioni):
 - **ciuffi d'erba**: un gruppetto di tre fili su metà delle celle del prato, a istanze, che sparisce dove sta una strada, un
-  pezzo, un albero o un sasso (si rifà a ogni cambio, `ridisegnaErba`), più quelli fuori dal mondo;
+  pezzo, un albero, un sasso o l'acqua (si rifà a ogni cambio e a ogni finestra nuova, `ridisegnaErba`), solo nei lotti aperti della finestra;
 - **vento**: i ciuffi ondeggiano nel vertex shader (fase per ciuffo, raffiche) e il grano maturo si piega di una decina di gradi;
 - **scintille e fumo**: solo nei momenti del gioco (semina, raccolto, acquisto, fumo dei forni), non a ciclo continuo.
 Prima di questo non si vedeva niente: i ciuffi solo fuori dal mondo (sottili e dello stesso verde del prato), il vento del grano muoveva la punta di 5 cm.
@@ -167,6 +167,26 @@ Prima di questo non si vedeva niente: i ciuffi solo fuori dal mondo (sottili e d
   livello vive in memoria e lo dicono le opzioni. I cartelli non riscrivono più lo stile se non si sono mossi, `proietta` non alloca, la foto del HUD
   non si rifà se è uguale. Il pannello ⚙ e «Mostra il rapporto» ora dicono anche: JS di logica e di disegno e il resto del fotogramma, programmi,
   quante cose per tipo, mesh e chi proietta ombra, pixel ratio scelto e usato, livello del degrado.
+  **Le mesh fuse (21/10).** `scena3d/fondi.js` (`fondiPerMateriale(gruppo, { escludi })`, chiamata alla fine di ogni `crea…()`) fonde le mesh
+  statiche in una per tipo di materiale: i colori passano nei vertici (materiale `vertexColors` condiviso per firma: ruvidità, metallo, luce propria,
+  lato), il disegno è identico. Restano sciolti ciò che si muove (pale, fumo, dolce, cono, pallone e fiamma, manichino, ago, ruota, vasche, panni,
+  gocce, navetta, i corpi delle bestie e le zampe delle pecore), i trasparenti, le trame, le istanze e le mesh con `userData`; le parti che si
+  muovono per intero (una pala, il manichino, la testa della mucca) si fondono a parte, dentro di sé. Un pezzo piccolo (< 35 cm) non proietta
+  ombra, salvo che nello stesso materiale ci sia un pezzo grande: allora entra nella sua mesh (meno draw call, qualche triangolo in più nell'ombra).
+  L'interruttore `FONDI.acceso` serve ai confronti prima/dopo. Misura (stato pieno: 7 campi, 22 pezzi e edifici, aiuole, recinto 3 pecore, pollaio 4,
+  stalla 4, cane, 3 gatti, contadino; ombra 1024; Chrome SwiftShader, i ms ballano, valgono i conti):
+
+  | | prima | dopo |
+  |---|---|---|
+  | mesh | 1158 | 421 |
+  | draw call a fotogramma (con l'ombra) | 1434 | **428** (−70%) |
+  | triangoli a fotogramma | 88,6k | 99,8k (+13%: l'ombra ora disegna anche i pezzi piccoli fusi) |
+  | JS di `render()` (ms) | 3,05 | 0,90 |
+
+  Per modello (mesh, prima → dopo): ponte 57 → 1, passerella 41 → 1, tavolo 25 → 1, pasticceria 45 → 4, conserviera 32 → 8, gelateria 36 → 3,
+  caseificio 32 → 4, telaio 32 → 3, zuccherificio 34 → 4, sartoria 23 → 6, tintoria 25 → 10, mulino 21 → 2, panificio 17 → 4, mongolfiera 16 → 4,
+  recinto (3 pecore) 89 → 22, pollaio (4) 51 → 13, stalla (4) 129 → 17, aiuola 23 → 1, contadino 28 → 7, mucca 23 → 6, pecora 18 → 7, gallina 8 → 4.
+  Cani e gatti erano già fusi per pezzo (15–17). Test: `unita/fattoria3d-fondi`.
   **Provato e non fatto**: `matrixAutoUpdate = false` sui gruppi fermi (0,18 ms in tutto: non vale il rischio con i modelli che altri toccano);
   nascondere i cartelli lontani (non pesano). Le proposte per il giro dopo sono in [da-fare.md](da-fare.md).
 - **Il peso nel sito spezzato**: `fattoria3d-3d-*.js` (~50 kB, il disegno) e `gioco-fattoria3d-*.js` (~40 kB) stanno nel

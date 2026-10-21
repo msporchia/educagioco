@@ -4,7 +4,7 @@
    torna, e lo stato si salva e si rilegge uguale.
    `node test/esegui.mjs fattoria3d`
    tempo: 1 */
-import { guastiDelMondo, LOTTI, LOTTI_INIZIALI, lottoPerId, idx, PARTENZA } from '../../src/giochi/fattoria3d/dati/mondo.js'
+import { guastiDelMondo, LOTTI_STORICI, LOTTI_INIZIALI, lottoPerId, PARTENZA } from '../../src/giochi/fattoria3d/dati/mondo.js'
 import { guastiDelCatalogo, PEZZI, EDIFICI, CATEGORIE } from '../../src/giochi/fattoria3d/dati/catalogo.js'
 import { carteDi, schedeDi, DISEGNI, STRUMENTI, guastiDelleCarte } from '../../src/giochi/fattoria3d/dati/carte.js'
 import { PEZZI as ATLANTE_PEZZI } from '../../src/giochi/fattoria/dati/atlante.js'
@@ -14,8 +14,12 @@ import { guastiDeiLivelli, sogliaDi, livelloPer, roba, nomeDi, ULTIMO, costoDelL
 import { msDi } from '../../src/giochi/fattoria3d/dati/ordini.js'
 import { ANIMALI, CORTILE, PRODOTTI_ANIMALI, LANA, guastiDegliAnimali, prezzoDellaBestia, msDelProdotto } from '../../src/giochi/fattoria3d/dati/animali.js'
 import { guastiDelleRegole, COSTI, PECORE } from '../../src/giochi/fattoria3d/dati/regole.js'
-import { generaAlberi, guastiDegliAlberi } from '../../src/giochi/fattoria3d/dati/alberi.js'
-import { generaOstacoli, guastiDegliOstacoli, PER_LOTTO } from '../../src/giochi/fattoria3d/dati/ostacoli.js'
+import { alberiStorici, guastiDegliAlberi } from '../../src/giochi/fattoria3d/dati/alberi.js'
+import { guastiDegliOstacoli, PER_LOTTO } from '../../src/giochi/fattoria3d/dati/ostacoli.js'
+import { generaLotto } from '../../src/giochi/fattoria3d/dati/lotti.js'
+import { guastiDeiBiomi } from '../../src/giochi/fattoria3d/dati/biomi.js'
+
+const ostacoliStorici = () => LOTTI_STORICI.flatMap(l => generaLotto(l.a, l.b).ostacoli)
 import { Fattoria3d } from '../../src/giochi/fattoria3d/motore/fattoria3d.js'
 import { statoIniziale, normalizza, bestieInForma, VERSIONE_STATO } from '../../src/giochi/fattoria3d/motore/stato.js'
 import manifesto from '../../src/giochi/fattoria3d/gioco.js'
@@ -41,11 +45,11 @@ const metti = (f, tipo) => f.mettiPezzo(tipo, ...postoPer(f, tipo))
 
 /* ══════════ 1. i dati ══════════ */
 const guasti = [...guastiDelMondo(), ...guastiDelCatalogo(), ...guastiDelleColture(), ...guastiDelleRicette(COLTURE, EDIFICI), ...guastiDeiLivelli(), ...guastiDegliAnimali(PEZZI),
-                ...guastiDelleRegole(), ...guastiDegliAlberi(), ...guastiDegliOstacoli()]
+                ...guastiDelleRegole(), ...guastiDegliAlberi(), ...guastiDegliOstacoli(ostacoliStorici(), alberiStorici()), ...guastiDeiBiomi()]
 controlla('i dati non hanno guasti', guasti.length === 0, guasti.join(' · '))
-stessaLista('quarantadue lotti, nove di partenza', [LOTTI.length, Object.keys(LOTTI_INIZIALI).length], [42, 9])
-controlla('gli alberi sono sempre gli stessi', JSON.stringify(generaAlberi()) === JSON.stringify(generaAlberi()))
-controlla('e i sassi e i cespugli pure', JSON.stringify(generaOstacoli()) === JSON.stringify(generaOstacoli()))
+stessaLista('quarantadue lotti storici, nove di partenza', [LOTTI_STORICI.length, Object.keys(LOTTI_INIZIALI).length], [42, 9])
+controlla('gli alberi sono sempre gli stessi', JSON.stringify(alberiStorici()) === JSON.stringify(alberiStorici()))
+controlla('e i sassi e i cespugli pure', JSON.stringify(ostacoliStorici()) === JSON.stringify(ostacoliStorici()))
 controlla('il manifesto è in prova e senza tappe', manifesto.sperimentale === true && manifesto.tappe === 0 && manifesto.chiave === 'fattoria3d')
 const gA = guastiDellAlbo([manifesto])
 controlla('l\'albo del manifesto sta in piedi', gA.length === 0, gA.join(' · '))
@@ -134,27 +138,25 @@ controlla('l\'albo del manifesto sta in piedi', gA.length === 0, gA.join(' · ')
   controlla('abbattuto: costa COSTI.albero, niente legna, cella libera', r.ok && r.costo === COSTI.albero && prima - b.monete === COSTI.albero && !('legna' in f.s) && !('legna' in r) && f.libera(a.i, a.j))
   controlla('conta come spesa (esperienza) e c\'è l\'evento', f.esperienza() === COSTI.albero && f.prendiEventi().some(e => e.tipo === 'albero'))
   uguale('due volte no', f.abbatti(a.n).motivo, 'gia-tagliato')
-  const fuori = f.alberi.find(x => x.tagliabile && !f.cellaPropria(x.i, x.j))
+  const fuori = f.alberi.find(x => !f.cellaPropria(x.i, x.j))
   uguale('un albero in un lotto non tuo non si abbatte', f.abbatti(fuori.n).motivo, 'fuori-terreno')
-  const bosco = f.alberi.find(x => !x.tagliabile)
-  uguale('il bosco fuori dal mondo nemmeno', f.abbatti(bosco.n).motivo, 'bosco')
   const salvato = f.serializza()
   const g = mondo({ stato: salvato }).f
-  controlla('l\'albero tagliato resta tagliato dopo il salvataggio', g.alberi[a.n].tagliato === true && g.libera(a.i, a.j))
+  controlla('l\'albero tagliato resta tagliato dopo il salvataggio', g.albero(a.n).tagliato === true && g.libera(a.i, a.j))
   // senza monete il colpo non parte e non cambia niente
   const povero = mondo({ monete: COSTI.albero - 1 })
   const b2 = povero.f.alberiNelTerreno()[0], es = povero.f.esperienza()
   const no = povero.f.abbatti(b2.n)
-  controlla('senza monete rifiuta e dice quanto costa', !no.ok && no.motivo === 'poche-monete' && no.costo === COSTI.albero && !povero.f.alberi[b2.n].tagliato && povero.b.monete === COSTI.albero - 1 && povero.f.esperienza() === es)
+  controlla('senza monete rifiuta e dice quanto costa', !no.ok && no.motivo === 'poche-monete' && no.costo === COSTI.albero && !povero.f.albero(b2.n).tagliato && povero.b.monete === COSTI.albero - 1 && povero.f.esperienza() === es)
 }
 
 /* ══════════ 6-bis. sassi e cespugli: pochi per lotto, restano dopo l'acquisto, si tolgono per 🪙 1 ══════════ */
 {
-  const tutti = generaOstacoli()
-  controlla('due-cinque per lotto (meno dove i posti riservati non lasciano spazio)', LOTTI.every(l => {
+  const tutti = ostacoliStorici()
+  controlla('due-cinque per lotto (meno dove i posti riservati non lasciano spazio)', LOTTI_STORICI.every(l => {
     const n = tutti.filter(o => o.i >= l.i && o.i < l.i + l.w && o.j >= l.j && o.j < l.j + l.d).length
     return n <= PER_LOTTO.max
-  }) && LOTTI.filter(l => tutti.filter(o => o.i >= l.i && o.i < l.i + l.w && o.j >= l.j && o.j < l.j + l.d).length >= PER_LOTTO.min).length >= LOTTI.length - 15)    // gli altri sono i lotti stretti fra edifici, strade e alberi (un edificio 3×3 riserva 5×5 celle: dodici erano i lotti senza posto prima di telaio, zuccherificio, sartoria e tintoria)
+  }) && LOTTI_STORICI.filter(l => tutti.filter(o => o.i >= l.i && o.i < l.i + l.w && o.j >= l.j && o.j < l.j + l.d).length >= PER_LOTTO.min).length >= LOTTI_STORICI.length - 15)    // gli altri sono i lotti stretti fra edifici, strade e alberi (un edificio 3×3 riserva 5×5 celle: dodici erano i lotti senza posto prima di telaio, zuccherificio, sartoria e tintoria)
   controlla('ci sono sia sassi sia cespugli', tutti.some(o => o.tipo === 'sasso') && tutti.some(o => o.tipo === 'cespuglio'))
   const { f, b } = mondo({ ostacoli: true })
   const nel = f.ostacoliNelTerreno(), fuoriTerreno = f.ostacoli.find(o => !f.cellaPropria(o.i, o.j))
@@ -169,22 +171,22 @@ controlla('l\'albo del manifesto sta in piedi', gA.length === 0, gA.join(' · ')
   controlla('ora ci si può mettere un pezzo', f.puoMettere('aiuola', o.i, o.j).ok)
   // l'acquisto di un lotto non li fa sparire
   const dentroLotto = (l, x) => x.i >= l.i && x.i < l.i + 4 && x.j >= l.j && x.j < l.j + 4 && !x.tolto
-  const nord = LOTTI.find(l => !f.posseduto(l) && f.confina(l) && f.ostacoli.some(x => dentroLotto(l, x))), qui = f.ostacoli.filter(x => dentroLotto(nord, x))
+  const nord = LOTTI_STORICI.find(l => !f.posseduto(l) && f.confina(l) && f.ostacoli.some(x => dentroLotto(l, x))), qui = f.ostacoli.filter(x => dentroLotto(nord, x))
   f.compraLotto(nord.id)
   controlla('comprare il lotto non li toglie: ci sono ancora e bloccano', qui.length >= 1 && qui.every(x => !x.tolto && !f.libera(x.i, x.j)))
   // si salva l'id e si rilegge
   const g = mondo({ stato: f.serializza(), ostacoli: true }).f
-  controlla('quello tolto resta tolto dopo il salvataggio, gli altri no', g.ostacoli[o.n].tolto === true && g.libera(o.i, o.j) && g.ostacoli.filter(x => x.tolto).length === 1)
+  controlla('quello tolto resta tolto dopo il salvataggio, gli altri no', g.ostacolo(o.n).tolto === true && g.libera(o.i, o.j) && g.ostacoli.filter(x => x.tolto).length === 1)
   // senza monete non si tocca
   const p = mondo({ monete: 0, ostacoli: true }).f
   const po = p.ostacoliNelTerreno()[0]
   const no = p.togliOstacolo(po.n)
-  controlla('senza monete rifiuta e non cambia niente', !no.ok && no.motivo === 'poche-monete' && no.costo === COSTI.ostacolo && !p.ostacoli[po.n].tolto && !p.libera(po.i, po.j))
+  controlla('senza monete rifiuta e non cambia niente', !no.ok && no.motivo === 'poche-monete' && no.costo === COSTI.ostacolo && !p.ostacolo(po.n).tolto && !p.libera(po.i, po.j))
   // un vecchio salvataggio con un pezzo e una strada dove ora c'è un sasso: il sasso se ne va da sé, gratis
   const q = f.ostacoliNelTerreno()[0], saved = f.serializza()
   saved.cose.push({ id: saved.prossimoId, tipo: 'aiuola', i: q.i, j: q.j }); saved.prossimoId++
   const h = mondo({ stato: saved, ostacoli: true }).f
-  controlla('il pezzo salvato sopra un sasso vince: il sasso è tolto, senza pagare', h.ostacoli[q.n].tolto === true && h.s.ostacoli.includes(q.id) && h.cosaSu(q.i, q.j).tipo === 'aiuola')
+  controlla('il pezzo salvato sopra un sasso vince: il sasso è tolto, senza pagare', h.ostacolo(q.n).tolto === true && h.s.ostacoli.includes(q.id) && h.cosaSu(q.i, q.j).tipo === 'aiuola')
 }
 
 /* ══════════ 6-ter. pagare al posizionamento: compra e metti in un gesto, senza conferma ══════════ */
@@ -352,7 +354,7 @@ controlla('l\'albo del manifesto sta in piedi', gA.length === 0, gA.join(' · ')
   f.compraLotto('3_1'); f.disegnaStrada(-3, 3); f.abbatti(f.alberiNelTerreno()[0].n); f.compraEdificio('pasticceria')
   f.s.prodotti.farina = 4; f.s.prodotti.uova = 1; f.prepara('pasta')
   const s1 = f.serializza()
-  const g = mondo({ stato: JSON.parse(JSON.stringify(s1)) }).f
+  const g = mondo({ stato: JSON.parse(JSON.stringify(s1)), ostacoli: true }).f
   uguale('la lettura rifà lo stesso stato', JSON.stringify(g.serializza()), JSON.stringify(s1))
   controlla('cose, lotti e strade tornano', g.s.cose.length === 2 && g.posseduto(lottoPerId('3_1')) && g.eStrada(-3, 3) === 1)
   for (const rotto of [null, undefined, 7, 'x', [], {}, { cose: 'no' }, { merci: 5, lotti: [1], strade: 'a', pasticceria: { coda: [{}] } }]) {

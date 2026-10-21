@@ -1,7 +1,7 @@
 # 🚜 La fattoria 3D
 
 La fattoria disegnata in 3D (three.js), **gioco in prova**: l'eroe cammina fino alle cose e le fa, il terreno si compra
-a lotti dentro un recinto basso, i pezzi si trascinano dalla barra alla mappa. Ha **risorse sue** (raccolti, prodotti,
+a lotti (senza confini) dentro un recinto basso, i pezzi si trascinano dalla barra alla mappa. Ha **risorse sue** (raccolti, prodotti,
 lana) e uno stato suo, e non tocca quelli della fattoria di sempre; le monete sono quelle vere. Il codice è in
 `src/giochi/fattoria3d/`.
 
@@ -14,6 +14,8 @@ lana) e uno stato suo, e non tocca quelli della fattoria di sempre; le monete so
 - [mongolfiera.md](mongolfiera.md) — la nave: tre file di casse da riempire un po' alla volta, i bonus, la sorpresa della fiera, il viaggio e il ritorno, il segnaposto di prima che si chiude
 - [vicini.md](vicini.md) — il trattore e i villaggi dei vicini: la fattoria visitabile come dato (snapshot), la cassa, il mercato che compra e che vende, la visita di sola lettura, e come domani entrerà quella di un amico
 - [terreno.md](terreno.md) — i lotti da comprare, il recinto, gli alberi che si abbattono, le strade a pennello, la telecamera
+- [mondo-infinito.md](mondo-infinito.md) — il mondo senza confini: lotti `a_b` qualunque, generazione per lotto, gli id salvati, la finestra della scena, il prezzo che si auto-limita
+- [laghi.md](laghi.md) — i laghetti (biomi), l'acqua, i ponti, il disegno, e come si aggancerà la pesca
 - [compagni.md](compagni.md) — Watson e i gatti che girano per la fattoria, il contadino nuovo: quando arrivano, come sono fatti, come si muovono
 - [scena.md](scena.md) — il disegno: i moduli di `scena3d/`, il dito, costruire trascinando, le opzioni di qualità e il peso
 - [file.md](file.md) — dove sta cosa in `src/giochi/fattoria3d/`, e i bersagli dei test

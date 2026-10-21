@@ -17,7 +17,7 @@ import { Costruzione } from './costruzione.js'
 import { Dito } from './dito.js'
 import { ASPETTO, fantasma } from './modelli.js'
 import { PEZZI, EDIFICI } from '../dati/catalogo.js'
-import { LOTTI, lottoDi } from '../dati/mondo.js'
+import { lottoDi } from '../dati/mondo.js'
 import { LIVELLI, scalaPer, nuovoDegrado, passoDegrado, descriviDegrado } from '../dati/degrado.js'
 
 const CIELO = new THREE.Color(0xbfe0f0)
@@ -121,10 +121,10 @@ export class Mondo3d {
     while (o && !o.userData.bersaglio) o = o.parent
     if (o) return o.userData.bersaglio
     const a = rg.intersectObjects(this.terreno.istanzeAlberi, false)
-      .map(h => this.m.alberi[h.instanceId]).find(x => x && x.tagliabile && !x.tagliato)
+      .map(h => this.terreno.alberoDi(h.instanceId)).find(x => x && !x.tagliato)
     if (a) return { kind: 'albero', n: a.n }
     const sx = rg.intersectObjects(this.terreno.istanzeOstacoli, false)
-      .map(h => this.m.ostacoli[this.terreno.ostacoloDi(h.object, h.instanceId)]).find(x => x && !x.tolto)
+      .map(h => this.m.ostacolo(this.terreno.ostacoloDi(h.object, h.instanceId))).find(x => x && !x.tolto)
     if (sx) return { kind: 'ostacolo', n: sx.n }
     const p = this.puntaSuolo(cx, cy); if (!p) return null
     const i = Math.floor(p.x), j = Math.floor(p.z), c = this.m.cosaSu(i, j)
@@ -138,7 +138,7 @@ export class Mondo3d {
   lottoSotto(cx, cy) {
     const p = this.puntaSuolo(cx, cy); if (!p) return null
     const l = lottoDi(Math.floor(p.x), Math.floor(p.z))
-    return l && !this.m.posseduto(l) ? l : null
+    return !this.m.posseduto(l) && this.m.lottiAperti.has(l.k) ? l : null           // il vuoto lontano (fuori dall'anello di due lotti) non apre niente
   }
   /** Le celle da cui si può servire una cosa: il davanti per gli edifici, tutta la cornice per il resto. */
   celleDiServizio(b) {
@@ -148,7 +148,7 @@ export class Mondo3d {
       if (x.calpestabile) { const su = []; for (let a = 0; a < w; a++) for (let b2 = 0; b2 < d; b2++) su.push([i + a, j + b2]); return su }   // un ponte si tocca per salirci
     }
     else if (b.kind === 'edificio') { const e = EDIFICI[b.tipo]; i = e.slot.i; j = e.slot.j; w = e.w; d = e.d; davanti = true }
-    else { const a = b.kind === 'ostacolo' ? this.m.ostacoli[b.n] : this.m.alberi[b.n]; i = a.i; j = a.j; w = 1; d = 1 }
+    else { const a = b.kind === 'ostacolo' ? this.m.ostacolo(b.n) : this.m.albero(b.n); i = a.i; j = a.j; w = 1; d = 1 }
     const out = []
     if (davanti) for (let a = 0; a < w; a++) out.push([i + a, j + d])
     else {
@@ -158,7 +158,7 @@ export class Mondo3d {
     return out.filter(([x, y]) => this.m.libera(x, y))
   }
   centroDi(b) {
-    if (b.kind === 'albero' || b.kind === 'ostacolo') { const a = b.kind === 'albero' ? this.m.alberi[b.n] : this.m.ostacoli[b.n]; return new THREE.Vector3(a.i + 0.5, 0, a.j + 0.5) }
+    if (b.kind === 'albero' || b.kind === 'ostacolo') { const a = b.kind === 'albero' ? this.m.albero(b.n) : this.m.ostacolo(b.n); return new THREE.Vector3(a.i + 0.5, 0, a.j + 0.5) }
     return this.pezzi.centroDi(b)
   }
 
@@ -177,13 +177,13 @@ export class Mondo3d {
     if (eroe.az) return
     this.svuotaCoda()
     if (b && b.kind === 'albero') {
-      const a = m.alberi[b.n], l = lottoDi(a.i, a.j)
-      if (l && !m.posseduto(l)) return this.azioni.offriLotto(l)               // ciò che sta in un terreno non tuo si compra
+      const a = m.albero(b.n), l = lottoDi(a.i, a.j)
+      if (!m.posseduto(l)) return this.azioni.offriLotto(l)               // ciò che sta in un terreno non tuo si compra
       return eroe.vaiA(this.celleDiServizio(b), () => this.azioni.abbatti(a), this.centroDi(b))
     }
     if (b && b.kind === 'ostacolo') {
-      const o = m.ostacoli[b.n], l = lottoDi(o.i, o.j)
-      if (l && !m.posseduto(l)) return this.azioni.offriLotto(l)
+      const o = m.ostacolo(b.n), l = lottoDi(o.i, o.j)
+      if (!m.posseduto(l)) return this.azioni.offriLotto(l)
       return eroe.vaiA(this.celleDiServizio(b), () => this.azioni.togli(o), this.centroDi(b))
     }
     if (b && b.kind === 'edificio' && this._edificioDaLontano(b.tipo)) return this.azioni.offriEdificio(b.tipo)   // dice livello o terreno, senza camminare
@@ -255,6 +255,7 @@ export class Mondo3d {
     this.camera.muovi(dt, {
       eroe: { x: eroe.x, z: eroe.z, vel: eroe.vel }, distanza: this.q.camera,
     })
+    this.terreno.segui(this.camera.x, this.camera.z)              // il suolo segue la camera; se cambia il lotto al mezzo si rifà la finestra
     const fineLogica = performance.now()
     // l'ombra: subito se qualcosa è cambiato, altrimenti ogni `ombraOgni` fotogrammi (1 = sempre)
     this.renderer.shadowMap.needsUpdate = this.q.ombre && (this.ombraSporca || this.nFot++ % LIVELLI[this.livello].ombraOgni === 0)
@@ -263,18 +264,19 @@ export class Mondo3d {
     this._misura(dtReale, performance.now() - inizio, ts, fineLogica - inizio)
   }
 
-  /** I cartelli del prezzo dei soli lotti che confinano coi tuoi, vicini all'eroe (o tutti, in costruzione). */
+  /** I cartelli del prezzo dei soli lotti che confinano coi tuoi, vicini all'eroe (o tutti quelli della finestra, in costruzione). Un laghetto lo dice. */
   _badgeLotti() {
-    const m = this.m, e = this.eroe
-    for (const l of LOTTI) {
-      const mostra = !m.posseduto(l) && m.confina(l) && (this.cmd.strumento || this.costruzione.attivo || Math.hypot(l.i + 2 - e.x, l.j + 2 - e.z) < 8)
-      let b = this.badgeLotti[l.id]
-      if (!mostra) { if (b) b.el.hidden = true; continue }
-      b = this.badgeLotti[l.id] || (this.badgeLotti[l.id] = this.fx.nuovoBadge())
-      b.imposta(`🪙 ${m.prezzoLotto()}`, 'vendita')
+    const m = this.m, e = this.eroe, tutti = this.cmd.strumento || this.costruzione.attivo
+    const mostrati = new Set()
+    for (const l of m.lottiComprabili()) {
+      if (!(tutti ? this.terreno.dentroFinestra(l.i, l.j) : Math.hypot(l.i + 2 - e.x, l.j + 2 - e.z) < 8)) continue
+      const b = this.badgeLotti[l.id] || (this.badgeLotti[l.id] = this.fx.nuovoBadge())
+      b.imposta(`🪙 ${m.prezzoLotto()}${m.biomaDi(l) === 'laghetto' ? ' · 🏞️ laghetto' : ''}`, 'vendita')
       const [x, y, visto] = this.proietta(new THREE.Vector3(l.i + 2, 0, l.j + 2), 0.6)
       b.metti(x, y, visto && x > 20 && x < this.rect.width - 20 && y > 20 && y < this.rect.height - 100, true)
+      mostrati.add(l.id)
     }
+    for (const [id, b] of Object.entries(this.badgeLotti)) if (!mostrati.has(id)) b.el.hidden = true
   }
 
   _misura(dtReale, cpu, ts, logica = 0) {

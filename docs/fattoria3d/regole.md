@@ -34,7 +34,7 @@ sempre ([../fattoria/regole.md](../fattoria/regole.md)); qui le differenze.
 | pollaio / stalla | 55 / 90 | liberi nel terreno come il recinto; una bestia nel prezzo, le altre una per volta, sempre più care ([animali.md](animali.md)) |
 | mulino / panificio / caseificio / cucina / gelateria | 60 / 90 / 120 / 110 / 140 | unici, nel loro posto, in lotti da comprare prima (la cucina ha ancora l'id `conserviera`) |
 | pastificio (id `pasticceria`) / mongolfiera | 80 / 100 | unici, nel loro posto |
-| un lotto di terreno | 40 + 20 per ogni lotto comprato oltre i nove di partenza | allargare costa sempre di più |
+| un lotto di terreno | 40 + 20 per ogni lotto comprato oltre i nove di partenza, più 2 per il quadrato dei lotti oltre il 33° (il 100° costa 10 998) | non ci sono confini, il prezzo li fa: [mondo-infinito.md](mondo-infinito.md) |
 | **un pezzo nuovo** | il prezzo, **pagato quando lo lasci sulla mappa** (`compraEMetti`) | niente conferma: il prezzo è sulla carta; senza monete il fantasma è rosso e il rilascio dice «Servono 🪙 N» |
 | tagliare un albero | 3 | trenta secondi di esercizio: un albero si toglie, non dà niente (niente legna) |
 | togliere un sasso o un cespuglio | 1 | pochi per lotto, restano anche dopo l'acquisto del lotto |

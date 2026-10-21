@@ -1,34 +1,37 @@
 # Il terreno della fattoria 3D
 
-Il mondo, i lotti da comprare, il recinto, gli alberi, le strade e la telecamera. I dati sono in `dati/mondo.js` e
-`dati/alberi.js` (puri, con le loro `guasti…()`), le regole in `motore/fattoria3d.js`, il disegno in `scena3d/terreno.js`.
+Il mondo, i lotti da comprare, il recinto, gli alberi, le strade e la telecamera. I dati sono in `dati/mondo.js`, `dati/lotti.js` e
+`dati/biomi.js` (puri), le regole in `motore/fattoria3d.js`, il disegno in `scena3d/terreno.js`. **Il mondo non ha confini**:
+come e perché in [mondo-infinito.md](mondo-infinito.md); i laghetti in [laghi.md](laghi.md).
 
-## Una griglia di lotti
+## Lotti senza confini
 
-Il mondo è una griglia di celle (`I0`, `J0`, `GW`, `GH`; si cammina in `LIM`) divisa in **7×6 lotti da 4×4**. Se ne
-hanno nove all'inizio, il quadrato 3×3 nel mezzo (`LOTTI_INIZIALI`); gli altri 33 si comprano. **Si compra solo un
-lotto che confina** con uno proprio (`confina`), così il terreno resta d'un pezzo. Il prezzo sale a ogni lotto
-(`prezzoLotto`, [regole.md](regole.md)).
+Il mondo è fatto di lotti da 4×4 con coordinate intere `(a, b)` qualunque. Se ne hanno nove all'inizio, il quadrato 3×3 nel mezzo
+(`LOTTI_INIZIALI`); **qualunque lotto che confina** (4 direzioni, `confina`) con uno proprio si compra, così il terreno resta
+d'un pezzo. Il prezzo sale a ogni lotto e si auto-limita (`prezzoLotto`, `prezzoDelLotto`: [mondo-infinito.md](mondo-infinito.md)).
 
-- **Dentro il terreno proprio tutto si può mettere dappertutto**: campi, recinti, bancarelle, fontane, strade. Niente
-  zone. I soli posti speciali sono quelli dei due edifici unici (`EDIFICI` in `dati/catalogo.js`), dentro il quadrato di
-  partenza: si vedono come fantasmi e si comprano da lì.
-- **Fuori dal terreno proprio non si cammina**: `blocca()` dice di sì a ogni cella di un lotto non tuo, e `percorso.js`
-  non ci passa. **Un tocco su ciò che sta lì apre l'acquisto di quel lotto** (anche un albero), senza messaggi sul
-  «fuori zona»; se il lotto non confina dice di comprare prima quelli vicini.
-- Il cartello `🪙 40` compare solo sui lotti acquistabili vicini all'eroe (o tutti, in costruzione).
+- **Dentro il terreno proprio tutto si può mettere dappertutto**: campi, recinti, bancarelle, fontane, strade. Niente zone, salvo
+  **l'acqua** dei laghetti (solo ponte e passerella) e i posti dei due edifici unici (`EDIFICI` in `dati/catalogo.js`), dentro il
+  quadrato di partenza: si vedono come fantasmi e si comprano da lì.
+- **Fuori dal terreno proprio non si cammina**: `blocca()` dice di sì a ogni cella di un lotto non tuo, e `percorso.js` non ci passa.
+  **Un tocco su un lotto non tuo apre l'acquisto** (anche su un albero che sta lì), senza messaggi sul «fuori zona»; se il
+  lotto non confina dice «Compra prima un terreno che confina con questo». Un tocco più in là dell'anello di due lotti
+  attorno ai tuoi non apre niente.
+- Il cartello `🪙 40` compare solo sui lotti acquistabili vicini all'eroe (o tutti quelli della finestra, in costruzione); un
+  laghetto lo dice: «🪙 N · 🏞️ laghetto».
+- **I biomi**: prato (~69%), bosco (~15%, alberi più fitti), laghetto (~15%); i 42 lotti storici sono sempre prato.
 
 ## Il recinto basso
 
-Un recinto di legno corre lungo ogni lato di un lotto proprio che confina con uno non proprio o con il bordo del
-mondo (`ricostruisciRecinti`, a istanze: pali e travi). Si rifà a ogni acquisto. I lotti non comprati hanno un velo
-scuro sul prato (`ridisegnaLotti`).
+Un recinto di legno corre lungo ogni lato di un lotto proprio che confina con uno non proprio (`ricostruisciRecinti`, a istanze:
+pali e travi, solo nella finestra). Si rifà a ogni acquisto. I lotti non comprati hanno un velo scuro sul prato (`ridisegnaLotti`).
 
 ## Gli alberi
 
-Gli alberi sono sempre gli stessi (`generaAlberi`, un caso col seme): «l'albero numero 32» è lo stesso a ogni avvio, e i
-tagliati si salvano come numeri (`stato.tagliati`). Tre per lotto, tranne dove sta una strada, un posto di edificio, il
-campo di partenza o la partenza dell'eroe (`celleRiservate`); **fuori dal mondo c'è il bosco**, che non si abbatte.
+Gli alberi di un lotto sono sempre gli stessi (`generaLotto`): «l'albero numero 32» è lo stesso a ogni avvio, e i tagliati si salvano
+come interi (`stato.tagliati`). Nei lotti storici sono quelli di prima: tre tentativi per lotto, tranne dove sta una strada, un posto
+di edificio, il campo di partenza o la partenza dell'eroe (`celleRiservate`); negli altri nascono dalle coordinate (il bosco ne ha
+tanti). Si creano solo per i lotti aperti (i tuoi e due attorno). Tutti si abbattono nel terreno proprio.
 
 - Toccare un albero nel terreno proprio: l'eroe lo raggiunge, alza l'**ascia** (quattro colpi), l'albero cade lontano
   da lui; il colpo costa **🪙 3** (`COSTI.albero`) e non dà niente (non c'è legna); la cella torna libera. Senza monete
@@ -40,24 +43,24 @@ campo di partenza o la partenza dell'eroe (`celleRiservate`); **fuori dal mondo 
 
 Il cespuglio è quello del Sotterraneo (tre macchie tonde un po' storte, `dal-sotterraneo.js:geometriaCespuglio`), a istanze come prima: lo stesso verde per istanza, la stessa cella-id. La casa di scena (4×3) è la casa di legno del Sotterraneo, con il camino che fuma ([scena.md](scena.md)).
 
-Pochi per lotto (2–5, `dati/ostacoli.js`), sempre gli stessi, **anche dopo aver comprato il lotto**: un lotto appena tuo non è
+Pochi per lotto (2–5 sul prato, 1–3 in bosco e laghetto, `dati/ostacoli.js`), sempre gli stessi, **anche dopo aver comprato il lotto**: un lotto appena tuo non è
 vuoto, ma nemmeno un campo minato (mai due vicini, mai sulle strade di serie, sui posti degli edifici, sul campo e sulla
-partenza, sul fienile e la casa, né sotto un albero; i lotti stretti fra edifici ne hanno meno). Bloccano il costruire e il
+partenza, sul fienile e la casa, sull'acqua, né sotto un albero; i lotti stretti fra edifici ne hanno meno). Bloccano il costruire e il
 passo come un albero (`bloccoFisso`). Si toccano nel terreno proprio: l'eroe arriva, si china (gesto breve) e **🪙 1** li toglie
-(`togliOstacolo`; evento `sasso`, contatore `fattoria3dSassi`). L'id di salvataggio è la **cella** (`idx(i, j)`), non l'ordine:
+(`togliOstacolo`; evento `sasso`, contatore `fattoria3dSassi`). L'id di salvataggio è la **cella** (`idCella(i, j)`), non l'ordine:
 `stato.ostacoli` salva i tolti, e un edificio nuovo non fa scorrere gli altri. Un salvataggio con un pezzo o una strada
 sopra un sasso toglie il sasso da sé, gratis. Un tocco su un sasso in un lotto non tuo apre l'acquisto del lotto, come un
 albero. Il dito è largo: oltre al raggio sul disegno basta la cella (`bersaglioSotto`).
 
 ## Le strade
 
-Una per cella, a istanze (`stato.strade` salva gli indici, `strada[k]`: 0 niente, 1 disegnata, 2 di serie). Quelle di
+Una per cella, a istanze (`stato.strade` salva gli id di cella come gli altri; `strada` è una mappa cella → 1 disegnata, 2 di serie). Quelle di
 serie sono un incrocio a T davanti ai due edifici e fino alla partenza. **Il bambino le disegna a pennello** (🛣️, 🪙 1 a
 pezzo, solo in terreno proprio e non sopra una cosa) e le toglie con 🧽 (gratis, solo quelle sue). **In strada l'eroe
 va più in fretta** (6,6 contro 4,8) **e il percorso le preferisce** (costano il 55%): disegnarle serve a qualcosa.
 
 ## La telecamera
 
-Segue l'eroe da sopra (distanza di serie 22: si vede una zona intera). Un dito che scorre la **stacca** (camera
+Segue l'eroe da sopra, **senza limiti** (distanza di serie 22: si vede una zona intera; il suolo segue la camera e la nebbia nasconde il bordo). Un dito che scorre la **stacca**, ma non oltre 30 celle dall'eroe (camera
 «libera») e compare «⌖ Torna all'eroe»; mandare l'eroe da qualche parte la rimette a seguirlo. Due dita zoomano. **Il
 contadino corre** quando il percorso supera 9 celle (1,75×). Non c'è più una telecamera «in costruzione»: si costruisce premendo dove si vuole ([scena.md](scena.md)); col pennello delle strade due dita spostano la vista.

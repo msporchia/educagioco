@@ -20,8 +20,8 @@ export class Azioni {
   fai(b) {
     const { eroe, pezzi, fx } = this.c
     if (eroe.az) return
-    if (b.kind === 'albero') return this.abbatti(this.m.alberi[b.n])
-    if (b.kind === 'ostacolo') return this.togli(this.m.ostacoli[b.n])
+    if (b.kind === 'albero') return this.abbatti(this.m.albero(b.n))
+    if (b.kind === 'ostacolo') return this.togli(this.m.ostacolo(b.n))
     eroe.faccia(pezzi.centroDi(b))
     if (b.kind === 'edificio') return this.edificio(b.tipo)
     const cosa = this.m.cosa(b.id)
@@ -212,12 +212,12 @@ export class Azioni {
     const { ui, fx, terreno } = this.c, m = this.m
     if (!m.confina(l)) return this.dici(dettoDi('non-confina'))
     const pr = m.prezzoLotto()
-    ui.chiedi('Terreno', `Allarga la fattoria: un lotto in più dove camminare, costruire e disegnare strade. Costa 🪙 ${pr}.`, [
+    ui.chiedi('Terreno', `Allarga la fattoria: un lotto in più dove camminare, costruire e disegnare strade.${m.biomaDi(l) === 'laghetto' ? ' Qui c\'è un laghetto.' : ''} Costa 🪙 ${pr}.`, [
       { t: `Compra · 🪙 ${pr}`, fn: () => {
         const r = m.compraLotto(l.id)
         if (!r.ok) return this.dici(dettoDiRifiuto(r, { mancano: pr - m.monete() }))
         fx.scoppietta(new THREE.Vector3(l.i + 2, 0.8, l.j + 2), 0xffd24a, 28, 4, 4)
-        terreno.ridisegnaLotti(); ui.cambio()
+        terreno.ridisegnaTutto(); ui.cambio()
       } },
       { t: 'Non ora', quieto: true },
     ])

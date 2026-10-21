@@ -262,7 +262,7 @@ await toccaEl('[data-carta="strada"]')
 await attendi(page, 300)
 controlla('scegliere la strada chiude il menu e porta la sua barra', await menuAperto() === 0 && await page.locator('[data-f3="barra-strade"]').count() === 1 && await page.locator('[data-f3^="az-"]').count() === 0)
 {
-  const conta = () => page.evaluate(() => Array.from(window.__fattoria3d.motore.strada).filter(v => v === 1).length)
+  const conta = () => page.evaluate(() => Array.from(window.__fattoria3d.motore.strada.values()).filter(v => v === 1).length)
   const strade0 = await conta()
   await trascina(await schermoDi(posto.i + 0.5, posto.j + 0.5), await schermoDi(posto.i + 3.5, posto.j + 0.5))
   await attendi(page, 300)
@@ -271,7 +271,7 @@ controlla('scegliere la strada chiude il menu e porta la sua barra', await menuA
 await toccaEl('[data-f3="strade-fatto"]')
 await attendi(page, 300)
 controlla('«Fatto» rimette la barra delle azioni', await page.locator('[data-f3="barra-strade"]').count() === 0 && await page.locator('[data-f3^="az-"]').count() === 4)
-await page.evaluate(() => { const { motore, mondo } = window.__fattoria3d; for (let k = 0; k < motore.strada.length; k++) if (motore.strada[k] === 1) motore.strada[k] = 0; mondo.terreno.ridisegnaStrade() })       // le strade di prova se ne vanno
+await page.evaluate(() => { const { motore, mondo } = window.__fattoria3d; for (const [k, v] of [...motore.strada]) if (v === 1) motore.strada.delete(k); mondo.terreno.ridisegnaStrade() })       // le strade di prova se ne vanno
 await riposo()
 
 /* ── gli alberi si abbattono, e un lotto non tuo si compra ── */
@@ -319,7 +319,7 @@ controlla('tolto: la cella è libera, il suo id è salvato, costa 🪙 1', senza
 // un lotto comprabile che stia bene a schermo (i posti degli edifici nuovi sono a nord: ci cade il tocco su un fantasma)
 const lottoNord = await page.evaluate(() => {
   const { motore, mondo } = window.__fattoria3d, r = mondo.canvas.getBoundingClientRect()
-  const c = Array.from({ length: 42 }, (_, n) => { const a = n % 7, b = Math.floor(n / 7); return { id: a + '_' + b, a, b, i: -14 + a * 4, j: -12 + b * 4, w: 4, d: 4 } }).filter(l => !motore.posseduto(l) && motore.confina(l)).map(l => ({ l, p: mondo.proietta({ x: l.i + 2, y: 0, z: l.j + 2 }) }))
+  const c = motore.lottiComprabili().filter(l => !motore.posseduto(l) && motore.confina(l)).map(l => ({ l, p: mondo.proietta({ x: l.i + 2, y: 0, z: l.j + 2 }) }))
     .filter(({ l, p }) => p[2] && p[0] > 60 && p[0] < r.width - 60 && p[1] > 110 && p[1] < r.height - 190 && !motore.lottiMancanti('mulino').includes(l.id) && !['mulino', 'panificio', 'conserviera', 'gelateria', 'telaio', 'zuccherificio', 'sartoria', 'tintoria'].some(t => motore.lottiMancanti(t).includes(l.id)))
   c.sort((u, v) => v.l.j - u.l.j)       // il più a sud: lontano dai fantasmi alti degli edifici
   return c.length ? { i: c[0].l.i + 2, j: c[0].l.j + 2 } : null
@@ -327,7 +327,7 @@ const lottoNord = await page.evaluate(() => {
 if (lottoNord) await tocca(...await schermoDi(lottoNord.i, lottoNord.j))
 else await page.evaluate(() => {      // l'eroe è andato lontano a togliere un sasso e nessun lotto comprabile sta a schermo: l'offerta si chiede alla scena come farebbe il tocco
   const { motore, mondo } = window.__fattoria3d
-  const l = Array.from({ length: 42 }, (_, n) => { const a = n % 7, b = Math.floor(n / 7); return { id: a + '_' + b, a, b, i: -14 + a * 4, j: -12 + b * 4, w: 4, d: 4 } }).find(x => !motore.posseduto(x) && motore.confina(x) && !motore.lottiMancanti('mulino').includes(x.id))
+  const l = motore.lottiComprabili().find(x => !motore.posseduto(x) && motore.confina(x) && !motore.lottiMancanti('mulino').includes(x.id))
   mondo.azioni.offriLotto(l)
 })
 await page.waitForSelector('[data-f3="dialogo"]', { timeout: 3000 })

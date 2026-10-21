@@ -157,4 +157,13 @@ export const VOCI = [
     crea: () => mesh(new THREE.IcosahedronGeometry(0.4, 0), mat(new THREE.Color().setHSL(0.3, 0.55, 0.32).getHex()), 0, 0.28, 0, 1.15, 0.85, 1.15) },
   { id: 'fattoria:sasso', nome: 'Sasso', gioco: 'fattoria', categoria: 'prop', dove: 'ostacolo nei lotti, si toglie toccandolo (terreno.js, _ostacoli)', file: `${T}:_ostacoli`, misure: '1×1',
     crea: () => mesh(new THREE.IcosahedronGeometry(0.32, 0), mat(new THREE.Color().setHSL(0.1, 0.05, 0.57).getHex()), 0, 0.15, 0, 1.1, 0.75, 1) },
+  { id: 'fattoria:stagno', nome: 'Stagno (laghetto)', gioco: 'fattoria', categoria: 'prop', dove: 'i lotti laghetto (dati/biomi.js): lastra azzurra per cella d\'acqua su una riva chiara, con ninfee e canne; ponte e passerella lo attraversano (terreno.js, _acqua)', file: `${T}:_acqua`, misure: '2×2',
+    crea: () => {
+      const g = new THREE.Group(), piano = new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2)
+      for (const [x, z] of [[-0.5, -0.5], [0.5, -0.5], [-0.5, 0.5], [0.5, 0.5]]) {
+        g.add(mesh(piano, mat(0xdcc796), x, 0.012, z, 1.5, 1, 1.5), mesh(piano, new THREE.MeshStandardMaterial({ color: 0x4ba6d6, transparent: true, opacity: 0.84, roughness: 0.3 }), x, 0.03, z))
+      }
+      g.add(mesh(new THREE.CircleGeometry(0.24, 9).rotateX(-Math.PI / 2), mat(0x4f9a45), 0.2, 0.04, -0.3), mesh(new THREE.ConeGeometry(0.035, 0.9, 4), mat(0x8aa63a), -1.1, 0.45, 0.8))
+      return g
+    } },
 ]

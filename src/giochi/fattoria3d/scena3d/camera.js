@@ -2,6 +2,8 @@
 // («libera») finché non lo si manda da qualche parte. Non sa le regole: riceve cosa inquadrare.
 import * as THREE from 'three'
 
+const LONTANO = 30          // fin dove la camera trascinata si allontana dall'eroe (celle)
+
 export class Camera {
   constructor(sole) {
     this.cam = new THREE.PerspectiveCamera(50, 1, 0.5, 160)
@@ -23,7 +25,7 @@ export class Camera {
   trascina(p0, p1) {
     const L = this.libera
     if (!L.on) { L.on = true; L.x = this.x; L.z = this.z }
-    L.x = Math.max(-13, Math.min(13, L.x - (p1.x - p0.x))); L.z = Math.max(-11, Math.min(11, L.z - (p1.z - p0.z)))
+    L.x -= p1.x - p0.x; L.z -= p1.z - p0.z
     this.x = L.x; this.z = L.z
   }
 
@@ -31,7 +33,7 @@ export class Camera {
   muovi(dt, { eroe, distanza }) {
     let tx = eroe.x, tz = eroe.z, td = distanza * this.zoom, tp = 55
     if (this.libera.on) { tx = this.libera.x; tz = this.libera.z }
-    tx = Math.max(-13, Math.min(13, tx)); tz = Math.max(-11, Math.min(11, tz))
+    if (this.libera.on) { tx = Math.max(eroe.x - LONTANO, Math.min(eroe.x + LONTANO, tx)); tz = Math.max(eroe.z - LONTANO, Math.min(eroe.z + LONTANO, tz)) }   // niente confini, ma la vista libera non si perde nel vuoto
     const k = 1 - Math.exp(-(eroe.vel > 7 && !this.libera.on ? 9 : 5) * dt)
     this.x += (tx - this.x) * k; this.z += (tz - this.z) * k; this.d += (td - this.d) * k; this.p += (tp - this.p) * k
     const p = this.p * Math.PI / 180
