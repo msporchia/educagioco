@@ -5,6 +5,7 @@
 import * as THREE from 'three'
 import { mat } from './modelli.js'
 import { fondiPerMateriale } from './fondi.js'
+import { memoModello } from './cache-modelli.js'
 
 function pronto (m) { m.castShadow = true; m.receiveShadow = true; return m }
 function scatola (g, w, h, d, m, x = 0, y = 0, z = 0) {
@@ -18,7 +19,7 @@ function cilindro (g, rs, ri, h, m, x = 0, y = 0, z = 0, seg = 8) {
 const GOBBA = x => 0.1 + 0.26 * (1 - (x / 1.5) ** 2)
 
 // ── il ponte ad arco di pietra: 3×1, sulla gobba si cammina; sotto, l'arcata ──
-export function creaPonte () {
+function costruisciPonte () {
   const g = new THREE.Group()
   const pietra = mat(0xb9b4aa), chiara = mat(0xd6d1c6), scura = mat(0x8d887e)
   const N = 12, L = 3, prof = 0.8
@@ -45,7 +46,7 @@ export function creaPonte () {
 }
 
 // ── la passerella: 1×3 (lungo z), assi di legno su pali, con la corda come mancorrente ──
-export function creaPasserella () {
+function costruisciPasserella () {
   const g = new THREE.Group()
   const asse = [mat(0xa97a46), mat(0x9a6a36), mat(0xb88a52)], trave = mat(0x6e4a28), palo = mat(0x5a3a22), corda = mat(0xd8c08a)
   const Q = 0.18, N = 11, L = 2.9
@@ -72,7 +73,7 @@ export function creaPasserella () {
 }
 
 // ── il tavolo con le panche: 3×2, un tavolo lungo con la tovaglia a quadri, due panche, due boccali, il pane e un piatto ──
-export function creaTavolo () {
+function costruisciTavolo () {
   const g = new THREE.Group()
   const piano = mat(0xb08450), gamba = mat(0x6e4a28), panca = mat(0x9a6a36), rosso = mat(0xd8352a), bianco = mat(0xfff4e0)
   const LT = 2.3, WT = 0.9, HT = 0.74
@@ -93,3 +94,8 @@ export function creaTavolo () {
   fondiPerMateriale(g)
   return g
 }
+
+// la cache (scena3d/cache-modelli.js): costruiti e fusi una volta, le istanze sono cloni
+export const creaPonte = memoModello('ponte', costruisciPonte)
+export const creaPasserella = memoModello('passerella', costruisciPasserella)
+export const creaTavolo = memoModello('tavolo', costruisciTavolo)

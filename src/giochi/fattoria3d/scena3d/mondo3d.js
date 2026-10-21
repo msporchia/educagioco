@@ -8,6 +8,7 @@ import * as THREE from 'three'
 import { Terreno } from './terreno.js'
 import { Pezzi } from './pezzi.js'
 import { creaAnteprime } from './anteprime.js'
+import { creaScaldo } from './scaldo-puro.js'
 import { Eroe } from './eroe.js'
 import { Compagni } from './compagni.js'
 import { Effetti } from './effetti.js'
@@ -50,6 +51,7 @@ export class Mondo3d {
     this.fx = new Effetti(this.scena, sopra, this.vista, qualita)
     this.terreno = new Terreno(this.scena, motore)
     this.pezzi = this.creaPezzi()
+    this.scaldo = creaScaldo(this.pezzi.compitiScaldo())      // i modelli che servono presto, costruiti in tempo morto (scaldo-puro.js)
     this.eroe = new Eroe(this.scena, motore, this.fx)
     this.eroe.alVia = () => this.camera.segui()
     this.compagni = new Compagni(this.scena, motore, this.eroe, this.fx, ui)
@@ -262,6 +264,16 @@ export class Mondo3d {
     this.ombraSporca = false
     this.renderer.render(this.scena, this.camera.cam)
     this._misura(dtReale, performance.now() - inizio, ts, fineLogica - inizio)
+    this._scalda(dtReale)
+  }
+
+  /** Un compito del riscaldamento, a fine fotogramma e solo dopo il primo secondo: non prima, non con la macchina in affanno (il degrado
+      scende di livello) né con la pagina nascosta. Se la macchina è lenta si rinuncia a ciò che resta: lo si pagherà alla prima richiesta. */
+  _scalda(dtReale) {
+    const sc = this.scaldo; if (!sc || !sc.restanti) return
+    if (this.livello > 0 || (this.stat.fps > 0 && this.stat.fps < 24)) { sc.abbandona(); return }
+    if (this.stat.n < 60) return
+    sc.passo({ dtMs: dtReale, fps: this.stat.fps, attivo: typeof document === 'undefined' || document.visibilityState !== 'hidden' })
   }
 
   /** I cartelli del prezzo dei soli lotti che confinano coi tuoi, vicini all'eroe (o tutti quelli della finestra, in costruzione). Un laghetto lo dice. */

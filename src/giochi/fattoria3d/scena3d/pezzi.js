@@ -3,7 +3,7 @@
 // Non sa le regole: legge lo stato e disegna. I cartelli sugli edifici (prezzo, cottura) sono qui.
 import * as THREE from 'three'
 import { creaCampo, aggiornaCampo, creaPasticceria, creaMongolfiera, creaBancarella, creaBacheca, creaFontana, creaRecinto, muoviPecore,
-         sincronizzaPecore, fantasma, creaMulino, creaPanificio, creaConserviera, creaGelateria, creaAiuola, creaPanchina,
+         sincronizzaPecore, fantasma, buttaFantasma, creaPecora, creaGallina, creaMucca, creaMulino, creaPanificio, creaConserviera, creaGelateria, creaAiuola, creaPanchina,
          creaPozzo, creaSpaventapasseri, creaTrattore, creaSegnaposto, creaPollaio, creaStalla, creaCaseificio, sincronizzaBestie, muoviBestie } from './modelli.js'
 import { creaPonte, creaPasserella, creaTavolo } from './modelli-passaggi.js'
 import { creaZuccherificio, creaTelaio, creaSartoria, creaTintoria } from './modelli-macchine.js'
@@ -88,8 +88,19 @@ export class Pezzi {
   _togli(id) {
     const v = this.voci.get(id); if (!v) return
     this.scena.remove(v.grp); v.badge?.togli()
+    if (v.kind === 'edificio' && !v.mio) buttaFantasma(v.grp)
     if (v.anello) this.scena.remove(v.anello)
     this.voci.delete(id)
+  }
+
+  /** I compiti del riscaldamento (scaldo-puro.js): costruire in tempo morto i modelli che servono presto e non sono ancora in scena. I più
+      urgenti per primi: il campo, il recinto, il pollaio e la stalla con le loro bestie, poi il resto dei pezzi e dei creatori di
+      bestie. Gli edifici ci sono già tutti (i fantasmi dei non comprati). Una fila di funzioni, ognuna costruisce e butta un'istanza. */
+  compitiScaldo() {
+    const pezzi = ['campo', 'recinto', 'pollaio', 'stalla', 'aiuola', 'panchina', 'pozzo', 'fontana', 'spaventapasseri', 'ponte', 'passerella', 'tavolo', 'bancarella', 'bacheca']
+    const fai = tipo => ({ nome: tipo, fai: () => { if (PEZZI[tipo]) modelloDi(tipo, PEZZI[tipo], tipo === 'recinto' || tipo === 'pollaio' || tipo === 'stalla' ? { pecore: [], bestie: [] } : undefined) } })
+    return [...pezzi.slice(0, 4).map(fai), { nome: 'pecora', fai: () => creaPecora() }, { nome: 'gallina', fai: () => { creaGallina(0); creaGallina(1) } },
+            { nome: 'mucca', fai: () => { creaMucca(0); creaMucca(1) } }, ...pezzi.slice(4).map(fai), ...Object.keys(EDIFICI).filter(t => CREA_EDIFICIO[t]).map(t => ({ nome: t, fai: () => CREA_EDIFICIO[t]() }))]
   }
 
   /** Il modello di un pezzo di quel tipo, per il fantasma di chi lo sta trascinando. */

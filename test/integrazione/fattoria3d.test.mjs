@@ -685,6 +685,42 @@ uguale('al tetto le pecore sono quattro e il pulsante sparisce', [(await pecoreD
 const via = await m3(`window.__fattoria3d.motore.mettiVia(${JSON.stringify(idP)})`)
 controlla('il pollaio con le bestie non si mette via', via.ok === false && via.motivo === 'ha-le-bestie')
 
+/* ── la cache dei modelli (scena3d/cache-modelli.js): 50 pose e 50 rimozioni, e 20 fantasmi, non fanno crescere le geometrie né le trame ──
+   Si misura dopo un primo giro di prova (una geometria o una trama si carica in GPU la prima volta che si vede), poi il resto deve restare piatto. */
+{
+  const r = await page.evaluate(async () => {
+    const { motore, mondo } = window.__fattoria3d, info = mondo.renderer.info, quadro = () => new Promise(ok => requestAnimationFrame(() => requestAnimationFrame(ok)))
+    const celle = []
+    for (let i = -14; i < 13; i++) for (let j = -12; j < 11; j++) if (motore.puoMettere('aiuola', i, j).ok) celle.push([i, j])
+    const soldi = motore.monete(); motore.borsa.paga(-5000)
+    const ids = []
+    const giro = async (da, a) => {
+      for (let n = da; n < a; n++) {
+        const [i, j] = celle[1 + (n % (celle.length - 1))], r = motore.compraEMetti('aiuola', i, j); mondo.pezzi.sincronizza()
+        if (r.ok) ids.push(r.cosa.id)
+        await quadro()
+        if (n % 2 && ids.length) { motore.mettiVia(ids.pop(), { gratis: true }); mondo.pezzi.sincronizza() }
+        if (n % 5 === 0) { mondo.costruzione.parcheggia('panchina', celle[0][0], celle[0][1]); await quadro(); mondo.costruzione.annullaTrascinamento() }
+      }
+    }
+    for (let n = 0; n < 60 && mondo.scaldo && mondo.scaldo.restanti; n++) await quadro()       // il riscaldamento ha finito (o ha rinunciato)
+    await giro(0, 10)
+    const prima = { g: info.memory.geometries, t: info.memory.textures }
+    await giro(10, 60)
+    for (const id of ids.splice(0)) { motore.mettiVia(id, { gratis: true }); mondo.pezzi.sincronizza() }
+    await quadro(); await quadro()
+    const dopo = { g: info.memory.geometries, t: info.memory.textures }
+    const a = mondo.pezzi.modello('aiuola'), b = mondo.pezzi.modello('aiuola')
+    const condivisa = a.children[0].geometry === b.children[0].geometry
+    motore.borsa.paga(motore.monete() - soldi)
+    return { prima, dopo, condivisa, scaldo: mondo.scaldo ? mondo.scaldo.restanti : -1 }
+  })
+  uguale('dopo 50 pose, 50 rimozioni e 10 fantasmi le geometrie in GPU non crescono', r.dopo.g, r.prima.g)
+  uguale('…e le trame nemmeno', r.dopo.t, r.prima.t)
+  controlla('due istanze dello stesso modello condividono la geometria', r.condivisa)
+  nota(`geometrie in GPU: ${r.prima.g} → ${r.dopo.g}; trame ${r.prima.t} → ${r.dopo.t}; riscaldamento: ancora ${r.scaldo} compiti`)
+}
+
 /* ── senza WebGL 2 si dice e si torna in home ── */
 const { page: senza } = await apriGioco(browser, { hash: 'fattoria3d&tela=niente', attesa: null })
 await senza.waitForSelector('[data-senza-3d]', { timeout: 8000 })

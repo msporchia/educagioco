@@ -121,7 +121,7 @@ subito, se c'è); `Gioco.vue` le passa come funzioni a `CostruisciQui.vue` e a `
   angoli della scatola stanno nel quadro col 10% di margine, centrando la figura vista: un 1×1 e un 4×3 riempiono uguale. La scena di posa
   ha solo sole e emisferica (senza ombre) e un disco d'ombra morbida sotto.
 - **I modelli** vengono da `Pezzi.modelloAnteprima(tipo)`: gli stessi creatori della scena, il campo con il grano maturo, il recinto con
-  due pecore, pollaio e stalla con due bestie. Non ci sono animazioni: un istante fisso.
+  due pecore, pollaio e stalla con due bestie. Non ci sono animazioni: un istante fisso. Sono cloni della cache dei modelli (geometrie condivise con la scena: non si toccano), perciò una foto non costruisce niente dopo il primo uso del tipo.
 - Se `anteprima` torna `null` (un guasto) resta l'emoji. Il tono (ACES) non si applica in un render target: i colori sono un filo più piatti che in scena.
 
 ## Qualità e peso
@@ -167,7 +167,7 @@ Prima di questo non si vedeva niente: i ciuffi solo fuori dal mondo (sottili e d
   livello vive in memoria e lo dicono le opzioni. I cartelli non riscrivono più lo stile se non si sono mossi, `proietta` non alloca, la foto del HUD
   non si rifà se è uguale. Il pannello ⚙ e «Mostra il rapporto» ora dicono anche: JS di logica e di disegno e il resto del fotogramma, programmi,
   quante cose per tipo, mesh e chi proietta ombra, pixel ratio scelto e usato, livello del degrado.
-  **Le mesh fuse (21/10).** `scena3d/fondi.js` (`fondiPerMateriale(gruppo, { escludi })`, chiamata alla fine di ogni `crea…()`) fonde le mesh
+  **Le mesh fuse (21/10).** `scena3d/fondi.js` (`fondiPerMateriale(gruppo, { escludi })`, chiamata alla fine di ogni costruttore, **una volta per tipo**: vedi «La cache dei modelli») fonde le mesh
   statiche in una per tipo di materiale: i colori passano nei vertici (materiale `vertexColors` condiviso per firma: ruvidità, metallo, luce propria,
   lato), il disegno è identico. Restano sciolti ciò che si muove (pale, fumo, dolce, cono, pallone e fiamma, manichino, ago, ruota, vasche, panni,
   gocce, navetta, i corpi delle bestie e le zampe delle pecore), i trasparenti, le trame, le istanze e le mesh con `userData`; le parti che si
@@ -187,6 +187,49 @@ Prima di questo non si vedeva niente: i ciuffi solo fuori dal mondo (sottili e d
   caseificio 32 → 4, telaio 32 → 3, zuccherificio 34 → 4, sartoria 23 → 6, tintoria 25 → 10, mulino 21 → 2, panificio 17 → 4, mongolfiera 16 → 4,
   recinto (3 pecore) 89 → 22, pollaio (4) 51 → 13, stalla (4) 129 → 17, aiuola 23 → 1, contadino 28 → 7, mucca 23 → 6, pecora 18 → 7, gallina 8 → 4.
   Cani e gatti erano già fusi per pezzo (15–17). Test: `unita/fattoria3d-fondi`.
+  **La cache dei modelli (21/10).** La fusione (clona le geometrie, le sposta, scrive i colori nei vertici, `mergeGeometries`) e la costruzione delle mesh
+  sciolte si pagavano **a ogni istanza**: ogni campo, aiuola, recinto, fantasma di trascinamento e anteprima rifaceva tutto, e ogni istanza si portava
+  le sue geometrie in GPU. Ora `scena3d/cache-modelli.js` (`memoModello(nome, costruisci, { chiave, dopo })`) costruisce e fonde un tipo **la prima volta**
+  e poi consegna un clone (`clonaModello`: nodi nuovi, **geometrie e materiali condivisi**). Vale per tutti i modelli di `modelli.js`, `modelli-macchine.js`,
+  `modelli-passaggi.js`, `dal-sotterraneo.js` (banco, bacheca, casa) e per il contadino. Il campo mette in cache la terra e il bordo (nove scatole, ora fuse: 26 → 18 mesh a campo)
+  e fa da sé le piante a istanze (matrici e colori sono suoi). Recinto, pollaio e stalla in cache sono vuoti e le bestie si aggiungono a ogni istanza; pecora, gallina (due mantelli)
+  e mucca (due) sono in cache anche loro. Cane e gatti avevano già le geometrie in cache dentro `modelli-compagni.js` (la prima volta 13–21 ms in node, poi 0,2–0,4).
+  Le regole per chi scrive un modello (anche in testa a `cache-modelli.js`):
+  - `userData` tiene numeri, vettori, oggetti semplici, liste, **riferimenti a nodi del modello** (si ricollegano al clone) e funzioni, ma **una funzione non cattura
+    nodi**: `anima` è un metodo che legge i nodi da `this` (`g.userData.pale = pale; g.userData.anima = function (dt) { this.pale.rotation.z -= dt * 0.5 }`;
+    `pezzi.js` la chiama come `g.userData.anima(dt, tt)`, quindi `this === userData`). Una freccia sulle variabili del costruttore animerebbe l'originale, che nessuno vede
+    (il test `unita/fattoria3d-cache` controlla che ogni `anima` muova il clone che la possiede).
+  - **geometrie e materiali non si toccano per istanza**: chi vuole un materiale suo lo clona. `fantasma(g)` lo fa, e `buttaFantasma(g)` (chiamato da `costruzione._fine` e da
+    `pezzi._togli`) butta quelle copie; le geometrie sono della cache e non si buttano mai. Le animazioni che cambiano un materiale (la bocca del forno, lo sciroppo, i bagni)
+    lo cambiano per tutti, come prima (i `mat()` erano già condivisi).
+  - ciò che deve essere diverso a ogni istanza (la `fase` a caso di una gallina) si rifà nel ritocco `dopo`.
+  - `CACHE_MODELLI.acceso = false` (e `FONDI.acceso = false`) rifanno i modelli da capo come una volta: per i confronti (`strumenti/misura-modelli3d.mjs`, `npm run catalogo3d:scheda -- --gioco fattoria --senzacache [--senzafondi]`).
+
+  **Il riscaldamento** (`scena3d/scaldo-puro.js`, `Pezzi.compitiScaldo()`, `Mondo3d._scalda`). La *prima* costruzione di un tipo costa 0,1–3 ms, e si pagherebbe
+  mentre si posa il primo campo o si compra la prima gallina. Dopo i primi 60 fotogrammi, a fine fotogramma, **un compito per fotogramma** costruisce in tempo morto ciò che manca,
+  in quest'ordine: campo, recinto, pollaio, stalla, pecora, gallina, mucca, il resto dei pezzi (aiuola, panchina, pozzo, fontana, spaventapasseri, ponte, passerella, tavolo, banco, bacheca)
+  e gli edifici (che ci sono già come fantasmi: costano un clone). Misurati in Chrome con la cache vuota, i 28 compiti durano 0,1–2,4 ms l'uno (un telefono: ×5–8, non misurato).
+  Non parte se l'ultimo fotogramma ha superato i 28 ms o gli fps medi sono sotto 30; con la pagina nascosta niente; dopo un compito lungo (>6 ms) lascia riposare qualche fotogramma;
+  **rinuncia per sempre** se il degrado adattivo è sceso di livello o gli fps stanno sotto 24 (ciò che resta si paga alla prima richiesta, come prima). Nei test con SwiftShader (15–20 fps)
+  rinuncia subito: è voluto, non un guasto (la logica è provata in `unita/fattoria3d-cache` e, a fps forzati, dentro la pagina).
+
+  **Misura (21/10; `node strumenti/misura-modelli3d.mjs`, e Chrome desktop col dev server: stesse proporzioni; i ms ballano, valgono i conti).** Una istanza di ogni tipo (26 tipi, 10 istanze l'uno):
+
+  | | prima | dopo |
+  |---|---|---|
+  | ms per una istanza di ogni tipo (somma dei 26) | 27–33 (node) · 22–24 (Chrome) | **1,0–1,8 (node) · 0,4 (Chrome)** |
+  | recinto (2 pecore) · stalla (2 mucche) · pollaio (2 galline), ms | 4,8 · 3,8 · 3,0 | 0,26 · 0,11 · 0,06 |
+  | aiuola · ponte · pasticceria · tintoria, ms | 2,0 · 1,5 · 2,0 · 1,1 | 0,01 · 0,01 · 0,03 · 0,05 |
+  | geometrie per 10 istanze di ogni tipo | 1123–1321 | **126** (le istanze non ne portano) |
+  | mesh di un campo | 26 | 18 (terra e bordo: da 9 scatole a una mesh) |
+
+  Il costo *per tipo* (la prima volta) è quello di prima: 0,1–2,9 ms, 22–24 ms per tutti i tipi in fila, di cui **~10 ms** sono i fantasmi degli 11 edifici, costruiti all'avvio.
+  **Memoria**: 50 pose, 50 rimozioni e 10 fantasmi di fila lasciano piatte le geometrie e le trame in GPU (`renderer.info.memory`: 181 → 181 e 24 → 24; controllo in `integrazione/fattoria3d`).
+  **Identici**: le 76 schede del catalogo (`catalogo3d:scheda --gioco fattoria` contro `--senzacache`) sono uguali al pixel, tranne dove una pecora sta in un posto a caso; la terra fusa
+  del campo contro le nove scatole sciolte (`--senzacache --senzafondi`) cambia ~230 pixel di bordo nelle carte dei campi.
+  **Cotto a monte? No** (21/10). Le geometrie fuse dei 26 tipi sono 25,5k vertici e 50k indici: **~400 kB** anche quantizzate (posizione int16, normale int8, colore uint8, indice uint16), ~540 kB in
+  base64, contro un tetto di ~150 kB; e il guadagno sarebbe al più la costruzione di tutti i tipi in fila (22–24 ms su un PC, ~130 ms *stimati* su un telefono, una volta per sessione), perché le
+  parti mobili e le mesh con trame si costruirebbero comunque. Non vale il peso nel file unico.
   **Provato e non fatto**: `matrixAutoUpdate = false` sui gruppi fermi (0,18 ms in tutto: non vale il rischio con i modelli che altri toccano);
   nascondere i cartelli lontani (non pesano). Le proposte per il giro dopo sono in [da-fare.md](da-fare.md).
 - **Il peso nel sito spezzato**: `fattoria3d-3d-*.js` (~50 kB, il disegno) e `gioco-fattoria3d-*.js` (~40 kB) stanno nel

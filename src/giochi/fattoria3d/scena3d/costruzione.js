@@ -6,7 +6,7 @@
 import { PEZZI } from '../dati/catalogo.js'
 
 import { dentro } from '../dati/mondo.js'
-import { tingi } from './modelli.js'
+import { tingi, buttaFantasma } from './modelli.js'
 import { dettoDi } from './azioni.js'
 
 const SOPRA_IL_DITO = 1.6          // durante il trascinamento il fantasma sta più in su, per non stare sotto il dito
@@ -153,7 +153,7 @@ export class Costruzione {
   annullaTrascinamento() { if (this.D.attivo) this._fine() }
   _fine() {
     const D = this.D
-    if (D.fant) { this.c.scena.remove(D.fant); D.fant = null }
+    if (D.fant) { this.c.scena.remove(D.fant); buttaFantasma(D.fant); D.fant = null }
     if (D.spostando) this.c.pezzi.nascondi(D.spostando.id, false)
     Object.assign(D, { attivo: false, tipo: null, spostando: null, parcheggiato: false })
     this.c.ui.trascinando(null)

@@ -19,6 +19,13 @@ import { PEZZI, EDIFICI } from '../../../src/giochi/fattoria3d/dati/catalogo.js'
 import { COLTURE } from '../../../src/giochi/fattoria3d/dati/colture.js'
 import { COMPAGNI } from '../../../src/giochi/fattoria3d/dati/compagni.js'
 import { FISSI } from '../../../src/giochi/fattoria3d/dati/mondo.js'
+import { CACHE_MODELLI } from '../../../src/giochi/fattoria3d/scena3d/cache-modelli.js'
+import { FONDI } from '../../../src/giochi/fattoria3d/scena3d/fondi.js'
+
+// `&senzacache=1`: i modelli si costruiscono da capo a ogni voce, come prima della cache; serve a confrontare le schede pixel per pixel
+const indirizzo = typeof location === 'undefined' ? new URLSearchParams() : new URLSearchParams(location.search)       // (il test lo importa anche da node)
+if (indirizzo.has('senzacache')) CACHE_MODELLI.acceso = false
+if (indirizzo.has('senzafondi')) FONDI.acceso = false        // e `&senzafondi=1`: nemmeno le mesh fuse (i modelli sciolti)
 
 const M = 'src/giochi/fattoria3d/scena3d/modelli.js'
 const MM = 'src/giochi/fattoria3d/scena3d/modelli-macchine.js'

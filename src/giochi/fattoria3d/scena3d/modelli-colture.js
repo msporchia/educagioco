@@ -3,6 +3,8 @@
 // Vedi docs/fattoria3d/scena.md («Le colture»).
 import * as THREE from 'three'
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js'
+import { fondiPerMateriale } from './fondi.js'
+import { memoModello } from './cache-modelli.js'
 
 const cache = new Map()
 function mat (colore, o = {}) {
@@ -411,13 +413,20 @@ function contaMassimi () {
   return massimi
 }
 
-export function creaCampo (seme = 1) {
+/** La terra e il bordo di legno: nove scatole fisse, fuse in una o due mesh e fatte una volta sola per tutti i campi. */
+const terraDelCampo = memoModello('campo-terra', () => {
   const g = new THREE.Group()
   scatola(g, 2, 0.1, 2, mat(0x6e4a2a), 0, 0.05, 0)
   for (const z of [-0.75, -0.25, 0.25, 0.75]) scatola(g, 1.84, 0.07, 0.17, mat(0x553720), 0, 0.12, z)
   const legno = mat(0x9a6a36)
   scatola(g, 2.1, 0.17, 0.08, legno, 0, 0.085, 1.0); scatola(g, 2.1, 0.17, 0.08, legno, 0, 0.085, -1.0)
   scatola(g, 0.08, 0.17, 2.1, legno, 1.0, 0.085, 0); scatola(g, 0.08, 0.17, 2.1, legno, -1.0, 0.085, 0)
+  fondiPerMateriale(g)
+  return g
+})
+/** Il campo: la terra in cache (geometrie condivise) e le piante a istanze, che sono sue (matrici e colori a ogni campo). */
+export function creaCampo (seme = 1) {
+  const g = terraDelCampo()
   const parti = {}
   for (const [nome, max] of Object.entries(contaMassimi())) {
     if (!max) continue
