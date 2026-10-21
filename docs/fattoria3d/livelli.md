@@ -75,7 +75,7 @@ i dati veri, quindi un elenco non si scrive due volte e non si scosta.
 Il livello apre il **pezzo** (pollaio, stalla, recinto); le bestie in più dentro non hanno livello: si comprano a monete
 ([animali.md](animali.md)), contano come esperienza ma non spostano la scaletta (la taratura conta solo i pezzi produttivi).
 
-Le decorazioni nuove (passerella al 3, tavolo al 4, ponte al 5) non spostano la scaletta: non sono produttive, quindi non si sommano ai salti.
+Le decorazioni nuove (passerella al 3, tavolo al 4, ponte e stagno al 5, laghetto all'11) non spostano la scaletta: non sono produttive, quindi non si sommano ai salti.
 
 Pollaio, stalla e caseificio stanno **nei buchi** della scaletta (5, 9, 11: livelli senza una cosa produttiva), così i
 livelli restano quindici e le soglie dopo il 5 salgono del loro prezzo (55, 90, 120). Lo stesso hanno fatto telaio (8, 🪙70), zuccherificio (13, 🪙130) e
@@ -87,24 +87,24 @@ quello del pezzo che li fa, e `livelloDellaRicetta` li conta fra gli ingredienti
 
 `{ ok: false, motivo: 'non-sbloccato', liv }` da `compraPezzo`, `compraEdificio`, `semina`/`seminaCampo` (la coltura) e
 `avviaRicetta`/`avviaRicettaIn`. Un edificio fuori dal quadrato di partenza prima chiede i lotti
-(`lotto-non-tuo`, `lotti`): l'ordine dei controlli è sconosciuto → già tuo → livello → lotti → monete.
+(`compraEdificio` è `compraEMetti`: [edifici-liberi.md](edifici-liberi.md)): l'ordine dei controlli è sconosciuto → già tuo → livello → monete; niente più lotti da comprare prima.
 Per le fattorie già salvate **ciò che si possiede resta**: il gating vale solo per comprare, seminare e avviare. Un vecchio
 stato senza `esperienza` riparte da 0 (livello 1) senza perdere niente.
 
 Un evento `livello` (`{ livello }`) esce a ogni salita, per la scena e i contatori.
 
-## Gli alberi sui posti nuovi
+## Gli alberi sui posti di prima
 
-Gli alberi si generano come quando gli edifici erano due (i loro numeri sono chiavi di salvataggio); quelli che cadono sul
-posto di un edificio arrivato dopo nascono già `tagliato` (senza costo).
+Gli alberi dei lotti storici si generano come quando gli edifici erano due (i loro numeri sono chiavi di salvataggio); quelli che cadono sul
+vecchio posto di un edificio arrivato dopo nascono già `tagliato` (senza costo). `POSTI_STORICI` (`dati/mondo.js`) ricorda quei posti anche se gli edifici oggi si mettono dove si vuole.
 
 ## A schermo
 
 Il gettone «⭐ N» con la barra sottile sta nel HUD e apre `viste/Livelli.vue`: una **scala** col livello di adesso in cima
 (numero grande che batte, barra a strisce che scorre, la scatola già aperta con ciò che è arrivato), sotto il gradino
 successivo con la scatola ancora chiusa (lucchetto, grigio) e un gradino segreto. Salendo compare un avviso («Livello N: nome») e un
-pallino sul gettone finché non si apre il foglio. Ciò che non è arrivato resta visibile ma in grigio, con «Livello N»: le carte del
-costruire (non si trascinano), le colture nella scelta del seme, le ricette di una macchina, i fantasmi degli edifici. Toccarle dice
+pallino sul gettone finché non si apre il foglio; se il livello apre un edificio l'avviso lo nomina («Livello 7: il Panificio! Costruiscilo») e un «!» sul tasto Costruisci resta finché non c'è ([edifici-liberi.md](edifici-liberi.md)). Ciò che non è arrivato resta visibile ma in grigio, con «Livello N»: le carte del
+costruire (non si trascinano), le colture nella scelta del seme, le ricette di una macchina e le carte degli edifici nel menu. Toccarle dice
 il livello; un tasto grigio non è `disabled`, così il tocco ha una risposta.
 
 Nei test: `unita/fattoria3d` (sezioni 13–20: soglie, `roba`, gating, lotti, catena, vecchio stato).

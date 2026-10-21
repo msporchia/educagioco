@@ -3,11 +3,12 @@
    dalle coordinate del lotto (`alberiNuovi`): l'id è la chiave della cella, grande, che non tocca mai i numeri storici.
    Tutti si abbattono nel terreno proprio. Vedi docs/fattoria3d/mondo-infinito.md. */
 import { EDIFICI } from './catalogo.js'
-import { LOTTI_STORICI, chiave, celleRiservate, lotto, eStorico } from './mondo.js'
+import { LOTTI_STORICI, POSTI_STORICI, chiave, celleRiservate, lotto, eStorico } from './mondo.js'
 import { sequenza } from './semi.js'
 
 // Gli alberi storici si generano come quando gli edifici erano due: i numeri sono chiavi di salvataggio (`tagliati`) e non devono
-// scorrere. Gli edifici arrivati dopo togliono gli alberi che stanno sul loro posto (nascono già `tagliato`, senza legna).
+// scorrere. Gli edifici arrivati dopo togliono gli alberi che stavano sul loro posto di prima (nascono già `tagliato`, senza legna):
+// gli edifici di oggi si mettono dove si vuole, ma i lotti storici restano come erano (docs/fattoria3d/edifici-liberi.md).
 const EDIFICI_DEL_PRIMO_GIRO = ['pasticceria', 'mongolfiera']
 
 let storici = null
@@ -27,7 +28,8 @@ export function alberiStorici() {
   const sulPosto = new Set()
   for (const [tipo, e] of Object.entries(EDIFICI)) {
     if (EDIFICI_DEL_PRIMO_GIRO.includes(tipo)) continue
-    for (let a = 0; a < e.w; a++) for (let b = 0; b < e.d; b++) sulPosto.add(chiave(e.slot.i + a, e.slot.j + b))
+    const slot = POSTI_STORICI[tipo]
+    for (let a = 0; a < e.w; a++) for (let b = 0; b < e.d; b++) sulPosto.add(chiave(slot.i + a, slot.j + b))
   }
   storici = lista.map((a, n) => sulPosto.has(chiave(a.i, a.j)) ? { ...a, n, tagliato: true } : { ...a, n })
   return storici
@@ -75,7 +77,8 @@ export function guastiDegliAlberi(alberi = alberiStorici()) {
     if (a.n !== alberi.indexOf(a)) g.push(`albero ${a.n}: numero fuori posto`)
   }
   for (const [tipo, e] of Object.entries(EDIFICI)) {
-    const su = alberi.find(a => !a.tagliato && a.i >= e.slot.i && a.i < e.slot.i + e.w && a.j >= e.slot.j && a.j < e.slot.j + e.d)
+    const slot = POSTI_STORICI[tipo]
+    const su = alberi.find(a => !a.tagliato && a.i >= slot.i && a.i < slot.i + e.w && a.j >= slot.j && a.j < slot.j + e.d)
     if (su) g.push(`${tipo}: l'albero ${su.n} sta sul suo posto`)
   }
   return g

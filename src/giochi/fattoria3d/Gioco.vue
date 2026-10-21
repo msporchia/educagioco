@@ -12,7 +12,7 @@ import { scelta, ricorda } from '../campagne.js'
 import { Fattoria3d } from './motore/fattoria3d.js'
 import { haWebGL2 } from './scena3d/webgl.js'
 import { dettoDi, dettoDiRifiuto } from './scena3d/detti.js'
-import { EDIFICI } from './dati/catalogo.js'
+import { EDIFICI, avvisoEdificiNuovi } from './dati/catalogo.js'
 import { COLTURE } from './dati/colture.js'
 import { RICETTE, emojiDi } from './dati/ricette.js'
 import { avanzamento, roba, nomeDi } from './dati/livelli.js'
@@ -67,7 +67,7 @@ const borsa = {
 
 // ── cosa si vede (il motore non è reattivo: si rilegge dopo ogni cambio e ogni quarto di secondo) ──
 const versione = ref(0)
-const foto = ref({ robaNuova: false, daFare: { semina: 0, raccogli: 0 }, livello: 1, quanto: 0 })
+const foto = ref({ robaNuova: false, daFare: { semina: 0, raccogli: 0 }, livello: 1, quanto: 0, daCostruire: 0 })
 const datiLivello = () => { const a = avanzamento(motore.esperienza()); return { livello: a.livello, quanto: a.quanto } }
 let ultimaFoto = ''
 let inventarioVisto = null               // il conto di quando si è guardato l'inventario l'ultima volta (in memoria, non si salva)
@@ -75,7 +75,7 @@ const ripresa = () => {
   const s = motore.s
   if (!inventarioVisto) inventarioVisto = contoDi(s)           // il primo sguardo è la base: «nuovo» è ciò che arriva dopo
   const nuova = {
-    robaNuova: !inventarioAperto.value && robaNuova(inventarioVisto, s), daFare: motore.daFare(), ...datiLivello(),
+    robaNuova: !inventarioAperto.value && robaNuova(inventarioVisto, s), daFare: motore.daFare(), daCostruire: motore.edificiDaCostruire().length, ...datiLivello(),
   }
   const firma = JSON.stringify(nuova)
   if (firma !== ultimaFoto) { ultimaFoto = firma; foto.value = nuova }      // niente nuova foto se è uguale: il HUD non si rifà ogni quarto di secondo
@@ -84,7 +84,7 @@ const ripresa = () => {
 const EVENTI = { terra: 'fattoria3dTerre', pezzo: 'fattoria3dPezzi', raccolto: 'fattoria3dRaccolti', albero: 'fattoria3dAlberi', sasso: 'fattoria3dSassi', visita: 'fattoria3dVisite', aiuto: 'fattoria3dAiuti', cassa: 'fattoria3dMongolfiera', fiera: 'fattoria3dFiere' }
 /** Un livello nuovo: un avviso che passa da sé e un pallino sul gettone finché non si apre il foglio. */
 function salito(livello) {
-  const testo = `Livello ${livello}: ${nomeDi(livello)}`
+  const testo = `Livello ${livello}: ${avvisoEdificiNuovi(livello) || nomeDi(livello)}`      // se si apre un edificio lo nomina: il «!» sul tasto Costruisci resta finché non c'è
   ui.avviso(testo)
   toast.value = { testo, fine: performance.now() + DURATA_TOAST }
   livelloNuovo.value = true
@@ -204,7 +204,6 @@ function chiudiCostruisci() { costruisciQui.value = null }
 function sceglieCarta(carta) {
   const c = costruisciQui.value; if (!c) return
   if (carta.genere === 'strumento') { costruisciQui.value = null; return scegliStrumento(carta.id) }
-  if (carta.genere === 'edificio') { costruisciQui.value = null; return mondo.azioni.offriEdificio(carta.id) }
   const r = mondo.costruisciQui(carta.id, c.i, c.j)
   if (r.esito === 'rifiuto') c.msg = dettoDi(r.motivo, { costo: r.costo, liv: r.liv })
   else costruisciQui.value = null                    // 'messo', o 'fantasma' (il fantasma resta sulla mappa)
@@ -412,7 +411,7 @@ onBeforeUnmount(() => {
         <button v-if="cameraLibera" class="f3-centra" data-f3="centra" @click="mondo.tornaAllEroe()">⌖ Torna all'eroe</button>
 
         <BarraAzioni v-if="!strumento && !trascinando" :modo="modo" :seme="COLTURE[seme].emoji" :da-fare="foto.daFare"
-                     @modo="impostaModo" @semina="apriSemina" @costruisci="apriCostruisci()" />
+                     @modo="impostaModo" @semina="apriSemina" @costruisci="apriCostruisci()" :da-costruire="foto.daCostruire" />
         <BarraStrade v-if="strumento" :strumento="strumento" :testo="avvisoTesto" @strumento="scegliStrumento" @fatto="finisciStrumento" />
 
         <!-- un pezzo sollevato tenendo premuto, o il fantasma del menu che aspetta un posto: si rilascia sulla mappa o su questa fascia -->

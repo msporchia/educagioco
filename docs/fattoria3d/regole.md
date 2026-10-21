@@ -31,14 +31,15 @@ sempre ([../fattoria/regole.md](../fattoria/regole.md)); qui le differenze.
 | recinto / bancarella / bacheca / fontana | 45 / 15 / 12 / 30 | fissi; nel recinto una pecora, le altre si comprano (40, 60, 80) |
 | aiuola / panchina / pozzo / spaventapasseri | 6 / 10 / 18 / 12 | decorazioni, fissi |
 | passerella / ponte / tavolo | 8 / 14 / 18 | decorazioni (liv 3 / 5 / 4), fisse |
+| stagno / laghetto | 35 / 110 | decorazioni d'acqua (liv 5 / 11), fisse; non produttive: non spostano la scaletta ([laghi.md](laghi.md)) |
 | pollaio / stalla | 55 / 90 | liberi nel terreno come il recinto; una bestia nel prezzo, le altre una per volta, sempre più care ([animali.md](animali.md)) |
-| mulino / panificio / caseificio / cucina / gelateria | 60 / 90 / 120 / 110 / 140 | unici, nel loro posto, in lotti da comprare prima (la cucina ha ancora l'id `conserviera`) |
-| pastificio (id `pasticceria`) / mongolfiera | 80 / 100 | unici, nel loro posto |
+| mulino / panificio / caseificio / cucina / gelateria | 60 / 90 / 120 / 110 / 140 | unici (uno per tipo), si mettono dove si vuole ([edifici-liberi.md](edifici-liberi.md)); la cucina ha ancora l'id `conserviera` |
+| pastificio (id `pasticceria`) / mongolfiera | 80 / 100 | unici, si mettono dove si vuole |
 | un lotto di terreno | 40 + 20 per ogni lotto comprato oltre i nove di partenza, più 2 per il quadrato dei lotti oltre il 33° (il 100° costa 10 998) | non ci sono confini, il prezzo li fa: [mondo-infinito.md](mondo-infinito.md) |
 | **un pezzo nuovo** | il prezzo, **pagato quando lo lasci sulla mappa** (`compraEMetti`) | niente conferma: il prezzo è sulla carta; senza monete il fantasma è rosso e il rilascio dice «Servono 🪙 N» |
 | tagliare un albero | 3 | trenta secondi di esercizio: un albero si toglie, non dà niente (niente legna) |
 | togliere un sasso o un cespuglio | 1 | pochi per lotto, restano anche dopo l'acquisto del lotto |
-| spostare o mettere via un pezzo | 1 | non è un tavolino da spostare per ore; rimetterlo dov'era è gratis |
+| spostare o mettere via un pezzo (anche un edificio) | 1 | non è un tavolino da spostare per ore; rimetterlo dov'era è gratis |
 | un pezzo di strada | 1 | togliere è gratis |
 
 I numeri stanno in `dati/catalogo.js` e `dati/regole.js`. Misurati sul metro di [calibrazione.md](../apprendimento/calibrazione.md)
@@ -101,8 +102,8 @@ in dispensa (`stato.prodotti`).
   (panificio); può anche uscire dalla stessa macchina (la pasta per le lasagne, come in 2D). **Un solo ingrediente è un contatore**: la
   lana (`stato.lana`, quella della tosa), per telaio e sartoria: `scortaDi` e `_togli` la trattano come le altre merci ([merci-e-ricette.md](merci-e-ricette.md)).
 - **Gli id delle ricette sono globali** (sono le chiavi di `prodotti`), sono quelli della 2D e non coincidono con quelli delle colture.
-- Un edificio fuori dal quadrato di partenza si compra solo con **tutti i suoi lotti tuoi** (`lotto-non-tuo`, con
-  l'elenco `lotti`): meglio un rifiuto che dice cosa comprare che un edificio sospeso sul terreno altrui.
+- **Un edificio è un pezzo libero** ([edifici-liberi.md](edifici-liberi.md)): si compra dal menu e si paga al rilascio, nel terreno proprio, uno per
+  tipo (`gia-tuo`). Non si mette via se la macchina lavora o ha pronti (`macchina-al-lavoro`); spostarla si può sempre e la coda la segue.
 - **Un ingrediente può anche essere `uova` o `latte`** delle bestie ([animali.md](animali.md)).
 - I prodotti servono al banco: li chiedono i clienti ([ordini.md](ordini.md)).
 

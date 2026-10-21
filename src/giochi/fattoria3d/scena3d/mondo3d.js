@@ -59,6 +59,8 @@ export class Mondo3d {
     this.ctx = {
       m: motore, ui, fx: this.fx, scena: this.scena, terreno: this.terreno, pezzi: this.pezzi, eroe: this.eroe, cmd: this.cmd,
       puntaSuolo: (x, y) => this.puntaSuolo(x, y),
+      camera: this.camera,
+      rettangolo: () => this.canvas.getBoundingClientRect(),
       misure: tipo => PEZZI[tipo] || EDIFICI[tipo],
       colore: k => ASPETTO[k].fc,
       cambiato: () => this.cambiato(),
@@ -115,7 +117,7 @@ export class Mondo3d {
   }
 
   // ── cosa c'è sotto il dito ──
-  /** { kind: 'cosa', id } | { kind: 'edificio', tipo } | { kind: 'albero', n } | { kind: 'ostacolo', n } | null */
+  /** { kind: 'cosa', id } (anche un edificio) | { kind: 'albero', n } | { kind: 'ostacolo', n } | null */
   bersaglioSotto(cx, cy) {
     const rg = this._raggio(cx, cy)
     const hit = rg.intersectObjects(this.pezzi.gruppi(), true)[0]
@@ -133,7 +135,6 @@ export class Mondo3d {
     if (c) return { kind: 'cosa', id: c.id }
     const sasso = this.m.ostacoloSu(i, j)                                  // il dito è largo: la cella basta
     if (sasso) return { kind: 'ostacolo', n: sasso.n }
-    for (const [tipo, e] of Object.entries(EDIFICI)) if (i >= e.slot.i && i < e.slot.i + e.w && j >= e.slot.j && j < e.slot.j + e.d) return { kind: 'edificio', tipo }
     return null
   }
   /** Un lotto non tuo sotto il dito, se c'è. */
@@ -142,22 +143,25 @@ export class Mondo3d {
     const l = lottoDi(Math.floor(p.x), Math.floor(p.z))
     return !this.m.posseduto(l) && this.m.lottiAperti.has(l.k) ? l : null           // il vuoto lontano (fuori dall'anello di due lotti) non apre niente
   }
-  /** Le celle da cui si può servire una cosa: il davanti per gli edifici, tutta la cornice per il resto. */
+  /** Le celle da cui si può servire una cosa: il davanti per gli edifici (se è libero), tutta la cornice per il resto. */
   celleDiServizio(b) {
     let i, j, w, d, davanti = false
+    if (b.kind === 'edificio') b = { kind: 'cosa', id: this.m.cosaDi(b.tipo).id }
     if (b.kind === 'cosa') {
-      const c = this.m.cosa(b.id), x = PEZZI[c.tipo]; i = c.i; j = c.j; w = x.w; d = x.d
+      const c = this.m.cosa(b.id), x = this.m.misure(c.tipo); i = c.i; j = c.j; w = x.w; d = x.d; davanti = !!EDIFICI[c.tipo]
       if (x.calpestabile) { const su = []; for (let a = 0; a < w; a++) for (let b2 = 0; b2 < d; b2++) su.push([i + a, j + b2]); return su }   // un ponte si tocca per salirci
     }
-    else if (b.kind === 'edificio') { const e = EDIFICI[b.tipo]; i = e.slot.i; j = e.slot.j; w = e.w; d = e.d; davanti = true }
     else { const a = b.kind === 'ostacolo' ? this.m.ostacolo(b.n) : this.m.albero(b.n); i = a.i; j = a.j; w = 1; d = 1 }
-    const out = []
-    if (davanti) for (let a = 0; a < w; a++) out.push([i + a, j + d])
-    else {
-      for (let a = 0; a < w; a++) out.push([i + a, j - 1], [i + a, j + d])
-      for (let b2 = 0; b2 < d; b2++) out.push([i - 1, j + b2], [i + w, j + b2])
+    const libere = celle => celle.filter(([x, y]) => this.m.libera(x, y))
+    const cornice = []
+    for (let a = 0; a < w; a++) cornice.push([i + a, j - 1], [i + a, j + d])
+    for (let b2 = 0; b2 < d; b2++) cornice.push([i - 1, j + b2], [i + w, j + b2])
+    if (davanti) {                                              // un edificio ha un davanti (verso +z); se è murato, si serve da un altro lato
+      const fronte = []; for (let a = 0; a < w; a++) fronte.push([i + a, j + d])
+      const davantiLibero = libere(fronte)
+      if (davantiLibero.length) return davantiLibero
     }
-    return out.filter(([x, y]) => this.m.libera(x, y))
+    return libere(cornice)
   }
   centroDi(b) {
     if (b.kind === 'albero' || b.kind === 'ostacolo') { const a = b.kind === 'albero' ? this.m.albero(b.n) : this.m.ostacolo(b.n); return new THREE.Vector3(a.i + 0.5, 0, a.j + 0.5) }
@@ -188,7 +192,6 @@ export class Mondo3d {
       if (!m.posseduto(l)) return this.azioni.offriLotto(l)
       return eroe.vaiA(this.celleDiServizio(b), () => this.azioni.togli(o), this.centroDi(b))
     }
-    if (b && b.kind === 'edificio' && this._edificioDaLontano(b.tipo)) return this.azioni.offriEdificio(b.tipo)   // dice livello o terreno, senza camminare
     if (b) return eroe.vaiA(this.celleDiServizio(b), () => this.azioni.fai(b), this.centroDi(b))
     const l = this.lottoSotto(x, y); if (l) return this.azioni.offriLotto(l)
     const p = this.puntaSuolo(x, y); if (!p) return
@@ -196,10 +199,6 @@ export class Mondo3d {
     for (let a = -2; a <= 2; a++) for (let b2 = -2; b2 <= 2; b2++) if (m.libera(i + a, j + b2)) cand.push([i + a, j + b2, Math.hypot(a, b2)])
     cand.sort((u, v) => u[2] - v[2])
     if (cand.length) eroe.vaiA([[cand[0][0], cand[0][1]]], null, null)
-  }
-  /** Un edificio che non è ancora tuo e che non si può comprare adesso (livello o terreno che mancano): l'eroe non ci cammina, sta fuori dal suo terreno. */
-  _edificioDaLontano(tipo) {
-    return !this.m.s.posseduti[tipo] && (EDIFICI[tipo].liv > this.m.livello() || this.m.lottiMancanti(tipo).length > 0)
   }
   // ── semina e raccogli armati: la coda ──
   applicabile(c) { return c.tipo === 'campo' && (this.cmd.modo === 'semina' ? this.m.campoVuoto(c) : this.cmd.modo === 'raccogli' ? this.m.campoMaturo(c) : false) }
@@ -257,6 +256,7 @@ export class Mondo3d {
     this.camera.muovi(dt, {
       eroe: { x: eroe.x, z: eroe.z, vel: eroe.vel }, distanza: this.q.camera,
     })
+    this.costruzione.fotogramma(dt)                               // il dito contro il bordo con un pezzo in mano: la camera scorre (costruzione.js)
     this.terreno.segui(this.camera.x, this.camera.z)              // il suolo segue la camera; se cambia il lotto al mezzo si rifà la finestra
     const fineLogica = performance.now()
     // l'ombra: subito se qualcosa è cambiato, altrimenti ogni `ombraOgni` fotogrammi (1 = sempre)
@@ -334,7 +334,7 @@ export class Mondo3d {
   /** Quante cose di ogni tipo ci sono in scena (per il rapporto): campi, edifici comprati, altri pezzi, compagni, cartelli, mesh e chi proietta ombra. */
   conteggi() {
     let campi = 0, edifici = 0, altri = 0
-    for (const v of this.pezzi.voci.values()) { if (v.kind === 'edificio') { if (v.mio) edifici++ } else if (v.c.tipo === 'campo') campi++; else altri++ }
+    for (const v of this.pezzi.voci.values()) { if (v.edificio) edifici++; else if (v.c.tipo === 'campo') campi++; else altri++ }
     let mesh = 0, ombre = 0, istanze = 0
     this.scena.traverse(o => { if (o.isMesh) { mesh++; if (o.castShadow) ombre++; if (o.isInstancedMesh) istanze++ } })
     return { campi, edifici, altri, compagni: this.compagni.lista.length, cartelli: this.sopra.querySelectorAll('.f3-badge').length, mesh, ombre, istanze }
@@ -381,7 +381,10 @@ export class Mondo3d {
     return meglio || e.cella()
   }
   /** Una scelta del menu: sulla cella premuta. Dice com'è andata (vedi `Costruzione.daMenu`). */
-  costruisciQui(tipo, i, j) { return this.costruzione.daMenu(tipo, i, j) }
+  costruisciQui(tipo, i, j) {
+    const pm = this.puntoMenu       // il punto esatto premuto, se il menu l'ha aperto un dito: il pezzo vi si centra
+    return this.costruzione.daMenu(tipo, i, j, pm && pm.i === i && pm.j === j ? pm : null)
+  }
   annullaTrascinamento() { this.costruzione.annullaTrascinamento() }
   tornaAllEroe() { this.camera.segui() }
 

@@ -4,10 +4,9 @@
 import * as THREE from 'three'
 import { COLTURE } from '../dati/colture.js'
 import { COSTI } from '../dati/regole.js'
-import { EDIFICI, PEZZI } from '../dati/catalogo.js'
+import { EDIFICI } from '../dati/catalogo.js'
 import { MACCHINE } from '../dati/ricette.js'
 import { PRODOTTI_ANIMALI } from '../dati/animali.js'
-import { lottoPerId } from '../dati/mondo.js'
 import { dettoDi, dettoDiRifiuto } from './detti.js'
 
 export { dettoDi, dettoDiRifiuto }
@@ -16,7 +15,7 @@ export class Azioni {
   constructor(ctx) { this.c = ctx }
   get m() { return this.c.m }
 
-  /** Un tocco su una cosa: l'eroe l'ha raggiunta, ora la fa. `b`: { kind: 'cosa', id } | { kind: 'edificio', tipo } | { kind: 'albero', n }. */
+  /** Un tocco su una cosa: l'eroe l'ha raggiunta, ora la fa. `b`: { kind: 'cosa', id } (anche un edificio) | { kind: 'albero', n } | { kind: 'ostacolo', n }. */
   fai(b) {
     const { eroe, pezzi, fx } = this.c
     if (eroe.az) return
@@ -33,6 +32,7 @@ export class Azioni {
       case 'bacheca': case 'bancarella': pezzi.salta(cosa.id); return this.c.ui.apriBanco()      // il foglio degli ordini
       case 'fontana': pezzi.salta(cosa.id); fx.parla('Che bella!'); return
       case 'trattore': pezzi.salta(cosa.id); return this.c.ui.apriMappa && this.c.ui.apriMappa()      // porta ai vicini (docs/fattoria3d/vicini.md)
+      default: if (EDIFICI[cosa.tipo]) return this.edificio(cosa.tipo)         // una macchina o la mongolfiera
     }
   }
 
@@ -172,37 +172,11 @@ export class Azioni {
     })
   }
 
-  // ── gli edifici unici ──
+  // ── gli edifici unici: una volta messi in mappa si toccano e si apre la loro finestra (comprarli e piazzarli è del menu «Costruisci qui») ──
   edificio(tipo) {
-    const { ui } = this.c, m = this.m
-    if (!m.s.posseduti[tipo]) return this.offriEdificio(tipo)
+    const { ui } = this.c
     if (MACCHINE[tipo]) return ui.apriMacchina(tipo)           // il menu della SUA macchina
     if (tipo === 'mongolfiera') return ui.apriMongolfiera()   // la nave: il foglio con la stiva di casse
-  }
-  /** Un edificio non ancora tuo: dice il prezzo, il livello a cui arriva e (se manca) il terreno da comprare prima. */
-  offriEdificio(tipo) {
-    const e = EDIFICI[tipo], { fx, ui, eroe, pezzi } = this.c, m = this.m
-    const ok = { t: 'Ho capito', quieto: true }
-    if (e.liv > m.livello()) {
-      return ui.chiedi(e.nome, `Arriva al livello ${e.liv}. Poi costerà 🪙 ${e.prezzo}.`, [ok])
-    }
-    const lotti = m.lottiMancanti(tipo).map(lottoPerId).filter(Boolean)
-    if (lotti.length) {
-      const prossimo = lotti.find(l => m.confina(l))          // il primo che si può comprare adesso
-      const testo = `Sta su un terreno che non è ancora tuo. ${prossimo ? 'Compra prima il terreno qui accanto' : 'Allarga la fattoria fin qui'}, poi costerà 🪙 ${e.prezzo}.`
-      return ui.chiedi(e.nome, testo, prossimo
-        ? [{ t: 'Vai al terreno', fn: () => this.offriLotto(prossimo) }, { t: 'Non ora', quieto: true }]
-        : [ok])
-    }
-    ui.chiedi(e.nome, `Costa 🪙 ${e.prezzo}. Ce n'è uno solo e resta qui.`, [
-      { t: `Compra · 🪙 ${e.prezzo}`, fn: () => {
-        const r = this.m.compraEdificio(tipo)
-        if (!r.ok) return this.dici(dettoDiRifiuto(r, { mancano: e.prezzo - this.m.monete() }))
-        pezzi.sincronizza()
-        fx.scoppietta(pezzi.centroDi({ kind: 'edificio', tipo }).setY(1), 0xffd24a, 24, 3.5, 4); eroe.avvia('esulta', 1); ui.cambio()
-      } },
-      { t: 'Non ora', quieto: true },
-    ])
   }
   /** Una riga che si vede sempre: nel fumetto dell'eroe, e nella barra del costruire se è aperta. */
   dici(testo) { this.c.fx.parla(testo); this.c.ui.avviso(testo) }

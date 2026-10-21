@@ -10,18 +10,20 @@ gli Asteroidi 3D e il Sotterraneo 3D: il 3D non si scrive a mano.
 |---|---|
 | `mondo3d.js` | **compone** tutto e fa il battito: renderer, luci, il tocco (`tocca`, `bersaglioSotto`), la coda di semina/raccolta, le opzioni (`applica`), le statistiche. L'unico che usa il renderer |
 | `terreno.js` | erba, strade, griglia, lotti non comprati, recinto, alberi, sassi, laghetti, i due edifici di scena: a istanze, per una finestra di 9×9 lotti attorno alla camera ([mondo-infinito.md](mondo-infinito.md)) |
-| `pezzi.js` | un gruppo per ogni cosa del motore e per gli undici edifici unici (fantasmi finché non si comprano); li tiene allineati (`sincronizza`) e li anima (grano che cresce, pecore, galline e mucche, fontana, fumo, il pallone che parte e torna: [mongolfiera.md](mongolfiera.md)); i cartelli sugli edifici: «🎈 N casse pronte!» o «🎈 in viaggio · m:ss» sulla mongolfiera, prezzo o «🔒 Livello N» sul fantasma, pronti o cottura su ogni macchina, uova o latte pronti sul pollaio e sulla stalla, e su recinto, pollaio e stalla il cartello col pulsante «＋ 🪙 N» che compra una bestia (niente conto «n/max»; «ha fame» se c'è una bestia o una pecora tosata da nutrire) ([animali.md](animali.md)); le bestie affamate sono magre e basse, con una transizione morbida (`muoviBestie`, `muoviPecore`: «La fame si vede»); il cartello si nasconde col pezzo sollevato |
+| `pezzi.js` | un gruppo per ogni cosa del motore, edifici compresi (sono pezzi liberi, non ci sono fantasmi: [edifici-liberi.md](edifici-liberi.md)); li tiene allineati (`sincronizza`) e li anima (grano che cresce, pecore, galline e mucche, fontana, fumo, il pallone che parte e torna: [mongolfiera.md](mongolfiera.md)); i cartelli sugli edifici: «🎈 N casse pronte!» o «🎈 in viaggio · m:ss» sulla mongolfiera, prezzo o «🔒 Livello N» sul fantasma, pronti o cottura su ogni macchina, uova o latte pronti sul pollaio e sulla stalla, e su recinto, pollaio e stalla il cartello col pulsante «＋ 🪙 N» che compra una bestia (niente conto «n/max»; «ha fame» se c'è una bestia o una pecora tosata da nutrire) ([animali.md](animali.md)); le bestie affamate sono magre e basse, con una transizione morbida (`muoviBestie`, `muoviPecore`: «La fame si vede»); il cartello si nasconde col pezzo sollevato |
 | `eroe.js` | il movimento (a piedi, o di corsa), il percorso, la posa del gesto (semina, falcia, abbatte, esulta) |
-| `azioni.js` | cosa fa l'eroe davanti a ogni cosa: anima il gesto e **a metà gesto chiede al motore di farlo davvero**; un edificio posseduto apre il menu della sua macchina, uno no offre l'acquisto (`offriEdificio`: livello, terreno da comprare prima, prezzo) |
+| `azioni.js` | cosa fa l'eroe davanti a ogni cosa: anima il gesto e **a metà gesto chiede al motore di farlo davvero**; un edificio in mappa è una cosa e apre il menu della sua macchina (comprarlo e piazzarlo è del menu «Costruisci qui») |
 | `detti.js` | `dettoDi` / `dettoDiRifiuto`: un rifiuto del motore in una riga che dice cosa fare. Senza three: lo usa anche `Gioco.vue` |
 | `costruzione.js` | cosa fa una carta del menu sulla cella premuta (`daMenu`), il fantasma (anche «parcheggiato», che aspetta un posto), riprendere e spostare un pezzo, le strade a pennello; al rilascio compra e mette in un gesto |
 | `dito.js` | i pointer sulla tela: tocco, mappa che scorre, pizzico, tenere premuto (su un pezzo lo riprende, su un posto libero apre «Costruisci qui»), il fantasma parcheggiato, il pennello delle strade |
-| `camera.js` | la telecamera: segue l'eroe, o libera se un dito la sposta |
+| `camera.js` | la telecamera: segue l'eroe, o libera se un dito la sposta (`trascina`) o se un pezzo tenuto contro il bordo la fa scorrere (`scorri`); mai oltre 30 celle dall'eroe |
+| `trascinamento-puro.js` | il conto del pezzo al dito, senza three: `cellaSottoIlDito` (il centro del pezzo sul punto del dito), lo scarto della presa, `velocitaBordo` e le costanti dello scorrimento ai bordi (`unita/fattoria3d-trascinamento`) |
 | `effetti.js` | scintille e fumo, i testi che volano, il fumetto dell'eroe, i cartelli (`nuovoBadge`; `nuovoCartello` per le bestie, con un pulsante vero), l'albero che cade |
 | `modelli.js` | tutti i pezzi in codice (niente sprite, niente immagini: le trame sono canvas): il campo (ri-esportato da `modelli-colture.js`), i sette edifici (pasticceria, mongolfiera, mulino, panificio, caseificio, conserviera, gelateria; i mattoncini sono esportati per `modelli-macchine.js`), le quattro decorazioni (aiuola, panchina, pozzo, spaventapasseri), bancarella, fontana, recinto e pecore con le loro fasi, pollaio con le galline, stalla con le mucche ([animali.md](animali.md)), fienile; `creaCasa`, `creaBancarella` e `creaBacheca` sono dei sottili rimandi a `dal-sotterraneo.js`, e `creaCasaVecchia` e `creaBancarellaVecchia` sono i disegni di prima, tenuti per il catalogo |
 | `modelli-macchine.js` | i quattro edifici nuovi, 3×3 con `anima`, `fumo` e `altezza` come gli altri: zuccherificio (capannone, ciminiera, barbabietole e sacchi, ruota dentata), telaio (capanna col grande telaio e la navetta, balle di lana), sartoria (casetta, manichino che gira, ago nel rocchetto), tintoria (capanno con tre vasche colorate, stoffe stese) |
 | `modelli-colture.js` | il campo 2×2 e le quindici colture, a istanze: vedi «Le colture» qui sotto |
 | `modelli-passaggi.js` | ponte ad arco (3×1, la gobba), passerella di assi su pali con la corda (1×3) e tavolo con le panche (3×2): vedi sotto |
+| `modelli-acqua.js` | lo stagno (3×3) e il laghetto (5×4): un solo `creaStagno(w, d)` con la lastra d'acqua, la riva in rilievo, sassi, canne e ninfee; il materiale dell'acqua è lo stesso dei laghi del terreno ([laghi.md](laghi.md)) |
 | `dal-sotterraneo.js` | la casa di legno, il banco della guaritrice, la bacheca delle taglie e il cespuglio, presi dal Sotterraneo 3D (copie adattate: vedi sotto). Un `Cantiere` che unisce i pezzi in una mesh per materiale, colori nei vertici |
 | `compagni.js`, `modelli-compagni.js` | Watson e i gatti che girano per la fattoria, e il contadino con la sua faccia: il comportamento, i corpi e le pose ([compagni.md](compagni.md)) |
 | `webgl.js` | `haWebGL2()`: si chiede senza caricare three |
@@ -86,21 +88,36 @@ toccano. Il cespuglio ha i vertici in grigio (luce e ombra) e il verde lo mette 
 davanti all'eroe (`cellaDavanti`). Un dito che scorre prima della soglia non lo apre (il dito non è un mouse); un lotto non tuo si
 compra toccandolo; tenuto premuto su un pezzo lo riprende, come prima.
 - **Le schede** (`CATEGORIE` in `dati/catalogo.js`: 🌾 Campi, 🐑 Animali, 🏠 Edifici, 🌷 Decori, 🛣️ Strade) e sotto **le carte**, tre
-  per riga, dai dati (`dati/carte.js`: ogni pezzo e ogni edificio unico ha la sua `categoria`, ordinati per livello; un edificio
-  già comprato non si offre). La carta mostra **il modello 3D vero** (vedi «Le anteprime»); l'emoji su una piastrella del colore della scheda sta solo per gli strumenti (strada e gomma) e come segnaposto finché l'immagine non è pronta o se non riesce; nome, prezzo
+  per riga, dai dati (`dati/carte.js`: ogni pezzo e ogni edificio unico ha la sua `categoria`, ordinati per livello, prima le carte col «!»; un edificio
+  già in mappa non si offre, uno nel magazzino sì con «📦 ×1»). La carta mostra **il modello 3D vero** (vedi «Le anteprime»); l'emoji su una piastrella del colore della scheda sta solo per gli strumenti (strada e gomma) e come segnaposto finché l'immagine non è pronta o se non riesce; nome, prezzo
   (o «📦 ×N» se il pezzo è già nel magazzino) e, se non è ancora arrivata, la velatura col lucchetto: **toccarla la fa tremare e
   dice il livello**. Le schede scorrono di lato, il corpo in verticale; un tocco sul velo o la ✕ lo chiudono.
 - **Scegliere una carta la posa sulla cella premuta** (`Costruzione.daMenu`): fra i modi di posarla che coprono la cella prende il
   più centrato che ci sta, **compra e mette in un gesto** (`compraEMetti`, senza conferme) e il foglio si chiude. Se mancano le
   monete il foglio resta e dice «Servono 🪙 N». Se la cella non basta (occupata, fuori terreno) il foglio si chiude e **il fantasma
-  resta lì**, verde o rosso: lo si **trascina** (sta 1,6 celle sopra il dito) e al rilascio in un posto buono paga e mette; un
+  resta lì**, verde o rosso: lo si **trascina** (il fantasma sta sopra il dito come sotto) e al rilascio in un posto buono paga e mette; un
   rilascio che non va lo lascia dov'è, un **tocco** su un posto buono costruisce lì e **su uno che non va annulla** (senza perdere
   niente), come la fascia «✖️ … per annullare» in basso (si tocca, o ci si rilascia sopra).
-- **Gli edifici unici** (mulino, ecc.) aprono la loro offerta (`offriEdificio`: livello, terreno da comprare prima, prezzo). **La
+- **Gli edifici unici** (mulino, ecc.) hanno la loro carta nella scheda Edifici e si posano come ogni pezzo, con il «!» sulla linguetta, sulla carta e sul tasto 🏗️ finché il livello li ha aperti e non ci sono ([edifici-liberi.md](edifici-liberi.md)). **La
   strada e la gomma** attivano il pennello: il foglio si chiude e compare `viste/BarraStrade.vue` (strada, gomma, «Fatto»); il dito
   sulla mappa disegna e due dita la spostano.
 - **Il prezzo e il rincaro** sono quelli di sempre (`prezzoPezzo`, `puoCompraEMettere`). Un pezzo già messo si riprende **tenendolo
   premuto** (vibra, compaiono la griglia e la fascia «📦 metti via») e si trascina; spostarlo costa 🪙 1. Nessun «annulla».
+- **Il pezzo sta sotto il dito, e dove lo vedi lo costruisci** (`costruzione.js`, `trascinamento-puro.js`). Il **centro** del pezzo cade sul punto del
+  suolo che il dito tiene: `i = round(x − w/2)`, `j = round(z − d/2)` (prima l'angolo stava sotto il dito, e un 3×3 finiva una cella e mezza in
+  giù e a destra: era il «qualche px sotto»). Il fantasma si disegna con lo stesso `(i, j)` con cui al rilascio si costruisce, e il rilascio non
+  ricalcola se il dito non si è mosso dall'ultimo punto visto. Un pezzo **nuovo** sta `SOLLEVA_PX` = 40 px sopra il dito (nello schermo, non
+  nel mondo: 1,6 celle di mondo erano 40 o 80 px a seconda dello zoom e della riga); uno **già messo** (tenuto premuto) o il **fantasma parcheggiato
+  preso sopra** (a meno di 1 cella) tengono **il punto che il dito ha preso**: lo scarto fra dito e centro dell'istante della presa non cambia
+  (niente salto verso il dito). Un tocco sul fantasma costruisce dov'è il fantasma. Dal menu, il pezzo si centra sul **punto esatto premuto**
+  (`puntoMenu`), non sul centro della cella. Provato: ancorare l'angolo, o 1,6 celle di mondo di rialzo.
+- **Contro il bordo la camera scorre** (`Costruzione.fotogramma`, ogni fotogramma): col dito che tiene un pezzo (da carta, ripreso o parcheggiato
+  trascinato) **o il pennello delle strade** nella fascia di `FASCIA_PX` = 72 px dal bordo utile (sotto la barra in alto `SOPRA_UI_PX` = 64; in
+  basso sopra la fascia «metti via», o 96 px dal fondo col pennello), la camera scorre verso quel bordo da `VEL_MIN` = 2 a `VEL_MAX` = 12
+  celle/s (col quadrato della profondità; × `dt`, non coi fotogrammi), anche a dito fermo; la cella del fantasma si ricalcola a ogni fotogramma
+  con la camera di adesso, quindi resta sotto il dito. Il limite è `LONTANO` = 30 celle dall'eroe (il mondo non ha confini); su «metti via» non
+  scorre; alzato il dito (o `pointercancel`) si ferma. «⌖ Torna all'eroe» compare come per ogni camera libera. Come la 2D
+  ([../fattoria/come-si-tocca.md](../fattoria/come-si-tocca.md), `spinta.js`), ma in celle di mondo e non in px di vista.
 - **Non c'è più la telecamera «costruzione»** (alta, «Vicino» / «Tutto») né la barra: il posto si sceglie premendo dove lo si vuole.
   Il fantasma si sistema sulla mappa di sempre (la telecamera segue l'eroe, due dita zoomano).
 - Il foglio si rifà dai dati a ogni cambio: una carta nuova nel catalogo compare da sola, e il test fallisce se manca la categoria.
@@ -207,8 +224,8 @@ Prima di questo non si vedeva niente: i ciuffi solo fuori dal mondo (sottili e d
 
   **Il riscaldamento** (`scena3d/scaldo-puro.js`, `Pezzi.compitiScaldo()`, `Mondo3d._scalda`). La *prima* costruzione di un tipo costa 0,1–3 ms, e si pagherebbe
   mentre si posa il primo campo o si compra la prima gallina. Dopo i primi 60 fotogrammi, a fine fotogramma, **un compito per fotogramma** costruisce in tempo morto ciò che manca,
-  in quest'ordine: campo, recinto, pollaio, stalla, pecora, gallina, mucca, il resto dei pezzi (aiuola, panchina, pozzo, fontana, spaventapasseri, ponte, passerella, tavolo, banco, bacheca)
-  e gli edifici (che ci sono già come fantasmi: costano un clone). Misurati in Chrome con la cache vuota, i 28 compiti durano 0,1–2,4 ms l'uno (un telefono: ×5–8, non misurato).
+  in quest'ordine: campo, recinto, pollaio, stalla, pecora, gallina, mucca, il resto dei pezzi (aiuola, panchina, pozzo, fontana, spaventapasseri, ponte, passerella, tavolo, banco, bacheca, stagno, laghetto)
+  e gli edifici (non sono in scena finché non si costruiscono: il primo costruito non deve pagare il modello). Misurati in Chrome con la cache vuota, i 28 compiti durano 0,1–2,4 ms l'uno (un telefono: ×5–8, non misurato).
   Non parte se l'ultimo fotogramma ha superato i 28 ms o gli fps medi sono sotto 30; con la pagina nascosta niente; dopo un compito lungo (>6 ms) lascia riposare qualche fotogramma;
   **rinuncia per sempre** se il degrado adattivo è sceso di livello o gli fps stanno sotto 24 (ciò che resta si paga alla prima richiesta, come prima). Nei test con SwiftShader (15–20 fps)
   rinuncia subito: è voluto, non un guasto (la logica è provata in `unita/fattoria3d-cache` e, a fps forzati, dentro la pagina).
@@ -223,7 +240,7 @@ Prima di questo non si vedeva niente: i ciuffi solo fuori dal mondo (sottili e d
   | geometrie per 10 istanze di ogni tipo | 1123–1321 | **126** (le istanze non ne portano) |
   | mesh di un campo | 26 | 18 (terra e bordo: da 9 scatole a una mesh) |
 
-  Il costo *per tipo* (la prima volta) è quello di prima: 0,1–2,9 ms, 22–24 ms per tutti i tipi in fila, di cui **~10 ms** sono i fantasmi degli 11 edifici, costruiti all'avvio.
+  Il costo *per tipo* (la prima volta) è quello di prima: 0,1–2,9 ms, 22–24 ms per tutti i tipi in fila, di cui **~10 ms** erano i fantasmi degli 11 edifici, costruiti all'avvio (oggi un edificio si costruisce quando lo si compra, o nel riscaldamento).
   **Memoria**: 50 pose, 50 rimozioni e 10 fantasmi di fila lasciano piatte le geometrie e le trame in GPU (`renderer.info.memory`: 181 → 181 e 24 → 24; controllo in `integrazione/fattoria3d`).
   **Identici**: le 76 schede del catalogo (`catalogo3d:scheda --gioco fattoria` contro `--senzacache`) sono uguali al pixel, tranne dove una pecora sta in un posto a caso; la terra fusa
   del campo contro le nove scatole sciolte (`--senzacache --senzafondi`) cambia ~230 pixel di bordo nelle carte dei campi.

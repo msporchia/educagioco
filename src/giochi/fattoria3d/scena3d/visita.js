@@ -1,6 +1,6 @@
 // La visita: la stessa tela e gli stessi pezzi del mondo di casa, ma su un motore di SOLA LETTURA costruito da uno snapshot
-// (motore/vicini.js `motoreDiVisita`): niente costruire, niente alberi, niente cartelli di prezzo, niente fantasmi di edifici da
-// comprare. Si cammina e si tocca solo ciò che il vicino offre: la cassa e il banco del mercato, che qui sono due cose in più
+// (motore/vicini.js `motoreDiVisita`): niente costruire, niente alberi, niente cartelli di prezzo.
+// Si cammina e si tocca solo ciò che il vicino offre: la cassa e il banco del mercato, che qui sono due cose in più
 // (non sono pezzi del catalogo: stanno nello snapshot, in `posti`). Non sa le regole: dice alla vista `ui.apriLuogo('cassa' | 'mercato')`.
 // Vedi docs/fattoria3d/vicini.md.
 import * as THREE from 'three'
@@ -11,16 +11,16 @@ import { MISURE_POSTI } from '../dati/vicini.js'
 
 const BADGE_NULLO = { el: { hidden: true }, testo: '', imposta() {}, bestie() {}, metti() {}, togli() {} }
 
-/** I pezzi di una visita: i cartelli di prezzo, di cottura e di uova non ci sono (non sono tuoi), e un edificio non posseduto non compare. */
+/** I pezzi di una visita: i cartelli di cottura e di uova non ci sono (non sono tuoi); gli edifici sono cose come le altre, dove li ha messi il vicino. */
 class PezziVisita extends Pezzi {
   _creaCosa(c) { super._creaCosa(c); this._senzaCartelli(c.id) }
-  _creaEdificio(tipo, mio) { if (!mio) return; super._creaEdificio(tipo, mio); this._senzaCartelli(tipo) }
   _senzaCartelli(id) { const v = this.voci.get(id); if (v) { v.badge?.togli(); v.badge = BADGE_NULLO } }
 }
 
 const STUB_COSTRUZIONE = {
   attivo: false, tratto: null, ultimaCella: null,
   inizia() {}, muovi() {}, rilascia() {}, annullaTrascinamento() {}, pennello() {}, finisciTratto() {}, annulla() {},
+  parcheggiato: false, fotogramma() {}, alzaDito() {}, prendi() {}, tocco() {},
 }
 
 export class Visita extends Mondo3d {

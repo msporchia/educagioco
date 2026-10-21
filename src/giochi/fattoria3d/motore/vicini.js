@@ -234,9 +234,10 @@ export function statoDaSnapshot(f) {
     if (c.bestie) x.bestie = Array.from({ length: c.bestie }, () => ({ fine: ORA_VISITA + 1e9 }))                // al lavoro: niente fame, niente uova da raccogliere
     return x
   })
+  for (const e of f.edifici) cose.push({ id: cose.length + 1, tipo: e.tipo, i: e.i, j: e.j })          // gli edifici stanno dove dice lo snapshot
   return {
     v: VERSIONE_STATO, lotti, strade: f.strade, cose,
-    posseduti: Object.fromEntries(f.edifici.map(t => [t, true])),
+    posseduti: Object.fromEntries(f.edifici.map(e => [e.tipo, true])),
     tagliati: lottiTuoi.flatMap(l => generaLotto(l.a, l.b).alberi.map(a => a.n)),
     ostacoli: lottiTuoi.flatMap(l => generaLotto(l.a, l.b).ostacoli.map(o => o.id)),
   }
@@ -261,8 +262,7 @@ const SCELTE = 3
 function postoLibero(motore, strade, nome) {
   const { w, d } = MISURE_POSTI[nome], base = nome === 'cassa' ? POSTO_CASSA : POSTO_MERCATO
   const preso = new Set([...stradeDiSerie(), ...strade.map(id => { const c = cellaDaId(id); return c ? chiave(c[0], c[1]) : -1 })])
-  for (const c of motore.s.cose) { const m = PEZZI[c.tipo]; if (m) for (let a = 0; a < m.w; a++) for (let b = 0; b < m.d; b++) preso.add(chiave(c.i + a, c.j + b)) }
-  for (const t of Object.keys(EDIFICI)) { const e = EDIFICI[t]; for (let a = 0; a < e.w; a++) for (let b = 0; b < e.d; b++) preso.add(chiave(e.slot.i + a, e.slot.j + b)) }
+  for (const c of motore.s.cose) { const m = motore.misure(c.tipo); if (m) for (let a = 0; a < m.w; a++) for (let b = 0; b < m.d; b++) preso.add(chiave(c.i + a, c.j + b)) }       // anche gli edifici sono cose
   const libero = (i, j) => { for (let a = 0; a < w; a++) for (let b = 0; b < d; b++) if (!dentro(i + a, j + b) || !motore.cellaPropria(i + a, j + b) || preso.has(chiave(i + a, j + b))) return false; return true }
   const celle = []
   for (let i = -6; i < 6; i++) for (let j = 0; j < 8; j++) celle.push([i, j, Math.hypot(i - base.i, j - base.j)])
@@ -285,7 +285,7 @@ export function esportaLaMiaFattoria(motore, chi = {}) {
   const alti = [...raccolti].sort((a, b) => peso(b) - peso(a)).slice(0, SCELTE)
   const strade = []                                           // le strade disegnate: indici di griglia, come nello stato
   for (const [k, v] of motore.strada) if (v === 1) { const c = cellaDa(k); strade.push(idCella(c[0], c[1])) }
-  const cose = s.cose.filter(c => PEZZI[c.tipo]).map(c => {
+  const cose = s.cose.filter(c => PEZZI[c.tipo]).map(c => {          // gli edifici vanno a parte (`edifici`)
     const x = { tipo: c.tipo, i: c.i, j: c.j }
     if (c.tipo === 'campo') {
       const cr = motore.crescita(c).filter(v => v >= 0)
@@ -299,7 +299,7 @@ export function esportaLaMiaFattoria(motore, chi = {}) {
   const baratti = alti.map(k => ({ k, n: 4, premio: premioMassimo(k, 4), da: null }))
   const grezzo = {
     v: VERSIONE_VISITA, id: chi.id, nome: chi.nome, proprietario: chi.proprietario, tema: 'misto', liv,
-    storia: [], lotti: Object.keys(s.lotti), edifici: Object.keys(s.posseduti).filter(t => s.posseduti[t] && EDIFICI[t]),
+    storia: [], lotti: Object.keys(s.lotti), edifici: s.cose.filter(c => EDIFICI[c.tipo]).map(c => ({ tipo: c.tipo, i: c.i, j: c.j })),
     cose, strade,
     posti: { cassa: postoLibero(motore, strade, 'cassa'), mercato: postoLibero(motore, strade, 'mercato') },
     mercato: { vende: vendibili.map(k => ({ k, n: 3, prezzo: prezzoPer(k, 1.2) })), compra: baratti, rinnovoMs: RINNOVO_MERCATO_MS },

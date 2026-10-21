@@ -66,6 +66,7 @@ const STELLE = Array.from({ length: 8 }, (_, i) => ({ dx: Math.round(Math.cos(i 
                 <span class="em" aria-hidden="true">{{ o.cliente.emoji }}</span>
                 <b class="stella">+{{ o.premio }} ⭐</b>
                 <span v-if="o.pronto" class="spunta" aria-hidden="true">✓</span>
+                <i v-else-if="o.senzaMacchina.length" class="f3-esclama" data-f3="ordine-esclama" aria-label="serve una macchina">!</i>
               </button>
             </Transition>
             <span v-if="festa && festa.idx === o.idx" :key="festa.via" class="f3-bac-festa" aria-hidden="true">
@@ -89,6 +90,9 @@ const STELLE = Array.from({ length: 8 }, (_, i) => ({ dx: Math.round(Math.cos(i 
                 <small v-else>{{ c.ha }}/{{ c.n }}</small>
               </div>
             </div>
+            <p v-for="mc in scelto.senzaMacchina" :key="mc.tipo" class="f3-bac-serve" data-f3="ordine-serve" :data-macchina="mc.tipo">
+              <i class="f3-esclama" aria-hidden="true">!</i> Serve {{ mc.art }} {{ mc.nome }} <span class="em" aria-hidden="true">{{ mc.emoji }}</span>
+            </p>
             <!-- aria-disabled e non disabled: un tasto spento non si tocca, e toccarlo deve dire cosa manca -->
             <button type="button" class="consegna" :class="{ spenta: !scelto.pronto }" :aria-disabled="!scelto.pronto" :data-puoi="scelto.pronto"
                     data-f3="consegna" @click="consegna(scelto)"><span aria-hidden="true">🚜</span> Consegna</button>

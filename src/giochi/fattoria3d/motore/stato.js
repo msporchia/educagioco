@@ -1,8 +1,8 @@
 /* Lo stato che si salva (in profile.campagne.fattoria3d.cfg.stato) e come si rimette in forma quando si legge: un salvataggio
    di ieri non ha bisogno di migrazioni, i campi che mancano si riempiono. Dato + funzioni pure. */
-import { LOTTI_INIZIALI, PEZZO_DI_PARTENZA, lottoPerId } from '../dati/mondo.js'
+import { LOTTI_INIZIALI, PEZZO_DI_PARTENZA, POSTI_STORICI, lottoPerId } from '../dati/mondo.js'
 import { CHIAVI_COLTURE, TESSERE } from '../dati/colture.js'
-import { TIPI_DI_EDIFICIO } from '../dati/catalogo.js'
+import { TIPI_DI_EDIFICIO, EDIFICI, PEZZI } from '../dati/catalogo.js'
 import { TIPI_DI_MACCHINA, MACCHINE, RICETTE, nuovoId } from '../dati/ricette.js'
 import { ANIMALI } from '../dati/animali.js'
 import { POSTI } from '../dati/ordini.js'
@@ -23,7 +23,10 @@ const LANA_DEL_SEGNAPOSTO = 2     // il premio della cassa del segnaposto di pri
 //    di prima (`MERCI_VECCHIE`) nelle scorte, nelle code e nei pronti, negli ordini aperti e nello stato dei vicini, un pezzo per un pezzo
 // 8: il mondo senza confini: i lotti `a_b` hanno coordinate intere qualunque; gli id di strade, sassi e alberi valgono una cella (nei lotti storici
 //    come prima, fuori la chiave impacchettata di dati/mondo.js). Niente da tradurre: un v7 si legge uguale
-export const VERSIONE_STATO = 8
+// 9: gli edifici sono pezzi liberi (docs/fattoria3d/edifici-liberi.md): uno posseduto sta in `cose` come `{ id, tipo: 'mulino', i, j }`, uno
+//    comprato e non messo nel `magazzino` (al massimo uno); `posseduti[tipo]` vuol dire «è in mappa» e `normalizza` lo rifà dalle cose.
+//    Un v8 con un edificio comprato lo ritrova dov'era il suo posto fisso (`POSTI_STORICI`), con la coda, i pronti e la stiva com'erano
+export const VERSIONE_STATO = 9
 
 const vuote = () => Object.fromEntries(CHIAVI_COLTURE.map(k => [k, 0]))
 
@@ -77,7 +80,6 @@ export function normalizza(letto) {
   }
   s.lana = numero(letto.lana)
   s.esperienza = numero(letto.esperienza)
-  for (const t of TIPI_DI_EDIFICIO) s.posseduti[t] = !!oggetto(letto.posseduti)[t]
   const lotti = oggetto(letto.lotti)
   s.lotti = Object.keys(lotti).length ? Object.fromEntries(Object.entries(lotti).filter(([k, v]) => v && lottoPerId(k)).map(([k]) => [k, true])) : s.lotti
   s.strade = Array.isArray(letto.strade) ? letto.strade.filter(Number.isInteger) : []
@@ -86,7 +88,9 @@ export function normalizza(letto) {
   s.ostacoli = Array.isArray(letto.ostacoli) ? [...new Set(letto.ostacoli.filter(Number.isInteger))] : []
   if (Array.isArray(letto.cose)) {
     let id = 1
-    s.cose = letto.cose.filter(c => c && typeof c.tipo === 'string' && Number.isInteger(c.i) && Number.isInteger(c.j)).map(c => {
+    const edificiVisti = new Set()                 // un edificio è uno per tipo: il secondo si butta
+    s.cose = letto.cose.filter(c => c && (PEZZI[c.tipo] || EDIFICI[c.tipo]) && Number.isInteger(c.i) && Number.isInteger(c.j)
+      && !(EDIFICI[c.tipo] && (edificiVisti.has(c.tipo) || !edificiVisti.add(c.tipo)))).map(c => {
       const x = { id: Number.isInteger(c.id) && c.id >= id ? c.id : id, tipo: c.tipo, i: c.i, j: c.j }
       id = x.id + 1
       if (c.tipo === 'campo') {
@@ -101,6 +105,14 @@ export function normalizza(letto) {
       return x
     })
     s.prossimoId = s.cose.reduce((m, c) => Math.max(m, c.id), 0) + 1
+  }
+  // gli edifici: in mappa se c'è la cosa; un v8 (o un v9 guasto) con `posseduti[tipo]` e nessuna cosa lo mette al suo posto di una volta;
+  // uno nel magazzino (comprato, non messo) è al più uno e non è in mappa
+  for (const t of TIPI_DI_EDIFICIO) {
+    if (s.cose.some(c => c.tipo === t)) delete s.magazzino[t]
+    else if (s.magazzino[t]) s.magazzino[t] = 1
+    else if (oggetto(letto.posseduti)[t]) s.cose.push({ id: s.prossimoId++, tipo: t, i: POSTI_STORICI[t].i, j: POSTI_STORICI[t].j })
+    s.posseduti[t] = s.cose.some(c => c.tipo === t)
   }
   // le macchine: un v1 aveva solo `pasticceria` in radice. Un v6 aveva altre ricette: ogni cosa in forno o pronta diventa il suo cugino di
   // oggi (`nuovoId`); se il cugino sta in un'altra macchina (il pane, che era della pasticceria) arriva subito in dispensa, se no resta

@@ -9,6 +9,7 @@ import { mat, FORME, creaFienile, creaCasa } from './modelli.js'
 import { geometriaCespuglio } from './dal-sotterraneo.js'
 import { LOTTO, FISSI, lotto, lottoDi, cellaDa } from '../dati/mondo.js'
 import { mescola, sequenza } from '../dati/semi.js'
+import { materialeAcqua, uTAcqua } from './modelli-acqua.js'
 
 const ZERO = new THREE.Matrix4().makeScale(0, 0, 0)
 
@@ -218,16 +219,7 @@ export class Terreno {
   // ── i laghetti: una lastra azzurra per ogni cella d'acqua con un po' di riva di terra chiara sotto, canne sulla riva e ninfee sull'acqua.
   // Un secondo materiale economico, senza ombra e senza luci in più; la superficie luccica col tempo nello shader. ──
   _acqua() {
-    const materiale = new THREE.MeshStandardMaterial({ color: 0x4ba6d6, transparent: true, opacity: 0.84, roughness: 0.3, depthWrite: false })
-    materiale.onBeforeCompile = sh => {
-      sh.uniforms.uT = this.vento.uT
-      sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec2 vWP;')
-        .replace('#include <begin_vertex>', '#include <begin_vertex>\nvWP = (modelMatrix * instanceMatrix * vec4(position, 1.0)).xz;')
-      sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying vec2 vWP;\nuniform float uT;')
-        .replace('#include <color_fragment>', `#include <color_fragment>
-          float onda = sin(vWP.x * 2.6 + uT * 1.3) * sin(vWP.y * 2.9 - uT * 1.1) + 0.5 * sin((vWP.x + vWP.y) * 4.1 + uT * 2.0);
-          diffuseColor.rgb += vec3(0.05, 0.08, 0.10) * onda;`)
-    }
+    const materiale = materialeAcqua()                // lo stesso materiale degli stagni costruiti (scena3d/modelli-acqua.js)
     this.lastra = new THREE.InstancedMesh(new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2), materiale, CAPACITA.acqua)
     this.riva = new THREE.InstancedMesh(new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2), new THREE.MeshStandardMaterial({ map: this.sabbia, roughness: 1 }), CAPACITA.acqua)
     const lama = (h, ang, dx) => new THREE.ConeGeometry(0.035, h, 4).translate(0, h / 2, 0).rotateZ(0.08).rotateY(ang).translate(dx, 0, 0).toNonIndexed()
@@ -315,7 +307,7 @@ export class Terreno {
 
   /** `fx`: gli effetti, per il fumo del camino (di tanto in tanto, piano). */
   muovi(dt, fx = null) {
-    this.tempo += dt; this.vento.uT.value = this.tempo
+    this.tempo += dt; this.vento.uT.value = this.tempo; uTAcqua.value = this.tempo
     if (fx && this.fumi.length && this.tempo - this.tFumo > 0.9) { this.tFumo = this.tempo; for (const p of this.fumi) fx.fumata(p) }
   }
 

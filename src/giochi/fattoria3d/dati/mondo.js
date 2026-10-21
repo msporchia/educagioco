@@ -46,7 +46,7 @@ export function lottoPerId(id) {
 }
 export const vicinoDi = (l, da, db) => lotto(l.a + da, l.b + db)
 export const VICINI_4 = [[1, 0], [-1, 0], [0, 1], [0, -1]]
-/** I lotti che un rettangolo di celle tocca (per i posti degli edifici: servono tutti tuoi per comprarli) */
+/** I lotti che un rettangolo di celle tocca (per gli snapshot dei vicini: i lotti di un edificio sono suoi) */
 export function lottiDelPosto(i, j, w, d) {
   const out = new Map()
   for (let a = 0; a < w; a++) for (let b = 0; b < d; b++) { const l = lottoDi(i + a, j + b); out.set(l.id, l) }
@@ -63,6 +63,15 @@ for (let b = 2; b <= 4; b++) for (let a = 2; a <= 4; a++) LOTTI_INIZIALI[a + '_'
 export const PARTENZA = { x: 0.5, z: 5.5 }                      // dove sta l'eroe all'inizio
 export const PEZZO_DI_PARTENZA = { tipo: 'campo', i: -5, j: 0 }  // un campo vuoto, per cominciare subito
 
+// I posti di prima degli edifici unici (angolo in alto a sinistra): oggi gli edifici si mettono dove si vuole, ma questi servono a
+// tre cose sole: rileggere un salvataggio vecchio (un edificio già comprato sta dove stava), tenere uguali gli alberi e i sassi dei 42
+// lotti storici (i numeri sono chiavi di salvataggio) e il posto di partenza dei villaggi. Non si cambiano. docs/fattoria3d/edifici-liberi.md
+export const POSTI_STORICI = {
+  pasticceria:   { i: -6, j: -4 }, mongolfiera: { i: 2, j: -4 }, mulino: { i: -2, j: -7 }, panificio: { i: -5, j: -7 },
+  conserviera:   { i: 2, j: -7 },  gelateria: { i: -9, j: 0 },   caseificio: { i: 6, j: -3 }, telaio: { i: -9, j: -4 },
+  zuccherificio: { i: 6, j: 4 },   sartoria: { i: 6, j: 0 },     tintoria: { i: -9, j: 4 },
+}
+
 // ciò che c'è sempre e non si sposta: due edifici di scena (non si comprano, ingombrano soltanto)
 export const FISSI = [
   { tipo: 'fienile', i: -9, j: -9, w: 4, d: 3 },
@@ -77,12 +86,12 @@ export function stradeDiSerie() {
   return out
 }
 
-// dove non nasce nessun albero: le strade, i posti degli edifici unici, il campo di partenza e la partenza dell'eroe (chiavi di cella).
-// `tipi`: quali edifici contare (gli alberi storici si generano con i primi due soli, perché i numeri non cambino: vedi alberi.js)
-export function celleRiservate(tipi = Object.keys(EDIFICI)) {
+// dove non nasce nessun albero nei lotti storici: le strade, i posti di prima degli edifici, il campo di partenza e la partenza dell'eroe
+// (chiavi di cella). `tipi`: quali posti contare (gli alberi storici si generano con i primi due soli, perché i numeri non cambino: vedi alberi.js)
+export function celleRiservate(tipi = Object.keys(POSTI_STORICI)) {
   const r = new Set(stradeDiSerie())
   const rette = [
-    ...tipi.map(t => EDIFICI[t]).map(e => [e.slot.i, e.slot.j, e.w, e.d]),
+    ...tipi.map(t => [POSTI_STORICI[t].i, POSTI_STORICI[t].j, EDIFICI[t].w, EDIFICI[t].d]),
     [PEZZO_DI_PARTENZA.i, PEZZO_DI_PARTENZA.j, 2, 2],
     [-3, 3, 6, 5],
   ]
@@ -100,9 +109,11 @@ export function guastiDelMondo() {
   if (!proprio(Math.floor(PARTENZA.x), Math.floor(PARTENZA.z))) g.push('l\'eroe parte fuori dal terreno suo')
   const strade = stradeDiSerie()
   for (const [tipo, e] of Object.entries(EDIFICI)) {
+    if (!POSTI_STORICI[tipo]) { g.push(`${tipo}: manca il posto di prima`); continue }
+    const slot = POSTI_STORICI[tipo]
     let fuori = false
     for (let a = 0; a < e.w; a++) for (let b = 0; b < e.d; b++) {
-      const i = e.slot.i + a, j = e.slot.j + b
+      const i = slot.i + a, j = slot.j + b
       if (!nelRettangolo(i, j)) fuori = true
       else if (strade.has(chiave(i, j))) g.push(`${tipo}: il posto è sopra una strada di serie`)
       if (FISSI.some(f => i >= f.i && i < f.i + f.w && j >= f.j && j < f.j + f.d)) g.push(`${tipo}: il posto è sopra ${FISSI.find(f => i >= f.i && i < f.i + f.w && j >= f.j && j < f.j + f.d).tipo}`)
@@ -112,6 +123,11 @@ export function guastiDelMondo() {
   }
   for (const f of FISSI) for (let a = 0; a < f.w; a++) for (let b = 0; b < f.d; b++) {
     if (!nelRettangolo(f.i + a, f.j + b)) g.push(`${f.tipo}: esce dai lotti storici`)
+  }
+  const t = Object.entries(POSTI_STORICI)
+  for (let a = 0; a < t.length; a++) for (let b = a + 1; b < t.length; b++) {
+    const [ka, x] = t[a], [kb, y] = t[b], A = EDIFICI[ka], B = EDIFICI[kb]
+    if (x.i < y.i + B.w && y.i < x.i + A.w && x.j < y.j + B.d && y.j < x.j + A.d) g.push(`${ka} e ${kb}: i posti di prima si sovrappongono`)
   }
   for (const [i, j] of [[0, 0], [-14, -12], [13, 11], [-30, 40], [-1000, 999]]) {
     const c = cellaDaId(idCella(i, j))

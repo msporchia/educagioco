@@ -14,6 +14,7 @@ import {
 import { creaZuccherificio, creaTelaio, creaSartoria, creaTintoria } from '../../../src/giochi/fattoria3d/scena3d/modelli-macchine.js'
 import { creaContadino, creaCane, posaCane, creaGatto, posaGatto } from '../../../src/giochi/fattoria3d/scena3d/modelli-compagni.js'
 import { creaPonte, creaPasserella, creaTavolo } from '../../../src/giochi/fattoria3d/scena3d/modelli-passaggi.js'
+import { creaStagno } from '../../../src/giochi/fattoria3d/scena3d/modelli-acqua.js'
 import { geometriaCespuglio } from '../../../src/giochi/fattoria3d/scena3d/dal-sotterraneo.js'
 import { PEZZI, EDIFICI } from '../../../src/giochi/fattoria3d/dati/catalogo.js'
 import { COLTURE } from '../../../src/giochi/fattoria3d/dati/colture.js'
@@ -34,9 +35,10 @@ const MCO = 'src/giochi/fattoria3d/scena3d/modelli-colture.js'
 const T = 'src/giochi/fattoria3d/scena3d/terreno.js'
 const D = 'src/giochi/fattoria3d/scena3d/dal-sotterraneo.js'      // le copie adattate dei modelli del Sotterraneo (docs/fattoria3d/scena.md)
 const MP = 'src/giochi/fattoria3d/scena3d/modelli-passaggi.js'
+const MA = 'src/giochi/fattoria3d/scena3d/modelli-acqua.js'
 
 const pezzo = t => `pezzo del vassoio, livello ${PEZZI[t].liv}, ${PEZZI[t].w}×${PEZZI[t].d} celle`
-const unico = t => `edificio unico al posto ${EDIFICI[t].slot.i},${EDIFICI[t].slot.j}, livello ${EDIFICI[t].liv} (fantasma finché non si compra)`
+const unico = t => `edificio unico, si mette dove si vuole nel terreno proprio (menu Costruisci, scheda Edifici), livello ${EDIFICI[t].liv}`
 const celle = d => `${d.w}×${d.d}`
 const CRESCITE = [0.75, 1, 0.2, 0.45]    // le tessere: dietro a sinistra, dietro a destra, davanti a sinistra, davanti a destra
 const FINE = Date.now() - 1000          // «pronta»: la gallina mostra l'uovo, la mucca il secchio
@@ -97,6 +99,8 @@ export const VOCI = [
   // preso dal Sotterraneo 3D e rifatto con i materiali della fattoria (docs/fattoria3d/scena.md): la voce del sotterraneo è `sot:kit:ponte-arco` / `sot:props:tavolo`
   { id: 'fattoria:ponte', nome: 'Ponte ad arco', gioco: 'entrambi', categoria: 'prop', dove: pezzo('ponte') + ', calpestabile (gobba alta ' + PEZZI.ponte.alzato[1] + '), conta come strada; dal ponte ad arco del mondo di sopra del sotterraneo', file: `${MP}:creaPonte`, misure: celle(PEZZI.ponte), crea: () => creaPonte() },
   { id: 'fattoria:passerella', nome: 'Passerella di assi', gioco: 'entrambi', categoria: 'prop', dove: pezzo('passerella') + ', calpestabile, conta come strada; dalla passerella di corde del mondo di sopra del sotterraneo', file: `${MP}:creaPasserella`, misure: celle(PEZZI.passerella), crea: () => creaPasserella() },
+  { id: 'fattoria:stagno-costruito', nome: 'Stagno', gioco: 'fattoria', categoria: 'prop', dove: pezzo('stagno') + ', decori; tutto acqua (non si cammina), solo un ponte o una passerella ci sta sopra; lo stesso materiale dell\'acqua dei lotti laghetto', file: `${MA}:creaStagno`, misure: celle(PEZZI.stagno), crea: () => creaStagno(PEZZI.stagno.w, PEZZI.stagno.d) },
+  { id: 'fattoria:laghetto-costruito', nome: 'Laghetto', gioco: 'fattoria', categoria: 'prop', dove: pezzo('laghetto') + ', decori; lo stesso disegno dello stagno, più grande', file: `${MA}:creaStagno`, misure: celle(PEZZI.laghetto), crea: () => creaStagno(PEZZI.laghetto.w, PEZZI.laghetto.d) },
   { id: 'fattoria:tavolo', nome: 'Tavolo con le panche', gioco: 'entrambi', categoria: 'prop', dove: pezzo('tavolo') + '; dal tavolo con le panche delle città del sotterraneo', file: `${MP}:creaTavolo`, misure: celle(PEZZI.tavolo), crea: () => creaTavolo() },
   { id: 'fattoria:segnaposto', nome: 'Segnaposto grigio', gioco: 'fattoria', categoria: 'altro', dove: 'ripiego: lo mostra la scena per un tipo di pezzo senza disegno (pezzi.js, modelloDi)', file: `${M}:creaSegnaposto`, misure: '2×2', crea: () => creaSegnaposto(2, 2) },
 
@@ -164,7 +168,7 @@ export const VOCI = [
     crea: () => mesh(new THREE.IcosahedronGeometry(0.4, 0), mat(new THREE.Color().setHSL(0.3, 0.55, 0.32).getHex()), 0, 0.28, 0, 1.15, 0.85, 1.15) },
   { id: 'fattoria:sasso', nome: 'Sasso', gioco: 'fattoria', categoria: 'prop', dove: 'ostacolo nei lotti, si toglie toccandolo (terreno.js, _ostacoli)', file: `${T}:_ostacoli`, misure: '1×1',
     crea: () => mesh(new THREE.IcosahedronGeometry(0.32, 0), mat(new THREE.Color().setHSL(0.1, 0.05, 0.57).getHex()), 0, 0.15, 0, 1.1, 0.75, 1) },
-  { id: 'fattoria:stagno', nome: 'Stagno (laghetto)', gioco: 'fattoria', categoria: 'prop', dove: 'i lotti laghetto (dati/biomi.js): lastra azzurra per cella d\'acqua su una riva chiara, con ninfee e canne; ponte e passerella lo attraversano (terreno.js, _acqua)', file: `${T}:_acqua`, misure: '2×2',
+  { id: 'fattoria:stagno', nome: 'Lago del lotto (laghetto naturale)', gioco: 'fattoria', categoria: 'prop', dove: 'i lotti laghetto (dati/biomi.js): lastra azzurra per cella d\'acqua su una riva chiara, con ninfee e canne; ponte e passerella lo attraversano (terreno.js, _acqua)', file: `${T}:_acqua`, misure: '2×2',
     crea: () => {
       const g = new THREE.Group(), piano = new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2)
       for (const [x, z] of [[-0.5, -0.5], [0.5, -0.5], [-0.5, 0.5], [0.5, 0.5]]) {

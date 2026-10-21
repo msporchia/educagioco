@@ -6,7 +6,7 @@ import { PEZZI, EDIFICI, CATEGORIE } from './catalogo.js'
 import { livelloDelPezzo } from './livelli.js'
 import { COSTI } from './regole.js'
 
-/** carta → pezzo dell'atlante 2D (gli id dei salvataggi restano: `pasticceria` è il Pastificio, `conserviera` la Cucina). Mancano passerella e trattore (e la strada e la gomma): lì c'è l'emoji. */
+/** carta → pezzo dell'atlante 2D (gli id dei salvataggi restano: `pasticceria` è il Pastificio, `conserviera` la Cucina). Mancano passerella, trattore, stagno e laghetto (e la strada e la gomma): lì c'è l'emoji. */
 export const DISEGNI = {
   campo: 'campo_vuoto', recinto: 'recinto_pecore_calmo', pollaio: 'recinto_galline_calmo', stalla: 'recinto_mucche_calmo',
   bancarella: 'bancarella', bacheca: 'cartello', aiuola: 'fioriera_mista', panchina: 'panchina', fontana: 'fontana0', pozzo: 'pozzo_giardino0',
@@ -23,8 +23,9 @@ export const STRUMENTI = {
 
 /**
  * Le carte di una scheda. `stato`: { livello, prezzoPezzo(tipo), nelMagazzino(tipo), posseduti: { edificio: true } }.
- * Ogni carta: { id, genere: 'pezzo' | 'edificio' | 'strumento', nome, emoji, disegno, etichetta, liv, bloccata }. Un edificio già
- * comprato non si offre; i pezzi, anche quelli già nel magazzino (`📦 ×N`, si mettono senza pagare).
+ * Ogni carta: { id, genere: 'pezzo' | 'edificio' | 'strumento', nome, emoji, disegno, etichetta, liv, bloccata, segnala }. Un edificio già
+ * in mappa non si offre (uno per tipo); i pezzi e gli edifici già nel magazzino sì (`📦 ×N`, si mettono senza pagare). `segnala` è il
+ * «!»: un edificio che il livello ha aperto e non è ancora in mappa (mai per un pezzo, mai per una carta chiusa).
  */
 export function carteDi(categoria, stato) {
   const carte = []
@@ -32,19 +33,23 @@ export function carteDi(categoria, stato) {
     if (p.categoria !== categoria) continue
     const mag = stato.nelMagazzino(id), liv = livelloDelPezzo(id)
     carte.push({ id, genere: 'pezzo', nome: p.nome, emoji: p.emoji, disegno: DISEGNI[id] || null,
-      etichetta: mag ? '📦 ×' + mag : '🪙 ' + stato.prezzoPezzo(id), liv, bloccata: liv > stato.livello })
+      etichetta: mag ? '📦 ×' + mag : '🪙 ' + stato.prezzoPezzo(id), liv, bloccata: liv > stato.livello, segnala: false })
   }
   for (const [id, e] of Object.entries(EDIFICI)) {
     if (e.categoria !== categoria || stato.posseduti[id]) continue
+    const mag = stato.nelMagazzino(id)
     carte.push({ id, genere: 'edificio', nome: e.nome, emoji: e.emoji, disegno: DISEGNI[id] || null,
-      etichetta: '🪙 ' + e.prezzo, liv: e.liv, bloccata: e.liv > stato.livello })
+      etichetta: mag ? '📦 ×' + mag : '🪙 ' + e.prezzo, liv: e.liv, bloccata: e.liv > stato.livello, segnala: e.liv <= stato.livello })
   }
-  carte.sort((a, b) => a.liv - b.liv || a.nome.localeCompare(b.nome, 'it'))
+  carte.sort((a, b) => (b.segnala ? 1 : 0) - (a.segnala ? 1 : 0) || a.liv - b.liv || a.nome.localeCompare(b.nome, 'it'))      // chi ha il «!» sta in cima
   if (CATEGORIE[categoria] && CATEGORIE[categoria].strumenti) {
     for (const [id, s] of Object.entries(STRUMENTI)) carte.push({ id, genere: 'strumento', nome: s.nome, emoji: s.emoji, disegno: null, etichetta: s.nota, liv: 1, bloccata: false })
   }
   return carte
 }
+
+/** Le schede che hanno una carta con il «!» (una scheda sola per ora: Edifici), per il pallino sulla linguetta e sul tasto 🏗️. */
+export const schedeSegnalate = schede => Object.keys(schede).filter(c => schede[c].some(x => x.segnala))
 
 /** Tutte le schede, nell'ordine di `CATEGORIE`: { campi: [carte], … }. */
 export function schedeDi(stato) {

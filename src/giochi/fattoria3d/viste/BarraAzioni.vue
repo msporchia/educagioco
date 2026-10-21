@@ -1,10 +1,11 @@
 <script setup>
 // Le azioni in basso: libero, semina, raccogli (si armano e poi si toccano i campi) e costruisci. Il numero rosso dice quanti
-// campi aspettano. Non tocca il gioco: dice cosa si vuole con gli `emit`.
+// campi aspettano. Sul tasto Costruisci un «!» pulsante dice che c'è un edificio aperto dal livello e non ancora costruito. Non tocca il gioco: dice cosa si vuole con gli `emit`.
 defineProps({
   modo: { type: String, default: 'libero' },
   seme: { type: String, default: '🌾' },
   daFare: { type: Object, default: () => ({ semina: 0, raccogli: 0 }) },
+  daCostruire: { type: Number, default: 0 },       // quanti edifici il livello ha aperto e non sono in mappa
 })
 defineEmits(['modo', 'semina', 'costruisci'])
 </script>
@@ -20,7 +21,7 @@ defineEmits(['modo', 'semina', 'costruisci'])
       <button :class="{ acceso: modo === 'raccogli' }" data-f3="az-raccogli" @click="$emit('modo', modo === 'raccogli' ? 'libero' : 'raccogli')">
         <span>✂️</span><small>Raccogli</small><em v-if="daFare.raccogli" class="f3-n">{{ daFare.raccogli }}</em>
       </button>
-      <button data-f3="az-costruisci" @click="$emit('costruisci')"><span>🏗</span><small>Costruisci</small></button>
+      <button data-f3="az-costruisci" :data-da-costruire="daCostruire || null" @click="$emit('costruisci')"><span>🏗</span><small>Costruisci</small><i v-if="daCostruire" class="f3-esclama" data-f3="costruisci-esclama" aria-label="c'è un edificio da costruire">!</i></button>
     </div>
   </div>
 </template>

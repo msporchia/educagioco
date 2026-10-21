@@ -1,11 +1,12 @@
-// I pezzi in scena: un gruppo per ogni cosa del motore (e per i due edifici unici), tenuti allineati a quello che il motore dice e
+// I pezzi in scena: un gruppo per ogni cosa del motore (anche gli edifici: sono pezzi liberi), tenuti allineati a quello che il motore dice e
 // animati ogni fotogramma (il grano che cresce, le pecore che vagano, la fontana, il fumo del forno, il pallone che parte).
-// Non sa le regole: legge lo stato e disegna. I cartelli sugli edifici (prezzo, cottura) sono qui.
+// Non sa le regole: legge lo stato e disegna. I cartelli sugli edifici (cottura, casse pronte) sono qui; un edificio non comprato non si vede.
 import * as THREE from 'three'
 import { creaCampo, aggiornaCampo, creaPasticceria, creaMongolfiera, creaBancarella, creaBacheca, creaFontana, creaRecinto, muoviPecore,
-         sincronizzaPecore, fantasma, buttaFantasma, creaPecora, creaGallina, creaMucca, creaMulino, creaPanificio, creaConserviera, creaGelateria, creaAiuola, creaPanchina,
+         sincronizzaPecore, creaPecora, creaGallina, creaMucca, creaMulino, creaPanificio, creaConserviera, creaGelateria, creaAiuola, creaPanchina,
          creaPozzo, creaSpaventapasseri, creaTrattore, creaSegnaposto, creaPollaio, creaStalla, creaCaseificio, sincronizzaBestie, muoviBestie } from './modelli.js'
 import { creaPonte, creaPasserella, creaTavolo } from './modelli-passaggi.js'
+import { creaStagno } from './modelli-acqua.js'
 import { creaZuccherificio, creaTelaio, creaSartoria, creaTintoria } from './modelli-macchine.js'
 import { EDIFICI, PEZZI } from '../dati/catalogo.js'
 import { RICETTE, MACCHINE } from '../dati/ricette.js'
@@ -30,6 +31,8 @@ const CREA = {
   ponte: () => creaPonte(),
   passerella: () => creaPasserella(),
   tavolo: () => creaTavolo(),
+  stagno: () => creaStagno(PEZZI.stagno.w, PEZZI.stagno.d),
+  laghetto: () => creaStagno(PEZZI.laghetto.w, PEZZI.laghetto.d),
 }
 const CREA_EDIFICIO = {
   pasticceria: creaPasticceria, mongolfiera: creaMongolfiera,
@@ -37,7 +40,7 @@ const CREA_EDIFICIO = {
   telaio: creaTelaio, zuccherificio: creaZuccherificio, sartoria: creaSartoria, tintoria: creaTintoria,
 }
 /** Un tipo senza disegno non rompe la scena: una scatola grigia della sua misura. */
-const modelloDi = (tipo, d, c) => (CREA[tipo] ? CREA[tipo](c) : creaSegnaposto(d.w, d.d))
+const modelloDi = (tipo, d, c) => (CREA[tipo] ? CREA[tipo](c) : CREA_EDIFICIO[tipo] ? CREA_EDIFICIO[tipo]() : creaSegnaposto(d.w, d.d))
 
 export const centroDi = (c, d) => new THREE.Vector3(c.i + d.w / 2, 0, c.j + d.d / 2)
 
@@ -50,7 +53,7 @@ export class Pezzi {
     this.sincronizza()
   }
 
-  /** Allinea i gruppi alle cose del motore: ne crea di nuovi, toglie quelli spariti, rifà un edificio appena comprato. */
+  /** Allinea i gruppi alle cose del motore: ne crea di nuovi, toglie quelli spariti. Un edificio è una cosa come le altre. */
   sincronizza() {
     const vivi = new Set()
     for (const c of this.m.cose) {
@@ -59,52 +62,38 @@ export class Pezzi {
       else if (c.pecore) sincronizzaPecore(this.voci.get(c.id).grp, c.pecore)
       else if (c.bestie) sincronizzaBestie(this.voci.get(c.id).grp, c.bestie)
     }
-    for (const tipo of Object.keys(EDIFICI)) {
-      vivi.add(tipo)
-      const mio = !!this.m.s.posseduti[tipo], v = this.voci.get(tipo)
-      if (!v) this._creaEdificio(tipo, mio)
-      else if (v.mio !== mio) { this._togli(tipo); this._creaEdificio(tipo, mio) }
-    }
     for (const id of [...this.voci.keys()]) if (!vivi.has(id)) this._togli(id)
     // ciò che si è mosso: la posizione la dice il motore
-    for (const c of this.m.cose) { const v = this.voci.get(c.id); if (v && !v.nasce) v.grp.position.copy(centroDi(c, PEZZI[c.tipo])) }
+    for (const c of this.m.cose) { const v = this.voci.get(c.id); if (v && !v.nasce) v.grp.position.copy(centroDi(c, v.d)) }
   }
 
   _creaCosa(c) {
-    const d = PEZZI[c.tipo], grp = modelloDi(c.tipo, d, c)
+    const d = this.m.misure(c.tipo), edificio = !!EDIFICI[c.tipo], grp = modelloDi(c.tipo, d, c)
     alleggeriOmbre(grp)
     grp.userData.bersaglio = { kind: 'cosa', id: c.id }
     grp.position.copy(centroDi(c, d)); this.scena.add(grp)
-    this.voci.set(c.id, { id: c.id, kind: 'cosa', c, d, grp, badge: c.bestie || c.pecore ? this.fx.nuovoCartello(() => this.sulCompraBestia && this.sulCompraBestia(c.id), c.tipo) : c.tipo === 'bacheca' ? this.fx.nuovoBadge() : null, anello: null, salto: 0, nasce: undefined, richiamo: null, chiave: '' })
-  }
-  _creaEdificio(tipo, mio) {
-    const e = EDIFICI[tipo], grp = CREA_EDIFICIO[tipo] ? CREA_EDIFICIO[tipo]() : creaSegnaposto(e.w, e.d)
-    if (!mio) fantasma(grp)
-    alleggeriOmbre(grp)
-    grp.userData.bersaglio = { kind: 'edificio', tipo }
-    grp.position.copy(centroDi({ i: e.slot.i, j: e.slot.j }, e)); this.scena.add(grp)
-    this.voci.set(tipo, { id: tipo, kind: 'edificio', tipo, mio, d: e, grp, badge: this.fx.nuovoBadge(), anello: null })
+    const badge = edificio || c.tipo === 'bacheca' ? this.fx.nuovoBadge() : c.bestie || c.pecore ? this.fx.nuovoCartello(() => this.sulCompraBestia && this.sulCompraBestia(c.id), c.tipo) : null
+    this.voci.set(c.id, { id: c.id, kind: 'cosa', edificio, tipo: c.tipo, c, d, grp, badge, anello: null, salto: 0, nasce: undefined, richiamo: null, chiave: '' })
   }
   _togli(id) {
     const v = this.voci.get(id); if (!v) return
     this.scena.remove(v.grp); v.badge?.togli()
-    if (v.kind === 'edificio' && !v.mio) buttaFantasma(v.grp)
     if (v.anello) this.scena.remove(v.anello)
     this.voci.delete(id)
   }
 
   /** I compiti del riscaldamento (scaldo-puro.js): costruire in tempo morto i modelli che servono presto e non sono ancora in scena. I più
       urgenti per primi: il campo, il recinto, il pollaio e la stalla con le loro bestie, poi il resto dei pezzi e dei creatori di
-      bestie. Gli edifici ci sono già tutti (i fantasmi dei non comprati). Una fila di funzioni, ognuna costruisce e butta un'istanza. */
+      bestie, infine gli edifici (non sono in scena finché non si comprano: il primo costruito non deve pagare il modello). Una fila di funzioni, ognuna costruisce e butta un'istanza. */
   compitiScaldo() {
-    const pezzi = ['campo', 'recinto', 'pollaio', 'stalla', 'aiuola', 'panchina', 'pozzo', 'fontana', 'spaventapasseri', 'ponte', 'passerella', 'tavolo', 'bancarella', 'bacheca']
+    const pezzi = ['campo', 'recinto', 'pollaio', 'stalla', 'aiuola', 'panchina', 'pozzo', 'fontana', 'spaventapasseri', 'ponte', 'passerella', 'tavolo', 'bancarella', 'bacheca', 'stagno', 'laghetto']
     const fai = tipo => ({ nome: tipo, fai: () => { if (PEZZI[tipo]) modelloDi(tipo, PEZZI[tipo], tipo === 'recinto' || tipo === 'pollaio' || tipo === 'stalla' ? { pecore: [], bestie: [] } : undefined) } })
     return [...pezzi.slice(0, 4).map(fai), { nome: 'pecora', fai: () => creaPecora() }, { nome: 'gallina', fai: () => { creaGallina(0); creaGallina(1) } },
             { nome: 'mucca', fai: () => { creaMucca(0); creaMucca(1) } }, ...pezzi.slice(4).map(fai), ...Object.keys(EDIFICI).filter(t => CREA_EDIFICIO[t]).map(t => ({ nome: t, fai: () => CREA_EDIFICIO[t]() }))]
   }
 
   /** Il modello di un pezzo di quel tipo, per il fantasma di chi lo sta trascinando. */
-  modello(tipo, c) { return modelloDi(tipo, PEZZI[tipo], c) }
+  modello(tipo, c) { return modelloDi(tipo, this.m.misure(tipo), c) }
 
   /** Il modello per l'anteprima del menu (anteprime.js): un pezzo o un edificio, disposto com'è «a regime» — il campo maturo, il
       recinto con due pecore, pollaio e stalla con due bestie. Fermo a un istante: niente animazione. */
@@ -128,8 +117,8 @@ export class Pezzi {
   gruppi() { return [...this.voci.values()].map(v => v.grp) }
   voce(id) { return this.voci.get(id) }
   centroDi(bersaglio) {
-    const v = this.voci.get(bersaglio.kind === 'cosa' ? bersaglio.id : bersaglio.tipo)
-    return centroDi(bersaglio.kind === 'cosa' ? v.c : { i: v.d.slot.i, j: v.d.slot.j }, v.d)
+    const c = bersaglio.kind === 'cosa' ? this.voci.get(bersaglio.id).c : this.m.cosaDi(bersaglio.tipo)      // `{ kind: 'edificio', tipo }`: l'edificio di quel tipo
+    return centroDi(c, this.m.misure(c.tipo))
   }
 
   /** L'anello giallo attorno a ciò che è in coda: sta sul terreno, non gira per lo schermo. */
@@ -147,8 +136,9 @@ export class Pezzi {
     const adesso = this.m.ora()
     for (const v of this.voci.values()) {
       const g = v.grp
-      if (v.kind === 'cosa') this._cosa(v, g, dt, tt, adesso)
-      else this._edificio(v, g, dt, tt, adesso)
+      this._nasceESalta(v, g, dt)
+      if (v.edificio) this._edificio(v, g, dt, tt, adesso)
+      else this._cosa(v, g, dt, tt, adesso)
       if (v.badge && !v.badge.el.hidden && g.visible) {
         const [x, y, visto] = this.vista.proietta(g.position, g.userData.altezza || 1.6)
         v.badge.metti(x, y, visto)
@@ -156,14 +146,18 @@ export class Pezzi {
     }
   }
 
-  _cosa(v, g, dt, tt, adesso) {
-    const c = v.c
+  /** Il rimbalzo di un pezzo appena messo e il saltello di un tocco: per ogni cosa, edifici compresi. */
+  _nasceESalta(v, g, dt) {
     if (v.nasce !== undefined) {
       v.nasce = Math.min(1, v.nasce + dt * 3); const s = 1 + Math.sin(v.nasce * Math.PI) * 0.15
       g.scale.setScalar(Math.max(0.01, v.nasce * s))
       if (v.nasce >= 1) { g.scale.setScalar(1); v.nasce = undefined }
     }
     if (v.salto) { v.salto -= dt * 1.2; g.position.y = Math.max(0, Math.sin(v.salto * Math.PI * 2)) * 0.18; if (v.salto <= 0) { v.salto = 0; g.position.y = 0 } }
+  }
+
+  _cosa(v, g, dt, tt, adesso) {
+    const c = v.c
     if (c.tipo === 'campo') {
       const cr = this.m.crescita(c), chiave = cr.map(x => x.toFixed(2)).join(), col = c.coltura || 'grano'
       if (this.q.vento || chiave !== v.chiave) { v.chiave = chiave; aggiornaCampo(g, cr, tt, col, this.q.vento) }
@@ -200,11 +194,7 @@ export class Pezzi {
   }
 
   _edificio(v, g, dt, tt, adesso) {
-    const s = this.m.s, e = v.d
-    if (!v.mio) {
-      const chiuso = e.liv > this.m.livello()                                   // un fantasma dice il prezzo, o il livello a cui arriva
-      v.badge.imposta(chiuso ? `🔒 Livello ${e.liv} · ${e.nome}` : `🪙 ${e.prezzo} · ${e.nome}`, chiuso ? 'chiuso' : 'vendita'); return
-    }
+    const s = this.m.s
     if (MACCHINE[v.tipo]) {
       // ogni macchina: pronti da ritirare, oppure la cottura in corso e i posti occupati
       const Q = s.macchine[v.tipo], posti = MACCHINE[v.tipo].posti

@@ -72,7 +72,7 @@ ordine = { id, cliente: 'nonna', chiede: { grano: 2, pane: 1 }, premio: 7, liv: 
 ## Per la vista
 
 - `ordini()` → un elemento per posto, `[]` a banco chiuso (`bancoAperto()`):
-  - ordine: `{ idx, id, cliente: { id, nome, emoji }, chiede: [{ k, n, nome, emoji, ha, manca, prodotto }], premio, liv, tipo, pronto }`;
+  - ordine: `{ idx, id, cliente: { id, nome, emoji }, chiede: [{ k, n, nome, emoji, ha, manca, prodotto }], premio, liv, tipo, pronto, senzaMacchina: [{ tipo, nome, art, emoji }] }` (`senzaMacchina`: le macchine che l'ordine vuole e non hai in mappa; il biglietto mostra un «!» e il dettaglio «Serve il Panificio»: [edifici-liberi.md](edifici-liberi.md));
   - posto che riposa: `{ idx, attesa: true, restoMs }`.
 - `consegna(idx)` / `rifiuta(idx)` / `cambia(idx)` → `{ ok, … }` o `{ ok: false, motivo }`; `mancanoPerOrdine(idx)`.
 - Eventi (`prendiEventi()`): `consegna` (`cliente`, `premio`, `chiede`), `rifiuto`, `livello` se si sale.

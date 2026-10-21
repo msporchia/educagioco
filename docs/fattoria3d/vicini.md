@@ -95,7 +95,8 @@ scorda da sé). Lo stato della fattoria (`VERSIONE_STATO`) **non è stato toccat
 `soloLettura = true`. Così terreno, pezzi, eroe, telecamera e dito sono gli stessi del mondo di casa, ma:
 
 - niente costruire, niente alberi né sassi da togliere (dentro la sua terra non ce ne sono), niente prezzi sui lotti, niente
-  fantasmi di edifici da comprare né cartelli di cottura o di uova (`PezziVisita` toglie i cartelli e salta gli edifici non suoi);
+  cartelli di cottura o di uova (`PezziVisita` toglie i cartelli); gli edifici del vicino stanno dove dice lo snapshot (`edifici: [{ tipo, i, j }]`,
+  o solo il nome, al suo posto di una volta: [edifici-liberi.md](edifici-liberi.md));
 - il dito lungo e il pennello non fanno niente (`costruzione` è un finto che non fa niente); un tocco sulla terra fa camminare l'eroe;
 - la **cassa** e il **banco del mercato** sono due cose in più (modelli `creaCassa` e `creaBancarella`), nei `posti` dello
   snapshot, non pezzi del catalogo: toccarli fa camminare l'eroe fin lì e apre il foglio (`ui.apriLuogo`). Due tasti in basso

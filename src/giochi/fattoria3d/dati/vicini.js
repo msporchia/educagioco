@@ -8,7 +8,7 @@ import { COLTURE } from './colture.js'
 import { RICETTE, nuovoId } from './ricette.js'
 import { PRODOTTI_ANIMALI } from './animali.js'
 import { PEZZI, EDIFICI } from './catalogo.js'
-import { LOTTI_INIZIALI, lottiDelPosto, lottoDi, lottoPerId, dentro } from './mondo.js'
+import { LOTTI_INIZIALI, POSTI_STORICI, lottiDelPosto, lottoDi, lottoPerId, dentro } from './mondo.js'
 import { livelloDelPezzo, livelloDellaColtura, livelloDellaRicetta } from './livelli.js'
 import { tettoDi } from './ordini.js'
 
@@ -116,6 +116,20 @@ function chiedeInForma(letto) {
   return out
 }
 
+/** Gli edifici di uno snapshot: `{ tipo, i, j }` (la fattoria di un amico li ha dove li ha messi) oppure solo il nome del tipo (i villaggi del
+    computer e gli snapshot di prima): sta al suo posto di una volta (`POSTI_STORICI`). Uno per tipo; ciò che non si conosce si scarta. */
+function edificiInForma(letto) {
+  const out = [], visti = new Set()
+  for (const x of (Array.isArray(letto) ? letto : []).slice(0, 40)) {
+    const o = oggetto(x), t = typeof x === 'string' ? x : o.tipo
+    if (!EDIFICI[t] || visti.has(t)) continue
+    visti.add(t)
+    const libero = Number.isInteger(o.i) && Number.isInteger(o.j) && Math.abs(o.i) <= 40000 && Math.abs(o.j) <= 40000
+    out.push(libero ? { tipo: t, i: o.i, j: o.j } : { tipo: t, ...POSTI_STORICI[t] })
+  }
+  return out
+}
+
 /** Una cella libera per un posto (cassa o mercato): quella detta se sta dentro i lotti, se no la prima vicina all'ingresso. */
 function postoInForma(letto, d, lotti) {
   const l = oggetto(letto)
@@ -136,8 +150,8 @@ export function normalizzaFattoriaVisitabile(letto) {
     const p = oggetto(l.proprietario)
     const lotti = { ...LOTTI_INIZIALI }
     for (const id of (Array.isArray(l.lotti) ? l.lotti : []).slice(0, 400)) { const lo = lottoPerId(id); if (lo) lotti[lo.id] = true }
-    const edifici = [...new Set(Array.isArray(l.edifici) ? l.edifici.filter(t => EDIFICI[t]) : [])]
-    for (const t of edifici) for (const lo of lottiDelPosto(EDIFICI[t].slot.i, EDIFICI[t].slot.j, EDIFICI[t].w, EDIFICI[t].d)) lotti[lo.id] = true
+    const edifici = edificiInForma(l.edifici)
+    for (const e of edifici) for (const lo of lottiDelPosto(e.i, e.j, EDIFICI[e.tipo].w, EDIFICI[e.tipo].d)) lotti[lo.id] = true
     const cose = coseInForma(l.cose).filter(c => { const m = PEZZI[c.tipo]; return lottiDelPosto(c.i, c.j, m.w, m.d).some(lo => lotti[lo.id]) })
     const posti = { cassa: postoInForma(oggetto(l.posti).cassa, POSTO_CASSA, lotti), mercato: postoInForma(oggetto(l.posti).mercato, POSTO_MERCATO, lotti) }
     const m = oggetto(l.mercato), c = oggetto(l.cassa)

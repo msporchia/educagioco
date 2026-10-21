@@ -10,7 +10,7 @@ aperti, mappe sparse), `scena3d/terreno.js` (la finestra). I laghetti: [laghi.md
 `i = -14 + 4a`, `j = -12 + 4b`, id `a_b` (`-1_3` è un lotto a ovest). I **42 lotti storici** (a 0..6, b 0..5) sono quelli di
 prima, il quadrato di partenza è 2..4 × 2..4: i salvataggi valgono tali e quali. Le celle sono chiavi intere impacchettate
 (`chiave(i, j)`, ±1 milione): le strutture del motore non sono più array di `GW×GH` ma mappe e insiemi sparsi (`strada`,
-`bloccoFisso`, `cellaEdificio`, `cellaCosa`, `cellaPasso`). Le API sono le stesse (`blocca`, `libera`, `cellaPropria`,
+`bloccoFisso`, `cellaCosa`, `cellaPasso`). Le API sono le stesse (`blocca`, `libera`, `cellaPropria`,
 `puoMettere`, `percorsoVerso`).
 
 ## Gli id salvati: una cella, un intero

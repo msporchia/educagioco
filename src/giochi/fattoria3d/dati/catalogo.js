@@ -1,5 +1,5 @@
-/* Cosa si può avere: i pezzi che il bambino costruisce dove vuole nel terreno suo, e gli edifici unici che hanno un posto
-   fisso. Dato puro: nessun disegno qui (i modelli stanno in scena3d/modelli.js). `liv` è il livello a cui si può comprare
+/* Cosa si può avere: i pezzi che il bambino costruisce dove vuole nel terreno suo, e gli edifici unici (una macchina per tipo, o la
+   mongolfiera) che si mettono dove si vuole anche loro, uno solo per tipo. Dato puro: nessun disegno qui (i modelli stanno in scena3d/modelli.js). `liv` è il livello a cui si può comprare
    (dati/livelli.js lo legge da qui, mai un elenco a parte); `produttivo` dice che il suo prezzo si somma al salto di
    livello (le decorazioni no). Vedi docs/fattoria3d/regole.md e livelli.md. */
 
@@ -18,6 +18,8 @@ export const PEZZI = {
   spaventapasseri: { nome: 'Spaventapasseri', emoji: '🧑‍🌾', w: 1, d: 1, prezzo: 12, rincaro: 0, categoria: 'decori', liv: 13 },
   passerella:      { nome: 'Passerella',      emoji: '🪵', w: 1, d: 3, prezzo: 8,  rincaro: 0, categoria: 'passaggi', liv: 3, calpestabile: true, suAcqua: true, alzato: 0.18 },   // calpestabili: non fermano il passo, contano come strada (regole.md)
   ponte:           { nome: 'Ponte',           emoji: '🌉', w: 3, d: 1, prezzo: 14, rincaro: 0, categoria: 'passaggi', liv: 5, calpestabile: true, suAcqua: true, alzato: [0.25, 0.36, 0.25] },   // la gobba: una quota per cella lungo il lato lungo
+  stagno:          { nome: 'Stagno',          emoji: '🦆', w: 3, d: 3, prezzo: 35, rincaro: 0, categoria: 'decori', liv: 5, acqua: true },     // tutta acqua: non si cammina, solo un ponte ci sta sopra (docs/fattoria3d/laghi.md)
+  laghetto:        { nome: 'Laghetto',        emoji: '🏞️', w: 5, d: 4, prezzo: 110, rincaro: 0, categoria: 'decori', liv: 11, acqua: true },
   tavolo:          { nome: 'Tavolo',          emoji: '🍽️', w: 3, d: 2, prezzo: 18, rincaro: 0, categoria: 'decori', liv: 4 },
   trattore:        { nome: 'Trattore',        emoji: '🚜', w: 2, d: 2, prezzo: 40, rincaro: 0, categoria: 'edifici', liv: 7 },     // si tocca e porta ai vicini (docs/fattoria3d/vicini.md)
 }
@@ -39,31 +41,45 @@ export const CATEGORIE = {
   passaggi: { nome: 'Strade',   emoji: '🛣️', strumenti: true },
 }
 
-// Unici: uno per tipo, nel posto che dice `slot` (angolo in alto a sinistra, davanti verso +z). Si vedono come fantasmi
-// finché non si comprano. Pastificio (id `pasticceria`, come nei salvataggi) e mongolfiera stanno dentro il quadrato di partenza; gli altri in lotti accanto, da
-// comprare prima (motivo `lotto-non-tuo`). Sono tutti produttivi: ogni edificio è una macchina (dati/ricette.js) tranne la mongolfiera.
+// Unici: uno per tipo, si costruiscono dal menu e si mettono dove si vuole nel terreno proprio (docs/fattoria3d/edifici-liberi.md). Niente
+// `slot`: i posti di prima stanno in `POSTI_STORICI` di dati/mondo.js (servono solo a leggere un salvataggio vecchio). Pastificio (id
+// `pasticceria`, come nei salvataggi). Sono tutti produttivi: ogni edificio è una macchina (dati/ricette.js) tranne la mongolfiera.
 export const EDIFICI = {
-  pasticceria: { nome: 'Pastificio', emoji: '🍝', w: 4, d: 3, prezzo: 80,  slot: { i: -6, j: -4 }, categoria: 'edifici', liv: 6 },
-  mongolfiera: { nome: 'Mongolfiera', emoji: '🎈', w: 3, d: 3, prezzo: 100, slot: { i: 2,  j: -4 }, categoria: 'edifici', liv: 10 },
-  mulino:      { nome: 'Mulino',      emoji: '🌬️', w: 3, d: 3, prezzo: 60,  slot: { i: -2, j: -7 }, categoria: 'edifici', liv: 3 },
-  panificio:   { nome: 'Panificio',   emoji: '🥖', w: 3, d: 3, prezzo: 90,  slot: { i: -5, j: -7 }, categoria: 'edifici', liv: 7 },
-  conserviera: { nome: 'Cucina',      emoji: '🍳', w: 3, d: 3, prezzo: 110, slot: { i: 2,  j: -7 }, categoria: 'edifici', liv: 12 },
-  gelateria:   { nome: 'Gelateria',   emoji: '🍦', w: 3, d: 3, prezzo: 140, slot: { i: -9, j: 0 }, categoria: 'edifici',  liv: 14 },
-  caseificio:  { nome: 'Caseificio',  emoji: '🧀', w: 3, d: 3, prezzo: 120, slot: { i: 6,  j: -3 }, categoria: 'edifici', liv: 11 },
-  telaio:        { nome: 'Telaio',        emoji: '🧵', w: 3, d: 3, prezzo: 70,  slot: { i: -9, j: -4 }, categoria: 'edifici', liv: 8 },
-  zuccherificio: { nome: 'Zuccherificio', emoji: '🧂', w: 3, d: 3, prezzo: 130, slot: { i: 6,  j: 4 },  categoria: 'edifici', liv: 13 },
-  sartoria:      { nome: 'Sartoria',      emoji: '🧥', w: 3, d: 3, prezzo: 150, slot: { i: 6,  j: 0 },  categoria: 'edifici', liv: 15 },
-  tintoria:      { nome: 'Tintoria',      emoji: '🧴', w: 3, d: 3, prezzo: 160, slot: { i: -9, j: 4 },  categoria: 'edifici', liv: 16 },
+  pasticceria: { nome: 'Pastificio', emoji: '🍝', art: 'il', w: 4, d: 3, prezzo: 80,  categoria: 'edifici', liv: 6 },
+  mongolfiera: { nome: 'Mongolfiera', emoji: '🎈', art: 'la', w: 3, d: 3, prezzo: 100, categoria: 'edifici', liv: 10 },
+  mulino:      { nome: 'Mulino',      emoji: '🌬️', art: 'il', w: 3, d: 3, prezzo: 60,  categoria: 'edifici', liv: 3 },
+  panificio:   { nome: 'Panificio',   emoji: '🥖', art: 'il', w: 3, d: 3, prezzo: 90,  categoria: 'edifici', liv: 7 },
+  conserviera: { nome: 'Cucina',      emoji: '🍳', art: 'la', w: 3, d: 3, prezzo: 110, categoria: 'edifici', liv: 12 },
+  gelateria:   { nome: 'Gelateria',   emoji: '🍦', art: 'la', w: 3, d: 3, prezzo: 140, categoria: 'edifici',  liv: 14 },
+  caseificio:  { nome: 'Caseificio',  emoji: '🧀', art: 'il', w: 3, d: 3, prezzo: 120, categoria: 'edifici', liv: 11 },
+  telaio:        { nome: 'Telaio',        emoji: '🧵', art: 'il', w: 3, d: 3, prezzo: 70,  categoria: 'edifici', liv: 8 },
+  zuccherificio: { nome: 'Zuccherificio', emoji: '🧂', art: 'lo', w: 3, d: 3, prezzo: 130, categoria: 'edifici', liv: 13 },
+  sartoria:      { nome: 'Sartoria',      emoji: '🧥', art: 'la', w: 3, d: 3, prezzo: 150, categoria: 'edifici', liv: 15 },
+  tintoria:      { nome: 'Tintoria',      emoji: '🧴', art: 'la', w: 3, d: 3, prezzo: 160,  categoria: 'edifici', liv: 16 },
 }
 export const TIPI_DI_EDIFICIO = Object.keys(EDIFICI)
 
 export const eEdificio = tipo => !!EDIFICI[tipo]
 export const misureDi = tipo => PEZZI[tipo] || EDIFICI[tipo] || null
 
+/** Gli edifici che il livello ha aperto e non sono ancora in mappa (`posseduti`: { tipo: true } quando c'è), nell'ordine di livello: sono i
+    soli che accendono il «!» (docs/fattoria3d/edifici-liberi.md). Le decorazioni non ci sono mai: gli EDIFICI sono tutte macchine. */
+export function edificiDaCostruire(livello, posseduti = {}) {
+  return Object.entries(EDIFICI).filter(([t, e]) => e.liv <= livello && !posseduti[t]).sort((a, b) => a[1].liv - b[1].liv).map(([t]) => t)
+}
+
+/** Cosa dice l'avviso quando si sale di livello e si apre un edificio: «il Panificio! Costruiscilo» (vuoto se non se ne apre nessuno). */
+export function avvisoEdificiNuovi(livello) {
+  const nuovi = Object.values(EDIFICI).filter(e => e.liv === livello)
+  if (!nuovi.length) return ''
+  return nuovi.map(e => `${e.art} ${e.nome}`).join(' e ') + '! ' + (nuovi.length > 1 ? 'Costruiscili' : 'Costruiscilo')
+}
+
 export function guastiDelCatalogo() {
   const g = []
   for (const [tipo, d] of [...Object.entries(PEZZI), ...Object.entries(EDIFICI)]) {
     if (!d.nome || !d.emoji) g.push(`${tipo}: manca nome o emoji`)
+    if (EDIFICI[tipo] && !['il', 'lo', 'la'].includes(d.art)) g.push(`${tipo}: manca l'articolo (art)`)
     if (!(d.w >= 1 && d.d >= 1)) g.push(`${tipo}: misure impossibili`)
     if (!(d.prezzo > 0)) g.push(`${tipo}: prezzo non positivo`)
     if (!(Number.isInteger(d.liv) && d.liv >= 1)) g.push(`${tipo}: manca il livello`)
@@ -72,19 +88,11 @@ export function guastiDelCatalogo() {
       const q = [].concat(d.alzato), lungo = Math.max(d.w, d.d)
       if (q.length !== (Array.isArray(d.alzato) ? lungo : 1) || !q.every(x => x > 0 && x < 0.5)) g.push(`${tipo}: calpestabile senza una quota sensata (alzato)`)
     }
-    if (d.calpestabile && (d.produttivo || d.slot)) g.push(`${tipo}: un pezzo calpestabile è solo decorazione`)
+    if (d.acqua && (d.calpestabile || d.suAcqua || d.produttivo)) g.push(`${tipo}: un pezzo d'acqua è solo decorazione e non ci si cammina`)
+    if (d.calpestabile && d.produttivo) g.push(`${tipo}: un pezzo calpestabile è solo decorazione`)
   }
   for (const [c, v] of Object.entries(CATEGORIE)) if (!v.strumenti && ![...Object.values(PEZZI), ...Object.values(EDIFICI)].some(d => d.categoria === c)) g.push(`${c}: categoria senza carte`)
   for (const t of TIPI_DI_PEZZO) if (EDIFICI[t]) g.push(`${t}: sia pezzo sia edificio`)
-  for (const [tipo, e] of Object.entries(EDIFICI)) {
-    if (!e.slot || !Number.isInteger(e.slot.i) || !Number.isInteger(e.slot.j)) g.push(`${tipo}: manca il posto`)
-  }
-  // i posti non si sovrappongono
-  const t = Object.entries(EDIFICI)
-  for (let a = 0; a < t.length; a++) for (let b = a + 1; b < t.length; b++) {
-    const [ka, x] = t[a], [kb, y] = t[b]
-    if (x.slot && y.slot && x.slot.i < y.slot.i + y.w && y.slot.i < x.slot.i + x.w && x.slot.j < y.slot.j + y.d && y.slot.j < x.slot.j + x.d)
-      g.push(`${ka} e ${kb}: i posti si sovrappongono`)
-  }
+  for (const [tipo, e] of Object.entries(EDIFICI)) if (e.slot) g.push(`${tipo}: i posti fissi non esistono più (dati/mondo.js POSTI_STORICI)`)
   return g
 }

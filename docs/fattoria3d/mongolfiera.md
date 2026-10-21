@@ -8,7 +8,7 @@ Dati in `dati/mongolfiera.js`, regole in `motore/mongolfiera.js`, il foglio in `
 
 ## Le regole
 
-- **Si compra al livello 10** (🪙 100, edificio unico, `EDIFICI.mongolfiera`): il livello d'ingresso è quello dell'edificio e non è cambiato.
+- **Si compra al livello 10** (🪙 100, edificio unico, `EDIFICI.mongolfiera`): il livello d'ingresso è quello dell'edificio e non è cambiato. Si mette dove si vuole nel terreno proprio come ogni edificio ([edifici-liberi.md](edifici-liberi.md)); non si mette via se è in volo o già caricata, si sposta sempre e la stiva la segue.
   Comprata, atterra subito un carico.
 - **Un carico: tre file di casse, una merce per fila** (`FILE`), **2–3 casse per fila** (`CASSE_MIN`, `CASSE_MAX`) e **lo stesso numero di pezzi in
   ogni cassa della fila** (da 1 a 2 pezzi sotto il livello 14, da 1 a 3 dopo: `pezziMaxAl`). «Tre pasta» si legge in un'occhiata e un

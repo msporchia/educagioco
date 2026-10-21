@@ -23,6 +23,7 @@ const trema = ref('')
 let tremaFine = 0
 watch(() => props.messaggio, m => { msg.value = m })
 
+const segnalata = k => (props.schede[k] || []).some(c => c.segnala)       // una carta con il «!» accende la sua linguetta
 function vai(c) { scheda.value = ultimaScheda = c; msg.value = ''; chiedi(c) }
 
 // le anteprime: dalla scheda aperta e poi le altre; ognuna entra in `img` quando è pronta ('' = non ce n'è: resta l'emoji)
@@ -58,19 +59,20 @@ function tocca(carta) {
       <button class="f3-chiudi" data-chiudi aria-label="chiudi" @click="emit('chiudi')">✕</button>
       <div class="f3-schede" role="tablist">
         <button v-for="(c, k) in CATEGORIE" :key="k" role="tab" :class="{ acceso: scheda === k }" :aria-selected="scheda === k" :data-scheda="k" :data-cat="k" @click="vai(k)">
-          <span class="em">{{ c.emoji }}</span>{{ c.nome }}
+          <span class="em">{{ c.emoji }}</span>{{ c.nome }}<i v-if="segnalata(k)" class="f3-esclama" data-f3="scheda-esclama" aria-label="c'è un edificio da costruire">!</i>
         </button>
       </div>
       <div class="f3-corpo">
         <div class="f3-griglia-carte" :key="scheda">
           <!-- aria-disabled e non disabled: toccare una carta chiusa deve dire il livello -->
-          <button v-for="c in schede[scheda]" :key="c.id" class="carta" :class="{ bloccata: c.bloccata, trema: trema === c.id, magazzino: c.etichetta.startsWith('📦') }"
+          <button v-for="c in schede[scheda]" :key="c.id" class="carta" :class="{ bloccata: c.bloccata, trema: trema === c.id, daCostruire: c.segnala, magazzino: c.etichetta.startsWith('📦') }"
                   :data-carta="c.id" :data-cat="scheda" :aria-disabled="c.bloccata || null" @click="tocca(c)">
             <span class="disegno">
               <span v-if="!viste[c.id]" class="em" :class="{ attesa: c.genere !== 'strumento' && img[c.id] !== '' }">{{ c.emoji }}</span>
               <img v-if="img[c.id]" class="anteprima" :class="{ vista: viste[c.id] }" :src="img[c.id]" :alt="c.nome" width="72" height="72" draggable="false"
                    :data-anteprima="viste[c.id] ? 'pronta' : null" @load="viste[c.id] = true">
             </span>
+            <i v-if="c.segnala" class="f3-esclama" data-f3="carta-esclama" aria-label="da costruire">!</i>
             <b>{{ c.nome }}</b>
             <small v-if="c.bloccata">🔒 Livello {{ c.liv }}</small>
             <small v-else class="prezzo">{{ c.etichetta }}</small>

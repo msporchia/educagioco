@@ -11,8 +11,8 @@ Il mondo è fatto di lotti da 4×4 con coordinate intere `(a, b)` qualunque. Se 
 d'un pezzo. Il prezzo sale a ogni lotto e si auto-limita (`prezzoLotto`, `prezzoDelLotto`: [mondo-infinito.md](mondo-infinito.md)).
 
 - **Dentro il terreno proprio tutto si può mettere dappertutto**: campi, recinti, bancarelle, fontane, strade. Niente zone, salvo
-  **l'acqua** dei laghetti (solo ponte e passerella) e i posti dei due edifici unici (`EDIFICI` in `dati/catalogo.js`), dentro il
-  quadrato di partenza: si vedono come fantasmi e si comprano da lì.
+  **l'acqua** dei laghetti, e quella degli stagni che il bambino costruisce (solo ponte e passerella). **Anche gli edifici unici** (mulino,
+  panificio…) sono pezzi liberi: si costruiscono dal menu e si mettono dove si vuole, senza posti fissi né fantasmi sul prato ([edifici-liberi.md](edifici-liberi.md)).
 - **Fuori dal terreno proprio non si cammina**: `blocca()` dice di sì a ogni cella di un lotto non tuo, e `percorso.js` non ci passa.
   **Un tocco su un lotto non tuo apre l'acquisto** (anche su un albero che sta lì), senza messaggi sul «fuori zona»; se il
   lotto non confina dice «Compra prima un terreno che confina con questo». Un tocco più in là dell'anello di due lotti
@@ -44,7 +44,7 @@ tanti). Si creano solo per i lotti aperti (i tuoi e due attorno). Tutti si abbat
 Il cespuglio è quello del Sotterraneo (tre macchie tonde un po' storte, `dal-sotterraneo.js:geometriaCespuglio`), a istanze come prima: lo stesso verde per istanza, la stessa cella-id. La casa di scena (4×3) è la casa di legno del Sotterraneo, con il camino che fuma ([scena.md](scena.md)).
 
 Pochi per lotto (2–5 sul prato, 1–3 in bosco e laghetto, `dati/ostacoli.js`), sempre gli stessi, **anche dopo aver comprato il lotto**: un lotto appena tuo non è
-vuoto, ma nemmeno un campo minato (mai due vicini, mai sulle strade di serie, sui posti degli edifici, sul campo e sulla
+vuoto, ma nemmeno un campo minato (mai due vicini, mai sulle strade di serie, sui vecchi posti degli edifici (`POSTI_STORICI`: nei lotti storici restano riservati perché i numeri sono chiavi di salvataggio), sul campo e sulla
 partenza, sul fienile e la casa, sull'acqua, né sotto un albero; i lotti stretti fra edifici ne hanno meno). Bloccano il costruire e il
 passo come un albero (`bloccoFisso`). Si toccano nel terreno proprio: l'eroe arriva, si china (gesto breve) e **🪙 1** li toglie
 (`togliOstacolo`; evento `sasso`, contatore `fattoria3dSassi`). L'id di salvataggio è la **cella** (`idCella(i, j)`), non l'ordine:
