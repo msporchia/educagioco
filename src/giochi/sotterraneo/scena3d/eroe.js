@@ -21,7 +21,7 @@ export function creaEroe() {
 // un passo del disegno: `corsa` il motore, `figure` quelle senza ombra (la torcia è sua), `fuori` dove si spinge fuori dalla
 // fontana (chi beve sta sulla sua cella), `scontro` se sta sul palco con un bersaglio da guardare
 export function disegnaEroe(e, corsa, { figure, luci, etichette, camera, dt, dtScena, t, fontana = null, bersaglio = null, portale = null,
-                                         fiamma = null, aloni = null, scintille = null, modello = null }) {
+                                         fiamma = null, aloni = null, scintille = null, modello = null, quota = null }) {
   if (e.px == null) { e.px = corsa.eroe.x; e.pz = corsa.eroe.y; e.x = e.px; e.z = e.pz }
   if (!e.meta) {
     // finito lo scontro torna dove lo tiene il motore camminando, non di colpo
@@ -64,7 +64,7 @@ export function disegnaEroe(e, corsa, { figure, luci, etichette, camera, dt, dtS
   o.rosso = e.colpito * 2; o.verde = e.cura * 0.9; o.blu = e.cura * 1.3; o.trasparenza = trasparenza; o.specchio = e.specchio; o.giro = giro
   e.alto = figure.alto(nome)
   // in prova: al posto dello sprite il modello 3D (scena3d/eroe3d.js), che porta da sé le armi
-  if (modello) modello.aggiorna(e, corsa, { x, z, trasparenza, dt, alto: e.alto })
+  if (modello) modello.aggiorna(e, corsa, { x, z, y: quota ? quota(x, z) : 0, trasparenza, dt, alto: e.alto })
   else figure.metti(nome, x, 0, z + 0.1, o)
   // le armi: due si portano una per lato (la debole dietro), una a due mani di lato come nel ritratto (dati/impugna.js)
   const su = Math.sin(e.t * (e.cammina ? 0.9 : 0.6)) * (e.cammina ? 0.9 : 0.5)
