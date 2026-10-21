@@ -192,6 +192,8 @@ export function vistaDelloScontro(c) {
       ossa: Math.max(0, m.ossa), ossaMax: m.ossaMax, morto: !!m.morto,
       stati: m.morto ? [] : statiDel(m),
       colpisce: mi ? mi.colpisce : 0, salta: !!(mi && mi.salta),
+      // la mossa che farà al suo turno, se ne ha più d'una (dati/mosse.js): l'annuncio sopra la testa
+      mossa: (mi && mi.mossa) || null, rinforzato: !!(mi && mi.rinforzato),
       bersaglio: f.chi === m, colpito: colpiti.has(m) ? colpiti.get(m) : 0, segni: m.morto ? [] : segni.get(m) || [],
     }
   })

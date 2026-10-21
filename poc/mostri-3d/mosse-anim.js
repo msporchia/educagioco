@@ -61,7 +61,8 @@ const MOTI = {
 }
 const VS = new THREE.Vector3()
 
-/** Prepara un mostro. voce = { chiave, nome, ruolo?, taglia?, forza?, elem? }. opz: { scala: scala del genitore (quanto è grande a schermo), mosse: elenco già pronto }. */
+/** Prepara un mostro. voce = { chiave, nome, ruolo?, taglia?, forza?, elem? }. opz: { scala: scala del genitore (quanto è grande a schermo), mosse: elenco già pronto,
+ *  icona: false per non disegnare l'icona sopra la testa (il gioco la scrive in HTML, sopra le barre) }. */
 export function conMosse (obj, voce, opz = {}) {
   const u = obj.userData, scalaMondo = opz.scala ?? 1
   const origAnima = u.anima || (() => {})
@@ -109,7 +110,9 @@ export function conMosse (obj, voce, opz = {}) {
     anello.scale.set(R, R, 1); disco.scale.set(R * 0.92, R * 0.92, 1)
     anello.material.color.setHex(m.colore); disco.material.color.setHex(m.colore)
     anello.material.opacity = 0.85 * q; disco.material.opacity = 0.2 * q * (forte ? 1.4 : 1)
-    sprIcona.material.map = icona(m.icona, m.colore); sprIcona.material.needsUpdate = true
+    sprIcona.visible = opz.icona !== false
+    if (!sprIcona.visible) return
+    if (sprIcona.material.map !== icona(m.icona, m.colore)) { sprIcona.material.map = icona(m.icona, m.colore); sprIcona.material.needsUpdate = true }
     const dim = 0.5 * k * (0.75 + 0.35 * q); sprIcona.scale.set(dim, dim, 1)
     sprIcona.position.set(0, yIcona + 0.05 * k * Math.sin(tempo * 4), 0); sprIcona.material.opacity = cl(q * 1.4)
   }

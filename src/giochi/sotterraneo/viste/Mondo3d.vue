@@ -471,7 +471,7 @@ function aggiornaScena() {
     if (d.aperto && !d.abisso) S.pallini.set(b.k, { colore: d.t && d.t.colore, adesso: !!(d.t && (d.t.adesso || d.t.nuova)) })
   }
   S.io.sprite = props.eroe.sprite || 'cavaliere'
-  S.io.mano = props.roba ? props.roba.mano : null; S.io.mancina = props.roba ? props.roba.mancina : null
+  S.io.mano = props.roba ? props.roba.mano : null; S.io.mancina = props.roba ? props.roba.mancina : null; S.io.corpo = props.roba ? props.roba.corpo : null
   S.veduta = props.veduta
   // davanti a una discesa rossa sta la sentinella (docs/sotterraneo/zone.md)
   const sentinelle = bersagli.value.filter(b => b.ruolo === 'ingresso' && trovati.value.has(b.chiave) && (datoDelPosto(b).t || {}).colore === 'rosso')

@@ -101,12 +101,11 @@ di riposo); `userData.origine` l'Object3D da cui partono i colpi a distanza.
 
 ## Le mosse multiple
 
-`poc/mostri-3d/mosse.js` e `mosse-anim.js` (MOSSE.md) sono pronti ma **non promossi**: il motore (`motore/scontro.js`,
-`dati/mostri.js`) dichiara un attacco solo. Gli agganci quando ci sarà: il motore scrive la mossa scelta nell'azione del mostro;
-`racconto.js` (`effetto(k, 'scatta')`) legge `userData.mosse[i]` (da `conMosse(modello, voce)` in `mostro3d.js`, alla
-costruzione) invece di `userData.attacco`, lancia gli `eventi` della mossa coi proiettili del gestore e sposta il mostro di
-`avanza`; l'annuncio (icona e anello) va acceso a inizio turno dell'eroe. Si aggiungono `mosse*.js` alle radici del gruppo
-`mostri` in `promuovi-3d.mjs`.
+Nel gioco ([mosse.md](mosse.md)). `mosse-anim.js` è fra le radici del gruppo `mostri` (con `mosse.js`, che porta con sé: i dati
+veri però stanno in `dati/mosse.js`). Chi ha più mosse ha una riserva sua (modello + elenco delle mosse), preparata con
+`conMosse(g, voce, { scala, mosse, icona: false })` alla prima `metti`; `metti` riceve `mossa: { id, p }` (al posto di `attacco`)
+e `annuncio` (l'anello a terra mentre l'eroe sceglie); `racconto.js` (`mossaDelMostro`) fa partire l'animazione coi tempi del
+racconto, le croci della cura, il proiettile dell'incantesimo. `prova('mossa:<id>', i)` per gli scatti.
 
 ## Quanto costa
 
@@ -127,7 +126,7 @@ paesaggi con `&sprite&eroe2d` e lo scontro fino a 260 chiamate (con gli sprite s
 ## Cosa manca
 
 - Le sei specie senza modello (sopra); il golem di muschio e il mostro viola sono i più visibili.
-- Le mosse multiple (sopra) e le pose d'attacco dell'eroe con arco e staffa.
+- Le pose d'attacco dell'eroe con arco e staffa.
 - Il cammino: i modelli scorrono col loro idle, non hanno passi.
 - Gli shader compilano la prima volta che un modello o un effetto compare (uno scatto al primo incontro).
 - Le chiamate: oltre gli otto mostri vicini un telefono vecchio va misurato col dito ([grafica-3d-costi.md](grafica-3d-costi.md)).
