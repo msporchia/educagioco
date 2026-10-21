@@ -108,6 +108,8 @@
 .sot3d-nome-dungeon { background: #2b2433e6; color: #ffe3a0 }
 .sot3d-nome-chiuso { color: #b9b0a4 }
 .sot3d-nome-regione { background: none; box-shadow: none; color: #1f3a22; font-style: italic; font-weight: 600; text-shadow: 0 0 3px #fff, 0 0 6px #fff; pointer-events: none }
+.sot3d-nome-tana { padding: 1px 4px; font-size: 14px; line-height: 1.1; color: #fff; background: #2b2433e6; pointer-events: none }
+.sot3d-nome-tana.sot3d-nome-morta { filter: grayscale(1); opacity: .5 }
 .sot3d-nome-pietra { padding: 0 5px; font-size: 13px; color: #5a6a7a; background: #e6eef6 }
 .sot3d-nome-accesa { color: #0b6a8a; background: #c8f4ff; box-shadow: 0 0 8px #7fe8ff }
 .sot3d-nome-tu { background: #ffd23f; border: 2px solid #2b2433; pointer-events: none }
