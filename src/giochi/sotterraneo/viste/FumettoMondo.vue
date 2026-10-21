@@ -8,7 +8,7 @@ defineProps({
   f: { type: Object, required: true },   // { tipo, … } (vedi fumetto in Mondo3d.vue)
 })
 defineEmits(['scendi', 'giu', 'viaggio', 'bevi', 'taglia', 'scava'])
-const minuscolo = s => s.charAt(0).toLowerCase() + s.slice(1)
+const minuscolo = s => (s ? s.charAt(0).toLowerCase() + s.slice(1) : '')   // il portale si svuota mentre il fumetto si chiude: nome mancante, non un guasto
 </script>
 
 <template>
