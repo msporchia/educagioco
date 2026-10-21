@@ -4,6 +4,8 @@
 // Vedi docs/fattoria3d/scena.md.
 import * as THREE from 'three'
 import { mat, pronto, scatola, cilindro, cono, sfera, tetto, insegna, lastra } from './modelli.js'
+import { fondiPerMateriale } from './fondi.js'
+import { memoModello } from './cache-modelli.js'
 
 /** Tante copie della stessa forma: una geometria sola, un mesh per posto. */
 function copie (g, geo, m, posti) {
@@ -11,7 +13,7 @@ function copie (g, geo, m, posti) {
 }
 
 // ── lo zuccherificio: capannone con la ciminiera, la pila di barbabietole e i sacchi bianchi ──
-export function creaZuccherificio () {
+function costruisciZuccherificio () {
   const g = new THREE.Group()
   const muro = mat(0xdfe6ea), lamiera = mat(0x8fa4b3), mattone = mat(0xb5553a), bianco = mat(0xfbfaf6), legno = mat(0x7b4a24)
   lastra(g, 3.0, 2.9, 0xc6c9c9)
@@ -39,13 +41,15 @@ export function creaZuccherificio () {
   const ruota = new THREE.Group(); ruota.position.set(-1.3, 0.85, -0.5); g.add(ruota)
   cilindro(ruota, 0.34, 0.34, 0.1, lamiera, 0, 0, 0, 10).rotation.z = Math.PI / 2
   copie(ruota, new THREE.BoxGeometry(0.1, 0.16, 0.12), mat(0x5c7080), Array.from({ length: 8 }, (_, k) => [0, Math.cos(k * Math.PI / 4) * 0.38, Math.sin(k * Math.PI / 4) * 0.38]))
-  g.userData.anima = (dt, tt) => { ruota.rotation.x += dt * 0.9; sciroppo.material.emissiveIntensity = 0.4 + Math.sin(tt * 5) * 0.15 }
+  g.userData.ruota = ruota; g.userData.sciroppo = sciroppo
+  g.userData.anima = function (dt, tt) { this.ruota.rotation.x += dt * 0.9; this.sciroppo.material.emissiveIntensity = 0.4 + Math.sin(tt * 5) * 0.15 }
   g.userData.altezza = 2.9
+  fondiPerMateriale(ruota); fondiPerMateriale(g, { escludi: [ruota, sciroppo] })
   return g
 }
 
 // ── il telaio: la capanna di legno col grande telaio davanti e le balle di lana ──
-export function creaTelaio () {
+function costruisciTelaio () {
   const g = new THREE.Group()
   const asse = mat(0xb98a55), scuro = mat(0x6b4426), lana = mat(0xf4efe0), filo = mat(0xe8483a)
   lastra(g, 3.0, 2.9, 0xcdbf9f)
@@ -65,13 +69,14 @@ export function creaTelaio () {
   // le balle di lana, a sinistra
   copie(g, new THREE.SphereGeometry(0.3, 8, 6), lana, [[-1.15, 0.28, 0.85, 0.85], [-0.75, 0.26, 1.15, 0.85], [-1.2, 0.26, 1.2, 0.85], [-1.0, 0.62, 1.0, 0.85]])
   cilindro(g, 0.18, 0.18, 0.28, lana, -0.4, 0.14, 1.2, 8)
-  g.userData.anima = (dt, tt) => { navetta.position.x = Math.sin(tt * 1.8) * 0.5 }
+  g.userData.navetta = navetta; g.userData.anima = function (dt, tt) { this.navetta.position.x = Math.sin(tt * 1.8) * 0.5 }
   g.userData.altezza = 2.1
+  fondiPerMateriale(g, { escludi: [navetta] })
   return g
 }
 
 // ── la sartoria: la casetta col manichino davanti e l'ago gigante nel rocchetto ──
-export function creaSartoria () {
+function costruisciSartoria () {
   const g = new THREE.Group()
   const muro = mat(0xf3dcec), viola = mat(0x7f4fa6), legno = mat(0x7b4a24), pelle = mat(0xe6cfa8), argento = mat(0xdadfe4, { metalness: 0.6, roughness: 0.35 })
   lastra(g, 3.0, 2.9, 0xd9cdd8)
@@ -100,13 +105,15 @@ export function creaSartoria () {
   const cruna = pronto(new THREE.Mesh(new THREE.TorusGeometry(0.05, 0.015, 4, 8), argento)); cruna.position.y = 0.38; ago.add(cruna)
   const filo = pronto(new THREE.Mesh(new THREE.TorusGeometry(0.2, 0.012, 4, 10, Math.PI), mat(0xd8352a))); filo.position.set(0, 0.38, 0); filo.rotation.z = Math.PI; ago.add(filo)
   ago.rotation.z = 0.2
-  g.userData.anima = (dt, tt) => { man.rotation.y += dt * 0.6; ago.rotation.z = 0.2 + Math.sin(tt * 1.4) * 0.1 }
+  g.userData.man = man; g.userData.ago = ago
+  g.userData.anima = function (dt, tt) { this.man.rotation.y += dt * 0.6; this.ago.rotation.z = 0.2 + Math.sin(tt * 1.4) * 0.1 }
   g.userData.altezza = 2.7
+  fondiPerMateriale(man); fondiPerMateriale(ago); fondiPerMateriale(g, { escludi: [man, ago] })
   return g
 }
 
 // ── la tintoria: il capanno aperto con le vasche colorate e le stoffe stese ad asciugare ──
-export function creaTintoria () {
+function costruisciTintoria () {
   const g = new THREE.Group()
   const legno = mat(0x7b4a24), pietra = mat(0x9a948a), scuro = mat(0x4a3a2a)
   lastra(g, 3.0, 2.9, 0xc9c2b0)
@@ -132,10 +139,18 @@ export function creaTintoria () {
   cilindro(g, 0.3, 0.34, 0.5, mat(0x5a5a5e, { metalness: 0.5, roughness: 0.5 }), 1.05, 0.3, 0.45, 10)
   scatola(g, 0.5, 0.12, 0.5, scuro, 1.05, 0.06, 0.45)
   g.userData.fumo = new THREE.Vector3(1.05, 0.7, 0.45)
-  g.userData.anima = (dt, tt) => {
-    bagni.forEach((b, k) => { b.material.emissiveIntensity = 0.35 + Math.sin(tt * 2.2 + k * 2) * 0.15 })
-    for (const p of panni) p.rotation.y = Math.sin(tt * 1.6 + p.userData.fase) * 0.12
+  g.userData.bagni = bagni; g.userData.panni = panni
+  g.userData.anima = function (dt, tt) {
+    this.bagni.forEach((b, k) => { b.material.emissiveIntensity = 0.35 + Math.sin(tt * 2.2 + k * 2) * 0.15 })
+    for (const p of this.panni) p.rotation.y = Math.sin(tt * 1.6 + p.userData.fase) * 0.12
   }
   g.userData.altezza = 2.3
+  fondiPerMateriale(g, { escludi: [...bagni, ...panni] })
   return g
 }
+
+// la cache (scena3d/cache-modelli.js): costruiti e fusi una volta, le istanze sono cloni
+export const creaZuccherificio = memoModello('zuccherificio', costruisciZuccherificio)
+export const creaTelaio = memoModello('telaio', costruisciTelaio)
+export const creaSartoria = memoModello('sartoria', costruisciSartoria)
+export const creaTintoria = memoModello('tintoria', costruisciTintoria)

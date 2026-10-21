@@ -154,7 +154,7 @@ export function bachecaDelleTaglie () {
     g.add(f); return f
   })
   g.userData.fogli = fogli
-  g.userData.mostraFogli = (n, colori = []) => fogli.forEach((f, i) => { f.visible = i < n; f.userData.carta.material = _matFogli[colori[i]] || _matFogli.verde })
+  g.userData.mostraFogli = function (n, colori = []) { this.fogli.forEach((f, i) => { f.visible = i < n; f.userData.carta.material = _matFogli[colori[i]] || _matFogli.verde }) }
   g.userData.mostraFogli(3)
   g.userData.altezza = 2.3
   return g

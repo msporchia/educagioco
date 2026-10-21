@@ -4,6 +4,8 @@
 import * as THREE from 'three'
 import { PECORE } from '../dati/regole.js'
 import { casaDiLegno, bancoDellaGuaritrice, bachecaDelleTaglie } from './dal-sotterraneo.js'
+import { fondiPerMateriale } from './fondi.js'
+import { memoModello } from './cache-modelli.js'
 
 // ── materiali e mattoncini ──
 const cache = new Map()
@@ -61,7 +63,7 @@ function insegna (g, testo, larg, alt, x, y, z, o) {
 export { ASPETTO, creaCampo, aggiornaCampo } from './modelli-colture.js'
 
 // ── la pasticceria: 4×3, la porta davanti ──
-export function creaPasticceria () {
+function costruisciPasticceria () {
   const g = new THREE.Group()
   const muro = mat(0xf6e3c8), rosa = mat(0xd9577a), bianco = mat(0xfff7ea), legno = mat(0x7b4a24)
   scatola(g, 3.6, 1.5, 2.2, muro, 0, 0.75, -0.3)
@@ -101,6 +103,7 @@ export function creaPasticceria () {
   sfera(dolce, 0.07, mat(0xd8212f), 0, 0.68, 0, 1, 1, 1, 8)
   g.add(dolce); g.userData.gira = dolce
   g.userData.altezza = 3.4
+  fondiPerMateriale(dolce); fondiPerMateriale(g, { escludi: [dolce] })
   return g
 }
 
@@ -112,7 +115,7 @@ function stricheTex () {
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = THREE.RepeatWrapping
   return t
 }
-export function creaMongolfiera () {
+function costruisciMongolfiera () {
   const g = new THREE.Group()
   const pietra = mat(0xb9b2a4)
   cilindro(g, 1.35, 1.4, 0.14, pietra, 0, 0.07, 0, 16)
@@ -134,6 +137,7 @@ export function creaMongolfiera () {
   g.add(volo)
   g.userData.volo = volo; g.userData.fiamma = fiamma
   g.userData.altezza = 5.6
+  fondiPerMateriale(volo, { escludi: [fiamma] }); fondiPerMateriale(g, { escludi: [volo] })
   return g
 }
 
@@ -144,7 +148,7 @@ function lastra (g, w, d, colore = 0xc9b79a) { return scatola(g, w, 0.1, d, mat(
 // i mattoncini, per i modelli delle macchine in modelli-macchine.js
 export { pronto, scatola, cilindro, cono, sfera, tetto, insegna, lastra }
 
-export function creaMulino () {
+function costruisciMulino () {
   const g = new THREE.Group()
   const pietra = mat(0xbdb4a2), legno = mat(0x7b4a24), tela = mat(0xf4ecd8)
   lastra(g, 2.9, 2.9, 0x9d9689)
@@ -167,12 +171,13 @@ export function creaMulino () {
     sfera(g, 0.24, sacco, x, 0.3 * s, z, 1, 1.15, 0.85, 8).scale.multiplyScalar(s)
     sfera(g, 0.07, sacco, x, 0.58 * s, z, 1, 1, 1, 5)
   }
-  g.userData.anima = (dt) => { pale.rotation.z -= dt * 0.5 }
+  g.userData.pale = pale; g.userData.anima = function (dt) { this.pale.rotation.z -= dt * 0.5 }
   g.userData.altezza = 4.1
+  fondiPerMateriale(pale); fondiPerMateriale(g, { escludi: [pale] })
   return g
 }
 
-export function creaPanificio () {
+function costruisciPanificio () {
   const g = new THREE.Group()
   const muro = mat(0xf0c890), mattone = mat(0xa8482e), legno = mat(0x7b4a24)
   lastra(g, 3.0, 2.9)
@@ -194,12 +199,13 @@ export function creaPanificio () {
   const pane = mat(0xd89a50)
   for (const x of [-1.05, -0.7, -0.35]) sfera(g, 0.14, pane, x, 0.5, 1.05, 1.5, 0.7, 0.8, 8)
   insegna(g, '🥖 PANE', 1.7, 0.36, -0.1, 1.22, 0.36, { w: 384, h: 80, sfondo: '#8a4a22', px: 48 })
-  g.userData.anima = (dt, tt) => { bocca.material.emissiveIntensity = 0.8 + Math.sin(tt * 9) * 0.2 }
+  g.userData.anima = function (dt, tt) { this.bocca.material.emissiveIntensity = 0.8 + Math.sin(tt * 9) * 0.2 }
   g.userData.altezza = 3.0
+  fondiPerMateriale(g, { escludi: [bocca] })
   return g
 }
 
-export function creaConserviera () {
+function costruisciConserviera () {
   const g = new THREE.Group()
   const legno = mat(0x9a6a3a), scuro = mat(0x6b4426), rame = mat(0xb8683a, { metalness: 0.6, roughness: 0.4 })
   lastra(g, 3.0, 2.9)
@@ -224,10 +230,11 @@ export function creaConserviera () {
   g.userData.fumo = new THREE.Vector3(1.0, 1.85, 0.95)
   insegna(g, '🍯 CONSERVE', 1.7, 0.34, 0.2, 1.05, 0.32, { w: 384, h: 76, sfondo: '#4a6a32', px: 46 })
   g.userData.altezza = cresta + 0.9
+  fondiPerMateriale(g)
   return g
 }
 
-export function creaGelateria () {
+function costruisciGelateria () {
   const g = new THREE.Group()
   const rosa = mat(0xf29ab6), bianco = mat(0xfff7ea), legno = mat(0x8a5a3a), cialda = mat(0xd9a05a)
   lastra(g, 3.0, 2.9, 0xd8cdb8)
@@ -250,13 +257,14 @@ export function creaGelateria () {
   sfera(cono3, 0.27, mat(0xfff0c8), 0, 1.22, 0, 1, 0.85, 1, 10)
   sfera(cono3, 0.06, mat(0xd8212f), 0, 1.45, 0, 1, 1, 1, 6)
   g.add(cono3)
-  g.userData.anima = (dt) => { cono3.rotation.y += dt * 0.7 }
+  g.userData.cono = cono3; g.userData.anima = function (dt) { this.cono.rotation.y += dt * 0.7 }
   g.userData.altezza = 3.0
+  fondiPerMateriale(cono3); fondiPerMateriale(g, { escludi: [cono3] })
   return g
 }
 
 /** Il modello di ripiego per un edificio o un pezzo che non ha ancora un disegno: una scatola grigia della sua misura. */
-export function creaSegnaposto (w, d, h = 1) {
+function costruisciSegnaposto (w, d, h = 1) {
   const g = new THREE.Group()
   scatola(g, w - 0.2, h, d - 0.2, mat(0x9a9a9a), 0, h / 2, 0)
   g.userData.altezza = h + 0.6
@@ -264,7 +272,7 @@ export function creaSegnaposto (w, d, h = 1) {
 }
 
 // ── le decorazioni: aiuola, panchina, pozzo, spaventapasseri ──
-export function creaAiuola () {
+function costruisciAiuola () {
   const g = new THREE.Group()
   const sasso = mat(0xb9b2a4)
   cilindro(g, 0.4, 0.4, 0.08, mat(0x5a3a22), 0, 0.04, 0, 10)
@@ -278,9 +286,10 @@ export function creaAiuola () {
     if (c === 0xfff4d8) sfera(g, 0.03, mat(0xf0b020), x, 0.12 + h, z, 1, 1, 1, 4)
   })
   g.userData.altezza = 0.8
+  fondiPerMateriale(g)
   return g
 }
-export function creaPanchina () {
+function costruisciPanchina () {
   const g = new THREE.Group()
   const legno = mat(0x9a6a36), ferro = mat(0x3a3a42)
   for (const z of [-0.12, 0, 0.12]) scatola(g, 1.6, 0.05, 0.1, legno, 0, 0.42, z + 0.05)
@@ -290,9 +299,10 @@ export function creaPanchina () {
     scatola(g, 0.06, 0.45, 0.05, ferro, x, 0.62, -0.16)
   }
   g.userData.altezza = 1.1
+  fondiPerMateriale(g)
   return g
 }
-export function creaPozzo () {
+function costruisciPozzo () {
   const g = new THREE.Group()
   const pietra = mat(0xb9b2a4), legno = mat(0x7b4a24)
   cilindro(g, 0.4, 0.43, 0.5, pietra, 0, 0.25, 0, 12)
@@ -303,9 +313,10 @@ export function creaPozzo () {
   cilindro(g, 0.006, 0.006, 0.42, mat(0x4a3a2a), 0, 0.98, 0, 3)
   cilindro(g, 0.1, 0.08, 0.13, mat(0x8a5a2a), 0, 0.72, 0, 8)
   g.userData.altezza = 2.1
+  fondiPerMateriale(g)
   return g
 }
-export function creaSpaventapasseri () {
+function costruisciSpaventapasseri () {
   const g = new THREE.Group()
   const legno = mat(0x8a5a2b), paglia = mat(0xe6c36a)
   cilindro(g, 0.03, 0.04, 1.5, legno, 0, 0.75, 0, 5)
@@ -318,15 +329,16 @@ export function creaSpaventapasseri () {
   sfera(corpo, 0.15, mat(0xe8cf8a), 0, 0.42, 0, 1, 1, 1, 8)
   cilindro(corpo, 0.26, 0.26, 0.03, paglia, 0, 0.55, 0, 10)
   cilindro(corpo, 0.13, 0.15, 0.14, paglia, 0, 0.63, 0, 8)
-  g.userData.anima = (t) => { corpo.rotation.z = Math.sin(t * 1.4) * 0.05 }
+  g.userData.corpo = corpo; g.userData.anima = function (t) { this.corpo.rotation.z = Math.sin(t * 1.4) * 0.05 }
   g.userData.altezza = 1.8
+  fondiPerMateriale(corpo); fondiPerMateriale(g, { escludi: [corpo] })
   return g
 }
 
 // ── la bancarella: 2×1. Il banco della guaritrice del Sotterraneo (dal-sotterraneo.js); il disegno di prima resta per il catalogo ──
-export function creaBancarella () { return bancoDellaGuaritrice() }
+function costruisciBancarella () { return bancoDellaGuaritrice() }
 /** La bacheca delle taglie: 2×1; `userData.mostraFogli(n)` accende i foglietti appuntati (gli ordini aperti). */
-export function creaBacheca () { return bachecaDelleTaglie() }
+function costruisciBacheca () { return bachecaDelleTaglie() }
 export function creaBancarellaVecchia () {
   const g = new THREE.Group()
   const legno = mat(0x8a5a2b), rosso = mat(0xd24a3a), bianco = mat(0xfff7ea)
@@ -343,7 +355,7 @@ export function creaBancarellaVecchia () {
 }
 
 // ── il trattore: 2×2, rosso con le ruote grandi dietro; si tocca e porta ai vicini ──
-export function creaTrattore () {
+function costruisciTrattore () {
   const g = new THREE.Group()
   const rosso = mat(0xd23a2a), scuro = mat(0x2a2622), giallo = mat(0xf0c030), vetro = mat(0xbfe3f0, { roughness: 0.3 }), grigio = mat(0x8a8a8a)
   scatola(g, 0.8, 0.42, 1.35, rosso, 0, 0.58, 0.28)                                    // il cofano
@@ -361,11 +373,12 @@ export function creaTrattore () {
   scatola(g, 0.09, 0.09, 0.09, giallo, 0.28, 0.72, 1.0)                                // un faro
   scatola(g, 0.09, 0.09, 0.09, giallo, -0.28, 0.72, 1.0)
   g.userData.altezza = 1.8
+  fondiPerMateriale(g)
   return g
 }
 
 // ── la cassa di un vicino (1×1): una cassa di legno con le assi e un nastro giallo; si riempie toccandola ──
-export function creaCassa () {
+function costruisciCassa () {
   const g = new THREE.Group()
   const legno = mat(0xb9803f), scuro = mat(0x8a5a2b), nastro = mat(0xf0c030)
   scatola(g, 0.8, 0.5, 0.8, legno, 0, 0.25, 0)
@@ -373,11 +386,12 @@ export function creaCassa () {
   for (const [x, z] of [[-0.39, -0.39], [0.39, -0.39], [-0.39, 0.39], [0.39, 0.39]]) scatola(g, 0.08, 0.52, 0.08, scuro, x, 0.26, z)
   scatola(g, 0.86, 0.04, 0.16, nastro, 0, 0.52, 0)
   g.userData.altezza = 1.1
+  fondiPerMateriale(g)
   return g
 }
 
 // ── la fontana: 2×2 ──
-export function creaFontana () {
+function costruisciFontana () {
   const g = new THREE.Group()
   const pietra = mat(0xc4beb0), acqua = mat(0x6cc6e4, { emissive: 0x1a4a60, roughness: 0.2, transparent: true, opacity: 0.9 })
   cilindro(g, 0.95, 1.0, 0.36, pietra, 0, 0.18, 0, 16)
@@ -388,17 +402,19 @@ export function creaFontana () {
   const gocce = []
   const gm = mat(0xcdf1fb, { emissive: 0x4a8aa0 })
   for (let n = 0; n < 8; n++) gocce.push(sfera(g, 0.04, gm, 0, 1.2, 0, 1, 1, 1, 6))
-  g.userData.anima = (t) => gocce.forEach((o, n) => {
-    const f = ((t * 0.9 + n / gocce.length) % 1), a = n * 0.785
+  g.userData.gocce = gocce
+  g.userData.anima = function (t) { this.gocce.forEach((o, n) => {
+    const f = ((t * 0.9 + n / this.gocce.length) % 1), a = n * 0.785
     o.position.set(Math.cos(a) * 0.62 * f, 1.15 + Math.sin(f * Math.PI) * 0.5 - f * f * 0.45, Math.sin(a) * 0.62 * f)
-  })
+  }) }
   g.userData.altezza = 1.6
+  fondiPerMateriale(g, { escludi: gocce })
   return g
 }
 
 // ── la pecora e il recinto 3×3: agnello → adulta → tosata, la lana ricresce ──
 const iniziali = () => [{ eta: 'adulta', t0: Date.now() }]    // solo per il fantasma del recinto
-export function creaPecora () {
+function costruisciPecora () {
   const g = new THREE.Group()
   const lana = mat(0xf5f1e6), scuro = mat(0x3a3a3a), pelle = mat(0xf0b8b0)
   const corpo = new THREE.Group(); corpo.position.y = 0.34; g.add(corpo)
@@ -415,10 +431,11 @@ export function creaPecora () {
     const p = new THREE.Group(); p.position.set(x, 0.26, z); g.add(p)
     cilindro(p, 0.025, 0.025, 0.26, scuro, 0, -0.13, 0, 5); zampe.push(p)
   }
+  fondiPerMateriale(fiocchi); fondiPerMateriale(testa)                              // la lana e la testa si muovono per intero
   g.userData = { zampe, corpo, testa, fiocchi, pelle: pelleM, k: 1, magro: 0, fase: 0, attesa: 1, meta: new THREE.Vector3() }
   return g
 }
-export function creaRecinto (stati) {
+function costruisciRecinto () {
   const g = new THREE.Group()
   scatola(g, 2.8, 0.03, 2.8, mat(0x8fd05c), 0, 0.015, 0).receiveShadow = true
   const legno = mat(0x93622f), m = 3.0 / 2
@@ -432,9 +449,12 @@ export function creaRecinto (stati) {
   scatola(g, 0.6, 0.06, 0.2, mat(0xe0c060), 0.8, 0.22, -0.9)
   g.userData.pecore = []
   g.userData.altezza = 1.2
-  sincronizzaPecore(g, stati || iniziali())
+  fondiPerMateriale(g)
   return g
 }
+const recintoVuoto = memoModello('recinto', costruisciRecinto)
+/** Il recinto con le sue pecore (di serie una): il recinto vuoto è il modello in cache, le pecore si aggiungono a ogni istanza. */
+export function creaRecinto (stati) { const g = recintoVuoto(); sincronizzaPecore(g, stati || iniziali()); return g }
 /** Tiene tante pecore in scena quante ne dicono gli stati (una nascita ne aggiunge una). */
 export function sincronizzaPecore (g, stati) {
   const lista = g.userData.pecore
@@ -487,7 +507,7 @@ const G_BECCO = new THREE.ConeGeometry(0.022, 0.07, 4).rotateX(Math.PI / 2), G_C
 const G_ZAMPA = new THREE.CylinderGeometry(0.008, 0.008, 0.1, 3), G_UOVO = new THREE.SphereGeometry(0.045, 8, 6)
 function parte (g, geo, m, x, y, z) { const o = pronto(new THREE.Mesh(geo, m)); o.position.set(x, y, z); g.add(o); return o }
 
-export function creaGallina (k = 0) {
+function costruisciGallina (k = 0) {
   const g = new THREE.Group()
   const penne = mat(k % 2 ? 0xb9703c : 0xf6f1e4), rosso = mat(0xd8352a), giallo = mat(0xf0b030)
   const corpo = parte(g, G_CORPO, penne, 0, 0.17, 0); corpo.scale.set(1, 0.9, 1.25)
@@ -498,11 +518,12 @@ export function creaGallina (k = 0) {
   scatola(testa, 0.02, 0.04, 0.05, rosso, 0, 0.1, 0.02)
   for (const s of [-1, 1]) parte(g, G_ZAMPA, giallo, s * 0.04, 0.05, 0.01)
   const uovo = parte(g, G_UOVO, mat(0xfff4e0), 0.16, 0.045, 0.04); uovo.scale.set(0.85, 1, 0.85); uovo.visible = false
+  fondiPerMateriale(testa); fondiPerMateriale(g, { escludi: [corpo, testa, uovo] })       // restano sciolti ciò che si piega e il dono
   g.userData = { corpo, testa, uovo, dono: uovo, magro: 0, fase: Math.random() * 6, attesa: Math.random() * 2, meta: new THREE.Vector3(), zona: { x0: -1.15, x1: 1.15, z0: 0.15, z1: 0.8 } }
   return g
 }
 
-export function creaPollaio (stati) {
+function costruisciPollaio () {
   const g = new THREE.Group()
   const legno = mat(0xa4713e), chiaro = mat(0xc99a5c), terra = mat(0xcdb27a)
   scatola(g, 3.0, 0.04, 2.0, mat(0x8fd05c), 0, 0.02, 0).receiveShadow = true
@@ -525,9 +546,11 @@ export function creaPollaio (stati) {
   g.userData.bestie = []; g.userData.crea = creaGallina
   g.userData.posto = k => new THREE.Vector3(-0.9 + (k % 3) * 0.9, 0, 0.35 + Math.floor(k / 3) * 0.36 + (k % 2) * 0.06)   // sei galline: due file di tre sulla terra battuta
   g.userData.altezza = 2.3
-  sincronizzaBestie(g, stati || [{ fine: null }])
+  fondiPerMateriale(g)
   return g
 }
+const pollaioVuoto = memoModello('pollaio', costruisciPollaio)
+export function creaPollaio (stati) { const g = pollaioVuoto(); sincronizzaBestie(g, stati || [{ fine: null }]); return g }
 
 // la mucca: bianca a chiazze marroni (un po' diversa per posto), la testa che rumina. Le chiazze sono colori per faccia sul
 // corpo stesso (niente mesh sovrapposte: non sporgono); le zampe entrano nella pancia e finiscono in uno zoccolo scuro.
@@ -556,7 +579,7 @@ function mantoDelCorpo (k) {
   }
   return MANTI.get(v)
 }
-export function creaMucca (k = 0) {
+function costruisciMucca (k = 0) {
   const g = new THREE.Group()
   const bianco = mat(0xf7f3ea), rosa = mat(0xf0b0a8), scuro = mat(0x2a2018)
   const corpo = parte(g, mantoDelCorpo(k), mat(0xffffff, { vertexColors: true }), 0, 0.42, 0); corpo.scale.set(...SCALA_CORPO)
@@ -575,12 +598,13 @@ export function creaMucca (k = 0) {
   const secchio = new THREE.Group(); secchio.position.set(0.5, 0, 0.3); g.add(secchio); secchio.visible = false
   cilindro(secchio, 0.1, 0.08, 0.17, mat(0xdde4ea, { metalness: 0.4, roughness: 0.5 }), 0, 0.085, 0, 8)
   cilindro(secchio, 0.085, 0.085, 0.02, mat(0xffffff), 0, 0.17, 0, 8)
+  fondiPerMateriale(testa); fondiPerMateriale(coda); fondiPerMateriale(g, { escludi: [corpo, testa, coda, secchio] })
   g.userData = { corpo, testa, coda, dono: secchio, magro: 0, fase: Math.random() * 6, meta: new THREE.Vector3() }
   return g
 }
 
 const G_PALO = new THREE.CylinderGeometry(0.04, 0.045, 0.68, 6)
-export function creaStalla (stati) {
+function costruisciStalla () {
   const g = new THREE.Group()
   const rosso = mat(0xa8392f), bianco = mat(0xf3e9d4), legno = mat(0x8a5a34), paglia = mat(0xe0c060)
   scatola(g, 3.9, 0.04, 2.9, mat(0x8fd05c), 0, 0.02, 0).receiveShadow = true
@@ -610,9 +634,11 @@ export function creaStalla (stati) {
   g.userData.bestie = []; g.userData.crea = creaMucca
   g.userData.posto = k => new THREE.Vector3(-1.35 + k * 0.9, 0.05, 0.45)  // quattro mucche in fila nel cortile, davanti al fienile
   g.userData.altezza = 2.9
-  sincronizzaBestie(g, stati || [{ fine: null }])
+  fondiPerMateriale(g)
   return g
 }
+const stallaVuota = memoModello('stalla', costruisciStalla)
+export function creaStalla (stati) { const g = stallaVuota(); sincronizzaBestie(g, stati || [{ fine: null }]); return g }
 
 /** Tiene tante bestie in scena quante ne dicono gli stati del motore (una compra ne aggiunge una). */
 export function sincronizzaBestie (g, stati) {
@@ -665,7 +691,7 @@ export function muoviBestie (g, dt, t, stati, adesso) {
   })
 }
 
-export function creaCaseificio () {
+function costruisciCaseificio () {
   const g = new THREE.Group()
   const bianco = mat(0xf7f2e6), legno = mat(0x7b4a24), giallo = mat(0xf2c44a), scuro = mat(0xd9a82c)
   lastra(g, 3.0, 2.9, 0xcfc3a8)
@@ -684,13 +710,14 @@ export function creaCaseificio () {
   for (let k = 0; k < 4; k++) { const r = scatola(ruota, 0.06, 1.24, 0.06, legno); r.rotation.x = k * Math.PI / 4 }
   for (let k = 0; k < 8; k++) { const a = k * Math.PI / 4; scatola(ruota, 0.34, 0.16, 0.05, legno, 0, Math.cos(a) * 0.62, Math.sin(a) * 0.62).rotation.x = a }
   scatola(g, 0.5, 0.06, 1.6, mat(0x6fb6e8, { transparent: true, opacity: 0.8 }), -1.35, 0.06, -0.2)   // il canaletto
-  g.userData.anima = (dt) => { ruota.rotation.x -= dt * 0.9 }
+  g.userData.ruota = ruota; g.userData.anima = function (dt) { this.ruota.rotation.x -= dt * 0.9 }
   g.userData.altezza = 1.15 + alt + 0.9
+  fondiPerMateriale(ruota); fondiPerMateriale(g, { escludi: [ruota] })
   return g
 }
 
 // ── fisse: il fienile, la casa ──
-export function creaFienile () {
+function costruisciFienile () {
   const g = new THREE.Group()
   const rosso = mat(0xa8392f)
   scatola(g, 3.6, 1.6, 2.6, rosso, 0, 0.8, 0)
@@ -700,10 +727,11 @@ export function creaFienile () {
   cilindro(g, 0.55, 0.55, 2.4, mat(0xcfd2d6), 2.4, 1.2, -0.3, 14)
   sfera(g, 0.55, mat(0xb9bdc2), 2.4, 2.4, -0.3, 1, 0.7, 1, 14)
   g.userData.altezza = 3.6
+  fondiPerMateriale(g)
   return g
 }
 /** La casa di legno del Sotterraneo (dal-sotterraneo.js), 4×3, con il camino: `userData.fumo` è dove esce il fumo. */
-export function creaCasa () { return casaDiLegno() }
+function costruisciCasa () { return casaDiLegno() }
 export function creaCasaVecchia () {
   const g = new THREE.Group()
   scatola(g, 3.4, 1.4, 2.2, mat(0xf2e6cf), 0, 0.7, 0)
@@ -731,6 +759,36 @@ export function fantasma(g) {
     o.material.transparent = true; o.material.opacity = 0.5; o.castShadow = false
   })
 }
+/** Toglie un fantasma di scena: i materiali sono copie sue (`fantasma` li ha clonati), si buttano; le geometrie sono della cache e restano. */
+export function buttaFantasma(g) {
+  g.traverse(o => { if (o.isMesh && o.material && o.material.dispose) o.material.dispose() })
+}
 export function tingi(g, ok) {
   g.traverse(o => { if (o.isMesh && o.material.emissive) { o.material.emissive.set(ok ? 0x1d6b1d : 0x8a1d1d); o.material.emissiveIntensity = 0.7 } })
 }
+
+// ── la cache: ogni modello si costruisce (e si fonde) una volta, le istanze sono cloni che ne condividono geometrie e materiali ──
+//    (scena3d/cache-modelli.js). I numeri a caso di una bestia si rifanno a ogni istanza.
+const casuale = (g) => { g.userData.fase = Math.random() * 6 }
+export const creaPasticceria = memoModello('pasticceria', costruisciPasticceria)
+export const creaMongolfiera = memoModello('mongolfiera', costruisciMongolfiera)
+export const creaMulino = memoModello('mulino', costruisciMulino)
+export const creaPanificio = memoModello('panificio', costruisciPanificio)
+export const creaConserviera = memoModello('conserviera', costruisciConserviera)
+export const creaGelateria = memoModello('gelateria', costruisciGelateria)
+export const creaCaseificio = memoModello('caseificio', costruisciCaseificio)
+export const creaSegnaposto = memoModello('segnaposto', costruisciSegnaposto, { chiave: (w, d, h = 1) => [w, d, h].join('x') })
+export const creaAiuola = memoModello('aiuola', costruisciAiuola)
+export const creaPanchina = memoModello('panchina', costruisciPanchina)
+export const creaPozzo = memoModello('pozzo', costruisciPozzo)
+export const creaSpaventapasseri = memoModello('spaventapasseri', costruisciSpaventapasseri)
+export const creaTrattore = memoModello('trattore', costruisciTrattore)
+export const creaCassa = memoModello('cassa', costruisciCassa)
+export const creaFontana = memoModello('fontana', costruisciFontana)
+export const creaFienile = memoModello('fienile', costruisciFienile)
+export const creaCasa = memoModello('casa', costruisciCasa)
+export const creaBancarella = memoModello('bancarella', costruisciBancarella)
+export const creaBacheca = memoModello('bacheca', costruisciBacheca)
+export const creaPecora = memoModello('pecora', costruisciPecora)
+export const creaGallina = memoModello('gallina', costruisciGallina, { chiave: (k = 0) => k % 2, dopo: (g) => { casuale(g); g.userData.attesa = Math.random() * 2 } })
+export const creaMucca = memoModello('mucca', costruisciMucca, { chiave: (k = 0) => k % 2, dopo: casuale })

@@ -46,6 +46,9 @@ export function perGiorno(voci, { quanti = 7, oggi = Date.now() } = {}) {
   return fuori
 }
 
+// i giorni di UN gioco (la pagina del gioco nelle impostazioni dei grandi): stessa forma di `perGiorno`, anche i giorni vuoti
+export const perGiornoDi = (voci, gioco, opzioni) => perGiorno(voci.filter(v => v.g === gioco), opzioni)
+
 // quanto oggi su quel gioco: lo usano le monete che calano (docs/genitori/varieta.md)
 export function oggiDi(voci, gioco, oggi = Date.now()) {
   const k = chiaveGiorno(oggi)

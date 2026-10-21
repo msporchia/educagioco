@@ -73,7 +73,7 @@ controlla('l\'aspetto del contadino è uno dei due', ['contadino', 'contadina'].
     dentro(`${aspetto}: l'altezza è vicina a quella di prima`, m.altezza, vecchio.altezza - 0.2, vecchio.altezza + 0.1)
     dentro(`${aspetto}: i piedi stanno a terra`, m.sotto, -0.01, 0.01)
     dentro(`${aspetto}: non è più largo di un metro`, m.larghezza, 0.3, 0.9)
-    dentro(`${aspetto}: i mesh sono pochi`, m.mesh, 20, 60)
+    dentro(`${aspetto}: i mesh sono pochi (fusi per parte: gambe, busto, testa, bracci)`, m.mesh, 4, 12)
     const u = creaContadino(aspetto).userData
     controlla(`${aspetto}: ha gli stessi perni dell'eroe di prima`, ['gambe', 'busto', 'testa', 'bracci', 'falce', 'ascia'].every(k => u[k]) && u.gambe.length === 2 && u.bracci.length === 2)
   }

@@ -8,7 +8,9 @@ stile-vicini.css    la mappa, il viaggio, la visita (`.f3-vic-`)
 stile-macchina.css  il foglio di una macchina (`.fm-`): fila, pronti, carte, fantasma; i colori del tema restano in stile.css
 visite.js            il filo fra `Gioco.vue` e le visite (`usaVisite`): mappa, viaggio, la scena a richiesta, cassa e mercato
 dati/
-  mondo.js           la griglia, i 42 lotti, il quadrato di partenza, i due edifici di scena, le strade di serie, i lotti di un posto
+  mondo.js           le coordinate (lotti `a_b` qualunque, chiavi di cella, id salvati), i 42 lotti storici, il quadrato di partenza, i due edifici di scena, le strade di serie
+  lotti.js           `generaLotto(a, b)`: bioma, acqua, molo, alberi e sassi di un lotto (puro)
+  biomi.js           prato / bosco / laghetto e lo stagno ([laghi.md](laghi.md)); semi.js: il caso del mondo
   carte.js           le carte del menu «Costruisci qui»: `carteDi(categoria, stato)`, `schedeDi`, `DISEGNI` (carta → pezzo dell'atlante 2D, ormai solo come dato: la carta mostra il modello 3D), `STRUMENTI`, i guasti
   catalogo.js        i pezzi (ora con la `categoria` di ogni pezzo e edificio, `CATEGORIE`; ora anche passerella, ponte e tavolo; i primi due `calpestabile`, con `alzato`: regole.md) — dieci all'inizio:  (campo, recinto, pollaio, stalla, bancarella, bacheca, aiuola, panchina, fontana, pozzo, spaventapasseri) e gli undici
                      edifici unici (pasticceria = il Pastificio, mongolfiera, mulino, panificio, caseificio, conserviera = la Cucina, gelateria, telaio, zuccherificio, sartoria, tintoria: gli id sono quelli dei salvataggi): prezzi, misure, `liv`, `slot`
@@ -18,10 +20,10 @@ dati/
   compagni.js        Watson e i gatti: i dati, il livello a cui arrivano, le scelte pure (meta, cosa fare), `ASPETTO_ERO` ([compagni.md](compagni.md))
   livelli.js         le soglie, `roba(liv)`, i nomi dei livelli, i guasti dei livelli
   ordini.js          il banco: i clienti, i tempi, il premio (tetto 🪙6/min), `chiedibili(livello)`, i guasti
-  regole.js          i costi (anche l'albero 🪙 3 e il sasso 🪙 1), le pecore
+  regole.js          i costi (anche l'albero 🪙 3 e il sasso 🪙 1, il prezzo dei lotti), le pecore
   mongolfiera.js     la nave: file, casse, pezzi, bonus, il riposo, la sorpresa (`SORPRESE`), `merceDaCassa`, `premioDellaCassa`, i guasti col tetto ([mongolfiera.md](mongolfiera.md))
-  alberi.js          gli alberi (sempre gli stessi: un caso col seme)
-  ostacoli.js        i sassi e i cespugli (2–5 per lotto, sempre gli stessi; l'id è la cella), i guasti
+  alberi.js          gli alberi storici (sempre gli stessi: un caso col seme) e quelli dei lotti nuovi
+  ostacoli.js        i sassi e i cespugli di un lotto (2–5 sul prato; l'id è la cella), i guasti
   qualita.js         i preset di qualità, le scale, le ombre
   degrado.js         il degrado adattivo (senza three): fps → livello → risoluzione e cadenza dell'ombra
   vicini.js          i villaggi dei vicini e il formato di una fattoria visitabile (snapshot, `normalizzaFattoriaVisitabile`, i numeri di prezzi, premi e doni), i guasti ([vicini.md](vicini.md))
@@ -29,11 +31,12 @@ motore/
   fattoria3d.js      le regole: la classe Fattoria3d (borsa e orologio da fuori)
   mongolfiera.js     la nave: `nuovaStiva`, `stivaInForma`, `aggiornaMongolfiera` (atterra il carico, torna dal viaggio), `caricaLaCassa`, `partiLaMongolfiera`, `scegliLaSorpresa`, `vistaDellaMongolfiera`
   ordini.js          gli ordini: `nuovoOrdine` (puro, col caso da fuori) e `ordineInForma`; i posti crescono col livello (`POSTI(livello)` in `dati/ordini.js`)
-  stato.js           lo stato salvato (esperienza, `posseduti`, `macchine`, `ordini`, `bestie` di pollaio e stalla; la versione sta in `VERSIONE_STATO`), `statoIniziale()` e `normalizza()` (un salvataggio rotto si rimette in forma; un v6 passa dagli id vecchi ai nuovi, v7)
+  stato.js           lo stato salvato (esperienza, `posseduti` = edificio in mappa; gli edifici sono anche `cose`, il v8 si migra al posto di prima: [edifici-liberi.md](edifici-liberi.md); `macchine`, `ordini`, `bestie` di pollaio e stalla; la versione sta in `VERSIONE_STATO`), `statoIniziale()` e `normalizza()` (un salvataggio rotto si rimette in forma; un v6 passa dagli id vecchi ai nuovi, v7)
   percorso.js        Dijkstra sulla griglia, le strade costano meno
   vicini.js          i vicini: la classe `Vicini` (entra, aiuta la cassa, compra, vende), `normalizzaVicini` (lo stato a parte), `motoreDiVisita` (la scena di sola lettura da uno snapshot), `esportaLaMiaFattoria`
-scena3d/             il disegno (vedi scena.md); `facce.js` la faccia di una merce su una tela per i pezzi di HTML sopra la scena (il «+1» di `fx.volo`); `visita.js` è la visita a un vicino, una sottoclasse di `Mondo3d` su un motore di sola lettura ([vicini.md](vicini.md)); `anteprime.js` e `anteprime-pura.js` le foto dei modelli per le carte (senza three: l'inquadratura e la cache; [scena.md](scena.md) «Le anteprime»); `modelli-colture.js` il campo e le quindici colture (ri-esportati da `modelli.js`); `compagni.js` e `modelli-compagni.js` per i compagni e il contadino ([compagni.md](compagni.md)); `detti.js` (senza three) traduce un rifiuto del motore in una riga, anche per la vista; `ottimizza.js` spegne l'ombra alle mesh piccole di un modello appena creato ([scena.md](scena.md) «Qualità e peso»); `azioni.js` fa il gesto davanti a ogni cosa, pollaio e stalla compresi ([animali.md](animali.md))
+scena3d/             il disegno (vedi scena.md); `facce.js` la faccia di una merce su una tela per i pezzi di HTML sopra la scena (il «+1» di `fx.volo`); `visita.js` è la visita a un vicino, una sottoclasse di `Mondo3d` su un motore di sola lettura ([vicini.md](vicini.md)); `anteprime.js` e `anteprime-pura.js` le foto dei modelli per le carte (senza three: l'inquadratura e la cache; [scena.md](scena.md) «Le anteprime»); `modelli-colture.js` il campo e le quindici colture (ri-esportati da `modelli.js`); `compagni.js` e `modelli-compagni.js` per i compagni e il contadino ([compagni.md](compagni.md)); `detti.js` (senza three) traduce un rifiuto del motore in una riga, anche per la vista; `ottimizza.js` spegne l'ombra alle mesh piccole di un modello appena creato ([scena.md](scena.md) «Qualità e peso»); `fondi.js` fonde le mesh statiche di un modello per materiale; `cache-modelli.js` costruisce (e fonde) un modello una volta per tipo e poi consegna cloni che ne condividono geometrie e materiali; `scaldo-puro.js` (senza three) è la coda del riscaldamento: i modelli che servono presto costruiti in tempo morto, un compito per fotogramma (tutto in «Qualità e peso»); `azioni.js` fa il gesto davanti a ogni cosa, pollaio e stalla compresi ([animali.md](animali.md))
   scena3d/modelli-passaggi.js   ponte, passerella e tavolo con le panche: presi dal Sotterraneo 3D e rifatti con i materiali della fattoria (scena.md)
+  scena3d/modelli-acqua.js      lo stagno (3×3) e il laghetto (5×4) costruiti dal bambino, e il materiale dell'acqua (`materialeAcqua`, `uTAcqua`) che usa anche il terreno ([laghi.md](laghi.md))
 viste/
   Faccia.vue         la faccia di una merce (`k` la chiave, `n` il numerino): il pezzo dell'atlante 2D con `Provino.vue`, l'emoji come ripiego; la usano inventario, banco, macchina, semi, livelli, visita
   Hud.vue            il gettone del livello (⭐ N con la barra sottile, apre i livelli), il tasto «🎒 Inventario» (pallino se è entrata roba dall'ultima apertura) e, da livello 2, «🧺 Banco» col pallino degli ordini consegnabili. Niente liste di scorte sul prato
@@ -73,7 +76,8 @@ Registrazione: `src/giochi/indice.js` (il manifesto, in coda) e `src/giochi/sche
 | `[data-f3="costruisci-msg"]`, `[data-carta].trema` | la riga sotto le carte (livello che manca, «Servono 🪙 N») e la carta chiusa che trema |
 | `[data-f3="zona-via"]` | la fascia in basso mentre un pezzo è sollevato o il fantasma aspetta un posto (toccarla annulla il fantasma) |
 | `[data-f3="barra-strade"]`, `[data-strumento="strada"]`, `[data-f3="strade-fatto"]` | la barra del pennello |
-| `[data-f3="dialogo"]`, `[data-scelta="0"]` | la conferma (solo lotti e edifici unici); la prima scelta è «Compra · 🪙 N» |
+| `[data-f3="dialogo"]`, `[data-scelta="0"]` | la conferma (solo i lotti di terreno); la prima scelta è «Compra · 🪙 N» |
+| `[data-f3="costruisci-esclama"]`, `[data-f3="scheda-esclama"]`, `[data-f3="carta-esclama"]` | il «!» pulsante: un edificio aperto dal livello e non costruito (sul tasto 🏗️, sulla linguetta Edifici, sulla carta); `[data-f3="ordine-esclama"]`/`[data-f3="ordine-serve"]` nel banco: [edifici-liberi.md](edifici-liberi.md) |
 | `[data-f3="cartello-bestie"]` (`data-pezzo`: recinto, pollaio, stalla), `[data-f3="compra-bestia"]` (`aria-disabled`) | il cartello sopra recinto, pollaio e stalla e il suo «＋ 🪙 N»; si tocca con `dispatchEvent('click')` perché può stare fuori dallo schermo |
 | `[data-f3="macchina"][data-macchina="<tipo>"]`, `[data-ricetta="pane"]`, `[data-f3="ritira"]` | il foglio di una macchina; la carta di ogni ricetta porta `[data-puoi="true|false"]` e `[data-n]` (quante se ne fanno); una carta spenta resta toccabile e dice perché in `[data-f3="macchina-msg"]` |
 | `[data-f3="posto"][data-posto="<n>"][data-stato="libero|cuoce|aspetta"]`, `[data-f3="pronti"]`, `[data-pronto="<k>"]`, `[data-ing="<k>"]` | un posto della fila, la pila dei pronti (ogni pronto, toccato, ritira), l'ingrediente sulla carta |

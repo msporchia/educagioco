@@ -11,6 +11,15 @@
 .f3-gettone i { display: block; height: 4px; border-radius: 2px; background: #eadfc6; overflow: hidden; } .f3-gettone u { display: block; height: 100%; background: #f0a020; }
 .f3-pallino { position: absolute; right: -3px; top: -3px; width: 14px; height: 14px; border-radius: 7px; background: #e8472b; border: 2px solid #fff; box-sizing: border-box; animation: f3-pulsa 1.2s ease-in-out infinite; }
 @keyframes f3-pulsa { 50% { transform: scale(1.25); } }
+/* il «!»: c'è un edificio aperto dal livello che non hai ancora costruito (docs/fattoria3d/edifici-liberi.md). Un pallino rosso che pulsa piano,
+   in un angolo del tasto, della linguetta o della carta; nel biglietto di un ordine e nella riga «Serve il…» sta a sé. */
+.f3-esclama { position: absolute; right: -4px; top: -6px; z-index: 2; width: 20px; height: 20px; border-radius: 10px; background: #e8472b; color: #fff; border: 2px solid #fff; box-sizing: border-box; font: 900 13px/16px "Emoji Gioco", system-ui, sans-serif; font-style: normal; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,.35); pointer-events: none; animation: f3-pulsa 1.4s ease-in-out infinite; }
+.f3-azioni button { position: relative; } .f3-schede button { position: relative; } .f3-griglia-carte .carta { position: relative; }
+.f3-griglia-carte .carta .f3-esclama { right: 4px; top: 4px; }
+.f3-schede button .f3-esclama { right: -2px; top: 0; }
+.f3-bac-serve { display: flex; align-items: center; gap: 6px; margin: 4px 0; font: 800 14px "Emoji Gioco", system-ui, sans-serif; color: #9a2a14; }
+.f3-bac-serve .f3-esclama { position: static; flex: none; animation: none; }
+@media (prefers-reduced-motion: reduce) { .f3-esclama { animation: none !important; } }
 .f3-toast { position: absolute; left: 50%; transform: translateX(-50%); top: 64px; z-index: 28; max-width: calc(100% - 32px); pointer-events: none; background: #ffe27a; color: #3a2a1a; font: 800 16px "Emoji Gioco", system-ui, sans-serif; padding: 9px 16px; border-radius: 18px; box-shadow: 0 3px 12px rgba(0,0,0,.3); text-align: center; }
 .f3-hud span { background: rgba(255,251,240,.92); color: #3a2a1a; font: 800 16px "Emoji Gioco", system-ui, sans-serif; padding: 5px 11px; border-radius: 16px; box-shadow: 0 2px 6px rgba(0,0,0,.18); }
 .f3-angolo { position: absolute; right: 8px; top: 8px; z-index: 20; width: 44px; height: 44px; border: 0; border-radius: 22px; background: rgba(255,255,255,.75); font-size: 20px; touch-action: manipulation; }

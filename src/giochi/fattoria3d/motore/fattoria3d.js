@@ -3,14 +3,14 @@
    Tutto ciò che può non riuscire torna { ok: false, motivo } e non cambia niente; quello che riesce torna { ok: true, … }.
    Gli eventi (`prendiEventi()`) dicono cosa è successo, per i contatori. L'esperienza è la spesa in monete fatta qui dentro
    (terra, pezzi, edifici, strade; non gli spostamenti, e i rimborsi non la riducono): da lei il livello, che apre le cose. Vedi docs/fattoria3d/regole.md. */
-import { GW, GH, LIM, LOTTI, idx, dentro, lottoDi, lottoPerId, lottiDelPosto, vicinoDi, FISSI, stradeDiSerie } from '../dati/mondo.js'
-import { PEZZI, EDIFICI, quotaDelPezzo } from '../dati/catalogo.js'
+import { LIM, chiave, cellaDa, lottoDaChiave, cellaDaId, idCella, dentro, lotto, lottoDi, lottoPerId, vicinoDi, VICINI_4, LOTTI_INIZIALI, FISSI, POSTI_STORICI, stradeDiSerie } from '../dati/mondo.js'
+import { PEZZI, EDIFICI, quotaDelPezzo, edificiDaCostruire } from '../dati/catalogo.js'
 import { COLTURE, TESSERE } from '../dati/colture.js'
 import { RICETTE, MACCHINE, TIPI_DI_MACCHINA } from '../dati/ricette.js'
 import { livelloPer, livelloDelPezzo, livelloDellaColtura, livelloDellaRicetta } from '../dati/livelli.js'
-import { COSTI, PECORE } from '../dati/regole.js'
-import { generaAlberi } from '../dati/alberi.js'
-import { generaOstacoli } from '../dati/ostacoli.js'
+import { COSTI, PECORE, prezzoDelLotto } from '../dati/regole.js'
+import { generaLotto } from '../dati/lotti.js'
+import { biomaDi, acquaDelLotto } from '../dati/biomi.js'
 import { ANIMALI, CORTILE, LANA, prezzoDellaBestia } from '../dati/animali.js'
 import { normalizza, nuoveTessere } from './stato.js'
 import { percorso } from './percorso.js'
@@ -25,35 +25,31 @@ export class Fattoria3d {
     this.ora = ora
     this.rnd = rnd
     this.eventi = []
-    this.alberi = generaAlberi()
-    this.strada = new Uint8Array(GW * GH)          // 0 niente, 1 disegnata, 2 di serie
-    for (const k of stradeDiSerie()) this.strada[k] = 2
-    for (const k of this.s.strade) if (!this.strada[k]) this.strada[k] = 1
-    this.bloccoFisso = new Uint8Array(GW * GH)     // fienile, casa, gli alberi in piedi e i sassi e cespugli ancora lì
-    for (const f of FISSI) for (let a = 0; a < f.w; a++) for (let b = 0; b < f.d; b++) this.bloccoFisso[idx(f.i + a, f.j + b)] = 1
+    this._comprabili = null
+    this.propri = new Set()                        // le chiavi dei lotti tuoi
+    for (const id of Object.keys(this.s.lotti)) { const l = lottoPerId(id); if (l) this.propri.add(l.k) }
+    this.strada = new Map()                        // cella (chiave) → 1 disegnata, 2 di serie
+    for (const k of stradeDiSerie()) this.strada.set(k, 2)
+    for (const id of this.s.strade) { const c = cellaDaId(id); if (c && !this.strada.has(chiave(c[0], c[1]))) this.strada.set(chiave(c[0], c[1]), 1) }
+    this.bloccoFisso = new Set()                   // fienile, casa, gli alberi in piedi e i sassi e cespugli ancora lì
+    for (const f of FISSI) for (let a = 0; a < f.w; a++) for (let b = 0; b < f.d; b++) this.bloccoFisso.add(chiave(f.i + a, f.j + b))
     this.tagliati = new Set(this.s.tagliati)
-    for (const a of this.alberi) {
-      if (this.tagliati.has(a.n)) a.tagliato = true
-      else if (!a.tagliato && dentro(a.i, a.j)) this.bloccoFisso[idx(a.i, a.j)] = 1
-    }
-    this.ostacoli = generaOstacoli()
     this.tolti = new Set(this.s.ostacoli)
-    for (const o of this.ostacoli) {
-      if (this.tolti.has(o.id)) o.tolto = true
-      else this.bloccoFisso[o.id] = 1
-    }
-    this.cellaEdificio = new Uint8Array(GW * GH)   // i posti degli edifici unici, comprati o no
-    for (const e of Object.values(EDIFICI)) for (let a = 0; a < e.w; a++) for (let b = 0; b < e.d; b++) this.cellaEdificio[idx(e.slot.i + a, e.slot.j + b)] = 1
-    this.cellaCosa = new Int32Array(GW * GH)       // l'id della cosa che sta su una cella, 0 = niente
-    this.cellaPasso = new Float32Array(GW * GH)    // > 0 dove sta un pezzo calpestabile (ponte, passerella): di quanto alza chi ci cammina
+    this.cellaCosa = new Map()                     // l'id della cosa che sta su una cella
+    this.cellaPasso = new Map()                    // di quanto alza chi cammina su un pezzo calpestabile (ponte, passerella)
+    this.cellaAcqua = new Map()                    // l'id dello stagno o del laghetto costruito che sta su una cella: a parte da `cellaCosa`, così un ponte ci sta sopra
     this.prove = []                                // le cose «di prova» (stress): non si salvano
     for (const c of this.s.cose) {
       if (c.tipo === 'recinto' && !c.pecore) c.pecore = this.pecoreIniziali()
       if (ANIMALI[c.tipo] && !c.bestie) c.bestie = this.bestieIniziali()
       this._occupa(c, c.id)
     }
-    // un salvataggio di prima può avere un pezzo o una strada dove ora c'è un sasso: il sasso sparisce (gratis, e per sempre)
-    for (const o of this.ostacoli) if (!o.tolto && (this.cellaCosa[o.id] || this.strada[o.id])) this._togliSenzaPagare(o)
+    // i lotti con dentro qualcosa (alberi, sassi, acqua): i tuoi e quelli entro due lotti da un tuo, generati a richiesta
+    this.alberi = []; this.ostacoli = []           // le liste degli oggetti in scena (nell'ordine in cui i lotti sono stati aperti)
+    this.alberiPerId = new Map(); this.ostacoliPerId = new Map(); this.ostacoloPerCella = new Map()
+    this.lottiAperti = new Map()                   // chiave del lotto → { l, dati }
+    this._acquaCache = new Map()
+    for (const k of this.propri) this._apriAnello(lottoDaChiave(k))
     this.tick()
   }
 
@@ -83,64 +79,131 @@ export class Fattoria3d {
   /** Il rifiuto di una cosa non ancora arrivata, o null se si può. */
   _chiusa(liv) { return liv > this.livello() ? { ok: false, motivo: 'non-sbloccato', liv } : null }
 
-  // ── il terreno ──
-  posseduto(l) { return !!this.s.lotti[l.id] }
-  cellaPropria(i, j) { const l = lottoDi(i, j); return !!l && this.posseduto(l) }
-  confina(l) { return [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([a, b]) => { const n = vicinoDi(l, a, b); return !!n && this.posseduto(n) }) }
-  prezzoLotto() { return COSTI.lottoBase + COSTI.lottoRincaro * (Object.keys(this.s.lotti).length - 9) }
-  lottiMiei() { return LOTTI.filter(l => this.posseduto(l)) }
+  // ── il terreno: lotti con coordinate intere qualunque, nessun confine ──
+  posseduto(l) { return this.propri.has(l.k) }
+  cellaPropria(i, j) { return this.propri.has(lottoDi(i, j).k) }
+  confina(l) { return VICINI_4.some(([a, b]) => this.propri.has(vicinoDi(l, a, b).k)) }
+  prezzoLotto() { return prezzoDelLotto(Object.keys(this.s.lotti).length - Object.keys(LOTTI_INIZIALI).length) }
+  lottiMiei() { return [...this.propri].map(cellaLotto) }
+  /** I lotti che si possono comprare adesso: quelli che confinano con uno tuo. */
+  lottiComprabili() {
+    if (this._comprabili) return this._comprabili
+    const out = new Map()
+    for (const k of this.propri) { const l = lottoDaChiave(k); for (const [a, b] of VICINI_4) { const v = vicinoDi(l, a, b); if (!this.propri.has(v.k)) out.set(v.k, v) } }
+    return (this._comprabili = [...out.values()])
+  }
+  biomaDi(l) { return biomaDi(l.a, l.b) }
+  /** Apre (genera) i lotti entro due lotti da `l`: alberi, sassi, acqua. Vale per i lotti tuoi e per l'anello che si vede davanti. */
+  _apriAnello(l) {
+    for (let db = -2; db <= 2; db++) for (let da = -2; da <= 2; da++) {
+      const v = lotto(l.a + da, l.b + db)
+      if (!this.lottiAperti.has(v.k)) this._apri(v)
+    }
+  }
+  _apri(l) {
+    const dati = generaLotto(l.a, l.b)
+    this.lottiAperti.set(l.k, { l, dati })
+    for (const a of dati.alberi) {
+      if (this.tagliati.has(a.n)) a.tagliato = true
+      else if (!a.tagliato) this.bloccoFisso.add(chiave(a.i, a.j))
+      this.alberi.push(a); this.alberiPerId.set(a.n, a)
+    }
+    for (const o of dati.ostacoli) {
+      if (this.tolti.has(o.id)) o.tolto = true
+      else this.bloccoFisso.add(chiave(o.i, o.j))
+      this.ostacoli.push(o); this.ostacoliPerId.set(o.n, o); this.ostacoloPerCella.set(chiave(o.i, o.j), o)
+      // un salvataggio di prima può avere un pezzo o una strada dove ora c'è un sasso: il sasso sparisce (gratis, e per sempre)
+      if (!o.tolto && (this.cellaCosa.has(chiave(o.i, o.j)) || this.cellaAcqua.has(chiave(o.i, o.j)) || this.strada.has(chiave(o.i, o.j)))) this._togliSenzaPagare(o)
+    }
+    return dati
+  }
+  /** I lotti aperti (con alberi, sassi e acqua) che la scena può disegnare: { l, dati }. */
+  lottiVisibili() { return this.lottiAperti.values() }
   compraLotto(id) {
     const l = lottoPerId(id)
     if (!l) return { ok: false, motivo: 'sconosciuto' }
     if (this.posseduto(l)) return { ok: false, motivo: 'gia-tuo' }
     if (!this.confina(l)) return { ok: false, motivo: 'non-confina' }
     const costo = this.prezzoLotto()
-    if (!this._spendi(costo)) return { ok: false, motivo: 'poche-monete', costo }
+    if (!this._paga(costo)) return { ok: false, motivo: 'poche-monete', costo }
+    this._guadagna(Math.min(costo, COSTI.lottoEsperienzaMax))          // la terra fa salire di livello fino a un tetto: oltre, il prezzo frena e basta
     this.s.lotti[l.id] = true
+    this.propri.add(l.k); this._comprabili = null
+    this._apriAnello(l)
     this._evento('terra')
     return { ok: true, costo, lotto: l }
   }
+  // ── l'acqua: i laghetti. Non si cammina e non si costruisce, tranne con un ponte o una passerella (`suAcqua`) ──
+  _acquaDi(l) {
+    let a = this._acquaCache.get(l.k)
+    if (a === undefined) {
+      const celle = biomaDi(l.a, l.b) === 'laghetto' ? acquaDelLotto(l) : []
+      a = celle.length ? new Set(celle.map(([i, j]) => chiave(i, j))) : null
+      this._acquaCache.set(l.k, a)
+    }
+    return a
+  }
+  /** Acqua: un lago del mondo, o le celle di uno stagno/laghetto costruito (`ignora`: l'id di quello che si sta spostando, che non conta). */
+  acqua(i, j, ignora = 0) {
+    const k = chiave(i, j), s = this.cellaAcqua.get(k)
+    if (s && s !== ignora) return true
+    const a = this._acquaDi(lottoDi(i, j)); return !!a && a.has(k)
+  }
+  /** Se il pezzo `c` è uno stagno/laghetto con un ponte (o una passerella) sopra: finché c'è, non si sposta né si mette via. */
+  _ponteSopra(c) {
+    const d = PEZZI[c.tipo]
+    if (!d || !d.acqua) return false
+    for (let a = 0; a < d.w; a++) for (let b = 0; b < d.d; b++) if (this.cellaCosa.has(chiave(c.i + a, c.j + b))) return true
+    return false
+  }
 
   // ── la griglia: cosa blocca il passo e il costruire ──
-  eStrada(i, j) { return dentro(i, j) ? this.strada[idx(i, j)] : 0 }
-  blocca(i, j, ignora = 0) {
-    if (!dentro(i, j)) return true
-    const k = idx(i, j)
+  eStrada(i, j) { return this.strada.get(chiave(i, j)) || 0 }
+  stradaSu(i, j) { return this.strada.get(chiave(i, j)) || 0 }
+  /** Una cella è occupata da qualcosa che si vede (strada, pezzo, edificio, albero, sasso): per i ciuffi d'erba. */
+  occupata(i, j) { const k = chiave(i, j); return this.strada.has(k) || this.cellaCosa.has(k) || this.bloccoFisso.has(k) }
+  _bloccaSenzaAcqua(i, j, ignora = 0) {
     if (!this.cellaPropria(i, j)) return true      // ci si chiude dentro il recinto: il terreno non tuo non si calpesta
-    if (this.bloccoFisso[k] || this.cellaEdificio[k]) return true
-    const c = this.cellaCosa[k]
+    const k = chiave(i, j)
+    if (this.bloccoFisso.has(k)) return true
+    const c = this.cellaCosa.get(k) || 0
     return c !== 0 && c !== ignora
   }
-  /** Il passo: come `blocca`, ma un pezzo calpestabile (ponte, passerella) non ferma chi cammina. Il costruire usa `blocca`. */
+  blocca(i, j, ignora = 0) { return this._bloccaSenzaAcqua(i, j, ignora) || this.acqua(i, j, ignora) }
+  /** Il passo: come `blocca`, ma un pezzo calpestabile (ponte, passerella) non ferma chi cammina, nemmeno sull'acqua. Il costruire usa `blocca`. */
   libera(i, j) {
-    if (!dentro(i, j)) return false
-    const k = idx(i, j)
-    return this.cellaPasso[k] > 0 ? this.cellaPropria(i, j) : !this.blocca(i, j)
+    const p = this.cellaPasso.get(chiave(i, j))
+    return p > 0 ? this.cellaPropria(i, j) : !this.blocca(i, j)
   }
   /** Una cella dove si cammina in fretta: la strada, o un pezzo calpestabile (conta come strada nel percorso). */
-  sullaStrada(i, j) { return dentro(i, j) && (this.strada[idx(i, j)] > 0 || this.cellaPasso[idx(i, j)] > 0) }
+  sullaStrada(i, j) { const k = chiave(i, j); return this.strada.has(k) || this.cellaPasso.has(k) }
   /** Di quanto si alza chi sta in quel punto (0 per terra, > 0 su un ponte o una passerella). */
-  quotaPasso(x, z) { const i = Math.floor(x), j = Math.floor(z); return dentro(i, j) ? this.cellaPasso[idx(i, j)] : 0 }
-  cosaSu(i, j) { const id = dentro(i, j) ? this.cellaCosa[idx(i, j)] : 0; return id ? this.cosa(id) : null }
+  quotaPasso(x, z) { return this.cellaPasso.get(chiave(Math.floor(x), Math.floor(z))) || 0 }
+  /** La cosa su una cella: il pezzo che sta sopra (un ponte) prima, poi lo stagno sotto. */
+  cosaSu(i, j) { const k = chiave(i, j), id = this.cellaCosa.get(k) || this.cellaAcqua.get(k) || 0; return id ? this.cosa(id) : null }
   _occupa(c, id) {
-    const d = PEZZI[c.tipo]
-    for (let a = 0; a < d.w; a++) for (let b = 0; b < d.d; b++) { this.cellaCosa[idx(c.i + a, c.j + b)] = id; this.cellaPasso[idx(c.i + a, c.j + b)] = quotaDelPezzo(d, a, b) }
+    const d = this.misure(c.tipo)
+    if (d.acqua) {          // l'acqua costruita non occupa `cellaCosa` (ci va il ponte); una strada disegnata lì sotto sparisce
+      for (let a = 0; a < d.w; a++) for (let b = 0; b < d.d; b++) { const k = chiave(c.i + a, c.j + b); this.cellaAcqua.set(k, id); if (this.strada.get(k) === 1) this.strada.delete(k) }
+      return
+    }
+    for (let a = 0; a < d.w; a++) for (let b = 0; b < d.d; b++) { const k = chiave(c.i + a, c.j + b); this.cellaCosa.set(k, id); const q = quotaDelPezzo(d, a, b); if (q > 0) this.cellaPasso.set(k, q); else this.cellaPasso.delete(k) }
   }
-  /** Il percorso (celle) da una cella alla più vicina delle mete, o null. */
+  /** Il percorso (celle) da una cella alla più vicina delle mete, o null. Cammina solo sul terreno tuo: l'insieme è finito. */
   percorsoVerso(da, mete) { return percorso((i, j) => this.libera(i, j), (i, j) => this.sullaStrada(i, j), da, mete) }
 
   // ── le strade ──
   disegnaStrada(i, j, { gratis = false } = {}) {
-    if (!dentro(i, j) || this.strada[idx(i, j)]) return { ok: false, motivo: 'qui-no' }
+    if (!dentro(i, j) || this.strada.has(chiave(i, j))) return { ok: false, motivo: 'qui-no' }
     if (this.blocca(i, j)) return { ok: false, motivo: 'occupato' }
     if (!gratis && !this._spendi(COSTI.strada)) return { ok: false, motivo: 'poche-monete', costo: COSTI.strada }
-    this.strada[idx(i, j)] = 1
+    this.strada.set(chiave(i, j), 1)
     this._evento('strada')
     return { ok: true, costo: gratis ? 0 : COSTI.strada }
   }
   togliStrada(i, j) {
-    if (!dentro(i, j) || this.strada[idx(i, j)] !== 1) return { ok: false, motivo: 'qui-no' }
-    this.strada[idx(i, j)] = 0
+    if (!dentro(i, j) || this.strada.get(chiave(i, j)) !== 1) return { ok: false, motivo: 'qui-no' }
+    this.strada.delete(chiave(i, j))
     return { ok: true }
   }
 
@@ -150,11 +213,13 @@ export class Fattoria3d {
   misure(tipo) { return PEZZI[tipo] || EDIFICI[tipo] }
   prezzoPezzo(tipo) {
     const d = PEZZI[tipo]
+    if (!d) return EDIFICI[tipo].prezzo               // un edificio costa sempre uguale: ce n'è uno solo
     return d.prezzo + d.rincaro * (this.s.cose.filter(c => c.tipo === tipo).length + (this.s.magazzino[tipo] || 0))
   }
   nelMagazzino(tipo) { return this.s.magazzino[tipo] || 0 }
   compraPezzo(tipo) {
-    if (!PEZZI[tipo]) return { ok: false, motivo: 'sconosciuto' }
+    if (!PEZZI[tipo] && !EDIFICI[tipo]) return { ok: false, motivo: 'sconosciuto' }
+    if (EDIFICI[tipo] && (this.s.posseduti[tipo] || this.nelMagazzino(tipo) > 0)) return { ok: false, motivo: 'gia-tuo' }       // uno per tipo
     const chiuso = this._chiusa(livelloDelPezzo(tipo))
     if (chiuso) return chiuso
     const costo = this.prezzoPezzo(tipo)
@@ -164,19 +229,37 @@ export class Fattoria3d {
   }
   /** Si può mettere un pezzo di quel tipo con l'angolo in (i, j)? `ignora`: l'id della cosa che si sta spostando. */
   puoMettere(tipo, i, j, ignora = 0) {
-    const d = PEZZI[tipo]
+    const d = this.misure(tipo)
     if (!d) return { ok: false, motivo: 'sconosciuto' }
+    if (d.acqua && ignora) { const x = this.cosa(ignora); if (x && this._ponteSopra(x)) return { ok: false, motivo: 'ponte-sopra' } }
+    let terra = false, acqua = false
     for (let a = 0; a < d.w; a++) for (let b = 0; b < d.d; b++) {
       if (!this.cellaPropria(i + a, j + b)) return { ok: false, motivo: 'fuori-terreno' }
-      if (this.blocca(i + a, j + b, ignora)) return { ok: false, motivo: 'occupato' }
+      if (this.acqua(i + a, j + b, ignora)) acqua = true; else terra = true
+    }
+    if (acqua && !d.suAcqua) return { ok: false, motivo: 'acqua' }
+    if (acqua && !terra && !this._appoggioPerPonte(d, i, j)) return { ok: false, motivo: 'acqua' }
+    for (let a = 0; a < d.w; a++) for (let b = 0; b < d.d; b++) {
+      if (this._bloccaSenzaAcqua(i + a, j + b, ignora) || (d.acqua && this.strada.get(chiave(i + a, j + b)) === 2)) return { ok: false, motivo: 'occupato' }
     }
     return { ok: true }
   }
+  /** Un ponte tutto sull'acqua regge solo se tocca un altro ponte (una cella calpestabile accanto al suo ingombro). */
+  _appoggioPerPonte(d, i, j) {
+    for (let a = -1; a <= d.w; a++) for (let b = -1; b <= d.d; b++) {
+      if ((a >= 0 && a < d.w) && (b >= 0 && b < d.d)) continue
+      if ((a < 0 || a >= d.w) && (b < 0 || b >= d.d)) continue          // gli angoli non toccano di lato
+      if (this.cellaPasso.has(chiave(i + a, j + b))) return true
+    }
+    return false
+  }
   mettiPezzo(tipo, i, j) {
     if (!(this.nelMagazzino(tipo) > 0)) return { ok: false, motivo: 'non-in-magazzino' }
+    if (EDIFICI[tipo] && this.s.posseduti[tipo]) return { ok: false, motivo: 'gia-tuo' }
     const p = this.puoMettere(tipo, i, j)
     if (!p.ok) return p
     const c = { id: this.s.prossimoId++, tipo, i, j }
+    if (EDIFICI[tipo]) this.s.posseduti[tipo] = true
     if (tipo === 'campo') c.tile = nuoveTessere()
     if (tipo === 'recinto') { c.pecore = this.pecoreIniziali(); c.cibo = 0 }
     if (ANIMALI[tipo]) c.bestie = this.bestieIniziali()
@@ -190,6 +273,7 @@ export class Fattoria3d {
   costoDiMettere(tipo) { return this.nelMagazzino(tipo) > 0 ? 0 : this.prezzoPezzo(tipo) }
   /** Si può pagare e mettere qui? Come `puoMettere`, più il livello e le monete: per il fantasma rosso. */
   puoCompraEMettere(tipo, i, j) {
+    if (EDIFICI[tipo] && this.s.posseduti[tipo]) return { ok: false, motivo: 'gia-tuo' }
     const p = this.puoMettere(tipo, i, j)
     if (!p.ok) return p
     const chiuso = this._chiusa(livelloDelPezzo(tipo))
@@ -223,8 +307,9 @@ export class Fattoria3d {
     return { ok: true, costo }
   }
   _libera(c) {
-    const d = PEZZI[c.tipo]
-    for (let a = 0; a < d.w; a++) for (let b = 0; b < d.d; b++) { this.cellaCosa[idx(c.i + a, c.j + b)] = 0; this.cellaPasso[idx(c.i + a, c.j + b)] = 0 }
+    const d = this.misure(c.tipo)
+    if (d.acqua) { for (let a = 0; a < d.w; a++) for (let b = 0; b < d.d; b++) this.cellaAcqua.delete(chiave(c.i + a, c.j + b)); return }       // il ponte sopra resta dov'è
+    for (let a = 0; a < d.w; a++) for (let b = 0; b < d.d; b++) { const k = chiave(c.i + a, c.j + b); this.cellaCosa.delete(k); this.cellaPasso.delete(k) }
   }
   /** Rimette un pezzo nel magazzino. Un campo che sta crescendo e un recinto con le pecore non si mettono via. */
   mettiVia(id, { gratis = false, forza = false } = {}) {
@@ -233,9 +318,12 @@ export class Fattoria3d {
     if (!forza && c.tile && c.tile.some(t => t !== null)) return { ok: false, motivo: 'sta-crescendo' }
     if (!forza && c.pecore) return { ok: false, motivo: 'ha-le-pecore' }
     if (!forza && c.bestie) return { ok: false, motivo: 'ha-le-bestie' }
+    if (!forza && this._ponteSopra(c)) return { ok: false, motivo: 'ponte-sopra' }
+    if (!forza && EDIFICI[c.tipo] && this.edificioAlLavoro(c.tipo)) return { ok: false, motivo: 'macchina-al-lavoro' }
     const costo = gratis ? 0 : COSTI.spostare
     if (!this._paga(costo)) return { ok: false, motivo: 'poche-monete', costo }
     this._libera(c)
+    if (EDIFICI[c.tipo]) this.s.posseduti[c.tipo] = false
     this.s.cose = this.s.cose.filter(x => x.id !== id)
     this.prove = this.prove.filter(x => x.id !== id)
     this.s.magazzino[c.tipo] = this.nelMagazzino(c.tipo) + 1
@@ -244,25 +332,31 @@ export class Fattoria3d {
   /** Il rimborso di un'azione annullata (la monetina dello spostamento). */
   rimborsa(n) { this._rimborsa(n) }
 
-  // ── gli edifici unici ──
-  edificio(tipo) { return { tipo, ...EDIFICI[tipo], posseduto: !!this.s.posseduti[tipo] } }
-  /** I lotti che il posto dell'edificio tocca e che non sono ancora tuoi (da comprare prima). */
-  lottiMancanti(tipo) {
-    const e = EDIFICI[tipo]
-    return e ? lottiDelPosto(e.slot.i, e.slot.j, e.w, e.d).filter(l => !this.posseduto(l)).map(l => l.id) : []
+  // ── gli edifici unici: pezzi liberi, uno per tipo (docs/fattoria3d/edifici-liberi.md). Stanno in `cose` come gli altri pezzi: si
+  //    comprano e si mettono con `compraEMetti`, si spostano con `spostaPezzo`, si mettono via con `mettiVia` ──
+  edificio(tipo) { return { tipo, ...EDIFICI[tipo], posseduto: !!this.s.posseduti[tipo], cosa: this.cosaDi(tipo) } }
+  /** La cosa che è l'edificio di quel tipo in mappa, o null (non comprato, o comprato e nel magazzino). */
+  cosaDi(tipo) { return this.s.cose.find(c => c.tipo === tipo) || null }
+  /** Una macchina che lavora (qualcosa in coda o da ritirare) o una mongolfiera in volo o già caricata: non si mette via, si può spostare. */
+  edificioAlLavoro(tipo) {
+    if (tipo === 'mongolfiera') { const M = this.s.mongolfiera; return M.riposo !== null || !!(M.stiva && M.stiva.file.some(f => f.casse.some(c => c.piena))) }
+    const Q = this.s.macchine[tipo]
+    return !!Q && (Q.coda.length > 0 || Object.keys(Q.pronti).length > 0)
   }
-  compraEdificio(tipo) {
-    const e = EDIFICI[tipo]
-    if (!e) return { ok: false, motivo: 'sconosciuto' }
-    if (this.s.posseduti[tipo]) return { ok: false, motivo: 'gia-tuo' }
-    const chiuso = this._chiusa(e.liv)
-    if (chiuso) return chiuso
-    const lotti = this.lottiMancanti(tipo)
-    if (lotti.length) return { ok: false, motivo: 'lotto-non-tuo', lotti, costo: e.prezzo }
-    if (!this._spendi(e.prezzo)) return { ok: false, motivo: 'poche-monete', costo: e.prezzo }
-    this.s.posseduti[tipo] = true
-    this._evento('pezzo', { pezzo: tipo })
-    return { ok: true, costo: e.prezzo }
+  /** Gli edifici che il livello ha aperto e non sono in mappa: il «!» (solo macchine e mongolfiera; mai una decorazione). */
+  edificiDaCostruire() { return edificiDaCostruire(this.livello(), this.s.posseduti) }
+  /** Un posto dove ci sta: quello di prima se è libero, se no il primo libero nel terreno tuo (per i banchi di prova e i comandi; il gioco lo sceglie il bambino). */
+  postoPer(tipo) {
+    const vecchio = POSTI_STORICI[tipo]
+    if (vecchio && this.puoMettere(tipo, vecchio.i, vecchio.j).ok) return [vecchio.i, vecchio.j]
+    for (let j = LIM.j0; j < LIM.j1; j++) for (let i = LIM.i0; i < LIM.i1; i++) if (this.puoMettere(tipo, i, j).ok) return [i, j]
+    return null
+  }
+  /** Compra e mette un edificio: in (i, j), o dove ci sta (`postoPer`). Come `compraEMetti`, con un nome che dice cos'è. */
+  compraEdificio(tipo, i, j) {
+    if (!EDIFICI[tipo]) return { ok: false, motivo: 'sconosciuto' }
+    if (i === undefined) { const p = this.postoPer(tipo); if (!p) return { ok: false, motivo: 'occupato' }; [i, j] = p }
+    return this.compraEMetti(tipo, i, j)
   }
 
   // ── i raccolti e le scorte ──
@@ -309,9 +403,8 @@ export class Fattoria3d {
 
   // ── gli alberi ──
   puoAbbattere(n) {
-    const a = this.alberi[n]
+    const a = this.albero(n)
     if (!a) return { ok: false, motivo: 'sconosciuto' }
-    if (!a.tagliabile) return { ok: false, motivo: 'bosco' }
     if (a.tagliato) return { ok: false, motivo: 'gia-tagliato' }
     if (!this.cellaPropria(a.i, a.j)) return { ok: false, motivo: 'fuori-terreno' }
     return { ok: true }
@@ -321,18 +414,20 @@ export class Fattoria3d {
     const p = this.puoAbbattere(n)
     if (!p.ok) return p
     if (!this._spendi(COSTI.albero)) return { ok: false, motivo: 'poche-monete', costo: COSTI.albero }
-    const a = this.alberi[n]
+    const a = this.albero(n)
     a.tagliato = true; this.tagliati.add(n); this.s.tagliati.push(n)
-    this.bloccoFisso[idx(a.i, a.j)] = 0
+    this.bloccoFisso.delete(chiave(a.i, a.j))
     this._evento('albero')
     return { ok: true, costo: COSTI.albero }
   }
-  alberiNelTerreno() { return this.alberi.filter(a => a.tagliabile && !a.tagliato && this.cellaPropria(a.i, a.j)) }
+  alberiNelTerreno() { return this.alberi.filter(a => !a.tagliato && this.cellaPropria(a.i, a.j)) }
 
   // ── i sassi e i cespugli: pochi per lotto, restano anche dopo l'acquisto; si tolgono toccandoli, 🪙 1 l'uno ──
-  ostacoloSu(i, j) { const o = dentro(i, j) ? this.ostacoli.find(x => x.id === idx(i, j)) : null; return o && !o.tolto ? o : null }
+  ostacoloSu(i, j) { const o = this.ostacoloPerCella.get(chiave(i, j)); return o && !o.tolto ? o : null }
+  albero(n) { return this.alberiPerId.get(n) || null }
+  ostacolo(n) { return this.ostacoliPerId.get(n) || null }
   puoTogliere(n) {
-    const o = this.ostacoli[n]
+    const o = this.ostacolo(n)
     if (!o) return { ok: false, motivo: 'sconosciuto' }
     if (o.tolto) return { ok: false, motivo: 'gia-tolto' }
     if (!this.cellaPropria(o.i, o.j)) return { ok: false, motivo: 'fuori-terreno' }
@@ -342,12 +437,12 @@ export class Fattoria3d {
     const p = this.puoTogliere(n)
     if (!p.ok) return p
     if (!this._spendi(COSTI.ostacolo)) return { ok: false, motivo: 'poche-monete', costo: COSTI.ostacolo }
-    const o = this.ostacoli[n]
+    const o = this.ostacolo(n)
     this._togliSenzaPagare(o)
     this._evento('sasso')
     return { ok: true, costo: COSTI.ostacolo, tipo: o.tipo }
   }
-  _togliSenzaPagare(o) { o.tolto = true; this.tolti.add(o.id); if (!this.s.ostacoli.includes(o.id)) this.s.ostacoli.push(o.id); this.bloccoFisso[o.id] = 0 }
+  _togliSenzaPagare(o) { o.tolto = true; this.tolti.add(o.id); if (!this.s.ostacoli.includes(o.id)) this.s.ostacoli.push(o.id); this.bloccoFisso.delete(chiave(o.i, o.j)) }
   ostacoliNelTerreno() { return this.ostacoli.filter(o => !o.tolto && this.cellaPropria(o.i, o.j)) }
 
   // ── le pecore: dopo la tosa hanno fame (`t0: null`); il pasto fa partire la lana (`t0` = quando ha mangiato) ──
@@ -592,7 +687,10 @@ export class Fattoria3d {
         const r = COLTURE[k] || RICETTE[k], ha = this.scortaDi(k)
         return { k, n, nome: r.nome, emoji: r.emoji, ha: Math.min(ha, n), manca: Math.max(0, n - ha), prodotto: !COLTURE[k] }
       })
-      return { idx, id: o.id, cliente: clienteDi(o.cliente), chiede, premio: o.premio, liv: o.liv, tipo: tipoDelOrdine(o.chiede), pronto: chiede.every(c => !c.manca) }
+      // le macchine che l'ordine vuole e che non hai ancora messo in mappa: il biglietto dice «Serve il Panificio» col «!»
+      const servono = [...new Set(chiede.filter(c => c.prodotto && RICETTE[c.k]).map(c => RICETTE[c.k].dove))].filter(t => EDIFICI[t] && !this.s.posseduti[t])
+      return { idx, id: o.id, cliente: clienteDi(o.cliente), chiede, premio: o.premio, liv: o.liv, tipo: tipoDelOrdine(o.chiede), pronto: chiede.every(c => !c.manca),
+               senzaMacchina: servono.map(t => ({ tipo: t, nome: EDIFICI[t].nome, art: EDIFICI[t].art, emoji: EDIFICI[t].emoji })) }
     })
   }
   /** Cosa manca per consegnare l'ordine di quel posto: { chiave: quanti }, vuoto se si può. */
@@ -680,7 +778,7 @@ export class Fattoria3d {
     this.tick()
     this._allungaPosti()                     // così la lettura rifà lo stesso stato (`normalizza` allunga allo stesso modo)
     s.strade = []
-    for (let k = 0; k < this.strada.length; k++) if (this.strada[k] === 1) s.strade.push(k)
+    for (const [k, v] of this.strada) if (v === 1) { const c = cellaDa(k); s.strade.push(idCella(c[0], c[1])) }
     return JSON.parse(JSON.stringify(s))
   }
 }

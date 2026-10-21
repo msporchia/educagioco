@@ -6,6 +6,8 @@
 import * as THREE from 'three'
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js'
 import { mat } from './modelli.js'
+import { fondiPerMateriale } from './fondi.js'
+import { memoModello } from './cache-modelli.js'
 
 // ── mattoncini con le geometrie in comune ──
 const geo = new Map()
@@ -53,7 +55,7 @@ function trammaFaccia (donna) {
 }
 
 /** Il contadino: testa grande, corpo piccolo. Stessi perni dell'eroe vecchio (`gambe`, `busto`, `testa`, `bracci`, `falce`, `ascia`). */
-export function creaContadino (aspetto = 'contadino') {
+function costruisciContadino (aspetto = 'contadino') {
   const donna = aspetto === 'contadina'
   const g = new THREE.Group()
   const pelle = mat(0xf5c9a2), maglia = mat(donna ? 0xf3e3c0 : 0xd9503f), salopette = mat(0x3d68b8), toppa = mat(0xe8b94a)
@@ -104,6 +106,9 @@ export function creaContadino (aspetto = 'contadino') {
   cil(ascia, 0.022, 0.022, 0.7, mat(0x9a6a36), 0, -0.25, 0, 5)
   scatola(ascia, 0.05, 0.16, 0.2, mat(0xcfd6dc, { metalness: 0.5, roughness: 0.4 }), 0, -0.56, 0.1)
   ombre(g)
+  // ogni parte che le pose piegano è fusa a sé: le gambe, il busto (senza testa e braccia), la testa, i bracci
+  for (const p of [...gambe, testa, ...bracci]) fondiPerMateriale(p)
+  fondiPerMateriale(busto, { escludi: [testa, ...bracci] })
   g.userData = { gambe, busto, testa, bracci, falce, ascia, aspetto }
   return g
 }
@@ -531,3 +536,6 @@ export function misure (g) {
   const s = new THREE.Vector3(); b.getSize(s)
   return { mesh, triangoli, larghezza: s.x, altezza: s.y, lunghezza: s.z, sotto: b.min.y }
 }
+
+// la cache (scena3d/cache-modelli.js): il contadino si costruisce e si fonde una volta per aspetto
+export const creaContadino = memoModello('contadino', costruisciContadino, { chiave: (aspetto = 'contadino') => aspetto })

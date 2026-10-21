@@ -24,6 +24,10 @@ come si provano.
   di lato si trascina. Lo vede solo un test che scorre col dito
   (`integrazione/campi`): `scrollIntoViewIfNeeded` scorre da programma e
   non incontra il guasto.
+- **Un pezzo tenuto al dito sta sotto il dito, centrato sul punto che il
+  dito tiene** (o tenendo il punto preso se lo si riprende): ciò che si vede
+  è dove cade, e contro il bordo la vista scorre. → `docs/fattoria3d/scena.md`
+  («Costruire»), `docs/fattoria/come-si-tocca.md`.
 - **Il dito non seleziona**, e la regola sta in un posto solo
   (`src/style.css`): niente evidenziazione blu né callout «Copia» su
   iPhone.

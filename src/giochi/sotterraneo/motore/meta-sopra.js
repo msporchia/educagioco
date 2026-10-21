@@ -3,6 +3,19 @@
 // la strada maestra è caricata), le celle del velo che si apre attorno, le luci della scia e i passi detti. Gira in Node
 // (unita/sotterraneo-meta-sopra). docs/sotterraneo/mondo-3d-la-meta.md
 import { baseDi } from './mondo-percorso.js'
+import { missioneDi } from '../dati/missioni.js'
+import { SEGUI_LA_STORIA } from './missioni.js'
+
+// Quale meta, solo dal selettore del diario («segui questa», `avventura.segui`): la missione o la taglia scelta finché è in mano
+// (presa, o fatta e da consegnare), se no la storia, che è anche il difetto. Mai la più vicina né chi aspetta: la meta non cambia
+// camminando né consegnando altro. `storia`: la porta della storia (discesaDellaStoria), null se finita o ferma per l'età.
+// Torna { tipo: 'taglia' | 'missione', id, fatta } o { tipo: 'storia', discesa }, o null
+export function metaScelta(stati, segui, storia = null) {
+  const st = segui && segui !== SEGUI_LA_STORIA && stati && typeof stati === 'object' ? stati[segui] : null
+  const t = st === 'presa' || st === 'fatta' ? missioneDi(segui) : null
+  if (t) return { tipo: t.taglia ? 'taglia' : 'missione', id: segui, fatta: st === 'fatta' }
+  return storia ? { tipo: 'storia', discesa: storia } : null
+}
 const OTTO = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]]
 const R2 = Math.SQRT2
 

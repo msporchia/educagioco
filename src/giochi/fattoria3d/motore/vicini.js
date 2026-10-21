@@ -8,9 +8,8 @@ import { COLTURE } from '../dati/colture.js'
 import { RICETTE, emojiDi, nuovoId } from '../dati/ricette.js'
 import { PRODOTTI_ANIMALI } from '../dati/animali.js'
 import { PEZZI, EDIFICI } from '../dati/catalogo.js'
-import { lottoDi, dentro, idx, stradeDiSerie } from '../dati/mondo.js'
-import { generaAlberi } from '../dati/alberi.js'
-import { generaOstacoli } from '../dati/ostacoli.js'
+import { lottoDi, dentro, chiave, idCella, cellaDa, cellaDaId, stradeDiSerie, lottoPerId } from '../dati/mondo.js'
+import { generaLotto } from '../dati/lotti.js'
 import { premioDi } from '../dati/ordini.js'
 import { VICINI, VERSIONE_VISITA, normalizzaFattoriaVisitabile, merce, livelloDellaMerce, prezzoPer, premioMassimo,
          POSTO_CASSA, POSTO_MERCATO, MISURE_POSTI, RINNOVO_CASSA_MS, RINNOVO_MERCATO_MS } from '../dati/vicini.js'
@@ -224,7 +223,7 @@ export class Vicini {
 /** Lo stato di una `Fattoria3d` che rappresenta lo snapshot: campi com'erano, bestie al lavoro, e dentro la terra sua niente alberi né sassi. */
 export function statoDaSnapshot(f) {
   const lotti = Object.fromEntries(f.lotti.map(id => [id, true]))
-  const propria = (i, j) => { const l = lottoDi(i, j); return !!l && !!lotti[l.id] }
+  const lottiTuoi = f.lotti.map(lottoPerId).filter(Boolean)
   const cose = f.cose.map((c, n) => {
     const x = { id: n + 1, tipo: c.tipo, i: c.i, j: c.j }
     if (c.tipo === 'campo') {
@@ -235,11 +234,12 @@ export function statoDaSnapshot(f) {
     if (c.bestie) x.bestie = Array.from({ length: c.bestie }, () => ({ fine: ORA_VISITA + 1e9 }))                // al lavoro: niente fame, niente uova da raccogliere
     return x
   })
+  for (const e of f.edifici) cose.push({ id: cose.length + 1, tipo: e.tipo, i: e.i, j: e.j })          // gli edifici stanno dove dice lo snapshot
   return {
     v: VERSIONE_STATO, lotti, strade: f.strade, cose,
-    posseduti: Object.fromEntries(f.edifici.map(t => [t, true])),
-    tagliati: generaAlberi().filter(a => a.tagliabile && propria(a.i, a.j)).map(a => a.n),
-    ostacoli: generaOstacoli().filter(o => propria(o.i, o.j)).map(o => o.id),
+    posseduti: Object.fromEntries(f.edifici.map(e => [e.tipo, true])),
+    tagliati: lottiTuoi.flatMap(l => generaLotto(l.a, l.b).alberi.map(a => a.n)),
+    ostacoli: lottiTuoi.flatMap(l => generaLotto(l.a, l.b).ostacoli.map(o => o.id)),
   }
 }
 
@@ -250,7 +250,7 @@ export function motoreDiVisita(f) {
   m.soloLettura = true
   for (const [nome, p] of Object.entries(f.posti)) {
     const d = MISURE_POSTI[nome]
-    for (let a = 0; a < d.w; a++) for (let b = 0; b < d.d; b++) if (dentro(p.i + a, p.j + b)) m.bloccoFisso[idx(p.i + a, p.j + b)] = 1
+    for (let a = 0; a < d.w; a++) for (let b = 0; b < d.d; b++) if (dentro(p.i + a, p.j + b)) m.bloccoFisso.add(chiave(p.i + a, p.j + b))
   }
   return m
 }
@@ -261,15 +261,14 @@ const SCELTE = 3
 /** Un posto per la cassa o il banco: quello di serie se è libero, se no la cella libera più vicina dentro la terra di chi gioca. */
 function postoLibero(motore, strade, nome) {
   const { w, d } = MISURE_POSTI[nome], base = nome === 'cassa' ? POSTO_CASSA : POSTO_MERCATO
-  const preso = new Set([...stradeDiSerie(), ...strade])
-  for (const c of motore.s.cose) { const m = PEZZI[c.tipo]; if (m) for (let a = 0; a < m.w; a++) for (let b = 0; b < m.d; b++) preso.add(idx(c.i + a, c.j + b)) }
-  for (const t of Object.keys(EDIFICI)) { const e = EDIFICI[t]; for (let a = 0; a < e.w; a++) for (let b = 0; b < e.d; b++) preso.add(idx(e.slot.i + a, e.slot.j + b)) }
-  const libero = (i, j) => { for (let a = 0; a < w; a++) for (let b = 0; b < d; b++) if (!dentro(i + a, j + b) || !motore.cellaPropria(i + a, j + b) || preso.has(idx(i + a, j + b))) return false; return true }
+  const preso = new Set([...stradeDiSerie(), ...strade.map(id => { const c = cellaDaId(id); return c ? chiave(c[0], c[1]) : -1 })])
+  for (const c of motore.s.cose) { const m = motore.misure(c.tipo); if (m) for (let a = 0; a < m.w; a++) for (let b = 0; b < m.d; b++) preso.add(chiave(c.i + a, c.j + b)) }       // anche gli edifici sono cose
+  const libero = (i, j) => { for (let a = 0; a < w; a++) for (let b = 0; b < d; b++) if (!dentro(i + a, j + b) || !motore.cellaPropria(i + a, j + b) || preso.has(chiave(i + a, j + b))) return false; return true }
   const celle = []
   for (let i = -6; i < 6; i++) for (let j = 0; j < 8; j++) celle.push([i, j, Math.hypot(i - base.i, j - base.j)])
   // il banco e la cassa non si accavallano fra loro: la cassa, scelta prima, è già «presa» per il banco
   const altro = nome === 'mercato' ? postoLibero(motore, strade, 'cassa') : null
-  if (altro) for (let a = 0; a < MISURE_POSTI.cassa.w; a++) for (let b = 0; b < MISURE_POSTI.cassa.d; b++) preso.add(idx(altro.i + a, altro.j + b))
+  if (altro) for (let a = 0; a < MISURE_POSTI.cassa.w; a++) for (let b = 0; b < MISURE_POSTI.cassa.d; b++) preso.add(chiave(altro.i + a, altro.j + b))
   const scelta = celle.sort((x, y) => x[2] - y[2]).find(([i, j]) => libero(i, j))
   return scelta ? { i: scelta[0], j: scelta[1] } : { ...base }
 }
@@ -285,8 +284,8 @@ export function esportaLaMiaFattoria(motore, chi = {}) {
   const prodotti = [...Object.keys(RICETTE), ...Object.keys(PRODOTTI_ANIMALI)].filter(fatte).sort((a, b) => peso(b) - peso(a)).slice(0, SCELTE)
   const alti = [...raccolti].sort((a, b) => peso(b) - peso(a)).slice(0, SCELTE)
   const strade = []                                           // le strade disegnate: indici di griglia, come nello stato
-  for (let k = 0; k < motore.strada.length; k++) if (motore.strada[k] === 1) strade.push(k)
-  const cose = s.cose.filter(c => PEZZI[c.tipo]).map(c => {
+  for (const [k, v] of motore.strada) if (v === 1) { const c = cellaDa(k); strade.push(idCella(c[0], c[1])) }
+  const cose = s.cose.filter(c => PEZZI[c.tipo]).map(c => {          // gli edifici vanno a parte (`edifici`)
     const x = { tipo: c.tipo, i: c.i, j: c.j }
     if (c.tipo === 'campo') {
       const cr = motore.crescita(c).filter(v => v >= 0)
@@ -300,7 +299,7 @@ export function esportaLaMiaFattoria(motore, chi = {}) {
   const baratti = alti.map(k => ({ k, n: 4, premio: premioMassimo(k, 4), da: null }))
   const grezzo = {
     v: VERSIONE_VISITA, id: chi.id, nome: chi.nome, proprietario: chi.proprietario, tema: 'misto', liv,
-    storia: [], lotti: Object.keys(s.lotti), edifici: Object.keys(s.posseduti).filter(t => s.posseduti[t] && EDIFICI[t]),
+    storia: [], lotti: Object.keys(s.lotti), edifici: s.cose.filter(c => EDIFICI[c.tipo]).map(c => ({ tipo: c.tipo, i: c.i, j: c.j })),
     cose, strade,
     posti: { cassa: postoLibero(motore, strade, 'cassa'), mercato: postoLibero(motore, strade, 'mercato') },
     mercato: { vende: vendibili.map(k => ({ k, n: 3, prezzo: prezzoPer(k, 1.2) })), compra: baratti, rinnovoMs: RINNOVO_MERCATO_MS },

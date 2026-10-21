@@ -52,7 +52,7 @@ villaggio (livello 7) si apre subito. Scelto un villaggio il trattore attraversa
 | 👵 L'orto di Nonna Rita | 7 | campi, il pollaio con le galline, aiuole | grano, carote, mais → 🥚 | uova, zucche, cipolle (generosa: 80%) |
 | 👨‍🍳 Il mulino di Tonio | 9 | il mulino che gira, otto campi di grano | grano, mais, farina → pappa di mais | farina, pappa di mais e pane (giusto: 100%) |
 | 👴 Le pecore di Zio Beppe | 11 | tre recinti, la mongolfiera, il telaio | zucche, pane, patate → pasta | torta, pasta, latte, stoffa (caro: 120%) |
-| 🌻 Villa Dolce | 13 | sei campi di fragole, la gelateria, lo zuccherificio, la fontana | fragole, cipolle, pizza → crostata | crostata, gelato, zucchero, melanzane, lavanda (di lusso: 150%) |
+| 🌻 Villa Dolce | 13 | sei campi di fragole, la gelateria, lo zuccherificio, la fontana, e a nord un laghetto (lotto `2_-1`) con la sua passerella ([laghi.md](laghi.md)) | fragole, cipolle, pizza → crostata | crostata, gelato, zucchero, melanzane, lavanda (di lusso: 150%) |
 
 Sono pezzi veri del catalogo, scritti a mano in `dati/vicini.js` (deterministici), e ogni villaggio si chiede e si compra solo
 ciò che si fa a **quel** livello: la cassa non è mai impossibile (`guastiDeiVicini`). Il baratto e il mercato vendono merci
@@ -95,7 +95,8 @@ scorda da sé). Lo stato della fattoria (`VERSIONE_STATO`) **non è stato toccat
 `soloLettura = true`. Così terreno, pezzi, eroe, telecamera e dito sono gli stessi del mondo di casa, ma:
 
 - niente costruire, niente alberi né sassi da togliere (dentro la sua terra non ce ne sono), niente prezzi sui lotti, niente
-  fantasmi di edifici da comprare né cartelli di cottura o di uova (`PezziVisita` toglie i cartelli e salta gli edifici non suoi);
+  cartelli di cottura o di uova (`PezziVisita` toglie i cartelli); gli edifici del vicino stanno dove dice lo snapshot (`edifici: [{ tipo, i, j }]`,
+  o solo il nome, al suo posto di una volta: [edifici-liberi.md](edifici-liberi.md));
 - il dito lungo e il pennello non fanno niente (`costruzione` è un finto che non fa niente); un tocco sulla terra fa camminare l'eroe;
 - la **cassa** e il **banco del mercato** sono due cose in più (modelli `creaCassa` e `creaBancarella`), nei `posti` dello
   snapshot, non pezzi del catalogo: toccarli fa camminare l'eroe fin lì e apre il foglio (`ui.apriLuogo`). Due tasti in basso

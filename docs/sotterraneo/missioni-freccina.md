@@ -46,9 +46,10 @@ non una strada**: niente percorso disegnato, e una freccina sola per volta.
   entrata di tanto, cede quando esce davvero) e le due non si vedono mai
   insieme.
 
-- **Nel mondo 3D** la freccia azzurra sul bordo resta, e in più c'è la carta della meta in cima (nome, passi, «portami lì»),
-  la scia di luci per terra e la strada aperta fra le nuvole: [mondo-3d-la-meta.md](mondo-3d-la-meta.md). Toccata, la freccia
-  della meta è «portami lì».
+- **Nel mondo 3D** la freccia azzurra non segue la regola della più vicina: indica la meta, che **viene solo dal «segui questa»**
+  (di difetto la storia) e non cambia camminando né consegnando altro. In più c'è la carta della meta in cima (nome, passi), la
+  scia di luci per terra e la strada aperta fra le nuvole: [mondo-3d-la-meta.md](mondo-3d-la-meta.md). Toccata, la freccia manda
+  l'eroe a piedi fin lì. Il «?» d'oro di chi aspetta resta com'è: dice che c'è una consegna, non sceglie la meta.
 
 ## Quale seguire
 
@@ -63,9 +64,9 @@ missione è presa**: fatta o consegnata decade da sé (`seguita` in `motore/miss
 
 - **Giù** (`rotta(c, segui)`): se la scelta è di questa discesa e ancora da fare vince
   sulla più vicina; se è di un'altra discesa non conta e vale la regola di prima.
-- **Sopra** (`discesaDaSeguire(…, segui)`): la discesa della scelta, anche se è più
+- **Sopra** (`discesaDaSeguire(…, segui)`, la terra dipinta): la discesa della scelta, anche se è più
   lontana di un'altra. La consegna pronta ha ancora la precedenza (la freccia azzurra
-  non c'è).
+  non c'è). Nel 3D vale `metaScelta` (`motore/meta-sopra.js`): la scelta, se no la storia.
 - La riga seguita ha il suo ▸ nel promemoria, e nel diario la voce ha il bordo azzurro
   e «la segui» (`li[data-segui]`).
 

@@ -9,7 +9,7 @@ import { RICETTE } from '../src/giochi/fattoria3d/dati/ricette.js'
 import { PRODOTTI_ANIMALI } from '../src/giochi/fattoria3d/dati/animali.js'
 import { sogliaDi } from '../src/giochi/fattoria3d/dati/livelli.js'
 import { MONETE_AL_MINUTO, premioDi, tettoDi } from '../src/giochi/fattoria3d/dati/ordini.js'
-import { catenaMs, tabellaLivelli, guastiDellaScala } from '../src/giochi/fattoria3d/motore/taratura.js'
+import { catenaMs, tabellaLivelli, tabellaLotti, guastiDellaScala } from '../src/giochi/fattoria3d/motore/taratura.js'
 
 const f1 = n => (Math.round(n * 10) / 10).toString()
 const sec = ms => `${Math.round(ms / 1000)}s`
@@ -23,6 +23,9 @@ for (const x of tabellaLivelli()) {
 console.log('\nprezzi, minuti di esercizio e quota del salto del livello di arrivo:')
 for (const [t, c] of [...Object.entries(PEZZI), ...Object.entries(EDIFICI)].sort((a, b) => a[1].liv - b[1].liv))
   console.log(`  liv ${String(c.liv).padStart(2)}  ${t.padEnd(16)} 🪙${String(c.prezzo).padStart(3)}  ${f1(c.prezzo / MONETE_AL_MINUTO)} min  (${Math.round(100 * c.prezzo / (sogliaDi(c.liv + 1) - sogliaDi(c.liv)))}% del salto)`)
+
+console.log('\nil prezzo del n-esimo lotto (oltre i nove di partenza), i minuti di esercizio e l\'esperienza che dà:')
+for (const x of tabellaLotti()) console.log(`  lotto ${String(x.n).padStart(3)}  🪙${String(x.prezzo).padStart(6)}  ${f1(x.minuti).padStart(7)} min  esperienza ${x.esperienza}`)
 
 console.log('\nattese in catena per cosa chiesta, e il premio di un ordine con una sola:')
 for (const k of [...Object.keys(COLTURE), ...Object.keys(PRODOTTI_ANIMALI), ...Object.keys(RICETTE)]) {

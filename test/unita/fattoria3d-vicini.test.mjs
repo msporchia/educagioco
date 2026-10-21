@@ -13,7 +13,7 @@ import { COLTURE } from '../../src/giochi/fattoria3d/dati/colture.js'
 import { RICETTE } from '../../src/giochi/fattoria3d/dati/ricette.js'
 import { sogliaDi, livelloDelPezzo } from '../../src/giochi/fattoria3d/dati/livelli.js'
 import { premioDi, tettoDi } from '../../src/giochi/fattoria3d/dati/ordini.js'
-import { PARTENZA, LOTTI, lottoDi, idx, dentro } from '../../src/giochi/fattoria3d/dati/mondo.js'
+import { PARTENZA, lottoDi, dentro } from '../../src/giochi/fattoria3d/dati/mondo.js'
 import { controlla, uguale, stessaLista, riassunto } from '../aiuto/verifica.mjs'
 
 /* una fattoria di casa, con le monete e l'orologio in mano; `liv` la porta a quel livello */
@@ -84,7 +84,7 @@ controlla('uno snapshot di una versione più nuova non si legge', normalizzaFatt
   controlla('la storia di un altro è al più di due righe e senza marcatori', ostile.storia.length <= 2 && ostile.storia.every(r => !/[<>]/.test(r)))
   controlla('il livello e il tema sono sani', ostile.liv <= 99 && ['orto', 'mulino', 'pecore', 'frutteto', 'misto'].includes(ostile.tema))
   controlla('i lotti sono solo quelli veri, con il quadrato di partenza e quello dell\'edificio', ostile.lotti.includes('3_3') && ostile.lotti.includes('3_1') && !ostile.lotti.includes('finto') && ostile.lotti.length >= 9)
-  controlla('gli edifici sono solo quelli veri', stessaLista('', ostile.edifici, ['mulino']))
+  controlla('gli edifici sono solo quelli veri (un nome solo sta al suo posto di una volta)', stessaLista('', ostile.edifici, [{ tipo: 'mulino', i: -2, j: -7 }]))
   controlla('le cose sono solo del catalogo, dentro i lotti', ostile.cose.every(c => PEZZI[c.tipo] && lottoDi(c.i, c.j)), JSON.stringify(ostile.cose))
   controlla('la coltura e la crescita sono sane', ostile.cose.filter(c => c.tipo === 'campo').every(c => COLTURE[c.coltura] && c.cresc >= 0 && c.cresc <= 1))
   controlla('le pecore sono al più quattro', ostile.cose.filter(c => c.tipo === 'recinto').every(c => c.pecore >= 1 && c.pecore <= 4))
@@ -231,11 +231,12 @@ for (const f of VICINI) {
   // niente si sovrappone: tante celle occupate quante ne dicono le misure
   let atteso = 0, occupate = 0
   for (const c of f.cose) { const d = PEZZI[c.tipo]; atteso += d.w * d.d }
-  for (let j = -13; j < 13; j++) for (let i = -16; i < 16; i++) if (dentro(i, j) && m.cosaSu(i, j)) occupate++
+  for (const e of f.edifici) atteso += EDIFICI[e.tipo].w * EDIFICI[e.tipo].d
+  for (let j = -24; j < 24; j++) for (let i = -24; i < 24; i++) if (dentro(i, j) && m.cosaSu(i, j)) occupate++
   uguale(`${f.id}: nessuna cosa sopra un'altra`, occupate, atteso)
-  uguale(`${f.id}: tante cose quante ne dice lo snapshot`, m.cose.length, f.cose.length)
+  uguale(`${f.id}: tante cose quante ne dice lo snapshot (gli edifici sono cose)`, m.cose.length, f.cose.length + f.edifici.length)
   controlla(`${f.id}: dentro la sua terra niente alberi né sassi che si sovrappongano`, m.alberiNelTerreno().length === 0 && m.ostacoliNelTerreno().length === 0)
-  controlla(`${f.id}: gli edifici sono quelli dello snapshot, tutti posseduti`, Object.keys(EDIFICI).every(t => !!m.s.posseduti[t] === f.edifici.includes(t)))
+  controlla(`${f.id}: gli edifici sono quelli dello snapshot, tutti posseduti`, Object.keys(EDIFICI).every(t => !!m.s.posseduti[t] === f.edifici.some(e => e.tipo === t)))
   controlla(`${f.id}: i lotti sono quelli dello snapshot`, Object.keys(m.s.lotti).sort().join() === [...f.lotti].sort().join())
   // la cassa e il banco sono due ostacoli: niente ci passa sopra, ma si arriva a servirli
   const cella = [Math.floor(PARTENZA.x), Math.floor(PARTENZA.z)]
@@ -247,10 +248,10 @@ for (const f of VICINI) {
     controlla(`${f.id}: la ${nome} sta nella terra del vicino`, d && lottoDi(p.i, p.j) && f.lotti.includes(lottoDi(p.i, p.j).id))
   }
   // ogni edificio si raggiunge dal davanti
-  for (const t of f.edifici) {
+  for (const { tipo: t, i: ei, j: ej } of f.edifici) {
     const e = EDIFICI[t], davanti = []
-    for (let a = 0; a < e.w; a++) davanti.push([e.slot.i + a, e.slot.j + e.d])
-    controlla(`${f.id}: il ${t} si raggiunge`, !!m.percorsoVerso(cella, davanti.filter(([i, j]) => m.libera(i, j))))
+    for (let a = 0; a < e.w; a++) davanti.push([ei + a, ej + e.d])
+    controlla(`${f.id}: il ${t} sta dove dice lo snapshot e si raggiunge`, !!m.cosaSu(ei, ej) && m.cosaSu(ei, ej).tipo === t && !!m.percorsoVerso(cella, davanti.filter(([i, j]) => m.libera(i, j))))
   }
   controlla(`${f.id}: la partenza è libera`, m.libera(cella[0], cella[1]))
   // i campi: l'età è la crescita dello snapshot, e l'orologio non va avanti (niente scade in una visita)
@@ -266,16 +267,17 @@ for (const f of VICINI) {
 /* ══════════ 9. la fattoria di chi gioca diventa uno snapshot (per domani) ══════════ */
 {
   const { m, v, dai } = casa({ liv: 11, monete: 5000 })
+  const postoDelMulino = mm => { for (let j = 1; j < 8; j++) for (let i = -6; i < 6; i++) if (mm.puoMettere('mulino', i, j).ok && mm.puoMettere('campo', 2, 2).ok && !(i < 5 && i + 3 > 2 && j < 4 && j + 3 > 2) && !(i < 6 && i + 3 > 3 && j < 5 && j + 3 > 4)) return [i, j]; return [0, 0] }
   // una fattoria con qualche cosa
-  m.compraLotto('3_1'); m.compraPezzo('campo'); m.compraEdificio('mulino')
   for (const o of m.ostacoli) if (!o.tolto) m._togliSenzaPagare(o)
+  m.compraLotto('3_1'); m.compraPezzo('campo'); m.compraEdificio('mulino', ...postoDelMulino(m))      // il mulino sta dove l'ha messo chi gioca (non al suo posto di una volta)
   m.mettiPezzo('campo', 2, 2); m.mettiPezzo('aiuola', 3, 4)
   dai('grano', 5)
   const prima = JSON.stringify(m.serializza())
   const snap = esportaLaMiaFattoria(m, { id: 'amico-test', nome: 'La fattoria di prova', proprietario: { nome: 'Prova', emoji: '👵' } })
   uguale('esportare non cambia la fattoria di chi gioca', JSON.stringify(m.serializza()), prima)
   controlla('lo snapshot esportato è uno snapshot valido e stabile', !!snap && stessaLista('', normalizzaFattoriaVisitabile(JSON.parse(JSON.stringify(snap))), snap))
-  controlla('porta le cose, i lotti e gli edifici di chi gioca', snap.cose.length === m.s.cose.length && snap.lotti.length === Object.keys(m.s.lotti).length && snap.edifici.includes('mulino'),
+  controlla('porta le cose, i lotti e gli edifici di chi gioca', snap.cose.length === m.s.cose.filter(c => PEZZI[c.tipo]).length && snap.lotti.length === Object.keys(m.s.lotti).length && snap.edifici.length === 1 && snap.edifici[0].tipo === 'mulino' && snap.edifici[0].j >= 1,
     `${snap && snap.cose.length}/${m.s.cose.length}`)
   controlla('porta il livello e un mercato e una cassa fatti con ciò che si fa a quel livello',
     snap.liv === 11 && snap.mercato.vende.length > 0 && snap.mercato.compra.length > 0 && snap.cassa.chiede.length > 0
@@ -284,10 +286,20 @@ for (const f of VICINI) {
   controlla('la cassa e il banco non stanno sopra una cosa', (() => {
     const mo = motoreDiVisita(snap); let occ = 0, att = 0
     for (const c of snap.cose) att += PEZZI[c.tipo].w * PEZZI[c.tipo].d
-    for (let j = -13; j < 13; j++) for (let i = -16; i < 16; i++) if (dentro(i, j) && mo.cosaSu(i, j)) occ++
+    for (const e of snap.edifici) att += EDIFICI[e.tipo].w * EDIFICI[e.tipo].d
+    for (let j = -24; j < 24; j++) for (let i = -24; i < 24; i++) if (dentro(i, j) && mo.cosaSu(i, j)) occ++
     const cassa = snap.posti.cassa, mer = snap.posti.mercato
     return occ === att && !mo.cosaSu(cassa.i, cassa.j) && !mo.cosaSu(mer.i, mer.j)
   })())
+  // gli edifici di un amico stanno dove li ha messi, anche in un posto che per i villaggi del computer non è mai stato di nessuno
+  {
+    const mo = motoreDiVisita(snap)
+    const { i: mi, j: mj } = snap.edifici[0]
+    controlla('nella visita il mulino sta dove l\'ha messo chi gioca', mo.cosaDi('mulino').i === mi && mo.cosaDi('mulino').j === mj && !mo.libera(mi + 1, mj + 1))
+    const ostile = normalizzaFattoriaVisitabile({ ...JSON.parse(JSON.stringify(snap)), edifici: [{ tipo: 'mulino', i: 'x', j: 2 }, { tipo: 'mulino', i: 9, j: 9 }, { tipo: 'panificio', i: 1e9, j: 0 }, 'telaio', { tipo: 'inventato', i: 0, j: 0 }, null] })
+    stessaLista('un edificio senza posto vero sta al suo posto di una volta, uno per tipo, e l\'inventato si scarta', ostile.edifici, [{ tipo: 'mulino', i: -2, j: -7 }, { tipo: 'panificio', i: -5, j: -7 }, { tipo: 'telaio', i: -9, j: -4 }])
+    controlla('i lotti dell\'edificio sono suoi', ostile.lotti.includes(lottoDi(-2, -7).id) && ostile.lotti.includes(lottoDi(-9, -4).id))
+  }
   // e una visita di un amico funziona come quella di un vicino del computer
   const altro = casa({ liv: 13 })
   controlla('un altro giocatore la aggiunge dai dati e la visita', !!altro.v.aggiungi(JSON.parse(JSON.stringify(snap))) && altro.v.entra('amico-test').ok)

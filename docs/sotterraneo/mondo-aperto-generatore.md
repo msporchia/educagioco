@@ -85,7 +85,7 @@ dove due zone si toccano c'è solo la base pura, e si cuciono senza giunte.
   - `persone`, `mulino` (`verso` dell'acqua con la ruota, `ruota`, `lato` −1/+1/0), `terre` (la porta delle terre, in fondo).
   - `antri` (vuoto: non ci sono più), `tane`.
 - `partenza` (nella piazza), **`tracciato`** (la strada maestra, un punto `{x y s}` ogni due celle d'arco: per la veduta, la
-  bussola, «portami lì» da lontano), **`distanze`** (lungo l'arco: `pietre` `{da a arco}`, `dungeon` `{chiave arco}`; dopo
+  bussola, la scia verso una meta lontana), **`distanze`** (lungo l'arco: `pietre` `{da a arco}`, `dungeon` `{chiave arco}`; dopo
   `misuraDelMondo` i passi veri).
 - **`zonaCaricata`** (7 booleani), **`carico`** (per zona, o null): `decoro`, `case`, `campi`, `celle`, `erba`, `tolte`, `firma`, `ms`.
 

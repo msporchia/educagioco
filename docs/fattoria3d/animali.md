@@ -44,8 +44,8 @@ Le ricette sono quelle della fattoria di sempre ([merci-e-ricette.md](merci-e-ri
 | frullato | gelateria | fragole 2, latte 1 | 14 |
 | gelato | gelateria | latte 2, fragola 1 (in 2D lo zucchero) | 14 |
 
-Il **caseificio** è un edificio unico 3×3 (🪙120, livello 11, posto `{ i: 6, j: -3 }` nel lotto `5_2`, accanto al quadrato di
-partenza): una macchina come le altre, tre posti nel forno. Il suo lotto è da comprare prima (`lotto-non-tuo`).
+Il **caseificio** è un edificio unico 3×3 (🪙120, livello 11): una macchina come le altre, tre posti nel forno, che si mette dove si
+vuole nel terreno proprio ([edifici-liberi.md](edifici-liberi.md)).
 
 **Un ordine può chiedere una ricetta con le uova senza che si abbia il pollaio**: come per le altre macchine, è un ordine
 che si può rifiutare.

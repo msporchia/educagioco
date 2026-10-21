@@ -5,6 +5,8 @@
    store/profile.js. Lo usa solo GenitoriView. */
 
 import { MODULI } from './nucleo/registro.js'
+import { GIOCHI, chiedeA, serveA } from '../data/giochi.js'
+import { moduliDi } from '../data/domande-dei-giochi.js'
 import { sorteQualunque } from './nucleo/sorte.js'
 import { sorgentiDi, esempioDi as esempioFra } from './nucleo/esempi.js'
 import { finestraDi } from './nucleo/classi.js'
@@ -39,3 +41,18 @@ export const siPuoProvare = (chiave, eta = null) =>
   sorgentiDi(MODULI, chiave, regoleDi(eta)).length > 0
 export const esempioDi = (chiave, sorte = sorteQualunque(), eta = null) =>
   esempioFra(MODULI, chiave, sorte, regoleDi(eta))
+
+/* I saperi che un gioco chiede, nell'ordine in cui compaiono: quelli dei suoi moduli (le tipologie dichiarano `sa:`, il PRIMO è il
+   gruppo) più quelli che dichiara il suo manifesto (`chiede:`). Un gioco che pesca da tutto il mazzo non ne ha un elenco suo. */
+export function saperiDelGioco(chiave) {
+  const visti = new Set(), fuori = []
+  const metti = k => { if (!visti.has(k)) { visti.add(k); fuori.push(k) } }
+  for (const m of MODULI) if (moduliDi(chiave).includes(m.id)) for (const t of m.tipi) metti(t.sa[0])
+  for (const k of chiedeA(chiave)) metti(k)
+  for (const k of serveA(chiave)) metti(k)        // quelli senza cui il gioco non c'è (le pozioni: misure e conversioni)
+  return fuori
+}
+
+/* Dove altro vale spegnere un sapere: i giochi che lo chiedono per modulo o per manifesto (non quelli che pescano da tutto il mazzo) */
+export const giochiCheChiedono = (sapere, tranne = null) => GIOCHI
+  .filter(g => g.chiave !== tranne && saperiDelGioco(g.chiave).includes(sapere)).map(g => g.chiave)

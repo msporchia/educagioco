@@ -106,7 +106,7 @@ caricata e uguale ricaricandola: la scena lo usa come prima (`[data-mostro-sopra
 
 - **`metaVicina(m, terra, meta)`** (`motore/meta-sopra.js`): una meta in una zona mai caricata non ha campo (la terra lì è roccia); la
   vista dà al campo il punto della strada maestra più vicino a lei fra quelli dove si cammina (`{ x, y, lontana: true }`), e rifà la meta
-  dopo ogni `seguiLEroe` con `caricate`. Così la scia e «portami lì» vanno avanti a pezzi lungo la strada.
+  dopo ogni `seguiLEroe` con `caricate`. Così la scia va avanti a pezzi lungo la strada, da sé.
 - **I dialoghi** (`motore/dialoghi.js`) leggono dal `ctx` due campi nuovi che la vista passa nel 3D: `forza` (`forzaDelCorredo`, la
   stessa dell'annuncio) fa dire al minatore e al capitano «I mostri della tua forza stanno nel bosco vecchio, oltre il ponte del mulino»
   (`dato: 'zona'`); `terre` (le tombe ripulite, compito E) fa annunciare per prima cosa la porta delle terre (`dato: 'terre'`). Senza i
