@@ -1282,6 +1282,8 @@ function brancoDaProva(c) {
   c.livello.robe.push(...fatti)
   if (h.get('agguato')) fatti.sort((a, b) => a.x - b.x)
   fatti.forEach(m => { m.sveglio = !h.get('sorpresa') })
+  // `&ferito=0.3`: i mostri entrano con quella parte della vita (le mosse che curano si annunciano sotto la metà: docs/sotterraneo/mosse.md)
+  if (h.get('ferito')) fatti.forEach(m => { m.ossa = Math.max(1, Math.round(m.ossaMax * Number(h.get('ferito')))) })
   // `&campo=1`: i mostri stanno lì, addormentati (calmi), e non si apre nessuno scontro (per guardarli sul campo); `&campo=sveglio`: svegli, e vengono
   if (h.get('campo')) { fatti.forEach(m => { m.sveglio = h.get('campo') === 'sveglio'; if (!m.sveglio) { m.fx = m.x + 0.5; m.fy = m.y + 0.5; m.casa = { x: m.x, y: m.y }; m.calmo = 600 } }); return }
   c.scontro(fatti[0], { tocco: !!h.get('sorpresa') })

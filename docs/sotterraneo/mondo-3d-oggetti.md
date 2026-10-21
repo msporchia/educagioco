@@ -7,17 +7,19 @@ li legge dall'`aBase`). Non cambiano la mappa di blocco. Il mondo e i pezzi: [mo
 
 ## Gli oggetti del villaggio
 
-`props-citta.js` (dove stanno, puro) e `props-modelli.js` (i modelli, sotto le 700 facce l'uno). Il villaggio è un ferro di cavallo
-aperto a sud e **dalla piazza si devono vedere tutti** ([mondo-a-percorso.md](mondo-a-percorso.md#il-villaggio)):
+`props-citta.js` (dove stanno, puro) e `props-modelli.js` (i modelli, sotto le 700 facce l'uno). Il villaggio è una piazza tonda
+con le botteghe a ventaglio e **dalla piazza si devono vedere tutti** ([mondo-a-percorso.md](mondo-a-percorso.md#il-villaggio)):
 
 - **Le botteghe**: un'insegna a palo ai fianchi (moneta, foglia, ferro di cavallo, gemma) e l'arredo ai fianchi e dietro, mai sul
   davanti (il fabbro la ruota di pietra, la rastrelliera e l'incudine; l'erborista scaffali e fiori; la torretta lanterne e vasi).
-- **La piazza**: le lanterne lungo il lato delle botteghe e agli angoli, le panche ai due capi che guardano dentro, un tavolo ai capi
-  della fila.
-- **Le case del fondale**: due o tre cose ai fianchi e dietro (carretti, legna, barili, bucato, fiori), mai verso le botteghe.
+- **Il bordo della piazza**: le lanterne tutto attorno, le panche sul davanti e due tavoli ai fianchi, girati verso il pozzo (un
+  oggetto di una cella guarda in qualunque verso).
+- **Le case**: due o tre cose ai fianchi e dietro (carretti, legna, barili, bucato, fiori), mai dal lato della porta.
 - **Sparsi** dietro le botteghe e ai lati, a gruppetti.
-- **Mai sul davanti** (dalla piazza in giù, verso la telecamera) se non cose basse e piccole: fiori, vasi, lanterne, panche. Niente
-  orti. Mai su una strada, un posto, la cella dove ci si ferma, le zone tenute libere davanti alle botteghe, l'acqua.
+- **L'orto** solo nel suo angolo della pianta (`villaggio.orto`, un lotto): le aiuole con lo steccato in file da due celle.
+- **Mai sul davanti** (sotto il rettangolo della piazza, verso la telecamera) se non cose basse e piccole: fiori, vasi, lanterne,
+  panche, l'orto; **mai niente di alto davanti a chi ci sta** (fino a quattro celle a sud del suo piede). Mai su una strada, un
+  posto, la cella dove ci si ferma, le zone tenute libere davanti alle botteghe, l'acqua.
 - **Prima che la zona del villaggio sia caricata, niente**: le celle non sono scritte. Poi si tengono (le celle restano).
 - **Per cambiarli**: il carattere sta in `MENU` (pesi, massimi, quanti sparsi), l'arredo in `ARREDO`; un modello nuovo è una funzione in
   `MODELLI` (origine a terra, davanti verso +z, larghezza lungo x) e, se è largo più di una cella, una voce in `LARGHE`. I modelli del
@@ -96,7 +98,7 @@ e `integrazione/sotterraneo-mondo-tana` (col dito: nessuna tana nella veduta di 
 averla vista, grigio col signore morto).
 
 Nei test: `unita/sotterraneo-mondo-props` (gli oggetti del villaggio: niente prima della zona, sempre uguali, mai su strade, posti o
-dove ci si ferma, dentro il villaggio, sul davanti solo cose basse e niente di alto davanti a chi ci sta, niente orti né cose del
+dove ci si ferma, dentro il villaggio, sul davanti solo cose basse e niente di alto davanti a chi ci sta, l'orto nel suo angolo, niente cose del
 forte, le insegne, nel loro pezzo, le facce dei modelli) e `unita/sotterraneo-mondo-aperto-props` (quelli fuori: le celle e le firme
 invariate, a blocchi come tutto insieme, nella loro zona, mai su strade, lotti, villaggio, confini o davanti a una porta, un
 repertorio per habitat, uno scenario per ognuno dei quattordici ingressi, i costi, la zona che se ne va coi suoi).

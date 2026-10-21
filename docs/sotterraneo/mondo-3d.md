@@ -87,10 +87,11 @@ celle aprendo il mondo. Si salva arrivando, scoprendo (al più ogni tre secondi)
 - **Le figure ancorate**: le figure dell'atlante delle discese col filo scuro, la luce di taglio dal lato del sole, l'ombra a
   contatto e quella vera; le persone a scala 1,25 dell'eroe. Chi saluta, i segni sopra la testa, chi cura e il richiamo sono quelli
   della terra dipinta.
-- **Il villaggio, l'unica città** (la pianta fissa, un ferro di cavallo aperto a sud): i quattro mercanti davanti alle loro botteghe
-  col banco verso la piazza, la ragazza del pozzo, il capitano (venuto dal forte), il minatore col suo campo, la bacheca, il cartello
-  (una freccia: la strada maestra), la pietra, il portale gemello quando c'è la sosta; dietro le case del fondale senza porta, agli
-  angoli gli alberi. Niente campi, orti né bucato. La piazza è un rettangolo di ciottoli col cordolo, aperto verso il cancello.
+- **Il villaggio, l'unica città** (la pianta fissa, una piazza tonda col pozzo in mezzo e le botteghe a ventaglio): i quattro
+  mercanti davanti alle loro botteghe col banco girato verso il pozzo, la ragazza del pozzo, il capitano (venuto dal forte), il
+  minatore col suo campo, la bacheca, il cartello (una freccia: la strada maestra), la pietra, il portale gemello quando c'è la
+  sosta; dietro e ai lati le case con la porta verso la piazza, l'orto in un angolo, gli alberi. Niente campi né bucato sul davanti.
+  La piazza è un disco irregolare di ciottoli (i raggi della pianta) col cordolo, aperto dove esce la stradina.
 - **Fuori**: chi sta fermo vicino al posto delle sue missioni (l'eremita, la guardia, il boscaiolo, il pescatore, il mugnaio), il
   mulino sulla riva del fiume con la ruota dal lato dell'acqua (`verso`), le case e i campi dei prati.
 - **I quattordici ingressi** hanno i loro monumenti: i sette del prototipo e l'abisso (l'altare coi re, l'arco dei goblin, la torre
@@ -156,14 +157,14 @@ il banco della tela ferma (20 disegni) e il tempo di una zona.
 
 | | chiamate | triangoli | banco (vecchio telefono) |
 |---|---|---|---|
-| dalla piazza del villaggio | 109–115 | 312–328k | 487 ms |
+| dalla piazza del villaggio | 95–98 | 289–296k | 487 ms (il villaggio di prima) |
 | davanti alla cripta dei re (la fila bassa) | 91–94 | 301–336k | 356 ms |
 | davanti alla palafitta (la fila di mezzo) | 64–75 | 266–326k | 339 ms |
 | davanti alla cava gelata (la fila alta) | 74–75 | 279–287k | 333 ms |
 | la veduta d'insieme | 31–34 | 204–212k | 521 ms |
 
-- **Il villaggio costa meno di prima** in chiamate (115 contro 119) a parità di triangoli, pur visto tutto intero: niente campi, orti
-  né forte. La veduta è scesa da 106 chiamate (il lontano un pezzo per chiamata) a 34 coi blocchi.
+- **Il villaggio tondo costa meno** di quello in fila (95–98 chiamate contro 108–114, 289–296k triangoli contro 305–308k, il 21
+  ottobre con la telecamera di allora): più piccolo, niente campi né forte. La veduta è scesa da 106 chiamate (il lontano un pezzo per chiamata) a 34 coi blocchi.
 - **Una zona** si carica in 45–100 ms in SwiftShader e **180–580 ms sul vecchio telefono** (la brughiera la più lenta): un fotogramma
   solo, e da fermi o vicino al confine (sopra). Il prossimo passo, se si sente sul Note 7: `caricaZona` in un worker.
 - **Partire** costa lo scheletro, le due zone attorno alla partenza (`ilMondo`) e il lontano dalla base di tutto il mondo (~0,1 s in

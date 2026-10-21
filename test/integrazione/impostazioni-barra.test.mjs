@@ -32,7 +32,7 @@ await page.click('[data-delicata] > summary')
 /* ── Giochi ── */
 await page.click('[data-scheda="giochi"]')
 await page.waitForSelector('[data-giochi-impostazioni]', { timeout: 5000 })
-controlla('i giochi: il carosello e l\'età', await page.locator('[data-giochi-impostazioni] .scaffale').count() === 1 && await page.locator('[data-manopola]').count() === 1)
+controlla('i giochi: il carosello, e l\'età sta nel bambino', await page.locator('[data-giochi-impostazioni] .scaffale').count() === 1 && await page.locator('[data-manopola]').count() === 0)
 controlla('lo strumento da sviluppatore non è fra gli interruttori', await page.locator('.carta[data-flag="fps"]').count() === 0)
 
 /* ── Casa: il telefono, e in fondo una tendina per chi sviluppa ── */

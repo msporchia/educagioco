@@ -5,6 +5,7 @@
 import { baseDi } from './mondo-percorso.js'
 import { missioneDi } from '../dati/missioni.js'
 import { SEGUI_LA_STORIA } from './missioni.js'
+import { campoPesato } from './strada-sopra.js'
 
 // Quale meta, solo dal selettore del diario («segui questa», `avventura.segui`): la missione o la taglia scelta finché è in mano
 // (presa, o fatta e da consegnare), se no la storia, che è anche il difetto. Mai la più vicina né chi aspetta: la meta non cambia
@@ -21,8 +22,11 @@ const R2 = Math.SQRT2
 
 // Le distanze da `meta` (una cella dove si cammina) a ogni cella, con le regole dell'A* di motore/terra.js: otto direzioni, la
 // diagonale costa √2 e si fa solo se le due celle di lato sono libere. Si fa una volta per meta (Dijkstra con un mucchio
-// binario: 22 400 celle in pochi millisecondi); poi la strada da qualunque cella è una discesa, e i passi sono una lettura
-export function campoVersoLaMeta(terra, meta) {
+// binario: 22 400 celle in pochi millisecondi); poi la strada da qualunque cella è una discesa, e i passi sono una lettura.
+// Con `cosaStrada` (la funzione (x, y) → strada o erba, `m.strada`) il campo è quello pesato di motore/strada-sopra.js: preferisce la
+// strada vera e sta lontano dalle case, senza allungare oltre il limite; senza, resta il più corto (i mostri, il banco)
+export function campoVersoLaMeta(terra, meta, cosaStrada = null) {
+  if (cosaStrada) return campoPesato(terra, meta, cosaStrada)
   const { L, A, passa } = terra
   if (!meta || !passa(meta.x, meta.y)) return null
   const D = new Float64Array(L * A).fill(Infinity)

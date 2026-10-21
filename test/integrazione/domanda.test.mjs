@@ -50,7 +50,7 @@ await page.waitForSelector('.carte', { timeout: 5000 })
    (`components/eta/Riga.vue`). Le schede «Cosa sa» e «Le domande» —
    che mostravano le stesse cose in due altri modi — sono sparite col
    riassetto: si guarda e si tara in un posto solo. */
-await page.click('[data-scheda="giochi"]')
+await page.click('[data-scheda="bambini"]')
 await page.waitForSelector('[data-manopola] .quadro', { timeout: 5000 })
 const apriQuadro = async k => {
   const sel = `[data-manopola] [data-apri="${k}"]`
@@ -134,7 +134,7 @@ uguale('rispondere dal banco dei grandi non tocca il ripasso',
    invece di sperare che la pesca ne dia una disegnata. */
 await page.click('.prova-x')
 await page.waitForSelector('.prova-velo', { state: 'hidden', timeout: 5000 })
-await page.click('[data-scheda="giochi"]')
+await page.click('[data-scheda="bambini"]')
 await page.waitForSelector('[data-manopola] .quadro', { timeout: 5000 })
 /* Il quadro si apre a due livelli — blocco, pezzo di scuola, domande —
    e in quale blocco cada questa classe dipende dall'età del profilo di
@@ -240,7 +240,7 @@ uguale('senza rispondere per sbaglio', await risposto(), 0)
    tiri tutti azzeccati capitano una volta su sessantacinquemila. */
 await page.click('.prova-x')
 await page.waitForSelector('.prova-velo', { state: 'hidden', timeout: 5000 })
-await page.click('[data-scheda="giochi"]')
+await page.click('[data-scheda="bambini"]')
 await page.waitForSelector('[data-manopola] .quadro', { timeout: 5000 })
 const ARROTONDA = '[data-prova="numero:6:num:arrotonda"]'
 /* Al profilo di prova (nove anni) l'arrotondamento cade fra le
@@ -337,7 +337,7 @@ await page.click('[data-azione="grandi"]')
 await page.waitForSelector('.tastierino', { timeout: 5000 })
 for (const c of '0000') await page.click(`.tasto >> text="${c}"`)
 await page.waitForSelector('.carte', { timeout: 5000 })
-await page.click('[data-scheda="giochi"]')
+await page.click('[data-scheda="bambini"]')
 await page.waitForSelector('[data-manopola] .quadro', { timeout: 5000 })
 for (const k of ['toste', 'medie', 'facili', 'sotto']) {
   if (await page.locator(ARROTONDA).count()) break
@@ -397,7 +397,7 @@ await page.waitForSelector('.prova-velo', { state: 'hidden', timeout: 5000 })
    e sta fuori dalla fila delle risposte; le risposte restano bottoni.
    Si va a prendere un «ordine» di `capire`, che è proprio quel caso. */
 const ORDINE = '[data-prova*=":capire:ordine"]'
-await page.click('[data-scheda="giochi"]')
+await page.click('[data-scheda="bambini"]')
 await page.waitForSelector('[data-manopola] .quadro', { timeout: 5000 })
 for (const k of ['facili', 'medie', 'toste', 'sotto']) {
   if (await page.locator(ORDINE).count()) break

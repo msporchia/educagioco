@@ -270,7 +270,7 @@ uguale('«Va bene così» la toglie dall\'elenco', await difficile(MURO3).count(
    Nella scheda dove si tara non deve comparire il grafico del tempo: è
    l'altra metà dello stesso guasto, e senza questo controllo la
    correzione regge solo da una parte. */
-await page.click('[data-scheda="giochi"]')
+await page.click('[data-scheda="bambini"]')
 await page.waitForSelector('[data-manopola]', { timeout: 5000 })
 uguale('e in «Giochi e domande» non c\'è il tempo di gioco',
        await page.locator('[data-tempo]').count(), 0)

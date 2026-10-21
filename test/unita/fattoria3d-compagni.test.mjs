@@ -344,7 +344,7 @@ const generatore = seme => () => (seme = (seme * 16807) % 2147483647) / 21474836
   controlla(`in dieci minuti ci sono incontri gatto-cane, ma pochi (${c.incontri - i0})`, c.incontri - i0 >= 2 && c.incontri - i0 < 80, String(c.incontri - i0))
   uguale('…e nessun compagno su una cella bloccata neanche dopo', fuori, 0)
   controlla('…nessuna sequenza bloccata', troppo.length === 0)
-  controlla(`il richiamo vale oltre ${SOGLIA_RICHIAMO} celle`, SOGLIA_RICHIAMO === 4)
+  controlla(`il richiamo vale oltre ${SOGLIA_RICHIAMO} celle`, SOGLIA_RICHIAMO === 2.5)
 }
 
 riassunto('fattoria3d-compagni')

@@ -96,7 +96,7 @@ export function decidiGatto(s, rnd = Math.random) {
 // ── quando ci premi (docs/fattoria3d/compagni.md): sequenze di passi, scelte pure ──
 // Un passo: { stato, dur, sub?, guarda?: 'eroe'|'altro'|'via', ev?: [[secondi, nome]] } oppure { va: { r: [min, max], corsa?, verso?: 'cane'|'lontano' } }.
 // I nomi degli eventi li esegue `Compagni._evento`: bau bau2 bauP cuori raffica hrr ciu zzz prrr miao mrr posa.
-export const SOGLIA_RICHIAMO = 4                 // celle: oltre, il contadino chiama Watson
+export const SOGLIA_RICHIAMO = 2.5                 // celle: oltre, il contadino chiama Watson
 export const INTERAZIONI_CANE = ['festa', 'zampa', 'rotola', 'salta', 'riporta', 'starnuta', 'gira', 'sbadiglia']
 export const CAREZZE_PER_SONNO = 6, FINESTRA_CAREZZE = 10
 

@@ -152,8 +152,9 @@ solito è «uno».
   accorcia. Il motore li fa tutti dentro `rispondi` e li racconta in
   `esito.azioni`.
 - **Un mostro agisce con «un'azione»** (`AZIONI_DEI_MOSTRI` in
-  `motore/scontro.js`, `azione` della scheda in `dati/mostri.js`): oggi sempre
-  il colpo; il grosso che chiama dei sottoposti si aggiunge lì.
+  `motore/scontro.js`), una per tipo di mossa: il comune ha solo il colpo, il
+  caporale e il grosso anche cura, incantesimo, urlo o colpo forte, scelti a
+  inizio turno dell'eroe e annunciati ([mosse.md](mosse.md)).
 
 ### Le abilità che dipendevano dalla risposta
 
@@ -238,7 +239,7 @@ costava il turno, il banco peggiorava e non beveva: [scontro-bilancio.md](scontr
 
 - **Il compagno dell'eroe**: ogni attore della fila ha un `lato`, quindi è un attore in più; `passaIlTurno` oggi si ferma
   al primo del lato dell'eroe e andrebbe insegnato a lui.
-- **Le abilità dei mostri** (il grosso che chiama dei sottoposti): la porta c'è, `AZIONI_DEI_MOSTRI`.
+- **Il grosso che chiama dei sottoposti**: niente rinforzi a scontro aperto; le altre mosse dei mostri ci sono ([mosse.md](mosse.md)).
 - **Prima e seconda fila**: scartate. **Il segno di chi arriva alle spalle**, se l'agguato risulta troppo duro.
 - **Uscire a metà** (la ✕, il portale): la sosta salva i mostri come sono (ossa e stati) e non lo scontro, che si riapre da
   capo, come con il duello.

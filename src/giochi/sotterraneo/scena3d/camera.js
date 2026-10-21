@@ -3,21 +3,21 @@
 // (`coperto`, in px), trema ai colpi (la scossa al quadrato). E i conti fra mondo e schermo: dove cade un punto, quale cella
 // sta sotto il dito.
 import { PerspectiveCamera, Vector3, Vector2, Plane, Raycaster, MathUtils } from 'three'
-import { CAMERA } from './costanti.js'
+import { CAMERA, impostaInclinazione } from './costanti.js'
 import { verso } from './tempo.js'
 
 export function creaCamera() {
   const camera = new PerspectiveCamera(CAMERA.fov, 1, 0.5, 200)
   const off = new Vector3(), tmp = new Vector3(), meta = new Vector3()
   const ray = new Raycaster(), pt = new Vector2(), piano = new Plane(new Vector3(0, 1, 0), 0)
-  let L = 1, A = 1, pxAlto = 1, celleOra = CAMERA.celle, spostaY = 0, zoom = 1, primo = true, dOra = 0
+  let L = 1, A = 1, pxAlto = 1, celleOra = CAMERA.celle, inclOra = CAMERA.inclinazione, spostaY = 0, zoom = 1, primo = true, dOra = 0
 
   // la distanza che serve a vedere `celle` in largo e in profondo, con l'apertura e la forma dello schermo
   // `fraz`: quanto dell'altezza resta libero (il pannello dello scontro copre il fondo)
   function scostamento(celle, fraz = 1) {
     const v = Math.atan(Math.tan(MathUtils.degToRad(camera.fov) / 2) * fraz)
     const o = Math.atan(Math.tan(MathUtils.degToRad(camera.fov) / 2) * camera.aspect)
-    const inc = MathUtils.degToRad(CAMERA.inclinazione)
+    const inc = MathUtils.degToRad(inclOra)
     const d = Math.max((celle / 2) / Math.tan(o), (celle / 2) * Math.sin(inc) / Math.tan(v))
     return off.set(0, d * Math.sin(inc), d * Math.cos(inc))
   }
@@ -36,6 +36,9 @@ export function creaCamera() {
     // `celle`: quante ne servono nello scontro perché ci stiano tutti (mai meno di CAMERA.celleScontro)
     aggiorna(dt, centro, { scontro = false, celle = CAMERA.celleScontro, coperto = 0, scossa = 0, t = 0 } = {}) {
       celleOra += ((scontro ? Math.max(CAMERA.celleScontro, celle) : CAMERA.celle) - celleOra) * verso(dt, 3)
+      // nello scontro si abbassa (dolcemente); gli sprite si allungano di conseguenza
+      inclOra += ((scontro ? CAMERA.inclinazioneScontro : CAMERA.inclinazione) - inclOra) * verso(dt, 3)
+      impostaInclinazione(inclOra)
       spostaY += (coperto * 0.5 - spostaY) * verso(dt, 5)
       if (Math.abs(spostaY) > 0.5) camera.setViewOffset(L, A, 0, spostaY, L, A)
       else if (camera.view) camera.clearViewOffset()
@@ -60,6 +63,8 @@ export function creaCamera() {
       camera.updateMatrixWorld()
     },
     salta() { primo = true },
+    // chi chiude la scena rimette l'allungamento degli sprite com'era (il mondo di sopra lo legge)
+    ripristina() { impostaInclinazione(CAMERA.inclinazione) },
     // dove cade a schermo (px nel campo) un punto del mondo
     schermo(x, y, z, fuori = { x: 0, y: 0 }) {
       tmp.set(x, y, z).project(camera)

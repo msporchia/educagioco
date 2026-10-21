@@ -112,7 +112,7 @@ export class Compagni {
   _fineSeq(c) {
     c.seq = null; c.sub = ''; c.guarda = null; c.velo = 0
     const e = this.eroe
-    if (c.tipo === 'cane' && e.fermo && Math.hypot(e.x - c.x, e.z - c.z) < SOGLIA_RICHIAMO) return this._stato(c, 'siede')
+    if (c.tipo === 'cane' && e.fermo && Math.hypot(e.x - c.x, e.z - c.z) < 4) return this._stato(c, 'siede')      // finita la festa, se è vicino si siede (non è la soglia del richiamo)
     this._decidi(c)
   }
   _interrompi(c) { c.seq = null; c.percorso = []; c.poi = null; c.corsa = false; c.sub = ''; c.velo = 0; this._decidi(c) }

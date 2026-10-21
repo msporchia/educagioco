@@ -8,6 +8,7 @@
 //   coda: la fila dei turni (motore/turni.js)     fermate/pericolo: lo stop      apertura: le azioni prima del primo turno
 //   bevuto: ha già bevuto in questo turno (una pozione sola, e non costa il turno)
 //   turni, colpiti, minaccia, inArrivo, difese: quello che la vista legge (si rifanno in `aggiorna`)
+//   mosse: per posto, lo stato delle mosse di ogni mostro (dati/mosse.js: la prossima annunciata, le volte, il rinforzo dell'urlo)
 import { COLPO_DEL_MOSTRO, RAGGIO_SCONTRO, MOSTRI_IN_CAMPO, CALMA, PASSI_PER_TURNO } from '../dati/mondo.js'
 import { MOSTRI } from '../dati/mostri.js'
 import { COSE } from '../dati/cose.js'
@@ -15,6 +16,7 @@ import { NODI, aGrado, inVita, colpisce, costoAl, FATTORE_DEL_SALTO } from '../d
 import { ELEMENTI, STATI, fattoreDi } from '../dati/elementi.js'
 import { difeseDi } from '../dati/grossi.js'
 import { GELO_DEL_MAGO } from '../dati/varianti.js'
+import { mosseDi, ruoloDi, statoDelleMosse, scegliMossa, registra, modDella, curaDella, vistaDella } from '../dati/mosse.js'
 import { pericoloDi } from './pericolo.js'
 import { nuovaFila, chiAgisce, agisci, togli, prossimi, primaDelSuoProssimo, TURNI_VISIBILI } from './turni.js'
 
@@ -22,10 +24,24 @@ import { nuovaFila, chiAgisce, agisci, togli, prossimi, primaDelSuoProssimo, TUR
 export const postiDi = m => (m.grosso ? 2 : 1)
 export const velocitaDel = m => (m.velocita != null ? m.velocita : (MOSTRI[m.tipo] && MOSTRI[m.tipo].velocita) || 8)
 
-// Le azioni dei mostri: oggi sempre il colpo. Un mostro agisce con «un'azione» (`azione` della sua scheda in dati/mostri.js,
-// se manca è il colpo): le abilità dei mostri (chiamare dei sottoposti…) si aggiungono qui. Ogni azione torna un evento
+// Le azioni dei mostri, una per tipo di mossa (dati/mosse.js, docs/sotterraneo/mosse.md): il comune ha solo l'attacco; il caporale e
+// il grosso anche la cura, l'incantesimo (un colpo che lo scudo non ferma) o l'urlo. Ogni azione torna un evento
 const AZIONI_DEI_MOSTRI = {
-  colpo(c, m) { return c.colpoDelMostro(m) },
+  attacco(c, m, mossa, s) { return c.colpoDelMostro(m, mossa, s) },
+  incantesimo(c, m, mossa, s) { return c.colpoDelMostro(m, mossa, s) },
+  // la cura non colpisce: è il turno in cui l'eroe respira
+  cura(c, m, mossa) { const n = curaDella(mossa, m.ossa, m.ossaMax || m.ossa); m.ossa += n; return { chi: m, che: 'cura', contro: 'eroe', preso: 0, cura: n } },
+  urlo(c, m, mossa) { return { chi: m, che: 'urlo', contro: 'eroe', preso: 0, piu: mossa.piu, turni: mossa.turni } },
+}
+
+// il tiro della scelta di una mossa, dal seme e da un contatore: non prende niente dal caso dello scontro (`rnd`), così chi ha una mossa
+// sola gioca lo stesso scontro di prima, colpo per colpo
+function tiroDalSeme(seme, n) {
+  let h = (Math.imul(seme | 0, 2654435761) ^ Math.imul(n, 40503)) >>> 0
+  h ^= h >>> 15; h = Math.imul(h, 2246822507) >>> 0
+  h ^= h >>> 13; h = Math.imul(h, 3266489909) >>> 0
+  h ^= h >>> 16
+  return (h >>> 0) / 4294967296
 }
 
 // quanti tagli si sommano al più (Taglio profondo, Ferita aperta, Macello): il sangue è un danno che si costruisce
@@ -80,6 +96,7 @@ export const MetodiDelloScontro = {
     const primo = sorpresa || this.ha('primoTiro')
     const f = this.foglio = {
       che: 'scontro', chi: m, campo, fermate: 0, pericolo: null, io: {}, pieni: 0, tirato: false, agguato, sorpresa, apertura: [],
+      mosse: campo.map(() => statoDelleMosse()),
       coda: nuovaFila([{ id: 'eroe', lato: 'eroe', velocita: this.velocita, fatti: primo ? -1 : 0 },
                        ...campo.map((x, i) => ({ id: i, lato: 'mostri', velocita: velocitaDel(x) }))]),
     }
@@ -115,8 +132,41 @@ export const MetodiDelloScontro = {
     if (io.parato > 0) io.parato--
     if (io.intoccabile > 0) io.intoccabile--
     this.bersaglioAuto(f)
+    this.annunciaLeMosse(f)
     this.aggiorna(f)
     return this.chiediOFerma(f.chi)
+  },
+
+  /* ═══════════ le mosse dei mostri (dati/mosse.js) ═══════════ */
+
+  statoMosse(f, x) { const i = f && f.campo ? f.campo.indexOf(x) : -1; return i >= 0 && f.mosse ? f.mosse[i] : null },
+  // l'eroe è protetto: uno scudo, una parata, lo specchio o una barriera preparata (l'incantesimo pesa di più: li ignora)
+  eroeProtetto(f) {
+    const io = (f && f.io) || {}
+    return io.scudo > 0 || io.parato > 0 || !!io.specchio || this.sempre('graffioMeno') > 0 || this.preparatoCon('parato') ||
+      !!this.specchioPreparato() || this.preparati.some(p => p.assorbe > 0)
+  },
+  scegliLaMossa(f, x) {
+    const lista = mosseDi(x)
+    if (lista.length < 2) return lista[0]
+    const s = this.statoMosse(f, x) || statoDelleMosse()
+    this.tiriDelleMosse = (this.tiriDelleMosse || 0) + 1
+    const n = this.tiriDelleMosse
+    return scegliMossa(lista, s, { vita: x.ossa, vitaMax: x.ossaMax || x.ossa, protetto: this.eroeProtetto(f), ruolo: ruoloDi(x) }, () => tiroDalSeme(this.seme || 0, n))
+  },
+  // a inizio del turno dell'eroe ogni mostro con più mosse sceglie la prossima, e la tiene fino al suo turno: l'annuncio dice il vero
+  annunciaLeMosse(f) {
+    for (const x of this.vivi(f)) {
+      const s = this.statoMosse(f, x)
+      if (s && !s.prossima && mosseDi(x).length > 1) s.prossima = this.scegliLaMossa(f, x)
+    }
+  },
+  // quanto farà la mossa annunciata (0 la cura e l'urlo): il numero detto prima, «ti colpisce 3»
+  bottaDella(x, f = this.foglio) {
+    const s = this.statoMosse(f, x)
+    const mossa = (s && s.prossima) || mosseDi(x)[0]
+    if (mossa.tipo === 'cura' || mossa.tipo === 'urlo') return 0
+    return this.botta(x, modDella(mossa, s), !!mossa.ignoraScudo)
   },
 
   bersaglioAuto(f) {
@@ -219,7 +269,12 @@ export const MetodiDelloScontro = {
     const nodo = this.pronta && NODI[this.pronta] ? NODI[this.pronta] : null
     f.colpiti = this.colpitiDa(nodo, f).map(c => ({ ...c, ...this.comeLaPrende(c.chi, nodo) }))
     f.difese = f.campo.map(x => this.difese(x))
-    f.minaccia = this.vivi(f).map(x => ({ chi: x, colpisce: this.botta(x), salta: ((x.stati || {}).fermo || 0) > 0 }))
+    f.minaccia = this.vivi(f).map(x => {
+      const s = this.statoMosse(f, x)
+      const piu = mosseDi(x).length > 1
+      return { chi: x, colpisce: piu ? this.bottaDella(x, f) : this.botta(x), salta: ((x.stati || {}).fermo || 0) > 0,
+               mossa: piu ? vistaDella((s && s.prossima) || mosseDi(x)[0]) : null, rinforzato: !!(s && s.rinforzo > 0) }
+    })
     f.inArrivo = this.colpiInArrivo(f)
   },
 
@@ -233,7 +288,8 @@ export const MetodiDelloScontro = {
       const k = fatti.get(id) || 0
       fatti.set(id, k + 1)
       if (!x || x.morto || ((x.stati || {}).fermo || 0) > k) continue
-      somma += this.botta(x)
+      // la prima mossa è quella annunciata; dopo, il colpo di sempre (col rinforzo, se urla)
+      somma += k === 0 ? this.bottaDella(x, f) : this.botta(x, modDella(null, this.statoMosse(f, x)))
     }
     // una barriera addosso (quella dello scontro, o quella preparata dal campo) ne para una parte: l'avviso dice quanto toglie davvero
     const barriera = ((f.io && f.io.scudo) || 0) + this.preparati.reduce((n, p) => n + (p.assorbe > 0 ? p.assorbe : 0), 0)
@@ -378,7 +434,9 @@ export const MetodiDelloScontro = {
       const x = f.campo[a.id]
       const eventi = this.turnoDelMostro(x)
       azioni.push(...eventi)
-      f.coda = x.morto ? togli(f.coda, a.id) : agisci(f.coda, a.id)
+      // l'attacco forte fa aspettare di più (dati/mosse.js, `attesa`): colpisce più forte, non più spesso
+      const fatta = eventi.find(e => e.mossa)
+      f.coda = x.morto ? togli(f.coda, a.id) : agisci(f.coda, a.id, (fatta && fatta.mossa.attesa) || 1)
       if (eventi.some(e => e.svenuto)) return 'svenuto'
       if (!this.vivi(f).length) return 'fine'
     }
@@ -410,8 +468,14 @@ export const MetodiDelloScontro = {
     }
     if (st.fermo > 0) eventi.push({ chi: x, che: 'salta', contro: 'eroe', preso: 0 })
     else {
-      const azione = AZIONI_DEI_MOSTRI[(MOSTRI[x.tipo] && MOSTRI[x.tipo].azione) || 'colpo']
-      eventi.push(azione(this, x))
+      // la mossa annunciata; chi agisce due volte prima dell'eroe sceglie la seconda lì
+      const f = this.foglio
+      const s = this.statoMosse(f, x)
+      const mossa = (s && s.prossima) || this.scegliLaMossa(f, x)
+      const e = AZIONI_DEI_MOSTRI[mossa.tipo](this, x, mossa, s)
+      if (mosseDi(x).length > 1) e.mossa = vistaDella(mossa)
+      if (s) { registra(s, mossa); s.prossima = null }
+      eventi.push(e)
     }
     if (x.morto) return eventi
     const ora = x.stati || {}
@@ -423,28 +487,30 @@ export const MetodiDelloScontro = {
   },
 
   // Il colpo di un mostro: COLPO_DEL_MOSTRO per (attacco − difesa), almeno 1, qualunque sia la risposta data; poi gli effetti
-  // (botta), la schivata, lo scudo che assorbe, lo specchio che rimanda
-  colpoDelMostro(x) {
+  // (botta), la schivata, lo scudo che assorbe, lo specchio che rimanda. `mossa`: la mossa che colpisce (dati/mosse.js), col suo
+  // moltiplicatore e il rinforzo dell'urlo (`s`); l'incantesimo ignora barriera, scudo, parata e specchio, non la schivata
+  colpoDelMostro(x, mossa = null, s = null) {
     const f = this.foglio
     const io = f.io
-    let male = this.botta(x)
+    const mod = modDella(mossa, s), ignora = !!(mossa && mossa.ignoraScudo)
+    let male = this.botta(x, mod, ignora)
     const pieno = male
-    if (pieno > 0) this.consumaIlDanno(x)
+    if (pieno > 0) this.consumaIlDanno(x, mod)
     const gelato = (x.stati || {}).debole > 0 && pieno > 0
     if (male > 0) f.pieni = (f.pieni || 0) + 1
     const schiva = male > 0 && this.schivata > 0 && this.rnd() * 100 < this.schivata
     if (schiva) { male = 0; this.dillo('🌀 schivato!') }
     // la barriera preparata dal campo para per prima (motore/preparati.js), poi quella dello scontro
-    let assorbito = male > 0 ? this.assorbiConIPreparati(male) : 0
+    let assorbito = male > 0 && !ignora ? this.assorbiConIPreparati(male) : 0
     male -= assorbito
-    if (male > 0 && io.scudo > 0) {
+    if (male > 0 && io.scudo > 0 && !ignora) {
       const a = Math.min(io.scudo, male)
       io.scudo -= a
       assorbito += a
       male -= a
     }
     let rimandato = 0
-    const specchio = male > 0 ? io.specchio || this.specchioPreparato() : 0
+    const specchio = male > 0 && !ignora ? io.specchio || this.specchioPreparato() : 0
     if (specchio) {
       rimandato = Math.round(male * specchio)
       io.specchio = 0
@@ -463,7 +529,7 @@ export const MetodiDelloScontro = {
     if (this.vita <= 0) { this.svieni(); evento.svenuto = true; return evento }
     // Bordo a punte: chi ti colpisce si fa male (una parte di quello che ti toglie, almeno uno)
     const spine = this.sempre('spine')
-    if (male > 0 && spine > 0) {
+    if (male > 0 && spine > 0 && !ignora) {   // le spine pungono chi tocca, non un incantesimo da lontano
       const dato = Math.max(1, Math.round(male * spine / 100))
       x.ossa -= dato
       evento.spinato = dato
@@ -476,11 +542,12 @@ export const MetodiDelloScontro = {
   // ha il suo (`resto`, 0,5 all'inizio: il primo colpo è quello arrotondato di sempre), e un colpo da 3,4 toglie 3, 3, 4, 3, 3, 4…
   // Così una frazione di spinta sposta le vittorie piano, non a gradini.
   // Il colpo pieno di un mostro, prima degli effetti: COLPO_DEL_MOSTRO × (attacco − difesa), almeno 1
+  // `mod`: il moltiplicatore della mossa (dati/mosse.js), 1 per il colpo di sempre
   dannoCont(m) { return Math.max(1, COLPO_DEL_MOSTRO * (m.att - this.dif)) },
-  danno(m) { return Math.floor(this.dannoCont(m) + (m.resto != null ? m.resto : 0.5)) },
+  danno(m, mod = 1) { return Math.floor(this.dannoCont(m) * mod + (m.resto != null ? m.resto : 0.5)) },
   // il colpo di `m` è arrivato: il suo resto passa al colpo dopo
-  consumaIlDanno(m) {
-    const v = this.dannoCont(m) + (m.resto != null ? m.resto : 0.5)
+  consumaIlDanno(m, mod = 1) {
+    const v = this.dannoCont(m) * mod + (m.resto != null ? m.resto : 0.5)
     m.resto = v - Math.floor(v)
   },
   // lo stesso per i colpi dell'eroe: ogni mostro ha il resto di quello che ha preso (`restoSubito`), così tre mostri colpiti dalla stessa
@@ -494,16 +561,17 @@ export const MetodiDelloScontro = {
 
   // Quanto arriva davvero con un suo colpo, con gli effetti (docs/sotterraneo/abilita.md): stordito e invulnerabile niente; la
   // protezione (parato, o i primi colpi di «Testa dura») dimezza; gelato dimezza ancora; la Parata ne toglie qualcuno. Non tocca
-  // niente: lo scudo e lo specchio si consumano in `colpoDelMostro`. È anche il numero detto prima («ti colpisce 3»)
-  botta(m) {
+  // niente: lo scudo e lo specchio si consumano in `colpoDelMostro`. È anche il numero detto prima («ti colpisce 3»). `mod`: la mossa;
+  // `ignora`: un incantesimo, che passa la protezione e la Parata (la Testa dura, che è la testa dell'eroe, resta)
+  botta(m, mod = 1, ignora = false) {
     const f = this.foglio && this.foglio.che === 'scontro' ? this.foglio : null
     const io = (f && f.io) || {}
     const st = m.stati || {}
     if (st.fermo > 0 || io.intoccabile > 0 || this.preparatoCon('intoccabile')) return 0
-    let x = this.danno(m)
-    if (io.parato > 0 || this.preparatoCon('parato') || (f && (f.pieni || 0) < this.sempre('testaDura'))) x = Math.ceil(x / 2)
+    let x = this.danno(m, mod)
+    if ((!ignora && (io.parato > 0 || this.preparatoCon('parato'))) || (f && (f.pieni || 0) < this.sempre('testaDura'))) x = Math.ceil(x / 2)
     if (st.debole > 0) x = Math.floor(x / 2)
-    return Math.max(0, x - this.sempre('graffioMeno'))
+    return Math.max(0, x - (ignora ? 0 : this.sempre('graffioMeno')))
   },
 
   /* ═══════════ scappare ═══════════ */

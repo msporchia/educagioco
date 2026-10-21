@@ -310,7 +310,7 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = [], fon
     if (S.scia !== sciaPosata) { sciaPosata = S.scia; scia.posa(S.scia && S.scia.luci, S.scia && S.scia.meta) }
     scia.da(S.sciaDa)
     // l'eroe e le persone
-    eroe.x = S.io.x; eroe.z = S.io.z; eroe.verso = S.io.verso; eroe.sprite = S.io.sprite; eroe.mano = S.io.mano; eroe.mancina = S.io.mancina
+    eroe.x = S.io.x; eroe.z = S.io.z; eroe.verso = S.io.verso; eroe.sprite = S.io.sprite; eroe.mano = S.io.mano; eroe.mancina = S.io.mancina; eroe.corpo = S.io.corpo
     // `#…&senzaeroe`: le foto delle icone (strumenti/scatti.mjs, icone-mondo); nello scontro l'eroe lo disegna il palco
     const inScontro = !!(palco && palco.attivo)
     eroe.nascosto = !!S.io.nascosto || inScontro

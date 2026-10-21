@@ -78,7 +78,7 @@ già in sequenza **non la riavvia** (tranne Watson che dorme: si sveglia con uno
 lavorare** durante una sequenza (non per il gesto «chiama»), la sequenza si ferma e il compagno torna a seguire/sedersi. Se il contadino
 non sta fermo già al tocco, resta il vecchio «Bau!»/«Prrr…» sul posto (e da lontano, «Watson!» e Watson torna a seguire).
 
-- **Il richiamo**: oltre 4 celle (`SOGLIA_RICHIAMO`) il contadino si gira verso Watson, dice «Watson!» (`fx.parla`, gesto `chiama` in `eroe.js`:
+- **Il richiamo**: oltre 2,5 celle (`SOGLIA_RICHIAMO`: appena non è accanto) il contadino si gira verso Watson, dice «Watson!» (`fx.parla`, gesto `chiama` in `eroe.js`:
   braccio alzato e mano alla bocca, 0,9 s), Watson alza la testa 0,4 s, **corre** (la corsa di sempre) fino a 1–1,9 celle dal contadino
   (`scegliMetaAttorno`) e fa la festa. Funziona anche con la camera staccata: conta la distanza in celle, non lo schermo.
 - **La festa di Watson** (`sequenzaCane`, 2–4 s): si apre sempre con la base (scodinzola col sedere e «Bau!»), poi **una** di otto,

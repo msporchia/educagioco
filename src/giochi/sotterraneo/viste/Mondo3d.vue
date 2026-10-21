@@ -33,6 +33,7 @@ import { annuncioDi, alSicuro, signoreVivo } from '../motore/aperta.js'
 import { fotoDelloScontro } from '../motore/aperta-scena.js'
 import { allaCitta } from '../motore/forze-sopra.js'
 import { SOPRA } from '../dati/mondo-aperto-mostri.js'
+import { stradaDelMondo, stradaPesata } from '../motore/strada-sopra.js'
 import { metaScelta, campoVersoLaMeta, metaVicina, celleDelVelo, luciDellaStrada, piuVicina, passiDetti, ARRIVATO_META } from '../motore/meta-sopra.js'
 
 const props = defineProps({
@@ -210,8 +211,10 @@ function vaiA(c, cosa = null) {
   if (!terra.passa(da.x, da.y)) { const s = terra.arrivo(m.partenza, da); if (s) { io.x = s.x + 0.5; io.z = s.y + 0.5; da = s } }
   const arrivo = terra.arrivo(da, c)
   if (!arrivo) return false
-  const strada = terra.strada(da, arrivo) || []
-  via = terra.liscia(da, strada).map(p => ({ x: p.x + 0.5, z: p.y + 0.5 }))
+  // a tocco come la scia: la strada vera, lontano dalle case, senza allungare oltre il limite (motore/strada-sopra.js)
+  const sp = stradaPesata(terra, stradaDelMondo(m), da, arrivo)
+  const strada = sp ? sp.via : (terra.strada(da, arrivo) || [])
+  via = (sp ? sp.liscia(strada) : terra.liscia(da, strada)).map(p => ({ x: p.x + 0.5, z: p.y + 0.5 }))
   meta = cosa
   primaVolta.value = false
   if (scena) scena.cam.segui()   // mandato l'eroe da qualche parte, la vista torna a seguirlo (come nella fattoria)
@@ -469,7 +472,7 @@ function aggiornaScena() {
     if (d.aperto && !d.abisso) S.pallini.set(b.k, { colore: d.t && d.t.colore, adesso: !!(d.t && (d.t.adesso || d.t.nuova)) })
   }
   S.io.sprite = props.eroe.sprite || 'cavaliere'
-  S.io.mano = props.roba ? props.roba.mano : null; S.io.mancina = props.roba ? props.roba.mancina : null
+  S.io.mano = props.roba ? props.roba.mano : null; S.io.mancina = props.roba ? props.roba.mancina : null; S.io.corpo = props.roba ? props.roba.corpo : null
   S.veduta = props.veduta
   // davanti a una discesa rossa sta la sentinella (docs/sotterraneo/zone.md)
   const sentinelle = bersagli.value.filter(b => b.ruolo === 'ingresso' && trovati.value.has(b.chiave) && (datoDelPosto(b).t || {}).colore === 'rosso')
@@ -994,7 +997,7 @@ function aggiornaMeta() {
     terraDelCampo = terra
     const v = metaVicina(m, terra, q.cella)
     const fine = v && (terra.passa(v.x, v.y) ? v : terra.arrivo(m.partenza, v))
-    campo = fine ? campoVersoLaMeta(terra, fine) : null
+    campo = fine ? campoVersoLaMeta(terra, fine, stradaDelMondo(m)) : null
     restoDellaStrada = v && v.lontana && fine ? Math.abs(baseDi(m, q.cella.x, q.cella.y).arco - baseDi(m, fine.x, fine.y).arco) : 0
     if (nuova || !cammina.value) rifaiLaStrada()
   }
@@ -1008,12 +1011,12 @@ function aggiornaMeta() {
   if (v.i >= 0) scena.S.sciaDa = v.i
   if (!cammina.value && Number.isFinite(n) && n >= ARRIVATO_META && (v.i < 0 || v.d > 4)) rifaiLaStrada()
 }
-// la strada dalla cella dell'eroe alla meta (la discesa del campo, lisciata come i passi dell'A*): la scia, il velo, i punti da camminare
+// la strada dalla cella dell'eroe alla meta (la discesa del campo, lisciata senza uscire dalla strada dove conviene): la scia, il velo, i punti da camminare
 function rifaiLaStrada() {
   const da = cellaDiMe()
   const via = campo && terra.passa(da.x, da.y) ? campo.strada(da) : null
   if (!via) { luci = []; posaLaStrada(null); return null }
-  const punti = [da, ...terra.liscia(da, via)].map(p => ({ x: p.x + 0.5, z: p.y + 0.5 }))
+  const punti = [da, ...campo.liscia(da, via)].map(p => ({ x: p.x + 0.5, z: p.y + 0.5 }))
   luci = luciDellaStrada(punti)
   posaLaStrada({ luci, meta: punti[punti.length - 1], velo: celleDelVelo([da, ...via], m.W, m.H, VELO_META) })
   return punti
