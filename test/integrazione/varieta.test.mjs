@@ -13,7 +13,7 @@
 
    `node test/esegui.mjs varieta`
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, attendi, scatto, semina, leggiProfilo,
+import { apriBrowser, apriGioco, azzera, attendi, scatto, semina, leggiProfilo, apriTendine,
          GIOCATORE, scegli } from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 
@@ -65,7 +65,12 @@ await page.waitForSelector('.tastierino', { timeout: 5000 })
 for (const c of '0000') await page.click(`.tasto >> text="${c}"`)
 await page.waitForSelector('nav.barra-giu', { timeout: 5000 })
 await page.click('[data-scheda="giochi"]')
-await page.waitForSelector('[data-varieta]', { timeout: 5000 })
+// le monete di un gioco stanno nella sua pagina (il selettore in alto), le regole di tutti in Impostazioni › Avanzate
+const vaiAlGioco = async k => {
+  await page.click(`[data-giochi-impostazioni] [data-indice="${k}"]`)
+  await page.waitForSelector(`[data-varieta-gioco-pagina="${k}"]`, { timeout: 5000 })
+}
+await vaiAlGioco('sotterraneo')
 
 uguale('la riga Oggi dice che il sotterraneo è finito',
        await page.locator('[data-varieta-oggi="sotterraneo"]').getAttribute('data-fase'), 'vuoto')
@@ -77,12 +82,17 @@ uguale('«Ridai tempo» lo riporta pieno',
 uguale('e il tasto sparisce',
        await page.locator('[data-varieta-oggi="sotterraneo"] [data-azione="ridai-tempo"]').count(), 0)
 
+await page.click('[data-scheda="impostazioni"]')
+await apriTendine(page)
 await page.click('[data-varieta-soglia="pieno"] [data-varieta-passo="su"]')
 controlla('la soglia sale di cinque minuti',
           (await page.locator('[data-varieta-soglia="pieno"] b').innerText()).includes('25'))
-await page.click('[data-varieta-gioco="survivors"] [data-tetto="libero"]')
-await page.click('[data-consiglia="inglese"]')
 await page.click('[data-flag="dormienti"]')
+await page.click('[data-scheda="giochi"]')
+await vaiAlGioco('survivors')
+await page.click('[data-varieta-gioco="survivors"] [data-tetto="libero"]')
+await vaiAlGioco('inglese')
+await page.click('[data-consiglia="inglese"]')
 await attendi(page, 500)
 await scatto(page, 'varieta-grandi')
 

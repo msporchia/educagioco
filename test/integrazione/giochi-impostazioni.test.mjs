@@ -50,7 +50,9 @@ await page.click('[data-gioco-modo="segui"]')
 /* ── il tempo: c'è sempre, anche a zero ── */
 controlla('il tempo ha sette giorni e tre numeri', await page.locator('[data-gioco-tempo] .col').count() === 7 && await page.locator('[data-gioco-tempo] .num div').count() === 3)
 
+const apriTutte = () => page.evaluate(() => document.querySelectorAll('[data-gioco-tutte]').forEach(d => { d.open = true }))
 /* ── le domande di Castle Battle: i saperi dei suoi moduli, con dove altro valgono ── */
+await apriTutte()
 const saperi = await page.locator('[data-gioco-sapere]').evaluateAll(l => l.map(x => x.dataset.giocoSapere))
 controlla('Castle Battle chiede numeri, moltiplicazioni e divisioni', ['numeri', 'moltiplicazioni', 'divisioni'].every(s => saperi.includes(s)), saperi.join(','))
 const div = page.locator('[data-gioco-sapere="divisioni"]')
@@ -76,6 +78,7 @@ controlla('tornata a zero: la voce sparisce dal profilo', (await leggiProfilo(pa
 
 /* ── un gioco che ha bisogno di un sapere per esserci: lo dice ── */
 await vai('pozioni')
+await apriTutte()
 controlla('le pozioni dicono che senza misure e conversioni non ci sono', /senza questa il gioco non c'è/.test(await page.locator('[data-gioco-sapere="misure"]').innerText()) && await page.locator('[data-gioco-sapere="conversioni"]').count() === 1)
 
 /* ── un gioco che pesca da tutto il mazzo, e uno senza domande ── */

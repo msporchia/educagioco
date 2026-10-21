@@ -9,12 +9,13 @@ import { GIOCHI } from '../../data/giochi.js'
 import { inCasa } from '../../data/portata-giochi.js'
 import { paga, comeDi, tettiDi, TETTO_MINUTI, FASE_BREVE, DOPPIO, DORMIENTE } from '../../data/varieta.js'
 
-defineProps({ chi: { type: String, default: '' } })
+// senza `gioco`: le regole di tutti (soglie, svegliare i dormienti), in Impostazioni › Avanzate; con `gioco`: le monete di quel gioco, nella sua pagina
+const props = defineProps({ chi: { type: String, default: '' }, gioco: { type: String, default: '' } })
 onMounted(ricarica)
 
 const PASSO = 5
 const r = computed(() => { void state.profile.settings.varieta; return regole() })
-const giochi = computed(() => GIOCHI.filter(g => paga(g) && inCasa(g.chiave)))
+const giochi = computed(() => GIOCHI.filter(g => paga(g) && inCasa(g.chiave) && (!props.gioco || g.chiave === props.gioco)))
 
 const oggi = computed(() => {
   void giro.value; void r.value
@@ -44,8 +45,9 @@ const COME = [
 </script>
 
 <template>
-  <div class="varieta" data-varieta>
-    <h2>Le monete, gioco per gioco</h2>
+  <div class="varieta" :data-varieta="gioco ? undefined : ''" :data-varieta-gioco-pagina="gioco || undefined">
+    <template v-if="!gioco">
+    <h3>Le monete sullo stesso gioco</h3>
     <p class="mini">Stare tanto sullo stesso gioco rende sempre meno monete: si gioca
       lo stesso, ma per guadagnare conviene cambiare. Domani tornano piene. Il tempo
       non si ferma mai: lo decidete voi.</p>
@@ -65,10 +67,11 @@ const COME = [
       </div>
       <p class="mini">Minuti di oggi sullo stesso gioco; dopo, per quel gioco niente monete fino a domani.</p>
     </div>
+    </template>
 
-    <h3>Oggi</h3>
-    <p v-if="!oggi.length" class="mini" data-varieta-oggi-vuoto>Oggi {{ chi }} non ha ancora
-      giocato a niente che dia monete.</p>
+    <template v-else>
+    <b class="titolo">Le monete di questo gioco</b>
+    <p v-if="!oggi.length" class="mini" data-varieta-oggi-vuoto>Oggi {{ chi }} non ci ha ancora giocato.</p>
     <ul v-else class="oggi">
       <li v-for="x in oggi" :key="x.g.chiave" :data-varieta-oggi="x.g.chiave" :data-fase="x.st.fase">
         <span>{{ x.g.ico }} {{ x.g.nome }} · {{ FASE_BREVE[x.st.fase] }} · {{ x.minuti }}′</span>
@@ -78,7 +81,6 @@ const COME = [
       </li>
     </ul>
 
-    <h3>Gioco per gioco</h3>
     <p class="mini">⭐ consigliato: sulla sua carta compare 🪙×2, e vale doppio nei primi
       {{ DOPPIO }} minuti del giorno.</p>
     <ul class="giochi">
@@ -87,7 +89,7 @@ const COME = [
           <button type="button" class="stella" :class="{ on: r.consigliati[g.chiave] }"
                   :data-consiglia="g.chiave" :aria-pressed="!!r.consigliati[g.chiave]"
                   @click="consiglia(g.chiave, !r.consigliati[g.chiave])">⭐</button>
-          <span class="nome">{{ g.ico }} {{ g.nome }}</span>
+          <span v-if="!gioco" class="nome">{{ g.ico }} {{ g.nome }}</span>
         </div>
         <div class="come">
           <button v-for="c in COME" :key="c.k" type="button"
@@ -106,8 +108,9 @@ const COME = [
         </div>
       </li>
     </ul>
+    </template>
 
-    <button type="button" class="dormienti" :class="{ spento: !r.dormienti }"
+    <button v-if="!gioco" type="button" class="dormienti" :class="{ spento: !r.dormienti }"
             data-flag="dormienti" @click="accendiDormienti(!r.dormienti)">
       <span class="parole"><b>Svegliare i giochi di scuola</b>
         <i>{{ r.dormienti
@@ -120,6 +123,7 @@ const COME = [
 
 <style scoped>
 .varieta { display:flex; flex-direction:column; gap:9px; width:100%; max-width:400px }
+.titolo { font-size:12px; text-transform:uppercase; letter-spacing:.05em; color:#8a8576 }
 .varieta h3 { font-size:15px; font-weight:900; color:var(--viola-scuro); margin-top:6px }
 .soglie, .oggi, .giochi { display:flex; flex-direction:column; gap:7px; list-style:none;
                           padding:0; margin:0 }

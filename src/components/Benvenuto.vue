@@ -11,7 +11,7 @@ import Prova from '../quiz/Prova.vue'
 import VeloGuide from '../guide/VeloGuide.vue'
 import { ricordaScelta, AMICI_DI_BASE } from '../store/amici.js'
 import { PASSO } from '../amici/testi.js'
-import { MESI, etaAnagrafica, nascitaValida, inParole, dentroGliEstremi } from '../data/nascita.js'
+import { MESI, etaDiClasse, inClasse, nascitaValida, dentroGliEstremi } from '../data/nascita.js'
 
 const props = defineProps({
   primo: { type: Boolean, default: true },   // false = si aggiunge un fratello dalle impostazioni
@@ -33,8 +33,8 @@ const nascita = computed(() => {
   const n = { m: Number(mese.value), a: Number(annoNascita.value) }
   return mese.value !== '' && annoNascita.value !== '' && nascitaValida(n) ? n : null
 })
-const etaDaData = computed(() => (nascita.value ? etaAnagrafica(nascita.value) : null))
-watch(etaDaData, e => { if (e) anni.value = Math.max(4, Math.min(12, dentroGliEstremi(e.anni))) })
+const etaDaData = computed(() => (nascita.value ? etaDiClasse(nascita.value) : null))
+watch(etaDaData, e => { if (e != null) anni.value = Math.max(4, Math.min(12, dentroGliEstremi(e))) })
 const spiegami = ref(false)
 const prova = ref(null)   // { sorgente|chiave, nome } | null
 
@@ -106,7 +106,7 @@ async function entra() {
           <select v-model="mese" aria-label="mese di nascita" data-nascita-mese><option value="">mese</option><option v-for="(m, i) in MESI" :key="m" :value="i">{{ m }}</option></select>
           <select v-model="annoNascita" aria-label="anno di nascita" data-nascita-anno><option value="">anno</option><option v-for="a in ANNI_DISPONIBILI" :key="a" :value="a">{{ a }}</option></select>
         </div>
-        <p v-if="etaDaData" class="mini" data-nascita-eta>Ha {{ inParole(etaDaData) }}: da qui l'età si aggiorna da sola.</p>
+        <p v-if="etaDaData != null" class="mini" data-nascita-eta>{{ inClasse(nascita).replace(/^./, c => c.toUpperCase()) }}: da qui l'età si aggiorna da sola a ogni settembre.</p>
         <p v-else class="mini">Senza, l'età resta quella che scegli qui sopra e la sposti tu quando serve.</p>
       </div>
 
