@@ -50,6 +50,7 @@ Tutto in `src/giochi/sotterraneo/scena3d/`, un file per tema.
 | `figure.js` | **tutte** le figure dell'atlante in un InstancedMesh (una chiamata) |
 | `cose.js` | quale figura per ogni cosa del motore, i chiarori, i segni sopra la testa; lo stato di disegno dei mostri |
 | `eroe.js` | l'eroe, le armi in mano, la torcia in mano con la fiamma, le faville e il chiarore |
+| `eroe3d.js`, `mostro3d.js`, `salda3d.js` | in prova: l'eroe e i mostri come modelli 3D al posto degli sprite, i pezzi fermi saldati; le copie dei prototipi in `eroi3d/`, `mostri3d/`, `effetti3d/` (generate, col registro e il gestore scritti a mano): [mostri-3d.md](mostri-3d.md) |
 | `luci.js` | la luce dell'eroe (alone e cono, una passata d'ombra, più forte con la torcia accesa, e il rimbalzo), la riserva fissa dei fuochi, lampo, magia, palco |
 | `segni.js` | fiamme, chiarori per terra, colonne di luce, anelli, bolla (istanziati) |
 | `particelle.js` | nebbia, l'aria del paesaggio (polvere, braci, gocce, neve, brina, lucciole, bolle: `ARIA`), scintille |

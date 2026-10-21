@@ -72,7 +72,7 @@ quale file.
 | `docs/passo-passo/` | Passo passo: regole del mondo, cane pastore, zaino e carte, stelle, sentiero, come si scrive un livello |
 | `docs/generale/` | Il Generale: didattica, mappe, livelli, cosa manca (come si scrive un livello: `src/data/livelli/GUIDA.md`) |
 | `docs/costruttore/` | Il Robot (era «Il costruttore»: chiave e cartelle restano `costruttore`): linguaggio, progetti e attrezzi, il porto, gli algoritmi, la campagna, la scheda e il robot disegnato |
-| `docs/sotterraneo/` | Il sotterraneo: la grande storia (le discese in fila e la roba attesa), le missioni, regole, roba, scenari e muri, i pensieri dell'eroe (`pensieri.md`), l'abisso com'è e il suo progetto, il Sotterraneo 3D in prova (`grafica-3d.md`, prima di toccare `scena3d/`; il suo mondo di sopra in `mondo-3d.md`) |
+| `docs/sotterraneo/` | Il sotterraneo: la grande storia (le discese in fila e la roba attesa), le missioni, regole, roba, scenari e muri, i pensieri dell'eroe (`pensieri.md`), l'abisso com'è e il suo progetto, il Sotterraneo 3D in prova (`grafica-3d.md`, prima di toccare `scena3d/`; i mostri e gli effetti 3D in `mostri-3d.md`; il suo mondo di sopra in `mondo-3d.md`) |
 | `docs/survivors/` | Survivors, con le sue regole |
 | `docs/codice-segreto/`, `docs/conta/`, `docs/prima-dopo/` | un gioco ciascuna; in `prima-dopo/disegni.md` la regola delle icone disegnate |
 | `docs/fattoria/` | La fattoria: regole, campi e silos, catena, macchine, chi chiede, livelli, animali, come si tocca, la pagina dell'albero, stagioni, sprite, dove sta cosa |
@@ -152,7 +152,8 @@ Una riga ciascuna; il perché sta nel documento indicato.
   (`npm run quiz:livelli`), `src/giochi/arena/dati/taratura.js`
   (`npm run tara:arena`, un test confronta la firma), `src/data/voci*.js`
   (`npm run voci`, e se dice «non incise» si rilancia), `src/giochi/sotterraneo/dati/icone-mondo.js`
-  (`npm run scatti icone-mondo`, la firma sta nel file e un test la ricalcola). → `docs/core/comandi.md`
+  (`npm run scatti icone-mondo`, la firma sta nel file e un test la ricalcola), le copie dei prototipi in `scena3d/eroi3d|mostri3d|effetti3d/`
+  (`npm run promuovi3d`). → `docs/core/comandi.md`
 - **Un'emoji nuova vuole `npm run emoji`**: il gioco disegna le emoji col suo font
   (Twemoji), tagliato a quelle usate; se ci si scorda, `unita/emoji` è rosso.
   → `docs/core/emoji.md`

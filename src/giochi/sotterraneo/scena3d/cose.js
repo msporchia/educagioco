@@ -1,7 +1,8 @@
 // La roba del piano in 3D, a ogni fotogramma: per ogni cosa del motore (corsa.livello.robe) la sua figura dell'atlante, scelta
 // come la sceglie il 2D (dati/tessere.js `PEZZO_DI`, dati/fotogrammi.js, dati/grossi.js), il chiarore per terra di chi lo
 // chiede e i segni scritti sopra. Si vede quello che il motore dice (`luceDi`): nel ricordo la roba ferma, mai i mostri.
-// I mostri hanno uno stato di disegno (dove stanno smussati, il lampo del colpo, lo scatto, la caduta), che il palco muove.
+// I mostri hanno uno stato di disegno (dove stanno smussati, il lampo del colpo, lo scatto, la caduta), che il palco muove; i più
+// vicini all'eroe hanno il modello 3D al posto dello sprite, se il registro ne ha uno (mostro3d.js, docs/sotterraneo/mostri-3d.md).
 import { Color } from 'three'
 import { PEZZI } from '../dati/atlante.js'
 import { SCENARI, SCENARIO, PEZZO_DI } from '../dati/tessere.js'
@@ -18,6 +19,7 @@ import { posaDi } from './pianta.js'
 import { esc, barretta } from './etichette.js'
 import { PIXEL_CELLA, ALLUNGA } from './costanti.js'
 import { verso } from './tempo.js'
+import { muoviAssalto } from './racconto.js'
 
 // i colori pronti una volta: a ogni fotogramma non si legge una stringa
 const AURA = { magico: new Color('#6f8dff'), raro: new Color('#ffd23f'), leggendario: new Color('#ff9a2e') }
@@ -28,12 +30,14 @@ const TINTE_GROSSI = Object.fromEntries(Object.entries(GROSSI).map(([k, g]) => [
 export const DA_TOCCARE = ['porta', 'forziere', 'curiosita', 'fonte', 'scala', 'scala-su', 'cosa', 'gemme', 'portale', 'mostro']
 
 // `apre(r)`: una porta o un forziere si è appena aperto (lo dice il motore): chi chiama ci mette le scintille
-export function creaCose({ figure, aloni, colonne, etichette, camera, apre = null }) {
+// `mostri3d`: la riserva dei modelli (mostro3d.js) o null; `vicino()`: dove sta l'eroe disegnato, per scegliere chi ha il modello
+export function creaCose({ figure, aloni, colonne, etichette, camera, apre = null, mostri3d = null, vicino = null }) {
   const stati = new WeakMap()
+  const visibili = []   // i mostri da disegnare in questo fotogramma (riusato): prima si sceglie chi ha il modello, poi si disegna
   const punto = { x: 0, y: 0 }
   const stato = r => {
     let s = stati.get(r)
-    if (!s) { s = { x: r.fx ?? r.x + 0.5, z: r.fy ?? r.y + 0.5, t: Math.random(), flash: 0, assalto: null, morente: 0, meta: null, alto: 1, specchio: false }; stati.set(r, s) }
+    if (!s) { s = { r, x: r.fx ?? r.x + 0.5, z: r.fy ?? r.y + 0.5, t: Math.random(), flash: 0, assalto: null, morente: 0, meta: null, alto: 1, specchio: false }; stati.set(r, s) }
     return s
   }
   // un segno scritto sopra (x, z) a quota `alto` (in celle), spostato di `dy` px
@@ -42,7 +46,7 @@ export function creaCose({ figure, aloni, colonne, etichette, camera, apre = nul
     etichette.metti(punto.x, punto.y + dy, chiave, html, attr)
   }
 
-  function mostro(r, s, t, luce, inCampo, fx) {
+  function mostro(r, s, t, luce, inCampo, fx, verso3d) {
     const scheda = MOSTRI[r.tipo] || {}
     const morto = inCampo >= 0 && fx && fx.attivo ? !!fx.morti[inCampo] : r.morto
     let nome, scala = 1
@@ -74,14 +78,24 @@ export function creaCose({ figure, aloni, colonne, etichette, camera, apre = nul
     }
     const x = s.x + (s.dx || 0) + (s.flash > 0 ? (Math.random() - 0.5) * 0.08 : 0), z = s.z + (s.dz || 0) + 0.1
     const specchio = s.specchio
+    s.nome = nome   // per le prove: lo sprite di adesso (anche quando si disegna il modello)
+    s.alto = figure.alto(nome, scala)
+    // il modello 3D, se questo mostro l'ha avuto e il registro ne ha uno; se no (o se non si costruisce) lo sprite
+    s.in3d = false
+    if (s.vuole3d && s.id3d) {
+      const a = s.assalto, att = s.attacco3d
+      let p = -1
+      if (a && att) p = a.t < a.picco ? att.arrivo * a.t / a.picco : att.arrivo + (1 - att.arrivo) * Math.min(1, (a.t - a.picco) / Math.max(0.01, a.dur - a.picco))
+      const alto = mostri3d.metti(r, s, s.id3d, { x, z: z - 0.1, alto: s.alto, verso: inCampo >= 0 || r.sveglio ? verso3d : null, t: s.t, dt: s.dtScena, trasparenza,
+        morente: morto ? s.morente : 0, bianco: s.flash * 1.4, tinta: s.tinta3d, forzaTinta: s.forzaTinta3d || 0, attacco: p })
+      if (alto >= 0) { s.alto = alto; s.in3d = true }
+    }
     const o = figure.o()
     o.scala = scala; o.specchio = specchio; o.bianco = s.flash * 2.5; o.trasparenza = trasparenza; o.cosa = morto ? null : r
-    figure.metti(nome, x, 0, z, o)
-    s.nome = nome   // per le prove: lo sprite di adesso
-    s.alto = figure.alto(nome, scala)
+    if (!s.in3d) figure.metti(nome, x, 0, z, o)
     // l'arma in pugno di una variante (dati/varianti.js, `MANI`): sulla sua mano, in proporzione
     const mano = MANI[r.tipo], corpo = PEZZI[nome], arma = r.arma && PEZZI[r.arma]
-    if (mano && corpo && arma && !morto) {
+    if (mano && corpo && arma && !morto && !s.in3d) {
       const k = mano.k * corpo[3] / arma[3], lato = specchio ? -1 : 1
       const ax = x + (mano.x - 0.5) * corpo[2] * lato / PIXEL_CELLA * scala
       const ay = ((1 - mano.y) * corpo[3] - 0.32 * arma[3] * k) / PIXEL_CELLA * ALLUNGA * scala
@@ -157,6 +171,7 @@ export function creaCose({ figure, aloni, colonne, etichette, camera, apre = nul
       const liv = corsa.livello
       const sc = SCENARI[corsa.scenario] || SCENARI[SCENARIO]
       const campo = palco ? palco.campo : null
+      visibili.length = 0
       for (const r of liv.robe) {
         if (r.presa) continue
         if (salta && salta(r)) continue
@@ -168,12 +183,15 @@ export function creaCose({ figure, aloni, colonne, etichette, camera, apre = nul
           if (s.meta) { const k = verso(dtScena, 5); s.x += (s.meta.x - s.x) * k; s.z += (s.meta.z - s.z) * k; s.corre = Math.hypot(s.meta.x - s.x, s.meta.z - s.z) > 0.08 }
           else { const nx = r.fx ?? r.x + 0.5, nz = r.fy ?? r.y + 0.5; s.corre = Math.hypot(nx - s.x, nz - s.z) > 0.002 && r.sveglio; s.x = nx; s.z = nz }
           s.t += dtScena; s.flash = Math.max(0, s.flash - dt * 7)
+          muoviAssalto(s, dtScena)   // lo scatto del racconto (racconto.js): prima nessuno lo muoveva, e il mostro stava fermo
+          if (!s.assalto) s.attacco3d = null
           if (inCampo < 0) s.specchio = r.guarda === 'sx'
           const k = Math.floor(s.z) * liv.largo + Math.floor(s.x)
           const inLuce = corsa.inLuce(k)
           if (r.morto && inCampo < 0 && !(s.morente > 0 && s.morente < 1.9)) continue
           if (inCampo < 0 && !inLuce) continue   // un mostro si vede solo nella luce di adesso (docs/sotterraneo/luce.md)
-          mostro(r, s, t, inLuce ? 2 : 1, inCampo, palco && palco.fx)
+          s.inCampo = inCampo; s.luce = inLuce ? 2 : 1
+          visibili.push(s)
           continue
         }
         if (r.morto && r.che !== 'fonte') continue
@@ -182,6 +200,20 @@ export function creaCose({ figure, aloni, colonne, etichette, camera, apre = nul
         if (!luce) continue
         roba(r, t, sc, corsa, luce)
       }
+      // i mostri: chi ha il modello 3D sono i più vicini all'eroe (quelli dello scontro per primi), fino al tetto di ACCESI.mostri3d
+      const e = vicino && vicino()
+      if (mostri3d) {
+        mostri3d.inizia()
+        for (const s of visibili) {
+          if (s.id3d === undefined) s.id3d = mostri3d.idDi(s.r)   // la specie, il grado e la variante non cambiano
+          s.vuole3d = !!s.id3d
+          s.d3d = s.inCampo >= 0 ? -1 : e ? (s.x - e.x) ** 2 + (s.z - e.z) ** 2 : 0
+        }
+        visibili.sort((a, b) => a.d3d - b.d3d)   // `metti` dice di no oltre il tetto: i lontani restano sprite
+      }
+      const fx = palco && palco.fx
+      for (const s of visibili) mostro(s.r, s, t, s.luce, s.inCampo, fx, e)
+      if (mostri3d) mostri3d.chiudi()
       // i relitti con uno sprite: coi piedi in fondo alla loro ultima cella, come l'arredo
       for (const q of liv.relitti || []) {
         if (!q.pezzo) continue

@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>La collezione di armi in 3D</title>
+<style>
+  :root { --fondo: #14161b; --carta: #1b1e25; --riga: #2c313a; --testo: #e2e5e0; --tenue: #98a09c; --male: #ff8a7a; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 18px; background: var(--fondo); color: var(--testo); font: 13px/1.4 system-ui, sans-serif; }
+  h1 { font-size: 17px; margin: 0 0 4px; }
+  h2 { font-size: 14px; margin: 14px 0 6px; text-transform: capitalize; }
+  p { margin: 0 0 12px; color: var(--tenue); max-width: 100ch; }
+  #esito.male { color: var(--male); }
+  .griglia { display: grid; grid-template-columns: repeat(5, var(--lato)); gap: 8px; margin-bottom: 8px; }
+  figure { margin: 0; background: var(--carta); border: 1px solid var(--riga); border-radius: 4px; padding: 4px; }
+  canvas { display: block; border-radius: 3px; width: var(--lato); height: var(--lato); }
+  figcaption { font-size: 11px; color: var(--tenue); margin-top: 3px; }
+  figcaption b { color: var(--testo); font-weight: 600; }
+  #scelte { display: flex; gap: 8px; margin: 8px 0; }
+  #scelte div { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+  select { background: var(--carta); color: var(--testo); border: 1px solid var(--riga); border-radius: 3px; padding: 2px; }
+  #eroi canvas { width: 100%; max-width: 1400px; height: auto; }
+</style>
+</head>
+<body>
+<h1>La collezione di armi in 3D (PoC)</h1>
+<p>Dieci armi per tipo, dalla più umile alla leggendaria (<code>poc/armi-3d/collezione*.js</code>). Parametri: <code>?famiglia=spada|ascia|arco|bacchetta|scudo</code> (una sola, più grande), <code>?vista=eroi</code> (&amp;<code>arma=id,id,id,id</code> &amp;<code>scudo=id,…</code>), <code>?pausa</code>, <code>?t=</code>.</p>
+<div id="esito">in corso…</div>
+<div id="scelte" hidden></div>
+<div id="contenuto"></div>
+<script type="module">
+import { WebGLRenderer, Scene, PerspectiveCamera, HemisphereLight, DirectionalLight, Box3, Vector3, Color, Group, CircleGeometry, Mesh, ShadowMaterial, PCFSoftShadowMap, SRGBColorSpace, ACESFilmicToneMapping } from 'three'
+import { CATALOGO, FAMIGLIE, creaDaId, perId } from './armi-3d/collezione.js'
+import { equipaggia } from './armi-3d/armi.js'
+import { creaEroe, posaGuardia, CHIAVI } from './eroi-3d/eroi.js'
+
+const url = new URLSearchParams(location.search)
+const vista = url.get('vista') || 'griglia'
+const solaFamiglia = FAMIGLIE.includes(url.get('famiglia')) ? url.get('famiglia') : null
+const pausa = url.has('pausa')
+const T0 = Number(url.get('t') || 0)
+const errori = []
+const vecchio = console.error
+console.error = (...a) => { errori.push(a.map(String).join(' ').slice(0, 300)); vecchio.apply(console, a) }
+addEventListener('error', e => errori.push(String(e.message)))
+const risultato = window.__prova = { ok: false, errori, triangoli: {} }
+
+const renderer = new WebGLRenderer({ antialias: true, preserveDrawingBuffer: true })
+renderer.setPixelRatio(1); renderer.shadowMap.enabled = true; renderer.shadowMap.type = PCFSoftShadowMap
+renderer.outputColorSpace = SRGBColorSpace; renderer.toneMapping = ACESFilmicToneMapping; renderer.toneMappingExposure = 1.1
+
+function nuovaScena (ampia = 2.5, mappa = 1024) {
+  const s = new Scene(); s.background = new Color(0x2a3038)
+  s.add(new HemisphereLight(0xfff0d8, 0x6a5a3a, 1.9))
+  const sole = new DirectionalLight(0xfff1dc, 2.6); sole.position.set(3, 6, 5); sole.castShadow = true
+  sole.shadow.mapSize.set(mappa, mappa); sole.shadow.radius = 4; sole.shadow.bias = -0.0008
+  const c = sole.shadow.camera; c.left = -ampia; c.right = ampia; c.top = ampia; c.bottom = -ampia; c.near = 0.5; c.far = 24
+  s.add(sole)
+  const fredda = new DirectionalLight(0xa8c8ff, 0.8); fredda.position.set(-4, 2, -3); s.add(fredda)
+  return s
+}
+function suolo (s, y, r = 1.5) {
+  const m = new Mesh(new CircleGeometry(r, 32), new ShadowMaterial({ opacity: 0.35 })); m.rotation.x = -Math.PI / 2; m.position.y = y; m.receiveShadow = true; s.add(m)
+}
+function copia (tela) {
+  const x = tela.getContext('2d'); x.drawImage(renderer.domElement, 0, 0, tela.width, tela.height)
+}
+
+// ── la griglia: una sezione per famiglia, un riquadro per arma ──
+function griglia () {
+  const grande = !!solaFamiglia, LATO = grande ? 420 : 340, CSS = grande ? 280 : 228
+  renderer.setSize(LATO, LATO, false)
+  const cont = document.getElementById('contenuto'), celle = []
+  for (const fam of solaFamiglia ? [solaFamiglia] : FAMIGLIE) {
+    const h = document.createElement('h2'); h.textContent = fam === 'bacchetta' ? 'bacchette e staffe' : fam === 'ascia' ? 'asce' : fam === 'arco' ? 'archi' : fam === 'spada' ? 'spade' : 'scudi'
+    const gr = document.createElement('div'); gr.className = 'griglia'; gr.style.setProperty('--lato', CSS + 'px')
+    cont.append(h, gr)
+    for (const a of CATALOGO.filter(x => x.famiglia === fam)) {
+      const arma = a.crea(), tri = arma.userData.triangoli
+      risultato.triangoli[a.id] = tri
+      const s = nuovaScena(), cam = new PerspectiveCamera(30, 1, 0.05, 50)
+      const ruota = new Group(); ruota.add(arma); s.add(ruota)
+      if (arma.userData.anima) arma.userData.anima(T0)
+      ruota.rotation.y = 0.6; ruota.updateMatrixWorld(true)
+      const b = new Box3().setFromObject(arma), c = b.getCenter(new Vector3()), d = b.getSize(new Vector3())
+      arma.position.set(-c.x, -c.y, -c.z); suolo(s, -d.y / 2 - 0.04, 0.6)
+      const raggio = Math.max(d.y, d.x * 1.15, d.z) * 0.62
+      cam.position.set(0, d.y * 0.08, raggio / Math.tan(15 * Math.PI / 180) + 0.1); cam.lookAt(0, 0, 0)
+      const fig = document.createElement('figure'), tela = document.createElement('canvas')
+      tela.width = tela.height = LATO
+      const did = document.createElement('figcaption'); did.innerHTML = `<b>${a.grado}. ${a.nome}</b><br>${a.id} · ${a.elemento} · ${tri} tri`
+      fig.append(tela, did); gr.append(fig)
+      celle.push({ arma, ruota, s, cam, tela })
+    }
+  }
+  return t => {
+    for (const k of celle) {
+      k.ruota.rotation.y = 0.6 + t * 0.7
+      if (k.arma.userData.anima) k.arma.userData.anima(t)
+      renderer.render(k.s, k.cam); copia(k.tela)
+    }
+  }
+}
+
+// ── i quattro eroi, ciascuno con un'arma (e uno scudo) della collezione ──
+const PREDEFINITI = { arma: ['lama-fuoco', 'arco-elfico', 'bastone-fulmine', 'ascia-nano'], scudo: ['scudo-cavaliere', '', '', 'scudo-nanico'] }
+function eroi () {
+  const W = 1400, H = 620
+  const cont = document.getElementById('contenuto')
+  const fig = document.createElement('figure'), tela = document.createElement('canvas'); tela.width = W; tela.height = H; fig.id = 'eroi'
+  fig.append(tela); cont.append(fig)
+  const lista = (url.get('arma') || '').split(',').filter(Boolean), listaS = url.has('scudo') ? url.get('scudo').split(',') : null
+  renderer.setSize(W, H, false)
+  const s = nuovaScena(4, 2048), cam = new PerspectiveCamera(27, W / H, 0.1, 60)
+  suolo(s, 0, 5)
+  const scelte = document.getElementById('scelte'); scelte.hidden = false
+  const stato = CHIAVI.map((k, i) => ({ k, arma: lista[i] ?? PREDEFINITI.arma[i], scudo: listaS ? (listaS[i] ?? '') : PREDEFINITI.scudo[i], togli: null, e: null }))
+  stato.forEach((x, i) => {
+    const e = creaEroe(x.k); e.position.x = (i - 1.5) * 1.3; e.rotation.y = [0.5, 0.35, 0.45, 0.4][i]; s.add(e); x.e = e
+    risultato.triangoli['eroe:' + x.k] = e.userData.triangoli
+    const div = document.createElement('div'); div.innerHTML = `<b>${x.k}</b>`
+    const opz = (famiglie, vuoto) => (vuoto ? '<option value="">— nessuno —</option>' : '') + famiglie.map(f => `<optgroup label="${f}">` + CATALOGO.filter(a => a.famiglia === f).map(a => `<option value="${a.id}">${a.grado}. ${a.nome}</option>`).join('') + '</optgroup>').join('')
+    const sa = document.createElement('select'), ss = document.createElement('select')
+    sa.innerHTML = opz(['spada', 'ascia', 'arco', 'bacchetta']); ss.innerHTML = opz(['scudo'], true)
+    sa.value = x.arma; ss.value = x.scudo
+    sa.onchange = () => { x.arma = sa.value; monta(x); if (pausa) disegna(T0) }
+    ss.onchange = () => { x.scudo = ss.value; monta(x); if (pausa) disegna(T0) }
+    div.append(sa, ss); scelte.append(div)
+    monta(x)
+  })
+  function monta (x) {
+    if (x.togli) x.togli()
+    const a = x.arma && perId(x.arma) ? creaDaId(x.arma) : null, sc = x.scudo && perId(x.scudo) ? creaDaId(x.scudo) : null
+    if (a) risultato.triangoli[x.arma] = a.userData.triangoli
+    if (sc) risultato.triangoli[x.scudo] = sc.userData.triangoli
+    const arco = a && a.userData.famiglia === 'arco'
+    x.arco = arco
+    x.togli = equipaggia(x.e, arco ? { sinistra: a } : { destra: a, sinistra: sc })
+  }
+  cam.position.set(0, 1.3, 6.0); cam.lookAt(0, 0.85, 0)
+  const disegna = t => {
+    stato.forEach((x, i) => {
+      const e = x.e, [bs, bd] = e.userData.bracci
+      posaGuardia(e, t + i)
+      if (x.arco) { bs.rotation.set(-1.45, 0, 0.06); bd.rotation.set(-1.1, 0.45, -0.45); e.userData.busto.rotation.y = -0.25; e.userData.testa.rotation.y = 0.15 }
+      else if (x.k === 'elfa') { bd.rotation.set(-0.55, 0, -0.12); bs.rotation.set(-0.75, 0, 0.18); e.userData.busto.rotation.y = 0.12; e.userData.testa.rotation.set(0, 0, 0) }
+      e.userData.anima(t + i)
+      for (const p of Object.values(e.userData.perniArmi || {})) { const a = p.children[0]; if (a && a.userData.anima) a.userData.anima(t) }
+    })
+    renderer.render(s, cam); copia(tela)
+  }
+  return disegna
+}
+
+try {
+  const giro = vista === 'eroi' ? eroi() : griglia()
+  giro(T0)
+  if (!pausa) { const t0 = performance.now(); const anima = () => { giro(T0 + (performance.now() - t0) / 1000); requestAnimationFrame(anima) }; requestAnimationFrame(anima) }
+  risultato.ok = true
+} catch (e) { errori.push(String(e.stack || e)) }
+const es = document.getElementById('esito')
+const tris = Object.entries(risultato.triangoli).filter(([k]) => !k.startsWith('eroe:'))
+es.textContent = errori.length ? 'errori: ' + errori.join(' | ') : `ok — ${tris.length} armi, al massimo ${Math.max(0, ...tris.map(([, n]) => n))} tri`
+es.className = errori.length ? 'male' : ''
+risultato.ok = risultato.ok && !errori.length
+</script>
+</body>
+</html>

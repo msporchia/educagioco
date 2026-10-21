@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Effetti aure 3D — prova</title>
+<style>
+  :root { --fondo: #14161b; --carta: #1b1e25; --riga: #2c313a; --testo: #e2e5e0; --tenue: #98a09c; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 12px; background: var(--fondo); color: var(--testo); font: 13px/1.4 system-ui, sans-serif; }
+  h1 { font-size: 16px; margin: 0 0 4px; }
+  p { margin: 0 0 10px; color: var(--tenue); max-width: 110ch; }
+  #griglia { display: flex; flex-wrap: wrap; gap: 8px; }
+  #griglia.righe { display: block; }
+  .riga { display: flex; gap: 4px; margin-bottom: 4px; align-items: flex-start; }
+  figure { margin: 0; background: var(--carta); border: 1px solid var(--riga); border-radius: 4px; padding: 4px; }
+  canvas { display: block; border-radius: 3px; }
+  figcaption { font-size: 11px; color: var(--tenue); padding-top: 2px; }
+</style>
+</head>
+<body>
+<h1>Aure in 3D — prova</h1>
+<p id="aiuto">Sul mostro: nube, esplode, rogo, blocco, sonno. Sull'eroe: scudo, sfera, pietra, cura, preghiera, specchio, muro. Stati: stordito… fiacco. <code>?effetto=nube</code>, <code>?elemento=fuoco</code>, <code>?t=0.3&amp;pausa</code>, <code>?striscia=0.05,0.2,0.4</code>, <code>?largo</code> (tutto il duello), <code>?su=eroe</code> (gli stati sull'eroe), <code>?lato=420</code>.</p>
+<div id="griglia"></div>
+<script type="module">
+import { WebGLRenderer, Scene, PerspectiveCamera, HemisphereLight, DirectionalLight, Color, Vector3, CircleGeometry, MeshStandardMaterial, Mesh, ACESFilmicToneMapping, PCFSoftShadowMap, SRGBColorSpace, Fog } from 'three'
+import * as THREE from 'three'
+import { EFFETTI, PREPARA } from './effetti-3d/aure.js'
+import { creaEroe, posaGuardia } from './eroi-3d/eroi.js'
+import { creaScheletro } from './mostri-3d/mostri.js'
+
+const url = new URLSearchParams(location.search)
+const solo = url.get('effetto'), pausa = url.has('pausa'), largo = url.has('largo')
+const striscia = url.get('striscia')?.split(',').map(Number)
+const tempo = Number(url.get('t') ?? 0.3), suEroe = url.get('su') === 'eroe'
+const W = Number(url.get('lato') || (solo && !striscia ? 900 : striscia ? 330 : 420)), H = Math.round(W * (solo && !striscia ? 0.78 : 0.78))
+const errori = []
+const vecchio = console.error
+console.error = (...a) => { errori.push(a.map(String).join(' ').slice(0, 300)); vecchio.apply(console, a) }
+addEventListener('error', e => errori.push(String(e.message)))
+window.__prova = { ok: false, errori, effetti: {} }
+
+const COL = { fisico: 0xb9c2d4, fuoco: 0xe8742f, gelo: 0x58b4e6, fulmine: 0xb98af0, veleno: 0x7cc94a, sacro: 0xffe08a }
+const STD = { nube: 'veleno', esplode: 'fuoco', rogo: 'fuoco', blocco: 'gelo', sonno: 'fulmine', scudo: 'fisico', sfera: 'fulmine', pietra: 'fisico', cura: 'sacro', preghiera: 'sacro', specchio: 'fisico', muro: 'fisico',
+  stordito: 'sacro', avvelenato: 'veleno', 'in-fiamme': 'fuoco', gelato: 'gelo', sanguina: 'fisico', bloccato: 'veleno', 'senza-difesa': 'fisico', fiacco: 'fisico' }
+const colori = el => { const t = new Color(COL[el]); return [t, t.clone().lerp(new Color(1, 1, 1), 0.55)] }
+
+const renderer = new WebGLRenderer({ antialias: true, preserveDrawingBuffer: true })
+renderer.setSize(W, H, false); renderer.setPixelRatio(1)
+renderer.toneMapping = ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05; renderer.outputColorSpace = SRGBColorSpace
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = PCFSoftShadowMap
+
+const EROE = new Vector3(-1.5, 0, 0), MOSTRO = new Vector3(1.5, 0, 0)
+const gruppo = url.get('gruppo')
+const chiavi = solo ? [solo] : Object.keys(EFFETTI).filter(k => !gruppo || EFFETTI[k].via === gruppo)
+const griglia = document.getElementById('griglia')
+const tiles = []
+
+function costruisciPalco () {
+  const scena = new Scene(); scena.background = new Color(0x2a2f38); scena.fog = new Fog(0x2a2f38, 11, 30)
+  scena.add(new HemisphereLight(0xcfe4ff, 0x6a5a3a, 1.2))
+  const sole = new DirectionalLight(0xfff1dc, 2.4); sole.position.set(3.5, 6, 4.5); sole.castShadow = true
+  sole.shadow.mapSize.set(1024, 1024); Object.assign(sole.shadow.camera, { left: -5, right: 5, top: 5, bottom: -5, near: 0.5, far: 20 }); sole.shadow.bias = -0.0006; sole.shadow.radius = 4
+  scena.add(sole)
+  const contro = new DirectionalLight(0x8fb4ff, 1.2); contro.position.set(-4, 3, -4); scena.add(contro)
+  const suolo = new Mesh(new CircleGeometry(40, 40), new MeshStandardMaterial({ color: 0x3b4048, roughness: 1 })); suolo.rotation.x = -Math.PI / 2; suolo.receiveShadow = true; scena.add(suolo)
+  const eroe = creaEroe('mago'); eroe.position.copy(EROE); eroe.rotation.y = 0.55; scena.add(eroe); posaGuardia(eroe, 0.4)
+  const mostro = creaScheletro(); mostro.position.copy(MOSTRO); mostro.rotation.y = -0.35; scena.add(mostro); mostro.userData.anima?.(0.6)
+  window.__prova.altezze ??= { eroe: new THREE.Box3().setFromObject(eroe).getSize(new Vector3()).y, mostro: new THREE.Box3().setFromObject(mostro).getSize(new Vector3()).y }
+  return { scena, eroe, mostro }
+}
+
+function telecamera (via) {
+  const cam = new PerspectiveCamera(32, W / H, 0.1, 100)
+  const cx = largo ? 0 : via === 'su-me' || (via === 'stato' && suEroe) ? -1.45 : via === 'su-chi' ? 1.3 : 1.5
+  const d = largo ? 9 : via === 'stato' ? 5.6 : 6.4, ang = 50 * Math.PI / 180, ly = via === 'stato' ? 0.9 : via === 'su-chi' ? 0.95 : 0.8
+  cam.position.set(cx - 0.5, ly + d * Math.sin(ang), d * Math.cos(ang)); cam.lookAt(cx, ly, 0)
+  return cam
+}
+
+function nuovoTile (chiave, istante) {
+  const def = EFFETTI[chiave], via = def.via
+  const palco = costruisciPalco(), cam = telecamera(via)
+  const tela = document.createElement('canvas'); tela.width = W; tela.height = H
+  const fig = document.createElement('figure'); const cap = document.createElement('figcaption')
+  fig.append(tela, cap)
+  const [tinta, tinta2] = colori(url.get('elemento') || STD[chiave] || 'fisico')
+  const portatore = via === 'stato' ? (suEroe ? palco.eroe : palco.mostro) : null
+  const pos = portatore ? portatore.position : null
+  const ctx = via === 'su-me' ? { da: EROE.clone(), a: MOSTRO.clone() } : via === 'stato' ? { da: pos.clone(), a: pos.clone() } : { da: EROE.clone(), a: MOSTRO.clone() }
+  Object.assign(ctx, { tinta, tinta2, seme: 11, scala: via === 'su-me' || (via === 'stato' && suEroe) ? 1.45 : 1.5, altri: [] })
+  const nb = Number(url.get('bersagli') || 1); for (let i = 1; i < nb; i++) ctx.altri.push(MOSTRO.clone().add(new Vector3(0.9 * i, 0, (i % 2 ? 1 : -1) * 0.9)))
+  // materiali da tingere per gli stati
+  const mats = []; const vistiM = new Set()
+  const bers = portatore; bers?.traverse(o => { if (o.isMesh) for (const m of [].concat(o.material)) if (m.color && !vistiM.has(m)) { vistiM.add(m); mats.push([m, m.color.clone()]) } })
+  const t = { chiave, def, palco, cam, tela, cap, ctx, fx: null, tUltimo: -1, mats, istante, tinte: { }, visibile: true }
+  t.ciclo = def.durata === Infinity ? 4.2 : def.durata + 0.8
+  t.crea = () => { t.fx?.libera(); t.fx = def.crea(ctx); palco.scena.add(t.fx.gruppo); t.tUltimo = 0; t.spento = false; t.fx.aggiorna(0, 0.016) }
+  t.vai = tt => {   // porta l'effetto all'istante tt (lo ricrea se serve tornare indietro)
+    if (!t.fx || tt < t.tUltimo - 1e-6) t.crea()
+    while (t.tUltimo < tt - 1e-6) {
+      const n = Math.min(t.tUltimo + 1 / 60, tt); t.fx.aggiorna(n, n - t.tUltimo); t.tUltimo = n
+      if (def.durata === Infinity && !t.spento && n >= 2.6) { t.fx.spegni(); t.spento = true }
+    }
+  }
+  t.disegna = () => {
+    const fx = t.fx
+    for (const [m, c0] of t.mats) { m.color.copy(c0); if (fx?.tintaCorpo && fx.forzaTinta > 0) m.color.lerp(fx.tintaCorpo, fx.forzaTinta) }
+    renderer.render(palco.scena, cam)
+    const c = tela.getContext('2d'); c.clearRect(0, 0, W, H); c.drawImage(renderer.domElement, 0, 0)
+    for (const [m, c0] of t.mats) m.color.copy(c0)
+  }
+  return t
+}
+
+function costo (t) {
+  let mesh = 0, istanze = 0
+  t.fx.gruppo.traverse(o => { if (o.isMesh || o.isSprite || o.isLineSegments) { mesh++; const n = o.geometry?.instanceCount; if (n) istanze += n } })
+  return { mesh, istanze }
+}
+
+const tempi = striscia ?? [tempo]
+const modoRighe = !!striscia
+if (modoRighe) griglia.className = 'righe'
+for (const chiave of chiavi) {
+  let riga = null; if (modoRighe) { riga = document.createElement('div'); riga.className = 'riga'; griglia.append(riga) }
+  for (const ist of (modoRighe || pausa ? tempi : [null])) {
+    const t = nuovoTile(chiave, ist); tiles.push(t); (riga ?? griglia).append(t.tela.parentElement)
+    if (ist !== null) { t.vai(ist); t.cap.textContent = `${chiave} — t = ${ist}s` } else t.cap.textContent = `${chiave} — ${t.def.via}${t.def.durata === Infinity ? ' (stato)' : ` ${t.def.durata}s, arrivo ${t.def.arrivo ?? 0}s`}`
+    if (ist === null) t.crea()
+    window.__prova.effetti[chiave] ??= { via: t.def.via, durata: t.def.durata, arrivo: t.def.arrivo ?? 0 }
+    if (!window.__prova.effetti[chiave].costo) { const m = t.def.durata === Infinity ? 1.2 : t.def.durata * 0.45; const c = t.istante === null ? t : t; t.vai(m); window.__prova.effetti[chiave].costo = costo(t); if (ist !== null) { t.fx.libera(); t.fx = null; t.vai(ist) } else { t.fx.libera(); t.fx = null; t.crea() } }
+    t.disegna()
+  }
+}
+if (!pausa && !modoRighe) {
+  const io = new IntersectionObserver(es => es.forEach(e => { tiles.find(t => t.tela === e.target).visibile = e.isIntersecting }))
+  tiles.forEach(t => io.observe(t.tela))
+  const t0 = performance.now(); let ult = 0
+  const giro = () => {
+    const ora = (performance.now() - t0) / 1000
+    for (const t of tiles) { if (!t.visibile) continue; const tt = ora % t.ciclo; if (tt < ult % t.ciclo) t.fx.libera(), t.fx = null; t.vai(tt); t.disegna() }
+    ult = ora; requestAnimationFrame(giro)
+  }
+  giro()
+}
+window.__prova.ok = errori.length === 0
+window.__prova.pronto = true
+</script>
+</body>
+</html>

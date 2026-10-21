@@ -8,7 +8,7 @@ defineProps({
   robaNuova: { type: Boolean, default: false },    // è entrata roba da quando si è aperto l'inventario
   banco: { type: Object, default: () => ({ visibile: false, pronti: 0 }) },   // il tasto del banco: da livello 2; `pronti` = ordini consegnabili
 })
-defineEmits(['livello', 'banco', 'inventario'])
+defineEmits(['livello', 'banco', 'inventario', 'abito'])
 </script>
 
 <template>
@@ -24,5 +24,6 @@ defineEmits(['livello', 'banco', 'inventario'])
     <button class="f3-banco-tasto" data-f3="apri-inventario" aria-label="inventario" @click="$emit('inventario')">
       🎒 Inventario<em v-if="robaNuova" class="f3-pallino" data-f3="inventario-nuovo"></em>
     </button>
+    <button class="f3-banco-tasto" data-f3="apri-guardaroba" aria-label="abito" @click="$emit('abito')">👕</button>
   </div>
 </template>

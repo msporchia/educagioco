@@ -67,6 +67,8 @@ export const ACCESI = {
   fuochi: N_FUOCHI,  // quante luci della riserva dei fuochi
   lampi: true,       // spento: lampo e magia sono una luce sola, e il rimbalzo della torcia non c'è
   palco: true,       // la luce calda dello scontro; spenta, la schiarita la fa l'emisferica
+  mostri3d: 12,      // quanti mostri al più col modello 3D nello stesso fotogramma (i più vicini); gli altri restano sprite, 0 tutti
+  effetti3d: true,   // gli effetti 3D delle abilità, degli attacchi e degli stati (effetti3d/); spenti restano scintille e luci
 }
 
 // La fascia grafica del telefono (store/qualita.js) decide quali pezzi di ACCESI restano: si riparte dai valori scritti sopra

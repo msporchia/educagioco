@@ -8,6 +8,7 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js'
 import { mat } from './modelli.js'
 import { fondiPerMateriale } from './fondi.js'
 import { memoModello } from './cache-modelli.js'
+import { abitoDiSerie, normalizzaAbito, opzione, chiaveAbito } from '../dati/abiti.js'
 
 // ── mattoncini con le geometrie in comune ──
 const geo = new Map()
@@ -30,15 +31,16 @@ const ombre = g => g.traverse(o => { if (o.isMesh) { o.castShadow = true; o.rece
 
 // ══════════ il contadino ══════════
 const facce = new Map()
-/** La faccia: una trama canvas (occhi grandi, guance, sorriso), una per aspetto. */
-function trammaFaccia (donna) {
-  if (facce.has(donna)) return facce.get(donna)
+/** La faccia: una trama canvas (occhi grandi, guance, sorriso), una per aspetto e per colore della pelle. */
+function trammaFaccia (donna, css = '#f5c9a2') {
+  const chiave = donna + css
+  if (facce.has(chiave)) return facce.get(chiave)
   const c = document.createElement('canvas'); c.width = 256; c.height = 176
   const x = c.getContext('2d')
-  x.fillStyle = '#f5c9a2'; x.fillRect(0, 0, 256, 176)
+  x.fillStyle = css; x.fillRect(0, 0, 256, 176)
   for (const s of [-1, 1]) {
     const ex = 128 + s * 46, ey = 78
-    x.fillStyle = 'rgba(240,120,110,.45)'; x.beginPath(); x.ellipse(128 + s * 74, 118, 17, 11, 0, 0, 7); x.fill()          // guancia
+    x.fillStyle = 'rgba(230,100,100,.4)'; x.beginPath(); x.ellipse(128 + s * 74, 118, 17, 11, 0, 0, 7); x.fill()          // guancia
     x.fillStyle = '#fff'; x.beginPath(); x.ellipse(ex, ey, 15, 19, 0, 0, 7); x.fill()
     x.fillStyle = '#2a2018'; x.beginPath(); x.ellipse(ex + s * -1, ey + 2, 10, 14, 0, 0, 7); x.fill()
     x.fillStyle = '#fff'; x.beginPath(); x.arc(ex + 3, ey - 4, 4, 0, 7); x.fill()
@@ -46,57 +48,113 @@ function trammaFaccia (donna) {
     x.beginPath(); x.arc(ex, ey - 28, 16, Math.PI * 1.2, Math.PI * 1.8); x.stroke()
     if (donna) { x.strokeStyle = '#2a2018'; x.lineWidth = 3; x.beginPath(); x.moveTo(ex + s * 14, ey - 8); x.lineTo(ex + s * 22, ey - 14); x.stroke() }   // ciglia
   }
-  x.fillStyle = '#e0a07e'; x.beginPath(); x.ellipse(128, 105, 5, 4, 0, 0, 7); x.fill()                                           // naso
+  x.fillStyle = 'rgba(120,60,40,.22)'; x.beginPath(); x.ellipse(128, 105, 5, 4, 0, 0, 7); x.fill()                                           // naso
   x.strokeStyle = '#8a3a2a'; x.lineWidth = 5; x.lineCap = 'round'; x.beginPath(); x.arc(128, 112, 24, 0.25 * Math.PI, 0.75 * Math.PI); x.stroke()   // sorriso
   if (!donna) { x.fillStyle = 'rgba(150,90,60,.5)'; for (const [a, b] of [[104, 100], [112, 96], [144, 96], [152, 100], [120, 94], [136, 94]]) { x.beginPath(); x.arc(a, b - 6, 2, 0, 7); x.fill() } }
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4
-  facce.set(donna, t)
+  facce.set(chiave, t)
   return t
 }
 
-/** Il contadino: testa grande, corpo piccolo. Stessi perni dell'eroe vecchio (`gambe`, `busto`, `testa`, `bracci`, `falce`, `ascia`). */
-function costruisciContadino (aspetto = 'contadino') {
-  const donna = aspetto === 'contadina'
+const scurisci = (hex, k) => new THREE.Color(hex).multiplyScalar(k).getHex()
+const cupola = G('cupola', () => new THREE.SphereGeometry(0.235, 12, 6, 0, Math.PI * 2, 0, Math.PI / 2))
+
+/** Il contadino: testa grande, corpo piccolo. `arg`: un abito (dati/abiti.js) o il nome di una persona ('contadino' | 'contadina': l'abito di
+    serie). Stessi perni per ogni abito (`gambe`, `busto`, `testa`, `bracci`, `falce`, `ascia`): i cappelli e i capelli stanno nella testa, la
+    gonna e la maglia nel busto, gli stivali nelle gambe. Vedi docs/fattoria3d/guardaroba.md. */
+function costruisciContadino (arg = 'contadino') {
+  const A = typeof arg === 'string' ? abitoDiSerie(arg) : normalizzaAbito(arg, arg && arg.persona)
+  const donna = A.persona === 'contadina'
+  const O = c => opzione(c, A[c])
+  const m = O('maglia'), cap = O('cappello'), colloO = O('collo'), chioma = O('capelli'), pant = O('pantalone')
   const g = new THREE.Group()
-  const pelle = mat(0xf5c9a2), maglia = mat(donna ? 0xf3e3c0 : 0xd9503f), salopette = mat(0x3d68b8), toppa = mat(0xe8b94a)
-  const scuro = mat(0x2a2018), stivale = mat(0x6a4426), paglia = mat(0xe9c96e), nastro = mat(donna ? 0xe86f9a : 0xc23a2e), fazzoletto = mat(0xd2392e)
+  const pelle = mat(O('pelle').c), maglia = mat(m.c), maniche = mat(m.motivo === 'festa' && !donna ? 0xf6f0e6 : m.c), salopette = mat(pant.c), toppa = mat(0xe8b94a)
+  const scuro = mat(0x2a2018), stivale = mat(O('stivali').c), nastro = mat(donna ? 0xe86f9a : 0xc23a2e), segno = mat(scurisci(m.c, 0.72))
   const gambe = [-1, 1].map(s => {
     const p = perno(g, s * 0.1, 0.34, 0)
-    scatola(p, 0.14, 0.2, 0.16, salopette, 0, -0.1, 0)
+    scatola(p, 0.14, 0.2, 0.16, donna ? pelle : salopette, 0, -0.1, 0)
     scatola(p, 0.16, 0.16, 0.22, stivale, 0, -0.26, 0.03); scatola(p, 0.17, 0.03, 0.17, scuro, 0, -0.18, 0)
-    if (s > 0) scatola(p, 0.08, 0.08, 0.01, toppa, 0.0, -0.09, 0.085)                                   // la toppa sul ginocchio
+    if (s > 0 && !donna) scatola(p, 0.08, 0.08, 0.01, toppa, 0.0, -0.09, 0.085)                       // la toppa sul ginocchio
     return p
   })
   const busto = perno(g, 0, 0.34, 0)
   scatola(busto, 0.36, 0.3, 0.22, maglia, 0, 0.15, 0)
-  scatola(busto, 0.37, 0.15, 0.23, salopette, 0, 0.075, 0)
-  scatola(busto, 0.22, 0.2, 0.04, salopette, 0, 0.2, 0.12); scatola(busto, 0.08, 0.07, 0.01, toppa, 0.05, 0.2, 0.145)
-  for (const s of [-1, 1]) scatola(busto, 0.05, 0.2, 0.235, salopette, s * 0.1, 0.24, 0)
-  cil(busto, 0.14, 0.12, 0.06, fazzoletto, 0, 0.31, 0)                                                   // il fazzoletto al collo
-  const nodo = cono(busto, 0.07, 0.1, fazzoletto, 0, 0.26, 0.12); nodo.rotation.x = Math.PI
+  if (donna) {
+    cil(busto, 0.2, 0.27, 0.27, salopette, 0, 0.0, 0, 12)                                            // la gonna
+    scatola(busto, 0.37, 0.04, 0.23, scuro, 0, 0.145, 0)                                              // la cintura
+  } else {
+    scatola(busto, 0.37, 0.15, 0.23, salopette, 0, 0.075, 0)
+    scatola(busto, 0.22, 0.2, 0.04, salopette, 0, 0.2, 0.12); scatola(busto, 0.08, 0.07, 0.01, toppa, 0.05, 0.2, 0.145)
+    for (const s of [-1, 1]) scatola(busto, 0.05, 0.2, 0.235, salopette, s * 0.1, 0.24, 0)
+  }
+  // il motivo della maglia
+  if (m.motivo === 'quadri') { scatola(busto, 0.03, 0.3, 0.225, segno, -0.1, 0.15, 0); scatola(busto, 0.03, 0.3, 0.225, segno, 0.1, 0.15, 0); scatola(busto, 0.362, 0.03, 0.225, segno, 0, 0.22, 0) }
+  else if (m.motivo === 'pois') for (const [x, y] of [[-0.09, 0.22], [0.09, 0.22], [0, 0.17], [-0.1, 0.1], [0.1, 0.1]]) sfera(busto, 0.02, segno, x, y, 0.112, 1, 1, 0.3)
+  else if (m.motivo === 'grembiule') {
+    const bianco = mat(0xf6f3ee)
+    scatola(busto, 0.26, 0.26, 0.03, bianco, 0, 0.12, 0.12); scatola(busto, 0.08, 0.07, 0.01, mat(0xd8d2c4), 0.05, 0.1, 0.14)
+    for (const s of [-1, 1]) scatola(busto, 0.03, 0.14, 0.235, bianco, s * 0.08, 0.24, 0)
+  } else if (m.motivo === 'festa') {
+    const oro = mat(0xe0b030)
+    if (donna) { scatola(busto, 0.375, 0.04, 0.235, oro, 0, 0.1, 0); scatola(busto, 0.1, 0.07, 0.03, oro, 0, 0.1, 0.12) }
+    else for (const y of [0.1, 0.19, 0.28]) sfera(busto, 0.02, oro, 0, y, 0.115, 1, 1, 0.4)
+  }
+  // il collo
+  const cc = mat(colloO.c)
+  if (colloO.forma === 'fazzoletto') { cil(busto, 0.14, 0.12, 0.06, cc, 0, 0.31, 0); const nodo = cono(busto, 0.07, 0.1, cc, 0, 0.26, 0.12); nodo.rotation.x = Math.PI }
+  else if (colloO.forma === 'sciarpa') { cil(busto, 0.15, 0.14, 0.08, cc, 0, 0.31, 0); scatola(busto, 0.07, 0.2, 0.03, cc, 0.07, 0.2, 0.125) }
+  else if (colloO.forma === 'papillon') { scatola(busto, 0.03, 0.03, 0.03, cc, 0, 0.3, 0.12); for (const s of [-1, 1]) { const f = cono(busto, 0.045, 0.09, cc, s * 0.065, 0.3, 0.12, 4); f.rotation.z = -s * Math.PI / 2 } }
+  else if (colloO.forma === 'scialle') { cil(busto, 0.2, 0.27, 0.09, cc, 0, 0.27, 0, 12); const p = cono(busto, 0.12, 0.17, cc, 0, 0.17, 0.12); p.rotation.x = Math.PI }
   // la testa
   const testa = perno(busto, 0, 0.34, 0)
   const sx = 1.05, sy = 0.95
   sfera(testa, 0.24, pelle, 0, 0.22, 0, sx, sy, 1)
   const faccia = new THREE.Mesh(G('faccia', () => new THREE.SphereGeometry(0.2425, 14, 10, Math.PI / 2 - 0.95, 1.9, 1.0, 1.3)),
-    new THREE.MeshStandardMaterial({ map: trammaFaccia(donna), roughness: 0.9 }))
+    new THREE.MeshStandardMaterial({ map: trammaFaccia(donna, O('pelle').css), roughness: 0.9 }))
   faccia.position.set(0, 0.22, 0); faccia.scale.set(sx, sy, 1); testa.add(faccia)
   for (const s of [-1, 1]) sfera(testa, 0.045, pelle, s * 0.25, 0.2, 0, 1, 1.2, 0.8)
-  const capelli = mat(donna ? 0x7a4a26 : 0x6b4423)
+  // i capelli
+  const capelli = mat(chioma.c)
   sfera(testa, 0.215, capelli, 0, 0.27, -0.05, sx, sy * 0.95, 0.95)
-  if (donna) for (const s of [-1, 1]) {                                                                // le trecce
+  if (chioma.stile === 'trecce') for (const s of [-1, 1]) {
     sfera(testa, 0.06, capelli, s * 0.2, 0.1, -0.05); sfera(testa, 0.055, capelli, s * 0.21, -0.01, -0.06); sfera(testa, 0.045, nastro, s * 0.21, -0.08, -0.06)
+  } else if (chioma.stile === 'coda') {
+    sfera(testa, 0.065, capelli, 0, 0.3, -0.22); sfera(testa, 0.06, capelli, 0, 0.2, -0.29, 1, 1.5, 1); sfera(testa, 0.05, capelli, 0, 0.08, -0.3, 1, 1.5, 1); sfera(testa, 0.035, nastro, 0, 0.3, -0.2)
+  } else if (chioma.stile === 'caschetto') sfera(testa, 0.25, capelli, 0, 0.16, -0.08, 1.1, 0.85, 0.9)
+  // il cappello
+  const cm = mat(cap.c)
+  if (cap.forma === 'paglia') {
+    cil(testa, 0.36, 0.36, 0.03, cm, 0, 0.38, 0, 16)
+    cil(testa, 0.17, 0.2, 0.16, cm, 0, 0.46, 0, 14)
+    cil(testa, 0.202, 0.208, 0.045, nastro, 0, 0.395, 0, 14)
+    if (donna) sfera(testa, 0.045, nastro, 0.2, 0.43, 0.06); else cono(testa, 0.012, 0.18, mat(0xd8b24a), -0.19, 0.44, 0.06, 4).rotation.z = 0.5   // un fiore, o una spiga
+  } else if (cap.forma === 'berretto') {
+    pezzo(testa, cupola, cm, 0, 0.3, 0, 1.05, 0.95, 1)
+    const v = scatola(testa, 0.2, 0.02, 0.13, cm, 0, 0.315, 0.26); v.rotation.x = 0.18
+    sfera(testa, 0.025, mat(scurisci(cap.c, 0.7)), 0, 0.52, 0)
+  } else if (cap.forma === 'tesa') {
+    cil(testa, 0.43, 0.43, 0.025, cm, 0, 0.37, 0, 16)
+    cil(testa, 0.19, 0.21, 0.13, cm, 0, 0.43, 0, 14)
+    cil(testa, 0.212, 0.214, 0.035, mat(scurisci(cap.c, 0.6)), 0, 0.395, 0, 14)
+  } else if (cap.forma === 'fascia') {
+    cil(testa, 0.19, 0.19, 0.045, cm, 0, 0.385, 0, 14)
+    const fiore = mat(0xfff2f6), cuore = mat(0xe8b94a)
+    for (let k = 0; k < 5; k++) { const a = k / 5 * Math.PI * 2; sfera(testa, 0.032, fiore, -0.12 + Math.cos(a) * 0.04 * 0.8, 0.405 + Math.sin(a) * 0.04, 0.15 + Math.cos(a) * 0.04 * 0.6) }
+    sfera(testa, 0.025, cuore, -0.125, 0.405, 0.165)
+  } else if (cap.forma === 'cowboy') {
+    cil(testa, 0.4, 0.4, 0.025, cm, 0, 0.38, 0, 16)
+    cil(testa, 0.15, 0.2, 0.2, cm, 0, 0.49, 0, 12)
+    cil(testa, 0.202, 0.208, 0.04, mat(scurisci(cap.c, 0.55)), 0, 0.405, 0, 12)
+    sfera(testa, 0.03, mat(0xe0b030), 0, 0.405, 0.2, 1, 1, 0.4)
   }
-  // il cappello di paglia con il nastro
-  cil(testa, 0.36, 0.36, 0.03, paglia, 0, 0.38, 0, 16)
-  cil(testa, 0.17, 0.2, 0.16, paglia, 0, 0.46, 0, 14)
-  cil(testa, 0.202, 0.208, 0.045, nastro, 0, 0.395, 0, 14)
-  if (donna) sfera(testa, 0.045, nastro, 0.2, 0.43, 0.06); else cono(testa, 0.012, 0.18, mat(0xd8b24a), -0.19, 0.44, 0.06, 4).rotation.z = 0.5   // un fiore, o una spiga
   const bracci = [-1, 1].map(s => {
     const p = perno(busto, s * 0.22, 0.28, 0)
-    scatola(p, 0.09, 0.24, 0.1, maglia, 0, -0.11, 0); sfera(p, 0.055, pelle, 0, -0.27, 0, 1, 1, 1)
+    scatola(p, 0.09, 0.24, 0.1, maniche, 0, -0.11, 0); sfera(p, 0.055, pelle, 0, -0.27, 0, 1, 1, 1)
+    if (m.motivo === 'quadri') scatola(p, 0.092, 0.03, 0.102, segno, 0, -0.06, 0)
+    else if (m.motivo === 'maglione') scatola(p, 0.098, 0.035, 0.108, mat(scurisci(m.c, 1.25)), 0, -0.225, 0)
     return p
   })
+  if (m.motivo === 'maglione') cil(busto, 0.15, 0.15, 0.05, mat(scurisci(m.c, 1.25)), 0, 0.3, 0)       // il collo alto
   // la falce e l'ascia nel pugno destro, solo mentre servono (come nel contadino di prima)
   const falce = perno(bracci[1], 0, -0.29, 0); falce.visible = false
   cil(falce, 0.018, 0.018, 1.1, mat(0x9a6a36), 0, -0.4, 0, 5)
@@ -109,7 +167,7 @@ function costruisciContadino (aspetto = 'contadino') {
   // ogni parte che le pose piegano è fusa a sé: le gambe, il busto (senza testa e braccia), la testa, i bracci
   for (const p of [...gambe, testa, ...bracci]) fondiPerMateriale(p)
   fondiPerMateriale(busto, { escludi: [testa, ...bracci] })
-  g.userData = { gambe, busto, testa, bracci, falce, ascia, aspetto }
+  g.userData = { gambe, busto, testa, bracci, falce, ascia, aspetto: A.persona, abito: A }
   return g
 }
 
@@ -183,6 +241,11 @@ const capo = p => {
 /** Le orecchie ardesia, che schiariscono verso le punte. */
 const orecchio = p => { const k = caso() - liscio(T.y - 0.05, T.y - 0.22, p.y) * 0.45; return k < 0.2 ? CHIARO : k < 0.45 ? SCURO : ARDESIA }
 const zampaDietro = p => caso() < liscio(0.12, 0.24, p.y) ? merle(p) : BIANCO
+
+/** Le quattro zampe all'aria, che pedalano piano (il cane a pancia in su). */
+function zampe_aria (u, k, t) {
+  u.zampe.forEach((z, i) => { z.rotation.x = -k * (1.6 + Math.sin(t * 9 + i * 1.7) * 0.4); z.position.y += 0.14 * k })
+}
 
 /** Un bobtail cucciolone: testa grande, tonda e bianca con la frangia sugli occhi, orecchie ardesia penzolanti, naso nero,
     bocca aperta con la lingua; petto e zampe davanti bianchi, la giacca grigio-azzurra dietro, il posteriore più alto
@@ -258,23 +321,36 @@ export function creaCane () {
     })
     return p
   })
+  // il bastoncino che riporta: un mesh solo (cilindro a cinque facce) in bocca, tenuto per traverso; si vede solo mentre lo porta
+  const bastone = cil(testa, 0.016, 0.02, 0.5, mat(0x8a5a2b), 0, T.y - 0.17 - O.testa.y, T.z + 0.33 - O.testa.z, 5)
+  bastone.rotation.z = Math.PI / 2; bastone.visible = false; bastone.castShadow = false
+  bastone.userData.base = { p: bastone.position.clone(), r: bastone.rotation.clone() }
   for (const p of [corpo, posteriore, testa, frangia, lingua, ...orecchie, ...zampe]) p.userData.base = p.position.clone()
   orecchie.forEach(o => { o.rotation.z = o.userData.giro })
   zonaTocco(g, 0.6, 0.5)
-  g.userData = { ...g.userData, corpo, posteriore, testa, frangia, orecchie, lingua, naso, occhi, zampe, tipo: 'cane' }
+  g.userData = { ...g.userData, corpo, posteriore, testa, frangia, orecchie, lingua, naso, occhi, zampe, bastone, tipo: 'cane' }
   return g
 }
 
-/** Muove i perni del cane. `stato`: sta siede annusa dorme festa vaga segue; `vel` 0..1 quanto va; `fase` il passo; `t` il tempo. */
-export function posaCane (g, { stato = 'sta', vel = 0, fase = 0, t = 0 } = {}) {
+const liscia = x => { const k = Math.max(0, Math.min(1, x)); return k * k * (3 - 2 * k) }
+
+/** Muove i perni del cane. `stato`: sta siede annusa dorme festa vaga segue e quelli delle sequenze (docs/fattoria3d/compagni.md): alza mano
+    zampa rotola salta riporta starnuta gira sbadiglia incontra (con `sub`: annusa scodinzola lecca); `vel` 0..1 quanto va; `fase` il passo;
+    `t` il tempo; `p` (0..1) a che punto è il passo della sequenza. */
+export function posaCane (g, { stato = 'sta', vel = 0, fase = 0, t = 0, p = 0, sub = '' } = {}) {
   const u = g.userData, [fl, fr, bl, br] = u.zampe
   for (const p of [u.corpo, u.posteriore, u.testa, u.frangia, u.lingua, ...u.orecchie, ...u.zampe]) { p.position.copy(p.userData.base); p.rotation.set(0, 0, 0); p.scale.set(1, 1, 1) }
   u.orecchie.forEach(o => { o.rotation.z = o.userData.giro })
+  u.occhi.forEach(o => o.scale.set(1, 1, 1))
+  if (u.bastone.parent === u.testa) { u.bastone.visible = stato === 'riporta' && p < 0.5 }          // (posato, resta dov'è finché Compagni lo rimette)
   const resp = Math.sin(t * 2.2), ansima = Math.sin(t * 8)
+  const alza = h => { u.corpo.position.y += h; u.zampe.forEach(z => { z.position.y += h }) }
   const lingua = (fuori, giu) => { u.lingua.scale.set(1 + fuori * 0.15, 1, 1 + fuori); u.lingua.rotation.x = giu; u.lingua.position.y += ansima * 0.004 }
   const orecchie = (k, avanti = 0) => u.orecchie.forEach((o, i) => { o.rotation.z += (i ? 1 : -1) * k; o.rotation.x = -avanti })
   lingua(0.25 + ansima * 0.05, 0.15)
   u.frangia.rotation.x = Math.sin(t * 1.3) * 0.03
+  const gira = stato === 'gira' && p < 0.78
+  if (gira) vel = 0.6
   if (vel > 0.05) {                                                    // il trotto, a coppie in diagonale, un po' goffo
     const amp = 0.55 * Math.min(1, 0.5 + vel), s = Math.sin(fase), rimbalzo = Math.sin(fase * 2)
     fl.rotation.x = br.rotation.x = s * amp; fr.rotation.x = bl.rotation.x = -s * amp
@@ -283,12 +359,52 @@ export function posaCane (g, { stato = 'sta', vel = 0, fase = 0, t = 0 } = {}) {
     u.frangia.rotation.x = rimbalzo * 0.12 - 0.04; orecchie(rimbalzo * 0.15, 0.1 + vel * 0.15)
     if (vel > 0.7) lingua(0.9, 0.5)
   }
-  if (stato === 'siede') {                                             // il sedere a terra, il petto in su, le zampe dietro piegate avanti
+  const seduto = () => {                                               // il sedere a terra, il petto in su, le zampe dietro piegate avanti
     u.corpo.rotation.x = -0.5; u.corpo.position.y = 0.37; u.corpo.scale.y = 1 + resp * 0.015
     for (const z of [bl, br]) { z.position.y = 0.17; z.position.z += 0.08; z.rotation.x = -1.35 }
     for (const z of [fl, fr]) { z.position.z -= 0.08; z.rotation.x = 0.06 }
     u.testa.rotation.x = 0.42; u.testa.rotation.y = Math.sin(t * 0.7) * 0.35; u.posteriore.rotation.y = Math.sin(t * 3) * 0.04
     lingua(0.35 + ansima * 0.1, 0.25)
+  }
+  if (stato === 'siede') seduto()
+  else if (stato === 'zampa') {                                        // seduto, la zampa davanti tesa verso l'eroe, la testa un po' storta
+    seduto(); fr.rotation.x = -1.15 + Math.sin(t * 6) * 0.12; fr.position.y += 0.03
+    u.testa.rotation.set(0.2, 0, 0.14); lingua(0.8 + ansima * 0.1, 0.4); orecchie(0.1); u.posteriore.rotation.y = Math.sin(t * 14) * 0.1
+  } else if (stato === 'sbadiglia') {                                  // seduto, il muso in su, la bocca spalancata, gli occhi chiusi
+    seduto(); const b = Math.pow(Math.sin(Math.min(1, p) * Math.PI), 0.6)
+    u.testa.rotation.set(0.42 - 1.1 * b, 0, 0); lingua(0.35 + 1.2 * b, 0.25 + 0.9 * b); u.occhi.forEach(o => o.scale.y = 1 - 0.85 * b)
+    u.testa.position.y += 0.03 * b; orecchie(0.1 * b)
+  } else if (stato === 'rotola') {                                     // a pancia in su, le zampe all'aria, dondola
+    const k = liscia(p / 0.2) * liscia((1 - p) / 0.2)
+    u.corpo.rotation.z = k * Math.PI + Math.sin(t * 7) * 0.16 * k; u.corpo.position.y += 0.2 * k
+    zampe_aria(u, k, t)
+    u.testa.rotation.z = -k * 1.3; u.testa.rotation.x = -0.25 * k; lingua(0.2 + 0.9 * k, 0.4 * k); orecchie(-0.3 * k, 0.2 * k)
+    u.posteriore.rotation.y = Math.sin(t * 14) * 0.3 * k
+  } else if (stato === 'salta') {                                      // saltelli sul posto, le orecchie al vento
+    const h = Math.abs(Math.sin(t * 8)); alza(h * 0.22)
+    fl.rotation.x = fr.rotation.x = -0.55 * h - 0.1; bl.rotation.x = br.rotation.x = 0.5 * h
+    u.corpo.rotation.x = 0.2 - 0.3 * h; u.testa.rotation.x = -0.3 * h; u.posteriore.rotation.y = Math.sin(t * 16) * 0.4
+    orecchie(0.1 + 0.35 * (1 - h), 0.3 * h); lingua(1, 0.5)
+  } else if (stato === 'riporta') {                                    // il bastoncino in bocca: abbassa il muso e lo posa
+    const giu = liscia((p - 0.3) / 0.2) * (1 - liscia((p - 0.6) / 0.2))
+    u.testa.rotation.x = -0.1 + 0.9 * giu; u.testa.position.y -= 0.14 * giu; u.testa.position.z += 0.06 * giu; u.corpo.rotation.x = 0.1 * giu
+    u.posteriore.rotation.y = Math.sin(t * 16) * 0.35; lingua(p < 0.5 ? 0.05 : 0.9, 0.3); orecchie(0.1 + 0.15 * giu, 0.15)
+  } else if (stato === 'starnuta') {                                   // prende fiato col muso in su, uno scatto in giù, poi scuote testa e orecchie
+    const su = liscia(p / 0.34) * (1 - liscia((p - 0.34) / 0.06)), dopo = Math.max(0, 1 - (p - 0.42) / 0.45) * (p > 0.4 ? 1 : 0), sc = Math.sin(t * 30)
+    u.testa.rotation.x = -0.55 * su + (p > 0.38 && p < 0.5 ? 0.7 : 0) + 0.1; u.testa.rotation.y = sc * 0.45 * dopo; u.corpo.position.y -= 0.03 * (p > 0.38 && p < 0.46 ? 1 : 0)
+    u.frangia.rotation.x = sc * 0.2 * dopo; orecchie(Math.abs(sc) * 0.55 * dopo, 0.1); lingua(0.2, 0.2); u.occhi.forEach(o => o.scale.y = 1 - 0.8 * (su > 0.8 || dopo > 0.5 ? 1 : 0))
+  } else if (stato === 'gira') {                                       // si rincorre il moncherino; poi si ferma stordito, ridendo
+    if (gira) { u.testa.rotation.y = 0.95; u.posteriore.rotation.y = 0.5; u.corpo.rotation.z = -0.1; orecchie(0.25, 0.1) }
+    else { u.corpo.rotation.z = Math.sin(t * 4) * 0.09; u.testa.rotation.set(0.2, 0, Math.sin(t * 5) * 0.3); orecchie(0.1); lingua(1.3, 0.8); u.posteriore.rotation.y = Math.sin(t * 14) * 0.2 }
+  } else if (stato === 'mano') {                                       // annusa la mano dell'eroe
+    u.testa.rotation.x = 0.6 + Math.sin(t * 10) * 0.05; u.testa.position.y -= 0.1; u.testa.position.z += 0.05; u.posteriore.rotation.y = Math.sin(t * 9) * 0.2; lingua(0, 0); orecchie(0, 0.2)
+  } else if (stato === 'alza') {                                       // sente il suo nome: la testa su, le orecchie dritte
+    u.testa.rotation.x = -0.35; u.testa.position.y += 0.04; orecchie(0.3, 0.25); lingua(0.1, 0.1)
+  } else if (stato === 'incontra') {                                   // il gatto è lì: il muso giù ad annusare, poi coda e lingua
+    const k = Math.sin(t * 16)
+    if (sub === 'scodinzola') { u.posteriore.rotation.y = k * 0.42; u.corpo.rotation.z = k * 0.05; u.testa.rotation.x = 0.3; lingua(1, 0.5); orecchie(Math.abs(Math.sin(t * 6)) * 0.15) }
+    else if (sub === 'lecca') { u.testa.rotation.x = 0.85 + Math.sin(t * 5) * 0.1; u.testa.position.y -= 0.1; u.testa.position.z += 0.05; lingua(1.4, 0.9 + Math.sin(t * 10) * 0.25); u.posteriore.rotation.y = k * 0.3 }
+    else { u.testa.rotation.x = 0.75 + Math.sin(t * 9) * 0.06; u.testa.position.y -= 0.1; u.testa.position.z += 0.05; u.posteriore.rotation.y = Math.sin(t * 5) * 0.12; lingua(0, 0); orecchie(-0.05, 0.25) }
   } else if (stato === 'annusa') {                                     // il naso giù, a scatti
     u.testa.rotation.x = 0.85 + Math.sin(t * 9) * 0.07; u.testa.position.y -= 0.12; u.testa.position.z += 0.05; u.corpo.rotation.x += 0.12
     u.posteriore.rotation.y += Math.sin(t * 5) * 0.08; orecchie(-0.05, 0.25); u.frangia.rotation.x = 0.1; lingua(0, 0)
@@ -473,12 +589,14 @@ export function creaGatto (variante = 'bianconero') {
   return g
 }
 
-/** Muove i perni del gatto. Stati: sta siede lava dorme stiracchia fusa vaga fugge. `p` (0..1) è a che punto è lo stato. */
-export function posaGatto (g, { stato = 'sta', vel = 0, fase = 0, t = 0, p = 0 } = {}) {
+/** Muove i perni del gatto. Stati: sta siede lava dorme stiracchia fusa vaga fugge e quelli delle sequenze: struscia rotola miao volta
+    incontra (con `sub`: annusa struscia zampata infastidito). `p` (0..1) è a che punto è lo stato. */
+export function posaGatto (g, { stato = 'sta', vel = 0, fase = 0, t = 0, p = 0, sub = '' } = {}) {
   const u = g.userData, [fl, fr, bl, br] = u.gambe, [c1, c2, c3] = u.coda
   u.gambe.forEach(z => { z.rotation.set(0, 0, 0); z.position.set(...z.userData.base); z.scale.set(1, 1, 1) })
   u.corpo.rotation.set(0, 0, 0); u.corpo.position.set(0, 0.2, -0.18); u.corpo.scale.set(1, 1, 1)
-  u.testa.rotation.set(0, 0, 0); u.testa.position.set(0, 0.14, 0.4); u.facce[0].visible = stato !== 'dorme'; u.facce[1].visible = stato === 'dorme'
+  u.testa.rotation.set(0, 0, 0); u.testa.position.set(0, 0.14, 0.4); const chiusi = stato === 'dorme' || ((stato === 'fusa' || stato === 'struscia' || (stato === 'incontra' && sub === 'struscia')) && Math.sin(t * 1.1) > 0.45)   // con le fusa gli occhi si socchiudono piano
+  u.facce[0].visible = !chiusi; u.facce[1].visible = chiusi
   c1.rotation.set(-1.3, 0, 0); c2.rotation.set(0.4, 0, 0); c3.rotation.set(0.3, 0, 0)
   const resp = Math.sin(t * 2.6)
   if (vel > 0.05) {                                                    // il passo felino: basso, la coda alta che ondeggia
@@ -514,6 +632,27 @@ export function posaGatto (g, { stato = 'sta', vel = 0, fase = 0, t = 0, p = 0 }
     c1.rotation.x = -0.2 * k - 0.8 * (1 - k); onda(1, 0.2)
   } else if (stato === 'fusa') {                                       // le fusa: un tremolio, la coda piano
     u.corpo.position.y += Math.sin(t * 55) * 0.003; u.testa.rotation.x = 0.15; u.testa.rotation.y = Math.sin(t * 2) * 0.2; onda(0.6, 0.25)
+  } else if (stato === 'struscia') {                                   // si struscia contro le gambe: testa e fianco, la coda dritta con la punta ripiegata
+    const o = Math.sin(t * 2.4)
+    u.corpo.rotation.y = o * 0.3; u.corpo.position.x = o * 0.08; u.testa.rotation.set(0.25, 0, o * 0.25); u.testa.position.z += 0.02
+    c1.rotation.set(-0.1, 0, o * 0.08); c2.rotation.set(0, 0, 0); c3.rotation.set(0.95, 0, 0)
+  } else if (stato === 'rotola') {                                     // si rovescia sulla schiena, le zampe all'aria
+    const k = liscia(p / 0.2) * liscia((1 - p) / 0.2)
+    u.corpo.rotation.z = k * Math.PI + Math.sin(t * 6) * 0.12 * k; u.corpo.position.y += 0.08 * k
+    u.gambe.forEach((z, i) => { z.rotation.x = -k * (1.5 + Math.sin(t * 8 + i * 1.5) * 0.4); z.position.y += 0.1 * k })
+    u.testa.rotation.z = -k * 1.1; u.testa.rotation.x = -0.2 * k; c1.rotation.set(-1.3 - 1.0 * k, 0, 0.4 * k); onda(1, 0.3)
+  } else if (stato === 'miao') {                                       // seduto, il muso in su che miagola
+    seduto(); const b = Math.sin(Math.min(1, p) * Math.PI)
+    u.testa.rotation.x = 1.0 - 0.6 * b; u.testa.position.y += 0.015 * b; u.corpo.scale.y = 1 + 0.02 * b; c3.rotation.z = Math.sin(t * 1.4) * 0.3
+  } else if (stato === 'volta') {                                      // seduto di schiena (Compagni lo gira), la coda che scatta
+    seduto(); u.testa.rotation.y = 0.25; c3.rotation.z = 1.6 + Math.sin(t * 15) * 0.5; c2.rotation.z = 1.4 + Math.sin(t * 15 - 0.6) * 0.2
+  } else if (stato === 'incontra') {                                   // con Watson: naso a naso, una zampata leggera, la faccia seccata
+    if (sub === 'zampata') { fl.rotation.x = -1.3 + Math.max(0, Math.sin(t * 9)) * 0.6; u.corpo.rotation.x = -0.12; c1.rotation.set(-0.15, 0, 0); c2.rotation.set(0, 0, 0); c3.rotation.set(0.6, 0, 0); u.testa.rotation.x = -0.1 }
+    else if (sub === 'infastidito') { u.testa.rotation.set(0.1, 0.7, 0.1); c1.rotation.x = -1.0; c3.rotation.z = Math.sin(t * 12) * 0.5; u.corpo.scale.y = 1 + resp * 0.012 }
+    else if (sub === 'struscia') {
+      const o = Math.sin(t * 2.4)
+      u.corpo.rotation.y = o * 0.3; u.corpo.position.x = o * 0.06; u.testa.rotation.set(0.2, 0, o * 0.25); c1.rotation.set(-0.1, 0, o * 0.08); c2.rotation.set(0, 0, 0); c3.rotation.set(0.95, 0, 0)
+    } else { u.corpo.rotation.x = -0.15; u.testa.rotation.x = -0.25; u.testa.position.z += 0.04; u.testa.position.y += 0.03; c1.rotation.set(-0.3, 0, 0); c2.rotation.set(0, 0, 0); c3.rotation.set(0.7, 0, 0) }
   } else { u.corpo.scale.y = 1 + resp * 0.012; u.testa.rotation.y = Math.sin(t * 0.7) * 0.3; onda(1, 0.35) }
 }
 
@@ -537,5 +676,7 @@ export function misure (g) {
   return { mesh, triangoli, larghezza: s.x, altezza: s.y, lunghezza: s.z, sotto: b.min.y }
 }
 
-// la cache (scena3d/cache-modelli.js): il contadino si costruisce e si fonde una volta per aspetto
-export const creaContadino = memoModello('contadino', costruisciContadino, { chiave: (aspetto = 'contadino') => aspetto })
+// la cache (scena3d/cache-modelli.js): il contadino si costruisce e si fonde una volta per abito (chiave = persona e capi)
+export const creaContadino = memoModello('contadino', costruisciContadino, {
+  chiave: (arg = 'contadino') => chiaveAbito(typeof arg === 'string' ? abitoDiSerie(arg) : normalizzaAbito(arg, arg && arg.persona)),
+})

@@ -36,8 +36,9 @@
    quelli del gioco, le luci sono quelle della pagina.
 
    ── cosa è fuori, e perché ──
-   · persone, mostri, eroe, armi: sono sprite ancorati (figure dell'atlante
-     su un piano), non geometrie: non c'è un modello da mostrare
+   · persone, eroe, armi: sono sprite ancorati (figure dell'atlante su un
+     piano), non geometrie: non c'è un modello da mostrare. I mostri 3D (in
+     prova, `VOCI_MOSTRI`) invece ci sono: uno per modello del registro
    · pareti, pavimenti, colonne e terreno (`pareti.js`, `terreno.js`,
      `mondo/terreno.js`, `mondo/lontano.js`): si scolpiscono su una pianta
      intera, non esistono da soli
@@ -46,6 +47,7 @@
    · `scatola`, `cilindro`, `triangolo`, `Cantiere` (`kit.js`): sono gli
      attrezzi con cui si fanno i modelli, non modelli
    ═══════════════════════════════════════════════════════════════════ */
+import { MODELLO_DI_SPECIE, MODELLO_DEL_GROSSO, MODELLO_DELLA_VARIANTE, voceDi as voceDelMostro, costruisci as costruisciMostro } from '../../../src/giochi/sotterraneo/scena3d/mostri3d/registro.js'
 import { Group, Mesh, MeshStandardMaterial, MeshBasicMaterial, CircleGeometry, OctahedronGeometry, DoubleSide, Matrix4, Vector3 } from 'three'
 import { U } from '../../../src/giochi/sotterraneo/scena3d/mondo/vesti.js'
 import { creaTrame } from '../../../src/giochi/sotterraneo/scena3d/mondo/trame.js'
@@ -567,10 +569,24 @@ const VOCI_DISCESE = [
     dove: 'In alcuni piani delle discese: vasca di pietra con la coppa, il velo d\'acqua che cade e le gocce; bevuta, cura e si svuota (nell\'inferno è una coppa di lava)' },
 ]
 
+/* ═══════════════════ i mostri 3D (in prova) ═══════════════════ */
+// uno per modello del registro (docs/sotterraneo/mostri-3d.md): chi lo usa si legge dal registro, non si scrive a mano
+const USI_DEI_MOSTRI = new Map()
+const usa = (id, chi) => { if (id && voceDelMostro(id)) { if (!USI_DEI_MOSTRI.has(id)) USI_DEI_MOSTRI.set(id, []); USI_DEI_MOSTRI.get(id).push(chi) } }
+for (const [tipo, v] of Object.entries(MODELLO_DI_SPECIE)) for (const id of [v].flat()) usa(id, tipo)
+for (const [grosso, id] of Object.entries(MODELLO_DEL_GROSSO)) usa(id, `il grosso ${grosso}`)
+for (const [tipo, vv] of Object.entries(MODELLO_DELLA_VARIANTE)) for (const [variante, id] of Object.entries(vv)) usa(id, `${tipo} ${variante}`)
+export const ID_DEI_MOSTRI = id => 'sot:mostri:' + id.replace('/', '-')
+const VOCI_MOSTRI = [...USI_DEI_MOSTRI].map(([id, chi]) => ({
+  id: ID_DEI_MOSTRI(id), nome: `Mostro 3D ${id.split('/')[1]}`, categoria: 'personaggio', file: SCENA + 'mostri3d/registro.js:costruisci',
+  crea: () => costruisciMostro(id),
+  dove: `Nel Sotterraneo 3D, al posto dello sprite (dalla zona ${id.split('/')[0]} dei prototipi): ${[...new Set(chi)].join(', ')}`,
+}))
+
 /* ═══════════════════ l'elenco ═══════════════════ */
 
 const comune = v => ({ gioco: 'sotterraneo', ...v })
-export const VOCI = [...VOCI_KIT, ...VOCI_MONUMENTI, ...VOCI_CITTA, ...VOCI_APERTI, ...VOCI_NATURA, ...VOCI_DISCESE].map(comune)
+export const VOCI = [...VOCI_KIT, ...VOCI_MONUMENTI, ...VOCI_CITTA, ...VOCI_APERTI, ...VOCI_NATURA, ...VOCI_DISCESE, ...VOCI_MOSTRI].map(comune)
 
 // quello che serve al test: le tabelle da confrontare con quelle del gioco
 export const TABELLE = { OGGETTI_CITTA, FORME_NOME, NATURA, ARREDO, RELITTI, INGRESSI, NOMI_HABITAT, NOMI_INGRESSO }

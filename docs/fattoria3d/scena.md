@@ -12,13 +12,13 @@ gli Asteroidi 3D e il Sotterraneo 3D: il 3D non si scrive a mano.
 | `terreno.js` | erba, strade, griglia, lotti non comprati, recinto, alberi, sassi, laghetti, i due edifici di scena: a istanze, per una finestra di 9×9 lotti attorno alla camera ([mondo-infinito.md](mondo-infinito.md)) |
 | `pezzi.js` | un gruppo per ogni cosa del motore, edifici compresi (sono pezzi liberi, non ci sono fantasmi: [edifici-liberi.md](edifici-liberi.md)); li tiene allineati (`sincronizza`) e li anima (grano che cresce, pecore, galline e mucche, fontana, fumo, il pallone che parte e torna: [mongolfiera.md](mongolfiera.md)); i cartelli sugli edifici: «🎈 N casse pronte!» o «🎈 in viaggio · m:ss» sulla mongolfiera, prezzo o «🔒 Livello N» sul fantasma, pronti o cottura su ogni macchina, uova o latte pronti sul pollaio e sulla stalla, e su recinto, pollaio e stalla il cartello col pulsante «＋ 🪙 N» che compra una bestia (niente conto «n/max»; «ha fame» se c'è una bestia o una pecora tosata da nutrire) ([animali.md](animali.md)); le bestie affamate sono magre e basse, con una transizione morbida (`muoviBestie`, `muoviPecore`: «La fame si vede»); il cartello si nasconde col pezzo sollevato |
 | `eroe.js` | il movimento (a piedi, o di corsa), il percorso, la posa del gesto (semina, falcia, abbatte, esulta) |
-| `azioni.js` | cosa fa l'eroe davanti a ogni cosa: anima il gesto e **a metà gesto chiede al motore di farlo davvero**; un edificio in mappa è una cosa e apre il menu della sua macchina (comprarlo e piazzarlo è del menu «Costruisci qui») |
+| `azioni.js` | cosa fa il contadino davanti a ogni cosa: anima il gesto e **a metà gesto chiede al motore di farlo davvero**; un edificio in mappa è una cosa e apre il menu della sua macchina (comprarlo e piazzarlo è del menu «Costruisci qui») |
 | `detti.js` | `dettoDi` / `dettoDiRifiuto`: un rifiuto del motore in una riga che dice cosa fare. Senza three: lo usa anche `Gioco.vue` |
 | `costruzione.js` | cosa fa una carta del menu sulla cella premuta (`daMenu`), il fantasma (anche «parcheggiato», che aspetta un posto), riprendere e spostare un pezzo, le strade a pennello; al rilascio compra e mette in un gesto |
 | `dito.js` | i pointer sulla tela: tocco, mappa che scorre, pizzico, tenere premuto (su un pezzo lo riprende, su un posto libero apre «Costruisci qui»), il fantasma parcheggiato, il pennello delle strade |
-| `camera.js` | la telecamera: segue l'eroe, o libera se un dito la sposta (`trascina`) o se un pezzo tenuto contro il bordo la fa scorrere (`scorri`); mai oltre 30 celle dall'eroe |
+| `camera.js` | la telecamera: segue il contadino, o libera se un dito la sposta (`trascina`) o se un pezzo tenuto contro il bordo la fa scorrere (`scorri`); mai oltre 30 celle dal contadino |
 | `trascinamento-puro.js` | il conto del pezzo al dito, senza three: `cellaSottoIlDito` (il centro del pezzo sul punto del dito), lo scarto della presa, `velocitaBordo` e le costanti dello scorrimento ai bordi (`unita/fattoria3d-trascinamento`) |
-| `effetti.js` | scintille e fumo, i testi che volano, il fumetto dell'eroe, i cartelli (`nuovoBadge`; `nuovoCartello` per le bestie, con un pulsante vero), l'albero che cade |
+| `effetti.js` | scintille e fumo, i testi che volano, il fumetto del contadino, i cartelli (`nuovoBadge`; `nuovoCartello` per le bestie, con un pulsante vero), l'albero che cade |
 | `modelli.js` | tutti i pezzi in codice (niente sprite, niente immagini: le trame sono canvas): il campo (ri-esportato da `modelli-colture.js`), i sette edifici (pasticceria, mongolfiera, mulino, panificio, caseificio, conserviera, gelateria; i mattoncini sono esportati per `modelli-macchine.js`), le quattro decorazioni (aiuola, panchina, pozzo, spaventapasseri), bancarella, fontana, recinto e pecore con le loro fasi, pollaio con le galline, stalla con le mucche ([animali.md](animali.md)), fienile; `creaCasa`, `creaBancarella` e `creaBacheca` sono dei sottili rimandi a `dal-sotterraneo.js`, e `creaCasaVecchia` e `creaBancarellaVecchia` sono i disegni di prima, tenuti per il catalogo |
 | `modelli-macchine.js` | i quattro edifici nuovi, 3×3 con `anima`, `fumo` e `altezza` come gli altri: zuccherificio (capannone, ciminiera, barbabietole e sacchi, ruota dentata), telaio (capanna col grande telaio e la navetta, balle di lana), sartoria (casetta, manichino che gira, ago nel rocchetto), tintoria (capanno con tre vasche colorate, stoffe stese) |
 | `modelli-colture.js` | il campo 2×2 e le quindici colture, a istanze: vedi «Le colture» qui sotto |
@@ -33,7 +33,7 @@ La **vista** (`Gioco.vue` e `viste/`) apre le finestre e dice cosa si vuole; la 
 
 **Il foglio di una macchina** (`apriMacchina(tipo)`) non è nella scena: è `viste/Macchina.vue`, con posti, pronti e carte da trascinare; il dito che lo trascina è del foglio e non tocca la scena sotto ([file.md](file.md), «Il foglio della macchina»).
 
-**Un tocco su un edificio non tuo** che non si può comprare adesso (livello o terreno che mancano) non fa camminare l'eroe, che sta fuori
+**Un tocco su un edificio non tuo** che non si può comprare adesso (livello o terreno che mancano) non fa camminare il contadino, che sta fuori
 dal suo terreno: apre subito l'offerta, che dice il livello o manda al lotto da comprare prima (`_edificioDaLontano` in `mondo3d.js`).
 
 ## Le colture
@@ -67,7 +67,7 @@ sotterraneo, la sua nebbia (`vesti.js`) e un mondo (`pontiDi(m)`, `suolo.js`), e
 `mondo/` nel gruppo `fattoria3d`. La forma è la stessa (arcata di pietra con i parapetti, assi su pali, tavolo con tovaglia e
 boccali), i materiali sono quelli di `modelli.js` (`mat`). Se si cambia l'aspetto in uno, si guarda l'altro: nel catalogo 3D
 ([../core/catalogo-3d.md](../core/catalogo-3d.md)) le voci sono `gioco: 'entrambi'`. La gobba del ponte è una formula (`GOBBA`)
-e le quote per cella di `dati/catalogo.js` (`alzato`) la campionano: l'eroe e i compagni salgono e scendono con `quotaPasso`.
+e le quote per cella di `dati/catalogo.js` (`alzato`) la campionano: il contadino e i compagni salgono e scendono con `quotaPasso`.
 
 ## Casa, banco, bacheca, cespuglio: copia, non import
 
@@ -85,7 +85,7 @@ toccano. Il cespuglio ha i vertici in grigio (luce e ombra) e il verde lo mette 
 
 **Si tiene premuto** (~0,45 s, vibra) **su un posto libero del proprio terreno** e si apre il foglio «Cosa costruiamo?»
 (`viste/CostruisciQui.vue`, `dito.js` ricorda la cella premuta); il tasto 🏗️ della barra apre lo stesso foglio per la cella
-davanti all'eroe (`cellaDavanti`). Un dito che scorre prima della soglia non lo apre (il dito non è un mouse); un lotto non tuo si
+davanti al contadino (`cellaDavanti`). Un dito che scorre prima della soglia non lo apre (il dito non è un mouse); un lotto non tuo si
 compra toccandolo; tenuto premuto su un pezzo lo riprende, come prima.
 - **Le schede** (`CATEGORIE` in `dati/catalogo.js`: 🌾 Campi, 🐑 Animali, 🏠 Edifici, 🌷 Decori, 🛣️ Strade) e sotto **le carte**, tre
   per riga, dai dati (`dati/carte.js`: ogni pezzo e ogni edificio unico ha la sua `categoria`, ordinati per livello, prima le carte col «!»; un edificio
@@ -115,11 +115,11 @@ compra toccandolo; tenuto premuto su un pezzo lo riprende, come prima.
   trascinato) **o il pennello delle strade** nella fascia di `FASCIA_PX` = 72 px dal bordo utile (sotto la barra in alto `SOPRA_UI_PX` = 64; in
   basso sopra la fascia «metti via», o 96 px dal fondo col pennello), la camera scorre verso quel bordo da `VEL_MIN` = 2 a `VEL_MAX` = 12
   celle/s (col quadrato della profondità; × `dt`, non coi fotogrammi), anche a dito fermo; la cella del fantasma si ricalcola a ogni fotogramma
-  con la camera di adesso, quindi resta sotto il dito. Il limite è `LONTANO` = 30 celle dall'eroe (il mondo non ha confini); su «metti via» non
-  scorre; alzato il dito (o `pointercancel`) si ferma. «⌖ Torna all'eroe» compare come per ogni camera libera. Come la 2D
+  con la camera di adesso, quindi resta sotto il dito. Il limite è `LONTANO` = 30 celle dal contadino (il mondo non ha confini); su «metti via» non
+  scorre; alzato il dito (o `pointercancel`) si ferma. «⌖ Torna al contadino» compare come per ogni camera libera. Come la 2D
   ([../fattoria/come-si-tocca.md](../fattoria/come-si-tocca.md), `spinta.js`), ma in celle di mondo e non in px di vista.
 - **Non c'è più la telecamera «costruzione»** (alta, «Vicino» / «Tutto») né la barra: il posto si sceglie premendo dove lo si vuole.
-  Il fantasma si sistema sulla mappa di sempre (la telecamera segue l'eroe, due dita zoomano).
+  Il fantasma si sistema sulla mappa di sempre (la telecamera segue il contadino, due dita zoomano).
 - Il foglio si rifà dai dati a ogni cambio: una carta nuova nel catalogo compare da sola, e il test fallisce se manca la categoria.
   Provato: una barra in basso con tutte le carte in fila: infinita e bruttina, per questo è un foglio a schede.
 
@@ -172,7 +172,7 @@ Prima di questo non si vedeva niente: i ciuffi solo fuori dal mondo (sottili e d
   | **1. la passata dell'ombra** | 1870 → 960 draw call senza ombre (**−49%**), 255k → 129k triangoli, 7500 → 3570 chiamate GL: ogni mesh si disegna due volte; ~1050 mesh proiettavano. A CPU ×6: 12 fps → 15 senza ombre (con la macchina quieta 12 → 49) |
   | **2. troppe mesh piccole** | edifici 17–45 mesh l'uno (11 edifici: ~320 mesh), ponte 57, passerella 41, recinto 53, stalla 68, campo 26 (di cui 17 istanze) × 7: sono ~960 draw call anche senza ombre; quasi la metà con raggio sotto i 35 cm |
   | **3. i triangoli dei compagni e dei campi** | un gatto ~7000 triangoli (3 gatti = 21k, ×2 con l'ombra), il cane 6000; i 7 campi ~38k per fotogramma. Costano alla GPU, non al JS |
-  | non sono loro | `updateMatrixWorld` di tutta la scena 0,18 ms; `proietta` 1 µs; JS della logica (eroe, pezzi, effetti, cartelli) ~1,5 ms; DOM/Vue: stile 0,2–0,8 ms a fotogramma (19 cartelli), layout 0; `ripresa()`/HUD invisibili nel profilo |
+  | non sono loro | `updateMatrixWorld` di tutta la scena 0,18 ms; `proietta` 1 µs; JS della logica (contadino, pezzi, effetti, cartelli) ~1,5 ms; DOM/Vue: stile 0,2–0,8 ms a fotogramma (19 cartelli), layout 0; `ripresa()`/HUD invisibili nel profilo |
 
   **Rimedi applicati** (stesso stato, CPU ×6, conti medi per fotogramma): ogni mesh con raggio sotto 35 cm non proietta ombra
   (`scena3d/ottimizza.js`, 1048 → 498 «con ombra»: **1870 → 1380 draw call, 255k → 174k triangoli, 7500 → 6000 chiamate GL**, nel campo
