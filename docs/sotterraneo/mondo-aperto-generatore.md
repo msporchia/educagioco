@@ -9,7 +9,8 @@ funzioni restituiscono è il **contratto** per il motore di sopra (compito B), l
   `saltoDellaTerra`, `difDellaZona`, `cittaDiOggi`, `pietraDiOggi`. Restano dal mondo di prima e servono ancora: `HABITAT`,
   `LOTTI`, `BOTTEGHE`, `PERSONE`, `PERSONE_NUOVE`, `difDi`.
 - `motore/mondo-percorso.js` — il generatore; `motore/mondo-aperto-strade.js` — l'A* e i passi da una cella (non cambia).
-- `strumenti/sotterraneo-pianta-percorso.mjs` — la pianta in PNG e la pianta del villaggio (`npm run pianta -- --percorso`).
+- `strumenti/sotterraneo-pianta-percorso.mjs` — la pianta in PNG e la pianta del villaggio (`npm run pianta -- --percorso`; con
+  `--oggetti` anche gli oggetti di scena del villaggio).
 
 **Il mondo ad anelli non c'è più** (tolto il 20 ottobre 2026 col compito D: `motore/mondo-aperto.js`, la prima metà della scheda,
 `motore/mondo-sopra-anelli.js`, `strumenti/sotterraneo-pianta-mondo.mjs`, `unita/sotterraneo-mondo`, la riga `--mondo` della pianta);
@@ -72,9 +73,10 @@ dove due zone si toccano c'è solo la base pura, e si cuciono senza giunte.
 - **`confini`** (6, fra una zona e la dopo, **senza grata**: si passa sempre): `i`, `da`, `a`, `tipo` (`ponte`/`valico`),
   `modello` (`arco`, `passerella`), `nome`, `x y`, `s`, `verso` (`est`/`sud`: come corre la strada lì), `celle` `{x y acqua}`
   (il piano del ponte o il varco), `rive` (due celle sulla strada, prima e dopo, con la `zona`), `quota` e `arco` del ponte.
-- **`citta`** = `[villaggio]` e **`villaggio`**: `x y w h` (40×26), `centro`, `raggio`, `piazza` `{x y w h}`, `partenza`,
-  `cancello`, `quota` (spianato), `mercanti` (i quattro posti), `persone` (la ragazza e il capitano), `minatore`, `portale`,
-  `pietra`, `bacheca`, `cartello`, `pozzo`, `case` (il fondale, `senzaPorta`), `alberi`. Niente forte né rifugio.
+- **`citta`** = `[villaggio]` e **`villaggio`**: `x y w h` (24×20), `centro` (il pozzo), `raggio`, `piazza` (`cx cy raggi`, la
+  forma tonda per `nellaPiazza` e `raggioDellaPiazza`, e `x y w h`, il rettangolo che la contiene), `partenza`, `cancello`, `quota`
+  (spianato), `mercanti` (i quattro posti, con `giro`), `persone` (la ragazza e il capitano), `minatore`, `portale`, `pietra`,
+  `bacheca`, `cartello`, `pozzo`, `case` (con `verso` e `giro`: la porta verso la piazza), `orto`, `alberi`. Niente forte né rifugio.
 - **`posti`** (tutti): `tipo`, `chiave`, `x y w h` (il lotto), `piede` (dove sta), `accanto` (dove si ferma l'eroe), `zona`,
   `regione` (il luogo), `quota`. I tipi: `citta` (il villaggio intero), `mercante` (con `nome em sprite ruolo bottega`), `minatore`,
   `persona` (`ragazza`, `capitano` nel villaggio; `eremita`, `guardia`, `boscaiolo`, `pescatore`, `mugnaio` fuori), `pozzo`,
@@ -121,9 +123,10 @@ Si cammina dove `terreno` è erba o c'è un ponte, e `blocco` è 0: `m.calpestab
 3. **I secchi** di 12 celle: per ognuno i campioni fra cui una cella cerca il più vicino, e quindi le zone a cui può andare.
 4. **La base** di una cella (pura, tenuta a mano a mano): il campione più vicino (d1, arco) e il più vicino di un'altra fila
    (d2); roccia fuori dal corridoio, la cresta dove due file si avvicinano, la cornice; fra due zone il confine di traverso (un
-   fiume di ~4 celle col ponte sulla strada, o una cresta col varco); il villaggio (40×26 più due celle) erba.
-5. **Il villaggio dalla pianta** (`VILLAGGIO`): la piazza, i lotti col `piede` e l'`accanto`, il fondale, gli alberi, il tratto
-   dal cancello alla curva. Niente campi.
+   fiume di ~4 celle col ponte sulla strada, o una cresta col varco); il villaggio (24×20 più due celle) erba.
+5. **Il villaggio dalla pianta** (`VILLAGGIO`): i lotti col `piede` e l'`accanto`, le case, l'orto, gli alberi; poi la piazza
+   tonda (le celle col centro dentro i raggi, non sotto un lotto) e la stradina, una curva dalla piazza al cancello (le celle a
+   meno di ¾ di cella). Niente campi.
 6. **I posti**: le pietre al mezzo di ogni zona, i dungeon (`f`, `lato`, `fondo` della scheda) con la stradina A*, le tane, il
    mulino sulla riva del fiume poco prima del ponte (la ruota nell'acqua, da qualunque lato), la porta delle terre, chi sta
    fermo; ognuno con la sua stradina. Un lotto è erba della sua zona con un anello libero, cercato a spirale.
@@ -149,7 +152,7 @@ confine che non porta da una riva all'altra.
 
 ## Il seme
 
-**Seme 8, firme `521a0901` (scheletro) e `cf2f657b` (celle)**, scelto il 20 ottobre 2026 con `--semi 1-12` sulla misura 504×300:
+**Seme 8, firme `1ab5aff5` (scheletro) e `178a0fc6` (celle)** (il villaggio tondo del 21 ottobre), scelto il 20 ottobre 2026 con `--semi 1-12` sulla misura 504×300:
 nessuno dei dodici ha guasti; l'8 è quello del prototipo approvato e ha le pietre più pari (202–227) con la cripta a 76 passi.
 Chi cambia il generatore o la scheda vede le firme diventare rosse in `unita/sotterraneo-mondo-percorso`: si riguarda la pianta,
 se il seme non regge se ne sceglie un altro col foglio, si scrivono le firme nuove in `MONDO_PERCORSO`. **La firma dello
@@ -182,5 +185,6 @@ scheletro sta nei salvataggi** (`mondo.firma`): cambiarla rifà nebbia, `dove` e
 Nei test: `unita/sotterraneo-mondo-percorso` (le firme del seme scelto, nessun guasto, lo stesso seme lo stesso mondo, niente
 import fuori dal repo né DOM, le misure, **a blocchi come tutto insieme** e le liste che calano scaricando, la terra 2 con la
 stessa mappa e le fasce +14, ogni posto raggiungibile, nessuna scorciatoia, le pietre a 200–230 passi, la storia in fila, la
-cripta nella cintura, il villaggio uguale alla pianta, i luoghi e gli ingressi con le chiavi di sempre, i confini aperti, il
+cripta nella cintura, il villaggio uguale alla pianta (la piazza tonda, nessun lotto sulla piazza o sulla stradina, chi ci sta a poche celle
+dalla partenza, le botteghe girate verso la piazza e non in fila, l'orto sul bordo), i luoghi e gli ingressi con le chiavi di sempre, i confini aperti, il
 tempo di una zona, `creaTerra` sulla maschera).

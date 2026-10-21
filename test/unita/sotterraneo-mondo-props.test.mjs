@@ -7,8 +7,9 @@
    dentro il villaggio, mai su una strada, su un posto, davanti a una porta
    o nelle zone tenute libere davanti alle botteghe, e mai sul davanti (fra
    la piazza e chi guarda) se non sono piccole e basse: dalla piazza si
-   devono vedere tutti. Niente orti. Sono sempre uguali, ognuno sta nel
-   pezzo della sua cella, ogni modello ha un nome e poche facce.
+   devono vedere tutti. L'orto solo nel suo angolo. Sono sempre uguali,
+   ognuno sta nel pezzo della sua cella, ogni modello ha un nome e poche
+   facce.
    ═══════════════════════════════════════════════════════════════════ */
 import { scheletroDelMondo, caricaZona, ERBA } from '../../src/giochi/sotterraneo/motore/mondo-percorso.js'
 import { propsDellaCitta, propsPerPezzo } from '../../src/giochi/sotterraneo/scena3d/mondo/props-citta.js'
@@ -46,8 +47,10 @@ const l = propsDellaCitta(m)
   const dentroA = (r, x, y) => x >= r.x && x < r.x + r.w && y >= r.y && y < r.y + r.h
   const celle = new Set()
   let guasti = 0, doppie = 0, fuori = 0
+  const nellOrto = (x, y) => x >= v.orto.x && y >= v.orto.y && x < v.orto.x + v.orto.w && y < v.orto.y + v.orto.h
   for (const o of l) for (const [x, y] of o.celle) {
     const k = y * m.W + x
+    if (o.tipo === 'orto') { if (!nellOrto(x, y)) guasti++; continue }
     if (celle.has(k)) doppie++
     celle.add(k)
     if (x < v.x || y < v.y || x >= v.x + v.w || y >= v.y + v.h) fuori++
@@ -66,13 +69,14 @@ const l = propsDellaCitta(m)
 {
   const fondo = v.piazza.y + v.piazza.h
   const davanti = l.filter(o => o.celle.some(([, y]) => y >= fondo))
-  controlla('sul davanti solo cose basse e piccole (fiori, vasi, lanterne, panche)', davanti.every(o => ['fiori', 'vaso', 'lanterna', 'panca'].includes(o.tipo)), davanti.map(o => o.tipo).join(','))
+  controlla('sul davanti solo cose basse e piccole (fiori, vasi, lanterne, panche, l\'orto)', davanti.every(o => ['fiori', 'vaso', 'lanterna', 'panca', 'orto'].includes(o.tipo)), davanti.map(o => o.tipo).join(','))
   const tipi = new Set(l.map(o => o.tipo))
-  controlla('niente orti', !tipi.has('orto'))
+  controlla('l\'orto solo nel suo angolo, e pieno', l.filter(o => o.tipo === 'orto').every(o => o.orto) && l.filter(o => o.tipo === 'orto').length === v.orto.h * Math.floor(v.orto.w / 2))
+  controlla('niente bucato né carretti sul davanti', !davanti.some(o => ['bucato', 'carretto'].includes(o.tipo)))
   controlla('niente del forte né del rifugio (palizzate, tende, bandiere, pellicce)', !['palizzata', 'tenda', 'bandiera', 'pellicce', 'slitta'].some(t => tipi.has(t)))
   // fra una persona del villaggio e la telecamera (a sud) non c'è niente di alto
   const persone = [...v.mercanti, ...v.persone, v.minatore].map(p => p.piede)
-  const alti = l.filter(o => !['fiori', 'vaso', 'lanterna', 'panca', 'insegna'].includes(o.tipo))
+  const alti = l.filter(o => !['fiori', 'vaso', 'lanterna', 'panca', 'insegna', 'orto'].includes(o.tipo))
   let davantiA = 0
   for (const p of persone) for (const o of alti) if (Math.abs(o.x - (p.x + 0.5)) < 0.9 && o.z > p.y + 0.5 && o.z < p.y + 4) davantiA++
   uguale('nessun oggetto alto davanti a chi sta nel villaggio', davantiA, 0)

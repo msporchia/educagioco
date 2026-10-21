@@ -1,10 +1,11 @@
 // Gli oggetti di scena del villaggio, l'unica città: dove stanno (puro, derivato dal mondo già generato con un caso suo: il
-// generatore e la firma non cambiano) e come si posano nel cantiere del pezzo. Il villaggio è un ferro di cavallo aperto a sud
-// (dati/mondo-aperto.js, VILLAGGIO), e dalla piazza si devono vedere tutti: niente orti, bucato né carretti sul davanti, cioè
-// fra la piazza e la telecamera; le cose stanno ai fianchi delle botteghe, dietro, attorno alle case del fondale e sui lati della
-// piazza. Sempre su celle libere d'erba del villaggio, mai su una strada, un posto, davanti a una porta o nelle zone tenute
-// libere davanti alle botteghe; non cambiano la mappa di blocco. docs/sotterraneo/mondo-3d.md, «Gli oggetti del villaggio».
+// generatore e la firma non cambiano) e come si posano nel cantiere del pezzo. Il villaggio è una piazza tonda con le botteghe a
+// ventaglio (dati/mondo-aperto.js, VILLAGGIO), e dalla piazza si devono vedere tutti: niente bucato né carretti sul davanti, cioè
+// fra la piazza e la telecamera, e niente di alto davanti a chi ci sta; le cose stanno ai fianchi delle botteghe, dietro, attorno
+// alle case e sul bordo della piazza; l'orto solo nel suo angolo. Sempre su celle libere d'erba del villaggio, mai su una strada,
+// un posto, davanti a una porta o nelle zone tenute libere; non cambiano la mappa di blocco. docs/sotterraneo/mondo-3d-oggetti.md
 import { caso, quotaTerreno, ERBA } from './suolo.js'
+import { raggioDellaPiazza } from '../../dati/mondo-aperto.js'
 import { grigliaDi, pezzoDi } from './pezzi.js'
 import { MODELLI } from './props-modelli.js'
 
@@ -52,13 +53,16 @@ function creaContesto(m) {
     if (p.tipo === 'persona' || p.tipo === 'pozzo') rett(p.x - 1, p.y - 1, p.w + 2, p.h + 2)
   }
   for (const a of c.alberi) rett(a.x - 1, a.y - 1, 3, 3)
+  if (c.orto) rett(c.orto.x - 1, c.orto.y - 1, c.orto.w + 2, c.orto.h + 2)
   const davanti = y => y >= c.piazza.y + c.piazza.h
+  // chi sta fermo nel villaggio: davanti a lui (a sud, verso chi guarda) niente di alto
+  const piedi = posti.filter(p => ['mercante', 'persona', 'minatore'].includes(p.tipo)).map(p => p.piede)
   const libera = (x, y) => {
     if (x < c.x || y < c.y || x >= c.x + c.w || y >= c.y + c.h || x >= W || y >= H) return false
     const i = k(x, y)
     return m.terreno[i] === ERBA && !m.strada[i] && !m.blocco[i] && !m.riservato[i] && m.ponte[i] < 0 && !fisso.has(i) && !preso.has(i)
   }
-  return { m, c, k, libera, preso, fisso, case_, posti, davanti, lista: [], conta: {}, r: caso((Math.imul((m.seme | 0) + 7, 2654435761) ^ 40503 * 3) >>> 0) }
+  return { m, c, k, libera, preso, fisso, case_, posti, davanti, piedi, lista: [], conta: {}, r: caso((Math.imul((m.seme | 0) + 7, 2654435761) ^ 40503 * 3) >>> 0) }
 }
 
 // posa un oggetto largo `larghe` celle, con il davanti verso `dir`, a partire dalla cella (x, y); `retro`: quanto sta addossato al muro
@@ -68,8 +72,9 @@ function colloca(ctx, tipo, x, y, dir, larghe = LARGHE[tipo] || 1, extra = null,
   if (!celle.every(([a, b]) => ctx.libera(a, b))) return false
   // sul davanti (fra la piazza e chi guarda) solo le cose basse e piccole dei lati: niente che copra qualcuno
   if (celle.some(([, b]) => ctx.davanti(b)) && !BASSI.has(tipo)) return false
-  for (const [a, b] of celle) ctx.preso.add(ctx.k(a, b))
   const cx = celle.reduce((s, v) => s + v[0], 0) / larghe + 0.5 - dir[0] * retro, cz = celle.reduce((s, v) => s + v[1], 0) / larghe + 0.5 - dir[1] * retro
+  if (!BASSI.has(tipo) && tipo !== 'insegna' && ctx.piedi.some(p => Math.abs(cx - p.x - 0.5) < 1.2 && cz > p.y + 0.3 && cz < p.y + 4.5)) return false
+  for (const [a, b] of celle) ctx.preso.add(ctx.k(a, b))
   ctx.lista.push({ tipo, x: cx, z: cz, ry: Math.atan2(dir[0], dir[1]), seme: Math.floor(ctx.r() * 1e9) + 1, celle, citta: 'villaggio', ...extra })
   ctx.conta[tipo] = (ctx.conta[tipo] || 0) + 1
   return true
@@ -116,29 +121,34 @@ export function propsDellaCitta(m) {
       provaCandidati(ctx, tipo, mescola(murali(p, ['s']), r), { fuoco: false })
     }
   }
-  // 2) la piazza: le lanterne lungo il lato delle botteghe e agli angoli, le panche ai due capi (guardano dentro la piazza)
+  // 2) il bordo della piazza: le lanterne tutto attorno, le panche sul davanti e i tavoli ai fianchi, girati verso il pozzo
   const P = c.piazza
-  for (let i = 0; i < 5; i++) vicino(ctx, P.x + 1 + i * (P.w - 2) / 4, P.y - 0.5, 1.6, 'lanterna', [0, 1])
-  for (const x of [P.x - 0.5, P.x + P.w + 0.5]) vicino(ctx, x, P.y + P.h - 0.5, 1.6, 'lanterna', [0, 1])
-  for (const [x, d] of [[P.x - 0.5, [1, 0]], [P.x + P.w + 0.5, [-1, 0]]]) for (const dz of [2, 6]) vicino(ctx, x, P.y + dz, 1.5, 'panca', d)
-  // un tavolo con le panche ai capi della fila delle botteghe
-  for (const x of [P.x + 1, P.x + P.w - 2]) if ((ctx.conta.tavolo || 0) < menu.max.tavolo) vicino(ctx, x, P.y - 2, 2, 'tavolo', [0, 1])
-  // 3) le case del fondale: due o tre cose ai fianchi e dietro (a nord), mai verso le botteghe
+  const sulBordo = (gradi, fuori) => { const a = gradi * Math.PI / 180, rr = raggioDellaPiazza(P, a) + fuori; return [P.cx + Math.cos(a) * rr, P.cy - Math.sin(a) * rr] }
+  const versoIlPozzo = (x, z) => { const dx = P.cx - x, dz = P.cy - z, l = Math.hypot(dx, dz) || 1; return [dx / l, dz / l] }
+  for (const g of [15, 60, 112, 140, 178, 215, 250, 290, 330]) { const [x, z] = sulBordo(g, 0.7); vicino(ctx, x, z, 1.9, 'lanterna', versoIlPozzo(x, z)) }
+  for (const g of [200, 232, 305]) { const [x, z] = sulBordo(g, 0.9); vicino(ctx, x, z, 1.9, 'panca', versoIlPozzo(x, z)) }
+  for (const g of [165, 20]) if ((ctx.conta.tavolo || 0) < menu.max.tavolo) { const [x, z] = sulBordo(g, 1.8); vicino(ctx, x, z, 2.6, 'tavolo', versoIlPozzo(x, z)) }
+  // 3) le case: due o tre cose ai fianchi e dietro, mai dal lato della porta
   for (const cs of ctx.case_) {
     const n = 2 + Math.floor(r() * 2), fatti = new Set()
     for (let i = 0, prove = 0; i < n && prove < 8; prove++) {
       const full = new Set([...fatti, ...Object.keys(menu.max).filter(t => (ctx.conta[t] || 0) >= menu.max[t])])
       const tipo = pesca(r, menu.case, full)
       if (!tipo) break
-      if (provaCandidati(ctx, tipo, mescola(murali(cs, ['s']), r), { fuoco: false })) { fatti.add(tipo); i++ }
+      if (provaCandidati(ctx, tipo, mescola(murali(cs, [cs.verso || 's']), r), { fuoco: false })) { fatti.add(tipo); i++ }
       else fatti.add(tipo)
     }
   }
   // 4) sparsi dietro le botteghe e ai lati, a gruppetti discosti dalle strade
   for (let n = 0, prove = 0; n < menu.sparsi && prove < menu.sparsi * 40; prove++) {
     const tipo = pesca(r, menu.aperto, new Set(Object.keys(menu.max).filter(t => (ctx.conta[t] || 0) >= menu.max[t])))
-    const x = c.x + 1 + Math.floor(r() * (c.w - 2)), y = c.y + 1 + Math.floor(r() * (P.y - c.y - 2)), dir = [DIR.s, DIR.e, DIR.o][Math.floor(r() * 3)]
+    const x = c.x + 1 + Math.floor(r() * (c.w - 2)), y = c.y + 1 + Math.floor(r() * (P.y + P.h - c.y - 2)), dir = [DIR.s, DIR.e, DIR.o][Math.floor(r() * 3)]
     if (colloca(ctx, tipo, x, y, dir, LARGHE[tipo] || 1, { fuoco: false }, 0)) n++
+  }
+  // 5) l'orto nel suo angolo: le aiuole col loro steccato, in file da due celle (le celle sono già un lotto)
+  if (c.orto) for (let y = c.orto.y; y < c.orto.y + c.orto.h; y++) for (let x = c.orto.x; x + 1 < c.orto.x + c.orto.w; x += 2) {
+    ctx.lista.push({ tipo: 'orto', x: x + 1, z: y + 0.5, ry: 0, seme: Math.floor(r() * 1e9) + 1, celle: [[x, y], [x + 1, y]], citta: 'villaggio', orto: true })
+    ctx.conta.orto = (ctx.conta.orto || 0) + 1
   }
   return ctx.lista
 }

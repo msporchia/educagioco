@@ -126,10 +126,10 @@ export function tetto(c, w, d, y, alto, sb, mat, col, colMuro, matMuro, lungoX =
 }
 
 // ── la casa: zoccolo di pietra, muri d'intonaco (a volte a graticcio) o di legno, tetto di tegole o di paglia, porta verso la
-// strada, finestre con le imposte, il camino col fumo ──
+// strada (nel villaggio verso la piazza, girata di `giro`), finestre con le imposte, il camino col fumo ──
 export function casa(c, cant, m, cose) {
   const r = caso(c.seme + 1)
-  const ang = { s: 0, e: Math.PI / 2, n: Math.PI, o: -Math.PI / 2 }[c.verso]
+  const ang = { s: 0, e: Math.PI / 2, n: Math.PI, o: -Math.PI / 2 }[c.verso] + (c.giro || 0)
   const lw = c.verso === 's' || c.verso === 'n' ? c.w : c.h, ld = c.verso === 's' || c.verso === 'n' ? c.h : c.w
   const cx = c.x + c.w / 2, cz = c.y + c.h / 2
   cant.base(cx, quotaTerreno(m, cx, cz), cz, ang)
@@ -146,12 +146,9 @@ export function casa(c, cant, m, cose) {
   const cima = tetto(cant, bw, bd, z0 + alt, 0.75 + r() * 0.45 + Math.min(bw, bd) * 0.1, 0.28, paglia ? 'paglia' : 'tegole',
     paglia ? [0.9, 0.8, 0.55] : scegli(r, COLORI.tegole), colMuro, legnosa ? 'legno' : 'intonaco', lungoX)
   const px = (r() - 0.5) * (bw - 1.2)
-  // le case del fondale del villaggio non hanno porta (`senzaPorta`): sono lo sfondo, non ci si entra
-  if (!c.senzaPorta) {
-    cant.metti('legno', scatola(0.62, 1.0, 0.08, 1), px, z0 + 0.5, bd / 2 + 0.03, COLORI.legnoScuro)
-    cant.metti('pietra', scatola(0.8, 0.1, 0.12, 1), px, z0 + 1.05, bd / 2 + 0.04, COLORI.pietra)
-    cant.metti('pietra', scatola(0.8, 0.08, 0.35, 1), px, 0.04, bd / 2 + 0.2, COLORI.pietra)
-  }
+  cant.metti('legno', scatola(0.62, 1.0, 0.08, 1), px, z0 + 0.5, bd / 2 + 0.03, COLORI.legnoScuro)
+  cant.metti('pietra', scatola(0.8, 0.1, 0.12, 1), px, z0 + 1.05, bd / 2 + 0.04, COLORI.pietra)
+  cant.metti('pietra', scatola(0.8, 0.08, 0.35, 1), px, 0.04, bd / 2 + 0.2, COLORI.pietra)
   const imposte = scegli(r, COLORI.imposte)
   const finestra = (x, y, z, ry) => {
     cant.metti('liscio', scatola(0.42, 0.44, 0.05), x, y, z, COLORI.vetro, { ry })
@@ -170,10 +167,11 @@ export function casa(c, cant, m, cose) {
   if (r() < 0.4) cant.metti('legno', scatola(0.9, 0.08, 0.28, 1), -px * 0.3 - 0.6, 0.38, bd / 2 + 0.3, COLORI.legno)
 }
 
-// ── le botteghe dei mercanti: la bancarella del mercante, le erbe della guaritrice, la fucina, la torretta dell'incantatrice ──
+// ── le botteghe dei mercanti: la bancarella del mercante, le erbe della guaritrice, la fucina, la torretta dell'incantatrice;
+// il davanti a sud, girato di `giro` verso la piazza ──
 export function bottega(me, cant, m, cose) {
   const cx = me.x + me.w / 2, cz = me.y + me.h / 2
-  cant.base(cx, quotaTerreno(m, cx, cz), cz, 0)
+  cant.base(cx, quotaTerreno(m, cx, cz), cz, me.giro || 0)
   const w = me.w, d = me.h, r = caso(me.chiave.length * 97 + 3 + me.x)
   if (me.bottega === 'bancarella' || me.bottega === 'erbe') {
     const tela = me.bottega === 'erbe' ? [0.32, 0.56, 0.34] : [0.78, 0.22, 0.2]
