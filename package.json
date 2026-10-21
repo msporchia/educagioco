@@ -27,6 +27,7 @@
     "pannelli": "vite --open /strumenti/banco/pannelli.html",
     "paesaggi": "node strumenti/tavola-paesaggi.mjs",
     "promuovi3d": "node strumenti/promuovi-3d.mjs",
+    "roba3d": "node strumenti/mappa-roba3d.mjs",
     "test": "node test/esegui.mjs unita",
     "test:unita": "node test/esegui.mjs unita",
     "test:browser": "node test/esegui.mjs integrazione",
