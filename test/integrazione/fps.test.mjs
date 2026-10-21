@@ -21,8 +21,8 @@ uguale('spento: nessuna pastiglia', await page.locator('[data-fps]').count(), 0)
 await page.click('[data-azione="grandi"]')
 await page.waitForSelector('.tastierino', { timeout: 5000 })
 for (const c of '0000') await page.click(`.tasto >> text="${c}"`)
-await page.waitForSelector('[data-scheda="casa"]', { timeout: 5000 })
-await page.click('[data-scheda="casa"]')
+await page.waitForSelector('[data-scheda="impostazioni"]', { timeout: 5000 })
+await page.click('[data-scheda="impostazioni"]')
 await apriTendine(page)      // «Per chi sviluppa» nasce chiusa
 await page.waitForSelector('.carta[data-flag="fps"]', { timeout: 5000 })
 controlla('l\'interruttore parte spento',
@@ -46,8 +46,8 @@ controlla('dopo la ricarica la misura c\'è ancora', /ultima/.test(await page.te
 await page.click('[data-azione="grandi"]')
 await page.waitForSelector('.tastierino', { timeout: 5000 })
 for (const c of '0000') await page.click(`.tasto >> text="${c}"`)
-await page.waitForSelector('[data-scheda="casa"]', { timeout: 5000 })
-await page.click('[data-scheda="casa"]')
+await page.waitForSelector('[data-scheda="impostazioni"]', { timeout: 5000 })
+await page.click('[data-scheda="impostazioni"]')
 await apriTendine(page)      // «Per chi sviluppa» nasce chiusa
 await apriTendine(page)      // «Per chi sviluppa» nasce chiusa
 await page.click('[data-azione="benchmark"]')
@@ -72,7 +72,7 @@ controlla('scelta a mano: bassa', /Qualità della grafica 3D: bassa/.test(await 
 await page.reload()
 await page.click('[data-azione="grandi"]'); await page.waitForSelector('.tastierino')
 for (const c of '0000') await page.click(`.tasto >> text="${c}"`)
-await page.click('[data-scheda="casa"]')
+await page.click('[data-scheda="impostazioni"]')
 await apriTendine(page)
 controlla('la scelta resta dopo la ricarica', /Qualità della grafica 3D: bassa/.test(await page.textContent('[data-fascia]')))
 

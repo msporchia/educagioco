@@ -5,22 +5,24 @@ cose di un bambino, cose del telefono e strumenti da sviluppatore mescolate, e i
 
 ## La forma
 
-Una barra in basso con quattro schede, ognuna «di chi è»:
-- 🎮 **Giochi**: il carosello e le impostazioni di un gioco ([giochi.md](giochi.md)), gli interruttori di casa, le monete per gioco, le domande dei quiz — **fatto**.
-- 👶 **Bambino** (tutto ciò che è di lui, **fatto il 21/10**): faccia e nome, **quando è nato, l'età e il quadro di cosa si apre** (`Nascita` + `ManopolaEta`), amici online, aggiungere un bambino, «Zona delicata» e cestino (chiusi). Il salvataggio **non** sta qui: è del telefono.
+Una barra in basso con cinque schede, ognuna «di chi è» (riordinate il 21/10):
+- 👶 **Bambino**: faccia e nome, **quando è nato** (da lì la classe), la **taratura a mano** in una tendina (si apre da sola solo senza data: con la data l'età si ricava dalla classe e la manopola è l'eccezione), amici online, aggiungere un bambino.
+- 🎮 **Giochi**: il carosello e la pagina del gioco in mezzo ([giochi.md](giochi.md)): «Nella home» (**Default** oppure **Acceso/Spento** a mano), il tempo, **le monete di quel gioco** (`Tetti.vue` con `gioco`), le domande; sotto, «Le domande dei quiz» (i giudizi).
 - 📊 **Come va**: la settimana, cosa guardare, i grafici.
-- 🏠 **Casa**: **salvataggio su file e «Rimetti da un file»** (con l'avviso «ultimo salvataggio: 12 giorni fa»), versione, giochi in prova, aggiungi un bambino, aiuto; e due
-  tendine chiuse: **«Per chi sviluppa»** (contatore fps, fascia grafica, benchmark) e **«Zona delicata»** (azzera, cestino).
-In cima a tutto il bambino scelto (le impostazioni sono sempre «di Leonardo»), con la lente per cercare un'impostazione.
+- 💾 **Salvataggi**: salva su file, rimetti da un file, l'avviso «mai salvato», il cestino e la «Zona delicata» (cancella i progressi) — roba del telefono, non di un bambino.
+- ⚙️ **Impostazioni**: passa il gioco, il codice, segnala; e una tendina **«Avanzate»** con quello che di base non si tocca: giochi in prova, sblocca tutti i livelli, le regole delle monete di tutti, fps e benchmark.
 
-## L'età dalla data di nascita (**fatto**)
+## L'età dalla data di nascita (**fatto**, rifatto il 21/10 sulla classe)
 
-`settings.nascita = { m, a }` (mese 0-11 e anno; solo sul telefono, mai nel servizio) e `settings.scarto` (quanti anni sopra o sotto i suoi si è
-tarato). **L'età che i giochi leggono resta `settings.eta`**: la data dice a quale età *dovrebbe* essere (`etaDaNascita`), il resto del motore non
-cambia. Il compleanno è il primo del mese di nascita (`data/nascita.js`: con il mese basta, e non si chiede il giorno).
-- **Un compleanno nella stessa fascia** (9→10, 6→7): l'età si aggiorna **in silenzio** all'avvio (`store/compleanno.js`), perché cambiano solo le
+`settings.nascita = { m, a }` (mese 0-11 e anno; solo sul telefono, mai nel servizio) e `settings.scarto` (di quante classi sopra o sotto la sua
+si è tarato). **L'età che i giochi leggono resta `settings.eta`**: la data dice a quale età *dovrebbe* essere (`etaDaNascita`), il resto del motore non
+cambia. **Non sono gli anni compiuti ma la classe**: si passa di classe a **settembre**, non al compleanno (un nato a novembre 2018 è in terza,
+cioè 8, a ottobre 2026 pur avendo 7 anni e 11 mesi); `etaDiClasse` in `data/nascita.js` = anno scolastico meno anno di nascita (terza = 8, prima media
+= 11), e lo scarto misura quanto i grandi se ne sono allontanati (un anticipatario, una classe ripetuta). Le schermate dicono «è in terza elementare,
+a metà anno» (`inClasse`), mai «8 anni come in terza». Basta mese e anno, non si chiede il giorno.
+- **Un cambio di classe nella stessa fascia** (a settembre: 9→10, 6→7): l'età si aggiorna **in silenzio** all'avvio (`store/compleanno.js`), perché cambiano solo le
   domande, che si spostano da sole.
-- **Un compleanno che cambia fascia** (7→8, 8→9): **non cambia niente da solo** (`spostaLEta` riscrive giochi, saperi e ritocchi): un avviso nella
+- **Un cambio di classe che cambia fascia** (7→8, 8→9): **non cambia niente da solo** (`spostaLEta` riscrive giochi, saperi e ritocchi): un avviso nella
   posta dei grandi, una volta sola per età, che dice cosa si aprirebbe e cosa si chiuderebbe; la scelta si fa da «Quando è nato»
   (`components/genitori/Nascita.vue`, scheda «Giochi e domande»): **passa ai N anni** (con la conferma di sempre se perderebbe ritocchi) oppure
   **tienilo a M anni**, che ricalcola lo scarto.

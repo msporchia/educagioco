@@ -33,6 +33,7 @@ const props = defineProps({
   conferma: { type: Boolean, default: false },
   // la prima tacca nasce in fondo (4), non in mezzo: chi aggiunge un bambino aggiunge quasi sempre il più piccolo
   partenza: { type: Number, default: 4 },
+  conData: { type: Boolean, default: false }, // se c'è la data di nascita la classe si dice lì: sotto la tacca niente «come in terza»
   tarabile: { type: Boolean, default: false }, // solo nella schermata dei grandi: il primo avvio non ha un profilo da correggere
   // com'è andata finora (state.profile.items): una riga che va male porta il suo numero, stessa soglia di quiz/consiglio.js
   risposte: { type: Object, default: () => ({}) },
@@ -218,7 +219,7 @@ const giu = n => String(n || '').charAt(0).toLowerCase() + String(n || '').slice
 <template>
   <div class="manopola" data-manopola>
     <Tacca :anni="anniVisti" :min="MIN" :max="MAX"
-           :sotto="fascia ? `come in ${fascia.come}` : ''" @muovi="muovi" />
+           :sotto="fascia && !conData ? `come in ${fascia.come}` : ''" @muovi="muovi" />
 
     <!-- niente quadro finché non si è scelto: sarebbe il quadro di un'età che nessuno ha deciso -->
     <p v-if="!quadro" class="invito">Sposta la manopola per vedere cosa cambia.</p>

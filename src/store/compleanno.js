@@ -3,6 +3,7 @@
 // la fascia (si aprono e si chiudono giochi, si riscrivono i saperi) non si cambia niente da soli: un avviso nella posta dei grandi,
 // una volta sola per età, e la scelta si fa dalle impostazioni, con l'anteprima di cosa succede.
 import { state, nomeCorrente, etaDelBambino, nascitaDelBambino, etaDaNascita, spostaLEta } from './profile.js'
+import { nomeClasse } from '../data/nascita.js'
 import { avvisaUnaVolta } from './posta.js'
 import { partenzaPerEta, eccezioniPerEta } from '../data/partenze.js'
 import { GIOCHI } from '../data/giochi.js'
@@ -35,11 +36,11 @@ export async function controllaCompleanno() {
     if (stessaFascia(ora, voluta)) { spostaLEta(voluta); return 'silenzio' }
     const { apre, chiude } = cosaCambia(ora, voluta)
     const nome = nomeCorrente()
-    const testo = `${nome} ha ${voluta} anni (dalla data di nascita), ma i giochi sono ancora tarati su ${ora}.`
+    const testo = `Dalla data di nascita ${nome} fa adesso la ${nomeClasse(voluta)}, cioè i giochi andrebbero tarati sui ${voluta} anni: sono ancora tarati su ${ora}.`
       + (apre.length ? ` Passando ai ${voluta} anni si aprirebbero: ${apre.join(', ')}.` : '')
       + (chiude.length ? ` Si chiuderebbero: ${chiude.join(', ')}.` : '')
       + ' Non cambio niente da solo: dalle impostazioni vedi cosa succede e decidi tu.'
-    await avvisaUnaVolta(`eta:${state.player}:${voluta}`, testo, { testo: 'Vai a «Quando è nato»', scheda: 'giochi' })
+    await avvisaUnaVolta(`eta:${state.player}:${voluta}`, testo, { testo: 'Vai a «Quando è nato»', scheda: 'bambini' })
     return 'avviso'
   } catch { return null }     // l'età non rompe mai niente
 }
