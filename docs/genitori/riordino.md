@@ -6,10 +6,10 @@ cose di un bambino, cose del telefono e strumenti da sviluppatore mescolate, e i
 ## La forma
 
 Una barra in basso con quattro schede, ognuna «di chi è»:
-- 🎮 **Giochi**: il carosello e le impostazioni di un gioco ([giochi.md](giochi.md)) — **fatto**.
-- 👶 **Bambino**: faccia e nome, aggiungere un bambino, amici online, progressi di lui (con la «Zona delicata» chiusa). L'**età** sta in «Giochi» con i giochi che decide: cambiarla mostra subito cosa si apre.
+- 🎮 **Giochi**: il carosello e le impostazioni di un gioco ([giochi.md](giochi.md)), gli interruttori di casa, le monete per gioco, le domande dei quiz — **fatto**.
+- 👶 **Bambino** (tutto ciò che è di lui, **fatto il 21/10**): faccia e nome, **quando è nato, l'età e il quadro di cosa si apre** (`Nascita` + `ManopolaEta`), amici online, aggiungere un bambino, «Zona delicata» e cestino (chiusi). Il salvataggio **non** sta qui: è del telefono.
 - 📊 **Come va**: la settimana, cosa guardare, i grafici.
-- 🏠 **Casa**: codice, salvataggio (con l'avviso «ultimo salvataggio: 12 giorni fa»), versione, giochi in prova, aggiungi un bambino, aiuto; e due
+- 🏠 **Casa**: **salvataggio su file e «Rimetti da un file»** (con l'avviso «ultimo salvataggio: 12 giorni fa»), versione, giochi in prova, aggiungi un bambino, aiuto; e due
   tendine chiuse: **«Per chi sviluppa»** (contatore fps, fascia grafica, benchmark) e **«Zona delicata»** (azzera, cestino).
 In cima a tutto il bambino scelto (le impostazioni sono sempre «di Leonardo»), con la lente per cercare un'impostazione.
 

@@ -62,10 +62,10 @@ function toglila(a) {
 
 <template>
   <div class="carta amici-carta" data-flag="amici">
-    <span class="ico">👫</span>
-    <b>Amici online di {{ chi }}</b>
-    <i v-if="!dati.attivo">{{ PASSO.corpo }}</i>
+    <div class="testa"><span class="ico">👫</span><b>Amici online di {{ chi }}</b></div>
+    <i v-if="!dati.attivo">Giocare insieme a un amico, ognuno sul suo telefono. Spento finché non lo accendi tu.</i>
     <i v-else>Può invitare gli amici e ricevere inviti. Vede solo quelli con cui scambiate un codice.</i>
+    <details v-if="!dati.attivo" class="come"><summary>Come funziona</summary><p>{{ PASSO.corpo }}</p></details>
 
     <button class="bottone" :class="{ chiaro: dati.attivo }" type="button" data-azione="amici-attiva" @click="cambia">
       {{ dati.attivo ? 'Spegni gli amici online' : 'Attiva gli amici online' }}
@@ -100,7 +100,10 @@ function toglila(a) {
 </template>
 
 <style scoped>
-.amici-carta { display:flex; flex-direction:column; align-items:stretch; gap:10px; text-align:left }
+.carta.amici-carta { display:flex; flex-direction:column; align-items:stretch; gap:10px; text-align:left }
+.testa { display:flex; align-items:center; gap:12px }
+.come summary { font-size:13px; font-weight:700; color:var(--viola); cursor:pointer; min-height:32px }
+.come p { margin:4px 0 0; font-size:12.5px; line-height:1.45; color:var(--tenue) }
 .elenco { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:6px }
 .elenco li { display:flex; align-items:center; gap:10px; justify-content:space-between }
 .codice { display:flex; flex-direction:column; align-items:center; gap:6px; padding:10px; border-radius:12px; background:#fffbe8 }
