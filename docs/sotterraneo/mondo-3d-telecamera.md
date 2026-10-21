@@ -42,7 +42,13 @@ schermo gira.
 
 Provato e tolto: la telecamera del villaggio che si allontanava e si fermava in mezzo alla fila delle botteghe per farle vedere tutte
 senza girare (il villaggio tondo, 24×20, sta in ~15 celle, e con lo zoom il bambino sceglie da sé).
-Non fatto: la telecamera più bassa (36°) dello scontro sul prato, come nelle discese: gli sprite si allungano con l'inclinazione (`scena3d/camera.js`), e il palco del mondo non lo sa; va provato a parte.
+## Lo scontro sul prato
+
+Nello scontro la telecamera fa come quella delle discese (`scena3d/camera.js`): si abbassa a 36° (`CAMERA.inclinazioneScontro`, dolcemente,
+e gli sprite si allungano di conseguenza: `impostaInclinazione`, rimessa a 52° quando lo scontro finisce) e si alza sopra il pannello
+delle azioni: `palco.centro()` torna anche `coperto` (i px del pannello, da `palco.segui`), la vista si sposta di metà e lo spazio
+libero si restringe (`distanza(celle, celle, inc, fraz)`). Eroe e mostri stanno sopra il pannello anche su uno schermo basso. Durante
+lo scontro la vista libera si spegne e il dito non la sposta.
 
 Nei test: `unita/sotterraneo-mondo-vista` (il gesto sotto e sopra i 16 px, il pizzico, i limiti dello zoom e del trascinare, la
 vista che si stacca e torna, i pezzi attorno a dove si guarda), `integrazione/sotterraneo-mondo-vista` (col dito vero, CDP: il
