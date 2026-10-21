@@ -1,24 +1,24 @@
 # La schermata dei grandi e «Come va»
 
-Le quattro schede della schermata dei grandi (`src/views/GenitoriView.vue`, nella barra in basso), la
+Le cinque schede della schermata dei grandi (`src/views/GenitoriView.vue`, nella barra in basso), la
 scheda che dice se le domande stanno funzionando, e il quaderno dei giudizi. Il perché del riordino sta in [riordino.md](riordino.md).
 
-## Quattro schede, ognuna «di chi è», e si tara in una sola
+## Cinque schede, ognuna «di chi è» (riordinate il 21/10)
 
-- **👶 Bambino** — chi gioca (faccia, nome, aggiungere un altro bambino), gli amici online, i progressi (salva su file, rimetti da un file) e in fondo
-  la **«Zona delicata»**, una tendina chiusa con le cose che cancellano e il cestino.
-- **🎮 Giochi** — «I giochi di <bambino>» ([giochi.md](giochi.md)), «Quando è nato» e la manopola dell'età col quadro sotto
-  ([manopola.md](manopola.md), [quadro.md](quadro.md)), i giochi in prova e le domande dei quiz. È l'unico posto dove
-  si tara: provati un elenco di classi con quattro tondi per riga e una fila
-  di interruttori per gioco, dicevano la stessa cosa in modi non
-  confrontabili, e il primo aveva una seconda tacca dell'età.
-- **📊 Come va** — sotto: le materie, la settimana, il tempo, le domande.
-- **🏠 Casa** — il telefono, non un bambino: l'**avviso sul salvataggio** («ultimo salvataggio: 12 giorni fa», o «mai salvato», `store/copia.js`),
-  il codice, passare il gioco, i guasti, segnalare, e in fondo la tendina **«Per chi sviluppa»** (contatore fps, qualità 3D, misura del telefono).
+Il perché e l'elenco sono in [riordino.md](riordino.md): **👶 Bambino** (nome, faccia, data di nascita e classe, la taratura a mano in una tendina,
+amici), **🎮 Giochi** (il carosello con la pagina del gioco: «Nella home» Default/Acceso/Spento, il tempo, le monete di quel gioco, le domande),
+**📊 Come va**, **💾 Salvataggi** (salva, rimetti, avviso, cestino, «Zona delicata») e **🔧 Impostazioni** (passa il gioco, codice, segnala, e la tendina
+**«Avanzate»**: giochi in prova, tappe aperte, regole delle monete, fps e benchmark).
 
-Nei test: la barra è `nav.barra-giu` con `[data-scheda="bambini"|"giochi"|"comeva"|"casa"]`; le tendine nascono chiuse e un test che deve premere lì
-dentro le apre con `apriTendine(page)` (`test/aiuto/browser.mjs`); `[data-delicata]`, `[data-sviluppo]`, `[data-copia-avviso]`.
-`integrazione/impostazioni-barra`, `unita/copia`.
+**Si gestiscono le eccezioni, non la norma** (decisione del proprietario, 21/10): le domande sono tarate sull'età e di solito non c'è niente da fare,
+quindi nessuna lista lunga da curare. Una domanda che continua ad andare male compare in **Come va › Difficili** con quattro tasti — ▶ Prova, più avanti
+di mezzo anno, *Va bene così*, **Non chiedergliela più** (la spegne, `accendiSapere(tipo, false)`; sta poi in «Le hai spente tu» con *Riaccendi*).
+L'elenco di tutte le domande di un gioco resta nella pagina del gioco, in una tendina chiusa.
+
+Nei test: la barra è `nav.barra-giu` con `[data-scheda="bambini"|"giochi"|"comeva"|"salvataggi"|"impostazioni"]`; le tendine nascono chiuse e un test che deve
+premere lì dentro le apre con `apriTendine(page)` (`test/aiuto/browser.mjs`); `[data-delicata]`, `[data-sviluppo]` («Avanzate»), `[data-eta-mano]`,
+`[data-gioco-tutte]`, `[data-copia-avviso]`, `[data-azione="settimana-spegni"|"settimana-riaccendi"]`, `[data-spenta]`.
+`integrazione/impostazioni-barra`, `integrazione/come-va`, `unita/copia`.
 
 ## «Come va»
 
@@ -88,7 +88,7 @@ sono migliorate** e **quante difficili**, e i due elenchi corti.
   prima gli mostra un esempio svolto» — un'altra domanda della stessa
   tipologia già risolta, non il metodo di quella che deve fare, che spesso
   conteneva la risposta ([l'esempio svolto](../apprendimento/la-domanda.md#lesempio-svolto)).
-  Tre tasti:
+  Quattro tasti (il quarto, **Non chiedergliela più**, spegne la domanda: vedi sopra):
   - **▶ Prova** — la palestra di sempre (`Prova.vue`);
   - **Più avanti di mezzo anno** — la ✎ di `components/eta/Taratura.vue`
     ([ritocchi.md](ritocchi.md)), aperta con lo scatto già fatto (`parte`):

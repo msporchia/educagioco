@@ -37,6 +37,7 @@ const BENE = 'ora:intere'         // le indovina tutte
    conto intero è ancora a metà, cioè da muro, e non deve dirlo */
 const MURO2 = 'num:linea'
 const MURO3 = 'num:posiziona'   // per «Va bene così»
+const MURO4 = 'num:ordine'      // per «Non chiedergliela più»
 const SALITA = 'ora:quarti'
 const ORA = Date.now()
 const GIORNO = 86400000
@@ -64,6 +65,7 @@ await semina(page, {
     [MURO2]: { s: 0, ok: 3, err: 7, seen: 10, t: 8000, last: ORA },
     [SALITA]: { s: 3, ok: 10, err: 10, seen: 20, t: 5000, last: ORA },
     [MURO3]: { s: 1, ok: 4, err: 6, seen: 10, t: 7000, last: ORA },
+    [MURO4]: { s: 1, ok: 3, err: 7, seen: 10, t: 7000, last: ORA },
     'math:2x3': { s: 4, ok: 6, err: 0, seen: 6, t: 1500, last: ORA },
   },
 })
@@ -108,7 +110,7 @@ controlla('e comincia dalle materie', await page.isVisible('[data-mattonelle]'))
 /* ── 1. il sommario, che è la misura di tutto il resto ── */
 const sommario = await page.locator('[data-sommario]').innerText()
 controlla('in cima dice quante risposte ha dato in tutto',
-          sommario.includes('62'), sommario.replace(/\n/g, ' '))
+          sommario.includes('72'), sommario.replace(/\n/g, ' '))
 
 /* ── 2. l'ordine ── */
 const righe = () => page.evaluate(() =>
@@ -264,6 +266,20 @@ uguale('«Va bene così» la toglie dall\'elenco', await difficile(MURO3).count(
   const prof = await leggiProfilo(page)
   controlla('e se lo ricorda', !!prof.settings?.vaBene?.[MURO3])
   uguale('senza toccare la taratura', (prof.settings?.ritocchi || {})[MURO3], undefined)
+}
+
+/* «Non chiedergliela più»: si spegne la domanda e si può riaccendere dalla stessa pagina */
+controlla('c\'è il quarto muro', await difficile(MURO4).count() === 1)
+{
+  await difficile(MURO4).locator('[data-azione="settimana-spegni"]').click()
+  await page.waitForTimeout(500)
+  uguale('spenta, esce dalle difficili', await difficile(MURO4).count(), 0)
+  uguale('e sta fra quelle che hai spente', await page.locator(`[data-spenta="${MURO4}"]`).count(), 1)
+  controlla('nel profilo è spenta', (await leggiProfilo(page)).settings?.sa?.[MURO4] === false)
+  await page.locator(`[data-spenta="${MURO4}"] [data-azione="settimana-riaccendi"]`).click()
+  await page.waitForTimeout(500)
+  uguale('riaccesa, non è più fra le spente', await page.locator(`[data-spenta="${MURO4}"]`).count(), 0)
+  controlla('e nel profilo non resta niente da ricordare', (await leggiProfilo(page)).settings?.sa?.[MURO4] === undefined)
 }
 
 /* ── e il verso contrario ──

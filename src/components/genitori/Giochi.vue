@@ -122,6 +122,9 @@ const saperi = computed(() => saperiDelGioco(chiave.value).map(k => {
         <b>Le domande di questo gioco</b>
         <p v-if="tutte" class="mini">Pesca da tutte le domande dei quiz, quelle che l'età lascia: si regolano nella sezione «Le domande dei quiz» qui sotto.</p>
         <template v-else-if="saperi.length">
+          <p class="mini">Sono tarate sull'età: di solito non c'è niente da fare. Se una gli va male la trovi in <b>Come va › Difficili</b>, e lì si può spostare o spegnere.</p>
+          <details class="tutte" data-gioco-tutte>
+          <summary>Vedi e ritocca tutte ({{ saperi.length }})</summary>
           <ul class="domande">
             <li v-for="s in saperi" :key="s.chiave" :class="{ spenta: !sapereAcceso(s.chiave) }" :data-gioco-sapere="s.chiave">
               <span class="testo"><b>{{ s.nome }}</b><i v-if="s.ex">{{ s.ex }}</i>
@@ -137,6 +140,7 @@ const saperi = computed(() => saperiDelGioco(chiave.value).map(k => {
             </li>
           </ul>
           <p class="mini">Le domande sono le stesse in ogni gioco che le usa: spegnerne una vale per tutti, e lo dice accanto.</p>
+          </details>
         </template>
         <p v-else class="mini">Questo gioco non fa domande di scuola, o non le ha ancora elencate qui.</p>
       </div>
@@ -170,6 +174,7 @@ const saperi = computed(() => saperiDelGioco(chiave.value).map(k => {
 .num div { flex:1; padding:6px; border-radius:10px; background:#f7f2e8; text-align:center }
 .num b { display:block; font-size:14px }
 .num small { font-size:10px; color:#8a8576 }
+.tutte > summary { min-height:40px; display:flex; align-items:center; font-size:13px; font-weight:700; color:#4a3fd1; cursor:pointer }
 .domande { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px }
 .domande li { display:flex; align-items:flex-start; gap:10px; padding:8px 0; border-bottom:1px solid #f1ebdf }
 .domande li:last-child { border-bottom:0 }

@@ -1,5 +1,5 @@
 <script setup>
-// La settimana di un bambino: minuti, difficili e migliorate, e tre tasti su ogni difficile. Al posto dell'avviso in posta (vedi docs/genitori/come-va.md).
+// La settimana di un bambino: minuti, difficili e migliorate, e quattro tasti su ogni difficile (anche «Non chiedergliela più»: le eccezioni si gestiscono qui, non in una lista di tutto). Al posto dell'avviso in posta (vedi docs/genitori/come-va.md).
 import { ref } from 'vue'
 import Taratura from '../components/eta/Taratura.vue'
 import { SETTIMANA } from './alleggerire.js'
@@ -9,8 +9,9 @@ const props = defineProps({
   settimana: { type: Object, required: true }, // settimanaDi di quiz/comeva.js
   eta: { type: Number, default: null },
   alleggerite: { type: Object, default: () => ({}) }, // settings.alleggerite: per dire «fino a quando»
+  spente: { type: Array, default: () => [] }, // le domande che un grande ha spento: { tipo, nome }
 })
-const emit = defineEmits(['prova', 'rimanda', 'va-bene'])
+const emit = defineEmits(['prova', 'rimanda', 'va-bene', 'spegni', 'riaccendi'])
 
 const tarando = ref(null) // la tipologia di cui è aperta la ✎
 
@@ -68,12 +69,24 @@ function applica(r, { ritocco }) {
                   @click="tarando = tarando === r.tipo ? null : r.tipo">Più avanti di mezzo anno</button>
           <button type="button" data-azione="settimana-va-bene"
                   @click="emit('va-bene', r)">Va bene così</button>
+          <button type="button" class="spegni" data-azione="settimana-spegni"
+                  @click="emit('spegni', r)">Non chiedergliela più</button>
         </div>
         <Taratura v-if="tarando === r.tipo && eta != null" :livello="livello(r)" :livelli="livelli(r)"
                   :eta="eta" :ritocco="r.ritocco" :chiave="r.tipo" :parte="1"
                   @applica="applica(r, $event)" @chiudi="tarando = null" />
       </li>
     </ul>
+
+    <template v-if="spente.length">
+      <h3>Le hai spente tu</h3>
+      <ul class="righe" data-spente>
+        <li v-for="x in spente" :key="x.tipo" class="spenta" :data-spenta="x.tipo">
+          <div class="voce"><span class="testo"><b>{{ x.nome }}</b><i>non gli viene più chiesta</i></span>
+            <button type="button" data-azione="settimana-riaccendi" @click="emit('riaccendi', x)">Riaccendi</button></div>
+        </li>
+      </ul>
+    </template>
 
     <h3>Migliorate</h3>
     <p v-if="!settimana.confronto" class="vuoto" data-settimana-attesa>
@@ -97,6 +110,8 @@ function applica(r, { ritocco }) {
 </template>
 
 <style scoped>
+.spegni { color: #8c2f2f }
+.spenta .voce { display: flex; align-items: center; justify-content: space-between; gap: 8px }
 .settimana { display: grid; gap: 8px; padding: 12px; text-align: left; border-radius: 16px; background: #fff;
              box-shadow: 0 1px 6px #0000000f }
 .settimana h2 { margin: 0 }
