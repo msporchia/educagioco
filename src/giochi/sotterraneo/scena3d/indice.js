@@ -19,6 +19,7 @@ import { creaPost } from './post.js'
 import { creaEtichette } from './etichette.js'
 import { creaCose } from './cose.js'
 import { creaEroe, disegnaEroe } from './eroe.js'
+import { creaEroe3d, eroe3dAcceso } from './eroe3d.js'
 import { creaRacconto, assalto } from './racconto.js'
 import { creaAzione } from './azione.js'
 import { costruisciPiano } from './piano.js'
@@ -54,6 +55,7 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
   const polvere = ACCESI.polvere ? creaPolvere(scena, POLVERE, luci.condivise, maschera) : NIENTE
   const etichette = creaEtichette(strato)
   const eroe = creaEroe()
+  const eroe3d = eroe3dAcceso() ? creaEroe3d(scena) : null     // in prova: il personaggio in 3D al posto dello sprite (`#eroe2d` lo spegne)
   // la fiamma della torcia in mano all'eroe: una sola, si sposta con lui (scena3d/eroe.js)
   const fiammaEroe = ACCESI.fiamme ? creaFiamme(scena, maschera, [{ scala: 0.85, cx: 0, cz: 0, x: 0, y: -9, z: 0 }]) : null
   if (fiammaEroe) fiammaEroe.accesa(0, false)
@@ -183,7 +185,7 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
     for (const s of piano.sorgenti) if (s.cella != null) s.vis = piano.vis.ora[s.cella] || 0
     luci.distribuisci(piano.sorgenti, eroe.x, eroe.z, t)
     disegnaEroe(eroe, corsa, { figure: figureEroe, luci, etichette, camera: cam, dt: dtVero, dtScena: dt, t, fontana: fo, portale: (passando && passando.portale) || piano.portale, bersaglio: scontro.bersaglio(corsa),
-                       fiamma: fiammaEroe, aloni, scintille: ACCESI.scintille ? scintille : null })
+                       fiamma: fiammaEroe, aloni, scintille: ACCESI.scintille ? scintille : null, modello: eroe3d })
     luci.spegni(dtVero)
     // le scintille delle torce: solo da quelle che si vedono adesso
     if (ACCESI.scintille) for (const s of piano.sorgenti) if (s.trema && s.vis > 0.2 && Math.random() < dt * 3) scintille.emetti(s.pos.x, s.pos.y - 0.05, s.pos.z - 0.15, 1, { forza: 0.3, su: 1.4, vita: 0.9, caldo: 0.3, taglia: 0.035 })
