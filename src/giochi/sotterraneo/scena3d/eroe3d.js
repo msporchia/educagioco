@@ -25,12 +25,14 @@ export const vestiEroe = (g, roba = {}) => vestiDotazione(g, dotazioneDi(roba))
 
 /** Lo stesso con la dotazione già decisa (`dotazioneDi`: gli id della collezione e l'armatura col pregio). → `togli()`. */
 export function vestiDotazione(g, d) {
-  const togliArma = equipaggia(g, { destra: d.destra ? creaDaId(d.destra) : null, sinistra: d.sinistra ? creaDaId(d.sinistra) : null })
+  const destra = d.destra ? creaDaId(d.destra) : null, sinistra = d.sinistra ? creaDaId(d.sinistra) : null
+  const togliArma = equipaggia(g, { destra, sinistra })
+  g.userData.armiAnima = [destra, sinistra].filter(a => a && a.userData.anima)   // le fiamme e i bagliori delle armi vive vanno animati (da soli sono enormi)
   const togliCorpo = d.corpo && TIPI.includes(d.corpo.tipo) ? vesti(g, d.corpo.tipo, d.corpo.pregio) : null
   // lo slot testa non esiste ancora nel gioco: per guardare gli elmi e i cappelli basta `#testa=elmo-cornuto` nell'indirizzo
   const idTesta = (/[#&?]testa=([\w-]+)/.exec(typeof location === 'undefined' ? '' : location.hash + location.search) || [])[1]
   const togliTesta = idTesta ? copri(g, idTesta) : null
-  return () => { togliArma(); if (togliCorpo) togliCorpo(); if (togliTesta) togliTesta() }
+  return () => { togliArma(); g.userData.armiAnima = null; if (togliCorpo) togliCorpo(); if (togliTesta) togliTesta() }
 }
 
 /** Ogni istanza ha i suoi materiali (il lampo cambia l'emissivo di uno solo); torna l'elenco per tingerli. */
@@ -87,6 +89,7 @@ export function creaEroe3d(scena) {
       if (e.assalto) posaColpo(g, Math.min(1, e.assalto.t / Math.max(0.01, e.assalto.picco)))
       if (g.userData.anima) g.userData.anima(e.t * 0.12)
       if (g.userData.animaArmatura) g.userData.animaArmatura(e.t * 0.12)
+      if (g.userData.armiAnima) for (const w of g.userData.armiAnima) w.userData.anima(e.t * 0.12)
       // il lampo
       const rosso = Math.min(1, e.colpito * 2), verde = Math.min(1, e.cura * 1.2)
       const tinta = `${rosso.toFixed(2)}|${verde.toFixed(2)}|${trasparenza.toFixed(2)}`
