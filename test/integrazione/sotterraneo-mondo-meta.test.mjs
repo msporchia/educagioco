@@ -18,6 +18,7 @@ import { seminaIlSotterraneo, campagnaSeminata } from '../aiuto/sotterraneo-semi
 import { controlla, uguale, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
 import { ilMondo, postiDi, terraDelMondo } from '../../src/giochi/sotterraneo/motore/mondo-sopra.js'
 import { campoVersoLaMeta } from '../../src/giochi/sotterraneo/motore/meta-sopra.js'
+import { stradaDelMondo } from '../../src/giochi/sotterraneo/motore/strada-sopra.js'
 import { missioneDi } from '../../src/giochi/sotterraneo/dati/missioni.js'
 
 const browser = await apriBrowser()
@@ -35,7 +36,8 @@ async function toccaIl(sel) {
 const m = ilMondo()
 const terra = terraDelMondo(m)
 const cripta = postiDi(m, 'ingresso').find(p => p.chiave === 'altare')
-const campo = campoVersoLaMeta(terra, cripta.accanto)
+const sd = stradaDelMondo(m)
+const campo = campoVersoLaMeta(terra, cripta.accanto, sd)
 const cella = async () => (await page.locator('[data-eroe-mondo]').getAttribute('data-cella')).split(',').map(Number)
 const carta = sel => page.locator(`[data-meta-carta] ${sel}`)
 async function entra() {
@@ -64,6 +66,11 @@ await entra()
   dentro('e il conto resta sotto le 150 chiamate', g.chiamate, 10, 150)
   dentro('e i 400 mila triangoli', g.triangoli, 1000, 400000)
   nota(`con la scia: ${g.chiamate} chiamate, ${Math.round(g.triangoli / 1000)}k triangoli, ${g.scia} luci`)
+  // la scia esce dalla piazza lungo la strada, non fra le case: le luci dentro il villaggio stanno sulla strada vera
+  const luci = await page.evaluate(() => window.__mondo3d.scena.S.scia.luci.map(l => [l.x, l.z]))
+  const dentroIlVillaggio = luci.filter(([lx, lz]) => lx < m.villaggio.x + m.villaggio.w + 2 && lz < m.villaggio.y + m.villaggio.h)
+  const suStrada = dentroIlVillaggio.filter(([lx, lz]) => sd(Math.floor(lx), Math.floor(lz)) > 0).length
+  controlla('la scia nel villaggio sta sulla strada', dentroIlVillaggio.length >= 3 && suStrada >= dentroIlVillaggio.length * 0.9, `${suStrada}/${dentroIlVillaggio.length}`)
   // il velo della strada si vede ma non si salva: la cripta non è «trovata», e la nebbia salvata non ha la sua strada
   uguale('la cripta non è trovata per finta', await page.locator('[data-posto="altare"]').getAttribute('data-trovato'), '0')
   uguale('e nel bit della nebbia (quello che si salva) la sua strada non c\'è', await page.evaluate(([x, z]) => window.__sotterraneo3d.visto(x, z), [cripta.accanto.x + 0.5, cripta.accanto.y + 0.5]), false)
