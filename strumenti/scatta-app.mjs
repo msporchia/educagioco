@@ -139,7 +139,7 @@ if (domande.length) {
   await page.waitForSelector('.tastierino', { timeout: 5000 })
   for (const c of '0000') await page.click(`.tasto >> text="${c}"`)
   await page.waitForSelector('.carte', { timeout: 5000 })
-  await page.click('[data-scheda="giochi"]')
+  await page.click('[data-scheda="bambini"]')
   await page.waitForSelector('[data-manopola] .quadro', { timeout: 5000 })
   let n = 0
   for (const d of domande) {

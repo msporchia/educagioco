@@ -37,7 +37,7 @@ async function apriProva() {
   await page.waitForSelector('.tastierino', { timeout: 5000 })
   for (const c of '0000') await page.click(`.tasto >> text="${c}"`)
   await page.waitForSelector('.carte', { timeout: 5000 })
-  await page.click('[data-scheda="giochi"]')
+  await page.click('[data-scheda="bambini"]')
   await page.waitForSelector('[data-manopola] .quadro', { timeout: 5000 })
   const sel = '[data-manopola] [data-apri="medie"]'
   if (await page.locator(sel).count() === 0) return false

@@ -83,7 +83,7 @@ const apriTutto = async () => {
 /* la tacca di un pezzo di scuola: `via` è l'ultimo scatto, quello che
    lo spegne; `rimetti` è la riga sotto i due tasti */
 const taraSapere = async (chiave, come) => {
-  await apriScheda('giochi')
+  await apriScheda('bambini')
   await page.waitForSelector('[data-manopola]', { timeout: 5000 })
   await apriTutto()
   /* lo stesso pezzo di scuola può avere una riga in due blocchi: si
@@ -99,7 +99,7 @@ const taraSapere = async (chiave, come) => {
   await page.waitForTimeout(500)
 }
 const taraGioco = async (chiave, verso) => {
-  await apriScheda('giochi')
+  await apriScheda('bambini')
   await page.waitForSelector('[data-manopola]', { timeout: 5000 })
   await apriBlocco('giochi')
   await page.click(`[data-tara-apri="${chiave}"]`)
@@ -149,7 +149,12 @@ await page.waitForSelector('.fermo .barretta.muta', { state: 'attached', timeout
 await digita('0000')
 await page.waitForSelector('.carte', { timeout: 5000 })
 await apriTendine(page)      // le cose che cancellano stanno nella «Zona delicata», chiusa di partenza
-const dentro = await page.evaluate(() => document.body.innerText)
+// il salvataggio sta in «Casa» (è del telefono), le cose che cancellano nel bambino
+const testoQui = () => page.evaluate(() => document.body.innerText)
+let dentro = await testoQui()
+await page.click('[data-scheda="casa"]'); await page.waitForTimeout(150); await apriTendine(page)
+dentro += await testoQui()
+await page.click('[data-scheda="bambini"]'); await page.waitForTimeout(150)
 controlla('con 0000 si entra', dentro.includes('Salva su file'))
 controlla('ci sono tutte e tre le cose',
   dentro.includes('Salva su file') && dentro.includes('Rimetti da un file') && dentro.includes('Cancella'))
@@ -202,8 +207,10 @@ const moneteVere = (await leggiProfilo(page)).coins
 controlla('il seme si è preso le medaglie che gli spettano', moneteVere >= 777,
   `${moneteVere} monete`)
 const scaricato = page.waitForEvent('download', { timeout: 8000 })
+await apriScheda('casa')
 await page.click('.carta >> text="Salva su file"')
 const dl = await scaricato
+await apriScheda('bambini')
 // tenuto da parte: al punto 6 lo si rimette dentro. La cartella è sua
 // e non un nome fisso in /tmp: due giri di test insieme, da due
 // worktree, si porterebbero via il file a vicenda
@@ -264,6 +271,7 @@ uguale('dopo la cancellazione le monete sono a zero', monete, 0)
 await vaiAiGenitori()
 await digita('0000')
 await page.waitForSelector('.carte', { timeout: 5000 })
+await apriScheda('casa')                         // il salvataggio sta in Casa
 await page.setInputFiles('input[type=file]', salvataggio)
 // lo stesso id c'è già (appena cancellato, non eliminato): chiede conferma
 // prima di sovrascriverlo (docs/genitori/cestino-e-posta.md)
@@ -290,6 +298,7 @@ writeFileSync(finto, JSON.stringify({ ciao: 'mondo' }))
 await vaiAiGenitori()
 await digita('0000')
 await page.waitForSelector('.carte', { timeout: 5000 })
+await apriScheda('casa')
 await page.setInputFiles('input[type=file]', finto)
 await page.waitForTimeout(400)
 controlla('un file estraneo viene rifiutato', await page.isVisible('.avviso'))
@@ -307,7 +316,7 @@ controlla('di partenza il castello è in home', await inHome('.carta.gioco[data-
 
 await vaiAiGenitori()
 await digita('0000')
-await apriScheda('giochi')
+await apriScheda('bambini')
 await page.waitForSelector('[data-manopola]', { timeout: 5000 })
 await apriBlocco('giochi')
 /* quanti sono lo dice l'elenco, non un numero scritto qui: un gioco
@@ -366,7 +375,7 @@ controlla('rimessa su «come dice l\'età», il castello torna in home',
 {
   await vaiAiGenitori()
   await digita('0000')
-  await apriScheda('giochi')
+  await apriScheda('bambini')
   await page.waitForSelector('[data-manopola]', { timeout: 5000 })
   await apriBlocco('giochi')
   const fuori = await page.evaluate(() => {
@@ -414,12 +423,15 @@ if (IN_PROVA.length) {
   await digita('0000')
   await apriScheda('giochi')
   await page.waitForSelector('.carta[data-flag="sperimentali"]', { timeout: 5000 })
+  await apriScheda('bambini')               // il quadro sta col bambino, l'interruttore con i giochi
   await apriBlocco('giochi')
   uguale('e non c\'è nemmeno la sua riga nel quadro',
          await page.locator(suaRiga).count(), 0)
 
+  await apriScheda('giochi')
   await page.click('.carta[data-flag="sperimentali"]')
   await page.waitForTimeout(300)
+  await apriScheda('bambini')
   await apriBlocco('giochi')
   uguale('acceso il cancello, i giochi in prova entrano nel quadro',
          await page.locator('[data-manopola] [data-apri="giochi"] .elenco li').count(),
@@ -512,21 +524,13 @@ for (const morta of ['sa', 'domande'])
   uguale(`la scheda «${morta}» non c'è più`,
          await page.locator(`[data-scheda="${morta}"]`).count(), 0)
 
-/* ── l'età si legge dove sta il bambino, si cambia dove si tara ──
-   La manopola col quadro sotto è alta due schermate, e stava in mezzo
-   alla carta di chi gioca: per cambiare il nome a un bambino bisognava
-   scorrere tutto l'elenco delle domande. Qui resta la riga che la dice,
-   col rimando; la manopola vive nella scheda dove si tara. */
-await page.click('[data-scheda="bambini"]')
+/* ── l'età sta nel bambino, con la manopola e il quadro sotto ──
+   La scheda «Giochi» ha solo i giochi: la data di nascita, la manopola e
+   il quadro di cosa si apre stanno col bambino a cui appartengono. */
 await apriScheda('bambini')
 await page.waitForSelector('.carta.chi-gioca', { timeout: 5000 })
-controlla('la carta di chi gioca dice quanti anni ha',
-  (await page.locator('[data-azione="vai-alla-tara"]').innerText()).includes('anni'))
-uguale('e la manopola non è più qui in mezzo',
-  await page.locator('[data-manopola]').count(), 0)
-await page.click('[data-azione="vai-alla-tara"]')
 await page.waitForSelector('[data-manopola] .quadro', { timeout: 5000 })
-controlla('il rimando porta dove si tara, col quadro già aperto',
+controlla('il quadro dell\'età sta nel bambino, col suo quadro',
   await page.isVisible('[data-manopola] .quadro'))
 const anniPrima = (await page.locator('[data-eta-ora]').innerText()).trim()
 const etaScritta = () => leggiProfilo(page).then(p => p.settings.eta)
@@ -732,7 +736,7 @@ await page.waitForTimeout(300)
 await page.click('[data-azione="eta-applica"]')
 await page.waitForTimeout(600)
 
-await apriScheda('giochi')
+await apriScheda('bambini')
 await page.waitForSelector('[data-manopola] .quadro', { timeout: 5000 })
 await scatto(page, 'genitori-domande')
 
@@ -768,7 +772,7 @@ controlla('il laboratorio delle pozioni sparisce dalla home',
           !(await inHome(POZIONI)))
 await vaiAiGenitori()
 await digita('0000')
-await apriScheda('giochi')
+await apriScheda('bambini')
 await page.waitForSelector('[data-manopola]', { timeout: 5000 })
 await apriBlocco('giochi')
 controlla('e la sua riga dice perché, invece di dire solo «spento»',
@@ -1044,6 +1048,7 @@ await page.waitForTimeout(200)
 
 /* la domanda si apre dal quadro, che è l'unico posto da cui si aprono:
    il ▶ di un pezzo di scuola scorre le sue, una per una */
+await apriScheda('bambini')
 await page.waitForSelector('[data-manopola] .quadro', { timeout: 5000 })
 await apriBlocco('medie')
 await page.locator('[data-manopola] [data-apri="medie"] .prova').first().click()
@@ -1127,7 +1132,7 @@ await digita('0000')
 /* Prima si spegne un gioco a mano: è quello che rende questo bambino
    «su misura», ed è quello che la conferma deve annunciare. */
 await taraGioco('sotterraneo', 'no')
-await apriScheda('giochi')
+await apriScheda('bambini')
 await page.waitForSelector('[data-manopola]', { timeout: 5000 })
 
 /* ── mezzo anno dentro la stessa fascia: si applica, e lo dice ──

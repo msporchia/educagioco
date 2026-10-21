@@ -47,7 +47,7 @@ await page.waitForSelector('.carte', { timeout: 5000 })
 
 controlla('le domande stanno con i giochi, in una scheda sola',
   await page.isVisible('[data-scheda="giochi"]'))
-await page.click('[data-scheda="giochi"]')
+await page.click('[data-scheda="bambini"]')
 await page.waitForSelector('[data-manopola] .quadro', { timeout: 5000 })
 
 const apriBlocco = async k => {
@@ -263,7 +263,7 @@ await semina(page, { coins: 100, settings: { eta: 6, sa: {} } })
 await page.click('[data-azione="grandi"]')
 await page.waitForSelector('.tastierino', { timeout: 5000 })
 for (const c of '0000') await page.click(`.tasto >> text="${c}"`)
-await page.click('[data-scheda="giochi"]')
+await page.click('[data-scheda="bambini"]')
 await page.waitForSelector('[data-manopola] .quadro', { timeout: 5000 })
 
 await apriBlocco('giochi')
@@ -327,7 +327,7 @@ await scatto(page, 'quadro-pezzo-di-scuola')
   await page.click('[data-azione="grandi"]')
   await page.waitForSelector('.tastierino', { timeout: 5000 })
   for (const c of '0000') await page.click(`.tasto >> text="${c}"`)
-  await page.click('[data-scheda="giochi"]')
+  await page.click('[data-scheda="bambini"]')
   await page.waitForSelector('[data-manopola] .quadro', { timeout: 5000 })
 
   const segnati = page.locator('[data-manopola] [data-apri] [data-va-male]')
