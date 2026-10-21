@@ -1,9 +1,12 @@
 // Le anteprime 3D della roba, dell'eroe e dei mostri (docs/sotterraneo/anteprime-3d.md), la parte senza three: quale modello per
 // quale oggetto (la stessa mappa che veste l'eroe in scena, eroe3d.js), le chiavi della cache e la coda che le disegna una per volta.
+// Un oggetto si disegna con la figura dei fogli (roba3d-pura.js, docs/sotterraneo/roba-3d.md); MODELLO_DI è il ripiego quando il
+// modulo della sua famiglia non c'è o la figura non si costruisce.
 import { COSE, baseDi } from '../dati/cose.js'
-import { rangoDellaRarita } from '../dati/pezzi.js'
+import { rangoDellaRarita, RARITA } from '../dati/pezzi.js'
+import { figuraDi, lookDi, famigliaDi, eUnaCollana, gettone, daGettone } from './roba3d-pura.js'
 
-// quale modello 3D (eroi3d/collezione.js) per quale oggetto dell'inventario; chi non c'è prende quello della sua famiglia
+// il ripiego: quale modello della collezione (eroi3d/collezione.js) per quale oggetto; chi non c'è prende quello della sua famiglia
 export const MODELLO_DI = {
   'spada-corta': 'spada-corta', spada: 'spada-lunga', spadone: 'due-mani', sciabola: 'scimitarra', 'spada-del-ladro': 'stocco',
   'pugnale-vampiro': 'pugnale', 'spada-di-ghiaccio': 'lama-ghiaccio',
@@ -35,46 +38,81 @@ export function pregioDi(k) {
 }
 
 /**
- * Cosa ha in mano e addosso l'eroe 3D: `roba` = { mano, mancina, corpo } (chiavi). L'arco si tiene nella sinistra, il resto nella
- * destra; la sinistra porta lo scudo (o la seconda arma) solo se la mano non è un arco o un'arma a due mani.
- * → { destra, sinistra (id della collezione o null), corpo: { tipo, pregio } | null }
+ * Il pezzo 3D di un oggetto: { figura (dei fogli, o null), id (il ripiego della collezione, o null), rarita, elemento }, o null se
+ * non ha né l'una né l'altro. Lo usano l'eroe in scena e le anteprime; roba3d.js lo costruisce.
+ */
+export function pezzo3dDi(k) {
+  const c = cosaDi(k)
+  if (!c) return null
+  const figura = figuraDi(k)
+  const id = c.dove === 'mano' || c.dove === 'mancina' ? modelloDi(k) : null
+  if (!figura && !id) return null
+  const l = lookDi(k)
+  return { figura, id, rarita: l.rarita, elemento: l.elemento }
+}
+
+/**
+ * Cosa ha in mano e addosso l'eroe 3D: `roba` = { mano, mancina, corpo, collo } (chiavi). L'arco si tiene nella sinistra, il resto
+ * nella destra; la sinistra porta lo scudo (o la seconda arma) solo se la mano non è un arco o un'arma a due mani.
+ * → { destra, sinistra, collo (pezzi 3D, pezzo3dDi, o null), corpo: { tipo, pregio, figura, rarita, elemento } | null }
  */
 export function dotazioneDi(roba = {}) {
   const mano = cosaDi(roba.mano) || {}
-  const d = { destra: null, sinistra: null, corpo: null }
-  const id = roba.mano ? modelloDi(roba.mano) : null
-  if (id) { if (mano.famiglia === 'archi') d.sinistra = id; else d.destra = id }
-  if (roba.mancina && mano.famiglia !== 'archi' && mano.mani !== 2) d.sinistra = modelloDi(roba.mancina) || 'rotella'
+  const d = { destra: null, sinistra: null, corpo: null, collo: null }
+  const p = roba.mano ? pezzo3dDi(roba.mano) : null
+  if (p) { if (mano.famiglia === 'archi') d.sinistra = p; else d.destra = p }
+  if (roba.mancina && mano.famiglia !== 'archi' && mano.mani !== 2) {
+    d.sinistra = pezzo3dDi(roba.mancina) || { figura: null, id: 'rotella', rarita: 'comune', elemento: 'nessuno' }
+  }
   const tipo = baseDi(roba.corpo)
-  if (ARMATURE.includes(tipo)) d.corpo = { tipo, pregio: pregioDi(roba.corpo) }
+  if (ARMATURE.includes(tipo)) {
+    const l = lookDi(roba.corpo)
+    d.corpo = { tipo, pregio: pregioDi(roba.corpo), figura: figuraDi(roba.corpo), rarita: l.rarita, elemento: l.elemento }
+  }
+  // al collo solo le collane (gli anelli si vedono nelle anteprime)
+  const collo = roba.collo ? pezzo3dDi(roba.collo) : null
+  if (collo && collo.figura && eUnaCollana(collo.figura)) d.collo = collo
   return d
+}
+
+// l'armatura nelle chiavi: `<tipo>.<pregio>.<figura>.<lettera della rarità>.<elemento>`
+const gettoneCorpo = c => (c ? `${c.tipo}.${c.pregio}.${c.figura || '-'}.${(RARITA[c.rarita] || RARITA.comune).lettera}.${c.elemento || 'nessuno'}` : '-')
+function corpoDaGettone(s) {
+  const p = String(s || '').split('.')
+  if (!ARMATURE.includes(p[0])) return null
+  const g = daGettone(`${p[2] || '-'}.-.${p[3] || 'c'}.${p[4] || 'nessuno'}`)
+  return { tipo: p[0], pregio: Number(p[1]) || 1, figura: g ? g.figura : null, rarita: g ? g.rarita : 'comune', elemento: g ? g.elemento : 'nessuno' }
 }
 
 const eroeValido = e => (EROI.includes(e) ? e : 'cavaliere')
 
 /**
- * La chiave dell'anteprima di una cosa (`{ chiave, dove, … }` come la danno le viste), o null se non ha un modello 3D (anelli,
- * collane, pozioni, torce…): `arma:<id>`, `scudo:<id>`, `armatura:<tipo>:<pregio>:<eroe>` (l'armatura sta su chi la porta).
+ * La chiave dell'anteprima di una cosa (`{ chiave, dove, … }` come la danno le viste), o null se non ha un modello 3D (pozioni,
+ * torce, i gioielli senza figura…): `arma:<gettone>`, `scudo:<gettone>`, `gioiello:<gettone>`, `armatura:<tipo>:<pregio>:<eroe>:<corpo>`
+ * (l'armatura sta su chi la porta). Il gettone (roba3d-pura.js) dice figura, ripiego, rarità ed elemento: due pezzi con la stessa
+ * figura e la stessa rarità sono la stessa anteprima.
  */
 export function chiaveDellaCosa(cosa, eroe = 'cavaliere') {
   const k = cosa && (cosa.chiave || null)
   if (!k) return null
   const c = cosaDi(k)
   if (!c) return null
-  if (c.dove === 'mano') { const id = modelloDi(k); return id ? `arma:${id}` : null }
-  if (c.dove === 'mancina') { const id = modelloDi(k); return id ? `scudo:${id}` : null }
+  if (c.dove === 'mano' || c.dove === 'mancina') { const g = gettone(pezzo3dDi(k)); return g ? `${c.dove === 'mano' ? 'arma' : 'scudo'}:${g}` : null }
   if (c.dove === 'corpo') {
-    const tipo = baseDi(k)
-    return ARMATURE.includes(tipo) ? `armatura:${tipo}:${pregioDi(k)}:${eroeValido(eroe)}` : null
+    const d = dotazioneDi({ corpo: k })
+    return d.corpo ? `armatura:${d.corpo.tipo}:${d.corpo.pregio}:${eroeValido(eroe)}:${gettoneCorpo(d.corpo)}` : null
+  }
+  if (c.dove === 'collo' || c.dove === 'dito') {
+    const p = pezzo3dDi(k)
+    return p && p.figura && famigliaDi(p.figura) === 'gioielli' ? `gioiello:${gettone(p)}` : null
   }
   return null
 }
 
-/** L'eroe vestito: `eroe:<chi>:<destra>:<sinistra>:<corpo.pregio>` (`-` dove non c'è niente); `modo` 'figura' (intero) o 'busto'. */
+/** L'eroe vestito: `eroe:<chi>:<destra>:<sinistra>:<corpo>:<collo>` (gettoni, `-` dove non c'è niente); `modo` 'figura' (intero) o 'busto'. */
 export function chiaveDellEroe(eroe, roba = {}, modo = 'figura') {
   const d = dotazioneDi(roba)
-  const corpo = d.corpo ? `${d.corpo.tipo}.${d.corpo.pregio}` : '-'
-  return `${modo === 'busto' ? 'busto' : 'eroe'}:${eroeValido(eroe)}:${d.destra || '-'}:${d.sinistra || '-'}:${corpo}`
+  return `${modo === 'busto' ? 'busto' : 'eroe'}:${eroeValido(eroe)}:${gettone(d.destra) || '-'}:${gettone(d.sinistra) || '-'}:${gettoneCorpo(d.corpo)}:${gettone(d.collo) || '-'}`
 }
 
 /** Un mostro dello scontro (viste/campo.js: tipo, grado, variante, grosso): `mostro:<tipo>:<grado>:<variante>` o `mostro:grosso:<chi>`. */
@@ -90,13 +128,14 @@ export function leggiChiave(k) {
   const p = String(k || '').split(':')
   const nulla = x => (x === '-' || x === '' || x == null ? null : x)
   switch (p[0]) {
-    case 'arma': case 'scudo': return p[1] ? { tipo: p[0], id: p[1] } : null
-    case 'armatura': return ARMATURE.includes(p[1]) ? { tipo: 'armatura', armatura: p[1], pregio: Number(p[2]) || 1, eroe: eroeValido(p[3]) } : null
-    case 'eroe': case 'busto': {
-      const [tipo, pregio] = (nulla(p[4]) || '').split('.')
-      return { tipo: p[0], eroe: eroeValido(p[1]), destra: nulla(p[2]), sinistra: nulla(p[3]),
-               corpo: ARMATURE.includes(tipo) ? { tipo, pregio: Number(pregio) || 1 } : null }
+    case 'arma': case 'scudo': case 'gioiello': { const g = daGettone(p[1]); return g ? { tipo: p[0], pezzo: g } : null }
+    case 'armatura': {
+      if (!ARMATURE.includes(p[1])) return null
+      const c = corpoDaGettone(p[4]) || { tipo: p[1], pregio: Number(p[2]) || 1, figura: null, rarita: 'comune', elemento: 'nessuno' }
+      return { tipo: 'armatura', armatura: p[1], pregio: Number(p[2]) || 1, eroe: eroeValido(p[3]), corpo: { ...c, tipo: p[1], pregio: Number(p[2]) || 1 } }
     }
+    case 'eroe': case 'busto':
+      return { tipo: p[0], eroe: eroeValido(p[1]), destra: daGettone(p[2]), sinistra: daGettone(p[3]), corpo: corpoDaGettone(p[4]), collo: daGettone(p[5]) }
     case 'mostro':
       if (p[1] === 'grosso') return p[2] ? { tipo: 'mostro', r: { grosso: p[2] } } : null
       return p[1] ? { tipo: 'mostro', r: { tipo: p[1], grado: p[2] || 'comune', variante: nulla(p[3]) } } : null
@@ -105,7 +144,7 @@ export function leggiChiave(k) {
 }
 
 /** Quanti pixel veri per ogni tipo di anteprima (le viste li mostrano a metà: un telefono ha il doppio dei pixel). */
-export const MISURE = { arma: [128, 128], scudo: [128, 128], armatura: [128, 128], eroe: [150, 176], busto: [96, 96], mostro: [96, 96] }
+export const MISURE = { arma: [128, 128], scudo: [128, 128], gioiello: [128, 128], armatura: [128, 128], eroe: [150, 176], busto: [96, 96], mostro: [96, 96] }
 
 /**
  * La coda delle anteprime: `disegna(chiave)` produce l'immagine (testo, o una promessa di testo: la codifica può finire dopo)
