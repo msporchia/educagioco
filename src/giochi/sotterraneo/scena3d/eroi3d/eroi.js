@@ -1,4 +1,4 @@
-// Copia di poc/eroi-3d/ e poc/armi-3d/ (i prototipi restano accanto, autonomi): i quattro eroi e le armi in 3D, in prova (eroe3d.js).
+// Generato da strumenti/promuovi-3d.mjs da poc/eroi-3d/eroi.js: non si tocca a mano (si cambia il prototipo e si rilancia `npm run promuovi3d`).
 // PoC: i quattro eroi giocabili del Sotterraneo come personaggi 3D in codice (three.js), al posto degli sprite.
 // Stile della fattoria 3D (`creaContadino`): chibi, testa ~45% dell'altezza, low-poly morbido a facce piatte, faccia con una
 // trama canvas (occhi grandi, ma decisi: il tono è serio-avventuroso). Autonomo: solo three.
@@ -138,16 +138,49 @@ function scheletro (chiave, o) {
   return g
 }
 
-/** L'idle: respiro, qualcosa che ondeggia (`sway`: { o, ax, az, f, p }) e gli occhi che ammiccano. */
-function finisci (g, extra = null) {
-  const u = g.userData, bustoY = u.busto.position.y, testaY = u.testa.position.y
+// ── l'idle di battaglia ──
+// Tutto è funzione di `t` (+ `userData.fase`, diversa per eroe): niente stato. `posaGuardia` muove le ossa (ginocchia, peso,
+// braccia, testa, il gesto speciale); `anima` fa il resto (respiro, ritardo dei capelli, occhi, bagliore, barba).
+const FASI = { cavaliere: 0, elfa: 1.9, mago: 3.6, nano: 5.3 }
+const FBALZO = { cavaliere: 1.3, elfa: 1.55, mago: 1.2, nano: 1.45 }                      // Hz: il rimbalzo sulle ginocchia
+const GESTI = { cavaliere: { P: 6.4, D: 1.7, off: 2.2 }, elfa: { P: 7.1, D: 1.8, off: 3.5 }, mago: { P: 5.6, D: 1.8, off: 1.0 }, nano: { P: 7.8, D: 2.6, off: 4.0 } }
+/** Il gesto speciale: `k` da 0 a 1 mentre dura (-1 fuori), `n` il numero del ciclo. `t` è il tempo senza la fase. */
+export function gesto (u, t) {
+  const g = GESTI[u.chiave], x = t + u.fase + g.off, n = Math.floor(x / g.P), k = (x - n * g.P) / g.D
+  return k < 1 ? { k, n } : { k: -1, n }
+}
+/** L'istante `t` (senza fase) in cui il gesto numero `n` è a `k` (per le strisce). */
+export function istanteGesto (chiave, n, k) { const g = GESTI[chiave]; return n * g.P - g.off - FASI[chiave] + k * g.D }
+const mescola = (a, b, k) => a + (b - a) * k
+/** L'idle: respiro più marcato, rimbalzo, occhi che ammiccano e capelli/barba che seguono con ritardo. */
+function finisci (g) {
+  const u = g.userData, testaY = u.testa.position.y
+  u.fase = FASI[u.chiave]
   u.anima = t => {
-    const r = Math.sin(t * 1.7)
-    u.busto.scale.y = 1 + 0.014 * r; u.testa.position.y = testaY + 0.004 + 0.004 * r
-    for (const s of u.sway) { s.o.rotation.x = (s.bx || 0) + s.ax * Math.sin(t * s.f + s.p); s.o.rotation.z = (s.bz || 0) + s.az * Math.sin(t * s.f * 0.8 + s.p + 1) }
-    const ciclo = (t * 0.9 + 1.3 + (u.chiave === 'mago' ? 0.4 : 0)) % 4.6, chiuso = ciclo > 4.44
+    const tt = t + u.fase, wb = Math.PI * 2 * FBALZO[u.chiave]
+    const r = Math.sin(tt * 2.1), sy = 1 + 0.032 * r, sx = 1 + 0.024 * r                     // il petto sale e si allarga
+    u.busto.scale.set(sx, sy, sx)
+    u.testa.scale.set(1 / sx, 1 / sy, 1 / sx); for (const b of u.bracci) b.scale.set(1 / sx, 1 / sy, 1 / sx)   // la testa e le braccia (e l'arma) non si deformano
+    u.testa.position.y = testaY
+    for (const s of u.sway) {
+      const lag = Math.sin(wb * tt - 1.5), lag2 = Math.sin(wb * tt * 0.5 - 0.8)             // seguono il rimbalzo con ritardo
+      s.o.rotation.x = (s.bx || 0) + s.ax * (1.2 * Math.sin(tt * s.f + s.p) + 0.7 * lag)
+      s.o.rotation.z = (s.bz || 0) + s.az * (1.2 * Math.sin(tt * s.f * 0.8 + s.p + 1) + 0.7 * lag2)
+    }
+    const ciclo = (tt * 0.9 + 1.3) % 4.6, chiuso = ciclo > 4.44 || (ciclo > 2.3 && ciclo < 2.42)
     const m = trammaFaccia(u.chiave, chiuso); if (u.faccia.material.map !== m) u.faccia.material.map = m
-    if (extra) extra(t, u)
+    const ge = gesto(u, t), pa = u.perniArmi
+    if (u.chiave === 'mago') {                                                              // il bagliore sulla gemma dopo il colpo della staffa
+      const arma = pa && pa.destra && pa.destra.children[0]
+      if (arma && arma.userData.liberi) {
+        if (!arma.userData.bagliore) { const l = new THREE.PointLight(0xc59bff, 0, 1.6, 1.5); l.position.set(0, 1.2, 0.1); arma.add(l); arma.userData.bagliore = l }
+        arma.userData.bagliore.intensity = ge.k > 0.5 ? 3.2 * Math.sin(Math.PI * (ge.k - 0.5) * 2) ** 2 : 0
+      }
+    }
+    if (u.chiave === 'nano' && u.barba) {                                                   // la barba si sistema: uno scuotimento mentre la mano passa
+      const q = ge.k > 0.45 ? Math.sin(Math.PI * (ge.k - 0.45) / 0.55) : 0
+      u.barba.rotation.x += 0.12 * q * Math.sin(ge.k * 40); u.barba.rotation.z += 0.06 * q * Math.sin(ge.k * 31)
+    }
   }
   let tri = 0
   g.traverse(o => { if (o.isMesh) tri += (o.geometry.index ? o.geometry.index.count : o.geometry.attributes.position.count) / 3 })
@@ -349,6 +382,7 @@ function nano () {
   }
   // barba: un muro rosso fino alla cintura, i baffi che si arricciano, le trecce con gli anelli
   const barba = sway(u, perno(testa, 0, cy - R * 0.28, R * 0.55), 0.04, 0.025, 1.2)
+  u.barba = barba
   sfera(barba, 0.255, ba, 0, -0.15, 0.1, 1.08, 0.6, 0.62, 8)
   sfera(barba, 0.235, bal, 0, -0.27, 0.13, 1.05, 0.85, 0.58, 8)
   cono(barba, 0.2, 0.2, ba, 0, -0.45, 0.13, 6).rotation.x = Math.PI
@@ -382,6 +416,7 @@ export function posaMarcia (e, fase) {
   u.gambe[0].rotation.x = s * 0.75; u.gambe[1].rotation.x = -s * 0.75
   u.bracci[0].rotation.set(-s * 0.55, 0, 0.06); u.bracci[1].rotation.set(s * 0.55, 0, -0.06)
   u.busto.position.y = u.altezzaBusto + a * 0.02; u.busto.rotation.y = s * 0.08
+  u.busto.position.x = 0; u.busto.rotation.z = 0; for (const gm of u.gambe) gm.rotation.z = 0
   u.testa.rotation.y = -s * 0.05
 }
 /** Il colpo con il braccio destro, p da 0 (riposo) a 1 (a fondo); il busto si gira. */
@@ -389,15 +424,92 @@ export function posaColpo (e, p) {
   const u = e.userData, k = p < 0.5 ? smussa(p / 0.5) : 1 - smussa((p - 0.5) / 0.5) * 0.0
   u.bracci[1].rotation.set(-0.35 - 1.9 * smussa(Math.min(1, p)), 0, -0.1); u.busto.rotation.y = 0.15 - 0.45 * k
 }
-/** La guardia di riposo, per eroe (con l'arma in mano). */
+/** Un'arma in mano oscilla attorno alla sua posa base (memorizzata la prima volta): la punta si muove appena. */
+function oscilla (p, dx, dy, dz) {
+  if (!p) return
+  const b = p.userData.base || (p.userData.base = { x: p.rotation.x, y: p.rotation.y, z: p.rotation.z })
+  p.rotation.set(b.x + dx, b.y + dy, b.z + dz)
+  return b
+}
+const lim = (x, a, b) => Math.max(a, Math.min(b, x))
+/** La guardia di battaglia, per eroe, viva: ginocchia che rimbalzano (il busto scende di 0.015-0.035, i piedi restano a terra),
+    il peso che passa da un piede all'altro ogni ~3,5 s, braccia e arma che dondolano, la testa che si guarda intorno,
+    e ogni 5-8 s un gesto speciale. Funzione pura di `t` (e di `userData.fase`); `posaColpo` e `posaMarcia` si compongono sopra. */
 export function posaGuardia (e, t = 0) {
-  const u = e.userData, [bs, bd] = u.bracci, r = Math.sin(t * 1.7)
-  u.busto.rotation.set(0, 0, 0); for (const b of [bs, bd]) b.rotation.set(0, 0, 0); for (const gm of u.gambe) gm.rotation.set(0, 0, 0)
-  u.testa.rotation.set(0, 0, 0)
+  const u = e.userData, [bs, bd] = u.bracci, tt = t + (u.fase || 0), wb = Math.PI * 2 * FBALZO[u.chiave]
+  const bz = Math.sin(wb * tt), bn = 0.5 + 0.5 * bz                                         // 0 su, 1 giù
+  const peso = lim(2.2 * Math.sin(tt * 0.9), -1, 1)                                         // -1 sul sinistro, +1 sul destro
+  const o1 = Math.sin(wb * tt + 0.7), o2 = Math.sin(wb * tt + 2.1), lenta = Math.sin(tt * 1.1)
+  const ge = gesto(u, t), k = ge.k, pa = u.perniArmi || {}
+  for (const b of [bs, bd]) b.rotation.set(0, 0, 0)
+  u.busto.rotation.set(0, 0, 0); u.testa.rotation.set(0, 0, 0)
+  let tuffo = 0, busY = 0                                                                   // `tuffo`: un'altra flessione dal gesto
+  // le gambe: una piega appena in avanti, quella scarica più rilassata; i piedi si spostano di pochi mm
+  u.gambe.forEach((gm, i) => {
+    const s = i ? 1 : -1, scarica = 0.5 - 0.5 * s * peso
+    gm.rotation.set(0.01 + 0.012 * bn + 0.012 * scarica, 0, s * (0.012 + 0.008 * bn) - peso * 0.006)
+  })
+  // la testa: ogni tanto si guarda intorno (con un respiro che la porta su e giù)
+  const giro = Math.sin(tt * 1.15) * Math.max(0, Math.sin(tt * 0.43)) ** 2
+  u.testa.rotation.set(0.035 * bz + 0.03 * Math.max(0, Math.sin(tt * 0.43 + 1)), 0.4 * giro, 0.03 * peso)
   switch (u.chiave) {
-    case 'cavaliere': bd.rotation.set(-0.55, 0, -0.12); bs.rotation.set(-0.75, 0, 0.18); u.busto.rotation.y = 0.12; break
-    case 'elfa': bs.rotation.set(-1.45, 0, 0.06); bd.rotation.set(-1.1, 0.45, -0.45); u.busto.rotation.y = -0.25; u.testa.rotation.y = 0.15; break
-    case 'mago': bd.rotation.set(-0.4 - 0.05 * r, 0, -0.1); bs.rotation.set(-0.85 + 0.08 * r, 0, 0.5); u.busto.rotation.y = 0.1; break
-    case 'nano': bd.rotation.set(-0.3, 0, 0.75); bs.rotation.set(-0.55, 0, -0.05); u.busto.rotation.y = 0.1; break
+    case 'cavaliere': {
+      bd.rotation.set(-0.55 + 0.05 * o1, 0, -0.12 + 0.03 * o2); bs.rotation.set(-0.75 + 0.04 * o2, 0, 0.18 + 0.03 * o1)
+      u.busto.rotation.y = 0.12 + 0.04 * lenta
+      const sp = oscilla(pa.destra, 0.06 * o2, 0, 0.05 * o1)                                // la punta della spada oscilla
+      if (k >= 0) {                                                                         // rialza e riassesta la spada
+        const su = k < 0.4 ? smussa(k / 0.4) : 1 - smussa((k - 0.4) / 0.6)
+        const assesta = k > 0.55 ? Math.sin((k - 0.55) * 22) * (1 - k) * 0.5 : 0
+        bd.rotation.x -= 0.7 * su; bd.rotation.z -= 0.12 * su; u.busto.rotation.y += 0.15 * su; u.testa.rotation.y -= 0.2 * su
+        if (sp) pa.destra.rotation.x = sp.x - 0.55 * su + 0.08 * assesta
+        tuffo = 0.01 * su
+      }
+      break
+    }
+    case 'elfa': {
+      bs.rotation.set(-1.45 + 0.03 * o1, 0, 0.06); bd.rotation.set(-1.1 + 0.04 * o2, 0.45, -0.45 + 0.03 * o1)
+      u.busto.rotation.y = -0.25 + 0.03 * lenta; u.testa.rotation.y += 0.15
+      oscilla(pa.sinistra, 0.04 * o2, 0, 0.03 * o1)                                          // l'arco ondeggia appena
+      if (k >= 0) {
+        const su = k < 0.35 ? smussa(k / 0.35) : k < 0.7 ? 1 : 1 - smussa((k - 0.7) / 0.3)
+        if (ge.n % 2 === 0) {                                                               // si ravvia l'orecchio (la mano sale al lato della testa)
+          bd.rotation.set(mescola(-1.1, -2.85, su), mescola(0.45, 0, su), mescola(-0.45, 0.55, su) + 0.05 * Math.sin(k * 30) * su)
+          u.testa.rotation.z -= 0.1 * su; u.testa.rotation.y -= 0.12 * su
+        } else {                                                                            // controlla la corda: la tira un filo e la lascia
+          const tira = Math.sin(Math.PI * k)
+          bd.rotation.x -= 0.14 * tira; bd.rotation.y += 0.3 * tira; u.testa.rotation.y += 0.25 * tira - 0.15 * su; u.busto.rotation.y -= 0.1 * tira
+        }
+      }
+      break
+    }
+    case 'mago': {
+      bd.rotation.set(-0.4 + 0.05 * o1, 0, -0.1 + 0.02 * o2); bs.rotation.set(-0.85 + 0.08 * o2, 0, 0.5 + 0.04 * o1)
+      u.busto.rotation.y = 0.1 + 0.03 * lenta
+      oscilla(pa.destra, 0.04 * o2, 0, 0.05 * o1)                                           // la gemma della staffa ondeggia
+      if (k >= 0) {                                                                         // alza la staffa e la batte a terra
+        const su = k < 0.45 ? smussa(k / 0.45) : k < 0.58 ? 1 - smussa((k - 0.45) / 0.13) : 0
+        const urto = k >= 0.58 ? Math.exp(-(k - 0.58) * 9) * Math.cos((k - 0.58) * 25) : 0
+        bd.rotation.x -= 0.55 * su; bd.rotation.z -= 0.05 * su; bs.rotation.x -= 0.2 * su + 0.05 * urto
+        u.testa.rotation.x -= 0.1 * su; tuffo = 0.025 * Math.max(0, urto) + 0.006 * su
+      }
+      break
+    }
+    case 'nano': {
+      bd.rotation.set(-0.3 + 0.04 * o1, 0, 0.75 + 0.04 * o2); bs.rotation.set(-0.55 + 0.04 * o2, 0, -0.05 + 0.03 * o1)
+      u.busto.rotation.y = 0.1 + 0.03 * lenta
+      oscilla(pa.destra, 0.06 * o2, 0, 0.05 * o1)
+      const arma = pa.destra && pa.destra.children[0]
+      if (arma) arma.rotation.y = 0
+      if (k >= 0) {                                                                         // l'ascia fa un quarto di giro, poi la mano passa sulla barba
+        const giraA = smussa(Math.min(1, k / 0.3)) * (1 - smussa(lim((k - 0.62) / 0.3, 0, 1)))
+        if (arma) arma.rotation.y = Math.PI / 2 * giraA
+        const barba = k > 0.4 ? Math.sin(Math.PI * lim((k - 0.4) / 0.58, 0, 1)) ** 0.6 : 0
+        bd.rotation.x = mescola(bd.rotation.x, -1.55, barba); bd.rotation.z = mescola(bd.rotation.z, -0.35, barba)
+        u.testa.rotation.x += 0.1 * barba; tuffo = 0.01 * Math.sin(Math.PI * k)
+      }
+      break
+    }
   }
+  u.busto.position.y = u.altezzaBusto - (0.015 + 0.02 * bn) - tuffo + busY
+  u.busto.position.x = 0.012 * peso; u.busto.rotation.z = -0.03 * peso
 }

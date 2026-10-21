@@ -1,3 +1,4 @@
+// Generato da strumenti/promuovi-3d.mjs da poc/armi-3d/fucina.js: non si tocca a mano (si cambia il prototipo e si rilancia `npm run promuovi3d`).
 // La fucina comune della collezione: copia di quella di armi.js (che non esporta niente) con in più i pezzi che pulsano
 // da soli ('viva': un materiale emissivo SUO per ogni arma), i pezzi liberi con materiale proprio, le geometrie estruse
 // (lame e scudi dal profilo) e i piccoli effetti (fiamme, braci, orbite, fulmini) che tornano in più armi.

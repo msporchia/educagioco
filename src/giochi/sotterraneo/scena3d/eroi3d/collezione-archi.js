@@ -1,3 +1,4 @@
+// Generato da strumenti/promuovi-3d.mjs da poc/armi-3d/collezione-archi.js: non si tocca a mano (si cambia il prototipo e si rilancia `npm run promuovi3d`).
 // La collezione: dieci archi. Verticali lungo y, il pancione (l'impugnatura) verso +z, le punte e la corda dietro (z < 0), la freccia verso +z.
 import { Fucina, C, sca, cil, con, sfe, ott, ico, toro, poli, cristallo, PIATTA, anima, respira, fiamme, braci, orbita, pulsaLibero } from './fucina.js'
 

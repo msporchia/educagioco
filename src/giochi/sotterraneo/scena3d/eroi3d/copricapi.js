@@ -1,3 +1,4 @@
+// Generato da strumenti/promuovi-3d.mjs da poc/copricapi-3d/copricapi.js: non si tocca a mano (si cambia il prototipo e si rilancia `npm run promuovi3d`).
 // PoC: i copricapi indossabili dei quattro eroi (slot testa): elmi e cappelli dal più umile al raro, tutto in codice three.js.
 // Si monta sul perno `testa` di un eroe di `poc/eroi-3d/eroi.js`; il copricapo di serie (`userData.copricapo`) si nasconde.
 // Ogni pezzo è disegnato in «unità di testa» (R = 1, origine al centro della testa, +z davanti) e il gruppo è scalato su R dell'eroe:

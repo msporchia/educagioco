@@ -1,3 +1,4 @@
+// Generato da strumenti/promuovi-3d.mjs da poc/armi-3d/collezione.js: non si tocca a mano (si cambia il prototipo e si rilancia `npm run promuovi3d`).
 // La collezione di armi 3D: una cinquantina di pezzi, dieci per tipo, dalla più umile alla leggendaria.
 // Contratto: CATALOGO = [{ id, famiglia, nome, grado 1..10, elemento, crea() }], creaDaId(id).
 // Orientamento come `creaArma` di armi.js: origine nel pugno, lama/testa/bastone verso +y; l'arco verticale col pancione

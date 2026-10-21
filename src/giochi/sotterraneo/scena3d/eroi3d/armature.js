@@ -1,3 +1,4 @@
+// Generato da strumenti/promuovi-3d.mjs da poc/armature-3d/armature.js: non si tocca a mano (si cambia il prototipo e si rilancia `npm run promuovi3d`).
 // PoC: l'armatura indossata dai quattro eroi (poc/eroi-3d/eroi.js), costruita SUL personaggio che la riceve.
 // `vesti(eroe, tipo, pregio = 1)` → `togli()`. tipo: 'panciotto' | 'corazza' | 'manto' | 'saio'; pregio 1 comune, 2 buono, 3 raro.
 // Le misure (busto, bracci, gambe) si leggono dal gruppo dell'eroe; i pezzi stanno sui perni (busto, bracci[i], gambe[i]) e

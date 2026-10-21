@@ -1,4 +1,4 @@
-// Copia di poc/eroi-3d/ e poc/armi-3d/ (i prototipi restano accanto, autonomi): i quattro eroi e le armi in 3D, in prova (eroe3d.js).
+// Generato da strumenti/promuovi-3d.mjs da poc/eroi-3d/ascia.js: non si tocca a mano (si cambia il prototipo e si rilancia `npm run promuovi3d`).
 // L'ascia del nano (e del cavaliere, se la vuole): stesso contratto di `creaArma` di armi.js.
 // Origine nel pugno, il manico lungo +y (~0.7), la lama di profilo nel piano x-y con il filo verso +x (di fronte si vede
 // la faccia larga). Un solo grado, 'medio'. Autonoma: solo three.

@@ -1,3 +1,4 @@
+// Generato da strumenti/promuovi-3d.mjs da poc/armi-3d/collezione-scudi.js: non si tocca a mano (si cambia il prototipo e si rilancia `npm run promuovi3d`).
 // La collezione: dieci scudi. La faccia guarda +z; il centro sta sopra e davanti al braccio che lo regge (`chiudi(offset)`).
 import { Fucina, C, sca, cil, con, sfe, ott, ico, toro, poli, profiloScudo, cristallo, PIATTA, anima, respira, braci, orbita, pulsaLibero } from './fucina.js'
 

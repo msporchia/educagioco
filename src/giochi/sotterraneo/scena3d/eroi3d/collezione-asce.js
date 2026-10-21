@@ -1,3 +1,4 @@
+// Generato da strumenti/promuovi-3d.mjs da poc/armi-3d/collezione-asce.js: non si tocca a mano (si cambia il prototipo e si rilancia `npm run promuovi3d`).
 // La collezione: dieci asce. Il manico sale lungo +y dal pugno, la testa sta in alto con il filo verso +x (il profilo si vede di fronte).
 import { Fucina, C, sca, cil, con, sfe, ott, ico, toro, poli, cristallo, PIATTA, anima, respira, fiamme, braci, lampo, orbita } from './fucina.js'
 

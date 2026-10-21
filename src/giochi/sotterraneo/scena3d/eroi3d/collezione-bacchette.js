@@ -1,3 +1,4 @@
+// Generato da strumenti/promuovi-3d.mjs da poc/armi-3d/collezione-bacchette.js: non si tocca a mano (si cambia il prototipo e si rilancia `npm run promuovi3d`).
 // La collezione: dieci bacchette e staffe. L'asta sale lungo +y dal pugno (un po' sotto, per il puntale); la cima porta la magia.
 import { Fucina, C, sca, cil, con, sfe, ott, ico, toro, poli, cristallo, PIATTA, anima, respira, fiamme, braci, orbita, lampo, pulsaLibero } from './fucina.js'
 

@@ -1,4 +1,4 @@
-// Copia di poc/eroi-3d/ e poc/armi-3d/ (i prototipi restano accanto, autonomi): i quattro eroi e le armi in 3D, in prova (eroe3d.js).
+// Generato da strumenti/promuovi-3d.mjs da poc/armi-3d/armi.js: non si tocca a mano (si cambia il prototipo e si rilancia `npm run promuovi3d`).
 // PoC: l'equipaggiamento in 3D «puro» (niente sprite): 4 famiglie × 3 gradi, tutto in codice three.js.
 // Stile della fattoria 3D: pezzi uniti in una mesh per materiale (colori nei vertici, flat shading, come `Cantiere` di
 // dal-sotterraneo.js), salvo le luci (materiale emissivo per colore) e i pezzi che si muovono (liberi).
