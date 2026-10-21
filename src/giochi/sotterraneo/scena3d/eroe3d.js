@@ -7,7 +7,7 @@ import { equipaggia } from './eroi3d/armi.js'
 import { creaDaId } from './eroi3d/collezione.js'
 import { vesti, TIPI } from './eroi3d/armature.js'
 import { copri } from './eroi3d/copricapi.js'
-import { COSE } from '../dati/cose.js'
+import { dotazioneDi } from './anteprime3d-pura.js'
 
 export const eroe3dAcceso = () => typeof location === 'undefined' || !/[#&?]eroe2d\b/.test(location.hash + location.search)
 
@@ -15,18 +15,23 @@ export const eroe3dAcceso = () => typeof location === 'undefined' || !/[#&?]eroe
 const ALTEZZA_SPRITE = 0.72
 const ROSSO = new Color(1, 0.18, 0.12), VERDE = new Color(0.3, 1, 0.55)
 const _v = new Vector3()
-// quale modello 3D (eroi3d/collezione.js) per quale oggetto dell'inventario; chi non c'è prende quello della sua famiglia
-const MODELLO_DI = {
-  'spada-corta': 'spada-corta', spada: 'spada-lunga', spadone: 'due-mani', sciabola: 'scimitarra', 'spada-del-ladro': 'stocco',
-  'pugnale-vampiro': 'pugnale', 'spada-di-ghiaccio': 'lama-ghiaccio',
-  accetta: 'accetta', ascia: 'ascia-guerra', scure: 'scure', bipenne: 'bipenne', mannaia: 'ascia-vichinga', 'bipenne-solare': 'ascia-lava',
-  'arco-corto': 'arco-corto', 'arco-lungo': 'arco-lungo', balestra: 'balestra',
-  verga: 'bacchetta-legno', 'bastone-magico': 'bastone-nodoso', scettro: 'scettro',
-  mazza: 'scure', martello: 'ascia-guerra',
-  'scudo-legno': 'rotella', 'scudo-borchiato': 'scudo-goccia', 'scudo-ferro': 'scudo-rotondo', 'scudo-crociato': 'scudo-cavaliere',
-  'scudo-leone': 'scudo-nanico', 'scudo-teschio': 'scudo-ombra',
+// quale modello per quale oggetto (MODELLO_DI) e il pregio dell'armatura stanno in anteprime3d-pura.js: li usano anche le anteprime
+
+/**
+ * Veste un eroe 3D (`creaEroe`) con la roba: `roba` = { mano, mancina, corpo } (chiavi degli oggetti). La stessa per l'eroe in scena
+ * e per le anteprime (anteprime3d.js). → `togli()`.
+ */
+export const vestiEroe = (g, roba = {}) => vestiDotazione(g, dotazioneDi(roba))
+
+/** Lo stesso con la dotazione già decisa (`dotazioneDi`: gli id della collezione e l'armatura col pregio). → `togli()`. */
+export function vestiDotazione(g, d) {
+  const togliArma = equipaggia(g, { destra: d.destra ? creaDaId(d.destra) : null, sinistra: d.sinistra ? creaDaId(d.sinistra) : null })
+  const togliCorpo = d.corpo && TIPI.includes(d.corpo.tipo) ? vesti(g, d.corpo.tipo, d.corpo.pregio) : null
+  // lo slot testa non esiste ancora nel gioco: per guardare gli elmi e i cappelli basta `#testa=elmo-cornuto` nell'indirizzo
+  const idTesta = (/[#&?]testa=([\w-]+)/.exec(typeof location === 'undefined' ? '' : location.hash + location.search) || [])[1]
+  const togliTesta = idTesta ? copri(g, idTesta) : null
+  return () => { togliArma(); if (togliCorpo) togliCorpo(); if (togliTesta) togliTesta() }
 }
-const PER_FAMIGLIA = { spade: 'spada-corta', asce: 'accetta', archi: 'arco-corto', bacchette: 'bacchetta-legno' }
 
 /** Ogni istanza ha i suoi materiali (il lampo cambia l'emissivo di uno solo); torna l'elenco per tingerli. */
 function clonaMateriali(radice) {
@@ -59,25 +64,8 @@ export function creaEroe3d(scena) {
     const f = `${corsa.mano || ''}|${corsa.mancina || ''}|${corsa.corpo || ''}`
     if (f === firma) return
     firma = f
-    if (arma) arma(); arma = null
-    const mano = COSE[String(corsa.mano || '').split('@')[0]] || {}
-    const dotazione = { destra: null, sinistra: null }
-    const base = k => String(k || '').split('@')[0]
-    const idMano = MODELLO_DI[base(corsa.mano)] || PER_FAMIGLIA[mano.famiglia]
-    if (corsa.mano && idMano) {
-      const a = creaDaId(idMano)
-      // l'arco si tiene nella sinistra, il resto nella destra
-      if (mano.famiglia === 'archi') dotazione.sinistra = a; else dotazione.destra = a
-    }
-    if (corsa.mancina && mano.famiglia !== 'archi' && mano.mani !== 2) dotazione.sinistra = creaDaId(MODELLO_DI[base(corsa.mancina)] || 'rotella')
-    const togliArma = equipaggia(g, dotazione)
-    // l'armatura che ha addosso: il pezzo giusto per l'oggetto (un oggetto con «@» è uno dei pregiati, il pregio sale)
-    const tipo = base(corsa.corpo)
-    const togliCorpo = TIPI.includes(tipo) ? vesti(g, tipo, String(corsa.corpo).includes('@') ? 2 : 1) : null
-    // lo slot testa non esiste ancora nel gioco: per guardare gli elmi e i cappelli basta `#testa=elmo-cornuto` nell'indirizzo
-    const idTesta = (/[#&?]testa=([\w-]+)/.exec(typeof location === 'undefined' ? '' : location.hash + location.search) || [])[1]
-    const togliTesta = idTesta ? copri(g, idTesta) : null
-    arma = () => { togliArma(); if (togliCorpo) togliCorpo(); if (togliTesta) togliTesta() }
+    if (arma) arma()
+    arma = vestiEroe(g, corsa)
     tinte = clonaMateriali(g)
     ultimaTinta = ''
   }
