@@ -2,7 +2,7 @@
    I MOSTRI DEL MONDO DI SOPRA, COL DITO — docs/sotterraneo/mondo-aperto-mostri-scena.md
    tempo: 480
 
-   Nel Sotterraneo 3D i branchi dormono nelle regioni del mondo generato. Qui: entrando nei campi la riga in fondo dice la regione
+   Nel Sotterraneo 3D i branchi dormono nelle regioni del mondo generato. Qui: entrando nei campi la riga in fondo dice la zona
    col suo colore; un branco vicino si sveglia e viene incontro, e lo scontro si apre sul prato, col pannello delle discese; un
    mostro toccato nella scena è il bersaglio; si vince rispondendo, e i caduti restano morti nel salvataggio. Lasciato con la ✕ a
    metà, rientrando i rimasti sono lì accanto e lo scontro si riapre da sé. Svenuti ci si sveglia nella città più vicina con metà
@@ -18,17 +18,36 @@ import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, scegli, scegli
          toccaNelMondo, nelDialogo } from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 import { campagnaSeminata } from '../aiuto/sotterraneo-semina.mjs'
-import { ilMondo, cittaInCella } from '../../src/giochi/sotterraneo/motore/mondo-sopra.js'
+import { ilMondoIntero, terraDelMondo, cittaInCella } from '../../src/giochi/sotterraneo/motore/mondo-sopra.js'
+import { popolaMondo, alSicuro, annuncioDi, BLOCCO_ZONA, VERSIONE_SOPRA } from '../../src/giochi/sotterraneo/motore/aperta.js'
 import { pezzoNuovo } from '../../src/giochi/sotterraneo/motore/bottino.js'
 import { seminato } from '../../src/giochi/sotterraneo/motore/livello.js'
 
-// i posti di prova (seme 19, cavaliere, giro 0): una cella a cinque o sei passi da un branco, da cui il branco arriva addosso
-const VESPE = { x: 90.5, z: 43.5 }      // i campi (livello 1–3): due vespe
-const GOBLIN = { x: 113.5, z: 28.5 }    // il colle: due goblin
-const ROVINE = { x: 23.5, z: 104.5 }    // le rovine del guado (7–9): uno zombie e uno scheletro
+// i posti di prova (cavaliere, giro 0), letti dal mondo a percorso coi suoi branchi: una cella del luogo a cinque o sei passi da un
+// branco fatto così (`tipi`: le specie in fila, una delle date), lontana dagli altri branchi, da cui il branco arriva addosso
+const m = ilMondoIntero(), terra = terraDelMondo(m)
+const vivi = popolaMondo({ mondo: m, eroe: 'cavaliere', giro: 0 }).mostri.filter(Boolean)
+function vicinoAlBranco(luogo, tipi) {
+  const ri = m.regioni.findIndex(r => r.chiave === luogo), branchi = new Map()
+  for (const q of vivi) if (q.regione === ri) branchi.set(q.branco, [...(branchi.get(q.branco) || []), q])
+  for (const [b, l] of branchi) {
+    if (!tipi.includes(l.map(q => q.tipo).sort().join())) continue
+    for (let r = 5; r <= 6; r++) for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) {
+      const x = Math.floor(l[0].fx) + dx, y = Math.floor(l[0].fy) + dy
+      if (Math.max(Math.abs(dx), Math.abs(dy)) !== r || !terra.passa(x, y) || alSicuro(m, x, y) || m.reg[y * m.W + x] !== ri) continue
+      if (vivi.some(q => q.branco !== b && Math.hypot(q.fx - x - 0.5, q.fy - y - 0.5) < 9)) continue
+      return { x: x + 0.5, z: y + 0.5 }
+    }
+  }
+  throw new Error(`nessun branco ${tipi} nel luogo ${luogo}`)
+}
+const VESPE = vicinoAlBranco('campi', ['vespa,vespa'])          // la prima zona (livello 1–3): due vespe
+const GOBLIN = vicinoAlBranco('colle', ['goblin,goblin'])       // il colle: due goblin
+const ROVINE = vicinoAlBranco('rovine', ['scheletro,zombie', 'fantasma,zombie', 'zombie,zombie'])   // le rovine: uno zombie e un altro
 const CACCIA = 't:villaggio:caccia-aperta:rovine.zombie:0'
-
-const m = ilMondo()
+const DETTO_VESPE = annuncioDi(m, VESPE.x, VESPE.z, null).testo.replace(/^\S+ /, '')   // «I prati… · livello 1–3», senza il segno del colore
+// la pozione per terra accanto alle rovine
+const POZIONE = (() => { for (let d = 2; d < 6; d++) for (const [dx, dy] of [[-d, 0], [d, 0], [0, -d], [0, d]]) { const x = Math.floor(ROVINE.x) + dx, y = Math.floor(ROVINE.z) + dy; if (terra.passa(x, y)) return { x, y } } })()
 const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser)
 const cdp = await page.context().newCDPSession(page)
@@ -81,7 +100,7 @@ await page.evaluate(p => window.__mondo3d.porta(p.x, p.z), VESPE)
 {
   await page.waitForSelector('[data-avviso-terra][data-annuncio]', { timeout: 20000 })
   const a = page.locator('[data-avviso-terra]')
-  controlla('entrando nei campi la riga dice la regione e la fascia', (await a.innerText()).includes('I campi · livello 1–3'), await a.innerText())
+  controlla('entrando nella prima zona la riga dice la zona e la fascia', (await a.innerText()).includes(DETTO_VESPE), `${await a.innerText()} (atteso ${DETTO_VESPE})`)
   const colore = await a.getAttribute('data-annuncio')
   controlla('col colore per questo eroe', ['verde', 'arancio', 'rosso', 'grigio'].includes(colore), colore)
   nota(`i campi per il cavaliere dopo due discese: ${colore}`)
@@ -118,7 +137,8 @@ await page.evaluate(p => window.__mondo3d.porta(p.x, p.z), VESPE)
   uguale('lo scontro finisce rispondendo giusto', await finoAllaFine(true), 'finito')
   await attendi(page, 1200)
   const a = await avventura()
-  const morti = (a.mondo?.sopra?.morti || []).map(x => x[0])
+  // i morti stanno per zona, col numero dentro la zona (motore/aperta.js, inSalvo)
+  const morti = Object.entries(a.mondo?.sopra?.morti || {}).flatMap(([z, l]) => l.map(([j]) => m.zone.findIndex(Z => Z.chiave === z) * BLOCCO_ZONA + j))
   controlla('i due caduti sono morti nel salvataggio', campo.every(i => morti.includes(i)), `${campo} in ${morti}`)
   controlla('l\'esperienza è salita', (a.crescita?.esp || 0) > (prima.crescita?.esp || 0), `${prima.crescita?.esp} → ${a.crescita?.esp}`)
   uguale('nessuno scontro in sospeso', a.mondo?.sopra?.scontro || null, null)
@@ -150,7 +170,7 @@ await page.evaluate(p => window.__mondo3d.porta(p.x, p.z), VESPE)
 /* ---------- 4. svenuti: la città più vicina, metà delle gemme, i rari restano; la guaritrice cura ---------- */
 {
   const raro = pezzoNuovo({ livello: 3, rarita: 'raro', rnd: seminato(3) })
-  await entra(2, { sopra: { v: 1, eroe: 'cavaliere', giro: 0, passi: 0, morti: [], forze: { vita: 1, energia: 0 }, perTerra: [] } },
+  await entra(2, { sopra: { v: VERSIONE_SOPRA, eroe: 'cavaliere', giro: 0, passi: 0, morti: {}, forze: { vita: 1, energia: 0 }, perTerra: [] } },
               { roba: { ...campagnaSeminata({ finite: 2 }).cfg.avventure.cavaliere.roba, gemme: 40, zaino: [raro, 'pozione-piccola'] } })
   await page.evaluate(p => window.__mondo3d.porta(p.x, p.z), VESPE)
   await aspettaLoScontro()
@@ -182,7 +202,7 @@ await page.evaluate(p => window.__mondo3d.porta(p.x, p.z), VESPE)
 /* ---------- 5. la caccia aperta della bacheca, e il bottino per terra ---------- */
 {
   await entra(6, { quest: { stati: { [CACCIA]: 'presa' }, fatte: 0 },
-                   sopra: { v: 1, eroe: 'cavaliere', giro: 0, passi: 0, morti: [], forze: null, perTerra: [{ cosa: 'pozione', x: 21, y: 104 }] } },
+                   sopra: { v: VERSIONE_SOPRA, eroe: 'cavaliere', giro: 0, passi: 0, morti: {}, forze: null, perTerra: [{ cosa: 'pozione', ...POZIONE }] } },
               { conti: { [CACCIA]: 5 } })
   await page.evaluate(p => window.__mondo3d.porta(p.x, p.z), ROVINE)
   await aspettaLoScontro()
