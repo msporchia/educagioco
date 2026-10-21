@@ -83,6 +83,24 @@ const tappeCon = finite => CAMPAGNA.map((t, i) => ({ indice: i, chiave: t.chiave
   stessaLista('pietreDiOggi: senza doppioni né chiavi che non ci sono', pietreDiOggi(['rifugio', 'forte', 'labirinto', 'boh', 'zona:monte']), ['villaggio', 'zona:ceneri', 'zona:monte'])
 }
 
+/* ── il travaso di chi ha giocato col villaggio di prima (40×26 a ferro di cavallo, firma 521a0901): stessa misura, firma diversa ── */
+{
+  const n = new Uint8Array(m.W * m.H)
+  for (let y = 220; y < 260; y++) for (let x = 20; x < 120; x++) n[y * m.W + x] = 1
+  const prima = { firma: '521a0901', nebbia: nebbiaInBase64(n), dove: { x: 41, y: 241 }, giro: 2, pietre: ['villaggio', 'zona:prati'], parlato: true,
+                  sopra: { v: 1, eroe: 'mago', giro: 2, passi: 300, morti: [[3, 900]], forze: null, perTerra: [] } }
+  controlla('la firma del villaggio di prima non è più quella della mappa', prima.firma !== m.firma)
+  let r = null, errore = null
+  try { r = mondoDaSalvato(m, prima, tappeCon(1)) } catch (e) { errore = e }
+  uguale('si travasa senza errori', errore, null)
+  uguale('è un travaso', r.travasato, true)
+  controlla('la nebbia si rifà dalle discese finite: la piazza nuova si vede', r.nebbia.length === m.W * m.H && visto(r.nebbia, m.partenza))
+  uguale('e si ricomincia nella piazza nuova (il posto di prima può essere dentro una bottega)', r.dove, null)
+  uguale('i mostri morti si buttano', r.sopra, null)
+  stessaLista('le pietre accese restano', r.pietre, ['villaggio', 'zona:prati'])
+  uguale('il giro resta', r.giro, 2)
+}
+
 /* ── una città sola: il villaggio serve tutto ── */
 {
   for (const k of Object.keys(INGRESSI_DEL_MONDO)) uguale(`${dungeonDi(k).nome}: il gemello sta nel villaggio`, cittaDelDungeon(m, k), 'villaggio')
