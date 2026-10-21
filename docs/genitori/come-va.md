@@ -1,18 +1,24 @@
 # La schermata dei grandi e «Come va»
 
-Le tre schede della schermata dei grandi (`src/views/GenitoriView.vue`), la
-scheda che dice se le domande stanno funzionando, e il quaderno dei giudizi.
+Le quattro schede della schermata dei grandi (`src/views/GenitoriView.vue`, nella barra in basso), la
+scheda che dice se le domande stanno funzionando, e il quaderno dei giudizi. Il perché del riordino sta in [riordino.md](riordino.md).
 
-## Tre schede, e si tara in una sola
+## Quattro schede, ognuna «di chi è», e si tara in una sola
 
-- **Bambini** — chi gioca, progressi, codice, guasti; dell'età solo una
-  riga, «Leonardo ha 10 anni · modifica ›», che rimanda all'altra scheda.
-- **Giochi e domande** — la manopola dell'età col quadro sotto
-  ([manopola.md](manopola.md), [quadro.md](quadro.md)). È l'unico posto dove
+- **👶 Bambino** — chi gioca (faccia, nome, aggiungere un altro bambino), gli amici online, i progressi (salva su file, rimetti da un file) e in fondo
+  la **«Zona delicata»**, una tendina chiusa con le cose che cancellano e il cestino.
+- **🎮 Giochi** — «I giochi di <bambino>» ([giochi.md](giochi.md)), «Quando è nato» e la manopola dell'età col quadro sotto
+  ([manopola.md](manopola.md), [quadro.md](quadro.md)), i giochi in prova e le domande dei quiz. È l'unico posto dove
   si tara: provati un elenco di classi con quattro tondi per riga e una fila
   di interruttori per gioco, dicevano la stessa cosa in modi non
   confrontabili, e il primo aveva una seconda tacca dell'età.
-- **Come va** — sotto: le materie, la settimana, il tempo, le domande.
+- **📊 Come va** — sotto: le materie, la settimana, il tempo, le domande.
+- **🏠 Casa** — il telefono, non un bambino: l'**avviso sul salvataggio** («ultimo salvataggio: 12 giorni fa», o «mai salvato», `store/copia.js`),
+  il codice, passare il gioco, i guasti, segnalare, e in fondo la tendina **«Per chi sviluppa»** (contatore fps, qualità 3D, misura del telefono).
+
+Nei test: la barra è `nav.barra-giu` con `[data-scheda="bambini"|"giochi"|"comeva"|"casa"]`; le tendine nascono chiuse e un test che deve premere lì
+dentro le apre con `apriTendine(page)` (`test/aiuto/browser.mjs`); `[data-delicata]`, `[data-sviluppo]`, `[data-copia-avviso]`.
+`integrazione/impostazioni-barra`, `unita/copia`.
 
 ## «Come va»
 
