@@ -4,9 +4,9 @@
 // l'età · acceso · spento), il tempo che ci passa, e le domande che chiede, ognuna con dove altro vale.
 import { ref, computed, onMounted, watch } from 'vue'
 import Carosello from '../home/Carosello.vue'
-import { GIOCHI } from '../../data/giochi.js'
+import { GIOCHI, serveA } from '../../data/giochi.js'
 import { state, nomeCorrente, etaDelBambino, giocoAcceso, fissaGioco, sapereAcceso, accendiSapere, saperiCheMancano,
-         sperimentaliAccesi } from '../../store/profile.js'
+         sperimentaliAccesi, ritoccoSapere, ritocca } from '../../store/profile.js'
 import { inCasa } from '../../data/portata-giochi.js'
 import { eccezioniPerEta } from '../../data/partenze.js'
 import { sapereDi } from '../../data/saperi.js'
@@ -68,9 +68,11 @@ const segno = d => GG[new Date(d.quando).getDay()]
 
 /* ── le domande ── */
 const tutte = computed(() => pescaDaTutte(chiave.value))
+// il ritocco: una tacca di mezzo anno sopra o sotto la taratura, al massimo tre per parte (docs/genitori/ritocchi.md); più è alto, più facili
+const testoRitocco = n => (n === 0 ? 'come dice l\'età' : `${Math.abs(n)} ${Math.abs(n) === 1 ? 'tacca' : 'tacche'} ${n > 0 ? 'più facili' : 'più difficili'}`)
 const saperi = computed(() => saperiDelGioco(chiave.value).map(k => {
   const s = sapereDi(k)
-  return { chiave: k, nome: s ? s.nome : k, ex: s ? s.esempio : '', anche: giochiCheChiedono(k, chiave.value).map(x => (GIOCHI.find(g => g.chiave === x) || {}).nome).filter(Boolean) }
+  return { chiave: k, nome: s ? s.nome : k, ex: s ? s.esempio : '', serve: serveA(chiave.value).includes(k), anche: giochiCheChiedono(k, chiave.value).map(x => (GIOCHI.find(g => g.chiave === x) || {}).nome).filter(Boolean) }
 }))
 </script>
 
@@ -115,7 +117,13 @@ const saperi = computed(() => saperiDelGioco(chiave.value).map(k => {
           <ul class="domande">
             <li v-for="s in saperi" :key="s.chiave" :class="{ spenta: !sapereAcceso(s.chiave) }" :data-gioco-sapere="s.chiave">
               <span class="testo"><b>{{ s.nome }}</b><i v-if="s.ex">{{ s.ex }}</i>
-                <em v-if="s.anche.length">vale anche in: {{ s.anche.join(', ') }}</em></span>
+                <em v-if="s.anche.length">vale anche in: {{ s.anche.join(', ') }}</em>
+                <em v-if="s.serve" class="serve">senza questa il gioco non c'è in home</em>
+                <span class="diff" :data-gioco-difficolta="s.chiave">
+                  <button type="button" aria-label="più difficili" data-diff="giu" @click="ritocca(s.chiave, ritoccoSapere(s.chiave) - 1)">−</button>
+                  <i data-diff-testo>{{ testoRitocco(ritoccoSapere(s.chiave)) }}</i>
+                  <button type="button" aria-label="più facili" data-diff="su" @click="ritocca(s.chiave, ritoccoSapere(s.chiave) + 1)">＋</button>
+                </span></span>
               <button type="button" class="tasto" :class="{ su: sapereAcceso(s.chiave) }" :aria-pressed="sapereAcceso(s.chiave)"
                       :aria-label="s.nome" data-gioco-sapere-tasto @click="accendiSapere(s.chiave, !sapereAcceso(s.chiave))"></button>
             </li>
@@ -158,6 +166,10 @@ const saperi = computed(() => saperiDelGioco(chiave.value).map(k => {
 .testo i { font-style:normal; font-size:12px; color:#6c6757 }
 .testo em { align-self:flex-start; margin-top:3px; padding:2px 7px; border-radius:8px; background:#fff1d6; color:#8a5a00; font-style:normal; font-size:11px }
 .domande li.spenta .testo b, .domande li.spenta .testo i { opacity:.45; text-decoration:line-through }
+.testo em.serve { background:#fde5e5; color:#9a2b2b }
+.diff { display:flex; align-items:center; gap:6px; margin-top:6px }
+.diff button { width:36px; height:32px; border:0; border-radius:10px; background:#ece6d8; font:inherit; font-size:16px; font-weight:700; touch-action:manipulation }
+.diff i { font-style:normal; font-size:12px; color:#6c6757; min-width:110px; text-align:center }
 .tasto { flex:none; position:relative; width:46px; height:28px; border:0; border-radius:14px; background:#cfc9b8; touch-action:manipulation }
 .tasto::after { content:""; position:absolute; top:3px; left:3px; width:22px; height:22px; border-radius:50%; background:#fff; transition:left .15s }
 .tasto.su { background:#2f9e5b }

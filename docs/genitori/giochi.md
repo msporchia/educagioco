@@ -17,7 +17,8 @@ vede il bambino. Il bambino dice «questo gioco mi chiede le divisioni»: il gen
      «gli serve X, che è spento», «è un gioco in prova»).
   2. **Il tempo che ci passa**: gli ultimi 7 giorni (barre, anche i giorni vuoti), «da quando gioca», giorno più lungo, giorni su 7. I conti
      sono `perGiornoDi` in `store/sessioni.js` (stessa forma di `perGiorno`, stesse sessioni di [../core/sessioni.md](../core/sessioni.md)).
-  3. **Le domande di questo gioco**: i saperi che chiede, ognuno con nome, esempio e **«vale anche in: …»**, e un interruttore.
+  3. **Le domande di questo gioco**: i saperi che chiede (o di cui ha bisogno: le pozioni, «senza questa il gioco non c'è in home»), ognuno con nome, esempio,
+     **«vale anche in: …»**, un interruttore e **la difficoltà a tacche** (`ritocca`: mezzo anno sopra o sotto la taratura, al massimo tre per parte, come la ✎ del quadro).
 
 ## Le domande: da dove le sa
 
@@ -33,7 +34,7 @@ motore ([../apprendimento/saperi.md](../apprendimento/saperi.md)) e non si cambi
 ## Cosa manca (voci aperte)
 
 - Elencare le domande degli altri giochi (inglese, spagnolo, bancarella, asteroidi…): oggi li dice «non le ha ancora elencate».
-- La difficoltà per gioco («Quanto sono difficili») e «Come funziona questo gioco» (la guida) nella pagina del gioco.
+- «Come funziona questo gioco» (la guida) nella pagina del gioco.
 - «Ricomincia questo gioco» in una tendina.
 - Togliere dalla scheda sotto («Interruttori», «Le domande dei quiz») quello che questa sezione già fa.
 

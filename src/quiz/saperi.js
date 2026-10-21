@@ -5,7 +5,7 @@
    store/profile.js. Lo usa solo GenitoriView. */
 
 import { MODULI } from './nucleo/registro.js'
-import { GIOCHI, chiedeA } from '../data/giochi.js'
+import { GIOCHI, chiedeA, serveA } from '../data/giochi.js'
 import { moduliDi } from '../data/domande-dei-giochi.js'
 import { sorteQualunque } from './nucleo/sorte.js'
 import { sorgentiDi, esempioDi as esempioFra } from './nucleo/esempi.js'
@@ -49,6 +49,7 @@ export function saperiDelGioco(chiave) {
   const metti = k => { if (!visti.has(k)) { visti.add(k); fuori.push(k) } }
   for (const m of MODULI) if (moduliDi(chiave).includes(m.id)) for (const t of m.tipi) metti(t.sa[0])
   for (const k of chiedeA(chiave)) metti(k)
+  for (const k of serveA(chiave)) metti(k)        // quelli senza cui il gioco non c'è (le pozioni: misure e conversioni)
   return fuori
 }
 

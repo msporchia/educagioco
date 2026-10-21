@@ -61,6 +61,23 @@ controlla('spegnere una domanda la spegne nel profilo (vale per tutti)', (await 
 controlla('e la riga si vede spenta', await page.locator('[data-gioco-sapere="divisioni"].spenta').count() === 1)
 await div.locator('[data-gioco-sapere-tasto]').click()
 
+/* ── la difficoltà di una domanda: una tacca alla volta, e zero non si scrive ── */
+const molt = page.locator('[data-gioco-sapere="moltiplicazioni"]')
+controlla('di partenza «come dice l\'età»', /come dice l'età/.test(await molt.locator('[data-diff-testo]').innerText()))
+await molt.locator('[data-diff="su"]').click()
+await attendi(page, 700)
+controlla('una tacca più facile: il testo e il profilo', /1 tacca più facili/.test(await molt.locator('[data-diff-testo]').innerText()) && (await leggiProfilo(page)).settings.ritocchi?.moltiplicazioni === 1)
+await molt.locator('[data-diff="giu"]').click(); await molt.locator('[data-diff="giu"]').click()
+await attendi(page, 700)
+controlla('due tacche giù: una più difficile', /1 tacca più difficili/.test(await molt.locator('[data-diff-testo]').innerText()) && (await leggiProfilo(page)).settings.ritocchi?.moltiplicazioni === -1)
+await molt.locator('[data-diff="su"]').click()
+await attendi(page, 700)
+controlla('tornata a zero: la voce sparisce dal profilo', (await leggiProfilo(page)).settings.ritocchi?.moltiplicazioni === undefined)
+
+/* ── un gioco che ha bisogno di un sapere per esserci: lo dice ── */
+await vai('pozioni')
+controlla('le pozioni dicono che senza misure e conversioni non ci sono', /senza questa il gioco non c'è/.test(await page.locator('[data-gioco-sapere="misure"]').innerText()) && await page.locator('[data-gioco-sapere="conversioni"]').count() === 1)
+
 /* ── un gioco che pesca da tutto il mazzo, e uno senza domande ── */
 await vai('sotterraneo')
 await page.locator('[data-pannello-gioco]').scrollIntoViewIfNeeded()
