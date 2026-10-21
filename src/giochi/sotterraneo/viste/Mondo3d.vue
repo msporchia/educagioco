@@ -714,8 +714,12 @@ const punti = new Map()   // le dita sulla vista (il mouse no: non pizzica)
 // (docs/sotterraneo/mondo-3d-telecamera.md). Nella veduta il dito scorre il mondo, come prima
 function premi(e) {
   if (e.pointerType === 'mouse' && e.button !== 0) return
-  if (e.target.closest && e.target.closest('.sot-terra-sopra > *, .sot-terra-sotto > *, [data-fumetto], .sot-foglio, [data-torna-eroe]')) { giu = null; strisciato = false; return }
-  if (e.pointerType !== 'mouse') punti.set(e.pointerId, { x: e.clientX, y: e.clientY })
+  const su = e.target.closest ? e.target.closest('.sot-terra-sopra > *, .sot-terra-sotto > *, [data-fumetto], .sot-foglio, [data-torna-eroe]') : null
+  if (su && e.target.closest('.sot-foglio, [data-torna-eroe]')) { giu = null; strisciato = false; return }   // un foglio aperto o il tasto: non sono della vista
+  if (e.pointerType !== 'mouse') {
+    if (e.isPrimary) { punti.clear(); pizzico = null }   // il primo dito di un gesto nuovo: quello che era rimasto non si è mai alzato
+    punti.set(e.pointerId, { x: e.clientX, y: e.clientY })
+  }
   if (punti.size >= 2) {
     giu = null; strisciato = true   // il pizzico non è un tocco: il click che segue non cammina
     if (punti.size === 2 && scena && !props.veduta && !inScontro) {
@@ -724,6 +728,7 @@ function premi(e) {
     }
     return
   }
+  if (su) { giu = null; strisciato = false; return }   // una carta o un fumetto: il dito che parte di lì non sposta la vista
   giu = { x: e.clientX, y: e.clientY, mouse: e.pointerType === 'mouse' }; strisciato = false
 }
 function muovi(e) {

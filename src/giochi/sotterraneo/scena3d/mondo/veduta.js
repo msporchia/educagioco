@@ -5,6 +5,7 @@
 // l'ombra non si rifà. Il dito sposta la vista (`trascina`) e due dita la zoomano: la vista libera resta nel mondo e a `LONTANO`
 // celle dall'eroe, finché non lo si manda da qualche parte (`segui`); docs/sotterraneo/mondo-3d-telecamera.md.
 import { PerspectiveCamera, Vector3, Vector2, MathUtils } from 'three'
+import { CAMERA, impostaInclinazione } from '../costanti.js'
 
 export const VISTA = { inclinazione: 52, fov: 34, largo: 15, fondo: 18, guarda: 0.5, zoomMin: 0.8, scontro: 9.5, tetto: 24, piuLarga: 28 }
 // la vista libera: quante celle dall'eroe al massimo (due zone si toccano, non tutto il mondo), e il margine dal bordo del mondo
@@ -31,17 +32,19 @@ export function limitaVista(x, z, eroe, W, H) {
 
 export function creaVeduta(m, quota = () => 0) {
   const camera = new PerspectiveCamera(VISTA.fov, 1, 0.5, 2400)
-  let L = 1, A = 1, sopra = 0, sotto = 0, zoom = 1, primo = true, ombra = 0, vx = null, w1 = 24
+  let L = 1, A = 1, sopra = 0, sotto = 0, zoom = 1, primo = true, ombra = 0, vx = null, w1 = 24, inclScontro = VISTA.inclinazione
   const libera = { on: false, x: 0, z: 0 }
   const st = { k: 0, x: 0, z: 0, y: 0, inc: VISTA.inclinazione, d: 40, spostaY: 0 }
   const largaVeduta = () => Math.min(m.W + 6, Math.max(VEDUTA.largo, (m.H + 10) * camera.aspect * 1.25))
   const ndc = new Vector2(), o = new Vector3(), dir = new Vector3(), tmp = new Vector3()
 
   // la distanza per vedere `largo` × `fondo` con l'apertura e la forma dello schermo
-  function distanza(largo, fondo, inc) {
+  // `fraz`: quanto dell'altezza resta libero (il pannello dello scontro copre il fondo)
+  function distanza(largo, fondo, inc, fraz = 1) {
     const v = MathUtils.degToRad(camera.fov) / 2, oz = Math.atan(Math.tan(v) * camera.aspect), i = MathUtils.degToRad(inc)
-    return Math.max((largo / 2) / Math.tan(oz), (fondo / 2) * Math.sin(i) / Math.tan(v))
+    return Math.max((largo / 2) / Math.tan(oz), (fondo / 2) * Math.sin(i) / (Math.tan(v) * fraz))
   }
+  impostaInclinazione(VISTA.inclinazione)   // gli sprite delle discese tornano ad allungarsi per i 52° (lo scontro li abbassa, sotto)
   return {
     camera,
     get veduta() { return st.k > 0.5 },
@@ -84,10 +87,17 @@ export function creaVeduta(m, quota = () => 0) {
       const celle = palco ? Math.max(VISTA.scontro, palco.celle || 0) : 0
       const largo = Math.min(VISTA.tetto, Math.max(VISTA.largo, camera.aspect * 18))
       const copre = Math.max(1, A / libero * 0.85)
-      const d1 = (palco ? distanza(celle, celle, VISTA.inclinazione) : distanza(largo, VISTA.fondo, VISTA.inclinazione)) * copre
+      // lo scontro: la telecamera si abbassa (dolcemente: gli sprite si allungano di conseguenza, come giù) e si alza sopra il pannello
+      // delle azioni, che copre il fondo (`coperto`, px): come `scena3d/camera.js`
+      const coperto = palco ? palco.coperto || 0 : 0
+      inclScontro += ((palco ? CAMERA.inclinazioneScontro : VISTA.inclinazione) - inclScontro) * (primo ? 1 : 1 - Math.exp(-dt * 3))
+      if (!palco && Math.abs(inclScontro - VISTA.inclinazione) < 0.05) inclScontro = VISTA.inclinazione
+      impostaInclinazione(inclScontro)
+      const d1 = palco ? distanza(celle, celle, inclScontro, Math.max(0.35, (A - coperto) / A))
+                       : distanza(largo, VISTA.fondo, VISTA.inclinazione) * copre
       w1 = larghezzaVista(d1, camera.fov, camera.aspect)
       if (!palco) zoom = zoomLimitato(zoom, w1)   // lo schermo può essere cambiato (si gira il telefono)
-      const vicino = { x: fuoco.x, z: fuoco.z, y: fuoco.y + VISTA.guarda, inc: VISTA.inclinazione, d: d1 * (palco ? 1 : zoom) }
+      const vicino = { x: fuoco.x, z: fuoco.z, y: fuoco.y + VISTA.guarda, inc: palco ? inclScontro : VISTA.inclinazione, d: d1 * (palco ? 1 : zoom) }
       const lv = largaVeduta()
       if (!veduta) vx = null
       else vx = Math.min(m.W + 3 - lv / 2, Math.max(lv / 2 - 3, vx ?? centro.x))
@@ -98,7 +108,7 @@ export function creaVeduta(m, quota = () => 0) {
       const k = primo ? 1 : 1 - Math.exp(-dt * (veduta ? 4 : 3.2))
       st.x += (t.x - st.x) * k; st.z += (t.z - st.z) * k; st.y += (t.y - st.y) * k; st.inc += (t.inc - st.inc) * k; st.d += (t.d - st.d) * k
       // l'eroe sta a metà dello spazio libero, un poco più giù del mezzo (come sulla terra dipinta); nella veduta il mondo a metà
-      const voluto = A / 2 - (sopra + libero * (0.55 - 0.05 * b))
+      const voluto = palco ? coperto * 0.5 : A / 2 - (sopra + libero * (0.55 - 0.05 * b))   // nello scontro comanda il pannello, non le carte
       st.spostaY += (voluto - st.spostaY) * (primo ? 1 : 1 - Math.exp(-dt * 5))
       if (Math.abs(st.spostaY) > 0.5) camera.setViewOffset(L, A, 0, st.spostaY, L, A)
       else if (camera.view) camera.clearViewOffset()
