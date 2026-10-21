@@ -6,6 +6,7 @@
 // fuori dal villaggio».
 import { fbm, quotaTerreno, LIVELLO_ACQUA, ERBA, ACQUA } from './suolo.js'
 import { pezzoDi } from './pezzi.js'
+import { ricettaDi } from './props-tana-dati.js'
 
 const PI = Math.PI
 const hash = (a, b, c = 0) => {
@@ -28,6 +29,9 @@ export const FORME = {
   carrello: { R: 1 }, binari: { R: 2 }, travi: { R: 1 }, minerale: { R: 1 }, argano: { R: 1 }, cairn: { R: 0 },
   cartello: { R: 0, strada: true, dist: 9 }, totem: { R: 0, strada: true, dist: 9 }, miliare: { R: 0, strada: true, dist: 9 },
   // quelli che stanno solo attorno agli ingressi
+  // il segno delle tane (props-tana-dati.js): tutti piccoli, a una cella; le varianti «Tana» disegnano come i loro fratelli maggiori
+  sassiTana: { R: 0 }, cenereTana: { R: 0 }, braciTana: { R: 0 }, bozzoliTesi: { R: 0 }, canneSpezzate: { R: 0 }, nidoFango: { R: 0 }, carcassa: { R: 0 }, mucchio: { R: 0 }, croceStorta: { R: 0 },
+  ossaTana: { R: 0 }, crepaTana: { R: 0 }, rocciaTana: { R: 0 }, macerieTana: { R: 0 },
   teschio: { R: 0 }, braciere: { R: 0 }, pozza: { R: 0 }, bozzolo: { R: 0 }, palizzata: { R: 1 }, sacchi: { R: 0 }, trave: { R: 0 }, crepa: { R: 1 }, lanterna: { R: 0 },
 }
 export const TABELLA = {
@@ -110,6 +114,25 @@ function senzaPosti(m, ok, sciolti = false) {
       for (let x = Math.max(0, p.x - g); x <= Math.min(m.W - 1, p.x + p.w - 1 + g); x++) f[y * m.W + x] = 0
   }
   return f
+}
+
+// Le celle dove può stare il segno di una tana: come `celleLibere`, ma attorno al cuore della tana (±4 celle) anche sulle celle che il
+// generatore ha riservato per lei (il suo quadrato di 7×7: niente decoro, niente altro)
+function celleDelleTane(m, k, tane) {
+  const ok = new Uint8Array(m.W * m.H), Z = m.zone[k]
+  const confini = m.confini.filter(c => c.da === Z.chiave || c.a === Z.chiave).map(c => c.s)
+  const v = m.villaggio
+  for (const t of tane) for (let y = Math.max(0, t.y - 4); y <= Math.min(m.H - 1, t.y + 4); y++) for (let x = Math.max(0, t.x - 4); x <= Math.min(m.W - 1, t.x + 4); x++) {
+    const i = y * m.W + x
+    if (m.zona[i] !== k || !m.reg[i]) continue
+    if (m.terreno[i] !== ERBA || m.strada[i] || m.blocco[i] === 1 || m.campo[i] || m.zonaCitta[i] || m.ponte[i] >= 0 || m.varco[i] >= 0 || m.isola[i]) continue
+    if (m.riservato[i] && (Math.abs(x - t.x) > 3 || Math.abs(y - t.y) > 3)) continue
+    if (confini.some(s => Math.abs(m.arco[i] - s) < LONTANO_DAL_CONFINE)) continue
+    if (x >= v.x - 3 && y >= v.y - 3 && x < v.x + v.w + 3 && y < v.y + v.h + 3) continue
+    ok[i] = 1
+  }
+  for (const q of m.confini) for (const c of q.celle || []) for (let y = c.y - 3; y <= c.y + 3; y++) for (let x = c.x - 3; x <= c.x + 3; x++) if (x >= 0 && y >= 0 && x < m.W && y < m.H) ok[y * m.W + x] = 0
+  return ok
 }
 
 // i posti da provare attorno a quello voluto, dal più vicino
@@ -195,6 +218,27 @@ export function propsDellaZona(m, k) {
         metti(tipo, x, z, giro, { ingresso: g.chiave })
         break
       }
+    }
+  }
+  // 1b. il segno di ogni tana della zona (props-tana-dati.js): attorno al suo cuore, in cerchio, ognuno sulla sua cella buona (la
+  // mappa di blocco non si tocca: sono segni, non muri). Il caso è della tana: la sua cella dà il giro del cerchio e le piccole mosse
+  const tane = m.regioni.filter(R => R.zona === k && R.tana && ricettaDi(R.habitat)).map(R => ({ R, x: R.tana.x, y: R.tana.y }))
+  if (tane.length) {
+    const buone = senzaPosti(m, celleDelleTane(m, k, tane))
+    for (const t of tane) {
+      const cx0 = t.x + 0.5, cz0 = t.y + 0.5, giro0 = hash(t.x, t.y, 7001) * 360
+      ricettaDi(t.R.habitat).forEach(([tipo, r, gradi, giro], i) => {
+        const e = hash(t.x, t.y, 7100 + i)
+        // al posto voluto, e se non va un poco più in qua o più in là, a giri sempre più larghi
+        for (const [dr, da] of [[0, 0], [0.4, 0], [-0.4, 0], [0, 12], [0, -12], [0.4, 14], [-0.4, -14]]) {
+          const rr = r ? Math.max(0, r + dr + (e - 0.5) * 0.3) : 0, a = (giro0 + gradi + da + (e - 0.5) * 10) * PI / 180
+          const x = cx0 + Math.cos(a) * rr, z = cz0 + Math.sin(a) * rr, cx = Math.floor(x), cy = Math.floor(z)
+          if (!dentro(cx, cy) || !puo(buone, tipo, cx, cy, x, z)) continue
+          const ry = giro === 'tang' ? -(a + PI / 2) : giro === 'centro' ? Math.atan2(-Math.cos(a), -Math.sin(a)) : giro + a
+          metti(tipo, x, z, ry, { tana: t.R.chiave })
+          break
+        }
+      })
     }
   }
   // 2. lungo le strade: un cartello, un totem o una pietra miliare ogni tanto, a una decina di celle l'uno dall'altro

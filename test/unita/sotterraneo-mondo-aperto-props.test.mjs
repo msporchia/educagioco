@@ -52,7 +52,7 @@ for (const [k, l] of perZona.entries()) dentro(`${m.zone[k].nome}: qualche centi
     if (m.terreno[k] !== (acqua ? ACQUA : ERBA)) sbagliato++
     if (m.zona[k] !== o.zona) altraZona++
     if (m.strada[k]) strada++
-    if (m.blocco[k] === 1 || m.riservato[k] || m.campo[k] || m.ponte[k] >= 0 || m.varco[k] >= 0) lotto++
+    if (m.blocco[k] === 1 || (m.riservato[k] && !o.tana) || m.campo[k] || m.ponte[k] >= 0 || m.varco[k] >= 0) lotto++
     const v = m.villaggio
     if (m.zonaCitta[k] || !m.reg[k] || (cx >= v.x - 3 && cy >= v.y - 3 && cx < v.x + v.w + 3 && cy < v.y + v.h + 3)) villaggio++
     for (const c of m.confini) if ((c.da === m.zone[o.zona].chiave || c.a === m.zone[o.zona].chiave) && Math.abs(m.arco[k] - c.s) < 7 && !acqua) confine++
@@ -64,7 +64,7 @@ for (const [k, l] of perZona.entries()) dentro(`${m.zone[k].nome}: qualche centi
   uguale('tutti sul terreno giusto (erba, o acqua per le ninfee e i pali) e nel pezzo del loro centro', sbagliato, 0)
   uguale('ognuno su una cella della sua zona', altraZona, 0)
   uguale('nessuno sopra una strada', strada, 0)
-  uguale('nessuno su un lotto, un campo, un ponte, un valico o davanti a una porta riservata', lotto, 0)
+  uguale('nessuno su un lotto, un campo, un ponte, un valico o davanti a una porta riservata (il segno di una tana sta nel quadrato che il generatore le riserva: sotto, il suo test)', lotto, 0)
   uguale('nessuno nel villaggio (né attorno)', villaggio, 0)
   uguale('nessuno sul confine fra due zone (il fiume col ponte, la cresta col valico)', confine, 0)
   uguale('nessuno nella cella dove l\'eroe si ferma davanti a un posto', porta, 0)
@@ -97,7 +97,7 @@ for (const [k, l] of perZona.entries()) dentro(`${m.zone[k].nome}: qualche centi
 /* ── ogni habitat il suo repertorio ── */
 {
   const ripetitorio = {}
-  for (const o of lista) { if (o.ingresso || o.strada) continue; const h = m.regioni[m.reg[Math.floor(o.z) * W + Math.floor(o.x)]].habitat; (ripetitorio[h] ||= new Set()).add(o.tipo) }
+  for (const o of lista) { if (o.ingresso || o.strada || o.tana) continue; const h = m.regioni[m.reg[Math.floor(o.z) * W + Math.floor(o.x)]].habitat; (ripetitorio[h] ||= new Set()).add(o.tipo) }
   const presenti = new Set(m.regioni.map(r => r.habitat))
   for (const [h, tab] of Object.entries(TABELLA)) {
     if (!presenti.has(h)) continue

@@ -3,7 +3,7 @@
 Barili, lanterne, insegne nel villaggio; lapidi, rovine, menhir, palafitte, fumarole, carrelli fuori; lo scenario attorno a ogni
 ingresso. Il generatore non li conosce (la firma e le nebbie salvate non cambiano): si derivano a scena dalle celle, con un caso
 proprio, sempre uguali, e si posano nel cantiere del pezzo (`disegnaProps`, `disegnaPropsAperti`: niente mesh per oggetto, la nebbia
-li legge dall'`aBase`). Non cambiano la mappa di blocco. Il mondo e i pezzi: [mondo-3d.md](mondo-3d.md).
+li legge dall'`aBase`). Non cambiano la mappa di blocco. Il mondo e i pezzi: [mondo-3d.md](mondo-3d.md). Il segno delle tane: [sotto](#la-tana).
 
 ## Gli oggetti del villaggio
 
@@ -51,6 +51,49 @@ celle del ponte o del valico: lì si vede che il terreno cambia), né dentro un 
   davanti alla pietra dei prati si andava a 434k triangoli.
 - **Per cambiarli**: un tipo nuovo è una funzione in `FORME_DISEGNO` (origine a terra, davanti verso +z), una voce in `FORME` e nella
   `TABELLA` (o nei `SCENARI`); fumarole e bracieri mettono fumo, braci e fiamme in `cose` (le fiamme al più 24 in tutto).
+
+## La tana
+
+Ogni luogo ha una **tana** (la cella `tana` della pianta: ci stanno il signore e le sue guardie, [mondo-aperto-mostri.md](mondo-aperto-mostri.md))
+e oggi ha un **segno che si riconosce**: così una taglia «ripulisci la tana» o «il signore della regione» porta in un posto che si
+vede. Tre cose, tutte derivate a scena (la pianta e la sua firma non cambiano, la mappa di blocco nemmeno):
+
+- **Il segno**: un cerchio di 6–11 pezzi attorno al cuore, a 1,2–3 celle (passo 1b di `propsDellaZona`; la ricetta per famiglia di
+  habitat in `props-tana-dati.js`, le forme nuove in `props-aperto.js`). Ogni pezzo sta sulla sua cella buona (erba, mai strada, ponte,
+  acqua, campo, lotto o ingresso, mai sul confine fra due zone), dentro il quadrato di 7×7 che il generatore riserva alla tana
+  (`celleDelleTane`: lì, e solo lì, anche sul `riservato`); se non cade lì si prova un poco più in qua. Il giro del cerchio lo dà la
+  cella della tana (sempre lo stesso). Solo nelle zone caricate, come ogni oggetto. Portano `tana: <luogo>` e non fanno parte della
+  `TABELLA`: il test del repertorio per habitat li salta.
+- **La macchia**: terra battuta di 3–4 celle dal bordo storto sotto e attorno, **più scura** al cuore (`forzaDellaTana`, letta da
+  `pesiDellaCella` in `terreno.js`: il peso della terra oltre l'1 dice «scura» e il fragment la scurisce, niente attributo in più).
+  È nella pianta, non nella zona: si vede anche dal terreno lontano.
+- **La vita**: il fumo del focolare e le braci e le fiamme della fossa portano il nome del luogo (`.tana` sulla sorgente): quando il
+  signore è morto (`signoriMorti` di `stato`, `signoreVivo`) la scena non li emette più (`S.taneSpente`). La tana resta com'è: è un
+  posto, non un mostro. Il resto (le braci disegnate, le ossa) è fermo e non si spegne.
+
+| famiglia (habitat) | il segno |
+|---|---|
+| prato (prati, campi, frutteto, cimitero, rovine) | un focolare spento: cenere e un filo di fumo, un cerchio di cinque tratti di sassi, ossa e un teschio su palo; il cimitero ha anche una croce storta, le rovine delle macerie |
+| bosco (bosco, foresta, secco) | tre ragnatele fra due rami secchi, con bozzoli appesi, due bozzoli per terra, ossa |
+| brughiera | cinque pietre erette in cerchio, ossa fra l'erica, un teschio |
+| palude (palude, lago) | un nido di fango col cratere e le uova, quattro mazzi di canne spezzate, due pozze, ossa |
+| ceneri | una fossa di braci accese (con scintille e fiamme), terra bruciata, travi annerite, una roccia spaccata, ossa |
+| monte (monte, roccia) | due carcasse di bestie, un mucchio di pietre e due ometti, ossa |
+| landa | quattro croci storte, ossa e un teschio, un ometto |
+
+Costa circa 1 270 triangoli a tana (30k in tutto il mondo, ma se ne vede una per volta) e nessuna chiamata in più: le forme vanno nel
+cantiere del pezzo. **Davanti a una tana** (`node strumenti/scatta-app.mjs 'sotterraneo3d=mondo&eroe=cavaliere&dpr=1&nebbia=no' --dist --tana
+bosco --senza-mostri`): bosco 91 → 90 chiamate e 401,8k → 406,6k triangoli, ceneri 68 → 70 e 253,2k → 255,1k, landa 76 → 75 e 322,4k →
+324,5k; il cimitero col dito 82 chiamate, 379k. Il bosco è già oltre i 400k senza la tana: il limite lo sfiora il decoro, non il segno.
+**Nella veduta** c'è un teschio 💀 (`[data-nome-posto="tana:<luogo>"]`) quando la cella del cuore è stata vista (la stessa regola della
+taglia «esplora»), grigio e più chiaro se il signore è morto; un salvato non ricorda i signori morti, quindi di una zona lontana mai
+rivista dopo il caricamento il teschio resta acceso finché la zona non si ricarica (o si uccide il signore di nuovo: nuovo giro, i
+signori tornano).
+
+Nei test: `unita/sotterraneo-tane-segno` (ogni tana ha il suo segno, sempre lo stesso, mai su strada, acqua, ingresso, lotto, nel suo
+quadrato, la pianta invariata, un segno per famiglia, la macchia, i signori dove il segno li aspetta, il fumo che si spegne col signore)
+e `integrazione/sotterraneo-mondo-tana` (col dito: nessuna tana nella veduta di chi parte, il costo davanti a una, il teschio dopo
+averla vista, grigio col signore morto).
 
 Nei test: `unita/sotterraneo-mondo-props` (gli oggetti del villaggio: niente prima della zona, sempre uguali, mai su strade, posti o
 dove ci si ferma, dentro il villaggio, sul davanti solo cose basse e niente di alto davanti a chi ci sta, niente orti né cose del
