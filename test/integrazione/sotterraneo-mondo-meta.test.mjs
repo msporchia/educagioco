@@ -5,21 +5,20 @@
    andare (la cripta dei re, con la sua icona) e quanti passi mancano;
    per terra la scia di luci azzurre e il velo di nuvole aperto lungo la
    strada, che non entra nella nebbia salvata. Nella veduta d'insieme la
-   meta c'è anche sotto le nuvole, e toccarla è «portami lì»; il tasto
-   della carta ferma l'eroe. «Portami lì» porta davanti alla cripta e ne
-   apre il fumetto; da un prato dove sulla strada c'è un mostro, si
-   ferma quando il mostro compare. Il cartello dice quale freccia porta
-   alla meta. Si tocca come un telefono (`Input.dispatchTouchEvent`).
+   meta c'è anche sotto le nuvole, e toccarla manda l'eroe a piedi. Il
+   cartello dice quale freccia porta alla meta. La meta la sceglie solo
+   il diario («segui questa»), di difetto la storia: con una missione e
+   una taglia in mano resta la storia, e non cambia camminando.
+   Si tocca come un telefono (`Input.dispatchTouchEvent`).
    `node test/esegui.mjs sotterraneo-mondo-meta`
    tempo: 300
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, scatto, attendi, mondoPronto, fermoNelMondo, toccaNelMondo } from '../aiuto/browser.mjs'
-import { seminaIlSotterraneo } from '../aiuto/sotterraneo-semina.mjs'
+import { apriBrowser, apriGioco, azzera, semina, scegli, scatto, attendi, mondoPronto, toccaNelMondo } from '../aiuto/browser.mjs'
+import { seminaIlSotterraneo, campagnaSeminata } from '../aiuto/sotterraneo-semina.mjs'
 import { controlla, uguale, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
 import { ilMondo, postiDi, terraDelMondo } from '../../src/giochi/sotterraneo/motore/mondo-sopra.js'
 import { campoVersoLaMeta } from '../../src/giochi/sotterraneo/motore/meta-sopra.js'
-import { riprendiMondo, alSicuro } from '../../src/giochi/sotterraneo/motore/aperta.js'
-import { SOPRA } from '../../src/giochi/sotterraneo/dati/mondo-aperto-mostri.js'
+import { missioneDi } from '../../src/giochi/sotterraneo/dati/missioni.js'
 
 const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser)
@@ -56,9 +55,9 @@ await entra()
   const [x, y] = await cella()
   dentro('e i passi della strada vera', passi, Math.floor(campo.passi(x, y)) - 1, Math.ceil(campo.passi(x, y)) + 1)
   controlla('detti al bambino', /^a \d+ passi$/.test(await carta('[data-meta-passi]').innerText()), await carta('[data-meta-passi]').innerText())
-  const ic = await carta('.sot3d-meta-icona').boundingBox(), tasto = await carta('[data-azione="portami"]').boundingBox()
+  const ic = await carta('.sot3d-meta-icona').boundingBox()
   controlla('l\'icona si legge (almeno 44 px)', ic.width >= 44 && ic.height >= 44, `${ic.width}×${ic.height}`)
-  controlla('e il tasto si prende col dito (almeno 44 px)', tasto.height >= 44 && tasto.width >= 44, `${tasto.width}×${tasto.height}`)
+  uguale('niente «portami lì»: per terra ci sono già le luci', await page.locator('[data-azione="portami"]').count(), 0)
   uguale('l\'icona è la cripta fotografata', await carta('[data-ritaglio]').count(), 1)
   const g = await page.evaluate(() => window.__sotterraneo3d.grafica())
   controlla('per terra c\'è la scia di luci', g.scia > 10, g.scia)
@@ -71,7 +70,7 @@ await entra()
   await scatto(page, 'sotterraneo-meta-carta')
 }
 
-/* ---------- 2. la veduta: la meta sotto le nuvole, e toccarla è «portami lì»; il tasto la ferma ---------- */
+/* ---------- 2. la veduta: la meta sotto le nuvole, e un tocco lì manda l'eroe a piedi ---------- */
 {
   await page.evaluate(() => document.querySelector('[data-casella-barra="mappa"]').click())
   await page.waitForSelector('[data-veduta]', { timeout: 5000 })
@@ -82,13 +81,8 @@ await entra()
   await scatto(page, 'sotterraneo-meta-veduta')
   await toccaIl('[data-nome-posto="meta:altare"]')
   await page.waitForSelector('[data-veduta]', { state: 'detached', timeout: 5000 })
-  await page.waitForSelector('[data-meta-carta][data-guidato="1"]', { timeout: 5000 })
-  controlla('toccata la meta, la veduta si chiude e l\'eroe ci va', await page.locator('[data-eroe-mondo]').getAttribute('data-cammina') === '1')
-  await attendi(page, 1500)
-  uguale('mentre si va il tasto dice «fermati»', (await carta('[data-azione="portami"]').innerText()).includes('fermati'), true)
-  await toccaIl('[data-meta-carta] [data-azione="portami"]')
-  await fermoNelMondo(page)
-  uguale('toccato, l\'eroe si ferma', await page.locator('[data-meta-carta]').getAttribute('data-guidato'), '0')
+  const va = await page.waitForSelector('[data-eroe-mondo][data-cammina="1"]', { state: 'attached', timeout: 5000 }).then(() => true, () => false)
+  controlla('toccata la meta, la veduta si chiude e l\'eroe ci va a piedi', va)
 }
 
 /* ---------- 3. il cartello del villaggio dice quale freccia porta alla meta ---------- */
@@ -102,50 +96,49 @@ await entra()
   await scatto(page, 'sotterraneo-meta-cartello')
 }
 
-/* ---------- 4. «portami lì» porta davanti alla cripta e ne apre il fumetto ---------- */
+/* ---------- 4. la meta la sceglie il diario: di difetto la storia, poi quella scelta, e non cambia camminando ---------- */
 {
+  const GIU = 'rosicchione'                      // il mugnaio, nella torre: la «più vicina» di prima, non la cripta
+  const TAGLIA = 't:villaggio:mappa:mulino:0'    // la X nel mulino
+  const c = campagnaSeminata({ finite: 0, eroe: 'cavaliere', missioni: { [GIU]: 'presa' } })
+  Object.assign(c.cfg.avventure.cavaliere, { mondo: { giro: 0, parlato: true, quest: { stati: { [TAGLIA]: 'presa' }, fatte: 0 } } })
+  await page.evaluate(() => history.replaceState(null, '', location.pathname + location.search))
+  await azzera(page)
+  await semina(page, { coins: 300, settings: { sperimentali: true }, campagne: { sotterraneo: c } })
+  await scegli(page, 'sotterraneo3d')
+  await mondoPronto(page)
   await page.evaluate(() => window.__mondo3d.senzaMostri())
-  await toccaIl('[data-meta-carta] [data-azione="portami"]')
-  await page.waitForSelector('[data-fumetto-di="altare"]', { timeout: 150000 })   // SwiftShader: l'eroe ci arriva piano
-  const [x, y] = await cella()
-  controlla('l\'eroe è davanti alla cripta', Math.hypot(x - cripta.accanto.x, y - cripta.accanto.y) <= 1.5, `${x},${y}`)
-  uguale('e il fumetto ha «scendo»', await page.locator('[data-fumetto-di="altare"] [data-azione="scendi"]').count(), 1)
-  uguale('i passi dicono che si è arrivati', await carta('[data-meta-passi]').innerText(), 'sei arrivato')
-  uguale('la cripta adesso è trovata davvero', await page.locator('[data-posto="altare"]').getAttribute('data-trovato'), '1')
-  await scatto(page, 'sotterraneo-meta-arrivato')
-}
-
-/* ---------- 5. con un mostro sulla strada, «portami lì» si ferma quando compare ---------- */
-let da = null
-{
-  // un prato a qualche passo da un mostro che dorme, fuori dal suo cerchio, da dove la strada verso la cripta gli passa accanto.
-  // Sul mondo a percorso i mostri li mette il motore di sopra (motore/aperta.js, compito B): finché non li sa mettere, la prova aspetta
-  let st = null
-  try { st = riprendiMondo({ mondo: m, eroe: 'cavaliere', giro: 0, salvato: null }) } catch (e) { nota(`il fermo per un mostro aspetta i mostri sul percorso: ${e.message}`) }
-  if (st) for (const q of st.lista || st.mostri) {
-    if (da || q.sveglio || !Number.isFinite(campo.passi(Math.floor(q.fx), Math.floor(q.fy)))) continue
-    for (let dy = -16; dy <= 16 && !da; dy++) for (let dx = -16; dx <= 16 && !da; dx++) {
-      const x = Math.floor(q.fx) + dx, y = Math.floor(q.fy) + dy, d = Math.hypot(x + 0.5 - q.fx, y + 0.5 - q.fy)
-      if (d < SOPRA.vista + 3 || d > SOPRA.vista + 6 || !terra.passa(x, y) || alSicuro(m, x + 0.5, y + 0.5)) continue
-      const via = campo.strada({ x, y })
-      if (via && Math.min(...via.map(v => Math.hypot(v.x + 0.5 - q.fx, v.y + 0.5 - q.fy))) < 2) da = { x, y, i: q.i }
-    }
-  }
-  if (st) controlla('c\'è un prato così', !!da)
-}
-if (da) {
-  await entra()
-  await page.evaluate(([x, y]) => window.__mondo3d.porta(x + 0.5, y + 0.5), [da.x, da.y])
+  await attendi(page, 2000)
+  const meta = () => page.locator('[data-meta-carta]').getAttribute('data-meta')
+  uguale('con una missione e una taglia in mano, niente scelto: la storia', await meta(), 'altare')
+  await page.evaluate(() => window.__mondo3d.vai('ingresso:torre'))
   await attendi(page, 2500)
-  controlla('da lì il mostro non si vede ancora', !(await page.evaluate(() => window.__mondo3d.mostri().map(q => q.i))).includes(da.i))
-  await toccaIl('[data-meta-carta] [data-azione="portami"]')
-  await page.waitForFunction(() => document.querySelector('[data-meta-carta]')?.dataset.guidato === '0' || window.__mondo3d.inScontro(), null, { timeout: 120000 })
-  const fermo = await page.locator('[data-meta-carta]').getAttribute('data-fermato').catch(() => null)
-  controlla('si è fermato per il mostro (o il mostro l\'ha preso)', fermo === 'mostro' || await page.evaluate(() => window.__mondo3d.inScontro()), fermo)
-  const [x, y] = await cella()
-  controlla('prima di arrivare alla cripta', Math.hypot(x - cripta.accanto.x, y - cripta.accanto.y) > 3, `${x},${y}`)
-  if (fermo === 'mostro') controlla('e lo dice', /mostro sulla strada/.test(await page.locator('[data-avviso-terra]').innerText().catch(() => '')))
-  await scatto(page, 'sotterraneo-meta-mostro')
+  uguale('e non cambia andando davanti alla torre', await meta(), 'altare')
+  const segui = async id => {
+    await toccaIl('[data-azione="vita"]')
+    await page.waitForSelector('[data-scheda="missioni"]', { timeout: 5000 })
+    await toccaIl('[data-scheda="missioni"]')
+    await page.waitForSelector(`[data-diario] [data-missione="${id}"]`, { timeout: 5000 })
+    await attendi(page, 300)
+    await toccaIl(`[data-diario] [data-missione="${id}"]`)
+    await page.waitForSelector('[data-dettaglio] [data-azione="segui"]', { timeout: 5000 })
+    await attendi(page, 300)
+    await toccaIl('[data-dettaglio] [data-azione="segui"]')
+    await attendi(page, 300)
+    await toccaIl('[data-diario] [data-chiudi]')
+    await page.waitForSelector('[data-diario]', { state: 'detached', timeout: 5000 })
+    await attendi(page, 1200)
+  }
+  await segui(GIU)
+  uguale('«segui questa» sulla missione: la meta è la sua discesa', await meta(), 'torre')
+  controlla('con la scia', (await page.evaluate(() => window.__sotterraneo3d.grafica().scia)) > 0)
+  await page.evaluate(() => window.__mondo3d.vai('ingresso:altare'))
+  await attendi(page, 2500)
+  uguale('e resta quella anche davanti alla cripta', await meta(), 'torre')
+  await segui(TAGLIA)
+  uguale('«segui questa» sulla taglia: la meta è il suo posto', await meta(), `taglia:${TAGLIA}`)
+  uguale('col suo nome', await carta('[data-meta-nome]').innerText(), missioneDi(TAGLIA).titolo)
+  await scatto(page, 'sotterraneo-meta-scelta')
 }
 
 uguale('nessun errore in console', errori.join(' | '), '')
