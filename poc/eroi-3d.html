@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gli eroi in 3D</title>
+<style>
+  :root { --fondo: #14161b; --carta: #1b1e25; --riga: #2c313a; --testo: #e2e5e0; --tenue: #98a09c; --male: #ff8a7a; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 18px; background: var(--fondo); color: var(--testo); font: 13px/1.4 system-ui, sans-serif; }
+  h1 { font-size: 17px; margin: 0 0 4px; }
+  p { margin: 0 0 12px; color: var(--tenue); max-width: 100ch; }
+  #esito.male { color: var(--male); }
+  figure { margin: 0 0 10px; background: var(--carta); border: 1px solid var(--riga); border-radius: 4px; padding: 4px; width: fit-content; max-width: 100%; }
+  canvas { display: block; border-radius: 3px; max-width: 100%; height: auto; }
+  figcaption { font-size: 11px; color: var(--tenue); margin-top: 3px; }
+</style>
+</head>
+<body>
+<h1>Gli eroi del Sotterraneo in 3D (PoC)</h1>
+<p>Cavaliere, elfa, mago e nano in codice (<code>poc/eroi-3d/eroi.js</code>, l'ascia in <code>ascia.js</code>), con le armi di <code>poc/armi-3d</code>. Parametri: <code>?eroe=mago</code> (uno solo, grande), <code>?vista=dietro|lato</code>, <code>?pausa</code>, <code>?t=</code>, <code>?senzarmi</code>, <code>?idle</code> (i quattro animati in loop), <code>?striscia=idle|gesto</code> (sei istanti per eroe).</p>
+<div id="esito">in corso…</div>
+<div id="righe"></div>
+<script type="module">
+import { WebGLRenderer, Scene, PerspectiveCamera, HemisphereLight, DirectionalLight, Color, CircleGeometry, Mesh, ShadowMaterial, PCFSoftShadowMap, SRGBColorSpace, ACESFilmicToneMapping } from 'three'
+import { creaEroe, posaMarcia, posaGuardia, istanteGesto, CHIAVI } from './eroi-3d/eroi.js'
+import { Box3 } from 'three'
+import { montaAscia } from './eroi-3d/ascia.js'
+import { equipaggia } from './armi-3d/armi.js'
+
+const url = new URLSearchParams(location.search)
+const solo = url.get('eroe'), vista = url.get('vista') || 'tre-quarti'
+const striscia = url.get('striscia'), idle = url.has('idle')
+const pausa = url.has('pausa'), senzaArmi = url.has('senzarmi'), T0 = Number(url.get('t') || 0)
+const errori = []
+const vecchio = console.error
+console.error = (...a) => { errori.push(a.map(String).join(' ').slice(0, 300)); vecchio.apply(console, a) }
+addEventListener('error', e => errori.push(String(e.message)))
+const risultato = window.__prova = { ok: false, errori, triangoli: {} }
+
+const renderer = new WebGLRenderer({ antialias: true, preserveDrawingBuffer: true })
+renderer.setPixelRatio(1); renderer.shadowMap.enabled = true; renderer.shadowMap.type = PCFSoftShadowMap
+renderer.outputColorSpace = SRGBColorSpace; renderer.toneMapping = ACESFilmicToneMapping; renderer.toneMappingExposure = 1.1
+
+function nuovaScena (ampia = 4) {
+  const s = new Scene(); s.background = new Color(0x2a3038)
+  s.add(new HemisphereLight(0xfff0d8, 0x6a5a3a, 1.9))
+  const sole = new DirectionalLight(0xfff1dc, 2.6); sole.position.set(3, 6, 5); sole.castShadow = true
+  sole.shadow.mapSize.set(2048, 2048); sole.shadow.radius = 4; sole.shadow.bias = -0.0008
+  const c = sole.shadow.camera; c.left = -ampia; c.right = ampia; c.top = ampia; c.bottom = -ampia; c.near = 0.5; c.far = 24
+  s.add(sole)
+  const fredda = new DirectionalLight(0xa8c8ff, 0.9); fredda.position.set(-4, 2, -3); s.add(fredda)
+  const m = new Mesh(new CircleGeometry(ampia * 1.2, 40), new ShadowMaterial({ opacity: 0.35 })); m.rotation.x = -Math.PI / 2; m.receiveShadow = true; s.add(m)
+  return s
+}
+function arma (e, chiave) {
+  if (senzaArmi) return
+  if (chiave === 'cavaliere') equipaggia(e, { destra: 'spada:medio', sinistra: 'scudo:medio' })
+  if (chiave === 'elfa') equipaggia(e, { sinistra: 'arco:medio' })
+  if (chiave === 'mago') equipaggia(e, { destra: 'staffa:super' })
+  if (chiave === 'nano') { equipaggia(e, { sinistra: 'scudo:base' }); montaAscia(e, 1) }
+}
+function animaArmi (e, t) {
+  const pa = e.userData.perniArmi; if (!pa) return
+  for (const p of Object.values(pa)) { const a = p.children[0]; if (a && a.userData.anima) a.userData.anima(t) }
+}
+function eroi (chiavi) { return chiavi.map(k => { const e = creaEroe(k); arma(e, k); return e }) }
+function riga (titolo, w, h, didascalia) {
+  const fig = document.createElement('figure'), tela = document.createElement('canvas'); tela.width = w; tela.height = h
+  const did = document.createElement('figcaption'); did.textContent = didascalia
+  fig.append(tela, did); document.getElementById('righe').append(fig); return tela
+}
+function copia (tela, ox, w, h) {
+  const x = tela.getContext('2d'); x.drawImage(renderer.domElement, 0, 0, w, h, ox, 0, w, h)
+}
+const lato = { 'tre-quarti': 0.5, dietro: Math.PI + 0.4, lato: Math.PI / 2, davanti: 0 }[vista] ?? 0.5
+
+// ── riga 1: figura intera, tre quarti ──
+function rigaIntera (chiavi, W, H) {
+  const tela = riga('intera', W, H, chiavi.join(' · ') + ' — figura intera con le armi')
+  const s = nuovaScena(chiavi.length > 1 ? 4 : 2), lista = eroi(chiavi), cam = new PerspectiveCamera(chiavi.length > 1 ? 23 : 30, W / H, 0.1, 60)
+  const sp = chiavi.length > 1 ? 1.3 : 0
+  lista.forEach((e, i) => { e.position.x = (i - (chiavi.length - 1) / 2) * sp; e.rotation.y = chiavi.length > 1 ? [0.5, 0.35, 0.45, 0.4][CHIAVI.indexOf(chiavi[i])] : lato; s.add(e) })
+  if (chiavi.length > 1) { cam.position.set(0, 1.3, 6.0); cam.lookAt(0, 0.85, 0) } else { cam.position.set(0, 1.0, 4.1); cam.lookAt(0, 0.78, 0) }
+  return t => {
+    lista.forEach((e, i) => { posaGuardia(e, t); e.userData.anima(t); animaArmi(e, t) })
+    renderer.setSize(W, H, false); renderer.render(s, cam); copia(tela, 0, W, H)
+  }
+}
+// ── riga 2: in marcia, di tre quarti verso il lato ──
+function rigaMarcia (chiavi, W, H) {
+  const tela = riga('marcia', W, H, 'in marcia (gambe e braccia in movimento)')
+  const s = nuovaScena(4), lista = eroi(chiavi), cam = new PerspectiveCamera(23, W / H, 0.1, 60)
+  lista.forEach((e, i) => { e.position.x = (i - (chiavi.length - 1) / 2) * 1.3; e.rotation.y = 1.0; s.add(e) })
+  cam.position.set(0, 1.2, 5.0); cam.lookAt(0, 0.85, 0)
+  return t => {
+    lista.forEach((e, i) => { posaMarcia(e, t * 5 + i * 1.3); e.userData.anima(t + i); animaArmi(e, t) })
+    renderer.setSize(W, H, false); renderer.render(s, cam); copia(tela, 0, W, H)
+  }
+}
+// ── riga 3: primo piano delle teste, una cella per eroe ──
+function rigaTeste (chiavi, W, H) {
+  const n = chiavi.length, w = W / n
+  const tela = riga('teste', W, H, 'primi piani delle teste (la faccia è metà del personaggio)')
+  const celle = chiavi.map(k => {
+    const s = nuovaScena(1.5), e = creaEroe(k), cam = new PerspectiveCamera(22, w / H, 0.05, 30)
+    e.rotation.y = 0.25; s.add(e)
+    const u = e.userData, sposta = k === 'mago' ? 0.2 : 0
+    const ty = u.altezzaBusto + u.th - 0.03 + u.cy + (k === 'mago' ? 0.12 : 0.02)
+    cam.position.set(0.1, ty + 0.08, 2.05 + sposta); cam.lookAt(0, ty - 0.01, 0)
+    return { e, s, cam }
+  })
+  return t => {
+    renderer.setSize(w, H, false)
+    celle.forEach((c, i) => { posaGuardia(c.e, t); c.e.userData.anima(t); renderer.render(c.s, c.cam); copia(tela, i * w, w, H) })
+  }
+}
+
+// ── strisce: 6 istanti per eroe (0..2 s di idle, o l'arco del gesto speciale) ──
+function rigaStrisce (chiavi, modo) {
+  const N = 6, w = 233, H = 330, W = N * w
+  const tela = riga('striscia', W, H * chiavi.length, modo === 'gesto' ? 'il gesto speciale di ogni eroe: sei istanti dall\'inizio alla fine' : 'idle di battaglia: sei istanti da 0 a 2 s')
+  const celle = chiavi.map(k => {
+    const s = nuovaScena(1.6), e = creaEroe(k), cam = new PerspectiveCamera(24, w / H, 0.1, 30)
+    arma(e, k); e.rotation.y = 0.45; s.add(e); cam.position.set(0, 1.05, 4.7); cam.lookAt(0, 0.8, 0)
+    return { k, e, s, cam }
+  })
+  return () => {
+    renderer.setSize(w, H, false)
+    celle.forEach((c, r) => {
+      for (let i = 0; i < N; i++) {
+        const t = modo === 'gesto' ? istanteGesto(c.k, (c.k === 'elfa' || c.k === 'nano') ? 2 : 1, i / (N - 1) * 0.98) : i * 0.4
+        posaGuardia(c.e, t); c.e.userData.anima(t); animaArmi(c.e, t)
+        renderer.render(c.s, c.cam); const x = tela.getContext('2d'); x.drawImage(renderer.domElement, 0, 0, w, H, i * w, r * H, w, H)
+      }
+    })
+  }
+}
+// i piedi restano a terra? (altezza minima/massima delle gambe in 40 s di idle)
+function misuraPiedi (chiavi) {
+  const out = {}
+  for (const k of chiavi) {
+    const e = creaEroe(k); arma(e, k); const s = new Scene(); s.add(e); let mn = 9, mx = -9, dx = 0, px = null
+    for (let t = 0; t < 40; t += 0.05) {
+      posaGuardia(e, t); e.userData.anima(t); e.updateMatrixWorld(true)
+      const b = new Box3(); e.userData.gambe.forEach(g => b.expandByObject(g)); mn = Math.min(mn, b.min.y); mx = Math.max(mx, b.min.y)
+    }
+    out[k] = { minY: +mn.toFixed(4), maxY: +mx.toFixed(4) }
+  }
+  return out
+}
+
+try {
+  const giri = []
+  const chiavi = solo && CHIAVI.includes(solo) ? [solo] : CHIAVI
+  if (striscia) giri.push(rigaStrisce(chiavi, striscia))
+  else if (idle) giri.push(rigaIntera(chiavi, 1400, 540))
+  else if (solo) { giri.push(rigaIntera(chiavi, 760, 820)); giri.push(rigaTeste(chiavi, 760, 640)) }
+  else { giri.push(rigaIntera(chiavi, 1400, 540)); giri.push(rigaMarcia(chiavi, 1400, 430)); giri.push(rigaTeste(chiavi, 1400, 400)) }
+  risultato.piedi = misuraPiedi(CHIAVI)
+  chiavi.forEach(k => { risultato.triangoli[k] = creaEroe(k).userData.triangoli })
+  const ciclo = t => { for (const g of giri) g(t) }
+  ciclo(T0)
+  if (!pausa) { const t0 = performance.now(); const anima = () => { ciclo(T0 + (performance.now() - t0) / 1000); requestAnimationFrame(anima) }; requestAnimationFrame(anima) }
+  risultato.ok = true
+} catch (e) { errori.push(String(e.stack || e)) }
+const es = document.getElementById('esito')
+es.textContent = errori.length ? 'errori: ' + errori.join(' | ') : 'ok — ' + Object.entries(risultato.triangoli).map(([k, n]) => `${k} ${n} tri`).join(', ')
+es.className = errori.length ? 'male' : ''
+risultato.ok = risultato.ok && !errori.length
+</script>
+</body>
+</html>
