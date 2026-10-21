@@ -49,7 +49,7 @@ const ctxCon = finite => ({ stati: {}, mondo: true, tappe: CAMPAGNA.map((t, i) =
   controlla('alla quinta racconta Gorgo e le sale allagate', /Gorgo/.test(testi(cis)) && /sale allagate/.test(testi(cis)), testi(cis))
   uguale('poi la strada del mondo aperto', cis.find(p => p.dato === 'detto').testo, `Le sale allagate: ${LUOGHI_MONDO.cisterna}.`)
   uguale('le prime pagine sono la storia', cis.slice(0, cis.findIndex(p => p.dato === 'detto')).every(p => p.dato === 'storia'), true)
-  uguale('e in fondo le luci azzurre e «portami lì»', cis.at(-1).dato, 'luci')
+  uguale('e in fondo le luci azzurre', cis.at(-1).dato, 'luci')
   const lab = stradaDelCapitano(ctxCon(5))
   controlla('alla sesta Minotto, e rimanda dal minatore', /Minotto/.test(testi(lab)) && /minatore/.test(testi(lab)), testi(lab))
   uguale('con la sua strada', lab.find(p => p.dato === 'detto').testo, `La porta dell'inferno: ${LUOGHI_MONDO.labirinto}.`)

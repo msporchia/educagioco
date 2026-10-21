@@ -166,10 +166,10 @@
 /* lo scontro di sopra (viste/ScontroSopra.vue): i suoi pezzi stanno dove stanno nello scontro di giù */
 .sot3d-sopra-scontro { display: contents }
 
-/* la meta di adesso (viste/Mondo3d.vue, docs/sotterraneo/mondo-3d-la-meta.md): in cima, l'icona del posto, il nome, i passi e
-   «portami lì». Azzurra come la bussola della meta e le luci per terra */
+/* la meta di adesso (viste/Mondo3d.vue, docs/sotterraneo/mondo-3d-la-meta.md): in cima, l'icona del posto, il nome e i passi.
+   Azzurra come la bussola della meta e le luci per terra */
 .sot3d-meta {
-  display: grid; grid-template-columns: 52px 1fr auto; align-items: center; gap: 0 10px; padding: 7px 8px 7px 7px; border-radius: 16px;
+  display: grid; grid-template-columns: 52px 1fr; align-items: center; gap: 0 10px; padding: 7px 12px 7px 7px; border-radius: 16px;
   background: linear-gradient(160deg, #14304a, var(--sot-carta) 75%); border: 2px solid #7fd0ff; box-shadow: 0 6px 18px #0007, 0 0 12px #7fd0ff55;
   animation: sot-appare .3s backwards;
 }
@@ -181,9 +181,7 @@
 .sot3d-meta-testo { display: grid; min-width: 0; line-height: 1.15 }
 .sot3d-meta-testo b { font-size: 15.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
 .sot3d-meta-testo i { font-style: normal; font-size: 13px; color: #a8dcff }
-.sot-grosso.sot3d-meta-vai { width: auto; min-height: 48px; margin: 0; padding: 8px 13px; font-size: 15px; white-space: nowrap; background: #7fd0ff; color: #0c2236 }
-.sot3d-meta[data-guidato="1"] .sot3d-meta-vai { background: #ffffff22; color: inherit }
-/* nella veduta la meta si tocca (è «portami lì») e pulsa, anche sotto le nuvole */
+/* nella veduta la meta si tocca (ci si va a piedi) e pulsa, anche sotto le nuvole */
 .sot3d-nome-posto.sot3d-nome-meta { pointer-events: auto; padding: 4px 10px; font-size: 14px; box-shadow: 0 0 0 3px #7fd0ff66, 0 0 14px 4px #7fd0ffaa;
   animation: sot3d-meta-pulsa 1.2s ease-in-out infinite }
 @keyframes sot3d-meta-pulsa { 50% { box-shadow: 0 0 0 6px #7fd0ff33, 0 0 20px 8px #7fd0ffcc } }
