@@ -212,6 +212,10 @@ export async function semina(page, profilo, giocatore = GIOCATORE) {
   await page.waitForSelector('.carte', { timeout: 10000 })
 }
 
+/* Le tendine delle impostazioni dei grandi («Zona delicata», «Per chi sviluppa») nascono chiuse: un test che deve premere lì dentro le
+   apre. Un bambino non le vedrebbe nemmeno, ed è il punto. Docs: docs/genitori/riordino.md. */
+export const apriTendine = page => page.evaluate(() => document.querySelectorAll('details.tendina').forEach(d => { d.open = true }))
+
 /* Rilegge il profilo com'è adesso su disco. Serve quando la cosa da
    controllare non si vede dallo schermo — quale contatore è salito,
    quale campagna si è mossa — e guardarla dal DOM vorrebbe dire

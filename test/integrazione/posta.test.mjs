@@ -15,7 +15,7 @@
    posta → e più tardi cancella per sbaglio, e rimette.
    ═══════════════════════════════════════════════════════════════════ */
 import { apriBrowser, apriGioco, semina, azzera, scatto,
-         leggiProfilo, moneteInHome } from '../aiuto/browser.mjs'
+         leggiProfilo, moneteInHome , apriTendine } from '../aiuto/browser.mjs'
 import { NOTE } from '../../src/guide/novita.js'
 import { DOMANDA } from '../../src/store/pin.js'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
@@ -155,6 +155,7 @@ controlla('si entra col codice scelto durante il recupero',
 const primaDi = (await leggiProfilo(page))?.coins
 uguale('il bambino ha le sue monete', primaDi, 500)
 
+await apriTendine(page)      // «Zona delicata» nasce chiusa
 await page.click('.carta.pericolo')
 await page.waitForTimeout(150)
 await page.click('.bottone.rosso')

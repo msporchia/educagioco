@@ -77,7 +77,7 @@ await page.click('[data-azione="grandi"]')
 await page.waitForSelector('.tastierino', { timeout: 5000 })
 for (const c of '0000') await page.click(`.tasto >> text="${c}"`)
 await page.waitForSelector('.carte', { timeout: 5000 })
-await page.click('.schede button[data-scheda="comeva"]')
+await page.click('[data-scheda="comeva"]')
 await page.waitForSelector('[data-tempo]', { timeout: 5000 })
 await attendi(page, 400)
 

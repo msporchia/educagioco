@@ -38,6 +38,7 @@ import ArchivioGenitori from '../components/genitori/Archivio.vue'
 import CartaAmici from '../components/amici/CartaAmici.vue'
 import GiochiImpostazioni from '../components/genitori/Giochi.vue'
 import Nascita from '../components/genitori/Nascita.vue'
+import { ultima as ultimaCopia, leggiCopia, segnaCopia, giorniDaUltima, statoCopia } from '../store/copia.js'
 
 const emit = defineEmits(['vai'])
 
@@ -285,6 +286,7 @@ async function esporta() {
     const dati = await esportaTutto()
     const oggi = new Date().toISOString().slice(0, 10)
     scarica(`giochi-progressi-${oggi}.json`, JSON.stringify(dati, null, 2))
+    segnaCopia()
     esito.value = { ok: true, testo: 'Salvataggio scaricato. Tienilo da parte: se il telefono si rompe, è tutto lì dentro.' }
   } catch (e) {
     esito.value = { ok: false, testo: 'Non sono riuscito a salvare: ' + e.message }
@@ -326,12 +328,21 @@ async function mandaSalvataggio () {
                        { type: 'application/json' })
     const r = await condividi({ file: f, titolo: 'Progressi Educagioco' })
     if (r.come === 'niente') esporta()      // niente foglio: resta il download di sempre
-    else if (r.come === 'condiviso') esito.value = { ok: true,
-      testo: 'Mandato. Dentro ci sono i nomi dei bambini e cosa hanno giocato: tienilo dove terresti le foto.' }
+    else if (r.come === 'condiviso') { segnaCopia(); esito.value = { ok: true,
+      testo: 'Mandato. Dentro ci sono i nomi dei bambini e cosa hanno giocato: tienilo dove terresti le foto.' } }
   } catch (e) {
     esito.value = { ok: false, testo: 'Non sono riuscito a mandarlo: ' + e.message }
   }
 }
+
+// l'avviso in cima a «Casa»: i progressi non sono mai stati salvati su un file, o è passato un po' (docs/genitori/riordino.md)
+onMounted(leggiCopia)
+const copia = computed(() => {
+  const haProgressi = (state.profile?.coins || 0) > 0 || (state.profile?.totals?.partiteMath || 0) > 0
+  const stato = statoCopia(ultimaCopia.value)
+  return stato === 'mai' ? (haProgressi ? 'mai' : null) : stato
+})
+const giorniCopia = computed(() => giorniDaUltima(ultimaCopia.value))
 
 const daInstallare = !installata() && piattaforma() !== 'computer'
 
@@ -601,15 +612,13 @@ async function rimetti(v) {
         <button class="bottone" data-azione="ho-letto" @click="hoLetto">Ho letto</button>
       </div>
 
-      <!-- tre schede, e si tara in una sola: vedi docs/genitori/come-va.md -->
-      <div class="schede">
-        <button :class="{ ora: scheda === 'bambini' }" data-scheda="bambini"
-                @click="scheda = 'bambini'">Bambini</button>
-        <button :class="{ ora: scheda === 'giochi' }" data-scheda="giochi"
-                @click="scheda = 'giochi'">Giochi e domande</button>
-        <button :class="{ ora: scheda === 'comeva' }" data-scheda="comeva"
-                @click="scheda = 'comeva'">Come va</button>
-      </div>
+      <!-- quattro schede, nella barra in basso: ognuna è «di chi è» (docs/genitori/riordino.md) -->
+      <nav class="barra-giu" aria-label="Sezioni delle impostazioni">
+        <button :class="{ ora: scheda === 'bambini' }" data-scheda="bambini" @click="scheda = 'bambini'"><span aria-hidden="true">👶</span>Bambino</button>
+        <button :class="{ ora: scheda === 'giochi' }" data-scheda="giochi" @click="scheda = 'giochi'"><span aria-hidden="true">🎮</span>Giochi</button>
+        <button :class="{ ora: scheda === 'comeva' }" data-scheda="comeva" @click="scheda = 'comeva'"><span aria-hidden="true">📊</span>Come va</button>
+        <button :class="{ ora: scheda === 'casa' }" data-scheda="casa" @click="scheda = 'casa'"><span aria-hidden="true">🏠</span>Casa</button>
+      </nav>
 
       <!-- ══════════ scheda: i bambini ══════════ -->
       <template v-if="scheda === 'bambini'">
@@ -711,6 +720,13 @@ async function rimetti(v) {
 
         <ArchivioGenitori @esito="v => esito = v" />
 
+      </div>
+
+
+      <!-- le cose che cancellano, chiuse: a un tocco da quelle innocue non ci stanno più -->
+      <details class="tendina delicata" data-delicata>
+        <summary>⚠️ Zona delicata</summary>
+        <div class="carte">
         <button v-if="!confermaAzzera" class="carta pericolo" @click="confermaAzzera = true">
           <span class="ico">🗑️</span>
           <b>Cancella i progressi di {{ chi }}</b>
@@ -746,8 +762,7 @@ async function rimetti(v) {
             </div>
           </div>
         </template>
-      </div>
-
+        </div>
       <!-- il cestino: vedi docs/genitori/cestino-e-posta.md -->
       <template v-if="cestino.length">
         <h2>Cancellati di recente</h2>
@@ -775,6 +790,19 @@ async function rimetti(v) {
         </div>
       </template>
 
+      </details>
+      </template>
+
+      <!-- ══════════ scheda: la casa (il telefono, non un bambino) ══════════ -->
+      <template v-else-if="scheda === 'casa'">
+      <p class="mini">Quello che riguarda il telefono e chi lo usa, non un bambino solo.</p>
+      <div v-if="copia" class="carte">
+        <button class="carta avviso-copia" type="button" data-copia-avviso @click="esporta">
+          <span class="ico">💾</span>
+          <b>{{ copia === 'mai' ? 'I progressi non sono mai stati salvati su un file' : `Ultimo salvataggio: ${giorniCopia} giorni fa` }}</b>
+          <i>Se il telefono si rompe è tutto lì dentro. Tocca per salvare adesso.</i>
+        </button>
+      </div>
       <h2>Passa il gioco</h2>
       <p class="mini">Non c'è un negozio da cui scaricarlo: si passa l'indirizzo, e chi lo
         riceve se lo aggiunge alla schermata del telefono. È gratis e non chiede niente
@@ -862,6 +890,42 @@ async function rimetti(v) {
           <i v-else>Si apre un modulo, con già dentro la versione del gioco</i>
         </a>
       </div>
+
+      <details class="tendina sviluppo" data-sviluppo>
+        <summary>🛠️ Per chi sviluppa</summary>
+        <div class="carte">
+        <button class="carta interruttore" :class="{ spento: !fpsAcceso }"
+                data-flag="fps" @click="cambiaFps">
+          <span class="ico">📈</span>
+          <b>Contatore di fluidità (fps)</b>
+          <i>{{ fpsAcceso ? 'Acceso: in un angolo i fotogrammi al secondo; un tocco avvia una misura, un altro la chiude e la tiene'
+                          : 'Spento: serve a chi prova i giochi su un telefono vecchio' }}</i>
+          <span class="leva"><span class="pallina"></span></span>
+        </button>
+
+ <div class="carta" data-fascia>
+          <span class="ico">🎚️</span>
+          <b>Qualità della grafica 3D: {{ fasciaAttiva() }}</b>
+          <i>{{ fasciaScelta === 'auto'
+                ? (fasciaMisura ? 'Scelta da sola, misurata il ' + new Date(fasciaMisura.quando).toLocaleDateString('it-IT') + ' (' + fasciaMisura.punti + ' punti, JS ' + fasciaMisura.js + ' ms)'
+                                : 'Scelta da sola: ancora da misurare, si fa in home')
+                : 'Scelta a mano' }}</i>
+          <div class="riga">
+            <button v-for="f in ['auto', ...FASCE]" :key="f" type="button" class="bottone chiaro" :class="{ attivo: fasciaScelta === f }"
+                    :data-fascia-scelta="f" @click="scegliFascia(f)">{{ f }}</button>
+            <button type="button" class="bottone chiaro" data-azione="rimisura-fascia" :disabled="rimisurando" @click="rimisuraFascia">
+              {{ rimisurando ? 'Misuro…' : 'Rimisura' }}</button>
+          </div>
+        </div>
+
+        <button class="carta interruttore" data-azione="benchmark" @click="misuraAperta = true">
+          <span class="ico">⏱️</span>
+          <b>Misura questo telefono</b>
+          <i>Un minuto di scene di prova a qualità diverse, e un resoconto da mandare: dice cosa lo fa andare a scatti</i>
+        </button>
+        </div>
+      <Benchmark v-if="misuraAperta" :modulo="SEGNALA_GIUDIZI" @chiudi="misuraAperta = false" />
+      </details>
       </template>
 
       <!-- ══════════ scheda: giochi e domande ══════════ -->
@@ -911,37 +975,7 @@ async function rimetti(v) {
           <span class="leva"><span class="pallina"></span></span>
         </button>
 
-        <button class="carta interruttore" :class="{ spento: !fpsAcceso }"
-                data-flag="fps" @click="cambiaFps">
-          <span class="ico">📈</span>
-          <b>Contatore di fluidità (fps)</b>
-          <i>{{ fpsAcceso ? 'Acceso: in un angolo i fotogrammi al secondo; un tocco avvia una misura, un altro la chiude e la tiene'
-                          : 'Spento: serve a chi prova i giochi su un telefono vecchio' }}</i>
-          <span class="leva"><span class="pallina"></span></span>
-        </button>
-
- <div class="carta" data-fascia>
-          <span class="ico">🎚️</span>
-          <b>Qualità della grafica 3D: {{ fasciaAttiva() }}</b>
-          <i>{{ fasciaScelta === 'auto'
-                ? (fasciaMisura ? 'Scelta da sola, misurata il ' + new Date(fasciaMisura.quando).toLocaleDateString('it-IT') + ' (' + fasciaMisura.punti + ' punti, JS ' + fasciaMisura.js + ' ms)'
-                                : 'Scelta da sola: ancora da misurare, si fa in home')
-                : 'Scelta a mano' }}</i>
-          <div class="riga">
-            <button v-for="f in ['auto', ...FASCE]" :key="f" type="button" class="bottone chiaro" :class="{ attivo: fasciaScelta === f }"
-                    :data-fascia-scelta="f" @click="scegliFascia(f)">{{ f }}</button>
-            <button type="button" class="bottone chiaro" data-azione="rimisura-fascia" :disabled="rimisurando" @click="rimisuraFascia">
-              {{ rimisurando ? 'Misuro…' : 'Rimisura' }}</button>
-          </div>
-        </div>
-
-        <button class="carta interruttore" data-azione="benchmark" @click="misuraAperta = true">
-          <span class="ico">⏱️</span>
-          <b>Misura questo telefono</b>
-          <i>Un minuto di scene di prova a qualità diverse, e un resoconto da mandare: dice cosa lo fa andare a scatti</i>
-        </button>
       </div>
-      <Benchmark v-if="misuraAperta" :modulo="SEGNALA_GIUDIZI" @chiudi="misuraAperta = false" />
 
       <MoneteGiocoPerGioco :chi="chi" />
 
@@ -1071,6 +1105,24 @@ async function rimetti(v) {
 .esci { width:100%; max-width:260px; margin-top:4px; font-size:16px; padding:13px 18px }
 
 /* tre schede larghe uguali su un telefono da 390 */
+.carta.avviso-copia { background:#fff1d6; color:#5b4300 }
+.carta.avviso-copia i { color:#7a5a10 }
+.barra-giu { position:fixed; left:0; right:0; bottom:0; z-index:60; display:flex; gap:4px; padding:6px 8px calc(6px + env(safe-area-inset-bottom));
+             background:#fffffff2; border-top:1px solid #e6dfd0; backdrop-filter:blur(6px) }
+.barra-giu button { flex:1; display:flex; flex-direction:column; align-items:center; gap:1px; min-height:50px; padding:4px 0; border:0; border-radius:12px;
+                    font-size:11px; font-weight:800; color:var(--tenue); background:none; touch-action:manipulation }
+.barra-giu button span { font-size:20px; line-height:1 }
+.barra-giu button.ora { color:var(--viola); background:#eeebff }
+.centro { padding-bottom:84px }      /* la barra in basso non copre l'ultima carta */
+.tendina { flex:none; width:100%; max-width:400px; border-radius:16px; background:#ffffffaa; overflow:hidden }
+.tendina > summary { padding:14px 16px; font-weight:800; cursor:pointer; list-style:none; display:flex; align-items:center; min-height:44px }
+.tendina > summary::-webkit-details-marker { display:none }
+.tendina > summary::after { content:"▸"; margin-left:auto; color:#b9b4a4 }
+.tendina[open] > summary::after { content:"▾" }
+.tendina > .carte, .tendina > h2, .tendina > p, .tendina > template { margin-left:10px; margin-right:10px }
+.tendina > .carte { width:auto; padding-bottom:12px }
+.tendina.delicata > summary { color:#b4302e }
+
 .schede { display:flex; gap:6px; width:100%; max-width:400px; margin:-4px 0 2px }
 .schede button { flex:1; padding:11px 6px; border-radius:14px; font-size:14px; font-weight:800;
                  color:var(--tenue); background:#ffffff88 }

@@ -1,7 +1,7 @@
 # I giochi nelle impostazioni dei grandi
 
-**Stato: fatta la sezione «I giochi di <bambino>»** (scheda «Giochi e domande», in cima). Il resto del riordino (barra in basso, data di
-nascita, tendine per le cose delicate) è proposto in [riordino.md](riordino.md) e non è ancora fatto.
+**Stato: fatta la sezione «I giochi di <bambino>»** (scheda «Giochi», in cima). Il riordino intorno (barra in basso, data di
+nascita, tendine per le cose delicate) è in [riordino.md](riordino.md).
 
 L'idea (dell'utente): le impostazioni di un gioco si trovano **dove un genitore lo cerca**, cioè nel gioco, e il gioco è fatto come lo
 vede il bambino. Il bambino dice «questo gioco mi chiede le divisioni»: il genitore apre quel gioco e le trova.

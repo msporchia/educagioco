@@ -1,13 +1,13 @@
 # Il riordino delle impostazioni (proposta)
 
-**Stato: proposta approvata a voce dall'utente (20 ottobre 2026), in corso a pezzi** (fatti: la sezione dei giochi e la data di nascita). La pagina dei grandi aveva tre schede e ~16 sezioni:
+**Stato: proposta approvata a voce dall'utente (20 ottobre 2026), in corso a pezzi** (fatti: la sezione dei giochi, la data di nascita, la barra in basso con le tendine e l'avviso sul salvataggio). La pagina dei grandi aveva tre schede e ~16 sezioni:
 cose di un bambino, cose del telefono e strumenti da sviluppatore mescolate, e i tasti che cancellano a un tocco da quelli innocui.
 
 ## La forma
 
 Una barra in basso con quattro schede, ognuna «di chi è»:
 - 🎮 **Giochi**: il carosello e le impostazioni di un gioco ([giochi.md](giochi.md)) — **fatto**.
-- 👶 **Bambino**: faccia e nome, età, amici online, progressi di lui.
+- 👶 **Bambino**: faccia e nome, aggiungere un bambino, amici online, progressi di lui (con la «Zona delicata» chiusa). L'**età** sta in «Giochi» con i giochi che decide: cambiarla mostra subito cosa si apre.
 - 📊 **Come va**: la settimana, cosa guardare, i grafici.
 - 🏠 **Casa**: codice, salvataggio (con l'avviso «ultimo salvataggio: 12 giorni fa»), versione, giochi in prova, aggiungi un bambino, aiuto; e due
   tendine chiuse: **«Per chi sviluppa»** (contatore fps, fascia grafica, benchmark) e **«Zona delicata»** (azzera, cestino).
@@ -39,6 +39,6 @@ Nei test: `[data-nascita]`, `[data-nascita-mese]`, `[data-nascita-anno]`, `[data
 
 1. Le domande di ogni gioco e la pagina del gioco — **fatto** ([giochi.md](giochi.md)).
 2. La data di nascita con l'avviso al compleanno — **fatto**.
-3. La barra in basso con Bambino, Come va e Casa, e il bambino scelto in cima.
-4. Le tendine («Per chi sviluppa», «Zona delicata»), gli avvisi in cima a Casa, la lente.
+3. La barra in basso con Bambino, Giochi, Come va e Casa — **fatto**. Il bambino scelto in cima **non** si fa: cambiare bambino riporta alla home (`App.vue`, per scelta), quindi le impostazioni restano «di chi sta giocando adesso».
+4. Le tendine («Per chi sviluppa», «Zona delicata») e l'avviso sul salvataggio — **fatti**. La lente per cercare un'impostazione: da fare se le sezioni crescono.
 5. I grafici di «Come va» (andamento delle risposte giuste, cosa guardare).
