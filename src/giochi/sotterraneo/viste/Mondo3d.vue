@@ -834,9 +834,9 @@ function dopo() {
     const el = elementi.get(b.chiave)
     if (!el) continue
     const r = !inScontro && trovati.value.has(b.chiave) && (!veduta || b.ruolo === 'pietra') ? rettangoloDi(b) : null
-    daPosare.push({ el, r, px: r && b.tipo === 'persona' ? r.px : null })
+    daPosare.push({ el, r, px: !r ? null : b.tipo === 'persona' ? r.px : b.tipo === 'cosa' ? r.x + r.w / 2 : null, cosa: b.tipo === 'cosa' })
   }
-  // le persone vicine si dividono lo spazio fra i loro piedi (scena3d/mondo/dito.js)
+  // le persone vicine si dividono lo spazio fra i loro piedi, e con la bacheca e il cartello (scena3d/mondo/dito.js)
   spartisciPersone(daPosare.filter(q => q.px != null))
   for (const { el, r, px } of daPosare) {
     const dentro = r && r.x + r.w > 0 && r.x < vL && r.y + r.h > sopra && r.y < vA - sotto

@@ -14,7 +14,7 @@ import { scheletroDelMondo, caricaZona, scaricaZona, caricaTutto, zonaDi, zoneAt
 import { frecceDelCartello, postiDi } from '../../src/giochi/sotterraneo/motore/mondo-sopra.js'
 import { PEZZO, grigliaDi, pezzoDi, rettangoloDi, pezziAttorno, lavoroDeiPezzi, dividiPerPezzo, dividiLaZona, contenutoDelPezzo, zoneDelPezzo,
          costruibile, ancoraUguale, distanzaPezzi } from '../../src/giochi/sotterraneo/scena3d/mondo/pezzi.js'
-import { rettangoloPersona, rettangoloPosto, sceltaDelTocco, personaVicina, aTerra, PERSONA } from '../../src/giochi/sotterraneo/scena3d/mondo/dito.js'
+import { rettangoloPersona, rettangoloPosto, sceltaDelTocco, personaVicina, aTerra, spartisciPersone, PERSONA } from '../../src/giochi/sotterraneo/scena3d/mondo/dito.js'
 import { quotaA, quotaTerreno, quotaDellaCella, cellaDaDisegnare, pontiDi } from '../../src/giochi/sotterraneo/scena3d/mondo/suolo.js'
 import { trameDellaNebbia, segnaScoperte, MAI } from '../../src/giochi/sotterraneo/scena3d/mondo/nebbia.js'
 import { istanzeDelPezzo } from '../../src/giochi/sotterraneo/scena3d/mondo/natura.js'
@@ -118,6 +118,16 @@ uguale('quello in basso a destra l\'ultimo', pezzoDi(m, m.W - 0.5, m.H - 0.5), n
   uguale('sopra un ingresso, la persona vince', sceltaDelTocco({ x: 100, y: 280 }, b).chiave, 'persona')
   uguale('fuori dalla persona, l\'ingresso', sceltaDelTocco({ x: 170, y: 210 }, b).chiave, 'posto')
   uguale('fuori da tutti, il prato', sceltaDelTocco({ x: 400, y: 600 }, b), null)
+  // la ragazza del pozzo accanto alla bacheca: il «?» della bacheca resta della bacheca
+  {
+    const ragazza = { r: rettangoloPersona(322, 460, 322, 400), px: 322 }, bacheca = { r: { x: 321, y: 430, w: 56, h: 56 }, px: 349, cosa: true }
+    spartisciPersone([bacheca, ragazza])
+    controlla('una persona e la bacheca accanto si dividono a metà', ragazza.r.x + ragazza.r.w <= 335.5 && bacheca.r.x >= 335 && bacheca.r.x + bacheca.r.w === 377,
+              JSON.stringify([ragazza.r, bacheca.r]))
+    const davanti = { r: rettangoloPersona(349, 470, 349, 410), px: 349 }, dietro = { r: { x: 321, y: 430, w: 56, h: 56 }, px: 351, cosa: true }
+    spartisciPersone([davanti, dietro])
+    uguale('davanti alla bacheca la persona resta intera', davanti.r.w, PERSONA.largo)
+  }
   const gente = [{ chiave: 'a', piede: { x: 10, y: 10 } }]
   uguale('un tocco sul prato vicino ai piedi è un tocco su di lei', (personaVicina({ x: 11.2, z: 10.6 }, gente) || {}).chiave, 'a')
   uguale('più in là no', personaVicina({ x: 13, z: 10.5 }, gente), null)
