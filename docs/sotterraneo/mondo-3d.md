@@ -59,12 +59,11 @@ celle aprendo il mondo. Si salva arrivando, scoprendo (al più ogni tre secondi)
 ## La vista e la veduta
 
 - **La telecamera** sta a 52°, vede almeno 15 celle in largo e 18 in profondo, segue l'eroe morbida e lo tiene a metà dello spazio
-  libero fra le carte in cima e in fondo (`copri`); col dialogo aperto si allontana un poco. La rotella avvicina e allontana.
-- **Nel villaggio** si allontana e si ferma in mezzo alla fila: larga quanto chi ci sta (i mercanti, la ragazza, il capitano, il
-  minatore, la bacheca e il cartello) più cinque celle, così **dalla partenza si vedono tutti senza girare**, e chi sta ai capi non
-  finisce sotto le bussole del bordo. Due persone vicine a schermo si dividono il rettangolo a metà fra i piedi (`spartisciPersone`):
-  il tocco va a ognuno, non a chi sta sopra nel DOM. Lo stesso fra una persona e la bacheca o il cartello accanto (fra il piede e il
-  centro della cosa): la ragazza del pozzo sta a due celle dalla bacheca, e il suo rettangolo intero ne coprirebbe il «?».
+  libero fra le carte in cima e in fondo (`copri`); col dialogo aperto si allontana un poco. **Il dito la sposta, due dita la
+  zoomano**: [mondo-3d-telecamera.md](mondo-3d-telecamera.md). Nel villaggio è quella di ovunque: niente più la telecamera che si
+  allontanava e si fermava in mezzo alla fila (chi sta fuori vista si raggiunge trascinando, o toccando).
+  Due persone vicine a schermo si dividono il rettangolo a metà fra i piedi (`spartisciPersone`): il tocco va a ognuno, non a chi sta
+  sopra nel DOM. Lo stesso fra una persona e la bacheca o il cartello accanto (fra il piede e il centro della cosa).
 - **La veduta d'insieme** (la casella «mappa grande»): il mondo intero su uno schermo largo, su un telefono in piedi una fascia di
   220 celle centrata dove si è, **che scorre col dito**, nello spazio libero fra le carte. Ci sono i nomi delle zone viste (grandi, col
   loro colore e i livelli) e della prima dopo (tratteggiata: «di là»), dei luoghi visti, del villaggio, dei dungeon trovati, le pietre
@@ -79,8 +78,9 @@ celle aprendo il mondo. Si salva arrivando, scoprendo (al più ogni tre secondi)
 - **Una persona vince sul prato**: per ogni persona, posto e cosa toccabile c'è un elemento HTML sopra la tela, posato a ogni
   fotogramma sul suo rettangolo (le persone almeno 72×96 px dove c'è spazio, sopra i posti); un tocco sul prato entro una cella e
   mezza dai piedi di qualcuno è un tocco su di lui (`dito.js`).
-- Si agisce sul `click`; oltre i 16 px il tocco diventa un trascinare e l'eroe insegue il dito (nella veduta il mondo scorre); il
-  mouse conta solo a tasto premuto; un tocco nuovo annulla la meta. L'A* è quello di `motore/terra.js` sulle celle scritte.
+- Si agisce sul `click`; oltre i 16 px il tocco diventa un trascinare **che sposta la vista** (l'eroe non insegue più il dito: come
+  nella fattoria; nella veduta il mondo scorre); due dita zoomano; il mouse conta solo a tasto premuto; un tocco nuovo annulla la
+  meta. L'A* è quello di `motore/terra.js` sulle celle scritte. Il gesto per intero: [mondo-3d-telecamera.md](mondo-3d-telecamera.md).
 
 ## Chi sta dove
 
