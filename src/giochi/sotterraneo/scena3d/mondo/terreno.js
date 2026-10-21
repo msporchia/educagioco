@@ -7,6 +7,7 @@ import { fbm, quotaTerreno, quotaDellaCella, cellaDaDisegnare, ACQUA, ROCCIA } f
 import { rettangoloDi } from './pezzi.js'
 import { vesti } from './vesti.js'
 import { scatola } from './kit.js'
+import { forzaDellaTana } from './props-tana-dati.js'
 
 const TINTE = {
   villaggio: [0.56, 0.74, 0.30], campi: [0.66, 0.78, 0.30], frutteto: [0.58, 0.76, 0.32], prato: [0.62, 0.78, 0.32],
@@ -16,7 +17,8 @@ const TINTE = {
 }
 
 // i pesi delle trame di una cella (erba, terra battuta, sabbia, roccia): `riva` se tocca l'acqua
-function pesiDellaCella(c, riva, x, y, out) {
+// `m`: se c'è, la macchia di terra smossa attorno alle tane (props-tana-dati.js: terra battuta, e oltre l'uno il peso dice «scura»)
+function pesiDellaCella(c, riva, x, y, out, m = null) {
   let e = 0, tb = 0, sa = 0, ro = 0
   if (c.terreno === ROCCIA) ro = 1
   else if (c.terreno === ACQUA) sa = 1
@@ -24,7 +26,11 @@ function pesiDellaCella(c, riva, x, y, out) {
   else if (c.strada === 2) { tb = 0.95; e = 0.05 }
   else if (c.strada === 1) { tb = 0.7; e = 0.3 }
   else if (riva) { sa = 0.75; e = 0.25 }
-  else { e = 1; const n = fbm(x, y, 900, 9); if (n > 0.62) { tb = (n - 0.62) * 1.4; e -= tb } }
+  else {
+    e = 1; const n = fbm(x, y, 900, 9); if (n > 0.62) { tb = (n - 0.62) * 1.4; e -= tb }
+    const t = m ? forzaDellaTana(m, x, y) : 0
+    if (t > 0) { tb = Math.max(tb, t * 1.9); e = Math.max(0, 1 - Math.min(1, tb)) }
+  }
   out[0] = e; out[1] = tb; out[2] = sa; out[3] = ro
   return out
 }
@@ -48,7 +54,7 @@ function finestra(m, x0, z0, x1, z1) {
       const q = cel[jj * w + ii]
       if (q.terreno === ACQUA && q.ponte < 0) { riva = true; break }
     }
-    peso.set(pesiDellaCella(cel[l], riva, X0 + i, Z0 + j, p4), l * 4)
+    peso.set(pesiDellaCella(cel[l], riva, X0 + i, Z0 + j, p4, m), l * 4)
     tinta.set(tintaDi(cel[l].habitat, X0 + i, Z0 + j, t3), l * 3)
   }
   const t2 = new Float32Array(n * 3)
@@ -93,11 +99,13 @@ export function materialeTerreno(trame, { lontano = false } = {}) {
           vec2 uvT = vMondo.xz * 0.5;
           vec3 ce = mix(texture(tErba, uvT * 0.7).rgb, texture(tErba, mat2(0.8, 0.6, -0.6, 0.8) * uvT * 0.27 + 0.37).rgb, 0.5), ct = texture(tTerra, uvT).rgb, cs = texture(tSabbia, uvT).rgb, cr = texture(tRoccia, uvT * 0.45 + vec2(0.0, vMondo.y * 0.08)).rgb;
           vec4 w = vPeso;
+          float scuro = clamp(vPeso.y - 1.0, 0.0, 0.9);   // la terra smossa di una tana: il peso della terra oltre l'uno
           w.w = max(w.w, smoothstep(0.3, 0.55, vRipido));
           vec4 h = w + vec4(ce.g, ct.r, cs.r, cr.r) * 0.45 + (frumore(vMondo.xz * 1.3) - 0.5) * 0.25;
           float hm = max(max(h.x, h.y), max(h.z, h.w));
           w = max(h - (hm - 0.22), 0.0); w /= (w.x + w.y + w.z + w.w + 1e-4);
           vec3 col = ce * vTinta * 1.55 * w.x + ct * vec3(0.84, 0.74, 0.58) * w.y + cs * vec3(0.98, 0.92, 0.78) * w.z + cr * vec3(0.74, 0.72, 0.70) * w.w;
+          col *= 1.0 - scuro * 0.72;
           diffuseColor.rgb = col;
           float pesoRoccia = w.w, pesoTerra = w.y;`)
         .replace('mapN.xy *= normalScale;', 'mapN.xy *= normalScale * (0.15 + 1.1 * pesoRoccia + 0.5 * pesoTerra);')
@@ -124,7 +132,7 @@ export function terrenoDelPezzo(m, p, mat, res = 2) {
     if (F) { bilineare(F.peso, 4, F, x, z, p4); bilineare(F.tinta, 3, F, x, z, t3); y = quotaTerreno(m, x, z) }
     else {
       const cx = Math.min(m.W - 1, Math.max(0, Math.round(x))), cz = Math.min(m.H - 1, Math.max(0, Math.round(z))), k = cz * m.W + cx
-      cellaDaDisegnare(m, k, c); pesiDellaCella(c, false, cx, cz, p4); tintaDi(c.habitat, cx, cz, t3)
+      cellaDaDisegnare(m, k, c); pesiDellaCella(c, false, cx, cz, p4, m); tintaDi(c.habitat, cx, cz, t3)
       y = quotaDellaCella(m, k)
     }
     return y + scabra(x, z, p4[3])

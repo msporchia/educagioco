@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Effetti 3D: la mischia — prova</title>
+<style>
+  :root { --fondo: #14161b; --carta: #1b1e25; --riga: #2c313a; --testo: #e2e5e0; --tenue: #98a09c; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 12px; background: var(--fondo); color: var(--testo); font: 13px/1.4 system-ui, sans-serif; }
+  h1 { font-size: 16px; margin: 0 0 4px; }
+  p { margin: 0 0 10px; color: var(--tenue); max-width: 110ch; }
+  #griglia { display: grid; gap: 8px; }
+  figure { margin: 0; background: var(--carta); border: 1px solid var(--riga); border-radius: 4px; padding: 4px; }
+  canvas { width: 100%; height: auto; display: block; border-radius: 3px; }
+  figcaption { font-size: 11px; color: var(--tenue); padding-top: 2px; }
+</style>
+</head>
+<body>
+<h1>Effetti 3D del Sotterraneo: la mischia</h1>
+<p>Senza parametri la griglia di tutto il gruppo. <code>?effetto=taglio</code> (uno, o più separati da virgola), <code>?elemento=fuoco|gelo|fulmine|veleno|sacro|fisico</code>, <code>?t=0.3&amp;pausa</code>, <code>?striscia=0.05,0.2,0.35</code> (un foglio-provini: una riga per effetto), <code>?bersagli=3</code>, <code>?larg=480</code>, <code>?cam=pieno|vicino|segno</code>.</p>
+<div id="griglia"></div>
+<script type="module">
+import { WebGLRenderer, Scene, PerspectiveCamera, HemisphereLight, DirectionalLight, Vector3, Color, CircleGeometry, MeshStandardMaterial, Mesh, ACESFilmicToneMapping, PCFSoftShadowMap, SRGBColorSpace, Fog } from 'three'
+import { creaEroe, posaGuardia } from './eroi-3d/eroi.js'
+import { creaScheletro } from './mostri-3d/mostri.js'
+import { EFFETTI } from './effetti-3d/mischia.js'
+
+const url = new URLSearchParams(location.search)
+const elencoUrl = (url.get('effetto') || '').split(',').filter(Boolean)
+const chiavi = elencoUrl.length ? elencoUrl : Object.keys(EFFETTI)
+const striscia = (url.get('striscia') || '').split(',').filter(Boolean).map(Number)
+const pausa = url.has('pausa'), tFisso = url.has('t') ? Number(url.get('t')) : null
+const nBers = Number(url.get('bersagli') || 1)
+const COLORI = { fisico: 0xb9c2d4, fuoco: 0xe8742f, gelo: 0x58b4e6, fulmine: 0xb98af0, veleno: 0x7cc94a, sacro: 0xffe08a }
+const elemento = url.get('elemento') || 'fuoco'
+const LARG = Number(url.get('larg') || (chiavi.length === 1 && !striscia.length ? 900 : striscia.length ? 340 : 440)), ALTO = Math.round(LARG * (striscia.length ? 0.82 : 0.78))
+
+const errori = []
+const vecchio = console.error
+console.error = (...a) => { errori.push(a.map(String).join(' ').slice(0, 300)); vecchio.apply(console, a) }
+window.addEventListener('error', e => errori.push(String(e.message)))
+window.__prova = { ok: false, errori, effetti: {} }
+
+const renderer = new WebGLRenderer({ antialias: true, preserveDrawingBuffer: true })
+renderer.setSize(LARG, ALTO, false); renderer.setPixelRatio(1)
+renderer.toneMapping = ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05; renderer.outputColorSpace = SRGBColorSpace
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = PCFSoftShadowMap
+
+const scena = new Scene(); scena.background = new Color(0x2a2f38); scena.fog = new Fog(0x2a2f38, 12, 30)
+scena.add(new HemisphereLight(0xcfe4ff, 0x6a5a3a, 1.2))
+const sole = new DirectionalLight(0xfff1dc, 2.4); sole.position.set(3.5, 6, 4.5); sole.castShadow = true
+sole.shadow.mapSize.set(2048, 2048); Object.assign(sole.shadow.camera, { left: -6, right: 6, top: 6, bottom: -6, near: 0.5, far: 20 }); sole.shadow.bias = -0.0006; sole.shadow.radius = 4
+scena.add(sole)
+const controluce = new DirectionalLight(0x8fb4ff, 1.1); controluce.position.set(-4, 3, -4); scena.add(controluce)
+const suolo = new Mesh(new CircleGeometry(40, 40), new MeshStandardMaterial({ color: 0x3b4048, roughness: 1 })); suolo.rotation.x = -Math.PI / 2; suolo.receiveShadow = true; scena.add(suolo)
+
+const eroe = creaEroe('mago'); eroe.position.set(-1.5, 0, 0); eroe.rotation.y = 1.2; scena.add(eroe); posaGuardia(eroe, 0.5)
+const posti = [[1.5, 0, 0], [1.9, 0, -1.3], [1.1, 0, 1.3], [2.4, 0, 0.1]].slice(0, Math.max(1, nBers))
+for (const p of posti) { const m = creaScheletro(); m.position.set(...p); m.rotation.y = -1.2; m.traverse(o => { if (o.isMesh) { o.castShadow = true } }); scena.add(m); m.userData.anima?.(0.7) }
+eroe.traverse(o => { if (o.isMesh) o.castShadow = true })
+
+const tinta = new Color(COLORI[elemento] ?? COLORI.fuoco), tinta2 = tinta.clone().lerp(new Color(1, 1, 1), 0.3)
+const ctxDi = () => ({
+  da: new Vector3(-1.5, 0.65, 0), a: new Vector3(posti[0][0], 0.75, posti[0][2]), tinta, tinta2, seme: 3.7,
+  altri: posti.slice(1).map(p => new Vector3(p[0], 0.75, p[2])), scala: 1,
+})
+function camera (via) {
+  const cam = new PerspectiveCamera(30, LARG / ALTO, 0.1, 100), modo = url.get('cam') || (via === 'segno' ? 'segno' : via === 'vicino' ? 'vicino' : 'pieno')
+  const [cx, cy, cz, dist] = modo === 'segno' ? [posti[0][0], 0.5, posti[0][2], 5.4] : modo === 'vicino' ? [posti[0][0] - 0.4, 0.5, posti[0][2], 5.2] : [0.2, 0.4, 0, nBers > 1 ? 9.5 : 8.2]
+  const p = 50 * Math.PI / 180
+  cam.position.set(cx, cy + dist * Math.sin(p), cz + dist * Math.cos(p)); cam.lookAt(cx, cy, cz)
+  return cam
+}
+
+const griglia = document.getElementById('griglia')
+griglia.style.gridTemplateColumns = `repeat(${striscia.length || (chiavi.length === 1 ? 1 : Math.max(1, Math.floor(innerWidth / (LARG + 14))))}, ${LARG}px)`
+const tessere = []
+for (const k of chiavi) {
+  const def = EFFETTI[k]
+  if (!def) { errori.push('effetto sconosciuto: ' + k); continue }
+  window.__prova.effetti[k] = { durata: def.durata, arrivo: def.arrivo }
+  const istanti = striscia.length ? striscia : [null]
+  for (const ti of istanti) {
+    const fig = document.createElement('figure'), tela = document.createElement('canvas'), cap = document.createElement('figcaption')
+    tela.width = LARG; tela.height = ALTO; cap.textContent = ti == null ? `${k} — ${def.via}, ${def.durata}s (arrivo ${def.arrivo}s)` : `${k} @ ${ti}s`
+    fig.append(tela, cap); griglia.append(fig)
+    tessere.push({ k, def, tela, ti, cam: camera(def.via), fx: null, t0: performance.now() / 1000 + tessere.length * 0.13 })
+  }
+}
+
+function disegna (T, t, dt) {
+  if (!T.fx) { try { T.fx = T.def.crea(ctxDi()) } catch (e) { errori.push(`${T.k}: ${e.stack || e}`); T.def.crea = null; return } scena.add(T.fx.gruppo) }
+  for (const X of tessere) if (X.fx) X.fx.gruppo.visible = X === T
+  let vivo = true
+  try { vivo = T.fx.aggiorna(t, dt) } catch (e) { errori.push(`${T.k}: ${e.stack || e}`); vivo = false }
+  renderer.render(scena, T.cam)
+  const c = T.tela.getContext('2d'); c.drawImage(renderer.domElement, 0, 0)
+  return vivo
+}
+function libera (T) { if (T.fx) { try { T.fx.libera() } catch (e) { errori.push(`libera ${T.k}: ${e}`) } T.fx = null } }
+
+renderer.shadowMap.autoUpdate = false; renderer.shadowMap.needsUpdate = true
+const fisso = striscia.length > 0 || pausa
+if (fisso) {
+  for (const T of tessere) {
+    if (!T.def.crea) continue
+    const t = T.ti ?? tFisso ?? T.def.arrivo
+    disegna(T, t, 0); libera(T)
+  }
+  window.__prova.ok = errori.length === 0
+} else {
+  let prima = performance.now() / 1000
+  const giro = () => {
+    const ora = performance.now() / 1000, dt = ora - prima; prima = ora
+    for (const T of tessere) {
+      if (!T.def.crea) continue
+      const t = ora - T.t0
+      if (t < 0) continue
+      if (t > T.def.durata + 0.7) { libera(T); T.t0 = ora; continue }
+      if (t > T.def.durata) { libera(T); continue }
+      disegna(T, t, dt)
+    }
+    // a fine giro lascia il riquadro come è
+    window.__prova.ok = errori.length === 0
+    requestAnimationFrame(giro)
+  }
+  giro()
+}
+</script>
+</body>
+</html>

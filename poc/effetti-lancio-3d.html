@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Effetti di lancio 3D — prova</title>
+<style>
+  :root { --fondo: #14161b; --carta: #1b1e25; --riga: #2c313a; --testo: #e2e5e0; --tenue: #98a09c; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 10px; background: var(--fondo); color: var(--testo); font: 13px/1.4 system-ui, sans-serif; }
+  h1 { font-size: 15px; margin: 0 0 3px; }
+  p { margin: 0 0 8px; color: var(--tenue); max-width: 110ch; font-size: 12px; }
+  #griglia { display: grid; gap: 6px; }
+  figure { margin: 0; background: var(--carta); border: 1px solid var(--riga); border-radius: 4px; padding: 3px; }
+  canvas { width: 100%; height: auto; display: block; border-radius: 3px; }
+  figcaption { font-size: 11px; color: var(--tenue); padding: 2px 3px 0; }
+  body.nudo h1, body.nudo p, body.nudo figcaption { display: none; } body.nudo { padding: 0; }
+</style>
+</head>
+<body>
+<h1>Effetti di lancio in 3D — prova</h1>
+<p><code>?effetto=palla</code> (uno solo, in loop) · <code>?elemento=fuoco|gelo|fulmine|veleno|sacro|fisico</code> · <code>?t=0.3&pausa</code> · <code>?bersagli=3</code> · <code>?striscia=0.05,0.2,0.35,0.5</code> (provini; con <code>&chiavi=a,b</code> per scegliere le righe) · <code>?nudo</code> (solo l'immagine) · <code>?l=900</code> (larghezza del riquadro)</p>
+<div id="griglia"></div>
+<script type="module">
+import { WebGLRenderer, Scene, PerspectiveCamera, HemisphereLight, DirectionalLight, Color, Vector3, CircleGeometry, MeshStandardMaterial, Mesh, ACESFilmicToneMapping, PCFSoftShadowMap, SRGBColorSpace, Fog } from 'three'
+import { creaEroe, posaGuardia } from './eroi-3d/eroi.js'
+import { creaScheletro } from './mostri-3d/mostri.js'
+import { EFFETTI, ELEMENTO_PROVA } from './effetti-3d/lancio.js'
+
+const url = new URLSearchParams(location.search)
+const errori = []
+const vecchio = console.error
+console.error = (...a) => { errori.push(a.map(String).join(' ').slice(0, 300)); vecchio.apply(console, a) }
+window.addEventListener('error', e => errori.push(String(e.message)))
+window.__prova = { ok: false, errori, effetti: {} }
+if (url.has('nudo')) document.body.classList.add('nudo')
+
+const COLORI = { fisico: '#b9c2d4', fuoco: '#e8742f', gelo: '#58b4e6', fulmine: '#b98af0', veleno: '#7cc94a', sacro: '#ffe08a' }
+const tintaDi = nome => new Color(COLORI[nome] || COLORI.fisico)
+const chiaro = c => c.clone().lerp(new Color(1, 1, 1), 0.55)
+const solo = url.get('effetto'), elementoUrl = url.get('elemento'), nB = Number(url.get('bersagli') || 1)
+const striscia = url.get('striscia') ? url.get('striscia').split(',').map(Number) : null
+const pausa = url.has('pausa'), tFisso = url.has('t') ? Number(url.get('t')) : null
+const scelte = url.get('chiavi') ? url.get('chiavi').split(',') : null
+const chiavi = solo ? [solo] : Object.keys(EFFETTI).filter(c => !scelte || scelte.includes(c))
+for (const c of Object.keys(EFFETTI)) window.__prova.effetti[c] = { durata: EFFETTI[c].durata, arrivo: EFFETTI[c].arrivo, passo: EFFETTI[c].passo, via: EFFETTI[c].via }
+
+const L = Number(url.get('l') || (solo && !striscia ? 900 : striscia ? 360 : 440)), A = Math.round(L * 0.74)
+const renderer = new WebGLRenderer({ antialias: true, preserveDrawingBuffer: true })
+renderer.setSize(L, A, false); renderer.setPixelRatio(1)
+renderer.toneMapping = ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05; renderer.outputColorSpace = SRGBColorSpace
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = PCFSoftShadowMap; renderer.shadowMap.autoUpdate = false
+
+// ── il palco: il mago a sinistra, gli scheletri a destra, la camera 3/4 alta ──
+const scena = new Scene(); scena.background = new Color(0x2b303a); scena.fog = new Fog(0x2b303a, 12, 30)
+scena.add(new HemisphereLight(0xcfe4ff, 0x6a5a3a, 1.2))
+const sole = new DirectionalLight(0xfff1dc, 2.4); sole.position.set(3.5, 6, 4.5); sole.castShadow = true
+sole.shadow.mapSize.set(1024, 1024); Object.assign(sole.shadow.camera, { left: -6, right: 6, top: 6, bottom: -6, near: 0.5, far: 20 }); sole.shadow.bias = -0.0006; sole.shadow.radius = 4
+scena.add(sole)
+const controluce = new DirectionalLight(0x8fb4ff, 1.0); controluce.position.set(-4, 3, -4); scena.add(controluce)
+const suolo = new Mesh(new CircleGeometry(40, 40), new MeshStandardMaterial({ color: 0x353a43, roughness: 1 })); suolo.rotation.x = -Math.PI / 2; suolo.receiveShadow = true; scena.add(suolo)
+const mago = creaEroe('mago'); mago.position.set(-1.5, 0, 0); mago.rotation.y = Math.PI / 2; posaGuardia(mago, 0); scena.add(mago)
+const POSTI = [[1.5, 0, 0], [2.3, 0, -1.1], [2.3, 0, 1.1], [3.1, 0, 0]]
+const scheletri = []
+for (let i = 0; i < Math.min(4, Math.max(1, nB)); i++) {
+  const s = creaScheletro(); s.position.set(...POSTI[i]); s.rotation.y = -Math.PI / 2 + (i ? (i % 2 ? 0.3 : -0.3) : 0); scena.add(s); s.userData.anima?.(1.2); scheletri.push(s)
+}
+const DA = new Vector3(-1.1, 0.85, 0.1)
+const BERSAGLI = POSTI.slice(0, scheletri.length).map(p => new Vector3(p[0], 0.55, p[2]))
+const cam = new PerspectiveCamera(34, L / A, 0.1, 100)
+const centro = new Vector3(0.15 + (scheletri.length > 1 ? 0.5 : 0), 1.15, 0)
+const base = new Vector3(centro.x, centro.y + 5.3, centro.z + 4.7)
+cam.position.copy(base); cam.lookAt(centro)
+renderer.shadowMap.needsUpdate = true; renderer.render(scena, cam)
+
+// ── i riquadri ──
+const griglia = document.getElementById('griglia')
+const istanti = striscia || [null]
+griglia.style.gridTemplateColumns = `repeat(${striscia ? striscia.length : solo ? 1 : 'auto-fill'}, ${striscia ? `${L}px` : solo ? `${L}px` : `minmax(${L - 20}px, 1fr)`})`
+const tiles = []
+let tasto = 0
+for (const chiave of chiavi) {
+  const def = EFFETTI[chiave]; if (!def) continue
+  for (const ist of istanti) {
+    const fig = document.createElement('figure'), tela = document.createElement('canvas'), cap = document.createElement('figcaption')
+    tela.width = L; tela.height = A; cap.textContent = `${chiave}${ist != null ? ` · t=${ist}` : ''} — ${def.via} · arrivo ${def.arrivo}s · dura ${def.durata}s`
+    fig.append(tela, cap); griglia.append(fig)
+    tiles.push({ chiave, def, tela, ist, eff: null, giro: -1, k: tasto++ })
+  }
+}
+
+const nuovo = (tile, giro) => {
+  const el = elementoUrl || ELEMENTO_PROVA[tile.chiave] || 'fisico', tinta = tintaDi(el)
+  tile.eff?.libera?.(); tile.eff = null
+  try {
+    tile.eff = tile.def.crea({ da: DA.clone(), a: BERSAGLI[0].clone(), tinta, tinta2: chiaro(tinta), seme: 1 + giro * 7, altri: BERSAGLI.slice(1).map(v => v.clone()), scala: 1 })
+  } catch (e) { errori.push(`${tile.chiave}: ${e.message}\n${e.stack?.split('\n').slice(0, 3).join(' | ')}`); console.error(e) }
+  tile.giro = giro
+}
+const disegna = (tile, t, dt) => {
+  if (!tile.eff) return
+  let vivo = true
+  try { vivo = tile.eff.aggiorna(t, dt) } catch (e) { errori.push(`${tile.chiave}@${t}: ${e.message}`); console.error(e); return }
+  scena.add(tile.eff.gruppo)
+  const sc = tile.eff.scossa ? tile.eff.scossa(t) : 0
+  cam.position.set(base.x + Math.sin(t * 90) * sc, base.y + Math.cos(t * 77) * sc, base.z); cam.lookAt(centro)
+  renderer.render(scena, cam)
+  scena.remove(tile.eff.gruppo)
+  const c = tile.tela.getContext('2d'); c.clearRect(0, 0, L, A); c.drawImage(renderer.domElement, 0, 0)
+  return vivo
+}
+
+if (striscia || (tFisso != null && pausa)) {
+  for (const tile of tiles) { nuovo(tile, 0); disegna(tile, tile.ist ?? tFisso, 0) }
+} else {
+  let prima = performance.now()
+  const giro = () => {
+    const ora = performance.now(), dt = (ora - prima) / 1000; prima = ora
+    for (const tile of tiles) {
+      const per = tile.def.durata + 0.8, t = ((ora / 1000) + tile.k * 0.05) % per, n = Math.floor((ora / 1000 + tile.k * 0.05) / per)
+      if (tile.giro !== n) nuovo(tile, n)
+      disegna(tile, t, dt)
+    }
+    requestAnimationFrame(giro)
+  }
+  giro()
+}
+// quanto costa ogni effetto: mesh e sprite, punti delle particelle, triangoli (con un solo bersaglio)
+for (const c of Object.keys(EFFETTI)) {
+  try {
+    const e = EFFETTI[c].crea({ da: DA.clone(), a: BERSAGLI[0].clone(), tinta: tintaDi('fuoco'), tinta2: chiaro(tintaDi('fuoco')), seme: 1, altri: [], scala: 1 })
+    let mesh = 0, punti = 0, tri = 0
+    e.gruppo.traverse(o => {
+      if (o.isPoints) punti += o.geometry.attributes.position.count
+      else if (o.isMesh || o.isSprite) { mesh += o.isInstancedMesh ? o.count : 1; const g = o.geometry; tri += ((g.index ? g.index.count : g.attributes.position.count) / 3) * (o.isInstancedMesh ? o.count : 1) }
+    })
+    window.__prova.effetti[c].costo = { mesh, punti, tri: Math.round(tri) }
+    e.libera()
+  } catch (err) { errori.push(`costo ${c}: ${err.message}`) }
+}
+window.__prova.ok = errori.length === 0
+setTimeout(() => { window.__prova.ok = errori.length === 0 }, 1500)
+</script>
+</body>
+</html>

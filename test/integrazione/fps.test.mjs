@@ -6,7 +6,7 @@
    la ritrova dopo una ricarica: la ragione per cui esiste è guardare
    il telefono vecchio senza cavi (docs/core/vecchio-telefono.md).
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera } from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, azzera, apriTendine } from '../aiuto/browser.mjs'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 
 const browser = await apriBrowser()
@@ -21,8 +21,9 @@ uguale('spento: nessuna pastiglia', await page.locator('[data-fps]').count(), 0)
 await page.click('[data-azione="grandi"]')
 await page.waitForSelector('.tastierino', { timeout: 5000 })
 for (const c of '0000') await page.click(`.tasto >> text="${c}"`)
-await page.waitForSelector('.schede button[data-scheda="giochi"]', { timeout: 5000 })
-await page.click('.schede button[data-scheda="giochi"]')
+await page.waitForSelector('[data-scheda="casa"]', { timeout: 5000 })
+await page.click('[data-scheda="casa"]')
+await apriTendine(page)      // «Per chi sviluppa» nasce chiusa
 await page.waitForSelector('.carta[data-flag="fps"]', { timeout: 5000 })
 controlla('l\'interruttore parte spento',
   await page.evaluate(() => document.querySelector('.carta[data-flag="fps"]').className.includes('spento')))
@@ -45,8 +46,10 @@ controlla('dopo la ricarica la misura c\'è ancora', /ultima/.test(await page.te
 await page.click('[data-azione="grandi"]')
 await page.waitForSelector('.tastierino', { timeout: 5000 })
 for (const c of '0000') await page.click(`.tasto >> text="${c}"`)
-await page.waitForSelector('.schede button[data-scheda="giochi"]', { timeout: 5000 })
-await page.click('.schede button[data-scheda="giochi"]')
+await page.waitForSelector('[data-scheda="casa"]', { timeout: 5000 })
+await page.click('[data-scheda="casa"]')
+await apriTendine(page)      // «Per chi sviluppa» nasce chiusa
+await apriTendine(page)      // «Per chi sviluppa» nasce chiusa
 await page.click('[data-azione="benchmark"]')
 await page.click('[data-azione="benchmark-avvia"]')
 await page.waitForSelector('[data-benchmark-log]', { timeout: 120000 })
@@ -69,7 +72,8 @@ controlla('scelta a mano: bassa', /Qualità della grafica 3D: bassa/.test(await 
 await page.reload()
 await page.click('[data-azione="grandi"]'); await page.waitForSelector('.tastierino')
 for (const c of '0000') await page.click(`.tasto >> text="${c}"`)
-await page.click('.schede button[data-scheda="giochi"]')
+await page.click('[data-scheda="casa"]')
+await apriTendine(page)
 controlla('la scelta resta dopo la ricarica', /Qualità della grafica 3D: bassa/.test(await page.textContent('[data-fascia]')))
 
 controlla('niente errori', errori.length === 0)

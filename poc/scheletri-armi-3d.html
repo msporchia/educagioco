@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Scheletri con armi diverse</title>
+<style>body{margin:0;background:#14161b;color:#e2e5e0;font:13px system-ui,sans-serif}h1{font-size:15px;margin:10px 14px 2px}p{margin:0 14px 8px;color:#98a09c}canvas{display:block;width:100%}</style></head>
+<body><h1>Lo scheletro con armi diverse</h1><p>Le armi sono quelle della collezione (poc/armi-3d/collezione.js), montate con <code>userData.impugna(destra, sinistra)</code>. <code>?pausa</code> ferma, <code>?attacco</code> fa il fendente in loop.</p>
+<canvas id="c"></canvas>
+<script type="module">
+import { WebGLRenderer, Scene, PerspectiveCamera, HemisphereLight, DirectionalLight, Color, CircleGeometry, MeshStandardMaterial, Mesh, ACESFilmicToneMapping, PCFSoftShadowMap, Fog } from 'three'
+import { creaScheletro } from './mostri-3d/mostri.js'
+import { creaDaId } from './armi-3d/collezione.js'
+const url = new URLSearchParams(location.search), pausa = url.has('pausa'), attacco = url.has('attacco')
+const errori = []; const ce = console.error; console.error = (...a) => { errori.push(a.map(String).join(' ').slice(0, 200)); ce(...a) }
+const SET = [[undefined, undefined], ['ascia-guerra', 'scudo-torre'], ['due-mani', null], ['arco-elfico', null], ['bastone-fuoco', null], ['bipenne', null], ['scimitarra', 'scudo-goccia'], ['bastone-ghiaccio', 'scudo-cristallo']]
+const W = 1600, H = 520
+const r = new WebGLRenderer({ canvas: document.getElementById('c'), antialias: true, preserveDrawingBuffer: true })
+r.setSize(W, H, false); r.setPixelRatio(1); r.toneMapping = ACESFilmicToneMapping; r.shadowMap.enabled = true; r.shadowMap.type = PCFSoftShadowMap
+const s = new Scene(); s.background = new Color(0x383e49); s.fog = new Fog(0x383e49, 14, 30)
+s.add(new HemisphereLight(0xcfe4ff, 0x6a5a3a, 1.35))
+const sole = new DirectionalLight(0xfff1dc, 2.6); sole.position.set(3, 7, 6); sole.castShadow = true; sole.shadow.mapSize.set(2048, 2048)
+Object.assign(sole.shadow.camera, { left: -9, right: 9, top: 5, bottom: -5, near: 1, far: 30 }); s.add(sole)
+const suolo = new Mesh(new CircleGeometry(40, 40), new MeshStandardMaterial({ color: 0x3b4048, roughness: 1 })); suolo.rotation.x = -Math.PI / 2; suolo.receiveShadow = true; s.add(suolo)
+const cam = new PerspectiveCamera(30, W / H, 0.1, 100); cam.position.set(0, 3.1, 11.5); cam.lookAt(0, 0.95, 0)
+const sk = SET.map(([d, sx], i) => { const g = creaScheletro(); g.userData.impugna(d == null ? d : creaDaId(d), sx == null ? sx : creaDaId(sx)); g.position.x = (i - (SET.length - 1) / 2) * 1.6; g.rotation.y = 0.25; s.add(g); return g })
+const t0 = performance.now()
+function disegna (t) { sk.forEach(g => { g.userData.anima(t); if (attacco) g.userData.attacca(((t + 0.1) % 2) / 0.8 > 1 ? 1 : ((t + 0.1) % 2) / 0.8) }); r.render(s, cam) }
+disegna(Number(url.get('t') || 1.2)); if (!pausa) { const f = () => { disegna(1.2 + (performance.now() - t0) / 1000); requestAnimationFrame(f) }; f() }
+window.__prova = { ok: errori.length === 0, errori }
+</script></body></html>

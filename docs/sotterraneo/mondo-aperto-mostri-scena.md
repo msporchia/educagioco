@@ -100,6 +100,15 @@ motore) al suo conto in `conti[id]`, e a `quanti` è fatta; **il signore** è fa
 quando tutto il branco del signore è a terra. Le fatte passano da `azioneMissione(id, 'fatta')` e la riga sopra il mondo le dice
 («Fatto: … Passa dalla bacheca.»). Il diario mostra la caccia col suo «N di M».
 
+## La tana si vede
+
+Il signore e le sue guardie stanno sulla cella `tana` del luogo, e lì c'è **un segno per habitat con la sua macchia di terra scura**
+([mondo-3d-oggetti.md](mondo-3d-oggetti.md#la-tana)). La scena sa quando il signore è morto: `stato.signoriMorti` (un `Set` di chiavi di
+luogo, scritto quando il signore cade, quando una zona dimenticata lo aveva morto, quando si ricarica morto; non si salva, e un
+giro nuovo lo svuota insieme ai signori), `signoreVivo(stato, luogo)` (true, false, o null se non si sa), che Mondo3d.vue passa a
+`scena.S.taneSpente` a ogni fotogramma: il fumo e le braci della tana si spengono, la tana resta. La veduta mette un 💀 sulle tane
+trovate, grigio se il signore è morto.
+
 ## Il bottino per terra
 
 Quello che dopo uno scontro non stava in tasca resta sul prato (`stato.perTerra`, `[data-per-terra]`): un tocco, l'eroe ci va e

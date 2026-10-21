@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Le armature in 3D</title>
+<style>
+  :root { --fondo: #14161b; --carta: #1b1e25; --riga: #2c313a; --testo: #e2e5e0; --tenue: #98a09c; --male: #ff8a7a; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 18px; background: var(--fondo); color: var(--testo); font: 13px/1.4 system-ui, sans-serif; }
+  h1 { font-size: 17px; margin: 0 0 4px; }
+  p { margin: 0 0 12px; color: var(--tenue); max-width: 110ch; }
+  #esito.male { color: var(--male); }
+  figure { margin: 0 0 10px; background: var(--carta); border: 1px solid var(--riga); border-radius: 4px; padding: 4px; width: fit-content; max-width: 100%; }
+  canvas { display: block; border-radius: 3px; max-width: 100%; height: auto; }
+</style>
+</head>
+<body>
+<h1>Le armature degli eroi in 3D (PoC)</h1>
+<p><code>poc/armature-3d/armature.js</code>: <code>vesti(eroe, tipo, pregio)</code>. Parametri: <code>?eroe=mago&amp;tipo=corazza&amp;pregio=3</code> (uno solo, grande), <code>?tipo=manto&amp;pregi</code> (i tre pregi per ogni eroe), <code>?vista=dietro|lato</code>, <code>?marcia</code>, <code>?pausa</code>, <code>?t=</code>.</p>
+<div id="esito">in corso…</div>
+<div id="righe"></div>
+<script type="module">
+import { WebGLRenderer, Scene, PerspectiveCamera, HemisphereLight, DirectionalLight, Color, CircleGeometry, Mesh, ShadowMaterial, PCFSoftShadowMap, SRGBColorSpace, ACESFilmicToneMapping } from 'three'
+import { creaEroe, posaMarcia, posaGuardia, CHIAVI } from './eroi-3d/eroi.js'
+import { equipaggia } from './armi-3d/armi.js'
+import { vesti, TIPI } from './armature-3d/armature.js'
+
+const url = new URLSearchParams(location.search)
+const solo = url.get('eroe'), tipoUrl = url.get('tipo'), pregioUrl = Number(url.get('pregio') || 1), vista = url.get('vista') || 'tre-quarti'
+const pausa = url.has('pausa'), marcia = url.has('marcia'), T0 = Number(url.get('t') || 0), pregi = url.has('pregi')
+const errori = []
+const vecchio = console.error
+console.error = (...a) => { errori.push(a.map(String).join(' ').slice(0, 300)); vecchio.apply(console, a) }
+addEventListener('error', e => errori.push(String(e.message)))
+const risultato = window.__prova = { ok: false, errori, triangoli: {} }
+
+const renderer = new WebGLRenderer({ antialias: true, preserveDrawingBuffer: true })
+renderer.setPixelRatio(1); renderer.shadowMap.enabled = true; renderer.shadowMap.type = PCFSoftShadowMap
+renderer.outputColorSpace = SRGBColorSpace; renderer.toneMapping = ACESFilmicToneMapping; renderer.toneMappingExposure = 1.1
+
+const scena = new Scene(); scena.background = new Color(0x2a3038)
+scena.add(new HemisphereLight(0xfff0d8, 0x6a5a3a, 1.9))
+const sole = new DirectionalLight(0xfff1dc, 2.6); sole.position.set(3, 6, 5); sole.castShadow = true
+sole.shadow.mapSize.set(2048, 2048); sole.shadow.radius = 4; sole.shadow.bias = -0.0008
+{ const c = sole.shadow.camera; c.left = -2; c.right = 2; c.top = 2; c.bottom = -2; c.near = 0.5; c.far = 24 }
+scena.add(sole)
+const fredda = new DirectionalLight(0xa8c8ff, 0.9); fredda.position.set(-4, 2, -3); scena.add(fredda)
+const suolo = new Mesh(new CircleGeometry(3, 40), new ShadowMaterial({ opacity: 0.35 })); suolo.rotation.x = -Math.PI / 2; suolo.receiveShadow = true; scena.add(suolo)
+
+function armi (e) { equipaggia(e, { destra: 'spada:medio', sinistra: 'scudo:medio' }) }
+function animaArmi (e, t) {
+  const pa = e.userData.perniArmi; if (!pa) return
+  for (const p of Object.values(pa)) { const a = p.children[0]; if (a && a.userData.anima) a.userData.anima(t) }
+}
+const lato = { 'tre-quarti': 0.35, dietro: Math.PI + 0.4, lato: Math.PI / 2, davanti: 0 }[vista] ?? 0.5
+
+// ogni cella: un eroe con la sua armatura (o nuda), acceso solo quando si disegna la sua cella
+function cella (chiave, tipo, pregio) {
+  const e = creaEroe(chiave); armi(e)
+  if (tipo) vesti(e, tipo, pregio)
+  e.rotation.y = lato; e.visible = false; scena.add(e)
+  risultato.triangoli[`${chiave}/${tipo || 'nudo'}${tipo && pregio > 1 ? '/' + pregio : ''}`] = tipo ? e.userData.triangoliArmatura : 0
+  return e
+}
+function ritrai (e, t, cam, tela, ox, oy, w, h, etichetta) {
+  if (marcia) posaMarcia(e, t * 5 + 0.7); else riposo(e, t)
+  e.userData.anima(t); if (e.userData.animaArmatura) e.userData.animaArmatura(t); animaArmi(e, t)
+  e.visible = true; renderer.setSize(w, h, false); renderer.render(scena, cam); e.visible = false
+  const x = tela.getContext('2d'); x.drawImage(renderer.domElement, 0, 0, w, h, ox, oy, w, h)
+  if (etichetta) { x.font = '600 13px system-ui'; x.fillStyle = 'rgba(240,240,235,.85)'; x.fillText(etichetta, ox + 8, oy + 18) }
+}
+// una posa a braccia basse: la guardia dell'eroe coprirebbe il petto con lo scudo, e qui è l'armatura che si guarda
+function riposo (e, t) {
+  const u = e.userData, [bs, bd] = u.bracci
+  posaGuardia(e, t)
+  bd.rotation.set(0.05, 0, -0.14); bs.rotation.set(0.05, 0, 0.16); u.busto.rotation.set(0, 0.04, 0); u.testa.rotation.set(0, 0, 0)
+}
+function nuovaTela (w, h) {
+  const fig = document.createElement('figure'), tela = document.createElement('canvas'); tela.width = w; tela.height = h
+  fig.append(tela); document.getElementById('righe').append(fig); return tela
+}
+const camera = (w, h, fov = 25) => { const c = new PerspectiveCamera(fov, w / h, 0.1, 60); c.position.set(0, 1.0, 3.9); c.lookAt(0, 0.78, 0); return c }
+
+try {
+  const giri = []
+  if (solo && CHIAVI.includes(solo)) {
+    const W = 760, H = 900, tela = nuovaTela(W, H), cam = camera(W, H, 28); cam.position.set(0, 1.0, 4.0); cam.lookAt(0, 0.78, 0)
+    const e = cella(solo, TIPI.includes(tipoUrl) ? tipoUrl : null, pregioUrl)
+    giri.push(t => ritrai(e, t, cam, tela, 0, 0, W, H, null))
+  } else if (pregi) {
+    const tipo = TIPI.includes(tipoUrl) ? tipoUrl : 'corazza', cw = 380, ch = 400, W = cw * 3, H = ch * 4, tela = nuovaTela(W, H), cam = camera(cw, ch, 27)
+    CHIAVI.forEach((k, r) => [1, 2, 3].forEach((p, c) => { const e = cella(k, tipo, p); giri.push(t => ritrai(e, t, cam, tela, c * cw, r * ch, cw, ch, c === 0 ? `${k} — ${tipo}` : `pregio ${p}`)) }))
+  } else {
+    const cw = 300, ch = 340, W = cw * 5, H = ch * 4, tela = nuovaTela(W, H), cam = camera(cw, ch, 26)
+    CHIAVI.forEach((k, r) => [null, ...TIPI].forEach((tp, c) => { const e = cella(k, tp, pregioUrl); giri.push(t => ritrai(e, t, cam, tela, c * cw, r * ch, cw, ch, c === 0 ? `${k} — nudo` : (r === 0 ? tp + (pregioUrl > 1 ? ' ' + pregioUrl : '') : null))) }))
+  }
+  const ciclo = t => { for (const g of giri) g(t) }
+  ciclo(T0)
+  if (!pausa) { const t0 = performance.now(); const anima = () => { ciclo(T0 + (performance.now() - t0) / 1000); requestAnimationFrame(anima) }; requestAnimationFrame(anima) }
+  risultato.ok = true
+} catch (e) { errori.push(String(e.stack || e)) }
+const es = document.getElementById('esito')
+es.textContent = errori.length ? 'errori: ' + errori.join(' | ') : 'ok — ' + Object.entries(risultato.triangoli).filter(([, n]) => n).map(([k, n]) => `${k} ${n}`).join(', ')
+es.className = errori.length ? 'male' : ''
+risultato.ok = risultato.ok && !errori.length
+</script>
+</body>
+</html>

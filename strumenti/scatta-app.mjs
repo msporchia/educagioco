@@ -33,6 +33,7 @@
    `--aspetta 4000` aspetta tanto dopo l'apertura, prima dei tocchi e dello scatto.
    `--prima '<espressione>'` la fa nella pagina (e la aspetta) dopo `--aspetta` e prima dei tocchi: per portare l'eroe del mondo
    di sopra in 3D davanti a un posto (`window.__mondo3d.vai('pietra:altare')`) o per aprire qualcosa a mano.
+   `--tana bosco [--distanza 4.5] [--senza-mostri]` porta l'eroe del mondo 3D di sopra davanti alla tana di un luogo (`--tana lista` li elenca).
    `--sequenza 8 --ogni 120` fa otto scatti di fila dopo i tocchi (`<nome>-1.png`…), per guardare un'animazione.
 
    `--esegui '<espressione>'` la valuta nella pagina prima dei tocchi.
@@ -92,6 +93,23 @@ await page.waitForTimeout(1200)                 // l'app aspetta il profilo
 await page.waitForTimeout(Number(opz('aspetta', 0)))
 // `--prima '<espressione>'`: la si fa (e la si aspetta, se è una promessa) prima dei tocchi e dello scatto: `window.__mondo3d.vai('pietra:altare')`
 if (opz('prima', null)) await page.evaluate(opz('prima')).catch(e => errori.push('--prima: ' + e.message))
+// `--tana <luogo>` (con `--gioco sotterraneo3d` o `#sotterraneo3d=mondo`): porta l'eroe del mondo di sopra a `--distanza` celle (4,5) a sud
+// della tana di quel luogo (`bosco`, `ceneri`, `landa`… le chiavi di `m.regioni`) e aspetta che la zona si carichi; `--senza-mostri`
+// li spegne (si vede il segno e basta), `--tana-lista` stampa i luoghi con la loro tana
+if (opz('tana', null)) {
+  const r = await page.evaluate(async ([chiave, d, senza]) => {
+    const M = window.__mondo3d
+    if (!M) return 'manca window.__mondo3d: serve il mondo 3D di sopra'
+    if (chiave === 'lista') return M.m.regioni.filter(q => q.tana).map(q => `${q.chiave} (${q.habitat}) ${q.tana.x},${q.tana.y}`).join('\n')
+    const R = M.m.regioni.find(q => q.chiave === chiave)
+    if (!R || !R.tana) return `nessuna tana per «${chiave}»`
+    if (senza) M.senzaMostri()
+    M.porta(R.tana.x + 0.5, R.tana.y + 0.5 + d)
+    await new Promise(f => setTimeout(f, 4500))
+    return null
+  }, [opz('tana'), Number(opz('distanza', 4.5)), args.includes('--senza-mostri')]).catch(e => '--tana: ' + e.message)
+  if (r) { if (opz('tana') === 'lista') console.log(r); else errori.push(String(r)) }
+}
 
 // una pagina del server di Vite (un banco), senza il giocatore di prova dell'app
 async function apriPagina() {

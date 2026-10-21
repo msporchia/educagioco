@@ -13,7 +13,7 @@
 import { readFileSync, writeFileSync, rmSync, mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { resolve } from 'node:path'
-import { apriBrowser, apriGioco, semina, azzera, scatto, leggiProfilo,
+import { apriBrowser, apriGioco, semina, azzera, scatto, leggiProfilo, apriTendine,
          GIOCATORE, scegli } from '../aiuto/browser.mjs'
 import { GIOCHI } from '../../src/data/giochi.js'
 import { SAPERI } from '../../src/data/saperi.js'
@@ -44,9 +44,10 @@ const digita = async pin => { for (const c of pin) await page.click(`.tasto >> t
    quella aperta: è la differenza fra un test che si rompe quando si
    cambia il difetto e uno che si rompe quando si rompe qualcosa. */
 const apriScheda = async nome => {
-  await page.waitForSelector(`.schede button[data-scheda="${nome}"]`, { timeout: 5000 })
-  await page.click(`.schede button[data-scheda="${nome}"]`)
+  await page.waitForSelector(`[data-scheda="${nome}"]`, { timeout: 5000 })
+  await page.click(`[data-scheda="${nome}"]`)
   await page.waitForTimeout(150)
+  await apriTendine(page)        // le tendine nascono chiuse: qui si prova quello che c'è dentro
 }
 
 /* ── IL QUADRO, CHE È L'UNICO POSTO DOVE SI TARA ──
@@ -147,6 +148,7 @@ controlla('un tasto premuto durante l\'attesa non conta',
 await page.waitForSelector('.fermo .barretta.muta', { state: 'attached', timeout: 15000 })
 await digita('0000')
 await page.waitForSelector('.carte', { timeout: 5000 })
+await apriTendine(page)      // le cose che cancellano stanno nella «Zona delicata», chiusa di partenza
 const dentro = await page.evaluate(() => document.body.innerText)
 controlla('con 0000 si entra', dentro.includes('Salva su file'))
 controlla('ci sono tutte e tre le cose',
@@ -234,6 +236,7 @@ if (dati) {
 }
 
 /* ── 4. cancellare chiede conferma ── */
+await apriTendine(page)      // «Zona delicata» nasce chiusa
 await page.click('.carta.pericolo')
 await page.waitForSelector('.carta.pericolo.aperta', { timeout: 5000 })
 controlla('cancellare chiede conferma invece di fare e basta',
@@ -491,16 +494,15 @@ if (IN_PROVA.length) {
    deve sopravvivere a un riavvio, e deve arrivare fino alla home. */
 await vaiAiGenitori()
 await digita('0000')
-await page.waitForSelector('.schede', { timeout: 5000 })
-/* Tre, e rispondono a tre domande diverse: *chi gioca*, *cosa gli
-   arriva*, *come sta andando*. «Come va» è tornata dopo essere stata
+await page.waitForSelector('nav.barra-giu', { timeout: 5000 })
+/* Quattro, nella barra in basso, e rispondono a domande diverse: *chi è*, *cosa gli arriva*, *come sta andando*, *cosa riguarda il telefono*. «Come va» è tornata dopo essere stata
    sospesa — mostrava solo i segnali, e tre righe senza il resto non
    dicono se sono tre su dieci o tre su centoventi. Quello che fa
    adesso lo prova `integrazione/come-va`; qui basta che ci sia. */
-controlla('le schede sono tre: bambini, giochi e domande, come va',
-  (await page.locator('.schede button').count()) === 3)
+controlla('le schede sono quattro nella barra in basso: bambino, giochi, come va, casa',
+  (await page.locator('nav.barra-giu [data-scheda]').count()) === 4)
 uguale('e «Come va» è una di loro',
-  await page.locator('.schede button[data-scheda="comeva"]').count(), 1)
+  await page.locator('[data-scheda="comeva"]').count(), 1)
 /* «Cosa sa» era la scheda delle domande detta in un altro modo, e
    «Domande» era l'elenco delle classi con quattro tondi per riga: tutte
    e due dicevano quello che il quadro dell'età dice già, e la seconda
@@ -508,14 +510,14 @@ uguale('e «Come va» è una di loro',
    altro posto. Si tara nel quadro, e basta. */
 for (const morta of ['sa', 'domande'])
   uguale(`la scheda «${morta}» non c'è più`,
-         await page.locator(`.schede button[data-scheda="${morta}"]`).count(), 0)
+         await page.locator(`[data-scheda="${morta}"]`).count(), 0)
 
 /* ── l'età si legge dove sta il bambino, si cambia dove si tara ──
    La manopola col quadro sotto è alta due schermate, e stava in mezzo
    alla carta di chi gioca: per cambiare il nome a un bambino bisognava
    scorrere tutto l'elenco delle domande. Qui resta la riga che la dice,
    col rimando; la manopola vive nella scheda dove si tara. */
-await page.click('.schede button[data-scheda="bambini"]')
+await page.click('[data-scheda="bambini"]')
 await apriScheda('bambini')
 await page.waitForSelector('.carta.chi-gioca', { timeout: 5000 })
 controlla('la carta di chi gioca dice quanti anni ha',
@@ -802,6 +804,7 @@ uguale('e il flag vecchio sparisce', migrato.settings.divisioni, undefined)
 await vaiAiGenitori()
 await digita('0000')
 await page.waitForSelector('.carte', { timeout: 5000 })
+await apriScheda('casa')
 await page.click('.carta[data-azione="cambia-codice"]')
 await page.waitForSelector('.tastierino', { timeout: 5000 })
 
@@ -814,6 +817,7 @@ controlla('e si resta a scegliere il codice nuovo', await page.isVisible('.tasti
 
 await digita('1234')
 await digita('1234')
+await apriScheda('casa')
 await page.waitForSelector('.carta[data-azione="cambia-codice"]', { timeout: 5000 })
 controlla('due volte uguali lo cambiano',
   (await page.evaluate(() => document.body.innerText)).includes('Codice cambiato'))
@@ -827,15 +831,18 @@ await page.waitForTimeout(200)
 controlla('il vecchio codice non apre più', await page.isVisible('.tastierino'))
 await digita('1234')
 await page.waitForSelector('.carte', { timeout: 5000 })
+await apriScheda('casa')
 controlla('quello nuovo apre, anche dopo un riavvio',
   await page.isVisible('.carta[data-azione="cambia-codice"]'))
 
 /* rimesso com'era: il codice sta fuori dai profili apposta, quindi
    nemmeno «cancella i progressi» lo riporterebbe a 0000 */
+await apriScheda('casa')
 await page.click('.carta[data-azione="cambia-codice"]')
 await page.waitForSelector('.tastierino', { timeout: 5000 })
 await digita('0000')
 await digita('0000')
+await apriScheda('casa')
 await page.waitForSelector('.carta[data-azione="cambia-codice"]', { timeout: 5000 })
 
 /* ── 9. il modo di dirlo ──
@@ -848,6 +855,7 @@ await page.waitForSelector('.carta[data-azione="cambia-codice"]', { timeout: 500
    è il dato che nessun genitore saprebbe scrivere a mano, ed è tutto il
    motivo per cui il link si costruisce invece di essere una costante. */
 const segnala = '.carta[data-azione="segnala"]'
+await apriScheda('casa')
 controlla('si può segnalare anche senza nessun guasto in archivio',
   await page.isVisible(segnala))
 const dove = await page.getAttribute(segnala, 'href')

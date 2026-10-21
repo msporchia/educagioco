@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Armi in 3D puro</title>
+<style>
+  :root { --fondo: #14161b; --carta: #1b1e25; --riga: #2c313a; --testo: #e2e5e0; --tenue: #98a09c; --male: #ff8a7a; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 18px; background: var(--fondo); color: var(--testo); font: 13px/1.4 system-ui, sans-serif; }
+  h1 { font-size: 17px; margin: 0 0 4px; }
+  p { margin: 0 0 12px; color: var(--tenue); max-width: 90ch; }
+  #esito.male { color: var(--male); }
+  #griglia { display: grid; grid-template-columns: repeat(3, 240px); gap: 8px; margin-bottom: 18px; }
+  figure { margin: 0; background: var(--carta); border: 1px solid var(--riga); border-radius: 4px; padding: 4px; }
+  canvas { display: block; border-radius: 3px; }
+  #griglia canvas { width: 230px; height: 230px; }
+  figcaption { font-size: 11px; color: var(--tenue); margin-top: 3px; }
+  .largo canvas { width: 100%; max-width: 1100px; height: auto; }
+</style>
+</head>
+<body>
+<h1>Armi in 3D puro (PoC)</h1>
+<p>Spada, scudo, arco e staffa in tre gradi, tutto in codice (<code>poc/armi-3d/armi.js</code>). Parametri: <code>?vista=griglia|contadini|tre-gradi</code> (&amp;famiglia=spada), <code>?t=</code> il tempo, <code>?pausa</code> ferma le rotazioni.</p>
+<div id="esito">in corso…</div>
+<div id="griglia"></div>
+<figure class="largo" id="sezContadini"><canvas id="contadini" width="1100" height="440"></canvas><figcaption>I contadini col set «super» (spada+scudo, arco, staffa) e il set «base».</figcaption></figure>
+<figure class="largo" id="sezTre"><canvas id="tre" width="1000" height="440"></canvas><figcaption id="didTre"></figcaption></figure>
+<script type="module">
+import { WebGLRenderer, Scene, PerspectiveCamera, HemisphereLight, DirectionalLight, Box3, Vector3, Color, CircleGeometry, Mesh, ShadowMaterial, PCFSoftShadowMap, SRGBColorSpace, ACESFilmicToneMapping } from 'three'
+import { creaArma, equipaggia, FAMIGLIE, GRADI } from './armi-3d/armi.js'
+import { creaContadino } from '../src/giochi/fattoria3d/scena3d/modelli-compagni.js'
+
+const url = new URLSearchParams(location.search)
+const vista = url.get('vista') || 'tutto'
+const pausa = url.has('pausa')
+const T0 = Number(url.get('t') || 0)
+const errori = []
+const vecchio = console.error
+console.error = (...a) => { errori.push(a.map(String).join(' ').slice(0, 300)); vecchio.apply(console, a) }
+addEventListener('error', e => errori.push(String(e.message)))
+const risultato = window.__prova = { ok: false, errori, triangoli: {} }
+
+const renderer = new WebGLRenderer({ antialias: true, preserveDrawingBuffer: true })
+renderer.setPixelRatio(1); renderer.shadowMap.enabled = true; renderer.shadowMap.type = PCFSoftShadowMap
+renderer.outputColorSpace = SRGBColorSpace; renderer.toneMapping = ACESFilmicToneMapping; renderer.toneMappingExposure = 1.1
+
+function nuovaScena (sfondo = 0x2a3038) {
+  const s = new Scene(); s.background = new Color(sfondo)
+  s.add(new HemisphereLight(0xfff0d8, 0x6a5a3a, 1.9))
+  const sole = new DirectionalLight(0xfff1dc, 2.6); sole.position.set(3, 6, 5); sole.castShadow = true
+  sole.shadow.mapSize.set(1024, 1024); sole.shadow.radius = 4; sole.shadow.bias = -0.0008
+  const c = sole.shadow.camera; c.left = -2.5; c.right = 2.5; c.top = 2.5; c.bottom = -2.5; c.near = 0.5; c.far = 20
+  s.add(sole)
+  const luceFredda = new DirectionalLight(0xa8c8ff, 0.8); luceFredda.position.set(-4, 2, -3); s.add(luceFredda)
+  return s
+}
+function suolo (s, y, r = 1.5) {
+  const m = new Mesh(new CircleGeometry(r, 32), new ShadowMaterial({ opacity: 0.35 })); m.rotation.x = -Math.PI / 2; m.position.y = y; m.receiveShadow = true; s.add(m)
+}
+function copia (tela) {
+  const x = tela.getContext('2d'); x.drawImage(renderer.domElement, 0, 0, tela.width, tela.height)
+}
+
+// ── la griglia 4 × 3 ──
+function griglia () {
+  const LATO = 460
+  renderer.setSize(LATO, LATO, false)
+  const cont = document.getElementById('griglia')
+  const celle = []
+  for (const fam of FAMIGLIE) for (const grado of GRADI) {
+    const arma = creaArma(fam, grado), tri = arma.userData.triangoli
+    risultato.triangoli[`${fam}/${grado}`] = tri
+    const s = nuovaScena(), cam = new PerspectiveCamera(30, 1, 0.05, 50)
+    const ruota = new (arma.constructor)(); ruota.add(arma); s.add(ruota)
+    const b = new Box3().setFromObject(arma), c = b.getCenter(new Vector3()), d = b.getSize(new Vector3())
+    arma.position.set(-c.x, -c.y, -c.z); suolo(s, -d.y / 2 - 0.04, 0.6)
+    const raggio = Math.max(d.y, d.x, d.z) * 0.62
+    cam.position.set(0, d.y * 0.1, raggio / Math.tan(15 * Math.PI / 180) + 0.1); cam.lookAt(0, 0, 0)
+    const fig = document.createElement('figure'), tela = document.createElement('canvas')
+    tela.width = tela.height = LATO
+    const did = document.createElement('figcaption'); did.textContent = `${fam} · ${grado} · ${tri} tri`
+    fig.append(tela, did); cont.append(fig)
+    celle.push({ arma, ruota, s, cam, tela })
+  }
+  const disegna = t => {
+    for (const k of celle) {
+      k.ruota.rotation.y = 0.6 + t * 0.7
+      if (k.arma.userData.anima) k.arma.userData.anima(t)
+      renderer.render(k.s, k.cam); copia(k.tela)
+    }
+  }
+  return disegna
+}
+
+// ── tre gradi di una famiglia, grandi, affiancati ──
+function treGradi () {
+  const fam = url.get('famiglia') || 'spada'
+  const tela = document.getElementById('tre'), W = tela.width, H = tela.height
+  renderer.setSize(W, H, false)
+  const s = nuovaScena(), cam = new PerspectiveCamera(28, W / H, 0.05, 50)
+  const arme = GRADI.map((g, i) => {
+    const a = creaArma(fam, g), p = new (a.constructor)(); p.add(a); p.position.x = (i - 1) * 0.95; s.add(p)
+    risultato.triangoli[`${fam}/${g}`] = a.userData.triangoli
+    return { a, p }
+  })
+  const b = new Box3().setFromObject(arme[1].a), cy = b.getCenter(new Vector3()).y
+  suolo(s, b.min.y - 0.05, 2)
+  cam.position.set(0, cy + 0.1, 4.2); cam.lookAt(0, cy, 0)
+  document.getElementById('didTre').textContent = `${fam}: base · medio · super — ` + GRADI.map(g => `${g} ${risultato.triangoli[`${fam}/${g}`]} tri`).join(', ')
+  return t => {
+    for (const { a, p } of arme) { p.rotation.y = 0.5 + t * 0.6; if (a.userData.anima) a.userData.anima(t) }
+    renderer.render(s, cam); copia(tela)
+  }
+}
+
+// ── i contadini in posa ──
+const smussa = x => x * x * (3 - 2 * x)
+function colpo (t) { const f = (t * 0.9) % 1; return f < 0.45 ? smussa(f / 0.45) : f < 0.6 ? 1 : 1 - smussa((f - 0.6) / 0.4) }   // 0 giù, 1 in alto
+function posa (i, c, t) {
+  const [bs, bd] = c.userData.bracci, pa = c.userData.perniArmi
+  c.userData.busto.rotation.set(0, 0, 0); bs.rotation.set(0, 0, 0); bd.rotation.set(0, 0, 0)
+  if (i === 0 || i === 3) {                                  // spada + scudo: il colpo
+    const k = colpo(i === 3 ? t + 0.4 : t)
+    bd.rotation.x = -0.35 - 2.1 * k; bd.rotation.z = -0.1
+    bs.rotation.x = -0.7; bs.rotation.z = 0.1
+    c.userData.busto.rotation.y = 0.15 - 0.3 * k
+  } else if (i === 1) {                                      // arco teso in avanti, l'altra mano alla corda
+    bs.rotation.x = -1.5; bs.rotation.z = 0.05
+    pa.sinistra.rotation.x = 1.5
+    bd.rotation.x = -1.2; bd.rotation.y = 0.6; bd.rotation.z = -0.5
+    c.userData.busto.rotation.y = -0.25
+  } else {                                                   // staffa: la alza e luccica
+    bd.rotation.x = -0.45 - 0.08 * Math.sin(t * 2); bd.rotation.z = -0.08
+    bs.rotation.x = -0.9 + 0.1 * Math.sin(t * 2); bs.rotation.z = 0.5
+    c.userData.busto.rotation.y = 0.1
+  }
+}
+function contadini () {
+  const tela = document.getElementById('contadini'), W = tela.width, H = tela.height
+  renderer.setSize(W, H, false)
+  const s = nuovaScena(), cam = new PerspectiveCamera(26, W / H, 0.1, 50)
+  s.children.find(o => o.isDirectionalLight).shadow.camera.left = -4
+  const sole = s.children.find(o => o.isDirectionalLight); Object.assign(sole.shadow.camera, { left: -4, right: 4 })
+  suolo(s, 0, 3.2)
+  const gruppi = [['spada:super', 'scudo:super'], ['', 'arco:super'], ['staffa:super', ''], ['spada:base', 'scudo:base']]
+  const lista = gruppi.map(([d, sx], i) => {
+    const c = creaContadino(i === 1 ? 'contadina' : 'contadino')
+    c.position.x = (i - 1.5) * 1.35; c.rotation.y = [0.45, 0.65, 0.2, 0.45][i]; s.add(c)
+    equipaggia(c, { destra: d || null, sinistra: sx || null })
+    return c
+  })
+  cam.position.set(0, 1.0, 5.3); cam.lookAt(0, 0.72, 0)
+  return t => {
+    lista.forEach((c, i) => {
+      posa(i, c, t)
+      for (const lato of ['destra', 'sinistra']) { const p = c.userData.perniArmi[lato]; if (p && p.children[0].userData.anima) p.children[0].userData.anima(t) }
+    })
+    renderer.render(s, cam); copia(tela)
+  }
+}
+
+try {
+  const giri = []
+  const vediGriglia = vista === 'tutto' || vista === 'griglia'
+  const vediCont = vista === 'tutto' || vista === 'contadini'
+  const vediTre = vista === 'tre-gradi'
+  document.getElementById('griglia').style.display = vediGriglia ? '' : 'none'
+  document.getElementById('sezContadini').style.display = vediCont ? '' : 'none'
+  document.getElementById('sezTre').style.display = vediTre ? '' : 'none'
+  if (vediGriglia) giri.push(griglia())
+  if (vediCont) giri.push(contadini())
+  if (vediTre) giri.push(treGradi())
+  const ciclo = t => { for (const g of giri) g(t) }
+  ciclo(T0)
+  if (!pausa) { const t0 = performance.now(); const anima = () => { ciclo(T0 + (performance.now() - t0) / 1000); requestAnimationFrame(anima) }; requestAnimationFrame(anima) }
+  risultato.ok = true
+} catch (e) { errori.push(String(e.stack || e)) }
+const es = document.getElementById('esito')
+es.textContent = errori.length ? 'errori: ' + errori.join(' | ') : 'ok'
+es.className = errori.length ? 'male' : ''
+risultato.ok = risultato.ok && !errori.length
+</script>
+</body>
+</html>

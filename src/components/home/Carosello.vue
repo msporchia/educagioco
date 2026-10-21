@@ -14,17 +14,24 @@ import { MODI } from '../../data/aree.js'
 const props = defineProps({
   giochi: { type: Array, required: true },   // righe di data/giochi.js, con `punto` e `classe`
   ultimo: { type: String, default: null },
+  // le impostazioni dei grandi usano lo stesso carosello (docs/genitori/giochi.md): `imposta` toglie il «gioca», `spenti` mette
+  // in grigio i giochi che in casa non ci sono, e `cambia` dice quale è in mezzo
+  imposta: { type: Boolean, default: false },
+  spenti: { type: Array, default: () => [] },
+  inMezzo: { type: String, default: null },
 })
-const emit = defineEmits(['apri'])
+const emit = defineEmits(['apri', 'cambia'])
 
-const L = 188, A = 288, ARTE = 114            // la copertina in mezzo: larga, alta, il disegno
+const L = 188, ARTE = 114                     // la copertina in mezzo: larga e il disegno
+const A = props.imposta ? 232 : 288           // senza il «gioca» (impostazioni dei grandi) la carta è più bassa
 const X = [0, 146, 252], S = [1, 0.8, 0.66]   // dove stanno e quanto sono grandi le vicine
 const SOGLIA = 16                             // docs/core/il-dito.md
 
 const limita = i => Math.max(0, Math.min(props.giochi.length - 1, i))
-const pos = ref(limita(Math.max(0, props.giochi.findIndex(g => g.chiave === ricordato))))
+const pos = ref(limita(Math.max(0, props.giochi.findIndex(g => g.chiave === (props.inMezzo || ricordato)))))
 const qui = computed(() => limita(Math.round(pos.value)))
 const scatta = ref(false), tira = ref(false)
+watch(qui, i => emit('cambia', props.giochi[i]?.chiave || null), { immediate: true })
 
 function vai (i) {
   pos.value = limita(i)
@@ -107,7 +114,7 @@ const modo = g => MODI[g.come] ? `${MODI[g.come].emoji} ${MODI[g.come].nome}` : 
          @pointerdown="premi" @pointermove="muovi" @pointerup="lascia" @pointercancel="lascia"
          @dragstart.prevent>
       <button v-for="(g, i) in giochi" :key="g.chiave" type="button"
-              class="carta gioco" :class="[g.classe, { davanti: i === qui }]" :data-gioco="g.chiave"
+              class="carta gioco" :class="[g.classe, { davanti: i === qui, spenta: spenti.includes(g.chiave) }]" :data-gioco="g.chiave"
               :tabindex="i === qui ? 0 : -1" :aria-hidden="Math.abs(i - qui) > 2 ? 'true' : null"
               :style="[{ width: L + 'px', height: A + 'px', marginLeft: -L / 2 + 'px' , background: DIPINTE[g.chiave]?.fondo || g.copertina?.fondo || '#8593a8' }, stile(i)]"
               @click="tocca(i)">
@@ -116,15 +123,17 @@ const modo = g => MODI[g.come] ? `${MODI[g.come].emoji} ${MODI[g.come].nome}` : 
           <b>{{ g.nome }}</b>
           <i>{{ g.che }}</i>
           <small class="modo">{{ modo(g) }}<template v-if="g.punto"> · {{ g.punto }}</template></small>
-          <Salvadanaio :gioco="g.chiave" />
-          <span class="gioca">▶ gioca</span>
+          <template v-if="!imposta">
+            <Salvadanaio :gioco="g.chiave" />
+            <span class="gioca">▶ gioca</span>
+          </template>
         </span>
       </button>
       <button type="button" class="fr sx" aria-label="gioco prima" :disabled="qui === 0" @click="vai(qui - 1)">‹</button>
       <button type="button" class="fr dx" aria-label="gioco dopo" :disabled="qui === giochi.length - 1" @click="vai(qui + 1)">›</button>
     </div>
 
-    <div class="indice">
+    <div class="indice" :class="{ fila: imposta }">
       <button v-for="(g, i) in giochi" :key="g.chiave" type="button"
               :class="{ on: i === qui, ultimo: g.chiave === ultimo }"
               :data-indice="g.chiave" :aria-label="g.nome" @click="vai(i)">
@@ -154,11 +163,14 @@ const modo = g => MODI[g.come] ? `${MODI[g.come].emoji} ${MODI[g.come].nome}` : 
          background:#1f2433; color:#fff }
 .carta:not(.davanti) .gioca { visibility:hidden }
 .carta.davanti:active { transform:scale(.98) !important }
+.carta.spenta { filter:grayscale(.9) brightness(1.04) }
 .fr { position:absolute; top:70px; z-index:200; width:34px; height:34px; border-radius:50%;
       background:#fff; color:#1f2433; font-size:20px; line-height:1; box-shadow:0 1px 3px #1f243326 }
 .fr.sx { left:20px } .fr.dx { right:20px }
 .fr:disabled { opacity:0; pointer-events:none }
 
+.indice.fila { display:flex; overflow-x:auto; gap:8px; padding:2px 2px 6px; margin-top:8px; scrollbar-width:none }
+.indice.fila button { flex:none; width:48px; font-size:26px }
 .indice { display:grid; grid-template-columns:repeat(auto-fill, minmax(56px, 1fr)); gap:8px; margin-top:14px }
 .indice button { position:relative; aspect-ratio:1; border-radius:14px; font-size:32px; line-height:1;
                  background:#fff; box-shadow:0 1px 2px #1f243312 }

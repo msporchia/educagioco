@@ -1,7 +1,7 @@
 <script setup>
 // Il primo avvio e ogni bambino aggiunto: un modulo solo (`primo` cambia
 // due parole e la via d'uscita). Vedi docs/genitori/manopola.md.
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { creaGiocatore } from '../store/profile.js'
 import { eccezioniPerEta } from '../data/partenze.js'
 import { PERSONE } from '../giochi/fattoria/dati/atlante.js'
@@ -11,6 +11,7 @@ import Prova from '../quiz/Prova.vue'
 import VeloGuide from '../guide/VeloGuide.vue'
 import { ricordaScelta, AMICI_DI_BASE } from '../store/amici.js'
 import { PASSO } from '../amici/testi.js'
+import { MESI, etaAnagrafica, nascitaValida, inParole, dentroGliEstremi } from '../data/nascita.js'
 
 const props = defineProps({
   primo: { type: Boolean, default: true },   // false = si aggiunge un fratello dalle impostazioni
@@ -24,6 +25,16 @@ const anni = ref(4)   // si parte da quattro, non da vuoto: premere senza legger
 const passo = ref(1)
 const amici = ref(AMICI_DI_BASE)   // la domanda ai genitori: di base spento (docs/core/amici.md)
 const leggiAmici = ref(false)
+// la data di nascita (facoltativa): mese e anno, solo sul telefono. Se c'è, la manopola si mette sull'età che ne esce, e da lì l'età si tiene aggiornata da sola
+const mese = ref('')
+const annoNascita = ref('')
+const ANNI_DISPONIBILI = Array.from({ length: 15 }, (_, i) => new Date().getFullYear() - i)
+const nascita = computed(() => {
+  const n = { m: Number(mese.value), a: Number(annoNascita.value) }
+  return mese.value !== '' && annoNascita.value !== '' && nascitaValida(n) ? n : null
+})
+const etaDaData = computed(() => (nascita.value ? etaAnagrafica(nascita.value) : null))
+watch(etaDaData, e => { if (e) anni.value = Math.max(4, Math.min(12, dentroGliEstremi(e.anni))) })
 const spiegami = ref(false)
 const prova = ref(null)   // { sorgente|chiave, nome } | null
 
@@ -42,7 +53,7 @@ async function entra() {
   // entra: true anche aggiungendo un fratello: si aggiunge un bambino perché vuole giocare adesso
   try {
     ricordaScelta(amici.value)   // il profilo non esiste ancora: la risposta la prende il suo primo `carica`
-    await creaGiocatore(pulito.value, true, anni.value, aspetto.value)
+    await creaGiocatore(pulito.value, true, anni.value, aspetto.value, nascita.value)
     emit('fatto')
   } finally { occupato.value = false }
 }
@@ -86,6 +97,17 @@ async function entra() {
       <div class="manopola-posto">
         <ManopolaEta :anni="anni" :giochi="daQuellEta.giochi" :sa="daQuellEta.sa"
                      @scegli="anni = $event" @prova="prova = $event" />
+      </div>
+
+      <!-- facoltativa: con la data l'età si tiene aggiornata da sola (docs/genitori/riordino.md) -->
+      <div class="nascita-domanda" data-nascita-domanda>
+        <b>🎂 Quando è nato? <small>(se vuoi)</small></b>
+        <div class="selezioni">
+          <select v-model="mese" aria-label="mese di nascita" data-nascita-mese><option value="">mese</option><option v-for="(m, i) in MESI" :key="m" :value="i">{{ m }}</option></select>
+          <select v-model="annoNascita" aria-label="anno di nascita" data-nascita-anno><option value="">anno</option><option v-for="a in ANNI_DISPONIBILI" :key="a" :value="a">{{ a }}</option></select>
+        </div>
+        <p v-if="etaDaData" class="mini" data-nascita-eta>Ha {{ inParole(etaDaData) }}: da qui l'età si aggiorna da sola.</p>
+        <p v-else class="mini">Senza, l'età resta quella che scegli qui sopra e la sposti tu quando serve.</p>
       </div>
 
       <!-- una domanda per i grandi, preselezionata sulla risposta prudente (come la manopola): docs/core/amici.md -->
@@ -157,4 +179,8 @@ form { display:flex; flex-direction:column; align-items:center; gap:14px; width:
 .amici-domanda .scelta { display:flex; gap:8px }
 .amici-domanda .scelta button { flex:1; min-height:44px; border:2px solid #c9c2b0; border-radius:12px; background:#fff; font:inherit; font-weight:700 }
 .amici-domanda .scelta .su { border-color:#7a5cf0; background:#7a5cf0; color:#fff }
+.nascita-domanda { width:100%; max-width:420px; display:flex; flex-direction:column; gap:6px; padding:10px 12px; border-radius:14px; background:#ffffffaa; text-align:left }
+.nascita-domanda p { margin:0 }
+.nascita-domanda .selezioni { display:flex; gap:8px }
+.nascita-domanda select { flex:1; min-height:44px; padding:6px 10px; border-radius:12px; border:1px solid #d9d2c2; background:#fff; font:inherit }
 </style>

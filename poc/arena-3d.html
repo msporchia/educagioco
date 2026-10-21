@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Arena 3D — prova</title>
+<style>
+  :root { --fondo: #14161b; --carta: #1b1e25; --riga: #2c313a; --testo: #e2e5e0; --tenue: #98a09c; --acc: #e8a23a; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: var(--fondo); color: var(--testo); font: 13px/1.35 system-ui, sans-serif; }
+  #palco { position: fixed; inset: 0; }
+  #palco canvas { display: block; }
+  #sopra { position: fixed; inset: 0; pointer-events: none; overflow: hidden; }
+  .hp { position: absolute; left: 0; top: 0; width: 84px; height: 9px; background: #0009; border: 1px solid #000a; border-radius: 5px; overflow: hidden; }
+  .hp i { display: block; height: 100%; width: 100%; background: linear-gradient(#7fe05a, #3c9e2c); transition: width .15s; }
+  .num { position: absolute; left: 0; top: 0; font: 800 22px system-ui, sans-serif; text-shadow: 0 2px 3px #000, 0 0 6px #000; white-space: nowrap; }
+  #lato { position: fixed; top: 0; right: 0; bottom: 0; width: min(350px, 94vw); z-index: 5; transition: transform .2s; }
+  .senza-pannello #lato { transform: translateX(105%); }
+  #pannello { height: 100%; overflow-y: auto; background: #14161bee; border-left: 1px solid var(--riga); padding: 10px 12px 60px; -webkit-overflow-scrolling: touch; }
+  #pannello header { display: flex; justify-content: space-between; align-items: center; font-size: 15px; margin-bottom: 4px; }
+  .nota { color: var(--tenue); margin: 0 0 8px; font-size: 12px; }
+  details { border-top: 1px solid var(--riga); padding: 6px 0; }
+  summary { cursor: pointer; font-weight: 700; padding: 4px 0; }
+  .riga { display: grid; grid-template-columns: 112px 1fr; gap: 6px; align-items: center; margin: 5px 0; }
+  .riga > span:first-child { color: var(--tenue); }
+  .due { display: flex; gap: 6px; align-items: center; }
+  .due select { flex: 1; min-width: 0; }
+  select { width: 100%; min-width: 0; background: var(--carta); color: var(--testo); border: 1px solid var(--riga); border-radius: 4px; padding: 5px 4px; font: inherit; }
+  input[type=range] { width: 100%; }
+  button { background: #262b34; color: var(--testo); border: 1px solid #3a414d; border-radius: 5px; padding: 7px 10px; font: inherit; cursor: pointer; }
+  button:active { background: #353c48; }
+  button.forte { background: #5a3d12; border-color: var(--acc); }
+  button.on { background: #7a2a2a; border-color: #ff7a6a; }
+  .bott { display: flex; gap: 6px; flex-wrap: wrap; margin: 6px 0; }
+  .bott button { flex: 1; }
+  #barra { position: fixed; left: 50%; bottom: 10px; transform: translateX(-50%); display: flex; gap: 6px; z-index: 6; background: #14161bd0; padding: 6px; border-radius: 8px; border: 1px solid var(--riga); }
+  .senza-barra #barra { display: none; }
+  body:not(.senza-pannello) #barra { left: calc(50% - 175px); }
+  .info { color: var(--tenue); font-size: 12px; min-height: 1em; }
+  @media (max-width: 760px) {
+    #lato { top: auto; width: 100vw; height: 52vh; }
+    .senza-pannello #lato { transform: translateY(105%); }
+    #pannello { border-left: 0; border-top: 1px solid var(--riga); }
+    #barra { bottom: auto; top: 8px; }
+    body:not(.senza-pannello) #barra { left: 50%; }
+    .riga { grid-template-columns: 96px 1fr; }
+  }
+</style>
+</head>
+<body>
+<div id="palco"></div>
+<div id="sopra"></div>
+<div id="lato"></div>
+<nav id="barra"></nav>
+<script type="module" src="./arena-3d/principale.js"></script>
+</body>
+</html>

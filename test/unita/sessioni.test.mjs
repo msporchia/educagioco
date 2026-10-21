@@ -9,7 +9,7 @@
 
    `node test/esegui.mjs sessioni --niente-build`
    ═══════════════════════════════════════════════════════════════════ */
-import { chiaveGiorno, perGioco, perGiorno, oggiDi, potate, unite,
+import { chiaveGiorno, perGioco, perGiorno, perGiornoDi, oggiDi, potate, unite,
          MINIMA, MAX_SESSIONE, GIORNI_TENUTI } from '../../src/store/sessioni.js'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 
@@ -91,4 +91,13 @@ uguale('e ieri non conta', oggiDi(VOCI, 'conta', OGGI), 0)
 
 nota(`sotto ${MINIMA}s non è una partita; nessuna sessione oltre ` +
      `${MAX_SESSIONE / 3600}h; si tengono ${GIORNI_TENUTI} giorni`)
+/* ── i giorni di UN gioco (la pagina del gioco nelle impostazioni dei grandi) ── */
+{
+  const f = perGiornoDi(VOCI, 'fattoria', { quanti: 3, oggi: OGGI })
+  uguale('tre giorni, anche quelli vuoti', f.length, 3)
+  uguale('la fattoria di oggi', f[2].minuti, 22)
+  uguale('e quella di ieri', f[1].minuti, 12)
+  uguale('l\'altroieri non l\'ha giocata: vuoto, ma c\'è', f[0].minuti, 0)
+  uguale('un gioco mai giocato: tutti i giorni a zero', perGiornoDi(VOCI, 'mai-giocato', { quanti: 7, oggi: OGGI }).every(d => d.secondi === 0), true)
+}
 riassunto('il registro delle sessioni')

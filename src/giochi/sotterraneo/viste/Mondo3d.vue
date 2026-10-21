@@ -29,7 +29,7 @@ import Foglio from './Foglio.vue'
 import FumettoMondo from './FumettoMondo.vue'
 import { RITMO } from '../dati/pensieri.js'
 import { creaMostriSopra } from './mondo-mostri.js'
-import { annuncioDi, alSicuro } from '../motore/aperta.js'
+import { annuncioDi, alSicuro, signoreVivo } from '../motore/aperta.js'
 import { fotoDelloScontro } from '../motore/aperta-scena.js'
 import { allaCitta } from '../motore/forze-sopra.js'
 import { SOPRA } from '../dati/mondo-aperto-mostri.js'
@@ -374,6 +374,7 @@ function dillo(s, colore = null) { avviso.value = s; coloreAvviso.value = colore
 // a ogni fotogramma, col tempo vero: chi si sveglia e insegue, chi apre lo scontro; cosa si disegna (il cerchio di luce, la nebbia)
 let senzaMostri = false   // le prove che non sono uno scontro (la bacheca, il viaggio): `__mondo3d.senzaMostri()`
 function mostriDelPasso(dt, t) {
+  if (mostri) scena.S.taneSpente = mostri.stato.signoriMorti   // il fumo e le braci delle tane senza più signore si spengono (scena3d/mondo/indice.js)
   if (senzaMostri) { scena.S.mostri = []; if (mostriVisti.value.length) mostriVisti.value = []; return }
   if (!inScontro && !attesaScontro) {
     const inc = mostri.passo(dt, io, { fermo: !!(dialogo.value || domandaPietra.value || props.veduta || props.fermo) })
@@ -1025,6 +1026,8 @@ const nomiVeduta = computed(() => {
   for (const z of m.zone) if (z.i <= conosciute + 1) l.push({ chiave: 'zona:' + z.chiave, testo: z.nome, classe: z.i <= conosciute ? 'zona' : 'zona dopo',
     colore: `rgb(${z.colore.join(', ')})`, x: z.etichetta.x + 0.5, y: 2, z: z.etichetta.y + 0.5, fascia: z.fascia })
   for (const r of m.regioni) if (r.chiave !== 'villaggio' && r.cx != null && visto({ x: r.cx, y: r.cy })) l.push({ chiave: 'regione:' + r.chiave, testo: r.nome, classe: 'regione', x: r.cx + 0.5, y: 1, z: r.cy + 0.5 })
+  // le tane trovate (la cella del cuore vista): un teschio, grigio se il signore è morto (la tana resta, è un luogo che si riconosce)
+  for (const r of m.regioni) if (r.tana && visto(r.tana)) l.push({ chiave: 'tana:' + r.chiave, testo: '💀', classe: mostri && signoreVivo(mostri.stato, r.chiave) === false ? 'tana morta' : 'tana', x: r.tana.x + 0.5, y: 0.5, z: r.tana.y + 0.5 })
   // le bacheche già trovate (col segno: c'è un foglio da prendere, o da consegnare) e la meta della taglia che si segue: un cerchio sul posto
   for (const b of bersagli.value) if (b.ruolo === 'bacheca' && trovati.value.has(b.chiave)) {
     const sg = segniBacheca.value[b.citta]

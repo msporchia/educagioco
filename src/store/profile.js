@@ -8,6 +8,7 @@ import { newItem, record as srsRecord, isMastered, strength } from './srs.js'
 import { acceso as suonoAcceso } from '../audio.js'
 import { CHIAVI_GIOCHI, eSperimentale, serveA } from '../data/giochi.js'
 import { SAPERI } from '../data/saperi.js'
+import { nascitaValida, etaAnagrafica, etaVoluta } from '../data/nascita.js'
 import { CAMPAGNE as GIORNATE_BANCARELLA } from '../data/bancarella.js'
 import { eccezioniDi, eccezioniPerEta, spostandoLEta,
          rimettendoLEta, partenzaPerEta } from '../data/partenze.js'
@@ -134,7 +135,7 @@ async function idLibero() {
 
 // `entra`: sì al primo avvio, no dalla schermata dei genitori (un fratellino
 // non caccia chi gioca). `partenza`: un'età in anni, applicata una sola volta.
-export async function creaGiocatore(nome, entra = true, partenza = null, aspetto = null) {
+export async function creaGiocatore(nome, entra = true, partenza = null, aspetto = null, nascita = null) {
   const pulito = String(nome || '').trim().slice(0, 20)
   if (!pulito) throw new Error('Serve un nome')
   const id = await idLibero()
@@ -147,6 +148,12 @@ export async function creaGiocatore(nome, entra = true, partenza = null, aspetto
       : eccezioniDi(partenza)
     fresco.settings = { ...fresco.settings, giochi, sa }
     if (eta) fresco.settings.eta = eta
+  }
+  // la data di nascita (facoltativa): l'età si terrà aggiornata da sola; lo scarto è quanto si è tarato sopra o sotto i suoi anni
+  if (nascitaValida(nascita)) {
+    fresco.settings.nascita = { m: nascita.m, a: nascita.a }
+    const e = etaAnagrafica(nascita)
+    fresco.settings.scarto = fresco.settings.eta ? Math.max(-3, Math.min(3, fresco.settings.eta - e.anni)) : 0
   }
   // un nome che PERSONE non ha (mai dovrebbe capitare, da un tasto che
   // mostra solo quelli) si ignora invece di scriverlo: meglio ricadere
@@ -528,6 +535,40 @@ export function fissaGioco(chiave, come) {
 export const quantiGiochiAccesi = () => CHIAVI_GIOCHI.filter(giocoAcceso).length
 
 // L'unica manopola dell'età: vedi docs/genitori/manopola.md e spostandoLEta in data/partenze.js
+/* ── LA DATA DI NASCITA ──
+   `settings.nascita = { m, a }` (mese 0-11 e anno) e `settings.scarto` (quanti anni sopra o sotto i suoi si è tarato). L'età che
+   i giochi leggono resta `settings.eta`: la data dice a quale età *dovrebbe* essere, e `store/compleanno.js` avvisa quando non lo è.
+   Docs: docs/genitori/riordino.md. */
+export const nascitaDelBambino = () => {
+  const n = state.profile.settings.nascita
+  return nascitaValida(n) ? n : null
+}
+export const scartoDelBambino = () => {
+  const x = Number(state.profile.settings.scarto)
+  return Number.isInteger(x) ? x : 0
+}
+// a quale età dovrebbe essere tarato, se c'è la data (null se non c'è)
+export const etaDaNascita = () => etaVoluta(nascitaDelBambino(), scartoDelBambino())
+function segnaLoScarto(s) {
+  const e = etaAnagrafica(s.nascita)
+  if (e) s.scarto = Math.max(-3, Math.min(3, Number(s.eta) - e.anni))
+}
+/* La data si dice una volta e basta; quello che il gioco usa non si sposta (lo sposta `spostaLEta`, con la conferma): lo scarto
+   si ricalcola in modo che l'età di adesso resti com'è. */
+export function impostaNascita(nascita) {
+  if (!nascitaValida(nascita)) return false
+  const s = state.profile.settings
+  s.nascita = { m: nascita.m, a: nascita.a }
+  segnaLoScarto(s)
+  persist()
+  return true
+}
+export function togliNascita() {
+  const s = state.profile.settings
+  delete s.nascita; delete s.scarto
+  persist()
+}
+
 export function spostaLEta (anni) {
   const s = state.profile.settings
   const mossa = spostandoLEta({ da: etaDelBambino(), a: anni,
@@ -535,6 +576,7 @@ export function spostaLEta (anni) {
                                 ritocchi: s.ritocchi || {} })
   if (!Number.isFinite(mossa.eta) || mossa.eta < 3 || mossa.eta > 14) return null
   s.eta = mossa.eta
+  segnaLoScarto(s)
   if (mossa.riscrive) {
     s.giochi = mossa.giochi
     s.sa = mossa.sa
