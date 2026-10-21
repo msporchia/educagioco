@@ -94,10 +94,29 @@ fuori») e i branchi a 14 celle (`292a98f5`); il villaggio tondo (24×20); la sc
 
 ## 2. Eroi, mostri ed effetti in 3D (sessione Mostri renderizzati)
 
-*Da scrivere dall'altra sessione.* Voci attese: le mosse multiple dei boss (`motore/scontro.js`, `dati/mosse.js`, `viste/Grosso.vue`,
-`scena/tela.js`), la ritaratura dei soli mostri, gli effetti 3D mancanti, i mostri 3D che non hanno ancora un modello, i fogli degli
-eroi/armi, `npm run promuovi3d`, i costi in chiamate (scontro sul prato ~231, mondo con due branchi ~250), le prove del 3D che
-falliscono.
+### A metà
+
+| Voce | Chi | Stato |
+|---|---|---|
+| La roba 3D per figura: un modello per ognuna delle 238 figure di `roba.json` (`poc/roba-3d/`: lame, bastoni, scudi, vesti, gioielli), con aloni di rarità ed elemento (`aloni.js`) | Mostri | spade/asce e bastoni/archi fatti, scudi, gioielli e vesti in corso |
+| Collegarla al gioco: `modelloDiRoba(chiave)` (chiave → figura → modello, ripiego sul modello della base e poi sullo sprite), `npm run roba3d`, eroe in scena, zaino, botteghe, ritratto | Mostri | in corso (agente) |
+| Gli anelli sono solo 4 e si vedono nelle anteprime, non sull'eroe | Mostri | deciso |
+| La torcia mostra un cerchio di ~3 celle invece del cono da 9,5 (`RAGGIO_TORCIA`, `scena3d/luci.js`) con l'eroe 3D e l'inclinazione bassa | Mostri | da indagare, la prendo io |
+
+### Da fare dopo
+
+| Voce | Chi | Stato |
+|---|---|---|
+| Un elmo vero nello slot testa (oggi solo `#testa=<id>`) | Mostri | non iniziato |
+| Mostri 3D senza modello proprio (ripiegano sullo sprite) | Mostri | da elencare |
+| Costi in chiamate: scontro sul prato ~231, mondo con due branchi ~250 (soglia del test 260) | Mostri | tenere d'occhio |
+| Peso e fluidità sul telefono (nessuna misura fatta) | Mostri | da guardare col dito |
+| Prove del browser complete (`npm run test:browser`) e `test:misure` non lanciate dopo il 3D | Mostri | da fare prima del prossimo giro grande |
+
+### Fatto il 21 ottobre
+
+Eroi, mostri e mosse multiple in 3D, effetti 3D, camera bassa nello scontro, anteprime 3D di caselle, ritratto e fila dei turni.
+Come si rifanno: `npm run promuovi3d` (`docs/sotterraneo/mostri-3d.md`, `mosse.md`, `anteprime-3d.md`).
 
 ## 3. Voci comuni
 
