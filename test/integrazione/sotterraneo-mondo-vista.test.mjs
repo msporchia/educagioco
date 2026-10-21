@@ -10,7 +10,7 @@
    `node test/esegui.mjs sotterraneo-mondo-vista`
    tempo: 480
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, semina, scegli, scegliAvventura, mondoPronto, fermoNelMondo, attendi, scatto } from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, azzera, semina, scegli, scegliAvventura, mondoPronto, fermoNelMondo, attendi, scatto, toccaNelMondo } from '../aiuto/browser.mjs'
 import { controlla, uguale, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
 import { ilMondo, terraDelMondo, zonaDi } from '../../src/giochi/sotterraneo/motore/mondo-sopra.js'
 
@@ -34,6 +34,14 @@ async function pizzica(cx, cy, d0, d1, n = 8) {
   await attendi(page, 200)
 }
 const cam = () => page.evaluate(() => { const c = window.__sotterraneo3d.cam; return { libera: c.libera.on, lx: c.libera.x, lz: c.libera.z, x: c.camera.position.x, z: c.camera.position.z, zoom: c.zoom, larghi: c.celleInLargo, lim: c.limitiZoom } })
+// un punto del campo che non sta sotto una carta o un fumetto (lì il dito non sposta la vista): lungo la riga `y`, il più vicino a `x`
+const puntoLibero = (x, y) => page.evaluate(([x0, y0]) => {
+  for (let d = 0; d < 400; d += 10) for (const x1 of [x0 + d, x0 - d]) {
+    const e = document.elementFromPoint(x1, y0)
+    if (e && !e.closest('.sot-terra-sopra > *, .sot-terra-sotto > *, [data-fumetto], .sot-foglio, [data-torna-eroe]')) return x1
+  }
+  return x0
+}, [x, y])
 const cella = async () => (await page.locator('[data-eroe-mondo]').getAttribute('data-cella')).split(',').map(Number)
 
 /* ---------- 1. si entra, la vista segue l'eroe ---------- */
@@ -54,7 +62,7 @@ await scatto(page, 'sotterraneo-mondo-vista-normale')
 
 /* ---------- 2. un dito che scorre sposta la vista, l'eroe resta fermo ---------- */
 const eroe0 = await cella()
-await trascina(cx + 80, cy, cx - 80, cy)
+{ const x = await puntoLibero(cx + 80, cy); await trascina(x, cy, x - 160, cy) }
 await attendi(page, 600)
 {
   const c = await cam()
@@ -70,7 +78,18 @@ await attendi(page, 600)
 /* ---------- 3. un tocco nella vista spostata: l'eroe cammina e la vista lo riprende ---------- */
 {
   const terra = terraDelMondo(ilMondo())
-  const p = await page.evaluate(() => { const s = window.__sotterraneo3d, io = window.__mondo3d.io; const q = s.aSchermo(io.x + 3, s.quota(io.x + 3, io.z + 1), io.z + 1); return [q.x, q.y] })
+  // un prato a qualche passo, lontano da chi sta fermo (vicino a una persona o alla bacheca il tocco è un'altra cosa)
+  const gente = await page.evaluate(() => window.__mondo3d.bersagli().map(q => q.accanto))
+  const io = await page.evaluate(() => window.__mondo3d.io)
+  let meta = null, voto = 0   // il prato più lontano da chi sta fermo, fra quelli a 3–6 passi che si vedono nel campo
+  for (let dz = -6; dz <= 6; dz++) for (let dx = -6; dx <= 6; dx++) {
+    const c = { x: Math.floor(io.x) + dx, y: Math.floor(io.z) + dz }, r = Math.hypot(dx, dz)
+    if (r < 3 || r > 6 || !terra.passa(c.x, c.y)) continue
+    const d = Math.min(...gente.map(g => Math.hypot(g.x - c.x, g.y - c.y)))
+    if (d > voto) { voto = d; meta = c }
+  }
+  controlla('c\'è un prato lontano da tutti (almeno 2 passi)', voto >= 2, String(voto))
+  const p = await page.evaluate(([x, z]) => { const s = window.__sotterraneo3d; const q = s.aSchermo(x + 0.5, s.quota(x + 0.5, z + 0.5), z + 0.5); return [q.x, q.y] }, [meta.x, meta.y])
   await tocca(b.x + p[0], b.y + p[1])
   await attendi(page, 400)
   controlla('toccando il prato la vista torna a seguire l\'eroe', !(await cam()).libera)
@@ -81,7 +100,12 @@ await attendi(page, 600)
 }
 
 /* ---------- 4. «torna all'eroe» ---------- */
-await trascina(cx - 90, cy, cx + 90, cy)
+// verso est, e se il bordo del mondo lo impedisce verso ovest
+for (const verso of [-1, 1]) {
+  const x = await puntoLibero(cx - verso * 90, cy)
+  await trascina(x, cy, x + verso * 180, cy)
+  if (await page.locator('[data-torna-eroe]').count()) break
+}
 await page.waitForSelector('[data-torna-eroe]', { timeout: 5000 })
 controlla('di nuovo staccata', (await cam()).libera)
 const eroe1 = await cella()
@@ -120,9 +144,10 @@ uguale('senza muovere l\'eroe', (await cella()).join(), eroe1.join())
 /* ---------- 6. col mouse: a tasto premuto si trascina, la rotella zooma ---------- */
 {
   const prima = await cam()
-  await page.mouse.move(cx + 60, cy)
+  const mx = await puntoLibero(cx + 60, cy)
+  await page.mouse.move(mx, cy)
   await page.mouse.down()
-  for (let i = 1; i <= 8; i++) { await page.mouse.move(cx + 60 - i * 15, cy + i * 4); await attendi(page, 30) }
+  for (let i = 1; i <= 8; i++) { await page.mouse.move(mx - i * 15, cy + i * 4); await attendi(page, 30) }
   await page.mouse.up()
   await attendi(page, 500)
   const dopo = await cam()
@@ -144,7 +169,7 @@ uguale('senza muovere l\'eroe', (await cella()).join(), eroe1.join())
   const zonaEroe = await page.evaluate(() => { const io = window.__mondo3d.io, m = window.__mondo3d.m; return window.__mondo3d.m.zonaCaricata.map((c, k) => c ? k : -1).filter(k => k >= 0) })
   const prima = await page.evaluate(() => window.__sotterraneo3d.grafica().pezzi)
   // lontano quanto si può: 40 celle in una direzione, a pezzi: ogni giro del dito sposta di un pezzo di schermo
-  for (let i = 0; i < 4; i++) await trascina(cx + 140, cy, cx - 140, cy, 6)
+  { const x = await puntoLibero(cx + 140, cy); for (let i = 0; i < 4; i++) await trascina(x, cy, x - 280, cy, 6) }
   await attendi(page, 2500)
   const c = await cam()
   const eroe = await page.evaluate(() => ({ x: window.__mondo3d.io.x, z: window.__mondo3d.io.z }))
@@ -162,17 +187,13 @@ uguale('senza muovere l\'eroe', (await cella()).join(), eroe1.join())
   await attendi(page, 500)
 }
 
-/* ---------- 8. un tocco su una persona resta un tocco, anche dopo aver trascinato ---------- */
+/* ---------- 8. un tocco su una persona resta un tocco: l'eroe va da lei e la vista lo segue ---------- */
 {
-  const gente = await page.evaluate(() => [...document.querySelectorAll('[data-bersaglio][data-personaggio],[data-bersaglio][data-mercante]')].filter(e => e.dataset.vis === '1').map(e => { const r = e.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height * 0.6, chi: e.dataset.personaggio || e.dataset.mercante } }))
-  controlla('qualcuno si vede', gente.length > 0, JSON.stringify(gente))
-  if (gente.length) {
-    const q = gente.sort((a, b2) => Math.hypot(a.x - cx, a.y - cy) - Math.hypot(b2.x - cx, b2.y - cy))[0]   // il più vicino: a piedi, sul banco, ci mette
-    await tocca(q.x, q.y)
-    await page.waitForFunction(() => document.querySelector('[data-eroe-mondo]')?.dataset.cammina === '1', null, { timeout: 8000 })
-    controlla(`un tocco su ${q.chi} manda l'eroe da lui (a piedi)`, true)
-    controlla('e la vista lo segue', !(await cam()).libera)
-  }
+  await toccaNelMondo(page, '[data-personaggio="ragazza"]', { tocca })   // porta la vista da lei, poi la tocca
+  await page.waitForFunction(() => document.querySelector('[data-eroe-mondo]')?.dataset.cammina === '1' || document.querySelector('[data-dialogo], [data-fumetto]'), null, { timeout: 8000 })
+  controlla('un tocco sulla ragazza fa agire l\'eroe (cammina, o parla se è già lì)', true)
+  const segue = await page.waitForFunction(() => !window.__sotterraneo3d.cam.libera.on, null, { timeout: 15000 }).then(() => true, () => false)
+  controlla('e la vista lo segue', segue)
 }
 
 controlla('nessun errore', errori.length === 0, errori.join(' | '))

@@ -541,7 +541,15 @@ export async function toccaNelMondo(page, sel, { tocca = null } = {}) {
     await attendi(page, 2500)   // la telecamera ci arriva morbida: il bersaglio si tocca quando ha smesso di scorrere
   }
   await page.waitForSelector(`${sel}[data-vis="1"]`, { timeout: 20000 })
-  const b = await page.locator(sel).first().boundingBox()
+  // la telecamera si muove morbida (segue l'eroe, o torna da dove l'ha portata il dito): si tocca quando il bersaglio sta fermo
+  let b = await page.locator(sel).first().boundingBox()
+  for (let i = 0; i < 20; i++) {
+    await attendi(page, 250)
+    const c = await page.locator(sel).first().boundingBox()
+    const fermo = c && b && Math.abs(c.x - b.x) < 1 && Math.abs(c.y - b.y) < 1
+    b = c
+    if (fermo) break
+  }
   await (tocca || ((x, y) => page.mouse.click(x, y)))(b.x + b.width / 2, b.y + b.height * 0.6)
 }
 /* Scende in una discesa dal mondo: l'eroe si porta davanti all'ingresso (`__mondo3d.vai`, il salto delle prove, che carica la sua
@@ -593,7 +601,15 @@ export async function lasciaLaDiscesa(page) {
    sceglie, il tasto compra o vende. `tocca(x, y)`: il dito (CDP) o, di difetto, il mouse. La bottega
    appena aperta è cieca per 320 ms: chi chiama l'ha già aspettata. */
 async function toccaIlCentro(page, sel, tocca) {
-  const b = await page.locator(sel).first().boundingBox()
+  // la telecamera si muove morbida (segue l'eroe, o torna da dove l'ha portata il dito): si tocca quando il bersaglio sta fermo
+  let b = await page.locator(sel).first().boundingBox()
+  for (let i = 0; i < 20; i++) {
+    await attendi(page, 250)
+    const c = await page.locator(sel).first().boundingBox()
+    const fermo = c && b && Math.abs(c.x - b.x) < 1 && Math.abs(c.y - b.y) < 1
+    b = c
+    if (fermo) break
+  }
   await (tocca || ((x, y) => page.mouse.click(x, y)))(b.x + b.width / 2, b.y + b.height / 2)
 }
 
