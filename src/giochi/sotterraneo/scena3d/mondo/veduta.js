@@ -2,20 +2,37 @@
 // distanza che viene dalla forma dello schermo (almeno 15 celle in largo, 18 in profondo), e tiene l'eroe nello spazio libero fra
 // le carte in cima e in fondo (`coperto`, come la terra dipinta). La veduta, del giocatore (la casella «mappa grande» della barra),
 // sale fino a vedere il mondo intero. Il sole fa una sola ombra, con una camera d'ombra piccola che segue l'eroe; nella veduta
-// l'ombra non si rifà.
+// l'ombra non si rifà. Il dito sposta la vista (`trascina`) e due dita la zoomano: la vista libera resta nel mondo e a `LONTANO`
+// celle dall'eroe, finché non lo si manda da qualche parte (`segui`); docs/sotterraneo/mondo-3d-telecamera.md.
 import { PerspectiveCamera, Vector3, Vector2, MathUtils } from 'three'
 
-export const VISTA = { inclinazione: 52, fov: 34, largo: 15, fondo: 18, guarda: 0.5, zoomMin: 0.7, zoomMax: 1.5, scontro: 9.5 }
+export const VISTA = { inclinazione: 52, fov: 34, largo: 15, fondo: 18, guarda: 0.5, zoomMin: 0.8, scontro: 9.5, tetto: 24, piuLarga: 28 }
+// la vista libera: quante celle dall'eroe al massimo (due zone si toccano, non tutto il mondo), e il margine dal bordo del mondo
+export const LONTANO = 40, MARGINE = 3
 export const VEDUTA = { inclinazione: 64, largo: 220 }
 export const SOLE = new Vector3(-0.42, 0.82, 0.38).normalize()
 
 // La veduta guarda il mondo intero quando lo schermo è largo; su un telefono in piedi una fascia larga almeno `VEDUTA.largo` celle
 // (il mondo è 504×300: intero, i nomi sarebbero briciole), centrata dove si è e che si sposta col dito (`sposta`)
-// Nel villaggio la telecamera si allontana e si ferma in mezzo alla fila delle botteghe: dalla partenza si vedono tutti senza girare
-// (`citta`: { x, largo } dal villaggio della pianta, e `k`, quanto si è dentro)
-export function creaVeduta(m) {
+// quante celle in largo vede la telecamera alla distanza `d` (a metà altezza), con l'apertura e la forma dello schermo
+export function larghezzaVista(d, fov, aspect) {
+  const v = MathUtils.degToRad(fov) / 2
+  return 2 * d * Math.tan(Math.atan(Math.tan(v) * aspect))
+}
+// i limiti dello zoom (moltiplicano la distanza): il più vicino è `zoomMin`; il più lontano mostra al più `piuLarga` celle in largo
+// (ma mai meno di quanto si vede a zoom 1: lo schermo largo parte già lontano). `w1`: le celle in largo a zoom 1
+export function limitiZoom(w1) { return { min: VISTA.zoomMin, max: Math.max(1, VISTA.piuLarga / Math.max(1, w1)) } }
+export const zoomLimitato = (z, w1) => { const l = limitiZoom(w1); return Math.min(l.max, Math.max(l.min, z)) }
+// la vista libera in (x, z), tenuta entro `LONTANO` celle dall'eroe e dentro il mondo W×H con un poco di margine
+export function limitaVista(x, z, eroe, W, H) {
+  const c = (v, e, M) => Math.max(MARGINE, Math.min(M - MARGINE, Math.max(e - LONTANO, Math.min(e + LONTANO, v))))
+  return { x: c(x, eroe.x, W), z: c(z, eroe.z, H) }
+}
+
+export function creaVeduta(m, quota = () => 0) {
   const camera = new PerspectiveCamera(VISTA.fov, 1, 0.5, 2400)
-  let L = 1, A = 1, sopra = 0, sotto = 0, zoom = 1, primo = true, ombra = 0, vx = null
+  let L = 1, A = 1, sopra = 0, sotto = 0, zoom = 1, primo = true, ombra = 0, vx = null, w1 = 24
+  const libera = { on: false, x: 0, z: 0 }
   const st = { k: 0, x: 0, z: 0, y: 0, inc: VISTA.inclinazione, d: 40, spostaY: 0 }
   const largaVeduta = () => Math.min(m.W + 6, Math.max(VEDUTA.largo, (m.H + 10) * camera.aspect * 1.25))
   const ndc = new Vector2(), o = new Vector3(), dir = new Vector3(), tmp = new Vector3()
@@ -31,25 +48,44 @@ export function creaVeduta(m) {
     get k() { return st.k },
     get d() { return st.d },
     get zoom() { return zoom },
-    set zoom(z) { zoom = Math.min(VISTA.zoomMax, Math.max(VISTA.zoomMin, z)) },
+    set zoom(z) { zoom = zoomLimitato(z, w1) },
+    get limitiZoom() { return limitiZoom(w1) },
+    get libera() { return libera },
+    // le celle in largo che si vedono adesso (per i test e per chi mostra lo zoom)
+    get celleInLargo() { return larghezzaVista(st.d, camera.fov, camera.aspect) },
+    // il dito sposta la vista di (dx, dz) celle del mondo: parte da dove sta la telecamera, e si muove senza ritardo (se no il dito
+    // e il terreno sotto si rincorrono). `eroe`: dove sta l'eroe, per il limite
+    trascina(dx, dz, eroe) {
+      if (!libera.on) { libera.on = true; libera.x = st.x; libera.z = st.z }
+      const l = limitaVista(libera.x - dx, libera.z - dz, eroe, m.W, m.H)
+      st.x += l.x - libera.x; st.z += l.z - libera.z
+      libera.x = l.x; libera.z = l.z
+    },
+    segui() { libera.on = false },
     misura(l, a) { L = l; A = a; camera.aspect = l / Math.max(1, a); camera.updateProjectionMatrix() },
     copri(su, giu) { sopra = su; sotto = giu },
-    salta() { primo = true },
+    salta() { primo = true; libera.on = false },
     // la veduta si sposta di `dx` pixel a schermo (il dito che trascina): la fascia scorre lungo il mondo
     sposta(dx) { if (vx != null) vx -= dx * largaVeduta() / Math.max(1, L) },
     // `centro` l'eroe (x, y, z), `veduta` se si guarda tutto il mondo; `sole` la luce che fa l'ombra; `palco`: lo scontro di sopra
-    // ({ celle, scossa }), che la telecamera inquadra da vicino come nelle discese (celle in largo e in profondo, mai meno di 9,5);
-    // `citta`: { x, largo, k } nel villaggio
-    aggiorna(dt, centro, veduta, sole, palco = null, citta = null) {
+    // ({ celle, scossa }), che la telecamera inquadra da vicino come nelle discese (celle in largo e in profondo, mai meno di 9,5)
+    aggiorna(dt, centro, veduta, sole, palco = null) {
+      if (veduta || palco) libera.on = false
+      if (libera.on) {   // l'eroe cammina o la vista è ai bordi: resta entro i limiti, e guarda il terreno che c'è lì
+        const l = limitaVista(libera.x, libera.z, centro, m.W, m.H)
+        libera.x = l.x; libera.z = l.z
+      }
+      const fuoco = libera.on ? { x: libera.x, y: quota(libera.x, libera.z), z: libera.z } : centro
       const kv = veduta ? 1 : 0
       st.k += (kv - st.k) * (primo ? 1 : 1 - Math.exp(-dt * 3))
       const libero = Math.max(1, A - sopra - sotto)
       const celle = palco ? Math.max(VISTA.scontro, palco.celle || 0) : 0
-      const kc = !palco && citta ? citta.k : 0
-      const largo = Math.min(30, Math.max(VISTA.largo, camera.aspect * 18)) * (1 - kc) + (citta ? citta.largo : 0) * kc
-      const vicino = { x: centro.x + (citta ? citta.x - centro.x : 0) * kc, z: centro.z, y: centro.y + VISTA.guarda, inc: VISTA.inclinazione,
-                       d: (palco ? distanza(celle, celle, VISTA.inclinazione) : distanza(largo, VISTA.fondo, VISTA.inclinazione))
-                          * zoom * Math.max(1, A / libero * 0.85) }
+      const largo = Math.min(VISTA.tetto, Math.max(VISTA.largo, camera.aspect * 18))
+      const copre = Math.max(1, A / libero * 0.85)
+      const d1 = (palco ? distanza(celle, celle, VISTA.inclinazione) : distanza(largo, VISTA.fondo, VISTA.inclinazione)) * copre
+      w1 = larghezzaVista(d1, camera.fov, camera.aspect)
+      if (!palco) zoom = zoomLimitato(zoom, w1)   // lo schermo può essere cambiato (si gira il telefono)
+      const vicino = { x: fuoco.x, z: fuoco.z, y: fuoco.y + VISTA.guarda, inc: VISTA.inclinazione, d: d1 * (palco ? 1 : zoom) }
       const lv = largaVeduta()
       if (!veduta) vx = null
       else vx = Math.min(m.W + 3 - lv / 2, Math.max(lv / 2 - 3, vx ?? centro.x))
