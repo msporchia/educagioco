@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Mosse dei mostri 3D — prova</title>
+<style>
+  :root { --fondo: #14161b; --carta: #1b1e25; --riga: #2c313a; --testo: #e2e5e0; --tenue: #98a09c; --acc: #e8a23a; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: var(--fondo); color: var(--testo); font: 13px/1.35 system-ui, sans-serif; }
+  #palco { position: fixed; inset: 0; }
+  #palco canvas { display: block; }
+  #sopra { position: fixed; inset: 0; pointer-events: none; overflow: hidden; }
+  .hp { position: absolute; left: 0; top: 0; width: 96px; height: 10px; background: #0009; border: 1px solid #000a; border-radius: 5px; overflow: hidden; }
+  .hp i { display: block; height: 100%; width: 100%; background: linear-gradient(#7fe05a, #3c9e2c); transition: width .15s; }
+  .hp u { position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; background: #fffa; }
+  .num { position: absolute; left: 0; top: 0; font: 800 22px system-ui, sans-serif; text-shadow: 0 2px 3px #000, 0 0 6px #000; white-space: nowrap; }
+  #lato { position: fixed; top: 0; right: 0; bottom: 0; width: min(360px, 94vw); z-index: 5; transition: transform .2s; }
+  .senza-pannello #lato { transform: translateX(105%); }
+  #pannello { height: 100%; overflow-y: auto; background: #14161bee; border-left: 1px solid var(--riga); padding: 10px 12px 60px; }
+  #pannello header { display: flex; justify-content: space-between; align-items: center; font-size: 15px; margin-bottom: 4px; }
+  .nota { color: var(--tenue); margin: 6px 0; font-size: 12px; }
+  .riga { display: grid; grid-template-columns: 104px 1fr; gap: 6px; align-items: center; margin: 5px 0; }
+  .riga > span:first-child { color: var(--tenue); }
+  .due { display: flex; gap: 6px; align-items: center; }
+  select { width: 100%; min-width: 0; background: var(--carta); color: var(--testo); border: 1px solid var(--riga); border-radius: 4px; padding: 5px 4px; font: inherit; }
+  input[type=range] { width: 100%; }
+  button { background: #262b34; color: var(--testo); border: 1px solid #3a414d; border-radius: 5px; padding: 7px 10px; font: inherit; cursor: pointer; }
+  button.forte { background: #5a3d12; border-color: var(--acc); }
+  button.on { background: #7a2a2a; border-color: #ff7a6a; }
+  .bott { display: flex; gap: 6px; flex-wrap: wrap; margin: 6px 0; }
+  .bott button { flex: 1; }
+  #mosse { display: flex; flex-direction: column; gap: 6px; margin: 8px 0; }
+  button.mossa { text-align: left; display: block; }
+  button.mossa small { display: block; color: var(--tenue); margin-top: 2px; font-size: 11px; }
+  .info { color: var(--tenue); font-size: 12px; margin: 4px 0; }
+  .registro { margin-top: 10px; font-size: 12px; color: var(--tenue); }
+  .registro div { padding: 2px 0; border-top: 1px solid var(--riga); }
+</style>
+</head>
+<body>
+<div id="palco"></div>
+<div id="sopra"></div>
+<div id="lato"></div>
+<script type="module" src="./mostri-3d/mosse-pagina.js"></script>
+</body>
+</html>
