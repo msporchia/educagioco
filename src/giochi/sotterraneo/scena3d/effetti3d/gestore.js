@@ -18,7 +18,8 @@ export function effettoDi(chiave, via = null) {
   if (g && g[chiave]) return g[chiave]
   return LANCIO[chiave] || MISCHIA[chiave] || AURE[chiave] || null
 }
-export const segnoDi = chiave => MISCHIA[chiave] || null
+// il segno `arco` (la spazzata) nei prototipi è l'effetto intero della spazzata
+export const segnoDi = chiave => MISCHIA[chiave] || (chiave === 'arco' ? MISCHIA.spazzata : null) || null
 export const auraDi = chiave => (AURE[chiave] && AURE[chiave].via === 'su-me' ? AURE[chiave] : null)
 
 // gli stati del gioco (viste/campo.js, statiDel) → gli stati 3D: il veleno di fuoco brucia, il gelo chiude nel ghiaccio
