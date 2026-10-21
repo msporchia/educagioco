@@ -5,6 +5,7 @@
 // all'eroe); la distanza viene dalla forma dello schermo. Provati 55°/~6 celle e 43°/~8 celle: troppo addosso
 export const CAMERA = {
   inclinazione: 52,      // gradi sotto l'orizzonte
+  inclinazioneScontro: 36,   // nello scontro la telecamera si abbassa: non si va in giro, si guarda un combattimento (più di lato, i modelli 3D si vedono in figura)
   fov: 34,               // apertura verticale
   celle: 15,             // quante celle si vedono almeno, in largo e in profondo
   celleScontro: 9.5,     // nello scontro la telecamera si avvicina
@@ -36,7 +37,9 @@ export const ALTO_MURO = 1.25
 export const PARAPETTO = 0.32       // un muro con il pavimento a nord sta fra la telecamera e la stanza: basso
 // le figure stanno ritte, e la vista dall'alto (52°) le schiaccia di cos 52°: le si allunga di 1/cos, così il pixel dello sprite
 // a schermo è quadrato (con 1,3 era alto 0,8 della larghezza: le righe venivano di altezze diverse)
-export const ALLUNGA = 1 / Math.cos(52 * Math.PI / 180)
+export let ALLUNGA = 1 / Math.cos(52 * Math.PI / 180)
+// la telecamera dello scontro si abbassa: gli sprite si allungano di 1/cos dell'inclinazione di adesso (un binding vivo, chi lo importa lo legge aggiornato)
+export function impostaInclinazione(gradi) { ALLUNGA = 1 / Math.cos(gradi * Math.PI / 180) }
 export const PIXEL_CELLA = 16       // i pixel di sprite in una cella (dati/mondo.js, T)
 
 export const N_FUOCHI = 6           // le luci delle torce, dei bracieri, della fonte e del portale: una riserva fissa
