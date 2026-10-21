@@ -63,7 +63,8 @@ const cella = async () => (await page.locator('[data-eroe-mondo]').getAttribute(
 
 async function entra(finite, mondo = {}, avv = {}) {
   const c = campagnaSeminata({ finite, eroe: 'cavaliere' })
-  Object.assign(c.cfg.avventure.cavaliere, { mondo: { giro: 0, parlato: true, ...mondo }, ...avv })
+  // con la firma della mappa: un salvato senza (o di un'altra mappa) perde `dove` e `sopra` (motore/mondo-sopra.js, mondoDaSalvato)
+  Object.assign(c.cfg.avventure.cavaliere, { mondo: { giro: 0, parlato: true, firma: m.firma, ...mondo }, ...avv })
   await azzera(page)
   await semina(page, { coins: 0, settings: { sperimentali: true }, campagne: { sotterraneo: c } })
   await scegli(page, 'sotterraneo3d')
@@ -76,7 +77,12 @@ async function aspettaLoScontro() {
   await page.waitForSelector('[data-scontro-sopra] [data-pannello3d], [data-risveglio-sopra]', { timeout: 30000 })
 }
 async function rispondi(giusto) {
-  await scegliAttacco(page)
+  // la casella toccata mentre il pannello torna pronto si perde: si ritocca (l'ha visto il test a macchina carica)
+  for (let n = 0; n < 3 && !(await page.locator('.sot-domanda .qz-tasto').count()); n++) {
+    if (n) nota(`l'attacco ritoccato (${n})`)
+    await scegliAttacco(page)
+    await page.waitForSelector('.sot-domanda .qz-tasto', { timeout: 5000 }).catch(() => {})
+  }
   await page.waitForSelector('.sot-domanda .qz-tasto', { timeout: 15000 })
   await attendi(page, 400)
   await page.locator(giusto ? '.sot-domanda .qz-tasto[data-giusta]' : '.sot-domanda .qz-tasto:not([data-giusta])').first().click()
