@@ -84,7 +84,7 @@ questa» e «vai da …». Nel mondo aperto cambia il **dove**:
 - **La freccina**: giù attorno all'eroe (la cosa, o la scala), sopra azzurra sul bordo verso la meta
   ([missioni-freccina.md](missioni-freccina.md)). Nel mondo sopra la freccina punta la strada vera (la prossima curva
   dell'A*), non la linea d'aria: in linea d'aria un fiume senza ponte è un muro.
-- **«Vai da …» e «portami lì»** con la pietra: se la meta è lontana e c'è una pietra accesa vicina, il dettaglio offre
+- **«Vai da …»** con la pietra: se la meta è lontana e c'è una pietra accesa vicina, il dettaglio offre
   «vai alla pietra» prima di camminare.
 
 ## (c) La storia principale nel mondo aperto

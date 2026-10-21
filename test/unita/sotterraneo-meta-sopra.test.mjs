@@ -5,10 +5,13 @@
    (sempre dove si cammina, mai un angolo tagliato, lunga quanto l'A*
    di motore/terra.js), la meta lontana in una zona non caricata che
    si raggiunge a pezzi lungo la strada maestra, le celle del velo che
-   si apre attorno, le luci della scia e i passi detti.
+   si apre attorno, le luci della scia e i passi detti. E quale meta:
+   solo quella scelta nel diario, di difetto la storia.
    ═══════════════════════════════════════════════════════════════════ */
 import { ilMondo, terraDelMondo, postiDi, seguiLEroe, zonaDi } from '../../src/giochi/sotterraneo/motore/mondo-sopra.js'
-import { campoVersoLaMeta, metaVicina, celleDelVelo, luciDellaStrada, piuVicina, passiDetti } from '../../src/giochi/sotterraneo/motore/meta-sopra.js'
+import { metaScelta, campoVersoLaMeta, metaVicina, celleDelVelo, luciDellaStrada, piuVicina, passiDetti } from '../../src/giochi/sotterraneo/motore/meta-sopra.js'
+import { MISSIONI } from '../../src/giochi/sotterraneo/dati/missioni.js'
+import { SEGUI_LA_STORIA } from '../../src/giochi/sotterraneo/motore/missioni.js'
 import { creaTerra } from '../../src/giochi/sotterraneo/motore/terra.js'
 import { baseDi } from '../../src/giochi/sotterraneo/motore/mondo-percorso.js'
 import { trameDellaNebbia, segnaScoperte, apriIlVelo, MAI } from '../../src/giochi/sotterraneo/scena3d/mondo/nebbia.js'
@@ -111,6 +114,23 @@ const lunga = via => via.reduce((s, c, i) => s + (i === 0 ? 0 : Math.hypot(c.x -
   controlla('mai più lontane di un passo di scia e un quarto', luci.slice(1).every((q, i) => Math.hypot(q.x - luci[i].x, q.z - luci[i].z) <= 2.51))
   uguale('la più vicina all\'eroe', piuVicina(luci, 10.4, 2.4).i, 5)
   uguale('una strada di un punto è una luce sola', luciDellaStrada([{ x: 3, z: 3 }]).length, 1)
+}
+
+/* ── quale meta: solo dal selettore del diario, di difetto la storia ── */
+{
+  const TAGLIA = 't:villaggio:mappa:mulino:0', GIU = MISSIONI.find(x => x.discesa).id, ALTRA = MISSIONI.filter(x => x.discesa)[1].id
+  const stessa = (nome, a, b) => uguale(nome, JSON.stringify(a), JSON.stringify(b))
+  const stati = { [TAGLIA]: 'presa', [GIU]: 'presa', [ALTRA]: 'fatta' }
+  stessa('niente scelto: la storia', metaScelta(stati, null, 'cantine'), { tipo: 'storia', discesa: 'cantine' })
+  stessa('anche con missioni e consegne in mano (nessuna comodità)', metaScelta(stati, undefined, 'torre'), { tipo: 'storia', discesa: 'torre' })
+  stessa('«segui la storia»', metaScelta(stati, SEGUI_LA_STORIA, 'cantine'), { tipo: 'storia', discesa: 'cantine' })
+  stessa('una taglia scelta', metaScelta(stati, TAGLIA, 'cantine'), { tipo: 'taglia', id: TAGLIA, fatta: false })
+  stessa('una missione scelta', metaScelta(stati, GIU, 'cantine'), { tipo: 'missione', id: GIU, fatta: false })
+  stessa('fatta resta la meta: si va a consegnarla', metaScelta(stati, ALTRA, 'cantine'), { tipo: 'missione', id: ALTRA, fatta: true })
+  stessa('consegnata la scelta decade: torna la storia', metaScelta({ ...stati, [TAGLIA]: 'consegnata' }, TAGLIA, 'cantine'), { tipo: 'storia', discesa: 'cantine' })
+  stessa('un id che non c\'è più: la storia', metaScelta({ 'boh': 'presa' }, 'boh', 'cantine'), { tipo: 'storia', discesa: 'cantine' })
+  stessa('storia finita e niente scelto: nessuna meta', metaScelta(stati, null, null), null)
+  stessa('la stessa scelta dà la stessa meta: non guarda dove si è', JSON.stringify(metaScelta(stati, GIU, 'cantine')), JSON.stringify(metaScelta(stati, GIU, 'cantine')))
 }
 
 /* ── i passi detti al bambino ── */

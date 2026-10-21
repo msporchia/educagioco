@@ -63,7 +63,8 @@ celle aprendo il mondo. Si salva arrivando, scoprendo (al più ogni tre secondi)
 - **Nel villaggio** si allontana e si ferma in mezzo alla fila: larga quanto chi ci sta (i mercanti, la ragazza, il capitano, il
   minatore, la bacheca e il cartello) più cinque celle, così **dalla partenza si vedono tutti senza girare**, e chi sta ai capi non
   finisce sotto le bussole del bordo. Due persone vicine a schermo si dividono il rettangolo a metà fra i piedi (`spartisciPersone`):
-  il tocco va a ognuno, non a chi sta sopra nel DOM.
+  il tocco va a ognuno, non a chi sta sopra nel DOM. Lo stesso fra una persona e la bacheca o il cartello accanto (fra il piede e il
+  centro della cosa): la ragazza del pozzo sta a due celle dalla bacheca, e il suo rettangolo intero ne coprirebbe il «?».
 - **La veduta d'insieme** (la casella «mappa grande»): il mondo intero su uno schermo largo, su un telefono in piedi una fascia di
   220 celle centrata dove si è, **che scorre col dito**, nello spazio libero fra le carte. Ci sono i nomi delle zone viste (grandi, col
   loro colore e i livelli) e della prima dopo (tratteggiata: «di là»), dei luoghi visti, del villaggio, dei dungeon trovati, le pietre

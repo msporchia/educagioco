@@ -17,11 +17,15 @@ export function rettangoloPersona(px, py, tx, ty, { largo = PERSONA.largo, alto 
 }
 // Le persone vicine a schermo (il villaggio visto intero, dove stanno a tre celle l'una dall'altra) avrebbero i rettangoli uno sopra
 // l'altro, e il tocco andrebbe a chi sta sopra nel DOM: due rettangoli che si toccano si dividono a metà fra i due piedi, così ognuno
-// prende il suo lato (più stretto dei 72 px, ma di nessun altro). `l`: [{ r, px }] col piede a schermo `px`; cambia i rettangoli
+// prende il suo lato (più stretto dei 72 px, ma di nessun altro). Lo stesso con le cose piccole (la bacheca, il cartello: `cosa`, col
+// centro in `px`), che se no sparirebbero sotto la persona accanto; davanti a una cosa (stesso punto a schermo) vince la persona.
+// `l`: [{ r, px, cosa }] col piede a schermo `px`; cambia i rettangoli
 export function spartisciPersone(l) {
   const s = l.filter(q => q.r).sort((a, b) => a.px - b.px)
   for (let i = 0; i < s.length; i++) for (let j = i + 1; j < s.length; j++) {
     const a = s[i].r, b = s[j].r
+    if (s[i].cosa && s[j].cosa) continue
+    if ((s[i].cosa || s[j].cosa) && s[j].px - s[i].px < 8) continue
     if (b.x >= a.x + a.w) continue
     if (b.y >= a.y + a.h || a.y >= b.y + b.h) continue
     const m = (s[i].px + s[j].px) / 2
