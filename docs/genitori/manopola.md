@@ -57,6 +57,10 @@ un'altra.
 
 Monete, animali, campagne e traguardi non si toccano mai.
 
+## Con la data di nascita
+
+Se il bambino ha la data (`settings.nascita`), l'età si tiene aggiornata da sola e la manopola diventa «sopra o sotto i suoi anni» (`settings.scarto`): [riordino.md](riordino.md).
+
 ## Il primo avvio
 
 Si chiede **al primo avvio e a ogni bambino aggiunto**: `src/components/Benvenuto.vue`

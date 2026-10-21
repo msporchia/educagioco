@@ -37,6 +37,7 @@ import MoneteGiocoPerGioco from '../components/varieta/Tetti.vue'
 import ArchivioGenitori from '../components/genitori/Archivio.vue'
 import CartaAmici from '../components/amici/CartaAmici.vue'
 import GiochiImpostazioni from '../components/genitori/Giochi.vue'
+import Nascita from '../components/genitori/Nascita.vue'
 
 const emit = defineEmits(['vai'])
 
@@ -868,6 +869,8 @@ async function rimetti(v) {
       <!-- l'unico posto dove si tara: vedi docs/genitori/manopola.md, docs/genitori/quadro.md -->
       <h2>I giochi di {{ chi }}</h2>
       <GiochiImpostazioni />
+
+      <div class="carte"><Nascita @applica="applicaAnni" @cambiato="giroEta++" /></div>
 
       <h2>Quanti anni ha</h2>
       <p class="mini">È la taratura, non un'anagrafe: decide quali giochi trova in home
