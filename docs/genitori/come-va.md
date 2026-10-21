@@ -27,7 +27,7 @@ premere lì dentro le apre con `apriTendine(page)` (`test/aiuto/browser.mjs`); `
 com'era due settimane fa; un'area mai giocata sta a zero col trattino; toccata l'etichetta si apre l'area qui sotto). Le frasi, che guardano *quali* domande vanno male
 e non una media: *Ha ancora giocato poco* (meno di venti risposte), *Sta andando bene* (nessuna difficile), *Ha difficoltà con le domande più difficili*
 (sono tutte un passo avanti, `dove: 'toste'`: è normale), *Ha difficoltà con alcune domande* (poche, fino a un quarto) e *Fa fatica con parecchie domande*
-(troppe: suggerisce di abbassare la taratura a mano). Poi **«Per area»** (`quiz/Aree.vue`): le cinque aree — 🔢 Numeri, 📖 Italiano, 🌍 Lingue, 📐 Spazio e tempo, 🧩 Logica e scienze (`AREE` in `quiz/comeva.js`: le materie dei quiz, dell'albo e dei giochi vi sono raggruppate, e una materia che non c'è finisce in Logica) — ognuna con la sua percentuale (la media delle materie giocate) e la freccia; toccata, **si apre** (una alla volta) sulle sue materie, con «va meglio» / «va peggio» (sopra 15 punti di distanza, `DIFFERENZA`) e le non ancora giocate; toccata una materia si entra nelle sue domande, come prima. Poi la settimana con le difficili, il tempo di gioco, e **in fondo, in una
+(troppe: suggerisce di abbassare la taratura a mano). Poi **«Per area»** (`quiz/Aree.vue`): le cinque aree — 🔢 Numeri, 📖 Italiano, 🌍 Lingue, 📐 Spazio e tempo, 🧩 Logica e scienze (`AREE` in `quiz/comeva.js`: le materie dei quiz, dell'albo e dei giochi vi sono raggruppate, e una materia che non c'è finisce in Logica) — ognuna con la sua percentuale di giuste (sulle risposte di tutte le sue materie) e la freccia; toccata, **si apre** (una alla volta) sulle sue materie, con «va meglio» / «va peggio» (sopra 15 punti di distanza, `DIFFERENZA`) e le non ancora giocate; toccata una materia si entra nelle sue domande, come prima. Poi la settimana con le difficili, il tempo di gioco, e **in fondo, in una
 tendina chiusa, «Il dettaglio, domanda per domanda»** — l'elenco lungo di sotto, che dentro una materia si apre da solo. Nei test: `[data-quadro]`,
 `[data-giudizio][data-tono]`, `[data-radar]`, `[data-radar-asse]`, `[data-area="numeri"|…]` con `[data-area-capo]`, `[data-mattonella="<materia>"]` (dentro un'area aperta), `[data-va-meglio]`, `[data-va-peggio]`, `details[data-dettaglio]`. `unita/aree`, `unita/giudizio`.
 
@@ -42,20 +42,22 @@ l'avviso del muro in posta arrivava a chi non sapeva cosa farci. Adesso la
 risposta corta sta in cima, in due forme che si leggono senza aprire niente,
 e l'elenco lungo resta sotto per chi vuole i numeri.
 
-### Le mattonelle (`quiz/Mattonelle.vue`)
+### Le materie dentro le aree (`quiz/Aree.vue`, `mattonelleDi` in `quiz/comeva.js`)
 
 Una per **materia**: quelle dei quiz (italiano, matematica, spazio e figure,
 tempo e orologio, logica, scienze) **e** quelle che prima stavano solo
 nell'albo del bambino (`MATERIE` di `store/progressi.js`: tabelline, calcolo
 a mente, inglese, spagnolo, operazioni in colonna, euro e resto, misure…).
-Ognuna dice **quanto è saputo** (percentuale e barra) e una **freccia** su,
+Ognuna dice **le risposte giuste su quelle date** (percentuale, barra e quante risposte) e una **freccia** su,
 giù o pari rispetto a due settimane fa.
 
-- **Quanto è saputo è la forza del ripasso, non la percentuale di giuste**,
-  la stessa misura dell'albo: per le materie dell'albo `abilita()` (quello
-  che non si è mai visto conta zero), per quelle dei quiz la media di
-  `saputo()` (`nucleo/bisogno.js`) sulle tipologie **che gli arrivano** —
-  né quelle tolte per età né le spente. Quindi scende se non si ripassa.
+- **La misura è «giuste su date» (`giustePerCento`), dal 21/10**, per decisione del proprietario: è quello che un genitore capisce subito. Prima era
+  «quanto è saputo», la forza del ripasso (`abilita()` per l'albo, `saputo()` per i quiz), che scende da sola se non si ripassa e non dice «sta
+  andando bene»; resta nel profilo (`pct`, e `m` nella fotografia) ma non si mostra. Le giuste e le sbagliate sono quelle delle tipologie
+  **che gli arrivano** (né le tolte per età né le spente) per i quiz, e quelle dei prefissi della materia per l'albo. Un'**area** somma le
+  risposte delle sue materie (56 giuste su 80, non la media di due percentuali); sotto otto risposte dice «poche prove», e «va meglio/peggio» si dice
+  solo fra materie con almeno otto risposte. La fotografia settimanale tiene anche `a` (le giuste): una fotografia vecchia, senza `a`, non dà
+  nessuna freccia finché non ne arriva una nuova.
 - **Una lingua è una mattonella**: parole, verbi e frasi sono tre barre
   nell'albo, pesate sul loro totale qui (`INSIEME` in `quiz/comeva.js`).
 - **La freccia** confronta con la fotografia più recente che abbia almeno

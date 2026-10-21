@@ -69,15 +69,18 @@ uguale('giù', frecciaDa(40, 40 + SOGLIA_FRECCIA), 'giu')
 uguale('un punto o due sono il decadimento, non una notizia', frecciaDa(40, 39), 'pari')
 {
   const { viste, nonAncora } = mattonelleDi({ righe: RIGHE, items: ITEMS, now: ORA,
-                                              prima: { m: { italiano: 60 } } })
-  uguale('l\'italiano sale da 60 a 75', viste.find(m => m.id === 'italiano').freccia, 'su')
+                                              prima: { a: { italiano: 40 } } })
+  uguale('l\'italiano, 11 giuste su 20 (55%), sale da 40', viste.find(m => m.id === 'italiano').freccia, 'su')
+  uguale('con la percentuale di giuste', viste.find(m => m.id === 'italiano').giuste, 55)
+  uguale('una fotografia vecchia, senza `a`, non dà nessuna freccia', mattonelleDi({ righe: RIGHE, items: ITEMS, now: ORA, prima: { m: { italiano: 10 } } }).viste.find(m => m.id === 'italiano').freccia, null)
   controlla('quello mai giocato sta da parte', nonAncora.some(m => m.id === 'tempo'))
 }
 
 /* ══════════ 4. la fotografia di ogni settimana ══════════ */
 {
-  const foto = fotoDa([{ id: 'italiano', pct: 75 }], ITEMS, ['orto:doppie', 'orto:gn', 'ora:intere'])
+  const foto = fotoDa([{ id: 'italiano', pct: 75, ok: 11, err: 9 }], ITEMS, ['orto:doppie', 'orto:gn', 'ora:intere'])
   uguale('tiene le percentuali', foto.m.italiano, 75)
+  uguale('e le giuste sulle risposte date', foto.a.italiano, 55)
   uguale('e il conto delle tipologie con risposte, e basta', Object.keys(foto.c).join(' '),
          'orto:doppie orto:gn')
   controlla('la prima si fa subito', serveUnaNuova([], ORA))

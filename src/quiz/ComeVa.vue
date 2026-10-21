@@ -139,7 +139,7 @@ function vaBene(r) {
       <div class="dentro-testa" :data-materia-aperta="dentro.id">
         <button type="button" class="torna" data-azione="materie-torna"
                 @click="materia = null">← tutte le materie</button>
-        <h2>{{ dentro.emoji }} {{ dentro.nome }} · {{ dentro.pct }}%</h2>
+        <h2>{{ dentro.emoji }} {{ dentro.nome }} · {{ dentro.giuste == null ? '–' : dentro.giuste + '% giuste' }}</h2>
       </div>
       <MappaTabelline v-if="dentro.mappa === 'tabelline'" />
       <ul v-else-if="dentro.tipo === 'albo'" class="parti" data-parti>
@@ -160,7 +160,7 @@ function vaBene(r) {
         <p v-if="assi.some(a => a.prima != null)" class="legenda"><i class="adesso"></i> adesso <i class="prima"></i> due settimane fa</p>
       </section>
 
-      <h3 class="sotto">Per area: tocca per entrare</h3>
+      <h3 class="sotto">Per area: risposte giuste su risposte date. Tocca per entrare</h3>
       <Aree :aree="aree" :aperta="areaAperta" @area="id => (areaAperta = id)" @apri="entra" />
 
       <Settimana :chi="chi" :settimana="settimana" :eta="eta" :alleggerite="alleggerite"

@@ -25,7 +25,10 @@ const nelleMaterie = a => a.materie.length + a.nonAncora.length
         <span class="testo">
           <b>{{ a.nome }}</b>
           <span v-if="a.pct == null" class="mai">non ancora giocata</span>
-          <span v-else class="barra"><i :style="{ width: Math.max(2, a.pct) + '%' }"></i></span>
+          <template v-else>
+            <span class="misura"><i :style="{ width: Math.max(2, a.pct) + '%' }"></i></span>
+            <span class="mai">{{ a.poche ? 'poche prove: ' : '' }}{{ a.risposte }} {{ a.risposte === 1 ? 'risposta' : 'risposte' }}</span>
+          </template>
         </span>
         <span v-if="a.pct != null" class="num">
           <b data-area-pct>{{ a.pct }}%</b>
@@ -40,11 +43,12 @@ const nelleMaterie = a => a.materie.length + a.nonAncora.length
             <span class="ico" aria-hidden="true">{{ m.emoji }}</span>
             <span class="testo">
               <b>{{ m.nome }}</b>
-              <span class="barra"><i :style="{ width: Math.max(2, m.pct) + '%' }"></i></span>
+              <span class="misura"><i :style="{ width: Math.max(2, m.giuste ?? 0) + '%' }"></i></span>
+              <span class="mai">{{ m.risposte }} {{ m.risposte === 1 ? 'risposta' : 'risposte' }}</span>
             </span>
             <span class="num">
-              <b data-pct>{{ m.pct }}%</b>
-              <em v-if="m.freccia" class="freccia" :class="m.freccia" :data-freccia="m.freccia" :title="`due settimane fa: ${m.prima}%`">{{ FRECCIA[m.freccia] }} {{ scarto(m) }}</em>
+              <b data-pct>{{ m.giuste == null ? '–' : m.giuste + '%' }}</b>
+              <em v-if="m.freccia" class="freccia" :class="m.freccia" :data-freccia="m.freccia" :title="`due settimane fa: ${m.prima}%`">{{ FRECCIA[m.freccia] }} {{ scarto({ ...m, pct: m.giuste }) }}</em>
             </span>
             <span class="etichetta">
               <em v-if="m.meglio" class="meglio" data-va-meglio>va meglio</em>
@@ -70,8 +74,8 @@ const nelleMaterie = a => a.materie.length + a.nonAncora.length
 .testo { flex: 1; min-width: 0; display: grid; gap: 4px }
 .testo b { font-size: 14px; font-weight: 800 }
 .mai { font-size: 11.5px; color: #8a8a99 }
-.barra { display: block; height: 7px; border-radius: 4px; background: #e4def5; overflow: hidden }
-.barra i { display: block; height: 100%; border-radius: 4px; background: #7c5cd6 }
+.misura { display: block; height: 7px; border-radius: 4px; background: #e4def5; overflow: hidden }
+.misura i { display: block; height: 100%; border-radius: 4px; background: #7c5cd6 }
 .num { flex: none; display: grid; justify-items: end; gap: 2px }
 .num b { font-size: 18px; font-weight: 850; color: #5b3fa8 }
 .freccia { font-style: normal; font-size: 10.5px; font-weight: 800; padding: 1px 6px; border-radius: 8px; white-space: nowrap }

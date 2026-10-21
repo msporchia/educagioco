@@ -53,8 +53,8 @@ await page.evaluate(([chi, voci]) => new Promise((ok, ko) => {
     tx.onerror = () => ko(new Error('scrittura fallita'))
   }
 }), [GIOCATORE, [
-  { t: ORA - 14 * GIORNO, m: { tempo: 0 }, c: { [SALITA]: [2, 8] } },
-  { t: ORA - 7 * GIORNO, m: { tempo: 0 }, c: { [SALITA]: [2, 8] } },
+  { t: ORA - 14 * GIORNO, m: { tempo: 0 }, a: { tempo: 0 }, c: { [SALITA]: [2, 8] } },
+  { t: ORA - 7 * GIORNO, m: { tempo: 0 }, a: { tempo: 0 }, c: { [SALITA]: [2, 8] } },
 ]])
 await semina(page, {
   coins: 100,
@@ -205,7 +205,7 @@ const mattonella = k => page.locator(`[data-mattonella="${k}"]`)
 const area = k => page.click(`[data-area-capo="${k}"]`)
 uguale('le aree sono sempre cinque', await page.locator('[data-area]').count(), 5)
 uguale('chiuse, non mostrano le materie', await page.locator('[data-mattonella]').count(), 0)
-controlla('un\'area mai giocata lo dice, senza una barra a zero', await page.locator('[data-area="italiano"] .mai').count() === 1 && await page.locator('[data-area="italiano"] .barra').count() === 0)
+controlla('un\'area mai giocata lo dice, senza una barra a zero', await page.locator('[data-area="italiano"] .mai').count() === 1 && await page.locator('[data-area="italiano"] .misura').count() === 0)
 await area('spazio')
 controlla('aperto «Spazio e tempo» c\'è la materia del tempo, dei quiz', await mattonella('tempo').count() === 1)
 uguale('e se ne apre una sola alla volta', await page.locator('[data-area].aperta').count(), 1)
