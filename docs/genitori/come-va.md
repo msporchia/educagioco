@@ -8,7 +8,7 @@ scheda che dice se le domande stanno funzionando, e il quaderno dei giudizi. Il 
 Il perché e l'elenco sono in [riordino.md](riordino.md): **👶 Bambino** (nome, faccia, data di nascita e classe, la taratura a mano in una tendina,
 amici), **🎮 Giochi** (il carosello con la pagina del gioco: «Nella home» Default/Acceso/Spento, il tempo, le monete di quel gioco, le domande),
 **📊 Come va**, **💾 Salvataggi** (salva, rimetti, avviso, cestino, «Zona delicata») e **🔧 Impostazioni** (passa il gioco, codice, segnala, e la tendina
-**«Avanzate»**: giochi in prova, tappe aperte, regole delle monete, fps e benchmark).
+**«Avanzate»**: giochi in prova, tappe aperte, «Giudicare le domande», fps e benchmark; e in fondo la firma).
 
 **Si gestiscono le eccezioni, non la norma** (decisione del proprietario, 21/10): le domande sono tarate sull'età e di solito non c'è niente da fare,
 quindi nessuna lista lunga da curare. Una domanda che continua ad andare male compare in **Come va › Difficili** con quattro tasti — ▶ Prova, più avanti
@@ -21,6 +21,15 @@ premere lì dentro le apre con `apriTendine(page)` (`test/aiuto/browser.mjs`); `
 `integrazione/impostazioni-barra`, `integrazione/come-va`, `unita/copia`.
 
 ## «Come va»
+
+**Il quadro generale prima del dettaglio** (21/10, decisione del proprietario: «entro e dico: sì, sta andando bene», non un mega-elenco). In cima
+**una frase** (`giudizioDi` in `quiz/comeva.js`, `unita/giudizio`) e il **radar** (`quiz/Radar.vue`: un asse per materia, il saputo da 0 a 100, tratteggiato
+com'era due settimane fa; toccata l'etichetta si entra nella materia; sotto tre materie non si disegna). Le frasi, che guardano *quali* domande vanno male
+e non una media: *Ha ancora giocato poco* (meno di venti risposte), *Sta andando bene* (nessuna difficile), *Ha difficoltà con le domande più difficili*
+(sono tutte un passo avanti, `dove: 'toste'`: è normale), *Ha difficoltà con alcune domande* (poche, fino a un quarto) e *Fa fatica con parecchie domande*
+(troppe: suggerisce di abbassare la taratura a mano). Poi «Per materia» (le mattonelle), la settimana con le difficili, il tempo di gioco, e **in fondo, in una
+tendina chiusa, «Il dettaglio, domanda per domanda»** — l'elenco lungo di sotto, che dentro una materia si apre da solo. Nei test: `[data-quadro]`,
+`[data-giudizio][data-tono]`, `[data-radar]`, `[data-radar-asse]`, `details[data-dettaglio]`.
 
 `src/quiz/ComeVa.vue`, montato dalla schermata dei grandi con una riga sola
 (gli passa il nome del bambino). Dall'alto: **le materie**, **la settimana**,

@@ -59,58 +59,21 @@ uguale('un gioco non ancora aperto oggi non dice niente', await segno('codice'),
 uguale('la fattoria non paga, e non ha salvadanaio', await segno('fattoria'), null)
 await scatto(page, 'varieta-home')
 
-/* ── 2. i grandi ── */
+/* ── 2. niente da regolare ──
+   Le soglie, i tetti per gioco, i ⭐ e «Ridai tempo» non hanno più una schermata (21/10): restano i numeri di prima, uguali per tutti.
+   Il motore li legge ancora dal profilo (`settings.varieta`), come qui sopra con `consigliati`. */
 await page.click('[data-azione="grandi"]')
 await page.waitForSelector('.tastierino', { timeout: 5000 })
 for (const c of '0000') await page.click(`.tasto >> text="${c}"`)
 await page.waitForSelector('nav.barra-giu', { timeout: 5000 })
-await page.click('[data-scheda="giochi"]')
-// le monete di un gioco stanno nella sua pagina (il selettore in alto), le regole di tutti in Impostazioni › Avanzate
-const vaiAlGioco = async k => {
-  await page.click(`[data-giochi-impostazioni] [data-indice="${k}"]`)
-  await page.waitForSelector(`[data-varieta-gioco-pagina="${k}"]`, { timeout: 5000 })
+for (const sch of ['giochi', 'impostazioni']) {
+  await page.click(`[data-scheda="${sch}"]`)
+  await apriTendine(page)
+  uguale(`in «${sch}» non c'è nessun regolatore delle monete`, await page.locator('[data-varieta], [data-varieta-gioco-pagina], [data-varieta-soglia], [data-flag="dormienti"]').count(), 0)
 }
-await vaiAlGioco('sotterraneo')
-
-uguale('la riga Oggi dice che il sotterraneo è finito',
-       await page.locator('[data-varieta-oggi="sotterraneo"]').getAttribute('data-fase'), 'vuoto')
-controlla('con i minuti', (await page.locator('[data-varieta-oggi="sotterraneo"]').innerText()).includes('45′'))
-await page.click('[data-varieta-oggi="sotterraneo"] [data-azione="ridai-tempo"]')
-await attendi(page, 200)
-uguale('«Ridai tempo» lo riporta pieno',
-       await page.locator('[data-varieta-oggi="sotterraneo"]').getAttribute('data-fase'), 'pieno')
-uguale('e il tasto sparisce',
-       await page.locator('[data-varieta-oggi="sotterraneo"] [data-azione="ridai-tempo"]').count(), 0)
-
-await page.click('[data-scheda="impostazioni"]')
-await apriTendine(page)
-await page.click('[data-varieta-soglia="pieno"] [data-varieta-passo="su"]')
-controlla('la soglia sale di cinque minuti',
-          (await page.locator('[data-varieta-soglia="pieno"] b').innerText()).includes('25'))
-await page.click('[data-flag="dormienti"]')
-await page.click('[data-scheda="giochi"]')
-await vaiAlGioco('survivors')
-await page.click('[data-varieta-gioco="survivors"] [data-tetto="libero"]')
-await vaiAlGioco('inglese')
-await page.click('[data-consiglia="inglese"]')
-await attendi(page, 500)
-await scatto(page, 'varieta-grandi')
-
-const p = await leggiProfilo(page)
-const v = p?.settings?.varieta || {}
-uguale('nel profilo: la soglia nuova', v.pieno, 25)
-uguale('Survivors senza tetto', v.giochi?.survivors, 'libero')
-uguale('English consigliato', v.consigliati?.inglese, true)
-uguale('i dormienti accesi', v.dormienti, true)
-controlla('e il tempo ridato al sotterraneo', (v.ridato?.s?.sotterraneo || 0) >= 45 * MIN, JSON.stringify(v.ridato))
-/* i dormienti accesi non devono accendere tutto: questo bambino gioca da oggi */
-
 await page.locator('button[aria-label="indietro"]').click()
 await page.waitForSelector('.carte .carta.gioco', { timeout: 5000 })
 await attendi(page, 300)
-uguale('in home, Survivors senza tetto non ha più salvadanaio', await segno('survivors'), null)
-uguale('il sotterraneo, ridato, non dice niente (è pieno come stamattina)', await segno('sotterraneo'), null)
-uguale('English consigliato ha il suo ×2', await segno('inglese'), 'doppio')
 
 /* ── 3. un gioco che paga: Conta, a metà ── */
 const monete = async () => (await leggiProfilo(page))?.coins || 0

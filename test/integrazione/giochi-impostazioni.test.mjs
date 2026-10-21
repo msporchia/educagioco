@@ -27,6 +27,11 @@ const vai = async k => { await page.click(`[data-indice="${k}"]`); await attendi
 controlla('c\'è il carosello, come in home', await page.locator('[data-giochi-impostazioni] .scaffale').count() === 1 && await page.locator('[data-giochi-impostazioni] .carta.gioco').count() > 8)
 controlla('senza «gioca»: qui non si entra nei giochi', await page.locator('[data-giochi-impostazioni] .gioca').count() === 0)
 
+/* ── fuori dalla home per l'età: «troppo facile» (un gioco per i piccoli) o «per più grandi», mai un «non è ancora adatto» sbagliato ── */
+await vai('conta')
+const contaDice = await page.locator('[data-gioco-esito]').innerText()
+controlla('Conta gli animali, a 8 anni, è troppo facile: non «non ancora adatto»', /troppo facile/.test(contaDice) && !/ancora adatto|da solo quando/.test(contaDice), contaDice)
+
 /* ── Castle Battle: a 8 anni sta in casa; il sotterraneo e i giochi in prova no ── */
 await vai('arena')
 uguale('in mezzo c\'è Castle Battle', await inMezzo(), 'arena')
@@ -87,7 +92,7 @@ await page.locator('[data-pannello-gioco]').scrollIntoViewIfNeeded()
 await scatto(page, 'giochi-impostazioni-sotterraneo')
 controlla('il sotterraneo pesca da tutte le domande: lo dice e non le elenca', /tutte le domande/.test(await page.locator('[data-gioco-domande]').innerText()) && await page.locator('[data-gioco-sapere]').count() === 0)
 await vai('fattoria')
-controlla('la fattoria non fa domande di scuola: lo dice', /non fa domande|non le ha ancora/.test(await page.locator('[data-gioco-domande]').innerText()))
+controlla('la fattoria non fa domande di scuola: lo dice', /non fa domande|dove si spendono/i.test(await page.locator('[data-gioco-domande]').innerText()))
 
 controlla('nessun errore in console', errori.length === 0, errori.join(' | '))
 await browser.close()

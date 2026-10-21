@@ -33,7 +33,6 @@ import { anniInLettere } from '../components/eta/lettere.js'
 import Benvenuto from '../components/Benvenuto.vue'
 import Prova from '../quiz/Prova.vue'
 import ComeVa from '../quiz/ComeVa.vue'
-import MoneteGlobali from '../components/varieta/Tetti.vue'
 import ArchivioGenitori from '../components/genitori/Archivio.vue'
 import CartaAmici from '../components/amici/CartaAmici.vue'
 import GiochiImpostazioni from '../components/genitori/Giochi.vue'
@@ -933,56 +932,9 @@ async function rimetti(v) {
         </button>
 
       
-        <MoneteGlobali :chi="chi" />
-        <button class="carta interruttore" :class="{ spento: !fpsAcceso }"
-                data-flag="fps" @click="cambiaFps">
-          <span class="ico">📈</span>
-          <b>Contatore di fluidità (fps)</b>
-          <i>{{ fpsAcceso ? 'Acceso: in un angolo i fotogrammi al secondo; un tocco avvia una misura, un altro la chiude e la tiene'
-                          : 'Spento: serve a chi prova i giochi su un telefono vecchio' }}</i>
-          <span class="leva"><span class="pallina"></span></span>
-        </button>
-
- <div class="carta" data-fascia>
-          <span class="ico">🎚️</span>
-          <b>Qualità della grafica 3D: {{ fasciaAttiva() }}</b>
-          <i>{{ fasciaScelta === 'auto'
-                ? (fasciaMisura ? 'Scelta da sola, misurata il ' + new Date(fasciaMisura.quando).toLocaleDateString('it-IT') + ' (' + fasciaMisura.punti + ' punti, JS ' + fasciaMisura.js + ' ms)'
-                                : 'Scelta da sola: ancora da misurare, si fa in home')
-                : 'Scelta a mano' }}</i>
-          <div class="riga">
-            <button v-for="f in ['auto', ...FASCE]" :key="f" type="button" class="bottone chiaro" :class="{ attivo: fasciaScelta === f }"
-                    :data-fascia-scelta="f" @click="scegliFascia(f)">{{ f }}</button>
-            <button type="button" class="bottone chiaro" data-azione="rimisura-fascia" :disabled="rimisurando" @click="rimisuraFascia">
-              {{ rimisurando ? 'Misuro…' : 'Rimisura' }}</button>
-          </div>
-        </div>
-
-        <button class="carta interruttore" data-azione="benchmark" @click="misuraAperta = true">
-          <span class="ico">⏱️</span>
-          <b>Misura questo telefono</b>
-          <i>Un minuto di scene di prova a qualità diverse, e un resoconto da mandare: dice cosa lo fa andare a scatti</i>
-        </button>
-        </div>
-      <Benchmark v-if="misuraAperta" :modulo="SEGNALA_GIUDIZI" @chiudi="misuraAperta = false" />
-      </details>
-      </template>
-
-      <!-- ══════════ scheda: giochi e domande ══════════ -->
-      <template v-else-if="scheda === 'giochi'">
-      <!-- l'unico posto dove si tara: vedi docs/genitori/manopola.md, docs/genitori/quadro.md -->
-      <h2>I giochi di {{ chi }}</h2>
-      <GiochiImpostazioni />
-
-      <MoneteGiocoPerGioco :chi="chi" />
-
-      <!-- il quaderno dei giudizi: vedi docs/genitori/come-va.md -->
-      <h2>Le domande dei quiz</h2>
-      <p class="mini">Acceso, sopra ogni domanda compaiono tre tastini per dire com'era:
-        😴 troppo facile, 😰 troppo difficile, 🐛 storta. Serve a correggere le tarature
-        sbagliate, ed esce di qui col modulo di segnalazione.</p>
-
-      <div class="carte">
+        <!-- il quaderno dei giudizi: vedi docs/genitori/come-va.md -->
+        <p class="mini">Acceso, sopra ogni domanda compaiono tre tastini per dire com'era: 😴 troppo facile, 😰 troppo difficile,
+          🐛 storta. Serve a correggere le tarature sbagliate, ed esce di qui col modulo di segnalazione.</p>
         <button class="carta interruttore" :class="{ spento: !giudiziAccesi }"
                 data-flag="giudizi" @click="cambiaGiudizi">
           <span class="ico">😰</span>
@@ -1016,16 +968,38 @@ async function rimetti(v) {
               Cancella</button>
           </div>
         </div>
-      </div>
+        <button class="carta interruttore" :class="{ spento: !fpsAcceso }"
+                data-flag="fps" @click="cambiaFps">
+          <span class="ico">📈</span>
+          <b>Contatore di fluidità (fps)</b>
+          <i>{{ fpsAcceso ? 'Acceso: in un angolo i fotogrammi al secondo; un tocco avvia una misura, un altro la chiude e la tiene'
+                          : 'Spento: serve a chi prova i giochi su un telefono vecchio' }}</i>
+          <span class="leva"><span class="pallina"></span></span>
+        </button>
 
-      </template>
+ <div class="carta" data-fascia>
+          <span class="ico">🎚️</span>
+          <b>Qualità della grafica 3D: {{ fasciaAttiva() }}</b>
+          <i>{{ fasciaScelta === 'auto'
+                ? (fasciaMisura ? 'Scelta da sola, misurata il ' + new Date(fasciaMisura.quando).toLocaleDateString('it-IT') + ' (' + fasciaMisura.punti + ' punti, JS ' + fasciaMisura.js + ' ms)'
+                                : 'Scelta da sola: ancora da misurare, si fa in home')
+                : 'Scelta a mano' }}</i>
+          <div class="riga">
+            <button v-for="f in ['auto', ...FASCE]" :key="f" type="button" class="bottone chiaro" :class="{ attivo: fasciaScelta === f }"
+                    :data-fascia-scelta="f" @click="scegliFascia(f)">{{ f }}</button>
+            <button type="button" class="bottone chiaro" data-azione="rimisura-fascia" :disabled="rimisurando" @click="rimisuraFascia">
+              {{ rimisurando ? 'Misuro…' : 'Rimisura' }}</button>
+          </div>
+        </div>
 
-      <!-- ══════════ scheda: come va ══════════ vedi docs/genitori/come-va.md -->
-      <template v-if="scheda === 'comeva'">
-        <ComeVa :chi="chi" @prova="prova = $event" />
-      </template>
-
-      <p v-if="esito" :class="esito.ok ? 'mini' : 'avviso'">{{ esito.testo }}</p>
+        <button class="carta interruttore" data-azione="benchmark" @click="misuraAperta = true">
+          <span class="ico">⏱️</span>
+          <b>Misura questo telefono</b>
+          <i>Un minuto di scene di prova a qualità diverse, e un resoconto da mandare: dice cosa lo fa andare a scatti</i>
+        </button>
+        </div>
+      <Benchmark v-if="misuraAperta" :modulo="SEGNALA_GIUDIZI" @chiudi="misuraAperta = false" />
+      </details>
 
       <!-- la firma: riga corta in fondo, non in cima; il resto sta in "Chi l'ha fatto" -->
       <footer class="firma" data-firma>
@@ -1037,6 +1011,23 @@ async function rimetti(v) {
             Il codice, aperto ↗</a>
         </div>
       </footer>
+      </template>
+
+      <!-- ══════════ scheda: giochi e domande ══════════ -->
+      <template v-else-if="scheda === 'giochi'">
+      <!-- l'unico posto dove si tara: vedi docs/genitori/manopola.md, docs/genitori/quadro.md -->
+      <h2>I giochi di {{ chi }}</h2>
+      <GiochiImpostazioni />
+
+      </template>
+
+      <!-- ══════════ scheda: come va ══════════ vedi docs/genitori/come-va.md -->
+      <template v-if="scheda === 'comeva'">
+        <ComeVa :chi="chi" @prova="prova = $event" />
+      </template>
+
+      <p v-if="esito" :class="esito.ok ? 'mini' : 'avviso'">{{ esito.testo }}</p>
+
     </div>
 
     <!-- fuori dalle schede: non è un'impostazione, è un modo di leggere una voce -->

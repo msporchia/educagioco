@@ -149,3 +149,30 @@ export function settimanaDi({ righe = [], items = {}, prima = null, vaBene = {},
 
   return { minuti: Math.round(secondi / 60), difficili, migliorate, confronto: !!prima }
 }
+
+/* ── Il giudizio in una frase ──
+   Quello con cui un genitore entra: «sta andando bene», «ha difficoltà con le domande più difficili», «ha difficoltà con alcune domande».
+   Non è una media: guarda **quali** domande vanno male. Una difficile che è un passo avanti (`dove: 'toste'`) è normale che faccia fatica;
+   una del suo livello no. `viste` sono le righe di `andamentoDi` (con `classi` che portano `dove`), `difficili` quelle di `settimanaDi`.
+   Tono: 'attesa' (poco da dire), 'bene', 'normale' (solo le difficili), 'alcune', 'tante'. */
+export const POCHE_RISPOSTE = 20
+const solo = (r, fasce) => !!r.classi?.length && r.classi.every(c => fasce.includes(c.dove))
+export function giudizioDi({ viste = [], difficili = [], migliorate = 0 } = {}) {
+  const valutate = viste.filter(r => !r.poche)
+  const risposte = viste.reduce((n, r) => n + r.quante, 0)
+  if (risposte < POCHE_RISPOSTE || valutate.length < 3)
+    return { tono: 'attesa', titolo: 'Ha ancora giocato poco', testo: 'Servono qualche giorno e un po\' di domande per capire come va: intanto si può solo guardare.' }
+  const nd = difficili.length
+  if (!nd)
+    return { tono: 'bene', titolo: 'Sta andando bene',
+             testo: migliorate ? `Nessuna domanda gli va male, e questa settimana è migliorato su ${migliorate}.` : 'Nessuna domanda gli va male.' }
+  if (difficili.every(r => solo(r, ['toste', 'sopra'])))
+    return { tono: 'normale', titolo: 'Ha difficoltà con le domande più difficili',
+             testo: nd === 1 ? 'Una sola, e è un passo avanti: è normale. Quelle del suo livello vanno bene.'
+                             : `${nd}, e sono tutte un passo avanti: è normale. Quelle del suo livello vanno bene.` }
+  if (nd <= Math.max(3, Math.round(valutate.length * 0.25)))
+    return { tono: 'alcune', titolo: 'Ha difficoltà con alcune domande',
+             testo: `${nd === 1 ? 'Una' : nd} su ${valutate.length} vanno male: sotto le trovi, e puoi provarle, spostarle o non chiedergliele più.` }
+  return { tono: 'tante', titolo: 'Fa fatica con parecchie domande',
+           testo: `${nd} su ${valutate.length} vanno male: forse i giochi sono tarati troppo avanti. Prova ad abbassare l'età a mano (Bambino › Tara a mano).` }
+}

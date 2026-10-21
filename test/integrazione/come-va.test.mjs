@@ -19,7 +19,7 @@
 
    `node test/esegui.mjs come-va`
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, semina, scatto, leggiProfilo, GIOCATORE } from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, azzera, semina, scatto, leggiProfilo, apriTendine, GIOCATORE } from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 
 const browser = await apriBrowser()
@@ -81,6 +81,13 @@ await entra()
 
 await page.click('[data-scheda="comeva"]')
 await page.waitForSelector('[data-come-va]', { timeout: 5000 })
+// il dettaglio domanda per domanda nasce chiuso: chi deve premere lì dentro lo apre (come per le altre tendine)
+await apriTendine(page)
+/* ── il quadro generale: una frase che dice come va, e il resto sotto ── */
+const tono = await page.locator('[data-giudizio]').getAttribute('data-tono')
+controlla('in cima c\'è il giudizio in una frase', ['attesa', 'bene', 'normale', 'alcune', 'tante'].includes(tono), tono)
+controlla('e dice qualcosa di leggibile', (await page.locator('[data-giudizio]').innerText()).length > 30)
+controlla('il dettaglio domanda per domanda sta in una tendina', await page.locator('details[data-dettaglio]').count() === 1)
 await page.waitForTimeout(300)
 
 /* ── 0. una scheda è una scheda sola ──
