@@ -29,8 +29,17 @@ export class Camera {
     this.x = L.x; this.z = L.z
   }
 
+  /** Scorre la camera di (`dx`, `dz`) celle (il dito contro il bordo con un pezzo in mano), senza ritardo e non oltre `LONTANO` dall'eroe. */
+  scorri(dx, dz) {
+    const L = this.libera, e = this.eroe || { x: this.x, z: this.z }
+    if (!L.on) { L.on = true; L.x = this.x; L.z = this.z }
+    L.x = Math.max(e.x - LONTANO, Math.min(e.x + LONTANO, L.x + dx)); L.z = Math.max(e.z - LONTANO, Math.min(e.z + LONTANO, L.z + dz))
+    this.x = L.x; this.z = L.z
+  }
+
   /** `eroe`: { x, z, vel }; `distanza`: la base (dalle opzioni). */
   muovi(dt, { eroe, distanza }) {
+    this.eroe = eroe
     let tx = eroe.x, tz = eroe.z, td = distanza * this.zoom, tp = 55
     if (this.libera.on) { tx = this.libera.x; tz = this.libera.z }
     if (this.libera.on) { tx = Math.max(eroe.x - LONTANO, Math.min(eroe.x + LONTANO, tx)); tz = Math.max(eroe.z - LONTANO, Math.min(eroe.z + LONTANO, tz)) }   // niente confini, ma la vista libera non si perde nel vuoto

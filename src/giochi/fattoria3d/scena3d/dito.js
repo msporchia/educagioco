@@ -32,12 +32,12 @@ export class Dito {
     this.canvas.setPointerCapture(e.pointerId); this.punti.set(e.pointerId, [e.clientX, e.clientY])
     if (this.punti.size === 2) {
       this.pinch0 = this._distanza(); this.zoom0 = w.camera.zoom; this.inizio = null; this.centroPrima = this._centro()
-      w.costruzione.tratto = null; w.costruzione.ultimaCella = null; clearTimeout(this.lungo); return
+      w.costruzione.tratto = null; w.costruzione.ultimaCella = null; w.costruzione.pennelloDito = null; clearTimeout(this.lungo); return
     }
     this.inizio = { x: e.clientX, y: e.clientY }; this.trascina = false
     clearTimeout(this.lungo)
     if (ui.fogliAperti()) return
-    if (w.costruzione.parcheggiato) { this.inizio.parcheggio = true; return }          // il fantasma del menu: lo si trascina o si tocca dove va
+    if (w.costruzione.parcheggiato) { this.inizio.parcheggio = true; w.costruzione.prendi(e.clientX, e.clientY); return }          // il fantasma del menu: lo si trascina o si tocca dove va
     if (this._pennello) { w.costruzione.pennello(e.clientX, e.clientY, this._pennello); return }
     const b = w.bersaglioSotto(e.clientX, e.clientY), ini = this.inizio
     if (b && b.kind === 'cosa') {                       // tenere premuto su un pezzo lo solleva: si sposta o si mette via
@@ -54,7 +54,7 @@ export class Dito {
       this.lungo = setTimeout(() => {
         if (this.inizio !== ini || this.trascina || this.punti.size !== 1 || w.costruzione.attivo || ui.fogliAperti()) return
         try { navigator.vibrate && navigator.vibrate(30) } catch (x) { /* niente vibrazione */ }
-        ini.menu = true; w.svuotaCoda(); ui.apriCostruisci(i, j)
+        ini.menu = true; w.svuotaCoda(); w.puntoMenu = { i, j, x: p.x, z: p.z }; ui.apriCostruisci(i, j)
       }, ATTESA_PREMUTO)
     }
   }
@@ -96,6 +96,7 @@ export class Dito {
     this.punti.delete(e.pointerId)
     const w = this.w, su = e.type === 'pointerup'
     clearTimeout(this.lungo); this.lungo = 0
+    if (!su) w.costruzione.alzaDito()
     if (!su && w.costruzione.attivo && !w.costruzione.parcheggiato) w.costruzione.annullaTrascinamento()
     if (this.inizio && this.inizio.parcheggio) {                                 // il fantasma del menu: trascinato si rilascia dove si è, toccato va dove si tocca
       if (su) { if (this.trascina) w.costruzione.rilascia(e.clientX, e.clientY); else w.costruzione.tocco(e.clientX, e.clientY) }
