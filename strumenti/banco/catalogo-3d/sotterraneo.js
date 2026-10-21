@@ -36,8 +36,9 @@
    quelli del gioco, le luci sono quelle della pagina.
 
    ── cosa è fuori, e perché ──
-   · persone, mostri, eroe, armi: sono sprite ancorati (figure dell'atlante
-     su un piano), non geometrie: non c'è un modello da mostrare
+   · persone, eroe, armi: sono sprite ancorati (figure dell'atlante su un
+     piano), non geometrie: non c'è un modello da mostrare. I mostri 3D (in
+     prova, `VOCI_MOSTRI`) invece ci sono: uno per modello del registro
    · pareti, pavimenti, colonne e terreno (`pareti.js`, `terreno.js`,
      `mondo/terreno.js`, `mondo/lontano.js`): si scolpiscono su una pianta
      intera, non esistono da soli
@@ -46,6 +47,7 @@
    · `scatola`, `cilindro`, `triangolo`, `Cantiere` (`kit.js`): sono gli
      attrezzi con cui si fanno i modelli, non modelli
    ═══════════════════════════════════════════════════════════════════ */
+import { MODELLO_DI_SPECIE, MODELLO_DEL_GROSSO, MODELLO_DELLA_VARIANTE, voceDi as voceDelMostro, costruisci as costruisciMostro } from '../../../src/giochi/sotterraneo/scena3d/mostri3d/registro.js'
 import { Group, Mesh, MeshStandardMaterial, MeshBasicMaterial, CircleGeometry, OctahedronGeometry, DoubleSide, Matrix4, Vector3 } from 'three'
 import { U } from '../../../src/giochi/sotterraneo/scena3d/mondo/vesti.js'
 import { creaTrame } from '../../../src/giochi/sotterraneo/scena3d/mondo/trame.js'
@@ -56,6 +58,7 @@ import { fontana as fontanaDellaPiazza } from '../../../src/giochi/sotterraneo/s
 import { MODELLI } from '../../../src/giochi/sotterraneo/scena3d/mondo/props-modelli.js'
 import { disegnaPropsAperti } from '../../../src/giochi/sotterraneo/scena3d/mondo/props-aperto.js'
 import { FORME as FORME_APERTE, TABELLA, SCENARI } from '../../../src/giochi/sotterraneo/scena3d/mondo/props-dove.js'
+import { RICETTE, FAMIGLIA_DI } from '../../../src/giochi/sotterraneo/scena3d/mondo/props-tana-dati.js'
 import { GEO } from '../../../src/giochi/sotterraneo/scena3d/mondo/natura.js'
 import { caso, LIVELLO_ACQUA } from '../../../src/giochi/sotterraneo/scena3d/mondo/suolo.js'
 import { creaBotti } from '../../../src/giochi/sotterraneo/scena3d/botti.js'
@@ -356,13 +359,30 @@ const FORME_NOME = {
   trave: ['Trave caduta', 'prop', 'una trave di legno annerita, di traverso'],
   crepa: ['Crepa nel terreno', 'effetto', 'una spaccatura nera nel suolo'],
   lanterna: ['Lanterna su palo', 'prop', 'un palo con la lanterna accesa'],
+  // il segno delle tane (props-tana-dati.js)
+  sassiTana: ['Tratto del cerchio di sassi', 'prop', 'tre sassi in fila, un tratto del cerchio attorno al focolare'],
+  cenereTana: ['Focolare spento', 'effetto', 'cenere grigia, tizzoni neri e un filo di fumo finché il signore c\'è'],
+  braciTana: ['Fossa di braci', 'effetto', 'terra nera, sassi anneriti e brace accesa, con scintille e fiamme finché il signore c\'è'],
+  bozzoliTesi: ['Ragnatela coi bozzoli', 'prop', 'una ragnatela fra due rami secchi, con due bozzoli appesi'],
+  canneSpezzate: ['Canne spezzate', 'pianta', 'qualche canna storta e le lame cadute di traverso'],
+  nidoFango: ['Nido di fango', 'prop', 'un tumulo di fango col cratere, i rametti attorno, due uova e un osso'],
+  carcassa: ['Carcassa', 'prop', 'il costato di una bestia grossa, la spina, il cranio con le corna'],
+  mucchio: ['Mucchio di pietre', 'prop', 'otto pietre ammucchiate, larghe sotto e piccole in cima'],
+  croceStorta: ['Croce storta', 'prop', 'una croce di legno inclinata, con due sassi ai piedi'],
+  ossaTana: ['Ossa della tana', 'prop', 'come le ossa del mondo, messe attorno al cuore della tana'],
+  crepaTana: ['Terra bruciata della tana', 'effetto', 'come la crepa nel terreno, al centro o attorno alla tana'],
+  rocciaTana: ['Roccia spaccata della tana', 'prop', 'come la roccia spaccata, attorno alla tana'],
+  macerieTana: ['Macerie della tana', 'prop', 'come le macerie, attorno alla tana'],
 }
 // quale pezzo di codice disegna il tipo (qualche nome è diverso dal tipo)
-const NOME_FUNZIONE_APERTO = { ragnatela: 'ragnatelaRami', croce: 'croce' }
+const NOME_FUNZIONE_APERTO = { ragnatela: 'ragnatelaRami', croce: 'croce', ossaTana: 'ossa', crepaTana: 'crepa', rocciaTana: 'rocciaSpaccata', macerieTana: 'macerie' }
 const dovePropsAperti = tipo => {
   const habitat = Object.entries(TABELLA).filter(([, l]) => l.some(([t]) => t === tipo)).map(([h]) => NOMI_HABITAT[h])
   const ingressi = Object.entries(SCENARI).filter(([, l]) => l.some(([t]) => t === tipo)).map(([i]) => NOMI_INGRESSO[i])
   const parti = []
+  // il segno delle tane: per quali habitat (famiglia), dalle ricette
+  const tane = Object.entries(RICETTE).filter(([, l]) => l.some(([t]) => t === tipo)).map(([f]) => Object.entries(FAMIGLIA_DI).filter(([, x]) => x === f).map(([h]) => NOMI_HABITAT[h]).join('; '))
+  if (tane.length) parti.push('nella tana di ' + tane.join(' / '))
   if (['cartello', 'totem', 'miliare'].includes(tipo)) parti.push('lungo le strade del mondo, a una decina di celle l\'uno dall\'altro')
   if (habitat.length) parti.push('sparso in ' + habitat.join('; '))
   if (ingressi.length) parti.push('attorno all\'ingresso di ' + ingressi.join(', '))
@@ -549,10 +569,24 @@ const VOCI_DISCESE = [
     dove: 'In alcuni piani delle discese: vasca di pietra con la coppa, il velo d\'acqua che cade e le gocce; bevuta, cura e si svuota (nell\'inferno è una coppa di lava)' },
 ]
 
+/* ═══════════════════ i mostri 3D (in prova) ═══════════════════ */
+// uno per modello del registro (docs/sotterraneo/mostri-3d.md): chi lo usa si legge dal registro, non si scrive a mano
+const USI_DEI_MOSTRI = new Map()
+const usa = (id, chi) => { if (id && voceDelMostro(id)) { if (!USI_DEI_MOSTRI.has(id)) USI_DEI_MOSTRI.set(id, []); USI_DEI_MOSTRI.get(id).push(chi) } }
+for (const [tipo, v] of Object.entries(MODELLO_DI_SPECIE)) for (const id of [v].flat()) usa(id, tipo)
+for (const [grosso, id] of Object.entries(MODELLO_DEL_GROSSO)) usa(id, `il grosso ${grosso}`)
+for (const [tipo, vv] of Object.entries(MODELLO_DELLA_VARIANTE)) for (const [variante, id] of Object.entries(vv)) usa(id, `${tipo} ${variante}`)
+export const ID_DEI_MOSTRI = id => 'sot:mostri:' + id.replace('/', '-')
+const VOCI_MOSTRI = [...USI_DEI_MOSTRI].map(([id, chi]) => ({
+  id: ID_DEI_MOSTRI(id), nome: `Mostro 3D ${id.split('/')[1]}`, categoria: 'personaggio', file: SCENA + 'mostri3d/registro.js:costruisci',
+  crea: () => costruisciMostro(id),
+  dove: `Nel Sotterraneo 3D, al posto dello sprite (dalla zona ${id.split('/')[0]} dei prototipi): ${[...new Set(chi)].join(', ')}`,
+}))
+
 /* ═══════════════════ l'elenco ═══════════════════ */
 
 const comune = v => ({ gioco: 'sotterraneo', ...v })
-export const VOCI = [...VOCI_KIT, ...VOCI_MONUMENTI, ...VOCI_CITTA, ...VOCI_APERTI, ...VOCI_NATURA, ...VOCI_DISCESE].map(comune)
+export const VOCI = [...VOCI_KIT, ...VOCI_MONUMENTI, ...VOCI_CITTA, ...VOCI_APERTI, ...VOCI_NATURA, ...VOCI_DISCESE, ...VOCI_MOSTRI].map(comune)
 
 // quello che serve al test: le tabelle da confrontare con quelle del gioco
 export const TABELLE = { OGGETTI_CITTA, FORME_NOME, NATURA, ARREDO, RELITTI, INGRESSI, NOMI_HABITAT, NOMI_INGRESSO }

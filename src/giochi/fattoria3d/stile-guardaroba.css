@@ -1,0 +1,34 @@
+/* Il foglio del guardaroba (viste/Guardaroba.vue): legno caldo come l'inventario. In alto il ritratto e chi si è, poi le schede delle
+   categorie, la griglia di gettoni e la riga che spiega. Prefisso .f3-gua; i fogli veri (.f3-foglio, .f3-colonna, .f3-chiudi, .f3-corpo) vengono da stile.css. */
+.f3-gua.f3-foglio { padding: 0; overflow: hidden; color: #3a2a1a; max-height: 88%;
+  background: repeating-linear-gradient(90deg, #a77440 0 58px, #9a6a38 58px 60px), #a77440; border-top: 5px solid #6b4423; }
+.f3-gua-asse { flex: none; display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 48px; margin: 10px 66px 6px 10px; padding: 4px 12px;
+  background: repeating-linear-gradient(180deg, #d7a766 0 11px, #cc9a58 11px 12px), #d7a766; border-radius: 10px; box-shadow: 0 3px 0 #6b4423, 0 5px 10px rgba(0,0,0,.28); }
+.f3-gua-asse span { font-size: 24px; line-height: 1; }
+.f3-foglio .f3-gua-asse h2 { margin: 0; font-size: 21px; line-height: 1.1; color: #4a2c12; text-shadow: 0 1px 0 rgba(255,255,255,.4); }
+.f3-gua-x.f3-chiudi { background: #e0402f; color: #fff; top: 14px; right: 14px; font-weight: 800; box-shadow: 0 2px 0 #8d241a; }
+.f3-gua-testa { flex: none; display: flex; gap: 10px; align-items: center; margin: 0 10px 8px; }
+.f3-gua-ritratto { flex: none; width: 128px; height: 128px; border-radius: 14px; border: 4px solid #6b4423; background: radial-gradient(circle at 50% 40%, #fff7e4, #f0dcae); box-shadow: inset 0 2px 8px rgba(0,0,0,.2); display: grid; place-items: center; overflow: hidden; }
+.f3-gua-ritratto img { width: 100%; height: 100%; object-fit: contain; pointer-events: none; animation: f3-compari .25s both; }
+.f3-gua-attesa { font-size: 44px; opacity: .5; }
+.f3-gua-chi { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+.f3-gua-nome { margin: 0; padding: 6px 12px; border-radius: 12px; background: #fff7e4; border: 3px solid #6b4423; font-weight: 800; font-size: 15px; }
+.f3-gua-schede { flex: none; display: flex; flex-wrap: wrap; gap: 5px; padding: 2px 10px 8px; }
+.f3-gua-schede button { flex: 1 1 22%; min-width: 0; display: flex; align-items: center; justify-content: center; gap: 3px; min-height: 44px; border: 2px solid #6b4423; border-radius: 14px; padding: 4px 4px;
+  background: #c79a5c; color: #4a2c12; font: 800 12px "Emoji Gioco", system-ui, sans-serif; touch-action: manipulation; transition: transform .15s ease, background .15s ease; }
+.f3-gua-schede button.acceso { background: #ffd36a; border-color: #e0a020; transform: translateY(-2px); box-shadow: 0 3px 0 #8d5a14; }
+.f3-gua .f3-corpo { margin: 0 10px; padding: 12px 8px; border-radius: 12px; border: 4px solid #6b4423; background: #fff7e4; min-height: 120px; box-shadow: inset 0 2px 8px rgba(0,0,0,.2); }
+.f3-gua-griglia { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 10px 8px; animation: f3-velo .15s ease-out; }
+.f3-gua-gettone { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 2px 6px; border: 2px solid #e6cfa0; border-radius: 16px; background: #fffdf6; color: #3a2a1a;
+  font: 800 12px "Emoji Gioco", system-ui, sans-serif; touch-action: manipulation; animation: f3-compari .3s both; animation-delay: calc(min(var(--i, 0), 10) * 30ms); transition: transform .15s ease; }
+.f3-gua-gettone b { max-width: 100%; overflow-wrap: anywhere; line-height: 1.1; }
+.f3-gua-gettone small { color: #8a5a14; font-size: 11px; }
+.f3-gua-gettone.sel { border-color: #f0a020; background: #fff3cf; transform: translateY(-3px); }
+.f3-gua-gettone.velata { opacity: .6; filter: grayscale(.7); border-style: dashed; }
+.f3-gua-campione { position: relative; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; background: var(--col); border: 3px solid rgba(60,30,10,.55); box-shadow: inset 0 -4px 0 rgba(0,0,0,.12); }
+.f3-gua-campione.vuoto { background: repeating-linear-gradient(45deg, #fff 0 6px, #e6cfa0 6px 12px); }
+.f3-gua-campione em { font-style: normal; font-size: 22px; line-height: 1; text-shadow: 0 1px 2px rgba(0,0,0,.35); }
+.f3-gua-lucchetto { position: absolute; right: -8px; bottom: -6px; font-style: normal; font-size: 16px; }
+.f3-gua-riga { flex: none; margin: 8px 10px calc(12px + env(safe-area-inset-bottom)); padding: 8px 12px; min-height: 42px; box-sizing: border-box; border-radius: 12px; background: #fff7e4; border: 3px solid #6b4423; font-weight: 700; font-size: 14px; line-height: 1.3; }
+@media (min-width: 700px) { .f3-gua.f3-foglio { left: 0; right: 0; margin: 0 auto; max-width: 720px; border-radius: 22px 22px 0 0; } }
+@media (prefers-reduced-motion: reduce) { .f3-gua *, .f3-gua-griglia { animation: none !important; transition: none !important; } }

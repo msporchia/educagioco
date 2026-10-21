@@ -21,7 +21,7 @@ oggetti di scena (del villaggio e fuori) in [mondo-3d-oggetti.md](mondo-3d-ogget
 | `terreno.js`, `acqua.js`, `lontano.js` | il terreno di un pezzo (con la gonna e le normali che combaciano), il fuori mappa, la piazza, i campi; l'acqua e il cielo; il mondo a dettaglio basso |
 | `kit.js`, `ponti.js`, `monumenti.js` | case, botteghe, pozzo, mulino; ponti dei confini, staccionate, cartello, bacheca, campo del minatore; i quattordici ingressi, le pietre (del villaggio e di zona), la porta delle terre, il portale gemello |
 | `fontana.js` | la fontana della piazza, dove manca chi cura (oggi in nessuna città: il villaggio li ha tutti e due) |
-| `props-citta.js`, `props-dove.js`, `props-aperto.js`, `props-modelli.js` | gli oggetti di scena: [mondo-3d-oggetti.md](mondo-3d-oggetti.md) |
+| `props-citta.js`, `props-dove.js`, `props-aperto.js`, `props-tana-dati.js`, `props-modelli.js` | gli oggetti di scena, e il segno di ogni tana con la sua macchia di terra: [mondo-3d-oggetti.md](mondo-3d-oggetti.md) |
 | `natura.js`, `vita.js`, `persone.js`, `trame.js`, `veduta.js` | alberi e decoro a istanze, per pezzo; fumo, spruzzi, faville, fiamme, uccelli; le figure ancorate (anche i mostri); le trame su canvas; la telecamera e la veduta |
 | `mostri.js`, `palco.js` | i mostri di sopra a schermo e il palco dello scontro ([mondo-aperto-mostri-scena.md](mondo-aperto-mostri-scena.md)) |
 
@@ -68,7 +68,7 @@ celle aprendo il mondo. Si salva arrivando, scoprendo (al più ogni tre secondi)
 - **La veduta d'insieme** (la casella «mappa grande»): il mondo intero su uno schermo largo, su un telefono in piedi una fascia di
   220 celle centrata dove si è, **che scorre col dito**, nello spazio libero fra le carte. Ci sono i nomi delle zone viste (grandi, col
   loro colore e i livelli) e della prima dopo (tratteggiata: «di là»), dei luoghi visti, del villaggio, dei dungeon trovati, le pietre
-  (✦ quelle accese), le bacheche, la meta e il segno «tu». Un tocco manda l'eroe lì a piedi; un tocco su una pietra accesa, stando
+  (✦ quelle accese), le bacheche, le tane trovate (💀, grigio se il signore è morto: [mondo-3d-oggetti.md](mondo-3d-oggetti.md#la-tana)), la meta e il segno «tu». Un tocco manda l'eroe lì a piedi; un tocco su una pietra accesa, stando
   accanto a un'altra accesa, è il viaggio.
 - **Entrando in una zona** il cartello grande in alto (`[data-annuncio-zona]`): il nome, il luogo e i livelli, col colore della zona,
   per 3,4 secondi; e la riga in fondo col colore per questo eroe (`annuncioDi`). Tornando al villaggio, «qui sei al sicuro».

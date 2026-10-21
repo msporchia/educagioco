@@ -423,9 +423,75 @@ function lanterna(c, r) {
   c.metti(LU, scatola(0.12, 0.14, 0.12), 0.3, 1.34, 0, [1, 0.8, 0.4])
 }
 
+// ── il segno delle tane (props-tana-dati.js): pezzi piccoli, disposti attorno al cuore della tana. Quello che dice «qui c'è qualcuno»
+// (il fumo, le braci) lo dichiarano a `cose` con `.tana`: la scena lo spegne quando il signore è morto ──
+const vivo = (o, v) => { if (o.cose) { v.tana = o.tana; return v } return null }
+// un tratto del cerchio di sassi: tre sassi lungo la tangente (il davanti guarda il cuore: gli estremi sono più in dentro)
+function sassiTana(c, r) {
+  for (let i = -1; i <= 1; i++) { const rr = 0.2 + r() * 0.12; c.metti(P, ico(rr), i * 0.55 + (r() - 0.5) * 0.12, rr * 0.45, i * i * 0.1, tinta(GRIGIO_S, 0.75 + r() * 0.35), { s: [1.2, 0.75, 1], ry: r() * 3 }) }
+}
+// il focolare spento: cenere, tizzoni neri e un filo di fumo
+function cenereTana(c, r, o) {
+  c.metti(X, disco(0.95, 9), 0, 0.024, 0, [0.2, 0.19, 0.19], { s: [1.1, 1, 0.95], ry: r() * 3 })
+  c.metti(X, disco(0.5, 7), 0.05, 0.03, 0.02, [0.5, 0.49, 0.47], { ry: r() * 3 })
+  for (let i = 0; i < 4; i++) c.metti(L, cilindro(0.03, 0.04, 0.5 + r() * 0.3, 4, 1), (r() - 0.5) * 0.8, 0.05, (r() - 0.5) * 0.7, BRUCIATO, { rz: PI / 2, ry: r() * 3 })
+  const f = vivo(o, c.dove(0, 0.12, 0)); if (f) o.cose.camini.push(f)
+}
+// la fossa di braci: terra nera, sassi anneriti, brace che luccica (e scintille e fiamme, finché il signore c'è)
+function braciTana(c, r, o) {
+  c.metti(X, disco(1.0, 9), 0, 0.024, 0, [0.08, 0.065, 0.06], { s: [1.1, 1, 0.95], ry: r() * 3 })
+  for (let i = 0; i < 6; i++) { const a = i * PI / 3 + 0.3; c.metti(P, ico(0.17 + r() * 0.06), Math.cos(a) * 0.72, 0.09, Math.sin(a) * 0.66, [0.22, 0.19, 0.18], { s: [1, 0.75, 1] }) }
+  for (let i = 0; i < 4; i++) c.metti(LU, disco(0.12 + r() * 0.1, 6), (r() - 0.5) * 0.8, 0.045, (r() - 0.5) * 0.7, [1, 0.4 + r() * 0.2, 0.1])
+  const b = vivo(o, c.dove(0, 0.2, 0)); if (b) { o.cose.braci.push(b); o.cose.fuochi.push(vivo(o, c.dove(0, 0.1, 0))) }
+}
+// la ragnatela fra due rami secchi, con due bozzoli appesi
+function bozzoliTesi(c, r) {
+  ragnatelaRami(c, r)
+  for (const [x, y, l] of [[-0.32, 1.0, 0.45], [0.38, 0.8, 0.38]]) {
+    c.metti(X, cilindro(0.008, 0.008, 0.5, 3), x, y + l / 2 + 0.1, 0.05, [0.9, 0.92, 0.94])
+    c.metti(X, sfera(0.15, 6, 4), x, y, 0.05, [0.9, 0.92, 0.94], { s: [0.8, 1.9, 0.8] })
+  }
+}
+// canne spezzate: qualche ceppo storto e le lame cadute di traverso
+function canneSpezzate(c, r) {
+  for (let i = 0; i < 5; i++) { const a = i * 2.3, d = 0.1 + (i % 3) * 0.18, h = 0.35 + (i % 4) * 0.14; c.metti(X, new ConeGeometry(0.03, h, 4), Math.cos(a) * d, h / 2, Math.sin(a) * d, [0.5, 0.6, 0.32], { rz: (r() - 0.5) * 0.4, rx: (r() - 0.5) * 0.4 }) }
+  for (let i = 0; i < 4; i++) c.metti(X, new ConeGeometry(0.03, 0.8 + r() * 0.3, 4), (r() - 0.5) * 0.6, 0.05, (r() - 0.5) * 0.6, [0.62, 0.55, 0.32], { rz: PI / 2 + (r() - 0.5) * 0.3, ry: r() * 3 })
+}
+// un nido di fango: il tumulo scuro col suo cratere, i rametti attorno, due uova e un osso
+function nidoFango(c, r) {
+  const fango = [0.3, 0.22, 0.15]
+  c.metti(X, new SphereGeometry(0.85, 8, 4, 0, PI * 2, 0, PI / 2), 0, 0, 0, fango, { s: [1.25, 0.5, 1.1] })
+  c.metti(X, disco(0.45, 8), 0, 0.43, 0, [0.1, 0.08, 0.06])
+  for (let i = 0; i < 8; i++) { const a = i * PI / 4 + r() * 0.3; c.metti(L, cilindro(0.025, 0.03, 0.7, 4, 1), Math.cos(a) * 0.85, 0.25, Math.sin(a) * 0.75, LEGNO_S, { rz: Math.cos(a) * -0.6, rx: Math.sin(a) * 0.6 }) }
+  for (const [x, z] of [[-0.12, 0.05], [0.14, -0.08]]) c.metti(X, sfera(0.13, 6, 4), x, 0.5, z, [0.82, 0.84, 0.72], { s: [0.85, 1.1, 0.85] })
+  c.metti(X, cilindro(0.03, 0.03, 0.55, 5, 1), 0.7, 0.07, 0.75, OSSO, { rz: PI / 2, ry: 0.6 })
+}
+// la carcassa di una bestia grossa: il costato che sale dal pelo marcio, la spina, il cranio con le corna
+function carcassa(c, r) {
+  c.metti(X, disco(0.9, 8), 0, 0.022, 0, [0.28, 0.22, 0.18], { s: [1.4, 1, 0.9], ry: r() * 3 })
+  for (let i = 0; i < 5; i++) c.metti(X, new TorusGeometry(0.5 - Math.abs(i - 2) * 0.07, 0.045, 3, 6, PI), 0, 0, -0.75 + i * 0.37, OSSO, { rz: 0, s: [1, 1, 1] })
+  c.metti(X, cilindro(0.05, 0.05, 1.9, 5, 1), 0, 0.5, -0.1, tinta(OSSO, 0.95), { rx: PI / 2 })
+  c.metti(X, sfera(0.24, 6, 4), 0.1, 0.2, 1.15, OSSO, { s: [0.9, 0.8, 1.5], ry: 0.4 })
+  for (const s of [-1, 1]) c.metti(X, new ConeGeometry(0.06, 0.55, 5), 0.1 + s * 0.25, 0.42, 1.1, OSSO, { rz: -s * 0.9, ry: 0.4 })
+  for (const s of [-1, 1]) c.metti(X, scatola(0.07, 0.07, 0.06), 0.1 + s * 0.1, 0.25, 0.88, BUIO)
+  c.metti(X, cilindro(0.035, 0.035, 0.7, 5, 1), -0.9, 0.05, 0.35, OSSO, { rz: PI / 2, ry: 0.9 })
+}
+// un mucchio di pietre, fatto a mano: larghe sotto, piccole in cima
+function mucchio(c, r) {
+  const sassi = [[0, 0, 0.42], [0.55, 0.1, 0.34], [-0.5, 0.15, 0.36], [0.1, -0.5, 0.33], [0.1, 0.5, 0.3], [0.2, 0.05, 0.3], [-0.2, -0.15, 0.27], [0.05, 0.02, 0.22]]
+  sassi.forEach(([x, z, rr], i) => c.metti(P, ico(rr), x, rr * (i < 5 ? 0.5 : i === 5 ? 1.25 : i === 6 ? 1.1 : 1.8), z, tinta(GRIGIO_S, 0.7 + r() * 0.35), { s: [1.1, 0.8, 1], ry: r() * 3 }))
+}
+// una croce di legno storta, con due sassi ai piedi
+function croceStorta(c, r) {
+  const lean = (r() < 0.5 ? -1 : 1) * (0.32 + r() * 0.3)
+  croce(c, 0, 0, lean, L, LEGNO_S, 1.25)
+  c.metti(P, ico(0.17), 0.18, 0.06, 0.12, GRIGIO_S, { s: [1.2, 0.6, 1] }); c.metti(P, ico(0.12), -0.15, 0.04, 0.16, GRIGIO, { s: [1.2, 0.6, 1] })
+}
+
 const FORME_DISEGNO = { tomba, cripta, cancello, croce: (c, r) => croce(c, 0, 0, (r() - 0.5) * 0.3, L, LEGNO_S, 1.05), arcoRotto, colonnaRotta, muretto, macerie, menhir, cerchio, tumulo, cespoErica,
   tronco, ceppoGrande, funghiGiganti, ragnatela: ragnatelaRami, accampamento, carro, recinto, cassaMele, palafitta, barca, canneto, ninfee, palo, fumarola, rocciaSpaccata, ossa, tridente,
-  carrello, binari, travi, minerale, argano, cairn, cartello, totem, miliare, teschio, braciere, pozza, bozzolo, palizzata, sacchi, trave, crepa, lanterna }
+  carrello, binari, travi, minerale, argano, cairn, cartello, totem, miliare, teschio, braciere, pozza, bozzolo, palizzata, sacchi, trave, crepa, lanterna,
+  sassiTana, cenereTana, braciTana, bozzoliTesi, canneSpezzate, nidoFango, carcassa, mucchio, croceStorta, ossaTana: ossa, crepaTana: crepa, rocciaTana: rocciaSpaccata, macerieTana: macerie }
 
 // Disegna nel cantiere i props di un pezzo (quelli delle zone caricate, o `lista`). `cose` riceve il fumo delle fumarole e le braci
 // dei bracieri
@@ -435,6 +501,6 @@ export function disegnaPropsAperti(m, p, cant, cose, lista = propsDelPezzo(m, p)
     if (!f) continue
     const q = quotaProp(m, o)
     cant.base(o.x, q.y - 0.02, o.z, o.giro)
-    f(cant, caso(o.seme * 7 + 3), { liv: q.liv, cose })
+    f(cant, caso(o.seme * 7 + 3), { liv: q.liv, cose, tana: o.tana })
   }
 }

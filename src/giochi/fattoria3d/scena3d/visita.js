@@ -25,8 +25,8 @@ const STUB_COSTRUZIONE = {
 
 export class Visita extends Mondo3d {
   /** `fattoria`: lo snapshot normalizzato che si sta visitando. `ui.apriLuogo(nome)` apre il foglio della cassa o del mercato. */
-  constructor({ canvas, sopra, motore, ui, qualita, fattoria }) {
-    super({ canvas, sopra, motore, ui, qualita })
+  constructor({ canvas, sopra, motore, ui, qualita, fattoria, abito = null }) {
+    super({ canvas, sopra, motore, ui, qualita, abito })
     this.fattoria = fattoria
     this.costruzione = STUB_COSTRUZIONE           // il dito lungo e il pennello non fanno niente: la fattoria non è tua
     this.luoghi = []

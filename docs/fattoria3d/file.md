@@ -5,6 +5,7 @@ gioco.js             il manifesto: in prova, tappe 0, il blocco albo (cinque tra
 Gioco.vue            il coordinatore: monete vere, contatori (anche `fattoria3dUova`/`…Latte`), salvataggio, le finestre
 stile.css            tutto sotto il prefisso .f3-
 stile-vicini.css    la mappa, il viaggio, la visita (`.f3-vic-`)
+stile-guardaroba.css il foglio del guardaroba (`.f3-gua-`)
 stile-macchina.css  il foglio di una macchina (`.fm-`): fila, pronti, carte, fantasma; i colori del tema restano in stile.css
 visite.js            il filo fra `Gioco.vue` e le visite (`usaVisite`): mappa, viaggio, la scena a richiesta, cassa e mercato
 dati/
@@ -17,7 +18,8 @@ dati/
   colture.js         le quindici colture: nome, emoji, `pezzo` (la faccia nell'atlante 2D), tempo, `liv`
   ricette.js         le macchine e le loro ricette, quelle della 2D (`MACCHINE`, `RICETTE` a elenco unico con `dove`; `pezzo`/`aspetta`; `merceDi`, `pezzoDi`; `MERCI_VECCHIE`/`nuovoId` per i salvataggi di prima: merci-e-ricette.md), i posti del forno
   animali.js         pollaio e stalla: bestie, tempi, capienza e prezzo di ogni bestia in più, cosa mangiano; `CORTILE` (anche il recinto) e `prezzoDellaBestia`; `uova` e `latte` (PRODOTTI_ANIMALI), i guasti
-  compagni.js        Watson e i gatti: i dati, il livello a cui arrivano, le scelte pure (meta, cosa fare), `ASPETTO_ERO` ([compagni.md](compagni.md))
+  abiti.js           il guardaroba: i capi, i livelli dei pezzi speciali, la persona dal profilo, l'abito di serie e `normalizzaAbito`, `nomeDelContadino` ([guardaroba.md](guardaroba.md))
+  compagni.js        Watson e i gatti: i dati, il livello a cui arrivano, le scelte pure (meta, cosa fare, le sequenze di «Quando ci premi»: richiamo, feste di Watson, risposte dei gatti, incontro), `ASPETTO_ERO` ([compagni.md](compagni.md))
   livelli.js         le soglie, `roba(liv)`, i nomi dei livelli, i guasti dei livelli
   ordini.js          il banco: i clienti, i tempi, il premio (tetto 🪙6/min), `chiedibili(livello)`, i guasti
   regole.js          i costi (anche l'albero 🪙 3 e il sasso 🪙 1, il prezzo dei lotti), le pecore
@@ -41,6 +43,8 @@ viste/
   Faccia.vue         la faccia di una merce (`k` la chiave, `n` il numerino): il pezzo dell'atlante 2D con `Provino.vue`, l'emoji come ripiego; la usano inventario, banco, macchina, semi, livelli, visita
   Hud.vue            il gettone del livello (⭐ N con la barra sottile, apre i livelli), il tasto «🎒 Inventario» (pallino se è entrata roba dall'ultima apertura) e, da livello 2, «🧺 Banco» col pallino degli ordini consegnabili. Niente liste di scorte sul prato
   Inventario.vue     il foglio delle scorte a schede (🌾 raccolti, 🧺 prodotti, 🧶 lana e altro): gettoni con faccia e numero, un tocco dice nome e a cosa serve; solo lettura, niente vendere. Il conto sta in `inventario-puro.js` (stile: `stile-inventario.css`)
+  Guardaroba.vue     il foglio dell'abito ([guardaroba.md](guardaroba.md)): il ritratto 3D (anteprima `contadino:<abito>`), chi si è (la scelta del profilo, `SceltaAspetto`), le schede dei capi e i gettoni col lucchetto
+
   BarraAzioni.vue    libero / semina / raccogli / costruisci, i numeri
   CostruisciQui.vue  il foglio «Cosa costruiamo?» (si apre tenendo premuto su un posto libero): le schede per categoria e la griglia di carte con l'anteprima 3D del modello (`anteprima(tipo)`, emoji come segnaposto), il prezzo o «📦 ×N», le chiuse col lucchetto che tremano e dicono il livello ([scena.md](scena.md))
   BarraStrade.vue    il pennello delle strade: strada, gomma, «Fatto»
@@ -70,6 +74,8 @@ Registrazione: `src/giochi/indice.js` (il manifesto, in coda) e `src/giochi/sche
 | `[data-f3="campo"] canvas` | il contenitore e la tela |
 | `[data-f3="az-libero|az-semina|az-raccogli|az-costruisci"]` | i tasti delle azioni (`.acceso` se armato); `.f3-n` è il numero rosso |
 | `[data-f3="apri-inventario"]`, `inventario-nuovo` (il pallino) | il tasto nell'HUD |
+| `[data-f3="apri-guardaroba"]` | il tasto «👕» nell'HUD (si apre anche toccando il contadino fermo) |
+| `[data-f3="guardaroba"]`, `[data-scheda-abito="cappello|maglia|pantalone|stivali|collo|capelli|pelle"]`, i gettoni `button[data-capo="<categoria>:<id>"]` (`aria-pressed`), `guardaroba-chi`, `guardaroba-riga`, `guardaroba-ritratto`; chi si è: `[data-aspetto="bambina|bimbo"]` | il foglio del guardaroba |
 | `[data-f3="inventario"]`, `[data-scheda-inv="raccolti|prodotti|altro"]`, `inventario-riga`, `inventario-vuoto`; i gettoni `button[data-merce="<id>"]` con `data-n` | il foglio dell'inventario (le colture arrivate al livello, le vuote velate) |
 | `[data-f3="semi"]`, `[data-seme="carota"]` | la scelta del seme |
 | `[data-f3="costruisci-qui"]`, `[data-f3="costruisci-velo"]`, `[data-scheda="campi"]`, `[data-carta="campo"]` | il foglio «Costruisci qui» (si apre con `premuto` ~0,45 s su un posto libero, o col tasto 🏗️), il velo che si tocca per chiuderlo, una scheda (`campi`, `animali`, `edifici`, `decori`, `passaggi`; `.acceso`) e una carta (anche `strada` e `gomma`; `data-cat` la scheda) |
@@ -88,7 +94,7 @@ Registrazione: `src/giochi/indice.js` (il manifesto, in coda) e `src/giochi/sche
 | `[data-f3="livello"]`, `[data-f3="livello-nuovo"]`, `[data-f3="livelli"]`, `[data-f3="avviso-livello"]` | il gettone, il suo pallino, il foglio dei livelli, l'avviso che compare a ogni salita |
 | `[data-carta].bloccata`, `[data-seme].bloccato`, `[data-f3="semi-msg"]` | una carta o una coltura non ancora arrivata, e la riga che dice il livello (la scelta dei semi) |
 | `[data-f3="apri-opzioni"]`, `[data-f3="opzioni"]`, `[data-preset="basso"]` | le opzioni |
-| `[data-f3="centra"]` | «⌖ Torna all'eroe» |
+| `[data-f3="centra"]` | «⌖ Torna al contadino» |
 | `[data-chiudi]` | la ✕ di ogni foglio |
 | `[data-senza-3d]`, `[data-azione="esci-3d"]` | il messaggio senza WebGL e il suo tasto |
 | `window.__fattoria3d` | `{ motore, mondo, q }` |

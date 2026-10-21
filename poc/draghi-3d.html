@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Draghi 3D — prova</title>
+<style>
+  :root { --fondo: #14161b; --testo: #e2e5e0; --tenue: #98a09c; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 10px; background: var(--fondo); color: var(--testo); font: 13px/1.4 system-ui, sans-serif; }
+  canvas { max-width: 100%; height: auto; display: block; border-radius: 4px; margin-bottom: 6px; }
+  p { margin: 6px 0 0; color: var(--tenue); }
+</style>
+</head>
+<body>
+<div id="tele"></div>
+<p id="info"></p>
+<script type="module">
+// ?colore=verde (uno grande) · ?vista=lato|fronte|sopra|tre-quarti · ?soffio · ?pausa · ?t= · ?zoom= · ?alt= · ?ang= · ?testa
+// ?attacco=soffio|morso|ala|coda in loop idle→attacco (con ?p=0.5 si ferma a quel punto) · ?striscia=attacco (5 riquadri a p=0,.25,.5,.75,1; senza ?attacco, una riga per variante)
+// ?idle tutti i colori + draghetto in loop (idle vivo) · ?striscia=idle 6 istanti da 0 a 3 s (di ?colore o, con ?piccolo, del draghetto)
+// ?piccolo (con ?attacco) mostra il draghetto di mostri.js col soffio montato · ?distanza=6.5 (il bersaglio del soffio, in unità di mondo)
+import { WebGLRenderer, Scene, PerspectiveCamera, HemisphereLight, DirectionalLight, Box3, Vector3, Color, CircleGeometry, MeshStandardMaterial, Mesh, SphereGeometry, ACESFilmicToneMapping, PCFSoftShadowMap, SRGBColorSpace, Fog } from 'three'
+import { creaDragoGrande, COLORI, montaSoffio, ravviva } from './mostri-3d/draghi.js'
+import { creaDragoCarino } from './mostri-3d/mostri.js'
+
+const url = new URLSearchParams(location.search)
+const solo = url.get('colore') || '', tempo = Number(url.get('t') || 1.2), pausa = url.has('pausa'), attacco = url.get('attacco') || '', striscia = url.get('striscia') === 'attacco', idleStriscia = url.get('striscia') === 'idle', idle = url.has('idle')
+const distanza = Number(url.get('distanza') || 6.5), piccolo = url.has('piccolo')
+const vista = url.get('vista') || (striscia ? 'tre-quarti' : 'tre-quarti')
+const VARIANTI = ['soffio', 'morso', 'ala', 'coda']
+const errori = []
+const vecchio = console.error
+console.error = (...a) => { errori.push(a.map(String).join(' ').slice(0, 300)); vecchio.apply(console, a) }
+window.__prova = { ok: false, errori, triangoli: {} }
+const tele = document.getElementById('tele')
+
+function nuovaScena (L, A, raggio) {
+  const tela = document.createElement('canvas'); tele.append(tela)
+  const renderer = new WebGLRenderer({ canvas: tela, antialias: true, preserveDrawingBuffer: true })
+  renderer.setSize(L, A, false); renderer.setPixelRatio(1)
+  renderer.toneMapping = ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05; renderer.outputColorSpace = SRGBColorSpace
+  renderer.shadowMap.enabled = true; renderer.shadowMap.type = PCFSoftShadowMap
+  const scena = new Scene(); scena.background = new Color(0x383e49); scena.fog = new Fog(0x383e49, 25, 90)
+  scena.add(new HemisphereLight(0xcfe4ff, 0x6a5a3a, 1.35))
+  const sole = new DirectionalLight(0xfff1dc, 2.6); sole.position.set(4, 9, 7); sole.castShadow = true
+  sole.shadow.mapSize.set(4096, 4096); Object.assign(sole.shadow.camera, { left: -raggio, right: raggio, top: raggio, bottom: -raggio, near: 0.5, far: 50 }); sole.shadow.bias = -0.0006; sole.shadow.radius = 3
+  scena.add(sole)
+  const controluce = new DirectionalLight(0x8fb4ff, 1.3); controluce.position.set(-5, 4, -6); scena.add(controluce)
+  const suolo = new Mesh(new CircleGeometry(100, 40), new MeshStandardMaterial({ color: 0x3b4048, roughness: 1 })); suolo.rotation.x = -Math.PI / 2; suolo.receiveShadow = true; scena.add(suolo)
+  return { renderer, scena, L, A }
+}
+
+const angDi = (v, solo2) => url.has('ang') ? Number(url.get('ang')) : ({ fronte: 0, lato: Math.PI / 2, sopra: 0.4, 'tre-quarti': solo2 ? 0.55 : 0.3 })[v] ?? 0.55
+function inquadra ({ scena, L, A }, oggetti, o = {}) {
+  const sc = new Box3(); oggetti.forEach(d => sc.expandByObject(d))
+  const c = sc.getCenter(new Vector3()), d = sc.getSize(new Vector3())
+  const cam = new PerspectiveCamera(30, L / A, 0.1, 300), zm = Number(url.get('zoom') || 1)
+  let mira = c.clone(), r = Math.max(d.y / 2 / Math.tan(15 * Math.PI / 180), d.x / 2 / Math.tan(15 * Math.PI / 180) / (L / A), d.z / 2 / Math.tan(15 * Math.PI / 180) / (L / A) * 0.6) * 1.1
+  if (url.has('testa')) { mira = oggetti[0].userData.testaPos(); r = 3.2 }
+  if (url.has('alt')) mira.y = sc.min.y + d.y * Number(url.get('alt'))
+  const dirV = vista === 'sopra' ? new Vector3(0, 1, 0.25).normalize() : vista === 'lato' || vista === 'fronte' ? new Vector3(0, 0.12, 1).normalize() : new Vector3(0.12, 0.2, 1).normalize()
+  cam.position.copy(mira).addScaledVector(dirV, r / zm); cam.lookAt(mira)
+  return cam
+}
+const triangoli = o => { let n = 0; o.traverse(x => { if (x.isMesh && x.visible !== false) { const g = x.geometry; n += (g.index ? g.index.count : g.attributes.position.count) / 3 } }); return Math.round(n) }
+const info = testo => { document.getElementById('info').textContent += (document.getElementById('info').textContent ? ' · ' : '') + testo }
+const creaOggetto = (colore) => {
+  if (piccolo) { const d = creaDragoCarino(); montaSoffio(d, { distanza: Math.min(distanza, 4) }); ravviva(d); d.scale.setScalar(1.8); return d }
+  return creaDragoGrande(colore)
+}
+const bersaglioDi = (scena, d) => {            // una palla davanti al muso, a `distanza`: dove deve arrivare il soffio
+  const m = new Mesh(new SphereGeometry(0.35, 12, 10), new MeshStandardMaterial({ color: 0xd04040, roughness: 0.7 })); m.castShadow = true
+  const sposta = () => { const o = d.userData.attacco?.proiettile?.origine; if (!o) return; const w = o.getWorldPosition(new Vector3()); const fw = new Vector3(0, 0, 1).applyQuaternion(d.getWorldQuaternion(new (d.quaternion.constructor)())); m.position.set(w.x + fw.x * (piccolo ? Math.min(distanza, 4) : distanza), 0.4, w.z + fw.z * (piccolo ? Math.min(distanza, 4) : distanza)) }
+  sposta(); scena.add(m); return m
+}
+
+if (idleStriscia) {
+  const TT = [0, 0.6, 1.2, 1.8, 2.4, 3.0], L = Number(url.get('larghezza') || 2400), A = Number(url.get('alto') || 560)
+  const S = nuovaScena(L, A, 40)
+  const draghi = TT.map((t, i) => { const d = creaOggetto(solo || 'verde'); d.position.x = (i - 2.5) * (piccolo ? 5 : 11); d.rotation.y = angDi(vista, false); S.scena.add(d); return d })
+  draghi.forEach((d, i) => d.userData.anima(TT[i]))
+  S.renderer.render(S.scena, inquadra(S, draghi))
+  window.__prova.triangoli.idle = Math.max(...draghi.map(triangoli)); info('idle: t = 0 · .6 · 1.2 · 1.8 · 2.4 · 3 s')
+  window.__prova.ok = errori.length === 0
+} else if (striscia) {
+  // 5 riquadri a p = 0, .25, .5, .75, 1 (una riga per variante: tutte, o quella di ?attacco)
+  const varianti = attacco ? [attacco] : (piccolo ? ['soffio', 'morso'] : VARIANTI), PP = [0, 0.25, 0.5, 0.75, 1]
+  const L = Number(url.get('larghezza') || 2400), A = Number(url.get('alto') || 560)
+  for (const v of varianti) {
+    const S = nuovaScena(L, A, 40)
+    const draghi = PP.map((p, i) => { const d = creaOggetto(solo || 'verde'); d.position.x = (i - 2) * (piccolo ? 7 : 12); d.rotation.y = angDi(vista, false) ; S.scena.add(d); return d })
+    draghi.forEach(d => d.userData.anima(tempo))
+    draghi.forEach(d => bersaglioDi(S.scena, d))
+    draghi.forEach((d, i) => d.userData.attacca(PP[i], v, { distanza }))
+    const cam = inquadra(S, draghi)
+    S.renderer.render(S.scena, cam)
+    window.__prova.triangoli[v] = Math.max(...draghi.map(triangoli))
+    info(`${v}: p = 0 · .25 · .5 · .75 · 1`)
+  }
+  window.__prova.ok = errori.length === 0
+} else if (attacco) {
+  const S = nuovaScena(Number(url.get('larghezza') || 1200), Number(url.get('alto') || 900), 14)
+  const d = creaOggetto(solo || 'verde'); d.rotation.y = angDi(vista, true); S.scena.add(d)
+  d.userData.soffioAutomatico = false
+  const cfg = d.userData.attacchi?.[attacco] ?? d.userData.attacco, dur = cfg.durata, quiete = 0.7, giro = dur + quiete + 0.7
+  const posa = tt => { d.userData.anima(tt); const k = (tt % giro) - quiete; if (k >= 0 && k <= dur) d.userData.attacca(k / dur, attacco, { distanza }) }
+  const fisso = url.has('p')
+  const pp = Number(url.get('p'))
+  window.__verificaIdle = () => {      // a p=0 e p=1 l'attacco deve lasciare la posa idle: stessa scatola, stessa bocca
+    const f = (p) => { d.userData.anima(tempo); if (p !== null) d.userData.attacca(p, attacco, { distanza }); const b = new Box3().setFromObject(d), o = d.userData.attacco.proiettile?.origine?.getWorldPosition(new Vector3()) ?? new Vector3(); return JSON.stringify([b.min, b.max, o].map(v => v.toArray().map(x => Math.round(x * 1000) / 1000))) }
+    const i = f(null); return { p0: f(0) === i, p1: f(1) === i }
+  }
+  d.userData.anima(tempo); if (fisso) d.userData.attacca(pp, attacco, { distanza })
+  const cam = inquadra(S, [d]); if (!piccolo || true) bersaglioDi(S.scena, d)
+  S.renderer.render(S.scena, cam)
+  window.__prova.triangoli[attacco] = triangoli(d)
+  info(`${attacco}: durata ${dur}s, arrivo a p=${cfg.arrivo}`)
+  if (!pausa && !fisso) { const t0 = performance.now(); const ciclo = () => { posa((performance.now() - t0) / 1000); S.renderer.render(S.scena, cam); requestAnimationFrame(ciclo) }; ciclo() }
+  window.__prova.ok = errori.length === 0
+} else {
+  const colori = solo ? [solo] : Object.keys(COLORI)
+  const L = Number(url.get('larghezza') || (solo ? 1000 : 2000)), A = Number(url.get('alto') || (solo ? 900 : 640))
+  const S = nuovaScena(L, A, solo ? 9 : 30)
+  const draghi = colori.map((c, i) => {
+    const d = creaDragoGrande(c); d.position.x = (i - (colori.length - 1) / 2) * 12.5; d.rotation.y = angDi(vista, !!solo); S.scena.add(d)
+    if (url.has('soffio')) d.userData.sbuffa(1)
+    return d
+  })
+  if (idle) { const b = ravviva(montaSoffio(creaDragoCarino())); b.scale.setScalar(1.8); b.position.x = colori.length * 6.2 + 1; b.rotation.y = angDi(vista, false); S.scena.add(b); draghi.push(b) }
+  const anima = t => draghi.forEach(d => d.userData.anima(t))
+  anima(tempo)
+  const cam = inquadra(S, draghi)
+  draghi.forEach((o, i) => { window.__prova.triangoli[colori[i] ?? 'draghetto'] = triangoli(o) })
+  window.__prova.triangoli.max = Math.max(...draghi.map(triangoli))
+  const disegna = t => { anima(t); S.renderer.render(S.scena, cam) }
+  disegna(tempo)
+  info((idle ? 'idle vivo · ' : '') + colori.map(c => `${COLORI[c].nome} (forza ${COLORI[c].forza}): ${window.__prova.triangoli[c]} triangoli`).join(' · '))
+  if (!pausa) { const t0 = performance.now(); const giro = () => { disegna(tempo + (performance.now() - t0) / 1000); requestAnimationFrame(giro) }; giro() }
+  window.__prova.ok = errori.length === 0
+}
+</script>
+</body>
+</html>

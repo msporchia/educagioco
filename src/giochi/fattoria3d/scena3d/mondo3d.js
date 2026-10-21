@@ -10,6 +10,7 @@ import { Pezzi } from './pezzi.js'
 import { creaAnteprime } from './anteprime.js'
 import { creaScaldo } from './scaldo-puro.js'
 import { Eroe } from './eroe.js'
+import { creaContadino } from './modelli-compagni.js'
 import { Compagni } from './compagni.js'
 import { Effetti } from './effetti.js'
 import { Camera } from './camera.js'
@@ -19,13 +20,17 @@ import { Dito } from './dito.js'
 import { ASPETTO, fantasma } from './modelli.js'
 import { PEZZI, EDIFICI } from '../dati/catalogo.js'
 import { lottoDi } from '../dati/mondo.js'
+import { abitoDaChiave } from '../dati/abiti.js'
 import { LIVELLI, scalaPer, nuovoDegrado, passoDegrado, descriviDegrado } from '../dati/degrado.js'
 
 const CIELO = new THREE.Color(0xbfe0f0)
+const _c = new THREE.Vector3()        // il corpo del contadino per `contadinoSotto`
 const _v = new THREE.Vector3()        // di scorta per `proietta`: niente oggetti nuovi a ogni cartello a ogni fotogramma
 
 export class Mondo3d {
-  constructor({ canvas, sopra, motore, ui, qualita }) {
+  /** `abito`: com'è vestito il contadino (dati/abiti.js, con la persona); senza, quello di serie. */
+  constructor({ canvas, sopra, motore, ui, qualita, abito = null }) {
+    this.abito = abito
     this.canvas = canvas; this.sopra = sopra; this.m = motore; this.ui = ui; this.q = qualita
     // cosa sta facendo il bambino: lo imposta la vista (barra delle azioni, pennello delle strade)
     this.cmd = { modo: 'libero', seme: 'grano', strumento: null }
@@ -52,7 +57,7 @@ export class Mondo3d {
     this.terreno = new Terreno(this.scena, motore)
     this.pezzi = this.creaPezzi()
     this.scaldo = creaScaldo(this.pezzi.compitiScaldo())      // i modelli che servono presto, costruiti in tempo morto (scaldo-puro.js)
-    this.eroe = new Eroe(this.scena, motore, this.fx)
+    this.eroe = new Eroe(this.scena, motore, this.fx, abito)
     this.eroe.alVia = () => this.camera.segui()
     this.compagni = new Compagni(this.scena, motore, this.eroe, this.fx, ui)
 
@@ -83,9 +88,13 @@ export class Mondo3d {
 
   /** L'anteprima 3D (dataURL PNG) di un pezzo o di un edificio, in cache per tipo; le fa col renderer di questa scena, un tipo per fotogramma. */
   anteprima(tipo) {
-    if (!this._anteprime) this._anteprime = creaAnteprime(this.renderer, t => this.pezzi.modelloAnteprima(t))
+    if (!this._anteprime) this._anteprime = creaAnteprime(this.renderer, t => t.startsWith('contadino:') ? this.modelloContadino(t.slice(10)) : this.pezzi.modelloAnteprima(t))
     return this._anteprime.chiedi(tipo)
   }
+  /** Il ritratto del guardaroba: `contadino:<chiave dell'abito>` (dati/abiti.js, `chiaveAbito`), fotografato come un pezzo. */
+  modelloContadino(chiave) { return creaContadino(abitoDaChiave(chiave)) }
+  /** Il contadino cambia abito, senza ricrearlo: stesso posto, stessa direzione, stesso gesto. */
+  vestiContadino(abito) { this.abito = abito; this.eroe.vesti(abito) }
   anteprimaPronta(tipo) { return this._anteprime ? this._anteprime.leggi(tipo) : null }
 
   /** Il gruppo dei pezzi in scena: una visita ne usa uno suo (scena3d/visita.js). */
@@ -137,6 +146,12 @@ export class Mondo3d {
     if (sasso) return { kind: 'ostacolo', n: sasso.n }
     return null
   }
+  /** Il dito è sul contadino? Solo se sta fermo, senza semina/raccogli armati né pennello: si misura il raggio contro una sfera attorno al suo corpo (il dito è largo). */
+  contadinoSotto(rg) {
+    const e = this.eroe
+    if (!e.fermo || this.cmd.modo !== 'libero' || this.cmd.strumento || this.costruzione.attivo) return false
+    return rg.ray.distanceToPoint(_c.set(e.x, e.rialzo + 0.5, e.z)) < 0.5
+  }
   /** Un lotto non tuo sotto il dito, se c'è. */
   lottoSotto(cx, cy) {
     const p = this.puntaSuolo(cx, cy); if (!p) return null
@@ -172,8 +187,10 @@ export class Mondo3d {
   tocca(x, y) {
     const { cmd, ui, m, eroe } = this
     if (ui.fogliAperti()) return
-    const amico = this.compagni.bersaglio(this._raggio(x, y))           // Watson e i gatti si accarezzano prima di tutto
+    const rg = this._raggio(x, y)
+    const amico = this.compagni.bersaglio(rg)                           // Watson e i gatti si accarezzano prima di tutto
     if (amico) return this.compagni.tocca(amico)
+    if (this.contadinoSotto(rg) && ui.apriGuardaroba) return ui.apriGuardaroba()          // un tocco sul contadino fermo apre il guardaroba
     const b = this.bersaglioSotto(x, y)
     const campo = b && b.kind === 'cosa' && m.cosa(b.id) && m.cosa(b.id).tipo === 'campo' ? m.cosa(b.id) : null
     if (campo && cmd.modo !== 'libero') {                      // semina e raccogli: si toccano più campi, l'eroe li fa in fila

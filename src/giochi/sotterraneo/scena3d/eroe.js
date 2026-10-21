@@ -10,6 +10,9 @@ import { muoviAssalto } from './racconto.js'
 import { barretta } from './etichette.js'
 import { verso } from './tempo.js'
 
+import { Vector3 } from 'three'
+const _mano = new Vector3()
+
 export function creaEroe() {
   return { x: 0, z: 0, dx: 0, dz: 0, vx: 0, vz: 1, lx: 0, lz: 1, t: 0, colpito: 0, cura: 0, gira: 0, assalto: null, meta: null,
            passaggio: null, specchio: false, alto: 1.4, px: null, pz: null, cammina: false }
@@ -18,7 +21,7 @@ export function creaEroe() {
 // un passo del disegno: `corsa` il motore, `figure` quelle senza ombra (la torcia è sua), `fuori` dove si spinge fuori dalla
 // fontana (chi beve sta sulla sua cella), `scontro` se sta sul palco con un bersaglio da guardare
 export function disegnaEroe(e, corsa, { figure, luci, etichette, camera, dt, dtScena, t, fontana = null, bersaglio = null, portale = null,
-                                         fiamma = null, aloni = null, scintille = null }) {
+                                         fiamma = null, aloni = null, scintille = null, modello = null }) {
   if (e.px == null) { e.px = corsa.eroe.x; e.pz = corsa.eroe.y; e.x = e.px; e.z = e.pz }
   if (!e.meta) {
     // finito lo scontro torna dove lo tiene il motore camminando, non di colpo
@@ -59,8 +62,10 @@ export function disegnaEroe(e, corsa, { figure, luci, etichette, camera, dt, dtS
   const giro = e.gira > 0 ? (0.5 - e.gira) * Math.PI * 4 : 0
   const o = figure.o()
   o.rosso = e.colpito * 2; o.verde = e.cura * 0.9; o.blu = e.cura * 1.3; o.trasparenza = trasparenza; o.specchio = e.specchio; o.giro = giro
-  figure.metti(nome, x, 0, z + 0.1, o)
   e.alto = figure.alto(nome)
+  // in prova: al posto dello sprite il modello 3D (scena3d/eroe3d.js), che porta da sé le armi
+  if (modello) modello.aggiorna(e, corsa, { x, z, trasparenza, dt, alto: e.alto })
+  else figure.metti(nome, x, 0, z + 0.1, o)
   // le armi: due si portano una per lato (la debole dietro), una a due mani di lato come nel ritratto (dati/impugna.js)
   const su = Math.sin(e.t * (e.cammina ? 0.9 : 0.6)) * (e.cammina ? 0.9 : 0.5)
   const lato = e.specchio ? -1 : 1
@@ -71,7 +76,8 @@ export function disegnaEroe(e, corsa, { figure, luci, etichette, camera, dt, dtS
     o.specchio = specchio
     figure.metti(cosa.sprite, x + verso * dx / PIXEL_CELLA, Math.max(0, base - su) / PIXEL_CELLA * ALLUNGA, z + 0.1 + dz, o)
   }
-  if (corsa.mano && (COSE[corsa.mano] || {}).mani === 2) arma(corsa.mano, lato, e.specchio, 0.03)
+  if (modello) { /* le armi sono nel modello */ }
+  else if (corsa.mano && (COSE[corsa.mano] || {}).mani === 2) arma(corsa.mano, lato, e.specchio, 0.03)
   else {
     if (corsa.mancina) arma(corsa.mancina, -lato, !e.specchio, -0.03)
     if (corsa.mano) arma(corsa.mano, lato, e.specchio, 0.03)
@@ -82,7 +88,9 @@ export function disegnaEroe(e, corsa, { figure, luci, etichette, camera, dt, dtS
   const tremo = luci.torcia(x, z, e.lx, e.lz, t, dt, accesa)
   const q = luci.q
   // la torcia (lo sprite dello zaino, piccolo) nella mano libera, fuori dalla sagoma o il corpo la copre; la fiamma sulla punta
-  const mx = x - lato * 0.42, base = 0.22 + su * 0.02, mz = z + 0.28
+  let mx = x - lato * 0.42, base = 0.22 + su * 0.02, mz = z + 0.28
+  const mano3d = modello && modello.manoSinistra(_mano)
+  if (mano3d) { mx = mano3d.x; base = Math.max(0.05, mano3d.y - 0.1); mz = mano3d.z + 0.05 }
   const my = base + (PEZZI.torcia ? PEZZI.torcia[3] / PIXEL_CELLA * ALLUNGA * 0.5 : 0.7) - 0.08
   if (accesa && PEZZI.torcia) { o.specchio = e.specchio; o.giro = 0; figure.metti('torcia', mx, base, mz, { ...o, scala: 0.5 }) }
   e.mano = accesa ? { x: mx, y: my, z: mz } : null

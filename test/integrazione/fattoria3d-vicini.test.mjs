@@ -55,8 +55,9 @@ const idTrattore = await page.evaluate(liv => {
     const [px, py, v] = mondo.proietta({ x: i + 1, y: 0, z: j + 1 })
     if (v && px > 60 && px < r0.width - 60 && py > 140 && py < r0.height - 200) buoni.push([i, j, Math.hypot(i + 1 - mondo.eroe.x, j + 1 - mondo.eroe.z)])
   }
-  buoni.sort((a, b) => a[2] - b[2])
-  const posto = buoni[0]
+  const lontani = buoni.filter(b => b[2] >= 3)                    // non sotto l'eroe: un tocco sul contadino fermo apre il guardaroba
+  lontani.sort((a, b) => a[2] - b[2])
+  const posto = lontani[0] || buoni[buoni.length - 1]
   const r = motore.compraEMetti('trattore', posto[0], posto[1])          // si paga davvero: 40 monete
   mondo.cambiato()
   return r.ok ? r.cosa.id : null

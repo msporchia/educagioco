@@ -26,6 +26,7 @@
     "catalogo3d:scheda": "node strumenti/catalogo-3d-scheda.mjs",
     "pannelli": "vite --open /strumenti/banco/pannelli.html",
     "paesaggi": "node strumenti/tavola-paesaggi.mjs",
+    "promuovi3d": "node strumenti/promuovi-3d.mjs",
     "test": "node test/esegui.mjs unita",
     "test:unita": "node test/esegui.mjs unita",
     "test:browser": "node test/esegui.mjs integrazione",

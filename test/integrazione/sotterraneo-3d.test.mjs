@@ -169,7 +169,8 @@ await attendi(page, 600)
   uguale('niente palco 2D', await page.locator('.sot-duello').count(), 0)
   uguale('le scritte sopra i due mostri', await page.locator('[data-scontro-3d] [data-mostro]').count(), 2)
   uguale('la fila dei turni c\'è', await page.locator('[data-scontro-3d] [data-fila]').count(), 1)
-  dentro('lo scontro costa poco', g.chiamate, 10, 140)
+  // coi mostri 3D (docs/sotterraneo/mostri-3d.md, «Quanto costa») ogni modello aggiunge una cinquantina di chiamate: con gli sprite stava sotto 140
+  dentro('lo scontro costa poco', g.chiamate, 10, 260)
   nota(`nello scontro: ${g.chiamate} chiamate, ${Math.round(g.triangoli / 1000)}k triangoli, ${g.ms} ms`)
   // i combattenti lontani dai muri: l'agio del palco (docs/sotterraneo/grafica-3d.md)
   const agio = await page.evaluate(() => window.__sotterraneo3d.palco.agio)
@@ -286,7 +287,7 @@ await attendi(page, 600)
 /* ---------- 7. i paesaggi solo del 3D: il cheat `#scenario=` veste la discesa (docs/sotterraneo/paesaggi-3d.md) ---------- */
 for (const [k, pianta] of [['ghiaccio', 'caverna'], ['tempio', 'costruita']]) {
   await page.evaluate(() => history.replaceState(null, '', location.pathname + location.search))
-  await page.evaluate(h => { location.hash = h }, `sotterraneo3d=1&eroe=cavaliere&seme=11&stanza=grande&luce=stanza&scenario=${k}`)
+  await page.evaluate(h => { location.hash = h }, `sotterraneo3d=1&eroe=cavaliere&seme=11&stanza=grande&luce=stanza&scenario=${k}&sprite&eroe2d`)   // il paesaggio da solo: l'eroe e i mostri 3D (in prova) si misurano a parte
   await page.waitForFunction(() => window.__sotterraneo3d && window.__sotterraneo3d.grafica().figure > 0, null, { timeout: 15000 })
   await attendi(page, 800)
   const g = await g3d()
