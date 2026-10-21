@@ -538,6 +538,7 @@ export async function toccaNelMondo(page, sel, { tocca = null } = {}) {
         || (d.posto && q.ruolo === 'ingresso' && q.k === d.posto) || (d.pietra && q.ruolo === 'pietra' && q.k === d.pietra) || (d.minatore !== undefined && q.ruolo === 'minatore'))
       if (b) M.scena.cam.guarda(b.accanto.x + 0.5, b.accanto.y + 0.5, M.io)
     }, sel)
+    await attendi(page, 2500)   // la telecamera ci arriva morbida: il bersaglio si tocca quando ha smesso di scorrere
   }
   await page.waitForSelector(`${sel}[data-vis="1"]`, { timeout: 20000 })
   const b = await page.locator(sel).first().boundingBox()
