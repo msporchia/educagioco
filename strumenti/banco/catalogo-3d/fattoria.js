@@ -141,8 +141,16 @@ export const VOCI = [
   { id: 'fattoria:mucca-2', nome: 'Mucca (variante)', gioco: 'fattoria', categoria: 'animale', dove: 'nella stalla, altri posti: le chiazze cambiano', file: `${M}:creaMucca`, crea: () => creaMucca(1) },
 
   // ── chi gira per la fattoria ──
-  { id: 'fattoria:contadino', nome: 'Contadino (l\'eroe)', gioco: 'fattoria', categoria: 'personaggio', dove: 'il giocatore, sempre in scena (eroe.js); semina, falcia, abbatte', file: `${MC}:creaContadino`, crea: () => creaContadino('contadino') },
-  { id: 'fattoria:contadina', nome: 'Contadina', gioco: 'fattoria', categoria: 'personaggio', dove: 'aspetto alternativo dell\'eroe (ASPETTO_ERO in dati/compagni.js), oggi non scelto', file: `${MC}:creaContadino`, crea: () => creaContadino('contadina') },
+  // il contadino e la contadina, vestibili (dati/abiti.js, docs/fattoria3d/guardaroba.md): l'abito di serie e qualche altro per giudicare i capi
+  ...[['contadino', 'Contadino', 'serie', null], ['contadina', 'Contadina', 'serie', null],
+    ['contadino', 'Contadino', 'cowboy e gilet da festa', { cappello: 'cowboy', maglia: 'gilet', pantalone: 'verde', stivali: 'dorati', collo: 'papillon', capelli: 'corti-rossi', pelle: 'scura' }],
+    ['contadina', 'Contadina', 'abito da festa, fascia e fiore', { cappello: 'fascia', maglia: 'festa', pantalone: 'rosso', stivali: 'rossi', collo: 'scialle', capelli: 'coda-rossa', pelle: 'chiara' }],
+    ['contadina', 'Contadina', 'grembiule e caschetto', { cappello: 'tesa', maglia: 'grembiule', pantalone: 'giallo', stivali: 'verdi', collo: 'sciarpa', capelli: 'caschetto-nero', pelle: 'bruna' }],
+    ['contadino', 'Contadino', 'berretto e maglione', { cappello: 'berretto', maglia: 'maglione', pantalone: 'marrone', stivali: 'neri', collo: 'niente', capelli: 'corti-biondi', pelle: 'ambra' }],
+  ].map(([persona, nome, abito, capi]) => ({
+    id: `fattoria:${persona}${capi ? '-' + abito.split(' ')[0].replace(/[^a-z]/g, '') : ''}`, nome: `${nome} (${abito})`, gioco: 'fattoria', categoria: 'personaggio',
+    dove: 'il giocatore, sempre in scena (eroe.js); lui o lei secondo il personaggio del profilo; semina, falcia, abbatte', file: `${MC}:creaContadino`,
+    crea: () => creaContadino(capi ? { persona, ...capi } : persona) })),
   { id: 'fattoria:watson', nome: `${COMPAGNI.watson.nome} (bobtail)`, gioco: 'fattoria', categoria: 'animale', dove: `il cane di casa, arriva al livello ${COMPAGNI.watson.liv} (scena3d/compagni.js)`, file: `${MC}:creaCane`,
     crea: () => creaCane(), anima: (g, dt, t) => posaCane(g, { stato: 'sta', t }) },
   // le pose di Watson, ferme nell'anteprima e mosse nella vista grande: per giudicarle senza giocare (posaCane)
@@ -152,6 +160,20 @@ export const VOCI = [
     id: `fattoria:watson-${stato}${vel ? '-' + vel : ''}`, nome: `${COMPAGNI.watson.nome} ${nome}`, gioco: 'fattoria', categoria: 'animale', dove: `posa «${stato}»: ${dove}`, file: `${MC}:posaCane`,
     crea: () => { const g = creaCane(); posaCane(g, { stato, vel, fase: 1.2, t: 0.4 }); return g },
     anima: (g, dt, t) => posaCane(g, { stato, vel, fase: t * (vel > 0.7 ? 11 : 7), t }),
+  })),
+  // le pose di «quando ci premi» (docs/fattoria3d/compagni.md): p scorre da 0 a 1 ogni 3 secondi, come in una sequenza
+  ...[['dà la zampa', 'zampa', 'festa: si siede e tende la zampa'], ['si rotola', 'rotola', 'festa: pancia in su, zampe all\'aria'], ['salta', 'salta', 'festa: saltelli sul posto'],
+    ['riporta il bastoncino', 'riporta', 'festa: il bastoncino in bocca, lo posa ai piedi dell\'eroe'], ['starnutisce', 'starnuta', 'festa: «Ciù!», scuote testa e orecchie'],
+    ['gira su sé stesso', 'gira', 'festa: rincorre il moncherino, poi stordito'], ['sbadiglia', 'sbadiglia', 'festa: seduto, bocca spalancata (anche quando si sveglia)'],
+    ['annusa la mano', 'mano', 'festa: prima dello sbadiglio'], ['alza la testa', 'alza', 'sente «Watson!» da lontano'], ['naso a naso col gatto', 'incontra', 'incontro col gatto']].map(([nome, stato, dove]) => ({
+    id: `fattoria:watson-${stato}`, nome: `${COMPAGNI.watson.nome} ${nome}`, gioco: 'fattoria', categoria: 'animale', dove: `posa «${stato}», ${dove}`, file: `${MC}:posaCane`,
+    crea: () => { const g = creaCane(); posaCane(g, { stato, fase: 1.2, t: 0.4, p: 0.5, sub: 'annusa' }); return g },
+    anima: (g, dt, t) => posaCane(g, { stato, fase: t * 7, t, p: (t % 3) / 3, sub: 'annusa' }),
+  })),
+  ...[['si struscia', 'struscia'], ['si rotola', 'rotola'], ['miagola', 'miao'], ['si volta, indifferente', 'volta'], ['fa le fusa', 'fusa'], ['incontra Watson (zampata)', 'incontra', 'zampata'], ['incontra Watson (annusa)', 'incontra', 'annusa']].map(([nome, stato, sub = '']) => ({
+    id: `fattoria:irene-${stato}${sub ? '-' + sub : ''}`, nome: `${COMPAGNI.irene.nome} ${nome}`, gioco: 'fattoria', categoria: 'animale', dove: `posa «${stato}» del gatto quando lo tocchi o incontra Watson`, file: `${MC}:posaGatto`,
+    crea: () => { const g = creaGatto('calico'); posaGatto(g, { stato, t: 0.4, p: 0.5, sub }); return g },
+    anima: (g, dt, t) => posaGatto(g, { stato, t, p: (t % 3) / 3, sub }),
   })),
   ...['sherlock', 'irene', 'pepe'].map(id => ({
     id: `fattoria:${id}`, nome: `${COMPAGNI[id].nome} (gatto ${COMPAGNI[id].variante})`, gioco: 'fattoria', categoria: 'animale',

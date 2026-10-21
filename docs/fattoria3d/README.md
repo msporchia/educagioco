@@ -1,6 +1,6 @@
 # 🚜 La fattoria 3D
 
-La fattoria disegnata in 3D (three.js), **gioco in prova**: l'eroe cammina fino alle cose e le fa, il terreno si compra
+La fattoria disegnata in 3D (three.js), **gioco in prova**: il contadino cammina fino alle cose e le fa, il terreno si compra
 a lotti (senza confini) dentro un recinto basso, i pezzi si trascinano dalla barra alla mappa. Ha **risorse sue** (raccolti, prodotti,
 lana) e uno stato suo, e non tocca quelli della fattoria di sempre; le monete sono quelle vere. Il codice è in
 `src/giochi/fattoria3d/`.
@@ -18,6 +18,7 @@ lana) e uno stato suo, e non tocca quelli della fattoria di sempre; le monete so
 - [mondo-infinito.md](mondo-infinito.md) — il mondo senza confini: lotti `a_b` qualunque, generazione per lotto, gli id salvati, la finestra della scena, il prezzo che si auto-limita
 - [laghi.md](laghi.md) — i laghetti (biomi), gli stagni e i laghetti che costruisce il bambino, l'acqua, i ponti, il disegno, e come si aggancerà la pesca
 - [compagni.md](compagni.md) — Watson e i gatti che girano per la fattoria, il contadino nuovo: quando arrivano, come sono fatti, come si muovono
+- [guardaroba.md](guardaroba.md) — cambiare abito al contadino o alla contadina: il genere dal profilo, i capi e gli sblocchi, il salvataggio, come si aggiunge un pezzo
 - [scena.md](scena.md) — il disegno: i moduli di `scena3d/`, il dito, costruire trascinando, le opzioni di qualità e il peso
 - [file.md](file.md) — dove sta cosa in `src/giochi/fattoria3d/`, e i bersagli dei test
 - [da-fare.md](da-fare.md) — le voci aperte

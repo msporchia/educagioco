@@ -75,7 +75,7 @@ const chiVieneSostituito = computed(() => {
     <i>
       Il file porta un profilo con lo stesso id di chi c'è già in questo telefono<template
         v-if="dataFile">, salvato il {{ dataFile }}</template>: quello che c'è adesso
-      viene sostituito. Ne resta una copia nel cestino qui sotto, per tornare indietro.
+      viene sostituito. Ne resta una copia nel cestino (scheda Bambino, «Zona delicata»), per tornare indietro.
     </i>
     <div class="riga">
       <button class="bottone chiaro" data-azione="importazione-annulla" @click="annulla">

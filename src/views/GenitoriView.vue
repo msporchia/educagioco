@@ -657,14 +657,6 @@ async function rimetti(v) {
             <i>sta giocando adesso</i>
 
             <div class="aspetto-sezione">
-              <!-- qui l'età è solo una riga col rimando: la manopola sta nell'altra scheda -->
-              <button class="riga-eta" data-azione="vai-alla-tara"
-                      @click="scheda = 'giochi'">
-                <span><b>{{ chi }} ha {{ inLettere(anniOra) }}</b>
-                  <i>decide i giochi in casa e la difficoltà delle domande</i></span>
-                <em>modifica ›</em>
-              </button>
-
               <p class="mini">Con che faccia si vede in mappa</p>
               <SceltaAspetto :scelto="aspettoAttuale" data-scelta="aspetto"
                              @scegli="cambiaAspetto" />
@@ -687,41 +679,33 @@ async function rimetti(v) {
              dove si sceglie chi gioca.</i>
         </div>
 
+      </div>
+
+      <div class="carte"><Nascita @applica="applicaAnni" @cambiato="giroEta++" /></div>
+
+      <h2>Età e giochi in casa</h2>
+      <p class="mini">Decide quali giochi trova in home e quanto sono difficili le domande.
+        Sotto c'è il quadro di quell'età: ogni riga si può correggere con la ✎.</p>
+
+      <ManopolaEta :anni="anniOra" :giochi="settaggi.giochi || {}"
+                   :sa="settaggi.sa || {}" :ritocchi="settaggi.ritocchi || {}"
+                   :risposte="state.profile?.items || {}"
+                   :sperimentali="inProva" conferma tarabile
+                   @scegli="applicaAnni" @prova="prova = $event"
+                   @ritocca="ritoccaDalQuadro" @gioco="fissaDalQuadro"
+                   @sapere="fissaSapereDalQuadro"
+                   @rimetti="rimettiTutto" />
+
+      <h2>Giocare con gli amici</h2>
+      <div class="carte"><CartaAmici /></div>
+
+      <div class="carte">
         <button class="carta" data-azione="aggiungi-giocatore" @click="apriAggiungi">
           <span class="ico">➕</span>
           <b>Aggiungi un bambino</b>
           <i>Nome, faccia ed età: poi tocca a lui giocare</i>
         </button>
       </div>
-
-      <h2>Giocare con gli amici</h2>
-      <div class="carte"><CartaAmici /></div>
-
-      <h2>Progressi</h2>
-      <p class="mini">Monete, animali, campagne e traguardi: si salvano su un file, si
-        rimettono da un file, o si cancellano per ricominciare da zero.</p>
-
-      <div class="carte">
-        <button class="carta" @click="esporta">
-          <span class="ico">💾</span>
-          <b>Salva su file</b>
-          <i>Scarica tutto: {{ chiGioca }}</i>
-        </button>
-
-        <!-- Solo dove il foglio di condivisione esiste (i telefoni): sul
-             computer «scarica» è già la cosa giusta, e una carta in più
-             sarebbe solo un'altra decisione da prendere. -->
-        <button v-if="puoMandareFile" class="carta" data-azione="manda-salvataggio"
-                @click="mandaSalvataggio">
-          <span class="ico">📤</span>
-          <b>Mandalo dove vuoi</b>
-          <i>A te stesso in chat, nel cloud, sull'altro telefono</i>
-        </button>
-
-        <ArchivioGenitori @esito="v => esito = v" />
-
-      </div>
-
 
       <!-- le cose che cancellano, chiuse: a un tocco da quelle innocue non ci stanno più -->
       <details class="tendina delicata" data-delicata>
@@ -796,13 +780,37 @@ async function rimetti(v) {
       <!-- ══════════ scheda: la casa (il telefono, non un bambino) ══════════ -->
       <template v-else-if="scheda === 'casa'">
       <p class="mini">Quello che riguarda il telefono e chi lo usa, non un bambino solo.</p>
-      <div v-if="copia" class="carte">
-        <button class="carta avviso-copia" type="button" data-copia-avviso @click="esporta">
+      <h2>Salvataggio</h2>
+      <p class="mini">Monete, animali, campagne e traguardi di tutti: si salvano su un file e si
+        rimettono da un file.</p>
+
+      <div class="carte">
+        <button v-if="copia" class="carta avviso-copia" type="button" data-copia-avviso @click="esporta">
           <span class="ico">💾</span>
           <b>{{ copia === 'mai' ? 'I progressi non sono mai stati salvati su un file' : `Ultimo salvataggio: ${giorniCopia} giorni fa` }}</b>
           <i>Se il telefono si rompe è tutto lì dentro. Tocca per salvare adesso.</i>
         </button>
+        <button class="carta" @click="esporta">
+          <span class="ico">💾</span>
+          <b>Salva su file</b>
+          <i>Scarica tutto: {{ chiGioca }}</i>
+        </button>
+
+        <!-- Solo dove il foglio di condivisione esiste (i telefoni): sul
+             computer «scarica» è già la cosa giusta, e una carta in più
+             sarebbe solo un'altra decisione da prendere. -->
+        <button v-if="puoMandareFile" class="carta" data-azione="manda-salvataggio"
+                @click="mandaSalvataggio">
+          <span class="ico">📤</span>
+          <b>Mandalo dove vuoi</b>
+          <i>A te stesso in chat, nel cloud, sull'altro telefono</i>
+        </button>
+
+        <ArchivioGenitori @esito="v => esito = v" />
+
       </div>
+
+
       <h2>Passa il gioco</h2>
       <p class="mini">Non c'è un negozio da cui scaricarlo: si passa l'indirizzo, e chi lo
         riceve se lo aggiunge alla schermata del telefono. È gratis e non chiede niente
@@ -934,22 +942,6 @@ async function rimetti(v) {
       <h2>I giochi di {{ chi }}</h2>
       <GiochiImpostazioni />
 
-      <div class="carte"><Nascita @applica="applicaAnni" @cambiato="giroEta++" /></div>
-
-      <h2>Quanti anni ha</h2>
-      <p class="mini">È la taratura, non un'anagrafe: decide quali giochi trova in home
-        e quanto sono difficili le domande. Sotto c'è il quadro di quell'età — e ogni
-        riga si può correggere con la ✎, se per {{ chi }} non è così.</p>
-
-      <ManopolaEta :anni="anniOra" :giochi="settaggi.giochi || {}"
-                   :sa="settaggi.sa || {}" :ritocchi="settaggi.ritocchi || {}"
-                   :risposte="state.profile?.items || {}"
-                   :sperimentali="inProva" conferma tarabile
-                   @scegli="applicaAnni" @prova="prova = $event"
-                   @ritocca="ritoccaDalQuadro" @gioco="fissaDalQuadro"
-                   @sapere="fissaSapereDalQuadro"
-                   @rimetti="rimettiTutto" />
-
       <h2>Interruttori di casa</h2>
       <p class="mini">Non dipendono dall'età e non sono di un gioco solo.</p>
 
@@ -1051,15 +1043,6 @@ async function rimetti(v) {
 
 <style scoped>
 /* non è un interruttore né una carta: è una frase col rimando */
-.riga-eta { display:flex; align-items:center; gap:10px; width:100%; text-align:left;
-            background:#f5f2ff; border:none; border-radius:14px; padding:10px 12px;
-            cursor:pointer; font-family:inherit }
-.riga-eta span { flex:1; min-width:0; display:flex; flex-direction:column; gap:1px }
-.riga-eta b { font-size:14px; font-weight:800; color:var(--viola-scuro) }
-.riga-eta i { font-style:normal; font-size:11px; color:var(--tenue); line-height:1.3 }
-.riga-eta em { font-style:normal; font-size:12px; font-weight:800; color:var(--viola);
-               white-space:nowrap }
-.riga-eta:active { transform:translateY(1px) }
 
 .pallini { display:flex; gap:14px; margin:4px 0 2px }
 .pallini span { width:15px; height:15px; border-radius:50%; background:#ffffffcc;

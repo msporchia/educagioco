@@ -86,7 +86,7 @@ export function stradeDiSerie() {
   return out
 }
 
-// dove non nasce nessun albero nei lotti storici: le strade, i posti di prima degli edifici, il campo di partenza e la partenza dell'eroe
+// dove non nasce nessun albero nei lotti storici: le strade, i posti di prima degli edifici, il campo di partenza e la partenza del contadino
 // (chiavi di cella). `tipi`: quali posti contare (gli alberi storici si generano con i primi due soli, perché i numeri non cambino: vedi alberi.js)
 export function celleRiservate(tipi = Object.keys(POSTI_STORICI)) {
   const r = new Set(stradeDiSerie())
@@ -106,7 +106,7 @@ export function guastiDelMondo() {
   for (const id of Object.keys(LOTTI_INIZIALI)) if (!lottoPerId(id)) g.push(`lotto di partenza ${id} sconosciuto`)
   if (Object.keys(LOTTI_INIZIALI).length !== 9) g.push('il quadrato di partenza non è 3×3')
   const proprio = (i, j) => !!LOTTI_INIZIALI[lottoDi(i, j).id]
-  if (!proprio(Math.floor(PARTENZA.x), Math.floor(PARTENZA.z))) g.push('l\'eroe parte fuori dal terreno suo')
+  if (!proprio(Math.floor(PARTENZA.x), Math.floor(PARTENZA.z))) g.push('il contadino parte fuori dal terreno suo')
   const strade = stradeDiSerie()
   for (const [tipo, e] of Object.entries(EDIFICI)) {
     if (!POSTI_STORICI[tipo]) { g.push(`${tipo}: manca il posto di prima`); continue }

@@ -74,7 +74,7 @@ cammino. Non c'è un limite fisso: un tetto sarebbe una regola che un bambino sc
 
 `percorsoVerso` è un Dijkstra con un mucchio, sulle chiavi di cella; cammina solo dove `libera()` è vero, cioè nel terreno
 proprio (finito) e non nell'acqua (se non su un ponte), e si ferma alla prima meta estratta. Nel bosco del vicinato non si
-cammina: l'eroe non esce mai dal suo terreno.
+cammina: il contadino non esce mai dal suo terreno.
 
 ## Nei test
 

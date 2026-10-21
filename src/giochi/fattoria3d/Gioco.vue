@@ -3,9 +3,9 @@
    le finestre in viste/. È l'unico file che sa delle monete vere (state.profile.coins), dei contatori (segna) e del salvataggio
    (profile.campagne.fattoria3d.cfg.stato). Usa raccolti, prodotti e lana suoi: non tocca quelli della fattoria di sempre.
    Senza WebGL 2 non si apre niente: lo si dice e si torna in home. Vedi docs/fattoria3d/. */
-import { ref, reactive, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, reactive, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import Barra from '../../components/Barra.vue'
-import { state, addCoins, segna, flushNow, persist } from '../../store/profile.js'
+import { state, addCoins, segna, flushNow, persist, aspettoDi, scegliAspetto } from '../../store/profile.js'
 import { fasciaAttiva } from '../../store/qualita.js'
 import { load, save } from '../../store/storage.js'
 import { scelta, ricorda } from '../campagne.js'
@@ -30,6 +30,8 @@ import SceltaSeme from './viste/SceltaSeme.vue'
 import Macchina from './viste/Macchina.vue'
 import Livelli from './viste/Livelli.vue'
 import Inventario from './viste/Inventario.vue'
+import Guardaroba from './viste/Guardaroba.vue'
+import { personaDi, normalizzaAbito, capiDi, chiaveAbito, vesti as vestiAbito, nomeDelContadino } from './dati/abiti.js'
 import { schedeDellInventario, robaNuova, contoDi } from './viste/inventario-puro.js'
 import Bacheca from './viste/Bacheca.vue'
 import Mongolfiera from './viste/Mongolfiera.vue'
@@ -130,6 +132,7 @@ const macchinaAperta = ref(null)         // il tipo della macchina di cui si ved
 const macchinaMsg = ref('')
 const livelliAperto = ref(false)
 const inventarioAperto = ref(false)
+const guardarobaAperto = ref(false)       // il foglio dell'abito (docs/fattoria3d/guardaroba.md)
 const livelloNuovo = ref(false)
 const bancoAperto = ref(false)             // il foglio del banco
 const bancoMsg = ref('')
@@ -151,6 +154,20 @@ let quandoSeme = null
 const anteprima = tipo => (mondo ? mondo.anteprima(tipo) : Promise.resolve(null))
 const anteprimaPronta = tipo => (mondo && mondo.anteprimaPronta(tipo)) || null
 
+// ── il guardaroba: i capi stanno in `cfg.abito`; chi si è (contadino o contadina) viene dal profilo, come nella fattoria di sempre ──
+aspettoDi()                                                            // mette a posto un profilo senza personaggio
+const capi = ref(scelta(CHIAVE, 'abito', null))
+const persona = computed(() => personaDi(state.profile.aspetto))
+const abito = computed(() => normalizzaAbito(capi.value, persona.value))
+function vestiContadino(categoria, id) {
+  const nuovo = vestiAbito(abito.value, categoria, id, motore ? motore.livello() : 1)
+  if (chiaveAbito(nuovo) === chiaveAbito(abito.value)) return
+  capi.value = capiDi(nuovo)
+  ricorda(CHIAVE, 'abito', capi.value)
+}
+function cambiaAspetto(nome) { scegliAspetto(nome) }                 // lo stesso attributo del profilo che usa la fattoria 2D
+watch(() => chiaveAbito(abito.value), () => { if (mondo) mondo.vestiContadino(abito.value) })
+
 // ── le porte che il mondo 3D usa verso la vista ──
 const ui = {
   cambio() { sporco = true; contaEventi(); ripresa() },
@@ -159,13 +176,14 @@ const ui = {
   apriMacchina(tipo) { macchinaMsg.value = ''; macchinaAperta.value = tipo },
   apriBanco() { apriBanco() },
   apriMongolfiera() { naveMsg.value = ''; nave.value = true },
-  apriMappa() { visite.apriMappa() },                 // il trattore: la mappa dei villaggi (docs/fattoria3d/vicini.md)
+  apriMappa() { visite.apriMappa() },
+  apriGuardaroba() { guardarobaAperto.value = true },             // un tocco sul contadino fermo                 // il trattore: la mappa dei villaggi (docs/fattoria3d/vicini.md)
   avviso(testo) {
     avvisoTesto.value = testo || ''
     avvisoFine = testo ? performance.now() + DURATA_AVVISO : 0
   },
   apriCostruisci(i, j) { apriCostruisci(i, j) },                           // tenere premuto su un posto libero del terreno tuo
-  fogliAperti: () => !!dialogo.value || !!costruisciQui.value || semiAperto.value || !!macchinaAperta.value || livelliAperto.value || inventarioAperto.value || bancoAperto.value || nave.value || mappaAperta.value || (opzioniAperte.value && !opzioniRidotte.value),
+  fogliAperti: () => !!dialogo.value || !!costruisciQui.value || semiAperto.value || !!macchinaAperta.value || livelliAperto.value || inventarioAperto.value || guardarobaAperto.value || bancoAperto.value || nave.value || mappaAperta.value || (opzioniAperte.value && !opzioniRidotte.value),
   zonaDrop: () => (zonaVia.value || null)?.getBoundingClientRect() || null,
   trascinando(info) { trascinando.value = info },
 }
@@ -367,7 +385,7 @@ onMounted(async () => {
   try { const c = await load(CHIAVE_OPZIONI); if (c && c.q && c.v === VERSIONE_OPZIONI) Object.assign(q, c.q) } catch (e) { /* le opzioni di serie */ }
   const { Mondo3d } = await import('./scena3d/mondo3d.js')          // three si scarica solo qui
   if (!vivo) return
-  mondo = new Mondo3d({ canvas: tela.value, sopra: sopra.value, motore, ui, qualita: q })
+  mondo = new Mondo3d({ canvas: tela.value, sopra: sopra.value, motore, ui, qualita: q, abito: abito.value })
   mondo.avvia()
   visite.avvia(scelta(CHIAVE, 'vicini', null))
   ripresa()
@@ -405,10 +423,10 @@ onBeforeUnmount(() => {
 
       <template v-if="mondo || versione">
         <div class="f3-casa" v-show="!inVisita">
-        <Hud v-bind="foto" :nuovo="livelloNuovo" :banco="banco" @livello="apriLivelli" @banco="apriBanco" @inventario="apriInventario" />
+        <Hud v-bind="foto" :nuovo="livelloNuovo" :banco="banco" @livello="apriLivelli" @banco="apriBanco" @inventario="apriInventario" @abito="guardarobaAperto = true" />
         <div v-if="toast" class="f3-toast" data-f3="avviso-livello">⭐ {{ toast.testo }}</div>
         <button class="f3-angolo" aria-label="opzioni" data-f3="apri-opzioni" @click="opzioniAperte = !opzioniAperte">⚙</button>
-        <button v-if="cameraLibera" class="f3-centra" data-f3="centra" @click="mondo.tornaAllEroe()">⌖ Torna all'eroe</button>
+        <button v-if="cameraLibera" class="f3-centra" data-f3="centra" @click="mondo.tornaAllEroe()">⌖ Torna {{ nomeDelContadino(abito, 'al') }}</button>
 
         <BarraAzioni v-if="!strumento && !trascinando" :modo="modo" :seme="COLTURE[seme].emoji" :da-fare="foto.daFare"
                      @modo="impostaModo" @semina="apriSemina" @costruisci="apriCostruisci()" :da-costruire="foto.daCostruire" />
@@ -429,6 +447,8 @@ onBeforeUnmount(() => {
         <Mongolfiera v-if="nave" v-bind="{ nave: mongolfiera, traguardo: traguardoNave, livelloIngresso: LIVELLO_MONGOLFIERA }" :messaggio="naveMsg"
                      @carica="caricaCassa" @parti="partiMongolfiera" @chiudi="nave = false" />
         <Inventario v-if="inventarioAperto && inventario" :schede="inventario" @chiudi="chiudiInventario" />
+        <Guardaroba v-if="guardarobaAperto" :abito="abito" :livello="foto.livello" :aspetto="state.profile.aspetto" :anteprima="anteprima" :anteprima-pronta="anteprimaPronta"
+                    @vesti="vestiContadino" @aspetto="cambiaAspetto" @chiudi="guardarobaAperto = false" />
         <Livelli v-if="livelliAperto" v-bind="livelli" @chiudi="livelliAperto = false" />
         <Opzioni v-if="opzioniAperte" :q="q" :stat="stat" :conta="conta" :rapporto="rapporto" @cambia="cambiaOpzioni"
                  @stress="(t, n) => { mondo.stress(t, n); ui.cambio() }" @rapporto="creaRapporto" @ridotto="v => opzioniRidotte = v"

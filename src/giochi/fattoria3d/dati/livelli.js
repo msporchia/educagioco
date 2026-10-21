@@ -7,6 +7,7 @@ import { COLTURE } from './colture.js'
 import { RICETTE } from './ricette.js'
 import { PRODOTTI_ANIMALI, LANA } from './animali.js'
 import { compagniAl } from './compagni.js'
+import { abitiAl } from './abiti.js'
 
 // Quanta esperienza (monete spese qui dentro) serve in tutto per un livello: una formula, non una tabella, così non
 // finiscono mai. Il livello 2 sta intorno a 60 monete (un secondo campo e un lotto); ogni salto aggiunge il costo di ciò
@@ -77,6 +78,7 @@ export function roba(livello) {
     colture: con(COLTURE, livelloDellaColtura),
     ricette: con(RICETTE, id => livelloDellaRicetta(id)),
     compagni: compagniAl(l, true),                       // chi arriva a girare per la fattoria: non conta come «roba» (vedi `vuoto`)
+    abiti: abitiAl(l, true),                             // i pezzi speciali del guardaroba: nemmeno questi contano come «roba»
   }
 }
 export const vuoto = r => !r.pezzi.length && !r.edifici.length && !r.colture.length && !r.ricette.length

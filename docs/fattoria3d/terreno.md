@@ -17,7 +17,7 @@ d'un pezzo. Il prezzo sale a ogni lotto e si auto-limita (`prezzoLotto`, `prezzo
   **Un tocco su un lotto non tuo apre l'acquisto** (anche su un albero che sta lì), senza messaggi sul «fuori zona»; se il
   lotto non confina dice «Compra prima un terreno che confina con questo». Un tocco più in là dell'anello di due lotti
   attorno ai tuoi non apre niente.
-- Il cartello `🪙 40` compare solo sui lotti acquistabili vicini all'eroe (o tutti quelli della finestra, in costruzione); un
+- Il cartello `🪙 40` compare solo sui lotti acquistabili vicini al contadino (o tutti quelli della finestra, in costruzione); un
   laghetto lo dice: «🪙 N · 🏞️ laghetto».
 - **I biomi**: prato (~69%), bosco (~15%, alberi più fitti), laghetto (~15%); i 42 lotti storici sono sempre prato.
 
@@ -30,12 +30,12 @@ pali e travi, solo nella finestra). Si rifà a ogni acquisto. I lotti non compra
 
 Gli alberi di un lotto sono sempre gli stessi (`generaLotto`): «l'albero numero 32» è lo stesso a ogni avvio, e i tagliati si salvano
 come interi (`stato.tagliati`). Nei lotti storici sono quelli di prima: tre tentativi per lotto, tranne dove sta una strada, un posto
-di edificio, il campo di partenza o la partenza dell'eroe (`celleRiservate`); negli altri nascono dalle coordinate (il bosco ne ha
+di edificio, il campo di partenza o la partenza del contadino (`celleRiservate`); negli altri nascono dalle coordinate (il bosco ne ha
 tanti). Si creano solo per i lotti aperti (i tuoi e due attorno). Tutti si abbattono nel terreno proprio.
 
-- Toccare un albero nel terreno proprio: l'eroe lo raggiunge, alza l'**ascia** (quattro colpi), l'albero cade lontano
+- Toccare un albero nel terreno proprio: il contadino lo raggiunge, alza l'**ascia** (quattro colpi), l'albero cade lontano
   da lui; il colpo costa **🪙 3** (`COSTI.albero`) e non dà niente (non c'è legna); la cella torna libera. Senza monete
-  l'ascia non si alza e l'eroe dice «Per tagliare un albero servono 🪙 3». Il motore decide (`abbatti`), la scena disegna
+  l'ascia non si alza e il contadino dice «Per tagliare un albero servono 🪙 3». Il motore decide (`abbatti`), la scena disegna
   (`togliAlbero`, `Effetti.cade`).
 - Ogni albero è un'istanza di tre mesh (tronco e due chiome): abbatterlo è azzerare l'istanza.
 
@@ -46,7 +46,7 @@ Il cespuglio è quello del Sotterraneo (tre macchie tonde un po' storte, `dal-so
 Pochi per lotto (2–5 sul prato, 1–3 in bosco e laghetto, `dati/ostacoli.js`), sempre gli stessi, **anche dopo aver comprato il lotto**: un lotto appena tuo non è
 vuoto, ma nemmeno un campo minato (mai due vicini, mai sulle strade di serie, sui vecchi posti degli edifici (`POSTI_STORICI`: nei lotti storici restano riservati perché i numeri sono chiavi di salvataggio), sul campo e sulla
 partenza, sul fienile e la casa, sull'acqua, né sotto un albero; i lotti stretti fra edifici ne hanno meno). Bloccano il costruire e il
-passo come un albero (`bloccoFisso`). Si toccano nel terreno proprio: l'eroe arriva, si china (gesto breve) e **🪙 1** li toglie
+passo come un albero (`bloccoFisso`). Si toccano nel terreno proprio: il contadino arriva, si china (gesto breve) e **🪙 1** li toglie
 (`togliOstacolo`; evento `sasso`, contatore `fattoria3dSassi`). L'id di salvataggio è la **cella** (`idCella(i, j)`), non l'ordine:
 `stato.ostacoli` salva i tolti, e un edificio nuovo non fa scorrere gli altri. Un salvataggio con un pezzo o una strada
 sopra un sasso toglie il sasso da sé, gratis. Un tocco su un sasso in un lotto non tuo apre l'acquisto del lotto, come un
@@ -56,11 +56,11 @@ albero. Il dito è largo: oltre al raggio sul disegno basta la cella (`bersaglio
 
 Una per cella, a istanze (`stato.strade` salva gli id di cella come gli altri; `strada` è una mappa cella → 1 disegnata, 2 di serie). Quelle di
 serie sono un incrocio a T davanti ai due edifici e fino alla partenza. **Il bambino le disegna a pennello** (🛣️, 🪙 1 a
-pezzo, solo in terreno proprio e non sopra una cosa) e le toglie con 🧽 (gratis, solo quelle sue). **In strada l'eroe
+pezzo, solo in terreno proprio e non sopra una cosa) e le toglie con 🧽 (gratis, solo quelle sue). **In strada il contadino
 va più in fretta** (6,6 contro 4,8) **e il percorso le preferisce** (costano il 55%): disegnarle serve a qualcosa.
 
 ## La telecamera
 
-Segue l'eroe da sopra, **senza limiti** (distanza di serie 22: si vede una zona intera; il suolo segue la camera e la nebbia nasconde il bordo). Un dito che scorre la **stacca**, ma non oltre 30 celle dall'eroe (camera
-«libera») e compare «⌖ Torna all'eroe»; mandare l'eroe da qualche parte la rimette a seguirlo. Due dita zoomano. **Il
+Segue il contadino da sopra, **senza limiti** (distanza di serie 22: si vede una zona intera; il suolo segue la camera e la nebbia nasconde il bordo). Un dito che scorre la **stacca**, ma non oltre 30 celle dal contadino (camera
+«libera») e compare «⌖ Torna al contadino»; mandare il contadino da qualche parte la rimette a seguirlo. Due dita zoomano. **Il
 contadino corre** quando il percorso supera 9 celle (1,75×). Non c'è più una telecamera «in costruzione»: si costruisce premendo dove si vuole ([scena.md](scena.md)); col pennello delle strade due dita spostano la vista.

@@ -44,8 +44,7 @@ function tieni() { impostaNascita(nascita.value); giro.value++; emit('cambiato')
 
 <template>
   <div class="nascita carta" data-nascita>
-    <span class="ico">🎂</span>
-    <b>Quando è nato {{ chi }}</b>
+    <div class="testa"><span class="ico">🎂</span><b>Quando è nato {{ chi }}</b></div>
 
     <template v-if="!nascita || modifica">
       <i>Mese e anno bastano, e restano sul telefono. Così l'età si tiene aggiornata da sola e non devi ricordarti di spostarla.</i>
@@ -60,7 +59,13 @@ function tieni() { impostaNascita(nascita.value); giro.value++; emit('cambiato')
     </template>
 
     <template v-else>
-      <i data-nascita-eta><template v-if="eta">{{ MESI[nascita.m] }} {{ nascita.a }} · ha {{ inParole(eta) }}</template><template v-else>la data non è valida</template></i>
+      <div class="data">
+        <i data-nascita-eta><template v-if="eta">{{ MESI[nascita.m] }} {{ nascita.a }} · ha {{ inParole(eta) }}</template><template v-else>la data non è valida</template></i>
+        <span class="azioni">
+          <button class="link" type="button" data-azione="nascita-cambia" @click="apri">Cambia</button>
+          <button class="link" type="button" data-azione="nascita-togli" @click="togli">Togli</button>
+        </span>
+      </div>
       <i v-if="scarto" class="scarto" data-nascita-scarto>Lo tari {{ unAnno(scarto) }} dei suoi anni, e così resta ai compleanni.</i>
       <i v-if="completa && !disallineato" class="prossimo">A {{ completa.mese }} compie {{ completa.anni }} anni{{ completa.fra <= 1 ? ' (questo mese)' : ` (fra ${completa.fra} mesi)` }}.</i>
 
@@ -77,17 +82,17 @@ function tieni() { impostaNascita(nascita.value); giro.value++; emit('cambiato')
           <button class="bottone chiaro" type="button" data-azione="nascita-tieni" @click="tieni">Tienilo a {{ tarata }}</button>
         </div>
       </div>
-
-      <div class="riga">
-        <button class="bottone chiaro" type="button" data-azione="nascita-cambia" @click="apri">Cambia la data</button>
-        <button class="bottone chiaro" type="button" data-azione="nascita-togli" @click="togli">Toglila</button>
-      </div>
     </template>
   </div>
 </template>
 
 <style scoped>
-.nascita { display:flex; flex-direction:column; align-items:stretch; gap:8px; text-align:left }
+.carta.nascita { display:flex; flex-direction:column; align-items:stretch; gap:8px; text-align:left }
+.testa { display:flex; align-items:center; gap:12px }
+.data { display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap }
+.data i { font-size:14px; color:inherit }
+.azioni { display:flex; gap:14px }
+.link { background:none; border:0; padding:8px 2px; min-height:36px; font:inherit; font-size:13px; font-weight:800; color:var(--viola); cursor:pointer }
 .riga { display:flex; gap:8px; flex-wrap:wrap }
 .riga select { flex:1; min-width:110px; min-height:44px; padding:6px 10px; border-radius:12px; border:1px solid #d9d2c2; background:#fff; font:inherit }
 .avviso-eta { padding:10px 12px; border-radius:12px; background:#fff1d6; color:#5b4300 }

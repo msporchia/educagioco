@@ -92,14 +92,14 @@ scorda da sé). Lo stato della fattoria (`VERSIONE_STATO`) **non è stato toccat
 
 `scena3d/visita.js` è una piccola sottoclasse di `Mondo3d` (`class Visita extends Mondo3d`) su **un motore di sola lettura**:
 `motoreDiVisita(snapshot)` costruisce una vera `Fattoria3d` dallo snapshot (`statoDaSnapshot`), senza borsa, con l'orologio fermo e
-`soloLettura = true`. Così terreno, pezzi, eroe, telecamera e dito sono gli stessi del mondo di casa, ma:
+`soloLettura = true`. Così terreno, pezzi, contadino, telecamera e dito sono gli stessi del mondo di casa, ma:
 
 - niente costruire, niente alberi né sassi da togliere (dentro la sua terra non ce ne sono), niente prezzi sui lotti, niente
   cartelli di cottura o di uova (`PezziVisita` toglie i cartelli); gli edifici del vicino stanno dove dice lo snapshot (`edifici: [{ tipo, i, j }]`,
   o solo il nome, al suo posto di una volta: [edifici-liberi.md](edifici-liberi.md));
-- il dito lungo e il pennello non fanno niente (`costruzione` è un finto che non fa niente); un tocco sulla terra fa camminare l'eroe;
+- il dito lungo e il pennello non fanno niente (`costruzione` è un finto che non fa niente); un tocco sulla terra fa camminare il contadino;
 - la **cassa** e il **banco del mercato** sono due cose in più (modelli `creaCassa` e `creaBancarella`), nei `posti` dello
-  snapshot, non pezzi del catalogo: toccarli fa camminare l'eroe fin lì e apre il foglio (`ui.apriLuogo`). Due tasti in basso
+  snapshot, non pezzi del catalogo: toccarli fa camminare il contadino fin lì e apre il foglio (`ui.apriLuogo`). Due tasti in basso
   («📦 La cassa», «🛒 Il mercato») li aprono senza camminare, e **«🚜 Torna a casa» sta sempre in alto**. La freccia della barra in
   visita riporta a casa, non in home.
 - **Due tele.** Il mondo di casa si ferma (`mondo.ferma()`) e resta com'è; la visita ha la **sua tela**, nuova a ogni visita

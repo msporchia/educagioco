@@ -75,7 +75,7 @@ export function usaVisite({ dammi, tela, sopra, q, versione, cambio }) {
       await Promise.all([pausa(ANDATA_MS), nextTick()])
       const { Visita } = await import('./scena3d/visita.js')          // il disegno della visita si chiede solo qui
       if (!vivo) return
-      mondoV = new Visita({ canvas: tela.value, sopra: sopra.value, motore: motoreDiVisita(f), ui: uiVisita, qualita: q, fattoria: f })
+      mondoV = new Visita({ canvas: tela.value, sopra: sopra.value, motore: motoreDiVisita(f), ui: uiVisita, qualita: q, fattoria: f, abito: dammi().mondo?.abito || null })
       mondoV.avvia()
       fase.value = 'visita'; storia.value = f.storia.length > 0
     } catch (e) {

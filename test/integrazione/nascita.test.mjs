@@ -72,7 +72,7 @@ async function daiGrandi(page, scheda = 'giochi') {
   await daiGrandi(page, 'bambini')
   await page.waitForSelector('[data-posta]', { timeout: 5000 })
   controlla('nella posta: dice 9 anni e non cambia niente da solo', /9 anni/.test(await page.locator('[data-posta]').innerText()) && /Non cambio niente/.test(await page.locator('[data-posta]').innerText()))
-  await page.click('[data-scheda="giochi"]')
+  await page.click('[data-scheda="bambini"]')
   await page.waitForSelector('[data-nascita-avviso]', { timeout: 5000 })
   const avviso = await page.locator('[data-nascita-avviso]').innerText()
   controlla('nelle impostazioni dice cosa succede passando ai 9 anni', /9 anni/.test(avviso) && /7/.test(avviso), avviso)
@@ -85,7 +85,7 @@ async function daiGrandi(page, scheda = 'giochi') {
 {
   const { page } = await apriGioco(browser)
   await semina(page, { settings: { eta: 7, nascita: nato(9), scarto: 0 } })
-  await daiGrandi(page)
+  await daiGrandi(page, 'bambini')
   await page.waitForSelector('[data-nascita-avviso]', { timeout: 5000 })
   await page.click('[data-azione="nascita-passa"]')
   await page.waitForSelector('[data-conferma]', { timeout: 3000 }).catch(() => {})
@@ -99,7 +99,7 @@ async function daiGrandi(page, scheda = 'giochi') {
 {
   const { page, errori } = await apriGioco(browser)
   await semina(page, { settings: { eta: 8 } })
-  await daiGrandi(page)
+  await daiGrandi(page, 'bambini')
   await page.waitForSelector('[data-nascita]', { timeout: 5000 })
   controlla('senza data la carta la chiede', await page.locator('[data-nascita-mese]').count() === 1)
   await page.selectOption('[data-nascita-mese]', String(nato(8).m))

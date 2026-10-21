@@ -14,7 +14,7 @@
    Il dito è vero (`Input.dispatchTouchEvent`): un `page.click()` non trascina
    e non porta i pointer del tocco (docs/core/il-dito.md).
    `node test/esegui.mjs fattoria3d --niente-build`
-   tempo: 60
+   tempo: 480
    ═══════════════════════════════════════════════════════════════════ */
 import { apriBrowser, apriGioco, azzera, semina, attendi, scatto, scegli, leggiProfilo } from '../aiuto/browser.mjs'
 import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifica.mjs'
@@ -96,6 +96,43 @@ await toccaEl('[data-f3="inventario"] button[data-merce="carota"]')
 controlla('un tocco dice il nome e a cosa serve', /Carote/.test(await page.locator('[data-f3="inventario-riga"]').innerText()))
 await toccaEl('[data-f3="inventario"] [data-chiudi]')
 controlla('chiuso l\'inventario il pallino è spento', await page.locator('[data-f3="inventario-nuovo"]').count() === 0)
+
+/* ── il guardaroba (docs/fattoria3d/guardaroba.md): si apre toccando il contadino fermo e dal tasto 👕; i capi stanno in cfg.abito ── */
+await toccaEl('[data-f3="az-libero"]')                    // col ✂️ armato il contadino non si apre: si torna a mano libera
+{
+  const dove = await page.evaluate(() => {
+    const m = window.__fattoria3d.mondo, r = m.canvas.getBoundingClientRect(), [x, y] = m.proietta(m.eroe.posizione, 0.5)
+    return { x: r.left + x, y: r.top + y }
+  })
+  await page.waitForFunction(() => window.__fattoria3d.mondo.eroe.fermo, null, { timeout: 8000 }).catch(() => {})
+  await tocca(dove.x, dove.y)
+  await attendi(page, 300)
+  controlla('toccare il contadino fermo apre il guardaroba', await page.locator('[data-f3="guardaroba"]').count() === 1)
+  const chi = (await page.locator('[data-f3="guardaroba-chi"]').innerText()).toLowerCase()
+  const aspetto = await page.evaluate(() => window.__fattoria3d && document.querySelector('[data-aspetto].on')?.getAttribute('data-aspetto'))
+  controlla('chi si è lo dice il profilo (bambina → contadina, bimbo → contadino)', aspetto === 'bimbo' ? /contadino/.test(chi) : /contadina/.test(chi), `${aspetto} / ${chi}`)
+  await toccaEl('[data-scheda-abito="stivali"]')
+  await toccaEl('[data-f3="guardaroba"] button[data-capo="stivali:rossi"]')
+  await attendi(page, 200)
+  controlla('un gettone cambia l\'abito e resta acceso', await page.locator('button[data-capo="stivali:rossi"][aria-pressed="true"]').count() === 1)
+  await toccaEl('[data-scheda-abito="cappello"]')
+  await toccaEl('[data-f3="guardaroba"] button[data-capo="cappello:cowboy"]')
+  controlla('un pezzo speciale col livello che manca resta bloccato e dice a che livello arriva', /livello 6/i.test(await page.locator('[data-f3="guardaroba-riga"]').innerText()))
+  await toccaEl('[data-f3="guardaroba"] [data-chiudi]')
+  controlla('la ✕ chiude il guardaroba', await page.locator('[data-f3="guardaroba"]').count() === 0)
+  await toccaEl('[data-f3="apri-guardaroba"]')
+  controlla('il tasto 👕 lo riapre e l\'abito è rimasto', await page.locator('button[data-capo="stivali:rossi"]').count() === 0 && await page.locator('[data-f3="guardaroba"]').count() === 1)
+  await toccaEl('[data-scheda-abito="stivali"]')
+  controlla('…gli stivali rossi sono ancora accesi', await page.locator('button[data-capo="stivali:rossi"][aria-pressed="true"]').count() === 1)
+  const testi = []
+  testi.push(await page.locator('body').innerText())
+  await toccaEl('[data-f3="guardaroba"] [data-chiudi]')
+  for (const sel of ['[data-f3="livello"]', '[data-f3="apri-inventario"]', '[data-f3="apri-opzioni"]']) {
+    await toccaEl(sel); await attendi(page, 200); testi.push(await page.locator('body').innerText())
+    const x = page.locator('[data-chiudi]'); if (await x.count()) await toccaEl('[data-chiudi]'); else await toccaEl(sel)
+  }
+  controlla('nessuna stringa visibile dice «eroe»', !testi.some(t => /\beroe\b/i.test(t)), testi.map(t => (t.match(/.{0,20}\beroe\b.{0,20}/i) || [''])[0]).join(' | '))
+}
 await toccaEl('[data-f3="az-libero"]')
 
 /* ── costruire: tenere premuto su un posto libero apre «Costruisci qui»; la carta va sulla cella premuta ──
@@ -131,7 +168,7 @@ const cella = (escludi = []) => page.evaluate(escludi => {
     if (pulita && v && px > 60 && px < r.width - 60 && py > 150 && py < r.height - 220) buoni.push({ i, j, d: Math.hypot(i - e.x, j - e.z) })
   }
   buoni.sort((a, b) => a.d - b.d)
-  return buoni[0] || null
+  return buoni.find(b => b.d >= 3) || buoni[0] || null          // non sotto l'eroe: un tocco sul contadino fermo apre il guardaroba
 }, escludi)
 const posto = await cella()
 controlla('c\'è una cella libera a schermo', !!posto)
@@ -144,6 +181,8 @@ const sulPosto = () => schermoDi(posto.i + 0.5, posto.j + 0.5)
   controlla('un dito che scorre prima dell\'attesa non apre il menu', await menuAperto() === 0)
   await fermo(); await tocca(...await sulPosto()); await attendi(page, 300)
   controlla('e un tocco corto nemmeno', await menuAperto() === 0)
+  // se l'eroe è già lì sotto, il tocco corto è sul contadino fermo e apre il guardaroba (giusto): si chiude con la ✕ e si prosegue
+  if (await page.locator('[data-f3="guardaroba"]').count()) await toccaEl('[data-f3="guardaroba"] [data-chiudi]')
   await fermo(); await attendi(page, 1200)        // l'eroe è andato a vedere, la telecamera lo segue: si aspetta che si fermino
 }
 // tenuto fermo: si apre, con le schede e la griglia di carte
@@ -846,6 +885,38 @@ controlla('il pollaio con le bestie non si mette via', via.ok === false && via.m
   uguale('…e le trame nemmeno', r.dopo.t, r.prima.t)
   controlla('due istanze dello stesso modello condividono la geometria', r.condivisa)
   nota(`geometrie in GPU: ${r.prima.g} → ${r.dopo.g}; trame ${r.prima.t} → ${r.dopo.t}; riscaldamento: ancora ${r.scaldo} compiti`)
+}
+
+/* ── toccare Watson lontano: il contadino dice «Watson!» e lui arriva (docs/fattoria3d/compagni.md) ── */
+{
+  await fermo()
+  await page.waitForFunction(() => !window.__fattoria3d.mondo.compagni.lista.find(c => c.tipo === 'cane').seq, null, { timeout: 15000 }).catch(() => {})
+  await page.evaluate(() => { for (const g of window.__fattoria3d.mondo.compagni.lista) if (g.tipo === 'gatto') g.prossimoIncontro = 1e9 })      // i gatti non vengono a salutarlo proprio ora
+  // Watson si mette a 5-6 celle dall'eroe, in un punto libero che sta a schermo
+  const dove = await page.evaluate(() => {
+    const { mondo, motore } = window.__fattoria3d, e = mondo.eroe, w = mondo.compagni.lista.find(c => c.tipo === 'cane'), r = mondo.canvas.getBoundingClientRect()
+    for (const [a, b] of [[5, 0], [-5, 0], [0, 5], [0, -5], [5, 3], [-5, -3], [4, 4], [-4, 4]]) {
+      const i = Math.floor(e.x + a), j = Math.floor(e.z + b)
+      if (!motore.libera(i, j)) continue
+      const [px, py, v] = mondo.proietta({ x: i + 0.5, y: 0, z: j + 0.5 })
+      if (v && px > 30 && px < r.width - 30 && py > 120 && py < r.height - 80) { w.x = i + 0.5; w.z = j + 0.5; w.percorso = []; w.seq = null; w.stato = 'sta'; w.tStato = 0; w.dur = 99; return [i + 0.5, j + 0.5] }
+    }
+    return null
+  })
+  controlla('Watson si può mettere lontano e a schermo', !!dove)
+  if (dove) {
+    await attendi(page, 150)
+    const sentito = () => page.evaluate(() => !!window.__fattoria3d.mondo.compagni.lista.find(c => c.tipo === 'cane').seq)
+    for (let prova = 0; prova < 3 && !await sentito(); prova++) { await tocca(...await schermoDi(dove[0], dove[1])); await attendi(page, 400) }         // (un tocco su un cane che si sposta può mancarlo: si riprova)
+    await page.waitForFunction(() => /Watson!/.test(document.querySelector('.f3-fumetto')?.textContent || ''), null, { timeout: 3000 }).catch(() => {})
+    controlla('il contadino dice «Watson!»', await page.evaluate(() => /Watson!/.test(document.querySelector('.f3-fumetto')?.textContent || '')))
+    await page.waitForFunction(() => { const { mondo } = window.__fattoria3d, e = mondo.eroe, w = mondo.compagni.lista.find(c => c.tipo === 'cane'); return Math.hypot(w.x - e.x, w.z - e.z) <= 2.2 }, null, { timeout: 9000 }).catch(() => {})
+    controlla('Watson corre dall\'eroe e si ferma a meno di due celle', await page.evaluate(() => { const { mondo } = window.__fattoria3d, e = mondo.eroe, w = mondo.compagni.lista.find(c => c.tipo === 'cane'); return Math.hypot(w.x - e.x, w.z - e.z) <= 2.2 }))
+    await attendi(page, 600)
+    controlla('…e fa festa (una sequenza in corso)', await page.evaluate(() => !!window.__fattoria3d.mondo.compagni.lista.find(c => c.tipo === 'cane').seq))
+    await attendi(page, 5000)
+    await fermo()
+  }
 }
 
 /* ── senza WebGL 2 si dice e si torna in home ── */

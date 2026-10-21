@@ -214,10 +214,15 @@ await page.evaluate(p => window.__mondo3d.porta(p.x, p.z), VESPE)
   await aspettaLoScontro()
   const tipi = await page.evaluate(() => window.__mondo3d.palco().corsa.livello.robe.filter(r => r.che === 'mostro').map(r => r.tipo))
   controlla('in campo c\'è lo zombie che manca alla caccia', tipi.includes('zombie'), tipi.join())
-  const detto = page.waitForFunction(() => (document.querySelector('[data-detto-sopra]')?.innerText || '').includes('Fatto'), null, { timeout: 30000 })
-    .then(() => true, () => false)   // la riga resta due secondi: la si guarda mentre lo scontro finisce
+  // la riga resta due secondi: un osservatore in pagina ricorda tutto quello che ha detto (un poll a fotogrammi la può mancare)
+  await page.evaluate(() => {
+    window.__dette = []
+    const guarda = () => { const t = document.querySelector('[data-detto-sopra]')?.innerText; if (t && window.__dette.at(-1) !== t) window.__dette.push(t) }
+    new MutationObserver(guarda).observe(document.body, { childList: true, subtree: true, characterData: true })
+  })
   uguale('lo scontro si vince', await finoAllaFine(true), 'finito')
-  controlla('e la riga sopra il mondo dice che la caccia è fatta', await detto)
+  const dette = await page.evaluate(() => window.__dette)
+  controlla('e la riga sopra il mondo dice che la caccia è fatta', dette.some(t => t.includes('Fatto')), JSON.stringify(dette))
   await attendi(page, 1200)
   const a = await avventura()
   uguale('la caccia aperta è fatta', a.mondo?.quest?.stati?.[CACCIA], 'fatta')

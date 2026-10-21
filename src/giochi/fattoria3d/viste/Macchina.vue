@@ -22,7 +22,7 @@ const props = defineProps({
   dispensaK: { type: Array, default: () => [] },   // [{ k, n }]: la dispensa, con la faccia
   anteprima: { type: Function, default: null },    // tipo → Promise<dataURL|null>: l'edificio 3D al posto dell'emoji dell'insegna
   anteprimaPronta: { type: Function, default: null },
-  messaggio: { type: String, default: '' },        // perché una ricetta non parte (si vede qui: il fumetto dell'eroe sta sotto il foglio)
+  messaggio: { type: String, default: '' },        // perché una ricetta non parte (si vede qui: il fumetto del contadino sta sotto il foglio)
 })
 const emit = defineEmits(['prepara', 'ritira', 'chiudi'])
 
