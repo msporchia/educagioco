@@ -11,7 +11,7 @@ import { colpisce } from '../dati/abilita.js'
 import { statoNuovo, statiDel } from './campo.js'
 
 // i tempi, in ms (un mostro ~0,45 s; l'eroe quanto dura il suo effetto, mai oltre ~0,8 s)
-export const TEMPI = { passo: 170, mostro: 450, nota: 300, veleno: 380, bevi: 520, riga: 1100, tetto: 860 }
+export const TEMPI = { passo: 170, mostro: 450, nota: 300, veleno: 380, bevi: 520, riga: 1100, tetto: 860, mossa: 650, magia: 320 }
 const VELOCE = 6   // quante volte più in fretta, dopo un tocco
 const IN_PIU = 340  // quanto al più aspetta chi sta lontano dal bersaglio (ms)
 const STAGGIO = 420  // quanto dura un segno sul mostro (ms)
@@ -40,7 +40,8 @@ export function nuovoRacconto({ suono = () => {}, colpitoEroe = () => {}, finito
   let passi = [], i = 0, timer = 0, vel = 1, n = 0
 
   const reset = () => Object.assign(fx, nuovo())
-  const tocca = (chi, tipo) => { fx.effetto[chi] = { tipo, n: ++n } }
+  // `mossa`: la mossa del mostro (dati/mosse.js, vistaDella), che il 3D anima (scena3d/racconto.js)
+  const tocca = (chi, tipo, mossa = null) => { fx.effetto[chi] = { tipo, n: ++n, mossa } }
   const numero = (su, testo, tipo, extra = {}) => fx.numeri.push({ id: ++n, su, testo, tipo, ...extra })
 
   function avanti() {
@@ -130,15 +131,27 @@ export function nuovoRacconto({ suono = () => {}, colpitoEroe = () => {}, finito
         p(0, () => { numero(k, `−${a.dato}`, 'veleno'); fx.ossa[k] = Math.max(0, fx.ossa[k] - a.dato); tocca(k, 'colpito') })
         if (a.caduto) { p(TEMPI.nota, () => {}); p(0, () => cade(k)); fineTurno(k) }
         else p(TEMPI.veleno, () => {})
+      } else if (a.che === 'cura') {
+        // la mossa che cura (docs/sotterraneo/mosse.md): il nome, poi le ossa che risalgono; niente colpo
+        p(0, () => { tocca(k, 'cura', a.mossa); numero(k, a.mossa ? a.mossa.nome : 'si cura', 'nota') })
+        p(TEMPI.passo * 2, () => { fx.ossa[k] = (fx.ossa[k] || 0) + a.cura; numero(k, `+${a.cura}`, 'cura'); suono('bevuto') })
+        p(TEMPI.mossa - TEMPI.passo * 2, () => {})
+        fineTurno(k)
+      } else if (a.che === 'urlo') {
+        p(0, () => { tocca(k, 'urla', a.mossa); numero(k, a.mossa ? a.mossa.nome : 'urla', 'nota') })
+        p(TEMPI.mossa, () => {})
+        fineTurno(k)
       } else if (a.che === 'salta') {
         p(0, () => { numero(k, 'stordito', 'nota'); tocca(k, 'stordito') })
         p(TEMPI.nota, () => {})
         p(0, () => { if (fx.stati[k]) fx.stati[k] = fx.stati[k].filter(x => x.chiave !== 'fermo') })
         fineTurno(k)
       } else {
-        // il colpo: chi colpisce scatta verso l'eroe, e a metà scatto l'eroe incassa
-        p(0, () => tocca(k, 'scatta'))
-        p(TEMPI.passo, () => {
+        // il colpo: chi colpisce scatta verso l'eroe, e a metà scatto l'eroe incassa; l'incantesimo parte da lontano e arriva dopo,
+        // una mossa in più (dati/mosse.js) dice il suo nome
+        const magia = a.mossa && a.mossa.tipo === 'incantesimo'
+        p(0, () => { tocca(k, magia ? 'lancia' : 'scatta', a.mossa); if (a.mossa && a.mossa.id !== 'attacco') numero(k, a.mossa.nome, 'nota') })
+        p(magia ? TEMPI.magia : TEMPI.passo, () => {
           if (a.preso > 0) { numero('eroe', `−${a.preso}`, 'preso'); tocca('eroe', 'colpito'); colpitoEroe(); suono('graffio') }
           else if (a.schivato) numero('eroe', 'schivato', 'nota')
           else if (a.assorbito > 0) { numero('eroe', 'parato', 'nota'); tocca('eroe', 'protegge') }
@@ -149,6 +162,7 @@ export function nuovoRacconto({ suono = () => {}, colpitoEroe = () => {}, finito
           ferisci(k, a.rimandato, 'dato', a.caduto)
           p(250, () => {})
         } else p(TEMPI.mostro - TEMPI.passo, () => {})
+        if (magia) p(TEMPI.magia - TEMPI.passo, () => {})
         fineTurno(k)
       }
     }

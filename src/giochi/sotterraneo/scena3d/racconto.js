@@ -10,6 +10,7 @@ import { Color, Vector3 } from 'three'
 import { schedaDi, motoDell } from '../dati/effetti.js'
 import { TEMPI } from '../viste/racconto.js'
 import { effettoDi, segnoDi, auraDi, SEGNO_COLPO, PROIETTILE } from './effetti3d/gestore.js'
+import { mosseDi, vistaDella } from '../dati/mosse.js'
 
 // un affondo: un passo indietro per caricare, lo scatto fin quasi a toccarlo (arriva al `picco`), il ritorno al suo posto
 export function assalto(chi, contro, dur, picco = dur * 0.5, quanto = 1) {
@@ -98,7 +99,49 @@ export function creaRacconto(S) {
     S.scintille.emetti(e.x, 0.6, e.z + 0.1, 30, { forza: 2.4, su: 1.6, vita: 0.45, taglia: 0.07 })
   }
   function bolla(colore) { S.anelli.bolla.material.color.set(colore); S.tBolla = 0 }
-  function effetto(chi, tipo) {
+  // Una mossa in più di un mostro (dati/mosse.js, docs/sotterraneo/mosse.md) col modello 3D: l'animazione dei prototipi
+  // (mostri3d/mosse-anim.js), che arriva al suo `arrivo` dopo `picco` secondi; `quanto` è quanto si porta verso l'eroe. Torna la mossa del modello o null
+  function animaMossa(v, mossa, picco, quanto) {
+    const mm = S.mostri3d && v.in3d && S.mostri3d.mossaDi(v, mossa.id)
+    if (!mm) return null
+    assalto(v, S.eroe, Math.max(TEMPI.mostro / 1000, picco + (1 - mm.arrivo) * mm.durata), picco, quanto)
+    v.attacco3d = { arrivo: mm.arrivo, mossa: mossa.id }
+    return mm
+  }
+  // la mossa del mostro, quando non è l'attacco di sempre: la cura (le croci verdi addosso), l'incantesimo (dalla bocca o dalla mano
+  // all'eroe, nel colore del suo elemento), l'urlo (gli anelli li fa il modello), l'attacco forte (l'animazione col corpo intero)
+  function mossaDelMostro(v, tipo, mossa) {
+    const e = S.eroe
+    if (tipo === 'cura') {
+      animaMossa(v, mossa, TEMPI.passo * 2 / 1000, 0.001)
+      const def = auraDi('cura'), tinta = new Color(mossa.colore || '#6ee06a')
+      if (S.effetti3d && def) S.effetti3d.lancia(def, { da: piediDi(v, v1), a: piediDi(v, v2), tinta, scala: Math.max(0.8, altoDi(v)), attesa: 0.1 })
+      S.scintille.emetti(v.x, 0.3, v.z, 30, { forza: 0.6, su: 2, vita: 0.9, caldo: 0.2, taglia: 0.06, tinta: c.set(mossa.colore || '#6ee06a') })
+      return true
+    }
+    if (tipo === 'urla') {
+      if (!animaMossa(v, mossa, 0.2, 0.001)) S.scintille.emetti(v.x, (altoDi(v) || 1) * 0.8, v.z, 24, { forza: 1.6, su: 0.6, vita: 0.5, caldo: 0.2, taglia: 0.06, tinta: c.set('#ffc83a') })
+      S.scossa = Math.min(1, S.scossa + 0.25)
+      return true
+    }
+    if (tipo === 'lancia') {
+      const picco = TEMPI.magia / 2000
+      animaMossa(v, mossa, picco, 0.001)
+      ultimoMostro = { v, tipo: 'incantesimo', proiettile: true, t: S.tempo }
+      const def = S.effetti3d && effettoDi(mossa.effetto || 'dardo', 'lancio')
+      if (def) {
+        const da = (S.mostri3d && v.in3d && S.mostri3d.origine(v, v1)) || pettoDi(v, v1)
+        S.effetti3d.lancia(def, { da, a: pettoEroe(v2), elem: mossa.elemento || 'fisico', scala: 1, attesa: picco })
+      }
+      return true
+    }
+    // un attacco in seconda variante (forte, o in area)
+    if (!animaMossa(v, mossa, TEMPI.passo / 1000, 1)) return false
+    ultimoMostro = { v, tipo: 'schianto', proiettile: false, t: S.tempo }
+    S.scossa = Math.min(1, S.scossa + 0.3)
+    return true
+  }
+  function effetto(chi, tipo, mossa = null) {
     const e = S.eroe
     if (chi === 'eroe') {
       // l'azione che parte adesso: la prima della fila che si muove così (la parata di un colpo del mostro non ne consuma una)
@@ -119,7 +162,8 @@ export function creaRacconto(S) {
     }
     const v = posizioneDi(Number(chi))
     if (!v) return
-    if (tipo === 'scatta') {
+    if (mossa && mossa.id !== 'attacco' && ['scatta', 'lancia', 'cura', 'urla'].includes(tipo) && mossaDelMostro(v, tipo, mossa)) return
+    if (tipo === 'scatta' || tipo === 'lancia') {
       // col modello 3D: la sua posa d'attacco (mostro3d.js la legge da `attacco3d`), che arriva quando il racconto fa incassare
       // l'eroe; prima dell'arrivo la carica è stretta nel passo del racconto, dopo va coi suoi tempi
       const att = S.mostri3d && v.in3d && S.mostri3d.attaccoDi(v)
@@ -179,7 +223,7 @@ export function creaRacconto(S) {
       S.colpoEroe = coda[0]
     },
     leggi(fx) {
-      for (const chi of Object.keys(fx.effetto)) { const e = fx.effetto[chi]; if (!e || visti[chi] === e.n) continue; visti[chi] = e.n; effetto(chi, e.tipo) }
+      for (const chi of Object.keys(fx.effetto)) { const e = fx.effetto[chi]; if (!e || visti[chi] === e.n) continue; visti[chi] = e.n; effetto(chi, e.tipo, e.mossa) }
       for (const s of fx.scene) if (s.id > ultimaScena) { ultimaScena = s.id; scena(s) }
       if (fx.scuote && fx.scuote !== ultimoScuote) { ultimoScuote = fx.scuote; S.scossa = Math.min(1, S.scossa + 0.8) }
     },
@@ -212,11 +256,18 @@ export function creaRacconto(S) {
     },
     svuota() { proiettili.length = 0; coda.length = 0; in3d = null },
     // per le prove e gli scatti (window.__sotterraneo3d.prova): l'eroe usa l'effetto `chiave` sul mostro `i` dello scontro, o il mostro
-    // `i` attacca l'eroe (`chiave` 'mostro'); nessun numero cambia, è solo il disegno
+    // `i` attacca l'eroe (`chiave` 'mostro'), o fa la sua mossa `id` (`chiave` 'mossa:<id>', dati/mosse.js); nessun numero cambia, è solo il disegno
     prova(chiave, i = 0, luce = '#e8742f') {
       const r = S.campo && S.campo[i]
       if (!r) return false
       if (chiave === 'mostro') { effetto(String(i), 'scatta'); setTimeout(() => effetto('eroe', 'colpito'), TEMPI.passo); return true }
+      if (chiave.startsWith('mossa:')) {
+        const m = mosseDi(r).find(x => x.id === chiave.slice(6))
+        if (!m) return false
+        const tipo = { cura: 'cura', urlo: 'urla', incantesimo: 'lancia' }[m.tipo] || 'scatta'
+        effetto(String(i), tipo, vistaDella(m))
+        return true
+      }
       const sc = schedaDi(chiave)
       S.colpoEroe = { bersaglio: r, presi: [r], effetto: chiave, luce, arrivo: sc.arrivo, dura: sc.dura, che: 'agisce', moto: motoDell(chiave) }
       coda.length = 0; coda.push(S.colpoEroe)

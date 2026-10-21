@@ -20,6 +20,7 @@ import { esc, barretta } from './etichette.js'
 import { PIXEL_CELLA, ALLUNGA } from './costanti.js'
 import { verso } from './tempo.js'
 import { muoviAssalto } from './racconto.js'
+import { mosseDi } from '../dati/mosse.js'
 
 // i colori pronti una volta: a ogni fotogramma non si legge una stringa
 const AURA = { magico: new Color('#6f8dff'), raro: new Color('#ffd23f'), leggendario: new Color('#ff9a2e') }
@@ -35,6 +36,8 @@ export function creaCose({ figure, aloni, colonne, etichette, camera, apre = nul
   const stati = new WeakMap()
   const visibili = []   // i mostri da disegnare in questo fotogramma (riusato): prima si sceglie chi ha il modello, poi si disegna
   const punto = { x: 0, y: 0 }
+  let foglio = null   // lo scontro di adesso: la mossa annunciata (foglio.minaccia) accende l'anello a terra
+  const annunciata = r => { const mi = foglio && foglio.minaccia && foglio.minaccia.find(x => x.chi === r); return mi && mi.mossa ? mi.mossa.id : null }
   const stato = r => {
     let s = stati.get(r)
     if (!s) { s = { r, x: r.fx ?? r.x + 0.5, z: r.fy ?? r.y + 0.5, t: Math.random(), flash: 0, assalto: null, morente: 0, meta: null, alto: 1, specchio: false }; stati.set(r, s) }
@@ -86,8 +89,12 @@ export function creaCose({ figure, aloni, colonne, etichette, camera, apre = nul
       const a = s.assalto, att = s.attacco3d
       let p = -1
       if (a && att) p = a.t < a.picco ? att.arrivo * a.t / a.picco : att.arrivo + (1 - att.arrivo) * Math.min(1, (a.t - a.picco) / Math.max(0.01, a.dur - a.picco))
+      // chi ha più mosse (dati/mosse.js): la mossa che fa adesso al posto dell'attacco, e quella annunciata mentre l'eroe sceglie
+      const mosse = r.caporale || r.signore || r.grosso ? mosseDi(r) : null
+      const mossa = att && att.mossa ? { id: att.mossa, p } : null
+      const annuncio = inCampo >= 0 && !morto && !(fx && fx.attivo) && mosse ? annunciata(r) : null
       const alto = mostri3d.metti(r, s, s.id3d, { x, z: z - 0.1, alto: s.alto, verso: inCampo >= 0 || r.sveglio ? verso3d : null, t: s.t, dt: s.dtScena, trasparenza,
-        morente: morto ? s.morente : 0, bianco: s.flash * 1.4, tinta: s.tinta3d, forzaTinta: s.forzaTinta3d || 0, attacco: p })
+        morente: morto ? s.morente : 0, bianco: s.flash * 1.4, tinta: s.tinta3d, forzaTinta: s.forzaTinta3d || 0, attacco: mossa ? -1 : p, mosse, mossa, annuncio })
       if (alto >= 0) { s.alto = alto; s.in3d = true }
     }
     const o = figure.o()
@@ -171,6 +178,7 @@ export function creaCose({ figure, aloni, colonne, etichette, camera, apre = nul
       const liv = corsa.livello
       const sc = SCENARI[corsa.scenario] || SCENARI[SCENARIO]
       const campo = palco ? palco.campo : null
+      foglio = palco && corsa.foglio && corsa.foglio.che === 'scontro' ? corsa.foglio : null
       visibili.length = 0
       for (const r of liv.robe) {
         if (r.presa) continue
