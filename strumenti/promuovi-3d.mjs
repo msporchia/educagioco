@@ -55,7 +55,9 @@ function raccogli(radici) {
       coda.push(dep)
       return `${prima}${q}./${basename(dep)}${q}`
     })
-    visti.set(rel, testata(rel) + riscritto)
+    // la regola delle emoji (docs/core/emoji.md): ogni pila di font del gioco comincia con il nostro, anche sulle tele dei prototipi
+    const conFont = riscritto.replace(/(\.font\s*=\s*['"`])((?:[\w-]+ )*\d+px )(?!"Emoji Gioco")/g, '$1$2"Emoji Gioco", ')
+    visti.set(rel, testata(rel) + conFont)
   }
   return visti
 }

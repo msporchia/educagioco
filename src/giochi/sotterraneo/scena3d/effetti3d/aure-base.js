@@ -27,7 +27,7 @@ const DIS = {
   },
   croce (g) { g.shadowColor = '#fff'; g.shadowBlur = 14; g.fillStyle = '#fff'; g.beginPath(); g.roundRect(47, 18, 34, 92, 8); g.roundRect(18, 47, 92, 34, 8); g.fill() },
   foglia (g) { g.shadowColor = '#fff'; g.shadowBlur = 8; g.fillStyle = '#fff'; g.beginPath(); g.moveTo(64, 118); g.quadraticCurveTo(8, 66, 64, 8); g.quadraticCurveTo(120, 66, 64, 118); g.fill(); g.shadowBlur = 0; g.globalCompositeOperation = 'destination-out'; g.strokeStyle = 'rgba(0,0,0,.55)'; g.lineWidth = 4; g.beginPath(); g.moveTo(64, 112); g.lineTo(64, 28); g.stroke() },
-  zeta (g) { g.shadowColor = '#fff'; g.shadowBlur = 16; g.fillStyle = '#fff'; g.font = 'bold 104px "Arial Black", Arial, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.transform(1, 0, -0.18, 1, 12, 0); g.fillText('Z', 64, 68) },
+  zeta (g) { g.shadowColor = '#fff'; g.shadowBlur = 16; g.fillStyle = '#fff'; g.font = 'bold 104px "Emoji Gioco", "Arial Black", Arial, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.transform(1, 0, -0.18, 1, 12, 0); g.fillText('Z', 64, 68) },
   nota (g) { g.shadowColor = '#fff'; g.shadowBlur = 12; g.fillStyle = '#fff'; g.strokeStyle = '#fff'; g.beginPath(); g.ellipse(44, 96, 21, 14, -0.45, 0, 7); g.fill(); g.fillRect(60, 18, 8, 78); g.lineWidth = 9; g.lineCap = 'round'; g.beginPath(); g.moveTo(66, 20); g.bezierCurveTo(76, 40, 104, 46, 92, 82); g.stroke() },
   fiamma (g) {
     g.shadowColor = '#fff'; g.shadowBlur = 10

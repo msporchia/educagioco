@@ -20,6 +20,9 @@ import { creaEtichette } from './etichette.js'
 import { creaCose } from './cose.js'
 import { creaEroe, disegnaEroe } from './eroe.js'
 import { creaEroe3d, eroe3dAcceso } from './eroe3d.js'
+import { creaMostri3d, mostri3dAccesi } from './mostro3d.js'
+import { creaGestore, statoDi } from './effetti3d/gestore.js'
+import { statiDel } from '../viste/campo.js'
 import { creaRacconto, assalto } from './racconto.js'
 import { creaAzione } from './azione.js'
 import { costruisciPiano } from './piano.js'
@@ -59,7 +62,11 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
   // la fiamma della torcia in mano all'eroe: una sola, si sposta con lui (scena3d/eroe.js)
   const fiammaEroe = ACCESI.fiamme ? creaFiamme(scena, maschera, [{ scala: 0.85, cx: 0, cz: 0, x: 0, y: -9, z: 0 }]) : null
   if (fiammaEroe) fiammaEroe.accesa(0, false)
-  const S = { eroe, campo: null, scintille, luci, anelli, fermo: 0, scossa: 0, aberr: 0, rosso: 0, tBolla: 9, tempo: 0, colpoEroe: null, stato: null }
+  // in prova: i mostri in 3D al posto degli sprite (`#sprite` li spegne) e gli effetti 3D dello scontro (docs/sotterraneo/mostri-3d.md)
+  const mostri3d = mostri3dAccesi() && ACCESI.mostri3d > 0 ? creaMostri3d(scena, { quanti: () => ACCESI.mostri3d }) : null
+  const effetti3d = ACCESI.effetti3d ? creaGestore(scena, { renderer, camera: cam.camera }) : null
+  const S = { eroe, campo: null, scintille, luci, anelli, fermo: 0, scossa: 0, aberr: 0, rosso: 0, tBolla: 9, tempo: 0, colpoEroe: null, stato: null,
+              mostri3d, effetti3d, eroe3d }
   const racconto = creaRacconto(S)
   const azione = creaAzione()
   const trame = new Map()
@@ -77,7 +84,7 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
     figureEroe = creaFigure(scena, { ...base, max: 8, ombra: false })
     // una porta o un forziere che si apre: polvere o scintille d'oro, e un lampo caldo
     const oro = new Color('#ffd76a'), polvere = new Color('#c8b49a')
-    cose = creaCose({ figure, aloni, colonne, etichette, camera: cam, apre: r => {
+    cose = creaCose({ figure, aloni, colonne, etichette, camera: cam, mostri3d, vicino: () => eroe.disegnato, apre: r => {
       const forziere = r.che === 'forziere'
       scintille.emetti(r.x + 0.5, 0.4, r.y + 0.5, forziere ? 50 : 24, { forza: 1.6, su: forziere ? 2.4 : 1, vita: 0.8, caldo: 0.2, taglia: 0.07, tinta: forziere ? oro : polvere })
       if (forziere) { luci.lampo.color.set(0xffd27a); luci.lampo.position.set(r.x + 0.5, 0.8, r.y + 0.8); luci.lampo.intensity = 12 }
@@ -97,6 +104,21 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
   const scontro = creaScontro({ S, cam, eroe, getPiano: () => piano, getCose: () => cose, getFigure: () => figure, anelli, cieca })
   const torcia = (i, su) => piano && piano.torcia(i, su)   // le torce sui muri che si abbassano nello scontro
   const salta = r => (piano.fontana && r === piano.fontana.roba) || !!piano.portaleDi(r)
+
+  // gli stati addosso ai mostri dello scontro, in 3D: quelli che il racconto mostra adesso, o la verità del motore a racconto finito
+  const chiaviStati = [], piedi = new Vector3()
+  function statiAddosso(fx) {
+    const palco = scontro.palco
+    if (!palco) { effetti3d.spegniStati(); return }
+    palco.campo.forEach((r, k) => {
+      const s = cose.stato(r)
+      chiaviStati.length = 0
+      if (!(fx && fx.attivo ? fx.morti[k] : r.morto)) {
+        for (const x of (fx && fx.attivo && fx.stati[k]) || statiDel(r)) { const c = statoDi(x); if (c && !chiaviStati.includes(c)) chiaviStati.push(c) }
+      }
+      effetti3d.tieniStati(s, chiaviStati, () => ({ piedi: piedi.set(s.x + (s.dx || 0), 0, s.z + (s.dz || 0)), alto: Math.max(0.8, s.in3d ? s.alto : s.alto * 0.72) }))
+    })
+  }
 
   function nuovoPiano(corsa) {
     if (piano) piano.via()
@@ -179,6 +201,7 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
 
     figure.inizia(); figureEroe.inizia(); aloni.inizia(); colonne.inizia(); etichette.inizia()
     cose.disegna(corsa, { t, dt: dtVero, dtScena: dt, palco: scontro.palco ? { campo: scontro.palco.campo, fx } : null, salta })
+    if (effetti3d) { statiAddosso(fx); effetti3d.aggiorna(dt) }
     // la fonte bevuta (lo dice il motore): l'acqua va all'eroe e la fontana si svuota, una volta sola
     const fo = piano.fontana
     if (fo && fo.roba.morto && fo.stato === 'piena') { if (fo.usa(eroe)) eroe.cura = 1.2 }
@@ -264,7 +287,7 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
       if (!corsa || !cose || !piano || passando) return
       if (scontro.palco) return scontro.tocca(p, quadro.fx, { bersaglio, accorcia })
       if (corsa.foglio) return
-      const modellate = []
+      const modellate = mostri3d ? [...mostri3d.modellati] : []
       if (piano.fontana) modellate.push([piano.fontana.roba, piano.fontana.gruppo])
       for (const p of piano.portali) modellate.push([p.roba, p.gruppo])
       const r = contorno.scegli(corsa, p, { figure, modellate })
@@ -294,7 +317,8 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
       return { tre: true, chiamate: m.chiamate, triangoli: m.triangoli, dpr: ctx.dpr, ms: Math.round(m.msFotogramma * 10) / 10,
                msJs: Math.round(m.msJs * 100) / 100, msDisegno: Math.round(m.msDisegno * 100) / 100,
                figure: figure ? figure.quante : 0, pixelSprite: Math.round(cam.pixelSprite * 100) / 100, scenario: piano ? piano.aspetto.chiave : null, palco: !!scontro.palco,
-               programmi: (renderer.info.programs || []).length }   // gli shader compilati: se crescono a ogni colpo, il telefono si ferma a compilare
+               programmi: (renderer.info.programs || []).length,
+               mostri3d: mostri3d ? mostri3d.visibili : 0, modelli3d: mostri3d ? mostri3d.quante : 0, effetti3d: effetti3d ? effetti3d.quanti : 0 }   // gli shader compilati: se crescono a ogni colpo, il telefono si ferma a compilare
     },
     // il banco: `n` disegni della scena così com'è, ognuno aspettato (la lettura di un pixel): i ms della tela da sola, senza
     // la pagina attorno né i 60 Hz (docs/core/vecchio-telefono.md, «Lo scontro»); la mediana e il p90
@@ -313,6 +337,7 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
     // per le prove: dove sta a schermo un punto del mondo, lo stato di disegno di una cosa, il palco
     aSchermo(x, y, z) { const p = cam.schermo(x, y, z); return [p.x, p.y] },
     statoDi(r) { return cose ? cose.stato(r) : null },
+    prova(chiave, i, luce) { return racconto.prova(chiave, i, luce) },
     // le botti del piano: dove stanno e se sono rotte
     botti() { return piano ? piano.botti.botti.map(b => ({ i: b.i, x: b.x, z: b.z, cella: b.cella, rotta: b.rotta, stanza: b.stanza, pezzi: b.pezzi.length })) : [] },
     get eroe() { return eroe },
@@ -323,6 +348,8 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
       if (osserva) osserva.disconnect()
       this_.ferma()
       racconto.svuota()
+      if (effetti3d) effetti3d.svuota()
+      if (mostri3d) mostri3d.via()
       if (piano) piano.via()
       piano = null
       for (const x of [aloni, colonne, anelli, scintille, polvere, etichette, contorno, figure, figureEroe, fiammaEroe]) if (x) x.via()
