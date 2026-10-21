@@ -82,7 +82,8 @@ senza fondo sotto le sette discese. Il codice sta in `src/giochi/sotterraneo/`.
 - [dungeon-che-si-rigenerano.md](dungeon-che-si-rigenerano.md) — nel 3D ogni dungeon ha il livello della sua zona e un seme fisso finché non lo si ripulisce (battuto il grosso, fuori dalla scala in fondo); ripulito, rientrando è un altro (forma, abitanti dal mazzo della zona, volto); la prima volta delle sette è la storia, poi ripetibile; i sei dungeon nuovi coi loro grossi; le leve da tarare e il contratto (`motore/rigenera.js`, `mondo.dungeon`)
 - [mondo-aperto-generatore.md](mondo-aperto-generatore.md) — la fase 1, fatta: il generatore del mondo aperto come dato puro (`motore/mondo-aperto.js`, la scheda `dati/mondo-aperto.js`), cosa la geometria ha cambiato del progetto (i due ponti del villaggio, i due ingressi delle marche, il monte all'angolo), l'algoritmo passo per passo, il risultato che fa da contratto per le fasi dopo, i guasti, il seme 19 e come si sceglie, come si aggiunge una regione o un posto, `npm run pianta -- --mondo`
 - [da-fare.md](da-fare.md) — le voci aperte e quello che va guardato col dito
-- [da-fare-3d-e-mondo.md](da-fare-3d-e-mondo.md) — le voci aperte del giro del 16 ottobre 2026: cosa provare col dito, le decisioni aperte, i lavori pronti, cosa ritarare, i guasti noti e come si pubblica senza pestarsi i piedi
+- [da-fare-3d-e-mondo.md](da-fare-3d-e-mondo.md) — le voci aperte del giro del 16 ottobre 2026: cosa provare col dito
+- [todo_sotterraneo.md](todo_sotterraneo.md) — il todo unico scritto insieme dalle due sessioni (mondo di sopra e modelli 3D): a metà, bug, da guardare col dito, le decisioni aperte, i lavori pronti, cosa ritarare, i guasti noti e come si pubblica senza pestarsi i piedi
 
 Vedi anche: [../core/grafica.md](../core/grafica.md) (tela, atlante, tessere),
 [../core/interfaccia.md](../core/interfaccia.md) (la pausa),
