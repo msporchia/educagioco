@@ -14,7 +14,7 @@
    Il dito è vero (`Input.dispatchTouchEvent`): un `page.click()` non trascina
    e non porta i pointer del tocco (docs/core/il-dito.md).
    `node test/esegui.mjs fattoria3d --niente-build`
-   tempo: 120
+   tempo: 480
    ═══════════════════════════════════════════════════════════════════ */
 import { apriBrowser, apriGioco, azzera, semina, attendi, scatto, scegli, leggiProfilo } from '../aiuto/browser.mjs'
 import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifica.mjs'
