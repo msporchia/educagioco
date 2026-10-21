@@ -4,6 +4,7 @@
 // Origine al centro dell'impronta, davanti verso +z; la quota di chi ci cammina sopra sta in dati/catalogo.js (`alzato`).
 import * as THREE from 'three'
 import { mat } from './modelli.js'
+import { fondiPerMateriale } from './fondi.js'
 
 function pronto (m) { m.castShadow = true; m.receiveShadow = true; return m }
 function scatola (g, w, h, d, m, x = 0, y = 0, z = 0) {
@@ -39,6 +40,7 @@ export function creaPonte () {
     for (const x of [-1.42, 1.42]) { scatola(g, 0.2, 0.42, 0.2, pietra, x, GOBBA(x) + 0.2, lato * 0.36); scatola(g, 0.25, 0.05, 0.25, chiara, x, GOBBA(x) + 0.43, lato * 0.36) }
   }
   g.userData.altezza = 0.9
+  fondiPerMateriale(g)
   return g
 }
 
@@ -65,6 +67,7 @@ export function creaPasserella () {
     }
   }
   g.userData.altezza = 0.8
+  fondiPerMateriale(g)
   return g
 }
 
@@ -87,5 +90,6 @@ export function creaTavolo () {
   const pane = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 6), mat(0xc88a3e)); pane.scale.set(1.3, 0.7, 0.9); pane.position.set(0.05, HT + 0.12, 0.02); g.add(pronto(pane))
   cilindro(g, 0.07, 0.09, 0.2, mat(0x6aa0c8), -0.1, HT + 0.14, -0.25, 8)
   g.userData.altezza = 1.0
+  fondiPerMateriale(g)
   return g
 }

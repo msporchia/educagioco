@@ -4,6 +4,7 @@
 // Vedi docs/fattoria3d/scena.md.
 import * as THREE from 'three'
 import { mat, pronto, scatola, cilindro, cono, sfera, tetto, insegna, lastra } from './modelli.js'
+import { fondiPerMateriale } from './fondi.js'
 
 /** Tante copie della stessa forma: una geometria sola, un mesh per posto. */
 function copie (g, geo, m, posti) {
@@ -41,6 +42,7 @@ export function creaZuccherificio () {
   copie(ruota, new THREE.BoxGeometry(0.1, 0.16, 0.12), mat(0x5c7080), Array.from({ length: 8 }, (_, k) => [0, Math.cos(k * Math.PI / 4) * 0.38, Math.sin(k * Math.PI / 4) * 0.38]))
   g.userData.anima = (dt, tt) => { ruota.rotation.x += dt * 0.9; sciroppo.material.emissiveIntensity = 0.4 + Math.sin(tt * 5) * 0.15 }
   g.userData.altezza = 2.9
+  fondiPerMateriale(ruota); fondiPerMateriale(g, { escludi: [ruota, sciroppo] })
   return g
 }
 
@@ -67,6 +69,7 @@ export function creaTelaio () {
   cilindro(g, 0.18, 0.18, 0.28, lana, -0.4, 0.14, 1.2, 8)
   g.userData.anima = (dt, tt) => { navetta.position.x = Math.sin(tt * 1.8) * 0.5 }
   g.userData.altezza = 2.1
+  fondiPerMateriale(g, { escludi: [navetta] })
   return g
 }
 
@@ -102,6 +105,7 @@ export function creaSartoria () {
   ago.rotation.z = 0.2
   g.userData.anima = (dt, tt) => { man.rotation.y += dt * 0.6; ago.rotation.z = 0.2 + Math.sin(tt * 1.4) * 0.1 }
   g.userData.altezza = 2.7
+  fondiPerMateriale(man); fondiPerMateriale(ago); fondiPerMateriale(g, { escludi: [man, ago] })
   return g
 }
 
@@ -137,5 +141,6 @@ export function creaTintoria () {
     for (const p of panni) p.rotation.y = Math.sin(tt * 1.6 + p.userData.fase) * 0.12
   }
   g.userData.altezza = 2.3
+  fondiPerMateriale(g, { escludi: [...bagni, ...panni] })
   return g
 }

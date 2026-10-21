@@ -6,6 +6,7 @@
 import * as THREE from 'three'
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js'
 import { mat } from './modelli.js'
+import { fondiPerMateriale } from './fondi.js'
 
 // ── mattoncini con le geometrie in comune ──
 const geo = new Map()
@@ -104,6 +105,9 @@ export function creaContadino (aspetto = 'contadino') {
   cil(ascia, 0.022, 0.022, 0.7, mat(0x9a6a36), 0, -0.25, 0, 5)
   scatola(ascia, 0.05, 0.16, 0.2, mat(0xcfd6dc, { metalness: 0.5, roughness: 0.4 }), 0, -0.56, 0.1)
   ombre(g)
+  // ogni parte che le pose piegano è fusa a sé: le gambe, il busto (senza testa e braccia), la testa, i bracci
+  for (const p of [...gambe, testa, ...bracci]) fondiPerMateriale(p)
+  fondiPerMateriale(busto, { escludi: [testa, ...bracci] })
   g.userData = { gambe, busto, testa, bracci, falce, ascia, aspetto }
   return g
 }
