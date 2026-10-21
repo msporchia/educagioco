@@ -15,7 +15,7 @@ domande, e non ce ne saranno.
   pecore, il pollaio, la stalla, il caseificio, la gelateria…). Ciò che non è ancora arrivato si vede in grigio, col suo livello.
 - **Quindici colture**, dal grano (20 secondi) al riso (70): si semina e si raccoglie armando l'azione e toccando i campi.
 - **Sei macchine in catena**, con le ricette della fattoria di sempre. Mulino, pastificio, panificio, caseificio, cucina e gelateria: il grano
-  diventa farina, la farina pane o pasta, il latte burro e formaggio. Tre posti nel forno, una cottura alla volta, e i pronti aspettano.
+  diventa farina, la farina pane o pasta, il latte burro e formaggio. Un posto di partenza (se ne comprano altri fino a sei), una cottura alla volta, e i pronti aspettano.
 - **Gli animali.** Le pecore (lana che ricresce, agnellini), le galline del pollaio (uova) e le mucche della stalla (latte):
   mangiano i raccolti e restituiscono i prodotti, che servono alle ricette.
 - **Il banco degli ordini.** Dal livello 2, con una bacheca (o una bancarella): tre clienti chiedono raccolti e prodotti. Consegnare paga

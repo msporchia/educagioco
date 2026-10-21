@@ -52,7 +52,7 @@ async function entra(hash) {
 }
 // sopra: il mondo di sopra (in 3D anche lui, col Sotterraneo 3D), e nessuna tela della discesa rimasta
 async function sopra(chi) {
-  await page.waitForSelector('[data-mondo3d], [data-terra]', { timeout: 15000 })
+  await page.waitForSelector('[data-mondo3d], [data-terra]', { timeout: 60000 })   // l'eroe 3D del mondo compila i suoi shader al primo fotogramma: in SwiftShader sono secondi
   await attendi(page, 800)
   uguale(`${chi}: si arriva sopra, senza la discesa in 3D`, await page.locator('[data-tela="3d"]').count(), 0)
   uguale(`${chi}: nessun errore in console`, errori.splice(0).join(' | '), '')

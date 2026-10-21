@@ -20,7 +20,8 @@ export function dettoDi(motivo, extra = {}) {
     case 'pieno': return extra.bestie ? `Ci sono già tutte le ${extra.bestie} che ci stanno` : 'Non c\'è più posto'
     case 'lana-ricresce': return `La lana ricresce… ${extra.secondi}s`
     case 'sazie': return 'Sono tutte sazie'
-    case 'forno-pieno': return 'Il forno è pieno'
+    case 'forno-pieno': return extra.compra ? 'Tutti i posti sono occupati: puoi comprarne un altro' : 'Tutti i posti sono occupati'
+    case 'non-posseduta': return 'Costruisci prima questa macchina'
     case 'mancano-ingredienti': {
       const manca = Object.entries(extra.ingredienti || {}).map(([k, n]) => `${emojiDi(k, COLTURE)} ${n}`).join('  ')
       return manca ? `Ti mancano: ${manca}` : 'Mancano degli ingredienti'

@@ -10,6 +10,7 @@ import { livelloPer } from '../dati/livelli.js'
 import { ordineInForma } from './ordini.js'
 import { stivaInForma } from './mongolfiera.js'
 import { RIPOSO_MS } from '../dati/mongolfiera.js'
+import { POSTI_DI_PARTENZA, postiInForma } from '../dati/posti.js'
 
 const LANA_DEL_SEGNAPOSTO = 2     // il premio della cassa del segnaposto di prima (v7)
 
@@ -30,7 +31,10 @@ export const VERSIONE_STATO = 9
 
 const vuote = () => Object.fromEntries(CHIAVI_COLTURE.map(k => [k, 0]))
 
-const macchinaVuota = () => ({ coda: [], pronti: {} })
+// `posti`: quanti posti ha la macchina (1 di partenza, fino a 6: dati/posti.js). Un vecchio stato senza il campo vale 1; una coda già più lunga
+// (quando i posti erano tre) lavora fino in fondo, poi si torna ai posti pagati. Niente da migrare: `normalizza` basta, la versione non sale.
+const macchinaVuota = () => ({ coda: [], pronti: {}, posti: POSTI_DI_PARTENZA })
+const CODA_STORICA = 3                // i posti di una volta: una coda così lunga non si butta
 
 /** `s.pasticceria` resta leggibile (la scena e la vista di prima lo usano) ma non si salva due volte: è la macchina. */
 function conAlias(s) {
@@ -126,12 +130,13 @@ export function normalizza(letto) {
     if (r.dove !== t) { s.prodotti[id] = (s.prodotti[id] || 0) + n; return }
     const Q = s.macchine[t]
     for (let i = 0; i < n; i++) {
-      if (Q.coda.length < MACCHINE[t].posti) Q.coda.push({ ric: id, fine: Q.coda.length === 0 && Number.isFinite(fine) ? fine : null })
+      if (Q.coda.length < Math.max(Q.posti, CODA_STORICA)) Q.coda.push({ ric: id, fine: Q.coda.length === 0 && Number.isFinite(fine) ? fine : null })
       else Q.pronti[id] = (Q.pronti[id] || 0) + 1
     }
   }
   for (const t of vecchie) {
     const p = oggetto(macchine[t] || (t === 'pasticceria' ? letto.pasticceria : null))
+    if (MACCHINE[t]) s.macchine[t].posti = postiInForma(p.posti)
     if (Array.isArray(p.coda)) for (const x of p.coda) if (x && typeof x.ric === 'string') alloggia(MACCHINE[t] ? t : '', x.ric, 1, x.fine)
     for (const [k, n] of Object.entries(oggetto(p.pronti))) {
       const id = nuovoId(k), r = RICETTE[id]

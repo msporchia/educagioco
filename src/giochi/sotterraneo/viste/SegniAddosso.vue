@@ -16,7 +16,8 @@ const fuoco = computed(() => props.stati.some(x => x.chiave === 'veleno' && x.fu
 const velenoso = computed(() => props.stati.some(x => x.chiave === 'veleno' && !x.fuoco))
 const gelo = computed(() => props.stati.some(x => (x.chiave === 'debole' || x.chiave === 'fermo') && x.gelo))
 const stordito = computed(() => props.stati.some(x => x.chiave === 'fermo' && !x.gelo))
-const fiacco = computed(() => props.stati.some(x => x.chiave === 'debole' && !x.gelo))
+const radiciDeiRovi = computed(() => props.stati.some(x => x.chiave === 'debole' && x.da === 'radici'))   // i Rovi: spine ai piedi finché dura
+const fiacco = computed(() => props.stati.some(x => x.chiave === 'debole' && !x.gelo && x.da !== 'radici'))
 </script>
 
 <template>
@@ -47,7 +48,7 @@ const fiacco = computed(() => props.stati.some(x => x.chiave === 'debole' && !x.
     <span v-if="ha('sanguina')" class="sa-gocce" data-segno="sanguina">
       <i v-for="k in 3" :key="k" :style="{ '--x': [22, 52, 78][k - 1] + '%', '--d': -(k - 1) * 0.5 + 's' }"></i>
     </span>
-    <svg v-if="ha('esposto')" class="sa-radici" viewBox="0 0 64 26" preserveAspectRatio="none" data-segno="radici">
+    <svg v-if="ha('esposto') || radiciDeiRovi" class="sa-radici" viewBox="0 0 64 26" preserveAspectRatio="none" data-segno="radici">
       <path d="M2 24C8 16 4 10 12 6M14 25C20 18 16 12 24 8M30 25C34 17 40 20 44 10M46 25C52 18 50 12 58 8M60 24C56 20 62 14 62 10" />
       <path class="sa-spina" d="M12 6L8 3M24 8L20 4M44 10L49 7M58 8L62 5" />
     </svg>

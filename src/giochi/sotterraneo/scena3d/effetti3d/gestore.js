@@ -26,7 +26,7 @@ export const auraDi = chiave => (AURE[chiave] && AURE[chiave].via === 'su-me' ? 
 export function statoDi(x) {
   switch (x.chiave) {
     case 'veleno': return x.fuoco ? 'in-fiamme' : 'avvelenato'
-    case 'debole': return x.gelo ? 'gelato' : 'fiacco'
+    case 'debole': return x.gelo ? 'gelato' : x.da === 'radici' ? 'bloccato' : 'fiacco'   // i Rovi: le radici ai piedi per tutti i turni
     case 'fermo': return x.gelo ? 'gelato' : 'stordito'
     case 'sanguina': return 'sanguina'
     case 'esposto': return 'bloccato'

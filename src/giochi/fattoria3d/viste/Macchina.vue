@@ -1,7 +1,7 @@
 <script setup>
 // Il foglio di una macchina (mulino, pastificio, panificio, caseificio, cucina, gelateria: gli id dei salvataggi sono pasticceria e conserviera),
 // come in Hay Day e come nella fattoria di sempre: l'insegna col suo colore, i POSTI della fila (libero, cuoce con la barra e il tempo, aspetta),
-// i pronti in una pila da ritirare, e le ricette come CARTE con la faccia del prodotto e il numero di quante se ne possono fare. Una carta si
+// i posti che mancano come vani chiusi col prezzo (un tocco compra il prossimo), i pronti in una pila da ritirare, e le ricette come CARTE con la faccia del prodotto e il numero di quante se ne possono fare. Una carta si
 // TRASCINA su un posto o sulla fila (il fantasma segue il dito, i posti liberi si accendono), o si TOCCA e va in fila da sé. Quelle non ancora
 // arrivate stanno velate col lucchetto e il livello. Il conto sta in macchina-pura.js; il motore non cambia: si emette `prepara` con la
 // chiave. Riceve una fotografia già pronta. Colori in stile.css (`[data-macchina]`), il resto in stile-macchina.css. Vedi docs/fattoria3d/file.md.
@@ -14,6 +14,9 @@ const props = defineProps({
   tipo: { type: String, required: true },
   titolo: { type: String, default: '' },           // «🍝 Pastificio»: l'emoji e il nome
   forno: { type: Array, required: true },          // [{ k, emoji, testo, barra } | null] per ognuno dei posti
+  dentro: { type: String, default: 'Al lavoro' },  // la scritta della sezione dei posti: ogni macchina ha la sua («Nel forno», «Al telaio»…: dati/ricette.js)
+  prontoTesto: { type: String, default: 'Pronto da ritirare' },
+  bloccati: { type: Array, default: () => [] },    // [{ n, prezzo, prossimo, puoi }]: i posti ancora da comprare, il prossimo in evidenza
   pronti: { type: String, default: '' },
   prontiK: { type: Array, default: () => [] },     // [{ k, n }]: gli stessi pronti, con la faccia
   puoRitirare: { type: Boolean, default: false },
@@ -24,7 +27,7 @@ const props = defineProps({
   anteprimaPronta: { type: Function, default: null },
   messaggio: { type: String, default: '' },        // perché una ricetta non parte (si vede qui: il fumetto del contadino sta sotto il foglio)
 })
-const emit = defineEmits(['prepara', 'ritira', 'chiudi'])
+const emit = defineEmits(['prepara', 'ritira', 'chiudi', 'compra'])
 
 const parti = computed(() => { const i = props.titolo.indexOf(' '); return i < 0 ? ['🍳', props.titolo] : [props.titolo.slice(0, i), props.titolo.slice(i + 1)] })
 const foto = ref(props.anteprimaPronta ? props.anteprimaPronta(props.tipo) : null)
@@ -93,7 +96,7 @@ function annulla() { dito = null; presa.value = null }
     <!-- `data-f3="pasticceria"` resta il bersaglio della pasticceria (un elemento ha un solo data-f3: il foglio porta «macchina») -->
     <div ref="corpo" class="f3-corpo fm-corpo" :data-f3="tipo === 'pasticceria' ? 'pasticceria' : null">
       <section ref="sopra" class="fm-sopra" :class="{ sopra: presa && presa.bers && presa.bers.tipo === 'fila' }">
-        <h3>Nel forno</h3>
+        <h3 data-f3="macchina-dentro">{{ dentro }}</h3>
         <div class="fm-fila">
           <div v-for="(p, i) in forno" :key="i" class="fm-posto" :class="[statoDelPosto(p), { sopra: presa && presa.bers && presa.bers.i === i }]" :style="{ '--i': i }"
                data-f3="posto" :data-posto="i" :data-stato="statoDelPosto(p)">
@@ -104,9 +107,15 @@ function annulla() { dito = null; presa.value = null }
             <i><u :style="{ width: (p ? p.barra : 0) + '%' }"></u></i>
             <small>{{ testoPosto(p) }}</small>
           </div>
+          <button v-for="b in bloccati" :key="'b' + b.n" class="fm-posto chiuso" :class="{ prossimo: b.prossimo, povero: !b.puoi }" :style="{ '--i': forno.length + b.n }"
+                  data-f3="posto-chiuso" :data-posto-chiuso="b.n" :data-prossimo="b.prossimo" :aria-label="'compra il posto ' + b.n + ' per ' + b.prezzo + ' monete'" @click="$emit('compra')">
+            <div class="fm-vano"><span class="fm-piu" aria-hidden="true">＋</span></div>
+            <small>🪙 {{ b.prezzo }}</small>
+          </button>
         </div>
         <div class="fm-pronti" :class="{ c: puoRitirare }" data-f3="pronti">
           <div class="fm-pila">
+            <small v-if="prontiK.length" class="fm-etichetta" data-f3="macchina-pronto">{{ prontoTesto }}</small>
             <button v-for="c in prontiK" :key="c.k" class="fm-pronto" :data-pronto="c.k" :aria-label="'ritira ' + c.k" @click="$emit('ritira')"><Faccia :k="c.k" :n="c.n" :lato="38" /></button>
             <span v-if="!prontiK.length" class="fm-nessuno">{{ pronti || 'Niente da ritirare' }}</span>
           </div>

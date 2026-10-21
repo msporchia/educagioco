@@ -666,7 +666,11 @@ export const MetodiDelloScontro = {
       const fattore = this.fattoreElemento(x, nodo)
       if (nodo.rompe) x.stati.rotto = true
       if (nodo.veleno && !no.veleno) x.stati.veleno = { quanto: Math.max(1, Math.ceil(base * fattore / 2)), scambi: vale('veleno'), fuoco: nodo.elemento === 'fuoco' }
-      if (nodo.debole && !no.debole) x.stati.debole = Math.max(x.stati.debole || 0, vale('debole'))
+      if (nodo.debole && !no.debole) {
+        x.stati.debole = Math.max(x.stati.debole || 0, vale('debole'))
+        // solo da disegnare (nessun conto): i Rovi lasciano le spine ai piedi per tutti i turni, non una freccia sopra la testa
+        x.stati.deboleDa = nodo.effetto === 'radici' ? 'radici' : null
+      }
       // `gelo` dice solo come si disegna (brina e azzurro, non un mostro «fiacco»): non cambia nessun conto
       if (nodo.elemento === 'gelo' && ((nodo.debole && !no.debole) || ((nodo.fermo || nodo.quieto) && !no.fermo))) x.stati.gelo = true
       // stordito salta i suoi prossimi N turni; Freccia mirata ne fa saltare uno

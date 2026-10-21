@@ -60,7 +60,7 @@ const props = defineProps({
 // `raccogli` (i): la cosa per terra `i` è sotto i piedi dell'eroe. Le forze di sopra vanno in `mondo.sopra` col resto (salva)
 const emit = defineEmits(['scendi', 'mondo', 'bottega', 'riprendi', 'sentito', 'cura', 'risposta', 'veduta', 'pensa', 'pensiero', 'pensiero-fine', 'trovati',
                           'scontro', 'raccogli'])
-const minuscolo = s => s.charAt(0).toLowerCase() + s.slice(1)
+const minuscolo = s => { const t = String(s ?? ''); return t.charAt(0).toLowerCase() + t.slice(1) }   // un nome che manca non rompe la pagina
 const RAGGIO_SALUTO = 6, RAGGIO_RIARMO = 9, DURATA_SALUTO = 1.4
 // quanto è alto il bersaglio di un ingresso, per monumento (scena3d/mondo/monumenti.js)
 const ALTO_DEL_MONUMENTO = { torre: 4.8, botola: 1.6, menhir: 2.6, palafitta: 3.4, fumarola: 2.6, tomba: 3.2 }
