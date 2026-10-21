@@ -47,7 +47,7 @@ export function mostriDaDisegnare(vicini, { x, z, t, visto = () => true, salta =
     const specchio = Math.abs(dx) > 0.002 ? dx < 0 : prima && prima.specchio != null ? (q.sveglio ? x < q.fx : prima.specchio) : x < q.fx
     if (memoria) memoria.set(q.i, { x: q.fx, z: q.fy, specchio })
     const f = figuraDiSopra(q, t, corre)
-    l.push({ i: q.i, pezzo: f.pezzo, scala: f.scala, x: q.fx, z: q.fy, alfa, specchio, sveglio: !!q.sveglio, caporale: !!q.caporale,
+    l.push({ i: q.i, tipo: q.tipo, grado: q.grado, pezzo: f.pezzo, scala: f.scala, x: q.fx, z: q.fy, alfa, specchio, sveglio: !!q.sveglio, caporale: !!q.caporale,
              signore: !!q.signore, nome: q.signore || q.caporale ? q.scheda.nome : null })
   }
   return l

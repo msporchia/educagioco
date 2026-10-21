@@ -7,9 +7,12 @@ import { DataTexture, RGBAFormat, Vector2, InstancedMesh, PlaneGeometry, MeshBas
 import { creaFigure } from '../figure.js'
 import { disegnaEroe } from '../eroe.js'
 import { creaEroe3d, eroe3dAcceso } from '../eroe3d.js'
+import { creaMostri3d, mostri3dAccesi } from '../mostro3d.js'
+import { ACCESI } from '../costanti.js'
 import { SALITA } from './vesti.js'
 
 export const SCALA_PERSONE = 1.25
+const MOSTRI_3D_SOPRA = 8   // il mondo è già pieno di cose: i modelli 3D sono pochi, per chi è vicino
 const OMBRE_MAX = 120
 
 // le figure del mondo di sopra non hanno la maschera delle discese: una bianca, che lascia tutto com'è
@@ -39,6 +42,10 @@ export function creaPersone(scena, { tex, norm, larga, alta, pezzi, trame, quota
   // in prova: l'eroe è il modello 3D delle discese, posato sul terreno (`#eroe2d` torna allo sprite)
   const eroe3d = eroe3dAcceso() ? creaEroe3d(scena) : null
   const quotaEroe = (x, z) => quota(x, z - 0.1)
+  // i mostri di sopra: i più vicini (al più MOSTRI_3D_SOPRA) con il modello 3D delle discese, gli altri restano sprite; lo stato di disegno
+  // di ognuno (la sua istanza, dove guarda) sta qui per indice del mostro
+  const mostri3d = mostri3dAccesi() && ACCESI.mostri3d > 0 ? creaMostri3d(scena, { quanti: () => Math.min(ACCESI.mostri3d, MOSTRI_3D_SOPRA) }) : null
+  const statiMostri = new Map()
   const salita = (x, z, t) => { const k = Math.max(0, Math.min(1, (t - nebbia.quando(x, z)) / SALITA)); return k * k * (3 - 2 * k) }
 
   return {
@@ -49,14 +56,30 @@ export function creaPersone(scena, { tex, norm, larga, alta, pezzi, trame, quota
     disegna(persone, eroe, { t, dt, veduta, camera, mostri = [], perTerra = [], extra = null }) {
       figure.inizia(); figureEroe.inizia(); nOmbre = 0
       if (eroe3d && (veduta || eroe.nascosto)) eroe3d.nascondi()
+      if (mostri3d && veduta) { mostri3d.inizia(); mostri3d.chiudi() }   // dall'alto non si vedono (troppo piccoli): via anche i modelli
       if (!veduta) {
         // i mostri: come le persone, alla loro scala; al bordo del cerchio di luce svaniscono a retino
-        for (const q of mostri) {
+        if (mostri3d) mostri3d.inizia()
+        const ordine = mostri3d ? [...mostri].sort((a, b) => (a.x - eroe.x) ** 2 + (a.z - eroe.z) ** 2 - (b.x - eroe.x) ** 2 - (b.z - eroe.z) ** 2) : mostri
+        for (const q of ordine) {
           const o = figure.o(), y = quota(q.x, q.z)
-          o.scala = q.scala; o.specchio = q.specchio; o.trasparenza = q.alfa
-          figure.metti(q.pezzo, q.x, y, q.z + 0.1, o)
+          let in3d = false
+          if (mostri3d) {
+            let s = statiMostri.get(q.i)
+            if (!s) statiMostri.set(q.i, s = { id3d: undefined })
+            const r = { tipo: q.tipo, grado: q.grado }
+            if (s.id3d === undefined) s.id3d = mostri3d.idDi(r)   // la specie e il grado non cambiano
+            if (s.id3d) {
+              s.specchio = q.specchio
+              const alto = mostri3d.metti(r, s, s.id3d, { x: q.x, y, z: q.z + 0.1, alto: figure.alto(q.pezzo, q.scala), verso: q.sveglio ? { x: eroe.x, z: eroe.z } : null,
+                                                           t, dt, trasparenza: q.alfa, morente: 0, bianco: 0, attacco: -1 })
+              in3d = alto >= 0
+            }
+          }
+          if (!in3d) { o.scala = q.scala; o.specchio = q.specchio; o.trasparenza = q.alfa; figure.metti(q.pezzo, q.x, y, q.z + 0.1, o) }
           if (q.alfa > 0.5) ombra(q.x, y, q.z + 0.1, 0.9 * Math.min(1.4, q.scala))
         }
+        if (mostri3d) mostri3d.chiudi()
         // il bottino che non stava in tasca: piccolo, che ondeggia sul prato
         for (const c of perTerra) {
           const o = figure.o(), y = quota(c.x, c.z)
@@ -84,6 +107,6 @@ export function creaPersone(scena, { tex, norm, larga, alta, pezzi, trame, quota
       ombre.count = nOmbre; ombre.instanceMatrix.needsUpdate = true
     },
     taglio(x, y) { figure.taglio(x, y); figureEroe.taglio(x, y) },
-    via() { if (eroe3d) eroe3d.toglie(); figure.via(); figureEroe.via(); scena.remove(ombre); geo.dispose(); mat.dispose(); ombre.dispose(); maschera.t.dispose() },
+    via() { if (eroe3d) eroe3d.toglie(); if (mostri3d) mostri3d.via(); figure.via(); figureEroe.via(); scena.remove(ombre); geo.dispose(); mat.dispose(); ombre.dispose(); maschera.t.dispose() },
   }
 }

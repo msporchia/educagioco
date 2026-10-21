@@ -144,7 +144,7 @@ export function creaMostri3d(scena, { quanti = () => 12 } = {}) {
         if (mossa) mossa.anima(p.mossa.p)
         else if (p.attacco >= 0 && u.attacca) u.attacca(p.attacco)
         piega.rotation.x = -1.35 * c
-        radice.position.set(p.x, -0.12 * ist.alto * k * c, p.z)
+        radice.position.set(p.x, (p.y || 0) - 0.12 * ist.alto * k * c, p.z)
         tingi(ist, p.bianco, p.tinta, p.forzaTinta, p.trasparenza)
         radice.visible = p.trasparenza > 0.02
         radice.updateMatrixWorld(true)
