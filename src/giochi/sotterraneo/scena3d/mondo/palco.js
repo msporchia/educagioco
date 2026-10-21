@@ -181,7 +181,7 @@ export function creaPalcoSopra(scena, { tex, norm, larga, alta, pezzi, quota, ca
     centro() {
       if (!attivo) return null
       if (!scontro.centro(centroPalco)) { const d = eroe.disegnato || { x: EROE_SUL_PALCO.x + 0.5, z: EROE_SUL_PALCO.y + 0.5 }; centroPalco.set(d.x, 0, d.z); scontro.celle = 9.5 }
-      return { x: centroPalco.x + O.x, z: centroPalco.z + O.z, celle: scontro.celle, scossa: S.scossa }
+      return { x: centroPalco.x + O.x, z: centroPalco.z + O.z, celle: scontro.celle, scossa: S.scossa, coperto }
     },
     via() {
       for (const x of [figure, figureEroe, aloni, colonne, anelli, scintille, etichette]) x.via()

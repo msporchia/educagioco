@@ -29,7 +29,7 @@ import { creaScia } from './scia.js'
 import { creaPersone } from './persone.js'
 import { creaPalcoSopra } from './palco.js'
 import { creaVeduta, SOLE } from './veduta.js'
-import { grigliaDi, pezzoDi, contenutoDelPezzo, lavoroDeiPezzi, costruibile, ancoraUguale } from './pezzi.js'
+import { grigliaDi, pezzoDi, contenutoDelPezzo, lavoroDeiPezziVista, costruibile, ancoraUguale } from './pezzi.js'
 import { aTerra } from './dito.js'
 import { quotaA, quotaTerreno, LIVELLO_ACQUA } from './suolo.js'
 
@@ -73,7 +73,7 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = [], fon
   const p0 = da || m.partenza
   const z0 = zonaDi(m, Math.floor(p0.x), Math.floor(p0.y))
   if (z0 >= 0 && !m.zonaCaricata[z0]) { carica(z0); if (allaZona) allaZona(z0, true) }
-  const cam = creaVeduta(m)
+  const cam = creaVeduta(m, (x, z) => quotaA(m, x, z))
   const trame = creaTrame()
   const suolo = materialiDelSuolo(trame), kit = materialiDelKit(trame)
   const griglia = grigliaDi(m), tPezzi = tramaDeiPezzi(griglia.nx, griglia.nz)
@@ -90,10 +90,6 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = [], fon
   const matCristallo = vesti(new MeshStandardMaterial({ color: 0xb78cff, emissive: 0x6a3cff, emissiveIntensity: 0.6, roughness: 0.2 }), { oggetto: 'istanza' })
   const quota = (x, z) => quotaA(m, x, z)
   const v = m.villaggio
-  // la telecamera nel villaggio: in mezzo alla fila di chi ci sta (e della bacheca e del cartello), larga quanto la fila più un
-  // margine, perché chi sta ai capi non finisca sotto le bussole del bordo (dalla pianta, docs/sotterraneo/mondo-a-percorso.md)
-  const fila = [...v.mercanti, ...v.persone, v.minatore, v.bacheca, v.cartello].filter(Boolean).flatMap(p => [p.piede.x, p.x + (p.w || 1)])
-  const citta = { x: (Math.min(...fila) + Math.max(...fila)) / 2, largo: Math.max(...fila) - Math.min(...fila) + 5, k: 0 }
   // lo stato da disegnare, scritto da chi gioca (Mondo3d.vue): niente di reattivo, si legge a ogni fotogramma
   const S = {
     io: { x: m.partenza.x + 0.5, z: m.partenza.y + 0.5, verso: { dx: 0, dy: 1 }, sprite: 'cavaliere', mano: null, mancina: null },
@@ -184,11 +180,16 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = [], fon
     daPreparare.push(k)
     cambiati = true
   }
+  // dove guarda la telecamera se il dito l'ha spostata (e non è già sopra l'eroe), altrimenti null
+  const fuocoVista = () => (cam.libera.on && Math.hypot(cam.libera.x - S.io.x, cam.libera.z - S.io.z) > 6 ? cam.libera : null)
   function zone() {
     const k = zonaDi(m, Math.floor(S.io.x), Math.floor(S.io.z))
     if (k < 0) return false
     zonaQui = k
+    // le zone dell'eroe, e se la vista è spostata dal dito anche quelle di dove si guarda (mai scaricare quelle dell'eroe)
     attorno = zoneAttorno(m, k)
+    const f = fuocoVista()
+    if (f) { const kv = zonaDi(m, Math.floor(f.x), Math.floor(f.z)); if (kv >= 0) for (const z of zoneAttorno(m, kv)) if (!attorno.includes(z)) attorno.push(z) }
     for (let z = 0; z < m.zone.length; z++) if (m.zonaCaricata[z] && !attorno.includes(z)) { scaricaZona(m, z); if (allaZona) allaZona(z, false); cambiati = true }
     if (!m.zonaCaricata[k]) { caricaUna(k); return true }
     return false
@@ -203,7 +204,7 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = [], fon
       for (const [p, f] of costruiti) if (!ancoraUguale(m, p, f.carichi)) { buttaPezzo(p); cambiati = true }
       while (daPreparare.length && !m.zonaCaricata[daPreparare[0]]) daPreparare.shift()
       if (daPreparare.length) { propsDellaZona(m, daPreparare.shift()); return }
-      const l = lavoroDeiPezzi(m, new Set(costruiti.keys()), S.io.x, S.io.z, p => costruibile(m, p, attorno))
+      const l = lavoroDeiPezziVista(m, new Set(costruiti.keys()), S.io, fuocoVista(), p => costruibile(m, p, attorno))
       for (const p of l.butta) { buttaPezzo(p); cambiati = true }
       if (l.costruisci != null) { costruiti.set(l.costruisci, costruisciPezzo(l.costruisci)); cambiati = true }
       else {
@@ -259,11 +260,6 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = [], fon
     cam.misura(L, A)
     vita.scala(A * ctx.dpr / (2 * Math.tan(cam.camera.fov * Math.PI / 360)))
     return true
-  }
-  // quanto si è dentro il villaggio (1 nella piazza, 0 a sei celle fuori dal suo recinto): la telecamera lo guarda intero
-  const dentroIlVillaggio = (x, z) => {
-    const dx = Math.max(v.x - x, 0, x - (v.x + v.w)), dz = Math.max(v.y - z, 0, z - (v.y + v.h))
-    return Math.max(0, 1 - Math.hypot(dx, dz) / 6)
   }
   function fotogramma(ora) {
     raf = requestAnimationFrame(fotogramma)
@@ -322,8 +318,7 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = [], fon
     const pc = inScontro ? palco.centro() : null
     if (pc) centro.set(pc.x, quota(pc.x, pc.z), pc.z)
     else centro.set(eroe.x, quota(eroe.x, eroe.z), eroe.z)
-    citta.k = S.io.nascosto ? 0 : dentroIlVillaggio(eroe.x, eroe.z)
-    cam.aggiorna(dt, centro, veduta, sole, pc, citta)
+    cam.aggiorna(dt, centro, veduta, sole, pc)
     U.uVeduta.value = cam.k
     soleVista.copy(SOLE).transformDirection(cam.camera.matrixWorldInverse)
     persone.taglio(soleVista.x, soleVista.y)
@@ -361,6 +356,7 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = [], fon
     get tempo() { return tempo },
     get zoom() { return cam.zoom },
     set zoom(z) { cam.zoom = z },
+    get cam() { return cam },   // la telecamera: trascina, segui, libera, limitiZoom (veduta.js)
     misura,
     copri(sopra, sotto) { cam.copri(sopra, sotto) },
     avvia() { if (!raf && vivo) { prima = 0; raf = requestAnimationFrame(fotogramma) } },
