@@ -23,13 +23,13 @@ premere lì dentro le apre con `apriTendine(page)` (`test/aiuto/browser.mjs`); `
 ## «Come va»
 
 **Il quadro generale prima del dettaglio** (21/10, decisione del proprietario: «entro e dico: sì, sta andando bene», non un mega-elenco). In cima
-**una frase** (`giudizioDi` in `quiz/comeva.js`, `unita/giudizio`) e il **radar** (`quiz/Radar.vue`: un asse per materia, il saputo da 0 a 100, tratteggiato
-com'era due settimane fa; toccata l'etichetta si entra nella materia; sotto tre materie non si disegna). Le frasi, che guardano *quali* domande vanno male
+**una frase** (`giudizioDi` in `quiz/comeva.js`, `unita/giudizio`) e il **radar** (`quiz/Radar.vue`: un asse per **area**, sempre cinque così il pentagono ha la stessa forma per tutti, il saputo da 0 a 100, tratteggiato
+com'era due settimane fa; un'area mai giocata sta a zero col trattino; toccata l'etichetta si apre l'area qui sotto). Le frasi, che guardano *quali* domande vanno male
 e non una media: *Ha ancora giocato poco* (meno di venti risposte), *Sta andando bene* (nessuna difficile), *Ha difficoltà con le domande più difficili*
 (sono tutte un passo avanti, `dove: 'toste'`: è normale), *Ha difficoltà con alcune domande* (poche, fino a un quarto) e *Fa fatica con parecchie domande*
-(troppe: suggerisce di abbassare la taratura a mano). Poi «Per materia» (le mattonelle), la settimana con le difficili, il tempo di gioco, e **in fondo, in una
+(troppe: suggerisce di abbassare la taratura a mano). Poi **«Per area»** (`quiz/Aree.vue`): le cinque aree — 🔢 Numeri, 📖 Italiano, 🌍 Lingue, 📐 Spazio e tempo, 🧩 Logica e scienze (`AREE` in `quiz/comeva.js`: le materie dei quiz, dell'albo e dei giochi vi sono raggruppate, e una materia che non c'è finisce in Logica) — ognuna con la sua percentuale (la media delle materie giocate) e la freccia; toccata, **si apre** (una alla volta) sulle sue materie, con «va meglio» / «va peggio» (sopra 15 punti di distanza, `DIFFERENZA`) e le non ancora giocate; toccata una materia si entra nelle sue domande, come prima. Poi la settimana con le difficili, il tempo di gioco, e **in fondo, in una
 tendina chiusa, «Il dettaglio, domanda per domanda»** — l'elenco lungo di sotto, che dentro una materia si apre da solo. Nei test: `[data-quadro]`,
-`[data-giudizio][data-tono]`, `[data-radar]`, `[data-radar-asse]`, `details[data-dettaglio]`.
+`[data-giudizio][data-tono]`, `[data-radar]`, `[data-radar-asse]`, `[data-area="numeri"|…]` con `[data-area-capo]`, `[data-mattonella="<materia>"]` (dentro un'area aperta), `[data-va-meglio]`, `[data-va-peggio]`, `details[data-dettaglio]`. `unita/aree`, `unita/giudizio`.
 
 `src/quiz/ComeVa.vue`, montato dalla schermata dei grandi con una riga sola
 (gli passa il nome del bambino). Dall'alto: **le materie**, **la settimana**,

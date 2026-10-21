@@ -3,11 +3,11 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { fasceDelBambino } from './catalogo.js'
 import { andamentoDi, riassuntoDi, CUORI } from './andamento.js'
-import { settimanaDi, giudizioDi, DUE_SETTIMANE, UNA_SETTIMANA } from './comeva.js'
+import { settimanaDi, giudizioDi, areeDi, DUE_SETTIMANE, UNA_SETTIMANA } from './comeva.js'
 import { mattonelleOra, fotografa } from './fotografia.js'
 import { vaBeneCosi } from './memoria.js'
 import SchedaDomanda from './SchedaDomanda.vue'
-import Mattonelle from './Mattonelle.vue'
+import Aree from './Aree.vue'
 import Radar from './Radar.vue'
 import Settimana from './Settimana.vue'
 import MappaTabelline from '../components/MappaTabelline.vue'
@@ -79,7 +79,11 @@ function spegni(r) { accendiSapere(r.tipo, false); giro.value++ }
 function riaccendi(x) { accendiSapere(x.tipo, true); giro.value++ }
 
 // il quadro a colpo d'occhio: un asse per materia, e una frase che dice come va (comeva.js: giudizioDi)
-const assi = computed(() => mattonelle.value.viste.map(m => ({ id: m.id, emoji: m.emoji, nome: m.nome, pct: m.pct, prima: m.freccia ? m.prima : null })))
+const aree = computed(() => areeDi(mattonelle.value))
+const areaAperta = ref(null)      // l'area di cui si vedono le materie
+// sempre tutte e cinque, anche quelle mai giocate (a zero, col trattino): il pentagono ha la stessa forma per tutti
+const assi = computed(() => aree.value
+  .map(a => ({ id: a.id, emoji: a.emoji, nome: a.nome, pct: a.pct ?? 0, vuota: a.pct == null, prima: a.freccia ? a.prima : null })))
 const giudizio = computed(() => giudizioDi({
   viste: elenco.value.viste, difficili: settimana.value.difficili, migliorate: settimana.value.migliorate.length,
 }))
@@ -152,12 +156,12 @@ function vaBene(r) {
         <p class="giudizio" :class="giudizio.tono" data-giudizio :data-tono="giudizio.tono">
           <b>{{ giudizio.titolo }}</b><span>{{ giudizio.testo }}</span>
         </p>
-        <Radar :assi="assi" @apri="entra" />
+        <Radar :assi="assi" @apri="id => (areaAperta = id)" />
         <p v-if="assi.some(a => a.prima != null)" class="legenda"><i class="adesso"></i> adesso <i class="prima"></i> due settimane fa</p>
       </section>
 
-      <h3 class="sotto">Per materia</h3>
-      <Mattonelle :viste="mattonelle.viste" :non-ancora="mattonelle.nonAncora" @apri="entra" />
+      <h3 class="sotto">Per area: tocca per entrare</h3>
+      <Aree :aree="aree" :aperta="areaAperta" @area="id => (areaAperta = id)" @apri="entra" />
 
       <Settimana :chi="chi" :settimana="settimana" :eta="eta" :alleggerite="alleggerite"
                  @prova="provaRiga" @rimanda="rimanda" @va-bene="vaBene"

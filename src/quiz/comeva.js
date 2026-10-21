@@ -176,3 +176,37 @@ export function giudizioDi({ viste = [], difficili = [], migliorate = 0 } = {}) 
   return { tono: 'tante', titolo: 'Fa fatica con parecchie domande',
            testo: `${nd} su ${valutate.length} vanno male: forse i giochi sono tarati troppo avanti. Prova ad abbassare l'età a mano (Bambino › Tara a mano).` }
 }
+
+/* ── Le aree ──
+   Le materie sono una dozzina (quelle dei quiz, quelle dell'albo, quelle dei giochi): troppe per un colpo d'occhio. Si raggruppano in poche
+   aree fisse — sempre le stesse, così il disegno ha la stessa forma per tutti i bambini e si confronta nel tempo — e dall'area si scende alle
+   materie e da lì alle domande (docs/genitori/come-va.md). Una materia che qui non c'è finisce in «Logica e scienze». */
+export const AREE = [
+  { id: 'numeri', nome: 'Numeri', emoji: '🔢', materie: ['matematica', 'mate', 'mente', 'torri', 'soldi', 'pozioni'] },
+  { id: 'italiano', nome: 'Italiano', emoji: '📖', materie: ['italiano'] },
+  { id: 'lingue', nome: 'Lingue', emoji: '🌍', materie: ['inglese', 'spagnolo'] },
+  { id: 'spazio', nome: 'Spazio e tempo', emoji: '📐', materie: ['spazio', 'tempo'] },
+  { id: 'logica', nome: 'Logica e scienze', emoji: '🧩', materie: ['logica', 'ordini', 'scienze'] },
+]
+export const areaDi = id => (AREE.find(a => a.materie.includes(id)) || AREE[AREE.length - 1]).id
+
+export const DIFFERENZA = 15   // punti fra la materia migliore e la peggiore di un'area, sotto i quali non si dice «va meglio/peggio»
+const media = v => (v.length ? Math.round(v.reduce((n, x) => n + x, 0) / v.length) : null)
+
+/* viste / nonAncora: le mattonelle di `mattonelleDi`. Sempre tutte le aree, nell'ordine di AREE; pct è null se nessuna materia è stata giocata. */
+export function areeDi({ viste = [], nonAncora = [] } = {}) {
+  return AREE.map(a => {
+    const mie = viste.filter(m => areaDi(m.id) === a.id)
+    const mai = nonAncora.filter(m => areaDi(m.id) === a.id)
+    const pct = media(mie.map(m => m.pct))
+    const prima = media(mie.filter(m => m.prima != null).map(m => m.prima))
+    const alte = Math.max(...mie.map(m => m.pct)), basse = Math.min(...mie.map(m => m.pct))
+    const confronto = mie.length >= 2 && alte - basse >= DIFFERENZA
+    return {
+      id: a.id, nome: a.nome, emoji: a.emoji, pct, prima,
+      freccia: frecciaDa(pct, prima),
+      materie: mie.map(m => ({ ...m, meglio: confronto && m.pct === alte, peggio: confronto && m.pct === basse })),
+      nonAncora: mai,
+    }
+  })
+}

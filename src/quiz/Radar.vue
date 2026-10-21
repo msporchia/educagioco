@@ -4,11 +4,11 @@
 import { computed } from 'vue'
 
 const props = defineProps({
-  assi: { type: Array, default: () => [] }, // { id, emoji, nome, pct, prima }
+  assi: { type: Array, default: () => [] }, // { id, emoji, nome, pct, vuota, prima }
 })
 defineEmits(['apri'])
 
-const W = 360, H = 290, CX = 180, CY = 145, R = 78
+const W = 380, H = 290, CX = 190, CY = 145, R = 76
 const n = computed(() => props.assi.length)
 const punto = (i, v) => {
   const a = -Math.PI / 2 + (2 * Math.PI * i) / n.value
@@ -22,8 +22,8 @@ const etichetta = i => {
   const [x, y] = punto(i, 1.14)
   return { x, y, ancora: x < CX - 8 ? 'end' : x > CX + 8 ? 'start' : 'middle' }
 }
-const corto = t => (t.length > 13 ? t.slice(0, 12) + '…' : t)
-const lettura = computed(() => props.assi.map(a => `${a.nome} ${a.pct}%`).join(', '))
+const corto = t => (t.length > 17 ? t.slice(0, 16) + '…' : t)
+const lettura = computed(() => props.assi.map(a => `${a.nome} ${a.vuota ? 'non ancora giocata' : a.pct + '%'}`).join(', '))
 </script>
 
 <template>
@@ -36,7 +36,7 @@ const lettura = computed(() => props.assi.map(a => `${a.nome} ${a.pct}%`).join('
     <g v-for="(a, i) in assi" :key="'t' + a.id" class="etichetta" :data-radar-asse="a.id" role="button" tabindex="0"
        @click="$emit('apri', a.id)" @keydown.enter="$emit('apri', a.id)">
       <text :x="etichetta(i).x" :y="etichetta(i).y - 3" :text-anchor="etichetta(i).ancora" class="nome">{{ a.emoji }} {{ corto(a.nome) }}</text>
-      <text :x="etichetta(i).x" :y="etichetta(i).y + 11" :text-anchor="etichetta(i).ancora" class="pct">{{ a.pct }}%</text>
+      <text :x="etichetta(i).x" :y="etichetta(i).y + 11" :text-anchor="etichetta(i).ancora" class="pct">{{ a.vuota ? '–' : a.pct + '%' }}</text>
     </g>
   </svg>
 </template>
