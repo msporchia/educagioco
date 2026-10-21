@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mostri dei prati 3D — prova</title>
+<style>
+  :root { --fondo: #14161b; --carta: #1b1e25; --riga: #2c313a; --testo: #e2e5e0; --tenue: #98a09c; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 14px; background: var(--fondo); color: var(--testo); font: 13px/1.4 system-ui, sans-serif; }
+  h1 { font-size: 16px; margin: 0 0 4px; }
+  h2 { font-size: 14px; margin: 18px 0 6px; }
+  p { margin: 0 0 12px; color: var(--tenue); max-width: 100ch; }
+  #griglia { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 10px; }
+  figure { margin: 0; background: var(--carta); border: 1px solid var(--riga); border-radius: 4px; padding: 6px; }
+  canvas { width: 100%; height: auto; display: block; border-radius: 3px; }
+  figcaption { font-size: 11px; color: var(--tenue); margin-top: 4px; }
+  figcaption b { color: var(--testo); font-weight: 600; }
+  #confronto canvas { width: 100%; }
+  .riga { grid-column: 1 / -1; display: flex; align-items: center; gap: 6px; margin-bottom: 6px; background: var(--carta); border: 1px solid var(--riga); border-radius: 4px; padding: 4px; }
+  .riga .et { width: 150px; flex: none; font-size: 11px; color: var(--tenue); }
+  .riga .et b { display: block; color: var(--testo); font-size: 12px; }
+  .riga canvas { width: 250px; flex: none; }
+</style>
+</head>
+<body>
+<h1>Mostri dei prati in 3D — prova</h1>
+<p>Zona «I prati del cimitero» (livelli 1–3): cimitero, campi, mulino, frutteto, altare e cantine. <code>?mostro=chiave</code> (uno grande), <code>?t=2</code>, <code>?pausa</code>, <code>?ang=0.6</code>, <code>?zoom=1.5</code>, <code>?alt=0.8</code>, <code>?lato=720</code>, <code>?attacca=0.5</code>, <code>?senzaconfronto</code>. Idle: <code>?idle</code> (tutti in loop, senza attacchi), <code>?striscia=idle</code> (6 istanti da t0 a t0+2 s; <code>?t0=</code>, <code>?fase=</code> fissa la fase di tutti). Attacchi: <code>?attacco</code> (in loop: riposo e attacco ogni ~2 s), <code>?striscia=attacco</code> (cinque fotogrammi per mostro, p = 0, .25, .5, .75, 1).</p>
+<div id="griglia"></div>
+<h2 id="tconf">A confronto di scala</h2>
+<div id="confronto"></div>
+<script type="module">
+import { WebGLRenderer, Scene, PerspectiveCamera, HemisphereLight, DirectionalLight, Box3, Vector3, Color, CircleGeometry, MeshStandardMaterial, Mesh, ACESFilmicToneMapping, PCFSoftShadowMap, SRGBColorSpace, Fog, Group } from 'three'
+import { MOSTRI_PRATI } from './mostri-3d/prati.js'
+import { creaEroe } from './eroi-3d/eroi.js'
+
+const url = new URLSearchParams(location.search)
+const solo = url.get('mostro') || '', tempo = Number(url.get('t') || 1.2), LATO = Number(url.get('lato') || (solo ? 720 : 440))
+const ang = Number(url.get('ang') ?? (url.get('striscia') ? 1.2 : 0.55)), pausa = url.has('pausa'), att = url.has('attacca') ? Number(url.get('attacca')) : null
+const loopAtt = url.has('attacco'), modoStr = url.get('striscia'), striscia = modoStr === 'attacco' || modoStr === 'idle', stIdle = modoStr === 'idle'
+const errori = []
+const vecchio = console.error
+console.error = (...a) => { errori.push(a.map(String).join(' ').slice(0, 300)); vecchio.apply(console, a) }
+window.addEventListener('error', e => errori.push(String(e.message)))
+window.__prova = { ok: false, errori, triangoli: {} }
+
+const renderer = new WebGLRenderer({ antialias: true, preserveDrawingBuffer: true })
+renderer.setPixelRatio(1)
+renderer.toneMapping = ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05; renderer.outputColorSpace = SRGBColorSpace
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = PCFSoftShadowMap
+
+function palco (raggio = 3) {
+  const scena = new Scene(); scena.background = new Color(0x3a4350); scena.fog = new Fog(0x3a4350, 12, 40)
+  scena.add(new HemisphereLight(0xcfe4ff, 0x6a5a3a, 1.35))
+  const sole = new DirectionalLight(0xfff1dc, 2.6); sole.position.set(3.5, 6, 4.5); sole.castShadow = true
+  sole.shadow.mapSize.set(2048, 2048); Object.assign(sole.shadow.camera, { left: -raggio, right: raggio, top: raggio, bottom: -raggio, near: 0.5, far: 24 }); sole.shadow.bias = -0.0006; sole.shadow.radius = 4
+  scena.add(sole)
+  const controluce = new DirectionalLight(0x8fb4ff, 1.3); controluce.position.set(-4, 3, -4); scena.add(controluce)
+  const suolo = new Mesh(new CircleGeometry(60, 40), new MeshStandardMaterial({ color: 0x3f4a3c, roughness: 1 })); suolo.rotation.x = -Math.PI / 2; suolo.receiveShadow = true; scena.add(suolo)
+  return scena
+}
+const conta = o => { let t = 0; o.traverse(x => { let v = x, vis = true; while (v) { if (!v.visible) vis = false; v = v.parent }
+  if (x.isMesh && vis) { const g = x.geometry; t += (g.index ? g.index.count : g.attributes.position.count) / 3 } }); return Math.round(t) }
+const anima = (o, t) => {
+  o.userData.anima?.(t)
+  if (att !== null) { o.userData.attacca?.(att); return }
+  const a = o.userData.attacco
+  if (loopAtt && a) { const tc = t % 2.2; if (tc < a.durata) o.userData.attacca(tc / a.durata) }
+}
+
+const griglia = document.getElementById('griglia'), viste = []
+const lista = MOSTRI_PRATI.filter(m => !solo || m.chiave === solo)
+for (const m of striscia ? [] : lista) {
+  try {
+    const fig = document.createElement('figure'), tela = document.createElement('canvas'), cap = document.createElement('figcaption')
+    tela.width = tela.height = LATO; fig.append(tela, cap); griglia.append(fig)
+    const scena = palco(), o = m.crea(), cornice = new Group(); cornice.add(o); scena.add(cornice); cornice.rotation.y = ang; anima(o, tempo)
+    const sc = new Box3().setFromObject(o), c = sc.getCenter(new Vector3()), d = sc.getSize(new Vector3())
+    const cam = new PerspectiveCamera(30, 1, 0.1, 100), r = d.length() * 0.5 / Math.tan(15 * Math.PI / 180) * 0.9
+    const zm = Number(url.get('zoom') || 1), yb = url.has('alt') ? sc.min.y + d.y * Number(url.get('alt')) : c.y - d.y * 0.02
+    cam.position.set(c.x + r * 0.15 / zm, yb + d.y * 0.25 / zm + r * 0.1, c.z + r / zm); cam.lookAt(c.x, yb, c.z)
+    renderer.setSize(LATO, LATO, false)
+    const disegna = t => { renderer.setSize(LATO, LATO, false); anima(o, t); renderer.render(scena, cam); const ctx = tela.getContext('2d'); ctx.clearRect(0, 0, LATO, LATO); ctx.drawImage(renderer.domElement, 0, 0) }
+    disegna(tempo)
+    const tris = conta(o); window.__prova.triangoli[m.chiave] = tris
+    cap.innerHTML = `<b>${m.nome}</b> — ${tris} tri · taglia ${m.taglia} · forza ${m.forza} · ${m.luogo} · h ${d.y.toFixed(2)}`
+    viste.push(disegna)
+  } catch (e) { errori.push(`${m.chiave}: ${e.stack || e}`.slice(0, 400)) }
+}
+
+// la fila a confronto: un eroe e i mostri principali, ognuno alla sua altezza vera
+if (striscia) {
+  document.getElementById('tconf').remove(); document.querySelector('h1').style.display = document.querySelector('p').style.display = 'none'
+  const PS = stIdle ? [0, 0.4, 0.8, 1.2, 1.6, 2.0].map(x => x + Number(url.get('t0') || 0)) : [0, 0.25, 0.5, 0.75, 1], N = Number(url.get('lato') || 250)
+  for (const m of lista) {
+    try {
+      const riga = document.createElement('div'); riga.className = 'riga'
+      const et = document.createElement('div'); et.className = 'et'; riga.append(et); griglia.append(riga)
+      const scena = palco(), o = m.crea(), cornice = new Group(); cornice.add(o); scena.add(cornice); cornice.rotation.y = ang
+      const box = new Box3()
+      if (url.has('fase')) o.userData.fase = Number(url.get('fase'))
+      for (const p of PS) { stIdle ? o.userData.anima?.(p) : (o.userData.anima?.(tempo), o.userData.attacca?.(p)); o.updateMatrixWorld(true); box.union(new Box3().setFromObject(cornice)) }
+      const c = box.getCenter(new Vector3()), d = box.getSize(new Vector3())
+      const cam = new PerspectiveCamera(30, 1, 0.1, 100), r = d.length() * 0.5 / Math.tan(15 * Math.PI / 180) * 0.95
+      cam.position.set(c.x + r * 0.15, c.y + d.y * 0.1 + r * 0.1, c.z + r); cam.lookAt(c.x, c.y, c.z)
+      renderer.setSize(N, N, false)
+      for (const p of PS) {
+        const tela = document.createElement('canvas'); tela.width = tela.height = N; riga.append(tela)
+        stIdle ? o.userData.anima?.(p) : (o.userData.anima?.(tempo), o.userData.attacca?.(p)); renderer.render(scena, cam)
+        tela.getContext('2d').drawImage(renderer.domElement, 0, 0)
+      }
+      const a = o.userData.attacco
+      et.innerHTML = `<b>${m.nome}</b>${stIdle ? `fase ${(o.userData.fase ?? 0).toFixed(2)}` : a ? `${a.tipo} · ${a.durata} s · arrivo ${a.arrivo}${a.proiettile ? ' · ' + a.proiettile.tipo : ''}` : 'SENZA attacco'}`
+      window.__prova.triangoli[m.chiave] = conta(o)
+    } catch (e) { errori.push(`striscia ${m.chiave}: ${e.stack || e}`.slice(0, 400)) }
+  }
+}
+if (!solo && !striscia && !url.has('senzaconfronto')) {
+  const W = 1500, H = 380, tela = document.createElement('canvas'); tela.width = W; tela.height = H; document.getElementById('confronto').append(tela)
+  const scena = palco(12)
+  const fila = [['cavaliere', () => creaEroe('cavaliere')], ['ratto', 'ratto'], ['goblin', 'goblin'], ['zombie', 'zombie'], ['scheletro-arciere', 'scheletro-arciere'], ['scheletro-scudo', 'scheletro-scudo'], ['cinghiale-caporale', 'cinghiale-caporale'], ['orco', 'orco'], ['spaventapasseri', 'spaventapasseri']]
+  let x = 0
+  const oggetti = []
+  for (const [k, f] of fila) {
+    try {
+      const o = typeof f === 'function' ? f() : MOSTRI_PRATI.find(m => m.chiave === f).crea()
+      scena.add(o); o.userData.anima?.(tempo); o.rotation.y = 0.25
+      const b = new Box3().setFromObject(o), w = Math.max(b.max.x - b.min.x, b.max.z - b.min.z, 0.4)
+      o.position.x = x + w / 2 - (b.min.x + b.max.x) / 2 + (o.position.x - 0); x += w + 0.35; oggetti.push(o)
+    } catch (e) { errori.push(`confronto ${k}: ${e.stack || e}`.slice(0, 400)) }
+  }
+  const cam = new PerspectiveCamera(22, W / H, 0.1, 100), cx = x / 2
+  const dist = Math.max(x / 2 / Math.tan(11 * Math.PI / 180 * (W / H)) , 8) * 1.25
+  cam.position.set(cx, 1.7, dist); cam.lookAt(cx, 0.75, 0)
+  const sole = scena.children.find(c => c.isDirectionalLight && c.castShadow); sole.position.set(cx + 3, 6, 5); sole.target.position.set(cx, 0, 0); scena.add(sole.target)
+  sole.shadow.camera.left = -x / 2 - 2; sole.shadow.camera.right = x / 2 + 2
+  renderer.setSize(W, H, false)
+  const disegna = t => { renderer.setSize(W, H, false); oggetti.forEach(o => o.userData.anima?.(t)); renderer.render(scena, cam); const ctx = tela.getContext('2d'); ctx.clearRect(0, 0, W, H); ctx.drawImage(renderer.domElement, 0, 0) }
+  disegna(tempo); viste.push(disegna)
+}
+if (!pausa && !striscia) { const t0 = performance.now(); const giro = () => { const t = tempo + (performance.now() - t0) / 1000; for (const v of viste) { v(t) } requestAnimationFrame(giro) }; giro() }
+window.__prova.ok = errori.length === 0
+</script>
+</body>
+</html>
