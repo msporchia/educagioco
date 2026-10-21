@@ -195,9 +195,9 @@ export const VILLAGGIO = {
   strada: [[16.6, 13.2], [18.8, 14.4], [21, 15], [24.5, 15]],
   lotti: [
     { tipo: 'mercante', chiave: 'incantatrice', x: 4, y: 9, w: 3, h: 3, giro: 0.8, piede: { x: 7, y: 12 }, accanto: { x: 8, y: 13 } },
-    { tipo: 'mercante', chiave: 'erborista', x: 6, y: 6, w: 3, h: 2, giro: 0.4, piede: { x: 7, y: 6 }, accanto: { x: 8, y: 9 } },
+    { tipo: 'mercante', chiave: 'erborista', x: 6, y: 6, w: 3, h: 2, giro: 0.4, piede: { x: 7, y: 8 }, accanto: { x: 8, y: 9 } },
     { tipo: 'minatore', chiave: 'minatore', x: 9, y: 2, w: 3, h: 2, piede: { x: 12, y: 4 }, accanto: { x: 12, y: 6 } },
-    { tipo: 'mercante', chiave: 'rigattiere', x: 14, y: 5, w: 3, h: 2, giro: -0.25, piede: { x: 15, y: 5 }, accanto: { x: 15, y: 8 } },
+    { tipo: 'mercante', chiave: 'rigattiere', x: 14, y: 5, w: 3, h: 2, giro: -0.25, piede: { x: 15, y: 7 }, accanto: { x: 15, y: 8 } },
     { tipo: 'persona', chiave: 'capitano', x: 17, y: 6, w: 1, h: 1, piede: { x: 17, y: 6 }, accanto: { x: 16, y: 8 } },
     { tipo: 'mercante', chiave: 'armaiolo', x: 18, y: 7, w: 4, h: 3, giro: -0.35, piede: { x: 18, y: 10 }, accanto: { x: 17, y: 11 } },
     { tipo: 'pozzo', chiave: 'pozzo', x: 11, y: 9, w: 2, h: 2, piede: { x: 11, y: 9 }, accanto: { x: 11, y: 12 } },
