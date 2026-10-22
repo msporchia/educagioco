@@ -49,6 +49,7 @@ alle undici di sera.
 Il contenuto è dato puro in `novita.js`; `posta.js` tiene solo la memoria di
 cosa si è letto, fuori dai profili.
 
+- **Gli avvisi sulle domande che vanno male** hanno `tipo: 'difficolta'` e `silenzia: true` (la carta mostra «Non avvertirmi più»); la home, per loro, scrive al bambino «ho qualcosa da dire al papà e alla mamma» al posto di «c'è un messaggio per te». Quando e perché: [../apprendimento/la-domanda.md](../apprendimento/la-domanda.md#quando-si-avvisa-un-grande-2110).
 - **Una nota si scrive solo se il genitore potrebbe voler fare qualcosa**:
   se non finisce con un tasto che porta da qualche parte, o non riguarda i
   salvataggi, non è una nota. Uno sprite nuovo non lo è.

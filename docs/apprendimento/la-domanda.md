@@ -115,6 +115,17 @@ far risultare «ci mette venti minuti» per sempre.
 - **Solo il muro, mai il pedaggio**: «le indovina quasi tutte» non è un
   problema da sistemare.
 
+### Quando si avvisa un grande (21/10)
+
+Il gioco da solo non basta a tutto, e il proprietario ha voluto **tornare a un avviso**, ma tarato perché non stressi come la prima volta
+(`quiz/allarme.js`, puro, `unita/allarme`; `store/difficolta.js` lo guarda all'avvio e cambiando bambino, dopo quattro secondi). Si avvisa solo se:
+una domanda **del suo livello** (mai quelle «un passo avanti») ha già avuto la settimana di aiuto del gioco e da allora, con almeno dodici risposte,
+va ancora male (`persiste`); oppure sono **parecchie insieme** (il giudizio «Fa fatica con parecchie domande» di «Come va»). **Un messaggio solo,
+una volta ogni due settimane (`PAUSA`) per bambino**, con i numeri e mai un giudizio sul bambino. In home il bambino legge soltanto «ho qualcosa da dire
+al papà e alla mamma» (`[data-posta-difficolta]`), mai il contenuto. Il grande trova **«Non avvertirmi più»** sul messaggio, e l'interruttore
+«Avvisi sulle domande che vanno male» in Impostazioni › Avanzate per riaccenderlo (`store/posta.js`: `avvisiDifficolta`, fuori dai profili).
+Nei test: `unita/allarme`, `integrazione/avviso-difficolta`.
+
 Nei test: `unita/alleggerire`, `unita/tiro-a-caso` (la soglia),
 `integrazione/domanda` (`[data-come-prima]`).
 

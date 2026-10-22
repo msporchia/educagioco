@@ -12,7 +12,7 @@ import { state, esportaTutto, resetPlayer, nomeCorrente,
          aspettoDi, scegliAspetto } from '../store/profile.js'
 import { azzeraCampagna, haGiocato } from '../giochi/campagne.js'
 import { leggiCestino } from '../store/cestino.js'
-import { laPosta, segnaLetta, avvisa } from '../store/posta.js'
+import { laPosta, segnaLetta, avvisa, avvisiDifficolta, accendiAvvisiDifficolta } from '../store/posta.js'
 import { inGrassetto } from '../guide/aiuto.js'
 import SceltaAspetto from '../components/SceltaAspetto.vue'
 import { leggiPin, scriviPin, azzeraPin, PIN_INIZIALE, DOMANDA, rispostaGiusta, cosaDopoIlCodice,
@@ -74,6 +74,11 @@ const rimettendo = ref(null)     // la voce in attesa di conferma
 const posta = ref({ note: [], avvisi: [] })
 const cePosta = computed(() => posta.value.note.length + posta.value.avvisi.length > 0)
 
+// «Non avvertirmi più» sulle domande che vanno male: si riaccende da Impostazioni › Avanzate
+async function nonAvvertire() {
+  await accendiAvvisiDifficolta(false)
+  posta.value = await laPosta()
+}
 async function hoLetto() {
   await segnaLetta()
   posta.value = await laPosta()
@@ -597,6 +602,7 @@ async function rimetti(v) {
           <small>{{ quando(a.quando) }}</small>
           <button v-if="a.azione" class="bottone chiaro" data-azione="posta-vai"
                   @click="scheda = a.azione.scheda">{{ a.azione.testo }}</button>
+          <button v-if="a.silenzia" class="bottone chiaro" data-azione="non-avvertire" @click="nonAvvertire">Non avvertirmi più</button>
         </div>
 
         <div v-for="n in posta.note" :key="n.id" class="nota">
@@ -933,6 +939,16 @@ async function rimetti(v) {
 
       
         <!-- il quaderno dei giudizi: vedi docs/genitori/come-va.md -->
+        <button class="carta interruttore" :class="{ spento: !avvisiDifficolta }"
+                data-flag="avvisi-difficolta" @click="accendiAvvisiDifficolta(!avvisiDifficolta)">
+          <span class="ico">💬</span>
+          <b>Avvisi sulle domande che vanno male</b>
+          <i>{{ avvisiDifficolta
+                ? 'Acceso: se una domanda va male anche dopo l\'aiuto del gioco, o sono parecchie insieme, trovi un messaggio qui (al massimo uno ogni due settimane)'
+                : 'Spento: nessun messaggio, la situazione si guarda da «Come va»' }}</i>
+          <span class="leva"><span class="pallina"></span></span>
+        </button>
+
         <p class="mini">Acceso, sopra ogni domanda compaiono tre tastini per dire com'era: 😴 troppo facile, 😰 troppo difficile,
           🐛 storta. Serve a correggere le tarature sbagliate, ed esce di qui col modulo di segnalazione.</p>
         <button class="carta interruttore" :class="{ spento: !giudiziAccesi }"

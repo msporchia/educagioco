@@ -4,7 +4,7 @@ import { state, level, countMastered, nomeCorrente, livelloOra,
          mateProgresso, mercatoProgresso,
          tabellineIntere, genProgresso,
          quantiGiochiAccesi } from '../store/profile.js'
-import { daLeggere } from '../store/posta.js'
+import { daLeggere, difficoltaDaDire } from '../store/posta.js'
 import { SCALETTA, posizioneOra, filaDi } from '../data/asteroidi.js'
 import { CAMPAGNE as GIORNATE } from '../data/bancarella.js'
 // conta le prove CHE SI VEDONO, non tutte: le non approvate sono dietro il cancello dei giochi in prova
@@ -231,7 +231,8 @@ function riprendi (k) { chiediRipresa(k); emit('vai', k) }
              (`store/posta.js`). -->
         <span v-if="daLeggere" class="pallino-posta" data-posta-pallino></span>
         <b>⚙︎ Impostazioni</b>
-        <i v-if="daLeggere">c'è un messaggio per te, e le solite cose da grandi</i>
+        <i v-if="difficoltaDaDire" data-posta-difficolta>ho qualcosa da dire al papà e alla mamma</i>
+        <i v-else-if="daLeggere">c'è un messaggio per te, e le solite cose da grandi</i>
         <i v-else>giochi visibili, difficoltà delle domande, chi gioca, salvataggio</i>
       </button>
       <!-- ══ le guide ══
