@@ -514,11 +514,17 @@ function cheatDellIndirizzo() {
 onMounted(async () => {
   if (!puo.value) return
   motore = new Fattoria3d({ stato: statoDaCaricare(scelta), borsa })
+  // `&stress=campo:10,edifici:15` (le prove di stress, che non si salvano) e `&degrado=no` (qualità ferma): per le misure, docs/fattoria3d/limiti.md
+  const frammento = location.hash || ''
+  const stress = ((/(?:^#?|&)stress=([\w:,]+)/.exec(frammento) || [])[1] || '').split(',').map(x => x.split(':')).filter(([t, n]) => t && Number(n) > 0)
+  const degradoFermo = /(?:^#?|&)degrado=no(?:&|$)/.test(frammento)
   cheatDellIndirizzo()
   try { const c = await load(CHIAVE_OPZIONI); if (c && c.q && c.v === VERSIONE_OPZIONI) Object.assign(q, c.q) } catch (e) { /* le opzioni di serie */ }
   const { Mondo3d } = await import('./scena3d/mondo3d.js')          // three si scarica solo qui
   if (!vivo) return
   mondo = new Mondo3d({ canvas: tela.value, sopra: sopra.value, motore, ui, qualita: q, abito: abito.value, stagione: stagione.value })
+  mondo.degradoFermo = degradoFermo
+  for (const [t, n] of stress) mondo.stress(t, Number(n))
   mondo.avvia()
   guidaAttiva.value = !saltaLeSpiegazioni() && !(scelta(CHIAVE, 'guida', null) || {}).finita && servePrimoGiro(motore.s)
   visite.avvia(scelta(CHIAVE, 'vicini', null))

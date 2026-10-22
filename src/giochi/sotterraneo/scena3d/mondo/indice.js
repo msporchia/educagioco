@@ -416,7 +416,7 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = [], fon
                msJs: Math.round(ms.msJs * 100) / 100, msDisegno: Math.round(ms.msDisegno * 100) / 100,
                figure: persone ? persone.figure.quante + persone.figureEroe.quante : 0, pezzi: [...costruiti.keys()].sort((a, b) => a - b),
                msPezzi: Math.round(Math.max(0, ...[...costruiti.values()].map(f => f.ms))), veduta: cam.veduta, scenario: 'mondo',
-               palco: !!(palco && palco.attivo), mostri: S.mostri.length, scia: scia.quante, persone3d: persone ? persone.persone3d : null,
+               palco: !!(palco && palco.attivo), mostri: S.mostri.length, mostri3d: persone ? persone.mostri3d : 0, scia: scia.quante, persone3d: persone ? persone.persone3d : null,
                // le zone: dove si è, quelle caricate, e quanto ci hanno messo le ultime a caricarsi (ms, una per fotogramma)
                zona: zonaQui, zone: m.zonaCaricata.map((c, k) => (c ? k : -1)).filter(k => k >= 0), msZone: misureZone.slice() }
     },

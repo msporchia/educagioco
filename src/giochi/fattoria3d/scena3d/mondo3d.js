@@ -349,6 +349,7 @@ export class Mondo3d {
   }
   /** Il degrado adattivo (dati/degrado.js): una lettura di fps ogni mezzo secondo. Cambia il pixel ratio e la cadenza dell'ombra, mai le scelte salvate. */
   _degrada(t, fps) {
+    if (this.degradoFermo) return          // `&degrado=no`: le misure a qualità ferma (docs/fattoria3d/limiti.md)
     const attivo = typeof document === 'undefined' || document.visibilityState !== 'hidden'
     const r = passoDegrado(this.deg, { t, fps, attivo })
     this.deg = r.stato
@@ -409,6 +410,20 @@ export class Mondo3d {
     this.fx.q = q; this.pezzi.q = q
   }
   adattaSenzaRect() { if (this.rect) this.renderer.setSize(Math.max(1, Math.round(this.rect.width)), Math.max(1, Math.round(this.rect.height)), false) }
+  /** Il banco: `n` disegni della scena così com'è, ognuno aspettato (una lettura di un pixel), l'ombra rifatta a disegni alterni come a
+      camera ferma; ms senza i 60 Hz (strumenti/vecchio-telefono.mjs `--banco`, docs/fattoria3d/limiti.md). */
+  banco(n = 20) {
+    const gl = this.renderer.getContext(), px = new Uint8Array(4), w = []
+    for (let i = 0; i < n + 2; i++) {
+      const t0 = performance.now()
+      this.renderer.shadowMap.needsUpdate = this.q.ombre && i % 2 === 0
+      this.renderer.render(this.scena, this.camera.cam)
+      gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px)
+      if (i >= 2) w.push(performance.now() - t0)
+    }
+    w.sort((x, y) => x - y)
+    return { ms: Math.round(w[n >> 1] * 10) / 10, p90: Math.round(w[Math.floor(n * 0.9)] * 10) / 10 }
+  }
   stress(tipo, n) { if (tipo) this.m.aggiungiProve(tipo, n); else this.m.togliProve(); this.pezzi.sincronizza() }
 
   // ── costruire: il menu «Costruisci qui» (viste/CostruisciQui.vue) e il fantasma che resta se la cella non basta ──

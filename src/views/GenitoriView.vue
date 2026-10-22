@@ -984,7 +984,7 @@ async function rimetti(v) {
         <button class="carta interruttore" data-azione="benchmark" @click="misuraAperta = true">
           <span class="ico">⏱️</span>
           <b>Misura questo telefono</b>
-          <i>Un minuto di scene di prova a qualità diverse, e un resoconto da mandare: dice cosa lo fa andare a scatti</i>
+          <i>Un minuto di scene di prova, o qualche minuto coi modelli veri dei giochi, e un resoconto da mandare: dice cosa lo fa andare a scatti</i>
         </button>
         </div>
       <Benchmark v-if="misuraAperta" :modulo="SEGNALA_GIUDIZI" @chiudi="misuraAperta = false" />

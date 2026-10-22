@@ -149,6 +149,9 @@ e ogni argomento ha la sua cartella in [`docs/`](docs/README.md).
 [un modulo](https://tally.so/r/D4OO1q) già compilato con la versione e
 l'ultimo errore, oppure si
 [apre una segnalazione](https://github.com/msporchia/educagioco/issues/new/choose).
+Se un gioco 3D va a scatti, *Impostazioni → Avanzate → Misura questo telefono*
+fa girare scene di prova, o i modelli veri dei giochi, e manda il resoconto
+dallo stesso modulo ([`docs/core/vecchio-telefono-veri.md`](docs/core/vecchio-telefono-veri.md)).
 Per il resto sto su [LinkedIn](https://www.linkedin.com/in/marcosporchia).
 
 **Crediti.** Le emoji che si vedono nel gioco sono [Twemoji](https://github.com/twitter/twemoji)

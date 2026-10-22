@@ -895,8 +895,10 @@ export class Fattoria3d {
   }
 
   // ── le prove di stress: tante cose in più, che non si salvano ──
+  // `edifici`: gli edifici a giro, anche più di uno per tipo (solo per misurare il peso: docs/fattoria3d/limiti.md)
   aggiungiProve(tipo, n) {
-    const d = PEZZI[tipo]
+    if (tipo === 'edifici') { let f = 0; const tipi = Object.keys(EDIFICI); for (let k = 0; k < n; k++) f += this.aggiungiProve(tipi[k % tipi.length], 1); return f }
+    const d = PEZZI[tipo] || EDIFICI[tipo]
     if (!d) return 0
     const posti = []
     for (let i = LIM.i0 + 1; i + d.w < LIM.i1; i += d.w + 1) for (let j = LIM.j0 + 1; j + d.d < LIM.j1; j += d.d + 1) posti.push([i, j])
@@ -905,7 +907,8 @@ export class Fattoria3d {
     for (const [i, j] of posti) {
       if (fatti >= n) break
       let ok = true
-      for (let a = -1; a <= d.w && ok; a++) for (let b = -1; b <= d.d && ok; b++) if (this.blocca(i + a, j + b)) ok = false
+      // anche sul terreno non comprato e sopra gli alberi: le prove misurano il peso, non giocano (con poche celle tue non ci starebbe niente)
+      for (let a = -1; a <= d.w && ok; a++) for (let b = -1; b <= d.d && ok; b++) if (this.cellaCosa.get(chiave(i + a, j + b)) || this.acqua(i + a, j + b)) ok = false
       if (!ok) continue
       const c = { id: this.s.prossimoId++, tipo, i, j, prova: true }
       if (tipo === 'campo') {

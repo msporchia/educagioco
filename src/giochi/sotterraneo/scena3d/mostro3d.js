@@ -8,6 +8,7 @@ import { idDi, costruisci, ALTEZZA } from './mostri3d/registro.js'
 import { verso } from './tempo.js'
 import { ferme, salda } from './salda3d.js'
 import { conMosse } from './mostri3d/mosse-anim.js'
+import { ACCESI } from './costanti.js'
 
 export const mostri3dAccesi = () => typeof location === 'undefined' || !/[#&?]sprite\b/.test(location.hash + location.search)
 
@@ -32,7 +33,7 @@ function nuovaIstanza(scena, id) {
   if (!g) return null
   try {
     if (!saldabili.has(id)) saldabili.set(id, ferme(g))
-    salda(g, saldabili.get(id))
+    if (ACCESI.saldatura) salda(g, saldabili.get(id))
     g.userData.anima(0)
   } catch (e) { console.warn(`mostri 3D: ${id} non si salda`, e) }   // resta com'è, solo più caro
   const b = misura(g), s = b.getSize(new Vector3())

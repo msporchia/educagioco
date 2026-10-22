@@ -8,6 +8,9 @@
 //   node strumenti/vecchio-telefono.mjs calibra --log telefono.txt      # il log copiato dal telefono (la riga DATI basta)
 //   node strumenti/vecchio-telefono.mjs benchmark                       # la stessa misura sul computer, con la taratura salvata
 //   node strumenti/vecchio-telefono.mjs benchmark --contro telefono.txt # e il confronto riga per riga col telefono
+//   node strumenti/vecchio-telefono.mjs benchmark --veri [--contro veri.txt] [--solo sot-,tri-]   # la misura coi modelli veri
+//     (docs/core/vecchio-telefono-veri.md); con `--contro` un log coi modelli veri la sceglie da sé (e la sua fascia); `--qualita bassa`
+//     forza la fascia grafica; `--foto f.png` la schermata del resoconto
 //   node strumenti/vecchio-telefono.mjs 'sotterraneo3d=1&dpr=2' --dist  # fotogrammi di un gioco, con la taratura salvata
 //   node strumenti/vecchio-telefono.mjs 'mate3d=3&volo' --tocca 200,500 --secondi 20
 //   node strumenti/vecchio-telefono.mjs 'sotterraneo3d' --cpu 1,3,6 --zavorra 0,4   # una riga per ogni combinazione
@@ -23,6 +26,9 @@
 // principale (il profilatore di Chrome, tempo proprio) e le voci senza JS («(program)»: stili, impaginazione, disegno della pagina);
 // `--traccia 15` le 15 voci della traccia di Chrome (devtools.timeline) che durano di più sul filo principale, in ms a fotogramma
 // (le voci si annidano: «RunTask» contiene le altre), e quelle del filo che compone e disegna la pagina. Il pixel ratio dei giochi si adatta da sé: per vedere il costo vero a una risoluzione, il cheat `&dpr=N`.
+// `--per 'folla=0,8,16'` fa una riga per ogni valore aggiunto all'indirizzo (`&folla=0`, `&folla=8`…: quanti personaggi, quanti edifici);
+// `--banco 20` stampa sotto ogni riga il banco della tela (`banco(20)`: ms senza i 60 Hz) con chiamate, triangoli e JS della scena, per
+// il Sotterraneo 3D (discese e mondo di sopra) e la Fattoria 3D. I limiti misurati così: docs/sotterraneo/limiti-3d.md, docs/fattoria3d/limiti.md.
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -107,21 +113,27 @@ const FASI_SCONTRO = `document.querySelector('[data-racconto]') ? 'racconto' : (
 const mediana = v => v.slice().sort((a, b) => a - b)[Math.floor(v.length / 2)]
 
 // la misura dell'app (zona dei grandi → «Misura questo telefono»): `solo` = gli id da fare, `js` compreso; ritorna { dati, log }
-async function bancoUna(b, cpu, K, solo = null, corto = false) {
+// `veri`: la prova coi modelli veri (gli inizi degli id in `solo`), che dura qualche minuto e sul computer rallentato di più
+// `qualita`: la fascia grafica forzata col cheat `&qualita=` (quella del telefono, se il log la dice)
+async function bancoUna(b, cpu, K, solo = null, corto = false, veri = false, qualita = null) {
   process.env.DIST = resolve(opz('dist', 'dist/index.html'))
   const { apriGioco } = await import('../test/aiuto/browser.mjs')
   const hog = await zavorra(b, K)
-  const { page } = await apriGioco(b, { viewport: SCHERMO, pixel: PIXEL, attesa: null, indirizzo: 'file://' + process.env.DIST, userAgent: UA })
+  const { page } = await apriGioco(b, { viewport: SCHERMO, pixel: PIXEL, attesa: null, indirizzo: 'file://' + process.env.DIST, userAgent: UA, ...(qualita ? { hash: `qualita=${qualita}` } : {}) })
   await page.addInitScript(([so, co]) => { window.__benchmarkSolo = so; window.__benchmarkCorto = co }, [solo, corto])
   await page.reload(); await page.waitForSelector('[data-azione="grandi"]', { timeout: 20000 })
   await page.click('[data-azione="grandi"]'); await page.waitForSelector('.tastierino')
   for (const c of '0000') await page.click(`.tasto >> text="${c}"`)
-  await page.click('.schede button[data-scheda="giochi"]'); await page.waitForSelector('[data-azione="benchmark"]')
+  // la misura sta in Impostazioni, nella tendina «Avanzate» (nasce chiusa)
+  await page.click('[data-scheda="impostazioni"]')
+  await page.evaluate(() => document.querySelectorAll('details.tendina').forEach(d => { d.open = true }))
+  await page.waitForSelector('[data-azione="benchmark"]')
   const s = await page.context().newCDPSession(page)
   if (cpu > 1) await s.send('Emulation.setCPUThrottlingRate', { rate: cpu })
-  await page.click('[data-azione="benchmark"]'); await page.click('[data-azione="benchmark-avvia"]')
-  await page.waitForSelector('[data-benchmark-log]', { timeout: 600000, state: 'attached' })
-  const dati = await page.evaluate(() => window.__benchmarkFluidita), log = await page.inputValue('[data-benchmark-log]')
+  await page.click('[data-azione="benchmark"]'); await page.click(veri ? '[data-azione="benchmark-veri"]' : '[data-azione="benchmark-avvia"]')
+  await page.waitForSelector('[data-benchmark-log]', { timeout: veri ? 3600000 : 600000, state: 'attached' })
+  const dati = await page.evaluate(v => (v ? window.__benchmarkVeri : window.__benchmarkFluidita), veri), log = await page.inputValue('[data-benchmark-log]')
+  if (opz('foto')) { await page.screenshot({ path: resolve(opz('foto')) }); console.log(`la schermata del resoconto: ${opz('foto')}`) }   // `--foto file.png`
   await page.close(); await hog?.close()
   return { dati, log }
 }
@@ -140,9 +152,12 @@ async function calibra() {
   const t = opz('telefono')
   const tel = lg ? { js: lg.js, gpu: msDi(lg, 'pieno-1.5') }
     : t ? Object.fromEntries(t.split(',').map(x => x.split('=')).map(([k, v]) => [k, Number(v)])) : null
-  if (!tel || !tel.js || !tel.gpu) { await b.close(); console.error('serve --log <file> (il log copiato dal telefono) oppure --telefono js=…,gpu=… (gpu = ms della prova «pixel, shader leggero, dpr 1,5»)'); process.exit(1) }
+  // un log coi modelli veri non ha la prova dei pixel: si tara la CPU sul suo `js` e la zavorra resta quella di prima
+  const soloCpu = !!(lg && lg.k === 'veri')
+  if (soloCpu) console.log('log coi modelli veri: si tara la CPU (la prova JS); la GPU si tara col log a scene, qui resta la zavorra salvata')
+  if (!tel || !tel.js || (!tel.gpu && !soloCpu)) { await b.close(); console.error('serve --log <file> (il log copiato dal telefono) oppure --telefono js=…,gpu=… (gpu = ms della prova «pixel, shader leggero, dpr 1,5»)'); process.exit(1) }
   const { dati: fatti } = await bancoUna(b, 1, 0, ['js', 'pieno-1.5'])
-  console.log(`il computer, a vuoto: js ${fatti.js} ms, pixel (dpr 1,5) ${msDi(fatti, 'pieno-1.5')} ms — telefono: js ${tel.js} ms, pixel ${tel.gpu} ms`)
+  console.log(`il computer, a vuoto: js ${fatti.js} ms, pixel (dpr 1,5) ${msDi(fatti, 'pieno-1.5')} ms — telefono: js ${tel.js} ms, pixel ${tel.gpu ?? '?'} ms`)
   // il rallentamento non è lineare e la misura balla: si prova, si corregge, e si tiene il tentativo che ci è andato più vicino
   let cpu = Math.min(30, Math.max(1, tel.js / fatti.js)), migliore = { cpu, errore: Infinity }
   for (let giro = 0; giro < 5; giro++) {
@@ -154,15 +169,15 @@ async function calibra() {
     cpu = Math.min(30, Math.max(1, cpu * (1 + 0.7 * (tel.js / dati.js - 1))))   // a metà strada: smorza l'oscillare
   }
   cpu = migliore.cpu
-  let K = 0, meglio = Infinity
-  for (const k of SCALINI) {
+  let K = soloCpu ? ((leggiProfilo()[gpuModo] || {}).zavorra || 0) : 0, meglio = Infinity
+  for (const k of soloCpu ? [] : SCALINI) {
     const { dati } = await bancoUna(b, 1, k, ['pieno-1.5'])
     const ms = msDi(dati, 'pieno-1.5')
     console.log(`zavorra ${k} → pixel nativi ${ms} ms (telefono ${tel.gpu})`)
     if (Math.abs(ms - tel.gpu) < meglio) { meglio = Math.abs(ms - tel.gpu); K = k }
     if (ms >= tel.gpu) break
   }
-  if (K === 0 && msDi(fatti, 'pieno-1.5') > tel.gpu) console.log('attenzione: la GPU del computer è già più lenta del telefono (--gpu sw ha senso solo se la zavorra non basta)')
+  if (!soloCpu && K === 0 && msDi(fatti, 'pieno-1.5') > tel.gpu) console.log('attenzione: la GPU del computer è già più lenta del telefono (--gpu sw ha senso solo se la zavorra non basta)')
   await b.close()
   const p = leggiProfilo(); p[gpuModo] = { cpu: +cpu.toFixed(2), zavorra: K, ...(process.env.VT_CORE ? { core: Number(process.env.VT_CORE) } : {}), telefono: tel }
   writeFileSync(PROFILO, JSON.stringify(p, null, 2) + '\n')
@@ -175,16 +190,28 @@ async function benchmark() {
   const salvato = leggiProfilo()[gpuModo]
   const cpu = Number(opz('cpu', salvato ? salvato.cpu : STIMA.cpu)), K = Number(opz('zavorra', salvato ? salvato.zavorra : STIMA.zavorra))
   if (!salvato && !opz('cpu') && !opz('zavorra')) console.log(`NON TARATO: CPU ×${STIMA.cpu} e zavorra ${STIMA.zavorra} sono stime (calibra --log …)`)
+  const tel = opz('contro') ? leggiLog(opz('contro')) : null
+  // la prova coi modelli veri: chiesta, o quella del log del telefono (docs/core/vecchio-telefono-veri.md)
+  const veri = argv.includes('--veri') || !!(tel && tel.k === 'veri')
+  const solo = opz('solo') ? opz('solo').split(',') : null
+  const qualita = opz('qualita') || (tel && tel.f) || null   // la fascia del telefono, perché le scene siano le stesse
   const b = await apri()
-  console.log(`computer rallentato: CPU ×${cpu}, zavorra ${K}, GPU ${await renderer(b)} (--gpu ${gpuModo}); circa un minuto…`)
-  const { dati, log } = await bancoUna(b, cpu, K)
+  console.log(`computer rallentato: CPU ×${cpu}, zavorra ${K}, GPU ${await renderer(b)} (--gpu ${gpuModo}); ${veri ? 'coi modelli veri, qualche minuto (rallentato, anche mezz\'ora)' : 'circa un minuto'}…`)
+  if (qualita) console.log(`fascia grafica: ${qualita}`)
+  const { dati, log } = await bancoUna(b, cpu, K, solo, false, veri, qualita)
   await b.close()
   console.log('\n' + log)
-  if (opz('contro')) {
-    const tel = leggiLog(opz('contro'))
-    console.log('\nconfronto (ms di lavoro): prova | computer | telefono | rapporto')
-    for (const r of dati.risultati) { const t = msDi(tel, r.id); if (t != null && !r.errore) console.log(`  ${r.id.padEnd(20)} ${String(r.ms).padStart(6)} ${String(t).padStart(7)}   ×${(r.ms / t).toFixed(2)}`) }
-    console.log(`  ${'js'.padEnd(20)} ${String(dati.js).padStart(6)} ${String(tel.js).padStart(7)}   ×${(dati.js / tel.js).toFixed(2)}`)
+  if (tel) {
+    const p95Di = (d, id) => { const r = dellaRiga(d, id); return r ? (r.p95 ?? (typeof r[2] === 'number' && r.length > 5 ? r[2] : null)) : null }
+    console.log(`\nconfronto (ms di lavoro${veri ? ', e p95' : ''}): prova | computer | telefono | rapporto`)
+    for (const r of dati.risultati) {
+      const t = msDi(tel, r.id), c = r.ms ?? r.tot
+      if (typeof t !== 'number' || r.errore || r.salta || c == null) continue
+      const pc = r.p95, pt = p95Di(tel, r.id)
+      console.log(`  ${r.id.padEnd(20)} ${String(c).padStart(6)} ${String(t).padStart(7)}   ×${(c / t).toFixed(2)}` +
+        (veri && pc != null && pt ? `    p95 ${String(pc).padStart(6)} ${String(pt).padStart(7)}   ×${(pc / pt).toFixed(2)}` : ''))
+    }
+    if (dati.js && tel.js) console.log(`  ${'js'.padEnd(20)} ${String(dati.js).padStart(6)} ${String(tel.js).padStart(7)}   ×${(dati.js / tel.js).toFixed(2)}`)
     console.log('rapporto vicino a 1 = il computer rallentato somiglia al telefono; lontano = quella parte non è imitata bene')
   }
 }
@@ -201,14 +228,16 @@ async function misura() {
   const ritmo = opz('ritmo') || (scontro ? ATTACCO : null), ogni = Number(opz('ogni', scontro ? 3000 : 2500))
   const fasi = opz('fasi') || (scontro ? FASI_SCONTRO : null)
   const spegni = opz('spegni') ? opz('spegni').split(',') : [null]
+  const per = opz('per') ? (([k, v]) => v.split(',').map(x => `${k}=${x}`))(opz('per').split('=')) : [null]
+  const banco = Number(opz('banco', 0))
   process.env.DIST = dist
   const { apriGioco } = await import('../test/aiuto/browser.mjs')
   const b = await apri()
   console.log(`telefono ${SCHERMO.width}×${SCHERMO.height} a ${PIXEL}, GPU: ${await renderer(b)} (--gpu ${gpuModo}), ${secondi} s per riga`)
   console.log('  CPU  zavorra   fps   p50   p95   p99  >33ms  >50ms  note')
-  for (const cpu of cpus) for (const K of zavs) for (const sp of spegni) {
+  for (const cpu of cpus) for (const K of zavs) for (const sp of spegni) for (const pv of per) {
     const hog = await zavorra(b, K)
-    const hash = sp && sp !== '-' ? `${primo}&spegni=${sp.replace(/\+/g, ',')}` : primo
+    const hash = (sp && sp !== '-' ? `${primo}&spegni=${sp.replace(/\+/g, ',')}` : primo) + (pv ? `&${pv}` : '')
     const { page } = await apriGioco(b, { viewport: SCHERMO, pixel: PIXEL, hash, attesa: null, indirizzo: 'file://' + dist, userAgent: UA })
     const adatta = []
     page.on('console', m => /pixel ratio/.test(m.text()) && adatta.push(m.text().replace(/^\[spazio3d\] /, '')))
@@ -228,6 +257,17 @@ async function misura() {
     const s = await page.context().newCDPSession(page)
     if (cpu > 1) await s.send('Emulation.setCPUThrottlingRate', { rate: cpu })
     if (esegui) await page.evaluate(esegui)
+    // il banco della tela e i conti della scena (Sotterraneo 3D, discese o mondo; Fattoria 3D), se l'espressione non ha lasciato il suo
+    if (banco) await page.evaluate(n => {
+      if (window.__extra) return
+      window.__extra = () => {
+        const f = window.__fattoria3d && window.__fattoria3d.mondo, s = window.__sotterraneo3d
+        if (f) { const g = f.statistiche(), c = f.conteggi(); return { banco: f.banco(n), chiamate: g.calls, triangoli: g.triangoli, js: +g.cpu.toFixed(2), mesh: c.mesh, ombre: c.ombre, degrado: g.livello } }
+        if (!s) return null
+        const g = s.grafica()
+        return { banco: s.banco(n), chiamate: g.chiamate, triangoli: g.triangoli, js: g.msJs, ...(g.mostri3d != null ? { mostri3d: g.mostri3d } : {}), ...(g.persone3d ? { persone3d: g.persone3d.visibili } : {}), ...(g.mondo ? { mostri: g.mostri } : {}) }
+      }
+    }, banco)
     await s.send('Performance.enable')
     const metriche = async () => Object.fromEntries((await s.send('Performance.getMetrics')).metrics.map(m => [m.name, m.value]))
     const m0 = await metriche()
@@ -248,7 +288,7 @@ async function misura() {
     const prof = profilo ? (await s.send('Profiler.stop')).profile : null
     const tr = traccia ? JSON.parse((await b.stopTracing()).toString()).traceEvents : null
     const g = await page.evaluate(() => { try { return (window.__sotterraneo3d?.grafica || window.__mate?.grafica)?.() } catch (e) { return null } })
-    const nota = [sp && sp !== '-' ? `spegni ${sp}` : '', g && g.dpr ? `dpr ${g.dpr}` : '', g && g.chiamate ? `${g.chiamate} chiamate` : '', g && g.triangoli ? `${g.triangoli} tri` : '',
+    const nota = [pv || '', sp && sp !== '-' ? `spegni ${sp}` : '', g && g.dpr ? `dpr ${g.dpr}` : '', g && g.chiamate ? `${g.chiamate} chiamate` : '', g && g.triangoli ? `${g.triangoli} tri` : '',
       adatta.length ? `si adatta: ${adatta[adatta.length - 1]}` : ''].filter(Boolean).join(', ')
     const nomi = fasi ? [...new Set(fa)].sort() : ['']
     for (const nome of nomi) {
