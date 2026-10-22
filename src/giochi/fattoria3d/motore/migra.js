@@ -201,3 +201,9 @@ export function statoDaCaricare(leggi) {
   if (suo) return suo
   return statoDa2D(leggi('fattoria', 'stato', null))
 }
+
+/** Il cheat `#fattoria3d-da2d`: la conversione rifatta dalla 2D del bambino, ignorando lo stato 3D (che il chiamante mette nel cestino).
+    Torna lo stato convertito, o `null` se il bambino non ha una 2D da portare (allora non si butta niente). */
+export function statoRifattoDa2D(leggi) {
+  return statoDa2D(leggi('fattoria', 'stato', null))
+}

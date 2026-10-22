@@ -11,7 +11,7 @@ import { load, save } from '../../store/storage.js'
 import { scelta, ricorda } from '../campagne.js'
 import { Fattoria3d } from './motore/fattoria3d.js'
 import { fattoriaTipo } from './motore/tipo.js'
-import { statoDaCaricare } from './motore/migra.js'
+import { statoDaCaricare, statoRifattoDa2D } from './motore/migra.js'
 import { haWebGL2 } from './scena3d/webgl.js'
 import { dettoDi, dettoDiRifiuto } from './scena3d/detti.js'
 import { EDIFICI, avvisoEdificiNuovi } from './dati/catalogo.js'
@@ -485,10 +485,19 @@ function cheatDellIndirizzo() {
   const frammento = location.hash || ''
   const tipo = /(?:^#?|&)fattoria3d-tipo=(\d{1,2})(?=&|$)/i.exec(frammento)
   const livello = /(?:^#?|&)fattoria3d=(\d{1,2})(?=&|$)/i.exec(frammento)
-  if (!tipo && !livello) return
+  const da2d = /(?:^#?|&)fattoria3d-da2d(?=&|$)/i.test(frammento)
+  if (!tipo && !livello && !da2d) return
   try { location.hash = '' } catch (e) { /* pazienza */ }
   let testo
-  if (tipo) {
+  if (da2d) {
+    const stato = statoRifattoDa2D(scelta)
+    if (!stato) testo = '🧪 Questo bambino non ha una fattoria 2D da portare: non ho toccato niente.'
+    else {
+      cestinaOra('fattoria3d da2d')          // la 3D di prima (se c'è) va nel cestino, prima di sostituirla
+      motore = new Fattoria3d({ stato, borsa })
+      testo = `🧪 Fattoria 3D rifatta dalla 2D, livello ${motore.livello()}: quella di prima è nel cestino.`
+    }
+  } else if (tipo) {
     cestinaOra('fattoria3d tipo')          // la copia si prende subito, prima di qualunque attesa
     motore = fattoriaTipo(parseInt(tipo[1], 10))
     motore.borsa = borsa

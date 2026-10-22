@@ -17,6 +17,7 @@
     "bottega": "node strumenti/sotterraneo-bottega.mjs",
     "tara:arena": "node strumenti/tara-arena.mjs",
     "tara:fattoria3d": "node strumenti/tara-fattoria3d.mjs",
+    "parita:fattoria3d": "node strumenti/parita-fattoria3d.mjs",
     "vetrina": "vite --open /strumenti/banco/vetrina.html",
     "mondo": "vite --open /strumenti/banco/mondo.html",
     "sprite:inutilizzati": "node strumenti/sprite/inutilizzati.mjs",
