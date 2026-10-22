@@ -145,3 +145,20 @@ Nei test: `[data-azione="benchmark-veri"]`, `[data-benchmark-palco]` (dove giran
 `window.__benchmarkVeri` (i dati), `window.__benchmarkSolo` (gli inizi degli id), `window.__benchmarkCorto` (scene di pochi decimi,
 senza pausa), `window.__benchmarkRaffredda` (i ms di pausa fra i gruppi: lo strumento la toglie quando tara).
 `unita/benchmark-veri` (il log, il limite, gli invii, le leve), `integrazione/benchmark-veri` (una scena per gruppo, a schermo).
+
+## Mandare il resoconto al computer
+
+`node strumenti/ricevi-log.mjs [--porta 8787] [--dist dist-sito]` serve il sito (dopo `npm run build:sito`) su `0.0.0.0` e stampa
+gli indirizzi da aprire sul telefono (IP di LAN; il nome e l'IP Tailscale se `tailscale status --json` c'è). In http su un IP il
+browser non registra il service worker (non è un contesto sicuro): la PWA non disturba. `GET /ricevi-log` risponde `{ok:true,v:1}`;
+`POST /ricevi-log` prende `{ testo, dati?, agente?, note?, quando? }` (JSON, max 200 KB) e scrive
+`strumenti/vecchio-telefono/log/ricevuti/AAAA-MM-GGThhmm-<modello>.txt` (non versionata) col `testo` (più `DATI …` se `dati` non è già
+dentro), poi risponde `{ok:true,file}` e la console stampa «ricevuto: <file> (<n> byte)». Il file va a `calibra --log` e a
+`benchmark --contro`. Si accettano solo Host e Origin di casa (localhost, reti private, tailnet `100.64/10` e `*.ts.net`, `.local`);
+il CORS si apre solo per quelle origini.
+
+Lato app: `src/grafica/benchmark/invio-diretto.js` esporta `sondaRicevitore(origin)` (GET con timeout 1,5 s, `true`/`false`, mai
+errori) e `mandaAlRicevitore(payload, origin)` (`{ok,file}` o `{ok:false,errore}`). Per integrarlo in `Benchmark.vue`: all'apertura
+del resoconto finale chiamare `sondaRicevitore()`; se `true` mostrare accanto a «Manda» il bottone **Manda al computer**, che chiama
+`mandaAlRicevitore({ testo, agente: navigator.userAgent, note, quando: Date.now() })` con il resoconto intero (non spezzato in
+parti) e mostra «Mandato» o l'errore. Fuori dal ricevitore (sito vero, file unico) la sonda è falsa e il bottone non c'è.
