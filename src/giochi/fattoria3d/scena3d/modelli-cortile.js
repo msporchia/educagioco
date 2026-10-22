@@ -113,11 +113,12 @@ const G_MAIALE = new THREE.SphereGeometry(0.22, 9, 7), G_ZAMPA_P = new THREE.Cyl
 const G_ORECCHIO_P = new THREE.ConeGeometry(0.06, 0.13, 4).translate(0, 0.065, 0), G_MUSO = new THREE.CylinderGeometry(0.06, 0.07, 0.07, 8).rotateX(Math.PI / 2)
 const G_RICCIO = new THREE.TorusGeometry(0.04, 0.012, 5, 10, 4.7)
 const SCALA_P = [0.78, 0.72, 1.32]
+const G_TROGOLO = new THREE.BoxGeometry(0.3, 0.07, 0.15), G_PASTONE = new THREE.BoxGeometry(0.26, 0.03, 0.11)
 const G_PIATTO = new THREE.CylinderGeometry(0.115, 0.105, 0.014, 12), G_STRISCIA = new THREE.BoxGeometry(0.2, 0.016, 0.031)
 
 function costruisciMaiale (k = 0) {
   const g = new THREE.Group()
-  const rosa = mat(k % 2 ? 0xc99a82 : 0xf2a7b0), chiaro = mat(k % 2 ? 0xdcb49c : 0xf7c3c8), scuro = mat(0x3a2a2a), terra = mat(0x5a3d27)
+  const rosa = mat(k % 2 ? 0xc99a82 : 0xf2a7b0), chiaro = mat(k % 2 ? 0xdcb49c : 0xf7c3c8), scuro = mat(0x3a2a2a)
   const corpo = parte(g, G_MAIALE, rosa, 0, 0.26, 0); corpo.scale.set(...SCALA_P)
   for (const [x, z] of [[0.1, 0.17], [-0.1, 0.17], [0.1, -0.17], [-0.1, -0.17]]) { parte(g, G_ZAMPA_P, rosa, x, 0.1, z); parte(g, G_ZOCCOLO_P, scuro, x, 0.015, z) }
   const testa = new THREE.Group(); testa.position.set(0, 0.3, 0.3); g.add(testa)
@@ -132,7 +133,11 @@ function costruisciMaiale (k = 0) {
   })
   const coda = new THREE.Group(); coda.position.set(0, 0.32, -0.29); g.add(coda)
   parte(coda, G_RICCIO, chiaro, 0, 0.02, 0).rotation.y = Math.PI / 2
-  const mucchio = parte(g, G_TESTINA, terra, 0.42, 0.01, 0.22); mucchio.scale.set(1.6, 0.5, 1.4); mucchio.visible = false          // dove ha scavato
+  // al lavoro mangia il pastone da un trogolo di legno (non un mucchio scuro: a schermo sembrava una cacca); il pastone cala mentre lavora
+  const mucchio = new THREE.Group(); mucchio.position.set(0, 0, 0.62); g.add(mucchio); mucchio.visible = false
+  const legno = mat(0x8a5a2e), pastone = mat(0xe8923a)
+  parte(mucchio, G_TROGOLO, legno, 0, 0.035, 0)
+  const pieno = parte(mucchio, G_PASTONE, pastone, 0, 0.065, 0); mucchio.userData.pieno = pieno
   const dono = new THREE.Group(); dono.position.set(0.42, 0.06, 0.22); g.add(dono); dono.visible = false
   // il dono è la pancetta (non il tartufo, che a schermo sembrava una cacca): un piatto con tre fette a strisce rosse e rosa, a ventaglio
   const piatto = mat(0x9c6b3c), rossa = mat(0xa8282a), rosa2 = mat(0xe8968a), grasso = mat(0xf6d2c2)
@@ -158,7 +163,7 @@ function animaMaiale (b, u, pr, stadio, dt, t, n) {
   u.coda.position.set(0, u.corpo.position.y + 0.06 * pr.sy, -0.26 * pr.sz)                      // il ricciolo nasce dalla groppa anche quando il corpo si restringe
   u.coda.rotation.z = Math.sin(ph * (stadio === 2 ? 4 : 1.6) + n * 2) * 0.5 * pr.coda
   u.coda.scale.setScalar(0.3 + 0.7 * pr.coda)
-  const m = pr.mucchio; u.mucchio.visible = m > 0.03; u.mucchio.scale.set(1.6 * m, 0.5 * m, 1.4 * m)
+  const m = pr.mucchio; u.mucchio.visible = m > 0.03; u.mucchio.userData.pieno.scale.set(1, 0.3 + 1.2 * m, 1)          // il trogolo si svuota
   const d = u.dono; d.visible = pr.dono > 0.03; d.scale.setScalar(pr.dono * 2.2)
 }
 

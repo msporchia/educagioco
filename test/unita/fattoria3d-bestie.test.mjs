@@ -58,7 +58,7 @@ const { PECORE } = await import('../../src/giochi/fattoria3d/dati/regole.js')
   controlla('pecora: i riccioli arrivano a gradini', profiloBestia('pecora', 1, 0.3).ricci0 === 0 && profiloBestia('pecora', 1, 0.7).ricci0 > 0 && profiloBestia('pecora', 1, 0.7).ricci2 < 1)
   // monotonia: durante il lavoro nulla va all'indietro (si riempie, mai si sgonfia)
   const cresce = { mucca: ['sx', 'sy', 'sz', 'testaY', 'mammella', 'coda', 'lento'], gallina: ['sx', 'sy', 'uovo', 'altoY', 'cresta', 'gX'], pecora: ['lana', 'ricci0', 'ricci1', 'ricci2', 'pelleX', 'pelleY'],
-    anatra: ['sx', 'sy', 'sz', 'testaY', 'collo', 'uovo', 'beccheggio'], maiale: ['sx', 'sy', 'sz', 'testaY', 'coda', 'mucchio'], capra: ['sx', 'sy', 'sz', 'testaY', 'mammella', 'coda', 'lento'] }      // le ultime tre: test/unita/fattoria3d-cortile.test.mjs
+    anatra: ['sx', 'sy', 'sz', 'testaY', 'collo', 'uovo', 'beccheggio'], maiale: ['sx', 'sy', 'sz', 'testaY', 'coda'], capra: ['sx', 'sy', 'sz', 'testaY', 'mammella', 'coda', 'lento'] }      // le ultime tre: test/unita/fattoria3d-cortile.test.mjs
   for (const sp of SPECIE) {
     let giu = 0, prec = null
     for (let p = 0; p <= 1.0001; p += 0.02) { const x = profiloBestia(sp, 1, p, {}); if (prec) for (const k of cresce[sp]) if (x[k] < prec[k] - 1e-9) giu++; prec = x }

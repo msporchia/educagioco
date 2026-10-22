@@ -187,7 +187,7 @@ const IDS = ['beverone', 'zuppa', 'zuppa_orto', 'pastura']
     uguale(`${sp}: stadi dallo stato`, [stadioBestia('fame', 0.9), stadioBestia('lavora', 0.4), stadioBestia('pronta', 1)].join(), '0,1,2')
   }
   const m0 = profiloBestia('maiale', 0, 0), m1 = profiloBestia('maiale', 1, 0.5), m2 = profiloBestia('maiale', 2, 1)
-  controlla('maiale: grufola solo al lavoro, il mucchio di terra cresce e la pancetta spunta da pronta', m0.grufola === 0 && m1.grufola === 1 && m2.grufola === 0 && m0.mucchio === 0 && m1.mucchio > 0.2 && m2.mucchio === 1 && m1.dono === 0 && m2.dono === 1)
+  controlla('maiale: grufola solo al lavoro, il trogolo col pastone c\'è solo al lavoro e la pancetta spunta da pronta', m0.grufola === 0 && m1.grufola === 1 && m2.grufola === 0 && m0.mucchio === 0 && m1.mucchio > 0.2 && m2.mucchio === 0 && m1.dono === 0 && m2.dono === 1)
   controlla('maiale: le orecchie cadono a fame e la coda è un ricciolo solo da sazio', m0.orecchie > m2.orecchie && m0.coda === 0 && m2.coda === 1)
   const c0 = profiloBestia('capra', 0, 0), c1 = profiloBestia('capra', 1, 0.5), c2 = profiloBestia('capra', 2, 1)
   controlla('capra: la mammella cresce, la pallida sparisce, saltella solo da pronta', c0.mammella < c1.mammella && c1.mammella < c2.mammella && c0.pallida === 1 && c2.pallida === 0 && c0.salto === 0 && c2.salto === 1)

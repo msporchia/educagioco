@@ -114,7 +114,7 @@ export function profiloBestia (specie, stadio, p, out = {}) {
     out.dono = out.uovo
     out.ondeggia = pronta
   } else if (specie === 'maiale') {
-    // a fame magro, orecchie giù e muso basso; al lavoro grufola nel fango e un mucchietto di terra cresce; pronto tondo, la coda a ricciolo, la pancetta in vista
+    // a fame magro, orecchie giù e muso basso; al lavoro mangia il pastone dal trogolo, che cala; pronto tondo, la coda a ricciolo, la pancetta in vista
     out.sx = lerp(0.74, 1.1, f); out.sy = lerp(0.66, 1.15, f); out.sz = lerp(0.92, 1.04, f)
     out.corpoY = lerp(-0.035, 0, f)
     out.testaY = lerp(-0.10, 0.0, f); out.testaX = lerp(0.8, 0.05, f)
@@ -122,7 +122,7 @@ export function profiloBestia (specie, stadio, p, out = {}) {
     out.coda = lerp(0, 1, f)                         // l'ampiezza (e la grandezza) del ricciolo
     out.lento = lerp(0.5, 1, f)
     out.grufola = stadio === 1 ? 1 : 0
-    out.mucchio = stadio <= 0 ? 0 : stadio >= 2 ? 1 : lerp(0.2, 0.85, clamp01(p))
+    out.mucchio = stadio === 1 ? lerp(1, 0.25, clamp01(p)) : 0          // il trogolo col pastone, solo mentre lavora
     out.dono = pronta                                // la pancetta
   } else if (specie === 'capra') {
     // a fame piccola, orecchie a terra e testa bassa; al lavoro la mammella rosea cresce; pronta tonda, la coda in su, il secchio del latte e qualche saltello
