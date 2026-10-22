@@ -43,7 +43,7 @@ function inPosaArma(pezzo, modo) {
   if (!a) return null
   const perno = new THREE.Group()
   perno.add(a); animaTutto(a, ISTANTE)
-  if (modo === 'scudo' || modo === 'gioiello') { perno.rotation.y = -0.35; return { obj: perno, verso: [0.15, 0.22, 1] } }
+  if (modo === 'scudo' || modo === 'gioiello' || modo === 'consumabile') { perno.rotation.y = -0.35; return { obj: perno, verso: [0.15, 0.22, 1] } }
   // l'arco è disegnato col pancione verso +z: girato di lato si vede la curva; tutto in diagonale, la punta in alto a destra
   if (a.userData.famiglia === 'arco') a.rotation.y = -Math.PI / 2
   else a.rotation.y = 0.45
@@ -98,7 +98,7 @@ function inPosaMostro(r) {
 
 function inPosa(c) {
   switch (c.tipo) {
-    case 'arma': case 'scudo': case 'gioiello': return inPosaArma(c.pezzo, c.tipo)
+    case 'arma': case 'scudo': case 'gioiello': case 'consumabile': return inPosaArma(c.pezzo, c.tipo)
     case 'armatura': return inPosaArmatura(c)
     case 'eroe': return inPosaEroe(c, false)
     case 'busto': return inPosaEroe(c, true)

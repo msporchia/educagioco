@@ -48,7 +48,12 @@ uguale('al collo una collana con la sua figura', dotazioneDi({ collo: 'medaglion
 uguale('un anello non sta al collo', dotazioneDi({ collo: 'anello-ambra' }).collo, null)
 
 // le chiavi: null dove resta lo sprite, la stessa per la stessa figura e la stessa rarità
-for (const k of ['medaglione', 'amuleto-rosso', 'pozione', 'torcia', 'chiave', 'elisir-toro']) uguale(`${k}: niente modello, resta lo sprite`, chiaveDellaCosa({ chiave: k }), null)
+for (const k of ['medaglione', 'amuleto-rosso', 'amuleto-osso']) uguale(`${k}: niente modello, resta lo sprite`, chiaveDellaCosa({ chiave: k }), null)
+uguale('una pozione: il suo modello', chiaveDellaCosa({ chiave: 'pozione' }), 'consumabile:pozione:c')
+uguale('la torcia anche', chiaveDellaCosa({ chiave: 'torcia' }), 'consumabile:torcia:c')
+uguale('un rarissimo brilla come un raro', chiaveDellaCosa({ chiave: 'elisir-toro' }), 'consumabile:elisir-toro:r')
+uguale('un consumabile letto', JSON.stringify(leggiChiave('consumabile:ampolla-vita:r')), JSON.stringify({ tipo: 'consumabile', pezzo: { consumabile: 'ampolla-vita', rarita: 'raro', elemento: 'nessuno' } }))
+uguale('un consumabile che non c\'è', leggiChiave('consumabile:spada:c'), null)
 uguale('una cosa senza chiave', chiaveDellaCosa(null), null)
 uguale('un\'arma', chiaveDellaCosa({ chiave: 'spada' }), 'arma:spada-26.spada-lunga.c.natura')
 {
@@ -74,7 +79,7 @@ uguale('l\'eroe letto è la dotazione di dotazioneDi', JSON.stringify({ destra: 
 uguale('un\'arma letta', JSON.stringify(leggiChiave('arma:spada-28.spada-lunga.m.fuoco')), JSON.stringify({ tipo: 'arma', pezzo: { figura: 'spada-28', id: 'spada-lunga', rarita: 'magico', elemento: 'fuoco' } }))
 uguale('un mostro letto', JSON.stringify(leggiChiave('mostro:scheletro:magico:guerriero')), JSON.stringify({ tipo: 'mostro', r: { tipo: 'scheletro', grado: 'magico', variante: 'guerriero' } }))
 for (const k of ['', 'boh:1', 'armatura:pigiama:1:elfa', 'mostro:', 'arma:-.-.c.nessuno', 'arma:spada-lunga']) uguale(`«${k}» non si legge`, leggiChiave(k), null)
-for (const t of ['arma', 'scudo', 'gioiello', 'armatura', 'eroe', 'busto', 'mostro']) controlla(`${t}: ha la sua misura`, MISURE[t] && MISURE[t][0] <= 192 && MISURE[t][1] <= 192)
+for (const t of ['arma', 'scudo', 'gioiello', 'consumabile', 'armatura', 'eroe', 'busto', 'mostro']) controlla(`${t}: ha la sua misura`, MISURE[t] && MISURE[t][0] <= 192 && MISURE[t][1] <= 192)
 
 // i mostri: chi non ha un modello torna allo sprite (idDi null), gli altri hanno la chiave che il disegno risolve
 for (const t of Object.keys(MOSTRI)) {

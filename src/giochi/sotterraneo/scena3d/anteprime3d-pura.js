@@ -3,7 +3,7 @@
 // Un oggetto si disegna con la figura dei fogli (roba3d-pura.js, docs/sotterraneo/roba-3d.md); MODELLO_DI è il ripiego quando il
 // modulo della sua famiglia non c'è o la figura non si costruisce.
 import { COSE, baseDi } from '../dati/cose.js'
-import { rangoDellaRarita, RARITA } from '../dati/pezzi.js'
+import { rangoDellaRarita, RARITA, RARITA_DA_LETTERA } from '../dati/pezzi.js'
 import { figuraDi, lookDi, famigliaDi, eUnaCollana, gettone, daGettone } from './roba3d-pura.js'
 
 // il ripiego: quale modello della collezione (eroi3d/collezione.js) per quale oggetto; chi non c'è prende quello della sua famiglia
@@ -36,6 +36,11 @@ export function pregioDi(k) {
   const c = cosaDi(k)
   return c ? Math.min(3, 1 + rangoDellaRarita(c.rarita || 'comune')) : 1
 }
+
+// i consumabili (dati/cose.js, `usa` e niente `dove`) hanno un modello per chiave (roba3d/pozioni.js); i «rarissimi» (l'ampolla della
+// vita, l'elisir del toro) brillano come un raro
+const consumabileDi = k => { const c = cosaDi(k); return c && c.usa && !c.dove ? baseDi(k) : null }
+const raritaDelConsumabile = k => (cosaDi(k) && cosaDi(k).rarissimo ? 'raro' : 'comune')
 
 /**
  * Il pezzo 3D di un oggetto: { figura (dei fogli, o null), id (il ripiego della collezione, o null), rarita, elemento }, o null se
@@ -106,7 +111,14 @@ export function chiaveDellaCosa(cosa, eroe = 'cavaliere') {
     const p = pezzo3dDi(k)
     return p && p.figura && famigliaDi(p.figura) === 'gioielli' ? `gioiello:${gettone(p)}` : null
   }
-  return null
+  const u = consumabileDi(k)
+  return u ? `consumabile:${u}:${RARITA[raritaDelConsumabile(u)].lettera}` : null
+}
+
+/** Il consumabile di una chiave come lo costruisce roba3d.js: { consumabile, rarita, elemento }, o null. */
+export function consumabile3dDi(k) {
+  const u = consumabileDi(k)
+  return u ? { consumabile: u, rarita: raritaDelConsumabile(u), elemento: 'nessuno' } : null
 }
 
 /** L'eroe vestito: `eroe:<chi>:<destra>:<sinistra>:<corpo>:<collo>` (gettoni, `-` dove non c'è niente); `modo` 'figura' (intero) o 'busto'. */
@@ -129,6 +141,7 @@ export function leggiChiave(k) {
   const nulla = x => (x === '-' || x === '' || x == null ? null : x)
   switch (p[0]) {
     case 'arma': case 'scudo': case 'gioiello': { const g = daGettone(p[1]); return g ? { tipo: p[0], pezzo: g } : null }
+    case 'consumabile': return consumabileDi(p[1]) ? { tipo: 'consumabile', pezzo: { consumabile: p[1], rarita: RARITA_DA_LETTERA[p[2]] || 'comune', elemento: 'nessuno' } } : null
     case 'armatura': {
       if (!ARMATURE.includes(p[1])) return null
       const c = corpoDaGettone(p[4]) || { tipo: p[1], pregio: Number(p[2]) || 1, figura: null, rarita: 'comune', elemento: 'nessuno' }
@@ -144,7 +157,7 @@ export function leggiChiave(k) {
 }
 
 /** Quanti pixel veri per ogni tipo di anteprima (le viste li mostrano a metà: un telefono ha il doppio dei pixel). */
-export const MISURE = { arma: [128, 128], scudo: [128, 128], gioiello: [128, 128], armatura: [128, 128], eroe: [150, 176], busto: [96, 96], mostro: [96, 96] }
+export const MISURE = { arma: [128, 128], scudo: [128, 128], gioiello: [128, 128], consumabile: [128, 128], armatura: [128, 128], eroe: [150, 176], busto: [96, 96], mostro: [96, 96] }
 
 /**
  * La coda delle anteprime: `disegna(chiave)` produce l'immagine (testo, o una promessa di testo: la codifica può finire dopo)

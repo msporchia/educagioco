@@ -102,6 +102,12 @@ if (existsSync(new URL('../../poc/mostri-3d/mostri.js', import.meta.url))) {
   const diversi = await promuovi({ scrivi: false })
   console.log = log
   controlla('le copie in src/ sono quelle di poc/ (npm run promuovi3d)', diversi.length === 0, diversi.join(', '))
+  // la roba (docs/sotterraneo/roba-3d.md): ogni famiglia che ha il prototipo è fra i moduli del gioco (se no non si costruisce)
+  const { FAMIGLIE_ROBA } = await import('../../strumenti/promuovi-3d.mjs')
+  const { MODULI } = await import('../../src/giochi/sotterraneo/scena3d/roba3d/moduli.js')
+  const conPrototipo = FAMIGLIE_ROBA.filter(f => existsSync(new URL(`../../poc/roba-3d/${f}.js`, import.meta.url)))
+  const fuoriRoba = conPrototipo.filter(f => !MODULI[f])
+  controlla('ogni famiglia della roba col prototipo è fra i moduli del gioco', fuoriRoba.length === 0, fuoriRoba.join(', '))
 } else nota('poc/ non c\'è: il confronto con i prototipi si salta')
 
 riassunto('mostri ed effetti 3d del sotterraneo')

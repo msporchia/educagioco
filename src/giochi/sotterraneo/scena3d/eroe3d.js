@@ -25,7 +25,8 @@ export const vestiEroe = (g, roba = {}) => vestiDotazione(g, dotazioneDi(roba))
 
 /** Lo stesso con la dotazione già decisa (`dotazioneDi`: i pezzi 3D, l'armatura col pregio, la collana). → `togli()`. */
 export function vestiDotazione(g, d) {
-  const destra = creaPezzo(d.destra), sinistra = creaPezzo(d.sinistra)
+  // in mano l'alone è più piccolo che da solo nella casella: addosso all'eroe copriva la faccia
+  const destra = creaPezzo(d.destra, { scalaAlone: 0.8 }), sinistra = creaPezzo(d.sinistra, { scalaAlone: 0.8 })
   const togliArma = equipaggia(g, { destra, sinistra })
   // la veste della figura (il modulo vesti) o l'armatura di sempre col pregio della rarità
   const togliCorpo = !d.corpo ? null
