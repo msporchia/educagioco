@@ -6,7 +6,8 @@ import { ref, computed, onMounted, watch } from 'vue'
 import Carosello from '../home/Carosello.vue'
 import { GIOCHI, serveA } from '../../data/giochi.js'
 import { state, nomeCorrente, etaDelBambino, giocoAcceso, fissaGioco, sapereAcceso, accendiSapere, saperiCheMancano,
-         sperimentaliAccesi, ritoccoSapere, ritocca } from '../../store/profile.js'
+         sperimentaliAccesi, ritoccoSapere, ritocca, cestinaOra } from '../../store/profile.js'
+import { azzeraCampagna, haGiocato } from '../../giochi/campagne.js'
 import { inCasa } from '../../data/portata-giochi.js'
 import { giochiDiUnEta, PASSATO } from '../../data/quadro.js'
 import { eccezioniPerEta } from '../../data/partenze.js'
@@ -16,7 +17,7 @@ import { insegnaDi } from '../../data/cosa-insegna.js'
 import { saperiDelGioco, giochiCheChiedono } from '../../quiz/saperi.js'
 import { leggiSessioni, perGiornoDi, perGioco } from '../../store/sessioni.js'
 
-const emit = defineEmits(['vai'])
+const emit = defineEmits(['vai', 'fatto'])
 const chiave = ref(null)
 const gioco = computed(() => GIOCHI.find(g => g.chiave === chiave.value) || null)
 const chi = computed(() => nomeCorrente() || 'lui')
@@ -52,6 +53,28 @@ const esito = computed(() => {
     : `È per più grandi: a ${eta} anni non compare ancora, e arriva in home quando cresce.`
 })
 const g_serve = k => saperiCheMancano(k).map(c => (sapereDi(c) || {}).nome || c)
+
+/* ── Avanzate: i reset della fattoria (docs/fattoria3d/parita/migrazione.md) ──
+   Due gesti, entrambi con la copia nel cestino e una conferma: «Riconverti» butta la fattoria 3D e la rifà dalla 2D alla prossima
+   apertura (la conversione parte da sola quando non c'è uno stato 3D); «Ricomincia» azzera 2D e 3D insieme (se no la 3D si
+   riconvertirebbe dalla 2D subito). Se non c'è niente da riconvertire il tasto non compare. */
+const eFattoria = computed(() => chiave.value === 'fattoria' || chiave.value === 'fattoria3d')
+const puoRiconvertire = computed(() => chiave.value === 'fattoria3d' && haGiocato('fattoria'))
+const chiede = ref(null)    // 'riconverti' | 'ricomincia' | null: quale conferma è aperta
+watch(chiave, () => { chiede.value = null })
+async function riconverti() {
+  await cestinaOra('fattoria3d riconverti')
+  azzeraCampagna('fattoria3d')
+  chiede.value = null
+  emit('fatto', 'La fattoria 3D di ' + chi.value + ' si rifà dalla 2D alla prossima apertura.')
+}
+async function ricomincia() {
+  await cestinaOra('fattoria')
+  azzeraCampagna('fattoria')
+  azzeraCampagna('fattoria3d')
+  chiede.value = null
+  emit('fatto', 'La fattoria di ' + chi.value + ' riparte da zero.')
+}
 
 /* ── il tempo ── */
 const voci = ref([])
@@ -120,6 +143,35 @@ const saperi = computed(() => saperiDelGioco(chiave.value).map(k => {
           <div><b>{{ giorniGiocati }} su 7</b><small>giorni</small></div>
         </div>
       </div>
+
+      <details v-if="eFattoria && (haGiocato('fattoria') || haGiocato('fattoria3d'))" class="blocco avanzate" data-gioco-avanzate>
+        <summary>Avanzate</summary>
+        <template v-if="puoRiconvertire">
+          <button v-if="chiede !== 'riconverti'" type="button" class="azione" data-azione="riconverti-fattoria" @click="chiede = 'riconverti'">
+            <b>Riconverti dalla fattoria 2D</b><small>Rifà la fattoria 3D partendo da quella 2D di {{ chi }}</small>
+          </button>
+          <div v-else class="conferma">
+            <p><b>Riconvertire la fattoria 3D di {{ chi }}?</b> Quella 3D di adesso va nel cestino e si rifà dalla 2D alla prossima apertura:
+              le cose comprate tornano nel magazzino da ripiazzare, i piazzamenti si perdono. <b>Le monete spese non tornano indietro.</b></p>
+            <div class="riga">
+              <button type="button" class="chiaro" @click="chiede = null">No, lascia stare</button>
+              <button type="button" class="rosso" data-azione="riconverti-fattoria-si" @click="riconverti">Sì, riconverti</button>
+            </div>
+          </div>
+        </template>
+        <button v-if="chiede !== 'ricomincia'" type="button" class="azione pericolo" data-azione="azzera-fattoria" @click="chiede = 'ricomincia'">
+          <b>Ricomincia la fattoria di {{ chi }}</b><small>Solo la fattoria (2D e 3D): il resto dei progressi non si tocca</small>
+        </button>
+        <div v-else class="conferma">
+          <p><b>Ricominciare la fattoria di {{ chi }}?</b> Terra, cose comprate e animali spariscono (anche nella fattoria 3D, se c'è),
+            e il prato torna vuoto. <b>Le monete spese non tornano indietro.</b> Tutto il resto — gli altri giochi, i traguardi, il
+            salvadanaio — resta com'è.</p>
+          <div class="riga">
+            <button type="button" class="chiaro" @click="chiede = null">No, lascia stare</button>
+            <button type="button" class="rosso" data-azione="azzera-fattoria-si" @click="ricomincia">Sì, ricomincia</button>
+          </div>
+        </div>
+      </details>
 
       <div class="blocco" data-gioco-domande>
         <b>{{ !tutte && !saperi.length && insegna ? insegna.titolo : 'Le domande di questo gioco' }}</b>
@@ -191,6 +243,16 @@ const saperi = computed(() => saperiDelGioco(chiave.value).map(k => {
 .diff { display:flex; align-items:center; gap:6px; margin-top:6px }
 .diff button { width:36px; height:32px; border:0; border-radius:10px; background:#ece6d8; font:inherit; font-size:16px; font-weight:700; touch-action:manipulation }
 .diff i { font-style:normal; font-size:12px; color:#6c6757; min-width:110px; text-align:center }
+.avanzate > summary { min-height:40px; display:flex; align-items:center; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#8a8576; cursor:pointer }
+.avanzate { gap:8px }
+.azione { display:flex; flex-direction:column; align-items:flex-start; gap:2px; width:100%; min-height:48px; margin-top:6px; padding:10px 12px; border:2px solid #ece6d8; border-radius:12px; background:#fff; font:inherit; text-align:left; touch-action:manipulation }
+.azione small { font-size:12px; color:#6c6757 }
+.azione.pericolo { border-color:#f1c9c9 }
+.conferma { margin-top:6px; padding:10px 12px; border-radius:12px; background:#fdf2f2; font-size:13px }
+.conferma p { margin:0 0 8px }
+.conferma .riga { display:flex; gap:8px }
+.conferma .riga button { flex:1; min-height:44px; border:0; border-radius:12px; font:inherit; font-weight:700; touch-action:manipulation; background:#ece6d8 }
+.conferma .riga .rosso { background:#d94b4b; color:#fff }
 .tasto { flex:none; position:relative; width:46px; height:28px; border:0; border-radius:14px; background:#cfc9b8; touch-action:manipulation }
 .tasto::after { content:""; position:absolute; top:3px; left:3px; width:22px; height:22px; border-radius:50%; background:#fff; transition:left .15s }
 .tasto.su { background:#2f9e5b }

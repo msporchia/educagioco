@@ -48,7 +48,7 @@ Fatto: `livelloPerProporzione` è l'identità (70 livelli uguali). La terra è t
 `statoDaCaricare(leggi)` sta nello stesso file; `leggi` è `scelta` di `src/giochi/campagne.js`. Manca solo di chiamarla dove la 3D legge il suo stato
 la prima volta, `onMounted` di `src/giochi/fattoria3d/Gioco.vue`:
 `new Fattoria3d({ stato: statoDaCaricare(scelta), borsa })` al posto di `scelta(CHIAVE, 'stato', null)`. Quando la 3D salva, il suo stato
-sostituisce la conversione. «Ricomincia la fattoria» (G1b) deve azzerare anche `fattoria3d`, o la conversione tornerebbe a ogni avvio.
+sostituisce la conversione. «Ricomincia la fattoria» (G1b, ora in Giochi › Avanzate, [../../genitori/giochi.md](../../genitori/giochi.md)) azzera anche `fattoria3d`, o la conversione tornerebbe a ogni avvio.
 
 ## Da fare
 
