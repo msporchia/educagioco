@@ -19,7 +19,7 @@ class PezziVisita extends Pezzi {
 
 const STUB_COSTRUZIONE = {
   attivo: false, tratto: null, ultimaCella: null,
-  inizia() {}, muovi() {}, rilascia() {}, annullaTrascinamento() {}, pennello() {}, finisciTratto() {}, annulla() {},
+  inizia() {}, muovi() {}, rilascia() {}, annullaTrascinamento() {}, ruota() {}, pennello() {}, finisciTratto() {}, annulla() {},
   parcheggiato: false, fotogramma() {}, alzaDito() {}, prendi() {}, tocco() {},
 }
 
