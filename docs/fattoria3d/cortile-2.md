@@ -58,6 +58,7 @@ Il coniglio e l'alpaca hanno due varianti (posti pari e dispari: bianco e crema,
 - **Apiario**: il prato fiorito (24 fiori di quattro colori più i più alti ai bordi), il **tavolo dell'apicoltore** (vasetti d'oro, l'affumicatore, il cappello con la rete), steccato di vimini, cartello «🍯 MIELE».
 - **Peso** (nodi del catalogo 3D, fusi quelli fermi): conigliera, recinto degli alpaca, degli asini e apiario sono sotto i 60 mesh vuoti e sotto i 130 pieni (un test lo tiene); coniglio, alpaca e asino ~10–15 mesh, arnia ~15 (api e goccia comprese).
   Geometrie e materiali sono condivisi, le animazioni vanno col tempo. Le emoji nuove (🐇 🦙 🐴 🐝) sono nel font (`npm run emoji`); 🫏, l'asino vero, è di Emoji 15 e Twemoji è fermo a 14: l'asino è un 🐴.
+- **Le parti si toccano** ([animali.md](animali.md), «Le parti si toccano», `scena3d/bestie-corpo.js`): il collo dell'alpaca e dell'asino è un osso che va dalla spalla alla testa, le zampe escono da una coscia dentro il corpo, orecchie, occhi e muso stanno sulla testa, il pelo del coniglio e il vello dell'alpaca sono ellissoidi concentrici al corpo (a fame solo un velo sulla schiena). Provato da `unita/fattoria3d-bestie-connesse`.
 - Si guardano col catalogo 3D (`npm run catalogo3d`, le voci sono in `strumenti/banco/catalogo-3d/fattoria-cortile2.js`: i quattro recinti, tre stadi per bestia e le varianti).
 
 ## La peschiera (A1k): tolta, e perché

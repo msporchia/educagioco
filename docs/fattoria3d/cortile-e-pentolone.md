@@ -83,6 +83,7 @@ Ogni recinto è un pezzo 4×3 col calco di stalla e pollaio (`userData.{bestie, 
   tetto rosso, fango, truogolo, cartello «🍄 TARTUFI», steccato col cancelletto. **Capre**: roccia a gradini, tettoia con rastrelliera, abbeveratoio,
   steccato col cancelletto. **Pentolone**: focolare di pietre con la legna e le fiamme (che guizzano), pentolone di ferro appeso a una traversa con
   il brodo verde che bolle, zucche, patate e cavolfiore accanto, tettoia di pietra con l'insegna; fuma.
+- **Le parti si toccano** ([animali.md](animali.md), «Le parti si toccano»): la capra ha il collo-osso dalla spalla alla testa, corna e orecchie sul cranio, coda dalla groppa e mammella sotto il ventre che seguono il corpo; maiale e anatra sono già corpi unici (la coda del maiale segue il corpo). Provato da `unita/fattoria3d-bestie-connesse`.
 - **Peso** (nodi del catalogo 3D, fusi quelli fermi): stagno 32 mesh vuoto, ~56 con sei anatre; porcile ~47 con quattro maiali; capre ~57 con
   quattro; pentolone 16. Anatra 5–8 mesh, maiale 6–10, capra 8–11. Come pollaio e stalla; geometrie e materiali condivisi, animazioni col tempo.
 - Si guardano col catalogo 3D (`npm run catalogo3d`, voci `fattoria:stagno-anatre`, `:porcile`, `:capre`, `:pentolone`, e una per stadio di anatra,
