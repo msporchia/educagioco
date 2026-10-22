@@ -30,6 +30,7 @@ import { creaScontro } from './scontro.js'
 import { creaContorno } from './contorno.js'
 import { ACCESI, POLVERE, SCINTILLE, FIGURE_MAX, ALONI_MAX, MARGINE_DITO } from './costanti.js'
 import { verso } from './tempo.js'
+import { elencaProgrammi } from './programmi.js'
 
 const NIENTE = { emetti() {}, aggiorna() {}, aspetto() {}, via() {} }
 
@@ -342,6 +343,7 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
     botti() { return piano ? piano.botti.botti.map(b => ({ i: b.i, x: b.x, z: b.z, cella: b.cella, rotta: b.rotta, stanza: b.stanza, pezzi: b.pezzi.length })) : [] },
     get eroe() { return eroe },
     get scena() { return scena },   // per le misure (docs/sotterraneo/prestazioni-3d.md): chi fa le chiamate
+    programmi() { return elencaProgrammi(renderer, [scena]) },   // da dove vengono gli shader compilati (le misure)
     get corsa() { return quadro ? quadro.corsa : null },
     get palco() { return scontro.palco },
     distruggi() {

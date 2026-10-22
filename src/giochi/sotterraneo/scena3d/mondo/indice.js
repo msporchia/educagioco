@@ -32,6 +32,7 @@ import { creaVeduta, SOLE } from './veduta.js'
 import { grigliaDi, pezzoDi, contenutoDelPezzo, lavoroDeiPezziVista, costruibile, ancoraUguale } from './pezzi.js'
 import { aTerra } from './dito.js'
 import { quotaA, quotaTerreno, LIVELLO_ACQUA } from './suolo.js'
+import { elencaProgrammi } from '../programmi.js'
 
 const CIELO = new Color(0xc9dcea)
 const COLORI_PALLINO = { grigio: 0x9a9a9a, verde: 0x5fd35f, arancio: 0xffa53a, rosso: 0xff4a3a }
@@ -422,6 +423,7 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = [], fon
     },
     get pronto() { return !!persone && costruiti.size >= Math.min(4, griglia.n) },
     get scena() { return scena },   // per le misure (docs/sotterraneo/prestazioni-3d.md): chi fa le chiamate
+    programmi() { return elencaProgrammi(renderer, [scena]) },   // da dove vengono gli shader compilati (le misure)
     distruggi() {
       vivo = false
       api.ferma()

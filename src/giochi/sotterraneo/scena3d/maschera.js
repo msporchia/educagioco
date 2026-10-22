@@ -33,7 +33,7 @@ export const GLSL_MASCHERA = 'uniform sampler2D uMaschera; uniform vec2 uDimMapp
 
 // Inietta la maschera in un materiale standard: fuori dalla vista resta solo il ricordo, freddo e scuro (`ricordo: false`:
 // niente, per chi nel ricordo non c'è). `spinta`: di quanto si legge la cella davanti alla faccia (un muro si accende con
-// la cella che guarda). `prima`: GLSL da mettere prima (le figure). `poi(sh)`: chi deve aggiungere altro allo shader
+// la cella che guarda). `prima`: GLSL da mettere prima (le figure). `poi(sh)`: chi deve aggiungere altro allo shader (e allora `chiave` dice il suo codice)
 export function conMaschera(mat, maschera, { ricordo = true, spinta = 0.45, prima = '', buco = false, poi = null, chiave = '' } = {}) {
   mat.onBeforeCompile = (sh) => {
     Object.assign(sh.uniforms, maschera.uniforms)
@@ -58,6 +58,9 @@ export function conMaschera(mat, maschera, { ricordo = true, spinta = 0.45, prim
       #include <opaque_fragment>`)
     if (poi) poi(sh)
   }
-  mat.customProgramCacheKey = () => 'maschera-' + ricordo + spinta + prima.length + buco + chiave
+  // la chiave dice solo cosa cambia il codice: le scelte qui sopra, e `chiave` quando c'è un `poi` (il suo codice non si legge da
+  // fuori). Due materiali col codice uguale hanno lo stesso programma: prima ogni pezzo d'arredo aveva il suo (docs/sotterraneo/prestazioni-3d.md)
+  const codice = 'maschera-' + ricordo + spinta + buco + (poi ? chiave : '') + prima
+  mat.customProgramCacheKey = () => codice
   return mat
 }

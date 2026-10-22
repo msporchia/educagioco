@@ -94,7 +94,7 @@ export function creaTerreno(scena, { pianta, aspetto, trame, maschera, seme = 1 
     normalScale: new Vector2(1.2, 1.2),
     ...(t.emissiveMap ? { emissiveMap: t.emissiveMap, emissive: new Color(1, 1, 1), emissiveIntensity: 1 } : {}),
   }), maschera, {
-    spinta: 0, chiave: 'pav' + (t.emissiveMap ? '-braci' : '') + (pozze ? '-pozze' : ''),
+    spinta: 0, chiave: 'pav' + (t.emissiveMap ? '-braci' : '') + (pozze ? '-pozze' + pozze.quanto : ''),   // `quanto` sta nel codice
     // le braci si accendono a chiazze larghe nel mondo, non a ogni ripetizione della trama (si vedeva il disegno ripetuto)
     prima: t.emissiveMap ? 'outgoingLight -= totalEmissiveRadiance * 0.75 * (1.0 - smoothstep(0.42, 0.62, rumore3(vec3(vMondoM.xz * 0.3, 0.0))));' : '',
     poi(sh) {
