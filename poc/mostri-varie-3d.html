@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mostri vari 3D</title>
+<style>
+  :root { --fondo: #14161b; --carta: #1b1e25; --riga: #2c313a; --testo: #e2e5e0; --tenue: #98a09c; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 14px; background: var(--fondo); color: var(--testo); font: 13px/1.4 system-ui, sans-serif; }
+  h1 { font-size: 16px; margin: 0 0 4px; } h2 { font-size: 14px; margin: 18px 0 6px; }
+  p { margin: 0 0 12px; color: var(--tenue); max-width: 100ch; }
+  #griglia { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 8px; }
+  #griglia.striscia { grid-template-columns: minmax(300px, 1fr); }
+  #griglia.solo { grid-template-columns: minmax(300px, 820px); }
+  figure { margin: 0; background: var(--carta); border: 1px solid var(--riga); border-radius: 4px; padding: 5px; }
+  canvas { width: 100%; height: auto; display: block; border-radius: 3px; }
+  figcaption { font-size: 11px; color: var(--tenue); padding: 4px 2px 0; }
+  figcaption b { color: var(--testo); font-weight: 600; }
+</style>
+</head>
+<body>
+<h1>Mostri vari in 3D (pianta, piranha, golem di muschio, scorpione, mostro viola, pipistrello occhio)</h1>
+<p>Prova: ogni mostro è un modello in codice (<code>poc/mostri-3d/varie.js</code>). <code>?mostro=golem-muschio</code> (uno solo, grande), <code>?pausa</code>, <code>?t=2</code>, <code>?ang=0.6</code>, <code>?zoom=1.5</code>, <code>?alt=0.5</code>, <code>?att=0.7</code> (posa d'attacco ferma), <code>?attacco</code> (idle → attacco in loop ogni ~2 s), <code>?striscia=attacco</code> (cinque riquadri per mostro, p = 0, .25, .5, .75, 1), <code>?idle</code> (tutti in loop, ognuno con la sua fase), <code>?striscia=idle</code> (sei istanti da 0 a 2 s per mostro), <code>?lato=720</code>, <code>?ruolo=comune|forte|boss|superboss</code>.</p>
+<div id="griglia"></div>
+<h2 id="tscala">A confronto di scala (alle proporzioni reali, con l'elfa)</h2>
+<figure><canvas id="scala"></canvas><figcaption id="capscala"></figcaption></figure>
+<script type="module">
+import { WebGLRenderer, Scene, PerspectiveCamera, HemisphereLight, DirectionalLight, Box3, Vector3, Color, CircleGeometry, MeshStandardMaterial, Mesh, ACESFilmicToneMapping, PCFSoftShadowMap, SRGBColorSpace, Fog } from 'three'
+import { MOSTRI_VARIE } from './mostri-3d/varie.js'
+import { creaEroe } from './eroi-3d/eroi.js'
+
+const url = new URLSearchParams(location.search)
+const solo = url.get('mostro') || '', tempo = Number(url.get('t') || 1.2), zona = url.get('ruolo') || ''
+const LATO = Number(url.get('lato') || (solo ? 800 : 440)), ang = Number(url.get('ang') ?? 0.55), pausa = url.has('pausa') && !url.has('idle'), att = url.has('att') ? Number(url.get('att')) : null
+const cicloAtt = url.has('attacco'), striscia = url.get('striscia') === 'attacco', stIdle = url.get('striscia') === 'idle'
+const errori = []
+const vecchio = console.error
+console.error = (...a) => { errori.push(a.map(String).join(' ').slice(0, 300)); vecchio.apply(console, a) }
+addEventListener('error', e => errori.push(String(e.message)))
+window.__prova = { ok: false, errori, triangoli: {}, max: 0 }
+
+const renderer = new WebGLRenderer({ antialias: true, preserveDrawingBuffer: true })
+renderer.setPixelRatio(1)
+renderer.toneMapping = ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05; renderer.outputColorSpace = SRGBColorSpace
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = PCFSoftShadowMap
+
+function scena3d (grande = 3) {
+  const scena = new Scene(); scena.background = new Color(0x383e49); scena.fog = new Fog(0x383e49, 12, 34)
+  scena.add(new HemisphereLight(0xcfe4ff, 0x6a5a3a, 1.35))
+  const sole = new DirectionalLight(0xfff1dc, 2.6); sole.position.set(3.5, 6, 4.5); sole.castShadow = true
+  sole.shadow.mapSize.set(2048, 2048); Object.assign(sole.shadow.camera, { left: -grande, right: grande, top: grande, bottom: -grande, near: 0.5, far: 24 }); sole.shadow.bias = -0.0006; sole.shadow.radius = 4
+  scena.add(sole)
+  const controluce = new DirectionalLight(0x8fb4ff, 1.3); controluce.position.set(-4, 3, -4); scena.add(controluce)
+  const suolo = new Mesh(new CircleGeometry(60, 40), new MeshStandardMaterial({ color: 0x3b4048, roughness: 1 })); suolo.rotation.x = -Math.PI / 2; suolo.receiveShadow = true; scena.add(suolo)
+  return scena
+}
+const conta = o => { let n = 0; o.traverse(x => { if (x.isMesh) { const g = x.geometry; n += (g.index ? g.index.count : g.attributes.position.count) / 3 } }); return Math.round(n) }
+
+const griglia = document.getElementById('griglia'); if (solo) griglia.className = 'solo'; if (striscia || stIdle) griglia.className = 'striscia'
+const elenco = MOSTRI_VARIE.filter(m => (!solo || m.chiave === solo) && (!zona || m.ruolo === zona))
+for (const m of elenco) {
+  const fig = document.createElement('figure'), tela = document.createElement('canvas'); tela.width = tela.height = LATO
+  const cap = document.createElement('figcaption'); fig.append(tela, cap); griglia.append(fig)
+  const scena = scena3d()
+  let o
+  try { o = m.crea() } catch (e) { errori.push(m.chiave + ': ' + e.message); cap.textContent = m.chiave + ' ERRORE ' + e.message; continue }
+  scena.add(o)
+  const info = o.userData.attacco
+  o.userData.fase = url.has('idle') ? elenco.indexOf(m) * 0.7 : 0
+  if (stIdle) {
+    const S = Number(url.get('lato') || 260), TS = [0, 0.4, 0.8, 1.2, 1.6, 2.0]
+    tela.width = S * 6; tela.height = S
+    const posa = tt => { o.rotation.y = ang; o.userData.anima?.(tt); o.updateMatrixWorld(true) }
+    const un = new Box3(); for (let i = 0; i <= 16; i++) { posa(i / 8); un.union(new Box3().setFromObject(o)) }
+    const c = un.getCenter(new Vector3()), d = un.getSize(new Vector3())
+    const cam = new PerspectiveCamera(30, 1, 0.1, 100), r = d.length() * 0.5 / Math.tan(15 * Math.PI / 180) * 0.85
+    cam.position.set(c.x + r * 0.15, c.y + d.y * 0.2 + r * 0.22, c.z + r); cam.lookAt(c.x, c.y - d.y * 0.04, c.z)
+    renderer.setSize(S, S, false); const ctx = tela.getContext('2d')
+    TS.forEach((tt, i) => { posa(tt); renderer.render(scena, cam); ctx.drawImage(renderer.domElement, i * S, 0); ctx.fillStyle = '#fff'; ctx.font = '15px sans-serif'; ctx.fillText('t=' + tt, i * S + 8, 18) })
+    const tris = conta(o); window.__prova.triangoli[m.chiave] = tris; window.__prova.max = Math.max(window.__prova.max, tris)
+    cap.innerHTML = `<b>${m.nome}</b> — idle, sei istanti da 0 a 2 s`
+    continue
+  }
+  if (striscia) {
+    const S = Number(url.get('lato') || 300), PS = [0, 0.25, 0.5, 0.75, 1]
+    tela.width = S * 5; tela.height = S
+    const posa = pp => { o.rotation.y = ang; o.userData.anima?.(tempo); o.userData.attacca?.(pp); o.updateMatrixWorld(true) }
+    const un = new Box3(); for (let i = 0; i <= 12; i++) { posa(i / 12); un.union(new Box3().setFromObject(o)) }
+    const c = un.getCenter(new Vector3()), d = un.getSize(new Vector3())
+    const cam = new PerspectiveCamera(30, 1, 0.1, 100), r = d.length() * 0.5 / Math.tan(15 * Math.PI / 180) * 0.72
+    cam.position.set(c.x + r * 0.15, c.y + d.y * 0.2 + r * 0.22, c.z + r); cam.lookAt(c.x, c.y - d.y * 0.04, c.z)
+    renderer.setSize(S, S, false); const ctx = tela.getContext('2d')
+    PS.forEach((pp, i) => { posa(pp); renderer.render(scena, cam); ctx.drawImage(renderer.domElement, i * S, 0); ctx.fillStyle = '#fff'; ctx.font = '16px sans-serif'; ctx.fillText('p=' + pp, i * S + 8, 20) })
+    const tris = conta(o); window.__prova.triangoli[m.chiave] = tris; window.__prova.max = Math.max(window.__prova.max, tris)
+    window.__prova.attacchi = window.__prova.attacchi || {}; window.__prova.attacchi[m.chiave] = info ? { tipo: info.tipo, durata: info.durata, arrivo: info.arrivo, proiettile: info.proiettile ? info.proiettile.tipo : null, origine: !!info.proiettile?.origine } : null
+    cap.innerHTML = `<b>${m.nome}</b> — attacco: ${info ? `${info.tipo} · ${info.durata}s · arrivo ${info.arrivo}${info.proiettile ? ' · ' + info.proiettile.tipo : ''}` : 'MANCA'}`
+    continue
+  }
+  const applica = t => {
+    o.userData.anima?.(t)
+    if (cicloAtt) { const tc = t % 2.2, dur = info?.durata ?? 0.7, pp = Math.min(1, Math.max(0, (tc - 0.7) / dur)); o.userData.attacca?.(pp) }
+    else if (att !== null) o.userData.attacca?.(att)
+  }
+  applica(tempo)
+  o.rotation.y += ang
+  o.updateMatrixWorld(true)
+  const sc = new Box3().setFromObject(o), c = sc.getCenter(new Vector3()), d = sc.getSize(new Vector3())
+  const cam = new PerspectiveCamera(30, 1, 0.1, 100)
+  const r = d.length() * 0.5 / Math.tan(15 * Math.PI / 180) * 0.88
+  const zm = Number(url.get('zoom') || 1), yb = url.has('alt') ? sc.min.y + d.y * Number(url.get('alt')) : c.y - d.y * 0.04
+  cam.position.set(c.x + r * 0.15 / zm, (url.has('alt') ? yb : c.y + d.y * 0.25) + r * 0.22 / zm, c.z + r / zm); cam.lookAt(c.x, yb, c.z)
+  const disegna = t => {
+    applica(t)
+    renderer.setSize(LATO, LATO, false); renderer.render(scena, cam)
+    const ctx = tela.getContext('2d'); ctx.clearRect(0, 0, LATO, LATO); ctx.drawImage(renderer.domElement, 0, 0)
+  }
+  disegna(tempo)
+  const tris = conta(o); window.__prova.triangoli[m.chiave] = tris; window.__prova.max = Math.max(window.__prova.max, tris)
+  cap.innerHTML = `<b>${m.nome}</b> — ${tris} triangoli · <b>${m.ruolo}</b><br>${m.luogo} · taglia ${m.taglia} · forza ${m.forza}`
+  if (!pausa) { const t0 = performance.now(); const giro = () => { disegna(tempo + (performance.now() - t0) / 1000); requestAnimationFrame(giro) }; giro() }
+}
+
+// ── a confronto di scala: l'elfa e i mostri principali, alle proporzioni reali ──
+{
+  const tela = document.getElementById('scala'), W = 1500, H = 420; tela.width = W; tela.height = H
+  const scena = scena3d(9)
+  const scelti = ['pianta', 'piranha', 'golem-muschio', 'golem-muschio-antico', 'scorpione', 'scorpione-regale', 'mostro-viola', 'mostro-viola-nero', 'pipistrello-occhio', 'pipistrello-occhio-blu']
+  const lista = [['elfa', creaEroe('elfa'), 'Elfa (eroe)'], ...scelti.map(k => MOSTRI_VARIE.find(x => x.chiave === k)).filter(Boolean).map(m => [m.chiave, m.crea(), m.nome])]
+  let x = 0; const bb = []
+  for (const [, o] of lista) {
+    o.userData.anima?.(tempo); o.rotation.y = 0.5; o.updateMatrixWorld(true)
+    const b = new Box3().setFromObject(o), w = b.max.x - b.min.x
+    o.position.x = x - b.min.x; x += w + 0.35; scena.add(o); bb.push(new Box3().setFromObject(o))
+  }
+  const Wt = x - 0.35, alto = Math.max(...bb.map(b => b.max.y))
+  const cam = new PerspectiveCamera(20, W / H, 0.1, 200)
+  const dist = Math.max(Wt * 0.5 / (Math.tan(10 * Math.PI / 180) * (W / H)), alto * 0.6 / Math.tan(10 * Math.PI / 180)) * 1.08
+  cam.position.set(Wt / 2, alto * 0.5 + dist * 0.12, dist); cam.lookAt(Wt / 2, alto * 0.42, 0)
+  renderer.setSize(W, H, false); renderer.render(scena, cam)
+  const ctx = tela.getContext('2d'); ctx.drawImage(renderer.domElement, 0, 0)
+  document.getElementById('capscala').textContent = lista.map(([, , n], i) => `${n} h≈${(bb[i].max.y).toFixed(2)}`).join(' · ')
+}
+window.__prova.ok = errori.length === 0
+</script>
+</body>
+</html>
