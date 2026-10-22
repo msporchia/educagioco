@@ -28,6 +28,7 @@ dati/
   compagni.js        Watson e i gatti: i dati, il livello a cui arrivano, le scelte pure (meta, cosa fare, le sequenze di «Quando ci premi»: richiamo, feste di Watson, risposte dei gatti, incontro), `ASPETTO_ERO` ([compagni.md](compagni.md))
   livelli.js         le soglie, `roba(liv)`, i nomi dei livelli, i guasti dei livelli
   ordini.js          il banco: i clienti, i tempi, il premio (tetto 🪙6/min), `chiedibili(livello)`, i guasti
+  albero.js, usi.js  «Come si fa» (`alberoDi`: la catena di una merce) e a cosa serve una merce (`usiDi`), puri ([guida.md](guida.md))
   regole.js          i costi (anche l'albero 🪙 3 e il sasso 🪙 1, il prezzo dei lotti), le pecore
   mongolfiera.js     la nave: file, casse, pezzi, bonus, il riposo, la sorpresa (`SORPRESE`), `merceDaCassa`, `premioDellaCassa`, i guasti col tetto ([mongolfiera.md](mongolfiera.md))
   alberi.js          gli alberi storici (sempre gli stessi: un caso col seme) e quelli dei lotti nuovi
@@ -58,6 +59,7 @@ scena3d/             il disegno (vedi scena.md); `facce.js` la faccia di una mer
 viste/
   Faccia.vue         la faccia di una merce (`k` la chiave, `n` il numerino): il pezzo dell'atlante 2D con `Provino.vue`, l'emoji come ripiego; la usano inventario, banco, macchina, semi, livelli, visita
   Hud.vue            il gettone del livello (⭐ N con la barra sottile, apre i livelli), il tasto «🎒 Inventario» (pallino se è entrata roba dall'ultima apertura) e, da livello 2, «🧺 Banco» col pallino degli ordini consegnabili. Niente liste di scorte sul prato
+  Albero.vue         «🌳 Come si fa»: la strada di una merce a figure con le rotaie (dati/albero.js); si apre da inventario e da sotto un «non si può» ([guida.md](guida.md); stile: `stile-albero.css`)
   Inventario.vue     il foglio delle scorte a schede (🌾 raccolti, 🧺 prodotti, 🧶 lana e altro): gettoni con faccia e numero, un tocco dice nome e a cosa serve; solo lettura, niente vendere. Il conto sta in `inventario-puro.js` (stile: `stile-inventario.css`)
   Guardaroba.vue     il foglio dell'abito ([guardaroba.md](guardaroba.md)): il ritratto 3D (anteprima `contadino:<abito>`), chi si è (la scelta del profilo, `SceltaAspetto`), le schede dei capi e i gettoni col lucchetto
 

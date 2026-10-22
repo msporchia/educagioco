@@ -28,7 +28,7 @@ Le arature non esistono in nessuna delle due.
 | C11 | silo del raccolto / della stalla / dispensa | 3 silos da 🪙120, livelli 1 / 4 / 16 | ❌ nessun silo | P1 |
 | C12 | scomparti | 8 pezzi per merce, +2 a ogni ingrandimento (tutti insieme), costo `40+130·ln(1+n)` | ❌ scorte senza tetto | P1 |
 | C13 | scomparto pieno | non si raccoglie e non si paga, il campo resta pronto; il foglio dice cosa fare | ❌ (non può succedere) | P1 |
-| C14 | «chi la usa» sulla roba | premere una merce dice dove si lavora (`dati/usi.js`) + «Come si fa» | 🟡 l'inventario dice «a cosa serve» in una frase | P1 |
+| C14 | «chi la usa» sulla roba | premere una merce dice dove si lavora (`dati/usi.js`) + «Come si fa» | 🟡 l'inventario dice «a cosa serve» in una frase (`dati/usi.js`) e ha il tasto «🌳 Come si fa» (I3); resta il «chi la usa» come foglio e gli scomparti (C11–C13) | P2 |
 | C15 | carretto del vicino per svuotare lo scomparto | roba 5 → 1, mai monete | ❌ (senza scomparti non serve; i vicini sono un'altra cosa) | P2 |
 
 Perché i silos contano: sono un pozzo di monete che non si esaurisce (28 posti ≈ 7 ore di spesa) e il momento in cui il gioco

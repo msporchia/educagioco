@@ -1,0 +1,31 @@
+/* «Come si fa» (viste/Albero.vue): una colonna di righe a figure con le rotaie di un albero; il bordo dice lo stato (verde c'è, ambra manca, azzurro lavora).
+   Le rotaie sono bordi e non caratteri (┌├│└ cambiano altezza da un font all'altro). Prefisso .f3a; il foglio viene da stile.css. */
+.f3-albero .f3-albero-corpo { display: flex; flex-direction: column; gap: 5px; padding: 4px 4px calc(10px + env(safe-area-inset-bottom)); text-align: left; }
+.f3a-riga { display: flex; align-items: stretch; }
+.f3a-riga > .f3a-ramo { flex: 1; min-width: 0; }
+.f3a-rotaie { display: flex; flex: none; }
+.f3a-rot { width: 13px; position: relative; }
+.f3a-rot.giu::before, .f3a-rot.mezzo::before { content: ''; position: absolute; left: 6px; top: -5px; bottom: -5px; border-left: 2px solid #c9a874; }
+.f3a-rot.chiude::before { content: ''; position: absolute; left: 6px; top: -5px; height: calc(50% + 5px); border-left: 2px solid #c9a874; }
+.f3a-rot.apre::before { content: ''; position: absolute; left: 6px; top: 50%; bottom: -5px; border-left: 2px solid #c9a874; }
+.f3a-rot.mezzo::after, .f3a-rot.chiude::after, .f3a-rot.apre::after { content: ''; position: absolute; left: 6px; top: 50%; right: 0; border-top: 2px solid #c9a874; }
+.f3a-ramo { display: flex; align-items: center; gap: 8px; min-height: 48px; padding: 5px 8px; border-radius: 11px; background: #fffaf0; border: 2px solid #ecd6a8; color: #5a3a1a; }
+.f3a-ramo.radice { border-color: #a8c98a; background: #eaf6d8; }
+.f3a-ramo.ok { border-color: #a8c98a; }
+.f3a-ramo.manca { border-color: #e09a1c; }
+.f3a-ramo.arriva { opacity: .6; }
+.f3a-ramo.lavora { border-color: #4a90c8; }
+.f3a-testo { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.f3a-testo b { font-size: 14px; color: #4a2c12; overflow-wrap: anywhere; }
+.f3a-testo b em { font-style: normal; font-weight: 400; color: #8a6a48; }
+.f3a-testo span { font-size: 12.5px; color: #5a3a1a; opacity: .85; }
+.f3a-ramo.manca .f3a-testo span { color: #c46a0a; opacity: 1; }
+.f3a-ramo.ok .f3a-testo span { color: #4f8f2a; }
+/* dove si fa: il connettore, più basso e senza figura grande, bordo tratteggiato */
+.f3a-ramo.via { min-height: 44px; padding: 3px 8px; border-width: 1px; border-style: dashed; background: transparent; }
+.f3a-ramo.via .f3a-testo b { font-size: 13px; font-weight: 600; }
+.f3a-luogo { flex: none; width: 34px; text-align: center; font-size: 24px; line-height: 1; }
+.f3a-bot { flex: none; min-width: 44px; min-height: 44px; padding: 4px 10px; border: 2px solid #e0a020; border-radius: 12px; background: #ffd36a; color: #4a2c12; font: 800 12.5px "Emoji Gioco", system-ui, sans-serif; touch-action: manipulation; max-width: 38%; }
+.f3-albero.f3-foglio { background: #fff7e6; }       /* opaco: sotto c'è un altro foglio (la macchina, l'inventario) e non deve trasparire */
+.f3a-ramo.radice.manca { background: #fff1d6; }
+@media (min-width: 700px) { .f3-albero.f3-foglio { left: 0; right: 0; margin: 0 auto; max-width: 720px; border-radius: 22px 22px 0 0; } }
