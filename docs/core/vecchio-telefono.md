@@ -52,7 +52,7 @@ per provarla sul computer (`[data-fascia]`, `[data-fascia-scelta]`, `[data-azion
 
 ## La misura a scene (il benchmark)
 
-Zona dei grandi → *giochi* → **Misura questo telefono** (`components/genitori/Benchmark.vue`, nei test
+Zona dei grandi → *Impostazioni* → *Avanzate* → **Misura questo telefono** (`components/genitori/Benchmark.vue`, nei test
 `[data-azione="benchmark"]`, `[data-benchmark-log]`). Un minuto di scene di `grafica/benchmark/prove.js`, ognuna con UNA
 cosa sola a qualità diverse: pixel (shader leggero e pesante, pixel ratio 1 / 1,5 / vero), 8 strati sfumati a schermo
 intero, scintille additive da 40 a 120 px (le esplosioni), 10k / 40k / 100k triangoli con luci, 30 / 150 / 400 oggetti
@@ -62,6 +62,10 @@ pixel: non dipende dai 60 Hz) con p95 e fps. `grafica/benchmark/log.js` li compo
 XX sopra) con una «LETTURA» che nomina cosa pesa e cosa togliere, e in fondo la riga `DATI {…}`. «Manda» apre il modulo dei
 giudizi con il log nel campo `giudizi` (l'unico modulo con un campo lungo: ~3,5k caratteri, se l'indirizzo è troppo lungo
 c'è «Copia»); «Rifai» ripete. Un pezzo che il telefono non regge (la tela half-float) è una riga «non regge», non un errore.
+L'ultimo log resta sul telefono (`store/benchmark.js`) e «L'ultima a scene» lo riapre.
+
+Lo stesso foglio ha la **misura coi modelli veri** (i giochi veri, qualche minuto: il limite di mostri, persone ed edifici e il collo
+di bottiglia fra triangoli, chiamate, pixel e luci): [vecchio-telefono-veri.md](vecchio-telefono-veri.md).
 
 ## Tarare il computer sul telefono (una volta)
 
