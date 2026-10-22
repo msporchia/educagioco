@@ -133,7 +133,7 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
     scaldaPiano(corsa)
     // dove il telefono compila in parallelo (KHR_parallel_shader_compile) gli shader del piano si chiedono subito e si disegna quando
     // sono pronti (al più un secondo): intanto resta il quadro di prima, e la pagina non si ferma. Senza, il primo disegno li aspetta
-    if (renderer.extensions.has('KHR_parallel_shader_compile')) { compila(scena); attesaShader = performance.now() + 1000 }
+    if (ACCESI.riscaldamento && renderer.extensions.has('KHR_parallel_shader_compile')) { compila(scena); attesaShader = performance.now() + 1000 }
   }
   let attesaShader = 0
   const shaderPronti = () => renderer.info.programs.every(p => p.isReady())
@@ -148,6 +148,7 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
   function scaldaPiano(corsa) {
     daScaldare.length = 0
     scaldaDa = S.tempo + 1
+    if (!ACCESI.riscaldamento) return   // `&spegni=riscaldamento`: per misurare quanto toglie (docs/core/vecchio-telefono-veri.md, «L'ingresso»)
     daScaldare.push(() => compila(scena))
     const vivi = corsa.livello.robe.filter(r => r.che === 'mostro' && !r.morto)
     if (mostri3d) for (const id of new Set(vivi.map(r => mostri3d.idDi(r)).filter(Boolean))) daScaldare.push(() => mostri3d.prepara(id, compila))
