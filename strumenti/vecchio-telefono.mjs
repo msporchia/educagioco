@@ -23,6 +23,9 @@
 // principale (il profilatore di Chrome, tempo proprio) e le voci senza JS («(program)»: stili, impaginazione, disegno della pagina);
 // `--traccia 15` le 15 voci della traccia di Chrome (devtools.timeline) che durano di più sul filo principale, in ms a fotogramma
 // (le voci si annidano: «RunTask» contiene le altre), e quelle del filo che compone e disegna la pagina. Il pixel ratio dei giochi si adatta da sé: per vedere il costo vero a una risoluzione, il cheat `&dpr=N`.
+// `--per 'folla=0,8,16'` fa una riga per ogni valore aggiunto all'indirizzo (`&folla=0`, `&folla=8`…: quanti personaggi, quanti edifici);
+// `--banco 20` stampa sotto ogni riga il banco della tela (`banco(20)`: ms senza i 60 Hz) con chiamate, triangoli e JS della scena, per
+// il Sotterraneo 3D (discese e mondo di sopra) e la Fattoria 3D. I limiti misurati così: docs/sotterraneo/limiti-3d.md, docs/fattoria3d/limiti.md.
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -201,14 +204,16 @@ async function misura() {
   const ritmo = opz('ritmo') || (scontro ? ATTACCO : null), ogni = Number(opz('ogni', scontro ? 3000 : 2500))
   const fasi = opz('fasi') || (scontro ? FASI_SCONTRO : null)
   const spegni = opz('spegni') ? opz('spegni').split(',') : [null]
+  const per = opz('per') ? (([k, v]) => v.split(',').map(x => `${k}=${x}`))(opz('per').split('=')) : [null]
+  const banco = Number(opz('banco', 0))
   process.env.DIST = dist
   const { apriGioco } = await import('../test/aiuto/browser.mjs')
   const b = await apri()
   console.log(`telefono ${SCHERMO.width}×${SCHERMO.height} a ${PIXEL}, GPU: ${await renderer(b)} (--gpu ${gpuModo}), ${secondi} s per riga`)
   console.log('  CPU  zavorra   fps   p50   p95   p99  >33ms  >50ms  note')
-  for (const cpu of cpus) for (const K of zavs) for (const sp of spegni) {
+  for (const cpu of cpus) for (const K of zavs) for (const sp of spegni) for (const pv of per) {
     const hog = await zavorra(b, K)
-    const hash = sp && sp !== '-' ? `${primo}&spegni=${sp.replace(/\+/g, ',')}` : primo
+    const hash = (sp && sp !== '-' ? `${primo}&spegni=${sp.replace(/\+/g, ',')}` : primo) + (pv ? `&${pv}` : '')
     const { page } = await apriGioco(b, { viewport: SCHERMO, pixel: PIXEL, hash, attesa: null, indirizzo: 'file://' + dist, userAgent: UA })
     const adatta = []
     page.on('console', m => /pixel ratio/.test(m.text()) && adatta.push(m.text().replace(/^\[spazio3d\] /, '')))
@@ -228,6 +233,17 @@ async function misura() {
     const s = await page.context().newCDPSession(page)
     if (cpu > 1) await s.send('Emulation.setCPUThrottlingRate', { rate: cpu })
     if (esegui) await page.evaluate(esegui)
+    // il banco della tela e i conti della scena (Sotterraneo 3D, discese o mondo; Fattoria 3D), se l'espressione non ha lasciato il suo
+    if (banco) await page.evaluate(n => {
+      if (window.__extra) return
+      window.__extra = () => {
+        const f = window.__fattoria3d && window.__fattoria3d.mondo, s = window.__sotterraneo3d
+        if (f) { const g = f.statistiche(), c = f.conteggi(); return { banco: f.banco(n), chiamate: g.calls, triangoli: g.triangoli, js: +g.cpu.toFixed(2), mesh: c.mesh, ombre: c.ombre, degrado: g.livello } }
+        if (!s) return null
+        const g = s.grafica()
+        return { banco: s.banco(n), chiamate: g.chiamate, triangoli: g.triangoli, js: g.msJs, ...(g.mostri3d != null ? { mostri3d: g.mostri3d } : {}), ...(g.persone3d ? { persone3d: g.persone3d.visibili } : {}), ...(g.mondo ? { mostri: g.mostri } : {}) }
+      }
+    }, banco)
     await s.send('Performance.enable')
     const metriche = async () => Object.fromEntries((await s.send('Performance.getMetrics')).metrics.map(m => [m.name, m.value]))
     const m0 = await metriche()
@@ -248,7 +264,7 @@ async function misura() {
     const prof = profilo ? (await s.send('Profiler.stop')).profile : null
     const tr = traccia ? JSON.parse((await b.stopTracing()).toString()).traceEvents : null
     const g = await page.evaluate(() => { try { return (window.__sotterraneo3d?.grafica || window.__mate?.grafica)?.() } catch (e) { return null } })
-    const nota = [sp && sp !== '-' ? `spegni ${sp}` : '', g && g.dpr ? `dpr ${g.dpr}` : '', g && g.chiamate ? `${g.chiamate} chiamate` : '', g && g.triangoli ? `${g.triangoli} tri` : '',
+    const nota = [pv || '', sp && sp !== '-' ? `spegni ${sp}` : '', g && g.dpr ? `dpr ${g.dpr}` : '', g && g.chiamate ? `${g.chiamate} chiamate` : '', g && g.triangoli ? `${g.triangoli} tri` : '',
       adatta.length ? `si adatta: ${adatta[adatta.length - 1]}` : ''].filter(Boolean).join(', ')
     const nomi = fasi ? [...new Set(fa)].sort() : ['']
     for (const nome of nomi) {
