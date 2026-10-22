@@ -11,6 +11,19 @@ Le eccezioni, decise dall'utente:
 - **Campi** (D12): le quattro tessere restano; è una questione di spazio sulla mappa, non di costo: il campo intero rende come uno della 2D e la terra si tara come sopra.
 - **Pesca**: è un'attività che entra a un livello **medio-alto**; nessun bambino ci è ancora arrivato, quindi si ritara **solo la parte medio-alta** della scala per incastrarla (D4 chiuso in questo senso).
 
+## Risposte dell'utente (22/10/2026)
+
+- **D3**: tutto come la 2D (il fienile al livello e al prezzo della 2D: livello 6, 🪙150).
+- **D4**: la pesca si calibra insieme alla parte medio-alta della scala, tenendo conto degli altri tempi.
+- **D5–D6**: vendere ai vicini non dà monete e comprare non dà esperienza: sono posti di vendita in più, un palliativo per far contenti i vicini. Si tiene.
+- **D7**: come la 2D, cioè **un fienile solo** (la macchina). Si toglie il fienile di scena (`FISSI`, `POSTI_STORICI`, alberi dei lotti storici); un salvataggio vecchio non perde niente.
+- **D8**: i laghetti naturali si tengono ma sono troppo piccoli («pozzanghere»): si ingrandiscono e si genera una mappa credibile ([../laghi.md](../laghi.md)).
+- **D10**: si tiene tutto il solo-3D. Le visite agli amici restano pronte e **non attivate**: prima si prova il gioco con i bambini.
+- **D12**: già risposto (regola generale sopra).
+- **D14**: un cut-off da parte dell'utente: per ora una delle due fattorie è `sperimentale`, e si sfrutta questo per evitare pasticci; niente si toglie dal codice.
+- **D16**: nessuna nota né riga per i bambini finché la 3D non esce da `sperimentale`.
+- **D15**: ancora aperta (cosa fa un telefono senza WebGL 2 o debole).
+
 ## D1 — Cosa succede ai salvataggi della 2D (blocca G1)
 
 | opzione | pro | contro |
