@@ -178,11 +178,11 @@ export function giudizioDi({ viste = [], difficili = [], migliorate = 0 } = {}) 
              testo: migliorate ? `Nessuna domanda gli va male, e questa settimana è migliorato su ${migliorate}.` : 'Nessuna domanda gli va male.' }
   if (difficili.every(r => solo(r, ['toste', 'sopra'])))
     return { tono: 'normale', titolo: 'Ha difficoltà con le domande più difficili',
-             testo: nd === 1 ? 'Una sola, e è un passo avanti: è normale. Quelle del suo livello vanno bene.'
+             testo: nd === 1 ? 'Una sola, ed è un passo avanti: è normale. Quelle del suo livello vanno bene.'
                              : `${nd}, e sono tutte un passo avanti: è normale. Quelle del suo livello vanno bene.` }
   if (nd <= Math.max(3, Math.round(valutate.length * 0.25)))
     return { tono: 'alcune', titolo: 'Ha difficoltà con alcune domande',
-             testo: `${nd === 1 ? 'Una' : nd} su ${valutate.length} vanno male: sotto le trovi, e puoi provarle, spostarle o non chiedergliele più.` }
+             testo: `${nd === 1 ? 'Una' : nd} su ${valutate.length} ${nd === 1 ? 'va' : 'vanno'} male: sotto le trovi, e puoi provarle, spostarle o non chiedergliele più.` }
   return { tono: 'tante', titolo: 'Fa fatica con parecchie domande',
            testo: `${nd} su ${valutate.length} vanno male: forse i giochi sono tarati troppo avanti. Prova ad abbassare l'età a mano (Bambino › Tara a mano).` }
 }

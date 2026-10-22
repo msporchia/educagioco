@@ -81,6 +81,13 @@ await molt.locator('[data-diff="su"]').click()
 await attendi(page, 700)
 controlla('tornata a zero: la voce sparisce dal profilo', (await leggiProfilo(page)).settings.ritocchi?.moltiplicazioni === undefined)
 
+/* ── gli Asteroidi: i pezzi di scuola delle sue tappe sono interruttori (spegnere le divisioni toglie la tappa che le vuole) ── */
+await vai('mate')
+await apriTutte()
+const saperiMate = await page.locator('[data-gioco-sapere]').evaluateAll(l => l.map(x => x.dataset.giocoSapere))
+controlla('gli Asteroidi elencano i pezzi di scuola delle loro tappe', ['moltiplicazioni', 'divisioni', 'decine', 'stima', 'numeri'].every(k => saperiMate.includes(k)), saperiMate.join(','))
+controlla('e dicono cosa chiedono, sopra', /tabelline/i.test(await page.locator('[data-gioco-insegna]').innerText()))
+
 /* ── un gioco che ha bisogno di un sapere per esserci: lo dice ── */
 await vai('pozioni')
 await apriTutte()
