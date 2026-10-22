@@ -21,7 +21,7 @@ import { creaCose } from './cose.js'
 import { creaEroe, disegnaEroe } from './eroe.js'
 import { creaEroe3d, eroe3dAcceso } from './eroe3d.js'
 import { creaMostri3d, mostri3dAccesi } from './mostro3d.js'
-import { creaGestore, statoDi } from './effetti3d/gestore.js'
+import { creaGestore, statoDi, effettiPrevisti } from './effetti3d/gestore.js'
 import { statiDel } from '../viste/campo.js'
 import { creaRacconto, assalto } from './racconto.js'
 import { creaAzione } from './azione.js'
@@ -31,6 +31,8 @@ import { creaContorno } from './contorno.js'
 import { ACCESI, POLVERE, SCINTILLE, FIGURE_MAX, ALONI_MAX, MARGINE_DITO } from './costanti.js'
 import { verso } from './tempo.js'
 import { elencaProgrammi } from './programmi.js'
+import { COSE } from '../dati/cose.js'
+import { mosseDi } from '../dati/mosse.js'
 
 const NIENTE = { emetti() {}, aggiorna() {}, aspetto() {}, via() {} }
 
@@ -128,6 +130,30 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
     eroe.px = null; eroe.ritorno = false
     cam.salta()
     azione.annulla()
+    scaldaPiano(corsa)
+  }
+
+  // Il riscaldamento degli shader (docs/sotterraneo/prestazioni-3d.md, «Shader e prima apparizione»): un secondo dopo il primo disegno
+  // di un piano, un pezzo per fotogramma (mai mentre si racconta un colpo), quello che il primo disegno non ha compilato: la scena intera (le cose ancora spente: gli anelli e le
+  // colonne dello scontro, i portali), un'istanza in serbo di ogni modello di mostro del piano, una volta per discesa gli effetti.
+  // `compile` chiede e non aspetta: il telefono li compila mentre si esplora, e il primo scontro e il primo colpo li trovano pronti
+  const daScaldare = []
+  let scaldaDa = 0
+  const compila = o => (post ? post.compila(o, cam.camera, scena) : renderer.compile(o, cam.camera, scena))
+  function scaldaPiano(corsa) {
+    daScaldare.length = 0
+    scaldaDa = S.tempo + 1
+    daScaldare.push(() => compila(scena))
+    const vivi = corsa.livello.robe.filter(r => r.che === 'mostro' && !r.morto)
+    if (mostri3d) for (const id of new Set(vivi.map(r => mostri3d.idDi(r)).filter(Boolean))) daScaldare.push(() => mostri3d.prepara(id, compila))
+    // gli effetti dopo i mostri: si sa che colpo hanno i loro modelli (effettiPrevisti); quelli già scaldati non tornano
+    if (effetti3d) daScaldare.push(() => daScaldare.push(...effetti3d.riscaldamento(effettiPrevisti({
+      albero: corsa.crescita && corsa.crescita.albero, famiglia: corsa.mano && COSE[corsa.mano] ? COSE[corsa.mano].famiglia : null,
+      attacchi: mostri3d ? mostri3d.attacchi() : [], mosse: vivi.flatMap(r => mosseDi(r)) }), compila)))
+  }
+  function scaldaUno() {
+    const f = daScaldare.shift()
+    try { f() } catch (e) { /* solo un anticipo: il primo uso compila come sempre */ }
   }
 
   // l'eroe dà un colpo; se il motore la rompe (motore/botti.js: lascia il segno e, una volta su cinque, qualcosa per terra) la botte si
@@ -253,6 +279,7 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
     if (post) post.disegna(scena, cam.camera); else renderer.render(scena, cam.camera)
     ctx.misure.msDisegno = performance.now() - t1
     ctx.conta(ms)
+    if (daScaldare.length && S.tempo >= scaldaDa && !(fx && fx.attivo)) scaldaUno()   // dopo il disegno: la GPU fa prima quello che serve adesso
     if (aFotogrammaFinito) { const f = aFotogrammaFinito; aFotogrammaFinito = null; f() }
   }
 
@@ -319,7 +346,7 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
                msJs: Math.round(m.msJs * 100) / 100, msDisegno: Math.round(m.msDisegno * 100) / 100,
                figure: figure ? figure.quante : 0, pixelSprite: Math.round(cam.pixelSprite * 100) / 100, scenario: piano ? piano.aspetto.chiave : null, palco: !!scontro.palco,
                programmi: (renderer.info.programs || []).length, memoria: { ...renderer.info.memory },
-               mostri3d: mostri3d ? mostri3d.visibili : 0, modelli3d: mostri3d ? mostri3d.quante : 0, effetti3d: effetti3d ? effetti3d.quanti : 0 }   // gli shader compilati: se crescono a ogni colpo, il telefono si ferma a compilare
+               daScaldare: daScaldare.length, mostri3d: mostri3d ? mostri3d.visibili : 0, modelli3d: mostri3d ? mostri3d.quante : 0, effetti3d: effetti3d ? effetti3d.quanti : 0 }   // gli shader compilati: se crescono a ogni colpo, il telefono si ferma a compilare
     },
     // il banco: `n` disegni della scena così com'è, ognuno aspettato (la lettura di un pixel): i ms della tela da sola, senza
     // la pagina attorno né i 60 Hz (docs/core/vecchio-telefono.md, «Lo scontro»); la mediana e il p90
