@@ -61,9 +61,9 @@ stessaLista('quattro botteghe: pasticceria, osteria, mensa, merceria', TIPI_DI_B
     controlla(`${tipo}: è un edificio unico e non una macchina`, E.bottega && E.categoria === 'edifici' && TIPI_DI_EDIFICIO.includes(tipo) && !PEZZI[tipo] && !Object.values(RICETTE).some(r => r.dove === tipo))
     stessaLista(`${tipo}: i clienti sono quelli della 2D`, BOTTEGHE[tipo].clienti, v.posto.clienti)
     const resto = v.posto.chiede.filter(p => !MERCE_3D(p))
-    controlla(`${tipo}: di ciò che la 2D chiede la 3D non ha solo ${resto.join(', ') || 'niente'} (la merenda e le caramelle)`, resto.every(p => ['merenda', 'caramelle'].includes(p)), resto.join())
+    controlla(`${tipo}: di ciò che la 2D chiede la 3D non ha solo ${resto.join(', ') || 'niente'} (ora la 3D ha merenda e caramelle)`, resto.length === 0, resto.join())
     stessaLista(`${tipo}: le altre merci ci sono tutte, nell'ordine della 2D`, BOTTEGHE[tipo].merci, v.posto.chiede.map(MERCE_3D).filter(Boolean))
-    controlla(`${tipo}: ogni merce esiste (raccolto, ricetta, uova, latte, tartufi o lana)`, BOTTEGHE[tipo].merci.every(k => COLTURE[k] || RICETTE[k] || ['uova', 'latte', 'tartufi', 'lana'].includes(k)))
+    controlla(`${tipo}: ogni merce esiste (raccolto, ricetta, uova, latte, pancetta o lana)`, BOTTEGHE[tipo].merci.every(k => COLTURE[k] || RICETTE[k] || ['uova', 'latte', 'pancetta', 'lana'].includes(k)))
   }
   uguale('la pasticceria 3D ha il nome nuovo: `pasticceria` resta il Pastificio', EDIFICI.pasticceria.nome, 'Pastificio')
   stessaLista('i nomi delle merci: il carota 3D è la carote 2D, il foraggio resta foraggio', [prodotto2D('carota'), prodotto2D('foraggio_carote'), MERCE_3D('carote'), MERCE_3D('fragole')], ['carote', 'foraggio', 'carota', 'fragola'])
@@ -108,7 +108,7 @@ stessaLista('quattro botteghe: pasticceria, osteria, mensa, merceria', TIPI_DI_B
   // il tetto: nessun cliente di nessuna bottega rende più di 🪙6 al minuto di lavoro, con i minuti della 3D
   const { f } = mondo({ tipo: 'bottega_osteria' })
   controlla('premioInBottega è il banco ×1,25 arrotondato, con lo stesso conto', premioInBottega('pane', 3) === Math.round(premioPer({ pane: 3 }) * PIU_DEL_BANCO))
-  controlla('e una merce che la 3D non ha non esiste', MERCE_3D('merenda') === null && MERCE_3D('caramelle') === null && merciDellaBottega(f, 'bottega_osteria').every(Boolean))
+  controlla('merenda e caramelle (G5) ci sono, e il tartufo 2D è la pancetta 3D', MERCE_3D('merenda') === 'merenda' && MERCE_3D('caramelle') === 'caramelle' && MERCE_3D('tartufi') === 'pancetta' && merciDellaBottega(f, 'bottega_osteria').every(Boolean))
 }
 
 /* ══════════ 3. mettere la bottega: come ogni edificio, e non lavora se non c'è ══════════ */
@@ -207,7 +207,7 @@ stessaLista('quattro botteghe: pasticceria, osteria, mensa, merceria', TIPI_DI_B
   }
   const alto = mondo({ liv: ULTIMO, tipo: 'bottega_osteria' }).f, basso = mondo({ liv: 29, tipo: 'bottega_osteria' }).f
   controlla('più sale il livello più merci chiede (il sushi non è per il livello 29)', merciDellaBottega(alto, 'bottega_osteria').length > merciDellaBottega(basso, 'bottega_osteria').length && !merciDellaBottega(basso, 'bottega_osteria').includes('sushi'))
-  controlla('uova, latte, tartufi e lana contano col livello del pezzo che li fa', Number.isFinite(livelloDellaMerce('uova')) && Number.isFinite(livelloDellaMerce('latte')) && Number.isFinite(livelloDellaMerce('lana')) && Number.isFinite(livelloDellaMerce('tartufi')))
+  controlla('uova, latte, pancetta e lana contano col livello del pezzo che li fa', Number.isFinite(livelloDellaMerce('uova')) && Number.isFinite(livelloDellaMerce('latte')) && Number.isFinite(livelloDellaMerce('lana')) && Number.isFinite(livelloDellaMerce('pancetta')))
 }
 
 /* ══════════ 7. lo stato: uno di prima si legge, uno rotto si rimette in forma ══════════ */

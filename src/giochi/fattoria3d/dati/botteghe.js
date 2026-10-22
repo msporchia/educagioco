@@ -31,6 +31,7 @@ const INVERSA = new Map()
 for (const k of Object.keys(COLTURE)) INVERSA.set(prodotto2D(k), k)
 for (const k of Object.keys(RICETTE)) if (!INVERSA.has(prodotto2D(k))) INVERSA.set(prodotto2D(k), k)
 for (const k of [...Object.keys(PRODOTTI_ANIMALI), ...Object.keys(LANA)]) if (!INVERSA.has(k)) INVERSA.set(k, k)
+INVERSA.set('tartufi', 'pancetta')      // il maiale 3D fa la pancetta: l'id 3D è rinominato, quello 2D (e dei clienti 2D) resta `tartufi`
 export const MERCE_3D = p2 => INVERSA.get(p2) || null
 
 const posto2D = tipo => POSTI_2D.find(v => v.id === SORELLA_2D[tipo])
