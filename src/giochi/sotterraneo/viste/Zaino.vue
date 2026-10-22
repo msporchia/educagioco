@@ -1,5 +1,5 @@
 <script setup>
-// Lo zaino, nello stesso stile della bottega: l'eroe con le quattro caselle intorno, le sei tasche in griglia e
+// Lo zaino, nello stesso stile della bottega: l'eroe con le sei caselle intorno, le sei tasche in griglia e
 // il pannello del pezzo scelto col confronto e i tasti (docs/sotterraneo/bottega-finestra.md, "La bottega e lo zaino").
 // Una tasca si sceglie, poi si decide: con sei piene, l'unico modo di liberarne una era usare quello che c'era
 // dentro. Una cosa che questa classe non impugna si vede spenta prima di toccarla, e dice il perché.

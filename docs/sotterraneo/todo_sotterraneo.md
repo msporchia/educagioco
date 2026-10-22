@@ -51,9 +51,12 @@ rimasti aperti. Quando una voce si chiude si toglie da qui (la storia sta in `gi
 - **`integrazione/sotterraneo-mondo` fallisce al passo della pietra** (`[data-pietra-domanda] .qz-tasto` non compare entro 30 s) anche senza
   la modifica del rigattiere, con load average 16–23; da solo, a macchina libera, passava. Da rilanciare quando il carico è basso; se
   fallisce ancora è una regressione dei gesti (drag/tocco) o della pietra del villaggio nuovo.
-- **Rossi anche prima di questi giorni** (non nostri, da guardare): `sotterraneo-dettaglio`, `-barra`, `-bottega-avanti` (instabile),
-  `-cura`, `-missioni` (la guardia con la missione «chiavi»), `integrazione/sotterraneo` (4 caselle nello zaino, ce ne sono 6),
-  `misure/sotterraneo` (il fondo a 4/10).
+- **`misure/sotterraneo` è rossa per taratura** (22 ottobre, non ritarata per ordine di Marco): a 4/10 il nano al fondo vince 14/20 (non «quasi
+  sempre»), e fra i quattro eroi la torre vince il 31% e il fondo il 43% (bersaglio: quasi mai). Da risolvere insieme alla taratura qui sotto.
+- **I test del browser col dito e la mappa che scorre**: chiuso un dialogo o aperto un foglio, la mappa torna a posto scorrendo per circa un
+  secondo; un tocco dato prima cade sul prato. `-cura` e `-missioni` ora aspettano che la cosa stia ferma (`toccaIl` locale); lo stesso
+  `toccaIl` copiato in altri test non lo fa, se uno diventa instabile si sa dove guardare. `-bottega-avanti` passava in questo giro ma a volte
+  fallisce per un prezzo casuale.
 - **`node_modules` condiviso svuotato** da un `npm ci` interrotto (21 ottobre, ripristinato copiando un'installazione): i worktree degli
   agenti lo collegano con un symlink al checkout principale; chi lancia `npm ci` lì rompe tutti.
 
