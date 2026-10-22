@@ -30,13 +30,14 @@ const dai = (f, chiede) => { for (const [k, n] of Object.entries(chiede)) { if (
 const guasti = guastiDegliOrdini()
 controlla('i dati del banco non hanno guasti', guasti.length === 0, guasti.join(' · '))
 controlla('i clienti sono da otto a dieci', CLIENTI.length >= 8 && CLIENTI.length <= 10)
-stessaLista('il banco ha tre posti fino al livello 4', [1, 2, 4].map(POSTI), [3, 3, 3])
-stessaLista('e i posti crescono col livello', [5, 7, 8, 10, 11, 13, 14, ULTIMO].map(POSTI), [4, 4, 5, 5, 6, 6, 8, 8])
+stessaLista('il banco ha tre posti fino al livello 16', [1, 2, 16].map(POSTI), [3, 3, 3])
+stessaLista('e i posti crescono col livello (gli stessi punti del percorso di prima: 17, 29, 42, 54 sulla scala della 2D)', POSTI_PER_LIVELLO.map(([da]) => da), [1, 17, 29, 42, 54])
+stessaLista('…a ogni soglia se ne apre uno, e un livello prima no', POSTI_PER_LIVELLO.slice(1).map(([da, posti]) => [POSTI(da - 1), POSTI(da)].join() + ',' + posti), ['3,4,4', '4,5,5', '5,6,6', '6,8,8'])
 controlla('i posti non scendono mai e il massimo è quello della tabella', Array.from({ length: ULTIMO }, (_, i) => POSTI(i + 1)).every((n, i, v) => !i || n >= v[i - 1]) && POSTI(ULTIMO) === POSTI_MAX && POSTI_MAX === POSTI_PER_LIVELLO.at(-1)[1])
 controlla('i biglietti hanno tre colori: rosa coi prodotti, giallo una cosa sola, verde più raccolti', tipoDelOrdine({ pane: 1 }) === 'rosa' && tipoDelOrdine({ grano: 1, pane: 1 }) === 'rosa'
   && tipoDelOrdine({ grano: 2 }) === 'giallo' && tipoDelOrdine({ grano: 2, mais: 1 }) === 'verde')
-controlla('al livello del banco si chiedono solo raccolti', chiedibili(LIVELLO_BANCO).prodotti.length === 0 && chiedibili(LIVELLO_BANCO).raccolti.length >= 2)
-controlla('i prodotti arrivano con le macchine', chiedibili(ULTIMO).prodotti.length === Object.values(RICETTE).filter(r => !r.mangime).length && chiedibili(5).prodotti.length > 0)
+controlla('al livello del banco si chiedono solo raccolti', chiedibili(LIVELLO_BANCO).prodotti.length === 0 && chiedibili(LIVELLO_BANCO).raccolti.length >= 1)
+controlla('i prodotti arrivano con le macchine', chiedibili(ULTIMO).prodotti.length === Object.values(RICETTE).filter(r => !r.mangime).length && chiedibili(17).prodotti.length > 0)
 controlla('il mangime (erba medica, becchime, foraggio) non si chiede mai', ['erba', 'becchime', 'foraggio', 'foraggio_carote'].every(k => !chiedibili(ULTIMO).raccolti.includes(k) && !chiedibili(ULTIMO).prodotti.includes(k)))
 
 /* ══════════ 2. ordini mai impossibili, premio dentro il tetto ══════════ */
@@ -193,24 +194,24 @@ controlla('il mangime (erba medica, becchime, foraggio) non si chiede mai', ['er
 }
 {
   // i posti crescono col livello: l'elenco corto si riempie, il lungo non si perde
-  const alto = mondo({ liv: 14 })
-  uguale('al livello 14 il banco ha otto ordini', alto.f.ordini().filter(o => !o.attesa).length, POSTI(14))
+  const alto = mondo({ liv: 54 })
+  uguale('al livello 54 il banco ha otto ordini', alto.f.ordini().filter(o => !o.attesa).length, POSTI(54))
   const clienti = alto.f.ordini().map(o => o.cliente.id)
   controlla('e sono tutti di clienti diversi', new Set(clienti).size === clienti.length, clienti.join())
   const salvato = JSON.parse(JSON.stringify(alto.f.serializza()))
   const letto = normalizza(salvato)
-  uguale('un salvataggio con otto ordini li tiene tutti', letto.ordini.aperti.filter(Boolean).length, POSTI(14))
+  uguale('un salvataggio con otto ordini li tiene tutti', letto.ordini.aperti.filter(Boolean).length, POSTI(54))
   const corto = JSON.parse(JSON.stringify(salvato)); corto.ordini.aperti = corto.ordini.aperti.slice(0, 3); corto.ordini.riprende = corto.ordini.riprende.slice(0, 3)
-  uguale('uno corto, a livello alto, si allunga ai posti del livello', normalizza(corto).ordini.aperti.length, POSTI(14))
+  uguale('uno corto, a livello alto, si allunga ai posti del livello', normalizza(corto).ordini.aperti.length, POSTI(54))
   const lungo = JSON.parse(JSON.stringify(statoIniziale())); lungo.esperienza = 0
   lungo.ordini.aperti = [0, 1, 2, 3, 4].map(i => ({ id: i + 1, cliente: CLIENTI[i].id, chiede: { grano: 1 } })); lungo.ordini.riprende = [null, null, null, null, null]
   const l = normalizza(lungo)
   controlla('uno più lungo dei posti del livello non perde ordini', l.ordini.aperti.filter(Boolean).length === 5)
   // salendo di livello i posti nuovi si aprono da soli
-  const { f, t } = mondo({ liv: 4 })
-  uguale('al livello 4 i posti sono tre', f.ordini().length, 3)
-  f.s.esperienza = sogliaDi(5); t.ora += 1
-  uguale('salendo al 5 se ne apre un quarto', f.ordini().filter(o => !o.attesa).length, POSTI(5))
+  const { f, t } = mondo({ liv: 16 })
+  uguale('al livello 16 i posti sono tre', f.ordini().length, 3)
+  f.s.esperienza = sogliaDi(17); t.ora += 1
+  uguale('salendo al 17 se ne apre un quarto', f.ordini().filter(o => !o.attesa).length, POSTI(17))
   uguale('e il rifiuto di un posto nuovo ha il suo riposo', f.rifiuta(3).ok && f.ordini()[3].attesa === true, true)
 }
 {

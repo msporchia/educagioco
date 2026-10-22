@@ -22,6 +22,7 @@ export function usiDi(k) {
   const usi = []
   for (const r of Object.values(RICETTE)) if (r.ing && r.ing[k]) usi.push({ che: 'ricetta', nome: r.nome, emoji: r.emoji, dove: (EDIFICI[r.dove] || {}).nome || r.dove })
   for (const [t, a] of Object.entries(CORTILE)) if (mangiano(t, a).includes(k)) usi.push({ che: 'bestie', nome: a.bestie, emoji: a.emoji })
+  if (k === 'mangime') usi.push({ che: 'bestie', nome: 'il cane e i gatti di casa', emoji: '🐕' })       // il cibo di Watson e dei gatti: la ciotola arriva con le bestie di casa (G6), intanto il mulino lo fa come in 2D
   if (!m.mangime) usi.push({ che: 'banco', nome: 'il banco', emoji: '🧺' })
   if (merceDaCassa(k)) usi.push({ che: 'nave', nome: 'la mongolfiera', emoji: '🎈' })
   return usi

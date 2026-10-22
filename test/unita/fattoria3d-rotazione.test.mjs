@@ -19,7 +19,7 @@ const { ruotabile, misureGirate, rotLetta, DAVANTI } = await import('../../src/g
 const nuova = (stato = null) => {
   const b = { monete: 5000 }
   const f = new Fattoria3d({ stato, borsa: { quante: () => b.monete, paga: n => { b.monete -= n; return true } }, ora: () => 1_000_000, rnd: () => 0.5 })
-  f.s.esperienza = Math.max(f.s.esperienza || 0, sogliaDi(14))
+  f.s.esperienza = Math.max(f.s.esperienza || 0, sogliaDi(70))
   for (const o of f.ostacoli) if (!o.tolto) f._togliSenzaPagare(o)
   return { f, b }
 }

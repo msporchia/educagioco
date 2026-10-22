@@ -1,24 +1,23 @@
 /* La conversione 2D → 3D: da quello che la fattoria di sempre ha salvato (src/giochi/fattoria/) allo stato della fattoria 3D. Funzione
    pura (nessun profilo, nessun DOM; l'orologio arriva da fuori) che non lancia mai: un dato guasto o vuoto torna `null` e la 3D parte
    da zero. Le regole le ha decise l'utente (D1, docs/fattoria3d/parita/decisioni.md): fedele in tutto tranne nei piazzamenti, e MAI
-   monete (le monete vengono solo dagli esercizi). La mappatura dei livelli è provvisoria finché D2 non decide la scala.
+   monete (le monete vengono solo dagli esercizi). Dal 22/10/2026 (D2) la scala dei livelli è la stessa della 2D: la mappatura è 1 a 1.
    Il perché di ogni scelta e la tabella cosa → cosa: docs/fattoria3d/parita/migrazione.md. */
 import { Fattoria } from '../../fattoria/motore/fattoria.js'
 import { PER_ID as COSE_2D } from '../../fattoria/dati/catalogo.js'
 import { PER_COLTURA as COLTURE_2D, PER_RICETTA as RICETTE_2D, quantoCresciuto, MINUTO } from '../../fattoria/dati/coltivazioni.js'
-import { livelloPer as livello2D, ULTIMO as ULTIMO_2D, avanzamento as avanzamento2D, categoriaDi } from '../../fattoria/dati/livelli.js'
+import { livelloPer as livello2D, avanzamento as avanzamento2D, categoriaDi } from '../../fattoria/dati/livelli.js'
 import { PIAZZOLE_INIZIALI } from '../../fattoria/dati/mondo.js'
 import { PEZZI, EDIFICI } from '../dati/catalogo.js'
 import { COLTURE } from '../dati/colture.js'
 import { RICETTE } from '../dati/ricette.js'
 import { PRODOTTI_ANIMALI } from '../dati/animali.js'
-import { livelloPer as livello3D, sogliaDi as soglia3D, ULTIMO as ULTIMO_3D, livelloDelPezzo, livelloDellaColtura } from '../dati/livelli.js'
+import { sogliaDi as soglia3D, livelloDelPezzo, livelloDellaColtura } from '../dati/livelli.js'
+import { lottiPerPiazzole } from '../dati/regole.js'
 import { LOTTI_INIZIALI, lottoPerId, VICINI_4, vicinoDi } from '../dati/mondo.js'
 import { biomaDi } from '../dati/biomi.js'
 import { statoIniziale, normalizza } from './stato.js'
 
-/** Quanti lotti di terra vale una piazzola comprata in più: una piazzola 2D è 6×6 celle, un lotto 3D 4×4 (36/16, per difetto). */
-export const LOTTI_PER_PIAZZOLA = 2
 /** Il tetto di una scorta portata: nessuno ne ha tante, ma un dato guasto non deve gonfiare lo stato. */
 const TETTO = 9999
 const ESPERIENZA_MASSIMA = 1e9
@@ -87,11 +86,10 @@ function lottiNuovi(n) {
   return nuovi
 }
 
-/** Il livello 3D per un livello 2D: la stessa strada in proporzione (il 1 resta 1, l'ultimo 2D è l'ultimo 3D). Provvisorio fino a D2. */
+/** Il livello 3D per un livello 2D: lo stesso (D2: la 3D usa i 70 livelli della 2D). Resta una funzione perché la usano il salvataggio di prima
+    (motore/scala-vecchia.js) e i test come «la mappatura»; l'identità è il suo valore, non un caso particolare. */
 export function livelloPerProporzione(l2d) {
-  if (ULTIMO_2D <= 1) return 1
-  const t = (Math.min(Math.max(1, l2d), ULTIMO_2D) - 1) / (ULTIMO_2D - 1)
-  return 1 + Math.round(t * (ULTIMO_3D - 1))
+  return Math.max(1, l2d | 0)
 }
 
 /** Rilegge un dato della fattoria 2D come lo rilegge la 2D (i salvataggi di ieri, i campi che mancano), o null se è guasto. */
@@ -162,13 +160,15 @@ export function statoDa2D(dato, { ora = Date.now() } = {}) {
       for (const id of Object.values(b.addobbi || {})) aggiungi(daRegalare, 'addobbo:' + id, 1)
     }
 
-    // 4. la terra: due lotti per piazzola comprata in più; quelli che non trovano posto restano «da regalare»
+    // 4. la terra: tutta quella che aveva (col regalo), rimessa in lotti da 4×4 (`lottiPerPiazzole`: la 2D parte con 324 celle, la 3D con 144, quindi anche chi non
+    //    ha comprato niente ha la sua terra); quelli che non trovano posto restano «da regalare»
     const extra = Math.max(0, Object.keys(f.piazzole).length - PIAZZOLE_INIZIALI)
-    const nuovi = lottiNuovi(extra * LOTTI_PER_PIAZZOLA)
+    const daAvere = lottiPerPiazzole(extra)
+    const nuovi = lottiNuovi(daAvere)
     for (const id of nuovi) s.lotti[id] = true
-    if (nuovi.length < extra * LOTTI_PER_PIAZZOLA) aggiungi(daRegalare, 'terra', extra * LOTTI_PER_PIAZZOLA - nuovi.length)
+    if (nuovi.length < daAvere) aggiungi(daRegalare, 'terra', daAvere - nuovi.length)
 
-    // 5. il livello e l'esperienza: la 2D in proporzione, poi mai sotto quello che serve a tenere ciò che si ha e le colture già aperte
+    // 5. il livello e l'esperienza: gli stessi della 2D (scala 1 a 1), poi mai sotto quello che serve a tenere ciò che si ha e le colture già aperte
     const esp2D = f.esperienza
     const l2D = livello2D(esp2D)
     let l3D = livelloPerProporzione(l2D)
@@ -199,5 +199,11 @@ export function statoDa2D(dato, { ora = Date.now() } = {}) {
 export function statoDaCaricare(leggi) {
   const suo = leggi('fattoria3d', 'stato', null)
   if (suo) return suo
+  return statoDa2D(leggi('fattoria', 'stato', null))
+}
+
+/** Il cheat `#fattoria3d-da2d`: la conversione rifatta dalla 2D del bambino, ignorando lo stato 3D (che il chiamante mette nel cestino).
+    Torna lo stato convertito, o `null` se il bambino non ha una 2D da portare (allora non si butta niente). */
+export function statoRifattoDa2D(leggi) {
   return statoDa2D(leggi('fattoria', 'stato', null))
 }

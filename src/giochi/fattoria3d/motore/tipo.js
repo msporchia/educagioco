@@ -8,7 +8,7 @@ import { RICETTE, TIPI_DI_MACCHINA } from '../dati/ricette.js'
 import { lottoDaChiave } from '../dati/mondo.js'
 import { sogliaDi, livelloDelPezzo, livelloDellaColtura, livelloDellaRicetta } from '../dati/livelli.js'
 
-export const LIVELLI_TIPO = [3, 6, 10, 14, 18]
+export const LIVELLI_TIPO = [3, 10, 20, 30, 50, 70]          // gli stessi della 2D (docs/fattoria3d/livelli.md)
 export const LIVELLO_MAX = 99
 export const borsaInfinita = () => ({ quante: () => Infinity, paga: () => true })
 

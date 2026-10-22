@@ -6,8 +6,11 @@ import Faccia from './Faccia.vue'
 import { SCHEDE, tipiDi, dettaglioDi } from './inventario-puro.js'
 import '../stile-inventario.css'
 
-const props = defineProps({ schede: { type: Object, required: true } })      // schedeDellInventario()
-defineEmits(['chiudi', 'albero'])
+const props = defineProps({
+  schede: { type: Object, required: true },                 // schedeDellInventario()
+  magazzini: { type: Array, default: () => [] },            // i silos: [{ silo, nome, emoji, posti, prezzo, puoi }] — ingrandirne uno aggiunge 2 pezzi a ogni scomparto
+})
+defineEmits(['chiudi', 'ingrandisci', 'albero'])
 const scheda = ref('raccolti')
 const scelta = ref('')
 const voci = computed(() => props.schede[scheda.value] || [])
@@ -32,10 +35,15 @@ function cambia(id) { scheda.value = id; scelta.value = '' }
       <div class="f3-inv-griglia" :key="scheda">
         <button v-for="(v, i) in voci" :key="v.k" class="f3-inv-gettone" :class="{ velata: v.velata, sel: v.k === scelta }" :data-merce="v.k" :data-n="v.n"
                 :style="{ '--i': i }" @click="scelta = v.k === scelta ? '' : v.k">
-          <span class="f3-inv-faccia"><Faccia :k="v.k" :emoji="v.emoji" :lato="46" /><em class="f3-inv-n">{{ v.n }}</em></span>
+          <span class="f3-inv-faccia"><Faccia :k="v.k" :emoji="v.emoji" :lato="46" /><em class="f3-inv-n" :class="{ pieno: v.pieno }">{{ v.n }}<template v-if="v.max">/{{ v.max }}</template></em></span>
           <b>{{ v.nome }}</b>
         </button>
       </div>
+    </div>
+    <div v-if="magazzini.length" class="f3-inv-magazzini" data-f3="magazzini">
+      <button v-for="m in magazzini" :key="m.silo" class="f3-inv-mag" :class="{ povero: !m.puoi }" :data-magazzino="m.silo" :aria-label="`ingrandisci ${m.nome}: da ${m.posti} a ${m.posti + 2} pezzi per scomparto, ${m.prezzo} monete`" @click="$emit('ingrandisci', m.silo)">
+        <span aria-hidden="true">{{ m.emoji }}</span><b>{{ m.posti }}</b><small>＋2 · 🪙 {{ m.prezzo }}</small>
+      </button>
     </div>
     <div class="f3-inv-riga" data-f3="inventario-riga">
       <p><template v-if="scelta"><b>{{ nomeScelta }}.</b> {{ dettaglioDi(scelta) }}</template><template v-else>Tocca una cosa per sapere a cosa serve.</template></p>

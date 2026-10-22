@@ -35,20 +35,26 @@ prova `test/unita/fattoria3d-migra.test.mjs` (fattorie 2D vere a ogni livello, `
 la cosa quando il suo modello arriva (G4–G6), non vale monete e non si spende. Lo stato porta anche `migrato: 1`. Non si portano: i
 piazzamenti, gli ordini aperti al banco, le botteghe e il volo in corso, i nomi e i bisogni delle bestie di casa (i compagni 3D arrivano col livello).
 
-## Il livello (provvisorio fino a D2)
+## Il livello (1 a 1 dal 22/10/2026, D2)
 
 La 2D ha 70 livelli, la 3D 18: la scala è «in proporzione», `1 + round((L − 1) / 69 · 17)` (2D 10 → 3D 3, 35 → 9, 70 → 18; tutto oltre il 70
 sta al 18). L'**esperienza** porta con sé anche la frazione già fatta del livello 2D, sulla banda del livello 3D. Poi il livello **non scende
 sotto** quello che serve a tenere ciò che si ha: un edificio o un pezzo produttivo nel magazzino, e le colture che la 2D aveva già aperto
 (`reclamati`). Il resto degli sblocchi (ricette, pezzi) li dà il livello, come sempre.
-Con D2 (allineare la scala alla 2D) la mappatura diventa l'identità: si cambia `livelloPerProporzione`.
+Fatto: `livelloPerProporzione` è l'identità (70 livelli uguali). La terra è tutta quella che aveva la 2D (324 celle di partenza + 36 a piazzola, col regalo del 5%: `lottiPerPiazzole`, 13 lotti nuovi per chi non ne ha comprate), non più «due lotti a piazzola». Il `mangime` del cane ora è un prodotto del mulino 3D e non è più «da regalare».
 
 ## L'aggancio
 
 `statoDaCaricare(leggi)` sta nello stesso file; `leggi` è `scelta` di `src/giochi/campagne.js`. Manca solo di chiamarla dove la 3D legge il suo stato
 la prima volta, `onMounted` di `src/giochi/fattoria3d/Gioco.vue`:
 `new Fattoria3d({ stato: statoDaCaricare(scelta), borsa })` al posto di `scelta(CHIAVE, 'stato', null)`. Quando la 3D salva, il suo stato
-sostituisce la conversione. «Ricomincia la fattoria» (G1b) deve azzerare anche `fattoria3d`, o la conversione tornerebbe a ogni avvio.
+sostituisce la conversione. «Ricomincia la fattoria» (G1b, ora in Giochi › Avanzate, [../../genitori/giochi.md](../../genitori/giochi.md)) azzera anche `fattoria3d`, o la conversione tornerebbe a ogni avvio.
+
+## Rifare la conversione (cheat)
+
+`#fattoria3d-da2d` (o il tasto in `/admin`) mette la 3D del bambino attivo nel cestino (`cestinaOra`) e la rifà dalla sua 2D, anche se la 3D
+ha già uno stato suo (`statoRifattoDa2D`). **Si usa con un bambino di prova**: la 3D di prima si perde dal gioco, resta solo nel cestino. Se il
+bambino non ha una 2D da portare, il gioco lo dice con un avviso e non butta niente.
 
 ## Da fare
 

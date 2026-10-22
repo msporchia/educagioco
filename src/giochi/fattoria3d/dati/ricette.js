@@ -1,6 +1,6 @@
 /* Le macchine: ogni edificio produttivo ha le sue ricette, un posto di partenza (gli altri si comprano fino a sei: dati/posti.js) e lavora uno alla volta. Le ricette sono quelle
-   della fattoria di sempre (src/giochi/fattoria/dati/coltivazioni.js): stesso id, stessi ingredienti, stesse quantità (N → 1);
-   cambiano solo i tempi, in scala 3D (i minuti della 2D diventano secondi). Una ricetta chiede raccolti (le chiavi di COLTURE),
+   della fattoria di sempre (src/giochi/fattoria/dati/coltivazioni.js): stesso id, stessi ingredienti, stesse quantità (N → 1), e dal giro G3
+   anche gli stessi tempi (minuti veri), lo stesso livello e lo stesso costo del gesto: `...N('id')` li legge da dati/parita2d.js. Una ricetta chiede raccolti (le chiavi di COLTURE),
    prodotti di un'altra macchina (le chiavi di un'altra ricetta) oppure uova e latte (dati/animali.js): è così che nasce la
    catena (grano → farina → pane). `liv` è il livello a cui la ricetta si può fare; dati/livelli.js lo controlla contro quello
    della macchina e degli ingredienti. Gli id delle ricette sono globali: sono le chiavi di `stato.prodotti`. `pezzo` è la faccia
@@ -9,6 +9,7 @@
    Gli id delle macchine `pasticceria` e `conserviera` sono quelli dei salvataggi: oggi si chiamano Pastificio e Cucina, come in 2D.
    Vedi docs/fattoria3d/merci-e-ricette.md, regole.md e livelli.md. */
 import { COLTURE } from './colture.js'
+import { numeriRicetta as N } from './parita2d.js'
 import { PRODOTTI_ANIMALI, LANA } from './animali.js'
 import { RICETTE_FIENILE, RICETTE_PENTOLONE } from './mangime.js'
 
@@ -39,66 +40,67 @@ export const PRONTO_DA_RITIRARE = 'Pronto da ritirare'
 /** La scritta della sezione dei posti di una macchina (mai «forno» se non è un forno). */
 export const dentroDi = tipo => (LAVORAZIONE[tipo] || {}).dentro || 'Al lavoro'
 
-// Una riga per ricetta: i minuti della 2D diventano secondi (`ms`).
+// Una riga per ricetta; `ms`, `liv` e `costo` sono della 2D (`N`).
 export const MACCHINE = {
   fienile: { posti: FORNO_POSTI, ricette: RICETTE_FIENILE },   // il mangime delle bestie: le tre ricette stanno in dati/mangime.js, perché animali.js ne conta il tempo
   mulino: { posti: FORNO_POSTI, ricette: {
-    farina:      { nome: 'Farina',          emoji: '🥣', pezzo: 'merce_farina',      ing: { grano: 2 },                       ms: 5000,  liv: 3 },
-    pastone:     { nome: 'Pappa di mais',   emoji: '🍲', pezzo: 'merce_pastone',     ing: { mais: 3 },                        ms: 6000,  liv: 3 },
+    mangime:     { nome: 'Mangime',         emoji: '🐕', pezzo: 'merce_mangime',     mangime: true, ing: { grano: 2 }, ...N('mangime') },     // il cibo di cane e gatto (la 2D lo fa al livello del mulino): i compagni 3D non mangiano ancora (G6), ma il mulino ha subito un lavoro
+    farina:      { nome: 'Farina',          emoji: '🥣', pezzo: 'merce_farina',      ing: { grano: 2 }, ...N('farina') },
+    pastone:     { nome: 'Pappa di mais',   emoji: '🍲', pezzo: 'merce_pastone',     ing: { mais: 3 }, ...N('pastone') },
   } },
   pasticceria: { posti: FORNO_POSTI, ricette: {          // il Pastificio della 2D
-    pasta:       { nome: 'Pasta',           emoji: '🍝', pezzo: 'merce_pasta',       ing: { farina: 2, uova: 1 },             ms: 7000,  liv: 6 },
-    biscotti:    { nome: 'Biscotti',        emoji: '🍪', pezzo: 'merce_biscotti',    ing: { farina: 1, burro: 1, zucchero: 1 }, ms: 6000, liv: 13 },
-    pizza:       { nome: 'Pizza',           emoji: '🍕', pezzo: 'merce_pizza',       ing: { farina: 1, salsa: 1, formaggio: 1 }, ms: 9000, liv: 12 },
-    lasagne:     { nome: 'Lasagne',         emoji: '🍱', pezzo: 'merce_lasagne',     ing: { pasta: 1, salsa: 1, formaggio: 1 },  ms: 12000, liv: 12 },
+    pasta:       { nome: 'Pasta',           emoji: '🍝', pezzo: 'merce_pasta',       ing: { farina: 2, uova: 1 }, ...N('pasta') },
+    biscotti:    { nome: 'Biscotti',        emoji: '🍪', pezzo: 'merce_biscotti',    ing: { farina: 1, burro: 1, zucchero: 1 }, ...N('biscotti') },
+    pizza:       { nome: 'Pizza',           emoji: '🍕', pezzo: 'merce_pizza',       ing: { farina: 1, salsa: 1, formaggio: 1 }, ...N('pizza') },
+    lasagne:     { nome: 'Lasagne',         emoji: '🍱', pezzo: 'merce_lasagne',     ing: { pasta: 1, salsa: 1, formaggio: 1 }, ...N('lasagne') },
   } },
   panificio: { posti: FORNO_POSTI, ricette: {
-    pane:        { nome: 'Pane',            emoji: '🍞', pezzo: 'merce_pane',        ing: { farina: 2 },                      ms: 6000,  liv: 7 },
-    torta:       { nome: 'Torta',           emoji: '🎂', pezzo: 'merce_torta',       ing: { farina: 2, uova: 1, burro: 1 },   ms: 8000,  liv: 11 },
-    crostata:    { nome: 'Crostata di fragole', emoji: '🍰', pezzo: 'merce_crostata', ing: { farina: 1, fragola: 1, burro: 1 }, ms: 7000, liv: 11 },
+    pane:        { nome: 'Pane',            emoji: '🍞', pezzo: 'merce_pane',        ing: { farina: 2 }, ...N('pane') },
+    torta:       { nome: 'Torta',           emoji: '🎂', pezzo: 'merce_torta',       ing: { farina: 2, uova: 1, burro: 1 }, ...N('torta') },
+    crostata:    { nome: 'Crostata di fragole', emoji: '🍰', pezzo: 'merce_crostata', ing: { farina: 1, fragola: 1, burro: 1 }, ...N('crostata') },
   } },
   caseificio: { posti: FORNO_POSTI, ricette: {
-    burro:       { nome: 'Burro',           emoji: '🧈', pezzo: 'merce_burro',       ing: { latte: 1 },                       ms: 5000,  liv: 11 },
-    formaggio:   { nome: 'Formaggio',       emoji: '🧀', pezzo: 'merce_formaggio',   ing: { latte: 2 },                       ms: 10000, liv: 11 },
+    burro:       { nome: 'Burro',           emoji: '🧈', pezzo: 'merce_burro',       ing: { latte: 1 }, ...N('burro') },
+    formaggio:   { nome: 'Formaggio',       emoji: '🧀', pezzo: 'merce_formaggio',   ing: { latte: 2 }, ...N('formaggio') },
   } },
   conserviera: { posti: FORNO_POSTI, ricette: {          // la Cucina della 2D: dove le colture si incontrano
-    salsa:       { nome: 'Salsa di pomodoro', emoji: '🥫', pezzo: 'merce_salsa',     ing: { pomodoro: 2, cipolla: 1, aglio: 1 }, ms: 6000,  liv: 12 },
-    polenta:     { nome: 'Polenta e formaggio', emoji: '🍛', pezzo: 'merce_polenta', ing: { mais: 2, formaggio: 1 },          ms: 8000,  liv: 12 },
-    minestrone:  { nome: 'Minestrone',      emoji: '🍜', pezzo: 'merce_minestrone',  ing: { patata: 1, carota: 1, cavolfiore: 1 }, ms: 6000,  liv: 12 },
-    conserva:    { nome: 'Conserva d\'orto', emoji: '🥗', pezzo: 'merce_conserva', ing: { melanzana: 1, peperone: 1, zucca: 1 }, ms: 7000, liv: 13 },
-    parmigiana:  { nome: 'Parmigiana di melanzane', emoji: '🥘', aspetta: 'merce_parmigiana', ing: { melanzana: 2, salsa: 1, formaggio: 1 }, ms: 9000, liv: 13 },
+    salsa:       { nome: 'Salsa di pomodoro', emoji: '🥫', pezzo: 'merce_salsa',     ing: { pomodoro: 2, cipolla: 1, aglio: 1 }, ...N('salsa') },
+    polenta:     { nome: 'Polenta e formaggio', emoji: '🍛', pezzo: 'merce_polenta', ing: { mais: 2, formaggio: 1 }, ...N('polenta') },
+    minestrone:  { nome: 'Minestrone',      emoji: '🍜', pezzo: 'merce_minestrone',  ing: { patata: 1, carota: 1, cavolfiore: 1 }, ...N('minestrone') },
+    conserva:    { nome: 'Conserva d\'orto', emoji: '🥗', pezzo: 'merce_conserva', ing: { melanzana: 1, peperone: 1, zucca: 1 }, ...N('conserva') },
+    parmigiana:  { nome: 'Parmigiana di melanzane', emoji: '🥘', aspetta: 'merce_parmigiana', ing: { melanzana: 2, salsa: 1, formaggio: 1 }, ...N('parmigiana') },
   } },
   gelateria: { posti: FORNO_POSTI, ricette: {
-    succo:       { nome: 'Succo',           emoji: '🧃', pezzo: 'merce_succo',       ing: { carota: 1, barbabietola: 1 },     ms: 4000,  liv: 14 },
-    frullato:    { nome: 'Frullato',        emoji: '🥤', pezzo: 'merce_frullato',    ing: { fragola: 2, latte: 1 },           ms: 5000,  liv: 14 },
-    gelato:      { nome: 'Gelato',          emoji: '🍨', pezzo: 'merce_gelato',      ing: { latte: 2, zucchero: 1 },          ms: 8000,  liv: 14 },
+    succo:       { nome: 'Succo',           emoji: '🧃', pezzo: 'merce_succo',       ing: { carota: 1, barbabietola: 1 }, ...N('succo') },
+    frullato:    { nome: 'Frullato',        emoji: '🥤', pezzo: 'merce_frullato',    ing: { fragola: 2, latte: 1 }, ...N('frullato') },
+    gelato:      { nome: 'Gelato',          emoji: '🍨', pezzo: 'merce_gelato',      ing: { latte: 2, zucchero: 1 }, ...N('gelato') },
   } },
   telaio: { posti: FORNO_POSTI, ricette: {               // la lana delle pecore (non c'è cotone: nemmeno in 2D)
-    stoffa:      { nome: 'Stoffa',          emoji: '🧵', pezzo: 'merce_stoffa',      ing: { lana: 2 },                        ms: 8000,  liv: 8 },
+    stoffa:      { nome: 'Stoffa',          emoji: '🧵', pezzo: 'merce_stoffa',      ing: { lana: 2 }, ...N('stoffa') },
   } },
   zuccherificio: { posti: FORNO_POSTI, ricette: {
-    zucchero:    { nome: 'Zucchero',        emoji: '🧂', pezzo: 'merce_zucchero',    ing: { barbabietola: 2 },                ms: 6000,  liv: 13 },
-    marmellata:  { nome: 'Marmellata',      emoji: '🫙', pezzo: 'merce_marmellata',  ing: { fragola: 2, zucchero: 1 },        ms: 8000,  liv: 13 },
+    zucchero:    { nome: 'Zucchero',        emoji: '🧂', pezzo: 'merce_zucchero',    ing: { barbabietola: 2 }, ...N('zucchero') },
+    marmellata:  { nome: 'Marmellata',      emoji: '🫙', pezzo: 'merce_marmellata',  ing: { fragola: 2, zucchero: 1 }, ...N('marmellata') },
   } },
   sartoria: { posti: FORNO_POSTI, ricette: {
-    maglione:    { nome: 'Maglione',        emoji: '🧥', pezzo: 'merce_maglione',    ing: { stoffa: 2 },                      ms: 10000, liv: 15 },
-    sciarpa_lana: { nome: 'Sciarpa di lana', emoji: '🧣', pezzo: 'merce_sciarpa_lana', ing: { stoffa: 1, lana: 1 },            ms: 6000,  liv: 15 },
-    berretto:    { nome: 'Berretto',        emoji: '🧢', pezzo: 'merce_berretto',    ing: { stoffa: 1 },                      ms: 5000,  liv: 15 },
+    maglione:    { nome: 'Maglione',        emoji: '🧥', pezzo: 'merce_maglione',    ing: { stoffa: 2 }, ...N('maglione') },
+    sciarpa_lana: { nome: 'Sciarpa di lana', emoji: '🧣', pezzo: 'merce_sciarpa_lana', ing: { stoffa: 1, lana: 1 }, ...N('sciarpa_lana') },
+    berretto:    { nome: 'Berretto',        emoji: '🧢', pezzo: 'merce_berretto',    ing: { stoffa: 1 }, ...N('berretto') },
   } },
   tintoria: { posti: FORNO_POSTI, ricette: {
-    tintura:     { nome: 'Tintura',         emoji: '🧴', pezzo: 'merce_tintura',     ing: { lavanda: 2 },                     ms: 5000,  liv: 16 },
-    sapone:      { nome: 'Sapone',          emoji: '🧼', pezzo: 'merce_sapone',      ing: { tintura: 1, burro: 1 },           ms: 5000,  liv: 16 },
-    sacchetto:   { nome: 'Sacchetto profumato', emoji: '👝', pezzo: 'merce_sacchetto', ing: { lavanda: 2, stoffa: 1 },         ms: 5000,  liv: 16 },
-    maglione_lavanda: { nome: 'Maglione alla lavanda', emoji: '💜', pezzo: 'merce_maglione_lavanda', ing: { maglione: 1, tintura: 1 }, ms: 6000, liv: 16 },
+    tintura:     { nome: 'Tintura',         emoji: '🧴', pezzo: 'merce_tintura',     ing: { lavanda: 2 }, ...N('tintura') },
+    sapone:      { nome: 'Sapone',          emoji: '🧼', pezzo: 'merce_sapone',      ing: { tintura: 1, burro: 1 }, ...N('sapone') },
+    sacchetto:   { nome: 'Sacchetto profumato', emoji: '👝', pezzo: 'merce_sacchetto', ing: { lavanda: 2, stoffa: 1 }, ...N('sacchetto') },
+    maglione_lavanda: { nome: 'Maglione alla lavanda', emoji: '💜', pezzo: 'merce_maglione_lavanda', ing: { maglione: 1, tintura: 1 }, ...N('maglione_lavanda') },
   } },
   friggitoria: { posti: FORNO_POSTI, ricette: {          // la friggitoria della 2D: col pesce appena pescato (dati/pesca.js)
-    patatine:    { nome: 'Patatine',        emoji: '🍟', pezzo: 'merce_patatine',    ing: { patata: 2 },                      ms: 5000,  liv: 17 },
-    fritto:      { nome: 'Pesce fritto',    emoji: '🍤', pezzo: 'merce_fritto',      ing: { pesce: 1, farina: 1 },            ms: 7000,  liv: 17 },
-    arancini:    { nome: 'Arancini',        emoji: '🍙', pezzo: 'merce_arancini',    ing: { riso: 2, formaggio: 1 },          ms: 9000,  liv: 17 },
+    patatine:    { nome: 'Patatine',        emoji: '🍟', pezzo: 'merce_patatine',    ing: { patata: 2 }, ...N('patatine') },
+    fritto:      { nome: 'Pesce fritto',    emoji: '🍤', pezzo: 'merce_fritto',      ing: { pesce: 1, farina: 1 }, ...N('fritto') },
+    arancini:    { nome: 'Arancini',        emoji: '🍙', pezzo: 'merce_arancini',    ing: { riso: 2, formaggio: 1 }, ...N('arancini') },
   } },
   sushi_bar: { posti: FORNO_POSTI, ricette: {            // il sushi bar della 2D: il riso e il pesce, per la bambina
-    sushi:       { nome: 'Sushi',           emoji: '🍣', pezzo: 'merce_sushi',       ing: { riso: 1, pesce: 1 },              ms: 8000,  liv: 18 },
-    maki:        { nome: 'Maki',            emoji: '🍥', pezzo: 'merce_maki',        ing: { riso: 1, carota: 1, peperone: 1 }, ms: 6000,  liv: 18 },
+    sushi:       { nome: 'Sushi',           emoji: '🍣', pezzo: 'merce_sushi',       ing: { riso: 1, pesce: 1 }, ...N('sushi') },
+    maki:        { nome: 'Maki',            emoji: '🍥', pezzo: 'merce_maki',        ing: { riso: 1, carota: 1, peperone: 1 }, ...N('maki') },
   } },
   pentolone: { posti: FORNO_POSTI, ricette: RICETTE_PENTOLONE },   // il pentolone della 2D: il mangime di anatre, maiali e capre (le quattro ricette stanno in dati/cortile.js)
 }

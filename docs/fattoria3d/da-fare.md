@@ -4,8 +4,11 @@ Le voci aperte tecniche. Una riga ciascuna, e quando una si chiude si toglie. Qu
 
 - **Misurare su un telefono vero.** Tutti i numeri di peso (draw call, fps, caldo, batteria) sono da SwiftShader; il
   pannello ⚙ e «Mostra il rapporto» servono a questo. Il degrado adattivo c'è (`dati/degrado.js`, scende sotto 30 fps): dopo la misura si tarano le soglie.
-- **Giocare la taratura.** Prezzi e tempi sono misurati sul metro (`npm run tara:fattoria3d`, [livelli.md](livelli.md)) ma non ancora giocati da un
-  bambino: la lana (25 s), il riposo del banco (3 minuti) e quello della mongolfiera (2 minuti) restano da prova.
+- **Giocare la scala della 2D nella 3D** (G3, 22/10/2026, [livelli.md](livelli.md)): livelli, prezzi, tempi in minuti, costo dei gesti e scomparti sono quelli della 2D e misurati
+  (`npm run tara:fattoria3d`), ma mai giocati con un bambino. Da vedere: la terra (i primi lotti costano 🪙4–15 perché la 3D parte con meno celle della 2D), la pesca a un ciclo di 15 minuti
+  per banco, i 22 livelli senza novità, i magazzini ingrandibili dall'inventario (bottoni in fondo), e un salvataggio vero di prima che si porta sulla scala nuova.
+- **Le bestie in più dentro un recinto non esistono in 2D.** Una 3D con 6 galline in parallelo produce più di un pollaio 2D (che lavora una ricetta alla volta): parità non decisa, i prezzi delle bestie restano 3D.
+- **Il `mangime` del mulino** (cibo di cane e gatto) c'è e serve solo ai compagni, che non mangiano ancora (G6).
 - **Giocare i prezzi delle bestie.** Pecora 20 (+10), gallina 15 (+8), mucca 30 (+15) sono scelti sul metro di
   [calibrazione.md](../apprendimento/calibrazione.md) e sul prezzo del pezzo, non ancora giocati; i fogli ridisegnati
   (macchine, banco, livelli) non sono stati visti su uno schermo da 360 px.
@@ -52,11 +55,9 @@ Le voci aperte tecniche. Una riga ciascuna, e quando una si chiude si toglie. Qu
 - **Il costo dell'avvio dei modelli.** Dopo la cache ([scena.md](scena.md) «La cache dei modelli») ogni tipo si costruisce una volta; all'avvio non ci sono più i fantasmi degli 11 edifici (si costruiscono quando servono, o nel riscaldamento),
   il contadino e i compagni (cane e gatti: 13–21 ms la prima volta in node). Su un telefono sarebbero ×5–8: da misurare. Se pesa, si scaglionano sui primi fotogrammi (i test d'integrazione cercano i gruppi subito:
   vanno aspettati). **Cuocere le geometrie a monte è stato valutato e scartato** (~400 kB per 26 tipi contro un tetto di ~150 kB, per ~22 ms su un PC): se un giorno il file cresce meno o un modello si fa grande, si rifà il conto.
-- **Il peso della scena, il giro dopo** (misure e rimedi già fatti: [scena.md](scena.md) «Qualità e peso»; stato pieno ~430 draw call dopo la fusione delle mesh). In quest'ordine:
-  1. **Il campo** (la prima voce dopo la fusione delle mesh, fatta il 21/10: [scena.md](scena.md)): 17 istanze per campo (una per figura di coltura) × 7 campi = 119 draw call, ora un quarto dei ~430 totali; con un'unica `InstancedMesh` per coltura *e* per tutti i campi scendono a ~15 (−100 draw call). Non fatto perché le istanze vivono nel `Group` di ogni campo e le muove `aggiornaCampo`: condividerle vuole che `pezzi.js` possieda le istanze e dia a ogni campo una fetta (e `terreno.js`/il motore sanno dei campi): da fare quando il mondo senza confini è chiuso.
-  2. **Istanziare le cose che si ripetono**: aiuole, panchine, pali del recinto dei pezzi, i quattro fiori; uno stesso edificio ripetuto non c'è, ma le gelosie, le finestre e le tegole sì.
-  3. **I compagni sono pesanti** (gatto ~7000 triangoli, cane 6000: più di tutta la stalla): una geometria più povera, o un LOD a 1500 triangoli oltre i 12 m (3 gatti + cane = 27k ×2 con l'ombra).
-  4. **LOD e cartelli**: oltre una certa distanza dalla camera (zoom lontano) i pezzi piccoli non si disegnano e non proiettano; i cartelli non servono oltre i 18 m.
-  5. **L'antialias**: `antialias: true` non si cambia a runtime; sul basso (e sui PC integrati) un renderer senza MSAA o con FXAA a posteriori. Da misurare sulla GPU integrata dell'utente.
-  6. **L'ombra con la camera che segue**: oggi si ridisegna a intervalli; con il sole agganciato alla griglia (passo di 2 celle) basterebbe ridisegnarla solo quando cambia qualcosa o la griglia scatta.
+- **Il peso della scena, ciò che resta** (fatto il 22/10: banchi di istanze per campi e pezzi fermi, LOD dei compagni, sole sulla griglia → [istanze.md](istanze.md)). Resta:
+  1. **I gatti e il cane non si fondono** (62 mesh, ~15 a gatto): le parti si muovono; con ~60 draw call sono il pezzo più grosso della scena in vista dopo gli edifici. Uno scheletro con pelle (`SkinnedMesh`) le porterebbe a 1–2 a compagno, ma cambia come si animano (`posaGatto`/`posaCane` muovono i perni): da valutare solo se il telefono vero lo chiede.
+  2. **I cartelli oltre i 18 m** non sono stati toccati: sono DOM (non pesano: 0,2–0,8 ms di stile con 19 cartelli, [scena.md](scena.md)), e a 22 m di camera sono già tutti dentro il campo visivo.
+  3. **L'antialias**: `antialias: true` non si cambia a runtime; sul basso (e sui PC integrati) un renderer senza MSAA o con FXAA a posteriori. Da misurare sulla GPU integrata dell'utente.
+  4. **Da misurare sul telefono vero**: tutti i numeri di [istanze.md](istanze.md) sono di Chrome senza schermo (conti, non ms). In particolare la cadenza dell'ombra a 30 al secondo da fermi e il LOD a 12 m: se si vedono a occhio, `LOD_METRI` (`compagni.js`) e il minimo di `ogni` (`mondo3d.js`) si alzano.
 - **«Quando ci premi» non è stato visto col dito** ([compagni.md](compagni.md)): le pose (rotola, zampa, riporta, sbadiglio, struscio, naso a naso) sono guardate solo dal catalogo 3D e provate in node; da giudicare in gioco i tempi, il gesto «chiama» del contadino (anche per i gatti, ora chiamati per nome) e se il bastoncino ai piedi si legge.

@@ -59,7 +59,7 @@ function dallIndirizzo() {
   if (ha(chiave)) vista.value = chiave
   // il cheat della fattoria si legge ENTRANDO nella fattoria, quindi ci porta anche l'indirizzo
   else if (/(?:^|&)fattoria-tipo=\d/i.test(chiave)) vista.value = 'fattoria'
-  else if (/(?:^|&)fattoria3d-tipo=\d/i.test(chiave)) vista.value = 'fattoria3d'
+  else if (/(?:^|&)fattoria3d(?:-tipo=\d|-da2d)/i.test(chiave)) vista.value = 'fattoria3d'
   // un cheat che porta il nome di un gioco (`#sotterraneo=branco&mostri=6`) apre anche quel gioco
   else { const k = [...new URLSearchParams(chiave).keys()].find(ha); if (k) vista.value = k }
 }

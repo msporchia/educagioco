@@ -11,7 +11,7 @@ import { load, save } from '../../store/storage.js'
 import { scelta, ricorda } from '../campagne.js'
 import { Fattoria3d } from './motore/fattoria3d.js'
 import { fattoriaTipo } from './motore/tipo.js'
-import { statoDaCaricare } from './motore/migra.js'
+import { statoDaCaricare, statoRifattoDa2D } from './motore/migra.js'
 import { haWebGL2 } from './scena3d/webgl.js'
 import { dettoDi, dettoDiRifiuto } from './scena3d/detti.js'
 import { EDIFICI, avvisoEdificiNuovi } from './dati/catalogo.js'
@@ -19,6 +19,8 @@ import { COLTURE } from './dati/colture.js'
 import { RICETTE, emojiDi, dentroDi, PRONTO_DA_RITIRARE } from './dati/ricette.js'
 import { POSTI_MASSIMI, prezzoDelPosto } from './dati/posti.js'
 import { avanzamento, roba, nomeDi, sogliaDi } from './dati/livelli.js'
+import { tempoBreve } from './dati/tempo.js'
+import { SILOS, TIPI_DI_SILO } from './dati/silos.js'
 import { clienteDi, LIVELLO_BANCO } from './dati/ordini.js'
 import { PEZZI } from './dati/catalogo.js'
 import { LIVELLO_MONGOLFIERA } from './dati/mongolfiera.js'
@@ -100,7 +102,8 @@ const ripresa = () => {
 const EVENTI = { terra: 'fattoria3dTerre', pezzo: 'fattoria3dPezzi', raccolto: 'fattoria3dRaccolti', albero: 'fattoria3dAlberi', sasso: 'fattoria3dSassi', visita: 'fattoria3dVisite', aiuto: 'fattoria3dAiuti', cassa: 'fattoria3dMongolfiera', fiera: 'fattoria3dFiere' }
 /** Un livello nuovo: un avviso che passa da sé e un pallino sul gettone finché non si apre il foglio. */
 function salito(livello) {
-  const testo = `Livello ${livello}: ${avvisoEdificiNuovi(livello) || nomeDi(livello)}`      // se si apre un edificio lo nomina: il «!» sul tasto Costruisci resta finché non c'è
+  const nome = nomeDi(livello), vuoto = /^Livello \d+$/.test(nome)           // un livello che non apre niente (la 3D ha meno cose della 2D) lo dice
+  const testo = `Livello ${livello}: ${avvisoEdificiNuovi(livello) || (vuoto ? 'niente di nuovo, ma sei più in alto!' : nome)}`      // se si apre un edificio lo nomina: il «!» sul tasto Costruisci resta finché non c'è
   ui.avviso(testo)
   toast.value = { testo, fine: performance.now() + DURATA_TOAST }
   livelloNuovo.value = true
@@ -269,12 +272,12 @@ const macchina = computed(() => {
       const r = RICETTE[it.ric]
       if (!it.fine) return { k: it.ric, emoji: r.emoji, testo: 'in coda', barra: 0 }
       const resto = Math.max(0, it.fine - adesso)
-      return { k: it.ric, emoji: r.emoji, testo: Math.ceil(resto / 1000) + 's', barra: 100 - 100 * resto / r.ms }
+      return { k: it.ric, emoji: r.emoji, testo: tempoBreve(resto), barra: 100 - 100 * resto / r.ms }
     }),
     pronti: pronti.length ? 'Pronti: ' + pronti.map(([k, n]) => emojiDi(k) + ' ×' + n).join('  ') : '',
     prontiK: pronti.map(([k, n]) => ({ k, n })),
     puoRitirare: pronti.length > 0,
-    ricette: motore.ricetteDi(tipo).map(r => ({ k: r.id, nome: r.nome, emoji: r.emoji, ms: r.ms, liv: r.liv, sbloccata: r.sbloccata,
+    ricette: motore.ricetteDi(tipo).map(r => ({ k: r.id, nome: r.nome, emoji: r.emoji, ms: r.ms, costo: r.costo, liv: r.liv, sbloccata: r.sbloccata,
       ing: Object.entries(r.ing).map(([i, serve]) => ({ k: i, emoji: emojiDi(i), ha: motore.scortaDi(i), serve })),
       manca: Object.entries(r.mancano).map(([i, n]) => `manca ${emojiDi(i)} ${n}`).join(' '),
       puoi: r.sbloccata && r.ingredienti && M.coda.length < M.posti })),
@@ -301,14 +304,21 @@ function compraPosto() {
 function ritira() {
   const tipo = macchinaAperta.value
   const r = motore.ritiraDa(tipo)
-  if (!r.ok) return
-  macchinaMsg.value = ''
+  if (!r.ok) { if (r.motivo === 'scomparto-pieno') macchinaMsg.value = dettoDiRifiuto(r); return }          // lo scomparto è pieno: la roba aspetta nella macchina
+  macchinaMsg.value = r.pieno ? dettoDiRifiuto({ motivo: 'scomparto-pieno', k: r.pieno, max: motore.capienzaDi(r.pieno) }) : ''
   ui.cambio(); mondo.fx.volo('+' + r.n + ' ' + EDIFICI[tipo].emoji, mondo.pezzi.centroDi({ kind: 'edificio', tipo }), 2.6)
   mondo.eroe.avvia('esulta', 0.9)
 }
 
 // ── l'inventario: le scorte a schede (si calcola solo a foglio aperto) ──
-const inventario = computed(() => { void versione.value; return inventarioAperto.value ? schedeDellInventario(motore.s, motore.livello()) : null })
+const inventario = computed(() => { void versione.value; return inventarioAperto.value ? schedeDellInventario(motore.s, motore.livello(), k => motore.capienzaDi(k)) : null })
+/** I tre magazzini (raccolti, stalla, dispensa) col loro prossimo ingrandimento (dati/silos.js): +2 pezzi a ogni scomparto, il prezzo della 2D. */
+const magazzini = computed(() => { void versione.value; return inventarioAperto.value ? TIPI_DI_SILO.map(silo => ({ silo, nome: SILOS[silo].nome, emoji: SILOS[silo].emoji, posti: motore.postiDelSilo(silo), prezzo: motore.prezzoIngrandimento(silo), puoi: motore.monete() >= motore.prezzoIngrandimento(silo) })) : [] })
+function ingrandisciMagazzino(silo) {
+  const r = motore.ingrandisciSilo(silo)
+  if (!r.ok) return ui.avviso(dettoDi('poche-monete', { costo: r.costo, per: 'ingrandire il magazzino' }))
+  ui.avviso(`${SILOS[silo].emoji} ${SILOS[silo].nome}: ora ${r.posti} pezzi per scomparto`); ui.cambio()
+}
 function apriInventario() { inventarioVisto = contoDi(motore.s); inventarioAperto.value = true; ripresa() }
 function chiudiInventario() { inventarioVisto = contoDi(motore.s); inventarioAperto.value = false; ripresa() }
 
@@ -439,6 +449,7 @@ function facciConsiglio(a) {
   else if (a.che === 'costruisci') apriCostruisci()
   else if (a.che === 'banco') apriBanco()
   else if (a.che === 'livelli') apriLivelli()
+  else if (a.che === 'inventario') apriInventario()
   else if (a.che === 'home') indietro()
 }
 /** Il consiglio per avere ciò che manca, col tasto «🌳 Come si fa» per la stessa merce (docs/fattoria3d/guida.md). */
@@ -474,10 +485,19 @@ function cheatDellIndirizzo() {
   const frammento = location.hash || ''
   const tipo = /(?:^#?|&)fattoria3d-tipo=(\d{1,2})(?=&|$)/i.exec(frammento)
   const livello = /(?:^#?|&)fattoria3d=(\d{1,2})(?=&|$)/i.exec(frammento)
-  if (!tipo && !livello) return
+  const da2d = /(?:^#?|&)fattoria3d-da2d(?=&|$)/i.test(frammento)
+  if (!tipo && !livello && !da2d) return
   try { location.hash = '' } catch (e) { /* pazienza */ }
   let testo
-  if (tipo) {
+  if (da2d) {
+    const stato = statoRifattoDa2D(scelta)
+    if (!stato) testo = '🧪 Questo bambino non ha una fattoria 2D da portare: non ho toccato niente.'
+    else {
+      cestinaOra('fattoria3d da2d')          // la 3D di prima (se c'è) va nel cestino, prima di sostituirla
+      motore = new Fattoria3d({ stato, borsa })
+      testo = `🧪 Fattoria 3D rifatta dalla 2D, livello ${motore.livello()}: quella di prima è nel cestino.`
+    }
+  } else if (tipo) {
     cestinaOra('fattoria3d tipo')          // la copia si prende subito, prima di qualunque attesa
     motore = fattoriaTipo(parseInt(tipo[1], 10))
     motore.borsa = borsa
@@ -565,7 +585,7 @@ onBeforeUnmount(() => {
                @consegna="consegna" @cambia="cambiaOrdine" @chiudi="bancoAperto = false" />
         <Mongolfiera v-if="nave" v-bind="{ nave: mongolfiera, traguardo: traguardoNave, livelloIngresso: LIVELLO_MONGOLFIERA }" :messaggio="naveMsg" :consiglio="naveCons" @consiglio="facciConsiglio"
                      @carica="caricaCassa" @parti="partiMongolfiera" @chiudi="nave = false" />
-        <Inventario v-if="inventarioAperto && inventario" :schede="inventario" @albero="apriAlbero" @chiudi="chiudiInventario" />
+        <Inventario v-if="inventarioAperto && inventario" :schede="inventario" :magazzini="magazzini" @ingrandisci="ingrandisciMagazzino" @albero="apriAlbero" @chiudi="chiudiInventario" />
         <Guardaroba v-if="guardarobaAperto" :abito="abito" :livello="foto.livello" :aspetto="state.profile.aspetto" :anteprima="anteprima" :anteprima-pronta="anteprimaPronta"
                     @vesti="vestiContadino" @aspetto="cambiaAspetto" @chiudi="guardarobaAperto = false" />
  <Albero v-if="albero" :albero="albero" @fai="facciConsiglio" @chiudi="chiudiAlbero" />

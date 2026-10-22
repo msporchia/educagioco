@@ -41,6 +41,8 @@ oggi non portano ancora `geo`, quindi la fattoria di un amico si vede con la geo
 **Si compra come ogni lotto**: `prezzoDelLotto`, 40 + 20 per ogni lotto già comprato (l'acqua si paga come la terra). Il cartello dice «🪙 N · 🌊 mare», «🏞️ lago» o «🏖️
 spiaggia» (e l'offerta: «Qui c'è il mare: con un molo e il porticciolo ci si pesca»).
 
+**Dal 22/10/2026 (G3) la pesca è al livello 57**, dove la 2D ha la peschiera: molo, molo girato e porticciolo al 57; friggitoria 58, sushi bar 62 (i 17/18 di questa pagina sono storia). Un banco dà un pesce ogni 15 minuti (5 di attesa + 10 di riposo, come la ricetta `pesce` della peschiera). Le soglie dal 58 si spostano di −258 ([livelli.md](livelli.md)).
+
 ## Come si vede
 
 - **Il mare lontano** è **un piano solo** (`Terreno._mare`, opaco, a perdita d'occhio verso ovest, da x = −18): turchese in riva e blu al largo (colori nei vertici), lo

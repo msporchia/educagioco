@@ -2,6 +2,8 @@
    regole in docs/core/guida.md). Pura: dal quadro di quello che c'è dice il passo `{ testo, dove, mano? }`, o null quando tace.
    Si legge lo schermo, non un copione: regge chi fa le cose in un altro ordine. Vedi docs/fattoria3d/guida.md. */
 
+import { tempoBreve } from '../dati/tempo.js'
+
 export const BERSAGLI = {
   semina: '[data-f3="az-semina"]',
   raccogli: '[data-f3="az-raccogli"]',
@@ -11,9 +13,12 @@ export const BERSAGLI = {
   carta: '[data-f3="costruisci-qui"] [data-carta="campo"]',
 }
 
-/** Il primo giro serve solo a chi non ha ancora fatto niente qui: nessuna spesa, nessun raccolto in scorta, nessun prodotto. */
+/** Quanto si spende senza aver «giocato» già: raccogliere il grano costa 🪙1 (il gesto della 2D), e il primo raccolto è proprio il traguardo del primo giro. */
+export const SPESA_DEL_PRIMO_GIRO = 2
+
+/** Il primo giro serve solo a chi non ha ancora fatto niente qui: nessuna spesa vera, nessun raccolto in scorta, nessun prodotto. */
 export function servePrimoGiro({ esperienza = 0, merci = {}, prodotti = {}, lana = 0 } = {}) {
-  if (esperienza > 0 || lana > 0) return false
+  if (esperienza > SPESA_DEL_PRIMO_GIRO || lana > 0) return false
   return !Object.values(merci).some(n => n > 0) && !Object.values(prodotti).some(n => n > 0)
 }
 
@@ -39,9 +44,9 @@ export function guidaDelPrimoGiro(q = {}) {
   if (raccolto && !visto) return { dove: BERSAGLI.costruisci, mano: true, testo: 'Bravo! Ora tocca 🏗 Costruisci e fai crescere la fattoria.' }
   if (vuoti && modo !== 'semina') return { dove: BERSAGLI.semina, mano: true, testo: 'Tocca 🌱 Semina e scegli cosa far crescere.' }
   if (vuoti && modo === 'semina') return { dove: null, testo: 'Tocca il campo vuoto: il contadino ci semina.' }
-  if (crescono) return { dove: null, testo: `Il grano cresce${secondi ? `: ancora ${secondi} secondi` : ''}.` }
+  if (crescono) return { dove: null, testo: `Il grano cresce${secondi ? `: ancora ${tempoBreve(secondi * 1000)}` : ''}.` }
   return null
 }
 
 /** Il primo giro è finito: ha raccolto e ha visto il menu delle costruzioni (o ha già speso). Da lì la guida tace per sempre. */
-export const primoGiroFinito = ({ raccolto = false, visto = false, esperienza = 0 } = {}) => esperienza > 0 || (raccolto && visto)
+export const primoGiroFinito = ({ raccolto = false, visto = false, esperienza = 0 } = {}) => esperienza > SPESA_DEL_PRIMO_GIRO || (raccolto && visto)

@@ -55,7 +55,7 @@ controlla('una merce che non c\'è non serve a niente', usiDi('boh').length === 
 
 /* ══════════ 3. a che punto si è ══════════ */
 {
-  const { f } = mondo({ liv: 8 })
+  const { f } = mondo({ liv: 17 })
   const farina = alberoDi(f, 'farina')
   controlla('senza il mulino: «compra» col prezzo', farina.via.stato === 'compra' && farina.via.prezzo > 0, JSON.stringify(farina.via))
   controlla('il grano dice come sta il campo', ['nessuno', 'libero', 'cresce', 'pronto', 'occupati'].includes(farina.rami[0].via.stato))
@@ -81,14 +81,14 @@ controlla('una merce che non c\'è non serve a niente', usiDi('boh').length === 
   f.semina(c.id, 'grano')
   g = alberoDi(f, 'grano')
   controlla('seminato: cresce, coi secondi che restano', g.via.stato === 'cresce' && g.via.manca > 0, JSON.stringify(g.via))
-  t.ora += 100_000
+  t.ora += 301_000
   uguale('maturo: pronto', alberoDi(f, 'grano').via.stato, 'pronto')
   uguale('il livello che non c\'è ancora: arriva', [alberoDi(f, 'riso').stato, alberoDi(f, 'riso').arriva > 1], ['arriva', true])
 }
 
 /* ══════════ 4. il tasto: la frase e l'azione sono quelle del consiglio ══════════ */
 {
-  const { f } = mondo({ liv: 8 })
+  const { f } = mondo({ liv: 17 })
   const a = alberoDi(f, 'farina', k => comeAvere(f, k))
   controlla('un nodo che manca porta il tasto del consiglio', a.azione && a.azione.che === comeAvere(f, 'farina').azione.che && !!a.testo, JSON.stringify(a.azione))
   f.s.merci.grano = 9

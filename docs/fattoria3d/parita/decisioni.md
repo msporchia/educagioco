@@ -11,6 +11,8 @@ Le eccezioni, decise dall'utente:
 - **Campi** (D12): le quattro tessere restano; è una questione di spazio sulla mappa, non di costo: il campo intero rende come uno della 2D e la terra si tara come sopra.
 - **Pesca**: è un'attività che entra a un livello **medio-alto**; nessun bambino ci è ancora arrivato, quindi si ritara **solo la parte medio-alta** della scala per incastrarla (D4 chiuso in questo senso).
 
+**Fatto nel giro G3 (22/10/2026)**: D2, D9, D11, D13 (livelli, tempi in minuti, scomparti, costo dei gesti), terra pareggiata sulla quantità, fienile unico (D3, D7), pesca al 57 (D4), voci del cortile sui valori 2D, migrazione 1 a 1. Dettagli in [../livelli.md](../livelli.md).
+
 ## Risposte dell'utente (22/10/2026)
 
 - **D3**: tutto come la 2D (il fienile al livello e al prezzo della 2D: livello 6, 🪙150).

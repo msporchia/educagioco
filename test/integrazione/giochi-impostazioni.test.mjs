@@ -12,7 +12,7 @@ import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 
 const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser)
-await semina(page, { settings: { eta: 8, sperimentali: false } })
+await semina(page, { settings: { eta: 8, sperimentali: true }, campagne: { fattoria: { cfg: { stato: {} } }, fattoria3d: { cfg: { stato: {} } } } })
 const digita = async pin => { for (const c of pin) await page.click(`.tasto >> text="${c}"`) }
 await page.click('[data-azione="grandi"]')
 await page.waitForSelector('.tastierino', { timeout: 5000 })
@@ -93,6 +93,25 @@ await scatto(page, 'giochi-impostazioni-sotterraneo')
 controlla('il sotterraneo pesca da tutte le domande: lo dice e non le elenca', /tutte le domande/.test(await page.locator('[data-gioco-domande]').innerText()) && await page.locator('[data-gioco-sapere]').count() === 0)
 await vai('fattoria')
 controlla('la fattoria non fa domande di scuola: lo dice', /non fa domande|dove si spendono/i.test(await page.locator('[data-gioco-domande]').innerText()))
+
+/* ── Avanzate della fattoria: riconverti dalla 2D e ricomincia, ognuno con la sua conferma ── */
+await vai('fattoria3d')
+controlla('la fattoria 3D ha le Avanzate coi due reset', await page.locator('[data-gioco-avanzate]').count() === 1)
+await page.locator('[data-gioco-avanzate] summary').click()
+await page.click('[data-azione="riconverti-fattoria"]')
+controlla('«Riconverti» chiede conferma e non fa niente da sola', await page.locator('[data-azione="riconverti-fattoria-si"]').count() === 1 && !!(await leggiProfilo(page)).campagne.fattoria3d)
+await page.click('[data-azione="riconverti-fattoria-si"]')
+await attendi(page, 600)
+const dopoRiconverti = (await leggiProfilo(page)).campagne || {}
+controlla('«Riconverti» butta la 3D e lascia la 2D', !dopoRiconverti.fattoria3d && !!dopoRiconverti.fattoria, JSON.stringify(Object.keys(dopoRiconverti)))
+await vai('fattoria')
+controlla('sul foglio della 2D non c\'è «Riconverti»', await page.locator('[data-azione="riconverti-fattoria"]').count() === 0)
+if (!await page.locator('[data-gioco-avanzate]').evaluate(d => d.open)) await page.locator('[data-gioco-avanzate] summary').click()
+await page.click('[data-azione="azzera-fattoria"]')
+await page.click('[data-azione="azzera-fattoria-si"]')
+await attendi(page, 600)
+const dopoAzzera = (await leggiProfilo(page)).campagne || {}
+controlla('«Ricomincia» azzera 2D e 3D insieme', !dopoAzzera.fattoria && !dopoAzzera.fattoria3d, JSON.stringify(Object.keys(dopoAzzera)))
 
 controlla('nessun errore in console', errori.length === 0, errori.join(' | '))
 await browser.close()

@@ -13,6 +13,8 @@ import { ordineInForma } from './ordini.js'
 import { stivaInForma } from './mongolfiera.js'
 import { RIPOSO_MS } from '../dati/mongolfiera.js'
 import { POSTI_DI_PARTENZA, postiInForma } from '../dati/posti.js'
+import { TIPI_DI_SILO } from '../dati/silos.js'
+import { esperienzaDaPrima, livelloMinimoDi } from './scala-vecchia.js'
 
 const LANA_DEL_SEGNAPOSTO = 2     // il premio della cassa del segnaposto di prima (v7)
 
@@ -33,7 +35,12 @@ const LANA_DEL_SEGNAPOSTO = 2     // il premio della cassa del segnaposto di pri
 //    `vecchi` e `vecchi1` (gli id dei lotti che un salvataggio senza `geo`, o con `geo: 1`, aveva già comprato dove ora il lotto sarebbe diverso: restano com'erano) e `pesca` (le lenze e i banchi)
 //    Il mangime (docs/fattoria3d/mangime-e-catena.md) non cambia la versione: l'erba medica è una coltura in più (`merci.erba`, a zero), il fienile una macchina in più (vuota, non
 //    comprata), becchime e foraggio stanno in `prodotti`; le bestie di prima restano, e se hanno fame chiedono il mangime nuovo.
-export const VERSIONE_STATO = 9
+// 10: la scala della 2D (docs/fattoria3d/livelli.md, «I salvataggi di prima»). Senza cambiare la forma: `scala: 2` dice che `esperienza` è sulla scala
+//    nuova (70 livelli, prezzi, tempi in minuti e silos della 2D); uno stato senza `scala` ha l'esperienza sulla scala di prima (22 livelli) e `normalizza` la porta
+//    nello stesso punto del percorso (motore/scala-vecchia.js), senza scendere sotto il livello che serve a tenere ciò che si ha. `silo`: quante volte è stato
+//    ingrandito ciascun magazzino (dati/silos.js), assente = zero. Un raccolto di prima in scorta resta anche se supera lo scomparto: il tetto frena solo ciò che entra.
+export const VERSIONE_STATO = 10
+export const SCALA_ATTUALE = 2
 
 const vuote = () => Object.fromEntries(CHIAVI_COLTURE.map(k => [k, 0]))
 
@@ -53,6 +60,8 @@ export function statoIniziale() {
     v: VERSIONE_STATO,
     merci: vuote(), prodotti: {}, lana: 0,
     esperienza: 0,             // monete spese in questo gioco; non scende mai (dati/livelli.js ne ricava il livello)
+    scala: SCALA_ATTUALE,      // 2 = la scala dei livelli della 2D; uno stato senza `scala` ha l'esperienza sulla scala di prima e `normalizza` la porta qui
+    silo: Object.fromEntries(TIPI_DI_SILO.map(t => [t, 0])),      // quante volte è stato ingrandito ogni magazzino (+2 pezzi per scomparto, dati/silos.js)
     posseduti: Object.fromEntries(TIPI_DI_EDIFICIO.map(t => [t, false])),
     lotti: { ...LOTTI_INIZIALI },
     geo: 2,                    // la geografia: 1 = mare a ovest e laghi a est, 2 = anche i laghi naturali nella fascia di mezzo; uno stato più vecchio tiene i suoi lotti com'erano
@@ -96,6 +105,7 @@ export function normalizza(letto) {
   }
   s.lana = numero(letto.lana)
   s.esperienza = numero(letto.esperienza)
+  for (const t of TIPI_DI_SILO) { const n = oggetto(letto.silo)[t]; s.silo[t] = Number.isInteger(n) && n > 0 ? Math.min(60, n) : 0 }
   const lotti = oggetto(letto.lotti)
   s.lotti = Object.keys(lotti).length ? Object.fromEntries(Object.entries(lotti).filter(([k, v]) => v && lottoPerId(k)).map(([k]) => [k, true])) : s.lotti
   // la geografia grande: uno stato di prima (senza `geo`) tiene com'erano i lotti già comprati che ora sarebbero diversi (mare, costa, lago, o un laghetto che sparisce)
@@ -150,6 +160,8 @@ export function normalizza(letto) {
     else if (oggetto(letto.posseduti)[t]) s.cose.push({ id: s.prossimoId++, tipo: t, i: POSTI_STORICI[t].i, j: POSTI_STORICI[t].j })
     s.posseduti[t] = s.cose.some(c => c.tipo === t)
   }
+  // la scala: l'esperienza di uno stato di prima vale sulla scala di prima (22 livelli); la si porta sulla scala della 2D nello stesso punto del percorso
+  if (letto.scala !== SCALA_ATTUALE) s.esperienza = esperienzaDaPrima(s.esperienza, livelloMinimoDi(s))
   // le macchine: un v1 aveva solo `pasticceria` in radice. Un v6 aveva altre ricette: ogni cosa in forno o pronta diventa il suo cugino di
   // oggi (`nuovoId`); se il cugino sta in un'altra macchina (il pane, che era della pasticceria) arriva subito in dispensa, se no resta
   // dov'era. Niente si perde: ciò che non entra nei tre posti va fra i pronti, e i pronti si ritirano.

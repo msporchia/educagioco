@@ -10,7 +10,6 @@ import { state, esportaTutto, resetPlayer, nomeCorrente,
          ritocca, accendiSapere, saperiSpenti, fissaGioco, fissaSapere,
          rimettiAiDifetti,
          aspettoDi, scegliAspetto } from '../store/profile.js'
-import { azzeraCampagna, haGiocato } from '../giochi/campagne.js'
 import { leggiCestino } from '../store/cestino.js'
 import { laPosta, segnaLetta, avvisa } from '../store/posta.js'
 import { inGrassetto } from '../guide/aiuto.js'
@@ -56,16 +55,6 @@ const dentro = ref(false)
 const sbagliato = ref(false)
 const esito = ref(null)          // { ok: bool, testo: string }
 const confermaAzzera = ref(false)
-const confermaFattoria = ref(false)
-
-async function azzeraFattoria() {
-  await cestinaOra('fattoria')
-  azzeraCampagna('fattoria')
-  azzeraCampagna('fattoria3d')          // anche la 3D (stato, vicini): stessa copia nel cestino, un solo gesto
-  confermaFattoria.value = false
-  esito.value = { ok: true, testo: 'La fattoria di ' + chi.value + ' riparte da zero.' }
-  cestino.value = await leggiCestino()
-}
 
 // il cestino: vedi docs/genitori/cestino-e-posta.md
 const cestino = ref([])
@@ -478,10 +467,14 @@ function cambiaProva() {
     ? `I giochi in prova compaiono nella home di ${chi.value}. Sono a metà: aspettati che cambino.`
     : `I giochi in prova spariscono dalla home di ${chi.value}.` }
 }
+// i reset della fattoria stanno nei Giochi › Avanzate: qui si dice com'è andata e si aggiorna il cestino
+async function fattoFattoria(testo) {
+  esito.value = { ok: true, testo }
+  cestino.value = await leggiCestino()
+}
 async function azzera() {
   await resetPlayer()
   confermaAzzera.value = false
-  confermaFattoria.value = false
   esito.value = { ok: true, testo: 'I progressi di ' + chi.value
     + ' sono stati cancellati. Se non era quello che volevi, qui sotto c\'è ancora la copia.' }
   cestino.value = await leggiCestino()
@@ -763,27 +756,6 @@ async function rimetti(v) {
             <button class="bottone rosso" @click="azzera">Sì, cancella</button>
           </div>
         </div>
-
-        <!-- ricomincia solo la fattoria, non tutto: compare solo se l'ha aperta -->
-        <template v-if="haGiocato('fattoria') || haGiocato('fattoria3d')">
-          <button v-if="!confermaFattoria" class="carta pericolo"
-                  data-azione="azzera-fattoria" @click="confermaFattoria = true">
-            <span class="ico">🚜</span>
-            <b>Ricomincia la fattoria di {{ chi }}</b>
-            <i>Solo la fattoria: il resto dei progressi non si tocca</i>
-          </button>
-          <div v-else class="carta pericolo aperta">
-            <b>Ricominciare la fattoria di {{ chi }}?</b>
-            <i>Terra, cose comprate e animali spariscono (anche nella fattoria
-               3D, se c'è), e il prato torna vuoto. <b>Le monete spese non tornano indietro.</b> Tutto il
-               resto — gli altri giochi, i traguardi, il salvadanaio — resta
-               com'è.</i>
-            <div class="riga">
-              <button class="bottone chiaro" @click="confermaFattoria = false">No, lascia stare</button>
-              <button class="bottone rosso" @click="azzeraFattoria">Sì, ricomincia</button>
-            </div>
-          </div>
-        </template>
         </div>
       <!-- il cestino: vedi docs/genitori/cestino-e-posta.md -->
       <template v-if="cestino.length">
@@ -1018,7 +990,7 @@ async function rimetti(v) {
       <template v-else-if="scheda === 'giochi'">
       <!-- l'unico posto dove si tara: vedi docs/genitori/manopola.md, docs/genitori/quadro.md -->
       <h2>I giochi di {{ chi }}</h2>
-      <GiochiImpostazioni />
+      <GiochiImpostazioni @fatto="fattoFattoria" />
 
       </template>
 
