@@ -65,7 +65,7 @@ Ogni migrazione e ogni nuova bottega 3D deve tenerne conto ([commercio.md](comme
 | C16 | le 37 portate | ✅ stesso id, ingredienti e quantità (un test le confronta, con le deviazioni dichiarate in `MANCANTI`) | – |
 | C17 | le 4 «di bestia» (uova, latte, lana, pesce) | ✅ sono i prodotti delle bestie e della pesca | – |
 | C18 | le 9 di macchine non portate: mangime, zuppa, beverone, zuppa_orto, pastura, fiorume, fiorume_concime, merenda, caramelle | ✅ pentolone (G4), fiorume, fiorume_concime, merenda e caramelle (G5, [../cortile-2.md](../cortile-2.md)); 🟡 solo `mangime` (mulino, cibo di cane e gatto) c'è ma i compagni non mangiano (A6) | – |
-| C19 | le 7 di recinti non portati: lana_angora, uova_anatra, tartufi, latte_capra, miele, lana_alpaca, concime | ✅ uova d'anatra, tartufi, latte di capra (G4); lana d'angora e d'alpaca (la lana dell'ovile, un contatore), miele e concime (G5) | – |
+| C19 | le 7 di recinti non portati: lana_angora, uova_anatra, tartufi (in 3D `pancetta`, deviazione: vedi animali.md), latte_capra, miele, lana_alpaca, concime | ✅ uova d'anatra, tartufi, latte di capra (G4); lana d'angora e d'alpaca (la lana dell'ovile, un contatore), miele e concime (G5) | – |
 | C20 | tempi | minuti | ✅ gli stessi minuti | – |
 | C21 | costo per lavorazione | 🪙0 (8 ricette), 🪙1 (42), 🪙2 (7) a ogni avvio | ✅ uguale (e 🪙1 a pasto per le bestie) | – |
 | C22 | `parmigiana` ha l'emoji 🍆 | ✅ uguale (manca il disegno in entrambe) | P2 |

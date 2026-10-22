@@ -95,7 +95,7 @@ La 2D vende piazzole da 6×6 celle (🪙45 la prima oltre le nove, poi ×1,38); 
 ## Gli scomparti (D11)
 
 Ogni merce ha il suo scomparto da **8 pezzi**; ingrandire un silo aggiunge 2 a **tutti** gli scomparti di quel silo (`dati/silos.js`, prezzo `40 + 130·ln(1+n)`: 🪙40, 130,
-185, 220…). I silos sono tre come in 2D (`terra`: i raccolti; `stalla`: lana, uova, latte, tartufi, pesce, mangimi; `bottega`: i prodotti finiti, la dispensa), ma **nella forma
+185, 220…). I silos sono tre come in 2D (`terra`: i raccolti; `stalla`: lana, uova, latte, pancetta, pesce, mangimi; `bottega`: i prodotti finiti, la dispensa), ma **nella forma
 più piccola**: ci sono da subito, senza pezzi da comprare e da mettere in mappa (le 🪙120 × 3 dei silos 2D non si pagano). Si ingrandiscono dall'**inventario** (tre bottoni in
 fondo; il gettone dice `n/max`, rosso se pieno). Il perché dei numeri è in [../fattoria/campi-e-silos.md](../fattoria/campi-e-silos.md).
 - **Uno scomparto pieno non si riempie: non si raccoglie e non si paga, il lavoro resta lì.** Un campo maturo con lo scomparto pieno non parte (`provaRaccolta`, controllato
@@ -110,7 +110,7 @@ fondo; il gettone dice `n/max`, rosso se pieno). Il perché dei numeri è in [..
 - **Raccogliere** costa il `raccolta` della coltura (🪙1, 🪙2 per mais, zucche, pomodori, melanzane), pagato **dall'ultima tessera** (le prime tre si staccano gratis, la quarta
   consegna il raccolto e paga). **Seminare** è gratis in 2D e qui (`semina`: 0).
 - **Avviare una ricetta** costa il `costo` della 2D (🪙0 per il fienile, 1 per quasi tutte, 2 per le più ricche: torta, pizza, gelato…).
-- **Nutrire una bestia** costa come avviare la sua ricetta in 2D (uova, latte, lana, tartufo, uova d'anatra, latte di capra: 🪙1 a pasto); a ogni bestia nutrita, non a ogni
+- **Nutrire una bestia** costa come avviare la sua ricetta in 2D (uova, latte, lana, pancetta, uova d'anatra, latte di capra: 🪙1 a pasto); a ogni bestia nutrita, non a ogni
   gesto: con meno monete si nutrono quelle che si può. Far crescere un agnello o nascere un cucciolo è gratis (non esiste in 2D).
 - Un rifiuto per poche monete è `poche-monete` col `costo`; niente si consuma. Il primo giro della guida non finisce col primo raccolto da 🪙1 (`SPESA_DEL_PRIMO_GIRO`).
 

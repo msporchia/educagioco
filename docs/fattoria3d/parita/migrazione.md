@@ -29,7 +29,7 @@ prova `test/unita/fattoria3d-migra.test.mjs` (fattorie 2D vere a ogni livello, `
 | scorte di prodotti, uova, latte, pesce | `prodotti`; la lana il contatore `lana` |
 | piazzole comprate oltre le 9 di partenza | 2 lotti ciascuna (36 celle contro 16), i più vicini al quadrato di partenza, solo prato o bosco, sempre confinanti |
 | raccolto maturo in un campo · lavoro finito in una macchina | la resa nelle scorte; il lavoro non finito rende gli ingredienti |
-| tutto il resto (conigliera, porcile, anatre, capre, arnie, alpaca, asini, peschiera, pentolone, silos, alberi, sassi, case, recinti, feste…) · scorte senza equivalente (miele, tartufi, concime, merenda, mangime del cane…) · addobbi · bestie di casa | **`daRegalare`** |
+| tutto il resto (conigliera, porcile, anatre, capre, arnie, alpaca, asini, peschiera, pentolone, silos, alberi, sassi, case, recinti, feste…) · scorte senza equivalente (miele, tartufi — in 3D è la pancetta, un'altra merce: le scorte si perdono, decisione del 22/10/2026 —, concime, merenda, mangime del cane…) · addobbi · bestie di casa | **`daRegalare`** |
 
 `daRegalare` è un conto `{ 'cosa:ovile': 1, 'scorta:miele': 4, 'addobbo:cappello': 2, 'bestia:cane-bobtail': 1, 'terra': 2 }`: serve a regalare
 la cosa quando il suo modello arriva (G4–G6), non vale monete e non si spende. Lo stato porta anche `migrato: 1`. Non si portano: i
