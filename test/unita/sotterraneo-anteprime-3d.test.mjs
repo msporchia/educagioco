@@ -125,6 +125,20 @@ for (const t of Object.keys(MOSTRI)) {
   uguale('una promessa: non è pronta finché non arriva', coda.pronta('a'), false)
   fine('tela'); uguale('poi lo è', await p, 'tela')
 }
+// le anteprime a fette: una promessa ferma il giro, la chiave dopo parte quando è arrivata (le fette usano la stessa scena)
+{
+  const giri = [], fini = [], partite = []
+  const coda = creaCoda(k => { partite.push(k); return new Promise(r => fini.push(r)) }, { pianifica: fn => giri.push(fn), ora: () => 0, budget: 100 })
+  const p = ['a', 'b'].map(k => coda.chiedi(k))
+  giri.shift()()
+  uguale('una promessa alla volta, anche col budget', partite.join(','), 'a')
+  fini.shift()('tela-a'); await p[0]; await null
+  uguale('arrivata la prima, la dopo aspetta il suo giro', partite.join(','), 'a')
+  giri.shift()()
+  uguale('e al giro dopo parte', partite.join(','), 'a,b')
+  fini.shift()('tela-b')
+  uguale('tutte e due', (await Promise.all(p)).join(','), 'tela-a,tela-b')
+}
 // RIPROVA (il contesto perso a metà): vale null ma non resta in cache, e la richiesta dopo ridisegna
 {
   const giri = []
