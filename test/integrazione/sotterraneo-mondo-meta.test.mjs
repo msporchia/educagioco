@@ -63,7 +63,8 @@ await entra()
   uguale('l\'icona è la cripta fotografata', await carta('[data-ritaglio]').count(), 1)
   const g = await page.evaluate(() => window.__sotterraneo3d.grafica())
   controlla('per terra c\'è la scia di luci', g.scia > 10, g.scia)
-  dentro('e il conto resta sotto le 150 chiamate', g.chiamate, 10, 150)
+  // le persone del villaggio in 3D (docs/sotterraneo/persone-3d.md): una trentina di chiamate in più degli sprite
+  dentro('e il conto resta sotto le 200 chiamate', g.chiamate, 10, 200)
   dentro('e i 400 mila triangoli', g.triangoli, 1000, 400000)
   nota(`con la scia: ${g.chiamate} chiamate, ${Math.round(g.triangoli / 1000)}k triangoli, ${g.scia} luci`)
   // la scia esce dalla piazza lungo la strada, non fra le case: le luci dentro il villaggio stanno sulla strada vera
