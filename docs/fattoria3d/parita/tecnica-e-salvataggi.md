@@ -12,7 +12,7 @@ Legenda in [README.md](README.md). Archivio: [../../core/archivio.md](../../core
 | T3 | il rischio degli id | ✅ risolto con tabelle esplicite: `pasticceria` 3D = `pastificio` 2D (la `pasticceria` 2D è una bottega, non convertita), `conserviera` = `cucina`; i raccolti plurali 2D diventano singolari (`carote` → `carota`, `fieno` → `erba`); nessun id si rinomina. Provato su `fattoriaTipo` 1–99 (`unita/fattoria3d-migra`) | – |
 | T4 | convivenza | oggi le due fattorie condividono le monete e hanno stati separati: nessun conflitto di dati, ma due posti dove spendere | D1, D14 |
 | T5 | salvataggio a pagina nascosta | ✅ `salva({ subito })` su `visibilitychange`/`pagehide` come la 2D | – |
-| T6 | cestino e ripristino | 2D sì | ❌ per la 3D (I17) |
+| T6 | cestino e ripristino | 2D sì | ✅ «Ricomincia la fattoria» e `#fattoria3d-tipo=` cestinano il profilo com'era; si rimette dalla pagina dei grandi come ogni voce del cestino |
 
 La migrazione è la **funzione pura** `statoDa2D(datoFattoria) → stato3D` (come `normalizza`: non lancia mai), provata su ogni
 livello con `motore/tipo.js` della 2D (1–99). Resta da provare su un salvataggio vero esportato. Legge lo stato 2D, non lo cambia.

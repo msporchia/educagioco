@@ -159,6 +159,8 @@ posto della home e `.carte` non arriva.
 | `#pin=1234` | rimette il codice dei grandi |
 | `#fattoria=40` | alza il livello della fattoria (non lo abbassa mai), il prato resta |
 | `#fattoria-tipo=30` | mette una fattoria già giocata di quel livello (1–99, `giochi/fattoria/motore/tipo.js`); **butta quella del bambino attivo** nel cestino: si usa con un bambino di prova |
+| `#fattoria3d=10` | alza il livello della fattoria 3D (non lo abbassa mai), il resto resta |
+| `#fattoria3d-tipo=10` | mette una fattoria 3D già giocata di quel livello (1–99, `giochi/fattoria3d/motore/tipo.js`: stesso motore, borsa infinita, campi a stadi diversi e macchine in moto); **butta quella del bambino attivo** nel cestino: si usa con un bambino di prova |
 | `#stagione=natale` | la fattoria a Natale (o `halloween`) fuori stagione |
 | `#eroe=mago&giu=3` | il sotterraneo con quell'eroe, già giù in quella discesa (l'indice della storia, o `abisso`): con gli altri cheat qui sotto una schermata si guarda senza camminare (`node strumenti/scatta-app.mjs 'sotterraneo=branco&mostri=6&eroe=mago&giu=1' --dist`) |
 | `#torcia=accesa` | il sotterraneo (2D o 3D) con la torcia piena e una di scorta; `sgoccioli` l'ultima stanza dell'ultima, `spenta` al buio; con `&verso=sx` (o `dx`, `su`, `giu`) l'eroe guarda di là, come dopo un passo ([../sotterraneo/luce.md](../sotterraneo/luce.md)) |
