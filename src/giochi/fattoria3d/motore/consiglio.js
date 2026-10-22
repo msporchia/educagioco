@@ -21,7 +21,7 @@ const dove = t => EDIFICI[t] || PEZZI[t] || { nome: t, emoji: '' }
 // «il mulino», «l'erba», «la stalla»: l'articolo sta nel dato degli edifici; per i pezzi si indovina (nomi in -a: la)
 const il = t => {
   const d = dove(t), n = d.nome.toLowerCase(), art = d.art || (/a$/.test(n) ? 'la' : 'il')
-  return /^[aeiou]/.test(n) ? `l'${n}` : `${art} ${n}`
+  return art === 'le' ? `le ${n}` : /^[aeiou]/.test(n) ? `l'${n}` : `${art} ${n}`      // «le arnie»: un plurale non vuole l'apostrofo
 }
 
 const ETICHETTE = {

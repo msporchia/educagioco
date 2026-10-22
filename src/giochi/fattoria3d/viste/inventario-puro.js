@@ -4,6 +4,7 @@ import { COLTURE } from '../dati/colture.js'
 import { RICETTE, merceDi } from '../dati/ricette.js'
 import { PRODOTTI_ANIMALI, LANA } from '../dati/animali.js'
 import { serveA, bestieChe } from '../dati/usi.js'
+import { MANGIMI_SENZA_RICETTA } from '../dati/cortile2.js'
 import { PESCI } from '../dati/pesca.js'
 import { EDIFICI } from '../dati/catalogo.js'
 import { livelloDellaColtura } from '../dati/livelli.js'
@@ -25,7 +26,7 @@ export function schedeDellInventario(s, livello, capienzaDi = null) {
     return { k, n, nome: m.nome || k, emoji: m.emoji || '❔', velata: n <= 0, ...(Number.isFinite(max) ? { max, pieno: n >= max } : {}) }
   }
   const raccolti = Object.keys(COLTURE).filter(k => livelloDellaColtura(k) <= livello || (merci[k] || 0) > 0).map(k => voce(k, merci[k] || 0))
-  const prodottiVoci = Object.keys(RICETTE).filter(k => (prodotti[k] || 0) > 0).map(k => voce(k, prodotti[k]))
+  const prodottiVoci = [...Object.keys(RICETTE), ...Object.keys(MANGIMI_SENZA_RICETTA)].filter(k => (prodotti[k] || 0) > 0).map(k => voce(k, prodotti[k]))
   const altro = [...Object.keys(LANA).map(k => voce(k, k === 'lana' ? (s.lana || 0) : (prodotti[k] || 0))),
     ...Object.keys(PRODOTTI_ANIMALI).map(k => voce(k, prodotti[k] || 0))].filter(v => v.n > 0)
   return { raccolti, prodotti: prodottiVoci, altro }

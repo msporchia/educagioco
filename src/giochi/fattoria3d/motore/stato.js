@@ -6,6 +6,7 @@ import { CHIAVI_COLTURE, TESSERE } from '../dati/colture.js'
 import { TIPI_DI_EDIFICIO, EDIFICI, PEZZI } from '../dati/catalogo.js'
 import { TIPI_DI_MACCHINA, MACCHINE, RICETTE, nuovoId } from '../dati/ricette.js'
 import { ANIMALI } from '../dati/animali.js'
+import { MANGIMI_SENZA_RICETTA } from '../dati/cortile2.js'
 import { ruotabile, rotLetta } from '../dati/rotazione.js'
 import { POSTI } from '../dati/ordini.js'
 import { livelloPer } from '../dati/livelli.js'
@@ -183,7 +184,7 @@ export function normalizza(letto) {
     if (MACCHINE[t]) s.macchine[t].posti = postiInForma(p.posti)
     if (Array.isArray(p.coda)) for (const x of p.coda) if (x && typeof x.ric === 'string') alloggia(MACCHINE[t] ? t : '', x.ric, 1, x.fine)
     for (const [k, n] of Object.entries(oggetto(p.pronti))) {
-      const id = nuovoId(k), r = RICETTE[id]
+      const id = nuovoId(k), r = RICETTE[id] || MANGIMI_SENZA_RICETTA[id]        // i pronti sono chiavi di PRODOTTO: `fiori` non ha una ricetta col suo id
       if (!r || !(numero(n) > 0)) continue
       if (r.dove !== t || !MACCHINE[t]) s.prodotti[id] = (s.prodotti[id] || 0) + numero(n)
       else s.macchine[t].pronti[id] = (s.macchine[t].pronti[id] || 0) + numero(n)

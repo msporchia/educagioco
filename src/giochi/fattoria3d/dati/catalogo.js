@@ -5,6 +5,7 @@
    passerella, molo, porticciolo) dichiarano i loro numeri. dati/livelli.js legge `liv` da qui, mai un elenco a parte; `produttivo` dice che il
    suo prezzo si somma al salto di livello (le decorazioni no). Vedi docs/fattoria3d/regole.md e livelli.md. */
 import { PEZZI_DEL_CORTILE, EDIFICIO_PENTOLONE } from './cortile.js'
+import { PEZZI_DEL_CORTILE_2 } from './cortile2.js'
 import { prezzoDa2D, livelloDa2D, crescitaDa2D, livelloPerPrezzo, LIVELLO_PESCA } from './parita2d.js'
 
 /** Prezzo, livello e rincaro di un pezzo, dalla 2D. `rincaro` è il passo per copia a prezzo pieno (13 per il campo da 22); il prezzo vero della copia n è `prezzoPezzo`. */
@@ -42,6 +43,7 @@ export const PEZZI = {
   zucche_mucchio:  { nome: 'Due zucche',       emoji: '🎃', w: 2, d: 1, ...da2d('zucche_mucchio'), categoria: 'decori', stagione: 'halloween' },
   trattore:        { nome: 'Trattore',        emoji: '🚜', w: 2, d: 2, ...da2d('trattore'), categoria: 'edifici' },     // si tocca e porta ai vicini (docs/fattoria3d/vicini.md)
   ...PEZZI_DEL_CORTILE,    // stagno delle anatre, porcile, capre (giro G4): livelli e prezzi provvisori in dati/cortile.js
+  ...PEZZI_DEL_CORTILE_2,  // conigliera, alpaca, asini, arnie (giro G5): livelli e prezzi della 2D (dati/cortile2.js)
 }
 /** Di quanto si alza chi cammina sulla cella (a, b) del pezzo (0 se non è calpestabile). `alzato` è un numero, o una quota per cella
     lungo il lato lungo (la gobba di un ponte). */

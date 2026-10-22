@@ -14,6 +14,7 @@ export const DISEGNI = {
   pasticceria: 'pastificio', mongolfiera: 'mongolfiera', mulino: 'mulino_vento', panificio: 'panificio', caseificio: 'caseificio', conserviera: 'cucina', gelateria: 'gelateria',
   telaio: 'telaio', zuccherificio: 'zuccherificio', sartoria: 'sartoria', tintoria: 'tintoria', friggitoria: 'friggitoria', sushi_bar: 'sushi_bar', fienile: 'fienile0',
   pentolone: 'pentolone', anatre: 'recinto_anatre_calmo', porcile: 'recinto_maiali_calmo', capre: 'recinto_capre_calmo',
+  conigliera: 'recinto_conigli_calmo', alpaca: 'recinto_alpaca_calmo', asini: 'recinto_asini_calmo', arnie: 'recinto_api_calmo',
 }
 
 /** Gli strumenti del pennello, nella scheda delle strade: non sono pezzi, scegliendoli si disegna col dito. */

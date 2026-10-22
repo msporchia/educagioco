@@ -657,7 +657,7 @@ export class Fattoria3d {
     const A = ANIMALI[c.tipo], n = Math.min(pronte.length, this.spazioPer(A.prodotto))        // lo scomparto ha il suo tetto: le bestie che non ci stanno aspettano col loro prodotto
     if (n < 1) return { ok: false, motivo: 'scomparto-pieno', k: A.prodotto, max: this.capienzaDi(A.prodotto) }
     for (const b of pronte.slice(0, n)) b.fine = null
-    this.s.prodotti[A.prodotto] = (this.s.prodotti[A.prodotto] || 0) + n
+    this._riponi(A.prodotto, n)                                                              // la lana va nel suo contatore (`stato.lana`), il resto in `prodotti`
     this._evento(A.evento, { n })
     return { ok: true, n, prodotto: A.prodotto }
   }

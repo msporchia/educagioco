@@ -25,6 +25,7 @@ import { PEZZI, EDIFICI } from '../../src/giochi/fattoria3d/dati/catalogo.js'
 import { COLTURE } from '../../src/giochi/fattoria3d/dati/colture.js'
 import { RICETTE } from '../../src/giochi/fattoria3d/dati/ricette.js'
 import { PRODOTTI_ANIMALI } from '../../src/giochi/fattoria3d/dati/animali.js'
+import { MANGIMI_SENZA_RICETTA } from '../../src/giochi/fattoria3d/dati/cortile2.js'
 import { lottoPerId, LOTTI_INIZIALI } from '../../src/giochi/fattoria3d/dati/mondo.js'
 import { biomaDi } from '../../src/giochi/fattoria3d/dati/biomi.js'
 import { controlla, uguale, riassunto, nota } from '../aiuto/verifica.mjs'
@@ -55,7 +56,7 @@ const T0 = 1770000000000
   uguale('il porcile è il porcile', pezzoPer('porcile'), 'porcile')
   uguale('lo stagno delle anatre sono le anatre', pezzoPer('stagno_anatre'), 'anatre')
   uguale('il recinto delle capre sono le capre', pezzoPer('recinto_capre'), 'capre')
-  uguale('la conigliera non ha equivalente', pezzoPer('conigliera'), null)
+  uguale('la conigliera ha il suo equivalente (G5), la peschiera no (la pesca ne prende il posto)', [pezzoPer('conigliera'), pezzoPer('peschiera')].join(), 'conigliera,')
   uguale('un albero non ha equivalente', pezzoPer('albero'), null)
   uguale('un id sconosciuto non ha equivalente', pezzoPer('boh'), null)
   uguale('carote → carota', JSON.stringify(merceDel('carote')), JSON.stringify({ dove: 'merci', id: 'carota' }))
@@ -63,7 +64,7 @@ const T0 = 1770000000000
   uguale('lana → il contatore', merceDel('lana').dove, 'lana')
   uguale('pane → prodotti', merceDel('pane').dove, 'prodotti')
   uguale('uova → prodotti', merceDel('uova').dove, 'prodotti')
-  uguale('il miele non esiste in 3D', merceDel('miele'), null)
+  uguale('il miele esiste in 3D (G5), e i fiori delle api pure', [merceDel('miele').id, merceDel('fiori').dove].join(), 'miele,prodotti')
   uguale('il mangime del cane ora c\'è in 3D (il mulino lo fa), nei prodotti', JSON.stringify(merceDel('mangime')), JSON.stringify({ dove: 'prodotti', id: 'mangime' }))
   uguale('un id strano non esiste', merceDel(42), null)
 }
@@ -108,7 +109,7 @@ for (const liv of [1, 2, ...LIVELLI_TIPO, LIVELLO_MAX]) {
   }
   // niente di inventato: ogni chiave è una merce vera, ogni pezzo del magazzino è nel catalogo
   for (const k of Object.keys(s.merci)) controlla(`${di}: merce ${k} esiste`, !!COLTURE[k])
-  for (const k of Object.keys(s.prodotti)) controlla(`${di}: prodotto ${k} esiste`, !!(RICETTE[k] || PRODOTTI_ANIMALI[k]))
+  for (const k of Object.keys(s.prodotti)) controlla(`${di}: prodotto ${k} esiste`, !!(RICETTE[k] || PRODOTTI_ANIMALI[k] || MANGIMI_SENZA_RICETTA[k]))
   for (const k of Object.keys(s.magazzino)) controlla(`${di}: pezzo ${k} esiste`, !!(PEZZI[k] || EDIFICI[k]))
   // la terra: lotti veri, prato o bosco, in più di quelli di partenza
   const nuovi = Object.keys(s.lotti).filter(id => !LOTTI_INIZIALI[id])
@@ -137,7 +138,7 @@ nota('livelli 2D → 3D:', forme.join(' '))
   if (alto) {
     uguale('livello 70: all\'ultimo livello 3D', livelloPer(alto.esperienza), ULTIMO)
     controlla('livello 70: tutti gli edifici 3D nel magazzino', Object.keys(EDIFICI).every(t => alto.magazzino[t] === 1), Object.keys(EDIFICI).filter(t => alto.magazzino[t] !== 1).join())
-    controlla('livello 70: le cose senza equivalente sono registrate (conigliera, arnie, …)', Object.keys(alto.daRegalare).some(k => k.startsWith('cosa:')))
+    controlla('livello 70: le cose senza equivalente sono registrate (la peschiera, …)', Object.keys(alto.daRegalare).some(k => k.startsWith('cosa:')))
     controlla('livello 70: ogni voce da regalare ha un numero positivo', Object.values(alto.daRegalare).every(n => Number.isInteger(n) && n > 0))
   }
 }

@@ -3,6 +3,7 @@
 import { COLTURE } from '../dati/colture.js'
 import { emojiDi, merceDi, RICETTE } from '../dati/ricette.js'
 import { EDIFICI } from '../dati/catalogo.js'
+import { MANGIMI_SENZA_RICETTA } from '../dati/cortile2.js'
 import { tempoBreve } from '../dati/tempo.js'
 import { siloDi, SILOS } from '../dati/silos.js'
 
@@ -17,7 +18,7 @@ export function dettoDi(motivo, extra = {}) {
       const cibi = (extra.mangia || []).filter(k => merceDi(k))
       if (!cibi.length) return 'Serve da mangiare'
       const cosa = cibi.map(k => `${emojiDi(k)} ${merceDi(k).nome.toLowerCase()}`).join(' o ')
-      const dove = [...new Set(cibi.map(k => (RICETTE[k] || {}).dove))].map(t => EDIFICI[t]).filter(Boolean).map(e => `${e.art} ${e.nome.toLowerCase()}`).join(' o ')
+      const dove = [...new Set(cibi.map(k => (RICETTE[k] || MANGIMI_SENZA_RICETTA[k] || {}).dove))].map(t => EDIFICI[t]).filter(Boolean).map(e => `${e.art} ${e.nome.toLowerCase()}`).join(' o ')
       return `Serve ${cosa}${extra.servono > 1 ? ` (${extra.servono} a testa)` : ''}${dove ? `: lo fa ${dove}` : ''}`
     }
     case 'lavora': return extra.secondi ? `Ci stanno lavorando… ${tempoBreve(extra.secondi * 1000)}` : 'Ci stanno lavorando'

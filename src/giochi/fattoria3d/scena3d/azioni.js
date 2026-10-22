@@ -6,7 +6,7 @@ import { COLTURE } from '../dati/colture.js'
 import { COSTI } from '../dati/regole.js'
 import { EDIFICI, PEZZI } from '../dati/catalogo.js'
 import { MACCHINE } from '../dati/ricette.js'
-import { PRODOTTI_ANIMALI } from '../dati/animali.js'
+import { prodottoDelleBestie } from '../dati/animali.js'
 import { dettoDi, dettoDiRifiuto } from './detti.js'
 import { tempoBreve } from '../dati/tempo.js'
 
@@ -30,6 +30,7 @@ export class Azioni {
       case 'campo': return this.campo(cosa)
       case 'recinto': return this.cura(cosa)
       case 'pollaio': case 'stalla': case 'anatre': case 'porcile': case 'capre': return this.curaBestie(cosa)
+      case 'conigliera': case 'alpaca': case 'asini': case 'arnie': return this.curaBestie(cosa)      // il secondo cortile (giro G5)
       case 'bacheca': case 'bancarella': pezzi.salta(cosa.id); return this.c.ui.apriBanco()      // il foglio degli ordini
       case 'fontana': pezzi.salta(cosa.id); fx.parla('Che bella!'); return
       case 'molo': case 'molo_v': return this.pescaDalMolo(cosa)         // toccare il molo: si lancia in punta
@@ -115,7 +116,7 @@ export class Azioni {
         eroe.az.fatto.add('r'); const r = this.m.raccogliProdotti(c.id)
         if (!r.ok) return fx.parla(dettoDiRifiuto(r))
         pezzi.sincronizza()
-        fx.volo('+' + r.n + (PRODOTTI_ANIMALI[r.prodotto].pezzo ? '' : ' ' + PRODOTTI_ANIMALI[r.prodotto].emoji), p, 1.8, r.prodotto); fx.scoppietta(p.clone().setY(0.7), 0xfff2c4, 10, 1.4, 2.0); ui.cambio()
+        fx.volo('+' + r.n + (prodottoDelleBestie(r.prodotto).pezzo ? '' : ' ' + prodottoDelleBestie(r.prodotto).emoji), p, 1.8, r.prodotto); fx.scoppietta(p.clone().setY(0.7), 0xfff2c4, 10, 1.4, 2.0); ui.cambio()
       })
     }
     if (pr.azione === 'nutri') {
