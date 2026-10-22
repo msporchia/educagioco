@@ -36,18 +36,18 @@ chiave), `Gioco.vue` (scendere, riprendere, chiudere).
 | 1 | Le cantine dei goblin | `cantine` | 2 | cantine | Grumo | orco | come oggi |
 | 2 | La torre bruciata | `torre` | 4 | fornace | Fiammetta | spirito di fuoco | come oggi |
 | 2 | La tana dei ragni | `gallerie` | 5 | grotta | Zannaverde | ragno | come oggi |
-| 3 | **Il cerchio di pietre** | `cerchio` | 6 | cripta | **Barbamuschio** | golem di muschio | serpente, vespa, occhio / lupo |
+| 3 | **Il cerchio di pietre** | `cerchio` | 6 | cripta | **Roccaverde** | golem di muschio | serpente, vespa, occhio / lupo |
 | 3 | **Il pozzo dei corvi** | `corvaia` | 7 | grotta | **Piumanera** | grifone | pipistrello, pipistrello con l'occhio, goblin / drago |
 | 4 | Le sale allagate | `cisterna` | 8 | tempio | Gorgo | polpo | come oggi |
 | 4 | **La palafitta** | `palafitta` | 9 | palude | **Sibilla** | serpente | melma, fungo, piranha / mostro verde |
 | 5 | La porta dell'inferno | `labirinto` | 10 | inferno | Minotto | bestia cornuta | come oggi |
-| 5 | **La fornace** | `fornace` | 11 | fornace | **Brontolava** | golem di magma | diavoletto, spirito di fuoco, bestia cornuta / drago di lava |
+| 5 | **La fornace** | `fornace` | 11 | fornace | **Vulcanor** | golem di magma | diavoletto, spirito di fuoco, bestia cornuta / drago di lava |
 | 6 | Le miniere di brace | `fondo` | 12 | miniera | Carbonchio | drago di lava | come oggi |
-| 6 | **La cava gelata** | `cava` | 13 | ghiaccio | **Brinaldo** | golem di ghiaccio | golem di pietra, pipistrello, lupo / troll |
+| 6 | **La cava gelata** | `cava` | 13 | ghiaccio | **Gelomagno** | golem di ghiaccio | golem di pietra, pipistrello, lupo / troll |
 | 7 | **Le tombe del vento** | `tombe` | 15 | tempio | **Falcenera** | mietitore | mummia, ombra, teschio azzurro / negromante |
 
 - **Le chiavi e i nomi** sono quelli di [mondo-a-percorso.md](mondo-a-percorso.md#i-dungeon); i **nomi dei sei grossi** li ho scelti
-  io sul calco dei sette (una parola sola, giocosa, che dice la creatura: Barbamuschio, Piumanera, Sibilla, Brontolava, Brinaldo,
+  io sul calco dei sette (una parola sola, giocosa, che dice la creatura: Roccaverde, Piumanera, Sibilla, Vulcanor, Gelomagno,
   Falcenera), da confermare. Le chiavi si salvano (`mondo.dungeon`, la sosta, le missioni): non si rinominano. `fornace` è anche
   il nome di uno scenario, di un paesaggio e di un'abilità del nano: sono campi diversi (nessuno legge `PAESAGGI[tappa.chiave]`).
 - **Il livello** è quello dei mostri della zona dove sta, più uno (`LIVELLO_DEL_DUNGEON`); nelle terre dopo `+14` a terra
@@ -57,8 +57,8 @@ chiave), `Gioco.vue` (scendere, riprendere, chiudere).
 - **I sei grossi** riusano quello che c'è: una creatura del bestiario ingrandita con la corona (`figura`, come i sette), le basi e
   i numeri dei sette (il troll fino al 9, il gigante dopo, ossa 1,1–1,2), le difese della creatura che vestono. I loro pezzi col nome
   hanno **una figura dei fogli che c'è già** (`figura` in `DEI_GROSSI`, un aspetto della base: [figure.md](figure.md)), finché la
-  loro non è ritagliata: lo Scudo di Barbamuschio (`scudo-08`), il Medaglione di Piumanera (`amuleto-21`), la Giubba di Sibilla
-  (`veste-08`), lo Scudo di Brontolava (`scudo-53`), l'Amuleto di Brinaldo (`amuleto-28`), lo Scudo di Falcenera (`scudo-38`). Basi
+  loro non è ritagliata: lo Scudo di Roccaverde (`scudo-08`), il Medaglione di Piumanera (`amuleto-21`), la Giubba di Sibilla
+  (`veste-08`), lo Scudo di Vulcanor (`scudo-53`), l'Amuleto di Gelomagno (`amuleto-28`), lo Scudo di Falcenera (`scudo-38`). Basi
   senza famiglia: li porta chiunque.
 
 ## Gli abitanti di una rigenerazione

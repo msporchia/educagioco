@@ -11,7 +11,8 @@ import { MOSTRI } from '../../src/giochi/sotterraneo/dati/mostri.js'
 import { perId } from '../../src/giochi/sotterraneo/scena3d/eroi3d/collezione.js'
 import { TIPI } from '../../src/giochi/sotterraneo/scena3d/eroi3d/armature.js'
 import { idDi } from '../../src/giochi/sotterraneo/scena3d/mostri3d/registro.js'
-import { MODELLO_DI, ARMATURE, modelloDi, pregioDi, dotazioneDi, chiaveDellaCosa, chiaveDellEroe, chiaveDelMostro, leggiChiave, creaCoda, MISURE }
+import { FIGURE3D } from '../../src/giochi/sotterraneo/dati/figure3d.js'
+import { MODELLO_DI, ARMATURE, modelloDi, pregioDi, dotazioneDi, pezzo3dDi, chiaveDellaCosa, chiaveDellEroe, chiaveDelMostro, leggiChiave, creaCoda, MISURE }
   from '../../src/giochi/sotterraneo/scena3d/anteprime3d-pura.js'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 
@@ -21,7 +22,7 @@ for (const [k, c] of Object.entries(COSE)) {
   if (c.dove === 'mano' || c.dove === 'mancina') controlla(`${k}: ha un modello 3D`, !!modelloDi(k) && !!perId(modelloDi(k)))
   if (c.dove === 'corpo') controlla(`${k}: è un'armatura 3D`, ARMATURE.includes(k) && TIPI.includes(k))
 }
-uguale('un pezzo trovato ha il modello della sua base', modelloDi('spada@7.m.fuoco'), 'spada-lunga')
+uguale('un pezzo trovato ha come ripiego il modello della sua base', modelloDi('spada@7.m.fuoco'), 'spada-lunga')
 
 // il pregio dell'armatura viene dalla rarità
 uguale('corazza di base: pregio 1', pregioDi('corazza'), 1)
@@ -29,35 +30,56 @@ uguale('corazza comune trovata: pregio 1', pregioDi('corazza@5'), 1)
 uguale('corazza magica: pregio 2', pregioDi('corazza@5.m.vita'), 2)
 uguale('corazza rara: pregio 3', pregioDi('corazza@5.r.vita.dif'), 3)
 
-// la dotazione: la stessa regola dell'eroe in scena (l'arco nella sinistra, lo scudo solo con un'arma a una mano)
-uguale('spada e scudo', JSON.stringify(dotazioneDi({ mano: 'spada', mancina: 'scudo-ferro', corpo: 'corazza' })),
-  JSON.stringify({ destra: 'spada-lunga', sinistra: 'scudo-rotondo', corpo: { tipo: 'corazza', pregio: 1 } }))
-uguale('l\'arco sta nella sinistra, e lo scudo non c\'è', JSON.stringify(dotazioneDi({ mano: 'arco-lungo', mancina: 'scudo-legno' })),
-  JSON.stringify({ destra: null, sinistra: 'arco-lungo', corpo: null }))
-uguale('a due mani niente scudo', dotazioneDi({ mano: 'spadone', mancina: 'scudo-legno' }).sinistra, null)
-uguale('niente roba, niente dotazione', JSON.stringify(dotazioneDi({})), JSON.stringify({ destra: null, sinistra: null, corpo: null }))
+// il pezzo 3D: la figura dello sprite (docs/sotterraneo/roba-3d.md), il ripiego, la rarità e l'elemento
+uguale('la spada di base: la sua figura e il ripiego', JSON.stringify(pezzo3dDi('spada')),
+  JSON.stringify({ figura: 'spada-26', id: 'spada-lunga', rarita: 'comune', elemento: 'natura' }))
+uguale('un pezzo trovato ha la figura del suo aspetto', pezzo3dDi('spada@7.m.fuoco').figura, COSE['spada@7.m.fuoco'].sprite)
+uguale('…e la rarità', pezzo3dDi('spada@7.m.fuoco').rarita, 'magico')
+uguale('un pezzo col nome ha la sua figura', pezzo3dDi('spada@9.u.zanna-del-drago').figura, 'spada-29')
+uguale('uno sprite fuori dai fogli: solo il ripiego', JSON.stringify(pezzo3dDi('pugnale-vampiro')), JSON.stringify({ figura: null, id: 'pugnale', rarita: 'comune', elemento: 'nessuno' }))
 
-// le chiavi: null dove resta lo sprite, la stessa per la stessa figura
-for (const k of ['anello-ambra', 'medaglione', 'pozione', 'torcia', 'chiave', 'elisir-toro']) uguale(`${k}: niente modello, resta lo sprite`, chiaveDellaCosa({ chiave: k }), null)
+// la dotazione: la stessa regola dell'eroe in scena (l'arco nella sinistra, lo scudo solo con un'arma a una mano)
+const d = dotazioneDi({ mano: 'spada', mancina: 'scudo-ferro', corpo: 'corazza' })
+uguale('spada e scudo', `${d.destra.id} ${d.sinistra.id} ${d.corpo.tipo}.${d.corpo.pregio}`, 'spada-lunga scudo-rotondo corazza.1')
+uguale('l\'arco sta nella sinistra, e lo scudo non c\'è', [dotazioneDi({ mano: 'arco-lungo', mancina: 'scudo-legno' })].map(x => `${x.destra}|${x.sinistra.id}|${x.corpo}`)[0], 'null|arco-lungo|null')
+uguale('a due mani niente scudo', dotazioneDi({ mano: 'spadone', mancina: 'scudo-legno' }).sinistra, null)
+uguale('niente roba, niente dotazione', JSON.stringify(dotazioneDi({})), JSON.stringify({ destra: null, sinistra: null, corpo: null, collo: null }))
+uguale('al collo una collana con la sua figura', dotazioneDi({ collo: 'medaglione@3.m.vita' }).collo.figura, COSE['medaglione@3.m.vita'].sprite)
+uguale('un anello non sta al collo', dotazioneDi({ collo: 'anello-ambra' }).collo, null)
+
+// le chiavi: null dove resta lo sprite, la stessa per la stessa figura e la stessa rarità
+for (const k of ['medaglione', 'amuleto-rosso', 'amuleto-osso']) uguale(`${k}: niente modello, resta lo sprite`, chiaveDellaCosa({ chiave: k }), null)
+uguale('una pozione: il suo modello', chiaveDellaCosa({ chiave: 'pozione' }), 'consumabile:pozione:c')
+uguale('la torcia anche', chiaveDellaCosa({ chiave: 'torcia' }), 'consumabile:torcia:c')
+uguale('un rarissimo brilla come un raro', chiaveDellaCosa({ chiave: 'elisir-toro' }), 'consumabile:elisir-toro:r')
+uguale('un consumabile letto', JSON.stringify(leggiChiave('consumabile:ampolla-vita:r')), JSON.stringify({ tipo: 'consumabile', pezzo: { consumabile: 'ampolla-vita', rarita: 'raro', elemento: 'nessuno' } }))
+uguale('un consumabile che non c\'è', leggiChiave('consumabile:spada:c'), null)
 uguale('una cosa senza chiave', chiaveDellaCosa(null), null)
-uguale('un\'arma', chiaveDellaCosa({ chiave: 'spada' }), 'arma:spada-lunga')
-uguale('due spade di rarità diverse: la stessa anteprima', chiaveDellaCosa({ chiave: 'spada@3.r.att.vita' }), chiaveDellaCosa({ chiave: 'spada@9' }))
-uguale('uno scudo', chiaveDellaCosa({ chiave: 'scudo-crociato@4' }), 'scudo:scudo-cavaliere')
-uguale('l\'armatura sta su chi la porta', chiaveDellaCosa({ chiave: 'manto@2.m.vita' }, 'mago'), 'armatura:manto:2:mago')
-uguale('un eroe sconosciuto è il cavaliere', chiaveDellaCosa({ chiave: 'saio' }, 'nessuno'), 'armatura:saio:1:cavaliere')
-uguale('l\'eroe vestito', chiaveDellEroe('nano', { mano: 'accetta', mancina: 'scudo-leone', corpo: 'corazza@5.r.vita.dif' }), 'eroe:nano:accetta:scudo-nanico:corazza.3')
-uguale('a mezzo busto', chiaveDellEroe('elfa', {}, 'busto'), 'busto:elfa:-:-:-')
+uguale('un\'arma', chiaveDellaCosa({ chiave: 'spada' }), 'arma:spada-26.spada-lunga.c.natura')
+{
+  const altra = Array.from({ length: 60 }, (_, i) => `spada@${i + 3}`).find(k => COSE[k].sprite === COSE['spada@2'].sprite)
+  uguale(`due spade comuni con la stessa figura (spada@2, ${altra}): la stessa anteprima`, chiaveDellaCosa({ chiave: altra }), chiaveDellaCosa({ chiave: 'spada@2' }))
+}
+controlla('la rarità cambia l\'anteprima', chiaveDellaCosa({ chiave: 'spada@3' }).split('.')[2] === 'c' && chiaveDellaCosa({ chiave: 'spada@3.r.att.vita' }).split('.')[2] === 'r')
+uguale('uno scudo', chiaveDellaCosa({ chiave: 'scudo-crociato' }), 'scudo:scudo-18.scudo-cavaliere.c.luce')
+uguale('un anello: un gioiello', chiaveDellaCosa({ chiave: 'anello-ambra' }), 'gioiello:amuleto-33.-.c.fuoco')
+uguale('l\'armatura sta su chi la porta', chiaveDellaCosa({ chiave: 'saio' }, 'mago'), 'armatura:saio:1:mago:saio.1.veste-15.c.luce')
+uguale('un eroe sconosciuto è il cavaliere', chiaveDellaCosa({ chiave: 'saio' }, 'nessuno').split(':')[3], 'cavaliere')
+uguale('l\'eroe vestito', chiaveDellEroe('nano', { mano: 'accetta', mancina: 'scudo-leone', corpo: 'corazza@5.r.vita.dif' }),
+  `eroe:nano:ascia-04.accetta.c.nessuno:scudo-20.scudo-nanico.c.oro:corazza.3.${COSE['corazza@5.r.vita.dif'].sprite}.r.${FIGURE3D[COSE['corazza@5.r.vita.dif'].sprite].elemento}:-`)
+uguale('a mezzo busto', chiaveDellEroe('elfa', {}, 'busto'), 'busto:elfa:-:-:-:-')
 uguale('un mostro', chiaveDelMostro({ tipo: 'lupo', grado: 'raro' }), 'mostro:lupo:raro:-')
 uguale('un grosso', chiaveDelMostro({ tipo: 'orco', grosso: 'grumo' }), 'mostro:grosso:grumo')
 
 // leggere le chiavi: tornano quello che serve al disegno, e le sconosciute valgono null
-const e = leggiChiave('eroe:nano:accetta:scudo-nanico:corazza.3')
-uguale('l\'eroe letto', JSON.stringify(e), JSON.stringify({ tipo: 'eroe', eroe: 'nano', destra: 'accetta', sinistra: 'scudo-nanico', corpo: { tipo: 'corazza', pregio: 3 } }))
-uguale('la dotazione letta è quella di dotazioneDi', JSON.stringify({ destra: e.destra, sinistra: e.sinistra, corpo: e.corpo }),
-  JSON.stringify(dotazioneDi({ mano: 'accetta', mancina: 'scudo-leone', corpo: 'corazza@5.r.vita.dif' })))
+const roba = { mano: 'accetta', mancina: 'scudo-leone', corpo: 'corazza@5.r.vita.dif', collo: 'medaglione@3.m.vita' }
+const e = leggiChiave(chiaveDellEroe('nano', roba))
+uguale('l\'eroe letto è la dotazione di dotazioneDi', JSON.stringify({ destra: e.destra, sinistra: e.sinistra, corpo: e.corpo, collo: e.collo }),
+  JSON.stringify(dotazioneDi(roba)))
+uguale('un\'arma letta', JSON.stringify(leggiChiave('arma:spada-28.spada-lunga.m.fuoco')), JSON.stringify({ tipo: 'arma', pezzo: { figura: 'spada-28', id: 'spada-lunga', rarita: 'magico', elemento: 'fuoco' } }))
 uguale('un mostro letto', JSON.stringify(leggiChiave('mostro:scheletro:magico:guerriero')), JSON.stringify({ tipo: 'mostro', r: { tipo: 'scheletro', grado: 'magico', variante: 'guerriero' } }))
-for (const k of ['', 'boh:1', 'armatura:pigiama:1:elfa', 'mostro:']) uguale(`«${k}» non si legge`, leggiChiave(k), null)
-for (const t of ['arma', 'scudo', 'armatura', 'eroe', 'busto', 'mostro']) controlla(`${t}: ha la sua misura`, MISURE[t] && MISURE[t][0] <= 192 && MISURE[t][1] <= 192)
+for (const k of ['', 'boh:1', 'armatura:pigiama:1:elfa', 'mostro:', 'arma:-.-.c.nessuno', 'arma:spada-lunga']) uguale(`«${k}» non si legge`, leggiChiave(k), null)
+for (const t of ['arma', 'scudo', 'gioiello', 'consumabile', 'armatura', 'eroe', 'busto', 'mostro']) controlla(`${t}: ha la sua misura`, MISURE[t] && MISURE[t][0] <= 192 && MISURE[t][1] <= 192)
 
 // i mostri: chi non ha un modello torna allo sprite (idDi null), gli altri hanno la chiave che il disegno risolve
 for (const t of Object.keys(MOSTRI)) {

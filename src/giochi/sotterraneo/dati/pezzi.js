@@ -108,11 +108,11 @@ export const DEI_GROSSI = {
   'martello-di-carbonchio': { base: 'martello', nome: 'Martello di Carbonchio', abilita: ['att', 'fuoco'] },
   // quelli dei sei grossi dei dungeon nuovi (solo del 3D): `figura` è una figura dei fogli che c'è già (un aspetto della base, dati/
   // aspetti.js), al posto della figura chiamata come loro che non è ancora ritagliata (docs/sotterraneo/figure.md)
-  'scudo-di-barbamuschio': { base: 'scudo-crociato', figura: 'scudo-08', nome: 'Scudo di Barbamuschio', abilita: ['dif', 'rigenera'] },
+  'scudo-di-barbamuschio': { base: 'scudo-crociato', figura: 'scudo-08', nome: 'Scudo di Roccaverde', abilita: ['dif', 'rigenera'] },
   'medaglione-di-piumanera': { base: 'medaglione', figura: 'amuleto-21', nome: 'Medaglione di Piumanera', abilita: ['schivata', 'torcia'] },
   'giubba-di-sibilla': { base: 'panciotto', figura: 'veste-08', nome: 'Giubba di Sibilla', abilita: ['dif', 'schivata', 'vita'] },
-  'scudo-di-brontolava': { base: 'scudo-ferro', figura: 'scudo-53', nome: 'Scudo di Brontolava', abilita: ['dif', 'fuoco', 'vita'] },
-  'amuleto-di-brinaldo': { base: 'amuleto-azzurro', figura: 'amuleto-28', nome: 'Amuleto di Brinaldo', abilita: ['vita', 'dif', 'torcia'] },
+  'scudo-di-brontolava': { base: 'scudo-ferro', figura: 'scudo-53', nome: 'Scudo di Vulcanor', abilita: ['dif', 'fuoco', 'vita'] },
+  'amuleto-di-brinaldo': { base: 'amuleto-azzurro', figura: 'amuleto-28', nome: 'Amuleto di Gelomagno', abilita: ['vita', 'dif', 'torcia'] },
   'scudo-di-falcenera': { base: 'scudo-teschio', figura: 'scudo-38', nome: 'Scudo di Falcenera', abilita: ['dif', 'vita', 'rigenera'] },
 }
 

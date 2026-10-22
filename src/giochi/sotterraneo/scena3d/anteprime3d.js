@@ -7,9 +7,9 @@ import { inquadra } from '../../fattoria3d/scena3d/anteprime-pura.js'
 import { creaCoda, leggiChiave, MISURE } from './anteprime3d-pura.js'
 import { creaEroe, posaGuardia } from './eroi3d/eroi.js'
 import { equipaggia } from './eroi3d/armi.js'
-import { creaDaId, perId } from './eroi3d/collezione.js'
-import { vesti } from './eroi3d/armature.js'
+import { vesti, TIPI } from './eroi3d/armature.js'
 import { vestiDotazione } from './eroe3d.js'
+import { creaPezzo, vestiFigura } from './roba3d.js'
 import { idDi, costruisci } from './mostri3d/registro.js'
 
 const FOV = 24
@@ -28,18 +28,24 @@ function scatolaDi(radice) {
 // ogni pezzo che si anima (le fiamme e le braci di un'arma, il respiro) va messo in un istante: prima della prima `anima` certe
 // particelle sono grandi quanto l'arma intera
 function animaTutto(radice, t) {
-  radice.traverse(o => { const a = o.userData && o.userData.anima; if (typeof a === 'function') { try { a(t) } catch (e) { /* resta com'è */ } } })
+  radice.traverse(o => {
+    for (const a of [o.userData && o.userData.anima, o.userData && o.userData.animaAlone]) {
+      if (typeof a === 'function') { try { a(t) } catch (e) { /* resta com'è */ } }
+    }
+  })
 }
 
 // ── i modelli in posa: ognuno torna { obj, scatola, verso } ──
-function inPosaArma(id, scudo) {
-  const voce = perId(id)
-  if (!voce) return null
-  const a = creaDaId(id), perno = new THREE.Group()
-  perno.add(a); animaTutto(a, 0.5)
-  if (scudo) { perno.rotation.y = -0.35; return { obj: perno, verso: [0.15, 0.22, 1] } }
+// l'istante delle anteprime: a 1,3 s l'aura del leggendario è gonfia e i luccichii del raro accesi (un fotogramma bello, fermo)
+const ISTANTE = 1.3
+function inPosaArma(pezzo, modo) {
+  const a = creaPezzo(pezzo)
+  if (!a) return null
+  const perno = new THREE.Group()
+  perno.add(a); animaTutto(a, ISTANTE)
+  if (modo === 'scudo' || modo === 'gioiello' || modo === 'consumabile') { perno.rotation.y = -0.35; return { obj: perno, verso: [0.15, 0.22, 1] } }
   // l'arco è disegnato col pancione verso +z: girato di lato si vede la curva; tutto in diagonale, la punta in alto a destra
-  if (voce.famiglia === 'arco') a.rotation.y = -Math.PI / 2
+  if (a.userData.famiglia === 'arco') a.rotation.y = -Math.PI / 2
   else a.rotation.y = 0.45
   perno.rotation.z = -Math.PI / 4
   return { obj: perno, verso: [0, 0.1, 1] }
@@ -51,6 +57,7 @@ function inPosaEroe(c, busto) {
   vestiDotazione(g, c)                   // come l'eroe in scena (eroe3d.js): la chiave porta la dotazione già decisa
   posaGuardia(g, 0.6)
   animaTutto(g, 0.6)
+  for (const w of g.userData.armiAnima || []) animaTutto(w, ISTANTE)
   if (g.userData.animaArmatura) g.userData.animaArmatura(0.6)
   g.rotation.y = 0.35
   if (!busto) return { obj: g, verso: [0.1, 0.16, 1] }
@@ -68,7 +75,7 @@ function inPosaEroe(c, busto) {
 function inPosaArmatura(c) {
   const g = creaEroe(c.eroe)
   equipaggia(g, {})
-  vesti(g, c.armatura, c.pregio)
+  if (!(c.corpo.figura && vestiFigura(g, c.corpo.figura)) && TIPI.includes(c.armatura)) vesti(g, c.armatura, c.pregio)
   if (g.userData.animaArmatura) g.userData.animaArmatura(0)
   g.userData.testa.visible = false
   g.rotation.y = 0.4
@@ -91,8 +98,7 @@ function inPosaMostro(r) {
 
 function inPosa(c) {
   switch (c.tipo) {
-    case 'arma': return inPosaArma(c.id, false)
-    case 'scudo': return inPosaArma(c.id, true)
+    case 'arma': case 'scudo': case 'gioiello': case 'consumabile': return inPosaArma(c.pezzo, c.tipo)
     case 'armatura': return inPosaArmatura(c)
     case 'eroe': return inPosaEroe(c, false)
     case 'busto': return inPosaEroe(c, true)

@@ -4,10 +4,10 @@
 import { Vector3, Color, Group, Box3 } from 'three'
 import { creaEroe, posaMarcia, posaColpo, posaGuardia, CHIAVI } from './eroi3d/eroi.js'
 import { equipaggia } from './eroi3d/armi.js'
-import { creaDaId } from './eroi3d/collezione.js'
 import { vesti, TIPI } from './eroi3d/armature.js'
 import { copri } from './eroi3d/copricapi.js'
 import { dotazioneDi } from './anteprime3d-pura.js'
+import { creaPezzo, vestiFigura, indossaGioiello } from './roba3d.js'
 
 export const eroe3dAcceso = () => typeof location === 'undefined' || !/[#&?]eroe2d\b/.test(location.hash + location.search)
 
@@ -15,7 +15,7 @@ export const eroe3dAcceso = () => typeof location === 'undefined' || !/[#&?]eroe
 const ALTEZZA_SPRITE = 0.72
 const ROSSO = new Color(1, 0.18, 0.12), VERDE = new Color(0.3, 1, 0.55)
 const _v = new Vector3()
-// quale modello per quale oggetto (MODELLO_DI) e il pregio dell'armatura stanno in anteprime3d-pura.js: li usano anche le anteprime
+// quale figura e quale modello per quale oggetto stanno in roba3d.js (docs/sotterraneo/roba-3d.md): li usano anche le anteprime
 
 /**
  * Veste un eroe 3D (`creaEroe`) con la roba: `roba` = { mano, mancina, corpo } (chiavi degli oggetti). La stessa per l'eroe in scena
@@ -23,16 +23,22 @@ const _v = new Vector3()
  */
 export const vestiEroe = (g, roba = {}) => vestiDotazione(g, dotazioneDi(roba))
 
-/** Lo stesso con la dotazione già decisa (`dotazioneDi`: gli id della collezione e l'armatura col pregio). → `togli()`. */
+/** Lo stesso con la dotazione già decisa (`dotazioneDi`: i pezzi 3D, l'armatura col pregio, la collana). → `togli()`. */
 export function vestiDotazione(g, d) {
-  const destra = d.destra ? creaDaId(d.destra) : null, sinistra = d.sinistra ? creaDaId(d.sinistra) : null
+  // in mano l'alone è più piccolo che da solo nella casella: addosso all'eroe copriva la faccia
+  const destra = creaPezzo(d.destra, { scalaAlone: 0.8 }), sinistra = creaPezzo(d.sinistra, { scalaAlone: 0.8 })
   const togliArma = equipaggia(g, { destra, sinistra })
-  g.userData.armiAnima = [destra, sinistra].filter(a => a && a.userData.anima)   // le fiamme e i bagliori delle armi vive vanno animati (da soli sono enormi)
-  const togliCorpo = d.corpo && TIPI.includes(d.corpo.tipo) ? vesti(g, d.corpo.tipo, d.corpo.pregio) : null
+  // la veste della figura (il modulo vesti) o l'armatura di sempre col pregio della rarità
+  const togliCorpo = !d.corpo ? null
+    : (d.corpo.figura && vestiFigura(g, d.corpo.figura)) || (TIPI.includes(d.corpo.tipo) ? vesti(g, d.corpo.tipo, d.corpo.pregio) : null)
+  const togliCollo = d.collo ? indossaGioiello(g, d.collo) : null
+  const collana = togliCollo && togliCollo.gruppo
+  // le fiamme e i bagliori delle armi vive vanno animati (da soli sono enormi), e gli aloni della rarità
+  g.userData.armiAnima = [destra, sinistra, collana].filter(a => a && (a.userData.anima || a.userData.animaAlone))
   // lo slot testa non esiste ancora nel gioco: per guardare gli elmi e i cappelli basta `#testa=elmo-cornuto` nell'indirizzo
   const idTesta = (/[#&?]testa=([\w-]+)/.exec(typeof location === 'undefined' ? '' : location.hash + location.search) || [])[1]
   const togliTesta = idTesta ? copri(g, idTesta) : null
-  return () => { togliArma(); g.userData.armiAnima = null; if (togliCorpo) togliCorpo(); if (togliTesta) togliTesta() }
+  return () => { togliArma(); g.userData.armiAnima = null; if (togliCorpo) togliCorpo(); if (togliCollo) togliCollo(); if (togliTesta) togliTesta() }
 }
 
 /** Ogni istanza ha i suoi materiali (il lampo cambia l'emissivo di uno solo); torna l'elenco per tingerli. */
@@ -41,7 +47,11 @@ function clonaMateriali(radice) {
   radice.traverse(o => {
     if (!o.isMesh) return
     const m = o.material
-    if (!nuovi.has(m)) { const c = m.clone(); nuovi.set(m, c); lista.push({ m: c, e: c.emissive.clone(), ei: c.emissiveIntensity, tr: c.transparent, op: c.opacity }) }
+    if (!m || Array.isArray(m)) return
+    if (!nuovi.has(m)) {
+      const c = m.clone(); nuovi.set(m, c)
+      if (c.emissive) lista.push({ m: c, e: c.emissive.clone(), ei: c.emissiveIntensity, tr: c.transparent, op: c.opacity })   // un materiale senza luce propria (i gioielli) non lampeggia
+    }
     o.material = nuovi.get(m)
     o.castShadow = false                                 // l'ombra del cono è per le pareti; l'eroe non ne fa (come lo sprite)
   })
@@ -63,7 +73,7 @@ export function creaEroe3d(scena) {
   }
 
   function equipa(corsa) {
-    const f = `${corsa.mano || ''}|${corsa.mancina || ''}|${corsa.corpo || ''}`
+    const f = `${corsa.mano || ''}|${corsa.mancina || ''}|${corsa.corpo || ''}|${corsa.collo || ''}`
     if (f === firma) return
     firma = f
     if (arma) arma()
@@ -89,7 +99,10 @@ export function creaEroe3d(scena) {
       if (e.assalto) posaColpo(g, Math.min(1, e.assalto.t / Math.max(0.01, e.assalto.picco)))
       if (g.userData.anima) g.userData.anima(e.t * 0.12)
       if (g.userData.animaArmatura) g.userData.animaArmatura(e.t * 0.12)
-      if (g.userData.armiAnima) for (const w of g.userData.armiAnima) w.userData.anima(e.t * 0.12)
+      if (g.userData.armiAnima) for (const w of g.userData.armiAnima) {
+        if (w.userData.anima) w.userData.anima(e.t * 0.12)
+        if (w.userData.animaAlone) w.userData.animaAlone(e.t)
+      }
       // il lampo
       const rosso = Math.min(1, e.colpito * 2), verde = Math.min(1, e.cura * 1.2)
       const tinta = `${rosso.toFixed(2)}|${verde.toFixed(2)}|${trasparenza.toFixed(2)}`
@@ -103,6 +116,8 @@ export function creaEroe3d(scena) {
           const tr = trasparenza < 1
           t.m.transparent = t.tr || tr; t.m.opacity = tr ? t.op * trasparenza : t.op
         }
+        // gli aloni della rarità svaniscono con lui (il portale)
+        if (g.userData.armiAnima) for (const w of g.userData.armiAnima) if (w.userData.aloneUniformi) w.userData.aloneUniformi.uIntensita.value = trasparenza
       }
       radice.updateMatrixWorld(true)
     },

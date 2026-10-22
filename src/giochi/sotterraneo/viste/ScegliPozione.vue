@@ -33,7 +33,7 @@ const bevi = s => { if (pronto.value) emit('bevi', s.i) }
       <button v-for="s in scelte" :key="s.k" type="button" class="sot-scelta sot-scelta-bevi sot-scegli-riga"
               :class="{ 'sot-rimette': s.cura >= manca && manca > 0 }" data-azione="bevi-questa" :data-cosa="s.k" :data-cura="s.cura"
               :data-n="s.n" @click="bevi(s)">
-        <span class="sot-scelta-icona"><Icona :sprite="s.sprite" :em="s.em" :emAlto="22" /></span>
+        <span class="sot-scelta-icona"><Icona :sprite="s.sprite" :em="s.em" :emAlto="22" :cosa3d="{ chiave: s.k }" :lato="36" /></span>
         <span class="sot-scelta-testo">
           <b>{{ s.nome }}</b>
           <small>{{ s.tutta ? 'tutta la vita' : `+${s.cura} vita` }}<template v-if="s.cura >= manca && manca > 0"> · ti rimette in piedi</template></small>

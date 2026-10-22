@@ -134,6 +134,11 @@ e poi di E; `Mondo3d.vue` e `scena3d/mondo/indice.js` sono di D e poi di E.
 
 ### E. Le terre successive — 2 giorni, per ultimo
 
+- **Fatto** (22 ottobre): [terre-successive.md](terre-successive.md). In breve: `motore/terre.js` (`terraDi`, `mondoDellaTerra`,
+  `conMondo`, `apertaLaPorta`, `passaTerra`, `laPorta`), il numero in `terraOra` (il campo `terra` è della terra dipinta del 2D),
+  `mondoQui` e `nelMondo3d` in `Gioco.vue`, la porta col tasto per passare, la tinta in `vesti.js` (`tingi`), il minatore e il
+  capitano che la annunciano una volta. Resta il viaggio indietro.
+
 - **File suoi**: nuovo `motore/terre.js`; dopo C, `Gioco.vue` (passare di terra, la sosta con la terra); dopo D, `Mondo3d.vue` e la
   tinta in `scena3d/mondo/vesti.js`; dopo B, `motore/mondo-sopra.js` per `mondi[t]`; i testi del minatore e del capitano; test nuovo
   `unita/sotterraneo-terre`.

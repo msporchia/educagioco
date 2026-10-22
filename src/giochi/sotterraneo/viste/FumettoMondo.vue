@@ -7,7 +7,7 @@ import { faccia, inFrase, titoloDi } from '../motore/missioni.js'
 defineProps({
   f: { type: Object, required: true },   // { tipo, … } (vedi fumetto in Mondo3d.vue)
 })
-defineEmits(['scendi', 'giu', 'viaggio', 'bevi', 'taglia', 'scava'])
+defineEmits(['scendi', 'giu', 'viaggio', 'bevi', 'taglia', 'scava', 'passa'])
 const minuscolo = s => { const t = String(s ?? ''); return t.charAt(0).toLowerCase() + t.slice(1) }   // un nome che manca non rompe la pagina
 </script>
 
@@ -104,9 +104,10 @@ const minuscolo = s => { const t = String(s ?? ''); return t.charAt(0).toLowerCa
     <button v-if="f.serve" class="sot-grosso" data-azione="bevi" @click="$emit('bevi')"><span class="em">💧</span> {{ f.bevi }}</button>
   </template>
 
-  <!-- la porta delle terre, in fondo alla landa: si apre ripulite le tombe del vento; passarla è delle terre successive -->
+  <!-- la porta delle terre, in fondo alla landa: si apre ripulite le tombe del vento, e porta alla terra dopo (docs/sotterraneo/terre-successive.md) -->
   <template v-else-if="f.tipo === 'terre'">
     <b class="sot-fum-nome"><span class="em">🌀</span> {{ f.nome }}</b>
     <i class="sot-fum-dritta" data-terre-dice :data-aperta="f.aperta ? 1 : 0">{{ f.dice }}</i>
+    <button v-if="f.aperta" class="sot-grosso" data-azione="passa-terra" @click="$emit('passa')"><span class="em">🌀</span> {{ f.passa }}</button>
   </template>
 </template>

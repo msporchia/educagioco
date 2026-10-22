@@ -13,7 +13,7 @@ import { gioco as giocoNuovo } from '../giochi/indice.js'
 import { progresso as progressoDi, primatoDi } from '../giochi/campagne.js'
 import { recordPiuRecente, recordInParole, sfidaDi } from '../giochi/primati.js'
 import { GIOCHI } from '../data/giochi.js'
-import { inCasa } from '../data/portata-giochi.js'
+import { inCasa, gemelloDi } from '../data/portata-giochi.js'
 import { AREE } from '../data/aree.js'
 import Nastri from '../guide/Nastri.vue'
 import Carosello from '../components/home/Carosello.vue'
@@ -140,8 +140,10 @@ const ultimo = computed(() => {
 const ripresa = computed(() => {
   const g = elenco.value.find(g => g.chiave === ultimo.value)
   if (!g) return null
-  const m = giocoNuovo(g.chiave)
-  const r = m && m.ripresa ? m.ripresa(progressoDi(g.chiave)) : null
+  // il Sotterraneo 3D ha la stessa avventura e la stessa sosta del 2D: la ripresa è quella del gemello (una sola, vedi docs/core/ripresa.md)
+  const k = gemelloDi(g.chiave)
+  const m = giocoNuovo(k)
+  const r = m && m.ripresa ? m.ripresa(progressoDi(k)) : null
   return r ? { ...g, punto: r.dove, immagine: r.immagine } : g
 })
 // il cartello dell'aggiornamento sta in cima (Nastri.vue): da giù in fondo lo si porta in vista
@@ -172,10 +174,11 @@ function riprendi (k) { chiediRipresa(k); emit('vai', k) }
         <span class="freccia" aria-hidden="true">›</span>
       </button>
 
-      <button v-if="datiAmici.attivo" class="riga-amici" type="button" data-azione="amici" @click="amiciAperti = true">
+      <!-- finché i grandi non collegano un amico non c'è niente da mostrare: «ancora nessuno» sarebbe solo triste (docs/core/amici.md) -->
+      <button v-if="datiAmici.attivo && datiAmici.amici.length" class="riga-amici" type="button" data-azione="amici" @click="amiciAperti = true">
         <span class="em" aria-hidden="true">👫</span>
         <b>Amici</b>
-        <i>{{ !datiAmici.online ? 'sei offline' : amiciOnline ? amiciOnline + (amiciOnline === 1 ? ' online' : ' online') : datiAmici.amici.length ? 'nessuno online' : 'ancora nessuno' }}</i>
+        <i>{{ !datiAmici.online ? 'sei offline' : amiciOnline ? amiciOnline + (amiciOnline === 1 ? ' online' : ' online') : 'nessuno online' }}</i>
       </button>
       <ListaAmici v-if="amiciAperti" @chiudi="amiciAperti = false" />
 

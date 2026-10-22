@@ -102,6 +102,7 @@ export default {
        sotInteri   discese finite senza svenire nemmeno una volta
        sotGemme    (primato) le gemme portate a casa in una discesa sola
        sotFondo    (primato) il piano più profondo toccato nell'abisso
+       sotTerra    (primato) la terra più lontana raggiunta nel 3D (passando la porta delle terre)
      Si scrivono alla fine e non stanza per stanza apposta: salvare venti
      volte per discesa non aggiunge niente e costa a ogni tocco. */
   albo: {

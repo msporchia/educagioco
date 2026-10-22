@@ -3,7 +3,8 @@
 Nel Sotterraneo 3D (gioco in prova, [grafica-3d.md](grafica-3d.md)) i mostri non sono più sprite ma i modelli in codice dei
 prototipi approvati (`poc/mostri-3d/`, `poc/mostri-3d.html` e le pagine per zona), con il loro respiro e il loro attacco; le
 abilità dell'eroe, i colpi dei mostri e gli stati addosso sono gli effetti 3D di `poc/effetti-3d/` (provati in `poc/arena-3d.html`).
-L'eroe era già passato al 3D (`scena3d/eroe3d.js`, dai prototipi di eroi, armi, armature e copricapi). Il 2D di sempre non cambia.
+L'eroe era già passato al 3D (`scena3d/eroe3d.js`, dai prototipi di eroi, armi, armature e copricapi); la roba che porta è la
+figura del suo oggetto, con l'alone della rarità ([roba-3d.md](roba-3d.md)). Il 2D di sempre non cambia.
 
 ## Prototipi e copie: `npm run promuovi3d`
 
@@ -12,8 +13,9 @@ I prototipi in `poc/` restano autonomi e non si toccano per il gioco. Il gioco u
 | cartella | da dove | cosa |
 |---|---|---|
 | `scena3d/eroi3d/` | `poc/eroi-3d`, `armi-3d`, `armature-3d`, `copricapi-3d` | i quattro eroi, le armi della collezione, le armature, i copricapi |
-| `scena3d/mostri3d/` | `poc/mostri-3d` (mostri, prati, bosco, palude, ceneri, draghi, monte, landa) | i mostri, più `elenchi.js` (generato) con gli elenchi per zona |
+| `scena3d/mostri3d/` | `poc/mostri-3d` (mostri, prati, bosco, palude, ceneri, draghi, monte, landa, varie) | i mostri, più `elenchi.js` (generato) con gli elenchi per zona |
 | `scena3d/effetti3d/` | `poc/effetti-3d` (lancio, mischia, aure) | gli effetti delle abilità e degli stati |
+| `scena3d/roba3d/` | `poc/roba-3d` (aloni, e lame, bastoni, scudi, vesti, gioielli se pronti) | le figure della roba e gli aloni della rarità, più `moduli.js` e `catalogo-roba.js` (generati): [roba-3d.md](roba-3d.md) |
 
 `strumenti/promuovi-3d.mjs` parte dalle radici di ogni gruppo, segue gli import (solo il referenziato: `mosse*.js` e le pagine
 non entrano), mette tutto in una cartella per gruppo riscrivendo gli import, premette la riga «Generato da…» e mette
@@ -40,11 +42,11 @@ collezione più ricca col grado (`userData.impugna`). La tabella:
 | golem e golem di pietra, golem di lava, golem di ghiaccio, spirito elettrico, grifone, troll e troll con la clava, gigante | monte |
 | ent, ombra, mummia (antica dal raro), occhio, negromante | landa |
 | drago | il drago grande: verde, azzurro, rosso, oro col grado |
-| **pianta, piranha, golem di muschio, scorpione, mostro viola, pipistrello occhio** | **nessuno: sprite** |
+| pianta (verde che frusta, viola che sputa spore), piranha (blu, rosso, nero), golem di muschio (anche fiorito e antico), scorpione (viola, di brace, regale), mostro viola (e scuro), pipistrello occhio (e gelido) | varie (`poc/mostri-3d/varie.js`, `poc/mostri-varie-3d.html`): il colore e la taglia crescono col grado |
 
 I grossi: Re Ossuto → re non morto, Grumo → orco, Fiammetta → spirito di fuoco, Zannaverde → ragno, Gorgo e Sibilla → i loro
-della palude, Minotto → minotauro, Carbonchio → drago di lava, Barbamuschio → ent, Piumanera → grifone, Brontolava → golem di
-magma, Brinaldo → golem di ghiaccio, Falcenera → mietitore.
+della palude, Minotto → minotauro, Carbonchio → drago di lava, Roccaverde → ent, Piumanera → grifone, Vulcanor → golem di
+magma, Gelomagno → golem di ghiaccio, Falcenera → mietitore.
 
 **Il gioco non si rompe mai**: un id che non c'è, una `crea` che si rompe o un'`anima` che si rompe mettono quel modello da parte
 e torna lo sprite (`console.warn`). `#sprite` nell'indirizzo li spegne tutti, `#eroe2d` l'eroe.
@@ -125,7 +127,7 @@ paesaggi con `&sprite&eroe2d` e lo scontro fino a 260 chiamate (con gli sprite s
 
 ## Cosa manca
 
-- Le sei specie senza modello (sopra); il golem di muschio e il mostro viola sono i più visibili.
+- Nessuna specie resta allo sprite (le sei di `varie.js` sono entrate il 22 ottobre); i modelli di `varie.js` sono al primo giro: da guardare nel gioco.
 - Le pose d'attacco dell'eroe con arco e staffa.
 - Il cammino: i modelli scorrono col loro idle, non hanno passi.
 - Gli shader compilano la prima volta che un modello o un effetto compare (uno scatto al primo incontro).

@@ -33,6 +33,7 @@ import { NODI, RAMI, preparabile } from './dati/abilita.js'
 import { zonaDi } from './dati/zone.js'
 import { notiziaDi, potenzaDi, livelloDellaZona, coloreDi, coloreDellaFascia, zoneConForza, zoneConSentita } from './motore/zone.js'
 import { dungeonDellAvventura, tappaDellaSosta, dopoLaDiscesa, CHIAVI_DEI_DUNGEON } from './motore/rigenera.js'
+import { terraDi, mondoDellaTerra, conMondo, passaTerra, laPorta } from './motore/terre.js'
 import { forzaDi, forzaDelCorredo } from './motore/forza.js'
 import { pescaLeggendario } from './motore/bottino.js'
 import { quotaDi } from './dati/livelli.js'
@@ -154,6 +155,11 @@ const scegliEroe = ref(!chiEro.value)
 // l'avventura aperta, riletta dal profilo a ogni scrittura; ci si scrive solo da qui
 const qui = computed(() => avventuraDi(progresso(CHIAVE), eroeQui()))
 const nellAvventura = (campi, opz) => ritocca(CHIAVE, c => scriviNellAvventura(c, eroeQui(), campi), opz)
+// Nel 3D la terra dove si è (motore/terre.js, docs/sotterraneo/terre-successive.md) e il suo mondo: `mondo` la prima, `mondi[t]` le
+// dopo. Tutto quello che legge o scrive il mondo di sopra passa da qui; nel 2D è sempre la prima
+const terraOra = () => (in3d ? terraDi(qui.value) : 1)
+const mondoQui = computed(() => mondoDellaTerra(qui.value, terraOra()))
+const nelMondo3d = (mondo, opz, t = terraOra()) => nellAvventura(conMondo(qui.value, mondo, t), opz)
 
 function scegli(k) {
   chiudiBottega()
@@ -225,16 +231,16 @@ function fatteGiu(c) {
    come ogni altra (docs/sotterraneo/missioni.md) */
 // Nel Sotterraneo 3D le taglie della bacheca (motore/taglie.js) stanno nel campo `mondo.quest` e si fondono qui con le missioni dei
 // personaggi: il diario, la Corsa e la freccina le vedono come le altre, e il 2D non le vede (docs/sotterraneo/mondo-aperto-quest.md)
-const questSopra = computed(() => (in3d ? questDi(qui.value.mondo) : null))
+const questSopra = computed(() => (in3d ? questDi(mondoQui.value) : null))
 const missioni = computed(() => (questSopra.value ? { ...(qui.value.missioni || {}), ...questSopra.value.stati } : qui.value.missioni || {}))
 // Lo stato nuovo dopo un'azione, rimesso dove sta: le missioni dei personaggi in `missioni`, le taglie in `mondo.quest` (ripulito e contato)
 function statiDaScrivere(nuovi) {
   if (!in3d) return { missioni: nuovi }
   const normali = {}, taglie = {}
   for (const [id, v] of Object.entries(nuovi)) (eTaglia(id) ? taglie : normali)[id] = v
-  const mondo = qui.value.mondo || {}, q = questDi(mondo)
+  const mondo = mondoQui.value || {}, q = questDi(mondo)
   const r = ripulisci(taglie, mondo.giro || 0, q.stati, q.fatte)
-  return { missioni: normali, mondo: { ...mondo, quest: r },
+  return { missioni: normali, ...conMondo(qui.value, { ...mondo, quest: r }, terraOra()),
            ...(Object.keys(qui.value.conti || {}).some(id => eTaglia(id)) ? { conti: contiVivi(qui.value.conti, r.stati) } : {}) }
 }
 // a che punto sono le «sconfiggi N»: quello dell'avventura, e giù quello della discesa che cammina (motore/missioni.js)
@@ -300,10 +306,10 @@ function salgoDalPortale() {
   c.chiudi()
   salva({ subito: true, via: VIA_PORTALE })
   // si sbuca nell'ultimo posto sicuro (motore/posto-sicuro.js): oggi il villaggio, accanto al gemello
-  const sicuro = ultimoPostoSicuro(qui.value)
+  const sicuro = ultimoPostoSicuro({ ...qui.value, mondo: mondoQui.value })
   nellAvventura({ terra: { ...(qui.value.terra || {}), dove: sicuro.terra } }, { subito: true })
   // nel mondo in 3D si sbuca accanto al gemello, nella città che serve quel dungeon (viste/Mondo3d.vue lo trova)
-  if (in3d) nellAvventura({ mondo: { ...(qui.value.mondo || {}), dove: sicuro.mondo } }, { subito: true })
+  if (in3d) nelMondo3d({ ...(mondoQui.value || {}), dove: sicuro.mondo }, { subito: true })
   suono.nota(260, 880, 0.5, 'sine', 0.12)
   // in 3D si vede il passaggio (il velo lampeggia, l'eroe ci si stringe dentro): la sosta è già scritta, non si riscrive
   if (in3d && pittore && pittore.attraversa) { salendo = true; pittore.attraversa(allaMappa, sale); return }
@@ -354,7 +360,7 @@ const forze = computed(() => {
   const dato = qui.value.sosta
   // senza il portale, nel mondo 3D: quelle che uno scontro sul prato ha lasciato (motore/forze-sopra.js), finché qualcuno non cura
   if (!dato || corsa.value || viaDi(dato) !== VIA_PORTALE) return forzeDelMondo.value
-  const chiave = [dato, qui.value.roba, qui.value.missioni, qui.value.crescita, qui.value.mondo && qui.value.mondo.quest]   // i dati salvati, non le copie rilette
+  const chiave = [dato, qui.value.roba, qui.value.missioni, qui.value.crescita, mondoQui.value && mondoQui.value.quest]   // i dati salvati, non le copie rilette
   if (forzeTenute.chiave && chiave.every((v, i) => v === forzeTenute.chiave[i])) return forzeTenute.valore
   const t = tappaDellaSosta(dato)
   const valore = t ? forzeDi(dato, t, roba.value, presePer(missioni.value, t.chiave || ''), crescita.value) : null
@@ -362,7 +368,7 @@ const forze = computed(() => {
   return valore
 })
 const forzeDelMondo = computed(() => {
-  const s = in3d && !corsa.value && qui.value.mondo && qui.value.mondo.sopra
+  const s = in3d && !corsa.value && mondoQui.value && mondoQui.value.sopra
   return s ? forzeDiSopra(s.forze, robaSopra.value.vita, robaSopra.value.energiaMax) : null
 })
 const ferito = computed(() => !!forze.value && forze.value.vita < forze.value.vitaMax)
@@ -397,16 +403,17 @@ const forzaOra = computed(() => forzaDi(eroeQui(), roba.value, crescita.value))
 // nel 3D le zone non rinascono: ogni dungeon ha il livello della sua zona (motore/rigenera.js), e il minatore non ha la notizia
 const notizia = computed(() => (in3d ? null : notiziaDi(qui.value, livelloOra.value, forzaOra.value)))
 // Il dungeon del mondo a percorso (solo nel 3D, docs/sotterraneo/dungeon-che-si-rigenerano.md): la storia la prima volta delle sette,
-// se no la ripetuta della volta `rifatti` (mondo.dungeon). La terra è la prima finché non ci sono le terre dopo (compito E)
-const terraOra = () => 1
-const nelMondo = k => (in3d ? dungeonDellAvventura(qui.value, k, { eroe: eroeQui(), terra: terraOra() }) : null)
+// se no la ripetuta della volta `rifatti` (mondo.dungeon della terra di adesso)
+const nelMondo = k => (in3d ? dungeonDellAvventura(qui.value, k, { eroe: eroeQui(), terra: terraOra(), mondo: mondoQui.value }) : null)
 const ripetuta = (d, extra) => ({ ...d.tappa, ...extra, livello: d.livello, colore: coloreDellaFascia(d.livello, forzaOra.value),
                                    nuova: false, rifatti: d.rifatti, zona: d.zona })
 const tappe = computed(() => {
   const a = qui.value
+  // nelle terre dopo la prima le sette porte sono aperte e ripetibili, e nessuna è «adesso»: la storia sta nella prima
+  const dopo = terraOra() > 1
   return CAMPAGNA.map((t, i) => {
     const d = nelMondo(i)
-    if (d && !d.storia) return ripetuta(d, { indice: i, aperta: aperta(CHIAVE, i, a.tappa), adesso: adesso(CHIAVE, i, a.tappa), stelle: a.stelle[i] || 0, fatta: i < a.tappa })
+    if (d && !d.storia) return ripetuta(d, { indice: i, aperta: dopo || aperta(CHIAVE, i, a.tappa), adesso: !dopo && adesso(CHIAVE, i, a.tappa), stelle: a.stelle[i] || 0, fatta: i < a.tappa })
     const potenza = potenzaDi(a, i, livelloOra.value, forzaOra.value)
     const livello = livelloDellaZona(a, i, livelloOra.value, forzaOra.value)
     return {
@@ -544,7 +551,16 @@ const ricordaTerra = v => nellAvventura({ terra: v })
 // il mondo di sopra del 3D (viste/Mondo3d.vue) si ricorda accanto, in `mondo`: la terra dipinta del 2D resta com'è
 // (docs/sotterraneo/mondo-aperto-dati.md). La veduta d'insieme si apre dalla casella della mappa nella barra
 // (`quest` lo scrive Gioco.vue, non la vista: la vista manda il suo e il resto resta com'è)
-const ricordaMondo = v => nellAvventura({ mondo: { ...(qui.value.mondo || {}), ...v } })
+const ricordaMondo = v => nelMondo3d({ ...(mondoQui.value || {}), ...v })
+// la porta delle terre attraversata (viste/Mondo3d.vue): si scrive la terra nuova e il mondo di sopra rinasce lì (la chiave di
+// Campagna). Una terra mai raggiunta prima si segna nel primato `sotTerra`
+const porta = computed(() => (in3d ? laPorta(qui.value) : null))
+function allaTerra(t) {
+  const p = passaTerra(qui.value, t)
+  if (!p) return
+  nellAvventura(p, { subito: true })
+  segnaBest('sotTerra', p.terraOra)
+}
 const vedutaSopra = ref(false)
 // la domanda di una pietra del viaggio: una risposta giusta paga come giù, una sbagliata no (docs/apprendimento/calibrazione.md)
 function rispostaSopra({ giusto, saltata }) {
@@ -1303,8 +1319,8 @@ function avvia(i, { prova = false } = {}) {
   togli()          // vedi `riprendiDiscesa`: si scende, non si scende in pausa
   scorda()
   // si scende in piedi (la Corsa nasce con le forze piene): le ferite di uno scontro sul prato restano sopra, e tornando sono guarite
-  const ms = in3d && qui.value.mondo && qui.value.mondo.sopra
-  if (ms && ms.forze) nellAvventura({ mondo: { ...qui.value.mondo, sopra: { ...ms, forze: null } } })
+  const ms = in3d && mondoQui.value && mondoQui.value.sopra
+  if (ms && ms.forze) nelMondo3d({ ...mondoQui.value, sopra: { ...ms, forze: null } })
   tappaIdx.value = i
   fine.value = null
   domanda.value = null
@@ -1744,8 +1760,10 @@ function chiudi({ senzaCartello = false } = {}) {
   const e = c.esito
   const stelle = stelleDella(e)
   // un dungeon del mondo ripulito (battuto il grosso, uscendo dalla scala in fondo) rientrando è un altro: un rifatti in più
-  const dopo = dopoLaDiscesa(qui.value.mondo, c.tappa, { ...e, grossoBattuto: !c.livello.robe.some(r => r.che === 'mostro' && r.grosso && !r.morto) })
-  if (in3d && dopo.mondo) nellAvventura({ mondo: dopo.mondo })
+  // nel mondo della terra di quella discesa (una sosta lasciata in un'altra terra torna lì)
+  const tGiu = c.tappa && c.tappa.delMondo ? c.tappa.delMondo.terra : terraOra()
+  const dopo = dopoLaDiscesa(mondoDellaTerra(qui.value, tGiu), c.tappa, { ...e, grossoBattuto: !c.livello.robe.some(r => r.che === 'mostro' && r.grosso && !r.morto) })
+  if (in3d && dopo.mondo) nelMondo3d(dopo.mondo, undefined, tGiu)
   // l'abisso non si butta (finisce la sera, non la discesa): si scrive il punto da cui si rientra
   const eraIlFondo = fondoDellAbisso.value   // il record DI PRIMA: segnaIlFondo lo sposta subito dopo
   if (nellAbisso.value) {
@@ -2082,10 +2100,10 @@ function ridimensiona() { if (pittore) pittore.misura() }
     <div ref="radice" class="sot" :class="{ 'sot-cambio-scheda': cambioScheda }" :data-tema="ATTRIBUTO[tema]">
       <!-- lo scontro di sopra (`sopra`) si gioca sul mondo, che resta montato: il pannello è quello delle discese (viste/ScontroSopra.vue) -->
       <template v-if="!corsa || sopra">
-        <!-- la chiave è l'eroe: cambiando avventura la terra di sopra rinasce con la nebbia e il posto suoi -->
-        <Campagna ref="campagnaEl" :key="eroeQui()" :tappe="tappe" :ripresa="ripresa" :eroe="eroeScheda" :abisso="abisso"
+        <!-- la chiave è l'eroe e la terra: cambiando avventura o terra il mondo di sopra rinasce con la nebbia e il posto suoi -->
+        <Campagna ref="campagnaEl" :key="eroeQui() + ':' + terraOra()" :tappe="tappe" :ripresa="ripresa" :eroe="eroeScheda" :abisso="abisso"
                   :roba="robaSopra" :terra="qui.terra || null" @terra="ricordaTerra"
-                  :disegno="in3d ? '3d' : null" :mondo="qui.mondo || null" @mondo="ricordaMondo" :dungeon="dungeonDelMondo"
+                  :disegno="in3d ? '3d' : null" :mondo="mondoQui" @mondo="ricordaMondo" :dungeon="dungeonDelMondo" :terre="porta" @terre="allaTerra"
                   :veduta="vedutaSopra" @veduta="v => { vedutaSopra = v }" @risposta="rispostaSopra"
                   :punti="barra.punti" :punti-abilita="barra.puntiAbilita" @scheda="apriScheda"
                   :annuncio="annuncio" @sentito="annuncioSentito" :forze="forze" @cura="curaDa"

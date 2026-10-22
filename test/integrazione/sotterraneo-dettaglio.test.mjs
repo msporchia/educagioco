@@ -55,6 +55,8 @@ async function tocca(x, y) {
 }
 async function toccaIl(sel) {
   await finestraFerma(page)   // la finestra nuova cresce per 160 ms: misurata prima, il tocco cade a lato
+  await page.locator(sel).first().scrollIntoViewIfNeeded()   // l'elenco del diario scorre: una voce in fondo sta sotto il bordo
+  await attendi(page, 50)
   const b = await page.locator(sel).first().boundingBox()
   await tocca(b.x + b.width / 2, b.y + b.height / 2)
 }

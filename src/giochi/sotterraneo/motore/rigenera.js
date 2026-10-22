@@ -160,12 +160,13 @@ export function tappaDelMondo(chiave, { eroe = '', rifatti = 0, terra = 1, livel
 }
 
 // Il dungeon `chiave` (o l'indice di uno dei sette) per l'avventura `a`: la prima volta delle sette (non ancora finita: l'indice è la
-// tappa della storia o dopo) è la storia, le altre e i sei nuovi la ripetuta; `rifatti` da `mondo` (quello della terra di adesso)
+// tappa della storia o dopo) è la storia, le altre e i sei nuovi la ripetuta; `rifatti` da `mondo` (quello della terra di adesso).
+// La storia sta nella prima terra: nelle dopo le sette sono ripetute dal primo giro (docs/sotterraneo/terre-successive.md)
 export function dungeonDellAvventura(a, chiaveOIndice, { eroe = '', terra = 1, mondo = a && a.mondo } = {}) {
   const chiave = typeof chiaveOIndice === 'number' ? (CAMPAGNA[chiaveOIndice] || {}).chiave : chiaveOIndice
   if (!chiave || !baseDi(chiave)) return null
   const indice = indiceDellaChiave(chiave)
-  const storia = indice >= 0 && !(a && Number.isFinite(a.tappa) && indice < a.tappa)
+  const storia = indice >= 0 && !(terra > 1) && !(a && Number.isFinite(a.tappa) && indice < a.tappa)
   const rifatti = rifattiDi(mondo, chiave)
   const tappa = tappaDelMondo(chiave, { eroe, rifatti, terra, storia })
   return { chiave, indice: indice >= 0 ? indice : null, storia, rifatti, livello: tappa.livello, zona: zonaDelDungeon(chiave), tappa }
@@ -185,7 +186,8 @@ export function tappaDellaSosta(dato) {
 }
 
 // Cosa fa una discesa del mondo finita: `ripulito` (e allora `mondo`, il mondo da scrivere con un rifatti in più) e `storia` (le
-// stelle e il capitolo: vinta e senza potenza, cioè la prima volta delle sette). Fuori dal mondo (nessun `delMondo`) mondo è null
+// stelle e il capitolo: vinta e senza potenza, cioè la prima volta delle sette). Fuori dal mondo (nessun `delMondo`) mondo è null.
+// `mondo` è quello della terra della discesa (`tappa.delMondo.terra`), che chi chiama sceglie
 export function dopoLaDiscesa(mondo, tappa, esito) {
   const r = !!(tappa && tappa.delMondo) && ripulito(esito)
   return { ripulito: r, mondo: r ? conRipulito(mondo, tappa.delMondo.chiave) : null, storia: !!(esito && esito.vinta && tappa && !tappa.potenza) }

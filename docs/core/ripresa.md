@@ -55,7 +55,8 @@ Survivors), e cambiando schermata la richiesta si scorda (`lasciaRipresa`
 in `App.vue`): tornati alla mappa, la carta resta ferma. Un gioco nuovo può
 dire da sé cosa c'è da riprendere (`ripresa(av)` nel manifesto, `{ dove,
 immagine }`): il riquadro scrive `dove` e mostra `immagine` al posto della
-copertina — il sotterraneo, la discesa a metà ritagliata dalla mappa. Senza partita a
+copertina — il sotterraneo, la discesa a metà ritagliata dalla mappa. Il Sotterraneo 3D non ha un manifesto: la home usa quello del gemello 2D (`gemelloDi`, stessa avventura e stessa sosta), quindi la
+carta è una sola e ha l'immagine anche per il 3D. Senza partita a
 metà si apre la mappa come sempre. I giochi con un posto per livello
 (Robot, Generale, Passo passo) aprono la mappa, col livello segnato.
 Lo prova `integrazione/pozioni-sosta`.

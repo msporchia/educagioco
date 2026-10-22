@@ -1,3 +1,5 @@
+> **Superato da [mondo-a-percorso.md](mondo-a-percorso.md)** (20 ottobre 2026): il mondo ad anelli qui descritto è stato cancellato; restano valide solo le parti che quel documento dichiara «resta».
+
 # Il mondo aperto: il 3D, le fasi, i rischi
 
 **Una proposta**, il seguito di [mondo-aperto-progetto.md](mondo-aperto-progetto.md) (la struttura e i dungeon),
@@ -116,14 +118,14 @@ onesti, test compresi.
 | # | fase | cosa dà all'utente | giorni |
 |---|---|---|---|
 | 0 | **Il terreno comune**: il ramo del Sotterraneo 3D unito, `motore/aperta.js` portato dal ramo delle terre selvagge, le decisioni di questo progetto | niente a schermo; il punto di partenza | 1–2 |
-| 1 | **Il generatore del mondo** in `src/` (`motore/mondo.js`, `dati/mondo.js`): 5×5 regioni, anelli, confini, tre città, pietre, sette dungeon in fila, antri, strade, guasti, firma; `npm run pianta -- --mondo` | la pianta da giudicare, e il seme scelto | 3–4 |
+| 1 | **Il generatore del mondo** in `src/` (`motore/mondo.js`, `dati/mondo.js`): 5×5 regioni (superato: oggi la serpentina), anelli, confini, tre città, pietre, sette dungeon in fila, antri, strade, guasti, firma; `npm run pianta -- --mondo` | la pianta da giudicare, e il seme scelto | 3–4 |
 | 2 | **Il mondo da girare**, senza mostri: `Mondo3d.vue`, la telecamera, il dito con le persone che vincono, le figure ancorate (A), la nebbia vera e salvata, la veduta, il villaggio coi mercanti, dialoghi, bottega, quest di oggi, il portale gemello, i sette dungeon coi nomi nuovi | la storia intera giocabile nel mondo nuovo, coi dungeon 3D di oggi | 7–9 |
 | 3 | **Le prestazioni**: regioni a pezzi, dettaglio da lontano, ombra vicina; misure su due telefoni | il mondo che regge sul telefono | 2–4 |
-| 4 | **Le città e i passaggi**: il forte e il rifugio, i banchi per mercante, chi cura, il gemello per città, le pietre con la domanda, ponti e valichi chiusi dalla storia | il viaggio alla Diablo | 3–4 |
-| 5 | **Le regioni coi mostri**: il motore aperto sul mondo, lo scontro del branco all'aperto in 3D (il palco sul terreno), svenire in città, la superficie lasciata con la ✕ | il mondo pericoloso, le fasce per anello | 6–9 |
+| 4 | **Le città e i passaggi**: il forte e il rifugio, i banchi per mercante, chi cura, il gemello per città, le pietre con la domanda, ponti e valichi (le grate sono state tolte) | il viaggio alla Diablo | 3–4 |
+| 5 | **Le regioni coi mostri**: il motore aperto sul mondo, lo scontro del branco all'aperto in 3D (il palco sul terreno), svenire in città, la superficie lasciata con la ✕ | il mondo pericoloso, le fasce (oggi per zona) | 6–9 |
 | 6 | **Le quest** ([mondo-aperto-quest.md](mondo-aperto-quest.md#e-cosa-si-fa-subito-e-cosa-vuole-mattoni-nuovi)): il dove a regione, i segni nella veduta, caccia e signori, consegna, esplora, trova chi, la bacheca coi modelli, le mappe del tesoro | il mondo con qualcosa da fare dappertutto | 8–12 |
 | 7 | **Gli antri**: ingressi a rotazione, uno o due piani, chiavi, Tesori | i dungeon da trovare | 4–6 |
-| 8 | **La storia e i nomi**: capitoli per anello, `LUOGHI`, `VOLTI`, dialoghi, le icone fotografate | il racconto che porta fuori | 2–3 |
+| 8 | **La storia e i nomi**: capitoli per zona, `LUOGHI`, `VOLTI`, dialoghi, le icone fotografate | il racconto che porta fuori | 2–3 |
 | 9 | **I salvataggi**: la chiave `sotterraneo3d` e «porta qui il tuo eroe»; il travaso del 2D solo il giorno che il mondo lo sostituisce | provarlo con l'eroe vero | 2–4 |
 | — | **La taratura**, segnalata e non fatta qui: banco e giocatori tipo nel mondo, fasce delle regioni, premi | i numeri giusti | 4–6 |
 

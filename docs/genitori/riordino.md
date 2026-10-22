@@ -7,10 +7,10 @@ cose di un bambino, cose del telefono e strumenti da sviluppatore mescolate, e i
 
 Una barra in basso con cinque schede, ognuna «di chi è» (riordinate il 21/10):
 - 👶 **Bambino**: faccia e nome, **quando è nato** (da lì la classe), la **taratura a mano** in una tendina (si apre da sola solo senza data: con la data l'età si ricava dalla classe e la manopola è l'eccezione), amici online, aggiungere un bambino.
-- 🎮 **Giochi**: il carosello e la pagina del gioco in mezzo ([giochi.md](giochi.md)): «Nella home» (**Default** oppure **Acceso/Spento** a mano), il tempo, **le monete di quel gioco** (`Tetti.vue` con `gioco`), le domande; sotto, «Le domande dei quiz» (i giudizi).
+- 🎮 **Giochi**: il carosello e la pagina del gioco in mezzo ([giochi.md](giochi.md)): «Nella home» (**Default** oppure **Acceso/Spento** a mano), il tempo, e **cosa chiede o cosa insegna** (le domande se ha un elenco di saperi, altrimenti una riga scritta a mano in `data/cosa-insegna.js`; l'elenco lungo con le tacche sta in una tendina chiusa). Le monete non si regolano più ([varieta.md](varieta.md)).
 - 📊 **Come va**: la settimana, cosa guardare, i grafici.
 - 💾 **Salvataggi**: salva su file, rimetti da un file, l'avviso «mai salvato», il cestino e la «Zona delicata» (cancella i progressi) — roba del telefono, non di un bambino.
-- ⚙️ **Impostazioni**: passa il gioco, il codice, segnala; e una tendina **«Avanzate»** con quello che di base non si tocca: giochi in prova, sblocca tutti i livelli, le regole delle monete di tutti, fps e benchmark.
+- ⚙️ **Impostazioni**: passa il gioco, il codice, segnala; e una tendina **«Avanzate»** con quello che di base non si tocca: giochi in prova, sblocca tutti i livelli, «Giudicare le domande» (😴😰🐛 e il modulo), fps e benchmark; in fondo la firma «Educagioco è di…», solo qui.
 
 ## L'età dalla data di nascita (**fatto**, rifatto il 21/10 sulla classe)
 

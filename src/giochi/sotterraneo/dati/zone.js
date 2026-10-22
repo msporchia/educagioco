@@ -88,11 +88,11 @@ export const VOLTI = {
   // rigenerazioni (motore/rigenera.js, voltoDelDungeon). Solo del 3D
   cerchio: [
     { nome: 'Il cerchio di pietre', dritta: 'tre piani sotto i menhir, e la pietra che respira',
-      annuncio: 'Sotto il cerchio di pietre c\'è una botola, e sotto la botola dorme Barbamuschio, un golem tutto coperto di muschio.' },
+      annuncio: 'Sotto il cerchio di pietre c\'è una botola, e sotto la botola dorme Roccaverde, un golem tutto coperto di muschio.' },
     { nome: 'Il cerchio delle radici', dritta: 'tre piani, e le radici bucano i muri',
-      annuncio: 'Le radici del cerchio di pietre sono scese fino in fondo. Barbamuschio si è svegliato, e gli è cresciuto il muschio anche sugli occhi.' },
+      annuncio: 'Le radici del cerchio di pietre sono scese fino in fondo. Roccaverde si è svegliato, e gli è cresciuto il muschio anche sugli occhi.' },
     { nome: 'Il cerchio della nebbia verde', dritta: 'tre piani di nebbia verde: si vede poco',
-      annuncio: 'Dalla botola del cerchio di pietre esce una nebbia verde. Barbamuschio la respira, e diventa più grosso.' },
+      annuncio: 'Dalla botola del cerchio di pietre esce una nebbia verde. Roccaverde la respira, e diventa più grosso.' },
   ],
   corvaia: [
     { nome: 'Il pozzo dei corvi', dritta: 'tre piani stretti, e ali che sbattono al buio',
@@ -112,19 +112,19 @@ export const VOLTI = {
   ],
   fornace: [
     { nome: 'La fornace', dritta: 'tre piani di griglie sopra il fuoco',
-      annuncio: 'Nella piana delle ceneri la fornace si è riaccesa da sola. Dentro brontola Brontolava, un golem di lava che non si spegne mai.' },
+      annuncio: 'Nella piana delle ceneri la fornace si è riaccesa da sola. Dentro rimbomba Vulcanor, un golem di lava che non si spegne mai.' },
     { nome: 'La fornace delle colate', dritta: 'tre piani, e la lava cola dalle pareti',
-      annuncio: 'Dalle fumarole della fornace cola lava fino alla strada. Brontolava ha mangiato tutto il carbone, e ne vuole ancora.' },
+      annuncio: 'Dalle fumarole della fornace cola lava fino alla strada. Vulcanor ha mangiato tutto il carbone, e ne vuole ancora.' },
     { nome: 'La fornace dei mantici', dritta: 'tre piani, e un vento caldo che soffia a colpi',
-      annuncio: 'La fornace soffia come un mantice: si sente fino alle colline. Brontolava si è fatto più grosso, e più caldo.' },
+      annuncio: 'La fornace soffia come un mantice: si sente fino alle colline. Vulcanor si è fatto più grosso, e più caldo.' },
   ],
   cava: [
     { nome: 'La cava gelata', dritta: 'tre piani di ghiaccio sotto la miniera',
-      annuncio: 'In fondo alla cava gelata ha messo radici Brinaldo, un golem di ghiaccio: ogni cosa che tocca diventa brina.' },
+      annuncio: 'In fondo alla cava gelata ha messo radici Gelomagno, un golem di ghiaccio: ogni cosa che tocca diventa brina.' },
     { nome: 'La cava dei cristalli', dritta: 'tre piani, e cristalli che tagliano',
-      annuncio: 'Nella cava gelata sono cresciuti cristalli lunghi come lance. Brinaldo ci si specchia, e diventa più freddo.' },
+      annuncio: 'Nella cava gelata sono cresciuti cristalli lunghi come lance. Gelomagno ci si specchia, e diventa più freddo.' },
     { nome: 'La cava della tormenta', dritta: 'tre piani di vento e di neve',
-      annuncio: 'Dalla cava gelata esce una tormenta che non smette mai. Brinaldo è là sotto che soffia.' },
+      annuncio: 'Dalla cava gelata esce una tormenta che non smette mai. Gelomagno è là sotto che soffia.' },
   ],
   tombe: [
     { nome: 'Le tombe del vento', dritta: 'tre piani di tombe, e il vento che fischia',

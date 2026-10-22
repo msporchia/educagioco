@@ -41,3 +41,11 @@ motore ([../apprendimento/saperi.md](../apprendimento/saperi.md)) e non si cambi
 Nei test: `[data-giochi-impostazioni]`, `[data-pannello-gioco]`, `[data-gioco-modo="segui"|"acceso"|"spento"]`, `[data-gioco-esito]`,
 `[data-gioco-tempo]`, `[data-gioco-domande]`, `[data-gioco-sapere="<chiave>"]` con `[data-gioco-sapere-tasto]`; il carosello `.carta.gioco.spenta`
 e `[data-indice="<gioco>"]`. `integrazione/giochi-impostazioni`, `unita/domande-dei-giochi`, `unita/sessioni`.
+
+## Cosa chiede e cosa insegna (21/10)
+
+Un gioco senza elenco di saperi non dice più «non fa domande di scuola»: `data/cosa-insegna.js` ha, gioco per gioco, una riga scritta a mano dai documenti
+di presentazione («Cosa chiede» per Asteroidi, le lingue, la bancarella, Conta; «Cosa si impara» per il Robot, Passo passo, il Generale, Codice Segreto,
+Prima e dopo, le fattorie). Se un gioco cambia si cambia anche quella riga; `unita/cosa-insegna` pretende che ogni gioco dica una delle due cose. L'elenco
+con le tacche, quando c'è, sta in una tendina chiusa («Vedi e ritocca tutte»). La scelta «Nella home» è **Default | Acceso/Spento** (si torna al default
+ritoccando quello già scelto), con parole sul bambino: «adatto», «troppo facile», «per più grandi».

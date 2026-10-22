@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Le persone in 3D</title>
+<style>
+  :root { --fondo: #14161b; --carta: #1b1e25; --riga: #2c313a; --testo: #e2e5e0; --tenue: #98a09c; --male: #ff8a7a; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 18px; background: var(--fondo); color: var(--testo); font: 13px/1.4 system-ui, sans-serif; }
+  h1 { font-size: 17px; margin: 0 0 4px; }
+  p { margin: 0 0 12px; color: var(--tenue); max-width: 110ch; }
+  #esito.male { color: var(--male); }
+  .griglia { display: grid; grid-template-columns: repeat(var(--colonne), var(--lato)); gap: 8px; margin-bottom: 8px; }
+  figure { margin: 0; background: var(--carta); border: 1px solid var(--riga); border-radius: 4px; padding: 4px; }
+  canvas { display: block; border-radius: 3px; width: var(--lato); height: var(--alto); }
+  figcaption { font-size: 11px; color: var(--tenue); margin-top: 3px; }
+  figcaption b { color: var(--testo); font-weight: 600; }
+</style>
+</head>
+<body>
+<h1>Le persone del mondo di sopra in 3D (PoC)</h1>
+<p>Le dodici persone del villaggio e delle missioni in codice (<code>poc/persone-3d/persone.js</code>). Parametri: <code>?id=armaiolo</code> (una sola, grande, che gira piano), <code>?vista=davanti|dietro|lato</code>, <code>?pausa</code>, <code>?t=</code>, <code>?saluta</code> (salutano: in pausa si vede la mano alzata), <code>?gesto=0.5</code> (ognuno al suo gesto, a quel punto da 0 a 1), <code>?confronto</code> (in fondo i quattro eroi, alla stessa scala).</p>
+<div id="esito">in corso…</div>
+<div id="contenuto"></div>
+<script type="module">
+import { WebGLRenderer, Scene, PerspectiveCamera, HemisphereLight, DirectionalLight, Color, CircleGeometry, Mesh, ShadowMaterial, PCFSoftShadowMap, SRGBColorSpace, ACESFilmicToneMapping } from 'three'
+import { creaPersona, CHIAVI } from './persone-3d/persone.js'
+import { creaEroe, posaGuardia, CHIAVI as EROI } from './eroi-3d/eroi.js'
+
+const url = new URLSearchParams(location.search)
+const gesto = url.has('gesto') ? Number(url.get('gesto') || 0.5) : null
+const pausa = url.has('pausa'), T0 = Number(url.get('t') || 0), vista = url.get('vista') || 'tre-quarti', saluta = url.has('saluta')
+const errori = []
+const vecchio = console.error
+console.error = (...a) => { errori.push(a.map(String).join(' ').slice(0, 300)); vecchio.apply(console, a) }
+addEventListener('error', e => errori.push(String(e.message)))
+const risultato = window.__prova = { ok: false, errori, persone: {} }
+
+const renderer = new WebGLRenderer({ antialias: true, preserveDrawingBuffer: true })
+renderer.setPixelRatio(1); renderer.shadowMap.enabled = true; renderer.shadowMap.type = PCFSoftShadowMap
+renderer.outputColorSpace = SRGBColorSpace; renderer.toneMapping = ACESFilmicToneMapping; renderer.toneMappingExposure = 1.1
+
+function nuovaScena () {
+  const s = new Scene(); s.background = new Color(0x2a3038)
+  s.add(new HemisphereLight(0xfff0d8, 0x6a5a3a, 1.9))
+  const sole = new DirectionalLight(0xfff1dc, 2.6); sole.position.set(3, 6, 5); sole.castShadow = true
+  sole.shadow.mapSize.set(1024, 1024); sole.shadow.bias = -0.0008
+  const c = sole.shadow.camera; c.left = -1.5; c.right = 1.5; c.top = 2; c.bottom = -1; c.near = 0.5; c.far = 20
+  s.add(sole)
+  const fredda = new DirectionalLight(0xa8c8ff, 0.8); fredda.position.set(-4, 2, -3); s.add(fredda)
+  const suolo = new Mesh(new CircleGeometry(1.4, 32), new ShadowMaterial({ opacity: 0.35 })); suolo.rotation.x = -Math.PI / 2; suolo.receiveShadow = true; s.add(suolo)
+  return s
+}
+const id = url.get('id'), grande = !!(id && CHIAVI.includes(id))
+const lista = grande ? [id] : CHIAVI
+const LATO = grande ? 640 : 300, ALTO = grande ? 720 : 340
+const giraV = { 'tre-quarti': 0.4, davanti: 0, dietro: Math.PI + 0.4, lato: Math.PI / 2 }[vista] ?? 0.4
+const ALTEZZA_CAMERA = 1.55                                                                      // tutte alla stessa scala: si vede chi è alto
+renderer.setSize(LATO, ALTO, false)
+
+const cont = document.getElementById('contenuto')
+function griglia (colonne) { const gr = document.createElement('div'); gr.className = 'griglia'; gr.style.setProperty('--colonne', colonne); gr.style.setProperty('--lato', LATO + 'px'); gr.style.setProperty('--alto', ALTO + 'px'); cont.append(gr); return gr }
+const celle = []
+function cella (gr, oggetto, didascalia, anima) {
+  const s = nuovaScena(), cam = new PerspectiveCamera(grande ? 26 : 30, LATO / ALTO, 0.05, 50)
+  s.add(oggetto)
+  const h = ALTEZZA_CAMERA
+  cam.position.set(0, h * 0.62, h * (grande ? 2.75 : 2.35)); cam.lookAt(0, h * 0.44, 0)
+  const fig = document.createElement('figure'), tela = document.createElement('canvas'); tela.width = LATO; tela.height = ALTO
+  const did = document.createElement('figcaption'); did.innerHTML = didascalia
+  fig.append(tela, did); gr.append(fig)
+  celle.push({ s, cam, tela, oggetto, anima })
+}
+const gr = griglia(grande ? 1 : 4)
+for (const k of lista) {
+  try {
+    const p = creaPersona(k), u = p.userData
+    let mesh = 0; p.traverse(o => { if (o.isMesh) mesh++ })
+    risultato.persone[k] = { triangoli: u.triangoli, altezza: u.altezza, mesh }
+    if (u.chiave !== k || typeof u.anima !== 'function' || typeof u.saluta !== 'function') errori.push(k + ': contratto incompleto')
+    if (u.triangoli > 2500) errori.push(`${k}: ${u.triangoli} triangoli`)
+    cella(gr, p, `<b>${k}</b> · ${u.triangoli} tri · ${mesh} mesh · alto ${u.altezza}`, t => {
+      if (saluta && (pausa ? t === T0 : Math.floor((t - T0) / 4.5) !== p.userData.giro)) { p.userData.giro = Math.floor((t - T0) / 4.5); u.saluta(pausa ? T0 - 0.8 : t) }
+      u.anima(gesto != null ? u.istanteGesto(gesto) + (t - T0) : t)
+    })
+  } catch (e) { errori.push(k + ': ' + String(e.stack || e)) }
+}
+if (url.has('confronto') && !grande) {
+  const ge = griglia(4)
+  for (const k of EROI) { const e = creaEroe(k); cella(ge, e, `<b>${k}</b> (eroe, per confronto)`, t => { posaGuardia(e, t); e.userData.anima(t) }) }
+}
+const giro = t => {
+  for (const c of celle) {
+    c.oggetto.rotation.y = giraV + (grande && !pausa ? (t - T0) * 0.35 : 0)
+    c.anima(t)
+    renderer.render(c.s, c.cam); c.tela.getContext('2d').drawImage(renderer.domElement, 0, 0)
+  }
+}
+try {
+  giro(T0)
+  if (!pausa) { const t0 = performance.now(); const anima = () => { giro(T0 + (performance.now() - t0) / 1000); requestAnimationFrame(anima) }; requestAnimationFrame(anima) }
+  risultato.ok = true
+} catch (e) { errori.push(String(e.stack || e)) }
+const es = document.getElementById('esito')
+const tris = Object.values(risultato.persone).map(f => f.triangoli)
+es.textContent = errori.length ? 'errori: ' + errori.join(' | ') : `ok — ${tris.length} persone, al massimo ${Math.max(0, ...tris)} tri`
+es.className = errori.length ? 'male' : ''
+risultato.ok = risultato.ok && !errori.length
+</script>
+</body>
+</html>

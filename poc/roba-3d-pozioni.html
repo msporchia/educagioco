@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Le pozioni in 3D</title>
+<style>
+  :root { --fondo: #14161b; --carta: #1b1e25; --riga: #2c313a; --testo: #e2e5e0; --tenue: #98a09c; --male: #ff8a7a; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 18px; background: var(--fondo); color: var(--testo); font: 13px/1.4 system-ui, sans-serif; }
+  h1 { font-size: 17px; margin: 0 0 4px; }
+  p { margin: 0 0 12px; color: var(--tenue); max-width: 110ch; }
+  #esito.male { color: var(--male); }
+  .griglia { display: grid; grid-template-columns: repeat(4, var(--lato)); gap: 8px; margin-bottom: 8px; }
+  figure { margin: 0; background: var(--carta); border: 1px solid var(--riga); border-radius: 4px; padding: 4px; }
+  canvas { display: block; border-radius: 3px; width: var(--lato); height: var(--lato); }
+  figcaption { font-size: 11px; color: var(--tenue); margin-top: 3px; }
+  figcaption b { color: var(--testo); font-weight: 600; }
+</style>
+</head>
+<body>
+<h1>Le pozioni e gli altri consumabili in 3D (PoC)</h1>
+<p>Le undici voci con <code>usa</code> di <code>dati/cose.js</code> (<code>poc/roba-3d/pozioni.js</code>): le bottiglie hanno la forma dal grado e il colore dal tipo (<code>grado(chiave)</code>, <code>TIPI</code>). Parametri: <code>?id=pozione-grande</code> (uno solo, grande), <code>?da=0&amp;n=4</code>, <code>?pausa</code>, <code>?t=</code>.</p>
+<div id="esito">in corso…</div>
+<div id="contenuto"></div>
+<script type="module">
+import { WebGLRenderer, Scene, PerspectiveCamera, HemisphereLight, DirectionalLight, Box3, Vector3, Color, Group, PCFSoftShadowMap, SRGBColorSpace, ACESFilmicToneMapping } from 'three'
+import { crea, CHIAVI, grado } from './roba-3d/pozioni.js'
+
+const NOMI = { 'pozione-piccola': 'Boccetta · cura 8', pozione: 'Pozione · cura 14', 'pozione-grande': 'Ampolla · cura 30', 'ampolla-maggiore': 'Ampolla maggiore · cura 50',
+  'ampolla-vita': 'Ampolla della vita · tutta', 'pozione-blu': 'Pozione blu · energia 8', 'ampolla-blu': 'Ampolla delle stelle · energia 16', 'elisir-toro': 'Elisir del toro · vita max',
+  torcia: 'Torcia · luce', chiave: 'Chiave · porta', 'pergamena-portale': 'Pergamena del portale' }
+const url = new URLSearchParams(location.search)
+const pausa = url.has('pausa'), T0 = Number(url.get('t') || 0)
+const errori = []
+const vecchio = console.error
+console.error = (...a) => { errori.push(a.map(String).join(' ').slice(0, 300)); vecchio.apply(console, a) }
+addEventListener('error', e => errori.push(String(e.message)))
+const risultato = window.__prova = { ok: false, errori, figure: {} }
+
+const renderer = new WebGLRenderer({ antialias: true, preserveDrawingBuffer: true })
+renderer.setPixelRatio(1); renderer.shadowMap.enabled = true; renderer.shadowMap.type = PCFSoftShadowMap
+renderer.outputColorSpace = SRGBColorSpace; renderer.toneMapping = ACESFilmicToneMapping; renderer.toneMappingExposure = 1.1
+
+function nuovaScena () {
+  const s = new Scene(); s.background = new Color(0x2a3038)
+  s.add(new HemisphereLight(0xfff0d8, 0x6a5a3a, 1.9))
+  const sole = new DirectionalLight(0xfff1dc, 2.6); sole.position.set(3, 6, 5); s.add(sole)
+  const fredda = new DirectionalLight(0xa8c8ff, 0.8); fredda.position.set(-4, 2, -3); s.add(fredda)
+  const frontale = new DirectionalLight(0xffffff, 0.9); frontale.position.set(0, 1, 6); s.add(frontale)
+  return s
+}
+const copia = tela => tela.getContext('2d').drawImage(renderer.domElement, 0, 0, tela.width, tela.height)
+
+let lista = CHIAVI
+const id = url.get('id')
+if (id) lista = CHIAVI.filter(k => k === id)
+else { const da = Number(url.get('da') || 0), n = Number(url.get('n') || CHIAVI.length); lista = CHIAVI.slice(da, da + n) }
+const grande = !!id, LATO = grande ? 640 : 360, CSS = grande ? 560 : 300
+
+renderer.setSize(LATO, LATO, false)
+const cont = document.getElementById('contenuto')
+const gr = document.createElement('div'); gr.className = 'griglia'; gr.style.setProperty('--lato', CSS + 'px'); if (grande) gr.style.gridTemplateColumns = 'var(--lato)'
+cont.append(gr)
+const celle = []
+lista.forEach(chiave => {
+  const s = nuovaScena(), cam = new PerspectiveCamera(30, 1, 0.02, 50)
+  let g
+  try { g = crea(chiave) } catch (e) { errori.push(chiave + ': ' + String(e.stack || e)); return }
+  const ruota = new Group(); ruota.add(g); s.add(ruota)
+  if (g.userData.anima) g.userData.anima(T0)
+  ruota.updateMatrixWorld(true)
+  const b = new Box3().setFromObject(g), c = b.getCenter(new Vector3()), d = b.getSize(new Vector3())
+  g.position.set(-c.x, -c.y, -c.z)
+  const raggio = Math.max(d.y, d.x * 1.1, d.z) * 0.62
+  cam.position.set(0, 0, raggio / Math.tan(15 * Math.PI / 180) + 0.05); cam.lookAt(0, 0, 0)
+  risultato.figure[chiave] = { triangoli: g.userData.triangoli }
+  const fig = document.createElement('figure'), tela = document.createElement('canvas')
+  tela.width = tela.height = LATO
+  const did = document.createElement('figcaption'); did.innerHTML = `<b>${chiave}</b> · ${NOMI[chiave]}<br>forma ${grado(chiave).forma} · tipo ${grado(chiave).tipo} · ${g.userData.triangoli} tri`
+  fig.append(tela, did); gr.append(fig)
+  celle.push({ g, ruota, s, cam, tela })
+})
+window.__celle = celle
+const giro = t => {
+  for (const k of celle) {
+    k.ruota.rotation.y = 0.45 + (grande && !pausa ? t * 0.4 : 0)
+    if (k.g.userData.anima) k.g.userData.anima(t)
+    renderer.render(k.s, k.cam); copia(k.tela)
+  }
+}
+try {
+  giro(T0)
+  if (!pausa) { const t0 = performance.now(); const anima = () => { giro(T0 + (performance.now() - t0) / 1000); requestAnimationFrame(anima) }; requestAnimationFrame(anima) }
+  risultato.ok = true
+} catch (e) { errori.push(String(e.stack || e)) }
+const es = document.getElementById('esito')
+const tris = Object.values(risultato.figure).map(f => f.triangoli)
+es.textContent = errori.length ? 'errori: ' + errori.join(' | ') : `ok — ${tris.length} modelli, al massimo ${Math.max(0, ...tris)} tri`
+es.className = errori.length ? 'male' : ''
+risultato.ok = risultato.ok && !errori.length
+</script>
+</body>
+</html>

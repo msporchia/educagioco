@@ -68,8 +68,7 @@ Tutto è stato guardato solo in Chrome senza GPU, mai su un telefono vero.
   volte; le armi in mano nel 3D sono a blocchi (il foglio nitido misura 11 848×2 331 e non entra come texture su un
   telefono: andrebbe ritagliato). Paladino, Luna e runico si distinguono nei pensieri solo dai nodi dell'albero.
 - **Le tane**: hanno il segno e la macchia ([mondo-3d-oggetti.md](mondo-3d-oggetti.md#la-tana), 21 ottobre). Da guardare col dito sul
-  Note 7 (fps davanti a una tana con le guardie), e da decidere se un salvato deve ricordare i signori morti (oggi no: una zona
-  lontana mai rivista mostra il teschio acceso), se la fossa di braci spenta deve diventare brace spenta (oggi le braci disegnate
+  Note 7 (fps davanti a una tana con le guardie), e se la fossa di braci spenta deve diventare brace spenta (oggi le braci disegnate
   restano), e se i dipinti dei mostri (il foglio delle creature d'aperta campagna) vogliono un segno loro.
 - **Il mondo di sopra**: l'anello acceso dal tocco su un mercante si vede poco mentre l'eroe cammina. La strada verso la meta
   (luci, velo) va guardata col dito: [mondo-3d-la-meta.md](mondo-3d-la-meta.md#cosa-resta-da-guardare-col-dito).
@@ -84,9 +83,8 @@ pergamena (prezzo 25 gemme, tetto 5, 3% nei forzieri dopo la missione), le risal
 
 ## Guasti già noti nei test del sotterraneo (non di questo giro)
 
-`integrazione/sotterraneo` (4 caselle nello zaino, ce ne sono 6), `sotterraneo-cura` e `sotterraneo-barra` (da soli passano
-spesso), `misure/sotterraneo` (equilibrio: il fondo a 4/10) e qualche timeout sotto carico (`sotterraneo-3d`, `-mondo`,
-`-missioni`: con `--alla-volta=2` passano). `sotterraneo-bottega-avanti` a volte fallisce per un prezzo casuale.
+`misure/sotterraneo` (equilibrio: il fondo a 4/10, vedi `todo_sotterraneo.md`) e qualche timeout sotto carico (`sotterraneo-3d`, `-mondo`:
+con `--alla-volta=2` passano). `sotterraneo-bottega-avanti` a volte fallisce per un prezzo casuale.
 
 ## Come si pubblica senza pestarsi i piedi
 

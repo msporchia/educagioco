@@ -79,10 +79,10 @@ export function creaAcqua(m, sole) {
 export function creaCielo() {
   const mat = new ShaderMaterial({
     side: BackSide, depthWrite: false, fog: false,
-    uniforms: { uTempo: U.uTempo },
+    uniforms: { uTempo: U.uTempo, uCielo: U.uCielo },   // uCielo: la tinta del cielo della terra (vesti.js, tingi)
     vertexShader: 'varying vec3 vDir; void main () { vDir = normalize(position); vec4 p = projectionMatrix * modelViewMatrix * vec4(position, 1.0); gl_Position = p.xyww; }',
     fragmentShader: /* glsl */`
-      uniform float uTempo; varying vec3 vDir;
+      uniform float uTempo; uniform vec3 uCielo; varying vec3 vDir;
       float h (vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
       float n (vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(h(i), h(i + vec2(1, 0)), f.x), mix(h(i + vec2(0, 1)), h(i + vec2(1, 1)), f.x), f.y); }
       void main () {
@@ -91,7 +91,7 @@ export function creaCielo() {
         vec2 q = vDir.xz / max(0.12, vDir.y + 0.15) * 1.6 + vec2(uTempo * 0.02, uTempo * 0.012);
         float c = n(q) * 0.55 + n(q * 2.2) * 0.3 + n(q * 5.1) * 0.15;
         col = mix(col, vec3(1.0), smoothstep(0.55, 0.78, c) * smoothstep(0.0, 0.25, y) * 0.85);
-        gl_FragColor = vec4(col, 1.0);
+        gl_FragColor = vec4(col * uCielo, 1.0);
         #include <colorspace_fragment>
       }`,
   })

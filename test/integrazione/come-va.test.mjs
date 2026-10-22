@@ -19,7 +19,7 @@
 
    `node test/esegui.mjs come-va`
    ═══════════════════════════════════════════════════════════════════ */
-import { apriBrowser, apriGioco, azzera, semina, scatto, leggiProfilo, GIOCATORE } from '../aiuto/browser.mjs'
+import { apriBrowser, apriGioco, azzera, semina, scatto, leggiProfilo, apriTendine, GIOCATORE } from '../aiuto/browser.mjs'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 
 const browser = await apriBrowser()
@@ -53,8 +53,8 @@ await page.evaluate(([chi, voci]) => new Promise((ok, ko) => {
     tx.onerror = () => ko(new Error('scrittura fallita'))
   }
 }), [GIOCATORE, [
-  { t: ORA - 14 * GIORNO, m: { tempo: 0 }, c: { [SALITA]: [2, 8] } },
-  { t: ORA - 7 * GIORNO, m: { tempo: 0 }, c: { [SALITA]: [2, 8] } },
+  { t: ORA - 14 * GIORNO, m: { tempo: 0 }, a: { tempo: 0 }, c: { [SALITA]: [2, 8] } },
+  { t: ORA - 7 * GIORNO, m: { tempo: 0 }, a: { tempo: 0 }, c: { [SALITA]: [2, 8] } },
 ]])
 await semina(page, {
   coins: 100,
@@ -81,6 +81,13 @@ await entra()
 
 await page.click('[data-scheda="comeva"]')
 await page.waitForSelector('[data-come-va]', { timeout: 5000 })
+// il dettaglio domanda per domanda nasce chiuso: chi deve premere lì dentro lo apre (come per le altre tendine)
+await apriTendine(page)
+/* ── il quadro generale: una frase che dice come va, e il resto sotto ── */
+const tono = await page.locator('[data-giudizio]').getAttribute('data-tono')
+controlla('in cima c\'è il giudizio in una frase', ['attesa', 'bene', 'normale', 'alcune', 'tante'].includes(tono), tono)
+controlla('e dice qualcosa di leggibile', (await page.locator('[data-giudizio]').innerText()).length > 30)
+controlla('il dettaglio domanda per domanda sta in una tendina', await page.locator('details[data-dettaglio]').count() === 1)
 await page.waitForTimeout(300)
 
 /* ── 0. una scheda è una scheda sola ──
@@ -191,14 +198,21 @@ controlla('il ▶ apre una domanda vera', await page.isVisible('.qz-carta'))
 await page.click('[data-prova] .prova-x')
 await page.waitForSelector('[data-prova]', { state: 'detached', timeout: 5000 })
 
-/* ── 7. LE MATERIE ──
-   Una mattonella per materia, con quanto è saputo e la freccia su due
-   settimane fa: il tempo era a zero nella fotografia di allora. */
+/* ── 7. LE AREE, E DALL'AREA LE MATERIE ──
+   Cinque aree (Numeri, Italiano, Lingue, Spazio e tempo, Logica e scienze): si apre un'area alla volta e dentro ci sono le sue materie con quanto
+   è saputo e la freccia su due settimane fa (il tempo era a zero nella fotografia di allora). */
 const mattonella = k => page.locator(`[data-mattonella="${k}"]`)
-controlla('c\'è la mattonella del tempo, che è una materia dei quiz', await mattonella('tempo').count() === 1)
-controlla('e quella delle tabelline, che il grande prima non vedeva', await mattonella('mate').count() === 1)
+const area = k => page.click(`[data-area-capo="${k}"]`)
+uguale('le aree sono sempre cinque', await page.locator('[data-area]').count(), 5)
+uguale('chiuse, non mostrano le materie', await page.locator('[data-mattonella]').count(), 0)
+controlla('un\'area mai giocata lo dice, senza una barra a zero', await page.locator('[data-area="italiano"] .mai').count() === 1 && await page.locator('[data-area="italiano"] .misura').count() === 0)
+await area('spazio')
+controlla('aperto «Spazio e tempo» c\'è la materia del tempo, dei quiz', await mattonella('tempo').count() === 1)
+uguale('e se ne apre una sola alla volta', await page.locator('[data-area].aperta').count(), 1)
 uguale('il tempo è salito rispetto a due settimane fa',
        await mattonella('tempo').locator('[data-freccia]').getAttribute('data-freccia'), 'su')
+await area('numeri')
+controlla('nei «Numeri» ci sono le tabelline, che il grande prima non vedeva', await mattonella('mate').count() === 1)
 await scatto(page, 'come-va-mattonelle')
 
 await mattonella('mate').click()
@@ -208,6 +222,7 @@ uguale('e il resto della pagina si toglie di mezzo', await page.locator('[data-s
 await page.click('[data-azione="materie-torna"]')
 await page.waitForSelector('[data-mattonelle]', { timeout: 5000 })
 
+await area('spazio')
 await mattonella('tempo').click()
 await page.waitForSelector('[data-materia-aperta="tempo"]', { timeout: 5000 })
 {

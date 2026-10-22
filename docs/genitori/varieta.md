@@ -52,7 +52,16 @@ toglierne.
   finita a metà paga piene le risposte dei primi venti minuti e a metà le
   altre, che è quello che le soglie promettono.
 
-## I tetti sono del genitore
+## I tetti non si regolano più (21/10)
+
+Il proprietario: «difficile che qualcuno comprenda come gestirlo, elimina questi settaggi e lascia il default». **Non c'è più nessuna schermata**
+(`components/varieta/Tetti.vue` è stato tolto): né le soglie, né i tetti per gioco, né i ⭐ consigliati, né «Ridai tempo», né «Svegliare i giochi di
+scuola». Valgono i numeri di partenza, uguali per tutti. Il motore li legge ancora da `settings.varieta` (`store/varieta.js`: `scegliSoglie`, `tettoDelGioco`,
+`consiglia`, `accendiDormienti`, `ridaiTempo`), così un profilo che li aveva non si rompe e `unita/varieta` resta; chi volesse riaverli deve rifare una
+schermata, e dire a un genitore cosa vuol dire «piene per 20′».
+
+Com'era, per memoria:
+
 
 In «Impostazioni › Giochi e domande › Le monete, gioco per gioco»
 (`components/varieta/Tetti.vue`), **per bambino**, in `settings.varieta`:

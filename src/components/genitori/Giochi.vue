@@ -4,15 +4,15 @@
 // spento a mano), il tempo che ci passa, le monete di questo gioco e le domande che chiede, ognuna con dove altro vale.
 import { ref, computed, onMounted, watch } from 'vue'
 import Carosello from '../home/Carosello.vue'
-import Monete from '../varieta/Tetti.vue'
 import { GIOCHI, serveA } from '../../data/giochi.js'
 import { state, nomeCorrente, etaDelBambino, giocoAcceso, fissaGioco, sapereAcceso, accendiSapere, saperiCheMancano,
          sperimentaliAccesi, ritoccoSapere, ritocca } from '../../store/profile.js'
 import { inCasa } from '../../data/portata-giochi.js'
-import { paga } from '../../data/varieta.js'
+import { giochiDiUnEta, PASSATO } from '../../data/quadro.js'
 import { eccezioniPerEta } from '../../data/partenze.js'
 import { sapereDi } from '../../data/saperi.js'
 import { pescaDaTutte } from '../../data/domande-dei-giochi.js'
+import { insegnaDi } from '../../data/cosa-insegna.js'
 import { saperiDelGioco, giochiCheChiedono } from '../../quiz/saperi.js'
 import { leggiSessioni, perGiornoDi, perGioco } from '../../store/sessioni.js'
 
@@ -44,9 +44,13 @@ const esito = computed(() => {
   if (!sperimentaliAccesi() && gioco.value?.sperimentale) return 'È un gioco in prova: compare solo se li accendi in Impostazioni › Avanzate.'
   if (m === 'spento') return `Non compare in home. I progressi di ${chi.value} restano.`
   if (m === 'acceso') return spentoDallEta(k) ? `Compare in home anche se a ${eta} anni non sarebbe adatto.` : 'Compare sempre in home.'
-  return inCasa(k) ? `A ${eta} anni è adatto, quindi compare in home. Se l'età cambia, cambia da solo.` : `A ${eta} anni non è ancora adatto, quindi non compare. Si apre da solo quando l'età lo porta.`
+  if (inCasa(k)) return `A ${eta} anni è adatto, quindi compare in home. Se l'età cambia, cambia da solo.`
+  // fuori dalla home per l'età: o è già troppo facile (i giochi per i piccoli) o è per più avanti
+  const { [k]: _, ...altri } = state.profile.settings.giochi || {}
+  const stato = giochiDiUnEta({ eta, giochi: altri, sa: state.profile.settings.sa || {}, sperimentali: sperimentaliAccesi() }).find(g => g.chiave === k)?.stato
+  return stato === PASSATO ? `A ${eta} anni è troppo facile, quindi non compare in home. Si può accendere a mano.`
+    : `È per più grandi: a ${eta} anni non compare ancora, e arriva in home quando cresce.`
 })
-const monetePagano = computed(() => !!gioco.value && paga(gioco.value) && inCasa(chiave.value))
 const g_serve = k => saperiCheMancano(k).map(c => (sapereDi(c) || {}).nome || c)
 
 /* ── il tempo ── */
@@ -70,6 +74,7 @@ const segno = d => GG[new Date(d.quando).getDay()]
 
 /* ── le domande ── */
 const tutte = computed(() => pescaDaTutte(chiave.value))
+const insegna = computed(() => insegnaDi(chiave.value))
 // il ritocco: una tacca di mezzo anno sopra o sotto la taratura, al massimo tre per parte (docs/genitori/ritocchi.md); più è alto, più facili
 const testoRitocco = n => (n === 0 ? 'come dice l\'età' : `${Math.abs(n)} ${Math.abs(n) === 1 ? 'tacca' : 'tacche'} ${n > 0 ? 'più facili' : 'più difficili'}`)
 const saperi = computed(() => saperiDelGioco(chiave.value).map(k => {
@@ -116,10 +121,8 @@ const saperi = computed(() => saperiDelGioco(chiave.value).map(k => {
         </div>
       </div>
 
-      <Monete v-if="gioco && monetePagano" :gioco="chiave" :chi="chi" />
-
       <div class="blocco" data-gioco-domande>
-        <b>Le domande di questo gioco</b>
+        <b>{{ !tutte && !saperi.length && insegna ? insegna.titolo : 'Le domande di questo gioco' }}</b>
         <p v-if="tutte" class="mini">Pesca da tutte le domande dei quiz, quelle che l'età lascia: si regolano nella sezione «Le domande dei quiz» qui sotto.</p>
         <template v-else-if="saperi.length">
           <p class="mini">Sono tarate sull'età: di solito non c'è niente da fare. Se una gli va male la trovi in <b>Come va › Difficili</b>, e lì si può spostare o spegnere.</p>
@@ -142,7 +145,8 @@ const saperi = computed(() => saperiDelGioco(chiave.value).map(k => {
           <p class="mini">Le domande sono le stesse in ogni gioco che le usa: spegnerne una vale per tutti, e lo dice accanto.</p>
           </details>
         </template>
-        <p v-else class="mini">Questo gioco non fa domande di scuola, o non le ha ancora elencate qui.</p>
+        <p v-else-if="insegna" class="mini insegna" data-gioco-insegna>{{ insegna.testo }}</p>
+        <p v-else class="mini">{{ gioco.che }}.</p>
       </div>
     </div>
   </div>
@@ -174,6 +178,7 @@ const saperi = computed(() => saperiDelGioco(chiave.value).map(k => {
 .num div { flex:1; padding:6px; border-radius:10px; background:#f7f2e8; text-align:center }
 .num b { display:block; font-size:14px }
 .num small { font-size:10px; color:#8a8576 }
+.insegna { margin:0; font-size:13.5px; line-height:1.45; color:#4a4638 }
 .tutte > summary { min-height:40px; display:flex; align-items:center; font-size:13px; font-weight:700; color:#4a3fd1; cursor:pointer }
 .domande { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px }
 .domande li { display:flex; align-items:flex-start; gap:10px; padding:8px 0; border-bottom:1px solid #f1ebdf }

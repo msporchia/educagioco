@@ -12,6 +12,7 @@
 
      npm run build && node strumenti/tavola-anteprime.mjs
      node strumenti/tavola-anteprime.mjs --solo roba          # roba, eroi, mostri
+     node strumenti/tavola-anteprime.mjs --solo rarita        # ogni arma, scudo, gioiello e veste comune, magico, raro, i consumabili e i pezzi col nome
      node strumenti/tavola-anteprime.mjs --eroe mago --scala 2
      node strumenti/tavola-anteprime.mjs --chiavi arma:ascia-lava,busto:nano:accetta:scudo-nanico:-
 
@@ -22,7 +23,8 @@ import { apriBrowser, apriGioco } from '../test/aiuto/browser.mjs'
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, resolve } from 'node:path'
-import { COSE } from '../src/giochi/sotterraneo/dati/cose.js'
+import { COSE, chiaveDelPezzo } from '../src/giochi/sotterraneo/dati/cose.js'
+import { ABILITA_DEI_PEZZI, UNICI } from '../src/giochi/sotterraneo/dati/pezzi.js'
 import { MOSTRI } from '../src/giochi/sotterraneo/dati/mostri.js'
 import { GROSSI } from '../src/giochi/sotterraneo/dati/grossi.js'
 import { chiaveDellaCosa, chiaveDellEroe, chiaveDelMostro, EROI } from '../src/giochi/sotterraneo/scena3d/anteprime3d-pura.js'
@@ -47,11 +49,25 @@ else {
       if (c.dove === 'corpo') for (const r of ['m.vita', 'r.vita.dif']) voci.push({ k: chiaveDellaCosa({ chiave: `${k}@5.${r}` }, eroe), n: `${k} ${r[0]}` })
     }
   }
+  if (solo.includes('rarita')) {
+    // le figure e gli aloni (docs/sotterraneo/roba-3d.md): ogni base comune, magica e rara al livello 6, poi i pezzi col nome
+    for (const [k, c] of Object.entries(COSE)) {
+      if (!['mano', 'mancina', 'collo', 'dito'].includes(c.dove)) continue
+      const ab = Object.keys(ABILITA_DEI_PEZZI).filter(a => ABILITA_DEI_PEZZI[a].dove.includes(c.dove))
+      for (const [r, a, n] of [['comune', [], 'c'], ['magico', ab.slice(0, 1), 'm'], ['raro', ab.slice(1, 3), 'r']])
+        voci.push({ k: chiaveDellaCosa({ chiave: chiaveDelPezzo(k, 6, r, a) }, eroe), n: `${k} ${n}` })
+    }
+    for (const [k, c] of Object.entries(COSE)) if (c.usa && !c.dove) voci.push({ k: chiaveDellaCosa({ chiave: k }, eroe), n: k })   // i consumabili
+    for (const k of ['corazza', 'manto', 'saio', 'panciotto']) for (const [r, a] of [['comune', []], ['magico', ['vita']], ['raro', ['vita', 'dif']]])
+      voci.push({ k: chiaveDellaCosa({ chiave: chiaveDelPezzo(k, 6, r, a) }, eroe), n: `${k} ${r[0]}` })   // le vesti
+    for (const [u, v] of Object.entries(UNICI)) voci.push({ k: chiaveDellaCosa({ chiave: chiaveDelPezzo(v.base, 9, v.rarita, [], u) }, eroe), n: u })
+  }
   if (solo.includes('eroi')) {
-    const roba = { cavaliere: ['spada', 'scudo-ferro', 'corazza'], elfa: ['arco-lungo', null, 'manto@3.m.vita'], mago: ['bastone-magico', null, 'saio'], nano: ['ascia', 'scudo-leone', 'corazza@5.r.vita.dif'] }
+    const roba = { cavaliere: ['spada@9.u.zanna-del-drago', 'scudo-ferro@6.r.dif.vita', 'corazza', 'medaglione@4.m.vita'], elfa: ['arco-lungo', null, 'manto@3.m.vita', 'amuleto-azzurro@5.r.vita.dif'],
+                   mago: ['bastone-magico@4.m.fuoco', null, 'saio', null], nano: ['ascia', 'scudo-leone', 'corazza@5.r.vita.dif', null] }
     for (const e of EROI) {
-      const [mano, mancina, corpo] = roba[e]
-      voci.push({ k: chiaveDellEroe(e, { mano, mancina, corpo }), n: e }, { k: chiaveDellEroe(e, { mano, mancina, corpo }, 'busto'), n: `${e} busto` })
+      const [mano, mancina, corpo, collo] = roba[e]
+      voci.push({ k: chiaveDellEroe(e, { mano, mancina, corpo, collo }), n: e }, { k: chiaveDellEroe(e, { mano, mancina, corpo, collo }, 'busto'), n: `${e} busto` })
     }
   }
   if (solo.includes('mostri')) {

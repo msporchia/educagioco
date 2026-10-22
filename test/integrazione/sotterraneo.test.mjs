@@ -122,8 +122,8 @@ controlla('dopo un tocco l\'eroe si è mosso', mosso, `sempre in ${prima}`)
 await page.locator('[data-azione="zaino"]').click()
 await page.waitForSelector('[data-zaino]', { timeout: 3000 })
 uguale('lo zaino ha sei tasche', await page.locator('[data-zaino] [data-tasca]').count(), 6)
-uguale('e quattro caselle addosso: le due mani, il corpo, il dito',
-       await page.locator('[data-casella]').count(), 4)
+uguale('e sei caselle addosso: le due mani, il corpo, la collana e i due anelli',
+       await page.locator('[data-casella]').count(), 6)
 uguale('e non è il foglio che sale dal basso',
        await page.locator('.sot-foglio').count(), 0)
 await page.locator('[data-azione="chiudi"]').click()

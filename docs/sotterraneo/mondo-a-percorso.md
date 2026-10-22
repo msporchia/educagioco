@@ -170,7 +170,8 @@ maestra verso i prati. La pianta, uscita da `npm run pianta -- --percorso` (la r
 
 ## Le terre successive
 
-Ripulite **le tombe del vento** (il boss della terra), in fondo alla strada si apre **la porta delle terre**: un arco di pietra
+**Fatte** (22 ottobre): com'è fatto, le scelte di dove questo progetto non decideva e le voci aperte in
+[terre-successive.md](terre-successive.md); dove le due non tornano vale quella. Ripulite **le tombe del vento** (il boss della terra), in fondo alla strada si apre **la porta delle terre**: un arco di pietra
 con le rune, che il capitano e il minatore annunciano al villaggio («laggiù, in fondo alla landa, si è aperta una porta»).
 Attraversarla porta al villaggio di **un'altra terra: la stessa mappa, le stesse zone e gli stessi dungeon, i mostri più forti**.
 

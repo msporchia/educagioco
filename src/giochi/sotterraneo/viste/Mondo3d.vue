@@ -54,13 +54,16 @@ const props = defineProps({
   pensiero: { type: Object, default: null },  // il pensiero dell'eroe sopra la testa (docs/sotterraneo/pensieri.md), come in Terra.vue
   forza: { type: Number, default: 1 },        // il livello di forza dell'eroe (motore/forza.js): il colore dell'annuncio di una regione
   fermo: { type: Boolean, default: false },   // un pannello di Gioco.vue è aperto sopra il mondo (bottega, zaino, eroe): i mostri aspettano
+  terre: { type: Object, default: null },     // la porta delle terre (motore/terre.js, laPorta): { ora, aperta, ultima, qui, dopo }
 })
 // `pensa`, `pensiero`, `pensiero-fine`, `trovati`: lo stesso contratto dei pensieri di viste/Terra.vue
 // `scontro` ({ inc, stato, terra, verso }): un mostro di sopra apre uno scontro (Gioco.vue lo gioca, `apriPalco` lo disegna qui);
 // `raccogli` (i): la cosa per terra `i` è sotto i piedi dell'eroe. Le forze di sopra vanno in `mondo.sopra` col resto (salva)
 const emit = defineEmits(['scendi', 'mondo', 'bottega', 'riprendi', 'sentito', 'cura', 'risposta', 'veduta', 'pensa', 'pensiero', 'pensiero-fine', 'trovati',
-                          'scontro', 'raccogli'])
+                          'scontro', 'raccogli', 'terre'])
 const minuscolo = s => { const t = String(s ?? ''); return t.charAt(0).toLowerCase() + t.slice(1) }   // un nome che manca non rompe la pagina
+// la terra dove si cammina (docs/sotterraneo/terre-successive.md): la stessa mappa, i mostri più su; la prima se Gioco.vue non lo dice
+const terraQui = () => (props.terre ? props.terre.ora : 1)
 const RAGGIO_SALUTO = 6, RAGGIO_RIARMO = 9, DURATA_SALUTO = 1.4
 // quanto è alto il bersaglio di un ingresso, per monumento (scena3d/mondo/monumenti.js)
 const ALTO_DEL_MONUMENTO = { torre: 4.8, botola: 1.6, menhir: 2.6, palafitta: 3.4, fumarola: 2.6, tomba: 3.2 }
@@ -122,7 +125,7 @@ function preparaBersagli() {
     citta: p.citta || null, lotto: { x: p.x, y: p.y, w: p.w, h: p.h }, accanto: { ...p.accanto }, piede: piede(p), alto: 2.4, ...extra })
   for (const p of postiDi(m, 'ingresso')) posto('ingresso', p, { alto: ALTO_DEL_MONUMENTO[p.monumento] || 3.2, monumento: p.monumento, zona: p.zona })
   for (const p of postiDi(m, 'pietra')) posto('pietra', p, { alto: p.chiave === 'villaggio' ? 1.6 : 2.6, zona: p.zona || null })
-  for (const p of postiDi(m, 'terre')) posto('terre', p, { alto: 3.8 })
+  for (const p of postiDi(m, 'terre')) posto('terre', p, { alto: 3.8, nome: 'La porta delle terre' })
   for (const p of postiDi(m, 'cartello')) posto('cartello', p, { alto: 1.7 })
   for (const p of postiDi(m, 'bacheca')) posto('bacheca', p, { alto: 2.1 })
   for (const f of fontane) posto('fontana', { ...f, chiave: f.citta }, { alto: 2.4 })
@@ -149,10 +152,10 @@ const visto = c => nebbia[c.y * m.W + c.x] === 1
 
 /* ═══════════ la nebbia, la partenza, il salvataggio ═══════════ */
 function prepara() {
-  m = markRaw(ilMondo())
+  m = markRaw(ilMondo({ terra: terraQui() }))
   // il salvato rimesso in forma per questa mappa (motore/mondo-sopra.js): la firma, e chi aveva il mondo di prima ritrova la strada
-  // fino alle discese finite (il travaso)
-  const s = mondoDaSalvato(m, props.mondo, props.tappe)
+  // fino alle discese finite (il travaso). Una terra dopo la prima comincia da capo: nessuna strada scoperta dalla storia
+  const s = mondoDaSalvato(m, props.mondo, terraQui() > 1 ? [] : props.tappe)
   // dove si era; salendo dal portale accanto al gemello del villaggio. La zona di là si carica prima della terra
   const d = s.dove
   const gemello = props.portale ? portaleDella(m) : null
@@ -194,8 +197,10 @@ function mostriDelMondo(salvato) {
   }
 }
 let sporca = false, ultimoSalvato = 0
+// `partito`: passata la porta delle terre, questo mondo non scrive più (smontandosi scriverebbe nella terra nuova)
+let partito = false
 function salva() {
-  if (!m) return
+  if (!m || partito) return
   sporca = false; ultimoSalvato = tempo
   const sopra = mostri.inSalvo(fotoScontro)
   emit('mondo', mondoDaSalvare(m, { nebbia, dove: { x: Math.floor(io.x), y: Math.floor(io.z) }, giro: giro.value, pietre: [...accese.value],
@@ -474,6 +479,7 @@ function aggiornaScena() {
   S.io.sprite = props.eroe.sprite || 'cavaliere'
   S.io.mano = props.roba ? props.roba.mano : null; S.io.mancina = props.roba ? props.roba.mancina : null; S.io.corpo = props.roba ? props.roba.corpo : null
   S.veduta = props.veduta
+  S.terre = !!(props.terre && props.terre.aperta)
   // davanti a una discesa rossa sta la sentinella (docs/sotterraneo/zone.md)
   const sentinelle = bersagli.value.filter(b => b.ruolo === 'ingresso' && trovati.value.has(b.chiave) && (datoDelPosto(b).t || {}).colore === 'rosso')
   S.persone = [...persone, ...sentinelle.map(b => ({ pezzo: 'guardia-fermo-0', x: b.lotto.x + 0.3, z: b.lotto.y + b.lotto.h + 0.6 }))]
@@ -489,7 +495,7 @@ const ctxBacheca = () => ({ m, eroe: props.eroe.chiave, giro: giro.value, tappe:
                             visto: (x, y) => nebbia[y * m.W + x] === 1 })
 const ctx = () => ({ stati: props.missioni, tappe: props.tappe, abisso: !!props.abisso, eroe: props.eroe.chiave,
                      roba: props.roba, annuncio: props.annuncio, novita: ascoltate.value, forze: props.forze, mondo: true,
-                     forza: props.forza })   // la forza: il minatore e il capitano dicono in che zona stanno i mostri giusti per te
+                     forza: props.forza, terra: terraQui() })   // la forza: il minatore e il capitano dicono in che zona stanno i mostri giusti per te
 // sotto il livello di una discesa della storia (i sei nuovi non hanno l'eroe atteso: lo dice il colore del pallino)
 const livelloDi = t => (t && !t.fatta && t.indice != null && t.indice >= 0 && props.roba ? dettoDelLivello(props.eroe.chiave, props.roba, t, t.indice) : null)
 function rigaStoria(t) {
@@ -525,8 +531,11 @@ const fumettoDati = computed(() => {
   if (b.ruolo === 'scavo') return { tipo: 'scavo', titolo: (missioneDi(b.k) || {}).titolo || 'La X' }
   if (b.ruolo === 'fontana') return { tipo: 'fontana', ...FONTANA, ...curaDellaFontana(props.forze) }
   if (b.ruolo === 'terre') {
-    return { tipo: 'terre', nome: 'La porta delle terre', aperta: !!scena && scena.S.terre,
-             dice: scena && scena.S.terre ? 'La porta è aperta: di là c\'è un\'altra terra.' : 'Un arco di pietra con le rune spente. Si apre quando batti chi comanda le tombe del vento.' }
+    const p = props.terre, aperta = !!(p && p.aperta)
+    const dice = aperta ? `La porta è aperta: di là c'è ${minuscolo(p.dopo.nome)}. Le stesse strade, mostri più forti.`
+      : p && p.ultima ? 'Le rune restano spente: oltre questa terra non ce n\'è un\'altra.'
+      : 'Un arco di pietra con le rune spente. Si apre quando batti chi comanda le tombe del vento.'
+    return { tipo: 'terre', nome: 'La porta delle terre', aperta, dice, passa: 'passo dall\'altra parte' }
   }
   if (b.ruolo === 'cartello') {
     const q = metaOra.value, qui = !!(q && q.regione === 'villaggio')
@@ -639,13 +648,24 @@ function parla(b) {
   if (b.ruolo === 'viandante') return parlaAlViandante(b)
   const chi = b.k
   saluta(b.chiave, tempo); vicini.add(b.chiave)
-  const prima = chi === 'minatore' && !parlato.value
-  if (prima) { parlato.value = true; salva() }
+  // nelle terre dopo la prima il minatore non si presenta di nuovo: lo conosci già
+  const prima = chi === 'minatore' && !parlato.value && terraQui() === 1
+  if (chi === 'minatore' && !parlato.value) { parlato.value = true; salva() }
+  // la porta delle terre aperta la dicono il minatore e il capitano, una volta ciascuno (in `novita`, `porta`)
+  const porta = annunciaLaPorta(chi)
+  if (porta) { ascoltate.value = { ...ascoltate.value, porta: { ...(ascoltate.value.porta || {}), [chi]: true } }; salva() }
   if (chi === 'capitano' && capitanoHaDaDire()) { ascoltate.value = { ...ascoltate.value, capitano: { n: 1, v: (props.tappe.find(t => t.adesso) || {}).chiave } }; salva() }
   if (chi === 'minatore' && props.annuncio && !props.annuncio.sentita) { avviso.value = ''; emit('sentito') }
-  dialogo.value = { chi, nome: chiParla(chi), pagine: apertura(chi, ctx(), { primaVolta: prima }), giro: ++giri, chieste: new Set(chi === 'minatore' || chi === 'capitano' ? ['strada'] : []) }
+  dialogo.value = { chi, nome: chiParla(chi), pagine: apertura(chi, { ...ctx(), terre: porta }, { primaVolta: prima }), giro: ++giri, chieste: new Set(chi === 'minatore' || chi === 'capitano' ? ['strada'] : []) }
 }
 function chiudiDialogo() { dialogo.value = null }
+const annunciaLaPorta = chi => !!(props.terre && props.terre.aperta) && (chi === 'minatore' || chi === 'capitano') && !(ascoltate.value.porta || {})[chi]
+// la porta delle terre: si salva qui e Gioco.vue scrive la terra dopo; il mondo rinasce là (la chiave di Campagna)
+function passaLaPorta() {
+  if (!props.terre || !props.terre.aperta || inScontro) return
+  chiudi(); salva(); partito = true
+  emit('terre', props.terre.ora + 1)
+}
 // chi si era perso: parlargli fa la taglia (poi sparisce dal prato); la paga è alla bacheca
 function parlaAlViandante(b) {
   const t = missioneDi(b.k)
@@ -1144,6 +1164,8 @@ async function nasci() {
   scena.avvia()
   pronto.value = true
   if (props.annuncio && !props.annuncio.sentita) dillo(C_E_UNA_NOTIZIA)
+  // arrivati in una terra nuova dalla porta: il suo nome e quello del villaggio
+  else if (terraQui() > 1 && !props.mondo && props.terre.qui) dillo(`${props.terre.qui.nome}: ${props.terre.qui.villaggio}.`)
   if (typeof window !== 'undefined') {
     window.__sotterraneo3d = scena
     window.__mondo3d = { scena, m, io, bersagli: () => bersagli.value, trovati: () => [...trovati.value], giro: () => giro.value,
@@ -1198,7 +1220,7 @@ watch(giro, g => { if (mostri && g !== mostri.stato.giro) { mostri.giro(g); foto
 </script>
 
 <template>
-  <div ref="vista" class="sot-terra sot3d-mondo" data-mondo3d :data-pronto="pronto ? 1 : 0" :data-in-veduta="veduta ? 1 : 0"
+  <div ref="vista" class="sot-terra sot3d-mondo" data-mondo3d :data-terra-ora="terre ? terre.ora : 1" :data-pronto="pronto ? 1 : 0" :data-in-veduta="veduta ? 1 : 0"
        @pointerdown="premi" @pointermove="muovi" @pointerup="lascia" @pointercancel="lascia" @click="toccaPrato" @wheel="rotella">
     <canvas ref="tela" class="sot3d-tela-mondo" data-tela="mondo"></canvas>
     <!-- le scritte della scena (scena3d/etichette.js) e quelle dello scontro di sopra (viste/Scontro3d.vue, dal posto di Gioco.vue) -->
@@ -1231,7 +1253,7 @@ watch(giro, g => { if (mostri && g !== mostri.stato.giro) { mostri.giro(g); foto
               :data-pietra="b.ruolo === 'pietra' ? b.k : null" :data-viandante="b.ruolo === 'viandante' ? b.k : null" :data-scavo="b.ruolo === 'scavo' ? b.k : null"
               :data-accesa="b.ruolo === 'pietra' ? (accese.has(b.k) ? 1 : 0) : null"
               :data-cartello="b.ruolo === 'cartello' ? b.citta : null" :data-bacheca="b.ruolo === 'bacheca' ? b.citta : null" :data-fontana="b.ruolo === 'fontana' ? b.citta : null"
-              :data-portale="b.ruolo === 'portale' ? '' : null" :data-terre="b.ruolo === 'terre' ? (scena && scena.S.terre ? 1 : 0) : null"
+              :data-portale="b.ruolo === 'portale' ? '' : null" :data-terre="b.ruolo === 'terre' ? (terre && terre.aperta ? 1 : 0) : null"
               :data-zona="b.zona || null"
               :data-divieto="b.ruolo === 'ingresso' && divieti.has(b.k) ? b.k : null"
               :data-trovato="trovati.has(b.chiave) ? 1 : 0" :data-saluta="b.tipo === 'persona' ? (salutano.has(b.chiave) ? 1 : 0) : null"
@@ -1289,7 +1311,7 @@ watch(giro, g => { if (mostri && g !== mostri.stato.giro) { mostri.giro(g); foto
     <div v-if="aperto && fumettoDati" ref="fumEl" class="sot-fumetto sot3d-fumetto" data-fumetto
          :data-fumetto-di="aperto.ruolo === 'ingresso' ? aperto.k : aperto.ruolo" :class="{ 'sot-tenue': fumettoDati.tipo === 'posto' && !fumettoDati.aperto }"
          style="visibility: hidden" @click.stop>
-      <FumettoMondo :f="fumettoDati" @scendi="scendi" @giu="giuDalPortale" @viaggio="viaggia" @bevi="bevi" @taglia="allaBacheca" @scava="scava" />
+      <FumettoMondo :f="fumettoDati" @scendi="scendi" @giu="giuDalPortale" @viaggio="viaggia" @bevi="bevi" @taglia="allaBacheca" @scava="scava" @passa="passaLaPorta" />
     </div>
 
     <button v-for="f in fuori" :key="'fuori-' + f.chiave" class="sot-bussola" :class="{ 'sot-bussola-meta': f.meta }"
