@@ -63,12 +63,13 @@ export function triangolo(a, b, c) {
 // ── il cantiere: si posano pezzi in coordinate locali (`base` sposta e gira tutto il gruppo), poi si chiude ──
 const _m = new Matrix4(), _q = new Quaternion(), _e = new Euler(), _v = new Vector3(), _s = new Vector3()
 export class Cantiere {
-  constructor() { this.liste = {}; this.b = new Matrix4(); this.tri = 0; this.qx = 0; this.qz = 0 }
+  constructor() { this.liste = {}; this.conti = {}; this.segni = {}; this.b = new Matrix4(); this.tri = 0; this.qx = 0; this.qz = 0 }
   // la base del gruppo, e la cella che la nebbia guarda (la base stessa, se non si dice altro con `qui`)
   base(x = 0, y = 0, z = 0, ry = 0) { this.b.compose(_v.set(x, y, z), _q.setFromEuler(_e.set(0, ry, 0)), _s.set(1, 1, 1)); this.qx = x; this.qz = z; return this }
   qui(x, z) { this.qx = x; this.qz = z; return this }
   dove(x, y, z) { return new Vector3(x, y, z).applyMatrix4(this.b) }
-  metti(nome, geo, x, y, z, colore = [1, 1, 1], { rx = 0, ry = 0, rz = 0, s = null, ordine = 'XYZ' } = {}) {
+  // `segno`: il pezzo si ritrova dopo l'unione (`userData.segni` della mesh: { segno, da, quanti } in vertici), per ricolorarlo
+  metti(nome, geo, x, y, z, colore = [1, 1, 1], { rx = 0, ry = 0, rz = 0, s = null, ordine = 'XYZ', segno = null } = {}) {
     const g = geo.index ? geo.toNonIndexed() : geo.clone()
     _m.compose(_v.set(x, y, z), _q.setFromEuler(_e.set(rx, ry, rz, ordine)), s ? _s.set(...s) : _s.set(1, 1, 1))
     g.applyMatrix4(_m.premultiply(this.b))
@@ -81,6 +82,9 @@ export class Cantiere {
     g.setAttribute('color', new BufferAttribute(c, 3))
     g.setAttribute('aBase', new BufferAttribute(b, 2))
     ;(this.liste[nome] ||= []).push(g)
+    const da = this.conti[nome] || 0
+    this.conti[nome] = da + n
+    if (segno != null) (this.segni[nome] ||= []).push({ segno, da, quanti: n })
     this.tri += n / 3
     if (geo !== g) geo.dispose()
     return g
@@ -95,9 +99,10 @@ export class Cantiere {
       const me = new Mesh(g, mats[nome])
       me.castShadow = nome !== 'luce'; me.receiveShadow = true
       if (ombra) me.customDepthMaterial = ombra
+      if (this.segni[nome]) me.userData.segni = this.segni[nome]
       fuori.push(me)
     }
-    this.liste = {}
+    this.liste = {}; this.conti = {}; this.segni = {}
     return fuori
   }
 }

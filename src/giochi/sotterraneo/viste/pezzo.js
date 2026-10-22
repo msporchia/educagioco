@@ -22,6 +22,7 @@ export function tipoDi(c) {
   if (c.dove === 'corpo') return 'Armatura'
   if (c.dove === 'dito') return 'Anello'
   if (c.dove === 'collo') return 'Collana'
+  if (c.dove === 'testa') return c.famiglia === 'ferro' ? 'Elmo' : 'Copricapo'
   if (c.usa === 'cura') return 'Pozione'
   if (c.usa === 'cresci') return 'Elisir'
   if (c.usa === 'energia') return 'Pozione dell\'energia'
@@ -102,6 +103,7 @@ export const POSTO = {
   collo: { em: '📿', dice: 'nessuna collana' },
   dito: { em: '💍', dice: 'nessun anello' },
   dito2: { em: '💍', dice: 'nessun anello' },
+  testa: { em: '🪖', dice: 'nessun copricapo' },
 }
 
 // «meglio in 2, peggio in 1», o «uguale»

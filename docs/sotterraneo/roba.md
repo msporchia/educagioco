@@ -50,7 +50,7 @@ la roba con livello e rarità: [rarita.md](rarita.md).
 
 ## Addosso e in tasca
 
-- **Addosso: la mano, la mano debole, il corpo, la collana e due anelli. In tasca: sei
+- **Addosso: la mano, la mano debole, il corpo, la collana, due anelli e il copricapo** ([elmo.md](elmo.md)). **In tasca: sei
   posti** (`TASCHE` in `dati/mondo.js`). Le tasche sono il limite: scegliere
   cosa lasciare per terra è il bivio fatto con le mani.
 - **Le pozioni uguali stanno in una tasca sola** (l'utente, 9 ottobre: sei posti

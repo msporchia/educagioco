@@ -19,8 +19,6 @@ rimasti aperti. Quando una voce si chiude si toglie da qui (la storia sta in `gi
 - **La torcia nel dungeon** (quasi chiuso, `corsa.js:264`): nello screenshot di Marco (torre, piano 3 di 3) si vede un cerchio di ~3 celle:
   è lo stato «senza torcia accesa» (`RAGGIO` 3,2; con la torcia `RAGGIO_TORCIA` 9,5), non un difetto dell'eroe 3D. Da confermare con Marco se la
   torcia era spenta o finita (`torciaResta` 0). Sopra, nel mondo, la torcia non fa niente (è sempre giorno): decidere se deve servire.
-- **Le braci di una tana a signore morto**: il fumo e le scintille si spengono (`taneSpente`, ora anche dopo un salvataggio), ma i dischi
-  incandescenti del modello (`braciTana`, `props-aperto.js`) restano accesi: servirebbe ricostruire il pezzo alla morte del signore.
 - **Le quest**: restano le quest scritte a mano nelle zone, scorta ed eventi; cacciatrice e carovaniere come persone nuove; la X e il
   viandante non hanno un disegno 3D (sono segni sul prato); «vai alla pietra» dal diario; la freccia sulla strada vera e non in linea
   d'aria; tarare le basi delle taglie (`BASI`, tetto 40 gemme) e quanto guadagna chi le fa tutte.
@@ -120,7 +118,7 @@ fuori») e i branchi a 14 celle (`292a98f5`); il villaggio tondo (24×20); la sc
 
 | Voce | Chi | Stato |
 |---|---|---|
-| Un elmo vero nello slot testa (oggi solo `#testa=<id>`) | Mostri | non iniziato |
+| Un elmo vero nello slot testa: fatto il 22/10, la casella `testa` e sei copricapi, solo nel 3D ([elmo.md](elmo.md)); restano lo sprite per il 2D, un copricapo leggendario, i copricapi nel mondo di sopra | Mostri | fatto, da guardare col dito |
 | Costi in chiamate: scontro sul prato ~231, mondo con due branchi ~250 (soglia del test 260) | Mostri | tenere d'occhio |
 | Peso e fluidità sul telefono (nessuna misura fatta) | Mostri | da guardare col dito |
 | Prove del browser complete (`npm run test:browser`) e `test:misure` non lanciate dopo il 3D | Mostri | da fare prima del prossimo giro grande |

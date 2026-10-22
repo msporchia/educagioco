@@ -15,6 +15,7 @@ const props = defineProps({
   mano: { type: String, default: null },
   mancina: { type: String, default: null },
   corpo: { type: String, default: null },        // l'armatura: per il ritratto 3D
+  testa: { type: String, default: null },        // il copricapo: anche lui nel ritratto 3D
   livello: { type: Number, required: true },
   forza: { type: Number, default: 0 },           // il livello di forza (motore/forza.js): quanto vale con la roba e le abilità di adesso
   fatto: { type: Number, default: 0 },           // l'esperienza fatta nel livello, e quella che serve per il dopo
@@ -46,7 +47,7 @@ const nomeDi = k => (props.caratteristiche.find(c => c.chiave === k) || { nome: 
   <Cornice alta data-pagina-eroe @chiudi="$emit('chiudi')" @fuori="e => $emit('fuori', e)">
     <SchedeEroe attiva="eroe" :punti="punti" :punti-abilita="puntiAbilita" :missioni="missioni" @scheda="s => $emit('scheda', s)" />
     <header class="sot-eroe-testa">
-      <span class="sot-eroe-ritratto"><Armato :eroe="eroe" :mano="mano" :mancina="mancina" :corpo="corpo" :scala="3" in3d /></span>
+      <span class="sot-eroe-ritratto"><Armato :eroe="eroe" :mano="mano" :mancina="mancina" :corpo="corpo" :testa="testa" :scala="3" in3d /></span>
       <span class="sot-eroe-nome">
         <b>{{ eroe.nome }}</b>
         <i data-livello-eroe :data-livello="livello">Livello {{ livello }}</i>
