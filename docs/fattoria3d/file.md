@@ -13,6 +13,8 @@ dati/
   lotti.js           `generaLotto(a, b, { vecchio })`: bioma, acqua, spiaggia, molo, alberi e sassi di un lotto (puro); `vecchio` per i lotti di un salvataggio di prima ([geografia-e-pesca.md](geografia-e-pesca.md))
   biomi.js           prato / bosco / laghetto e lo stagno ([laghi.md](laghi.md)), il mare a ovest, la costa e la spiaggia, i laghi grandi a est (`eMare`, `eSpiaggia`, `eLago`, `tipoAcqua`: funzioni della cella), `biomaVecchio`; semi.js: il caso del mondo
   pesca.js           i numeri della pesca (`PESCA`: 12 s, riposo 60 s, raggio 6), `resaDellaPesca`, il pesce (`PESCI`, in `PRODOTTI_ANIMALI`)
+  rotazione.js       ruotare i pezzi: `ruotabile`, `misureGirate`, `DAVANTI`, `rotLetta` ([rotazione.md](rotazione.md))
+  stagioni3d.js      le feste in 3D: importa le finestre della 2D; `ASPETTI`, `PARTICELLE`, `addobbiNatale`, `chiazzeDiNeve`, `stagioneAttiva` ([stagioni.md](stagioni.md))
   carte.js           le carte del menu «Costruisci qui»: `carteDi(categoria, stato)`, `schedeDi`, `DISEGNI` (carta → pezzo dell'atlante 2D, ormai solo come dato: la carta mostra il modello 3D), `STRUMENTI`, i guasti
   catalogo.js        i pezzi (ora con la `categoria` di ogni pezzo e edificio, `CATEGORIE`; ora anche passerella, ponte e tavolo; i primi due `calpestabile`, con `alzato`: regole.md) — dieci all'inizio:  (campo, recinto, pollaio, stalla, bancarella, bacheca, aiuola, panchina, fontana, pozzo, spaventapasseri) e i dodici
                      edifici unici (fienile, pasticceria = il Pastificio, mongolfiera, mulino, panificio, caseificio, conserviera = la Cucina, gelateria, telaio, zuccherificio, sartoria, tintoria: gli id sono quelli dei salvataggi): prezzi, misure, `liv`, `slot`
@@ -45,6 +47,8 @@ scena3d/             il disegno (vedi scena.md); `facce.js` la faccia di una mer
   scena3d/modelli-acqua.js      lo stagno (3×3) e il laghetto (5×4) costruiti dal bambino, e i materiali dell'acqua (`materialeAcqua`, `materialeMare`, `uTAcqua`) che usa anche il terreno ([laghi.md](laghi.md))
   scena3d/modelli-pesca.js      il molo (3×1 e 1×3) e il porticciolo (4×3, la barca dondola); friggitoria e sushi bar stanno in `modelli-macchine.js` ([geografia-e-pesca.md](geografia-e-pesca.md))
   scena3d/pesci.js              i pesciolini: una `InstancedMesh` sola, tutta nello shader (`uTPesci`), nell'acqua dei laghi, del mare e degli stagni
+  scena3d/stagione.js           le feste in scena: cielo e luci tinti, i fiocchi (un `Points`), chiazze, stelle, alberelli e lucine a istanze; `via()` rimette tutto ([stagioni.md](stagioni.md))
+  scena3d/modelli-feste.js      le zucche di Halloween (`zucca_intagliata`, `zucche_mucchio`)
   scena3d/pesca3d.js            il galleggiante (tre stadi: calma, attesa, «Abbocca!»), il filo dalla canna, il ritiro da sé se il contadino è lì
 viste/
   Faccia.vue         la faccia di una merce (`k` la chiave, `n` il numerino): il pezzo dell'atlante 2D con `Provino.vue`, l'emoji come ripiego; la usano inventario, banco, macchina, semi, livelli, visita
@@ -87,6 +91,7 @@ Registrazione: `src/giochi/indice.js` (il manifesto, in coda) e `src/giochi/sche
 | `[data-f3="semi"]`, `[data-seme="carota"]` | la scelta del seme |
 | `[data-f3="costruisci-qui"]`, `[data-f3="costruisci-velo"]`, `[data-scheda="campi"]`, `[data-carta="campo"]` | il foglio «Costruisci qui» (si apre con `premuto` ~0,45 s su un posto libero, o col tasto 🏗️), il velo che si tocca per chiuderlo, una scheda (`campi`, `animali`, `edifici`, `decori`, `passaggi`; `.acceso`) e una carta (anche `strada` e `gomma`; `data-cat` la scheda) |
 | `[data-f3="costruisci-msg"]`, `[data-carta].trema` | la riga sotto le carte (livello che manca, «Servono 🪙 N») e la carta chiusa che trema |
+| `[data-f3="ruota"]` (con `data-rot`) | il tasto ↻ mentre un pezzo ruotabile è in mano: gira di un quarto ([rotazione.md](rotazione.md)) |
 | `[data-f3="zona-via"]` | la fascia in basso mentre un pezzo è sollevato o il fantasma aspetta un posto (toccarla annulla il fantasma) |
 | `[data-f3="barra-strade"]`, `[data-strumento="strada"]`, `[data-f3="strade-fatto"]` | la barra del pennello |
 | `[data-f3="dialogo"]`, `[data-scelta="0"]` | la conferma (solo i lotti di terreno); la prima scelta è «Compra · 🪙 N» |

@@ -990,6 +990,110 @@ controlla('il pollaio con le bestie non si mette via', via.ok === false && via.m
   }
 }
 
+/* ── ruotare: tenuto premuto un pezzo, il tasto ↻ con un secondo dito lo gira di un quarto; rilasciato resta girato (docs/fattoria3d/rotazione.md) ── */
+{
+  const { page, errori } = await apriGioco(browser)
+  await azzera(page)
+  await semina(page, { coins: 600, settings: { eta: 8, sperimentali: true } })
+  await scegli(page, 'fattoria3d')
+  await page.waitForFunction(() => !!(window.__fattoria3d && window.__fattoria3d.mondo), null, { timeout: 15000 })
+  await attendi(page, 1200)
+  const cdp = await page.context().newCDPSession(page)
+  const giu = (x, y) => cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y }] })
+  const su = () => cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
+  const schermoDi = (x, z) => page.evaluate(([x, z]) => {
+    const { mondo } = window.__fattoria3d, r = mondo.canvas.getBoundingClientRect(), [px, py] = mondo.proietta({ x, y: 0, z })
+    return [r.left + px, r.top + py]
+  }, [x, z])
+  const stato = () => page.evaluate(() => JSON.parse(JSON.stringify(window.__fattoria3d.motore.s)))
+  const monete = () => page.evaluate(() => window.__fattoria3d.motore.monete())
+  await page.evaluate(() => { const { motore } = window.__fattoria3d; motore.s.esperienza = 1e6 })          // il tavolo è del livello 4
+  const pan = await page.evaluate(() => {
+    const { motore, mondo } = window.__fattoria3d, r = mondo.canvas.getBoundingClientRect(), buoni = []
+    for (let i = -14; i < 13; i++) for (let j = -12; j < 11; j++) {
+      // un tavolo (3×2) che ci sta dritto e girato (2×3) col centro fermo, a metà schermo (fuori dalla fascia che scorre) e lontano dall'eroe
+      if (!motore.puoMettere('tavolo', i, j).ok || !motore.puoMettere('tavolo', i + 1, j - 1, 0, 1).ok) continue
+      const [px, py, v] = mondo.proietta({ x: i + 1.5, y: 0, z: j + 1 })
+      if (v && px > 110 && px < r.width - 110 && py > 200 && py < r.height - 300) buoni.push({ i, j, d: Math.hypot(i - mondo.eroe.x, j - mondo.eroe.z) })
+    }
+    buoni.sort((a, b) => b.d - a.d)
+    const q = buoni[0]; if (!q) return null
+    const c = motore.compraEMetti('tavolo', q.i, q.j); mondo.cambiato(); return { id: c.cosa.id, i: q.i, j: q.j }
+  })
+  controlla('c\'è un posto per un tavolo che gira', !!pan)
+  const centro = await schermoDi(pan.i + 1.5, pan.j + 1)
+  const M1 = await monete()
+  await giu(centro[0], centro[1])
+  await attendi(page, 700)                                              // la pressione lunga solleva il pezzo
+  controlla('tenuto premuto il tavolo mostra il tasto ↻', await page.locator('[data-f3="ruota"]').count() === 1 && await page.locator('[data-f3="ruota"]').getAttribute('data-rot') === '0')
+  await scatto(page, 'fattoria3d-ruota')
+  const bt = await page.locator('[data-f3="ruota"]').boundingBox()
+  // il secondo dito tocca il tasto mentre il primo tiene il pezzo
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: centro[0], y: centro[1], id: 0 }, { x: bt.x + bt.width / 2, y: bt.y + bt.height / 2, id: 1 }] })
+  await attendi(page, 150)
+  uguale('il tasto ha girato il pezzo in mano', await page.locator('[data-f3="ruota"]').getAttribute('data-rot'), '1')
+  await su()                                                             // tutti i diti su: il pezzo si rilascia dov'è
+  await attendi(page, 300)
+  const t = (await stato()).cose.find(c => c.id === pan.id)
+  uguale('rilasciato, il tavolo resta girato nello stato', t.rot, 1)
+  const ing = await page.evaluate(id => { const m = window.__fattoria3d.motore, c = m.cosa(id), d = m.misureCosa(c); return [d.w, d.d] }, pan.id)
+  stessaLista('e occupa 2×3', ing, [2, 3])
+  uguale('girare è costato una moneta', M1 - await monete(), 1)
+  const rotScena = await page.evaluate(id => Math.round(window.__fattoria3d.mondo.pezzi.voce(id).grp.rotation.y * 1000), pan.id)
+  uguale('e il modello è girato di un quarto', rotScena, Math.round(Math.PI / 2 * 1000))
+  controlla('il tasto sparisce a dito alzato', await page.locator('[data-f3="ruota"]').count() === 0)
+  await page.evaluate(id => { const { motore, mondo } = window.__fattoria3d; motore.mettiVia(id, { gratis: true, forza: true }); mondo.cambiato() }, pan.id)
+  controlla('nessun errore in console girando', errori.length === 0, errori.join(' · '))
+  await page.context().close().catch(() => {})
+}
+
+/* ── le stagioni: #stagione=natale accende cielo, neve e lucine con pochi disegni in più; Halloween offre le zucche ── */
+{
+  const { page: festa, errori: erroriFesta } = await apriGioco(browser)
+  await azzera(festa)
+  await semina(festa, { coins: 300, settings: { eta: 8, sperimentali: true } })
+  await festa.evaluate(() => { location.hash = 'fattoria3d&stagione=natale'; location.reload() })
+  await festa.waitForFunction(() => !!(window.__fattoria3d && window.__fattoria3d.mondo), null, { timeout: 20000 })
+  await attendi(festa, 1500)
+  const n = await festa.evaluate(() => {
+    const { mondo } = window.__fattoria3d, st = mondo.stagione, s = mondo.statistiche()
+    return { nome: st && st.nome, chiazze: st && st.chiazze.count, fiocchi: !!(st && st.punti && st.punti.visible), calls: s.calls, tri: s.triangoli, cielo: mondo.scena.background.getHex() }
+  })
+  uguale('a Natale la scena lo sa', n.nome, 'natale')
+  controlla('ci sono la neve sul prato e i fiocchi', n.chiazze > 5 && n.fiocchi)
+  uguale('il cielo è quello di Natale', n.cielo, 0xdbe6f0)
+  await scatto(festa, 'fattoria3d-natale')
+  // le draw call della festa: lo stesso fotogramma disegnato con la festa accesa e spenta (renderer.info si azzera a ogni render)
+  const conti = await festa.evaluate(() => {
+    const { mondo } = window.__fattoria3d, st = mondo.stagione, r = mondo.renderer, chiama = () => { r.info.autoReset = true; r.render(mondo.scena, mondo.camera.cam); return r.info.render.calls }
+    const con = chiama(); st.gruppo.visible = false; st.punti.visible = false
+    const senza = chiama(); st.gruppo.visible = true; st.punti.visible = true
+    return { con, senza }
+  })
+  controlla('Natale costa pochi disegni in più (≤ 8 draw call)', conti.con - conti.senza <= 8 && conti.con > conti.senza, `${conti.con} contro ${conti.senza}`)
+  controlla('nessun errore in console a Natale', erroriFesta.length === 0, erroriFesta.join(' · '))
+  await festa.context().close().catch(() => {})
+  const { page: zuc, errori: erroriZuc } = await apriGioco(browser)
+  await azzera(zuc)
+  await semina(zuc, { coins: 300, settings: { eta: 8, sperimentali: true } })
+  await zuc.evaluate(() => { location.hash = 'fattoria3d&stagione=halloween'; location.reload() })
+  await zuc.waitForFunction(() => !!(window.__fattoria3d && window.__fattoria3d.mondo), null, { timeout: 20000 })
+  await attendi(zuc, 1200)
+  const h = await zuc.evaluate(() => { const { mondo } = window.__fattoria3d; return { nome: mondo.stagione && mondo.stagione.nome, cielo: mondo.scena.background.getHex() } })
+  uguale('a Halloween la scena lo sa', h.nome, 'halloween')
+  await zuc.evaluate(() => { const { motore, mondo } = window.__fattoria3d; motore.s.esperienza = 1e6; for (let j = -3; j < 8; j++) for (let i = -7; i < 5; i++) if (motore.puoMettere('zucche_mucchio', i, j).ok && motore.puoMettere('zucca_intagliata', i + 3, j).ok && Math.abs(i) < 3 && j > 1) { motore.compraEMetti('zucche_mucchio', i, j); motore.compraEMetti('zucca_intagliata', i + 3, j); mondo.cambiato(); return } })
+  await attendi(zuc, 500)
+  await scatto(zuc, 'fattoria3d-halloween')
+  await zuc.locator('[data-f3="az-costruisci"]').click()
+  await attendi(zuc, 600)
+  await zuc.locator('[data-scheda="decori"]').click().catch(() => {})
+  await attendi(zuc, 300)
+  controlla('e nel menu dei decori ci sono le zucche', await zuc.locator('[data-carta="zucca_intagliata"]').count() === 1 && await zuc.locator('[data-carta="zucche_mucchio"]').count() === 1)
+  await scatto(zuc, 'fattoria3d-halloween-menu')
+  controlla('nessun errore in console a Halloween', erroriZuc.length === 0, erroriZuc.join(' · '))
+  await zuc.context().close().catch(() => {})
+}
+
 /* ── senza WebGL 2 si dice e si torna in home ── */
 const { page: senza } = await apriGioco(browser, { hash: 'fattoria3d&tela=niente', attesa: null })
 await senza.waitForSelector('[data-senza-3d]', { timeout: 8000 })
