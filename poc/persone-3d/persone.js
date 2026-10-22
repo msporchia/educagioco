@@ -8,7 +8,7 @@
 import * as THREE from 'three'
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js'
 
-export const CHIAVI = ['armaiolo', 'incantatrice', 'erborista', 'rigattiere', 'minatore', 'capitano', 'ragazza', 'eremita', 'guardia', 'boscaiolo', 'pescatore', 'mugnaio']
+export const CHIAVI = ['armaiolo', 'incantatrice', 'erborista', 'rigattiere', 'minatore', 'capitano', 'ragazza', 'eremita', 'guardia', 'boscaiolo', 'pescatore', 'mugnaio', 'cacciatrice', 'carovaniere']
 
 // ── mattoncini ──
 const cacheMat = new Map()
@@ -145,7 +145,9 @@ const FACCE = {
   guardia: { pelle: '#e6b896', iride: '#5a4630', occX: 45, occY: 86, rx: 11, ry: 12, palp: 0.38, ceja: '#4a3020', cejaS: 9, cejaOut: -26, cejaIn: -20, bocca: 'serio', barbetta: 'rgba(80,60,50,.22)' },
   boscaiolo: { pelle: '#e0a882', iride: '#3a6a3a', occX: 45, occY: 82, rx: 11, ry: 13, palp: 0.25, ceja: '#5a3218', cejaS: 10, bocca: 'nulla', guance: 'rgba(220,90,70,.45)' },
   pescatore: { pelle: '#d49a72', iride: '#3a7a9a', occX: 44, occY: 86, rx: 9, ry: 8, palp: 0.45, ceja: '#9a9a96', cejaS: 8, bocca: 'nulla', rughe: true, barbetta: 'rgba(200,200,200,.4)', naso: 9 },
-  mugnaio: { pelle: '#f2c0a0', iride: '#5a3a22', occX: 45, occY: 80, rx: 11, ry: 13, palp: 0.15, ceja: '#6a4428', cejaS: 8, bocca: 'nulla', guance: 'rgba(240,90,90,.55)', farina: true, ridendo: true }
+  mugnaio: { pelle: '#f2c0a0', iride: '#5a3a22', occX: 45, occY: 80, rx: 11, ry: 13, palp: 0.15, ceja: '#6a4428', cejaS: 8, bocca: 'nulla', guance: 'rgba(240,90,90,.55)', farina: true, ridendo: true },
+  cacciatrice: { pelle: '#e8b894', iride: '#4a7a3a', occX: 45, occY: 84, rx: 11, ry: 12, palp: 0.42, ceja: '#8a3014', cejaS: 6, cejaOut: -24, cejaIn: -30, bocca: 'serio', boccaY: 134, ciglia: true, lentiggini: true },
+  carovaniere: { pelle: '#c98a5e', iride: '#3a2a1a', occX: 44, occY: 84, rx: 10, ry: 11, palp: 0.3, ceja: '#1e1610', cejaS: 11, cejaOut: -30, cejaIn: -24, bocca: 'sorriso', boccaY: 138, rughe: true, naso: 11 }
 }
 
 // ══════════ il corpo comune ══════════
@@ -907,7 +909,126 @@ function mugnaio () {
   })
 }
 
-const COSTRUTTORI = { armaiolo, incantatrice, erborista, rigattiere, minatore, capitano, ragazza, eremita, guardia, boscaiolo, pescatore, mugnaio }
+// La cacciatrice: snella e dritta, giubba di cuoio verde bosco con le frange, la pelle del lupo sulle spalle e sul capo (il muso
+// sulla fronte, le orecchie dritte), la treccia rossa, gli stivali alti; l'arco corto nella sinistra, la faretra sulla schiena. Si
+// porta la destra sopra gli occhi e scruta lontano.
+function cacciatrice () {
+  const PELLE = 0xe8b894, GIUBBA = 0x4a5a2e, GIUBBA_S = 0x36421f, CUOIO = 0x7a5232, CUOIO_S = 0x4a3020, LUPO = 0x8a8984, LUPO_S = 0x5a5955,
+    LUPO_C = 0xd8d4c8, CAPELLI = 0xb0461e, CAPELLI_S = 0x8a3414
+  const g = corpo('cacciatrice', { legH: 0.38, legX: 0.08, legR: 0.055, tw: 0.32, th: 0.3, td: 0.22, basso: 0.9, armX: 0.2, R: 0.23, pelle: PELLE,
+    calzoni: M(0x5a4632), scarpe: M(CUOIO_S), vesti: M(GIUBBA), maniche: M(GIUBBA), avambracci: M(CUOIO), manicaR: 0.048, bot: [0.11, 0.12, 0.19] })
+  const u = g.userData, { busto, testa, gambe, mani, cy, R } = u
+  const gi = M(GIUBBA), gis = M(GIUBBA_S), cu = M(CUOIO), cus = M(CUOIO_S), lu = M(LUPO), lus = M(LUPO_S), ca = M(CAPELLI), cas = M(CAPELLI_S)
+  for (const p of gambe) cil(p, 0.063, 0.059, 0.17, cus, 0, -0.25, 0, 7)                                     // gli stivali alti
+  // la falda della giubba sotto la cintura, con le frange
+  const falda = sway(u, perno(busto, 0, 0.03, 0), 0.02, 0.015, 1.3)
+  cil(falda, 0.165, 0.2, 0.14, gi, 0, -0.07, 0, 9).scale.z = 0.75
+  for (let i = -3; i <= 3; i++) scatola(falda, 0.024, 0.06, 0.012, gis, i * 0.045, -0.16, 0.148)
+  cil(busto, 0.168, 0.172, 0.04, cus, 0, 0.04, 0, 9).scale.z = 0.72                                          // la cintura
+  scatola(busto, 0.04, 0.035, 0.02, metallo(0xc8a050), 0, 0.04, 0.125)
+  scatola(busto, 0.035, 0.44, 0.02, cus, 0.0, 0.17, 0.118).rotation.z = 0.72                                 // la cinghia della faretra
+  // la faretra sulla schiena, con le frecce
+  const far = perno(busto, 0.05, 0.2, -0.14); far.rotation.z = -0.4; far.userData.arnese = true
+  cil(far, 0.055, 0.048, 0.34, cu, 0, 0, 0, 7); cil(far, 0.058, 0.058, 0.03, cus, 0, 0.16, 0, 7)
+  for (const [x, z] of [[-0.022, 0.012], [0.022, -0.01], [0.0, 0.022]]) { cil(far, 0.006, 0.006, 0.14, M(LEGNO), x, 0.22, z, 4); cono(far, 0.02, 0.06, M(0xece8de), x, 0.31, z, 3) }
+  // la pelle del lupo: il manto dietro, il bavero di pelo chiaro, il capo col muso e le orecchie
+  const manto = sway(u, perno(busto, 0, 0.3, -0.09), 0.035, 0.02, 1.1)
+  cil(manto, 0.17, 0.24, 0.44, lu, 0, -0.21, -0.02, 9).scale.z = 0.6
+  cil(busto, 0.19, 0.2, 0.07, lu, 0, 0.27, 0, 9).scale.z = 0.86
+  sfera(busto, 0.07, M(LUPO_C), 0, 0.26, 0.13, 1.7, 0.6, 0.5, 6)
+  pezzo(testa, calotta(0.95, 1.85), M(LUPO, DOPPIO), 0, cy + 0.02, -0.02, R * 1.17, R * 1.12, R * 1.16)
+  sfera(testa, 0.1, lu, 0, cy + R * 0.98, R * 0.45, 1.05, 0.6, 1.35, 7)                                      // il muso del lupo sulla fronte
+  sfera(testa, 0.06, M(LUPO_C), 0, cy + R * 0.86, R * 0.88, 1.1, 0.55, 0.9, 6)
+  sfera(testa, 0.026, M(0x1c1a18), 0, cy + R * 0.98, R * 1.02, 1, 0.8, 1, 5)                                 // il naso del lupo
+  for (const s of [-1, 1]) sfera(testa, 0.018, M(0xd0a020), s * 0.06, cy + R * 1.1, R * 0.62, 1, 1, 1, 4)    // gli occhi del lupo
+  for (const s of [-1, 1]) { const o = cono(testa, 0.055, 0.13, lus, s * R * 0.58, cy + R * 1.18, R * 0.08, 4); o.rotation.z = -s * 0.25 }
+  // i capelli rossi: due ciocche ai lati del viso e la treccia sulla spalla destra
+  for (const s of [-1, 1]) sfera(testa, R * 0.24, ca, s * R * 0.86, cy + R * 0.05, R * 0.38, 0.55, 1.3, 0.8, 6)
+  const treccia = sway(u, perno(testa, -R * 0.75, cy - R * 0.25, R * 0.1), 0.08, 0.05, 1.4)
+  treccia.rotation.set(0.15, 0, -0.15)
+  ;[0, 1, 2].forEach(i => sfera(treccia, 0.05 - i * 0.006, i % 2 ? cas : ca, 0, -0.04 - i * 0.07, 0.04 * i, 1, 1.2, 1, 6))
+  scatola(treccia, 0.05, 0.03, 0.03, cus, 0, -0.22, 0.09)
+  sfera(testa, 0.05, M(0xd89a78), 0, cy - R * 0.1, R * 0.98, 1, 0.9, 1)                                      // il naso
+  // l'arco corto nella sinistra, dritto, con la corda
+  const arco = perno(mani[0], 0, 0, 0.02); arco.userData.arnese = true
+  pezzo(arco, G('arcoCaccia', () => new THREE.TorusGeometry(0.34, 0.016, 4, 12, Math.PI * 0.86)), M(LEGNO_S), 0.12, 0, 0).rotation.z = Math.PI / 2 + Math.PI * 0.07
+  cil(arco, 0.024, 0.024, 0.08, cus, 0, 0, 0, 6)
+  cil(arco, 0.003, 0.003, 0.66, M(0xe8e4d8), 0.21, 0, 0, 3)
+  return finisci(g, {
+    fase: 1.1, P: 7.8, D: 2.6, off: 0.9, mano: 1, sguardo: 0.9,
+    posa (u, tt, ge) {
+      const [bs, bd] = u.bracci, [gs, gd] = u.gomiti, [ms] = u.mani
+      bs.rotation.set(-0.12, 0, -0.16); gs.rotation.set(-0.35 + 0.03 * Math.sin(tt * 1.2), 0, 0); ms.rotation.set(0, 0.0, 0)   // l'arco giù al fianco
+      bd.rotation.set(0.02, 0, 0.12); gd.rotation.set(-0.25, 0, 0)
+      if (ge.k >= 0) {                                                                                     // la mano sopra gli occhi, e guarda lontano
+        const su = smussa(lim(ge.k / 0.18)) * (1 - smussa(lim((ge.k - 0.82) / 0.18))), giro = Math.sin(ge.k * Math.PI * 2)
+        bd.rotation.set(mescola(0.02, -1.25, su), mescola(0, -0.45, su), mescola(0.12, -0.2, su)); gd.rotation.set(mescola(-0.25, -2.2, su), 0, mescola(0, -0.6, su))
+        u.testa.rotation.x = mescola(u.testa.rotation.x, -0.12, su); u.testa.rotation.y = mescola(u.testa.rotation.y, 0.4 * giro, su)
+        u.busto.rotation.y = 0.12 * giro * su
+      }
+    }
+  })
+}
+
+// Il carovaniere: largo e scuro di sole, il turbante ocra avvolto col lembo che pende, la barba nera folta, lo spolverino rosso
+// mattone fino ai polpacci sopra il panciotto, la fascia in vita con la frusta arrotolata; nella destra il bastone col lume, nella
+// sinistra la carta delle strade. Ogni tanto la apre e la guarda.
+function carovaniere () {
+  const PELLE = 0xc98a5e, MANTO = 0x9a3a28, MANTO_S = 0x6e2818, PANC = 0x3a4a6a, FASCIA = 0xd8a030, TURB = 0xd8b060, TURB_S = 0xb08a40, BARBA = 0x1e1610
+  const g = corpo('carovaniere', { legH: 0.32, legX: 0.11, legR: 0.075, tw: 0.44, th: 0.32, td: 0.32, basso: 0.95, armX: 0.28, R: 0.24, pelle: PELLE,
+    calzoni: M(0x6a5a44), scarpe: M(0x3a2618), vesti: M(PANC), maniche: M(MANTO), avambracci: M(MANTO), manicaR: 0.07, bot: [0.15, 0.11, 0.23] })
+  const u = g.userData, { busto, testa, mani, cy, R } = u
+  const ma = M(MANTO), mas = M(MANTO_S), tu = M(TURB), tus = M(TURB_S)
+  // lo spolverino: aperto davanti, dalle spalle fin sotto il ginocchio
+  const manto = sway(u, perno(busto, 0, 0.3, 0), 0.025, 0.015, 1.0)
+  pezzo(manto, arcoGeo(0.23, 0.32, 0.62, 2.45), M(MANTO, DOPPIO), 0, -0.3, -0.01, 1, 1, 0.82)
+  cil(busto, 0.235, 0.25, 0.09, ma, 0, 0.27, 0, 9).scale.z = 0.85                                           // le spalle
+  for (const s of [-1, 1]) scatola(busto, 0.06, 0.3, 0.02, mas, s * 0.1, 0.14, 0.16).rotation.y = s * 0.2    // i risvolti
+  for (const gm of u.gomiti) cil(gm, 0.08, 0.08, 0.05, mas, 0, -0.12, 0, 7)                                  // i polsini
+  // la fascia in vita e la frusta arrotolata al fianco
+  cil(busto, 0.232, 0.236, 0.07, M(FASCIA), 0, 0.05, 0, 9).scale.z = 0.8
+  const frusta = toro(busto, 0.07, 0.014, M(0x4a2e1a), -0.22, 0.0, 0.05, 10); frusta.rotation.y = Math.PI / 2
+  cil(busto, 0.016, 0.018, 0.12, M(0x6a4a2a), -0.23, 0.06, 0.08, 5)
+  // la testa: il turbante a giri, il lembo che pende, la barba folta
+  const tur = perno(testa, 0, cy + R * 0.42, -0.01)
+  cil(tur, R * 1.1, R * 1.06, 0.12, tu, 0, 0, 0, 10)
+  toro(tur, R * 1.0, 0.035, tus, 0, 0.05, 0, 10).rotation.x = Math.PI / 2
+  sfera(tur, R * 0.95, tu, 0, 0.07, 0, 1, 0.55, 1, 9)
+  sfera(tur, 0.04, M(0x2a8a6a), 0, 0.02, R * 1.08, 1, 1, 0.6, 5)                                              // la pietra sul davanti
+  const lembo = sway(u, perno(tur, R * 0.75, -0.02, -R * 0.55), 0.08, 0.05, 1.5)
+  scatola(lembo, 0.08, 0.3, 0.025, tus, 0, -0.15, 0).rotation.x = 0.15
+  barba(u, M(BARBA), M(0x2a2018), { lung: 0.2, larga: 1.12 })
+  sfera(testa, 0.07, M(0xb87a52), 0, cy - R * 0.12, R * 0.98, 1.1, 1.0, 1.15)
+  // il bastone col lume nella destra
+  const bas = perno(mani[1], 0, 0, 0); bas.userData.arnese = true
+  cil(bas, 0.02, 0.024, 1.2, M(LEGNO_S), 0, 0.22, 0, 6)
+  cil(bas, 0.006, 0.006, 0.14, metallo(0x3a3a3a), 0.07, 0.75, 0, 3).rotation.z = Math.PI / 2
+  const lant = sway(u, perno(bas, 0.13, 0.72, 0), 0.12, 0.1, 1.8)
+  scatola(lant, 0.07, 0.09, 0.07, metallo(0x3a3a3a), 0, -0.08, 0); cono(lant, 0.055, 0.05, metallo(0x3a3a3a), 0, -0.01, 0, 4)
+  scatola(lant, 0.052, 0.064, 0.075, luce(0xffc860, 0.9), 0, -0.08, 0)
+  // la carta delle strade nella sinistra: arrotolata, si apre nel gesto
+  const carta = perno(mani[0], 0, -0.02, 0.06)
+  const rotolo = cil(carta, 0.03, 0.03, 0.22, M(0xe8d8a8), 0, 0, 0, 6); rotolo.rotation.z = Math.PI / 2
+  const foglio = perno(carta, 0.1, 0.06, 0.03); scatola(foglio, 0.26, 0.2, 0.01, M(0xeadcae))
+  return finisci(g, {
+    fase: 2.6, P: 7.4, D: 2.8, off: 1.7, mano: 1, sguardo: 0.7,
+    posa (u, tt, ge) {
+      const [bs, bd] = u.bracci, [gs, gd] = u.gomiti, [ms, md] = u.mani
+      bd.rotation.set(-0.1, 0, 0.34); gd.rotation.set(-1.05, 0, 0); md.rotation.set(1.15, 0, -0.32)       // il bastone a terra, il lume di lato
+      bs.rotation.set(-0.1, 0, -0.12); gs.rotation.set(-0.5 + 0.03 * Math.sin(tt * 1.1), 0, 0); ms.rotation.set(0, 0, 0)
+      foglio.scale.set(1e-4, 1e-4, 1e-4)                                                                    // nella pelle: si nasconde scalando
+      if (ge.k >= 0) {                                                                                     // apre la carta davanti e la legge
+        const su = smussa(lim(ge.k / 0.2)) * (1 - smussa(lim((ge.k - 0.8) / 0.2)))
+        bs.rotation.set(mescola(-0.1, -0.85, su), mescola(0, 0.35, su), mescola(-0.12, -0.05, su)); gs.rotation.set(mescola(-0.5, -1.0, su), 0, mescola(0, 0.4, su))
+        ms.rotation.set(mescola(0, -0.4, su), 0, 0)
+        const aperta = su > 0.5 ? 1 : 1e-4; foglio.scale.set(aperta, aperta, aperta)
+        u.testa.rotation.x = mescola(u.testa.rotation.x, 0.32, su); u.testa.rotation.y *= 1 - su
+      }
+    }
+  })
+}
+
+const COSTRUTTORI = { armaiolo, incantatrice, erborista, rigattiere, minatore, capitano, ragazza, eremita, guardia, boscaiolo, pescatore, mugnaio, cacciatrice, carovaniere }
 export function creaPersona (chiave) {
   const c = COSTRUTTORI[chiave]
   if (!c) throw new Error(`persona sconosciuta: ${chiave}`)
