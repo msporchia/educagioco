@@ -54,7 +54,7 @@ import { Group, Mesh, MeshStandardMaterial, MeshBasicMaterial, CircleGeometry, O
 import { U } from '../../../src/giochi/sotterraneo/scena3d/mondo/vesti.js'
 import { creaTrame } from '../../../src/giochi/sotterraneo/scena3d/mondo/trame.js'
 import { materialiDelKit, Cantiere, casa, bottega, pozzo, mulino, tetto } from '../../../src/giochi/sotterraneo/scena3d/mondo/kit.js'
-import { ponte, staccionate, cartello, bacheca, campoMinatore } from '../../../src/giochi/sotterraneo/scena3d/mondo/ponti.js'
+import { ponte, staccionate, cartello, bacheca, campoMinatore, creaScavo } from '../../../src/giochi/sotterraneo/scena3d/mondo/ponti.js'
 import { creaMonumento, creaPietra, creaPortale as creaPortaleDiSopra, creaPortaDelleTerre } from '../../../src/giochi/sotterraneo/scena3d/mondo/monumenti.js'
 import { fontana as fontanaDellaPiazza } from '../../../src/giochi/sotterraneo/scena3d/mondo/fontana.js'
 import { MODELLI } from '../../../src/giochi/sotterraneo/scena3d/mondo/props-modelli.js'
@@ -191,6 +191,9 @@ const VOCI_KIT = [
   { id: 'sot:kit:campo-minatore', nome: 'Campo del minatore', categoria: 'edificio', file: MONDO + 'ponti.js:campoMinatore',
     crea: () => pezzo(({ cant, m, cose }) => campoMinatore({ tenda: { x: 0, y: 0 } }, cant, m, cose), { centro: [2, 1.5] }),
     dove: 'In mezzo alla fila del villaggio, dove sta il vecchio minatore: la tenda, il carretto col minerale e il falò' },
+  { id: 'sot:kit:scavo', nome: 'La X della mappa del tesoro', categoria: 'prop', file: MONDO + 'ponti.js:creaScavo',
+    crea: () => creaScavo(contesto().kit).g,
+    dove: 'Sul prato, solo con una taglia «mappa» in mano: la terra smossa con le due assi rosse a croce e la pala, dove si scava' },
 ]
 
 /* ═══════════════════ i monumenti (monumenti.js): i dungeon, la pietra, il portale, la porta delle terre ═══════════════════ */

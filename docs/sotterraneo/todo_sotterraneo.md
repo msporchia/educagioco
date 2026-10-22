@@ -19,17 +19,26 @@ rimasti aperti. Quando una voce si chiude si toglie da qui (la storia sta in `gi
 - **La torcia nel dungeon** (quasi chiuso, `corsa.js:264`): nello screenshot di Marco (torre, piano 3 di 3) si vede un cerchio di ~3 celle:
   è lo stato «senza torcia accesa» (`RAGGIO` 3,2; con la torcia `RAGGIO_TORCIA` 9,5), non un difetto dell'eroe 3D. Da confermare con Marco se la
   torcia era spenta o finita (`torciaResta` 0). Sopra, nel mondo, la torcia non fa niente (è sempre giorno): decidere se deve servire.
-- **Le quest**: restano le quest scritte a mano nelle zone, scorta ed eventi; cacciatrice e carovaniere come persone nuove; la X e il
-  viandante non hanno un disegno 3D (sono segni sul prato); «vai alla pietra» dal diario; la freccia sulla strada vera e non in linea
-  d'aria; tarare le basi delle taglie (`BASI`, tetto 40 gemme) e quanto guadagna chi le fa tutte.
-- **I dungeon che si rigenerano** ([dungeon-che-si-rigenerano.md](dungeon-che-si-rigenerano.md)): la prima volta delle sette porte nel
-  3D non usa ancora i livelli della zona (`STORIA_DALLA_ZONA` spento, 4/8/10/12 invece di 3/7/8/10); la cava (13) esce più tenera
-  delle miniere (12); i nomi dei sei boss nuovi sono scelti (Roccaverde, Piumanera, Sibilla, Vulcanor, Gelomagno, Falcenera; le chiavi nei dati restano quelle di prima, sono salvataggi); i
-  pezzi col nome dei boss non hanno ancora una figura ritagliata (puntano a un aspetto dei fogli già esistente).
+- **Le quest**: restano le quest scritte a mano nelle zone, scorta ed eventi. La cacciatrice e il carovaniere hanno il modello 3D ma
+  non stanno nel mondo: dove metterli (il forte e il rifugio non ci sono più; in `PERSONE` cambia la firma del mondo) e cosa chiedono
+  (quest scritte a mano) è da decidere ([mondo-aperto-quest.md](mondo-aperto-quest.md#chi-le-dà)). Le basi delle taglie (`BASI`,
+  tetto 40 gemme) e quanto guadagna chi le fa tutte stanno nella taratura, sotto.
+- **I dungeon che si rigenerano** ([dungeon-che-si-rigenerano.md](dungeon-che-si-rigenerano.md)): la cava (13) esce più tenera delle
+  miniere (12); i nomi dei sei boss nuovi sono scelti (Roccaverde, Piumanera, Sibilla, Vulcanor, Gelomagno, Falcenera; le chiavi nei
+  dati restano quelle di prima, sono salvataggi).
 - **Abitanti da dipingere**: orso, corvo, avvoltoio, brigante, lupo capobranco e gli altri; oggi sono specie del catalogo scelte per
   habitat ([mondo-aperto-mostri.md](mondo-aperto-mostri.md)).
-- **La pergamena del portale** ([da-fare.md](da-fare.md)): sprite disegnato, casella nella barra, banco, abisso «dall'inizio del
-  tratto».
+- **La pergamena del portale** ([da-fare.md](da-fare.md)): il modello 3D c'è (`poc/roba-3d/pozioni.js`); il resto è fermo, ognuno per
+  una ragione (22 ottobre):
+  - *lo sprite 2D*: nel foglio `scudi.png` ci sono pergamene non ritagliate, ma lo sprite si dichiara in `dati/cose.js`, che era in
+    mano allo slot dell'elmo; si fa dopo, con una riga nel foglietto e `atlante.py`;
+  - *la casella nella barra*: non c'è (si apre dallo zaino). Sei caselle invece di cinque scendono da ~42 a ~34 px a 390 di larghezza
+    (~31 a 360), e la barra vuole caselle tutte uguali ([barra.md](barra.md)); la torcia ne è già uscita perché «non così utile». Da
+    decidere con Marco: la sesta casella, o una che cede il posto (💎 apre lo stesso zaino della bisaccia);
+  - *il banco*: nessun documento dice quando un giocatore tipo la compra e la apre ([risalite.md](risalite.md) usa solo il portale
+    fisso), e serve alla taratura, che è rimandata;
+  - *l'abisso «dall'inizio del tratto»*: la regola non è scritta (ripartire dal primo piano del tratto o dal piano lasciato, con quale
+    sosta); oggi la pergamena là è «torno su per stasera» e si riprende come dopo la risalita ([portale-e-sosta.md](portale-e-sosta.md)).
 - **L'icona del villaggio** (`ICONE_MONDO.villaggio`, generata): nessuna schermata la chiede (`iconaDi` la dà solo se qualcuno passa
   `'villaggio'`, e oggi nessuno lo fa; le 14 icone dei dungeon invece servono al Diario e alla carta di ripresa). Si tiene: quando le città
   saranno più d'una ci vorrà.
@@ -39,8 +48,11 @@ rimasti aperti. Quando una voce si chiude si toglie da qui (la storia sta in `gi
 - **Il mercante a cui vendere non si trovava** (Marco, dopo il villaggio nuovo): il rigattiere e l'erborista avevano il `piede` sulla riga di
   dietro del loro lotto, e dal sud la tenda della bottega li copriva (`data-vis=1` ma invisibili). Portati sul fronte della piazza
   ((15,7) e (7,8) in `dati/mondo-aperto.js`, 21 ottobre): da riguardare sul telefono.
-- **Rigattiere e armaiolo**: sono stati spostati dal ridisegno del villaggio: controllare che la bottega si apra ancora col dito vero
-  (`sotterraneo-bottega-avanti` è instabile da prima).
+- **I ritratti 3D nel mondo** (22 ottobre): in `integrazione/sotterraneo-mondo` il ritratto del dialogo e quello della bottega non
+  arrivano, e `__anteprime3d.stato()` dice `rotto: true` (il contesto WebGL delle anteprime perso, `webglcontextlost`) con la macchina
+  carica (load 20–25); nelle discese (`-elmo`) le anteprime vanno. Da rilanciare a macchina libera; se resta rosso, guardare chi perde il
+  contesto quando il mondo e le anteprime ne tengono due. Nello stesso test la palude è passata da 154 a 191 chiamate (soglia 200)
+  dopo il merge di `main` del 22 ottobre: da guardare prima che la soglia scatti.
 - **Fumetto del portale**: `TypeError charAt` su `f.nome` mancante quando la sosta si svuota («torno giù»): corretto con `minuscolo`
   tollerante (21 ottobre); non riprodotto nel browser, solo dedotto dal file pubblicato. Se ricompare, incollare l'errore.
 - **Test del browser lenti sotto carico**: `sotterraneo-mondo`, `-bacheca`, `-mostri-sopra`, `-mondo-meta` vanno in timeout con la macchina
@@ -62,6 +74,9 @@ rimasti aperti. Quando una voce si chiude si toglie da qui (la storia sta in `gi
 - Svenimenti per strada nel mondo a percorso, a 9/10 di risposte giuste: cantine 94%, tana dei ragni 25%, miniere 19%, sale allagate
   16% (bersaglio ≤ 10% e vita all'ingresso ≥ 60%); dalle tane 50–100%, fino a 56 domande. Leve: `cellePerBranco` per zona, la
   cintura di sicurezza fino alle cantine, i prati a 1–2 invece di 1–3, `SOPRA.fraBranchi` (ora 14), `SOPRA.dalloTana`.
+- **`STORIA_DALLA_ZONA`** (in `dati/dungeon-del-mondo.js`, spento): la prima volta delle sette porte nel 3D ai livelli dei dungeon
+  (4/8/10/12 invece di 3/7/8/10 per torre, sale allagate, porta dell'inferno, miniere). Cambia livelli, forza e domande della storia:
+  si accende con la taratura, non prima.
 - Il signore del cimitero stende quasi sempre l'eroe nudo di livello 1 che ci va prima della cripta (91–100%).
 - Le risalite col portale gemello, la torcia (a 4/10 il curioso vince il fondo 4 volte su 6), il bottino delle botti, la pergamena, le
   basi delle taglie, `PIU_FORTE` dei dungeon. → [giocatori-tipo.md](giocatori-tipo.md), `npm run taratura`.

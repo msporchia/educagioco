@@ -6,6 +6,9 @@ import { CAMPAGNA } from '../../src/giochi/sotterraneo/dati/campagna.js'
 import { GROSSI, GROSSO_DELLA_DISCESA, figuraDelGrosso, guastiDeiGrossi, grossoDi } from '../../src/giochi/sotterraneo/dati/grossi.js'
 import { DEI_GROSSI } from '../../src/giochi/sotterraneo/dati/pezzi.js'
 import { COSE } from '../../src/giochi/sotterraneo/dati/cose.js'
+import { PEZZI } from '../../src/giochi/sotterraneo/dati/atlante.js'
+import { ASPETTI } from '../../src/giochi/sotterraneo/dati/aspetti.js'
+import { SPRITE_FIGURA } from '../../src/giochi/sotterraneo/dati/figure3d.js'
 import { MOSTRI } from '../../src/giochi/sotterraneo/dati/mostri.js'
 import { DUNGEON_NUOVI, LIVELLO_DEL_DUNGEON, ZONE_DEL_PERCORSO, zonaDelDungeon, livelloDelDungeon, SALTO_DELLA_TERRA, PIANI_DEI_NUOVI }
   from '../../src/giochi/sotterraneo/dati/dungeon-del-mondo.js'
@@ -45,7 +48,10 @@ const firma = c => c.livello.robe.map(r => `${r.che}:${r.x},${r.y}:${r.tipo || '
     controlla(`${k}: il grosso veste una creatura del catalogo, ingrandita`, !!g.figura && !!MOSTRI[g.figura] && !!figuraDelGrosso(GROSSO_DELLA_DISCESA[k]))
     const p = DEI_GROSSI[g.pezzo]
     controlla(`${k}: il suo pezzo col nome c'è, e lo porta chiunque`, !!p && !COSE[p.base].famiglia)
-    controlla(`${k}: il pezzo ha una figura dei fogli`, !!p.figura)
+    // la figura chiamata come lui, ritagliata dai fogli e tolta dagli aspetti: non la veste nessun altro pezzo (docs/sotterraneo/figure.md)
+    controlla(`${k}: il pezzo ha la sua figura nell'atlante`, !p.figura && !!PEZZI[g.pezzo], g.pezzo)
+    controlla(`${k}: e nessun pezzo trovato ce l'ha`, !Object.values(ASPETTI).flat().some(a => a.sprite === g.pezzo || a.sprite === SPRITE_FIGURA[g.pezzo]))
+    controlla(`${k}: il 3D sa da quale figura dei fogli viene`, !!SPRITE_FIGURA[g.pezzo], g.pezzo)
     const t = tappaDelMondo(k, { eroe: 'mago' })
     uguale(`${k}: tre piani`, t.piani, PIANI_DEI_NUOVI)
     uguale(`${k}: il grosso in fondo`, grossoDi(t, t.piani - 1), GROSSO_DELLA_DISCESA[k])

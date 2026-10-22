@@ -1,8 +1,8 @@
 // Il resto del kit del mondo di sopra: i ponti dei confini fra le zone (arco di pietra, travi, passerella di corde: nessuna grata,
 // si passa sempre), le staccionate dei campi, il cartello e la bacheca del villaggio, il campo del minatore. Le parti ferme nel
 // cantiere (kit.js), quelle che si muovono a parte. Dal prototipo poc/mondo-sopra/kit.js.
-import { Shape, Path, ExtrudeGeometry, DodecahedronGeometry, OctahedronGeometry, SphereGeometry } from 'three'
-import { scatola, cilindro, triangolo, COLORI } from './kit.js'
+import { Shape, Path, ExtrudeGeometry, DodecahedronGeometry, OctahedronGeometry, SphereGeometry, Group } from 'three'
+import { scatola, cilindro, triangolo, COLORI, Cantiere } from './kit.js'
 import { quotaTerreno, LIVELLO_ACQUA, pontiDi } from './suolo.js'
 
 // ── i ponti: si costruiscono lungo la x locale e si girano verso sud quando il fiume corre da ovest a est ──
@@ -89,6 +89,25 @@ export function bacheca(b, cant, m) {
   cant.metti('legno', scatola(1.7, 1.0, 0.08, 1), 0, 1.25, 0.04, [0.6, 0.45, 0.3])
   for (const s of [-1, 1]) cant.metti('tegole', scatola(2.0, 0.05, 0.42, 1.4), 0, 1.95 + 0.06, s * 0.15, [0.55, 0.32, 0.26], { rx: s * 0.5 })
   for (const [dx, dy, r] of [[-0.42, 1.32, 0.08], [0.36, 1.18, -0.06]]) cant.metti('liscio', scatola(0.42, 0.52, 0.02), dx, dy, 0.1, [0.94, 0.9, 0.78], { rz: r })
+}
+
+// ── la X della mappa del tesoro (le taglie «mappa»): un mucchietto di terra smossa con due assi rosse inchiodate a croce, la pala
+// piantata accanto, due sassi. Non sta nel cantiere del pezzo: c'è solo a taglia in mano, e indice.js la mette e la toglie (`S.scavi`),
+// come il portale. Un gruppo a sé, coi materiali dei pezzi che si muovono ──
+export function creaScavo(kit) {
+  const c = new Cantiere(), ROSSO = [0.78, 0.16, 0.12]
+  c.metti('liscio', new SphereGeometry(0.6, 9, 4, 0, Math.PI * 2, 0, Math.PI / 2), 0, 0, 0, [0.4, 0.29, 0.19], { s: [1.15, 0.34, 1] })
+  c.metti('liscio', new SphereGeometry(0.34, 7, 3, 0, Math.PI * 2, 0, Math.PI / 2), 0.12, 0.12, -0.08, [0.33, 0.24, 0.16], { s: [1, 0.45, 1] })
+  for (const r of [Math.PI / 4, -Math.PI / 4]) c.metti('legno', scatola(1.05, 0.06, 0.16, 1), 0, 0.23, 0, ROSSO, { ry: r })
+  c.metti('liscio', scatola(0.07, 0.03, 0.07), 0, 0.27, 0, COLORI.ferro)
+  // la pala piantata nella terra, un po' storta
+  c.metti('legno', cilindro(0.03, 0.03, 1.0, 6, 1), 0.55, 0.62, 0.15, COLORI.legno, { rz: -0.28, rx: 0.12 })
+  c.metti('legno', scatola(0.2, 0.05, 0.05), 0.69, 1.1, 0.21, COLORI.legnoScuro, { rz: -0.28 })
+  c.metti('liscio', scatola(0.22, 0.28, 0.03), 0.43, 0.14, 0.12, [0.55, 0.56, 0.6], { rz: -0.28, rx: 0.12 })
+  for (const [x, z, r] of [[-0.62, 0.3, 0.14], [-0.4, -0.55, 0.11]]) c.metti('pietra', new DodecahedronGeometry(r), x, r * 0.5, z, [0.6, 0.58, 0.55], { s: [1.2, 0.7, 1] })
+  const g = new Group()
+  for (const me of c.chiudi(kit.mobili, kit.ombraMobili)) g.add(me)
+  return { g, via() { g.traverse(o => { if (o.geometry) o.geometry.dispose() }) } }
 }
 
 // ── il campo del minatore: la tenda, il carretto col minerale, il falò (le fiamme le fa vita.js) ──

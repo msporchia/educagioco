@@ -63,7 +63,10 @@ Ogni tipo dice cosa fa il bambino, dove la si trova, e se il motore lo sa già f
   bosco vecchio, il minatore (nel villaggio, poi al rifugio). Stanno vicini al dungeon delle loro quest, come oggi.
 - **Le città portano gente nuova**: il capitano del forte (la storia delle marche), una cacciatrice al rifugio, un
   carovaniere fra le due. Sprite nuovi da dipingere; finché non ci sono, figure in `viste/pixel.js` come ripiego,
-  secondo la regola di sempre ([../core/sprite.md](../core/sprite.md)).
+  secondo la regola di sempre ([../core/sprite.md](../core/sprite.md)). **Il 22 ottobre** la cacciatrice e il carovaniere hanno il
+  modello 3D ([persone-3d.md](persone-3d.md)), ma non stanno ancora nel mondo: il forte e il rifugio non ci sono più, metterli
+  vicino a un dungeon (`PERSONE` in `dati/mondo-aperto.js`) cambia la firma del mondo, e cosa chiedono sono quest scritte a mano
+  ancora da scrivere; non hanno sprite 2D.
 - **La bacheca delle taglie** in ogni città: un cartello modellato con i fogli appesi, una taglia per foglio. Si tocca
   come un personaggio e apre lo stesso dialogo (il ritratto è la bacheca).
 - **I mercanti non danno quest** (oggi neanche): parlano di quello che vendono. **Da decidere**.
@@ -82,10 +85,12 @@ questa» e «vai da …». Nel mondo aperto cambia il **dove**:
   seguita **un cerchio sulla regione**, non il punto: dove andare sì, cosa trovare lì no. Una quest che punta in una
   regione mai vista mostra il cerchio sopra la nebbia, ma la nebbia resta: si scopre camminando.
 - **La freccina**: giù attorno all'eroe (la cosa, o la scala), sopra azzurra sul bordo verso la meta
-  ([missioni-freccina.md](missioni-freccina.md)). Nel mondo sopra la freccina punta la strada vera (la prossima curva
-  dell'A*), non la linea d'aria: in linea d'aria un fiume senza ponte è un muro.
+  ([missioni-freccina.md](missioni-freccina.md)). Nel mondo sopra la freccina punta la strada vera, non la linea d'aria: in
+  linea d'aria un fiume senza ponte è un muro. **Fatto** (22 ottobre): la bussola sul bordo punta dove la scia esce dalla vista
+  ([mondo-3d-la-meta.md](mondo-3d-la-meta.md#la-veduta-il-bordo-il-cartello)).
 - **«Vai da …»** con la pietra: se la meta è lontana e c'è una pietra accesa vicina, il dettaglio offre
-  «vai alla pietra» prima di camminare.
+  «vai alla pietra» prima di camminare. **Fatto** (22 ottobre): «vai alla pietra …, e da lì viaggi» porta l'eroe alla pietra accesa
+  più vicina, dove si viaggia come sempre (le soglie in [mondo-3d-la-meta.md](mondo-3d-la-meta.md#la-veduta-il-bordo-il-cartello)).
 
 ## (c) La storia principale nel mondo aperto
 
@@ -171,8 +176,8 @@ una bacheca, il posto sul prato), e gli agganci in `motore/missioni.js`, `Gioco.
 |---|---|---|---|
 | `consegna` | portare una cosa (🍞 ✉️ 🍎 📜 🧶 📦) a un'altra città | si tocca la bacheca di laggiù | in un colpo |
 | `esplora-regione` · `-ingresso` · `-pietra` | vedere un posto | la nebbia scopre il cuore della regione, l'ingresso, la pietra | da sé, camminando |
-| `trova-chi` | cercare una persona persa in una regione | le si parla | una figura dell'atlante che c'è solo a taglia in mano |
-| `mappa` | seguire la X e scavare | una domanda giusta alla X; sbagliando si riprova | la X (✕) è un segno sul prato, solo a taglia in mano |
+| `trova-chi` | cercare una persona persa in una regione | le si parla | c'è solo a taglia in mano; nel 3D è la persona del suo sprite ([persone-3d.md](persone-3d.md)) |
+| `mappa` | seguire la X e scavare | una domanda giusta alla X; sbagliando si riprova | solo a taglia in mano: terra smossa, due assi rosse a croce e la pala (`creaScavo` in `scena3d/mondo/ponti.js`, `S.scavi`), col ✕ sopra |
 | `caccia` | battere N di una specie in un dungeon | N morti, anche tornati | è la «conta» di sempre (`Corsa.conti`) |
 | `mostro` | un mostro col nome e la corona, più duro | cade | come «sconfiggi» di sempre |
 | `recupera` | una cosa smarrita in un forziere d'oro | si apre | come «trova» di sempre |

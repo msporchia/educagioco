@@ -72,7 +72,10 @@ uguale('e non la terra dipinta', await page.locator('[data-terra]').count(), 0)
   // dalla partenza si vedono tutti quelli del villaggio, senza muoversi né girare, e il tocco va a ognuno (non a chi gli sta accanto)
   const gente = await page.evaluate(() => [...document.querySelectorAll('[data-bersaglio][data-citta="villaggio"]')].filter(e => e.matches('[data-personaggio],[data-mercante],[data-minatore]')).map(e => {
     const r = e.getBoundingClientRect(), t = document.elementFromPoint(r.x + r.width / 2, r.y + r.height * 0.6)
-    return { chi: e.dataset.personaggio || e.dataset.mercante || 'minatore', vis: e.dataset.vis, suo: t === e || e.contains(t) }
+    const preso = t && t.closest('[data-bersaglio]')
+    return { chi: e.dataset.personaggio || e.dataset.mercante || 'minatore', vis: e.dataset.vis, suo: t === e || e.contains(t),
+             preso: preso ? Object.entries(preso.dataset).map(([k, v]) => `${k}=${v}`).join(' ') : t && t.outerHTML.slice(0, 120),
+             dove: [Math.round(r.x + r.width / 2), Math.round(r.y + r.height * 0.6)] }
   }))
   uguale('nel villaggio ci sono i quattro mercanti, la ragazza, il capitano e il minatore', gente.map(q => q.chi).sort().join(','), ['armaiolo', 'capitano', 'erborista', 'incantatrice', 'minatore', 'ragazza', 'rigattiere'].sort().join(','))
   controlla('tutti a schermo dalla partenza', gente.every(q => q.vis === '1'), JSON.stringify(gente.filter(q => q.vis !== '1')))
@@ -256,7 +259,8 @@ await attendi(page, 500)
   uguale('l\'eroe è nella palude', g.zona, 3)
   controlla('caricate la palude e le due accanto, e basta', g.zone.join() === '2,3,4', g.zone.join())
   controlla('e i pezzi attorno', g.pezzi.length >= 6, g.pezzi.join())
-  dentro('sotto le 150 chiamate', g.chiamate, 10, 150)
+  // anche qui le persone e i mostri di sopra in 3D (docs/sotterraneo/persone-3d.md): 154 il 22 ottobre, la soglia come dal villaggio
+  dentro('sotto le 200 chiamate', g.chiamate, 10, 200)
   dentro('sotto i 400 mila triangoli', g.triangoli, 1000, 400000)
   const ms = g.msZone.map(z => z.ms)
   nota(`nella palude: ${g.chiamate} chiamate, ${Math.round(g.triangoli / 1000)}k triangoli; una zona si carica in ${Math.min(...ms)}–${Math.max(...ms)} ms (SwiftShader, un fotogramma)`)

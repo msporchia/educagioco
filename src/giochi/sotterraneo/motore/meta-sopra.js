@@ -136,6 +136,27 @@ export function piuVicina(luci, x, z) {
   return { i, d }
 }
 
+// Dove la strada esce dalla vista: la prima luce della scia, da `da` (la più vicina all'eroe) in avanti, che `siVede(x, z)` dice
+// fuori. La freccia sul bordo punta lì e non alla meta in linea d'aria, dove un fiume senza ponte è un muro. null se si vedono
+// tutte (la meta è in vista, o la scia finisce prima: allora vale la linea d'aria)
+export function doveEsceLaStrada(luci, da, siVede) {
+  for (let i = Math.max(0, da); i < luci.length; i++) if (!siVede(luci[i].x, luci[i].z)) return luci[i]
+  return null
+}
+
+// «Vai alla pietra» (docs/sotterraneo/mondo-aperto-quest.md, «Il giornale e la nebbia»): chi aspetta è lontano dall'eroe e una pietra
+// accesa gli sta vicino, quindi conviene andare alla pietra accesa più vicina all'eroe e viaggiare da lì. `io` e `meta` in celle,
+// `pietre` le accese ({ chiave, x, y }, dove ci si ferma). { da, a } (le chiavi), o null se a piedi conviene lo stesso
+export const PIETRA_PER_ANDARE = { lontano: 60, vicino: 14, risparmio: 0.6 }
+export function pietraPerAndare(io, meta, pietre) {
+  const d = (a, b) => Math.hypot(a.x - b.x, a.y - b.y), tutto = d(io, meta)
+  if (tutto <= PIETRA_PER_ANDARE.lontano || pietre.length < 2) return null
+  const vicina = q => pietre.reduce((m, p) => (!m || d(p, q) < d(m, q) ? p : m), null)
+  const la = vicina(meta), qui = vicina(io)
+  if (la.chiave === qui.chiave || d(la, meta) > PIETRA_PER_ANDARE.vicino) return null
+  return d(io, qui) + d(la, meta) <= tutto * PIETRA_PER_ANDARE.risparmio ? { da: qui.chiave, a: la.chiave } : null
+}
+
 // I passi detti al bambino: una cella è un passo, a cinque per volta (non cambia a ogni cella), «qui» quando ci si è
 export const ARRIVATO_META = 3
 export function passiDetti(n) {

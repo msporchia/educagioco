@@ -4,7 +4,7 @@ Nel Sotterraneo 3D ([grafica-3d.md](grafica-3d.md)) l'eroe e i mostri sono model
 anche chi sta sulla terra di sopra: i quattro mercanti, i personaggi delle missioni, il capitano, il minatore, i viandanti da
 cercare e le sentinelle delle discese rosse. Le bancarelle e le botteghe restano quelle di prima. Il 2D di sempre non cambia.
 
-## I dodici modelli
+## I quattordici modelli
 
 `poc/persone-3d/persone.js` (la pagina `poc/persone-3d.html`), copiato in `scena3d/persone3d/` da `npm run promuovi3d`: le copie
 non si toccano a mano. Ognuno si riconosce dalla sagoma e dai colori, e non somiglia a un eroe giocabile:
@@ -23,6 +23,11 @@ non si toccano a mano. Ognuno si riconosce dalla sagoma e dai colori, e non somi
 | boscaiolo | il boscaiolo, il pastore | camicia a quadri, berretto col pompon, barbone, ascia in spalla | solleva l'ascia |
 | pescatore | i due pescatori | cappello di paglia, pipa, canna col filo e il galleggiante | tira la lenza |
 | mugnaio | il mugnaio, il raccoglitore | basco, baffi, grembiule infarinato, sacco in spalla | sbuffo di farina |
+| cacciatrice | (nessuno ancora) | pelle di lupo sul capo col muso e le orecchie, treccia rossa, giubba verde con le frange, arco corto, faretra | la mano sopra gli occhi, scruta lontano |
+| carovaniere | (nessuno ancora) | turbante ocra col lembo, barba nera, spolverino rosso mattone, fascia gialla con la frusta, bastone col lume | apre la carta delle strade e la legge |
+
+La cacciatrice e il carovaniere sono le persone nuove delle città del progetto ([mondo-aperto-quest.md](mondo-aperto-quest.md#chi-le-dà)):
+il modello c'è, nel mondo ancora no (né sprite 2D).
 
 Un corpo solo coi parametri (corporatura, testa, braccia col gomito e la mano), la faccia su una trama canvas come gli eroi
 (che ammicca, e apre la bocca salutando), sotto i 2500 triangoli.
@@ -75,5 +80,5 @@ coi modelli (243 prima della pelle). Le soglie di `integrazione/sotterraneo-mond
 
 Nei test: `unita/sotterraneo-persone-3d` (chi sta sopra ha il modello, la lista delle viste è quella dei modelli, ogni modello si
 costruisce, sta nel tetto, ha i piedi a terra, si anima, saluta e ha poche mesh), `unita/sotterraneo-mostri-3d` (le copie uguali ai
-prototipi), `unita/catalogo-3d-sotterraneo` (le dodici voci `sot:persona:*`), `integrazione/sotterraneo-mondo` (le persone del
+prototipi), `unita/catalogo-3d-sotterraneo` (le quattordici voci `sot:persona:*`), `integrazione/sotterraneo-mondo` (le persone del
 villaggio coi modelli, le chiamate, il ritratto 3D del dialogo e della bottega).

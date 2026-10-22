@@ -15,7 +15,7 @@ import { creaTrame } from './trame.js'
 import { materialiDelSuolo, terrenoDelPezzo, creaFuori, creaPiazza, campiDelPezzo } from './terreno.js'
 import { creaAcqua, creaCielo } from './acqua.js'
 import { materialiDelKit, Cantiere, casa, bottega, pozzo, mulino } from './kit.js'
-import { ponte, staccionate, cartello, bacheca, campoMinatore } from './ponti.js'
+import { ponte, staccionate, cartello, bacheca, campoMinatore, creaScavo } from './ponti.js'
 import { creaMonumento, creaPietra, creaPortale, creaPortaDelleTerre } from './monumenti.js'
 import { fontana } from './fontana.js'
 import { creaNatura, istanzeDelPezzo } from './natura.js'
@@ -96,6 +96,7 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = [], fon
   const S = {
     io: { x: m.partenza.x + 0.5, z: m.partenza.y + 0.5, verso: { dx: 0, dy: 1 }, sprite: 'cavaliere', mano: null, mancina: null },
     persone: [], accese: new Set(), aperti: new Set(), pallini: new Map(), divieti: new Set(), portale: null, veduta: false,
+    scavi: [],                 // le X delle mappe del tesoro in mano: [{ chiave, x, z }] (ponti.js, creaScavo)
     terre: false,              // la porta delle terre aperta (le tombe del vento ripulite: lo dice chi gioca)
     inCammino: false,          // l'eroe sta camminando: le zone accanto aspettano che si fermi, o che arrivi vicino al confine
     mostri: [], perTerra: [],   // i mostri di sopra e il bottino per terra, già nel cerchio e fuori dalla nebbia (mostri.js)
@@ -266,6 +267,7 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = [], fon
   img.src = ATLANTE
 
   let sciaPosata = null, vedutaPrima = false
+  const scavi = new Map()
   let portale = null, raf = 0, prima = 0, tempo = 0, vivo = true, L = 0, A = 0
   const centro = new Vector3(), soleVista = new Vector3()
   // la misura è quella del contenitore, mai della finestra, e la rilegge il ResizeObserver quando cambia (come giù)
@@ -328,6 +330,13 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = [], fon
     if (pv && (!portale || portale.x !== pv.x || portale.z !== pv.z)) { if (portale) { scena.remove(portale.p.gruppo); portale.p.via() } portale = { x: pv.x, z: pv.z, p: creaPortale(pv.x, quotaTerreno(m, pv.x, pv.z), pv.z) }; scena.add(portale.p.gruppo) }
     if (!pv && portale) { scena.remove(portale.p.gruppo); portale.p.via(); portale = null }
     if (portale) { portale.p.gruppo.visible = nebbia.visto(portale.x, portale.z) && !veduta; portale.p.aggiorna(tempo) }
+    // le X delle mappe del tesoro: ci sono finché la taglia è in mano
+    for (const [k, sc] of scavi) if (!S.scavi.some(v => v.chiave === k)) { scena.remove(sc.g); sc.via(); scavi.delete(k) }
+    for (const v of S.scavi) {
+      let sc = scavi.get(v.chiave)
+      if (!sc) { sc = creaScavo(kit); sc.g.position.set(v.x, quotaTerreno(m, v.x, v.z), v.z); sc.g.rotation.y = (v.x * 7 + v.z * 3) % 6.28; scena.add(sc.g); scavi.set(v.chiave, sc) }
+      sc.g.visible = nebbia.visto(v.x, v.z) && !veduta
+    }
     vita.passo(dt, tempo, centro)
     if (S.scia !== sciaPosata) { sciaPosata = S.scia; scia.posa(S.scia && S.scia.luci, S.scia && S.scia.meta) }
     scia.da(S.sciaDa)
@@ -418,6 +427,7 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = [], fon
       for (const p of [...costruiti.keys()]) buttaPezzo(p)
       for (const x of [natura, vita, scia, lontano, nebbia, acqua, cielo, persone, palco]) if (x) x.via()
       if (portale) portale.p.via()
+      for (const sc of scavi.values()) sc.via()
       scena.remove(fuori.mesh); fuori.mesh.geometry.dispose()
       for (const x of Object.values(suolo)) x.dispose()
       kit.via(); matCristallo.dispose(); trame.via(); tPezzi.via()

@@ -57,6 +57,12 @@ function vaDa(chi) {
   diarioAperto.value = false
   if (terraEl.value) terraEl.value.vaDa(chi)
 }
+// «vai alla pietra»: solo nel mondo in 3D (viste/Mondo3d.vue), se chi aspetta è lontano e c'è una pietra accesa vicino a lui
+const pietraPer = chi => (terraEl.value && terraEl.value.pietraPer ? terraEl.value.pietraPer(chi) : null)
+function vaAllaPietra(chi) {
+  diarioAperto.value = false
+  if (terraEl.value && terraEl.value.vaAllaPietra) terraEl.value.vaAllaPietra(chi)
+}
 
 // un tocco fuori dal diario (o dalla bottega, da Gioco.vue) lo chiude e passa alla terra: l'eroe va dove si è toccato
 function toccoDaFuori(x, y) { if (terraEl.value) terraEl.value.toccoDaFuori(x, y) }
@@ -125,7 +131,7 @@ function comincia() {
 
     <Diario v-if="diarioAperto" :stati="missioni" :conti="conti" :tappe="tappe" :segui="segui" :punti="punti" :punti-abilita="puntiAbilita" :mondo="in3d"
             @scheda="s => $emit('scheda', s)" @chiudi="diarioAperto = false"
-            @segui="id => $emit('segui', id)" @vai="vaDa" @fuori="fuoriDalDiario" />
+            :pietra="pietraPer" @segui="id => $emit('segui', id)" @vai="vaDa" @pietra="vaAllaPietra" @fuori="fuoriDalDiario" />
 
     <!-- detto prima: la roba resta, la discesa ricomincia da capo -->
     <LascioPerdere v-if="perdere && ripresa" :nome="ripresa.nome"
