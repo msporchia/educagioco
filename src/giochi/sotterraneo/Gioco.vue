@@ -179,11 +179,11 @@ const avventure = computed(() => EROI.map(e => {
   return {
     ...e, nuova: !cominciata(a), livello: n.livello,
     vita: n.vita, att: n.att, dif: n.dif, tratti: n.tratti,
-    mano: n.mano, mancina: n.mancina, corpo: n.corpo,
+    mano: n.mano, mancina: n.mancina, corpo: n.corpo, testa: n.testa,
     discese: Math.min(a.tappa, QUANTE_TAPPE), quante: QUANTE_TAPPE,
     stelle: Object.values(a.stelle).reduce((n, s) => n + (Number(s) || 0), 0),
     // il resto della roba che si vede: l'arma e lo scudo sono già nelle mani del ritratto
-    addosso: [n.corpo, n.collo, n.dito, n.dito2].filter(k => k && COSE[k]).map(k => ({ chiave: k, ...COSE[k] })),
+    addosso: [n.corpo, n.collo, n.dito, n.dito2, n.testa].filter(k => k && COSE[k]).map(k => ({ chiave: k, ...COSE[k] })),
     gemme: r.gemme,
     fondo: (a.abisso && a.abisso.fondo) || 0,
     aMeta: meta ? meta.nome : null,
@@ -331,6 +331,7 @@ function riprendiDiscesa({ ferma = false } = {}) {
   domanda.value = null
   chiudiLaBarra()
   c.botti = in3d   // le botti da rompere sono solo del 3D (motore/botti.js)
+  c.copricapi = in3d   // e i copricapi nel bottino (docs/sotterraneo/elmo.md)
   corsa.value = c
   c.pergameneTrovabili = dopoLaMissione(COSE['pergamena-portale'].dopo, missioni.value)
   borsellino = borsa(CHIAVE)
@@ -471,7 +472,7 @@ let bottega = null
 function apriBottega(k, scheda = null) {
   if (!mercanteDi(k)) return
   bottega = new Bottega({ eroe: eroeQui(), roba: roba.value, finite: qui.value.tappa, crescita: crescita.value,
-                          ...(qui.value.botteghe || {}), venduti: qui.value.venduti, missioni: missioni.value })
+                          ...(qui.value.botteghe || {}), venduti: qui.value.venduti, missioni: missioni.value, copricapi: in3d })
   bottega.prepara(k)   // il banco di questo giro, o il suo cambio a metà se è finita una discesa
   nellAvventura({ botteghe: bottega.botteghe })
   dettoBanco.value = null
@@ -508,9 +509,10 @@ const banco = computed(() => {
     })
   return {
     // le linguette di una famiglia che l'eroe non porta non si mostrano (dati/mercanti.js, schedeDi)
-    chi: { ...m, schede: schedeDi(m, eroeDi(eroeQui()), missioni.value) },
+    chi: { ...m, schede: schedeDi(m, eroeDi(eroeQui()), missioni.value, { copricapi: in3d }) },
     roba: vendibili,
-    addosso: { mano: voce(b.mano), mancina: voce(b.mancina), corpo: voce(b.corpo), collo: voce(b.collo), dito: voce(b.dito), dito2: voce(b.dito2) },
+    addosso: { mano: voce(b.mano), mancina: voce(b.mancina), corpo: voce(b.corpo), collo: voce(b.collo), dito: voce(b.dito), dito2: voce(b.dito2),
+               testa: voce(b.testa), conTesta: in3d || !!b.testa },
     numeri: { vita: b.vitaConLaRoba, att: b.att, dif: b.dif, gemme: b.gemme },
     tasche: m.compra ? Array.from({ length: b.capienza }, (_, i) => {
       const t = b.tasche()[i]
@@ -661,7 +663,7 @@ const pagina = computed(() => {
   const c = chiGuardo()
   const q = quotaDi(c.crescita.esp)
   return {
-    eroe: c.io, mano: c.mano, mancina: c.mancina, corpo: c.corpo,
+    eroe: c.io, mano: c.mano, mancina: c.mancina, corpo: c.corpo, testa: c.testa,
     livello: q.livello, fatto: q.fatto, serve: q.serve, punti: puntiDaDare(c.crescita), forza: forzaDelCorredo(c),
     numeri: { vita: c.vita ?? c.vitaConLaRoba, vitaMax: c.vitaMax ?? c.vitaConLaRoba, att: c.att, dif: c.dif,
               gemme: c.gemme },
@@ -760,6 +762,7 @@ const zainoDiSopra = computed(() => {
   const voce = k => (k ? { chiave: k, ...COSE[k], nonPuoi: c.perchéNo(k), ancora: c.porta(k) && !c.posso(k), prova: c.seLoMetto(k, { ancora: true }), ...((COSE[k].cura || COSE[k].tutta) ? { cura: c.curaDi(k) } : {}) } : null)
   return {
     mano: voce(c.mano), mancina: voce(c.mancina), corpo: voce(c.corpo), collo: voce(c.collo), dito: voce(c.dito), dito2: voce(c.dito2),
+    testa: voce(c.testa), conTesta: in3d || !!c.testa,
     tasche: tascheVoci(c, voce), costoTasca: c.costoTasca, cure: { n: c.pozioniDiCura, max: POZIONI_MASSIME },
     att: c.att, dif: c.dif, gemme: c.gemme, vita: c.vitaConLaRoba, vitaMax: c.vitaConLaRoba,
   }
@@ -1085,6 +1088,7 @@ const zaino = dallaCorsa(c => {
   return {
     mano: voce(c.mano), mancina: voce(c.mancina),
     corpo: voce(c.corpo), collo: voce(c.collo), dito: voce(c.dito), dito2: voce(c.dito2),
+    testa: voce(c.testa), conTesta: in3d || !!c.testa,   // il copricapo (docs/sotterraneo/elmo.md): nel 2D solo se ce n'è uno
     tasche: tascheVoci(c, voce), costoTasca: c.costoTasca, cure: { n: c.pozioniDiCura, max: POZIONI_MASSIME },
   }
 })
@@ -1123,9 +1127,11 @@ function corredoDaProva(c) {
   c.collo = 'teschio-cercatore'
   c.dito = 'anello-verde'
   c.dito2 = 'anello-ambra'
+  // nel 3D anche il copricapo (docs/sotterraneo/elmo.md), della famiglia che l'eroe veste: il 2D resta com'era
+  if (in3d) c.testa = c.porta('elmo-cornuto') ? 'elmo-cornuto@6.m.vita' : 'cappello-mago@6.m.vita'
   // le tre armature (mai visibili addosso) e i due gioielli: le cose che si vedono solo qui
   c.zaino = ['panciotto', 'manto', 'saio', 'amuleto-azzurro', 'pozione-grande', 'chiave']
-  if (sola) { c.mano = c.mancina = c.corpo = c.collo = c.dito = c.dito2 = null; c.zaino = [] }
+  if (sola) { c.mano = c.mancina = c.corpo = c.collo = c.dito = c.dito2 = c.testa = null; c.zaino = [] }
   c.gemme += 120
   // due torce (una accesa, una di scorta): la seconda fa vedere anche il "+1" nella fascia in cima
   if (!sola) { c.accendi('torcia'); c.accendi('torcia') }
@@ -1333,6 +1339,7 @@ function avvia(i, { prova = false } = {}) {
   corsa.value = new Corsa(t, { seme: semeDallIndirizzo() ?? t.seme ?? null, eroe: eroeQui(), roba: roba.value,
                                crescita: crescita.value, missioni: presePer(missioni.value, t.chiave), conti: qui.value.conti })
   corsa.value.botti = in3d   // le botti da rompere sono solo del 3D (motore/botti.js)
+  corsa.value.copricapi = in3d   // e i copricapi nel bottino (docs/sotterraneo/elmo.md)
   corsa.value.pergameneTrovabili = dopoLaMissione(COSE['pergamena-portale'].dopo, missioni.value)   // si trova solo dopo la missione dell'incantatrice
   borsellino = borsa(CHIAVE)
   corredoDaProva(corsa.value)
@@ -1474,7 +1481,7 @@ function guarda(c) {
   const f = `${c.vita}|${c.gemme}|${c.foglio ? c.foglio.che : '-'}|${c.chiesta ? c.chiesta.id : 0}` +
             `|${c.piano}|${c.zaino.length}|${c.chiaveDelPiano}|${c.finita}` +
             // tutte le caselle: uno scudo raccolto camminandoci sopra va nella mancina, un anello al dito
-            `|${c.mano}|${c.mancina}|${c.corpo}|${c.collo}|${c.dito}|${c.dito2}` +
+            `|${c.mano}|${c.mancina}|${c.corpo}|${c.collo}|${c.dito}|${c.dito2}|${c.testa}` +
             `|${c.torciaResta}|${c.torceInScorta}` +   // la torcia cala da sola, camminando
             `|${c.foglio ? c.foglio.cosa || '' : ''}|${c.livello.robe.length}` +   // due cose trovate di fila hanno lo stesso `che`
             `|${c.crescita.esp}|${c.crescita.forza}.${c.crescita.destrezza}.${c.crescita.intelligenza}.${c.crescita.tempra}` +

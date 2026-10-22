@@ -22,6 +22,7 @@ const props = defineProps({
   posa: { type: String, default: 'fermo' },      // 'corsa' quando cammina: l'arma resta in pugno
   fotogramma: { type: Number, default: 0 },
   corpo: { type: String, default: null },        // l'armatura: si vede solo nel ritratto 3D
+  testa: { type: String, default: null },        // il copricapo: anche lui solo nel 3D (docs/sotterraneo/elmo.md)
   in3d: { type: Boolean, default: false },       // nel Sotterraneo 3D: il ritratto è l'eroe 3D vestito (viste/anteprima3d.js)
 })
 
@@ -56,7 +57,7 @@ const inBraccio = computed(() => (props.mancina && !dueMani.value ? posato(props
 // il ritratto 3D, quando c'è: sopra lo sprite, che resta sotto (nascosto) finché l'immagine non arriva
 const chi = computed(() => [props.eroe.sprite, props.eroe.chiave].find(k => EROI.includes(k)) || null)
 const tre = usaAnteprima(() => (props.in3d && props.posa === 'fermo' && chi.value
-  ? chiaveDellEroe(chi.value, { mano: props.mano, mancina: props.mancina, corpo: props.corpo }) : null))
+  ? chiaveDellEroe(chi.value, { mano: props.mano, mancina: props.mancina, corpo: props.corpo, testa: props.testa }) : null))
 </script>
 
 <template>
