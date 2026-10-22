@@ -8,10 +8,8 @@ import Cornice from './Cornice.vue'
 import Addosso from './Addosso.vue'
 import Casella from './Casella.vue'
 import Pannello from './Pannello.vue'
-import Pixel from './Pixel.vue'
+import Ritratto from './Ritratto.vue'
 import Icona from './Icona.vue'
-import { figura, haFigura } from './figura.js'
-import { ARMAIOLO, ERBORISTA, RIGATTIERE, MINATORE } from './pixel.js'
 import { schedaDi } from '../dati/mercanti.js'
 import { COSE } from '../dati/cose.js'
 
@@ -40,9 +38,7 @@ let cieco = 0
 onMounted(() => { cieco = setTimeout(() => { pronto.value = true }, CIECO) })
 onBeforeUnmount(() => clearTimeout(cieco))
 
-const FIGURE = { armaiolo: ARMAIOLO, erborista: ERBORISTA, rigattiere: RIGATTIERE }
-const ritratto = computed(() => (haFigura(`${props.chi.sprite}-fermo-0`)
-  ? figura(`${props.chi.sprite}-fermo-0`, { scala: 3 }) : null))
+// il ritratto del mercante: lo stesso del dialogo (viste/Ritratto.vue), col modello 3D nel Sotterraneo 3D
 
 const scheda = ref(props.chi.schede.some(s => s.chiave === props.scheda) ? props.scheda : props.chi.schede[0].chiave)
 const laScheda = computed(() => props.chi.schede.find(s => s.chiave === scheda.value))
@@ -156,8 +152,7 @@ const tascheVuote = computed(() => !!props.tasche && !props.tasche.some(Boolean)
            @fuori="e => pronto && $emit('fuori', e)">
     <header class="sot-targa">
       <span class="sot-targa-ritratto">
-        <span v-if="ritratto" class="sot-ritratto" :style="ritratto.gabbia"><i :style="ritratto.pezzo"></i></span>
-        <Pixel v-else :figura="FIGURE[chi.chiave] || MINATORE" :scala="3" />
+        <Ritratto :chi="chi.chiave" :scala="3" />
       </span>
       <span class="sot-targa-nome">
         <b>{{ chi.nome }}</b>

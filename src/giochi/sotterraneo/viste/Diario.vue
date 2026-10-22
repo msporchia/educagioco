@@ -13,6 +13,7 @@ import Cornice from './Cornice.vue'
 import SchedeEroe from './SchedeEroe.vue'
 import Icona from './Icona.vue'
 import Ritratto from './Ritratto.vue'
+import { MODELLI_PERSONE } from '../dati/persone3d.js'
 import { diario } from '../motore/missioni.js'
 import { iconaDi } from '../dati/terra.js'
 
@@ -57,6 +58,8 @@ const stato = v => (v.stato === 'fatta' ? `Fatta: torna ${v.daChi}`
   : 'Consegnata')
 const fatto = v => v.stato === 'fatta' || v.stato === 'consegnata'
 const nomeFigura = v => (v.cosa.sprite ? `${v.cosa.sprite}-fermo-0` : null)
+// chi si è perso (una taglia «trova chi»): nel Sotterraneo 3D la faccia del suo modello (docs/sotterraneo/persone-3d.md)
+const persona3d = v => (v.cosa.sprite && MODELLI_PERSONE.includes(v.cosa.sprite) ? `persona:${v.cosa.sprite}` : null)
 // «vai da …» c'è per chi aspetta qualcosa da te: un favore da chiederti, o la consegna di una missione fatta
 const puoiAndare = v => !props.giu && (v.stato === 'offerta' || v.stato === 'fatta')
 const vaDa = v => emit('vai', v.vai || v.da)
@@ -97,7 +100,7 @@ const vaDa = v => emit('vai', v.vai || v.da)
       </div>
 
       <div v-if="storia.corrente && storia.corrente.cosa" class="sot-dettaglio-riga" data-dettaglio-cosa data-tipo="sconfiggi">
-        <span class="sot-dettaglio-icona"><Icona :sprite="nomeFigura(storia.corrente)" :em="storia.corrente.cosa.em" :scala="2" :emAlto="38" /></span>
+        <span class="sot-dettaglio-icona"><Icona :sprite="nomeFigura(storia.corrente)" :tre="persona3d(storia.corrente)" :em="storia.corrente.cosa.em" :scala="2" :emAlto="38" /></span>
         <span class="sot-testo">
           <small>Da battere</small>
           <b>{{ storia.corrente.cosa.nome }}</b>
@@ -160,7 +163,7 @@ const vaDa = v => emit('vai', v.vai || v.da)
 
       <!-- cosa: la cosa da trovare, o il mostro da battere -->
       <div class="sot-dettaglio-riga" data-dettaglio-cosa :data-tipo="voce.tipo">
-        <span class="sot-dettaglio-icona"><Icona :sprite="nomeFigura(voce)" :em="voce.cosa.em" :scala="2" :emAlto="38" /></span>
+        <span class="sot-dettaglio-icona"><Icona :sprite="nomeFigura(voce)" :tre="persona3d(voce)" :em="voce.cosa.em" :scala="2" :emAlto="38" /></span>
         <span class="sot-testo">
           <small>{{ voce.cosa.verbo ? voce.cosa.verbo[fatto(voce) ? 1 : 0] : voce.tipo === 'trova' ? (fatto(voce) ? 'Trovata' : 'Da trovare') : (fatto(voce) ? 'Battuti' : 'Da battere') }}</small>
           <b>{{ voce.cosa.nome }}</b>

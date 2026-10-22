@@ -15,6 +15,7 @@ I prototipi in `poc/` restano autonomi e non si toccano per il gioco. Il gioco u
 | `scena3d/eroi3d/` | `poc/eroi-3d`, `armi-3d`, `armature-3d`, `copricapi-3d` | i quattro eroi, le armi della collezione, le armature, i copricapi |
 | `scena3d/mostri3d/` | `poc/mostri-3d` (mostri, prati, bosco, palude, ceneri, draghi, monte, landa, varie) | i mostri, più `elenchi.js` (generato) con gli elenchi per zona |
 | `scena3d/effetti3d/` | `poc/effetti-3d` (lancio, mischia, aure) | gli effetti delle abilità e degli stati |
+| `scena3d/persone3d/` | `poc/persone-3d` | le persone del mondo di sopra ([persone-3d.md](persone-3d.md)) |
 | `scena3d/roba3d/` | `poc/roba-3d` (aloni, e lame, bastoni, scudi, vesti, gioielli se pronti) | le figure della roba e gli aloni della rarità, più `moduli.js` e `catalogo-roba.js` (generati): [roba-3d.md](roba-3d.md) |
 
 `strumenti/promuovi-3d.mjs` parte dalle radici di ogni gruppo, segue gli import (solo il referenziato: `mosse*.js` e le pagine

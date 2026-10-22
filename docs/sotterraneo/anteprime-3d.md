@@ -35,6 +35,7 @@ La chiave dice la figura e l'aspetto, non l'oggetto: due spade con la stessa fig
 | `armatura:<tipo>:<pregio>:<eroe>:<corpo>` | l'armatura su un manichino: l'eroe di adesso senza testa e senza armi (la veste della figura se il modulo `vesti` c'è); `<corpo>` = `<tipo>.<pregio>.<figura>.<rarità>.<elemento>` | 128² |
 | `eroe:<chi>:<destra>:<sinistra>:<corpo>:<collo>` | l'eroe intero nella guardia, con le armi, l'armatura e la collana | 150×176 |
 | `busto:…` (lo stesso) | la faccia e le spalle, uguali per tutti (il cappello del mago e la barba del nano restano dentro a metà) | 96² |
+| `persona:<modello>` | una persona del mondo di sopra a mezzo busto ([persone-3d.md](persone-3d.md)): il dialogo, il diario, la bottega | 96² |
 | `mostro:<tipo>:<grado>:<variante>` · `mostro:grosso:<chi>` | il modello del registro (`idDi`), di tre quarti verso sinistra, dalla testa a circa due terzi | 96² |
 
 - **Il pregio dell'armatura viene dalla rarità** (comune 1, magico 2, raro e leggendario 3), anche per l'eroe in scena: prima era

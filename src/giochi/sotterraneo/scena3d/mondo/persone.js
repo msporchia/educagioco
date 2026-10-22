@@ -8,12 +8,15 @@ import { creaFigure } from '../figure.js'
 import { disegnaEroe } from '../eroe.js'
 import { creaEroe3d, eroe3dAcceso } from '../eroe3d.js'
 import { creaMostri3d, mostri3dAccesi } from '../mostro3d.js'
+import { creaPersone3d, persone3dAccese } from '../persona3d.js'
 import { ACCESI } from '../costanti.js'
 import { SALITA } from './vesti.js'
 
 export const SCALA_PERSONE = 1.25
 const MOSTRI_3D_SOPRA = 8   // il mondo è già pieno di cose: i modelli 3D sono pochi, per chi è vicino
 const OMBRE_MAX = 120
+// le persone in 3D (docs/sotterraneo/persone-3d.md): le più vicine all'eroe, entro questa distanza in celle; le altre restano sprite
+const PERSONE_3D_SOPRA = 8, PERSONE_3D_VICINO = 18
 
 // le figure del mondo di sopra non hanno la maschera delle discese: una bianca, che lascia tutto com'è
 export function mascheraPiena() {
@@ -46,6 +49,8 @@ export function creaPersone(scena, { tex, norm, larga, alta, pezzi, trame, quota
   // di ognuno (la sua istanza, dove guarda) sta qui per indice del mostro
   const mostri3d = mostri3dAccesi() && ACCESI.mostri3d > 0 ? creaMostri3d(scena, { quanti: () => Math.min(ACCESI.mostri3d, MOSTRI_3D_SOPRA) }) : null
   const statiMostri = new Map()
+  const persone3d = persone3dAccese() ? creaPersone3d(scena, { quanti: () => PERSONE_3D_SOPRA }) : null
+  const statiPersone = new Map()
   const salita = (x, z, t) => { const k = Math.max(0, Math.min(1, (t - nebbia.quando(x, z)) / SALITA)); return k * k * (3 - 2 * k) }
 
   return {
@@ -57,6 +62,7 @@ export function creaPersone(scena, { tex, norm, larga, alta, pezzi, trame, quota
       figure.inizia(); figureEroe.inizia(); nOmbre = 0
       if (eroe3d && (veduta || eroe.nascosto)) eroe3d.nascondi()
       if (mostri3d && veduta) { mostri3d.inizia(); mostri3d.chiudi() }   // dall'alto non si vedono (troppo piccoli): via anche i modelli
+      if (persone3d && veduta) { persone3d.inizia(); persone3d.chiudi() }
       if (!veduta) {
         // i mostri: come le persone, alla loro scala; al bordo del cerchio di luce svaniscono a retino
         if (mostri3d) mostri3d.inizia()
@@ -86,15 +92,30 @@ export function creaPersone(scena, { tex, norm, larga, alta, pezzi, trame, quota
           o.scala = 0.8
           figure.metti(c.pezzo, c.x, y + 0.1 + Math.sin(t * 2.6 + c.x) * 0.06, c.z, o)
         }
-        for (const q of persone) {
+        // le persone: le più vicine col modello 3D (persona3d.js), le altre (e chi non ha il modello) sprite
+        if (persone3d) persone3d.inizia()
+        const d2 = q => (q.x - eroe.x) ** 2 + (q.z - eroe.z) ** 2
+        const ordinePersone = persone3d ? [...persone].sort((a, b) => d2(a) - d2(b)) : persone
+        for (const q of ordinePersone) {
           if (!nebbia.visto(q.x, q.z)) continue
           const e = salita(q.x, q.z, t), o = figure.o(), y = quota(q.x, q.z)
-          o.scala = q.scala || SCALA_PERSONE; o.specchio = !!q.specchio
-          // un colore in più per chi lo vuole (il capitano: il blu del mantello, un lampo additivo piccolo sullo sprite della guardia)
-          if (q.tinta) { o.rosso = q.tinta[0]; o.verde = q.tinta[1]; o.blu = q.tinta[2] }
-          figure.metti(q.pezzo, q.x, y - (1 - e) * 2.2, q.z, o)
+          const scala = q.scala || SCALA_PERSONE
+          let in3d = false
+          if (persone3d && q.modello && d2(q) < PERSONE_3D_VICINO ** 2) {
+            const k = q.chiave || `${q.x},${q.z}`
+            let s = statiPersone.get(k)
+            if (!s) statiPersone.set(k, s = {})
+            in3d = persone3d.metti(s, q.modello, { x: q.x, y: y - (1 - e) * 2.2, z: q.z, alto: figure.alto(q.fermo || q.pezzo, scala), eroe, t, dt, saluta: !!q.saluta })
+          }
+          if (!in3d) {
+            o.scala = scala; o.specchio = !!q.specchio
+            // un colore in più per chi lo vuole (il capitano: il blu del mantello, un lampo additivo piccolo sullo sprite della guardia)
+            if (q.tinta) { o.rosso = q.tinta[0]; o.verde = q.tinta[1]; o.blu = q.tinta[2] }
+            figure.metti(q.pezzo, q.x, y - (1 - e) * 2.2, q.z, o)
+          }
           if (e > 0.9) ombra(q.x, y, q.z, 1.05)
         }
+        if (persone3d) persone3d.chiudi()
         if (!eroe.nascosto) {
           finta.eroe.x = eroe.x; finta.eroe.y = eroe.z; finta.versoEroe.dx = eroe.verso.dx; finta.versoEroe.dy = eroe.verso.dy
           finta.io.sprite = eroe.sprite; finta.mano = eroe.mano; finta.mancina = eroe.mancina; finta.corpo = eroe.corpo
@@ -107,6 +128,8 @@ export function creaPersone(scena, { tex, norm, larga, alta, pezzi, trame, quota
       ombre.count = nOmbre; ombre.instanceMatrix.needsUpdate = true
     },
     taglio(x, y) { figure.taglio(x, y); figureEroe.taglio(x, y) },
-    via() { if (eroe3d) eroe3d.toglie(); if (mostri3d) mostri3d.via(); figure.via(); figureEroe.via(); scena.remove(ombre); geo.dispose(); mat.dispose(); ombre.dispose(); maschera.t.dispose() },
+    /** Quante persone hanno il modello 3D adesso, e quante istanze ci sono (per le prove: `grafica()`). */
+    get persone3d() { return persone3d ? { visibili: persone3d.visibili, istanze: persone3d.quante } : null },
+    via() { if (eroe3d) eroe3d.toglie(); if (mostri3d) mostri3d.via(); if (persone3d) persone3d.via(); figure.via(); figureEroe.via(); scena.remove(ombre); geo.dispose(); mat.dispose(); ombre.dispose(); maschera.t.dispose() },
   }
 }
