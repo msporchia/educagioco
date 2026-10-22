@@ -37,6 +37,7 @@ motore/
   mongolfiera.js     la nave: `nuovaStiva`, `stivaInForma`, `aggiornaMongolfiera` (atterra il carico, torna dal viaggio), `caricaLaCassa`, `partiLaMongolfiera`, `scegliLaSorpresa`, `vistaDellaMongolfiera`
   ordini.js          gli ordini: `nuovoOrdine` (puro, col caso da fuori) e `ordineInForma`; i posti crescono col livello (`POSTI(livello)` in `dati/ordini.js`)
   stato.js           lo stato salvato (esperienza, `posseduti` = edificio in mappa; gli edifici sono anche `cose`, il v8 si migra al posto di prima: [edifici-liberi.md](edifici-liberi.md); `macchine`, `ordini`, `bestie` di pollaio e stalla; la versione sta in `VERSIONE_STATO`), `statoIniziale()` e `normalizza()` (un salvataggio rotto si rimette in forma; un v6 passa dagli id vecchi ai nuovi, v7)
+  tipo.js            la fattoria «tipo» (`fattoriaTipo(livello)`, borsa infinita, deterministica): il cheat `#fattoria3d-tipo=N` ([comandi](../core/comandi.md)); test `unita/fattoria3d-tipo`
   percorso.js        Dijkstra sulla griglia, le strade costano meno
   pesca.js           la pesca: `provaPesca`, `lanciaLenza`, `ritiraPesca`, `bancoDi`, `lenzeInAcqua`, `riesaminaPesca` (funzioni pure sulla `Fattoria3d`); `stato.pesca` per lotto d'acqua
   vicini.js          i vicini: la classe `Vicini` (entra, aiuta la cassa, compra, vende), `normalizzaVicini` (lo stato a parte), `motoreDiVisita` (la scena di sola lettura da uno snapshot), `esportaLaMiaFattoria`

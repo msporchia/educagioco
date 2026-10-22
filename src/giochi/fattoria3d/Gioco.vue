@@ -5,18 +5,19 @@
    Senza WebGL 2 non si apre niente: lo si dice e si torna in home. Vedi docs/fattoria3d/. */
 import { ref, reactive, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import Barra from '../../components/Barra.vue'
-import { state, addCoins, segna, flushNow, persist, aspettoDi, scegliAspetto } from '../../store/profile.js'
+import { state, addCoins, segna, flushNow, persist, aspettoDi, scegliAspetto, cestinaOra } from '../../store/profile.js'
 import { fasciaAttiva } from '../../store/qualita.js'
 import { load, save } from '../../store/storage.js'
 import { scelta, ricorda } from '../campagne.js'
 import { Fattoria3d } from './motore/fattoria3d.js'
+import { fattoriaTipo } from './motore/tipo.js'
 import { haWebGL2 } from './scena3d/webgl.js'
 import { dettoDi, dettoDiRifiuto } from './scena3d/detti.js'
 import { EDIFICI, avvisoEdificiNuovi } from './dati/catalogo.js'
 import { COLTURE } from './dati/colture.js'
 import { RICETTE, emojiDi, dentroDi, PRONTO_DA_RITIRARE } from './dati/ricette.js'
 import { POSTI_MASSIMI, prezzoDelPosto } from './dati/posti.js'
-import { avanzamento, roba, nomeDi } from './dati/livelli.js'
+import { avanzamento, roba, nomeDi, sogliaDi } from './dati/livelli.js'
 import { clienteDi, LIVELLO_BANCO } from './dati/ordini.js'
 import { PEZZI } from './dati/catalogo.js'
 import { LIVELLO_MONGOLFIERA } from './dati/mongolfiera.js'
@@ -393,9 +394,33 @@ function indietro() {
   salva({ subito: true }); emit('vai', 'home')
 }
 
+/** #fattoria3d-tipo=N mette una fattoria già giocata di quel livello (quella del bambino va nel cestino); #fattoria3d=N alza il livello
+    e non lo abbassa mai. L'indirizzo si legge una volta e si svuota: un ricaricamento non ripete il cheat. Vedi docs/core/comandi.md. */
+function cheatDellIndirizzo() {
+  const frammento = location.hash || ''
+  const tipo = /(?:^#?|&)fattoria3d-tipo=(\d{1,2})(?=&|$)/i.exec(frammento)
+  const livello = /(?:^#?|&)fattoria3d=(\d{1,2})(?=&|$)/i.exec(frammento)
+  if (!tipo && !livello) return
+  try { location.hash = '' } catch (e) { /* pazienza */ }
+  let testo
+  if (tipo) {
+    cestinaOra('fattoria3d tipo')          // la copia si prende subito, prima di qualunque attesa
+    motore = fattoriaTipo(parseInt(tipo[1], 10))
+    motore.borsa = borsa
+    testo = `🧪 Fattoria di prova al livello ${motore.livello()}: quella di prima è nel cestino.`
+  } else {
+    const meta = parseInt(livello[1], 10)
+    if (motore.esperienza() < sogliaDi(meta)) motore.s.esperienza = sogliaDi(meta)
+    testo = `🧪 Livello ${motore.livello()}.`
+  }
+  salva({ subito: true })
+  toast.value = { testo, fine: performance.now() + DURATA_TOAST }
+}
+
 onMounted(async () => {
   if (!puo.value) return
   motore = new Fattoria3d({ stato: scelta(CHIAVE, 'stato', null), borsa })
+  cheatDellIndirizzo()
   try { const c = await load(CHIAVE_OPZIONI); if (c && c.q && c.v === VERSIONE_OPZIONI) Object.assign(q, c.q) } catch (e) { /* le opzioni di serie */ }
   const { Mondo3d } = await import('./scena3d/mondo3d.js')          // three si scarica solo qui
   if (!vivo) return
