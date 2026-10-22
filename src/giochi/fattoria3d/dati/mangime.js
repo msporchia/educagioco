@@ -3,6 +3,7 @@
    foraggio. Qui stanno le tre ricette del fienile (le usa `MACCHINE.fienile` in dati/ricette.js) e il conto del loro tempo, in un
    file a parte perché `animali.js` ne ha bisogno e `ricette.js` importa `animali.js`. Vedi docs/fattoria3d/mangime-e-catena.md. */
 import { COLTURE } from './colture.js'
+import { RICETTE_PENTOLONE } from './cortile.js'
 
 /** Le ricette del fienile, con gli id della 2D (`foraggio_carote`, `becchime`, `foraggio`). `da`: il prodotto, se non è l'id (due strade per
     lo stesso foraggio). `mangime: true`: non si chiede al banco, non sale in mongolfiera, non si baratta con i vicini (come `mangime: true` in 2D).
@@ -13,14 +14,26 @@ export const RICETTE_FIENILE = {
   foraggio:        { nome: 'Foraggio',           emoji: '🥬', pezzo: 'balla_fieno_tonda', mangime: true, ing: { erba: 2 },   ms: 5000, liv: 9 },
 }
 
-/** Il prodotto di una ricetta del fienile (di solito il suo id). */
-export const prodottoDi = id => (RICETTE_FIENILE[id] || {}).da || id
+/** Le ricette del pentolone (verdure lesse, pastone, verdura fresca): il mangime di anatre, maiali e capre. Stanno in dati/cortile.js con i loro numeri provvisori. */
+export { RICETTE_PENTOLONE }
+
+/** Tutte le ricette di mangime, del fienile e del pentolone: `{ id: ricetta }`. */
+export const RICETTE_MANGIME = { ...RICETTE_FIENILE, ...RICETTE_PENTOLONE }
+
+/** Il prodotto di una ricetta di mangime (di solito il suo id). */
+export const prodottoDi = id => (RICETTE_MANGIME[id] || {}).da || id
 
 /** I mangimi che il fienile fa: `becchime`, `foraggio`. */
 export const MANGIMI_DEL_FIENILE = [...new Set(Object.keys(RICETTE_FIENILE).map(prodottoDi))]
 
+/** I mangimi che fa il pentolone: `beverone`, `zuppa`, `pastura`. */
+export const MANGIMI_DEL_PENTOLONE = [...new Set(Object.keys(RICETTE_PENTOLONE).map(prodottoDi))]
+
+/** Tutti i mangimi che esistono. */
+export const MANGIMI = [...MANGIMI_DEL_FIENILE, ...MANGIMI_DEL_PENTOLONE]
+
 /** Le ricette che fanno quel mangime (uno o due modi). */
-export const ricetteDelMangime = k => Object.entries(RICETTE_FIENILE).filter(([id]) => prodottoDi(id) === k)
+export const ricetteDelMangime = k => Object.entries(RICETTE_MANGIME).filter(([id]) => prodottoDi(id) === k)
 
 /** Il lavoro per avere `n` pezzi di un mangime, dalla strada che costa meno: la cottura più il tempo di ogni raccolto (il conto degli ordini, come `msDi`). */
 export function lavoroDelMangime(k, n = 1) {

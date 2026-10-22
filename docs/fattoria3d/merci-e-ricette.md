@@ -30,7 +30,7 @@ lavanda…) e le disegnava con le emoji; la 2D ha una catena curata ([../fattori
 - **Il mangime è portato** (il fienile, l'erba medica, becchime e foraggio): [mangime-e-catena.md](mangime-e-catena.md), con l'audit di ogni ricetta contro la 2D
   e le sole deviazioni dichiarate.
 - **Friggitoria e sushi bar sono portati** (col pesce, che si pesca: [geografia-e-pesca.md](geografia-e-pesca.md)); la **peschiera** no.
-- **Dove la 2D ha una macchina in più, non si porta** (la peschiera e il pentolone, che fa il mangime di anatre, maiali e capre; i recinti oltre pollaio, stalla e
+- **Dove la 2D ha una macchina in più, non si porta** (la peschiera; il pentolone c'è: [cortile-e-pentolone.md](cortile-e-pentolone.md); i recinti oltre pollaio, stalla e
   ovile): è in [da-fare.md](da-fare.md).
 - **Nessuna ricetta è adattata**: le colture che mancavano (cavolfiore, aglio…) sono arrivate e salsa (con l'aglio) e minestrone
   (col cavolfiore) sono tornate quelle della 2D; il test non ha più eccezioni.
@@ -44,6 +44,7 @@ lavanda…) e le disegnava con le emoji; la 2D ha una catena curata ([../fattori
 | Pastificio (`pasticceria`) | 6 | pasta (farina 2, uova 1), biscotti (farina, burro, zucchero), pizza (farina, salsa, formaggio), lasagne (pasta, salsa, formaggio) |
 | Panificio (`panificio`) | 7 | pane (farina 2), torta (farina 2, uova, burro), crostata (farina, fragola, burro) |
 | Caseificio (`caseificio`) | 11 | burro (latte 1), formaggio (latte 2) |
+| Pentolone (`pentolone`) | 19 (provvisorio) | verdure lesse (patate 2, cavolfiore), pastone (zucche 2), pastone d'orto (pomodori 2), verdura fresca (carote 2, cavolfiore): **mangime**, non si consegna |
 | Cucina (`conserviera`) | 12 | salsa (pomodoro 2, cipolla, aglio), polenta (mais 2, formaggio), minestrone (patata, carota, cavolfiore), conserva d'orto (melanzana, peperone, zucca), parmigiana (melanzana 2, salsa, formaggio) |
 | Gelateria (`gelateria`) | 14 | succo (carota, barbabietola), frullato (fragola 2, latte), gelato (latte 2, zucchero) |
 | Telaio (`telaio`) | 8 | stoffa (lana 2) |
@@ -81,7 +82,7 @@ tintoria; lo zucchero chiude il gelato, i biscotti e la marmellata). Ricette, qu
 Gli id restano quelli di prima (`carota`, `patata`…, singolari): sono le chiavi dei salvataggi e dei modelli di
 `scena3d/modelli-colture.js`; il legame con la 2D è il `pezzo` (`raccolto_carote`…) e il test. **Tempi e livelli non seguono la
 2D**: la taratura vuole che una coltura che arriva dopo non maturi prima (`guastiDellaScala`), e la 2D ha un altro ordine.
-La lavanda ha ora la tintoria al 16; la zucca ha una sola uscita (il banco, i vicini): il resto della sua catena è in 2D (pentolone).
+La lavanda ha ora la tintoria al 16; la zucca ha il pastone del pentolone e la conserva ([cortile-e-pentolone.md](cortile-e-pentolone.md)).
 
 L'**erba medica** (`erba`, `raccolto_erba`) è la sedicesima coltura: sta fuori dalla regola della scala perché è la strada svelta del foraggio ([mangime-e-catena.md](mangime-e-catena.md)).
 

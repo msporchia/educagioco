@@ -10,7 +10,7 @@
    Vedi docs/fattoria3d/merci-e-ricette.md, regole.md e livelli.md. */
 import { COLTURE } from './colture.js'
 import { PRODOTTI_ANIMALI, LANA } from './animali.js'
-import { RICETTE_FIENILE } from './mangime.js'
+import { RICETTE_FIENILE, RICETTE_PENTOLONE } from './mangime.js'
 
 import { POSTI_DI_PARTENZA } from './posti.js'
 
@@ -33,6 +33,7 @@ export const LAVORAZIONE = {
   tintoria:      { dentro: 'Nella tinozza' },
   friggitoria:   { dentro: 'Nella friggitrice' },
   sushi_bar:     { dentro: 'Al banco del sushi' },
+  pentolone:     { dentro: 'Nel pentolone' },
 }
 export const PRONTO_DA_RITIRARE = 'Pronto da ritirare'
 /** La scritta della sezione dei posti di una macchina (mai «forno» se non è un forno). */
@@ -99,6 +100,7 @@ export const MACCHINE = {
     sushi:       { nome: 'Sushi',           emoji: '🍣', pezzo: 'merce_sushi',       ing: { riso: 1, pesce: 1 },              ms: 8000,  liv: 18 },
     maki:        { nome: 'Maki',            emoji: '🍥', pezzo: 'merce_maki',        ing: { riso: 1, carota: 1, peperone: 1 }, ms: 6000,  liv: 18 },
   } },
+  pentolone: { posti: FORNO_POSTI, ricette: RICETTE_PENTOLONE },   // il pentolone della 2D: il mangime di anatre, maiali e capre (le quattro ricette stanno in dati/cortile.js)
 }
 export const TIPI_DI_MACCHINA = Object.keys(MACCHINE)
 

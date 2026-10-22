@@ -25,19 +25,19 @@ vince il codice.
 
 | | 2D | 3D |
 |---|--:|--:|
-| voci nel catalogo (cosa si compra) | 253 | 34 (20 pezzi + 14 edifici) |
+| voci nel catalogo (cosa si compra) | 253 | 38 (23 pezzi + 15 edifici) |
 | di cui decorazioni | 217 (verde, fiori, acqua, recinti, case, arredo, bestiole, feste, fiera, raccolto) | 10 (aiuola, panchina, fontana, pozzo, spaventapasseri, tavolo, passerella, ponte, stagno, laghetto) |
 | colture | 16 | 16 (gli stessi id, singolari) |
-| ricette | 57 | 37 (nessuna inventata) |
-| macchine | 14 | 13 (manca il pentolone) |
-| recinti del cortile | 11 | 3 (pecore, galline, mucche) |
+| ricette | 57 | 41 (nessuna inventata) |
+| macchine | 14 | 14 |
+| recinti del cortile | 11 | 6 (pecore, galline, mucche, anatre, maiali, capre) |
 | bestie di casa (si comprano, hanno bisogni) | 7 | 0 (4 compagni gratuiti che girano, non si curano) |
 | addobbi per le bestie | 12 (7 in vendita) | 0 (il guardaroba è del contadino) |
 | botteghe del paese | 4 | 0 |
 | clienti del banco | 16 (per mestiere) | 10 (per tutti) |
 | silos | 3 (scomparti da 8, ingrandibili) | 0 (scorte senza tetto) |
-| livelli | 70 | 18 |
-| ore di esercizio per arrivare in cima (spesa a 🪙6/min) | ~202 | ~8,25 |
+| livelli | 70 | 22 (19–22 provvisori) |
+| ore di esercizio per arrivare in cima (spesa a 🪙6/min) | ~202 | ~10,85 |
 | celle di terra | piazzole 6×6, rincaro ×1,38 | lotti 4×4 senza confini, rincaro lineare poi quadratico |
 | stagioni (Halloween, Natale) | sì | no |
 | guida `?`, consiglio, «Come si fa» | sì | no |

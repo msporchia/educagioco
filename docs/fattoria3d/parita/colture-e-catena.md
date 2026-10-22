@@ -34,7 +34,7 @@ Le arature non esistono in nessuna delle due.
 Perché i silos contano: sono un pozzo di monete che non si esaurisce (28 posti ≈ 7 ore di spesa) e il momento in cui il gioco
 insegna il resto della catena. Con ricette 60× più svelte e niente tetto, la 3D si riempie di roba senza uno scopo. Decisione D11.
 
-## Le macchine (14 nella 2D, 13 nella 3D)
+## Le macchine (14 nella 2D, 14 nella 3D)
 
 Prezzi e livelli: 2D 🪙/liv → 3D 🪙/liv. Tempo delle ricette: minuti 2D → secondi 3D (×60).
 
@@ -45,7 +45,7 @@ Prezzi e livelli: 2D 🪙/liv → 3D 🪙/liv. Tempo delle ricette: minuti 2D �
 | telaio | 170/16: stoffa | ✅ 70/8 | – | – |
 | panificio | 180/17: pane, torta (20), crostata e merenda (50) | 🟡 90/7 | `merenda` (vuole il miele) | P1 con A8 |
 | caseificio | 200/20: burro, formaggio | ✅ 120/11 | – | – |
-| **pentolone** | 150/23: zuppa, beverone, zuppa_orto, pastura | ❌ | tutte e 4 (il mangime di maiali, anatre, capre) | **P0** (A1) |
+| pentolone | 150/23: zuppa, beverone, zuppa_orto, pastura | ✅ 75/19 (provvisorio, [../cortile-e-pentolone.md](../cortile-e-pentolone.md)): le 4 ricette | – | – |
 | cucina | 210/25: minestrone, polenta, conserva, salsa, parmigiana | ✅ 110/12 (id `conserviera`; modello ancora da ridisegnare) | – | – |
 | zuccherificio | 230/31: zucchero, caramelle (46), marmellata (51) | 🟡 130/13 | `caramelle` (miele) | P1 con A8 |
 | gelateria | 240/34: succo, gelato, frullato | ✅ 140/14 | – | – |
@@ -58,19 +58,19 @@ Prezzi e livelli: 2D 🪙/liv → 3D 🪙/liv. Tempo delle ricette: minuti 2D �
 **Attenzione agli id**: in 3D `pasticceria` è il Pastificio, in 2D è la bottega della pasticcera; `conserviera` è la Cucina.
 Ogni migrazione e ogni nuova bottega 3D deve tenerne conto ([commercio.md](commercio.md) M3).
 
-## Le ricette (57 nella 2D, 37 nella 3D)
+## Le ricette (57 nella 2D, 41 nella 3D)
 
 | id | cosa | stato | pri |
 |---|---|---|---|
 | C16 | le 37 portate | ✅ stesso id, ingredienti e quantità (un test le confronta, con le deviazioni dichiarate in `MANCANTI`) | – |
 | C17 | le 4 «di bestia» (uova, latte, lana, pesce) | ✅ sono i prodotti delle bestie e della pesca | – |
-| C18 | le 9 di macchine non portate: mangime, zuppa, beverone, zuppa_orto, pastura, fiorume, fiorume_concime, merenda, caramelle | ❌ | P0 le quattro del pentolone, P1 le altre |
+| C18 | le 9 di macchine non portate: mangime, zuppa, beverone, zuppa_orto, pastura, fiorume, fiorume_concime, merenda, caramelle | 🟡 le quattro del pentolone ✅ (G4); restano mangime, fiorume, fiorume_concime, merenda, caramelle | P1 le altre |
 | C19 | le 7 di recinti non portati: lana_angora, uova_anatra, tartufi, latte_capra, miele, lana_alpaca, concime | ❌ | P0/P1 ([animali.md](animali.md)) |
 | C20 | tempi | 🟡 minuti → secondi (×60) | P1 D9 |
 | C21 | costo per lavorazione | 2D: 🪙0 (8 ricette), 🪙1 (42), 🪙2 (7) a ogni avvio; 3D: ❌ gratis | P1 D13 |
 | C22 | `parmigiana` ha l'emoji 🍆 | ✅ uguale (manca il disegno in entrambe) | P2 |
-| C23 | zucca e patata con poche uscite (la 2D le manda al pentolone) | ❌ si risolve con C18 | P0 con A1 |
-| C24 | merci | 2D 66 prodotti, 3D 56 (mancano almeno mangime, zuppa, beverone, pastura, fiori, merenda, tartufi, miele, concime, caramelle) | segue C18–C19 |
+| C23 | zucca e patata con poche uscite (la 2D le manda al pentolone) | ✅ zucca → pastone, patata → verdure lesse (G4) | – |
+| C24 | merci | 2D 66 prodotti, 3D 60 (mancano almeno mangime, fiori, merenda, miele, concime, caramelle; arrivati zuppa, beverone, pastura, tartufi) | segue C18–C19 |
 
 ## La fila
 
@@ -86,6 +86,6 @@ Ogni migrazione e ogni nuova bottega 3D deve tenerne conto ([commercio.md](comme
 |---|---|---|---|
 | C28 | N → 1 e mai il contrario | ✅ | – |
 | C29 | becchime (galline), foraggio (mucche, pecore) | ✅ stesse quantità | – |
-| C30 | tre mangimi, tre bocche (mangime / pastone, foraggio, pentolone) | 🟡 due mangimi: la catena si insegna a metà finché mancano maiali, anatre, capre | P0 con A1 |
+| C30 | tre mangimi, tre bocche (mangime / pastone, foraggio, pentolone) | ✅ cinque mangimi (becchime, foraggio, verdure lesse, pastone, verdura fresca) e le loro bocche (G4); resta il `mangime` del mulino per i compagni (A6) | – |
 | C31 | l'erba medica | ✅ la più svelta, solo per il fienile (`mangime: true`) | – |
 | C32 | veterinaria che chiede il mangime | ❌ il mangime non si consegna in 3D | P2 con A6 |
