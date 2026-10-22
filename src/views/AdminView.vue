@@ -58,6 +58,7 @@ const A_MANO = [
   ['#fattoria-tipo=30', 'fattoria già giocata di quel livello, 1–99'],
   ['#fattoria=40', 'solo il livello della fattoria, il prato resta'],
   ['#fattoria3d-tipo=10', 'fattoria 3D già giocata di quel livello, 1–99'],
+  ['#fattoria3d-da2d', 'rifà la conversione 2D→3D del bambino (la 3D di prima va nel cestino)'],
   ['#fattoria3d=10', 'solo il livello della fattoria 3D (non lo abbassa mai)'],
   ['#stagione=natale', 'la fattoria a Natale (o halloween)'],
   ['#sotterraneo=roba', 'si scende equipaggiati'],
@@ -116,6 +117,11 @@ const A_MANO = [
         <div class="tasti">
           <button v-for="l in LIVELLI_TIPO_3D" :key="'3d' + l" :data-trucco="'fattoria3d-tipo=' + l"
                   @click="trucco('fattoria3d-tipo=' + l, 'fattoria3d')">livello {{ l }}</button>
+        </div>
+        <h3>Fattoria 3D: rifà la conversione dalla 2D</h3>
+        <p class="nota">Butta la 3D di {{ chi }} nel cestino e la rifà dalla sua fattoria 2D; senza una 2D non tocca niente.</p>
+        <div class="tasti">
+          <button data-trucco="fattoria3d-da2d" @click="trucco('fattoria3d-da2d', 'fattoria3d')">converti dalla 2D</button>
         </div>
         <h3>Fattoria 3D: solo il livello</h3>
         <div class="tasti">

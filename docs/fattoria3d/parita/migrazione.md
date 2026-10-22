@@ -50,6 +50,12 @@ la prima volta, `onMounted` di `src/giochi/fattoria3d/Gioco.vue`:
 `new Fattoria3d({ stato: statoDaCaricare(scelta), borsa })` al posto di `scelta(CHIAVE, 'stato', null)`. Quando la 3D salva, il suo stato
 sostituisce la conversione. «Ricomincia la fattoria» (G1b) deve azzerare anche `fattoria3d`, o la conversione tornerebbe a ogni avvio.
 
+## Rifare la conversione (cheat)
+
+`#fattoria3d-da2d` (o il tasto in `/admin`) mette la 3D del bambino attivo nel cestino (`cestinaOra`) e la rifà dalla sua 2D, anche se la 3D
+ha già uno stato suo (`statoRifattoDa2D`). **Si usa con un bambino di prova**: la 3D di prima si perde dal gioco, resta solo nel cestino. Se il
+bambino non ha una 2D da portare, il gioco lo dice con un avviso e non butta niente.
+
 ## Da fare
 
 - Provarla su un salvataggio vero esportato (non solo sulle fattorie tipo).

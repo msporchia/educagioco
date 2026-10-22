@@ -16,7 +16,7 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { fattoriaTipo, LIVELLI_TIPO, LIVELLO_MAX } from '../../src/giochi/fattoria/motore/tipo.js'
 import { Fattoria } from '../../src/giochi/fattoria/motore/fattoria.js'
-import { statoDa2D, statoDaCaricare, pezzoPer, merceDel, livelloPerProporzione } from '../../src/giochi/fattoria3d/motore/migra.js'
+import { statoDa2D, statoDaCaricare, statoRifattoDa2D, pezzoPer, merceDel, livelloPerProporzione } from '../../src/giochi/fattoria3d/motore/migra.js'
 import { normalizza, statoIniziale, VERSIONE_STATO } from '../../src/giochi/fattoria3d/motore/stato.js'
 import { Fattoria3d } from '../../src/giochi/fattoria3d/motore/fattoria3d.js'
 import { livelloPer, ULTIMO } from '../../src/giochi/fattoria3d/dati/livelli.js'
@@ -203,6 +203,18 @@ nota('livelli 2D → 3D:', forme.join(' '))
   uguale('la conversione è deterministica', JSON.stringify(a), JSON.stringify(b))
   uguale('e non cambia il dato 2D', JSON.stringify(dato), prima)
   uguale('un\'esperienza assurda (guasto) non fa girare a vuoto', statoDa2D({ ...dato, speso: 1e300 }, { ora: T0 }), null)
+}
+
+// ── il cheat #fattoria3d-da2d: la conversione rifatta, anche se la 3D ha già uno stato suo ──
+{
+  const dato2D = JSON.parse(JSON.stringify(fattoriaTipo(30, { ora: T0 }).serializza()))
+  const profilo = { fattoria: { stato: dato2D }, fattoria3d: { stato: { ...statoIniziale(), esperienza: 7 } } }
+  const leggi = (c, k, d) => (profilo[c] && profilo[c][k] != null ? profilo[c][k] : d)
+  const rifatto = statoRifattoDa2D(leggi)
+  controlla('con una 2D, la rifà anche se la 3D ha uno stato suo', rifatto && rifatto.migrato === 1 && rifatto.esperienza !== 7)
+  uguale('senza una 2D torna null (il chiamante non butta niente)', statoRifattoDa2D(() => null), null)
+  uguale('e la 3D da sola non basta', statoRifattoDa2D((c, k, d) => (c === 'fattoria3d' ? profilo.fattoria3d[k] : d)), null)
+  uguale('il dato 2D resta com\'era', JSON.stringify(profilo.fattoria.stato), JSON.stringify(dato2D))
 }
 
 riassunto('fattoria3d-migra')
