@@ -6,6 +6,7 @@ import { COLTURE } from '../dati/colture.js'
 import { COSTI } from '../dati/regole.js'
 import { EDIFICI, PEZZI } from '../dati/catalogo.js'
 import { MACCHINE } from '../dati/ricette.js'
+import { eBottega } from '../dati/botteghe.js'
 import { PRODOTTI_ANIMALI } from '../dati/animali.js'
 import { dettoDi, dettoDiRifiuto } from './detti.js'
 import { tempoBreve } from '../dati/tempo.js'
@@ -248,6 +249,7 @@ export class Azioni {
     const { ui } = this.c
     if (MACCHINE[tipo]) return ui.apriMacchina(tipo)           // il menu della SUA macchina
     if (tipo === 'mongolfiera') return ui.apriMongolfiera()   // la nave: il foglio con la stiva di casse
+    if (eBottega(tipo)) return ui.apriBottega(tipo)             // una bottega del paese: il foglio dei suoi clienti
   }
   /** Una riga che si vede sempre: nel fumetto dell'eroe, e nella barra del costruire se è aperta. */
   dici(testo) { this.c.fx.parla(testo); this.c.ui.avviso(testo) }

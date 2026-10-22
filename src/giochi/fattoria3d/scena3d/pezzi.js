@@ -9,6 +9,8 @@ import { creaPonte, creaPasserella, creaTavolo } from './modelli-passaggi.js'
 import { creaStagno } from './modelli-acqua.js'
 import { creaZuccherificio, creaTelaio, creaSartoria, creaTintoria, creaFienileMacchina, creaFriggitoria, creaSushiBar } from './modelli-macchine.js'
 import { creaMolo, creaPorticciolo } from './modelli-pesca.js'
+import { creaBottegaPasticceria, creaBottegaOsteria, creaBottegaMensa, creaBottegaMerceria } from './modelli-botteghe.js'
+import { eBottega } from '../dati/botteghe.js'
 import { creaStagnoAnatre, creaPorcile, creaRecintoCapre, creaPentolone, creaAnatra, creaMaiale, creaCapra } from './modelli-cortile.js'
 import { creaZucca, creaZucche } from './modelli-feste.js'
 import { EDIFICI, PEZZI } from '../dati/catalogo.js'
@@ -52,6 +54,7 @@ const CREA_EDIFICIO = {
   telaio: creaTelaio, zuccherificio: creaZuccherificio, sartoria: creaSartoria, tintoria: creaTintoria,
   friggitoria: creaFriggitoria, sushi_bar: creaSushiBar,
   pentolone: creaPentolone,
+  bottega_pasticceria: creaBottegaPasticceria, bottega_osteria: creaBottegaOsteria, bottega_mensa: creaBottegaMensa, bottega_merceria: creaBottegaMerceria,      // le botteghe del paese (docs/fattoria3d/botteghe.md)
   fienile: creaFienileMacchina,                       // la macchina del mangime (l'unico fienile: quello di scena è stato tolto)
 }
 /** Un tipo senza disegno non rompe la scena: una scatola grigia della sua misura. */
@@ -226,6 +229,14 @@ export class Pezzi {
       const pronti = this.m.prontiIn(v.tipo), prima = Object.keys(Q.pronti).find(k => Q.pronti[k] > 0)
       v.badge.imposta(pronti ? `${RICETTE[prima].emoji} ${pronti} pront${pronti === 1 ? 'o' : 'i'}!`
         : cuoce ? `🔥 ${tempoBreve(Math.max(0, (Q.coda[0].fine || adesso) - adesso))} · ${Q.coda.length}/${posti}` : '', pronti ? 'pronto' : '')
+    } else if (eBottega(v.tipo)) {
+      // una bottega non lavora: un dettaglio che si muove piano, e il cartello coi clienti che hanno già la loro roba
+      if (g.userData.anima) g.userData.anima(dt, tt)
+      if (tt - (v.tNave ?? -9) > 0.5) {
+        v.tNave = tt
+        const n = this.m.bottegaPronta(v.tipo)
+        v.badge.imposta(n ? `${EDIFICI[v.tipo].emoji} ${n} pront${n === 1 ? 'o' : 'i'}!` : '', n ? 'pronto' : '')
+      }
     } else if (v.tipo === 'mongolfiera') {
       // da ferma sale e scende piano; a tutto pieno (o con «Parti!») sale in alto e si allontana, e torna prima della fine del riposo
       const M = s.mongolfiera, volo = g.userData.volo
