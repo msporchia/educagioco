@@ -29,6 +29,7 @@ lana) e uno stato suo, e non tocca quelli della fattoria di sempre; le monete so
 - [guida.md](guida.md) — il `?`, il primo giro (la riga e l'anello), «E adesso?» e il consiglio col tasto sotto un «non si può»
 - [scena.md](scena.md) — il disegno: i moduli di `scena3d/`, il dito, costruire trascinando, le opzioni di qualità e il peso
 - [istanze.md](istanze.md) — i banchi di istanze (campi, pezzi fermi), il LOD dei compagni, l'ombra agganciata alla griglia; **come si aggiunge un pezzo istanziato**
+- [limiti.md](limiti.md) — i limiti sul vecchio telefono: edifici, campi, recinti, pollai e stalle, stagioni e preset misurati sul Redmi imitato e nel log vero, chi pesa di più, le proposte; le leve `&stress=` e `&degrado=no`
 - [file.md](file.md) — dove sta cosa in `src/giochi/fattoria3d/`, e i bersagli dei test
 - [parita/](parita/README.md) — **cosa manca per sostituire la fattoria 2D**: criteri, tabelle di parità per area (colture e catena, animali, commercio, livelli ed economia, mondo e stagioni, interfaccia e guida, tecnica e salvataggi), le decisioni per l'utente e il piano a giri
 - [da-fare.md](da-fare.md) — le voci aperte tecniche

@@ -57,6 +57,8 @@ Le voci aperte tecniche. Una riga ciascuna, e quando una si chiude si toglie. Qu
 - **Il costo dell'avvio dei modelli.** Dopo la cache ([scena.md](scena.md) «La cache dei modelli») ogni tipo si costruisce una volta; all'avvio non ci sono più i fantasmi degli 11 edifici (si costruiscono quando servono, o nel riscaldamento),
   il contadino e i compagni (cane e gatti: 13–21 ms la prima volta in node). Su un telefono sarebbero ×5–8: da misurare. Se pesa, si scaglionano sui primi fotogrammi (i test d'integrazione cercano i gruppi subito:
   vanno aspettati). **Cuocere le geometrie a monte è stato valutato e scartato** (~400 kB per 26 tipi contro un tetto di ~150 kB, per ~22 ms su un PC): se un giorno il file cresce meno o un modello si fa grande, si rifà il conto.
+- **I limiti sul vecchio telefono** ([limiti.md](limiti.md), 22/10): il log vero dà 54 ms con 10 edifici a telefono caldo; da rifare
+  freddo. Proposte: galline e mucche a istanze, i campi più leggeri da lontano, i recinti del secondo cortile fusi.
 - **Il peso della scena, ciò che resta** (fatto il 22/10: banchi di istanze per campi e pezzi fermi, LOD dei compagni, sole sulla griglia → [istanze.md](istanze.md)). Resta:
   1. **I gatti e il cane non si fondono** (62 mesh, ~15 a gatto): le parti si muovono; con ~60 draw call sono il pezzo più grosso della scena in vista dopo gli edifici. Uno scheletro con pelle (`SkinnedMesh`) le porterebbe a 1–2 a compagno, ma cambia come si animano (`posaGatto`/`posaCane` muovono i perni): da valutare solo se il telefono vero lo chiede.
   2. **I cartelli oltre i 18 m** non sono stati toccati: sono DOM (non pesano: 0,2–0,8 ms di stile con 19 cartelli, [scena.md](scena.md)), e a 22 m di camera sono già tutti dentro il campo visivo.
