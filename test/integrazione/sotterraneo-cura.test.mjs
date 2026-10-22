@@ -52,7 +52,15 @@ async function tocca(x, y) {
 }
 async function toccaIl(sel) {
   await finestraFerma(page)
-  const b = await page.locator(sel).first().boundingBox()
+  // chiuso il dialogo la mappa torna a posto scorrendo per un secondo: si tocca quando la cosa sta ferma
+  let b = await page.locator(sel).first().boundingBox()
+  for (let i = 0; i < 20; i++) {
+    await attendi(page, 150)
+    const n = await page.locator(sel).first().boundingBox()
+    const fermo = Math.abs(n.x - b.x) < 1 && Math.abs(n.y - b.y) < 1
+    b = n
+    if (fermo) break
+  }
   await tocca(b.x + b.width / 2, b.y + b.height / 2)
 }
 const sostaOra = async () => (await leggiProfilo(page))?.campagne?.sotterraneo?.cfg?.avventure?.cavaliere?.sosta || {}
