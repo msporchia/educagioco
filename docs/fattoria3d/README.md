@@ -14,7 +14,8 @@ lana) e uno stato suo, e non tocca quelli della fattoria di sempre; le monete so
 - [cortile-e-pentolone.md](cortile-e-pentolone.md) — il pentolone (le 4 ricette del mangime) e le bestie che mangiano da lui: anatre, maiali, capre; i numeri provvisori in `dati/cortile.js`
 - [animali.md](animali.md) — pollaio e stalla: galline e mucche, uova e latte, i posti coi livelli, il caseificio e le ricette nuove
 - [ordini.md](ordini.md) — il banco della bancarella: chi chiede raccolti e prodotti, il premio in esperienza (mai monete), rifiutare, lo stato v3
-- [mongolfiera.md](mongolfiera.md) — la nave: tre file di casse da riempire un po' alla volta, i bonus, la sorpresa della fiera, il viaggio e il ritorno, il segnaposto di prima che si chiude
+- [botteghe.md](botteghe.md) — le quattro botteghe del paese (pasticceria, osteria, mensa, merceria): edifici che chiedono, clienti per mestiere, la fama a cuori, i numeri della 2D
+- [mongolfiera.md](mongolfiera.md) — la nave: tre file di casse (quattro dal livello 66) da riempire un po' alla volta, i bonus, la sorpresa della fiera, il viaggio e il ritorno, il segnaposto di prima che si chiude
 - [vicini.md](vicini.md) — il trattore e i villaggi dei vicini: la fattoria visitabile come dato (snapshot), la cassa, il mercato che compra e che vende, la visita di sola lettura, e come domani entrerà quella di un amico
 - [terreno.md](terreno.md) — i lotti da comprare, il recinto, gli alberi che si abbattono, le strade a pennello, la telecamera
 - [mondo-infinito.md](mondo-infinito.md) — il mondo senza confini: lotti `a_b` qualunque, generazione per lotto, gli id salvati, la finestra della scena, il prezzo che si auto-limita

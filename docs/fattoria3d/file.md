@@ -28,6 +28,7 @@ dati/
   compagni.js        Watson e i gatti: i dati, il livello a cui arrivano, le scelte pure (meta, cosa fare, le sequenze di «Quando ci premi»: richiamo, feste di Watson, risposte dei gatti, incontro), `ASPETTO_ERO` ([compagni.md](compagni.md))
   livelli.js         le soglie, `roba(liv)`, i nomi dei livelli, i guasti dei livelli
   ordini.js          il banco: i clienti, i tempi, il premio (tetto 🪙6/min), `chiedibili(livello)`, i guasti
+  botteghe.js        le quattro botteghe del paese: costanti e funzioni della 2D, `BOTTEGHE`, `EDIFICI_BOTTEGHE` (foglia di `catalogo.js`), `prodotto2D`/`MERCE_3D` ([botteghe.md](botteghe.md))
   albero.js, usi.js  «Come si fa» (`alberoDi`: la catena di una merce) e a cosa serve una merce (`usiDi`), puri ([guida.md](guida.md))
   regole.js          i costi (anche l'albero 🪙 3 e il sasso 🪙 1, il prezzo dei lotti), le pecore
   mongolfiera.js     la nave: file, casse, pezzi, bonus, il riposo, la sorpresa (`SORPRESE`), `merceDaCassa`, `premioDellaCassa`, i guasti col tetto ([mongolfiera.md](mongolfiera.md))
@@ -42,6 +43,7 @@ motore/
   consiglio.js       «E adesso?» (`cosaFaccioAdesso`) e il passo per avere una merce (`comeAvere`, risale la catena) con l'azione per farlo (pura)
   mongolfiera.js     la nave: `nuovaStiva`, `stivaInForma`, `aggiornaMongolfiera` (atterra il carico, torna dal viaggio), `caricaLaCassa`, `partiLaMongolfiera`, `scegliLaSorpresa`, `vistaDellaMongolfiera`
   ordini.js          gli ordini: `nuovoOrdine` (puro, col caso da fuori) e `ordineInForma`; i posti crescono col livello (`POSTI(livello)` in `dati/ordini.js`)
+  botteghe.js        le botteghe del paese: `componiCliente`, `aggiornaLaBottega`, `consegnaInBottega`, `rifiutaInBottega`, `leggiLeBotteghe`, `vistaDellaBottega`, `famaDi`, `guastiDelleBotteghe` ([botteghe.md](botteghe.md))
   stato.js           lo stato salvato (esperienza, `posseduti` = edificio in mappa; gli edifici sono anche `cose`, il v8 si migra al posto di prima: [edifici-liberi.md](edifici-liberi.md); `macchine`, `ordini`, `bestie` di pollaio e stalla; la versione sta in `VERSIONE_STATO`), `statoIniziale()` e `normalizza()` (un salvataggio rotto si rimette in forma; un v6 passa dagli id vecchi ai nuovi, v7)
   tipo.js            la fattoria «tipo» (`fattoriaTipo(livello)`, borsa infinita, deterministica): il cheat `#fattoria3d-tipo=N` ([comandi](../core/comandi.md)); test `unita/fattoria3d-tipo`
   percorso.js        Dijkstra sulla griglia, le strade costano meno
@@ -51,6 +53,7 @@ scena3d/             il disegno (vedi scena.md); `facce.js` la faccia di una mer
   scena3d/modelli-passaggi.js   ponte, passerella e tavolo con le panche: presi dal Sotterraneo 3D e rifatti con i materiali della fattoria (scena.md)
   scena3d/modelli-acqua.js      lo stagno (3×3) e il laghetto (5×4) costruiti dal bambino, e i materiali dell'acqua (`materialeAcqua`, `materialeMare`, `uTAcqua`) che usa anche il terreno ([laghi.md](laghi.md))
   scena3d/modelli-cortile.js    il pentolone (3×3), lo stagno delle anatre, il porcile e il recinto delle capre (4×3) con anatra, maiale e capra ([cortile-e-pentolone.md](cortile-e-pentolone.md))
+  scena3d/modelli-botteghe.js   pasticceria, osteria, mensa e merceria (3×3, 3–5 mesh fuse l'una) con un dettaglio che si muove ([botteghe.md](botteghe.md))
   scena3d/modelli-pesca.js      il molo (3×1 e 1×3) e il porticciolo (4×3, la barca dondola); friggitoria e sushi bar stanno in `modelli-macchine.js` ([geografia-e-pesca.md](geografia-e-pesca.md))
   scena3d/pesci.js              i pesciolini: una `InstancedMesh` sola, tutta nello shader (`uTPesci`), nell'acqua dei laghi, del mare e degli stagni
   scena3d/stagione.js           le feste in scena: cielo e luci tinti, i fiocchi (un `Points`), chiazze, stelle, alberelli e lucine a istanze; `via()` rimette tutto ([stagioni.md](stagioni.md))
@@ -71,6 +74,7 @@ viste/
   macchina-pura.js   il conto del foglio senza DOM: `quanteNePuoiFare`, `ordinaRicette`, `statoDelPosto`, `bersaglioSotto`, `gestoDelDito` (`unita/fattoria3d-macchina`)
   Bacheca.vue        il foglio «Gli ordini» a bacheca ([ordini.md](ordini.md)): i biglietti colorati sulla tavola (3–8, uno per posto), il dettaglio di quello scelto con le merci, il cestino e «Consegna», l'indicatore delle consegne; stile in `stile-bacheca.css`
   MerceBacheca.vue   una merce in un cerchio (`k`, `emoji`, `n`): provvisoria, stessa API di `Faccia.vue`
+  Bottega.vue        il foglio di una bottega del paese ([botteghe.md](botteghe.md); stile: `stile-bottega.css`): insegna col suo colore, cinque cuori, un foglietto per bancone, «Consegna» e 🗑️
   Mongolfiera.vue    il foglio della mongolfiera ([mongolfiera.md](mongolfiera.md)): l'insegna col cielo e il pallone, la stiva con tre file di cassette di legno (la faccia, `ha/serve`, «Metti sulla mongolfiera»), i bonus, «Parti subito»; stile in `stile-mongolfiera.css`
   Banco.vue          il vecchio foglio del banco (tre posti con fumetto): non più agganciato, da togliere
   Livelli.vue        il foglio «Livello N»: la scala, con la scatola aperta di ciò che è arrivato e quella chiusa (in grigio, col lucchetto) di ciò che arriva dopo, quanto manca
