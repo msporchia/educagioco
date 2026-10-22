@@ -1,7 +1,7 @@
 /* Lo stato che si salva (in profile.campagne.fattoria3d.cfg.stato) e come si rimette in forma quando si legge: un salvataggio
    di ieri non ha bisogno di migrazioni, i campi che mancano si riempiono. Dato + funzioni pure. */
 import { LOTTI_INIZIALI, PEZZO_DI_PARTENZA, POSTI_STORICI, lottoPerId } from '../dati/mondo.js'
-import { biomaDi, biomaVecchio } from '../dati/biomi.js'
+import { lottoDiversoDa } from '../dati/biomi.js'
 import { CHIAVI_COLTURE, TESSERE } from '../dati/colture.js'
 import { TIPI_DI_EDIFICIO, EDIFICI, PEZZI } from '../dati/catalogo.js'
 import { TIPI_DI_MACCHINA, MACCHINE, RICETTE, nuovoId } from '../dati/ricette.js'
@@ -28,8 +28,8 @@ const LANA_DEL_SEGNAPOSTO = 2     // il premio della cassa del segnaposto di pri
 // 9: gli edifici sono pezzi liberi (docs/fattoria3d/edifici-liberi.md): uno posseduto sta in `cose` come `{ id, tipo: 'mulino', i, j }`, uno
 //    comprato e non messo nel `magazzino` (al massimo uno); `posseduti[tipo]` vuol dire «è in mappa» e `normalizza` lo rifà dalle cose.
 //    Un v8 con un edificio comprato lo ritrova dov'era il suo posto fisso (`POSTI_STORICI`), con la coda, i pronti e la stiva com'erano
-//    Senza cambiare versione (niente da tradurre, un v9 si legge uguale): `geo` (1 = la geografia grande, mare a ovest e laghi a est: docs/fattoria3d/geografia-e-pesca.md),
-//    `vecchi` (gli id dei lotti che un salvataggio senza `geo` aveva già comprato dove ora c'è il mare o un lago: restano com'erano) e `pesca` (le lenze e i banchi)
+//    Senza cambiare versione (niente da tradurre, un v9 si legge uguale): `geo` (1 = la geografia grande, mare a ovest e laghi a est: docs/fattoria3d/geografia-e-pesca.md; 2 = anche i laghi naturali grandi della fascia di mezzo: docs/fattoria3d/laghi.md),
+//    `vecchi` e `vecchi1` (gli id dei lotti che un salvataggio senza `geo`, o con `geo: 1`, aveva già comprato dove ora il lotto sarebbe diverso: restano com'erano) e `pesca` (le lenze e i banchi)
 //    Il mangime (docs/fattoria3d/mangime-e-catena.md) non cambia la versione: l'erba medica è una coltura in più (`merci.erba`, a zero), il fienile una macchina in più (vuota, non
 //    comprata), becchime e foraggio stanno in `prodotti`; le bestie di prima restano, e se hanno fame chiedono il mangime nuovo.
 export const VERSIONE_STATO = 9
@@ -54,8 +54,9 @@ export function statoIniziale() {
     esperienza: 0,             // monete spese in questo gioco; non scende mai (dati/livelli.js ne ricava il livello)
     posseduti: Object.fromEntries(TIPI_DI_EDIFICIO.map(t => [t, false])),
     lotti: { ...LOTTI_INIZIALI },
-    geo: 1,                    // la geografia grande (mare a ovest, laghi a est): uno stato senza questo campo è di prima e tiene i suoi lotti com'erano
-    vecchi: [],                // gli id (`a_b`) dei lotti comprati prima della geografia grande dove ora cambierebbe qualcosa: si generano alla vecchia (generaLotto `vecchio`)
+    geo: 2,                    // la geografia: 1 = mare a ovest e laghi a est, 2 = anche i laghi naturali nella fascia di mezzo; uno stato più vecchio tiene i suoi lotti com'erano
+    vecchi: [],                // gli id (`a_b`) dei lotti comprati prima della geografia grande dove ora cambierebbe qualcosa: si generano alla vecchia (generaLotto `vecchio: true`)
+    vecchi1: [],               // gli id dei lotti comprati con `geo: 1` dove ora c'è un lago naturale al posto della pozzanghera: restano com'erano (generaLotto `vecchio: 1`)
     pesca: {},                 // per lotto d'acqua tuo: { i, j (dove sta il galleggiante), fine (quando abbocca, null se non c'è la lenza), riposo (quando il banco si ripopola, null) }
     strade: [],                // le celle (indice di griglia) disegnate dal bambino
     daRegalare: {},            // ciò che la fattoria 2D aveva e la 3D non ha ancora ({ 'cosa:ovile': 1, 'scorta:miele': 4, 'terra': 2 }): solo un conto, mai monete (motore/migra.js)
@@ -97,8 +98,17 @@ export function normalizza(letto) {
   const lotti = oggetto(letto.lotti)
   s.lotti = Object.keys(lotti).length ? Object.fromEntries(Object.entries(lotti).filter(([k, v]) => v && lottoPerId(k)).map(([k]) => [k, true])) : s.lotti
   // la geografia grande: uno stato di prima (senza `geo`) tiene com'erano i lotti già comprati che ora sarebbero diversi (mare, costa, lago, o un laghetto che sparisce)
-  if (letto.geo === 1) s.vecchi = Array.isArray(letto.vecchi) ? [...new Set(letto.vecchi.filter(id => typeof id === 'string' && lottoPerId(id) && s.lotti[id]))] : []
-  else s.vecchi = Object.keys(s.lotti).filter(id => { const l = lottoPerId(id); return l && biomaDi(l.a, l.b) !== biomaVecchio(l.a, l.b) })
+  // `geo: 1` ha già la sua lista; i suoi lotti comprati dove ora c'è un lago naturale (o altro che cambia) restano com'erano (`vecchi1`). `geo: 2` ha tutte e due le liste.
+  const lista = (v, tieni) => Array.isArray(v) ? [...new Set(v.filter(id => typeof id === 'string' && lottoPerId(id) && s.lotti[id] && tieni(id)))] : []
+  const diverso = (gen, id) => { const l = lottoPerId(id); return l && lottoDiversoDa(l, gen) }
+  if (letto.geo === 1 || letto.geo === 2) {
+    s.vecchi = lista(letto.vecchi, () => true)
+    s.vecchi1 = letto.geo === 2 ? lista(letto.vecchi1, id => !s.vecchi.includes(id))
+      : Object.keys(s.lotti).filter(id => !s.vecchi.includes(id) && diverso(1, id))
+  } else {
+    s.vecchi = Object.keys(s.lotti).filter(id => diverso(0, id))
+    s.vecchi1 = []
+  }
   for (const [id, v] of Object.entries(oggetto(letto.pesca))) {
     if (!lottoPerId(id) || !v || typeof v !== 'object' || !Number.isInteger(v.i) || !Number.isInteger(v.j)) continue
     const fine = Number.isFinite(v.fine) ? v.fine : null, riposo = Number.isFinite(v.riposo) ? v.riposo : null

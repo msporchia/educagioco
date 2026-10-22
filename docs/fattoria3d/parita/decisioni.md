@@ -17,7 +17,7 @@ Le eccezioni, decise dall'utente:
 - **D4**: la pesca si calibra insieme alla parte medio-alta della scala, tenendo conto degli altri tempi.
 - **D5–D6**: vendere ai vicini non dà monete e comprare non dà esperienza: sono posti di vendita in più, un palliativo per far contenti i vicini. Si tiene.
 - **D7**: come la 2D, cioè **un fienile solo** (la macchina). Si toglie il fienile di scena (`FISSI`, `POSTI_STORICI`, alberi dei lotti storici); un salvataggio vecchio non perde niente.
-- **D8**: i laghetti naturali si tengono ma sono troppo piccoli («pozzanghere»): si ingrandiscono e si genera una mappa credibile ([../laghi.md](../laghi.md)).
+- **D8**: i laghetti naturali si tengono ma sono troppo piccoli («pozzanghere»): si ingrandiscono e si genera una mappa credibile ([../laghi.md](../laghi.md)). **Fatto il 22/10**: laghi naturali nelle supercelle della fascia di mezzo, 12% di acqua, i salvataggi di prima tengono le loro pozzanghere.
 - **D10**: si tiene tutto il solo-3D. Le visite agli amici restano pronte e **non attivate**: prima si prova il gioco con i bambini.
 - **D12**: già risposto (regola generale sopra).
 - **D14**: un cut-off da parte dell'utente: per ora una delle due fattorie è `sperimentale`, e si sfrutta questo per evitare pasticci; niente si toglie dal codice.

@@ -1,18 +1,47 @@
 # I laghetti, i ponti e la pesca
 
-Un lotto su sette della fascia di mezzo è un **laghetto**: al mezzo uno stagno, intorno terra. Si vede anche da un lotto non tuo; si attraversa coi
-ponti. **A ovest c'è il mare e a est i laghi grandi**, fatti di celle e non di lotti: [geografia-e-pesca.md](geografia-e-pesca.md). Codice: `dati/biomi.js`,
-`Fattoria3d.acqua`/`puoMettere`, `scena3d/terreno.js` (`_acqua`). Il perché dei lotti è in [mondo-infinito.md](mondo-infinito.md).
+Nella fascia di mezzo ci sono **laghi naturali veri**: da qualche decina di celle a quasi cento, con la riva frastagliata, che attraversano i confini fra
+i lotti (un lago tocca da 3 a 11 lotti) e si vedono anche da un lotto non tuo; si attraversano coi ponti. **A ovest c'è il mare e a est i laghi grandi**,
+fatti di celle e non di lotti: [geografia-e-pesca.md](geografia-e-pesca.md). Codice: `dati/biomi.js`, `Fattoria3d.acqua`/`puoMettere`, `scena3d/terreno.js`
+(`_acqua`). Il perché dei lotti è in [mondo-infinito.md](mondo-infinito.md).
 
-## Lo stagno
+## I laghi della fascia di mezzo (generazione 2)
 
-Il quadrato 2×2 al centro del lotto più **da una a tre celle del bordo** (al più una per lato, mai un angolo): 5–7 celle d'acqua,
-una forma a blob che non è mai un quadrato. **Le quattro celle d'angolo e almeno tre celle per lato restano terra**: il lotto si
-compra e si attraversa dai lati. Un margine di terra di una cella tutt'intorno lascerebbe quattro celle d'acqua (il lotto è 4×4):
-poco più di una pozzanghera, per questo il bordo si lascia toccare in un punto per lato al massimo.
+Erano stagni da 5–7 celle al mezzo di un lotto su sette: «pozzanghere» (D8, [parita/decisioni.md](parita/decisioni.md)). Ora **l'acqua è una funzione della cella**
+(`eLagoDolce(i, j)` in `dati/biomi.js`), come quella dei laghi grandi, quindi un lago non sta in un lotto solo.
 
-`acquaDelLotto(l)` dà le celle, `moloDelLotto(l)` una **cella di riva** (terra che tocca l'acqua) col verso dell'acqua, scelta dal
-generatore: è il posto candidato per la pesca. `generaLotto` espone tutti e due (`acqua`, `molo`); il motore `acqua(i, j)`.
+- **Le supercelle.** La fascia (a da 0 a 7) è divisa in supercelle di 4×3 lotti (16×12 celle) allineate al rettangolo storico; ciascuna ha con probabilità
+  `P_LAGO_DOLCE` (0,52) **un lago**, tutto dentro con una cella di margine: fra due laghi c'è sempre una striscia di terra di almeno due celle, e
+  **la terra della fascia resta d'un pezzo** (gli unici pezzi staccati sono gli isolotti). Le due righe di supercelle sopra il rettangolo storico (b da 0 a 5)
+  non hanno laghi: il quadrato di partenza e i 42 lotti storici non cambiano.
+- **Le forme.** Tre taglie, scelte dal seme: piccolo (ellisse di ~6×4,5 celle), medio (~9×6,5, e una volta su due un lobo) e grande (~11,5×8, uno o due lobi, e un isolotto una
+  volta su due). Ogni ellisse è inclinata e col contorno ondulato (tre armoniche): niente è mai un quadrato. Misurato su 120 righe: 35 laghi da 25 a 97 celle (mediana 50), mai
+  un riquadro pieno oltre il 90%.
+- **La terra.** L'acqua naturale è il **12% delle celle** della fascia (le pozzanghere di prima ~5,6%; i laghi grandi a est ~20%): la regola «nel dubbio più terra»
+  ([parita/decisioni.md](parita/decisioni.md), «Terra») vuole che l'acqua non mangi la terra giocabile, e il 88% resta prato e bosco. Un lotto su cinque ha un po' d'acqua (il 27% tocca una
+  cella d'acqua), uno su trenta è tutto d'acqua (come il mare: si compra e ci si arriva con un ponte).
+- **Il bioma.** Un lotto con tre celle d'acqua o più è `laghetto` (il cartello dice «🏞️ laghetto»); sotto è un prato o un bosco con la sua riva. `acquaDelLotto(l)` dà le celle,
+  `moloDelLotto(l)` una cella di riva (non c'è per un lotto tutto d'acqua); `generaLotto` li espone (`acqua`, `molo`); il motore `acqua(i, j)`. Alberi e sassi non nascono sull'acqua.
+- **Comprabili e attraversabili.** Ogni lotto si compra come gli altri (confina con un altro). Da ogni cella d'acqua la terra è a **5 passi al più**: una catena di ponti
+  da tre celle (il primo appoggiato alla riva, i seguenti uno accanto all'altro, `_appoggioPerPonte`) attraversa anche il lago più largo (13 celle, provato nei test). Il 99,9% dei
+  lotti che non sono tutti d'acqua si lascia a piedi; resta qualche lotto con solo un isolotto in mezzo (si raggiunge col ponte).
+- **Le rive e il molo.** La riva è la sabbia sotto la lastra d'acqua (un po' più larga), le canne stanno sulle celle di terra che toccano l'acqua, e il molo si mette dove vuole il bambino
+  (🪙12): un lago grande dà più banchi di pesca, uno per lotto d'acqua suo ([geografia-e-pesca.md](geografia-e-pesca.md)). Il peso della scena non cambia: l'acqua della finestra di 9×9 lotti è
+  ~160 celle (il tetto è 720).
+
+### I salvataggi di prima non perdono pezzi
+
+Tre generazioni del generatore (`gen` in `dati/biomi.js`, `generaLotto(a, b, { vecchio })`): **0** prima della geografia grande (solo prato, bosco e pozzanghera), **1** con mare e
+laghi grandi ma ancora le pozzanghere, **2** quella di oggi. Un lotto **già comprato** dove la generazione di allora dà un lotto diverso da oggi (un altro bioma o altra acqua, `lottoDiversoDa`) **resta com'era**:
+`normalizza` ne mette l'id in `stato.vecchi` (gen 0, da uno stato senza `geo`) o in `stato.vecchi1` (gen 1, da `geo: 1`), e il motore lo genera con la sua generazione (`genDi(l)`): stessa acqua, stessi alberi e sassi,
+quindi un pezzo piazzato sulla pozzanghera o su una cella che oggi sarebbe lago non perde niente e un ponte sullo stagno regge. I lotti non comprati sono sempre di oggi. Il prezzo del compromesso: un lotto
+vecchio dentro un lago nuovo ha un taglio netto sul suo bordo (il lago finisce dritto contro il suo prato). Uno stato nuovo parte con `geo: 2`; `VERSIONE_STATO` resta 9. Provato in
+`unita/fattoria3d-laghi` (stato `geo: 1` col pezzo su una cella che oggi è lago, riletto e salvato; la pozzanghera con la passerella; lo stato senza `geo`; stati rotti). Le visite ai vicini (`statoDaSnapshot`)
+trattano gli snapshot come gen 0.
+
+## Lo stagno vecchio (le pozzanghere di prima)
+
+Resta solo per i salvataggi (gen 0 e 1) e per Villa Dolce: il quadrato 2×2 al centro del lotto più da una a tre celle del bordo (5–7 celle, `acquaDelLaghetto`). `moloDelLotto` sceglie la cella di riva.
 
 ## Regole
 
@@ -32,11 +61,11 @@ coordinate del lotto. Il movimento è nello shader della lastra (`uT`, lo stesso
 niente riflessioni e niente luci in più. Le istanze si rifanno con la finestra ([mondo-infinito.md](mondo-infinito.md)). Nel
 catalogo 3D c'è `fattoria:stagno`.
 
-Il cartello di un lotto comprabile con laghetto dice «🪙 N · 🏞️ laghetto» e l'offerta «Qui c'è un laghetto.» (e «🏞️ lago», «🌊 mare», «🏖️ spiaggia» per la geografia grande).
+Il cartello di un lotto comprabile con un lago naturale dice «🪙 N · 🏞️ laghetto» e l'offerta «Qui c'è un laghetto.» (e «🏞️ lago», «🌊 mare», «🏖️ spiaggia» per la geografia grande).
 
 ## Lo stagno e il laghetto che si costruiscono
 
-Oltre ai laghetti dei lotti (che restano com'erano) il bambino compra due pezzi dalla scheda **Decori** di «Costruisci qui» e li mette dove
+Oltre ai laghi dei lotti il bambino compra due pezzi dalla scheda **Decori** di «Costruisci qui» e li mette dove
 vuole nel suo terreno: lo **stagno** (3×3, 🪙 35, livello 5) e il **laghetto** (5×4, 🪙 110, livello 11). Sono decorazioni: non
 produttive, non spostano la scaletta (`tara:fattoria3d` resta verde). Scheda scelta: **Decori**, non una scheda nuova: il menu ha già
 cinque schede che scorrono di lato, e un pezzo d'acqua è una decorazione come la fontana. `acqua: true` in `dati/catalogo.js` (nessun
@@ -77,5 +106,6 @@ banco che si ripopola in un minuto). Il posto candidato `generaLotto(..).molo` r
 
 `unita/fattoria3d` (il blocco «stagno e laghetto»: misure, `acqua`, ponte sopra, rifiuti, percorso, salvataggio) e `integrazione/fattoria3d` (la carta
 `[data-carta="stagno"]`, messa con un tocco vero, il ponte sopra, il contadino che ci sale).
-`unita/fattoria3d-mondo` (sezioni 6, 7 e 9: biomi e proporzioni, forma e margini, molo, `puoMettere` con acqua e ponti, percorso che
-attraversa la passerella e non l'acqua, Villa Dolce con il suo laghetto e la sua passerella nel lotto `2_-1`).
+`unita/fattoria3d-mondo` (sezioni 6, 7 e 9: proporzioni, molo, `puoMettere` con acqua e ponti su una pozzanghera `geo: 1`, percorso che
+attraversa la passerella e non l'acqua, Villa Dolce con il suo laghetto e la sua passerella nel lotto `2_-1`), `unita/fattoria3d-laghi` (la distribuzione: percentuale d'acqua,
+taglie e forme, margini, terra d'un pezzo, nessun lotto isolato, la catena di ponti, il generatore puro, i salvataggi di prima).

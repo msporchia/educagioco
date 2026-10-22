@@ -4,7 +4,9 @@
    lato; in diagonale c'è sempre terra fra le due acque) e non cade mai nel quadrato di partenza.
    L'acqua grande NON è «per lotto»: la forma dell'acqua è una funzione continua della cella (i, j) (la riva del mare ondeggia con la riga,
    un lago è un'ellisse irregolare con i suoi isolotti), quindi attraversa i confini fra due lotti: comprando i lotti vicini si scopre più
-   lago. Il perché e i numeri: docs/fattoria3d/geografia-e-pesca.md. Una cella di riva è il posto candidato per un molo. Puro. */
+   lago. Il perché e i numeri: docs/fattoria3d/geografia-e-pesca.md. Una cella di riva è il posto candidato per un molo.
+   Tre generazioni (`gen`): 0 = prima della geografia grande, 1 = mare e laghi con i laghetti-pozzanghera di 5–7 celle, 2 = quella di oggi, coi laghi dolci
+   naturali nella fascia di mezzo (docs/fattoria3d/laghi.md). Un salvataggio tiene la generazione dei suoi lotti già comprati. Puro. */
 import { lotto, eStorico, chiave } from './mondo.js'
 import { mescola, sequenza } from './semi.js'
 
@@ -101,7 +103,8 @@ export function biomaVecchio(a, b) {
   return mescola(a, b, 2) < P_BOSCO ? 'bosco' : 'prato'
 }
 
-export function biomaDi(a, b) {
+/** Il bioma della generazione 1 (mare e laghi grandi, laghetti-pozzanghera): i lotti comprati in un salvataggio con `geo: 1` dove ora cambierebbe qualcosa restano così. */
+export function biomaV1(a, b) {
   const l = lotto(a, b)
   if (eStorico(l)) return 'prato'
   if (a <= ZONA.mareFinoA) return 'mare'
@@ -109,6 +112,79 @@ export function biomaDi(a, b) {
   if (a >= ZONA.lagoDaA) return haLago(l) ? 'lago' : (mescola(a, b, 2) < P_BOSCO ? 'bosco' : 'prato')      // a est niente laghetti: c'è il lago, o terra
   return biomaVecchio(a, b)
 }
+
+// ── i laghi dolci naturali della fascia di mezzo (generazione 2) ──
+// La fascia (a da 0 a 7, fuori dal rettangolo storico) è divisa in supercelle di 4×3 lotti (16×12 celle) allineate al rettangolo storico: ciascuna ha
+// con probabilità P_LAGO_DOLCE un lago, e il lago sta tutto dentro con una cella di margine, quindi fra due laghi c'è sempre una striscia di terra di
+// almeno due celle e la terra della fascia resta tutta d'un pezzo. Tre taglie (piccolo, medio, grande), ognuna un'ellisse inclinata dal contorno
+// ondulato, con uno o due lobi nei laghi medi e grandi e a volte un isolotto: forme che non sono mai un quadrato e che attraversano i confini fra i lotti.
+export const P_LAGO_DOLCE = 0.52          // la probabilità che una supercella abbia un lago (la terra giocabile: docs/fattoria3d/laghi.md)
+const FASCIA_A0 = 0, FASCIA_A1 = 7
+const SD_W = 16, SD_H = 12, SD_I0 = -14, SD_J0 = -12
+const laghiDolci = new Map()
+const nelBlob = (B, x, y) => {
+  const dx = x - B.cx, dy = y - B.cy, u = (dx * B.c + dy * B.s) / B.rx, v = (-dx * B.s + dy * B.c) / B.ry, t = Math.atan2(v, u)
+  return Math.hypot(u, v) < 1 + B.m1 * Math.sin(2 * t + B.f1) + B.m2 * Math.sin(3 * t + B.f2) + B.m3 * Math.sin(5 * t + B.f3)
+}
+function lagoDolceDi(ci, cj) {
+  const k = ci * 100003 + cj
+  if (laghiDolci.has(k)) return laghiDolci.get(k)
+  let L = null
+  if (ci >= 0 && ci <= 1 && cj !== 0 && cj !== 1 && mescola(ci, cj, 51) < P_LAGO_DOLCE) {
+    const q = mescola(ci, cj, 52), classe = q < 0.38 ? 0 : q < 0.8 ? 1 : 2                      // piccolo, medio, grande
+    const R = [[3.0, 0.9, 2.2, 0.7], [4.2, 1.2, 3.0, 0.9], [5.6, 0.9, 3.9, 0.7]][classe]
+    const blob = (rx, ry, cx, cy, sale) => {
+      const th = mescola(ci, cj, sale) * Math.PI
+      const ex = Math.hypot(rx * Math.cos(th), ry * Math.sin(th)) * 1.15, ey = Math.hypot(rx * Math.sin(th), ry * Math.cos(th)) * 1.15       // quanto sporge, con l'ondulazione
+      return { cx: Math.min(Math.max(cx, 1 + ex), SD_W - 1 - ex), cy: Math.min(Math.max(cy, 1 + ey), SD_H - 1 - ey), rx, ry, c: Math.cos(th), s: Math.sin(th),
+        m1: 0.07 + 0.06 * mescola(ci, cj, sale + 1), m2: 0.05 + 0.05 * mescola(ci, cj, sale + 2), m3: 0.02 + 0.04 * mescola(ci, cj, sale + 3),
+        f1: mescola(ci, cj, sale + 4) * 6.28, f2: mescola(ci, cj, sale + 5) * 6.28, f3: mescola(ci, cj, sale + 6) * 6.28 }
+    }
+    const rx = R[0] + mescola(ci, cj, 53) * R[1], ry = R[2] + mescola(ci, cj, 54) * R[3]
+    const cx = SD_W * (0.35 + 0.3 * mescola(ci, cj, 55)), cy = SD_H * (0.38 + 0.24 * mescola(ci, cj, 56))
+    const blobs = [blob(rx, ry, cx, cy, 100)]
+    const lobi = classe === 0 ? 0 : classe === 1 ? (mescola(ci, cj, 57) < 0.5 ? 1 : 0) : 1 + (mescola(ci, cj, 57) < 0.5 ? 1 : 0)
+    for (let n = 0; n < lobi; n++) {
+      const ang = mescola(ci, cj, 70 + n) * Math.PI * 2, f = 0.42 + 0.2 * mescola(ci, cj, 72 + n)
+      blobs.push(blob(rx * f, ry * (f + 0.1), cx + Math.cos(ang) * rx * 0.85, cy + Math.sin(ang) * ry * 0.85, 120 + 10 * n))
+    }
+    const isole = []
+    if (classe === 2 && mescola(ci, cj, 58) < 0.55) isole.push({ x: cx + (mescola(ci, cj, 59) - 0.5) * rx * 0.7, y: cy + (mescola(ci, cj, 61) - 0.5) * ry * 0.7, r: 0.9 + 0.5 * mescola(ci, cj, 62) })
+    L = { blobs, isole }
+  }
+  laghiDolci.set(k, L)
+  return L
+}
+/** La cella è acqua di un lago dolce naturale della fascia di mezzo? Dipende solo dalla cella: la forma attraversa i confini fra i lotti. */
+export function eLagoDolce(i, j) {
+  if (i < SD_I0 || i >= SD_I0 + 2 * SD_W) return false
+  const ci = Math.floor((i - SD_I0) / SD_W), cj = Math.floor((j - SD_J0) / SD_H)
+  const L = lagoDolceDi(ci, cj)
+  if (!L) return false
+  const lx = i - SD_I0 - ci * SD_W, ly = j - SD_J0 - cj * SD_H
+  if (lx < 1 || ly < 1 || lx >= SD_W - 1 || ly >= SD_H - 1) return false              // il margine di terra è una regola, non una speranza
+  const x = lx + 0.5, y = ly + 0.5
+  if (!L.blobs.some(B => nelBlob(B, x, y))) return false
+  for (const o of L.isole) if (Math.hypot(x - o.x, y - o.y) < o.r) return false
+  return true
+}
+const nellaFascia = l => !eStorico(l) && l.a >= FASCIA_A0 && l.a <= FASCIA_A1
+function celleLagoDolce(l) {
+  const out = []
+  for (let y = 0; y < l.d; y++) for (let x = 0; x < l.w; x++) if (eLagoDolce(l.i + x, l.j + y)) out.push([l.i + x, l.j + y])
+  return out
+}
+const SOGLIA_LAGHETTO = 3          // da tre celle d'acqua in su il lotto è un «laghetto» (cartello, pochi alberi); sotto è un prato o un bosco con una riva
+
+/** Il bioma di oggi (generazione 2): come la 1, ma nella fascia di mezzo un lotto con un lago dolce è `laghetto`, e gli altri sono prato o bosco. */
+export function biomaDi(a, b) {
+  const l = lotto(a, b)
+  if (!nellaFascia(l)) return biomaV1(a, b)
+  if (celleLagoDolce(l).length >= SOGLIA_LAGHETTO) return 'laghetto'
+  return mescola(a, b, 2) < P_BOSCO ? 'bosco' : 'prato'
+}
+/** Il bioma di una generazione: 0 = prima della geografia grande, 1 = i laghetti-pozzanghera, 2 = oggi. */
+export const biomaDiGen = (a, b, gen) => gen === 0 ? biomaVecchio(a, b) : gen === 1 ? biomaV1(a, b) : biomaDi(a, b)
 
 // Lo stagno: il quadrato centrale 2×2 più da una a tre celle del bordo (al più una per lato, mai un angolo): le quattro celle d'angolo
 // e almeno tre per lato restano terra, il lotto si compra e si attraversa dai lati (un ponte da 3 supera i 2 di acqua).
@@ -125,10 +201,14 @@ function acquaDelLaghetto(l) {
   return celle.map(([x, y]) => [l.i + x, l.j + y])
 }
 
+/** La generazione che un argomento `vecchio` indica: `true` = la 0 (come prima), un numero = quella, niente = la 2. */
+export const genDi = g => g === true ? 0 : typeof g === 'number' ? g : 2
 /** Le celle d'acqua di un lotto (globali, [i, j]): il mare (tutte), la costa (le sue colonne di mare), il lago (la parte del lago che cade qui),
-    il laghetto (lo stagno al mezzo); vuoto per gli altri. `vecchio`: la geografia di prima (solo i laghetti). */
+    il laghetto (lo stagno al mezzo o, di oggi, il lago dolce); vuoto per gli altri. `vecchio`: la generazione (`true` = la 0). */
 export function acquaDelLotto(l, vecchio = false) {
-  const bio = vecchio ? biomaVecchio(l.a, l.b) : biomaDi(l.a, l.b)
+  const gen = genDi(vecchio)
+  if (gen === 2 && nellaFascia(l)) return celleLagoDolce(l)
+  const bio = biomaDiGen(l.a, l.b, gen)
   if (bio === 'laghetto') return acquaDelLaghetto(l)
   if (bio === 'prato' || bio === 'bosco') return []
   const out = []
@@ -137,6 +217,12 @@ export function acquaDelLotto(l, vecchio = false) {
     if (bio === 'mare' || (bio === 'costa' ? eMare(i, j) : eLago(i, j))) out.push([i, j])
   }
   return out
+}
+/** Vero se la generazione `gen` dà di questo lotto qualcosa di diverso da oggi (un altro bioma o altra acqua): un lotto comprato così in un salvataggio vecchio resta com'era. */
+export function lottoDiversoDa(l, gen) {
+  if (biomaDi(l.a, l.b) !== biomaDiGen(l.a, l.b, gen)) return true
+  const A = acquaDelLotto(l), B = acquaDelLotto(l, gen)
+  return A.length !== B.length || A.some(([i, j], n) => B[n][0] !== i || B[n][1] !== j)
 }
 /** Le celle di spiaggia di un lotto (solo la costa): sabbia in riva, si cammina. */
 export function spiaggiaDelLotto(l) {
@@ -166,11 +252,12 @@ export function guastiDeiBiomi() {
     if (!BIOMI.includes(bio)) g.push(`${l.id}: bioma ${bio}`)
     if (eStorico(l) && bio !== 'prato') g.push(`${l.id}: un lotto storico non è prato`)
     if (bio === 'laghetto') {
-      for (const [da, db] of VICINI_4) if (biomaDi(a + da, b + db) === 'laghetto') g.push(`${l.id}: laghetti attaccati`)
       const acqua = acquaDelLotto(l)
-      if (acqua.length < 5 || acqua.length > 7) g.push(`${l.id}: ${acqua.length} celle d'acqua`)
-      if (!moloDelLotto(l, acqua)) g.push(`${l.id}: nessun posto per il molo`)
+      if (acqua.length < SOGLIA_LAGHETTO) g.push(`${l.id}: laghetto con ${acqua.length} celle d'acqua`)
+      if (acqua.length < l.w * l.d && !moloDelLotto(l, acqua)) g.push(`${l.id}: nessun posto per il molo`)
+      if (!nellaFascia(l)) g.push(`${l.id}: laghetto fuori dalla fascia di mezzo`)
     }
+    if (a >= FASCIA_A0 && a <= FASCIA_A1 && !eStorico(l) && bio !== 'laghetto' && acquaDelLotto(l).length >= SOGLIA_LAGHETTO) g.push(`${l.id}: acqua senza il bioma laghetto`)
     if (bio === 'mare' && acquaDelLotto(l).length !== l.w * l.d) g.push(`${l.id}: un lotto di mare non è tutto acqua`)
     if (bio === 'lago' && !acquaDelLotto(l).length) g.push(`${l.id}: un lotto di lago senza acqua`)
     if (bio === 'costa' && acquaDelLotto(l).some(([i, j]) => !eMare(i, j))) g.push(`${l.id}: acqua di costa che non è mare`)
