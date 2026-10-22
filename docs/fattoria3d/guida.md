@@ -29,13 +29,25 @@ La riga è `giochi/Guida.vue`, l'anello e la manina li accende `usaGuida` (comun
 - Il tasto «Costruisci» non evidenzia ancora la carta giusta nel menu: il testo nomina l'edificio.
 - Nessun suono: la guida è tutta testo e anello.
 
+## «🌳 Come si fa»
+
+`dati/albero.js` (puro) `alberoDi(motore, merce, azioneDi)`: la strada di una merce dal campo alla cosa finita e a che punto si è, in nodi `{ k, nome, servono, ho, stato, via, rami }`.
+`via` dice dove si fa (campo, macchina, bestie, molo) e come sta: pronto, lavora (coi secondi), da comprare (col prezzo), nel magazzino, arriva al livello N. `viste/Albero.vue` lo disegna a figure con le rotaie; `dati/usi.js` (`usiDi`) dice a cosa serve una merce.
+
+- **Una strada sola per riga**: fra due ricette aperte vince quella di cui hai già gli ingredienti, poi la più precoce. Niente «tutto l'albero»: si arriva sempre con una merce scelta.
+- **`servono` si moltiplica scendendo** (due stoffe vogliono due giri, ognuno due lane) e la scorta si spartisce fra i rami in ordine di lettura: due rami che vogliono grano non dicono tutti e due «ne hai 3».
+- **Le bestie hanno il loro mangime come ramo** (un uovo vuole becchime, il becchime vuole grano); il pesce no: si pesca dal molo.
+- **Solo quello che è aperto**: se l'unica strada arriva dopo, la riga dice «arriva al livello N» e si ferma.
+- **Dove si apre**: dall'inventario (tasto sotto la merce scelta) e dal passo sotto un «non si può» (macchina, banco, mongolfiera: `ConsiglioRiga` ha il tasto `🌳 Come si fa` per la merce che manca). Si apre SOPRA il foglio da cui si parte, che resta dov'è; la ✕ lo chiude. I tasti ambra sulle righe che mancano portano dov'è il passo (le stesse azioni del consiglio, `facciConsiglio`) e chiudono tutti i fogli.
+- Non dal `?` né dalla bacheca: serve una merce già scelta.
+
 ## Nei test
 
-`[data-azione="aiuto"]` il `?` (foglio: `[data-azione="chiudi-aiuto"]`); `[data-guida-riga]` la riga del primo giro, `[data-indicato]` (`="mano"`) l'anello, `.f3-guida` (`.su` in alto); `[data-f3="apri-consiglio"]` il tasto «E adesso?», `[data-f3="consiglio"]` il foglio, `[data-f3="consiglio-riga"]` / `consiglio-testo` / `consiglio-fai` (`data-azione` = `che`) il passo col tasto, anche sotto `macchina-msg`, `banco-msg`, `mongolfiera-msg`.
-Unità: `unita/fattoria3d-guida` (passi, catena, ogni ricetta ha un consiglio); integrazione: `integrazione/fattoria3d-guida`.
+`[data-f3="albero"]` (`data-albero-di` = la merce) il foglio «Come si fa», `[data-albero-riga="<merce>"]` (`data-stato`) una riga, `[data-f3="albero-via"]` (`data-albero-via` = campo/macchina) dove si fa, `[data-f3="albero-fai"]` il tasto di una riga che manca; `[data-f3="inventario-albero"]` il tasto nell'inventario, `[data-f3="consiglio-albero"]` quello sotto un «non si può»; `[data-azione="aiuto"]` il `?` (foglio: `[data-azione="chiudi-aiuto"]`); `[data-guida-riga]` la riga del primo giro, `[data-indicato]` (`="mano"`) l'anello, `.f3-guida` (`.su` in alto); `[data-f3="apri-consiglio"]` il tasto «E adesso?», `[data-f3="consiglio"]` il foglio, `[data-f3="consiglio-riga"]` / `consiglio-testo` / `consiglio-fai` (`data-azione` = `che`) il passo col tasto, anche sotto `macchina-msg`, `banco-msg`, `mongolfiera-msg`.
+Unità: `unita/fattoria3d-guida` (passi, catena, ogni ricetta ha un consiglio), `unita/fattoria3d-albero` (usi, ogni merce ha un albero, quantità, scorta spartita, stato di campo e macchina); integrazione: `integrazione/fattoria3d-guida`.
 
 ## Da fare
 
 - Provare il primo giro con un bambino di 4–6 anni e su un telefono vero (la manina copre un poco la scritta del tasto).
-- «🌳 Come si fa» (I3): la 3D non ha ancora `dati/albero.js` né `usi.js`; vanno portati dalla 2D (`src/giochi/fattoria/dati/albero.js`, `usi.js`) e agganciati a inventario, macchina e banco.
+- «Come si fa»: le strade alternative («o nel pollaio») non si dicono; provarlo con un bambino piccolo (l'albero di cinque fasi è alto su 360 px).
 - Consiglio anche per i rifiuti «niente monete» e «livello» dei fogli (oggi solo il perché).

@@ -10,7 +10,7 @@ const props = defineProps({
   schede: { type: Object, required: true },                 // schedeDellInventario()
   magazzini: { type: Array, default: () => [] },            // i silos: [{ silo, nome, emoji, posti, prezzo, puoi }] — ingrandirne uno aggiunge 2 pezzi a ogni scomparto
 })
-defineEmits(['chiudi', 'ingrandisci'])
+defineEmits(['chiudi', 'ingrandisci', 'albero'])
 const scheda = ref('raccolti')
 const scelta = ref('')
 const voci = computed(() => props.schede[scheda.value] || [])
@@ -45,6 +45,9 @@ function cambia(id) { scheda.value = id; scelta.value = '' }
         <span aria-hidden="true">{{ m.emoji }}</span><b>{{ m.posti }}</b><small>＋2 · 🪙 {{ m.prezzo }}</small>
       </button>
     </div>
-    <p class="f3-inv-riga" data-f3="inventario-riga"><template v-if="scelta"><b>{{ nomeScelta }}.</b> {{ dettaglioDi(scelta) }}</template><template v-else>Tocca una cosa per sapere a cosa serve.</template></p>
+    <div class="f3-inv-riga" data-f3="inventario-riga">
+      <p><template v-if="scelta"><b>{{ nomeScelta }}.</b> {{ dettaglioDi(scelta) }}</template><template v-else>Tocca una cosa per sapere a cosa serve.</template></p>
+      <button v-if="scelta" type="button" class="f3-inv-albero" data-f3="inventario-albero" :data-albero-di="scelta" @click="$emit('albero', scelta)">🌳 Come si fa</button>
+    </div>
   </div>
 </template>

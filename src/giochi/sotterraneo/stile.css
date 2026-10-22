@@ -938,6 +938,9 @@
   align-self: stretch; width: 76px; min-height: 106px; display: grid; place-items: end center; padding-bottom: 6px;
   background: radial-gradient(48% 14% at 50% 90%, #ffd23f30, transparent);
 }
+/* il copricapo sopra la testa dell'eroe (docs/sotterraneo/elmo.md): in cima alla colonna, l'eroe resta coi piedi in fondo */
+.sot-intorno-eroe.sot-con-testa { position: relative; min-height: 148px }
+.sot-intorno-eroe .sot-intorno-testa { position: absolute; top: 0; left: 50%; translate: -50% 0; width: 46px; height: 46px }
 .sot-intorno-numeri {
   display: grid; gap: 5px; justify-items: start; padding-left: 6px;
   font-size: 14.5px; font-weight: 800; color: #f3e6c8; white-space: nowrap;

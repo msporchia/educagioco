@@ -71,7 +71,10 @@ vede. Tre cose, tutte derivate a scena (la pianta e la sua firma non cambiano, l
   È nella pianta, non nella zona: si vede anche dal terreno lontano.
 - **La vita**: il fumo del focolare e le braci e le fiamme della fossa portano il nome del luogo (`.tana` sulla sorgente): quando il
   signore è morto (`signoriMorti` di `stato`, `signoreVivo`) la scena non li emette più (`S.taneSpente`). La tana resta com'è: è un
-  posto, non un mostro. Il resto (le braci disegnate, le ossa) è fermo e non si spegne.
+  posto, non un mostro. Anche i dischi accesi della fossa di braci diventano cenere: portano il `segno` della tana nel cantiere
+  (`metti(…, { segno })`, che la mesh unita ricorda in `userData.segni` come vertici), e la scena ne ricolora i vertici
+  (`spegniLeBraci` in `indice.js`) senza rifare il pezzo; un giro nuovo che rimette il signore li riaccende. Le ossa e il resto
+  restano.
 
 | famiglia (habitat) | il segno |
 |---|---|

@@ -90,7 +90,6 @@ export class Fattoria3d {
   cellaPropria(i, j) { return this.propri.has(lottoDi(i, j).k) }
   confina(l) { return VICINI_4.some(([a, b]) => this.propri.has(vicinoDi(l, a, b).k)) }
   prezzoLotto() { return prezzoDelLotto(Object.keys(this.s.lotti).length - Object.keys(LOTTI_INIZIALI).length) }
-  lottiMiei() { return [...this.propri].map(cellaLotto) }
   /** I lotti che si possono comprare adesso: quelli che confinano con uno tuo. */
   lottiComprabili() {
     if (this._comprabili) return this._comprabili

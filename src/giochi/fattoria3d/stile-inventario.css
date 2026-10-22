@@ -32,3 +32,6 @@
 .f3-inv-mag.povero { opacity: .7; }
 @media (min-width: 700px) { .f3-inv.f3-foglio { left: 0; right: 0; margin: 0 auto; max-width: 720px; border-radius: 22px 22px 0 0; } }
 @media (prefers-reduced-motion: reduce) { .f3-inv *, .f3-inv-griglia { animation: none !important; transition: none !important; } }
+.f3-inv-riga { display: flex; align-items: center; gap: 8px; }
+.f3-inv-riga p { margin: 0; flex: 1; min-width: 0; }
+.f3-inv-albero { flex: none; min-height: 44px; padding: 0 12px; border: 2px solid #e0a020; border-radius: 22px; background: #ffd36a; color: #4a2c12; font: 800 13px "Emoji Gioco", system-ui, sans-serif; touch-action: manipulation; }

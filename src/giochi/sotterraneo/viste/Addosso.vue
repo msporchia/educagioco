@@ -1,7 +1,8 @@
 <script setup>
-// L'eroe armato con le sei caselle intorno, come il cerchio dei giochi di ruolo in piccolo: a sinistra lo scudo, il corpo e la
-// collana, a destra l'arma e i due anelli. Serve alla bottega e allo zaino; toccare una casella la
-// sceglie, e il pannello dice cosa c'è. `va`: la casella dove andrebbe il pezzo guardato, che si accende
+// L'eroe armato con le caselle intorno, come il cerchio dei giochi di ruolo in piccolo: a sinistra lo scudo, il corpo e la
+// collana, a destra l'arma e i due anelli, sopra la testa il copricapo (docs/sotterraneo/elmo.md: c'è nel 3D, e nel 2D solo se ce
+// n'è uno da mostrare). Serve alla bottega e allo zaino; toccare una casella la sceglie, e il pannello dice cosa c'è. `va`: la
+// casella dove andrebbe il pezzo guardato, che si accende
 import { computed } from 'vue'
 import Armato from './Armato.vue'
 import Casella from './Casella.vue'
@@ -14,6 +15,8 @@ const props = defineProps({
   collo: { type: Object, default: null },
   dito: { type: Object, default: null },
   dito2: { type: Object, default: null },
+  testa: { type: Object, default: null },
+  conTesta: { type: Boolean, default: false },   // la casella del copricapo anche vuota (il 3D)
   scelto: { type: String, default: null },    // la casella scelta
   va: { type: String, default: null },
 })
@@ -28,6 +31,8 @@ const POSTI = [
   { dove: 'dito', ombra: '💍', dice: 'anello' },
   { dove: 'dito2', ombra: '💍', dice: 'anello' },
 ]
+const TESTA = { dove: 'testa', ombra: '🪖', dice: 'copricapo' }
+const conLaTesta = computed(() => props.conTesta || !!props.testa)
 const su = dove => props[dove]
 // l'arma a due mani tiene anche la sinistra: la stessa arma, in ombra
 const dueMani = computed(() => !!(props.mano && props.mano.mani === 2))
@@ -43,8 +48,12 @@ const ombra = dove => dove === 'mancina' && dueMani.value
                  :data-casella="p.dove" :data-cosa="su(p.dove) ? su(p.dove).chiave : null" :aria-label="su(p.dove) ? su(p.dove).nome : p.dice" @click="$emit('tocca', p.dove)" />
       </template>
     </div>
-    <div class="sot-intorno-eroe">
-      <Armato :eroe="eroe" :mano="mano ? mano.chiave : null" :mancina="mancina ? mancina.chiave : null" :corpo="corpo ? corpo.chiave : null" :scala="3" in3d />
+    <div class="sot-intorno-eroe" :class="{ 'sot-con-testa': conLaTesta }">
+      <Casella v-if="conLaTesta" class="sot-intorno-testa" :cosa="testa" :vuota="TESTA.ombra" piccola
+               :scelta="scelto === 'testa'" :accesa="va === 'testa'"
+               data-casella="testa" :data-cosa="testa ? testa.chiave : null" :aria-label="testa ? testa.nome : TESTA.dice" @click="$emit('tocca', 'testa')" />
+      <Armato :eroe="eroe" :mano="mano ? mano.chiave : null" :mancina="mancina ? mancina.chiave : null" :corpo="corpo ? corpo.chiave : null"
+              :testa="testa ? testa.chiave : null" :scala="3" in3d />
     </div>
     <div class="sot-intorno-lato">
       <template v-for="p in POSTI.filter(x => x.dove === 'mano' || x.dove === 'dito' || x.dove === 'dito2')" :key="p.dove">

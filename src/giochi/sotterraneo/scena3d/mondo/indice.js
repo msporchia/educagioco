@@ -140,7 +140,7 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = [], fon
     }
     for (const r of cose.ruote) gruppo.add(r)
     for (const c of cose.cristalli) { const me = new Mesh(new OctahedronGeometry(0.28), matCristallo); me.position.copy(c); me.castShadow = true; me.userData.y = c.y; gruppo.add(me); fatto.cristalli = [...(fatto.cristalli || []), me] }
-    for (const me of cant.chiudi(kit.fermi, kit.ombraFermi)) gruppo.add(me)
+    for (const me of cant.chiudi(kit.fermi, kit.ombraFermi)) { gruppo.add(me); if (me.userData.segni) (fatto.segnati ||= []).push(me) }
     fatto.istanze = istanzeDelPezzo(m, p, q)
     scena.add(gruppo)
     fatto.ms = performance.now() - t0
@@ -231,6 +231,26 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = [], fon
   function sorgentiViste() {
     for (const k of Object.keys(viste)) { viste[k].length = 0; for (const s of vitaSorgenti[k]) if (nebbia.visto(s.x, s.z) && !(s.tana && S.taneSpente && S.taneSpente.has(s.tana))) viste[k].push(s) }
     vita.sorgenti(viste)
+    spegniLeBraci()
+  }
+  // i dischi accesi delle tane senza più signore (braciTana, col `segno` della tana) diventano cenere: si ricolorano i loro vertici
+  // nella mesh unita, senza rifare il pezzo; un giro nuovo che rimette il signore li riaccende
+  const CENERE = [0.15, 0.12, 0.11]
+  function spegniLeBraci() {
+    const sp = S.taneSpente
+    for (const f of costruiti.values()) for (const me of f.segnati || []) {
+      const col = me.geometry.attributes.color
+      let tocca = false
+      for (const sg of me.userData.segni) {
+        const morto = !!(sp && sp.has(sg.segno))
+        if (morto === !!sg.prima) continue
+        const a = col.array, da = sg.da * 3, a3 = sg.quanti * 3
+        if (morto) { sg.prima = a.slice(da, da + a3); for (let i = 0; i < a3; i++) a[da + i] = CENERE[i % 3] }
+        else { a.set(sg.prima, da); sg.prima = null }
+        tocca = true
+      }
+      if (tocca) col.needsUpdate = true
+    }
   }
 
   // l'atlante delle figure: finché non c'è, non si disegna (un istante, è già nel file)

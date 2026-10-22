@@ -10,7 +10,7 @@ coi pezzi comuni `Cornice.vue`, `Addosso.vue`, `Casella.vue`, `Pannello.vue`,
 
 - **Una finestra da gioco di ruolo stretta in un telefono**: legno scuro e
   bordo d'oro con quattro angoli, disegnati in CSS e SVG. Dall'alto il
-  mercante (ritratto e nome), l'eroe armato con le sei caselle intorno (a sinistra scudo, corpo e collana, a destra arma e due anelli, tre per lato da 46 px) e
+  mercante (ritratto e nome), l'eroe armato con le caselle intorno (a sinistra scudo, corpo e collana, a destra arma e due anelli, tre per lato da 46 px, e sopra la testa il copricapo: [elmo.md](elmo.md)) e
   i numeri accanto (vita, braccio, difesa e le gemme, sempre in vista), le
   linguette, la griglia, il pannello. Scorre solo la griglia. Provato: un
   elenco di voci col bordino, sembrava un modulo da compilare.
@@ -116,7 +116,7 @@ valore in `data-n`), `[data-due-mani]`, `[data-storia]`,
 `[data-gemme-bottega]`; sulla casella `data-ruolo="salto|sogno"`; nello zaino `[data-zaino]`, `[data-tasca]` (con
 `data-cosa`), `[data-azione="usa|butta|riponi|chiudi"]`, `[data-torcia-zaino]`,
 `[data-ancora-no]` (la nota 🔒 di un pezzo che l'eroe porta ma non regge ancora; la ✋ `[data-non-puoi]` è per quello che la classe non porta);
-in tutte e due `[data-casella="<dove>"]` (`mano`, `mancina`, `corpo`, `collo`, `dito`, `dito2`; con `data-cosa`) e `[data-chiudi]`.
+in tutte e due `[data-casella="<dove>"]` (`mano`, `mancina`, `corpo`, `collo`, `dito`, `dito2`, `testa`; con `data-cosa`) e `[data-chiudi]`.
 `compraNellaBottega`, `vendiNellaBottega`, `riacquistaNellaBottega` e `allaLinguettaDi` in
 `test/aiuto/browser.mjs`; `unita/sotterraneo-roba` (i numeri del confronto abilità per abilità; quello che
 non si mostra, le linguette; il resto, i banchi, sta in [bottega.md](bottega.md)),

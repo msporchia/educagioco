@@ -21,6 +21,8 @@ anteprime è il modello 3D di `spada-28`, con l'alone della sua rarità. Prima t
    pergamena del portale) hanno un modello per chiave in `pozioni.js` (`crea(chiave)`, `CHIAVI`: la forma dal grado, il colore dal
    tipo). Nelle caselle, nella scelta della pozione e nella riga della torcia dello zaino.
 
+Il copricapo non passa dalle figure: ha i modelli dei copricapi per base (`COPRICAPI_3D`, [elmo.md](elmo.md)).
+
 `scena3d/roba3d.js`: `modelloDiRoba(chiave)` → `{ figura, famiglia, modulo, ripiego, crea(), look }`; `creaPezzo(p)` costruisce e
 mette l'alone; `vestiFigura` e `indossaGioiello` per il corpo e il collo. Li usano l'eroe in scena (`eroe3d.js`, `vestiDotazione`) e
 le anteprime ([anteprime-3d.md](anteprime-3d.md)): la stessa funzione, lo stesso aspetto.

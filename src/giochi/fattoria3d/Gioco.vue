@@ -31,6 +31,8 @@ import { saltaLeSpiegazioni } from '../../guide/aiuto.js'
 import { guidaDelPrimoGiro, servePrimoGiro, primoGiroFinito } from './motore/guida.js'
 import { comeAvere, cosaFaccioAdesso } from './motore/consiglio.js'
 import Consiglio from './viste/Consiglio.vue'
+import Albero from './viste/Albero.vue'
+import { alberoDi } from './dati/albero.js'
 import { qualitaIniziale, VERSIONE_OPZIONI } from './dati/qualita.js'
 import Hud from './viste/Hud.vue'
 import BarraAzioni from './viste/BarraAzioni.vue'
@@ -200,7 +202,7 @@ const ui = {
     avvisoFine = testo ? performance.now() + DURATA_AVVISO : 0
   },
   apriCostruisci(i, j) { apriCostruisci(i, j) },                           // tenere premuto su un posto libero del terreno tuo
-  fogliAperti: () => !!dialogo.value || !!consiglio.value || !!costruisciQui.value || semiAperto.value || !!macchinaAperta.value || livelliAperto.value || inventarioAperto.value || guardarobaAperto.value || bancoAperto.value || nave.value || mappaAperta.value || (opzioniAperte.value && !opzioniRidotte.value),
+  fogliAperti: () => !!alberoK.value || !!dialogo.value || !!consiglio.value || !!costruisciQui.value || semiAperto.value || !!macchinaAperta.value || livelliAperto.value || inventarioAperto.value || guardarobaAperto.value || bancoAperto.value || nave.value || mappaAperta.value || (opzioniAperte.value && !opzioniRidotte.value),
   zonaDrop: () => (zonaVia.value || null)?.getBoundingClientRect() || null,
   trascinando(info) { trascinando.value = info },
 }
@@ -288,7 +290,7 @@ function prepara(k) {
   const r = motore.avviaRicettaIn(tipo, k)
   macchinaCons.value = null
   if (!r.ok) {
-    if (r.motivo === 'mancano-ingredienti' && primaMancante(r)) macchinaCons.value = comeAvere(motore, primaMancante(r))
+    if (r.motivo === 'mancano-ingredienti' && primaMancante(r)) macchinaCons.value = consiglioPer(primaMancante(r))
     return macchinaMsg.value = dettoDiRifiuto(r, { compra: motore.postiDi(tipo) < POSTI_MASSIMI })
   }
   macchinaMsg.value = ''; ui.cambio()
@@ -346,7 +348,7 @@ const traguardoOrdini = computed(() => {
 function apriBanco() { bancoMsg.value = ''; bancoCons.value = null; bancoAperto.value = true }
 function consegna(idx) {
   const r = motore.consegna(idx)
-  bancoCons.value = !r.ok && r.motivo === 'mancano' && primaMancante(r) ? comeAvere(motore, primaMancante(r)) : null
+  bancoCons.value = !r.ok && r.motivo === 'mancano' && primaMancante(r) ? consiglioPer(primaMancante(r)) : null
   if (!r.ok) return bancoMsg.value = r.motivo === 'mancano' ? dettoDi('mancano-ingredienti', { ingredienti: r.mancano }) : dettoDi(r.motivo)
   ui.cambio()                                // `contaEventi` vede l'evento «consegna» e scrive l'esito
 }
@@ -360,7 +362,7 @@ function cambiaOrdine(idx) {
 const mongolfiera = computed(() => { void versione.value; return motore.vistaMongolfiera() })
 function caricaCassa(i, c) {
   const r = motore.caricaCassa(i, c)
-  naveCons.value = !r.ok && r.motivo === 'mancano' && primaMancante(r) ? comeAvere(motore, primaMancante(r)) : null
+  naveCons.value = !r.ok && r.motivo === 'mancano' && primaMancante(r) ? consiglioPer(primaMancante(r)) : null
   if (!r.ok) return naveMsg.value = r.motivo === 'mancano' ? dettoDi('mancano-ingredienti', { ingredienti: r.mancano }) : dettoDi(r.motivo)
   const testo = [`+${r.xp} ⭐`, r.bonusFila ? `fila piena +${r.bonusFila}` : '', r.bonusTutto ? `tutto pieno +${r.bonusTutto}` : ''].filter(Boolean).join(' · ')
   naveMsg.value = r.pieno
@@ -415,7 +417,7 @@ const quadroGuida = () => {
   return {
     campi: cs.length, vuoti: cs.filter(c => m.campoVuoto(c)).length, maturi: cs.filter(c => m.campoMaturo(c)).length, crescono: crescono.length,
     secondi: restanti.length ? Math.min(...restanti) : 0, modo: modo.value, semi: semiAperto.value, costruisci: !!costruisciQui.value,
-    foglio: !!(dialogo.value || macchinaAperta.value || livelliAperto.value || inventarioAperto.value || guardarobaAperto.value || bancoAperto.value || nave.value || mappaAperta.value || opzioniAperte.value || consiglio.value || strumento.value || trascinando.value),
+    foglio: !!(alberoK.value || dialogo.value || macchinaAperta.value || livelliAperto.value || inventarioAperto.value || guardarobaAperto.value || bancoAperto.value || nave.value || mappaAperta.value || opzioniAperte.value || consiglio.value || strumento.value || trascinando.value),
     raccolto: Object.values(m.s.merci).some(n => n > 0), visto: guidaVisto.value,
   }
 }
@@ -437,6 +439,8 @@ function chiudiLaGuida() {
 function apriConsiglio() { consiglio.value = cosaFaccioAdesso(motore) }
 /** Il tasto di un consiglio: chiude il foglio da cui si è partiti e porta dove si fa. */
 function facciConsiglio(a) {
+  if (a && a.che === 'albero') return apriAlbero(a.k)          // «Come si fa» si apre sopra il foglio, che resta dov'è
+  alberoK.value = ''; if (inventarioAperto.value) chiudiInventario()
   consiglio.value = null; macchinaAperta.value = null; bancoAperto.value = false; nave.value = false; semiAperto.value = false
   if (!a) return
   if (a.che === 'semina') { seme.value = a.seme || seme.value; mondo.imposta({ seme: seme.value }); impostaModo('semina') }
@@ -448,6 +452,13 @@ function facciConsiglio(a) {
   else if (a.che === 'inventario') apriInventario()
   else if (a.che === 'home') indietro()
 }
+/** Il consiglio per avere ciò che manca, col tasto «🌳 Come si fa» per la stessa merce (docs/fattoria3d/guida.md). */
+const consiglioPer = k => ({ ...comeAvere(motore, k), albero: k })
+// ── «Come si fa»: la strada di una merce (dati/albero.js), a figure; si apre dall'inventario e dal passo sotto un «non si può» ──
+const alberoK = ref('')
+const albero = computed(() => { void versione.value; return alberoK.value ? alberoDi(motore, alberoK.value, k => comeAvere(motore, k)) : null })
+function apriAlbero(k) { alberoK.value = k; ripresa() }
+function chiudiAlbero() { alberoK.value = ''; ripresa() }
 const primaMancante = r => Object.keys(r.mancano || {})[0]
 
 // ── il battito della vista: statistiche, contatori e cose che passano col tempo ──
@@ -565,9 +576,10 @@ onBeforeUnmount(() => {
                @consegna="consegna" @cambia="cambiaOrdine" @chiudi="bancoAperto = false" />
         <Mongolfiera v-if="nave" v-bind="{ nave: mongolfiera, traguardo: traguardoNave, livelloIngresso: LIVELLO_MONGOLFIERA }" :messaggio="naveMsg" :consiglio="naveCons" @consiglio="facciConsiglio"
                      @carica="caricaCassa" @parti="partiMongolfiera" @chiudi="nave = false" />
-        <Inventario v-if="inventarioAperto && inventario" :schede="inventario" :magazzini="magazzini" @ingrandisci="ingrandisciMagazzino" @chiudi="chiudiInventario" />
+        <Inventario v-if="inventarioAperto && inventario" :schede="inventario" :magazzini="magazzini" @ingrandisci="ingrandisciMagazzino" @albero="apriAlbero" @chiudi="chiudiInventario" />
         <Guardaroba v-if="guardarobaAperto" :abito="abito" :livello="foto.livello" :aspetto="state.profile.aspetto" :anteprima="anteprima" :anteprima-pronta="anteprimaPronta"
                     @vesti="vestiContadino" @aspetto="cambiaAspetto" @chiudi="guardarobaAperto = false" />
+ <Albero v-if="albero" :albero="albero" @fai="facciConsiglio" @chiudi="chiudiAlbero" />
  <Consiglio v-if="consiglio" :consiglio="consiglio" @fai="facciConsiglio" @chiudi="consiglio = null" />
         <Livelli v-if="livelliAperto" v-bind="livelli" @chiudi="livelliAperto = false" />
         <Opzioni v-if="opzioniAperte" :q="q" :stat="stat" :conta="conta" :rapporto="rapporto" @cambia="cambiaOpzioni"

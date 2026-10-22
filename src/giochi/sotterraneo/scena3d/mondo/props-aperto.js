@@ -437,11 +437,12 @@ function cenereTana(c, r, o) {
   for (let i = 0; i < 4; i++) c.metti(L, cilindro(0.03, 0.04, 0.5 + r() * 0.3, 4, 1), (r() - 0.5) * 0.8, 0.05, (r() - 0.5) * 0.7, BRUCIATO, { rz: PI / 2, ry: r() * 3 })
   const f = vivo(o, c.dove(0, 0.12, 0)); if (f) o.cose.camini.push(f)
 }
-// la fossa di braci: terra nera, sassi anneriti, brace che luccica (e scintille e fiamme, finché il signore c'è)
+// la fossa di braci: terra nera, sassi anneriti, brace che luccica (e scintille e fiamme, finché il signore c'è). I dischi accesi
+// portano il segno della tana: a signore morto la scena li fa diventare cenere (indice.js, `spegniLeBraci`)
 function braciTana(c, r, o) {
   c.metti(X, disco(1.0, 9), 0, 0.024, 0, [0.08, 0.065, 0.06], { s: [1.1, 1, 0.95], ry: r() * 3 })
   for (let i = 0; i < 6; i++) { const a = i * PI / 3 + 0.3; c.metti(P, ico(0.17 + r() * 0.06), Math.cos(a) * 0.72, 0.09, Math.sin(a) * 0.66, [0.22, 0.19, 0.18], { s: [1, 0.75, 1] }) }
-  for (let i = 0; i < 4; i++) c.metti(LU, disco(0.12 + r() * 0.1, 6), (r() - 0.5) * 0.8, 0.045, (r() - 0.5) * 0.7, [1, 0.4 + r() * 0.2, 0.1])
+  for (let i = 0; i < 4; i++) c.metti(LU, disco(0.12 + r() * 0.1, 6), (r() - 0.5) * 0.8, 0.045, (r() - 0.5) * 0.7, [1, 0.4 + r() * 0.2, 0.1], { segno: o.tana || null })
   const b = vivo(o, c.dove(0, 0.2, 0)); if (b) { o.cose.braci.push(b); o.cose.fuochi.push(vivo(o, c.dove(0, 0.1, 0))) }
 }
 // la ragnatela fra due rami secchi, con due bozzoli appesi
