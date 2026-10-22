@@ -35,8 +35,6 @@ rimasti aperti. Quando una voce si chiude si toglie da qui (la storia sta in `gi
   tratto».
 - **Il villaggio**: le icone delle città (`ICONE_MONDO`) non le chiede nessuna schermata; la carta «riprendi» della home non mostra
   l'icona del 3D (`sotterraneo3d` non ha un manifesto con `ripresa()`).
-- **Il vecchio mondo ad anelli è stato cancellato** ma qualche documento vecchio lo nomina ancora (`mondo-aperto-progetto.md`,
-  `mondo-aperto-fasi.md`): va segnato «superato da mondo-a-percorso.md» in cima o riscritto.
 
 ### Bug noti
 
