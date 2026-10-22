@@ -33,8 +33,7 @@ rimasti aperti. Quando una voce si chiude si toglie da qui (la storia sta in `gi
   habitat ([mondo-aperto-mostri.md](mondo-aperto-mostri.md)).
 - **La pergamena del portale** ([da-fare.md](da-fare.md)): sprite disegnato, casella nella barra, banco, abisso «dall'inizio del
   tratto».
-- **Il villaggio**: le icone delle città (`ICONE_MONDO`) non le chiede nessuna schermata; la carta «riprendi» della home non mostra
-  l'icona del 3D (`sotterraneo3d` non ha un manifesto con `ripresa()`).
+- **Il villaggio**: le icone delle città (`ICONE_MONDO`) non le chiede nessuna schermata.
 
 ### Bug noti
 

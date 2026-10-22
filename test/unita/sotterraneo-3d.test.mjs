@@ -22,6 +22,8 @@ import { creaMaschera } from '../../src/giochi/sotterraneo/scena3d/maschera.js'
 import { BOTTI_PER_PAESAGGIO } from '../../src/giochi/sotterraneo/dati/botti.js'
 import { AGIO, FIGURE_MAX } from '../../src/giochi/sotterraneo/scena3d/costanti.js'
 import { Scene, InstancedMesh } from 'three'
+import { gemelloDi } from '../../src/data/portata-giochi.js'
+import { gioco as giocoNuovo } from '../../src/giochi/indice.js'
 import { controlla, uguale, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
 
 const corsaDi = (tappa, seme) => new Corsa(tappa, { seme, rnd: seminato(seme) })
@@ -179,4 +181,12 @@ for (const p of [0, 6, 12]) { const c = corsaDi(L_ABISSO, 5); if (p) { c.piano =
 
 // le botti da rompere hanno il loro test: unita/sotterraneo-botti
 
+/* ── la carta «riprendi» della home: il 3D prende la ripresa del gemello 2D (stessa sosta, un manifesto solo) ── */
+{
+  uguale('il 3D è il gemello del sotterraneo', gemelloDi('sotterraneo3d'), 'sotterraneo')
+  uguale('un gioco senza gemello è se stesso', gemelloDi('torri'), 'torri')
+  const m = giocoNuovo(gemelloDi('sotterraneo3d'))
+  const r = m.ripresa({})
+  uguale('senza sosta niente da riprendere', r, null)
+}
 riassunto('sotterraneo 3d')

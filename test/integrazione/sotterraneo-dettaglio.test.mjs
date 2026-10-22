@@ -55,6 +55,8 @@ async function tocca(x, y) {
 }
 async function toccaIl(sel) {
   await finestraFerma(page)   // la finestra nuova cresce per 160 ms: misurata prima, il tocco cade a lato
+  await page.locator(sel).first().scrollIntoViewIfNeeded()   // l'elenco del diario scorre: una voce in fondo sta sotto il bordo
+  await attendi(page, 50)
   const b = await page.locator(sel).first().boundingBox()
   await tocca(b.x + b.width / 2, b.y + b.height / 2)
 }
@@ -204,7 +206,6 @@ if (offerta) {
 } else nota('nessun favore offerto in questo profilo')
 
 await toccaIl('[data-diario] li[data-missione="rosicchione"]')
-await attendi(page,500);console.log('DBG',(await page.locator('body').innerText()).slice(0,1500), await page.locator('[data-diario]').count())
 await page.waitForSelector('[data-dettaglio]', { timeout: 3000 })
 await attendi(page, 200)
 uguale('la consegnata ha il suo stato', await page.locator('[data-dettaglio]').getAttribute('data-stato'), 'consegnata')

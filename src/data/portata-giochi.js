@@ -63,13 +63,15 @@ const CONTATORE_VECCHIO = {
 
 // un gioco in prova che è un altro disegno di un gioco nuovo: si è provato se si è provato quello (la campagna è una)
 const GEMELLI = { sotterraneo3d: 'sotterraneo' }
+// la chiave del gioco di cui è un altro disegno (la stessa campagna, la stessa sosta, lo stesso manifesto), o lei stessa
+export const gemelloDi = chiave => GEMELLI[chiave] || chiave
 
 export function giaProvato (chiave) {
   const t = (state.profile && state.profile.totals) || {}
   const vecchio = CONTATORE_VECCHIO[chiave]
   if (vecchio) return (t[vecchio] || 0) > 0 ||
     (chiave === 'inglese' && (t.verbi || 0) > 0)
-  const g = GIOCHI_NUOVI.find(x => x.chiave === (GEMELLI[chiave] || chiave))
+  const g = GIOCHI_NUOVI.find(x => x.chiave === gemelloDi(chiave))
   if (!g || !g.albo || typeof g.albo.provato !== 'function') return false
   try { return !!g.albo.provato(misure(state.profile)) } catch { return false }
 }
