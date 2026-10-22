@@ -9,6 +9,7 @@ import { componi } from '../../grafica/benchmark/log.js'
 import { componiVeri, conNote, spezza } from '../../grafica/benchmark/log-veri.js'
 import { ultimeMisure, salvaMisura } from '../../store/benchmark.js'
 import { fasciaAttiva } from '../../store/qualita.js'
+import { sondaRicevitore, mandaAlRicevitore } from '../../grafica/benchmark/invio-diretto.js'
 
 const props = defineProps({ modulo: { type: String, required: true } })
 const emit = defineEmits(['chiudi'])
@@ -52,12 +53,13 @@ async function avvia(che = modo.value) {
       log.value = componi(dati, await meta())
     }
     stato.value = 'fatto'
+    mandaAuto()
     salvaMisura(che, log.value).then(async () => { ultime.value = await ultimeMisure() }).catch(() => {})
   } catch (e) {
     log.value = ''; esito.value = 'Non è partita: ' + (e && e.message || e); stato.value = 'guasto'
   }
 }
-function rivedi(che) { modo.value = che; log.value = ultime.value[che].log; note.value = ''; esito.value = ''; stato.value = 'fatto' }
+function rivedi(che) { modo.value = che; log.value = ultime.value[che].log; note.value = ''; esito.value = ''; stato.value = 'fatto'; sonda() }
 function interrompi() { fermare = true }
 function chiudi() { fermare = true; emit('chiudi') }
 onBeforeUnmount(() => { fermare = true })
@@ -67,6 +69,18 @@ const finale = computed(() => conNote(log.value, note.value))
 const parti = computed(() => spezza(finale.value))
 const link = testo => `${props.modulo}?${new URLSearchParams({ versione: versione(), giudizi: testo })}`
 const quando = q => new Date(q).toLocaleString('it-IT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
+// il computer di sviluppo in LAN (`node strumenti/ricevi-log.mjs`, docs/core/vecchio-telefono-veri.md): se la pagina è servita da lui il resoconto
+// parte da solo a fine prova e c'è «Manda al computer» per rimandarlo con le note; altrimenti niente di tutto questo
+const alComputer = ref(false)
+async function sonda() { alComputer.value = await sondaRicevitore() }
+async function mandaAlComputer() {
+  const r = await mandaAlRicevitore({ testo: finale.value, quando: Date.now() })
+  esito.value = r.ok ? `Mandato al computer (${r.file}).` : `Non è arrivato al computer: ${r.errore}.`
+}
+async function mandaAuto() {
+  await sonda()
+  if (alComputer.value) await mandaAlComputer()
+}
 async function copia() {
   try { await navigator.clipboard.writeText(finale.value); esito.value = 'Copiato negli appunti.' } catch (e) { esito.value = 'Non si riesce a copiare: tieni premuto sul testo.' }
 }
@@ -112,6 +126,7 @@ async function copia() {
         <div class="riga">
           <a v-for="(p, k) in parti" :key="k" class="bottone" data-azione="benchmark-manda" :data-parte="k + 1"
              :href="link(p)" target="_blank" rel="noopener">{{ parti.length > 1 ? `Manda ${k + 1}/${parti.length}` : 'Manda' }}</a>
+          <button v-if="alComputer" type="button" class="bottone" data-azione="benchmark-al-computer" @click="mandaAlComputer">Manda al computer</button>
           <button type="button" class="bottone" data-azione="benchmark-copia" @click="copia">Copia</button>
           <button type="button" class="bottone" data-azione="benchmark-ripeti" @click="avvia()">Rifai</button>
         </div>

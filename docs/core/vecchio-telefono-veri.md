@@ -158,7 +158,9 @@ dentro), poi risponde `{ok:true,file}` e la console stampa «ricevuto: <file> (<
 il CORS si apre solo per quelle origini.
 
 Lato app: `src/grafica/benchmark/invio-diretto.js` esporta `sondaRicevitore(origin)` (GET con timeout 1,5 s, `true`/`false`, mai
-errori) e `mandaAlRicevitore(payload, origin)` (`{ok,file}` o `{ok:false,errore}`). Per integrarlo in `Benchmark.vue`: all'apertura
-del resoconto finale chiamare `sondaRicevitore()`; se `true` mostrare accanto a «Manda» il bottone **Manda al computer**, che chiama
-`mandaAlRicevitore({ testo, agente: navigator.userAgent, note, quando: Date.now() })` con il resoconto intero (non spezzato in
-parti) e mostra «Mandato» o l'errore. Fuori dal ricevitore (sito vero, file unico) la sonda è falsa e il bottone non c'è.
+errori) e `mandaAlRicevitore(payload, origin)` (`{ok,file}` o `{ok:false,errore}`). In `Benchmark.vue`: a fine prova (e riaprendo l'ultima) `sondaRicevitore()`; se la pagina è servita dal ricevitore il resoconto
+parte **da solo** al computer (intero, senza note) e compare **Manda al computer** (`[data-azione="benchmark-al-computer"]`) per
+rimandarlo con le note aggiunte; l'esito («Mandato al computer (<file>)») sta in `.esito`. Fuori dal ricevitore (sito vero, file
+unico) la sonda è falsa e il bottone non c'è: restano «Manda» (modulo) e «Copia».
+Sul telefono: `npm run build:sito`, `node strumenti/ricevi-log.mjs`, aprire sul Redmi l'indirizzo stampato, zona dei grandi →
+Impostazioni → Avanzate → Misura questo telefono.
