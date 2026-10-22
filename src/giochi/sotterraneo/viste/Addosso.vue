@@ -44,7 +44,7 @@ const ombra = dove => dove === 'mancina' && dueMani.value
       </template>
     </div>
     <div class="sot-intorno-eroe">
-      <Armato :eroe="eroe" :mano="mano ? mano.chiave : null" :mancina="mancina ? mancina.chiave : null" :scala="3" />
+      <Armato :eroe="eroe" :mano="mano ? mano.chiave : null" :mancina="mancina ? mancina.chiave : null" :corpo="corpo ? corpo.chiave : null" :scala="3" in3d />
     </div>
     <div class="sot-intorno-lato">
       <template v-for="p in POSTI.filter(x => x.dove === 'mano' || x.dove === 'dito' || x.dove === 'dito2')" :key="p.dove">

@@ -7,6 +7,11 @@
 export const SCARTO_DITO = 16              // px: sotto, il dito è fermo (docs/core/il-dito.md)
 export const PERSONA = { largo: 72, alto: 96 }
 export const VICINO_AL_PIEDE = 1.5         // celle: un tocco sul prato qui attorno è un tocco sulla persona
+// Il gesto sul mondo (docs/sotterraneo/mondo-3d-telecamera.md): un tocco cammina; un dito che oltre la soglia scorre sposta la vista (come
+// nella fattoria: l'eroe non insegue più il dito); due dita zoomano
+export const eTrascinare = (x0, y0, x1, y1) => Math.hypot(x1 - x0, y1 - y0) > SCARTO_DITO
+// il pizzico: due dita che si allontanano avvicinano (la distanza della telecamera cala), che si avvicinano allontanano
+export const zoomDaPizzico = (zoom0, d0, d) => zoom0 * d0 / Math.max(1, d)
 export const PRIORITA = { persona: 0, posto: 1, cosa: 2 }
 
 // il rettangolo di una figura a schermo, dai piedi (px, py) e dalla testa (tx, ty): allargato al minimo, coi piedi dentro

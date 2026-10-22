@@ -1,7 +1,8 @@
 // Cosa dire quando una cosa non riesce: il motivo del motore in una riga per un bambino. Senza three, così la vista
 // (Gioco.vue) lo usa senza trascinarsi dietro il disegno. Un rifiuto dice cosa fare, non un «no» nudo.
 import { COLTURE } from '../dati/colture.js'
-import { emojiDi } from '../dati/ricette.js'
+import { emojiDi, merceDi, RICETTE } from '../dati/ricette.js'
+import { EDIFICI } from '../dati/catalogo.js'
 
 /** `extra`: costo (le monete che servono: «Servono 🪙 N»), mancano (monete), per, secondi, liv (il livello a cui arriva), ingredienti ({ chiave: quanti }). */
 export function dettoDi(motivo, extra = {}) {
@@ -9,12 +10,13 @@ export function dettoDi(motivo, extra = {}) {
     case 'poche-monete':
       if (extra.costo && extra.per) return `Per ${extra.per} servono 🪙 ${extra.costo}`
       return extra.costo ? `Servono 🪙 ${extra.costo}` : `Ti mancano 🪙 ${extra.mancano}`
-    case 'manca-raccolto': {
-      if (extra.mangia && extra.servono) {
-        const cosa = extra.mangia.map(k => emojiDi(k, COLTURE)).join(' o ')
-        return `Hanno fame: servono ${extra.servono} ${extra.servono === 1 ? 'raccolto' : 'raccolti'} (${cosa}) per ognuna`
-      }
-      return extra.per ? `Per ${extra.per} serve un raccolto` : 'Serve un raccolto'
+    case 'manca-mangime': {
+      // «Serve 🥬 foraggio (2 a testa): lo fa il fienile» — il mangime lo fa una macchina, non è un raccolto (docs/fattoria3d/mangime-e-catena.md)
+      const cibi = (extra.mangia || []).filter(k => merceDi(k))
+      if (!cibi.length) return 'Serve da mangiare'
+      const cosa = cibi.map(k => `${emojiDi(k)} ${merceDi(k).nome.toLowerCase()}`).join(' o ')
+      const dove = [...new Set(cibi.map(k => (RICETTE[k] || {}).dove))].map(t => EDIFICI[t]).filter(Boolean).map(e => `${e.art} ${e.nome.toLowerCase()}`).join(' o ')
+      return `Serve ${cosa}${extra.servono > 1 ? ` (${extra.servono} a testa)` : ''}${dove ? `: lo fa ${dove}` : ''}`
     }
     case 'lavora': return extra.secondi ? `Ci stanno lavorando… ${extra.secondi}s` : 'Ci stanno lavorando'
     case 'pieno': return extra.bestie ? `Ci sono già tutte le ${extra.bestie} che ci stanno` : 'Non c\'è più posto'
@@ -36,6 +38,17 @@ export function dettoDi(motivo, extra = {}) {
     case 'occupato': case 'fuori-terreno': return 'Qui non si può: cerca un posto libero nei tuoi terreni'
     case 'acqua': return 'Qui c\'è l\'acqua: serve un ponte'
     case 'ponte-sopra': return 'Togli prima il ponte'
+    case 'non-acqua-vicina': return 'Qui non c\'è acqua da pescare'
+    case 'non-acqua': return 'Qui non c\'è acqua'
+    case 'non-abbocca': return 'Non ha ancora abboccato'
+    case 'da-ritirare': return 'Il pesce ha abboccato: ritiralo!'
+    case 'senza-molo': return 'Per pescare serve un molo vicino all\'acqua'
+    case 'serve-porticciolo': return 'Per pescare in mare serve il porticciolo'
+    case 'lontano': return 'L\'acqua è troppo lontana dal molo: allunga il molo o mettine un altro'
+    case 'acqua-non-tua': return 'Quest\'acqua non è ancora tua: compra prima il terreno'
+    case 'serve-riva': return 'Il porticciolo si mette sulla riva, vicino all\'acqua'
+    case 'pesca-attesa': return extra.secondi ? `Il galleggiante è in acqua… ${extra.secondi}s` : 'Il galleggiante è in acqua'
+    case 'pesca-riposo': return extra.secondi ? `I pesci stanno tornando… ${extra.secondi}s` : 'I pesci stanno tornando'
     case 'sta-crescendo': return 'Quello che sta crescendo non si mette via'
     case 'ha-le-bestie': return 'Ci sono le bestie: spostalo, non si mette via'
     case 'macchina-al-lavoro': return 'Finisci prima il lavoro: poi la metti via (spostarla si può)'

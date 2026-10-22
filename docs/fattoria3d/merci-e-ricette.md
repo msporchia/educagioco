@@ -8,7 +8,7 @@ lavanda…) e le disegnava con le emoji; la 2D ha una catena curata ([../fattori
 ## Una faccia per ogni merce
 
 - **Ogni merce dichiara il suo `pezzo` dell'atlante** nei dati 3D (`dati/colture.js`, `dati/ricette.js`, `PRODOTTI_ANIMALI`
-  in `dati/animali.js`), e dove l'id coincide con uno di `PRODOTTI` (2D, `dati/coltivazioni.js`) è **lo stesso pezzo**. Un test
+  in `dati/animali.js`, dove il `pesce` di `dati/pesca.js` sta con uova e latte), e dove l'id coincide con uno di `PRODOTTI` (2D, `dati/coltivazioni.js`) è **lo stesso pezzo**. Un test
   (`unita/fattoria3d-merci`) lo confronta con la 2D: nome e faccia di una merce comune non possono scostarsi.
 - **`viste/Faccia.vue`** disegna la merce (`k` = la chiave 3D) con `Provino.vue` della 2D, che non si tocca: la 3D importa la
   vista e i dati dell'atlante, non mezza fattoria. L'**emoji è il ripiego dichiarato**: una merce senza `pezzo` ha `aspetta`
@@ -27,8 +27,11 @@ lavanda…) e le disegnava con le emoji; la 2D ha una catena curata ([../fattori
   hanno ancora gli id dei salvataggi `pasticceria` e `conserviera`): si chiamano come in 2D, e **nessuna è inventata**. Il perché:
   una «Pasticceria» che fa la pasta era una bugia, e rinominare un id vuol dire migrare ogni salvataggio e ogni modello per un
   nome che il bambino non legge. Restano da ridisegnare i due modelli 3D ([da-fare.md](da-fare.md)).
-- **Dove la 2D ha una macchina in più, non si porta** (friggitoria, sushi bar, pentolone, fienile e i recinti oltre pollaio e
-  stalla): è in [da-fare.md](da-fare.md).
+- **Il mangime è portato** (il fienile, l'erba medica, becchime e foraggio): [mangime-e-catena.md](mangime-e-catena.md), con l'audit di ogni ricetta contro la 2D
+  e le sole deviazioni dichiarate.
+- **Friggitoria e sushi bar sono portati** (col pesce, che si pesca: [geografia-e-pesca.md](geografia-e-pesca.md)); la **peschiera** no.
+- **Dove la 2D ha una macchina in più, non si porta** (la peschiera e il pentolone, che fa il mangime di anatre, maiali e capre; i recinti oltre pollaio, stalla e
+  ovile): è in [da-fare.md](da-fare.md).
 - **Nessuna ricetta è adattata**: le colture che mancavano (cavolfiore, aglio…) sono arrivate e salsa (con l'aglio) e minestrone
   (col cavolfiore) sono tornate quelle della 2D; il test non ha più eccezioni.
 
@@ -36,6 +39,7 @@ lavanda…) e le disegnava con le emoji; la 2D ha una catena curata ([../fattori
 
 | macchina (id) | livello | ricette (ingredienti) |
 |---|---|---|
+| Fienile (`fienile`) | 2 | foraggio di carote (carote 2), becchime (grano 2), foraggio d'erba (erba medica 2, dal 9): **mangime**, non si consegna |
 | Mulino (`mulino`) | 3 | farina (grano 2), pastone (mais 3) |
 | Pastificio (`pasticceria`) | 6 | pasta (farina 2, uova 1), biscotti (farina, burro, zucchero), pizza (farina, salsa, formaggio), lasagne (pasta, salsa, formaggio) |
 | Panificio (`panificio`) | 7 | pane (farina 2), torta (farina 2, uova, burro), crostata (farina, fragola, burro) |
@@ -46,6 +50,8 @@ lavanda…) e le disegnava con le emoji; la 2D ha una catena curata ([../fattori
 | Zuccherificio (`zuccherificio`) | 13 | zucchero (barbabietola 2), marmellata (fragola 2, zucchero) |
 | Sartoria (`sartoria`) | 15 | maglione (stoffa 2), sciarpa di lana (stoffa, lana), berretto (stoffa) |
 | Tintoria (`tintoria`) | 16 | tintura (lavanda 2), sapone (tintura, burro), sacchetto profumato (lavanda 2, stoffa), maglione alla lavanda (maglione, tintura) |
+| Friggitoria (`friggitoria`) | 17 | patatine (patata 2), pesce fritto (`fritto`: pesce 1, farina 1), arancini (riso 2, formaggio 1) |
+| Sushi bar (`sushi_bar`) | 18 | sushi (riso 1, pesce 1), maki (riso 1, carota 1, peperone 1) |
 
 Per far stare le ricette al loro livello il pollaio scende al 5 e il pastificio sale al 6 (la pasta vuole le uova): i prezzi
 e le soglie non cambiano di sensibile (`npm run tara:fattoria3d`).
@@ -77,6 +83,8 @@ Gli id restano quelli di prima (`carota`, `patata`…, singolari): sono le chiav
 2D**: la taratura vuole che una coltura che arriva dopo non maturi prima (`guastiDellaScala`), e la 2D ha un altro ordine.
 La lavanda ha ora la tintoria al 16; la zucca ha una sola uscita (il banco, i vicini): il resto della sua catena è in 2D (pentolone).
 
+L'**erba medica** (`erba`, `raccolto_erba`) è la sedicesima coltura: sta fuori dalla regola della scala perché è la strada svelta del foraggio ([mangime-e-catena.md](mangime-e-catena.md)).
+
 Le cinque colture portate dopo, con il loro `pezzo` (`raccolto_cavolfiori`, `_peperoni`, `_aglio`, `_barbabietola`, `_riso`): gli id
 sono al singolare come gli altri (`cavolfiore`, `peperone`, `aglio`, `barbabietola`, `riso`), e il test li legge con `COME_2D`.
 
@@ -86,7 +94,8 @@ sono al singolare come gli altri (`cavolfiore`, `peperone`, `aglio`, `barbabieto
 | aglio | 10 | 46 s | salsa |
 | barbabietola | 11 | 48 s | zucchero (zuccherificio) |
 | peperone | 12 | 54 s | conserva d'orto |
-| riso | 15 | 70 s | solo banco e vicini (arancini e sushi sono di macchine non ancora portate: friggitoria e sushi bar) |
+| erba medica | 9 | 12 s | solo il fienile (foraggio); `mangime: true`, non si chiede, non si baratta |
+| riso | 15 | 70 s | arancini (friggitoria) e sushi e maki (sushi bar), banco e vicini |
 
 Stanno in coda alla scaletta dove non spostano niente: la regola «matura dopo chi arriva prima» (`guastiDellaScala`) le
 vuole fra la zucca (38 s) e la lavanda (64 s), e l'aglio sta prima della cucina perché la salsa non faccia slittare pizza e lasagne.

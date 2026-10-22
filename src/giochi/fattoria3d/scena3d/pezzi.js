@@ -7,7 +7,8 @@ import { creaCampo, aggiornaCampo, creaPasticceria, creaMongolfiera, creaBancare
          creaPozzo, creaSpaventapasseri, creaTrattore, creaSegnaposto, creaPollaio, creaStalla, creaCaseificio, sincronizzaBestie, muoviBestie } from './modelli.js'
 import { creaPonte, creaPasserella, creaTavolo } from './modelli-passaggi.js'
 import { creaStagno } from './modelli-acqua.js'
-import { creaZuccherificio, creaTelaio, creaSartoria, creaTintoria } from './modelli-macchine.js'
+import { creaZuccherificio, creaTelaio, creaSartoria, creaTintoria, creaFienileMacchina, creaFriggitoria, creaSushiBar } from './modelli-macchine.js'
+import { creaMolo, creaPorticciolo } from './modelli-pesca.js'
 import { EDIFICI, PEZZI } from '../dati/catalogo.js'
 import { RICETTE, MACCHINE } from '../dati/ricette.js'
 import { SALITA_MS } from '../dati/mongolfiera.js'
@@ -33,11 +34,16 @@ const CREA = {
   tavolo: () => creaTavolo(),
   stagno: () => creaStagno(PEZZI.stagno.w, PEZZI.stagno.d),
   laghetto: () => creaStagno(PEZZI.laghetto.w, PEZZI.laghetto.d),
+  molo: () => creaMolo(PEZZI.molo.w, PEZZI.molo.d),
+  molo_v: () => creaMolo(PEZZI.molo_v.w, PEZZI.molo_v.d),
+  porticciolo: () => creaPorticciolo(),
 }
 const CREA_EDIFICIO = {
   pasticceria: creaPasticceria, mongolfiera: creaMongolfiera,
   mulino: creaMulino, panificio: creaPanificio, conserviera: creaConserviera, gelateria: creaGelateria, caseificio: creaCaseificio,
   telaio: creaTelaio, zuccherificio: creaZuccherificio, sartoria: creaSartoria, tintoria: creaTintoria,
+  friggitoria: creaFriggitoria, sushi_bar: creaSushiBar,
+  fienile: creaFienileMacchina,                       // la macchina del mangime; il fienile di scena (FISSI) è un altro modello, `creaFienile`
 }
 /** Un tipo senza disegno non rompe la scena: una scatola grigia della sua misura. */
 const modelloDi = (tipo, d, c) => (CREA[tipo] ? CREA[tipo](c) : CREA_EDIFICIO[tipo] ? CREA_EDIFICIO[tipo]() : creaSegnaposto(d.w, d.d))
@@ -86,7 +92,7 @@ export class Pezzi {
       urgenti per primi: il campo, il recinto, il pollaio e la stalla con le loro bestie, poi il resto dei pezzi e dei creatori di
       bestie, infine gli edifici (non sono in scena finché non si comprano: il primo costruito non deve pagare il modello). Una fila di funzioni, ognuna costruisce e butta un'istanza. */
   compitiScaldo() {
-    const pezzi = ['campo', 'recinto', 'pollaio', 'stalla', 'aiuola', 'panchina', 'pozzo', 'fontana', 'spaventapasseri', 'ponte', 'passerella', 'tavolo', 'bancarella', 'bacheca', 'stagno', 'laghetto']
+    const pezzi = ['campo', 'recinto', 'pollaio', 'stalla', 'aiuola', 'panchina', 'pozzo', 'fontana', 'spaventapasseri', 'ponte', 'passerella', 'tavolo', 'bancarella', 'bacheca', 'stagno', 'laghetto', 'molo', 'molo_v', 'porticciolo']
     const fai = tipo => ({ nome: tipo, fai: () => { if (PEZZI[tipo]) modelloDi(tipo, PEZZI[tipo], tipo === 'recinto' || tipo === 'pollaio' || tipo === 'stalla' ? { pecore: [], bestie: [] } : undefined) } })
     return [...pezzi.slice(0, 4).map(fai), { nome: 'pecora', fai: () => creaPecora() }, { nome: 'gallina', fai: () => { creaGallina(0); creaGallina(1) } },
             { nome: 'mucca', fai: () => { creaMucca(0); creaMucca(1) } }, ...pezzi.slice(4).map(fai), ...Object.keys(EDIFICI).filter(t => CREA_EDIFICIO[t]).map(t => ({ nome: t, fai: () => CREA_EDIFICIO[t]() }))]

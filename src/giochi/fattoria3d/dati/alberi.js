@@ -27,7 +27,7 @@ export function alberiStorici() {
   for (const l of LOTTI_STORICI) for (let k = 0; k < 3; k++) prova(l.i + Math.floor(caso() * l.w), l.j + Math.floor(caso() * l.d))
   const sulPosto = new Set()
   for (const [tipo, e] of Object.entries(EDIFICI)) {
-    if (EDIFICI_DEL_PRIMO_GIRO.includes(tipo)) continue
+    if (EDIFICI_DEL_PRIMO_GIRO.includes(tipo) || POSTI_STORICI[tipo].nuovo) continue
     const slot = POSTI_STORICI[tipo]
     for (let a = 0; a < e.w; a++) for (let b = 0; b < e.d; b++) sulPosto.add(chiave(slot.i + a, slot.j + b))
   }
@@ -47,7 +47,7 @@ function storiciDelLotto(l) {
 
 // Quanti tentativi e quanto vicini: il prato ne ha pochi e radi (come prima), il bosco tanti e fitti. Dentro il lotto le celle
 // sono 0..2 su ogni asse: due alberi di lotti vicini stanno sempre ad almeno 2 celle.
-export const ALBERI_PER_BIOMA = { prato: { prove: 3, minimo: 1.9 }, bosco: { prove: 12, minimo: 1.4 }, laghetto: { prove: 2, minimo: 1.9 } }
+export const ALBERI_PER_BIOMA = { prato: { prove: 3, minimo: 1.9 }, bosco: { prove: 12, minimo: 1.4 }, laghetto: { prove: 2, minimo: 1.9 }, costa: { prove: 2, minimo: 1.9 }, lago: { prove: 2, minimo: 1.9 } }
 
 /** Gli alberi di un lotto non storico. `occupate`: chiavi di celle dove non si pianta (l'acqua). Il numero è la chiave della cella. */
 export function alberiNuovi(l, bioma, occupate = new Set()) {

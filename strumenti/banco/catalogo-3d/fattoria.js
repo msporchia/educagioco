@@ -11,7 +11,11 @@ import {
   creaFontana, creaPecora, creaRecinto, muoviPecore, creaGallina, creaPollaio, creaStalla, muoviBestie, creaMucca,
   creaFienile, creaCasa, creaTrattore, creaCassa, creaBacheca, creaCasaVecchia, creaBancarellaVecchia,
 } from '../../../src/giochi/fattoria3d/scena3d/modelli.js'
-import { creaZuccherificio, creaTelaio, creaSartoria, creaTintoria } from '../../../src/giochi/fattoria3d/scena3d/modelli-macchine.js'
+import { creaZuccherificio, creaTelaio, creaSartoria, creaTintoria, creaFienileMacchina, creaFriggitoria, creaSushiBar } from '../../../src/giochi/fattoria3d/scena3d/modelli-macchine.js'
+import { creaMolo, creaPorticciolo } from '../../../src/giochi/fattoria3d/scena3d/modelli-pesca.js'
+import { galleggiante } from '../../../src/giochi/fattoria3d/scena3d/pesca3d.js'
+import { Pesci } from '../../../src/giochi/fattoria3d/scena3d/pesci.js'
+import { materialeAcqua, materialeMare } from '../../../src/giochi/fattoria3d/scena3d/modelli-acqua.js'
 import { creaContadino, creaCane, posaCane, creaGatto, posaGatto } from '../../../src/giochi/fattoria3d/scena3d/modelli-compagni.js'
 import { creaPonte, creaPasserella, creaTavolo } from '../../../src/giochi/fattoria3d/scena3d/modelli-passaggi.js'
 import { creaStagno } from '../../../src/giochi/fattoria3d/scena3d/modelli-acqua.js'
@@ -38,6 +42,9 @@ const T = 'src/giochi/fattoria3d/scena3d/terreno.js'
 const D = 'src/giochi/fattoria3d/scena3d/dal-sotterraneo.js'      // le copie adattate dei modelli del Sotterraneo (docs/fattoria3d/scena.md)
 const MP = 'src/giochi/fattoria3d/scena3d/modelli-passaggi.js'
 const MA = 'src/giochi/fattoria3d/scena3d/modelli-acqua.js'
+const MP2 = 'src/giochi/fattoria3d/scena3d/modelli-pesca.js'
+const PS = 'src/giochi/fattoria3d/scena3d/pesci.js'
+const P3 = 'src/giochi/fattoria3d/scena3d/pesca3d.js'
 
 const pezzo = t => `pezzo del vassoio, livello ${PEZZI[t].liv}, ${PEZZI[t].w}×${PEZZI[t].d} celle`
 const unico = t => `edificio unico, si mette dove si vuole nel terreno proprio (menu Costruisci, scheda Edifici), livello ${EDIFICI[t].liv}`
@@ -120,6 +127,24 @@ export const VOCI = [
   { id: 'fattoria:passerella', nome: 'Passerella di assi', gioco: 'entrambi', categoria: 'prop', dove: pezzo('passerella') + ', calpestabile, conta come strada; dalla passerella di corde del mondo di sopra del sotterraneo', file: `${MP}:creaPasserella`, misure: celle(PEZZI.passerella), crea: () => creaPasserella() },
   { id: 'fattoria:stagno-costruito', nome: 'Stagno', gioco: 'fattoria', categoria: 'prop', dove: pezzo('stagno') + ', decori; tutto acqua (non si cammina), solo un ponte o una passerella ci sta sopra; lo stesso materiale dell\'acqua dei lotti laghetto', file: `${MA}:creaStagno`, misure: celle(PEZZI.stagno), crea: () => creaStagno(PEZZI.stagno.w, PEZZI.stagno.d) },
   { id: 'fattoria:laghetto-costruito', nome: 'Laghetto', gioco: 'fattoria', categoria: 'prop', dove: pezzo('laghetto') + ', decori; lo stesso disegno dello stagno, più grande', file: `${MA}:creaStagno`, misure: celle(PEZZI.laghetto), crea: () => creaStagno(PEZZI.laghetto.w, PEZZI.laghetto.d) },
+  { id: 'fattoria:molo', nome: 'Molo', gioco: 'fattoria', categoria: 'prop', dove: pezzo('molo') + ', calpestabile (quota ' + PEZZI.molo.alzato + '), sull\'acqua: dalla riva in acqua, in punta si lancia la lenza (pesca)', file: `${MP2}:creaMolo`, misure: celle(PEZZI.molo), crea: () => creaMolo(PEZZI.molo.w, PEZZI.molo.d) },
+  { id: 'fattoria:molo-girato', nome: 'Molo girato', gioco: 'fattoria', categoria: 'prop', dove: pezzo('molo_v') + ', lo stesso molo per l\'acqua a nord o a sud', file: `${MP2}:creaMolo`, misure: celle(PEZZI.molo_v), crea: () => creaMolo(PEZZI.molo_v.w, PEZZI.molo_v.d) },
+  { id: 'fattoria:porticciolo', nome: 'Porticciolo', gioco: 'fattoria', categoria: 'edificio', dove: pezzo('porticciolo') + ', uno solo, sulla riva: abilita la pesca in mare e rende di più; la barca dondola', file: `${MP2}:creaPorticciolo`, misure: celle(PEZZI.porticciolo), crea: () => creaPorticciolo(), anima: animaCosa },
+  { id: 'fattoria:galleggiante', nome: 'Galleggiante (lenza in acqua)', gioco: 'fattoria', categoria: 'altro', dove: 'sull\'acqua dove ha lanciato il contadino: dondola in attesa, si immerge a scatti e gli anelli si allargano quando abbocca', file: `${P3}:galleggiante`,
+    crea: () => galleggiante(), anima: (g, dt, t) => { const { boa, anello } = g.userData; const k = (t * 1.6) % 1; boa.position.y = -0.045 + Math.abs(Math.sin(t * 9)) * 0.05; anello.scale.setScalar(0.8 + k * 3); anello.material.opacity = 0.85 * (1 - k) } },
+  { id: 'fattoria:pesci', nome: 'Pesciolini nell\'acqua', gioco: 'fattoria', categoria: 'animale', dove: 'nei laghi, nel mare, nei laghetti e negli stagni: sagome scure sotto il pelo dell\'acqua che nuotano in tondo e ogni tanto saltano (una InstancedMesh sola per tutta la scena, tutto nello shader)', file: `${PS}:Pesci`, misure: '4×4',
+    crea: () => {
+      const g = new THREE.Group(), p = new Pesci(g, { cose: [], acqua: () => true })
+      const acqua = []; for (let j = -4; j < 4; j++) for (let i = -4; i < 4; i++) acqua.push([i, j])         // i pesci non hanno matrice di modello: la scena li tiene all'origine, il gruppo non si sposta
+      p.ridisegna([{ l: { id: 'catalogo' }, dati: { acqua } }], true)
+      const lastra = new THREE.Mesh(new THREE.PlaneGeometry(8, 8).rotateX(-Math.PI / 2), materialeAcqua()); lastra.position.y = 0.03; g.add(lastra)
+      g.userData.pesci = p; return g
+    },
+    anima: (g, dt, t) => g.userData.pesci.muovi(t + 3) },
+  { id: 'fattoria:mare', nome: 'Il mare (piano lontano)', gioco: 'fattoria', categoria: 'altro', dove: 'a ovest dal lotto a = −2 all\'orizzonte: un piano solo, turchese in riva e blu al largo (terreno.js, _mare)', file: `${T}:_mare`, misure: '8×8',
+    crea: () => { const g = new THREE.Group(), c = new THREE.Color(), pos = [], col = [], idx = [], colori = [0x1d5f9a, 0x2678b0, 0x3092c4, 0x52b4d2, 0x8fd2dc, 0xb4e0e2]; colori.forEach((k, n) => { c.set(k); for (const z of [-4, 4]) { pos.push(-8 + n * 1.6, 0, z); col.push(c.r, c.g, c.b) } }); for (let n = 0; n < colori.length - 1; n++) { const a = n * 2; idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2) }
+      const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); geo.setAttribute('color', new THREE.Float32BufferAttribute(col, 3)); geo.setAttribute('normal', new THREE.Float32BufferAttribute(pos.map((v, n) => n % 3 === 1 ? 1 : 0), 3)); geo.setIndex(idx)
+      g.add(new THREE.Mesh(geo, materialeMare())); return g } },
   { id: 'fattoria:tavolo', nome: 'Tavolo con le panche', gioco: 'entrambi', categoria: 'prop', dove: pezzo('tavolo') + '; dal tavolo con le panche delle città del sotterraneo', file: `${MP}:creaTavolo`, misure: celle(PEZZI.tavolo), crea: () => creaTavolo() },
   { id: 'fattoria:segnaposto', nome: 'Segnaposto grigio', gioco: 'fattoria', categoria: 'altro', dove: 'ripiego: lo mostra la scena per un tipo di pezzo senza disegno (pezzi.js, modelloDi)', file: `${M}:creaSegnaposto`, misure: '2×2', crea: () => creaSegnaposto(2, 2) },
 
@@ -130,6 +155,7 @@ export const VOCI = [
   { id: 'fattoria:pasticceria', nome: 'Pastificio (id pasticceria)', gioco: 'fattoria', categoria: 'edificio', dove: unico('pasticceria') + ': forno, torta che gira', file: `${M}:creaPasticceria`, misure: celle(EDIFICI.pasticceria), crea: () => creaPasticceria(), anima: animaEdificio },
   { id: 'fattoria:mongolfiera', nome: 'Mongolfiera', gioco: 'fattoria', categoria: 'edificio', dove: unico('mongolfiera') + ': parte per i viaggi di vendita', file: `${M}:creaMongolfiera`, misure: celle(EDIFICI.mongolfiera),
     crea: () => creaMongolfiera(), anima: (g, dt, t) => { const u = g.userData; u.volo.position.y = Math.sin(t * 1.3) * 0.08; u.volo.rotation.z = Math.sin(t * 0.9) * 0.02; u.fiamma.scale.set(1, 1.2 + Math.sin(t * 14) * 0.4, 1) } },
+  { id: 'fattoria:fienile-macchina', nome: 'Fienile (la macchina del mangime)', gioco: 'fattoria', categoria: 'edificio', dove: unico('fienile') + ': capanna aperta con le balle, una balla tonda che gira; foraggio e becchime', file: `${MM}:creaFienileMacchina`, misure: celle(EDIFICI.fienile), crea: () => creaFienileMacchina(), anima: animaEdificio },
   { id: 'fattoria:mulino', nome: 'Mulino', gioco: 'fattoria', categoria: 'edificio', dove: unico('mulino') + ': pale a vento, macina il grano', file: `${M}:creaMulino`, misure: celle(EDIFICI.mulino), crea: () => creaMulino(), anima: animaEdificio },
   { id: 'fattoria:panificio', nome: 'Panificio', gioco: 'fattoria', categoria: 'edificio', dove: unico('panificio') + ': forno con la bocca accesa', file: `${M}:creaPanificio`, misure: celle(EDIFICI.panificio), crea: () => creaPanificio(), anima: animaEdificio },
   { id: 'fattoria:conserviera', nome: 'Cucina (id conserviera)', gioco: 'fattoria', categoria: 'edificio', dove: unico('conserviera'), file: `${M}:creaConserviera`, misure: celle(EDIFICI.conserviera), crea: () => creaConserviera(), anima: animaEdificio },
@@ -138,11 +164,13 @@ export const VOCI = [
   { id: 'fattoria:telaio', nome: 'Telaio', gioco: 'fattoria', categoria: 'edificio', dove: unico('telaio') + ': la navetta che scorre sul telaio, balle di lana', file: `${MM}:creaTelaio`, misure: celle(EDIFICI.telaio), crea: () => creaTelaio(), anima: animaEdificio },
   { id: 'fattoria:zuccherificio', nome: 'Zuccherificio', gioco: 'fattoria', categoria: 'edificio', dove: unico('zuccherificio') + ': la ciminiera che fuma, la ruota dentata', file: `${MM}:creaZuccherificio`, misure: celle(EDIFICI.zuccherificio), crea: () => creaZuccherificio(), anima: animaEdificio },
   { id: 'fattoria:sartoria', nome: 'Sartoria', gioco: 'fattoria', categoria: 'edificio', dove: unico('sartoria') + ': il manichino che gira, l\'ago nel rocchetto', file: `${MM}:creaSartoria`, misure: celle(EDIFICI.sartoria), crea: () => creaSartoria(), anima: animaEdificio },
+  { id: 'fattoria:friggitoria', nome: 'Friggitoria', gioco: 'fattoria', categoria: 'edificio', dove: unico('friggitoria') + ': tendone a righe, friggitrici con l\'olio che brilla, il cartoccio di patatine che gira sul tetto, fuma', file: `${MM}:creaFriggitoria`, misure: celle(EDIFICI.friggitoria), crea: () => creaFriggitoria(), anima: animaEdificio },
+  { id: 'fattoria:sushi-bar', nome: 'Sushi bar', gioco: 'fattoria', categoria: 'edificio', dove: unico('sushi_bar') + ': chiosco giapponese con il noren rosso che ondeggia, il bancone coi piattini e due lanterne', file: `${MM}:creaSushiBar`, misure: celle(EDIFICI.sushi_bar), crea: () => creaSushiBar(), anima: animaEdificio },
   { id: 'fattoria:tintoria', nome: 'Tintoria', gioco: 'fattoria', categoria: 'edificio', dove: unico('tintoria') + ': le vasche colorate, le stoffe che ondeggiano', file: `${MM}:creaTintoria`, misure: celle(EDIFICI.tintoria), crea: () => creaTintoria(), anima: animaEdificio },
 
   // ── solo di scena: nascono col terreno ──
   ...FISSI.map(f => ({
-    id: `fattoria:${f.tipo}`, nome: f.tipo === 'fienile' ? 'Fienile' : 'Casa di legno', gioco: f.tipo === 'fienile' ? 'fattoria' : 'entrambi', categoria: 'edificio',
+    id: `fattoria:${f.tipo}`, nome: f.tipo === 'fienile' ? 'Fienile di scena (fisso)' : 'Casa di legno', gioco: f.tipo === 'fienile' ? 'fattoria' : 'entrambi', categoria: 'edificio',
     dove: `scenario fisso (non si compra) al posto ${f.i},${f.j}, ${f.w}×${f.d} celle (terreno.js, _fisse)` + (f.tipo === 'fienile' ? '' : ': la casa di legno del Sotterraneo, col fumo dal camino'),
     file: f.tipo === 'fienile' ? `${M}:creaFienile` : `${D}:casaDiLegno`, misure: `${f.w}×${f.d}`, crea: () => f.tipo === 'fienile' ? creaFienile() : creaCasa(),
     anima: animaEdificio,
@@ -173,6 +201,8 @@ export const VOCI = [
     id: `fattoria:${persona}${capi ? '-' + abito.split(' ')[0].replace(/[^a-z]/g, '') : ''}`, nome: `${nome} (${abito})`, gioco: 'fattoria', categoria: 'personaggio',
     dove: 'il giocatore, sempre in scena (eroe.js); lui o lei secondo il personaggio del profilo; semina, falcia, abbatte', file: `${MC}:creaContadino`,
     crea: () => creaContadino(capi ? { persona, ...capi } : persona) })),
+  { id: 'fattoria:contadino-canna', nome: 'Contadino che pesca', gioco: 'fattoria', categoria: 'personaggio', dove: 'sul molo o accanto al porticciolo dopo il lancio (eroe.js, `pescando`): la canna alzata, il braccio che dondola', file: `${MC}:creaContadino`,
+    crea: () => { const g = creaContadino('contadino'); g.userData.canna.visible = true; g.userData.bracci[1].rotation.x = -2; g.userData.bracci[0].rotation.x = -0.3; g.userData.busto.rotation.x = 0.1; return g } },
   { id: 'fattoria:watson', nome: `${COMPAGNI.watson.nome} (bobtail)`, gioco: 'fattoria', categoria: 'animale', dove: `il cane di casa, arriva al livello ${COMPAGNI.watson.liv} (scena3d/compagni.js)`, file: `${MC}:creaCane`,
     crea: () => creaCane(), anima: (g, dt, t) => posaCane(g, { stato: 'sta', t }) },
   // le pose di Watson, ferme nell'anteprima e mosse nella vista grande: per giudicarle senza giocare (posaCane)

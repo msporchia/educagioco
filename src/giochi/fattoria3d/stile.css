@@ -99,6 +99,7 @@
 /* i fogli di gioco (macchine, banco, livelli): l'insegna in cima col colore del posto, poi il corpo che scorre. Ogni foglio ha le sue
    quattro tinte: --a e --b per l'insegna e le barre, --c per i fondi chiari, --d per i bordi, --t per il testo sull'insegna. */
 .f3-macchina, .f3-banco, .f3-livelli { --a: #e6b84a; --b: #a8741b; --c: #fbefd0; --d: #ecd9a8; --t: #fff; padding: 0; overflow: hidden; }
+.f3-macchina[data-macchina="fienile"]     { --a: #8fbf4a; --b: #55802a; --c: #eef6dc; --d: #cfe2a8; }
 .f3-macchina[data-macchina="mulino"]      { --a: #7fa9c4; --b: #4a6c82; --c: #e8f2f8; --d: #c3d8e6; }
 .f3-macchina[data-macchina="panificio"]   { --a: #dba23c; --b: #9a6513; --c: #fbefd0; --d: #ecd9a8; }
 .f3-macchina[data-macchina="conserviera"] { --a: #dd5a48; --b: #8f2a1f; --c: #fde4df; --d: #f2c4bc; }

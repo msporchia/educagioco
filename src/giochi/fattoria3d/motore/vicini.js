@@ -10,6 +10,7 @@ import { PRODOTTI_ANIMALI } from '../dati/animali.js'
 import { PEZZI, EDIFICI } from '../dati/catalogo.js'
 import { lottoDi, dentro, chiave, idCella, cellaDa, cellaDaId, stradeDiSerie, lottoPerId } from '../dati/mondo.js'
 import { generaLotto } from '../dati/lotti.js'
+import { biomaDi, biomaVecchio } from '../dati/biomi.js'
 import { premioDi } from '../dati/ordini.js'
 import { VICINI, VERSIONE_VISITA, normalizzaFattoriaVisitabile, merce, livelloDellaMerce, prezzoPer, premioMassimo,
          POSTO_CASSA, POSTO_MERCATO, MISURE_POSTI, RINNOVO_CASSA_MS, RINNOVO_MERCATO_MS } from '../dati/vicini.js'
@@ -221,6 +222,9 @@ export class Vicini {
 // ═════════ la scena di una visita: un motore di SOLA LETTURA costruito dallo snapshot ═════════
 
 /** Lo stato di una `Fattoria3d` che rappresenta lo snapshot: campi com'erano, bestie al lavoro, e dentro la terra sua niente alberi né sassi. */
+/** Un lotto di una fattoria di prima della geografia grande, dove ora cambia qualcosa (mare, costa, lago): resta com'era (`normalizza` lo segna `vecchio`). */
+const vecchio = l => biomaDi(l.a, l.b) !== biomaVecchio(l.a, l.b)
+
 export function statoDaSnapshot(f) {
   const lotti = Object.fromEntries(f.lotti.map(id => [id, true]))
   const lottiTuoi = f.lotti.map(lottoPerId).filter(Boolean)
@@ -238,8 +242,8 @@ export function statoDaSnapshot(f) {
   return {
     v: VERSIONE_STATO, lotti, strade: f.strade, cose,
     posseduti: Object.fromEntries(f.edifici.map(e => [e.tipo, true])),
-    tagliati: lottiTuoi.flatMap(l => generaLotto(l.a, l.b).alberi.map(a => a.n)),
-    ostacoli: lottiTuoi.flatMap(l => generaLotto(l.a, l.b).ostacoli.map(o => o.id)),
+    tagliati: lottiTuoi.flatMap(l => generaLotto(l.a, l.b, { vecchio: vecchio(l) }).alberi.map(a => a.n)),
+    ostacoli: lottiTuoi.flatMap(l => generaLotto(l.a, l.b, { vecchio: vecchio(l) }).ostacoli.map(o => o.id)),
   }
 }
 
@@ -277,7 +281,7 @@ function postoLibero(motore, strade, nome) {
     la cassa si compongono con ciò che si fa a questo livello, con gli stessi numeri dei villaggi del computer. */
 export function esportaLaMiaFattoria(motore, chi = {}) {
   const s = motore.s, liv = motore.livello()
-  const fatte = k => Number.isFinite(livelloDellaMerce(k)) && livelloDellaMerce(k) <= liv
+  const fatte = k => Number.isFinite(livelloDellaMerce(k)) && livelloDellaMerce(k) <= liv && !(COLTURE[k] || RICETTE[k] || {}).mangime      // il mangime resta a casa
   const raccolti = Object.keys(COLTURE).filter(fatte)
   // le merci che più si hanno in scorta per prime: sono quelle che si vedono; poi le più alte che si fanno
   const peso = k => motore.scortaDi(k) * 100 + livelloDellaMerce(k)

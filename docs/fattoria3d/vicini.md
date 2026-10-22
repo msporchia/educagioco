@@ -20,7 +20,7 @@ stato piccolo, versionato, separato dalla vista (`sfida/foto.js` è una fotograf
   cassa: { chiede: [{ k, n }], dono: { k, n } | null, rinnovoMs } }
 ```
 
-- `k` è la chiave di una merce: un raccolto (`COLTURE`), un prodotto di una macchina (`RICETTE`), uova o latte. Gli id dei
+- `k` è la chiave di una merce: un raccolto (`COLTURE`), un prodotto di una macchina (`RICETTE`), uova o latte; **non il mangime** (`eMerce` lo scarta, `esportaLaMiaFattoria` non lo mette nel mercato). Gli id dei
   contenuti non si rinominano ([../core/archivio.md](../core/archivio.md)): sono anche le chiavi dello snapshot.
 - `cresc` (0–1) è l'età di un campo: la scena lo rimette a `ora − cresc·ms`, e l'orologio di una visita sta fermo, quindi il
   grano resta com'è. Le bestie lavorano (niente fame, niente uova da raccogliere): non sono tue.

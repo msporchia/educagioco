@@ -6,13 +6,13 @@ import { PEZZI, EDIFICI, CATEGORIE } from './catalogo.js'
 import { livelloDelPezzo } from './livelli.js'
 import { COSTI } from './regole.js'
 
-/** carta → pezzo dell'atlante 2D (gli id dei salvataggi restano: `pasticceria` è il Pastificio, `conserviera` la Cucina). Mancano passerella, trattore, stagno e laghetto (e la strada e la gomma): lì c'è l'emoji. */
+/** carta → pezzo dell'atlante 2D (gli id dei salvataggi restano: `pasticceria` è il Pastificio, `conserviera` la Cucina). Mancano passerella, trattore, stagno, laghetto, molo, molo girato e porticciolo (e la strada e la gomma): lì c'è l'emoji. */
 export const DISEGNI = {
   campo: 'campo_vuoto', recinto: 'recinto_pecore_calmo', pollaio: 'recinto_galline_calmo', stalla: 'recinto_mucche_calmo',
   bancarella: 'bancarella', bacheca: 'cartello', aiuola: 'fioriera_mista', panchina: 'panchina', fontana: 'fontana0', pozzo: 'pozzo_giardino0',
   spaventapasseri: 'spaventapasseri', ponte: 'ponte', tavolo: 'tavolo',
   pasticceria: 'pastificio', mongolfiera: 'mongolfiera', mulino: 'mulino_vento', panificio: 'panificio', caseificio: 'caseificio', conserviera: 'cucina', gelateria: 'gelateria',
-  telaio: 'telaio', zuccherificio: 'zuccherificio', sartoria: 'sartoria', tintoria: 'tintoria',
+  telaio: 'telaio', zuccherificio: 'zuccherificio', sartoria: 'sartoria', tintoria: 'tintoria', friggitoria: 'friggitoria', sushi_bar: 'sushi_bar', fienile: 'fienile0',
 }
 
 /** Gli strumenti del pennello, nella scheda delle strade: non sono pezzi, scegliendoli si disegna col dito. */

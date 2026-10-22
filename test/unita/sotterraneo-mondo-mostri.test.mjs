@@ -312,5 +312,58 @@ const giocaFinoInFondo = (corsa, giusto = () => true) => { for (let i = 0; i < 4
   dentro('e pochi attorno', mostriVicini(stato, q.fx, q.fy, SOPRA.vista).length, 1, 40)
 }
 
+/* ── i branchi stanno lontani fra loro (SOPRA.fraBranchi, dalla tana SOPRA.dallaTana) ── */
+{
+  controlla('le regole: 14 fra i branchi, 12 dalla tana', SOPRA.fraBranchi >= 14 && SOPRA.dallaTana >= 12)
+  let minB = Infinity, minT = Infinity, branchi = 0
+  for (const [eroe, giro] of [['cavaliere', 0], ['cavaliere', 2], ['mago', 0], ['elfa', 1], ['nano', 3]]) {
+    const s = popolaMondo({ mondo: m, eroe, giro })
+    const dellaTana = new Set(s.tane.map(t => t.branco))
+    const ancore = Object.entries(s.branchi).map(([b, l]) => ({ b: +b, z: s.mostri[l[0]].zona, x: s.mostri[l[0]].casa.x, y: s.mostri[l[0]].casa.y }))
+    branchi = ancore.length
+    for (const a of ancore) for (const t of s.tane) if (t.zona === a.z && !dellaTana.has(a.b)) minT = Math.min(minT, Math.hypot(a.x - t.x, a.y - t.y))
+    for (let i = 0; i < ancore.length; i++) for (let j = i + 1; j < ancore.length; j++) {
+      const p = ancore[i], q = ancore[j]
+      if (p.z !== q.z || dellaTana.has(p.b) || dellaTana.has(q.b)) continue
+      minB = Math.min(minB, Math.hypot(p.x - q.x, p.y - q.y))
+    }
+  }
+  controlla(`due branchi di una zona: mai a meno di 14 celle (il più vicino ${minB.toFixed(1)})`, minB >= SOPRA.fraBranchi)
+  controlla(`un branco dalla tana della zona: mai a meno di 12 (${minT.toFixed(1)})`, minT >= SOPRA.dallaTana)
+  nota(`branchi nel mondo intero: ${branchi} (con ${stato.lista.length} mostri)`)
+}
+
+/* ── o dentro o fuori: lo scontro prende chi è vicino, e chi non ci sta si fa da parte ── */
+{
+  const s = popolaMondo({ mondo: m, eroe: 'cavaliere', giro: 4 })
+  const q = nelLuogo(s, 'frutteto', x => !x.caporale)
+  const zona = s.lista.filter(o => o.zona === q.zona && !o.morto && o !== q)
+  const eroe = { x: q.fx - 0.5, y: q.fy }
+  // dieci sconosciuti di altri branchi vicino all'eroe, a 3 celle sopra o sotto (l'ultimo a 8: fuori)
+  const altri = zona.filter(o => o.branco !== q.branco && Math.hypot(o.fx - q.fx, o.fy - q.fy) > 30).slice(0, 10)
+  altri.forEach((o, n) => { o.fx = eroe.x + 1.5 + Math.min(n, 8) * 0.4; o.fy = eroe.y + (n % 2 ? 3 : -3); o.sveglio = false })
+  altri[9].fx = eroe.x + 8; altri[9].fy = eroe.y
+  const inc = incontro(s, eroe, { tocco: q.i })
+  const dEroe = o => Math.hypot(o.fx - eroe.x, o.fy - eroe.y)
+  uguale('più di sette vicini: il campo è pieno', inc.campo.length, 7)
+  controlla('chi apre è il primo', inc.campo[0] === q.i)
+  const fuori = [q, ...altri].filter(o => !inc.campo.includes(o.i) && dEroe(o) <= SOPRA.dentro)
+  controlla('ne restano fuori, e sono più lontani di tutti quelli entrati', fuori.length > 0 && fuori.every(o => inc.campo.every(i => i === q.i || dEroe(s.mostri[i]) <= dEroe(o))))
+  const corsa = apriLoScontro(s, inc, forte)
+  uguale('sul palco entrano solo quelli del campo', corsa.livello.robe.filter(r => r.che === 'mostro').length, 7)
+  const x0 = Math.floor(eroe.x) - 6, y0 = Math.floor(eroe.y) - 5
+  controlla('chi non è entrato è fuori dall\'area del palco', fuori.every(o => o.fx < x0 || o.fx > x0 + 17 || o.fy < y0 || o.fy > y0 + 11), JSON.stringify(fuori.map(o => [o.fx, o.fy])))
+  controlla('e non è morto né ferito', fuori.every(o => !o.morto && o.ossa === o.scheda.ossaMax))
+  // pochi vicini: entra chi è a 5 celle da chi apre (altro branco), non chi è a 12
+  const s2 = popolaMondo({ mondo: m, eroe: 'cavaliere', giro: 4 })
+  const q2 = nelLuogo(s2, 'frutteto', x => !x.caporale)
+  const z2 = s2.lista.filter(o => o.zona === q2.zona && !o.morto && o.branco !== q2.branco && Math.hypot(o.casa.x - q2.fx, o.casa.y - q2.fy) > 30)
+  z2[0].fx = q2.fx + 4; z2[0].fy = q2.fy + 3
+  z2[1].fx = q2.fx - 12; z2[1].fy = q2.fy
+  const inc2 = incontro(s2, { x: q2.fx - 0.5, y: q2.fy }, { tocco: q2.i })
+  controlla('uno a 5 celle da chi apre entra, quello a 12 no', inc2.campo.includes(z2[0].i) && !inc2.campo.includes(z2[1].i))
+  uguale('determinismo: stesso incontro, stesso campo', JSON.stringify(incontro(s2, { x: q2.fx - 0.5, y: q2.fy }, { tocco: q2.i }).campo), JSON.stringify(inc2.campo))
+}
+
 seguiLEroe(m, m.partenza.x, m.partenza.y)
 riassunto('il mondo di sopra: i mostri')

@@ -20,7 +20,7 @@ sempre ([../fattoria/regole.md](../fattoria/regole.md)); qui le differenze.
   aspetta la forbice. Il tempo avanza anche a pagina chiusa: i campi leggono `ora()`, la cottura si rimette in pari
   con `tick()`.
 - **Niente si perde.** Un pezzo messo via va nel magazzino e si ripiazza gratis. Non c'è un «annulla»: si paga al rilascio, e un rilascio che non va non costa niente.
-- **Un rifiuto dice cosa fare** (`dettoDi` in `scena3d/azioni.js`): «Servono raccolti», «Compra prima un terreno che
+- **Un rifiuto dice cosa fare** (`dettoDi` in `scena3d/azioni.js`): «Serve foraggio: lo fa il fienile», «Compra prima un terreno che
   confina con questo», non un «no» nudo.
 
 ## Quanto costa
@@ -32,6 +32,8 @@ sempre ([../fattoria/regole.md](../fattoria/regole.md)); qui le differenze.
 | aiuola / panchina / pozzo / spaventapasseri | 6 / 10 / 18 / 12 | decorazioni, fissi |
 | passerella / ponte / tavolo | 8 / 14 / 18 | decorazioni (liv 3 / 5 / 4), fisse |
 | stagno / laghetto | 35 / 110 | decorazioni d'acqua (liv 5 / 11), fisse; non produttive: non spostano la scaletta ([laghi.md](laghi.md)) |
+| molo / molo girato / porticciolo | 12 / 12 / 90 | la pesca (liv 4 / 4 / 9), fissi; il porticciolo è uno solo e sta sulla riva; non produttivi ([geografia-e-pesca.md](geografia-e-pesca.md)) |
+| friggitoria / sushi bar | 170 / 180 | edifici unici come gli altri (liv 17 / 18: i due livelli in coda alla scaletta), le ricette della 2D col pesce ([geografia-e-pesca.md](geografia-e-pesca.md)) |
 | pollaio / stalla | 55 / 90 | liberi nel terreno come il recinto; una bestia nel prezzo, le altre una per volta, sempre più care ([animali.md](animali.md)) |
 | mulino / panificio / caseificio / cucina / gelateria | 60 / 90 / 120 / 110 / 140 | unici (uno per tipo), si mettono dove si vuole ([edifici-liberi.md](edifici-liberi.md)); la cucina ha ancora l'id `conserviera` |
 | pastificio (id `pasticceria`) / mongolfiera | 80 / 100 | unici, si mettono dove si vuole |
@@ -50,7 +52,7 @@ resto è in [livelli.md](livelli.md).
 ## I campi
 
 Quattro tessere per campo, un raccolto per tessera (`TESSERE`): una coltura matura per intero, e si taglia una tessera alla
-volta (`raccogliTessera`). Il tempo è vero (16 s il grano e le carote, 70 s il riso: quindici colture, crescente col livello). Seminare è gratis. **Un campo che sta crescendo non
+volta (`raccogliTessera`). Il tempo è vero (16 s il grano e le carote, 70 s il riso: sedici colture, crescente col livello; l'erba medica, che serve solo al fienile, è la più svelta e sta fuori dalla regola). Seminare è gratis. **Un campo che sta crescendo non
 si mette via**.
 
 ## I pezzi calpestabili
@@ -62,6 +64,7 @@ gobba) in `dati/catalogo.js`. Sono **decorazione per fare camminamenti**: niente
 - **Contano come strada nel percorso** (`sullaStrada`: costo ridotto e passo svelto), ma non sono strada (`eStrada` resta 0, non si
   salvano in `strade`, non si tolgono col pennello).
 - Si **toccano per salirci**: il contadino va su una loro cella (`celleDiServizio`). Il tavolo, invece, è un pezzo qualunque: ferma il passo.
+- **Il molo e il molo girato** (3×1, 1×3) sono calpestabili e `suAcqua` come la passerella (una cella almeno sulla riva, o un altro molo accanto), ma sono posti di pesca: in punta si lancia la lenza ([geografia-e-pesca.md](geografia-e-pesca.md)).
 
 ## Le pecore
 
@@ -69,9 +72,9 @@ gobba) in `dati/catalogo.js`. Sono **decorazione per fare camminamenti**: niente
 una pecora adulta, con fame** (nel prezzo del recinto); **le altre si comprano dal cartello sopra il recinto** (adulte, 🪙40, 60, 80, fino a
 quattro: [animali.md](animali.md)), come le galline e le mucche. Con due adulte le nascite ricominciano:
 
-- un agnello **cresce dopo due pasti** (ogni pasto un raccolto qualsiasi, dalla scorta più grande);
+- **le pecore mangiano foraggio**, il mangime del fienile come l'ovile della 2D ([mangime-e-catena.md](mangime-e-catena.md)): non un raccolto qualsiasi. Un agnello **cresce dopo due pasti** (un foraggio a pasto);
 - **dopo la tosa la pecora ha fame** (`t0: null`), come una gallina o una mucca: la lana ricresce in 25 s, ma **dal pasto**, non dalla tosa
-  (`pastiPerLana`: un raccolto qualsiasi, dalla scorta più grande). Una pecora affamata non fa lana, e il tempo che passa non cambia
+  (`pastiPerLana`: un foraggio). Una pecora affamata non fa lana, e il tempo che passa non cambia
   niente: niente muore, niente marcisce, una pappa a ogni giro. Si tosa: `+1 🧶` a pecora;
 - **due adulte nutrite due volte fanno nascere un agnellino**, fino a quattro pecore per recinto (acquisti e nascite dividono lo
   stesso tetto);
@@ -93,7 +96,7 @@ vale solo per comprare, seminare e avviare. → [livelli.md](livelli.md)
 
 ## Le macchine
 
-Mulino, pastificio (id `pasticceria`), panificio, caseificio, cucina (id `conserviera`), gelateria, telaio, zuccherificio, sartoria e tintoria sono **macchine** con le ricette della fattoria di sempre ([merci-e-ricette.md](merci-e-ricette.md)) (`MACCHINE` in `dati/ricette.js`): ognuna ha le
+Fienile (il mangime delle bestie: [mangime-e-catena.md](mangime-e-catena.md)), mulino, pastificio (id `pasticceria`), panificio, caseificio, cucina (id `conserviera`), gelateria, telaio, zuccherificio, sartoria e tintoria sono **macchine** con le ricette della fattoria di sempre ([merci-e-ricette.md](merci-e-ricette.md)) (`MACCHINE` in `dati/ricette.js`): ognuna ha le
 sue ricette (raccolti precisi e un tempo), **un posto di partenza** e cuoce **uno alla volta**. Gli ingredienti si scalano
 subito, il successivo parte quando finisce il precedente; i pronti restano finché non si ritirano (`ritiraDa`) e passano
 in dispensa (`stato.prodotti`).

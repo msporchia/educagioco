@@ -88,6 +88,7 @@ import './tema/legno.css'
 import './tema/barra.css'
 import './tema/rilievo.css'
 import { usaTema, ATTRIBUTO } from './tema/tema.js'
+import { fornisciAnteprime3d } from './viste/anteprima3d.js'
 
 defineOptions({ name: 'IlSotterraneo' })
 const emit = defineEmits(['vai'])
@@ -105,6 +106,8 @@ const FERMO_PX = 16   // sotto i 16px Android/iOS considerano il dito ancora fer
 const tela = ref(null)
 const radice = ref(null)
 const tema = usaTema(radice, in3d ? 'legno' : 'attuale')
+// nel 3D le caselle della roba, il ritratto e la fila dei turni mostrano i modelli 3D (docs/sotterraneo/anteprime-3d.md)
+const anteprime = in3d ? fornisciAnteprime3d(() => eroeQui()) : null
 const corsa = shallowRef(null)
 // indice della campagna, o INDICE_ABISSO (−1); null vuol dire nessuna discesa
 const tappaIdx = ref(null)
@@ -170,7 +173,7 @@ const avventure = computed(() => EROI.map(e => {
   return {
     ...e, nuova: !cominciata(a), livello: n.livello,
     vita: n.vita, att: n.att, dif: n.dif, tratti: n.tratti,
-    mano: n.mano, mancina: n.mancina,
+    mano: n.mano, mancina: n.mancina, corpo: n.corpo,
     discese: Math.min(a.tappa, QUANTE_TAPPE), quante: QUANTE_TAPPE,
     stelle: Object.values(a.stelle).reduce((n, s) => n + (Number(s) || 0), 0),
     // il resto della roba che si vede: l'arma e lo scudo sono già nelle mani del ritratto
@@ -642,7 +645,7 @@ const pagina = computed(() => {
   const c = chiGuardo()
   const q = quotaDi(c.crescita.esp)
   return {
-    eroe: c.io, mano: c.mano, mancina: c.mancina,
+    eroe: c.io, mano: c.mano, mancina: c.mancina, corpo: c.corpo,
     livello: q.livello, fatto: q.fatto, serve: q.serve, punti: puntiDaDare(c.crescita), forza: forzaDelCorredo(c),
     numeri: { vita: c.vita ?? c.vitaConLaRoba, vitaMax: c.vitaMax ?? c.vitaConLaRoba, att: c.att, dif: c.dif,
               gemme: c.gemme },
@@ -2053,7 +2056,7 @@ onMounted(() => {
   addEventListener('pagehide', seSparisce)
 })
 // lo scontro di sopra si chiude prima che il mondo se ne vada (dopo, il suo salvataggio non c'è più): come la ✕
-onBeforeUnmount(() => { if (sopra.value) chiudiSopra({ lascia: true }) })
+onBeforeUnmount(() => { if (sopra.value) chiudiSopra({ lascia: true }); if (anteprime) anteprime.via() })
 onUnmounted(() => {
   salva({ subito: true })
   removeEventListener('resize', ridimensiona)

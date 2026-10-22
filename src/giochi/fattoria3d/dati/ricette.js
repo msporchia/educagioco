@@ -10,6 +10,7 @@
    Vedi docs/fattoria3d/merci-e-ricette.md, regole.md e livelli.md. */
 import { COLTURE } from './colture.js'
 import { PRODOTTI_ANIMALI, LANA } from './animali.js'
+import { RICETTE_FIENILE } from './mangime.js'
 
 import { POSTI_DI_PARTENZA } from './posti.js'
 
@@ -19,6 +20,7 @@ export const FORNO_POSTI = POSTI_DI_PARTENZA
 /** Come si chiama, per ogni macchina, il posto dove lavora (la sezione dei posti nel foglio): non tutte hanno un forno. `dentro` è la scritta
     della sezione, `pronto` quella dei pronti. Vedi docs/fattoria3d/merci-e-ricette.md. */
 export const LAVORAZIONE = {
+  fienile:       { dentro: 'Nel fienile' },
   mulino:        { dentro: 'Alla macina' },
   pasticceria:   { dentro: 'Nel forno' },            // il Pastificio: biscotti, pizza e lasagne al forno
   panificio:     { dentro: 'Nel forno' },
@@ -29,6 +31,8 @@ export const LAVORAZIONE = {
   zuccherificio: { dentro: 'Nella caldaia' },
   sartoria:      { dentro: 'In sartoria' },
   tintoria:      { dentro: 'Nella tinozza' },
+  friggitoria:   { dentro: 'Nella friggitrice' },
+  sushi_bar:     { dentro: 'Al banco del sushi' },
 }
 export const PRONTO_DA_RITIRARE = 'Pronto da ritirare'
 /** La scritta della sezione dei posti di una macchina (mai «forno» se non è un forno). */
@@ -36,6 +40,7 @@ export const dentroDi = tipo => (LAVORAZIONE[tipo] || {}).dentro || 'Al lavoro'
 
 // Una riga per ricetta: i minuti della 2D diventano secondi (`ms`).
 export const MACCHINE = {
+  fienile: { posti: FORNO_POSTI, ricette: RICETTE_FIENILE },   // il mangime delle bestie: le tre ricette stanno in dati/mangime.js, perché animali.js ne conta il tempo
   mulino: { posti: FORNO_POSTI, ricette: {
     farina:      { nome: 'Farina',          emoji: '🥣', pezzo: 'merce_farina',      ing: { grano: 2 },                       ms: 5000,  liv: 3 },
     pastone:     { nome: 'Pappa di mais',   emoji: '🍲', pezzo: 'merce_pastone',     ing: { mais: 3 },                        ms: 6000,  liv: 3 },
@@ -85,6 +90,15 @@ export const MACCHINE = {
     sacchetto:   { nome: 'Sacchetto profumato', emoji: '👝', pezzo: 'merce_sacchetto', ing: { lavanda: 2, stoffa: 1 },         ms: 5000,  liv: 16 },
     maglione_lavanda: { nome: 'Maglione alla lavanda', emoji: '💜', pezzo: 'merce_maglione_lavanda', ing: { maglione: 1, tintura: 1 }, ms: 6000, liv: 16 },
   } },
+  friggitoria: { posti: FORNO_POSTI, ricette: {          // la friggitoria della 2D: col pesce appena pescato (dati/pesca.js)
+    patatine:    { nome: 'Patatine',        emoji: '🍟', pezzo: 'merce_patatine',    ing: { patata: 2 },                      ms: 5000,  liv: 17 },
+    fritto:      { nome: 'Pesce fritto',    emoji: '🍤', pezzo: 'merce_fritto',      ing: { pesce: 1, farina: 1 },            ms: 7000,  liv: 17 },
+    arancini:    { nome: 'Arancini',        emoji: '🍙', pezzo: 'merce_arancini',    ing: { riso: 2, formaggio: 1 },          ms: 9000,  liv: 17 },
+  } },
+  sushi_bar: { posti: FORNO_POSTI, ricette: {            // il sushi bar della 2D: il riso e il pesce, per la bambina
+    sushi:       { nome: 'Sushi',           emoji: '🍣', pezzo: 'merce_sushi',       ing: { riso: 1, pesce: 1 },              ms: 8000,  liv: 18 },
+    maki:        { nome: 'Maki',            emoji: '🍥', pezzo: 'merce_maki',        ing: { riso: 1, carota: 1, peperone: 1 }, ms: 6000,  liv: 18 },
+  } },
 }
 export const TIPI_DI_MACCHINA = Object.keys(MACCHINE)
 
@@ -122,6 +136,7 @@ export function guastiDelleRicette(colture, edifici) {
     if (!r.pezzo && !r.aspetta) g.push(`${k}: senza pezzo e senza dire quale aspetta: un'emoji per sempre`)
     if (r.pezzo && r.aspetta) g.push(`${k}: ha il pezzo e aspetta ancora: togli «aspetta»`)
     if (!(r.ms >= 1000)) g.push(`${k}: tempo sotto il secondo`)
+    if (r.da && !(RICETTE[r.da] && RICETTE[r.da].mangime && r.mangime && RICETTE[r.da].dove === r.dove)) g.push(`${k}: fa ${r.da}, che non è un mangime della stessa macchina`)
     if (!(Number.isInteger(r.liv) && r.liv >= 1)) g.push(`${k}: manca il livello`)
     const ing = Object.entries(r.ing)
     if (!ing.length) g.push(`${k}: senza ingredienti`)
@@ -134,6 +149,7 @@ export function guastiDelleRicette(colture, edifici) {
   // in un testo «manca 🌾 2» deve dire una cosa sola: nessuna emoji di ripiego è di due merci
   const viste = new Map()
   for (const [k, m] of [...Object.entries(colture), ...Object.entries(PRODOTTI_ANIMALI), ...Object.entries(LANA), ...Object.entries(RICETTE)]) {
+    if (m.da) continue                                  // la seconda strada per lo stesso prodotto (foraggio di carote): la faccia è già del prodotto
     if (viste.has(m.emoji)) g.push(`${k} e ${viste.get(m.emoji)}: la stessa emoji ${m.emoji}`)
     viste.set(m.emoji, k)
   }
