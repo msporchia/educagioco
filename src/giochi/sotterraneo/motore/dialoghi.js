@@ -7,7 +7,7 @@
 // storia, la zona appena nata (motore/zone.js, docs/sotterraneo/zone.md); `novita` quante volte si è chiesto «Novità?»
 // a ognuno ({ [chi]: { n, v } }, in `terra.novita` dell'avventura). `mondo`: nel Sotterraneo 3D, che ha la sua geografia (luogoDi); lì
 // `forza` (motore/forza.js) fa dire in quale zona stanno i mostri giusti per l'eroe, `terra` in quale terra si è, `terre` che la porta delle
-// terre in fondo alla landa è aperta.
+// terre in fondo alla landa è aperta, `dungeon` i dungeon del mondo (Gioco.vue), col volto di questa terra.
 import { DIALOGHI, ARRIVEDERCI, DOVE_VADO, LE_LUCI, perOra } from '../dati/dialoghi.js'
 import { missioneDi, premioDetto } from '../dati/missioni.js'
 import { cosaDice, chiTiCerca, titoloDi, inFrase } from './missioni.js'
@@ -21,6 +21,8 @@ import { NOVITA, NOVITA_DI } from '../dati/novita.js'
 import { CAMPAGNA } from '../dati/campagna.js'
 import { ZONE_DEL_MONDO, saltoDellaTerra } from '../dati/mondo-aperto.js'
 import { articolata } from '../dati/missioni-modelli.js'
+import { voltoDelDungeon } from './rigenera.js'
+import { ULTIMA_TERRA } from './terre.js'
 
 export const finiteDi = tappe => (tappe || []).filter(t => t.fatta).length
 const maiuscola = s => s.charAt(0).toUpperCase() + s.slice(1)
@@ -62,6 +64,27 @@ export function consiglioDellaZona(ctx) {
 }
 
 /* ═══════════ il minatore: la strada, e cosa c'è laggiù ═══════════ */
+
+// Nelle terre dopo la prima le discese hanno un altro volto (motore/rigenera.js, voltoDelDungeon): il minatore racconta quelle della
+// zona per l'eroe e, con `tombe`, chi comanda la terra e apre la porta (docs/sotterraneo/terre-successive.md). Il volto è quello di
+// `ctx.dungeon` (con le volte già ripulite), se no il primo della terra
+export function voltiDellaTerra(ctx, { tombe = false } = {}) {
+  const t = ctx.terra || 1
+  if (!ctx.mondo || t < 2) return []
+  const Z = zonaPerTe(Number.isFinite(ctx.forza) ? ctx.forza : 0, t)
+  const chiavi = Z.dungeon.map(d => d.chiave)
+  if (tombe && !chiavi.includes('tombe')) chiavi.push('tombe')
+  const pagine = []
+  for (const k of chiavi) {
+    const d = (ctx.dungeon || []).find(x => x && x.chiave === k)
+    const v = d && d.annuncio ? d : voltoDelDungeon(k, 0, t)
+    if (!v || !v.annuncio) continue   // l'abisso non ha volti
+    for (const testo of inPagine(v.annuncio)) pagine.push({ testo, dato: 'volto', chiave: k })
+    pagine.push({ testo: `${v.nome}: ${luogoDi(k, ctx.mondo)}.`, dato: 'volto-dove', chiave: k })
+  }
+  if (tombe && t < ULTIMA_TERRA) pagine.push({ testo: DIALOGHI.minatore.voltiPorta, dato: 'volti' })
+  return pagine
+}
 
 // «cosa faccio adesso»: la missione principale (il perché di questa porta), la prossima discesa e la strada, chi è sotto
 // il livello, chi ti cerca al villaggio. `capitolo: false` la prima volta, che ha già detto la missione per intero
@@ -191,7 +214,7 @@ function dellaMissione(v, ctx) {
 
 // Quando ci si avvicina: la presentazione la prima volta (il minatore), poi le missioni (prima quello che hai fatto
 // per lui, poi quello che ti chiede, poi quello che aspetta), poi il saluto. Il minatore dice sempre anche la strada
-export function apertura(chi, ctx, { primaVolta = false } = {}) {
+export function apertura(chi, ctx, { primaVolta = false, nuovaTerra = false } = {}) {
   const d = DIALOGHI[chi] || {}
   const pagine = []
   if (chi === 'minatore' && primaVolta) {
@@ -200,6 +223,11 @@ export function apertura(chi, ctx, { primaVolta = false } = {}) {
   }
   // la porta delle terre aperta in fondo alla landa: la annunciano il minatore e il capitano, per primi
   if (ctx.mondo && ctx.terre && d.terre) pagine.push({ testo: d.terre, dato: 'terre' })
+  // la prima volta in una terra dopo la prima il minatore non si presenta: racconta i volti nuovi delle discese
+  if (chi === 'minatore' && nuovaTerra && (ctx.terra || 1) > 1) {
+    pagine.push({ testo: d.volti, dato: 'volti' })
+    pagine.push(...voltiDellaTerra(ctx))
+  }
   if (chi === 'minatore') pagine.push(...strada(ctx, { capitolo: !primaVolta }))
   if (chi === 'capitano') pagine.push(...stradaDelCapitano(ctx))
   for (const v of cosaDice(chi, ctx.stati, ctx.tappe).voci) pagine.push(...dellaMissione(v, ctx))
@@ -247,6 +275,7 @@ export function risposta(chi, che, ctx) {
   if (che === 'strada') return chi === 'capitano' ? stradaDelCapitano(ctx) : strada(ctx)
   if (che === 'novita') return novita(chi, ctx, ctx.novita && ctx.novita[chi]).pagine
   if (che !== 'racconta') return []
+  if (chi === 'minatore' && ctx.mondo && (ctx.terra || 1) > 1) return voltiDellaTerra(ctx, { tombe: true })
   if (chi === 'minatore') return laggiuDalMinatore(ctx).map(testo => ({ testo, dato: 'racconto' }))
   const r = perOra((DIALOGHI[chi] || {}).racconti, finiteDi(ctx.tappe))
   return r ? r.pagine.map(testo => ({ testo, dato: 'racconto' })) : []
