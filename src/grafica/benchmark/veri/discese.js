@@ -50,7 +50,8 @@ export function corsaDelloScontro(n) {
 }
 
 /**
- * `opz`: { dpr (null: quello del gioco), spegni (pezzi di ACCESI, come `&spegni=`) }. Le scene: { mostri, colpi, tri, ch, fuochi, ombra }.
+ * `opz`: { dpr (null: quello del gioco), spegni (pezzi di ACCESI, come `&spegni=`) }. Le scene: { mostri, colpi, tri, ch, fuochi, ombra,
+ * via: 'ombra' | 'luci1' (solo il cono) | 'luci0' | 'punti' | 'normali' | 'lambert' | 'basic' }.
  * → la famiglia per veri.js: { gl, renderer-info (conti), avvia, scena(s), via, dpr, luci() }.
  */
 export async function prepara({ contenitore, opz = {} }) {
@@ -60,8 +61,9 @@ export async function prepara({ contenitore, opz = {} }) {
   if (!pittore) { tela.via(); throw new Error('il Sotterraneo 3D non parte (WebGL 2?)') }
   const gl = tela.canvas.getContext('webgl2')
   const lv = leve(pittore.scena)
-  let corsa = null, quanti = -1, colpi = null, k = 0, extra = []
-  const togliColpi = () => { clearInterval(colpi); colpi = null }
+  let corsa = null, quanti = -1, colpi = null, rifai = null, k = 0, extra = [], spente = []
+  const togliColpi = () => { clearInterval(colpi); colpi = null; clearInterval(rifai); rifai = null }
+  const riaccendi = () => { for (const l of spente) l.visible = true; spente = [] }
   const togliFuochi = () => { for (const l of extra) pittore.scena.remove(l); extra = [] }
   // i fuochi in più: come quelli della riserva (luci.js), attorno al palco, accesi e tremolanti
   function fuochi(n) {
@@ -87,7 +89,7 @@ export async function prepara({ contenitore, opz = {} }) {
     },
     scena3d: () => pittore.scena,
     async scena(s) {
-      togliColpi(); lv.ripristina()
+      togliColpi(); lv.ripristina(); riaccendi()
       if (s.mostri !== quanti || !corsa) {
         corsa = corsaDelloScontro(s.mostri); quanti = s.mostri
         pittore.misura()
@@ -96,9 +98,14 @@ export async function prepara({ contenitore, opz = {} }) {
       }
       if (s.fuochi != null) fuochi(s.fuochi); else togliFuochi()
       const sp = cono()
-      if (sp) sp.castShadow = s.ombra === false ? false : conoOmbra
+      if (sp) sp.castShadow = s.ombra === false || s.via === 'ombra' ? false : conoOmbra
       if (s.tri > 1) lv.triangoli(s.tri)
       if (s.ch > 1) lv.chiamate(s.ch)
+      // la scomposizione (`via`: una cosa tolta alla volta); luci tolte nascondendole (three non le conta più, e ricompila)
+      if (s.via === 'luci1' || s.via === 'luci0') pittore.scena.traverse(o => { if ((o.isPointLight || o.isSpotLight) && o.visible && !(s.via === 'luci1' && o.isSpotLight)) { o.visible = false; spente.push(o) } })
+      if (s.via === 'normali') lv.senzaNormali()
+      const sempre = s.via === 'punti' ? () => lv.senzaPunti() : s.via === 'lambert' || s.via === 'basic' ? () => lv.materiali(s.via) : null
+      if (sempre) { sempre(); rifai = setInterval(sempre, 250) }   // anche le cose che nascono dopo (gli effetti dei colpi)
       if (s.colpi) {
         colpi = setInterval(() => {
           const i = k % quanti, chiave = k % 2 ? 'mostro' : COLPI[(k >> 1) % COLPI.length]
@@ -107,6 +114,6 @@ export async function prepara({ contenitore, opz = {} }) {
         }, OGNI)
       }
     },
-    via() { togliColpi(); lv.ripristina(); togliFuochi(); try { pittore.distruggi() } finally { tela.via() } },
+    via() { togliColpi(); lv.ripristina(); riaccendi(); togliFuochi(); try { pittore.distruggi() } finally { tela.via() } },
   }
 }

@@ -92,8 +92,10 @@ const GLSL_OGGETTO = /* glsl */`
 `
 // `vento`: quanto si piega (0 niente), `rigido`: fin dove (in altezza, nel pezzo) resta fermo. `oggetto`: 'istanza', 'attributo'
 // o niente (una superficie). `nuvole`: l'ombra delle nuvole; `nebbia`: il velo sulla superficie. `prima(sh)`: chi aggiunge altro
-// `lontano`: un oggetto del mondo lontano (lontano.js), che sparisce dove c'è il pezzo costruito
-export function vesti(mat, { vento = 0, rigido = 0, nuvole = true, nebbia = true, oggetto = null, lontano = false, prima = null } = {}) {
+// `lontano`: un oggetto del mondo lontano (lontano.js), che sparisce dove c'è il pezzo costruito. `codice`: il nome del codice in
+// più (di `prima`, o di chi riscrive lo shader dopo): materiali col codice uguale hanno lo stesso programma, e il nome del materiale
+// e quanto si piega non lo cambiano (vento e rigido sono uniform: docs/sotterraneo/prestazioni-3d.md, «Shader e prima apparizione»)
+export function vesti(mat, { vento = 0, rigido = 0, nuvole = true, nebbia = true, oggetto = null, lontano = false, prima = null, codice = '' } = {}) {
   const vecchio = mat.onBeforeCompile
   mat.onBeforeCompile = (sh, r) => {
     if (vecchio) vecchio(sh, r)
@@ -111,13 +113,15 @@ export function vesti(mat, { vento = 0, rigido = 0, nuvole = true, nebbia = true
         gl_FragColor.rgb = nebbiaSu(gl_FragColor.rgb, vMondo);` : ''}`)
     if (prima) prima(sh)
   }
-  mat.customProgramCacheKey = () => `mondo-${vento}-${rigido}-${nuvole}-${nebbia}-${oggetto}-${lontano}-${mat.name || ''}`
+  const chiave = `mondo-${vento > 0}-${nuvole}-${nebbia}-${oggetto}-${lontano}-${codice}`
+  mat.customProgramCacheKey = () => chiave
   return mat
 }
 
 // il vertice: il vento, la salita dal terreno (e chi non si è visto si chiude fuori dallo schermo), la posizione nel mondo
 function cuciVertice(sh, { vento, rigido, oggetto, lontano = false }) {
   Object.assign(sh.uniforms, U, { uNebbiaO: U.uNebbia, uMappaO: U.uMappa, uTempoO: U.uTempo })
+  if (vento > 0) Object.assign(sh.uniforms, { uVentoV: { value: vento }, uRigidoV: { value: rigido } })   // di questo materiale
   const base = oggetto === 'istanza'
     ? `
 #ifdef USE_INSTANCING
@@ -130,6 +134,7 @@ function cuciVertice(sh, { vento, rigido, oggetto, lontano = false }) {
   sh.vertexShader = sh.vertexShader
     .replace('#include <common>', `#include <common>
       uniform float uTempo; varying vec3 vMondo;
+      ${vento > 0 ? 'uniform float uVentoV; uniform float uRigidoV;' : ''}
       ${oggetto ? GLSL_OGGETTO : ''}
       ${oggetto === 'attributo' ? 'attribute vec2 aBase;' : ''}
       ${oggetto ? 'float kSalito;' : ''}`)
@@ -141,7 +146,7 @@ function cuciVertice(sh, { vento, rigido, oggetto, lontano = false }) {
         #else
           vec3 radice = (modelMatrix * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
         #endif
-        float pieg = max(0.0, position.y - ${rigido.toFixed(3)}) * ${vento.toFixed(3)};
+        float pieg = max(0.0, position.y - uRigidoV) * uVentoV;
         float fase = uTempo * 1.7 + radice.x * 0.37 + radice.z * 0.23;
         float raffica = 0.6 + 0.4 * sin(uTempo * 0.31 + radice.x * 0.05);
         transformed.x += (sin(fase) * 0.7 + sin(fase * 2.3 + 1.0) * 0.3) * pieg * raffica;
@@ -166,6 +171,7 @@ export function ombraDi({ vento = 0, rigido = 0, oggetto = 'istanza' } = {}) {
     // il frammento dell'ombra non usa vMondo, ma la varying va dichiarata uguale
     sh.fragmentShader = 'varying vec3 vMondo;\n' + sh.fragmentShader
   }
-  mat.customProgramCacheKey = () => `mondo-ombra-${vento}-${rigido}-${oggetto}`
+  const chiave = `mondo-ombra-${vento > 0}-${oggetto}`
+  mat.customProgramCacheKey = () => chiave
   return mat
 }

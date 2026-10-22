@@ -79,12 +79,13 @@ const bilineare = (arr, comp, F, x, z, out) => {
   return out
 }
 
-// il materiale del terreno; `lontano`: quello dei pezzi a dettaglio basso (un programma a parte; dove il pezzo vicino è costruito il
-// pezzo lontano si spegne: lontano.js)
+// il materiale del terreno; `lontano`: quello dei pezzi a dettaglio basso (un materiale a parte, lo stesso programma; dove il pezzo
+// vicino è costruito il pezzo lontano si spegne: lontano.js)
 export function materialeTerreno(trame, { lontano = false } = {}) {
   const mat = new MeshStandardMaterial({ roughness: 0.95, metalness: 0, normalMap: trame.roccia.normalMap, normalScale: new Vector2(1, 1) })
   mat.name = lontano ? 'terreno-lontano' : 'terreno'
   return vesti(mat, {
+    codice: 'terreno',
     prima: sh => {
       sh.uniforms.tErba = { value: trame.erba.map }; sh.uniforms.tTerra = { value: trame.terra.map }
       sh.uniforms.tSabbia = { value: trame.sabbia.map }; sh.uniforms.tRoccia = { value: trame.roccia.map }

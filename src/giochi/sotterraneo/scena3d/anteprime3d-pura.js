@@ -200,11 +200,11 @@ export function leggiChiave(k) {
 export const MISURE = { arma: [128, 128], scudo: [128, 128], gioiello: [128, 128], copricapo: [128, 128], consumabile: [128, 128], armatura: [128, 128], eroe: [150, 176], busto: [96, 96], mostro: [96, 96], persona: [96, 96] }
 
 /**
- * La coda delle anteprime: `disegna(chiave)` produce l'immagine (testo, o una promessa di testo: la codifica può finire dopo)
- * o null, e costa; si chiama una volta per chiave, quando
- * `pianifica(fn)` lo concede (un fotogramma). In un fotogramma se ne fanno finché non passano `budget` ms (almeno una), così la
- * pagina non si blocca mai. `chiedi` dà una promessa (la stessa per la stessa chiave), `leggi` l'immagine già fatta o null.
- * Un guasto di `disegna` vale null e non si riprova. `vuota()` è chiamata quando la coda finisce.
+ * La coda delle anteprime: `disegna(chiave)` produce l'immagine o null, o una promessa (l'anteprima a fette: il modello, gli shader
+ * e la copia in compiti diversi), e costa; si chiama una volta per chiave, quando `pianifica(fn)` lo concede (un fotogramma). In un
+ * giro se ne fanno finché non passano `budget` ms (almeno una), così la pagina non si blocca mai; una promessa ferma il giro, e la
+ * chiave dopo parte quando è arrivata (le fette usano la stessa scena). `chiedi` dà una promessa (la stessa per la stessa chiave),
+ * `leggi` l'immagine già fatta o null. Un guasto di `disegna` vale null e non si riprova. `vuota()` è chiamata quando la coda finisce.
  */
 /** Torna da `disegna` quando l'immagine non si è potuta fare per un caso (il contesto perso a metà): vale null ma non resta in cache. */
 export const RIPROVA = Symbol('riprova')
@@ -217,18 +217,23 @@ export function creaCoda(disegna, { pianifica, ora = () => Date.now(), budget = 
     else fatte.set(k, img)
     const a = attese.get(k); attese.delete(k); if (a) a.resolve(img)
   }
+  // una chiave; torna la promessa se l'immagine arriva dopo (allora il giro si ferma e riparte quando arriva)
   const una = () => {
     const k = coda.shift()
     let img = null
     if (!chiusa) { try { img = disegna(k) || null } catch (e) { img = null } }   // RIPROVA è vero: passa com'è
-    if (img && typeof img.then === 'function') img.then(v => fine(k, chiusa ? null : v || null), () => fine(k, null))
-    else fine(k, img)
+    if (img && typeof img.then === 'function') {
+      return img.then(v => fine(k, chiusa ? null : v || null), () => fine(k, null)).then(avanti)
+    }
+    fine(k, img)
+    return null
   }
+  const avanti = () => { if (coda.length && !chiusa) { gira = true; pianifica(passo) } else { gira = false; if (!chiusa) vuota() } }
   const passo = () => {
-    gira = false
+    gira = true
     const t0 = ora()
-    do una(); while (coda.length && ora() - t0 < budget)
-    if (coda.length) { gira = true; pianifica(passo) } else vuota()
+    do { if (una()) return } while (coda.length && ora() - t0 < budget)
+    avanti()
   }
   return {
     chiedi(k) {

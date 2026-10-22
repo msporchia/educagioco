@@ -53,6 +53,11 @@ export function creaPost(renderer) {
       renderer.setRenderTarget(null)
       renderer.render(quadro, cam)
     },
+    // gli shader della scena come li vuole la texture (senza tono, colori lineari): fuori dalla texture sarebbero altri programmi
+    compila(o, camera, scena) {
+      renderer.setRenderTarget(rt)
+      try { renderer.compile(o, camera, scena) } finally { renderer.setRenderTarget(null) }
+    },
     via() { rt.dispose(); geo.dispose(); mat.dispose() },
   }
 }

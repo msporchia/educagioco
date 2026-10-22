@@ -1,7 +1,8 @@
 // Le leve dei colli di bottiglia sulla scena vera (docs/core/vecchio-telefono-veri.md): la stessa scena con k volte i triangoli
 // (ogni triangolo diviso in k, piatto: la forma e le chiamate restano quelle) o con k volte le chiamate (ogni mesh spezzata in k
-// gruppi dello stesso materiale: i triangoli restano quelli). Si toglie tutto con `ripristina`.
-import { BufferAttribute } from 'three'
+// gruppi dello stesso materiale: i triangoli restano quelli); e, per la scomposizione, i materiali semplici, niente normal map,
+// niente particelle. Si toglie tutto con `ripristina`.
+import { BufferAttribute, MeshLambertMaterial, MeshBasicMaterial } from 'three'
 
 const ATTR_INTERI = new Set([Int8Array, Uint8Array, Int16Array, Uint16Array, Int32Array, Uint32Array])
 
@@ -74,12 +75,19 @@ export function leve(scena) {
   const prima = new Map()          // mesh → { geo, mat }
   const gruppi = new Map()         // geometria → i suoi gruppi di prima (una geometria può stare in più mesh)
   const derivate = new Map()       // `uuid|k` → geometria divisa (condivisa fra le mesh che condividevano l'originale)
+  const semplici = new Map()       // materiale del gioco → il suo semplice (Lambert o Basic)
+  const normali = new Map()        // materiale → la sua normal map tolta
+  const strati = new Map()         // particelle → i loro strati di prima (lo strato 31 non lo vede la telecamera)
   const ricorda = o => {
     if (!prima.has(o)) prima.set(o, { geo: o.geometry, mat: o.material })
     if (!gruppi.has(o.geometry)) gruppi.set(o.geometry, o.geometry.groups.slice())
   }
   function ripristina() {
     for (const [o, p] of prima) { o.geometry = p.geo; o.material = p.mat }
+    for (const [m, n] of normali) { m.normalMap = n; m.needsUpdate = true }
+    for (const [o, l] of strati) o.layers.mask = l
+    for (const m of semplici.values()) m.dispose()
+    normali.clear(); strati.clear(); semplici.clear()
     for (const [g, l] of gruppi) g.groups = l.slice()
     prima.clear(); gruppi.clear()
     for (const g of derivate.values()) g.dispose()
@@ -100,6 +108,33 @@ export function leve(scena) {
         ricorda(o); o.geometry = g
       })
     },
+    /** I materiali del gioco (Standard, Physical, Phong; e Lambert per `basic`) al posto loro un Lambert o un Basic con colore e trama:
+        l'illuminazione per pixel che resta. Si può richiamare (le cose nate dopo, gli effetti), senza ripristinare. */
+    materiali(tipo) {
+      const C = tipo === 'basic' ? MeshBasicMaterial : MeshLambertMaterial
+      scena.traverse(o => {
+        const m = o.material
+        if (!o.isMesh || !m || Array.isArray(m) || prima.has(o)) return
+        if (!(m.isMeshStandardMaterial || m.isMeshPhongMaterial || (tipo === 'basic' && m.isMeshLambertMaterial))) return
+        let n = semplici.get(m)
+        if (!n) {
+          n = new C({ color: m.color, map: m.map || null, transparent: m.transparent, opacity: m.opacity, alphaTest: m.alphaTest, side: m.side,
+                      vertexColors: m.vertexColors, depthWrite: m.depthWrite, visible: m.visible })
+          if (n.emissive && m.emissive) { n.emissive.copy(m.emissive); n.emissiveIntensity = m.emissiveIntensity }
+          semplici.set(m, n)
+        }
+        prima.set(o, { geo: o.geometry, mat: m }); o.material = n
+      })
+    },
+    /** Le normal map tolte dai materiali (la trama che finge il rilievo). */
+    senzaNormali() {
+      scena.traverse(o => {
+        const l = o.material ? (Array.isArray(o.material) ? o.material : [o.material]) : []
+        for (const m of l) if (m.normalMap && !normali.has(m)) { normali.set(m, m.normalMap); m.normalMap = null; m.needsUpdate = true }
+      })
+    },
+    /** Le particelle (Points: scintille, polvere, aloni) fuori dalla vista. Si può richiamare. */
+    senzaPunti() { scena.traverse(o => { if (o.isPoints && !strati.has(o)) { strati.set(o, o.layers.mask); o.layers.set(31) } }) },
     /** Tutte le mesh con un materiale solo spezzate in k gruppi: k chiamate per mesh invece di una, stessi triangoli. */
     chiamate(k) {
       ripristina()

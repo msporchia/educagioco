@@ -5,9 +5,11 @@
    (in più invii se è lungo) o da copiare, e l'ultimo resta sul telefono. Il codice (e three) si carica solo premendo il tasto.
    La ✕ in alto a destra chiude, e durante la misura la ferma; «Interrompi» la ferma e tiene quello che c'è. */
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
-import { componi, componiVeri, conNote, spezza } from '../../grafica/benchmark/log.js'
+import { componi } from '../../grafica/benchmark/log.js'
+import { componiVeri, conNote, spezza } from '../../grafica/benchmark/log-veri.js'
 import { ultimeMisure, salvaMisura } from '../../store/benchmark.js'
 import { fasciaAttiva } from '../../store/qualita.js'
+import { sondaRicevitore, mandaAlRicevitore } from '../../grafica/benchmark/invio-diretto.js'
 
 const props = defineProps({ modulo: { type: String, required: true } })
 const emit = defineEmits(['chiudi'])
@@ -24,7 +26,12 @@ const ultime = ref({})
 let fermare = false
 
 const versione = () => (typeof __VERSIONE__ !== 'undefined' ? __VERSIONE__.id : '')
-const meta = () => ({ versione: versione(), ua: navigator.userAgent, cpu: navigator.hardwareConcurrency, memoria: navigator.deviceMemory })
+// Chrome accorcia lo user agent («Android 10; K»): il modello vero, se c'è, lo dice userAgentData
+async function meta() {
+  let nome = ''
+  try { const h = navigator.userAgentData && await navigator.userAgentData.getHighEntropyValues(['model']); nome = (h && h.model) || '' } catch (e) { /* non lo dice */ }
+  return { versione: versione(), ua: navigator.userAgent, nome, cpu: navigator.hardwareConcurrency, memoria: navigator.deviceMemory }
+}
 
 onMounted(async () => { ultime.value = await ultimeMisure() })
 
@@ -35,22 +42,24 @@ async function avvia(che = modo.value) {
     if (che === 'veri') {
       const { eseguiVeri } = await import('../../grafica/benchmark/veri.js')
       const dati = await eseguiVeri({ contenitore: palco.value, corto: !!window.__benchmarkCorto, solo: window.__benchmarkSolo || null, fascia: fasciaAttiva(),
+        ...(window.__benchmarkRaffredda != null ? { raffredda: window.__benchmarkRaffredda } : {}),
         progresso, fermo: () => fermare })
       window.__benchmarkVeri = dati
-      log.value = componiVeri(dati, meta())
+      log.value = componiVeri(dati, await meta())
     } else {
       const { eseguiProve } = await import('../../grafica/benchmark/prove.js')
       const dati = await eseguiProve({ canvas: tela.value, corto: !!window.__benchmarkCorto, solo: window.__benchmarkSolo || null, progresso, fermo: () => fermare })
       window.__benchmarkFluidita = dati
-      log.value = componi(dati, meta())
+      log.value = componi(dati, await meta())
     }
     stato.value = 'fatto'
+    mandaAuto()
     salvaMisura(che, log.value).then(async () => { ultime.value = await ultimeMisure() }).catch(() => {})
   } catch (e) {
     log.value = ''; esito.value = 'Non è partita: ' + (e && e.message || e); stato.value = 'guasto'
   }
 }
-function rivedi(che) { modo.value = che; log.value = ultime.value[che].log; note.value = ''; esito.value = ''; stato.value = 'fatto' }
+function rivedi(che) { modo.value = che; log.value = ultime.value[che].log; note.value = ''; esito.value = ''; stato.value = 'fatto'; sonda() }
 function interrompi() { fermare = true }
 function chiudi() { fermare = true; emit('chiudi') }
 onBeforeUnmount(() => { fermare = true })
@@ -60,6 +69,18 @@ const finale = computed(() => conNote(log.value, note.value))
 const parti = computed(() => spezza(finale.value))
 const link = testo => `${props.modulo}?${new URLSearchParams({ versione: versione(), giudizi: testo })}`
 const quando = q => new Date(q).toLocaleString('it-IT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
+// il computer di sviluppo in LAN (`node strumenti/ricevi-log.mjs`, docs/core/vecchio-telefono-veri.md): se la pagina è servita da lui il resoconto
+// parte da solo a fine prova e c'è «Manda al computer» per rimandarlo con le note; altrimenti niente di tutto questo
+const alComputer = ref(false)
+async function sonda() { alComputer.value = await sondaRicevitore() }
+async function mandaAlComputer() {
+  const r = await mandaAlRicevitore({ testo: finale.value, quando: Date.now() })
+  esito.value = r.ok ? `Mandato al computer (${r.file}).` : `Non è arrivato al computer: ${r.errore}.`
+}
+async function mandaAuto() {
+  await sonda()
+  if (alComputer.value) await mandaAlComputer()
+}
 async function copia() {
   try { await navigator.clipboard.writeText(finale.value); esito.value = 'Copiato negli appunti.' } catch (e) { esito.value = 'Non si riesce a copiare: tieni premuto sul testo.' }
 }
@@ -77,9 +98,9 @@ async function copia() {
       <p>Tieni lo schermo acceso e non toccare niente.</p>
       <button type="button" class="bottone" data-azione="benchmark-avvia" @click="avvia('sintetico')">Avvia la misura</button>
       <h3>Con i modelli veri del gioco</h3>
-      <p>Qualche minuto (cinque al più) con le scene vere: lo scontro del Sotterraneo con sempre più mostri, il mondo di sopra con
+      <p>Un quarto d'ora circa con le scene vere (con pause a schermo nero perché il telefono non si scaldi): lo scontro del Sotterraneo con sempre più mostri, il mondo di sopra con
         sempre più persone, lo zaino, la roba, la fattoria; e la stessa scena con più triangoli, più chiamate, più luci e più pixel,
-        per sapere cosa la rallenta.</p>
+        e la stessa scena con una cosa tolta alla volta, per sapere cosa la rallenta.</p>
       <p><b>Guarda lo schermo</b>: se un colore, una luce o la nebbia ti sembrano strani, alla fine scrivilo nelle note.
         Tieni il telefono acceso e in carica se puoi: lo schermo non deve spegnersi.</p>
       <button type="button" class="bottone" data-azione="benchmark-veri" @click="avvia('veri')">Avvia coi modelli veri</button>
@@ -105,6 +126,7 @@ async function copia() {
         <div class="riga">
           <a v-for="(p, k) in parti" :key="k" class="bottone" data-azione="benchmark-manda" :data-parte="k + 1"
              :href="link(p)" target="_blank" rel="noopener">{{ parti.length > 1 ? `Manda ${k + 1}/${parti.length}` : 'Manda' }}</a>
+          <button v-if="alComputer" type="button" class="bottone" data-azione="benchmark-al-computer" @click="mandaAlComputer">Manda al computer</button>
           <button type="button" class="bottone" data-azione="benchmark-copia" @click="copia">Copia</button>
           <button type="button" class="bottone" data-azione="benchmark-ripeti" @click="avvia()">Rifai</button>
         </div>

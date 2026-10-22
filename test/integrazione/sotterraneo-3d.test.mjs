@@ -199,14 +199,17 @@ const ossa = () => page.evaluate(() => window.__sotterraneo3d.corsa.foglio ? win
   uguale('una risposta sbagliata non colpisce', (await ossa()).join(), prima.join())
   // fino a quattro risposte giuste: il ratto cade (la sua figura svanisce nella scena)
   let morti = 0
-  const programmi = []   // gli shader compilati dopo ogni colpo: un colpo non ne compila di nuovi (sull'Adreno è un fermo di 50-300 ms)
+  // gli shader compilati dopo ogni colpo: un colpo non ne compila di nuovi (sull'Adreno è un fermo di 50-300 ms). Si contano i `linkProgram`,
+  // non i programmi vivi: un effetto che butta i suoi materiali fa liberare e ricompilare lo stesso programma, e il conto dei vivi non cambia
+  await page.evaluate(() => { const P = WebGL2RenderingContext.prototype, o = P.linkProgram; window.__compilati = 0; P.linkProgram = function (x) { window.__compilati++; return o.call(this, x) } })
+  const programmi = []
   for (let n = 0; n < 6 && morti === 0; n++) {
     await rispondi(true)
     await page.waitForSelector('[data-scontro-3d][data-racconto]', { timeout: 8000 }).catch(() => {})
     await attendi(page, 500)
     await scatto(page, 'sotterraneo-3d-colpo')
     await page.waitForFunction(() => !document.querySelector('[data-scontro-3d][data-racconto]'), null, { timeout: 20000 })
-    programmi.push((await g3d()).programmi)
+    programmi.push(await page.evaluate(() => window.__compilati))
     morti = await page.evaluate(() => window.__sotterraneo3d.corsa.livello.robe.filter(r => r.che === 'mostro' && r.morto).length)
     if (!morti) await page.waitForSelector('[data-caselle-abilita][data-pronto]', { timeout: 20000 }).catch(() => {})
   }
@@ -232,6 +235,29 @@ await attendi(page, 600)
   const dopo = await g3d()
   controlla('bassa: il pixel ratio non passa 1', dopo.dpr <= 1, dopo.dpr)
   nota(`fascia bassa nello scontro: ${dopo.chiamate} chiamate, ${dopo.programmi} shader, ${dopo.ms} ms`)
+}
+
+/* ---------- 4c. tre attacchi contro gli scheletri armati: dopo il primo giro nessuno shader si ricompila (gli effetti tengono i programmi,
+   docs/sotterraneo/limiti-3d.md: buttarli faceva ricompilare a ogni colpo, sul telefono 50-300 ms l'uno) ---------- */
+await entra('sotterraneo3d=1&seme=11&sotterraneo=branco&mostri=3&tipo=scheletro&variante=guerriero,arciere,mago&grado=leggendario&stanza=sala&qualita=bassa')
+await page.waitForSelector('[data-caselle-abilita][data-pronto]', { timeout: 20000 })
+// il riscaldamento (docs/sotterraneo/prestazioni-3d.md, «Shader e prima apparizione»): finito, il primo attacco trova gli shader pronti
+await page.waitForFunction(() => window.__sotterraneo3d.grafica().daScaldare === 0, null, { timeout: 30000 })
+await page.evaluate(() => { const P = WebGL2RenderingContext.prototype, o = P.linkProgram; window.__compilati = 0; P.linkProgram = function (x) { window.__compilati++; return o.call(this, x) } })
+{
+  const compilati = []
+  for (let n = 0; n < 3; n++) {
+    await page.evaluate(() => { const c = window.__sotterraneo3d.corsa; if (c && c.vitaMax) c.vita = c.vitaMax })
+    await rispondi(true)
+    await page.waitForSelector('[data-scontro-3d][data-racconto]', { timeout: 8000 }).catch(() => {})
+    await page.waitForFunction(() => !document.querySelector('[data-scontro-3d][data-racconto]'), null, { timeout: 20000 })
+    await page.waitForSelector('[data-caselle-abilita][data-pronto]', { timeout: 20000 }).catch(() => {})
+    compilati.push(await page.evaluate(() => window.__compilati))
+  }
+  // un effetto visto la prima volta si compila (una mossa nuova di un mostro): al più qualcuno; buttando i programmi erano 15-19 a giro
+  controlla('scheletri armati: dopo il primo attacco quasi nessuno shader compilato', compilati[1] - compilati[0] <= 6 && compilati[2] - compilati[1] <= 6, compilati.join())
+  controlla('scaldati gli shader, il primo attacco non ne compila quasi (senza riscaldamento erano una decina)', compilati[0] <= 2, compilati.join())
+  nota(`scheletri armati, shader compilati dopo il riscaldamento, attacco per attacco: ${compilati.join(', ')}`)
 }
 
 /* ---------- 5. la scala che sale e quella che scende, da una sosta scritta in Node ---------- */

@@ -158,6 +158,25 @@ export function creaMostri3d(scena, { quanti = () => 12 } = {}) {
       if (!p.morente) modellati.push([r, radice])
       return ist.alto * radice.scale.x * (1 - 0.7 * c)
     },
+    /**
+     * Un'istanza in serbo del modello `id`, nascosta, e i suoi shader chiesti in anticipo con `compila(oggetto)`: quelli suoi e quelli
+     * delle copie trasparenti di chi svanisce (docs/sotterraneo/prestazioni-3d.md, «Shader e prima apparizione»). Il primo `metti`
+     * la prende. Falso se il modello ne aveva già una, o non c'è.
+     */
+    prepara(id, compila) {
+      let lista = riserve.get(id)
+      if (lista && lista.length) return false
+      const ist = nuovaIstanza(scena, id)
+      if (!ist) return false
+      ist.chiave = id; ist.mosse = null
+      if (!lista) riserve.set(id, lista = [])
+      lista.push(ist)
+      compila(ist.radice)
+      tingi(ist, 0, null, 0, 0.5); compila(ist.radice); tingi(ist, 0, null, 0, 1)
+      return true
+    },
+    /** Gli attacchi che i modelli fatti finora dichiarano (`userData.attacco`): per scaldare i loro effetti. */
+    attacchi() { const l = []; for (const r of riserve.values()) for (const i of r) if (i.g.userData.attacco) l.push(i.g.userData.attacco); return l },
     /** Nasconde le istanze che nessuno ha preso in questo fotogramma. */
     chiudi() {
       for (const l of riserve.values()) for (const i of l) if (!i.presa) { i.radice.visible = false; if (i.chi) { i.chi.m3d = null; i.chi = null } }

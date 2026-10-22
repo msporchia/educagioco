@@ -32,6 +32,7 @@ import { creaVeduta, SOLE } from './veduta.js'
 import { grigliaDi, pezzoDi, contenutoDelPezzo, lavoroDeiPezziVista, costruibile, ancoraUguale } from './pezzi.js'
 import { aTerra } from './dito.js'
 import { quotaA, quotaTerreno, LIVELLO_ACQUA } from './suolo.js'
+import { elencaProgrammi } from '../programmi.js'
 
 const CIELO = new Color(0xc9dcea)
 const COLORI_PALLINO = { grigio: 0x9a9a9a, verde: 0x5fd35f, arancio: 0xffa53a, rosso: 0xff4a3a }
@@ -363,7 +364,14 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = [], fon
     renderer.render(scena, cam.camera)
     ctx.misure.msDisegno = performance.now() - t1
     ctx.conta(ms)
+    // il riscaldamento (docs/sotterraneo/prestazioni-3d.md, «Shader e prima apparizione»): un secondo dopo i primi pezzi, gli shader di
+    // quello che c'è ma non si è ancora disegnato (lo scontro sul prato, il portale, la scia); `compile` chiede e non aspetta
+    if (!scaldato && costruiti.size >= Math.min(4, griglia.n)) {
+      if (scaldaDa == null) scaldaDa = tempo + 1
+      else if (tempo >= scaldaDa) { scaldato = true; try { renderer.compile(scena, cam.camera) } catch (e) { /* solo un anticipo */ } }
+    }
   }
+  let scaldato = false, scaldaDa = null
 
   const fuoriTela = { x: -1, z: -1 }
   const api = {
@@ -416,12 +424,13 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = [], fon
                msJs: Math.round(ms.msJs * 100) / 100, msDisegno: Math.round(ms.msDisegno * 100) / 100,
                figure: persone ? persone.figure.quante + persone.figureEroe.quante : 0, pezzi: [...costruiti.keys()].sort((a, b) => a - b),
                msPezzi: Math.round(Math.max(0, ...[...costruiti.values()].map(f => f.ms))), veduta: cam.veduta, scenario: 'mondo',
-               palco: !!(palco && palco.attivo), mostri: S.mostri.length, mostri3d: persone ? persone.mostri3d : 0, scia: scia.quante, persone3d: persone ? persone.persone3d : null,
+               palco: !!(palco && palco.attivo), scaldato, mostri: S.mostri.length, mostri3d: persone ? persone.mostri3d : 0, scia: scia.quante, persone3d: persone ? persone.persone3d : null,
                // le zone: dove si è, quelle caricate, e quanto ci hanno messo le ultime a caricarsi (ms, una per fotogramma)
                zona: zonaQui, zone: m.zonaCaricata.map((c, k) => (c ? k : -1)).filter(k => k >= 0), msZone: misureZone.slice() }
     },
     get pronto() { return !!persone && costruiti.size >= Math.min(4, griglia.n) },
     get scena() { return scena },   // per le misure (docs/sotterraneo/prestazioni-3d.md): chi fa le chiamate
+    programmi() { return elencaProgrammi(renderer, [scena]) },   // da dove vengono gli shader compilati (le misure)
     distruggi() {
       vivo = false
       api.ferma()

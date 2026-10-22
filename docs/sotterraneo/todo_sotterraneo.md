@@ -84,6 +84,9 @@ rimasti aperti. Quando una voce si chiude si toglie da qui (la storia sta in `gi
   chiamate; mondo con due branchi 18 ms, 326 chiamate, 415k triangoli), la GPU qui non si misura. Col contatore fps: scontro fermo, tre
   attacchi, dieci secondi nel villaggio e fra due branchi (prima 48 fermo e 15 in attacco); il primo incontro con un modello (35-55
   shader da compilare); l'apertura del mondo (~7 s simulati) e di una zona (~0,3 s); lo zaino (15 anteprime in ~1,2 s).
+- **I limiti veri** ([limiti-3d.md](limiti-3d.md), 22/10): sul telefono vero lo scontro delle discese sta oltre i 33 ms già con un
+  mostro (collo: fuochi e pixel, non i personaggi); sul prato ~5 persone e meno di 4 mostri 3D ai 30 fps. Gli shader ricompilati a ogni
+  colpo sono tolti (15-19 a attacco → 0-2): **rifare la misura coi modelli veri a telefono freddo**, poi il mondo intero col contatore.
 - **Si legge?** Il villaggio tondo a zoom normale, le luci azzurre della scia sul sole e sui ciottoli, i segni delle tane, il 💤 e i
   galloni dei mostri, il capitano (piccolo, blu poco marcato), le insegne e le panche, il fascio sulla meta.
 - **Gesti**: drag della vista e pinch per lo zoom (compito C, su `main`) contro il tocco per camminare; lo scontro sul prato sopra il
@@ -131,7 +134,7 @@ fuori») e i branchi a 14 celle (`292a98f5`); il villaggio tondo (24×20); la sc
 |---|---|---|
 | Un elmo vero nello slot testa: fatto il 22/10, la casella `testa`, sei copricapi e l'Elmo alato di Piumanera, solo nel 3D, anche negli scontri sul prato ([elmo.md](elmo.md)); resta lo sprite per il 2D dei copricapi (nessun foglio ha un elmo: oggi l'emoji; serve un disegno in codice) | Mostri | fatto, da guardare col dito |
 | Costi in chiamate: scontro sul prato ~231, mondo con due branchi ~250 (soglia del test 260) | Mostri | tenere d'occhio |
-| Peso e fluidità sul telefono (nessuna misura fatta) | Mostri | da guardare col dito |
+| Peso e fluidità sul telefono: misurati il 22/10 ([limiti-3d.md](limiti-3d.md)); restano i rimedi grossi proposti lì (draghi saldati per osso, fantasma e melme, ombra del sole nella bassa, luce della gemma del mago, eroe vestito) | Mostri | da decidere dopo la misura vera |
 | Prove del browser complete (`npm run test:browser`) e `test:misure` non lanciate dopo il 3D | Mostri | da fare prima del prossimo giro grande |
 | Le persone 3D di sopra: quadri e righe come colori nei vertici (oggi trame, cinque mesh in più), peso sul telefono | Mostri | da guardare col dito |
 
@@ -156,7 +159,7 @@ nel diario e nella bottega: `docs/sotterraneo/persone-3d.md`.
 
 - Chi tocca `scena3d/mondo/` e `Mondo3d.vue` (mondo) e chi tocca `scena3d/` delle discese e `mostro3d.js` (mostri 3D) si avvisano al merge
   su `main`; regola per pubblicare: `git merge main` nel proprio ramo, `git merge --ff-only` su `main`, `./pubblica.sh` da un albero pulito.
-- I mostri 3D nel mondo di sopra: tetto di 8 modelli (i più vicini all'eroe), gli altri sprite; se costa troppo sul Note 7 è la costante
-  da abbassare.
+- I mostri 3D nel mondo di sopra: tetto di 8 modelli (i più vicini all'eroe), 6 nella fascia bassa (`mostriSopra` in `store/qualita.js`,
+  [limiti-3d.md](limiti-3d.md)), gli altri sprite.
 - I file generati non si toccano a mano: `dati/icone-mondo.js` (`npm run scatti icone-mondo`), `scena3d/eroi3d|mostri3d|effetti3d/`
   (`npm run promuovi3d`), le emoji (`npm run emoji`; in un conflitto sulle emoji si rilancia il comando, non si fonde a mano).

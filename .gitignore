@@ -33,3 +33,6 @@ dist-poc/
 
 # il servizio di inoltro delle sfide (Cloudflare)
 servizio/inoltro/.wrangler/
+
+# i log mandati dal telefono al ricevitore (strumenti/ricevi-log.mjs)
+strumenti/vecchio-telefono/log/ricevuti/
