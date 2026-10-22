@@ -5,7 +5,7 @@
 // Le leve si tarano sul log della misura fatta sul telefono vero (zona dei grandi → «Misura questo telefono», poi «Copia»),
 // vedi docs/core/vecchio-telefono.md:
 //
-//   node strumenti/vecchio-telefono.mjs calibra --log telefono.txt      # il log copiato dal telefono (la riga DATI basta)
+//   node strumenti/vecchio-telefono.mjs calibra --log telefono.txt      # il log copiato dal telefono (la riga DATI basta); `--prova` non salva
 //   node strumenti/vecchio-telefono.mjs benchmark                       # la stessa misura sul computer, con la taratura salvata
 //   node strumenti/vecchio-telefono.mjs benchmark --contro telefono.txt # e il confronto riga per riga col telefono
 //   node strumenti/vecchio-telefono.mjs benchmark --veri [--contro veri.txt] [--solo sot-,tri-]   # la misura coi modelli veri
@@ -183,6 +183,8 @@ async function calibra() {
   }
   if (!soloCpu && !veri && K === 0 && msDi(fatti, 'pieno-1.5') > tel.gpu) console.log('attenzione: la GPU del computer è già più lenta del telefono (--gpu sw ha senso solo se la zavorra non basta)')
   await b.close()
+  // `--prova`: dice la taratura senza salvarla (profilo.json lo usano anche le altre misure)
+  if (argv.includes('--prova')) { console.log(`\ntaratura (${gpuModo}), NON salvata: CPU ×${cpu.toFixed(2)}, zavorra ${K}`); return }
   const p = leggiProfilo(); p[gpuModo] = { cpu: +cpu.toFixed(2), zavorra: K, ...(process.env.VT_CORE ? { core: Number(process.env.VT_CORE) } : {}), telefono: tel }
   writeFileSync(PROFILO, JSON.stringify(p, null, 2) + '\n')
   console.log(`\ntarato (${gpuModo}): CPU ×${cpu.toFixed(2)}, zavorra ${K} — salvato in strumenti/vecchio-telefono/profilo.json`)

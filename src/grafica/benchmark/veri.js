@@ -226,20 +226,20 @@ export async function eseguiVeri({ contenitore, progresso = () => {}, fermo = ()
   window.addEventListener('error', guasto, true); window.addEventListener('unhandledrejection', guasto, true)
   const persi0 = eventiContesto.persi, ripresi0 = eventiContesto.ripresi
   const prima = await ambiente()
-  let k = 0, rif0 = null, ultimo = null, deriva = 1
+  let k = 0, ultimo = null, rifOra = null
+  const rifs = []
   try {
     for (const tappa of tappe) {
       if (fermo()) break
       const nuovo = tappa.gruppo !== ultimo
       const g = gruppi[tappa.gruppo] || (gruppi[tappa.gruppo] = { carica: [], dpr: [], luci: null, programmi: 0 })
-      // a ogni gruppo nuovo: la pausa e il riferimento; il primo è il metro, gli altri dicono di quanto il telefono è rallentato
+      // a ogni gruppo nuovo: la pausa e il riferimento (a fine prova, diviso il più svelto: di quanto il telefono è rallentato)
       if (nuovo) {
         let r = null
         try { r = await riferimento({ contenitore, fermo, corto, progresso, k, tot, raffredda }) } catch (e) { r = null }
         if (r && r.ms) {
-          if (!rif0) rif0 = r
-          deriva = Math.round(r.ms / rif0.ms * 100) / 100
-          g.rif = { ms: r.ms, p95: r.p95, js: r.js, gpu: r.gpu, deriva }
+          rifOra = r.ms; rifs.push(r.ms)
+          if (!g.rif) g.rif = { ms: r.ms, p95: r.p95, js: r.js, gpu: r.gpu }
         }
       }
       ultimo = tappa.gruppo
@@ -273,7 +273,7 @@ export async function eseguiVeri({ contenitore, progresso = () => {}, fermo = ()
               if (!g.luci || l.p + l.s > g.luci.p + g.luci.s) g.luci = l
             }
             if (guasti.length > g0) throw new Error(`errore nel gioco: ${guasti[g0]}`)
-            risultati.push({ ...riga(s, tappa), ...r, deriva })
+            risultati.push({ ...riga(s, tappa), ...r, ...(rifOra ? { rif: rifOra } : {}) })
             // solo le serie che crescono (più mostri, più persone…): le leve dei colli e la roba si confrontano fra loro, si fanno tutte
             if (s.cresce && r.p95 > SALTA_OLTRE && !corto) saltate.add(s.serie)   // nelle prove corte si fanno tutte
           } catch (e) { risultati.push({ ...riga(s, tappa), errore: breve(e) }) }
@@ -288,6 +288,13 @@ export async function eseguiVeri({ contenitore, progresso = () => {}, fermo = ()
     console.warn = orig.warn; console.error = orig.error
     window.removeEventListener('error', guasto, true); window.removeEventListener('unhandledrejection', guasto, true)
     for (const m of new Set(guasti)) avvisi.set(`errore: ${m}`, guasti.filter(x => x === m).length)
+  }
+  // la deriva del calore: il riferimento di ogni gruppo diviso il più svelto (il telefono più fresco; il primo è spesso freddo di
+  // shader e trame, e prenderlo come metro triplicava tutto)
+  const fresco = rifs.length ? Math.min(...rifs) : null
+  if (fresco) {
+    for (const r of risultati) if (r.rif) r.deriva = Math.round(r.rif / fresco * 100) / 100
+    for (const g of Object.values(gruppi)) if (g.rif) g.rif.deriva = Math.round(g.rif.ms / fresco * 100) / 100
   }
   const js = fermo() || (solo && !solo.includes('js')) ? null : proveCpu()
   const dopo = await ambiente()

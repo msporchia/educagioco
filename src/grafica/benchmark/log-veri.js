@@ -55,7 +55,7 @@ export function letturaVeri(dati) {
   const m = id => { const r = ris.find(x => x.id === id); return misurata(r) ? r : null }
   const d = (a, b) => t1d(a.ms - b.ms)
   const derive = crudi.some(r => r.deriva) ? crudi.filter(misurata).map(r => r.deriva ?? 1) : []
-  if (derive.length) righe.push(`Calore: il riferimento di ogni gruppo da x${Math.min(...derive)} a x${Math.max(...derive)} del primo` +
+  if (derive.length) righe.push(`Calore: il riferimento di ogni gruppo da x${Math.min(...derive)} a x${Math.max(...derive)} del più fresco` +
     (Math.max(...derive) > 1.15 ? `; la lettura usa i ms divisi per quella deriva (le righe: ≈).` : ': stabile.'))
   if (dati.js != null) righe.push(`CPU: ${dati.js} ms (computer 110-160): ${dati.js <= CPU.veloce ? 'veloce' : dati.js <= CPU.lenta ? 'media' : 'lenta, il JS dei giochi pesa'}.`)
   const a = (dati.ambiente || {}).prima || {}, z = (dati.ambiente || {}).dopo || {}

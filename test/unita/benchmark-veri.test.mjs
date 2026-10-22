@@ -57,7 +57,7 @@ controlla('LIMITE già oltre alla prima: la pendenza', /Mostri 3D di sopra: LIMI
 controlla('il pavimento', /Pavimento: schermo vuoto 8 ms \(js 2, gpu 6\), 100 cubi semplici 18 ms \(~1 ms ogni 10 chiamate\)/.test(righe), righe)
 controlla('la scomposizione, dal guadagno più grande', /TOGLIERE \(1 mostro con effetti: 60 ms, js 18 gpu 42\): materiali → Basic -30, pixel ratio 0,6 -20, ombra -8 ms/.test(righe), righe)
 controlla('la CPU o la GPU', /CPU o GPU: la GPU tiene il 70% del lavoro .* = il collo è la scheda/.test(righe), righe)
-controlla('i ms corretti dal calore', /Calore: il riferimento di ogni gruppo da x1 a x1\.6 del primo; la lettura usa i ms divisi/.test(righe), righe)
+controlla('i ms corretti dal calore', /Calore: il riferimento di ogni gruppo da x1 a x1\.6 del più fresco; la lettura usa i ms divisi/.test(righe), righe)
 controlla('LIMITE delle persone: 8', /Persone 3D di sopra: LIMITE 8 persone sotto 33 ms/.test(righe))
 controlla('la fattoria che non parte è oltre già al primo', /Fattoria 3D: LIMITE già 10 edifici oltre 33 ms \(non regge\), oltre 66 da 10/.test(righe), righe)
 controlla('i triangoli costano poco', /Triangoli \(stesse chiamate\): x1 15 ms \(70k\), x8 18 ms \(560k\)\. Costano poco: c'è margine per ~8x/.test(righe), righe)
