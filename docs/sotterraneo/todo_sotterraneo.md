@@ -19,9 +19,10 @@ rimasti aperti. Quando una voce si chiude si toglie da qui (la storia sta in `gi
 - **La torcia nel dungeon** (quasi chiuso, `corsa.js:264`): nello screenshot di Marco (torre, piano 3 di 3) si vede un cerchio di ~3 celle:
   è lo stato «senza torcia accesa» (`RAGGIO` 3,2; con la torcia `RAGGIO_TORCIA` 9,5), non un difetto dell'eroe 3D. Da confermare con Marco se la
   torcia era spenta o finita (`torciaResta` 0). Sopra, nel mondo, la torcia non fa niente (è sempre giorno): decidere se deve servire.
-- **Le quest**: restano le quest scritte a mano nelle zone, scorta ed eventi; cacciatrice e carovaniere come persone nuove; la X e il
-  viandante non hanno un disegno 3D (sono segni sul prato); «vai alla pietra» dal diario; la freccia sulla strada vera e non in linea
-  d'aria; tarare le basi delle taglie (`BASI`, tetto 40 gemme) e quanto guadagna chi le fa tutte.
+- **Le quest**: restano le quest scritte a mano nelle zone, scorta ed eventi. La cacciatrice e il carovaniere hanno il modello 3D ma
+  non stanno nel mondo: dove metterli (il forte e il rifugio non ci sono più; in `PERSONE` cambia la firma del mondo) e cosa chiedono
+  (quest scritte a mano) è da decidere ([mondo-aperto-quest.md](mondo-aperto-quest.md#chi-le-dà)). Le basi delle taglie (`BASI`,
+  tetto 40 gemme) e quanto guadagna chi le fa tutte stanno nella taratura, sotto.
 - **I dungeon che si rigenerano** ([dungeon-che-si-rigenerano.md](dungeon-che-si-rigenerano.md)): la cava (13) esce più tenera delle
   miniere (12); i nomi dei sei boss nuovi sono scelti (Roccaverde, Piumanera, Sibilla, Vulcanor, Gelomagno, Falcenera; le chiavi nei
   dati restano quelle di prima, sono salvataggi).

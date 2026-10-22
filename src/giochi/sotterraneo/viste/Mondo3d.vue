@@ -34,7 +34,7 @@ import { fotoDelloScontro } from '../motore/aperta-scena.js'
 import { allaCitta } from '../motore/forze-sopra.js'
 import { SOPRA } from '../dati/mondo-aperto-mostri.js'
 import { stradaDelMondo, stradaPesata } from '../motore/strada-sopra.js'
-import { metaScelta, campoVersoLaMeta, metaVicina, celleDelVelo, luciDellaStrada, piuVicina, passiDetti, ARRIVATO_META } from '../motore/meta-sopra.js'
+import { metaScelta, campoVersoLaMeta, metaVicina, celleDelVelo, luciDellaStrada, piuVicina, doveEsceLaStrada, pietraPerAndare, passiDetti, ARRIVATO_META } from '../motore/meta-sopra.js'
 
 const props = defineProps({
   tappe: { type: Array, required: true },
@@ -473,6 +473,7 @@ function aggiornaScena() {
   S.accese = accese.value
   S.divieti = divieti.value
   S.portale = (() => { const b = bersagli.value.find(x => x.ruolo === 'portale'); return b ? { x: b.piede.x + 0.5, z: b.piede.y + 0.5 } : null })()
+  S.scavi = bersagli.value.filter(x => x.ruolo === 'scavo').map(b => ({ chiave: b.k, x: b.piede.x + 0.5, z: b.piede.y + 0.5 }))
   S.pallini = new Map()
   for (const b of bersagli.value) if (b.ruolo === 'ingresso' && trovati.value.has(b.chiave)) {
     const d = datoDelPosto(b)
@@ -835,8 +836,22 @@ function giuDalPortale() { salva(); emit('riprendi') }
 function rotella(e) { if (!scena) return; e.preventDefault(); scena.zoom = scena.zoom * (e.deltaY > 0 ? 1.08 : 0.92) }
 
 // il diario manda l'eroe da chi aspetta, o ai piedi di un ingresso; il tocco che ha chiuso un pannello passa qui
+const bersaglioDi = chiave => bersagli.value.find(x => (x.ruolo === 'minatore' && chiave === 'minatore') || (x.ruolo === 'personaggio' && x.k === chiave) || (x.ruolo === 'ingresso' && x.k === chiave) || (x.ruolo === 'bacheca' && x.k === chiave))
 function vaDa(chiave) {
-  const b = bersagli.value.find(x => (x.ruolo === 'minatore' && chiave === 'minatore') || (x.ruolo === 'personaggio' && x.k === chiave) || (x.ruolo === 'ingresso' && x.k === chiave) || (x.ruolo === 'bacheca' && x.k === chiave))
+  const b = bersaglioDi(chiave)
+  if (b) tocca(b)
+}
+// «vai alla pietra» dal diario: chi aspetta è lontano e una pietra accesa gli sta vicino (motore/meta-sopra.js, pietraPerAndare).
+// { da, a, nome } o null; l'eroe va alla pietra `da`, e lì il fumetto offre il viaggio
+function pietraPer(chiave) {
+  const b = m && bersaglioDi(chiave)
+  if (!b) return null
+  const pietre = postiDi(m, 'pietra').filter(p => accese.value.has(p.chiave)).map(p => ({ chiave: p.chiave, x: p.accanto.x, y: p.accanto.y }))
+  const v = pietraPerAndare({ x: io.x, y: io.z }, b.accanto, pietre)
+  return v ? { ...v, nome: nomeDellaPietra(v.da) } : null
+}
+function vaAllaPietra(chiave) {
+  const v = pietraPer(chiave), b = v && bersagli.value.find(x => x.ruolo === 'pietra' && x.k === v.da)
   if (b) tocca(b)
 }
 async function toccoDaFuori(x, y) {
@@ -850,7 +865,7 @@ async function toccoDaFuori(x, y) {
 }
 // lo stato dei mostri di sopra, per chi cura in città e chi raccoglie da terra (Gioco.vue): lo cambia lui, poi `salvaSopra`
 const statoSopra = () => (mostri ? mostri.stato : null)
-defineExpose({ vaDa, toccoDaFuori, vaDaMercante, apriPalco, dopoLoScontro, statoSopra, salvaSopra: () => salva() })
+defineExpose({ vaDa, pietraPer, vaAllaPietra, toccoDaFuori, vaDaMercante, apriPalco, dopoLoScontro, statoSopra, salvaSopra: () => salva() })
 
 /* ═══════════ dopo ogni fotogramma: i bersagli, il fumetto, i nomi della veduta e le bussole, scritti nel DOM ═══════════ */
 let vL = 0, vA = 0, sopra = 0, sotto = 0
@@ -1125,8 +1140,12 @@ function aggiornaBussole() {
   // la meta (quella della carta in cima): un tondo azzurro con la sua faccia. Chi aspetta una consegna ha già il suo
   const q = metaOra.value
   if (q && !q.consegna) {
+    // verso dove la scia esce dalla vista (la strada vera); se la scia si vede tutta, verso la meta
+    const siVede = (x, z) => { scena.aSchermo(x, scena.quota(x, z) + 1, z, pt); return pt.x >= M && pt.x <= vL - M && pt.y >= sopra + M && pt.y <= vA - sotto - M }
+    const fuoriVista = luci.length ? doveEsceLaStrada(luci, piuVicina(luci, io.x, io.z).i, siVede) : null
     const l = q.b && q.b.lotto
-    if (l) scena.aSchermo(l.x + l.w / 2, scena.quota(l.x, l.y) + 1, l.y + l.h / 2, pt)
+    if (fuoriVista) scena.aSchermo(fuoriVista.x, scena.quota(fuoriVista.x, fuoriVista.z) + 1, fuoriVista.z, pt)
+    else if (l) scena.aSchermo(l.x + l.w / 2, scena.quota(l.x, l.y) + 1, l.y + l.h / 2, pt)
     else scena.aSchermo(q.cella.x + 0.5, scena.quota(q.cella.x + 0.5, q.cella.y + 0.5) + 1, q.cella.y + 0.5, pt)
     alBordo(pt.x, pt.y, { chiave: q.chiave, meta: true, nome: q.nome, immagine: q.immagine || null, em: q.em || null })
   }

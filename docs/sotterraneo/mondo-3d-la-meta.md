@@ -77,7 +77,14 @@ i passi. Nessun tasto: non si tocca. C'è anche con la meta in vista; si nascond
 - **Nella veduta** la meta c'è anche sotto le nuvole: un'etichetta azzurra «◎ La cripta dei re» che pulsa, sul posto; le luci vi
   si ingrandiscono e fanno la strada tratteggiata. Toccarla è un tocco come gli altri della veduta: la veduta si chiude e l'eroe
   ci va a piedi (arrivato, si apre quello che c'è).
-- **Sul bordo**, quando la meta è fuori vista, la bussola azzurra con la sua faccia; toccata, lo stesso.
+- **Sul bordo**, quando la meta è fuori vista, la bussola azzurra con la sua faccia; toccata, lo stesso. **Segue la strada vera**:
+  punta dove la scia esce dalla vista (`doveEsceLaStrada` in `motore/meta-sopra.js`, dalla luce più vicina all'eroe in avanti), non
+  la meta in linea d'aria, dove un fiume senza ponte è un muro; se la scia si vede tutta (finisce prima, dove la strada non è
+  caricata) vale la linea d'aria.
+- **«Vai alla pietra»** nel diario, accanto a «vai da …» e «vai alla discesa»: se chi aspetta è a più di 60 celle e una pietra accesa
+  gli sta a meno di 14, e andare alla pietra accesa più vicina all'eroe più l'ultimo tratto costa al più il 60% della linea d'aria
+  (`pietraPerAndare`, `PIETRA_PER_ANDARE`), l'eroe va a quella pietra e lì il fumetto offre il viaggio. Non si viaggia dal diario:
+  le pietre si usano stando lì. `[data-azione="vai-pietra"]` col `data-pietra-da`.
 - **Il cartello** dice, sotto la freccia del passaggio verso la regione della meta, «◎ di qui per la cripta dei re: segui le luci
   azzurre»; se la meta sta da queste parti, «… è da queste parti» (`frecceDelCartello`).
 - **Il minatore e il capitano**, dopo la strada a parole, nel 3D aggiungono «Per terra ci sono le luci azzurre: seguile e ci
@@ -96,10 +103,10 @@ volta per meta; il velo riscrive le trame della nebbia solo quando la strada cam
 
 Nei test: `unita/sotterraneo-meta-sopra` (quale meta: dal selettore, di difetto la storia, nessuna comodità, la scelta che decade;
 il campo e la strada: dove si cammina, mai un salto né un angolo tagliato, non oltre il limite sul più corto, sulla strada e lontano dai muri (30 coppie, una mappa a mano con la L, il varco di due celle, il varco largo), i passi, i tempi; il velo
-nelle trame, che non tocca il bit e si richiude; le luci; i passi detti) e `integrazione/sotterraneo-mondo-meta` (col dito vero:
+nelle trame, che non tocca il bit e si richiude; le luci; dove la strada esce dalla vista; quando conviene la pietra; i passi detti) e `integrazione/sotterraneo-mondo-meta` (col dito vero:
 la carta col nome, i passi e l'icona di almeno 44 px, senza tasti; la scia e quanto costa; il velo che non trova la cripta per
 finta; la veduta con la meta sotto le nuvole e il tocco che manda a piedi; il cartello; la meta che resta la storia con una
 missione e una taglia in mano, non cambia camminando, e segue «segui questa» del diario). Bersagli: `[data-meta-carta]`
 (`data-meta`: la discesa, `taglia:<id>` o `chi:<bersaglio>`) con `[data-meta-nome]`, `[data-meta-passi]` (`data-passi`) e
 `[data-ritaglio]`; nella veduta `[data-nome-posto="meta:<discesa>"]` (o `taglia:<id>`); sul bordo `[data-meta-fuori]`; nel
-cartello `[data-freccia-meta]` e `[data-meta-qui]`; `window.__sotterraneo3d.grafica().scia` (quante luci).
+cartello `[data-freccia-meta]` e `[data-meta-qui]`; nel diario `[data-azione="vai-pietra"]` (`data-pietra-da`); `window.__sotterraneo3d.grafica().scia` (quante luci).

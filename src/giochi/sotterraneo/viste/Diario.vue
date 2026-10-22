@@ -26,8 +26,9 @@ const props = defineProps({
   punti: { type: Number, default: 0 },          // le schede: i «+» delle altre
   puntiAbilita: { type: Number, default: 0 },
   mondo: { type: Boolean, default: false },     // nel Sotterraneo 3D la strada è quella del mondo aperto (dati/terra.js, luogoDi)
+  pietra: { type: Function, default: null },    // chi → la pietra accesa da cui conviene viaggiare ({ da, a, nome }), o null
 })
-const emit = defineEmits(['chiudi', 'segui', 'vai', 'fuori', 'scheda'])
+const emit = defineEmits(['chiudi', 'segui', 'vai', 'pietra', 'fuori', 'scheda'])
 
 const d = computed(() => diario(props.stati, props.tappe, props.segui, props.conti, props.mondo))
 
@@ -63,6 +64,9 @@ const persona3d = v => (v.cosa.sprite && MODELLI_PERSONE.includes(v.cosa.sprite)
 // «vai da …» c'è per chi aspetta qualcosa da te: un favore da chiederti, o la consegna di una missione fatta
 const puoiAndare = v => !props.giu && (v.stato === 'offerta' || v.stato === 'fatta')
 const vaDa = v => emit('vai', v.vai || v.da)
+// «vai alla pietra …»: chi aspetta è lontano e una pietra accesa gli sta vicino; si va prima alla pietra accesa più vicina
+const pietraDi = chi => (props.pietra && !props.giu && chi ? props.pietra(chi) : null)
+const allaPietra = p => p.nome.replace(/^La /, 'alla ')
 </script>
 
 <template>
@@ -115,6 +119,10 @@ const vaDa = v => emit('vai', v.vai || v.da)
       </button>
       <button v-if="doveAndare && !giu" class="sot-grosso sot-chiaro" data-azione="vai-da" @click="$emit('vai', doveAndare)">
         <span class="em">🚶</span> vai alla discesa
+      </button>
+      <button v-if="doveAndare && pietraDi(doveAndare)" class="sot-grosso sot-chiaro" data-azione="vai-pietra" :data-pietra-da="pietraDi(doveAndare).da"
+              @click="$emit('pietra', doveAndare)">
+        <span class="em">🚶</span> vai {{ allaPietra(pietraDi(doveAndare)) }}, e da lì viaggi
       </button>
 
       <!-- le sette porte, una per una: perché una è aperta e un'altra no -->
@@ -195,6 +203,10 @@ const vaDa = v => emit('vai', v.vai || v.da)
       <button v-if="puoiAndare(voce)" class="sot-grosso" :class="{ 'sot-chiaro': voce.seguibile }" data-azione="vai-da"
               @click="vaDa(voce)">
         <span class="em">🚶</span> vai {{ voce.daChi }}
+      </button>
+      <button v-if="puoiAndare(voce) && pietraDi(voce.vai || voce.da)" class="sot-grosso sot-chiaro" data-azione="vai-pietra"
+              :data-pietra-da="pietraDi(voce.vai || voce.da).da" @click="$emit('pietra', voce.vai || voce.da)">
+        <span class="em">🚶</span> vai {{ allaPietra(pietraDi(voce.vai || voce.da)) }}, e da lì viaggi
       </button>
     </div>
 
