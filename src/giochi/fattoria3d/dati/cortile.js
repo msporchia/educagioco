@@ -1,6 +1,6 @@
 /* Il pentolone e le tre bestie che mangiano da lui (anatre, maiali, capre): i dati del giro G4 della parità con la fattoria di sempre
    (docs/fattoria3d/parita/). Dal giro G3 livelli, prezzi e tempi sono quelli della 2D (dati/parita2d.js: pentolone 23, stagno delle anatre 24,
-   porcile 28, capre 40; il tempo di una bestia è la sua ricetta, uova d'anatra 6 min, tartufo 20, latte di capra 12). Restano solo 3D le
+   porcile 28, capre 40; il tempo di una bestia è la sua ricetta, uova d'anatra 6 min, pancetta 20, latte di capra 12). Restano solo 3D le
    capienze e il prezzo delle singole bestie dentro il recinto (`posti`, `prezzoBestia`, `rincaroBestia`): nella 2D non esistono (c'è la fila di
    un posto per macchina). Tutto il resto (id, ingredienti, quantità, cosa mangia chi) è quello della 2D (`src/giochi/fattoria/dati/coltivazioni.js`).
    Importa solo `parita2d.js`: `mangime.js`, `animali.js`, `catalogo.js` e `ricette.js` leggono da qui. Vedi docs/fattoria3d/cortile-e-pentolone.md. */
@@ -34,7 +34,7 @@ export const PEZZI_DEL_CORTILE = {
 }
 
 // ── le bestie nuove, nella forma di `ANIMALI` (dati/animali.js). Cosa mangiano e quanto è della 2D: anatre 1 verdure lesse → uova d'anatra,
-//    maiali 2 pastone → tartufi, capre 1 verdura fresca → latte di capra. Uova e latte sono gli stessi `uova` e `latte` di pollaio e stalla (come in 2D: `da: 'uova'`). ──
+//    maiali 2 pastone → pancetta (id `tartufi`), capre 1 verdura fresca → latte di capra. Uova e latte sono gli stessi `uova` e `latte` di pollaio e stalla (come in 2D: `da: 'uova'`). ──
 export const ANIMALI_DEL_CORTILE = {
   anatre: {
     bestia: 'anatra', bestie: 'anatre', emoji: '🦆', prodotto: 'uova', evento: 'uovo',
@@ -53,5 +53,6 @@ export const ANIMALI_DEL_CORTILE = {
   },
 }
 
-/** L'unica merce nuova delle bestie: il tartufo (id, nome, emoji e faccia della 2D). */
-export const TARTUFI = { nome: 'Tartufi', emoji: '🍄', pezzo: 'merce_tartufi', dove: 'porcile' }
+/** L'unica merce nuova delle bestie: l'id resta `tartufi` (chiave di salvataggi e di parita2d.js), ma in 3D è la PANCETTA 🥓 (come Hay Day: il tartufo
+    sembrava una cacca). Senza `pezzo`: la faccia è l'emoji (Faccia.vue). Vedi docs/fattoria3d/cortile-e-pentolone.md. */
+export const TARTUFI = { nome: 'Pancetta', emoji: '🥓', dove: 'porcile' }

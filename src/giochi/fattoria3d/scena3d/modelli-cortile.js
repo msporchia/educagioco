@@ -112,6 +112,7 @@ const G_MAIALE = new THREE.SphereGeometry(0.22, 9, 7), G_ZAMPA_P = new THREE.Cyl
 const G_ORECCHIO_P = new THREE.ConeGeometry(0.06, 0.13, 4).translate(0, 0.065, 0), G_MUSO = new THREE.CylinderGeometry(0.06, 0.07, 0.07, 8).rotateX(Math.PI / 2)
 const G_RICCIO = new THREE.TorusGeometry(0.04, 0.012, 5, 10, 4.7)
 const SCALA_P = [0.78, 0.72, 1.32]
+const G_PIATTO = new THREE.CylinderGeometry(0.115, 0.105, 0.014, 12), G_STRISCIA = new THREE.BoxGeometry(0.2, 0.016, 0.031)
 
 function costruisciMaiale (k = 0) {
   const g = new THREE.Group()
@@ -132,9 +133,14 @@ function costruisciMaiale (k = 0) {
   parte(coda, G_RICCIO, chiaro, 0, 0.02, 0).rotation.y = Math.PI / 2
   const mucchio = parte(g, G_TESTINA, terra, 0.42, 0.01, 0.22); mucchio.scale.set(1.6, 0.5, 1.4); mucchio.visible = false          // dove ha scavato
   const dono = new THREE.Group(); dono.position.set(0.42, 0.06, 0.22); g.add(dono); dono.visible = false
-  const tartufo = mat(0x3b2a22), bernoccolo = mat(0x6b5a4a)                                                                      // il tartufo: scuro e bitorzoluto
-  parte(dono, G_TESTINA, tartufo, 0, 0, 0).scale.set(0.9, 0.75, 0.9)
-  for (const [x, y, z] of [[0.04, 0.02, 0.03], [-0.04, 0.0, 0.035], [0.0, 0.035, -0.03], [0.035, -0.015, -0.04]]) parte(dono, G_TESTINA, bernoccolo, x, y, z).scale.setScalar(0.28)
+  // il dono è la pancetta (non il tartufo, che a schermo sembrava una cacca): un piatto con tre fette a strisce rosse e rosa, a ventaglio
+  const piatto = mat(0x9c6b3c), rossa = mat(0xa8282a), rosa2 = mat(0xe8968a), grasso = mat(0xf6d2c2)
+  parte(dono, G_PIATTO, piatto, 0, 0, 0)
+  for (const [i, ang, dx] of [[0, -0.5, -0.02], [1, 0.05, 0.0], [2, 0.55, 0.02]]) {
+    const fetta = new THREE.Group(); fetta.position.set(dx, 0.014 + i * 0.016, 0); fetta.rotation.y = ang; dono.add(fetta)
+    // strisce irregolari come le venature della pancetta: lunghezze e colori non a righe regolari, un'ondina in altezza
+    for (let n = 0; n < 5; n++) { const m = parte(fetta, G_STRISCIA, [rossa, rosa2, rossa, grasso, rosa2][(n + i) % 5], ((n * 7 + i * 3) % 5 - 2) * 0.008, Math.sin(n * 1.7 + i) * 0.004, (n - 2) * 0.031); m.scale.set(0.82 + ((n + i) % 3) * 0.1, 1, 1) }
+  }
   fondiPerMateriale(testa, { escludi: orecchie }); fondiPerMateriale(dono); fondiPerMateriale(g, { escludi: [corpo, testa, coda, mucchio, dono] })
   g.userData = { corpo, testa, coda, orecchie, mucchio, dono, specie: 'maiale', ms: ANIMALI.porcile.ms, fase: Math.random() * 6, meta: new THREE.Vector3(), animaBestia: animaMaiale }
   segniDiPronta(g, g.userData, { raggio: 0.5, yAlone: 0.02, scint: [0.42, 0.4, 0.22], sbuffo: [0.42, 0.18, 0.22], rSbuffo: 0.22 })
@@ -169,10 +175,10 @@ function costruisciPorcile () {
   const falde = new THREE.Group(); falde.position.y = 0.95; casa.add(falde); tetto(falde, 2.5, 1.25, 0.0, 0xa8392f, 0.5)
   // il truogolo lungo contro il muro, con la sbobba
   scatola(g, 1.4, 0.16, 0.26, legno, 0.75, 0.1, -0.2); scatola(g, 1.28, 0.03, 0.16, mat(0xb08a50), 0.75, 0.18, -0.2)
-  // un balla di paglia e il cartello dei tartufi
+  // un balla di paglia e il cartello della pancetta
   const balla = cilindro(g, 0.2, 0.2, 0.4, paglia, -1.55, 0.24, -0.35, 8); balla.rotation.z = Math.PI / 2
   cilindro(g, 0.025, 0.025, 0.75, legno, 1.65, 0.38, 0.1, 5)
-  insegna(g, '🍄 TARTUFI', 0.7, 0.24, 1.65, 0.8, 0.12, { w: 256, h: 88, sfondo: '#6b4a32', px: 36 })
+  insegna(g, '🥓 PANCETTA', 0.7, 0.24, 1.65, 0.8, 0.12, { w: 256, h: 88, sfondo: '#6b4a32', px: 36 })
   // lo steccato davanti e ai lati, col cancelletto in mezzo
   const X = 1.85, Zf = 1.38, Zm = -0.3, Gx = 0.38
   const palo = (x, z) => cilindro(g, 0.04, 0.045, 0.62, legno, x, 0.32, z, 6)
