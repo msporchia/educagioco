@@ -13,7 +13,6 @@ Le voci aperte tecniche. Una riga ciascuna, e quando una si chiude si toglie. Qu
   in basso copre parte della tavola quando i biglietti sono otto; il test d'integrazione del banco è aggiornato ma non eseguito. Quando `Faccia.vue` c'è,
   `MerceBacheca.vue` si sostituisce con una riga e `Banco.vue` si toglie. I posti per livello (3/4/5/6/8) sono da giocare.
 - **I tre stadi delle bestie non sono visti dalla telecamera di gioco.** Guardati nel catalogo 3D (una voce per stadio, da vicino e a 40°) e provati nei test unitari, non dalla distanza di serie (~22) né su un telefono: da giudicare se alone, secchio, uovo enorme e nuvola ×1,3 bastano a colpo d'occhio, e se la mucca pronta (corpo +12%) si distingue abbastanza ([animali.md](animali.md) «I tre stadi»).
-- Spostata in [parita/](parita/README.md) (I2).
 - **Gli edifici liberi non sono stati visti col dito né su un telefono** ([edifici-liberi.md](edifici-liberi.md)): provati nei test unitari e in Chrome (dev server: acquisto dal menu, il «!» sul tasto e sulle carte, nessun fantasma);
   `integrazione/fattoria3d` è aggiornato (la gelateria dal menu, il «!», nessun fantasma) ma **non eseguito** (la build era vietata). Da guardare: il «!» e la riga «Serve il Panificio» nel banco su 360 px, il rimbalzo dell'edificio
   appena posato, trascinare un edificio 3×3 in un terreno stretto. Un edificio guarda sempre verso +z (non si ruota: vedi sotto), quindi il suo davanti può finire contro un muro di alberi (allora il contadino lo serve da un altro lato).

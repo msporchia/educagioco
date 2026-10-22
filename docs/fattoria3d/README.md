@@ -21,6 +21,7 @@ lana) e uno stato suo, e non tocca quelli della fattoria di sempre; le monete so
 - [geografia-e-pesca.md](geografia-e-pesca.md) — il mare a ovest e i laghi grandi a est (forme continue fra lotti), i salvataggi di prima che tengono i loro lotti, il molo, il porticciolo, i banchi di pesce, i pesciolini a istanze, il pesce, friggitoria e sushi bar, i livelli 17 e 18
 - [compagni.md](compagni.md) — Watson e i gatti che girano per la fattoria, il contadino nuovo: quando arrivano, come sono fatti, come si muovono
 - [guardaroba.md](guardaroba.md) — cambiare abito al contadino o alla contadina: il genere dal profilo, i capi e gli sblocchi, il salvataggio, come si aggiunge un pezzo
+- [guida.md](guida.md) — il `?`, il primo giro (la riga e l'anello), «E adesso?» e il consiglio col tasto sotto un «non si può»
 - [scena.md](scena.md) — il disegno: i moduli di `scena3d/`, il dito, costruire trascinando, le opzioni di qualità e il peso
 - [file.md](file.md) — dove sta cosa in `src/giochi/fattoria3d/`, e i bersagli dei test
 - [parita/](parita/README.md) — **cosa manca per sostituire la fattoria 2D**: criteri, tabelle di parità per area (colture e catena, animali, commercio, livelli ed economia, mondo e stagioni, interfaccia e guida, tecnica e salvataggi), le decisioni per l'utente e il piano a giri

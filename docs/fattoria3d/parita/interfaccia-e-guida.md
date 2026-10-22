@@ -8,10 +8,10 @@ Legenda in [README.md](README.md). 2D: [../../fattoria/come-si-tocca.md](../../f
 
 | id | cosa | 2D | 3D | pri |
 |---|---|---|---|---|
-| I1 | il `?` della barra | `guida="fattoria"` in `src/guide/contenuti.js` (tocchi, terra, animali, livelli, catena) | ❌ `<Barra>` senza `guida` | **P0** |
-| I2 | il primo giro | guida del primo giro ([../../core/guida.md](../../core/guida.md)) | ❌ un bambino vede il prato e le azioni, e basta | **P0** |
-| I3 | «🌳 Come si fa» (l'albero delle ricette: `alberoDi`, `dati/albero.js`) | si apre da silo, mercato, fogli | ❌ | P1 |
-| I4 | il consiglio: ogni «non si può» porta con sé il passo e il tasto per farlo (`motore/consiglio.js`, risale la catena) | sì, 4 forme di azione | 🟡 `dettoDi` dice cosa serve e dove si fa, senza tasto che porti lì | **P0** |
+| I1 | il `?` della barra | `guida="fattoria"` in `src/guide/contenuti.js` (tocchi, terra, animali, livelli, catena) | ✅ `guida="fattoria3d"` ([../guida.md](../guida.md)); da leggere con un bambino | – |
+| I2 | il primo giro | guida del primo giro ([../../core/guida.md](../../core/guida.md)) | ✅ `motore/guida.js`: 🌱 → grano → aspetta → ✂️ → 🏗, con la manina; non provato con un bambino piccolo ([../guida.md](../guida.md)) | – |
+| I3 | «🌳 Come si fa» (l'albero delle ricette: `alberoDi`, `dati/albero.js`) | si apre da silo, mercato, fogli | ❌ non fatto: `dati/albero.js` e `usi.js` non esistono nella 3D, l'albero sta solo nella 2D | P1 |
+| I4 | il consiglio: ogni «non si può» porta con sé il passo e il tasto per farlo (`motore/consiglio.js`, risale la catena) | sì, 4 forme di azione | ✅ `motore/consiglio.js` (`comeAvere` risale la catena, `cosaFaccioAdesso`): 🧭 «E adesso?» e il passo col tasto sotto i «mancano» di macchina, banco e mongolfiera; gli altri «no» dicono ancora solo il perché | – |
 | I5 | «a cosa serve una roba» | silo + `dati/usi.js` | ✅ inventario, una frase | – |
 | I6 | inviti, non rimproveri (🧺 sui campi pronti, 💭 sulle bestie) | sì | ✅ cartelli «N pronti!» e fame, badge sulle macchine | – |
 | I7 | aiuti a monete 💡 | non ce l'ha (è dei quiz) | non ce l'ha | n/a |

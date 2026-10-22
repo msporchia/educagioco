@@ -42,7 +42,7 @@ Rischi:
 | il pentolone | aperta | G4 |
 | conigli, capre, alpaca, asini, maiali, anatre, api | aperta | G4–G5 |
 | le stagioni | aperta | G8 |
-| la guida | aperta | G2 |
+| la guida | fatta: `?`, primo giro, consiglio; manca «Come si fa» (I3) | [../guida.md](../guida.md) |
 | i suoni | parità con la 2D (nessuno): tenere | I26 |
 | ruotare i pezzi | aperta | W6 |
 | la misura su telefono | aperta | T7 |
