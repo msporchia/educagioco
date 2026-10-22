@@ -2,7 +2,7 @@
    il mondo della prima in `mondo` e quelli dopo in `mondi[t]`; la porta si apre ripulite le tombe del vento, fino alla quinta terra;
    passando si porta l'eroe e si ricomincia il mondo, tornando si ritrova la prima com'era; la storia sta nella prima.
    `node test/esegui.mjs sotterraneo-terre --niente-build` */
-import { terraDi, laTerra, mondoDellaTerra, conMondo, terreViste, apertaLaPorta, passaTerra, laPorta, ULTIMA_TERRA, CHI_APRE_LA_PORTA }
+import { terraDi, laTerra, mondoDellaTerra, conMondo, terreViste, apertaLaPorta, passaTerra, laPorta, terreDaTornare, ULTIMA_TERRA, CHI_APRE_LA_PORTA }
   from '../../src/giochi/sotterraneo/motore/terre.js'
 import { dungeonDellAvventura, rifattiDi, conRipulito, dopoLaDiscesa } from '../../src/giochi/sotterraneo/motore/rigenera.js'
 import { livelloDelDungeon } from '../../src/giochi/sotterraneo/dati/dungeon-del-mondo.js'
@@ -10,7 +10,9 @@ import { TERRE, MONDO_PERCORSO } from '../../src/giochi/sotterraneo/dati/mondo-a
 import { scheletroDelMondo } from '../../src/giochi/sotterraneo/motore/mondo-percorso.js'
 import { mondoDaSalvato } from '../../src/giochi/sotterraneo/motore/mondo-sopra.js'
 import { questDi } from '../../src/giochi/sotterraneo/motore/taglie.js'
-import { apertura } from '../../src/giochi/sotterraneo/motore/dialoghi.js'
+import { apertura, risposta, voltiDellaTerra } from '../../src/giochi/sotterraneo/motore/dialoghi.js'
+import { voltoDelDungeon } from '../../src/giochi/sotterraneo/motore/rigenera.js'
+import { guastiDeiDialoghi } from '../../src/giochi/sotterraneo/dati/dialoghi.js'
 import { tingi } from '../../src/giochi/sotterraneo/scena3d/mondo/vesti.js'
 import { controlla, uguale, stessaLista, riassunto } from '../aiuto/verifica.mjs'
 
@@ -104,15 +106,52 @@ const b = { ...a, ...passo }
   uguale('ripulite nella seconda non vuol dire nella prima di nuovo', rifattiDi(mondoDellaTerra(d, 1), 'tombe'), 1)
 }
 
-/* ══════════ 4. tornare: la prima terra com'era ══════════ */
+/* ══════════ 4. tornare: la prima terra com'era, arrivando in piazza ══════════ */
 {
   const indietro = passaTerra(b, 1)
-  uguale('si torna a una terra già vista', JSON.stringify(indietro), JSON.stringify({ terraOra: 1 }))
+  uguale('si torna a una terra già vista', indietro.terraOra, 1)
+  stessaLista('si scrive la terra e il mondo di là', Object.keys(indietro), ['terraOra', 'mondo'])
   const c = { ...b, ...indietro }
-  uguale('la prima com\'era', mondoDellaTerra(c), a.mondo)
+  const { dove, ...resto } = mondoDellaTerra(c), { dove: _d, ...prima } = a.mondo
+  uguale('la prima com\'era', JSON.stringify(resto), JSON.stringify(prima))
   uguale('coi suoi dungeon ripuliti', rifattiDi(mondoDellaTerra(c), 'cerchio'), 2)
+  uguale('si arriva in piazza, non dove la si era lasciata', JSON.stringify(dove), JSON.stringify({ arrivo: true }))
   uguale('non si salta a una terra mai vista', passaTerra(b, 4), null)
   uguale('né si passa nella stessa', passaTerra(b, 2), null)
+}
+
+/* ══════════ 4b. il viaggio indietro dalla pietra del villaggio, col salvataggio ══════════ */
+{
+  // arrivati nella terza: la seconda e la prima hanno il loro mondo
+  const due = { giro: 2, pietre: ['villaggio', 'zona:bosco'], dove: { x: 40, y: 60 }, dungeon: { tombe: { rifatti: 1 }, cava: { rifatti: 1 } } }
+  const tre = { giro: 1, pietre: ['villaggio'], dove: { x: 5, y: 6 } }
+  const c = JSON.parse(JSON.stringify({ ...a, terraOra: 3, mondi: { 2: due, 3: tre } }))   // salvato e riletto: le chiavi sono stringhe
+  uguale('fin dove si è arrivati: la terza', terreViste(c), 3)
+  stessaLista('la pietra riporta alla prima e alla seconda', terreDaTornare(c).map(t => t.terra), [1, 2])
+  stessaLista('laPorta le dice', laPorta(c).altre.map(t => t.villaggio), [TERRE[0].villaggio, TERRE[1].villaggio])
+  stessaLista('nella prima, mai stati altrove: nessuna', terreDaTornare(a), [])
+  // dalla terza alla seconda: si scrive `mondi` (con la terza com'era), e si arriva nella piazza di Borgo d'autunno
+  const p = passaTerra(c, 2)
+  stessaLista('si scrive la terra e `mondi`', Object.keys(p), ['terraOra', 'mondi'])
+  const d = JSON.parse(JSON.stringify({ ...c, ...p }))
+  uguale('si è nella seconda', terraDi(d), 2)
+  uguale('il suo giro', mondoDellaTerra(d).giro, 2)
+  uguale('le sue pietre', mondoDellaTerra(d).pietre.join(), 'villaggio,zona:bosco')
+  uguale('i suoi dungeon ripuliti', rifattiDi(mondoDellaTerra(d), 'cava'), 1)
+  uguale('si arriva in piazza', JSON.stringify(mondoDellaTerra(d).dove), JSON.stringify({ arrivo: true }))
+  uguale('la terza resta com\'era', JSON.stringify(mondoDellaTerra(d, 3)), JSON.stringify(tre))
+  uguale('la prima pure', mondoDellaTerra(d, 1).giro, a.mondo.giro)
+  uguale('fin dove si è arrivati resta la terza', terreViste(d), 3)
+  stessaLista('e dalla seconda si torna alla prima o alla terza', terreDaTornare(d).map(t => t.terra), [1, 3])
+  // la porta della seconda (tombe ripulite lì) porta alla terza già vista: anche lì si arriva in piazza
+  uguale('la porta verso una terra vista', JSON.stringify(mondoDellaTerra({ ...d, ...passaTerra(d) }).dove), JSON.stringify({ arrivo: true }))
+  // il mondo di arrivo si rimette in forma come sempre: la firma diversa fa un mondo nuovo con le pietre di prima
+  const m = scheletroDelMondo(MONDO_PERCORSO.seme, { terra: 2 })
+  const s = mondoDaSalvato(m, mondoDellaTerra(d), [])
+  controlla('le pietre accese restano', s.pietre.includes('zona:bosco'))
+  controlla('l\'eroe non ha posto: si parte dalla piazza', !(s.dove && Number.isInteger(s.dove.x)))
+  // la porta della terza è chiusa (tombe da ripulire) e non si salta oltre
+  uguale('mai oltre le terre viste', passaTerra(c, 4), null)
 }
 
 /* ══════════ 5. la storia sta nella prima terra ══════════ */
@@ -137,6 +176,34 @@ const b = { ...a, ...passo }
   uguale('nella landa', due.posti.find(p => p.tipo === 'terre').zona, 'landa')
   stessaLista('le fasce più su di 14', due.zone.map(z => z.fascia[0]), uno.zone.map(z => z.fascia[0] + 14))
   uguale('la tinta della seconda', due.terraDi.nome, TERRE[1].nome)
+}
+
+/* ══════════ 7b. il minatore racconta i volti nuovi ══════════ */
+{
+  const ctx = { mondo: true, tappe: [], stati: {}, forza: 1, terra: 2 }
+  uguale('nella prima terra niente volti', voltiDellaTerra({ ...ctx, terra: 1 }).length, 0)
+  const v = voltiDellaTerra(ctx)
+  stessaLista('quelli della zona per te: i prati', [...new Set(v.map(p => p.chiave))], ['altare', 'cantine'])
+  controlla('col volto della seconda terra', v.some(p => p.dato === 'volto-dove' && p.testo.startsWith(voltoDelDungeon('altare', 0, 2).nome)))
+  controlla('e diverso da quello della prima', voltoDelDungeon('altare', 0, 2).nome !== voltoDelDungeon('altare', 0, 1).nome)
+  // il volto della volta già ripulita, se il gioco lo dà
+  const dungeon = [{ chiave: 'altare', nome: 'La cripta X', annuncio: 'Una cosa nuova.' }]
+  controlla('il volto dei dungeon del gioco', voltiDellaTerra({ ...ctx, dungeon }).some(p => p.dato === 'volto-dove' && p.testo.startsWith('La cripta X:')))
+  // la prima volta in una terra dopo: il minatore li racconta, senza presentarsi
+  const ap = apertura('minatore', ctx, { nuovaTerra: true })
+  uguale('la prima pagina dice che le discese hanno un\'altra faccia', ap[0].dato, 'volti')
+  controlla('poi i volti', ap.some(p => p.dato === 'volto'))
+  controlla('dopo, non più', !apertura('minatore', ctx).some(p => p.dato === 'volto'))
+  controlla('nella prima terra mai', !apertura('minatore', { ...ctx, terra: 1 }, { nuovaTerra: true }).some(p => p.dato === 'volti'))
+  // «Cosa c'è laggiù?» nelle terre dopo: i volti, le tombe e la porta
+  const r = risposta('minatore', 'racconta', ctx)
+  controlla('laggiù: le tombe di questa terra', r.some(p => p.chiave === 'tombe' && p.dato === 'volto'))
+  controlla('e chi le batte apre la porta', r.some(p => p.dato === 'volti'))
+  controlla('nella quinta la porta non si riapre', !risposta('minatore', 'racconta', { ...ctx, terra: 5 }).some(p => p.dato === 'volti'))
+  controlla('nella prima, il racconto di sempre', risposta('minatore', 'racconta', { ...ctx, terra: 1 }).every(p => p.dato === 'racconto'))
+  // la riga del dove è come quella della strada del minatore («nome: luogoDi»); i volti vanno a pagine
+  controlla('nessuna pagina del volto troppo lunga', [...v, ...r].filter(p => p.dato !== 'volto-dove').every(p => p.testo.length <= 150))
+  uguale('i dialoghi senza guasti', guastiDeiDialoghi().join(' | '), '')
 }
 
 /* ══════════ 7. chi annuncia la porta, e la tinta ══════════ */

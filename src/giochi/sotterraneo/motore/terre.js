@@ -40,18 +40,29 @@ export function terreViste(a) {
 // la porta delle terre è aperta nella terra `t` se lì le tombe del vento sono state ripulite, e se dopo c'è un'altra terra
 export const apertaLaPorta = (a, t = terraDi(a)) => numero(t) < ULTIMA_TERRA && rifattiDi(mondoDellaTerra(a, t), CHI_APRE_LA_PORTA) > 0
 
-// Passare alla terra `t` (di difetto quella dopo): si va avanti di una dalla porta aperta, o in una già vista. Torna i campi da
-// scrivere (`{ terraOra }`) o null se non si può. L'eroe è uno (roba, crescita, zaino, missioni restano dove sono); il mondo della
-// terra nuova manca, cioè nebbia, pietre, taglie e dungeon ripuliti cominciano da capo; quello lasciato resta com'era
+// Passare alla terra `t` (di difetto quella dopo): si va avanti di una dalla porta aperta, o in una già vista (la porta, o la pietra
+// del villaggio). Torna i campi da scrivere (`{ terraOra }`, e il mondo di là se c'è) o null se non si può. L'eroe è uno (roba,
+// crescita, zaino, missioni restano dove sono); il mondo della terra nuova manca, cioè nebbia, pietre, taglie e dungeon ripuliti
+// cominciano da capo; quello lasciato resta com'era. In una terra già vista si arriva in piazza (`dove: { arrivo: true }`), non dove
+// la si era lasciata: tutto il resto del suo mondo resta
 export function passaTerra(a, t = terraDi(a) + 1) {
   const ora = terraDi(a), n = Math.floor(Number(t))
   if (!Number.isFinite(n) || n < 1 || n > ULTIMA_TERRA || n === ora) return null
   const avanti = n === ora + 1 && apertaLaPorta(a, ora)
-  return avanti || n <= terreViste(a) ? { terraOra: n } : null
+  if (!avanti && n > terreViste(a)) return null
+  const la = mondoDellaTerra(a, n)
+  return la ? { terraOra: n, ...conMondo(a, { ...la, dove: { arrivo: true } }, n) } : { terraOra: n }
+}
+// le altre terre dove si può tornare dalla pietra del villaggio: quelle già viste, tranne questa
+export function terreDaTornare(a) {
+  const ora = terraDi(a), l = []
+  for (let t = 1; t <= terreViste(a); t++) if (t !== ora) l.push(laTerra(t))
+  return l
 }
 
-// quello che il mondo di sopra deve sapere della porta: dove si è, se è aperta, dove porta, se questa è l'ultima terra
+// quello che il mondo di sopra deve sapere della porta: dove si è, se è aperta, dove porta, se questa è l'ultima terra, e le terre
+// già viste dove la pietra del villaggio riporta (`altre`)
 export function laPorta(a) {
   const ora = terraDi(a), aperta = apertaLaPorta(a, ora)
-  return { ora, aperta, ultima: ora >= ULTIMA_TERRA, qui: laTerra(ora), dopo: aperta ? laTerra(ora + 1) : null }
+  return { ora, aperta, ultima: ora >= ULTIMA_TERRA, qui: laTerra(ora), dopo: aperta ? laTerra(ora + 1) : null, altre: terreDaTornare(a) }
 }

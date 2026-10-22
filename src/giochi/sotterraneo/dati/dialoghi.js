@@ -9,6 +9,7 @@
 //   `porte`    solo il capitano: per le discese che racconta lui (la chiave della tappa), quello che dice della porta
 //              di adesso, in aggiunta alla strada (motore/dialoghi.js, stradaDelCapitano)
 //   `terre`    il minatore e il capitano, nel mondo 3D: la porta delle terre aperta in fondo alla landa (ctx.terre)
+//   `volti`, `voltiPorta`  solo il minatore, nelle terre dopo la prima: le discese col volto nuovo (motore/dialoghi.js, voltiDellaTerra)
 //   `cura`     chi cura gratis (la guaritrice la vita, l'incantatrice l'energia): `risorsa`, la `domanda`, le `pagine` dette
 //              curando, `gia` quando non serve e `richiamo`, il fumetto sulla sua testa quando serve (motore/dialoghi.js)
 // «Novità?», con le frasi che ruotano e reagiscono, sta in dati/novita.js.
@@ -26,6 +27,8 @@ export const DIALOGHI = {
     saluti: [{ da: 0, testo: 'Ancora qui? Le discese non si chiudono da sole.' }],
     presa: 'La lanterna del nonno. Se la riporti su, mi riporti su anche lui.',
     terre: 'Laggiù, in fondo alla landa, si è aperta una porta di pietra. Le rune dicono che di là c\'è un\'altra terra: le stesse strade, mostri più forti.',
+    volti: 'Le strade sono quelle di casa, ma le discese qui hanno un\'altra faccia. Ti dico quelle che fanno per te.',
+    voltiPorta: 'Batti chi comanda le tombe, e la porta in fondo alla landa si apre ancora.',
   },
 
   ragazza: {
@@ -263,6 +266,7 @@ export function guastiDeiDialoghi(chi = []) {
     for (const v of d.racconti || []) if (v.pagine.length > 4) g.push(`${k}: un racconto di più di quattro pagine`)
     for (const [t, testo] of Object.entries(d.porte || {}))
       for (const f of testo.split(/(?<=[.!?…])\s+/)) if (f.length > 120) g.push(`${k}: una frase della porta «${t}» di ${f.length} caratteri`)
+    for (const f of [d.volti, d.voltiPorta].filter(Boolean)) if (f.length > 120) g.push(`${k}: una frase dei volti di ${f.length} caratteri`)
     if (d.terre) for (const f of d.terre.split(/(?<=[.!?…])\s+/)) if (f.length > 120) g.push(`${k}: una frase della porta delle terre di ${f.length} caratteri`)
   }
   return g
