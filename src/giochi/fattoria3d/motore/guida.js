@@ -2,6 +2,8 @@
    regole in docs/core/guida.md). Pura: dal quadro di quello che c'è dice il passo `{ testo, dove, mano? }`, o null quando tace.
    Si legge lo schermo, non un copione: regge chi fa le cose in un altro ordine. Vedi docs/fattoria3d/guida.md. */
 
+import { tempoBreve } from '../dati/tempo.js'
+
 export const BERSAGLI = {
   semina: '[data-f3="az-semina"]',
   raccogli: '[data-f3="az-raccogli"]',
@@ -39,7 +41,7 @@ export function guidaDelPrimoGiro(q = {}) {
   if (raccolto && !visto) return { dove: BERSAGLI.costruisci, mano: true, testo: 'Bravo! Ora tocca 🏗 Costruisci e fai crescere la fattoria.' }
   if (vuoti && modo !== 'semina') return { dove: BERSAGLI.semina, mano: true, testo: 'Tocca 🌱 Semina e scegli cosa far crescere.' }
   if (vuoti && modo === 'semina') return { dove: null, testo: 'Tocca il campo vuoto: il contadino ci semina.' }
-  if (crescono) return { dove: null, testo: `Il grano cresce${secondi ? `: ancora ${secondi} secondi` : ''}.` }
+  if (crescono) return { dove: null, testo: `Il grano cresce${secondi ? `: ancora ${tempoBreve(secondi * 1000)}` : ''}.` }
   return null
 }
 

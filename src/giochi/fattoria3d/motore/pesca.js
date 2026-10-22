@@ -105,10 +105,11 @@ export function ritiraPesca(f, id) {
   if (!e || bancoDi(f, id).stato !== 'abbocca') return { ok: false, motivo: 'non-abbocca' }
   const p = provaPesca(f, e.i, e.j)
   if (!p.ok) return p
-  f.s.prodotti.pesce = (f.s.prodotti.pesce || 0) + p.resa
+  const n = f._riponi('pesce', p.resa)                                  // lo scomparto del pesce ha il suo tetto (dati/silos.js): il pesce resta all'amo finché non c'è posto
+  if (n < 1) return { ok: false, motivo: 'scomparto-pieno', k: 'pesce', max: f.capienzaDi('pesce') }
   f.s.pesca[id] = { i: e.i, j: e.j, fine: null, riposo: f.ora() + PESCA.riposoMs }
-  f._evento('pesce', { n: p.resa, mare: p.mare })
-  return { ok: true, n: p.resa, mare: p.mare, lotto: id }
+  f._evento('pesce', { n, mare: p.mare })
+  return { ok: true, n, mare: p.mare, lotto: id }
 }
 
 /** Le lenze in acqua o col pesce all'amo, per la scena: [{ lotto, i, j, stato: 'attesa' | 'abbocca', restoMs }]. */
