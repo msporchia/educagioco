@@ -116,6 +116,7 @@ fuori») e i branchi a 14 celle (`292a98f5`); il villaggio tondo (24×20); la sc
 | Costi in chiamate: scontro sul prato ~231, mondo con due branchi ~250 (soglia del test 260) | Mostri | tenere d'occhio |
 | Peso e fluidità sul telefono (nessuna misura fatta) | Mostri | da guardare col dito |
 | Prove del browser complete (`npm run test:browser`) e `test:misure` non lanciate dopo il 3D | Mostri | da fare prima del prossimo giro grande |
+| Le persone 3D di sopra: quadri e righe come colori nei vertici (oggi trame, cinque mesh in più), peso sul telefono | Mostri | da guardare col dito |
 
 ### Mostri 3D senza modello
 
@@ -128,6 +129,11 @@ capobranco, rospo, airone, coccodrillo e gli altri) non sono ancora specie: oggi
 
 Eroi, mostri e mosse multiple in 3D, effetti 3D, camera bassa nello scontro, anteprime 3D di caselle, ritratto e fila dei turni.
 Come si rifanno: `npm run promuovi3d` (`docs/sotterraneo/mostri-3d.md`, `mosse.md`, `anteprime-3d.md`).
+
+### Fatto il 22 ottobre
+
+Le persone del mondo di sopra in 3D (mercanti, missioni, capitano, minatore, viandanti, sentinelle), coi ritratti 3D nel dialogo,
+nel diario e nella bottega: `docs/sotterraneo/persone-3d.md`.
 
 ## 3. Voci comuni
 
