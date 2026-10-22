@@ -51,7 +51,8 @@ rimasti aperti. Quando una voce si chiude si toglie da qui (la storia sta in `gi
 - **I ritratti 3D nel mondo** (22 ottobre): in `integrazione/sotterraneo-mondo` il ritratto del dialogo e quello della bottega non
   arrivano, e `__anteprime3d.stato()` dice `rotto: true` (il contesto WebGL delle anteprime perso, `webglcontextlost`) con la macchina
   carica (load 20–25); nelle discese (`-elmo`) le anteprime vanno. Da rilanciare a macchina libera; se resta rosso, guardare chi perde il
-  contesto quando il mondo e le anteprime ne tengono due.
+  contesto quando il mondo e le anteprime ne tengono due. Nello stesso test la palude è passata da 154 a 191 chiamate (soglia 200)
+  dopo il merge di `main` del 22 ottobre: da guardare prima che la soglia scatti.
 - **Fumetto del portale**: `TypeError charAt` su `f.nome` mancante quando la sosta si svuota («torno giù»): corretto con `minuscolo`
   tollerante (21 ottobre); non riprodotto nel browser, solo dedotto dal file pubblicato. Se ricompare, incollare l'errore.
 - **Test del browser lenti sotto carico**: `sotterraneo-mondo`, `-bacheca`, `-mostri-sopra`, `-mondo-meta` vanno in timeout con la macchina
