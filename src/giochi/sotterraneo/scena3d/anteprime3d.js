@@ -10,6 +10,8 @@ import { equipaggia } from './eroi3d/armi.js'
 import { vesti, TIPI } from './eroi3d/armature.js'
 import { vestiDotazione } from './eroe3d.js'
 import { creaPezzo, vestiFigura } from './roba3d.js'
+import { copri } from './eroi3d/copricapi.js'
+import { aggiungiAlone } from './roba3d/aloni.js'
 import { idDi, costruisci } from './mostri3d/registro.js'
 import { creaPersona } from './persone3d/persone.js'
 
@@ -83,6 +85,22 @@ function inPosaArmatura(c) {
   return { obj: g, verso: [0.1, 0.2, 1] }
 }
 
+// il copricapo da solo (docs/sotterraneo/elmo.md): montato su una testa finta, senza eroe sotto (`copri` vuole il perno `testa`, il suo
+// centro e il raggio), di tre quarti e appena dall'alto; l'alone della rarità come le altre caselle
+function inPosaCopricapo(c) {
+  const finto = new THREE.Group(), testa = new THREE.Group()
+  finto.add(testa)
+  finto.userData = { testa, cy: 0, R: 0.3, chiave: 'cavaliere' }
+  copri(finto, c.id)
+  const g = finto.userData.copricapoMontato && finto.userData.copricapoMontato.gruppo
+  if (!g) return null
+  if (finto.userData.animaCopricapo) finto.userData.animaCopricapo(ISTANTE)
+  if (c.rarita !== 'comune') aggiungiAlone(g, { rarita: c.rarita, elemento: 'nessuno' })
+  animaTutto(g, ISTANTE)
+  finto.rotation.set(0.25, -0.5, 0)
+  return { obj: finto, verso: [0.15, 0.3, 1] }
+}
+
 // il mostro di tre quarti, girato verso sinistra (dove sta l'eroe), dalla testa a metà corpo
 function inPosaMostro(r) {
   const id = idDi(r)
@@ -114,6 +132,7 @@ function inPosa(c) {
   switch (c.tipo) {
     case 'arma': case 'scudo': case 'gioiello': case 'consumabile': return inPosaArma(c.pezzo, c.tipo)
     case 'armatura': return inPosaArmatura(c)
+    case 'copricapo': return inPosaCopricapo(c)
     case 'eroe': return inPosaEroe(c, false)
     case 'busto': return inPosaEroe(c, true)
     case 'mostro': return inPosaMostro(c.r)

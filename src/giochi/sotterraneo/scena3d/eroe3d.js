@@ -18,7 +18,7 @@ const _v = new Vector3()
 // quale figura e quale modello per quale oggetto stanno in roba3d.js (docs/sotterraneo/roba-3d.md): li usano anche le anteprime
 
 /**
- * Veste un eroe 3D (`creaEroe`) con la roba: `roba` = { mano, mancina, corpo } (chiavi degli oggetti). La stessa per l'eroe in scena
+ * Veste un eroe 3D (`creaEroe`) con la roba: `roba` = { mano, mancina, corpo, collo, testa } (chiavi degli oggetti). La stessa per l'eroe in scena
  * e per le anteprime (anteprime3d.js). → `togli()`.
  */
 export const vestiEroe = (g, roba = {}) => vestiDotazione(g, dotazioneDi(roba))
@@ -35,9 +35,11 @@ export function vestiDotazione(g, d) {
   const collana = togliCollo && togliCollo.gruppo
   // le fiamme e i bagliori delle armi vive vanno animati (da soli sono enormi), e gli aloni della rarità
   g.userData.armiAnima = [destra, sinistra, collana].filter(a => a && (a.userData.anima || a.userData.animaAlone))
-  // lo slot testa non esiste ancora nel gioco: per guardare gli elmi e i cappelli basta `#testa=elmo-cornuto` nell'indirizzo
-  const idTesta = (/[#&?]testa=([\w-]+)/.exec(typeof location === 'undefined' ? '' : location.hash + location.search) || [])[1]
-  const togliTesta = idTesta ? copri(g, idTesta) : null
+  // il copricapo della casella `testa` (docs/sotterraneo/elmo.md); `#testa=elmo-cornuto` nell'indirizzo resta la prova, e vince sulla casella
+  const prova = (/[#&?]testa=([\w-]+)/.exec(typeof location === 'undefined' ? '' : location.hash + location.search) || [])[1]
+  const idTesta = prova || (d.testa && d.testa.id) || null
+  let togliTesta = null
+  try { togliTesta = idTesta ? copri(g, idTesta) : null } catch (e) { togliTesta = null }   // un modello che non c'è: resta quello di serie
   return () => { togliArma(); g.userData.armiAnima = null; if (togliCorpo) togliCorpo(); if (togliCollo) togliCollo(); if (togliTesta) togliTesta() }
 }
 
@@ -73,7 +75,7 @@ export function creaEroe3d(scena) {
   }
 
   function equipa(corsa) {
-    const f = `${corsa.mano || ''}|${corsa.mancina || ''}|${corsa.corpo || ''}|${corsa.collo || ''}`
+    const f = `${corsa.mano || ''}|${corsa.mancina || ''}|${corsa.corpo || ''}|${corsa.collo || ''}|${corsa.testa || ''}`
     if (f === firma) return
     firma = f
     if (arma) arma()

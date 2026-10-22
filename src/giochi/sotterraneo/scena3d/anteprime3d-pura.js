@@ -24,6 +24,33 @@ export const EROI = ['cavaliere', 'elfa', 'mago', 'nano']
 
 const cosaDi = k => (k ? COSE[k] || null : null)
 
+// I copricapi in 3D (docs/sotterraneo/elmo.md): per ogni base i modelli di eroi3d/copricapi.js (`CATALOGO_TESTA`) e i pregi (1..4) a cui
+// stanno; la rarità sceglie fra quelli del suo pregio (`pregio` di dati/pezzi.js), poi la chiave ne sceglie uno, sempre lo stesso
+export const COPRICAPI_3D = {
+  cuffia: [['cuffia-cuoio', 1, 4]],
+  elmo: [['elmo-calotta', 1, 2], ['elmo-nasale', 2, 2], ['elmo-paragnatici', 3, 3], ['grande-elmo', 3, 4], ['elmo-leggendario', 4, 4]],
+  'elmo-cornuto': [['elmo-cornuto', 1, 3], ['elmo-alato', 3, 4]],
+  cappuccio: [['cappuccio', 1, 2], ['fascia', 1, 3], ['cappello-feltro', 2, 4]],
+  cerchietto: [['corona-foglie', 1, 3], ['diadema', 3, 4]],
+  'cappello-mago': [['cappello-apprendista', 1, 2], ['cappello-stellato', 2, 3], ['cappello-arcano', 3, 4]],
+}
+const MODELLI_TESTA = new Set(Object.values(COPRICAPI_3D).flatMap(l => l.map(m => m[0])))
+
+/** Il copricapo 3D di un oggetto da testa (anche «elmo@9.m.vita»): { id (il modello), rarita }, o null. */
+export function copricapoDi(k) {
+  const c = cosaDi(k)
+  const tutti = c && c.dove === 'testa' ? COPRICAPI_3D[baseDi(k)] : null
+  if (!tutti || !tutti.length) return null
+  const rarita = RARITA[c.rarita] ? c.rarita : 'comune'
+  const [da, a] = RARITA[rarita].pregio
+  const giusti = tutti.filter(m => m[1] <= a && m[2] >= da)
+  const scelte = giusti.length ? giusti : tutti
+  let h = 2166136261
+  for (let i = 0; i < k.length; i++) h = Math.imul(h ^ k.charCodeAt(i), 16777619)
+  h = Math.imul(h ^ (h >>> 16), 0x45d9f3b)
+  return { id: scelte[((h ^ (h >>> 16)) >>> 0) % scelte.length][0], rarita }
+}
+
 /** Il modello della collezione per un'arma o uno scudo (la chiave dell'oggetto, anche «spada@7.m.fuoco»), o null. */
 export function modelloDi(k) {
   const c = cosaDi(k)
@@ -63,7 +90,7 @@ export function pezzo3dDi(k) {
  */
 export function dotazioneDi(roba = {}) {
   const mano = cosaDi(roba.mano) || {}
-  const d = { destra: null, sinistra: null, corpo: null, collo: null }
+  const d = { destra: null, sinistra: null, corpo: null, collo: null, testa: null }
   const p = roba.mano ? pezzo3dDi(roba.mano) : null
   if (p) { if (mano.famiglia === 'archi') d.sinistra = p; else d.destra = p }
   if (roba.mancina && mano.famiglia !== 'archi' && mano.mani !== 2) {
@@ -77,6 +104,8 @@ export function dotazioneDi(roba = {}) {
   // al collo solo le collane (gli anelli si vedono nelle anteprime)
   const collo = roba.collo ? pezzo3dDi(roba.collo) : null
   if (collo && collo.figura && eUnaCollana(collo.figura)) d.collo = collo
+  // in testa il copricapo, senza alone come la collana (eroe3d.js, `copri`); senza, l'eroe tiene il suo di serie
+  d.testa = copricapoDi(roba.testa)
   return d
 }
 
@@ -93,7 +122,7 @@ const eroeValido = e => (EROI.includes(e) ? e : 'cavaliere')
 
 /**
  * La chiave dell'anteprima di una cosa (`{ chiave, dove, … }` come la danno le viste), o null se non ha un modello 3D (pozioni,
- * torce, i gioielli senza figura…): `arma:<gettone>`, `scudo:<gettone>`, `gioiello:<gettone>`, `armatura:<tipo>:<pregio>:<eroe>:<corpo>`
+ * torce, i gioielli senza figura…): `arma:<gettone>`, `scudo:<gettone>`, `gioiello:<gettone>`, `copricapo:<modello>:<rarità>`, `armatura:<tipo>:<pregio>:<eroe>:<corpo>`
  * (l'armatura sta su chi la porta). Il gettone (roba3d-pura.js) dice figura, ripiego, rarità ed elemento: due pezzi con la stessa
  * figura e la stessa rarità sono la stessa anteprima.
  */
@@ -107,6 +136,8 @@ export function chiaveDellaCosa(cosa, eroe = 'cavaliere') {
     const d = dotazioneDi({ corpo: k })
     return d.corpo ? `armatura:${d.corpo.tipo}:${d.corpo.pregio}:${eroeValido(eroe)}:${gettoneCorpo(d.corpo)}` : null
   }
+  // il copricapo da solo, senza testa sotto: è la stessa anteprima per tutti e quattro
+  if (c.dove === 'testa') { const t = copricapoDi(k); return t ? `copricapo:${t.id}:${RARITA[t.rarita].lettera}` : null }
   if (c.dove === 'collo' || c.dove === 'dito') {
     const p = pezzo3dDi(k)
     return p && p.figura && famigliaDi(p.figura) === 'gioielli' ? `gioiello:${gettone(p)}` : null
@@ -121,10 +152,14 @@ export function consumabile3dDi(k) {
   return u ? { consumabile: u, rarita: raritaDelConsumabile(u), elemento: 'nessuno' } : null
 }
 
-/** L'eroe vestito: `eroe:<chi>:<destra>:<sinistra>:<corpo>:<collo>` (gettoni, `-` dove non c'è niente); `modo` 'figura' (intero) o 'busto'. */
+/**
+ * L'eroe vestito: `eroe:<chi>:<destra>:<sinistra>:<corpo>:<collo>` (gettoni, `-` dove non c'è niente), e `:<copricapo>` in coda solo se ne ha
+ * uno (le chiavi di chi non l'ha restano quelle di prima); `modo` 'figura' (intero) o 'busto'.
+ */
 export function chiaveDellEroe(eroe, roba = {}, modo = 'figura') {
   const d = dotazioneDi(roba)
-  return `${modo === 'busto' ? 'busto' : 'eroe'}:${eroeValido(eroe)}:${gettone(d.destra) || '-'}:${gettone(d.sinistra) || '-'}:${gettoneCorpo(d.corpo)}:${gettone(d.collo) || '-'}`
+  return `${modo === 'busto' ? 'busto' : 'eroe'}:${eroeValido(eroe)}:${gettone(d.destra) || '-'}:${gettone(d.sinistra) || '-'}:${gettoneCorpo(d.corpo)}:${gettone(d.collo) || '-'}` +
+    (d.testa ? `:${d.testa.id}` : '')
 }
 
 /** Un mostro dello scontro (viste/campo.js: tipo, grado, variante, grosso): `mostro:<tipo>:<grado>:<variante>` o `mostro:grosso:<chi>`. */
@@ -135,12 +170,13 @@ export function chiaveDelMostro(m) {
   return `mostro:${m.tipo}:${m.grado || 'comune'}:${m.variante || '-'}`
 }
 
-/** Il contrario delle chiavi: { tipo: 'arma'|'scudo'|'armatura'|'eroe'|'busto'|'mostro', … } o null. */
+/** Il contrario delle chiavi: { tipo: 'arma'|'scudo'|'copricapo'|'armatura'|'eroe'|'busto'|'mostro', … } o null. */
 export function leggiChiave(k) {
   const p = String(k || '').split(':')
   const nulla = x => (x === '-' || x === '' || x == null ? null : x)
   switch (p[0]) {
     case 'arma': case 'scudo': case 'gioiello': { const g = daGettone(p[1]); return g ? { tipo: p[0], pezzo: g } : null }
+    case 'copricapo': return MODELLI_TESTA.has(p[1]) ? { tipo: 'copricapo', id: p[1], rarita: RARITA_DA_LETTERA[p[2]] || 'comune' } : null
     case 'consumabile': return consumabileDi(p[1]) ? { tipo: 'consumabile', pezzo: { consumabile: p[1], rarita: RARITA_DA_LETTERA[p[2]] || 'comune', elemento: 'nessuno' } } : null
     case 'armatura': {
       if (!ARMATURE.includes(p[1])) return null
@@ -148,7 +184,8 @@ export function leggiChiave(k) {
       return { tipo: 'armatura', armatura: p[1], pregio: Number(p[2]) || 1, eroe: eroeValido(p[3]), corpo: { ...c, tipo: p[1], pregio: Number(p[2]) || 1 } }
     }
     case 'eroe': case 'busto':
-      return { tipo: p[0], eroe: eroeValido(p[1]), destra: daGettone(p[2]), sinistra: daGettone(p[3]), corpo: corpoDaGettone(p[4]), collo: daGettone(p[5]) }
+      return { tipo: p[0], eroe: eroeValido(p[1]), destra: daGettone(p[2]), sinistra: daGettone(p[3]), corpo: corpoDaGettone(p[4]), collo: daGettone(p[5]),
+               testa: MODELLI_TESTA.has(p[6]) ? { id: p[6], rarita: 'comune' } : null }
     // una persona del mondo di sopra (docs/sotterraneo/persone-3d.md): la chiave del modello; una che non c'è vale null al disegno
     case 'persona': return /^[a-z]+$/.test(p[1] || '') ? { tipo: 'persona', chi: p[1] } : null
     case 'mostro':
@@ -159,7 +196,7 @@ export function leggiChiave(k) {
 }
 
 /** Quanti pixel veri per ogni tipo di anteprima (le viste li mostrano a metà: un telefono ha il doppio dei pixel). */
-export const MISURE = { arma: [128, 128], scudo: [128, 128], gioiello: [128, 128], consumabile: [128, 128], armatura: [128, 128], eroe: [150, 176], busto: [96, 96], mostro: [96, 96], persona: [96, 96] }
+export const MISURE = { arma: [128, 128], scudo: [128, 128], gioiello: [128, 128], copricapo: [128, 128], consumabile: [128, 128], armatura: [128, 128], eroe: [150, 176], busto: [96, 96], mostro: [96, 96], persona: [96, 96] }
 
 /**
  * La coda delle anteprime: `disegna(chiave)` produce l'immagine (testo, o una promessa di testo: la codifica può finire dopo)

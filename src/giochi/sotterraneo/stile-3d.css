@@ -17,6 +17,7 @@
 .sot3d-vita b { display: block; height: 100%; background: linear-gradient(90deg, #e0644f, #ff9b7a) }
 .sot3d-sonno { font-size: 12px; opacity: .85; translate: 12px 4px }
 .sot3d-cerca { font-size: 20px; filter: drop-shadow(0 1px 2px #000) }
+.sot3d-cosa { font-size: 22px; filter: drop-shadow(0 1px 2px #000) }
 /* i galloni del caporale: due V d'oro */
 .sot3d-galloni { display: block; width: 10px; height: 9px; background:
   linear-gradient(135deg, transparent 38%, #f0c24a 38% 62%, transparent 62%) 0 0 / 5px 4.5px no-repeat,
