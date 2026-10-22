@@ -152,11 +152,13 @@ nota('livelli 2D → 3D:', forme.join(' '))
   f.cose.push({ i: 2, id: 'orto', g: 0, x: 30, y: 20, coltura: 'grano', seminato: T0 - 1000 })
   f.cose.push({ i: 3, id: 'mulino', g: 0, x: 40, y: 40, coda: [{ ricetta: 'mangime', da: T0 - 10 * 60000 }, { ricetta: 'pastone', da: T0 + 1000 }] })
   f.prossimo = 4
+  f.granaio.tartufi = 2          // le scorte di tartufi della 2D
   const s = statoDa2D(JSON.parse(JSON.stringify(f.serializza())), { ora: T0 })
   controlla('un campo di carote maturo dà una carota', s && s.merci.carota >= 1)
   uguale('un campo di grano appena seminato non dà niente', s.merci.grano, 0)
   uguale('il pastone non finito rende tre mais', s.merci.mais, 3)
   uguale('il mangime finito (il cane di casa) arriva nei prodotti, non è da regalare', [s.prodotti.mangime, s.daRegalare['scorta:mangime']].join(), '1,')
+  uguale('i tartufi 2D non passano (in 3D la pancetta è un\'altra merce): restano da regalare, mai monete né pancetta', [s.daRegalare['scorta:tartufi'], s.prodotti.pancetta, s.prodotti.tartufi].join(), '2,,')
   uguale('due orti: uno in mappa e uno nel magazzino', s.magazzino.campo, 1)
 }
 

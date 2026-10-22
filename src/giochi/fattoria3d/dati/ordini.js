@@ -59,7 +59,7 @@ export const minutiDi = chiede => Object.entries(chiede).reduce((n, [k, q]) => n
 /** Il tetto in esperienza di un ordine: quel che vale il tempo che costa. */
 export const tettoDi = chiede => MONETE_AL_MINUTO * minutiDi(chiede)
 /** Una merce 3D come la chiama la 2D: il raccolto è il prodotto del campo (`carota` → `carote`), una ricetta il suo prodotto (`foraggio_carote` → `foraggio`). */
-const prodotto2D = k => COLTURE[k] ? coltura2d(k).da : ((RICETTE[k] && RICETTE[k].da) || k)
+const prodotto2D = k => COLTURE[k] ? coltura2d(k).da : ((RICETTE[k] && (RICETTE[k].premioCome || RICETTE[k].da)) || k)
 /** Quanto rende un pezzo di quella merce, senza la base (la mongolfiera paga così, pezzo per pezzo): la formula della 2D. */
 export const premioDelPezzo = k => premioDelPezzo2D(prodotto2D(k))
 /** L'esperienza che rende un ordine: quella della 2D, sempre un intero, almeno 1. */

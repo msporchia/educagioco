@@ -19,6 +19,10 @@ import { Fattoria3d } from '../../src/giochi/fattoria3d/motore/fattoria3d.js'
 import { dettoDi } from '../../src/giochi/fattoria3d/scena3d/detti.js'
 import { dettaglioDi } from '../../src/giochi/fattoria3d/viste/inventario-puro.js'
 import { SPECIE, profiloBestia, stadioBestia } from '../../src/giochi/fattoria3d/scena3d/bestie-puro.js'
+import { siloDi, guastiDeiSilos } from '../../src/giochi/fattoria3d/dati/silos.js'
+import { merceDaCassa, guastiDellaMongolfiera } from '../../src/giochi/fattoria3d/dati/mongolfiera.js'
+import { premioDelPezzo, chiedibili, guastiDegliOrdini } from '../../src/giochi/fattoria3d/dati/ordini.js'
+import { eMerce } from '../../src/giochi/fattoria3d/dati/vicini.js'
 import { normalizza } from '../../src/giochi/fattoria3d/motore/stato.js'
 import { controlla, uguale, stessaLista, riassunto } from '../aiuto/verifica.mjs'
 
@@ -68,7 +72,7 @@ const IDS = ['beverone', 'zuppa', 'zuppa_orto', 'pastura']
     const d = RICETTE_2D.find(x => x.id === ric), A = ANIMALI[t]
     uguale(`${t}: in 2D è il recinto «${dove2d}»`, d.dove, dove2d)
     uguale(`${t}: mangia quello che mangia in 2D`, JSON.stringify([A.mangia, A.pasti]), JSON.stringify([Object.keys(d.prende), Object.values(d.prende)[0]]))
-    uguale(`${t}: dà il prodotto della 2D`, A.prodotto, d.da)
+    uguale(`${t}: dà il prodotto della 2D (il porcile: tartufi in 2D, pancetta in 3D)`, A.prodotto, t === 'porcile' ? 'pancetta' : d.da)
     controlla(`${t}: è un pezzo del catalogo, produttivo e di animali`, PEZZI[t] && PEZZI[t].produttivo === true && PEZZI[t].categoria === 'animali')
     controlla(`${t}: ha il disegno d'atlante`, !!ATLANTE[DISEGNI[t]], DISEGNI[t])
     controlla(`${t}: tutto ciò che mangia lo fa il pentolone`, A.mangia.every(k => RICETTE[k] && RICETTE[k].dove === 'pentolone'))
@@ -77,12 +81,15 @@ const IDS = ['beverone', 'zuppa', 'zuppa_orto', 'pastura']
     controlla(`${t}: un solo pezzo produttivo al suo livello`, roba(PEZZI[t].liv).pezzi.filter(p => p.produttivo).length + roba(PEZZI[t].liv).edifici.length === 1)
   }
   uguale('le anatre fanno le uova di sempre, le capre il latte di sempre', [ANIMALI.anatre.prodotto, ANIMALI.capre.prodotto].join(), 'uova,latte')
-  uguale('i maiali fanno i tartufi, la merce nuova (faccia e nome della 2D)', [PRODOTTI_ANIMALI.tartufi.pezzo, PRODOTTI_ANIMALI.tartufi.nome, PRODOTTI_ANIMALI.tartufi.emoji].join(), [PRODOTTI.tartufi.pezzo, PRODOTTI.tartufi.nome, PRODOTTI.tartufi.emoji].join())
-  controlla('i tartufi non hanno un\'altra faccia: sono ritagliati nell\'atlante', !!ATLANTE[PRODOTTI_ANIMALI.tartufi.pezzo])
+  // DEVIAZIONE DICHIARATA dalla 2D (decisione dell'utente del 22/10/2026): il tartufo sembrava una cacca, come Hay Day il maiale fa la PANCETTA; l'id è rinominato (2D `tartufi`, 3D `pancetta`).
+  uguale('i maiali fanno la pancetta, nome e emoji suoi, nessuna faccia d\'atlante', [PRODOTTI_ANIMALI.pancetta.nome, PRODOTTI_ANIMALI.pancetta.emoji, PRODOTTI_ANIMALI.pancetta.pezzo || '-'].join(), 'Pancetta,🥓,-')
+  controlla('in 3D non esiste più un id tartufi', !PRODOTTI_ANIMALI.tartufi && !RICETTE.tartufi && ANIMALI.porcile.prodotto === 'pancetta' && RICETTE_2D.find(x => x.id === 'tartufi').da === 'tartufi')
+  controlla('la pancetta aspetta il suo sprite e nell\'atlante non c\'è ancora', !!PRODOTTI_ANIMALI.pancetta.aspetta && !ATLANTE[PRODOTTI_ANIMALI.pancetta.aspetta])
+  controlla('nessun nome o emoji «tartufo» resta visibile in 3D', ![...Object.values(PRODOTTI_ANIMALI), ...Object.values(RICETTE)].some(m => /tartuf/i.test(m.nome) || m.emoji === '🍄'))
   // i tempi sono in minuti veri e rispettano l'ordine della 2D (anatre 6 min, capre 12, maiali 20)
   controlla('i tempi seguono l\'ordine della 2D', ANIMALI.anatre.ms < ANIMALI.capre.ms && ANIMALI.capre.ms < ANIMALI.porcile.ms)
-  controlla('i tartufi non superano il tetto d\'attesa in catena', catenaMs('tartufi') <= TETTO_ATTESA_MS, String(catenaMs('tartufi')))
-  controlla('il conto dei tempi vede il mangime nuovo', msDelProdotto('tartufi') === ANIMALI.porcile.ms + lavoroDelMangime('zuppa', 2))
+  controlla('la pancetta non supera il tetto d\'attesa in catena', catenaMs('pancetta') <= TETTO_ATTESA_MS, String(catenaMs('pancetta')))
+  controlla('il conto dei tempi vede il mangime nuovo', msDelProdotto('pancetta') === ANIMALI.porcile.ms + lavoroDelMangime('zuppa', 2))
   // le bestie in più dentro: prezzo che sale, fino alla capienza, come per le altre
   for (const t of Object.keys(RECINTI)) {
     const n = CORTILE[t].posti, prezzi = Array.from({ length: n }, (_, k) => prezzoDellaBestia(t, k + 1))
@@ -149,8 +156,8 @@ const IDS = ['beverone', 'zuppa', 'zuppa_orto', 'pastura']
   f.s.prodotti.zuppa = pastoni
   controlla('il pastone nutre un maiale ogni due', f.nutriBestie(po.id).ok && f.s.prodotti.zuppa === undefined)
   t.ora += ANIMALI.porcile.ms; const rp = f.raccogliProdotti(po.id)
-  controlla('i maiali danno i tartufi, merce nuova', rp.ok && rp.prodotto === 'tartufi' && f.s.prodotti.tartufi === 1)
-  controlla('i tartufi si possono chiedere ai vicini ma non sono mangime', !RICETTE.tartufi && PRODOTTI_ANIMALI.tartufi.dove === 'porcile')
+  controlla('i maiali danno la pancetta, merce nuova', rp.ok && rp.prodotto === 'pancetta' && f.s.prodotti.pancetta === 1)
+  controlla('la pancetta si può chiedere ai vicini ma non è mangime', !RICETTE.pancetta && PRODOTTI_ANIMALI.pancetta.dove === 'porcile')
 
   // le capre
   controlla('il recinto delle capre si compra e si mette', f.compraPezzo('capre').ok && metti(f, 'capre').ok)
@@ -180,7 +187,7 @@ const IDS = ['beverone', 'zuppa', 'zuppa_orto', 'pastura']
     uguale(`${sp}: stadi dallo stato`, [stadioBestia('fame', 0.9), stadioBestia('lavora', 0.4), stadioBestia('pronta', 1)].join(), '0,1,2')
   }
   const m0 = profiloBestia('maiale', 0, 0), m1 = profiloBestia('maiale', 1, 0.5), m2 = profiloBestia('maiale', 2, 1)
-  controlla('maiale: grufola solo al lavoro, il mucchio di terra cresce e il tartufo spunta da pronto', m0.grufola === 0 && m1.grufola === 1 && m2.grufola === 0 && m0.mucchio === 0 && m1.mucchio > 0.2 && m2.mucchio === 1 && m1.dono === 0 && m2.dono === 1)
+  controlla('maiale: grufola solo al lavoro, il mucchio di terra cresce e la pancetta spunta da pronta', m0.grufola === 0 && m1.grufola === 1 && m2.grufola === 0 && m0.mucchio === 0 && m1.mucchio > 0.2 && m2.mucchio === 1 && m1.dono === 0 && m2.dono === 1)
   controlla('maiale: le orecchie cadono a fame e la coda è un ricciolo solo da sazio', m0.orecchie > m2.orecchie && m0.coda === 0 && m2.coda === 1)
   const c0 = profiloBestia('capra', 0, 0), c1 = profiloBestia('capra', 1, 0.5), c2 = profiloBestia('capra', 2, 1)
   controlla('capra: la mammella cresce, la pallida sparisce, saltella solo da pronta', c0.mammella < c1.mammella && c1.mammella < c2.mammella && c0.pallida === 1 && c2.pallida === 0 && c0.salto === 0 && c2.salto === 1)
@@ -233,6 +240,22 @@ const IDS = ['beverone', 'zuppa', 'zuppa_orto', 'pastura']
   pt.userData.anima(0.016, 1.3)
   const bx = new THREE.Box3().setFromObject(pt)
   controlla('pentolone: sta nell\'impronta 3×3', bx.min.x > -1.6 && bx.max.x < 1.6 && bx.min.z > -1.6 && bx.max.z < 1.6, [bx.min.x, bx.max.x, bx.min.z, bx.max.z].map(x => x.toFixed(2)).join(' '))
+}
+
+/* ══════════ la pancetta ha una catena (ricette solo 3D, numeri provvisori: dati/pancetta.js) ══════════ */
+{
+  const PIATTI = { uova_pancetta: ['conserviera', 'uova'], panino_pancetta: ['panificio', 'pane'], ravioli_pancetta: ['pasticceria', 'pasta'] }
+  for (const [id, [dove, altro]] of Object.entries(PIATTI)) {
+    const r = RICETTE[id]
+    controlla(`${id}: è solo 3D, nella macchina ${dove}, con la pancetta e ${altro}`, !!r && r.solo3d === true && r.dove === dove && r.ing.pancetta === 1 && r.ing[altro] >= 1)
+    controlla(`${id}: tempo in minuti veri, costo del gesto e livello dal porcile in poi`, r.ms >= 5 * 60000 && r.ms <= 12 * 60000 && r.costo >= 1 && r.costo <= 2 && livelloDellaRicetta(id) >= PEZZI.porcile.liv)
+    controlla(`${id}: sta nella dispensa e paga come il piatto 2D che somiglia`, siloDi(id) === 'bottega' && !!PRODOTTI[r.premioCome] && premioDelPezzo(id) > 0, String(premioDelPezzo(id)))
+    controlla(`${id}: si chiede al banco e ai vicini, e sale in mongolfiera solo con due lavorazioni (uova e pancetta ne ha una)`, chiedibili(ULTIMO).prodotti.includes(id) && eMerce(id) && merceDaCassa(id) === (id !== 'uova_pancetta'))
+  }
+  controlla('la pancetta sta nella stalla', siloDi('pancetta') === 'stalla')
+  const vecchio = normalizza({ prodotti: { tartufi: 3, pancetta: 2, xyz: 5 } })
+  uguale('un vecchio stato con i tartufi si legge senza eccezioni: la scorta si perde e nessun id sconosciuto resta', Object.keys(vecchio.prodotti).join() + '|' + vecchio.prodotti.pancetta, 'pancetta|2')
+  stessaLista('nessun guasto nei dati con le ricette nuove', [...guastiDelleRicette(COLTURE, EDIFICI), ...guastiDeiLivelli(), ...guastiDellaScala(), ...guastiDeiSilos(), ...guastiDellaMongolfiera(), ...guastiDegliOrdini()], [])
 }
 
 riassunto('Fattoria 3D — pentolone, anatre, maiali e capre')

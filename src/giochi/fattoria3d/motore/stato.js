@@ -5,7 +5,7 @@ import { lottoDiversoDa } from '../dati/biomi.js'
 import { CHIAVI_COLTURE, TESSERE } from '../dati/colture.js'
 import { TIPI_DI_EDIFICIO, EDIFICI, PEZZI } from '../dati/catalogo.js'
 import { TIPI_DI_MACCHINA, MACCHINE, RICETTE, nuovoId } from '../dati/ricette.js'
-import { ANIMALI } from '../dati/animali.js'
+import { ANIMALI, PRODOTTI_ANIMALI } from '../dati/animali.js'
 import { MANGIMI_SENZA_RICETTA } from '../dati/cortile2.js'
 import { ruotabile, rotLetta } from '../dati/rotazione.js'
 import { POSTI } from '../dati/ordini.js'
@@ -95,6 +95,9 @@ export function bestieInForma(tipo, letto) {
 const numero = (v, d = 0) => Number.isFinite(v) && v >= 0 ? v : d
 const oggetto = v => v && typeof v === 'object' && !Array.isArray(v) ? v : {}
 
+/** Una chiave che può stare in `prodotti`: una ricetta, un prodotto delle bestie o un mangime senza ricetta. */
+const merceDiProdotti = k => !!(RICETTE[k] || PRODOTTI_ANIMALI[k] || MANGIMI_SENZA_RICETTA[k])
+
 /** Rimette in forma uno stato letto (o niente): mai un'eccezione, mai un campo che manca. */
 export function normalizza(letto) {
   const base = statoIniziale()
@@ -102,7 +105,8 @@ export function normalizza(letto) {
   const s = base
   for (const k of CHIAVI_COLTURE) s.merci[k] = numero(oggetto(letto.merci)[k])
   for (const [vecchio, n] of Object.entries(oggetto(letto.prodotti))) {
-    if (numero(n) > 0) { const k = nuovoId(vecchio); s.prodotti[k] = (s.prodotti[k] || 0) + numero(n) }
+    const k = nuovoId(vecchio)
+    if (numero(n) > 0 && merceDiProdotti(k)) s.prodotti[k] = (s.prodotti[k] || 0) + numero(n)         // un id che la 3D non conosce (i `tartufi` di prima) si perde, mai un'eccezione
   }
   s.lana = numero(letto.lana)
   s.esperienza = numero(letto.esperienza)

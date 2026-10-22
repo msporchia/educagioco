@@ -8,7 +8,7 @@ import { COLTURE } from './colture.js'
 import { PECORE } from './regole.js'
 import { PESCI } from './pesca.js'
 import { lavoroDelMangime, MANGIMI } from './mangime.js'
-import { ANIMALI_DEL_CORTILE, TARTUFI } from './cortile.js'
+import { ANIMALI_DEL_CORTILE, PANCETTA } from './cortile.js'
 import { ANIMALI_DEL_CORTILE_2, PRODOTTI_DEL_CORTILE_2, FANNO_LANA_2 } from './cortile2.js'
 import { bestia2d, msDaMinuti } from './parita2d.js'
 
@@ -55,7 +55,7 @@ export function prezzoDellaBestia(tipo, n) {
 export const PRODOTTI_ANIMALI = {
   uova:  { nome: 'Uova',  emoji: '🥚', pezzo: 'merce_uova', dove: 'pollaio', anche: ['anatre'] },     // `anche`: gli altri pezzi che fanno la stessa merce (come in 2D, `da: 'uova'`)
   latte: { nome: 'Latte', emoji: '🥛', pezzo: 'latte', dove: 'stalla', anche: ['capre'] },
-  tartufi: TARTUFI,
+  pancetta: PANCETTA,
   ...PRODOTTI_DEL_CORTILE_2,  // miele (arnie) e concime (asini)
   ...PESCI,                   // il pesce si pesca dal molo, non lo fa una bestia: ha `ms` suo (dati/pesca.js)
 }
@@ -101,7 +101,7 @@ export function guastiDegliAnimali(pezzi) {
   }
   for (const [k, p] of Object.entries(PRODOTTI_ANIMALI)) {
     if (COLTURE[k]) g.push(`${k}: un prodotto con l'id di una coltura`)
-    if (!p.nome || !p.emoji || !p.pezzo || !(ANIMALI[p.dove] || PESCI[k])) g.push(`${k}: nome, emoji o pezzo sbagliati`)
+    if (!p.nome || !p.emoji || !(p.pezzo || p.aspetta) || !(ANIMALI[p.dove] || PESCI[k])) g.push(`${k}: nome, emoji o pezzo sbagliati`)
   }
   return g
 }

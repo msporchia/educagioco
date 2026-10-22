@@ -34,19 +34,25 @@ uguale('una chiave sconosciuta ha l\'emoji di ripiego e nessun pezzo', [emojiDi(
 // stesso id o stesso raccolto = stessa faccia e stesso nome della 2D
 for (const k of merci) {
   const d = PRODOTTI[id2d(k)]
-  if (!d) continue
+  if (!d) continue          // la pancetta (in 2D `tartufi`) e i piatti con la pancetta non hanno omonimi: sono SOLO_3D qui sotto
   const m = merceDi(k)
   const r2d = RICETTE_2D.find(x => x.id === k)           // la 2D ha il nome della merce e, per una ricetta, quello più lungo della sua scheda
   controlla(`${k}: il nome è quello della 2D (la merce o la scheda della ricetta)`, m.nome === d.nome || (!!r2d && m.nome === r2d.nome), `${m.nome} / ${d.nome}`)
   uguale(`${k}: la faccia è quella della 2D`, m.pezzo || m.aspetta, d.pezzo || d.aspetta)
 }
 // le sole che non hanno un'omonima in 2D sono quelle che il nome stesso racconta
-controlla('ogni ricetta 3D esiste in 2D con lo stesso id (nessuna ricetta inventata)', Object.keys(RICETTE).every(k => RICETTE_2D.some(r => r.id === k)), Object.keys(RICETTE).filter(k => !RICETTE_2D.some(r => r.id === k)).join())
+// Le deviazioni dichiarate (decisione dell'utente del 22/10/2026: il tartufo del maiale sembrava una cacca, come Hay Day fa la pancetta): l'id è `pancetta` (non `tartufi`, scorte vecchie perse), con nome
+// e emoji suoi, e tre ricette che la usano esistono SOLO in 3D (dati/pancetta.js, numeri provvisori).
+const SOLO_3D = ['panino_pancetta', 'ravioli_pancetta', 'uova_pancetta']
+uguale('le ricette solo 3D sono solo le dichiarate', Object.keys(RICETTE).filter(k => RICETTE[k].solo3d).sort().join(), SOLO_3D.join())
+uguale('la pancetta è la merce del maiale (in 2D `tartufi`: id rinominato)', [PRODOTTI_ANIMALI.pancetta.nome, PRODOTTI_ANIMALI.pancetta.emoji, PRODOTTI_ANIMALI.pancetta.dove].join(), 'Pancetta,🥓,porcile')
+controlla('ogni ricetta 3D esiste in 2D con lo stesso id (nessuna ricetta inventata) tranne le dichiarate', Object.keys(RICETTE).every(k => SOLO_3D.includes(k) || RICETTE_2D.some(r => r.id === k)), Object.keys(RICETTE).filter(k => !SOLO_3D.includes(k) && !RICETTE_2D.some(r => r.id === k)).join())
 controlla('ogni coltura 3D esiste in 2D', Object.keys(COLTURE).every(k => COLTURE_2D.some(c => c.id === id2d(k))))
 
 // ingredienti e quantità: gli stessi della 2D (tradotti), senza eccezioni
 const in3d = o => Object.fromEntries(Object.entries(o).map(([k, n]) => [k === 'fieno' ? 'erba' : (Object.keys(COME_2D).find(x => COME_2D[x] === k) || k), n]))      // l'erba medica è la coltura `erba` che dà `fieno`
 for (const [k, r] of Object.entries(RICETTE)) {
+  if (SOLO_3D.includes(k)) continue
   const d = RICETTE_2D.find(x => x.id === k)
   uguale(`${k}: ingredienti e quantità come in 2D`, JSON.stringify(Object.entries(r.ing).sort()), JSON.stringify(Object.entries(in3d(d.prende)).sort()))
   uguale(`${k}: il tempo è quello della 2D (minuti veri)`, r.ms, d.minuti * 60000)
@@ -57,9 +63,9 @@ uguale('ogni ricetta rende uno (N → 1): le quantità sono interi positivi', Ob
 for (const [t, m] of Object.entries(MACCHINE)) {
   const sorella = SORELLA[t]
   controlla(`${t}: la sorella ${sorella} esiste in 2D`, RICETTE_2D.some(r => r.dove === sorella))
-  for (const k of Object.keys(m.ricette)) uguale(`${t} → ${k}: in 2D la fa ${sorella}`, RICETTE_2D.find(r => r.id === k).dove, sorella)
+  for (const k of Object.keys(m.ricette).filter(k => !SOLO_3D.includes(k))) uguale(`${t} → ${k}: in 2D la fa ${sorella}`, RICETTE_2D.find(r => r.id === k).dove, sorella)
 }
-controlla('nessuna catena 3D supera la profondità della 2D', Object.entries(RICETTE).every(([k, r]) => profonditaDi(r.da || k) < 8))
+controlla('nessuna catena 3D supera la profondità della 2D', Object.entries(RICETTE).every(([k, r]) => SOLO_3D.includes(k) || profonditaDi(r.da || k) < 8))
 
 // i vecchi id non sono merci di oggi, e portano a una ricetta
 controlla('i vecchi id non sono merci di oggi', Object.keys(MERCI_VECCHIE).every(v => !merceDi(v)))

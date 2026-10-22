@@ -13,6 +13,7 @@ import { numeriRicetta as N } from './parita2d.js'
 import { PRODOTTI_ANIMALI, LANA } from './animali.js'
 import { RICETTE_FIENILE, RICETTE_PENTOLONE, MANGIMI_SENZA_RICETTA } from './mangime.js'
 import { RICETTA_MERENDA, RICETTA_CARAMELLE } from './cortile2.js'
+import { RICETTE_PANCETTA as P } from './pancetta.js'
 
 import { POSTI_DI_PARTENZA } from './posti.js'
 
@@ -54,12 +55,14 @@ export const MACCHINE = {
     biscotti:    { nome: 'Biscotti',        emoji: '🍪', pezzo: 'merce_biscotti',    ing: { farina: 1, burro: 1, zucchero: 1 }, ...N('biscotti') },
     pizza:       { nome: 'Pizza',           emoji: '🍕', pezzo: 'merce_pizza',       ing: { farina: 1, salsa: 1, formaggio: 1 }, ...N('pizza') },
     lasagne:     { nome: 'Lasagne',         emoji: '🍱', pezzo: 'merce_lasagne',     ing: { pasta: 1, salsa: 1, formaggio: 1 }, ...N('lasagne') },
+    ravioli_pancetta: P.ravioli_pancetta,                              // solo 3D (dati/pancetta.js)
   } },
   panificio: { posti: FORNO_POSTI, ricette: {
     pane:        { nome: 'Pane',            emoji: '🍞', pezzo: 'merce_pane',        ing: { farina: 2 }, ...N('pane') },
     torta:       { nome: 'Torta',           emoji: '🎂', pezzo: 'merce_torta',       ing: { farina: 2, uova: 1, burro: 1 }, ...N('torta') },
     crostata:    { nome: 'Crostata di fragole', emoji: '🍰', pezzo: 'merce_crostata', ing: { farina: 1, fragola: 1, burro: 1 }, ...N('crostata') },
     merenda:     RICETTA_MERENDA,                          // le fragole al miele (giro G5: il miele è delle arnie)
+    panino_pancetta: P.panino_pancetta,                    // solo 3D (dati/pancetta.js)
   } },
   caseificio: { posti: FORNO_POSTI, ricette: {
     burro:       { nome: 'Burro',           emoji: '🧈', pezzo: 'merce_burro',       ing: { latte: 1 }, ...N('burro') },
@@ -71,6 +74,7 @@ export const MACCHINE = {
     minestrone:  { nome: 'Minestrone',      emoji: '🍜', pezzo: 'merce_minestrone',  ing: { patata: 1, carota: 1, cavolfiore: 1 }, ...N('minestrone') },
     conserva:    { nome: 'Conserva d\'orto', emoji: '🥗', pezzo: 'merce_conserva', ing: { melanzana: 1, peperone: 1, zucca: 1 }, ...N('conserva') },
     parmigiana:  { nome: 'Parmigiana di melanzane', emoji: '🥘', aspetta: 'merce_parmigiana', ing: { melanzana: 2, salsa: 1, formaggio: 1 }, ...N('parmigiana') },
+    uova_pancetta: P.uova_pancetta,                        // solo 3D (dati/pancetta.js)
   } },
   gelateria: { posti: FORNO_POSTI, ricette: {
     succo:       { nome: 'Succo',           emoji: '🧃', pezzo: 'merce_succo',       ing: { carota: 1, barbabietola: 1 }, ...N('succo') },

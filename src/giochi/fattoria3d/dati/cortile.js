@@ -34,7 +34,7 @@ export const PEZZI_DEL_CORTILE = {
 }
 
 // ── le bestie nuove, nella forma di `ANIMALI` (dati/animali.js). Cosa mangiano e quanto è della 2D: anatre 1 verdure lesse → uova d'anatra,
-//    maiali 2 pastone → pancetta (id `tartufi`), capre 1 verdura fresca → latte di capra. Uova e latte sono gli stessi `uova` e `latte` di pollaio e stalla (come in 2D: `da: 'uova'`). ──
+//    maiali 2 pastone → pancetta (in 2D `tartufi`), capre 1 verdura fresca → latte di capra. Uova e latte sono gli stessi `uova` e `latte` di pollaio e stalla (come in 2D: `da: 'uova'`). ──
 export const ANIMALI_DEL_CORTILE = {
   anatre: {
     bestia: 'anatra', bestie: 'anatre', emoji: '🦆', prodotto: 'uova', evento: 'uovo',
@@ -42,7 +42,7 @@ export const ANIMALI_DEL_CORTILE = {
     posti: NUMERI_DEL_CORTILE.anatre.posti, prezzoBestia: NUMERI_DEL_CORTILE.anatre.prezzoBestia, rincaroBestia: NUMERI_DEL_CORTILE.anatre.rincaroBestia,
   },
   porcile: {
-    bestia: 'maiale', bestie: 'maiali', emoji: '🐖', prodotto: 'tartufi', evento: 'tartufo',
+    bestia: 'maiale', bestie: 'maiali', emoji: '🐖', prodotto: 'pancetta', evento: 'pancetta',
     ms: NUMERI_DEL_CORTILE.porcile.ms, costo: bestia2d('porcile').costo, mangia: ['zuppa'], pasti: 2,
     posti: NUMERI_DEL_CORTILE.porcile.posti, prezzoBestia: NUMERI_DEL_CORTILE.porcile.prezzoBestia, rincaroBestia: NUMERI_DEL_CORTILE.porcile.rincaroBestia,
   },
@@ -53,6 +53,6 @@ export const ANIMALI_DEL_CORTILE = {
   },
 }
 
-/** L'unica merce nuova delle bestie: l'id resta `tartufi` (chiave di salvataggi e di parita2d.js), ma in 3D è la PANCETTA 🥓 (come Hay Day: il tartufo
-    sembrava una cacca). Senza `pezzo`: la faccia è l'emoji (Faccia.vue). Vedi docs/fattoria3d/cortile-e-pentolone.md. */
-export const TARTUFI = { nome: 'Pancetta', emoji: '🥓', dove: 'porcile' }
+/** L'unica merce nuova delle bestie: l'id è `pancetta` (in 2D è `tartufi`, la ricetta 2D del porcile resta in dati/parita2d.js: la mappa è esplicita; il tartufo sembrava una cacca, come Hay Day
+    il maiale fa la pancetta; le scorte 2D di tartufi non passano: migra.js le lascia «da regalare»). Senza `pezzo` (`aspetta`: lo sprite d'atlante non c'è ancora): la faccia è l'emoji (Faccia.vue). Le tre ricette che la usano: dati/pancetta.js (numeri provvisori). Vedi docs/fattoria3d/cortile-e-pentolone.md. */
+export const PANCETTA = { nome: 'Pancetta', emoji: '🥓', aspetta: 'merce_pancetta', silo: 'stalla', dove: 'porcile' }
