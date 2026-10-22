@@ -11,7 +11,7 @@ import { POSTI_MASSIMI, postiInForma, prezzoDelPosto } from '../dati/posti.js'
 import { livelloPer, livelloDelPezzo, livelloDellaColtura, livelloDellaRicetta } from '../dati/livelli.js'
 import { COSTI, PECORE, prezzoDelLotto } from '../dati/regole.js'
 import { generaLotto } from '../dati/lotti.js'
-import { biomaDi, biomaVecchio, acquaDelLotto, tipoAcqua } from '../dati/biomi.js'
+import { biomaDiGen, acquaDelLotto, tipoAcqua } from '../dati/biomi.js'
 import { provaPesca, lanciaLenza, ritiraPesca, bancoDi, lenzeInAcqua, ripulisciPesca, riesaminaPesca, postiDiPesca } from './pesca.js'
 import { ANIMALI, CORTILE, LANA, prezzoDellaBestia } from '../dati/animali.js'
 import { normalizza, nuoveTessere } from './stato.js'
@@ -51,7 +51,8 @@ export class Fattoria3d {
     this.alberiPerId = new Map(); this.ostacoliPerId = new Map(); this.ostacoloPerCella = new Map()
     this.lottiAperti = new Map()                   // chiave del lotto → { l, dati }
     this._acquaCache = new Map()
-    this.vecchi = new Set(this.s.vecchi)           // i lotti comprati prima della geografia grande dove ora c'è il mare o un lago: si generano alla vecchia
+    this.vecchi = new Set(this.s.vecchi)           // i lotti comprati prima della geografia grande dove ora c'è il mare o un lago: si generano alla vecchia (generazione 0)
+    this.vecchi1 = new Set(this.s.vecchi1)         // i lotti comprati con i laghetti-pozzanghera, dove ora c'è un lago naturale: restano pozzanghere (generazione 1; docs/fattoria3d/laghi.md)
     for (const k of this.propri) this._apriAnello(lottoDaChiave(k))
     this.tick()
   }
@@ -96,7 +97,9 @@ export class Fattoria3d {
     return (this._comprabili = [...out.values()])
   }
   /** Il bioma di un lotto, come lo vede il motore (un lotto di un salvataggio di prima resta quello di prima). */
-  biomaDi(l) { return this.vecchi.has(l.id) ? biomaVecchio(l.a, l.b) : biomaDi(l.a, l.b) }
+  /** La generazione di un lotto: 0 e 1 per i lotti di un salvataggio vecchio che restano com'erano, 2 per gli altri. */
+  genDi(l) { return this.vecchi.has(l.id) ? 0 : this.vecchi1.has(l.id) ? 1 : 2 }
+  biomaDi(l) { return biomaDiGen(l.a, l.b, this.genDi(l)) }
   /** Apre (genera) i lotti entro due lotti da `l`: alberi, sassi, acqua. Vale per i lotti tuoi e per l'anello che si vede davanti. */
   _apriAnello(l) {
     for (let db = -2; db <= 2; db++) for (let da = -2; da <= 2; da++) {
@@ -105,7 +108,7 @@ export class Fattoria3d {
     }
   }
   _apri(l) {
-    const dati = generaLotto(l.a, l.b, { vecchio: this.vecchi.has(l.id) })
+    const dati = generaLotto(l.a, l.b, { vecchio: this.genDi(l) })
     this.lottiAperti.set(l.k, { l, dati })
     for (const a of dati.alberi) {
       if (this.tagliati.has(a.n)) a.tagliato = true
@@ -141,7 +144,7 @@ export class Fattoria3d {
   _acquaDi(l) {
     let a = this._acquaCache.get(l.k)
     if (a === undefined) {
-      const celle = acquaDelLotto(l, this.vecchi.has(l.id))
+      const celle = acquaDelLotto(l, this.genDi(l))
       a = celle.length ? new Set(celle.map(([i, j]) => chiave(i, j))) : null
       this._acquaCache.set(l.k, a)
     }

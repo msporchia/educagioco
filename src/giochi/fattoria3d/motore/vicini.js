@@ -10,7 +10,7 @@ import { PRODOTTI_ANIMALI } from '../dati/animali.js'
 import { PEZZI, EDIFICI } from '../dati/catalogo.js'
 import { lottoDi, dentro, chiave, idCella, cellaDa, cellaDaId, stradeDiSerie, lottoPerId } from '../dati/mondo.js'
 import { generaLotto } from '../dati/lotti.js'
-import { biomaDi, biomaVecchio } from '../dati/biomi.js'
+import { lottoDiversoDa } from '../dati/biomi.js'
 import { premioDi } from '../dati/ordini.js'
 import { VICINI, VERSIONE_VISITA, normalizzaFattoriaVisitabile, merce, livelloDellaMerce, prezzoPer, premioMassimo,
          POSTO_CASSA, POSTO_MERCATO, MISURE_POSTI, RINNOVO_CASSA_MS, RINNOVO_MERCATO_MS } from '../dati/vicini.js'
@@ -223,7 +223,7 @@ export class Vicini {
 
 /** Lo stato di una `Fattoria3d` che rappresenta lo snapshot: campi com'erano, bestie al lavoro, e dentro la terra sua niente alberi né sassi. */
 /** Un lotto di una fattoria di prima della geografia grande, dove ora cambia qualcosa (mare, costa, lago): resta com'era (`normalizza` lo segna `vecchio`). */
-const vecchio = l => biomaDi(l.a, l.b) !== biomaVecchio(l.a, l.b)
+const vecchio = l => lottoDiversoDa(l, 0)
 
 export function statoDaSnapshot(f) {
   const lotti = Object.fromEntries(f.lotti.map(id => [id, true]))
