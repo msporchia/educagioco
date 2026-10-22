@@ -131,7 +131,12 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
     cam.salta()
     azione.annulla()
     scaldaPiano(corsa)
+    // dove il telefono compila in parallelo (KHR_parallel_shader_compile) gli shader del piano si chiedono subito e si disegna quando
+    // sono pronti (al più un secondo): intanto resta il quadro di prima, e la pagina non si ferma. Senza, il primo disegno li aspetta
+    if (renderer.extensions.has('KHR_parallel_shader_compile')) { compila(scena); attesaShader = performance.now() + 1000 }
   }
+  let attesaShader = 0
+  const shaderPronti = () => renderer.info.programs.every(p => p.isReady())
 
   // Il riscaldamento degli shader (docs/sotterraneo/prestazioni-3d.md, «Shader e prima apparizione»): un secondo dopo il primo disegno
   // di un piano, un pezzo per fotogramma (mai mentre si racconta un colpo), quello che il primo disegno non ha compilato: la scena intera (le cose ancora spente: gli anelli e le
@@ -275,6 +280,7 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
     ctx.misure.msJs = performance.now() - t0
     // l'ombra a fotogrammi alterni (fascia bassa): la mappa vecchia resta giusta con la sua luce, va solo un fotogramma indietro
     if (ACCESI.ombre && ACCESI.ombraOgni > 1) renderer.shadowMap.needsUpdate = (giri++ % ACCESI.ombraOgni) === 0
+    if (attesaShader) { if (performance.now() < attesaShader && !shaderPronti()) return; attesaShader = 0 }
     const t1 = performance.now()
     if (post) post.disegna(scena, cam.camera); else renderer.render(scena, cam.camera)
     ctx.misure.msDisegno = performance.now() - t1
