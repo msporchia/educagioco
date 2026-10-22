@@ -41,9 +41,11 @@ function pezzo (g, geometria, m, x, y, z, sx = 1, sy = 1, sz = 1) {
   const o = new THREE.Mesh(geometria, m); o.position.set(x, y, z); o.scale.set(sx, sy, sz); o.castShadow = true; o.receiveShadow = true; g.add(o); return o
 }
 const scatola = (g, w, h, d, m, x = 0, y = 0, z = 0) => pezzo(g, G(`b${w},${h},${d}`, () => new THREE.BoxGeometry(w, h, d)), m, x, y, z)
-const sfera = (g, r, m, x = 0, y = 0, z = 0, sx = 1, sy = 1, sz = 1) => {
-  const geo = G(`s${r}`, () => new THREE.SphereGeometry(r, 10, 8)), o = pezzo(g, geo, m, x, y, z, sx, sy, sz)
-  o.userData.lod = { alta: geo, bassa: () => G(`s${r}:lod`, () => new THREE.SphereGeometry(r, 6, 4)) }
+const sfera = (g, r, m, x = 0, y = 0, z = 0, sx = 1, sy = 1, sz = 1) => pezzo(g, G(`s${r}`, () => new THREE.SphereGeometry(r, 10, 8)), m, x, y, z, sx, sy, sz)
+/** Come `sfera`, con la versione povera per il LOD (`impostaDettaglio`). Non per il contadino: una mesh con `userData` non si fonde (fondi.js). */
+const sferaL = (g, r, ...resto) => {
+  const o = sfera(g, r, ...resto), alta = o.geometry
+  o.userData.lod = { alta, bassa: () => G(`s${r}:lod`, () => new THREE.SphereGeometry(r, 6, 4)) }
   return o
 }
 const rozza = (g, r, m, x = 0, y = 0, z = 0, sx = 1, sy = 1, sz = 1) => pezzo(g, G(`i${r}`, () => new THREE.IcosahedronGeometry(r, 1)), m, x, y, z, sx, sy, sz)
@@ -319,11 +321,11 @@ export function creaCane () {
     for (const G2 of GUANCE) { volume(parti, ...G2, capo); manto(parti, ...G2, { n: 30, lungo: 0.08, largo: 0.055, tinta: capo, dove: p => p.z > T.z + 0.1 }) }
     manto(parti, ...MUSO, { n: 50, lungo: 0.07, largo: 0.045, tinta: capo, dove: p => p.z > T.z + 0.2 && !(Math.abs(p.x) < 0.07 && p.y > T.y - 0.11) })
   })
-  const naso = sfera(testa, 0.06, mat(0x16161a, { roughness: 0.25 }), 0, T.y - 0.06 - O.testa.y, T.z + 0.345 - O.testa.z, 1.3, 0.85, 0.9)
-  sfera(testa, 0.06, mat(0x3b1d24), 0, T.y - 0.165 - O.testa.y, T.z + 0.3 - O.testa.z, 1.45, 0.5, 0.8)                     // la bocca aperta
+  const naso = sferaL(testa, 0.06, mat(0x16161a, { roughness: 0.25 }), 0, T.y - 0.06 - O.testa.y, T.z + 0.345 - O.testa.z, 1.3, 0.85, 0.9)
+  sferaL(testa, 0.06, mat(0x3b1d24), 0, T.y - 0.165 - O.testa.y, T.z + 0.3 - O.testa.z, 1.45, 0.5, 0.8)                     // la bocca aperta
   const occhi = [-1, 1].map(s => {                                                                                          // due occhietti lucidi, a metà sotto la frangia
-    const o = sfera(testa, 0.034, mat(0x1c1612, { roughness: 0.15 }), s * 0.105, T.y - 0.025 - O.testa.y, T.z + 0.252 - O.testa.z)
-    sfera(testa, 0.01, mat(0xffffff, { roughness: 0.3 }), s * 0.105 + 0.01, T.y - 0.015 - O.testa.y, T.z + 0.284 - O.testa.z); return o
+    const o = sferaL(testa, 0.034, mat(0x1c1612, { roughness: 0.15 }), s * 0.105, T.y - 0.025 - O.testa.y, T.z + 0.252 - O.testa.z)
+    sferaL(testa, 0.01, mat(0xffffff, { roughness: 0.3 }), s * 0.105 + 0.01, T.y - 0.015 - O.testa.y, T.z + 0.284 - O.testa.z); return o
   })
   // la frangia: file di ciocche che dalla fronte ricadono sugli occhi, un mesh suo per dondolare
   const frangia = perno(testa, O.frangia.x - O.testa.x, O.frangia.y - O.testa.y, O.frangia.z - O.testa.z)
@@ -336,7 +338,7 @@ export function creaCane () {
     }
   })
   const lingua = perno(testa, O.lingua.x - O.testa.x, O.lingua.y - O.testa.y, O.lingua.z - O.testa.z)
-  const l = sfera(lingua, 0.05, mat(0xe8768e), 0, -0.012, 0.02, 1.05, 0.3, 1.3); l.rotation.x = 0.45
+  const l = sferaL(lingua, 0.05, mat(0xe8768e), 0, -0.012, 0.02, 1.05, 0.3, 1.3); l.rotation.x = 0.45
   const orecchie = [-1, 1].map(s => {
     const o = V(s * 0.27, T.y + 0.15, T.z - 0.01), p = perno(testa, o.x - O.testa.x, o.y - O.testa.y, o.z - O.testa.z)
     const ORE = [[s * 0.32, T.y - 0.06, T.z + 0.02], [0.075, 0.2, 0.14]]
