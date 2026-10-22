@@ -113,9 +113,8 @@ fuori») e i branchi a 14 celle (`292a98f5`); il villaggio tondo (24×20); la sc
 - **Medaglia per una terra nuova**: no.
 - **Pubblicare** periodicamente con `./pubblica.sh` (mai push su GitHub per ora), senza rifare ogni volta tutti i test; la prova completa a
   macchina libera si fa a lavori finiti.
-- **Modelli 3D da migliorare** (dopo): drago dello scudo (sembra una lucertola) e leoni con la stessa sagoma; ciondolo su mago e nano; puntine
-  dei castoni e fiamme delle collane; fiamme della torcia a coni; rosso delle cure rosato; collane e scudi sopra i 1500 triangoli (fino a
-  1960); cappucci calati poco visibili; scorpione (coda piatta), golem (testa nascosta nello schianto) e pipistrello visto dall'alto.
+- **Modelli 3D da migliorare** (dopo): scorpione (coda piatta), golem (testa nascosta nello schianto) e pipistrello visto dall'alto. Chiusi il 22/10 (scudi, gioielli, pozioni, vesti): restano da guardare col dito il
+  ciondolo sul nano (sporge con la barba) e i cappucci calati sul mago (li copre la barba).
 
 ## 2. Eroi, mostri ed effetti in 3D (sessione Mostri renderizzati)
 
