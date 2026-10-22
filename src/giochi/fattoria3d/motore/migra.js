@@ -9,6 +9,7 @@ import { PER_COLTURA as COLTURE_2D, PER_RICETTA as RICETTE_2D, quantoCresciuto, 
 import { livelloPer as livello2D, avanzamento as avanzamento2D, categoriaDi } from '../../fattoria/dati/livelli.js'
 import { PIAZZOLE_INIZIALI } from '../../fattoria/dati/mondo.js'
 import { PEZZI, EDIFICI } from '../dati/catalogo.js'
+import { VOCE_DECORI } from '../dati/parita2d.js'
 import { COLTURE } from '../dati/colture.js'
 import { RICETTE } from '../dati/ricette.js'
 import { PRODOTTI_ANIMALI } from '../dati/animali.js'
@@ -39,11 +40,14 @@ const ALTRE = {
   tavolo: 'tavolo', tavolino: 'tavolo', spaventapasseri: 'spaventapasseri',
 }
 
+/** Le decorazioni portate in 3D (giro G8) hanno lo stesso id (tranne il `recinto` di legno): id 2D → id 3D. */
+const DECORO_DA_2D = Object.fromEntries(Object.entries(VOCE_DECORI).map(([id3d, id2d]) => [id2d, id3d]))
+
 /** Il pezzo 3D che sostituisce una voce 2D, o null (allora è «da regalare»). I fiori e i vasi diventano aiuole. */
 export function pezzoPer(id2d) {
   const v = COSE_2D[id2d]
   if (!v) return null
-  const t = (v.macchina && (MACCHINE[v.macchina] || RECINTI[v.macchina])) || (v.mongolfiera && 'mongolfiera') || MACCHINE[id2d] || RECINTI[id2d] || ALTRE[id2d]
+  const t = (v.macchina && (MACCHINE[v.macchina] || RECINTI[v.macchina])) || (v.mongolfiera && 'mongolfiera') || MACCHINE[id2d] || RECINTI[id2d] || ALTRE[id2d] || DECORO_DA_2D[id2d]
     || (categoriaDi(id2d) === 'fiori' ? 'aiuola' : null)
   return t && (PEZZI[t] || EDIFICI[t]) ? t : null
 }
