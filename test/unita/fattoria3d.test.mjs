@@ -538,7 +538,7 @@ controlla('l\'albo del manifesto sta in piedi', gA.length === 0, gA.join(' · ')
   stessaLista('costruito, il «!» sparisce', f.edificiDaCostruire(), ['mulino', 'fienile', 'telaio'])
   alLivello(f, 99)
   controlla('a livello alto sono tutti gli edifici mancanti, e solo edifici (mai una decorazione)', f.edificiDaCostruire().length === Object.keys(EDIFICI).length - 1 && f.edificiDaCostruire().every(t => !!EDIFICI[t] && !PEZZI[t]))
-  for (const id of ['1_2', '1_3', '1_4', '5_2', '5_3', '5_4']) f.compraLotto(id)               // tredici edifici da 3×3 non stanno nei nove lotti di partenza: un po' di terra in più
+  for (const id of ['1_2', '1_3', '1_4', '5_2', '5_3', '5_4', '2_1', '3_1', '4_1', '2_5']) f.compraLotto(id)               // diciassette edifici da 3×3 (con le quattro botteghe) non stanno nei nove lotti di partenza: un po' di terra in più
   for (const t of Object.keys(EDIFICI)) f.compraEdificio(t)
   uguale('tutti costruiti: nessun «!»', f.edificiDaCostruire().length, 0)
   controlla('le decorazioni non lo accendono mai', carteDi('decori', { livello: 99, prezzoPezzo: t => PEZZI[t].prezzo, nelMagazzino: () => 0, posseduti: {} }).every(c => !c.segnala))

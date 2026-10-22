@@ -5,7 +5,7 @@ import { EDIFICI } from '../dati/catalogo.js'
 import { RICETTE } from '../dati/ricette.js'
 import { livelloDelPezzo } from '../dati/livelli.js'
 import {
-  FILE, CASSE_MIN, CASSE_MAX, PEZZI_MIN, PEZZI_MAX, RIPOSO_MS, PESO_MACCHINA_TUA, BONUS_FILA, BONUS_TUTTO,
+  FILE_MAX, fileAl, CASSE_MIN, CASSE_MAX, PEZZI_MIN, PEZZI_MAX, RIPOSO_MS, PESO_MACCHINA_TUA, BONUS_FILA, BONUS_TUTTO,
   merceDaCassa, merciDelLivello, fasiDi, pezziMaxAl, premioDellaCassa, bonusDellaFila, bonusDelTutto, SORPRESE,
 } from '../dati/mongolfiera.js'
 
@@ -13,12 +13,12 @@ const traMinMax = (rnd, min, max) => min + Math.min(max - min, Math.floor(rnd() 
 const somma = casse => casse.reduce((n, c) => n + c.xp, 0)
 const filaPiena = fila => fila.casse.every(c => c.piena)
 
-/** Un carico nuovo per questo livello: una fila per merce (fino a tre), 2–3 casse per fila, lo stesso numero di pezzi in ogni cassa
+/** Un carico nuovo per questo livello: una fila per merce (fino a tre, quattro dal livello 66), 2–3 casse per fila, lo stesso numero di pezzi in ogni cassa
     di una fila. Le merci di una macchina che hai pesano di più. Null se al livello non c'è niente da chiedere. */
 export function nuovaStiva(f) {
   const livello = f.livello()
   const resta = merciDelLivello(livello)
-  const quante = Math.min(FILE, resta.length)
+  const quante = Math.min(fileAl(livello), resta.length)
   if (!quante) return null
   const pezziMax = pezziMaxAl(livello), file = []
   for (let n = 0; n < quante; n++) {
@@ -38,7 +38,7 @@ export function stivaInForma(x) {
   if (!x || typeof x !== 'object' || !Array.isArray(x.file)) return null
   const file = []
   for (const fila of x.file) {
-    if (file.length >= FILE) break
+    if (file.length >= FILE_MAX) break
     if (!fila || !merceDaCassa(fila.merce) || file.some(g => g.merce === fila.merce) || !Array.isArray(fila.casse)) continue
     const casse = fila.casse.slice(0, CASSE_MAX)
       .filter(c => c && Number.isInteger(c.pezzi) && c.pezzi >= PEZZI_MIN && c.pezzi <= PEZZI_MAX)

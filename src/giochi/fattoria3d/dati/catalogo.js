@@ -7,6 +7,7 @@
 import { PEZZI_DEL_CORTILE, EDIFICIO_PENTOLONE } from './cortile.js'
 import { PEZZI_DEL_CORTILE_2 } from './cortile2.js'
 import { pezziDecori, SCHEDE_DECORI } from './decori.js'
+import { EDIFICI_BOTTEGHE } from './botteghe.js'
 import { prezzoDa2D, livelloDa2D, crescitaDa2D, livelloPerPrezzo, LIVELLO_PESCA } from './parita2d.js'
 
 /** Prezzo, livello e rincaro di un pezzo, dalla 2D. `rincaro` è il passo per copia a prezzo pieno (13 per il campo da 22); il prezzo vero della copia n è `prezzoPezzo`. */
@@ -85,6 +86,7 @@ export const EDIFICI = {
   friggitoria:   { nome: 'Friggitoria',   emoji: '🍟', art: 'la', w: 3, d: 3, ...edificio2d('friggitoria'), categoria: 'edifici' },     // nata dopo i posti liberi: il suo posto storico è solo per i controlli (`nuovo` in dati/mondo.js)
   sushi_bar:     { nome: 'Sushi bar',     emoji: '🍣', art: 'il', w: 3, d: 3, ...edificio2d('sushi_bar'), categoria: 'edifici' },
   pentolone:     EDIFICIO_PENTOLONE,      // la 14ª macchina della 2D (giro G4): liv e prezzo provvisori in dati/cortile.js
+  ...EDIFICI_BOTTEGHE,     // le quattro botteghe del paese (giro G7): non lavorano, chiedono; prezzo e livello della 2D (dati/botteghe.js)
 }
 export const TIPI_DI_EDIFICIO = Object.keys(EDIFICI)
 

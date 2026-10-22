@@ -41,6 +41,8 @@ export function dettoDi(motivo, extra = {}) {
     case 'non-sbloccato': return extra.liv ? `Arriva al livello ${extra.liv}` : 'Non è ancora arrivato'
     case 'non-tua': return 'Costruisci prima questo edificio'
     case 'gia-tuo': return 'Ce n\'è già uno: puoi spostarlo'
+    case 'niente-bottega': return 'Metti prima la bottega nella fattoria'
+    case 'non-esiste': return 'Quel cliente è già andato via'
     case 'in-viaggio': return 'È ancora in viaggio…'
     case 'non-confina': return 'Compra prima un terreno che confina con questo'
     case 'occupato': case 'fuori-terreno': return 'Qui non si può: cerca un posto libero nei tuoi terreni'
