@@ -81,7 +81,7 @@ const saldabili = new Map()
 export function saldaEroe(g, chiave) {
   posa(g, 0, false, null)   // la prima posa aggiunge pezzi (il mago): gli indici si contano dopo
   if (!saldabili.has(chiave)) {
-    const prove = { anima: t => posa(g, t, (t * 7) % 2 > 1, null), attacca: p => posa(g, 1.7, false, p) }
+    const prove = { anima: t => posa(g, t, (t * 7) % 2 > 1, null), attacca: p => posaColpo(g, p) }   // sopra la posa di adesso, come in aggiorna
     if (saldabili.size > 40) saldabili.clear()
     saldabili.set(chiave, ferme(g, prove, { prove: 240, passo: 3.1 }))
   }
