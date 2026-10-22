@@ -53,6 +53,8 @@
 
     "__pezzi-col-nome": "le figure dei leggendari e dei pezzi dei grossi (dati/pezzi.js), scelte dal catalogo roba.json",
     "scudo-di-fiammetta": { "da": [140, 18], "cella": [14, 16] },
+    "scudo-di-brontolava": { "da": [225, 53], "cella": [16, 16] },
+    "scudo-di-falcenera": { "da": [192, 35], "cella": [14, 16] },
     "__aspetti": "generato da strumenti/sprite/roba.py --gioco dal catalogo roba.json: non si tocca a mano",
     "bastone-49": { "da": [119, 92], "cella": [11, 16], "ruota": 30, "misura": [10, 22] },
     "bastone-50": { "da": [132, 92], "cella": [12, 16], "ruota": 29, "misura": [9, 22] },
@@ -80,7 +82,6 @@
     "scudo-35": { "da": [140, 35], "cella": [14, 16] },
     "scudo-36": { "da": [158, 35], "cella": [14, 17] },
     "scudo-37": { "da": [176, 35], "cella": [13, 16] },
-    "scudo-38": { "da": [192, 35], "cella": [14, 16] },
     "scudo-39": { "da": [210, 35], "cella": [13, 16] },
     "scudo-40": { "da": [226, 35], "cella": [13, 16] },
     "scudo-41": { "da": [16, 51], "cella": [13, 18] },
@@ -94,7 +95,6 @@
     "scudo-50": { "da": [175, 53], "cella": [15, 16] },
     "scudo-51": { "da": [193, 53], "cella": [14, 16] },
     "scudo-52": { "da": [210, 53], "cella": [13, 16] },
-    "scudo-53": { "da": [225, 53], "cella": [16, 16] },
     "__aspetti-fine": ""
   }
 }

@@ -3,10 +3,10 @@
    Le figure della roba per il Sotterraneo 3D: per ogni figura dei fogli il modulo 3D che la disegna (`famiglia`) e i dati che
    servono al modello; e gli sprite dell'atlante che non si chiamano come la loro figura. Chi la legge: scena3d/roba3d.js
    (docs/sotterraneo/roba-3d.md). Dato puro, niente three.
-   firma: 061dfcb16c66
+   firma: fad804a168e8
 */
 
-export const FIRMA = '061dfcb16c66'
+export const FIRMA = 'fad804a168e8'
 
 export const FIGURE3D = {
   "spada-01": {"famiglia":"lame","cosa":"spada lunga","elemento":"nessuno","materia":"acciaio","stile":"guerriero","mani":1,"pregio":1,"nome":"Lama del soldato","pezzo":"spada"},
@@ -126,7 +126,7 @@ export const FIGURE3D = {
   "veste-05": {"famiglia":"vesti","cosa":"corazza a piastre","elemento":"nessuno","materia":"ferro","stile":"guerriero","pregio":2,"nome":"Corazza del bastione","pezzo":"corazza"},
   "veste-06": {"famiglia":"vesti","cosa":"corazza a piastre","elemento":"luce","materia":"oro","stile":"guerriero","pregio":4,"nome":"Armatura del sovrano","pezzo":"corazza"},
   "veste-07": {"famiglia":"vesti","cosa":"corazza a piastre","elemento":"fuoco","materia":"ferro","stile":"guerriero","pregio":3,"nome":"Corazza della brace"},
-  "veste-08": {"famiglia":"vesti","cosa":"giubba con tabarro","elemento":"natura","materia":"cuoio","stile":"esploratore","pregio":2,"nome":"Giubba del bosco","pezzo":"panciotto"},
+  "veste-08": {"famiglia":"vesti","cosa":"giubba con tabarro","elemento":"natura","materia":"cuoio","stile":"esploratore","pregio":2,"nome":"Giubba del bosco"},
   "veste-09": {"famiglia":"vesti","cosa":"cotta di maglia","elemento":"nessuno","materia":"ferro","stile":"guerriero","pregio":2,"nome":"Cotta del soldato","pezzo":"corazza"},
   "veste-10": {"famiglia":"vesti","cosa":"corazza a piastre","elemento":"luce","materia":"acciaio","stile":"guerriero","pregio":2,"nome":"Corazza dell'alba","pezzo":"corazza"},
   "veste-11": {"famiglia":"vesti","cosa":"corazza a piastre","elemento":"fuoco","materia":"ferro","stile":"guerriero","pregio":3,"nome":"Corazza della forgia","pezzo":"corazza"},
@@ -165,7 +165,7 @@ export const FIGURE3D = {
   "scudo-05": {"famiglia":"scudi","cosa":"scudo a goccia","elemento":"arcano","materia":"acciaio","stile":"guerriero","pregio":2,"nome":"Scudo del crepuscolo","pezzo":"scudo-crociato"},
   "scudo-06": {"famiglia":"scudi","cosa":"scudo a goccia","elemento":"morte","materia":"ferro","stile":"guerriero","pregio":3,"nome":"Scudo del teschio","pezzo":"scudo-teschio"},
   "scudo-07": {"famiglia":"scudi","cosa":"scudo a goccia","elemento":"luce","materia":"acciaio","stile":"guerriero","pregio":2,"nome":"Scudo del cavaliere","pezzo":"scudo-crociato"},
-  "scudo-08": {"famiglia":"scudi","cosa":"scudo a goccia","elemento":"natura","materia":"acciaio","stile":"guerriero","pregio":3,"nome":"Scudo del bosco sacro","pezzo":"scudo-crociato"},
+  "scudo-08": {"famiglia":"scudi","cosa":"scudo a goccia","elemento":"natura","materia":"acciaio","stile":"guerriero","pregio":3,"nome":"Scudo del bosco sacro"},
   "scudo-09": {"famiglia":"scudi","cosa":"scudo rinforzato","elemento":"nessuno","materia":"ferro","stile":"guerriero","pregio":2,"nome":"Scudo della croce di ferro"},
   "scudo-10": {"famiglia":"scudi","cosa":"scudo a goccia","elemento":"nessuno","materia":"legno","stile":"guerriero","pregio":2,"nome":"Scudo del paladino","pezzo":"scudo-crociato"},
   "scudo-11": {"famiglia":"scudi","cosa":"scudo a goccia","elemento":"nessuno","materia":"ferro","stile":"guerriero","pregio":2,"nome":"Scudo della sentinella","pezzo":"scudo-ferro"},
@@ -195,7 +195,7 @@ export const FIGURE3D = {
   "scudo-35": {"famiglia":"scudi","cosa":"scudo a goccia","elemento":"ombra","materia":"ferro","stile":"mago","pregio":3,"nome":"Scudo della luna nera","pezzo":"scudo-ferro"},
   "scudo-36": {"famiglia":"scudi","cosa":"scudo a mandorla","elemento":"sangue","materia":"legno","stile":"guerriero","pregio":2,"nome":"Scudo del giglio di sangue","pezzo":"scudo-teschio"},
   "scudo-37": {"famiglia":"scudi","cosa":"scudo a goccia","elemento":"fuoco","materia":"legno","stile":"guerriero","pregio":2,"nome":"Scudo del leone rosso","pezzo":"scudo-leone"},
-  "scudo-38": {"famiglia":"scudi","cosa":"scudo a goccia","elemento":"morte","materia":"ferro","stile":"mago","pregio":3,"nome":"Scudo del teschio notturno","pezzo":"scudo-teschio"},
+  "scudo-38": {"famiglia":"scudi","cosa":"scudo a goccia","elemento":"morte","materia":"ferro","stile":"mago","pregio":3,"nome":"Scudo del teschio notturno"},
   "scudo-39": {"famiglia":"scudi","cosa":"scudo a goccia","elemento":"oro","materia":"acciaio","stile":"guerriero","pregio":3,"nome":"Scudo del leone dorato","pezzo":"scudo-leone"},
   "scudo-40": {"famiglia":"scudi","cosa":"scudo a goccia","elemento":"morte","materia":"ferro","stile":"guerriero","pregio":3,"nome":"Scudo del teschio fiero","pezzo":"scudo-teschio"},
   "scudo-41": {"famiglia":"scudi","cosa":"scudo a goccia","elemento":"nessuno","materia":"legno","stile":"guerriero","pregio":1,"nome":"Scudo della guardia","pezzo":"scudo-crociato"},
@@ -210,7 +210,7 @@ export const FIGURE3D = {
   "scudo-50": {"famiglia":"scudi","cosa":"scudo tondo","elemento":"arcano","materia":"ferro","stile":"mago","pregio":4,"nome":"Scudo dell'occhio veggente","pezzo":"scudo-ferro"},
   "scudo-51": {"famiglia":"scudi","cosa":"scudo a goccia","elemento":"oro","materia":"legno","stile":"guerriero","pregio":3,"nome":"Scudo del leone reale","pezzo":"scudo-leone"},
   "scudo-52": {"famiglia":"scudi","cosa":"scudo a goccia","elemento":"nessuno","materia":"ferro","stile":"guerriero","pregio":2,"nome":"Scudo dell'insegna d'argento","pezzo":"scudo-crociato"},
-  "scudo-53": {"famiglia":"scudi","cosa":"scudo tondo","elemento":"fuoco","materia":"ferro","stile":"guerriero","pregio":4,"nome":"Scudo della fiamma","pezzo":"scudo-ferro"},
+  "scudo-53": {"famiglia":"scudi","cosa":"scudo tondo","elemento":"fuoco","materia":"ferro","stile":"guerriero","pregio":4,"nome":"Scudo della fiamma"},
   "amuleto-01": {"famiglia":"gioielli","cosa":"ciondolo a stella","elemento":"fuoco","materia":"oro","stile":"chiunque","pregio":2,"nome":"Stella della brace","pezzo":"amuleto-rosso"},
   "amuleto-02": {"famiglia":"gioielli","cosa":"ciondolo con cristallo","elemento":"ghiaccio","materia":"cristallo","stile":"mago","pregio":2,"nome":"Scheggia del gelo","pezzo":"amuleto-azzurro"},
   "amuleto-03": {"famiglia":"gioielli","cosa":"ciondolo con gemma","elemento":"natura","materia":"oro","stile":"chiunque","pregio":2,"nome":"Occhio del bosco","pezzo":"medaglione"},
@@ -231,14 +231,14 @@ export const FIGURE3D = {
   "amuleto-18": {"famiglia":"gioielli","cosa":"ciondolo con gemma","elemento":"ghiaccio","materia":"oro","stile":"chiunque","pregio":2,"nome":"Goccia del ghiacciaio","pezzo":"amuleto-azzurro"},
   "amuleto-19": {"famiglia":"gioielli","cosa":"ciondolo con gemma","elemento":"arcano","materia":"oro","stile":"mago","pregio":2,"nome":"Ametista dell'eremita","pezzo":"medaglione"},
   "amuleto-20": {"famiglia":"gioielli","cosa":"ciondolo con gemma","elemento":"fuoco","materia":"oro","stile":"chiunque","pregio":2,"nome":"Rubino del drago","pezzo":"amuleto-rosso"},
-  "amuleto-21": {"famiglia":"gioielli","cosa":"ciondolo con gemma scura","elemento":"ombra","materia":"oro","stile":"chiunque","pregio":3,"nome":"Seme dell'ombra","pezzo":"medaglione"},
+  "amuleto-21": {"famiglia":"gioielli","cosa":"ciondolo con gemma scura","elemento":"ombra","materia":"oro","stile":"chiunque","pregio":3,"nome":"Seme dell'ombra"},
   "amuleto-22": {"famiglia":"gioielli","cosa":"ciondolo con gemma scura","elemento":"sangue","materia":"oro","stile":"chiunque","pregio":3,"nome":"Rombo del sangue secco","pezzo":"amuleto-rosso"},
   "amuleto-23": {"famiglia":"gioielli","cosa":"ciondolo con gemma","elemento":"ombra","materia":"oro","stile":"chiunque","pregio":3,"nome":"Luna nera","pezzo":"medaglione"},
   "amuleto-24": {"famiglia":"gioielli","cosa":"ciondolo a stella","elemento":"natura","materia":"oro","stile":"esploratore","pregio":3,"nome":"Smeraldo del sentiero","pezzo":"medaglione"},
   "amuleto-25": {"famiglia":"gioielli","cosa":"ciondolo con gemma","elemento":"acqua","materia":"acciaio","stile":"chiunque","pregio":3,"nome":"Zaffiro del naviglio","pezzo":"amuleto-azzurro"},
   "amuleto-26": {"famiglia":"gioielli","cosa":"amuleto a sole","elemento":"natura","materia":"oro","stile":"chiunque","pregio":3,"nome":"Sole del bosco","pezzo":"medaglione"},
   "amuleto-27": {"famiglia":"gioielli","cosa":"ciondolo ad anello d'argento","elemento":"ombra","materia":"acciaio","stile":"chiunque","pregio":2,"nome":"Anello dell'eclissi","pezzo":"medaglione"},
-  "amuleto-28": {"famiglia":"gioielli","cosa":"ciondolo con cristallo","elemento":"ghiaccio","materia":"cristallo","stile":"mago","pregio":3,"nome":"Artiglio del ghiaccio","pezzo":"amuleto-azzurro"},
+  "amuleto-28": {"famiglia":"gioielli","cosa":"ciondolo con cristallo","elemento":"ghiaccio","materia":"cristallo","stile":"mago","pregio":3,"nome":"Artiglio del ghiaccio"},
   "amuleto-29": {"famiglia":"gioielli","cosa":"ciondolo con cristallo","elemento":"acqua","materia":"cristallo","stile":"mago","pregio":3,"nome":"Zaffiro dell'abisso"},
   "amuleto-30": {"famiglia":"gioielli","cosa":"ciondolo con gemma scura","elemento":"ombra","materia":"oro","stile":"mago","pregio":3,"nome":"Notte senza luna","pezzo":"medaglione"},
   "amuleto-31": {"famiglia":"gioielli","cosa":"ciondolo a croce","elemento":"sangue","materia":"oro","stile":"guerriero","pregio":2,"nome":"Croce del cacciatore","pezzo":"amuleto-rosso"},
@@ -253,6 +253,7 @@ export const SPRITE_FIGURA = {
   "accetta": "ascia-04",
   "amuleto-azzurro": "amuleto-07",
   "amuleto-della-fenice": "amuleto-15",
+  "amuleto-di-brinaldo": "amuleto-28",
   "amuleto-di-gorgo": "amuleto-29",
   "amuleto-teschio": "amuleto-05",
   "anello-ambra": "amuleto-33",
@@ -274,18 +275,23 @@ export const SPRITE_FIGURA = {
   "corpo-manto": "veste-29",
   "corpo-piastre": "veste-02",
   "corpo-saio": "veste-15",
+  "giubba-di-sibilla": "veste-08",
   "giubbone-di-minotto": "veste-01",
   "manto-della-notte": "veste-38",
   "martello": "bastone-43",
   "martello-di-carbonchio": "ascia-11",
   "mazza": "ascia-02",
   "mazza-di-grumo": "ascia-08",
+  "medaglione-di-piumanera": "amuleto-21",
   "pugnale-dell-ombra": "spada-07",
   "scettro": "bastone-41",
   "scettro-delle-stelle": "bastone-24",
   "scudo-borchiato": "scudo-16",
   "scudo-crociato": "scudo-18",
   "scudo-del-gigante": "scudo-09",
+  "scudo-di-barbamuschio": "scudo-08",
+  "scudo-di-brontolava": "scudo-53",
+  "scudo-di-falcenera": "scudo-38",
   "scudo-di-fiammetta": "scudo-22",
   "scudo-ferro": "scudo-26",
   "scudo-legno": "scudo-15",

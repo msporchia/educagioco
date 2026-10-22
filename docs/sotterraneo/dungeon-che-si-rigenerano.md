@@ -56,10 +56,8 @@ chiave), `Gioco.vue` (scendere, riprendere, chiudere).
   hanno i piani delle zone (cinque, sei nella tana).
 - **I sei grossi** riusano quello che c'è: una creatura del bestiario ingrandita con la corona (`figura`, come i sette), le basi e
   i numeri dei sette (il troll fino al 9, il gigante dopo, ossa 1,1–1,2), le difese della creatura che vestono. I loro pezzi col nome
-  hanno **una figura dei fogli che c'è già** (`figura` in `DEI_GROSSI`, un aspetto della base: [figure.md](figure.md)), finché la
-  loro non è ritagliata: lo Scudo di Roccaverde (`scudo-08`), il Medaglione di Piumanera (`amuleto-21`), la Giubba di Sibilla
-  (`veste-08`), lo Scudo di Vulcanor (`scudo-53`), l'Amuleto di Gelomagno (`amuleto-28`), lo Scudo di Falcenera (`scudo-38`). Basi
-  senza famiglia: li porta chiunque.
+  hanno **la loro figura**, ritagliata dai fogli e tolta dagli aspetti (la tabella in [figure.md](figure.md#i-pezzi-col-nome-hanno-la-loro-figura));
+  il modello 3D lo sceglie la figura (`SPRITE_FIGURA`, `npm run roba3d`). Basi senza famiglia: li porta chiunque.
 
 ## Gli abitanti di una rigenerazione
 
@@ -82,7 +80,10 @@ all'1, la miniera al 10), dal 12 la curva delle zone (`forzaDellaZona`, con la f
 ritarato. Da misurare col banco, a lavoro finito (tutte le leve in `dati/dungeon-del-mondo.js` e nella curva delle zone):
 
 - **`STORIA_DALLA_ZONA`** (spento): la prima volta delle sette ai livelli dei dungeon (1, 2, 4, 5, 8, 10, 12 invece di 1, 2, 3, 5,
-  7, 8, 10; domanda 3 del progetto), che costa una taratura della storia nel 3D;
+  7, 8, 10; domanda 3 del progetto). **Spento apposta**: acceso, la torre, le sale allagate, la porta dell'inferno e le miniere
+  nascono uno-due livelli sopra, con la forza, la spinta e le domande (`dif`) della curva dei dungeon invece di quelle di `CAMPAGNA`;
+  sono numeri di gioco tarati sulla storia (i livelli attesi, la roba attesa, i giocatori tipo), e la taratura si fa a lavoro finito.
+  Si accende insieme a quella, rilanciando `npm run taratura`;
 - **`PIU_FORTE`** (forza ×1, spinta +0): quanto una ripetuta sta sopra la curva; oggi il «più forte» è solo il livello in più;
 - **la forma delle zone** (`FORMA_DELLA_ZONA`) vale per i sette dal 12 e non per i sei: la cava (13) esce più tenera delle miniere
   (12); **i sei grossi** (ossa e attacco) e la forma dei loro piani;

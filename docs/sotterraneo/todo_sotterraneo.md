@@ -22,10 +22,9 @@ rimasti aperti. Quando una voce si chiude si toglie da qui (la storia sta in `gi
 - **Le quest**: restano le quest scritte a mano nelle zone, scorta ed eventi; cacciatrice e carovaniere come persone nuove; la X e il
   viandante non hanno un disegno 3D (sono segni sul prato); «vai alla pietra» dal diario; la freccia sulla strada vera e non in linea
   d'aria; tarare le basi delle taglie (`BASI`, tetto 40 gemme) e quanto guadagna chi le fa tutte.
-- **I dungeon che si rigenerano** ([dungeon-che-si-rigenerano.md](dungeon-che-si-rigenerano.md)): la prima volta delle sette porte nel
-  3D non usa ancora i livelli della zona (`STORIA_DALLA_ZONA` spento, 4/8/10/12 invece di 3/7/8/10); la cava (13) esce più tenera
-  delle miniere (12); i nomi dei sei boss nuovi sono scelti (Roccaverde, Piumanera, Sibilla, Vulcanor, Gelomagno, Falcenera; le chiavi nei dati restano quelle di prima, sono salvataggi); i
-  pezzi col nome dei boss non hanno ancora una figura ritagliata (puntano a un aspetto dei fogli già esistente).
+- **I dungeon che si rigenerano** ([dungeon-che-si-rigenerano.md](dungeon-che-si-rigenerano.md)): la cava (13) esce più tenera delle
+  miniere (12); i nomi dei sei boss nuovi sono scelti (Roccaverde, Piumanera, Sibilla, Vulcanor, Gelomagno, Falcenera; le chiavi nei
+  dati restano quelle di prima, sono salvataggi).
 - **Abitanti da dipingere**: orso, corvo, avvoltoio, brigante, lupo capobranco e gli altri; oggi sono specie del catalogo scelte per
   habitat ([mondo-aperto-mostri.md](mondo-aperto-mostri.md)).
 - **La pergamena del portale** ([da-fare.md](da-fare.md)): sprite disegnato, casella nella barra, banco, abisso «dall'inizio del
@@ -64,6 +63,9 @@ rimasti aperti. Quando una voce si chiude si toglie da qui (la storia sta in `gi
 - Svenimenti per strada nel mondo a percorso, a 9/10 di risposte giuste: cantine 94%, tana dei ragni 25%, miniere 19%, sale allagate
   16% (bersaglio ≤ 10% e vita all'ingresso ≥ 60%); dalle tane 50–100%, fino a 56 domande. Leve: `cellePerBranco` per zona, la
   cintura di sicurezza fino alle cantine, i prati a 1–2 invece di 1–3, `SOPRA.fraBranchi` (ora 14), `SOPRA.dalloTana`.
+- **`STORIA_DALLA_ZONA`** (in `dati/dungeon-del-mondo.js`, spento): la prima volta delle sette porte nel 3D ai livelli dei dungeon
+  (4/8/10/12 invece di 3/7/8/10 per torre, sale allagate, porta dell'inferno, miniere). Cambia livelli, forza e domande della storia:
+  si accende con la taratura, non prima.
 - Il signore del cimitero stende quasi sempre l'eroe nudo di livello 1 che ci va prima della cripta (91–100%).
 - Le risalite col portale gemello, la torcia (a 4/10 il curioso vince il fondo 4 volte su 6), il bottino delle botti, la pergamena, le
   basi delle taglie, `PIU_FORTE` dei dungeon. → [giocatori-tipo.md](giocatori-tipo.md), `npm run taratura`.

@@ -138,7 +138,6 @@ export const ASPETTI = {
     { sprite: 'veste-13', tinta: 'ombra', pregio: 3 },
   ],
   'panciotto': [
-    { sprite: 'veste-08', tinta: 'natura', pregio: 2 },
     { sprite: 'corpo-cuoio', tinta: 'nessuno', pregio: 1 },
     { sprite: 'veste-16', tinta: 'ghiaccio', pregio: 2 },
     { sprite: 'veste-18', tinta: 'fuoco', pregio: 2 },
@@ -181,7 +180,6 @@ export const ASPETTI = {
     { sprite: 'scudo-04', tinta: 'nessuno', pregio: 2 },
     { sprite: 'scudo-05', tinta: 'arcano', pregio: 2 },
     { sprite: 'scudo-07', tinta: 'luce', pregio: 2 },
-    { sprite: 'scudo-08', tinta: 'natura', pregio: 3 },
     { sprite: 'scudo-10', tinta: 'nessuno', pregio: 2 },
     { sprite: 'scudo-13', tinta: 'arcano', pregio: 3 },
     { sprite: 'scudo-crociato', tinta: 'luce', pregio: 2 },
@@ -203,7 +201,6 @@ export const ASPETTI = {
     { sprite: 'scudo-06', tinta: 'morte', pregio: 3 },
     { sprite: 'scudo-29', tinta: 'morte', pregio: 2 },
     { sprite: 'scudo-36', tinta: 'sangue', pregio: 2 },
-    { sprite: 'scudo-38', tinta: 'morte', pregio: 3 },
     { sprite: 'scudo-40', tinta: 'morte', pregio: 3 },
     { sprite: 'scudo-teschio', tinta: 'veleno', pregio: 2 },
   ],
@@ -220,7 +217,6 @@ export const ASPETTI = {
     { sprite: 'scudo-47', tinta: 'luce', pregio: 4 },
     { sprite: 'scudo-49', tinta: 'arcano', pregio: 3 },
     { sprite: 'scudo-50', tinta: 'arcano', pregio: 4 },
-    { sprite: 'scudo-53', tinta: 'fuoco', pregio: 4 },
   ],
   'scudo-legno': [
     { sprite: 'scudo-legno', tinta: 'nessuno', pregio: 1 },
@@ -246,7 +242,6 @@ export const ASPETTI = {
     { sprite: 'amuleto-16', tinta: 'acqua', pregio: 2 },
     { sprite: 'amuleto-18', tinta: 'ghiaccio', pregio: 2 },
     { sprite: 'amuleto-25', tinta: 'acqua', pregio: 3 },
-    { sprite: 'amuleto-28', tinta: 'ghiaccio', pregio: 3 },
   ],
   'medaglione': [
     { sprite: 'amuleto-03', tinta: 'natura', pregio: 2 },
@@ -258,7 +253,6 @@ export const ASPETTI = {
     { sprite: 'amuleto-14', tinta: 'arcano', pregio: 3 },
     { sprite: 'amuleto-17', tinta: 'veleno', pregio: 2 },
     { sprite: 'amuleto-19', tinta: 'arcano', pregio: 2 },
-    { sprite: 'amuleto-21', tinta: 'ombra', pregio: 3 },
     { sprite: 'amuleto-23', tinta: 'ombra', pregio: 3 },
     { sprite: 'amuleto-24', tinta: 'natura', pregio: 3 },
     { sprite: 'amuleto-26', tinta: 'natura', pregio: 3 },
