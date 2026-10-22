@@ -58,15 +58,15 @@ const SPEC = {
   28: { forma: 'tondo', R: 0.255, campo: [K.legnoRossiccio], assi: 7, rim: ferro.medio, bordo: 'borchie', borchiaR: 0.02, umbone: { r: 0.07, col: ferro.chiaro } },
   29: { forma: 'goccia', W: 0.215, yT: 0.28, yB: -0.3, p: 2.3, top: 'arco', campo: [K.marrone], assi: 5, embl: ['teschio', { s: 1.1, col: K.oro }], bordo: 'dentelli' },
   30: { forma: 'goccia', W: 0.21, yT: 0.28, yB: -0.3, p: 2.5, campo: [K.legnoViola], assi: 5, embl: ['croce', { up: 0.2, dn: 0.2, sd: 0.15, t: 0.03, fl: 0.03, col: 0xff6a1e, viva: true }], bordo: 'liscio' },
-  31: { forma: 'goccia', W: 0.225, yT: 0.27, yB: -0.3, p: 2.7, top: 'conc', campo: [K.nero], embl: ['leone', { col: K.oro, col2: K.oroS, lingua: true, pose: -1 }], bordo: 'liscio' },
+  31: { forma: 'goccia', W: 0.225, yT: 0.27, yB: -0.3, p: 2.7, top: 'conc', campo: [K.nero], embl: ['leone', { stile: 'passante', col: K.oro, col2: K.oroS, lingua: true, pose: -1 }], bordo: 'liscio' },
   32: { forma: 'goccia', W: 0.225, yT: 0.28, yB: -0.3, p: 2.4, campo: [K.cobalto], embl: ['croce', { up: 0.17, dn: 0.17, sd: 0.14, t: 0.04, col: K.argento }], bordo: 'liscio', borchieCampo: true },
   33: { forma: 'goccia', W: 0.23, yT: 0.28, yB: -0.31, p: 2.1, top: 'corna', campo: [K.nerastro], embl: ['drago', { col: K.rossoV, col2: K.rossoS }], bordo: 'dentelli' },
   34: { forma: 'goccia', W: 0.2, yT: 0.29, yB: -0.31, p: 2.3, campo: [K.legnoAmbra], assi: 4, embl: ['croce', { up: 0.2, dn: 0.2, sd: 0.15, t: 0.02, tri: true, col: K.argento }], bordo: 'liscio' },
   35: { forma: 'goccia', W: 0.21, yT: 0.28, yB: -0.3, p: 2.2, top: 'picco', campo: [K.nero], embl: ['luna', { col: K.oro }], bordo: 'rune' },
   36: { forma: 'mandorla', W: 0.21, yT: 0.3, yB: -0.3, campo: [K.rossoBruno, 0x5a1a18], assi: 3, embl: ['giglioOsso', { col: K.ossoOro }], bordo: 'dentelli' },
-  37: { forma: 'goccia', W: 0.215, yT: 0.28, yB: -0.3, p: 2.6, top: 'tacche', campo: [K.marrone], embl: ['leone', { col: 0xc8641e, col2: 0x8a3a14, pose: -1 }], bordo: 'liscio' },
+  37: { forma: 'goccia', W: 0.215, yT: 0.28, yB: -0.3, p: 2.6, top: 'tacche', campo: [K.marrone], embl: ['leone', { stile: 'testa', col: 0xc8641e, col2: 0x8a3a14, pose: -1 }], bordo: 'liscio' },
   38: { forma: 'goccia', W: 0.215, yT: 0.28, yB: -0.3, p: 2.3, top: 'arco', campo: [K.bluNotte, K.viola], embl: ['teschio', { s: 1.1, col: K.osso, occhiVivi: true }], bordo: 'rune' },
-  39: { forma: 'goccia', W: 0.22, yT: 0.28, yB: -0.3, p: 2.5, top: 'picco', campo: [K.bluNero], embl: ['leone', { col: K.oro, col2: K.oroS, fiamme: true }], bordo: 'borchie' },
+  39: { forma: 'goccia', W: 0.22, yT: 0.28, yB: -0.3, p: 2.5, top: 'picco', campo: [K.bluNero], embl: ['leone', { stile: 'sedente', col: K.oro, col2: K.oroS, fiamme: true }], bordo: 'borchie' },
   40: { forma: 'goccia', W: 0.235, yT: 0.27, yB: -0.3, p: 2.8, top: 'conc', campo: [K.bluS], embl: ['teschio', { s: 1.45, col: K.osso, mascella: true }], bordo: 'dentelli' },
   41: { forma: 'goccia', W: 0.2, yT: 0.27, yB: -0.29, p: 2.4, campo: [K.marrone], assi: 4, embl: ['croce', { up: 0.1, dn: 0.1, sd: 0.08, t: 0.016, col: K.argentoS }], bordo: 'liscio' },
   42: { forma: 'goccia', W: 0.21, yT: 0.28, yB: -0.3, p: 2.2, campo: [K.marroneChiaro], assi: 4, embl: ['croce', { up: 0.16, dn: 0.16, sd: 0.14, t: 0.024, fl: 0.04, col: K.bianco }], bordo: 'liscio' },
@@ -78,7 +78,7 @@ const SPEC = {
   48: { forma: 'goccia', W: 0.2, yT: 0.28, yB: -0.31, p: 2.3, campo: [K.grigioBlu], embl: ['croce', { up: 0.19, dn: 0.19, sd: 0.15, t: 0.014, fl: 0.035, col: K.ossoOro }], bordo: 'liscio' },
   49: { forma: 'tondo', R: 0.24, campo: [K.bluNotte], embl: ['runa', {}], bordo: 'rune' },
   50: { forma: 'tondo', R: 0.255, campo: [K.viola, K.bluNero], stelle: true, embl: ['occhio', {}], bordo: 'rune' },
-  51: { forma: 'goccia', W: 0.225, yT: 0.28, yB: -0.3, p: 2.2, top: 'arco', campo: [K.arancio, K.rossoS], embl: ['leone', { col: K.oro, col2: K.oroS, corona: true, viva: true }], bordo: 'borchie' },
+  51: { forma: 'goccia', W: 0.225, yT: 0.28, yB: -0.3, p: 2.2, top: 'arco', campo: [K.arancio, K.rossoS], embl: ['leone', { stile: 'gardant', col: K.oro, col2: K.oroS, corona: true, viva: true }], bordo: 'borchie' },
   52: { forma: 'goccia', W: 0.2, yT: 0.27, yB: -0.29, p: 2.4, campo: [K.blu], embl: ['elle', { col: K.argento }], bordo: 'liscio' },
   53: { forma: 'tondo', R: 0.25, campo: [K.nerastro], embl: ['fiamma', { col: K.rossoV, col2: K.aranciaV }], bordo: 'punte', rim: oroM.medio, rimT: 'oro' }
 }
@@ -200,6 +200,127 @@ function croceGeo ({ up, dn, sd, t, fl = 0 }, grow = 0) {
   return out
 }
 
+// ── sagome: un nastro che si affusola lungo una linea, una stella a raggi ──
+function nastro (path, w0, w1) {
+  const n = path.length, L = [], R = []
+  for (let i = 0; i < n; i++) {
+    const a = path[Math.max(0, i - 1)], b = path[Math.min(n - 1, i + 1)], dx = b[0] - a[0], dy = b[1] - a[1], d = Math.hypot(dx, dy) || 1
+    const w = (w0 + (w1 - w0) * i / (n - 1)) / 2, nx = -dy / d * w, ny = dx / d * w
+    L.push([path[i][0] + nx, path[i][1] + ny]); R.push([path[i][0] - nx, path[i][1] - ny])
+  }
+  return [...L, ...R.reverse()]
+}
+function stella (cx, cy, R0, R1, n, rot = 0) {
+  return Array.from({ length: n * 2 }, (_, i) => { const a = rot + i * Math.PI / n, r = i % 2 ? R1 : R0; return [cx + Math.cos(a) * r, cy + Math.sin(a) * r] })
+}
+const ellisse = (cx, cy, rx, ry, n = 10) => Array.from({ length: n }, (_, i) => [cx + Math.cos(i * 2 * Math.PI / n) * rx, cy + Math.sin(i * 2 * Math.PI / n) * ry])
+
+const corona = (D, cx, cy, w, L) => D([[cx - w, cy], [cx + w, cy], [cx + w, cy + w * 0.5], [cx + w * 0.55, cy + w * 0.25], [cx + w * 0.55, cy + w * 0.95], [cx, cy + w * 0.5], [cx - w * 0.55, cy + w * 0.95], [cx - w * 0.55, cy + w * 0.25], [cx - w, cy + w * 0.5]], K.oro, L)
+
+// ── i cinque leoni, ognuno con la sua sagoma: rampante (20), passante (31), testa (37), sedente a raggi (39), gardant (51) ──
+const LEO = {
+  rampante (c, o) {
+    const { f } = c, m = o.pose || 1, S = 0.88, y0 = c.y - 0.045
+    const PL = [[-0.10, -0.15], [-0.02, -0.15], [0.0, -0.10], [0.03, -0.15], [0.10, -0.15], [0.10, -0.12], [0.05, -0.09], [0.04, -0.02], [0.08, 0.02], [0.15, 0.04], [0.18, 0.08], [0.15, 0.1], [0.1, 0.07],
+      [0.13, 0.11], [0.18, 0.14], [0.15, 0.16], [0.09, 0.13], [0.06, 0.15], [0.02, 0.17], [-0.05, 0.06], [-0.08, -0.02], [-0.10, -0.08]]
+    dec(f, PL.map(([x, y]) => [m * x * S, y * S]), o.col, 1, 'oro', 0, y0)
+    dec(f, [[-0.02, -0.1], [0.02, -0.03], [-0.02, 0.06], [-0.06, 0.0]].map(([x, y]) => [m * x * S, y * S]), o.col2, 2, 'oro', 0, y0)   // l'ombra del corpo
+    const z = capa(2) + 0.006
+    f.metti(ico(0.062 * S, 0), o.col2, m * 0.035 * S, y0 + 0.19 * S, z, { s: [1, 1, 0.7] }, 'oro')                       // criniera
+    f.metti(sfe(0.04 * S, 6, 4), o.col, m * 0.075 * S, y0 + 0.2 * S, z + 0.01, { s: [1, 1, 0.8] }, 'oro')                   // testa
+    f.metti(sca(0.045 * S, 0.028 * S, 0.03 * S), o.col, m * 0.115 * S, y0 + 0.19 * S, z + 0.008, {}, 'oro')                // muso
+    f.metti(sfe(0.008 * S, 4, 3), K.ink, m * 0.095 * S, y0 + 0.215 * S, z + 0.035, {})
+    if (o.lingua) f.metti(sca(0.03 * S, 0.008 * S, 0.01), 0xd03a3a, m * 0.135 * S, y0 + 0.178 * S, z + 0.012, {})
+    const T = [[-0.08, -0.03], [-0.15, 0.0], [-0.17, 0.08], [-0.13, 0.14]].map(([x, y]) => [m * x * S, y0 + y * S, capa(1) + 0.004])
+    f.fila(T, 0.012 * S, 0.008 * S, o.col, 'oro', 4); f.metti(ico(0.02 * S, 0), o.col2, ...T[3], {}, 'oro')
+    if (o.corona) { f.metti(cil(0.028 * S, 0.036 * S, 0.02, 5), K.oro, m * 0.04 * S, y0 + 0.255 * S, z + 0.01, {}, 'oro'); for (const x of [-1, 0, 1]) f.metti(con(0.009, 0.03, 4), K.oro, m * (0.04 + x * 0.02) * S, y0 + 0.285 * S, z + 0.01, {}, 'oro') }
+    if (o.fiamme) c.fiamme = [[m * 0.0, y0 + 0.28 * S, 0.04], [m * -0.12 * S, y0 + 0.18 * S, 0.04], [m * 0.14 * S, y0 + 0.24 * S, 0.04], [m * -0.14 * S, y0 - 0.1 * S, 0.04]]
+  },
+  // il passante: il corpo orizzontale, tre zampe a terra e una alzata, la coda sul dorso, la testa girata verso chi guarda
+  passante (c, o) {
+    const { f } = c, m = o.pose || 1, S = 0.84, y0 = c.y + 0.01
+    const Q = pts => pts.map(([x, y]) => [m * x * S, y * S]), D = (pts, col, L) => dec(f, Q(pts), col, L, 'oro', 0, y0)
+    const P = (x, y, zz) => [m * x * S, y0 + y * S, zz]
+    D([[-0.17, 0.01], [-0.16, 0.06], [-0.10, 0.085], [0.0, 0.075], [0.08, 0.085], [0.12, 0.05], [0.115, -0.01], [0.08, -0.04], [0.0, -0.035], [-0.09, -0.04], [-0.15, -0.03]], o.col, 1)
+    D([[-0.1, -0.035], [0.0, -0.03], [0.07, -0.035], [0.04, 0.0], [-0.04, 0.005], [-0.1, 0.0]], o.col2, 2)            // il ventre in ombra
+    for (const [pts, x] of [[[[-0.13, -0.03], [-0.115, -0.09], [-0.135, -0.14]], -0.135], [[[-0.075, -0.03], [-0.06, -0.09], [-0.075, -0.14]], -0.075], [[[0.085, -0.03], [0.09, -0.09], [0.085, -0.14]], 0.085]]) {
+      D(nastro(pts, 0.034, 0.022), o.col, 1); D([[x - 0.03, -0.155], [x + 0.03, -0.155], [x + 0.025, -0.125], [x - 0.02, -0.125]], o.col, 1)
+    }
+    D(nastro([[0.105, 0.0], [0.15, -0.02], [0.19, -0.065]], 0.032, 0.022), o.col, 1); D([[0.18, -0.085], [0.23, -0.085], [0.22, -0.045], [0.185, -0.05]], o.col, 1)   // la zampa alzata
+    const T = [[-0.16, 0.04], [-0.205, 0.1], [-0.2, 0.17], [-0.15, 0.205]]
+    D(nastro(T, 0.022, 0.014), o.col, 1); f.metti(ico(0.026 * S, 0), o.col2, ...P(-0.15, 0.215, capa(1) + 0.006), {}, 'oro')
+    const zz = capa(2) + 0.004
+    D(stella(0.145, 0.065, 0.1, 0.07, 11, 0.2), o.col2, 2)                                                           // la criniera a punte
+    D([[0.12, 0.035], [0.125, 0.1], [0.165, 0.12], [0.215, 0.095], [0.23, 0.06], [0.2, 0.035]], o.col, 3)           // il muso
+    f.metti(sfe(0.009 * S, 4, 3), K.ink, ...P(0.195, 0.09, capa(3) + 0.012), {})
+    f.metti(sca(0.02 * S, 0.016 * S, 0.012), K.ink, ...P(0.228, 0.065, capa(3) + 0.006), {})
+    if (o.lingua) f.metti(sca(0.03 * S, 0.008 * S, 0.01), 0xd03a3a, ...P(0.222, 0.04, zz + 0.02), {})
+    D([[0.15, 0.115], [0.155, 0.15], [0.175, 0.125]], o.col, 3)                                                       // l'orecchio
+  },
+  // la testa di leone di fronte: la criniera tutta a raggi, il muso, le orecchie
+  testa (c, o) {
+    const { f } = c, y0 = c.y + 0.005, Q = (pts, dx = 0) => pts.map(([x, y]) => [x + dx, y])
+    const D = (pts, col, L) => dec(f, pts, col, L, 'oro', 0, y0)
+    D(stella(0, 0, 0.2, 0.135, 14, 0.1), o.col2, 1)
+    D(stella(0, 0, 0.15, 0.11, 14, 0.1 + Math.PI / 14), o.col, 2)
+    D(ellisse(0, -0.01, 0.1, 0.115, 12), o.col2, 3)
+    for (const s of [-1, 1]) { D(ellisse(s * 0.09, 0.105, 0.032, 0.032, 8), o.col, 3); D(ellisse(s * 0.09, 0.105, 0.017, 0.017, 6), o.col2, 4) }
+    D(ellisse(0, -0.005, 0.085, 0.1, 12), o.col, 4)
+    D(ellisse(-0.03, -0.055, 0.04, 0.032, 8), 0xf0d898, 5); D(ellisse(0.03, -0.055, 0.04, 0.032, 8), 0xf0d898, 5)    // il muso
+    D([[-0.032, -0.02], [0.032, -0.02], [0.012, -0.05], [-0.012, -0.05]], K.ink, 6)                                  // il naso
+    for (const s of [-1, 1]) {
+      D([[s * 0.025, 0.045], [s * 0.075, 0.035], [s * 0.07, 0.065], [s * 0.03, 0.07]], 0xf6d8a0, 5)
+      f.metti(sfe(0.011, 4, 3), K.ink, s * 0.047, y0 + 0.052, capa(5) + 0.012, { s: [1.2, 0.8, 0.5] })               // gli occhi
+      D(nastro([[s * 0.012, -0.055], [s * 0.012, -0.085], [s * 0.04, -0.095]], 0.006, 0.006), K.ink, 6)              // la bocca
+    }
+    if (o.lingua) D([[-0.012, -0.09], [0.012, -0.09], [0.012, -0.125], [-0.012, -0.125]], 0xd03a3a, 6)
+    if (o.corona) corona(D, 0, 0.11, 0.07, 7)
+    if (o.fiamme) c.fiamme = [[0, y0 + 0.21, 0.04], [-0.17, y0 + 0.1, 0.04], [0.17, y0 + 0.1, 0.04]]
+    void Q
+  },
+  // il sedente: seduto sulle zampe di dietro, il petto dritto, la testa di profilo in una corona di raggi
+  sedente (c, o) {
+    const { f } = c, m = o.pose || 1, S = 0.86, y0 = c.y - 0.03
+    const Q = pts => pts.map(([x, y]) => [m * x * S, y * S]), D = (pts, col, L) => dec(f, Q(pts), col, L, 'oro', 0, y0)
+    const P = (x, y, zz) => [m * x * S, y0 + y * S, zz]
+    D(nastro([[-0.1, -0.15], [-0.17, -0.15], [-0.2, -0.08], [-0.17, -0.02]], 0.022, 0.014), o.col, 1); f.metti(ico(0.024 * S, 0), o.col2, ...P(-0.17, -0.015, capa(1) + 0.006), {}, 'oro')
+    D([[-0.1, -0.16], [-0.12, -0.08], [-0.09, 0.0], [-0.04, 0.07], [0.02, 0.1], [0.07, 0.08], [0.08, 0.0], [0.065, -0.1], [0.07, -0.16], [0.0, -0.17]], o.col, 1)   // il tronco
+    D(ellisse(-0.04, -0.1, 0.085, 0.07, 10), o.col2, 2)                                                           // la coscia
+    D([[-0.07, -0.165], [0.02, -0.165], [0.025, -0.14], [-0.065, -0.14]], o.col, 2)
+    D(nastro([[0.045, 0.02], [0.055, -0.07], [0.055, -0.14]], 0.036, 0.028), o.col, 2); D([[0.04, -0.17], [0.1, -0.17], [0.095, -0.14], [0.04, -0.14]], o.col, 2)   // la zampa davanti
+    D(stella(0.06, 0.155, 0.125, 0.085, 13, 0.3), o.col2, 1)                                                      // i raggi della criniera
+    D(ellisse(0.06, 0.15, 0.085, 0.085, 10), o.col, 2)
+    D([[0.075, 0.115], [0.085, 0.195], [0.14, 0.205], [0.185, 0.17], [0.185, 0.135], [0.14, 0.11]], 0xf0d898, 3)  // il muso
+    f.metti(sfe(0.009 * S, 4, 3), K.ink, ...P(0.145, 0.178, capa(3) + 0.012), {})
+    f.metti(sca(0.02 * S, 0.016 * S, 0.012), K.ink, ...P(0.186, 0.152, capa(3) + 0.006), {})
+    if (o.lingua) f.metti(sca(0.03 * S, 0.008 * S, 0.01), 0xd03a3a, ...P(0.18, 0.128, capa(3) + 0.012), {})
+    if (o.corona) corona(D, 0.06, 0.225, 0.05, 4)
+    if (o.fiamme) c.fiamme = [[m * 0.06 * S, y0 + 0.28 * S, 0.04], [m * -0.1 * S, y0 + 0.2 * S, 0.04], [m * 0.2 * S, y0 + 0.24 * S, 0.04]]
+  },
+  // il gardant: dritto di fronte, le braccia aperte e la testa che guarda fuori dallo scudo
+  gardant (c, o) {
+    const { f } = c, S = 0.9, y0 = c.y - 0.03, Q = pts => pts.map(([x, y]) => [x * S, y * S])
+    const D = (pts, col, L) => dec(f, Q(pts), col, L, 'oro', 0, y0)
+    D(nastro([[0.05, -0.12], [0.16, -0.12], [0.2, -0.02], [0.17, 0.06]], 0.022, 0.014), o.col, 1); f.metti(ico(0.024 * S, 0), o.col2, 0.17 * S, y0 + 0.07 * S, capa(1) + 0.006, {}, 'oro')
+    D([[-0.065, 0.1], [0.065, 0.1], [0.085, 0.0], [0.075, -0.1], [0.125, -0.175], [0.04, -0.175], [0.0, -0.1], [-0.04, -0.175], [-0.125, -0.175], [-0.075, -0.1], [-0.085, 0.0]], o.col, 1)
+    D([[-0.04, 0.08], [0.04, 0.08], [0.05, -0.04], [0.0, -0.09], [-0.05, -0.04]], o.col2, 2)                      // il petto in ombra
+    for (const s of [-1, 1]) {
+      D(nastro([[s * 0.06, 0.07], [s * 0.14, 0.1], [s * 0.2, 0.17]], 0.034, 0.026), o.col, 1)
+      D([[s * 0.17, 0.155], [s * 0.19, 0.21], [s * 0.21, 0.175], [s * 0.235, 0.19], [s * 0.235, 0.15], [s * 0.21, 0.13]], o.col, 1)   // la mano con gli artigli
+    }
+    D(stella(0, 0.17, 0.125, 0.085, 14, 0.12), o.col2, 1)
+    D(ellisse(0, 0.17, 0.082, 0.088, 12), o.col, 2)
+    for (const s of [-1, 1]) {
+      D(ellisse(s * 0.07, 0.235, 0.024, 0.024, 7), o.col, 2)
+      f.metti(sfe(0.01 * S, 4, 3), K.ink, s * 0.034 * S, y0 + 0.19 * S, capa(2) + 0.012, { s: [1.2, 0.8, 0.5] })
+    }
+    D(ellisse(0, 0.14, 0.05, 0.04, 8), 0xf0d898, 3); D([[-0.022, 0.16], [0.022, 0.16], [0.0, 0.14]], K.ink, 4)
+    if (o.lingua) D([[-0.01, 0.125], [0.01, 0.125], [0.01, 0.1], [-0.01, 0.1]], 0xd03a3a, 4)
+    if (o.corona) corona(D, 0, 0.245, 0.06, 5)
+    if (o.fiamme) c.fiamme = [[0, y0 + 0.36 * S, 0.04], [-0.17 * S, y0 + 0.25 * S, 0.04], [0.17 * S, y0 + 0.25 * S, 0.04]]
+  }
+}
+
 // ── gli emblemi: tutti a (0, y) con `s` come scala, partono da capa(0) ──
 const EMB = {
   croce (c, o) {
@@ -224,23 +345,7 @@ const EMB = {
     f.metti(con(s * 0.14, s * 0.3, 3), K.ink, 0, y - s * 0.38, z + s * 0.42, { rx: PIATTA * 0 + 0.1, rz: Math.PI }, 'pieno')
     for (const x of [-0.45, -0.15, 0.15, 0.45]) f.metti(sca(s * 0.1, s * 0.3, s * 0.1), K.ink, x * s, y - s * 0.98, z + s * 0.34, {})
   },
-  leone (c, o) {
-    const { f } = c, m = o.pose || 1, S = 0.88, y0 = c.y - 0.045
-    const PL = [[-0.10, -0.15], [-0.02, -0.15], [0.0, -0.10], [0.03, -0.15], [0.10, -0.15], [0.10, -0.12], [0.05, -0.09], [0.04, -0.02], [0.08, 0.02], [0.15, 0.04], [0.18, 0.08], [0.15, 0.1], [0.1, 0.07],
-      [0.13, 0.11], [0.18, 0.14], [0.15, 0.16], [0.09, 0.13], [0.06, 0.15], [0.02, 0.17], [-0.05, 0.06], [-0.08, -0.02], [-0.10, -0.08]]
-    dec(f, PL.map(([x, y]) => [m * x * S, y * S]), o.col, 1, 'oro', 0, y0)
-    dec(f, [[-0.02, -0.1], [0.02, -0.03], [-0.02, 0.06], [-0.06, 0.0]].map(([x, y]) => [m * x * S, y * S]), o.col2, 2, 'oro', 0, y0)   // l'ombra del corpo
-    const z = capa(2) + 0.006
-    f.metti(ico(0.062 * S, 0), o.col2, m * 0.035 * S, y0 + 0.19 * S, z, { s: [1, 1, 0.7] }, 'oro')                       // criniera
-    f.metti(sfe(0.04 * S, 6, 4), o.col, m * 0.075 * S, y0 + 0.2 * S, z + 0.01, { s: [1, 1, 0.8] }, 'oro')                   // testa
-    f.metti(sca(0.045 * S, 0.028 * S, 0.03 * S), o.col, m * 0.115 * S, y0 + 0.19 * S, z + 0.008, {}, 'oro')                // muso
-    f.metti(sfe(0.008 * S, 4, 3), K.ink, m * 0.095 * S, y0 + 0.215 * S, z + 0.035, {})
-    if (o.lingua) f.metti(sca(0.03 * S, 0.008 * S, 0.01), 0xd03a3a, m * 0.135 * S, y0 + 0.178 * S, z + 0.012, {})
-    const T = [[-0.08, -0.03], [-0.15, 0.0], [-0.17, 0.08], [-0.13, 0.14]].map(([x, y]) => [m * x * S, y0 + y * S, capa(1) + 0.004])
-    f.fila(T, 0.012 * S, 0.008 * S, o.col, 'oro', 4); f.metti(ico(0.02 * S, 0), o.col2, ...T[3], {}, 'oro')
-    if (o.corona) { f.metti(cil(0.028 * S, 0.036 * S, 0.02, 5), K.oro, m * 0.04 * S, y0 + 0.255 * S, z + 0.01, {}, 'oro'); for (const x of [-1, 0, 1]) f.metti(con(0.009, 0.03, 4), K.oro, m * (0.04 + x * 0.02) * S, y0 + 0.285 * S, z + 0.01, {}, 'oro') }
-    if (o.fiamme) c.fiamme = [[m * 0.0, y0 + 0.28 * S, 0.04], [m * -0.12 * S, y0 + 0.18 * S, 0.04], [m * 0.14 * S, y0 + 0.24 * S, 0.04], [m * -0.14 * S, y0 - 0.1 * S, 0.04]]
-  },
+  leone (c, o) { LEO[o.stile || 'rampante'](c, o) },
   sole (c, o) {
     const { f } = c, n = o.raggi || 12, R = o.rilievo ? 0.085 : 0.075, y = c.y
     for (let i = 0; i < n; i++) {
@@ -306,9 +411,9 @@ const EMB = {
   occhio (c) {
     const f = c.f, y = c.y, z = capa(0)
     for (let i = 0; i < 14; i++) { const a = i * Math.PI / 7; f.metti(con(0.014, i % 2 ? 0.05 : 0.08, 4), 0xffb040, Math.cos(a) * 0.14, y + Math.sin(a) * 0.14, z + 0.004, { rz: a - PIATTA, s: [1, 1, 0.5] }, 'oro') }
-    f.metti(sfe(0.13, 14, 8), K.ink, 0, y, z - 0.004, { s: [1, 0.62, 0.3] }, 'pieno')
-    f.metti(sfe(0.115, 14, 8), 0xf6d6dc, 0, y, z - 0.002, { s: [1, 0.55, 0.38] }, 'pieno')
-    f.metti(sfe(0.06, 12, 8), 0xe22a2a, 0, y, z + 0.016, { s: [1, 1, 0.5] }, 'viva')
+    f.metti(sfe(0.13, 12, 6), K.ink, 0, y, z - 0.004, { s: [1, 0.62, 0.3] }, 'pieno')
+    f.metti(sfe(0.115, 12, 6), 0xf6d6dc, 0, y, z - 0.002, { s: [1, 0.55, 0.38] }, 'pieno')
+    f.metti(sfe(0.06, 10, 6), 0xe22a2a, 0, y, z + 0.016, { s: [1, 1, 0.5] }, 'viva')
     f.metti(sfe(0.027, 8, 6), K.ink, 0, y, z + 0.03, { s: [0.7, 1.3, 0.4] }, 'pieno')
   },
   runa (c) {
@@ -318,20 +423,33 @@ const EMB = {
     dec(f, [[0, -0.07], [0.02, -0.07], [0.02, -0.17], [0.07, -0.2], [0.0, -0.21], [-0.02, -0.17]], 0xe2551f, 1, 'viva', 0, y)
     f.metti(ott(0.034), 0xffe08a, 0, y + 0.03, capa(2) + 0.01, { s: [1, 1.2, 0.7] }, 'viva')
   },
+  // il drago araldico rampante: ali a membrana con le dita, collo ad S, testa col muso aperto e le corna, artigli, coda a spirale
   drago (c, o) {
-    const { f } = c, z = capa(0) + 0.012, y = c.y, S = 1.3
-    const P = (x, yy, zz = 0) => [x * S, y + yy * S, z + zz]
-    f.fila([P(-0.1, -0.12), P(-0.14, -0.04), P(-0.12, 0.04), P(-0.14, 0.1), P(-0.1, 0.14)], 0.013 * S, 0.004 * S, o.col, 'pieno', 5)     // la coda arricciata
-    f.fila([P(-0.06, -0.1), P(0.0, -0.04), P(0.02, 0.04), P(0.05, 0.1)], 0.03 * S, 0.02 * S, o.col, 'pieno', 6)                           // il corpo
-    f.metti(sfe(0.03 * S, 7, 5), o.col, ...P(0.075, 0.125), { s: [1.2, 1, 0.9] }, 'pieno')
-    f.metti(con(0.015 * S, 0.05 * S, 4), o.col, ...P(0.115, 0.12), { rz: -PIATTA }, 'pieno')
-    for (const x of [-0.01, 0.025]) f.metti(con(0.01 * S, 0.04 * S, 4), o.col2, ...P(0.06 + x, 0.155), { rz: 0.4 }, 'pieno')
-    f.metti(sfe(0.007 * S, 4, 3), 0xffd23a, ...P(0.085, 0.133, 0.025), {}, 'viva')
-    // l'ala
-    f.metti(poli([[0, 0], [-0.04, 0.12], [-0.01, 0.1], [0.03, 0.15], [0.05, 0.09], [0.1, 0.12], [0.08, 0.02]].map(([x, yy]) => [x * S, yy * S]), 0.012, 0), o.col2, 0, y + 0.0, z - 0.01, {}, 'pieno')
-    f.asta(P(0.02, 0.03), P(0.09, -0.03), 0.014 * S, 0.01 * S, o.col, 'pieno', 5); f.asta(P(0.0, -0.06), P(-0.03, -0.14), 0.016 * S, 0.012 * S, o.col, 'pieno', 5)
-    f.asta(P(0.03, -0.01), P(0.1, 0.02), 0.012 * S, 0.01 * S, o.col, 'pieno', 5)
-    f.asta(P(-0.02, -0.07), P(0.04, -0.14), 0.016 * S, 0.012 * S, o.col, 'pieno', 5)
+    const { f } = c, y0 = c.y + 0.0, S = 0.82
+    const Q = pts => pts.map(([x, y]) => [x * S, y * S]), D = (pts, col, L, t = 'pieno') => dec(f, Q(pts), col, L, t, 0, y0)
+    const P = (x, y, zz) => [x * S, y0 + y * S, zz]
+    // l'ala: la membrana a festoni dietro il corpo, le dita sopra
+    D([[0.0, 0.09], [-0.05, 0.2], [-0.11, 0.255], [-0.2, 0.23], [-0.17, 0.17], [-0.235, 0.12], [-0.17, 0.08], [-0.2, 0.01], [-0.12, 0.03], [-0.06, 0.0]], o.col2, 0)
+    for (const [a, b] of [[[0.0, 0.09], [-0.11, 0.255]], [[-0.11, 0.255], [-0.2, 0.23]], [[-0.11, 0.255], [-0.235, 0.12]], [[-0.11, 0.255], [-0.2, 0.01]]])
+      D(nastro([a, b], 0.017, 0.008), o.col, 1)
+    // la coda: spirale che si affina, con la punta a freccia
+    const coda = [[-0.07, -0.1], [-0.14, -0.15], [-0.22, -0.13], [-0.23, -0.06], [-0.18, -0.03], [-0.15, -0.06]]
+    D(nastro(coda, 0.036, 0.01), o.col, 1); D([[-0.145, -0.06], [-0.2, -0.085], [-0.15, -0.115]], o.col2, 1)
+    // il corpo e il collo ad S
+    D([[-0.085, -0.14], [-0.095, -0.04], [-0.07, 0.04], [-0.05, 0.1], [-0.055, 0.16], [-0.02, 0.205], [0.04, 0.215], [0.05, 0.17], [0.025, 0.125], [0.05, 0.075], [0.08, 0.02], [0.075, -0.06], [0.045, -0.14]], o.col, 1)
+    D([[0.05, 0.17], [0.025, 0.125], [0.05, 0.075], [0.08, 0.02], [0.075, -0.06], [0.045, -0.14], [0.02, -0.14], [0.045, -0.06], [0.045, 0.02], [0.02, 0.075], [0.0, 0.125], [0.02, 0.17]], o.col2, 2)   // il ventre a fasce
+    // la testa: cranio, muso lungo, mascella aperta con la lingua
+    D([[-0.02, 0.19], [-0.01, 0.245], [0.05, 0.265], [0.12, 0.25], [0.2, 0.235], [0.205, 0.215], [0.13, 0.2], [0.09, 0.185], [0.05, 0.17]], o.col, 2)
+    D([[0.07, 0.185], [0.13, 0.195], [0.19, 0.17], [0.2, 0.15], [0.13, 0.15], [0.07, 0.15]], o.col2, 2)
+    D([[0.13, 0.195], [0.2, 0.2], [0.185, 0.18]], 0xf2efe6, 3)                                                       // le zanne
+    D([[0.11, 0.19], [0.17, 0.19], [0.15, 0.172]], 0xc8302a, 3)                                                       // la lingua
+    D([[0.0, 0.25], [-0.07, 0.31], [-0.04, 0.24]], o.col2, 3); D([[0.04, 0.265], [-0.02, 0.33], [0.01, 0.26]], o.col2, 3)     // le corna
+    f.metti(sfe(0.012 * S, 5, 4), 0xffd23a, ...P(0.075, 0.23, capa(2) + 0.012), { s: [1.3, 0.8, 0.6] }, 'viva')
+    // le zampe: dietro piantata, davanti due con gli artigli
+    D([[-0.09, -0.05], [-0.05, -0.1], [0.0, -0.13], [0.0, -0.18], [0.1, -0.18], [0.1, -0.15], [0.06, -0.15], [0.04, -0.09], [-0.01, -0.03]], o.col, 2)
+    for (const k of [0.06, 0.08, 0.1]) D([[k - 0.012, -0.18], [k + 0.012, -0.18], [k, -0.2]], 0xf2efe6, 2)
+    D(nastro([[0.06, 0.05], [0.13, 0.08], [0.2, 0.125]], 0.034, 0.024), o.col, 2); D([[0.19, 0.12], [0.24, 0.15], [0.23, 0.12], [0.255, 0.12], [0.22, 0.09]], o.col, 2)
+    D(nastro([[0.06, 0.0], [0.13, -0.01], [0.2, 0.02]], 0.034, 0.024), o.col, 2); D([[0.19, 0.03], [0.245, 0.04], [0.225, 0.015], [0.25, 0.0], [0.205, -0.01]], o.col, 2)
   },
   albero (c, o) {
     const { f } = c, y = c.y, z = capa(0) + 0.01
@@ -414,7 +532,7 @@ export function crea (figura) {
   const nB = Math.max(8, Math.round(perim / 0.09))
   if (s.bordo === 'borchie') {
     const r = s.borchiaR || 0.014
-    for (const p of perimetro(scalaPts(outer, (k + 1) / 2 + 0.005, cy), nB, 0.5)) f.metti(sfe(r, 5, 3), figura.materia === 'oro' || rimT === 'oro' ? oroM.chiaro : matRim.chiaro, p.x, p.y, 0.027, { s: [1, 1, 0.6] }, 'metallo')
+    for (const p of perimetro(scalaPts(outer, (k + 1) / 2 + 0.005, cy), nB, 0.5)) f.metti(sfe(r, 4, 2), figura.materia === 'oro' || rimT === 'oro' ? oroM.chiaro : matRim.chiaro, p.x, p.y, 0.027, { s: [1, 1, 0.6] }, 'metallo')
   } else if (s.bordo === 'dentelli' || s.bordo === 'punte') {
     const punte = s.bordo === 'punte', nn = punte ? 16 : Math.round(nB * 0.7), h = punte ? 0.08 : 0.034, wd = punte ? 0.04 : 0.032
     for (const p of perimetro(outer, nn, 0.5)) {
