@@ -11,6 +11,7 @@ import { vesti, TIPI } from './eroi3d/armature.js'
 import { vestiDotazione } from './eroe3d.js'
 import { creaPezzo, vestiFigura } from './roba3d.js'
 import { idDi, costruisci } from './mostri3d/registro.js'
+import { creaPersona } from './persone3d/persone.js'
 
 const FOV = 24
 const _b = new THREE.Box3()
@@ -96,6 +97,19 @@ function inPosaMostro(r) {
   return { obj: perno, scatola: s, verso: [0, 0.18, 1] }
 }
 
+// una persona del mondo di sopra a mezzo busto, appena girata: la faccia e le spalle, come il ritratto dell'eroe (il cappello del
+// pescatore e lo zaino del rigattiere restano dentro a metà)
+function inPosaPersona(chi) {
+  const g = creaPersona(chi)
+  g.userData.anima(0.6)
+  g.rotation.y = 0.3
+  g.updateMatrixWorld(true)
+  const f = scatolaDi(g.userData.faccia || g.userData.testa)
+  if (!f) return { obj: g, verso: [0.1, 0.16, 1] }
+  const m = f.getCenter(new THREE.Vector3()), r = Math.max(f.max.x - f.min.x, f.max.y - f.min.y) / 2
+  return { obj: g, scatola: new THREE.Box3(new THREE.Vector3(m.x - r * 2, m.y - r * 2.4, m.z - r), new THREE.Vector3(m.x + r * 2, m.y + r * 1.8, m.z + r)), verso: [0.1, 0.1, 1] }
+}
+
 function inPosa(c) {
   switch (c.tipo) {
     case 'arma': case 'scudo': case 'gioiello': case 'consumabile': return inPosaArma(c.pezzo, c.tipo)
@@ -103,6 +117,7 @@ function inPosa(c) {
     case 'eroe': return inPosaEroe(c, false)
     case 'busto': return inPosaEroe(c, true)
     case 'mostro': return inPosaMostro(c.r)
+    case 'persona': return inPosaPersona(c.chi)
     default: return null
   }
 }

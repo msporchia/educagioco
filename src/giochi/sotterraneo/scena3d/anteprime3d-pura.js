@@ -149,6 +149,8 @@ export function leggiChiave(k) {
     }
     case 'eroe': case 'busto':
       return { tipo: p[0], eroe: eroeValido(p[1]), destra: daGettone(p[2]), sinistra: daGettone(p[3]), corpo: corpoDaGettone(p[4]), collo: daGettone(p[5]) }
+    // una persona del mondo di sopra (docs/sotterraneo/persone-3d.md): la chiave del modello; una che non c'è vale null al disegno
+    case 'persona': return /^[a-z]+$/.test(p[1] || '') ? { tipo: 'persona', chi: p[1] } : null
     case 'mostro':
       if (p[1] === 'grosso') return p[2] ? { tipo: 'mostro', r: { grosso: p[2] } } : null
       return p[1] ? { tipo: 'mostro', r: { tipo: p[1], grado: p[2] || 'comune', variante: nulla(p[3]) } } : null
@@ -157,7 +159,7 @@ export function leggiChiave(k) {
 }
 
 /** Quanti pixel veri per ogni tipo di anteprima (le viste li mostrano a metà: un telefono ha il doppio dei pixel). */
-export const MISURE = { arma: [128, 128], scudo: [128, 128], gioiello: [128, 128], consumabile: [128, 128], armatura: [128, 128], eroe: [150, 176], busto: [96, 96], mostro: [96, 96] }
+export const MISURE = { arma: [128, 128], scudo: [128, 128], gioiello: [128, 128], consumabile: [128, 128], armatura: [128, 128], eroe: [150, 176], busto: [96, 96], mostro: [96, 96], persona: [96, 96] }
 
 /**
  * La coda delle anteprime: `disegna(chiave)` produce l'immagine (testo, o una promessa di testo: la codifica può finire dopo)
