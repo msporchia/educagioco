@@ -27,6 +27,23 @@ sua. Il progetto è in [mondo-a-percorso.md](mondo-a-percorso.md#le-terre-succes
   («La terra d'autunno: Borgo d'autunno.»).
 - **Il minatore e il capitano annunciano la porta aperta**, per prima cosa, una volta ciascuno (`novita.porta` del mondo; le frasi
   in `dati/dialoghi.js`, `terre`).
+- **Il minatore racconta i volti nuovi**: nelle terre dopo la prima le discese hanno un altro nome e un altro boss
+  (`voltoDelDungeon` ruota di uno a terra). La prima volta che gli si parla in una terra (invece della presentazione) dice che le
+  discese hanno un'altra faccia e racconta quelle della zona per l'eroe (`zonaPerTe`): l'annuncio e «nome: dove»; a «Cosa c'è
+  laggiù?» le stesse più le tombe del vento, e che batterle apre la porta (non nella quinta). Codice: `voltiDellaTerra` in
+  `motore/dialoghi.js`; il volto è quello del dungeon del gioco (`ctx.dungeon`, con le volte già ripulite), se manca il primo della terra.
+
+## Il viaggio indietro
+
+- **La pietra del villaggio** riporta ai villaggi delle terre già viste: nel suo fumetto, sotto le pietre accese, un tasto per ogni
+  altra terra raggiunta («Il villaggio, la terra di casa»), da qualunque terra (anche in avanti, fino all'ultima vista). La pietra si
+  accende con la sua domanda come in ogni terra: nella terra nuova è spenta, e per tornare indietro la si accende.
+- **Si torna solo nelle terre già raggiunte** (`terreViste`): avanti oltre l'ultima si va solo dalla porta aperta.
+- **Si arriva nella piazza**, sia dalla pietra sia dalla porta verso una terra già vista: `passaTerra` scrive nel mondo di là
+  `dove: { arrivo: true }`, che non è una cella, e la riga in basso dice di nuovo terra e villaggio. Tutto il resto del mondo di là
+  (nebbia, pietre, dungeon ripuliti, taglie, mostri) resta com'era; nessun campo nuovo nel profilo.
+- **Scelta di questo lavoro**: la pietra e non la porta, perché la porta sta in fondo alla landa e nella terra nuova resta chiusa
+  finché non si battono le sue tombe; il progetto voleva anche la porta nei due versi, che resta da fare se serve.
 - **La tinta** (`TERRE` della scheda, `tingi` in `scena3d/mondo/vesti.js`): `tinta` moltiplica il colore di tutto il mondo
   (terreno, case, alberi) prima del velo delle nuvole, che resta bianco; `cielo` colora la sfera del cielo, lo sfondo e la foschia
   in proporzione al cielo della prima terra. La prima è [1, 1, 1]: non cambia niente.
@@ -57,17 +74,17 @@ Tutto nell'avventura (`profile.campagne.sotterraneo.cfg.avventure[eroe]`), nient
 
 `terraDi(a)`, `laTerra(t)`, `mondoDellaTerra(a, t)`, `conMondo(a, mondo, t)` (i campi da scrivere), `terreViste(a)`,
 `apertaLaPorta(a, t)`, `passaTerra(a, t)` (`{ terraOra }` o null: avanti di una dalla porta aperta, o in una già vista),
-`laPorta(a)` (`{ ora, aperta, ultima, qui, dopo }`, quello che `Mondo3d.vue` riceve come `terre` ed emette `terre` per passare).
+`terreDaTornare(a)`, `laPorta(a)` (`{ ora, aperta, ultima, qui, dopo, altre }`, quello che `Mondo3d.vue` riceve come `terre`; emette
+`terre` col numero della terra per passare, dalla porta o dalla pietra del villaggio).
 
 ## Voci aperte
 
-- **Il viaggio indietro**: `passaTerra` sa già tornare a una terra vista e ognuna tiene il suo mondo, ma nel gioco non c'è modo di
-  farlo (il progetto: la porta nei due versi e la pietra di ogni villaggio verso i villaggi delle terre già viste).
+- **La porta nei due versi** (dal progetto): oggi si torna solo dalla pietra del villaggio.
 - **La taratura** delle terre dopo (il salto di 14, la curva della forza oltre il 15, quanto si guadagna): col banco, a lavoro finito.
-- **I volti** delle rigenerazioni ruotano già di uno a terra (`voltoDelDungeon`); il minatore non li racconta ancora.
 - **La medaglia** per una terra nuova raggiunta, se l'utente la vuole.
 
-Nei test: `unita/sotterraneo-terre` (le regole, il salvataggio, la porta, la storia nella prima, la tinta),
-`integrazione/sotterraneo-terre` (il minatore che la annuncia, la porta toccata col dito, la seconda terra salvata e ritrovata).
-Bersagli: `[data-mondo3d][data-terra-ora]`, `[data-bersaglio][data-terre]` (1 aperta), `[data-terre-dice][data-aperta]`, il tasto
-`[data-azione="passa-terra"]`, la riga `[data-avviso-terra]`.
+Nei test: `unita/sotterraneo-terre` (le regole, il salvataggio, la porta, il viaggio indietro, i volti del minatore, la storia nella
+prima, la tinta), `integrazione/sotterraneo-terre` (il minatore che la annuncia, la porta toccata col dito, la seconda terra salvata e
+ritrovata, i volti, la pietra che riporta alla prima). Bersagli: `[data-mondo3d][data-terra-ora]`, `[data-bersaglio][data-terre]`
+(1 aperta), `[data-terre-dice][data-aperta]`, il tasto `[data-azione="passa-terra"]`, la riga `[data-avviso-terra]`, nel fumetto
+della pietra `[data-terre-da-tornare]` e i tasti `[data-azione="torna-terra"][data-terra]`.
