@@ -25,8 +25,8 @@ vince il codice.
 
 | | 2D | 3D |
 |---|--:|--:|
-| voci nel catalogo (cosa si compra) | 253 | 38 (23 pezzi + 15 edifici) |
-| di cui decorazioni | 217 (verde, fiori, acqua, recinti, case, arredo, bestiole, feste, fiera, raccolto) | 10 (aiuola, panchina, fontana, pozzo, spaventapasseri, tavolo, passerella, ponte, stagno, laghetto) |
+| voci nel catalogo (cosa si compra) | 253 | 170 (155 pezzi + 15 edifici) |
+| di cui decorazioni | 217 (verde, fiori, acqua, recinti, case, arredo, bestiole, feste, fiera, raccolto) | 140 (le 10 di prima + 130 del giro G8: verde, recinti e cartelli, raccolto, case e lampioni, bestiole) |
 | colture | 16 | 16 (gli stessi id, singolari) |
 | ricette | 57 | 41 (nessuna inventata) |
 | macchine | 14 | 14 |
