@@ -8,6 +8,7 @@ import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js
 import { mat, pronto, scatola, cilindro, cono, sfera, tetto, insegna, lastra, parte, segniDiPronta, sincronizzaBestie } from './modelli.js'
 import { ANIMALI } from '../dati/animali.js'
 import { fondiPerMateriale } from './fondi.js'
+import { geoOsso, geoPunta, collega, osso, ellisse, zampa } from './bestie-corpo.js'
 import { memoModello } from './cache-modelli.js'
 
 const casuale = g => { g.userData.fase = Math.random() * 6 }
@@ -112,6 +113,7 @@ const G_MAIALE = new THREE.SphereGeometry(0.22, 9, 7), G_ZAMPA_P = new THREE.Cyl
 const G_ORECCHIO_P = new THREE.ConeGeometry(0.06, 0.13, 4).translate(0, 0.065, 0), G_MUSO = new THREE.CylinderGeometry(0.06, 0.07, 0.07, 8).rotateX(Math.PI / 2)
 const G_RICCIO = new THREE.TorusGeometry(0.04, 0.012, 5, 10, 4.7)
 const SCALA_P = [0.78, 0.72, 1.32]
+const G_PIATTO = new THREE.CylinderGeometry(0.115, 0.105, 0.014, 12), G_STRISCIA = new THREE.BoxGeometry(0.2, 0.016, 0.031)
 
 function costruisciMaiale (k = 0) {
   const g = new THREE.Group()
@@ -132,9 +134,14 @@ function costruisciMaiale (k = 0) {
   parte(coda, G_RICCIO, chiaro, 0, 0.02, 0).rotation.y = Math.PI / 2
   const mucchio = parte(g, G_TESTINA, terra, 0.42, 0.01, 0.22); mucchio.scale.set(1.6, 0.5, 1.4); mucchio.visible = false          // dove ha scavato
   const dono = new THREE.Group(); dono.position.set(0.42, 0.06, 0.22); g.add(dono); dono.visible = false
-  const tartufo = mat(0x3b2a22), bernoccolo = mat(0x6b5a4a)                                                                      // il tartufo: scuro e bitorzoluto
-  parte(dono, G_TESTINA, tartufo, 0, 0, 0).scale.set(0.9, 0.75, 0.9)
-  for (const [x, y, z] of [[0.04, 0.02, 0.03], [-0.04, 0.0, 0.035], [0.0, 0.035, -0.03], [0.035, -0.015, -0.04]]) parte(dono, G_TESTINA, bernoccolo, x, y, z).scale.setScalar(0.28)
+  // il dono è la pancetta (non il tartufo, che a schermo sembrava una cacca): un piatto con tre fette a strisce rosse e rosa, a ventaglio
+  const piatto = mat(0x9c6b3c), rossa = mat(0xa8282a), rosa2 = mat(0xe8968a), grasso = mat(0xf6d2c2)
+  parte(dono, G_PIATTO, piatto, 0, 0, 0)
+  for (const [i, ang, dx] of [[0, -0.5, -0.02], [1, 0.05, 0.0], [2, 0.55, 0.02]]) {
+    const fetta = new THREE.Group(); fetta.position.set(dx, 0.014 + i * 0.016, 0); fetta.rotation.y = ang; dono.add(fetta)
+    // strisce irregolari come le venature della pancetta: lunghezze e colori non a righe regolari, un'ondina in altezza
+    for (let n = 0; n < 5; n++) { const m = parte(fetta, G_STRISCIA, [rossa, rosa2, rossa, grasso, rosa2][(n + i) % 5], ((n * 7 + i * 3) % 5 - 2) * 0.008, Math.sin(n * 1.7 + i) * 0.004, (n - 2) * 0.031); m.scale.set(0.82 + ((n + i) % 3) * 0.1, 1, 1) }
+  }
   fondiPerMateriale(testa, { escludi: orecchie }); fondiPerMateriale(dono); fondiPerMateriale(g, { escludi: [corpo, testa, coda, mucchio, dono] })
   g.userData = { corpo, testa, coda, orecchie, mucchio, dono, specie: 'maiale', ms: ANIMALI.porcile.ms, fase: Math.random() * 6, meta: new THREE.Vector3(), animaBestia: animaMaiale }
   segniDiPronta(g, g.userData, { raggio: 0.5, yAlone: 0.02, scint: [0.42, 0.4, 0.22], sbuffo: [0.42, 0.18, 0.22], rSbuffo: 0.22 })
@@ -148,6 +155,7 @@ function animaMaiale (b, u, pr, stadio, dt, t, n) {
   u.testa.rotation.x = pr.testaX + pr.grufola * (0.35 + 0.35 * Math.sin(ph * 5 + n))            // al lavoro il muso va su e giù nel fango
   const o = pr.orecchie
   for (const p of u.orecchie) p.rotation.z = -p.userData.lato * (o + Math.sin(ph * 2 + n) * 0.05)
+  u.coda.position.set(0, u.corpo.position.y + 0.06 * pr.sy, -0.26 * pr.sz)                      // il ricciolo nasce dalla groppa anche quando il corpo si restringe
   u.coda.rotation.z = Math.sin(ph * (stadio === 2 ? 4 : 1.6) + n * 2) * 0.5 * pr.coda
   u.coda.scale.setScalar(0.3 + 0.7 * pr.coda)
   const m = pr.mucchio; u.mucchio.visible = m > 0.03; u.mucchio.scale.set(1.6 * m, 0.5 * m, 1.4 * m)
@@ -169,10 +177,10 @@ function costruisciPorcile () {
   const falde = new THREE.Group(); falde.position.y = 0.95; casa.add(falde); tetto(falde, 2.5, 1.25, 0.0, 0xa8392f, 0.5)
   // il truogolo lungo contro il muro, con la sbobba
   scatola(g, 1.4, 0.16, 0.26, legno, 0.75, 0.1, -0.2); scatola(g, 1.28, 0.03, 0.16, mat(0xb08a50), 0.75, 0.18, -0.2)
-  // un balla di paglia e il cartello dei tartufi
+  // un balla di paglia e il cartello della pancetta
   const balla = cilindro(g, 0.2, 0.2, 0.4, paglia, -1.55, 0.24, -0.35, 8); balla.rotation.z = Math.PI / 2
   cilindro(g, 0.025, 0.025, 0.75, legno, 1.65, 0.38, 0.1, 5)
-  insegna(g, '🍄 TARTUFI', 0.7, 0.24, 1.65, 0.8, 0.12, { w: 256, h: 88, sfondo: '#6b4a32', px: 36 })
+  insegna(g, '🥓 PANCETTA', 0.7, 0.24, 1.65, 0.8, 0.12, { w: 256, h: 88, sfondo: '#6b4a32', px: 36 })
   // lo steccato davanti e ai lati, col cancelletto in mezzo
   const X = 1.85, Zf = 1.38, Zm = -0.3, Gx = 0.38
   const palo = (x, z) => cilindro(g, 0.04, 0.045, 0.62, legno, x, 0.32, z, 6)
@@ -194,53 +202,64 @@ export function creaPorcile (stati) { const g = porcileVuoto(); sincronizzaBesti
 export const creaMaiale = memoModello('maiale', costruisciMaiale, { chiave: (k = 0) => k % 2, dopo: casuale })
 
 /* ═════════════════════════ la capra e il recinto ═════════════════════════ */
-const G_CAPRA = new THREE.SphereGeometry(0.2, 9, 7), G_ZAMPA_C = new THREE.CylinderGeometry(0.024, 0.02, 0.3, 5), G_ZOCCOLO_C = new THREE.CylinderGeometry(0.024, 0.026, 0.04, 5)
-const G_CORNO_C = new THREE.ConeGeometry(0.026, 0.17, 5), G_ORECCHIO_C = new THREE.SphereGeometry(0.05, 6, 4).scale(1.5, 0.28, 0.8).translate(0.06, 0, 0), G_BARBA = new THREE.ConeGeometry(0.022, 0.1, 4)
-const SCALA_C = [0.62, 0.64, 1.4]
+// Un corpo solo (docs/fattoria3d/animali.md, «Le parti si toccano»): cosce nel corpo, collo che va dalla spalla alla testa, corna e orecchie sul cranio,
+// coda dalla groppa, mammella sotto il ventre (segue il corpo quando si restringe).
+const G_CAPRA = new THREE.SphereGeometry(0.2, 9, 7), G_CORNO_C = geoPunta(0.022, 0.15, 5), G_ORECCHIO_C = new THREE.SphereGeometry(0.045, 6, 4).scale(1.6, 0.22, 0.75).translate(0.055, 0, 0)
+const G_BARBA = geoPunta(0.018, 0.09, 4), G_CODA_C = geoPunta(0.03, 0.12, 4)
+const SCALA_C = [0.65, 0.65, 1.4]                      // il corpo: raggi 0,13 · 0,13 · 0,28
+const Y_C = 0.4, BASE_C = [0.47, 0.19], LUNGO_C = 0.28, ANGOLO_C = 0.65
 
 function costruisciCapra (k = 0) {
   const g = new THREE.Group()
   const manto = mat(k % 2 ? 0x9a7048 : 0xf4efe4), chiaro = mat(0xf4efe4), scuro = mat(0x2a2018), corno = mat(0xd8cfae), rosa = mat(0xf0b0a8)
-  const corpo = parte(g, G_CAPRA, manto, 0, 0.4, 0); corpo.scale.set(...SCALA_C)
-  for (const [x, z] of [[0.065, 0.17], [-0.065, 0.17], [0.065, -0.17], [-0.065, -0.17]]) { parte(g, G_ZAMPA_C, k % 2 ? scuro : chiaro, x, 0.19, z); parte(g, G_ZOCCOLO_C, scuro, x, 0.02, z) }
-  const mammella = parte(g, G_UOVO_C, mat(0xff8aa0), 0, 0.23, -0.15); mammella.scale.set(0.1, 0.1, 0.1)
-  const pallida = parte(g, G_UOVO_C, mat(0xcdb7b3), 0, 0.23, -0.15); pallida.scale.set(1.1, 1.3, 1.1)
+  const corpo = parte(g, G_CAPRA, manto, 0, Y_C, 0); corpo.scale.set(...SCALA_C)
+  for (const [x, z] of [[0.06, 0.18], [-0.06, 0.18], [0.06, -0.18], [-0.06, -0.18]]) zampa(g, k % 2 ? scuro : chiaro, scuro, x, z, Y_C - 0.03, 0.03, 0.02, 0.035)
+  const mammella = parte(g, G_UOVO_C, mat(0xff8aa0), 0, Y_C - 0.1, -0.15); mammella.scale.set(0.1, 0.1, 0.1)
+  const pallida = parte(g, G_UOVO_C, mat(0xcdb7b3), 0, Y_C - 0.1, -0.15); pallida.scale.set(1.1, 1.3, 1.1)
   const goccia = parte(g, G_TESTINA, mat(0xffffff, { emissive: 0x808080 }), 0, 0.15, -0.15); goccia.scale.setScalar(0.3); goccia.visible = false
-  const coda = new THREE.Group(); coda.position.set(0, 0.5, -0.27); g.add(coda)
-  parte(coda, new THREE.ConeGeometry(0.03, 0.12, 4).translate(0, 0.06, 0), manto, 0, 0, 0)
-  parte(g, G_CAPRA, manto, 0, 0.55, 0.26).scale.set(0.24, 0.5, 0.3)                       // il collo
-  const testa = new THREE.Group(); testa.position.set(0, 0.62, 0.34); g.add(testa)
-  parte(testa, G_CAPRA, chiaro, 0, 0, 0.07).scale.set(0.34, 0.36, 0.5)
-  parte(testa, G_CAPRA, k % 2 ? manto : rosa, 0, -0.035, 0.17).scale.set(0.2, 0.17, 0.22)    // il muso
-  for (const s of [-1, 1]) { const c = parte(testa, G_CORNO_C, corno, s * 0.04, 0.1, -0.02); c.rotation.set(-0.7, 0, -s * 0.2) }
-  parte(testa, G_BARBA, k % 2 ? scuro : chiaro, 0, -0.1, 0.16).rotation.x = Math.PI              // la barbetta
-  for (const s of [-1, 1]) parte(testa, G_TESTINA, scuro, s * 0.045, 0.03, 0.12).scale.setScalar(0.22)
+  const coda = new THREE.Group(); coda.position.set(0, Y_C + 0.07, -0.22); g.add(coda)
+  parte(coda, G_CODA_C, manto, 0, 0, 0)
+  const collo = osso(g, geoOsso(0.075, 0.045, 7), manto, 0, BASE_C[0], BASE_C[1], 0, 0.7, 0.35)
+  const testa = new THREE.Group(); testa.position.set(0, 0.7, 0.35); g.add(testa)                       // l'origine è la cima del collo
+  ellisse(testa, chiaro, 0, -0.012, 0.06, 0.045, 0.05, 0.085, 8)
+  ellisse(testa, k % 2 ? manto : rosa, 0, -0.03, 0.135, 0.033, 0.032, 0.042, 7)                       // il muso
+  for (const s of [-1, 1]) {
+    const c = parte(testa, G_CORNO_C, corno, s * 0.022, 0.015, 0.03); c.rotation.set(-0.7, 0, -s * 0.2)   // le corna: nascono dentro il cranio
+    ellisse(testa, scuro, s * 0.034, 0.016, 0.045, 0.012, 0.012, 0.012, 5)                           // gli occhi
+  }
+  parte(testa, G_BARBA, k % 2 ? scuro : chiaro, 0, -0.045, 0.12).rotation.x = Math.PI              // la barbetta
   const orecchie = [-1, 1].map(s => {
-    const p = new THREE.Group(); p.position.set(s * 0.05, 0.05, -0.01); testa.add(p)
+    const p = new THREE.Group(); p.position.set(s * 0.03, 0.01, 0.02); testa.add(p)
     const o = parte(p, G_ORECCHIO_C, manto, 0, 0, 0); o.scale.x = s; p.userData = { lato: s }
     return p
   })
   const secchio = new THREE.Group(); secchio.position.set(0.34, 0, 0.26); g.add(secchio); secchio.visible = false
   cilindro(secchio, 0.09, 0.07, 0.15, mat(0xb87333, { metalness: 0.5, roughness: 0.45 }), 0, 0.075, 0, 8)
   cilindro(secchio, 0.078, 0.078, 0.02, mat(0xffffff), 0, 0.15, 0, 8)
-  fondiPerMateriale(testa, { escludi: orecchie }); fondiPerMateriale(coda); fondiPerMateriale(g, { escludi: [corpo, testa, coda, secchio, mammella, pallida, goccia] })
-  g.userData = { corpo, testa, coda, orecchie, mammella, pallida, goccia, dono: secchio, specie: 'capra', ms: ANIMALI.capre.ms, fase: Math.random() * 6, meta: new THREE.Vector3(), animaBestia: animaCapra }
+  fondiPerMateriale(testa, { escludi: orecchie }); fondiPerMateriale(g, { escludi: [corpo, testa, coda, collo, secchio, mammella, pallida, goccia] })
+  g.userData = { corpo, collo, testa, coda, orecchie, mammella, pallida, goccia, dono: secchio, specie: 'capra', ms: ANIMALI.capre.ms, fase: Math.random() * 6, meta: new THREE.Vector3(), animaBestia: animaCapra }
   segniDiPronta(g, g.userData, { raggio: 0.42, yAlone: 0.025, scint: [0.34, 0.38, 0.26], sbuffo: [0.34, 0.2, 0.26], rSbuffo: 0.2 })
   return g
 }
 function animaCapra (b, u, pr, stadio, dt, t, n) {
   const ph = u.fase += dt * pr.lento
-  u.corpo.scale.set(SCALA_C[0] * pr.sx, SCALA_C[1] * pr.sy, SCALA_C[2] * pr.sz)
-  u.corpo.position.y = 0.4 + pr.corpoY + Math.sin(ph * 0.9 + n) * 0.005
-  u.testa.position.y = 0.62 + pr.testaY + Math.sin(ph * 2.4 + n) * (stadio === 1 ? 0.01 : 0.003)       // mastica
-  u.testa.rotation.x = pr.testaX + Math.sin(ph * 0.8 + n) * 0.05
+  const y = Y_C + pr.corpoY + Math.sin(ph * 0.9 + n) * 0.005
+  u.corpo.scale.set(SCALA_C[0] * pr.sx, SCALA_C[1] * pr.sy, SCALA_C[2] * pr.sz); u.corpo.position.y = y
+  const a = ANGOLO_C + pr.testaX * 0.4 + Math.sin(ph * 0.8 + n) * 0.03
+  const by = BASE_C[0] + pr.corpoY, bz = BASE_C[1]
+  const ty = by + Math.cos(a) * LUNGO_C + pr.testaY + Math.sin(ph * 2.4 + n) * (stadio === 1 ? 0.01 : 0.003), tz = bz + Math.sin(a) * LUNGO_C       // mastica
+  collega(u.collo, 0, by, bz, 0, ty, tz)                                                                  // il collo segue la testa: non si stacca mai
+  u.testa.position.set(0, ty, tz)
+  u.testa.rotation.x = 0.3 + pr.testaX * 0.4
   for (const p of u.orecchie) p.rotation.z = -p.userData.lato * ((pr.orecchie - 1.0) * 1.2 + Math.sin(ph * 3 + n + p.userData.lato) * 0.06 * pr.coda)      // a fame cadono
-  u.coda.rotation.x = -0.4 - 0.5 * pr.coda; u.coda.rotation.z = Math.sin(ph * (stadio === 2 ? 5 : 2) + n) * 0.4 * pr.coda
-  const m = pr.mammella; u.mammella.visible = m > 0.03; u.mammella.scale.set(2.8 * m, 2.2 * m, 2.6 * m)
-  const q = pr.pallida; u.pallida.visible = q > 0.03; u.pallida.scale.set(1.1 * q, 1.3 * q, 1.1 * q)
+  u.coda.position.y = y + 0.07 * pr.sy
+  u.coda.rotation.x = -(1.9 - pr.coda); u.coda.rotation.z = Math.sin(ph * (stadio === 2 ? 5 : 2) + n) * 0.4 * pr.coda      // a fame giù, contenta in su
+  const yv = y - 0.14 * pr.sy                                                                              // la mammella pende sotto il ventre, qualunque sia la sua taglia
+  const m = pr.mammella; u.mammella.visible = m > 0.03; u.mammella.scale.set(2.8 * m, 2.2 * m, 2.6 * m); u.mammella.position.y = yv
+  const q = pr.pallida; u.pallida.visible = q > 0.03; u.pallida.scale.set(1.1 * q, 1.3 * q, 1.1 * q); u.pallida.position.y = yv
   const c = (t * 0.9 + n * 0.37) % 1
   u.goccia.visible = pr.goccia > 0.5 && c < 0.4
-  if (u.goccia.visible) u.goccia.position.y = 0.15 - (c / 0.4) * (c / 0.4) * 0.12
+  if (u.goccia.visible) u.goccia.position.y = yv - 0.03 - (c / 0.4) * (c / 0.4) * 0.1
   const d = u.dono; d.visible = pr.dono > 0.03; d.scale.setScalar(pr.dono * 1.5)
   const c0 = u.casa; if (c0) b.position.y = c0.y + pr.salto * Math.max(0, Math.sin(t * 3.2 + n * 1.7)) * 0.07        // da pronta saltella
 }

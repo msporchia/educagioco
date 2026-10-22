@@ -49,7 +49,7 @@ export const COLTURA = {
 
 /** Il recinto 3D → la ricetta 2D che fa il suo prodotto (le bestie sono ricette nella 2D: uova, latte, lana…). */
 export const RICETTA_DELLA_BESTIA = {
-  pollaio: 'uova', stalla: 'latte', recinto: 'lana', anatre: 'uova_anatra', porcile: 'tartufi', capre: 'latte_capra',
+  pollaio: 'uova', stalla: 'latte', recinto: 'lana', anatre: 'uova_anatra', porcile: 'tartufi' /* la ricetta 2D: in 3D il suo prodotto è `pancetta` (dati/cortile.js) */, capre: 'latte_capra',
   conigliera: 'lana_angora', alpaca: 'lana_alpaca', asini: 'concime', arnie: 'miele',      // giro G5
 }
 

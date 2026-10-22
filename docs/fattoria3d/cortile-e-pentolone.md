@@ -25,7 +25,7 @@ sono coerenti con quelli di oggi e col metro di [calibrazione.md](../apprendimen
   Come fecero friggitoria e sushi bar. Conseguenza dichiarata: l'ultimo livello costa ~651 minuti (10 h 50) e `TETTO_ULTIMO_MIN` è salito da 510
   a 660, **provvisorio** come i numeri (D2 lo rifarà).
 - I prezzi seguono il rapporto 2D→3D delle altre macchine (~0,5) e stanno sotto i due terzi del salto del loro livello; i tempi seguono l'ordine
-  della 2D (anatre < capre < maiali) e tengono i tartufi sotto il tetto d'attesa in catena (110 s su 120).
+  della 2D (anatre < capre < maiali) e tengono la pancetta sotto il tetto d'attesa in catena (110 s su 120).
 
 ## Il pentolone
 
@@ -47,7 +47,7 @@ sono quelle dell'atlante.
 
 ```
  patate + cavolfiore ─▶ pentolone: verdure lesse ─1─▶ stagno (anatra) ─▶ 🥚 uova (le stesse del pollaio)   20 s
- zucche | pomodori ───▶ pentolone: pastone ───────2─▶ porcile (maiale) ─▶ 🍄 tartufi                      50 s
+ zucche | pomodori ───▶ pentolone: pastone ───────2─▶ porcile (maiale) ─▶ 🥓 pancetta                      50 s
  carote + cavolfiore ─▶ pentolone: verdura fresca ─1─▶ capre (capra)   ─▶ 🥛 latte (lo stesso della stalla) 45 s
 ```
 
@@ -57,13 +57,30 @@ li vedono tutti, quindi il rifiuto («Serve 🫕 pastone (2 a testa): lo fa il p
 casi a parte. Resta fuori il `mangime` del mulino (cane, gatto, peschiera): è dei compagni, A6.
 
 **Uova e latte sono un prodotto solo**: come in 2D (`da: 'uova'`) le anatre fanno `uova` e le capre `latte`, nello stesso scomparto. In
-`PRODOTTI_ANIMALI` la voce dice `dove` (il primo pezzo, da cui il livello) e `anche` (gli altri). I **tartufi** sono l'unica merce nuova
-(`merce_tartufi`, 🍄, nome e faccia della 2D); come uova e latte non si chiedono da soli al banco. L'evento è `tartufo`, senza contatore (un
+`PRODOTTI_ANIMALI` la voce dice `dove` (il primo pezzo, da cui il livello) e `anche` (gli altri). La **pancetta** è l'unica merce nuova
+(id `pancetta`, 🥓, `aspetta: 'merce_pancetta'`: lo sprite d'atlante non c'è, vale l'emoji); come uova e latte non si chiede da sola al banco. L'evento è `pancetta`, senza contatore (un
 gioco non aggiunge campi: i traguardi restano quelli del cortile).
+
+**Tolto perché: il tartufo (`tartufi`, 🍄).** Decisione dell'utente del 22/10/2026: il tartufo scuro in terra a schermo sembrava una cacca; come Hay Day, il maiale fa la
+**pancetta**. In 3D l'id è rinominato (`tartufi` → `pancetta`); la ricetta 2D del porcile resta `tartufi` e `RICETTA_DELLA_BESTIA` (`parita2d.js`) è la mappa esplicita. Stessa resa, tempo e
+prezzo. Le scorte di `tartufi` già possedute **si perdono**: `normalizza` scarta ogni id che non conosce, e la migrazione 2D→3D le lascia in `daRegalare` come `scorta:tartufi` (mai monete).
+
+### La catena della pancetta (solo 3D, numeri provvisori)
+
+Tre ricette che la usano, nelle macchine che già ci sono (`dati/pancetta.js`; nella 2D non esistono, quindi sono dichiarate fra le deviazioni: `SOLO_3D` in `unita/fattoria3d-merci`):
+
+| Ricetta | Macchina | Ingredienti | Tempo · 🪙 | Livello (fascia del piatto 2D vicino) |
+|---|---|---|---|---|
+| 🍳 Uova e pancetta | cucina (conserviera) | 1 uova + 1 pancetta | 8 min · 1 | 28 (polenta 25, ma il porcile è al 28) |
+| 🥪 Panino alla pancetta | panificio | 1 pane + 1 pancetta | 7 min · 1 | 28 (torta 20, 8 min) |
+| 🥟 Ravioli alla pancetta | pastificio | 1 pasta + 1 uova + 1 pancetta | 10 min · 2 | 46 (pizza 46, lasagne 48) |
+
+Stanno nella dispensa; al banco, ai vicini e (se hanno due lavorazioni: non «uova e pancetta») in mongolfiera; l'esperienza la calcola la formula 2D sul piatto che
+somigliano (`premioCome`: polenta, torta, lasagne). Nessun nome «tartufo» resta visibile in 3D. Le facce aspettano gli sprite (`aspetta`).
 
 ## La zucca e la patata (C23)
 
-Non hanno più una sola uscita: la zucca va nella conserva d'orto e nel pastone (maiali → tartufi), la patata nel minestrone, nelle patatine e
+Non hanno più una sola uscita: la zucca va nella conserva d'orto e nel pastone (maiali → pancetta), la patata nel minestrone, nelle patatine e
 nelle verdure lesse (anatre). Anche pomodoro, carota e cavolfiore guadagnano una strada. Il perché della 2D: le colture che altrimenti si
 accumulano senza scopo trovano una bocca.
 
@@ -76,13 +93,14 @@ Ogni recinto è un pezzo 4×3 col calco di stalla e pollaio (`userData.{bestie, 
 | | 0 · ha fame | 1 · al lavoro | 2 · pronta |
 |---|---|---|---|
 | **Anatra** | piccola e piatta, a pelo d'acqua, becco giù che rimesta, coda giù, nuota agitata | si arrotonda; **un uovo verdino galleggia accanto e cresce** | petto e becco in su, coda in su, **uovo enorme (×3)** accanto, alone dorato, scintillio, dondola |
-| **Maiale** | magro, orecchie giù, muso basso, coda dritta | **grufola** nel fango; **un mucchio di terra cresce** accanto | tondo, orecchie su, coda a ricciolo che scodinzola, **un tartufo scuro e bitorzoluto (×2,2) sul mucchio**, alone, scintillio |
+| **Maiale** | magro, orecchie giù, muso basso, coda dritta | **grufola** nel fango; **un mucchio di terra cresce** accanto | tondo, orecchie su, coda a ricciolo che scodinzola, **un piatto di legno con tre fette di pancetta a strisce rosse e rosa (×2,2) sul mucchio**, alone, scintillio |
 | **Capra** | piccola, testa e orecchie giù, mammella pallida | la **mammella rosea cresce**, mastica, ogni tanto una goccia | tonda, testa alta, coda in su, **secchio di rame col latte**, **saltella**, alone, scintillio |
 
 - **Stagno delle anatre**: ellisse d'acqua con ninfee, sponda, canne, pontile, casetta con rampa, mangiatoia e sacco. **Porcile**: casetta di assi col
-  tetto rosso, fango, truogolo, cartello «🍄 TARTUFI», steccato col cancelletto. **Capre**: roccia a gradini, tettoia con rastrelliera, abbeveratoio,
+  tetto rosso, fango, truogolo, cartello «🥓 PANCETTA», steccato col cancelletto. **Capre**: roccia a gradini, tettoia con rastrelliera, abbeveratoio,
   steccato col cancelletto. **Pentolone**: focolare di pietre con la legna e le fiamme (che guizzano), pentolone di ferro appeso a una traversa con
   il brodo verde che bolle, zucche, patate e cavolfiore accanto, tettoia di pietra con l'insegna; fuma.
+- **Le parti si toccano** ([animali.md](animali.md), «Le parti si toccano»): la capra ha il collo-osso dalla spalla alla testa, corna e orecchie sul cranio, coda dalla groppa e mammella sotto il ventre che seguono il corpo; maiale e anatra sono già corpi unici (la coda del maiale segue il corpo). Provato da `unita/fattoria3d-bestie-connesse`.
 - **Peso** (nodi del catalogo 3D, fusi quelli fermi): stagno 32 mesh vuoto, ~56 con sei anatre; porcile ~47 con quattro maiali; capre ~57 con
   quattro; pentolone 16. Anatra 5–8 mesh, maiale 6–10, capra 8–11. Come pollaio e stalla; geometrie e materiali condivisi, animazioni col tempo.
 - Si guardano col catalogo 3D (`npm run catalogo3d`, voci `fattoria:stagno-anatre`, `:porcile`, `:capre`, `:pentolone`, e una per stadio di anatra,
@@ -96,6 +114,6 @@ anche coi pezzi nuovi in menu); i bersagli dei cartelli sono quelli di pollaio e
 
 ## Da guardare (non visto)
 
-Guardati solo dal catalogo 3D e in node: non dalla camera di gioco (~22) né su un telefono né col dito. In particolare se l'uovo verdino e il
-tartufo si leggono a distanza, se le anatre sparse sull'acqua si distinguono da pronte, se 🪙75–140 e i tempi vanno a un bambino, e il pentolone
+Guardati solo dal catalogo 3D e in node: non dalla camera di gioco (~22) né su un telefono né col dito. In particolare se l'uovo verdino e la
+pancetta si leggono a distanza, se le anatre sparse sull'acqua si distinguono da pronte, se 🪙75–140 e i tempi vanno a un bambino, e il pentolone
 in scena (l'insegna sta sul retro, dietro il pentolone).

@@ -75,6 +75,7 @@ export function guastiDiParita() {
     if (c.raccolta !== (d.raccolta || 0)) g.push(`${k}: raccoglierla costa ${c.raccolta} e in 2D ${d.raccolta || 0}`)
   }
   for (const [id, r] of Object.entries(RICETTE)) {
+    if (r.solo3d) continue                      // le ricette con la pancetta (dati/pancetta.js): solo 3D, dichiarate nei test di parità
     const d = ricetta2d(id)
     if (!d) { g.push(`${id}: nella 2D non c'è`); continue }
     if (r.ms !== msDaMinuti(d.minuti)) g.push(`${id}: ci mette ${r.ms / 60000} min e in 2D ${d.minuti}`)

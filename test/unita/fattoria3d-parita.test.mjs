@@ -65,6 +65,7 @@ const maturo = (f, t, c) => { t.ora += COLTURE[c.coltura || 'grano'].ms + 1 }
     uguale(`${k}: ${d.minuti} minuti, livello ${d.liv}, raccolta 🪙${d.raccolta}`, [c.ms / MINUTO, c.liv, c.raccolta].join(), [d.minuti, d.liv, d.raccolta].join())
   }
   for (const [id, r] of Object.entries(RICETTE)) {
+    if (r.solo3d) continue                                   // le tre ricette con la pancetta: solo 3D, provate sotto («9b»)
     const d = RICETTE_2D.find(x => x.id === id)
     uguale(`${id}: ${d.minuti} minuti, livello ${livelloRicetta2D(d)}, 🪙${d.costo} a ogni avvio`, [r.ms / MINUTO, r.liv, r.costo].join(), [d.minuti, livelloRicetta2D(d), d.costo].join())
   }
@@ -144,7 +145,7 @@ const maturo = (f, t, c) => { t.ora += COLTURE[c.coltura || 'grano'].ms + 1 }
 {
   controlla('i dati dei silos non hanno guasti', guastiDeiSilos().length === 0, guastiDeiSilos().join(' · '))
   stessaLista('i raccolti stanno nel magazzino della terra, uova e latte in quello della stalla, il pane nella dispensa', [siloDi('grano'), siloDi('uova'), siloDi('latte'), siloDi('pesce'), siloDi('lana'), siloDi('becchime'), siloDi('pane'), siloDi('sushi')], ['terra', 'stalla', 'stalla', 'stalla', 'stalla', 'stalla', 'bottega', 'bottega'])
-  controlla('ogni merce sta nello stesso silo della 2D (stesso id di prodotto)', Object.keys(RICETTE).every(id => siloDi(id) === PRODOTTI_2D[RICETTE[id].da || id].silo) && Object.keys(COLTURE).every(k => siloDi(k) === 'terra'))
+  controlla('ogni merce sta nello stesso silo della 2D (stesso id di prodotto)', Object.keys(RICETTE).every(id => siloDi(id) === (RICETTE[id].solo3d ? 'bottega' : PRODOTTI_2D[RICETTE[id].da || id].silo)) && Object.keys(COLTURE).every(k => siloDi(k) === 'terra'))
   uguale('gli scomparti: 8, 10, 12 e i prezzi della 2D', [0, 1, 2].map(postiPerMerce).join() + '|' + [0, 1, 2, 3].map(prezzoDelPasso).join(), '8,10,12|40,130,185,220')
   uguale('gli scomparti sono quelli della 2D (8 e +2)', [SCOMPARTO_BASE, SCOMPARTO_PIU, costoIngrandimento(1)].join(), '8,2,130')
   const tutti = TIPI_DI_SILO.flatMap(merciDelSilo)

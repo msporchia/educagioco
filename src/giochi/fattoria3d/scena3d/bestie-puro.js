@@ -83,7 +83,7 @@ export function profiloBestia (specie, stadio, p, out = {}) {
     out.codaR = lerp(-0.55, -1.35, f)
     const corpoSotto = G.corpoY0 + out.altoY - G.corpoR * G.altezzaCorpo * out.sy
     const dondola = liscia(0.5, 1, f)
-    out.gX = lerp(0.035, 0.15, dondola)
+    out.gX = lerp(0.035, 0.105, dondola)
     out.gAlt = Math.max(0.03, corpoSotto + 0.02)     // la cima della zampa: sotto il corpo
     out.gLen = lerp(out.gAlt, G.gambaLen, dondola)   // da sollevata penzolano, non toccano terra
     out.gAperta = dondola * 0.5
@@ -114,7 +114,7 @@ export function profiloBestia (specie, stadio, p, out = {}) {
     out.dono = out.uovo
     out.ondeggia = pronta
   } else if (specie === 'maiale') {
-    // a fame magro, orecchie giù e muso basso; al lavoro grufola nel fango e un mucchietto di terra cresce; pronto tondo, la coda a ricciolo, il tartufo in vista
+    // a fame magro, orecchie giù e muso basso; al lavoro grufola nel fango e un mucchietto di terra cresce; pronto tondo, la coda a ricciolo, la pancetta in vista
     out.sx = lerp(0.74, 1.1, f); out.sy = lerp(0.66, 1.15, f); out.sz = lerp(0.92, 1.04, f)
     out.corpoY = lerp(-0.035, 0, f)
     out.testaY = lerp(-0.10, 0.0, f); out.testaX = lerp(0.8, 0.05, f)
@@ -123,7 +123,7 @@ export function profiloBestia (specie, stadio, p, out = {}) {
     out.lento = lerp(0.5, 1, f)
     out.grufola = stadio === 1 ? 1 : 0
     out.mucchio = stadio <= 0 ? 0 : stadio >= 2 ? 1 : lerp(0.2, 0.85, clamp01(p))
-    out.dono = pronta                                // il tartufo
+    out.dono = pronta                                // la pancetta
   } else if (specie === 'capra') {
     // a fame piccola, orecchie a terra e testa bassa; al lavoro la mammella rosea cresce; pronta tonda, la coda in su, il secchio del latte e qualche saltello
     out.sx = lerp(0.72, 1.06, f); out.sy = lerp(0.68, 1.1, f); out.sz = lerp(0.92, 1.02, f)

@@ -15,7 +15,7 @@ comprare dentro l'edificio (`CORTILE` in `dati/animali.js`).
 | A1b | stalla | 220/18 · 2 foraggio → latte · 10 | ✅ 90/9, 1–4 mucche, 40 s | – |
 | A1c | ovile | 190/14 · 1 foraggio → lana · 8 | 🟡 «recinto» 45/4: 1–4 pecore, agnelli e nascite (✳), lana in 25 s | – |
 | A1d | stagno delle anatre | 240/24 · 1 verdure lesse → uova d'anatra · 6 | ✅ `anatre` 120/20 (provvisorio), 1–6 anatre, 20 s, uova di sempre | – |
-| A1e | porcile | 260/28 · 2 pastone → tartufi · 20 | ✅ `porcile` 130/21 (provvisorio), 1–4 maiali, 50 s, tartufi (merce nuova) | – |
+| A1e | porcile | 260/28 · 2 pastone → tartufi · 20 | ✅ `porcile` 130/21 (provvisorio), 1–4 maiali, 50 s, **pancetta** (id `pancetta`, merce nuova) | **Deviazione**: tolto il tartufo perché a schermo sembrava una cacca, come Hay Day il maiale fa la pancetta (utente, 22/10/2026); id rinominato, scorte `tartufi` perse; tre ricette solo 3D la usano ([../cortile-e-pentolone.md](../cortile-e-pentolone.md)) |
 | A1f | capre | 280/40 · 1 verdura fresca → latte di capra · 12 | ✅ `capre` 140/22 (provvisorio), 1–4 capre, 45 s, latte di sempre | – |
 | A1g | conigliera | 95/7 · 2 foraggio → lana d'angora · 14 | ✅ `conigliera` 95/7, 1–6 conigli, 14 min, la lana dell'ovile (G5) | – |
 | A1h | alpaca | 330/47 · 1 foraggio → lana d'alpaca · 5 | ✅ `alpaca` 330/47, 1–4 alpaca, 5 min, la lana dell'ovile (G5) | – |

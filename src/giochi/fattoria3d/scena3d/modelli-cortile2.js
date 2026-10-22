@@ -7,29 +7,37 @@ import * as THREE from 'three'
 import { mat, scatola, cilindro, cono, sfera, tetto, insegna, parte, segniDiPronta, sincronizzaBestie } from './modelli.js'
 import { ANIMALI } from '../dati/animali.js'
 import { fondiPerMateriale } from './fondi.js'
+import { geoOsso, geoPunta, collega, osso, ellisse, zampa } from './bestie-corpo.js'
 import { memoModello } from './cache-modelli.js'
 
 const casuale = g => { g.userData.fase = Math.random() * 6 }
 const G_SFERA = new THREE.SphereGeometry(0.2, 9, 7), G_PICCOLA = new THREE.SphereGeometry(0.06, 7, 5), G_MINI = new THREE.SphereGeometry(0.035, 6, 4)
 
 /* ═════════════════════════ il coniglio d'angora e la conigliera ═════════════════════════ */
-const G_CONIGLIO = new THREE.SphereGeometry(0.1, 9, 7), G_PELO = new THREE.SphereGeometry(0.105, 9, 7), G_ZAMPETTA = new THREE.SphereGeometry(0.035, 6, 4)
+// Un corpo solo: il pelo e il corpo sono due ellissoidi concentrici, le cosce e le zampe escono dal corpo, la testa gli sta addosso (niente collo), le
+// orecchie e gli occhi sono dentro il suo ingombro, la coda a batuffolo nasce dalla groppa.
+const G_CONIGLIO = new THREE.SphereGeometry(0.1, 9, 7)
 const G_ORECCHIO_K = new THREE.SphereGeometry(0.05, 6, 4).scale(0.45, 1.7, 0.22).translate(0, 0.085, 0)
-const SCALA_K = [1, 0.9, 1.3]
+const SCALA_K = [1, 0.95, 1.3]
+const Y_K = 0.105
 
 function costruisciConiglio (k = 0) {
   const g = new THREE.Group()
   const bianco = mat(k % 2 ? 0xe9d9c0 : 0xf8f5ee), pelle = mat(0xcdb7a0), rosa = mat(0xf0a0a8), scuro = mat(0x2a2018), lana = mat(0xe9462c)
-  const corpo = parte(g, G_CONIGLIO, pelle, 0, 0.1, 0); corpo.scale.set(...SCALA_K)
-  const pelo = parte(g, G_PELO, bianco, 0, 0.11, 0); pelo.scale.setScalar(0.4)                 // la nuvola d'angora: dal vello rado alla palla di pelo
-  for (const [x, z] of [[0.05, 0.1], [-0.05, 0.1], [0.045, -0.11], [-0.045, -0.11]]) parte(g, G_ZAMPETTA, pelle, x, 0.025, z).scale.set(1, 0.6, 1.3)
-  const coda = parte(g, G_PICCOLA, bianco, 0, 0.12, -0.16); coda.scale.setScalar(0.9)
-  const testa = new THREE.Group(); testa.position.set(0, 0.17, 0.13); g.add(testa)
-  parte(testa, G_PICCOLA, bianco, 0, 0, 0.02).scale.set(1, 0.95, 1.1)
-  parte(testa, G_MINI, rosa, 0, -0.012, 0.075).scale.setScalar(0.6)
-  for (const s of [-1, 1]) parte(testa, G_MINI, scuro, s * 0.032, 0.012, 0.06).scale.setScalar(0.5)
+  const corpo = parte(g, G_CONIGLIO, pelle, 0, Y_K, 0); corpo.scale.set(...SCALA_K)
+  const pelo = parte(g, G_CONIGLIO, bianco, 0, Y_K, 0); pelo.scale.set(...SCALA_K)                // la nuvola d'angora: dal vello rado sulla schiena alla palla di pelo
+  for (const s of [-1, 1]) {
+    zampa(g, bianco, pelle, s * 0.045, 0.085, Y_K - 0.01, 0.024, 0.017, 0.02)                      // le zampe davanti
+    ellisse(g, bianco, s * 0.06, 0.07, -0.055, 0.045, 0.06, 0.07, 7)                              // la coscia
+    ellisse(g, pelle, s * 0.06, 0.022, -0.02, 0.03, 0.022, 0.075, 6)                              // il piede di dietro, lungo, disteso in avanti
+  }
+  const coda = parte(g, G_PICCOLA, bianco, 0, Y_K + 0.02, -0.14); coda.scale.setScalar(0.9)
+  const testa = new THREE.Group(); testa.position.set(0, 0.155, 0.115); g.add(testa)
+  ellisse(testa, bianco, 0, 0, 0.03, 0.058, 0.056, 0.066, 8)
+  ellisse(testa, rosa, 0, -0.012, 0.094, 0.015, 0.013, 0.013, 5)                                    // il nasino
+  for (const s of [-1, 1]) ellisse(testa, scuro, s * 0.047, 0.015, 0.05, 0.014, 0.014, 0.014, 5)   // gli occhi, mezzi dentro la testa
   const orecchie = [-1, 1].map(s => {
-    const p = new THREE.Group(); p.position.set(s * 0.03, 0.04, -0.005); testa.add(p)
+    const p = new THREE.Group(); p.position.set(s * 0.028, 0.028, 0); testa.add(p)
     parte(p, G_ORECCHIO_K, bianco, 0, 0, 0); p.userData = { lato: s }
     return p
   })
@@ -43,13 +51,14 @@ function costruisciConiglio (k = 0) {
 }
 function animaConiglio (b, u, pr, stadio, dt, t, n) {
   const ph = u.fase += dt * pr.lento
-  u.corpo.scale.set(SCALA_K[0] * pr.sx, SCALA_K[1] * pr.sy, SCALA_K[2] * pr.sz)
-  u.corpo.position.y = 0.1 + pr.corpoY + Math.sin(ph * 1.8 + n) * 0.003                    // respira
-  u.pelo.scale.setScalar(pr.pelo); u.pelo.position.y = u.corpo.position.y + 0.012
-  u.coda.scale.setScalar(0.7 + 0.35 * pr.pelo); u.coda.position.y = 0.1 + pr.corpoY + 0.02 + 0.02 * pr.pelo
-  u.testa.position.y = 0.17 + pr.testaY + pr.pelo * 0.012
+  const y = Y_K + pr.corpoY + Math.sin(ph * 1.8 + n) * 0.003                                      // respira
+  u.corpo.scale.set(SCALA_K[0] * pr.sx, SCALA_K[1] * pr.sy, SCALA_K[2] * pr.sz); u.corpo.position.y = y
+  const m = 0.2 + 0.8 * pr.pelo, su = 0.045 * Math.max(0, 1.4 - pr.pelo)                          // il pelo: a fame un velo sulla schiena, da pronto una palla più grande del corpo
+  u.pelo.scale.set(SCALA_K[0] * m * pr.sx, SCALA_K[1] * m * pr.sy, SCALA_K[2] * m * pr.sz); u.pelo.position.y = y + su
+  u.coda.scale.setScalar(0.7 + 0.35 * pr.pelo); u.coda.position.set(0, y + 0.02 + su, -0.125 * m * pr.sz - 0.01)
+  u.testa.position.y = 0.155 + pr.corpoY + pr.testaY + pr.pelo * 0.012
   u.testa.rotation.x = pr.testaX + Math.max(0, Math.sin(ph * 6 + n)) * 0.06              // il nasino che si muove
-  for (const p of u.orecchie) p.rotation.z = -p.userData.lato * (pr.orecchie + Math.sin(ph * 1.4 + n + p.userData.lato) * 0.05)
+  for (const p of u.orecchie) p.rotation.set(-0.1, 0, -p.userData.lato * (pr.orecchie + Math.sin(ph * 1.4 + n + p.userData.lato) * 0.05))
   const d = u.dono; d.visible = pr.dono > 0.03; d.scale.setScalar(pr.dono * 1.3)
   const c0 = u.casa; if (c0) b.position.y = c0.y + pr.salto * Math.max(0, Math.sin(t * 4.2 + n * 1.9)) * 0.08          // da pronto salterella
 }
@@ -99,29 +108,30 @@ const conigliereVuote = memoModello('conigliera', costruisciConigliera)
 export function creaConigliera (stati) { const g = conigliereVuote(); sincronizzaBestie(g, stati || [{ fine: null }]); return g }
 export const creaConiglio = memoModello('coniglio', costruisciConiglio, { chiave: (k = 0) => k % 2, dopo: casuale })
 
+const G_CORPO_A = new THREE.SphereGeometry(0.2, 9, 7), G_ORECCHIO_A = geoPunta(0.022, 0.12, 4), G_PUNTA_A = geoPunta(0.04, 0.09, 5)
 /* ═════════════════════════ l'alpaca e il suo recinto ═════════════════════════ */
-const G_CORPO_A = new THREE.SphereGeometry(0.2, 9, 7), G_COLLO_A = new THREE.CylinderGeometry(0.05, 0.075, 0.4, 7).translate(0, 0.2, 0), G_ZAMPA_A = new THREE.CylinderGeometry(0.026, 0.022, 0.4, 5)
-const G_ZOCC_A = new THREE.CylinderGeometry(0.026, 0.03, 0.04, 5), G_ORECCHIO_A = new THREE.ConeGeometry(0.03, 0.14, 4).translate(0, 0.07, 0)
-const SCALA_A = [0.6, 0.62, 1.15]
-const BASE_COLLO = [0, 0.62, 0.2], ANGOLO_COLLO = 0.32
+// Un corpo solo (docs/fattoria3d/animali.md, «Le parti si toccano»): la coscia di ogni zampa entra nel corpo, il collo è un osso che va dalla spalla alla
+// testa (`collega` a ogni fotogramma), la testa tiene muso, occhi e orecchie dentro il suo ingombro, la coda nasce dalla groppa.
+const SCALA_A = [0.8, 0.8, 1.25]                       // il corpo: sfera da 0,2 → raggi 0,16 · 0,16 · 0,25
+const Y_A = 0.46, BASE_COLLO = [0.54, 0.15], LUNGO_A = 0.42, ANGOLO_COLLO = 0.35, TESTA_A = [0.056, 0.06, 0.08]
 
 function costruisciAlpaca (k = 0) {
   const g = new THREE.Group()
   const vello = mat(k % 2 ? 0xa8754a : 0xf2e7cf), pelle = mat(k % 2 ? 0x7a5538 : 0xcdb99a), scuro = mat(0x2a2018), rosa = mat(0xf0b0a8), lana = mat(0x2f8f9a)
-  const corpo = parte(g, G_CORPO_A, pelle, 0, 0.58, 0); corpo.scale.set(...SCALA_A)
-  const manto = parte(g, G_CORPO_A, vello, 0, 0.6, 0); manto.scale.set(SCALA_A[0] * 0.5, SCALA_A[1] * 0.5, SCALA_A[2] * 0.5)       // il vello: cresce fino a coprire il corpo e di più
-  for (const [x, z] of [[0.07, 0.22], [-0.07, 0.22], [0.07, -0.22], [-0.07, -0.22]]) { parte(g, G_ZAMPA_A, k % 2 ? scuro : vello, x, 0.2, z); parte(g, G_ZOCC_A, scuro, x, 0.02, z) }
-  const coda = new THREE.Group(); coda.position.set(0, 0.7, -0.26); g.add(coda)
-  parte(coda, G_PICCOLA, vello, 0, 0.0, -0.02).scale.set(0.8, 1.2, 0.8)
-  const collo = parte(g, G_COLLO_A, vello, ...BASE_COLLO)                                      // il collo lungo: si allunga quando sta bene
-  collo.rotation.x = ANGOLO_COLLO
-  const testa = new THREE.Group(); testa.position.set(0, 1.02, 0.34); g.add(testa)
-  parte(testa, G_SFERA, vello, 0, 0, 0.04).scale.set(0.25, 0.27, 0.34)
-  parte(testa, G_SFERA, k % 2 ? pelle : rosa, 0, -0.04, 0.13).scale.set(0.19, 0.16, 0.2)    // il muso
-  for (const s of [-1, 1]) parte(testa, G_MINI, scuro, s * 0.045, 0.03, 0.1).scale.setScalar(0.6)
-  const ciuffo = parte(testa, G_PICCOLA, vello, 0, 0.1, 0.02); ciuffo.scale.setScalar(0.01)      // il ciuffo sulla fronte
+  const gamba = mat(k % 2 ? 0x5a3f2a : 0xd8c9a8)
+  const corpo = parte(g, G_CORPO_A, pelle, 0, Y_A, 0); corpo.scale.set(...SCALA_A)
+  const manto = parte(g, G_CORPO_A, vello, 0, Y_A + 0.025, 0); manto.scale.set(...SCALA_A)       // il vello: dal velo sulla schiena alla nuvola che copre il corpo e di più
+  for (const [x, z] of [[0.07, 0.15], [-0.07, 0.15], [0.07, -0.15], [-0.07, -0.15]]) zampa(g, gamba, scuro, x, z, Y_A - 0.03, 0.037, 0.026)
+  const coda = new THREE.Group(); coda.position.set(0, Y_A + 0.07, -0.2); g.add(coda)                 // nasce dalla groppa, dentro il vello
+  parte(coda, G_PUNTA_A, vello, 0, 0, 0).scale.set(1, 1, 1)
+  const collo = osso(g, geoOsso(0.085, 0.045, 8), vello, 0, BASE_COLLO[0], BASE_COLLO[1], 0, 1, 0.3)       // il collo lungo: dalla spalla alla testa
+  const testa = new THREE.Group(); testa.position.set(0, 1, 0.3); g.add(testa)                          // l'origine è la cima del collo
+  ellisse(testa, vello, 0, 0.012, 0.04, ...TESTA_A, 9)
+  ellisse(testa, k % 2 ? pelle : rosa, 0, -0.022, 0.105, 0.037, 0.033, 0.042, 7)                         // il muso
+  for (const s of [-1, 1]) ellisse(testa, scuro, s * 0.046, 0.026, 0.07, 0.013, 0.013, 0.013, 5)       // gli occhi, mezzi dentro la testa
+  const ciuffo = ellisse(testa, vello, 0, 0.05, 0.045, 0.06, 0.06, 0.06, 7); ciuffo.scale.setScalar(0.0006)      // il ciuffo sulla fronte
   const orecchie = [-1, 1].map(s => {
-    const p = new THREE.Group(); p.position.set(s * 0.05, 0.1, -0.03); testa.add(p)
+    const p = new THREE.Group(); p.position.set(s * 0.03, 0.035, 0.02); testa.add(p)
     parte(p, G_ORECCHIO_A, vello, 0, 0, 0); p.userData = { lato: s }
     return p
   })
@@ -135,18 +145,19 @@ function costruisciAlpaca (k = 0) {
 }
 function animaAlpaca (b, u, pr, stadio, dt, t, n) {
   const ph = u.fase += dt * pr.lento
-  u.corpo.scale.set(SCALA_A[0] * pr.sx, SCALA_A[1] * pr.sy, SCALA_A[2] * pr.sz)
-  u.corpo.position.y = 0.58 + pr.corpoY + Math.sin(ph * 0.9 + n) * 0.005
-  const l = pr.lana
-  u.manto.scale.set(SCALA_A[0] * 0.5 * l * pr.sx, SCALA_A[1] * 0.5 * l * pr.sy, SCALA_A[2] * 0.5 * l * pr.sz); u.manto.position.y = u.corpo.position.y + 0.02
-  u.coda.position.y = 0.7 + pr.corpoY; u.coda.rotation.x = -0.2 + Math.sin(ph * 1.5 + n) * 0.08
-  u.collo.scale.y = pr.collo; u.collo.position.y = BASE_COLLO[1] + pr.corpoY
-  const lungo = 0.4 * pr.collo, a = ANGOLO_COLLO + pr.testaX * 0.35 + Math.sin(ph * 0.8 + n) * 0.03       // a fame il collo è basso e proteso
-  u.collo.rotation.x = a
-  u.testa.position.set(0, BASE_COLLO[1] + pr.corpoY + Math.cos(a) * lungo + pr.testaY, BASE_COLLO[2] + Math.sin(a) * lungo + 0.07)
+  const y = Y_A + pr.corpoY + Math.sin(ph * 0.9 + n) * 0.005
+  u.corpo.scale.set(SCALA_A[0] * pr.sx, SCALA_A[1] * pr.sy, SCALA_A[2] * pr.sz); u.corpo.position.y = y
+  const m = 0.88 + 0.4 * Math.max(0, Math.min(1, (pr.lana - 0.35) / 1.1))                // il vello: a fame appena un velo sulla schiena, alla fine più grande del corpo
+  u.manto.scale.set(SCALA_A[0] * m * pr.sx, SCALA_A[1] * m * pr.sy, SCALA_A[2] * m * pr.sz); u.manto.position.y = y + 0.025
+  u.coda.position.y = y + 0.07 * pr.sy; u.coda.rotation.x = -1.3 + Math.sin(ph * 1.5 + n) * 0.1
+  const lungo = LUNGO_A * pr.collo, a = ANGOLO_COLLO + pr.testaX * 0.35 + Math.sin(ph * 0.8 + n) * 0.03       // a fame il collo è basso e proteso
+  const by = BASE_COLLO[0] + pr.corpoY, bz = BASE_COLLO[1]
+  const ty = by + Math.cos(a) * lungo + pr.testaY, tz = bz + Math.sin(a) * lungo
+  collega(u.collo, 0, by, bz, 0, ty, tz)                                                                  // il collo segue la testa: non si stacca mai
+  u.testa.position.set(0, ty, tz)
   u.testa.rotation.x = pr.testaX * 0.5 + Math.sin(ph * 2.2 + n) * (stadio === 1 ? 0.04 : 0.01)           // mastica
-  const c = pr.ciuffo; u.ciuffo.scale.setScalar(Math.max(0.01, c * 1.5)); u.ciuffo.visible = c > 0.03
-  for (const p of u.orecchie) p.rotation.z = -p.userData.lato * (pr.orecchie * 1.1 + Math.sin(ph * 3 + n + p.userData.lato) * 0.05)
+  const c = pr.ciuffo; u.ciuffo.scale.setScalar(Math.max(0.01, c * 0.06)); u.ciuffo.visible = c > 0.03
+  for (const p of u.orecchie) p.rotation.z = -p.userData.lato * (0.12 + pr.orecchie * 1.0 + Math.sin(ph * 3 + n + p.userData.lato) * 0.05)
   const d = u.dono; d.visible = pr.dono > 0.03; d.scale.setScalar(pr.dono * 1.4)
 }
 
@@ -191,28 +202,29 @@ export function creaRecintoAlpaca (stati) { const g = alpacaVuoto(); sincronizza
 export const creaAlpaca = memoModello('alpaca', costruisciAlpaca, { chiave: (k = 0) => k % 2, dopo: casuale })
 
 /* ═════════════════════════ l'asino e il suo recinto ═════════════════════════ */
-const G_CORPO_S = new THREE.SphereGeometry(0.2, 9, 7), G_ZAMPA_S = new THREE.CylinderGeometry(0.03, 0.026, 0.34, 5), G_ZOCC_S = new THREE.CylinderGeometry(0.03, 0.034, 0.04, 5)
-const G_ORECCHIO_S = new THREE.ConeGeometry(0.04, 0.22, 4).translate(0, 0.11, 0), G_CRINIERA = new THREE.BoxGeometry(0.03, 0.2, 0.34)
-const SCALA_S = [0.58, 0.6, 1.3]
+// Un corpo solo: cosce nel corpo, collo grosso che va dalla spalla alla testa, criniera sul collo, testa lunga col muso chiaro, orecchie lunghe sul cranio.
+const G_CORPO_S = new THREE.SphereGeometry(0.2, 9, 7), G_ORECCHIO_S = geoPunta(0.036, 0.2, 4), G_CRINIERA = geoOsso(0.022, 0.015, 4)
+const SCALA_S = [0.65, 0.72, 1.4]                      // il corpo: raggi 0,13 · 0,144 · 0,28
+const Y_S = 0.46, BASE_S = [0.53, 0.2], LUNGO_S = 0.3, ANGOLO_S = 0.8
 
 function costruisciAsino (k = 0) {
   const g = new THREE.Group()
   const manto = mat(k % 2 ? 0x7a5a42 : 0x8e8d92), chiaro = mat(k % 2 ? 0xd8c4a8 : 0xd9d6d0), scuro = mat(0x2a2424), terra = mat(0x4a3220), tela = mat(0xcfb27a), nodo = mat(0x7a5232)
-  const corpo = parte(g, G_CORPO_S, manto, 0, 0.5, 0); corpo.scale.set(...SCALA_S)
-  parte(g, G_CORPO_S, chiaro, 0, 0.4, 0.02).scale.set(SCALA_S[0] * 0.8, SCALA_S[1] * 0.5, SCALA_S[2] * 0.85)        // la pancia chiara
-  for (const [x, z] of [[0.07, 0.2], [-0.07, 0.2], [0.07, -0.2], [-0.07, -0.2]]) { parte(g, G_ZAMPA_S, manto, x, 0.17, z); parte(g, G_ZOCC_S, scuro, x, 0.02, z) }
-  const coda = new THREE.Group(); coda.position.set(0, 0.55, -0.27); g.add(coda)
-  parte(coda, new THREE.CylinderGeometry(0.012, 0.012, 0.26, 4).translate(0, -0.13, 0), manto, 0, 0, 0)
-  parte(coda, G_MINI, scuro, 0, -0.27, 0).scale.set(1.1, 1.8, 1.1)
-  parte(g, G_CORPO_S, manto, 0, 0.64, 0.25).scale.set(0.24, 0.5, 0.3)                       // il collo
-  parte(g, G_CRINIERA, scuro, 0, 0.7, 0.2).rotation.x = 0.55                                    // la criniera dritta
-  const testa = new THREE.Group(); testa.position.set(0, 0.72, 0.36); g.add(testa)
-  parte(testa, G_CORPO_S, manto, 0, 0, 0.07).scale.set(0.3, 0.32, 0.5)
-  parte(testa, G_CORPO_S, chiaro, 0, -0.045, 0.2).scale.set(0.21, 0.19, 0.24)             // il muso chiaro
-  for (const s of [-1, 1]) parte(testa, G_MINI, scuro, s * 0.05, 0.035, 0.12).scale.setScalar(0.6)
-  parte(testa, G_MINI, scuro, 0, -0.045, 0.31).scale.set(1.6, 0.8, 0.6)
+  const corpo = parte(g, G_CORPO_S, manto, 0, Y_S, 0); corpo.scale.set(...SCALA_S)
+  const pancia = parte(g, G_CORPO_S, chiaro, 0, Y_S - 0.07, 0.02); pancia.scale.set(SCALA_S[0] * 0.8, SCALA_S[1] * 0.6, SCALA_S[2] * 0.85)       // la pancia chiara
+  for (const [x, z] of [[0.065, 0.18], [-0.065, 0.18], [0.065, -0.18], [-0.065, -0.18]]) zampa(g, manto, scuro, x, z, Y_S - 0.03, 0.036, 0.024)
+  const coda = new THREE.Group(); coda.position.set(0, Y_S + 0.03, -0.25); g.add(coda)
+  osso(coda, geoOsso(0.014, 0.011, 4), manto, 0, 0, 0, 0, -0.26, 0)
+  ellisse(coda, scuro, 0, -0.27, 0, 0.024, 0.06, 0.024, 6)                                  // il ciuffo in fondo alla coda
+  const collo = osso(g, geoOsso(0.09, 0.06, 8), manto, 0, BASE_S[0], BASE_S[1], 0, 0.7, 0.4)
+  const criniera = osso(g, G_CRINIERA, scuro, 0, BASE_S[0] + 0.05, BASE_S[1] - 0.03, 0, 0.75, 0.37)       // la criniera dritta sul collo
+  const testa = new THREE.Group(); testa.position.set(0, 0.7, 0.4); g.add(testa)                       // l'origine è la cima del collo
+  ellisse(testa, manto, 0, -0.025, 0.075, 0.055, 0.07, 0.115, 9)
+  ellisse(testa, chiaro, 0, -0.045, 0.19, 0.05, 0.05, 0.055, 7)                                       // il muso chiaro
+  ellisse(testa, scuro, 0, -0.035, 0.238, 0.03, 0.017, 0.015, 5)                                      // le narici
+  for (const s of [-1, 1]) ellisse(testa, scuro, s * 0.043, 0.02, 0.065, 0.013, 0.013, 0.013, 5)      // gli occhi
   const orecchie = [-1, 1].map(s => {
-    const p = new THREE.Group(); p.position.set(s * 0.05, 0.1, -0.04); testa.add(p)
+    const p = new THREE.Group(); p.position.set(s * 0.033, 0.02, 0.05); testa.add(p)
     parte(p, G_ORECCHIO_S, manto, 0, 0, 0); p.userData = { lato: s }
     return p
   })
@@ -221,18 +233,25 @@ function costruisciAsino (k = 0) {
   parte(dono, G_PICCOLA, tela, 0, 0.1, 0).scale.set(1.25, 1.7, 1.1)
   parte(dono, G_MINI, nodo, 0, 0.22, 0).scale.set(1.3, 0.8, 1.3)
   parte(dono, G_MINI, mat(0x3a9a3a), 0, 0.12, 0.07).scale.set(1.6, 1.1, 0.4)             // l'etichetta verde
-  fondiPerMateriale(testa, { escludi: orecchie }); fondiPerMateriale(dono); fondiPerMateriale(coda); fondiPerMateriale(g, { escludi: [corpo, coda, testa, mucchio, dono] })
-  g.userData = { corpo, coda, testa, orecchie, mucchio, dono, specie: 'asino', ms: ANIMALI.asini.ms, fase: Math.random() * 6, meta: new THREE.Vector3(), animaBestia: animaAsino }
+  fondiPerMateriale(testa, { escludi: orecchie }); fondiPerMateriale(dono); fondiPerMateriale(coda); fondiPerMateriale(g, { escludi: [corpo, pancia, collo, criniera, coda, testa, mucchio, dono] })
+  g.userData = { corpo, pancia, collo, criniera, coda, testa, orecchie, mucchio, dono, specie: 'asino', ms: ANIMALI.asini.ms, fase: Math.random() * 6, meta: new THREE.Vector3(), animaBestia: animaAsino }
   segniDiPronta(g, g.userData, { raggio: 0.5, yAlone: 0.02, scint: [0.44, 0.4, 0.24], sbuffo: [0.44, 0.2, 0.24], rSbuffo: 0.2 })
   return g
 }
 function animaAsino (b, u, pr, stadio, dt, t, n) {
   const ph = u.fase += dt * pr.lento
-  u.corpo.scale.set(SCALA_S[0] * pr.sx, SCALA_S[1] * pr.sy, SCALA_S[2] * pr.sz)
-  u.corpo.position.y = 0.5 + pr.corpoY + Math.sin(ph * 0.9 + n) * 0.005
-  u.testa.position.y = 0.72 + pr.testaY + Math.sin(ph * 2.2 + n) * (stadio === 1 ? 0.01 : 0.003)       // mastica
-  u.testa.rotation.x = pr.testaX + Math.sin(ph * 0.7 + n) * 0.04
-  for (const p of u.orecchie) p.rotation.z = -p.userData.lato * (pr.orecchie + Math.sin(ph * 2.1 + n + p.userData.lato) * 0.07)       // le orecchie lunghe si muovono sempre un po'
+  const y = Y_S + pr.corpoY + Math.sin(ph * 0.9 + n) * 0.005
+  u.corpo.scale.set(SCALA_S[0] * pr.sx, SCALA_S[1] * pr.sy, SCALA_S[2] * pr.sz); u.corpo.position.y = y
+  u.pancia.scale.set(SCALA_S[0] * 0.8 * pr.sx, SCALA_S[1] * 0.6 * pr.sy, SCALA_S[2] * 0.85 * pr.sz); u.pancia.position.y = y - 0.07 * pr.sy
+  const a = ANGOLO_S + pr.testaX * 0.5 + Math.sin(ph * 0.7 + n) * 0.03                                   // a fame il collo si piega in avanti e la testa pende
+  const by = BASE_S[0] + pr.corpoY, bz = BASE_S[1]
+  const ty = by + Math.cos(a) * LUNGO_S + pr.testaY + Math.sin(ph * 2.2 + n) * (stadio === 1 ? 0.01 : 0.003), tz = bz + Math.sin(a) * LUNGO_S      // mastica
+  collega(u.collo, 0, by, bz, 0, ty, tz)                                                                  // il collo segue la testa: non si stacca mai
+  collega(u.criniera, 0, by + (ty - by) * 0.18 + 0.05, bz + (tz - bz) * 0.18 - 0.02, 0, ty + 0.045, tz - 0.03)       // dal garrese alla nuca
+  u.testa.position.set(0, ty, tz)
+  u.testa.rotation.x = 0.5 + pr.testaX * 0.45
+  for (const p of u.orecchie) p.rotation.set(-0.2, 0, -p.userData.lato * (pr.orecchie + Math.sin(ph * 2.1 + n + p.userData.lato) * 0.07))       // le orecchie lunghe si muovono sempre un po'
+  u.coda.position.y = y + 0.03 * pr.sy
   u.coda.rotation.x = 0.2 + 0.2 * pr.coda; u.coda.rotation.z = Math.sin(ph * (stadio === 2 ? 3 : 1.4) + n) * 0.5 * pr.coda
   const m = pr.mucchio; u.mucchio.visible = m > 0.03; u.mucchio.scale.set(1.8 * m, 0.55 * m, 1.5 * m)
   const d = u.dono; d.visible = pr.dono > 0.03; d.scale.setScalar(pr.dono * 1.4)

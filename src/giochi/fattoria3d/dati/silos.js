@@ -21,7 +21,9 @@ export const TIPI_DI_SILO = Object.keys(SILOS)
 export function siloDi(k) {
   if (COLTURE[k]) return siloDelProdotto2D(coltura2d(k).da)
   if (LANA[k]) return 'stalla'
+  if (RICETTE[k] && RICETTE[k].silo) return RICETTE[k].silo            // le ricette solo 3D (dati/pancetta.js) dicono il loro silo
   if (RICETTE[k]) return siloDelProdotto2D(RICETTE[k].da || k)         // `da`: il prodotto, se non è l'id (due strade per lo stesso foraggio)
+  if (PRODOTTI_ANIMALI[k] && PRODOTTI_ANIMALI[k].silo) return PRODOTTI_ANIMALI[k].silo      // la pancetta (solo 3D, id nuovo): nella stalla come il tartufo di una volta
   if (PRODOTTI_ANIMALI[k] || MANGIMI_SENZA_RICETTA[k]) return siloDelProdotto2D(k)       // i fiori delle api: nella stalla come in 2D
   return null
 }
