@@ -27,8 +27,17 @@ rimasti aperti. Quando una voce si chiude si toglie da qui (la storia sta in `gi
   dati restano quelle di prima, sono salvataggi).
 - **Abitanti da dipingere**: orso, corvo, avvoltoio, brigante, lupo capobranco e gli altri; oggi sono specie del catalogo scelte per
   habitat ([mondo-aperto-mostri.md](mondo-aperto-mostri.md)).
-- **La pergamena del portale** ([da-fare.md](da-fare.md)): sprite disegnato, casella nella barra, banco, abisso «dall'inizio del
-  tratto».
+- **La pergamena del portale** ([da-fare.md](da-fare.md)): il modello 3D c'è (`poc/roba-3d/pozioni.js`); il resto è fermo, ognuno per
+  una ragione (22 ottobre):
+  - *lo sprite 2D*: nel foglio `scudi.png` ci sono pergamene non ritagliate, ma lo sprite si dichiara in `dati/cose.js`, che era in
+    mano allo slot dell'elmo; si fa dopo, con una riga nel foglietto e `atlante.py`;
+  - *la casella nella barra*: non c'è (si apre dallo zaino). Sei caselle invece di cinque scendono da ~42 a ~34 px a 390 di larghezza
+    (~31 a 360), e la barra vuole caselle tutte uguali ([barra.md](barra.md)); la torcia ne è già uscita perché «non così utile». Da
+    decidere con Marco: la sesta casella, o una che cede il posto (💎 apre lo stesso zaino della bisaccia);
+  - *il banco*: nessun documento dice quando un giocatore tipo la compra e la apre ([risalite.md](risalite.md) usa solo il portale
+    fisso), e serve alla taratura, che è rimandata;
+  - *l'abisso «dall'inizio del tratto»*: la regola non è scritta (ripartire dal primo piano del tratto o dal piano lasciato, con quale
+    sosta); oggi la pergamena là è «torno su per stasera» e si riprende come dopo la risalita ([portale-e-sosta.md](portale-e-sosta.md)).
 - **L'icona del villaggio** (`ICONE_MONDO.villaggio`, generata): nessuna schermata la chiede (`iconaDi` la dà solo se qualcuno passa
   `'villaggio'`, e oggi nessuno lo fa; le 14 icone dei dungeon invece servono al Diario e alla carta di ripresa). Si tiene: quando le città
   saranno più d'una ci vorrà.
