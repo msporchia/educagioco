@@ -12,7 +12,7 @@
 
      npm run build && node strumenti/tavola-anteprime.mjs
      node strumenti/tavola-anteprime.mjs --solo roba          # roba, eroi, mostri
-     node strumenti/tavola-anteprime.mjs --solo rarita        # ogni arma, scudo e gioiello comune, magico, raro, e i leggendari (gli aloni)
+     node strumenti/tavola-anteprime.mjs --solo rarita        # ogni arma, scudo, gioiello e veste comune, magico, raro, i consumabili e i pezzi col nome
      node strumenti/tavola-anteprime.mjs --eroe mago --scala 2
      node strumenti/tavola-anteprime.mjs --chiavi arma:ascia-lava,busto:nano:accetta:scudo-nanico:-
 
@@ -57,6 +57,9 @@ else {
       for (const [r, a, n] of [['comune', [], 'c'], ['magico', ab.slice(0, 1), 'm'], ['raro', ab.slice(1, 3), 'r']])
         voci.push({ k: chiaveDellaCosa({ chiave: chiaveDelPezzo(k, 6, r, a) }, eroe), n: `${k} ${n}` })
     }
+    for (const [k, c] of Object.entries(COSE)) if (c.usa && !c.dove) voci.push({ k: chiaveDellaCosa({ chiave: k }, eroe), n: k })   // i consumabili
+    for (const k of ['corazza', 'manto', 'saio', 'panciotto']) for (const [r, a] of [['comune', []], ['magico', ['vita']], ['raro', ['vita', 'dif']]])
+      voci.push({ k: chiaveDellaCosa({ chiave: chiaveDelPezzo(k, 6, r, a) }, eroe), n: `${k} ${r[0]}` })   // le vesti
     for (const [u, v] of Object.entries(UNICI)) voci.push({ k: chiaveDellaCosa({ chiave: chiaveDelPezzo(v.base, 9, v.rarita, [], u) }, eroe), n: u })
   }
   if (solo.includes('eroi')) {

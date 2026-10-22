@@ -31,6 +31,7 @@ La chiave dice la figura e l'aspetto, non l'oggetto: due spade con la stessa fig
 |---|---|---|
 | `arma:<gettone>` | l'arma (la figura, o il ripiego) in diagonale, la punta in alto a destra; l'arco girato di lato perché si veda la curva; l'alone fermo a 1,3 s | 128² |
 | `scudo:<gettone>` · `gioiello:<gettone>` | lo scudo, la collana o l'anello di fronte, appena girato | 128² |
+| `consumabile:<chiave>:<rarità>` | la pozione, la torcia, la chiave o la pergamena di fronte (l'alone solo ai rarissimi) | 128² |
 | `armatura:<tipo>:<pregio>:<eroe>:<corpo>` | l'armatura su un manichino: l'eroe di adesso senza testa e senza armi (la veste della figura se il modulo `vesti` c'è); `<corpo>` = `<tipo>.<pregio>.<figura>.<rarità>.<elemento>` | 128² |
 | `eroe:<chi>:<destra>:<sinistra>:<corpo>:<collo>` | l'eroe intero nella guardia, con le armi, l'armatura e la collana | 150×176 |
 | `busto:…` (lo stesso) | la faccia e le spalle, uguali per tutti (il cappello del mago e la barba del nano restano dentro a metà) | 96² |
@@ -46,7 +47,7 @@ La chiave dice la figura e l'aspetto, non l'oggetto: due spade con la stessa fig
 ## Lo sprite non sparisce mai
 
 - **Finché l'anteprima non è pronta si vede lo sprite**, e poi si scambia. Le caselle compaiono subito.
-- **Dove il modello non c'è resta lo sprite**: pozioni, torce, chiavi, i tre gioielli di base senza figura dei fogli ([roba-3d.md](roba-3d.md)), le sei specie senza modello (pianta,
+- **Dove il modello non c'è resta lo sprite**: i tre gioielli di base senza figura dei fogli ([roba-3d.md](roba-3d.md)), le sei specie senza modello (pianta,
   piranha, golem di muschio, scorpione, mostro viola, pipistrello occhio). Una chiave senza modello, un modello che si rompe, un
   WebGL che non c'è o un contesto perso valgono null: niente riquadri vuoti.
 - **Il ritratto tiene sotto lo sprite** coi suoi `data-in-mano`/`data-addosso` (nascosto con `visibility`): i test e i `data-` di
@@ -91,7 +92,6 @@ aperto, quante in coda, e `prima`/`ultima` (il primo chiedere e l'ultima pronta)
 ## Cosa manca
 
 - L'armatura si mostra sull'eroe di adesso anche quando la sua classe non la porta (il ✋ lo dice già).
-- Le pozioni non hanno un modello.
 
 Nei test: `unita/sotterraneo-anteprime-3d` (il ripiego copre ogni arma e scudo del gioco, il pezzo 3D con la figura, le chiavi, null dove resta lo
 sprite, la lettura delle chiavi, i mostri allo stesso modello della scena, la coda), `integrazione/sotterraneo-3d-anteprime` (lo

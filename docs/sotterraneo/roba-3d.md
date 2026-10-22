@@ -16,7 +16,10 @@ anteprime è il modello 3D di `spada-28`, con l'alone della sua rarità. Prima t
 3. **La figura → il modulo** della sua famiglia, dal prefisso dell'id: `spada-*`, `ascia-*` → lame; `bastone-*`, `arco-*` →
    bastoni; `scudo-*` → scudi; `veste-*` → vesti; `amuleto-*` → gioielli. Ogni modulo ha `crea(figura)` (il record del catalogo,
    `{ id, cosa, elemento, materia, … }`) → Group con l'origine nel pugno o nel centro, `userData.famiglia` (spada, staffa, arco,
-   scudo, amuleto) e `userData.anima(t)`; `vesti.js` ha `vesti(eroe, figura)`, `gioielli.js` `indossa(eroe, figura)`.
+   scudo, amuleto) e `userData.anima(t)`; `vesti.js` ha solo `vesti(eroe, figura)` → `togli()`, `gioielli.js` anche `indossa(eroe, figura)`.
+4. **I consumabili** non hanno figura: le undici chiavi con `usa` di `dati/cose.js` (le pozioni, l'elisir, la torcia, la chiave, la
+   pergamena del portale) hanno un modello per chiave in `pozioni.js` (`crea(chiave)`, `CHIAVI`: la forma dal grado, il colore dal
+   tipo). Nelle caselle, nella scelta della pozione e nella riga della torcia dello zaino.
 
 `scena3d/roba3d.js`: `modelloDiRoba(chiave)` → `{ figura, famiglia, modulo, ripiego, crea(), look }`; `creaPezzo(p)` costruisce e
 mette l'alone; `vestiFigura` e `indossaGioiello` per il corpo e il collo. Li usano l'eroe in scena (`eroe3d.js`, `vestiDotazione`) e
@@ -27,11 +30,13 @@ le anteprime ([anteprime-3d.md](anteprime-3d.md)): la stessa funzione, lo stesso
 - **Il modulo della famiglia manca** (un agente lo sta ancora scrivendo), **la figura non è coperta** o **il modello si rompe**
   (`console.warn`, e la figura non si riprova): l'arma e lo scudo tornano al modello della base nella collezione (`MODELLO_DI` in
   `anteprime3d-pura.js`, le 50 armi di sempre); la veste torna all'armatura di `armature.js` col pregio dalla rarità.
-- **Né figura né ripiego**: null, e la vista tiene lo sprite. Sono così le pozioni, le torce e i gioielli di base il cui sprite non
+- **Né figura né ripiego**: null, e la vista tiene lo sprite. Sono così i gioielli di base il cui sprite non
   viene dai fogli (`amuleto-rosso`, `medaglione`, `amuleto-osso`); i pezzi trovati di quelle basi hanno una figura dei fogli e
   quindi il 3D. Anche le armi di base con uno sprite fuori dai fogli (`pugnale-vampiro`, `spada-del-ladro`, `bipenne-solare`)
   restano al ripiego.
-- **Al collo dell'eroe in scena solo le collane**; gli anelli si vedono nelle anteprime.
+- **Al collo dell'eroe in scena solo le collane**, senza alone (la catena allungata lo spargeva su tutto l'eroe); gli anelli si
+  vedono nelle anteprime.
+- **Un consumabile senza il modulo `pozioni`** resta lo sprite.
 
 ## Gli aloni della rarità e dell'elemento
 
@@ -50,7 +55,9 @@ Più, se l'elemento non è «nessuno», una velatura del suo colore e piccoli mo
 che scendono per il ghiaccio, saette per il fulmine, bolle per veleno e acqua, foglie per la natura, rune per l'arcano). I colori
 stanno in `poc/roba-3d/palette.js` (`ELEMENTI`). L'alone si mette **solo ai pezzi non comuni**; un comune mostra già la sua figura.
 `gruppo.userData.animaAlone(t)` lo muove (l'eroe lo chiama a ogni fotogramma, le anteprime una volta a 1,3 s: l'aura gonfia);
-`userData.aloneUniformi.uIntensita` lo fa svanire col portale. Provato con le sole tinte dei materiali: clonarli rompe le animazioni
+`userData.aloneUniformi.uIntensita` lo fa svanire col portale. In mano all'eroe i punti sono più piccoli (`scalaAlone` 0,8): a
+grandezza piena coprivano la faccia del ritratto. Fra i consumabili brillano (come un raro) solo i «rarissimi»: l'ampolla della vita
+e l'elisir del toro. Provato con le sole tinte dei materiali: clonarli rompe le animazioni
 dei moduli, che tengono i loro materiali.
 
 Per guardarli: `poc/roba-3d-aloni.html` (le 50 armi × le quattro rarità con l'elemento dell'arma; `?famiglia=spada`,
@@ -67,7 +74,7 @@ catalogo o un foglietto. `-- --controlla` non scrive ed esce con 1 se è vecchia
 
 I moduli stanno in `poc/roba-3d/` e il gioco usa le copie in `scena3d/roba3d/` ([mostri-3d.md](mostri-3d.md)): gli aloni sempre,
 ogni famiglia **solo se è pronta** (il file c'è, la sua copia si importa in una cartella di prova sotto `tmp/`, esporta `crea` e
-costruisce almeno una figura). `roba3d/moduli.js` (generato) importa quelle che ci sono; chi manca ripiega. L'import di
+costruisce almeno una figura: `crea(figura)`, `vesti` su un eroe con una tela finta, `crea(chiave)` per chi ha `CHIAVI`). `roba3d/moduli.js` (generato) importa quelle che ci sono; chi manca ripiega. L'import di
 `roba.json` dei prototipi diventa `roba3d/catalogo-roba.js`, che legge `dati/figure3d.js` (le descrizioni e i rettangoli non
 entrano nel file unico).
 
@@ -81,10 +88,11 @@ entrano nel file unico).
 ## Cosa manca
 
 - Le armi in mano ai mostri (gli scheletri guerriero e mago) restano quelle della collezione: non sono oggetti con una chiave.
-- L'alone non c'è sulle vesti (starebbe su tutto l'eroe): la rarità della veste si vede dal pregio e dalla figura.
+- L'alone non c'è sulle vesti (starebbe su tutto l'eroe): la rarità della veste si vede dalla figura.
 
 Nei test: `unita/sotterraneo-roba-3d` (la tabella uguale a quella dello strumento e la firma; ogni figura ha la sua famiglia e il
 modulo la costruisce, o la famiglia è fra quelle che mancano; ogni oggetto da impugnare ha figura o ripiego; il ripiego senza modulo
-e con un modulo che si rompe; le chiavi composte; gli aloni), `unita/sotterraneo-mostri-3d` (le copie uguali ai prototipi),
+e con un modulo che si rompe; ogni veste addosso all'eroe; ogni consumabile, con l'alone solo ai rarissimi; le chiavi composte; gli
+aloni), `unita/sotterraneo-mostri-3d` (anche: ogni famiglia col prototipo è fra i moduli del gioco), le copie uguali ai prototipi,
 `unita/sotterraneo-anteprime-3d` e `integrazione/sotterraneo-3d-anteprime` (le chiavi con figura e rarità). La tavola:
 `node strumenti/tavola-anteprime.mjs --solo rarita`.
