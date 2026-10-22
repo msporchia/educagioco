@@ -129,44 +129,6 @@
 .f3-gt.grande .e { width: 52px; height: 52px; font-size: 30px; }
 .f3-gt .x { position: absolute; right: -8px; top: -5px; min-width: 24px; height: 22px; padding: 0 5px; box-sizing: border-box; border-radius: 11px; background: #3a2a1a; color: #fff; font-size: 12px; line-height: 22px; text-align: center; }
 
-/* il forno: tre vani con la barra di cottura e il timer */
-.f3-forno { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-.f3-forno .posto { display: flex; flex-direction: column; align-items: center; gap: 5px; animation: f3-compari .35s both; animation-delay: calc(var(--i, 0) * 70ms); }
-.f3-forno .vano { width: 100%; aspect-ratio: 1 / 1.02; display: grid; place-items: center; border-radius: 40px 40px 12px 12px; border: 4px solid var(--b); background: radial-gradient(circle at 50% 110%, #6a4430, #2f2018 75%); box-shadow: inset 0 0 14px rgba(0,0,0,.55); box-sizing: border-box; }
-.f3-forno .em { font-size: 34px; line-height: 1; }
-.f3-forno .posto.vuoto .vano { background: transparent; border: 3px dashed var(--a); box-shadow: none; opacity: .75; }
-.f3-forno .posto.vuoto .em { color: var(--b); font-size: 26px; font-weight: 800; }
-.f3-forno .posto.cuoce .vano { background: radial-gradient(circle at 50% 110%, #ffb04a, #8a3414 72%); animation: f3-brace 1.6s ease-in-out infinite; }
-.f3-forno .posto.cuoce .em { animation: f3-sobbalza 1.2s ease-in-out infinite; }
-.f3-forno i { display: block; width: 100%; height: 10px; border-radius: 5px; background: #eadfc6; overflow: hidden; box-shadow: inset 0 1px 2px rgba(0,0,0,.22); }
-.f3-forno u { display: block; height: 100%; border-radius: 5px; background: linear-gradient(90deg, var(--a), var(--b)); transition: width .4s linear; }
-.f3-forno small { font-size: 13px; font-weight: 800; color: var(--b); }
-.f3-pronti { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 12px; padding: 7px 7px 7px 14px; border-radius: 28px; background: var(--c); border: 2px dashed var(--a); font-size: 14px; font-weight: 700; }
-.f3-pronti.c { background: #eefad9; border: 2px solid #5fae3a; animation: f3-batti-lieve 1.4s ease-in-out infinite; }
-.f3-pronti button { flex: none; min-height: 48px; padding: 0 16px; border: 0; border-radius: 24px; background: linear-gradient(#8de060, #5fb83a); box-shadow: 0 3px 0 #3f8a22; font: 800 15px "Emoji Gioco", system-ui, sans-serif; color: #123; touch-action: manipulation; transition: transform .08s, box-shadow .08s; }
-.f3-pronti button:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 0 0 #3f8a22; }
-.f3-pronti button:disabled { background: #ddd6c6; box-shadow: 0 3px 0 #bdb5a2; color: #9a9283; }
-
-/* le ricette: schede con la foto del piatto, i gettoni e un tasto grande */
-.f3-ricette { display: flex; flex-direction: column; gap: 12px; }
-.f3-ricette .ricetta { display: grid; grid-template-columns: 72px 1fr; grid-template-areas: "foto dati" "tasto tasto"; gap: 8px 12px; align-items: center; padding: 10px; border-radius: 20px; background: #fffdf6; border: 2px solid var(--d); box-shadow: 0 3px 0 var(--d); animation: f3-compari .35s both; animation-delay: calc(var(--i, 0) * 45ms); }
-.f3-ricette .ricetta.pronta { border-color: #5fae3a; box-shadow: 0 3px 0 #9be07a; background: linear-gradient(#fffdf6, #f3fbe9); }
-.f3-ricette .foto { grid-area: foto; position: relative; width: 72px; height: 72px; display: grid; place-items: center; border-radius: 22px; background: radial-gradient(circle at 35% 30%, #fff, var(--c)); box-shadow: inset 0 0 0 3px var(--d); }
-.f3-ricette .foto .em { font-size: 42px; line-height: 1; }
-.f3-ricette .dati { grid-area: dati; display: flex; flex-direction: column; gap: 5px; min-width: 0; }
-.f3-ricette .dati b { font-size: 17px; }
-.f3-ricette .gettoni { display: flex; flex-wrap: wrap; gap: 6px; }
-.f3-ricette .tempo { font-size: 13px; font-weight: 700; color: #7a5a3a; }
-.f3-ricette .prepara { grid-area: tasto; min-height: 52px; border: 0; border-radius: 26px; background: linear-gradient(#ffe27a, #ffc533); box-shadow: 0 4px 0 #c98f0a; font: 800 17px "Emoji Gioco", system-ui, sans-serif; color: #3a2a1a; touch-action: manipulation; transition: transform .08s, box-shadow .08s; }
-.f3-ricette .prepara:active { transform: translateY(4px); box-shadow: 0 0 0 #c98f0a; }
-.f3-ricette .prepara.spenta { background: #e8e2d2; box-shadow: 0 4px 0 #cfc7b2; color: #9a9283; }
-.f3-ricette .ricetta.chiusa { border-style: dashed; box-shadow: none; background: repeating-linear-gradient(135deg, #f4eedc 0 10px, #ece4cc 10px 20px); }
-.f3-ricette .chiusa .foto .em { filter: grayscale(1) opacity(.45); }
-.f3-ricette .chiusa .gettoni { opacity: .5; }
-.f3-ricette .lucchetto { position: absolute; right: -6px; bottom: -6px; width: 32px; height: 32px; display: grid; place-items: center; border-radius: 50%; background: #fff; font-size: 18px; box-shadow: 0 2px 4px rgba(0,0,0,.28); }
-.f3-ricette .blocco { font-size: 13px; font-weight: 800; color: #8a6a3a; }
-.f3-ricette .manca { color: #c0392b; }
-
 /* le opzioni */
 .f3-opzioni { max-height: 78%; }
 .f3-opzioni.ridotto { max-height: none; padding-bottom: calc(10px + env(safe-area-inset-bottom)); }

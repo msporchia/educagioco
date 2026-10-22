@@ -44,7 +44,7 @@ Le voci aperte tecniche. Una riga ciascuna, e quando una si chiude si toglie. Qu
   con il mestiere giusto (pasta, forno, pentole).
 - **L'atlante nel sito spezzato.** `atlante.js` della 2D lo importa anche la 3D (`Faccia.vue`, `facce.js`, `Provino.vue`): il modulo diventa un
   file condiviso nella base e il PNG resta nel gruppo `fattoria`. Da guardare con `node strumenti/prova-sito.mjs` (offline, solo la 3D).
-- **Il foglio della macchina e i vani dei posti da comprare non sono stati visti col dito vero** (scritto senza build: `integrazione/fattoria3d` ha il tocco e due trascinate da eseguire): da guardare a 360 px, a 820 px e in orizzontale. Manca «accelera» (il motore non anticipa una cottura) e il ritiro di un solo pronto; `stile.css` ha ancora le regole morte `.f3-forno`, `.f3-pronti`, `.f3-ricette`, `.f3-gt` di prima, da togliere.
+- **Il foglio della macchina e i vani dei posti da comprare non sono stati visti col dito vero** (scritto senza build: `integrazione/fattoria3d` ha il tocco e due trascinate da eseguire): da guardare a 360 px, a 820 px e in orizzontale. Manca «accelera» (il motore non anticipa una cottura) e il ritiro di un solo pronto.
 - **La mongolfiera non è stata vista.** `Mongolfiera.vue` (360 px e tablet, cielo, cassette, pallone) è scritta ma non guardata su uno schermo né provata col dito
   (la build era vietata mentre altri lavoravano): il dito sul foglio e il pallone che parte e torna nella scena sono da guardare ([mongolfiera.md](mongolfiera.md)). Da giocare: i pezzi
   per cassa (1–2 sotto il livello 14, 1–3 dopo), il riposo di 2 minuti, le soglie del traguardo «Sulla mongolfiera» (10, 40, 120 casse). Manca la quarta fila alta della 2D e un test d'integrazione col dito.
