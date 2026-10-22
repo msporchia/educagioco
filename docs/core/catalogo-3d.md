@@ -54,6 +54,7 @@ stesse geometrie. Un modello che vuole un canvas lo fa da sé: siamo in pagina.
 
 ## Chi mantiene cosa
 
+- `catalogo-3d/fattoria-cortile2.js`: le voci del secondo cortile della Fattoria 3D (caricato da `catalogo-3d.js` accanto a `fattoria.js`; stessa forma).
 - `catalogo-3d/fattoria.js`: chi lavora sulla Fattoria 3D. `dove` si ricava
   dai dati (`dati/catalogo.js`, `colture.js`, `compagni.js`), non si scrive a
   mano. Un `crea…` nuovo in `modelli.js` vuole una voce qui.

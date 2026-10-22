@@ -72,7 +72,7 @@ tintoria; lo zucchero chiude il gelato, i biscotti e la marmellata). Ricette, qu
   Non si chiede in un ordine né si baratta con un vicino: ogni elenco che parte da `RICETTE` non la vede.
 - **Lo zuccherificio sta al 13** (la barbabietola arriva all'11): lo zucchero rimette gli ingredienti veri nel gelato (prima la fragola) e
   apre i biscotti del pastificio, il succo della gelateria e la marmellata (che non è più un vecchio nome della crostata: `MERCI_VECCHIE`
-  non la traduce più). **Caramelle** (zucchero + miele) restano fuori: il miele non c'è.
+  non la traduce più). **Caramelle** (zucchero + miele) e la **merenda** del panificio ci sono dal giro G5: il miele è delle arnie ([cortile-2.md](cortile-2.md)).
 - **L'emoji di ripiego della tintura è 🧴**: 🫙, quella della 2D, è già della marmellata e un'emoji non è di due merci (`guastiDelleRicette`).
 - Posti: telaio (−9,−4), zuccherificio (6,4), sartoria (6,0), tintoria (−9,4), tutti 3×3 in un lotto accanto al quadrato di partenza (un
   vicino li può avere: Zio Beppe il telaio, Villa Dolce lo zuccherificio).

@@ -30,7 +30,7 @@ vince il codice.
 | colture | 16 | 16 (gli stessi id, singolari) |
 | ricette | 57 | 41 (nessuna inventata) |
 | macchine | 14 | 14 |
-| recinti del cortile | 11 | 6 (pecore, galline, mucche, anatre, maiali, capre) |
+| recinti del cortile | 11 | 10 (pecore, galline, mucche, anatre, maiali, capre, conigli, alpaca, asini, arnie; la peschiera è la pesca) |
 | bestie di casa (si comprano, hanno bisogni) | 7 | 0 (4 compagni gratuiti che girano, non si curano) |
 | addobbi per le bestie | 12 (7 in vendita) | 0 (il guardaroba è del contadino) |
 | botteghe del paese | 4 | 0 |

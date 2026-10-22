@@ -12,6 +12,7 @@ lana) e uno stato suo, e non tocca quelli della fattoria di sempre; le monete so
 - [edifici-liberi.md](edifici-liberi.md) — gli edifici sono pezzi liberi: si costruiscono dal menu e si mettono dove si vuole, uno per tipo; il «!» per quelli aperti dal livello e non costruiti; la migrazione dei vecchi posti fissi
 - [mangime-e-catena.md](mangime-e-catena.md) — cosa mangiano le bestie (il mangime del fienile, come in 2D), la catena grano → becchime → uova e carote/erba → foraggio → latte e lana, l'audit di ogni ricetta contro la 2D e le deviazioni dichiarate
 - [cortile-e-pentolone.md](cortile-e-pentolone.md) — il pentolone (le 4 ricette del mangime) e le bestie che mangiano da lui: anatre, maiali, capre; i numeri provvisori in `dati/cortile.js`
+- [cortile-2.md](cortile-2.md) — il secondo cortile: conigliera (lana d'angora), alpaca (lana d'alpaca), asini (concime), arnie (fiori → miele), merenda e caramelle, e perché la peschiera non c'è; i numeri sono della 2D (`dati/cortile2.js`)
 - [animali.md](animali.md) — pollaio e stalla: galline e mucche, uova e latte, i posti coi livelli, il caseificio e le ricette nuove
 - [ordini.md](ordini.md) — il banco della bancarella: chi chiede raccolti e prodotti, il premio in esperienza (mai monete), rifiutare, lo stato v3
 - [mongolfiera.md](mongolfiera.md) — la nave: tre file di casse da riempire un po' alla volta, i bonus, la sorpresa della fiera, il viaggio e il ritorno, il segnaposto di prima che si chiude

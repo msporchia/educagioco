@@ -41,13 +41,13 @@ Prezzi e livelli: 2D 🪙/liv → 3D 🪙/liv. Tempo delle ricette: minuti 2D �
 | macchina | 2D | 3D | ricette mancanti nella 3D | pri |
 |---|---|---|---|---|
 | mulino | 150/4: mangime, pappa di mais (11), farina (17) | 🟡 60/3: farina, pastone | `mangime` (cibo di cane, gatto, coniglio, pappagallo, pesci: i compagni 3D non mangiano) | P1 con A6 |
-| fienile | 150/6: foraggio di carote, becchime (9), foraggio (13), fiorume (44), fiorume_concime (52) | 🟡 40/2: 3 ricette | `fiorume` (fiori per le arnie), `fiorume_concime` | P1 con A8 |
+| fienile | 150/6: foraggio di carote, becchime (9), foraggio (13), fiorume (44), fiorume_concime (52) | ✅ 40/2: 5 ricette (G5: fiorume, fiorume_concime) | – | – |
 | telaio | 170/16: stoffa | ✅ 70/8 | – | – |
-| panificio | 180/17: pane, torta (20), crostata e merenda (50) | 🟡 90/7 | `merenda` (vuole il miele) | P1 con A8 |
+| panificio | 180/17: pane, torta (20), crostata e merenda (50) | ✅ 90/7 (G5: merenda) | – | – |
 | caseificio | 200/20: burro, formaggio | ✅ 120/11 | – | – |
 | pentolone | 150/23: zuppa, beverone, zuppa_orto, pastura | ✅ 75/19 (provvisorio, [../cortile-e-pentolone.md](../cortile-e-pentolone.md)): le 4 ricette | – | – |
 | cucina | 210/25: minestrone, polenta, conserva, salsa, parmigiana | ✅ 110/12 (id `conserviera`; modello ancora da ridisegnare) | – | – |
-| zuccherificio | 230/31: zucchero, caramelle (46), marmellata (51) | 🟡 130/13 | `caramelle` (miele) | P1 con A8 |
+| zuccherificio | 230/31: zucchero, caramelle (46), marmellata (51) | ✅ 130/13 (G5: caramelle) | – | – |
 | gelateria | 240/34: succo, gelato, frullato | ✅ 140/14 | – | – |
 | pastificio | 260/37: pasta, biscotti, pizza, lasagne | ✅ 80/6 (id `pasticceria`!) | – | – |
 | sartoria | 250/42: maglione, sciarpa di lana, berretto | ✅ 150/15 | – | – |
@@ -58,19 +58,19 @@ Prezzi e livelli: 2D 🪙/liv → 3D 🪙/liv. Tempo delle ricette: minuti 2D �
 **Attenzione agli id**: in 3D `pasticceria` è il Pastificio, in 2D è la bottega della pasticcera; `conserviera` è la Cucina.
 Ogni migrazione e ogni nuova bottega 3D deve tenerne conto ([commercio.md](commercio.md) M3).
 
-## Le ricette (57 nella 2D, 41 nella 3D)
+## Le ricette (57 nella 2D, 57 nella 3D, dal giro G5: il `mangime` del mulino c'è dal giro G3)
 
 | id | cosa | stato | pri |
 |---|---|---|---|
 | C16 | le 37 portate | ✅ stesso id, ingredienti e quantità (un test le confronta, con le deviazioni dichiarate in `MANCANTI`) | – |
 | C17 | le 4 «di bestia» (uova, latte, lana, pesce) | ✅ sono i prodotti delle bestie e della pesca | – |
-| C18 | le 9 di macchine non portate: mangime, zuppa, beverone, zuppa_orto, pastura, fiorume, fiorume_concime, merenda, caramelle | 🟡 le quattro del pentolone ✅ (G4); restano mangime, fiorume, fiorume_concime, merenda, caramelle | P1 le altre |
-| C19 | le 7 di recinti non portati: lana_angora, uova_anatra, tartufi, latte_capra, miele, lana_alpaca, concime | ❌ | P0/P1 ([animali.md](animali.md)) |
+| C18 | le 9 di macchine non portate: mangime, zuppa, beverone, zuppa_orto, pastura, fiorume, fiorume_concime, merenda, caramelle | ✅ pentolone (G4), fiorume, fiorume_concime, merenda e caramelle (G5, [../cortile-2.md](../cortile-2.md)); 🟡 solo `mangime` (mulino, cibo di cane e gatto) c'è ma i compagni non mangiano (A6) | – |
+| C19 | le 7 di recinti non portati: lana_angora, uova_anatra, tartufi, latte_capra, miele, lana_alpaca, concime | ✅ uova d'anatra, tartufi, latte di capra (G4); lana d'angora e d'alpaca (la lana dell'ovile, un contatore), miele e concime (G5) | – |
 | C20 | tempi | minuti | ✅ gli stessi minuti | – |
 | C21 | costo per lavorazione | 🪙0 (8 ricette), 🪙1 (42), 🪙2 (7) a ogni avvio | ✅ uguale (e 🪙1 a pasto per le bestie) | – |
 | C22 | `parmigiana` ha l'emoji 🍆 | ✅ uguale (manca il disegno in entrambe) | P2 |
 | C23 | zucca e patata con poche uscite (la 2D le manda al pentolone) | ✅ zucca → pastone, patata → verdure lesse (G4) | – |
-| C24 | merci | 2D 66 prodotti, 3D 60 (mancano almeno mangime, fiori, merenda, miele, concime, caramelle; arrivati zuppa, beverone, pastura, tartufi) | segue C18–C19 |
+| C24 | merci | 2D 66 prodotti, 3D 66 (G5 porta fiori, merenda, miele, concime, caramelle; i fiori sono un mangime senza ricetta col proprio id: `MANGIMI_SENZA_RICETTA`) | – |
 
 ## La fila
 
