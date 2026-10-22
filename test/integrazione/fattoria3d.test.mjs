@@ -18,7 +18,7 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { apriBrowser, apriGioco, azzera, semina, attendi, scatto, scegli, leggiProfilo } from '../aiuto/browser.mjs'
 import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifica.mjs'
-import { PEZZI, EDIFICI } from '../../src/giochi/fattoria3d/dati/catalogo.js'
+import { PEZZI, EDIFICI, CATEGORIE } from '../../src/giochi/fattoria3d/dati/catalogo.js'
 import { ANIMALI } from '../../src/giochi/fattoria3d/dati/animali.js'
 import { COLTURE } from '../../src/giochi/fattoria3d/dati/colture.js'
 import { RICETTE } from '../../src/giochi/fattoria3d/dati/ricette.js'
@@ -558,14 +558,14 @@ await apriMenu()
   // le carte di tutte le schede, dai dati: i pezzi, gli edifici unici da costruire e i due strumenti
   let carte = 0
   const posseduti = await page.evaluate(() => ({ ...window.__fattoria3d.motore.s.posseduti }))   // un edificio già comprato non si offre
-  for (const k of ['campi', 'animali', 'edifici', 'decori', 'passaggi']) {
+  for (const k of Object.keys(CATEGORIE)) {
     await page.locator(`[data-scheda="${k}"]`).evaluate(e => e.scrollIntoView({ inline: 'center', block: 'nearest' })); await attendi(page, 100)
     await toccaEl(`[data-scheda="${k}"]`); await attendi(page, 150)
     carte += await page.locator('[data-carta]').count()
   }
   // le anteprime 3D: ogni carta che non è uno strumento mostra il suo modello (si aspetta l'evento, non un tempo)
   await page.waitForFunction(() => [...document.querySelectorAll('[data-carta]')].length > 0, null, { timeout: 5000 })
-  for (const k of ['campi', 'animali', 'edifici', 'decori', 'passaggi']) {
+  for (const k of Object.keys(CATEGORIE)) {
     await toccaEl(`[data-scheda="${k}"]`)
     await page.waitForFunction(() => [...document.querySelectorAll('[data-carta]')].every(c => /^(strada|gomma)$/.test(c.dataset.carta) || c.querySelector('img[data-anteprima="pronta"]')), null, { timeout: 60000 })
   }
