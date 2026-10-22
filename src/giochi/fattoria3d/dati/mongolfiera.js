@@ -45,7 +45,7 @@ export const bonusDellaFila = premioCasse => Math.round(BONUS_FILA * premioCasse
 export const bonusDelTutto = premioCasse => Math.round(BONUS_TUTTO * premioCasse)
 
 /** I pezzi che la sorpresa della fiera può regalare: le decorazioni del catalogo, tranne i pezzi d'acqua (e ciò che si dichiarerà `fiera: true`). */
-export const SORPRESE = Object.entries(PEZZI).filter(([, d]) => (d.categoria === 'decori' || d.fiera) && !d.calpestabile && !d.acqua).map(([t]) => t)
+export const SORPRESE = Object.entries(PEZZI).filter(([, d]) => (d.categoria === 'decori' || d.fiera) && !d.calpestabile && !d.acqua && !d.stagione).map(([t]) => t)
 
 export function guastiDellaMongolfiera() {
   const g = []
