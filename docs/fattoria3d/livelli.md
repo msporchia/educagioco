@@ -16,12 +16,12 @@ Il codice è `dati/livelli.js`; l'esperienza e i rifiuti stanno in `motore/fatto
 - **La roba di un livello non paga il livello dopo**: ogni salto aggiunge il costo di ciò che il livello apre di
   **produttivo** (`costoDelLivello`: campo, recinto, edifici; le decorazioni no). Senza, si costruiva ciò che era appena
   arrivato ed eri già al livello dopo. Un guasto verifica che il resto del salto sia almeno `SOGLIA_B`.
-- Dopo l'ultimo livello (`ULTIMO`, oggi 18) la formula continua e non si apre altro.
+- Dopo l'ultimo livello (`ULTIMO`, oggi 22) la formula continua e non si apre altro.
 
 ## La misura
 
 `npm run tara:fattoria3d` (logica in `motore/taratura.js`) stampa la tabella; `unita/fattoria3d-taratura` ne tiene ferme le
-promesse: **il livello 2 non oltre 10 minuti di esercizio, l'ultimo non oltre 8 ore e mezza (erano 5 e mezza coi quindici livelli, 7 coi sedici: il sedicesimo e i quattro edifici di telaio, zuccherificio, sartoria e tintoria hanno aggiunto ~75 minuti, la friggitoria e il sushi bar del diciassettesimo e del diciottesimo ~90), nessuna cosa chiesta con più di 2
+promesse: **il livello 2 non oltre 10 minuti di esercizio, l'ultimo non oltre 11 ore (provvisorio: 19–22 sono il pentolone e le tre bestie del giro G4, [cortile-e-pentolone.md](cortile-e-pentolone.md); erano 8 ore e mezza, e prima 5 e mezza coi quindici livelli, 7 coi sedici: il sedicesimo e i quattro edifici di telaio, zuccherificio, sartoria e tintoria hanno aggiunto ~75 minuti, la friggitoria e il sushi bar del diciassettesimo e del diciottesimo ~90), nessuna cosa chiesta con più di 2
 minuti di attesa in catena, nessun pezzo produttivo sopra i due terzi del salto del suo livello, nessun premio sopra il tetto.**
 Metro: 🪙6 al minuto. «Attesa» = maturazione più cottura in catena, campi e bestie in parallelo, una macchina alla volta.
 
@@ -44,6 +44,10 @@ Metro: 🪙6 al minuto. «Attesa» = maturazione più cottura in catena, campi e
 | 16 | 2440 | 407 (6 h 47) | 86 s |
 | 17 | 2700 | 450 (7 h 30) | 81 s |
 | 18 | 2970 | 495 (8 h 15) | 78 s |
+| 19 | 3250 | 542 | 45 s |
+| 20 | 3435 | 573 | — |
+| 21 | 3665 | 611 | — |
+| 22 | 3905 | 651 (10 h 50) | — |
 
 Sono monete spese del tutto (pezzi, lotti, strade): ordini consegnati e lotti contano come esperienza e accorciano la strada.
 Provato: curva A=4, B=44 portava il 15 a 7 ore e 20: troppo; con A=1, B=47 il 2 resta a 60 (il test d'integrazione lo conta).
@@ -75,6 +79,7 @@ i dati veri, quindi un elenco non si scrive due volte e non si scosta.
  8 telaio (stoffa), zucche,     16 tintoria (tintura, sapone, sacchetto, maglione alla lavanda)
    cavolfiori, fontana        17 friggitoria (patatine, pesce fritto, arancini)
                               18 sushi bar (sushi, maki)
+                              19 pentolone (mangime), 20 stagno delle anatre, 21 porcile, 22 capre (provvisori)
 ```
 
 Il livello apre il **pezzo** (pollaio, stalla, recinto); le bestie in più dentro non hanno livello: si comprano a monete

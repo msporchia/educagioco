@@ -33,13 +33,11 @@ Le voci aperte tecniche. Una riga ciascuna, e quando una si chiude si toglie. Qu
 - Spostata in [parita/](parita/README.md) (I20).
 - **I vicini.** Provati nel browser senza schermo vero e senza un build del sito spezzato: restano da guardare su un telefono (due contesti WebGL durante
   una visita) e da giocare i numeri del trattore e dei villaggi ([vicini.md](vicini.md)).
-- Spostata in [parita/](parita/README.md) (C18, A1).
 - **Il telaio, la sartoria, la tintoria e lo zuccherificio non sono stati visti in scena né giocati**: i quattro modelli sono guardati solo dal catalogo 3D, i posti
   (−9,−4 · 6,4 · 6,0 · −9,4) e i prezzi (70 · 130 · 150 · 160) non sono stati provati con un bambino, e `integrazione/fattoria3d` non è stato eseguito.
   Il tetto dell'ultimo livello è salito da 5 h 30 a 7 ore ([livelli.md](livelli.md)): da giocare. La lana fa da ingrediente ma il foglio della macchina la mostra
   col contatore della tosa (il gettone verde/rosso), non c'è ancora un'altra scorta di lana.
 - **Il mangime non è stato visto né giocato** ([mangime-e-catena.md](mangime-e-catena.md)): il modello del fienile (`creaFienileMacchina`) è guardato solo nei test unitari, non dal catalogo 3D né in scena; sono due fienili in vista (quello di scena e quello che si costruisce) e forse uno va tolto; `integrazione/fattoria3d` e `fattoria3d-vicini` sono aggiornati ma **non eseguiti** (la build era vietata). Da giocare: il fienile al livello 2 (🪙40) e quanto pesa la prima fame del recinto al 4, che chiede foraggio.
-- Spostata in [parita/](parita/README.md) (C23).
 - **I modelli di pastificio e cucina** (`creaPasticceria`, `creaConserviera`) sono ancora quelli di una pasticceria e di una conserviera: da ridisegnare
   con il mestiere giusto (pasta, forno, pentole).
 - **L'atlante nel sito spezzato.** `atlante.js` della 2D lo importa anche la 3D (`Faccia.vue`, `facce.js`, `Provino.vue`): il modulo diventa un

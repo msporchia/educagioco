@@ -72,7 +72,6 @@ fienile. **Le deviazioni dichiarate** (`MANCANTI` nel test):
 | `mangime` (mulino) | non c'è | è il cibo del cane, del gatto e della peschiera: i compagni 3D non mangiano |
 | `merenda`, `caramelle` | non ci sono | vogliono il miele (le arnie non ci sono) |
 | `fiorume`, `fiorume_concime` (fienile) | non ci sono | fiori per le arnie, concime degli asini |
-| pentolone (verdure lesse, pastone, verdura fresca) | non c'è | li mangiano anatre, maiali e capre; senza di loro è una macchina che non serve |
 | `pastone` | non è `mangime: true` | in 2D è il cibo del cane; qui nessuno lo mangia e resta una merce da banco |
 | veterinaria chiede il mangime | no | in 3D il mangime non si consegna |
 | erba medica: il giardiniere chiede `fieno` | no | idem |
@@ -80,6 +79,11 @@ fienile. **Le deviazioni dichiarate** (`MANCANTI` nel test):
 Il **fienile di scena** (`FISSI`, 4×3, `creaFienile`) resta com'è: il nuovo `fienile` è un edificio vero (3×3, `creaFienileMacchina`) con un posto
 storico `nuovo: true` in `POSTI_STORICI` (9, −7) che non tocca alberi e sassi dei lotti storici. Due fienili in vista, uno che si costruisce: da
 unire se darà fastidio (voce in [da-fare.md](da-fare.md)).
+
+## Il pentolone (G4)
+
+Anatre, maiali e capre mangiano il mangime del pentolone (verdure lesse, pastone, verdura fresca): stessa regola, stessa lettura (`MANGIMI`, `ricetteDelMangime`),
+stesso rifiuto che dice dove si fa. Vedi [cortile-e-pentolone.md](cortile-e-pentolone.md).
 
 ## I vecchi salvataggi
 
