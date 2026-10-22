@@ -5,6 +5,9 @@
 // Come si agganciano le cose nuove: docs/fattoria3d/scena.md, «Come si aggiunge un pezzo istanziato».
 import * as THREE from 'three'
 import { formaDi } from './modelli-colture.js'
+import { MARGINE_VISTA } from './statici-istanze.js'
+
+const SFERA = new THREE.Sphere(), RAGGIO = 1.5 + 1.3      // mezza diagonale della terra + l'altezza della pianta più alta (il mais)
 
 export class BancoCampi {
   constructor(scena) {
@@ -31,23 +34,28 @@ export class BancoCampi {
     const st = g.userData.grano; if (st) st.banco = null
     this.sporco = true
   }
+  /** Il campo si disegna adesso (visibile e nell'inquadratura)? Uno che non si disegna non ha bisogno di riporre le piante. */
+  visto(g) { const c = this.campi.get(g); return !c || c.visto }
   /** Un campo ha posato di nuovo le sue piante. */
   segna() { this.sporco = true }
 
-  /** A fine fotogramma (dopo che i pezzi si sono aggiornati): ricopia se è cambiato qualcosa. */
-  aggiorna() {
-    for (const [g, c] of this.campi) if (g.visible !== c.visto) this.sporco = true
+  /** A fine fotogramma (dopo che i pezzi si sono aggiornati): ricopia se è cambiato qualcosa. Un campo fuori dall'inquadratura (`frustum`, con un
+      margine) non si disegna e non proietta. */
+  aggiorna(frustum = null) {
+    for (const [g, c] of this.campi) {
+      const visto = g.visible && (!frustum || frustum.intersectsSphere(SFERA.set(g.position, RAGGIO * g.scale.x + MARGINE_VISTA)))
+      if (visto !== c.visto) { c.visto = visto; this.sporco = true }
+    }
     if (!this.sporco) return
     this.sporco = false
     const nomi = new Set(Object.keys(this.mesh))
     for (const g of this.campi.keys()) for (const n of Object.keys(g.userData.grano.parti)) nomi.add(n)
     for (const nome of nomi) this._copia(nome)
-    for (const [g, c] of this.campi) c.visto = g.visible
   }
 
   _copia(nome) {
     let tot = 0
-    for (const g of this.campi.keys()) if (g.visible) { const p = g.userData.grano.parti[nome]; if (p) tot += Math.min(p.n, p.max) }
+    for (const g of this.campi.keys()) if (this.campi.get(g).visto) { const p = g.userData.grano.parti[nome]; if (p) tot += Math.min(p.n, p.max) }
     let m = this.mesh[nome]
     if (tot && (!m || tot > m.instanceMatrix.count)) m = this._rifai(nome, Math.max(32, Math.ceil(tot * 1.5)))
     if (!m) return
@@ -56,7 +64,7 @@ export class BancoCampi {
     if (tot) {
       const am = m.instanceMatrix.array, ac = m.instanceColor.array
       for (const g of this.campi.keys()) {
-        if (!g.visible) continue
+        if (!this.campi.get(g).visto) continue
         const p = g.userData.grano.parti[nome]; if (!p) continue
         const n = Math.min(p.n, p.max); if (!n) continue
         am.set(p.mat.subarray(0, n * 16), k * 16); ac.set(p.col.subarray(0, n * 3), k * 3)
