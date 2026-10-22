@@ -856,6 +856,8 @@ export class Corsa extends Corredo {
       this.posaPezzo(this.trovato(pezzoNuovo({ livello: this.livelloDelTrovato('grosso', m.x, m.y), chi: 'grosso', fortuna: this.fortuna,
                                                rnd: () => this.rnd(), tua: k => this.porta(k) }), m.x, m.y), { x: m.x - 1, y: m.y })
       this.posaPezzo(pezzoDelGrosso(GROSSI[m.grosso].pezzo, this.livelloDelTrovato('grosso', m.x, m.y, 1)), { x: m.x, y: m.y + 1 })
+      // il suo copricapo col nome, solo dove i copricapi sono accesi (il 3D): niente tiri, il resto del bottino non si sposta
+      if (this.copricapi && GROSSI[m.grosso].copricapo) this.posaPezzo(pezzoDelGrosso(GROSSI[m.grosso].copricapo, this.livelloDelTrovato('grosso', m.x, m.y, 1)), { x: m.x - 1, y: m.y + 1 })
     } else if (this.rnd() < pezzoDalMostro(scheda)) {
       // a volte anche un mostro qualunque lascia un pezzo da mettersi addosso, a tono col posto e con l'eroe
       this.posaPezzo(this.trovato(pezzoNuovo({ livello: this.livelloDelTrovato('mostro', m.x, m.y), chi: 'mostro', fortuna: this.fortuna,

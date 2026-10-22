@@ -42,6 +42,7 @@ export function copricapoDi(k) {
   const tutti = c && c.dove === 'testa' ? COPRICAPI_3D[baseDi(k)] : null
   if (!tutti || !tutti.length) return null
   const rarita = RARITA[c.rarita] ? c.rarita : 'comune'
+  if (c.modello) return { id: c.modello, rarita }   // il copricapo col nome ha il suo modello
   const [da, a] = RARITA[rarita].pregio
   const giusti = tutti.filter(m => m[1] <= a && m[2] >= da)
   const scelte = giusti.length ? giusti : tutti

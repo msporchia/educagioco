@@ -51,7 +51,7 @@ for (const [id, f] of Object.entries(FIGURE3D)) {
 
 // gli sprite col nome loro portano a una figura vera; i pezzi col nome hanno la loro
 for (const [s, id] of Object.entries(SPRITE_FIGURA)) controlla(`${s} → ${id}: la figura c'è`, !!FIGURE3D[id])
-for (const u of Object.keys(UNICI)) controlla(`${u}: il pezzo col nome ha una figura`, !!figuraDi(`${UNICI[u].base}@5.u.${u}`))
+for (const u of Object.keys(UNICI).filter(u => !UNICI[u].modello)) controlla(`${u}: il pezzo col nome ha una figura`, !!figuraDi(`${UNICI[u].base}@5.u.${u}`))   // un copricapo col nome ha un modello, non una figura (sotterraneo-elmo)
 
 // i consumabili: un modello per chiave dal modulo pozioni; l'alone solo ai rarissimi
 for (const [k, c] of Object.entries(COSE)) {
