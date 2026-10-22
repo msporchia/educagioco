@@ -12,7 +12,7 @@ const { EDIFICI, PEZZI } = await import('../src/giochi/fattoria3d/dati/catalogo.
 const geometrie = g => { const s = new Set(); g.traverse(o => { if (o.isMesh) s.add(o.geometry) }); return s }
 const mesh = g => { let n = 0; g.traverse(o => { if (o.isMesh) n++ }); return n }
 // un finto contesto: basta a `modelloDi`/`modelloAnteprima` (non si usa la scena)
-const p = Object.create(Pezzi.prototype)
+const p = Object.create(Pezzi.prototype); p.m = { misure: t => PEZZI[t] || EDIFICI[t] }      // il motore finto: solo le misure
 const tipi = [...Object.keys(PEZZI).filter(t => !['strada', 'gomma'].includes(t)).map(t => ['pezzo', t]), ...Object.keys(EDIFICI).map(t => ['edificio', t])]
 const righe = []
 for (const [kind, tipo] of tipi) {

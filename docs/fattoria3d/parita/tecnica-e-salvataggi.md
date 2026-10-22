@@ -25,7 +25,7 @@ Com'è fatta e cosa converte: [migrazione.md](migrazione.md).
 | T7 | **misura su un telefono vero** (fps, caldo, batteria, draw call ~430 a stato pieno) | gira sui telefoni deboli, tela 2D | ❌ solo SwiftShader; `Mostra il rapporto` nel pannello ⚙ serve a questo | **P0** |
 | T8 | senza WebGL 2 | non serve | 🟡 il messaggio e il ritorno in home: un bambino su un telefono vecchio perde la fattoria. Serve un ripiego (aprire la 2D?) o una decisione | **P0** D15 |
 | T9 | fasce di qualità e degrado | – | ✅ `dati/qualita.js` (basso/medio/alto dalla fascia del telefono), degrado adattivo `dati/degrado.js` (scende sotto 30 fps per 2 s, risale dopo 10 s a 55); **da tarare su un telefono** | P1 |
-| T10 | istanziare il campo (−100 draw call), aiuole/panchine/pali, LOD, compagni più leggeri | – | ❌ elencati in [../da-fare.md](../da-fare.md) «Il peso della scena» | P1 |
+| T10 | istanziare il campo (−100 draw call), aiuole/panchine/pali, LOD, compagni più leggeri | – | ✅ banchi di istanze (campi e pezzi fermi, taglio fuori inquadratura), LOD dei compagni (−60% triangoli oltre 12 m), sole sulla griglia: [../istanze.md](../istanze.md) (le draw call in vista scendono meno del previsto: la scena è fatta di edifici e compagni; i pali e i fiori erano già istanze o fusi); **da misurare su un telefono** | P1 |
 | T11 | costo dell'avvio dei modelli | – | cache, ma ×5–8 sui telefoni: da misurare | P1 |
 | T12 | peso nel file | atlante 1,9 MB | three ~640 KB + `fattoria3d`; la 3D importa l'atlante 2D (`Faccia.vue`): se la 2D si toglie, l'atlante deve restare | P1 D14 |
 | T13 | ogni modello nuovo si paga in mesh | – | ~30 modelli nuovi per la parità (recinti, pentolone, botteghe, decori): il budget va fissato per famiglia (`strumenti/misura-modelli3d.mjs`) | P1 |

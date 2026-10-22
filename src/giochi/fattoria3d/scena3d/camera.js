@@ -2,6 +2,7 @@
 // («libera») finché non lo si manda da qualche parte. Non sa le regole: riceve cosa inquadrare.
 import * as THREE from 'three'
 
+const PASSO_OMBRA = 2        // il sole si aggancia a una griglia di 2 celle: la mappa dell'ombra resta valida (e non «nuota») finché la camera non scavalca una linea
 const LONTANO = 30          // fin dove la camera trascinata si allontana dall'eroe (celle)
 
 export class Camera {
@@ -11,6 +12,9 @@ export class Camera {
     this.x = 0; this.z = 0; this.d = 22; this.p = 55
     this.libera = { on: false, x: 0, z: 0 }       // la camera trascinata col dito
     this.zoom = 1
+    this.ombraCambiata = true      // il sole è scattato (o la finestra dell'ombra è cambiata) in questo fotogramma: l'ombra va rifatta
+    this.inMoto = false            // la camera si è mossa (più di un millimetro) in questo fotogramma
+    this._ox = NaN; this._oz = NaN; this._or = 0
     this.larghezza = 1; this.altezza = 1
   }
 
@@ -46,9 +50,16 @@ export class Camera {
     const k = 1 - Math.exp(-(eroe.vel > 7 && !this.libera.on ? 9 : 5) * dt)
     this.x += (tx - this.x) * k; this.z += (tz - this.z) * k; this.d += (td - this.d) * k; this.p += (tp - this.p) * k
     const p = this.p * Math.PI / 180
+    this.inMoto = Math.abs(this.cam.position.x - this.x) + Math.abs(this.cam.position.z - (this.z + this.d * Math.cos(p))) > 1e-3
     this.cam.position.set(this.x, this.d * Math.sin(p), this.z + this.d * Math.cos(p)); this.cam.lookAt(this.x, 0.3, this.z)
-    this.sole.position.set(this.x - 8, 17, this.z + 6); this.sole.target.position.set(this.x, 0, this.z)
-    const ombra = Math.max(12, Math.min(26, this.d * 0.9))
-    Object.assign(this.sole.shadow.camera, { left: -ombra, right: ombra, top: ombra, bottom: -ombra }); this.sole.shadow.camera.updateProjectionMatrix()
+    // il sole sta sulla griglia, e la finestra dell'ombra cresce a gradini di 2 (con 2 di margine per lo scarto della griglia)
+    const sx = Math.round(this.x / PASSO_OMBRA) * PASSO_OMBRA, sz = Math.round(this.z / PASSO_OMBRA) * PASSO_OMBRA
+    const ombra = Math.ceil(Math.max(12, Math.min(26, this.d * 0.9)) / 2) * 2 + 2
+    this.ombraCambiata = sx !== this._ox || sz !== this._oz || ombra !== this._or
+    if (this.ombraCambiata) {
+      this._ox = sx; this._oz = sz; this._or = ombra
+      this.sole.position.set(sx - 8, 17, sz + 6); this.sole.target.position.set(sx, 0, sz)
+      Object.assign(this.sole.shadow.camera, { left: -ombra, right: ombra, top: ombra, bottom: -ombra }); this.sole.shadow.camera.updateProjectionMatrix()
+    }
   }
 }

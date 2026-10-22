@@ -57,7 +57,7 @@ export class Mondo3d {
     this.scena.add(this.sole, this.sole.target)
     this.camera = new Camera(this.sole)
 
-    this.vista = { proietta: (p, extra) => this.proietta(p, extra) }
+    this.vista = { proietta: (p, extra) => this.proietta(p, extra), frustum: () => this._frustum() }
     this.fx = new Effetti(this.scena, sopra, this.vista, qualita)
     this.terreno = new Terreno(this.scena, motore)
     this.pezzi = this.creaPezzi()
@@ -65,7 +65,7 @@ export class Mondo3d {
     this.scaldo = creaScaldo(this.pezzi.compitiScaldo())      // i modelli che servono presto, costruiti in tempo morto (scaldo-puro.js)
     this.eroe = new Eroe(this.scena, motore, this.fx, abito)
     this.eroe.alVia = () => this.camera.segui()
-    this.compagni = new Compagni(this.scena, motore, this.eroe, this.fx, ui)
+    this.compagni = new Compagni(this.scena, motore, this.eroe, this.fx, ui); this.compagni.camera = this.camera.cam
     this.pesca3d = new Pesca3d(this.scena, motore, this.eroe, this.fx, this.vista)          // i galleggianti, il filo e il cartello «abbocca!»
 
     this.ctx = {
@@ -133,6 +133,12 @@ export class Mondo3d {
     return this._raggio(cx, cy).ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), p) ? p : null
   }
 
+  /** Ciò che la camera inquadra, come l'ha lasciata il fotogramma prima (i banchi di istanze tagliano da sé, `campi-istanze.js`). */
+  _frustum() {
+    const c = this.camera.cam; c.updateMatrixWorld()
+    return (this._frust || (this._frust = new THREE.Frustum())).setFromProjectionMatrix(this._pv = (this._pv || new THREE.Matrix4()).multiplyMatrices(c.projectionMatrix, c.matrixWorldInverse))
+  }
+
   // ── cosa c'è sotto il dito ──
   /** { kind: 'cosa', id } (anche un edificio) | { kind: 'albero', n } | { kind: 'ostacolo', n } | null */
   bersaglioSotto(cx, cy) {
@@ -140,6 +146,8 @@ export class Mondo3d {
     const hit = rg.intersectObjects(this.pezzi.gruppi(), true)[0]
     let o = hit && hit.object
     while (o && !o.userData.bersaglio) o = o.parent
+    const pianta = this.pezzi.colpisciPiante(rg)                  // una pianta di un campo: le sue istanze sono del banco, non del gruppo del campo
+    if (pianta && (!o || !hit || pianta.distance < hit.distance)) return pianta.bersaglio
     if (o) return o.userData.bersaglio
     const a = rg.intersectObjects(this.terreno.istanzeAlberi, false)
       .map(h => this.terreno.alberoDi(h.instanceId)).find(x => x && !x.tagliato)
@@ -295,8 +303,10 @@ export class Mondo3d {
     this.stagione?.aggiorna(tt, this.renderer.getPixelRatio())     // i fiocchi: due uniform (scena3d/stagione.js)
     this.terreno.segui(this.camera.x, this.camera.z)              // il suolo segue la camera; se cambia il lotto al mezzo si rifà la finestra
     const fineLogica = performance.now()
-    // l'ombra: subito se qualcosa è cambiato, altrimenti ogni `ombraOgni` fotogrammi (1 = sempre)
-    this.renderer.shadowMap.needsUpdate = this.q.ombre && (this.ombraSporca || this.nFot++ % LIVELLI[this.livello].ombraOgni === 0)
+    // l'ombra: subito se qualcosa è cambiato o il sole è scattato sulla griglia; a camera ferma e contadino fermo (restano solo le bestie e le pale)
+    // basta la metà dei fotogrammi: un'ombra a 30 al secondo non si distingue da una a 60
+    const quieta = this.eroe.fermo && !this.camera.inMoto, ogni = Math.max(LIVELLI[this.livello].ombraOgni, quieta ? 2 : 1)
+    this.renderer.shadowMap.needsUpdate = this.q.ombre && (this.ombraSporca || this.camera.ombraCambiata || this.nFot++ % ogni === 0)
     this.ombraSporca = false
     this.renderer.render(this.scena, this.camera.cam)
     this._misura(dtReale, performance.now() - inizio, ts, fineLogica - inizio)
