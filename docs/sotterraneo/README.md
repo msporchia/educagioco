@@ -54,6 +54,7 @@ senza fondo sotto le sette discese. Il codice sta in `src/giochi/sotterraneo/`.
 - [avventure.md](avventure.md) — un'avventura per eroe: cosa ha ognuno e dove sta nel salvataggio, cosa è in comune (monete, il massimo per medaglie ed esperienza), i salvataggi di prima, azzerati e poi riordinati
 - [roba.md](roba.md) — gli eroi e cosa portano, due mani, la torcia, per terra e nello zaino, curiosità e arredo; la tabella delle cinque cure
 - [gioielli.md](gioielli.md) — due anelli e una collana: i tre posti, dove va un gioiello e quale anello si toglie, i salvataggi di prima, cosa ha cambiato per forza e gemme (14 ottobre)
+- [elmo.md](elmo.md) — la casella della testa (22 ottobre): elmi, cappelli e la cuffia, a frazione di un'armatura; nel bottino e dal fabbro e dall'incantatrice solo dove sono accesi (il 3D), i salvataggi di prima, la casella nel 2D, il modello e l'anteprima in 3D
 - [pozioni.md](pozioni.md) — le cure: quanto costano rispetto a una spada, quando arrivano sul banco, l'ampolla della vita, il tetto di otto, la scelta di quale bere
 - [figure.md](figure.md) — le 238 figure da indossare dei fogli dipinti, descritte una per una (elemento, materia, a chi sta bene): il catalogo, `roba.py` per guardarle e ritagliarle, i pezzi col nome con la figura loro
 - [bottega.md](bottega.md) — i mercanti di sopra, i pezzi avanti a sovrapprezzo, il tetto di rarità, i dieci pezzi per linguetta, il banco che cambia poco alla volta, comprare senza le caratteristiche, il riacquisto degli ultimi cinque venduti

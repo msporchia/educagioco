@@ -31,9 +31,10 @@ La chiave dice la figura e l'aspetto, non l'oggetto: due spade con la stessa fig
 |---|---|---|
 | `arma:<gettone>` | l'arma (la figura, o il ripiego) in diagonale, la punta in alto a destra; l'arco girato di lato perché si veda la curva; l'alone fermo a 1,3 s | 128² |
 | `scudo:<gettone>` · `gioiello:<gettone>` | lo scudo, la collana o l'anello di fronte, appena girato | 128² |
+| `copricapo:<modello>:<rarità>` | il copricapo da solo su una testa finta, di tre quarti, con l'alone della rarità ([elmo.md](elmo.md)) | 128² |
 | `consumabile:<chiave>:<rarità>` | la pozione, la torcia, la chiave o la pergamena di fronte (l'alone solo ai rarissimi) | 128² |
 | `armatura:<tipo>:<pregio>:<eroe>:<corpo>` | l'armatura su un manichino: l'eroe di adesso senza testa e senza armi (la veste della figura se il modulo `vesti` c'è); `<corpo>` = `<tipo>.<pregio>.<figura>.<rarità>.<elemento>` | 128² |
-| `eroe:<chi>:<destra>:<sinistra>:<corpo>:<collo>` | l'eroe intero nella guardia, con le armi, l'armatura e la collana | 150×176 |
+| `eroe:<chi>:<destra>:<sinistra>:<corpo>:<collo>` (e `:<copricapo>` in coda, solo se ce l'ha) | l'eroe intero nella guardia, con le armi, l'armatura, la collana e il copricapo | 150×176 |
 | `busto:…` (lo stesso) | la faccia e le spalle, uguali per tutti (il cappello del mago e la barba del nano restano dentro a metà) | 96² |
 | `persona:<modello>` | una persona del mondo di sopra a mezzo busto ([persone-3d.md](persone-3d.md)): il dialogo, il diario, la bottega | 96² |
 | `mostro:<tipo>:<grado>:<variante>` · `mostro:grosso:<chi>` | il modello del registro (`idDi`), di tre quarti verso sinistra, dalla testa a circa due terzi | 96² |

@@ -118,7 +118,7 @@ fuori») e i branchi a 14 celle (`292a98f5`); il villaggio tondo (24×20); la sc
 
 | Voce | Chi | Stato |
 |---|---|---|
-| Un elmo vero nello slot testa (oggi solo `#testa=<id>`) | Mostri | non iniziato |
+| Un elmo vero nello slot testa: fatto il 22/10, la casella `testa` e sei copricapi, solo nel 3D ([elmo.md](elmo.md)); restano lo sprite per il 2D, un copricapo leggendario, i copricapi nel mondo di sopra | Mostri | fatto, da guardare col dito |
 | Costi in chiamate: scontro sul prato ~231, mondo con due branchi ~250 (soglia del test 260) | Mostri | tenere d'occhio |
 | Peso e fluidità sul telefono (nessuna misura fatta) | Mostri | da guardare col dito |
 | Prove del browser complete (`npm run test:browser`) e `test:misure` non lanciate dopo il 3D | Mostri | da fare prima del prossimo giro grande |
