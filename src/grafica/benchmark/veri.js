@@ -26,8 +26,8 @@ export const TAPPE = [
     ...[2, 4].map(k => tre({ id: `ch-${k}`, nome: `chiamate x${k}`, ch: k, serie: 'chiamate', quanti: k })),
   ] },
   { gruppo: 'luci', carica: discese, opz: { spegni: ['fuochi:0'] }, scene: [
-    ...[1, 2, 4, 6, 12].map(n => tre({ id: `luci-${n}`, nome: `${n} fuochi e l'ombra del cono`, fuochi: n, serie: 'luci', quanti: n })),
-    ...[1, 6, 12].map(n => tre({ id: `luci-${n}s`, nome: `${n} fuochi senza ombra`, fuochi: n, ombra: false, serie: 'luci-senza-ombra', quanti: n })),
+    ...[1, 2, 4, 6, 12].map(n => tre({ id: `luci-${n}`, nome: `${n} fuoc${n > 1 ? 'hi' : 'o'} e l'ombra del cono`, fuochi: n, serie: 'luci', quanti: n })),
+    ...[1, 6, 12].map(n => tre({ id: `luci-${n}s`, nome: `${n} fuoc${n > 1 ? 'hi' : 'o'} senza ombra`, fuochi: n, ombra: false, serie: 'luci-senza-ombra', quanti: n })),
   ] },
   ...[1, 1.41, 2].map(d => ({ gruppo: 'pixel', carica: discese, opz: { dpr: d }, scene: [tre({ id: `px-${d}`, nome: `pixel ratio ${d}`, serie: 'pixel', quanti: d })] })),
   { gruppo: 'pixel', carica: discese, opz: { spegni: ['nebbia'] }, scene: [tre({ id: 'senza-nebbia', nome: 'senza nebbia' })] },
@@ -79,7 +79,8 @@ function creaGiro(f) {
     // `prepara()` mette la scena (i suoi fotogrammi sono la prima apparizione: shader, geometrie, riserve), poi il rodaggio
     // (scartato) e la misura a finestre, finché i lenti non si fermano o scade il tetto. Il «primo» è il fotogramma più lungo fra
     // quelli della preparazione e i primi dieci del rodaggio.
-    async misura(tempi, fermo, prepara) {
+    // `prima`: la prima scena di un gruppo, appena costruito: il rodaggio minimo è doppio (trame e shader arrivano ancora)
+    async misura(tempi, fermo, prepara, prima = false) {
       guasto = null
       const comparsa = []
       rec = l => { comparsa.push(l) }
@@ -104,7 +105,7 @@ function creaGiro(f) {
             primi.push(l)
             const e = ora - t0, k = primi.length, w = 10, q = tempi.quadri
             const assestato = k >= 2 * w && Math.abs(mediana(primi.slice(-w)) - mediana(primi.slice(-2 * w, -w))) <= 0.15 * Math.max(1, mediana(primi.slice(-2 * w, -w)))
-            if ((e >= tempi.rodaggio[0] && assestato) || (e >= tempi.rodaggio[1] && k >= 2 * q) || e >= tempi.fine) { fase = 'misura'; tm = tf = ora; prec = t }
+            if ((e >= tempi.rodaggio[0] * (prima ? 2 : 1) && assestato) || (e >= tempi.rodaggio[1] && k >= 2 * q) || e >= tempi.fine) { fase = 'misura'; tm = tf = ora; prec = t }
             return
           }
           lavoro.push(l); finestra.push(l)
@@ -209,7 +210,7 @@ export async function eseguiVeri({ contenitore, progresso = () => {}, fermo = ()
             if (f.misura) r = await f.misura(s)
             else {
               const prima = f.conti ? f.conti().programmi : 0
-              r = await giro.misura(tempi, fermo, () => f.scena(s))
+              r = await giro.misura(tempi, fermo, () => f.scena(s), s === tappa.scene[0])
               if (giro.guasto) throw giro.guasto
               const c = f.conti ? f.conti() : {}
               if (f.gl() && f.gl().isContextLost()) throw new Error('contesto WebGL perso')

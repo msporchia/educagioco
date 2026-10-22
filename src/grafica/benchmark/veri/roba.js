@@ -50,7 +50,8 @@ export async function prepara({ contenitore }) {
     scena3d: () => scena,
     conti() { const i = renderer.info; return { ch: i.render.calls, tri: i.render.triangles, programmi: (i.programs || []).length, geo: i.memory.geometries, tex: i.memory.textures } },
     async scena(s) {
-      if (gruppo) scena.remove(gruppo)
+      // la famiglia di prima via, geometrie comprese (24 pezzi a famiglia: sul telefono la memoria della GPU conta)
+      if (gruppo) { scena.remove(gruppo); gruppo.traverse(o => { if (o.geometry) o.geometry.dispose() }) }
       gruppo = new Group(); animati = []
       const figure = figureDi(s.roba, QUANTI)
       let fatti = 0

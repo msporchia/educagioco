@@ -51,7 +51,7 @@ controlla('la fattoria che non parte è sotto il primo', /Fattoria 3D: LIMITE so
 controlla('i triangoli costano poco', /Triangoli \(stesse chiamate\): x1 15 ms \(70k\), x8 18 ms \(560k\)\. Costano poco: c'è margine per ~8x/.test(righe), righe)
 controlla('le chiamate: ms ogni 100', /Chiamate \(stessi triangoli\).*~\+2\.4 ms ogni 100 chiamate/.test(righe), righe)
 controlla('i pixel: ms per milione', /Pixel: dpr 1 15 ms, dpr 1\.41 22 ms: ~21\.2 ms ogni milione/.test(righe), righe)
-controlla('le luci: il salto più grande', /il salto più grande da 6 a 12 \(\+10 ms\)/.test(righe), righe)
+controlla('le luci: il salto più grande', /Luci: 1 12, 6 15, 12 25 ms; il salto più grande da 6 a 12 fuochi \(\+10 ms\)/.test(righe), righe)
 controlla('l\'ombra del cono e la nebbia', /L'ombra del cono costa ~\+4 ms \(con 6 fuochi\)/.test(righe) && /La nebbia costa ~\+5 ms/.test(righe))
 controlla('il collo di bottiglia è il più caro a raddoppiare', /COLLO DI BOTTIGLIA: luci \(a raddoppiarli \+10 ms; triangoli \+0\.5, chiamate \+6, pixel \+7\)/.test(righe), righe)
 controlla('la roba che pesa', /Roba: la più cara roba-vesti .* = pesa/.test(righe))
@@ -64,6 +64,12 @@ const dd = JSON.parse(testo.split('DATI ')[1])
 uguale('la riga DATI: versione 2, coi modelli veri', `${dd.v} ${dd.k}`, '2 veri')
 uguale('la riga DATI ha tutte le scene', dd.r.length, dati.risultati.length)
 controlla('le righe DATI: ms in seconda colonna (lo strumento legge quella)', dd.r.find(r => r[0] === 'sot-3')[1] === 20 && dd.r.find(r => r[0] === 'sot-8')[1] === 'salta')
+
+// i triangoli che pesano, e nessun collo quando raddoppiare non cambia niente
+const pesanti = letturaVeri({ risultati: [s('tri-1', 'd', 100, 120, serie('triangoli', 1)), s('tri-8', 'd', 170, 200, serie('triangoli', 8)),
+  s('ch-2', 'd', 100.5, 121, serie('chiamate', 2)), s('tri-2', 'd', 100.2, 120, serie('triangoli', 2))] }).join('\n')
+controlla('i triangoli che pesano: quanto costa x8', /Pesano: x8 costa \+70 ms \(\+70%\)/.test(pesanti), pesanti)
+controlla('nessun collo sotto il rumore', /COLLO DI BOTTIGLIA: nessuno fra quelli provati/.test(pesanti), pesanti)
 
 // il limite: tutte, nessuna, il guasto conta come oltre
 const L = (...p95) => p95.map((p, k) => ({ serie: 'x', quanti: k + 1, p95: p, ms: p }))

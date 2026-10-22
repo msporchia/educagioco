@@ -117,7 +117,8 @@ export function letturaVeri(dati) {
     const u = tk[tk.length - 1], fino = [t1, ...tk].filter(r => r.p95 <= T).pop()
     const poco = u.ms - t1.ms <= Math.max(4, 0.25 * t1.ms)
     righe.push(`Triangoli (stesse chiamate): x1 ${t1.ms} ms (${kt(t1.tri)}k), x${u.quanti} ${u.ms} ms (${kt(u.tri)}k). ` +
-      (poco ? `Costano poco: c'è margine per ~${u.quanti}x di dettaglio.` : fino ? `Pesano: sotto ${T} ms al p95 si arriva a x${fino.quanti}.` : 'Pesano: già così si va oltre.'))
+      (poco ? `Costano poco: c'è margine per ~${u.quanti}x di dettaglio.` : fino ? `Pesano: sotto ${T} ms al p95 si arriva a x${fino.quanti}.`
+        : `Pesano: x${u.quanti} costa ${segnato(d(u, t1))} ms (${segnato(Math.round(100 * (u.ms - t1.ms) / Math.max(0.1, t1.ms)))}%).`))
     if (m('tri-2')) costi.push(['triangoli', d(m('tri-2'), t1)])
   }
   const ck = [2, 4].map(k => m(`ch-${k}`)).filter(Boolean)
@@ -137,7 +138,7 @@ export function letturaVeri(dati) {
   if (lu.length > 1) {
     let salto = null
     for (let i = 1; i < lu.length; i++) if (!salto || lu[i].ms - lu[i - 1].ms > salto[2]) salto = [lu[i - 1].quanti, lu[i].quanti, +(lu[i].ms - lu[i - 1].ms).toFixed(1)]
-    righe.push(`Luci: ${lu[0].quanti} fuoco ${lu[0].ms} ms, ${lu[lu.length - 1].quanti} fuochi ${lu[lu.length - 1].ms} ms; il salto più grande da ${salto[0]} a ${salto[1]} (${segnato(salto[2])} ms).`)
+    righe.push(`Luci: ${lu.map(r => `${r.quanti} ${r.ms}`).join(', ')} ms; il salto più grande da ${salto[0]} a ${salto[1]} fuochi (${segnato(salto[2])} ms).`)
     const l6 = m('luci-6'), l12 = m('luci-12')
     if (l6 && l12) costi.push(['luci', d(l12, l6)])
   }
