@@ -107,6 +107,8 @@ function postoDi(t) {
   if (!postiTaglie.has(t.id)) postiTaglie.set(t.id, postoSulPrato(m, terra, t))
   return postiTaglie.get(t.id)
 }
+// il modello 3D di una persona (scena3d/persona3d.js, docs/sotterraneo/persone-3d.md): quello dello sprite, ma il capitano ha il suo
+const modelloDellaPersona = b => (b.ruolo === 'personaggio' && b.k === 'capitano' ? 'capitano' : b.sprite)
 function preparaBersagli() {
   const l = [], piede = p => ({ x: p.piede.x, y: p.piede.y })
   const persona = (tipo, k, p, extra) => l.push({ chiave: `${tipo}:${p.citta || ''}:${k}`, tipo: 'persona', ruolo: tipo, k, citta: p.citta || null,
@@ -137,7 +139,7 @@ function preparaBersagli() {
   bersagli.value = markRaw(l)
   persone.length = 0
   for (const b of l) if (b.tipo === 'persona') persone.push({ chiave: b.chiave, fermo: `${b.sprite}-fermo-0`, saluto: `${b.sprite}-saluta-0`, pezzo: `${b.sprite}-fermo-0`, x: b.piede.x + 0.5, z: b.piede.y + 0.5, specchio: false,
-                                                          scala: b.scala, tinta: b.tinta })
+                                                          scala: b.scala, tinta: b.tinta, modello: modelloDellaPersona(b), saluta: false })
 }
 // Le taglie in mano che cambiano il prato (un viandante da cercare, una X da scavare) rifanno i bersagli
 const chiaveDelPrato = computed(() => [...presePerTipo(props.missioni, 'trovachi'), ...presePerTipo(props.missioni, 'mappa')].map(t => t.id).sort().join('|'))
@@ -260,7 +262,7 @@ function passo(dt, t) {
   if (sporca && t - ultimoSalvato > 3) salva()
   const S = scena.S
   S.io.x = io.x; S.io.z = io.z; S.io.verso = verso; S.inCammino = via.length > 0
-  for (const q of persone) { q.pezzo = salutano.value.has(q.chiave) ? q.saluto : q.fermo; q.specchio = io.x < q.x - 0.2 }
+  for (const q of persone) { q.saluta = salutano.value.has(q.chiave); q.pezzo = q.saluta ? q.saluto : q.fermo; q.specchio = io.x < q.x - 0.2 }
 }
 // le celle nuove attorno all'eroe: si trova quello che ci sta, si annuncia la regione, si conta il giro delle città
 function guarda() {
@@ -482,7 +484,7 @@ function aggiornaScena() {
   S.terre = !!(props.terre && props.terre.aperta)
   // davanti a una discesa rossa sta la sentinella (docs/sotterraneo/zone.md)
   const sentinelle = bersagli.value.filter(b => b.ruolo === 'ingresso' && trovati.value.has(b.chiave) && (datoDelPosto(b).t || {}).colore === 'rosso')
-  S.persone = [...persone, ...sentinelle.map(b => ({ pezzo: 'guardia-fermo-0', x: b.lotto.x + 0.3, z: b.lotto.y + b.lotto.h + 0.6 }))]
+  S.persone = [...persone, ...sentinelle.map(b => ({ chiave: `sentinella:${b.chiave}`, modello: 'guardia', pezzo: 'guardia-fermo-0', x: b.lotto.x + 0.3, z: b.lotto.y + b.lotto.h + 0.6 }))]
 }
 
 /* ═══════════ il fumetto ═══════════ */

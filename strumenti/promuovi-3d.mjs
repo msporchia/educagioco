@@ -41,6 +41,8 @@ export const GRUPPI = [
   { nome: 'roba', dest: `${SCENA}/roba3d`,
     radici: ['poc/roba-3d/aloni.js', ...FAMIGLIE_ROBA.map(f => `poc/roba-3d/${f}.js`)],
     facoltative: FAMIGLIE_ROBA.map(f => `poc/roba-3d/${f}.js`), moduli: true },
+  // le persone del mondo di sopra (docs/sotterraneo/persone-3d.md)
+  { nome: 'persone', dest: `${SCENA}/persone3d`, radici: ['poc/persone-3d/persone.js'] },
 ]
 
 const IMPORT = /(\bfrom\s*|\bimport\s*\(?\s*)(['"])([^'"]+)\2/g
