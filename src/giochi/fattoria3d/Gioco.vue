@@ -27,6 +27,7 @@ import BarraAzioni from './viste/BarraAzioni.vue'
 import CostruisciQui from './viste/CostruisciQui.vue'
 import BarraStrade from './viste/BarraStrade.vue'
 import { schedeDi } from './dati/carte.js'
+import { stagioneAttiva } from './dati/stagioni3d.js'
 import SceltaSeme from './viste/SceltaSeme.vue'
 import Macchina from './viste/Macchina.vue'
 import Livelli from './viste/Livelli.vue'
@@ -129,6 +130,7 @@ const seme = ref('grano')
 const strumento = ref(null)              // il pennello delle strade: null | 'strada' | 'gomma'
 const costruisciQui = ref(null)          // { i, j, msg }: il menu «Costruisci qui», con la cella premuta
 const avvisoTesto = ref('')
+const stagione = ref(stagioneAttiva(new Date(), typeof location !== 'undefined' ? location.hash : ''))          // la festa in corso (dati/stagioni3d.js): Natale, Halloween o niente
 const trascinando = ref(null)            // { emoji, x, y, su, perMettereVia, perAnnullare, nuovo, parcheggiato } mentre si trascina un pezzo (o ne aspetta uno il fantasma)
 const semiAperto = ref(false)
 const macchinaAperta = ref(null)         // il tipo della macchina di cui si vede il menu
@@ -212,7 +214,7 @@ function scegliSeme(k) {
 // ── costruire: tenere premuto su un posto libero (o il tasto 🏗️) apre il menu «Costruisci qui» ──
 const schede = computed(() => {
   void versione.value
-  return schedeDi({ livello: motore.livello(), prezzoPezzo: t => motore.prezzoPezzo(t), nelMagazzino: t => motore.nelMagazzino(t), posseduti: motore.s.posseduti })
+  return schedeDi({ stagione: stagione.value, livello: motore.livello(), prezzoPezzo: t => motore.prezzoPezzo(t), nelMagazzino: t => motore.nelMagazzino(t), posseduti: motore.s.posseduti })
 })
 function apriCostruisci(i, j) {
   if (mondo.eroe.az || strumento.value) return
@@ -399,7 +401,7 @@ onMounted(async () => {
   try { const c = await load(CHIAVE_OPZIONI); if (c && c.q && c.v === VERSIONE_OPZIONI) Object.assign(q, c.q) } catch (e) { /* le opzioni di serie */ }
   const { Mondo3d } = await import('./scena3d/mondo3d.js')          // three si scarica solo qui
   if (!vivo) return
-  mondo = new Mondo3d({ canvas: tela.value, sopra: sopra.value, motore, ui, qualita: q, abito: abito.value })
+  mondo = new Mondo3d({ canvas: tela.value, sopra: sopra.value, motore, ui, qualita: q, abito: abito.value, stagione: stagione.value })
   mondo.avvia()
   visite.avvia(scelta(CHIAVE, 'vicini', null))
   ripresa()
@@ -451,6 +453,8 @@ onBeforeUnmount(() => {
                 @click="trascinando.parcheggiato && mondo.annullaTrascinamento()">
           {{ trascinando.nuovo ? '✖️' : '📦' }} {{ avvisoTesto || (trascinando.nuovo ? 'Trascinalo dove vuoi, o qui per annullare' : 'Trascinalo dove vuoi, o qui per mettere via') }}
         </button>
+        <button v-if="trascinando && trascinando.ruotabile && !trascinando.su" class="f3-ruota" data-f3="ruota" :data-rot="trascinando.rot" aria-label="Gira"
+                @pointerdown.prevent="mondo.ruotaTenuto()" @keydown.enter.prevent="mondo.ruotaTenuto()">↻</button>
         <div v-if="trascinando && trascinando.su" class="f3-trascinato" :style="{ transform: `translate(${trascinando.x}px, ${trascinando.y - 56}px) translate(-50%, -50%)` }">{{ trascinando.emoji }}</div>
 
         <CostruisciQui v-if="costruisciQui" :schede="schede" :messaggio="costruisciQui.msg" :anteprima="anteprima" :anteprima-pronta="anteprimaPronta" @scegli="sceglieCarta" @chiudi="chiudiCostruisci" />

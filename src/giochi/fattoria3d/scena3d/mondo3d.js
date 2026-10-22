@@ -18,6 +18,7 @@ import { Azioni } from './azioni.js'
 import { Pesca3d } from './pesca3d.js'
 import { Costruzione } from './costruzione.js'
 import { Dito } from './dito.js'
+import { Stagione } from './stagione.js'
 import { ASPETTO, fantasma } from './modelli.js'
 import { PEZZI, EDIFICI } from '../dati/catalogo.js'
 import { lottoDi } from '../dati/mondo.js'
@@ -31,8 +32,9 @@ const _c = new THREE.Vector3()        // il corpo del contadino per `contadinoSo
 const _v = new THREE.Vector3()        // di scorta per `proietta`: niente oggetti nuovi a ogni cartello a ogni fotogramma
 
 export class Mondo3d {
-  /** `abito`: com'è vestito il contadino (dati/abiti.js, con la persona); senza, quello di serie. */
-  constructor({ canvas, sopra, motore, ui, qualita, abito = null }) {
+  /** `abito`: com'è vestito il contadino (dati/abiti.js, con la persona); senza, quello di serie. `stagione`: 'natale' | 'halloween' | null
+      (dati/stagioni3d.js `stagioneAttiva`): il cielo, la luce e gli addobbi di quella festa. */
+  constructor({ canvas, sopra, motore, ui, qualita, abito = null, stagione = null }) {
     this.abito = abito
     this.canvas = canvas; this.sopra = sopra; this.m = motore; this.ui = ui; this.q = qualita
     // cosa sta facendo il bambino: lo imposta la vista (barra delle azioni, pennello delle strade)
@@ -47,7 +49,7 @@ export class Mondo3d {
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping; this.renderer.toneMappingExposure = 1.05
     this.scena = new THREE.Scene()
     this.scena.background = CIELO; this.scena.fog = new THREE.Fog(CIELO, 38, 90)
-    this.scena.add(new THREE.HemisphereLight(0xdff1ff, 0x7a9a5a, 1.05))
+    this.emisfero = new THREE.HemisphereLight(0xdff1ff, 0x7a9a5a, 1.05); this.scena.add(this.emisfero)
     this.sole = new THREE.DirectionalLight(0xfff0d0, 2.3)
     this.sole.castShadow = true; this.sole.shadow.mapSize.set(1024, 1024)
     Object.assign(this.sole.shadow.camera, { left: -14, right: 14, top: 14, bottom: -14, near: 1, far: 60 })
@@ -59,6 +61,7 @@ export class Mondo3d {
     this.fx = new Effetti(this.scena, sopra, this.vista, qualita)
     this.terreno = new Terreno(this.scena, motore)
     this.pezzi = this.creaPezzi()
+    this.stagione = stagione ? new Stagione({ scena: this.scena, emisfero: this.emisfero, sole: this.sole, motore, pezzi: this.pezzi, camera: this.camera, qualita, nome: stagione }) : null
     this.scaldo = creaScaldo(this.pezzi.compitiScaldo())      // i modelli che servono presto, costruiti in tempo morto (scaldo-puro.js)
     this.eroe = new Eroe(this.scena, motore, this.fx, abito)
     this.eroe.alVia = () => this.camera.segui()
@@ -165,10 +168,10 @@ export class Mondo3d {
   }
   /** Le celle da cui si può servire una cosa: il davanti per gli edifici (se è libero), tutta la cornice per il resto. */
   celleDiServizio(b) {
-    let i, j, w, d, davanti = false
+    let i, j, w, d, davanti = false, rot = 0
     if (b.kind === 'edificio') b = { kind: 'cosa', id: this.m.cosaDi(b.tipo).id }
     if (b.kind === 'cosa') {
-      const c = this.m.cosa(b.id), x = this.m.misure(c.tipo); i = c.i; j = c.j; w = x.w; d = x.d; davanti = !!EDIFICI[c.tipo]
+      const c = this.m.cosa(b.id), x = this.m.misureCosa(c); i = c.i; j = c.j; w = x.w; d = x.d; davanti = !!EDIFICI[c.tipo]; rot = c.rot || 0
       if (x.calpestabile) { const su = []; for (let a = 0; a < w; a++) for (let b2 = 0; b2 < d; b2++) su.push([i + a, j + b2]); return su }   // un ponte si tocca per salirci
     }
     else { const a = b.kind === 'ostacolo' ? this.m.ostacolo(b.n) : this.m.albero(b.n); i = a.i; j = a.j; w = 1; d = 1 }
@@ -176,8 +179,12 @@ export class Mondo3d {
     const cornice = []
     for (let a = 0; a < w; a++) cornice.push([i + a, j - 1], [i + a, j + d])
     for (let b2 = 0; b2 < d; b2++) cornice.push([i - 1, j + b2], [i + w, j + b2])
-    if (davanti) {                                              // un edificio ha un davanti (verso +z); se è murato, si serve da un altro lato
-      const fronte = []; for (let a = 0; a < w; a++) fronte.push([i + a, j + d])
+    if (davanti) {                                              // un edificio ha un davanti (verso +z, o dove l'ha girato); se è murato, si serve da un altro lato
+      const fronte = []                                         // il davanti gira con l'edificio (dati/rotazione.js DAVANTI)
+      if (rot === 0) for (let a = 0; a < w; a++) fronte.push([i + a, j + d])
+      else if (rot === 2) for (let a = 0; a < w; a++) fronte.push([i + a, j - 1])
+      else if (rot === 1) for (let b2 = 0; b2 < d; b2++) fronte.push([i + w, j + b2])
+      else for (let b2 = 0; b2 < d; b2++) fronte.push([i - 1, j + b2])
       const davantiLibero = libere(fronte)
       if (davantiLibero.length) return davantiLibero
     }
@@ -240,7 +247,7 @@ export class Mondo3d {
   }
 
   /** Dopo che il motore ha cambiato qualcosa che si vede: i gruppi, il terreno, i cartelli. */
-  cambiato() { this.pezzi.sincronizza(); this.terreno.ridisegnaStrade(); this.terreno.pesci.ridisegna(this.terreno.lottiInFinestra()); this.ombraSporca = true; this.ui.cambio() }
+  cambiato() { this.pezzi.sincronizza(); this.terreno.ridisegnaStrade(); this.terreno.pesci.ridisegna(this.terreno.lottiInFinestra()); this.stagione?.sporca(); this.ombraSporca = true; this.ui.cambio() }
 
   // ── cosa sta facendo il bambino: la vista lo dice, qui si applica ──
   imposta(nuovo) {
@@ -285,6 +292,7 @@ export class Mondo3d {
       eroe: { x: eroe.x, z: eroe.z, vel: eroe.vel }, distanza: this.q.camera,
     })
     this.costruzione.fotogramma(dt)                               // il dito contro il bordo con un pezzo in mano: la camera scorre (costruzione.js)
+    this.stagione?.aggiorna(tt, this.renderer.getPixelRatio())     // i fiocchi: due uniform (scena3d/stagione.js)
     this.terreno.segui(this.camera.x, this.camera.z)              // il suolo segue la camera; se cambia il lotto al mezzo si rifà la finestra
     const fineLogica = performance.now()
     // l'ombra: subito se qualcosa è cambiato, altrimenti ogni `ombraOgni` fotogrammi (1 = sempre)
@@ -385,7 +393,9 @@ export class Mondo3d {
       if (this.sole.shadow.map) { this.sole.shadow.map.dispose(); this.sole.shadow.map = null }
     }
     this.terreno.applica(q)
-    this.scena.fog.near = q.nebbia ? 38 : 1e6; this.scena.fog.far = q.nebbia ? 90 : 2e6
+    const [vicino, lontano] = this.stagione ? this.stagione.nebbia : [38, 90]          // in festa la nebbia è più corta
+    this.scena.fog.near = q.nebbia ? vicino : 1e6; this.scena.fog.far = q.nebbia ? lontano : 2e6
+    this.stagione?.applica(q)
     this.fx.q = q; this.pezzi.q = q
   }
   adattaSenzaRect() { if (this.rect) this.renderer.setSize(Math.max(1, Math.round(this.rect.width)), Math.max(1, Math.round(this.rect.height)), false) }
@@ -415,11 +425,13 @@ export class Mondo3d {
     return this.costruzione.daMenu(tipo, i, j, pm && pm.i === i && pm.j === j ? pm : null)
   }
   annullaTrascinamento() { this.costruzione.annullaTrascinamento() }
+  /** Il tasto ↻: gira di un quarto il pezzo in mano (docs/fattoria3d/rotazione.md). */
+  ruotaTenuto() { return this.costruzione.ruota() }
   tornaAllEroe() { this.camera.segui() }
 
   via() {
     this.ferma(); this.ro?.disconnect(); this.dito.via()
-    this.pezzi.via(); this.fx.via(); this.terreno.via(); this.compagni.via(); this.pesca3d.via()
+    this.stagione?.via(); this.pezzi.via(); this.fx.via(); this.terreno.via(); this.compagni.via(); this.pesca3d.via()
     this._anteprime?.via()
     try { this.renderer.dispose() } catch (e) { /* già andato */ }
   }

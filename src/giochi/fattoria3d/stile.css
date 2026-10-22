@@ -94,6 +94,8 @@
 .f3-strumenti button.fatto { background: #ffd36a; }
 .f3-trascinato { position: fixed; left: 0; top: 0; z-index: 50; font-size: 44px; pointer-events: none; filter: drop-shadow(0 4px 6px rgba(0,0,0,.4)); }
 .f3-zonavia { border: 0; width: 100%; touch-action: manipulation; position: absolute; left: 0; right: 0; bottom: 0; z-index: 26; height: calc(96px + env(safe-area-inset-bottom)); display: flex; align-items: center; justify-content: center; background: rgba(255,247,230,.96); border-radius: 22px 22px 0 0; box-shadow: 0 -4px 16px rgba(0,0,0,.25); font: 700 15px "Emoji Gioco", system-ui, sans-serif; color: #5a3a2a; text-align: center; padding: 0 20px env(safe-area-inset-bottom); }
+.f3-ruota { position: absolute; right: 14px; bottom: calc(96px + 14px + env(safe-area-inset-bottom)); z-index: 27; width: 64px; height: 64px; border-radius: 50%; border: 3px solid #fff; background: #ffb83d; color: #5a3a2a; font: 700 34px "Emoji Gioco", system-ui, sans-serif; box-shadow: 0 3px 10px rgba(0,0,0,.35); touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+.f3-ruota:active { transform: scale(.92); }
 .f3-zonavia.bersaglio { background: #e6f7d8; outline: 4px dashed #5fae3a; outline-offset: -6px; }
 
 /* i fogli di gioco (macchine, banco, livelli): l'insegna in cima col colore del posto, poi il corpo che scorre. Ogni foglio ha le sue
