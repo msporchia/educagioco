@@ -89,6 +89,16 @@ Stesse regole, la scheda dell'ultima tappa e le truppe del terreno (`Partita.tru
 sulla lista ammessa e un passo che non c'è si salta. Le bestie cornute sono nel ruolo `veloce` (dove ci sono i
 mummie non ci sono le bestie) e in `BATTE` come terrestri a corto raggio. `VERSIONE_IA` 12.
 
+## Il nemico che impara (battaglia infinita, 22 ottobre)
+
+L'utente: «anche a livello difficile dice che vince sempre». Il nemico della battaglia infinita era quello fermo
+dell'ultima tappa (furbizia 0,3-0,4) e le partite finivano in meno di quattro minuti. Adesso, **solo nella battaglia
+infinita** (`durata === Infinity`, `cresciNemico` in `nemico.js`), la furbizia sale da quella del livello fino a 1 e il
+tempo di pensiero scende del 40% in 150 secondi di partita; monete e forza restano a pari (più bravo, non più
+ricco). Le tappe non cambiano, quindi `VERSIONE_IA` e la taratura restano. Misurato (`npm run tara:arena -- --infinita`):
+il bambino vince Facile 30-63%, Medio 13-27%, Difficile 10-13%. **Punto debole: la palude**, dove le mummie
+battono quasi tutto e chi mette solo truppe (`rush`) vince ancora il 77-100%.
+
 ## Se si ritocca
 
 `VERSIONE_IA` in `nemico.js` entra nella firma dell'equilibrio: va alzata a ogni cambio del

@@ -278,7 +278,17 @@ function testa(p) {
   return altro ? p.fai('nem', altro.azione, altro.id) : false
 }
 
+/* Nella battaglia infinita il nemico impara mentre si gioca: la furbizia sale verso 1 e pensa più in fretta, in
+   `CRESCITA_INFINITA` secondi di partita. Le monete e la forza restano a pari (docs/arena/nemico.md). */
+const CRESCITA_INFINITA = 150
+function cresciNemico(p) {
+  p.nemicoBase ??= p.nemicoCfg
+  const k = Math.min(1, p.t / CRESCITA_INFINITA), b = p.nemicoBase
+  p.nemicoCfg = { ...b, furbizia: (b.furbizia || 0) + (1 - (b.furbizia || 0)) * k, pensa: b.pensa * (1 - 0.4 * k) }
+}
+
 export function pensaNemico(p, dt) {
+  if (p.durata === Infinity) cresciNemico(p)
   p.pensa -= dt
   if (p.pensa > 0) return
   p.pensa = p.nemicoCfg.pensa
