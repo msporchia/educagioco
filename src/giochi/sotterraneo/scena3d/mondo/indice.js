@@ -412,6 +412,7 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = [], fon
     grafica() {
       const ms = ctx.misure
       return { tre: true, mondo: true, chiamate: ms.chiamate, triangoli: ms.triangoli, dpr: ctx.dpr, ms: Math.round(ms.msFotogramma * 10) / 10,
+               programmi: (renderer.info.programs || []).length, memoria: { ...renderer.info.memory },
                msJs: Math.round(ms.msJs * 100) / 100, msDisegno: Math.round(ms.msDisegno * 100) / 100,
                figure: persone ? persone.figure.quante + persone.figureEroe.quante : 0, pezzi: [...costruiti.keys()].sort((a, b) => a - b),
                msPezzi: Math.round(Math.max(0, ...[...costruiti.values()].map(f => f.ms))), veduta: cam.veduta, scenario: 'mondo',
@@ -420,6 +421,7 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = [], fon
                zona: zonaQui, zone: m.zonaCaricata.map((c, k) => (c ? k : -1)).filter(k => k >= 0), msZone: misureZone.slice() }
     },
     get pronto() { return !!persone && costruiti.size >= Math.min(4, griglia.n) },
+    get scena() { return scena },   // per le misure (docs/sotterraneo/prestazioni-3d.md): chi fa le chiamate
     distruggi() {
       vivo = false
       api.ferma()

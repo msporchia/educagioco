@@ -317,7 +317,7 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
       return { tre: true, chiamate: m.chiamate, triangoli: m.triangoli, dpr: ctx.dpr, ms: Math.round(m.msFotogramma * 10) / 10,
                msJs: Math.round(m.msJs * 100) / 100, msDisegno: Math.round(m.msDisegno * 100) / 100,
                figure: figure ? figure.quante : 0, pixelSprite: Math.round(cam.pixelSprite * 100) / 100, scenario: piano ? piano.aspetto.chiave : null, palco: !!scontro.palco,
-               programmi: (renderer.info.programs || []).length,
+               programmi: (renderer.info.programs || []).length, memoria: { ...renderer.info.memory },
                mostri3d: mostri3d ? mostri3d.visibili : 0, modelli3d: mostri3d ? mostri3d.quante : 0, effetti3d: effetti3d ? effetti3d.quanti : 0 }   // gli shader compilati: se crescono a ogni colpo, il telefono si ferma a compilare
     },
     // il banco: `n` disegni della scena così com'è, ognuno aspettato (la lettura di un pixel): i ms della tela da sola, senza
@@ -341,6 +341,7 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
     // le botti del piano: dove stanno e se sono rotte
     botti() { return piano ? piano.botti.botti.map(b => ({ i: b.i, x: b.x, z: b.z, cella: b.cella, rotta: b.rotta, stanza: b.stanza, pezzi: b.pezzi.length })) : [] },
     get eroe() { return eroe },
+    get scena() { return scena },   // per le misure (docs/sotterraneo/prestazioni-3d.md): chi fa le chiamate
     get corsa() { return quadro ? quadro.corsa : null },
     get palco() { return scontro.palco },
     distruggi() {
