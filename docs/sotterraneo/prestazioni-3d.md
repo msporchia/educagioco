@@ -134,7 +134,8 @@ poco (il riscaldamento).
 Per contare: `window.__sotterraneo3d.programmi()` (le discese e il mondo) e `window.__anteprime3d.programmi()` dicono ogni programma
 col tipo, i materiali che lo usano (le scelte che fanno variante, `scena3d/programmi.js`) e dove la chiave differisce dal primo dello
 stesso tipo; `grafica().programmi` quanti, `grafica().daScaldare` quanti pezzi restano del riscaldamento (`scaldato` nel mondo),
-`__anteprime3d.stato()` `programmi`, `msCompila` e `fettaMax`.
+`__anteprime3d.stato()` `programmi`, `msCompila` e `fettaMax`. `&spegni=riscaldamento` spegne il riscaldamento (discese e mondo): quanto toglie
+sul telefono lo dice la misura coi modelli veri, «L'ingresso» ([../core/vecchio-telefono-veri.md](../core/vecchio-telefono-veri.md)).
 
 ```bash
 S='sotterraneo3d=1&seme=11&stanza=sala&sotterraneo=branco&mostri=3&tipo=scheletro&variante=guerriero,arciere,mago&grado=leggendario&corredo=leggendario&eroe=cavaliere&qualita=bassa&dpr=1'
