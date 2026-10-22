@@ -12,7 +12,7 @@ import { perId } from '../../src/giochi/sotterraneo/scena3d/eroi3d/collezione.js
 import { TIPI } from '../../src/giochi/sotterraneo/scena3d/eroi3d/armature.js'
 import { idDi } from '../../src/giochi/sotterraneo/scena3d/mostri3d/registro.js'
 import { FIGURE3D } from '../../src/giochi/sotterraneo/dati/figure3d.js'
-import { MODELLO_DI, ARMATURE, modelloDi, pregioDi, dotazioneDi, pezzo3dDi, chiaveDellaCosa, chiaveDellEroe, chiaveDelMostro, leggiChiave, creaCoda, MISURE }
+import { MODELLO_DI, ARMATURE, modelloDi, pregioDi, dotazioneDi, pezzo3dDi, chiaveDellaCosa, chiaveDellEroe, chiaveDelMostro, leggiChiave, creaCoda, MISURE, RIPROVA }
   from '../../src/giochi/sotterraneo/scena3d/anteprime3d-pura.js'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 
@@ -124,6 +124,17 @@ for (const t of Object.keys(MOSTRI)) {
   giri.shift()()
   uguale('una promessa: non è pronta finché non arriva', coda.pronta('a'), false)
   fine('tela'); uguale('poi lo è', await p, 'tela')
+}
+// RIPROVA (il contesto perso a metà): vale null ma non resta in cache, e la richiesta dopo ridisegna
+{
+  const giri = []
+  let volte = 0
+  const coda = creaCoda(() => (++volte === 1 ? RIPROVA : 'tela'), { pianifica: fn => giri.push(fn) })
+  const p = coda.chiedi('a'); giri.shift()()
+  uguale('persa a metà: null', await p, null)
+  uguale('e non è pronta', coda.pronta('a'), false)
+  const q = coda.chiedi('a'); giri.shift()()
+  uguale('chiesta di nuovo, si ridisegna', await q, 'tela')
 }
 
 riassunto('le anteprime 3D del sotterraneo')

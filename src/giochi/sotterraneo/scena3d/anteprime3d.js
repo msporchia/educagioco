@@ -4,7 +4,7 @@
 // fotogramma; una cache per chiave. Un modello che manca o si rompe vale null: la vista tiene lo sprite.
 import * as THREE from 'three'
 import { inquadra } from '../../fattoria3d/scena3d/anteprime-pura.js'
-import { creaCoda, leggiChiave, MISURE } from './anteprime3d-pura.js'
+import { creaCoda, leggiChiave, MISURE, RIPROVA } from './anteprime3d-pura.js'
 import { creaEroe, posaGuardia } from './eroi3d/eroi.js'
 import { equipaggia } from './eroi3d/armi.js'
 import { vesti, TIPI } from './eroi3d/armature.js'
@@ -145,15 +145,23 @@ function inPosa(c) {
  * → { chiedi(chiave) → Promise<HTMLCanvasElement|null>, leggi(chiave), pronta(chiave), stato(), via() }. `ozio`: ms senza richieste dopo i
  * quali il renderer si chiude (si riapre alla prossima). Senza WebGL, o col contesto perso, ogni chiave vale null.
  */
-export function creaAnteprime3d({ ozio = 30000, budget = 16 } = {}) {
-  let renderer = null, scena = null, camera = null, rotto = false, timer = 0, chiudendo = false
-  const misure = { prima: 0, codaVuota: 0, ultima: 0, disegnate: 0, ms: 0, renderer: 0, msModelli: 0, msDisegno: 0, msCopia: 0 }
+export function creaAnteprime3d({ ozio = 30000, budget = 16, perdite = 3 } = {}) {
+  let renderer = null, scena = null, camera = null, rotto = false, timer = 0
+  const misure = { prima: 0, codaVuota: 0, ultima: 0, disegnate: 0, ms: 0, renderer: 0, perdite: 0, msModelli: 0, msDisegno: 0, msCopia: 0 }
 
   function apri() {
     if (renderer || rotto) return renderer
     try {
       const canvas = document.createElement('canvas')
-      canvas.addEventListener('webglcontextlost', () => { if (!chiudendo) rotto = true })
+      // l'evento arriva DOPO forceContextLoss (un compito più in là): conta solo se la tela è ancora quella aperta; un contesto
+      // tolto dal browser si lascia e si riapre alla prossima richiesta, rotto per sempre solo dopo `perdite` volte
+      canvas.addEventListener('webglcontextlost', () => {
+        if (!renderer || renderer.domElement !== canvas) return
+        misure.perdite++
+        try { renderer.dispose() } catch (e) { /* già andato */ }
+        renderer = null
+        if (misure.perdite >= perdite) rotto = true
+      })
       renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true, preserveDrawingBuffer: true, powerPreference: 'low-power' })
       renderer.setPixelRatio(1)
       renderer.outputColorSpace = THREE.SRGBColorSpace
@@ -175,10 +183,9 @@ export function creaAnteprime3d({ ozio = 30000, budget = 16 } = {}) {
 
   function chiudi() {
     if (!renderer) return
-    chiudendo = true
-    try { renderer.dispose(); renderer.forceContextLoss() } catch (e) { /* già andato */ }
-    chiudendo = false
-    renderer = null
+    const r = renderer
+    renderer = null                       // prima: il webglcontextlost che segue trova la tela già chiusa
+    try { r.dispose(); r.forceContextLoss() } catch (e) { /* già andato */ }
   }
 
   function disegna(chiave) {
@@ -202,6 +209,7 @@ export function creaAnteprime3d({ ozio = 30000, budget = 16 } = {}) {
       renderer.setSize(w, h, false)
       renderer.clear()
       renderer.render(scena, camera)
+      if (renderer.getContext().isContextLost()) return RIPROVA   // perso a metà: niente riquadro vuoto in cache
       const t2 = performance.now()
       // l'immagine è una tela 2D piccola, copiata dal renderer: niente PNG (toDataURL costava tre quarti del tempo sul filo
       // principale, e toBlob arrivava un secondo dopo); la vista la copia nella sua tela (viste/Quadro3d.vue)
@@ -233,7 +241,7 @@ export function creaAnteprime3d({ ozio = 30000, budget = 16 } = {}) {
     },
     leggi: coda.leggi,
     pronta: coda.pronta,
-    /** Per le prove: `prima` e `ultima` (performance.now() della prima richiesta e dell'ultima pronta), quante disegnate, i ms in tutto, quante volte s'è aperto il renderer, se è aperto, quante in coda. */
+    /** Per le prove: `prima` e `ultima` (performance.now() della prima richiesta e dell'ultima pronta), quante disegnate, i ms in tutto, quante volte s'è aperto il renderer, quanti contesti persi dal browser, se è aperto, quante in coda. */
     stato: () => ({ ...misure, aperto: !!renderer, inCoda: coda.inCoda, rotto }),
     via() { clearTimeout(timer); coda.via(); chiudi() },
   }

@@ -61,6 +61,11 @@ La chiave dice la figura e l'aspetto, non l'oggetto: due spade con la stessa fig
 - **Un renderer solo, suo** (la bottega sta sopra, dove la scena della discesa non c'è): una tela piccola, creato alla prima
   richiesta (e three col modulo, a richiesta), chiuso dopo 30 s senza richieste (`dispose` e `forceContextLoss`); si riapre alla
   prossima. La cache delle immagini resta finché si gioca; `via()` alla chiusura del gioco.
+- **Il `webglcontextlost` di `forceContextLoss` arriva dopo**, un compito più in là: conta solo se la tela è ancora quella
+  aperta (chiudendo si toglie il renderer prima). Era il guasto dei ritratti del mondo di sopra: dopo 30 s di cammino la chiusura
+  per ozio passava per una perdita e il servizio restava `rotto`. Un contesto tolto davvero dal browser (telefoni con pochi
+  contesti) chiude il renderer, che si riapre alla richiesta dopo; `rotto` per sempre solo alla terza perdita (`stato().perdite`).
+  Un'immagine persa a metà torna `RIPROVA`: null, ma non resta in cache.
 - **La coda**: una chiave una volta sola; in un giro se ne fanno finché non passano 16 ms (almeno una), poi si cede il filo con
   un messaggio (il tocco e i fotogrammi passano prima).
 - **L'immagine è una tela 2D** copiata dal renderer, e la vista la copia nella sua (`Quadro3d.vue`): niente PNG.

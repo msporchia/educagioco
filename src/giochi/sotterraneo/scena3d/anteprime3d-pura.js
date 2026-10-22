@@ -205,17 +205,21 @@ export const MISURE = { arma: [128, 128], scudo: [128, 128], gioiello: [128, 128
  * pagina non si blocca mai. `chiedi` dà una promessa (la stessa per la stessa chiave), `leggi` l'immagine già fatta o null.
  * Un guasto di `disegna` vale null e non si riprova. `vuota()` è chiamata quando la coda finisce.
  */
+/** Torna da `disegna` quando l'immagine non si è potuta fare per un caso (il contesto perso a metà): vale null ma non resta in cache. */
+export const RIPROVA = Symbol('riprova')
+
 export function creaCoda(disegna, { pianifica, ora = () => Date.now(), budget = 8, vuota = () => {} } = {}) {
   const fatte = new Map(), attese = new Map(), coda = []
   let gira = false, chiusa = false
   const fine = (k, img) => {
-    fatte.set(k, img)
+    if (img === RIPROVA) img = null
+    else fatte.set(k, img)
     const a = attese.get(k); attese.delete(k); if (a) a.resolve(img)
   }
   const una = () => {
     const k = coda.shift()
     let img = null
-    if (!chiusa) { try { img = disegna(k) || null } catch (e) { img = null } }
+    if (!chiusa) { try { img = disegna(k) || null } catch (e) { img = null } }   // RIPROVA è vero: passa com'è
     if (img && typeof img.then === 'function') img.then(v => fine(k, chiusa ? null : v || null), () => fine(k, null))
     else fine(k, img)
   }
