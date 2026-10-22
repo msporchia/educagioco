@@ -174,8 +174,9 @@ const saperi = computed(() => saperiDelGioco(chiave.value).map(k => {
       </details>
 
       <div class="blocco" data-gioco-domande>
-        <b>{{ !tutte && !saperi.length && insegna ? insegna.titolo : 'Le domande di questo gioco' }}</b>
-        <p v-if="tutte" class="mini">Pesca da tutte le domande dei quiz, quelle che l'età lascia: si regolano nella sezione «Le domande dei quiz» qui sotto.</p>
+        <b>{{ !tutte && insegna ? insegna.titolo : 'Le domande di questo gioco' }}</b>
+        <p v-if="!tutte && insegna" class="mini insegna" data-gioco-insegna>{{ insegna.testo }}</p>
+        <p v-if="tutte" class="mini">Pesca da tutte le domande dei quiz, già tarate sull'età: di solito non c'è niente da fare. Se una gli va male la trovi in <b>Come va › Difficili</b>, e lì si può spostare o non chiedergliela più.</p>
         <template v-else-if="saperi.length">
           <p class="mini">Sono tarate sull'età: di solito non c'è niente da fare. Se una gli va male la trovi in <b>Come va › Difficili</b>, e lì si può spostare o spegnere.</p>
           <details class="tutte" data-gioco-tutte>
@@ -197,8 +198,7 @@ const saperi = computed(() => saperiDelGioco(chiave.value).map(k => {
           <p class="mini">Le domande sono le stesse in ogni gioco che le usa: spegnerne una vale per tutti, e lo dice accanto.</p>
           </details>
         </template>
-        <p v-else-if="insegna" class="mini insegna" data-gioco-insegna>{{ insegna.testo }}</p>
-        <p v-else class="mini">{{ gioco.che }}.</p>
+        <p v-else-if="!insegna" class="mini">{{ gioco.che }}.</p>
       </div>
     </div>
   </div>

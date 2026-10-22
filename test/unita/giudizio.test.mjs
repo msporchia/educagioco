@@ -19,7 +19,7 @@ const male = riga('m', 12, 'medie')
 const g2 = giudizioDi({ viste: [...bene(9), male], difficili: [male] })
 uguale('una del suo livello: alcune domande', g2.tono, 'alcune')
 uguale('con il titolo che dice «alcune»', g2.titolo, 'Ha difficoltà con alcune domande')
-controlla('e quante su quante', /Una su 10/.test(g2.testo), g2.testo)
+controlla('e quante su quante, con il verbo giusto', /Una su 10 va male/.test(g2.testo), g2.testo)
 
 const mix = giudizioDi({ viste: [...bene(5), male, duro], difficili: [male, duro] })
 uguale('una del livello e una difficile: alcune domande', mix.tono, 'alcune')

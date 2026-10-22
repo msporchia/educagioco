@@ -7,6 +7,7 @@
 import { MODULI } from './nucleo/registro.js'
 import { GIOCHI, chiedeA, serveA } from '../data/giochi.js'
 import { moduliDi } from '../data/domande-dei-giochi.js'
+import { TAPPE_DEL_GIOCO } from '../data/portata-giochi.js'
 import { sorteQualunque } from './nucleo/sorte.js'
 import { sorgentiDi, esempioDi as esempioFra } from './nucleo/esempi.js'
 import { finestraDi } from './nucleo/classi.js'
@@ -50,6 +51,8 @@ export function saperiDelGioco(chiave) {
   for (const m of MODULI) if (moduliDi(chiave).includes(m.id)) for (const t of m.tipi) metti(t.sa[0])
   for (const k of chiedeA(chiave)) metti(k)
   for (const k of serveA(chiave)) metti(k)        // quelli senza cui il gioco non c'è (le pozioni: misure e conversioni)
+  // i pezzi di scuola che le sue tappe dichiarano (`scuola:`): spegnerne uno toglie dalla fila le tappe che lo vogliono (gli Asteroidi: le divisioni)
+  for (const t of TAPPE_DEL_GIOCO[chiave] || []) for (const k of [].concat(t.scuola || [])) metti(k)
   return fuori
 }
 

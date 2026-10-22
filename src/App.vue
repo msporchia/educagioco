@@ -3,6 +3,7 @@ import { ref, watch, onMounted } from 'vue'
 import { init, state } from './store/profile.js'
 import { riavviaAmici } from './amici/avvio.js'
 import { controllaCompleanno } from './store/compleanno.js'
+import { controllaDifficolta } from './store/difficolta.js'
 import { schermoAcceso } from './amici/servizio.js'
 import { ingresso } from './amici/ingresso.js'
 import { initPosta } from './store/posta.js'
@@ -82,7 +83,8 @@ onMounted(async () => {
   // gli amici partono dopo che l'app è pronta e non la aspettano; offline non succede niente
   setTimeout(riavviaAmici, 0)
   setTimeout(controllaCompleanno, 600)
-  watch(() => state.player, () => { setTimeout(riavviaAmici, 0); setTimeout(controllaCompleanno, 600) })
+  setTimeout(controllaDifficolta, 4000)    // dopo l'avvio: il conto guarda tutto il catalogo, e non deve rubare il primo fotogramma
+  watch(() => state.player, () => { setTimeout(riavviaAmici, 0); setTimeout(controllaCompleanno, 600); setTimeout(controllaDifficolta, 4000) })
 })
 function vai(v) { vista.value = v }
 
