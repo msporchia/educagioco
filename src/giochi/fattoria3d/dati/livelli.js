@@ -118,6 +118,10 @@ export const NOMI = {
   tintoria: 'La tintoria',
   friggitoria: 'La friggitoria',
   sushi_bar: 'Il sushi bar',
+  pentolone: 'Il pentolone',
+  anatre: 'Lo stagno delle anatre',
+  porcile: 'Il porcile',
+  capre: 'Le capre',
 }
 
 export function nomeDi(livello) {

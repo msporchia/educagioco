@@ -17,7 +17,7 @@ const COME_2D = { carota: 'carote', patata: 'patate', zucca: 'zucche', pomodoro:
 const id2d = k => COME_2D[k] || k
 // le macchine 3D e la loro sorella 2D (gli id della 3D sono quelli dei salvataggi)
 const SORELLA = { mulino: 'mulino', pasticceria: 'pastificio', panificio: 'panificio', caseificio: 'caseificio', conserviera: 'cucina', gelateria: 'gelateria',
-  telaio: 'telaio', zuccherificio: 'zuccherificio', sartoria: 'sartoria', tintoria: 'tintoria', fienile: 'fienile', friggitoria: 'friggitoria', sushi_bar: 'sushi_bar' }
+  telaio: 'telaio', zuccherificio: 'zuccherificio', sartoria: 'sartoria', tintoria: 'tintoria', fienile: 'fienile', friggitoria: 'friggitoria', sushi_bar: 'sushi_bar', pentolone: 'pentolone' }
 
 const merci = [...Object.keys(COLTURE), ...Object.keys(PRODOTTI_ANIMALI), ...Object.keys(LANA), ...Object.keys(RICETTE)]
 
