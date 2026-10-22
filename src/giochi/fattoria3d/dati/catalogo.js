@@ -26,6 +26,9 @@ export const PEZZI = {
   molo_v:          { nome: 'Molo girato',     emoji: '🪝', w: 1, d: 3, prezzo: 12, rincaro: 0, categoria: 'passaggi', liv: 4, calpestabile: true, suAcqua: true, alzato: 0.14, molo: true },    // lo stesso, per l'acqua che sta a nord o a sud
   porticciolo:     { nome: 'Porticciolo',     emoji: '⚓', w: 4, d: 3, prezzo: 90, rincaro: 0, categoria: 'edifici', liv: 9, suAcqua: true, riva: true, unico: true },       // capanna, pontili e barca: abilita la pesca in mare e rende di più (uno solo, sulla riva)
   tavolo:          { nome: 'Tavolo',          emoji: '🍽️', w: 3, d: 2, prezzo: 18, rincaro: 0, categoria: 'decori', liv: 4 },
+  // le feste (docs/fattoria3d/stagioni.md): si offrono nel menu solo in stagione (`stagione` è una chiave di FINESTRE della fattoria di sempre); comprate restano
+  zucca_intagliata: { nome: 'Zucca intagliata', emoji: '🎃', w: 1, d: 1, prezzo: 6,  rincaro: 0, categoria: 'decori', liv: 2, stagione: 'halloween' },
+  zucche_mucchio:  { nome: 'Due zucche',       emoji: '🎃', w: 2, d: 1, prezzo: 10, rincaro: 0, categoria: 'decori', liv: 2, stagione: 'halloween' },
   trattore:        { nome: 'Trattore',        emoji: '🚜', w: 2, d: 2, prezzo: 40, rincaro: 0, categoria: 'edifici', liv: 7 },     // si tocca e porta ai vicini (docs/fattoria3d/vicini.md)
   ...PEZZI_DEL_CORTILE,    // stagno delle anatre, porcile, capre (giro G4): livelli e prezzi provvisori in dati/cortile.js
 }

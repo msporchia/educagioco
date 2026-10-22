@@ -6,6 +6,7 @@ import { CHIAVI_COLTURE, TESSERE } from '../dati/colture.js'
 import { TIPI_DI_EDIFICIO, EDIFICI, PEZZI } from '../dati/catalogo.js'
 import { TIPI_DI_MACCHINA, MACCHINE, RICETTE, nuovoId } from '../dati/ricette.js'
 import { ANIMALI } from '../dati/animali.js'
+import { ruotabile, rotLetta } from '../dati/rotazione.js'
 import { POSTI } from '../dati/ordini.js'
 import { livelloPer } from '../dati/livelli.js'
 import { ordineInForma } from './ordini.js'
@@ -136,6 +137,7 @@ export function normalizza(letto) {
         x.cibo = numero(c.cibo)
       }
       if (ANIMALI[c.tipo]) x.bestie = bestieInForma(c.tipo, c.bestie)
+      if (ruotabile(c.tipo) && rotLetta(c.rot)) x.rot = rotLetta(c.rot)          // un quarto di giro: assente = 0 (dati/rotazione.js)
       return x
     })
     s.prossimoId = s.cose.reduce((m, c) => Math.max(m, c.id), 0) + 1

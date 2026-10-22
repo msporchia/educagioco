@@ -350,7 +350,7 @@ export class Compagni {
     const evita = cane ? [[cane.x, cane.z, 1.8], ...this._altri(c)] : this._altri(c)
     if (d.vai === 'attorno') return this._vai(c, scegliMeta({ libera, centro: [c.x, c.z], rMin: 2, rMax: 5, rnd: this.rnd, evita }), 'vaga', { poi: { stato: 'sta' } })
     if (d.vai === 'posto') {
-      const b = panchine[Math.floor(this.rnd() * panchine.length)], dim = PEZZI.panchina
+      const b = panchine[Math.floor(this.rnd() * panchine.length)], dim = m.misureCosa(b)          // girata o no
       const centro = [b.i + dim.w / 2, b.j + dim.d / 2]
       const meta = scegliMeta({ libera, centro, rMin: 1.2, rMax: 2.2, rnd: this.rnd, evita })
       return this._vai(c, meta, 'vaga', { poi: { stato: 'dorme', panchina: { id: b.id, i: b.i, j: b.j, x: centro[0], z: centro[1] + 0.05 } } })

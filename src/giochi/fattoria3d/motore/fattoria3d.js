@@ -5,6 +5,7 @@
    (terra, pezzi, edifici, strade; non gli spostamenti, e i rimborsi non la riducono): da lei il livello, che apre le cose. Vedi docs/fattoria3d/regole.md. */
 import { LIM, chiave, cellaDa, lottoDaChiave, cellaDaId, idCella, dentro, lotto, lottoDi, lottoPerId, vicinoDi, VICINI_4, LOTTI_INIZIALI, FISSI, POSTI_STORICI, stradeDiSerie } from '../dati/mondo.js'
 import { PEZZI, EDIFICI, quotaDelPezzo, edificiDaCostruire } from '../dati/catalogo.js'
+import { ruotabile, misureGirate } from '../dati/rotazione.js'
 import { COLTURE, TESSERE } from '../dati/colture.js'
 import { RICETTE, MACCHINE, TIPI_DI_MACCHINA } from '../dati/ricette.js'
 import { POSTI_MASSIMI, postiInForma, prezzoDelPosto } from '../dati/posti.js'
@@ -189,7 +190,7 @@ export class Fattoria3d {
   /** La cosa su una cella: il pezzo che sta sopra (un ponte) prima, poi lo stagno sotto. */
   cosaSu(i, j) { const k = chiave(i, j), id = this.cellaCosa.get(k) || this.cellaAcqua.get(k) || 0; return id ? this.cosa(id) : null }
   _occupa(c, id) {
-    const d = this.misure(c.tipo)
+    const d = this.misureCosa(c)
     if (d.acqua) {          // l'acqua costruita non occupa `cellaCosa` (ci va il ponte); una strada disegnata lì sotto sparisce
       for (let a = 0; a < d.w; a++) for (let b = 0; b < d.d; b++) { const k = chiave(c.i + a, c.j + b); this.cellaAcqua.set(k, id); if (this.strada.get(k) === 1) this.strada.delete(k) }
       return
@@ -217,7 +218,10 @@ export class Fattoria3d {
   // ── i pezzi ──
   get cose() { return [...this.s.cose, ...this.prove] }
   cosa(id) { return this.s.cose.find(c => c.id === id) || this.prove.find(c => c.id === id) || null }
-  misure(tipo) { return PEZZI[tipo] || EDIFICI[tipo] }
+  /** Le misure di un tipo; `rot` (0–3, quarti di giro) le scambia se è dispari: un pezzo girato di 90° occupa d×w (docs/fattoria3d/rotazione.md). */
+  misure(tipo, rot = 0) { const d = PEZZI[tipo] || EDIFICI[tipo]; return d && rot % 2 === 1 && ruotabile(tipo) ? misureGirate(tipo, d) : d }
+  /** Le misure della cosa com'è messa (con la sua rotazione). */
+  misureCosa(c) { return this.misure(c.tipo, c.rot || 0) }
   prezzoPezzo(tipo) {
     const d = PEZZI[tipo]
     if (!d) return EDIFICI[tipo].prezzo               // un edificio costa sempre uguale: ce n'è uno solo
@@ -236,8 +240,8 @@ export class Fattoria3d {
     return { ok: true, costo }
   }
   /** Si può mettere un pezzo di quel tipo con l'angolo in (i, j)? `ignora`: l'id della cosa che si sta spostando. */
-  puoMettere(tipo, i, j, ignora = 0) {
-    const d = this.misure(tipo)
+  puoMettere(tipo, i, j, ignora = 0, rot = 0) {
+    const d = this.misure(tipo, rot)
     if (!d) return { ok: false, motivo: 'sconosciuto' }
     if (d.acqua && ignora) { const x = this.cosa(ignora); if (x && this._ponteSopra(x)) return { ok: false, motivo: 'ponte-sopra' } }
     let terra = false, acqua = false
@@ -271,12 +275,13 @@ export class Fattoria3d {
     }
     return false
   }
-  mettiPezzo(tipo, i, j) {
+  mettiPezzo(tipo, i, j, rot = 0) {
     if (!(this.nelMagazzino(tipo) > 0)) return { ok: false, motivo: 'non-in-magazzino' }
     if (EDIFICI[tipo] && this.s.posseduti[tipo]) return { ok: false, motivo: 'gia-tuo' }
-    const p = this.puoMettere(tipo, i, j)
+    const p = this.puoMettere(tipo, i, j, 0, rot)
     if (!p.ok) return p
     const c = { id: this.s.prossimoId++, tipo, i, j }
+    if (rot % 4 && ruotabile(tipo)) c.rot = rot % 4
     if (EDIFICI[tipo]) this.s.posseduti[tipo] = true
     if (tipo === 'campo') c.tile = nuoveTessere()
     if (tipo === 'recinto') { c.pecore = this.pecoreIniziali(); c.cibo = 0 }
@@ -290,9 +295,9 @@ export class Fattoria3d {
   /** Quanto costa mettere ora un pezzo di quel tipo: 0 se è già pagato (nel magazzino). */
   costoDiMettere(tipo) { return this.nelMagazzino(tipo) > 0 ? 0 : this.prezzoPezzo(tipo) }
   /** Si può pagare e mettere qui? Come `puoMettere`, più il livello e le monete: per il fantasma rosso. */
-  puoCompraEMettere(tipo, i, j) {
+  puoCompraEMettere(tipo, i, j, rot = 0) {
     if (EDIFICI[tipo] && this.s.posseduti[tipo]) return { ok: false, motivo: 'gia-tuo' }
-    const p = this.puoMettere(tipo, i, j)
+    const p = this.puoMettere(tipo, i, j, 0, rot)
     if (!p.ok) return p
     const chiuso = this._chiusa(livelloDelPezzo(tipo))
     if (chiuso) return chiuso
@@ -301,32 +306,52 @@ export class Fattoria3d {
     return { ok: true, costo }
   }
   /** Compra (se non è già nel magazzino) e mette in un solo gesto. Se qualcosa non va non cambia niente e non si paga. */
-  compraEMetti(tipo, i, j) {
-    const p = this.puoCompraEMettere(tipo, i, j)
+  compraEMetti(tipo, i, j, rot = 0) {
+    const p = this.puoCompraEMettere(tipo, i, j, rot)
     if (!p.ok) return p
     if (!(this.nelMagazzino(tipo) > 0)) {
       const c = this.compraPezzo(tipo)
       if (!c.ok) return c
     }
-    const r = this.mettiPezzo(tipo, i, j)
+    const r = this.mettiPezzo(tipo, i, j, rot)
     return r.ok ? { ...r, costo: p.costo } : r
   }
   bestieIniziali() { return [{ fine: null }] }          // una gallina o una mucca sono nel prezzo, con fame
   pecoreIniziali() { return [{ eta: 'adulta', t0: null }] }                      // una pecora è nel prezzo del recinto, con fame come una gallina nel pollaio
-  spostaPezzo(id, i, j, { gratis = false } = {}) {
+  /** Sposta una cosa; `rot` (se detto) la gira. Stesso posto e stessa rotazione: niente da fare, niente da pagare. */
+  spostaPezzo(id, i, j, { gratis = false, rot } = {}) {
     const c = this.cosa(id)
     if (!c) return { ok: false, motivo: 'sconosciuto' }
-    if (c.i === i && c.j === j) return { ok: true, costo: 0 }
-    const p = this.puoMettere(c.tipo, i, j, id)
+    const r1 = rot === undefined || !ruotabile(c.tipo) ? (c.rot || 0) : ((rot % 4) + 4) % 4
+    if (c.i === i && c.j === j && r1 === (c.rot || 0)) return { ok: true, costo: 0 }
+    const p = this.puoMettere(c.tipo, i, j, id, r1)
     if (!p.ok) return p
     const costo = gratis || c.prova ? 0 : COSTI.spostare
     if (!this._paga(costo)) return { ok: false, motivo: 'poche-monete', costo }
-    this._libera(c); c.i = i; c.j = j; this._occupa(c, c.id)
+    this._libera(c); c.i = i; c.j = j
+    if (r1) c.rot = r1; else delete c.rot
+    this._occupa(c, c.id)
     riesaminaPesca(this)
     return { ok: true, costo }
   }
+  /** Gira di un quarto la cosa attorno al suo centro (🪙 1 come spostarla). Se così non ci sta, resta com'è e dice perché. */
+  ruotaPezzo(id, { gratis = false } = {}) {
+    const c = this.cosa(id)
+    if (!c) return { ok: false, motivo: 'sconosciuto' }
+    if (!ruotabile(c.tipo)) return { ok: false, motivo: 'non-ruotabile' }
+    const d0 = this.misureCosa(c), rot = ((c.rot || 0) + 1) % 4, d1 = this.misure(c.tipo, rot)
+    // il centro resta; se cade a mezza cella si arrotonda «in fuori» (così quattro quarti di giro tornano dov'erano) e, se lì non ci sta, dall'altra parte
+    const dx = (d0.w - d1.w) / 2, dz = (d0.d - d1.d) / 2, fuori = v => Math.sign(v) * Math.ceil(Math.abs(v)), dentro = v => Math.sign(v) * Math.floor(Math.abs(v))
+    let ultimo = null
+    for (const [ax, az] of [[fuori(dx), fuori(dz)], [dentro(dx), dentro(dz)], [fuori(dx), dentro(dz)], [dentro(dx), fuori(dz)]]) {
+      if (ultimo && ultimo[0] === ax && ultimo[1] === az) continue
+      ultimo = [ax, az]
+      if (this.puoMettere(c.tipo, c.i + ax, c.j + az, id, rot).ok) return this.spostaPezzo(id, c.i + ax, c.j + az, { gratis, rot })
+    }
+    return this.spostaPezzo(id, c.i + fuori(dx), c.j + fuori(dz), { gratis, rot })          // non ci sta: il rifiuto dice perché
+  }
   _libera(c) {
-    const d = this.misure(c.tipo)
+    const d = this.misureCosa(c)
     if (d.acqua) { for (let a = 0; a < d.w; a++) for (let b = 0; b < d.d; b++) this.cellaAcqua.delete(chiave(c.i + a, c.j + b)); return }       // il ponte sopra resta dov'è
     for (let a = 0; a < d.w; a++) for (let b = 0; b < d.d; b++) { const k = chiave(c.i + a, c.j + b); this.cellaCosa.delete(k); this.cellaPasso.delete(k) }
   }

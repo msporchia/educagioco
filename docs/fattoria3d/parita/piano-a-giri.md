@@ -41,10 +41,10 @@ Rischi:
 | l'erba medica | fatta | C31 |
 | il pentolone | fatta (G4) | [../cortile-e-pentolone.md](../cortile-e-pentolone.md) |
 | conigli, capre, alpaca, asini, maiali, anatre, api | capre, maiali, anatre fatti (G4); restano conigli, alpaca, asini, api | G5 |
-| le stagioni | aperta | G8 |
+| le stagioni | fatta in parte (cielo, fiocchi, addobbi, zucche; mancano costumi e albero) | G8 ([../stagioni.md](../stagioni.md)) |
 | la guida | aperta | G2 |
 | i suoni | parità con la 2D (nessuno): tenere | I26 |
-| ruotare i pezzi | aperta | W6 |
+| ruotare i pezzi | fatta (quarti di giro, tasto ↻) | W6 ([../rotazione.md](../rotazione.md)) |
 | la misura su telefono | aperta | T7 |
 
 Il resto delle voci aperte tecniche resta in [../da-fare.md](../da-fare.md).
