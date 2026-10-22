@@ -22,7 +22,7 @@ const rita = vicinoPerId('nonna-rita')
 const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser)
 await azzera(page)
-await semina(page, { coins: 200, settings: { eta: 8, sperimentali: true } })
+await semina(page, { coins: 5000, settings: { eta: 8, sperimentali: true } })
 
 const cdp = await page.context().newCDPSession(page)
 const tocca = async (x, y) => {
@@ -43,9 +43,9 @@ await page.waitForSelector('[data-f3="campo"] canvas', { timeout: 10000 })
 await page.waitForFunction(() => !!(window.__fattoria3d && window.__fattoria3d.mondo), null, { timeout: 15000 })
 await attendi(page, 800)
 
-/* ── il trattore: il livello e il posto sulla mappa (il livello si porta a 9: Nonna Rita e Tonio sì, gli altri no) ── */
+/* ── il trattore: il livello e il posto sulla mappa (il livello si porta a 33: Nonna Rita (25) e Tonio (33) sì, gli altri no) ── */
 uguale('di partenza una tela sola', await tele(), 1)
-const LIV = sogliaDi(9)
+const LIV = sogliaDi(33)
 const idTrattore = await page.evaluate(liv => {
   const { motore, mondo } = window.__fattoria3d
   motore.s.esperienza = liv
@@ -61,7 +61,7 @@ const idTrattore = await page.evaluate(liv => {
   const lontani = buoni.filter(b => b[2] >= 3)                    // non sotto l'eroe: un tocco sul contadino fermo apre il guardaroba
   lontani.sort((a, b) => a[2] - b[2])
   const posto = lontani[0] || buoni[buoni.length - 1]
-  const r = motore.compraEMetti('trattore', posto[0], posto[1])          // si paga davvero: 40 monete
+  const r = motore.compraEMetti('trattore', posto[0], posto[1])          // si paga davvero: 32 monete
   mondo.cambiato()
   return r.ok ? r.cosa.id : null
 }, LIV)
@@ -83,7 +83,7 @@ await scatto(page, 'fattoria3d-mappa')
 /* ── un villaggio ancora grigio dice il livello e non parte ── */
 await page.locator('[data-vicino="zio-beppe"]').click()
 await attendi(page, 300)
-controlla('un villaggio grigio dice il livello', /livello 11/i.test(await page.locator('[data-f3="mappa-msg"]').innerText()))
+controlla('un villaggio grigio dice il livello', /livello 44/i.test(await page.locator('[data-f3="mappa-msg"]').innerText()))
 uguale('e la tela è ancora una', await tele(), 1)
 
 /* ── il viaggio e la visita ── */

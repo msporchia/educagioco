@@ -13,9 +13,12 @@ export const BERSAGLI = {
   carta: '[data-f3="costruisci-qui"] [data-carta="campo"]',
 }
 
-/** Il primo giro serve solo a chi non ha ancora fatto niente qui: nessuna spesa, nessun raccolto in scorta, nessun prodotto. */
+/** Quanto si spende senza aver «giocato» già: raccogliere il grano costa 🪙1 (il gesto della 2D), e il primo raccolto è proprio il traguardo del primo giro. */
+export const SPESA_DEL_PRIMO_GIRO = 2
+
+/** Il primo giro serve solo a chi non ha ancora fatto niente qui: nessuna spesa vera, nessun raccolto in scorta, nessun prodotto. */
 export function servePrimoGiro({ esperienza = 0, merci = {}, prodotti = {}, lana = 0 } = {}) {
-  if (esperienza > 0 || lana > 0) return false
+  if (esperienza > SPESA_DEL_PRIMO_GIRO || lana > 0) return false
   return !Object.values(merci).some(n => n > 0) && !Object.values(prodotti).some(n => n > 0)
 }
 
@@ -46,4 +49,4 @@ export function guidaDelPrimoGiro(q = {}) {
 }
 
 /** Il primo giro è finito: ha raccolto e ha visto il menu delle costruzioni (o ha già speso). Da lì la guida tace per sempre. */
-export const primoGiroFinito = ({ raccolto = false, visto = false, esperienza = 0 } = {}) => esperienza > 0 || (raccolto && visto)
+export const primoGiroFinito = ({ raccolto = false, visto = false, esperienza = 0 } = {}) => esperienza > SPESA_DEL_PRIMO_GIRO || (raccolto && visto)

@@ -58,7 +58,7 @@ controlla('armato: dice di toccare il campo', /campo/.test(await riga() || ''), 
 await motore(() => { const { motore: m, mondo } = window.__fattoria3d; const c = m.s.cose.find(x => x.tipo === 'campo'); m.semina(c.id, 'grano'); mondo.cambiato() })
 await attendi(page, 600)
 controlla('il grano cresce: la riga lo dice', /cresce/.test(await riga() || ''), await riga())
-await motore(() => { const { motore: m } = window.__fattoria3d; const t0 = Date.now(); m.ora = () => t0 + 60000 })
+await motore(() => { const { motore: m } = window.__fattoria3d; const t0 = Date.now(); m.ora = () => t0 + 6 * 60000 })
 await attendi(page, 700)
 uguale('maturo: l\'anello è su ✂️ Raccogli', await indicato('[data-f3="az-raccogli"]'), 1)
 await motore(() => { const { motore: m, mondo } = window.__fattoria3d; const c = m.s.cose.find(x => x.tipo === 'campo'); for (let k = 0; k < c.tile.length; k++) m.raccogliTessera(c.id, k); mondo.cambiato() })

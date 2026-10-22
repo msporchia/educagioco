@@ -30,8 +30,9 @@ uguale('un foglio che non conosce: tace', guidaDelPrimoGiro(q({ foglio: true }))
 controlla('ogni passo ha un testo corto (si legge a 6 anni)', [q(), q({ semi: true }), q({ modo: 'semina' }), q({ vuoti: 0, maturi: 1 }), q({ vuoti: 0, maturi: 1, modo: 'raccogli' }), q({ vuoti: 0, crescono: 1, secondi: 20 }), q({ raccolto: true }), { campi: 0 }, { campi: 0, costruisci: true }].every(x => guidaDelPrimoGiro(x).testo.length <= 70))
 controlla('serve a chi non ha fatto niente', servePrimoGiro({ esperienza: 0, merci: { grano: 0 }, prodotti: {}, lana: 0 }))
 controlla('non serve a chi ha speso', !servePrimoGiro({ esperienza: 5, merci: {} }))
+controlla('ma il primo raccolto costa 🪙1 e non conta come aver giocato', servePrimoGiro({ esperienza: 1, merci: {} }) && !primoGiroFinito({ esperienza: 1 }))
 controlla('non serve a chi ha già roba in scorta', !servePrimoGiro({ esperienza: 0, merci: { grano: 3 } }))
-controlla('finisce al primo raccolto più il menu, o a una spesa', primoGiroFinito({ raccolto: true, visto: true }) && primoGiroFinito({ esperienza: 1 }) && !primoGiroFinito({ raccolto: true }))
+controlla('finisce al primo raccolto più il menu, o a una spesa', primoGiroFinito({ raccolto: true, visto: true }) && primoGiroFinito({ esperienza: 5 }) && !primoGiroFinito({ raccolto: true }))
 
 /* ══════════ 2. il consiglio ══════════ */
 function mondo({ monete = 1000, liv = 1 } = {}) {
