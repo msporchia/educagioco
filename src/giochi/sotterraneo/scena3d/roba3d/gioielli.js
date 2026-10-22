@@ -6,7 +6,7 @@
 // `indossa(eroe, figura)` → `togli()` appende la collana al collo dell'eroe 3D (poc/eroi-3d/eroi.js). Le misure del busto si leggono dall'eroe.
 import * as THREE from 'three'
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js'
-import { Fucina, sca, cil, con, sfe, ott, toro, poli, cristallo, fiamme, braci, orbita } from './fucina.js'
+import { Fucina, sca, cil, con, sfe, ott, toro, poli, cristallo, braci, orbita } from './fucina.js'
 import { MATERIE, ELEMENTI, PREGIO } from './palette.js'
 import roba from './catalogo-roba.js'
 
@@ -64,7 +64,7 @@ const SCHEDE = {
   'amuleto-29': { f: 'cristallo', gem: ['goccia', 0x1c3ca8, 0.046, { em: 0x3a70e0 }], met: 'oro', cat: ['cordino', CUOIO_S], tipo: 'laterali' },
   'amuleto-30': { f: 'scudetto', gem: ['losanga', 0x0e1650, 0.04, { em: 0x3050c0 }], met: 'oro', cat: ['cordino', CUOIO] },
   'amuleto-31': { f: 'croce', gem: ['tondo', 0xd01a2a, 0.02], met: 'oro', cat: ['cordino', CUOIO] },
-  'amuleto-32': { f: 'ovale', rx: 0.07, ry: 0.058, gem: ['tondo', 0xd8dce2, 0.05, { em: 0xf0f4ff }], met: 'oro', cat: ['cordino', CUOIO], orizz: true },
+  'amuleto-32': { f: 'ovale', rx: 0.07, ry: 0.058, gem: ['tondo', 0xffb27a, 0.05, { em: 0xff9a55 }], met: 'oro', cat: ['cordino', CUOIO], orizz: true },
   'amuleto-33': { f: 'anello', giri: 3, gem: ['sfacc', 0xe02a1e, 0.042], met: 'oro', rig: 'artigli' },
   'amuleto-34': { f: 'anello', giri: 2, gem: ['saetta', 0x2a54e8, 0.044], met: 'cristallo', rig: 'ghiaccio' },
   'amuleto-35': { f: 'anello', giri: 2.5, gem: ['ottagono', 0x9a34e8, 0.044], met: 'rosa', rig: 'cornice', spira: 0x40ff82 },
@@ -162,7 +162,7 @@ function occhiello (c, y, R = 0.013) {
 function borchie (c) {
   const n = [0, 0, 2, 4, 6][c.fig.pregio] || 0, col = c.sch.gem ? c.sch.gem[1] : c.el.gemma
   for (const p of c.punti.slice(0, n)) {
-    c.m(sfe(0.0075, 6, 4), 'hi', p[0], p[1], p[2])
+    c.m(ott(0.0082), 'hi', p[0], p[1], p[2])
     if (c.fig.pregio >= 3) c.f.metti(ott(0.0045), mescola(col, 0xffffff, 0.35), p[0], p[1], p[2] + 0.006, { s: [1, 1, 0.6] }, 'luce')
   }
 }
@@ -205,7 +205,7 @@ const MONTATURE = {
     gemma(c, s.gem, 0, 0, sp / 2 + 0.006)
     c.top = ry + 0.01; c.bot = -ry; c.W = rx
     const nb = s.extra === 'borchie' ? 12 : 8
-    for (let i = 0; i < nb; i++) { const a = i * 2 * PI / nb; c.m(sfe(0.0055, 5, 4), 'hi', Math.cos(a) * rx * 0.895, Math.sin(a) * ry * 0.895, sp / 2 + 0.004) }
+    for (let i = 0; i < nb; i++) { const a = i * 2 * PI / nb; c.m(ott(0.0058), 'hi', Math.cos(a) * rx * 0.895, Math.sin(a) * ry * 0.895, sp / 2 + 0.004, { s: [1, 1, 0.8] }) }
     c.punti = giro(4, 1, PI / 4).map(p => [p[0] * rx * 0.7, p[1] * ry * 0.7, sp / 2 + 0.006])
     c.m(cil(0.009, 0.011, 0.016, 8), 'sc', 0, ry + 0.002, 0)                    // il collarino
     let y = ry + 0.01
@@ -218,9 +218,13 @@ const MONTATURE = {
     const sx = dw * r * 1.12, sy = dh * r * 1.1, t = rob ? 0.011 : sot ? 0.0045 : 0.007
     disco(c, 1, 0.01, 'sc', 0, 0, -0.004, sx * 1.05, sy * 1.05, 20)
     anello(c, 1, t, 'md', 0, 0, 0.002, sx, sy, 20)
-    if (rob) { anello(c, 1, 0.006, 'hi', 0, 0, 0.004, sx * 1.12, sy * 1.12, 20); for (const p of giro(8, 1)) c.m(sfe(0.007, 5, 4), 'hi', p[0] * sx * 1.2, p[1] * sy * 1.2, 0.004) }
+    if (rob) { anello(c, 1, 0.006, 'hi', 0, 0, 0.004, sx * 1.12, sy * 1.12, 20); for (const p of giro(8, 1)) c.m(ott(0.0075), 'hi', p[0] * sx * 1.2, p[1] * sy * 1.2, 0.004) }
     const gm = gemma(c, s.gem, 0, 0, 0.003)
-    for (const sg of [-1, 1]) for (const sv of [0.7, -0.7]) c.f.asta([sg * sx * 1.02, sv * sy * 0.86, 0.002], [sg * sx * 0.62, sv * sy * 0.64, gm.zf + 0.006], 0.0035, 0.002, c.M.hi, c.M.t, 4)
+    for (const sg of [-1, 1]) for (const sv of [0.72, -0.72]) {                      // quattro griffe corte: la base sul bordo e un artiglio che morde l'orlo della gemma
+      const px = sg * sx * 0.99, py = sv * sy * 0.92, th = Math.atan2(-py, -px), dx = Math.cos(th), dy = Math.sin(th)
+      c.m(sfe(0.0068, 5, 3), 'hi', px, py, 0.005, { s: [1, 1, 0.8] })
+      c.m(con(0.0044, 0.013, 4), 'hi', px + dx * 0.0055, py + dy * 0.0055, gm.zf * 0.72 + 0.003, { rz: th - PI / 2, rx: -0.35 * 0 })
+    }
     c.top = sy * 1.1; c.bot = -sy * 1.1; c.W = sx * 1.2
     c.punti = [[sx * 1.15, 0, 0.005], [-sx * 1.15, 0, 0.005], [0, -sy * 1.15, 0.005], [sx * 0.8, -sy * 0.85, 0.005]]
     let y = c.top
@@ -372,9 +376,11 @@ const MONTATURE = {
     if (crepa) { c.p(sca(0.004, 0.036, 0.004), ombra, 0.012, 0.062, 0.05, { rz: 0.5 }); c.p(sca(0.003, 0.03, 0.003), ombra, -0.038, 0.034, 0.052, { rz: -0.3 }); c.p(sca(0.012, 0.012, 0.01), 0x7a5a24, -0.05, 0.05, 0.04) }
     // la luce negli occhi (la morte)
     for (const sg of [-1, 1]) {
-      const e = c.f.libero(sfe(0.0085, 6, 4), s.occhi, sg * 0.026, 0.012, 0.048, 1.5)
+      const e = c.f.libero(sfe(0.0135, 7, 5), s.occhi, sg * 0.026, 0.012, 0.053, 1.0)
+      e.scale.set(1, 1.15, 0.65)
       const ph = sg * 1.3 + hash(c.s) * 6
-      c.an.push(t => { e.material.emissiveIntensity = 1.1 + 0.8 * Math.sin(t * 3 + ph); e.scale.setScalar(0.85 + 0.15 * Math.sin(t * 2.2 + ph)) })
+      c.an.push(t => { e.material.emissiveIntensity = 1.0 + 0.5 * Math.sin(t * 3 + ph); const k = 1 + 0.12 * Math.sin(t * 2.2 + ph); e.scale.set(k, 1.15 * k, 0.65) })
+      c.f.libero(sfe(0.006, 4, 3), 0xd8ffe6, sg * 0.026 + 0.003, 0.016, 0.062, 1.2)   // il punto più luminoso della pupilla
     }
     c.top = 0.09; c.bot = -0.07; c.W = 0.07
     c.m(sfe(0.01, 6, 4), 'sc', 0, 0.086, -0.002); c.m(toro(0.0125, 0.004, 4, 8), 'hi', 0, 0.097, 0)
@@ -446,7 +452,7 @@ function catena (c, [tipo, col, sp = 1]) {
       const sp0 = tipo === 'grosse' ? 0.04 : tipo === 'perline' ? 0.026 : 0.027, n = Math.floor(L * 1.05 / sp0)
       for (let i = 0; i < n; i++) {
         const u = (i + 0.5) / n, p = pt(u, sg), a = Math.atan2(sg * W, L)
-        if (tipo === 'grosse') f.metti(toro(0.019, 0.0062, 4, 6), col, p[0], p[1], p[2], { rz: -a, ry: i % 2 ? PI / 2 : 0, s: [0.8, 1.45, 1] }, 'oro')
+        if (tipo === 'grosse') f.metti(toro(0.019, 0.0062, 3, 5), col, p[0], p[1], p[2], { rz: -a, ry: i % 2 ? PI / 2 : 0, s: [0.8, 1.45, 1] }, 'oro')
         else if (tipo === 'perline') f.metti(ott(0.0095), col, p[0], p[1], p[2], {}, 'pieno')
         else f.metti(sca(0.0135, 0.0245, 0.0045), col, p[0], p[1], p[2], { rz: -a, ry: i % 2 ? PI / 2 : 0 }, 'oro')
       }
@@ -455,6 +461,24 @@ function catena (c, [tipo, col, sp = 1]) {
   const g = f.chiudi()
   g.userData.nome = 'catena'
   return g
+}
+
+// ══════════ le fiamme a lingue ══════════
+// una lingua è un profilo piatto a goccia con la punta piegata, sovrapposta a una più piccola e più chiara: fiamme, non coni. Origine alla base.
+const PROFILO_FIAMMA = [[-0.42, 0.12], [-0.28, 0.0], [0, -0.04], [0.3, 0.0], [0.46, 0.14], [0.44, 0.38], [0.3, 0.6], [0.2, 0.8], [0.06, 1.0], [-0.1, 0.78], [-0.2, 0.7], [-0.38, 0.52], [-0.46, 0.3]]
+let geoFiamma = null
+const lingua = () => {
+  if (!geoFiamma) { geoFiamma = nuda(new THREE.ShapeGeometry(new THREE.Shape(PROFILO_FIAMMA.map(p => new THREE.Vector2(p[0], p[1]))))) }
+  return geoFiamma
+}
+/** Fiamme a lingue sovrapposte nei punti `basi`: `col` esterna, media e interna; guizzano ognuna per conto suo. */
+function fiammeLingue (f, basi, { h = 0.06, w = 0.03, col = [0xe62a08, 0xff7410, 0xffd02a] } = {}) {
+  const l = basi.map((b, i) => ({ b, i, m: [[1, 1, 0], [0.68, 0.72, 0.004], [0.36, 0.5, 0.008]].map(([kw, kh, dz], j) => { const m = f.libero(lingua(), col[j], b[0], b[1], b[2] + dz, 0.85 + j * 0.2); m.material.side = THREE.DoubleSide; m.userData.k = [kw, kh]; return m }) }))
+  return t => { for (const { b, i, m } of l) m.forEach((q, j) => {
+    const k = 0.78 + 0.3 * Math.sin(t * 7 + i * 1.9 + j * 0.9) + 0.1 * Math.sin(t * 16 + i + j)
+    q.scale.set(w * q.userData.k[0] * (1.15 - 0.15 * k), h * q.userData.k[1] * k, 1)
+    q.rotation.z = 0.2 * Math.sin(t * 5 + i * 2.3 + j * 0.6) - 0.05
+  }) }
 }
 
 // ══════════ i motivi dell'elemento ══════════
@@ -469,7 +493,7 @@ function motivo (c) {
     c.an.push(t => { for (const { m, i } of gs) { const u = (t * 0.45 + i * 0.37) % 1; m.position.y = bot * 0.8 - u * 0.075; m.scale.setScalar(Math.min(1, u * 5) * (1 - u * u)) } })
   }
   switch (fig.elemento) {
-    case 'fuoco': c.an.push(fiamme(f, [[-X * 0.8, Y, 0], [X * 0.8, Y, 0], [-X * 0.95, -Y * 0.2, 0], [X * 0.95, -Y * 0.2, 0]].slice(0, n), { h: 0.06 * (k < 1 ? 0.8 : 1), r: 0.013 })); break
+    case 'fuoco': c.an.push(fiammeLingue(f, (c.sch.f === 'anello' ? [[-0.062, 0.03, 0.046], [0.062, 0.03, 0.046], [0, 0.088, 0.05]] : [[-X * 0.45, Y * 0.35, -0.012], [X * 0.45, Y * 0.35, -0.012], [0, Y * 0.62, -0.014]]).slice(0, Math.min(3, n)), { h: 0.085 * (k < 1 ? 0.8 : 1), w: 0.038 })); break
     case 'ghiaccio':
       for (const [x, y, a, L] of [[-X, -bot * 0 - Y * 0.1, 1.2, 0.05], [X, -Y * 0.1, -1.2, 0.05], [-X * 0.5, bot * 0.9, 0.35, 0.044], [X * 0.5, bot * 0.9, -0.35, 0.044]].slice(0, n)) {
         const sg = x < 0 ? -1 : 1
@@ -530,16 +554,21 @@ const eroiPortati = new WeakMap()
 function fronte (eroe, y0, y1, g0) {
   const u = eroe.userData, busto = u.busto, cassa = busto.children[0].geometry.parameters
   eroe.updateMatrixWorld(true)
-  const inv = busto.matrixWorld.clone().invert(), v = new THREE.Vector3()
-  let z = cassa.depth / 2
+  const meshes = []
   busto.traverse(o => {
     if (!o.isMesh || !o.visible) return
     for (let p = o.parent; p; p = p.parent) if (u.bracci.includes(p) || p === g0) return
-    const bb = o.geometry.boundingBox || (o.geometry.computeBoundingBox(), o.geometry.boundingBox)
-    const ca = new THREE.Box3()
-    for (const x of [bb.min.x, bb.max.x]) for (const y of [bb.min.y, bb.max.y]) for (const zz of [bb.min.z, bb.max.z]) ca.expandByPoint(v.set(x, y, zz).applyMatrix4(o.matrixWorld).applyMatrix4(inv))
-    if (ca.min.x < 0.08 && ca.max.x > -0.08 && ca.max.y > y0 && ca.min.y < y1 && ca.max.z > z) z = Math.min(ca.max.z, cassa.depth / 2 + 0.2)
+    meshes.push(o)
   })
+  // raggi dal davanti verso il petto, a più altezze e a tre scarti laterali: la superficie vera (la punta della barba, la pancia), non lo scatolone di una mesh intera
+  const rc = new THREE.Raycaster(), inv = busto.matrixWorld.clone().invert(), p0 = new THREE.Vector3(), d = new THREE.Vector3(0, 0, -1).transformDirection(busto.matrixWorld), v = new THREE.Vector3()
+  let z = cassa.depth / 2
+  for (let i = 0; i <= 5; i++) for (const x of [-0.04, 0, 0.04]) {
+    p0.set(x, y0 + (y1 - y0) * i / 5, 1).applyMatrix4(busto.matrixWorld)
+    rc.set(p0, d)
+    const h = rc.intersectObjects(meshes, false)[0]
+    if (h) { v.copy(h.point).applyMatrix4(inv); if (v.z > z) z = Math.min(v.z, cassa.depth / 2 + 0.5) }
+  }
   return z
 }
 export function indossa (eroe, figura) {
@@ -550,7 +579,11 @@ export function indossa (eroe, figura) {
   const catena = g.userData.catena, yC = g.userData.catenaY
   const lungo = Math.max(0.08, th * 0.3)                                             // quanto sta la catena sul petto
   g.scale.setScalar(sc)
-  g.position.set(0, th - lungo - yC * sc, fronte(eroe, th * 0.3, th, g) + 0.03)                           // la catena sale dritta sul petto fino al collo
+  const yP = th - lungo - yC * sc                                                    // dove sta il ciondolo
+  // il ciondolo poggia dove il busto sporge DAVVERO alla sua altezza (la barba e la pancia, non i baffi più in alto); la catena risale al collo inclinando il tutto
+  const zP = fronte(eroe, yP - th * 0.07, yP + th * 0.07, g) + 0.028, zC = Math.min(zP, fronte(eroe, th * 0.82, th, g) + 0.02)
+  g.position.set(0, yP, zP)
+  g.rotation.x = -Math.atan2(Math.max(0, zP - zC), yC * sc + lungo)
   catena.scale.set(Math.min(0.62, tw * 0.3 / (0.15 * sc)), lungo / (0.34 * sc), 1)
   busto.add(g)
   const togli = () => { busto.remove(g) }
