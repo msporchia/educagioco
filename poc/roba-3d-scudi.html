@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Roba 3D: gli scudi</title>
+<style>
+  :root { --fondo: #14161b; --carta: #1b1e25; --riga: #2c313a; --testo: #e2e5e0; --tenue: #98a09c; --male: #ff8a7a; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 14px; background: var(--fondo); color: var(--testo); font: 12px/1.35 system-ui, sans-serif; }
+  h1 { font-size: 16px; margin: 0 0 4px; }
+  #esito { color: var(--tenue); margin-bottom: 8px; }
+  #esito.male { color: var(--male); }
+  #griglia { display: grid; grid-template-columns: repeat(auto-fill, 325px); gap: 8px; }
+  figure { margin: 0; background: var(--carta); border: 1px solid var(--riga); border-radius: 4px; padding: 4px; }
+  canvas { display: block; border-radius: 3px; width: 315px; height: 315px; }
+  figcaption { font-size: 10.5px; color: var(--tenue); margin-top: 3px; }
+  figcaption b { color: var(--testo); }
+  .grande { grid-template-columns: 1fr; }
+  .grande canvas { width: 900px; height: 800px; }
+</style>
+</head>
+<body>
+<h1>Roba 3D: gli scudi</h1>
+<div id="esito">in corso…</div>
+<div id="griglia"></div>
+<script type="module">
+import { WebGLRenderer, Scene, PerspectiveCamera, HemisphereLight, DirectionalLight, Box3, Vector3, Color, Group, CircleGeometry, Mesh, ShadowMaterial, PCFSoftShadowMap, SRGBColorSpace, ACESFilmicToneMapping } from 'three'
+import roba from '../strumenti/sprite/sorgenti/sotterraneo/generati/roba.json'
+import { crea } from './roba-3d/scudi.js'
+
+const url = new URLSearchParams(location.search)
+const pausa = url.has('pausa'), T0 = Number(url.get('t') || 0)
+const errori = []
+const vecchio = console.error
+console.error = (...a) => { errori.push(a.map(String).join(' ').slice(0, 300)); vecchio.apply(console, a) }
+addEventListener('error', e => errori.push(String(e.message)))
+const prova = window.__prova = { ok: false, errori, figure: {} }
+
+let figure = roba.figure.filter(f => f.id.startsWith('scudo-'))
+const unica = url.get('id')
+if (unica) figure = figure.filter(f => f.id === unica)
+else { const da = Number(url.get('da') || 0), n = Number(url.get('n') || figure.length); figure = figure.slice(da, da + n) }
+
+const grande = !!unica
+const LATO = grande ? 800 : 630
+const renderer = new WebGLRenderer({ antialias: true, preserveDrawingBuffer: true })
+renderer.setPixelRatio(1); renderer.shadowMap.enabled = true; renderer.shadowMap.type = PCFSoftShadowMap
+renderer.outputColorSpace = SRGBColorSpace; renderer.toneMapping = ACESFilmicToneMapping; renderer.toneMappingExposure = 1.1
+renderer.setSize(grande ? 900 : LATO, LATO, false)
+
+function nuovaScena () {
+  const s = new Scene(); s.background = new Color(0x2a3038)
+  s.add(new HemisphereLight(0xfff0d8, 0x6a5a3a, 1.9))
+  const sole = new DirectionalLight(0xfff1dc, 2.6); sole.position.set(3, 6, 5); sole.castShadow = true
+  sole.shadow.mapSize.set(1024, 1024); sole.shadow.radius = 4; sole.shadow.bias = -0.0008; sole.shadow.normalBias = 0.012
+  const c = sole.shadow.camera; c.left = -2.5; c.right = 2.5; c.top = 2.5; c.bottom = -2.5; c.near = 0.5; c.far = 20
+  s.add(sole)
+  const fredda = new DirectionalLight(0xa8c8ff, 0.8); fredda.position.set(-4, 2, -3); s.add(fredda)
+  return s
+}
+const celle = []
+const cont = document.getElementById('griglia'); if (grande) cont.classList.add('grande')
+for (const fig of figure) {
+  try {
+    const m = crea(fig), tri = m.userData.triangoli
+    prova.figure[fig.id] = { triangoli: tri }
+    const s = nuovaScena(), cam = new PerspectiveCamera(30, grande ? 900 / LATO : 1, 0.05, 50)
+    const ruota = new Group(); ruota.add(m); s.add(ruota)
+    if (m.userData.anima) m.userData.anima(T0 + 0.7)
+    const b = new Box3().setFromObject(m), c = b.getCenter(new Vector3()), d = b.getSize(new Vector3())
+    m.position.set(-c.x, -c.y, -c.z)
+    const suolo = new Mesh(new CircleGeometry(0.6, 32), new ShadowMaterial({ opacity: 0.35 })); suolo.rotation.x = -Math.PI / 2; suolo.position.y = -d.y / 2 - 0.04; suolo.receiveShadow = true; s.add(suolo)
+    const raggio = Math.max(d.y, d.x) * 0.64
+    cam.position.set(0, d.y * 0.05, raggio / Math.tan(15 * Math.PI / 180) + 0.1); cam.lookAt(0, 0, 0)
+    const quad = document.createElement('figure'), tela = document.createElement('canvas')
+    tela.width = grande ? 900 : LATO; tela.height = LATO
+    const did = document.createElement('figcaption')
+    did.innerHTML = `<b>${fig.id}</b> ${fig.nome} · ${fig.cosa}<br>${fig.elemento} · ${fig.materia} · pregio ${fig.pregio} · ${tri} tri`
+    quad.append(tela, did); cont.append(quad)
+    celle.push({ m, ruota, s, cam, tela })
+  } catch (e) { errori.push(fig.id + ': ' + String(e.stack || e)) }
+}
+const disegna = t => {
+  for (const k of celle) {
+    k.ruota.rotation.y = pausa ? 0.38 : 0.6 + 0.5 * Math.sin(t * 0.7)
+    if (k.m.userData.anima) k.m.userData.anima(t)
+    renderer.render(k.s, k.cam); k.tela.getContext('2d').drawImage(renderer.domElement, 0, 0, k.tela.width, k.tela.height)
+  }
+}
+try {
+  disegna(T0)
+  if (!pausa) { const t0 = performance.now(); const giro = () => { disegna(T0 + (performance.now() - t0) / 1000); requestAnimationFrame(giro) }; requestAnimationFrame(giro) }
+} catch (e) { errori.push(String(e.stack || e)) }
+const es = document.getElementById('esito')
+const tris = Object.values(prova.figure).map(x => x.triangoli)
+es.textContent = errori.length ? 'errori: ' + errori.join(' | ') : `ok · ${celle.length} figure · max ${Math.max(0, ...tris)} tri`
+es.className = errori.length ? 'male' : ''
+prova.ok = !errori.length
+</script>
+</body>
+</html>
