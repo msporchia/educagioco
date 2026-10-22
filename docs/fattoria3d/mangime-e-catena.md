@@ -55,7 +55,7 @@ cibo è lo stesso. Non mangiano più grano, mais, carote né becchime: un rifiut
 
 ## I livelli
 
-Il fienile sta al **2**, l'unico livello senza una cosa produttiva: prima di tutti i recinti (4, 5, 9). Costa 🪙40 e ha spostato di 40 la
+**Dal 22/10/2026 il fienile è uno solo, la macchina, al livello 6 (🪙150) come in 2D**; il fienile di scena è tolto e i tempi sono in minuti (becchime al 9, foraggio d'erba al 13). Quanto segue è la storia di prima. Il fienile sta al **2**, l'unico livello senza una cosa produttiva: prima di tutti i recinti (4, 5, 9). Costa 🪙40 e ha spostato di 40 la
 soglia dal livello 3 in poi (120 → 160; l'ultimo livello da 400 a 407 minuti, sotto il tetto di 420): è il prezzo di avere il mangime *prima*.
 Provato al livello 1, dove la roba non entra nella soglia: avrebbe acceso un «!» per un edificio inutile fino al 4.
 

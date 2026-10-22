@@ -4,7 +4,11 @@ Giro G4 della parità ([parita/](parita/README.md): C18, C23, A1d–A1f, C30). L
 ricette, mangime, prodotti e cosa mangia chi sono **quelli della fattoria di sempre** ([../fattoria/macchine.md](../fattoria/macchine.md),
 [../fattoria/catena.md](../fattoria/catena.md)); cambiano solo i tempi (minuti → secondi) e la scaletta.
 
-## I numeri provvisori: un punto solo
+## I numeri: dal 22/10/2026 sono della 2D
+
+**Livelli, prezzi e tempi del pentolone e delle tre bestie sono quelli della 2D** (pentolone 23 · 🪙150, anatre 24 · 🪙240 · 6 min, porcile 28 · 🪙260 · 20 min, capre 40 · 🪙280 · 12 min; `NUMERI_DEL_CORTILE` in `dati/cortile.js`, letti da `dati/parita2d.js`); `TETTO_ULTIMO_MIN` non è più 660. Restano solo 3D le capienze e il prezzo delle bestie in più. Tabella e paragrafo «In coda alla scaletta» sotto sono la storia di com'erano (livelli 19–22, 🪙75/120/130/140).
+
+## I numeri provvisori di prima: un punto solo
 
 `dati/cortile.js` (`PROVVISORI`) tiene livelli, prezzi, capienze e tempi di questo giro. La scala (D2) e i tempi (D9) non sono decisi: i valori
 sono coerenti con quelli di oggi e col metro di [calibrazione.md](../apprendimento/calibrazione.md) (🪙1 = 10 s), e **si cambiano lì**. Un test

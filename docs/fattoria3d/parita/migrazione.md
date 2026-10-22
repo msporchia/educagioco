@@ -35,13 +35,13 @@ prova `test/unita/fattoria3d-migra.test.mjs` (fattorie 2D vere a ogni livello, `
 la cosa quando il suo modello arriva (G4–G6), non vale monete e non si spende. Lo stato porta anche `migrato: 1`. Non si portano: i
 piazzamenti, gli ordini aperti al banco, le botteghe e il volo in corso, i nomi e i bisogni delle bestie di casa (i compagni 3D arrivano col livello).
 
-## Il livello (provvisorio fino a D2)
+## Il livello (1 a 1 dal 22/10/2026, D2)
 
 La 2D ha 70 livelli, la 3D 18: la scala è «in proporzione», `1 + round((L − 1) / 69 · 17)` (2D 10 → 3D 3, 35 → 9, 70 → 18; tutto oltre il 70
 sta al 18). L'**esperienza** porta con sé anche la frazione già fatta del livello 2D, sulla banda del livello 3D. Poi il livello **non scende
 sotto** quello che serve a tenere ciò che si ha: un edificio o un pezzo produttivo nel magazzino, e le colture che la 2D aveva già aperto
 (`reclamati`). Il resto degli sblocchi (ricette, pezzi) li dà il livello, come sempre.
-Con D2 (allineare la scala alla 2D) la mappatura diventa l'identità: si cambia `livelloPerProporzione`.
+Fatto: `livelloPerProporzione` è l'identità (70 livelli uguali). La terra è tutta quella che aveva la 2D (324 celle di partenza + 36 a piazzola, col regalo del 5%: `lottiPerPiazzole`, 13 lotti nuovi per chi non ne ha comprate), non più «due lotti a piazzola». Il `mangime` del cane ora è un prodotto del mulino 3D e non è più «da regalare».
 
 ## L'aggancio
 

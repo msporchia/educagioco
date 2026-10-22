@@ -14,7 +14,7 @@ vince il codice.
 | S1 | **Nessun salvataggio si perde.** Chi ha una fattoria 2D la ritrova (convertita) o la tiene finché non decide lui | 🟡 la conversione c'è (`statoDa2D`), manca l'aggancio nel caricamento ([migrazione.md](migrazione.md)) |
 | S2 | **Il posto dove si spendono le monete è uno solo.** Le due fattorie non convivono: ora la 3D spende monete vere accanto alla 2D ([../../fattoria/regole.md](../../fattoria/regole.md) «Il money pit è uno») | 🟡 convivono, la 3D è dietro «giochi in prova» |
 | S3 | **Lo stesso patto**: le monete vengono solo dagli esercizi, niente si vende, niente marcisce, nessun gioco paga una risposta sbagliata, un «no» dice cosa fare ([../../apprendimento/calibrazione.md](../../apprendimento/calibrazione.md)) | ✅ rispettato |
-| S4 | **Dura quanto la 2D**: la scaletta regge mesi, non giorni (2D: 70 livelli, ~202 ore di esercizio spese; 3D: 18 livelli, ~8 ore) | ❌ [livelli-ed-economia.md](livelli-ed-economia.md) |
+| S4 | **Dura quanto la 2D**: la scaletta regge mesi, non giorni (70 livelli, ~202 ore di esercizio spese, uguali) | ✅ G3 (22/10/2026); restano 22 livelli senza novità ([livelli-ed-economia.md](livelli-ed-economia.md)) |
 | S5 | **Niente della 2D manca senza una decisione scritta** («tolto perché…»): ogni macchina, recinto, bestia, bottega, decoro | ❌ [colture-e-catena.md](colture-e-catena.md), [animali.md](animali.md), [commercio.md](commercio.md), [mondo-e-stagioni.md](mondo-e-stagioni.md) |
 | S6 | **Si capisce da soli, a 4–12 anni**: il `?`, il consiglio («cosa faccio adesso»), «Come si fa», il primo giro | 🟡 fatti `?`, primo giro e consiglio ([../guida.md](../guida.md)); fatto anche «Come si fa» (I3); manca la prova con un bambino |
 | S7 | **Gira sui telefoni di casa** e senza WebGL 2 non lascia un bambino senza fattoria | ❌ mai misurata su un telefono; senza WebGL 2 si torna in home ([tecnica-e-salvataggi.md](tecnica-e-salvataggi.md)) |
@@ -35,10 +35,10 @@ vince il codice.
 | addobbi per le bestie | 12 (7 in vendita) | 0 (il guardaroba è del contadino) |
 | botteghe del paese | 4 | 0 |
 | clienti del banco | 16 (per mestiere) | 10 (per tutti) |
-| silos | 3 (scomparti da 8, ingrandibili) | 0 (scorte senza tetto) |
-| livelli | 70 | 22 (19–22 provvisori) |
-| ore di esercizio per arrivare in cima (spesa a 🪙6/min) | ~202 | ~10,85 |
-| celle di terra | piazzole 6×6, rincaro ×1,38 | lotti 4×4 senza confini, rincaro lineare poi quadratico |
+| silos | 3 (scomparti da 8, ingrandibili) | 3 magazzini (scomparti da 8, +2, prezzo 2D), senza pezzi da comprare |
+| livelli | 70 | 70 (gli stessi) |
+| ore di esercizio per arrivare in cima (spesa a 🪙6/min) | ~202 | ~201 |
+| celle di terra | piazzole 6×6, rincaro ×1,38 | lotti 4×4 senza confini, stesso prezzo cella per cella (quantità pareggiata) |
 | stagioni (Halloween, Natale) | sì | no |
 | guida `?`, consiglio, «Come si fa» | sì | `?`, primo giro, consiglio e «Come si fa» |
 | test (file di unità + di integrazione) | ~15 + 8 | 22 + 2 |
@@ -71,7 +71,7 @@ da trascinare con scorrimento ai bordi. Vanno tenuti? Decisione D10 ([decisioni.
 ## I P0 in una riga
 
 1. **T1** agganciare `statoDaCaricare` in `Gioco.vue` (la conversione `statoDa2D` c'è: [migrazione.md](migrazione.md)).
-2. **L1–L3** una scaletta che regge mesi: oggi 18 livelli e ~8 ore; mancano le cose che ne riempiono 70.
+2. ~~**L1–L3** una scaletta che regge mesi~~ fatta (G3): 70 livelli, ~201 ore; mancano le cose che riempiono i 22 livelli senza novità.
 3. **A1–A3** il cortile completo: 8 recinti, il pentolone, le bestie di casa con i loro bisogni.
 4. **T7, T8, T19** misurare la 3D su un telefono vero, decidere cosa fa senza WebGL 2, eseguire le prove d'integrazione.
 5. ~~**I1, I2, I4** la guida~~ fatta (G2); ~~I3~~ «Come si fa» fatto (G2b).

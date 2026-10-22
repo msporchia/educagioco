@@ -9,11 +9,11 @@ Legenda in [README.md](README.md). 2D: [../../fattoria/campi-e-silos.md](../../f
 | id | cosa | 2D | 3D | pri | dove |
 |---|---|---|---|---|---|
 | C1 | le colture | 16 (`dati/coltivazioni.js`) | ✅ le stesse 16 (id singolari: `carota`, `pomodoro`…; il legame è il `pezzo` e un test) | – | `dati/colture.js` |
-| C2 | livello a cui si semina | grano 1, carote 5, mais 11, erba 13, patate/cavolfiori 22, zucche 27, barbabietola 30, pomodori 33, melanzane/peperoni 39, cipolle/aglio 44, fragole 50, lavanda 54, riso 60 | 🟡 compresso: grano/carote 1, mais 2, pomodori 4, patate 6, zucche/cavolfiori 8, erba/cipolle 9, aglio 10, fragole/barbabietola 11, peperoni 12, melanzane 13, lavanda/riso 15 | P0 con L1 | [livelli-ed-economia.md](livelli-ed-economia.md) |
-| C3 | tempo di crescita | grano 5 min … riso 12 min | 🟡 grano 20 s … riso 70 s: da ×8 (peperoni) a ×22 (carote) più veloci, non ×15 per tutti | P1 | D9 |
-| C4 | resa di un campo | `RESA = 1`: un campo, un pezzo, si raccoglie intero | 🟡 4 tessere, un raccolto ciascuna, tagliate una alla volta: 4× la roba per lo stesso campo | P1 | D12 |
-| C5 | prezzo del raccolto | si paga raccogliendo: 🪙1 (🪙2 per mais, zucche, pomodori, melanzane); seminare è gratis | ❌ raccogliere è gratis | P1 | D13 |
-| C6 | prezzo del campo | 🪙22 e +🪙13 a copia (22, 35, 48, 62, 75…), conta anche il baule | 🟡 🪙20 e +8 a copia, conta anche il magazzino | P2 | `dati/catalogo.js` |
+| C2 | livello a cui si semina | grano 1, carote 5, mais 11, erba 13, patate/cavolfiori 22, zucche 27, barbabietola 30, pomodori 33, melanzane/peperoni 39, cipolle/aglio 44, fragole 50, lavanda 54, riso 60 | ✅ gli stessi (G3) | – | [livelli-ed-economia.md](livelli-ed-economia.md) |
+| C3 | tempo di crescita | grano 5 min … riso 12 min | ✅ gli stessi minuti | – | D9 |
+| C4 | resa di un campo | `RESA = 1`: un campo, un pezzo | ✅ quattro tessere, un raccolto in tutto (l'ultima lo consegna) | – | D12 |
+| C5 | prezzo del raccolto | 🪙1 (🪙2 per mais, zucche, pomodori, melanzane) | ✅ stesso, pagato dall'ultima tessera | – | D13 |
+| C6 | prezzo del campo | 🪙22 e +60% a copia (22, 35, 48, 62, 75…) | ✅ la formula della 2D | – | `dati/catalogo.js` |
 | C7 | gli stadi del campo | 7 stati dipinti (da terra nuda a maturo); il seminato si distingue | 🟡 crescita continua (scala, foglie una alla volta, frutto oltre 0,55, colore che matura): si legge brullo → semini → maturo | – | [../scena.md](../scena.md) «Le colture» |
 | C8 | cartelli di coltura | 16 `cartello_*` da posare (decorazione) | ❌ | P2 | [mondo-e-stagioni.md](mondo-e-stagioni.md) |
 | C9 | seminare e raccogliere con un gesto | semi e cesto da trascinare su più campi | 🟡 si arma «semina/raccogli» e si trascina; il contadino cammina | P2 | [interfaccia-e-guida.md](interfaccia-e-guida.md) |
@@ -25,9 +25,9 @@ Le arature non esistono in nessuna delle due.
 
 | id | cosa | 2D | 3D | pri |
 |---|---|---|---|---|
-| C11 | silo del raccolto / della stalla / dispensa | 3 silos da 🪙120, livelli 1 / 4 / 16 | ❌ nessun silo | P1 |
-| C12 | scomparti | 8 pezzi per merce, +2 a ogni ingrandimento (tutti insieme), costo `40+130·ln(1+n)` | ❌ scorte senza tetto | P1 |
-| C13 | scomparto pieno | non si raccoglie e non si paga, il campo resta pronto; il foglio dice cosa fare | ❌ (non può succedere) | P1 |
+| C11 | silo del raccolto / della stalla / dispensa | 3 silos da 🪙120, livelli 1 / 4 / 16 | 🟡 tre magazzini di serie (forma più piccola, D11), ingrandibili dall'inventario | – |
+| C12 | scomparti | 8 pezzi per merce, +2 a ogni ingrandimento, `40+130·ln(1+n)` | ✅ uguali | – |
+| C13 | scomparto pieno | non si raccoglie e non si paga, il campo resta pronto | ✅ vale per campi, bestie, tosa, macchine e pesca; il consiglio porta all'inventario | – |
 | C14 | «chi la usa» sulla roba | premere una merce dice dove si lavora (`dati/usi.js`) + «Come si fa» | 🟡 l'inventario dice «a cosa serve» in una frase (`dati/usi.js`) e ha il tasto «🌳 Come si fa» (I3); resta il «chi la usa» come foglio e gli scomparti (C11–C13) | P2 |
 | C15 | carretto del vicino per svuotare lo scomparto | roba 5 → 1, mai monete | ❌ (senza scomparti non serve; i vicini sono un'altra cosa) | P2 |
 
@@ -66,8 +66,8 @@ Ogni migrazione e ogni nuova bottega 3D deve tenerne conto ([commercio.md](comme
 | C17 | le 4 «di bestia» (uova, latte, lana, pesce) | ✅ sono i prodotti delle bestie e della pesca | – |
 | C18 | le 9 di macchine non portate: mangime, zuppa, beverone, zuppa_orto, pastura, fiorume, fiorume_concime, merenda, caramelle | 🟡 le quattro del pentolone ✅ (G4); restano mangime, fiorume, fiorume_concime, merenda, caramelle | P1 le altre |
 | C19 | le 7 di recinti non portati: lana_angora, uova_anatra, tartufi, latte_capra, miele, lana_alpaca, concime | ❌ | P0/P1 ([animali.md](animali.md)) |
-| C20 | tempi | 🟡 minuti → secondi (×60) | P1 D9 |
-| C21 | costo per lavorazione | 2D: 🪙0 (8 ricette), 🪙1 (42), 🪙2 (7) a ogni avvio; 3D: ❌ gratis | P1 D13 |
+| C20 | tempi | minuti | ✅ gli stessi minuti | – |
+| C21 | costo per lavorazione | 🪙0 (8 ricette), 🪙1 (42), 🪙2 (7) a ogni avvio | ✅ uguale (e 🪙1 a pasto per le bestie) | – |
 | C22 | `parmigiana` ha l'emoji 🍆 | ✅ uguale (manca il disegno in entrambe) | P2 |
 | C23 | zucca e patata con poche uscite (la 2D le manda al pentolone) | ✅ zucca → pastone, patata → verdure lesse (G4) | – |
 | C24 | merci | 2D 66 prodotti, 3D 60 (mancano almeno mangime, fiori, merenda, miele, concime, caramelle; arrivati zuppa, beverone, pastura, tartufi) | segue C18–C19 |

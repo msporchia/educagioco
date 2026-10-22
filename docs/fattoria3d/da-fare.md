@@ -4,8 +4,12 @@ Le voci aperte tecniche. Una riga ciascuna, e quando una si chiude si toglie. Qu
 
 - **Misurare su un telefono vero.** Tutti i numeri di peso (draw call, fps, caldo, batteria) sono da SwiftShader; il
   pannello ⚙ e «Mostra il rapporto» servono a questo. Il degrado adattivo c'è (`dati/degrado.js`, scende sotto 30 fps): dopo la misura si tarano le soglie.
-- **Giocare la taratura.** Prezzi e tempi sono misurati sul metro (`npm run tara:fattoria3d`, [livelli.md](livelli.md)) ma non ancora giocati da un
-  bambino: la lana (25 s), il riposo del banco (3 minuti) e quello della mongolfiera (2 minuti) restano da prova.
+- **Giocare la scala della 2D nella 3D** (G3, 22/10/2026, [livelli.md](livelli.md)): livelli, prezzi, tempi in minuti, costo dei gesti e scomparti sono quelli della 2D e misurati
+  (`npm run tara:fattoria3d`), ma mai giocati con un bambino. Da vedere: la terra (i primi lotti costano 🪙4–15 perché la 3D parte con meno celle della 2D), la pesca a un ciclo di 15 minuti
+  per banco, i 22 livelli senza novità, i magazzini ingrandibili dall'inventario (bottoni in fondo), e un salvataggio vero di prima che si porta sulla scala nuova.
+- **Le bestie in più dentro un recinto non esistono in 2D.** Una 3D con 6 galline in parallelo produce più di un pollaio 2D (che lavora una ricetta alla volta): parità non decisa, i prezzi delle bestie restano 3D.
+- **Il `mangime` del mulino** (cibo di cane e gatto) c'è e serve solo ai compagni, che non mangiano ancora (G6).
+- **`npm run parita:fattoria3d` (T22) non c'è**: la parità la tiene `guastiDiParita()` (taratura) e `unita/fattoria3d-parita`.
 - **Giocare i prezzi delle bestie.** Pecora 20 (+10), gallina 15 (+8), mucca 30 (+15) sono scelti sul metro di
   [calibrazione.md](../apprendimento/calibrazione.md) e sul prezzo del pezzo, non ancora giocati; i fogli ridisegnati
   (macchine, banco, livelli) non sono stati visti su uno schermo da 360 px.

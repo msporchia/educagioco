@@ -46,7 +46,7 @@ Com'è fatta e cosa converte: [migrazione.md](migrazione.md).
 | T18 | unità | ~15 file (fattoria, tipo, mercato, botteghe, mongolfiera, coda, bolla, spinta, stagioni, addobbi, albero, animali, consiglio, coltivazioni, livelli) | ✅ 22 file | – |
 | T19 | integrazione col dito | 8 file | 🟡 2 file, **aggiornati ma non eseguiti** dopo molti giri (la build era vietata): `fattoria3d`, `fattoria3d-vicini` | **P0** |
 | T20 | una fattoria già giocata a ogni livello | `unita/fattoria-tipo` | ❌ | P1 |
-| T21 | un test di parità 2D/3D: ogni macchina, recinto, ricetta, bottega della 2D è in 3D o è in una lista di deviazioni dichiarate (come `MANCANTI` di `unita/fattoria3d-merci`) | – | ❌ solo le ricette | P1 |
+| T21 (in parte fatto: `unita/fattoria3d-parita` confronta prezzi, livelli, tempi, costi e scomparti voce per voce) | un test di parità 2D/3D: ogni macchina, recinto, ricetta, bottega della 2D è in 3D o è in una lista di deviazioni dichiarate (come `MANCANTI` di `unita/fattoria3d-merci`) | – | ❌ solo le ricette | P1 |
 | T22 | un comando che rifa i numeri di questa cartella (`npm run parita:fattoria3d`) | – | ❌: oggi si ricavano importando i dati; la regola «niente cose una tantum» vuole uno strumento in `strumenti/` | P1 |
 | T23 | `npm run test:misure` per l'equilibrio | `tara` (livelli) | ✅ `tara:fattoria3d` | – |
 

@@ -8,7 +8,7 @@ come e perché in [mondo-infinito.md](mondo-infinito.md); i laghetti in [laghi.m
 
 Il mondo è fatto di lotti da 4×4 con coordinate intere `(a, b)` qualunque. Se ne hanno nove all'inizio, il quadrato 3×3 nel mezzo
 (`LOTTI_INIZIALI`); **qualunque lotto che confina** (4 direzioni, `confina`) con uno proprio si compra, così il terreno resta
-d'un pezzo. Il prezzo sale a ogni lotto e si auto-limita (`prezzoLotto`, `prezzoDelLotto`: [mondo-infinito.md](mondo-infinito.md)).
+d'un pezzo. Il prezzo è quello della terra della 2D contato sulle celle ([livelli.md](livelli.md) «La terra»); sale a ogni lotto e si auto-limita (`prezzoLotto`, `prezzoDelLotto`: [mondo-infinito.md](mondo-infinito.md)).
 
 - **Dentro il terreno proprio tutto si può mettere dappertutto**: campi, recinti, bancarelle, fontane, strade. Niente zone, salvo
   **l'acqua** dei laghetti, e quella degli stagni che il bambino costruisce (solo ponte e passerella). **Anche gli edifici unici** (mulino,
