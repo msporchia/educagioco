@@ -13,6 +13,7 @@ import {
 } from '../../../src/giochi/fattoria3d/scena3d/modelli.js'
 import { creaZuccherificio, creaTelaio, creaSartoria, creaTintoria, creaFienileMacchina, creaFriggitoria, creaSushiBar } from '../../../src/giochi/fattoria3d/scena3d/modelli-macchine.js'
 import { creaMolo, creaPorticciolo } from '../../../src/giochi/fattoria3d/scena3d/modelli-pesca.js'
+import { creaStagnoAnatre, creaPorcile, creaRecintoCapre, creaPentolone, creaAnatra, creaMaiale, creaCapra } from '../../../src/giochi/fattoria3d/scena3d/modelli-cortile.js'
 import { galleggiante } from '../../../src/giochi/fattoria3d/scena3d/pesca3d.js'
 import { Pesci } from '../../../src/giochi/fattoria3d/scena3d/pesci.js'
 import { materialeAcqua, materialeMare } from '../../../src/giochi/fattoria3d/scena3d/modelli-acqua.js'
@@ -36,6 +37,7 @@ if (indirizzo.has('senzafondi')) FONDI.acceso = false        // e `&senzafondi=1
 
 const M = 'src/giochi/fattoria3d/scena3d/modelli.js'
 const MM = 'src/giochi/fattoria3d/scena3d/modelli-macchine.js'
+const MCT = 'src/giochi/fattoria3d/scena3d/modelli-cortile.js'
 const MC = 'src/giochi/fattoria3d/scena3d/modelli-compagni.js'
 const MCO = 'src/giochi/fattoria3d/scena3d/modelli-colture.js'
 const T = 'src/giochi/fattoria3d/scena3d/terreno.js'
@@ -53,11 +55,11 @@ const CRESCITE = [0.75, 1, 0.2, 0.45]    // le tessere: dietro a sinistra, dietr
 const FINE = Date.now() - 1000          // «pronta»: la gallina mostra l'uovo, la mucca il secchio
 // i tre stadi di un animale (docs/fattoria3d/animali.md, «I tre stadi»): 'fame', 'lavora' (a metà, p = 0,5) e 'pronta'. Lo stato si ricalcola a ogni fotogramma
 // (l'ora passa), e il modello è fermo in un punto (niente passeggiate) e già nello stadio, anche nella scheda che non anima.
-const MS = { gallina: ANIMALI.pollaio.ms, mucca: ANIMALI.stalla.ms }
+const MS = { gallina: ANIMALI.pollaio.ms, mucca: ANIMALI.stalla.ms, anatra: ANIMALI.anatre.ms, maiale: ANIMALI.porcile.ms, capra: ANIMALI.capre.ms }
 const statoBestia = (specie, stadio) => { const t = Date.now(); return { fine: stadio === 'fame' ? null : stadio === 'pronta' ? t - 1000 : t + MS[specie] * 0.5 } }
 const statoPecora = (stadio) => { const t = Date.now(); return { eta: 'adulta', t0: stadio === 'fame' ? null : stadio === 'pronta' ? t - PECORE.laneMs - 1000 : t - PECORE.laneMs * 0.5 } }
 function inStadio (specie, stadio) {
-  const fai = specie === 'gallina' ? () => creaGallina(0) : specie === 'mucca' ? () => creaMucca(0) : () => creaPecora()
+  const fai = specie === 'gallina' ? () => creaGallina(0) : specie === 'mucca' ? () => creaMucca(0) : specie === 'anatra' ? () => creaAnatra(0) : specie === 'maiale' ? () => creaMaiale(0) : specie === 'capra' ? () => creaCapra(0) : () => creaPecora()
   const passo = (g, dt, t) => specie === 'pecora' ? muoviPecore({ userData: { pecore: [g] } }, dt, t, null, [statoPecora(stadio)], Date.now()) : muoviBestie({ userData: { bestie: [g] } }, dt, t, [statoBestia(specie, stadio)], Date.now())
   return {
     crea: () => { const g = fai(); g.userData.attesa = 1e9; g.userData.zona && (g.userData.zona = { x0: 0, x1: 0, z0: 0, z1: 0 }); passo(g, 0.016, 0.6); return g },
@@ -68,6 +70,7 @@ const NOMI_STADIO = { fame: 'ha fame', lavora: 'al lavoro (a metà)', pronta: 'p
 const stadi = (specie, nome, file, dove) => ['fame', 'lavora', 'pronta'].map(st => ({
   id: `fattoria:${specie}-${st}`, nome: `${nome} · ${NOMI_STADIO[st]}`, gioco: 'fattoria', categoria: 'animale', dove: `${dove}: lo stadio «${NOMI_STADIO[st]}» (bestie-puro.js)`, file, ...inStadio(specie, st),
 }))
+const statiCortile = (n = 6) => Array.from({ length: n }, (_, k) => ({ fine: k % 3 === 0 ? FINE : k % 3 === 1 ? null : Date.now() + 9e6 }))    // pronta, fame, al lavoro, a giro
 const statiStalla = () => [{ fine: FINE }, { fine: null }, { fine: Date.now() + 9e6 }, { fine: null }]   // la stalla piena: pronta, fame, al lavoro, fame
 
 /** Le animazioni che il gioco fa nei pezzi.js, riprese una per una (le firme di `userData.anima` non sono uguali). */
@@ -109,6 +112,16 @@ export const VOCI = [
     file: `${M}:creaStalla`, misure: celle(PEZZI.stalla),
     crea: () => creaStalla(statiStalla()),
     anima: (g, dt, t) => muoviBestie(g, dt, t, statiStalla(), Date.now()) },
+  { id: 'fattoria:stagno-anatre', nome: 'Stagno delle anatre', gioco: 'fattoria', categoria: 'edificio', dove: pezzo('anatre') + ': lo stagno con le ninfee, il pontile, la casetta e fino a sei anatre',
+    file: `${MCT}:creaStagnoAnatre`, misure: celle(PEZZI.anatre),
+    crea: () => creaStagnoAnatre(statiCortile()), anima: (g, dt, t) => muoviBestie(g, dt, t, statiCortile(), Date.now()) },
+  { id: 'fattoria:porcile', nome: 'Porcile', gioco: 'fattoria', categoria: 'edificio', dove: pezzo('porcile') + ': casetta di assi, fango, truogolo e fino a quattro maiali',
+    file: `${MCT}:creaPorcile`, misure: celle(PEZZI.porcile),
+    crea: () => creaPorcile(statiCortile(4)), anima: (g, dt, t) => muoviBestie(g, dt, t, statiCortile(4), Date.now()) },
+  { id: 'fattoria:capre', nome: 'Capre', gioco: 'fattoria', categoria: 'edificio', dove: pezzo('capre') + ': la roccia a gradini, la tettoia col fieno e fino a quattro capre',
+    file: `${MCT}:creaRecintoCapre`, misure: celle(PEZZI.capre),
+    crea: () => creaRecintoCapre(statiCortile(4)), anima: (g, dt, t) => muoviBestie(g, dt, t, statiCortile(4), Date.now()) },
+  { id: 'fattoria:pentolone', nome: 'Pentolone', gioco: 'fattoria', categoria: 'edificio', dove: unico('pentolone') + ': il pentolone di ferro che bolle sul fuoco, le fiamme e le bolle, le zucche e le patate accanto', file: `${MCT}:creaPentolone`, misure: celle(EDIFICI.pentolone), crea: () => creaPentolone(), anima: animaEdificio },
   { id: 'fattoria:bancarella', nome: 'Banco della guaritrice (la bancarella)', gioco: 'entrambi', categoria: 'prop',
     dove: pezzo('bancarella') + ': il banco della guaritrice del Sotterraneo (tendone a strisce, boccette, erbe, frutta); apre il banco degli ordini come la bacheca',
     file: `${D}:bancoDellaGuaritrice`, misure: celle(PEZZI.bancarella), crea: () => creaBancarella() },
@@ -189,6 +202,15 @@ export const VOCI = [
   ...stadi('gallina', 'Gallina', `${M}:creaGallina`, 'nel pollaio'),
   ...stadi('mucca', 'Mucca', `${M}:creaMucca`, 'nella stalla'),
   ...stadi('pecora', 'Pecora', `${M}:creaPecora`, 'dentro il recinto'),
+  ...stadi('anatra', 'Anatra', `${MCT}:creaAnatra`, 'nello stagno'),
+  ...stadi('maiale', 'Maiale', `${MCT}:creaMaiale`, 'nel porcile'),
+  ...stadi('capra', 'Capra', `${MCT}:creaCapra`, 'nel recinto delle capre'),
+  { id: 'fattoria:anatra-bianca', nome: 'Anatra bianca', gioco: 'fattoria', categoria: 'animale', dove: 'nello stagno, posti pari', file: `${MCT}:creaAnatra`, crea: () => creaAnatra(0) },
+  { id: 'fattoria:anatra-selvatica', nome: 'Anatra selvatica', gioco: 'fattoria', categoria: 'animale', dove: 'nello stagno, posti dispari (testa verde)', file: `${MCT}:creaAnatra`, crea: () => creaAnatra(1) },
+  { id: 'fattoria:maiale-rosa', nome: 'Maiale rosa', gioco: 'fattoria', categoria: 'animale', dove: 'nel porcile, posti pari', file: `${MCT}:creaMaiale`, crea: () => creaMaiale(0) },
+  { id: 'fattoria:maiale-bruno', nome: 'Maiale bruno', gioco: 'fattoria', categoria: 'animale', dove: 'nel porcile, posti dispari', file: `${MCT}:creaMaiale`, crea: () => creaMaiale(1) },
+  { id: 'fattoria:capra-bianca', nome: 'Capra bianca', gioco: 'fattoria', categoria: 'animale', dove: 'nel recinto delle capre, posti pari', file: `${MCT}:creaCapra`, crea: () => creaCapra(0) },
+  { id: 'fattoria:capra-bruna', nome: 'Capra bruna', gioco: 'fattoria', categoria: 'animale', dove: 'nel recinto delle capre, posti dispari', file: `${MCT}:creaCapra`, crea: () => creaCapra(1) },
 
   // ── chi gira per la fattoria ──
   // il contadino e la contadina, vestibili (dati/abiti.js, docs/fattoria3d/guardaroba.md): l'abito di serie e qualche altro per giudicare i capi
