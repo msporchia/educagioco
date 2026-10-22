@@ -3,7 +3,7 @@
 // piazze, campi) dove la cella non vista è velo di nuvole chiare, sfumato ai bordi; un OGGETTO (case, alberi, monumenti) che si
 // vede tutto intero o niente, letto alla cella della sua base (l'istanza, o l'attributo `aBase` per il kit unito), e che entrando
 // in vista sale dal terreno. Le uniform sono una copia sola per tutti. docs/sotterraneo/grafica-3d.md, «La nebbia di sopra».
-import { Vector2, MeshDepthMaterial, RGBADepthPacking, DataTexture, RedFormat, UnsignedByteType, NearestFilter } from 'three'
+import { Vector2, Vector3, MeshDepthMaterial, RGBADepthPacking, DataTexture, RedFormat, UnsignedByteType, NearestFilter } from 'three'
 import { PEZZO } from './pezzi.js'
 
 export const U = {
@@ -14,6 +14,18 @@ export const U = {
   uVeduta: { value: 0 },        // 0..1, quanto si è saliti nella veduta: il fuori mappa si sbiadisce
   uMappa: { value: new Vector2(1, 1) },
   uPezzi: { value: null },      // un texel per pezzo (pezzi.js): 1 dove il pezzo vicino è costruito, e lì il mondo lontano si toglie
+  uTinta: { value: new Vector3(1, 1, 1) },   // la tinta della terra (TERRE della scheda): moltiplica il colore di tutto il mondo
+  uCielo: { value: new Vector3(1, 1, 1) },   // e quella del cielo, rispetto al cielo della prima terra
+}
+// La tinta di una terra (dati/mondo-aperto.js, TERRE; docs/sotterraneo/terre-successive.md): la prima è [1, 1, 1], le altre
+// colorano terreno, case e alberi, e il cielo (la sfera, lo sfondo e la foschia) in proporzione al cielo della prima. Torna il fattore
+// del cielo, [r, g, b], per lo sfondo e la foschia della scena
+const CIELO_DI_CASA = [150, 200, 240]
+export function tingi(terra) {
+  const t = (terra && terra.tinta) || [1, 1, 1], c = (terra && terra.cielo) || CIELO_DI_CASA
+  const k = c.map((v, i) => v / CIELO_DI_CASA[i])
+  U.uTinta.value.set(t[0], t[1], t[2]); U.uCielo.value.set(k[0], k[1], k[2])
+  return k
 }
 // la trama dei pezzi costruiti, una per mondo: `segna(costruiti)` la riscrive (solo quando cambia qualcosa, non a fotogramma)
 export function tramaDeiPezzi(nx, nz) {
@@ -36,7 +48,7 @@ export const GLSL_RUMORE = /* glsl */`
   float frumore (vec2 p) { return vrumore(p) * 0.55 + vrumore(p * 2.1 + 7.3) * 0.3 + vrumore(p * 4.3 + 1.7) * 0.15; }
 `
 export const GLSL_CIELO = /* glsl */`
-  uniform float uTempo; uniform sampler2D uVisto; uniform float uNebbia; uniform vec2 uMappa; uniform float uVeduta;
+  uniform float uTempo; uniform sampler2D uVisto; uniform float uNebbia; uniform vec2 uMappa; uniform float uVeduta; uniform vec3 uTinta;
   ${GLSL_RUMORE}
   float ombraNuvole (vec2 xz) {
     float n = frumore(xz * 0.03 + vec2(uTempo * 0.018, uTempo * 0.011));
@@ -93,8 +105,10 @@ export function vesti(mat, { vento = 0, rigido = 0, nuvole = true, nebbia = true
       sh.fragmentShader = sh.fragmentShader.replace('#include <aomap_fragment>', `{ float on = ombraNuvole(vMondo.xz);
         reflectedLight.directDiffuse *= on; reflectedLight.directSpecular *= on; }
         #include <aomap_fragment>`)
-    if (nebbia && !oggetto) sh.fragmentShader = sh.fragmentShader.replace('#include <fog_fragment>', `#include <fog_fragment>
-        gl_FragColor.rgb = nebbiaSu(gl_FragColor.rgb, vMondo);`)
+    // la tinta della terra prima della nebbia: il velo delle nuvole resta bianco
+    sh.fragmentShader = sh.fragmentShader.replace('#include <fog_fragment>', `gl_FragColor.rgb *= uTinta;
+        #include <fog_fragment>${nebbia && !oggetto ? `
+        gl_FragColor.rgb = nebbiaSu(gl_FragColor.rgb, vMondo);` : ''}`)
     if (prima) prima(sh)
   }
   mat.customProgramCacheKey = () => `mondo-${vento}-${rigido}-${nuvole}-${nebbia}-${oggetto}-${lontano}-${mat.name || ''}`

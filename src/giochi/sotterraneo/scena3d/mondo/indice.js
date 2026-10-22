@@ -10,7 +10,7 @@ import { ATLANTE, PEZZI } from '../../dati/atlante.js'
 import { caricaZona, scaricaZona, zonaDi, zoneAttorno } from '../../motore/mondo-percorso.js'
 import { creaContesto } from '../contesto.js'
 import { normaliAtlante } from '../trame.js'
-import { U, vesti, tramaDeiPezzi } from './vesti.js'
+import { U, vesti, tramaDeiPezzi, tingi } from './vesti.js'
 import { creaTrame } from './trame.js'
 import { materialiDelSuolo, terrenoDelPezzo, creaFuori, creaPiazza, campiDelPezzo } from './terreno.js'
 import { creaAcqua, creaCielo } from './acqua.js'
@@ -54,6 +54,8 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = [], fon
   const scena = new Scene()
   scena.background = CIELO.clone()
   scena.fog = new Fog(CIELO, 80, 260)
+  // la tinta della terra (docs/sotterraneo/terre-successive.md): il terreno e le cose nei loro shader, qui lo sfondo e la foschia
+  { const k = tingi(m.terraDi); scena.background.multiply(new Color(...k)); scena.fog.color.multiply(new Color(...k)) }
   scena.add(new HemisphereLight(0xcfe4ff, 0x6a5a3a, 1.35))
   const sole = new DirectionalLight(0xfff1dc, 2.6)
   sole.castShadow = true
