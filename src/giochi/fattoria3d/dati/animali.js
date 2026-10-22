@@ -9,11 +9,13 @@ import { PECORE } from './regole.js'
 import { PESCI } from './pesca.js'
 import { lavoroDelMangime, MANGIMI } from './mangime.js'
 import { ANIMALI_DEL_CORTILE, TARTUFI } from './cortile.js'
+import { bestia2d, msDaMinuti } from './parita2d.js'
 
 export const ANIMALI = {
   pollaio: {
     bestia: 'gallina', bestie: 'galline', emoji: '🐔', prodotto: 'uova', evento: 'uovo',
-    ms: 25000,                    // dal pasto all'uovo
+    ms: msDaMinuti(bestia2d('pollaio').minuti),       // dal pasto all'uovo: i minuti della ricetta 2D (8)
+    costo: bestia2d('pollaio').costo,                 // 🪙 a ogni pasto dato a una bestia (come avviare la ricetta in 2D)
     mangia: ['becchime'],         // il mangime della 2D (ricette del fienile): 2 becchimi → 1 uovo
     pasti: 2,                     // pezzi di mangime per pasto
     posti: 6,                     // galline al massimo (la capienza del pollaio)
@@ -22,7 +24,8 @@ export const ANIMALI = {
   },
   stalla: {
     bestia: 'mucca', bestie: 'mucche', emoji: '🐄', prodotto: 'latte', evento: 'latte',
-    ms: 40000,
+    ms: msDaMinuti(bestia2d('stalla').minuti),         // 10 minuti
+    costo: bestia2d('stalla').costo,
     mangia: ['foraggio'],         // 2 foraggi → 1 latte
     pasti: 2,
     posti: 4,
