@@ -6,11 +6,13 @@ import { proveCpu } from './prove.js'
 import { eventiContesto } from './veri/tela.js'
 
 export const SOGLIA = 33          // ms di lavoro al p95: oltre, a scatti (30 fps)
-export const SALTA_OLTRE = 66     // una scena oltre questo al p95: il resto della sua serie non si misura (sarebbe peggio)
+export const SALTA_OLTRE = 66     // una scena oltre questo al p95: il resto della sua serie che cresce non si misura (sarebbe peggio)
 const LENTO = 33
+// [minimo, tetto] in ms; `quadri`: i fotogrammi che una finestra vuole almeno (a 500 ms l'uno, il telefono imitato, il tempo da solo
+// darebbe dieci fotogrammi); `fine`: il tetto di una fase anche senza i fotogrammi
 const TEMPI = {
-  normale: { rodaggio: [2000, 5000], misura: [5000, 8000], finestra: 1500 },
-  corto: { rodaggio: [120, 300], misura: [250, 500], finestra: 120 },        // le prove (`window.__benchmarkCorto`)
+  normale: { rodaggio: [2000, 5000], misura: [5000, 8000], finestra: 1500, quadri: 15, fine: 20000 },
+  corto: { rodaggio: [120, 300], misura: [250, 500], finestra: 120, quadri: 0, fine: 3000 },        // le prove (`window.__benchmarkCorto`)
 }
 
 const discese = () => import('./veri/discese.js')
@@ -19,7 +21,7 @@ const tre = n => ({ mostri: 3, ...n })
 export const TAPPE = [
   { gruppo: 'calore', carica: discese, scene: [{ id: 'cal-1', nome: 'riferimento, 8 mostri con gli effetti', mostri: 8, colpi: true }] },
   { gruppo: 'discese', carica: discese, scene: [
-    ...[1, 3, 6, 8].map(n => ({ id: `sot-${n}`, nome: `${n} mostr${n > 1 ? 'i' : 'o'} con gli effetti`, mostri: n, colpi: true, serie: 'discese', quanti: n })),
+    ...[1, 3, 6, 8].map(n => ({ id: `sot-${n}`, nome: `${n} mostr${n > 1 ? 'i' : 'o'} con gli effetti`, mostri: n, colpi: true, serie: 'discese', quanti: n, cresce: true })),
     ...[1, 2, 4, 8].map(k => tre({ id: `tri-${k}`, nome: `triangoli x${k}`, tri: k, serie: 'triangoli', quanti: k })),
     ...[2, 4].map(k => tre({ id: `ch-${k}`, nome: `chiamate x${k}`, ch: k, serie: 'chiamate', quanti: k })),
   ] },
@@ -30,15 +32,15 @@ export const TAPPE = [
   ...[1, 1.41, 2].map(d => ({ gruppo: 'pixel', carica: discese, opz: { dpr: d }, scene: [tre({ id: `px-${d}`, nome: `pixel ratio ${d}`, serie: 'pixel', quanti: d })] })),
   { gruppo: 'pixel', carica: discese, opz: { spegni: ['nebbia'] }, scene: [tre({ id: 'senza-nebbia', nome: 'senza nebbia' })] },
   { gruppo: 'sopra', carica: () => import('./veri/sopra.js'), scene: [
-    ...[4, 8, 16, 24].map(n => ({ id: `per-${n}`, nome: `${n} persone`, persone: n, serie: 'persone', quanti: n })),
-    ...[4, 8, 16].map(n => ({ id: `mos-${n}`, nome: `${n} mostri sul prato`, mostri: n, serie: 'mostri-sopra', quanti: n })),
+    ...[4, 8, 16, 24].map(n => ({ id: `per-${n}`, nome: `${n} persone`, persone: n, serie: 'persone', quanti: n, cresce: true })),
+    ...[4, 8, 16].map(n => ({ id: `mos-${n}`, nome: `${n} mostri sul prato`, mostri: n, serie: 'mostri-sopra', quanti: n, cresce: true })),
   ] },
   { gruppo: 'zaino', carica: () => import('./veri/zaino.js'), scene: [
     { id: 'zaino-15', nome: '15 anteprime', anteprime: 15 }, { id: 'zaino-40', nome: '40 anteprime', anteprime: 40, salta: 15 },
   ] },
   { gruppo: 'roba', carica: () => import('./veri/roba.js'), scene: ['lame', 'bastoni', 'scudi', 'vesti', 'gioielli', 'pozioni'].map(f => ({ id: `roba-${f}`, nome: `24 ${f}`, roba: f, serie: 'roba' })) },
   { gruppo: 'fattoria', carica: () => import('./veri/fattoria.js'), scene: [
-    ...[10, 30, 60].map(n => ({ id: `fat-${n}`, nome: `${n} edifici`, edifici: n, serie: 'fattoria', quanti: n })),
+    ...[10, 30, 60].map(n => ({ id: `fat-${n}`, nome: `${n} edifici`, edifici: n, serie: 'fattoria', quanti: n, cresce: true })),
     { id: 'fat-bestie', nome: '4 pollai e 4 stalle (bestie)', pollai: 4, stalle: 4 },
   ] },
   { gruppo: 'fattoria', carica: () => import('./veri/fattoria.js'), opz: { stagione: 'natale' }, scene: [{ id: 'fat-natale', nome: 'Natale, 30 edifici', edifici: 30 }] },
@@ -100,20 +102,22 @@ function creaGiro(f) {
           if (fermo()) return chiudi(false)
           if (fase === 'rodaggio') {
             primi.push(l)
-            const e = ora - t0, k = primi.length, w = 20
+            const e = ora - t0, k = primi.length, w = 10, q = tempi.quadri
             const assestato = k >= 2 * w && Math.abs(mediana(primi.slice(-w)) - mediana(primi.slice(-2 * w, -w))) <= 0.15 * Math.max(1, mediana(primi.slice(-2 * w, -w)))
-            if ((e >= tempi.rodaggio[0] && assestato) || e >= tempi.rodaggio[1]) { fase = 'misura'; tm = tf = ora; prec = t }
+            if ((e >= tempi.rodaggio[0] && assestato) || (e >= tempi.rodaggio[1] && k >= 2 * q) || e >= tempi.fine) { fase = 'misura'; tm = tf = ora; prec = t }
             return
           }
           lavoro.push(l); finestra.push(l)
           if (prec) dt.push(t - prec)
           prec = t
-          if (ora - tf >= tempi.finestra) {
+          const e = ora - tm, q = tempi.quadri
+          if (ora - tf >= tempi.finestra && finestra.length >= q) {
             finestre.push({ lenti: finestra.filter(x => x > LENTO).length / finestra.length, med: mediana(finestra) }); finestra = []; tf = ora
-            const [p, u] = finestre.slice(-2), e = ora - tm
+            const [p, u] = finestre.slice(-2)
             const ferma = p && u && Math.abs(u.lenti - p.lenti) <= 0.1 && Math.abs(u.med - p.med) <= 0.2 * Math.max(1, p.med)
-            if ((e >= tempi.misura[0] && ferma) || e >= tempi.misura[1]) chiudi(!!ferma)
+            if ((e >= tempi.misura[0] && ferma) || (e >= tempi.misura[1] && lavoro.length >= 2 * q)) return chiudi(!!ferma)
           }
+          if (e >= tempi.fine) chiudi(false)
         }
       })
     },
@@ -216,7 +220,8 @@ export async function eseguiVeri({ contenitore, progresso = () => {}, fermo = ()
             }
             if (guasti.length > g0) throw new Error(`errore nel gioco: ${guasti[g0]}`)
             risultati.push({ ...riga(s, tappa), ...r })
-            if (s.serie && r.p95 > SALTA_OLTRE && !corto) saltate.add(s.serie)   // nelle prove corte si fanno tutte
+            // solo le serie che crescono (più mostri, più persone…): le leve dei colli e la roba si confrontano fra loro, si fanno tutte
+            if (s.cresce && r.p95 > SALTA_OLTRE && !corto) saltate.add(s.serie)   // nelle prove corte si fanno tutte
           } catch (e) { risultati.push({ ...riga(s, tappa), errore: breve(e) }) }
         }
       } finally {
