@@ -12,9 +12,11 @@ import { creaPersone3d, persone3dAccese } from '../persona3d.js'
 import { ACCESI } from '../costanti.js'
 import { SALITA } from './vesti.js'
 import { leggiFolla, personeFinte, mostriFinti } from './folla-prova.js'
+import { profilo } from '../../../../store/qualita.js'
 
 export const SCALA_PERSONE = 1.25
-const MOSTRI_3D_SOPRA = 8   // il mondo è già pieno di cose: i modelli 3D sono pochi, per chi è vicino
+// il mondo è già pieno di cose: i modelli 3D sono pochi, per chi è vicino (8, nella fascia bassa 6: `mostriSopra` di store/qualita.js)
+const MOSTRI_3D_SOPRA = 8
 const OMBRE_MAX = 120
 // le persone in 3D (docs/sotterraneo/persone-3d.md): le più vicine all'eroe, entro questa distanza in celle; le altre restano sprite
 const PERSONE_3D_SOPRA = 8, PERSONE_3D_VICINO = 18
@@ -50,7 +52,7 @@ export function creaPersone(scena, { tex, norm, larga, alta, pezzi, trame, quota
   // di ognuno (la sua istanza, dove guarda) sta qui per indice del mostro
   // `&folla=`, `&branco3d=`, `&tetto3d=`: la folla finta delle misure (folla-prova.js, docs/sotterraneo/limiti-3d.md)
   const prova = leggiFolla()
-  const tettoMostri = prova.tetto || MOSTRI_3D_SOPRA, tettoPersone = prova.tetto || PERSONE_3D_SOPRA
+  const tettoMostri = prova.tetto || (profilo('sotterraneo').mostriSopra ?? MOSTRI_3D_SOPRA), tettoPersone = prova.tetto || PERSONE_3D_SOPRA
   const mostri3d = mostri3dAccesi() && ACCESI.mostri3d > 0 ? creaMostri3d(scena, { quanti: () => Math.min(ACCESI.mostri3d, tettoMostri) }) : null
   const statiMostri = new Map()
   const persone3d = persone3dAccese() ? creaPersone3d(scena, { quanti: () => tettoPersone }) : null

@@ -17,11 +17,13 @@ export const VERSIONE_MISURA = 1     // si alza se cambia la prova o le soglie: 
 // anche spenta), l'ombra a 512 ridisegnata a fotogrammi alterni, la nebbia con due strati di rumore, metà scintille
 // (docs/sotterraneo/grafica-3d-costi.md, «La fascia bassa»)
 const SPEGNI_BASSA = ['post', 'fuochi:2', 'lampi', 'palco', 'ombraMappa:512', 'ombraOgni:2', 'ottaveNebbia:2', 'quanteScintille:0.5']
+// `mostriSopra`: quanti mostri al più col modello 3D nel mondo di sopra (gli altri sprite): ~35 chiamate l'uno, nella bassa 6 invece di 8
+// (con 8 il filo principale del telefono imitato sta a 29-35 ms: docs/sotterraneo/limiti-3d.md)
 
 export const PROFILI = {
-  alta:  { asteroidi: { dprPartenza: 2,   scintille: 1400, fumo: 400, lenti: 90, passo: 0.85 }, sotterraneo: { dprMax: 1.5,  fetteNebbia: 5, spegni: [] } },
-  media: { asteroidi: { dprPartenza: 1.5, scintille: 700,  fumo: 200, lenti: 45, passo: 0.8 },  sotterraneo: { dprMax: 1.25, fetteNebbia: 3, spegni: [] } },
-  bassa: { asteroidi: { dprPartenza: 1,   scintille: 350,  fumo: 100, lenti: 20, passo: 0.75 }, sotterraneo: { dprMax: 1,    fetteNebbia: 2, spegni: SPEGNI_BASSA } },
+  alta:  { asteroidi: { dprPartenza: 2,   scintille: 1400, fumo: 400, lenti: 90, passo: 0.85 }, sotterraneo: { dprMax: 1.5,  fetteNebbia: 5, mostriSopra: 8, spegni: [] } },
+  media: { asteroidi: { dprPartenza: 1.5, scintille: 700,  fumo: 200, lenti: 45, passo: 0.8 },  sotterraneo: { dprMax: 1.25, fetteNebbia: 3, mostriSopra: 8, spegni: [] } },
+  bassa: { asteroidi: { dprPartenza: 1,   scintille: 350,  fumo: 100, lenti: 20, passo: 0.75 }, sotterraneo: { dprMax: 1,    fetteNebbia: 2, mostriSopra: 6, spegni: SPEGNI_BASSA } },
 }
 
 export const scelta = ref('auto')   // 'auto' o una fascia, deciso dai grandi
