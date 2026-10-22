@@ -489,6 +489,7 @@ export function muoviPecore (g, dt, t, verso, stati, adesso) {
     u.ricci.forEach((r, i) => { const q = pr['ricci' + i]; r.visible = q > 0.03; r.scale.setScalar(Math.max(0.01, q)) })
     u.pelle.visible = pr.lana < 0.9; u.pelle.scale.set(1.25 * pr.pelleX, 0.9 * pr.pelleY, 0.95 * pr.pelleZ)
     u.orecchie[0].rotation.z = pr.orecchie; u.orecchie[1].rotation.z = -pr.orecchie
+    u.testa.position.z = 0.26 - 0.6 * (1 - pr.pelleZ)                    // la testa segue la pelle quando la pecora è magra (le parti si toccano)
     animaSegni(u, pr, stadio, dt, t, n)
     // il movimento
     u.attesa -= dt
@@ -746,10 +747,11 @@ function animaMucca (b, u, pr, stadio, dt, t, n) {
   u.corpo.scale.set(SCALA_CORPO[0] * pr.sx, SCALA_CORPO[1] * pr.sy, SCALA_CORPO[2] * pr.sz)
   u.corpo.position.y = 0.42 + pr.corpoY + Math.sin(ph * 0.8 + n) * 0.006
   u.testa.rotation.x = pr.testaX + Math.sin(ph * (stadio === 1 ? 1.3 : 0.7) + n) * (stadio === 0 ? 0.03 : 0.07)
+  u.coda.position.y = u.corpo.position.y + 0.17 * pr.sy                                   // la coda e la mammella seguono il corpo quando si restringe (le parti si toccano)
   u.testa.position.y = 0.65 + pr.testaY + Math.sin(ph * 2.6 + n) * (stadio === 1 ? 0.012 : 0.004)    // la mascella
   u.coda.rotation.z = Math.sin(ph * (stadio === 2 ? 2.4 : 1.1) + n * 2) * 0.7 * pr.coda
-  const m = pr.mammella; u.mammella.visible = m > 0.03; u.mammella.scale.set(3.6 * m, 2.8 * m, 3.4 * m)
-  const q = pr.pallida; u.pallida.visible = q > 0.03; u.pallida.scale.set(1.3 * q, 1.5 * q, 1.3 * q)
+  const m = pr.mammella; u.mammella.visible = m > 0.03; u.mammella.scale.set(3.6 * m, 2.8 * m, 3.4 * m); u.mammella.position.y = u.corpo.position.y - 0.27 * pr.sy
+  const q = pr.pallida; u.pallida.visible = q > 0.03; u.pallida.scale.set(1.3 * q, 1.5 * q, 1.3 * q); u.pallida.position.y = u.mammella.position.y
   const c = (t * 0.9 + n * 0.37) % 1                                                      // ogni tanto una goccia di latte cade
   u.goccia.visible = pr.goccia > 0.5 && c < 0.4
   if (u.goccia.visible) u.goccia.position.y = 0.1 - (c / 0.4) * (c / 0.4) * 0.09

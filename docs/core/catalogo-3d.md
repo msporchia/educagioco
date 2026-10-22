@@ -67,3 +67,5 @@ stesse geometrie. Un modello che vuole un canvas lo fa da sé: siamo in pagina.
 - Nei test: `test/unita/catalogo-3d.test.mjs` controlla solo il formato e che
   `file:` esista e nomini qualcosa che c'è scritto dentro (niente three, niente
   browser). Che nessun modello manchi non lo controlla nessuno.
+- Le **bestie** della Fattoria 3D le controlla `test/unita/fattoria3d-bestie-connesse.test.mjs`: tutte le mesh di una bestia devono toccarsi a catena
+  (`docs/fattoria3d/animali.md`, «Le parti si toccano»); si guardano con la scheda da vicino, di fianco e da davanti/dietro/sopra (`--angolo 0|90|180|45`, `--alto 10|55`).

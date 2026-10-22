@@ -87,6 +87,22 @@ emoji, n, max, pieno, prezzo }` (`prezzo` è null se pieno; null l'intero risult
   «🐔 ha fame», «🧶 pronta!» e «🐑 ha fame» per le pecore), sotto il pulsante «＋ 🪙 40»; **niente conto «n/max»**: quando il pezzo è pieno il pulsante e la riga spariscono. Peso: pollaio ~47 mesh
   con una gallina (+~8 per ogni altra), stalla ~110 con le quattro mucche (steccato e cancelletto compresi), caseificio ~32; geometrie delle bestie condivise, animazioni col tempo.
 
+## Le parti si toccano
+
+**Una bestia è un corpo solo**: ogni mesh si tocca (o entra) in un'altra a catena, corpo–collo–testa, testa–orecchie/occhi/muso/corna,
+corpo–zampe/coda, in tutti e tre gli stadi e in ogni momento dell'animazione. Un collo che non attacca, un orecchio sospeso, una zampa che non
+arriva alla pancia sono un modello sbagliato (così erano nate le prime bestie del cortile: «sconnesse»). Come si fa:
+- **Il collo è un osso** (`scena3d/bestie-corpo.js`: `geoOsso`, `collega`): va dalla spalla (dentro il corpo) alla cima, dove sta l'origine del gruppo
+  testa; a ogni fotogramma `collega` lo rimette fra i due punti, così segue la testa che sale, scende o si piega. Lo stesso per la criniera.
+- **Le zampe partono dalla coscia**, una sfera dentro il corpo, e arrivano a terra con lo zoccolo (`zampa`); la coda e la mammella **seguono il
+  corpo quando si restringe** (a fame il corpo è più piccolo: la loro quota si calcola sul corpo, non è fissa).
+- **Occhi, muso, orecchie e corna sono dentro l'ingombro della testa** (centro dentro l'ellissoide, mezzi fuori), mai attaccati «per punta».
+- Il corpo dà la forma con un ellissoide (poche facce), il pelo/vello è un secondo ellissoide concentrico che cresce: fuori dal corpo solo a fine crescita.
+- **La regola la controlla `unita/fattoria3d-bestie-connesse`** (tutte le bestie, due versioni, cinque momenti del lavoro, cinque secondi di animazione
+  con `FONDI` spento: i pezzi fusi unirebbero tutto): se fallisce nomina le mesh che galleggiano (tipo, colore, posizione). Una bestia nuova va in `BESTIE`.
+  Il test guarda l'ingombro orientato di ogni mesh, non il suo aspetto: dopo si guarda comunque (`npm run catalogo3d:scheda -- --gioco fattoria --q <bestia>
+  --angolo 90 --alto 10 --vicino 1.5`, e angoli 0, 180, 45 con `--alto 55`).
+
 ## I tre stadi
 
 Come un campo (brullo → i semini → tutto maturo), ogni bestia ha **tre stadi che si leggono a colpo d'occhio**. La logica è una
@@ -131,7 +147,7 @@ Nel catalogo 3D (`strumenti/banco/catalogo-3d/fattoria.js`) c'è una voce per st
   esperienza dai contatori.
 - I motivi `ha-le-bestie`, `lavora`, `pieno` e `manca-mangime` per le bestie sono in `scena3d/detti.js`.
 
-Nei test: `unita/fattoria3d` (sezioni 8 e 18–20); `integrazione/fattoria3d` (sezione «gli animali da cortile»: nutrire, uova,
+Nei test: `unita/fattoria3d-bestie-connesse` (le parti di ogni bestia si toccano); `unita/fattoria3d` (sezioni 8 e 18–20); `integrazione/fattoria3d` (sezione «gli animali da cortile»: nutrire, uova,
 bestie comprate dal cartello — `[data-f3="cartello-bestie"][data-pezzo="pollaio|stalla|recinto"]`, `[data-f3="compra-bestia"]` con
 `aria-disabled` —, latte, il recinto da una pecora a quattro, contatori, `[data-f3="prodotti"]`).
 
