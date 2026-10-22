@@ -107,23 +107,13 @@ fuori») e i branchi a 14 celle (`292a98f5`); il villaggio tondo (24×20); la sc
 | Voce | Chi | Stato |
 |---|---|---|
 | Un elmo vero nello slot testa (oggi solo `#testa=<id>`) | Mostri | non iniziato |
-| Mostri 3D senza modello proprio (ripiegano sullo sprite) | Mostri | elencati qui sotto (22 ottobre) |
 | Costi in chiamate: scontro sul prato ~231, mondo con due branchi ~250 (soglia del test 260) | Mostri | tenere d'occhio |
 | Peso e fluidità sul telefono (nessuna misura fatta) | Mostri | da guardare col dito |
 | Prove del browser complete (`npm run test:browser`) e `test:misure` non lanciate dopo il 3D | Mostri | da fare prima del prossimo giro grande |
 
-### Mostri 3D senza modello (22 ottobre)
+### Mostri 3D senza modello
 
-Specie di `dati/mostri.js` con `idDi` nullo a ogni grado (`MODELLO_DI_SPECIE`: `null`); i 13 grossi hanno tutti il loro modello.
-
-| Specie (famiglia) | Dove si incontra |
-|---|---|
-| `pianta` (piante) | il bosco secco (sopra); la tana dei ragni (`gallerie`) |
-| `piranha` (pesci) | le sale allagate (`cisterna`) e la palafitta; nessun luogo di sopra |
-| `golem-muschio` (golem) | le colline di roccia (sopra, caporale); è anche la `figura` di Barbamuschio, che però usa `landa/ent` |
-| `scorpione` (insetti) | le colline di roccia (sopra); le miniere di brace (`fondo`) |
-| `mostro-viola` (mostri) | un piano delle cantine (campagna.js:115); nessun luogo di sopra |
-| `pipistrello-occhio` (pipistrelli) | i corvi (sopra) e la corvaia; un piano delle cantine |
+Fatto: le sei specie (pianta, piranha, golem di muschio, scorpione, mostro viola, pipistrello occhio) hanno i modelli di `poc/mostri-3d/varie.js`.
 
 Le specie scelte per l'habitat ma da dipingere (`dipingere` in `dati/mondo-aperto-mostri.js`: orso, corvo, avvoltoio, brigante, lupo
 capobranco, rospo, airone, coccodrillo e gli altri) non sono ancora specie: oggi sono altre del catalogo, quindi non hanno nemmeno uno sprite.
