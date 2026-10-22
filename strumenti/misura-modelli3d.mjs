@@ -11,9 +11,12 @@ const { Pezzi } = await import('../src/giochi/fattoria3d/scena3d/pezzi.js')
 const { EDIFICI, PEZZI } = await import('../src/giochi/fattoria3d/dati/catalogo.js')
 const geometrie = g => { const s = new Set(); g.traverse(o => { if (o.isMesh) s.add(o.geometry) }); return s }
 const mesh = g => { let n = 0; g.traverse(o => { if (o.isMesh) n++ }); return n }
+const tri = g => { let n = 0; g.traverse(o => { if (o.isMesh) n += (o.geometry.index ? o.geometry.index.count : o.geometry.attributes.position.count) / 3 }); return Math.round(n) }
 // un finto contesto: basta a `modelloDi`/`modelloAnteprima` (non si usa la scena)
 const p = Object.create(Pezzi.prototype)
-const tipi = [...Object.keys(PEZZI).filter(t => !['strada', 'gomma'].includes(t)).map(t => ['pezzo', t]), ...Object.keys(EDIFICI).map(t => ['edificio', t])]
+p.m = { misure: t => PEZZI[t] || EDIFICI[t] }
+const SOLO = process.env.SOLO ? process.env.SOLO.split(',') : null      // SOLO=verde,recinti: solo le categorie dette
+const tipi = [...Object.keys(PEZZI).filter(t => !['strada', 'gomma'].includes(t) && (!SOLO || SOLO.includes(PEZZI[t].categoria))).map(t => ['pezzo', t]), ...(SOLO ? [] : Object.keys(EDIFICI)).map(t => ['edificio', t])]
 const righe = []
 for (const [kind, tipo] of tipi) {
   const crea = () => kind === 'pezzo' ? p.modello(tipo, { pecore: [{ eta: 'adulta', t0: 0 }, { eta: 'adulta', t0: 0 }], bestie: [{ fine: null }, { fine: null }] }) : p.modelloAnteprima(tipo)
@@ -22,7 +25,7 @@ for (const [kind, tipo] of tipi) {
     let t0 = performance.now(); const a = crea(); primo = performance.now() - t0
     t0 = performance.now(); for (let i = 0; i < N; i++) tutti.push(crea()); const resto = (performance.now() - t0) / N
     const geo = new Set(); for (const g of [a, ...tutti]) for (const x of geometrie(g)) geo.add(x)
-    righe.push({ tipo, mesh: mesh(a), 'prima ms': +primo.toFixed(2), 'poi ms/ist': +resto.toFixed(2), [`geom (${N + 1} ist)`]: geo.size })
+    righe.push({ tipo, mesh: mesh(a), tri: tri(a), 'prima ms': +primo.toFixed(2), 'poi ms/ist': +resto.toFixed(2), [`geom (${N + 1} ist)`]: geo.size })
   } catch (e) { righe.push({ tipo, errore: e.message.slice(0, 60) }) }
 }
 console.table(righe)
