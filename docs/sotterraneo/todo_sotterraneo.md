@@ -27,7 +27,7 @@ rimasti aperti. Quando una voce si chiude si toglie da qui (la storia sta in `gi
   d'aria; tarare le basi delle taglie (`BASI`, tetto 40 gemme) e quanto guadagna chi le fa tutte.
 - **I dungeon che si rigenerano** ([dungeon-che-si-rigenerano.md](dungeon-che-si-rigenerano.md)): la prima volta delle sette porte nel
   3D non usa ancora i livelli della zona (`STORIA_DALLA_ZONA` spento, 4/8/10/12 invece di 3/7/8/10); la cava (13) esce più tenera
-  delle miniere (12); i nomi dei sei boss nuovi (Barbamuschio, Piumanera, Sibilla, Brontolava, Brinaldo, Falcenera) vanno confermati; i
+  delle miniere (12); i nomi dei sei boss nuovi sono scelti (Roccaverde, Piumanera, Sibilla, Vulcanor, Gelomagno, Falcenera; le chiavi nei dati restano quelle di prima, sono salvataggi); i
   pezzi col nome dei boss non hanno ancora una figura ritagliata (puntano a un aspetto dei fogli già esistente).
 - **Abitanti da dipingere**: orso, corvo, avvoltoio, brigante, lupo capobranco e gli altri; oggi sono specie del catalogo scelte per
   habitat ([mondo-aperto-mostri.md](mondo-aperto-mostri.md)).

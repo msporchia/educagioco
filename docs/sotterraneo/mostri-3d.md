@@ -45,8 +45,8 @@ collezione più ricca col grado (`userData.impugna`). La tabella:
 | pianta (verde che frusta, viola che sputa spore), piranha (blu, rosso, nero), golem di muschio (anche fiorito e antico), scorpione (viola, di brace, regale), mostro viola (e scuro), pipistrello occhio (e gelido) | varie (`poc/mostri-3d/varie.js`, `poc/mostri-varie-3d.html`): il colore e la taglia crescono col grado |
 
 I grossi: Re Ossuto → re non morto, Grumo → orco, Fiammetta → spirito di fuoco, Zannaverde → ragno, Gorgo e Sibilla → i loro
-della palude, Minotto → minotauro, Carbonchio → drago di lava, Barbamuschio → ent, Piumanera → grifone, Brontolava → golem di
-magma, Brinaldo → golem di ghiaccio, Falcenera → mietitore.
+della palude, Minotto → minotauro, Carbonchio → drago di lava, Roccaverde → ent, Piumanera → grifone, Vulcanor → golem di
+magma, Gelomagno → golem di ghiaccio, Falcenera → mietitore.
 
 **Il gioco non si rompe mai**: un id che non c'è, una `crea` che si rompe o un'`anima` che si rompe mettono quel modello da parte
 e torna lo sprite (`console.warn`). `#sprite` nell'indirizzo li spegne tutti, `#eroe2d` l'eroe.
