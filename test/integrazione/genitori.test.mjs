@@ -306,6 +306,7 @@ await page.setInputFiles('input[type=file]', finto)
 await page.waitForTimeout(400)
 controlla('un file estraneo viene rifiutato', await page.isVisible('.avviso'))
 
+
 /* ── 7. i giochi si spengono uno per uno ──
    È l'interruttore che cambia quello che il bambino vede aprendo il
    gioco: se spegnere non togliesse la carta, o se riaccendere non la
@@ -1236,10 +1237,29 @@ controlla('e in home restano solo i giochi per i piccoli',
    cancella niente di quello che è stato guadagnato. */
 uguale('i progressi non si sono mossi', (await leggiProfilo(page)).coins, monetePrima)
 
-rmSync(cartella, { recursive: true, force: true })
-
 uguale('nessun errore in console', errori.length, 0)
 if (errori.length) errori.forEach(e => nota(e))
 
+
+/* ── un bambino nuovo dal file (in fondo: poi chi gioca è lui) ── */
+await vaiAiGenitori()
+await digita('0000')
+await page.waitForSelector('.carte', { timeout: 5000 })
+await apriScheda('salvataggi')
+/* Un bambino nuovo dal file: non cambia chi sta giocando, quindi il gioco lo dice e offre «Passa a …» (senza, sembrava che il file non avesse fatto niente) */
+const nuovo = resolve(cartella, 'giochi-un-altro-bambino.json')
+writeFileSync(nuovo, JSON.stringify({ tipo: 'giochi-bambini', v: 2, esportato: new Date().toISOString(),
+  giocatori: [{ id: 'dal-file', nome: 'Dalfile' }], profili: { 'dal-file': { v: 7, coins: 321, items: {}, settings: { eta: 8 } } } }))
+await page.setInputFiles('input[type=file]', nuovo)
+await page.waitForSelector('[data-importato]', { timeout: 5000 })
+controlla('dice chi è stato rimesso e che chi gioca è ancora l\'altro', /Dalfile/.test(await page.locator('[data-importato]').innerText()) && /ancora/.test(await page.locator('[data-importato]').innerText()))
+controlla('e offre di passare a lui', await page.locator('[data-azione="passa-a"][data-id="dal-file"]').isVisible())
+controlla('la carta di prima avvisa che i bambini nuovi si aggiungono', /i nuovi si aggiungono/.test(await page.locator('[data-azione="rimetti-da-file"]').innerText()))
+await page.click('[data-azione="passa-a"][data-id="dal-file"]')
+await page.waitForSelector('.carte .carta.gioco', { timeout: 8000 })
+uguale('passando, la home è quella di lui', (await page.locator('[data-nome]').innerText()).trim(), 'Dalfile')
+uguale('con le sue monete', await page.evaluate(() => Number((document.body.innerText.match(/🪙\s*(\d+)/) || [])[1])), 321)
+
+rmSync(cartella, { recursive: true, force: true })
 await browser.close()
 riassunto('la schermata dei genitori')
