@@ -80,10 +80,10 @@ rimasti aperti. Quando una voce si chiude si toglie da qui (la storia sta in `gi
 
 ### Da guardare col dito sul telefono (Redmi Note 7 della bambina, fascia bassa)
 
-- **Prestazioni**: gli fps del mondo e dello scontro sul prato (prima 48 fermo e 15 in attacco nello scontro delle discese, poi
-  alleggerito: da rimisurare col contatore fps, una misura fermi, tre attacchi, dieci secondi camminando); il tempo di caricare una zona
-  (stimato 0,1–0,5 s sul Note 7); i ~250 chiamate dello scontro sul prato e del mondo con due branchi vicini (mostri 3D, tetto 8); il
-  bosco da solo supera i 400k triangoli per il decoro.
+- **Prestazioni** ([prestazioni-3d.md](prestazioni-3d.md), CPU ×6 simulata il 22/10): il JS regge (scontro 10 ms a fotogramma, 265
+  chiamate; mondo con due branchi 18 ms, 326 chiamate, 415k triangoli), la GPU qui non si misura. Col contatore fps: scontro fermo, tre
+  attacchi, dieci secondi nel villaggio e fra due branchi (prima 48 fermo e 15 in attacco); il primo incontro con un modello (35-55
+  shader da compilare); l'apertura del mondo (~7 s simulati) e di una zona (~0,3 s); lo zaino (15 anteprime in ~1,2 s).
 - **Si legge?** Il villaggio tondo a zoom normale, le luci azzurre della scia sul sole e sui ciottoli, i segni delle tane, il 💤 e i
   galloni dei mostri, il capitano (piccolo, blu poco marcato), le insegne e le panche, il fascio sulla meta.
 - **Gesti**: drag della vista e pinch per lo zoom (compito C, su `main`) contro il tocco per camminare; lo scontro sul prato sopra il
