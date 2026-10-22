@@ -10,7 +10,8 @@ le anteprime le fornisce solo Gioco.vue col `disegno: '3d'`.
 
 | file | cosa tiene |
 |---|---|
-| `scena3d/anteprime3d-pura.js` | senza three: `MODELLO_DI` (oggetto → modello della collezione, la stessa mappa che veste l'eroe in scena), `dotazioneDi`, `pregioDi`, le chiavi, `leggiChiave`, la coda `creaCoda` |
+| `scena3d/anteprime3d-pura.js` | senza three: `pezzo3dDi` (oggetto → figura, ripiego, rarità, elemento: [roba-3d.md](roba-3d.md)), `MODELLO_DI` (il ripiego della collezione), `dotazioneDi`, `pregioDi`, le chiavi, `leggiChiave`, la coda `creaCoda` |
+| `scena3d/roba3d.js` | la figura costruita dal modulo della sua famiglia, o il ripiego, con l'alone della rarità ([roba-3d.md](roba-3d.md)) |
 | `scena3d/anteprime3d.js` | il renderer, la scena di posa, le inquadrature, `creaAnteprime3d` |
 | `scena3d/eroe3d.js` | `vestiEroe(g, roba)` e `vestiDotazione(g, d)`: l'eroe in scena e quello delle anteprime si vestono con la stessa funzione |
 | `viste/anteprima3d.js` | `fornisciAnteprime3d` (Gioco.vue), `usaAnteprima(chiave)`: un ref null finché l'immagine non c'è |
@@ -23,15 +24,19 @@ Chi la usa: `Casella`, `Pannello`, `Confronto` (`cosa3d`), `Addosso`, `PaginaEro
 
 ## Le chiavi e le inquadrature
 
-La chiave dice la figura, non l'oggetto: due spade di rarità diverse sono la stessa anteprima.
+La chiave dice la figura e l'aspetto, non l'oggetto: due spade con la stessa figura e la stessa rarità sono la stessa anteprima. Il
+«gettone» di un pezzo è `<figura>.<ripiego>.<lettera della rarità>.<elemento>` (`spada-28.spada-lunga.m.fuoco`, `-` dove manca).
 
 | chiave | cosa si vede | pixel |
 |---|---|---|
-| `arma:<id>` | l'arma della collezione in diagonale, la punta in alto a destra; l'arco girato di lato perché si veda la curva | 128² |
-| `scudo:<id>` | lo scudo di fronte, appena girato | 128² |
-| `armatura:<tipo>:<pregio>:<eroe>` | l'armatura su un manichino: l'eroe di adesso senza testa e senza armi | 128² |
-| `eroe:<chi>:<destra>:<sinistra>:<corpo.pregio>` | l'eroe intero nella guardia, con le armi e l'armatura | 150×176 |
+| `arma:<gettone>` | l'arma (la figura, o il ripiego) in diagonale, la punta in alto a destra; l'arco girato di lato perché si veda la curva; l'alone fermo a 1,3 s | 128² |
+| `scudo:<gettone>` · `gioiello:<gettone>` | lo scudo, la collana o l'anello di fronte, appena girato | 128² |
+| `copricapo:<modello>:<rarità>` | il copricapo da solo su una testa finta, di tre quarti, con l'alone della rarità ([elmo.md](elmo.md)) | 128² |
+| `consumabile:<chiave>:<rarità>` | la pozione, la torcia, la chiave o la pergamena di fronte (l'alone solo ai rarissimi) | 128² |
+| `armatura:<tipo>:<pregio>:<eroe>:<corpo>` | l'armatura su un manichino: l'eroe di adesso senza testa e senza armi (la veste della figura se il modulo `vesti` c'è); `<corpo>` = `<tipo>.<pregio>.<figura>.<rarità>.<elemento>` | 128² |
+| `eroe:<chi>:<destra>:<sinistra>:<corpo>:<collo>` (e `:<copricapo>` in coda, solo se ce l'ha) | l'eroe intero nella guardia, con le armi, l'armatura, la collana e il copricapo | 150×176 |
 | `busto:…` (lo stesso) | la faccia e le spalle, uguali per tutti (il cappello del mago e la barba del nano restano dentro a metà) | 96² |
+| `persona:<modello>` | una persona del mondo di sopra a mezzo busto ([persone-3d.md](persone-3d.md)): il dialogo, il diario, la bottega | 96² |
 | `mostro:<tipo>:<grado>:<variante>` · `mostro:grosso:<chi>` | il modello del registro (`idDi`), di tre quarti verso sinistra, dalla testa a circa due terzi | 96² |
 
 - **Il pregio dell'armatura viene dalla rarità** (comune 1, magico 2, raro e leggendario 3), anche per l'eroe in scena: prima era
@@ -44,7 +49,7 @@ La chiave dice la figura, non l'oggetto: due spade di rarità diverse sono la st
 ## Lo sprite non sparisce mai
 
 - **Finché l'anteprima non è pronta si vede lo sprite**, e poi si scambia. Le caselle compaiono subito.
-- **Dove il modello non c'è resta lo sprite**: anelli, collane, pozioni, torce, chiavi, le sei specie senza modello (pianta,
+- **Dove il modello non c'è resta lo sprite**: i tre gioielli di base senza figura dei fogli ([roba-3d.md](roba-3d.md)), le sei specie senza modello (pianta,
   piranha, golem di muschio, scorpione, mostro viola, pipistrello occhio). Una chiave senza modello, un modello che si rompe, un
   WebGL che non c'è o un contesto perso valgono null: niente riquadri vuoti.
 - **Il ritratto tiene sotto lo sprite** coi suoi `data-in-mano`/`data-addosso` (nascosto con `visibility`): i test e i `data-` di
@@ -56,6 +61,11 @@ La chiave dice la figura, non l'oggetto: due spade di rarità diverse sono la st
 - **Un renderer solo, suo** (la bottega sta sopra, dove la scena della discesa non c'è): una tela piccola, creato alla prima
   richiesta (e three col modulo, a richiesta), chiuso dopo 30 s senza richieste (`dispose` e `forceContextLoss`); si riapre alla
   prossima. La cache delle immagini resta finché si gioca; `via()` alla chiusura del gioco.
+- **Il `webglcontextlost` di `forceContextLoss` arriva dopo**, un compito più in là: conta solo se la tela è ancora quella
+  aperta (chiudendo si toglie il renderer prima). Era il guasto dei ritratti del mondo di sopra: dopo 30 s di cammino la chiusura
+  per ozio passava per una perdita e il servizio restava `rotto`. Un contesto tolto davvero dal browser (telefoni con pochi
+  contesti) chiude il renderer, che si riapre alla richiesta dopo; `rotto` per sempre solo alla terza perdita (`stato().perdite`).
+  Un'immagine persa a metà torna `RIPROVA`: null, ma non resta in cache.
 - **La coda**: una chiave una volta sola; in un giro se ne fanno finché non passano 16 ms (almeno una), poi si cede il filo con
   un messaggio (il tocco e i fotogrammi passano prima).
 - **L'immagine è una tela 2D** copiata dal renderer, e la vista la copia nella sua (`Quadro3d.vue`): niente PNG.
@@ -77,7 +87,8 @@ un secondo dopo la coda), una anteprima per fotogramma (dietro la scena in Swift
 ```bash
 npm run build && node strumenti/tavola-anteprime.mjs          # tutte, in tmp/scatti/tavola-anteprime.png, coi tempi
 node strumenti/tavola-anteprime.mjs --solo eroi --eroe mago    # roba, eroi, mostri; l'armatura sul mago
-node strumenti/tavola-anteprime.mjs --chiavi arma:ascia-lava,busto:nano:accetta:scudo-nanico:-
+node strumenti/tavola-anteprime.mjs --solo rarita              # le figure e gli aloni: ogni base comune, magica, rara, e i pezzi col nome
+node strumenti/tavola-anteprime.mjs --chiavi arma:spada-28.spada-lunga.l.fuoco,busto:nano:-:-:-:-
 node strumenti/scatta-app.mjs 'sotterraneo3d=1&eroe=cavaliere&sotterraneo=roba&dpr=1' --dist --aspetta 6000 --tocca '[data-azione="zaino"]'
 node strumenti/scatta-app.mjs 'sotterraneo3d=mondo&eroe=cavaliere&bottega=armaiolo&livello=12&roba=rara&gemme=800&dpr=1' --dist --aspetta 8000
 ```
@@ -87,13 +98,9 @@ aperto, quante in coda, e `prima`/`ultima` (il primo chiedere e l'ultima pronta)
 
 ## Cosa manca
 
-- **Le figure dei pezzi trovati**: lo sprite ha gli aspetti ([figure.md](figure.md)), il 3D la sola base (tutte le spade sono la
-  spada lunga). La collezione ha dieci modelli per famiglia con l'elemento: scegliere fra quelli come `aspettoDi` cambierebbe
-  anche l'arma in mano in scena.
 - L'armatura si mostra sull'eroe di adesso anche quando la sua classe non la porta (il ✋ lo dice già).
-- Anelli, collane e pozioni non hanno un modello.
 
-Nei test: `unita/sotterraneo-anteprime-3d` (la mappa copre ogni arma, scudo e armatura del gioco, le chiavi, null dove resta lo
+Nei test: `unita/sotterraneo-anteprime-3d` (il ripiego copre ogni arma e scudo del gioco, il pezzo 3D con la figura, le chiavi, null dove resta lo
 sprite, la lettura delle chiavi, i mostri allo stesso modello della scena, la coda), `integrazione/sotterraneo-3d-anteprime` (lo
 zaino coi modelli e gli sprite dove servono, un renderer solo, la pagina dell'eroe, la fila con l'eroe a mezzo busto e la pianta
 sprite, il 2D e `#icone2d` senza anteprime). Bersagli: `[data-anteprima="3d"]` con `[data-anteprima-chiave]` sull'icona, e

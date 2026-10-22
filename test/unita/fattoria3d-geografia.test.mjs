@@ -19,7 +19,7 @@ import { dettoDi } from '../../src/giochi/fattoria3d/scena3d/detti.js'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 
 const adesso = { t: 1_000_000 }
-function mondo({ monete = 1e7, stato = null, liv = 18 } = {}) {
+function mondo({ monete = 1e7, stato = null, liv = 70 } = {}) {
   const b = { monete }
   const s = stato || statoIniziale()
   s.esperienza = Math.max(s.esperienza || 0, sogliaDi(liv))
@@ -45,8 +45,8 @@ const celleDi = l => { const o = []; for (let y = 0; y < l.d; y++) for (let x = 
   controlla('i 42 lotti storici sono prato e non hanno acqua né sabbia', storici.every(([a, b]) => { const g = generaLotto(a, b); return g.bioma === 'prato' && !g.acqua.length && !g.spiaggia.length && !g.mare }))
   controlla('i lotti storici non cambiano con la geografia: stesso risultato col «vecchio»', storici.every(([a, b]) => JSON.stringify(generaLotto(a, b)) === JSON.stringify({ ...generaLotto(a, b, { vecchio: true }), spiaggia: [], mare: false })))
   controlla('il quadrato di partenza 3×3 (a e b da 2 a 4) è prato', Object.keys(LOTTI_INIZIALI).every(id => { const l = lottoPerId(id); return biomaDi(l.a, l.b) === 'prato' }))
-  // la fascia di mezzo non cambia: a da 0 a 7 è la geografia di prima (laghetti compresi)
-  controlla('da a = 0 a 7 il bioma è quello di prima', (() => { for (let b = -40; b < 40; b++) for (let a = 0; a <= 7; a++) if (biomaDi(a, b) !== biomaVecchio(a, b)) return false; return true })())
+  // la fascia di mezzo ha i suoi laghi naturali (fattoria3d-laghi); dove non c'è acqua né di oggi né di prima, prato e bosco sono quelli di prima
+  controlla('da a = 0 a 7, senza acqua, il bioma è quello di prima', (() => { for (let b = -40; b < 40; b++) for (let a = 0; a <= 7; a++) if (biomaDi(a, b) !== 'laghetto' && biomaVecchio(a, b) !== 'laghetto' && biomaDi(a, b) !== biomaVecchio(a, b)) return false; return true })())
   // il mare
   let tuttiMare = true, interi = true
   for (let b = -50; b < 50; b++) for (let a = -40; a <= ZONA.mareFinoA; a++) {
@@ -163,7 +163,7 @@ const celleDi = l => { const o = []; for (let y = 0; y < l.d; y++) for (let x = 
   for (const id of ['1_3', '0_3', '-1_3', '-2_3', '-3_3', '8_3']) s.lotti[id] = true
   const v = JSON.parse(JSON.stringify(s)); delete v.geo; delete v.vecchi
   const n = normalizza(v)
-  uguale('uno stato di prima si legge: geo = 1', n.geo, 1)
+  uguale('uno stato di prima si legge: geo = 2', n.geo, 2)
   controlla('i lotti comprati dove ora cambia la geografia sono «vecchi»', ['-2_3', '-3_3'].every(id => n.vecchi.includes(id)) && !n.vecchi.includes('1_3') && !n.vecchi.includes('0_3'), JSON.stringify(n.vecchi))
   const { f } = mondo({ stato: n })
   uguale('un lotto di mare comprato prima è prato come prima', f.biomaDi(lottoPerId('-3_3')), biomaVecchio(-3, 3))
@@ -175,10 +175,10 @@ const celleDi = l => { const o = []; for (let y = 0; y < l.d; y++) for (let x = 
   controlla('un lotto comprato dopo la geografia grande è nuovo', !f.vecchi.has('-4_3'))
   const salvato = f.serializza()
   const g = new Fattoria3d({ stato: normalizza(salvato), borsa: f.borsa, ora: () => adesso.t })
-  controlla('salvato e riletto: i vecchi restano, il nuovo no', g.vecchi.has('-3_3') && !g.vecchi.has('-4_3') && salvato.geo === 1)
+  controlla('salvato e riletto: i vecchi restano, il nuovo no', g.vecchi.has('-3_3') && !g.vecchi.has('-4_3') && salvato.geo === 2)
   // uno stato nuovo parte con la geografia grande e nessun lotto vecchio
   const ini = statoIniziale()
-  controlla('uno stato nuovo: geo 1, nessun vecchio, nessuna pesca', ini.geo === 1 && ini.vecchi.length === 0 && Object.keys(ini.pesca).length === 0)
+  controlla('uno stato nuovo: geo 2, nessun vecchio, nessuna pesca', ini.geo === 2 && ini.vecchi.length === 0 && ini.vecchi1.length === 0 && Object.keys(ini.pesca).length === 0)
   controlla('uno stato guasto non lancia', (() => { try { normalizza({ geo: 'x', vecchi: 5, pesca: { '1_1': { i: 'a' }, 'zz': {}, '2_2': { i: 3, j: 4, fine: 'x', riposo: null } } }); normalizza({ pesca: [] }); return true } catch (e) { return false } })())
   controlla('tutto lo stato di prima (v9) si legge: i campi nuovi sono opzionali', (() => { const vecchioV9 = { v: 9, lotti: { ...LOTTI_INIZIALI }, esperienza: 10 }; const x = normalizza(vecchioV9); return x.pesca && typeof x.pesca === 'object' && x.vecchi.length === 0 })())
 }
@@ -187,18 +187,18 @@ const celleDi = l => { const o = []; for (let y = 0; y < l.d; y++) for (let x = 
 {
   const molo = PEZZI.molo, girato = PEZZI.molo_v, port = PEZZI.porticciolo
   controlla('il molo è 3×1, il molo girato 1×3: calpestabili, sull\'acqua, decorazioni', molo.w === 3 && molo.d === 1 && girato.w === 1 && girato.d === 3 && molo.calpestabile && girato.calpestabile && molo.suAcqua && girato.suAcqua && !molo.produttivo)
-  controlla('prezzi e livelli: molo 🪙12 al 4, porticciolo 🪙90 al 9', molo.prezzo === 12 && molo.liv === 4 && girato.prezzo === 12 && port.prezzo === 90 && port.liv === 9)
+  controlla('prezzi e livelli: molo 🪙12 e porticciolo 🪙90, tutti e due al 57 (dove la 2D ha la peschiera)', molo.prezzo === 12 && molo.liv === 57 && girato.prezzo === 12 && girato.liv === 57 && port.prezzo === 90 && port.liv === 57)
   controlla('il porticciolo è uno solo, sull\'acqua, alla riva', port.unico && port.suAcqua && port.riva && !port.calpestabile)
-  controlla('friggitoria e sushi bar sono edifici (3×3) alla fine della scaletta', EDIFICI.friggitoria.liv === 17 && EDIFICI.sushi_bar.liv === 18 && EDIFICI.friggitoria.w === 3 && EDIFICI.sushi_bar.d === 3)
+  controlla('friggitoria e sushi bar sono edifici (3×3) dove li mette la 2D (58 e 62)', EDIFICI.friggitoria.liv === 58 && EDIFICI.sushi_bar.liv === 62 && EDIFICI.friggitoria.w === 3 && EDIFICI.sushi_bar.d === 3)
   controlla('le macchine del pesce hanno le ricette della 2D', Object.keys(MACCHINE.friggitoria.ricette).join() === 'patatine,fritto,arancini' && Object.keys(MACCHINE.sushi_bar.ricette).join() === 'sushi,maki')
   uguale('sushi: riso 1 e pesce 1', JSON.stringify(RICETTE.sushi.ing), JSON.stringify({ riso: 1, pesce: 1 }))
   uguale('pesce fritto: pesce 1 e farina 1', JSON.stringify(RICETTE.fritto.ing), JSON.stringify({ pesce: 1, farina: 1 }))
-  uguale('il sushi bar apre al 18 e il sushi si fa dal 18', [livelloDelPezzo('sushi_bar'), livelloDellaRicetta('sushi')].join(), '18,18')
-  uguale('il pesce è uno dei prodotti e sta al livello del molo', [!!PRODOTTI_ANIMALI.pesce, livelloDelPezzo(PESCI.pesce.dove)].join(), 'true,4')
+  uguale('il sushi bar apre al 62 e il sushi si fa dal 62', [livelloDelPezzo('sushi_bar'), livelloDellaRicetta('sushi')].join(), '62,62')
+  uguale('il pesce è uno dei prodotti e sta al livello del molo (57)', [!!PRODOTTI_ANIMALI.pesce, livelloDelPezzo(PESCI.pesce.dove)].join(), 'true,57')
   uguale('un lancio rende 1 (molo, acqua dolce)', resaDellaPesca({}), 1)
   uguale('col porticciolo 2', resaDellaPesca({ porticciolo: true }), 2)
   uguale('nel mare (col porticciolo) 3', resaDellaPesca({ porticciolo: true, mare: true }), 3)
-  controlla('l\'attesa è fra 10 e 18 secondi', PESCA.ms >= 10000 && PESCA.ms <= 18000)
+  controlla('l\'attesa è fra 3 e 10 minuti, e il ciclo del banco quindici (come la peschiera)', PESCA.ms >= 180000 && PESCA.ms <= 600000 && PESCA.ms + PESCA.riposoMs === 900000)
 }
 
 /* ══════════ 5. la pesca: lago a est, mare a ovest ══════════ */
@@ -260,7 +260,7 @@ const celleDi = l => { const o = []; for (let y = 0; y < l.d; y++) for (let x = 
   controlla('friggitoria e sushi bar si comprano e si mettono', f.s.posseduti.sushi_bar && f.s.posseduti.friggitoria)
   controlla('il sushi: riso + pesce', f.avviaRicetta('sushi').ok && f.s.merci.riso === 3 && f.s.prodotti.pesce === 2)
   controlla('il pesce fritto: pesce + farina', f.avviaRicetta('fritto').ok && f.s.prodotti.pesce === 1 && !f.s.prodotti.farina)
-  adesso.t += 60_000; f.tick(); f.ritiraDa('friggitoria')
+  adesso.t += 3_600_000; f.tick(); f.ritiraDa('friggitoria')
   uguale('senza pesce non si frigge: mancano gli ingredienti', (() => { f.s.prodotti.pesce = 0; f.s.prodotti.farina = 1; return f.avviaRicetta('fritto').motivo })(), 'mancano-ingredienti')
   controlla('il sushi è pronto da ritirare', f.prontiIn('sushi_bar') === 1 && f.ritiraDa('sushi_bar').ok && f.s.prodotti.sushi === 1)
   // lo stagno costruito è un posto di pesca anche lui, con un molo accanto

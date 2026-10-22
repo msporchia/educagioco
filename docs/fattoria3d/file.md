@@ -6,6 +6,7 @@ Gioco.vue            il coordinatore: monete vere, contatori (anche `fattoria3dU
 stile.css            tutto sotto il prefisso .f3-
 stile-vicini.css    la mappa, il viaggio, la visita (`.f3-vic-`)
 stile-guardaroba.css il foglio del guardaroba (`.f3-gua-`)
+stile-guida.css     la riga del primo giro, il tasto «E adesso?» e il consiglio (`.f3-guida`, `.f3-adesso`, `.f3-consiglio-`)
 stile-macchina.css  il foglio di una macchina (`.fm-`): fila, pronti, carte, fantasma; i colori del tema restano in stile.css
 visite.js            il filo fra `Gioco.vue` e le visite (`usaVisite`): mappa, viaggio, la scena a richiesta, cassa e mercato
 dati/
@@ -13,6 +14,8 @@ dati/
   lotti.js           `generaLotto(a, b, { vecchio })`: bioma, acqua, spiaggia, molo, alberi e sassi di un lotto (puro); `vecchio` per i lotti di un salvataggio di prima ([geografia-e-pesca.md](geografia-e-pesca.md))
   biomi.js           prato / bosco / laghetto e lo stagno ([laghi.md](laghi.md)), il mare a ovest, la costa e la spiaggia, i laghi grandi a est (`eMare`, `eSpiaggia`, `eLago`, `tipoAcqua`: funzioni della cella), `biomaVecchio`; semi.js: il caso del mondo
   pesca.js           i numeri della pesca (`PESCA`: 12 s, riposo 60 s, raggio 6), `resaDellaPesca`, il pesce (`PESCI`, in `PRODOTTI_ANIMALI`)
+  rotazione.js       ruotare i pezzi: `ruotabile`, `misureGirate`, `DAVANTI`, `rotLetta` ([rotazione.md](rotazione.md))
+  stagioni3d.js      le feste in 3D: importa le finestre della 2D; `ASPETTI`, `PARTICELLE`, `addobbiNatale`, `chiazzeDiNeve`, `stagioneAttiva` ([stagioni.md](stagioni.md))
   carte.js           le carte del menu «Costruisci qui»: `carteDi(categoria, stato)`, `schedeDi`, `DISEGNI` (carta → pezzo dell'atlante 2D, ormai solo come dato: la carta mostra il modello 3D), `STRUMENTI`, i guasti
   catalogo.js        i pezzi (ora con la `categoria` di ogni pezzo e edificio, `CATEGORIE`; ora anche passerella, ponte e tavolo; i primi due `calpestabile`, con `alzato`: regole.md) — dieci all'inizio:  (campo, recinto, pollaio, stalla, bancarella, bacheca, aiuola, panchina, fontana, pozzo, spaventapasseri) e i dodici
                      edifici unici (fienile, pasticceria = il Pastificio, mongolfiera, mulino, panificio, caseificio, conserviera = la Cucina, gelateria, telaio, zuccherificio, sartoria, tintoria: gli id sono quelli dei salvataggi): prezzi, misure, `liv`, `slot`
@@ -25,6 +28,7 @@ dati/
   compagni.js        Watson e i gatti: i dati, il livello a cui arrivano, le scelte pure (meta, cosa fare, le sequenze di «Quando ci premi»: richiamo, feste di Watson, risposte dei gatti, incontro), `ASPETTO_ERO` ([compagni.md](compagni.md))
   livelli.js         le soglie, `roba(liv)`, i nomi dei livelli, i guasti dei livelli
   ordini.js          il banco: i clienti, i tempi, il premio (tetto 🪙6/min), `chiedibili(livello)`, i guasti
+  albero.js, usi.js  «Come si fa» (`alberoDi`: la catena di una merce) e a cosa serve una merce (`usiDi`), puri ([guida.md](guida.md))
   regole.js          i costi (anche l'albero 🪙 3 e il sasso 🪙 1, il prezzo dei lotti), le pecore
   mongolfiera.js     la nave: file, casse, pezzi, bonus, il riposo, la sorpresa (`SORPRESE`), `merceDaCassa`, `premioDellaCassa`, i guasti col tetto ([mongolfiera.md](mongolfiera.md))
   alberi.js          gli alberi storici (sempre gli stessi: un caso col seme) e quelli dei lotti nuovi
@@ -34,21 +38,28 @@ dati/
   vicini.js          i villaggi dei vicini e il formato di una fattoria visitabile (snapshot, `normalizzaFattoriaVisitabile`, i numeri di prezzi, premi e doni), i guasti ([vicini.md](vicini.md))
 motore/
   fattoria3d.js      le regole: la classe Fattoria3d (borsa e orologio da fuori)
+  guida.js           il primo giro: dal quadro di quello che c'è, il passo `{ testo, dove, mano }` (pura; [guida.md](guida.md))
+  consiglio.js       «E adesso?» (`cosaFaccioAdesso`) e il passo per avere una merce (`comeAvere`, risale la catena) con l'azione per farlo (pura)
   mongolfiera.js     la nave: `nuovaStiva`, `stivaInForma`, `aggiornaMongolfiera` (atterra il carico, torna dal viaggio), `caricaLaCassa`, `partiLaMongolfiera`, `scegliLaSorpresa`, `vistaDellaMongolfiera`
   ordini.js          gli ordini: `nuovoOrdine` (puro, col caso da fuori) e `ordineInForma`; i posti crescono col livello (`POSTI(livello)` in `dati/ordini.js`)
   stato.js           lo stato salvato (esperienza, `posseduti` = edificio in mappa; gli edifici sono anche `cose`, il v8 si migra al posto di prima: [edifici-liberi.md](edifici-liberi.md); `macchine`, `ordini`, `bestie` di pollaio e stalla; la versione sta in `VERSIONE_STATO`), `statoIniziale()` e `normalizza()` (un salvataggio rotto si rimette in forma; un v6 passa dagli id vecchi ai nuovi, v7)
+  tipo.js            la fattoria «tipo» (`fattoriaTipo(livello)`, borsa infinita, deterministica): il cheat `#fattoria3d-tipo=N` ([comandi](../core/comandi.md)); test `unita/fattoria3d-tipo`
   percorso.js        Dijkstra sulla griglia, le strade costano meno
   pesca.js           la pesca: `provaPesca`, `lanciaLenza`, `ritiraPesca`, `bancoDi`, `lenzeInAcqua`, `riesaminaPesca` (funzioni pure sulla `Fattoria3d`); `stato.pesca` per lotto d'acqua
   vicini.js          i vicini: la classe `Vicini` (entra, aiuta la cassa, compra, vende), `normalizzaVicini` (lo stato a parte), `motoreDiVisita` (la scena di sola lettura da uno snapshot), `esportaLaMiaFattoria`
 scena3d/             il disegno (vedi scena.md); `facce.js` la faccia di una merce su una tela per i pezzi di HTML sopra la scena (il «+1» di `fx.volo`); `visita.js` è la visita a un vicino, una sottoclasse di `Mondo3d` su un motore di sola lettura ([vicini.md](vicini.md)); `anteprime.js` e `anteprime-pura.js` le foto dei modelli per le carte (senza three: l'inquadratura e la cache; [scena.md](scena.md) «Le anteprime»); `modelli-colture.js` il campo e le sedici colture (ri-esportati da `modelli.js`); `compagni.js` e `modelli-compagni.js` per i compagni e il contadino ([compagni.md](compagni.md)); `detti.js` (senza three) traduce un rifiuto del motore in una riga, anche per la vista; `ottimizza.js` spegne l'ombra alle mesh piccole di un modello appena creato ([scena.md](scena.md) «Qualità e peso»); `fondi.js` fonde le mesh statiche di un modello per materiale; `cache-modelli.js` costruisce (e fonde) un modello una volta per tipo e poi consegna cloni che ne condividono geometrie e materiali; `bestie-puro.js` (senza three) i tre stadi di gallina, mucca e pecora come numeri (stato, progresso, profilo: [animali.md](animali.md) «I tre stadi»); `scaldo-puro.js` (senza three) è la coda del riscaldamento: i modelli che servono presto costruiti in tempo morto, un compito per fotogramma (tutto in «Qualità e peso»); `azioni.js` fa il gesto davanti a ogni cosa, pollaio e stalla compresi ([animali.md](animali.md))
   scena3d/modelli-passaggi.js   ponte, passerella e tavolo con le panche: presi dal Sotterraneo 3D e rifatti con i materiali della fattoria (scena.md)
   scena3d/modelli-acqua.js      lo stagno (3×3) e il laghetto (5×4) costruiti dal bambino, e i materiali dell'acqua (`materialeAcqua`, `materialeMare`, `uTAcqua`) che usa anche il terreno ([laghi.md](laghi.md))
+  scena3d/modelli-cortile.js    il pentolone (3×3), lo stagno delle anatre, il porcile e il recinto delle capre (4×3) con anatra, maiale e capra ([cortile-e-pentolone.md](cortile-e-pentolone.md))
   scena3d/modelli-pesca.js      il molo (3×1 e 1×3) e il porticciolo (4×3, la barca dondola); friggitoria e sushi bar stanno in `modelli-macchine.js` ([geografia-e-pesca.md](geografia-e-pesca.md))
   scena3d/pesci.js              i pesciolini: una `InstancedMesh` sola, tutta nello shader (`uTPesci`), nell'acqua dei laghi, del mare e degli stagni
+  scena3d/stagione.js           le feste in scena: cielo e luci tinti, i fiocchi (un `Points`), chiazze, stelle, alberelli e lucine a istanze; `via()` rimette tutto ([stagioni.md](stagioni.md))
+  scena3d/modelli-feste.js      le zucche di Halloween (`zucca_intagliata`, `zucche_mucchio`)
   scena3d/pesca3d.js            il galleggiante (tre stadi: calma, attesa, «Abbocca!»), il filo dalla canna, il ritiro da sé se il contadino è lì
 viste/
   Faccia.vue         la faccia di una merce (`k` la chiave, `n` il numerino): il pezzo dell'atlante 2D con `Provino.vue`, l'emoji come ripiego; la usano inventario, banco, macchina, semi, livelli, visita
   Hud.vue            il gettone del livello (⭐ N con la barra sottile, apre i livelli), il tasto «🎒 Inventario» (pallino se è entrata roba dall'ultima apertura) e, da livello 2, «🧺 Banco» col pallino degli ordini consegnabili. Niente liste di scorte sul prato
+  Albero.vue         «🌳 Come si fa»: la strada di una merce a figure con le rotaie (dati/albero.js); si apre da inventario e da sotto un «non si può» ([guida.md](guida.md); stile: `stile-albero.css`)
   Inventario.vue     il foglio delle scorte a schede (🌾 raccolti, 🧺 prodotti, 🧶 lana e altro): gettoni con faccia e numero, un tocco dice nome e a cosa serve; solo lettura, niente vendere. Il conto sta in `inventario-puro.js` (stile: `stile-inventario.css`)
   Guardaroba.vue     il foglio dell'abito ([guardaroba.md](guardaroba.md)): il ritratto 3D (anteprima `contadino:<abito>`), chi si è (la scelta del profilo, `SceltaAspetto`), le schede dei capi e i gettoni col lucchetto
 
@@ -64,6 +75,7 @@ viste/
   Banco.vue          il vecchio foglio del banco (tre posti con fumetto): non più agganciato, da togliere
   Livelli.vue        il foglio «Livello N»: la scala, con la scatola aperta di ciò che è arrivato e quella chiusa (in grigio, col lucchetto) di ciò che arriva dopo, quanto manca
   Dialogo.vue        la conferma d'acquisto (non più per le bestie)
+  Consiglio.vue      il foglio «E adesso?»; `ConsiglioRiga.vue` il passo col tasto, anche sotto i «mancano» di macchina, banco e mongolfiera
   Opzioni.vue        il pannello ⚙
   Mappa.vue          la mappa del trattore: i villaggi in fila lungo una strada, i grigi col livello
   Visita.vue         una visita: la testata con «Torna a casa», i tasti, la storia, i fogli della cassa e del mercato, il viaggio del trattore
@@ -87,6 +99,7 @@ Registrazione: `src/giochi/indice.js` (il manifesto, in coda) e `src/giochi/sche
 | `[data-f3="semi"]`, `[data-seme="carota"]` | la scelta del seme |
 | `[data-f3="costruisci-qui"]`, `[data-f3="costruisci-velo"]`, `[data-scheda="campi"]`, `[data-carta="campo"]` | il foglio «Costruisci qui» (si apre con `premuto` ~0,45 s su un posto libero, o col tasto 🏗️), il velo che si tocca per chiuderlo, una scheda (`campi`, `animali`, `edifici`, `decori`, `passaggi`; `.acceso`) e una carta (anche `strada` e `gomma`; `data-cat` la scheda) |
 | `[data-f3="costruisci-msg"]`, `[data-carta].trema` | la riga sotto le carte (livello che manca, «Servono 🪙 N») e la carta chiusa che trema |
+| `[data-f3="ruota"]` (con `data-rot`) | il tasto ↻ mentre un pezzo ruotabile è in mano: gira di un quarto ([rotazione.md](rotazione.md)) |
 | `[data-f3="zona-via"]` | la fascia in basso mentre un pezzo è sollevato o il fantasma aspetta un posto (toccarla annulla il fantasma) |
 | `[data-f3="barra-strade"]`, `[data-strumento="strada"]`, `[data-f3="strade-fatto"]` | la barra del pennello |
 | `[data-f3="dialogo"]`, `[data-scelta="0"]` | la conferma (solo i lotti di terreno); la prima scelta è «Compra · 🪙 N» |
@@ -101,6 +114,7 @@ Registrazione: `src/giochi/indice.js` (il manifesto, in coda) e `src/giochi/sche
 | `[data-merce="<id>"]` | la faccia di una merce (`viste/Faccia.vue`; anche il gettone dell'inventario ha lo stesso attributo: per il gettone `button[data-merce]`): inventario, banco, macchina, scelta del seme, livelli, cassa e mercato; il volo «+1» sopra la scena |
 | `[data-f3="livello"]`, `[data-f3="livello-nuovo"]`, `[data-f3="livelli"]`, `[data-f3="avviso-livello"]` | il gettone, il suo pallino, il foglio dei livelli, l'avviso che compare a ogni salita |
 | `[data-carta].bloccata`, `[data-seme].bloccato`, `[data-f3="semi-msg"]` | una carta o una coltura non ancora arrivata, e la riga che dice il livello (la scelta dei semi) |
+| `[data-f3="apri-consiglio"]`, `[data-f3="consiglio"]`, `[data-f3="consiglio-riga"]`, `consiglio-testo`, `consiglio-fai`; `[data-guida-riga]`, `[data-indicato]` | «E adesso?», il passo col suo tasto (anche sotto i messaggi dei fogli) e la guida del primo giro: [guida.md](guida.md) |
 | `[data-f3="apri-opzioni"]`, `[data-f3="opzioni"]`, `[data-preset="basso"]` | le opzioni |
 | `[data-f3="centra"]` | «⌖ Torna al contadino» |
 | `[data-chiudi]` | la ✕ di ogni foglio |

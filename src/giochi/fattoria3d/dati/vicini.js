@@ -4,6 +4,7 @@
    `normalizzaFattoriaVisitabile` non si fida di niente: scarta ciò che non conosce, taglia i testi e RICALCOLA i numeri che
    regalano qualcosa (premi, doni), così uno snapshot altrui non può pagare più del banco. Dato puro, niente disegno.
    Vedi docs/fattoria3d/vicini.md. */
+import { sullaScalaDellaDueD } from './parita2d.js'
 import { COLTURE } from './colture.js'
 import { RICETTE, nuovoId } from './ricette.js'
 import { PRODOTTI_ANIMALI } from './animali.js'
@@ -73,6 +74,8 @@ function coseInForma(letto) {
     if (c.tipo === 'recinto') x.pecore = intero(c.pecore, 1, 4, 2)
     if (c.tipo === 'pollaio') x.bestie = intero(c.bestie, 1, 6, 3)
     if (c.tipo === 'stalla') x.bestie = intero(c.bestie, 1, 4, 2)
+    if (c.tipo === 'anatre') x.bestie = intero(c.bestie, 1, 6, 3)
+    if (c.tipo === 'porcile' || c.tipo === 'capre') x.bestie = intero(c.bestie, 1, 4, 2)
     out.push(x)
   }
   return out
@@ -197,7 +200,7 @@ const vende = (k, n, carattere) => ({ k, n, prezzo: prezzoPer(k, carattere) })
 
 const DA_SCRIVERE = [
   {
-    v: 1, id: 'nonna-rita', nome: 'L\'orto di Nonna Rita', tema: 'orto', liv: 7,
+    v: 1, id: 'nonna-rita', nome: 'L\'orto di Nonna Rita', tema: 'orto', liv: sullaScalaDellaDueD(7),
     proprietario: { nome: 'Nonna Rita', emoji: '👵' },
     storia: ['Che bello vederti! Le mie galline fanno le uova più buone del paese.', 'Se mi riempi la cassa ti lascio qualcosa del mio orto.'],
     lotti: [],
@@ -209,12 +212,12 @@ const DA_SCRIVERE = [
     ],
     mercato: {
       vende: [vende('uova', 4, 0.8), vende('zucca', 4, 0.8), vende('cipolla', 3, 0.8)],
-      compra: [scambio('patata', 9, 'uova', 1), scambio('carota', 6, 'zucca', 2), scambio('mais', 5, 'cipolla', 1)],
+      compra: [scambio('patata', 9, 'grano', 3), scambio('carota', 6, 'zucca', 1), scambio('mais', 5, 'cipolla', 1)],
     },
     cassa: { chiede: [{ k: 'grano', n: 4 }, { k: 'carota', n: 3 }, { k: 'mais', n: 2 }], dono: { k: 'patata', n: 2 } },      // non più un uovo: vale due becchimi (il mangime della 2D), più di metà di questa cassa
   },
   {
-    v: 1, id: 'mugnaio-tonio', nome: 'Il mulino di Tonio', tema: 'mulino', liv: 9,
+    v: 1, id: 'mugnaio-tonio', nome: 'Il mulino di Tonio', tema: 'mulino', liv: sullaScalaDellaDueD(9),
     proprietario: { nome: 'Tonio', emoji: '👨‍🍳' },
     storia: ['Sono Tonio, il mugnaio. Sente come gira? Quella è farina che sta nascendo.', 'Portami un po\' di grano: ho sempre fame di grano.'],
     edifici: ['mulino'],
@@ -230,7 +233,7 @@ const DA_SCRIVERE = [
     cassa: { chiede: [{ k: 'grano', n: 6 }, { k: 'mais', n: 3 }, { k: 'farina', n: 1 }], dono: { k: 'pastone', n: 1 } },
   },
   {
-    v: 1, id: 'zio-beppe', nome: 'Le pecore di Zio Beppe', tema: 'pecore', liv: 11,
+    v: 1, id: 'zio-beppe', nome: 'Le pecore di Zio Beppe', tema: 'pecore', liv: Math.max(sullaScalaDellaDueD(11), livelloDellaMerce('cipolla')),       // compra cipolle (44): il villaggio non chiede mai ciò che non si fa ancora
     proprietario: { nome: 'Zio Beppe', emoji: '👴' },
     storia: ['Ehi, benvenuta in campagna! Le mie pecore brucano da stamattina.', 'Là in alto vedi la mongolfiera: da lassù la fattoria sembra un francobollo.'],
     edifici: ['mongolfiera', 'telaio'],
@@ -240,12 +243,12 @@ const DA_SCRIVERE = [
     ],
     mercato: {
       vende: [vende('torta', 2, 1.2), vende('pasta', 2, 1.2), vende('latte', 3, 1.2), vende('stoffa', 2, 1.2)],
-      compra: [scambio('zucca', 6, 'latte', 1), scambio('cipolla', 6, 'pane', 1), scambio('patata', 8, 'latte', 1)],
+      compra: [scambio('zucca', 6, 'farina', 1), scambio('cipolla', 6, 'farina', 1), scambio('patata', 8, 'farina', 1)],
     },
     cassa: { chiede: [{ k: 'zucca', n: 3 }, { k: 'pane', n: 2 }, { k: 'patata', n: 3 }], dono: { k: 'stoffa', n: 1 } },      // la pasta (con l'uovo) vale ormai più di metà della cassa: la lana delle sue pecore
   },
   {
-    v: 1, id: 'villa-dolce', nome: 'Villa Dolce', tema: 'frutteto', liv: 13,
+    v: 1, id: 'villa-dolce', nome: 'Villa Dolce', tema: 'frutteto', liv: sullaScalaDellaDueD(13),
     proprietario: { nome: 'Villa Dolce', emoji: '🌻' },
     storia: ['Benvenuti a Villa Dolce! Qui le fragole si raccolgono una per una, a mano.', 'E in fondo c\'è la gelateria: il gelato lo facciamo solo con frutta vera.'],
     edifici: ['gelateria', 'zuccherificio'],

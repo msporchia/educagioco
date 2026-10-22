@@ -3,7 +3,7 @@
 // Il perché di tutto sta in docs/sotterraneo/roba.md.
 import { EROI, FAMIGLIE, portaLa } from './eroi.js'
 import { RARITA, RARITA_DA_LETTERA, ABILITA_DEI_PEZZI, UNICI, EPICI, ATT_OGNI_LIVELLI, DIF_OGNI_LIVELLI,
-         VITA_OGNI_LIVELLI, valoreDelLivello, TINTE_DELLE_ABILITA } from './pezzi.js'
+         VITA_OGNI_LIVELLI, DIF_TESTA_OGNI_LIVELLI, VITA_TESTA_OGNI_LIVELLI, valoreDelLivello, TINTE_DELLE_ABILITA } from './pezzi.js'
 import { ASPETTI } from './aspetti.js'
 
 // i tre gradini, uguali per tutte le famiglie: `att` è a una mano, `mano` quello che darebbe la mancina (uno scudo del gradino:
@@ -29,11 +29,12 @@ export const STANZE_TORCIA = 12
 // se ne tengono al più PERGAMENE_MASSIME, e la vende solo l'incantatrice dopo la sua missione (`dopo`)
 export const PREZZO_PERGAMENA = 25, PERGAMENE_MASSIME = 5
 
-// Dove si indossa: `dove` di un pezzo è il tipo di posto (dito = anello, collo = collana), le caselle addosso sono sei e due
-// anelli stanno sulle due del dito (docs/sotterraneo/roba.md, «Addosso e in tasca»). Un salvataggio di prima ha un solo `dito`
-export const TIPI_DI_POSTO = ['mano', 'mancina', 'corpo', 'dito', 'collo']
-export const CASELLE = ['mano', 'mancina', 'corpo', 'collo', 'dito', 'dito2']
-export const CASELLE_DEL_TIPO = { mano: ['mano'], mancina: ['mancina'], corpo: ['corpo'], collo: ['collo'], dito: ['dito', 'dito2'] }
+// Dove si indossa: `dove` di un pezzo è il tipo di posto (dito = anello, collo = collana, testa = copricapo), le caselle addosso sono
+// sette e due anelli stanno sulle due del dito (docs/sotterraneo/roba.md, «Addosso e in tasca»). Un salvataggio di prima ha un solo
+// `dito`, e nessuna `testa` (docs/sotterraneo/elmo.md): la casella in coda, così chi scorre le altre le trova nell'ordine di sempre
+export const TIPI_DI_POSTO = ['mano', 'mancina', 'corpo', 'dito', 'collo', 'testa']
+export const CASELLE = ['mano', 'mancina', 'corpo', 'collo', 'dito', 'dito2', 'testa']
+export const CASELLE_DEL_TIPO = { mano: ['mano'], mancina: ['mancina'], corpo: ['corpo'], collo: ['collo'], dito: ['dito', 'dito2'], testa: ['testa'] }
 export const tipoDellaCasella = c => (c === 'dito2' ? 'dito' : c)
 
 // `mani: 2` occupa anche la sinistra (bastone, arco, spadone); leggere si sdoppiano, pesanti no
@@ -134,6 +135,23 @@ const BASI = {
   'scudo-teschio': { em: '💀', nome: 'Scudo del teschio', sprite: 'scudo-teschio', dove: 'mancina',
                      dif: 3, prezzo: 34, dice: 'Il più duro che ci sia. Non fa altro, e basta così.' },
 
+  // i copricapi (docs/sotterraneo/elmo.md): il ferro per chi veste il ferro, la stoffa per gli altri, la cuffia per tutti. Un elmo vale
+  // una frazione di un'armatura (un punto di difesa, e cresce a metà passo: DIF_TESTA_OGNI_LIVELLI); il 3D li disegna coi modelli
+  // dei copricapi (anteprime3d-pura.js, `COPRICAPI_3D`) e non hanno sprite: nel 2D l'emoji. `copricapo`: fuori dai banchi e dal
+  // bottino di sempre, ci entrano solo dove il gioco li accende (Corredo.copricapi, il 3D)
+  cuffia: { em: '🪖', nome: 'Cuffia di cuoio', dove: 'testa', copricapo: true, genere: 'f', vita: 3, prezzo: 7,
+            dice: 'Cuoio imbottito: ti tiene in piedi un po\' di più.' },
+  elmo: { em: '🪖', nome: 'Elmo', dove: 'testa', famiglia: 'ferro', copricapo: true, dif: 1, prezzo: 10,
+          dice: 'Ferro sulla testa: sbagliare fa un po\' meno male.' },
+  'elmo-cornuto': { em: '🪖', nome: 'Elmo cornuto', dove: 'testa', famiglia: 'ferro', copricapo: true, dif: 1, vita: 3, prezzo: 16,
+                    dice: 'Due corna e tanto ferro: para, e ti tiene in piedi.' },
+  cappuccio: { em: '🎩', nome: 'Cappuccio', dove: 'testa', famiglia: 'stoffa', copricapo: true, dif: 1, prezzo: 10,
+               dice: 'Stoffa fitta, cucita doppia: sbagliare fa un po\' meno male.' },
+  cerchietto: { em: '👑', nome: 'Cerchietto', dove: 'testa', famiglia: 'stoffa', copricapo: true, dif: 1, luce: 1, prezzo: 16,
+                dice: 'Para poco, e brilla: vedi un po\' più in là.' },
+  'cappello-mago': { em: '🎩', nome: 'Cappello a punta', dove: 'testa', famiglia: 'stoffa', copricapo: true, dif: 1, vita: 3, prezzo: 16,
+                     dice: 'Il cappello di chi studia le stelle: para, e ti tiene in piedi.' },
+
   'amuleto-osso': { em: '🦴', nome: 'Amuleto d\'ossa', sprite: 'ossa', dove: 'collo',
                     dif: 1, vita: 4, prezzo: 24,
                     dice: 'Para un pochino, e ti tiene in piedi un po\' di più.' },
@@ -233,6 +251,10 @@ function componi(k) {
     (b.mani === 2 ? PESO_DELLA_DIFESA * Math.floor((liv - 1) / DIF_OGNI_LIVELLI) : 0)
   else if (b.dove === 'mancina' || b.dove === 'corpo') c.dif = (c.dif || 0) + Math.floor((liv - 1) / DIF_OGNI_LIVELLI)
   else if ((b.dove === 'dito' || b.dove === 'collo') && b.vita) c.vita = b.vita + Math.floor((liv - 1) / VITA_OGNI_LIVELLI)
+  else if (b.dove === 'testa') {
+    if (b.dif) c.dif = b.dif + Math.floor((liv - 1) / DIF_TESTA_OGNI_LIVELLI)
+    if (b.vita) c.vita = b.vita + Math.floor((liv - 1) / VITA_TESTA_OGNI_LIVELLI)
+  }
   const f = RARITA[rarita].forza
   for (const a of abilita) {
     const v = ABILITA_DEI_PEZZI[a].valore(liv, f)
@@ -305,11 +327,14 @@ export const CHIAVI_COSE = Object.keys(BASI)
 
 export const ARMI_DI = grado =>
   CHIAVI_COSE.filter(k => COSE[k].dove === 'mano' && COSE[k].grado === grado)
-// le basi che si trovano e si comprano: senza le armi dei mostri grossi
-export const PEZZI_DI_BASE = CHIAVI_COSE.filter(k => COSE[k].dove && !COSE[k].deiGrossi)
+// le basi che si trovano e si comprano: senza le armi dei mostri grossi, e senza i copricapi (sotto)
+export const PEZZI_DI_BASE = CHIAVI_COSE.filter(k => COSE[k].dove && !COSE[k].deiGrossi && !COSE[k].copricapo)
+// i copricapi: un elenco a parte, perché il bottino e i banchi di sempre (il 2D, il banco di prova, la taratura) restino quelli di
+// prima; li pescano solo `copricapoDalTrovato` (motore/bottino.js) e le linguette `copricapi` (dati/mercanti.js), dove sono accesi
+export const COPRICAPI = CHIAVI_COSE.filter(k => COSE[k].dove === 'testa')
 
 // due elenchi diversi: dal forziere non escono chiavi né boccette
-export const IN_VENDITA = CHIAVI_COSE.filter(k => COSE[k].prezzo && !COSE[k].deiGrossi && !COSE[k].rarissimo)
+export const IN_VENDITA = CHIAVI_COSE.filter(k => COSE[k].prezzo && !COSE[k].deiGrossi && !COSE[k].rarissimo && !COSE[k].copricapo)
 export const SCUDI = CHIAVI_COSE.filter(k => COSE[k].dove === 'mancina')
 
 // stanno fuori dal sorteggio (la guaritrice le ha sempre, dalla discesa in cui `dalla` le mette sul banco); l'elisir e l'ampolla
@@ -402,7 +427,10 @@ export function guastiDelleCose(nomi = null) {
     if (c.dove && !TIPI_DI_POSTO.includes(c.dove)) g.push(`${k}: si indossa su "${c.dove}"?`)
     if (c.dove === 'mancina' && !c.dif) g.push(`${k}: nella mano debole, ma non para`)
     if (c.dove === 'corpo' && !c.dif) g.push(`${k}: si mette addosso, ma non para`)
-    if (c.dove && !c.sprite) g.push(`${k}: si indossa, ma non ha un pezzo disegnato`)
+    // il copricapo non ha sprite: lo disegna il 3D (i modelli dei copricapi), e nel 2D si vede la sua emoji
+    if (c.dove && c.dove !== 'testa' && !c.sprite) g.push(`${k}: si indossa, ma non ha un pezzo disegnato`)
+    if (c.dove === 'testa' && !(c.dif || c.vita)) g.push(`${k}: in testa, ma non para e non tiene in piedi`)
+    if (c.dove === 'testa' && !c.copricapo) g.push(`${k}: in testa senza \`copricapo\`, entrerebbe nel bottino di sempre`)
     if (c.usa === 'cura' && !c.cura && !c.tutta) g.push(`${k}: cura zero`)
     if (c.usa === 'luce' && !(c.stanze > 0)) g.push(`${k}: fa luce, ma non dice per quante stanze`)
     if ((c.dove === 'dito' || c.dove === 'collo') && !(c.luce || c.gemme || c.vita || c.dif))
@@ -438,6 +466,7 @@ export function guastiDelleCose(nomi = null) {
         g.push(`${e.chiave}: nessuna arma di gradino ${grado}, la sua fila ha un buco`)
     const addosso = CHIAVI_COSE.filter(k => COSE[k].dove === 'corpo' && portaLa(e, COSE[k]))
     if (!addosso.length) g.push(`${e.chiave}: niente da mettersi addosso`)
+    if (COPRICAPI.filter(k => COSE[k].famiglia && portaLa(e, COSE[k])).length < 2) g.push(`${e.chiave}: meno di due copricapi suoi`)
   }
 
   // le armi col nome proprio non devono picchiare più dell'ultimo gradino, e devono portare un tratto

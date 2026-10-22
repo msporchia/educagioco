@@ -5,13 +5,15 @@
    (terra, pezzi, edifici, strade; non gli spostamenti, e i rimborsi non la riducono): da lei il livello, che apre le cose. Vedi docs/fattoria3d/regole.md. */
 import { LIM, chiave, cellaDa, lottoDaChiave, cellaDaId, idCella, dentro, lotto, lottoDi, lottoPerId, vicinoDi, VICINI_4, LOTTI_INIZIALI, FISSI, POSTI_STORICI, stradeDiSerie } from '../dati/mondo.js'
 import { PEZZI, EDIFICI, quotaDelPezzo, edificiDaCostruire } from '../dati/catalogo.js'
+import { ruotabile, misureGirate } from '../dati/rotazione.js'
 import { COLTURE, TESSERE } from '../dati/colture.js'
 import { RICETTE, MACCHINE, TIPI_DI_MACCHINA } from '../dati/ricette.js'
 import { POSTI_MASSIMI, postiInForma, prezzoDelPosto } from '../dati/posti.js'
 import { livelloPer, livelloDelPezzo, livelloDellaColtura, livelloDellaRicetta } from '../dati/livelli.js'
 import { COSTI, PECORE, prezzoDelLotto } from '../dati/regole.js'
+import { SILOS, TIPI_DI_SILO, siloDi, postiPerMerce, prezzoDelPasso } from '../dati/silos.js'
 import { generaLotto } from '../dati/lotti.js'
-import { biomaDi, biomaVecchio, acquaDelLotto, tipoAcqua } from '../dati/biomi.js'
+import { biomaDiGen, acquaDelLotto, tipoAcqua } from '../dati/biomi.js'
 import { provaPesca, lanciaLenza, ritiraPesca, bancoDi, lenzeInAcqua, ripulisciPesca, riesaminaPesca, postiDiPesca } from './pesca.js'
 import { ANIMALI, CORTILE, LANA, prezzoDellaBestia } from '../dati/animali.js'
 import { normalizza, nuoveTessere } from './stato.js'
@@ -51,7 +53,8 @@ export class Fattoria3d {
     this.alberiPerId = new Map(); this.ostacoliPerId = new Map(); this.ostacoloPerCella = new Map()
     this.lottiAperti = new Map()                   // chiave del lotto → { l, dati }
     this._acquaCache = new Map()
-    this.vecchi = new Set(this.s.vecchi)           // i lotti comprati prima della geografia grande dove ora c'è il mare o un lago: si generano alla vecchia
+    this.vecchi = new Set(this.s.vecchi)           // i lotti comprati prima della geografia grande dove ora c'è il mare o un lago: si generano alla vecchia (generazione 0)
+    this.vecchi1 = new Set(this.s.vecchi1)         // i lotti comprati con i laghetti-pozzanghera, dove ora c'è un lago naturale: restano pozzanghere (generazione 1; docs/fattoria3d/laghi.md)
     for (const k of this.propri) this._apriAnello(lottoDaChiave(k))
     this.tick()
   }
@@ -87,7 +90,6 @@ export class Fattoria3d {
   cellaPropria(i, j) { return this.propri.has(lottoDi(i, j).k) }
   confina(l) { return VICINI_4.some(([a, b]) => this.propri.has(vicinoDi(l, a, b).k)) }
   prezzoLotto() { return prezzoDelLotto(Object.keys(this.s.lotti).length - Object.keys(LOTTI_INIZIALI).length) }
-  lottiMiei() { return [...this.propri].map(cellaLotto) }
   /** I lotti che si possono comprare adesso: quelli che confinano con uno tuo. */
   lottiComprabili() {
     if (this._comprabili) return this._comprabili
@@ -96,7 +98,9 @@ export class Fattoria3d {
     return (this._comprabili = [...out.values()])
   }
   /** Il bioma di un lotto, come lo vede il motore (un lotto di un salvataggio di prima resta quello di prima). */
-  biomaDi(l) { return this.vecchi.has(l.id) ? biomaVecchio(l.a, l.b) : biomaDi(l.a, l.b) }
+  /** La generazione di un lotto: 0 e 1 per i lotti di un salvataggio vecchio che restano com'erano, 2 per gli altri. */
+  genDi(l) { return this.vecchi.has(l.id) ? 0 : this.vecchi1.has(l.id) ? 1 : 2 }
+  biomaDi(l) { return biomaDiGen(l.a, l.b, this.genDi(l)) }
   /** Apre (genera) i lotti entro due lotti da `l`: alberi, sassi, acqua. Vale per i lotti tuoi e per l'anello che si vede davanti. */
   _apriAnello(l) {
     for (let db = -2; db <= 2; db++) for (let da = -2; da <= 2; da++) {
@@ -105,7 +109,7 @@ export class Fattoria3d {
     }
   }
   _apri(l) {
-    const dati = generaLotto(l.a, l.b, { vecchio: this.vecchi.has(l.id) })
+    const dati = generaLotto(l.a, l.b, { vecchio: this.genDi(l) })
     this.lottiAperti.set(l.k, { l, dati })
     for (const a of dati.alberi) {
       if (this.tagliati.has(a.n)) a.tagliato = true
@@ -141,7 +145,7 @@ export class Fattoria3d {
   _acquaDi(l) {
     let a = this._acquaCache.get(l.k)
     if (a === undefined) {
-      const celle = acquaDelLotto(l, this.vecchi.has(l.id))
+      const celle = acquaDelLotto(l, this.genDi(l))
       a = celle.length ? new Set(celle.map(([i, j]) => chiave(i, j))) : null
       this._acquaCache.set(l.k, a)
     }
@@ -186,7 +190,7 @@ export class Fattoria3d {
   /** La cosa su una cella: il pezzo che sta sopra (un ponte) prima, poi lo stagno sotto. */
   cosaSu(i, j) { const k = chiave(i, j), id = this.cellaCosa.get(k) || this.cellaAcqua.get(k) || 0; return id ? this.cosa(id) : null }
   _occupa(c, id) {
-    const d = this.misure(c.tipo)
+    const d = this.misureCosa(c)
     if (d.acqua) {          // l'acqua costruita non occupa `cellaCosa` (ci va il ponte); una strada disegnata lì sotto sparisce
       for (let a = 0; a < d.w; a++) for (let b = 0; b < d.d; b++) { const k = chiave(c.i + a, c.j + b); this.cellaAcqua.set(k, id); if (this.strada.get(k) === 1) this.strada.delete(k) }
       return
@@ -214,11 +218,14 @@ export class Fattoria3d {
   // ── i pezzi ──
   get cose() { return [...this.s.cose, ...this.prove] }
   cosa(id) { return this.s.cose.find(c => c.id === id) || this.prove.find(c => c.id === id) || null }
-  misure(tipo) { return PEZZI[tipo] || EDIFICI[tipo] }
+  /** Le misure di un tipo; `rot` (0–3, quarti di giro) le scambia se è dispari: un pezzo girato di 90° occupa d×w (docs/fattoria3d/rotazione.md). */
+  misure(tipo, rot = 0) { const d = PEZZI[tipo] || EDIFICI[tipo]; return d && rot % 2 === 1 && ruotabile(tipo) ? misureGirate(tipo, d) : d }
+  /** Le misure della cosa com'è messa (con la sua rotazione). */
+  misureCosa(c) { return this.misure(c.tipo, c.rot || 0) }
   prezzoPezzo(tipo) {
     const d = PEZZI[tipo]
     if (!d) return EDIFICI[tipo].prezzo               // un edificio costa sempre uguale: ce n'è uno solo
-    return d.prezzo + d.rincaro * (this.s.cose.filter(c => c.tipo === tipo).length + (this.s.magazzino[tipo] || 0))
+    return Math.round(d.prezzo * (1 + (d.cresce || 0) * (this.s.cose.filter(c => c.tipo === tipo).length + (this.s.magazzino[tipo] || 0))))          // la formula della 2D: `base · (1 + copie · cresce)`
   }
   nelMagazzino(tipo) { return this.s.magazzino[tipo] || 0 }
   compraPezzo(tipo) {
@@ -233,8 +240,8 @@ export class Fattoria3d {
     return { ok: true, costo }
   }
   /** Si può mettere un pezzo di quel tipo con l'angolo in (i, j)? `ignora`: l'id della cosa che si sta spostando. */
-  puoMettere(tipo, i, j, ignora = 0) {
-    const d = this.misure(tipo)
+  puoMettere(tipo, i, j, ignora = 0, rot = 0) {
+    const d = this.misure(tipo, rot)
     if (!d) return { ok: false, motivo: 'sconosciuto' }
     if (d.acqua && ignora) { const x = this.cosa(ignora); if (x && this._ponteSopra(x)) return { ok: false, motivo: 'ponte-sopra' } }
     let terra = false, acqua = false
@@ -268,12 +275,13 @@ export class Fattoria3d {
     }
     return false
   }
-  mettiPezzo(tipo, i, j) {
+  mettiPezzo(tipo, i, j, rot = 0) {
     if (!(this.nelMagazzino(tipo) > 0)) return { ok: false, motivo: 'non-in-magazzino' }
     if (EDIFICI[tipo] && this.s.posseduti[tipo]) return { ok: false, motivo: 'gia-tuo' }
-    const p = this.puoMettere(tipo, i, j)
+    const p = this.puoMettere(tipo, i, j, 0, rot)
     if (!p.ok) return p
     const c = { id: this.s.prossimoId++, tipo, i, j }
+    if (rot % 4 && ruotabile(tipo)) c.rot = rot % 4
     if (EDIFICI[tipo]) this.s.posseduti[tipo] = true
     if (tipo === 'campo') c.tile = nuoveTessere()
     if (tipo === 'recinto') { c.pecore = this.pecoreIniziali(); c.cibo = 0 }
@@ -287,9 +295,9 @@ export class Fattoria3d {
   /** Quanto costa mettere ora un pezzo di quel tipo: 0 se è già pagato (nel magazzino). */
   costoDiMettere(tipo) { return this.nelMagazzino(tipo) > 0 ? 0 : this.prezzoPezzo(tipo) }
   /** Si può pagare e mettere qui? Come `puoMettere`, più il livello e le monete: per il fantasma rosso. */
-  puoCompraEMettere(tipo, i, j) {
+  puoCompraEMettere(tipo, i, j, rot = 0) {
     if (EDIFICI[tipo] && this.s.posseduti[tipo]) return { ok: false, motivo: 'gia-tuo' }
-    const p = this.puoMettere(tipo, i, j)
+    const p = this.puoMettere(tipo, i, j, 0, rot)
     if (!p.ok) return p
     const chiuso = this._chiusa(livelloDelPezzo(tipo))
     if (chiuso) return chiuso
@@ -298,32 +306,52 @@ export class Fattoria3d {
     return { ok: true, costo }
   }
   /** Compra (se non è già nel magazzino) e mette in un solo gesto. Se qualcosa non va non cambia niente e non si paga. */
-  compraEMetti(tipo, i, j) {
-    const p = this.puoCompraEMettere(tipo, i, j)
+  compraEMetti(tipo, i, j, rot = 0) {
+    const p = this.puoCompraEMettere(tipo, i, j, rot)
     if (!p.ok) return p
     if (!(this.nelMagazzino(tipo) > 0)) {
       const c = this.compraPezzo(tipo)
       if (!c.ok) return c
     }
-    const r = this.mettiPezzo(tipo, i, j)
+    const r = this.mettiPezzo(tipo, i, j, rot)
     return r.ok ? { ...r, costo: p.costo } : r
   }
   bestieIniziali() { return [{ fine: null }] }          // una gallina o una mucca sono nel prezzo, con fame
   pecoreIniziali() { return [{ eta: 'adulta', t0: null }] }                      // una pecora è nel prezzo del recinto, con fame come una gallina nel pollaio
-  spostaPezzo(id, i, j, { gratis = false } = {}) {
+  /** Sposta una cosa; `rot` (se detto) la gira. Stesso posto e stessa rotazione: niente da fare, niente da pagare. */
+  spostaPezzo(id, i, j, { gratis = false, rot } = {}) {
     const c = this.cosa(id)
     if (!c) return { ok: false, motivo: 'sconosciuto' }
-    if (c.i === i && c.j === j) return { ok: true, costo: 0 }
-    const p = this.puoMettere(c.tipo, i, j, id)
+    const r1 = rot === undefined || !ruotabile(c.tipo) ? (c.rot || 0) : ((rot % 4) + 4) % 4
+    if (c.i === i && c.j === j && r1 === (c.rot || 0)) return { ok: true, costo: 0 }
+    const p = this.puoMettere(c.tipo, i, j, id, r1)
     if (!p.ok) return p
     const costo = gratis || c.prova ? 0 : COSTI.spostare
     if (!this._paga(costo)) return { ok: false, motivo: 'poche-monete', costo }
-    this._libera(c); c.i = i; c.j = j; this._occupa(c, c.id)
+    this._libera(c); c.i = i; c.j = j
+    if (r1) c.rot = r1; else delete c.rot
+    this._occupa(c, c.id)
     riesaminaPesca(this)
     return { ok: true, costo }
   }
+  /** Gira di un quarto la cosa attorno al suo centro (🪙 1 come spostarla). Se così non ci sta, resta com'è e dice perché. */
+  ruotaPezzo(id, { gratis = false } = {}) {
+    const c = this.cosa(id)
+    if (!c) return { ok: false, motivo: 'sconosciuto' }
+    if (!ruotabile(c.tipo)) return { ok: false, motivo: 'non-ruotabile' }
+    const d0 = this.misureCosa(c), rot = ((c.rot || 0) + 1) % 4, d1 = this.misure(c.tipo, rot)
+    // il centro resta; se cade a mezza cella si arrotonda «in fuori» (così quattro quarti di giro tornano dov'erano) e, se lì non ci sta, dall'altra parte
+    const dx = (d0.w - d1.w) / 2, dz = (d0.d - d1.d) / 2, fuori = v => Math.sign(v) * Math.ceil(Math.abs(v)), dentro = v => Math.sign(v) * Math.floor(Math.abs(v))
+    let ultimo = null
+    for (const [ax, az] of [[fuori(dx), fuori(dz)], [dentro(dx), dentro(dz)], [fuori(dx), dentro(dz)], [dentro(dx), fuori(dz)]]) {
+      if (ultimo && ultimo[0] === ax && ultimo[1] === az) continue
+      ultimo = [ax, az]
+      if (this.puoMettere(c.tipo, c.i + ax, c.j + az, id, rot).ok) return this.spostaPezzo(id, c.i + ax, c.j + az, { gratis, rot })
+    }
+    return this.spostaPezzo(id, c.i + fuori(dx), c.j + fuori(dz), { gratis, rot })          // non ci sta: il rifiuto dice perché
+  }
   _libera(c) {
-    const d = this.misure(c.tipo)
+    const d = this.misureCosa(c)
     if (d.acqua) { for (let a = 0; a < d.w; a++) for (let b = 0; b < d.d; b++) this.cellaAcqua.delete(chiave(c.i + a, c.j + b)); return }       // il ponte sopra resta dov'è
     for (let a = 0; a < d.w; a++) for (let b = 0; b < d.d; b++) { const k = chiave(c.i + a, c.j + b); this.cellaCosa.delete(k); this.cellaPasso.delete(k) }
   }
@@ -405,20 +433,73 @@ export class Fattoria3d {
     if (!this.campoVuoto(c)) return { ok: false, motivo: 'non-vuoto' }
     const chiuso = this._chiusa(livelloDellaColtura(coltura))
     if (chiuso) return chiuso
+    const costo = COLTURE[coltura].semina || 0                          // 🪙 per seminare un campo: nella 2D è zero per tutte (si paga raccogliendo), ma è un dato
+    if (costo && !this._spendi(costo)) return { ok: false, motivo: 'poche-monete', costo }
     const t = this.ora()
     c.coltura = coltura; c.tile = Array.from({ length: TESSERE }, () => t)
-    return { ok: true }
+    return { ok: true, costo }
   }
   seminaCampo(id, coltura) { return this.semina(id, coltura) }
   colturaSbloccata(coltura) { return livelloDellaColtura(coltura) <= this.livello() }
+  /** Un campo ha quattro tessere ma rende un raccolto solo, come uno della 2D (D12): le prime tre si staccano gratis, la **ultima** consegna il raccolto in
+      magazzino e costa il gesto della 2D (🪙1–2). Cosa succederebbe raccogliendo tutto il campo, senza cambiare niente: { ok, coltura, costo } o un rifiuto
+      (`scomparto-pieno`, `poche-monete`): chi chiama lo controlla prima di far partire il gesto, così non si lascia un campo a metà. */
+  provaRaccolta(id) {
+    const c = this.cosa(id)
+    if (!c || c.tipo !== 'campo' || this.campoVuoto(c)) return { ok: false, motivo: 'vuota' }
+    if (!this.campoMaturo(c)) return { ok: false, motivo: 'non-matura' }
+    const coltura = c.coltura || 'grano', costo = COLTURE[coltura].raccolta || 0
+    if (this.spazioPer(coltura) < 1) return { ok: false, motivo: 'scomparto-pieno', k: coltura, max: this.capienzaDi(coltura) }
+    if (costo > this.monete()) return { ok: false, motivo: 'poche-monete', costo }
+    return { ok: true, coltura, costo }
+  }
   raccogliTessera(id, k) {
     const c = this.cosa(id)
     if (!c || c.tipo !== 'campo' || c.tile[k] === null) return { ok: false, motivo: 'vuota' }
     if (this.crescita(c)[k] < 1) return { ok: false, motivo: 'non-matura' }
     const coltura = c.coltura || 'grano'
-    c.tile[k] = null; this.s.merci[coltura]++
-    this._evento('raccolto', { coltura })
-    return { ok: true, coltura }
+    const ultima = c.tile.every((x, i) => i === k || x === null)               // l'ultima tessera del campo consegna il raccolto
+    let costo = 0
+    if (ultima) {
+      if (this.spazioPer(coltura) < 1) return { ok: false, motivo: 'scomparto-pieno', k: coltura, max: this.capienzaDi(coltura) }
+      costo = COLTURE[coltura].raccolta || 0
+      if (costo && !this._spendi(costo)) return { ok: false, motivo: 'poche-monete', costo }
+    }
+    c.tile[k] = null
+    if (ultima) { this.s.merci[coltura]++; this._evento('raccolto', { coltura }) }
+    return { ok: true, coltura, consegnato: ultima, costo }
+  }
+
+  // ── i silos: ogni merce ha il suo scomparto da 8 pezzi, +2 a ogni ingrandimento del silo (dati/silos.js) ──
+  /** Il silo della merce `k` (una coltura, la lana, un prodotto di bestia o di macchina), o null. */
+  siloDi(k) { return siloDi(k) }
+  /** Quante volte è stato ingrandito il silo (0 = appena nato). */
+  livelloDelSilo(silo) { return (this.s.silo && this.s.silo[silo]) | 0 }
+  /** Quanti pezzi tiene ogni scomparto di quel silo. */
+  postiDelSilo(silo) { return postiPerMerce(this.livelloDelSilo(silo)) }
+  /** Quanti pezzi di `k` ci stanno in tutto (Infinity se non è una merce di nessun silo). */
+  capienzaDi(k) { const s = siloDi(k); return s ? this.postiDelSilo(s) : Infinity }
+  /** Quanti pezzi di `k` ci stanno ancora: 0 se lo scomparto è pieno (anche se una scorta portata da fuori lo supera). */
+  spazioPer(k) { return Math.max(0, this.capienzaDi(k) - this.scortaDi(k)) }
+  /** Il prezzo del prossimo ingrandimento di un silo (🪙 `40 + 130·ln(1+n)` come in 2D). */
+  prezzoIngrandimento(silo) { return TIPI_DI_SILO.includes(silo) ? prezzoDelPasso(this.livelloDelSilo(silo)) : null }
+  /** Ingrandisce un silo: +2 pezzi per ogni scomparto. Costa monete (conta come esperienza); { ok, costo, posti } o un rifiuto (`sconosciuto`, `poche-monete`). */
+  ingrandisciSilo(silo) {
+    if (!TIPI_DI_SILO.includes(silo)) return { ok: false, motivo: 'sconosciuto' }
+    const costo = this.prezzoIngrandimento(silo)
+    if (!this._spendi(costo)) return { ok: false, motivo: 'poche-monete', costo }
+    this.s.silo[silo] = this.livelloDelSilo(silo) + 1
+    this._evento('silo', { silo, livello: this.s.silo[silo] })
+    return { ok: true, costo, posti: this.postiDelSilo(silo) }
+  }
+  /** Mette `n` di `k` in magazzino, fin dove ci stanno: torna quanti ne sono entrati (il resto resta dov'era, a chi chiama). */
+  _riponi(k, n) {
+    const entra = Math.min(n, this.spazioPer(k))
+    if (entra <= 0) return 0
+    if (COLTURE[k]) this.s.merci[k] += entra
+    else if (LANA[k]) this.s.lana += entra
+    else this.s.prodotti[k] = (this.s.prodotti[k] || 0) + entra
+    return entra
   }
 
   // ── gli alberi ──
@@ -478,11 +559,13 @@ export class Fattoria3d {
   provaCura(id) {
     const c = this.cosa(id)
     if (!c || c.tipo !== 'recinto') return { azione: null, motivo: 'sconosciuto' }
-    if (this.lanaPronta(c).length) return { azione: 'tosa' }
+    if (this.lanaPronta(c).length) return this.spazioPer('lana') >= 1 ? { azione: 'tosa' } : { azione: null, motivo: 'scomparto-pieno', k: 'lana', max: this.capienzaDi('lana') }
     const fame = this.pecoreAffamate(c).length
     if (fame) {
-      const quante = Math.min(fame, Math.floor(this.scortaMangime(PECORE.mangia) / PECORE.pastiPerLana))
-      return quante ? { azione: 'nutri', n: quante } : { azione: null, ...this._senzaMangime(PECORE.mangia, PECORE.pastiPerLana) }
+      const colMangime = Math.floor(this.scortaMangime(PECORE.mangia) / PECORE.pastiPerLana)
+      if (!colMangime) return { azione: null, ...this._senzaMangime(PECORE.mangia, PECORE.pastiPerLana) }
+      const quante = Math.min(fame, colMangime, PECORE.costo ? Math.floor(this.monete() / PECORE.costo) : Infinity)       // ogni pecora nutrita dopo la tosa costa il gesto della 2D (la ricetta della lana)
+      return quante ? { azione: 'nutri', n: quante } : { azione: null, motivo: 'poche-monete', costo: PECORE.costo }
     }
     if (this._pastoAlRecinto(c)) return this.scortaMangime(PECORE.mangia) >= 1 ? { azione: 'nutri' } : { azione: null, ...this._senzaMangime(PECORE.mangia, 1) }
     const t = this.ora(), resti = c.pecore.filter(p => p.eta === 'adulta' && p.t0 != null).map(p => PECORE.laneMs - (t - p.t0))
@@ -492,23 +575,28 @@ export class Fattoria3d {
   tosa(id) {
     const c = this.cosa(id), pronte = c ? this.lanaPronta(c) : []
     if (!pronte.length) return { ok: false, motivo: 'non-pronta' }
-    for (const p of pronte) p.t0 = null
-    this.s.lana += pronte.length
-    this._evento('tosa', { n: pronte.length })
-    return { ok: true, n: pronte.length }
+    const n = Math.min(pronte.length, this.spazioPer('lana'))                    // lo scomparto della lana ha il suo tetto: le altre pecore aspettano
+    if (n < 1) return { ok: false, motivo: 'scomparto-pieno', k: 'lana', max: this.capienzaDi('lana') }
+    for (const p of pronte.slice(0, n)) p.t0 = null
+    this.s.lana += n
+    this._evento('tosa', { n })
+    return { ok: true, n }
   }
   /** Un pasto: alle tosate (ognuna, finché c'è da mangiare: parte la lana); poi l'agnello cresce dopo due, due adulte ne fanno nascere uno. Torna cosa è successo. */
   nutri(id) {
     const c = this.cosa(id)
     const p = this.provaCura(id)
-    if (!c || p.azione !== 'nutri') return { ok: false, motivo: p.motivo || 'niente-da-fare', ...(p.servono ? { servono: p.servono, mangia: p.mangia } : {}) }
+    if (!c || p.azione !== 'nutri') return { ok: false, motivo: p.motivo || 'niente-da-fare', ...(p.servono ? { servono: p.servono, mangia: p.mangia } : {}), ...(p.costo ? { costo: p.costo } : {}), ...(p.k ? { k: p.k, max: p.max } : {}) }
     if (this.pecoreAffamate(c).length) {
       let n = 0
       for (const x of this.pecoreAffamate(c)) {
-        if (!this._consumaTra(PECORE.mangia, PECORE.pastiPerLana)) break
+        if (this.scortaMangime(PECORE.mangia) < PECORE.pastiPerLana) break
+        if (PECORE.costo && !this._spendi(PECORE.costo)) break
+        this._consumaTra(PECORE.mangia, PECORE.pastiPerLana)
         x.t0 = this.ora(); n++
       }
-      return n ? { ok: true, evento: 'lana', n } : { ok: false, ...this._senzaMangime(PECORE.mangia, PECORE.pastiPerLana) }
+      if (n) return { ok: true, evento: 'lana', n, costo: n * PECORE.costo }
+      return this.scortaMangime(PECORE.mangia) >= PECORE.pastiPerLana ? { ok: false, motivo: 'poche-monete', costo: PECORE.costo } : { ok: false, ...this._senzaMangime(PECORE.mangia, PECORE.pastiPerLana) }
     }
     if (!this._consumaTra(PECORE.mangia, 1)) return { ok: false, ...this._senzaMangime(PECORE.mangia, 1) }
     const agnello = c.pecore.find(x => x.eta === 'agnello')
@@ -535,11 +623,13 @@ export class Fattoria3d {
     const c = this.cosa(id)
     if (!c || !c.bestie) return { azione: null, motivo: 'sconosciuto' }
     const A = ANIMALI[c.tipo], pronte = this.bestiePronte(c).length
-    if (pronte) return { azione: 'raccogli', n: pronte }
+    if (pronte) return this.spazioPer(A.prodotto) >= 1 ? { azione: 'raccogli', n: Math.min(pronte, this.spazioPer(A.prodotto)) } : { azione: null, motivo: 'scomparto-pieno', k: A.prodotto, max: this.capienzaDi(A.prodotto) }
     const fame = this.bestieAffamate(c).length
     if (fame) {
-      const quante = Math.min(fame, Math.floor(this.scortaDaMangiare(c.tipo) / A.pasti))
-      return quante ? { azione: 'nutri', n: quante } : { azione: null, ...this._senzaMangime(A.mangia, A.pasti) }
+      const colMangime = Math.floor(this.scortaDaMangiare(c.tipo) / A.pasti)
+      if (!colMangime) return { azione: null, ...this._senzaMangime(A.mangia, A.pasti) }
+      const quante = Math.min(fame, colMangime, A.costo ? Math.floor(this.monete() / A.costo) : Infinity)       // ogni pasto dato a una bestia costa il gesto della 2D (avviare la ricetta)
+      return quante ? { azione: 'nutri', n: quante } : { azione: null, motivo: 'poche-monete', costo: A.costo }
     }
     const t = this.ora(), resto = Math.min(...c.bestie.map(b => b.fine - t))
     return { azione: null, motivo: 'lavora', secondi: Math.ceil(Math.max(0, resto) / 1000) }
@@ -547,14 +637,16 @@ export class Fattoria3d {
   /** Dà da mangiare a tutte le bestie che hanno fame, finché c'è da mangiare: ognuna comincia il suo lavoro. */
   nutriBestie(id) {
     const p = this.provaCuraBestie(id)
-    if (p.azione !== 'nutri') return { ok: false, motivo: p.motivo || 'niente-da-fare', ...(p.servono ? { servono: p.servono, mangia: p.mangia } : {}) }
+    if (p.azione !== 'nutri') return { ok: false, motivo: p.motivo || 'niente-da-fare', ...(p.servono ? { servono: p.servono, mangia: p.mangia } : {}), ...(p.costo ? { costo: p.costo } : {}), ...(p.k ? { k: p.k, max: p.max } : {}) }
     const c = this.cosa(id), A = ANIMALI[c.tipo], t = this.ora()
     let n = 0
     for (const b of this.bestieAffamate(c)) {
-      if (!this._consumaTra(A.mangia, A.pasti)) break
+      if (this.scortaMangime(A.mangia) < A.pasti) break
+      if (A.costo && !this._spendi(A.costo)) break
+      this._consumaTra(A.mangia, A.pasti)
       b.fine = t + A.ms; n++
     }
-    return { ok: true, n }
+    return { ok: true, n, costo: n * (A.costo || 0) }
   }
   /** Raccoglie ciò che le bestie hanno fatto: va in dispensa (`prodotti`), le bestie hanno di nuovo fame. */
   raccogliProdotti(id) {
@@ -562,11 +654,12 @@ export class Fattoria3d {
     if (!c || !c.bestie) return { ok: false, motivo: 'sconosciuto' }
     const pronte = this.bestiePronte(c)
     if (!pronte.length) return { ok: false, motivo: 'niente' }
-    const A = ANIMALI[c.tipo]
-    for (const b of pronte) b.fine = null
-    this.s.prodotti[A.prodotto] = (this.s.prodotti[A.prodotto] || 0) + pronte.length
-    this._evento(A.evento, { n: pronte.length })
-    return { ok: true, n: pronte.length, prodotto: A.prodotto }
+    const A = ANIMALI[c.tipo], n = Math.min(pronte.length, this.spazioPer(A.prodotto))        // lo scomparto ha il suo tetto: le bestie che non ci stanno aspettano col loro prodotto
+    if (n < 1) return { ok: false, motivo: 'scomparto-pieno', k: A.prodotto, max: this.capienzaDi(A.prodotto) }
+    for (const b of pronte.slice(0, n)) b.fine = null
+    this.s.prodotti[A.prodotto] = (this.s.prodotti[A.prodotto] || 0) + n
+    this._evento(A.evento, { n })
+    return { ok: true, n, prodotto: A.prodotto }
   }
   // ── le bestie, una sola API per recinto (pecore), pollaio (galline) e stalla (mucche): una è nel prezzo del pezzo, le altre si
   //    comprano quando si vuole, ognuna più cara della precedente, fino alla capienza dell'edificio. Il livello apre il pezzo,
@@ -641,7 +734,7 @@ export class Fattoria3d {
     if (!m) return []
     return Object.entries(m.ricette).map(([id, r]) => {
       const liv = livelloDellaRicetta(id)
-      return { id, nome: r.nome, emoji: r.emoji, ing: r.ing, ms: r.ms, liv, sbloccata: liv <= this.livello(), ingredienti: this.ingredientiOk(id), mancano: this.mancano(id) }
+      return { id, nome: r.nome, emoji: r.emoji, ing: r.ing, ms: r.ms, costo: r.costo || 0, liv, sbloccata: liv <= this.livello(), ingredienti: this.ingredientiOk(id), mancano: this.mancano(id) }
     })
   }
   avviaRicettaIn(tipo, ric) {
@@ -653,20 +746,27 @@ export class Fattoria3d {
     const Q = this.s.macchine[tipo]
     if (Q.coda.length >= this.postiDi(tipo)) return { ok: false, motivo: 'forno-pieno' }
     if (!this.ingredientiOk(ric)) return { ok: false, motivo: 'mancano-ingredienti', mancano: this.mancano(ric) }
+    const costo = r.costo || 0                                   // 🪙 per avviare la ricetta: quello della 2D (0, 1 o 2)
+    if (costo && !this._spendi(costo)) return { ok: false, motivo: 'poche-monete', costo }
     for (const [k, n] of Object.entries(r.ing)) this._togli(k, n)
     Q.coda.push({ ric, fine: null })
     this.tick()
-    return { ok: true }
+    return { ok: true, costo }
   }
   /** La ricetta, nella macchina a cui appartiene. */
   avviaRicetta(ric) { return RICETTE[ric] ? this.avviaRicettaIn(RICETTE[ric].dove, ric) : { ok: false, motivo: 'sconosciuta' } }
   ritiraDa(tipo) {
     const Q = this.s.macchine[tipo]
     if (!Q) return { ok: false, motivo: 'sconosciuta' }
-    let n = 0
-    for (const [k, q] of Object.entries(Q.pronti)) { this.s.prodotti[k] = (this.s.prodotti[k] || 0) + q; n += q; this._evento('prodotto', { ric: k, n: q, macchina: tipo }) }
-    Q.pronti = {}
-    return n ? { ok: true, n } : { ok: false, motivo: 'niente' }
+    let n = 0, pieno = null
+    for (const [k, q] of Object.entries(Q.pronti)) {
+      const entra = this._riponi(k, q)                           // lo scomparto ha il suo tetto: il resto aspetta nella macchina
+      if (entra < q) pieno = pieno || k
+      if (entra) { n += entra; this._evento('prodotto', { ric: k, n: entra, macchina: tipo }) }
+      if (entra >= q) delete Q.pronti[k]; else if (entra) Q.pronti[k] = q - entra
+    }
+    if (n) return { ok: true, n, ...(pieno ? { pieno } : {}) }
+    return pieno ? { ok: false, motivo: 'scomparto-pieno', k: pieno, max: this.capienzaDi(pieno) } : { ok: false, motivo: 'niente' }
   }
   prontiIn(tipo) { return Object.values(this.s.macchine[tipo].pronti).reduce((a, n) => a + n, 0) }
   // le vecchie chiamate della pasticceria, che la scena e la vista usano ancora

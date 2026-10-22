@@ -36,9 +36,10 @@
    quelli del gioco, le luci sono quelle della pagina.
 
    ── cosa è fuori, e perché ──
-   · persone, eroe, armi: sono sprite ancorati (figure dell'atlante su un
+   · l'eroe e le armi: sono sprite ancorati (figure dell'atlante su un
      piano), non geometrie: non c'è un modello da mostrare. I mostri 3D (in
-     prova, `VOCI_MOSTRI`) invece ci sono: uno per modello del registro
+     prova, `VOCI_MOSTRI`) invece ci sono: uno per modello del registro; e le
+     persone del mondo di sopra (`VOCI_PERSONE`, docs/sotterraneo/persone-3d.md)
    · pareti, pavimenti, colonne e terreno (`pareti.js`, `terreno.js`,
      `mondo/terreno.js`, `mondo/lontano.js`): si scolpiscono su una pianta
      intera, non esistono da soli
@@ -47,12 +48,13 @@
    · `scatola`, `cilindro`, `triangolo`, `Cantiere` (`kit.js`): sono gli
      attrezzi con cui si fanno i modelli, non modelli
    ═══════════════════════════════════════════════════════════════════ */
+import { creaPersona, CHIAVI as CHIAVI_PERSONE } from '../../../src/giochi/sotterraneo/scena3d/persone3d/persone.js'
 import { MODELLO_DI_SPECIE, MODELLO_DEL_GROSSO, MODELLO_DELLA_VARIANTE, voceDi as voceDelMostro, costruisci as costruisciMostro } from '../../../src/giochi/sotterraneo/scena3d/mostri3d/registro.js'
 import { Group, Mesh, MeshStandardMaterial, MeshBasicMaterial, CircleGeometry, OctahedronGeometry, DoubleSide, Matrix4, Vector3 } from 'three'
 import { U } from '../../../src/giochi/sotterraneo/scena3d/mondo/vesti.js'
 import { creaTrame } from '../../../src/giochi/sotterraneo/scena3d/mondo/trame.js'
 import { materialiDelKit, Cantiere, casa, bottega, pozzo, mulino, tetto } from '../../../src/giochi/sotterraneo/scena3d/mondo/kit.js'
-import { ponte, staccionate, cartello, bacheca, campoMinatore } from '../../../src/giochi/sotterraneo/scena3d/mondo/ponti.js'
+import { ponte, staccionate, cartello, bacheca, campoMinatore, creaScavo } from '../../../src/giochi/sotterraneo/scena3d/mondo/ponti.js'
 import { creaMonumento, creaPietra, creaPortale as creaPortaleDiSopra, creaPortaDelleTerre } from '../../../src/giochi/sotterraneo/scena3d/mondo/monumenti.js'
 import { fontana as fontanaDellaPiazza } from '../../../src/giochi/sotterraneo/scena3d/mondo/fontana.js'
 import { MODELLI } from '../../../src/giochi/sotterraneo/scena3d/mondo/props-modelli.js'
@@ -189,6 +191,9 @@ const VOCI_KIT = [
   { id: 'sot:kit:campo-minatore', nome: 'Campo del minatore', categoria: 'edificio', file: MONDO + 'ponti.js:campoMinatore',
     crea: () => pezzo(({ cant, m, cose }) => campoMinatore({ tenda: { x: 0, y: 0 } }, cant, m, cose), { centro: [2, 1.5] }),
     dove: 'In mezzo alla fila del villaggio, dove sta il vecchio minatore: la tenda, il carretto col minerale e il falò' },
+  { id: 'sot:kit:scavo', nome: 'La X della mappa del tesoro', categoria: 'prop', file: MONDO + 'ponti.js:creaScavo',
+    crea: () => creaScavo(contesto().kit).g,
+    dove: 'Sul prato, solo con una taglia «mappa» in mano: la terra smossa con le due assi rosse a croce e la pala, dove si scava' },
 ]
 
 /* ═══════════════════ i monumenti (monumenti.js): i dungeon, la pietra, il portale, la porta delle terre ═══════════════════ */
@@ -586,7 +591,14 @@ const VOCI_MOSTRI = [...USI_DEI_MOSTRI].map(([id, chi]) => ({
 /* ═══════════════════ l'elenco ═══════════════════ */
 
 const comune = v => ({ gioco: 'sotterraneo', ...v })
-export const VOCI = [...VOCI_KIT, ...VOCI_MONUMENTI, ...VOCI_CITTA, ...VOCI_APERTI, ...VOCI_NATURA, ...VOCI_DISCESE, ...VOCI_MOSTRI].map(comune)
+// le persone del mondo di sopra (in prova): una voce per modello, col suo idle
+const VOCI_PERSONE = CHIAVI_PERSONE.map(k => ({
+  id: `sot:persona:${k}`, nome: `Persona: ${k}`, gioco: 'sotterraneo', categoria: 'personaggio',
+  dove: k === 'guardia' ? 'il mondo di sopra: la guardia della torre e le sentinelle delle discese rosse' : 'il mondo di sopra (villaggio, botteghe, missioni)',
+  file: 'src/giochi/sotterraneo/scena3d/persone3d/persone.js:creaPersona', crea: () => creaPersona(k),
+}))
+
+export const VOCI = [...VOCI_KIT, ...VOCI_MONUMENTI, ...VOCI_CITTA, ...VOCI_APERTI, ...VOCI_NATURA, ...VOCI_DISCESE, ...VOCI_MOSTRI, ...VOCI_PERSONE].map(comune)
 
 // quello che serve al test: le tabelle da confrontare con quelle del gioco
 export const TABELLE = { OGGETTI_CITTA, FORME_NOME, NATURA, ARREDO, RELITTI, INGRESSI, NOMI_HABITAT, NOMI_INGRESSO }

@@ -20,7 +20,7 @@ import { controlla, uguale, stessaLista, riassunto } from '../aiuto/verifica.mjs
 const sequenza = (seme = 7) => { let x = seme; return () => (x = (x * 16807) % 2147483647) / 2147483647 }
 
 /** Una fattoria al livello `liv` con la mongolfiera comprata; `t.ora` è l'orologio, `b.monete` le monete (non devono muoversi). */
-function mondo({ liv = 10, stato = null, rnd = sequenza(), nave = true } = {}) {
+function mondo({ liv = LIVELLO_MONGOLFIERA, stato = null, rnd = sequenza(), nave = true } = {}) {
   const b = { monete: 500 }, t = { ora: 1_000_000 }
   const f = new Fattoria3d({ stato, borsa: { quante: () => b.monete, paga: n => { b.monete -= n; return true } }, ora: () => t.ora, rnd })
   f.s.esperienza = sogliaDi(liv)
@@ -73,9 +73,9 @@ controlla('la sorpresa ha dei decori da regalare, nessuno calpestabile', SORPRES
 }
 {
   const { f } = mondo({ liv: LIVELLO_MONGOLFIERA })
-  controlla('a livello 10 si chiede solo ciò che a livello 10 si fa', f.s.mongolfiera.stiva.file.every(x => livelloDi(x.merce) <= 10))
+  controlla('all\'ingresso si chiede solo ciò che a quel livello si fa', f.s.mongolfiera.stiva.file.every(x => livelloDi(x.merce) <= LIVELLO_MONGOLFIERA))
   const t = mondo({ liv: LIVELLO_MONGOLFIERA, rnd: () => 0.99 }).f
-  controlla('con il caso al massimo le casse sono tre e i pezzi sono quelli del livello', t.s.mongolfiera.stiva.file.every(x => x.casse.length === CASSE_MAX && x.casse[0].pezzi === pezziMaxAl(10)))
+  controlla('con il caso al massimo le casse sono tre e i pezzi sono quelli del livello', t.s.mongolfiera.stiva.file.every(x => x.casse.length === CASSE_MAX && x.casse[0].pezzi === pezziMaxAl(LIVELLO_MONGOLFIERA)))
 }
 
 /* ══════════ 3. senza mongolfiera, o sotto il livello ══════════ */
@@ -97,7 +97,7 @@ controlla('la sorpresa ha dei decori da regalare, nessuno calpestabile', SORPRES
   stessaLista('la vista: a terra, nessuna cassa pronta, tutte vuote', [v0.stato, v0.pronte, v0.piene, v0.totale], ['terra', 0, 0, st.file.reduce((n, x) => n + x.casse.length, 0)])
   const r0 = f.caricaCassa(0, 0)
   controlla('senza roba non si carica: dice cosa manca', !r0.ok && r0.motivo === 'mancano' && r0.mancano[fila.merce] === cassa.pezzi)
-  controlla('e non cambia niente', !cassa.piena && f.s.esperienza === sogliaDi(10))
+  controlla('e non cambia niente', !cassa.piena && f.s.esperienza === sogliaDi(LIVELLO_MONGOLFIERA))
   dai(f, fila.merce, cassa.pezzi - 1)
   uguale('con un pezzo di meno ne manca uno', f.caricaCassa(0, 0).mancano[fila.merce], 1)
   dai(f, fila.merce, 1)
@@ -176,7 +176,7 @@ controlla('la sorpresa ha dei decori da regalare, nessuno calpestabile', SORPRES
 {
   const { f } = mondo({ rnd: () => 0 })
   const aperti = SORPRESE.filter(t => PEZZI[t].liv <= f.livello())
-  controlla('a livello 10 i decori sorprendono solo fra quelli già comprabili', aperti.length >= 2)
+  controlla('all\'ingresso i decori sorprendono solo fra quelli già comprabili', aperti.length >= 1)
   const dueVolte = new Set()
   for (let n = 0; n < aperti.length * 2; n++) {
     const s = scegliLaSorpresa(f); dueVolte.add(s)
@@ -212,7 +212,7 @@ controlla('la sorpresa ha dei decori da regalare, nessuno calpestabile', SORPRES
   const dopo = normalizza(JSON.parse(JSON.stringify({ ...statoIniziale(), lana: 3, mongolfiera: { fine: 1, cassa: true } })))
   const ancora = normalizza(JSON.parse(JSON.stringify(dopo)))
   uguale('e non si paga due volte, rileggendo', ancora.lana, dopo.lana)
-  const vecchio = mondo({ stato: { ...statoIniziale(), esperienza: sogliaDi(10), posseduti: { ...statoIniziale().posseduti, mongolfiera: true }, mongolfiera: { fine: 1, cassa: false } }, nave: false }).f
+  const vecchio = mondo({ stato: { ...statoIniziale(), esperienza: sogliaDi(LIVELLO_MONGOLFIERA), posseduti: { ...statoIniziale().posseduti, mongolfiera: true }, mongolfiera: { fine: 1, cassa: false } }, nave: false }).f
   controlla('una fattoria col segnaposto riceve il suo primo carico', vecchio.vistaMongolfiera().stato === 'terra')
   // stati rotti
   for (const rotto of [null, 5, 'x', [], { stiva: 'x' }, { stiva: { file: 'x' } }, { stiva: { file: [null, 1, { merce: 'grano', casse: [{ pezzi: 1 }] }, { merce: 'pasta', casse: 'x' }, { merce: 'pasta', casse: [{ pezzi: 99 }, { pezzi: -1 }, null] }] } }, { riposo: 'x', giri: -4 }, { giri: 2.5 }]) {

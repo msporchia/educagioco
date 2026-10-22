@@ -3,15 +3,17 @@
    e le scelte pure (dove andare, cosa fare) che il disegno (`scena3d/compagni.js`) usa col caso da fuori.
    Vedi docs/fattoria3d/compagni.md. */
 
+import { ANIMALI_2D } from './parita2d.js'
+
 // Il ripiego quando il profilo non dice se è contadino o contadina: di solito lo dice `personaDi(aspettoDi())` (dati/abiti.js, docs/fattoria3d/guardaroba.md).
 export const ASPETTO_ERO = 'contadino'
 
-// `liv`: il livello a cui arriva (come `liv` sui pezzi: `roba(liv)` lo raccoglie). Il bobtail e il gatto bianco e nero hanno il nome vero di casa (Watson, Sherlock, Irene) e arrivano per primi (livelli 1-3).
+// `liv`: il livello a cui arriva (come `liv` sui pezzi: `roba(liv)` lo raccoglie). Pepe, il gatto nero, arriva dove arriva il gatto nero della 2D (19); gli altri tre no: sono gli animali di casa e arrivano per primi. Il bobtail e il gatto bianco e nero hanno il nome vero di casa (Watson, Sherlock, Irene) e arrivano per primi (livelli 1-3).
 export const COMPAGNI = {
   watson: { nome: 'Watson', tipo: 'cane',  variante: 'bobtail',   liv: 1,  verso: 'Bau!', arrivo: 'Watson è arrivato!' },
   sherlock: { nome: 'Sherlock', tipo: 'gatto', variante: 'bianconero', liv: 2,  verso: 'Prrr…', arrivo: 'Sherlock, il gatto, è arrivato!' },
   irene:   { nome: 'Irene',   tipo: 'gatto', variante: 'calico',     liv: 3,  verso: 'Prrr…', arrivo: 'Irene, la gattina, è arrivata!' },
-  pepe:    { nome: 'Pepe',    tipo: 'gatto', variante: 'nero',       liv: 13, verso: 'Prrr…', arrivo: 'Pepe, il gatto nero, è arrivato!' },
+  pepe:    { nome: 'Pepe',    tipo: 'gatto', variante: 'nero',       liv: ANIMALI_2D['gatto-nero'].liv, verso: 'Prrr…', arrivo: 'Pepe, il gatto nero, è arrivato!' },
 }
 export const VARIANTI_GATTO = ['bianconero', 'calico', 'nero']
 

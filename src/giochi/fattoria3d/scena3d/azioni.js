@@ -8,6 +8,7 @@ import { EDIFICI, PEZZI } from '../dati/catalogo.js'
 import { MACCHINE } from '../dati/ricette.js'
 import { PRODOTTI_ANIMALI } from '../dati/animali.js'
 import { dettoDi, dettoDiRifiuto } from './detti.js'
+import { tempoBreve } from '../dati/tempo.js'
 
 export { dettoDi, dettoDiRifiuto }
 
@@ -28,7 +29,7 @@ export class Azioni {
     switch (cosa.tipo) {
       case 'campo': return this.campo(cosa)
       case 'recinto': return this.cura(cosa)
-      case 'pollaio': case 'stalla': return this.curaBestie(cosa)
+      case 'pollaio': case 'stalla': case 'anatre': case 'porcile': case 'capre': return this.curaBestie(cosa)
       case 'bacheca': case 'bancarella': pezzi.salta(cosa.id); return this.c.ui.apriBanco()      // il foglio degli ordini
       case 'fontana': pezzi.salta(cosa.id); fx.parla('Che bella!'); return
       case 'molo': case 'molo_v': return this.pescaDalMolo(cosa)         // toccare il molo: si lancia in punta
@@ -41,9 +42,14 @@ export class Azioni {
   // ── i campi ──
   campo(c) {
     const m = this.m
-    if (m.campoMaturo(c)) return this.falcia(c)
+    if (m.campoMaturo(c)) {
+      // raccogliere un campo costa il gesto della 2D (🪙1–2) e lo scomparto del raccolto ha un tetto: si guarda prima, così il campo non resta a metà
+      const pr = m.provaRaccolta(c.id)
+      if (!pr.ok) return this.dici(dettoDiRifiuto(pr, { per: 'raccogliere' }))
+      return this.falcia(c)
+    }
     if (m.campoVuoto(c)) return this.c.ui.scegliSeme(k => this.semina(c, k))
-    this.c.fx.parla(`Sta crescendo… ${m.restoSecondi(c)}s`)
+    this.c.fx.parla(`Sta crescendo… ${tempoBreve(m.restoSecondi(c) * 1000)}`)
   }
   semina(c, coltura) {
     const { eroe, fx, ui } = this.c, p = this.centro(c)
@@ -64,7 +70,9 @@ export class Azioni {
         const r = this.m.raccogliTessera(c.id, k); if (!r.ok) return
         eroe.az.fatto.add(k)
         const q = new THREE.Vector3(p.x + (k % 2 ? 0.5 : -0.5), 0.3, p.z + (k < 2 ? -0.5 : 0.5)), col = COLTURE[r.coltura]
-        fx.scoppietta(q, this.c.colore(r.coltura), 10, 1.8, 2.6); fx.volo(col.pezzo ? '+1' : '+1 ' + col.emoji, q, 1.0, r.coltura); ui.cambio()
+        fx.scoppietta(q, this.c.colore(r.coltura), 10, 1.8, 2.6)
+        if (r.consegnato) fx.volo((col.pezzo ? '+1' : '+1 ' + col.emoji) + (r.costo ? ` · −🪙 ${r.costo}` : ''), q, 1.0, r.coltura)         // il campo intero rende uno: l'ultima tessera lo consegna e paga il gesto
+        ui.cambio()
       })
     })
   }
@@ -77,6 +85,7 @@ export class Azioni {
         if (t <= 0.5 || eroe.az.fatto.has('t')) return
         eroe.az.fatto.add('t'); const r = this.m.tosa(c.id)
         if (r.ok) { fx.volo('+' + r.n + ' 🧶', p, 1.6); fx.scoppietta(p.clone().setY(0.6), 0xffffff, 12, 1.6, 2.2); ui.cambio() }
+        else fx.parla(dettoDiRifiuto(r))
       })
     }
     if (pr.azione === 'nutri') {
@@ -84,17 +93,17 @@ export class Azioni {
         if (t <= 0.5 || eroe.az.fatto.has('n')) return
         eroe.az.fatto.add('n')
         const r = this.m.nutri(c.id)
-        if (!r.ok) return fx.parla(dettoDi(r.motivo, { per: 'nutrirle', servono: r.servono, mangia: r.mangia }))
+        if (!r.ok) return fx.parla(dettoDiRifiuto(r, { per: 'nutrirle' }))
         pezzi.richiama(c.id, { x: eroe.x - p.x, z: eroe.z - p.z })
         pezzi.sincronizza()
-        const testo = { cresciuta: '🐑 è cresciuta!', nata: '🐣 è nata una pecorella!', pasto: '🍼 +1', cuore: '❤️', lana: '🍽️ ×' + r.n }[r.evento]
+        const testo = { cresciuta: '🐑 è cresciuta!', nata: '🐣 è nata una pecorella!', pasto: '🍼 +1', cuore: '❤️', lana: '🍽️ ×' + r.n + (r.costo ? ` · −🪙 ${r.costo}` : '') }[r.evento]
         fx.volo(testo, p, 1.8)
         if (r.evento === 'cresciuta') fx.scoppietta(p.clone().setY(0.8), 0xffd24a, 12, 1.6, 2.4)
         if (r.evento === 'nata') fx.scoppietta(p.clone().setY(0.8), 0xff9ab8, 14, 1.6, 2.4)
         ui.cambio()
       })
     }
-    fx.parla(dettoDi(pr.motivo, { per: 'nutrirle', secondi: pr.secondi, servono: pr.servono, mangia: pr.mangia }))
+    fx.parla(dettoDiRifiuto(pr, { per: 'nutrirle' }))
   }
 
   // ── il pollaio e la stalla: prima si raccoglie, poi si nutre; se non c'è altro, si dice perché. Le bestie si comprano dal cartello ──
@@ -104,7 +113,7 @@ export class Azioni {
       return eroe.avvia('semina', 1.2, t => {
         if (t <= 0.5 || eroe.az.fatto.has('r')) return
         eroe.az.fatto.add('r'); const r = this.m.raccogliProdotti(c.id)
-        if (!r.ok) return
+        if (!r.ok) return fx.parla(dettoDiRifiuto(r))
         pezzi.sincronizza()
         fx.volo('+' + r.n + (PRODOTTI_ANIMALI[r.prodotto].pezzo ? '' : ' ' + PRODOTTI_ANIMALI[r.prodotto].emoji), p, 1.8, r.prodotto); fx.scoppietta(p.clone().setY(0.7), 0xfff2c4, 10, 1.4, 2.0); ui.cambio()
       })
@@ -114,12 +123,12 @@ export class Azioni {
         if (t <= 0.5 || eroe.az.fatto.has('n')) return
         eroe.az.fatto.add('n')
         const r = this.m.nutriBestie(c.id)
-        if (!r.ok) return fx.parla(dettoDi(r.motivo, { per: 'nutrirle', servono: r.servono, mangia: r.mangia }))
+        if (!r.ok) return fx.parla(dettoDiRifiuto(r, { per: 'nutrirle' }))
         pezzi.sincronizza()
-        fx.volo('🍽️ ×' + r.n, p, 1.8); ui.cambio()
+        fx.volo('🍽️ ×' + r.n + (r.costo ? ` · −🪙 ${r.costo}` : ''), p, 1.8); ui.cambio()
       })
     }
-    fx.parla(dettoDi(pr.motivo, { per: 'nutrirle', secondi: pr.secondi, servono: pr.servono, mangia: pr.mangia }))
+    fx.parla(dettoDiRifiuto(pr, { per: 'nutrirle' }))
   }
   /** Il pulsante «＋ 🪙 N» del cartello su un recinto, un pollaio o una stalla: compra una bestia subito, senza conferma (non
       cammina fino all'edificio). Se mancano monete dice quante. */
@@ -226,7 +235,7 @@ export class Azioni {
       if (t < 0.45 || eroe.az.fatto.has('r')) return
       eroe.az.fatto.add('r')
       const r = this.m.ritiraPesca(lotto)
-      if (!r.ok) return fx.parla(dettoDi(r.motivo))
+      if (!r.ok) return fx.parla(dettoDiRifiuto(r))
       const dove = pos ? pos.clone() : new THREE.Vector3(eroe.x, 0, eroe.z)
       fx.scoppietta(dove.clone().setY(0.15), 0xdff3ff, 16, 2.2, 3.4)
       fx.volo('+' + r.n, dove, 1.2, 'pesce')

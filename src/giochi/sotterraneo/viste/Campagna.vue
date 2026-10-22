@@ -30,13 +30,15 @@ const props = defineProps({
   veduta: { type: Boolean, default: false },
   // i tredici dungeon del mondo a percorso per chiave (Gioco.vue, docs/sotterraneo/dungeon-che-si-rigenerano.md): da passare al mondo
   dungeon: { type: Array, default: null },
+  // la porta delle terre (motore/terre.js, laPorta): dove si è, se è aperta e dove porta; `terre` (t) chiede di passare
+  terre: { type: Object, default: null },
   pensiero: { type: Object, default: null },  // il pensiero dell'eroe sopra la testa (docs/sotterraneo/pensieri.md)
   // i mostri di sopra (viste/Mondo3d.vue): la forza dell'eroe per l'annuncio, e se un pannello sta sopra il mondo (i mostri aspettano)
   forza: { type: Number, default: 1 },
   fermo: { type: Boolean, default: false },
 })
 const emit = defineEmits(['gioca', 'riprendi', 'scorda', 'terra', 'bottega', 'segui', 'sentito', 'scheda', 'cura', 'mondo', 'risposta', 'veduta',
-                          'pensa', 'pensiero', 'pensiero-fine', 'trovati', 'scontro', 'raccogli'])
+                          'pensa', 'pensiero', 'pensiero-fine', 'trovati', 'scontro', 'raccogli', 'terre'])
 const in3d = props.disegno === '3d'
 riprendiSeChiesta(() => props.ripresa, () => emit('riprendi'))
 
@@ -54,6 +56,12 @@ const terraEl = ref(null)
 function vaDa(chi) {
   diarioAperto.value = false
   if (terraEl.value) terraEl.value.vaDa(chi)
+}
+// «vai alla pietra»: solo nel mondo in 3D (viste/Mondo3d.vue), se chi aspetta è lontano e c'è una pietra accesa vicino a lui
+const pietraPer = chi => (terraEl.value && terraEl.value.pietraPer ? terraEl.value.pietraPer(chi) : null)
+function vaAllaPietra(chi) {
+  diarioAperto.value = false
+  if (terraEl.value && terraEl.value.vaAllaPietra) terraEl.value.vaAllaPietra(chi)
 }
 
 // un tocco fuori dal diario (o dalla bottega, da Gioco.vue) lo chiude e passa alla terra: l'eroe va dove si è toccato
@@ -87,7 +95,7 @@ function comincia() {
   <div class="sot-tappe">
     <!-- la discesa lasciata dal portale è anche il portale gemello nel villaggio: tutti e due riprendono la stessa sosta -->
     <component :is="in3d ? Mondo3d : Terra" ref="terraEl" :tappe="tappe" :abisso="abisso" :eroe="eroe" :roba="roba"
-           v-bind="in3d ? { mondo, veduta, forza, fermo: fermo || diarioAperto || !!chiede || perdere, dungeon } : { terra }"
+           v-bind="in3d ? { mondo, veduta, forza, fermo: fermo || diarioAperto || !!chiede || perdere, dungeon, terre } : { terra }"
            :missioni="missioni" :azione-missione="azioneMissione" :segui="segui"
            :giaScesa="ripresa ? ripresa.tappa : null" :portale="portale"
            :annuncio="annuncio" :forze="forze" @sentito="$emit('sentito')" @cura="r => $emit('cura', r)"
@@ -95,7 +103,7 @@ function comincia() {
            @mondo="v => $emit('mondo', v)" @risposta="r => $emit('risposta', r)" @veduta="v => $emit('veduta', v)"
            @riprendi="$emit('riprendi')" :pensiero="pensiero" @pensa="$emit('pensa')" @pensiero="p => $emit('pensiero', p)"
            @pensiero-fine="$emit('pensiero-fine')" @trovati="v => $emit('trovati', v)"
-           @scontro="v => $emit('scontro', v)" @raccogli="i => $emit('raccogli', i)">
+           @scontro="v => $emit('scontro', v)" @raccogli="i => $emit('raccogli', i)" @terre="t => $emit('terre', t)">
       <template #scontro><slot name="scontro" /></template>
       <template #sopra>
         <div v-if="ripresa" class="sot-ripresa" data-ripresa="1">
@@ -123,7 +131,7 @@ function comincia() {
 
     <Diario v-if="diarioAperto" :stati="missioni" :conti="conti" :tappe="tappe" :segui="segui" :punti="punti" :punti-abilita="puntiAbilita" :mondo="in3d"
             @scheda="s => $emit('scheda', s)" @chiudi="diarioAperto = false"
-            @segui="id => $emit('segui', id)" @vai="vaDa" @fuori="fuoriDalDiario" />
+            :pietra="pietraPer" @segui="id => $emit('segui', id)" @vai="vaDa" @pietra="vaAllaPietra" @fuori="fuoriDalDiario" />
 
     <!-- detto prima: la roba resta, la discesa ricomincia da capo -->
     <LascioPerdere v-if="perdere && ripresa" :nome="ripresa.nome"

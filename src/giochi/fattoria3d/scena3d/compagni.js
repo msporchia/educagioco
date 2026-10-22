@@ -7,10 +7,11 @@ import { compagniAl, scegliMeta, scegliMetaAttorno, cellaLiberaVicina, cellaDi, 
   scegliInterazioneCane, sequenzaCane, sequenzaRichiamo, sequenzaSonno, sequenzaSveglia, carezzaCane, scegliRispostaGatto, sequenzaGatto,
   chiamaIlGatto, sequenzaGattoChiamato,
   sequenzaGattoSopra, incontroGattoCane, sequenzaIncontro } from '../dati/compagni.js'
-import { creaCompagno, posaCane, posaGatto } from './modelli-compagni.js'
+import { creaCompagno, posaCane, posaGatto, impostaDettaglio } from './modelli-compagni.js'
 import { PEZZI } from '../dati/catalogo.js'
 import { alleggeriOmbre } from './ottimizza.js'
 
+const LOD_METRI = 12                              // oltre questa distanza dalla camera un compagno si disegna con le geometrie povere (modelli-compagni.js)
 const CASA = [0.5, -6.5]                       // davanti alla porta della casa
 const VEL = { cane: { vaga: 2.4, segue: 3.6, corsa: 5.6 }, gatto: { vaga: 1.5, fugge: 3.8 } }
 const ALTEZZA_SEDILE = 0.45                     // la seduta della panchina (vedi modelli.js)
@@ -19,6 +20,7 @@ const ang = (a, b, k) => { let d = b - a; d = Math.atan2(Math.sin(d), Math.cos(d
 export class Compagni {
   constructor(scena, motore, eroe, fx, ui, rnd = Math.random) {
     this.scena = scena; this.m = motore; this.eroe = eroe; this.fx = fx; this.ui = ui; this.rnd = rnd
+    this.camera = null          // la camera di three (la mette il mondo): oltre `LOD_METRI` i compagni usano le geometrie povere
     this.lista = []; this.t = 0; this.inattivo = 0; this.tSync = 0
     this.ultimaCane = null; this.incontri = 0          // l'ultima festa di Watson (mai due uguali di fila); gli incontri gatto-cane fatti
     this.sync(true)
@@ -231,6 +233,10 @@ export class Compagni {
     const vmax = c.tipo === 'cane' ? VEL.cane.corsa : VEL.gatto.fugge
     const pose = { stato: c.stato, vel: c.velo / vmax, fase: c.fase, t: this.t, p: Math.min(1, c.tStato / (c.dur || 1)), sub: c.sub }
     if (c.velo > 0) pose.stato = 'vaga'
+    if (this.camera) {                                           // il dettaglio dalla distanza (con isteresi: niente andirivieni sulla soglia)
+      const d = this.camera.position.distanceTo(g.position)
+      impostaDettaglio(g, d > (g.userData.dettaglioBasso ? LOD_METRI - 1.5 : LOD_METRI))
+    }
     if (c.tipo === 'cane') posaCane(g, { ...pose, vel: c.velo > 0 ? Math.max(0.3, pose.vel) : 0 })
     else posaGatto(g, { ...pose, vel: c.velo > 0 ? Math.max(0.3, pose.vel) : 0 })
   }
@@ -350,7 +356,7 @@ export class Compagni {
     const evita = cane ? [[cane.x, cane.z, 1.8], ...this._altri(c)] : this._altri(c)
     if (d.vai === 'attorno') return this._vai(c, scegliMeta({ libera, centro: [c.x, c.z], rMin: 2, rMax: 5, rnd: this.rnd, evita }), 'vaga', { poi: { stato: 'sta' } })
     if (d.vai === 'posto') {
-      const b = panchine[Math.floor(this.rnd() * panchine.length)], dim = PEZZI.panchina
+      const b = panchine[Math.floor(this.rnd() * panchine.length)], dim = m.misureCosa(b)          // girata o no
       const centro = [b.i + dim.w / 2, b.j + dim.d / 2]
       const meta = scegliMeta({ libera, centro, rMin: 1.2, rMax: 2.2, rnd: this.rnd, evita })
       return this._vai(c, meta, 'vaga', { poi: { stato: 'dorme', panchina: { id: b.id, i: b.i, j: b.j, x: centro[0], z: centro[1] + 0.05 } } })

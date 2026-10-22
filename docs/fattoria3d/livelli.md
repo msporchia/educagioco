@@ -1,117 +1,149 @@
 # I livelli della fattoria 3D
 
-Sul modello di [../fattoria/livelli.md](../fattoria/livelli.md), ricalibrato sui prezzi di qui (campo 20, recinto 45).
-Il codice è `dati/livelli.js`; l'esperienza e i rifiuti stanno in `motore/fattoria3d.js`.
+**Dal 22/10/2026 sono quelli della fattoria di sempre** ([../fattoria/livelli.md](../fattoria/livelli.md)): 70 livelli, le stesse soglie, gli stessi
+prezzi, i tempi in minuti veri, il costo di un gesto, gli scomparti dei silos. La 3D non ha numeri suoi dove la 2D ne ha uno (decisioni D2, D9, D11,
+D13 e le eccezioni: [parita/decisioni.md](parita/decisioni.md) «Regola generale»). Il codice è `dati/livelli.js`; l'esperienza e i rifiuti stanno in
+`motore/fattoria3d.js`; il ponte con i dati 2D è **`dati/parita2d.js`** (foglia: importa solo dati 2D).
+
+## Il ponte: `dati/parita2d.js`
+
+Chi scrive un pezzo, una coltura o una ricetta 3D dice solo **chi è nella 2D** e prende il resto da lì: `VOCE` (pezzo/edificio 3D → voce del catalogo 2D),
+`COLTURA` (id singolare → id 2D), `RICETTA_DELLA_BESTIA` (pollaio → `uova`…). Da lì vengono `prezzo`, `liv`, `cresce` (rincaro per copia), `ms`
+(i minuti × 60 000), `costo` (🪙 a ogni avvio), `raccolta` (🪙 a campo), gli scomparti. Un id nuovo che la 2D non ha non si inventa: si dichiara
+solo 3D a mano (bacheca, passerella, molo, porticciolo). `unita/fattoria3d-parita` e `guastiDiParita()` (motore/taratura.js) confrontano **voce per
+voce**: se la 2D cambia un numero, il test dice quale.
 
 ## L'esperienza
 
-- **È la spesa in monete fatta dentro questo gioco**: pezzi, lotti, edifici, strade (`_spendi`). Non gli spostamenti né
-  il mettere via, e un rimborso non la riduce. Sta in `stato.esperienza` e **non scende mai**.
-- Le monete vengono solo dagli esercizi, quindi il livello è tempo di studio riletto; anche le consegne (banco, mongolfiera, vicini) e la terra dànno esperienza, mai monete (niente si vende).
+- **È la spesa in monete fatta dentro questo gioco**: pezzi, lotti, edifici, strade, **e ora anche i gesti** (raccogliere un campo, avviare una ricetta,
+  nutrire una bestia: 🪙0–2 come in 2D). Non gli spostamenti né il mettere via, e un rimborso non la riduce. Sta in `stato.esperienza` e **non scende mai**.
+- Le monete vengono solo dagli esercizi, quindi il livello è tempo di studio riletto; le consegne (banco, mongolfiera, vicini) danno esperienza, mai
+  monete. **Il premio di un ordine e di una cassa è quello della 2D** (`premioPer`/`premioDelPezzo` di `fattoria/dati/mercato.js`: 6 di base, 2 per gesto,
+  +20% per fase): col tempo in minuti il vecchio conto «metà del tempo a 🪙6/min» avrebbe pagato una lasagna 621 invece di 110.
 
 ## Le soglie
 
-- **Una formula, non una tabella**: `1,25 · ((n-1)² + 47·(n-1))` arrotondata a dieci (`SOGLIA_A`, `SOGLIA_B`), così i
-  livelli non finiscono mai. Il livello 2 sta a 60 monete (10 minuti di esercizio): un secondo campo e un lotto.
-- **La roba di un livello non paga il livello dopo**: ogni salto aggiunge il costo di ciò che il livello apre di
-  **produttivo** (`costoDelLivello`: campo, recinto, edifici; le decorazioni no). Senza, si costruiva ciò che era appena
-  arrivato ed eri già al livello dopo. Un guasto verifica che il resto del salto sia almeno `SOGLIA_B`.
-- Dopo l'ultimo livello (`ULTIMO`, oggi 18) la formula continua e non si apre altro.
+- **Quelle della 2D**: `1,25 · (8·(n-1)² + 200·(n-1))` più il costo di ciò che ogni livello apre (`sogliaDi2D`). Il livello 2 sta a 260 monete (43 minuti
+  di esercizio), il 10 a 3867, il 70 a ~72500 (**~202 ore**, contando solo la spesa).
+- **Un solo ritocco, la pesca** ([sotto](#la-pesca-al-posto-della-peschiera)): `sogliaDi(l) = sogliaDi2D(l) + (l > 57 ? SCARTO_DELLA_PESCA : 0)`, con
+  `SCARTO_DELLA_PESCA` = molo + porticciolo (102) − peschiera (360) = **−258**. Si ritara solo la parte alta della scala, di meno del 2%.
+- Un guasto verifica che il resto di ogni salto sia almeno `SOGLIA_B` (200) dopo aver comprato la roba produttiva del livello (`costoDelLivello`).
+- Dopo l'ultimo livello (`ULTIMO` = 70) la formula continua e non si apre altro.
 
 ## La misura
 
-`npm run tara:fattoria3d` (logica in `motore/taratura.js`) stampa la tabella; `unita/fattoria3d-taratura` ne tiene ferme le
-promesse: **il livello 2 non oltre 10 minuti di esercizio, l'ultimo non oltre 8 ore e mezza (erano 5 e mezza coi quindici livelli, 7 coi sedici: il sedicesimo e i quattro edifici di telaio, zuccherificio, sartoria e tintoria hanno aggiunto ~75 minuti, la friggitoria e il sushi bar del diciassettesimo e del diciottesimo ~90), nessuna cosa chiesta con più di 2
-minuti di attesa in catena, nessun pezzo produttivo sopra i due terzi del salto del suo livello, nessun premio sopra il tetto.**
-Metro: 🪙6 al minuto. «Attesa» = maturazione più cottura in catena, campi e bestie in parallelo, una macchina alla volta.
+`npm run tara:fattoria3d` (logica in `motore/taratura.js`) stampa la tabella; `unita/fattoria3d-taratura` ne tiene ferme le promesse: **il livello 2 non
+oltre 45 minuti di esercizio, il 70 non oltre 12150 (~202 ore), nessuna cosa chiesta con più di un'ora di attesa in catena** (la più lunga della 2D è il
+maglione alla lavanda, 53 minuti), nessun pezzo produttivo sopra i due terzi del salto del suo livello, nessun premio sopra il tetto, la terra che costa
+come in 2D cella per cella, la parità con la 2D voce per voce. Metro: 🪙6 al minuto. «Attesa» = maturazione più cottura in catena, campi e bestie in
+parallelo, una macchina alla volta.
 
-| livello | monete in tutto | minuti | attesa più lunga di ciò che apre |
-|---|---|---|---|
-| 2 | 60 | 10 | 24 s |
-| 3 | 160 | 26,7 | 30 s |
-| 4 | 290 | 48 | 28 s |
-| 5 | 405 | 67,5 | — |
-| 6 | 530 | 88 | 60 s |
-| 7 | 680 | 113 | 36 s |
-| 8 | 840 | 140 (2 h 20) | 62 s |
-| 9 | 990 | 165 | 44 s |
-| 10 | 1160 | 193 | 46 s |
-| 11 | 1340 | 223 | 75 s |
-| 12 | 1550 | 258 | 84 s |
-| 13 | 1750 | 292 | 81 s |
-| 14 | 1970 | 328 | 70 s |
-| 15 | 2200 | 367 (6 h) | 80 s |
-| 16 | 2440 | 407 (6 h 47) | 86 s |
-| 17 | 2700 | 450 (7 h 30) | 81 s |
-| 18 | 2970 | 495 (8 h 15) | 78 s |
-
-Sono monete spese del tutto (pezzi, lotti, strade): ordini consegnati e lotti contano come esperienza e accorciano la strada.
-Provato: curva A=4, B=44 portava il 15 a 7 ore e 20: troppo; con A=1, B=47 il 2 resta a 60 (il test d'integrazione lo conta).
+| livello | monete in tutto | ore | cosa si apre (le cose che lavorano) |
+|--:|--:|--:|---|
+| 2 | 260 | 0,7 | bancarella, bacheca (il banco) |
+| 4 | 970 | 2,7 | mulino |
+| 6 | 1900 | 5,3 | fienile |
+| 9 | 3317 | 9,2 | pollaio |
+| 14 | 5907 | 16,4 | recinto (pecore) |
+| 17 | 8097 | 22,5 | panificio |
+| 23 | 12732 | 35,4 | pentolone |
+| 31 | 20222 | 56,2 | zuccherificio |
+| 42 | 32067 | 89,1 | sartoria |
+| 57 | 52262 | 145,2 | **la pesca** (molo, porticciolo) |
+| 62 | 59764 | 166,0 | sushi bar |
+| 70 | 72504 | 201,4 | – |
 
 ## Cosa arriva quando
 
-Lo dicono le cose stesse: `liv` sul pezzo, sull'edificio, sulla coltura e sulla ricetta; `roba(liv)` le raccoglie girando
-i dati veri, quindi un elenco non si scrive due volte e non si scosta.
+Lo dicono le cose stesse: `liv` sul pezzo, sull'edificio, sulla coltura e sulla ricetta, **letto dalla 2D**; `roba(liv)` le raccoglie girando i dati veri.
 
-- **Una cosa produttiva per livello al massimo** (pezzo o edificio), più le decorazioni; le colture e le ricette arrivano
-  dove la catena le regge.
-- **Una ricetta dichiara il livello vero**: il più tardo fra il suo, quello della sua macchina e quello dei suoi
-  ingredienti (`livelloDellaRicetta`). Se non coincide col `liv` scritto è un guasto: un tasto spento non si dichiara.
+- **Una cosa produttiva per livello al massimo** (pezzo o edificio), più le decorazioni. Con i livelli della 2D resta vero: bancarella 2, mulino 4, fienile 6,
+  trattore 8, pollaio 9, recinto 14, telaio 16, panificio 17, stalla 18, caseificio 20, pentolone 23, anatre 24, cucina 25, mongolfiera 26, porcile 28,
+  zuccherificio 31, gelateria 34, pastificio 37, capre 40, sartoria 42, tintoria 55, pesca 57, friggitoria 58, sushi bar 62.
+- **Le colture** arrivano dove la 2D le apre: grano 1, carote 5, mais 11, erba medica 13, patate/cavolfiori 22, zucche 27, barbabietola 30, pomodori 33,
+  melanzane/peperoni 39, cipolle/aglio 44, fragole 50, lavanda 54, riso 60.
+- **Una ricetta dichiara il livello vero**: il più tardo fra il suo, quello della sua macchina e quello dei suoi ingredienti (`livelloDellaRicetta`, uguale a
+  quello della 2D). Se non coincide col `liv` scritto è un guasto.
+- **Venti-due livelli non aprono niente** (3, 7, 10, 12, 15, 19, 21, 29, 32, 35, 36, 41, 43, 47, 49, 59, 65–70): la 3D ha meno cose della 2D (niente bestie
+  di casa, conigliera, arnie, alpaca, asini, peschiera, botteghe, solo dieci decorazioni). Il foglio lo dice («Niente di nuovo qui») e l'avviso anche («Livello 3:
+  niente di nuovo, ma sei più in alto!»); il giro G5–G8 li riempie. Il primo livello non è mai vuoto (guasto).
 - **I nomi stanno sulla cosa** (`NOMI`), l'ordine è la precedenza quando due cose arrivano insieme.
+- **Compagni, abiti, villaggi, posti del banco** erano scritti sulla scala vecchia (finiva al 18): stanno nello stesso punto del percorso
+  (`sullaScalaDellaDueD(l)` = `1 + (l-1)·69/17`: il 6 vecchio è il 21, il 13 è il 50). Eccezione: **Watson, Sherlock e Irene** restano ai livelli 1–3 (gli animali
+  di casa arrivano per primi) e **Pepe**, il gatto nero, arriva dove arriva il gatto nero della 2D (19). I villaggi (25, 33, 44, 50) non chiedono mai ciò che non si fa
+  ancora al loro livello. Il banco apre 4 ordini al 17, 5 al 29, 6 al 42, 8 al 54. Le casse della mongolfiera chiedono fino a 3 pezzi da subito (come in 2D).
 
-```
- 1 campo, grano, carote          9 stalla (latte), cipolle, pozzo,
-                                   erba medica (foraggio d'erba)
- 2 fienile (foraggio, becchime),  10 mongolfiera, aglio
-   mais, bancarella, aiuola
- 3 mulino (farina, pappa di mais), passerella
-                                11 caseificio (burro, formaggio), fragole, barbabietola, torta, crostata
- 4 recinto, pomodori, tavolo   12 cucina (salsa, polenta, minestrone), peperoni, pizza, lasagne
- 5 pollaio (uova), ponte        13 zuccherificio (zucchero, marmellata, biscotti),
-                                   melanzane (parmigiana, conserva), spaventapasseri
- 6 pastificio (pasta), patate,  14 gelateria (succo, frullato, gelato)
-   panchina
- 7 panificio (pane)             15 sartoria (maglione, sciarpa, berretto), lavanda, riso
- 8 telaio (stoffa), zucche,     16 tintoria (tintura, sapone, sacchetto, maglione alla lavanda)
-   cavolfiori, fontana        17 friggitoria (patatine, pesce fritto, arancini)
-                              18 sushi bar (sushi, maki)
-```
+## La pesca al posto della peschiera
 
-Il livello apre il **pezzo** (pollaio, stalla, recinto); le bestie in più dentro non hanno livello: si comprano a monete
-([animali.md](animali.md)), contano come esperienza ma non spostano la scaletta (la taratura conta solo i pezzi produttivi).
+Nessun equivalente 2D (la peschiera è un recinto): la pesca entra **dove la 2D ha la peschiera, il 57** (`LIVELLO_PESCA`), perché il pesce serve alla friggitoria (58) e
+al sushi bar (62). Molo, molo girato e porticciolo sono al 57. **Un banco dà un pesce ogni 15 minuti, come la ricetta `pesce` della peschiera**: 5 minuti ad aspettare
+che abbocchi (`PESCA.ms`) e 10 a ripopolarsi (`riposoMs`); il porticciolo e il mare danno più pesci per lancio (1, 2, 3: il premio per averli). Per i conti dei tempi un
+pesce costa un ciclo (15 min). Le soglie dal 58 in poi si spostano di −258 (vedi sopra). Prima del 57 il pesce non c'è: friggitoria e sushi bar arrivano dopo.
 
-Le decorazioni nuove (passerella al 3, tavolo e molo al 4, ponte e stagno al 5, porticciolo al 9, laghetto all'11) non spostano la scaletta: non sono produttive, quindi non si sommano ai salti.
+## La terra: la stessa, cella per cella
 
-Il **fienile** sta al 2, l'unico livello senza una cosa produttiva: il mangime ([mangime-e-catena.md](mangime-e-catena.md)) deve esserci prima del recinto (4), del pollaio (5) e della stalla (9), e `guastiDeiLivelli` lo pretende. Costa 🪙40 e ha spostato di 40 la soglia dal 3 in poi (era 120, ora 160; tutti i livelli dopo +40, l'ultimo da 400 a 407 minuti). L'erba medica arriva al 9, con la stalla, ed è fuori dalla regola della scala.
+La 2D vende piazzole da 6×6 celle (🪙45 la prima oltre le nove, poi ×1,38); la 3D lotti da 4×4. Si pareggia la **quantità** di terra (`TERRA` in `dati/regole.js`):
+- `prezzoDelLotto(k)` = 45 · 1,38^p · 16/36, con `p` le piazzole di terra che hai sopra le nove della 2D (324 celle). **La 3D parte con 144 celle**, quindi i primi lotti
+  costano pochissimo (🪙4, 5, 6… il quinto 9, il decimo 15) finché non si raggiunge la terra con cui parte un bambino della 2D; da lì segue la 2D (20 al lotto
+  11°, 57 al 20°, 225 al 30°, 878 al 40°, 3431 al 50°).
+- **Nel dubbio si regala**: le celle che hai pesano il 5% in meno nel conto (`TERRA.regalo` 1,05), quindi si paga un poco meno della 2D. Il prezzo non scende mai e
+  sale a ogni lotto (almeno 1).
+- Un lotto dà esperienza fino a un tetto (680): la terra cara non salta i livelli. Chi migra dalla 2D riceve tutta la terra che aveva, col regalo
+  (`lottiPerPiazzole`: 13 lotti nuovi per chi non ne ha comprate, 15 con una piazzola in più, 25 con cinque).
+- Il **campo** ha quattro tessere ma **rende un raccolto solo** (come uno della 2D): è una questione di spazio sulla mappa, non di costo.
 
-Pollaio, stalla e caseificio stanno **nei buchi** della scaletta (5, 9, 11: livelli senza una cosa produttiva), così i
-livelli restano quindici e le soglie dopo il 5 salgono del loro prezzo (55, 90, 120). Lo stesso hanno fatto telaio (8, 🪙70), zuccherificio (13, 🪙130) e
-sartoria (15, 🪙150); la tintoria (🪙160) vuole la lavanda, che è del 15, e **ha aperto un sedicesimo livello**: la scaletta ne ha 16. La **friggitoria (17, 🪙170) e il sushi bar (18, 🪙180)** hanno aperto un diciassettesimo e un diciottesimo: tutti i livelli avevano già una cosa produttiva, e le soglie di prima non si muovono ([geografia-e-pesca.md](geografia-e-pesca.md)). Il pollaio è al 5 e il pastificio al 6 (era il
-contrario, con la pasticceria): la pasta vuole le uova, e una macchina non si compra prima della sua prima ricetta. Il livello di `uova` e `latte` è
-quello del pezzo che li fa, e `livelloDellaRicetta` li conta fra gli ingredienti ([animali.md](animali.md)).
+## Gli scomparti (D11)
+
+Ogni merce ha il suo scomparto da **8 pezzi**; ingrandire un silo aggiunge 2 a **tutti** gli scomparti di quel silo (`dati/silos.js`, prezzo `40 + 130·ln(1+n)`: 🪙40, 130,
+185, 220…). I silos sono tre come in 2D (`terra`: i raccolti; `stalla`: lana, uova, latte, tartufi, pesce, mangimi; `bottega`: i prodotti finiti, la dispensa), ma **nella forma
+più piccola**: ci sono da subito, senza pezzi da comprare e da mettere in mappa (le 🪙120 × 3 dei silos 2D non si pagano). Si ingrandiscono dall'**inventario** (tre bottoni in
+fondo; il gettone dice `n/max`, rosso se pieno). Il perché dei numeri è in [../fattoria/campi-e-silos.md](../fattoria/campi-e-silos.md).
+- **Uno scomparto pieno non si riempie: non si raccoglie e non si paga, il lavoro resta lì.** Un campo maturo con lo scomparto pieno non parte (`provaRaccolta`, controllato
+  prima del gesto così il campo non resta a metà); le bestie pronte e le pecore da tosare aspettano (se ne ritirano quante ce ne stanno); una macchina ritira quanto entra
+  e il resto resta fra i pronti (`ritiraDa` dice `pieno`); il pesce resta all'amo. Il rifiuto è `scomparto-pieno` (con `k` e `max`): «🌾 Grano: lo scomparto è pieno (8). Usa un
+  po' di roba o ingrandisci il magazzino», e il consiglio porta all'inventario.
+- **Il tetto frena solo ciò che entra**: la roba già in scorta (un salvataggio di prima, un dono del vicino, una migrazione dalla 2D) resta tutta.
+- Lo stato salva `silo: { terra, stalla, bottega }` (quante volte ingrandito); assente = 0.
+
+## Il costo dei gesti (D13)
+
+- **Raccogliere** costa il `raccolta` della coltura (🪙1, 🪙2 per mais, zucche, pomodori, melanzane), pagato **dall'ultima tessera** (le prime tre si staccano gratis, la quarta
+  consegna il raccolto e paga). **Seminare** è gratis in 2D e qui (`semina`: 0).
+- **Avviare una ricetta** costa il `costo` della 2D (🪙0 per il fienile, 1 per quasi tutte, 2 per le più ricche: torta, pizza, gelato…).
+- **Nutrire una bestia** costa come avviare la sua ricetta in 2D (uova, latte, lana, tartufo, uova d'anatra, latte di capra: 🪙1 a pasto); a ogni bestia nutrita, non a ogni
+  gesto: con meno monete si nutrono quelle che si può. Far crescere un agnello o nascere un cucciolo è gratis (non esiste in 2D).
+- Un rifiuto per poche monete è `poche-monete` col `costo`; niente si consuma. Il primo giro della guida non finisce col primo raccolto da 🪙1 (`SPESA_DEL_PRIMO_GIRO`).
+
+## Il fienile solo (D7)
+
+Come la 2D: **un fienile, la macchina** (livello 6, 🪙150). Il fienile di scena (`FISSI`, 4×3 al (−9, −9)) è tolto; il suo posto resta riservato ai **sassi** dei lotti storici
+(`FIENILE_TOLTO` in `dati/mondo.js`): i 100 sassi e i 57 alberi storici sono gli stessi di prima (un test confronta il conto e un hash), quindi un sasso già tolto o un albero
+già tagliato restano quelli. Le celle ora sono libere. `POSTI_STORICI.fienile` (il posto della macchina) resta: serve a leggere un salvataggio vecchio.
+
+## I salvataggi di prima
+
+Uno stato 3D scritto sulla scala vecchia (22 livelli, 🪙60 il livello 2) **non perde niente**. `stato.scala` (2 = la scala della 2D) lo dice; uno stato senza `scala` ha
+l'`esperienza` sulla scala vecchia e `normalizza` la porta (`motore/scala-vecchia.js`, che tiene congelate le soglie di prima):
+1. il livello di prima va nello stesso punto del percorso (`livelloNuovoPer`: 1 → 1, 11 → 34, 22 → 70), con la **frazione già fatta**;
+2. **non scende mai sotto il livello che serve a tenere ciò che si ha** (`livelloMinimoDi`): un edificio o un pezzo produttivo in mappa o nel magazzino, una coltura in scorta o seminata;
+3. le scorte restano tutte, anche oltre lo scomparto; il `magazzino`, le `cose`, i lotti, le strade non si toccano; gli ordini aperti ricalcolano il premio dai dati di oggi
+   (e le casse della mongolfiera l'esperienza). Rileggere lo stesso stato non lo porta due volte. Versione dello stato: 10.
+
+La scelta è quella di `statoDa2D` (la migrazione dalla 2D: [parita/migrazione.md](parita/migrazione.md), ora **1 a 1**, `livelloPerProporzione` è l'identità): proporzionale, mai in giù.
+Chi aveva «tutto» (il 18) sale al 70, dove ha tutto davvero; chi aveva poco tiene poco. Nessuno perde un'aggiunta; qualcuno guadagna livelli (mai monete).
 
 ## Il rifiuto
 
-`{ ok: false, motivo: 'non-sbloccato', liv }` da `compraPezzo`, `compraEdificio`, `semina`/`seminaCampo` (la coltura) e
-`avviaRicetta`/`avviaRicettaIn`. Un edificio fuori dal quadrato di partenza prima chiede i lotti
-(`compraEdificio` è `compraEMetti`: [edifici-liberi.md](edifici-liberi.md)): l'ordine dei controlli è sconosciuto → già tuo → livello → monete; niente più lotti da comprare prima.
-Per le fattorie già salvate **ciò che si possiede resta**: il gating vale solo per comprare, seminare e avviare. Un vecchio
-stato senza `esperienza` riparte da 0 (livello 1) senza perdere niente.
-
-Un evento `livello` (`{ livello }`) esce a ogni salita, per la scena e i contatori.
-
-## Gli alberi sui posti di prima
-
-Gli alberi dei lotti storici si generano come quando gli edifici erano due (i loro numeri sono chiavi di salvataggio); quelli che cadono sul
-vecchio posto di un edificio arrivato dopo nascono già `tagliato` (senza costo). `POSTI_STORICI` (`dati/mondo.js`) ricorda quei posti anche se gli edifici oggi si mettono dove si vuole.
+`{ ok: false, motivo: 'non-sbloccato', liv }` da `compraPezzo`, `compraEdificio`, `semina`/`seminaCampo` (la coltura) e `avviaRicetta`/`avviaRicettaIn`. Un edificio fuori dal
+quadrato di partenza prima chiede i lotti (`compraEdificio` è `compraEMetti`: [edifici-liberi.md](edifici-liberi.md)): l'ordine dei controlli è sconosciuto → già tuo → livello → monete.
+Per le fattorie già salvate **ciò che si possiede resta**: il gating vale solo per comprare, seminare e avviare. Un evento `livello` (`{ livello }`) esce a ogni salita.
 
 ## A schermo
 
-Il gettone «⭐ N» con la barra sottile sta nel HUD e apre `viste/Livelli.vue`: una **scala** col livello di adesso in cima
-(numero grande che batte, barra a strisce che scorre, la scatola già aperta con ciò che è arrivato), sotto il gradino
-successivo con la scatola ancora chiusa (lucchetto, grigio) e un gradino segreto. Salendo compare un avviso («Livello N: nome») e un
-pallino sul gettone finché non si apre il foglio; se il livello apre un edificio l'avviso lo nomina («Livello 7: il Panificio! Costruiscilo») e un «!» sul tasto Costruisci resta finché non c'è ([edifici-liberi.md](edifici-liberi.md)). Ciò che non è arrivato resta visibile ma in grigio, con «Livello N»: le carte del
-costruire (non si trascinano), le colture nella scelta del seme, le ricette di una macchina e le carte degli edifici nel menu. Toccarle dice
-il livello; un tasto grigio non è `disabled`, così il tocco ha una risposta.
+Il gettone «⭐ N» con la barra sottile sta nel HUD e apre `viste/Livelli.vue`: una **scala** col livello di adesso in cima (la scatola già aperta con ciò che è arrivato, o «Niente
+di nuovo qui»), sotto il gradino successivo con la scatola ancora chiusa. Salendo compare un avviso («Livello N: nome») e un pallino sul gettone finché non si apre il foglio; se
+il livello apre un edificio l'avviso lo nomina e un «!» sul tasto Costruisci resta finché non c'è ([edifici-liberi.md](edifici-liberi.md)). Ciò che non è arrivato resta visibile ma
+in grigio, con «Livello N». I tempi si dicono in minuti (`dati/tempo.js` `tempoBreve`: «45 s», «5 min», «1 h 20 min»); la carta di una ricetta dice anche il costo («⏱️ 7 min · 🪙 1»).
 
-Nei test: `unita/fattoria3d` (sezioni 13–20: soglie, `roba`, gating, lotti, catena, vecchio stato).
+Nei test: `unita/fattoria3d-parita` (la parità voce per voce, i gesti, gli scomparti, la terra, i salvataggi di prima), `unita/fattoria3d-taratura`, `unita/fattoria3d`
+(sezioni 13–20: soglie, `roba`, gating, lotti, catena, vecchio stato), `unita/fattoria3d-migra`. Integrazione: `integrazione/fattoria3d` (il gettone, gli scomparti nell'inventario).

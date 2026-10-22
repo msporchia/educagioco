@@ -17,7 +17,7 @@ const COME_2D = { carota: 'carote', patata: 'patate', zucca: 'zucche', pomodoro:
 const id2d = k => COME_2D[k] || k
 // le macchine 3D e la loro sorella 2D (gli id della 3D sono quelli dei salvataggi)
 const SORELLA = { mulino: 'mulino', pasticceria: 'pastificio', panificio: 'panificio', caseificio: 'caseificio', conserviera: 'cucina', gelateria: 'gelateria',
-  telaio: 'telaio', zuccherificio: 'zuccherificio', sartoria: 'sartoria', tintoria: 'tintoria', fienile: 'fienile', friggitoria: 'friggitoria', sushi_bar: 'sushi_bar' }
+  telaio: 'telaio', zuccherificio: 'zuccherificio', sartoria: 'sartoria', tintoria: 'tintoria', fienile: 'fienile', friggitoria: 'friggitoria', sushi_bar: 'sushi_bar', pentolone: 'pentolone' }
 
 const merci = [...Object.keys(COLTURE), ...Object.keys(PRODOTTI_ANIMALI), ...Object.keys(LANA), ...Object.keys(RICETTE)]
 
@@ -49,7 +49,7 @@ const in3d = o => Object.fromEntries(Object.entries(o).map(([k, n]) => [k === 'f
 for (const [k, r] of Object.entries(RICETTE)) {
   const d = RICETTE_2D.find(x => x.id === k)
   uguale(`${k}: ingredienti e quantità come in 2D`, JSON.stringify(Object.entries(r.ing).sort()), JSON.stringify(Object.entries(in3d(d.prende)).sort()))
-  uguale(`${k}: il tempo è quello della 2D in scala 3D (minuti → secondi)`, r.ms, d.minuti * 1000)
+  uguale(`${k}: il tempo è quello della 2D (minuti veri)`, r.ms, d.minuti * 60000)
 }
 uguale('ogni ricetta rende uno (N → 1): le quantità sono interi positivi', Object.values(RICETTE).every(r => Object.values(r.ing).every(n => Number.isInteger(n) && n >= 1)), true)
 
@@ -68,7 +68,6 @@ controlla('e diventano ricette', Object.values(MERCI_VECCHIE).every(n => !!RICET
 /* ══ le deviazioni dalla 2D: nessuna, tranne quelle dichiarate qui (docs/fattoria3d/mangime-e-catena.md) ══ */
 // le ricette 2D delle macchine che la 3D ha, e che la 3D non ha: ognuna con il perché
 const MANCANTI = {
-  mangime: 'il mulino lo fa per il cane, il gatto e la peschiera: in 3D i compagni non mangiano e la peschiera è un altro lavoro',
   merenda: 'vuole il miele (le arnie non ci sono)',
   caramelle: 'vuole il miele (le arnie non ci sono)',
   fiorume: 'i fiori sono il mangime delle arnie, che non ci sono',

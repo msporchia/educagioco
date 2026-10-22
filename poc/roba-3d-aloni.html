@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aloni della roba 3D</title>
+<style>
+  :root { --fondo: #101114; --carta: #17191e; --riga: #2a2e36; --testo: #e2e5e0; --tenue: #98a09c; --male: #ff8a7a; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 14px; background: var(--fondo); color: var(--testo); font: 12px/1.35 system-ui, sans-serif; }
+  h1 { font-size: 16px; margin: 0 0 2px; }
+  h2 { font-size: 13px; margin: 10px 0 4px; }
+  p { margin: 0 0 8px; color: var(--tenue); max-width: 120ch; }
+  #esito.male { color: var(--male); }
+  .griglia { display: flex; flex-wrap: wrap; gap: 6px; }
+  figure { margin: 0; background: var(--carta); border: 1px solid var(--riga); border-radius: 4px; padding: 3px; }
+  .fila { display: flex; gap: 2px; }
+  canvas { display: block; width: var(--lato); height: var(--lato); border-radius: 3px; }
+  figcaption { font-size: 10px; color: var(--tenue); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: calc(4 * var(--lato)); }
+  .testa { display: flex; gap: 2px; font-size: 10px; color: var(--tenue); }
+  .testa span { width: var(--lato); text-align: center; }
+</style>
+</head>
+<body>
+<h1>Aloni della rarità e dell'elemento (PoC)</h1>
+<p><code>poc/roba-3d/aloni.js</code> sulle 50 armi della collezione: per ogni arma comune · magico · raro · leggendario, con l'elemento dell'arma.
+Parametri: <code>?famiglia=spada|ascia|arco|bacchetta|scudo</code>, <code>?vista=elementi&amp;arma=spada-lunga</code> (tutti gli elementi × le rarità),
+<code>?lato=</code> (px), <code>?pausa</code>, <code>?t=</code>.</p>
+<div id="esito">in corso…</div>
+<div id="contenuto"></div>
+<script type="module">
+import { WebGLRenderer, Scene, PerspectiveCamera, HemisphereLight, DirectionalLight, Box3, Vector3, Color, Group, SRGBColorSpace, ACESFilmicToneMapping } from 'three'
+import { CATALOGO, FAMIGLIE, creaDaId, perId } from './armi-3d/collezione.js'
+import { aggiungiAlone, RARITA_ALONE, puntiDellAlone } from './roba-3d/aloni.js'
+import { ELEMENTI } from './roba-3d/palette.js'
+
+const url = new URLSearchParams(location.search)
+const vista = url.get('vista') || 'armi'
+const famiglia = FAMIGLIE.includes(url.get('famiglia')) ? url.get('famiglia') : null
+const pausa = url.has('pausa')
+const T0 = Number(url.get('t') || 1.3)
+const errori = []
+addEventListener('error', e => errori.push(String(e.message)))
+const vecchio = console.error
+console.error = (...a) => { errori.push(a.map(String).join(' ').slice(0, 300)); vecchio.apply(console, a) }
+const risultato = window.__prova = { ok: false, errori, celle: 0, punti: 0 }
+
+const lato = Number(url.get('lato')) || (vista === 'elementi' ? 96 : famiglia ? 128 : 60)
+const PX = Math.round(lato * 1.5)
+const renderer = new WebGLRenderer({ antialias: true, preserveDrawingBuffer: true })
+renderer.setPixelRatio(1); renderer.setSize(PX, PX, false)
+renderer.outputColorSpace = SRGBColorSpace; renderer.toneMapping = ACESFilmicToneMapping; renderer.toneMappingExposure = 1.15
+
+// la luce delle anteprime del gioco (scena3d/anteprime3d.js): torce calde, un filo freddo da dietro, fondo scuro di sotterraneo
+const scena = new Scene(); scena.background = new Color(0x0d0e12)
+scena.add(new HemisphereLight(0xffe6c4, 0x3b2a1e, 1.25))
+const fuoco = new DirectionalLight(0xffd29a, 2.7); fuoco.position.set(-3, 5, 6); scena.add(fuoco)
+const taglio = new DirectionalLight(0xa9c4ff, 1.3); taglio.position.set(4, 3, -5); scena.add(taglio)
+const cam = new PerspectiveCamera(26, 1, 0.01, 50)
+
+const celle = []
+function cella (contenitore, id, rarita, elemento) {
+  const arma = creaDaId(id), perno = new Group()
+  perno.add(arma)
+  if (arma.userData.anima) arma.userData.anima(T0)
+  if (arma.userData.famiglia === 'arco') arma.rotation.y = -Math.PI / 2
+  else if (arma.userData.famiglia !== 'scudo') arma.rotation.y = 0.45
+  if (arma.userData.famiglia === 'scudo') perno.rotation.y = -0.35
+  else perno.rotation.z = -Math.PI / 4
+  perno.updateMatrixWorld(true)
+  const b = new Box3().setFromObject(perno), c = b.getCenter(new Vector3()), d = b.getSize(new Vector3())
+  const radice = new Group(); radice.add(perno); perno.position.sub(c)
+  const togli = aggiungiAlone(arma, { rarita, elemento })
+  risultato.punti += puntiDellAlone({ rarita, elemento })
+  const r = Math.max(d.x, d.y, d.z) * 0.62
+  const tela = document.createElement('canvas'); tela.width = tela.height = PX
+  tela.title = `${id} · ${rarita} · ${elemento}`
+  contenitore.append(tela)
+  celle.push({ arma, radice, tela, dist: r / Math.tan(13 * Math.PI / 180), togli })
+  risultato.celle++
+}
+
+function disegna (t) {
+  for (const k of celle) {
+    if (k.arma.userData.anima) k.arma.userData.anima(t)
+    if (k.arma.userData.animaAlone) k.arma.userData.animaAlone(t)
+    scena.add(k.radice)
+    cam.position.set(0, k.dist * 0.08, k.dist); cam.lookAt(0, 0, 0)
+    renderer.render(scena, cam)
+    scena.remove(k.radice)
+    k.tela.getContext('2d').drawImage(renderer.domElement, 0, 0)
+  }
+}
+
+function blocco (titolo) {
+  const cont = document.getElementById('contenuto')
+  const h = document.createElement('h2'); h.textContent = titolo
+  const g = document.createElement('div'); g.className = 'griglia'; g.style.setProperty('--lato', lato + 'px')
+  cont.append(h, g)
+  return g
+}
+function figura (g, didascalia, testa) {
+  const f = document.createElement('figure'), fila = document.createElement('div'); fila.className = 'fila'
+  if (testa) { const t = document.createElement('div'); t.className = 'testa'; t.innerHTML = testa.map(x => `<span>${x}</span>`).join(''); f.append(t) }
+  f.append(fila)
+  const cap = document.createElement('figcaption'); cap.textContent = didascalia; f.append(cap)
+  g.append(f)
+  return fila
+}
+
+try {
+  if (vista === 'elementi') {
+    const id = perId(url.get('arma')) ? url.get('arma') : 'spada-lunga'
+    const g = blocco(`${id}: ogni elemento × le quattro rarità`)
+    for (const el of Object.keys(ELEMENTI)) {
+      const fila = figura(g, el, ['c', 'm', 'r', 'l'])
+      for (const r of RARITA_ALONE) cella(fila, id, r, el)
+    }
+  } else {
+    for (const fam of famiglia ? [famiglia] : FAMIGLIE) {
+      const g = blocco(fam)
+      for (const a of CATALOGO.filter(x => x.famiglia === fam)) {
+        const fila = figura(g, `${a.id} · ${a.elemento}`)
+        for (const r of RARITA_ALONE) cella(fila, a.id, r, a.elemento)
+      }
+    }
+  }
+  disegna(T0)
+  if (!pausa) { const t0 = performance.now(); const giro = () => { disegna(T0 + (performance.now() - t0) / 1000); requestAnimationFrame(giro) }; requestAnimationFrame(giro) }
+  risultato.ok = true
+} catch (e) { errori.push(String(e.stack || e)) }
+const es = document.getElementById('esito')
+es.textContent = errori.length ? 'errori: ' + errori.join(' | ') : `ok — ${risultato.celle} riquadri, ${risultato.punti} punti d'alone in tutto (una chiamata per alone)`
+es.className = errori.length ? 'male' : ''
+risultato.ok = risultato.ok && !errori.length
+</script>
+</body>
+</html>

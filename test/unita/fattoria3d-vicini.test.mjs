@@ -17,7 +17,7 @@ import { PARTENZA, lottoDi, dentro } from '../../src/giochi/fattoria3d/dati/mond
 import { controlla, uguale, stessaLista, riassunto } from '../aiuto/verifica.mjs'
 
 /* una fattoria di casa, con le monete e l'orologio in mano; `liv` la porta a quel livello */
-function casa({ monete = 500, liv = 13 } = {}) {
+function casa({ monete = 500, liv = 25 } = {}) {
   const b = { monete }, t = { ora: 1_000_000 }
   const m = new Fattoria3d({ stato: null, borsa: { quante: () => b.monete, paga: n => { b.monete -= n; return true } }, ora: () => t.ora, rnd: () => 0.5 })
   m.s.esperienza = sogliaDi(liv)
@@ -132,7 +132,7 @@ controlla('uno snapshot di una versione più nuova non si legge', normalizzaFatt
 
 /* ══════════ 5. la cassa ══════════ */
 {
-  const { m, b, t, v, dai } = casa({ liv: 13 })
+  const { m, b, t, v, dai } = casa({ liv: 25 })
   const xp0 = m.esperienza(), mon0 = b.monete
   controlla('senza roba la cassa rifiuta e dice cosa manca', (() => { const r = v.aiuta('nonna-rita', 'grano'); return !r.ok && r.motivo === 'mancano' && r.mancano.grano === 4 })())
   controlla('una merce che non chiede si rifiuta', v.aiuta('nonna-rita', 'lavanda').motivo === 'non-chiesto')
@@ -170,7 +170,7 @@ controlla('uno snapshot di una versione più nuova non si legge', normalizzaFatt
 }
 {
   // la cassa piena resta piena a pagina chiusa e riapre da sola
-  const { m, t, v, dai } = casa({ liv: 13 })
+  const { m, t, v, dai } = casa({ liv: 25 })
   for (const c of rita.cassa.chiede) { dai(c.k, c.n); v.aiuta('nonna-rita', c.k) }
   controlla('riempita in una volta sola la cassa si chiude', !v.cassaAperta('nonna-rita'))
   const v2 = new Vicini({ motore: m, stato: v.serializza() })
@@ -181,10 +181,10 @@ controlla('uno snapshot di una versione più nuova non si legge', normalizzaFatt
 
 /* ══════════ 6. il mercato: comprare ══════════ */
 {
-  const { m, b, t, v } = casa({ liv: 13, monete: 100 })
+  const { m, b, t, v } = casa({ liv: 25, monete: 5000 })
   const voce = rita.mercato.vende[0], xp0 = m.esperienza()
   let r = v.compra('nonna-rita', voce.k, 2)
-  controlla('si compra al prezzo scritto sul banco, per pezzo', r.ok && r.n === 2 && r.costo === voce.prezzo * 2 && b.monete === 100 - voce.prezzo * 2, JSON.stringify(r))
+  controlla('si compra al prezzo scritto sul banco, per pezzo', r.ok && r.n === 2 && r.costo === voce.prezzo * 2 && b.monete === 5000 - voce.prezzo * 2, JSON.stringify(r))
   uguale('la roba finisce nelle scorte', m.scortaDi(voce.k), 2)
   uguale('comprare non è esperienza (le monete cambiano forma, non si creano)', m.esperienza(), xp0)
   r = v.compra('nonna-rita', voce.k, 99)
@@ -202,7 +202,7 @@ controlla('uno snapshot di una versione più nuova non si legge', normalizzaFatt
 
 /* ══════════ 7. il mercato: vendere (mai monete) ══════════ */
 {
-  const { m, b, t, v, dai } = casa({ liv: 13 })
+  const { m, b, t, v, dai } = casa({ liv: 25 })
   const b0 = rita.mercato.compra[0], mon0 = b.monete, xp0 = m.esperienza()
   let r = v.vendi('nonna-rita', 0)
   controlla('senza la roba rifiuta e dice quanto manca', !r.ok && r.motivo === 'mancano' && r.mancano[b0.k] === b0.n, JSON.stringify(r))
@@ -266,7 +266,7 @@ for (const f of VICINI) {
 
 /* ══════════ 9. la fattoria di chi gioca diventa uno snapshot (per domani) ══════════ */
 {
-  const { m, v, dai } = casa({ liv: 11, monete: 5000 })
+  const { m, v, dai } = casa({ liv: 25, monete: 5000 })
   const postoDelMulino = mm => { for (let j = 1; j < 8; j++) for (let i = -6; i < 6; i++) if (mm.puoMettere('mulino', i, j).ok && mm.puoMettere('campo', 2, 2).ok && !(i < 5 && i + 3 > 2 && j < 4 && j + 3 > 2) && !(i < 6 && i + 3 > 3 && j < 5 && j + 3 > 4)) return [i, j]; return [0, 0] }
   // una fattoria con qualche cosa
   for (const o of m.ostacoli) if (!o.tolto) m._togliSenzaPagare(o)
@@ -280,8 +280,8 @@ for (const f of VICINI) {
   controlla('porta le cose, i lotti e gli edifici di chi gioca', snap.cose.length === m.s.cose.filter(c => PEZZI[c.tipo]).length && snap.lotti.length === Object.keys(m.s.lotti).length && snap.edifici.length === 1 && snap.edifici[0].tipo === 'mulino' && snap.edifici[0].j >= 1,
     `${snap && snap.cose.length}/${m.s.cose.length}`)
   controlla('porta il livello e un mercato e una cassa fatti con ciò che si fa a quel livello',
-    snap.liv === 11 && snap.mercato.vende.length > 0 && snap.mercato.compra.length > 0 && snap.cassa.chiede.length > 0
-    && [...snap.mercato.vende, ...snap.mercato.compra, ...snap.cassa.chiede].every(x => livelloDellaMerce(x.k) <= 11))
+    snap.liv === 25 && snap.mercato.vende.length > 0 && snap.mercato.compra.length > 0 && snap.cassa.chiede.length > 0
+    && [...snap.mercato.vende, ...snap.mercato.compra, ...snap.cassa.chiede].every(x => livelloDellaMerce(x.k) <= 25))
   controlla('lo snapshot è piccolo (sotto i 6 KB)', JSON.stringify(snap).length < 6000, String(JSON.stringify(snap).length))
   controlla('la cassa e il banco non stanno sopra una cosa', (() => {
     const mo = motoreDiVisita(snap); let occ = 0, att = 0
@@ -301,7 +301,7 @@ for (const f of VICINI) {
     controlla('i lotti dell\'edificio sono suoi', ostile.lotti.includes(lottoDi(-2, -7).id) && ostile.lotti.includes(lottoDi(-9, -4).id))
   }
   // e una visita di un amico funziona come quella di un vicino del computer
-  const altro = casa({ liv: 13 })
+  const altro = casa({ liv: 25 })
   controlla('un altro giocatore la aggiunge dai dati e la visita', !!altro.v.aggiungi(JSON.parse(JSON.stringify(snap))) && altro.v.entra('amico-test').ok)
   altro.dai('carota', 3)
   const voce = snap.cassa.chiede[0]

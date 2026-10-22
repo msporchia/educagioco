@@ -2,8 +2,8 @@
 // serve» una merce e se è entrata roba nuova. Vedi docs/fattoria3d/file.md («Il foglio dell'inventario»).
 import { COLTURE } from '../dati/colture.js'
 import { RICETTE, merceDi } from '../dati/ricette.js'
-import { PRODOTTI_ANIMALI, LANA, CORTILE } from '../dati/animali.js'
-import { PECORE } from '../dati/regole.js'
+import { PRODOTTI_ANIMALI, LANA } from '../dati/animali.js'
+import { serveA, bestieChe } from '../dati/usi.js'
 import { PESCI } from '../dati/pesca.js'
 import { EDIFICI } from '../dati/catalogo.js'
 import { livelloDellaColtura } from '../dati/livelli.js'
@@ -14,12 +14,16 @@ export const SCHEDE = [
   { id: 'altro', emoji: '🧶', nome: 'Lana e altro' },
 ]
 
-/** Le tre schede: `{ raccolti, prodotti, altro }`, ognuna `[{ k, n, nome, emoji, velata }]`.
+/** Le tre schede: `{ raccolti, prodotti, altro }`, ognuna `[{ k, n, nome, emoji, velata, max?, pieno? }]`.
     Raccolti: tutte le colture arrivate al livello, nell'ordine dei dati, con le vuote velate. Prodotti: le ricette che hai (> 0), nell'ordine
     delle macchine. Altro: lana, uova, latte che hai (> 0). `s` ha `merci`, `prodotti` e `lana` come lo stato del motore. */
-export function schedeDellInventario(s, livello) {
+export function schedeDellInventario(s, livello, capienzaDi = null) {
   const merci = s.merci || {}, prodotti = s.prodotti || {}
-  const voce = (k, n) => { const m = merceDi(k) || {}; return { k, n, nome: m.nome || k, emoji: m.emoji || '❔', velata: n <= 0 } }
+  // `capienzaDi(k)`: quanti pezzi tiene lo scomparto di quella merce (dati/silos.js); senza, nessun tetto da mostrare
+  const voce = (k, n) => {
+    const m = merceDi(k) || {}, max = capienzaDi ? capienzaDi(k) : null
+    return { k, n, nome: m.nome || k, emoji: m.emoji || '❔', velata: n <= 0, ...(Number.isFinite(max) ? { max, pieno: n >= max } : {}) }
+  }
   const raccolti = Object.keys(COLTURE).filter(k => livelloDellaColtura(k) <= livello || (merci[k] || 0) > 0).map(k => voce(k, merci[k] || 0))
   const prodottiVoci = Object.keys(RICETTE).filter(k => (prodotti[k] || 0) > 0).map(k => voce(k, prodotti[k]))
   const altro = [...Object.keys(LANA).map(k => voce(k, k === 'lana' ? (s.lana || 0) : (prodotti[k] || 0))),
@@ -30,11 +34,8 @@ export function schedeDellInventario(s, livello) {
 /** Quante merci diverse hai (n > 0) in una scheda. */
 export const tipiDi = voci => voci.filter(v => v.n > 0).length
 
-/** Le ricette (nomi) che usano la merce come ingrediente, nell'ordine dei dati. */
-export const serveA = k => Object.values(RICETTE).filter(r => r.ing && r.ing[k]).map(r => r.nome)
-
-/** Le bestie che mangiano quel mangime (becchime: galline; foraggio: pecore e mucche), nell'ordine del cortile. */
-export const bestieChe = k => Object.entries(CORTILE).filter(([t, a]) => (t === 'recinto' ? PECORE.mangia : a.mangia).includes(k)).map(([, a]) => a.bestie)
+// «serveA» (le ricette che la usano) e «bestieChe» (chi la mangia) stanno in dati/usi.js, con «Come si fa»: si ridicono da qui per chi le importava.
+export { serveA, bestieChe }
 
 /** Il «nome — a cosa serve» di una merce, in una frase per bambini. */
 export function dettaglioDi(k) {

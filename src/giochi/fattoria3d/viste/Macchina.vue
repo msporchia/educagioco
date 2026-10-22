@@ -7,7 +7,9 @@
 // chiave. Riceve una fotografia già pronta. Colori in stile.css (`[data-macchina]`), il resto in stile-macchina.css. Vedi docs/fattoria3d/file.md.
 import { computed, ref, watch } from 'vue'
 import Faccia from './Faccia.vue'
+import ConsiglioRiga from './ConsiglioRiga.vue'
 import { quanteNePuoiFare, ordinaRicette, statoDelPosto, bersaglioSotto, gestoDelDito } from './macchina-pura.js'
+import { tempoBreve } from '../dati/tempo.js'
 import '../stile-macchina.css'
 
 const props = defineProps({
@@ -26,8 +28,9 @@ const props = defineProps({
   anteprima: { type: Function, default: null },    // tipo → Promise<dataURL|null>: l'edificio 3D al posto dell'emoji dell'insegna
   anteprimaPronta: { type: Function, default: null },
   messaggio: { type: String, default: '' },        // perché una ricetta non parte (si vede qui: il fumetto del contadino sta sotto il foglio)
+  consiglio: { type: Object, default: null },      // il passo per averla (motore/consiglio.js): sotto il messaggio, col tasto
 })
-const emit = defineEmits(['prepara', 'ritira', 'chiudi', 'compra'])
+const emit = defineEmits(['prepara', 'ritira', 'chiudi', 'compra', 'consiglio'])
 
 const parti = computed(() => { const i = props.titolo.indexOf(' '); return i < 0 ? ['🍳', props.titolo] : [props.titolo.slice(0, i), props.titolo.slice(i + 1)] })
 const foto = ref(props.anteprimaPronta ? props.anteprimaPronta(props.tipo) : null)
@@ -37,7 +40,7 @@ watch(() => props.tipo, t => {
 }, { immediate: true })
 const occupati = computed(() => props.forno.filter(Boolean).length)
 const carte = computed(() => ordinaRicette(props.ricette).map(r => ({ ...r, n: r.sbloccata ? quanteNePuoiFare(r.ing) : 0 })))
-const tempoDi = ms => (ms >= 60000 ? Math.round(ms / 6000) / 10 + ' min' : ms / 1000 + ' s')
+const tempoDi = ms => tempoBreve(ms)
 const testoPosto = p => (!p ? 'libero' : p.testo === 'in coda' ? 'aspetta' : p.testo)
 
 // ── il dito: tocco = in fila; trascinata = su un posto o sulla fila; su e giù veloce = scorre il foglio (docs/core/il-dito.md) ──
@@ -124,6 +127,7 @@ function annulla() { dito = null; presa.value = null }
       </section>
       <section class="fm-ricette">
         <p v-if="messaggio" class="f3-messaggio" data-f3="macchina-msg">{{ messaggio }}</p>
+        <ConsiglioRiga v-if="messaggio && consiglio" :consiglio="consiglio" @fai="a => $emit('consiglio', a)" />
         <h3>Cosa vuoi preparare? <small>trascinala in fila, o toccala</small></h3>
         <div class="fm-carte">
           <article v-for="(r, n) in carte" :key="r.k" class="ricetta fm-carta" :class="{ chiusa: !r.sbloccata, pronta: r.puoi, inmano: presa && presa.k === r.k }" :style="{ '--i': n }"
@@ -140,7 +144,7 @@ function annulla() { dito = null; presa.value = null }
                 <Faccia :k="i.k" :emoji="i.emoji" :lato="26" /><em aria-hidden="true">{{ i.ha >= i.serve ? '✓' : '✗' }}</em><small>{{ i.ha }}/{{ i.serve }}</small>
               </span>
             </div>
-            <small v-if="r.sbloccata" class="tempo">⏱️ {{ tempoDi(r.ms) }}</small>
+            <small v-if="r.sbloccata" class="tempo">⏱️ {{ tempoDi(r.ms) }}<template v-if="r.costo"> · 🪙 {{ r.costo }}</template></small>
             <small v-else class="blocco">🔒 Arriva al livello {{ r.liv }}</small>
           </article>
         </div>

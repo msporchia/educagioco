@@ -55,7 +55,7 @@ cibo è lo stesso. Non mangiano più grano, mais, carote né becchime: un rifiut
 
 ## I livelli
 
-Il fienile sta al **2**, l'unico livello senza una cosa produttiva: prima di tutti i recinti (4, 5, 9). Costa 🪙40 e ha spostato di 40 la
+**Dal 22/10/2026 il fienile è uno solo, la macchina, al livello 6 (🪙150) come in 2D**; il fienile di scena è tolto e i tempi sono in minuti (becchime al 9, foraggio d'erba al 13). Quanto segue è la storia di prima. Il fienile sta al **2**, l'unico livello senza una cosa produttiva: prima di tutti i recinti (4, 5, 9). Costa 🪙40 e ha spostato di 40 la
 soglia dal livello 3 in poi (120 → 160; l'ultimo livello da 400 a 407 minuti, sotto il tetto di 420): è il prezzo di avere il mangime *prima*.
 Provato al livello 1, dove la roba non entra nella soglia: avrebbe acceso un «!» per un edificio inutile fino al 4.
 
@@ -72,7 +72,6 @@ fienile. **Le deviazioni dichiarate** (`MANCANTI` nel test):
 | `mangime` (mulino) | non c'è | è il cibo del cane, del gatto e della peschiera: i compagni 3D non mangiano |
 | `merenda`, `caramelle` | non ci sono | vogliono il miele (le arnie non ci sono) |
 | `fiorume`, `fiorume_concime` (fienile) | non ci sono | fiori per le arnie, concime degli asini |
-| pentolone (verdure lesse, pastone, verdura fresca) | non c'è | li mangiano anatre, maiali e capre; senza di loro è una macchina che non serve |
 | `pastone` | non è `mangime: true` | in 2D è il cibo del cane; qui nessuno lo mangia e resta una merce da banco |
 | veterinaria chiede il mangime | no | in 3D il mangime non si consegna |
 | erba medica: il giardiniere chiede `fieno` | no | idem |
@@ -80,6 +79,11 @@ fienile. **Le deviazioni dichiarate** (`MANCANTI` nel test):
 Il **fienile di scena** (`FISSI`, 4×3, `creaFienile`) resta com'è: il nuovo `fienile` è un edificio vero (3×3, `creaFienileMacchina`) con un posto
 storico `nuovo: true` in `POSTI_STORICI` (9, −7) che non tocca alberi e sassi dei lotti storici. Due fienili in vista, uno che si costruisce: da
 unire se darà fastidio (voce in [da-fare.md](da-fare.md)).
+
+## Il pentolone (G4)
+
+Anatre, maiali e capre mangiano il mangime del pentolone (verdure lesse, pastone, verdura fresca): stessa regola, stessa lettura (`MANGIMI`, `ricetteDelMangime`),
+stesso rifiuto che dice dove si fa. Vedi [cortile-e-pentolone.md](cortile-e-pentolone.md).
 
 ## I vecchi salvataggi
 

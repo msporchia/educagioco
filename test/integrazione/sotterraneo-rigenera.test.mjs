@@ -77,7 +77,7 @@ const zero = tappaDelMondo('cerchio', { eroe: EROE, rifatti: 0 })
     return { piano: c.piano, grosso: grosso.grosso }
   })
   uguale('sull\'ultimo piano', g.piano, 2)
-  uguale('il grosso è Barbamuschio', g.grosso, 'barbamuschio')
+  uguale('il grosso è Roccaverde', g.grosso, 'barbamuschio')
   await scatto(page, 'sotterraneo-rigenera-scala')
   await toccaIl('[data-azione="scendi"]')
   await page.waitForSelector('[data-fine="ancora"]', { timeout: 15000 })

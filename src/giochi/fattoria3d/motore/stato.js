@@ -1,17 +1,20 @@
 /* Lo stato che si salva (in profile.campagne.fattoria3d.cfg.stato) e come si rimette in forma quando si legge: un salvataggio
    di ieri non ha bisogno di migrazioni, i campi che mancano si riempiono. Dato + funzioni pure. */
 import { LOTTI_INIZIALI, PEZZO_DI_PARTENZA, POSTI_STORICI, lottoPerId } from '../dati/mondo.js'
-import { biomaDi, biomaVecchio } from '../dati/biomi.js'
+import { lottoDiversoDa } from '../dati/biomi.js'
 import { CHIAVI_COLTURE, TESSERE } from '../dati/colture.js'
 import { TIPI_DI_EDIFICIO, EDIFICI, PEZZI } from '../dati/catalogo.js'
 import { TIPI_DI_MACCHINA, MACCHINE, RICETTE, nuovoId } from '../dati/ricette.js'
 import { ANIMALI } from '../dati/animali.js'
+import { ruotabile, rotLetta } from '../dati/rotazione.js'
 import { POSTI } from '../dati/ordini.js'
 import { livelloPer } from '../dati/livelli.js'
 import { ordineInForma } from './ordini.js'
 import { stivaInForma } from './mongolfiera.js'
 import { RIPOSO_MS } from '../dati/mongolfiera.js'
 import { POSTI_DI_PARTENZA, postiInForma } from '../dati/posti.js'
+import { TIPI_DI_SILO } from '../dati/silos.js'
+import { esperienzaDaPrima, livelloMinimoDi } from './scala-vecchia.js'
 
 const LANA_DEL_SEGNAPOSTO = 2     // il premio della cassa del segnaposto di prima (v7)
 
@@ -28,11 +31,16 @@ const LANA_DEL_SEGNAPOSTO = 2     // il premio della cassa del segnaposto di pri
 // 9: gli edifici sono pezzi liberi (docs/fattoria3d/edifici-liberi.md): uno posseduto sta in `cose` come `{ id, tipo: 'mulino', i, j }`, uno
 //    comprato e non messo nel `magazzino` (al massimo uno); `posseduti[tipo]` vuol dire «è in mappa» e `normalizza` lo rifà dalle cose.
 //    Un v8 con un edificio comprato lo ritrova dov'era il suo posto fisso (`POSTI_STORICI`), con la coda, i pronti e la stiva com'erano
-//    Senza cambiare versione (niente da tradurre, un v9 si legge uguale): `geo` (1 = la geografia grande, mare a ovest e laghi a est: docs/fattoria3d/geografia-e-pesca.md),
-//    `vecchi` (gli id dei lotti che un salvataggio senza `geo` aveva già comprato dove ora c'è il mare o un lago: restano com'erano) e `pesca` (le lenze e i banchi)
+//    Senza cambiare versione (niente da tradurre, un v9 si legge uguale): `geo` (1 = la geografia grande, mare a ovest e laghi a est: docs/fattoria3d/geografia-e-pesca.md; 2 = anche i laghi naturali grandi della fascia di mezzo: docs/fattoria3d/laghi.md),
+//    `vecchi` e `vecchi1` (gli id dei lotti che un salvataggio senza `geo`, o con `geo: 1`, aveva già comprato dove ora il lotto sarebbe diverso: restano com'erano) e `pesca` (le lenze e i banchi)
 //    Il mangime (docs/fattoria3d/mangime-e-catena.md) non cambia la versione: l'erba medica è una coltura in più (`merci.erba`, a zero), il fienile una macchina in più (vuota, non
 //    comprata), becchime e foraggio stanno in `prodotti`; le bestie di prima restano, e se hanno fame chiedono il mangime nuovo.
-export const VERSIONE_STATO = 9
+// 10: la scala della 2D (docs/fattoria3d/livelli.md, «I salvataggi di prima»). Senza cambiare la forma: `scala: 2` dice che `esperienza` è sulla scala
+//    nuova (70 livelli, prezzi, tempi in minuti e silos della 2D); uno stato senza `scala` ha l'esperienza sulla scala di prima (22 livelli) e `normalizza` la porta
+//    nello stesso punto del percorso (motore/scala-vecchia.js), senza scendere sotto il livello che serve a tenere ciò che si ha. `silo`: quante volte è stato
+//    ingrandito ciascun magazzino (dati/silos.js), assente = zero. Un raccolto di prima in scorta resta anche se supera lo scomparto: il tetto frena solo ciò che entra.
+export const VERSIONE_STATO = 10
+export const SCALA_ATTUALE = 2
 
 const vuote = () => Object.fromEntries(CHIAVI_COLTURE.map(k => [k, 0]))
 
@@ -52,12 +60,17 @@ export function statoIniziale() {
     v: VERSIONE_STATO,
     merci: vuote(), prodotti: {}, lana: 0,
     esperienza: 0,             // monete spese in questo gioco; non scende mai (dati/livelli.js ne ricava il livello)
+    scala: SCALA_ATTUALE,      // 2 = la scala dei livelli della 2D; uno stato senza `scala` ha l'esperienza sulla scala di prima e `normalizza` la porta qui
+    silo: Object.fromEntries(TIPI_DI_SILO.map(t => [t, 0])),      // quante volte è stato ingrandito ogni magazzino (+2 pezzi per scomparto, dati/silos.js)
     posseduti: Object.fromEntries(TIPI_DI_EDIFICIO.map(t => [t, false])),
     lotti: { ...LOTTI_INIZIALI },
-    geo: 1,                    // la geografia grande (mare a ovest, laghi a est): uno stato senza questo campo è di prima e tiene i suoi lotti com'erano
-    vecchi: [],                // gli id (`a_b`) dei lotti comprati prima della geografia grande dove ora cambierebbe qualcosa: si generano alla vecchia (generaLotto `vecchio`)
+    geo: 2,                    // la geografia: 1 = mare a ovest e laghi a est, 2 = anche i laghi naturali nella fascia di mezzo; uno stato più vecchio tiene i suoi lotti com'erano
+    vecchi: [],                // gli id (`a_b`) dei lotti comprati prima della geografia grande dove ora cambierebbe qualcosa: si generano alla vecchia (generaLotto `vecchio: true`)
+    vecchi1: [],               // gli id dei lotti comprati con `geo: 1` dove ora c'è un lago naturale al posto della pozzanghera: restano com'erano (generaLotto `vecchio: 1`)
     pesca: {},                 // per lotto d'acqua tuo: { i, j (dove sta il galleggiante), fine (quando abbocca, null se non c'è la lenza), riposo (quando il banco si ripopola, null) }
     strade: [],                // le celle (indice di griglia) disegnate dal bambino
+    daRegalare: {},            // ciò che la fattoria 2D aveva e la 3D non ha ancora ({ 'cosa:ovile': 1, 'scorta:miele': 4, 'terra': 2 }): solo un conto, mai monete (motore/migra.js)
+    migrato: 0,                // 1 se lo stato viene dalla fattoria 2D
     magazzino: {},             // pezzi pagati e non ancora messi: { campo: 1 }
     tagliati: [],              // i numeri degli alberi abbattuti
     ostacoli: [],              // gli id (le celle) dei sassi e dei cespugli tolti
@@ -92,16 +105,28 @@ export function normalizza(letto) {
   }
   s.lana = numero(letto.lana)
   s.esperienza = numero(letto.esperienza)
+  for (const t of TIPI_DI_SILO) { const n = oggetto(letto.silo)[t]; s.silo[t] = Number.isInteger(n) && n > 0 ? Math.min(60, n) : 0 }
   const lotti = oggetto(letto.lotti)
   s.lotti = Object.keys(lotti).length ? Object.fromEntries(Object.entries(lotti).filter(([k, v]) => v && lottoPerId(k)).map(([k]) => [k, true])) : s.lotti
   // la geografia grande: uno stato di prima (senza `geo`) tiene com'erano i lotti già comprati che ora sarebbero diversi (mare, costa, lago, o un laghetto che sparisce)
-  if (letto.geo === 1) s.vecchi = Array.isArray(letto.vecchi) ? [...new Set(letto.vecchi.filter(id => typeof id === 'string' && lottoPerId(id) && s.lotti[id]))] : []
-  else s.vecchi = Object.keys(s.lotti).filter(id => { const l = lottoPerId(id); return l && biomaDi(l.a, l.b) !== biomaVecchio(l.a, l.b) })
+  // `geo: 1` ha già la sua lista; i suoi lotti comprati dove ora c'è un lago naturale (o altro che cambia) restano com'erano (`vecchi1`). `geo: 2` ha tutte e due le liste.
+  const lista = (v, tieni) => Array.isArray(v) ? [...new Set(v.filter(id => typeof id === 'string' && lottoPerId(id) && s.lotti[id] && tieni(id)))] : []
+  const diverso = (gen, id) => { const l = lottoPerId(id); return l && lottoDiversoDa(l, gen) }
+  if (letto.geo === 1 || letto.geo === 2) {
+    s.vecchi = lista(letto.vecchi, () => true)
+    s.vecchi1 = letto.geo === 2 ? lista(letto.vecchi1, id => !s.vecchi.includes(id))
+      : Object.keys(s.lotti).filter(id => !s.vecchi.includes(id) && diverso(1, id))
+  } else {
+    s.vecchi = Object.keys(s.lotti).filter(id => diverso(0, id))
+    s.vecchi1 = []
+  }
   for (const [id, v] of Object.entries(oggetto(letto.pesca))) {
     if (!lottoPerId(id) || !v || typeof v !== 'object' || !Number.isInteger(v.i) || !Number.isInteger(v.j)) continue
     const fine = Number.isFinite(v.fine) ? v.fine : null, riposo = Number.isFinite(v.riposo) ? v.riposo : null
     if (fine !== null || riposo !== null) s.pesca[id] = { i: v.i, j: v.j, fine, riposo }
   }
+  for (const [k, n] of Object.entries(oggetto(letto.daRegalare)).slice(0, 400)) if (typeof k === 'string' && k.length <= 64 && numero(n) >= 1) s.daRegalare[k] = Math.min(9999, Math.floor(n))
+  s.migrato = letto.migrato === 1 ? 1 : 0
   s.strade = Array.isArray(letto.strade) ? letto.strade.filter(Number.isInteger) : []
   for (const [k, n] of Object.entries(oggetto(letto.magazzino))) if (numero(n) > 0) s.magazzino[k] = numero(n)
   s.tagliati = Array.isArray(letto.tagliati) ? letto.tagliati.filter(Number.isInteger) : []
@@ -122,6 +147,7 @@ export function normalizza(letto) {
         x.cibo = numero(c.cibo)
       }
       if (ANIMALI[c.tipo]) x.bestie = bestieInForma(c.tipo, c.bestie)
+      if (ruotabile(c.tipo) && rotLetta(c.rot)) x.rot = rotLetta(c.rot)          // un quarto di giro: assente = 0 (dati/rotazione.js)
       return x
     })
     s.prossimoId = s.cose.reduce((m, c) => Math.max(m, c.id), 0) + 1
@@ -134,6 +160,8 @@ export function normalizza(letto) {
     else if (oggetto(letto.posseduti)[t]) s.cose.push({ id: s.prossimoId++, tipo: t, i: POSTI_STORICI[t].i, j: POSTI_STORICI[t].j })
     s.posseduti[t] = s.cose.some(c => c.tipo === t)
   }
+  // la scala: l'esperienza di uno stato di prima vale sulla scala di prima (22 livelli); la si porta sulla scala della 2D nello stesso punto del percorso
+  if (letto.scala !== SCALA_ATTUALE) s.esperienza = esperienzaDaPrima(s.esperienza, livelloMinimoDi(s))
   // le macchine: un v1 aveva solo `pasticceria` in radice. Un v6 aveva altre ricette: ogni cosa in forno o pronta diventa il suo cugino di
   // oggi (`nuovoId`); se il cugino sta in un'altra macchina (il pane, che era della pasticceria) arriva subito in dispensa, se no resta
   // dov'era. Niente si perde: ciò che non entra nei tre posti va fra i pronti, e i pronti si ritirano.

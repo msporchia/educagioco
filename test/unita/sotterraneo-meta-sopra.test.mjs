@@ -10,7 +10,7 @@
    solo quella scelta nel diario, di difetto la storia.
    ═══════════════════════════════════════════════════════════════════ */
 import { ilMondo, terraDelMondo, postiDi, seguiLEroe, zonaDi } from '../../src/giochi/sotterraneo/motore/mondo-sopra.js'
-import { metaScelta, campoVersoLaMeta, metaVicina, celleDelVelo, luciDellaStrada, piuVicina, passiDetti } from '../../src/giochi/sotterraneo/motore/meta-sopra.js'
+import { metaScelta, campoVersoLaMeta, metaVicina, celleDelVelo, luciDellaStrada, piuVicina, doveEsceLaStrada, pietraPerAndare, passiDetti } from '../../src/giochi/sotterraneo/motore/meta-sopra.js'
 import { MISSIONI } from '../../src/giochi/sotterraneo/dati/missioni.js'
 import { SEGUI_LA_STORIA } from '../../src/giochi/sotterraneo/motore/missioni.js'
 import { stradaDelMondo, stradaPesata, LIMITE, MARGINE } from '../../src/giochi/sotterraneo/motore/strada-sopra.js'
@@ -222,6 +222,24 @@ const lunga = via => via.reduce((s, c, i) => s + (i === 0 ? 0 : Math.hypot(c.x -
   controlla('mai più lontane di un passo di scia e un quarto', luci.slice(1).every((q, i) => Math.hypot(q.x - luci[i].x, q.z - luci[i].z) <= 2.51))
   uguale('la più vicina all\'eroe', piuVicina(luci, 10.4, 2.4).i, 5)
   uguale('una strada di un punto è una luce sola', luciDellaStrada([{ x: 3, z: 3 }]).length, 1)
+  // la freccia sul bordo: dove la strada esce dalla vista, non la meta in linea d'aria (qui la strada va a est, poi gira a sud)
+  const vista = (x, z) => x < 8 && z < 4
+  const esce = doveEsceLaStrada(luci, 0, vista)
+  controlla('la strada esce dalla vista verso est, anche se la meta è a sud-est', esce && esce.x >= 8 && esce.z < 1, JSON.stringify(esce))
+  uguale('dalla luce più vicina in avanti, non da quelle già passate', doveEsceLaStrada(luci, 5, (x, z) => z < 3).z >= 3, true)
+  uguale('tutta in vista: niente (vale la meta)', doveEsceLaStrada(luci, 0, () => true), null)
+}
+
+/* ── «vai alla pietra»: chi aspetta è lontano e una pietra accesa gli sta vicino ── */
+{
+  const villaggio = { chiave: 'villaggio', x: 10, y: 15 }, prati = { chiave: 'zona:prati', x: 120, y: 20 }, bosco = { chiave: 'zona:bosco', x: 240, y: 30 }
+  const chi = { x: 12, y: 13 }
+  const v = pietraPerAndare({ x: 125, y: 24 }, chi, [villaggio, prati, bosco])
+  uguale('dai prati al villaggio: prima la pietra dei prati, poi il viaggio', v && `${v.da}→${v.a}`, 'zona:prati→villaggio')
+  uguale('vicino a chi aspetta, a piedi', pietraPerAndare({ x: 30, y: 15 }, chi, [villaggio, prati, bosco]), null)
+  uguale('una pietra sola accesa: a piedi', pietraPerAndare({ x: 125, y: 24 }, chi, [prati]), null)
+  uguale('nessuna pietra accesa vicino a chi aspetta: a piedi', pietraPerAndare({ x: 125, y: 24 }, chi, [prati, bosco]), null)
+  uguale('la pietra più vicina è già quella di chi aspetta: a piedi', pietraPerAndare({ x: 80, y: 14 }, chi, [villaggio, bosco]), null)
 }
 
 /* ── quale meta: solo dal selettore del diario, di difetto la storia ── */

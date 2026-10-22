@@ -7,6 +7,7 @@ import { MOSTRI_PALUDE } from './palude.js'
 import { MOSTRI_CENERI } from './ceneri.js'
 import { MOSTRI_MONTE } from './monte.js'
 import { MOSTRI_LANDA } from './landa.js'
+import { MOSTRI_VARIE } from './varie.js'
 import { creaDragoGrande, COLORI as COLORI_DRAGHI } from './draghi.js'
 
 export const ELENCHI = {
@@ -17,5 +18,6 @@ export const ELENCHI = {
   ceneri: MOSTRI_CENERI,
   monte: MOSTRI_MONTE,
   landa: MOSTRI_LANDA,
+  varie: MOSTRI_VARIE,
   draghi: Object.keys(COLORI_DRAGHI).map(c => ({ chiave: c, nome: `Drago grande ${c}`, crea: () => creaDragoGrande(c) })),
 }

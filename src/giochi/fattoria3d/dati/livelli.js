@@ -1,6 +1,7 @@
-/* Il livello della fattoria 3D: solo le soglie. Cosa arriva a ogni livello lo dicono le cose stesse (`liv` su pezzo,
-   edificio, coltura, ricetta): `roba(liv)` le raccoglie girando i dati veri, così un elenco non si scrive due volte e non
-   si scosta. Sul modello di src/giochi/fattoria/dati/livelli.js, ricalibrato sui prezzi di qui (campo 20, recinto 45).
+/* Il livello della fattoria 3D: le soglie sono quelle della fattoria di sempre (70 livelli, ~200 ore di esercizio contando solo la spesa),
+   con un solo ritocco nella parte medio-alta: la pesca (molo e porticciolo, solo 3D) prende il posto della peschiera della 2D, allo stesso livello.
+   Cosa arriva a ogni livello lo dicono le cose stesse (`liv` su pezzo, edificio, coltura, ricetta: tutti letti dalla 2D, dati/parita2d.js):
+   `roba(liv)` le raccoglie girando i dati veri, così un elenco non si scrive due volte e non si scosta.
    Vedi docs/fattoria3d/livelli.md. */
 import { PEZZI, EDIFICI } from './catalogo.js'
 import { COLTURE } from './colture.js'
@@ -10,14 +11,10 @@ import { PECORE } from './regole.js'
 import { ricetteDelMangime } from './mangime.js'
 import { compagniAl } from './compagni.js'
 import { abitiAl } from './abiti.js'
+import { sogliaDi2D, ULTIMO_2D, SOGLIA_A, SOGLIA_B, ALLUNGA, LIVELLO_PESCA, PESCHIERA_2D } from './parita2d.js'
 
-// Quanta esperienza (monete spese qui dentro) serve in tutto per un livello: una formula, non una tabella, così non
-// finiscono mai. Il livello 2 sta intorno a 60 monete (un secondo campo e un lotto); ogni salto aggiunge il costo di ciò
-// che il livello apre di produttivo (costoDelLivello).
-export const SOGLIA_A = 1, SOGLIA_B = 47
-export const ALLUNGA = 1.25
-
-const passiFinoA = livello => ALLUNGA * (SOGLIA_A * (livello - 1) ** 2 + SOGLIA_B * (livello - 1))
+// La formula del passo è quella della 2D (`8·(n-1)² + 200·(n-1)`, allungata di un quarto): i livelli non finiscono mai.
+export { SOGLIA_A, SOGLIA_B, ALLUNGA, LIVELLO_PESCA }
 
 // ── il livello di ogni cosa: lo scrive la cosa ──
 export const livelloDelPezzo = tipo => (PEZZI[tipo] || EDIFICI[tipo] || {}).liv || 1
@@ -34,31 +31,25 @@ export function livelloDellaRicetta(id, giri = 4) {
 /** Da che livello c'è un mangime (becchime, foraggio): la sua ricetta più precoce, cioè la strada che si apre per prima. */
 export const livelloDelMangime = k => Math.min(...ricetteDelMangime(k).map(([id]) => livelloDellaRicetta(id)))
 
+/** Quanto costa entrare nella pesca: un molo e il porticciolo. Non sono «produttivi» (un molo si cammina), ma al livello della pesca il salto li paga, come paga la peschiera nella 2D. */
+export const COSTO_DELLA_PESCA = PEZZI.molo.prezzo + PEZZI.porticciolo.prezzo
+/** Di quanto la pesca costa diversamente dalla peschiera della 2D (che qui non c'è): le soglie dal livello dopo si spostano di tanto, e solo quelle. */
+export const SCARTO_DELLA_PESCA = COSTO_DELLA_PESCA - PESCHIERA_2D.prezzo
+
 // Quanto costa comprare una volta ciò che il livello apre di produttivo; le decorazioni non contano.
 export const costoDelLivello = livello =>
   livello < 2 ? 0 : [
     ...Object.values(PEZZI).filter(p => p.produttivo && p.liv === livello),
     ...Object.values(EDIFICI).filter(e => e.liv === livello),
-  ].reduce((n, c) => n + c.prezzo, 0)
+  ].reduce((n, c) => n + c.prezzo, 0) + (livello === LIVELLO_PESCA ? COSTO_DELLA_PESCA : 0)
 
-// Fin dove arriva la roba dichiarata; oltre si continua a salire ma senza niente di nuovo da aprire.
-export const ULTIMO = Math.max(
-  ...Object.keys(PEZZI).map(livelloDelPezzo), ...Object.keys(EDIFICI).map(livelloDelPezzo),
-  ...Object.keys(COLTURE).map(livelloDellaColtura), ...Object.keys(RICETTE).map(id => livelloDellaRicetta(id)))
+// Fin dove arriva la roba dichiarata: l'ultimo livello della 2D; oltre si continua a salire ma senza niente di nuovo da aprire.
+export const ULTIMO = ULTIMO_2D
 
-// Tenuta da parte: i prezzi non cambiano durante una partita.
-let costi = null
-function costiFinoA(livello) {
-  if (!costi) {
-    costi = [0, 0]
-    for (let l = 1; l <= ULTIMO; l++) costi[l + 1] = costi[l] + costoDelLivello(l)
-  }
-  return costi[Math.min(livello, costi.length - 1)]
-}
-
+/** Quanta esperienza (monete spese qui dentro) serve in tutto per un livello: quella della 2D, più lo scarto della pesca dal livello dopo il suo. */
 export function sogliaDi(livello) {
   const l = Math.max(1, livello | 0)
-  return Math.round(passiFinoA(l) / 10) * 10 + costiFinoA(l)
+  return sogliaDi2D(l) + (l > LIVELLO_PESCA ? SCARTO_DELLA_PESCA : 0)
 }
 
 export function livelloPer(esperienza = 0) {
@@ -78,7 +69,7 @@ export function roba(livello) {
   const l = Math.max(1, livello | 0)
   const con = (tabella, chiave) => Object.entries(tabella).map(([id, v]) => ({ id, ...v })).filter(v => chiave(v.id) === l)
   return {
-    pezzi: con(PEZZI, livelloDelPezzo),
+    pezzi: con(PEZZI, livelloDelPezzo).filter(p => !p.stagione),          // le feste vengono e vanno: non sono «roba» del livello
     edifici: con(EDIFICI, livelloDelPezzo),
     colture: con(COLTURE, livelloDellaColtura),
     ricette: con(RICETTE, id => livelloDellaRicetta(id)),
@@ -92,10 +83,13 @@ export const vuoto = r => !r.pezzi.length && !r.edifici.length && !r.colture.len
 // precedenza quando due cose arrivano insieme.
 export const NOMI = {
   campo: 'Il primo campo',
+  bancarella: 'Il mercato',
+  mulino: 'Il mulino',
+  carota: 'Le carote',
   fienile: 'Il fienile',
+  trattore: 'Il vicino',
   mais: 'Il mais',
   erba: 'L\'erba medica',
-  mulino: 'Il mulino',
   recinto: 'Le pecore',
   pomodoro: 'I pomodori',
   pasticceria: 'Il pastificio',
@@ -118,6 +112,22 @@ export const NOMI = {
   tintoria: 'La tintoria',
   friggitoria: 'La friggitoria',
   sushi_bar: 'Il sushi bar',
+  molo: 'La pesca',
+  barbabietola: 'La barbabietola',
+  riso: 'Il riso',
+  biscotti: 'I biscotti',
+  pizza: 'La pizza',
+  lasagne: 'Le lasagne',
+  sciarpa_lana: 'La sciarpa',
+  marmellata: 'La marmellata',
+  frullato: 'Il frullato',
+  berretto: 'Il berretto',
+  arancini: 'Gli arancini',
+  maki: 'I maki',
+  pentolone: 'Il pentolone',
+  anatre: 'Lo stagno delle anatre',
+  porcile: 'Il porcile',
+  capre: 'Le capre',
 }
 
 export function nomeDi(livello) {
@@ -139,7 +149,7 @@ export function avanzamento(esperienza = 0) {
 export function guastiDeiLivelli() {
   const g = []
   for (let l = 2; l <= ULTIMO + 2; l++) if (!(sogliaDi(l) > sogliaDi(l - 1))) g.push(`la soglia del livello ${l} non sale`)
-  if (ULTIMO < 15) g.push(`i livelli sono ${ULTIMO}, meno di 15`)
+  if (ULTIMO !== ULTIMO_2D) g.push(`i livelli sono ${ULTIMO} e quelli della 2D ${ULTIMO_2D}`)
   // l'inversa e la diretta devono combaciare, se no uno spende e non sale, o sale senza spendere
   for (let l = 1; l <= ULTIMO + 2; l++) {
     if (livelloPer(sogliaDi(l)) !== l) g.push(`chi ha speso la soglia del ${l} non è al ${l}`)
@@ -150,14 +160,17 @@ export function guastiDeiLivelli() {
     const resta = sogliaDi(l + 1) - sogliaDi(l) - costoDelLivello(l)
     if (resta < SOGLIA_B) g.push(`al livello ${l} comprare ciò che arriva (${costoDelLivello(l)}) lascia solo ${resta} del salto: il livello si paga da sé`)
   }
-  // un livello che non porta niente è un livello vuoto
+  // i livelli sono quelli della 2D (70) e la 3D ha meno cose della 2D (niente bestie di casa, solo dieci decorazioni): un livello può non aprire niente, e il foglio lo dice.
+  // Ma il primo no, e una cosa produttiva per livello al massimo, più le decorazioni
   for (let l = 1; l <= ULTIMO; l++) {
     const r = roba(l)
-    if (vuoto(r)) g.push(`al livello ${l} non arriva niente`)
-    // una cosa produttiva per livello, più le decorazioni
+    if (l === 1 && vuoto(r)) g.push('al livello 1 non arriva niente')
     const prod = r.edifici.length + r.pezzi.filter(p => p.produttivo).length
     if (l > 1 && prod > 1) g.push(`al livello ${l} arrivano ${prod} cose produttive: una sola`)
   }
+  // niente arriva oltre l'ultimo livello, e la pesca sta dove la 2D ha la peschiera
+  for (const [t, p] of [...Object.entries(PEZZI), ...Object.entries(EDIFICI)]) if (p.liv > ULTIMO) g.push(`${t}: arriva al livello ${p.liv}, che non esiste`)
+  for (const t of ['molo', 'molo_v', 'porticciolo']) if (PEZZI[t].liv !== LIVELLO_PESCA) g.push(`${t}: la pesca arriva al ${LIVELLO_PESCA}, non al ${PEZZI[t].liv}`)
   // uova e latte nascono dove il livello li apre: il pezzo che li fa
   for (const [k, p] of Object.entries(PRODOTTI_ANIMALI)) if (!PEZZI[p.dove]) g.push(`${k}: il pezzo ${p.dove} non esiste`)
   if (!roba(1).pezzi.some(p => p.id === 'campo')) g.push('al livello 1 non c\'è il campo')

@@ -38,7 +38,7 @@ export const GROSSI = {
                 pezzo: 'martello-di-carbonchio', dice: 'Il drago di lava delle miniere: le sue squame sono carbone acceso.' },
   // i sei dei dungeon nuovi del mondo a percorso (solo del 3D, dati/dungeon-del-mondo.js): creature del catalogo ingrandite con la
   // corona, sulle basi e coi numeri dei sette (il troll fino al 9, poi il gigante); da tarare col banco a lavoro finito
-  barbamuschio: { nome: 'Barbamuschio', tipo: 'troll', figura: 'golem-muschio', ossa: 1.1, att: 1, tinta: '#6fbf4a',
+  barbamuschio: { nome: 'Roccaverde', tipo: 'troll', figura: 'golem-muschio', ossa: 1.1, att: 1, tinta: '#6fbf4a',
                   difese: { resiste: ['veleno', 'fisico'], teme: ['fuoco'], immune: ['stordisce', 'avvelena'] },
                   pezzo: 'scudo-di-barbamuschio', dice: 'Un golem di pietra coperto di muschio: quando cammina, il prato trema.' },
   piumanera: { nome: 'Piumanera', genere: 'f', tipo: 'troll', figura: 'grifone', ossa: 1.1, att: 1, tinta: '#8c7bd6',
@@ -47,10 +47,10 @@ export const GROSSI = {
   sibilla: { nome: 'Sibilla', genere: 'f', tipo: 'gigante', figura: 'serpente', ossa: 1.1, att: 1, tinta: '#9ad14a',
              difese: { resiste: ['veleno'], teme: ['gelo'], immune: ['avvelena'] },
              pezzo: 'giubba-di-sibilla', dice: 'Un serpente lungo come il ponte del guado, che sibila nel fango.' },
-  brontolava: { nome: 'Brontolava', tipo: 'gigante', figura: 'golem-magma', ossa: 1.15, att: 1, tinta: '#ff7a2c',
+  brontolava: { nome: 'Vulcanor', tipo: 'gigante', figura: 'golem-magma', ossa: 1.15, att: 1, tinta: '#ff7a2c',
                 difese: { resiste: ['fuoco', 'fisico'], teme: ['gelo'], immune: ['brucia', 'stordisce'] },
                 pezzo: 'scudo-di-brontolava', dice: 'Un golem di lava che brontola come una pentola: dove passa, la pietra si scioglie.' },
-  brinaldo: { nome: 'Brinaldo', tipo: 'gigante', figura: 'golem-ghiaccio', ossa: 1.15, att: 1, tinta: '#8fd8ff',
+  brinaldo: { nome: 'Gelomagno', tipo: 'gigante', figura: 'golem-ghiaccio', ossa: 1.15, att: 1, tinta: '#8fd8ff',
               difese: { resiste: ['gelo'], teme: ['fuoco'], immune: ['gela', 'stordisce'] },
               pezzo: 'amuleto-di-brinaldo', dice: 'Un golem di ghiaccio: ogni cosa che tocca diventa brina.' },
   falcenera: { nome: 'Falcenera', genere: 'f', tipo: 'gigante', figura: 'mietitore', ossa: 1.2, att: 2, tinta: '#b58cff', ruolo: 'superboss',

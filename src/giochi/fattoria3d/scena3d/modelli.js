@@ -62,7 +62,7 @@ function insegna (g, testo, larg, alt, x, y, z, o) {
 }
 
 // ── il campo e le dieci colture: in modelli-colture.js ──
-export { ASPETTO, creaCampo, aggiornaCampo } from './modelli-colture.js'
+export { ASPETTO, creaCampo, aggiornaCampo, campoMosso } from './modelli-colture.js'
 
 // ── la pasticceria: 4×3, la porta davanti ──
 function costruisciPasticceria () {
@@ -543,6 +543,8 @@ function animaSegni (u, pr, stadio, dt, t, n) {
   } else u.sbuffo.visible = false
 }
 
+export { parte, segniDiPronta, animaSegni, VELOCI }       // per modelli-cortile.js (anatre, maiali, capre: stessi segni dello stadio «pronta»)
+
 function costruisciGallina (k = 0) {
   const g = new THREE.Group()
   const penne = mat(k % 2 ? 0xb9703c : 0xf6f1e4), rosso = mat(0xd8352a), giallo = mat(0xf0b030)
@@ -700,7 +702,8 @@ export function muoviBestie (g, dt, t, stati, adesso) {
     const u = b.userData, st = stati[n] || { fine: null }
     const stato = statoDaFine(st.fine, adesso), p = progressoBestia(st.fine, adesso, u.ms), stadio = stadioBestia(stato, p)
     const pr = avvicina(u.pr || (u.pr = {}), profiloBestia(u.specie, stadio, p, u.tg || (u.tg = {})), dt, VELOCI)
-    if (u.zona) animaGallina(b, u, pr, stadio, dt, t, n)
+    if (u.animaBestia) u.animaBestia(b, u, pr, stadio, dt, t, n)       // le bestie di modelli-cortile.js (anatra, maiale, capra) portano la loro animazione
+    else if (u.zona) animaGallina(b, u, pr, stadio, dt, t, n)
     else animaMucca(b, u, pr, stadio, dt, t, n)
     animaSegni(u, pr, stadio, dt, t, n)
   })

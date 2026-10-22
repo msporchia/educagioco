@@ -199,7 +199,7 @@ export const VILLAGGIO = {
     { tipo: 'minatore', chiave: 'minatore', x: 9, y: 2, w: 3, h: 2, piede: { x: 12, y: 4 }, accanto: { x: 12, y: 6 } },
     { tipo: 'mercante', chiave: 'rigattiere', x: 14, y: 5, w: 3, h: 2, giro: -0.25, piede: { x: 15, y: 7 }, accanto: { x: 15, y: 8 } },
     { tipo: 'persona', chiave: 'capitano', x: 17, y: 6, w: 1, h: 1, piede: { x: 17, y: 6 }, accanto: { x: 16, y: 8 } },
-    { tipo: 'mercante', chiave: 'armaiolo', x: 18, y: 7, w: 4, h: 3, giro: -0.35, piede: { x: 18, y: 10 }, accanto: { x: 17, y: 11 } },
+    { tipo: 'mercante', chiave: 'armaiolo', x: 18, y: 7, w: 4, h: 3, giro: -0.35, piede: { x: 17, y: 10 }, accanto: { x: 17, y: 11 } },
     { tipo: 'pozzo', chiave: 'pozzo', x: 11, y: 9, w: 2, h: 2, piede: { x: 11, y: 9 }, accanto: { x: 11, y: 12 } },
     { tipo: 'persona', chiave: 'ragazza', x: 13, y: 10, w: 1, h: 1, piede: { x: 13, y: 10 }, accanto: { x: 13, y: 12 } },
     { tipo: 'portale', chiave: 'villaggio', x: 6, y: 15, w: 1, h: 1, piede: { x: 6, y: 15 }, accanto: { x: 8, y: 15 } },

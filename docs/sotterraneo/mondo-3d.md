@@ -107,8 +107,9 @@ celle aprendo il mondo. Si salva arrivando, scoprendo (al più ogni tre secondi)
   dell'eroe sul livello del dungeon, come giù.
 - **Nessuna grata**: i confini fra le zone (un fiume col ponte ad arco o la passerella, una cresta col valico) sono sempre aperti; i
   ponti vengono da `m.confini`. Gli antri non ci sono più.
-- **La porta delle terre**, in fondo alla landa: un arco di pietra con le rune; aperta (`S.terre`, la scrive chi fa le terre), le
-  rune brillano e dentro gira un velo chiaro. Il fumetto dice cosa la apre; passarla è delle terre successive.
+- **La porta delle terre**, in fondo alla landa: un arco di pietra con le rune; aperta (`S.terre`, dalla prop `terre` di
+  `Gioco.vue`), le rune brillano e dentro gira un velo chiaro. Il fumetto dice cosa la apre, e aperta ha «passo dall'altra parte»:
+  le regole, la tinta e il salvataggio in [terre-successive.md](terre-successive.md).
 - **Si torna** dove si era: risalendo, lasciando perdere o svenuti si è davanti all'ingresso; dal portale accanto al gemello del
   villaggio.
 
@@ -177,7 +178,6 @@ il banco della tela ferma (20 disegni) e il tempo di una zona.
 - **I mostri e la bacheca** stanno sul percorso col motore di sopra (B, [mondo-sopra-contratto.md](mondo-sopra-contratto.md)): la vista
   non è cambiata (`creaMostriSopra`, `vociDellaBacheca`); se il motore non li sa mettere su una mappa, la vista resta senza mostri e lo
   dice nella console, e il resto si gioca.
-- **Aspetta le terre (E)**: `S.terre` (la porta aperta) e passarla; la tinta della terra in `vesti.js`.
 - **Il mondo ad anelli è stato tolto** (il generatore, la prima metà della scheda, il motore di prima, la sua pianta e il suo test).
 - Le figure pixel art in un mondo liscio vanno viste sul telefono.
 

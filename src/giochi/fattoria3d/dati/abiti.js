@@ -5,6 +5,7 @@
    La PERSONA (contadino o contadina) non si salva qui: viene dal profilo del bambino (`aspettoDi()`, come nella fattoria di
    sempre) ed è un parametro di ogni funzione. In `profile.campagne.fattoria3d.cfg.abito` stanno i soli capi.
    Vedi docs/fattoria3d/guardaroba.md. */
+import { sullaScalaDellaDueD } from './parita2d.js'
 import { ASPETTO_ERO } from './compagni.js'
 
 export const PERSONE_ABITO = ['contadino', 'contadina']
@@ -23,18 +24,18 @@ const CAT = {
     { id: 'berretto', nome: 'Berretto', emoji: '🧢', forma: 'berretto', c: 0x3d68b8 },
     { id: 'tesa', nome: 'Tesa larga', emoji: '🤠', forma: 'tesa', c: 0xb88a52 },
     { id: 'fascia', nome: 'Fascia e fiore', emoji: '🌸', forma: 'fascia', c: 0xe86f9a, per: 'contadina' },
-    { id: 'cowboy', nome: 'Cowboy', emoji: '🤠', forma: 'cowboy', c: 0x7a4a26, liv: 6 },
+    { id: 'cowboy', nome: 'Cowboy', emoji: '🤠', forma: 'cowboy', c: 0x7a4a26, liv: sullaScalaDellaDueD(6) },
     { id: 'niente', nome: 'Nessuno', emoji: '🚫', forma: 'niente', c: 0 },
   ],
   maglia: [
     { id: 'quadri', nome: 'A quadri', motivo: 'quadri', c: 0xd9503f, per: 'contadino' },
     { id: 'blu', nome: 'Blu', motivo: 'liscia', c: 0x3f78c8, per: 'contadino' },
     { id: 'maglione', nome: 'Maglione', emoji: '🧶', motivo: 'maglione', c: 0x5f9a56, per: 'contadino' },
-    { id: 'gilet', nome: 'Gilet da festa', emoji: '🎩', motivo: 'festa', c: 0x8a2f4a, per: 'contadino', liv: 10 },
+    { id: 'gilet', nome: 'Gilet da festa', emoji: '🎩', motivo: 'festa', c: 0x8a2f4a, per: 'contadino', liv: sullaScalaDellaDueD(10) },
     { id: 'camicetta', nome: 'Camicetta', motivo: 'liscia', c: 0xf3e3c0, per: 'contadina' },
     { id: 'pois', nome: 'A pois', motivo: 'pois', c: 0xf0b8c8, per: 'contadina' },
     { id: 'grembiule', nome: 'Grembiule', motivo: 'grembiule', c: 0x9ad0c8, per: 'contadina' },
-    { id: 'festa', nome: 'Abito da festa', emoji: '👗', motivo: 'festa', c: 0x8a4aa8, per: 'contadina', liv: 10 },
+    { id: 'festa', nome: 'Abito da festa', emoji: '👗', motivo: 'festa', c: 0x8a4aa8, per: 'contadina', liv: sullaScalaDellaDueD(10) },
   ],
   pantalone: [
     { id: 'blu', nome: 'Blu', c: 0x3d68b8 }, { id: 'verde', nome: 'Verde', c: 0x4a8a4a },
@@ -44,15 +45,15 @@ const CAT = {
   stivali: [
     { id: 'marroni', nome: 'Marroni', c: 0x6a4426 }, { id: 'gialli', nome: 'Gialli', c: 0xe0b020 },
     { id: 'rossi', nome: 'Rossi', c: 0xc03030 }, { id: 'verdi', nome: 'Verdi', c: 0x3f7a4a },
-    { id: 'neri', nome: 'Neri', c: 0x2a2a30 }, { id: 'dorati', nome: 'Dorati', emoji: '✨', c: 0xc9a227, liv: 12 },
+    { id: 'neri', nome: 'Neri', c: 0x2a2a30 }, { id: 'dorati', nome: 'Dorati', emoji: '✨', c: 0xc9a227, liv: sullaScalaDellaDueD(12) },
   ],
   collo: [
     { id: 'fazzoletto-rosso', nome: 'Fazzoletto rosso', forma: 'fazzoletto', c: 0xd2392e },
     { id: 'fazzoletto-blu', nome: 'Fazzoletto blu', forma: 'fazzoletto', c: 0x3b6fc0 },
     { id: 'fazzoletto-giallo', nome: 'Fazzoletto giallo', forma: 'fazzoletto', c: 0xe0b030 },
     { id: 'sciarpa', nome: 'Sciarpa', forma: 'sciarpa', c: 0x4a8a4a },
-    { id: 'papillon', nome: 'Papillon', emoji: '🎀', forma: 'papillon', c: 0x22222a, per: 'contadino', liv: 9 },
-    { id: 'scialle', nome: 'Scialle', emoji: '🧵', forma: 'scialle', c: 0xb85a8a, per: 'contadina', liv: 9 },
+    { id: 'papillon', nome: 'Papillon', emoji: '🎀', forma: 'papillon', c: 0x22222a, per: 'contadino', liv: sullaScalaDellaDueD(9) },
+    { id: 'scialle', nome: 'Scialle', emoji: '🧵', forma: 'scialle', c: 0xb85a8a, per: 'contadina', liv: sullaScalaDellaDueD(9) },
     { id: 'niente', nome: 'Niente', emoji: '🚫', forma: 'niente', c: 0 },
   ],
   capelli: [

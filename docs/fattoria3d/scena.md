@@ -249,7 +249,8 @@ Prima di questo non si vedeva niente: i ciuffi solo fuori dal mondo (sottili e d
   base64, contro un tetto di ~150 kB; e il guadagno sarebbe al più la costruzione di tutti i tipi in fila (22–24 ms su un PC, ~130 ms *stimati* su un telefono, una volta per sessione), perché le
   parti mobili e le mesh con trame si costruirebbero comunque. Non vale il peso nel file unico.
   **Provato e non fatto**: `matrixAutoUpdate = false` sui gruppi fermi (0,18 ms in tutto: non vale il rischio con i modelli che altri toccano);
-  nascondere i cartelli lontani (non pesano). Le proposte per il giro dopo sono in [da-fare.md](da-fare.md).
+  nascondere i cartelli lontani (non pesano).
+  **Il giro dopo (22/10): i banchi di istanze (campi e pezzi fermi, con il taglio fuori dall'inquadratura), il LOD dei compagni e il sole agganciato alla griglia → [istanze.md](istanze.md)**; le proposte che restano sono in [da-fare.md](da-fare.md).
 - **Il peso nel sito spezzato**: `fattoria3d-3d-*.js` (~50 kB, il disegno) e `gioco-fattoria3d-*.js` (~40 kB) stanno nel
   gruppo `fattoria3d`; **three sta in `asteroidi-3d` (640 kB, gruppo `mate`)** e lo prende anche questo gioco. Il file
   del 3D si chiede a richiesta, quindi senza WebGL 2 o senza entrarci non si scarica (e `vite.config.js` lo sa, come per

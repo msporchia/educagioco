@@ -1,3 +1,5 @@
+> **Superato da [mondo-a-percorso.md](mondo-a-percorso.md)** (20 ottobre 2026): il mondo ad anelli qui descritto è stato cancellato; restano valide solo le parti che quel documento dichiara «resta».
+
 # Il mondo aperto: il progetto
 
 **Una proposta, non ancora decisa né costruita.** La terra di sopra del Sotterraneo 3D diventa un mondo grande generato da
@@ -20,35 +22,11 @@ raccomandazione e il perché.
 
 ## 1. La struttura del mondo
 
-### Anelli, regioni, confini
+### Le regioni
 
-- **Una griglia di 5×5 regioni**, ognuna di circa 32×28 celle (oggi il prototipo ha 3×3 regioni su 112×88): il mondo
-  è **160×140 celle**, 2,3 volte il prototipo e sette volte la terra dipinta (64×48). Le regioni restano «centro più
-  vicino più rumore a macchie», come in `aperta.js` e nel prototipo: i confini serpeggiano.
-- **Gli anelli sono la distanza dalla città di mezzo** (la distanza a scacchiera nella griglia): l'anello 0 è il
-  villaggio, l'anello 1 sono le **otto terre vicine**, l'anello 2 le **sedici delle marche**, divise in quattro marche
-  di quattro regioni (nord, est, sud, ovest), ognuna col suo carattere. Il livello sale con l'anello, quindi
-  allontanarsi è salire: la regola «alla Diablo» in una riga.
-- **Ogni confine si vede**: fra due regioni dello stesso anello un fiume o una cresta (come nel prototipo); **fra due
-  anelli sempre un confine che si passa in pochi punti** (ponti e valichi), così il salto di livello ha una porta e la
-  si riconosce. Una regione si annuncia entrando: una riga in fondo col nome, la fascia e il colore per quell'eroe
-  (lo stesso conto del pallino, [zone.md](zone.md#il-pallino-e-la-sentinella)), come nelle terre selvagge.
-- **Le regioni hanno mostri**, le città no. Una regione è una stanza grande del motore (`dentro`, `stanzaDi`: i mostri
-  non ne escono), a branchi sparsi, con le tane dei caporali: il motore aperto delle terre selvagge
-  (`motore/aperta.js`, ramo `terre-selvagge`). Deciso il 16 ottobre: mostri anche sopra; il motore è in
-  [mondo-aperto-mostri.md](mondo-aperto-mostri.md).
-
-| anello | regioni | fascia dei mostri di sopra | cosa c'è | età (`portata`) |
-|---|---|---|---|---|
-| 0 | il villaggio | nessuno | i mercanti, il minatore, la pietra del viaggio | sempre aperto |
-| 1 | otto terre vicine | 1–6 | quattro dungeon della storia, gli antri | la più bassa dei suoi dungeon |
-| 2 | sedici, in quattro marche | 6–13 | tre dungeon della storia, l'abisso, due città, gli antri | la più bassa dei dungeon della marca |
-
-- **La fascia di una regione segue il dungeon della storia che ci sta**: un livello sotto quello atteso
-  (`LIVELLI_ATTESI` di oggi: 1 · 2 · 3 · 5 · 7 · 8 · 10 · 12), perché sopra si cammina verso il dungeon e lo si trova
-  un poco più facile; le regioni senza dungeon stanno a metà fra le vicine. Il `dif` di una regione è l'inizio di quello
-  del suo dungeon. Sono numeri da misurare col banco, non da credere (sotto, «Cosa va ricalibrato»).
-- **L'età non chiude passaggi**: si aprono solo per la storia (se ha finito le discese prima può andare anche oltre).
+La griglia 5×5 ad anelli, le marche, i confini fra anelli e le fasce per anello sono superati: la forma è la serpentina a sette zone di
+[mondo-a-percorso.md](mondo-a-percorso.md). Restano vere le regole: le regioni hanno mostri e le città no (il motore è in
+[mondo-aperto-mostri.md](mondo-aperto-mostri.md)), e l'età non chiude passaggi.
 
 ### Le città
 
@@ -84,9 +62,8 @@ Tre città, una per lato del viaggio: si torna sempre a una città vicina, mai a
 
 ### Il centro e la partenza
 
-- **Si parte nel villaggio**, sulla piazza, come oggi; l'eroe nuovo vede il villaggio e il primo tratto della strada
-  verso il primo dungeon. La strada dei campi porta al primo ponte: il primo dungeon sta nell'anello 1, vicino.
-- **Il cartello all'incrocio** resta, una freccia per ogni ponte del villaggio, coi nomi dei posti già trovati.
+- **Si parte nel villaggio**, sulla piazza; l'eroe nuovo vede il villaggio e il primo tratto della strada verso il primo dungeon.
+- **Il cartello all'incrocio** resta, una freccia per ogni uscita del villaggio, coi nomi dei posti già trovati.
 
 ### Il seme e cosa cambia
 
@@ -104,13 +81,8 @@ Tre città, una per lato del viaggio: si torna sempre a una città vicina, mai a
 
 ### Come cresce
 
-- **Il mondo è intero dal primo giorno**, ma i passaggi fra gli anelli si aprono con la storia: il ponte verso le
-  marche del sud e dell'ovest si alza quando si batte il grosso del quarto dungeon, il valico del nord quando si batte
-  quello del sesto (le chiuse dicono cosa le apre: «Si apre quando batti Zannaverde»). Un passaggio chiuso è una grata
-  calata, modellata, non un muro invisibile.
-- **Regioni nuove si aggiungono fuori** (un anello 3, una marca del mare) cambiando la griglia: cambia la firma, e le
-  nebbie salvate si allargano con lo stesso trucco di `LARGHEZZE_VECCHIE` (il vecchio codice si rimette dentro e il
-  nuovo è nebbia). La regola: si aggiunge solo fuori, mai in mezzo.
+Le grate e i passaggi chiusi dalla storia non ci sono più (nessun passaggio chiuso); le terre successive sono un compito di
+[mondo-a-percorso.md](mondo-a-percorso.md).
 
 ## 2. I dungeon
 

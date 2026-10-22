@@ -42,6 +42,7 @@ const prossime = computed(() => voci(props.dopo))
             <div class="f3-barra-livello" role="progressbar" :aria-valuenow="Math.round(info.quanto * 100)" aria-valuemin="0" aria-valuemax="100"><u :style="{ width: info.quanto * 100 + '%' }"></u></div>
             <p class="f3-nota">Spendi ancora 🪙 {{ info.manca }} qui dentro per il livello {{ info.livello + 1 }}.</p>
             <h3>📦 Arrivato con questo livello</h3>
+            <p v-if="!arrivate.length" class="f3-nota" data-f3="livello-vuoto">Niente di nuovo qui: ogni livello è un passo verso quelli dopo.</p>
             <div class="f3-roba">
               <div v-for="(c, n) in arrivate" :key="c.k" class="dono" :style="{ '--i': n }"><span class="em"><Faccia v-if="c.merce" :k="c.merce" :emoji="c.emoji" :lato="38" /><template v-else>{{ c.emoji }}</template></span><b>{{ c.nome }}</b><small>{{ c.cosa }}</small></div>
             </div>
@@ -52,6 +53,7 @@ const prossime = computed(() => voci(props.dopo))
           <div class="scheda">
             <p class="f3-nome">{{ nomeDopo }}</p>
             <h3><span class="regalo" aria-hidden="true">🎁</span> Dopo, al livello {{ info.livello + 1 }}</h3>
+            <p v-if="!prossime.length" class="f3-nota">Niente di nuovo neanche qui: la fattoria cresce con te.</p>
             <div class="f3-roba chiusa">
               <div v-for="(c, n) in prossime" :key="c.k" class="dono" :style="{ '--i': n + 2 }"><span class="em"><Faccia v-if="c.merce" :k="c.merce" :emoji="c.emoji" :lato="38" /><template v-else>{{ c.emoji }}</template></span><b>{{ c.nome }}</b><small>🔒 {{ c.cosa }}</small></div>
             </div>

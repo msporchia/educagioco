@@ -5,7 +5,7 @@
 // che il motore ha aperto (i tuoi e due lotti attorno): il peso non cresce con la fattoria. Non sa le regole: legge dal motore cosa è tuo.
 // Vedi docs/fattoria3d/mondo-infinito.md.
 import * as THREE from 'three'
-import { mat, FORME, creaFienile, creaCasa } from './modelli.js'
+import { mat, FORME, creaCasa } from './modelli.js'
 import { geometriaCespuglio } from './dal-sotterraneo.js'
 import { LOTTO, FISSI, lotto, lottoDi, cellaDa } from '../dati/mondo.js'
 import { mescola, sequenza } from '../dati/semi.js'
@@ -338,10 +338,10 @@ export class Terreno {
   }
   ridisegnaErba() { this._ridisegnaErba() }
 
-  // il fienile e la casa: solo di scena
+  // la casa: solo di scena (il fienile di scena non c'è più: ce n'è uno solo, quello che si costruisce)
   _fisse() {
     for (const f of FISSI) {
-      const g = f.tipo === 'fienile' ? creaFienile() : creaCasa()
+      const g = creaCasa()
       g.position.set(f.i + f.w / 2, 0, f.j + f.d / 2); this.scena.add(g)
       if (g.userData.fumo) this.fumi.push(g.position.clone().add(g.userData.fumo))      // il camino della casa
     }

@@ -1,0 +1,11 @@
+/* La guida della fattoria 3D: la riga del primo giro, il tasto «E adesso?» e il consiglio sotto un «non si può». Vedi docs/fattoria3d/guida.md. */
+.f3-guida { position: absolute; left: 10px; right: 10px; bottom: calc(14px + 56px + 22px + env(safe-area-inset-bottom)); z-index: 31; pointer-events: none; display: flex; justify-content: center; }
+.f3-guida > * { max-width: 460px; box-shadow: 0 3px 10px rgba(0,0,0,.25); }
+.f3-guida.su { bottom: auto; top: 8px; z-index: 40; }
+.f3-adesso { position: absolute; right: 8px; top: 58px; z-index: 20; min-height: 44px; border: 0; border-radius: 22px; padding: 0 14px; background: rgba(255,251,240,.92); color: #3a2a1a; font: 800 14px "Emoji Gioco", system-ui, sans-serif; box-shadow: 0 2px 6px rgba(0,0,0,.18); touch-action: manipulation; }
+.f3-consiglio-riga { display: flex; flex-direction: column; align-items: stretch; gap: 8px; margin: 8px 2px 0; padding: 10px 12px; border-radius: 12px; background: #e3f3d4; border: 2px solid #9be07a; color: #2f4a1a; }
+.f3-consiglio-testo { font-size: 15px; font-weight: 800; line-height: 1.35; }
+.f3-consiglio-fai { min-height: 44px; border: 0; border-radius: 22px; padding: 0 18px; background: #5fae3a; color: #fff; font: 800 15px "Emoji Gioco", system-ui, sans-serif; touch-action: manipulation; }
+.f3-consiglio-fai:active { background: #4a8f2c; }
+.f3-consiglio-albero { background: #fff3cf; color: #4a2c12; border: 2px solid #e0a020; }
+.f3-consiglio-albero:active { background: #ffe39a; }

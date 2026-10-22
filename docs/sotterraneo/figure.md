@@ -106,9 +106,22 @@ sua base sarebbe una spada qualunque con un nome importante. Un pezzo col
 nome nuovo vuole la sua riga in un foglietto, e `guastiDelleCose` si accorge
 se manca.
 
-**I pezzi dei sei grossi dei dungeon nuovi** ([dungeon-che-si-rigenerano.md](dungeon-che-si-rigenerano.md)) non hanno ancora la
-figura chiamata come loro: `figura` in `DEI_GROSSI` dice quale figura dei fogli vestono (un aspetto della loro base), e `componi` e
-`guastiDelleCose` leggono quella. Quando la loro sarà ritagliata, si toglie `figura`.
+**I pezzi dei sei grossi dei dungeon nuovi** ([dungeon-che-si-rigenerano.md](dungeon-che-si-rigenerano.md)) hanno la loro dal
+22 ottobre: la figura che vestivano come aspetto è ritagliata col loro nome (il blocco `__pezzi-col-nome` dei foglietti) e ha perso il
+`pezzo` nel catalogo, così nessun pezzo trovato la porta più. Le chiavi restano quelle di prima dei nomi (sono salvataggi):
+
+| pezzo | chiave (sprite) | figura | perché |
+|---|---|---|---|
+| Scudo di Roccaverde | `scudo-di-barbamuschio` | `scudo-08` | il campo verde del bosco sacro: muschio, natura |
+| Medaglione di Piumanera | `medaglione-di-piumanera` | `amuleto-21` | il pendente con le punte e la gemma nera: il corvo, l'ombra |
+| Giubba di Sibilla | `giubba-di-sibilla` | `veste-08` | la giubba verde di cuoio (una giubba, non una veste da mago) |
+| Scudo di Vulcanor | `scudo-di-brontolava` | `scudo-53` | il tondo scuro con la fiamma, il più prezioso del fuoco |
+| Amuleto di Gelomagno | `amuleto-di-brinaldo` | `amuleto-28` | il cristallo azzurro stretto dagli artigli: il ghiaccio |
+| Scudo di Falcenera | `scudo-di-falcenera` | `scudo-38` | il teschio sul blu notte: la morte |
+
+`figura` in `UNICI` (`componi`, `guastiDelleCose`) resta per un pezzo col nome nuovo che non ha ancora la sua. Il panciotto ha ora due
+aspetti soli (il gelo e il fuoco). **Una `misura` scritta solo nel foglietto si perde** al `--gioco` dopo: sta nella figura di
+`roba.json` (gli archi `arco-02`, `04`, `05` ce l'avevano solo nel foglietto).
 
 Due scelte da rifare quando ci saranno figure migliori:
 

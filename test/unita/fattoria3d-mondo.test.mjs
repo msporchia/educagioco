@@ -8,6 +8,7 @@ import { generaLotto } from '../../src/giochi/fattoria3d/dati/lotti.js'
 import { biomaDi, acquaDelLotto, moloDelLotto, P_LAGHETTO } from '../../src/giochi/fattoria3d/dati/biomi.js'
 import { LOTTI_STORICI, LOTTI_INIZIALI, lotto, lottoDi, lottoPerId, chiave, cellaDa, idCella, cellaDaId, eStorico, nelRettangolo, vicinoDi } from '../../src/giochi/fattoria3d/dati/mondo.js'
 import { COSTI, prezzoDelLotto } from '../../src/giochi/fattoria3d/dati/regole.js'
+import { esperienzaDaPrima } from '../../src/giochi/fattoria3d/motore/scala-vecchia.js'
 import { Fattoria3d } from '../../src/giochi/fattoria3d/motore/fattoria3d.js'
 import { statoIniziale, normalizza, VERSIONE_STATO } from '../../src/giochi/fattoria3d/motore/stato.js'
 import { percorso } from '../../src/giochi/fattoria3d/motore/percorso.js'
@@ -17,7 +18,7 @@ import { sogliaDi, ULTIMO } from '../../src/giochi/fattoria3d/dati/livelli.js'
 import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifica.mjs'
 
 const RIF = JSON.parse(fs.readFileSync(new URL('../aiuto/fattoria3d-mondo-storico.json', import.meta.url), 'utf8'))
-function mondo({ monete = 1e7, stato = null, liv = 16 } = {}) {
+function mondo({ monete = 1e7, stato = null, liv = 70 } = {}) {
   const b = { monete }
   const s = stato || statoIniziale()
   s.esperienza = Math.max(s.esperienza || 0, sogliaDi(liv))
@@ -98,17 +99,17 @@ controlla('i biomi non dipendono dall\'ordine di chiamata', (() => { const v = [
 /* ══════════ 5. il prezzo si auto-limita ══════════ */
 {
   const p = k => prezzoDelLotto(k)
-  controlla('i primi 33 lotti costano come sempre (40, 60… 680)', Array.from({ length: 33 }, (_, k) => p(k)).every((v, k) => v === COSTI.lottoBase + COSTI.lottoRincaro * k) && p(32) === 680)
+  controlla('il primo lotto costa pochissimo (la 3D parte con meno terra della 2D) e il rincaro è quello della 2D: ×1,38 per piazzola, cioè per 36 celle', p(0) <= 10 && Math.abs(p(60) / p(60 - 9) - 1.38 ** (9 * 16 / 1.05 / 36)) / 1.38 ** (9 * 16 / 1.05 / 36) < 0.03, String([p(0), p(60) / p(51)]))
   controlla('sale a ogni lotto e resta finito', Array.from({ length: 2000 }, (_, k) => k).every(k => Number.isFinite(p(k)) && (k === 0 || p(k) > p(k - 1))))
-  controlla('il rincaro sale (lo scarto fra due lotti cresce oltre il 33°)', p(60) - p(59) > p(40) - p(39) && p(40) - p(39) > p(20) - p(19))
+  controlla('il rincaro sale (lo scarto fra due lotti cresce)', p(60) - p(59) > p(40) - p(39) && p(40) - p(39) > p(20) - p(19))
   const minuti = k => p(k) / 6
-  controlla('il lotto 10 costa meno di un\'ora di esercizio', minuti(9) < 60, String(p(9)))
+  controlla('il lotto 10 costa pochi minuti di esercizio', minuti(9) < 10, String(p(9)))
   controlla('il centesimo lotto costa più di una settimana di esercizio quotidiano (mezz\'ora al giorno)', minuti(99) > 7 * 30, String(p(99)))
   nota('prezzo del 10°, 20°, 50°, 100° lotto:', p(9), p(19), p(49), p(99))
   // il prezzo di un lotto non salta il livello da solo: l'esperienza che dà è tagliata al prezzo dell'ultimo storico
   const { f, b } = mondo({ monete: 1e7, liv: 1 })
   f.s.esperienza = 0
-  for (let k = 0; k < 40; k++) { const l = f.lottiComprabili()[0]; const prima = f.livello(); f.compraLotto(l.id); if (k > 32) controlla(`il lotto ${k + 1} non fa salire di livello a salti`, f.livello() - prima <= 1 + Math.floor(ULTIMO / 4)) }
+  for (let k = 0; k < 41; k++) { const l = f.lottiComprabili()[0]; const prima = f.livello(); f.compraLotto(l.id); if (k > 32) controlla(`il lotto ${k + 1} non fa salire di livello a salti`, f.livello() - prima <= 1 + Math.floor(ULTIMO / 4)) }
   controlla('l\'esperienza dei lotti è tagliata (680 al massimo ciascuno)', f.esperienza() <= 33 * 680 + 40 * 680)
   const q = f.prezzoLotto(), eprima = f.esperienza(); f.compraLotto(f.lottiComprabili()[0].id)
   controlla('un lotto che costa più del tetto dà solo il tetto di esperienza', q > COSTI.lottoEsperienzaMax && f.esperienza() - eprima === COSTI.lottoEsperienzaMax)
@@ -126,18 +127,17 @@ controlla('i biomi non dipendono dall\'ordine di chiamata', (() => { const v = [
     const ac = acquaDelLotto(l), set = new Set(ac.map(([i, j]) => chiave(i, j)))
     const piu = Math.max(Math.abs(a - 3), Math.abs(b - 3))
     if (piu < 3 || nelRettangolo(l.i, l.j) || eStorico(l)) brutti.push(`${l.id}: troppo vicino al quadrato di partenza`)
-    for (const [da, db] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) if (biomaDi(a + da, b + db) === 'laghetto') brutti.push(`${l.id}: attaccato a un altro laghetto`)
-    if (ac.length < 5 || ac.length > 7) brutti.push(`${l.id}: ${ac.length} celle`)
-    for (const [x, y] of [[0, 0], [3, 0], [0, 3], [3, 3]]) if (set.has(chiave(l.i + x, l.j + y))) brutti.push(`${l.id}: acqua in un angolo`)
-    for (const lato of [[[0, 0], [1, 0], [2, 0], [3, 0]], [[0, 3], [1, 3], [2, 3], [3, 3]], [[0, 0], [0, 1], [0, 2], [0, 3]], [[3, 0], [3, 1], [3, 2], [3, 3]]]) if (lato.filter(([x, y]) => !set.has(chiave(l.i + x, l.j + y))).length < 3) brutti.push(`${l.id}: un lato quasi tutto d'acqua`)
+    if (ac.length < 3) brutti.push(`${l.id}: ${ac.length} celle`)
     const m = moloDelLotto(l, ac)
-    if (!m || set.has(chiave(m.i, m.j)) || !set.has(chiave(m.i + m.verso[0], m.j + m.verso[1])) || lottoDi(m.i, m.j).id !== l.id) brutti.push(`${l.id}: il posto del molo non torna`)
-    const g = generaLotto(a, b)
-    if (!g.molo || g.molo.i !== m.i || g.molo.j !== m.j) brutti.push(`${l.id}: generaLotto non espone il molo`)
+    if (ac.length < 16) {
+      if (!m || set.has(chiave(m.i, m.j)) || !set.has(chiave(m.i + m.verso[0], m.j + m.verso[1])) || lottoDi(m.i, m.j).id !== l.id) brutti.push(`${l.id}: il posto del molo non torna`)
+      const g = generaLotto(a, b)
+      if (!g.molo || g.molo.i !== m.i || g.molo.j !== m.j) brutti.push(`${l.id}: generaLotto non espone il molo`)
+    }
   }
-  controlla('i laghetti stanno alle regole (lontani, mai attaccati, con la terra negli angoli, un molo)', brutti.length === 0, brutti.slice(0, 4).join(' · '))
+  controlla('i laghetti stanno alle regole (lontani dal quadrato storico, con un molo dove c\'è terra); la forma e la distribuzione: fattoria3d-laghi', brutti.length === 0, brutti.slice(0, 4).join(' · '))
   const pc = k => Math.round(100 * conta[k] / tot)
-  controlla('le proporzioni sono quelle volute (prato ~70%, bosco ~15%, laghetto ~15%)', Math.abs(pc('laghetto') - 15) <= 4 && Math.abs(pc('bosco') - 15) <= 4 && pc('prato') >= 63, JSON.stringify(conta))
+  controlla('le proporzioni sono quelle volute (prato ~65%, bosco ~14%, lotti con un lago ~21%)', pc('laghetto') >= 15 && pc('laghetto') <= 28 && Math.abs(pc('bosco') - 14) <= 4 && pc('prato') >= 55, JSON.stringify(conta))
   nota('biomi nella fascia di mezzo (a da 0 a 7, b da −60 a 59): prato', pc('prato') + '%, bosco', pc('bosco') + '%, laghetto', pc('laghetto') + '%')
   controlla('il bosco ha più alberi del prato', (() => { let b = 0, p = 0, nb = 0, np = 0; for (let y = 8; y < 60; y++) for (let x = 8; x < 60; x++) { const bi = biomaDi(x, y); if (bi === 'bosco') { b += generaLotto(x, y).alberi.length; nb++ } else if (bi === 'prato') { p += generaLotto(x, y).alberi.length; np++ } } return b / nb > 1.8 * (p / np) })())
   controlla('P_LAGHETTO è un numero sensato', P_LAGHETTO > 0 && P_LAGHETTO < 1)
@@ -146,6 +146,7 @@ controlla('i biomi non dipendono dall\'ordine di chiamata', (() => { const v = [
 /* ══════════ 7. acqua, ponti e percorso ══════════ */
 {
   const s = statoIniziale()
+  s.geo = 1             // un salvataggio dei laghetti-pozzanghera: il lotto 2_-1 tiene il suo stagno (fattoria3d-laghi: `vecchi1`)
   for (const id of ['2_1', '2_0', '2_-1']) s.lotti[id] = true
   const { f } = mondo({ stato: s })
   senzaOstacoli(f); senzaAlberi(f)
@@ -176,7 +177,8 @@ controlla('i biomi non dipendono dall\'ordine di chiamata', (() => { const v = [
   // togliere il ponte chiude di nuovo il passaggio
   f.mettiVia(r.cosa.id)
   controlla('tolta la passerella l\'acqua è di nuovo un muro', !f.libera(-5, -15))
-  controlla('nel lotto non tuo l\'acqua si vede ma non si tocca', mondo().f.acqua(-5, -15) && !mondo().f.cellaPropria(-5, -15))
+  const [wi, wj] = (() => { for (let b = -12; b < -3; b++) for (let a = 0; a <= 7; a++) { const ac = acquaDelLotto(lotto(a, b)); if (ac.length) return ac[0] } })()
+  controlla('nel lotto non tuo l\'acqua si vede ma non si tocca', mondo().f.acqua(wi, wj) && !mondo().f.cellaPropria(wi, wj))
   // il percorso non esce dal terreno proprio, e finisce sempre
   const { f: g } = mondo()
   senzaOstacoli(g); senzaAlberi(g)
@@ -197,7 +199,7 @@ controlla('i biomi non dipendono dall\'ordine di chiamata', (() => { const v = [
     magazzino: { campo: 1 }, esperienza: 300, prodotti: { farina: 2 },
   }
   const n = normalizza(JSON.parse(JSON.stringify(vecchio)))
-  controlla('un v7 si legge: lotti, strade, alberi tagliati, sassi tolti, cose e magazzino', JSON.stringify(n.lotti) === JSON.stringify(lottiVecchi) && JSON.stringify(n.strade) === '[525,526,600]' && JSON.stringify(n.tagliati) === '[3,10,40]' && JSON.stringify(n.ostacoli) === '[35,69,132]' && n.cose.length === 2 && n.magazzino.campo === 1 && n.esperienza === 300 && n.prodotti.farina === 2)
+  controlla('un v7 si legge: lotti, strade, alberi tagliati, sassi tolti, cose e magazzino', JSON.stringify(n.lotti) === JSON.stringify(lottiVecchi) && JSON.stringify(n.strade) === '[525,526,600]' && JSON.stringify(n.tagliati) === '[3,10,40]' && JSON.stringify(n.ostacoli) === '[35,69,132]' && n.cose.length === 2 && n.magazzino.campo === 1 && n.esperienza === esperienzaDaPrima(300, 1) && n.esperienza > 300 && n.prodotti.farina === 2)
   uguale('e passa alla versione dell\'ora', n.v, VERSIONE_STATO)
   controlla('la versione è salita oltre la 7', VERSIONE_STATO >= 8)
   const { f } = mondo({ stato: JSON.parse(JSON.stringify(vecchio)), liv: 1 })

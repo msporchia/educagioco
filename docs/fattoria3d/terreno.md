@@ -8,7 +8,7 @@ come e perché in [mondo-infinito.md](mondo-infinito.md); i laghetti in [laghi.m
 
 Il mondo è fatto di lotti da 4×4 con coordinate intere `(a, b)` qualunque. Se ne hanno nove all'inizio, il quadrato 3×3 nel mezzo
 (`LOTTI_INIZIALI`); **qualunque lotto che confina** (4 direzioni, `confina`) con uno proprio si compra, così il terreno resta
-d'un pezzo. Il prezzo sale a ogni lotto e si auto-limita (`prezzoLotto`, `prezzoDelLotto`: [mondo-infinito.md](mondo-infinito.md)).
+d'un pezzo. Il prezzo è quello della terra della 2D contato sulle celle ([livelli.md](livelli.md) «La terra»); sale a ogni lotto e si auto-limita (`prezzoLotto`, `prezzoDelLotto`: [mondo-infinito.md](mondo-infinito.md)).
 
 - **Dentro il terreno proprio tutto si può mettere dappertutto**: campi, recinti, bancarelle, fontane, strade. Niente zone, salvo
   **l'acqua** dei laghetti, e quella degli stagni che il bambino costruisce (solo ponte e passerella). **Anche gli edifici unici** (mulino,
@@ -19,7 +19,7 @@ d'un pezzo. Il prezzo sale a ogni lotto e si auto-limita (`prezzoLotto`, `prezzo
   attorno ai tuoi non apre niente.
 - Il cartello `🪙 40` compare solo sui lotti acquistabili vicini al contadino (o tutti quelli della finestra, in costruzione); un
   laghetto, un lago, il mare o la spiaggia lo dice: «🪙 N · 🏞️ laghetto», «🏞️ lago», «🌊 mare», «🏖️ spiaggia».
-- **I biomi**: prato (~69%), bosco (~15%, alberi più fitti), laghetto (~15%) nella fascia di mezzo (a da 0 a 7); i 42 lotti storici sono sempre prato. **A ovest (a ≤ −2) c'è il mare**, con la
+- **I biomi**: prato (~66%), bosco (~14%, alberi più fitti), laghetto (~21%: lotti con un lago naturale, [laghi.md](laghi.md)) nella fascia di mezzo (a da 0 a 7); i 42 lotti storici sono sempre prato. **A ovest (a ≤ −2) c'è il mare**, con la
   costa e la spiaggia al lotto a = −1, **a est (a ≥ 8) i laghi grandi**: fatti di celle e non di lotti, e si pescano ([geografia-e-pesca.md](geografia-e-pesca.md)).
 
 ## Il recinto basso

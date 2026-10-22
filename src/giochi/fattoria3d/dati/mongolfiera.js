@@ -3,18 +3,19 @@
    di 🪙6 al minuto. Modello: la mongolfiera della fattoria di sempre (src/giochi/fattoria/dati/mongolfiera.js). Vedi docs/fattoria3d/mongolfiera.md. */
 import { RICETTE } from './ricette.js'
 import { PEZZI, EDIFICI } from './catalogo.js'
-import { livelloDi, msDi, premioDi, tettoDi, MONETE_AL_MINUTO } from './ordini.js'
+import { livelloDi, msDi, premioDelPezzo, tettoDi, MONETE_AL_MINUTO } from './ordini.js'
+import { CIELO_VUOTO_MIN, msDaMinuti } from './parita2d.js'
 
 export const FILE = 3                 // file di casse, una merce per fila (meno, se al livello non ci sono tre merci)
 export const CASSE_MIN = 2            // casse per fila
 export const CASSE_MAX = 3
 export const PEZZI_MIN = 1            // pezzi per cassa: ogni cassa di una fila ne chiede lo stesso numero
 export const PEZZI_MAX = 3            // il tetto assoluto; sotto il livello `LIVELLO_PEZZI_GRANDI` il massimo è uno di meno
-export const LIVELLO_PEZZI_GRANDI = 14
+export const LIVELLO_PEZZI_GRANDI = EDIFICI.mongolfiera.liv      // come in 2D: le casse chiedono fino a tre pezzi da subito (la mongolfiera arriva al 26)
 export const FASI_MIN = 2             // una merce da cassa passa da almeno due lavorazioni (farina → pasta); il crudo lo chiede il banco
 export const BONUS_FILA = 0.25        // fila piena: +25% del premio delle sue casse
 export const BONUS_TUTTO = 0.5        // tutto pieno: +50% del premio di tutte le casse, e la sorpresa
-export const RIPOSO_MS = 2 * 60_000   // dopo la partenza il cielo resta vuoto due minuti (il banco: tre); sull'orologio, quindi anche a pagina chiusa
+export const RIPOSO_MS = msDaMinuti(CIELO_VUOTO_MIN)   // dopo la partenza il cielo resta vuoto un'ora, come in 2D (il banco: cinque minuti); sull'orologio, quindi anche a pagina chiusa
 export const SALITA_MS = 4000         // quanto ci mette il pallone a salire e a scendere (la scena)
 export const PESO_MACCHINA_TUA = 4    // nella pesca una merce di una macchina che hai pesa quattro volte: la fila si riempie con la tua roba
 export const LIVELLO_MONGOLFIERA = EDIFICI.mongolfiera.liv
@@ -39,13 +40,13 @@ export const merciDelLivello = livello => Object.keys(RICETTE).filter(k => merce
 
 export const pezziMaxAl = livello => (livello | 0) >= LIVELLO_PEZZI_GRANDI ? PEZZI_MAX : PEZZI_MAX - 1
 
-/** L'esperienza di una cassa: quello che renderebbero gli stessi pezzi al banco (si paga il tempo, la metà del tetto). */
-export const premioDellaCassa = (merce, pezzi) => premioDi({ [merce]: pezzi })
+/** L'esperienza di una cassa: pezzo per pezzo, come in 2D (`premioDelPezzo`, senza la base dell'ordine). */
+export const premioDellaCassa = (merce, pezzi) => Math.round(premioDelPezzo(merce) * pezzi)
 export const bonusDellaFila = premioCasse => Math.round(BONUS_FILA * premioCasse)
 export const bonusDelTutto = premioCasse => Math.round(BONUS_TUTTO * premioCasse)
 
 /** I pezzi che la sorpresa della fiera può regalare: le decorazioni del catalogo, tranne i pezzi d'acqua (e ciò che si dichiarerà `fiera: true`). */
-export const SORPRESE = Object.entries(PEZZI).filter(([, d]) => (d.categoria === 'decori' || d.fiera) && !d.calpestabile && !d.acqua).map(([t]) => t)
+export const SORPRESE = Object.entries(PEZZI).filter(([, d]) => (d.categoria === 'decori' || d.fiera) && !d.calpestabile && !d.acqua && !d.stagione).map(([t]) => t)
 
 export function guastiDellaMongolfiera() {
   const g = []

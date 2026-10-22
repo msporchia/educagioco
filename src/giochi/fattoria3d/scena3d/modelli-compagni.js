@@ -10,6 +10,30 @@ import { fondiPerMateriale } from './fondi.js'
 import { memoModello } from './cache-modelli.js'
 import { abitoDiSerie, normalizzaAbito, opzione, chiaveAbito } from '../dati/abiti.js'
 
+// ── il dettaglio da lontano ──
+// Ogni pezzo di pelo (cane) e di morbido (gatto) sa rifarsi con meno facce e meno ciocche (`userData.lod`, fatto la prima volta che serve):
+// un compagno a più di ~12 m dalla camera (zoom lontano) ne ha il 20–25%. `impostaDettaglio` cambia le geometrie del gruppo.
+// Vedi docs/fattoria3d/scena.md, «Draw call e triangoli».
+let DETTAGLIO = 1
+const LOD_FACCE = 0.5, LOD_GROSSE = 1.5
+/** Esegue `fai` con il dettaglio basso (palla, tubo e manto leggono `DETTAGLIO`). */
+function daLontano (fai) {
+  DETTAGLIO = 0.35
+  try { return fai() } finally { DETTAGLIO = 1 }
+}
+/** Dal vicino al lontano e viceversa: `basso` vero = le geometrie povere. Non fa niente se è già così. */
+export function impostaDettaglio (g, basso) {
+  if (!!g.userData.dettaglioBasso === !!basso) return
+  g.userData.dettaglioBasso = !!basso
+  g.traverse(o => { const l = o.userData.lod; if (l) o.geometry = basso ? l.bassa() : l.alta })
+}
+/** Triangoli di un gruppo come sono adesso (per i controlli e per le misure). */
+export function triangoliDi (g) {
+  let n = 0
+  g.traverse(o => { if (o.isMesh && o.visible !== false && o.geometry) n += (o.geometry.index ? o.geometry.index.count : o.geometry.attributes.position.count) / 3 })
+  return Math.round(n)
+}
+
 // ── mattoncini con le geometrie in comune ──
 const geo = new Map()
 const G = (k, f) => { if (!geo.has(k)) geo.set(k, f()); return geo.get(k) }
@@ -18,6 +42,12 @@ function pezzo (g, geometria, m, x, y, z, sx = 1, sy = 1, sz = 1) {
 }
 const scatola = (g, w, h, d, m, x = 0, y = 0, z = 0) => pezzo(g, G(`b${w},${h},${d}`, () => new THREE.BoxGeometry(w, h, d)), m, x, y, z)
 const sfera = (g, r, m, x = 0, y = 0, z = 0, sx = 1, sy = 1, sz = 1) => pezzo(g, G(`s${r}`, () => new THREE.SphereGeometry(r, 10, 8)), m, x, y, z, sx, sy, sz)
+/** Come `sfera`, con la versione povera per il LOD (`impostaDettaglio`). Non per il contadino: una mesh con `userData` non si fonde (fondi.js). */
+const sferaL = (g, r, ...resto) => {
+  const o = sfera(g, r, ...resto), alta = o.geometry
+  o.userData.lod = { alta, bassa: () => G(`s${r}:lod`, () => new THREE.SphereGeometry(r, 6, 4)) }
+  return o
+}
 const rozza = (g, r, m, x = 0, y = 0, z = 0, sx = 1, sy = 1, sz = 1) => pezzo(g, G(`i${r}`, () => new THREE.IcosahedronGeometry(r, 1)), m, x, y, z, sx, sy, sz)
 const cil = (g, rs, ri, h, m, x = 0, y = 0, z = 0, seg = 10) => pezzo(g, G(`c${rs},${ri},${h},${seg}`, () => new THREE.CylinderGeometry(rs, ri, h, seg)), m, x, y, z)
 const cono = (g, r, h, m, x = 0, y = 0, z = 0, seg = 4) => pezzo(g, G(`n${r},${h},${seg}`, () => new THREE.ConeGeometry(r, h, seg)), m, x, y, z)
@@ -195,7 +225,7 @@ function tingi (geo, colore) {
 }
 /** Un volume morbido (icosaedro), colorato vertice per vertice da `tinta(p)`, un po' più scuro: sta sotto le ciocche. */
 function volume (parti, c, r, tinta) {
-  const g = new THREE.IcosahedronGeometry(1, 1); g.deleteAttribute('uv'); g.scale(...r); g.translate(...c)
+  const g = new THREE.IcosahedronGeometry(1, DETTAGLIO < 1 ? 0 : 1); g.deleteAttribute('uv'); g.scale(...r); g.translate(...c)
   tingi(g, (p, k) => k.setHex(tinta(p)).multiplyScalar(0.8)); parti.push(g)
 }
 /** Una ciocca: un cono dalla radice `p` verso `d`, scuro alla radice e chiaro in punta, girato a caso su sé stesso. */
@@ -210,6 +240,7 @@ const fuori = (c, r, k = 0.92) => p => ((p.x - c[0]) / r[0]) ** 2 + ((p.y - c[1]
 /** Copre un volume di ciocche: `n` radici sparse a spirale sulla superficie; `giu` 0..1 quanto ricadono lungo il corpo
     (sul dorso si aprono di lato, come la scriminatura); `dove(p)` scarta le radici nascoste o fuori posto. */
 function manto (parti, c, r, { n, lungo, largo, giu = 0.8, tinta, dove = () => true }) {
+  if (DETTAGLIO < 1) { n = Math.max(3, Math.round(n * DETTAGLIO)); lungo *= LOD_GROSSE; largo *= LOD_GROSSE }       // la versione da lontano: meno ciocche, più grosse
   for (let i = 0; i < n; i++) {
     const y = 1 - 2 * (i + 0.5) / n, rr = Math.sqrt(1 - y * y), a = i * 2.39996 + caso() * 0.6
     const u = new THREE.Vector3(Math.cos(a) * rr, y, Math.sin(a) * rr)
@@ -226,12 +257,15 @@ function manto (parti, c, r, { n, lungo, largo, giu = 0.8, tinta, dove = () => t
 }
 /** Un pezzo di pelo (volumi e ciocche disegnati nel sistema del cane fermo), spostato nel suo perno: un mesh. */
 function pelo (perno, chiave, o, disegna) {
-  const geo = G(chiave, () => {
-    seme = [...chiave].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) % 2147483646, 7) + 1
+  const fai = k => G(k, () => {
+    seme = [...k].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) % 2147483646, 7) + 1
     const parti = []; disegna(parti)
     const g = mergeGeometries(parti); g.translate(-o.x, -o.y, -o.z); g.computeBoundingSphere(); return g
   })
-  const m = new THREE.Mesh(geo, mat(0xffffff, { vertexColors: true })); m.castShadow = m.receiveShadow = true; perno.add(m); return m
+  const geo = fai(chiave)
+  const m = new THREE.Mesh(geo, mat(0xffffff, { vertexColors: true })); m.castShadow = m.receiveShadow = true; perno.add(m)
+  m.userData.lod = { alta: geo, bassa: () => daLontano(() => fai(chiave + ':lod')) }
+  return m
 }
 // i colori, dalla posizione nel cane fermo
 const merle = p => { const k = caso(); return p.y < 0.3 ? CHIARO : k < 0.15 ? SCURO : k < 0.45 ? CHIARO : ARDESIA }
@@ -287,11 +321,11 @@ export function creaCane () {
     for (const G2 of GUANCE) { volume(parti, ...G2, capo); manto(parti, ...G2, { n: 30, lungo: 0.08, largo: 0.055, tinta: capo, dove: p => p.z > T.z + 0.1 }) }
     manto(parti, ...MUSO, { n: 50, lungo: 0.07, largo: 0.045, tinta: capo, dove: p => p.z > T.z + 0.2 && !(Math.abs(p.x) < 0.07 && p.y > T.y - 0.11) })
   })
-  const naso = sfera(testa, 0.06, mat(0x16161a, { roughness: 0.25 }), 0, T.y - 0.06 - O.testa.y, T.z + 0.345 - O.testa.z, 1.3, 0.85, 0.9)
-  sfera(testa, 0.06, mat(0x3b1d24), 0, T.y - 0.165 - O.testa.y, T.z + 0.3 - O.testa.z, 1.45, 0.5, 0.8)                     // la bocca aperta
+  const naso = sferaL(testa, 0.06, mat(0x16161a, { roughness: 0.25 }), 0, T.y - 0.06 - O.testa.y, T.z + 0.345 - O.testa.z, 1.3, 0.85, 0.9)
+  sferaL(testa, 0.06, mat(0x3b1d24), 0, T.y - 0.165 - O.testa.y, T.z + 0.3 - O.testa.z, 1.45, 0.5, 0.8)                     // la bocca aperta
   const occhi = [-1, 1].map(s => {                                                                                          // due occhietti lucidi, a metà sotto la frangia
-    const o = sfera(testa, 0.034, mat(0x1c1612, { roughness: 0.15 }), s * 0.105, T.y - 0.025 - O.testa.y, T.z + 0.252 - O.testa.z)
-    sfera(testa, 0.01, mat(0xffffff, { roughness: 0.3 }), s * 0.105 + 0.01, T.y - 0.015 - O.testa.y, T.z + 0.284 - O.testa.z); return o
+    const o = sferaL(testa, 0.034, mat(0x1c1612, { roughness: 0.15 }), s * 0.105, T.y - 0.025 - O.testa.y, T.z + 0.252 - O.testa.z)
+    sferaL(testa, 0.01, mat(0xffffff, { roughness: 0.3 }), s * 0.105 + 0.01, T.y - 0.015 - O.testa.y, T.z + 0.284 - O.testa.z); return o
   })
   // la frangia: file di ciocche che dalla fronte ricadono sugli occhi, un mesh suo per dondolare
   const frangia = perno(testa, O.frangia.x - O.testa.x, O.frangia.y - O.testa.y, O.frangia.z - O.testa.z)
@@ -304,7 +338,7 @@ export function creaCane () {
     }
   })
   const lingua = perno(testa, O.lingua.x - O.testa.x, O.lingua.y - O.testa.y, O.lingua.z - O.testa.z)
-  const l = sfera(lingua, 0.05, mat(0xe8768e), 0, -0.012, 0.02, 1.05, 0.3, 1.3); l.rotation.x = 0.45
+  const l = sferaL(lingua, 0.05, mat(0xe8768e), 0, -0.012, 0.02, 1.05, 0.3, 1.3); l.rotation.x = 0.45
   const orecchie = [-1, 1].map(s => {
     const o = V(s * 0.27, T.y + 0.15, T.z - 0.01), p = perno(testa, o.x - O.testa.x, o.y - O.testa.y, o.z - O.testa.z)
     const ORE = [[s * 0.32, T.y - 0.06, T.z + 0.02], [0.075, 0.2, 0.14]]
@@ -493,12 +527,15 @@ function coloriGatto (v) {
   }
 }
 const sferaG = (seg, righe) => G(`sg${seg},${righe}`, () => { const s = new THREE.SphereGeometry(1, seg, righe); s.deleteAttribute('uv'); return s })
-function palla (parti, c, r, colore, seg = 14, righe = 10) { const g = sferaG(seg, righe).clone(); g.scale(...r); g.translate(...c); tingi(g, colore); parti.push(g) }
-function tubo (parti, rs, ri, h, c, colore, seg = 10) { const g = new THREE.CylinderGeometry(rs, ri, h, seg, 1); g.deleteAttribute('uv'); g.translate(...c); tingi(g, colore); parti.push(g) }
+function palla (parti, c, r, colore, seg = 14, righe = 10) { if (DETTAGLIO < 1) { seg = Math.max(5, Math.round(seg * LOD_FACCE)); righe = Math.max(3, Math.round(righe * LOD_FACCE)) }; const g = sferaG(seg, righe).clone(); g.scale(...r); g.translate(...c); tingi(g, colore); parti.push(g) }
+function tubo (parti, rs, ri, h, c, colore, seg = 10) { if (DETTAGLIO < 1) seg = Math.max(5, Math.round(seg * LOD_FACCE)); const g = new THREE.CylinderGeometry(rs, ri, h, seg, 1); g.deleteAttribute('uv'); g.translate(...c); tingi(g, colore); parti.push(g) }
 /** Un pezzo di pelo liscio: i volumi in `parti` fusi in un mesh solo (la geometria si fa una volta, per chiave). */
 function morbido (perno, chiave, lucido, disegna) {
-  const geo = G(chiave, () => { const parti = []; disegna(parti); const g = mergeGeometries(parti); g.computeBoundingSphere(); return g })
-  const m = new THREE.Mesh(geo, mat(0xffffff, { vertexColors: true, flatShading: false, roughness: lucido })); m.castShadow = m.receiveShadow = true; perno.add(m); return m
+  const fai = k => G(k, () => { const parti = []; disegna(parti); const g = mergeGeometries(parti); g.computeBoundingSphere(); return g })
+  const geo = fai(chiave)
+  const m = new THREE.Mesh(geo, mat(0xffffff, { vertexColors: true, flatShading: false, roughness: lucido })); m.castShadow = m.receiveShadow = true; perno.add(m)
+  m.userData.lod = { alta: geo, bassa: () => daLontano(() => fai(chiave + ':lod')) }
+  return m
 }
 
 const facceGatto = new Map()

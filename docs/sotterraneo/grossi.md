@@ -24,7 +24,7 @@ nello scontro e nella barra in cima).
 | la botola segreta | Minotto | la bestia cornuta | troll | il Giubbone di Minotto (difesa, vita, rigenera) |
 | la miniera abbandonata | Carbonchio | il drago di lava | gigante | il Martello di Carbonchio (attacco, fuoco) |
 
-I sei dei dungeon nuovi del 3D (Barbamuschio, Piumanera, Sibilla, Brontolava, Brinaldo, Falcenera: il golem di muschio, il grifone,
+I sei dei dungeon nuovi del 3D (Roccaverde, Piumanera, Sibilla, Vulcanor, Gelomagno, Falcenera: il golem di muschio, il grifone,
 il serpente, il golem di magma, il golem di ghiaccio, il mietitore) stanno in [dungeon-che-si-rigenerano.md](dungeon-che-si-rigenerano.md#i-tredici-dungeon).
 
 - **La creatura giusta** (12 ottobre 2026, l'utente: «Zannaverde il ragno, Carbonchio il drago di lava, Minotto la bestia cornuta, Gorgo il

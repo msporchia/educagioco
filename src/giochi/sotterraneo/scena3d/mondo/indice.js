@@ -10,12 +10,12 @@ import { ATLANTE, PEZZI } from '../../dati/atlante.js'
 import { caricaZona, scaricaZona, zonaDi, zoneAttorno } from '../../motore/mondo-percorso.js'
 import { creaContesto } from '../contesto.js'
 import { normaliAtlante } from '../trame.js'
-import { U, vesti, tramaDeiPezzi } from './vesti.js'
+import { U, vesti, tramaDeiPezzi, tingi } from './vesti.js'
 import { creaTrame } from './trame.js'
 import { materialiDelSuolo, terrenoDelPezzo, creaFuori, creaPiazza, campiDelPezzo } from './terreno.js'
 import { creaAcqua, creaCielo } from './acqua.js'
 import { materialiDelKit, Cantiere, casa, bottega, pozzo, mulino } from './kit.js'
-import { ponte, staccionate, cartello, bacheca, campoMinatore } from './ponti.js'
+import { ponte, staccionate, cartello, bacheca, campoMinatore, creaScavo } from './ponti.js'
 import { creaMonumento, creaPietra, creaPortale, creaPortaDelleTerre } from './monumenti.js'
 import { fontana } from './fontana.js'
 import { creaNatura, istanzeDelPezzo } from './natura.js'
@@ -54,6 +54,8 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = [], fon
   const scena = new Scene()
   scena.background = CIELO.clone()
   scena.fog = new Fog(CIELO, 80, 260)
+  // la tinta della terra (docs/sotterraneo/terre-successive.md): il terreno e le cose nei loro shader, qui lo sfondo e la foschia
+  { const k = tingi(m.terraDi); scena.background.multiply(new Color(...k)); scena.fog.color.multiply(new Color(...k)) }
   scena.add(new HemisphereLight(0xcfe4ff, 0x6a5a3a, 1.35))
   const sole = new DirectionalLight(0xfff1dc, 2.6)
   sole.castShadow = true
@@ -94,6 +96,7 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = [], fon
   const S = {
     io: { x: m.partenza.x + 0.5, z: m.partenza.y + 0.5, verso: { dx: 0, dy: 1 }, sprite: 'cavaliere', mano: null, mancina: null },
     persone: [], accese: new Set(), aperti: new Set(), pallini: new Map(), divieti: new Set(), portale: null, veduta: false,
+    scavi: [],                 // le X delle mappe del tesoro in mano: [{ chiave, x, z }] (ponti.js, creaScavo)
     terre: false,              // la porta delle terre aperta (le tombe del vento ripulite: lo dice chi gioca)
     inCammino: false,          // l'eroe sta camminando: le zone accanto aspettano che si fermi, o che arrivi vicino al confine
     mostri: [], perTerra: [],   // i mostri di sopra e il bottino per terra, già nel cerchio e fuori dalla nebbia (mostri.js)
@@ -138,7 +141,7 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = [], fon
     }
     for (const r of cose.ruote) gruppo.add(r)
     for (const c of cose.cristalli) { const me = new Mesh(new OctahedronGeometry(0.28), matCristallo); me.position.copy(c); me.castShadow = true; me.userData.y = c.y; gruppo.add(me); fatto.cristalli = [...(fatto.cristalli || []), me] }
-    for (const me of cant.chiudi(kit.fermi, kit.ombraFermi)) gruppo.add(me)
+    for (const me of cant.chiudi(kit.fermi, kit.ombraFermi)) { gruppo.add(me); if (me.userData.segni) (fatto.segnati ||= []).push(me) }
     fatto.istanze = istanzeDelPezzo(m, p, q)
     scena.add(gruppo)
     fatto.ms = performance.now() - t0
@@ -229,6 +232,26 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = [], fon
   function sorgentiViste() {
     for (const k of Object.keys(viste)) { viste[k].length = 0; for (const s of vitaSorgenti[k]) if (nebbia.visto(s.x, s.z) && !(s.tana && S.taneSpente && S.taneSpente.has(s.tana))) viste[k].push(s) }
     vita.sorgenti(viste)
+    spegniLeBraci()
+  }
+  // i dischi accesi delle tane senza più signore (braciTana, col `segno` della tana) diventano cenere: si ricolorano i loro vertici
+  // nella mesh unita, senza rifare il pezzo; un giro nuovo che rimette il signore li riaccende
+  const CENERE = [0.15, 0.12, 0.11]
+  function spegniLeBraci() {
+    const sp = S.taneSpente
+    for (const f of costruiti.values()) for (const me of f.segnati || []) {
+      const col = me.geometry.attributes.color
+      let tocca = false
+      for (const sg of me.userData.segni) {
+        const morto = !!(sp && sp.has(sg.segno))
+        if (morto === !!sg.prima) continue
+        const a = col.array, da = sg.da * 3, a3 = sg.quanti * 3
+        if (morto) { sg.prima = a.slice(da, da + a3); for (let i = 0; i < a3; i++) a[da + i] = CENERE[i % 3] }
+        else { a.set(sg.prima, da); sg.prima = null }
+        tocca = true
+      }
+      if (tocca) col.needsUpdate = true
+    }
   }
 
   // l'atlante delle figure: finché non c'è, non si disegna (un istante, è già nel file)
@@ -244,6 +267,7 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = [], fon
   img.src = ATLANTE
 
   let sciaPosata = null, vedutaPrima = false
+  const scavi = new Map()
   let portale = null, raf = 0, prima = 0, tempo = 0, vivo = true, L = 0, A = 0
   const centro = new Vector3(), soleVista = new Vector3()
   // la misura è quella del contenitore, mai della finestra, e la rilegge il ResizeObserver quando cambia (come giù)
@@ -306,6 +330,13 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = [], fon
     if (pv && (!portale || portale.x !== pv.x || portale.z !== pv.z)) { if (portale) { scena.remove(portale.p.gruppo); portale.p.via() } portale = { x: pv.x, z: pv.z, p: creaPortale(pv.x, quotaTerreno(m, pv.x, pv.z), pv.z) }; scena.add(portale.p.gruppo) }
     if (!pv && portale) { scena.remove(portale.p.gruppo); portale.p.via(); portale = null }
     if (portale) { portale.p.gruppo.visible = nebbia.visto(portale.x, portale.z) && !veduta; portale.p.aggiorna(tempo) }
+    // le X delle mappe del tesoro: ci sono finché la taglia è in mano
+    for (const [k, sc] of scavi) if (!S.scavi.some(v => v.chiave === k)) { scena.remove(sc.g); sc.via(); scavi.delete(k) }
+    for (const v of S.scavi) {
+      let sc = scavi.get(v.chiave)
+      if (!sc) { sc = creaScavo(kit); sc.g.position.set(v.x, quotaTerreno(m, v.x, v.z), v.z); sc.g.rotation.y = (v.x * 7 + v.z * 3) % 6.28; scena.add(sc.g); scavi.set(v.chiave, sc) }
+      sc.g.visible = nebbia.visto(v.x, v.z) && !veduta
+    }
     vita.passo(dt, tempo, centro)
     if (S.scia !== sciaPosata) { sciaPosata = S.scia; scia.posa(S.scia && S.scia.luci, S.scia && S.scia.meta) }
     scia.da(S.sciaDa)
@@ -384,7 +415,7 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = [], fon
                msJs: Math.round(ms.msJs * 100) / 100, msDisegno: Math.round(ms.msDisegno * 100) / 100,
                figure: persone ? persone.figure.quante + persone.figureEroe.quante : 0, pezzi: [...costruiti.keys()].sort((a, b) => a - b),
                msPezzi: Math.round(Math.max(0, ...[...costruiti.values()].map(f => f.ms))), veduta: cam.veduta, scenario: 'mondo',
-               palco: !!(palco && palco.attivo), mostri: S.mostri.length, scia: scia.quante,
+               palco: !!(palco && palco.attivo), mostri: S.mostri.length, scia: scia.quante, persone3d: persone ? persone.persone3d : null,
                // le zone: dove si è, quelle caricate, e quanto ci hanno messo le ultime a caricarsi (ms, una per fotogramma)
                zona: zonaQui, zone: m.zonaCaricata.map((c, k) => (c ? k : -1)).filter(k => k >= 0), msZone: misureZone.slice() }
     },
@@ -396,6 +427,7 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = [], fon
       for (const p of [...costruiti.keys()]) buttaPezzo(p)
       for (const x of [natura, vita, scia, lontano, nebbia, acqua, cielo, persone, palco]) if (x) x.via()
       if (portale) portale.p.via()
+      for (const sc of scavi.values()) sc.via()
       scena.remove(fuori.mesh); fuori.mesh.geometry.dispose()
       for (const x of Object.values(suolo)) x.dispose()
       kit.via(); matCristallo.dispose(); trame.via(); tPezzi.via()

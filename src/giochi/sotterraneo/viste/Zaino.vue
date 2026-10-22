@@ -1,5 +1,5 @@
 <script setup>
-// Lo zaino, nello stesso stile della bottega: l'eroe con le quattro caselle intorno, le sei tasche in griglia e
+// Lo zaino, nello stesso stile della bottega: l'eroe con le caselle intorno, le sei tasche in griglia e
 // il pannello del pezzo scelto col confronto e i tasti (docs/sotterraneo/bottega-finestra.md, "La bottega e lo zaino").
 // Una tasca si sceglie, poi si decide: con sei piene, l'unico modo di liberarne una era usare quello che c'era
 // dentro. Una cosa che questa classe non impugna si vede spenta prima di toccarla, e dice il perché.
@@ -21,6 +21,8 @@ const props = defineProps({
   collo: { type: Object, default: null },
   dito: { type: Object, default: null },
   dito2: { type: Object, default: null },
+  testa: { type: Object, default: null },     // il copricapo (docs/sotterraneo/elmo.md)
+  conTesta: { type: Boolean, default: false },   // la sua casella anche vuota: il 3D
   tasche: { type: Array, required: true },    // [{ chiave, …COSE, nonPuoi, prova } | null]
   att: { type: Number, required: true },
   dif: { type: Number, required: true },
@@ -38,6 +40,7 @@ const props = defineProps({
   cure: { type: Object, default: null },      // { n, max }: le pozioni di cura in tasca e il tetto (al più otto, di ogni stadio)
 })
 const emit = defineEmits(['usa', 'butta', 'riponi', 'chiudi', 'fuori', 'scheda', 'tasca'])
+const TORCIA = { chiave: 'torcia' }   // nel 3D la torcia della riga è il suo modello (docs/sotterraneo/roba-3d.md)
 
 // una tasca ({ dove: 'zaino', i }) o una casella addosso ({ dove: 'mano' }); null è lo stato normale
 const scelto = ref(null)
@@ -126,7 +129,7 @@ const polso = computed(() => (props.vita / props.vitaMax > 0.6 ? '#4fce7c' : pro
             :title="`al massimo ${cure.max} pozioni`">· 🧪 <b>{{ cure.n }}/{{ cure.max }}</b></span>
     </p>
 
-    <Addosso :eroe="eroe" :mano="mano" :mancina="mancina" :corpo="corpo" :collo="collo" :dito="dito" :dito2="dito2"
+    <Addosso :eroe="eroe" :mano="mano" :mancina="mancina" :corpo="corpo" :collo="collo" :dito="dito" :dito2="dito2" :testa="testa" :con-testa="conTesta"
              :scelto="scelto && scelto.dove !== 'zaino' ? scelto.dove : null" :va="prova ? prova.dove : null"
              @tocca="tocca">
       <span class="sot-polso" :style="{ '--sot-polso': polso }">
@@ -139,7 +142,7 @@ const polso = computed(() => (props.vita / props.vitaMax > 0.6 ? '#4fce7c' : pro
     </Addosso>
 
     <p v-if="torcia" class="sot-torcia-riga" data-torcia-zaino>
-      <Icona sprite="torcia" em="🔥" :emAlto="16" />
+      <Icona sprite="torcia" em="🔥" :emAlto="16" :cosa3d="TORCIA" :lato="30" />
       <i class="sot-lume"><u :style="{ height: torcia.quota * 100 + '%' }"></u></i>
       <b>ancora {{ torcia.resta }} {{ torcia.resta === 1 ? 'stanza' : 'stanze' }}</b>
       <em v-if="torcia.scorta">

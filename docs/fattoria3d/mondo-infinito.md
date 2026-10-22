@@ -36,11 +36,8 @@ alberi, ostacoli }`.
 - **I lotti nuovi**: alberi nelle celle 0..2 del lotto (due alberi di lotti vicini stanno sempre ad almeno 2 celle; un albero nuovo
   non si pianta a meno di 1,9 da uno storico), poi i sassi come sempre ma senza toccare alberi, acqua e molo. Il prato ha 3
   tentativi d'albero, il bosco 12 più fitti (1,4), il laghetto 2; sassi e cespugli 2–5 sul prato, 1–3 in bosco e laghetto.
-- **Il bioma** viene dalle coordinate: nella fascia di mezzo (a da 0 a 7) prato ~71%, bosco ~15%, laghetto ~15%; a ovest il mare (a ≤ −2) e la costa (a = −1), a est i laghi
-  (a ≥ 8): [geografia-e-pesca.md](geografia-e-pesca.md). `generaLotto(a, b, { vecchio })` genera alla vecchia i lotti che un salvataggio di prima aveva già comprato dove ora cambia la geografia. Un laghetto è un lotto
-  non storico il cui sorteggio è il più basso fra quelli che lo toccano di lato: **mai due laghetti attaccati** (in diagonale c'è
-  sempre terra fra le due acque) e **mai a meno di due lotti dal quadrato di partenza** (stanno fuori dal rettangolo storico:
-  il più vicino è a tre lotti). Provato: un sorteggio «il più basso fra gli otto vicini» non supera l'11%.
+- **Il bioma** viene dalle coordinate: nella fascia di mezzo (a da 0 a 7) prato ~66%, bosco ~14%, laghetto (un lotto con un lago naturale, tre celle d'acqua o più) ~21%, laghi a cavallo di più lotti: [laghi.md](laghi.md); a ovest il mare (a ≤ −2) e la costa (a = −1), a est i laghi
+  (a ≥ 8): [geografia-e-pesca.md](geografia-e-pesca.md). `generaLotto(a, b, { vecchio })` genera alla vecchia i lotti che un salvataggio di prima aveva già comprato dove ora cambia la geografia. I laghi di oggi non sono più per lotto: stanno nelle supercelle 4×3 lotti e **mai a meno di tre lotti dal quadrato di partenza** (stanno fuori dal rettangolo storico). Le pozzanghere di prima (un sorteggio per lotto, mai attaccate) restano solo per i salvataggi (`vecchi`, `vecchi1`).
 
 ## Quello che si apre e quello che si disegna
 

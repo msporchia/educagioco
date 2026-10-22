@@ -2,18 +2,23 @@
 // animati ogni fotogramma (il grano che cresce, le pecore che vagano, la fontana, il fumo del forno, il pallone che parte).
 // Non sa le regole: legge lo stato e disegna. I cartelli sugli edifici (cottura, casse pronte) sono qui; un edificio non comprato non si vede.
 import * as THREE from 'three'
-import { creaCampo, aggiornaCampo, creaPasticceria, creaMongolfiera, creaBancarella, creaBacheca, creaFontana, creaRecinto, muoviPecore,
+import { creaCampo, aggiornaCampo, campoMosso, creaPasticceria, creaMongolfiera, creaBancarella, creaBacheca, creaFontana, creaRecinto, muoviPecore,
          sincronizzaPecore, creaPecora, creaGallina, creaMucca, creaMulino, creaPanificio, creaConserviera, creaGelateria, creaAiuola, creaPanchina,
          creaPozzo, creaSpaventapasseri, creaTrattore, creaSegnaposto, creaPollaio, creaStalla, creaCaseificio, sincronizzaBestie, muoviBestie } from './modelli.js'
 import { creaPonte, creaPasserella, creaTavolo } from './modelli-passaggi.js'
 import { creaStagno } from './modelli-acqua.js'
 import { creaZuccherificio, creaTelaio, creaSartoria, creaTintoria, creaFienileMacchina, creaFriggitoria, creaSushiBar } from './modelli-macchine.js'
 import { creaMolo, creaPorticciolo } from './modelli-pesca.js'
+import { creaStagnoAnatre, creaPorcile, creaRecintoCapre, creaPentolone, creaAnatra, creaMaiale, creaCapra } from './modelli-cortile.js'
+import { creaZucca, creaZucche } from './modelli-feste.js'
 import { EDIFICI, PEZZI } from '../dati/catalogo.js'
 import { RICETTE, MACCHINE } from '../dati/ricette.js'
 import { SALITA_MS } from '../dati/mongolfiera.js'
-import { ANIMALI, PRODOTTI_ANIMALI } from '../dati/animali.js'
+import { ANIMALI, CORTILE, PRODOTTI_ANIMALI } from '../dati/animali.js'
 import { alleggeriOmbre } from './ottimizza.js'
+import { BancoCampi } from './campi-istanze.js'
+import { BancoStatici, STATICI } from './statici-istanze.js'
+import { tempoBreve } from '../dati/tempo.js'
 
 
 const CREA = {
@@ -21,6 +26,9 @@ const CREA = {
   recinto: c => creaRecinto(c && c.pecore),
   pollaio: c => creaPollaio(c && c.bestie),
   stalla: c => creaStalla(c && c.bestie),
+  anatre: c => creaStagnoAnatre(c && c.bestie),
+  porcile: c => creaPorcile(c && c.bestie),
+  capre: c => creaRecintoCapre(c && c.bestie),
   bancarella: () => creaBancarella(),
   bacheca: () => creaBacheca(),
   fontana: () => creaFontana(),
@@ -37,13 +45,16 @@ const CREA = {
   molo: () => creaMolo(PEZZI.molo.w, PEZZI.molo.d),
   molo_v: () => creaMolo(PEZZI.molo_v.w, PEZZI.molo_v.d),
   porticciolo: () => creaPorticciolo(),
+  zucca_intagliata: () => creaZucca(),
+  zucche_mucchio: () => creaZucche(),
 }
 const CREA_EDIFICIO = {
   pasticceria: creaPasticceria, mongolfiera: creaMongolfiera,
   mulino: creaMulino, panificio: creaPanificio, conserviera: creaConserviera, gelateria: creaGelateria, caseificio: creaCaseificio,
   telaio: creaTelaio, zuccherificio: creaZuccherificio, sartoria: creaSartoria, tintoria: creaTintoria,
   friggitoria: creaFriggitoria, sushi_bar: creaSushiBar,
-  fienile: creaFienileMacchina,                       // la macchina del mangime; il fienile di scena (FISSI) è un altro modello, `creaFienile`
+  pentolone: creaPentolone,
+  fienile: creaFienileMacchina,                       // la macchina del mangime (l'unico fienile: quello di scena è stato tolto)
 }
 /** Un tipo senza disegno non rompe la scena: una scatola grigia della sua misura. */
 const modelloDi = (tipo, d, c) => (CREA[tipo] ? CREA[tipo](c) : CREA_EDIFICIO[tipo] ? CREA_EDIFICIO[tipo]() : creaSegnaposto(d.w, d.d))
@@ -55,6 +66,9 @@ export class Pezzi {
     this.scena = scena; this.m = motore; this.fx = effetti; this.vista = vista; this.q = qualita
     this.voci = new Map()           // id (numero) o tipo (edificio) → voce
     this.tFumo = 0
+    this.usaBanchi = true       // falso (poi `via()` e `sincronizza()`) rifà le istanze sciolte come prima, per i confronti (docs/fattoria3d/scena.md, «Misura»)
+    this.statici = new BancoStatici(scena)  // i pezzi fermi (aiuole, panchine…): una mesh per geometria e materiale (statici-istanze.js)
+    this.banco = new BancoCampi(scena)    // le piante di tutti i campi: una mesh per forma (campi-istanze.js)
     this.sulCompraBestia = null     // la porta verso il pulsante «＋» dei cartelli: la mette il mondo (scena3d/azioni.js `compraBestia`)
     this.sincronizza()
   }
@@ -70,20 +84,27 @@ export class Pezzi {
     }
     for (const id of [...this.voci.keys()]) if (!vivi.has(id)) this._togli(id)
     // ciò che si è mosso: la posizione la dice il motore
-    for (const c of this.m.cose) { const v = this.voci.get(c.id); if (v && !v.nasce) v.grp.position.copy(centroDi(c, v.d)) }
+    for (const c of this.m.cose) {
+      const v = this.voci.get(c.id); if (!v) continue
+      const rot = c.rot || 0
+      if (v.rot !== rot) { v.rot = rot; v.d = this.m.misureCosa(c); v.grp.rotation.y = rot * Math.PI / 2 }          // girata: il disegno gira attorno al centro dell'impronta
+      if (!v.nasce) v.grp.position.copy(centroDi(c, v.d))
+    }
   }
 
   _creaCosa(c) {
-    const d = this.m.misure(c.tipo), edificio = !!EDIFICI[c.tipo], grp = modelloDi(c.tipo, d, c)
+    const d = this.m.misureCosa(c), edificio = !!EDIFICI[c.tipo], grp = modelloDi(c.tipo, d, c)
     alleggeriOmbre(grp)
+    if (this.usaBanchi && c.tipo === 'campo') this.banco.adotta(grp)
     grp.userData.bersaglio = { kind: 'cosa', id: c.id }
-    grp.position.copy(centroDi(c, d)); this.scena.add(grp)
+    grp.position.copy(centroDi(c, d)); grp.rotation.y = (c.rot || 0) * Math.PI / 2; this.scena.add(grp)
+    if (this.usaBanchi && STATICI.has(c.tipo)) this.statici.adotta(grp)
     const badge = edificio || c.tipo === 'bacheca' ? this.fx.nuovoBadge() : c.bestie || c.pecore ? this.fx.nuovoCartello(() => this.sulCompraBestia && this.sulCompraBestia(c.id), c.tipo) : null
-    this.voci.set(c.id, { id: c.id, kind: 'cosa', edificio, tipo: c.tipo, c, d, grp, badge, anello: null, salto: 0, nasce: undefined, richiamo: null, chiave: '' })
+    this.voci.set(c.id, { id: c.id, kind: 'cosa', edificio, tipo: c.tipo, c, d, rot: c.rot || 0, grp, badge, anello: null, salto: 0, nasce: undefined, richiamo: null, chiave: '' })
   }
   _togli(id) {
     const v = this.voci.get(id); if (!v) return
-    this.scena.remove(v.grp); v.badge?.togli()
+    this.scena.remove(v.grp); v.badge?.togli(); this.banco.lascia(v.grp); this.statici.lascia(v.grp)
     if (v.anello) this.scena.remove(v.anello)
     this.voci.delete(id)
   }
@@ -92,10 +113,11 @@ export class Pezzi {
       urgenti per primi: il campo, il recinto, il pollaio e la stalla con le loro bestie, poi il resto dei pezzi e dei creatori di
       bestie, infine gli edifici (non sono in scena finché non si comprano: il primo costruito non deve pagare il modello). Una fila di funzioni, ognuna costruisce e butta un'istanza. */
   compitiScaldo() {
-    const pezzi = ['campo', 'recinto', 'pollaio', 'stalla', 'aiuola', 'panchina', 'pozzo', 'fontana', 'spaventapasseri', 'ponte', 'passerella', 'tavolo', 'bancarella', 'bacheca', 'stagno', 'laghetto', 'molo', 'molo_v', 'porticciolo']
-    const fai = tipo => ({ nome: tipo, fai: () => { if (PEZZI[tipo]) modelloDi(tipo, PEZZI[tipo], tipo === 'recinto' || tipo === 'pollaio' || tipo === 'stalla' ? { pecore: [], bestie: [] } : undefined) } })
+    const pezzi = ['campo', 'recinto', 'pollaio', 'stalla', 'anatre', 'porcile', 'capre', 'aiuola', 'panchina', 'pozzo', 'fontana', 'spaventapasseri', 'ponte', 'passerella', 'tavolo', 'bancarella', 'bacheca', 'stagno', 'laghetto', 'molo', 'molo_v', 'porticciolo', 'zucca_intagliata', 'zucche_mucchio']
+    const fai = tipo => ({ nome: tipo, fai: () => { if (PEZZI[tipo]) modelloDi(tipo, PEZZI[tipo], CORTILE[tipo] ? { pecore: [], bestie: [] } : undefined) } })
     return [...pezzi.slice(0, 4).map(fai), { nome: 'pecora', fai: () => creaPecora() }, { nome: 'gallina', fai: () => { creaGallina(0); creaGallina(1) } },
-            { nome: 'mucca', fai: () => { creaMucca(0); creaMucca(1) } }, ...pezzi.slice(4).map(fai), ...Object.keys(EDIFICI).filter(t => CREA_EDIFICIO[t]).map(t => ({ nome: t, fai: () => CREA_EDIFICIO[t]() }))]
+            { nome: 'mucca', fai: () => { creaMucca(0); creaMucca(1) } },
+            { nome: 'anatra', fai: () => { creaAnatra(0); creaAnatra(1) } }, { nome: 'maiale', fai: () => { creaMaiale(0); creaMaiale(1) } }, { nome: 'capra', fai: () => { creaCapra(0); creaCapra(1) } }, ...pezzi.slice(4).map(fai), ...Object.keys(EDIFICI).filter(t => CREA_EDIFICIO[t]).map(t => ({ nome: t, fai: () => CREA_EDIFICIO[t]() }))]
   }
 
   /** Il modello di un pezzo di quel tipo, per il fantasma di chi lo sta trascinando. */
@@ -124,7 +146,7 @@ export class Pezzi {
   voce(id) { return this.voci.get(id) }
   centroDi(bersaglio) {
     const c = bersaglio.kind === 'cosa' ? this.voci.get(bersaglio.id).c : this.m.cosaDi(bersaglio.tipo)      // `{ kind: 'edificio', tipo }`: l'edificio di quel tipo
-    return centroDi(c, this.m.misure(c.tipo))
+    return centroDi(c, this.m.misureCosa(c))
   }
 
   /** L'anello giallo attorno a ciò che è in coda: sta sul terreno, non gira per lo schermo. */
@@ -150,6 +172,15 @@ export class Pezzi {
         v.badge.metti(x, y, visto)
       } else if (v.badge && !g.visible) { v.badge.el.style.visibility = 'hidden'; v.badge.visto = false }      // un pezzo sollevato non lascia il suo cartello (e il suo «＋») a mezz'aria
     }
+    const f = this.vista.frustum ? this.vista.frustum() : null            // ciò che sta fuori dall'inquadratura (con un margine) non si disegna: un'istanza non si taglia da sola
+    this.banco.aggiorna(f); this.statici.aggiorna(f)
+  }
+
+  /** Il campo che il raggio colpisce con una sua pianta (le piante non sono più figlie del gruppo del campo): `{ distance, bersaglio }` o null. */
+  colpisciPiante(raggio) {
+    const hit = raggio.intersectObjects(this.banco.meshes(), false)[0]
+    const g = hit && this.banco.campoDi(hit.object, hit.instanceId)
+    return g ? { distance: hit.distance, bersaglio: g.userData.bersaglio } : null
   }
 
   /** Il rimbalzo di un pezzo appena messo e il saltello di un tocco: per ogni cosa, edifici compresi. */
@@ -165,8 +196,9 @@ export class Pezzi {
   _cosa(v, g, dt, tt, adesso) {
     const c = v.c
     if (c.tipo === 'campo') {
+      if (!this.banco.visto(g)) { v.chiave = null; return }          // fuori dall'inquadratura (o sollevato): non si ripone, e al ritorno si rifà
       const cr = this.m.crescita(c), chiave = cr.map(x => x.toFixed(2)).join(), col = c.coltura || 'grano'
-      if (this.q.vento || chiave !== v.chiave) { v.chiave = chiave; aggiornaCampo(g, cr, tt, col, this.q.vento) }
+      if (this.q.vento || chiave !== v.chiave || campoMosso(g)) { v.chiave = chiave; aggiornaCampo(g, cr, tt, col, this.q.vento) }
     } else if (c.tipo === 'recinto') {
       muoviPecore(g, dt, tt, v.richiamo, c.pecore, adesso); v.richiamo = null
       const lana = this.m.lanaPronta(c).length
@@ -180,7 +212,7 @@ export class Pezzi {
       const lavora = c.bestie.filter(b => b.fine !== null && b.fine > adesso).map(b => b.fine - adesso)
       const fame = c.bestie.some(b => b.fine === null)
       v.badge.imposta(pronte ? `${PRODOTTI_ANIMALI[A.prodotto].emoji} ${pronte} pront${pronte === 1 ? 'o' : 'i'}!`
-        : fame ? `${A.emoji} ha fame` : lavora.length ? `⏳ ${Math.ceil(Math.min(...lavora) / 1000)}s` : '', pronte ? 'pronto' : '')
+        : fame ? `${A.emoji} ha fame` : lavora.length ? `⏳ ${tempoBreve(Math.min(...lavora))}` : '', pronte ? 'pronto' : '')
       this._conto(v, c)
     } else if (c.tipo === 'bacheca') {
       // i foglietti sono gli ordini aperti; sul cartello quelli che si possono consegnare adesso (come le macchine, i pronti)
@@ -207,10 +239,10 @@ export class Pezzi {
       if (g.userData.gira) g.userData.gira.rotation.y += dt * 0.8
       if (g.userData.anima) g.userData.anima(dt, tt)
       const cuoce = Q.coda.length > 0, cadenza = cuoce ? 0.35 : v.tipo === 'pasticceria' ? Infinity : 0.6   // gli altri fumano anche a riposo
-      if (g.userData.fumo && tt - (v.tFumo || 0) > cadenza) { v.tFumo = tt; this.fx.fumata(g.position.clone().add(g.userData.fumo)) }
+      if (g.userData.fumo && tt - (v.tFumo || 0) > cadenza) { v.tFumo = tt; this.fx.fumata(g.position.clone().add(g.userData.fumo.clone().applyQuaternion(g.quaternion))) }
       const pronti = this.m.prontiIn(v.tipo), prima = Object.keys(Q.pronti).find(k => Q.pronti[k] > 0)
       v.badge.imposta(pronti ? `${RICETTE[prima].emoji} ${pronti} pront${pronti === 1 ? 'o' : 'i'}!`
-        : cuoce ? `🔥 ${Math.max(0, Math.ceil(((Q.coda[0].fine || adesso) - adesso) / 1000))}s · ${Q.coda.length}/${posti}` : '', pronti ? 'pronto' : '')
+        : cuoce ? `🔥 ${tempoBreve(Math.max(0, (Q.coda[0].fine || adesso) - adesso))} · ${Q.coda.length}/${posti}` : '', pronti ? 'pronto' : '')
     } else if (v.tipo === 'mongolfiera') {
       // da ferma sale e scende piano; a tutto pieno (o con «Parti!») sale in alto e si allontana, e torna prima della fine del riposo
       const M = s.mongolfiera, volo = g.userData.volo
@@ -231,5 +263,5 @@ export class Pezzi {
     }
   }
 
-  via() { for (const id of [...this.voci.keys()]) this._togli(id) }
+  via() { for (const id of [...this.voci.keys()]) this._togli(id); this.banco.via(); this.statici.via() }
 }

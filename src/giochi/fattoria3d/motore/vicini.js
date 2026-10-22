@@ -10,7 +10,7 @@ import { PRODOTTI_ANIMALI } from '../dati/animali.js'
 import { PEZZI, EDIFICI } from '../dati/catalogo.js'
 import { lottoDi, dentro, chiave, idCella, cellaDa, cellaDaId, stradeDiSerie, lottoPerId } from '../dati/mondo.js'
 import { generaLotto } from '../dati/lotti.js'
-import { biomaDi, biomaVecchio } from '../dati/biomi.js'
+import { lottoDiversoDa } from '../dati/biomi.js'
 import { premioDi } from '../dati/ordini.js'
 import { VICINI, VERSIONE_VISITA, normalizzaFattoriaVisitabile, merce, livelloDellaMerce, prezzoPer, premioMassimo,
          POSTO_CASSA, POSTO_MERCATO, MISURE_POSTI, RINNOVO_CASSA_MS, RINNOVO_MERCATO_MS } from '../dati/vicini.js'
@@ -223,7 +223,7 @@ export class Vicini {
 
 /** Lo stato di una `Fattoria3d` che rappresenta lo snapshot: campi com'erano, bestie al lavoro, e dentro la terra sua niente alberi né sassi. */
 /** Un lotto di una fattoria di prima della geografia grande, dove ora cambia qualcosa (mare, costa, lago): resta com'era (`normalizza` lo segna `vecchio`). */
-const vecchio = l => biomaDi(l.a, l.b) !== biomaVecchio(l.a, l.b)
+const vecchio = l => lottoDiversoDa(l, 0)
 
 export function statoDaSnapshot(f) {
   const lotti = Object.fromEntries(f.lotti.map(id => [id, true]))
@@ -266,7 +266,7 @@ const SCELTE = 3
 function postoLibero(motore, strade, nome) {
   const { w, d } = MISURE_POSTI[nome], base = nome === 'cassa' ? POSTO_CASSA : POSTO_MERCATO
   const preso = new Set([...stradeDiSerie(), ...strade.map(id => { const c = cellaDaId(id); return c ? chiave(c[0], c[1]) : -1 })])
-  for (const c of motore.s.cose) { const m = motore.misure(c.tipo); if (m) for (let a = 0; a < m.w; a++) for (let b = 0; b < m.d; b++) preso.add(chiave(c.i + a, c.j + b)) }       // anche gli edifici sono cose
+  for (const c of motore.s.cose) { const m = motore.misureCosa(c); if (m) for (let a = 0; a < m.w; a++) for (let b = 0; b < m.d; b++) preso.add(chiave(c.i + a, c.j + b)) }       // anche gli edifici sono cose
   const libero = (i, j) => { for (let a = 0; a < w; a++) for (let b = 0; b < d; b++) if (!dentro(i + a, j + b) || !motore.cellaPropria(i + a, j + b) || preso.has(chiave(i + a, j + b))) return false; return true }
   const celle = []
   for (let i = -6; i < 6; i++) for (let j = 0; j < 8; j++) celle.push([i, j, Math.hypot(i - base.i, j - base.j)])
