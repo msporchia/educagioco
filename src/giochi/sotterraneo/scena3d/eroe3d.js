@@ -9,6 +9,7 @@ import { copri } from './eroi3d/copricapi.js'
 import { dotazioneDi } from './anteprime3d-pura.js'
 import { creaPezzo, vestiFigura, indossaGioiello } from './roba3d.js'
 import { ferme, salda } from './salda3d.js'
+import { ACCESI } from './costanti.js'
 
 export const eroe3dAcceso = () => typeof location === 'undefined' || !/[#&?]eroe2d\b/.test(location.hash + location.search)
 
@@ -112,7 +113,7 @@ export function creaEroe3d(scena) {
     }
     g = creaEroe(chiave); radice.add(g)
     vestiEroe(g, corsa)
-    try { saldaEroe(g, `${chiave}|${f}`) } catch (e) { console.warn('eroe 3D: non si salda', e) }   // resta com'è, solo più caro
+    try { if (ACCESI.saldatura) saldaEroe(g, `${chiave}|${f}`) } catch (e) { console.warn('eroe 3D: non si salda', e) }   // resta com'è, solo più caro
     tinte = clonaMateriali(g)
     ultimaTinta = ''
   }

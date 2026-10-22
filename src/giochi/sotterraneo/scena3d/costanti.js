@@ -72,6 +72,11 @@ export const ACCESI = {
   palco: true,       // la luce calda dello scontro; spenta, la schiarita la fa l'emisferica
   mostri3d: 12,      // quanti mostri al più col modello 3D nello stesso fotogramma (i più vicini); gli altri restano sprite, 0 tutti
   effetti3d: true,   // gli effetti 3D delle abilità, degli attacchi e degli stati (effetti3d/); spenti restano scintille e luci
+  // per le misure (docs/sotterraneo/limiti-3d.md): nessuna fascia li spegne
+  aloni: true,       // gli aloni della rarità sulla roba 3D (roba3d/aloni.js: un Points per pezzo, in somma di luce)
+  saldatura: true,   // le mesh ferme dei mostri e dell'eroe 3D saldate in una (salda3d.js); spenta, una chiamata per mesh
+  ombreMorbide: true,   // le macchie d'ombra sotto le figure del mondo di sopra (mondo/persone.js)
+  chiarori: true,    // i chiarori per terra delle discese (rarità, missione, chiave, capi: segni.js, creaAloni)
 }
 
 // La fascia grafica del telefono (store/qualita.js) decide quali pezzi di ACCESI restano: si riparte dai valori scritti sopra

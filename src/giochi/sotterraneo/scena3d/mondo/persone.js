@@ -11,6 +11,7 @@ import { creaMostri3d, mostri3dAccesi } from '../mostro3d.js'
 import { creaPersone3d, persone3dAccese } from '../persona3d.js'
 import { ACCESI } from '../costanti.js'
 import { SALITA } from './vesti.js'
+import { leggiFolla, personeFinte, mostriFinti } from './folla-prova.js'
 
 export const SCALA_PERSONE = 1.25
 const MOSTRI_3D_SOPRA = 8   // il mondo è già pieno di cose: i modelli 3D sono pochi, per chi è vicino
@@ -47,9 +48,12 @@ export function creaPersone(scena, { tex, norm, larga, alta, pezzi, trame, quota
   const quotaEroe = (x, z) => quota(x, z - 0.1)
   // i mostri di sopra: i più vicini (al più MOSTRI_3D_SOPRA) con il modello 3D delle discese, gli altri restano sprite; lo stato di disegno
   // di ognuno (la sua istanza, dove guarda) sta qui per indice del mostro
-  const mostri3d = mostri3dAccesi() && ACCESI.mostri3d > 0 ? creaMostri3d(scena, { quanti: () => Math.min(ACCESI.mostri3d, MOSTRI_3D_SOPRA) }) : null
+  // `&folla=`, `&branco3d=`, `&tetto3d=`: la folla finta delle misure (folla-prova.js, docs/sotterraneo/limiti-3d.md)
+  const prova = leggiFolla()
+  const tettoMostri = prova.tetto || MOSTRI_3D_SOPRA, tettoPersone = prova.tetto || PERSONE_3D_SOPRA
+  const mostri3d = mostri3dAccesi() && ACCESI.mostri3d > 0 ? creaMostri3d(scena, { quanti: () => Math.min(ACCESI.mostri3d, tettoMostri) }) : null
   const statiMostri = new Map()
-  const persone3d = persone3dAccese() ? creaPersone3d(scena, { quanti: () => PERSONE_3D_SOPRA }) : null
+  const persone3d = persone3dAccese() ? creaPersone3d(scena, { quanti: () => tettoPersone }) : null
   const statiPersone = new Map()
   const salita = (x, z, t) => { const k = Math.max(0, Math.min(1, (t - nebbia.quando(x, z)) / SALITA)); return k * k * (3 - 2 * k) }
 
@@ -60,6 +64,8 @@ export function creaPersone(scena, { tex, norm, larga, alta, pezzi, trame, quota
     // (mostri.js, già filtrati dal cerchio e dalla nebbia); `extra(ombra)`: chi disegna anche lui (il palco dello scontro) e vuole l'ombra
     disegna(persone, eroe, { t, dt, veduta, camera, mostri = [], perTerra = [], extra = null }) {
       figure.inizia(); figureEroe.inizia(); nOmbre = 0
+      if (prova.folla) persone = [...persone, ...personeFinte(prova.folla, eroe.x, eroe.z)]
+      if (prova.branco) mostri = [...mostri, ...mostriFinti(prova.branco, prova.specie, eroe.x, eroe.z, t)]
       if (eroe3d && (veduta || eroe.nascosto)) eroe3d.nascondi()
       if (mostri3d && veduta) { mostri3d.inizia(); mostri3d.chiudi() }   // dall'alto non si vedono (troppo piccoli): via anche i modelli
       if (persone3d && veduta) { persone3d.inizia(); persone3d.chiudi() }
@@ -125,11 +131,12 @@ export function creaPersone(scena, { tex, norm, larga, alta, pezzi, trame, quota
       }
       if (extra && !veduta) extra(ombra)
       figure.chiudi(); figureEroe.chiudi()
-      ombre.count = nOmbre; ombre.instanceMatrix.needsUpdate = true
+      ombre.count = ACCESI.ombreMorbide ? nOmbre : 0; ombre.instanceMatrix.needsUpdate = true
     },
     taglio(x, y) { figure.taglio(x, y); figureEroe.taglio(x, y) },
     /** Quante persone hanno il modello 3D adesso, e quante istanze ci sono (per le prove: `grafica()`). */
     get persone3d() { return persone3d ? { visibili: persone3d.visibili, istanze: persone3d.quante } : null },
+    get mostri3d() { return mostri3d ? mostri3d.visibili : 0 },
     via() { if (eroe3d) eroe3d.toglie(); if (mostri3d) mostri3d.via(); if (persone3d) persone3d.via(); figure.via(); figureEroe.via(); scena.remove(ombre); geo.dispose(); mat.dispose(); ombre.dispose(); maschera.t.dispose() },
   }
 }

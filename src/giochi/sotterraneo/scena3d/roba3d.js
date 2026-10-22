@@ -8,6 +8,7 @@ import { aggiungiAlone } from './roba3d/aloni.js'
 import { FIGURE3D } from '../dati/figure3d.js'
 import { pezzo3dDi, consumabile3dDi } from './anteprime3d-pura.js'
 import { lookDi } from './roba3d-pura.js'
+import { ACCESI } from './costanti.js'
 
 export { MODULI }
 const rotte = new Set()                  // le figure il cui modello s'è rotto una volta: non si riprovano
@@ -60,7 +61,7 @@ export function creaPezzo(p, { moduli = MODULI, alone = true, scalaAlone = 1 } =
     try { g = creaDaId(p.id) } catch (e) { avvisa(p.id, e); g = null }
   }
   if (!g) return null
-  if (alone && p.rarita && p.rarita !== 'comune') {
+  if (alone && ACCESI.aloni && p.rarita && p.rarita !== 'comune') {
     try { if (g.userData.anima) g.userData.anima(0.5); aggiungiAlone(g, { rarita: p.rarita, elemento: p.elemento, scala: scalaAlone }) } catch (e) { avvisa(`l'alone di ${p.figura || p.id}`, e) }
   }
   return g

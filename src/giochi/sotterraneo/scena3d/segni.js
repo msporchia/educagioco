@@ -5,6 +5,7 @@ import { InstancedMesh, InstancedBufferAttribute, PlaneGeometry, CircleGeometry,
          ShaderMaterial, MeshBasicMaterial, AdditiveBlending, Matrix4, Color } from 'three'
 import { GLSL_RUMORE } from './luci.js'
 import { GLSL_MASCHERA } from './maschera.js'
+import { ACCESI } from './costanti.js'
 
 // ── le fiamme: un quadrato rivolto alla telecamera col fuoco disegnato dal rumore ──
 export function creaFiamme(scena, maschera, fuochi, tinta = null) {
@@ -86,7 +87,7 @@ export function creaAloni(scena, max) {
       dati[n * 4] = c.r; dati[n * 4 + 1] = c.g; dati[n * 4 + 2] = c.b; dati[n * 4 + 3] = forza
       n++
     },
-    chiudi() { mesh.count = n; mesh.instanceMatrix.needsUpdate = true; geo.attributes.aAlone.needsUpdate = true },
+    chiudi() { mesh.count = ACCESI.chiarori ? n : 0; mesh.instanceMatrix.needsUpdate = true; geo.attributes.aAlone.needsUpdate = true },
     via() { scena.remove(mesh); geo.dispose(); mat.dispose() },
   }
 }
