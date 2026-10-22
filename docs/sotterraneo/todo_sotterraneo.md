@@ -87,12 +87,16 @@ rimasti aperti. Quando una voce si chiude si toglie da qui (la storia sta in `gi
 La telecamera dello scontro sul prato con `coperto` e l'inclinazione a 36° (`ae9915b5`); lo scontro che prende i mostri vicini («o dentro o
 fuori») e i branchi a 14 celle (`292a98f5`); il villaggio tondo (24×20); la scia sulla strada; drag e pinch; le tane con il loro segno.
 
-### Decisioni aperte
+### Decisioni prese da Marco (22 ottobre)
 
-- La torcia sopra serve a qualcosa? (cerchio dei mostri, agguati)
-- Dopo l'ultima terra: si ripete a gradini fino a cinque terre o c'è un tetto prima? E il viaggio indietro dalla porta del villaggio.
-- Il pannello dei genitori: cosa si può spegnere del 3D e delle terre.
-- La riga di novità per i bambini sul mondo nuovo (non scritta: il sotterraneo 3D è in prova).
+- **La torcia sopra non serve**: si consuma e si usa solo dentro i dungeon, sopra è sempre giorno.
+- **Il pannello dei genitori**: niente di nuovo da spegnere, come nel 2D. Il 3D è già dietro l'interruttore dei giochi in prova (`sperimentali`,
+  [../genitori/interruttori.md](../genitori/interruttori.md)); le terre non hanno un interruttore.
+- **I nomi dei boss nuovi** li sceglie Claude: basta che suonino epici.
+- **L'elmo è uno slot tutto suo** (lavoro grosso: drop, botteghe, zaino, `copri` dell'eroe 3D): non iniziato.
+- **Nessuna riga di novità per i bambini** per ora.
+- **La taratura solo a lavoro finito.**
+- Aperto: dopo l'ultima terra c'è un tetto a cinque, e il viaggio indietro dalla porta del villaggio va deciso.
 
 ## 2. Eroi, mostri ed effetti in 3D (sessione Mostri renderizzati)
 
