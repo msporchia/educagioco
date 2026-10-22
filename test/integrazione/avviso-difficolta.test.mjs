@@ -41,6 +41,7 @@ const entra = async page => {
 
   /* non torna a ogni avvio: una volta ogni due settimane */
   await page.click('[data-azione="ho-letto"]')
+  await attendi(page, 500)           // la scrittura dell'archivio parte dopo un attimo: ricaricare subito la perderebbe
   await page.reload(); await page.waitForSelector('.carte', { timeout: 8000 })
   await attendi(page, 6000)
   uguale('letto, e riaperto il gioco, non ne arriva un altro', await page.locator('[data-posta-pallino]').count(), 0)

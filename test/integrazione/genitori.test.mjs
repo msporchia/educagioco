@@ -1258,7 +1258,7 @@ controlla('la carta di prima avvisa che i bambini nuovi si aggiungono', /i nuovi
 await page.click('[data-azione="passa-a"][data-id="dal-file"]')
 await page.waitForSelector('.carte .carta.gioco', { timeout: 8000 })
 uguale('passando, la home è quella di lui', (await page.locator('[data-nome]').innerText()).trim(), 'Dalfile')
-uguale('con le sue monete', await page.evaluate(() => Number((document.body.innerText.match(/🪙\s*(\d+)/) || [])[1])), 321)
+uguale('con le sue monete', (await leggiProfilo(page, 'dal-file')).coins, 321)
 
 rmSync(cartella, { recursive: true, force: true })
 await browser.close()
