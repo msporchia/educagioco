@@ -84,9 +84,9 @@ async function copia() {
       <p>Tieni lo schermo acceso e non toccare niente.</p>
       <button type="button" class="bottone" data-azione="benchmark-avvia" @click="avvia('sintetico')">Avvia la misura</button>
       <h3>Con i modelli veri del gioco</h3>
-      <p>Qualche minuto (cinque al più) con le scene vere: lo scontro del Sotterraneo con sempre più mostri, il mondo di sopra con
+      <p>Un quarto d'ora circa con le scene vere (con pause a schermo nero perché il telefono non si scaldi): lo scontro del Sotterraneo con sempre più mostri, il mondo di sopra con
         sempre più persone, lo zaino, la roba, la fattoria; e la stessa scena con più triangoli, più chiamate, più luci e più pixel,
-        per sapere cosa la rallenta.</p>
+        e la stessa scena con una cosa tolta alla volta, per sapere cosa la rallenta.</p>
       <p><b>Guarda lo schermo</b>: se un colore, una luce o la nebbia ti sembrano strani, alla fine scrivilo nelle note.
         Tieni il telefono acceso e in carica se puoi: lo schermo non deve spegnersi.</p>
       <button type="button" class="bottone" data-azione="benchmark-veri" @click="avvia('veri')">Avvia coi modelli veri</button>

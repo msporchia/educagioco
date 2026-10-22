@@ -106,12 +106,14 @@ function creaGiro(f) {
       try { await prepara() } catch (e) { rec = null; throw e }
       const pronto = Math.round(performance.now() - tp)
       return new Promise(fatto => {
-        const t0 = performance.now(), primi = [], lavoro = [], dt = [], finestre = [], cpu = [], gpu = []
+        const t0 = performance.now(), primi = [], lavoro = [], dt = [], finestre = [], cpu = [], gpu = [], conti = []
         let fase = 'rodaggio', tm = 0, tf = 0, prec = null, nascosta = false, finestra = []
         const chiudi = stabile => {
           rec = null
           const somma = dt.reduce((x, y) => x + y, 0)
-          fatto({ ms: tondo(mediana(lavoro)), p95: tondo(perc(lavoro, 0.95)), js: tondo(mediana(cpu)), gpu: tondo(mediana(gpu)), fps: somma ? Math.round(1000 * dt.length / somma) : 0, n: lavoro.length,
+          // chiamate e triangoli cambiano col fotogramma (chi entra ed esce dall'inquadratura): il più alto dei campioni
+          const piu = k => (conti.length ? Math.max(...conti.map(c => c[k] || 0)) : undefined)
+          fatto({ chMax: piu('ch'), triMax: piu('tri'), ms: tondo(mediana(lavoro)), p95: tondo(perc(lavoro, 0.95)), js: tondo(mediana(cpu)), gpu: tondo(mediana(gpu)), fps: somma ? Math.round(1000 * dt.length / somma) : 0, n: lavoro.length,
                   primo: tondo(Math.max(0, ...comparsa, ...primi.slice(0, 10))), pronto, lenti: lavoro.filter(x => x > LENTO).length, stabile,
                   ...(nascosta ? { nascosta: true } : {}) })
         }
@@ -127,6 +129,7 @@ function creaGiro(f) {
             return
           }
           lavoro.push(l); finestra.push(l); cpu.push(lc); gpu.push(lg)
+          if (f.conti && lavoro.length % 15 === 1) { try { conti.push(f.conti()) } catch (e) { /* niente conti */ } }
           if (prec) dt.push(t - prec)
           prec = t
           const e = ora - tm, q = tempi.quadri
@@ -266,7 +269,7 @@ export async function eseguiVeri({ contenitore, progresso = () => {}, fermo = ()
               if (giro.guasto) throw giro.guasto
               const c = f.conti ? f.conti() : {}
               if (f.gl() && f.gl().isContextLost()) throw new Error('contesto WebGL perso')
-              r = { ...r, ch: c.ch, tri: c.tri, nuovi: Math.max(0, (c.programmi || 0) - prima), geo: c.geo, tex: c.tex,
+              r = { ...r, ch: r.chMax ?? c.ch, tri: r.triMax ?? c.tri, nuovi: Math.max(0, (c.programmi || 0) - prima), geo: c.geo, tex: c.tex,
                     mpx: f.tela ? tondo(f.tela.width * f.tela.height / 1e6) : null }
               g.programmi = Math.max(g.programmi, c.programmi || 0)
               const l = luciDi(f.scena3d && f.scena3d())
