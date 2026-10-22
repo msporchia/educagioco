@@ -128,6 +128,10 @@ export const NOMI = {
   anatre: 'Lo stagno delle anatre',
   porcile: 'Il porcile',
   capre: 'Le capre',
+  conigliera: 'La conigliera',
+  arnie: 'Le arnie',
+  alpaca: 'Gli alpaca',
+  asini: 'Gli asini',
 }
 
 export function nomeDi(livello) {

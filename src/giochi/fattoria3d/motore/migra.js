@@ -9,9 +9,11 @@ import { PER_COLTURA as COLTURE_2D, PER_RICETTA as RICETTE_2D, quantoCresciuto, 
 import { livelloPer as livello2D, avanzamento as avanzamento2D, categoriaDi } from '../../fattoria/dati/livelli.js'
 import { PIAZZOLE_INIZIALI } from '../../fattoria/dati/mondo.js'
 import { PEZZI, EDIFICI } from '../dati/catalogo.js'
+import { VOCE_DECORI } from '../dati/parita2d.js'
 import { COLTURE } from '../dati/colture.js'
 import { RICETTE } from '../dati/ricette.js'
 import { PRODOTTI_ANIMALI } from '../dati/animali.js'
+import { MANGIMI_SENZA_RICETTA } from '../dati/cortile2.js'
 import { sogliaDi as soglia3D, livelloDelPezzo, livelloDellaColtura } from '../dati/livelli.js'
 import { lottiPerPiazzole } from '../dati/regole.js'
 import { LOTTI_INIZIALI, lottoPerId, VICINI_4, vicinoDi } from '../dati/mondo.js'
@@ -29,8 +31,9 @@ const MACCHINE = {
   zuccherificio: 'zuccherificio', gelateria: 'gelateria', pastificio: 'pasticceria', sartoria: 'sartoria', tintoria: 'tintoria',
   friggitoria: 'friggitoria', sushi_bar: 'sushi_bar', mongolfiera: 'mongolfiera',
 }
-// I recinti che la 3D ha già (conigliera, arnie, alpaca, asini e peschiera non ci sono: «da regalare»). Il pentolone è una macchina.
-const RECINTI = { ovile: 'recinto', pollaio: 'pollaio', stalla: 'stalla', porcile: 'porcile', stagno_anatre: 'anatre', recinto_capre: 'capre', pentolone: 'pentolone' }
+// I recinti che la 3D ha già (la peschiera non c'è: «da regalare»). Il pentolone è una macchina.
+const RECINTI = { ovile: 'recinto', pollaio: 'pollaio', stalla: 'stalla', porcile: 'porcile', stagno_anatre: 'anatre', recinto_capre: 'capre', pentolone: 'pentolone',
+  conigliera: 'conigliera', arnie: 'arnie', alpaca: 'alpaca', asini: 'asini' }      // giro G5; la peschiera no: la pesca ne prende il posto
 // Le cose di mappa con un equivalente: il vicino (il carretto 2D è una vista del trattore, D10), il mercato, i decori dello stesso mestiere.
 const ALTRE = {
   orto: 'campo', mercato: 'bancarella', carretto_mercato: 'trattore',
@@ -39,11 +42,14 @@ const ALTRE = {
   tavolo: 'tavolo', tavolino: 'tavolo', spaventapasseri: 'spaventapasseri',
 }
 
+/** Le decorazioni portate in 3D (giro G8) hanno lo stesso id (tranne il `recinto` di legno): id 2D → id 3D. */
+const DECORO_DA_2D = Object.fromEntries(Object.entries(VOCE_DECORI).map(([id3d, id2d]) => [id2d, id3d]))
+
 /** Il pezzo 3D che sostituisce una voce 2D, o null (allora è «da regalare»). I fiori e i vasi diventano aiuole. */
 export function pezzoPer(id2d) {
   const v = COSE_2D[id2d]
   if (!v) return null
-  const t = (v.macchina && (MACCHINE[v.macchina] || RECINTI[v.macchina])) || (v.mongolfiera && 'mongolfiera') || MACCHINE[id2d] || RECINTI[id2d] || ALTRE[id2d]
+  const t = (v.macchina && (MACCHINE[v.macchina] || RECINTI[v.macchina])) || (v.mongolfiera && 'mongolfiera') || MACCHINE[id2d] || RECINTI[id2d] || ALTRE[id2d] || DECORO_DA_2D[id2d]
     || (categoriaDi(id2d) === 'fiori' ? 'aiuola' : null)
   return t && (PEZZI[t] || EDIFICI[t]) ? t : null
 }
@@ -59,7 +65,7 @@ export function merceDel(k) {
   const c = Object.prototype.hasOwnProperty.call(COLTURA_DEL_RACCOLTO, k) ? COLTURA_DEL_RACCOLTO[k] : k
   if (COLTURE[c]) return { dove: 'merci', id: c }
   if (k === 'lana') return { dove: 'lana', id: 'lana' }
-  if (RICETTE[k] || PRODOTTI_ANIMALI[k]) return { dove: 'prodotti', id: k }
+  if (RICETTE[k] || PRODOTTI_ANIMALI[k] || MANGIMI_SENZA_RICETTA[k]) return { dove: 'prodotti', id: k }
   return null
 }
 

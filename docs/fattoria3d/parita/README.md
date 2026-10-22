@@ -25,12 +25,12 @@ vince il codice.
 
 | | 2D | 3D |
 |---|--:|--:|
-| voci nel catalogo (cosa si compra) | 253 | 40 (25 pezzi + 15 edifici) |
-| di cui decorazioni | 217 (verde, fiori, acqua, recinti, case, arredo, bestiole, feste, fiera, raccolto) | 10 (aiuola, panchina, fontana, pozzo, spaventapasseri, tavolo, passerella, ponte, stagno, laghetto) |
+| voci nel catalogo (cosa si compra) | 253 | 174 (159 pezzi + 15 edifici) |
+| di cui decorazioni | 217 (verde, fiori, acqua, recinti, case, arredo, bestiole, feste, fiera, raccolto) | 140 (le 10 di prima + 130 del giro G8: verde, recinti e cartelli, raccolto, case e lampioni, bestiole) |
 | colture | 16 | 16 (gli stessi id, singolari) |
-| ricette | 57 | 42 (nessuna inventata) |
+| ricette | 57 | 46 (nessuna inventata) |
 | macchine | 14 | 14 |
-| recinti del cortile | 11 | 6 (pecore, galline, mucche, anatre, maiali, capre) |
+| recinti del cortile | 11 | 10 (pecore, galline, mucche, anatre, maiali, capre, conigli, alpaca, asini, arnie; la peschiera è la pesca) |
 | bestie di casa (si comprano, hanno bisogni) | 7 | 0 (4 compagni gratuiti che girano, non si curano) |
 | addobbi per le bestie | 12 (7 in vendita) | 0 (il guardaroba è del contadino) |
 | botteghe del paese | 4 | 0 |

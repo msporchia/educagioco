@@ -4,7 +4,7 @@ Legenda in [README.md](README.md). 2D: [../../fattoria/animali.md](../../fattori
 [macchine.md](../../fattoria/macchine.md) (recinti). 3D: [../animali.md](../animali.md), [../compagni.md](../compagni.md),
 [../regole.md](../regole.md) «Le pecore».
 
-## I recinti del cortile (11 nella 2D, 6 nella 3D)
+## I recinti del cortile (11 nella 2D, 10 nella 3D: la peschiera è la pesca)
 
 Nella 2D un recinto è una macchina (prende un mangime, dà un prodotto, ha la fila). Nella 3D è un pezzo con bestie singole da
 comprare dentro l'edificio (`CORTILE` in `dati/animali.js`).
@@ -17,13 +17,13 @@ comprare dentro l'edificio (`CORTILE` in `dati/animali.js`).
 | A1d | stagno delle anatre | 240/24 · 1 verdure lesse → uova d'anatra · 6 | ✅ `anatre` 120/20 (provvisorio), 1–6 anatre, 20 s, uova di sempre | – |
 | A1e | porcile | 260/28 · 2 pastone → tartufi · 20 | ✅ `porcile` 130/21 (provvisorio), 1–4 maiali, 50 s, tartufi (merce nuova) | – |
 | A1f | capre | 280/40 · 1 verdura fresca → latte di capra · 12 | ✅ `capre` 140/22 (provvisorio), 1–4 capre, 45 s, latte di sempre | – |
-| A1g | conigliera | 95/7 · 2 foraggio → lana d'angora · 14 | ❌ | P1 |
-| A1h | alpaca | 330/47 · 1 foraggio → lana d'alpaca · 5 | ❌ | P1 |
-| A1i | asini | 355/52 · 2 foraggio → concime · 10 | ❌ | P1 |
-| A1j | arnie | 300/45 · 2 fiori → miele · 12 | ❌ (servono i fiori del fienile) | P1 |
-| A1k | peschiera | 360/57 · 2 mangime → pesce · 15 | ❌ ✳ il pesce c'è, ma si pesca | P1 (D10) |
+| A1g | conigliera | 95/7 · 2 foraggio → lana d'angora · 14 | ✅ `conigliera` 95/7, 1–6 conigli, 14 min, la lana dell'ovile (G5) | – |
+| A1h | alpaca | 330/47 · 1 foraggio → lana d'alpaca · 5 | ✅ `alpaca` 330/47, 1–4 alpaca, 5 min, la lana dell'ovile (G5) | – |
+| A1i | asini | 355/52 · 2 foraggio → concime · 10 | ✅ `asini` 355/52, 1–4 asini, 10 min, concime (merce nuova, G5) | – |
+| A1j | arnie | 300/45 · 2 fiori → miele · 12 | ✅ `arnie` 300/45, 1–4 arnie, 12 min, miele; i fiori li fa il fienile (G5) | – |
+| A1k | peschiera | 360/57 · 2 mangime → pesce · 15 | 🟡 **tolta, voluta**: la pesca (molo, porticciolo) ne prende il posto allo stesso livello 57 e con lo stesso ritmo (un pesce ogni 15 minuti per banco), il pesce c'è e alimenta friggitoria e sushi bar; un recinto di pesci col mangime del mulino sarebbe un secondo modo di avere lo stesso pesce senza il lago ([../cortile-2.md](../cortile-2.md) «La peschiera») | – (D10) |
 
-Anatre, maiali e capre (G4, [../cortile-e-pentolone.md](../cortile-e-pentolone.md)) sono le bocche del pentolone (C18): la catena ha i suoi cinque mangimi e la
+Conigliera, alpaca, asini e arnie (G5, [../cortile-2.md](../cortile-2.md)) hanno livelli, prezzi e tempi della 2D (`dati/cortile2.js`). Anatre, maiali e capre (G4, [../cortile-e-pentolone.md](../cortile-e-pentolone.md)) sono le bocche del pentolone (C18): la catena ha i suoi cinque mangimi e la
 zucca e la patata un'uscita. Livelli, prezzi e tempi sono provvisori (D2, D9) e stanno in `dati/cortile.js`. Ogni recinto nuovo vuole: un pezzo in `dati/catalogo.js`, la voce in `dati/animali.js`
 (o un tipo nuovo nel motore), un modello e tre stadi leggibili ([../animali.md](../animali.md) «I tre stadi»), un test.
 

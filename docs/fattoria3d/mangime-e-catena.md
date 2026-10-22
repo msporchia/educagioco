@@ -70,8 +70,7 @@ fienile. **Le deviazioni dichiarate** (`MANCANTI` nel test):
 | 2D | in 3D | perché |
 |---|---|---|
 | `mangime` (mulino) | non c'è | è il cibo del cane, del gatto e della peschiera: i compagni 3D non mangiano |
-| `merenda`, `caramelle` | non ci sono | vogliono il miele (le arnie non ci sono) |
-| `fiorume`, `fiorume_concime` (fienile) | non ci sono | fiori per le arnie, concime degli asini |
+| `merenda`, `caramelle`, `fiorume`, `fiorume_concime` | ci sono dal giro G5 | le arnie, gli asini e i fiori ([cortile-2.md](cortile-2.md)): `MANCANTI` è ora vuoto |
 | `pastone` | non è `mangime: true` | in 2D è il cibo del cane; qui nessuno lo mangia e resta una merce da banco |
 | veterinaria chiede il mangime | no | in 3D il mangime non si consegna |
 | erba medica: il giardiniere chiede `fieno` | no | idem |

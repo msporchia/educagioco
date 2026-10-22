@@ -15,18 +15,18 @@ Legenda in [README.md](README.md). 2D: [../../fattoria/stagioni.md](../../fattor
 | W5 | gli edifici dove si vuole | sì (baule, tenere premuto) | ✅ «Costruisci qui» e trascinare; ✳ scorrimento ai bordi | – |
 | W6 | ruotare / rovesciare | ↻ ⇄ 📦 sul pezzo tenuto | ✅ ↻ a quarti di giro (`rot` 0–3) su ogni pezzo e edificio tranne campo, acqua, ponti e moli, porticciolo; col pezzo in mano un secondo dito sul tasto; l'ingombro e il davanti seguono ([../rotazione.md](../rotazione.md)). ⇄ no: un giro di 180° basta | – |
 
-## Decorazioni e giardino (217 contro 10)
+## Decorazioni e giardino (217 contro 10 + 130 portate nel giro G8)
 
 | id | gruppo (2D) | voci 2D | 3D | pri |
 |---|---|---|---|---|
-| W7 | verde (alberi, siepi, arbusti, sassi, tronchi) | 27 | ❌ gli alberi sono ostacoli, non si piantano | P1 |
+| W7 | verde (alberi, siepi, arbusti, sassi, tronchi) | 27 | ✅ 27 voci, scheda «Verde», stessi id, prezzo e livello ([../decorazioni.md](../decorazioni.md)); gli alberi del bosco restano ostacoli da abbattere | – |
 | W8 | fiori e vasi | 34 | 🟡 solo l'aiuola | P1 |
 | W9 | acqua (fontane, pozzi, ninfee, canne, ponte, laghetto, stagno, mulino ad acqua, cantina) | 12 | 🟡 fontana, pozzo, ponte, stagno, laghetto ✳ passerella, molo, porticciolo | P2 |
-| W10 | recinti, cancelli, pergole, gazebo, cartelli | 29 (16 sono i cartelli delle colture) | ❌ | P2 |
-| W11 | case, forni, chioschi, lampioni, serra | 19 | ❌ (c'è la casa fissa di scena) | P2 |
+| W10 | recinti, cancelli, pergole, gazebo, cartelli | 29 (16 sono i cartelli delle colture) | ✅ 29 voci, scheda «Recinti»; il `recinto` di legno è `recinto_legno` (in 3D `recinto` è quello delle pecore); la bandiera sventola | – |
+| W11 | case, forni, chioschi, lampioni, serra | 19 | ✅ 19 voci, scheda «Case» (lampioni compresi; non fanno luce di notte) | – |
 | W12 | arredo (panchine, sedie, amache, tavoli, lucine) | 29 | 🟡 panchina e tavolo | P1 |
-| W13 | bestiole (cucce, casette, farfalle) | 17 | ❌ | P2 |
-| W14 | raccolto (balle, cassette, ceste) | 39 | ❌ | P2 |
+| W13 | bestiole (cucce, casette, farfalle) | 17 | ✅ 17 voci, scheda «Bestiole»: ferme, non sono i compagni; gattino smoking e cucciolo bobtail | – |
+| W14 | raccolto (balle, cassette, ceste) | 39 | ✅ 38 voci (lo spaventapasseri c'era già), scheda «Raccolto»; pane, torta, marmellata e latte sono `<id>_decoro` (id già presi dalle merci) | – |
 | W15 | feste (zucche, albero di Natale) e fiera (8) | 3 + 8 | 🟡 le due zucche (🪙6, 🪙10, solo a Halloween); manca l'albero di Natale da comprare (a Natale ci sono gli alberelli effimeri accanto agli edifici) e la fiera | P1 con W17 |
 
 Perché contano: i decori sono la spesa piccola e la **scelta della bambina** («di norma le decorazioni sono una scelta sua»).

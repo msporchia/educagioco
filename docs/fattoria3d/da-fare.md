@@ -2,11 +2,13 @@
 
 Le voci aperte tecniche. Una riga ciascuna, e quando una si chiude si toglie. Quello che manca rispetto alla fattoria 2D sta in [parita/](parita/README.md).
 
+- **Le decorazioni (G8) non sono viste su un telefono né col dito** ([decorazioni.md](decorazioni.md)): 130 modelli guardati nel catalogo 3D e misurati senza browser (~1,25 mesh l'uno). Da giudicare: le 38 carte della scheda Raccolto su 360 px, se i cartelli delle colture si leggono a distanza di gioco, se un giardino da 200 pezzi pesa (rimedio pronto: fondere o istanziare i decori fermi per tipo; ogni copia è oggi una mesh). Mancano fiori (W8), acqua extra (W9), arredo (W12), albero di Natale e fiera (W15).
 - **Misurare su un telefono vero.** Tutti i numeri di peso (draw call, fps, caldo, batteria) sono da SwiftShader; il
   pannello ⚙ e «Mostra il rapporto» servono a questo. Il degrado adattivo c'è (`dati/degrado.js`, scende sotto 30 fps): dopo la misura si tarano le soglie.
 - **Giocare la scala della 2D nella 3D** (G3, 22/10/2026, [livelli.md](livelli.md)): livelli, prezzi, tempi in minuti, costo dei gesti e scomparti sono quelli della 2D e misurati
   (`npm run tara:fattoria3d`), ma mai giocati con un bambino. Da vedere: la terra (i primi lotti costano 🪙4–15 perché la 3D parte con meno celle della 2D), la pesca a un ciclo di 15 minuti
   per banco, i 22 livelli senza novità, i magazzini ingrandibili dall'inventario (bottoni in fondo), e un salvataggio vero di prima che si porta sulla scala nuova.
+- **Il secondo cortile non è visto in scena né giocato** ([cortile-2.md](cortile-2.md)): conigliera, alpaca, asini e apiario sono guardati solo dal catalogo 3D e in node; da giudicare a distanza di gioco il gomitolo e la nuvola d'angora, il favo dell'arnia e il peso coi quattro recinti pieni; `compitiScaldo` (`pezzi.js`) non li conosce ancora.
 - **Le bestie in più dentro un recinto non esistono in 2D.** Una 3D con 6 galline in parallelo produce più di un pollaio 2D (che lavora una ricetta alla volta): parità non decisa, i prezzi delle bestie restano 3D.
 - **Il `mangime` del mulino** (cibo di cane e gatto) c'è e serve solo ai compagni, che non mangiano ancora (G6).
 - **Giocare i prezzi delle bestie.** Pecora 20 (+10), gallina 15 (+8), mucca 30 (+15) sono scelti sul metro di

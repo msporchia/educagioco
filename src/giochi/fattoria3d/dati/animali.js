@@ -9,6 +9,7 @@ import { PECORE } from './regole.js'
 import { PESCI } from './pesca.js'
 import { lavoroDelMangime, MANGIMI } from './mangime.js'
 import { ANIMALI_DEL_CORTILE, TARTUFI } from './cortile.js'
+import { ANIMALI_DEL_CORTILE_2, PRODOTTI_DEL_CORTILE_2, FANNO_LANA_2 } from './cortile2.js'
 import { bestia2d, msDaMinuti } from './parita2d.js'
 
 export const ANIMALI = {
@@ -33,6 +34,7 @@ export const ANIMALI = {
     rincaroBestia: 30,
   },
   ...ANIMALI_DEL_CORTILE,         // anatre, porcile, capre (giro G4): dati/cortile.js, coi numeri provvisori
+  ...ANIMALI_DEL_CORTILE_2,       // conigliera, alpaca, asini, arnie (giro G5): dati/cortile2.js, coi numeri della 2D
 }
 export const TIPI_DI_ANIMALI = Object.keys(ANIMALI)
 
@@ -54,6 +56,7 @@ export const PRODOTTI_ANIMALI = {
   uova:  { nome: 'Uova',  emoji: '🥚', pezzo: 'merce_uova', dove: 'pollaio', anche: ['anatre'] },     // `anche`: gli altri pezzi che fanno la stessa merce (come in 2D, `da: 'uova'`)
   latte: { nome: 'Latte', emoji: '🥛', pezzo: 'latte', dove: 'stalla', anche: ['capre'] },
   tartufi: TARTUFI,
+  ...PRODOTTI_DEL_CORTILE_2,  // miele (arnie) e concime (asini)
   ...PESCI,                   // il pesce si pesca dal molo, non lo fa una bestia: ha `ms` suo (dati/pesca.js)
 }
 
@@ -61,7 +64,7 @@ export const PRODOTTI_ANIMALI = {
     telaio e della sartoria, come nella 2D. `dove` è il pezzo che la fa; `ms` quanto ci vuole per averne una: il tempo della lana (PECORE.laneMs) più il foraggio
     che la tosata chiede, contato come per le uova (`msDelProdotto`). */
 export const LANA = {
-  lana: { nome: 'Lana', emoji: '🧶', pezzo: 'merce_lana', dove: 'recinto', ms: PECORE.laneMs + (PECORE.pastiPerLana || 0) * lavoroDelMangime(PECORE.mangia[0]) },
+  lana: { nome: 'Lana', emoji: '🧶', pezzo: 'merce_lana', dove: 'recinto', anche: FANNO_LANA_2, ms: PECORE.laneMs + (PECORE.pastiPerLana || 0) * lavoroDelMangime(PECORE.mangia[0]) },
 }
 
 /** Quanto ci vuole per averne uno: il suo tempo più il mangime che mangia (il primo della lista, `pasti` pezzi), per i calcoli degli ordini. */
@@ -70,6 +73,9 @@ export function msDelProdotto(k) {
   if (p && p.ms) return p.ms
   return a ? a.ms + lavoroDelMangime(a.mangia[0], a.pasti) : Infinity
 }
+
+/** Il prodotto che una bestia fa: una merce di `PRODOTTI_ANIMALI`, oppure la lana (che sta nel contatore `stato.lana`). */
+export const prodottoDelleBestie = k => PRODOTTI_ANIMALI[k] || LANA[k] || null
 
 export function guastiDegliAnimali(pezzi) {
   const g = []
@@ -86,7 +92,7 @@ export function guastiDegliAnimali(pezzi) {
     if (!(a.prezzoBestia > 0) || !(a.rincaroBestia >= 0)) g.push(`${t}: il prezzo della bestia non torna`)
   }
   for (const [t, a] of Object.entries(ANIMALI)) {
-    const p = PRODOTTI_ANIMALI[a.prodotto]
+    const p = prodottoDelleBestie(a.prodotto)
     if (!p || (p.dove !== t && !(p.anche || []).includes(t))) g.push(`${t}: il prodotto non torna`)
   }
   for (const [k, p] of Object.entries(LANA)) {
