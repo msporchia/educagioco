@@ -32,6 +32,7 @@ camera, nessun array da riscrivere). Misurato in Chrome senza schermo: **≤ 8 d
 ## Cosa non c'è (ancora)
 
 - Il cappello da strega e i recinti in costume della 2D (W21): in 3D le bestie non si vestono (il guardaroba è del contadino).
+  **Deciso (22/10/2026): niente per ora, se ne riparla prima di Natale.** I costumi non si metteranno addosso: si **sostituiscono i modelli** della bestia con una versione in costume (modelli nuovi, non accessori), in stagione.
 - Il fumetto «lo vorrei» / il segnalino 🎃 sul menu (W20): le zucche stanno nei decori senza segnalino.
 - Il suolo non si tinge di bianco a Natale (solo chiazze), e i tetti non hanno la crosta di neve: un velo sui modelli costerebbe una mesh per tetto.
 - Le visite ai vicini non mostrano la stagione.
