@@ -1,0 +1,61 @@
+MISURA COI MODELLI VERI 22/10 17:40 v2026.10.22.1719-9d463578
+K | schermo 392x718 dpr 2.75 | CPU 8 core, 4 GB | fascia bassa
+GPU ANGLE (Qualcomm, Adreno (TM) 512, OpenGL ES 3.2) | Google Inc. (Qualcomm) | WebGL 2.0 (OpenGL ES 3.0 Chromium)
+tex 4096 | uniform v/f 256/256 | varying 31 | highp v/f 23/23 mediump f 10 | mancano KHR_parallel_shader_compile EXT_disjoint_timer_query_webgl2
+
+[calore] codice 367 ms, dpr 1, luci 4p 1s 0d 1h ombre 1, mem 452g 28t
+XX riferimento, 8 mostri con gli effetti: 77.2/135.1 ms 12fps 459ch 82kt primo 6019 +42sh pronto 6.5s
+[discese] codice 50 ms, dpr 1, luci 4p 1s 0d 1h ombre 1, mem 505g 27t
+XX 1 mostro con gli effetti: 63.7/97.9 ms 14fps 184ch 78kt primo 2267 +41sh pronto 2.7s
+-- 3 mostri con gli effetti: saltata (la serie era già oltre)
+-- 6 mostri con gli effetti: saltata (la serie era già oltre)
+-- 8 mostri con gli effetti: saltata (la serie era già oltre)
+XX triangoli x1: 71.6/79.4 ms 13fps 241ch 86kt primo 968
+XX triangoli x2: 81.6/100.8 ms 12fps 226ch 109kt
+XX triangoli x4: 79.9/91.3 ms 12fps 226ch 202kt
+XX triangoli x8: 88.4/106.8 ms 11fps 241ch 475kt
+XX chiamate x2: 86.5/133.6 ms 10fps 462ch 86kt
+XX chiamate x4: 95.9/132.2 ms 10fps 892ch 86kt
+[luci] codice 118 ms, dpr 1, luci 14p 1s 0d 1h ombre 1, mem 218g 17t
+XX 1 fuoco e l'ombra del cono: 103.1/114.6 ms 9fps 241ch 86kt primo 3885 +57sh pronto 4.4s
+XX 2 fuochi e l'ombra del cono: 82/115.7 ms 11fps 241ch 86kt primo 854 +23sh
+XX 4 fuochi e l'ombra del cono: 91/111.4 ms 11fps 226ch 62kt primo 2775 +23sh
+XX 6 fuochi e l'ombra del cono: 96/103.9 ms 10fps 226ch 62kt primo 3044 +23sh
+XX 12 fuochi e l'ombra del cono: 194/235.9 ms 5fps 226ch 62kt primo 4545 +23sh
+XX 1 fuoco senza ombra: 96/99.9 ms 10fps 226ch 62kt primo 2234 +23sh
+XX 6 fuochi senza ombra: 93.5/109.2 ms 10fps 226ch 62kt primo 3013 +23sh
+XX 12 fuochi senza ombra: 152.6/169.4 ms 6fps 226ch 62kt primo 4049 +23sh
+[pixel] codice 488 ms, dpr 1/1.4/2, luci 4p 1s 0d 1h ombre 1, mem 218g 17t
+XX pixel ratio 1: 83.8/121.2 ms 11fps 241ch 86kt primo 4170 +34sh pronto 4.5s
+XX pixel ratio 1.41: 97.7/117.5 ms 10fps 241ch 86kt primo 2477 +34sh pronto 2.9s
+XX pixel ratio 2: 134.9/143.2 ms 7fps 226ch 62kt primo 2296 +34sh pronto 2.9s
+XX senza nebbia: 82.9/115 ms 11fps 225ch 62kt primo 2137 +33sh pronto 2.7s
+[sopra] codice 342 ms, dpr 1, luci 0p 0s 1d 1h ombre 1, mem 416g 51t
+XX 4 persone: 32.2/43.6 ms 28fps 104ch 15kt primo 1753 +10sh
+XX 8 persone: 38.4/53.7 ms 24fps 118ch 23kt primo 277
+XX 16 persone: 63.3/79.8 ms 15fps 165ch 40kt primo 504 +1sh
+-- 24 persone: saltata (la serie era già oltre)
+XX 4 mostri sul prato: 48.8/59 ms 20fps 239ch 25kt primo 400
+XX 8 mostri sul prato: 78/93.1 ms 13fps 367ch 43kt primo 569 +2sh
+-- 16 mostri sul prato: saltata (la serie era già oltre)
+[zaino] codice 92 ms
+XX 15 anteprime: 1938 ms in tutto, attesa 1276, lavoro 1799, fotogramma max 400
+XX 40 anteprime: 2767 ms in tutto, attesa 1367, lavoro 2632, fotogramma max 200
+[roba] codice 155 ms, dpr 1, luci 0p 0s 2d 1h ombre 0, mem 342g 3t
+XX 24 lame: 39.1/51 ms 25fps 242ch 21kt primo 227 +3sh
+XX 24 bastoni: 40.7/48.4 ms 23fps 201ch 20kt
+XX 24 scudi: 43.7/51.9 ms 22fps 245ch 24kt primo 138
+XX 24 vesti: 108.9/127.8 ms 9fps 1486ch 59kt primo 253 +3sh
+XX 24 gioielli: 45.9/58.8 ms 20fps 288ch 27kt primo 150 +1sh
+XX 24 pozioni: 69.7/79.2 ms 14fps 395ch 23kt primo 295 +1sh
+[fattoria] codice 1071 ms, dpr 1, luci 0p 0s 1d 1h ombre 0, mem 118g 11t
+XX 10 edifici: 54/71.6 ms 16fps 114ch 75kt primo 1224 +21sh pronto 3.4s
+-- 30 edifici: saltata (la serie era già oltre)
+-- 60 edifici: saltata (la serie era già oltre)
+XX 4 pollai e 4 stalle (bestie): 57/75.5 ms 15fps 244ch 80kt primo 182 +2sh
+XX Natale, 30 edifici: 51.7/66.9 ms 17fps 124ch 83kt primo 880 +23sh pronto 1.6s
+[calore] codice 367 ms, dpr 1, luci 4p 1s 0d 1h ombre 1, mem 452g 28t
+XX riferimento, di nuovo alla fine: 136.9/242.1 ms 7fps 456ch 84kt primo 2717 +45sh pronto 3.1s
+
+CPU prova JS: 488 ms
+DATI {"v":2,"k":"veri","i":{"g":"ANGLE (Qualcomm, Adreno (TM) 512, OpenGL ES 3.2)","v":"Google Inc. (Qualcomm)","t":4096,"u":[256,256],"p":[23,23,10],"m":["KHR_parallel_shader_compile","EXT_disjoint_timer_query_webgl2"]},"s":"392x718","d":2.75,"f":"bassa","js":488,"c":{"calore":367,"discese":50,"luci":118,"pixel":488,"sopra":342,"zaino":92,"roba":155,"fattoria":1071},"x":{"p":0,"r":0,"a":1},"r":[["cal-1",77.2,135.1,12,459,82,6019,42],["sot-1",63.7,97.9,14,184,78,2267,41],["sot-3","salta"],["sot-6","salta"],["sot-8","salta"],["tri-1",71.6,79.4,13,241,86,968,0],["tri-2",81.6,100.8,12,226,109,162,0],["tri-4",79.9,91.3,12,226,202,157,0],["tri-8",88.4,106.8,11,241,475,133,0],["ch-2",86.5,133.6,10,462,86,126,0],["ch-4",95.9,132.2,10,892,86,147,0],["luci-1",103.1,114.6,9,241,86,3885,57],["luci-2",82,115.7,11,241,86,854,23],["luci-4",91,111.4,11,226,62,2775,23],["luci-6",96,103.9,10,226,62,3044,23],["luci-12",194,235.9,5,226,62,4545,23],["luci-1s",96,99.9,10,226,62,2234,23],["luci-6s",93.5,109.2,10,226,62,3013,23],["luci-12s",152.6,169.4,6,226,62,4049,23],["px-1",83.8,121.2,11,241,86,4170,34],["px-1.41",97.7,117.5,10,241,86,2477,34],["px-2",134.9,143.2,7,226,62,2296,34],["senza-nebbia",82.9,115,11,225,62,2137,33],["per-4",32.2,43.6,28,104,15,1753,10],["per-8",38.4,53.7,24,118,23,277,0],["per-16",63.3,79.8,15,165,40,504,1],["per-24","salta"],["mos-4",48.8,59,20,239,25,400,0],["mos-8",78,93.1,13,367,43,569,2],["mos-16","salta"],["zaino-15",1938,400,1799,1276],["zaino-40",2767,200,2632,1367],["roba-lame",39.1,51,25,242,21,227,3],["roba-bastoni",40.7,48.4,23,201,20,81,0],["roba-scudi",43.7,51.9,22,245,24,138,0],["roba-vesti",108.9,127.8,9,1486,59,253,3],["roba-gioielli",45.9,58.8,20,288,27,150,1],["roba-pozioni",69.7,79.2,14,395,23,295,1],["fat-10",54,71.6,16,114,75,1224,21],["fat-30","salta"],["fat-60","salta"],["fat-bestie",57,75.5,15,244,80,182,2],["fat-natale",51.7,66.9,17,124,83,880,23],["cal-2",136.9,242.1,7,456,84,2717,45]]}
