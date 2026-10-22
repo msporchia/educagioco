@@ -9,7 +9,6 @@ Le voci aperte tecniche. Una riga ciascuna, e quando una si chiude si toglie. Qu
   per banco, i 22 livelli senza novità, i magazzini ingrandibili dall'inventario (bottoni in fondo), e un salvataggio vero di prima che si porta sulla scala nuova.
 - **Le bestie in più dentro un recinto non esistono in 2D.** Una 3D con 6 galline in parallelo produce più di un pollaio 2D (che lavora una ricetta alla volta): parità non decisa, i prezzi delle bestie restano 3D.
 - **Il `mangime` del mulino** (cibo di cane e gatto) c'è e serve solo ai compagni, che non mangiano ancora (G6).
-- **`npm run parita:fattoria3d` (T22) non c'è**: la parità la tiene `guastiDiParita()` (taratura) e `unita/fattoria3d-parita`.
 - **Giocare i prezzi delle bestie.** Pecora 20 (+10), gallina 15 (+8), mucca 30 (+15) sono scelti sul metro di
   [calibrazione.md](../apprendimento/calibrazione.md) e sul prezzo del pezzo, non ancora giocati; i fogli ridisegnati
   (macchine, banco, livelli) non sono stati visti su uno schermo da 360 px.
