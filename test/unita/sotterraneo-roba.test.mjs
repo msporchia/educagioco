@@ -571,11 +571,11 @@ import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiut
   const vecchio = { banchi: { armaiolo: ['spada-corta', 'scudo-legno', 'panciotto'], rigattiere: ['amuleto-azzurro'] } }
   const v1 = new Bottega({ ...base, ...vecchio, rnd: seminato(31) })
   const vistaV = v1.mercanziaVista('armaiolo')
-  controlla('un banco di prima si riempie fino a dieci per linguetta', mercanteDi('armaiolo').schede.filter(x => x.dove).every(sc =>
+  controlla('un banco di prima si riempie fino a dieci per linguetta', mercanteDi('armaiolo').schede.filter(x => x.dove && !x.copricapi).every(sc =>
             vistaV.filter(r => COSE[r.chiave].dove && schedaDi(mercanteDi('armaiolo'), r.chiave) === sc).length >= 3))
   const v2 = new Bottega({ ...base, ...alGiroNuovo({ ...vecchio, ...JSON.parse(JSON.stringify(v1.botteghe)) }), rnd: seminato(32) })
   const conta = (bb, sc) => bb.mercanziaVista('armaiolo').filter(r => COSE[r.chiave].dove && schedaDi(mercanteDi('armaiolo'), r.chiave) === sc).length
-  controlla('al giro dopo ruota come uno nuovo', mercanteDi('armaiolo').schede.filter(x => x.dove).every(sc => conta(v2, sc) >= 3))
+  controlla('al giro dopo ruota come uno nuovo', mercanteDi('armaiolo').schede.filter(x => x.dove && !x.copricapi).every(sc => conta(v2, sc) >= 3))
   uguale('alGiroNuovo senza banchi non chiede niente', alGiroNuovo(null), null)
   uguale('né con un record storto', alGiroNuovo({ banchi: 3 }), null)
 }
@@ -655,25 +655,25 @@ import { controlla, uguale, stessaLista, dentro, nota, riassunto } from '../aiut
     const m = mercanteDi('armaiolo')
     const dati = { eroe, finite: 3, roba: raroDi(eroe, 12), crescita: crescitaA(eroeDi(eroe), 12) }
     const a = new Bottega({ ...dati, rnd: seminato(5) })
-    const prima = m.schede.filter(x => x.dove).map(sc => dellaScheda(a, m, sc).map(r => r.chiave))
+    const prima = m.schede.filter(x => x.dove && !x.copricapi).map(sc => dellaScheda(a, m, sc).map(r => r.chiave))
     const registro = JSON.parse(JSON.stringify(a.botteghe))
     const apri = (lv, seme) => new Bottega({ ...dati, roba: a.roba, crescita: crescitaA(eroeDi(eroe), lv), ...registro, rnd: seminato(seme) })
     // un livello in più: i salti e i sogni ci sono ancora, quindi niente cambia
     const su1 = apri(13, 6)
-    const senza = m.schede.filter(x => x.dove).map(sc => su1.vistaDi(m.chiave).filter(r => COSE[r.chiave].dove && schedaDi(m, r.chiave) === sc))
+    const senza = m.schede.filter(x => x.dove && !x.copricapi).map(sc => su1.vistaDi(m.chiave).filter(r => COSE[r.chiave].dove && schedaDi(m, r.chiave) === sc))
     const ancora = senza.every(qui => conta(qui, 'salto') + conta(qui, 'sogno') >= SALTI_MINIMI && conta(qui, 'sogno') >= SOGNI_MINIMI)
     controlla('al livello dopo ci sono ancora un sogno e dei salti', ancora)
-    stessaLista('e allora il banco è lo stesso', m.schede.filter(x => x.dove).map(sc => dellaScheda(su1, m, sc).map(r => r.chiave)), prima)
+    stessaLista('e allora il banco è lo stesso', m.schede.filter(x => x.dove && !x.copricapi).map(sc => dellaScheda(su1, m, sc).map(r => r.chiave)), prima)
     // dieci livelli più su: il sogno di prima non è più un sogno, il banco si rinnova (e i pezzi nuovi sono salti e sogni di adesso)
     const su10 = apri(24, 7)
-    const dopo10 = m.schede.filter(x => x.dove).map(sc => dellaScheda(su10, m, sc))
+    const dopo10 = m.schede.filter(x => x.dove && !x.copricapi).map(sc => dellaScheda(su10, m, sc))
     controlla('molti livelli più su c\'è di nuovo il suo sogno e i suoi salti', dopo10.every(qui => conta(qui, 'salto') + conta(qui, 'sogno') >= SALTI_MINIMI && conta(qui, 'sogno') >= SOGNI_MINIMI))
     controlla('ed è cambiato qualcosa', dopo10.some((qui, i) => qui.some(r => !prima[i].includes(r.chiave))))
     controlla('ma i pezzi di prima che servono ancora non sono spariti', dopo10.some((qui, i) => prima[i].some(k => qui.some(r => r.chiave === k))))
     // riaperto di nuovo allo stesso livello (scritto e riletto) non cambia più niente
     const reg2 = JSON.parse(JSON.stringify(su10.botteghe))
     const su10b = new Bottega({ ...dati, roba: su10.roba, crescita: crescitaA(eroeDi(eroe), 24), ...reg2, rnd: seminato(999) })
-    stessaLista('e riaperto allo stesso livello non cambia più', m.schede.filter(x => x.dove).map(sc => dellaScheda(su10b, m, sc).map(r => r.chiave)),
+    stessaLista('e riaperto allo stesso livello non cambia più', m.schede.filter(x => x.dove && !x.copricapi).map(sc => dellaScheda(su10b, m, sc).map(r => r.chiave)),
                 dopo10.map(q => q.map(r => r.chiave)))
   }
 }

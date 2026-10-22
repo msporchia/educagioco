@@ -5,7 +5,7 @@
 // si entra nella prossima discesa (motore/storia.js). Gira in Node: il giocatore finto ci fa la spesa (banco.js).
 // Le regole: docs/sotterraneo/bottega.md.
 import { Corredo, ABILITA_CONFRONTATE, ROBA_VUOTA } from './corredo.js'
-import { COSE, A_SORTE, pescaMerce, aLivello, chiaveDelPezzo, baseDi } from '../dati/cose.js'
+import { COSE, A_SORTE, COPRICAPI, pescaMerce, aLivello, chiaveDelPezzo, baseDi } from '../dati/cose.js'
 import { mercanteDi, vendeLa, righeDi, profonditaDelBanco, prezzoAvanti, schedaDi } from '../dati/mercanti.js'
 import { bancoDelPasso, vetrinaDelPasso, delPassoDi, righeAvanti } from './storia.js'
 import { pescaAbilita } from './bottino.js'
@@ -15,6 +15,8 @@ import { LIVELLI_PER_REQUISITO, eroeDi, portaLa } from '../dati/eroi.js'
 // quanti pezzi ha ogni linguetta di un mercante che veste quando il banco si riempie (docs/sotterraneo/bottega.md,
 // «Dieci pezzi per linguetta»), e fin dove si spinge il livello dei pezzi in più per trovarne che migliorano
 export const PEZZI_PER_LINGUETTA = 10
+// le basi da cui le linguette che vestono pescano: quelle di sempre e, in coda, i copricapi (li vede solo la loro linguetta, `dove: ['testa']`)
+const BASI_DEL_BANCO = [...A_SORTE, ...COPRICAPI]
 // sotto questi (comprati, o non più utili al nuovo livello) una linguetta si rimette in piedi anche a metà giro
 export const MINIMO_PER_LINGUETTA = 3
 // i pezzi che chiedono più caratteristica di quella che hai, per linguetta: si comprano, vanno nello zaino
@@ -85,8 +87,9 @@ export class Bottega extends Corredo {
   // in più che stanno in mostra accanto al banco, scritti anch'essi; `ruota`: i mercanti il cui banco deve cambiare
   // al giro nuovo (alGiroNuovo). `venduti`: gli ultimi pezzi che l'eroe ha venduto al rigattiere, [{ k, prezzo }]
   constructor({ eroe, roba = null, finite = 0, banchi = null, scaffali = null, ruota = null, venduti = null,
-                giudicato = null, rnd = Math.random, crescita = null, missioni = null } = {}) {
+                giudicato = null, rnd = Math.random, crescita = null, missioni = null, copricapi = false } = {}) {
     super({ eroe, roba, crescita })
+    this.copricapi = copricapi   // la linguetta dei copricapi (dati/mercanti.js): solo il 3D la accende
     this.finite = finite
     this.missioni = missioni   // gli stati delle missioni dell'avventura: la pergamena si vende dopo la sua (`dopo`)
     this.rnd = rnd
@@ -257,7 +260,7 @@ export class Bottega extends Corredo {
     const cera = !!this.banchi[chiave]
     if (daRuotare && cera && !m.passo) delete this.banchi[chiave]
     this.banco(chiave)
-    const schede = m.schede.filter(s => s.dove && !s.vendi)
+    const schede = m.schede.filter(s => s.dove && !s.vendi && (!s.copricapi || this.copricapi))
     if (!schede.length) return
     const primo = !this.scaffali[chiave]
     if (primo) this.scaffali[chiave] = []
@@ -280,7 +283,7 @@ export class Bottega extends Corredo {
 
   // il livello e quello che l'eroe ha addosso e nello zaino: se non cambia, il banco non si rimette in discussione
   firmaDelGiudizio() {
-    return [this.livelloEroe, this.mano, this.mancina, this.corpo, this.collo, this.dito, this.dito2, ...this.zaino].join('|')
+    return [this.livelloEroe, this.mano, this.mancina, this.corpo, this.collo, this.dito, this.dito2, this.testa, ...this.zaino].join('|')
   }
 
   // Manca il pezzo per cui risparmiare (meno di SALTI_MINIMI pezzi forti, sogni compresi, o di SOGNI_MINIMI sogni in vista) E ce n'è di nuovi da
@@ -364,7 +367,7 @@ export class Bottega extends Corredo {
     const L = this.livelloEroe
     const rari = this.vistaQui(m, scheda).filter(r => COSE[r.chiave].rarita === 'raro').length
     const candidati = []
-    for (const b of A_SORTE) {
+    for (const b of BASI_DEL_BANCO) {
       if (!(COSE[b].dove && scheda.dove.includes(COSE[b].dove) && vendeLa(m, b) && !m.sempre.includes(b) && this.porta(b))) continue
       for (let l = L; l >= Math.max(1, L - SALTO_SUBITO_SOTTO); l--) {
         for (const rar of ['comune', 'magico', 'raro']) {
@@ -438,7 +441,7 @@ export class Bottega extends Corredo {
   // quel ruolo (ruoloDi)
   pescaForti(m, scheda, ruolo, quanti, visti) {
     if (quanti <= 0) return []
-    const basi = A_SORTE.filter(b => COSE[b].dove && scheda.dove.includes(COSE[b].dove) && vendeLa(m, b) &&
+    const basi = BASI_DEL_BANCO.filter(b => COSE[b].dove && scheda.dove.includes(COSE[b].dove) && vendeLa(m, b) &&
                                      !m.sempre.includes(b) && this.porta(b))
     const L = this.livelloEroe
     const sogno = ruolo === 'sogno'
@@ -486,7 +489,7 @@ export class Bottega extends Corredo {
   // a trovare pezzi che migliorano quello che ha addosso. Mai un raro (stanno nei salti e nei sogni) né un leggendario, e
   // al più DA_MERITARE pezzi che non regge ancora (`qui`: quelli già in vista). Uno per base prima, poi il resto, a caso
   pescaPer(m, scheda, quanti, qui, visti) {
-    const basi = A_SORTE.filter(b => COSE[b].dove && scheda.dove.includes(COSE[b].dove) && vendeLa(m, b) &&
+    const basi = BASI_DEL_BANCO.filter(b => COSE[b].dove && scheda.dove.includes(COSE[b].dove) && vendeLa(m, b) &&
                                      !m.sempre.includes(b) && this.porta(b))
     if (!basi.length) return []
     const L = this.livelloEroe

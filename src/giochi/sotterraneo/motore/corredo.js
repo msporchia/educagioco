@@ -29,7 +29,7 @@ const PESI = { att: 2, dif: 2 * PESO_DELLA_DIFESA, vita: 0.4, rigenera: 1, fuoco
 // la schivata ha un tetto: oltre, i mostri non toccherebbero più
 export const SCHIVATA_MASSIMA = 60
 // le caselle che non sono le mani: danno solo quello che hanno addosso (difesa, vita, abilità)
-const DEL_CORPO = ['corpo', 'collo', 'dito', 'dito2']
+const DEL_CORPO = ['corpo', 'collo', 'dito', 'dito2', 'testa']
 
 // Le pozioni dello stesso tipo stanno nella stessa tasca (l'utente, 9 ottobre): «Pozione ×3» è un posto solo. Lo zaino resta
 // una lista di chiavi, una per pezzo; i posti si contano e si mostrano raggruppando. Solo le pozioni (le torce non vanno in
@@ -53,7 +53,7 @@ export const eCura = k => !!(COSE[k] && COSE[k].usa === 'cura')
 export const curePerTipo = zaino => tascheDello(zaino).filter(t => eCura(t.k))
 
 export const ROBA_VUOTA = () => ({
-  v: VERSIONE_ROBA, gemme: 0, zaino: [], mano: null, mancina: null, corpo: null, collo: null, dito: null, dito2: null,
+  v: VERSIONE_ROBA, gemme: 0, zaino: [], mano: null, mancina: null, corpo: null, collo: null, dito: null, dito2: null, testa: null,
   torcia: 0, torce: 0,
 })
 
@@ -68,8 +68,12 @@ export function rileggiRoba(dato) {
     zaino: (Array.isArray(dato.zaino) ? dato.zaino : []).filter(k => COSE[k]),
     mano: vera(dato.mano), mancina: vera(dato.mancina), corpo: vera(dato.corpo),
     collo: vera(dato.collo), dito: vera(dato.dito), dito2: vera(dato.dito2),
+    // il copricapo (docs/sotterraneo/elmo.md): un salvataggio di prima non ha il campo, e vuol dire niente in testa (la `v` resta 1)
+    testa: vera(dato.testa),
     torcia: numero(dato.torcia), torce: numero(dato.torce),
   }
+  // in testa solo un copricapo: un dato storto torna in tasca, non si perde
+  if (roba.testa && COSE[roba.testa].dove !== 'testa') { roba.zaino.push(roba.testa); roba.testa = null }
   return sistemaIGioielli(roba)
 }
 
@@ -105,7 +109,7 @@ export function schedaConLaRoba(eroe, roba = null, crescita = null) {
   if (elisir) tratti.push(elisir)
   return {
     vita: c.vitaConLaRoba, att: c.att, dif: c.dif, gemme: c.gemme, tasche: c.postiUsati(), capienza: c.capienza,
-    mano: c.mano, mancina: c.mancina, corpo: c.corpo, collo: c.collo, dito: c.dito, dito2: c.dito2, tratti, livello: c.livelloEroe, energiaMax: c.energiaMax,
+    mano: c.mano, mancina: c.mancina, corpo: c.corpo, collo: c.collo, dito: c.dito, dito2: c.dito2, testa: c.testa, tratti, livello: c.livelloEroe, energiaMax: c.energiaMax,
   }
 }
 
@@ -126,6 +130,10 @@ export class Corredo {
     this.collo = null     // la collana: un posto solo
     this.dito = null      // gli anelli: due posti, `dito` e `dito2`
     this.dito2 = null
+    this.testa = null     // il copricapo (docs/sotterraneo/elmo.md)
+    // i copricapi si trovano e si comprano solo dove il gioco li accende (il Sotterraneo 3D, come le botti): spenti di difetto,
+    // così il 2D, il banco di prova e la taratura restano quelli di prima. Quello che si ha già si porta dappertutto
+    this.copricapi = false
     // `torciaResta`: stanze davanti alla torcia accesa (0 = spenta). `torceInScorta`: quante aspettano alla cintura
     this.torciaResta = 0
     this.torceInScorta = 0
@@ -137,7 +145,7 @@ export class Corredo {
   get roba() {
     return {
       v: VERSIONE_ROBA, gemme: this.gemme, zaino: [...this.zaino],
-      mano: this.mano, mancina: this.mancina, corpo: this.corpo, collo: this.collo, dito: this.dito, dito2: this.dito2,
+      mano: this.mano, mancina: this.mancina, corpo: this.corpo, collo: this.collo, dito: this.dito, dito2: this.dito2, testa: this.testa,
       torcia: this.torciaResta, torce: this.torceInScorta,
     }
   }
@@ -152,6 +160,7 @@ export class Corredo {
     this.collo = r.collo
     this.dito = r.dito
     this.dito2 = r.dito2
+    this.testa = r.testa
     this.torciaResta = r.torcia
     this.torceInScorta = r.torce
   }
@@ -539,7 +548,7 @@ export class Corredo {
     if (!c || !c.dove) return null
     // le armi hanno due caselle: il confronto è col totale delle mani, non "uguale a quella che hai"
     const dove = this.postoDi(k)
-    const campo = c.dove === 'mano' ? 'att' : c.dove === 'corpo' || c.dove === 'mancina' ? 'dif' : 'dono'
+    const campo = c.dove === 'mano' ? 'att' : c.dove === 'corpo' || c.dove === 'mancina' || c.dove === 'testa' ? 'dif' : 'dono'
     const prova = this.copia()
     prova.metti(dove, k)
     prova.sistemaLeMani()

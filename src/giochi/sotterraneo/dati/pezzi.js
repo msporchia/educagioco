@@ -19,11 +19,11 @@ export const RARITA_DA_LETTERA = Object.fromEntries(Object.entries(RARITA).map((
 // Le abilità dei pezzi: `campo` è quello che il motore somma (Corredo.addosso), `dove` le caselle dove nascono,
 // `valore` quanto vale al livello `L` con la forza `f` della rarità. Il nome: l'aggettivo (maschile e
 // femminile) e il complemento («della volpe»). Parole da sette anni, un po' epiche (docs/sotterraneo/rarita.md)
-const T = ['mano', 'mancina', 'corpo', 'dito', 'collo']
+const T = ['mano', 'mancina', 'corpo', 'dito', 'collo', 'testa']
 export const ABILITA_DEI_PEZZI = {
   att: { em: '⚔️', nome: 'Attacco', dove: ['mano', 'mancina'], agg: ['affilato', 'affilata'], di: 'del leone',
          valore: (L, f) => Math.max(1, Math.round((0.5 + L / 10) * f)) },
-  dif: { em: '🛡️', nome: 'Difesa', dove: ['mancina', 'corpo', 'dito', 'collo'], agg: ['corazzato', 'corazzata'], di: 'della tartaruga',
+  dif: { em: '🛡️', nome: 'Difesa', dove: ['mancina', 'corpo', 'dito', 'collo', 'testa'], agg: ['corazzato', 'corazzata'], di: 'della tartaruga',
          valore: (L, f) => Math.max(1, Math.round((0.4 + L / 20) * f)) },
   vita: { em: '❤️', nome: 'Vita', dove: T, agg: ['robusto', 'robusta'], di: 'dell\'orso',
           valore: (L, f) => Math.max(2, Math.round((2 + L / 3) * f)) },
@@ -31,13 +31,13 @@ export const ABILITA_DEI_PEZZI = {
               valore: (L, f) => Math.max(1, Math.round((0.5 + L / 12) * f)) },
   fuoco: { em: '🔥', nome: 'Fuoco', dove: ['mano', 'dito', 'collo'], agg: ['fiammeggiante', 'fiammeggiante'], di: 'del drago',
            valore: (L, f) => Math.max(1, Math.round((0.5 + L / 12) * f)) },
-  schivata: { em: '🌀', nome: 'Schivata', dove: ['mancina', 'corpo', 'dito', 'collo'], agg: ['leggero', 'leggera'], di: 'della volpe',
+  schivata: { em: '🌀', nome: 'Schivata', dove: ['mancina', 'corpo', 'dito', 'collo', 'testa'], agg: ['leggero', 'leggera'], di: 'della volpe',
               valore: (L, f) => Math.min(40, Math.round((4 + L / 3) * f)) },
   gemme: { em: '💎', nome: 'Gemme', dove: ['mano', 'dito', 'collo'], agg: ['luccicante', 'luccicante'], di: 'della gazza',
            valore: (L, f) => Math.round((0.1 + L * 0.005) * f * 100) / 100 },
-  fortuna: { em: '🍀', nome: 'Fortuna', dove: ['mano', 'corpo', 'dito', 'collo'], agg: ['fortunato', 'fortunata'], di: 'del quadrifoglio',
+  fortuna: { em: '🍀', nome: 'Fortuna', dove: ['mano', 'corpo', 'dito', 'collo', 'testa'], agg: ['fortunato', 'fortunata'], di: 'del quadrifoglio',
              valore: (L, f) => Math.max(1, Math.round((0.5 + L / 12) * f)) },
-  pozioni: { em: '🧪', nome: 'Pozioni', dove: ['corpo', 'dito', 'collo'], agg: ['incantato', 'incantata'], di: 'della strega',
+  pozioni: { em: '🧪', nome: 'Pozioni', dove: ['corpo', 'dito', 'collo', 'testa'], agg: ['incantato', 'incantata'], di: 'della strega',
              valore: (L, f) => Math.round((10 + L) * f) },
   torcia: { em: '⏳', nome: 'Torcia', dove: ['mancina', 'dito', 'collo'], agg: ['lucente', 'lucente'], di: 'della lucciola',
             valore: (L, f) => Math.max(1, Math.round((2 + L / 6) * f)) },
@@ -56,6 +56,8 @@ export const TINTE_DELLE_ABILITA = {
 // armature parano, i gioielli che danno vita ne danno di più. Lento apposta: nella storia (livelli 1–12) un'arma
 // prende al più due punti, la crescita vera sta nell'eroe; nell'abisso, senza tetto, il livello fa la differenza
 export const ATT_OGNI_LIVELLI = 5, DIF_OGNI_LIVELLI = 15, VITA_OGNI_LIVELLI = 4
+// il copricapo cresce a metà passo di un'armatura e di un gioiello: vale una frazione di loro (docs/sotterraneo/elmo.md)
+export const DIF_TESTA_OGNI_LIVELLI = 2 * DIF_OGNI_LIVELLI, VITA_TESTA_OGNI_LIVELLI = 2 * VITA_OGNI_LIVELLI
 // il prezzo cresce in linea retta col livello (mai esponenziale, docs/apprendimento/calibrazione.md)
 export const PREZZO_PER_LIVELLO = 0.12
 export const valoreDelLivello = L => 1 + PREZZO_PER_LIVELLO * (Math.max(1, L) - 1)

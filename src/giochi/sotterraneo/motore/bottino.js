@@ -2,7 +2,7 @@
 // abilità. Il livello è quello del posto o dell'eroe, il più alto dei due («se io sono livello 20 i drop devono
 // essere a tono»); la rarità la decidono chi lascia (un mostro, un forziere, un mostro grosso), la profondità e la fortuna.
 // Il caso arriva da fuori (`rnd`): la discesa si deve poter rifare identica. Gira in Node.
-import { COSE, PEZZI_DI_BASE, chiaveDelPezzo, pescaCosa } from '../dati/cose.js'
+import { COSE, PEZZI_DI_BASE, COPRICAPI, chiaveDelPezzo, pescaCosa } from '../dati/cose.js'
 import { RARITA, ABILITA_DEI_PEZZI, LEGGENDARI, UNICI } from '../dati/pezzi.js'
 import { RARITA_PER_FORTUNA } from '../dati/livelli.js'
 
@@ -142,6 +142,20 @@ export function pergamenaCade(chi, seme, piano, x, y) {
   h = Math.imul(h ^ (h >>> 15), 0x2c1b3c6d)
   h = Math.imul(h ^ (h >>> 12), 0x297a2d39)
   return ((h ^ (h >>> 15)) >>> 0) / 4294967296 < (PROBABILITA_PERGAMENA[chi] || 0)
+}
+
+// Il copricapo nel bottino (docs/sotterraneo/elmo.md): dove è acceso (Corredo.copricapi), un pezzo trovato su sette diventa un copricapo
+// dello stesso livello e della stessa rarità, con altrettante abilità: un posto su sette addosso, e i pezzi che cadono restano quanti erano.
+// `tiro` e `sorte` nascono dal seme e non dal caso della discesa (Corsa.trovato): accenderlo non sposta niente di quello che cade.
+// Un leggendario o un pezzo col nome restano quello che sono (non ci sono copricapi col nome)
+export const QUOTA_DEL_COPRICAPO = 1 / 7
+export function copricapoDalTrovato(k, { tiro = 1, sorte = Math.random, tua = () => true } = {}) {
+  const c = COSE[k]
+  if (!c || !c.dove || c.dove === 'testa' || c.unico || c.rarita === 'leggendario' || !(tiro < QUOTA_DEL_COPRICAPO)) return k
+  const liv = c.liv || 1, rarita = c.rarita || 'comune'
+  const b = pescaCosa(COPRICAPI, { rnd: sorte, tua, profondita: Math.min(1, liv / 12) })
+  const ab = rarita === 'comune' ? [] : pescaAbilita(b, Math.max(1, Object.keys(c.abilita || {}).length), sorte)
+  return chiaveDelPezzo(b, liv, ab.length ? rarita : 'comune', ab)
 }
 
 // il pezzo col nome di un mostro grosso, al livello del bottino
