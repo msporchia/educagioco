@@ -115,12 +115,13 @@ const mediana = v => v.slice().sort((a, b) => a - b)[Math.floor(v.length / 2)]
 // la misura dell'app (zona dei grandi → «Misura questo telefono»): `solo` = gli id da fare, `js` compreso; ritorna { dati, log }
 // `veri`: la prova coi modelli veri (gli inizi degli id in `solo`), che dura qualche minuto e sul computer rallentato di più
 // `qualita`: la fascia grafica forzata col cheat `&qualita=` (quella del telefono, se il log la dice)
-async function bancoUna(b, cpu, K, solo = null, corto = false, veri = false, qualita = null) {
+// `raffredda`: i ms di pausa fra un gruppo e l'altro della prova coi modelli veri (null: quella dell'app)
+async function bancoUna(b, cpu, K, solo = null, corto = false, veri = false, qualita = null, raffredda = null) {
   process.env.DIST = resolve(opz('dist', 'dist/index.html'))
   const { apriGioco } = await import('../test/aiuto/browser.mjs')
   const hog = await zavorra(b, K)
   const { page } = await apriGioco(b, { viewport: SCHERMO, pixel: PIXEL, attesa: null, indirizzo: 'file://' + process.env.DIST, userAgent: UA, ...(qualita ? { hash: `qualita=${qualita}` } : {}) })
-  await page.addInitScript(([so, co]) => { window.__benchmarkSolo = so; window.__benchmarkCorto = co }, [solo, corto])
+  await page.addInitScript(([so, co, ra]) => { window.__benchmarkSolo = so; window.__benchmarkCorto = co; if (ra != null) window.__benchmarkRaffredda = ra }, [solo, corto, raffredda])
   await page.reload(); await page.waitForSelector('[data-azione="grandi"]', { timeout: 20000 })
   await page.click('[data-azione="grandi"]'); await page.waitForSelector('.tastierino')
   for (const c of '0000') await page.click(`.tasto >> text="${c}"`)
@@ -152,9 +153,11 @@ async function calibra() {
   const t = opz('telefono')
   const tel = lg ? { js: lg.js, gpu: msDi(lg, 'pieno-1.5') }
     : t ? Object.fromEntries(t.split(',').map(x => x.split('=')).map(([k, v]) => [k, Number(v)])) : null
-  // un log coi modelli veri non ha la prova dei pixel: si tara la CPU sul suo `js` e la zavorra resta quella di prima
-  const soloCpu = !!(lg && lg.k === 'veri')
-  if (soloCpu) console.log('log coi modelli veri: si tara la CPU (la prova JS); la GPU si tara col log a scene, qui resta la zavorra salvata')
+  // un log coi modelli veri non ha la prova dei pixel: la CPU si tara sul suo `js`, la zavorra su una sua scena (`--scena`, di
+  // difetto «pixel ratio 1», lo scontro con 3 mostri: una scena vera, con le luci e la nebbia del gioco)
+  const veri = !!(lg && lg.k === 'veri'), scena = opz('scena', 'px-1')
+  if (veri) { tel.gpu = msDi(lg, scena); console.log(`log coi modelli veri: la CPU sulla prova JS, la zavorra sulla scena ${scena} (${tel.gpu ?? '?'} ms sul telefono)`) }
+  const soloCpu = veri && typeof tel.gpu !== 'number'
   if (!tel || !tel.js || (!tel.gpu && !soloCpu)) { await b.close(); console.error('serve --log <file> (il log copiato dal telefono) oppure --telefono js=…,gpu=… (gpu = ms della prova «pixel, shader leggero, dpr 1,5»)'); process.exit(1) }
   const { dati: fatti } = await bancoUna(b, 1, 0, ['js', 'pieno-1.5'])
   console.log(`il computer, a vuoto: js ${fatti.js} ms, pixel (dpr 1,5) ${msDi(fatti, 'pieno-1.5')} ms — telefono: js ${tel.js} ms, pixel ${tel.gpu ?? '?'} ms`)
@@ -171,13 +174,14 @@ async function calibra() {
   cpu = migliore.cpu
   let K = soloCpu ? ((leggiProfilo()[gpuModo] || {}).zavorra || 0) : 0, meglio = Infinity
   for (const k of soloCpu ? [] : SCALINI) {
-    const { dati } = await bancoUna(b, 1, k, ['pieno-1.5'])
-    const ms = msDi(dati, 'pieno-1.5')
-    console.log(`zavorra ${k} → pixel nativi ${ms} ms (telefono ${tel.gpu})`)
+    // coi modelli veri la scena gira con la CPU appena tarata (lo scontro ha il suo JS), senza la pausa che raffredda
+    const { dati } = veri ? await bancoUna(b, cpu, k, [scena], false, true, lg.f, 0) : await bancoUna(b, 1, k, ['pieno-1.5'])
+    const ms = msDi(dati, veri ? scena : 'pieno-1.5')
+    console.log(`zavorra ${k} → ${veri ? scena : 'pixel nativi'} ${ms} ms (telefono ${tel.gpu})`)
     if (Math.abs(ms - tel.gpu) < meglio) { meglio = Math.abs(ms - tel.gpu); K = k }
     if (ms >= tel.gpu) break
   }
-  if (!soloCpu && K === 0 && msDi(fatti, 'pieno-1.5') > tel.gpu) console.log('attenzione: la GPU del computer è già più lenta del telefono (--gpu sw ha senso solo se la zavorra non basta)')
+  if (!soloCpu && !veri && K === 0 && msDi(fatti, 'pieno-1.5') > tel.gpu) console.log('attenzione: la GPU del computer è già più lenta del telefono (--gpu sw ha senso solo se la zavorra non basta)')
   await b.close()
   const p = leggiProfilo(); p[gpuModo] = { cpu: +cpu.toFixed(2), zavorra: K, ...(process.env.VT_CORE ? { core: Number(process.env.VT_CORE) } : {}), telefono: tel }
   writeFileSync(PROFILO, JSON.stringify(p, null, 2) + '\n')
@@ -204,13 +208,18 @@ async function benchmark() {
   if (tel) {
     const p95Di = (d, id) => { const r = dellaRiga(d, id); return r ? (r.p95 ?? (typeof r[2] === 'number' && r.length > 5 ? r[2] : null)) : null }
     console.log(`\nconfronto (ms di lavoro${veri ? ', e p95' : ''}): prova | computer | telefono | rapporto`)
+    const perGruppo = {}
     for (const r of dati.risultati) {
       const t = msDi(tel, r.id), c = r.ms ?? r.tot
       if (typeof t !== 'number' || r.errore || r.salta || c == null) continue
       const pc = r.p95, pt = p95Di(tel, r.id)
       console.log(`  ${r.id.padEnd(20)} ${String(c).padStart(6)} ${String(t).padStart(7)}   ×${(c / t).toFixed(2)}` +
-        (veri && pc != null && pt ? `    p95 ${String(pc).padStart(6)} ${String(pt).padStart(7)}   ×${(pc / pt).toFixed(2)}` : ''))
+        (veri && pc != null && pt ? `    p95 ${String(pc).padStart(6)} ${String(pt).padStart(7)}   ×${(pc / pt).toFixed(2)}` : '') +
+        (veri && r.js != null ? `    computer js ${r.js} gpu ${r.gpu}` : ''))
+      if (veri) (perGruppo[r.gruppo] = perGruppo[r.gruppo] || []).push(c / t)
     }
+    // coi modelli veri: il rapporto medio per gruppo, per vedere quale parte del gioco l'imitazione sbaglia
+    for (const [g, l] of Object.entries(perGruppo)) console.log(`  gruppo ${g.padEnd(12)} rapporto medio ×${(l.reduce((x, y) => x + y, 0) / l.length).toFixed(2)} su ${l.length} scene`)
     if (dati.js && tel.js) console.log(`  ${'js'.padEnd(20)} ${String(dati.js).padStart(6)} ${String(tel.js).padStart(7)}   ×${(dati.js / tel.js).toFixed(2)}`)
     console.log('rapporto vicino a 1 = il computer rallentato somiglia al telefono; lontano = quella parte non è imitata bene')
   }
