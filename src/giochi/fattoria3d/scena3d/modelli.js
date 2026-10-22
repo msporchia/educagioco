@@ -62,7 +62,7 @@ function insegna (g, testo, larg, alt, x, y, z, o) {
 }
 
 // ── il campo e le dieci colture: in modelli-colture.js ──
-export { ASPETTO, creaCampo, aggiornaCampo } from './modelli-colture.js'
+export { ASPETTO, creaCampo, aggiornaCampo, campoMosso } from './modelli-colture.js'
 
 // ── la pasticceria: 4×3, la porta davanti ──
 function costruisciPasticceria () {

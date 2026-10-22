@@ -140,6 +140,8 @@ export class Mondo3d {
     const hit = rg.intersectObjects(this.pezzi.gruppi(), true)[0]
     let o = hit && hit.object
     while (o && !o.userData.bersaglio) o = o.parent
+    const pianta = this.pezzi.colpisciPiante(rg)                  // una pianta di un campo: le sue istanze sono del banco, non del gruppo del campo
+    if (pianta && (!o || !hit || pianta.distance < hit.distance)) return pianta.bersaglio
     if (o) return o.userData.bersaglio
     const a = rg.intersectObjects(this.terreno.istanzeAlberi, false)
       .map(h => this.terreno.alberoDi(h.instanceId)).find(x => x && !x.tagliato)

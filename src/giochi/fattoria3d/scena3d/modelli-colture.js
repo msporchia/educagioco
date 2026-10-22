@@ -167,18 +167,23 @@ export const ASPETTO = {
 }
 
 // ── chi posa le parti: la pianta (P) e il pezzo attorno a lei ──
-const P = new THREE.Matrix4(), L = new THREE.Matrix4(), M = new THREE.Matrix4()
+const P = new THREE.Matrix4(), L = new THREE.Matrix4(), M = new THREE.Matrix4(), MONDO = new THREE.Matrix4()
 const Q = new THREE.Quaternion(), E = new THREE.Euler(), V = new THREE.Vector3(), S = new THREE.Vector3()
 const posa = {
   parti: null,
+  nelMondo: false,        // vero per un campo del banco (`campi-istanze.js`): le matrici si scrivono già nel mondo (MONDO = la sua matrice), perché le istanze sono di tutti i campi
+
   /** La pianta in (x, y, z): si piega `lean` verso `yaw`, il vento la inclina di `sway`, cresce di `s`. */
-  su (x, y, z, yaw = 0, sway = 0, s = 1, lean = 0) { E.set(lean, yaw, sway, 'ZYX'); P.compose(V.set(x, y, z), Q.setFromEuler(E), S.set(s, s, s)) },
+  su (x, y, z, yaw = 0, sway = 0, s = 1, lean = 0) {
+    E.set(lean, yaw, sway, 'ZYX'); P.compose(V.set(x, y, z), Q.setFromEuler(E), S.set(s, s, s))
+    if (this.nelMondo) P.premultiply(MONDO)
+  },
   /** Un pezzo nel riferimento della pianta: ruotato (rx in avanti, poi ry attorno), scalato. Il colore è un THREE.Color. */
   metti (nome, colore, x, y, z, rx, ry, rz, sx, sy = sx, sz = sx) {
     const p = this.parti[nome]
-    if (p.mesh && p.n < p.mesh.instanceMatrix.count) {
+    if (p.mat && p.n < p.max) {
       E.set(rx, ry, rz, 'YXZ'); L.compose(V.set(x, y, z), Q.setFromEuler(E), S.set(sx, sy, sz))
-      p.mesh.setMatrixAt(p.n, M.multiplyMatrices(P, L)); p.mesh.setColorAt(p.n, colore)
+      M.multiplyMatrices(P, L).toArray(p.mat, p.n * 16); colore.toArray(p.col, p.n * 3)
     }
     p.n++
   },
@@ -425,7 +430,13 @@ const terraDelCampo = memoModello('campo-terra', () => {
   fondiPerMateriale(g)
   return g
 })
-/** Il campo: la terra in cache (geometrie condivise) e le piante a istanze, che sono sue (matrici e colori a ogni campo). */
+/** Le istanze di una forma: matrici e colori del campo in un suo array (sono la verità; la mesh o il banco li copiano). */
+const nuovaParte = max => ({ mesh: null, n: 0, max, mat: new Float32Array(max * 16), col: new Float32Array(max * 3) })
+/** La forma e il materiale di una parte: il banco dei campi (`campi-istanze.js`) ne fa una mesh sola per tutti. */
+export const formaDi = nome => ({ geo: FORME[nome].geo, materiale: mat(0xffffff, FORME[nome].m) })
+
+/** Il campo: la terra in cache (geometrie condivise) e le piante a istanze, che sono sue (matrici e colori a ogni campo). Da solo (anteprime, fantasma,
+    catalogo) disegna con le sue mesh; messo in scena, `Pezzi` lo dà al banco (`BancoCampi.adotta`) e le istanze diventano una mesh per forma per tutti i campi. */
 export function creaCampo (seme = 1) {
   const g = terraDelCampo()
   const parti = {}
@@ -433,18 +444,33 @@ export function creaCampo (seme = 1) {
     if (!max) continue
     const m = new THREE.InstancedMesh(FORME[nome].geo, mat(0xffffff, FORME[nome].m), max)
     m.castShadow = true; m.frustumCulled = false; m.setColorAt(0, BIANCO); m.count = 0; m.visible = false
-    g.add(m); parti[nome] = { mesh: m, n: 0 }
+    g.add(m); parti[nome] = Object.assign(nuovaParte(max), { mesh: m })
   }
-  g.userData.grano = { parti, seme, disp: {} }
+  g.userData.grano = { parti, seme, disp: {}, banco: null, t: [NaN, 0, 0, 0, 0] }
   return g
+}
+/** Il campo è stato spostato, girato o ingrandito dall'ultima volta che si è posato? (conta solo per un campo del banco: le sue matrici sono nel mondo.) */
+export function campoMosso (g) {
+  const st = g.userData.grano; if (!st.banco) return false
+  const t = st.t, p = g.position
+  return p.x !== t[0] || p.y !== t[1] || p.z !== t[2] || g.rotation.y !== t[3] || g.scale.x !== t[4]
 }
 /** crescita: quattro numeri, -1 = vuota, 0..1 = cresce (1 = matura). `vento` false = niente ondeggio. */
 export function aggiornaCampo (g, crescita, t, coltura = 'grano', vento = true) {
   const st = g.userData.grano
+  posa.nelMondo = !!st.banco
+  if (st.banco) {
+    g.updateMatrixWorld(); MONDO.copy(g.matrixWorld)
+    st.t = [g.position.x, g.position.y, g.position.z, g.rotation.y, g.scale.x]
+  }
   posaTutto(st.parti, posizioni(st, ASPETTO[coltura] || ASPETTO.grano), crescita, t, coltura, vento)
-  for (const { mesh: m, n } of Object.values(st.parti)) {
+  posa.nelMondo = false
+  if (st.banco) { st.banco.segna(); return }
+  for (const p of Object.values(st.parti)) {
+    const m = p.mesh, n = Math.min(p.n, p.max)
     m.count = n; m.visible = n > 0
     if (!n) continue
+    m.instanceMatrix.array.set(p.mat.subarray(0, n * 16)); m.instanceColor.array.set(p.col.subarray(0, n * 3))
     for (const a of [m.instanceMatrix, m.instanceColor]) { a.clearUpdateRanges(); a.addUpdateRange(0, n * a.itemSize); a.needsUpdate = true }
   }
 }
