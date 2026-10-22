@@ -5,7 +5,8 @@
    (in più invii se è lungo) o da copiare, e l'ultimo resta sul telefono. Il codice (e three) si carica solo premendo il tasto.
    La ✕ in alto a destra chiude, e durante la misura la ferma; «Interrompi» la ferma e tiene quello che c'è. */
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
-import { componi, componiVeri, conNote, spezza } from '../../grafica/benchmark/log.js'
+import { componi } from '../../grafica/benchmark/log.js'
+import { componiVeri, conNote, spezza } from '../../grafica/benchmark/log-veri.js'
 import { ultimeMisure, salvaMisura } from '../../store/benchmark.js'
 import { fasciaAttiva } from '../../store/qualita.js'
 
@@ -24,7 +25,12 @@ const ultime = ref({})
 let fermare = false
 
 const versione = () => (typeof __VERSIONE__ !== 'undefined' ? __VERSIONE__.id : '')
-const meta = () => ({ versione: versione(), ua: navigator.userAgent, cpu: navigator.hardwareConcurrency, memoria: navigator.deviceMemory })
+// Chrome accorcia lo user agent («Android 10; K»): il modello vero, se c'è, lo dice userAgentData
+async function meta() {
+  let nome = ''
+  try { const h = navigator.userAgentData && await navigator.userAgentData.getHighEntropyValues(['model']); nome = (h && h.model) || '' } catch (e) { /* non lo dice */ }
+  return { versione: versione(), ua: navigator.userAgent, nome, cpu: navigator.hardwareConcurrency, memoria: navigator.deviceMemory }
+}
 
 onMounted(async () => { ultime.value = await ultimeMisure() })
 
@@ -35,14 +41,15 @@ async function avvia(che = modo.value) {
     if (che === 'veri') {
       const { eseguiVeri } = await import('../../grafica/benchmark/veri.js')
       const dati = await eseguiVeri({ contenitore: palco.value, corto: !!window.__benchmarkCorto, solo: window.__benchmarkSolo || null, fascia: fasciaAttiva(),
+        ...(window.__benchmarkRaffredda != null ? { raffredda: window.__benchmarkRaffredda } : {}),
         progresso, fermo: () => fermare })
       window.__benchmarkVeri = dati
-      log.value = componiVeri(dati, meta())
+      log.value = componiVeri(dati, await meta())
     } else {
       const { eseguiProve } = await import('../../grafica/benchmark/prove.js')
       const dati = await eseguiProve({ canvas: tela.value, corto: !!window.__benchmarkCorto, solo: window.__benchmarkSolo || null, progresso, fermo: () => fermare })
       window.__benchmarkFluidita = dati
-      log.value = componi(dati, meta())
+      log.value = componi(dati, await meta())
     }
     stato.value = 'fatto'
     salvaMisura(che, log.value).then(async () => { ultime.value = await ultimeMisure() }).catch(() => {})
