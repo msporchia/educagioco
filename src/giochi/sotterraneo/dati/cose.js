@@ -195,8 +195,8 @@ const BASI = {
             dice: `La prendi e si accende: ${STANZE_TORCIA} stanze di luce, poi si spegne.` },
   chiave: { em: '🗝️', nome: 'Chiave', sprite: 'chiave-oro', usa: 'porta', prezzo: 6, genere: 'f',
             dice: 'Apre una porta senza rispondere.' },
-  // niente sprite ancora: si vede la sua emoji (docs/sotterraneo/da-fare.md)
-  'pergamena-portale': { em: '📜', nome: 'Pergamena del portale', usa: 'portale', prezzo: PREZZO_PERGAMENA, genere: 'f', dopo: 'quaderno',
+  // lo sprite è un rotolo col sigillo ritagliato da scudi.png (il foglietto, strumenti/sprite/sorgenti/sotterraneo/generati/scudi.json)
+  'pergamena-portale': { em: '📜', nome: 'Pergamena del portale', sprite: 'pergamena-portale', usa: 'portale', prezzo: PREZZO_PERGAMENA, genere: 'f', dopo: 'quaderno',
                          dice: 'La apri e si accende un portale: ti porta a casa, e quando torni giù riparti proprio da qui.' },
 }
 
