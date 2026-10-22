@@ -18,6 +18,7 @@ import { rettangoloPersona, rettangoloPosto, sceltaDelTocco, personaVicina, aTer
 import { quotaA, quotaTerreno, quotaDellaCella, cellaDaDisegnare, pontiDi } from '../../src/giochi/sotterraneo/scena3d/mondo/suolo.js'
 import { trameDellaNebbia, segnaScoperte, MAI } from '../../src/giochi/sotterraneo/scena3d/mondo/nebbia.js'
 import { istanzeDelPezzo } from '../../src/giochi/sotterraneo/scena3d/mondo/natura.js'
+import { dueVicini } from '../../src/giochi/sotterraneo/scena3d/mondo/trame.js'
 import { controlla, uguale, dentro, nota, riassunto } from '../aiuto/verifica.mjs'
 
 const m = scheletroDelMondo()
@@ -159,6 +160,25 @@ uguale('quello in basso a destra l\'ultimo', pezzoDi(m, m.W - 0.5, m.H - 0.5), n
   uguale('una freccia sola', f.length, 1)
   uguale('con tutti i dungeon lungo la strada', f[0].posti.length, 14)
   uguale('un cartello, nel villaggio', postiDi(m, 'cartello').length, 1)
+}
+
+/* ── i ciottoli: il vicinato di 5×5 caselle dà lo stesso disegno di tutti i punti (docs/sotterraneo/prestazioni-3d.md) ── */
+{
+  const L = 256, n = 10
+  let s = 7; const r = () => ((s = (s * 16807) % 2147483647) / 2147483647)
+  const punti = []
+  for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) punti.push([(i + 0.2 + r() * 0.6) * L / n, (j + 0.2 + r() * 0.6) * L / n, r()])
+  let diversi = 0
+  for (let y = 0; y < L; y += 3) for (let x = 0; x < L; x += 3) {
+    let d1 = 1e9, d2 = 1e9, t = 0
+    for (const [px, py, pt] of punti) for (const ox of [-L, 0, L]) for (const oy of [-L, 0, L]) {
+      const d = Math.hypot(x - px - ox, y - py - oy)
+      if (d < d1) { d2 = d1; d1 = d; t = pt } else if (d < d2) d2 = d
+    }
+    const [e1, e2, u] = dueVicini(punti, n, L, x, y)
+    if (Math.abs(e1 - d1) > 1e-9 || u !== t || Math.min(1, (e2 - e1) / 6) !== Math.min(1, (d2 - d1) / 6)) diversi++
+  }
+  uguale('i ciottoli col vicinato sono quelli con tutti i punti', diversi, 0)
 }
 
 riassunto('il mondo di sopra in 3D')

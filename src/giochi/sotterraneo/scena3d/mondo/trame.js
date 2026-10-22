@@ -45,6 +45,21 @@ function dipingi(lato, f, forza = 2) {
   return { lato, col, nor: forza ? normaliDa(alt, lato, lato, forza) : null }
 }
 
+// I due punti più vicini a (x, y) fra quelli di un reticolo n×n che si ripete (uno per casella, a 0,2–0,8 della casella) e quel che porta
+// il più vicino: si guardano solo le 5×5 caselle attorno, non tutti i punti con le nove copie (900 distanze a pixel: tre secondi
+// all'apertura del mondo sul telefono lento, docs/sotterraneo/prestazioni-3d.md). Il più vicino dista al più 1,13 caselle, uno fuori
+// dalle 5×5 almeno 2,2: il bordo dei ciottoli (d2 − d1 sotto i 6 px) viene uguale
+export function dueVicini(punti, n, L, x, y) {
+  const c = L / n, ci = Math.floor(x / c), cj = Math.floor(y / c)
+  let d1 = 1e9, d2 = 1e9, t = 0
+  for (let j = cj - 2; j <= cj + 2; j++) for (let i = ci - 2; i <= ci + 2; i++) {
+    const ii = ((i % n) + n) % n, jj = ((j % n) + n) % n, [px, py, pt] = punti[jj * n + ii]
+    const d = Math.hypot(x - px - (i - ii) * c, y - py - (j - jj) * c)
+    if (d < d1) { d2 = d1; d1 = d; t = pt } else if (d < d2) d2 = d
+  }
+  return [d1, d2, t]
+}
+
 let pixel = null
 function pixelDelleTrame(L = 256) {
   if (pixel) return pixel
@@ -109,11 +124,7 @@ function pixelDelleTrame(L = 256) {
   const punti = []
   for (let j = 0; j < 10; j++) for (let i = 0; i < 10; i++) punti.push([(i + 0.2 + r() * 0.6) * L / 10, (j + 0.2 + r() * 0.6) * L / 10, r()])
   p.ciottoli = dipingi(L, (x, y) => {
-    let d1 = 1e9, d2 = 1e9, t = 0
-    for (const [px, py, pt] of punti) for (const ox of [-L, 0, L]) for (const oy of [-L, 0, L]) {
-      const d = Math.hypot(x - px - ox, y - py - oy)
-      if (d < d1) { d2 = d1; d1 = d; t = pt } else if (d < d2) d2 = d
-    }
+    const [d1, d2, t] = dueVicini(punti, 10, L, x, y)
     const bordo = Math.min(1, (d2 - d1) / 6), v = bordo < 0.3 ? 0.4 : (0.66 + t * 0.2) * (0.9 + k3(x, y) * 0.2)
     return [v, v * 0.95, v * 0.88, bordo]
   }, 3)

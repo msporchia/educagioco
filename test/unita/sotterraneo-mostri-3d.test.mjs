@@ -10,6 +10,7 @@
    src/ sono quelle dei prototipi (`npm run promuovi3d -- --controlla`).
    ═══════════════════════════════════════════════════════════════════ */
 import { existsSync } from 'node:fs'
+import { Vector3 } from 'three'
 import { MOSTRI } from '../../src/giochi/sotterraneo/dati/mostri.js'
 import { GROSSI } from '../../src/giochi/sotterraneo/dati/grossi.js'
 import { GRADI } from '../../src/giochi/sotterraneo/dati/varianti.js'
@@ -40,6 +41,22 @@ import { controlla, nota, riassunto } from '../aiuto/verifica.mjs'
 }
 
 /* ── ogni modello si costruisce, si anima, attacca e si salda ── */
+// dove stanno nel mondo i vertici delle mesh che si vedono (somme e quadrati): saldare non toglie né sposta vertici
+const _v = new Vector3()
+function impronta(g) {
+  g.updateMatrixWorld(true)
+  const s = [0, 0, 0, 0]
+  g.traverseVisible(o => {
+    if (!o.isMesh) return
+    const p = o.geometry.attributes.position
+    for (let i = 0; i < p.count; i++) { _v.fromBufferAttribute(p, i).applyMatrix4(o.matrixWorld); s[0] += _v.x; s[1] += _v.y; s[2] += _v.z; s[3] += _v.lengthSq() }
+  })
+  return s
+}
+const vicine = (a, b) => a.every((x, i) => Math.abs(x - b[i]) < 1e-3 + 1e-6 * a[3])   // a[3] dà la misura: le matrici composte sbagliano di poco
+// due istanze uguali: qualche modello pesca a caso costruendosi
+const casuale = Math.random
+const conSeme = (n, f) => { let s = n; Math.random = () => ((s = (s * 16807) % 2147483647) / 2147483647); try { return f() } finally { Math.random = casuale } }
 {
   const ids = new Set()
   for (const tipo of Object.keys(MOSTRI)) for (const grado of GRADI) for (const variante of [null, 'arciere', 'guerriero', 'mago']) {
@@ -48,7 +65,7 @@ import { controlla, nota, riassunto } from '../aiuto/verifica.mjs'
   for (const k of Object.keys(GROSSI)) { const id = idDi({ grosso: k }); if (id) ids.add(id) }
   let prima = 0, dopo = 0
   for (const id of ids) {
-    const g = costruisci(id)
+    const g = conSeme(7, () => costruisci(id))
     controlla(`${id}: si costruisce`, !!g && g.isObject3D)
     if (!g) continue
     const u = g.userData
@@ -68,6 +85,28 @@ import { controlla, nota, riassunto } from '../aiuto/verifica.mjs'
     const n1 = conta()
     controlla(`${id}: saldato resta qualcosa`, n1 > 0 && n1 <= n0, `${n0} → ${n1}`)
     prima += n0; dopo += n1
+    // saldato e no, nelle stesse pose, hanno i vertici negli stessi posti: nessun pezzo che si muove è finito in una saldatura. I
+    // gemelli hanno la stessa storia (qualche modello ricorda: la stessa sequenza di anima e attacca del saldato) e la stessa fase
+    const gemello = () => {
+      const n = conSeme(7, () => costruisci(id))
+      if (!n) return null
+      if ('fase' in g.userData) n.userData.fase = g.userData.fase   // la fase va col numero dell'istanza
+      try { const nu = n.userData; nu.anima(1.3); nu.anima(4.2); if (nu.attacco && nu.attacca) { nu.anima(0.5); nu.attacca(0.3); nu.attacca(nu.attacco.arrivo); nu.attacca(1) }; ferme(n) } catch (e) { /* già detto sopra */ }
+      return n
+    }
+    const nudo = gemello(), altro = gemello()
+    if (nudo && altro) {
+      let diverse = 0, capricci = 0, peggio = ''
+      for (let k = 0; k < 20; k++) {   // istanti e colpi fuori dalla griglia di `ferme`
+        const t = 0.53 + k * 1.37, p = ((k * 3) % 11) / 10
+        for (const m of [nudo, altro, g]) { m.userData.anima(t); if (k % 2 && m.userData.attacca) m.userData.attacca(p) }
+        const a = impronta(nudo)
+        if (!vicine(a, impronta(altro))) capricci++
+        else { const b = impronta(g); if (!vicine(a, b)) { diverse++; peggio = a.map((x, i) => (x - b[i]).toExponential(1)).join(' ') } }
+      }
+      if (capricci) nota(`${id}: due gemelli non saldati non vengono uguali, la saldatura non si confronta`)
+      controlla(`${id}: saldato, i vertici stanno dove stavano`, diverse === 0, `${diverse} pose diverse (${peggio})`)
+    }
   }
   nota(`${ids.size} modelli, mesh ${prima} → ${dopo} saldando i pezzi fermi`)
 }

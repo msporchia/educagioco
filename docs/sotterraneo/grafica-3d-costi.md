@@ -75,4 +75,6 @@ Sotterraneo di sempre non lo carica, né carica three. Il 3D non ha un
 tirava dentro i dati in comune col 2D, e il 2D finiva per caricare three)
 ([../core/avvio-e-memoria.md](../core/avvio-e-memoria.md)).
 
+Le scene più pesanti con la CPU rallentata (eroe, mostri, persone, anteprime): [prestazioni-3d.md](prestazioni-3d.md).
+
 Torna a [grafica-3d.md](grafica-3d.md).

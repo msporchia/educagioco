@@ -8,6 +8,7 @@ import { vesti, TIPI } from './eroi3d/armature.js'
 import { copri } from './eroi3d/copricapi.js'
 import { dotazioneDi } from './anteprime3d-pura.js'
 import { creaPezzo, vestiFigura, indossaGioiello } from './roba3d.js'
+import { ferme, salda } from './salda3d.js'
 
 export const eroe3dAcceso = () => typeof location === 'undefined' || !/[#&?]eroe2d\b/.test(location.hash + location.search)
 
@@ -60,14 +61,39 @@ function clonaMateriali(radice) {
   return lista
 }
 
+/** Le pose di un fotogramma: la guardia di fondo, la marcia se cammina, il colpo (0..1) se assalta, e quello che si anima da sé. */
+export function posa(g, t, cammina, colpo) {
+  posaGuardia(g, t * 0.12)
+  if (cammina) posaMarcia(g, t * 0.9)
+  if (colpo != null) posaColpo(g, colpo)
+  if (g.userData.anima) g.userData.anima(t * 0.12)
+  if (g.userData.animaArmatura) g.userData.animaArmatura(t * 0.12)
+  if (g.userData.armiAnima) for (const w of g.userData.armiAnima) {
+    if (w.userData.anima) w.userData.anima(t * 0.12)
+    if (w.userData.animaAlone) w.userData.animaAlone(t)
+  }
+}
+
+// L'eroe vestito si salda come i mostri (salda3d.js): vestito di tutto erano ~130 chiamate di disegno, la voce più cara dello scontro
+// (docs/sotterraneo/prestazioni-3d.md). Chi si muove lo dicono le pose stesse, provate su ~90 s di guardia (i gesti ogni 5-8 s), a
+// passi alterni con la marcia, e col colpo; le mesh ferme si saldano. Gli indici valgono per lo stesso eroe con la stessa roba.
+const saldabili = new Map()
+export function saldaEroe(g, chiave) {
+  posa(g, 0, false, null)   // la prima posa aggiunge pezzi (il mago): gli indici si contano dopo
+  if (!saldabili.has(chiave)) {
+    const prove = { anima: t => posa(g, t, (t * 7) % 2 > 1, null), attacca: p => posaColpo(g, p) }   // sopra la posa di adesso, come in aggiorna
+    if (saldabili.size > 40) saldabili.clear()
+    saldabili.set(chiave, ferme(g, prove, { prove: 240, passo: 3.1 }))
+  }
+  salda(g, saldabili.get(chiave), { ombre: true })
+}
+
 /** `scena`: dove si aggiunge. Torna `{ aggiorna(...), toglie() }`. */
 export function creaEroe3d(scena) {
   const radice = new Group(); radice.visible = false; scena.add(radice)
-  let chiave = null, g = null, tinte = [], arma = null, altezza = 1, firma = '', ultimaTinta = ''
+  let chiave = null, g = null, tinte = [], altezza = 1, firma = '', ultimaTinta = ''
 
   function monta(corsa) {
-    if (g) radice.remove(g)
-    g = creaEroe(chiave); radice.add(g)
     firma = ''; equipa(corsa)
     // l'altezza vera, cappello compreso: il mago è più alto del cavaliere e non deve sbucare sopra le colonne
     altezza = new Box3().setFromObject(g).getSize(new Vector3()).y || 1
@@ -78,8 +104,15 @@ export function creaEroe3d(scena) {
     const f = `${corsa.mano || ''}|${corsa.mancina || ''}|${corsa.corpo || ''}|${corsa.collo || ''}|${corsa.testa || ''}`
     if (f === firma) return
     firma = f
-    if (arma) arma()
-    arma = vestiEroe(g, corsa)
+    // saldato, l'eroe non si sveste più pezzo per pezzo: si rifà da capo (le geometrie e i materiali di serie stanno in cache)
+    if (g) {
+      radice.remove(g)
+      g.traverse(o => { if (o.userData.saldata) o.geometry.dispose() })
+      for (const t of tinte) t.m.dispose()
+    }
+    g = creaEroe(chiave); radice.add(g)
+    vestiEroe(g, corsa)
+    try { saldaEroe(g, `${chiave}|${f}`) } catch (e) { console.warn('eroe 3D: non si salda', e) }   // resta com'è, solo più caro
     tinte = clonaMateriali(g)
     ultimaTinta = ''
   }
@@ -95,16 +128,7 @@ export function creaEroe3d(scena) {
       radice.scale.setScalar(k)
       radice.position.set(x, y, z)
       g.rotation.y = Math.atan2(e.lx, e.lz)
-      // le pose: guardia di fondo; se cammina la marcia sulle gambe e sulle braccia; se assalta il colpo
-      posaGuardia(g, e.t * 0.12)
-      if (e.cammina) posaMarcia(g, e.t * 0.9)
-      if (e.assalto) posaColpo(g, Math.min(1, e.assalto.t / Math.max(0.01, e.assalto.picco)))
-      if (g.userData.anima) g.userData.anima(e.t * 0.12)
-      if (g.userData.animaArmatura) g.userData.animaArmatura(e.t * 0.12)
-      if (g.userData.armiAnima) for (const w of g.userData.armiAnima) {
-        if (w.userData.anima) w.userData.anima(e.t * 0.12)
-        if (w.userData.animaAlone) w.userData.animaAlone(e.t)
-      }
+      posa(g, e.t, e.cammina, e.assalto ? Math.min(1, e.assalto.t / Math.max(0.01, e.assalto.picco)) : null)
       // il lampo
       const rosso = Math.min(1, e.colpito * 2), verde = Math.min(1, e.cura * 1.2)
       const tinta = `${rosso.toFixed(2)}|${verde.toFixed(2)}|${trasparenza.toFixed(2)}`
