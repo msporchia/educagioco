@@ -18,7 +18,7 @@ const SCENA = 'src/giochi/sotterraneo/scena3d'
 export const SEGNO = 'Generato da strumenti/promuovi-3d.mjs'
 
 // i moduli della roba: uno per famiglia di figure (il prefisso dell'id → la famiglia sta in strumenti/mappa-roba3d.mjs)
-export const FAMIGLIE_ROBA = ['lame', 'bastoni', 'scudi', 'vesti', 'gioielli']
+export const FAMIGLIE_ROBA = ['lame', 'bastoni', 'scudi', 'vesti', 'gioielli', 'pozioni']
 const CATALOGO_ROBA = 'catalogo-roba.js'
 
 // I gruppi: dove vanno e da quali file si parte. `elenchi`: per i mostri, il file → l'export con l'elenco delle creature
@@ -91,8 +91,9 @@ async function zonaPronta(rel, elenchi) {
   }
 }
 
-/** Un modulo della roba è pronto se la sua copia si importa (in una cartella di prova sotto tmp/), esporta `crea` e costruisce
- *  almeno una figura della sua famiglia: un modulo a metà resta fuori, e le sue figure ripiegano sulla base (roba3d.js). */
+/** Un modulo della roba è pronto se la sua copia si importa (in una cartella di prova sotto tmp/) e costruisce almeno una figura
+ *  della sua famiglia: `crea(figura)`, o `vesti(eroe, figura)` su un eroe, o `crea(chiave)` per i consumabili (che hanno `CHIAVI`).
+ *  Un modulo a metà resta fuori, e le sue figure ripiegano sulla base (roba3d.js). */
 async function moduloPronto(rel) {
   const famiglia = basename(rel, '.js')
   const prova = resolve(RADICE, 'tmp/promuovi-prova', famiglia)
@@ -103,10 +104,23 @@ async function moduloPronto(rel) {
     const figure3d = pathToFileURL(resolve(RADICE, 'src/giochi/sotterraneo/dati/figure3d.js')).href
     writeFileSync(resolve(prova, CATALOGO_ROBA), testoCatalogo(figure3d))
     const m = await import(pathToFileURL(resolve(prova, `${famiglia}.js`)).href + `?${Date.now()}`)
-    if (typeof m.crea !== 'function') throw new Error('non esporta crea')
     const { FIGURE3D } = await import(figure3d)
     const figure = Object.entries(FIGURE3D).filter(([, f]) => f.famiglia === famiglia).map(([id, f]) => ({ id, ...f }))
-    if (!figure.some(f => { try { return !!(m.crea(f) && m.crea(f).isObject3D) } catch (e) { return false } })) throw new Error('non costruisce nessuna figura')
+    const prova1 = fn => { try { return !!fn() } catch (e) { return false } }
+    if (Array.isArray(m.CHIAVI) && typeof m.crea === 'function') {
+      if (!m.CHIAVI.some(k => prova1(() => m.crea(k).isObject3D))) throw new Error('non costruisce nessun consumabile')
+    } else if (typeof m.vesti === 'function') {
+      // l'eroe disegna la faccia su una tela: in Node ne basta una finta, per il tempo della prova
+      const c2d = new Proxy({}, { get: (_, k) => (k === 'canvas' ? {} : () => ({ data: [] })), set: () => true })
+      const prima = globalThis.document
+      if (!prima) globalThis.document = { createElement: () => ({ width: 0, height: 0, getContext: () => c2d }) }
+      try {
+        const { creaEroe } = await import(pathToFileURL(resolve(RADICE, 'poc/eroi-3d/eroi.js')).href)
+        if (!figure.some(f => prova1(() => typeof m.vesti(creaEroe('cavaliere'), f) === 'function'))) throw new Error('non veste nessuna figura')
+      } finally { if (!prima) delete globalThis.document }
+    } else if (typeof m.crea === 'function') {
+      if (!figure.some(f => prova1(() => m.crea(f).isObject3D))) throw new Error('non costruisce nessuna figura')
+    } else throw new Error('non esporta né crea né vesti')
     return true
   } catch (e) {
     console.warn(`  ${rel}: non è pronto (${String(e.message).split('\n')[0]}), resta fuori`)
