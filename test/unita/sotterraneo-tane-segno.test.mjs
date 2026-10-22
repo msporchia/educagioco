@@ -147,6 +147,19 @@ for (const R of luoghi) {
     if (f === 'ceneri') controlla(`${R.chiave}: le braci accese`, conBraci.has(R.chiave))
   }
   nota(`${luoghi.length} tane, ${Math.round(triTana / luoghi.length)} triangoli l'una (${Math.round(triTana / 1000)}k in tutto il mondo)`)
+
+  // i dischi accesi della fossa di braci si ritrovano nella mesh unita col nome della tana: la scena li fa cenere senza rifare il pezzo
+  const R = luoghi.find(x => FAMIGLIA_DI[x.habitat] === 'ceneri')
+  const fossa = tutti.filter(o => o.tana === R.chiave && o.tipo === 'braciTana')
+  const c = new Cantiere()
+  disegnaPropsAperti(m, 0, c, { camini: [], braci: [], fuochi: [], spruzzi: [] }, fossa)
+  const finte = { pietra: {}, legno: {}, liscio: {}, luce: {} }
+  const luce = c.chiudi(finte).find(me => me.material === finte.luce)
+  const segni = (luce && luce.userData.segni) || []
+  uguale(`${R.chiave}: i quattro dischi accesi portano il segno della tana`, segni.filter(sg => sg.segno === R.chiave).length, 4 * fossa.length)
+  const col = luce.geometry.attributes.color, sg = segni[0]
+  controlla('e i vertici segnati sono quelli accesi (rossi)', Array.from({ length: sg.quanti }, (_, i) => col.getX(sg.da + i)).every(r => r > 0.99))
+  uguale('i vertici segnati stanno dentro la mesh', segni.every(s => s.da + s.quanti <= col.count), true)
 }
 
 /* ── il signore morto: il segno di vita si spegne, la tana resta, anche dopo che la zona è stata dimenticata ── */
