@@ -64,9 +64,9 @@ Lo dicono le cose stesse: `liv` sul pezzo, sull'edificio, sulla coltura e sulla 
   melanzane/peperoni 39, cipolle/aglio 44, fragole 50, lavanda 54, riso 60.
 - **Una ricetta dichiara il livello vero**: il più tardo fra il suo, quello della sua macchina e quello dei suoi ingredienti (`livelloDellaRicetta`, uguale a
   quello della 2D). Se non coincide col `liv` scritto è un guasto.
-- **Venti-due livelli non aprono niente** (3, 7, 10, 12, 15, 19, 21, 29, 32, 35, 36, 41, 43, 47, 49, 59, 65–70): la 3D ha meno cose della 2D (niente bestie
-  di casa, conigliera, arnie, alpaca, asini, peschiera, botteghe, solo dieci decorazioni). Il foglio lo dice («Niente di nuovo qui») e l'avviso anche («Livello 3:
-  niente di nuovo, ma sei più in alto!»); il giro G5–G8 li riempie. Il primo livello non è mai vuoto (guasto).
+- **Diciotto livelli non aprono niente** (3, 7, 10, 12, 15, 19, 32, 35, 41, 47, 49, 59, 65–70): la 3D ha meno cose della 2D (niente bestie
+  di casa, conigliera, arnie, alpaca, asini, peschiera, solo dieci decorazioni; le botteghe ci sono: 21, 29, 36 e 43). Il foglio lo dice («Niente di nuovo qui») e l'avviso anche («Livello 3:
+  niente di nuovo, ma sei più in alto!»); il giro G5, G6 e G8 li riempie. Il primo livello non è mai vuoto (guasto).
 - **I nomi stanno sulla cosa** (`NOMI`), l'ordine è la precedenza quando due cose arrivano insieme.
 - **Compagni, abiti, villaggi, posti del banco** erano scritti sulla scala vecchia (finiva al 18): stanno nello stesso punto del percorso
   (`sullaScalaDellaDueD(l)` = `1 + (l-1)·69/17`: il 6 vecchio è il 21, il 13 è il 50). Eccezione: **Watson, Sherlock e Irene** restano ai livelli 1–3 (gli animali

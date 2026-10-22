@@ -24,6 +24,7 @@ export const VOCE = {
   friggitoria: 'friggitoria', sushi_bar: 'sushi_bar', pentolone: 'pentolone',
   anatre: 'stagno_anatre', porcile: 'porcile', capre: 'recinto_capre',
   conigliera: 'conigliera', alpaca: 'recinto_alpaca', asini: 'recinto_asini', arnie: 'arnie',      // giro G5 (dati/cortile2.js); la peschiera non c'è: la pesca ne prende il posto (LIVELLO_PESCA)
+  bottega_pasticceria: 'pasticceria', bottega_osteria: 'osteria', bottega_mensa: 'mensa', bottega_merceria: 'merceria',      // le botteghe del paese (giro G7)
 }
 
 /** Le decorazioni portate in 3D (giro G8): le famiglie della 2D che hanno un disegno 3D, e i loro id. Lo stesso id che in 2D (gli id dei contenuti non

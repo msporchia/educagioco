@@ -1,0 +1,52 @@
+/* Il foglio di una bottega del paese (viste/Bottega.vue): l'insegna col colore della bottega, i cuori, un foglietto per bancone. Prefisso .f3-bt-;
+   i fogli veri (.f3-foglio, .f3-colonna, .f3-chiudi, .f3-corpo, .f3-messaggio, .f3-nota) vengono da stile.css. Ogni bottega ha il suo
+   colore (--tema, --tema-scuro). Si muove poco, col tempo; prefers-reduced-motion lo ferma. */
+.f3-bt.f3-foglio { padding: 0; overflow: hidden; color: #3a2a1a; background: #fbf3df; --tema: #c2788f; --tema-scuro: #8f4a63; }
+.f3-bt[data-bottega="bottega_osteria"] { --tema: #a8403a; --tema-scuro: #6f2a26; }
+.f3-bt[data-bottega="bottega_mensa"] { --tema: #4f8fc8; --tema-scuro: #2f5f8a; }
+.f3-bt[data-bottega="bottega_merceria"] { --tema: #8a68b8; --tema-scuro: #5a3f85; }
+.f3-bt .f3-corpo { padding: 0 12px calc(16px + env(safe-area-inset-bottom)); }
+.f3-bt .f3-messaggio { margin: 8px 0 0; }
+.f3-bt .f3-nota { margin: 12px 2px 0; }
+
+.f3-bt-testa { flex: none; display: flex; align-items: center; gap: 12px; min-height: 84px; padding: 14px 64px 12px 16px; margin-bottom: 8px; border-radius: 22px 22px 0 0;
+  background: linear-gradient(180deg, var(--tema), var(--tema-scuro)); box-shadow: 0 3px 8px rgba(0,0,0,.2); color: #fff; }
+.f3-bt-testa .insegna { flex: none; display: grid; place-items: center; width: 56px; height: 56px; border-radius: 16px; background: rgba(255,255,255,.92); font: 34px/1 "Emoji Gioco", system-ui, sans-serif; box-shadow: 0 2px 0 rgba(0,0,0,.22); }
+.f3-bt-testa .titolo { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.f3-foglio .f3-bt-testa h2 { margin: 0; font-size: 23px; line-height: 1.1; color: #fff; text-shadow: 0 2px 0 rgba(0,0,0,.3); }
+.f3-bt-testa small { font-size: 13px; font-weight: 800; text-shadow: 0 1px 0 rgba(0,0,0,.3); }
+.f3-bt-x.f3-chiudi { top: 14px; right: 14px; background: #fff; box-shadow: 0 2px 0 rgba(0,0,0,.2); }
+
+.f3-bt-fama { display: flex; justify-content: center; gap: 6px; margin: 10px 0 2px; font-size: 26px; line-height: 1; font-family: "Emoji Gioco", system-ui, sans-serif; }
+.f3-bt-fama .cuore.pieno { animation: f3-bt-batti 2.4s ease-in-out infinite; }
+
+.f3-bt-banchi { display: flex; flex-direction: column; gap: 12px; margin-top: 10px; }
+.f3-bt-banco { padding: 10px; border-radius: 18px; background: #fffdf6; border: 2px solid #ecd9a8; box-shadow: 0 3px 0 #ecd9a8; animation: f3-compari .35s both; }
+.f3-bt-banco.pronto { border-color: #5fae3a; box-shadow: 0 3px 0 #5fae3a; background: #f3fbe9; }
+.f3-bt-banco .chi { display: flex; align-items: center; gap: 10px; }
+.f3-bt-banco .ritratto { flex: none; display: grid; place-items: center; width: 48px; height: 48px; border-radius: 50%; background: #fff; box-shadow: inset 0 0 0 3px #e9d9b4; font: 28px/1 "Emoji Gioco", system-ui, sans-serif; }
+.f3-bt-banco .nome { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; font-size: 16px; }
+.f3-bt-banco .nome small { font-size: 12px; font-weight: 800; color: #7a5a3a; }
+.f3-bt-banco .premio { font: 800 14px "Emoji Gioco", system-ui, sans-serif; color: #7a5a3a; }
+.f3-bt-banco .butta { flex: none; width: 44px; height: 44px; border: 0; border-radius: 14px; background: #efe4cf; font: 20px/1 "Emoji Gioco", system-ui, sans-serif; touch-action: manipulation; box-shadow: 0 2px 0 rgba(0,0,0,.18); }
+.f3-bt-banco .merci { display: flex; flex-wrap: wrap; gap: 14px; margin: 10px 0 8px; }
+.f3-bt-banco .merce { display: flex; align-items: center; gap: 8px; padding: 4px 10px 4px 6px; border-radius: 14px; background: #fff; border: 2px solid #ecd9a8; }
+.f3-bt-banco .merce.ok { border-color: #5fae3a; }
+.f3-bt-banco .nome-merce { font-size: 14px; font-weight: 800; }
+.f3-bt-banco .conto { font: 800 15px "Emoji Gioco", system-ui, sans-serif; }
+.f3-bt-banco .conto.ok { color: #2d7a2d; } .f3-bt-banco .conto.manca { color: #c0392b; }
+.f3-bt-banco .consegna { width: 100%; min-height: 48px; padding: 6px 12px; border: 0; border-radius: 14px; background: linear-gradient(180deg, #7ed957, #3fae3a); color: #fff; font: 800 16px/1.1 "Emoji Gioco", system-ui, sans-serif;
+  text-shadow: 0 1px 0 rgba(0,0,0,.25); box-shadow: 0 3px 0 #2a7a28, 0 5px 8px rgba(0,0,0,.2); touch-action: manipulation; }
+.f3-bt-banco .consegna:active { transform: translateY(2px); box-shadow: 0 1px 0 #2a7a28; }
+.f3-bt-banco .consegna.spenta { background: linear-gradient(180deg, #d4dacb, #b0b8a6); box-shadow: 0 3px 0 #858c7b, 0 5px 8px rgba(0,0,0,.15); color: #f4f4ee; text-shadow: none; }
+.f3-bt-banco.attesa { display: flex; align-items: center; gap: 10px; background: #f6efe0; border-style: dashed; box-shadow: none; }
+.f3-bt-banco.attesa .ritratto { animation: f3-bt-clessidra 3s ease-in-out infinite; }
+
+@keyframes f3-bt-batti { 50% { transform: scale(1.12); } }
+@keyframes f3-bt-clessidra { 50% { transform: rotate(18deg); } }
+@media (min-width: 700px) {
+  .f3-bt.f3-foglio { left: 0; right: 0; margin: 0 auto; max-width: 720px; border-radius: 22px 22px 0 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .f3-bt *, .f3-bt *::before, .f3-bt *::after { animation: none !important; transition: none !important; }
+}

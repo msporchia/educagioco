@@ -10,7 +10,7 @@ Dati in `dati/mongolfiera.js`, regole in `motore/mongolfiera.js`, il foglio in `
 
 - **Si compra al livello 10** (🪙 100, edificio unico, `EDIFICI.mongolfiera`): il livello d'ingresso è quello dell'edificio e non è cambiato. Si mette dove si vuole nel terreno proprio come ogni edificio ([edifici-liberi.md](edifici-liberi.md)); non si mette via se è in volo o già caricata, si sposta sempre e la stiva la segue.
   Comprata, atterra subito un carico.
-- **Un carico: tre file di casse, una merce per fila** (`FILE`), **2–3 casse per fila** (`CASSE_MIN`, `CASSE_MAX`) e **lo stesso numero di pezzi in
+- **Un carico: tre file di casse, una merce per fila** (`FILE`; **quattro dal livello 66**, `fileAl(livello)`: `LIVELLO_GRANDE` e `FILE_GRANDE` si leggono dalla 2D, è il pallone che cresce col livello, non una cosa da comprare), **2–3 casse per fila** (`CASSE_MIN`, `CASSE_MAX`) e **lo stesso numero di pezzi in
   ogni cassa della fila** (da 1 a 2 pezzi sotto il livello 14, da 1 a 3 dopo: `pezziMaxAl`). «Tre pasta» si legge in un'occhiata e un
   bambino sa quanta roba preparare. Se al livello ci sono meno di tre merci le file sono meno (a 10: pasta e pane).
 - **Solo prodotti finiti** (`merceDaCassa`): ricette con **due lavorazioni o più** (`fasiDi`: la pasta è farina + uova, due; la
@@ -97,7 +97,7 @@ stato.mongolfiera = {
 
 ## Cosa non c'è, rispetto alla 2D
 
-- **Niente quarta fila** a livello alto (la mongolfiera grande della 2D, dal 66): la 3D non ha ancora tanti livelli.
+- **La quarta fila c'è** (dal 66, come la mongolfiera grande della 2D: la scala dei livelli ora è la stessa). Un carico già salvato con tre file resta com'è; il nuovo ne ha quattro. Il foglio scorre.
 - **Niente albero che si apre dalla merce che manca**: la 3D non ha la pagina dell'albero; la faccia dice cosa serve e il tocco sul tasto spento dice cosa manca.
 - **Niente piazzola che cambia disegno quando è partita**: il pallone parte davvero, la base resta.
 - **Nessuna fiera di otto decorazioni dedicate**: la sorpresa è un decoro del catalogo (sopra).

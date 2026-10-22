@@ -75,6 +75,8 @@ export const POSTI_STORICI = {
   friggitoria:   { i: 10, j: 5, nuovo: true },                                       // nati dopo i posti liberi come il fienile: servono solo ai controlli (`nuovo`)
   sushi_bar:     { i: -4, j: 6, nuovo: true },
   pentolone:     { i: 11, j: 1, nuovo: true },                                        // idem (giro G4)
+  bottega_pasticceria: { i: -12, j: -12, nuovo: true }, bottega_osteria: { i: -8, j: -10, nuovo: true },      // le botteghe del paese (giro G7): idem
+  bottega_mensa: { i: 5, j: -10, nuovo: true }, bottega_merceria: { i: -12, j: -7, nuovo: true },
 }
 
 // ciò che c'è sempre e non si sposta: la casa di scena (non si compra, ingombra soltanto). C'era anche un fienile di scena: tolto il 22/10/2026
