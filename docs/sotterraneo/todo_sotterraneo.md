@@ -10,11 +10,10 @@ rimasti aperti. Quando una voce si chiude si toglie da qui (la storia sta in `gi
 
 ### A metà: cosa non è ancora fatto
 
-- **Le terre successive** (compito E, mai cominciato): la porta delle terre in fondo alla landa (si apre ripulendo le tombe del vento),
-  il nuovo villaggio con la sua tinta di terreno e cielo, `terra` e `mondi[t]` nell'avventura, `terraOra()` in `Gioco.vue` (oggi
-  sempre 1) da sostituire con `terraDi`, i testi del minatore e del capitano che annunciano la porta. Il parametro `livelloDellaTerra`
-  c'è già nel generatore (stessa mappa e firma, fasce +14 a terra, tetto cinque terre). → [mondo-a-percorso.md](mondo-a-percorso.md),
-  [mondo-a-percorso-lavori.md](mondo-a-percorso-lavori.md) (compito E).
+- **Il viaggio indietro fra le terre**: le terre successive ci sono ([terre-successive.md](terre-successive.md)), ma dal villaggio di
+  una terra dopo non si torna a quelle già viste (il motore lo sa già, `passaTerra(a, t)`; manca il modo nel gioco: la porta nei due
+  versi o la pietra del villaggio). Restano anche la medaglia per una terra nuova (il primato `sotTerra` c'è) e il minatore che
+  racconta i volti nuovi; le terre dopo la prima vanno tarate col banco (`--terra 2`) insieme al resto.
 - **Gli screen delle sette zone con i nemici** chiesti da Marco: ora c'è `scatta-app.mjs --tana <luogo>` (`--tana lista`); mancano le
   foto per zona e lo scontro all'aperto.
 - **La torcia nel dungeon** (quasi chiuso, `corsa.js:264`): nello screenshot di Marco (torre, piano 3 di 3) si vede un cerchio di ~3 celle:
@@ -96,7 +95,7 @@ fuori») e i branchi a 14 celle (`292a98f5`); il villaggio tondo (24×20); la sc
 - **L'elmo è uno slot tutto suo** (lavoro grosso: drop, botteghe, zaino, `copri` dell'eroe 3D): non iniziato.
 - **Nessuna riga di novità per i bambini** per ora.
 - **La taratura solo a lavoro finito.**
-- Aperto: dopo l'ultima terra c'è un tetto a cinque, e il viaggio indietro dalla porta del villaggio va deciso.
+- **Le terre finiscono alla quinta**: lì la porta resta chiusa. Aperto: il viaggio indietro (sopra, «A metà»).
 
 ## 2. Eroi, mostri ed effetti in 3D (sessione Mostri renderizzati)
 
