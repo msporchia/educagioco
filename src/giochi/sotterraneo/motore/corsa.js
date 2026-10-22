@@ -21,7 +21,8 @@ import { valoreDelLivello } from '../dati/pezzi.js'
 import { esperienzaDi, gemmeDi } from '../dati/livelli.js'
 import { potenzaDelMostro } from './potenza.js'
 import { espNellaZona } from '../dati/zone.js'
-import { pezzoNuovo, pezzoDelGrosso, pezzoDalMostro, livelloDelBottino, livelloDelTrovato, tiroDalSeme, elisirCade, ampollaCade, pergamenaCade, CURE_DAI_MOSTRI } from './bottino.js'
+import { pezzoNuovo, pezzoDelGrosso, pezzoDalMostro, livelloDelBottino, livelloDelTrovato, tiroDalSeme, elisirCade, ampollaCade, pergamenaCade, CURE_DAI_MOSTRI,
+         copricapoDalTrovato } from './bottino.js'
 import { generaPiano } from './livello.js'
 import { percorso, viaVerso, primaLibera } from '../../../motore/passi.js'
 import { Corredo, eCura, curePerTipo } from './corredo.js'
@@ -53,12 +54,13 @@ const RINCARO = { porta: -0.05, forziere: 0.25, fonte: 0, mostro: 0.05, capo: 0.
 export class Corsa extends Corredo {
   // `missioni`: quelle prese che riguardano questa discesa (motore/missioni.js, presePer)
   // `crescita`: l'esperienza e i punti dell'avventura (motore/crescita.js): l'eroe sale di livello anche giù
-  constructor(tappa, { seme = null, rnd = Math.random, eroe = DI_PARTENZA, roba = null, missioni = [], crescita = null, ricomparsa = true, botti = false, conti = {} } = {}) {
+  constructor(tappa, { seme = null, rnd = Math.random, eroe = DI_PARTENZA, roba = null, missioni = [], crescita = null, ricomparsa = true, botti = false, copricapi = false, conti = {} } = {}) {
     super({ eroe, roba, crescita })
     // la pergamena del portale si trova (rara) solo dopo la missione dell'incantatrice: lo dice chi gioca (Gioco.vue)
     this.pergameneTrovabili = false
     this.ricomparsa = ricomparsa   // i mostri morti tornano (motore/ricomparsa.js); il banco la spegne: misura un passaggio solo
     this.botti = botti             // le botti da rompere (motore/botti.js): solo il Sotterraneo 3D le accende; il 2D e il banco no
+    this.copricapi = copricapi     // i copricapi nel bottino (Corredo.copricapi, docs/sotterraneo/elmo.md): lo stesso, solo il 3D
     this.tappa = tappa
     // il posto nella storia (−1 l'abisso, che pesca come sempre): dice cosa deve dare questa discesa
     this.indice = indiceDella(tappa)
@@ -140,6 +142,14 @@ export class Corsa extends Corredo {
   livelloDelTrovato(chi, x, y, sale = 0) {
     const sem = [this.seme, this.piano, x, y]
     return livelloDelTrovato(this.livelloEroe, chi, tiroDalSeme(31 + sale, ...sem), tiroDalSeme(37 + sale, ...sem))
+  }
+  // un pezzo trovato, o il copricapo che prende il suo posto dove i copricapi sono accesi (motore/bottino.js, copricapoDalTrovato): i tiri
+  // dal seme, dal piano e dal posto, con un sale loro
+  trovato(k, x, y, sale = 0) {
+    if (!this.copricapi) return k
+    const sem = [this.seme, this.piano, x, y]
+    let i = 0
+    return copricapoDalTrovato(k, { tiro: tiroDalSeme(101 + sale, ...sem), sorte: () => tiroDalSeme(211 + sale + 17 * ++i, ...sem), tua: b => this.porta(b) })
   }
   get quantiPiani() { return this.tappa.piani }
 
@@ -843,17 +853,17 @@ export class Corsa extends Corredo {
     }
     // il mostro grosso: di sicuro un pezzo raro o meglio, e il suo pezzo col nome
     if (m.grosso) {
-      this.posaPezzo(pezzoNuovo({ livello: this.livelloDelTrovato('grosso', m.x, m.y), chi: 'grosso', fortuna: this.fortuna,
-                                  rnd: () => this.rnd(), tua: k => this.porta(k) }), { x: m.x - 1, y: m.y })
+      this.posaPezzo(this.trovato(pezzoNuovo({ livello: this.livelloDelTrovato('grosso', m.x, m.y), chi: 'grosso', fortuna: this.fortuna,
+                                               rnd: () => this.rnd(), tua: k => this.porta(k) }), m.x, m.y), { x: m.x - 1, y: m.y })
       this.posaPezzo(pezzoDelGrosso(GROSSI[m.grosso].pezzo, this.livelloDelTrovato('grosso', m.x, m.y, 1)), { x: m.x, y: m.y + 1 })
     } else if (this.rnd() < pezzoDalMostro(scheda)) {
       // a volte anche un mostro qualunque lascia un pezzo da mettersi addosso, a tono col posto e con l'eroe
-      this.posaPezzo(pezzoNuovo({ livello: this.livelloDelTrovato('mostro', m.x, m.y), chi: 'mostro', fortuna: this.fortuna,
-                                  rnd: () => this.rnd(), tua: k => this.porta(k) }), { x: m.x, y: m.y + 1 })
+      this.posaPezzo(this.trovato(pezzoNuovo({ livello: this.livelloDelTrovato('mostro', m.x, m.y), chi: 'mostro', fortuna: this.fortuna,
+                                               rnd: () => this.rnd(), tua: k => this.porta(k) }), m.x, m.y), { x: m.x, y: m.y + 1 })
     }
     // il signore di una regione di sopra (motore/aperta.js): un raro della fascia di sicuro, come il grosso ma al livello di un mostro
-    if (m.signore) this.posaPezzo(pezzoNuovo({ livello: this.livelloDelTrovato('mostro', m.x, m.y), chi: 'grosso', fortuna: this.fortuna,
-                                               rnd: () => this.rnd(), tua: k => this.porta(k) }), { x: m.x - 1, y: m.y })
+    if (m.signore) this.posaPezzo(this.trovato(pezzoNuovo({ livello: this.livelloDelTrovato('mostro', m.x, m.y), chi: 'grosso', fortuna: this.fortuna,
+                                                            rnd: () => this.rnd(), tua: k => this.porta(k) }), m.x, m.y, 1), { x: m.x - 1, y: m.y })
     // l'elisir del toro: rarissimo, dal grosso o da un caporale (e dai forzieri)
     const chi = m.grosso ? 'grosso' : m.caporale ? 'caporale' : null
     if (chi && elisirCade(chi, this.seme, this.piano, m.x, m.y)) this.posaPezzo('elisir-toro', { x: m.x + 1, y: m.y + 1 })
@@ -1007,8 +1017,8 @@ export class Corsa extends Corredo {
     const tiro = this.rnd()
     let cosa = premio
     if (!cosa && tiro < (this.indice >= 0 ? 0.34 : 0.6))
-      cosa = pezzoNuovo({ livello: this.livelloDelTrovato('forziere', f.x, f.y), chi: 'forziere', fortuna: this.fortuna,
-                          rnd: () => this.rnd(), tua: k => this.porta(k) })
+      cosa = this.trovato(pezzoNuovo({ livello: this.livelloDelTrovato('forziere', f.x, f.y), chi: 'forziere', fortuna: this.fortuna,
+                                       rnd: () => this.rnd(), tua: k => this.porta(k) }), f.x, f.y)
     if (!cosa) cosa = pescaCosa(NEI_FORZIERI_DELLA_STORIA, { rnd: () => this.rnd(), tua: k => this.porta(k) })
     this.posaPezzo(cosa, { x: f.x, y: f.y + 1 }, 'forziere')
     if (elisirCade('forziere', this.seme, this.piano, f.x, f.y)) this.posaPezzo('elisir-toro', { x: f.x - 1, y: f.y + 1 })

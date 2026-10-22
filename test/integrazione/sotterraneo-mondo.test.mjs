@@ -63,7 +63,10 @@ uguale('e non la terra dipinta', await page.locator('[data-terra]').count(), 0)
   const g = await g3d()
   uguale('lo disegna il mondo di sopra', g.mondo, true)
   controlla('i nove pezzi attorno al villaggio', g.pezzi.length === 9, g.pezzi.join())
-  dentro('sotto le 150 chiamate', g.chiamate, 10, 150)
+  // le persone del villaggio in 3D (docs/sotterraneo/persone-3d.md): quattro o cinque chiamate l'una, una trentina in più degli
+  // sprite (con gli sprite stava sotto le 150)
+  dentro('sotto le 200 chiamate', g.chiamate, 10, 200)
+  controlla('le persone del villaggio hanno il modello 3D', g.persone3d && g.persone3d.visibili >= 7, JSON.stringify(g.persone3d))
   dentro('sotto i 400 mila triangoli', g.triangoli, 1000, 400000)
   nota(`dal villaggio: ${g.chiamate} chiamate, ${Math.round(g.triangoli / 1000)}k triangoli, ${g.figure} figure, un pezzo in ${g.msPezzi} ms (SwiftShader)`)
   // dalla partenza si vedono tutti quelli del villaggio, senza muoversi né girare, e il tocco va a ognuno (non a chi gli sta accanto)
@@ -97,6 +100,10 @@ await scatto(page, 'sotterraneo-mondo-villaggio')
 await toccaNelMondo(page, '[data-personaggio="ragazza"]', { tocca })
 await page.waitForSelector('[data-dialogo="ragazza"]', { timeout: 60000 })
 controlla('toccata la ragazza, si apre il suo dialogo', true)
+{
+  const ok = await page.waitForSelector('[data-ritratto-dialogo] [data-anteprima-chiave="persona:ragazza"]', { state: 'attached', timeout: 15000 }).then(() => true).catch(() => false)
+  controlla('il ritratto del dialogo è la faccia del modello 3D', ok, await page.evaluate(() => (document.querySelector('[data-ritratto-dialogo]') || {}).innerHTML + ' ' + JSON.stringify(window.__anteprime3d && window.__anteprime3d.stato())))
+}
 await scatto(page, 'sotterraneo-mondo-ragazza')
 await nelDialogo(page, '[data-scelta="ciao"]')
 
@@ -106,6 +113,10 @@ await page.waitForSelector('[data-dialogo="armaiolo"]', { timeout: 60000 })   //
 await nelDialogo(page, '[data-scelta="bottega"]')
 await page.waitForSelector('[data-bottega][data-mercante-aperto="armaiolo"]', { timeout: 8000 })
 controlla('la bottega del fabbro si apre', true)
+{
+  const ok = await page.waitForSelector('[data-bottega] .sot-targa [data-anteprima-chiave="persona:armaiolo"]', { state: 'attached', timeout: 30000 }).then(() => true).catch(() => false)
+  controlla('col ritratto 3D del fabbro', ok, await page.evaluate(() => (document.querySelector('[data-bottega] .sot-targa') || {}).innerHTML + ' ' + JSON.stringify(window.__anteprime3d && window.__anteprime3d.stato())))
+}
 await scatto(page, 'sotterraneo-mondo-bottega')
 await page.click('[data-bottega] [data-chiudi]')
 await attendi(page, 500)

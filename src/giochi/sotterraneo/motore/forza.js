@@ -212,7 +212,7 @@ export function forzaDi(eroe, roba, crescita) {
 }
 export function forzaDelCorredo(c) {
   const cr = c.crescita || {}
-  const chiave = [c.chiEro, c.mano, c.mancina, c.corpo, c.collo, c.dito, c.dito2, cr.esp, cr.forza, cr.destrezza, cr.intelligenza, cr.tempra,
+  const chiave = [c.chiEro, c.mano, c.mancina, c.corpo, c.collo, c.dito, c.dito2, c.testa, cr.esp, cr.forza, cr.destrezza, cr.intelligenza, cr.tempra,
                   JSON.stringify(cr.albero || {}), (cr.caselle || []).join(',')].join('|')
   if (memoria.has(chiave)) return memoria.get(chiave)
   if (memoria.size > 200) memoria.clear()

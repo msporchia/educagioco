@@ -530,8 +530,14 @@ export async function fermoNelMondo(page) {
 // tocca il centro di un bersaglio del mondo (un elemento HTML sopra la tela): `tocca(x, y)` il dito, di difetto il mouse
 export async function toccaNelMondo(page, sel, { tocca = null } = {}) {
   // fuori dalla vista (la telecamera segue l'eroe e non ha più una veduta speciale per il villaggio): la vista si porta lì, come col dito
+  // `data-vis` vale anche per chi sta mezzo fuori dal bordo: il tocco va al centro, che deve stare nello schermo (la pietra del
+  // villaggio, al bordo sinistro dopo la bottega, si toccava a x < 0)
   const li = await page.waitForSelector(`${sel}[data-vis="1"]`, { timeout: 1500 }).catch(() => null)
-  if (!li) {
+  const dentro = async () => {
+    const r = await page.locator(sel).first().boundingBox(), v = page.viewportSize()
+    return !!r && r.x + r.width / 2 > 8 && r.x + r.width / 2 < v.width - 8 && r.y + r.height * 0.6 > 8 && r.y + r.height * 0.6 < v.height - 8
+  }
+  if (!li || !(await dentro())) {
     await page.evaluate(s => {
       const el = document.querySelector(s), M = window.__mondo3d, d = el.dataset
       const b = M.bersagli().find(q => (d.personaggio && q.ruolo === 'personaggio' && q.k === d.personaggio) || (d.mercante && q.ruolo === 'mercante' && q.k === d.mercante && (!d.citta || q.citta === d.citta))

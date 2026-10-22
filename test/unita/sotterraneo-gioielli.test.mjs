@@ -1,5 +1,5 @@
 /* Due anelli e una collana (docs/sotterraneo/roba.md, «Due anelli e una collana»): il catalogo dice se un gioiello è un anello o
-   una collana, le caselle addosso sono sei, i salvataggi di prima (un solo `dito` per tutto) si rileggono senza perdere niente, e il
+   una collana, le caselle addosso sono sette (sei e il copricapo), i salvataggi di prima (un solo `dito` per tutto) si rileggono senza perdere niente, e il
    banco del rigattiere offre le due cose. `node test/esegui.mjs sotterraneo-gioielli --niente-build` */
 import { COSE, CASELLE, CASELLE_DEL_TIPO, IN_VENDITA, chiaveDelPezzo, guastiDelleCose } from '../../src/giochi/sotterraneo/dati/cose.js'
 import { Corredo, ROBA_VUOTA, rileggiRoba, schedaConLaRoba, SCHIVATA_MASSIMA } from '../../src/giochi/sotterraneo/motore/corredo.js'
@@ -19,7 +19,8 @@ const corredo = (extra, eroe = 'cavaliere') => new Corredo({ eroe, roba: roba(ex
   stessaLista('gli anelli sono i due anelli', anelli.sort(), ['anello-ambra', 'anello-verde'])
   stessaLista('le collane sono gli amuleti, il medaglione e il teschio', collane.sort(),
               ['amuleto-azzurro', 'amuleto-osso', 'amuleto-rosso', 'medaglione', 'teschio-cercatore'])
-  stessaLista('le caselle addosso sono sei', CASELLE.slice().sort(), ['collo', 'corpo', 'dito', 'dito2', 'mancina', 'mano'])
+  // e la settima, il copricapo (docs/sotterraneo/elmo.md, unita/sotterraneo-elmo)
+  stessaLista('le caselle addosso sono sette', CASELLE.slice().sort(), ['collo', 'corpo', 'dito', 'dito2', 'mancina', 'mano', 'testa'])
   stessaLista('un anello ha due posti', CASELLE_DEL_TIPO.dito, ['dito', 'dito2'])
   stessaLista('una collana uno', CASELLE_DEL_TIPO.collo, ['collo'])
   // anche i pezzi composti (livello e rarità) e quelli col nome seguono la base

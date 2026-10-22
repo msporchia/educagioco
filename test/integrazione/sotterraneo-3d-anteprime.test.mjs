@@ -5,8 +5,9 @@
    lo scudo, l'armatura sul manichino) e il ritratto è l'eroe 3D vestito;
    anelli e collane hanno la loro figura 3D dove c'è (docs/sotterraneo/roba-3d.md), le pozioni restano sprite. Le caselle compaiono subito e
    le anteprime arrivano poco dopo, tutte; i `data-` di sempre restano.
-   Nella fila dei turni l'eroe e i mostri sono 3D, chi non ha un modello
-   (la pianta) resta sprite. Nel Sotterraneo di sempre e con `#icone2d`
+   Nella fila dei turni l'eroe e i mostri sono 3D (anche la pianta, dal
+   22 ottobre: nessuna specie resta sprite); una chiave senza modello vale
+   null, e la vista tiene lo sprite. Nel Sotterraneo di sempre e con `#icone2d`
    niente cambia. `--scatti`: lo zaino e la fila.
    `node test/esegui.mjs sotterraneo-3d-anteprime`
    tempo: 90
@@ -67,8 +68,11 @@ await entra('sotterraneo3d=1&eroe=elfa&sotterraneo=branco&mostri=3&tipo=lupo,pia
     && [...document.querySelectorAll('[data-fila] [data-anteprima-chiave]')].some(e => e.dataset.anteprimaChiave.startsWith('mostro:lupo')), null, { timeout: 15000 })
   const chiavi = await page.locator('[data-fila] [data-anteprima-chiave]').evaluateAll(es => es.map(e => e.dataset.anteprimaChiave))
   controlla('l\'eroe a mezzo busto', chiavi.some(k => k.startsWith('busto:elfa:')), chiavi.join(' '))
-  const piante = await page.locator('[data-mostro][data-tipo="pianta"]').evaluateAll(es => es.map(e => e.dataset.i))
-  for (const i of piante) uguale(`la pianta (${i}) non ha un modello: resta lo sprite`, await conta(`[data-fila] [data-turno][data-chi="${i}"] [data-anteprima]`), 0)
+  // la pianta ha il suo modello (poc/mostri-3d/varie.js): anche lei 3D nella fila
+  await page.waitForFunction(() => [...document.querySelectorAll('[data-fila] [data-anteprima-chiave]')].some(e => e.dataset.anteprimaChiave.startsWith('mostro:pianta')), null, { timeout: 15000 })
+    .then(() => controlla('la pianta ha il suo modello nella fila', true), () => controlla('la pianta ha il suo modello nella fila', false))
+  // il ripiego: una specie che non c'è non ha immagine (null), e la vista terrebbe lo sprite
+  uguale('una chiave senza modello vale null', await page.evaluate(() => window.__anteprime3d.chiedi('mostro:nessuno:comune').then(c => c)), null)
   await scatto(page, 'sotterraneo-3d-anteprime-fila')
 }
 

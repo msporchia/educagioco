@@ -1,7 +1,7 @@
 // I mercanti della terra di sopra: chi vende cosa, e quanta roba ha sul banco secondo le discese finite. Dove
 // stanno sulla mappa lo dice il foglietto (dati/terra-mappa.js, MERCANTI); come si compra motore/bottega.js.
 // Il perché: docs/sotterraneo/bottega.md, "I mercanti di sopra".
-import { COSE, CURE_IN_VENDITA, IN_VENDITA, baseDi, tipoDellaCasella } from './cose.js'
+import { COSE, CURE_IN_VENDITA, IN_VENDITA, COPRICAPI, baseDi, tipoDellaCasella } from './cose.js'
 import { CAMPAGNA, QUANTE_TAPPE } from './campagna.js'
 import { portaLa } from './eroi.js'
 
@@ -14,15 +14,17 @@ import { portaLa } from './eroi.js'
 // linguetta serve solo a chi porta una di quelle famiglie, e agli altri non si mostra (schedeDi)
 // `schede`: le linguette in cima alla bottega (viste/Bottega.vue), ognuna coi posti (`dove`) o gli usi (`usa`) che
 // raccoglie; `vendi` è quella delle tasche e `riacquista` quella delle ultime cose vendute, solo per chi compra
-// (docs/sotterraneo/bottega-finestra.md, "La bottega e lo zaino")
+// (docs/sotterraneo/bottega-finestra.md, "La bottega e lo zaino"). `copricapi`: la linguetta dei copricapi, che c'è solo dove sono accesi
+// (il 3D, Corredo.copricapi: docs/sotterraneo/elmo.md)
 export const MERCANTI = [
   // la roba del passo dopo, non quella della miniera: chi ha le gemme non scende col meglio
   // le chiavi restano quelle di prima (salvataggi, sprite); i nomi sono parole che un bambino conosce
   { chiave: 'armaiolo', nome: 'Il fabbro', em: '⚒️', sprite: 'armaiolo',
     dice: 'Lame, scudi e corazze, battuti uno per uno su questa incudine. Guarda pure.',
     schede: [{ chiave: 'armi', nome: 'Armi', em: '⚔️', dove: ['mano'] },
-             { chiave: 'difese', nome: 'Scudi e armature', em: '🛡️', dove: ['mancina', 'corpo'] }],
-    vende: { dove: ['mano', 'mancina', 'corpo'], senza: ['bacchette', 'stoffa'] }, sempre: [],
+             { chiave: 'difese', nome: 'Scudi e armature', em: '🛡️', dove: ['mancina', 'corpo'] },
+             { chiave: 'elmi', nome: 'Elmi', em: '🪖', dove: ['testa'], famiglie: ['ferro'], copricapi: true }],
+    vende: { dove: ['mano', 'mancina', 'corpo', 'testa'], senza: ['bacchette', 'stoffa'] }, sempre: [],
     passo: ['mano', 'mancina', 'corpo'], altre: 2 },
 
   // il fabbro lavora il ferro, lei la magia: le bacchette e i bastoni, le vesti di stoffa e l'energia (docs/sotterraneo/bottega.md)
@@ -30,10 +32,11 @@ export const MERCANTI = [
     dice: 'Bacchette per le mani, stoffa per le spalle, e una boccetta blu per quando la magia si spegne.',
     schede: [{ chiave: 'bacchette', nome: 'Bacchette e bastoni', em: '🪄', dove: ['mano'], famiglie: ['bacchette'] },
              { chiave: 'vesti', nome: 'Vesti', em: '🧥', dove: ['corpo'], famiglie: ['stoffa'] },
+             { chiave: 'cappelli', nome: 'Cappelli', em: '🎩', dove: ['testa'], famiglie: ['stoffa'], copricapi: true },
              { chiave: 'energia', nome: 'Energia', em: '🧪', usa: ['energia'] },
              // la pergamena del portale, solo dopo la sua missione (`dopo`: si mostra quando quella missione è consegnata)
              { chiave: 'pergamene', nome: 'Pergamene', em: '📜', usa: ['portale'], dopo: 'quaderno' }],
-    vende: { dove: ['mano', 'corpo'], famiglie: ['bacchette', 'stoffa'] }, sempre: ['pozione-blu', 'ampolla-blu', 'pergamena-portale'],
+    vende: { dove: ['mano', 'corpo', 'testa'], famiglie: ['bacchette', 'stoffa'] }, sempre: ['pozione-blu', 'ampolla-blu', 'pergamena-portale'],
     passo: ['mano', 'corpo'], altre: 1 },
 
   { chiave: 'erborista', nome: 'La guaritrice', em: '🌿', sprite: 'erborista',
@@ -57,14 +60,14 @@ export const mercanteDi = chiave => MERCANTI.find(m => m.chiave === chiave) || n
 
 // un pezzo di un posto che vende, se la sua famiglia non è esclusa (`senza`) e, dove `famiglie` c'è, è una di quelle
 const dellaFamiglia = (v, c) => !(v.senza || []).includes(c.famiglia) && (!v.famiglie || v.famiglie.includes(c.famiglia))
-export const vendeLa = (m, k) => !!COSE[k] && IN_VENDITA.includes(baseDi(k)) &&
+export const vendeLa = (m, k) => !!COSE[k] && (IN_VENDITA.includes(baseDi(k)) || COPRICAPI.includes(baseDi(k))) &&
   (((m.vende.dove || []).includes(COSE[k].dove) && dellaFamiglia(m.vende, COSE[k])) || (m.vende.chiavi || []).includes(baseDi(k)))
 
 // le linguette che un eroe vede: quelle che non chiedono una famiglia, e quelle di una famiglia che porta (a un cavaliere
 // la bottega dell'incantatrice non mostra le bacchette)
-// (`stati`: le missioni dell'avventura; una linguetta con `dopo` compare solo a quella missione consegnata)
-export const schedeDi = (m, eroe, stati = null) => m.schede.filter(s => (!s.famiglie || s.famiglie.some(f => portaLa(eroe, { famiglia: f }))) &&
-  (!s.dopo || (stati && stati[s.dopo] === 'consegnata')))
+// (`stati`: le missioni dell'avventura; una linguetta con `dopo` compare solo a quella missione consegnata; `copricapi`: se sono accesi)
+export const schedeDi = (m, eroe, stati = null, { copricapi = false } = {}) => m.schede.filter(s => (!s.famiglie || s.famiglie.some(f => portaLa(eroe, { famiglia: f }))) &&
+  (!s.dopo || (stati && stati[s.dopo] === 'consegnata')) && (!s.copricapi || copricapi))
 
 // la linguetta di una cosa: la prima che ne raccoglie il posto o l'uso
 export const schedaDi = (m, k) => (COSE[k]
@@ -111,6 +114,10 @@ export function guastiDeiMercanti() {
       g.push(`${m.chiave}: vuole ${Math.max(...m.righe)} righe e ha ${pescabili.length} cose da pescare`)
   }
   // tutto quello che ha un prezzo lo vende qualcuno: una cosa che non si compra da nessuna parte è catalogo morto
+  for (const k of COPRICAPI) {
+    if (!MERCANTI.some(m => vendeLa(m, k))) g.push(`"${k}" non lo vende nessuno`)
+    for (const m of MERCANTI) if (vendeLa(m, k) && !(schedaDi(m, k) || {}).copricapi) g.push(`${m.chiave}: "${k}" fuori dalla linguetta dei copricapi`)
+  }
   for (const k of IN_VENDITA)
     if (!MERCANTI.some(m => vendeLa(m, k) || m.sempre.includes(k))) g.push(`"${k}" non lo vende nessuno`)
   if (!MERCANTI.some(m => m.compra)) g.push('nessuno compra la roba: le tasche piene non si svuotano')

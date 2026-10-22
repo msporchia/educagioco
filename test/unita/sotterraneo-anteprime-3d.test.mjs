@@ -43,7 +43,7 @@ const d = dotazioneDi({ mano: 'spada', mancina: 'scudo-ferro', corpo: 'corazza' 
 uguale('spada e scudo', `${d.destra.id} ${d.sinistra.id} ${d.corpo.tipo}.${d.corpo.pregio}`, 'spada-lunga scudo-rotondo corazza.1')
 uguale('l\'arco sta nella sinistra, e lo scudo non c\'è', [dotazioneDi({ mano: 'arco-lungo', mancina: 'scudo-legno' })].map(x => `${x.destra}|${x.sinistra.id}|${x.corpo}`)[0], 'null|arco-lungo|null')
 uguale('a due mani niente scudo', dotazioneDi({ mano: 'spadone', mancina: 'scudo-legno' }).sinistra, null)
-uguale('niente roba, niente dotazione', JSON.stringify(dotazioneDi({})), JSON.stringify({ destra: null, sinistra: null, corpo: null, collo: null }))
+uguale('niente roba, niente dotazione', JSON.stringify(dotazioneDi({})), JSON.stringify({ destra: null, sinistra: null, corpo: null, collo: null, testa: null }))
 uguale('al collo una collana con la sua figura', dotazioneDi({ collo: 'medaglione@3.m.vita' }).collo.figura, COSE['medaglione@3.m.vita'].sprite)
 uguale('un anello non sta al collo', dotazioneDi({ collo: 'anello-ambra' }).collo, null)
 
@@ -74,7 +74,7 @@ uguale('un grosso', chiaveDelMostro({ tipo: 'orco', grosso: 'grumo' }), 'mostro:
 // leggere le chiavi: tornano quello che serve al disegno, e le sconosciute valgono null
 const roba = { mano: 'accetta', mancina: 'scudo-leone', corpo: 'corazza@5.r.vita.dif', collo: 'medaglione@3.m.vita' }
 const e = leggiChiave(chiaveDellEroe('nano', roba))
-uguale('l\'eroe letto è la dotazione di dotazioneDi', JSON.stringify({ destra: e.destra, sinistra: e.sinistra, corpo: e.corpo, collo: e.collo }),
+uguale('l\'eroe letto è la dotazione di dotazioneDi', JSON.stringify({ destra: e.destra, sinistra: e.sinistra, corpo: e.corpo, collo: e.collo, testa: e.testa }),
   JSON.stringify(dotazioneDi(roba)))
 uguale('un\'arma letta', JSON.stringify(leggiChiave('arma:spada-28.spada-lunga.m.fuoco')), JSON.stringify({ tipo: 'arma', pezzo: { figura: 'spada-28', id: 'spada-lunga', rarita: 'magico', elemento: 'fuoco' } }))
 uguale('un mostro letto', JSON.stringify(leggiChiave('mostro:scheletro:magico:guerriero')), JSON.stringify({ tipo: 'mostro', r: { tipo: 'scheletro', grado: 'magico', variante: 'guerriero' } }))
