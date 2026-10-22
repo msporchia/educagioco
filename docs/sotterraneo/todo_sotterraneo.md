@@ -39,8 +39,10 @@ rimasti aperti. Quando una voce si chiude si toglie da qui (la storia sta in `gi
 - **Il mercante a cui vendere non si trovava** (Marco, dopo il villaggio nuovo): il rigattiere e l'erborista avevano il `piede` sulla riga di
   dietro del loro lotto, e dal sud la tenda della bottega li copriva (`data-vis=1` ma invisibili). Portati sul fronte della piazza
   ((15,7) e (7,8) in `dati/mondo-aperto.js`, 21 ottobre): da riguardare sul telefono.
-- **Rigattiere e armaiolo**: sono stati spostati dal ridisegno del villaggio: controllare che la bottega si apra ancora col dito vero
-  (`sotterraneo-bottega-avanti` è instabile da prima).
+- **I ritratti 3D nel mondo** (22 ottobre): in `integrazione/sotterraneo-mondo` il ritratto del dialogo e quello della bottega non
+  arrivano, e `__anteprime3d.stato()` dice `rotto: true` (il contesto WebGL delle anteprime perso, `webglcontextlost`) con la macchina
+  carica (load 20–25); nelle discese (`-elmo`) le anteprime vanno. Da rilanciare a macchina libera; se resta rosso, guardare chi perde il
+  contesto quando il mondo e le anteprime ne tengono due.
 - **Fumetto del portale**: `TypeError charAt` su `f.nome` mancante quando la sosta si svuota («torno giù»): corretto con `minuscolo`
   tollerante (21 ottobre); non riprodotto nel browser, solo dedotto dal file pubblicato. Se ricompare, incollare l'errore.
 - **Test del browser lenti sotto carico**: `sotterraneo-mondo`, `-bacheca`, `-mostri-sopra`, `-mondo-meta` vanno in timeout con la macchina

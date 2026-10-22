@@ -145,7 +145,7 @@ maestra verso i prati. La pianta, uscita da `npm run pianta -- --percorso` (la r
   7  ......###ooooooo..####.t
   8  ........oooooooooo####..
   9  ....###ooooW#ooooo####..     W il pozzo in mezzo alla piazza
- 10  ....###oooo##@ooooA.....     @ la ragazza del pozzo, A l'armaiolo davanti alla fucina
+ 10  ....###oooo##@oooA......     @ la ragazza del pozzo, A l'armaiolo davanti alla fucina
  11  t...###ooooooooooo...###
  12  .......Ioooooooooo...###     I l'incantatrice davanti alla torretta
  13  ........oooo*oooo++.T...     * la partenza, T il cartello
@@ -158,8 +158,8 @@ maestra verso i prati. La pianta, uscita da `npm run pianta -- --percorso` (la r
 - **Chi sta dove**: chi cura (l'incantatrice, l'erborista) a ovest, verso il portale, perché chi sale dal portale si cura subito;
   in fondo, al centro, il minatore (la storia); a est chi vende (il rigattiere, l'armaiolo) e il capitano; la ragazza al pozzo,
   accanto alla partenza; a sud, sul davanti, solo cose basse: la bacheca e la pietra, che si guardano uscendo, e il portale.
-- **Le misure**: chi ci sta è al più 6 celle a destra o a sinistra della partenza (la telecamera ne vede 15 in largo) e al più 9
-  più su; la bacheca, la pietra e il portale al più 5. Le botteghe non stanno in fila: quattro profondità diverse.
+- **Le misure**: chi ci sta è al più 5 celle a destra o a sinistra della partenza (la telecamera ne vede 15 in largo) e al più 9
+  più su: a 6 l'armaiolo finiva sotto la bussola della meta, che sta sul bordo (44 px a 30 dal bordo) e vince il tocco; la bacheca, la pietra e il portale al più 5. Le botteghe non stanno in fila: quattro profondità diverse.
 - **I vincoli per il generatore**: la pianta si stampa dalla scheda (`VILLAGGIO`: la piazza col centro e dodici raggi raccordati,
   `nellaPiazza`; i lotti con `piede`, `accanto` e `giro`; la stradina come curva; le case con `verso` e `giro`; l'orto; gli
   alberi), non si sceglie a punteggio; il terreno sotto si spiana; nessun campo; nessun lotto sulla piazza (tranne il pozzo e la
