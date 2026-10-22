@@ -27,13 +27,14 @@ export const GRUPPI = [
     radici: ['poc/eroi-3d/eroi.js', 'poc/eroi-3d/ascia.js', 'poc/armi-3d/armi.js', 'poc/armi-3d/collezione.js', 'poc/armature-3d/armature.js', 'poc/copricapi-3d/copricapi.js'] },
   { nome: 'mostri', dest: `${SCENA}/mostri3d`,
     radici: ['poc/mostri-3d/mostri.js', 'poc/mostri-3d/prati.js', 'poc/mostri-3d/bosco.js', 'poc/mostri-3d/palude.js', 'poc/mostri-3d/ceneri.js',
-             'poc/mostri-3d/draghi.js', 'poc/mostri-3d/monte.js', 'poc/mostri-3d/landa.js',
+             'poc/mostri-3d/draghi.js', 'poc/mostri-3d/monte.js', 'poc/mostri-3d/landa.js', 'poc/mostri-3d/varie.js',
              // le animazioni delle mosse multiple (docs/sotterraneo/mosse.md): i dati veri stanno in dati/mosse.js, qui solo il disegno
              'poc/mostri-3d/mosse-anim.js'],
     // le zone che si aggiungono solo se il loro file c'è e si importa (altri le stanno ancora finendo)
     facoltative: ['poc/mostri-3d/monte.js', 'poc/mostri-3d/landa.js'],
     elenchi: { 'mostri.js': ['mostri', 'MOSTRI'], 'prati.js': ['prati', 'MOSTRI_PRATI'], 'bosco.js': ['bosco', 'MOSTRI_BOSCO'], 'palude.js': ['palude', 'MOSTRI_PALUDE'],
-               'ceneri.js': ['ceneri', 'MOSTRI_CENERI'], 'monte.js': ['monte', 'MOSTRI_MONTE'], 'landa.js': ['landa', 'MOSTRI_LANDA'] } },
+               'ceneri.js': ['ceneri', 'MOSTRI_CENERI'], 'monte.js': ['monte', 'MOSTRI_MONTE'], 'landa.js': ['landa', 'MOSTRI_LANDA'],
+               'varie.js': ['varie', 'MOSTRI_VARIE'] } },
   { nome: 'effetti', dest: `${SCENA}/effetti3d`,
     radici: ['poc/effetti-3d/lancio.js', 'poc/effetti-3d/mischia.js', 'poc/effetti-3d/aure.js'] },
   // la roba: gli aloni sempre, i moduli delle famiglie (FAMIGLIE_ROBA) solo se ci sono, si importano e costruiscono una figura

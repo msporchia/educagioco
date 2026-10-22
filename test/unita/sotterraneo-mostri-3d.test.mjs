@@ -35,6 +35,7 @@ import { controlla, nota, riassunto } from '../aiuto/verifica.mjs'
   const zoneMancanti = [...new Set(tutti.filter(id => !voceDi(id)).map(id => id.split('/')[0]))]
   if (zoneMancanti.length) nota(`zone non promosse, restano sprite: ${zoneMancanti.join(', ')}`)
   const con = Object.keys(MOSTRI).filter(k => idDi({ tipo: k, grado: 'comune' }))
+  controlla('ogni specie ha un modello 3D (nessuna resta allo sprite)', con.length === Object.keys(MOSTRI).length, Object.keys(MOSTRI).filter(k => !con.includes(k)).join(', '))
   nota(`${con.length}/${Object.keys(MOSTRI).length} specie in 3D; allo sprite: ${Object.keys(MOSTRI).filter(k => !con.includes(k)).join(', ')}`)
 }
 
