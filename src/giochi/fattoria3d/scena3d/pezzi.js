@@ -16,6 +16,7 @@ import { RICETTE, MACCHINE } from '../dati/ricette.js'
 import { SALITA_MS } from '../dati/mongolfiera.js'
 import { ANIMALI, CORTILE, PRODOTTI_ANIMALI } from '../dati/animali.js'
 import { alleggeriOmbre } from './ottimizza.js'
+import { tempoBreve } from '../dati/tempo.js'
 
 
 const CREA = {
@@ -51,7 +52,7 @@ const CREA_EDIFICIO = {
   telaio: creaTelaio, zuccherificio: creaZuccherificio, sartoria: creaSartoria, tintoria: creaTintoria,
   friggitoria: creaFriggitoria, sushi_bar: creaSushiBar,
   pentolone: creaPentolone,
-  fienile: creaFienileMacchina,                       // la macchina del mangime; il fienile di scena (FISSI) è un altro modello, `creaFienile`
+  fienile: creaFienileMacchina,                       // la macchina del mangime (l'unico fienile: quello di scena è stato tolto)
 }
 /** Un tipo senza disegno non rompe la scena: una scatola grigia della sua misura. */
 const modelloDi = (tipo, d, c) => (CREA[tipo] ? CREA[tipo](c) : CREA_EDIFICIO[tipo] ? CREA_EDIFICIO[tipo]() : creaSegnaposto(d.w, d.d))
@@ -194,7 +195,7 @@ export class Pezzi {
       const lavora = c.bestie.filter(b => b.fine !== null && b.fine > adesso).map(b => b.fine - adesso)
       const fame = c.bestie.some(b => b.fine === null)
       v.badge.imposta(pronte ? `${PRODOTTI_ANIMALI[A.prodotto].emoji} ${pronte} pront${pronte === 1 ? 'o' : 'i'}!`
-        : fame ? `${A.emoji} ha fame` : lavora.length ? `⏳ ${Math.ceil(Math.min(...lavora) / 1000)}s` : '', pronte ? 'pronto' : '')
+        : fame ? `${A.emoji} ha fame` : lavora.length ? `⏳ ${tempoBreve(Math.min(...lavora))}` : '', pronte ? 'pronto' : '')
       this._conto(v, c)
     } else if (c.tipo === 'bacheca') {
       // i foglietti sono gli ordini aperti; sul cartello quelli che si possono consegnare adesso (come le macchine, i pronti)
@@ -224,7 +225,7 @@ export class Pezzi {
       if (g.userData.fumo && tt - (v.tFumo || 0) > cadenza) { v.tFumo = tt; this.fx.fumata(g.position.clone().add(g.userData.fumo.clone().applyQuaternion(g.quaternion))) }
       const pronti = this.m.prontiIn(v.tipo), prima = Object.keys(Q.pronti).find(k => Q.pronti[k] > 0)
       v.badge.imposta(pronti ? `${RICETTE[prima].emoji} ${pronti} pront${pronti === 1 ? 'o' : 'i'}!`
-        : cuoce ? `🔥 ${Math.max(0, Math.ceil(((Q.coda[0].fine || adesso) - adesso) / 1000))}s · ${Q.coda.length}/${posti}` : '', pronti ? 'pronto' : '')
+        : cuoce ? `🔥 ${tempoBreve(Math.max(0, (Q.coda[0].fine || adesso) - adesso))} · ${Q.coda.length}/${posti}` : '', pronti ? 'pronto' : '')
     } else if (v.tipo === 'mongolfiera') {
       // da ferma sale e scende piano; a tutto pieno (o con «Parti!») sale in alto e si allontana, e torna prima della fine del riposo
       const M = s.mongolfiera, volo = g.userData.volo

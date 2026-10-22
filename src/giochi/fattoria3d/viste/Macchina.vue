@@ -9,6 +9,7 @@ import { computed, ref, watch } from 'vue'
 import Faccia from './Faccia.vue'
 import ConsiglioRiga from './ConsiglioRiga.vue'
 import { quanteNePuoiFare, ordinaRicette, statoDelPosto, bersaglioSotto, gestoDelDito } from './macchina-pura.js'
+import { tempoBreve } from '../dati/tempo.js'
 import '../stile-macchina.css'
 
 const props = defineProps({
@@ -39,7 +40,7 @@ watch(() => props.tipo, t => {
 }, { immediate: true })
 const occupati = computed(() => props.forno.filter(Boolean).length)
 const carte = computed(() => ordinaRicette(props.ricette).map(r => ({ ...r, n: r.sbloccata ? quanteNePuoiFare(r.ing) : 0 })))
-const tempoDi = ms => (ms >= 60000 ? Math.round(ms / 6000) / 10 + ' min' : ms / 1000 + ' s')
+const tempoDi = ms => tempoBreve(ms)
 const testoPosto = p => (!p ? 'libero' : p.testo === 'in coda' ? 'aspetta' : p.testo)
 
 // ── il dito: tocco = in fila; trascinata = su un posto o sulla fila; su e giù veloce = scorre il foglio (docs/core/il-dito.md) ──
@@ -143,7 +144,7 @@ function annulla() { dito = null; presa.value = null }
                 <Faccia :k="i.k" :emoji="i.emoji" :lato="26" /><em aria-hidden="true">{{ i.ha >= i.serve ? '✓' : '✗' }}</em><small>{{ i.ha }}/{{ i.serve }}</small>
               </span>
             </div>
-            <small v-if="r.sbloccata" class="tempo">⏱️ {{ tempoDi(r.ms) }}</small>
+            <small v-if="r.sbloccata" class="tempo">⏱️ {{ tempoDi(r.ms) }}<template v-if="r.costo"> · 🪙 {{ r.costo }}</template></small>
             <small v-else class="blocco">🔒 Arriva al livello {{ r.liv }}</small>
           </article>
         </div>

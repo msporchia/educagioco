@@ -14,12 +14,16 @@ export const SCHEDE = [
   { id: 'altro', emoji: '🧶', nome: 'Lana e altro' },
 ]
 
-/** Le tre schede: `{ raccolti, prodotti, altro }`, ognuna `[{ k, n, nome, emoji, velata }]`.
+/** Le tre schede: `{ raccolti, prodotti, altro }`, ognuna `[{ k, n, nome, emoji, velata, max?, pieno? }]`.
     Raccolti: tutte le colture arrivate al livello, nell'ordine dei dati, con le vuote velate. Prodotti: le ricette che hai (> 0), nell'ordine
     delle macchine. Altro: lana, uova, latte che hai (> 0). `s` ha `merci`, `prodotti` e `lana` come lo stato del motore. */
-export function schedeDellInventario(s, livello) {
+export function schedeDellInventario(s, livello, capienzaDi = null) {
   const merci = s.merci || {}, prodotti = s.prodotti || {}
-  const voce = (k, n) => { const m = merceDi(k) || {}; return { k, n, nome: m.nome || k, emoji: m.emoji || '❔', velata: n <= 0 } }
+  // `capienzaDi(k)`: quanti pezzi tiene lo scomparto di quella merce (dati/silos.js); senza, nessun tetto da mostrare
+  const voce = (k, n) => {
+    const m = merceDi(k) || {}, max = capienzaDi ? capienzaDi(k) : null
+    return { k, n, nome: m.nome || k, emoji: m.emoji || '❔', velata: n <= 0, ...(Number.isFinite(max) ? { max, pieno: n >= max } : {}) }
+  }
   const raccolti = Object.keys(COLTURE).filter(k => livelloDellaColtura(k) <= livello || (merci[k] || 0) > 0).map(k => voce(k, merci[k] || 0))
   const prodottiVoci = Object.keys(RICETTE).filter(k => (prodotti[k] || 0) > 0).map(k => voce(k, prodotti[k]))
   const altro = [...Object.keys(LANA).map(k => voce(k, k === 'lana' ? (s.lana || 0) : (prodotti[k] || 0))),

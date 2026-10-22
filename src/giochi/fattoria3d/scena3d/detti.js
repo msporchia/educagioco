@@ -3,6 +3,8 @@
 import { COLTURE } from '../dati/colture.js'
 import { emojiDi, merceDi, RICETTE } from '../dati/ricette.js'
 import { EDIFICI } from '../dati/catalogo.js'
+import { tempoBreve } from '../dati/tempo.js'
+import { siloDi, SILOS } from '../dati/silos.js'
 
 /** `extra`: costo (le monete che servono: «Servono 🪙 N»), mancano (monete), per, secondi, liv (il livello a cui arriva), ingredienti ({ chiave: quanti }). */
 export function dettoDi(motivo, extra = {}) {
@@ -18,9 +20,14 @@ export function dettoDi(motivo, extra = {}) {
       const dove = [...new Set(cibi.map(k => (RICETTE[k] || {}).dove))].map(t => EDIFICI[t]).filter(Boolean).map(e => `${e.art} ${e.nome.toLowerCase()}`).join(' o ')
       return `Serve ${cosa}${extra.servono > 1 ? ` (${extra.servono} a testa)` : ''}${dove ? `: lo fa ${dove}` : ''}`
     }
-    case 'lavora': return extra.secondi ? `Ci stanno lavorando… ${extra.secondi}s` : 'Ci stanno lavorando'
+    case 'lavora': return extra.secondi ? `Ci stanno lavorando… ${tempoBreve(extra.secondi * 1000)}` : 'Ci stanno lavorando'
     case 'pieno': return extra.bestie ? `Ci sono già tutte le ${extra.bestie} che ci stanno` : 'Non c\'è più posto'
-    case 'lana-ricresce': return `La lana ricresce… ${extra.secondi}s`
+    case 'lana-ricresce': return `La lana ricresce… ${tempoBreve(extra.secondi * 1000)}`
+    case 'scomparto-pieno': {
+      // lo scomparto di quella merce è pieno (dati/silos.js): non si raccoglie e non si paga, il lavoro aspetta
+      const m = extra.k && merceDi(extra.k), silo = extra.k && SILOS[siloDi(extra.k)]
+      return `${m ? `${m.emoji} ${m.nome}: ` : ''}lo scomparto è pieno${extra.max ? ` (${extra.max})` : ''}. Usa un po' di roba${silo ? ` o ingrandisci ${silo.breve === 'Dispensa' ? 'la dispensa' : 'il magazzino'}` : ''}`
+    }
     case 'sazie': return 'Sono tutte sazie'
     case 'forno-pieno': return extra.compra ? 'Tutti i posti sono occupati: puoi comprarne un altro' : 'Tutti i posti sono occupati'
     case 'non-posseduta': return 'Costruisci prima questa macchina'
@@ -47,8 +54,8 @@ export function dettoDi(motivo, extra = {}) {
     case 'lontano': return 'L\'acqua è troppo lontana dal molo: allunga il molo o mettine un altro'
     case 'acqua-non-tua': return 'Quest\'acqua non è ancora tua: compra prima il terreno'
     case 'serve-riva': return 'Il porticciolo si mette sulla riva, vicino all\'acqua'
-    case 'pesca-attesa': return extra.secondi ? `Il galleggiante è in acqua… ${extra.secondi}s` : 'Il galleggiante è in acqua'
-    case 'pesca-riposo': return extra.secondi ? `I pesci stanno tornando… ${extra.secondi}s` : 'I pesci stanno tornando'
+    case 'pesca-attesa': return extra.secondi ? `Il galleggiante è in acqua… ${tempoBreve(extra.secondi * 1000)}` : 'Il galleggiante è in acqua'
+    case 'pesca-riposo': return extra.secondi ? `I pesci stanno tornando… ${tempoBreve(extra.secondi * 1000)}` : 'I pesci stanno tornando'
     case 'sta-crescendo': return 'Quello che sta crescendo non si mette via'
     case 'ha-le-bestie': return 'Ci sono le bestie: spostalo, non si mette via'
     case 'macchina-al-lavoro': return 'Finisci prima il lavoro: poi la metti via (spostarla si può)'
@@ -59,5 +66,5 @@ export function dettoDi(motivo, extra = {}) {
 
 /** Lo stesso, da un rifiuto intero del motore ({ ok: false, motivo, liv, mancano… }): prende da sé il livello e gli ingredienti. */
 export function dettoDiRifiuto(r, extra = {}) {
-  return dettoDi(r.motivo, { liv: r.liv, ingredienti: r.mancano, ...extra })
+  return dettoDi(r.motivo, { liv: r.liv, ingredienti: r.mancano, costo: r.costo, k: r.k, max: r.max, servono: r.servono, mangia: r.mangia, secondi: r.secondi, ...extra })
 }
