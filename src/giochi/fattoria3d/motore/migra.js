@@ -37,6 +37,7 @@ const ALTRE = {
   fontana: 'fontana', fontana_grande: 'fontana', cantina: 'pozzo', pozzo: 'pozzo', pozzo_coperto: 'pozzo', stagno: 'stagno', laghetto: 'laghetto',
   ponte: 'ponte', panchina: 'panchina', panchina2: 'panchina', panchina_legno: 'panchina', panchina_bianca: 'panchina', panchina_cuore: 'panchina',
   tavolo: 'tavolo', tavolino: 'tavolo', spaventapasseri: 'spaventapasseri',
+  pasticceria: 'bottega_pasticceria', osteria: 'bottega_osteria', mensa: 'bottega_mensa', merceria: 'bottega_merceria',      // le botteghe del paese (giro G7): la 3D le ha dello stesso nome
 }
 
 /** Il pezzo 3D che sostituisce una voce 2D, o null (allora è «da regalare»). I fiori e i vasi diventano aiuole. */
@@ -132,6 +133,12 @@ export function statoDa2D(dato, { ora = Date.now() } = {}) {
     // il campo di partenza della 3D è già in mappa: ne contano uno in meno nel magazzino (i campi rincarano per copia, anche quelle nel magazzino)
     if (campi > 1) magazzino.campo = campi - 1
     for (const [t, n] of Object.entries(magazzino)) s.magazzino[t] = n
+
+    // le botteghe portano con sé la fama (le consegne fatte): i cuori e i banconi sono quelli di prima, i clienti si ricompongono
+    for (const [id, b] of Object.entries(f.botteghe || {})) {
+      const t = ALTRE[id]
+      if (t && magazzino[t] && b && b.consegne > 0) s.botteghe[t] = { consegne: intero(b.consegne), prossimo: 1, banconi: [] }
+    }
 
     // 2. le scorte: raccolti, prodotti e lana uguali; ciò che la 3D non ha resta «da regalare»
     const scorta = (k, n) => {

@@ -11,6 +11,7 @@ import { POSTI } from '../dati/ordini.js'
 import { livelloPer } from '../dati/livelli.js'
 import { ordineInForma } from './ordini.js'
 import { stivaInForma } from './mongolfiera.js'
+import { leggiLeBotteghe } from './botteghe.js'
 import { RIPOSO_MS } from '../dati/mongolfiera.js'
 import { POSTI_DI_PARTENZA, postiInForma } from '../dati/posti.js'
 import { TIPI_DI_SILO } from '../dati/silos.js'
@@ -79,6 +80,7 @@ export function statoIniziale() {
     macchine: Object.fromEntries(TIPI_DI_MACCHINA.map(t => [t, macchinaVuota()])),
     mongolfiera: { stiva: null, via: null, riposo: null, giri: 0 },   // la nave (docs/fattoria3d/mongolfiera.md): il carico da riempire, quando è partita e quando torna, i viaggi fatti
     ordini: { aperti: Array(POSTI(1)).fill(null), riprende: Array(POSTI(1)).fill(null), prossimoId: 1 },   // il banco: un ordine o null per posto; `riprende` è quando un posto vuoto si riempie
+    botteghe: {},              // le quattro botteghe del paese (docs/fattoria3d/botteghe.md), per tipo: { consegne (i cuori della fama), prossimo, banconi: [cliente | { dal } | null] }
   })
 }
 
@@ -209,5 +211,7 @@ export function normalizza(letto) {
     s.ordini.riprende[k] = Array.isArray(o.riprende) && Number.isFinite(o.riprende[k]) ? o.riprende[k] : null
   }
   s.ordini.prossimoId = Math.max(numero(o.prossimoId, 1), 1, ...s.ordini.aperti.map(x => x ? x.id + 1 : 1))
+  // le botteghe (assenti prima del giro G7, senza cambiare versione): uno stato di prima non ne ha, e nascono vuote
+  s.botteghe = leggiLeBotteghe(letto.botteghe)
   return s
 }

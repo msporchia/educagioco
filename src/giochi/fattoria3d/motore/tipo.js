@@ -13,7 +13,7 @@ export const LIVELLO_MAX = 99
 export const borsaInfinita = () => ({ quante: () => Infinity, paga: () => true })
 
 const LOTTI_MAX = 60                       // i giri di ricerca per un pezzo
-const TERRA_MAX = liv => 24 + 5 * Math.min(liv, 20)          // i lotti che una fattoria di quel livello ha comprato al più
+const TERRA_MAX = liv => 24 + 5 * Math.min(liv, 20) + 12          // i lotti che una fattoria di quel livello ha comprato al più (+12: le quattro botteghe del paese, giro G7)
 const DECORI = ['aiuola', 'panchina', 'fontana', 'pozzo', 'spaventapasseri', 'tavolo', 'passerella', 'ponte']
 const FRAZIONI = [2, 0.4, 0.8]             // quanto è cresciuto il campo k, in tempi di maturazione: maturo, giovane, a metà
 const dalCentro = (x, y) => (x.a * x.a + x.b * x.b) - (y.a * y.a + y.b * y.b) || x.a - y.a || x.b - y.b

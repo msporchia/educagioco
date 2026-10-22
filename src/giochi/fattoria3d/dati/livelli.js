@@ -128,6 +128,10 @@ export const NOMI = {
   anatre: 'Lo stagno delle anatre',
   porcile: 'Il porcile',
   capre: 'Le capre',
+  bottega_pasticceria: 'La pasticceria',
+  bottega_osteria: 'L\'osteria',
+  bottega_mensa: 'La mensa',
+  bottega_merceria: 'La merceria',
 }
 
 export function nomeDi(livello) {
@@ -193,10 +197,10 @@ export function guastiDeiLivelli() {
     if (!Number.isFinite(vero)) g.push(`${id}: ingredienti circolari o troppo profondi`)
     else if (vero !== r.liv) g.push(`${id}: dichiara il livello ${r.liv} ma si fa dal ${vero} (macchina o ingredienti)`)
   }
-  // una macchina non arriva prima della sua prima ricetta, e ogni edificio tranne la mongolfiera è una macchina
+  // una macchina non arriva prima della sua prima ricetta, e ogni edificio tranne la mongolfiera e le botteghe è una macchina
   for (const [tipo, e] of Object.entries(EDIFICI)) {
     const sue = Object.entries(RICETTE).filter(([, r]) => r.dove === tipo)
-    if (tipo === 'mongolfiera') continue
+    if (tipo === 'mongolfiera' || e.bottega) continue          // la nave e le botteghe non lavorano: non hanno ricette
     if (!sue.length) { g.push(`${tipo}: edificio senza ricette`); continue }
     const prima = Math.min(...sue.map(([id]) => livelloDellaRicetta(id)))
     if (prima > e.liv) g.push(`${tipo}: si compra al ${e.liv} e la sua prima ricetta arriva al ${prima}`)

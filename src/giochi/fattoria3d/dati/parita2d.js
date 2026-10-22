@@ -23,6 +23,7 @@ export const VOCE = {
   caseificio: 'caseificio', gelateria: 'gelateria', telaio: 'telaio', zuccherificio: 'zuccherificio', sartoria: 'sartoria', tintoria: 'tintoria',
   friggitoria: 'friggitoria', sushi_bar: 'sushi_bar', pentolone: 'pentolone',
   anatre: 'stagno_anatre', porcile: 'porcile', capre: 'recinto_capre',
+  bottega_pasticceria: 'pasticceria', bottega_osteria: 'osteria', bottega_mensa: 'mensa', bottega_merceria: 'merceria',      // le botteghe del paese (giro G7)
 }
 
 /** Le colture: id 3D (singolare) → id 2D. */
