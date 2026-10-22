@@ -15,11 +15,12 @@ function firma(o) {
     (g ? `|${g.uuid}|${p ? p.version : 0}|${o.material && o.material.uuid}` : '')
 }
 
-/** Gli indici (nell'ordine di traverse) delle mesh che si possono saldare: ferme, foglie, un materiale solo. */
-export function ferme(g) {
-  const u = g.userData, ogg = elenco(g), prima = ogg.map(firma), mosse = new Set()
+/** Gli indici (nell'ordine di traverse) delle mesh che si possono saldare: ferme, foglie, un materiale solo. `u`: chi le muove
+ *  (`anima(t)`, `attacca(p)`), di difetto il modello; l'eroe passa le sue pose, e più prove (`prove`, `passo`). */
+export function ferme(g, u = g.userData, { prove = PROVE_IDLE, passo = PASSO_IDLE } = {}) {
+  const ogg = elenco(g), prima = ogg.map(firma), mosse = new Set()
   const guarda = () => ogg.forEach((o, i) => { if (!mosse.has(i) && firma(o) !== prima[i]) mosse.add(i) })
-  for (let i = 0; i < PROVE_IDLE; i++) { u.anima(i * PASSO_IDLE); guarda() }
+  for (let i = 0; i < prove; i++) { u.anima(i * passo); guarda() }
   if (u.attacca) for (let i = 0; i <= PROVE_ATTACCO; i++) { u.anima(1.7); u.attacca(i / PROVE_ATTACCO); guarda() }
   u.anima(0)
   return ogg.map((o, i) => i).filter(i => {
@@ -31,13 +32,14 @@ export function ferme(g) {
 
 const segnoGeo = g => `${g.index ? 'i' : 'n'}:${Object.keys(g.attributes).sort().map(k => `${k}${g.attributes[k].itemSize}`).join(',')}`
 
-/** Salda in `g` le mesh di `indici` (da `ferme`) con lo stesso perno e lo stesso materiale. Torna quante mesh ha tolto. */
-export function salda(g, indici) {
+/** Salda in `g` le mesh di `indici` (da `ferme`) con lo stesso perno e lo stesso materiale. Torna quante mesh ha tolto. `ombre`: la
+ *  saldata fa e prende l'ombra come i pezzi (l'eroe); senza, come sempre per i mostri, né l'una né l'altra. */
+export function salda(g, indici, { ombre = false } = {}) {
   const ogg = elenco(g), gruppi = new Map()
   for (const i of indici) {
     const o = ogg[i]
     if (!o || !o.parent) continue
-    const k = `${o.parent.uuid}|${o.material.uuid}|${segnoGeo(o.geometry)}|${o.renderOrder}`
+    const k = `${o.parent.uuid}|${o.material.uuid}|${segnoGeo(o.geometry)}|${o.renderOrder}` + (ombre ? `|${o.castShadow}|${o.receiveShadow}` : '')
     if (!gruppi.has(k)) gruppi.set(k, [])
     gruppi.get(k).push(o)
   }
@@ -50,6 +52,8 @@ export function salda(g, indici) {
     if (!unita) continue
     const m = new Mesh(unita, lista[0].material)
     m.renderOrder = lista[0].renderOrder; m.frustumCulled = lista[0].frustumCulled
+    if (ombre) { m.castShadow = lista[0].castShadow; m.receiveShadow = lista[0].receiveShadow }
+    m.userData.saldata = true   // la geometria è sua: chi butta il modello la libera (eroe3d.js)
     lista[0].parent.add(m)
     for (const o of lista) o.parent.remove(o)
     tolte += lista.length - 1
