@@ -10,11 +10,12 @@ import { creaStagno } from './modelli-acqua.js'
 import { creaZuccherificio, creaTelaio, creaSartoria, creaTintoria, creaFienileMacchina, creaFriggitoria, creaSushiBar } from './modelli-macchine.js'
 import { creaMolo, creaPorticciolo } from './modelli-pesca.js'
 import { creaStagnoAnatre, creaPorcile, creaRecintoCapre, creaPentolone, creaAnatra, creaMaiale, creaCapra } from './modelli-cortile.js'
+import { creaConigliera, creaRecintoAlpaca, creaRecintoAsini, creaApiario } from './modelli-cortile2.js'
 import { creaZucca, creaZucche } from './modelli-feste.js'
 import { EDIFICI, PEZZI } from '../dati/catalogo.js'
-import { RICETTE, MACCHINE } from '../dati/ricette.js'
+import { RICETTE, MACCHINE, merceDi } from '../dati/ricette.js'
 import { SALITA_MS } from '../dati/mongolfiera.js'
-import { ANIMALI, CORTILE, PRODOTTI_ANIMALI } from '../dati/animali.js'
+import { ANIMALI, CORTILE, prodottoDelleBestie } from '../dati/animali.js'
 import { alleggeriOmbre } from './ottimizza.js'
 import { BancoCampi } from './campi-istanze.js'
 import { BancoStatici, STATICI } from './statici-istanze.js'
@@ -29,6 +30,10 @@ const CREA = {
   anatre: c => creaStagnoAnatre(c && c.bestie),
   porcile: c => creaPorcile(c && c.bestie),
   capre: c => creaRecintoCapre(c && c.bestie),
+  conigliera: c => creaConigliera(c && c.bestie),      // il secondo cortile (giro G5): scena3d/modelli-cortile2.js
+  alpaca: c => creaRecintoAlpaca(c && c.bestie),
+  asini: c => creaRecintoAsini(c && c.bestie),
+  arnie: c => creaApiario(c && c.bestie),
   bancarella: () => creaBancarella(),
   bacheca: () => creaBacheca(),
   fontana: () => creaFontana(),
@@ -211,7 +216,7 @@ export class Pezzi {
       const A = ANIMALI[c.tipo], pronte = c.bestie.filter(b => b.fine !== null && b.fine <= adesso).length
       const lavora = c.bestie.filter(b => b.fine !== null && b.fine > adesso).map(b => b.fine - adesso)
       const fame = c.bestie.some(b => b.fine === null)
-      v.badge.imposta(pronte ? `${PRODOTTI_ANIMALI[A.prodotto].emoji} ${pronte} pront${pronte === 1 ? 'o' : 'i'}!`
+      v.badge.imposta(pronte ? `${prodottoDelleBestie(A.prodotto).emoji} ${pronte} pront${pronte === 1 ? 'o' : 'i'}!`
         : fame ? `${A.emoji} ha fame` : lavora.length ? `⏳ ${tempoBreve(Math.min(...lavora))}` : '', pronte ? 'pronto' : '')
       this._conto(v, c)
     } else if (c.tipo === 'bacheca') {
@@ -241,7 +246,7 @@ export class Pezzi {
       const cuoce = Q.coda.length > 0, cadenza = cuoce ? 0.35 : v.tipo === 'pasticceria' ? Infinity : 0.6   // gli altri fumano anche a riposo
       if (g.userData.fumo && tt - (v.tFumo || 0) > cadenza) { v.tFumo = tt; this.fx.fumata(g.position.clone().add(g.userData.fumo.clone().applyQuaternion(g.quaternion))) }
       const pronti = this.m.prontiIn(v.tipo), prima = Object.keys(Q.pronti).find(k => Q.pronti[k] > 0)
-      v.badge.imposta(pronti ? `${RICETTE[prima].emoji} ${pronti} pront${pronti === 1 ? 'o' : 'i'}!`
+      v.badge.imposta(pronti ? `${merceDi(prima).emoji} ${pronti} pront${pronti === 1 ? 'o' : 'i'}!`
         : cuoce ? `🔥 ${tempoBreve(Math.max(0, (Q.coda[0].fine || adesso) - adesso))} · ${Q.coda.length}/${posti}` : '', pronti ? 'pronto' : '')
     } else if (v.tipo === 'mongolfiera') {
       // da ferma sale e scende piano; a tutto pieno (o con «Parti!») sale in alto e si allontana, e torna prima della fine del riposo

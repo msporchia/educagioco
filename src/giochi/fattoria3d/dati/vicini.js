@@ -76,6 +76,8 @@ function coseInForma(letto) {
     if (c.tipo === 'stalla') x.bestie = intero(c.bestie, 1, 4, 2)
     if (c.tipo === 'anatre') x.bestie = intero(c.bestie, 1, 6, 3)
     if (c.tipo === 'porcile' || c.tipo === 'capre') x.bestie = intero(c.bestie, 1, 4, 2)
+    if (c.tipo === 'conigliera') x.bestie = intero(c.bestie, 1, 6, 3)
+    if (c.tipo === 'alpaca' || c.tipo === 'asini' || c.tipo === 'arnie') x.bestie = intero(c.bestie, 1, 4, 2)
     out.push(x)
   }
   return out

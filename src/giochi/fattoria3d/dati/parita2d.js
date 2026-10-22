@@ -23,6 +23,7 @@ export const VOCE = {
   caseificio: 'caseificio', gelateria: 'gelateria', telaio: 'telaio', zuccherificio: 'zuccherificio', sartoria: 'sartoria', tintoria: 'tintoria',
   friggitoria: 'friggitoria', sushi_bar: 'sushi_bar', pentolone: 'pentolone',
   anatre: 'stagno_anatre', porcile: 'porcile', capre: 'recinto_capre',
+  conigliera: 'conigliera', alpaca: 'recinto_alpaca', asini: 'recinto_asini', arnie: 'arnie',      // giro G5 (dati/cortile2.js); la peschiera non c'è: la pesca ne prende il posto (LIVELLO_PESCA)
 }
 
 /** Le colture: id 3D (singolare) → id 2D. */
@@ -35,6 +36,7 @@ export const COLTURA = {
 /** Il recinto 3D → la ricetta 2D che fa il suo prodotto (le bestie sono ricette nella 2D: uova, latte, lana…). */
 export const RICETTA_DELLA_BESTIA = {
   pollaio: 'uova', stalla: 'latte', recinto: 'lana', anatre: 'uova_anatra', porcile: 'tartufi', capre: 'latte_capra',
+  conigliera: 'lana_angora', alpaca: 'lana_alpaca', asini: 'concime', arnie: 'miele',      // giro G5
 }
 
 /** La peschiera della 2D: il pesce arriva da lì. La pesca della 3D (molo, porticciolo) ne prende il posto, allo stesso livello. */

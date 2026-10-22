@@ -6,6 +6,7 @@
 import { COLTURE } from './colture.js'
 import { RICETTE } from './ricette.js'
 import { LANA, PRODOTTI_ANIMALI } from './animali.js'
+import { MANGIMI_SENZA_RICETTA } from './cortile2.js'
 import { coltura2d, siloDelProdotto2D, postiPerMerce, costoDelPassoDelSilo, SCOMPARTO_BASE, SCOMPARTO_PIU } from './parita2d.js'
 
 /** I tre silos: l'id è quello della 2D (`terra`, `stalla`, `bottega`). */
@@ -21,13 +22,13 @@ export function siloDi(k) {
   if (COLTURE[k]) return siloDelProdotto2D(coltura2d(k).da)
   if (LANA[k]) return 'stalla'
   if (RICETTE[k]) return siloDelProdotto2D(RICETTE[k].da || k)         // `da`: il prodotto, se non è l'id (due strade per lo stesso foraggio)
-  if (PRODOTTI_ANIMALI[k]) return siloDelProdotto2D(k)
+  if (PRODOTTI_ANIMALI[k] || MANGIMI_SENZA_RICETTA[k]) return siloDelProdotto2D(k)       // i fiori delle api: nella stalla come in 2D
   return null
 }
 
 /** Le merci di un silo, nell'ordine di colture, bestie e ricette (per il foglio dell'inventario). */
 export function merciDelSilo(silo) {
-  return [...Object.keys(COLTURE), ...Object.keys(LANA), ...Object.keys(PRODOTTI_ANIMALI), ...Object.keys(RICETTE)].filter((k, i, a) => a.indexOf(k) === i && !(RICETTE[k] && RICETTE[k].da) && siloDi(k) === silo)
+  return [...Object.keys(COLTURE), ...Object.keys(LANA), ...Object.keys(PRODOTTI_ANIMALI), ...Object.keys(MANGIMI_SENZA_RICETTA), ...Object.keys(RICETTE)].filter((k, i, a) => a.indexOf(k) === i && !(RICETTE[k] && RICETTE[k].da) && siloDi(k) === silo)
 }
 
 export { postiPerMerce, SCOMPARTO_BASE, SCOMPARTO_PIU }
@@ -36,7 +37,7 @@ export const prezzoDelPasso = n => costoDelPassoDelSilo(n)
 
 export function guastiDeiSilos() {
   const g = []
-  for (const k of [...Object.keys(COLTURE), ...Object.keys(LANA), ...Object.keys(PRODOTTI_ANIMALI), ...Object.keys(RICETTE)]) {
+  for (const k of [...Object.keys(COLTURE), ...Object.keys(LANA), ...Object.keys(PRODOTTI_ANIMALI), ...Object.keys(MANGIMI_SENZA_RICETTA), ...Object.keys(RICETTE)]) {
     const s = siloDi(k)
     if (!s || !SILOS[s]) g.push(`${k}: non sta in nessun silo (${s})`)
   }

@@ -12,6 +12,7 @@ import { PEZZI, EDIFICI } from '../dati/catalogo.js'
 import { COLTURE } from '../dati/colture.js'
 import { RICETTE } from '../dati/ricette.js'
 import { PRODOTTI_ANIMALI } from '../dati/animali.js'
+import { MANGIMI_SENZA_RICETTA } from '../dati/cortile2.js'
 import { sogliaDi as soglia3D, livelloDelPezzo, livelloDellaColtura } from '../dati/livelli.js'
 import { lottiPerPiazzole } from '../dati/regole.js'
 import { LOTTI_INIZIALI, lottoPerId, VICINI_4, vicinoDi } from '../dati/mondo.js'
@@ -29,8 +30,9 @@ const MACCHINE = {
   zuccherificio: 'zuccherificio', gelateria: 'gelateria', pastificio: 'pasticceria', sartoria: 'sartoria', tintoria: 'tintoria',
   friggitoria: 'friggitoria', sushi_bar: 'sushi_bar', mongolfiera: 'mongolfiera',
 }
-// I recinti che la 3D ha già (conigliera, arnie, alpaca, asini e peschiera non ci sono: «da regalare»). Il pentolone è una macchina.
-const RECINTI = { ovile: 'recinto', pollaio: 'pollaio', stalla: 'stalla', porcile: 'porcile', stagno_anatre: 'anatre', recinto_capre: 'capre', pentolone: 'pentolone' }
+// I recinti che la 3D ha già (la peschiera non c'è: «da regalare»). Il pentolone è una macchina.
+const RECINTI = { ovile: 'recinto', pollaio: 'pollaio', stalla: 'stalla', porcile: 'porcile', stagno_anatre: 'anatre', recinto_capre: 'capre', pentolone: 'pentolone',
+  conigliera: 'conigliera', arnie: 'arnie', alpaca: 'alpaca', asini: 'asini' }      // giro G5; la peschiera no: la pesca ne prende il posto
 // Le cose di mappa con un equivalente: il vicino (il carretto 2D è una vista del trattore, D10), il mercato, i decori dello stesso mestiere.
 const ALTRE = {
   orto: 'campo', mercato: 'bancarella', carretto_mercato: 'trattore',
@@ -59,7 +61,7 @@ export function merceDel(k) {
   const c = Object.prototype.hasOwnProperty.call(COLTURA_DEL_RACCOLTO, k) ? COLTURA_DEL_RACCOLTO[k] : k
   if (COLTURE[c]) return { dove: 'merci', id: c }
   if (k === 'lana') return { dove: 'lana', id: 'lana' }
-  if (RICETTE[k] || PRODOTTI_ANIMALI[k]) return { dove: 'prodotti', id: k }
+  if (RICETTE[k] || PRODOTTI_ANIMALI[k] || MANGIMI_SENZA_RICETTA[k]) return { dove: 'prodotti', id: k }
   return null
 }
 

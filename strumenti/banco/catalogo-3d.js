@@ -36,7 +36,7 @@ async function caricaVoci() {
   const voci = [], note = []
   // `import.meta.glob`, non due `import()` con il nome scritto: se il file di un gioco non c'è ancora, Vite non si rompe
   const trovati = import.meta.glob('./catalogo-3d/*.js')
-  for (const nome of ['fattoria', 'sotterraneo']) {
+  for (const nome of ['fattoria', 'fattoria-cortile2', 'sotterraneo']) {          // `fattoria-cortile2`: le voci del secondo cortile, in un file a parte
     const carica = trovati[`./catalogo-3d/${nome}.js`]
     if (!carica) {
       note.push(nome === 'sotterraneo'

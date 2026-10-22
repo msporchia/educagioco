@@ -68,23 +68,20 @@ controlla('e diventano ricette', Object.values(MERCI_VECCHIE).every(n => !!RICET
 /* ══ le deviazioni dalla 2D: nessuna, tranne quelle dichiarate qui (docs/fattoria3d/mangime-e-catena.md) ══ */
 // le ricette 2D delle macchine che la 3D ha, e che la 3D non ha: ognuna con il perché
 const MANCANTI = {
-  merenda: 'vuole il miele (le arnie non ci sono)',
-  caramelle: 'vuole il miele (le arnie non ci sono)',
-  fiorume: 'i fiori sono il mangime delle arnie, che non ci sono',
-  fiorume_concime: 'il concime è degli asini, che non ci sono',
+  // nessuna: con il secondo cortile (G5) la 3D ha tutte le ricette delle sue macchine
 }
 const macchine3d = Object.values(SORELLA)
 const mancanti = RICETTE_2D.filter(r => macchine3d.includes(r.dove) && !RICETTE[r.id]).map(r => r.id).sort()
 uguale('le ricette 2D che la 3D non ha sono solo le dichiarate', mancanti.join(), Object.keys(MANCANTI).sort().join())
 
 // le ricette del fienile sono quelle della 2D che servono alle bestie che ci sono: foraggio (carote o erba medica) e becchime
-uguale('il fienile fa il foraggio di carote, il becchime e il foraggio d\'erba', Object.keys(RICETTE_FIENILE).sort().join(), 'becchime,foraggio,foraggio_carote')
+uguale('il fienile fa il foraggio di carote, il becchime e il foraggio d\'erba', Object.keys(RICETTE_FIENILE).sort().join(), 'becchime,fiorume,fiorume_concime,foraggio,foraggio_carote')
 for (const [id, r] of Object.entries(RICETTE_FIENILE)) {
   const d = RICETTE_2D.find(x => x.id === id)
   uguale(`${id}: il prodotto è quello della 2D (${d.da})`, r.da || id, d.da)
   controlla(`${id}: è mangime come in 2D`, r.mangime === true && PRODOTTI[d.da].mangime === true)
 }
-uguale('i mangimi del fienile', MANGIMI_DEL_FIENILE.join(), 'foraggio,becchime')
+uguale('i mangimi del fienile (i fiori per le api sono il terzo)', MANGIMI_DEL_FIENILE.join(), 'foraggio,becchime,fiori')
 controlla('l\'erba medica è la coltura 2D che dà fieno, con la stessa faccia e lo stesso nome', COLTURE.erba.pezzo === PRODOTTI.fieno.pezzo && COLTURE.erba.nome === COLTURE_2D.find(c => c.id === 'erba').nome && COLTURE_2D.find(c => c.id === 'erba').da === 'fieno')
 controlla('l\'erba medica è mangime: nessuno la chiede', COLTURE.erba.mangime === true)
 

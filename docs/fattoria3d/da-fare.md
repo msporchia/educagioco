@@ -7,6 +7,7 @@ Le voci aperte tecniche. Una riga ciascuna, e quando una si chiude si toglie. Qu
 - **Giocare la scala della 2D nella 3D** (G3, 22/10/2026, [livelli.md](livelli.md)): livelli, prezzi, tempi in minuti, costo dei gesti e scomparti sono quelli della 2D e misurati
   (`npm run tara:fattoria3d`), ma mai giocati con un bambino. Da vedere: la terra (i primi lotti costano 🪙4–15 perché la 3D parte con meno celle della 2D), la pesca a un ciclo di 15 minuti
   per banco, i 22 livelli senza novità, i magazzini ingrandibili dall'inventario (bottoni in fondo), e un salvataggio vero di prima che si porta sulla scala nuova.
+- **Il secondo cortile non è visto in scena né giocato** ([cortile-2.md](cortile-2.md)): conigliera, alpaca, asini e apiario sono guardati solo dal catalogo 3D e in node; da giudicare a distanza di gioco il gomitolo e la nuvola d'angora, il favo dell'arnia e il peso coi quattro recinti pieni; `compitiScaldo` (`pezzi.js`) non li conosce ancora.
 - **Le bestie in più dentro un recinto non esistono in 2D.** Una 3D con 6 galline in parallelo produce più di un pollaio 2D (che lavora una ricetta alla volta): parità non decisa, i prezzi delle bestie restano 3D.
 - **Il `mangime` del mulino** (cibo di cane e gatto) c'è e serve solo ai compagni, che non mangiano ancora (G6).
 - **Giocare i prezzi delle bestie.** Pecora 20 (+10), gallina 15 (+8), mucca 30 (+15) sono scelti sul metro di

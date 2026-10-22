@@ -856,7 +856,7 @@ controlla('l\'albo del manifesto sta in piedi', gA.length === 0, gA.join(' · ')
   for (const tipo of ['telaio', 'zuccherificio', 'sartoria', 'tintoria']) controlla(`${tipo}: si compra, nel suo lotto`, compra(tipo).ok, tipo)
   stessaLista('i livelli della 2D: telaio 16, zuccherificio 31, sartoria 42, tintoria 55', ['telaio', 'zuccherificio', 'sartoria', 'tintoria'].map(k => EDIFICI[k].liv), [16, 31, 42, 55])
   stessaLista('le ricette di ognuna', ['telaio', 'zuccherificio', 'sartoria', 'tintoria'].map(k => f.ricetteDi(k).map(r => r.id).join()),
-    ['stoffa', 'zucchero,marmellata', 'maglione,sciarpa_lana,berretto', 'tintura,sapone,sacchetto,maglione_lavanda'])
+    ['stoffa', 'zucchero,marmellata,caramelle', 'maglione,sciarpa_lana,berretto', 'tintura,sapone,sacchetto,maglione_lavanda'])
   // la lana è il contatore della tosa: scorta, mancanza e consumo passano da lì
   stessaLista('la lana si legge dal contatore e la stoffa la chiede', [f.scortaDi('lana'), JSON.stringify(f.mancano('stoffa'))], [0, JSON.stringify({ lana: 2 })])
   uguale('senza lana la stoffa non parte', f.avviaRicettaIn('telaio', 'stoffa').motivo, 'mancano-ingredienti')
