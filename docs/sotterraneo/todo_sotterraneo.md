@@ -20,8 +20,8 @@ rimasti aperti. Quando una voce si chiude si toglie da qui (la storia sta in `gi
 - **La torcia nel dungeon** (quasi chiuso, `corsa.js:264`): nello screenshot di Marco (torre, piano 3 di 3) si vede un cerchio di ~3 celle:
   è lo stato «senza torcia accesa» (`RAGGIO` 3,2; con la torcia `RAGGIO_TORCIA` 9,5), non un difetto dell'eroe 3D. Da confermare con Marco se la
   torcia era spenta o finita (`torciaResta` 0). Sopra, nel mondo, la torcia non fa niente (è sempre giorno): decidere se deve servire.
-- **Il signore morto non si salva**: `stato.signoriMorti` non va nel salvataggio; di una zona lontana mai rivista il teschio nella
-  veduta resta acceso. Le braci disegnate di una tana restano accese a signore morto.
+- **Le braci di una tana a signore morto**: il fumo e le scintille si spengono (`taneSpente`, ora anche dopo un salvataggio), ma i dischi
+  incandescenti del modello (`braciTana`, `props-aperto.js`) restano accesi: servirebbe ricostruire il pezzo alla morte del signore.
 - **Le quest**: restano le quest scritte a mano nelle zone, scorta ed eventi; cacciatrice e carovaniere come persone nuove; la X e il
   viandante non hanno un disegno 3D (sono segni sul prato); «vai alla pietra» dal diario; la freccia sulla strada vera e non in linea
   d'aria; tarare le basi delle taglie (`BASI`, tetto 40 gemme) e quanto guadagna chi le fa tutte.

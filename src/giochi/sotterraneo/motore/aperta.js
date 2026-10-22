@@ -272,7 +272,7 @@ export function inSalvo(stato) {
   const morti = {}
   for (const [z, l] of Object.entries(stato.mortiFuori)) morti[z] = l.map(v => [...v])
   for (const q of stato.lista) if (q.morto) (morti[stato.mondo.zone[q.zona].chiave] ||= []).push([q.i - q.zona * BLOCCO_ZONA, q.torna == null ? -1 : q.torna])
-  return { v: VERSIONE_SOPRA, eroe: stato.eroe, giro: stato.giro, passi: stato.passi, morti,
+  return { v: VERSIONE_SOPRA, eroe: stato.eroe, giro: stato.giro, passi: stato.passi, morti, signori: [...stato.signoriMorti],
            forze: stato.forze ? { ...stato.forze } : null, perTerra: stato.perTerra.map(c => ({ ...c })) }
 }
 // Riprende il mondo: lo rifà da (eroe, giro) e ci rimette i morti, se il salvato è di quell'eroe e di quel giro (un giro nuovo è un mondo
@@ -291,6 +291,8 @@ export function riprendiMondo({ mondo, eroe = 'eroe', giro = 0, salvato = null }
         const buoni = l.filter(v => Array.isArray(v) && Number.isInteger(v[0]) && v[0] >= 0 && v[0] < BLOCCO_ZONA && Number.isFinite(v[1]))
         if (buoni.length) stato.mortiFuori[Z.chiave] = buoni.map(([j, t]) => [j, t >= 0 ? t : -1])
       }
+      // i signori morti, anche di zone lontane mai riviste (il teschio della veduta, il fumo e le braci della tana)
+      if (Array.isArray(s.signori)) for (const c of s.signori) if (mondo.regioni.some(q => q.chiave === c)) stato.signoriMorti.add(c)
     }
   }
   allineaZone(stato)
@@ -313,8 +315,8 @@ export function mostriVicini(stato, x, y, raggio = SOPRA.vista) {
   return stato.lista.filter(q => !q.morto && (q.fx - x) * (q.fx - x) + (q.fy - y) * (q.fy - y) <= r2)
 }
 // i luoghi il cui signore è morto, anche di zone dimenticate (`signoriMorti`: lo scrive chi lo uccide, o lo ritrova morto): la tana
-// resta, è il suo segno di vita che si spegne (il fumo, le braci) e quello della veduta che si fa grigio. Non si salva
-// È vivo il signore di quel luogo? true/false, o null se non lo si sa (zona dimenticata e mai vista morta: un salvato non ricorda i signori)
+// resta, è il suo segno di vita che si spegne (il fumo, le braci) e quello della veduta che si fa grigio. Si salva (`signori` in inSalvo)
+// È vivo il signore di quel luogo? true/false, o null se non lo si sa (zona dimenticata e mai vista, mai vista morta)
 export const signoreVivo = (stato, chiaveRegione) => {
   if (stato.signoriMorti.has(chiaveRegione)) return false
   const t = tanaDi(stato, chiaveRegione)

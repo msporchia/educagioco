@@ -88,9 +88,8 @@ cantiere del pezzo. **Davanti a una tana** (`node strumenti/scatta-app.mjs 'sott
 bosco --senza-mostri`): bosco 91 → 90 chiamate e 401,8k → 406,6k triangoli, ceneri 68 → 70 e 253,2k → 255,1k, landa 76 → 75 e 322,4k →
 324,5k; il cimitero col dito 82 chiamate, 379k. Il bosco è già oltre i 400k senza la tana: il limite lo sfiora il decoro, non il segno.
 **Nella veduta** c'è un teschio 💀 (`[data-nome-posto="tana:<luogo>"]`) quando la cella del cuore è stata vista (la stessa regola della
-taglia «esplora»), grigio e più chiaro se il signore è morto; un salvato non ricorda i signori morti, quindi di una zona lontana mai
-rivista dopo il caricamento il teschio resta acceso finché la zona non si ricarica (o si uccide il signore di nuovo: nuovo giro, i
-signori tornano).
+taglia «esplora»), grigio e più chiaro se il signore è morto; il salvato ricorda i signori morti (`signori` in `inSalvo`), quindi anche di una zona lontana mai
+rivista il teschio è già spento (nuovo giro: i signori tornano).
 
 Nei test: `unita/sotterraneo-tane-segno` (ogni tana ha il suo segno, sempre lo stesso, mai su strada, acqua, ingresso, lotto, nel suo
 quadrato, la pianta invariata, un segno per famiglia, la macchia, i signori dove il segno li aspetta, il fumo che si spegne col signore)

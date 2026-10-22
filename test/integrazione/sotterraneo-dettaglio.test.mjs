@@ -204,6 +204,7 @@ if (offerta) {
 } else nota('nessun favore offerto in questo profilo')
 
 await toccaIl('[data-diario] li[data-missione="rosicchione"]')
+await attendi(page,500);console.log('DBG',(await page.locator('body').innerText()).slice(0,1500), await page.locator('[data-diario]').count())
 await page.waitForSelector('[data-dettaglio]', { timeout: 3000 })
 await attendi(page, 200)
 uguale('la consegnata ha il suo stato', await page.locator('[data-dettaglio]').getAttribute('data-stato'), 'consegnata')
