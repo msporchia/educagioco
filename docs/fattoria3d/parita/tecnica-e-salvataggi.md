@@ -12,7 +12,7 @@ Legenda in [README.md](README.md). Archivio: [../../core/archivio.md](../../core
 | T3 | il rischio degli id | `pasticceria` e `conserviera` significano cose diverse nelle due; gli id dei contenuti non si rinominano ([../../core/archivio.md](../../core/archivio.md)); le merci `carote`/`carota` hanno chiavi diverse | P0 con T1 |
 | T4 | convivenza | oggi le due fattorie condividono le monete e hanno stati separati: nessun conflitto di dati, ma due posti dove spendere | D1, D14 |
 | T5 | salvataggio a pagina nascosta | ✅ `salva({ subito })` su `visibilitychange`/`pagehide` come la 2D | – |
-| T6 | cestino e ripristino | 2D sì | ❌ per la 3D (I17) |
+| T6 | cestino e ripristino | 2D sì | ✅ «Ricomincia la fattoria» e `#fattoria3d-tipo=` cestinano il profilo com'era; si rimette dalla pagina dei grandi come ogni voce del cestino |
 
 La migrazione si scrive come **funzione pura** `statoDa2D(datoFattoria) → stato3D` (come `normalizza`: non lancia mai), provata su ogni
 livello con `motore/tipo.js` della 2D (1–99) e su un salvataggio vero esportato. Tocca la 3D in sola lettura sullo stato 2D.
