@@ -1,13 +1,14 @@
 <script setup>
 // Il fumetto del mondo di sopra in 3D (viste/Mondo3d.vue): sopra un ingresso, una pietra del viaggio, il portale gemello, il
 // cartello, la bacheca, la fontana o la porta delle terre. Non decide niente: Mondo3d.vue gli dà i dati già pronti e lui dice cosa si è toccato
-// (`scendi`, `giu`, `viaggio`, `bevi`, `taglia` per un foglio della bacheca, `scava` per la X). Gli stessi bersagli dei test del fumetto della terra dipinta (viste/Terra.vue).
+// (`scendi`, `giu`, `viaggio`, `bevi`, `taglia` per un foglio della bacheca, `scava` per la X, `passa` la porta delle terre, `terra` il
+// villaggio di un'altra terra dalla pietra del villaggio). Gli stessi bersagli dei test del fumetto della terra dipinta (viste/Terra.vue).
 import { faccia, inFrase, titoloDi } from '../motore/missioni.js'
 
 defineProps({
   f: { type: Object, required: true },   // { tipo, … } (vedi fumetto in Mondo3d.vue)
 })
-defineEmits(['scendi', 'giu', 'viaggio', 'bevi', 'taglia', 'scava', 'passa'])
+defineEmits(['scendi', 'giu', 'viaggio', 'bevi', 'taglia', 'scava', 'passa', 'terra'])
 const minuscolo = s => { const t = String(s ?? ''); return t.charAt(0).toLowerCase() + t.slice(1) }   // un nome che manca non rompe la pagina
 </script>
 
@@ -49,7 +50,13 @@ const minuscolo = s => { const t = String(s ?? ''); return t.charAt(0).toLowerCa
       <button v-for="v in f.mete" :key="v.chiave" type="button" class="sot-grosso sot-chiaro sot-fum-viaggio" :data-viaggio="v.chiave"
               @click="$emit('viaggio', v.chiave)">{{ v.nome }}</button>
     </template>
-    <i v-else class="sot-fum-dritta" data-nessuna-meta>La runa è accesa. Accendi un'altra pietra, e da qui ci arrivi in un attimo.</i>
+    <i v-else-if="!f.terre.length" class="sot-fum-dritta" data-nessuna-meta>La runa è accesa. Accendi un'altra pietra, e da qui ci arrivi in un attimo.</i>
+    <!-- le terre già viste: si arriva nella piazza del loro villaggio (docs/sotterraneo/terre-successive.md) -->
+    <template v-if="f.terre.length">
+      <i class="sot-fum-dritta" data-terre-da-tornare>La runa ricorda anche le altre terre dove sei stato.</i>
+      <button v-for="t in f.terre" :key="t.terra" type="button" class="sot-grosso sot-chiaro sot-fum-viaggio" data-azione="torna-terra"
+              :data-terra="t.terra" @click="$emit('terra', t.terra)"><span class="em">🌀</span> {{ t.villaggio }}, {{ minuscolo(t.nome) }}</button>
+    </template>
   </template>
 
   <template v-else-if="f.tipo === 'portale'">

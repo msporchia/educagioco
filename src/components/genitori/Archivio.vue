@@ -4,13 +4,14 @@
    perché tocca `store/profile.js` e `store/storage.js`, comuni ad altri
    agenti — qui il cambio resta un montaggio a una riga in GenitoriView. */
 import { ref, computed, onMounted } from 'vue'
-import { anteprimaImportazione, importaTutto } from '../../store/profile.js'
+import { state, anteprimaImportazione, importaTutto, selectPlayer } from '../../store/profile.js'
 import { chiediPersistenza } from '../../store/storage.js'
 
 const emit = defineEmits(['esito'])
 
 const file = ref(null)
 const inAttesa = ref(null)   // { dati, sostituiti, esportato } mentre si aspetta conferma
+const fatto = ref(null)      // { quali: [{ id, nome }] } dopo un ripristino: chi è stato rimesso, e un tasto per passare a lui
 const persistita = ref(null) // null = non si sa (o non supportato), true/false = risposta del browser
 
 onMounted(async () => { persistita.value = await chiediPersistenza() })
@@ -36,6 +37,8 @@ async function scegli(ev) {
 
 async function eseguiImportazione(dati) {
   const nomi = await importaTutto(dati)
+  const ids = Object.entries(dati.profili).filter(([id, p]) => id && p && typeof p === 'object').map(([id]) => id)
+  fatto.value = { quali: ids.map((id, i) => ({ id, nome: nomi[i] || id })) }
   emit('esito', { ok: true, testo: 'Rimessi i progressi di ' + nomi.join(' e ') + '.' })
 }
 
@@ -47,6 +50,9 @@ async function conferma() {
 }
 
 function annulla() { inAttesa.value = null }
+// cambiare bambino porta in home da solo (il watch su state.player in App.vue)
+const passa = id => { fatto.value = null; return selectPlayer(id) }
+const daPassare = computed(() => (fatto.value?.quali || []).filter(q => q.id !== state.player))
 
 const dataFile = computed(() => {
   const iso = inAttesa.value?.esportato
@@ -66,9 +72,19 @@ const chiVieneSostituito = computed(() => {
   <button class="carta" data-azione="rimetti-da-file" @click="apriFile">
     <span class="ico">📂</span>
     <b>Rimetti da un file</b>
-    <i>Sostituisce i progressi con quelli salvati</i>
+    <i>Rimette i bambini che sono nel file: i nuovi si aggiungono, quelli con lo stesso id si sostituiscono. Poi li scegli dalla home, o qui con «Passa a…».</i>
   </button>
   <input ref="file" type="file" accept="application/json,.json" hidden @change="scegli">
+
+  <div v-if="fatto" class="carta aperta" data-importato>
+    <b>Rimessi: {{ fatto.quali.map(q => q.nome).join(', ') }}</b>
+    <i v-if="daPassare.length">Per ora sta giocando ancora {{ (state.giocatori.find(g => g.id === state.player) || {}).nome || 'il bambino di prima' }}: finché non passi a {{ daPassare.length === 1 ? 'lui' : 'uno di loro' }}, qui non cambia niente.</i>
+    <i v-else>Sono già quelli che stanno giocando adesso.</i>
+    <div class="riga">
+      <button v-for="q in daPassare" :key="q.id" class="bottone" type="button" data-azione="passa-a" :data-id="q.id" @click="passa(q.id)">Passa a {{ q.nome }}</button>
+      <button class="bottone chiaro" type="button" data-azione="importato-ok" @click="fatto = null">Resto qui</button>
+    </div>
+  </div>
 
   <div v-if="inAttesa" class="carta pericolo aperta" data-conferma="importazione">
     <b>Sostituisce {{ chiVieneSostituito }}?</b>
@@ -116,6 +132,9 @@ const chiVieneSostituito = computed(() => {
 .carta.pericolo.aperta { display:flex; flex-direction:column; gap:9px; align-items:center;
                          text-align:center; background:#fff0f3 }
 .carta.pericolo.aperta i { max-width:34ch }
+.carta.aperta { display:flex; flex-direction:column; gap:9px; align-items:center; text-align:center }
+.carta.aperta i { max-width:34ch }
+.carta.aperta .riga { display:flex; gap:8px; flex-wrap:wrap; justify-content:center }
 .bottone.rosso { background:linear-gradient(180deg,var(--rosso),#d63a5c); color:#fff;
                  box-shadow:0 6px 0 #a82a46; font-size:16px; padding:13px 22px }
 .bottone.rosso:active { box-shadow:0 3px 0 #a82a46 }

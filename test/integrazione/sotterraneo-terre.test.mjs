@@ -6,10 +6,12 @@
    porta delle terre in fondo alla landa è aperta: il minatore la
    annuncia, toccandola si passa nella seconda terra (la stessa mappa,
    i mostri più su di 14, la porta di là chiusa) e l'avventura lo
-   ricorda anche ricaricando. La prima terra resta com'era. Si tocca come
-   un telefono (`Input.dispatchTouchEvent`).
+   ricorda anche ricaricando. La prima terra resta com'era. Nella seconda
+   il minatore racconta i volti nuovi delle discese, e la pietra del
+   villaggio (accesa con la sua domanda) riporta nella piazza della prima.
+   Si tocca come un telefono (`Input.dispatchTouchEvent`).
    `node test/esegui.mjs sotterraneo-terre`
-   tempo: 180
+   tempo: 240
    ═══════════════════════════════════════════════════════════════════ */
 import { apriBrowser, apriGioco, azzera, semina, scatto, attendi, leggiProfilo, mondoPronto, toccaNelMondo, nelDialogo, scegli } from '../aiuto/browser.mjs'
 import { uguale, controlla, riassunto } from '../aiuto/verifica.mjs'
@@ -114,6 +116,57 @@ await page.waitForSelector('.carte', { timeout: 15000 })
 await scegli(page, 'sotterraneo3d')
 await nelMondo()
 uguale('ricaricando, ancora la seconda terra', await page.locator('[data-mondo3d]').getAttribute('data-terra-ora'), '2')
+
+/* ── nella seconda il minatore non si presenta: racconta i volti nuovi delle discese ── */
+await page.evaluate(() => window.__mondo3d.vai('minatore'))
+await attendi(page, 1500)
+for (let n = 0; n < 3 && !(await page.locator('[data-dialogo-testo]').count()); n++) {
+  await toccaNelMondo(page, '[data-minatore]', { tocca })
+  await page.waitForSelector('[data-dialogo-testo]', { timeout: 15000 }).catch(() => null)
+}
+await page.waitForSelector('[data-dialogo-testo]', { timeout: 5000 })
+{
+  const t = await page.locator('[data-dialogo-testo]').innerText()
+  controlla('il minatore dice che le discese hanno un\'altra faccia', /un'altra faccia/.test(t), t)
+}
+await scatto(page, 'sotterraneo-terre-volti')
+await nelDialogo(page, '[data-scelta="ciao"]', { tocca: async sel => { const b = await page.locator(sel).first().boundingBox(); await tocca(b.x + b.width / 2, b.y + b.height / 2) } })
+await page.waitForFunction(() => !document.querySelector('[data-dialogo]'), null, { timeout: 10000 })
+
+/* ── il viaggio indietro: la pietra del villaggio, accesa, riporta alla prima terra ── */
+await page.evaluate(() => window.__mondo3d.vai('pietra:villaggio'))
+await attendi(page, 1500)
+for (let n = 0; n < 3 && !(await page.locator('[data-pietra-domanda] .qz-tasto').count()); n++) {
+  await toccaNelMondo(page, '[data-pietra="villaggio"]', { tocca })
+  await page.waitForSelector('[data-pietra-domanda] .qz-tasto', { timeout: 15000 }).catch(() => null)
+}
+await page.locator('[data-pietra-domanda] .qz-tasto[data-giusta]').first().click()
+await page.waitForSelector('[data-pietra="villaggio"][data-accesa="1"]', { timeout: 8000 })
+await page.waitForSelector('[data-fumetto-di="pietra"] [data-azione="torna-terra"]', { timeout: 10000 })
+uguale('la pietra offre la prima terra, e nessun\'altra', await page.locator('[data-azione="torna-terra"]').evaluateAll(l => l.map(e => e.dataset.terra).join()), '1')
+uguale('e non dice «nessuna meta»', await page.locator('[data-fumetto-di="pietra"] [data-nessuna-meta]').count(), 0)
+await scatto(page, 'sotterraneo-terre-pietra')
+{
+  const b = await page.locator('[data-azione="torna-terra"][data-terra="1"]').boundingBox()
+  await tocca(b.x + b.width / 2, b.y + b.height / 2)
+}
+await page.waitForSelector('[data-mondo3d][data-terra-ora="1"]', { timeout: 30000 })
+const aCasa = await page.waitForFunction(v => [...document.querySelectorAll('[data-avviso-terra]')].some(e => e.textContent.includes(v)),
+  TERRE[0].villaggio, { timeout: 30000 }).then(() => true, () => false)
+await mondoPronto(page)
+await attendi(page, 2000)
+{
+  controlla('tornati, il nome della terra di casa', aCasa)
+  uguale('il mondo è quello della prima terra', await page.evaluate(() => window.__mondo3d.m.terra), 1)
+  uguale('la porta di qui è aperta come prima', await page.locator('[data-bersaglio][data-terre]').getAttribute('data-terre'), '1')
+  uguale('si arriva nella piazza, non alla porta', await page.locator('[data-minatore][data-vis="1"]').count(), 1)
+  const av = await avventura()
+  uguale('l\'avventura dice la prima terra', av.terraOra, 1)
+  uguale('le tombe della prima restano ripulite', av.mondo.dungeon.tombe.rifatti, 1)
+  controlla('la seconda resta salvata con la pietra accesa', (av.mondi && av.mondi[2] && av.mondi[2].pietre || []).includes('villaggio'))
+  uguale('il primato resta la seconda', (await leggiProfilo(page)).best.sotTerra, 2)
+  await scatto(page, 'sotterraneo-terre-ritorno')
+}
 
 uguale('nessun errore in console', errori.join(' | '), '')
 await browser.close()

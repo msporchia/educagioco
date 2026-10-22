@@ -10,6 +10,12 @@ const AVVISI = 'posta-avvisi'
 const DETTI = 'posta-detti'
 
 export const daLeggere = ref(0)
+// c'è un avviso sulle domande che vanno male: la home lo dice al bambino con una frase sola, mai con il contenuto (docs/genitori/cestino-e-posta.md)
+export const difficoltaDaDire = ref(false)
+// «Non avvertirmi più» e quando si è avvisato l'ultima volta, per bambino: fuori dai profili, come il resto della posta
+const SILENZI = 'posta-silenzi'
+const ULTIMI = 'posta-difficolta'
+export const avvisiDifficolta = ref(true)
 
 const leggiSegno = async () => (await load(CHIAVE))?.id
 const leggiAvvisi = async () => (await load(AVVISI))?.voci || []
@@ -45,12 +51,14 @@ export async function laPosta() {
 async function ricalcola() {
   const { note, avvisi } = await laPosta()
   daLeggere.value = note.length + avvisi.length
+  difficoltaDaDire.value = avvisi.some(a => a.tipo === 'difficolta')
   return daLeggere.value
 }
 
 // chiamata dopo profile.init(): senza segno, nessun profilo in casa parte da ULTIMA
 // (installazione nuova), altrimenti da 0 (casa che giocava già)
 export async function initPosta() {
+  avvisiDifficolta.value = (await load(SILENZI))?.difficolta !== false
   if (typeof await leggiSegno() !== 'number') {
     const vergine = (await chiavi('profilo:')).length === 0
     save(CHIAVE, { id: vergine ? ULTIMA : 0 })
@@ -67,9 +75,9 @@ export async function segnaLetta() {
 }
 
 // azione facoltativa, stessa forma delle note ({ testo, scheda })
-export async function avvisa(testo, azione = null) {
+export async function avvisa(testo, azione = null, extra = {}) {
   const voci = await leggiAvvisi()
-  voci.unshift({ quando: new Date().toISOString(), testo, azione })
+  voci.unshift({ quando: new Date().toISOString(), testo, azione, ...extra })
   save(AVVISI, { voci: voci.slice(0, 10) })
   await flush()
   return ricalcola()
@@ -84,4 +92,22 @@ export async function avvisaUnaVolta(chiave, testo, azione = null) {
   save(DETTI, { voci: [chiave, ...detti].slice(0, 200) })
   await avvisa(testo, azione)
   return true
+}
+
+/* ── Gli avvisi sulle domande che vanno male (quiz/allarme.js, store/difficolta.js) ── */
+export const ultimoAvvisoDifficolta = async id => (await load(ULTIMI))?.[id] || 0
+export async function segnaAvvisoDifficolta(id, quando = Date.now()) {
+  save(ULTIMI, { ...((await load(ULTIMI)) || {}), [id]: quando })
+  await flush()
+}
+// `tipo` e `silenzia`: la home dice al bambino la sua frase, e il grande trova «Non avvertirmi più» sulla carta
+export const avvisaDifficolta = (testo, azione) => avvisa(testo, azione, { tipo: 'difficolta', silenzia: true })
+
+// mai il booleano nudo (docs/core/archivio.md): { difficolta: false } vuol dire spento
+export async function accendiAvvisiDifficolta(si) {
+  avvisiDifficolta.value = !!si
+  save(SILENZI, { difficolta: !!si })
+  if (!si) save(AVVISI, { voci: (await leggiAvvisi()).filter(a => a.tipo !== 'difficolta') })
+  await flush()
+  return ricalcola()
 }

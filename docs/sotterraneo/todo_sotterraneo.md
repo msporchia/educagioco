@@ -10,10 +10,9 @@ rimasti aperti. Quando una voce si chiude si toglie da qui (la storia sta in `gi
 
 ### A metà: cosa non è ancora fatto
 
-- **Il viaggio indietro fra le terre**: le terre successive ci sono ([terre-successive.md](terre-successive.md)), ma dal villaggio di
-  una terra dopo non si torna a quelle già viste (il motore lo sa già, `passaTerra(a, t)`; manca il modo nel gioco: la porta nei due
-  versi o la pietra del villaggio). Restano anche la medaglia per una terra nuova (il primato `sotTerra` c'è) e il minatore che
-  racconta i volti nuovi; le terre dopo la prima vanno tarate col banco (`--terra 2`) insieme al resto.
+- **Le terre successive** ([terre-successive.md](terre-successive.md)): il viaggio indietro (la pietra del villaggio) e i volti
+  raccontati dal minatore ci sono; restano la porta nei due versi (se serve), la medaglia per una terra nuova (il primato `sotTerra`
+  c'è) e la taratura delle terre dopo la prima col banco (`--terra 2`) insieme al resto.
 - **Gli screen delle sette zone con i nemici** chiesti da Marco: ora c'è `scatta-app.mjs --tana <luogo>` (`--tana lista`); mancano le
   foto per zona e lo scontro all'aperto.
 - **La torcia nel dungeon** (quasi chiuso, `corsa.js:264`): nello screenshot di Marco (torre, piano 3 di 3) si vede un cerchio di ~3 celle:
@@ -114,9 +113,8 @@ fuori») e i branchi a 14 celle (`292a98f5`); il villaggio tondo (24×20); la sc
 - **Medaglia per una terra nuova**: no.
 - **Pubblicare** periodicamente con `./pubblica.sh` (mai push su GitHub per ora), senza rifare ogni volta tutti i test; la prova completa a
   macchina libera si fa a lavori finiti.
-- **Modelli 3D da migliorare** (dopo): drago dello scudo (sembra una lucertola) e leoni con la stessa sagoma; ciondolo su mago e nano; puntine
-  dei castoni e fiamme delle collane; fiamme della torcia a coni; rosso delle cure rosato; collane e scudi sopra i 1500 triangoli (fino a
-  1960); cappucci calati poco visibili; scorpione (coda piatta), golem (testa nascosta nello schianto) e pipistrello visto dall'alto.
+- **Modelli 3D da migliorare** (dopo): scorpione (coda piatta), golem (testa nascosta nello schianto) e pipistrello visto dall'alto. Chiusi il 22/10 (scudi, gioielli, pozioni, vesti): restano da guardare col dito il
+  ciondolo sul nano (sporge con la barba) e i cappucci calati sul mago (li copre la barba).
 
 ## 2. Eroi, mostri ed effetti in 3D (sessione Mostri renderizzati)
 

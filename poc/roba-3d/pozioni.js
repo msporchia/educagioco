@@ -4,7 +4,7 @@
 // (alte 0.16 .. 0.35, come i gioielli); `userData = { famiglia:'pozione', figura, triangoli, anima(t) }`: il liquido ondeggia, salgono le bollicine, il
 // cuore luminoso respira, la fiamma della torcia guizza, il portale della pergamena brilla. Sotto i 1000 triangoli per modello.
 import * as THREE from 'three'
-import { Fucina, sca, cil, con, sfe, ott, toro, fiamme, braci, orbita, C } from '../armi-3d/fucina.js'
+import { Fucina, sca, cil, con, sfe, ott, toro, braci, orbita } from '../armi-3d/fucina.js'
 import { MATERIE } from './palette.js'
 
 const PI = Math.PI
@@ -49,7 +49,7 @@ function bottiglia (c, ctrl, o) {
   const dentro = [V(0.0005, parete)]
   for (const p of pts) if (p.y > parete && p.y < livello) dentro.push(V(Math.max(0.003, p.x - parete), p.y))
   dentro.push(V(Math.max(0.003, rA(livello) - parete), livello), V(0.0005, livello))
-  const mLiq = new THREE.MeshStandardMaterial({ color: mescola(colore, 0x000000, 0.25), emissive: colore, emissiveIntensity: luce * 0.42, roughness: 0.3, metalness: 0, flatShading: true, transparent: true, opacity: pieno, depthWrite: false })
+  const mLiq = new THREE.MeshStandardMaterial({ color: mescola(colore, 0x000000, 0.6), emissive: colore, emissiveIntensity: luce * 0.42, roughness: 0.45, metalness: 0, flatShading: true, transparent: true, opacity: pieno, depthWrite: false })
   const liq = new THREE.Mesh(new THREE.LatheGeometry(dentro, seg), mLiq); liq.scale.z = sz; c.aggiungi(liq, 2)
   // il pelo dell'acqua, più chiaro, che si inclina
   const rS = Math.max(0.004, rA(livello) - parete)
@@ -65,9 +65,9 @@ function bottiglia (c, ctrl, o) {
   })
   // il cuore luminoso (un bagliore additivo che respira)
   if (nucleo != null) {
-    const n = new THREE.Mesh(new THREE.SphereGeometry(1, 7, 5), luceBasic(nucleo, 0.3, true)); n.position.y = ym; n.scale.set(1, 1, sz); c.aggiungi(n, 4)
+    const n = new THREE.Mesh(new THREE.SphereGeometry(1, 7, 5), luceBasic(nucleo, 0.2, true)); n.position.y = ym; n.scale.set(1, 1, sz); c.aggiungi(n, 4)
     const R = Math.max(0.01, rA(ym) - parete) * 0.5
-    c.an.push(t => { const k = 0.85 + 0.2 * Math.sin(t * 2.4 + ph); n.scale.set(R * k, R * k * 1.1, R * k * sz); n.rotation.y = t * 0.6; n.material.opacity = 0.22 + 0.12 * Math.sin(t * 2.4 + ph) })
+    c.an.push(t => { const k = 0.85 + 0.2 * Math.sin(t * 2.4 + ph); n.scale.set(R * k, R * k * 1.1, R * k * sz); n.rotation.y = t * 0.6; n.material.opacity = 0.15 + 0.08 * Math.sin(t * 2.4 + ph) })
   }
   // le bollicine, che salgono e scoppiano al pelo
   const bs = []
@@ -142,11 +142,11 @@ export const TIPI = {
   cura: {
     segno: 'goccia', segnoCol: 0xd01a2a, cima: null, cera: CERA, nastro: 0xd01a2a, corda: 0x8a5a2e, metallo: ORO, gemma: 0xff2a4a,
     tinte: {
-      fiala:      { colore: 0xff6a5a, luce: 0.4, nucleo: 0xff6a78, pieno: 0.88, bolle: 3 },
-      pallone:    { colore: 0xe81c2e, luce: 0.55, nucleo: 0xff3a4a, bolle: 4 },
-      ampolla:    { colore: 0xa80c28, luce: 0.6, nucleo: 0xff2a40, bolle: 4 },
-      fiaschetta: { colore: 0x68041e, luce: 0.7, nucleo: 0xff2040, bolle: 4, scint: [0xffd45a, 6] },
-      goccia:     { colore: 0xff0a28, luce: 1.7, nucleo: 0xffd45a, pieno: 0.92, bolle: 4, scint: [0xffe27a, 7] }
+      fiala:      { colore: 0xff5a00, luce: 0.5, nucleo: 0xff4000, pieno: 0.9, bolle: 3 },
+      pallone:    { colore: 0xd00012, luce: 0.5, nucleo: 0xff0818, bolle: 4 },
+      ampolla:    { colore: 0x82001c, luce: 0.55, nucleo: 0xc00820, bolle: 4 },
+      fiaschetta: { colore: 0x5a0418, luce: 0.8, nucleo: 0xd01030, bolle: 4, scint: [0xffd45a, 6] },
+      goccia:     { colore: 0xff0a1e, luce: 0.95, nucleo: 0xffb020, pieno: 0.94, bolle: 4, scint: [0xffe27a, 7] }
     }
   },
   energia: {
@@ -303,6 +303,26 @@ function elisirToro (chiave) {
 }
 
 // ══════════ gli altri ══════════
+// una lingua di fiamma è un profilo piatto a goccia con la punta piegata, doppio (due piani in croce) per vederla da ogni lato, e tre strati sovrapposti
+// (rosso, arancio, giallo) che guizzano ognuno per conto suo. Origine alla base.
+const PROFILO_FIAMMA = [[-0.42, 0.12], [-0.28, 0.0], [0, -0.04], [0.3, 0.0], [0.46, 0.14], [0.44, 0.38], [0.3, 0.6], [0.2, 0.8], [0.06, 1.0], [-0.1, 0.78], [-0.2, 0.7], [-0.38, 0.52], [-0.46, 0.3]]
+let geoFiamma = null
+const lingua = () => {
+  if (!geoFiamma) { geoFiamma = new THREE.ShapeGeometry(new THREE.Shape(PROFILO_FIAMMA.map(p => new THREE.Vector2(p[0], p[1])))); geoFiamma.deleteAttribute('uv') }
+  return geoFiamma
+}
+function fiammeLingue (f, basi, { col = [0xe62a08, 0xff7410, 0xffd02a] } = {}) {
+  const l = basi.map((b, i) => ({ b, i, m: [0, PI / 2].flatMap(ry => [[1, 1, 0], [0.68, 0.72, 0.003], [0.36, 0.5, 0.006]].map(([kw, kh, dz], j) => {
+    const m = f.libero(lingua(), col[j], b.x, b.y, b.z, 0.95 + j * 0.2); m.material.side = THREE.DoubleSide; m.rotation.y = ry
+    m.position.x += ry ? dz : 0; m.position.z += ry ? 0 : dz; m.userData.k = [kw, kh]; m.userData.ry = ry; return m
+  })) }))
+  return t => { for (const { b, i, m } of l) m.forEach((q, j) => {
+    const jj = j % 3, k = 0.8 + 0.28 * Math.sin(t * 7 + i * 1.9 + jj * 0.9) + 0.1 * Math.sin(t * 16 + i + jj)
+    q.scale.set(b.w * q.userData.k[0] * (1.15 - 0.15 * k), b.h * q.userData.k[1] * k, 1)
+    q.rotation.z = 0.18 * Math.sin(t * 5 + i * 2.3 + jj * 0.6) - 0.04
+  }) }
+}
+
 /** La torcia: il manico di legno, la stoffa impeciata in cima e la fiamma che guizza con le braci che salgono. */
 function torcia (chiave) {
   const c = cantiere(97), f = c.f
@@ -316,10 +336,9 @@ function torcia (chiave) {
   f.metti(toro(0.0235, 0.0055, 4, 10), 0x6a4326, 0, 0.125, 0, { rx: PI / 2 })
   f.metti(cil(0.026, 0.02, 0.016, 8), FERRO.medio, 0, 0.113, 0, {}, 'metallo')               // la ghiera di ferro
   const brace = f.libero(sfe(0.04, 7, 5), 0xff5a1a, 0, 0.208, 0, 1.2); brace.scale.set(1, 0.4, 1)
-  const fa = fiamme(f, [[0, 0.21, 0], [0.018, 0.21, 0.01], [-0.018, 0.21, -0.008], [0.004, 0.21, -0.016]], { h: 0.17, r: 0.046, vel: 7 })
-  const fb = fiamme(f, [[0, 0.21, 0.002]], { h: 0.11, r: 0.03, col: [C.FUOCO_C], vel: 9 })
+  const fa = fiammeLingue(f, [{ x: 0, y: 0.205, z: 0, w: 0.1, h: 0.2 }, { x: -0.03, y: 0.205, z: 0.006, w: 0.07, h: 0.13 }, { x: 0.03, y: 0.205, z: -0.006, w: 0.075, h: 0.15 }])
   const sc = braci(f, 0xffd23a, [-0.035, 0.22, -0.035], [0.07, 0.04, 0.07], { n: 6, vel: 0.45, r: 0.011, sale: 0.17 })
-  c.an.push(t => { fa(t); fb(t); sc(t); const k = 0.9 + 0.15 * Math.sin(t * 9) + 0.07 * Math.sin(t * 17); brace.scale.set(k, 0.4, k); })
+  c.an.push(t => { fa(t); sc(t); const k = 0.9 + 0.15 * Math.sin(t * 9) + 0.07 * Math.sin(t * 17); brace.scale.set(k, 0.4, k); })
   return chiudi(c, chiave)
 }
 
