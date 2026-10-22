@@ -12,7 +12,7 @@ import { apriBrowser, apriGioco, azzera, apriTendine, scatto } from '../aiuto/br
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 
 // una scena per gruppo, e due di una serie per vedere il limite
-const SOLO = ['vuoto', 'cubi', 'ab-base', 'ab-basic', 'ab-nebbia', 'cal-1', 'sot-1', 'sot-3', 'tri-1', 'tri-2', 'ch-2', 'luci-6', 'px-2', 'per-4', 'mos-4', 'zaino-15', 'roba-lame', 'fat-10', 'js']
+const SOLO = ['ing-sot', 'ing-presto', 'ing-zaino', 'ing-mondo', 'vuoto', 'cubi', 'ab-base', 'ab-basic', 'ab-nebbia', 'cal-1', 'sot-1', 'sot-3', 'tri-1', 'tri-2', 'ch-2', 'luci-6', 'px-2', 'per-4', 'mos-4', 'zaino-15', 'roba-lame', 'fat-10', 'js']
 
 const browser = await apriBrowser()
 const { page, errori } = await apriGioco(browser)
@@ -41,7 +41,7 @@ const log = await page.inputValue('[data-benchmark-log]')
 console.log(log)
 if (errori.length) console.log('ERRORI DELLA PAGINA:', errori)
 
-for (const g of ['pavimento', 'togli', 'calore', 'discese', 'luci', 'pixel', 'sopra', 'zaino', 'roba', 'fattoria']) controlla(`il gruppo ${g} c'è`, log.includes(`[${g}]`))
+for (const g of ['ingresso', 'pavimento', 'togli', 'calore', 'discese', 'luci', 'pixel', 'sopra', 'zaino', 'roba', 'fattoria']) controlla(`il gruppo ${g} c'è`, log.includes(`[${g}]`))
 uguale('nessuna scena «non regge»', (log.match(/non regge/g) || []).length, 0)
 controlla('la LETTURA dice un limite', /LETTURA/.test(log) && /LIMITE/.test(log))
 const dati = JSON.parse(log.split('DATI ')[1])
@@ -50,6 +50,10 @@ const scena = id => dati.r.find(r => r[0] === id)
 controlla('lo scontro ha chiamate e triangoli', scena('sot-3') && scena('sot-3')[4] > 50 && scena('sot-3')[5] > 5, JSON.stringify(scena('sot-3')))
 controlla('i triangoli x2 sono di più, le chiamate le stesse', scena('tri-2')[5] > scena('tri-1')[5] * 1.4 && Math.abs(scena('tri-2')[4] - scena('tri-1')[4]) < 20, JSON.stringify([scena('tri-2'), scena('tri-1')]))
 controlla('le chiamate x2 sono di più, i triangoli gli stessi', scena('ch-2')[4] > scena('tri-1')[4] * 1.4 && Math.abs(scena('ch-2')[5] - scena('tri-1')[5]) < 10, JSON.stringify([scena('ch-2'), scena('tri-1')]))
+const ingresso = id => dati.r.find(r => r[0] === id)
+controlla('l\'ingresso: due giri da capo, i fotogrammi più lunghi e i tre attacchi', ingresso('ing-sot') && ingresso('ing-sot')[1] === 'ing' && ingresso('ing-sot')[2].length === 2 && ingresso('ing-sot')[4][0].length === 3, JSON.stringify(ingresso('ing-sot')))
+controlla('l\'ingresso a riscaldamento spento e il mondo di sopra', ['ing-sot-x', 'ing-presto', 'ing-presto-x', 'ing-mondo', 'ing-mondo-x', 'ing-zaino'].every(id => ingresso(id) && ingresso(id)[1] === 'ing'))
+controlla('la LETTURA dice l\'ingresso', /INGRESSO in un piano/.test(log) && /Ingresso nel mondo di sopra/.test(log))
 controlla('ogni scena ha la CPU e la GPU a parte', ['vuoto', 'sot-3', 'ab-basic'].every(id => typeof scena(id)[8] === 'number' && typeof scena(id)[9] === 'number'), JSON.stringify(scena('sot-3')))
 controlla('ogni gruppo ha il riferimento del calore', /\[discese\][^\n]*rif [\d.]+ ms x[\d.]+/.test(log))
 controlla('la LETTURA dice cosa togliere e il pavimento', /TOGLIERE/.test(log) && /Pavimento: schermo vuoto/.test(log))

@@ -24,6 +24,17 @@ const tre = n => ({ mostri: 3, ...n })
 const uno = n => ({ mostri: 1, colpi: true, ...n })   // la scomposizione: un mostro con gli effetti, una cosa tolta alla volta
 /** Le scene, in ordine. `serie` e `quanti` dicono dove cercare il limite; `gruppo` è la sezione del log. */
 export const TAPPE = [
+  // l'ingresso da freddo, per primo (il browser tiene da parte gli shader già visti: dopo sarebbe più caldo del vero), ogni scena tre
+  // volte da capo; le stesse a riscaldamento spento dopo, perché il confronto non lo favorisca
+  { gruppo: 'ingresso', carica: () => import('./veri/ingresso.js'), scene: [
+    { id: 'ing-sot', nome: 'entrare in un piano, poi 3 attacchi', ingresso: 'discesa' },
+    { id: 'ing-presto', nome: 'attacco a 0,5 s dall\'ingresso', ingresso: 'discesa', presto: true },
+    { id: 'ing-zaino', nome: 'entrare e aprire lo zaino', ingresso: 'discesa', zaino: true },
+    { id: 'ing-mondo', nome: 'entrare nel mondo di sopra', ingresso: 'mondo' },
+    { id: 'ing-sot-x', nome: 'entrare, 3 attacchi, senza riscaldamento', ingresso: 'discesa', riscaldamento: false },
+    { id: 'ing-presto-x', nome: 'attacco a 0,5 s, senza riscaldamento', ingresso: 'discesa', presto: true, riscaldamento: false },
+    { id: 'ing-mondo-x', nome: 'il mondo di sopra, senza riscaldamento', ingresso: 'mondo', riscaldamento: false },
+  ] },
   { gruppo: 'calore', carica: discese, scene: [{ id: 'cal-1', nome: 'riferimento, 8 mostri con gli effetti', mostri: 8, colpi: true }] },
   // il pavimento: quanto costa un fotogramma che non disegna niente, e 100 oggetti semplici
   { gruppo: 'pavimento', carica: base, scene: [{ id: 'vuoto', nome: 'schermo vuoto (solo pulito)', base: 'vuoto' }, { id: 'cubi', nome: '100 cubi semplici', base: 'cubi' }] },
@@ -194,7 +205,7 @@ async function ambiente() {
 
 // il riferimento del calore: la pausa a schermo nero, poi la stessa scena fissa (veri/base.js), corta
 async function riferimento({ contenitore, fermo, corto, progresso, k, tot, raffredda }) {
-  if (!corto) {
+  if (!corto && raffredda > 0) {
     for (let s = Math.round(raffredda / 1000); s > 0 && !fermo(); s--) { progresso(k, tot, `pausa per raffreddare, ${s} s`); await new Promise(r => setTimeout(r, 1000)) }
   }
   if (fermo()) return null
@@ -240,6 +251,11 @@ export async function eseguiVeri({ contenitore, progresso = () => {}, fermo = ()
       if (nuovo) {
         let r = null
         try { r = await riferimento({ contenitore, fermo, corto, progresso, k, tot, raffredda }) } catch (e) { r = null }
+        // un riferimento più che doppio del più svelto si rifà una volta (subito, senza pausa): un intoppo non deve correggere un gruppo intero;
+        // e il primo si rifà sempre: è freddo (shader e trame del riferimento ancora da compilare)
+        if (r && r.ms && (!rifs.length || r.ms > 2 * Math.min(...rifs))) {
+          try { const r2 = await riferimento({ contenitore, fermo, corto, progresso, k, tot, raffredda: 0 }); if (r2 && r2.ms && r2.ms < r.ms) r = r2 } catch (e) { /* si tiene il primo */ }
+        }
         if (r && r.ms) {
           rifOra = r.ms; rifs.push(r.ms)
           if (!g.rif) g.rif = { ms: r.ms, p95: r.p95, js: r.js, gpu: r.gpu }
