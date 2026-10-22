@@ -30,8 +30,8 @@ const MACCHINE = {
   zuccherificio: 'zuccherificio', gelateria: 'gelateria', pastificio: 'pasticceria', sartoria: 'sartoria', tintoria: 'tintoria',
   friggitoria: 'friggitoria', sushi_bar: 'sushi_bar', mongolfiera: 'mongolfiera',
 }
-// I recinti che la 3D ha già (conigliera, porcile, anatre, capre, arnie, alpaca, asini, peschiera e il pentolone non ci sono: «da regalare»).
-const RECINTI = { ovile: 'recinto', pollaio: 'pollaio', stalla: 'stalla' }
+// I recinti che la 3D ha già (conigliera, arnie, alpaca, asini e peschiera non ci sono: «da regalare»). Il pentolone è una macchina.
+const RECINTI = { ovile: 'recinto', pollaio: 'pollaio', stalla: 'stalla', porcile: 'porcile', stagno_anatre: 'anatre', recinto_capre: 'capre', pentolone: 'pentolone' }
 // Le cose di mappa con un equivalente: il vicino (il carretto 2D è una vista del trattore, D10), il mercato, i decori dello stesso mestiere.
 const ALTRE = {
   orto: 'campo', mercato: 'bancarella', carretto_mercato: 'trattore',

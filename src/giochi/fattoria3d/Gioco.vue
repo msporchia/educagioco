@@ -11,6 +11,7 @@ import { load, save } from '../../store/storage.js'
 import { scelta, ricorda } from '../campagne.js'
 import { Fattoria3d } from './motore/fattoria3d.js'
 import { fattoriaTipo } from './motore/tipo.js'
+import { statoDaCaricare } from './motore/migra.js'
 import { haWebGL2 } from './scena3d/webgl.js'
 import { dettoDi, dettoDiRifiuto } from './scena3d/detti.js'
 import { EDIFICI, avvisoEdificiNuovi } from './dati/catalogo.js'
@@ -419,7 +420,7 @@ function cheatDellIndirizzo() {
 
 onMounted(async () => {
   if (!puo.value) return
-  motore = new Fattoria3d({ stato: scelta(CHIAVE, 'stato', null), borsa })
+  motore = new Fattoria3d({ stato: statoDaCaricare(scelta), borsa })
   cheatDellIndirizzo()
   try { const c = await load(CHIAVE_OPZIONI); if (c && c.q && c.v === VERSIONE_OPZIONI) Object.assign(q, c.q) } catch (e) { /* le opzioni di serie */ }
   const { Mondo3d } = await import('./scena3d/mondo3d.js')          // three si scarica solo qui

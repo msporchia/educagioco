@@ -50,8 +50,11 @@ const T0 = 1770000000000
   uguale('il carretto del vicino è il trattore', pezzoPer('carretto_mercato'), 'trattore')
   uguale('la mongolfiera è la mongolfiera', pezzoPer('mongolfiera'), 'mongolfiera')
   uguale('un vaso fiorito è un\'aiuola', pezzoPer('vaso_f'), 'aiuola')
-  uguale('la pentolone non ha equivalente', pezzoPer('pentolone'), null)
-  uguale('il porcile non ha equivalente', pezzoPer('porcile'), null)
+  uguale('il pentolone è il pentolone', pezzoPer('pentolone'), 'pentolone')
+  uguale('il porcile è il porcile', pezzoPer('porcile'), 'porcile')
+  uguale('lo stagno delle anatre sono le anatre', pezzoPer('stagno_anatre'), 'anatre')
+  uguale('il recinto delle capre sono le capre', pezzoPer('recinto_capre'), 'capre')
+  uguale('la conigliera non ha equivalente', pezzoPer('conigliera'), null)
   uguale('un albero non ha equivalente', pezzoPer('albero'), null)
   uguale('un id sconosciuto non ha equivalente', pezzoPer('boh'), null)
   uguale('carote → carota', JSON.stringify(merceDel('carote')), JSON.stringify({ dove: 'merci', id: 'carota' }))
@@ -133,7 +136,7 @@ nota('livelli 2D → 3D:', forme.join(' '))
   if (alto) {
     uguale('livello 70: all\'ultimo livello 3D', livelloPer(alto.esperienza), ULTIMO)
     controlla('livello 70: tutti gli edifici 3D nel magazzino', Object.keys(EDIFICI).every(t => alto.magazzino[t] === 1), Object.keys(EDIFICI).filter(t => alto.magazzino[t] !== 1).join())
-    controlla('livello 70: le cose senza equivalente sono registrate (porcile, pentolone, …)', Object.keys(alto.daRegalare).some(k => k.startsWith('cosa:')))
+    controlla('livello 70: le cose senza equivalente sono registrate (conigliera, arnie, …)', Object.keys(alto.daRegalare).some(k => k.startsWith('cosa:')))
     controlla('livello 70: ogni voce da regalare ha un numero positivo', Object.values(alto.daRegalare).every(n => Number.isInteger(n) && n > 0))
   }
 }
