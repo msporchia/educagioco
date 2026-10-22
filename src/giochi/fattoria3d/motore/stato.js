@@ -58,6 +58,8 @@ export function statoIniziale() {
     vecchi: [],                // gli id (`a_b`) dei lotti comprati prima della geografia grande dove ora cambierebbe qualcosa: si generano alla vecchia (generaLotto `vecchio`)
     pesca: {},                 // per lotto d'acqua tuo: { i, j (dove sta il galleggiante), fine (quando abbocca, null se non c'è la lenza), riposo (quando il banco si ripopola, null) }
     strade: [],                // le celle (indice di griglia) disegnate dal bambino
+    daRegalare: {},            // ciò che la fattoria 2D aveva e la 3D non ha ancora ({ 'cosa:ovile': 1, 'scorta:miele': 4, 'terra': 2 }): solo un conto, mai monete (motore/migra.js)
+    migrato: 0,                // 1 se lo stato viene dalla fattoria 2D
     magazzino: {},             // pezzi pagati e non ancora messi: { campo: 1 }
     tagliati: [],              // i numeri degli alberi abbattuti
     ostacoli: [],              // gli id (le celle) dei sassi e dei cespugli tolti
@@ -102,6 +104,8 @@ export function normalizza(letto) {
     const fine = Number.isFinite(v.fine) ? v.fine : null, riposo = Number.isFinite(v.riposo) ? v.riposo : null
     if (fine !== null || riposo !== null) s.pesca[id] = { i: v.i, j: v.j, fine, riposo }
   }
+  for (const [k, n] of Object.entries(oggetto(letto.daRegalare)).slice(0, 400)) if (typeof k === 'string' && k.length <= 64 && numero(n) >= 1) s.daRegalare[k] = Math.min(9999, Math.floor(n))
+  s.migrato = letto.migrato === 1 ? 1 : 0
   s.strade = Array.isArray(letto.strade) ? letto.strade.filter(Number.isInteger) : []
   for (const [k, n] of Object.entries(oggetto(letto.magazzino))) if (numero(n) > 0) s.magazzino[k] = numero(n)
   s.tagliati = Array.isArray(letto.tagliati) ? letto.tagliati.filter(Number.isInteger) : []
