@@ -3,6 +3,14 @@
 Quello che il codice non può decidere. Per ognuna: le opzioni con pro e contro, e una **raccomandazione** (un'indicazione, non una
 scelta fatta). Finché non c'è una risposta, i giri che ne dipendono restano fermi ([piano-a-giri.md](piano-a-giri.md)).
 
+## Regola generale (22/10/2026): la 3D usa i valori esatti della 2D
+
+Dove la 2D ha un valore (livelli, prezzi, tempi in minuti, silos con scomparti, costo dei gesti) la 3D usa **quello**: chiude D2, D9, D11, D13.
+Le eccezioni, decise dall'utente:
+- **Terra**: si adegua la 3D alla 2D (prezzo e rincaro della terra come nella 2D). La differenza di forma (lotti 4×4 senza confini contro piazzole 6×6) si pareggia **tarando la quantità di terra**: quanta ne stava prima nella 2D contro quanta ne sta ora, e **nel dubbio si regala un po' più di terra** (non è importante).
+- **Campi** (D12): le quattro tessere restano; è una questione di spazio sulla mappa, non di costo: il campo intero rende come uno della 2D e la terra si tara come sopra.
+- **Pesca**: è un'attività che entra a un livello **medio-alto**; nessun bambino ci è ancora arrivato, quindi si ritara **solo la parte medio-alta** della scala per incastrarla (D4 chiuso in questo senso).
+
 ## D1 — Cosa succede ai salvataggi della 2D (blocca G1)
 
 | opzione | pro | contro |
