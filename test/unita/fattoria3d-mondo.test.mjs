@@ -120,7 +120,7 @@ controlla('i biomi non dipendono dall\'ordine di chiamata', (() => { const v = [
   const conta = { prato: 0, bosco: 0, laghetto: 0 }
   for (let b = -60; b < 60; b++) for (let a = -60; a < 60; a++) {
     const l = lotto(a, b), bio = biomaDi(a, b)
-    conta[bio]++; tot++
+    if (a >= 0 && a <= 7) { conta[bio]++; tot++ }          // le proporzioni valgono per la fascia di mezzo: a ovest c'è il mare, a est i laghi grandi (fattoria3d-geografia)
     if (bio !== 'laghetto') continue
     laghi++
     const ac = acquaDelLotto(l), set = new Set(ac.map(([i, j]) => chiave(i, j)))
@@ -138,7 +138,7 @@ controlla('i biomi non dipendono dall\'ordine di chiamata', (() => { const v = [
   controlla('i laghetti stanno alle regole (lontani, mai attaccati, con la terra negli angoli, un molo)', brutti.length === 0, brutti.slice(0, 4).join(' · '))
   const pc = k => Math.round(100 * conta[k] / tot)
   controlla('le proporzioni sono quelle volute (prato ~70%, bosco ~15%, laghetto ~15%)', Math.abs(pc('laghetto') - 15) <= 4 && Math.abs(pc('bosco') - 15) <= 4 && pc('prato') >= 63, JSON.stringify(conta))
-  nota('biomi su 14400 lotti: prato', pc('prato') + '%, bosco', pc('bosco') + '%, laghetto', pc('laghetto') + '%')
+  nota('biomi nella fascia di mezzo (a da 0 a 7, b da −60 a 59): prato', pc('prato') + '%, bosco', pc('bosco') + '%, laghetto', pc('laghetto') + '%')
   controlla('il bosco ha più alberi del prato', (() => { let b = 0, p = 0, nb = 0, np = 0; for (let y = 8; y < 60; y++) for (let x = 8; x < 60; x++) { const bi = biomaDi(x, y); if (bi === 'bosco') { b += generaLotto(x, y).alberi.length; nb++ } else if (bi === 'prato') { p += generaLotto(x, y).alberi.length; np++ } } return b / nb > 1.8 * (p / np) })())
   controlla('P_LAGHETTO è un numero sensato', P_LAGHETTO > 0 && P_LAGHETTO < 1)
 }

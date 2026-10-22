@@ -17,11 +17,9 @@ rimasti aperti. Quando una voce si chiude si toglie da qui (la storia sta in `gi
   [mondo-a-percorso-lavori.md](mondo-a-percorso-lavori.md) (compito E).
 - **Gli screen delle sette zone con i nemici** chiesti da Marco: ora c'è `scatta-app.mjs --tana <luogo>` (`--tana lista`); mancano le
   foto per zona e lo scontro all'aperto.
-- **La torcia nel dungeon** (da indagare): nello screenshot di Marco, piano 3 di 3 della torre, con la torcia, si vede solo un cerchio
-  di ~3 celle attorno all'eroe e un velo blu più in là. Il cono atteso con la torcia è 9,5 celle (`RAGGIO_TORCIA`, [luce.md](luce.md)):
-  verificare se la torcia è accesa/carica (agli sgoccioli scende a 7), se il 3D la legge ancora dopo i cambi di `scena3d/` di questi
-  giorni (inclinazione a 36°, eroe 3D), e se la luce a terra a 36° nasconde il cono. Sopra, nel mondo, la torcia non fa niente (è
-  sempre giorno): decidere se deve servire (cerchio dei mostri più largo, niente agguati).
+- **La torcia nel dungeon** (quasi chiuso, `corsa.js:264`): nello screenshot di Marco (torre, piano 3 di 3) si vede un cerchio di ~3 celle:
+  è lo stato «senza torcia accesa» (`RAGGIO` 3,2; con la torcia `RAGGIO_TORCIA` 9,5), non un difetto dell'eroe 3D. Da confermare con Marco se la
+  torcia era spenta o finita (`torciaResta` 0). Sopra, nel mondo, la torcia non fa niente (è sempre giorno): decidere se deve servire.
 - **Il signore morto non si salva**: `stato.signoriMorti` non va nel salvataggio; di una zona lontana mai rivista il teschio nella
   veduta resta acceso. Le braci disegnate di una tana restano accese a signore morto.
 - **Le quest**: restano le quest scritte a mano nelle zone, scorta ed eventi; cacciatrice e carovaniere come persone nuove; la X e il
@@ -42,16 +40,18 @@ rimasti aperti. Quando una voce si chiude si toglie da qui (la storia sta in `gi
 
 ### Bug noti
 
-- **Il mercante a cui vendere non si trova più** (Marco, dopo il villaggio nuovo): il rigattiere sta nel fondo del villaggio a circa
-  (14,5) di `dati/mondo-aperto.js`, dietro la piazza e accanto al capitano; da una telecamera dal sud può stare coperto da una casa o dalla
-  tenda del minatore, e il bersaglio da toccare (72×96 px) potrebbe cadere sotto un altro. Da verificare con `scatta-app --gioco
-  sotterraneo3d` (`data-vis`, `[data-mercante]`) e, se è nascosto, portarlo sul fronte della piazza o toccarlo anche dietro le case.
+- **Il mercante a cui vendere non si trovava** (Marco, dopo il villaggio nuovo): il rigattiere e l'erborista avevano il `piede` sulla riga di
+  dietro del loro lotto, e dal sud la tenda della bottega li copriva (`data-vis=1` ma invisibili). Portati sul fronte della piazza
+  ((15,7) e (7,8) in `dati/mondo-aperto.js`, 21 ottobre): da riguardare sul telefono.
 - **Rigattiere e armaiolo**: sono stati spostati dal ridisegno del villaggio: controllare che la bottega si apra ancora col dito vero
   (`sotterraneo-bottega-avanti` è instabile da prima).
 - **Fumetto del portale**: `TypeError charAt` su `f.nome` mancante quando la sosta si svuota («torno giù»): corretto con `minuscolo`
   tollerante (21 ottobre); non riprodotto nel browser, solo dedotto dal file pubblicato. Se ricompare, incollare l'errore.
 - **Test del browser lenti sotto carico**: `sotterraneo-mondo`, `-bacheca`, `-mostri-sopra`, `-mondo-meta` vanno in timeout con la macchina
   carica (load 40–90 con più agenti); da soli passano. Girarli uno o due alla volta (`--alla-volta=2`).
+- **`integrazione/sotterraneo-mondo` fallisce al passo della pietra** (`[data-pietra-domanda] .qz-tasto` non compare entro 30 s) anche senza
+  la modifica del rigattiere, con load average 16–23; da solo, a macchina libera, passava. Da rilanciare quando il carico è basso; se
+  fallisce ancora è una regressione dei gesti (drag/tocco) o della pietra del villaggio nuovo.
 - **Rossi anche prima di questi giorni** (non nostri, da guardare): `sotterraneo-dettaglio`, `-barra`, `-bottega-avanti` (instabile),
   `-cura`, `-missioni` (la guardia con la missione «chiavi»), `integrazione/sotterraneo` (4 caselle nello zaino, ce ne sono 6),
   `misure/sotterraneo` (il fondo a 4/10).

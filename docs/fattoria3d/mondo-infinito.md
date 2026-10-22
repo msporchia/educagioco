@@ -28,7 +28,7 @@ che non sono `a_b` e non lancia mai).
 ## Generare un lotto
 
 `generaLotto(a, b)` è puro: stesso risultato a ogni chiamata, per ogni coppia (anche `-50_-50`), senza `Math.random`
-(`dati/semi.js`: un `mescola(a, b, sale)` per le scelte, una `sequenza` mulberry32 per le liste). Torna `{ bioma, acqua, molo,
+(`dati/semi.js`: un `mescola(a, b, sale)` per le scelte, una `sequenza` mulberry32 per le liste). Torna `{ bioma, acqua, spiaggia, mare, molo,
 alberi, ostacoli }`.
 
 - **I lotti storici** hanno gli alberi e i sassi di prima (il riferimento fisso è `test/aiuto/fattoria3d-mondo-storico.json`,
@@ -36,7 +36,8 @@ alberi, ostacoli }`.
 - **I lotti nuovi**: alberi nelle celle 0..2 del lotto (due alberi di lotti vicini stanno sempre ad almeno 2 celle; un albero nuovo
   non si pianta a meno di 1,9 da uno storico), poi i sassi come sempre ma senza toccare alberi, acqua e molo. Il prato ha 3
   tentativi d'albero, il bosco 12 più fitti (1,4), il laghetto 2; sassi e cespugli 2–5 sul prato, 1–3 in bosco e laghetto.
-- **Il bioma** viene dalle coordinate: prato ~69%, bosco ~15%, laghetto ~15% (misurato su 14400 lotti). Un laghetto è un lotto
+- **Il bioma** viene dalle coordinate: nella fascia di mezzo (a da 0 a 7) prato ~71%, bosco ~15%, laghetto ~15%; a ovest il mare (a ≤ −2) e la costa (a = −1), a est i laghi
+  (a ≥ 8): [geografia-e-pesca.md](geografia-e-pesca.md). `generaLotto(a, b, { vecchio })` genera alla vecchia i lotti che un salvataggio di prima aveva già comprato dove ora cambia la geografia. Un laghetto è un lotto
   non storico il cui sorteggio è il più basso fra quelli che lo toccano di lato: **mai due laghetti attaccati** (in diagonale c'è
   sempre terra fra le due acque) e **mai a meno di due lotti dal quadrato di partenza** (stanno fuori dal rettangolo storico:
   il più vicino è a tre lotti). Provato: un sorteggio «il più basso fra gli otto vicini» non supera l'11%.
@@ -50,7 +51,7 @@ nuovi dell'anello. Fuori dall'anello non c'è niente (il suolo è un piano che s
 La scena disegna solo una **finestra di 9×9 lotti attorno alla camera** (4 per lato, 5 avanti, 3 dietro: la camera guarda
 verso −z) fra i lotti aperti, e la rifà quando cambia il lotto al mezzo o il terreno (`Terreno.segui`, `ridisegnaTutto`). Il
 peso non cresce con la fattoria: istanze massime (`CAPACITA` in `terreno.js`) alberi 700 (×3 mesh), cespugli 420, sassi 420,
-ciuffi 1500, strade disegnate 4000, pali 2400, travi 4800, veli 90, griglia 90, acqua 200 (con la riva), canne 120, ninfee 120.
+ciuffi 1500, strade disegnate 4000, pali 2400, travi 4800, veli 90, griglia 90, acqua 720 (con la riva: i laghi grandi), canne 300, ninfee 200, spiaggia 240, prato sul mare 40, più i pesci (220, una `InstancedMesh`) e un piano solo per il mare.
 Una fattoria con cento lotti pesa quanto una con venti. Provato: un'estensione enorme con tutti i lotti disegnati: non va sul
 telefono, per questo la finestra.
 

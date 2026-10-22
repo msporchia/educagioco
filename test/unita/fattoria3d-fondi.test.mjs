@@ -93,7 +93,7 @@ const conta = g => { let n = 0; g.traverse(o => { if (o.isMesh) n++ }); return n
 const SOFFITTO = {
   pasticceria: [M.creaPasticceria, 6], mongolfiera: [M.creaMongolfiera, 6], mulino: [M.creaMulino, 4], panificio: [M.creaPanificio, 6],
   conserviera: [M.creaConserviera, 10], gelateria: [M.creaGelateria, 5], caseificio: [M.creaCaseificio, 6], telaio: [MM.creaTelaio, 5],
-  zuccherificio: [MM.creaZuccherificio, 6], sartoria: [MM.creaSartoria, 8], tintoria: [MM.creaTintoria, 12],
+  zuccherificio: [MM.creaZuccherificio, 6], sartoria: [MM.creaSartoria, 8], tintoria: [MM.creaTintoria, 12], 'fienile (macchina)': [MM.creaFienileMacchina, 4],
   ponte: [MP.creaPonte, 3], passerella: [MP.creaPasserella, 3], tavolo: [MP.creaTavolo, 3],
   recinto: [() => M.creaRecinto([]), 3], pollaio: [() => M.creaPollaio([]), 8], stalla: [() => M.creaStalla([]), 8],
   fienile: [M.creaFienile, 3], aiuola: [M.creaAiuola, 3], panchina: [M.creaPanchina, 3], pozzo: [M.creaPozzo, 4], spaventapasseri: [M.creaSpaventapasseri, 4],

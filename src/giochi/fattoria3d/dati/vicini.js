@@ -34,7 +34,9 @@ export const MISURE_POSTI = { cassa: { w: 1, d: 1 }, mercato: { w: 2, d: 1 } }
 export const FACCE = ['👵', '👴', '🧑‍🌾', '👨‍🍳', '🎩', '🌻']
 
 // ── le merci: raccolti (COLTURE), prodotti delle macchine (RICETTE) e di pollaio e stalla (PRODOTTI_ANIMALI) ──
-export const eMerce = k => typeof k === 'string' && !!(COLTURE[k] || RICETTE[k] || PRODOTTI_ANIMALI[k])
+/** Il mangime (erba medica, becchime, foraggio) non è una merce da scambiare: lo mangiano le bestie di casa. */
+const eMangime = k => !!((COLTURE[k] || RICETTE[k] || {}).mangime)
+export const eMerce = k => typeof k === 'string' && !!(COLTURE[k] || RICETTE[k] || PRODOTTI_ANIMALI[k]) && !eMangime(k)
 export const merce = k => COLTURE[k] || RICETTE[k] || PRODOTTI_ANIMALI[k] || null
 /** Da che livello si fa questa merce (uova e latte: da quando c'è il pollaio o la stalla). */
 export const livelloDellaMerce = k =>
@@ -125,7 +127,7 @@ function edificiInForma(letto) {
     if (!EDIFICI[t] || visti.has(t)) continue
     visti.add(t)
     const libero = Number.isInteger(o.i) && Number.isInteger(o.j) && Math.abs(o.i) <= 40000 && Math.abs(o.j) <= 40000
-    out.push(libero ? { tipo: t, i: o.i, j: o.j } : { tipo: t, ...POSTI_STORICI[t] })
+    out.push(libero ? { tipo: t, i: o.i, j: o.j } : { tipo: t, i: POSTI_STORICI[t].i, j: POSTI_STORICI[t].j })
   }
   return out
 }
@@ -207,9 +209,9 @@ const DA_SCRIVERE = [
     ],
     mercato: {
       vende: [vende('uova', 4, 0.8), vende('zucca', 4, 0.8), vende('cipolla', 3, 0.8)],
-      compra: [scambio('grano', 6, 'uova', 1), scambio('carota', 6, 'zucca', 2), scambio('mais', 5, 'cipolla', 1)],
+      compra: [scambio('patata', 9, 'uova', 1), scambio('carota', 6, 'zucca', 2), scambio('mais', 5, 'cipolla', 1)],
     },
-    cassa: { chiede: [{ k: 'grano', n: 4 }, { k: 'carota', n: 3 }, { k: 'mais', n: 2 }], dono: { k: 'uova', n: 1 } },
+    cassa: { chiede: [{ k: 'grano', n: 4 }, { k: 'carota', n: 3 }, { k: 'mais', n: 2 }], dono: { k: 'patata', n: 2 } },      // non più un uovo: vale due becchimi (il mangime della 2D), più di metà di questa cassa
   },
   {
     v: 1, id: 'mugnaio-tonio', nome: 'Il mulino di Tonio', tema: 'mulino', liv: 9,
@@ -240,7 +242,7 @@ const DA_SCRIVERE = [
       vende: [vende('torta', 2, 1.2), vende('pasta', 2, 1.2), vende('latte', 3, 1.2), vende('stoffa', 2, 1.2)],
       compra: [scambio('zucca', 6, 'latte', 1), scambio('cipolla', 6, 'pane', 1), scambio('patata', 8, 'latte', 1)],
     },
-    cassa: { chiede: [{ k: 'zucca', n: 3 }, { k: 'pane', n: 2 }, { k: 'patata', n: 3 }], dono: { k: 'pasta', n: 1 } },
+    cassa: { chiede: [{ k: 'zucca', n: 3 }, { k: 'pane', n: 2 }, { k: 'patata', n: 3 }], dono: { k: 'stoffa', n: 1 } },      // la pasta (con l'uovo) vale ormai più di metà della cassa: la lana delle sue pecore
   },
   {
     v: 1, id: 'villa-dolce', nome: 'Villa Dolce', tema: 'frutteto', liv: 13,

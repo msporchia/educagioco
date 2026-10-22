@@ -152,9 +152,9 @@ controlla('uno snapshot di una versione più nuova non si legge', normalizzaFatt
   const sc = v.scheda('nonna-rita')
   controlla('la scheda dice a che punto è la cassa', sc.cassa.righe.find(x => x.k === 'grano').finita && !sc.cassa.righe.find(x => x.k === 'carota').finita && sc.cassa.righe.find(x => x.k === 'carota').puoi)
   v.aiuta('nonna-rita', 'carota')
-  const uova0 = m.s.prodotti.uova || 0
+  const dono0 = m.scortaDi(rita.cassa.dono.k)           // il dono di Rita è un raccolto (non più l'uovo: vale due becchimi)
   r = v.aiuta('nonna-rita', 'mais')
-  controlla('l\'ultima consegna chiude la cassa e dà il dono del vicino', r.ok && r.completa && r.dono && r.dono.k === 'uova' && (m.s.prodotti.uova || 0) === uova0 + r.dono.n, JSON.stringify(r))
+  controlla('l\'ultima consegna chiude la cassa e dà il dono del vicino', r.ok && r.completa && r.dono && r.dono.k === rita.cassa.dono.k && m.scortaDi(r.dono.k) === dono0 + r.dono.n, JSON.stringify(r))
   controlla('la cassa piena si rifiuta e dice quando riapre', (() => { dai('grano', 1); const x = v.aiuta('nonna-rita', 'grano'); return !x.ok && x.motivo === 'cassa-piena' && x.restoMs > 0 })())
   uguale('le monete restano quelle anche a cassa piena', b.monete, mon0)
   t.ora += rita.cassa.rinnovoMs - 1

@@ -20,6 +20,9 @@ export const PEZZI = {
   ponte:           { nome: 'Ponte',           emoji: '🌉', w: 3, d: 1, prezzo: 14, rincaro: 0, categoria: 'passaggi', liv: 5, calpestabile: true, suAcqua: true, alzato: [0.25, 0.36, 0.25] },   // la gobba: una quota per cella lungo il lato lungo
   stagno:          { nome: 'Stagno',          emoji: '🦆', w: 3, d: 3, prezzo: 35, rincaro: 0, categoria: 'decori', liv: 5, acqua: true },     // tutta acqua: non si cammina, solo un ponte ci sta sopra (docs/fattoria3d/laghi.md)
   laghetto:        { nome: 'Laghetto',        emoji: '🏞️', w: 5, d: 4, prezzo: 110, rincaro: 0, categoria: 'decori', liv: 11, acqua: true },
+  molo:            { nome: 'Molo',            emoji: '🎣', w: 3, d: 1, prezzo: 12, rincaro: 0, categoria: 'passaggi', liv: 4, calpestabile: true, suAcqua: true, alzato: 0.14, molo: true },    // dalla riva sull'acqua: in punta si pesca (docs/fattoria3d/geografia-e-pesca.md)
+  molo_v:          { nome: 'Molo girato',     emoji: '🪝', w: 1, d: 3, prezzo: 12, rincaro: 0, categoria: 'passaggi', liv: 4, calpestabile: true, suAcqua: true, alzato: 0.14, molo: true },    // lo stesso, per l'acqua che sta a nord o a sud
+  porticciolo:     { nome: 'Porticciolo',     emoji: '⚓', w: 4, d: 3, prezzo: 90, rincaro: 0, categoria: 'edifici', liv: 9, suAcqua: true, riva: true, unico: true },       // capanna, pontili e barca: abilita la pesca in mare e rende di più (uno solo, sulla riva)
   tavolo:          { nome: 'Tavolo',          emoji: '🍽️', w: 3, d: 2, prezzo: 18, rincaro: 0, categoria: 'decori', liv: 4 },
   trattore:        { nome: 'Trattore',        emoji: '🚜', w: 2, d: 2, prezzo: 40, rincaro: 0, categoria: 'edifici', liv: 7 },     // si tocca e porta ai vicini (docs/fattoria3d/vicini.md)
 }
@@ -47,6 +50,7 @@ export const CATEGORIE = {
 export const EDIFICI = {
   pasticceria: { nome: 'Pastificio', emoji: '🍝', art: 'il', w: 4, d: 3, prezzo: 80,  categoria: 'edifici', liv: 6 },
   mongolfiera: { nome: 'Mongolfiera', emoji: '🎈', art: 'la', w: 3, d: 3, prezzo: 100, categoria: 'edifici', liv: 10 },
+  fienile:     { nome: 'Fienile',     emoji: '🌿', art: 'il', w: 3, d: 3, prezzo: 40,  categoria: 'edifici', liv: 2 },   // il mangime delle bestie (docs/fattoria3d/mangime-e-catena.md); il fienile di scena (FISSI) resta com'è
   mulino:      { nome: 'Mulino',      emoji: '🌬️', art: 'il', w: 3, d: 3, prezzo: 60,  categoria: 'edifici', liv: 3 },
   panificio:   { nome: 'Panificio',   emoji: '🥖', art: 'il', w: 3, d: 3, prezzo: 90,  categoria: 'edifici', liv: 7 },
   conserviera: { nome: 'Cucina',      emoji: '🍳', art: 'la', w: 3, d: 3, prezzo: 110, categoria: 'edifici', liv: 12 },
@@ -56,6 +60,8 @@ export const EDIFICI = {
   zuccherificio: { nome: 'Zuccherificio', emoji: '🧂', art: 'lo', w: 3, d: 3, prezzo: 130, categoria: 'edifici', liv: 13 },
   sartoria:      { nome: 'Sartoria',      emoji: '🧥', art: 'la', w: 3, d: 3, prezzo: 150, categoria: 'edifici', liv: 15 },
   tintoria:      { nome: 'Tintoria',      emoji: '🧴', art: 'la', w: 3, d: 3, prezzo: 160,  categoria: 'edifici', liv: 16 },
+  friggitoria:   { nome: 'Friggitoria',   emoji: '🍟', art: 'la', w: 3, d: 3, prezzo: 170,  categoria: 'edifici', liv: 17 },     // nata dopo i posti liberi: il suo posto storico è solo per i controlli (`nuovo` in dati/mondo.js)
+  sushi_bar:     { nome: 'Sushi bar',     emoji: '🍣', art: 'il', w: 3, d: 3, prezzo: 180,  categoria: 'edifici', liv: 18 },
 }
 export const TIPI_DI_EDIFICIO = Object.keys(EDIFICI)
 
@@ -89,6 +95,8 @@ export function guastiDelCatalogo() {
       if (q.length !== (Array.isArray(d.alzato) ? lungo : 1) || !q.every(x => x > 0 && x < 0.5)) g.push(`${tipo}: calpestabile senza una quota sensata (alzato)`)
     }
     if (d.acqua && (d.calpestabile || d.suAcqua || d.produttivo)) g.push(`${tipo}: un pezzo d'acqua è solo decorazione e non ci si cammina`)
+    if (d.molo && !(d.calpestabile && d.suAcqua)) g.push(`${tipo}: un molo si cammina e sta sull'acqua`)
+    if (d.riva && !d.suAcqua) g.push(`${tipo}: «riva» vuol dire che sta anche sull'acqua`)
     if (d.calpestabile && d.produttivo) g.push(`${tipo}: un pezzo calpestabile è solo decorazione`)
   }
   for (const [c, v] of Object.entries(CATEGORIE)) if (!v.strumenti && ![...Object.values(PEZZI), ...Object.values(EDIFICI)].some(d => d.categoria === c)) g.push(`${c}: categoria senza carte`)

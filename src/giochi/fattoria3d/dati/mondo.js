@@ -70,6 +70,10 @@ export const POSTI_STORICI = {
   pasticceria:   { i: -6, j: -4 }, mongolfiera: { i: 2, j: -4 }, mulino: { i: -2, j: -7 }, panificio: { i: -5, j: -7 },
   conserviera:   { i: 2, j: -7 },  gelateria: { i: -9, j: 0 },   caseificio: { i: 6, j: -3 }, telaio: { i: -9, j: -4 },
   zuccherificio: { i: 6, j: 4 },   sartoria: { i: 6, j: 0 },     tintoria: { i: -9, j: 4 },
+  // arrivato dopo: nessun salvataggio lo aveva, e `nuovo` lo lascia fuori da alberi e sassi storici (che restano come erano: celleRiservate)
+  fienile:       { i: 9, j: -7, nuovo: true },
+  friggitoria:   { i: 10, j: 5, nuovo: true },                                       // nati dopo i posti liberi come il fienile: servono solo ai controlli (`nuovo`)
+  sushi_bar:     { i: -4, j: 6, nuovo: true },
 }
 
 // ciò che c'è sempre e non si sposta: due edifici di scena (non si comprano, ingombrano soltanto)
@@ -88,7 +92,7 @@ export function stradeDiSerie() {
 
 // dove non nasce nessun albero nei lotti storici: le strade, i posti di prima degli edifici, il campo di partenza e la partenza del contadino
 // (chiavi di cella). `tipi`: quali posti contare (gli alberi storici si generano con i primi due soli, perché i numeri non cambino: vedi alberi.js)
-export function celleRiservate(tipi = Object.keys(POSTI_STORICI)) {
+export function celleRiservate(tipi = Object.keys(POSTI_STORICI).filter(t => !POSTI_STORICI[t].nuovo)) {
   const r = new Set(stradeDiSerie())
   const rette = [
     ...tipi.map(t => [POSTI_STORICI[t].i, POSTI_STORICI[t].j, EDIFICI[t].w, EDIFICI[t].d]),

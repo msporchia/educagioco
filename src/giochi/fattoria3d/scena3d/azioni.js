@@ -4,7 +4,7 @@
 import * as THREE from 'three'
 import { COLTURE } from '../dati/colture.js'
 import { COSTI } from '../dati/regole.js'
-import { EDIFICI } from '../dati/catalogo.js'
+import { EDIFICI, PEZZI } from '../dati/catalogo.js'
 import { MACCHINE } from '../dati/ricette.js'
 import { PRODOTTI_ANIMALI } from '../dati/animali.js'
 import { dettoDi, dettoDiRifiuto } from './detti.js'
@@ -31,6 +31,8 @@ export class Azioni {
       case 'pollaio': case 'stalla': return this.curaBestie(cosa)
       case 'bacheca': case 'bancarella': pezzi.salta(cosa.id); return this.c.ui.apriBanco()      // il foglio degli ordini
       case 'fontana': pezzi.salta(cosa.id); fx.parla('Che bella!'); return
+      case 'molo': case 'molo_v': return this.pescaDalMolo(cosa)         // toccare il molo: si lancia in punta
+      case 'stagno': case 'laghetto': return this.pescaSu(Math.floor(this.centro(cosa).x), Math.floor(this.centro(cosa).z))      // l'acqua costruita: la pesca (se il tocco non l'ha già fatto)
       case 'trattore': pezzi.salta(cosa.id); return this.c.ui.apriMappa && this.c.ui.apriMappa()      // porta ai vicini (docs/fattoria3d/vicini.md)
       default: if (EDIFICI[cosa.tipo]) return this.edificio(cosa.tipo)         // una macchina o la mongolfiera
     }
@@ -82,7 +84,7 @@ export class Azioni {
         if (t <= 0.5 || eroe.az.fatto.has('n')) return
         eroe.az.fatto.add('n')
         const r = this.m.nutri(c.id)
-        if (!r.ok) return fx.parla(dettoDi(r.motivo, { per: 'nutrirle' }))
+        if (!r.ok) return fx.parla(dettoDi(r.motivo, { per: 'nutrirle', servono: r.servono, mangia: r.mangia }))
         pezzi.richiama(c.id, { x: eroe.x - p.x, z: eroe.z - p.z })
         pezzi.sincronizza()
         const testo = { cresciuta: '🐑 è cresciuta!', nata: '🐣 è nata una pecorella!', pasto: '🍼 +1', cuore: '❤️', lana: '🍽️ ×' + r.n }[r.evento]
@@ -92,7 +94,7 @@ export class Azioni {
         ui.cambio()
       })
     }
-    fx.parla(dettoDi(pr.motivo, { per: 'nutrirle', secondi: pr.secondi }))
+    fx.parla(dettoDi(pr.motivo, { per: 'nutrirle', secondi: pr.secondi, servono: pr.servono, mangia: pr.mangia }))
   }
 
   // ── il pollaio e la stalla: prima si raccoglie, poi si nutre; se non c'è altro, si dice perché. Le bestie si comprano dal cartello ──
@@ -112,7 +114,7 @@ export class Azioni {
         if (t <= 0.5 || eroe.az.fatto.has('n')) return
         eroe.az.fatto.add('n')
         const r = this.m.nutriBestie(c.id)
-        if (!r.ok) return fx.parla(dettoDi(r.motivo, { per: 'nutrirle' }))
+        if (!r.ok) return fx.parla(dettoDi(r.motivo, { per: 'nutrirle', servono: r.servono, mangia: r.mangia }))
         pezzi.sincronizza()
         fx.volo('🍽️ ×' + r.n, p, 1.8); ui.cambio()
       })
@@ -172,6 +174,66 @@ export class Azioni {
     })
   }
 
+  // ── la pesca: si tocca l'acqua (o la punta del molo); il contadino cammina fino al posto da cui si lancia, lancia, e se resta lì ritira da sé ──
+  /** L'acqua più vicina alle celle del molo (di lato, fuori dall'impronta): da lì si lancia se si tocca il molo. */
+  pescaDalMolo(cosa) {
+    const m = this.m, d = PEZZI[cosa.tipo]
+    let meglio = null
+    for (let a = 0; a < d.w; a++) for (let b = 0; b < d.d; b++) for (const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const i = cosa.i + a + di, j = cosa.j + b + dj
+      if (i >= cosa.i && i < cosa.i + d.w && j >= cosa.j && j < cosa.j + d.d) continue
+      if (!m.acqua(i, j) || !m.cellaPropria(i, j)) continue
+      const lontano = Math.hypot(a - (d.w - 1) / 2, b - (d.d - 1) / 2)            // meglio la punta: l'acqua accanto alla cella più lontana dal centro
+      if (!meglio || lontano > meglio.lontano) meglio = { i, j, lontano }
+    }
+    if (!meglio) return this.dici(dettoDi('non-acqua-vicina'))
+    return this.pescaSu(meglio.i, meglio.j)
+  }
+  /** Un tocco su una cella d'acqua: se si può lancia la lenza dal posto più vicino; se il pesce abbocca lo ritira; se no dice perché. */
+  pescaSu(i, j) {
+    const { eroe, fx } = this.c, m = this.m
+    if (eroe.az) return
+    const p = m.provaPesca(i, j)
+    if (!p.ok) return this.dici(dettoDi(p.motivo))
+    if (p.azione === 'aspetta') return fx.parla(dettoDi('pesca-attesa', { secondi: p.secondi }))
+    if (p.azione === 'riposo') return fx.parla(dettoDi('pesca-riposo', { secondi: p.secondi }))
+    const verso = new THREE.Vector3(p.i + 0.5, 0, p.j + 0.5)
+    const fn = p.azione === 'lancia' ? () => this.lancia(p) : () => this.ritira(p.lotto)
+    eroe.vaiA([p.sta], fn, verso)
+  }
+  /** Il lancio: la canna indietro e avanti, il galleggiante in acqua; il contadino resta lì con la canna alzata (`eroe.pescando`). */
+  lancia(p) {
+    const { eroe, fx, ui } = this.c
+    if (eroe.az) return
+    const verso = new THREE.Vector3(p.i + 0.5, 0, p.j + 0.5)
+    eroe.faccia(verso)
+    eroe.avvia('pesca', 1.5, t => {
+      if (t < 0.62 || eroe.az.fatto.has('l')) return
+      eroe.az.fatto.add('l')
+      const r = this.m.lanciaLenza(p.i, p.j)
+      if (!r.ok) return fx.parla(dettoDi(r.motivo, { secondi: r.secondi }))
+      eroe.pescando = { lotto: r.lotto, x: p.i + 0.5, z: p.j + 0.5 }
+      fx.scoppietta(verso.clone().setY(0.1), 0xbfe6ff, 12, 1.6, 2.4); ui.cambio()
+    })
+  }
+  /** Il ritiro: lo strappo, lo spruzzo, il pesce che vola nell'inventario, e l'esultanza. */
+  ritira(lotto) {
+    const { eroe, fx, ui, pesca } = this.c
+    if (eroe.az) return
+    const pos = pesca && pesca.posizioneDi(lotto)
+    if (pos) eroe.faccia(pos)
+    eroe.avvia('ritira', 1.1, t => {
+      if (t < 0.45 || eroe.az.fatto.has('r')) return
+      eroe.az.fatto.add('r')
+      const r = this.m.ritiraPesca(lotto)
+      if (!r.ok) return fx.parla(dettoDi(r.motivo))
+      const dove = pos ? pos.clone() : new THREE.Vector3(eroe.x, 0, eroe.z)
+      fx.scoppietta(dove.clone().setY(0.15), 0xdff3ff, 16, 2.2, 3.4)
+      fx.volo('+' + r.n, dove, 1.2, 'pesce')
+      eroe.pescando = null; ui.cambio()
+    }, () => { if (!eroe.az) eroe.avvia('esulta', 0.9) })
+  }
+
   // ── gli edifici unici: una volta messi in mappa si toccano e si apre la loro finestra (comprarli e piazzarli è del menu «Costruisci qui») ──
   edificio(tipo) {
     const { ui } = this.c
@@ -186,7 +248,7 @@ export class Azioni {
     const { ui, fx, terreno } = this.c, m = this.m
     if (!m.confina(l)) return this.dici(dettoDi('non-confina'))
     const pr = m.prezzoLotto()
-    ui.chiedi('Terreno', `Allarga la fattoria: un lotto in più dove camminare, costruire e disegnare strade.${m.biomaDi(l) === 'laghetto' ? ' Qui c\'è un laghetto.' : ''} Costa 🪙 ${pr}.`, [
+    ui.chiedi('Terreno', `Allarga la fattoria: un lotto in più dove camminare, costruire e disegnare strade.${{ laghetto: ' Qui c\'è un laghetto.', lago: ' Qui c\'è un lago: con un molo ci si pesca.', mare: ' Qui c\'è il mare: con un molo e il porticciolo ci si pesca.', costa: ' Qui c\'è la spiaggia.' }[m.biomaDi(l)] || ''} Costa 🪙 ${pr}.`, [
       { t: `Compra · 🪙 ${pr}`, fn: () => {
         const r = m.compraLotto(l.id)
         if (!r.ok) return this.dici(dettoDiRifiuto(r, { mancano: pr - m.monete() }))

@@ -6,7 +6,7 @@
 import { LOTTI_STORICI, FISSI, chiave, idCella, celleRiservate } from './mondo.js'
 
 export const PER_LOTTO = { min: 2, max: 5 }                      // il prato
-export const PER_BIOMA = { prato: PER_LOTTO, bosco: { min: 1, max: 3 }, laghetto: { min: 1, max: 3 } }
+export const PER_BIOMA = { prato: PER_LOTTO, bosco: { min: 1, max: 3 }, laghetto: { min: 1, max: 3 }, costa: { min: 1, max: 2 }, lago: { min: 1, max: 3 } }
 
 let riservateStoriche = null
 /** Le celle dove un lotto storico non ha sassi, tolti gli alberi (quelli li dà chi chiama): strade, posti degli edifici, fienile e casa. */

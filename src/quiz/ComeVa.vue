@@ -3,11 +3,12 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { fasceDelBambino } from './catalogo.js'
 import { andamentoDi, riassuntoDi, CUORI } from './andamento.js'
-import { settimanaDi, DUE_SETTIMANE, UNA_SETTIMANA } from './comeva.js'
+import { settimanaDi, giudizioDi, areeDi, DUE_SETTIMANE, UNA_SETTIMANA } from './comeva.js'
 import { mattonelleOra, fotografa } from './fotografia.js'
 import { vaBeneCosi } from './memoria.js'
 import SchedaDomanda from './SchedaDomanda.vue'
-import Mattonelle from './Mattonelle.vue'
+import Aree from './Aree.vue'
+import Radar from './Radar.vue'
 import Settimana from './Settimana.vue'
 import MappaTabelline from '../components/MappaTabelline.vue'
 import TempoDiGioco from '../components/TempoDiGioco.vue'
@@ -77,6 +78,16 @@ const spente = computed(() => {
 function spegni(r) { accendiSapere(r.tipo, false); giro.value++ }
 function riaccendi(x) { accendiSapere(x.tipo, true); giro.value++ }
 
+// il quadro a colpo d'occhio: un asse per materia, e una frase che dice come va (comeva.js: giudizioDi)
+const aree = computed(() => areeDi(mattonelle.value))
+const areaAperta = ref(null)      // l'area di cui si vedono le materie
+// sempre tutte e cinque, anche quelle mai giocate (a zero, col trattino): il pentagono ha la stessa forma per tutti
+const assi = computed(() => aree.value
+  .map(a => ({ id: a.id, emoji: a.emoji, nome: a.nome, pct: a.pct ?? 0, vuota: a.pct == null, prima: a.freccia ? a.prima : null })))
+const giudizio = computed(() => giudizioDi({
+  viste: elenco.value.viste, difficili: settimana.value.difficili, migliorate: settimana.value.migliorate.length,
+}))
+
 const dentro = computed(() => materia.value &&
   [...mattonelle.value.viste, ...mattonelle.value.nonAncora].find(m => m.id === materia.value))
 // dentro una materia dei quiz l'elenco è lo stesso, filtrato: l'ordine resta dalla peggiore
@@ -128,7 +139,7 @@ function vaBene(r) {
       <div class="dentro-testa" :data-materia-aperta="dentro.id">
         <button type="button" class="torna" data-azione="materie-torna"
                 @click="materia = null">← tutte le materie</button>
-        <h2>{{ dentro.emoji }} {{ dentro.nome }} · {{ dentro.pct }}%</h2>
+        <h2>{{ dentro.emoji }} {{ dentro.nome }} · {{ dentro.giuste == null ? '–' : dentro.giuste + '% giuste' }}</h2>
       </div>
       <MappaTabelline v-if="dentro.mappa === 'tabelline'" />
       <ul v-else-if="dentro.tipo === 'albo'" class="parti" data-parti>
@@ -141,7 +152,16 @@ function vaBene(r) {
 
     <template v-else>
       <h2>Come sta andando {{ chi }}</h2>
-      <Mattonelle :viste="mattonelle.viste" :non-ancora="mattonelle.nonAncora" @apri="entra" />
+      <section class="quadro" data-quadro>
+        <p class="giudizio" :class="giudizio.tono" data-giudizio :data-tono="giudizio.tono">
+          <b>{{ giudizio.titolo }}</b><span>{{ giudizio.testo }}</span>
+        </p>
+        <Radar :assi="assi" @apri="id => (areaAperta = id)" />
+        <p v-if="assi.some(a => a.prima != null)" class="legenda"><i class="adesso"></i> adesso <i class="prima"></i> due settimane fa</p>
+      </section>
+
+      <h3 class="sotto">Per area: risposte giuste su risposte date. Tocca per entrare</h3>
+      <Aree :aree="aree" :aperta="areaAperta" @area="id => (areaAperta = id)" @apri="entra" />
 
       <Settimana :chi="chi" :settimana="settimana" :eta="eta" :alleggerite="alleggerite"
                  @prova="provaRiga" @rimanda="rimanda" @va-bene="vaBene"
@@ -150,16 +170,17 @@ function vaBene(r) {
       <h2>Quanto ha giocato</h2>
       <TempoDiGioco />
 
-      <h2>Tutte le domande</h2>
+    </template>
+
+    <!-- il dettaglio: chiuso, è per chi vuole i numeri; dentro una materia si apre da solo e il titolo sparisce -->
+    <details v-if="!dentro || dentro.tipo === 'quiz'" class="tendina dettaglio" :class="{ libera: !!dentro }" :open="!!dentro" data-dettaglio>
+      <summary>Il dettaglio, domanda per domanda ({{ conti.incontrate }} incontrate)</summary>
       <!-- tre numeri in cima: «7 su 10» vuol dire una cosa diversa dopo 12 risposte o dopo 2000 -->
-      <div class="sommario" data-sommario>
+      <div v-if="!dentro" class="sommario" data-sommario>
         <div><b>{{ conti.risposte }}</b><span>risposte in tutto</span></div>
         <div><b>{{ conti.incontrate }}</b><span>domande incontrate</span></div>
         <div :class="{ male: conti.male > 0 }"><b>{{ conti.male }}</b><span>vanno male</span></div>
       </div>
-    </template>
-
-    <template v-if="!dentro || dentro.tipo === 'quiz'">
       <p v-if="!lista.viste.length" class="vuoto">
         Non ha ancora risposto a niente<template v-if="dentro"> in questa materia</template>.
         Si riempie da sola giocando: ogni domanda si porta dietro quante volte gli è
@@ -209,7 +230,7 @@ function vaBene(r) {
           </button>
         </li>
       </ul>
-    </template>
+    </details>
 
     <SchedaDomanda v-if="aperta" :riga="aperta" :eta="eta"
                    @chiudi="chiudi" @prova="provaRiga"
@@ -219,6 +240,22 @@ function vaBene(r) {
 
 <style scoped>
 .come-va { display: grid; gap: 10px }
+.quadro { display: grid; gap: 8px; padding: 12px; border-radius: 16px; background: #fff; box-shadow: 0 1px 6px #0000000f }
+.giudizio { display: grid; gap: 2px; margin: 0; padding: 10px 12px; border-radius: 12px; text-align: left; background: #f5f3fc }
+.giudizio b { font-size: 17px; font-weight: 850; color: #3a2a7a }
+.giudizio span { font-size: 13px; line-height: 1.4; color: #55556a }
+.giudizio.bene { background: #e4f6ea } .giudizio.bene b { color: #1f6a3d }
+.giudizio.normale { background: #eef3ff } .giudizio.normale b { color: #2f4f9a }
+.giudizio.alcune { background: #fff4de } .giudizio.alcune b { color: #8a5a0a }
+.giudizio.tante { background: #ffe9e4 } .giudizio.tante b { color: #9a3a26 }
+.legenda { margin: 0; text-align: center; font-size: 11px; color: #8a8a99 }
+.legenda i { display: inline-block; width: 16px; height: 0; border-top: 3px solid #6a49c4; vertical-align: middle; margin: 0 4px 0 8px }
+.legenda i.prima { border-top: 2px dashed #9a8fc0 }
+.sotto { margin: 4px 0 0; font-size: 13px; font-weight: 850; color: #55556a }
+.dettaglio { border-radius: 14px; background: #ffffffaa; padding: 0 10px 10px }
+.dettaglio > summary { padding: 12px 4px; font-weight: 800; font-size: 14px; cursor: pointer; min-height: 44px; box-sizing: border-box; display: flex; align-items: center }
+.dettaglio.libera { background: none; padding: 0 }
+.dettaglio.libera > summary { display: none }
 .come-va h2 { margin: 8px 0 0 }
 
 .dentro-testa { display: grid; gap: 6px }

@@ -21,10 +21,11 @@ export function prezzoDelLotto(k) {
 
 export const PECORE = {
   laneMs: 25000,      // quanto ci mette la lana a rifarsi dal pasto (un numero da prova)
-  pastiPerLana: 1,    // raccolti che una tosata vuole per rifarla: dopo la tosa ha fame, come le galline
+  mangia: ['foraggio'],   // come l'ovile della 2D: un foraggio per la lana (il mangime del fienile, non un raccolto)
+  pastiPerLana: 1,    // pezzi di foraggio che una tosata vuole per rifarla: dopo la tosa ha fame, come le galline
   max: 4,             // per recinto
-  pastiPerCrescere: 2,
-  pastiPerNascere: 2,
+  pastiPerCrescere: 2,   // pezzi di foraggio per far crescere un agnello
+  pastiPerNascere: 2,    // e per far nascere il prossimo
 }
 
 export function guastiDelleRegole() {

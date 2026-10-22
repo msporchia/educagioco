@@ -9,14 +9,18 @@ import { mat, FORME, creaFienile, creaCasa } from './modelli.js'
 import { geometriaCespuglio } from './dal-sotterraneo.js'
 import { LOTTO, FISSI, lotto, lottoDi, cellaDa } from '../dati/mondo.js'
 import { mescola, sequenza } from '../dati/semi.js'
-import { materialeAcqua, uTAcqua } from './modelli-acqua.js'
+import { materialeAcqua, materialeMare, uTAcqua } from './modelli-acqua.js'
+import { Pesci } from './pesci.js'
+import { ZONA } from '../dati/biomi.js'
 
 const ZERO = new THREE.Matrix4().makeScale(0, 0, 0)
 
 /** La finestra di lotti attorno alla camera: a per lato, b più avanti (la camera guarda verso -z). 9×9 lotti, mai di più. */
 export const FINESTRA = { a0: -4, a1: 4, b0: -5, b1: 3 }
 /** Quante istanze al massimo per ogni cosa (il peso è questo, qualunque sia l'estensione). */
-export const CAPACITA = { alberi: 700, cespugli: 420, sassi: 420, ciuffi: 1500, strade: 4000, pali: 2400, travi: 4800, veli: 90, griglia: 90, acqua: 200, canne: 120, ninfee: 120 }
+export const CAPACITA = { alberi: 700, cespugli: 420, sassi: 420, ciuffi: 1500, strade: 4000, pali: 2400, travi: 4800, veli: 90, griglia: 90, acqua: 720, canne: 300, ninfee: 200, spiaggia: 240, terraSuMare: 40 }
+/** Il mare lontano (un piano solo, non per lotto): da qui verso ovest. È il bordo est della colonna i = −19, l'ultima di mare «sempre» (dati/biomi.js). */
+export const MARE_X = -18
 
 function rumore(px, colA, colB, n = 900) {
   const c = document.createElement('canvas'); c.width = c.height = px
@@ -41,7 +45,8 @@ export class Terreno {
     this.vento = { uT: { value: 0 }, uV: { value: 1 } }       // il tempo e l'intensità del vento, letti dal materiale dei ciuffi (e dell'acqua)
     this.centro = { a: 1e9, b: 1e9 }                          // il lotto al mezzo della finestra
     this.griglia = null; this._grigliaOn = false
-    this._suolo(); this._strade(); this._griglia(); this._lotti(); this._alberi(); this._ostacoli(); this._erba(); this._acqua(); this._fisse()
+    this._suolo(); this._mare(); this._strade(); this._griglia(); this._lotti(); this._alberi(); this._ostacoli(); this._erba(); this._acqua(); this._fisse()
+    this.pesci = new Pesci(scena, motore)
     this.segui(0, 0, true)
   }
 
@@ -65,7 +70,7 @@ export class Terreno {
     const l = lottoDi(Math.floor(x), Math.floor(z))
     if (forza || l.a !== this.centro.a || l.b !== this.centro.b) { this.centro = { a: l.a, b: l.b }; this.ridisegnaTutto() }
   }
-  ridisegnaTutto() { this.ridisegnaLotti(); this.ridisegnaStrade(); this._ridisegnaAlberi(); this._ridisegnaOstacoli(); this._ridisegnaAcqua(); this._ridisegnaErba() }
+  ridisegnaTutto() { this.ridisegnaLotti(); this.ridisegnaStrade(); this._ridisegnaAlberi(); this._ridisegnaOstacoli(); this._ridisegnaAcqua(); this._ridisegnaErba(); this.pesci.ridisegna(this.lottiInFinestra(), true) }
 
   _suolo() {
     const erba = rumore(256, '#79b84a', '#5e9a38'); this.sabbia = rumore(256, '#dcc796', '#c9b07c', 500)
@@ -125,8 +130,8 @@ export class Terreno {
   }
   ridisegnaLotti() {
     const d = new THREE.Object3D(); let nv = 0
-    for (const { l } of this.lottiInFinestra()) {
-      if (this.m.posseduto(l) || nv >= CAPACITA.veli) continue
+    for (const { l, dati } of this.lottiInFinestra()) {
+      if (this.m.posseduto(l) || nv >= CAPACITA.veli || (l.a <= ZONA.mareFinoA && dati.mare)) continue          // il mare non si vela: si vede com'è, e si compra con il cartello
       d.position.set(l.i + 2, 0.05, l.j + 2); d.rotation.set(-Math.PI / 2, 0, 0); d.scale.set(1, 1, 1); d.updateMatrix(); this.velo.setMatrixAt(nv++, d.matrix)
     }
     this.velo.count = nv; this.velo.instanceMatrix.needsUpdate = true
@@ -137,11 +142,13 @@ export class Terreno {
   ricostruisciRecinti() {
     const d = new THREE.Object3D(), vistiPali = new Set(); let np = 0, nt = 0
     const propria = (i, j) => this.m.cellaPropria(i, j)
+    const aSecco = (i, j) => !this.m.acqua(i, j)                          // un recinto non sta in mezzo al mare o a un lago: solo dove c'è terra
     const palo = (x, z) => { const k = x + ',' + z; if (vistiPali.has(k) || np >= CAPACITA.pali) return; vistiPali.add(k); d.position.set(x, 0, z); d.rotation.set(0, 0, 0); d.scale.set(1, 1, 1); d.updateMatrix(); this.pali.setMatrixAt(np++, d.matrix) }
     const trave = (x, z, giu) => { for (const y of [0.28, 0.52]) { if (nt >= CAPACITA.travi) return; d.position.set(x, y, z); d.rotation.set(0, giu ? Math.PI / 2 : 0, 0); d.updateMatrix(); this.travi.setMatrixAt(nt++, d.matrix) } }
     for (const { l } of this.lottiInFinestra()) {
       if (!this.m.posseduto(l)) continue
       for (let j = l.j; j < l.j + l.d; j++) for (let i = l.i; i < l.i + l.w; i++) {
+        if (!aSecco(i, j)) continue
         if (!propria(i, j - 1)) { palo(i, j); palo(i + 1, j); trave(i + 0.5, j, false) }
         if (!propria(i, j + 1)) { palo(i, j + 1); palo(i + 1, j + 1); trave(i + 0.5, j + 1, false) }
         if (!propria(i - 1, j)) { palo(i, j); palo(i, j + 1); trave(i, j + 0.5, true) }
@@ -216,8 +223,25 @@ export class Terreno {
     for (const [mesh, ns] of this._indiceOstacoli) { const k = ns.indexOf(n); if (k >= 0) { mesh.setMatrixAt(k, ZERO); mesh.instanceMatrix.needsUpdate = true } }
   }
 
-  // ── i laghetti: una lastra azzurra per ogni cella d'acqua con un po' di riva di terra chiara sotto, canne sulla riva e ninfee sull'acqua.
-  // Un secondo materiale economico, senza ombra e senza luci in più; la superficie luccica col tempo nello shader. ──
+  // ── il mare lontano: UN piano d'acqua opaco (turchese in riva, blu al largo) da MARE_X verso ovest, a perdita d'occhio: la nebbia lo sfuma nel
+  // cielo e si capisce da lontano che a ovest c'è il mare. Non è per lotto: il peso è lo stesso con un lotto di mare o con cento. Sta sopra il suolo
+  // verde (0,03) e sotto i velini dei lotti. I lotti di mare non disegnano niente (`dati.mare`); la costa sì, cella per cella. ──
+  _mare() {
+    const xs = [-3000, -400, -150, -80, -45, -30, -22, MARE_X], colori = [0x143f6e, 0x17497c, 0x1d5f9a, 0x2678b0, 0x3092c4, 0x52b4d2, 0x8fd2dc, 0xb4e0e2]      // l'ultimo si fonde con l'acqua bassa sulla sabbia della costa
+    const pos = [], col = [], idx = [], c = new THREE.Color(), Z = 3000
+    xs.forEach((x, k) => { c.set(colori[k]); for (const z of [-Z, Z]) { pos.push(x, 0, z); col.push(c.r, c.g, c.b) } })
+    for (let k = 0; k < xs.length - 1; k++) { const a = k * 2; idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2) }
+    const g = new THREE.BufferGeometry()
+    g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3)); g.setIndex(idx)
+    g.setAttribute('normal', new THREE.Float32BufferAttribute(pos.map((v, n) => n % 3 === 1 ? 1 : 0), 3))
+    this.mare = new THREE.Mesh(g, materialeMare())
+    this.mare.position.y = 0.03; this.mare.frustumCulled = false; this.mare.receiveShadow = false; this.mare.castShadow = false
+    this.scena.add(this.mare)
+  }
+
+  // ── i laghi, la costa e la terra rimasta: una lastra azzurra per ogni cella d'acqua con un po' di riva di terra chiara sotto, canne sulla riva e
+  // ninfee sull'acqua dolce; la sabbia della spiaggia; un prato dove un salvataggio vecchio ha ancora terra sotto il mare. Un secondo materiale
+  // economico, senza ombra e senza luci in più; la superficie luccica col tempo nello shader. ──
   _acqua() {
     const materiale = materialeAcqua()                // lo stesso materiale degli stagni costruiti (scena3d/modelli-acqua.js)
     this.lastra = new THREE.InstancedMesh(new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2), materiale, CAPACITA.acqua)
@@ -227,24 +251,42 @@ export class Terreno {
     const gc = new THREE.BufferGeometry(); gc.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); gc.computeVertexNormals()
     this.canne = new THREE.InstancedMesh(gc, new THREE.MeshStandardMaterial({ color: 0x8aa63a, roughness: 1, flatShading: true, side: THREE.DoubleSide }), CAPACITA.canne)
     this.ninfee = new THREE.InstancedMesh(new THREE.CircleGeometry(0.24, 9).rotateX(-Math.PI / 2), new THREE.MeshStandardMaterial({ color: 0x4f9a45, roughness: 0.8, side: THREE.DoubleSide }), CAPACITA.ninfee)
-    for (const x of [this.lastra, this.riva, this.canne, this.ninfee]) { x.frustumCulled = false; x.count = 0; x.castShadow = false }
-    this.lastra.receiveShadow = false; this.riva.receiveShadow = true
-    this.scena.add(this.riva, this.lastra, this.canne, this.ninfee)
+    // la spiaggia: una piastrella di sabbia per cella, un po' più chiara della riva dei laghi
+    this.spiaggia = new THREE.InstancedMesh(new THREE.PlaneGeometry(1.02, 1.02).rotateX(-Math.PI / 2), new THREE.MeshStandardMaterial({ map: this.sabbia, color: 0xfff2d0, roughness: 1 }), CAPACITA.spiaggia)
+    // un prato per i lotti di un salvataggio vecchio che stanno dove ora c'è il mare: la terra c'è ancora, sopra l'acqua
+    this.terraSuMare = new THREE.InstancedMesh(new THREE.PlaneGeometry(LOTTO, LOTTO).rotateX(-Math.PI / 2), new THREE.MeshStandardMaterial({ map: this.texture[0], roughness: 1 }), CAPACITA.terraSuMare)
+    for (const x of [this.lastra, this.riva, this.canne, this.ninfee, this.spiaggia, this.terraSuMare]) { x.frustumCulled = false; x.count = 0; x.castShadow = false }
+    this.lastra.receiveShadow = false; this.riva.receiveShadow = true; this.spiaggia.receiveShadow = true; this.terraSuMare.receiveShadow = true
+    this.scena.add(this.riva, this.spiaggia, this.terraSuMare, this.lastra, this.canne, this.ninfee)
   }
   _ridisegnaAcqua() {
-    const d = new THREE.Object3D(); let na = 0, nc = 0, nn = 0
+    const d = new THREE.Object3D(); let na = 0, nc = 0, nn = 0, ns = 0, nt = 0
     for (const { l, dati } of this.lottiInFinestra()) {
-      if (!dati.acqua.length || na + dati.acqua.length > CAPACITA.acqua) continue
+      if (l.a <= ZONA.mareFinoA && !dati.mare && nt < CAPACITA.terraSuMare) {
+        d.position.set(l.i + 2, 0.045, l.j + 2); d.rotation.set(0, 0, 0); d.scale.set(1, 1, 1); d.updateMatrix(); this.terraSuMare.setMatrixAt(nt++, d.matrix)
+      }
+      for (const [i, j] of dati.spiaggia || []) {
+        if (ns >= CAPACITA.spiaggia) break
+        d.position.set(i + 0.5, 0.02, j + 0.5); d.rotation.set(0, 0, 0); d.scale.set(1, 1, 1); d.updateMatrix(); this.spiaggia.setMatrixAt(ns++, d.matrix)
+      }
+      const caso = sequenza(l.a, l.b, 6), acqua = new Set(dati.acqua.map(([i, j]) => i + ',' + j))
+      if (dati.spiaggia && dati.spiaggia.length) {                                       // la costa: canne qua e là in fondo alla sabbia
+        for (let k = 0; k < 3 && nc < CAPACITA.canne; k++) {
+          const sab = dati.spiaggia[Math.floor(caso() * dati.spiaggia.length)], [i, j] = sab
+          if (acqua.has((i - 1) + ',' + j) || caso() < 0.35) continue
+          d.position.set(i + 0.2 + caso() * 0.6, 0.02, j + 0.2 + caso() * 0.6); d.rotation.set(0, caso() * 6, 0); d.scale.setScalar(0.9 + caso() * 0.5); d.updateMatrix(); this.canne.setMatrixAt(nc++, d.matrix)
+        }
+      }
+      if (dati.mare || !dati.acqua.length || na + dati.acqua.length > CAPACITA.acqua) continue           // il mare è il piano lontano
       for (const [i, j] of dati.acqua) {
         d.position.set(i + 0.5, 0.03, j + 0.5); d.rotation.set(0, 0, 0); d.scale.set(1.0, 1, 1.0); d.updateMatrix(); this.lastra.setMatrixAt(na, d.matrix)
         d.position.y = 0.012; d.scale.set(1.5, 1, 1.5); d.updateMatrix(); this.riva.setMatrixAt(na, d.matrix); na++
       }
-      const caso = sequenza(l.a, l.b, 6), acqua = new Set(dati.acqua.map(([i, j]) => i + ',' + j))
-      for (let k = 0; k < 2 && nn < CAPACITA.ninfee; k++) {
+      if (dati.bioma !== 'costa') for (let k = 0; k < (dati.bioma === 'lago' ? 3 : 2) && nn < CAPACITA.ninfee; k++) {
         const [i, j] = dati.acqua[Math.floor(caso() * dati.acqua.length)]
         d.position.set(i + 0.25 + caso() * 0.5, 0.04, j + 0.25 + caso() * 0.5); d.rotation.set(0, caso() * 6, 0); d.scale.setScalar(0.8 + caso() * 0.5); d.updateMatrix(); this.ninfee.setMatrixAt(nn++, d.matrix)
       }
-      for (let k = 0; k < 4 && nc < CAPACITA.canne; k++) {                  // canne: sulle celle di terra che toccano l'acqua
+      for (let k = 0; k < (dati.bioma === 'lago' ? 8 : 4) && nc < CAPACITA.canne; k++) {                  // canne: sulle celle di terra che toccano l'acqua
         const i = l.i + Math.floor(caso() * l.w), j = l.j + Math.floor(caso() * l.d)
         const x = caso(), y = caso()
         const riva = !acqua.has(i + ',' + j) && [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([a, b]) => acqua.has((i + a) + ',' + (j + b)))
@@ -252,8 +294,8 @@ export class Terreno {
         d.position.set(i + 0.2 + x * 0.6, 0, j + 0.2 + y * 0.6); d.rotation.set(0, caso() * 6, 0); d.scale.setScalar(0.9 + caso() * 0.5); d.updateMatrix(); this.canne.setMatrixAt(nc++, d.matrix)
       }
     }
-    this.lastra.count = this.riva.count = na; this.canne.count = nc; this.ninfee.count = nn
-    for (const x of [this.lastra, this.riva, this.canne, this.ninfee]) x.instanceMatrix.needsUpdate = true
+    this.lastra.count = this.riva.count = na; this.canne.count = nc; this.ninfee.count = nn; this.spiaggia.count = ns; this.terraSuMare.count = nt
+    for (const x of [this.lastra, this.riva, this.canne, this.ninfee, this.spiaggia, this.terraSuMare]) x.instanceMatrix.needsUpdate = true
   }
 
   // i ciuffi d'erba: un gruppetto di tre fili, a istanze, su ogni cella del prato che non sia occupata (si rifanno a ogni cambio) e
@@ -307,7 +349,7 @@ export class Terreno {
 
   /** `fx`: gli effetti, per il fumo del camino (di tanto in tanto, piano). */
   muovi(dt, fx = null) {
-    this.tempo += dt; this.vento.uT.value = this.tempo; uTAcqua.value = this.tempo
+    this.tempo += dt; this.vento.uT.value = this.tempo; uTAcqua.value = this.tempo; this.pesci.muovi(this.tempo)
     if (fx && this.fumi.length && this.tempo - this.tFumo > 0.9) { this.tFumo = this.tempo; for (const p of this.fumi) fx.fumata(p) }
   }
 
@@ -316,9 +358,11 @@ export class Terreno {
     for (const m of this.decori.alberi) m.visible = q.alberi
     for (const m of this.decori.erba) m.visible = q.erba
     this.vento.uV.value = q.vento ? 1 : 0
+    this.pesci.imposta(q.erba)                 // i pesci pesano poco ma si spengono con i ciuffi (e col degrado: `Mondo3d`)
   }
 
   via() {
+    this.pesci.via()
     for (const t of this.texture) t.dispose()
     this.scena.traverse(o => { if (o.isMesh) { o.geometry?.dispose(); const m = o.material; for (const x of Array.isArray(m) ? m : [m]) x?.dispose() } })
   }

@@ -11,18 +11,21 @@ domande, e non ce ne saranno.
 
 ## Cosa si fa
 
-- **15 livelli.** Si sale spendendo monete qui dentro; a ogni livello arriva una cosa nuova (un campo, il mulino, le
+- **18 livelli.** Si sale spendendo monete qui dentro; a ogni livello arriva una cosa nuova (un campo, il mulino, le
   pecore, il pollaio, la stalla, il caseificio, la gelateria…). Ciò che non è ancora arrivato si vede in grigio, col suo livello.
-- **Quindici colture**, dal grano (20 secondi) al riso (70): si semina e si raccoglie armando l'azione e toccando i campi.
+- **Sedici colture**, dal grano (20 secondi) al riso (70): si semina e si raccoglie armando l'azione e toccando i campi.
 - **Sei macchine in catena**, con le ricette della fattoria di sempre. Mulino, pastificio, panificio, caseificio, cucina e gelateria: il grano
   diventa farina, la farina pane o pasta, il latte burro e formaggio. Un posto di partenza (se ne comprano altri fino a sei), una cottura alla volta, e i pronti aspettano.
 - **Gli animali.** Le pecore (lana che ricresce, agnellini), le galline del pollaio (uova) e le mucche della stalla (latte):
-  mangiano i raccolti e restituiscono i prodotti, che servono alle ricette.
+  mangiano il mangime che si fa al fienile (becchime e foraggio, da grano, carote o erba medica) e restituiscono i prodotti, che servono alle ricette.
 - **Il banco degli ordini.** Dal livello 2, con una bacheca (o una bancarella): tre clienti chiedono raccolti e prodotti. Consegnare paga
   **esperienza** (mai monete) e fa salire di livello; rifiutare è gratis ma il posto resta vuoto qualche minuto.
 - **Si allarga e si costruisce.** I terreni si comprano a lotti dentro un recinto basso; i pezzi si trascinano dalla barra,
   si pagano quando li lasci sulla mappa (niente conferme), si spostano tenendoli premuti, le strade si disegnano col dito; alberi, sassi e
   cespugli si tolgono toccandoli, per poche monete.
+- **Il mare, i laghi e la pesca.** A ovest, dopo qualche lotto, c'è il mare; a est ci sono laghi grandi che si scoprono comprando i terreni vicini. Con un
+  molo (e il porticciolo, per il mare) il contadino lancia la lenza: dopo qualche secondo il galleggiante si immerge e il pesce si ritira. Il pesce serve alla
+  friggitoria e al sushi bar, le ultime due macchine della catena, con le ricette della fattoria di sempre.
 
 ## Cosa lo distingue dalla fattoria di sempre
 

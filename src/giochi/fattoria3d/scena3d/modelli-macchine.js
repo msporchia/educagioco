@@ -149,8 +149,133 @@ function costruisciTintoria () {
   return g
 }
 
+// ── il fienile (la macchina del mangime): capanna rossa aperta davanti, piena di balle, con una balla tonda che gira piano ──
+// Non è il fienile di scena di `modelli.js` (`creaFienile`, 4×3, un fisso): questo si costruisce, si sposta e fa il foraggio e il becchime.
+function costruisciFienileMacchina () {
+  const g = new THREE.Group()
+  const asse = mat(0xb4553a), scuro = mat(0x6b3a24), paglia = mat(0xe3c25a), paglia2 = mat(0xcfa845), legaccio = mat(0x8a6a2a)
+  lastra(g, 3.0, 2.9, 0xd2c08a)
+  // il fondo e i due fianchi: davanti è aperto, si vede il fieno
+  scatola(g, 2.3, 1.5, 0.12, asse, -0.1, 0.75, -1.0)
+  for (const s of [-1, 1]) scatola(g, 0.12, 1.5, 1.4, asse, -0.1 + s * 1.12, 0.75, -0.35)
+  const falde = new THREE.Group(); falde.position.set(-0.1, 0, -0.45); g.add(falde)
+  tetto(falde, 2.55, 1.7, 1.5, 0x6d5a50, 0.5)
+  scatola(g, 0.14, 1.5, 0.14, scuro, -1.2, 0.75, 0.3); scatola(g, 0.14, 1.5, 0.14, scuro, 1.0, 0.75, 0.3)          // i due pali del davanti
+  // dentro: le balle quadre impilate, a piramide
+  for (const [x, y, z] of [[-0.55, 0.2, -0.6], [0, 0.2, -0.6], [0.55, 0.2, -0.6], [-0.28, 0.58, -0.6], [0.28, 0.58, -0.6], [0, 0.96, -0.6]]) {
+    scatola(g, 0.52, 0.36, 0.5, ((x + y) * 10 | 0) % 2 ? paglia : paglia2, x - 0.1, y, z)
+    scatola(g, 0.54, 0.04, 0.52, legaccio, x - 0.1, y, z)
+  }
+  // davanti, a destra: due balle tonde in piedi e quella che gira
+  const tonda = (x, z, y = 0.32) => { const c = cilindro(g, 0.32, 0.32, 0.5, paglia, x, y, z, 12); c.rotation.z = Math.PI / 2; return c }
+  tonda(0.85, 0.95); tonda(0.5, 1.2)
+  const balla = tonda(0.9, 1.15, 0.8)
+  scatola(g, 1.5, 0.05, 0.05, legaccio, -0.1, 0.1, 1.4)                                                            // una tavola per terra: dove si carica
+  insegna(g, '🌿 FIENILE', 1.6, 0.34, -0.1, 1.72, 0.9, { w: 384, h: 76, sfondo: '#5b7a2c', px: 44 })
+  g.userData.balla = balla
+  g.userData.anima = function (dt) { this.balla.rotation.x += dt * 0.5 }
+  g.userData.altezza = 2.6
+  fondiPerMateriale(g, { escludi: [balla] })
+  return g
+}
+
+// ── la friggitoria: il baracchino giallo con il tendone a righe, due friggitrici sul banco e il cartoccio gigante di patatine sul tetto ──
+function costruisciFriggitoria () {
+  const g = new THREE.Group()
+  const giallo = mat(0xf2cf5a), rosso = mat(0xc8402f), bianco = mat(0xfff7ea), legno = mat(0x8a5a3a), acciaio = mat(0xb9c2c9, { metalness: 0.6, roughness: 0.35 })
+  lastra(g, 3.0, 2.9, 0xd9c7a0)
+  scatola(g, 2.4, 1.2, 1.4, giallo, 0, 0.6, -0.6)
+  scatola(g, 2.7, 0.14, 1.7, rosso, 0, 1.27, -0.55)
+  // il tendone a righe rosse e bianche sul davanti
+  for (let n = 0; n < 8; n++) { const t = scatola(g, 0.34, 0.05, 0.85, n % 2 ? bianco : rosso, -1.19 + n * 0.34, 1.08, 0.7); t.rotation.x = 0.28 }
+  for (const x of [-1.25, 1.25]) cilindro(g, 0.04, 0.04, 1.05, legno, x, 0.52, 1.1, 6)
+  // il banco con due friggitrici: vasca d'acciaio, olio che brilla, cestello col manico
+  scatola(g, 2.2, 0.55, 0.55, legno, 0, 0.28, 0.85)
+  scatola(g, 2.3, 0.05, 0.65, mat(0xe8d8c0), 0, 0.58, 0.85)
+  const olio = []
+  for (const x of [-0.55, 0.45]) {
+    scatola(g, 0.62, 0.28, 0.42, acciaio, x, 0.74, 0.85)
+    olio.push(scatola(g, 0.5, 0.03, 0.3, mat(0xf0b030, { emissive: 0xe08a10, emissiveIntensity: 0.45 }), x, 0.89, 0.85))
+    scatola(g, 0.3, 0.025, 0.04, mat(0x2a2a2e), x + 0.1, 0.95, 0.85)
+  }
+  // i cartocci di patatine sul banco e le bottigliette di salsa
+  for (const [x, c] of [[1.0, 0xc8402f], [0.78, 0xfff7ea], [-1.0, 0xc8402f]]) {
+    cono(g, 0.09, 0.2, mat(c), x, 0.7, 0.9, 6).rotation.x = Math.PI
+    for (let k = 0; k < 4; k++) scatola(g, 0.025, 0.14, 0.025, mat(0xf3c441), x - 0.04 + k * 0.027, 0.86, 0.9)
+  }
+  for (const [x, c] of [[-0.05, 0xd8352a], [0.05, 0xf3c441]]) cilindro(g, 0.03, 0.035, 0.14, mat(c), x, 0.67, 0.7, 6)
+  insegna(g, '🍟 FRITTI', 1.7, 0.32, 0, 1.0, 0.1, { w: 384, h: 76, sfondo: '#c8402f', px: 44 })
+  // un pesce di latta sulla porta (la friggitoria frigge anche il pesce)
+  const pesce = new THREE.Group(); pesce.position.set(-0.85, 0.5, 0.11); g.add(pesce)
+  sfera(pesce, 0.13, mat(0x6aa0c8), 0, 0, 0, 1.6, 0.8, 0.3, 8); cono(pesce, 0.09, 0.14, mat(0x6aa0c8), -0.24, 0, 0, 4).rotation.z = Math.PI / 2
+  // il cartoccio gigante sul tetto: patatine d'oro che sbucano
+  const cartoccio = new THREE.Group(); cartoccio.position.set(0.7, 1.34, -0.55); g.add(cartoccio)
+  cono(cartoccio, 0.32, 0.6, rosso, 0, 0.3, 0, 8).rotation.x = Math.PI
+  for (let k = 0; k < 9; k++) { const a = k / 9 * Math.PI * 2, r = 0.1 + (k % 3) * 0.04; const f = scatola(cartoccio, 0.07, 0.42 + (k % 4) * 0.06, 0.07, mat(0xf3c441), Math.cos(a) * r, 0.78, Math.sin(a) * r); f.rotation.set(Math.sin(a) * 0.25, a, Math.cos(a) * 0.25) }
+  g.userData.fumo = new THREE.Vector3(-0.55, 1.05, 0.85)
+  g.userData.olio = olio; g.userData.cartoccio = cartoccio
+  g.userData.anima = function (dt, tt) { this.cartoccio.rotation.y += dt * 0.8; this.olio[0].material.emissiveIntensity = 0.45 + Math.sin(tt * 7) * 0.15 }
+  g.userData.altezza = 3.0
+  fondiPerMateriale(cartoccio); fondiPerMateriale(pesce); fondiPerMateriale(g, { escludi: [cartoccio, ...olio] })
+  return g
+}
+
+// ── il sushi bar: il chiosco giapponese di legno scuro, il tetto a due piani, il noren rosso che ondeggia, il bancone coi piattini e due lanterne ──
+function costruisciSushiBar () {
+  const g = new THREE.Group()
+  const scuro = mat(0x4a3224), legno = mat(0x8a5a3a), carta = mat(0xf6efe0), rosso = mat(0xc0282d), bianco = mat(0xfffaf0), tegola = mat(0x3b3f4a)
+  lastra(g, 3.0, 2.9, 0xcfc5b0)
+  scatola(g, 2.4, 1.1, 1.4, scuro, 0, 0.55, -0.6)
+  for (const x of [-0.7, 0, 0.7]) scatola(g, 0.52, 0.62, 0.05, carta, x, 0.68, 0.12)                              // gli shoji, pannelli di carta sul davanti
+  for (const x of [-0.97, -0.43, 0.1, 0.43, 0.97]) scatola(g, 0.04, 0.66, 0.06, scuro, x * 0.97, 0.68, 0.13)
+  // il tetto a due piani con le punte in su, e la trave rossa sul davanti sorretta da due pilastri
+  const falde = new THREE.Group(); falde.position.set(0, 1.1, -0.6); g.add(falde)
+  tetto(falde, 2.9, 1.9, 0.0, 0x3b3f4a, 0.42)
+  scatola(g, 2.5, 0.1, 0.12, rosso, 0, 1.05, 0.72)
+  for (const x of [-1.15, 1.15]) cilindro(g, 0.07, 0.08, 1.1, rosso, x, 0.55, 0.72, 8)
+  scatola(g, 3.1, 0.08, 0.14, tegola, 0, 1.2, 0.72)
+  // il noren: quattro strisce di stoffa rossa con la riga bianca appese alla trave (ondeggiano)
+  const noren = []
+  for (let k = 0; k < 4; k++) {
+    const p = new THREE.Group(); p.position.set(-0.75 + k * 0.5, 1.0, 0.8); g.add(p)
+    scatola(p, 0.42, 0.55, 0.02, rosso, 0, -0.28, 0); scatola(p, 0.42, 0.08, 0.022, bianco, 0, -0.2, 0)
+    noren.push(p)
+  }
+  // il bancone davanti con sei piattini di sushi (riso bianco e un fiocco di salmone o di uovo)
+  scatola(g, 2.0, 0.5, 0.45, legno, 0, 0.25, 1.15)
+  scatola(g, 2.1, 0.05, 0.55, mat(0xc89a62), 0, 0.52, 1.15)
+  const colori = [0xff8a65, 0xf3c441, 0xff8a65, 0xe8483a, 0xf3c441, 0xff8a65]
+  colori.forEach((c, k) => {
+    const x = -0.85 + k * 0.34
+    cilindro(g, 0.13, 0.13, 0.025, bianco, x, 0.565, 1.15, 10)
+    scatola(g, 0.14, 0.06, 0.09, bianco, x, 0.61, 1.15); scatola(g, 0.16, 0.035, 0.1, mat(c), x, 0.66, 1.15)
+  })
+  // le due lanterne di carta rosse, sospese ai pilastri
+  const lanterne = [-1, 1].map(s => {
+    const l = sfera(g, 0.14, mat(0xe8483a, { emissive: 0xd8302a, emissiveIntensity: 0.6 }), s * 1.15, 0.78, 0.95, 1, 1.25, 1, 8)
+    cilindro(g, 0.1, 0.1, 0.03, mat(0x2a2018), s * 1.15, 0.97, 0.95, 8); cilindro(g, 0.1, 0.1, 0.03, mat(0x2a2018), s * 1.15, 0.6, 0.95, 8)
+    return l
+  })
+  insegna(g, '🍣 SUSHI', 1.5, 0.3, 0, 1.43, 0.78, { w: 384, h: 72, sfondo: '#a8232a', px: 44 })
+  // la pentola del riso, a sinistra, che fuma piano
+  cilindro(g, 0.22, 0.24, 0.3, mat(0x5a5a5e, { metalness: 0.5, roughness: 0.5 }), -1.15, 0.15, 0.2, 10); cilindro(g, 0.24, 0.24, 0.05, mat(0x3a3a3e), -1.15, 0.32, 0.2, 10)
+  g.userData.fumo = new THREE.Vector3(-1.15, 0.5, 0.2)
+  g.userData.noren = noren; g.userData.lanterne = lanterne
+  g.userData.anima = function (dt, tt) {
+    this.noren.forEach((p, k) => { p.rotation.x = Math.sin(tt * 1.7 + k * 0.8) * 0.08; p.rotation.z = Math.sin(tt * 1.1 + k) * 0.03 })
+    this.lanterne[0].material.emissiveIntensity = 0.6 + Math.sin(tt * 2.6) * 0.18
+  }
+  g.userData.altezza = 2.7
+  for (const p of noren) fondiPerMateriale(p)
+  fondiPerMateriale(g, { escludi: [...noren, ...lanterne] })
+  return g
+}
+
 // la cache (scena3d/cache-modelli.js): costruiti e fusi una volta, le istanze sono cloni
+export const creaFriggitoria = memoModello('friggitoria', costruisciFriggitoria)
+export const creaSushiBar = memoModello('sushi_bar', costruisciSushiBar)
 export const creaZuccherificio = memoModello('zuccherificio', costruisciZuccherificio)
 export const creaTelaio = memoModello('telaio', costruisciTelaio)
 export const creaSartoria = memoModello('sartoria', costruisciSartoria)
 export const creaTintoria = memoModello('tintoria', costruisciTintoria)
+export const creaFienileMacchina = memoModello('fienile-macchina', costruisciFienileMacchina)

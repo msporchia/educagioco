@@ -174,7 +174,7 @@ Test: `unita/amici-servizio` (le regole del servizio), `unita/amici` (archivio, 
 finti), `integrazione/amici` (due pagine e il servizio: `SERVIZIO=http://localhost:8787` con `wrangler dev` in `servizio/inoltro`, o
 quello pubblicato; senza servizio **salta**), e `servizio/inoltro/prova.mjs` (le regole contro il servizio vero, in locale o online).
 Il banco (`test/aiuto/browser.mjs`) parte con la domanda già risposta (spento); `amiciDecisi: false` rimette l'avviso nella posta.
-Bersagli: `[data-azione="amici"]` (la riga in home), `[data-amici]` e `[data-amico]` (la lista), `[data-invito]`, `[data-invito-gioca]`,
+**La riga in home compare solo con almeno un amico** (21/10): acceso ma senza amici non c'è niente da mostrare, e «ancora nessuno» al bambino sarebbe solo triste. Bersagli: `[data-azione="amici"]` (la riga in home), `[data-amici]` e `[data-amico]` (la lista), `[data-invito]`, `[data-invito-gioca]`,
 `[data-invito-no]`, `[data-sfida-amici]`, `[data-sfida-invitato]`; nei grandi `.carta[data-flag="amici"]` con `[data-azione="amici-attiva"|
 "amici-invita"|"amici-riscatta"|"amici-togli"]`, `[data-amici-codice]`, `[data-amici-codice-input]`, `[data-amici-messaggio]`; nel modulo
 del bambino `[data-amici-domanda]`.

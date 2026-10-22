@@ -1,0 +1,91 @@
+# Parità: colture, campi e catena
+
+Legenda in [README.md](README.md). 2D: [../../fattoria/campi-e-silos.md](../../fattoria/campi-e-silos.md),
+[catena.md](../../fattoria/catena.md), [macchine.md](../../fattoria/macchine.md). 3D: [../merci-e-ricette.md](../merci-e-ricette.md),
+[../mangime-e-catena.md](../mangime-e-catena.md), [../regole.md](../regole.md).
+
+## Campi e colture
+
+| id | cosa | 2D | 3D | pri | dove |
+|---|---|---|---|---|---|
+| C1 | le colture | 16 (`dati/coltivazioni.js`) | ✅ le stesse 16 (id singolari: `carota`, `pomodoro`…; il legame è il `pezzo` e un test) | – | `dati/colture.js` |
+| C2 | livello a cui si semina | grano 1, carote 5, mais 11, erba 13, patate/cavolfiori 22, zucche 27, barbabietola 30, pomodori 33, melanzane/peperoni 39, cipolle/aglio 44, fragole 50, lavanda 54, riso 60 | 🟡 compresso: grano/carote 1, mais 2, pomodori 4, patate 6, zucche/cavolfiori 8, erba/cipolle 9, aglio 10, fragole/barbabietola 11, peperoni 12, melanzane 13, lavanda/riso 15 | P0 con L1 | [livelli-ed-economia.md](livelli-ed-economia.md) |
+| C3 | tempo di crescita | grano 5 min … riso 12 min | 🟡 grano 20 s … riso 70 s: da ×8 (peperoni) a ×22 (carote) più veloci, non ×15 per tutti | P1 | D9 |
+| C4 | resa di un campo | `RESA = 1`: un campo, un pezzo, si raccoglie intero | 🟡 4 tessere, un raccolto ciascuna, tagliate una alla volta: 4× la roba per lo stesso campo | P1 | D12 |
+| C5 | prezzo del raccolto | si paga raccogliendo: 🪙1 (🪙2 per mais, zucche, pomodori, melanzane); seminare è gratis | ❌ raccogliere è gratis | P1 | D13 |
+| C6 | prezzo del campo | 🪙22 e +🪙13 a copia (22, 35, 48, 62, 75…), conta anche il baule | 🟡 🪙20 e +8 a copia, conta anche il magazzino | P2 | `dati/catalogo.js` |
+| C7 | gli stadi del campo | 7 stati dipinti (da terra nuda a maturo); il seminato si distingue | 🟡 crescita continua (scala, foglie una alla volta, frutto oltre 0,55, colore che matura): si legge brullo → semini → maturo | – | [../scena.md](../scena.md) «Le colture» |
+| C8 | cartelli di coltura | 16 `cartello_*` da posare (decorazione) | ❌ | P2 | [mondo-e-stagioni.md](mondo-e-stagioni.md) |
+| C9 | seminare e raccogliere con un gesto | semi e cesto da trascinare su più campi | 🟡 si arma «semina/raccogli» e si trascina; il contadino cammina | P2 | [interfaccia-e-guida.md](interfaccia-e-guida.md) |
+| C10 | terreni / pennello | `dati/terreni.js`: erba, acqua (pennello spento), strada e roccia annunciate | 🟡 strade a pennello ✅; acqua e mare sono geografia, non pennello; ✳ pesca | P2 | [mondo-e-stagioni.md](mondo-e-stagioni.md) |
+
+Le arature non esistono in nessuna delle due.
+
+## Silos e scorte
+
+| id | cosa | 2D | 3D | pri |
+|---|---|---|---|---|
+| C11 | silo del raccolto / della stalla / dispensa | 3 silos da 🪙120, livelli 1 / 4 / 16 | ❌ nessun silo | P1 |
+| C12 | scomparti | 8 pezzi per merce, +2 a ogni ingrandimento (tutti insieme), costo `40+130·ln(1+n)` | ❌ scorte senza tetto | P1 |
+| C13 | scomparto pieno | non si raccoglie e non si paga, il campo resta pronto; il foglio dice cosa fare | ❌ (non può succedere) | P1 |
+| C14 | «chi la usa» sulla roba | premere una merce dice dove si lavora (`dati/usi.js`) + «Come si fa» | 🟡 l'inventario dice «a cosa serve» in una frase | P1 |
+| C15 | carretto del vicino per svuotare lo scomparto | roba 5 → 1, mai monete | ❌ (senza scomparti non serve; i vicini sono un'altra cosa) | P2 |
+
+Perché i silos contano: sono un pozzo di monete che non si esaurisce (28 posti ≈ 7 ore di spesa) e il momento in cui il gioco
+insegna il resto della catena. Con ricette 60× più svelte e niente tetto, la 3D si riempie di roba senza uno scopo. Decisione D11.
+
+## Le macchine (14 nella 2D, 13 nella 3D)
+
+Prezzi e livelli: 2D 🪙/liv → 3D 🪙/liv. Tempo delle ricette: minuti 2D → secondi 3D (×60).
+
+| macchina | 2D | 3D | ricette mancanti nella 3D | pri |
+|---|---|---|---|---|
+| mulino | 150/4: mangime, pappa di mais (11), farina (17) | 🟡 60/3: farina, pastone | `mangime` (cibo di cane, gatto, coniglio, pappagallo, pesci: i compagni 3D non mangiano) | P1 con A6 |
+| fienile | 150/6: foraggio di carote, becchime (9), foraggio (13), fiorume (44), fiorume_concime (52) | 🟡 40/2: 3 ricette | `fiorume` (fiori per le arnie), `fiorume_concime` | P1 con A8 |
+| telaio | 170/16: stoffa | ✅ 70/8 | – | – |
+| panificio | 180/17: pane, torta (20), crostata e merenda (50) | 🟡 90/7 | `merenda` (vuole il miele) | P1 con A8 |
+| caseificio | 200/20: burro, formaggio | ✅ 120/11 | – | – |
+| **pentolone** | 150/23: zuppa, beverone, zuppa_orto, pastura | ❌ | tutte e 4 (il mangime di maiali, anatre, capre) | **P0** (A1) |
+| cucina | 210/25: minestrone, polenta, conserva, salsa, parmigiana | ✅ 110/12 (id `conserviera`; modello ancora da ridisegnare) | – | – |
+| zuccherificio | 230/31: zucchero, caramelle (46), marmellata (51) | 🟡 130/13 | `caramelle` (miele) | P1 con A8 |
+| gelateria | 240/34: succo, gelato, frullato | ✅ 140/14 | – | – |
+| pastificio | 260/37: pasta, biscotti, pizza, lasagne | ✅ 80/6 (id `pasticceria`!) | – | – |
+| sartoria | 250/42: maglione, sciarpa di lana, berretto | ✅ 150/15 | – | – |
+| tintoria | 300/55: tintura, maglione alla lavanda, sapone, sacchetto | ✅ 160/16 | – | – |
+| friggitoria | 300/58: patatine, fritto, arancini | ✅ 170/17 | – | – |
+| sushi bar | 340/62: sushi, maki | ✅ 180/18 | – | – |
+
+**Attenzione agli id**: in 3D `pasticceria` è il Pastificio, in 2D è la bottega della pasticcera; `conserviera` è la Cucina.
+Ogni migrazione e ogni nuova bottega 3D deve tenerne conto ([commercio.md](commercio.md) M3).
+
+## Le ricette (57 nella 2D, 37 nella 3D)
+
+| id | cosa | stato | pri |
+|---|---|---|---|
+| C16 | le 37 portate | ✅ stesso id, ingredienti e quantità (un test le confronta, con le deviazioni dichiarate in `MANCANTI`) | – |
+| C17 | le 4 «di bestia» (uova, latte, lana, pesce) | ✅ sono i prodotti delle bestie e della pesca | – |
+| C18 | le 9 di macchine non portate: mangime, zuppa, beverone, zuppa_orto, pastura, fiorume, fiorume_concime, merenda, caramelle | ❌ | P0 le quattro del pentolone, P1 le altre |
+| C19 | le 7 di recinti non portati: lana_angora, uova_anatra, tartufi, latte_capra, miele, lana_alpaca, concime | ❌ | P0/P1 ([animali.md](animali.md)) |
+| C20 | tempi | 🟡 minuti → secondi (×60) | P1 D9 |
+| C21 | costo per lavorazione | 2D: 🪙0 (8 ricette), 🪙1 (42), 🪙2 (7) a ogni avvio; 3D: ❌ gratis | P1 D13 |
+| C22 | `parmigiana` ha l'emoji 🍆 | ✅ uguale (manca il disegno in entrambe) | P2 |
+| C23 | zucca e patata con poche uscite (la 2D le manda al pentolone) | ❌ si risolve con C18 | P0 con A1 |
+| C24 | merci | 2D 66 prodotti, 3D 56 (mancano almeno mangime, zuppa, beverone, pastura, fiori, merenda, tartufi, miele, concime, caramelle) | segue C18–C19 |
+
+## La fila
+
+| id | cosa | 2D | 3D | pri |
+|---|---|---|---|---|
+| C25 | posti per macchina | 1 + 5 da comprare, 🪙20·40·80·160·320 | ✅ uguali (un test li confronta) | – |
+| C26 | la fila dei recinti | stessa fila delle macchine | 🟡 i recinti 3D hanno bestie singole da comprare (🪙40/60/80 pecore, 25–73 galline, 60/90/120 mucche) | – |
+| C27 | fila sul prato (dischetti, anello, posto col «+») | sì | 🟡 nel foglio della macchina, non sul prato | P2 |
+
+## Mangime e catena N → 1
+
+| id | cosa | stato | pri |
+|---|---|---|---|
+| C28 | N → 1 e mai il contrario | ✅ | – |
+| C29 | becchime (galline), foraggio (mucche, pecore) | ✅ stesse quantità | – |
+| C30 | tre mangimi, tre bocche (mangime / pastone, foraggio, pentolone) | 🟡 due mangimi: la catena si insegna a metà finché mancano maiali, anatre, capre | P0 con A1 |
+| C31 | l'erba medica | ✅ la più svelta, solo per il fienile (`mangime: true`) | – |
+| C32 | veterinaria che chiede il mangime | ❌ il mangime non si consegna in 3D | P2 con A6 |

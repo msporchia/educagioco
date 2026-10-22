@@ -166,6 +166,7 @@ await scatto(page, 'genitori')
    l'applicazione deve dire di chi è e dove si guarda il codice, se no
    una famiglia che l'ha ricevuta da un'altra famiglia non ha nessun
    modo di saperlo. */
+await apriScheda('impostazioni')   // la firma sta solo lì, non in tutte le schede
 const firma = await page.evaluate(() => {
   const f = document.querySelector('[data-firma]')
   return f ? { testo: f.innerText, fuori: [...f.querySelectorAll('a')].map(a => a.href) } : null
@@ -184,6 +185,8 @@ controlla('e da lì si arriva al codice',
    sola alla prima distrazione. */
 uguale('e non c\'è nient\'altro: un link solo, il codice',
   (firma?.fuori || []).length, 1)
+uguale('la firma non c\'è nelle altre schede', await (async () => { await apriScheda('bambini'); return page.locator('[data-firma]').count() })(), 0)
+await apriScheda('impostazioni')
 controlla('niente LinkedIn nelle impostazioni',
   !/linkedin/i.test(JSON.stringify(firma)), (firma?.fuori || []).join(' '))
 await page.evaluate(() => document.querySelector('[data-firma]')?.scrollIntoView(false))
@@ -1036,7 +1039,7 @@ await page.waitForSelector('.carta.chi-gioca', { timeout: 5000 })
    dai profili, come il codice dei genitori, e devono sopravvivere a un
    riavvio e a un cambio di bambino. Se finissero in `settings` questo
    controllo li perderebbe. */
-await apriScheda('giochi')        // i giudizi stanno dove si guardano le domande
+await apriScheda('impostazioni')  // i giudizi sono un'impostazione avanzata
 controlla('l\'interruttore dei giudizi c\'è', await page.isVisible('.carta[data-flag="giudizi"]'))
 controlla('e parte spento',
   await page.evaluate(() => document.querySelector('.carta[data-flag="giudizi"]').className.includes('spento')))
@@ -1067,7 +1070,7 @@ await page.reload()
 await page.waitForSelector('.carte', { timeout: 8000 })
 await vaiAiGenitori()
 await digita('0000')
-await apriScheda('giochi')
+await apriScheda('impostazioni')
 await page.waitForSelector('.carta[data-flag="giudizi"]', { timeout: 5000 })
 controlla('l\'interruttore è rimasto acceso dopo il riavvio',
   !(await page.evaluate(() => document.querySelector('.carta[data-flag="giudizi"]').className.includes('spento'))))

@@ -1,8 +1,8 @@
-# I laghetti, i ponti e (poi) la pesca
+# I laghetti, i ponti e la pesca
 
-Un lotto su sette è un **laghetto**: al mezzo uno stagno, intorno terra. Si vede anche da un lotto non tuo; si attraversa coi
-ponti. La pesca **non c'è ancora**: le basi sono pronte. Codice: `dati/biomi.js`, `Fattoria3d.acqua`/`puoMettere`, `scena3d/terreno.js`
-(`_acqua`). Il perché dei lotti è in [mondo-infinito.md](mondo-infinito.md).
+Un lotto su sette della fascia di mezzo è un **laghetto**: al mezzo uno stagno, intorno terra. Si vede anche da un lotto non tuo; si attraversa coi
+ponti. **A ovest c'è il mare e a est i laghi grandi**, fatti di celle e non di lotti: [geografia-e-pesca.md](geografia-e-pesca.md). Codice: `dati/biomi.js`,
+`Fattoria3d.acqua`/`puoMettere`, `scena3d/terreno.js` (`_acqua`). Il perché dei lotti è in [mondo-infinito.md](mondo-infinito.md).
 
 ## Lo stagno
 
@@ -32,7 +32,7 @@ coordinate del lotto. Il movimento è nello shader della lastra (`uT`, lo stesso
 niente riflessioni e niente luci in più. Le istanze si rifanno con la finestra ([mondo-infinito.md](mondo-infinito.md)). Nel
 catalogo 3D c'è `fattoria:stagno`.
 
-Il cartello di un lotto comprabile con laghetto dice «🪙 N · 🏞️ laghetto» e l'offerta «Qui c'è un laghetto.».
+Il cartello di un lotto comprabile con laghetto dice «🪙 N · 🏞️ laghetto» e l'offerta «Qui c'è un laghetto.» (e «🏞️ lago», «🌊 mare», «🏖️ spiaggia» per la geografia grande).
 
 ## Lo stagno e il laghetto che si costruiscono
 
@@ -66,21 +66,12 @@ cinque schede che scorrono di lato, e un pezzo d'acqua è una decorazione come l
   verde o rosso come gli altri.
 - Nel catalogo 3D: `fattoria:stagno-costruito` e `fattoria:laghetto-costruito` (il vecchio `fattoria:stagno` è il lago dei lotti).
 
-## Come si aggancerà la pesca (non fatta)
+## La pesca (fatta: [geografia-e-pesca.md](geografia-e-pesca.md))
 
-0. **Anche gli stagni costruiti saranno posti di pesca** (non fatto): le celle di riva libere attorno a un pezzo `stagno`/`laghetto`
-   (terra che tocca la sua impronta, non occupata) fanno da `molo`, come `generaLotto(...).molo` per i laghi dei lotti; servirà un
-   `moloDelPezzo(c)` accanto a `moloDelLotto`.
-1. **Un pezzo `molo`** (decoro calpestabile come la passerella, 1×2, `suAcqua`) che si mette dalla riva; nel `puoMettere` basta il
-   flag e il posto candidato (`generaLotto(...).molo`) suggerisce dove.
-2. **Un'azione «pesca»** del contadino in fondo al molo (`azioni.js`, come `semina`): il motore decide (`pesca(id)`), la scena anima la
-   canna; costo in attesa, non in monete.
-3. **Un prodotto `pesce`** (e merci derivate) in `dati/ricette.js` e `ordini`: il pesce che la 2D usa alla friggitoria, al sushi bar
-   e alla peschiera ([merci-e-ricette.md](merci-e-ricette.md), [da-fare.md](da-fare.md)).
-4. **La peschiera** come recinto-macchina accanto a un laghetto; i pesci da catturare per lago dipendono dal lotto
-   (`mescola(a, b, sale)`), così ogni lago ha la sua pesca.
-
-Niente di questo cambia i salvataggi: servono solo un pezzo nuovo, un'azione e una merce.
+Tutta l'acqua, dei laghetti, dei laghi grandi, del mare e degli stagni costruiti, si pesca da un **molo** (🪙12, livello 4, 3×1 o 1×3) o dal **porticciolo** (🪙90, livello 9):
+si tocca una cella d'acqua tua entro 6 celle dal molo e nello stesso specchio, il contadino lancia, aspetta 12 s e ritira un pesce (uno per lotto d'acqua alla volta: ogni lotto è un
+banco che si ripopola in un minuto). Il posto candidato `generaLotto(..).molo` resta nei dati ma non guida più niente: il molo lo mette il bambino dove vuole. La peschiera della 2D
+(il recinto dei pesci, che mangiano il mangime del mulino) **non c'è ancora**: [da-fare.md](da-fare.md).
 
 ## Nei test
 

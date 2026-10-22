@@ -126,7 +126,7 @@ await D.page.waitForSelector('[data-amici-messaggio]', { timeout: 20000 })
 controlla('senza servizio il grande legge una frase chiara', /internet|non risponde/.test(await D.page.locator('[data-amici-messaggio]').innerText()))
 await inHome(D.page)
 await attendi(D.page, 600)
-controlla('e la home resta com\'è, con la riga degli amici ma nessun cartello', await D.page.locator('[data-azione="amici"]').isVisible() && await D.page.locator('[data-invito]').count() === 0)
+controlla('e la home resta com\'è: finché non c\'è un amico non c\'è nemmeno la riga («ancora nessuno» sarebbe triste), e nessun cartello', await D.page.locator('[data-azione="amici"]').count() === 0 && await D.page.locator('[data-invito]').count() === 0)
 controlla('nessun errore del gioco', veri(D.errori).length === 0, veri(D.errori).join(' | '))
 
 await browser.close()

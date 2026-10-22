@@ -8,10 +8,10 @@ sempre ([../fattoria/animali.md](../fattoria/animali.md)) ma più semplici delle
 
 ## Le regole
 
-- **Due pezzi del catalogo**, piazzabili liberamente nel terreno proprio come il recinto: `pollaio` 3×2 (🪙55, livello 6) e
+- **Due pezzi del catalogo**, piazzabili liberamente nel terreno proprio come il recinto: `pollaio` 3×2 (🪙55, livello 5) e
   `stalla` 4×3 (🪙90, livello 9), produttivi (il loro prezzo si somma al salto di livello), rincaro 0.
-- **Una bestia è nel prezzo** e parte con fame. Nutrirla costa raccolti, dalla scorta più grande fra quelli che mangia:
-  la gallina **1** fra grano e mais, la mucca **2** fra mais e carote. Dopo `ms` la bestia ha il suo prodotto: 25 s per un
+- **Una bestia è nel prezzo** e parte con fame. Nutrirla costa **mangime**, quello della fattoria di sempre
+  ([mangime-e-catena.md](mangime-e-catena.md)): la gallina **2 becchimi**, la mucca **2 foraggi** (li fa il fienile da grano e carote), non un raccolto qualsiasi. Dopo `ms` la bestia ha il suo prodotto: 25 s per un
   uovo, 40 s per un latte (da prova).
 - **Il prodotto aspetta**: una bestia pronta non ne fa un altro, non lo perde, non marcisce; anche a pagina chiusa conta
   l'orologio (`fine` è un'ora assoluta). Si raccoglie col tocco: tutto il pronto del pezzo in un gesto, e va in
@@ -21,17 +21,17 @@ sempre ([../fattoria/animali.md](../fattoria/animali.md)) ma più semplici delle
   recinto 4 pecore, pollaio 6 galline, stalla 4 mucche. **Il livello apre il pezzo, non i posti.** Ogni bestia costa
   più della precedente: `prezzoBestia + rincaroBestia · (n − 1)` con `n` le bestie già dentro (pecora 40, 60, 80;
   gallina 25, 37, 49, 61, 73; mucca 60, 90, 120). Conta come esperienza. Pieno rifiuta con `pieno`, senza monete con
-  `poche-monete` e il `costo`. Una pecora comprata è **adulta e affamata** (la lana parte dal primo pasto, che l'acquisto dà da sé se c'è un raccolto); le nascite restano
+  `poche-monete` e il `costo`. Una pecora comprata è **adulta e affamata** (la lana parte dal primo pasto, che l'acquisto dà da sé se c'è il foraggio); le nascite restano
   ([regole.md](regole.md), «Le pecore»).
 - **Un pollaio o una stalla con le bestie non si mette via** (`ha-le-bestie`), si sposta, come il recinto.
-- Nutrire dà da mangiare **a tutte le bestie che hanno fame**, finché c'è da mangiare (una gallina per raccolto).
+- Nutrire dà da mangiare **a tutte le bestie che hanno fame**, finché c'è da mangiare (una gallina ogni due becchimi, una mucca ogni due foraggi).
 
 ## Uova e latte: ingredienti, non ricette
 
 `uova` e `latte` (`PRODOTTI_ANIMALI`) non hanno una macchina e non si chiedono da soli al banco: servono alle ricette
 ([ricette.js](../../src/giochi/fattoria3d/dati/ricette.js)). Il loro livello è quello del pezzo che li fa
-(`livelloDellaRicetta` lo sa), e per il premio degli ordini valgono il loro tempo più il primo raccolto che mangiano
-(`msDelProdotto`: 45 s un uovo, 88 s un latte). Ognuno ha la sua faccia nell'atlante (`pezzo`: `merce_uova`, `latte`).
+(`livelloDellaRicetta` lo sa), e per il premio degli ordini valgono il loro tempo più il mangime che mangiano
+(`msDelProdotto`: 113 s un uovo, 98 s un latte; il conto è `lavoroDelMangime`, due pasti di becchime o di foraggio). Ognuno ha la sua faccia nell'atlante (`pezzo`: `merce_uova`, `latte`).
 
 Le ricette sono quelle della fattoria di sempre ([merci-e-ricette.md](merci-e-ricette.md)):
 
@@ -42,7 +42,7 @@ Le ricette sono quelle della fattoria di sempre ([merci-e-ricette.md](merci-e-ri
 | burro | **caseificio** | latte 1 | 11 |
 | formaggio | caseificio | latte 2 | 11 |
 | frullato | gelateria | fragole 2, latte 1 | 14 |
-| gelato | gelateria | latte 2, fragola 1 (in 2D lo zucchero) | 14 |
+| gelato | gelateria | latte 2, zucchero 1 | 14 |
 
 Il **caseificio** è un edificio unico 3×3 (🪙120, livello 11): una macchina come le altre, un posto (gli altri si comprano), che si mette dove si
 vuole nel terreno proprio ([edifici-liberi.md](edifici-liberi.md)).
@@ -120,8 +120,8 @@ Nel catalogo 3D (`strumenti/banco/catalogo-3d/fattoria.js`) c'è una voce per st
 ## Il collegamento alla scena
 
 - **Il tocco sull'edificio** (`scena3d/azioni.js`, `curaBestie`): se c'è un prodotto pronto si raccoglie (gesto di semina, testo che
-  vola «+2 🥚»), altrimenti si nutre («🍽️ ×N»); se lavorano dice quanto manca; senza raccolti dice cosa serve
-  (`manca-raccolto` con `servono` e `mangia`). Niente più dialogo: comprare non passa di qui.
+  vola «+2 🥚»), altrimenti si nutre («🍽️ ×N»); se lavorano dice quanto manca; senza mangime dice cosa serve e dove si fa
+  (`manca-mangime` con `servono` e `mangia`: «Serve 🌰 becchime (2 a testa): lo fa il fienile»). Niente più dialogo: comprare non passa di qui.
 - **Il pulsante «＋ 🪙 N» del cartello** (`azioni.compraBestia(id)`): compra subito, senza conferma e senza camminare fino
   all'edificio; compare la bestia, scintille e «+1 🐄». Se mancano monete dice quante (`Ti mancano 🪙 N`) e il pulsante è
   grigio (`aria-disabled`, ma risponde). Pieno, il pulsante sparisce e il conto diventa verde. Ignorato in Costruisci e con un
@@ -129,10 +129,10 @@ Nel catalogo 3D (`strumenti/banco/catalogo-3d/fattoria.js`) c'è una voce per st
 - **La vista** (`Gioco.vue`): uova e latte stanno in `prodotti` e nel HUD (`emojiDi`, non `RICETTE`); gli eventi `uovo` e
   `latte` muovono i contatori `fattoria3dUova` e `fattoria3dLatte`, che insieme fanno il traguardo `f3d-cortile`. Niente
   esperienza dai contatori.
-- I motivi `ha-le-bestie`, `lavora`, `pieno` e `manca-raccolto` per le bestie sono in `scena3d/detti.js`.
+- I motivi `ha-le-bestie`, `lavora`, `pieno` e `manca-mangime` per le bestie sono in `scena3d/detti.js`.
 
 Nei test: `unita/fattoria3d` (sezioni 8 e 18–20); `integrazione/fattoria3d` (sezione «gli animali da cortile»: nutrire, uova,
 bestie comprate dal cartello — `[data-f3="cartello-bestie"][data-pezzo="pollaio|stalla|recinto"]`, `[data-f3="compra-bestia"]` con
 `aria-disabled` —, latte, il recinto da una pecora a quattro, contatori, `[data-f3="prodotti"]`).
 
-Ogni acquisto di una bestia porta **un giro di pappa** (`pappa` nel risultato di `compraBestia`): le bestie affamate del pollaio o della stalla si nutrono dalla scorta, il recinto riceve un pasto (cresce l'agnello o avanza la nascita). Senza raccolti da dare, niente pappa (non è un rifiuto).
+Ogni acquisto di una bestia porta **un giro di pappa** (`pappa` nel risultato di `compraBestia`): le bestie affamate del pollaio o della stalla si nutrono dalla dispensa (becchime, foraggio), il recinto riceve un pasto di foraggio (cresce l'agnello o avanza la nascita). Senza mangime da dare, niente pappa (non è un rifiuto).

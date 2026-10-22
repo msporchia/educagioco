@@ -192,17 +192,18 @@ export function abilita(p, materia, now = Date.now()) {
   const def = typeof materia === 'string' ? materiaDi(materia) : materia
   if (!def) return null
   const items = p.items || {}
-  let visti = 0, imparati = 0, somma = 0
+  let visti = 0, imparati = 0, somma = 0, ok = 0, err = 0
   for (const [k, it] of Object.entries(items)) {
     if (!k.startsWith(def.prefisso) || (def.vale && !def.vale(k))) continue
     visti++
+    ok += it.ok || 0; err += it.err || 0      // per «Come va»: le giuste sulle risposte date
     const s = strength(it, now)
     somma += Math.min(SRS.masterS, s)
     if (isMastered(it, now)) imparati++
   }
   const padronanza = Math.max(0, Math.min(1, somma / (def.totale * SRS.masterS)))
   return {
-    ...def, visti, imparati, padronanza,
+    ...def, visti, imparati, padronanza, ok, err,
     /* la forza media di quello che si è già incontrato: dice se il poco
        che si sa è saldo, mentre la padronanza dice quanto se ne è fatto */
     forzaMedia: visti ? somma / visti : 0,

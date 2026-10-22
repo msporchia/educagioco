@@ -1,78 +1,34 @@
-/* ═══════════════════════════════════════════════════════════════════
-   DI COSA PARLA UN GIOCO — il catalogo e chi lo cita
+/* Le aree di «Come va»: le materie raggruppate in cinque, dall'area alle materie (`areeDi` in quiz/comeva.js). Docs: docs/genitori/come-va.md */
+import { AREE, areaDi, areeDi, DIFFERENZA } from '../../src/quiz/comeva.js'
+import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 
-   Stessa forma del test dei saperi, per lo stesso motivo. `data/aree.js`
-   è un'anagrafe: da sola non fa niente, conta perché i giochi la citano
-   — i sette vecchi in `data/giochi.js`, i cinque nuovi nel proprio
-   manifesto. Le due parti stanno in file diversi apposta, e qui si
-   controlla che si parlino.
+uguale('cinque aree', AREE.length, 5)
+uguale('la matematica è nei numeri', areaDi('matematica'), 'numeri')
+uguale('le tabelline pure', areaDi('mate'), 'numeri')
+uguale('l\'inglese è nelle lingue', areaDi('inglese'), 'lingue')
+uguale('il tempo sta con lo spazio', areaDi('tempo'), 'spazio')
+uguale('una materia sconosciuta va in logica e scienze', areaDi('chissà'), 'logica')
+controlla('nessuna materia è in due aree', new Set(AREE.flatMap(a => a.materie)).size === AREE.flatMap(a => a.materie).length)
 
-   Cosa si rompe se non si controlla, e perché non lo vedrebbe nessuno:
-
-     · un gioco senza `area`, o con un'area che nel catalogo non esiste,
-       **sparisce dalla home**. Non dà errore, non lascia un buco: la
-       carta semplicemente non viene disegnata, perché i gruppi si
-       costruiscono partendo dalle aree e filtrando i giochi. Un gioco
-       invisibile che nessuno ha spento è il guasto peggiore di questa
-       schermata, ed è a un refuso di distanza;
-     · un `come` sconosciuto fa esplodere la carta a schermo — la home
-       legge `MODI[g.come].emoji` — e a quel punto è tutta la home a non
-       comparire, non una carta sola;
-     · un'area elencata e citata da nessuno è un gruppo che non si
-       disegnerà mai: vale la regola di sempre, peggio che non averla.
-
-   Quello che questo test NON pretende: che le assegnazioni siano
-   *giuste*. Se il castello finisse fra le parole nessuno qui se ne
-   accorgerebbe — quella è una scelta, e si guarda a occhio.
-   ═══════════════════════════════════════════════════════════════════ */
-import { GIOCHI } from '../../src/data/giochi.js'
-import { AREE, MODI, CHIAVI_AREE } from '../../src/data/aree.js'
-import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
-import { SCENE } from '../../src/components/home/scene.js'
-
-/* ── ogni gioco si dichiara ── */
-const senzaArea = GIOCHI.filter(g => !g.area).map(g => g.chiave)
-uguale('ogni gioco dice di che area è', senzaArea.join(',') || '—', '—')
-
-const senzaModo = GIOCHI.filter(g => !g.come).map(g => g.chiave)
-uguale('ogni gioco dice che tipo di gioco è', senzaModo.join(',') || '—', '—')
-
-/* ── e quello che dichiara esiste ── */
-const areaIgnota = GIOCHI.filter(g => g.area && !CHIAVI_AREE.includes(g.area))
-  .map(g => `${g.chiave}→${g.area}`)
-uguale('nessun gioco cita un\'area che non esiste', areaIgnota.join(',') || '—', '—')
-
-const modoIgnoto = GIOCHI.filter(g => g.come && !MODI[g.come])
-  .map(g => `${g.chiave}→${g.come}`)
-uguale('nessun gioco cita un modo che non esiste', modoIgnoto.join(',') || '—', '—')
-
-/* ── e il catalogo non ha voci morte ──
-   Un'area vuota non è un guasto a schermo (la home salta i gruppi
-   senza giochi), ma è una voce che non serve a niente: o le si dà un
-   gioco, o si toglie. */
-const areeVuote = AREE.filter(a => !GIOCHI.some(g => g.area === a.chiave)).map(a => a.chiave)
-uguale('ogni area ha almeno un gioco', areeVuote.join(',') || '—', '—')
-
-const modiVuoti = Object.keys(MODI).filter(m => !GIOCHI.some(g => g.come === m))
-uguale('ogni modo di giocare è usato da almeno un gioco', modiVuoti.join(',') || '—', '—')
-
-/* ── quello che i genitori possono spegnere resta spegnibile ──
-   Le aree non sono un interruttore in più: raggruppano e basta. Se un
-   giorno un gioco finisse in un'area e sparisse dall'elenco dei
-   settaggi sarebbe un gioco che non si può più né vedere né spegnere. */
-uguale('le aree non tolgono giochi dall\'elenco', GIOCHI.length,
-       new Set(GIOCHI.map(g => g.chiave)).size)
-
-controlla('ci sono almeno quattro aree, che è quanto serve per spezzare la fila',
-  AREE.length >= 4)
-
-const perArea = AREE.map(a =>
-  `${a.nome} ${GIOCHI.filter(g => g.area === a.chiave).length}`).join(' · ')
-nota(`${GIOCHI.length} giochi in ${AREE.length} aree — ${perArea}`)
-
-/* ── la copertina del carosello (docs/core/home.md): senza, il gioco esce grigio e nessuno lo nota ── */
-const senzaCopertina = GIOCHI.filter(g => !g.copertina || !/^#[0-9a-f]{6}$/i.test(g.copertina.fondo || '')
-  || !/^#[0-9a-f]{6}$/i.test(g.copertina.disegno || '') || !SCENE[g.copertina.scena]).map(g => g.chiave)
-uguale('ogni gioco ha una copertina con fondo, disegno e una scena che esiste', senzaCopertina.join(',') || '—', '—')
-
-riassunto('le aree e i modi di giocare')
+/* una materia: `ok` giuste su `n` risposte; `prima` è la percentuale di giuste di due settimane fa */
+const m = (id, ok, n, prima = null) => ({ id, nome: id, ok, err: n - ok, giuste: Math.round(ok / n * 100), risposte: n, prima, visti: 1 })
+const a = areeDi({ viste: [m('matematica', 40, 50, 60), m('mate', 10, 20, 40), m('mente', 6, 10), m('tempo', 4, 10)], nonAncora: [m('torri', 0, 1), m('italiano', 0, 1)] })
+uguale('sempre cinque aree, anche vuote', a.length, 5)
+const numeri = a.find(x => x.id === 'numeri')
+uguale('le giuste sulle risposte date, non la media delle percentuali', numeri.pct, 70)   // 56 su 80
+uguale('quante risposte', numeri.risposte, 80)
+uguale('e di com\'erano (solo dove c\'è la fotografia)', numeri.prima, 50)
+uguale('la freccia sale', numeri.freccia, 'su')
+uguale('la migliore materia dei numeri', numeri.materie.filter(x => x.meglio).map(x => x.id).join(), 'matematica')
+uguale('la peggiore', numeri.materie.filter(x => x.peggio).map(x => x.id).join(), 'mate')
+uguale('le mai giocate stanno a parte', numeri.nonAncora.map(x => x.id).join(), 'torri')
+uguale('un\'area senza risposte non ha percentuale', a.find(x => x.id === 'italiano').pct, null)
+uguale('e nessuna freccia', a.find(x => x.id === 'italiano').freccia, null)
+uguale('con meno di otto risposte è «poche prove»', a.find(x => x.id === 'spazio').poche, false)
+uguale('anche una sola risposta', areeDi({ viste: [m('tempo', 1, 3)] }).find(x => x.id === 'spazio').poche, true)
+uguale('una materia sola non dice meglio o peggio', a.find(x => x.id === 'spazio').materie.some(x => x.meglio || x.peggio), false)
+const vicine = areeDi({ viste: [m('matematica', 70, 100), m('mate', 70 - DIFFERENZA + 1, 100)] }).find(x => x.id === 'numeri')
+uguale('sotto la differenza non si dice nulla', vicine.materie.some(x => x.meglio || x.peggio), false)
+const poche = areeDi({ viste: [m('matematica', 5, 5), m('mate', 1, 3)] }).find(x => x.id === 'numeri')
+uguale('con poche risposte per materia non si dice meglio o peggio', poche.materie.some(x => x.meglio || x.peggio), false)
+riassunto('le aree di come va')

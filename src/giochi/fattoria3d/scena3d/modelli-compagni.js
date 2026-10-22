@@ -163,11 +163,16 @@ function costruisciContadino (arg = 'contadino') {
   const ascia = perno(bracci[1], 0, -0.29, 0); ascia.visible = false
   cil(ascia, 0.022, 0.022, 0.7, mat(0x9a6a36), 0, -0.25, 0, 5)
   scatola(ascia, 0.05, 0.16, 0.2, mat(0xcfd6dc, { metalness: 0.5, roughness: 0.4 }), 0, -0.56, 0.1)
+  // la canna da pesca nel pugno destro, solo quando si pesca: un'asta lunga che punta avanti e in alto quando il braccio è alzato
+  const canna = perno(bracci[1], 0, -0.29, 0); canna.visible = false
+  cil(canna, 0.014, 0.022, 1.15, mat(0x8a5a2b), 0, -0.5, 0, 5)
+  cil(canna, 0.03, 0.03, 0.13, mat(0x2a2018), 0, -0.04, 0, 6)               // l'impugnatura
+  sfera(canna, 0.035, mat(0xd8352a), 0, -1.08, 0)                           // la punta rossa: si vede dove finisce il filo
   ombre(g)
   // ogni parte che le pose piegano è fusa a sé: le gambe, il busto (senza testa e braccia), la testa, i bracci
   for (const p of [...gambe, testa, ...bracci]) fondiPerMateriale(p)
   fondiPerMateriale(busto, { escludi: [testa, ...bracci] })
-  g.userData = { gambe, busto, testa, bracci, falce, ascia, aspetto: A.persona, abito: A }
+  g.userData = { gambe, busto, testa, bracci, falce, ascia, canna, aspetto: A.persona, abito: A }
   return g
 }
 
