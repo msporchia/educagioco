@@ -20,7 +20,7 @@ export const MERCANTI = [
   // la roba del passo dopo, non quella della miniera: chi ha le gemme non scende col meglio
   // le chiavi restano quelle di prima (salvataggi, sprite); i nomi sono parole che un bambino conosce
   { chiave: 'armaiolo', nome: 'Il fabbro', em: '⚒️', sprite: 'armaiolo',
-    dice: 'Lame, scudi e corazze, battuti uno per uno su questa incudine. Guarda pure.',
+    dice: 'Lame, scudi, corazze ed elmi, battuti uno per uno su questa incudine. Guarda pure.',
     schede: [{ chiave: 'armi', nome: 'Armi', em: '⚔️', dove: ['mano'] },
              { chiave: 'difese', nome: 'Scudi e armature', em: '🛡️', dove: ['mancina', 'corpo'] },
              { chiave: 'elmi', nome: 'Elmi', em: '🪖', dove: ['testa'], famiglie: ['ferro'], copricapi: true }],
@@ -29,7 +29,7 @@ export const MERCANTI = [
 
   // il fabbro lavora il ferro, lei la magia: le bacchette e i bastoni, le vesti di stoffa e l'energia (docs/sotterraneo/bottega.md)
   { chiave: 'incantatrice', nome: 'L\'incantatrice', em: '🔮', sprite: 'incantatrice',
-    dice: 'Bacchette per le mani, stoffa per le spalle, e una boccetta blu per quando la magia si spegne.',
+    dice: 'Bacchette per le mani, stoffa per le spalle, cappelli per la testa, e una boccetta blu per quando la magia si spegne.',
     schede: [{ chiave: 'bacchette', nome: 'Bacchette e bastoni', em: '🪄', dove: ['mano'], famiglie: ['bacchette'] },
              { chiave: 'vesti', nome: 'Vesti', em: '🧥', dove: ['corpo'], famiglie: ['stoffa'] },
              { chiave: 'cappelli', nome: 'Cappelli', em: '🎩', dove: ['testa'], famiglie: ['stoffa'], copricapi: true },
