@@ -56,6 +56,7 @@ export const PROIETTILE = {
 }
 
 const BIANCO = new Color(1, 1, 1)
+const TIENI = () => {}
 let seme = 1
 
 /** `scena`: dove si aggiungono; `renderer`, `camera`: per compilare le aure la prima volta (niente scatto al primo stato). */
@@ -85,6 +86,9 @@ export function creaGestore(scena, { renderer = null, camera = null } = {}) {
   function libera(v) {
     const i = attivi.indexOf(v)
     if (i >= 0) attivi.splice(i, 1)
+    // i materiali non si buttano: buttato l'ultimo, three libera il suo programma e il colpo dopo lo ricompila (sul telefono 50-300 ms
+    // l'uno, a ogni attacco: docs/sotterraneo/limiti-3d.md). Senza `dispose` il programma resta in serbo; il materiale lo prende il GC
+    try { v.fx.gruppo.traverse(o => { if (o.material) for (const m of [o.material].flat()) m.dispose = TIENI }) } catch { /* già via */ }
     try { v.fx.libera() } catch { /* già via */ }
     scena.remove(v.fx.gruppo)
     if (v.portatore) { const m = stati.get(v.portatore); if (m && m.get(v.chiave) === v) m.delete(v.chiave) }
