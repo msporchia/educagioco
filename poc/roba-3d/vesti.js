@@ -212,8 +212,14 @@ function cappuccio (c, tipo, mat, bordo) {
     return
   }
   const sx = W * 0.9 * (k > 1 ? 1.15 : 1)
-  sfe(b, sx, 0.1 * k, 0.085 * k, mat, 0, T - 0.075 * (k > 1 ? 1.3 : 1), -(D + 0.05 + 0.02 * k), 9)
-  const pu = cil(b, 0.012, W * 0.5 * k, 0.13 * k, mat, 0, T - 0.17 * k, -(D + 0.058 + 0.03 * k), 7, 0.75); pu.rotation.x = 0.12
+  // il collare: il cappuccio calato si vede da davanti come un cordone spesso di stoffa attorno al collo, appoggiato sulle spalle, col bordo sopra
+  const Rc = W * 0.92 + 0.03 * k, tb = 0.034 * k, zc = (D + 0.07 + 0.02 * k) / Rc
+  const collare = (R, t, m, y) => { const q = pezzo(b, G(`hc${R.toFixed(3)},${t.toFixed(3)}`, () => { const q = new THREE.TorusGeometry(R, t, 5, 14); q.rotateX(PI / 2); return q }), m, 0, y, 0.0, 1, 1, zc); return q }
+  collare(Rc, tb, mat, T - 0.012)
+  if (bordo) collare(Rc, 0.009 * k, bordo, T + tb * 0.7 - 0.012)
+  // il sacco dietro la schiena: più grosso, con la punta ricadente
+  sfe(b, sx * 1.15, 0.13 * k, 0.11 * k, mat, 0, T - 0.085 * (k > 1 ? 1.3 : 1), -(D + 0.055 + 0.025 * k), 9)
+  const pu = cil(b, 0.014, W * 0.62 * k, 0.17 * k, mat, 0, T - 0.2 * k, -(D + 0.065 + 0.035 * k), 7, 0.8); pu.rotation.x = 0.12
   if (bordo) tondo(b, 1, 0.011, bordo, 0, T - 0.07 * k, -(D + 0.05 + 0.02 * k) + 0.004, sx * 0.97, 0.075 * k, 12).rotation.x = PI / 2 - 0.05
 }
 /** Il mantello dietro la schiena in tre tratti che si piegano e oscillano. */
@@ -581,7 +587,7 @@ function veste (c) {
     c.R.br.forEach(r => { tondo(r, 1, 0.006, m1, 0, -0.2, 0, mR + 0.05, mR + 0.05, 10) })
   }
   if (s.stelline) {                                                                                        // la notte stellata: stelline sparse sulla gonna
-    const l = lucem(0xfff2b0, 0.7); posizioniRicami.slice(0, s.stelline).forEach(([a, f], i) => { const y = g.yb + (g.y0 - g.yb) * f, p = g.pt(a, y, 0.005), st = stella(b, 0.014 + 0.006 * hash(i), l, p[0], p[1], p[2], 5); st.rotation.y = a; st.rotation.x = -g.ang })
+    const l = lucem(0xfff2b0, 0.7); posizioniRicami.slice(0, s.stelline).forEach(([a, f], i) => { const y = g.yb + (g.y0 - g.yb) * f, p = g.pt(a, y, 0.005), st = stella(b, 0.026 + 0.01 * hash(i), l, p[0], p[1], p[2], 5); st.rotation.y = a; st.rotation.x = -g.ang })
     c.anim.push(t => { l.emissiveIntensity = 0.55 + 0.35 * Math.sin(t * 2.3) })
   }
   // casi speciali
@@ -609,8 +615,8 @@ function veste (c) {
     for (let i = 0; i < 6; i++) { const a = i * PI / 3 + 0.2, p = g.pt(a, g.yb + 0.18, 0.01); sfe(b, 0.055, 0.05, 0.03, co, p[0], p[1], p[2], 6).rotation.y = a }
     tondo(b, 1, 0.022, co, 0, T - 0.04, 0, W + 0.025, D + 0.03, 12)
   }
-  if (s.lumeEl) elemento(c, { rx: g.rx(g.yb) + 0.015, rz: g.rz(g.yb) + 0.015, y: g.yb + 0.02, ang: g.ang, scala: 1.35 })
-  else elemento(c, s.noEl ? null : { rx: g.rx(g.yb) + 0.015, rz: g.rz(g.yb) + 0.015, y: g.yb + 0.02, ang: g.ang, scala: 1.35 })
+  if (s.lumeEl) elemento(c, { rx: g.rx(g.yb) + 0.015, rz: g.rz(g.yb) + 0.015, y: g.yb + 0.02, ang: g.ang, scala: 1.9 })
+  else elemento(c, s.noEl ? null : { rx: g.rx(g.yb) + 0.015, rz: g.rz(g.yb) + 0.015, y: g.yb + 0.02, ang: g.ang, scala: 1.9 })
   if (s.mantelloDietro) mantello(c, { mat: stoffa(s.mantelloDietro), fod: stoffa(s.mantelloF || 0x201010), bordo: null, yFondo: g.yb + 0.04 })
 }
 
