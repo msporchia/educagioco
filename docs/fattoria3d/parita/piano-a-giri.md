@@ -42,7 +42,7 @@ Rischi:
 | il pentolone | fatta (G4) | [../cortile-e-pentolone.md](../cortile-e-pentolone.md) |
 | conigli, capre, alpaca, asini, maiali, anatre, api | capre, maiali, anatre fatti (G4); restano conigli, alpaca, asini, api | G5 |
 | le stagioni | fatta in parte (cielo, fiocchi, addobbi, zucche; mancano costumi e albero) | G8 ([../stagioni.md](../stagioni.md)) |
-| la guida | aperta | G2 |
+| la guida | fatta: `?`, primo giro, consiglio; manca «Come si fa» (I3) | [../guida.md](../guida.md) |
 | i suoni | parità con la 2D (nessuno): tenere | I26 |
 | ruotare i pezzi | fatta (quarti di giro, tasto ↻) | W6 ([../rotazione.md](../rotazione.md)) |
 | la misura su telefono | aperta | T7 |

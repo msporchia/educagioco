@@ -7,6 +7,7 @@
 // chiave. Riceve una fotografia già pronta. Colori in stile.css (`[data-macchina]`), il resto in stile-macchina.css. Vedi docs/fattoria3d/file.md.
 import { computed, ref, watch } from 'vue'
 import Faccia from './Faccia.vue'
+import ConsiglioRiga from './ConsiglioRiga.vue'
 import { quanteNePuoiFare, ordinaRicette, statoDelPosto, bersaglioSotto, gestoDelDito } from './macchina-pura.js'
 import '../stile-macchina.css'
 
@@ -26,8 +27,9 @@ const props = defineProps({
   anteprima: { type: Function, default: null },    // tipo → Promise<dataURL|null>: l'edificio 3D al posto dell'emoji dell'insegna
   anteprimaPronta: { type: Function, default: null },
   messaggio: { type: String, default: '' },        // perché una ricetta non parte (si vede qui: il fumetto del contadino sta sotto il foglio)
+  consiglio: { type: Object, default: null },      // il passo per averla (motore/consiglio.js): sotto il messaggio, col tasto
 })
-const emit = defineEmits(['prepara', 'ritira', 'chiudi', 'compra'])
+const emit = defineEmits(['prepara', 'ritira', 'chiudi', 'compra', 'consiglio'])
 
 const parti = computed(() => { const i = props.titolo.indexOf(' '); return i < 0 ? ['🍳', props.titolo] : [props.titolo.slice(0, i), props.titolo.slice(i + 1)] })
 const foto = ref(props.anteprimaPronta ? props.anteprimaPronta(props.tipo) : null)
@@ -124,6 +126,7 @@ function annulla() { dito = null; presa.value = null }
       </section>
       <section class="fm-ricette">
         <p v-if="messaggio" class="f3-messaggio" data-f3="macchina-msg">{{ messaggio }}</p>
+        <ConsiglioRiga v-if="messaggio && consiglio" :consiglio="consiglio" @fai="a => $emit('consiglio', a)" />
         <h3>Cosa vuoi preparare? <small>trascinala in fila, o toccala</small></h3>
         <div class="fm-carte">
           <article v-for="(r, n) in carte" :key="r.k" class="ricetta fm-carta" :class="{ chiusa: !r.sbloccata, pronta: r.puoi, inmano: presa && presa.k === r.k }" :style="{ '--i': n }"

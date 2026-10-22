@@ -24,6 +24,7 @@ lana) e uno stato suo, e non tocca quelli della fattoria di sempre; le monete so
 - [guardaroba.md](guardaroba.md) — cambiare abito al contadino o alla contadina: il genere dal profilo, i capi e gli sblocchi, il salvataggio, come si aggiunge un pezzo
 - [rotazione.md](rotazione.md) — ruotare i pezzi e gli edifici: `rot` 0–3 nello stato, l'ingombro e il davanti che seguono, il tasto ↻ col secondo dito
 - [stagioni.md](stagioni.md) — Halloween e Natale come nella 2D (stesse finestre, `#stagione=`): cielo e luci, fiocchi, chiazze, addobbi sugli edifici, le zucche da comprare; il peso
+- [guida.md](guida.md) — il `?`, il primo giro (la riga e l'anello), «E adesso?» e il consiglio col tasto sotto un «non si può»
 - [scena.md](scena.md) — il disegno: i moduli di `scena3d/`, il dito, costruire trascinando, le opzioni di qualità e il peso
 - [file.md](file.md) — dove sta cosa in `src/giochi/fattoria3d/`, e i bersagli dei test
 - [parita/](parita/README.md) — **cosa manca per sostituire la fattoria 2D**: criteri, tabelle di parità per area (colture e catena, animali, commercio, livelli ed economia, mondo e stagioni, interfaccia e guida, tecnica e salvataggi), le decisioni per l'utente e il piano a giri

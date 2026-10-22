@@ -30,8 +30,8 @@ import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 const chiaviSchermata = () => {
   const app = readFileSync(new URL('../../src/App.vue', import.meta.url), 'utf8')
   const nuove = readFileSync(new URL('../../src/giochi/schermate.js', import.meta.url), 'utf8')
-  const dentro = t => [...t.matchAll(/^\s*([a-z]+):\s*[A-Z]\w*,?\s*$/gm)].map(m => m[1])
-  const inRiga = t => [...t.matchAll(/\b([a-z]+):\s*[A-Z]\w+/g)].map(m => m[1])
+  const dentro = t => [...t.matchAll(/^\s*([a-z0-9]+):\s*[A-Z]\w*,?\s*$/gm)].map(m => m[1])
+  const inRiga = t => [...t.matchAll(/\b([a-z0-9]+):\s*[A-Z]\w+/g)].map(m => m[1])
   return new Set([...dentro(nuove), ...inRiga(nuove), ...inRiga(app)])
 }
 
