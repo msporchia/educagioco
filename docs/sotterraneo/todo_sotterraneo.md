@@ -92,10 +92,18 @@ fuori») e i branchi a 14 celle (`292a98f5`); il villaggio tondo (24×20); la sc
 - **Il pannello dei genitori**: niente di nuovo da spegnere, come nel 2D. Il 3D è già dietro l'interruttore dei giochi in prova (`sperimentali`,
   [../genitori/interruttori.md](../genitori/interruttori.md)); le terre non hanno un interruttore.
 - **I nomi dei boss nuovi** li sceglie Claude: basta che suonino epici.
-- **L'elmo è uno slot tutto suo** (lavoro grosso: drop, botteghe, zaino, `copri` dell'eroe 3D): non iniziato.
+- **L'elmo è uno slot tutto suo** (drop, botteghe, zaino, `copri` dell'eroe 3D): in lavorazione (22 ottobre).
 - **Nessuna riga di novità per i bambini** per ora.
 - **La taratura solo a lavoro finito.**
-- **Le terre finiscono alla quinta**: lì la porta resta chiusa. Aperto: il viaggio indietro (sopra, «A metà»).
+- **Le terre finiscono alla quinta**: lì la porta resta chiusa; finite le tappe di una terra si ricompare in un nuovo villaggio con tutto
+  potenziato (+14 livelli a terra). Aperto: il viaggio indietro (sopra, «A metà»).
+- **Missioni nelle terre nuove**: oggi restano dell'eroe e valgono in ogni terra; rifarle da capo per ogni terra è un todo, non essenziale ora.
+- **Medaglia per una terra nuova**: no.
+- **Pubblicare** periodicamente con `./pubblica.sh` (mai push su GitHub per ora), senza rifare ogni volta tutti i test; la prova completa a
+  macchina libera si fa a lavori finiti.
+- **Modelli 3D da migliorare** (dopo): drago dello scudo (sembra una lucertola) e leoni con la stessa sagoma; ciondolo su mago e nano; puntine
+  dei castoni e fiamme delle collane; fiamme della torcia a coni; rosso delle cure rosato; collane e scudi sopra i 1500 triangoli (fino a
+  1960); cappucci calati poco visibili; scorpione (coda piatta), golem (testa nascosta nello schianto) e pipistrello visto dall'alto.
 
 ## 2. Eroi, mostri ed effetti in 3D (sessione Mostri renderizzati)
 
