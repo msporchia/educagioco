@@ -8,6 +8,8 @@
 // `pienezza` (f) è il filo unico: 0 a fame, da PIENO_MIN a PIENO_MAX durante il lavoro, 1 da pronta. Quasi ogni misura è una
 // interpolazione di f, quindi nessun passaggio salta e nessuno va all'indietro: nutrire riempie, raccogliere svuota.
 
+import { profiloCortile2 } from './bestie-puro-cortile2.js'
+
 export const PIENO_MIN = 0.12                 // f appena nutrita: già un poco più piena di una affamata, si vede che è partita
 export const PIENO_MAX = 0.88                 // f un attimo prima di essere pronta
 
@@ -135,7 +137,7 @@ export function profiloBestia (specie, stadio, p, out = {}) {
     out.goccia = stadio === 1 && p > 0.35 ? 1 : 0
     out.dono = pronta                                // il secchio
     out.salto = pronta                               // saltella
-  } else throw new Error('specie sconosciuta: ' + specie)
+  } else if (!profiloCortile2(specie, out, stadio, p, f, pronta)) throw new Error('specie sconosciuta: ' + specie)      // coniglio, alpaca, asino, arnia: bestie-puro-cortile2.js
   return out
 }
 
