@@ -477,6 +477,39 @@ export const AIUTI = {
     ],
   },
 
+  fattoria3d: {
+    emoji: '🚜', titolo: 'La fattoria 3D',
+    blocchi: [
+      'Qui non si vince: è il posto dove si spendono le monete guadagnate negli altri giochi. Il contadino cammina da solo fino alle cose e le fa, e la fattoria resta com\'era lasciata. È ancora un gioco **in prova**.',
+      { titolo: 'I tocchi', righe: [
+        '**Un tocco** su una cosa: il contadino ci va e la fa — raccoglie, dà da mangiare, apre la macchina.',
+        '**Tocca 🌱 Semina**, scegli cosa far crescere, poi **tocca i campi vuoti**. Lo stesso con **✂️ Raccogli** sui campi pronti: puoi anche passare il dito su più campi.',
+        '**Tieni il dito premuto** su un posto libero del tuo terreno: si apre «Costruisci qui». Anche il tasto 🏗 fa lo stesso.',
+        '**Tieni premuto** su una cosa già messa per **spostarla**: la porti dove vuoi, oppure sulla scritta in basso per metterla via nel magazzino (rimetterla fuori è gratis).',
+      ] },
+      { titolo: 'Le prime cose da fare', righe: [
+        'Semina il grano, aspetta qualche secondo, raccoglilo. Niente marcisce mai: se ti dimentichi un campo, lo trovi lì.',
+        'Con le monete tocca 🏗 Costruisci: campi, recinti, edifici. Il terreno si compra a pezzi, e il mondo non finisce mai.',
+        'Non sai cosa fare? Tocca **🧭 E adesso?** e il gioco ti dice la cosa più utile, con il tasto per farla.',
+      ] },
+      { titolo: 'Cosa serve e dove si fa', righe: [
+        'Quando manca qualcosa, il foglio dice **cosa fare adesso** e ha il tasto che porta lì: se manca la farina ti manda al mulino, se manca il grano ti manda a seminare.',
+        'I raccolti si portano alle **macchine** (mulino, panificio…): si sceglie una ricetta e il pane si fa da solo.',
+        'Le bestie mangiano **mangime**: lo fa il fienile dai raccolti. Quello che danno — uova, latte, lana — serve alle ricette e al banco.',
+      ] },
+      { titolo: 'Il banco, la mongolfiera e il resto', righe: [
+        'Dal livello 2 il **banco** (🧺) ha clienti che chiedono cose: consegnarle fa salire il livello.',
+        'La **mongolfiera** porta casse alla fiera: si riempiono un po\' alla volta.',
+        'Il livello (⭐) sale **spendendo** qui. Più si spende, più roba arriva: nel foglio dei livelli si vede cosa arriva dopo.',
+        'Il trattore porta a visitare i **vicini**; il 👕 cambia l\'abito al contadino.',
+      ] },
+      { titolo: 'Cosa allena', righe: [
+        'Niente domande: qui non si studia, si **spende**. È il motivo per cui vale la pena esercitarsi negli altri giochi.',
+        'Quello che chiede davvero è aspettare e fare un progetto: capire cosa serve a cosa (il grano, la farina, il pane) e risparmiare per la cosa grande invece di comprare subito quella piccola.',
+      ] },
+    ],
+  },
+
   mate: {
     emoji: '➕', titolo: 'I conti in colonna',
     blocchi: [

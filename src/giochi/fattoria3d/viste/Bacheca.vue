@@ -5,6 +5,7 @@
 // Vedi docs/fattoria3d/ordini.md.
 import { ref, computed, watch, onBeforeUnmount } from 'vue'
 import MerceBacheca from './MerceBacheca.vue'
+import ConsiglioRiga from './ConsiglioRiga.vue'
 import '../stile-bacheca.css'
 
 const p = defineProps({
@@ -12,9 +13,10 @@ const p = defineProps({
   perche: { type: String, default: '' },           // banco chiuso: cosa fare per aprirlo
   ordini: { type: Array, default: () => [] },      // motore.ordini(): ordine { idx, cliente, chiede, premio, tipo, pronto } | { idx, attesa, restoMs }
   messaggio: { type: String, default: '' },        // l'esito dell'ultimo tocco (manca roba, consegnato)
+  consiglio: { type: Object, default: null },      // il passo per avere ciò che manca (motore/consiglio.js)
   traguardo: { type: Object, default: () => ({ fatte: 0, meta: 1 }) },   // le consegne fatte e la prossima soglia del traguardo
 })
-const emit = defineEmits(['consegna', 'cambia', 'chiudi'])
+const emit = defineEmits(['consegna', 'cambia', 'chiudi', 'consiglio'])
 
 const tempo = ms => { const s = Math.ceil(ms / 1000); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0') }
 const SCELTO = ref(null)                           // il posto toccato; null = il primo consegnabile, o il primo che c'è
@@ -77,6 +79,7 @@ const STELLE = Array.from({ length: 8 }, (_, i) => ({ dx: Math.round(Math.cos(i 
 
         <div class="f3-bac-dettaglio" data-f3="dettaglio" :data-dettaglio="scelto ? scelto.idx : ''">
           <p v-if="messaggio" class="f3-messaggio" data-f3="banco-msg">{{ messaggio }}</p>
+          <ConsiglioRiga v-if="messaggio && consiglio" :consiglio="consiglio" @fai="a => $emit('consiglio', a)" />
           <div v-if="scelto" class="f3-bac-carta">
             <div class="f3-bac-chi">
               <span class="ritratto" aria-hidden="true">{{ scelto.cliente.emoji }}</span>

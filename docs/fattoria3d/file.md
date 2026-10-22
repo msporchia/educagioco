@@ -6,6 +6,7 @@ Gioco.vue            il coordinatore: monete vere, contatori (anche `fattoria3dU
 stile.css            tutto sotto il prefisso .f3-
 stile-vicini.css    la mappa, il viaggio, la visita (`.f3-vic-`)
 stile-guardaroba.css il foglio del guardaroba (`.f3-gua-`)
+stile-guida.css     la riga del primo giro, il tasto «E adesso?» e il consiglio (`.f3-guida`, `.f3-adesso`, `.f3-consiglio-`)
 stile-macchina.css  il foglio di una macchina (`.fm-`): fila, pronti, carte, fantasma; i colori del tema restano in stile.css
 visite.js            il filo fra `Gioco.vue` e le visite (`usaVisite`): mappa, viaggio, la scena a richiesta, cassa e mercato
 dati/
@@ -36,6 +37,8 @@ dati/
   vicini.js          i villaggi dei vicini e il formato di una fattoria visitabile (snapshot, `normalizzaFattoriaVisitabile`, i numeri di prezzi, premi e doni), i guasti ([vicini.md](vicini.md))
 motore/
   fattoria3d.js      le regole: la classe Fattoria3d (borsa e orologio da fuori)
+  guida.js           il primo giro: dal quadro di quello che c'è, il passo `{ testo, dove, mano }` (pura; [guida.md](guida.md))
+  consiglio.js       «E adesso?» (`cosaFaccioAdesso`) e il passo per avere una merce (`comeAvere`, risale la catena) con l'azione per farlo (pura)
   mongolfiera.js     la nave: `nuovaStiva`, `stivaInForma`, `aggiornaMongolfiera` (atterra il carico, torna dal viaggio), `caricaLaCassa`, `partiLaMongolfiera`, `scegliLaSorpresa`, `vistaDellaMongolfiera`
   ordini.js          gli ordini: `nuovoOrdine` (puro, col caso da fuori) e `ordineInForma`; i posti crescono col livello (`POSTI(livello)` in `dati/ordini.js`)
   stato.js           lo stato salvato (esperienza, `posseduti` = edificio in mappa; gli edifici sono anche `cose`, il v8 si migra al posto di prima: [edifici-liberi.md](edifici-liberi.md); `macchine`, `ordini`, `bestie` di pollaio e stalla; la versione sta in `VERSIONE_STATO`), `statoIniziale()` e `normalizza()` (un salvataggio rotto si rimette in forma; un v6 passa dagli id vecchi ai nuovi, v7)
@@ -70,6 +73,7 @@ viste/
   Banco.vue          il vecchio foglio del banco (tre posti con fumetto): non più agganciato, da togliere
   Livelli.vue        il foglio «Livello N»: la scala, con la scatola aperta di ciò che è arrivato e quella chiusa (in grigio, col lucchetto) di ciò che arriva dopo, quanto manca
   Dialogo.vue        la conferma d'acquisto (non più per le bestie)
+  Consiglio.vue      il foglio «E adesso?»; `ConsiglioRiga.vue` il passo col tasto, anche sotto i «mancano» di macchina, banco e mongolfiera
   Opzioni.vue        il pannello ⚙
   Mappa.vue          la mappa del trattore: i villaggi in fila lungo una strada, i grigi col livello
   Visita.vue         una visita: la testata con «Torna a casa», i tasti, la storia, i fogli della cassa e del mercato, il viaggio del trattore
@@ -108,6 +112,7 @@ Registrazione: `src/giochi/indice.js` (il manifesto, in coda) e `src/giochi/sche
 | `[data-merce="<id>"]` | la faccia di una merce (`viste/Faccia.vue`; anche il gettone dell'inventario ha lo stesso attributo: per il gettone `button[data-merce]`): inventario, banco, macchina, scelta del seme, livelli, cassa e mercato; il volo «+1» sopra la scena |
 | `[data-f3="livello"]`, `[data-f3="livello-nuovo"]`, `[data-f3="livelli"]`, `[data-f3="avviso-livello"]` | il gettone, il suo pallino, il foglio dei livelli, l'avviso che compare a ogni salita |
 | `[data-carta].bloccata`, `[data-seme].bloccato`, `[data-f3="semi-msg"]` | una carta o una coltura non ancora arrivata, e la riga che dice il livello (la scelta dei semi) |
+| `[data-f3="apri-consiglio"]`, `[data-f3="consiglio"]`, `[data-f3="consiglio-riga"]`, `consiglio-testo`, `consiglio-fai`; `[data-guida-riga]`, `[data-indicato]` | «E adesso?», il passo col suo tasto (anche sotto i messaggi dei fogli) e la guida del primo giro: [guida.md](guida.md) |
 | `[data-f3="apri-opzioni"]`, `[data-f3="opzioni"]`, `[data-preset="basso"]` | le opzioni |
 | `[data-f3="centra"]` | «⌖ Torna al contadino» |
 | `[data-chiudi]` | la ✕ di ogni foglio |

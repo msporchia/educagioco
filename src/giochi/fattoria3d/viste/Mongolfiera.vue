@@ -6,15 +6,17 @@
 // vuole con gli `emit`. Premia esperienza ⭐, mai monete. Vedi docs/fattoria3d/mongolfiera.md.
 import { computed } from 'vue'
 import Faccia from './Faccia.vue'
+import ConsiglioRiga from './ConsiglioRiga.vue'
 import '../stile-mongolfiera.css'
 
 const p = defineProps({
   nave: { type: Object, required: true },          // motore.vistaMongolfiera(): { stato, file, piene, totale, pronte, restoMs, … }
   messaggio: { type: String, default: '' },        // l'esito dell'ultimo tocco (manca roba, cassa messa, partita)
+  consiglio: { type: Object, default: null },      // il passo per avere ciò che manca (motore/consiglio.js)
   traguardo: { type: Object, default: () => ({ fatte: 0, meta: 1 }) },   // le casse messe verso la prossima soglia del traguardo
   livelloIngresso: { type: Number, default: 10 },
 })
-defineEmits(['carica', 'parti', 'chiudi'])
+defineEmits(['carica', 'parti', 'chiudi', 'consiglio'])
 
 const tempo = ms => { const s = Math.ceil(ms / 1000); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0') }
 const barra = computed(() => p.nave.totale ? Math.round(100 * p.nave.piene / p.nave.totale) : 0)
@@ -47,6 +49,7 @@ const piuFila = computed(() => Math.round(100 * p.nave.bonusFila))
 
       <template v-else>
         <p v-if="messaggio" class="f3-messaggio" data-f3="mongolfiera-msg">{{ messaggio }}</p>
+        <ConsiglioRiga v-if="messaggio && consiglio" :consiglio="consiglio" @fai="a => $emit('consiglio', a)" />
 
         <section v-if="nave.stato === 'viaggio'" class="f3-mg-viaggio" data-f3="mongolfiera-viaggio">
           <span class="vola" aria-hidden="true">🎈</span>
