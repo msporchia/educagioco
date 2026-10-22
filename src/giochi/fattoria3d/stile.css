@@ -82,6 +82,11 @@
 .f3-griglia-carte .carta[data-cat="edifici"] .disegno { background: #f3d9d3; }
 .f3-griglia-carte .carta[data-cat="decori"] .disegno { background: #fbe0ec; }
 .f3-griglia-carte .carta[data-cat="passaggi"] .disegno { background: #dfe6ee; }
+.f3-griglia-carte .carta[data-cat="verde"] .disegno { background: #dcefc8; }
+.f3-griglia-carte .carta[data-cat="recinti"] .disegno { background: #efe3cb; }
+.f3-griglia-carte .carta[data-cat="raccolto"] .disegno { background: #fbecc8; }
+.f3-griglia-carte .carta[data-cat="case"] .disegno { background: #f1dcd0; }
+.f3-griglia-carte .carta[data-cat="bestiole"] .disegno { background: #e8e0f4; }
 .f3-griglia-carte .carta b { font-size: 13px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .f3-griglia-carte .carta small { font-size: 12px; color: #7a5a3a; font-weight: 700; }
 .f3-griglia-carte .carta small.prezzo { padding: 1px 8px; border-radius: 10px; background: #fff0c4; color: #5a3a1a; }

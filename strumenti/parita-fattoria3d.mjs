@@ -2,6 +2,7 @@
 // «I numeri a colpo d'occhio» di parita/README.md che divergono dal codice. Non scrive niente: se una riga diverge si corregge
 // il documento a mano (vince il codice). Esce con 1 se qualche riga diverge. Vedi docs/core/comandi.md.
 //   npm run parita:fattoria3d
+import { SCHEDE_DECORI } from '../src/giochi/fattoria3d/dati/decori.js'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { CATEGORIE, CATALOGO } from '../src/giochi/fattoria/dati/catalogo.js'
@@ -23,7 +24,7 @@ const ore = (soglia, ultimo) => Math.round(soglia(ultimo) / MONETE_AL_MINUTO / 6
 // riga della tabella (inizio dell'etichetta) → [2D, 3D], e come si legge
 const RIGHE = [
   ['voci nel catalogo', [CATALOGO.length, pezzi3D.length + edifici3D.length], `3D: ${pezzi3D.length} pezzi + ${edifici3D.length} edifici`],
-  ['di cui decorazioni', [voci2D.filter(v => v.cat !== 'campi').length, pezzi3D.filter(p => p.categoria === 'decori').length], '2D: tutto tranne i campi; 3D: la categoria decori'],
+  ['di cui decorazioni', [voci2D.filter(v => v.cat !== 'campi').length, pezzi3D.filter(p => p.categoria === 'decori' || p.categoria in SCHEDE_DECORI).length], '2D: tutto tranne i campi; 3D: la categoria decori e le schede delle decorazioni'],
   ['colture', [COLTURE_2D.length, Object.keys(COLTURE).length]],
   ['ricette', [RICETTE_2D.length, Object.keys(RICETTE).length]],
   ['macchine', [macchine2D.size, edifici3D.filter(k => k !== 'mongolfiera').length], '3D: gli edifici meno la mongolfiera'],

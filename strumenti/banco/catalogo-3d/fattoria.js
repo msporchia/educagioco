@@ -20,6 +20,7 @@ import { materialeAcqua, materialeMare } from '../../../src/giochi/fattoria3d/sc
 import { creaContadino, creaCane, posaCane, creaGatto, posaGatto } from '../../../src/giochi/fattoria3d/scena3d/modelli-compagni.js'
 import { creaPonte, creaPasserella, creaTavolo } from '../../../src/giochi/fattoria3d/scena3d/modelli-passaggi.js'
 import { creaStagno } from '../../../src/giochi/fattoria3d/scena3d/modelli-acqua.js'
+import { creaDecoro } from '../../../src/giochi/fattoria3d/scena3d/modelli-decori.js'
 import { geometriaCespuglio } from '../../../src/giochi/fattoria3d/scena3d/dal-sotterraneo.js'
 import { ANIMALI } from '../../../src/giochi/fattoria3d/dati/animali.js'
 import { PECORE } from '../../../src/giochi/fattoria3d/dati/regole.js'
@@ -44,6 +45,7 @@ const T = 'src/giochi/fattoria3d/scena3d/terreno.js'
 const D = 'src/giochi/fattoria3d/scena3d/dal-sotterraneo.js'      // le copie adattate dei modelli del Sotterraneo (docs/fattoria3d/scena.md)
 const MP = 'src/giochi/fattoria3d/scena3d/modelli-passaggi.js'
 const MA = 'src/giochi/fattoria3d/scena3d/modelli-acqua.js'
+const MD = 'src/giochi/fattoria3d/scena3d/modelli-decori.js'
 const MP2 = 'src/giochi/fattoria3d/scena3d/modelli-pesca.js'
 const PS = 'src/giochi/fattoria3d/scena3d/pesci.js'
 const P3 = 'src/giochi/fattoria3d/scena3d/pesca3d.js'
@@ -273,4 +275,10 @@ export const VOCI = [
       g.add(mesh(new THREE.CircleGeometry(0.24, 9).rotateX(-Math.PI / 2), mat(0x4f9a45), 0.2, 0.04, -0.3), mesh(new THREE.ConeGeometry(0.035, 0.9, 4), mat(0x8aa63a), -1.1, 0.45, 0.8))
       return g
     } },
+
+  // ── le decorazioni portate dalla 2D (giro G8, docs/fattoria3d/decorazioni.md): verde, recinti e cartelli, raccolto, case e lampioni, bestiole ──
+  ...Object.entries(PEZZI).filter(([, p]) => p.decoro).map(([id, p]) => ({
+    id: `fattoria:decoro-${id}`, nome: p.nome, gioco: 'fattoria', categoria: p.categoria === 'verde' ? 'pianta' : p.categoria === 'bestiole' ? 'animale' : 'prop',
+    dove: pezzo(id) + `; scheda «${p.categoria}» del menu Costruisci`, file: `${MD}:creaDecoro`, misure: celle(p), crea: () => creaDecoro(id),
+  })),
 ]

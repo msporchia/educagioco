@@ -12,6 +12,7 @@ import { creaMolo, creaPorticciolo } from './modelli-pesca.js'
 import { creaStagnoAnatre, creaPorcile, creaRecintoCapre, creaPentolone, creaAnatra, creaMaiale, creaCapra } from './modelli-cortile.js'
 import { creaConigliera, creaRecintoAlpaca, creaRecintoAsini, creaApiario } from './modelli-cortile2.js'
 import { creaZucca, creaZucche } from './modelli-feste.js'
+import { DECORI_CREA } from './modelli-decori.js'
 import { EDIFICI, PEZZI } from '../dati/catalogo.js'
 import { RICETTE, MACCHINE, merceDi } from '../dati/ricette.js'
 import { SALITA_MS } from '../dati/mongolfiera.js'
@@ -52,6 +53,7 @@ const CREA = {
   porticciolo: () => creaPorticciolo(),
   zucca_intagliata: () => creaZucca(),
   zucche_mucchio: () => creaZucche(),
+  ...DECORI_CREA,                    // le decorazioni portate dalla 2D (giro G8): verde, recinti, raccolto, case, bestiole (modelli-decori*.js)
 }
 const CREA_EDIFICIO = {
   pasticceria: creaPasticceria, mongolfiera: creaMongolfiera,

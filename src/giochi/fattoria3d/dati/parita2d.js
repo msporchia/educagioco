@@ -3,7 +3,7 @@
    minuti, il costo di un gesto, gli scomparti dei silos. Chi scrive un pezzo, una coltura o una ricetta 3D dice solo CHI è nella 2D
    (le tabelle `VOCE`, `COLTURA`) e prende il resto da qui. Decisione dell'utente del 22/10/2026 (docs/fattoria3d/parita/decisioni.md,
    «Regola generale»). Foglia: importa solo dati 2D, mai la 3D. Vedi docs/fattoria3d/livelli.md. */
-import { PER_ID as VOCI_2D, prezzoDellaVoce, CATALOGO as CATALOGO_2D } from '../../fattoria/dati/catalogo.js'
+import { PER_ID as VOCI_2D, prezzoDellaVoce, CATALOGO as CATALOGO_2D, CATEGORIE as CATEGORIE_2D } from '../../fattoria/dati/catalogo.js'
 import { PER_COLTURA as COLTURE_2D, PER_RICETTA as RICETTE_2D, PRODOTTI as PRODOTTI_2D, SCOMPARTO_BASE, SCOMPARTO_PIU, costoIngrandimento, MINUTO } from '../../fattoria/dati/coltivazioni.js'
 import { livelloDellaVoce, livelloDellaRicetta as livelloRicetta2D, ULTIMO as ULTIMO_2D, sogliaDi as sogliaDi2D, SOGLIA_A, SOGLIA_B, ALLUNGA, zonaDi, PRIMO_DECORO, DECORI_PER_LIVELLO } from '../../fattoria/dati/livelli.js'
 import { ANIMALI as ANIMALI_2D } from '../../fattoria/dati/animali.js'
@@ -25,6 +25,20 @@ export const VOCE = {
   anatre: 'stagno_anatre', porcile: 'porcile', capre: 'recinto_capre',
   conigliera: 'conigliera', alpaca: 'recinto_alpaca', asini: 'recinto_asini', arnie: 'arnie',      // giro G5 (dati/cortile2.js); la peschiera non c'è: la pesca ne prende il posto (LIVELLO_PESCA)
 }
+
+/** Le decorazioni portate in 3D (giro G8): le famiglie della 2D che hanno un disegno 3D, e i loro id. Lo stesso id che in 2D (gli id dei contenuti non
+    si rinominano); le uniche eccezioni sono id già presi in 3D: il «Recinto» di legno (`recinto` è quello delle pecore: qui `recinto_legno`) e pane, torta, marmellata e latte (sono merci e ricette: qui col suffisso `_decoro`). Lo
+    spaventapasseri c'era già come pezzo (sta sotto «decori»). Prezzo e livello arrivano da `VOCE` come per ogni altro pezzo. docs/fattoria3d/decorazioni.md. */
+export const FAMIGLIE_DECORI = ['verde', 'recinti', 'raccolto', 'case', 'bestiole']
+const ID_3D_DEL_DECORO = { recinto: 'recinto_legno', pane: 'pane_decoro', torta: 'torta_decoro', marmellata: 'marmellata_decoro', latte: 'latte_decoro' }
+const GIA_PEZZO = new Set(['spaventapasseri'])
+/** id 3D → id 2D, per ogni decorazione delle famiglie portate (compresi i cartelli delle colture e i lampioni). */
+export const VOCE_DECORI = Object.fromEntries(CATEGORIE_2D.filter(c => FAMIGLIE_DECORI.includes(c.chiave))
+  .flatMap(c => c.voci.filter(v => !GIA_PEZZO.has(v.id)).map(v => [ID_3D_DEL_DECORO[v.id] || v.id, v.id])))
+/** Le famiglie della 2D: id 3D → famiglia (verde, recinti, …). */
+export const FAMIGLIA_DEL_DECORO = Object.fromEntries(CATEGORIE_2D.filter(c => FAMIGLIE_DECORI.includes(c.chiave))
+  .flatMap(c => c.voci.filter(v => !GIA_PEZZO.has(v.id)).map(v => [ID_3D_DEL_DECORO[v.id] || v.id, c.chiave])))
+Object.assign(VOCE, VOCE_DECORI)
 
 /** Le colture: id 3D (singolare) → id 2D. */
 export const COLTURA = {

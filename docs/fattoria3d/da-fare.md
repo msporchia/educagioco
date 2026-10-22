@@ -2,6 +2,7 @@
 
 Le voci aperte tecniche. Una riga ciascuna, e quando una si chiude si toglie. Quello che manca rispetto alla fattoria 2D sta in [parita/](parita/README.md).
 
+- **Le decorazioni (G8) non sono viste su un telefono né col dito** ([decorazioni.md](decorazioni.md)): 130 modelli guardati nel catalogo 3D e misurati senza browser (~1,25 mesh l'uno). Da giudicare: le 38 carte della scheda Raccolto su 360 px, se i cartelli delle colture si leggono a distanza di gioco, se un giardino da 200 pezzi pesa (rimedio pronto: fondere o istanziare i decori fermi per tipo; ogni copia è oggi una mesh). Mancano fiori (W8), acqua extra (W9), arredo (W12), albero di Natale e fiera (W15).
 - **Misurare su un telefono vero.** Tutti i numeri di peso (draw call, fps, caldo, batteria) sono da SwiftShader; il
   pannello ⚙ e «Mostra il rapporto» servono a questo. Il degrado adattivo c'è (`dati/degrado.js`, scende sotto 30 fps): dopo la misura si tarano le soglie.
 - **Giocare la scala della 2D nella 3D** (G3, 22/10/2026, [livelli.md](livelli.md)): livelli, prezzi, tempi in minuti, costo dei gesti e scomparti sono quelli della 2D e misurati
