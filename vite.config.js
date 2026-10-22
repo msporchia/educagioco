@@ -340,6 +340,8 @@ export default defineConfig({
                const q = m[1]
                if (q === 'main.js' || q === 'App.vue' || q === 'giochi/schermate.js') return undefined   // il JS di avvio: le strade verso i giochi
                if (/^giochi\/[^/]+\/|^views\//.test(q)) return undefined                                  // un gioco: lo decide Rollup
+               // la misura del telefono (grafica/benchmark/) si carica a richiesta, e quella coi modelli veri tira dentro i giochi: fuori dalla base
+               if (/^grafica\/benchmark\//.test(q)) return undefined
                return 'comune'
              } }),
              // il gioco si riconosce dal nome del file (gioco-sotterraneo-<hash>.js): servirà a scaricarli a gruppi
