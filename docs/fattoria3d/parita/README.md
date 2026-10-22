@@ -11,7 +11,7 @@ vince il codice.
 
 | # | criterio | oggi |
 |---|---|---|
-| S1 | **Nessun salvataggio si perde.** Chi ha una fattoria 2D la ritrova (convertita) o la tiene finché non decide lui | ❌ non esiste migrazione ([tecnica-e-salvataggi.md](tecnica-e-salvataggi.md) T1) |
+| S1 | **Nessun salvataggio si perde.** Chi ha una fattoria 2D la ritrova (convertita) o la tiene finché non decide lui | 🟡 la conversione c'è (`statoDa2D`), manca l'aggancio nel caricamento ([migrazione.md](migrazione.md)) |
 | S2 | **Il posto dove si spendono le monete è uno solo.** Le due fattorie non convivono: ora la 3D spende monete vere accanto alla 2D ([../../fattoria/regole.md](../../fattoria/regole.md) «Il money pit è uno») | 🟡 convivono, la 3D è dietro «giochi in prova» |
 | S3 | **Lo stesso patto**: le monete vengono solo dagli esercizi, niente si vende, niente marcisce, nessun gioco paga una risposta sbagliata, un «no» dice cosa fare ([../../apprendimento/calibrazione.md](../../apprendimento/calibrazione.md)) | ✅ rispettato |
 | S4 | **Dura quanto la 2D**: la scaletta regge mesi, non giorni (2D: 70 livelli, ~202 ore di esercizio spese; 3D: 18 livelli, ~8 ore) | ❌ [livelli-ed-economia.md](livelli-ed-economia.md) |
@@ -25,19 +25,19 @@ vince il codice.
 
 | | 2D | 3D |
 |---|--:|--:|
-| voci nel catalogo (cosa si compra) | 253 | 34 (20 pezzi + 14 edifici) |
+| voci nel catalogo (cosa si compra) | 253 | 38 (23 pezzi + 15 edifici) |
 | di cui decorazioni | 217 (verde, fiori, acqua, recinti, case, arredo, bestiole, feste, fiera, raccolto) | 10 (aiuola, panchina, fontana, pozzo, spaventapasseri, tavolo, passerella, ponte, stagno, laghetto) |
 | colture | 16 | 16 (gli stessi id, singolari) |
-| ricette | 57 | 37 (nessuna inventata) |
-| macchine | 14 | 13 (manca il pentolone) |
-| recinti del cortile | 11 | 3 (pecore, galline, mucche) |
+| ricette | 57 | 41 (nessuna inventata) |
+| macchine | 14 | 14 |
+| recinti del cortile | 11 | 6 (pecore, galline, mucche, anatre, maiali, capre) |
 | bestie di casa (si comprano, hanno bisogni) | 7 | 0 (4 compagni gratuiti che girano, non si curano) |
 | addobbi per le bestie | 12 (7 in vendita) | 0 (il guardaroba è del contadino) |
 | botteghe del paese | 4 | 0 |
 | clienti del banco | 16 (per mestiere) | 10 (per tutti) |
 | silos | 3 (scomparti da 8, ingrandibili) | 0 (scorte senza tetto) |
-| livelli | 70 | 18 |
-| ore di esercizio per arrivare in cima (spesa a 🪙6/min) | ~202 | ~8,25 |
+| livelli | 70 | 22 (19–22 provvisori) |
+| ore di esercizio per arrivare in cima (spesa a 🪙6/min) | ~202 | ~10,85 |
 | celle di terra | piazzole 6×6, rincaro ×1,38 | lotti 4×4 senza confini, rincaro lineare poi quadratico |
 | stagioni (Halloween, Natale) | sì | no |
 | guida `?`, consiglio, «Come si fa» | sì | no |
@@ -64,12 +64,13 @@ da trascinare con scorrimento ai bordi. Vanno tenuti? Decisione D10 ([decisioni.
 - [mondo-e-stagioni.md](mondo-e-stagioni.md) — terra, ostacoli, decorazioni, acqua e pesca, stagioni, fiera
 - [interfaccia-e-guida.md](interfaccia-e-guida.md) — gesti, baule, guida, consiglio, home, genitori, cheat, suoni
 - [tecnica-e-salvataggi.md](tecnica-e-salvataggi.md) — migrazione dello stato, peso e telefoni, sito spezzato, test
+- [migrazione.md](migrazione.md) — la conversione 2D → 3D (`statoDa2D`): le regole, cosa diventa cosa, il livello, l'aggancio
 - [decisioni.md](decisioni.md) — le scelte che spettano all'utente, con pro, contro e una raccomandazione
 - [piano-a-giri.md](piano-a-giri.md) — l'ordine del lavoro, i rischi, le richieste non ancora chiuse
 
 ## I P0 in una riga
 
-1. **T1** una migrazione dei salvataggi 2D → 3D (o una scelta scritta di non farla).
+1. **T1** agganciare `statoDaCaricare` in `Gioco.vue` (la conversione `statoDa2D` c'è: [migrazione.md](migrazione.md)).
 2. **L1–L3** una scaletta che regge mesi: oggi 18 livelli e ~8 ore; mancano le cose che ne riempiono 70.
 3. **A1–A3** il cortile completo: 8 recinti, il pentolone, le bestie di casa con i loro bisogni.
 4. **T7, T8, T19** misurare la 3D su un telefono vero, decidere cosa fa senza WebGL 2, eseguire le prove d'integrazione.

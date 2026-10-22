@@ -61,6 +61,7 @@ const confermaFattoria = ref(false)
 async function azzeraFattoria() {
   await cestinaOra('fattoria')
   azzeraCampagna('fattoria')
+  azzeraCampagna('fattoria3d')          // anche la 3D (stato, vicini): stessa copia nel cestino, un solo gesto
   confermaFattoria.value = false
   esito.value = { ok: true, testo: 'La fattoria di ' + chi.value + ' riparte da zero.' }
   cestino.value = await leggiCestino()
@@ -764,7 +765,7 @@ async function rimetti(v) {
         </div>
 
         <!-- ricomincia solo la fattoria, non tutto: compare solo se l'ha aperta -->
-        <template v-if="haGiocato('fattoria')">
+        <template v-if="haGiocato('fattoria') || haGiocato('fattoria3d')">
           <button v-if="!confermaFattoria" class="carta pericolo"
                   data-azione="azzera-fattoria" @click="confermaFattoria = true">
             <span class="ico">🚜</span>
@@ -773,8 +774,8 @@ async function rimetti(v) {
           </button>
           <div v-else class="carta pericolo aperta">
             <b>Ricominciare la fattoria di {{ chi }}?</b>
-            <i>Terra, cose comprate e animali spariscono, e il prato torna
-               vuoto. <b>Le monete spese non tornano indietro.</b> Tutto il
+            <i>Terra, cose comprate e animali spariscono (anche nella fattoria
+               3D, se c'è), e il prato torna vuoto. <b>Le monete spese non tornano indietro.</b> Tutto il
                resto — gli altri giochi, i traguardi, il salvadanaio — resta
                com'è.</i>
             <div class="riga">

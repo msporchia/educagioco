@@ -34,7 +34,7 @@ Legenda in [README.md](README.md). 2D: [../../fattoria/come-si-tocca.md](../../f
 
 | id | cosa | 2D | 3D | pri |
 |---|---|---|---|---|
-| I17 | «Ricomincia la fattoria di …» (`GenitoriView`, `cestinaOra('fattoria')`, `azzeraCampagna`) | sì, con cestino | ❌ nomina solo `fattoria`: la 3D resta | **P0** |
+| I17 | «Ricomincia la fattoria di …» (`GenitoriView`, `cestinaOra('fattoria')`, `azzeraCampagna`) | sì, con cestino | ✅ azzera anche `fattoria3d` (stato e vicini), con la stessa copia nel cestino; la carta compare se uno dei due giochi è stato aperto | – |
 | I18 | interruttore dei giochi in prova | – | ✅ la 3D è `sperimentale` e sta dietro l'interruttore | uscire dalla prova (G10) |
 | I19 | il quadro dei genitori / «Come va» | conta la fattoria come gioco senza campagna | da verificare per la 3D (`posto: true`) | P1 |
 | I20 | le novità per i bambini | righe 6, 7, 8, 24, 29 | ❌ «un gioco in prova non la vuole»: al giorno del cambio serve una riga, proposta, mai scritta prima | P1 |
@@ -44,8 +44,8 @@ Legenda in [README.md](README.md). 2D: [../../fattoria/come-si-tocca.md](../../f
 
 | id | cosa | 2D | 3D | pri |
 |---|---|---|---|---|
-| I22 | alzare il livello (`#fattoria=40`) | sì | ❌ si fa da console (`window.__fattoria3d.motore.s.esperienza = …`) | P1 |
-| I23 | una fattoria già giocata di quel livello (`#fattoria-tipo=30`, `motore/tipo.js`) | sì: la fattoria sta in piedi a ogni livello (test) | ❌ | P1 (serve a provare ogni giro) |
+| I22 | alzare il livello (`#fattoria=40`) | sì | ✅ `#fattoria3d=N` (alza, non abbassa mai; `Gioco.vue`, `cheatDellIndirizzo`) | – |
+| I23 | una fattoria già giocata di quel livello (`#fattoria-tipo=30`, `motore/tipo.js`) | sì: la fattoria sta in piedi a ogni livello (test) | ✅ `#fattoria3d-tipo=N` (1–99, `motore/tipo.js`, test `unita/fattoria3d-tipo`); butta quella del bambino attivo nel cestino | – |
 | I24 | `#stagione=` | sì | ❌ | P1 |
 | I25 | `#fattoria3d&tela=niente` | – | ✅ prova il messaggio senza WebGL | – |
 

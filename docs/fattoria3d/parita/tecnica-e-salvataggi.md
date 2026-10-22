@@ -7,15 +7,16 @@ Legenda in [README.md](README.md). Archivio: [../../core/archivio.md](../../core
 
 | id | cosa | stato | pri |
 |---|---|---|---|
-| T1 | **migrazione 2D → 3D** | ❌ non esiste. La 3D scrive in `profile.campagne.fattoria3d.cfg.stato` (`VERSIONE_STATO` 9) e non legge mai `campagne.fattoria`. Chi passa dalla 2D parte da zero e perde tutto (terra, bestie, livello fino a 70) | **P0** |
-| T2 | cosa convertire (se D1 lo sceglie) | livello (`speso` + `guadagnato` della 2D → `esperienza`), campi/macchine/recinti per equivalenza di tipo, scorte e prodotti, `fila`, bestie, addobbi, ordini aperti, nomi, traguardi (contatori `fattoria*` restano) | P0 con T1 |
-| T3 | il rischio degli id | `pasticceria` e `conserviera` significano cose diverse nelle due; gli id dei contenuti non si rinominano ([../../core/archivio.md](../../core/archivio.md)); le merci `carote`/`carota` hanno chiavi diverse | P0 con T1 |
+| T1 | **migrazione 2D → 3D** | ✅ `statoDa2D` (`motore/migra.js`, funzione pura, non lancia mai; null se non c'è niente da portare). **Non ancora agganciata**: `statoDaCaricare(leggi)` va chiamata in `Gioco.vue` al posto di `scelta(CHIAVE, 'stato', null)` (una riga, vedi [migrazione.md](migrazione.md) «L'aggancio»). I salvataggi 2D non si toccano | **P0** (resta l'aggancio) |
+| T2 | cosa convertire | ✅ livello ed esperienza (in proporzione, provvisorio fino a D2), ogni cosa con un equivalente 3D come pezzo nel magazzino (gratis da ripiazzare), terra come lotti, scorte e prodotti, raccolti maturi e lavoro finito ritirati, ingredienti del lavoro non finito resi. Il resto è in `daRegalare` (mai monete). **Non** si portano: piazzamenti, ordini aperti, bestie di casa e addobbi (solo registrati), `fila`, nomi, mongolfiera e botteghe in corso. Tabella in [migrazione.md](migrazione.md) | – |
+| T3 | il rischio degli id | ✅ risolto con tabelle esplicite: `pasticceria` 3D = `pastificio` 2D (la `pasticceria` 2D è una bottega, non convertita), `conserviera` = `cucina`; i raccolti plurali 2D diventano singolari (`carote` → `carota`, `fieno` → `erba`); nessun id si rinomina. Provato su `fattoriaTipo` 1–99 (`unita/fattoria3d-migra`) | – |
 | T4 | convivenza | oggi le due fattorie condividono le monete e hanno stati separati: nessun conflitto di dati, ma due posti dove spendere | D1, D14 |
 | T5 | salvataggio a pagina nascosta | ✅ `salva({ subito })` su `visibilitychange`/`pagehide` come la 2D | – |
-| T6 | cestino e ripristino | 2D sì | ❌ per la 3D (I17) |
+| T6 | cestino e ripristino | 2D sì | ✅ «Ricomincia la fattoria» e `#fattoria3d-tipo=` cestinano il profilo com'era; si rimette dalla pagina dei grandi come ogni voce del cestino |
 
-La migrazione si scrive come **funzione pura** `statoDa2D(datoFattoria) → stato3D` (come `normalizza`: non lancia mai), provata su ogni
-livello con `motore/tipo.js` della 2D (1–99) e su un salvataggio vero esportato. Tocca la 3D in sola lettura sullo stato 2D.
+La migrazione è la **funzione pura** `statoDa2D(datoFattoria) → stato3D` (come `normalizza`: non lancia mai), provata su ogni
+livello con `motore/tipo.js` della 2D (1–99). Resta da provare su un salvataggio vero esportato. Legge lo stato 2D, non lo cambia.
+Com'è fatta e cosa converte: [migrazione.md](migrazione.md).
 
 ## Peso e telefoni (S7)
 

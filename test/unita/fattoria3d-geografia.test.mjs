@@ -45,8 +45,8 @@ const celleDi = l => { const o = []; for (let y = 0; y < l.d; y++) for (let x = 
   controlla('i 42 lotti storici sono prato e non hanno acqua né sabbia', storici.every(([a, b]) => { const g = generaLotto(a, b); return g.bioma === 'prato' && !g.acqua.length && !g.spiaggia.length && !g.mare }))
   controlla('i lotti storici non cambiano con la geografia: stesso risultato col «vecchio»', storici.every(([a, b]) => JSON.stringify(generaLotto(a, b)) === JSON.stringify({ ...generaLotto(a, b, { vecchio: true }), spiaggia: [], mare: false })))
   controlla('il quadrato di partenza 3×3 (a e b da 2 a 4) è prato', Object.keys(LOTTI_INIZIALI).every(id => { const l = lottoPerId(id); return biomaDi(l.a, l.b) === 'prato' }))
-  // la fascia di mezzo non cambia: a da 0 a 7 è la geografia di prima (laghetti compresi)
-  controlla('da a = 0 a 7 il bioma è quello di prima', (() => { for (let b = -40; b < 40; b++) for (let a = 0; a <= 7; a++) if (biomaDi(a, b) !== biomaVecchio(a, b)) return false; return true })())
+  // la fascia di mezzo ha i suoi laghi naturali (fattoria3d-laghi); dove non c'è acqua né di oggi né di prima, prato e bosco sono quelli di prima
+  controlla('da a = 0 a 7, senza acqua, il bioma è quello di prima', (() => { for (let b = -40; b < 40; b++) for (let a = 0; a <= 7; a++) if (biomaDi(a, b) !== 'laghetto' && biomaVecchio(a, b) !== 'laghetto' && biomaDi(a, b) !== biomaVecchio(a, b)) return false; return true })())
   // il mare
   let tuttiMare = true, interi = true
   for (let b = -50; b < 50; b++) for (let a = -40; a <= ZONA.mareFinoA; a++) {
@@ -163,7 +163,7 @@ const celleDi = l => { const o = []; for (let y = 0; y < l.d; y++) for (let x = 
   for (const id of ['1_3', '0_3', '-1_3', '-2_3', '-3_3', '8_3']) s.lotti[id] = true
   const v = JSON.parse(JSON.stringify(s)); delete v.geo; delete v.vecchi
   const n = normalizza(v)
-  uguale('uno stato di prima si legge: geo = 1', n.geo, 1)
+  uguale('uno stato di prima si legge: geo = 2', n.geo, 2)
   controlla('i lotti comprati dove ora cambia la geografia sono «vecchi»', ['-2_3', '-3_3'].every(id => n.vecchi.includes(id)) && !n.vecchi.includes('1_3') && !n.vecchi.includes('0_3'), JSON.stringify(n.vecchi))
   const { f } = mondo({ stato: n })
   uguale('un lotto di mare comprato prima è prato come prima', f.biomaDi(lottoPerId('-3_3')), biomaVecchio(-3, 3))
@@ -175,10 +175,10 @@ const celleDi = l => { const o = []; for (let y = 0; y < l.d; y++) for (let x = 
   controlla('un lotto comprato dopo la geografia grande è nuovo', !f.vecchi.has('-4_3'))
   const salvato = f.serializza()
   const g = new Fattoria3d({ stato: normalizza(salvato), borsa: f.borsa, ora: () => adesso.t })
-  controlla('salvato e riletto: i vecchi restano, il nuovo no', g.vecchi.has('-3_3') && !g.vecchi.has('-4_3') && salvato.geo === 1)
+  controlla('salvato e riletto: i vecchi restano, il nuovo no', g.vecchi.has('-3_3') && !g.vecchi.has('-4_3') && salvato.geo === 2)
   // uno stato nuovo parte con la geografia grande e nessun lotto vecchio
   const ini = statoIniziale()
-  controlla('uno stato nuovo: geo 1, nessun vecchio, nessuna pesca', ini.geo === 1 && ini.vecchi.length === 0 && Object.keys(ini.pesca).length === 0)
+  controlla('uno stato nuovo: geo 2, nessun vecchio, nessuna pesca', ini.geo === 2 && ini.vecchi.length === 0 && ini.vecchi1.length === 0 && Object.keys(ini.pesca).length === 0)
   controlla('uno stato guasto non lancia', (() => { try { normalizza({ geo: 'x', vecchi: 5, pesca: { '1_1': { i: 'a' }, 'zz': {}, '2_2': { i: 3, j: 4, fine: 'x', riposo: null } } }); normalizza({ pesca: [] }); return true } catch (e) { return false } })())
   controlla('tutto lo stato di prima (v9) si legge: i campi nuovi sono opzionali', (() => { const vecchioV9 = { v: 9, lotti: { ...LOTTI_INIZIALI }, esperienza: 10 }; const x = normalizza(vecchioV9); return x.pesca && typeof x.pesca === 'object' && x.vecchi.length === 0 })())
 }

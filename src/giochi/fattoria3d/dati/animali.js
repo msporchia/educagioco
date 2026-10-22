@@ -7,7 +7,8 @@
 import { COLTURE } from './colture.js'
 import { PECORE } from './regole.js'
 import { PESCI } from './pesca.js'
-import { lavoroDelMangime, MANGIMI_DEL_FIENILE } from './mangime.js'
+import { lavoroDelMangime, MANGIMI } from './mangime.js'
+import { ANIMALI_DEL_CORTILE, TARTUFI } from './cortile.js'
 
 export const ANIMALI = {
   pollaio: {
@@ -28,6 +29,7 @@ export const ANIMALI = {
     prezzoBestia: 60,
     rincaroBestia: 30,
   },
+  ...ANIMALI_DEL_CORTILE,         // anatre, porcile, capre (giro G4): dati/cortile.js, coi numeri provvisori
 }
 export const TIPI_DI_ANIMALI = Object.keys(ANIMALI)
 
@@ -46,8 +48,9 @@ export function prezzoDellaBestia(tipo, n) {
 
 // I prodotti degli animali: l'id è la chiave di `stato.prodotti` (è anche quello della 2D); `pezzo` la faccia nell'atlante; `dove` il pezzo che li fa.
 export const PRODOTTI_ANIMALI = {
-  uova:  { nome: 'Uova',  emoji: '🥚', pezzo: 'merce_uova', dove: 'pollaio' },
-  latte: { nome: 'Latte', emoji: '🥛', pezzo: 'latte', dove: 'stalla' },
+  uova:  { nome: 'Uova',  emoji: '🥚', pezzo: 'merce_uova', dove: 'pollaio', anche: ['anatre'] },     // `anche`: gli altri pezzi che fanno la stessa merce (come in 2D, `da: 'uova'`)
+  latte: { nome: 'Latte', emoji: '🥛', pezzo: 'latte', dove: 'stalla', anche: ['capre'] },
+  tartufi: TARTUFI,
   ...PESCI,                   // il pesce si pesca dal molo, non lo fa una bestia: ha `ms` suo (dati/pesca.js)
 }
 
@@ -72,15 +75,16 @@ export function guastiDegliAnimali(pezzi) {
     if (!a.bestia || !a.bestie || !a.emoji) g.push(`${t}: manca nome o emoji`)
     if (!(a.ms >= 1000)) g.push(`${t}: tempo sotto il secondo`)
     if (!(a.pasti >= 1)) g.push(`${t}: nessun pasto`)
-    if (!a.mangia.length || a.mangia.some(k => !MANGIMI_DEL_FIENILE.includes(k))) g.push(`${t}: mangia qualcosa che il fienile non fa`)
+    if (!a.mangia.length || a.mangia.some(k => !MANGIMI.includes(k))) g.push(`${t}: mangia qualcosa che nessuna macchina fa`)
   }
-  if (!PECORE.mangia.length || PECORE.mangia.some(k => !MANGIMI_DEL_FIENILE.includes(k))) g.push('le pecore mangiano qualcosa che il fienile non fa')
+  if (!PECORE.mangia.length || PECORE.mangia.some(k => !MANGIMI.includes(k))) g.push('le pecore mangiano qualcosa che nessuna macchina fa')
   for (const [t, a] of Object.entries(CORTILE)) {
     if (!(a.posti >= 2)) g.push(`${t}: la capienza non basta per comprare una bestia`)
     if (!(a.prezzoBestia > 0) || !(a.rincaroBestia >= 0)) g.push(`${t}: il prezzo della bestia non torna`)
   }
   for (const [t, a] of Object.entries(ANIMALI)) {
-    if (!PRODOTTI_ANIMALI[a.prodotto] || PRODOTTI_ANIMALI[a.prodotto].dove !== t) g.push(`${t}: il prodotto non torna`)
+    const p = PRODOTTI_ANIMALI[a.prodotto]
+    if (!p || (p.dove !== t && !(p.anche || []).includes(t))) g.push(`${t}: il prodotto non torna`)
   }
   for (const [k, p] of Object.entries(LANA)) {
     if (COLTURE[k] || PRODOTTI_ANIMALI[k]) g.push(`${k}: la lana con l'id di un'altra merce`)

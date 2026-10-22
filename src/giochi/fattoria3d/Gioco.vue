@@ -5,18 +5,20 @@
    Senza WebGL 2 non si apre niente: lo si dice e si torna in home. Vedi docs/fattoria3d/. */
 import { ref, reactive, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import Barra from '../../components/Barra.vue'
-import { state, addCoins, segna, flushNow, persist, aspettoDi, scegliAspetto } from '../../store/profile.js'
+import { state, addCoins, segna, flushNow, persist, aspettoDi, scegliAspetto, cestinaOra } from '../../store/profile.js'
 import { fasciaAttiva } from '../../store/qualita.js'
 import { load, save } from '../../store/storage.js'
 import { scelta, ricorda } from '../campagne.js'
 import { Fattoria3d } from './motore/fattoria3d.js'
+import { fattoriaTipo } from './motore/tipo.js'
+import { statoDaCaricare } from './motore/migra.js'
 import { haWebGL2 } from './scena3d/webgl.js'
 import { dettoDi, dettoDiRifiuto } from './scena3d/detti.js'
 import { EDIFICI, avvisoEdificiNuovi } from './dati/catalogo.js'
 import { COLTURE } from './dati/colture.js'
 import { RICETTE, emojiDi, dentroDi, PRONTO_DA_RITIRARE } from './dati/ricette.js'
 import { POSTI_MASSIMI, prezzoDelPosto } from './dati/posti.js'
-import { avanzamento, roba, nomeDi } from './dati/livelli.js'
+import { avanzamento, roba, nomeDi, sogliaDi } from './dati/livelli.js'
 import { clienteDi, LIVELLO_BANCO } from './dati/ordini.js'
 import { PEZZI } from './dati/catalogo.js'
 import { LIVELLO_MONGOLFIERA } from './dati/mongolfiera.js'
@@ -27,6 +29,7 @@ import BarraAzioni from './viste/BarraAzioni.vue'
 import CostruisciQui from './viste/CostruisciQui.vue'
 import BarraStrade from './viste/BarraStrade.vue'
 import { schedeDi } from './dati/carte.js'
+import { stagioneAttiva } from './dati/stagioni3d.js'
 import SceltaSeme from './viste/SceltaSeme.vue'
 import Macchina from './viste/Macchina.vue'
 import Livelli from './viste/Livelli.vue'
@@ -129,6 +132,7 @@ const seme = ref('grano')
 const strumento = ref(null)              // il pennello delle strade: null | 'strada' | 'gomma'
 const costruisciQui = ref(null)          // { i, j, msg }: il menu «Costruisci qui», con la cella premuta
 const avvisoTesto = ref('')
+const stagione = ref(stagioneAttiva(new Date(), typeof location !== 'undefined' ? location.hash : ''))          // la festa in corso (dati/stagioni3d.js): Natale, Halloween o niente
 const trascinando = ref(null)            // { emoji, x, y, su, perMettereVia, perAnnullare, nuovo, parcheggiato } mentre si trascina un pezzo (o ne aspetta uno il fantasma)
 const semiAperto = ref(false)
 const macchinaAperta = ref(null)         // il tipo della macchina di cui si vede il menu
@@ -212,7 +216,7 @@ function scegliSeme(k) {
 // ── costruire: tenere premuto su un posto libero (o il tasto 🏗️) apre il menu «Costruisci qui» ──
 const schede = computed(() => {
   void versione.value
-  return schedeDi({ livello: motore.livello(), prezzoPezzo: t => motore.prezzoPezzo(t), nelMagazzino: t => motore.nelMagazzino(t), posseduti: motore.s.posseduti })
+  return schedeDi({ stagione: stagione.value, livello: motore.livello(), prezzoPezzo: t => motore.prezzoPezzo(t), nelMagazzino: t => motore.nelMagazzino(t), posseduti: motore.s.posseduti })
 })
 function apriCostruisci(i, j) {
   if (mondo.eroe.az || strumento.value) return
@@ -393,13 +397,37 @@ function indietro() {
   salva({ subito: true }); emit('vai', 'home')
 }
 
+/** #fattoria3d-tipo=N mette una fattoria già giocata di quel livello (quella del bambino va nel cestino); #fattoria3d=N alza il livello
+    e non lo abbassa mai. L'indirizzo si legge una volta e si svuota: un ricaricamento non ripete il cheat. Vedi docs/core/comandi.md. */
+function cheatDellIndirizzo() {
+  const frammento = location.hash || ''
+  const tipo = /(?:^#?|&)fattoria3d-tipo=(\d{1,2})(?=&|$)/i.exec(frammento)
+  const livello = /(?:^#?|&)fattoria3d=(\d{1,2})(?=&|$)/i.exec(frammento)
+  if (!tipo && !livello) return
+  try { location.hash = '' } catch (e) { /* pazienza */ }
+  let testo
+  if (tipo) {
+    cestinaOra('fattoria3d tipo')          // la copia si prende subito, prima di qualunque attesa
+    motore = fattoriaTipo(parseInt(tipo[1], 10))
+    motore.borsa = borsa
+    testo = `🧪 Fattoria di prova al livello ${motore.livello()}: quella di prima è nel cestino.`
+  } else {
+    const meta = parseInt(livello[1], 10)
+    if (motore.esperienza() < sogliaDi(meta)) motore.s.esperienza = sogliaDi(meta)
+    testo = `🧪 Livello ${motore.livello()}.`
+  }
+  salva({ subito: true })
+  toast.value = { testo, fine: performance.now() + DURATA_TOAST }
+}
+
 onMounted(async () => {
   if (!puo.value) return
-  motore = new Fattoria3d({ stato: scelta(CHIAVE, 'stato', null), borsa })
+  motore = new Fattoria3d({ stato: statoDaCaricare(scelta), borsa })
+  cheatDellIndirizzo()
   try { const c = await load(CHIAVE_OPZIONI); if (c && c.q && c.v === VERSIONE_OPZIONI) Object.assign(q, c.q) } catch (e) { /* le opzioni di serie */ }
   const { Mondo3d } = await import('./scena3d/mondo3d.js')          // three si scarica solo qui
   if (!vivo) return
-  mondo = new Mondo3d({ canvas: tela.value, sopra: sopra.value, motore, ui, qualita: q, abito: abito.value })
+  mondo = new Mondo3d({ canvas: tela.value, sopra: sopra.value, motore, ui, qualita: q, abito: abito.value, stagione: stagione.value })
   mondo.avvia()
   visite.avvia(scelta(CHIAVE, 'vicini', null))
   ripresa()
@@ -451,6 +479,8 @@ onBeforeUnmount(() => {
                 @click="trascinando.parcheggiato && mondo.annullaTrascinamento()">
           {{ trascinando.nuovo ? '✖️' : '📦' }} {{ avvisoTesto || (trascinando.nuovo ? 'Trascinalo dove vuoi, o qui per annullare' : 'Trascinalo dove vuoi, o qui per mettere via') }}
         </button>
+        <button v-if="trascinando && trascinando.ruotabile && !trascinando.su" class="f3-ruota" data-f3="ruota" :data-rot="trascinando.rot" aria-label="Gira"
+                @pointerdown.prevent="mondo.ruotaTenuto()" @keydown.enter.prevent="mondo.ruotaTenuto()">↻</button>
         <div v-if="trascinando && trascinando.su" class="f3-trascinato" :style="{ transform: `translate(${trascinando.x}px, ${trascinando.y - 56}px) translate(-50%, -50%)` }">{{ trascinando.emoji }}</div>
 
         <CostruisciQui v-if="costruisciQui" :schede="schede" :messaggio="costruisciQui.msg" :anteprima="anteprima" :anteprima-pronta="anteprimaPronta" @scegli="sceglieCarta" @chiudi="chiudiCostruisci" />

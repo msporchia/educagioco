@@ -9,10 +9,12 @@ import { creaPonte, creaPasserella, creaTavolo } from './modelli-passaggi.js'
 import { creaStagno } from './modelli-acqua.js'
 import { creaZuccherificio, creaTelaio, creaSartoria, creaTintoria, creaFienileMacchina, creaFriggitoria, creaSushiBar } from './modelli-macchine.js'
 import { creaMolo, creaPorticciolo } from './modelli-pesca.js'
+import { creaStagnoAnatre, creaPorcile, creaRecintoCapre, creaPentolone, creaAnatra, creaMaiale, creaCapra } from './modelli-cortile.js'
+import { creaZucca, creaZucche } from './modelli-feste.js'
 import { EDIFICI, PEZZI } from '../dati/catalogo.js'
 import { RICETTE, MACCHINE } from '../dati/ricette.js'
 import { SALITA_MS } from '../dati/mongolfiera.js'
-import { ANIMALI, PRODOTTI_ANIMALI } from '../dati/animali.js'
+import { ANIMALI, CORTILE, PRODOTTI_ANIMALI } from '../dati/animali.js'
 import { alleggeriOmbre } from './ottimizza.js'
 
 
@@ -21,6 +23,9 @@ const CREA = {
   recinto: c => creaRecinto(c && c.pecore),
   pollaio: c => creaPollaio(c && c.bestie),
   stalla: c => creaStalla(c && c.bestie),
+  anatre: c => creaStagnoAnatre(c && c.bestie),
+  porcile: c => creaPorcile(c && c.bestie),
+  capre: c => creaRecintoCapre(c && c.bestie),
   bancarella: () => creaBancarella(),
   bacheca: () => creaBacheca(),
   fontana: () => creaFontana(),
@@ -37,12 +42,15 @@ const CREA = {
   molo: () => creaMolo(PEZZI.molo.w, PEZZI.molo.d),
   molo_v: () => creaMolo(PEZZI.molo_v.w, PEZZI.molo_v.d),
   porticciolo: () => creaPorticciolo(),
+  zucca_intagliata: () => creaZucca(),
+  zucche_mucchio: () => creaZucche(),
 }
 const CREA_EDIFICIO = {
   pasticceria: creaPasticceria, mongolfiera: creaMongolfiera,
   mulino: creaMulino, panificio: creaPanificio, conserviera: creaConserviera, gelateria: creaGelateria, caseificio: creaCaseificio,
   telaio: creaTelaio, zuccherificio: creaZuccherificio, sartoria: creaSartoria, tintoria: creaTintoria,
   friggitoria: creaFriggitoria, sushi_bar: creaSushiBar,
+  pentolone: creaPentolone,
   fienile: creaFienileMacchina,                       // la macchina del mangime; il fienile di scena (FISSI) è un altro modello, `creaFienile`
 }
 /** Un tipo senza disegno non rompe la scena: una scatola grigia della sua misura. */
@@ -70,16 +78,21 @@ export class Pezzi {
     }
     for (const id of [...this.voci.keys()]) if (!vivi.has(id)) this._togli(id)
     // ciò che si è mosso: la posizione la dice il motore
-    for (const c of this.m.cose) { const v = this.voci.get(c.id); if (v && !v.nasce) v.grp.position.copy(centroDi(c, v.d)) }
+    for (const c of this.m.cose) {
+      const v = this.voci.get(c.id); if (!v) continue
+      const rot = c.rot || 0
+      if (v.rot !== rot) { v.rot = rot; v.d = this.m.misureCosa(c); v.grp.rotation.y = rot * Math.PI / 2 }          // girata: il disegno gira attorno al centro dell'impronta
+      if (!v.nasce) v.grp.position.copy(centroDi(c, v.d))
+    }
   }
 
   _creaCosa(c) {
-    const d = this.m.misure(c.tipo), edificio = !!EDIFICI[c.tipo], grp = modelloDi(c.tipo, d, c)
+    const d = this.m.misureCosa(c), edificio = !!EDIFICI[c.tipo], grp = modelloDi(c.tipo, d, c)
     alleggeriOmbre(grp)
     grp.userData.bersaglio = { kind: 'cosa', id: c.id }
-    grp.position.copy(centroDi(c, d)); this.scena.add(grp)
+    grp.position.copy(centroDi(c, d)); grp.rotation.y = (c.rot || 0) * Math.PI / 2; this.scena.add(grp)
     const badge = edificio || c.tipo === 'bacheca' ? this.fx.nuovoBadge() : c.bestie || c.pecore ? this.fx.nuovoCartello(() => this.sulCompraBestia && this.sulCompraBestia(c.id), c.tipo) : null
-    this.voci.set(c.id, { id: c.id, kind: 'cosa', edificio, tipo: c.tipo, c, d, grp, badge, anello: null, salto: 0, nasce: undefined, richiamo: null, chiave: '' })
+    this.voci.set(c.id, { id: c.id, kind: 'cosa', edificio, tipo: c.tipo, c, d, rot: c.rot || 0, grp, badge, anello: null, salto: 0, nasce: undefined, richiamo: null, chiave: '' })
   }
   _togli(id) {
     const v = this.voci.get(id); if (!v) return
@@ -92,10 +105,11 @@ export class Pezzi {
       urgenti per primi: il campo, il recinto, il pollaio e la stalla con le loro bestie, poi il resto dei pezzi e dei creatori di
       bestie, infine gli edifici (non sono in scena finché non si comprano: il primo costruito non deve pagare il modello). Una fila di funzioni, ognuna costruisce e butta un'istanza. */
   compitiScaldo() {
-    const pezzi = ['campo', 'recinto', 'pollaio', 'stalla', 'aiuola', 'panchina', 'pozzo', 'fontana', 'spaventapasseri', 'ponte', 'passerella', 'tavolo', 'bancarella', 'bacheca', 'stagno', 'laghetto', 'molo', 'molo_v', 'porticciolo']
-    const fai = tipo => ({ nome: tipo, fai: () => { if (PEZZI[tipo]) modelloDi(tipo, PEZZI[tipo], tipo === 'recinto' || tipo === 'pollaio' || tipo === 'stalla' ? { pecore: [], bestie: [] } : undefined) } })
+    const pezzi = ['campo', 'recinto', 'pollaio', 'stalla', 'anatre', 'porcile', 'capre', 'aiuola', 'panchina', 'pozzo', 'fontana', 'spaventapasseri', 'ponte', 'passerella', 'tavolo', 'bancarella', 'bacheca', 'stagno', 'laghetto', 'molo', 'molo_v', 'porticciolo', 'zucca_intagliata', 'zucche_mucchio']
+    const fai = tipo => ({ nome: tipo, fai: () => { if (PEZZI[tipo]) modelloDi(tipo, PEZZI[tipo], CORTILE[tipo] ? { pecore: [], bestie: [] } : undefined) } })
     return [...pezzi.slice(0, 4).map(fai), { nome: 'pecora', fai: () => creaPecora() }, { nome: 'gallina', fai: () => { creaGallina(0); creaGallina(1) } },
-            { nome: 'mucca', fai: () => { creaMucca(0); creaMucca(1) } }, ...pezzi.slice(4).map(fai), ...Object.keys(EDIFICI).filter(t => CREA_EDIFICIO[t]).map(t => ({ nome: t, fai: () => CREA_EDIFICIO[t]() }))]
+            { nome: 'mucca', fai: () => { creaMucca(0); creaMucca(1) } },
+            { nome: 'anatra', fai: () => { creaAnatra(0); creaAnatra(1) } }, { nome: 'maiale', fai: () => { creaMaiale(0); creaMaiale(1) } }, { nome: 'capra', fai: () => { creaCapra(0); creaCapra(1) } }, ...pezzi.slice(4).map(fai), ...Object.keys(EDIFICI).filter(t => CREA_EDIFICIO[t]).map(t => ({ nome: t, fai: () => CREA_EDIFICIO[t]() }))]
   }
 
   /** Il modello di un pezzo di quel tipo, per il fantasma di chi lo sta trascinando. */
@@ -124,7 +138,7 @@ export class Pezzi {
   voce(id) { return this.voci.get(id) }
   centroDi(bersaglio) {
     const c = bersaglio.kind === 'cosa' ? this.voci.get(bersaglio.id).c : this.m.cosaDi(bersaglio.tipo)      // `{ kind: 'edificio', tipo }`: l'edificio di quel tipo
-    return centroDi(c, this.m.misure(c.tipo))
+    return centroDi(c, this.m.misureCosa(c))
   }
 
   /** L'anello giallo attorno a ciò che è in coda: sta sul terreno, non gira per lo schermo. */
@@ -207,7 +221,7 @@ export class Pezzi {
       if (g.userData.gira) g.userData.gira.rotation.y += dt * 0.8
       if (g.userData.anima) g.userData.anima(dt, tt)
       const cuoce = Q.coda.length > 0, cadenza = cuoce ? 0.35 : v.tipo === 'pasticceria' ? Infinity : 0.6   // gli altri fumano anche a riposo
-      if (g.userData.fumo && tt - (v.tFumo || 0) > cadenza) { v.tFumo = tt; this.fx.fumata(g.position.clone().add(g.userData.fumo)) }
+      if (g.userData.fumo && tt - (v.tFumo || 0) > cadenza) { v.tFumo = tt; this.fx.fumata(g.position.clone().add(g.userData.fumo.clone().applyQuaternion(g.quaternion))) }
       const pronti = this.m.prontiIn(v.tipo), prima = Object.keys(Q.pronti).find(k => Q.pronti[k] > 0)
       v.badge.imposta(pronti ? `${RICETTE[prima].emoji} ${pronti} pront${pronti === 1 ? 'o' : 'i'}!`
         : cuoce ? `🔥 ${Math.max(0, Math.ceil(((Q.coda[0].fine || adesso) - adesso) / 1000))}s · ${Q.coda.length}/${posti}` : '', pronti ? 'pronto' : '')

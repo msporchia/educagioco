@@ -11,6 +11,7 @@ lana) e uno stato suo, e non tocca quelli della fattoria di sempre; le monete so
 - [merci-e-ricette.md](merci-e-ricette.md) — le merci e le ricette sono quelle della 2D: la faccia di ogni merce (`Faccia.vue`), le macchine e le ricette giuste, gli scarti, i vecchi salvataggi
 - [edifici-liberi.md](edifici-liberi.md) — gli edifici sono pezzi liberi: si costruiscono dal menu e si mettono dove si vuole, uno per tipo; il «!» per quelli aperti dal livello e non costruiti; la migrazione dei vecchi posti fissi
 - [mangime-e-catena.md](mangime-e-catena.md) — cosa mangiano le bestie (il mangime del fienile, come in 2D), la catena grano → becchime → uova e carote/erba → foraggio → latte e lana, l'audit di ogni ricetta contro la 2D e le deviazioni dichiarate
+- [cortile-e-pentolone.md](cortile-e-pentolone.md) — il pentolone (le 4 ricette del mangime) e le bestie che mangiano da lui: anatre, maiali, capre; i numeri provvisori in `dati/cortile.js`
 - [animali.md](animali.md) — pollaio e stalla: galline e mucche, uova e latte, i posti coi livelli, il caseificio e le ricette nuove
 - [ordini.md](ordini.md) — il banco della bancarella: chi chiede raccolti e prodotti, il premio in esperienza (mai monete), rifiutare, lo stato v3
 - [mongolfiera.md](mongolfiera.md) — la nave: tre file di casse da riempire un po' alla volta, i bonus, la sorpresa della fiera, il viaggio e il ritorno, il segnaposto di prima che si chiude
@@ -21,6 +22,8 @@ lana) e uno stato suo, e non tocca quelli della fattoria di sempre; le monete so
 - [geografia-e-pesca.md](geografia-e-pesca.md) — il mare a ovest e i laghi grandi a est (forme continue fra lotti), i salvataggi di prima che tengono i loro lotti, il molo, il porticciolo, i banchi di pesce, i pesciolini a istanze, il pesce, friggitoria e sushi bar, i livelli 17 e 18
 - [compagni.md](compagni.md) — Watson e i gatti che girano per la fattoria, il contadino nuovo: quando arrivano, come sono fatti, come si muovono
 - [guardaroba.md](guardaroba.md) — cambiare abito al contadino o alla contadina: il genere dal profilo, i capi e gli sblocchi, il salvataggio, come si aggiunge un pezzo
+- [rotazione.md](rotazione.md) — ruotare i pezzi e gli edifici: `rot` 0–3 nello stato, l'ingombro e il davanti che seguono, il tasto ↻ col secondo dito
+- [stagioni.md](stagioni.md) — Halloween e Natale come nella 2D (stesse finestre, `#stagione=`): cielo e luci, fiocchi, chiazze, addobbi sugli edifici, le zucche da comprare; il peso
 - [scena.md](scena.md) — il disegno: i moduli di `scena3d/`, il dito, costruire trascinando, le opzioni di qualità e il peso
 - [file.md](file.md) — dove sta cosa in `src/giochi/fattoria3d/`, e i bersagli dei test
 - [parita/](parita/README.md) — **cosa manca per sostituire la fattoria 2D**: criteri, tabelle di parità per area (colture e catena, animali, commercio, livelli ed economia, mondo e stagioni, interfaccia e guida, tecnica e salvataggi), le decisioni per l'utente e il piano a giri

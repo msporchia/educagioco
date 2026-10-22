@@ -15,7 +15,7 @@ const clamp01 = x => (x > 0 ? (x < 1 ? x : 1) : 0)                 // anche NaN 
 const lerp = (a, b, t) => a + (b - a) * t
 const liscia = (a, b, x) => { const t = clamp01((x - a) / (b - a)); return t * t * (3 - 2 * t) }
 
-export const SPECIE = ['gallina', 'mucca', 'pecora']
+export const SPECIE = ['gallina', 'mucca', 'pecora', 'anatra', 'maiale', 'capra']      // le ultime tre: il giro G4 (scena3d/modelli-cortile.js)
 
 /** 'fame' | 'lavora' | 'pronta' per una gallina o una mucca: `fine` è l'ora a cui il prodotto è pronto, null se ha fame (come `statoBestia` del motore). */
 export function statoDaFine (fine, adesso) { return fine === null || fine === undefined ? 'fame' : fine <= adesso ? 'pronta' : 'lavora' }
@@ -98,6 +98,43 @@ export function profiloBestia (specie, stadio, p, out = {}) {
     out.orecchie = lerp(-1.15, 0.5, f)              // l'angolo dell'orecchio destro (l'altro è opposto): giù a fame
     out.lento = lerp(0.6, 1, f)
     out.dono = 0
+  } else if (specie === 'anatra') {
+    // sull'acqua: a fame piccola e piatta, col becco nell'acqua; al lavoro un uovo verdino galleggia accanto e cresce; pronta col collo dritto, il becco in su e un uovo enorme
+    out.sx = lerp(0.78, 1.1, f); out.sy = lerp(0.6, 1.05, f); out.sz = lerp(0.95, 1.12, f)
+    out.corpoY = lerp(-0.03, 0, f)                   // affamata sta più a pelo d'acqua
+    out.testaY = lerp(-0.03, 0.03, f); out.testaX = lerp(1.0, -0.3, f)
+    out.collo = lerp(0.7, 1.2, f)
+    out.codaR = lerp(0.3, -0.7, f)                   // la coda a papera: giù a fame, in su da pronta
+    out.beccheggio = liscia(0.55, 1, f) * 0.5        // da pronta alza il petto e il becco
+    out.uovo = stadio <= 0 ? 0 : stadio >= 2 ? 3 : lerp(0.5, 2.2, clamp01((f - PIENO_MIN) / (PIENO_MAX - PIENO_MIN)))
+    out.passo = stadio <= 0 ? 1 : stadio >= 2 ? 0.1 : lerp(0.6, 0.2, clamp01(p))
+    out.lento = lerp(1.25, 1, f)
+    out.dono = out.uovo
+    out.ondeggia = pronta
+  } else if (specie === 'maiale') {
+    // a fame magro, orecchie giù e muso basso; al lavoro grufola nel fango e un mucchietto di terra cresce; pronto tondo, la coda a ricciolo, il tartufo in vista
+    out.sx = lerp(0.74, 1.1, f); out.sy = lerp(0.66, 1.15, f); out.sz = lerp(0.92, 1.04, f)
+    out.corpoY = lerp(-0.035, 0, f)
+    out.testaY = lerp(-0.10, 0.0, f); out.testaX = lerp(0.8, 0.05, f)
+    out.orecchie = lerp(1.15, 0.4, f)                // quanto le orecchie cadono in fuori (0 = dritte)
+    out.coda = lerp(0, 1, f)                         // l'ampiezza (e la grandezza) del ricciolo
+    out.lento = lerp(0.5, 1, f)
+    out.grufola = stadio === 1 ? 1 : 0
+    out.mucchio = stadio <= 0 ? 0 : stadio >= 2 ? 1 : lerp(0.2, 0.85, clamp01(p))
+    out.dono = pronta                                // il tartufo
+  } else if (specie === 'capra') {
+    // a fame piccola, orecchie a terra e testa bassa; al lavoro la mammella rosea cresce; pronta tonda, la coda in su, il secchio del latte e qualche saltello
+    out.sx = lerp(0.72, 1.06, f); out.sy = lerp(0.68, 1.1, f); out.sz = lerp(0.92, 1.02, f)
+    out.corpoY = lerp(-0.03, 0, f)
+    out.testaY = lerp(-0.10, 0.03, f); out.testaX = lerp(0.75, -0.18, f)
+    out.orecchie = lerp(1.5, 1.0, f)
+    out.coda = lerp(0.1, 1, f)
+    out.lento = lerp(0.55, 1, f)
+    out.mammella = liscia(0.05, 1, f)
+    out.pallida = lerp(1, 0, liscia(0.25, 0.75, f))
+    out.goccia = stadio === 1 && p > 0.35 ? 1 : 0
+    out.dono = pronta                                // il secchio
+    out.salto = pronta                               // saltella
   } else throw new Error('specie sconosciuta: ' + specie)
   return out
 }

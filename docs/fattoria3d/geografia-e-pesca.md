@@ -13,7 +13,7 @@ andare, e il sushi è quello che la bambina vuole. Codice: `dati/biomi.js` (la g
 | il quadrato di partenza e i 42 lotti storici | a 0..6, b 0..5 (partenza 2..4 × 2..4) | invariati: prato, niente acqua (un test li confronta con la generazione «vecchia») |
 | **il mare** | a ≤ −2, per ogni b | **tutto acqua** (16 celle). Quattro lotti dal bordo ovest del quadrato (a = 2): i lotti 1, 0, −1 e −2 |
 | **la costa** | a = −1, per ogni b | terra con la **riva che ondeggia**: le prime colonne sono ancora mare (0, 1 o 2 secondo la riga) e poi **2–3 celle di sabbia** in riva, canne in fondo alla sabbia, qualche albero e sasso |
-| la fascia di mezzo | a 0..7, b fuori dal rettangolo storico | come prima: prato 71%, bosco 15%, laghetti 15% |
+| la fascia di mezzo | a 0..7, b fuori dal rettangolo storico | prato ~66%, bosco ~14%, **laghi naturali** (un lotto su cinque ha un po' d'acqua, il 12% delle celle): [laghi.md](laghi.md) |
 | **i laghi grandi** | a ≥ 8, per ogni b | quattro lotti dal bordo est del quadrato (a = 4): i lotti 5, 6, 7 e poi l'8. Fra i laghi c'è terra (prato e bosco), niente laghetti |
 
 Il primo lago sta a est a x ≈ 19 (dal lotto 8_3): per arrivarci si comprano 5_3 … 9_3. Un lago ha 50–78 celle e tocca quasi sempre 4 lotti o più (il più grande 6 o più).
@@ -30,10 +30,12 @@ si scopre più lago**:
 
 ### I salvataggi di prima non perdono niente
 
+(`geo: 1` e i laghi naturali della fascia di mezzo: `stato.vecchi1`, [laghi.md](laghi.md).)
+
 Un lotto già comprato in uno stato senza `geo` (il campo che dice «geografia grande») **resta com'era**: `normalizza` mette in `stato.vecchi` gli id dei lotti
 comprati dove ora il bioma cambierebbe (mare, costa, lago, o un laghetto che sparisce), e il motore li genera con `generaLotto(a, b, { vecchio: true })`: stessi
 alberi e sassi, stesso suolo. Quelli non ancora comprati sono nuovi. Se sta sotto il mare, la scena disegna il suo prato sopra l'acqua (`terraSuMare`). Uno stato
-nuovo parte con `geo: 1`. `VERSIONE_STATO` resta 9 (i campi nuovi si riempiono da sé). Le visite ai vicini seguono la stessa regola (`statoDaSnapshot`); gli snapshot di
+nuovo parte con `geo: 2`. `VERSIONE_STATO` resta 9 (i campi nuovi si riempiono da sé). Le visite ai vicini seguono la stessa regola (`statoDaSnapshot`); gli snapshot di
 oggi non portano ancora `geo`, quindi la fattoria di un amico si vede con la geografia di prima per i lotti dove cambierebbe (voce in [da-fare.md](da-fare.md)).
 
 **Si compra come ogni lotto**: `prezzoDelLotto`, 40 + 20 per ogni lotto già comprato (l'acqua si paga come la terra). Il cartello dice «🪙 N · 🌊 mare», «🏞️ lago» o «🏖️

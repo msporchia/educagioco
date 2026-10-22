@@ -13,7 +13,7 @@ Legenda in [README.md](README.md). 2D: [../../fattoria/stagioni.md](../../fattor
 | W3 | prezzo | `45·1,38ⁿ` | 🟡 `40+20n` poi quadratico | P2 |
 | W4 | il bosco | sgomberare costa, non rende | ✅ albero 🪙3, sasso 🪙1, niente legna | – |
 | W5 | gli edifici dove si vuole | sì (baule, tenere premuto) | ✅ «Costruisci qui» e trascinare; ✳ scorrimento ai bordi | – |
-| W6 | ruotare / rovesciare | ↻ ⇄ 📦 sul pezzo tenuto | ❌ si può solo spostare o mettere via; gli edifici guardano tutti a +z | P1 |
+| W6 | ruotare / rovesciare | ↻ ⇄ 📦 sul pezzo tenuto | ✅ ↻ a quarti di giro (`rot` 0–3) su ogni pezzo e edificio tranne campo, acqua, ponti e moli, porticciolo; col pezzo in mano un secondo dito sul tasto; l'ingombro e il davanti seguono ([../rotazione.md](../rotazione.md)). ⇄ no: un giro di 180° basta | – |
 
 ## Decorazioni e giardino (217 contro 10)
 
@@ -27,7 +27,7 @@ Legenda in [README.md](README.md). 2D: [../../fattoria/stagioni.md](../../fattor
 | W12 | arredo (panchine, sedie, amache, tavoli, lucine) | 29 | 🟡 panchina e tavolo | P1 |
 | W13 | bestiole (cucce, casette, farfalle) | 17 | ❌ | P2 |
 | W14 | raccolto (balle, cassette, ceste) | 39 | ❌ | P2 |
-| W15 | feste (zucche, albero di Natale) e fiera (8) | 3 + 8 | ❌ | P1 con W17 |
+| W15 | feste (zucche, albero di Natale) e fiera (8) | 3 + 8 | 🟡 le due zucche (🪙6, 🪙10, solo a Halloween); manca l'albero di Natale da comprare (a Natale ci sono gli alberelli effimeri accanto agli edifici) e la fiera | P1 con W17 |
 
 Perché contano: i decori sono la spesa piccola e la **scelta della bambina** («di norma le decorazioni sono una scelta sua»).
 Una terra grande senza niente da mettere sopra è un prato. In 3D ogni decoro è un modello: un costo di peso e di
@@ -44,11 +44,11 @@ riusando le forme già nel catalogo 3D (`strumenti/banco/catalogo-3d/`).
 
 | id | cosa | 2D | 3D | pri |
 |---|---|---|---|---|
-| W17 | Halloween (1–31 ott) | recinti in costume (sprite `*_halloween`), zucca 🪙6 e due zucche 🪙10, cappello da strega 🪙8 | ❌ | P1 |
-| W18 | Natale (1 nov–6 gen) | neve, lucine, tetti innevati, albero 🪙24 | ❌ | P1 |
-| W19 | `#stagione=` per guardarle fuori stagione | sì | ❌ | P1 con W17 |
+| W17 | Halloween (1–31 ott) | recinti in costume (sprite `*_halloween`), zucca 🪙6 e due zucche 🪙10, cappello da strega 🪙8 | 🟡 cielo al tramonto, lucciole, le due zucche nei decori solo in stagione ([../stagioni.md](../stagioni.md)); mancano i recinti in costume e il cappello (W21) | P2 |
+| W18 | Natale (1 nov–6 gen) | neve, lucine, tetti innevati, albero 🪙24 | 🟡 cielo, fiocchi, chiazze di neve, ⭐/🔔, lucine e alberelli sugli edifici ([../stagioni.md](../stagioni.md)); mancano la crosta sui tetti e l'albero da comprare | P2 |
+| W19 | `#stagione=` per guardarle fuori stagione | sì | ✅ stessa sintassi (`stagioneAttiva`) | – |
 | W20 | il fumetto «lo vorrei» / segnalino 🎃 | sì | ❌ | P2 |
 | W21 | i costumi di Halloween da rifare (galline/capre fantasmini, alpaca grigia…) | aperto in [../../fattoria/da-fare.md](../../fattoria/da-fare.md) | – | P2 |
 
-Le stagioni sono **un dato puro** (`dati/stagioni.js`: `stagioneDi(data)`, `addobbiStagionali`) che la 3D può importare così com'è;
-il lavoro è il disegno 3D: nebbia/neve come effetto della scena, zucche e albero come modelli.
+Le stagioni sono **un dato puro** (`dati/stagioni.js`: `stagioneDi(data)`, `addobbiStagionali`) che la 3D importa così com'è
+(`dati/stagioni3d.js`); il disegno 3D è in [../stagioni.md](../stagioni.md): cielo e luci, fiocchi (un solo `Points`), addobbi a istanze, zucche come pezzi.

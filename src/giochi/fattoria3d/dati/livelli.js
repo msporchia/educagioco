@@ -78,7 +78,7 @@ export function roba(livello) {
   const l = Math.max(1, livello | 0)
   const con = (tabella, chiave) => Object.entries(tabella).map(([id, v]) => ({ id, ...v })).filter(v => chiave(v.id) === l)
   return {
-    pezzi: con(PEZZI, livelloDelPezzo),
+    pezzi: con(PEZZI, livelloDelPezzo).filter(p => !p.stagione),          // le feste vengono e vanno: non sono «roba» del livello
     edifici: con(EDIFICI, livelloDelPezzo),
     colture: con(COLTURE, livelloDellaColtura),
     ricette: con(RICETTE, id => livelloDellaRicetta(id)),
@@ -118,6 +118,10 @@ export const NOMI = {
   tintoria: 'La tintoria',
   friggitoria: 'La friggitoria',
   sushi_bar: 'Il sushi bar',
+  pentolone: 'Il pentolone',
+  anatre: 'Lo stagno delle anatre',
+  porcile: 'Il porcile',
+  capre: 'Le capre',
 }
 
 export function nomeDi(livello) {

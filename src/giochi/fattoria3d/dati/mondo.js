@@ -74,6 +74,7 @@ export const POSTI_STORICI = {
   fienile:       { i: 9, j: -7, nuovo: true },
   friggitoria:   { i: 10, j: 5, nuovo: true },                                       // nati dopo i posti liberi come il fienile: servono solo ai controlli (`nuovo`)
   sushi_bar:     { i: -4, j: 6, nuovo: true },
+  pentolone:     { i: 11, j: 1, nuovo: true },                                        // idem (giro G4)
 }
 
 // ciò che c'è sempre e non si sposta: due edifici di scena (non si comprano, ingombrano soltanto)

@@ -12,7 +12,7 @@ import { attesaDelMangime } from '../dati/mangime.js'
 
 // Le promesse di scala (minuti di esercizio, ms di attesa)
 export const TETTO_LIVELLO_2_MIN = 10
-export const TETTO_ULTIMO_MIN = 510          // 8 ore e mezza (erano 5 e mezza fino ai quindici livelli, 7 coi sedici: la friggitoria e il sushi bar ne hanno aggiunto un diciassettesimo e un diciottesimo, ~45 minuti ciascuno)
+export const TETTO_ULTIMO_MIN = 660          // 11 ore, PROVVISORIO (G4: pentolone e le tre bestie in coda, livelli 19–22 di dati/cortile.js; D2 non è deciso; erano 8 e mezza, 5 e mezza fino ai quindici livelli, 7 coi sedici: la friggitoria e il sushi bar ne hanno aggiunto un diciassettesimo e un diciottesimo, ~45 minuti ciascuno)
 export const TETTO_ATTESA_MS = 120_000       // per cosa chiesta, in catena
 export const TETTO_PREZZO_SUL_SALTO = 0.65   // un pezzo produttivo non costa più dei due terzi del salto del suo livello
 

@@ -13,6 +13,7 @@ export const DISEGNI = {
   spaventapasseri: 'spaventapasseri', ponte: 'ponte', tavolo: 'tavolo',
   pasticceria: 'pastificio', mongolfiera: 'mongolfiera', mulino: 'mulino_vento', panificio: 'panificio', caseificio: 'caseificio', conserviera: 'cucina', gelateria: 'gelateria',
   telaio: 'telaio', zuccherificio: 'zuccherificio', sartoria: 'sartoria', tintoria: 'tintoria', friggitoria: 'friggitoria', sushi_bar: 'sushi_bar', fienile: 'fienile0',
+  pentolone: 'pentolone', anatre: 'recinto_anatre_calmo', porcile: 'recinto_maiali_calmo', capre: 'recinto_capre_calmo',
 }
 
 /** Gli strumenti del pennello, nella scheda delle strade: non sono pezzi, scegliendoli si disegna col dito. */
@@ -23,6 +24,7 @@ export const STRUMENTI = {
 
 /**
  * Le carte di una scheda. `stato`: { livello, prezzoPezzo(tipo), nelMagazzino(tipo), posseduti: { edificio: true } }.
+ * `stato.stagione`: la festa in corso (dati/stagioni3d.js) o niente: le carte con `stagione` si vedono solo allora.
  * Ogni carta: { id, genere: 'pezzo' | 'edificio' | 'strumento', nome, emoji, disegno, etichetta, liv, bloccata, segnala }. Un edificio già
  * in mappa non si offre (uno per tipo); i pezzi e gli edifici già nel magazzino sì (`📦 ×N`, si mettono senza pagare). `segnala` è il
  * «!»: un edificio che il livello ha aperto e non è ancora in mappa (mai per un pezzo, mai per una carta chiusa).
@@ -32,6 +34,7 @@ export function carteDi(categoria, stato) {
   for (const [id, p] of Object.entries(PEZZI)) {
     if (p.categoria !== categoria) continue
     const mag = stato.nelMagazzino(id), liv = livelloDelPezzo(id)
+    if (p.stagione && p.stagione !== stato.stagione && !mag) continue          // una festa: si offre solo in stagione (ciò che è nel magazzino si rimette sempre)
     carte.push({ id, genere: 'pezzo', nome: p.nome, emoji: p.emoji, disegno: DISEGNI[id] || null,
       etichetta: mag ? '📦 ×' + mag : '🪙 ' + stato.prezzoPezzo(id), liv, bloccata: liv > stato.livello, segnala: false })
   }

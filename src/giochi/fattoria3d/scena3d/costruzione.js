@@ -4,6 +4,7 @@
 // monete. E le strade a pennello. Le regole di cosa ci sta sono del motore (`puoCompraEMettere`): qui si guida il fantasma, si chiede
 // e si racconta.
 import { misureDi } from '../dati/catalogo.js'     // PEZZI e EDIFICI: anche gli edifici si costruiscono e si spostano
+import { ruotabile, misureGirate } from '../dati/rotazione.js'
 
 import { dentro } from '../dati/mondo.js'
 import { tingi, buttaFantasma } from './modelli.js'
@@ -29,11 +30,13 @@ function lineaDiCelle(a, b) {
 export class Costruzione {
   constructor(ctx) {
     this.c = ctx
-    this.D = { attivo: false, tipo: null, spostando: null, parcheggiato: false, i: 0, j: 0, ok: false, fant: null, presa: PRESA_NUOVO, dentro: false, dito: null }
+    this.D = { attivo: false, tipo: null, spostando: null, parcheggiato: false, rot: 0, i: 0, j: 0, ok: false, fant: null, presa: PRESA_NUOVO, dentro: false, dito: null }
     this.tratto = null; this.ultimaCella = null
     this.pennelloDito = null        // il dito che disegna: { x, y, gesto }, per scorrere ai bordi anche da fermo
     this._camPrima = null
   }
+  /** Le misure del pezzo in mano com'è girato adesso. */
+  _misure() { const d = misureDi(this.D.tipo); return this.D.rot % 2 === 1 ? misureGirate(this.D.tipo, d) : d }
   get m() { return this.c.m }
   get attivo() { return this.D.attivo }
   /** Un fantasma scelto dal menu che aspetta un posto: il dito lo trascina o lo tocca (`dito.js`). */
@@ -43,16 +46,16 @@ export class Costruzione {
   /** Un pezzo già messo si sposta (🪙 1 al rilascio); uno della barra si compra e si mette: rosso anche se mancano le monete. */
   _valido() {
     const D = this.D
-    return D.spostando ? this.m.puoMettere(D.tipo, D.i, D.j, D.spostando.id) : this.m.puoCompraEMettere(D.tipo, D.i, D.j)
+    return D.spostando ? this.m.puoMettere(D.tipo, D.i, D.j, D.spostando.id, D.rot) : this.m.puoCompraEMettere(D.tipo, D.i, D.j, D.rot)
   }
   _aggiorna() {
     const D = this.D; if (!D.fant) return
-    const d = misureDi(D.tipo); D.fant.position.set(D.i + d.w / 2, 0, D.j + d.d / 2)
+    const d = this._misure(); D.fant.position.set(D.i + d.w / 2, 0, D.j + d.d / 2); D.fant.rotation.y = D.rot * Math.PI / 2
     const p = this._valido(); D.ok = p.ok; D.motivo = p.motivo; D.costo = p.costo; D.liv = p.liv; tingi(D.fant, p.ok)
   }
   _suDito(x, y) {
     const D = this.D, p = this.c.puntaSuolo(x, y - D.presa.px); if (!p) return
-    const d = misureDi(D.tipo), a = cellaSottoIlDito(p, d.w, d.d, D.presa.off)
+    const d = this._misure(), a = cellaSottoIlDito(p, d.w, d.d, D.presa.off)
     D.i = a.i; D.j = a.j; this._aggiorna()
   }
   _sulBordo(y) { const r = this.c.ui.zonaDrop(); return !!r && y > r.top }
@@ -60,9 +63,9 @@ export class Costruzione {
   /** Comincia a trascinare una cosa già messa (`daSpostare`: tenuta premuta) o un pezzo nuovo. */
   inizia(tipo, daSpostare, x, y) {
     const D = this.D
-    Object.assign(D, { attivo: true, tipo, spostando: daSpostare || null, parcheggiato: false, presa: PRESA_NUOVO, dentro: false, dito: null })
+    Object.assign(D, { attivo: true, tipo, spostando: daSpostare || null, parcheggiato: false, rot: (daSpostare && daSpostare.rot) || 0, presa: PRESA_NUOVO, dentro: false, dito: null })
     if (daSpostare) {                                                   // si vede il fantasma, non il pezzo, e il dito tiene il punto che ha preso
-      const d = misureDi(tipo), p = this.c.puntaSuolo(x, y)
+      const d = this._misure(), p = this.c.puntaSuolo(x, y)
       if (p) D.presa = { px: 0, off: scartoDellaPresa(p, daSpostare.i, daSpostare.j, d.w, d.d) }
       this.c.pezzi.nascondi(daSpostare.id, true)
     }
@@ -75,7 +78,7 @@ export class Costruzione {
     D.dito = { x, y }
     D.fant.visible = !su
     if (!su) this._suDito(x, y)
-    ui.trascinando({ emoji: misureDi(D.tipo).emoji, x, y, su, perMettereVia: su && !!D.spostando, perAnnullare: su && !D.spostando, nuovo: !D.spostando, parcheggiato: D.parcheggiato })
+    ui.trascinando({ emoji: misureDi(D.tipo).emoji, ruotabile: ruotabile(D.tipo), rot: D.rot, x, y, su, perMettereVia: su && !!D.spostando, perAnnullare: su && !D.spostando, nuovo: !D.spostando, parcheggiato: D.parcheggiato })
     const prezzo = !D.spostando && D.costo ? ` (🪙 ${D.costo})` : ''
     ui.avviso(su ? (D.spostando ? 'Rilascia qui per mettere via (🪙 1)' : 'Portalo sulla mappa e rilascia')
                  : (D.ok ? 'Rilascia per costruire qui' + prezzo : dettoDi(D.motivo, { costo: D.costo, liv: D.liv })))
@@ -87,7 +90,7 @@ export class Costruzione {
     D.dito = null                                                   // il dito è alzato: la camera non scorre più
     // si costruisce dove il fantasma si vede: ricalcola solo se il dito si è staccato altrove dall'ultimo punto visto
     if (!su && (!visto || Math.hypot(visto.x - x, visto.y - y) > 0.5)) this._suDito(x, y)
-    const ok = D.ok, motivo = D.motivo, costo = D.costo, liv = D.liv, tipo = D.tipo, c0 = D.spostando, i = D.i, j = D.j
+    const ok = D.ok, motivo = D.motivo, costo = D.costo, liv = D.liv, tipo = D.tipo, c0 = D.spostando, i = D.i, j = D.j, rot = D.rot
     if (D.parcheggiato && !su && !ok) {                             // il fantasma del menu resta finché non trova posto (o non lo si annulla)
       return ui.avviso(dettoDi(motivo, { costo, liv }))
     }
@@ -99,17 +102,17 @@ export class Costruzione {
         this.c.cambiato(); return ui.avviso(misureDi(tipo).nome + ' messo via: lo ritrovi nel menu Costruisci')
       }
       if (!ok) return this._dice(dettoDi(motivo))
-      const r = m.spostaPezzo(c0.id, i, j)
+      const r = m.spostaPezzo(c0.id, i, j, { rot })
       if (!r.ok) return this._dice(dettoDi(r.motivo, { mancano: 1 }))
-      this.c.cambiato(); return ui.avviso('Spostato')
+      this.c.cambiato(); return ui.avviso(rot !== (c0.rot || 0) ? 'Girato' : 'Spostato')
     }
     if (su) return ui.avviso('')
     if (!ok) return this._dice(dettoDi(motivo, { costo, liv }))     // un rilascio che non va non perde niente
-    this._compraEMetti(tipo, i, j)
+    this._compraEMetti(tipo, i, j, rot)
   }
   /** Compra (se serve) e mette: un gesto, con le scintille. Se non va non cambia niente e lo dice. */
-  _compraEMetti(tipo, i, j) {
-    const { ui, fx } = this.c, r = this.m.compraEMetti(tipo, i, j)
+  _compraEMetti(tipo, i, j, rot = 0) {
+    const { ui, fx } = this.c, r = this.m.compraEMetti(tipo, i, j, rot)
     if (!r.ok) { this._dice(dettoDi(r.motivo, { costo: r.costo, liv: r.liv })); return r }
     this.c.pezzi.sincronizza(); this.c.pezzi.fanNascere(r.cosa.id)
     fx.scoppietta(this.c.pezzi.centroDi({ kind: 'cosa', id: r.cosa.id }).setY(0.5), 0xfff2a0, 14, 2.4, 3)
@@ -147,17 +150,17 @@ export class Costruzione {
   parcheggia(tipo, i, j) {
     if (this.D.attivo) this._fine()
     const D = this.D
-    Object.assign(D, { attivo: true, tipo, spostando: null, parcheggiato: true, i, j, presa: PRESA_NUOVO, dentro: false, dito: null })
+    Object.assign(D, { attivo: true, tipo, spostando: null, parcheggiato: true, rot: 0, i, j, presa: PRESA_NUOVO, dentro: false, dito: null })
     D.fant = this.c.creaFantasma(tipo, null); this.c.scena.add(D.fant)
     this.c.terreno.mostraGriglia(true)
     this._aggiorna()
-    this.c.ui.trascinando({ emoji: misureDi(tipo).emoji, x: 0, y: 0, su: false, perMettereVia: false, perAnnullare: false, nuovo: true, parcheggiato: true })
+    this.c.ui.trascinando({ emoji: misureDi(tipo).emoji, ruotabile: ruotabile(tipo), rot: 0, x: 0, y: 0, su: false, perMettereVia: false, perAnnullare: false, nuovo: true, parcheggiato: true })
     this.c.ui.avviso(D.ok ? `Trascinalo dove vuoi e lascialo, o toccalo qui${D.costo ? ` (🪙 ${D.costo})` : ''}` : 'Qui non ci sta: trascinalo in un posto libero, o tocca per annullare')
   }
   /** Il dito preme (col fantasma parcheggiato): se preme sul fantasma lo afferra tenendo il punto preso; se preme altrove lo porterà sollevato. */
   prendi(x, y) {
     const D = this.D; if (!D.attivo || !D.parcheggiato) return
-    const p = this.c.puntaSuolo(x, y), d = misureDi(D.tipo)
+    const p = this.c.puntaSuolo(x, y), d = this._misure()
     D.dito = null; D.presa = PRESA_NUOVO; D.dentro = false
     if (p && dentroIlPezzo(p, D.i, D.j, d.w, d.d)) { D.dentro = true; D.presa = { px: 0, off: scartoDellaPresa(p, D.i, D.j, d.w, d.d) } }
   }
@@ -165,11 +168,22 @@ export class Costruzione {
   tocco(x, y) {
     const D = this.D; if (!D.attivo || !D.parcheggiato) return
     const p = this.c.puntaSuolo(x, y), { ui } = this.c
-    if (p && !D.dentro) { const d = misureDi(D.tipo), a = cellaSottoIlDito(p, d.w, d.d); D.i = a.i; D.j = a.j; this._aggiorna() }
-    const ok = D.ok, motivo = D.motivo, costo = D.costo, liv = D.liv, tipo = D.tipo, i = D.i, j = D.j
+    if (p && !D.dentro) { const d = this._misure(), a = cellaSottoIlDito(p, d.w, d.d); D.i = a.i; D.j = a.j; this._aggiorna() }
+    const ok = D.ok, motivo = D.motivo, costo = D.costo, liv = D.liv, tipo = D.tipo, i = D.i, j = D.j, rot = D.rot
     this._fine()
     if (!p || !ok) return p ? this._dice(dettoDi(motivo, { costo, liv })) : ui.avviso('')
-    this._compraEMetti(tipo, i, j)
+    this._compraEMetti(tipo, i, j, rot)
+  }
+  /** Il tasto ↻: gira di un quarto il pezzo in mano attorno al suo centro (col dito giù o col fantasma parcheggiato). */
+  ruota() {
+    const D = this.D; if (!D.attivo || !ruotabile(D.tipo)) return false
+    const prima = this._misure(), cx = D.i + prima.w / 2, cz = D.j + prima.d / 2
+    D.rot = (D.rot + 1) % 4
+    const d = this._misure(); D.i = Math.round(cx - d.w / 2); D.j = Math.round(cz - d.d / 2)
+    this._aggiorna()
+    if (D.dito) this.muovi(D.dito.x, D.dito.y)          // col dito giù il fantasma torna sotto il dito (stesso centro, misure nuove)
+    else this.c.ui.trascinando({ emoji: misureDi(D.tipo).emoji, ruotabile: true, rot: D.rot, x: 0, y: 0, su: false, perMettereVia: false, perAnnullare: false, nuovo: !D.spostando, parcheggiato: D.parcheggiato })
+    return true
   }
   /** Un rifiuto: una riga nella fascia e nel fumetto dell'eroe (dopo un rilascio la fascia sparisce, il fumetto resta). */
   _dice(testo) { this.c.ui.avviso(testo); if (testo) this.c.fx.parla(testo) }
@@ -180,7 +194,7 @@ export class Costruzione {
     const D = this.D
     if (D.fant) { this.c.scena.remove(D.fant); buttaFantasma(D.fant); D.fant = null }
     if (D.spostando) this.c.pezzi.nascondi(D.spostando.id, false)
-    Object.assign(D, { attivo: false, tipo: null, spostando: null, parcheggiato: false, presa: PRESA_NUOVO, dentro: false, dito: null })
+    Object.assign(D, { attivo: false, tipo: null, spostando: null, parcheggiato: false, rot: 0, presa: PRESA_NUOVO, dentro: false, dito: null })
     this.c.ui.trascinando(null)
     if (!this.c.cmd.strumento) this.c.terreno.mostraGriglia(false)
   }
