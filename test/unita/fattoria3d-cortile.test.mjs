@@ -11,7 +11,7 @@ import { COLTURE } from '../../src/giochi/fattoria3d/dati/colture.js'
 import { RICETTE, MACCHINE, guastiDelleRicette } from '../../src/giochi/fattoria3d/dati/ricette.js'
 import { ANIMALI, CORTILE, PRODOTTI_ANIMALI, guastiDegliAnimali, msDelProdotto, prezzoDellaBestia } from '../../src/giochi/fattoria3d/dati/animali.js'
 import { MANGIMI, MANGIMI_DEL_FIENILE, MANGIMI_DEL_PENTOLONE, RICETTE_PENTOLONE, lavoroDelMangime } from '../../src/giochi/fattoria3d/dati/mangime.js'
-import { PROVVISORI } from '../../src/giochi/fattoria3d/dati/cortile.js'
+import { NUMERI_DEL_CORTILE as PROVVISORI } from '../../src/giochi/fattoria3d/dati/cortile.js'
 import { guastiDeiLivelli, sogliaDi, roba, livelloDelMangime, livelloDellaRicetta, nomeDi, ULTIMO } from '../../src/giochi/fattoria3d/dati/livelli.js'
 import { guastiDellaScala, catenaMs, TETTO_ATTESA_MS } from '../../src/giochi/fattoria3d/motore/taratura.js'
 import { DISEGNI } from '../../src/giochi/fattoria3d/dati/carte.js'
@@ -48,7 +48,7 @@ const IDS = ['beverone', 'zuppa', 'zuppa_orto', 'pastura']
     const r = RICETTE[id], d = RICETTE_2D.find(x => x.id === id)
     uguale(`${id}: in 2D la fa il pentolone`, d.dove, 'pentolone')
     uguale(`${id}: ingredienti e quantità come in 2D`, JSON.stringify(Object.entries(r.ing).map(([k, n]) => [id2d(k), n]).sort()), JSON.stringify(Object.entries(d.prende).sort()))
-    uguale(`${id}: il tempo è quello della 2D (minuti → secondi)`, r.ms, d.minuti * 1000)
+    uguale(`${id}: il tempo è quello della 2D (minuti veri)`, r.ms, d.minuti * 60000)
     uguale(`${id}: il prodotto è quello della 2D`, r.da || id, d.da)
     controlla(`${id}: è mangime, come in 2D`, r.mangime === true && PRODOTTI[d.da].mangime === true)
     controlla(`${id}: la faccia è nell'atlante`, !!ATLANTE[r.pezzo], r.pezzo)
@@ -79,7 +79,7 @@ const IDS = ['beverone', 'zuppa', 'zuppa_orto', 'pastura']
   uguale('le anatre fanno le uova di sempre, le capre il latte di sempre', [ANIMALI.anatre.prodotto, ANIMALI.capre.prodotto].join(), 'uova,latte')
   uguale('i maiali fanno i tartufi, la merce nuova (faccia e nome della 2D)', [PRODOTTI_ANIMALI.tartufi.pezzo, PRODOTTI_ANIMALI.tartufi.nome, PRODOTTI_ANIMALI.tartufi.emoji].join(), [PRODOTTI.tartufi.pezzo, PRODOTTI.tartufi.nome, PRODOTTI.tartufi.emoji].join())
   controlla('i tartufi non hanno un\'altra faccia: sono ritagliati nell\'atlante', !!ATLANTE[PRODOTTI_ANIMALI.tartufi.pezzo])
-  // i tempi sono in secondi e rispettano l'ordine della 2D (anatre 6 min, capre 12, maiali 20)
+  // i tempi sono in minuti veri e rispettano l'ordine della 2D (anatre 6 min, capre 12, maiali 20)
   controlla('i tempi seguono l\'ordine della 2D', ANIMALI.anatre.ms < ANIMALI.capre.ms && ANIMALI.capre.ms < ANIMALI.porcile.ms)
   controlla('i tartufi non superano il tetto d\'attesa in catena', catenaMs('tartufi') <= TETTO_ATTESA_MS, String(catenaMs('tartufi')))
   controlla('il conto dei tempi vede il mangime nuovo', msDelProdotto('tartufi') === ANIMALI.porcile.ms + lavoroDelMangime('zuppa', 2))
@@ -97,9 +97,9 @@ const IDS = ['beverone', 'zuppa', 'zuppa_orto', 'pastura']
     const p = PROVVISORI[t], A = ANIMALI[t]
     uguale(`${t}: pezzo e bestie sono quelli di dati/cortile.js`, JSON.stringify([PEZZI[t].liv, PEZZI[t].prezzo, A.posti, A.prezzoBestia, A.rincaroBestia, A.ms]), JSON.stringify([p.liv, p.prezzo, p.posti, p.prezzoBestia, p.rincaroBestia, p.ms]))
   }
-  stessaLista('i livelli 19–22 sono in coda, uno per cosa', [EDIFICI.pentolone.liv, PEZZI.anatre.liv, PEZZI.porcile.liv, PEZZI.capre.liv], [19, 20, 21, 22])
-  uguale('la scaletta di prima non si è mossa: il 18 resta il sushi bar', [EDIFICI.sushi_bar.liv, sogliaDi(18)].join(), '18,2970')
-  uguale('l\'ultimo livello è il 22', ULTIMO, 22)
+  stessaLista('i livelli sono quelli della 2D: pentolone 23, stagno delle anatre 24, porcile 28, capre 40', [EDIFICI.pentolone.liv, PEZZI.anatre.liv, PEZZI.porcile.liv, PEZZI.capre.liv], [23, 24, 28, 40])
+  stessaLista('e i prezzi pure: 150, 240, 260, 280', [EDIFICI.pentolone.prezzo, PEZZI.anatre.prezzo, PEZZI.porcile.prezzo, PEZZI.capre.prezzo], [150, 240, 260, 280])
+  uguale('l\'ultimo livello è il 70, come in 2D', ULTIMO, 70)
 }
 
 /* ══════════ 4. la zucca e la patata hanno un'uscita (C23) ══════════ */
@@ -116,8 +116,8 @@ const IDS = ['beverone', 'zuppa', 'zuppa_orto', 'pastura']
 /* ══════════ 5. il motore: pentolone, anatre, maiali, capre ══════════ */
 {
   const { f, t } = mondo({ monete: 99999 })
-  uguale('il pentolone è chiuso fino al 19', f.compraEdificio('pentolone').motivo, 'non-sbloccato')
-  alLivello(f, 19)
+  uguale('il pentolone è chiuso fino al 23', f.compraEdificio('pentolone').motivo, 'non-sbloccato')
+  alLivello(f, PEZZI.capre.liv)                    // il livello più alto del cortile: tutte le ricette del pentolone sono aperte (zuppa al 27, pastura al 39)
   controlla('si compra e si mette', f.compraEdificio('pentolone').ok && f.s.posseduti.pentolone)
   f.s.merci.zucca = 2; f.s.merci.patata = 2; f.s.merci.cavolfiore = 2; f.s.merci.pomodoro = 2; f.s.merci.carota = 2
   controlla('due zucche fanno un pastone (N → 1)', f.avviaRicettaIn('pentolone', 'zuppa').ok && f.s.merci.zucca === 0)
@@ -127,12 +127,12 @@ const IDS = ['beverone', 'zuppa', 'zuppa_orto', 'pastura']
   controlla('patate e cavolfiore fanno le verdure lesse; carote e cavolfiore la verdura fresca', f.avviaRicettaIn('pentolone', 'beverone').ok)
   t.ora += RICETTE.beverone.ms; f.tick()
   controlla('…la verdura fresca vuole un altro cavolfiore', f.avviaRicettaIn('pentolone', 'pastura').ok === true || f.avviaRicettaIn('pentolone', 'pastura').motivo === 'mancano-ingredienti' || f.avviaRicettaIn('pentolone', 'pastura').motivo === 'forno-pieno')
-  t.ora += 60000; f.tick(); f.ritiraDa('pentolone')
+  t.ora += 600000; f.tick(); f.ritiraDa('pentolone')
   uguale('in dispensa: due pastoni (da due strade), le verdure lesse', [f.s.prodotti.zuppa, f.s.prodotti.beverone].join(), '2,1')
   controlla('il pastone non si chiede al banco né si baratta: è mangime', RICETTE.zuppa.mangime === true)
 
   // le anatre
-  alLivello(f, 20); controlla('lo stagno delle anatre si compra e si mette', f.compraPezzo('anatre').ok && metti(f, 'anatre').ok)
+  controlla('lo stagno delle anatre si compra e si mette', f.compraPezzo('anatre').ok && metti(f, 'anatre').ok)
   const an = f.s.cose.find(c => c.tipo === 'anatre')
   uguale('una anatra nel prezzo, con fame', JSON.stringify(an.bestie), JSON.stringify([{ fine: null }]))
   uguale('con le verdure lesse nutre l\'anatra', f.provaCuraBestie(an.id).azione, 'nutri')
@@ -142,7 +142,7 @@ const IDS = ['beverone', 'zuppa', 'zuppa_orto', 'pastura']
   controlla('la sesta anatra è l\'ultima', (() => { let ok = true; for (let k = 1; k < ANIMALI.anatre.posti; k++) ok = ok && f.compraBestia(an.id).ok; return ok && f.compraBestia(an.id).motivo === 'pieno' })())
 
   // i maiali
-  alLivello(f, 21); controlla('il porcile si compra e si mette', f.compraPezzo('porcile').ok && metti(f, 'porcile').ok)
+  controlla('il porcile si compra e si mette', f.compraPezzo('porcile').ok && metti(f, 'porcile').ok)
   const po = f.s.cose.find(c => c.tipo === 'porcile')
   const pastoni = f.s.prodotti.zuppa; delete f.s.prodotti.zuppa
   uguale('senza pastone il porcile dice cosa serve', JSON.stringify(f.provaCuraBestie(po.id)), JSON.stringify({ azione: null, motivo: 'manca-mangime', servono: 2, mangia: ['zuppa'] }))
@@ -153,7 +153,7 @@ const IDS = ['beverone', 'zuppa', 'zuppa_orto', 'pastura']
   controlla('i tartufi si possono chiedere ai vicini ma non sono mangime', !RICETTE.tartufi && PRODOTTI_ANIMALI.tartufi.dove === 'porcile')
 
   // le capre
-  alLivello(f, 22); controlla('il recinto delle capre si compra e si mette', f.compraPezzo('capre').ok && metti(f, 'capre').ok)
+  controlla('il recinto delle capre si compra e si mette', f.compraPezzo('capre').ok && metti(f, 'capre').ok)
   const ca = f.s.cose.find(c => c.tipo === 'capre')
   f.s.merci.carota = 2; f.s.merci.cavolfiore = 1
   f.avviaRicettaIn('pentolone', 'pastura'); t.ora += RICETTE.pastura.ms; f.tick(); f.ritiraDa('pentolone')

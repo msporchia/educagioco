@@ -19,7 +19,7 @@ import { dettoDi } from '../../src/giochi/fattoria3d/scena3d/detti.js'
 import { controlla, uguale, nota, riassunto } from '../aiuto/verifica.mjs'
 
 const adesso = { t: 1_000_000 }
-function mondo({ monete = 1e7, stato = null, liv = 18 } = {}) {
+function mondo({ monete = 1e7, stato = null, liv = 70 } = {}) {
   const b = { monete }
   const s = stato || statoIniziale()
   s.esperienza = Math.max(s.esperienza || 0, sogliaDi(liv))
@@ -187,18 +187,18 @@ const celleDi = l => { const o = []; for (let y = 0; y < l.d; y++) for (let x = 
 {
   const molo = PEZZI.molo, girato = PEZZI.molo_v, port = PEZZI.porticciolo
   controlla('il molo è 3×1, il molo girato 1×3: calpestabili, sull\'acqua, decorazioni', molo.w === 3 && molo.d === 1 && girato.w === 1 && girato.d === 3 && molo.calpestabile && girato.calpestabile && molo.suAcqua && girato.suAcqua && !molo.produttivo)
-  controlla('prezzi e livelli: molo 🪙12 al 4, porticciolo 🪙90 al 9', molo.prezzo === 12 && molo.liv === 4 && girato.prezzo === 12 && port.prezzo === 90 && port.liv === 9)
+  controlla('prezzi e livelli: molo 🪙12 e porticciolo 🪙90, tutti e due al 57 (dove la 2D ha la peschiera)', molo.prezzo === 12 && molo.liv === 57 && girato.prezzo === 12 && girato.liv === 57 && port.prezzo === 90 && port.liv === 57)
   controlla('il porticciolo è uno solo, sull\'acqua, alla riva', port.unico && port.suAcqua && port.riva && !port.calpestabile)
-  controlla('friggitoria e sushi bar sono edifici (3×3) alla fine della scaletta', EDIFICI.friggitoria.liv === 17 && EDIFICI.sushi_bar.liv === 18 && EDIFICI.friggitoria.w === 3 && EDIFICI.sushi_bar.d === 3)
+  controlla('friggitoria e sushi bar sono edifici (3×3) dove li mette la 2D (58 e 62)', EDIFICI.friggitoria.liv === 58 && EDIFICI.sushi_bar.liv === 62 && EDIFICI.friggitoria.w === 3 && EDIFICI.sushi_bar.d === 3)
   controlla('le macchine del pesce hanno le ricette della 2D', Object.keys(MACCHINE.friggitoria.ricette).join() === 'patatine,fritto,arancini' && Object.keys(MACCHINE.sushi_bar.ricette).join() === 'sushi,maki')
   uguale('sushi: riso 1 e pesce 1', JSON.stringify(RICETTE.sushi.ing), JSON.stringify({ riso: 1, pesce: 1 }))
   uguale('pesce fritto: pesce 1 e farina 1', JSON.stringify(RICETTE.fritto.ing), JSON.stringify({ pesce: 1, farina: 1 }))
-  uguale('il sushi bar apre al 18 e il sushi si fa dal 18', [livelloDelPezzo('sushi_bar'), livelloDellaRicetta('sushi')].join(), '18,18')
-  uguale('il pesce è uno dei prodotti e sta al livello del molo', [!!PRODOTTI_ANIMALI.pesce, livelloDelPezzo(PESCI.pesce.dove)].join(), 'true,4')
+  uguale('il sushi bar apre al 62 e il sushi si fa dal 62', [livelloDelPezzo('sushi_bar'), livelloDellaRicetta('sushi')].join(), '62,62')
+  uguale('il pesce è uno dei prodotti e sta al livello del molo (57)', [!!PRODOTTI_ANIMALI.pesce, livelloDelPezzo(PESCI.pesce.dove)].join(), 'true,57')
   uguale('un lancio rende 1 (molo, acqua dolce)', resaDellaPesca({}), 1)
   uguale('col porticciolo 2', resaDellaPesca({ porticciolo: true }), 2)
   uguale('nel mare (col porticciolo) 3', resaDellaPesca({ porticciolo: true, mare: true }), 3)
-  controlla('l\'attesa è fra 10 e 18 secondi', PESCA.ms >= 10000 && PESCA.ms <= 18000)
+  controlla('l\'attesa è fra 3 e 10 minuti, e il ciclo del banco quindici (come la peschiera)', PESCA.ms >= 180000 && PESCA.ms <= 600000 && PESCA.ms + PESCA.riposoMs === 900000)
 }
 
 /* ══════════ 5. la pesca: lago a est, mare a ovest ══════════ */
@@ -260,7 +260,7 @@ const celleDi = l => { const o = []; for (let y = 0; y < l.d; y++) for (let x = 
   controlla('friggitoria e sushi bar si comprano e si mettono', f.s.posseduti.sushi_bar && f.s.posseduti.friggitoria)
   controlla('il sushi: riso + pesce', f.avviaRicetta('sushi').ok && f.s.merci.riso === 3 && f.s.prodotti.pesce === 2)
   controlla('il pesce fritto: pesce + farina', f.avviaRicetta('fritto').ok && f.s.prodotti.pesce === 1 && !f.s.prodotti.farina)
-  adesso.t += 60_000; f.tick(); f.ritiraDa('friggitoria')
+  adesso.t += 3_600_000; f.tick(); f.ritiraDa('friggitoria')
   uguale('senza pesce non si frigge: mancano gli ingredienti', (() => { f.s.prodotti.pesce = 0; f.s.prodotti.farina = 1; return f.avviaRicetta('fritto').motivo })(), 'mancano-ingredienti')
   controlla('il sushi è pronto da ritirare', f.prontiIn('sushi_bar') === 1 && f.ritiraDa('sushi_bar').ok && f.s.prodotti.sushi === 1)
   // lo stagno costruito è un posto di pesca anche lui, con un molo accanto

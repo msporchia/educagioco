@@ -7,6 +7,7 @@ import { comeAvere, cosaFaccioAdesso, FORME } from '../../src/giochi/fattoria3d/
 import { Fattoria3d } from '../../src/giochi/fattoria3d/motore/fattoria3d.js'
 import { sogliaDi } from '../../src/giochi/fattoria3d/dati/livelli.js'
 import { RICETTE } from '../../src/giochi/fattoria3d/dati/ricette.js'
+import { COLTURE } from '../../src/giochi/fattoria3d/dati/colture.js'
 import { controlla, uguale as ug, riassunto } from '../aiuto/verifica.mjs'
 const uguale = (n, a, b) => ug(n, JSON.stringify(a), JSON.stringify(b))
 
@@ -16,7 +17,7 @@ uguale('un campo vuoto: tocca Semina', guidaDelPrimoGiro(q()).dove, BERSAGLI.sem
 controlla('la manina c\'è: chi ha 4 anni non legge', guidaDelPrimoGiro(q()).mano === true)
 uguale('il foglio dei semi: indica il grano', guidaDelPrimoGiro(q({ semi: true })).dove, BERSAGLI.seme)
 controlla('armato per seminare: dice di toccare il campo, niente anello', guidaDelPrimoGiro(q({ modo: 'semina' })).dove === null && /campo/.test(guidaDelPrimoGiro(q({ modo: 'semina' })).testo))
-uguale('semina fatta, il grano cresce: aspetta', [guidaDelPrimoGiro(q({ vuoti: 0, crescono: 1, secondi: 12 })).dove, /12 secondi/.test(guidaDelPrimoGiro(q({ vuoti: 0, crescono: 1, secondi: 12 })).testo)], [null, true])
+uguale('semina fatta, il grano cresce: aspetta', [guidaDelPrimoGiro(q({ vuoti: 0, crescono: 1, secondi: 12 })).dove, /12 s/.test(guidaDelPrimoGiro(q({ vuoti: 0, crescono: 1, secondi: 12 })).testo)], [null, true])
 uguale('un campo pronto: tocca Raccogli', guidaDelPrimoGiro(q({ vuoti: 0, maturi: 1 })).dove, BERSAGLI.raccogli)
 controlla('un campo pronto ha la precedenza su uno vuoto', guidaDelPrimoGiro(q({ vuoti: 1, maturi: 1 })).dove === BERSAGLI.raccogli)
 controlla('raccogli armato: tocca il campo', guidaDelPrimoGiro(q({ vuoti: 0, maturi: 1, modo: 'raccogli' })).dove === null)
@@ -50,8 +51,8 @@ const AZIONI = r => r.azione ? r.azione.che : null
   uguale('…e dice cosa', c.azione.seme, 'grano')
   f.semina(campo(f).id, 'grano')
   c = cosaFaccioAdesso(f)
-  controlla('seminato: si aspetta, senza tasto', c.azione === null && /secondi/.test(c.testo), c.testo)
-  t.ora += 25_000
+  controlla('seminato: si aspetta, senza tasto, e dice quanto in minuti', c.azione === null && /min/.test(c.testo), c.testo)
+  t.ora += COLTURE.grano.ms + 1
   c = cosaFaccioAdesso(f)
   uguale('maturo: raccogli', AZIONI(c), 'raccogli')
   for (let k = 0; k < 4; k++) f.raccogliTessera(campo(f).id, k)
@@ -60,8 +61,8 @@ const AZIONI = r => r.azione ? r.azione.che : null
 }
 
 {
-  /* la catena: il pane vuole la farina, la farina vuole il grano (liv 7: panificio, mulino, campo) */
-  const { f, t } = mondo({ liv: 8 })
+  /* la catena: il pane vuole la farina, la farina vuole il grano (liv 17: panificio, mulino, campo) */
+  const { f, t } = mondo({ liv: 17 })
   let c = comeAvere(f, 'pane')
   uguale('senza panificio: costruiscilo', [AZIONI(c), c.azione.tipo], ['costruisci', 'panificio'])
   f.s.posseduti.panificio = true; f.s.cose.push({ id: f.s.prossimoId++, tipo: 'panificio', i: 5, j: 5 })
@@ -84,8 +85,8 @@ const AZIONI = r => r.azione ? r.azione.che : null
   const c = comeAvere(f, 'grano')
   uguale('il grano si semina', AZIONI(c), 'semina')
   f.semina(campo(f).id, 'grano')
-  controlla('…poi si aspetta e dice quanto', comeAvere(f, 'grano').azione === null && /secondi/.test(comeAvere(f, 'grano').testo))
-  t.ora += 30_000
+  controlla('…poi si aspetta e dice quanto', comeAvere(f, 'grano').azione === null && /min/.test(comeAvere(f, 'grano').testo))
+  t.ora += COLTURE.grano.ms + 1
   uguale('…poi si raccoglie', AZIONI(comeAvere(f, 'grano')), 'raccogli')
 }
 

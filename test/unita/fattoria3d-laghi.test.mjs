@@ -17,7 +17,7 @@ const j0 = -12 + 4 * B0, j1 = -12 + 4 * B1 - 1
 const acq = (i, j) => eLagoDolce(i, j)
 const storica = (i, j) => eStorico({ ...lotto(Math.floor((i + 14) / 4), Math.floor((j + 12) / 4)) })
 
-function mondo({ stato, liv = 18 } = {}) {
+function mondo({ stato, liv = 70 } = {}) {
   const s = stato || statoIniziale(), b = { monete: 1e7 }
   s.esperienza = Math.max(s.esperienza || 0, sogliaDi(liv))
   const f = new Fattoria3d({ stato: s, borsa: { quante: () => b.monete, paga: n => { b.monete -= n; return true } }, ora: () => 1_000_000, rnd: () => 0.5 })

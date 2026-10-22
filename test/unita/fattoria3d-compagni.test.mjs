@@ -24,7 +24,7 @@ controlla('i dati dei livelli reggono con i compagni', guastiDeiLivelli().length
 uguale('al livello 1 c\'è già Watson', compagniAl(1).map(c => c.id).join(), 'watson')
 uguale('al 2 si aggiunge Sherlock', compagniAl(2).map(c => c.id).join(), 'watson,sherlock')
 uguale('al 3 anche Irene', compagniAl(3).map(c => c.id).join(), 'watson,sherlock,irene')
-uguale('al 13 sono quattro', compagniAl(13).length, 4)
+uguale('al 19 sono quattro (Pepe arriva dove arriva il gatto nero della 2D)', compagniAl(19).length, 4)
 uguale('«soloQuesto»: al 3 arriva solo Irene', compagniAl(3, true).map(c => c.id).join(), 'irene')
 uguale('roba(2) li raccoglie', roba(2).compagni.map(c => c.id).join(), 'sherlock')
 controlla('un livello coi soli compagni non è «vuoto» per il conto di roba', roba(3).compagni.length === 1 && roba(3).compagni[0].id === 'irene' && !vuoto({ pezzi: [], edifici: [], colture: [], ricette: [] }) === false)
@@ -139,7 +139,7 @@ controlla('l\'aspetto del contadino è uno dei due', ['contadino', 'contadina'].
     f.s.esperienza = esp
     return f
   }
-  const f = mondoVero(sogliaDi(13))
+  const f = mondoVero(sogliaDi(19))
   const scena = new THREE.Scene()
   const eroe = { x: 0.5, z: 5.5, az: null, percorso: [], get fermo() { return !this.az && !this.percorso.length } }
   const fx = { volo() {}, scoppietta() {}, parla() {} }
@@ -283,7 +283,7 @@ const generatore = seme => () => (seme = (seme * 16807) % 2147483647) / 21474836
     f.s.esperienza = esp
     return f
   }
-  const f = mondoVero(sogliaDi(13))
+  const f = mondoVero(sogliaDi(19))
   const eroe = { x: 0.5, z: 5.5, az: null, percorso: [], dir: 0, get fermo() { return !this.az && !this.percorso.length }, faccia(v) { this.dir = Math.atan2(v.x - this.x, v.z - this.z); this.guardato = v },
     avvia(tipo, dur) { this.az = { tipo, t: 0, dur } } }
   const dette = [], versi = []

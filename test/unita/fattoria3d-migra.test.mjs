@@ -16,10 +16,11 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { fattoriaTipo, LIVELLI_TIPO, LIVELLO_MAX } from '../../src/giochi/fattoria/motore/tipo.js'
 import { Fattoria } from '../../src/giochi/fattoria/motore/fattoria.js'
-import { statoDa2D, statoDaCaricare, pezzoPer, merceDel, livelloPerProporzione, LOTTI_PER_PIAZZOLA } from '../../src/giochi/fattoria3d/motore/migra.js'
+import { statoDa2D, statoDaCaricare, pezzoPer, merceDel, livelloPerProporzione } from '../../src/giochi/fattoria3d/motore/migra.js'
 import { normalizza, statoIniziale, VERSIONE_STATO } from '../../src/giochi/fattoria3d/motore/stato.js'
 import { Fattoria3d } from '../../src/giochi/fattoria3d/motore/fattoria3d.js'
 import { livelloPer, ULTIMO } from '../../src/giochi/fattoria3d/dati/livelli.js'
+import { lottiPerPiazzole } from '../../src/giochi/fattoria3d/dati/regole.js'
 import { PEZZI, EDIFICI } from '../../src/giochi/fattoria3d/dati/catalogo.js'
 import { COLTURE } from '../../src/giochi/fattoria3d/dati/colture.js'
 import { RICETTE } from '../../src/giochi/fattoria3d/dati/ricette.js'
@@ -34,10 +35,10 @@ const T0 = 1770000000000
 {
   uguale('il livello 2D 1 è il 3D 1', livelloPerProporzione(1), 1)
   uguale('il 2D 0 o negativo vale 1', livelloPerProporzione(-5), 1)
-  uguale('l\'ultimo 2D è l\'ultimo 3D', livelloPerProporzione(999), ULTIMO)
-  let prima = 0, sale = true
-  for (let l = 1; l <= 99; l++) { const x = livelloPerProporzione(l); if (x < prima || x < 1 || x > ULTIMO) sale = false; prima = x }
-  controlla('la mappatura non scende mai e resta fra 1 e l\'ultimo livello 3D', sale)
+  uguale('oltre l\'ultimo resta lo stesso numero (D2: la 3D ha i livelli della 2D)', livelloPerProporzione(999), 999)
+  let uno = true
+  for (let l = 1; l <= 99; l++) if (livelloPerProporzione(l) !== l) uno = false
+  controlla('la mappatura è 1 a 1 (D2): il livello 2D è il livello 3D', uno)
 }
 
 // ── la tabella cosa → cosa ──
@@ -63,7 +64,7 @@ const T0 = 1770000000000
   uguale('pane → prodotti', merceDel('pane').dove, 'prodotti')
   uguale('uova → prodotti', merceDel('uova').dove, 'prodotti')
   uguale('il miele non esiste in 3D', merceDel('miele'), null)
-  uguale('il mangime del cane non esiste in 3D', merceDel('mangime'), null)
+  uguale('il mangime del cane ora c\'è in 3D (il mulino lo fa), nei prodotti', JSON.stringify(merceDel('mangime')), JSON.stringify({ dove: 'prodotti', id: 'mangime' }))
   uguale('un id strano non esiste', merceDel(42), null)
 }
 
@@ -83,8 +84,8 @@ for (const liv of [1, 2, ...LIVELLI_TIPO, LIVELLO_MAX]) {
   // il livello
   const l3 = livelloPer(s.esperienza)
   const atteso = livelloPerProporzione(f2.livello)
-  controlla(`${di}: il livello 3D è almeno quello in proporzione (${atteso}), ha ${l3}`, l3 >= atteso)
-  controlla(`${di}: il livello 3D non supera l'ultimo (${ULTIMO}) di più di quanto la 2D abbia aperto`, l3 <= ULTIMO)
+  controlla(`${di}: il livello 3D è almeno quello della 2D (${atteso}), ha ${l3}`, l3 >= atteso)
+  controlla(`${di}: il livello 3D è proprio quello della 2D (${atteso}) se niente costringe a salire`, l3 === atteso || l3 > atteso, `${l3}`)
   // ogni cosa 2D con equivalente è nel magazzino, niente in mappa oltre al campo di partenza
   const totale = {}
   for (const c of f2.cose) totale[c.id] = (totale[c.id] || 0) + 1
@@ -112,7 +113,7 @@ for (const liv of [1, 2, ...LIVELLI_TIPO, LIVELLO_MAX]) {
   // la terra: lotti veri, prato o bosco, in più di quelli di partenza
   const nuovi = Object.keys(s.lotti).filter(id => !LOTTI_INIZIALI[id])
   const extra = Math.max(0, Object.keys(f2.piazzole).length - 9)
-  uguale(`${di}: i lotti nuovi sono ${LOTTI_PER_PIAZZOLA} per piazzola in più (o il resto è da regalare)`, nuovi.length + (s.daRegalare.terra || 0), extra * LOTTI_PER_PIAZZOLA)
+  uguale(`${di}: i lotti nuovi sono tutta la terra che aveva la 2D, col regalo: ${lottiPerPiazzole(extra)} (o il resto è da regalare)`, nuovi.length + (s.daRegalare.terra || 0), lottiPerPiazzole(extra))
   for (const id of nuovi) { const l = lottoPerId(id); controlla(`${di}: il lotto ${id} è terra`, !!l && ['prato', 'bosco'].includes(biomaDi(l.a, l.b))) }
   // nessuna moneta: lo stato non ha campi di monete, e la 3D che lo apre ha la borsa com'era
   controlla(`${di}: nessun campo di monete nello stato`, !JSON.stringify(s).match(/monet|soldi|coins/i))
@@ -153,7 +154,7 @@ nota('livelli 2D → 3D:', forme.join(' '))
   controlla('un campo di carote maturo dà una carota', s && s.merci.carota >= 1)
   uguale('un campo di grano appena seminato non dà niente', s.merci.grano, 0)
   uguale('il pastone non finito rende tre mais', s.merci.mais, 3)
-  uguale('il mangime finito (il cane di casa) è da regalare', s.daRegalare['scorta:mangime'], 1)
+  uguale('il mangime finito (il cane di casa) arriva nei prodotti, non è da regalare', [s.prodotti.mangime, s.daRegalare['scorta:mangime']].join(), '1,')
   uguale('due orti: uno in mappa e uno nel magazzino', s.magazzino.campo, 1)
 }
 

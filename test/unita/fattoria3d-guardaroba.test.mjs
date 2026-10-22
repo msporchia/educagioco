@@ -66,16 +66,16 @@ uguale('niente / un numero / null non lanciano', [personaDi(undefined), personaD
 /* ══════════ 4. gli sblocchi ══════════ */
 {
   const cow = opzione('cappello', 'cowboy')
-  controlla('il cowboy è bloccato al 5 e libero al 6', !sbloccato(cow, 5) && sbloccato(cow, 6))
+  controlla('il cowboy è bloccato un livello prima e libero al suo (21: il 6 della scala vecchia, sulla scala della 2D)', cow.liv === 21 && !sbloccato(cow, cow.liv - 1) && sbloccato(cow, cow.liv))
   controlla('un pezzo senza livello è sempre libero', sbloccato(opzione('cappello', 'paglia'), 1))
   const a = abitoDiSerie('contadino')
-  uguale('vestire un pezzo bloccato non cambia l\'abito', vesti(a, 'cappello', 'cowboy', 5), a)
-  uguale('…sbloccato sì', vesti(a, 'cappello', 'cowboy', 6).cappello, 'cowboy')
+  uguale('vestire un pezzo bloccato non cambia l\'abito', vesti(a, 'cappello', 'cowboy', cow.liv - 1), a)
+  uguale('…sbloccato sì', vesti(a, 'cappello', 'cowboy', cow.liv).cappello, 'cowboy')
   uguale('un pezzo di lei a lui non si veste', vesti(a, 'cappello', 'fascia', 99), a)
   uguale('un id sconosciuto non cambia niente', vesti(a, 'cappello', 'zzz', 99), a)
-  uguale('arrivano proprio al 6: il cowboy', abitiAl(6, true).map(p => p.id).join(), 'cowboy')
-  controlla('fino al 12 sono tutti (e al 1 nessuno)', abitiAl(1).length === 0 && abitiAl(12).length === abitiAl(99).length && abitiAl(99).length >= 5)
-  uguale('roba(6).abiti li raccoglie', roba(6).abiti.map(p => p.id).join(), 'cowboy')
+  uguale('arrivano proprio al suo livello: il cowboy', abitiAl(cow.liv, true).map(p => p.id).join(), 'cowboy')
+  controlla('fino al 46 sono tutti (e al 1 nessuno)', abitiAl(1).length === 0 && abitiAl(46).length === abitiAl(99).length && abitiAl(99).length >= 5)
+  uguale('roba(21).abiti li raccoglie', roba(cow.liv).abiti.map(p => p.id).join(), 'cowboy')
   controlla('i pezzi del guardaroba non rendono «pieno» un livello vuoto', vuoto({ pezzi: [], edifici: [], colture: [], ricette: [], abiti: [{ id: 'x' }] }))
 }
 
