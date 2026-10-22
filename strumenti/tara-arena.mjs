@@ -13,7 +13,7 @@
 //   npm run tara:arena -- --misura --d 1 --furbizia 0   # contro un nemico fisso (la furbizia forzata)
 //   npm run tara:arena -- --misura --ricco 1.3   # nemico con il 30% di monete e di forza in più
 //   npm run tara:arena -- --misura --draghi   # e anche chi fa solo draghi, senza miniera
-//   npm run tara:arena -- --infinita    # i giocatori finti nella battaglia infinita, un terreno alla volta (non tara niente)
+//   npm run tara:arena -- --infinita    # i giocatori finti nella battaglia infinita, un livello e un terreno alla volta (--livello: uno solo; non tara niente)
 import { writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
@@ -34,7 +34,7 @@ const opz = (nome, def) => { const i = argv.indexOf(nome); return i >= 0 ? Numbe
    Facile non ha tetto: il nemico lo regola solo il bambino. Il nemico non diventa più ricco ma più bravo (`nemicoDi`). */
 export const LIVELLI = {
   facile:    { da: 0.95, a: 0.6,  bravo: null },
-  medio:     { da: 0.9,  a: 0.35, bravo: { dalla: 6, da: 0.85, a: 0.5 } },
+  medio:     { da: 0.8,  a: 0.3,  bravo: { dalla: 2, da: 0.8,  a: 0.4 } },
   difficile: { da: 0.7,  a: 0.15, bravo: { dalla: 3, da: 0.7,  a: 0.2 } },
 }
 const VOLTE = opz('--volte', 120)
@@ -123,13 +123,14 @@ if (argv.includes('--misura')) {
    finisce fra le «aperte»: un nemico che non si batte e non batte. Non scrive niente. */
 if (argv.includes('--infinita')) {
   const LIMITE = 1800
-  for (const terreno of TERRENI) {
-    const sfida = sfidaInfinita(terreno)
+  const livelli = argv.includes('--livello') ? [argv[argv.indexOf('--livello') + 1]] : Object.keys(LIVELLI)
+  for (const livello of livelli) for (const terreno of TERRENI) {
+    const sfida = sfidaInfinita(terreno, livello)
     const riga = (await Promise.all(Object.entries(PILOTI).map(async ([n, p]) => {
       const r = await misura({ volte: 30, sfida, pilota: p, limite: LIMITE })
       return `${n} ${Math.round(r.vinte / 30 * 100)}% ${r.secondi}s${r.pari ? ` (${r.pari} aperte)` : ''}`
     }))).join(' · ')
-    console.log(`${terreno.padEnd(7)} ${riga}`)
+    console.log(`${livello.padEnd(9)} ${terreno.padEnd(7)} ${riga}`)
   }
   process.exit(0)
 }

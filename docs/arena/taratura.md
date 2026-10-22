@@ -32,7 +32,7 @@ giocatore, poi solo il pensare e la furbizia). Le promesse sono in `LIVELLI` di 
 | livello | il bambino (90% di conti giusti) vince | chi non sbaglia mai vince al massimo |
 |---|---|---|
 | facile | 95% → 60% | niente tetto |
-| medio | 90% → 35% | 85% → 50% dalla tappa 6 |
+| medio | 80% → 30% | 80% → 40% dalla tappa 2 |
 | difficile | 70% → 15% | 70% → 20% dalla tappa 3 |
 
 Vale la più dura; anche il rush (+10 punti) ha il suo tetto (se non si riesce a rispettarlo, il log dice
@@ -83,3 +83,12 @@ tutti i tetti, rush compreso.
   costa il castello, costa una caserma ferma.
 - **Provato: il castello al livello 3 per prima cosa.** Quel bambino perdeva contro nemici deboli che il
   pigro batteva sempre (l'utente: «ho 70 monete, non sto facendo niente e sto stravincendo»).
+
+## Il Medio più duro (22 ottobre)
+
+L'utente: «il bambino lamenta che è ancora troppo semplice e vince troppo spesso senza problemi». Le promesse del Medio
+erano 90% → 35% per il bambino e il tetto di chi non sbaglia solo dalla tappa 6: le prime cinque tappe restavano
+vinte quasi sempre (`misura` 80-99%). Adesso 80% → 30% e il tetto dalla tappa 2 (80% → 40%); misurato: `misura`
+80% alla tappa 2, 57% alla 5, 38% all'ultima. Il nemico è lo stesso (stesse regole, stessa IA): salgono solo `d` e
+con lui monete, forza e furbizia. Il rush nelle prime tappe resta sopra il tetto (70-90%): la palude non si ferma
+senza snaturare il bambino. Se anche così è facile, il passo dopo è il Difficile come livello di base.
