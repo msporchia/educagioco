@@ -10,9 +10,9 @@ Legenda in [README.md](README.md). 2D: [../../fattoria/come-si-tocca.md](../../f
 |---|---|---|---|---|
 | I1 | il `?` della barra | `guida="fattoria"` in `src/guide/contenuti.js` (tocchi, terra, animali, livelli, catena) | ✅ `guida="fattoria3d"` ([../guida.md](../guida.md)); da leggere con un bambino | – |
 | I2 | il primo giro | guida del primo giro ([../../core/guida.md](../../core/guida.md)) | ✅ `motore/guida.js`: 🌱 → grano → aspetta → ✂️ → 🏗, con la manina; non provato con un bambino piccolo ([../guida.md](../guida.md)) | – |
-| I3 | «🌳 Come si fa» (l'albero delle ricette: `alberoDi`, `dati/albero.js`) | si apre da silo, mercato, fogli | ❌ non fatto: `dati/albero.js` e `usi.js` non esistono nella 3D, l'albero sta solo nella 2D | P1 |
+| I3 | «🌳 Come si fa» (l'albero delle ricette: `alberoDi`, `dati/albero.js`) | si apre da silo, mercato, fogli | ✅ `dati/albero.js` (`alberoDi`, strada sola per riga, scorta spartita, il mangime delle bestie come ramo) e `viste/Albero.vue`; si apre dall'inventario (🌳 sotto la merce scelta) e dal passo sotto un «non si può» di macchina, banco e mongolfiera, sulla merce che manca ([../guida.md](../guida.md)). Non c'è «tutto l'albero»; manca la riga «o nel pollaio» delle strade alternative | – |
 | I4 | il consiglio: ogni «non si può» porta con sé il passo e il tasto per farlo (`motore/consiglio.js`, risale la catena) | sì, 4 forme di azione | ✅ `motore/consiglio.js` (`comeAvere` risale la catena, `cosaFaccioAdesso`): 🧭 «E adesso?» e il passo col tasto sotto i «mancano» di macchina, banco e mongolfiera; gli altri «no» dicono ancora solo il perché | – |
-| I5 | «a cosa serve una roba» | silo + `dati/usi.js` | ✅ inventario, una frase | – |
+| I5 | «a cosa serve una roba» | silo + `dati/usi.js` | ✅ inventario, una frase (`dati/usi.js`: ricette, bestie, banco, mongolfiera) | – |
 | I6 | inviti, non rimproveri (🧺 sui campi pronti, 💭 sulle bestie) | sì | ✅ cartelli «N pronti!» e fame, badge sulle macchine | – |
 | I7 | aiuti a monete 💡 | non ce l'ha (è dei quiz) | non ce l'ha | n/a |
 
@@ -46,7 +46,7 @@ Legenda in [README.md](README.md). 2D: [../../fattoria/come-si-tocca.md](../../f
 |---|---|---|---|---|
 | I22 | alzare il livello (`#fattoria=40`) | sì | ✅ `#fattoria3d=N` (alza, non abbassa mai; `Gioco.vue`, `cheatDellIndirizzo`) | – |
 | I23 | una fattoria già giocata di quel livello (`#fattoria-tipo=30`, `motore/tipo.js`) | sì: la fattoria sta in piedi a ogni livello (test) | ✅ `#fattoria3d-tipo=N` (1–99, `motore/tipo.js`, test `unita/fattoria3d-tipo`); butta quella del bambino attivo nel cestino | – |
-| I24 | `#stagione=` | sì | ❌ | P1 |
+| I24 | `#stagione=` | sì | ✅ `#stagione=natale|halloween` (`dati/stagioni3d.js`, [../stagioni.md](../stagioni.md)) | – |
 | I25 | `#fattoria3d&tela=niente` | – | ✅ prova il messaggio senza WebGL | – |
 
 Il cheat 3D va nella pagina `#admin` accanto agli altri e in [../../core/comandi.md](../../core/comandi.md).

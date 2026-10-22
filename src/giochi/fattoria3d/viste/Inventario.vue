@@ -7,7 +7,7 @@ import { SCHEDE, tipiDi, dettaglioDi } from './inventario-puro.js'
 import '../stile-inventario.css'
 
 const props = defineProps({ schede: { type: Object, required: true } })      // schedeDellInventario()
-defineEmits(['chiudi'])
+defineEmits(['chiudi', 'albero'])
 const scheda = ref('raccolti')
 const scelta = ref('')
 const voci = computed(() => props.schede[scheda.value] || [])
@@ -37,6 +37,9 @@ function cambia(id) { scheda.value = id; scelta.value = '' }
         </button>
       </div>
     </div>
-    <p class="f3-inv-riga" data-f3="inventario-riga"><template v-if="scelta"><b>{{ nomeScelta }}.</b> {{ dettaglioDi(scelta) }}</template><template v-else>Tocca una cosa per sapere a cosa serve.</template></p>
+    <div class="f3-inv-riga" data-f3="inventario-riga">
+      <p><template v-if="scelta"><b>{{ nomeScelta }}.</b> {{ dettaglioDi(scelta) }}</template><template v-else>Tocca una cosa per sapere a cosa serve.</template></p>
+      <button v-if="scelta" type="button" class="f3-inv-albero" data-f3="inventario-albero" :data-albero-di="scelta" @click="$emit('albero', scelta)">🌳 Come si fa</button>
+    </div>
   </div>
 </template>

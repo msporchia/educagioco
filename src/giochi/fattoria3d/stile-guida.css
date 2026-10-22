@@ -7,3 +7,5 @@
 .f3-consiglio-testo { font-size: 15px; font-weight: 800; line-height: 1.35; }
 .f3-consiglio-fai { min-height: 44px; border: 0; border-radius: 22px; padding: 0 18px; background: #5fae3a; color: #fff; font: 800 15px "Emoji Gioco", system-ui, sans-serif; touch-action: manipulation; }
 .f3-consiglio-fai:active { background: #4a8f2c; }
+.f3-consiglio-albero { background: #fff3cf; color: #4a2c12; border: 2px solid #e0a020; }
+.f3-consiglio-albero:active { background: #ffe39a; }

@@ -2,8 +2,8 @@
 // serve» una merce e se è entrata roba nuova. Vedi docs/fattoria3d/file.md («Il foglio dell'inventario»).
 import { COLTURE } from '../dati/colture.js'
 import { RICETTE, merceDi } from '../dati/ricette.js'
-import { PRODOTTI_ANIMALI, LANA, CORTILE } from '../dati/animali.js'
-import { PECORE } from '../dati/regole.js'
+import { PRODOTTI_ANIMALI, LANA } from '../dati/animali.js'
+import { serveA, bestieChe } from '../dati/usi.js'
 import { PESCI } from '../dati/pesca.js'
 import { EDIFICI } from '../dati/catalogo.js'
 import { livelloDellaColtura } from '../dati/livelli.js'
@@ -30,11 +30,8 @@ export function schedeDellInventario(s, livello) {
 /** Quante merci diverse hai (n > 0) in una scheda. */
 export const tipiDi = voci => voci.filter(v => v.n > 0).length
 
-/** Le ricette (nomi) che usano la merce come ingrediente, nell'ordine dei dati. */
-export const serveA = k => Object.values(RICETTE).filter(r => r.ing && r.ing[k]).map(r => r.nome)
-
-/** Le bestie che mangiano quel mangime (becchime: galline; foraggio: pecore e mucche), nell'ordine del cortile. */
-export const bestieChe = k => Object.entries(CORTILE).filter(([t, a]) => (t === 'recinto' ? PECORE.mangia : a.mangia).includes(k)).map(([, a]) => a.bestie)
+// «serveA» (le ricette che la usano) e «bestieChe» (chi la mangia) stanno in dati/usi.js, con «Come si fa»: si ridicono da qui per chi le importava.
+export { serveA, bestieChe }
 
 /** Il «nome — a cosa serve» di una merce, in una frase per bambini. */
 export function dettaglioDi(k) {
