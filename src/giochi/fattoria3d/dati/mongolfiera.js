@@ -5,8 +5,13 @@ import { RICETTE } from './ricette.js'
 import { PEZZI, EDIFICI } from './catalogo.js'
 import { livelloDi, msDi, premioDelPezzo, tettoDi, MONETE_AL_MINUTO } from './ordini.js'
 import { CIELO_VUOTO_MIN, msDaMinuti } from './parita2d.js'
+import { FILE_GRANDE, LIVELLO_GRANDE, fileAl as fileAl2D } from '../../fattoria/dati/mongolfiera.js'
 
 export const FILE = 3                 // file di casse, una merce per fila (meno, se al livello non ci sono tre merci)
+export const FILE_MAX = FILE_GRANDE   // dal livello 66 (quello della 2D) il pallone cresce: quattro file, non una cosa da comprare (M17)
+export const LIVELLO_QUARTA_FILA = LIVELLO_GRANDE
+/** Quante file ha il carico a questo livello: tre, e quattro dal livello della mongolfiera grande della 2D (66). */
+export const fileAl = livello => fileAl2D(livello)
 export const CASSE_MIN = 2            // casse per fila
 export const CASSE_MAX = 3
 export const PEZZI_MIN = 1            // pezzi per cassa: ogni cassa di una fila ne chiede lo stesso numero
@@ -51,6 +56,7 @@ export const SORPRESE = Object.entries(PEZZI).filter(([, d]) => (d.categoria ===
 export function guastiDellaMongolfiera() {
   const g = []
   if (!(FILE >= 1 && CASSE_MIN >= 1 && CASSE_MAX >= CASSE_MIN)) g.push('le file o le casse non stanno in piedi')
+  if (!(FILE_MAX > FILE && fileAl(LIVELLO_QUARTA_FILA - 1) === FILE && fileAl(LIVELLO_QUARTA_FILA) === FILE_MAX)) g.push('la quarta fila non arriva al livello della 2D')
   if (!(PEZZI_MIN >= 1 && PEZZI_MAX >= PEZZI_MIN && pezziMaxAl(1) >= PEZZI_MIN)) g.push('i pezzi di una cassa non stanno in piedi')
   if (!(RIPOSO_MS > 0 && SALITA_MS > 0 && RIPOSO_MS > 2 * SALITA_MS)) g.push('il viaggio non lascia il tempo di salire e scendere')
   if (!(BONUS_FILA > 0 && BONUS_TUTTO > 0)) g.push('i bonus non esistono')
