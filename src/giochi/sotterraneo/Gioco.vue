@@ -20,7 +20,7 @@ import Domanda from '../../quiz/Domanda.vue'
 
 import { CAMPAGNA, QUANTE_TAPPE, stelleDella, L_ABISSO, INDICE_ABISSO } from './dati/campagna.js'
 import { inPaesaggio } from './dati/paesaggi.js'
-import { COSE, PERGAMENE_MASSIME } from './dati/cose.js'
+import { COSE, PERGAMENE_MASSIME, COPRICAPI, chiaveDelPezzo } from './dati/cose.js'
 import { CURIOSITA_DI } from './dati/curiosita.js'
 import { EROI, DI_PARTENZA, eroeDi } from './dati/eroi.js'
 import { TASCHE, VITA_PER_PIANO, POZIONI_MASSIME } from './dati/mondo.js'
@@ -35,7 +35,7 @@ import { notiziaDi, potenzaDi, livelloDellaZona, coloreDi, coloreDellaFascia, zo
 import { dungeonDellAvventura, tappaDellaSosta, dopoLaDiscesa, CHIAVI_DEI_DUNGEON } from './motore/rigenera.js'
 import { terraDi, mondoDellaTerra, conMondo, passaTerra, laPorta } from './motore/terre.js'
 import { forzaDi, forzaDelCorredo } from './motore/forza.js'
-import { pescaLeggendario } from './motore/bottino.js'
+import { pescaLeggendario, pescaAbilita } from './motore/bottino.js'
 import { quotaDi } from './dati/livelli.js'
 import { LEGGENDARI } from './dati/pezzi.js'
 import { prendi as prendiMissione, consegna as consegnaMissione, fatte as missioniFatte, presePer, promemoria,
@@ -930,7 +930,8 @@ async function scontroSopra({ inc, stato, terra, verso }) {
   // salito dal portale le forze sono quelle della sosta; se no quelle che il mondo tiene (stato.forze), o piene
   const dato = qui.value.sosta, portale = !!dato && viaDi(dato) === VIA_PORTALE, f = portale ? forze.value : null
   const c = mod.apriLoScontro(stato, inc, { eroe: eroeQui(), roba: roba.value, crescita: crescita.value, verso,
-                                           forze: f ? { vita: f.vita, energia: f.energia } : null, missioni: [], conti: qui.value.conti || {} })
+                                           forze: f ? { vita: f.vita, energia: f.energia } : null, missioni: [], conti: qui.value.conti || {},
+                                           copricapi: true })   // il mondo di sopra è solo del 3D: i copricapi cadono anche lassù (docs/sotterraneo/elmo.md)
   chiudiBottega(); chiudiLaBarra(); diarioSopra(false)
   domanda.value = null; fine.value = null; pensiero.value = null; detto.value = null
   sopra.value = { stato, terra, portale, mod }
@@ -1140,6 +1141,24 @@ function corredoDaProva(c) {
   if (sola) c.mano = sola
 }
 
+// `&corredo=leggendario` (con qualunque altro cheat, anche `sotterraneo=branco`): ogni casella col leggendario che l'eroe porta, il
+// copricapo raro (non ce n'è uno leggendario): l'eroe più pesante da disegnare, per misurarlo (docs/sotterraneo/prestazioni-3d.md)
+function corredoLeggendarioDaProva(c) {
+  if (new URLSearchParams(location.hash.slice(1)).get('corredo') !== 'leggendario') return
+  const L = c.livelloDelBottino || 1
+  const leggendario = dove => {
+    const id = Object.keys(LEGGENDARI).find(id => COSE[LEGGENDARI[id].base].dove === dove && c.porta(LEGGENDARI[id].base))
+    return id ? chiaveDelPezzo(LEGGENDARI[id].base, L, 'leggendario', [], id) : null
+  }
+  c.mano = leggendario('mano')
+  c.mancina = c.mano && COSE[c.mano].mani === 2 ? null : leggendario('mancina')
+  c.corpo = leggendario('corpo')
+  c.collo = leggendario('collo')
+  c.dito = c.dito2 = leggendario('dito')
+  if (in3d) { const t = COPRICAPI.find(k => !COSE[k].deiGrossi && c.porta(k)); c.testa = t ? chiaveDelPezzo(t, L, 'raro', pescaAbilita(t, 2)) : null }
+  c.sistemaIlCorredo()
+}
+
 // `#torcia=accesa` (piena, con una di scorta), `sgoccioli` (l'ultima stanza dell'ultima) o `spenta`: per guardare la luce coi suoi
 // tre stati senza camminare (docs/sotterraneo/luce.md)
 function torciaDaProva(c) {
@@ -1343,6 +1362,7 @@ function avvia(i, { prova = false } = {}) {
   corsa.value.pergameneTrovabili = dopoLaMissione(COSE['pergamena-portale'].dopo, missioni.value)   // si trova solo dopo la missione dell'incantatrice
   borsellino = borsa(CHIAVE)
   corredoDaProva(corsa.value)
+  corredoLeggendarioDaProva(corsa.value)
   torciaDaProva(corsa.value)
   pianoDaProva(corsa.value)
   stanzaDaProva(corsa.value)

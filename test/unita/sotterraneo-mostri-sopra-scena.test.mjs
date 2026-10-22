@@ -122,6 +122,12 @@ const s0 = popolaMondo({ mondo: m, eroe: 'cavaliere', giro: 0 })
   const inc = incontro(s, { x: q.fx - 1, y: q.fy }, { tocco: q.i })
   const corsa = apriLoScontro(s, inc, forte)
   const foto = fotoDelloScontro(corsa)
+  uguale('i copricapi nel bottino sono spenti di difetto (il banco)', corsa.copricapi, false)
+  {
+    const s3 = popolaMondo({ mondo: m, eroe: 'cavaliere', giro: 0 })
+    const i3 = incontro(s3, { x: q.fx - 1, y: q.fy }, { tocco: q.i })
+    uguale('e il gioco 3D li accende', apriLoScontro(s3, i3, { ...forte, copricapi: true }).copricapi, true)
+  }
   uguale('la foto all\'inizio: tutti quelli in campo', foto.campo.length, inc.campo.length)
   // un colpo solo: si risponde finché il primo cade, poi la ✕
   for (let i = 0; i < 40 && corsa.foglio && corsa.foglio.che === 'scontro' && !corsa.livello.robe.some(r => r.che === 'mostro' && r.morto); i++) corsa.rispondi(true)

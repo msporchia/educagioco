@@ -4,7 +4,7 @@ Decisione dell'utente (22 ottobre 2026): *«sì all'elmo tutto suo»*. L'eroe ha
 per chi veste il ferro, un cappello per chi veste la stoffa, la cuffia per tutti. Il 3D li disegna coi modelli dei copricapi che già
 c'erano (`eroi3d/copricapi.js`, prima solo con `#testa=<id>`). Il codice: `dati/cose.js` (le basi, `CASELLE`, `COPRICAPI`),
 `dati/pezzi.js` (la crescita col livello, le abilità), `motore/corredo.js`, `motore/bottino.js` (`copricapoDalTrovato`),
-`motore/corsa.js` (`trovato`), `dati/mercanti.js` e `motore/bottega.js` (le linguette), `scena3d/anteprime3d-pura.js`
+`motore/corsa.js` (`trovato`), `dati/mercanti.js` (le linguette e le battute: il fabbro nomina gli elmi, l'incantatrice i cappelli) e `motore/bottega.js`, `scena3d/anteprime3d-pura.js`
 (`COPRICAPI_3D`, `copricapoDi`), `viste/Addosso.vue`. La roba in generale: [roba.md](roba.md); i gioielli: [gioielli.md](gioielli.md).
 
 ## La casella e chi porta cosa
@@ -51,8 +51,8 @@ dappertutto.
 - **Il bottino** (`copricapoDalTrovato`, `QUOTA_DEL_COPRICAPO` = 1/7): un pezzo trovato su sette (forzieri, mostri, grossi, signori)
   diventa un copricapo **dello stesso livello e della stessa rarità, con altrettante abilità**. Un posto su sette addosso, e i pezzi che
   cadono restano quanti erano. Il tiro e la scelta nascono dal seme, dal piano e dal posto (`Corsa.trovato`, sali loro), come
-  l'elisir: accenderlo non sposta niente del resto. Un leggendario e un pezzo col nome restano quello che sono (non ci sono copricapi
-  col nome). La roba della storia e delle missioni non cambia. Misurato sui forzieri dell'abisso: 88 su 574, otto su dieci della
+  l'elisir: accenderlo non sposta niente del resto. Un leggendario e un pezzo col nome restano quello che sono (il copricapo col nome è un
+  pezzo in più del suo grosso, più sotto). La roba della storia e delle missioni non cambia. Misurato sui forzieri dell'abisso: 88 su 574, otto su dieci della
   famiglia del cavaliere.
 - **Le botteghe**: il fabbro ha la linguetta **«Elmi»** (🪖, ferro e cuffia; la vede chi veste il ferro) e l'incantatrice
   **«Cappelli»** (🎩, stoffa), con `copricapi: true` sulla linguetta (`schedeDi(…, { copricapi })`, `Bottega.prepara`). Le regole di
@@ -60,7 +60,15 @@ dappertutto.
   `BASI_DEL_BANCO` (quelle di sempre e i copricapi in coda): le altre linguette restano le stesse, accese o spente (un test).
 - **Il livello dei pezzi** ([livello-dei-pezzi.md](livello-dei-pezzi.md)) vale come per tutto: un copricapo di livello N si mette
   dal livello N, e un salvataggio che ce l'ha già addosso lo tiene.
-- **Il mondo di sopra** (gli scontri del mondo aperto, `motore/aperta.js`) non ne fa cadere: le sue corse hanno i copricapi spenti.
+- **Il copricapo col nome**: l'**Elmo alato di Piumanera** (`COPRICAPI_DEI_GROSSI` in `dati/pezzi.js`, `copricapo` in `GROSSI.piumanera`;
+  raro, 🛡️ + 🌀 + ❤️ sulla cuffia, che non ha famiglia: lo porta chiunque come gli altri pezzi dei grossi). Cade **in più** del suo
+  medaglione solo dove i copricapi sono accesi (il 3D, `Corsa.copricapi`), senza tiri: il bottino di sempre non si sposta. Non ha una
+  figura dei fogli (nessun foglio ha un elmo): `modello: 'elmo-alato'` di `COPRICAPI_3D` lo disegna e `copricapoDi` lo rispetta; nel 2D
+  l'emoji. Non è un leggendario (la lista di `LEGGENDARI` e i suoi conti non si sono toccati). Un solo grosso, i sei nuovi sono
+  solo del 3D: gli altri non ne hanno, e chi vuole il secondo lo aggiunge a `COPRICAPI_DEI_GROSSI` con la riga `copricapo` del grosso.
+- **Il mondo di sopra** (gli scontri sul prato, `apriLoScontro`) li fa cadere quando il gioco 3D passa `copricapi: true` (`Gioco.vue`); il
+  banco (`banco.js`, `banco-mondo.js`) non lo passa, e i suoi numeri restano quelli di prima (lo stesso patto delle discese: un pezzo su
+  sette diventa un copricapo, quanti ne cadono non cambia). Per terra lassù (`stato.perTerra`) un copricapo è una cosa come un'altra.
 
 ## I salvataggi
 
@@ -77,7 +85,7 @@ caselle (un id sparito vale null) e la `v` della roba resta 1, come per la colla
   stato peggio). Il 2D non ne fa né cadere né vendere.
 - **Non hanno sprite**: nel 2D, nello zaino e per terra, si vede l'emoji (🪖 elmi e cuffia, 🎩 cappuccio e cappello, 👑 cerchietto);
   `guastiDelleCose` non chiede la figura ai pezzi da testa. Nel 3D la casella, la bottega e il pannello hanno l'anteprima, e per terra
-  una cosa senza sprite si vede con la sua emoji sospesa (`scena3d/cose.js`, vale anche per la pergamena).
+  una cosa senza sprite si vede con la sua emoji sospesa (`scena3d/cose.js`).
 - Nella riga del pezzo: «Elmo» per il ferro, «Copricapo» per gli altri (`tipoDi` in `viste/pezzo.js`).
 
 ## In 3D
@@ -94,10 +102,8 @@ caselle (un id sparito vale null) e la `v` della roba resta 1, come per la colla
 
 ## Cosa resta
 
-- Uno sprite per il 2D (oggi l'emoji), e un copricapo leggendario col nome (la lista dei leggendari non si è toccata, per non
-  spostare quelli che cadono).
-- I copricapi nel mondo di sopra (gli scontri del mondo aperto e le cose per terra lassù).
-- La battuta del fabbro parla ancora di «lame, scudi e corazze».
+- Uno sprite per il 2D (oggi l'emoji): nessun foglio dipinto ha un elmo o un cappello (`bottino-e-arredo` lo dice), e un disegno in codice
+  dei sei modelli, a quattro rarità, è un lavoro a sé: per ora restano 🪖 🎩 👑.
 
 Nei test: `unita/sotterraneo-elmo` (la casella e il catalogo, i numeri a frazione, addosso e riposto, i salvataggi di prima, il
 bottino acceso e spento sui forzieri dell'abisso, le linguette, le chiavi 3D), `integrazione/sotterraneo-elmo` (col dito: le sette

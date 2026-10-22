@@ -14,6 +14,7 @@
     "scudo-leone":      { "da": [105, 19], "cella": [13, 15] },
     "scudo-teschio":    { "da": [51, 52],  "cella": [13, 17] },
 
+    "pergamena-portale":{ "da": [196, 73], "cella": [11, 13] },
     "libro":            { "da": [16, 73],  "cella": [13, 14] },
     "sfera-cristallo":  { "da": [16, 93],  "cella": [12, 14] },
     "clessidra":        { "da": [16, 114], "cella": [11, 15] },

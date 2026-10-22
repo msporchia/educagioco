@@ -151,7 +151,7 @@ export function creaCose({ figure, aloni, colonne, etichette, camera, apre = nul
       aloni.metti(x, z, 0.36, CALDO, 0.3)
       if (AURA[c.rarita]) aloni.metti(x, z, 0.75, AURA[c.rarita], 0.5 + 0.15 * Math.sin(t * 3 + x))
       if (c.rarita === 'leggendario') colonne.metti(x, z, 0.32, 5, AURA.leggendario, 0.45 + 0.15 * Math.sin(t * 2.5))
-      // una cosa senza sprite (i copricapi, la pergamena: docs/sotterraneo/elmo.md) si vede con la sua emoji, sospesa sul chiarore; il
+      // una cosa senza sprite (i copricapi: docs/sotterraneo/elmo.md) si vede con la sua emoji, sospesa sul chiarore; il
       // dito la prende lo stesso (dito.js: la più vicina sullo schermo)
       if (!nome && c.em) sopra(x, 0.3 + y, z, `c|${c.em}`, () => `<span class="em sot3d-cosa">${esc(c.em)}</span>`, { cosa: r.cosa })
     } else if (r.che === 'porta') {

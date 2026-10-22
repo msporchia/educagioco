@@ -117,8 +117,16 @@ export const DEI_GROSSI = {
   'scudo-di-falcenera': { base: 'scudo-teschio', nome: 'Scudo di Falcenera', abilita: ['dif', 'vita', 'rigenera'] },
 }
 
+// Il copricapo col nome (docs/sotterraneo/elmo.md): un pezzo da testa di un grosso, che cade in più del suo pezzo solo dove i copricapi
+// sono accesi (`copricapo` in dati/grossi.js). Nessuna figura dei fogli: `modello` è quello di eroi3d/copricapi.js che lo disegna, e nel 2D
+// resta l'emoji. La base è la cuffia, senza famiglia: lo porta chiunque, come gli altri pezzi dei grossi
+export const COPRICAPI_DEI_GROSSI = {
+  'elmo-di-piumanera': { base: 'cuffia', nome: 'Elmo alato di Piumanera', modello: 'elmo-alato', abilita: ['dif', 'schivata', 'vita'] },
+}
+
 // i pezzi col nome proprio (leggendari e dei capi) nella stessa chiave: `u` nella chiave composta
 export const UNICI = {
   ...Object.fromEntries(Object.entries(LEGGENDARI).map(([k, v]) => [k, { ...v, rarita: 'leggendario' }])),
   ...Object.fromEntries(Object.entries(DEI_GROSSI).map(([k, v]) => [k, { ...v, rarita: 'raro' }])),
+  ...Object.fromEntries(Object.entries(COPRICAPI_DEI_GROSSI).map(([k, v]) => [k, { ...v, rarita: 'raro' }])),
 }

@@ -3,10 +3,12 @@
    accesi, e spenti non cambia niente), le linguette del fabbro e dell'incantatrice, le chiavi delle anteprime 3D.
    `node test/esegui.mjs sotterraneo-elmo --niente-build` */
 import { COSE, CASELLE, CASELLE_DEL_TIPO, COPRICAPI, IN_VENDITA, A_SORTE, PEZZI_DI_BASE, chiaveDelPezzo, guastiDelleCose } from '../../src/giochi/sotterraneo/dati/cose.js'
-import { DIF_OGNI_LIVELLI, DIF_TESTA_OGNI_LIVELLI, ABILITA_DEI_PEZZI } from '../../src/giochi/sotterraneo/dati/pezzi.js'
+import { DIF_OGNI_LIVELLI, DIF_TESTA_OGNI_LIVELLI, ABILITA_DEI_PEZZI, UNICI } from '../../src/giochi/sotterraneo/dati/pezzi.js'
 import { EROI, eroeDi, portaLa } from '../../src/giochi/sotterraneo/dati/eroi.js'
 import { Corredo, ROBA_VUOTA, rileggiRoba, schedaConLaRoba } from '../../src/giochi/sotterraneo/motore/corredo.js'
-import { copricapoDalTrovato, QUOTA_DEL_COPRICAPO } from '../../src/giochi/sotterraneo/motore/bottino.js'
+import { copricapoDalTrovato, QUOTA_DEL_COPRICAPO, pezzoDelGrosso } from '../../src/giochi/sotterraneo/motore/bottino.js'
+import { GROSSI } from '../../src/giochi/sotterraneo/dati/grossi.js'
+import { tappaDelMondo } from '../../src/giochi/sotterraneo/motore/rigenera.js'
 import { Corsa } from '../../src/giochi/sotterraneo/motore/corsa.js'
 import { Bottega } from '../../src/giochi/sotterraneo/motore/bottega.js'
 import { crescitaA } from '../../src/giochi/sotterraneo/motore/crescita.js'
@@ -114,6 +116,32 @@ uguale('un elmo magico si chiama come gli altri pezzi', COSE[chiaveDelPezzo('elm
   const spenta = new Corsa(L_ABISSO, { seme: 4, rnd: seminato(4) })
   uguale('una corsa li ha spenti di difetto', spenta.copricapi, false)
   uguale('e spenti `trovato` non tocca niente', spenta.trovato('spada@3', 1, 1), 'spada@3')
+}
+
+/* ══════════ 5b. il copricapo col nome di un grosso ══════════ */
+{
+  const g = GROSSI.piumanera, u = UNICI[g.copricapo]
+  controlla('Piumanera ha il suo copricapo col nome: da testa, senza famiglia, col modello', !!u && COSE[u.base].dove === 'testa' && !COSE[u.base].famiglia && !!u.modello)
+  controlla('il modello c\'è fra quelli dei copricapi', CATALOGO_TESTA.some(d => d.id === u.modello))
+  const k = pezzoDelGrosso(g.copricapo, 12)
+  controlla('la chiave si rilegge, col nome, senza sprite', COSE[k].unico === g.copricapo && COSE[k].nome === u.nome && !COSE[k].sprite, k)
+  uguale('il 3D lo disegna col suo modello', copricapoDi(k).id, u.modello)
+  controlla('lo porta chiunque', EROI.every(e => portaLa(e, COSE[k])))
+  uguale('il catalogo resta senza guasti', guastiDelleCose().join(' | '), '')
+  const cade = cop => {
+    const t = tappaDelMondo('corvaia', { eroe: 'mago' })
+    const c = new Corsa(t, { seme: 41, rnd: seminato(41), copricapi: cop })
+    c.piano = t.piani - 1
+    c.nuovoPiano()
+    const m = c.livello.robe.find(r => r.che === 'mostro' && r.grosso)
+    const prima = c.livello.robe.length
+    c.cade(m)
+    return c.livello.robe.slice(prima).filter(r => r.che === 'cosa').map(r => r.cosa)
+  }
+  const spenti = cade(false), accesi = cade(true)
+  controlla('spenti, Piumanera lascia solo il suo medaglione', !spenti.some(x => COSE[x].unico === g.copricapo) && spenti.some(x => COSE[x].unico === g.pezzo), spenti.join())
+  controlla('accesi, in più il suo copricapo', accesi.some(x => COSE[x].unico === g.copricapo) && accesi.some(x => COSE[x].unico === g.pezzo), accesi.join())
+  uguale('e il resto è lo stesso', accesi.filter(x => COSE[x].unico !== g.copricapo).join(), spenti.join())
 }
 
 /* ══════════ 6. le botteghe ══════════ */

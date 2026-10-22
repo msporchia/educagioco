@@ -9,6 +9,7 @@
 // del chiarore che gli sta intorno, per distinguere due grossi della stessa specie (Re Ossuto e Carbonchio).
 // `difese`: le sue resistenze, debolezze e immunità (dati/elementi.js) al posto di quelle della specie: Carbonchio, il re di
 // brace, non brucia; senza `difese` ha quelle di `tipo`.
+// `copricapo`: un secondo pezzo col nome, da testa, che cade solo dove i copricapi sono accesi (dati/pezzi.js, COPRICAPI_DEI_GROSSI).
 // `ruolo: 'superboss'`: tre mosse invece di due (dati/mosse.js, docs/sotterraneo/mosse.md): l'ultimo della storia e il più forte dei sei nuovi.
 import { MOSTRI } from './mostri.js'
 import { guastiDelleDifese } from './elementi.js'
@@ -43,7 +44,7 @@ export const GROSSI = {
                   pezzo: 'scudo-di-barbamuschio', dice: 'Un golem di pietra coperto di muschio: quando cammina, il prato trema.' },
   piumanera: { nome: 'Piumanera', genere: 'f', tipo: 'troll', figura: 'grifone', ossa: 1.1, att: 1, tinta: '#8c7bd6',
                difese: { resiste: ['gelo'], teme: ['fulmine'], immune: ['stordisce'] },
-               pezzo: 'medaglione-di-piumanera', dice: 'Un grifone con le penne nere come la notte, e un becco che spacca i sassi.' },
+               pezzo: 'medaglione-di-piumanera', copricapo: 'elmo-di-piumanera', dice: 'Un grifone con le penne nere come la notte, e un becco che spacca i sassi.' },
   sibilla: { nome: 'Sibilla', genere: 'f', tipo: 'gigante', figura: 'serpente', ossa: 1.1, att: 1, tinta: '#9ad14a',
              difese: { resiste: ['veleno'], teme: ['gelo'], immune: ['avvelena'] },
              pezzo: 'giubba-di-sibilla', dice: 'Un serpente lungo come il ponte del guado, che sibila nel fango.' },

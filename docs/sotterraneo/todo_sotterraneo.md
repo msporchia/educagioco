@@ -29,8 +29,6 @@ rimasti aperti. Quando una voce si chiude si toglie da qui (la storia sta in `gi
   habitat ([mondo-aperto-mostri.md](mondo-aperto-mostri.md)).
 - **La pergamena del portale** ([da-fare.md](da-fare.md)): il modello 3D c'è (`poc/roba-3d/pozioni.js`); il resto è fermo, ognuno per
   una ragione (22 ottobre):
-  - *lo sprite 2D*: nel foglio `scudi.png` ci sono pergamene non ritagliate, ma lo sprite si dichiara in `dati/cose.js`, che era in
-    mano allo slot dell'elmo; si fa dopo, con una riga nel foglietto e `atlante.py`;
   - *la casella nella barra*: non c'è (si apre dallo zaino). Sei caselle invece di cinque scendono da ~42 a ~34 px a 390 di larghezza
     (~31 a 360), e la barra vuole caselle tutte uguali ([barra.md](barra.md)); la torcia ne è già uscita perché «non così utile». Da
     decidere con Marco: la sesta casella, o una che cede il posto (💎 apre lo stesso zaino della bisaccia);
@@ -131,7 +129,7 @@ fuori») e i branchi a 14 celle (`292a98f5`); il villaggio tondo (24×20); la sc
 
 | Voce | Chi | Stato |
 |---|---|---|
-| Un elmo vero nello slot testa: fatto il 22/10, la casella `testa` e sei copricapi, solo nel 3D ([elmo.md](elmo.md)); restano lo sprite per il 2D, un copricapo leggendario, i copricapi nel mondo di sopra | Mostri | fatto, da guardare col dito |
+| Un elmo vero nello slot testa: fatto il 22/10, la casella `testa`, sei copricapi e l'Elmo alato di Piumanera, solo nel 3D, anche negli scontri sul prato ([elmo.md](elmo.md)); resta lo sprite per il 2D dei copricapi (nessun foglio ha un elmo: oggi l'emoji; serve un disegno in codice) | Mostri | fatto, da guardare col dito |
 | Costi in chiamate: scontro sul prato ~231, mondo con due branchi ~250 (soglia del test 260) | Mostri | tenere d'occhio |
 | Peso e fluidità sul telefono (nessuna misura fatta) | Mostri | da guardare col dito |
 | Prove del browser complete (`npm run test:browser`) e `test:misure` non lanciate dopo il 3D | Mostri | da fare prima del prossimo giro grande |

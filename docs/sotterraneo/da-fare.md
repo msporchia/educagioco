@@ -13,8 +13,7 @@ Fatta senza ritarare (l'utente: «fallo e basta»):
   curiosità, solo dopo il quaderno) e l'effetto sulle risalite: una
   pergamena è una spesa e una cura gratis sopra a metà discesa, che il banco
   e i giocatori tipo non sanno usare.
-- **Lo sprite**: si vede la sua emoji 📜; nel 3D per terra c'è solo il
-  chiarore.
+- **Lo sprite** (22 ottobre): un rotolo col sigillo, ritagliato da `scudi.png` (`pergamena-portale` nel suo foglietto).
 - **La casella della barra** come la pozione: per ora si apre dallo zaino.
 - **Il mondo nuovo**: una sola che vende (l'incantatrice del villaggio).
   Le altre città potranno avere un suo banco dopo la missione; e

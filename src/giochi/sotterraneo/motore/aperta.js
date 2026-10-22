@@ -476,12 +476,12 @@ const daVerso = (verso, dx, dy) => {
 
 // Apre lo scontro dell'incontro `inc`: una Corsa vera sul palco (motore/palco.js) col branco, l'eroe con la sua roba, la sua crescita e le
 // forze di sopra (`forze`, o quelle dello stato, o piene), e lo scontro già partito: `corsa.foglio` è il foglio di sempre
-// (docs/sotterraneo/scontro.md). `verso`: dove guardava l'eroe nel mondo (l'agguato alle spalle). `missioni`: solo le «sconfiggi N»
-export function apriLoScontro(stato, inc, { eroe = 'cavaliere', roba = null, crescita = null, forze = null, verso = null, missioni = [], conti = {}, rnd = null, seme = null } = {}) {
+// (docs/sotterraneo/scontro.md). `copricapi`: i copricapi nel bottino (docs/sotterraneo/elmo.md), che il gioco 3D accende e il banco no. `verso`: dove guardava l'eroe nel mondo (l'agguato alle spalle). `missioni`: solo le «sconfiggi N»
+export function apriLoScontro(stato, inc, { eroe = 'cavaliere', roba = null, crescita = null, forze = null, verso = null, missioni = [], conti = {}, rnd = null, seme = null, copricapi = false } = {}) {
   const m = stato.mondo, chi = stato.mostri[inc.chi], R = m.regioni[chi.regione]
   const campo = inc.campo.map(i => { const q = stato.mostri[i]; return { ...structuredClone(q.scheda), ossa: q.ossa, sveglio: q.sveglio, mondo: q.i } })
   const s = seme != null ? seme : fnv(stato.base, 'scontro', stato.passi, inc.chi) % 100000
-  const corsa = new Corsa(tappaDelPalco(stato, R, campo), { seme: s, rnd: rnd || seminato(s * 31 + 17), eroe, roba, crescita, ricomparsa: false, botti: false,
+  const corsa = new Corsa(tappaDelPalco(stato, R, campo), { seme: s, rnd: rnd || seminato(s * 31 + 17), eroe, roba, crescita, ricomparsa: false, botti: false, copricapi,
                                                          missioni: (missioni || []).filter(q => q.tipo === 'conta'), conti })
   const f = forze || stato.forze
   if (f) { corsa.vita = Math.max(1, Math.min(corsa.vitaMax, f.vita)); corsa.energia = Math.max(0, Math.min(corsa.energiaMax, f.energia)) }
