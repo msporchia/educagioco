@@ -37,9 +37,8 @@ const RECINTI = { ovile: 'recinto', pollaio: 'pollaio', stalla: 'stalla', porcil
 // Le cose di mappa con un equivalente: il vicino (il carretto 2D è una vista del trattore, D10), il mercato, i decori dello stesso mestiere.
 const ALTRE = {
   orto: 'campo', mercato: 'bancarella', carretto_mercato: 'trattore',
-  fontana: 'fontana', fontana_grande: 'fontana', cantina: 'pozzo', pozzo: 'pozzo', pozzo_coperto: 'pozzo', stagno: 'stagno', laghetto: 'laghetto',
-  ponte: 'ponte', panchina: 'panchina', panchina2: 'panchina', panchina_legno: 'panchina', panchina_bianca: 'panchina', panchina_cuore: 'panchina',
-  tavolo: 'tavolo', tavolino: 'tavolo', spaventapasseri: 'spaventapasseri',
+  fontana: 'fontana', pozzo: 'pozzo', stagno: 'stagno', laghetto: 'laghetto',      // fontana grande, cantina, pozzo coperto, panche e tavolino hanno ora il loro pezzo (DECORO_DA_2D)
+  ponte: 'ponte', panchina: 'panchina', tavolo: 'tavolo', spaventapasseri: 'spaventapasseri',
   pasticceria: 'bottega_pasticceria', osteria: 'bottega_osteria', mensa: 'bottega_mensa', merceria: 'bottega_merceria',      // le botteghe del paese (giro G7): la 3D le ha dello stesso nome
 }
 

@@ -14,7 +14,7 @@
    Il dito è vero (`Input.dispatchTouchEvent`): un `page.click()` non trascina
    e non porta i pointer del tocco (docs/core/il-dito.md).
    `node test/esegui.mjs fattoria3d --niente-build`
-   tempo: 480
+   tempo: 900
    ═══════════════════════════════════════════════════════════════════ */
 import { apriBrowser, apriGioco, azzera, semina, attendi, scatto, scegli, leggiProfilo } from '../aiuto/browser.mjs'
 import { controlla, uguale, stessaLista, nota, riassunto } from '../aiuto/verifica.mjs'
@@ -558,19 +558,21 @@ await apriMenu()
   // le carte di tutte le schede, dai dati: i pezzi, gli edifici unici da costruire e i due strumenti
   let carte = 0
   const posseduti = await page.evaluate(() => ({ ...window.__fattoria3d.motore.s.posseduti }))   // un edificio già comprato non si offre
-  for (const k of Object.keys(CATEGORIE)) {
+  const stagioneOra = await page.evaluate(() => { const st = window.__fattoria3d.mondo.stagione; return st && st.nome || null })
+  const visibili = Object.keys(CATEGORIE).filter(k => k !== 'feste' || stagioneOra === 'natale')          // «Feste» è nascosta senza carte: la fiera si vince e l'albero è di Natale
+  for (const k of visibili) {
     await page.locator(`[data-scheda="${k}"]`).evaluate(e => e.scrollIntoView({ inline: 'center', block: 'nearest' })); await attendi(page, 100)
     await toccaEl(`[data-scheda="${k}"]`); await attendi(page, 150)
     carte += await page.locator('[data-carta]').count()
   }
   // le anteprime 3D: ogni carta che non è uno strumento mostra il suo modello (si aspetta l'evento, non un tempo)
   await page.waitForFunction(() => [...document.querySelectorAll('[data-carta]')].length > 0, null, { timeout: 5000 })
-  for (const k of Object.keys(CATEGORIE)) {
+  for (const k of visibili) {
     await toccaEl(`[data-scheda="${k}"]`)
     await page.waitForFunction(() => [...document.querySelectorAll('[data-carta]')].every(c => /^(strada|gomma)$/.test(c.dataset.carta) || c.querySelector('img[data-anteprima="pronta"]')), null, { timeout: 60000 })
   }
   controlla('ogni carta di pezzo o edificio mostra l\'anteprima 3D, non l\'emoji', await page.locator('[data-carta] img[data-anteprima="pronta"]').count() > 0)
-  uguale('le schede hanno tutti i pezzi e gli edifici dei dati e i due strumenti', carte, Object.keys(PEZZI).length + Object.keys(EDIFICI).filter(t => !posseduti[t]).length + 2)
+  uguale('le schede hanno tutti i pezzi e gli edifici dei dati e i due strumenti', carte, Object.values(PEZZI).filter(d => !d.fiera && (!d.stagione || d.stagione === stagioneOra)).length + Object.keys(EDIFICI).filter(t => !posseduti[t]).length + 2)
   await toccaEl('[data-scheda="animali"]'); await attendi(page, 150)
   controlla('il recinto non è arrivato: carta in grigio col livello', await page.locator('[data-carta="recinto"].bloccata').count() === 1 && /Livello 14/.test(await page.locator('[data-carta="recinto"]').innerText()))
   const schede = await page.evaluate(() => { const c = document.querySelector('.f3-schede'); return [c.scrollWidth, c.clientWidth, document.documentElement.scrollWidth, innerWidth] })

@@ -14,7 +14,7 @@ cosa va su un edificio); il *come* si vede è della 3D. `#stagione=natale|hallow
 | particelle | ~420 fiocchi che cadono | ~70 lucciole arancioni che salgono e brillano |
 | a terra | chiazze di neve sul prato (una cella su 7, fino a 160, scelte dal caso del giorno) | – |
 | sugli edifici | ⭐ o 🔔 sul tetto (la scelta è quella della 2D), lucine rosse e gialle sotto la gronda, un alberello innevato accanto | – |
-| da comprare | – | **Zucca intagliata** 🪙6 e **Due zucche** 🪙10 (decori, `stagione: 'halloween'` in `dati/catalogo.js`) |
+| da comprare | **Albero con le lucine** 🪙24 (scheda «Feste», `stagione: 'natale'`, [decorazioni.md](decorazioni.md)) | **Zucca intagliata** 🪙6 e **Due zucche** 🪙10 (decori, `stagione: 'halloween'` in `dati/catalogo.js`) |
 
 Gli addobbi di Natale sono **effimeri**: non si salvano, non occupano niente (le bestie, i compagni e il contadino ci passano attraverso),
 si rifanno quando la mappa cambia o la telecamera cambia quadrato (6 celle). Le zucche sono pezzi veri: si comprano solo a Halloween

@@ -52,6 +52,7 @@ Resta solo per i salvataggi (gen 0 e 1) e per Villa Dolce: il quadrato 2×2 al c
   calpestabili: il contadino e i compagni attraversano l'acqua sopra di loro (`cellaPasso`, che vince su `blocca`). Un ponte da 3 supera i 2
   dello stagno (un'estremità sulla riva, l'altra sull'acqua accanto alla riva opposta).
 - Toglierlo richiude il passaggio; non si mette altro sul ponte.
+- **Le decorazioni d'acqua** (giro G9, [decorazioni.md](decorazioni.md)) stanno sull'acqua senza fare passaggio: le **ninfee** (`soloAcqua`: tutte le celle d'acqua, sul prato no, motivo `serve-acqua`), le **canne** (`anfibio`: acqua bassa e prato, senza appoggio) e il **mulino ad acqua** (`riva`: tocca l'acqua o ci sta in parte, non solo sull'acqua). Non sono calpestabili e non sono `acqua` (non fanno lago e un ponte non ci passa).
 
 ## Il disegno
 

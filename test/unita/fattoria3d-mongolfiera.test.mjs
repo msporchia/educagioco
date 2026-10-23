@@ -44,7 +44,7 @@ controlla('una merce dichiarata mangime non sale', (() => { RICETTE.pasta.mangim
 controlla('al livello d\'ingresso ci sono almeno due merci, tutte già fattibili', merciDelLivello(LIVELLO_MONGOLFIERA).length >= 2 && merciDelLivello(LIVELLO_MONGOLFIERA).every(k => livelloDi(k) <= LIVELLO_MONGOLFIERA))
 controlla('prima del livello d\'ingresso non c\'è niente da fare in più del livello', merciDelLivello(1).length === 0)
 controlla('i pezzi per cassa crescono col livello e non scendono', pezziMaxAl(1) === PEZZI_MAX - 1 && pezziMaxAl(ULTIMO) === PEZZI_MAX)
-controlla('la sorpresa ha dei decori da regalare, nessuno calpestabile', SORPRESE.length >= 3 && SORPRESE.every(t => PEZZI[t].categoria === 'decori' && !PEZZI[t].calpestabile))
+controlla('la sorpresa ha le otto decorazioni della fiera da regalare (come in 2D), nessuna calpestabile', SORPRESE.length === 8 && SORPRESE.every(t => PEZZI[t].fiera && PEZZI[t].categoria === 'feste' && !PEZZI[t].calpestabile))
 
 /* ══════════ 1b. la quarta fila (M17): dal livello della mongolfiera grande della 2D ══════════ */
 uguale('tre file sotto il livello 66, quattro da lì (come in 2D)', [fileAl(1), fileAl(LIVELLO_QUARTA_FILA - 1), fileAl(LIVELLO_QUARTA_FILA), fileAl(ULTIMO)].join(), [FILE, FILE, FILE_MAX, FILE_MAX].join())
@@ -145,7 +145,7 @@ controlla('un carico a quattro file si rilegge intero', (() => { const f = mondo
   const r2 = riempi(f, ultima.i, ultima.c)
   controlla('l\'ultima cassa: bonus fila, bonus tutto (+50% del totale) e la sorpresa', r2.ok && r2.pieno && r2.parte && r2.bonusTutto === bonusDelTutto(totale) && r2.bonusTutto === Math.round(BONUS_TUTTO * totale) && r2.bonusFila > 0)
   controlla('l\'esperienza sale esattamente di quel che dice', f.s.esperienza === prima + r2.xp)
-  controlla('la sorpresa è un decoro, ora nel magazzino', SORPRESE.includes(r2.sorpresa) && (f.s.magazzino[r2.sorpresa] || 0) === (magazzino[r2.sorpresa] || 0) + 1)
+  controlla('la sorpresa è una decorazione della fiera, ora nel magazzino', SORPRESE.includes(r2.sorpresa) && (f.s.magazzino[r2.sorpresa] || 0) === (magazzino[r2.sorpresa] || 0) + 1)
   const ev = f.prendiEventi()
   controlla('gli eventi: la cassa e la fiera', ev.some(x => x.tipo === 'cassa') && ev.filter(x => x.tipo === 'fiera').length === 1 && ev.find(x => x.tipo === 'fiera').pezzo === r2.sorpresa)
   controlla('le monete non si sono mosse in tutto il giro', b.monete === 500)

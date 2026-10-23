@@ -8,7 +8,7 @@ Quattro cose, tutte dietro un'interfaccia piccola, così i pezzi nuovi di chi la
 | banco | file | cosa fa |
 |---|---|---|
 | **campi** `BancoCampi` | `scena3d/campi-istanze.js` | le piante di **tutti** i campi in una `InstancedMesh` per forma (≤ 17 in tutto, prima 17 a campo). Ogni campo tiene matrici (già nel mondo) e colori in array suoi (`userData.grano.parti[forma].mat/col`, `modelli-colture.js`) e il banco li copia uno dopo l'altro: a ogni campo la sua «fetta» (`fette[forma] = [{ g, da, n }]`) |
-| **pezzi fermi** `BancoStatici` | `scena3d/statici-istanze.js` | aiuole, panchine, pozzi, bancarelle, ponti, passerelle, tavoli, moli, trattore, zucche: una `InstancedMesh` per (geometria, materiale, ombra). Le mesh originali restano nel gruppo **invisibili**: servono al dito (`intersectObjects` non guarda `visible`) e ai test, che cercano i gruppi |
+| **pezzi fermi** `BancoStatici` | `scena3d/statici-istanze.js` | aiuole, panchine, pozzi, bancarelle, ponti, passerelle, tavoli, moli, trattore, zucche, e (giro G9) tutti i fiori e l'arredo fermo (per categoria, [decorazioni.md](decorazioni.md)): una `InstancedMesh` per (geometria, materiale, ombra). Le mesh originali restano nel gruppo **invisibili**: servono al dito (`intersectObjects` non guarda `visible`) e ai test, che cercano i gruppi |
 
 `Pezzi` (`pezzi.js`) li possiede (`this.banco`, `this.statici`), adotta un gruppo in `_creaCosa`, lo lascia in `_togli`, e a fine
 `aggiorna()` chiama `aggiorna(frustum)` di entrambi. Due regole comuni:
