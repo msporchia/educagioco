@@ -120,6 +120,7 @@ export function guastiDelCatalogo() {
       if (q.length !== (Array.isArray(d.alzato) ? lungo : 1) || !q.every(x => x > 0 && x < 0.5)) g.push(`${tipo}: calpestabile senza una quota sensata (alzato)`)
     }
     if (d.acqua && (d.calpestabile || d.suAcqua || d.produttivo)) g.push(`${tipo}: un pezzo d'acqua è solo decorazione e non ci si cammina`)
+    if ((d.soloAcqua || d.anfibio) && !d.suAcqua) g.push(`${tipo}: «soloAcqua» e «anfibio» sono pezzi che stanno anche sull'acqua (suAcqua)`)
     if (d.molo && !(d.calpestabile && d.suAcqua)) g.push(`${tipo}: un molo si cammina e sta sull'acqua`)
     if (d.riva && !d.suAcqua) g.push(`${tipo}: «riva» vuol dire che sta anche sull'acqua`)
     if (d.calpestabile && d.produttivo) g.push(`${tipo}: un pezzo calpestabile è solo decorazione`)

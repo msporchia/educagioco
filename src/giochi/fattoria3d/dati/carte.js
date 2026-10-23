@@ -36,6 +36,7 @@ export function carteDi(categoria, stato) {
   for (const [id, p] of Object.entries(PEZZI)) {
     if (p.categoria !== categoria) continue
     const mag = stato.nelMagazzino(id), liv = livelloDelPezzo(id)
+    if (p.fiera && !mag) continue                                              // la fiera non si compra: si vince dalla mongolfiera, e la carta c'è solo se ce l'hai
     if (p.stagione && p.stagione !== stato.stagione && !mag) continue          // una festa: si offre solo in stagione (ciò che è nel magazzino si rimette sempre)
     carte.push({ id, genere: 'pezzo', nome: p.nome, emoji: p.emoji, disegno: DISEGNI[id] || null,
       etichetta: mag ? '📦 ×' + mag : '🪙 ' + stato.prezzoPezzo(id), liv, bloccata: liv > stato.livello, segnala: false })

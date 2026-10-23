@@ -69,7 +69,7 @@ export function roba(livello) {
   const l = Math.max(1, livello | 0)
   const con = (tabella, chiave) => Object.entries(tabella).map(([id, v]) => ({ id, ...v })).filter(v => chiave(v.id) === l)
   return {
-    pezzi: con(PEZZI, livelloDelPezzo).filter(p => !p.stagione),          // le feste vengono e vanno: non sono «roba» del livello
+    pezzi: con(PEZZI, livelloDelPezzo).filter(p => !p.stagione && !p.fiera),          // le feste vengono e vanno, la fiera si vince: non sono «roba» del livello
     edifici: con(EDIFICI, livelloDelPezzo),
     colture: con(COLTURE, livelloDellaColtura),
     ricette: con(RICETTE, id => livelloDellaRicetta(id)),
