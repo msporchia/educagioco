@@ -88,6 +88,23 @@ mettono dopo gli scatti prima/dopo e il sì di Marco; intanto la prova le confro
 - **Terreno di sopra**: quattro trame del suolo lette per pixel più il rumore e la normal map della roccia. `rilievo`; poi una trama.
 - **Ombra del sole** (2048) sul mondo: ridisegna case e alberi. `ombre`.
 
+## Il tetto di tempo e il lettore (tutte le prove coi modelli veri)
+
+Una scena finiva solo quando arrivavano fotogrammi: se il telefono non ne dava più, o una preparazione non tornava, la prova restava
+ferma senza dirlo (il Note 7 il 23/10 alla scena 50 di 138, «base sole,terreno» del mondo di sopra). Adesso (`veri.js`, `TETTO`,
+`conTetto`): ogni scena ha un tetto (le due fasi a `fine` più 15 s: ~39 s per le scene di «Chi pesa»), il caricamento di un gruppo
+30 s, una scena che si misura da sé (l'ingresso) 150 s, il riferimento del calore la pausa più 45 s. Scaduto, la scena è «non regge:
+tempo scaduto (… oltre N s)», il gruppo si butta e si rifà da capo per la scena dopo, e la prova va avanti; una preparazione che
+arriva dopo il tetto si butta appena arriva. Il tetto non può niente se la pagina intera è ferma (un fotogramma che non torna dalla GPU
+blocca anche i timer): per questo c'è il lettore.
+
+**Il lettore**, in alto a sinistra mentre una prova gira (`Benchmark.vue`): gli fps dell'ultimo mezzo secondo (un requestAnimationFrame
+suo, come `ContaFps.vue`) e i secondi nella scena di adesso, anche nelle pause e nelle attese; lo stesso nel riquadro in basso
+(«scena 50 di 138 · …», «sono 7 s in questa scena · 30 fps»). Se i fotogrammi non arrivano per 5 s scrive «il telefono non risponde»;
+se si ferma tutta la pagina lo scrive il CSS, perché il battito che ogni mezzo secondo rimette la scritta invisibile non arriva più
+(l'opacità la anima il compositore). Nei test: `[data-benchmark-lettore]`, `[data-benchmark-secondi]`, `[data-benchmark-muto]`;
+`unita/benchmark-tetto` (una scena che non finisce, un gruppo che non si carica).
+
 ## Il codice e le prove
 
 `grafica/elementi3d.js`; `grafica/benchmark/veri/elementi-dati.js` (le scene, `LEVE`, `SEMPLICE`, `sceneDegliElementi`,

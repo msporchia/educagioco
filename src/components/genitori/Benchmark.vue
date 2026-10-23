@@ -35,9 +35,39 @@ async function meta() {
 
 onMounted(async () => { ultime.value = await ultimeMisure() })
 
+// Il lettore in diretta mentre gira (docs/core/vecchio-telefono-elementi.md, «Il tetto di tempo e il lettore»): gli fps dell'ultimo mezzo secondo con un
+// requestAnimationFrame suo, come ContaFps.vue, e i secondi nella scena di adesso (anche nelle pause e nelle attese lunghe). Se i fotogrammi
+// non arrivano per 5 s lo dice; se si ferma tutta la pagina, lo dice il CSS (`.muto`, che compare da sé se il battito non lo rinnova)
+const fps = ref(0), secondi = ref(0), muto = ref(false), battito = ref(0)
+let rafVivo = 0, ultimoRaf = 0, finestra = [], aggFps = 0, inizioScena = 0, chiaveScena = '', orologio = 0
+function vivo(t) {
+  if (ultimoRaf && t - ultimoRaf < 1000) finestra.push(t - ultimoRaf)
+  ultimoRaf = t
+  if (t - aggFps > 500) { fps.value = finestra.length ? Math.round(1000 * finestra.length / finestra.reduce((a, b) => a + b, 0)) : 0; finestra = []; aggFps = t; battito.value++ }
+  rafVivo = requestAnimationFrame(vivo)
+}
+function accendiLettore() {
+  spegniLettore()
+  inizioScena = performance.now(); chiaveScena = ''; muto.value = false
+  rafVivo = requestAnimationFrame(vivo)
+  orologio = setInterval(() => {
+    const ora = performance.now()
+    secondi.value = Math.floor((ora - inizioScena) / 1000)
+    muto.value = !!ultimoRaf && ora - ultimoRaf > 5000
+  }, 500)
+}
+function spegniLettore() { cancelAnimationFrame(rafVivo); clearInterval(orologio); rafVivo = 0; ultimoRaf = 0; finestra = []; fps.value = 0 }
+onBeforeUnmount(spegniLettore)
+
 async function avvia(che = modo.value, lunga = false) {
   modo.value = che; stato.value = 'corre'; fermare = false; esito.value = ''; note.value = ''
-  const progresso = (i, n, nome) => { avanza.value = { i, n, nome } }
+  accendiLettore()
+  // il tempo della scena riparte a ogni scena nuova (e fra la pausa e il riferimento), non a ogni secondo del conto alla rovescia
+  const progresso = (i, n, nome) => {
+    const chiave = `${i}|${String(nome).replace(/\d+ s$/, '')}`
+    if (chiave !== chiaveScena) { chiaveScena = chiave; inizioScena = performance.now(); secondi.value = 0 }
+    avanza.value = { i, n, nome }
+  }
   try {
     if (che === 'veri' || che === 'elementi') {
       const { eseguiVeri } = await import('../../grafica/benchmark/veri.js')
@@ -59,7 +89,7 @@ async function avvia(che = modo.value, lunga = false) {
     salvaMisura(che, log.value).then(async () => { ultime.value = await ultimeMisure() }).catch(() => {})
   } catch (e) {
     log.value = ''; esito.value = 'Non è partita: ' + (e && e.message || e); stato.value = 'guasto'
-  }
+  } finally { spegniLettore() }
 }
 function rivedi(che) { modo.value = che; log.value = ultime.value[che].log; note.value = ''; esito.value = ''; stato.value = 'fatto'; sonda() }
 function interrompi() { fermare = true }
@@ -93,6 +123,11 @@ async function copia() {
     <canvas ref="tela" class="tela" :class="{ vista: stato === 'corre' && modo === 'sintetico' }"></canvas>
     <div ref="palco" class="palco" :class="{ vista: stato === 'corre' && modo !== 'sintetico' }" data-benchmark-palco></div>
     <button class="chiudi" type="button" aria-label="chiudi" data-azione="benchmark-chiudi" @click="chiudi">✕</button>
+    <div v-if="stato === 'corre'" class="lettore" data-benchmark-lettore>
+      <span class="pasti" :class="fps >= 50 ? 'ok' : fps >= 28 ? 'medio' : 'male'">{{ fps }} fps · {{ secondi }} s in questa scena</span>
+      <span v-if="muto" class="pasti male" data-benchmark-muto>il telefono non risponde</span>
+      <span v-else :key="battito" class="pasti male muto">il telefono non risponde</span>
+    </div>
     <div v-if="stato === 'pronto'" class="carta">
       <h2>Misura questo telefono</h2>
       <p>Per circa un minuto lo schermo mostra scene di prova (pixel, sfumature, esplosioni, triangoli, ombre) a qualità diverse.
@@ -124,7 +159,8 @@ async function copia() {
     </div>
     <div v-else-if="stato === 'corre'" class="carta piccola" data-benchmark-corre>
       <div class="corre">
-        <span><b>{{ avanza.i + 1 }} / {{ avanza.n }}</b> {{ avanza.nome }}</span>
+        <span><b>scena {{ avanza.i + 1 }} di {{ avanza.n }}</b> · {{ avanza.nome }}<br>
+          <small data-benchmark-secondi>sono {{ secondi }} s in questa scena · {{ fps }} fps<template v-if="muto"> · il telefono non risponde</template></small></span>
         <button type="button" class="bottone mini" data-azione="benchmark-interrompi" @click="interrompi">Interrompi</button>
       </div>
       <div class="barra"><i :style="{ width: (100 * avanza.i / avanza.n) + '%' }"></i></div>
@@ -172,4 +208,11 @@ h3 { margin: 18px 0 6px; font-size: 17px }
 .bottone.chiaro { background: rgba(255,255,255,.14); font-weight: 600 }
 .bottone.mini { padding: 6px 12px; font-size: 13px; background: #b4462f }
 .esito { margin: 8px 0 0; font-size: 14px }
+.lettore { position: fixed; top: calc(env(safe-area-inset-top, 0px) + 6px); left: 6px; z-index: 3; display: flex; flex-direction: column; gap: 4px; pointer-events: none;
+  font: 700 12px/1.3 "Emoji Gioco", ui-monospace, monospace }
+.pasti { align-self: flex-start; background: rgba(10, 14, 28, .85); border: 1px solid rgba(255, 255, 255, .5); border-radius: 999px; padding: 3px 9px; color: #fff }
+.pasti.ok { border-color: #6fe08a } .pasti.medio { border-color: #ffd45a } .pasti.male { border-color: #ff6b6b }
+/* se la pagina si ferma, il battito non la rinnova e dopo 5 s compare da sola (l'opacità la anima il compositore, non il JS) */
+.pasti.muto { opacity: 0; animation: muto 0.2s linear 5s forwards }
+@keyframes muto { to { opacity: 1 } }
 </style>

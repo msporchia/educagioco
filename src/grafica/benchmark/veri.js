@@ -23,6 +23,17 @@ const TEMPI = {
   elementi: { rodaggio: [1500, 3500], misura: [3000, 4500], finestra: 1000, quadri: 12, fine: 12000 },
 }
 const RAFFREDDA = 8000   // ms a schermo nero fra un gruppo e l'altro (le misure complete)
+// I tetti di tempo (docs/core/vecchio-telefono-elementi.md, «Il tetto di tempo e il lettore»): una scena che non finisce (un fotogramma che non torna, una
+// promessa che non si risolve) diventa «non regge: tempo scaduto» e la prova va avanti, col gruppo rifatto da capo per la scena dopo.
+// `scena`: in più delle due fasi al loro tetto (`fine`); `carica`: il codice e la scena di un gruppo; `misura`: le scene che si misurano da sé (l'ingresso)
+export const TETTO = { scena: 15000, carica: 30000, misura: 150000 }
+/** `p` entro `ms`, se no un errore «tempo scaduto (cosa oltre N s)». */
+export function conTetto(p, ms, cosa) {
+  let t = 0
+  const scade = new Promise((_, no) => { t = setTimeout(() => no(new Error(`tempo scaduto (${cosa} oltre ${Math.round(ms / 1000)} s)`)), ms) })
+  return Promise.race([p, scade]).finally(() => clearTimeout(t))
+}
+const scaduto = e => /tempo scaduto/.test(String((e && e.message) || e))
 const RAFFREDDA_BREVE = 4500   // la verifica compatta: i gruppi sono pochi e le scene corte
 
 const discese = () => import('./veri/discese.js')
@@ -261,7 +272,8 @@ async function riferimento({ contenitore, fermo, corto, progresso, k, tot, raffr
  * prove, `solo`: gli inizi degli id da fare (`['sot-', 'zaino']`, e `js` per la prova di CPU), `raffredda`: i ms di pausa fra i gruppi.
  * → { tipo: 'veri', info, js, risultati, gruppi, avvisi, contesto, schermo, dpr, fascia, fermata }
  */
-export async function eseguiVeri({ contenitore, progresso = () => {}, fermo = () => false, corto = false, solo = null, fascia = null, raffredda = null, completa = false }) {
+export async function eseguiVeri({ contenitore, progresso = () => {}, fermo = () => false, corto = false, solo = null, fascia = null, raffredda = null, completa = false,
+                                   tetti = TETTO, tappe: proprie = null }) {
   if (raffredda == null) raffredda = completa || solo ? RAFFREDDA : RAFFREDDA_BREVE
   const tempi = corto ? TEMPI.corto : TEMPI.normale
   const info = infoGpuVeri()
@@ -269,7 +281,7 @@ export async function eseguiVeri({ contenitore, progresso = () => {}, fermo = ()
   // complete (gli elementi no: sono una prova a parte)
   const visti = new Set()
   const nuova = s => !visti.has(s.id) && !!visti.add(s.id)
-  const tappe = (solo ? [...TAPPE, ...TAPPE_VERIFICA, ...TAPPE_ELEMENTI] : completa ? TAPPE : TAPPE_VERIFICA)
+  const tappe = (proprie || (solo ? [...TAPPE, ...TAPPE_VERIFICA, ...TAPPE_ELEMENTI] : completa ? TAPPE : TAPPE_VERIFICA))
     .map(t => ({ ...t, scene: t.scene.filter(s => (!solo || solo.some(p => s.id.startsWith(p) || t.gruppo.startsWith(p))) && (!solo || nuova(s))) })).filter(t => t.scene.length)
   const tot = tappe.reduce((n, t) => n + t.scene.length, 0)
   const risultati = [], gruppi = {}, saltate = new Set(), avvisi = new Map()
@@ -297,11 +309,11 @@ export async function eseguiVeri({ contenitore, progresso = () => {}, fermo = ()
       // a ogni gruppo nuovo: la pausa e il riferimento (a fine prova, diviso il più svelto: di quanto il telefono è rallentato)
       if (nuovo) {
         let r = null
-        try { r = await riferimento({ contenitore, fermo, corto, progresso, k, tot, raffredda }) } catch (e) { r = null }
+        try { r = await conTetto(riferimento({ contenitore, fermo, corto, progresso, k, tot, raffredda }), raffredda + tetti.carica + tetti.scena, 'il riferimento') } catch (e) { r = null }
         // un riferimento più che doppio del più svelto si rifà una volta (subito, senza pausa): un intoppo non deve correggere un gruppo intero;
         // e il primo si rifà sempre: è freddo (shader e trame del riferimento ancora da compilare)
         if (r && r.ms && (!rifs.length || r.ms > 2 * Math.min(...rifs))) {
-          try { const r2 = await riferimento({ contenitore, fermo, corto, progresso, k, tot, raffredda: 0 }); if (r2 && r2.ms && r2.ms < r.ms) r = r2 } catch (e) { /* si tiene il primo */ }
+          try { const r2 = await conTetto(riferimento({ contenitore, fermo, corto, progresso, k, tot, raffredda: 0 }), tetti.carica + tetti.scena, 'il riferimento'); if (r2 && r2.ms && r2.ms < r.ms) r = r2 } catch (e) { /* si tiene il primo */ }
         }
         if (r && r.ms) {
           rifOra = r.ms; rifs.push(r.ms)
@@ -310,25 +322,40 @@ export async function eseguiVeri({ contenitore, progresso = () => {}, fermo = ()
       }
       ultimo = tappa.gruppo
       progresso(k, tot, `${tappa.gruppo}: si carica…`)
-      const t0 = performance.now()
-      let f = null, errore = null
-      try { const m = await tappa.carica(); f = await m.prepara({ contenitore, opz: (typeof tappa.opz === 'function' ? tappa.opz(risultati) : tappa.opz) || {}, corto }) } catch (e) { errore = breve(e) }
-      g.carica.push(Math.round(performance.now() - t0))
+      const opzTappa = (typeof tappa.opz === 'function' ? tappa.opz(risultati) : tappa.opz) || {}
+      let f = null, giro = null, errore = null, scaduta = false
+      // il codice e la scena del gruppo, col tetto: una scena che arriva dopo il tetto si butta appena arriva (la sua tela tiene un contesto)
+      const apri = async () => {
+        const t0 = performance.now()
+        try {
+          const m = await conTetto(tappa.carica(), tetti.carica, 'il codice')
+          const pp = Promise.resolve(m.prepara({ contenitore, opz: opzTappa, corto }))
+          try { f = await conTetto(pp, tetti.carica, 'la preparazione') } catch (e) { pp.then(x => { try { x && x.via() } catch (_) { /* già via */ } }, () => {}); throw e }
+        } catch (e) { errore = breve(e); f = null }
+        g.carica.push(Math.round(performance.now() - t0))
+        if (!f) return
+        if (f.dpr && !g.dpr.includes(tondo(f.dpr))) g.dpr.push(tondo(f.dpr))
+        giro = f.misura ? null : creaGiro(f)
+      }
+      const chiudi = () => { if (giro) giro.ferma(); giro = null; try { if (f) f.via() } catch (e) { /* è già andata */ } f = null }
+      await apri()
       if (!f) { for (const s of tappa.scene) { risultati.push({ ...riga(s, tappa), errore }); k++ } continue }
-      if (f.dpr && !g.dpr.includes(tondo(f.dpr))) g.dpr.push(tondo(f.dpr))
-      const giro = f.misura ? null : creaGiro(f)
       try {
         for (const s of tappa.scene) {
           if (fermo()) break
           progresso(k++, tot, `${tappa.gruppo}: ${s.nome}`)
           if (s.serie && saltate.has(s.serie)) { risultati.push({ ...riga(s, tappa), salta: true }); continue }
+          // dopo un tempo scaduto il gruppo si rifà da capo: la scena di prima può aver lasciato il gioco a metà
+          if (scaduta) { scaduta = false; chiudi(); await apri(); if (!f) { risultati.push({ ...riga(s, tappa), errore }); continue } }
           const g0 = guasti.length
           try {
             let r
-            if (f.misura) r = await f.misura(s)
+            if (f.misura) r = await conTetto(f.misura(s), tetti.misura, 'la scena')
             else {
               const prima = f.conti ? f.conti().programmi : 0
-              r = await giro.misura(corto ? tempi : TEMPI[tappa.tempi] || tempi, fermo, () => f.scena(s), s === tappa.scene[0])
+              const tm = corto ? tempi : TEMPI[tappa.tempi] || tempi
+              // le due fasi stanno sotto `fine` l'una (se arrivano fotogrammi), più la preparazione della scena
+              r = await conTetto(giro.misura(tm, fermo, () => f.scena(s), s === tappa.scene[0]), 2 * tm.fine + tetti.scena, 'la scena')
               if (giro.guasto) throw giro.guasto
               const c = f.conti ? f.conti() : {}
               if (f.gl() && f.gl().isContextLost()) throw new Error('contesto WebGL perso')
@@ -342,12 +369,12 @@ export async function eseguiVeri({ contenitore, progresso = () => {}, fermo = ()
             risultati.push({ ...riga(s, tappa), ...r, ...(rifOra ? { rif: rifOra } : {}) })
             // solo le serie che crescono (più mostri, più persone…): le leve dei colli e la roba si confrontano fra loro, si fanno tutte
             if (s.cresce && r.p95 > SALTA_OLTRE && !corto) saltate.add(s.serie)   // nelle prove corte si fanno tutte
-          } catch (e) { risultati.push({ ...riga(s, tappa), errore: breve(e) }) }
+          } catch (e) {
+            risultati.push({ ...riga(s, tappa), errore: breve(e) })
+            if (scaduto(e)) scaduta = true
+          }
         }
-      } finally {
-        if (giro) giro.ferma()
-        try { f.via() } catch (e) { /* è già andata */ }
-      }
+      } finally { chiudi() }
       await new Promise(r => setTimeout(r, corto ? 30 : 250))
     }
   } finally {
