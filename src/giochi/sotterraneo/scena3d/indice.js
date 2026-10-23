@@ -56,6 +56,11 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
   const cam = creaCamera()
   const luci = creaLuci(scena, aspettoDi(null))
   const maschera = creaMaschera()
+  // la luce per vertice del piano (fascia bassa): la trama delle luci sta con la maschera, che ogni materiale del piano ha già
+  if (ACCESI.lucePerVertice) {
+    Object.assign(maschera.uniforms, luci.vertice.uniforms)
+    scena.onBeforeRender = (r, s, camera) => luci.scriviVertice(camera, S.tempo)
+  }
   const post = ACCESI.post ? creaPost(renderer) : null
   // gli elementi (grafica/elementi3d.js): chi pesa si misura spegnendone uno alla volta (docs/core/vecchio-telefono-elementi.md)
   const elementi = creaElementi(ELEMENTI_DISCESE, elementoAcceso)
@@ -402,6 +407,7 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
       if (norm) norm.dispose()
       if (post) post.via()
       maschera.via()
+      luci.vertice.via()
       ctx.via()
     },
   }

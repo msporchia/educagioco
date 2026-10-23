@@ -47,6 +47,9 @@ export const MAX_LUCI = 8           // quelle che nebbia, polvere e acqua somman
 export const FETTE = 5, POLVERE = 450, SCINTILLE = 1500
 export const FIGURE_MAX = 700       // le figure dell'atlante in scena nello stesso fotogramma
 export const ALONI_MAX = 96         // i chiarori per terra (rarità, missione, chiave, scala che sale)
+// con la luce per vertice pavimento, muri e colonne si dividono perché la luce interpolata resti liscia: il pavimento in n×n quadrati
+// per cella, ogni triangolo dei muri e delle colonne in quattro (docs/sotterraneo/appiattimento-3d.md, «Nel gioco»)
+export const SUDDIVIDI = { pavimento: 3, muri: 4, colonne: 4 }
 
 import { profilo } from '../../../store/qualita.js'
 
@@ -83,6 +86,9 @@ export const ACCESI = {
   rilievo: true,     // le normal map e le trame di ruvidezza di pavimento, pareti, colonne e terreno di sopra; spento: trame piatte
   nebbiaFitta: true, // le fette di nebbia della fascia; spenta: una fetta sola
   quantaPolvere: 1,  // quanta della polvere che fluttua nella luce (0,4: due granelli su cinque)
+  // al contrario degli altri, acceso è la versione semplice (la bassa lo accende con `lucePerVertice:1`, `&spegni=lucePerVertice` lo toglie):
+  // il piano somma le luci per vertice e non per pixel, la nebbia è un termine per vertice al posto della fetta (scena3d/luce-vertice.js)
+  lucePerVertice: false,
   // gli elementi della scena (grafica/elementi3d.js): spento non si disegna, senza buttarlo né cambiare il gioco. Solo per misurare chi
   // pesa (`&spegni=pavimento`); anche arredo, fiamme, fuochi, palco, nebbia, effetti3d e chiarori qui sopra fanno da elemento. `resto`: quello
   // senza nome (l'emisferica, una cosa dimenticata), così la scena «tutto spento» è vuota davvero

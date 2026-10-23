@@ -82,7 +82,10 @@ export function costruisciPiano(scena, corsa, { maschera, luci, trameDi, legno, 
   const botti = el('arredo', () => creaBotti(scena, { posti, legno: posti.length ? legno() : null, conMaschera, maschera, regola: BOTTI_PER_PAESAGGIO[paesaggio] || null }))
   via.push(botti.via)
   // senza `nebbiaFitta` (la fascia bassa) una fetta sola
-  const fitte = ACCESI.nebbia ? Math.min(FETTE, profilo('sotterraneo').fetteNebbia) : 0, fette = ACCESI.nebbiaFitta ? fitte : Math.min(1, fitte)
+  // con la luce per vertice nessuna: la nebbia è un termine dei vertici del piano, densa quanto le fette che sostituisce
+  const fitte = ACCESI.nebbia ? Math.min(FETTE, profilo('sotterraneo').fetteNebbia) : 0
+  const fette = ACCESI.lucePerVertice ? 0 : ACCESI.nebbiaFitta ? fitte : Math.min(1, fitte)
+  luci.vertice.nebbia(aspetto, fitte)
   const nebbia = el('nebbia', () => creaNebbia(scena, pianta.W, pianta.H, fette, luci.condivise, maschera, aspetto, fette ? fitte / fette : 1)); via.push(nebbia.via)
 
   // dove nello scontro non si mette nessuno: l'arredo, la fonte e il portale modellati (sono cose posate, non pavimento libero;

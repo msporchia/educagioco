@@ -12,7 +12,8 @@ import { conMaschera } from './maschera.js'
 import { GLSL_RUMORE } from './luci.js'
 import { scolpisciPareti } from './pareti.js'
 import { fbm3d } from './rumore.js'
-import { ALTO_MURO, PARAPETTO, ACCESI } from './costanti.js'
+import { ALTO_MURO, PARAPETTO, ACCESI, SUDDIVIDI } from './costanti.js'
+import { dividi } from './luce-vertice.js'
 import { verso } from './tempo.js'
 
 // le altezze dei muri nello shader: la cella di ogni vertice, e quanto è alta adesso (0..1 nella trama)
@@ -73,13 +74,14 @@ export function creaTerreno(scena, { pianta, aspetto, trame, maschera, seme = 1 
   const via = []
   const aggiungi = o => { scena.add(o); via.push(() => { scena.remove(o) }) }
 
-  // ── il pavimento: un quadrato per cella (anche sotto le colonne e i muri), la trama ogni `celle`×`celle` celle ──
+  // ── il pavimento: un quadrato per cella (anche sotto le colonne e i muri), la trama ogni `celle`×`celle` celle; con la luce per
+  // vertice n×n quadrati per cella ──
   const pos = [], uv = [], nor = [], idx = []
-  const cu = trame.pav.celle
+  const cu = trame.pav.celle, n = ACCESI.lucePerVertice ? SUDDIVIDI.pavimento : 1
   for (const { x, y } of [...p.pavimento, ...p.muri]) {
     const b = pos.length / 3
-    for (const [dx, dz] of [[0, 0], [1, 0], [0, 1], [1, 1]]) { pos.push(x + dx, 0, y + dz); uv.push((x + dx) / cu, -(y + dz) / cu); nor.push(0, 1, 0) }
-    idx.push(b, b + 2, b + 1, b + 1, b + 2, b + 3)
+    for (let j = 0; j <= n; j++) for (let i = 0; i <= n; i++) { const px = x + i / n, pz = y + j / n; pos.push(px, 0, pz); uv.push(px / cu, -pz / cu); nor.push(0, 1, 0) }
+    for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) { const a = b + j * (n + 1) + i, c = a + n + 1; idx.push(a, c, a + 1, a + 1, c, c + 1) }
   }
   const gPav = new BufferGeometry()
   gPav.setAttribute('position', new Float32BufferAttribute(pos, 3))
@@ -116,7 +118,7 @@ export function creaTerreno(scena, { pianta, aspetto, trame, maschera, seme = 1 
   // ── le pareti scolpite ──
   const par = aspetto.parete || { stile: 'blocchi' }
   const sc = scolpisciPareti(p, { stile: par.stile, seme, colore: par })
-  const gMuri = new BufferGeometry()
+  let gMuri = new BufferGeometry()
   gMuri.setAttribute('position', new Float32BufferAttribute(sc.posizioni, 3))
   gMuri.setAttribute('normal', new Float32BufferAttribute(sc.normali, 3))
   gMuri.setAttribute('uv', new Float32BufferAttribute(sc.uv, 2))
@@ -125,6 +127,7 @@ export function creaTerreno(scena, { pianta, aspetto, trame, maschera, seme = 1 
   gMuri.setAttribute('aCella', new Float32BufferAttribute(sc.celle, 1))
   gMuri.setIndex(sc.indici)
   sc.gruppi.forEach((g, i) => gMuri.addGroup(g.start, g.count, i))
+  if (ACCESI.lucePerVertice) { const d = dividi(gMuri, SUDDIVIDI.muri); gMuri.dispose(); gMuri = d }
   // quanto è alta adesso ogni cella di muro alto (1 di difetto; nello scontro scende a parapetto)
   const datiAlto = new Uint8Array(p.W * p.H * 4).fill(255)
   const tAlto = new DataTexture(datiAlto, p.W, p.H, RGBAFormat)
@@ -169,7 +172,8 @@ export function creaTerreno(scena, { pianta, aspetto, trame, maschera, seme = 1 
   // ── le colonne, nella forma del paesaggio ──
   const [g0, g1] = (COLONNE[aspetto.fusto] || COLONNE.tonda)()
   const fusto = pulisci(g0), basi = pulisci(g1)
-  const gCol = mergeGeometries([fusto, basi], true)
+  let gCol = mergeGeometries([fusto, basi], true)
+  if (ACCESI.lucePerVertice) { const d = dividi(gCol, SUDDIVIDI.colonne); gCol.dispose(); gCol = d }
   for (const g of [g0, g1, fusto, basi]) g.dispose()
   const matPietra = conMaschera(new MeshStandardMaterial({ color: aspetto.fusto === 'ferro' ? '#3a3634' : aspetto.fusto === 'tronco' ? '#2a3a18' : new Color(aspetto.colonna).multiplyScalar(0.8),
     roughness: 0.8, metalness: aspetto.metallo || 0, flatShading: aspetto.fusto === 'cristallo' }), maschera, { buco: true, chiave: 'pietra' })

@@ -5,6 +5,7 @@
 import { HemisphereLight, PointLight, SpotLight, Vector3, Color } from 'three'
 import { N_FUOCHI, MAX_LUCI, LUCE, ACCESI } from './costanti.js'
 import { verso } from './tempo.js'
+import { creaLuceVertice } from './luce-vertice.js'
 
 export const GLSL_RUMORE = /* glsl */`
 float hash13(vec3 p){ p = fract(p*0.1031); p += dot(p, p.zyx+31.32); return fract((p.x+p.y)*p.z); }
@@ -53,9 +54,14 @@ export function creaLuci(scena, aspetto) {
   const tinta = new Color(), base = new Color(0xffc488), calda = new Color(0xffa650), tmp = new Vector3()
   const T = LUCE.torcia
   let ambiente = cielo.intensity, qPalco = 0
+  // la luce per vertice del piano (fascia bassa): tutti i fuochi della riserva, anche quelli che three non ha (`ACCESI.fuochi`)
+  const vertice = creaLuceVertice()
+  const fuochiV = Array.from({ length: N_FUOCHI }, () => ({ pos: new Vector3(), colore: new Color(), forza: 0, raggio: 7 }))
+  const puntiV = [alone, lampo, ...(magia !== lampo ? [magia] : []), rimbalzo, palco]
+  let nFuochiV = 0
 
   return {
-    condivise, alone, cono, lampo, magia, palco, cielo, rimbalzo,
+    condivise, alone, cono, lampo, magia, palco, cielo, rimbalzo, vertice,
     tinta, tTinta: 0,
     q: 0,   // quanto è accesa la torcia, inseguito: 0 al buio, 1 piena
     // le cose che fanno luce: { pos: Vector3, colore: Color, forza, vis (0..1, quanto si vede adesso), d (distanza²) }
@@ -72,17 +78,25 @@ export function creaLuci(scena, aspetto) {
       condivise.uLn.value = 0
       for (const s of sorgenti) s.d = s.vis > 0.2 ? (s.pos.x - ex) ** 2 + (s.pos.z - ez) ** 2 : Infinity
       sorgenti.sort((a, b) => a.d - b.d)
-      for (let i = 0; i < fuochi.length; i++) {
+      nFuochiV = 0
+      const n = ACCESI.lucePerVertice ? N_FUOCHI : fuochi.length
+      for (let i = 0; i < n; i++) {
         const l = fuochi[i], s = sorgenti[i]
-        if (!s || s.d === Infinity) { l.intensity = 0; continue }
+        if (!s || s.d === Infinity) { if (l) l.intensity = 0; continue }
         const tr = s.trema ? 0.82 + 0.1 * Math.sin(t * 9.3 + s.seme) + 0.06 * Math.sin(t * 23.7 + s.seme * 2) + 0.05 * Math.sin(t * 41 + s.seme * 3) : 1
-        l.position.copy(s.pos)
-        if (s.trema) { l.position.x += Math.sin(t * 13 + s.seme) * 0.03; l.position.y += Math.sin(t * 17 + s.seme) * 0.03 }
-        l.color.copy(s.colore)
-        l.distance = s.raggio || 7
-        l.intensity = s.forza * tr * Math.min(1, s.vis * 1.5)
+        const f = fuochiV[nFuochiV++]
+        f.pos.copy(s.pos)
+        if (s.trema) { f.pos.x += Math.sin(t * 13 + s.seme) * 0.03; f.pos.y += Math.sin(t * 17 + s.seme) * 0.03 }
+        f.colore.copy(s.colore); f.raggio = s.raggio || 7; f.forza = s.forza * tr * Math.min(1, s.vis * 1.5)
+        if (!l) continue
+        l.position.copy(f.pos); l.color.copy(f.colore); l.distance = f.raggio; l.intensity = f.forza
         this.aggiungi(l.position, l.color, 0.22 * tr * (s.forza / 4.5) * s.vis)
       }
+    },
+    // la luce per vertice: prima di ogni disegno (scena.onBeforeRender), quando le luci sono già al loro posto. `ACCESI.fuochi` a 0
+    // (`&spegni=fuochi`) spegne anche i fuochi per vertice; `nebbia` l'elemento della nebbia
+    scriviVertice(camera, t) {
+      vertice.scrivi({ cielo, punti: puntiV, fuochi: fuochiV, nFuochi: ACCESI.fuochi ? nFuochiV : 0, cono, nebbia: ACCESI.nebbia !== false, t }, camera)
     },
     // una luce in più per nebbia, polvere e acqua (che non passano da three)
     aggiungi(p, c, i) {

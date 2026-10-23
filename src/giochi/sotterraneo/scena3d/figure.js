@@ -59,7 +59,7 @@ export function creaFigure(scena, { tex, norm, larga, alta, pezzi, maschera, max
   const mat = conMaschera(new MeshStandardMaterial({
     map: tex, normalMap: norm, alphaTest: 0.5, side: DoubleSide, roughness: 0.75, metalness: 0,
   }), maschera, {
-    spinta: 0, chiave: contorno ? 'figure-contorno' : 'figure',
+    spinta: 0, chiave: contorno ? 'figure-contorno' : 'figure', vertice: false,   // un quadrato per figura: la luce per vertice ne farebbe quattro angoli
     // né troppo buie né bruciate: fra il minimo e 1,3 volte il loro colore (il lampo del colpo, emissivo, resta sopra)
     prima: `
       outgoingLight = clamp(outgoingLight - totalEmissiveRadiance, diffuseColor.rgb * uMinimoF, diffuseColor.rgb * 1.3) + totalEmissiveRadiance;
