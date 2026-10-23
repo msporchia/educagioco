@@ -361,7 +361,7 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = [], fon
     persone.taglio(soleVista.x, soleVista.y)
     persone.disegna(S.persone, eroe, { t: tempo, dt, veduta, camera: cam, mostri: S.mostri, perTerra: S.perTerra,
                                        extra: inScontro ? o => palco.passo(dt, tempo, o, A * ctx.dpr * 1.5) : null })
-    scena.fog.near = cam.d * 1.5; scena.fog.far = cam.d * 4.5
+    if (scena.fog) { scena.fog.near = cam.d * 1.5; scena.fog.far = cam.d * 4.5 }   // senza: la misura degli elementi (la foschia tolta)
     cielo.mesh.position.copy(cam.camera.position)
     if (dopo) dopo(dt, tempo)
     ctx.misure.msJs = performance.now() - t0

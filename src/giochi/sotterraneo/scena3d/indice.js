@@ -70,7 +70,7 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
   const fiammaEroe = ACCESI.fiamme ? segnaNuovi(scena, 'fiamme', () => creaFiamme(scena, maschera, [{ scala: 0.85, cx: 0, cz: 0, x: 0, y: -9, z: 0 }])) : null
   if (fiammaEroe) fiammaEroe.accesa(0, false)
   // in prova: i mostri in 3D al posto degli sprite (`#sprite` li spegne) e gli effetti 3D dello scontro (docs/sotterraneo/mostri-3d.md)
-  const mostri3d = mostri3dAccesi() && ACCESI.mostri3d > 0 ? creaMostri3d(gruppo('mostri3d'), { quanti: () => ACCESI.mostri3d }) : null
+  const mostri3d = mostri3dAccesi() && ACCESI.mostri3d > 0 ? creaMostri3d(gruppo('mostri'), { quanti: () => ACCESI.mostri3d }) : null
   const effetti3d = ACCESI.effetti3d ? creaGestore(gruppo('effetti3d'), { renderer, camera: cam.camera }) : null
   const S = { eroe, campo: null, scintille, luci, anelli, fermo: 0, scossa: 0, aberr: 0, rosso: 0, tBolla: 9, tempo: 0, colpoEroe: null, stato: null,
               mostri3d, effetti3d, eroe3d }

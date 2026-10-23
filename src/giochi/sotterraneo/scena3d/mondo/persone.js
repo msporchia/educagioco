@@ -56,7 +56,7 @@ export function creaPersone(scena, { tex, norm, larga, alta, pezzi, trame, quota
   // `&folla=`, `&branco3d=`, `&tetto3d=`: la folla finta delle misure (folla-prova.js, docs/sotterraneo/limiti-3d.md)
   const prova = leggiFolla()
   const tettoMostri = prova.tetto || (profilo('sotterraneo').mostriSopra ?? MOSTRI_3D_SOPRA), tettoPersone = prova.tetto || PERSONE_3D_SOPRA
-  const mostri3d = mostri3dAccesi() && ACCESI.mostri3d > 0 ? creaMostri3d(gruppo('mostri3d'), { quanti: () => Math.min(ACCESI.mostri3d, tettoMostri) }) : null
+  const mostri3d = mostri3dAccesi() && ACCESI.mostri3d > 0 ? creaMostri3d(gruppo('mostri'), { quanti: () => Math.min(ACCESI.mostri3d, tettoMostri) }) : null
   const statiMostri = new Map()
   const persone3d = persone3dAccese() ? creaPersone3d(gruppo('persone'), { quanti: () => tettoPersone }) : null
   const statiPersone = new Map()

@@ -16,7 +16,7 @@ const figlio = new Mesh(geo, mat()); figlio.visible = false; gruppo.add(figlio)
 const luce = new PointLight()          // senza nome: il resto
 scena.add(pav, muri, gruppo, luce)
 const nuove = segnaNuovi(scena, 'nebbia', () => { const a = new Mesh(geo, mat()); scena.add(a); return a })
-uguale('segnaNuovi segna quello che si aggiunge', nuove.userData.elemento, 'nebbia')
+uguale('segnaNuovi segna quello che si aggiunge', nuove.userData.elemento3d, 'nebbia')
 const giu = o => (o.layers.mask & 1) === 0
 
 nascondiElementi(scena, k => k === 'mostri' || k === 'vicina' || k === 'resto', 'resto')

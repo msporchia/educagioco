@@ -46,7 +46,7 @@ export function creaLuci(scena, aspetto) {
   const rimbalzo = new PointLight(0xff9a50, 0, 6, 1.5)   // la torcia accesa: la luce che torna su dal pavimento
   const fuochi = Array.from({ length: Math.max(0, Math.min(N_FUOCHI, ACCESI.fuochi)) }, () => new PointLight(0xff8a3c, 0, 7, 1.7))
   // gli elementi, per misurare chi pesa (grafica/elementi3d.js); l'emisferica no: non costa
-  for (const [l, nome] of [[alone, 'torcia'], [cono, 'torcia'], [rimbalzo, 'torcia'], [lampo, 'lampo'], [magia, 'lampo'], [palco, 'palco'], ...fuochi.map(f => [f, 'fuochi'])]) l.userData.elemento = nome
+  for (const [l, nome] of [[alone, 'torcia'], [cono, 'torcia'], [rimbalzo, 'torcia'], [lampo, 'lampo'], [magia, 'lampo'], [palco, 'palco'], ...fuochi.map(f => [f, 'fuochi'])]) l.userData.elemento3d = nome
   scena.add(cielo, alone, cono, cono.target, lampo, ...fuochi)
   if (ACCESI.lampi) scena.add(magia, rimbalzo)
   if (ACCESI.palco) scena.add(palco)

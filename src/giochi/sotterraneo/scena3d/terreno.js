@@ -110,7 +110,7 @@ export function creaTerreno(scena, { pianta, aspetto, trame, maschera, seme = 1 
     },
   })
   const pav = new Mesh(gPav, matPav)
-  pav.receiveShadow = true; pav.userData.elemento = 'pavimento'
+  pav.receiveShadow = true; pav.userData.elemento3d = 'pavimento'
   aggiungi(pav)
 
   // ── le pareti scolpite ──
@@ -180,7 +180,7 @@ export function creaTerreno(scena, { pianta, aspetto, trame, maschera, seme = 1 
   const colonne = new InstancedMesh(gCol, [matFusto, matPietra], Math.max(1, p.colonne.length))
   p.colonne.forEach((c, i) => colonne.setMatrixAt(i, mt.makeRotationY(((c.x * 7 + c.y * 13) % 6) * 1.05).setPosition(c.x + 0.5, 0, c.y + 0.5)))
   colonne.count = p.colonne.length
-  colonne.castShadow = true; colonne.receiveShadow = true; colonne.computeBoundingSphere(); colonne.userData.elemento = 'colonne'
+  colonne.castShadow = true; colonne.receiveShadow = true; colonne.computeBoundingSphere(); colonne.userData.elemento3d = 'colonne'
   aggiungi(colonne)
 
   // ── le staffe delle torce, posate sulla faccia vera del muro (le fiamme e le luci le mette chi accende i fuochi) ──
@@ -198,7 +198,7 @@ export function creaTerreno(scena, { pianta, aspetto, trame, maschera, seme = 1 
   }
   p.torce.forEach((_, i) => posaStaffa(i, true))
   staffe.count = p.torce.length
-  staffe.castShadow = true; staffe.computeBoundingSphere(); staffe.userData.elemento = 'colonne'
+  staffe.castShadow = true; staffe.computeBoundingSphere(); staffe.userData.elemento3d = 'colonne'
   aggiungi(staffe)
 
   const materiali = [matPav, ...matPareti, prof, matPietra, matFusto, matStaffa]

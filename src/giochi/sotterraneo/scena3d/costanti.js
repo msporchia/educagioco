@@ -84,15 +84,16 @@ export const ACCESI = {
   nebbiaFitta: true, // le fette di nebbia della fascia; spenta: una fetta sola
   quantaPolvere: 1,  // quanta della polvere che fluttua nella luce (0,4: due granelli su cinque)
   // gli elementi della scena (grafica/elementi3d.js): spento non si disegna, senza buttarlo né cambiare il gioco. Solo per misurare chi
-  // pesa (`&spegni=pavimento`); anche arredo, fiamme, fuochi, palco, nebbia, effetti3d, chiarori e mostri3d qui sopra fanno da elemento
-  pavimento: true, pareteLontana: true, pareteVicina: true, colonne: true, torcia: true, lampo: true, particelle: true, figure: true, eroe: true,
+  // pesa (`&spegni=pavimento`); anche arredo, fiamme, fuochi, palco, nebbia, effetti3d e chiarori qui sopra fanno da elemento. `resto`: quello
+  // senza nome (l'emisferica, una cosa dimenticata), così la scena «tutto spento» è vuota davvero
+  pavimento: true, pareteLontana: true, pareteVicina: true, colonne: true, torcia: true, lampo: true, particelle: true, figure: true, eroe: true, mostri: true, resto: true,
   terreno: true, mare: true, natura: true, case: true, cielo: true, sole: true, velo: true, vita: true, scia: true, persone: true,
 }
 // gli elementi delle discese e del mondo di sopra, nell'ordine della tabella (docs/core/vecchio-telefono-elementi.md)
 export const ELEMENTI_DISCESE = ['pavimento', 'pareteLontana', 'pareteVicina', 'colonne', 'arredo', 'fiamme', 'torcia', 'fuochi', 'lampo', 'palco',
-  'nebbia', 'particelle', 'effetti3d', 'chiarori', 'figure', 'eroe', 'mostri3d']
-export const ELEMENTI_SOPRA = ['terreno', 'mare', 'natura', 'case', 'cielo', 'sole', 'velo', 'vita', 'scia', 'persone', 'eroe', 'mostri3d']
-/** Se l'elemento `k` si disegna (`fuochi` e `mostri3d` sono numeri: 0 è spento). */
+  'nebbia', 'particelle', 'effetti3d', 'chiarori', 'figure', 'eroe', 'mostri', 'resto']
+export const ELEMENTI_SOPRA = ['terreno', 'mare', 'natura', 'case', 'cielo', 'sole', 'velo', 'vita', 'scia', 'persone', 'eroe', 'mostri', 'resto']
+/** Se l'elemento `k` si disegna (`fuochi` è un numero: 0 è spento). */
 export const elementoAcceso = k => ACCESI[k] !== false && ACCESI[k] !== 0
 
 // La fascia grafica del telefono (store/qualita.js) decide quali pezzi di ACCESI restano: si riparte dai valori scritti sopra
