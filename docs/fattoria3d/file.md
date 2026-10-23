@@ -1,7 +1,7 @@
 # Dove sta cosa in `src/giochi/fattoria3d/`
 
 ```
-gioco.js             il manifesto: in prova, tappe 0, il blocco albo (nove traguardi), il riassunto in home
+gioco.js             il manifesto: in prova, tappe 0, il blocco albo (dieci traguardi), il riassunto in home
 Gioco.vue            il coordinatore: monete vere, contatori (anche `fattoria3dUova`/`…Latte`), salvataggio, le finestre
 stile.css            tutto sotto il prefisso .f3-
 stile-vicini.css    la mappa, il viaggio, la visita (`.f3-vic-`)

@@ -26,7 +26,7 @@ Legenda in [README.md](README.md). 2D: [../../fattoria/come-si-tocca.md](../../f
 | I11 | il magazzino (pezzi messi via) | baule | ✅ `magazzino`, gratis rimetterli | – |
 | I12 | soglie del dito (16 px, click fantasma, 420 ms) | `scena/dito.js` | ✅ in `scena3d/dito.js`; **non provato su un telefono** | P1 |
 | I13 | fogli con la ✕ in alto a destra | sì | ✅ | – |
-| I14 | home: carta, riassunto, traguardi dell'albo | `gioco.js` | ✅ riassunto e 9 traguardi (la 2D ne ha 7) | – |
+| I14 | home: carta, riassunto, traguardi dell'albo | `gioco.js` | ✅ riassunto e 10 traguardi (la 2D ne ha 7): stesse soglie dove il gesto è lo stesso (terre, posati/pezzi, varietà `[8,20,32]` come primato, ordini), soglie sue dove il conto è diverso (raccolti a tessere: ×~7). «Sgomberi» = `f3d-alberi`; **«Che eleganza» (vestiti) tolto: in 3D il guardaroba è del contadino, le bestie non si vestono** ([animali.md](animali.md)). Contatori `fattoria3d*` con `segna()`/`segnaBest()` in `Gioco.vue`, niente campi nuovi nel profilo | – |
 | I15 | ripresa / sosta | il mondo si salva da sé ([../../core/ripresa.md](../../core/ripresa.md)) | ✅ lo stesso (`posto: true`) | – |
 | I16 | **pausa** | assente di proposito | assente | n/a |
 
@@ -35,9 +35,9 @@ Legenda in [README.md](README.md). 2D: [../../fattoria/come-si-tocca.md](../../f
 | id | cosa | 2D | 3D | pri |
 |---|---|---|---|---|
 | I17 | «Ricomincia la fattoria di …» (`GenitoriView`, `cestinaOra('fattoria')`, `azzeraCampagna`) | sì, con cestino | ✅ azzera anche `fattoria3d` (stato e vicini), con la stessa copia nel cestino; la carta compare se uno dei due giochi è stato aperto | – |
-| I18 | interruttore dei giochi in prova | – | ✅ la 3D è `sperimentale` e sta dietro l'interruttore | uscire dalla prova (G10) |
-| I19 | il quadro dei genitori / «Come va» | conta la fattoria come gioco senza campagna | da verificare per la 3D (`posto: true`) | P1 |
-| I20 | le novità per i bambini | righe 6, 7, 8, 24, 29 | ❌ «un gioco in prova non la vuole»: al giorno del cambio serve una riga, proposta, mai scritta prima | P1 |
+| I18 | interruttori dei grandi (in prova, «In casa» a tre posizioni, tempo, domande) | la 2D non è in prova: è un `posto` (non si spegne per età) | ✅ già fatto, niente da aggiungere: `sperimentale: true` la nasconde finché i giochi in prova sono spenti ([../../genitori/interruttori.md](../../genitori/interruttori.md) §3), e in `Giochi › La fattoria 3D` c'è la stessa tendina «In casa», il tempo e «Cosa si impara» (`cosa-insegna.js`) della 2D. **Uscire dalla prova** vuol dire togliere `sperimentale: true` dal manifesto (`gioco.js`): da quel giorno compare per tutti come la 2D, la riga «è un gioco in prova» sparisce da sé, e un bambino che l'ha già aperta la tiene comunque. Non si fa prima di G10 | uscire dalla prova (G10) |
+| I19 | il quadro dei genitori / «Come va» | `posto: true`: non si giudica per età, non paga monete (`paga()` in `data/varieta.js`), il tempo è per vista | ✅ verificato: la 3D è `posto: true` e passa dagli stessi filtri generici (`data/quadro.js` la mostra solo con i giochi in prova accesi; sessioni per chiave `fattoria3d`; nessun codice la nomina). Niente di suo da mostrare: livello e cosa ha costruito stanno nella carta di home (`riassunto`) e nell'albo, come per la 2D | – |
+| I20 | le novità per i bambini | righe 6, 7, 8, 24, 29 | ❌ «un gioco in prova non la vuole» ([../../genitori/novita-bambini.md](../../genitori/novita-bambini.md)). **Al giorno del cambio** (uscita dalla prova, G10) servono, proposte e mai scritte prima: (1) una riga «🚜 C'è la fattoria in 3D: girala col trattore!» (2) se la migrazione converte la 2D, una riga che dice che la sua fattoria c'è ancora, nuova (D1); (3) niente righe per i traguardi, dentro l'albo. Si propongono a fine lavoro, si aggiungono solo dopo il sì | P1 |
 | I21 | la guida in app per i grandi | – | – | – |
 
 ## Cheat di indirizzo

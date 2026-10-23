@@ -31,13 +31,13 @@ export default {
   // I contatori li muove Gioco.vue con segna(): fattoria3dTerre (lotti comprati), …Pezzi (pezzi e edifici messi),
   // …Raccolti (tessere tagliate), …Alberi (abbattuti), …Sassi (sassi e cespugli tolti), …Prodotti (usciti dal forno), …Ordini (consegnati al banco),
   // …Uova e …Latte (raccolti dal pollaio e dalla stalla), …Mongolfiera (casse messe sulla mongolfiera) e …Fiere (le sorprese della fiera ricevute).
-  // …Visite (entrate in un villaggio col trattore) e …Aiuti (una cassa riempita, un baratto, un acquisto dai vicini).
+  // …Varieta (primato: i tipi diversi in mappa), …Visite (entrate in un villaggio col trattore) e …Aiuti (una cassa riempita, un baratto, un acquisto dai vicini).
   albo: {
     area: { nome: 'La fattoria 3D', emoji: '🚜' },
 
     // Modesto apposta, come la fattoria di sempre: non è la scorciatoia per salire di livello senza un esercizio.
     xp: m => m.tot('fattoria3dTerre') + Math.floor(m.tot('fattoria3dPezzi') / 2) + Math.floor(m.tot('fattoria3dRaccolti') / 2)
-             + Math.floor(m.tot('fattoria3dAlberi') / 2) + m.tot('fattoria3dProdotti'),
+             + Math.floor(m.tot('fattoria3dAlberi') / 2) + m.tot('fattoria3dProdotti') + m.best('fattoria3dVarieta'),
     provato: m => m.tot('fattoria3dTerre') + m.tot('fattoria3dPezzi') + m.tot('fattoria3dRaccolti') + m.tot('fattoria3dAlberi') > 0,
 
     traguardi: [
@@ -59,6 +59,10 @@ export default {
       { id: 'f3d-cortile', emoji: '🥚', nome: 'Il cortile',
         come: n => `Raccogli ${n} fra uova e latte`,
         soglie: [5, 25, 80], valore: m => m.tot('fattoria3dUova') + m.tot('fattoria3dLatte') },
+      // I tipi diversi in mappa (la 2D ne ha 34 di soglia alta; qui il catalogo è 174, ma molti sono variazioni dello stesso verde)
+      { id: 'f3d-varieta', emoji: '🎨', nome: 'Un po\' di tutto',
+        come: n => `Tieni ${n} cose diverse nella fattoria`,
+        soglie: [8, 20, 32], valore: m => m.best('fattoria3dVarieta') },
       { id: 'f3d-ordini', emoji: '🧺', nome: 'Ordini al banco',
         come: n => `Consegna ${n} ordini al banco`,
         soglie: [3, 15, 50], valore: m => m.tot('fattoria3dOrdini') },
