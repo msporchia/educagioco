@@ -44,11 +44,12 @@ function trovaChrome() {
   return undefined                                  // quello di playwright, se c'è
 }
 
-export async function apriBrowser() {
+// `args`: opzioni in più per Chrome (il banco delle perdite vuole `--js-flags=--expose-gc`)
+export async function apriBrowser({ args = [] } = {}) {
   if (!existsSync(COSTRUITO))
     throw new Error('manca dist/index.html — lancia prima `npm run build`')
   const exe = trovaChrome()
-  return chromium.launch(exe ? { executablePath: exe } : {})
+  return chromium.launch({ ...(exe ? { executablePath: exe } : {}), ...(args.length ? { args } : {}) })
 }
 
 /* ── UN TELEFONO, CON LA SUA CACHE SU DISCO ──
