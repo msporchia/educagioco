@@ -6,6 +6,7 @@
 // Adotta solo ciò che è fermo: niente `userData.anima`, niente trasparenti, niente istanze o materiali a lista.
 // Come si aggiunge un pezzo: docs/fattoria3d/scena.md, «Come si aggiunge un pezzo istanziato».
 import * as THREE from 'three'
+import { segna } from '../../../grafica/elementi3d.js'
 
 /** I tipi che si adottano: pezzi fermi, uguali a ogni copia (si aggiunge un tipo qui e basta: i controlli sono in `adotta`). */
 export const STATICI = new Set(['aiuola', 'panchina', 'pozzo', 'bancarella', 'ponte', 'passerella', 'tavolo', 'molo', 'molo_v', 'trattore', 'zucca_intagliata', 'zucche_mucchio'])
@@ -92,7 +93,7 @@ export class BancoStatici {
   _rifai(gr, capienza) {
     if (gr.mesh) { this.scena.remove(gr.mesh); gr.mesh.dispose() }
     const m = new THREE.InstancedMesh(gr.geo, gr.materiale, capienza)
-    m.frustumCulled = false; m.count = 0; m.visible = false; m.castShadow = gr.cast; m.receiveShadow = gr.recv; m.name = 'statici'
+    m.frustumCulled = false; m.count = 0; m.visible = false; m.castShadow = gr.cast; m.receiveShadow = gr.recv; m.name = 'statici'; segna(m, 'pezzi')
     this.scena.add(m); gr.mesh = m
   }
 

@@ -2,6 +2,7 @@
 // animati ogni fotogramma (il grano che cresce, le pecore che vagano, la fontana, il fumo del forno, il pallone che parte).
 // Non sa le regole: legge lo stato e disegna. I cartelli sugli edifici (cottura, casse pronte) sono qui; un edificio non comprato non si vede.
 import * as THREE from 'three'
+import { segna } from '../../../grafica/elementi3d.js'
 import { creaCampo, aggiornaCampo, campoMosso, creaPasticceria, creaMongolfiera, creaBancarella, creaBacheca, creaFontana, creaRecinto, muoviPecore,
          sincronizzaPecore, creaPecora, creaGallina, creaMucca, creaMulino, creaPanificio, creaConserviera, creaGelateria, creaAiuola, creaPanchina,
          creaPozzo, creaSpaventapasseri, creaTrattore, creaSegnaposto, creaPollaio, creaStalla, creaCaseificio, sincronizzaBestie, muoviBestie } from './modelli.js'
@@ -107,7 +108,7 @@ export class Pezzi {
     alleggeriOmbre(grp)
     if (this.usaBanchi && c.tipo === 'campo') this.banco.adotta(grp)
     grp.userData.bersaglio = { kind: 'cosa', id: c.id }
-    grp.position.copy(centroDi(c, d)); grp.rotation.y = (c.rot || 0) * Math.PI / 2; this.scena.add(grp)
+    grp.position.copy(centroDi(c, d)); grp.rotation.y = (c.rot || 0) * Math.PI / 2; this.scena.add(segna(grp, edificio ? 'edifici' : c.tipo === 'campo' ? 'campi' : 'pezzi'))
     if (this.usaBanchi && STATICI.has(c.tipo)) this.statici.adotta(grp)
     const badge = edificio || c.tipo === 'bacheca' ? this.fx.nuovoBadge() : c.bestie || c.pecore ? this.fx.nuovoCartello(() => this.sulCompraBestia && this.sulCompraBestia(c.id), c.tipo) : null
     this.voci.set(c.id, { id: c.id, kind: 'cosa', edificio, tipo: c.tipo, c, d, rot: c.rot || 0, grp, badge, anello: null, salto: 0, nasce: undefined, richiamo: null, chiave: '' })

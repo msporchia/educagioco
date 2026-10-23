@@ -5,6 +5,7 @@
 // che il motore ha aperto (i tuoi e due lotti attorno): il peso non cresce con la fattoria. Non sa le regole: legge dal motore cosa è tuo.
 // Vedi docs/fattoria3d/mondo-infinito.md.
 import * as THREE from 'three'
+import { segnaNuovi } from '../../../grafica/elementi3d.js'
 import { mat, FORME, creaCasa } from './modelli.js'
 import { geometriaCespuglio } from './dal-sotterraneo.js'
 import { LOTTO, FISSI, lotto, lottoDi, cellaDa } from '../dati/mondo.js'
@@ -45,8 +46,11 @@ export class Terreno {
     this.vento = { uT: { value: 0 }, uV: { value: 1 } }       // il tempo e l'intensità del vento, letti dal materiale dei ciuffi (e dell'acqua)
     this.centro = { a: 1e9, b: 1e9 }                          // il lotto al mezzo della finestra
     this.griglia = null; this._grigliaOn = false
-    this._suolo(); this._mare(); this._strade(); this._griglia(); this._lotti(); this._alberi(); this._ostacoli(); this._erba(); this._acqua(); this._fisse()
-    this.pesci = new Pesci(scena, motore)
+    // gli elementi (grafica/elementi3d.js): chi pesa si misura spegnendone uno alla volta (docs/core/vecchio-telefono-elementi.md)
+    const el = (nome, fai) => segnaNuovi(scena, nome, fai)
+    el('terreno', () => this._suolo()); el('acqua', () => this._mare()); el('strade', () => this._strade()); this._griglia(); el('terreno', () => this._lotti())
+    el('alberi', () => { this._alberi(); this._ostacoli() }); el('erba', () => this._erba()); el('acqua', () => this._acqua()); el('edifici', () => this._fisse())
+    this.pesci = el('acqua', () => new Pesci(scena, motore))
     this.segui(0, 0, true)
   }
 
