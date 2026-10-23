@@ -189,48 +189,15 @@ Impostazioni → Avanzate → Misura questo telefono.
 
 ## Dove eravamo rimasti (la misura per elemento, 23/10)
 
-Lo scopo: sapere **chi pesa** in ogni scena grande, un elemento alla volta (dal «tutto spento» se ne accende uno; dalla scena intera
-se ne toglie uno), con ms js/gpu, chiamate, triangoli e shader per elemento, e una leva semplice pronta per ognuno di quelli cari.
+**Fatto.** La prova «Chi pesa» c'è: [vecchio-telefono-elementi.md](vecchio-telefono-elementi.md) (tasto in «Misura questo
+telefono», le scene delle discese, del mondo di sopra, della fattoria 3D e degli Asteroidi, la tabella, la LETTURA, le leve,
+`--solo elementi` nello strumento, `unita/benchmark-elementi`, `integrazione/benchmark-elementi`). Le leve semplici (`ombre`,
+`rilievo`, `nebbiaFitta`, `quantaPolvere:0.4` nel Sotterraneo; `erba: false` nella fattoria) sono pronte e la prova le confronta;
+gli scatti prima/dopo sono in `tmp/scatti/leve-discese-*.png` e `leve-sopra-*.png` (fascia bassa, `&spegni=` di ogni leva).
 
-**Fatto (sul ramo, test verdi).**
-- `src/grafica/elementi3d.js`: `segna(o, nome)`, `segnaNuovi(radice, nome, fai)`, `nascondiElementi`, `creaElementi(nomi, acceso, resto)`.
-  Un elemento spento va sullo strato 31 (non si disegna né fa ombra; la `visible` del gioco non si tocca), un materiale di una mesh a
-  più materiali si spegne da solo (`userData.elementiMateriali`), quello senza nome in cima è il `resto`. Il passo gira a ogni
-  fotogramma e non fa niente se tutto è acceso. Prova: `unita/elementi-3d`.
-- **Discese** (`scena3d/indice.js`, `piano.js`, `terreno.js`, `luci.js`): `ELEMENTI_DISCESE` in `costanti.js` = pavimento (con
-  pozze e velo d'acqua), pareteLontana / pareteVicina (i gruppi di materiale dei muri alti e dei parapetti), colonne (e staffe),
-  arredo (arredo3d, botti, relitti, fontana, portali, raggi), fiamme, torcia (alone, cono, rimbalzo), fuochi, lampo (lampo e magia),
-  palco, nebbia, particelle (polvere e scintille), effetti3d, chiarori (aloni, colonne di luce, anelli), figure (l'atlante), eroe
-  (modello 3D e figure dell'eroe), mostri3d. Eroe, mostri ed effetti 3D stanno in un `Group` col nome. `post` ora si legge a ogni
-  fotogramma (`post && ACCESI.post`).
-- **Mondo di sopra** (`mondo/indice.js`, `mondo/persone.js`): `ELEMENTI_SOPRA` = terreno (pezzi, fuori, lontano, campi, piazza),
-  mare, natura, case (tutto il resto del pezzo), cielo, sole (la luce), velo (la nebbia dell'esplorazione), vita, scia, persone (figure,
-  macchie d'ombra, persone 3D, palco), eroe, mostri3d.
-- Si spengono a mano col cheat che c'era: `#…&spegni=pavimento,pareteVicina` (discese) o `&spegni=case,natura` (mondo).
-- **Le leve semplici** (in `ACCESI`, spente = versione semplice): `rilievo` (niente normal map né trama di ruvidezza su pavimento,
-  pareti, colonne e terreno/piazza/campi di sopra), `nebbiaFitta` (una fetta sola, con la densità delle fette che sostituisce:
-  `creaNebbia(…, forza)`), `quantaPolvere` (0,4: meno granelli). Con `ombre` (già c'era: niente ombra del cono né del sole) sono la
-  «fascia bassa semplificata» proposta. **Non sono ancora in `SPEGNI_BASSA`** (`store/qualita.js`): mancano gli scatti prima/dopo;
-  per provarle `#…&qualita=bassa&spegni=ombre,rilievo,nebbiaFitta,quantaPolvere:0.4`.
-- `applicaFascia(spegni, riaccendi)` e il cheat `&riaccendi=ombre,…` (Gioco.vue, Mondo3d.vue): rimette come scritto quello che la
-  fascia spegne, per confrontare «com'era» e «semplificata» con la stessa prova.
-
-**Manca, in ordine.**
-1. La fattoria 3D: un `Set` di spenti in `Mondo3d` (dal cheat `&spegni=`) e `creaElementi` prima del `render` in `_fotogramma`; i nomi
-   da mettere: terreno (`terreno.suolo`, velo/pali/travi), strade (`stradeMesh`), alberi (`istanzeAlberi`, `istanzeOstacoli`), erba
-   (`ciuffi`), acqua (mare, lastra, riva, spiaggia, terraSuMare, canne, ninfee, pesci), campi (`pezzi._creaCosa` tipo campo e i banchi
-   `campi:*`), edifici (edifici, case fisse, banchi `statici`), pezzi (le altre cose), animali (`compagni`), eroe, stagione, sole; il
-   resto col nome `resto`. Speciali nella prova: l'ombra (`sole.castShadow`), la nebbia (`scena.fog`).
-2. Gli Asteroidi 3D (`grafica/spazio3d/indice.js`) come termine di confronto: cielo, sassi, nave, madre, effetti, luci, post; la prova
-   deve fare un `q` finto (asteroidi `{x, y, r, ph}`, nave `{x, y, r}`, `anelli`, `particelle`, `raggi`, `frammenti` vuoti).
-3. La prova in app: `src/grafica/benchmark/veri/elementi-*.js` (una famiglia per scena, `scena(s)` con `s.accesi`: mette `ACCESI[k]`
-   e chiama il passo; speciali `ombra` = `castShadow` del cono o del sole, `normali` = `leve().senzaNormali`, `post`), i gruppi
-   `elementi-<scena>` (accendi) e `elementi-<scena>-togli` (così il riferimento del calore si rifà a metà) in una lista a parte da
-   `TAPPE` in `veri.js`, tempi corti (~4 s dopo un rodaggio di 1,5-3,5 s), le luci e i ritocchi misurati sopra una base (pavimento,
-   pareti, colonne, torcia), e una scena «com'era» (`riaccendi` le leve) contro «semplificata». `solo` deve poter scegliere per gruppo.
-4. `log-elementi.js`: la TABELLA per scena («elemento: +X ms (js a, gpu b) da solo / −Y tolto, ch, kt, +sh», in ordine) e la
-   LETTURA (i cinque più cari, JS o GPU, il fondo del giro del gioco senza disegnare, quanto tolgono le leve); unità con dati finti.
-5. `Benchmark.vue`: il tasto «Chi pesa» (`data-azione="benchmark-elementi"`) e l'ultima in `store/benchmark.js`; lo strumento
-   (`strumenti/vecchio-telefono.mjs benchmark --veri --solo elementi`); un test del browser solo (`nice`), corto.
-6. Gli scatti prima/dopo di ogni leva in `tmp/scatti/` (la scena dello scontro con `scatta-app.mjs` apre prima il foglio «Chi
-   scende?»: serve il tocco sul cavaliere), poi le leve in `SPEGNI_BASSA` dopo il sì di Marco.
+**Manca.**
+1. Il resoconto «Chi pesa» del Redmi Note 7, e da lì quali leve vanno in `SPEGNI_BASSA` (`store/qualita.js`) e nel preset
+   `basso` della fattoria: dopo il sì di Marco sugli scatti.
+2. Per gli elementi più cari senza leva (secondo la tabella): la semplificazione scritta in `SEMPLICE` (`elementi-dati.js`).
+3. Le leve dei colli (`veri/moltiplica.js`): con la pelle (`salda3d.js`) mostri ed eroe sono SkinnedMesh, che `triangoli` e `chiamate`
+   saltano: `integrazione/benchmark-veri` non vede più «triangoli ×2» e «chiamate ×2» crescere abbastanza (121k contro 87k, 106 contro 89).
