@@ -4,6 +4,7 @@
 import { WebGLRenderer, BasicShadowMap, ACESFilmicToneMapping } from 'three'
 import { DPR, LUCE, ACCESI, applicaFascia } from './costanti.js'
 import { profilo } from '../../../store/qualita.js'
+import { segui, rilascia } from '../../../grafica/rilascio3d.js'
 
 // `antialias`: il mondo di sopra lo vuole (staccionate, corde, bordi dei tetti); le discese no (il passaggio finale le ammorbidisce)
 export function creaContesto(canvas, { perso, fisso, antialias = false, spegni = [], riaccendi = [] } = {}) {
@@ -14,7 +15,7 @@ export function creaContesto(canvas, { perso, fisso, antialias = false, spegni =
   } catch (e) { gl = null }
   if (!gl || gl.isContextLost()) return null
   let renderer
-  try { renderer = new WebGLRenderer({ canvas, context: gl, antialias, alpha: false }) } catch (e) { return null }
+  try { renderer = segui(new WebGLRenderer({ canvas, context: gl, antialias, alpha: false })) } catch (e) { return null }
   renderer.shadowMap.enabled = ACCESI.ombre
   renderer.shadowMap.type = BasicShadowMap   // PCF filtra LINEAR una texture di profondità (Firefox avvisa), VSM costa il doppio (docs/sotterraneo/grafica-3d-portale.md)
   renderer.toneMapping = ACESFilmicToneMapping
@@ -51,6 +52,7 @@ export function creaContesto(canvas, { perso, fisso, antialias = false, spegni =
       if (media > DPR.lento && dpr > DPR.min) dprNuovo = Math.round(Math.max(DPR.min, dpr - 0.1) * 100) / 100
       else if (media < DPR.svelto && dpr < dprMax) dprNuovo = Math.round(Math.min(dprMax, dpr + 0.05) * 100) / 100
     },
-    via() { canvas.removeEventListener('webglcontextlost', perdi); try { renderer.dispose() } catch (e) { /* già andato */ } },
+    // chiuso davvero (grafica/rilascio3d.js): niente più ascoltatori sulle cose condivise, e il contesto perso subito
+    via() { canvas.removeEventListener('webglcontextlost', perdi); rilascia(renderer) },
   }
 }

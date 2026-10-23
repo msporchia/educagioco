@@ -6,6 +6,7 @@
 import { WebGLRenderer, Scene, PerspectiveCamera, AmbientLight, DirectionalLight, PointLight, ACESFilmicToneMapping,
          WebGLRenderTarget, HalfFloatType, Mesh, PlaneGeometry, ShaderMaterial, OrthographicCamera, Vector2,
          PMREMGenerator, MeshBasicMaterial, Color, DoubleSide, BackSide, SphereGeometry } from 'three'
+import { segui, rilascia } from '../rilascio3d.js'
 import { creaCielo, DIREZIONE_SOLE } from './cielo.js'
 import { creaSassi } from './sassi.js'
 import { creaNave } from './nave.js'
@@ -67,7 +68,7 @@ export function creaSpazio3d(canvas, { perso, dpr } = {}) {
                                        premultipliedAlpha: true, powerPreference: 'high-performance' })
   } catch (e) { gl = null }
   if (!gl || gl.isContextLost()) return null
-  try { renderer = new WebGLRenderer({ canvas, context: gl, antialias: false, alpha: false }) } catch (e) { return null }
+  try { renderer = segui(new WebGLRenderer({ canvas, context: gl, antialias: false, alpha: false })) } catch (e) { return null }
 
   let tutto
   try { tutto = costruisci(renderer, dpr) } catch (e) {
@@ -212,8 +213,7 @@ function costruisci(renderer, fisso) {
     },
     distruggi() {
       this.toglie?.()
-      renderer.dispose()
-      renderer.forceContextLoss?.()
+      rilascia(renderer)   // anche gli ascoltatori sulle cose che i moduli tengono in cache (grafica/rilascio3d.js)
     },
   }
 }

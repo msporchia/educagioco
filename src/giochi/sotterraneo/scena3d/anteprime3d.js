@@ -15,6 +15,7 @@ import { aggiungiAlone } from './roba3d/aloni.js'
 import { idDi, costruisci } from './mostri3d/registro.js'
 import { creaPersona } from './persone3d/persone.js'
 import { elencaProgrammi } from './programmi.js'
+import { segui, rilascia } from '../../../grafica/rilascio3d.js'
 
 const FOV = 24
 const ATTESA_PROGRAMMA = 60   // ms lasciati alla compilazione di un programma nuovo, senza KHR_parallel_shader_compile (l'Adreno 512: 50-300)
@@ -160,11 +161,11 @@ export function creaAnteprime3d({ ozio = 30000, budget = 16, perdite = 3 } = {})
       canvas.addEventListener('webglcontextlost', () => {
         if (!renderer || renderer.domElement !== canvas) return
         misure.perdite++
-        try { renderer.dispose() } catch (e) { /* già andato */ }
+        rilascia(renderer)
         renderer = null
         if (misure.perdite >= perdite) rotto = true
       })
-      renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true, preserveDrawingBuffer: true, powerPreference: 'low-power' })
+      renderer = segui(new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true, preserveDrawingBuffer: true, powerPreference: 'low-power' }))
       renderer.setPixelRatio(1)
       renderer.outputColorSpace = THREE.SRGBColorSpace
       renderer.toneMapping = THREE.ACESFilmicToneMapping
@@ -187,7 +188,7 @@ export function creaAnteprime3d({ ozio = 30000, budget = 16, perdite = 3 } = {})
     if (!renderer) return
     const r = renderer
     renderer = null                       // prima: il webglcontextlost che segue trova la tela già chiusa
-    try { r.dispose(); r.forceContextLoss() } catch (e) { /* già andato */ }
+    rilascia(r)   // anche gli ascoltatori sulle cose che i moduli tengono in cache (grafica/rilascio3d.js)
   }
 
   // L'anteprima a fette (docs/sotterraneo/anteprime-3d.md, «Quanto costa»), ognuna in un compito suo: il renderer se non c'è; il modello

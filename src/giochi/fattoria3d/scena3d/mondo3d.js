@@ -5,6 +5,7 @@
 // `ui` (le porte verso Gioco.vue): cambio(), chiedi(titolo, testo, bottoni), scegliSeme(cb), apriMacchina(tipo),
 //   avviso(testo), chiudiCostruzione(), fogliAperti(), zonaDrop() → DOMRect|null, trascinando(info|null).
 import * as THREE from 'three'
+import { segui, rilascia } from '../../../grafica/rilascio3d.js'
 import { segna, creaElementi } from '../../../grafica/elementi3d.js'
 import { Terreno } from './terreno.js'
 import { Pezzi } from './pezzi.js'
@@ -44,7 +45,7 @@ export class Mondo3d {
     this.cmd = { modo: 'libero', seme: 'grano', strumento: null }
     this.rect = canvas.getBoundingClientRect()
 
-    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' })
+    this.renderer = segui(new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' }))
     this.renderer.shadowMap.enabled = true; this.renderer.shadowMap.type = THREE.PCFShadowMap
     // l'ombra si ridisegna a comando (`_fotogramma`): a ogni fotogramma di serie, più di rado se la macchina non regge (dati/degrado.js)
     this.renderer.shadowMap.autoUpdate = false
@@ -465,6 +466,6 @@ export class Mondo3d {
     this.ferma(); this.ro?.disconnect(); this.dito.via()
     this.stagione?.via(); this.pezzi.via(); this.fx.via(); this.terreno.via(); this.compagni.via(); this.pesca3d.via()
     this._anteprime?.via()
-    try { this.renderer.dispose() } catch (e) { /* già andato */ }
+    rilascia(this.renderer)   // anche gli ascoltatori sulle cose che i moduli tengono in cache, e il contesto (grafica/rilascio3d.js)
   }
 }
