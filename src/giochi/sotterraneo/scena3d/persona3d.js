@@ -14,9 +14,9 @@ const ALTEZZA_SPRITE = 0.72
 const GUARDA = 6            // celle: più vicino di così l'eroe, la persona si gira verso di lui (come il saluto di Mondo3d.vue)
 
 /** `scena`: dove si aggiungono. `quanti()`: quanti modelli al più nello stesso fotogramma (i più vicini all'eroe). */
-export function creaPersone3d(scena, { quanti = () => 8 } = {}) {
+export function creaPersone3d(scena, { quanti = () => 8, ozio = 0 } = {}) {
   const riserve = new Map(), guasti = new Set()
-  let usate = 0
+  let usate = 0, prossimoOzio = 0
 
   function nuova(modello) {
     try {
@@ -50,6 +50,7 @@ export function creaPersone3d(scena, { quanti = () => 8 } = {}) {
       if (usate >= quanti() || !this.ha(modello)) return false
       const ist = prendi(s, modello)
       if (!ist) return false
+      ist.usata = performance.now()
       usate++
       const { g, radice } = ist, u = g.userData
       try {
@@ -76,6 +77,22 @@ export function creaPersone3d(scena, { quanti = () => 8 } = {}) {
     },
     chiudi() {
       for (const l of riserve.values()) for (const i of l) if (!i.presa) { i.radice.visible = false; if (i.chi) { i.chi.p3d = null; i.chi = null } }
+      // `ozio` (s): chi non si vede da tanto si butta, come i mostri di sopra (mostro3d.js); le geometrie che nessun altro usa con lui
+      if (ozio && performance.now() > prossimoOzio) {
+        prossimoOzio = performance.now() + Math.min(2000, ozio * 500)
+        const fino = performance.now() - ozio * 1000, via = [], tenute = new Set()
+        for (const [k, l] of riserve) {
+          const resta = l.filter(i => i.chi || (i.usata || 0) > fino)
+          for (const i of l) if (!resta.includes(i)) via.push(i)
+          if (resta.length) riserve.set(k, resta); else riserve.delete(k)
+          for (const i of resta) i.g.traverse(o => { if (o.geometry) tenute.add(o.geometry) })
+        }
+        for (const i of via) {
+          scena.remove(i.radice)
+          i.g.traverse(o => { if (o.geometry && !tenute.has(o.geometry)) o.geometry.dispose() })
+          if (i.g.userData.scheletro) i.g.userData.scheletro.dispose()
+        }
+      }
     },
     get visibili() { return usate },
     get quante() { let n = 0; for (const l of riserve.values()) n += l.length; return n },

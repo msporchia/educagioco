@@ -75,9 +75,9 @@ function tingi(ist, bianco, tinta, forzaTinta, trasparenza) {
 }
 
 /** `scena`: dove si aggiungono. `quanti()`: quanti al più nello stesso fotogramma (ACCESI.mostri3d). */
-export function creaMostri3d(scena, { quanti = () => 12 } = {}) {
+export function creaMostri3d(scena, { quanti = () => 12, ozio = 0 } = {}) {
   const riserve = new Map()      // id → [istanze]
-  let usate = 0
+  let usate = 0, prossimoOzio = 0
   const modellati = []           // [roba, radice] per il dito, di questo fotogramma
 
   // chi ha più mosse (dati/mosse.js) ha istanze sue, preparate con le animazioni delle mosse (mostri3d/mosse-anim.js): la riserva
@@ -110,6 +110,7 @@ export function creaMostri3d(scena, { quanti = () => 12 } = {}) {
       if (usate >= quanti()) return -1
       const ist = prendi(s, id, p.mosse)
       if (!ist) return -1
+      ist.usata = performance.now()
       usate++
       const { radice, piega, g } = ist
       const c = liscio(p.morente / 0.6)   // quanto è già caduto
@@ -183,6 +184,13 @@ export function creaMostri3d(scena, { quanti = () => 12 } = {}) {
     /** Nasconde le istanze che nessuno ha preso in questo fotogramma. */
     chiudi() {
       for (const l of riserve.values()) for (const i of l) if (!i.presa) { i.radice.visible = false; if (i.chi) { i.chi.m3d = null; i.chi = null } }
+      // `ozio` (s): nel mondo di sopra i mostri vanno e vengono con le zone, e la riserva teneva ogni specie incontrata; chi non si
+      // vede da tanto si butta (una volta ogni due secondi si guarda)
+      if (ozio && performance.now() > prossimoOzio) {
+        prossimoOzio = performance.now() + Math.min(2000, ozio * 500)
+        const fino = performance.now() - ozio * 1000
+        this.sfoltisci(null, i => (i.usata || 0) > fino)
+      }
     },
     modellati,
     /** Dove nascono i colpi a distanza di un mostro (l'`origine` del modello, nel mondo), o null. */
@@ -211,10 +219,10 @@ export function creaMostri3d(scena, { quanti = () => 12 } = {}) {
      * Butta le istanze dei modelli che non sono in `ids` (i mostri del piano nuovo) e che nessuno tiene: le loro geometrie (quelle che
      * nessun'altra istanza usa) e lo scheletro della pelle. I materiali no: buttato l'ultimo, three ricompila il programma al prossimo.
      */
-    sfoltisci(ids) {
+    sfoltisci(ids, resta_ = i => ids.has(i.id)) {
       const via = [], tenute = new Set()
       for (const [k, l] of riserve) {
-        const resta = l.filter(i => i.chi || ids.has(i.id))
+        const resta = l.filter(i => i.chi || resta_(i))
         for (const i of l) if (!resta.includes(i)) via.push(i)
         if (resta.length) riserve.set(k, resta); else riserve.delete(k)
         for (const i of resta) i.g.traverse(o => { if (o.geometry) tenute.add(o.geometry) })

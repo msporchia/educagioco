@@ -19,6 +19,8 @@ export const SCALA_PERSONE = 1.25
 // il mondo è già pieno di cose: i modelli 3D sono pochi, per chi è vicino (8, nella fascia bassa 6: `mostriSopra` di store/qualita.js)
 const MOSTRI_3D_SOPRA = 8
 const OMBRE_MAX = 120
+// s: un modello 3D che non si vede da tanto lascia la riserva (le specie e le persone di zone già lasciate)
+const OZIO = 30
 // le persone in 3D (docs/sotterraneo/persone-3d.md): le più vicine all'eroe, entro questa distanza in celle; le altre restano sprite
 const PERSONE_3D_SOPRA = 8, PERSONE_3D_VICINO = 18
 
@@ -56,9 +58,9 @@ export function creaPersone(scena, { tex, norm, larga, alta, pezzi, trame, quota
   // `&folla=`, `&branco3d=`, `&tetto3d=`: la folla finta delle misure (folla-prova.js, docs/sotterraneo/limiti-3d.md)
   const prova = leggiFolla()
   const tettoMostri = prova.tetto || (profilo('sotterraneo').mostriSopra ?? MOSTRI_3D_SOPRA), tettoPersone = prova.tetto || PERSONE_3D_SOPRA
-  const mostri3d = mostri3dAccesi() && ACCESI.mostri3d > 0 ? creaMostri3d(gruppo('mostri'), { quanti: () => Math.min(ACCESI.mostri3d, tettoMostri) }) : null
+  const mostri3d = mostri3dAccesi() && ACCESI.mostri3d > 0 ? creaMostri3d(gruppo('mostri'), { quanti: () => Math.min(ACCESI.mostri3d, tettoMostri), ozio: OZIO }) : null
   const statiMostri = new Map()
-  const persone3d = persone3dAccese() ? creaPersone3d(gruppo('persone'), { quanti: () => tettoPersone }) : null
+  const persone3d = persone3dAccese() ? creaPersone3d(gruppo('persone'), { quanti: () => tettoPersone, ozio: OZIO }) : null
   const statiPersone = new Map()
   const salita = (x, z, t) => { const k = Math.max(0, Math.min(1, (t - nebbia.quando(x, z)) / SALITA)); return k * k * (3 - 2 * k) }
 

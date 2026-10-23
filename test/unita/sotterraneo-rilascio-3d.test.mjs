@@ -11,6 +11,7 @@
    ═══════════════════════════════════════════════════════════════════ */
 import { BufferGeometry, MeshBasicMaterial, Group } from 'three'
 import { creaMostri3d } from '../../src/giochi/sotterraneo/scena3d/mostro3d.js'
+import { creaPersone3d } from '../../src/giochi/sotterraneo/scena3d/persona3d.js'
 import { segui, rilascia } from '../../src/grafica/rilascio3d.js'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 
@@ -80,6 +81,24 @@ uguale('un metodo seguito torna il suo valore col suo this', d.conta(), 7)
   uguale('e la sua radice è fuori dalla scena', scena.children.length, 1)
   M.inizia(); M.chiudi()   // il lupo non è più preso
   uguale('nel piano del lupo, il lupo resta', M.sfoltisci(new Set([lupo])), 0)
+}
+
+// nel mondo di sopra (e sul prato) la riserva si sfoltisce da sé: chi non si vede da `ozio` secondi se ne va (mostri e persone)
+{
+  const aspetta = ms => new Promise(r => setTimeout(r, ms))
+  const scena = new Group(), M = creaMostri3d(scena, { ozio: 0.02 }), P = creaPersone3d(scena, { ozio: 0.02 })
+  const lupo = M.idDi({ tipo: 'lupo', grado: 'comune' }), sL = {}, sP = {}
+  const passo = (conLupo, conPersona) => {
+    M.inizia(); if (conLupo) M.metti({ tipo: 'lupo' }, sL, lupo, { x: 0, z: 0, alto: 1, t: 0, dt: 0.016, trasparenza: 1, morente: 0, bianco: 0, attacco: -1 }); M.chiudi()
+    P.inizia(); if (conPersona) P.metti(sP, 'capitano', { x: 1, z: 0, alto: 1.6, eroe: { x: 0, z: 0 }, t: 0, dt: 0.016 }); P.chiudi()
+  }
+  passo(true, true)
+  uguale('il lupo e il capitano in riserva', [M.quante, P.quante].join(), '1,1')
+  await aspetta(40); passo(true, true)
+  uguale('visti da poco, restano', [M.quante, P.quante].join(), '1,1')
+  await aspetta(40); passo(false, false)
+  uguale('non visti da più di ozio, se ne vanno', [M.quante, P.quante].join(), '0,0')
+  uguale('e la scena è vuota', scena.children.length, 0)
 }
 
 riassunto('chiudere un renderer davvero')

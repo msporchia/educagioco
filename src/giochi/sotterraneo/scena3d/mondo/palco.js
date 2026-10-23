@@ -65,7 +65,7 @@ export function creaPalcoSopra(scena, { tex, norm, larga, alta, pezzi, quota, ca
   // i modelli 3D e gli effetti 3D come nello scontro delle discese (scena3d/indice.js, docs/sotterraneo/mostri-3d.md): dentro il gruppo
   // del palco, quindi sul prato dove si è; lo sprite resta se il modello manca (`#sprite`, `#eroe2d` li spengono)
   const eroe3d = eroe3dAcceso() ? creaEroe3d(gruppo) : null
-  const mostri3d = mostri3dAccesi() && ACCESI.mostri3d > 0 ? creaMostri3d(gruppo, { quanti: () => ACCESI.mostri3d }) : null
+  const mostri3d = mostri3dAccesi() && ACCESI.mostri3d > 0 ? creaMostri3d(gruppo, { quanti: () => ACCESI.mostri3d, ozio: 60 }) : null
   const effetti3d = ACCESI.effetti3d ? creaGestore(gruppo, { camera: cam.camera }) : null
   const cose = creaCose({ figure: fig, aloni, colonne, etichette, camera: camPalco, mostri3d, vicino: () => eroe.disegnato })
   const S = { eroe, campo: null, scintille, luci, anelli, fermo: 0, scossa: 0, rosso: 0, tBolla: 9, tempo: 0, colpoEroe: null, stato: cose.stato,
