@@ -12,10 +12,10 @@
 export function pesa(o) {
   const p = { chiamate: 0, triangoli: 0, luci: 0, fisici: 0, pelle: 0, additivi: 0, trasparenti: 0, shader: 0, tipi: {} }
   const ricette = new Set()
-  o.traverse(x => {
-    if (x.visible === false) return
+  o.traverseVisible(x => {                               // un gruppo spento (le fiamme del soffio a riposo) non si disegna, coi figli
     if (x.isPointLight || x.isSpotLight) { p.luci++; return }
     if (!(x.isMesh || x.isPoints || x.isLine || x.isSprite)) return
+    if ((x.layers.mask & 1) === 0) return              // un osso della pelle (scena3d/salda3d.js): lo disegna la SkinnedMesh
     const g = x.geometry, mats = [].concat(x.material || [])
     const gruppi = Array.isArray(x.material) && g && g.groups.length ? g.groups.length : 1
     p.chiamate += gruppi
