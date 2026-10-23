@@ -92,3 +92,8 @@ vinte quasi sempre (`misura` 80-99%). Adesso 80% → 30% e il tetto dalla tappa 
 80% alla tappa 2, 57% alla 5, 38% all'ultima. Il nemico è lo stesso (stesse regole, stessa IA): salgono solo `d` e
 con lui monete, forza e furbizia. Il rush nelle prime tappe resta sopra il tetto (70-90%): la palude non si ferma
 senza snaturare il bambino. Se anche così è facile, il passo dopo è il Difficile come livello di base.
+
+Il 23 ottobre, con le riparazioni limitate del nemico (`VERSIONE_IA` 13), le tre rampe sono state ritarate e le
+promesse reggono: il nemico ora è più forte a parità di `d`, quindi `d` è sceso (Medio, ultima tappa: 0,96 → 0,82).
+`-- --infinita --mono` (una truppa sola, mai miniera, in ogni terreno) è il controllo contro le strade senza
+contromossa; [nemico.md](nemico.md).

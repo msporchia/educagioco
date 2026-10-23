@@ -13,7 +13,7 @@
 //   npm run tara:arena -- --misura --d 1 --furbizia 0   # contro un nemico fisso (la furbizia forzata)
 //   npm run tara:arena -- --misura --ricco 1.3   # nemico con il 30% di monete e di forza in più
 //   npm run tara:arena -- --misura --draghi   # e anche chi fa solo draghi, senza miniera
-//   npm run tara:arena -- --infinita    # i giocatori finti nella battaglia infinita, un livello e un terreno alla volta (--livello: uno solo; non tara niente)
+//   npm run tara:arena -- --infinita    # i giocatori finti nella battaglia infinita, un livello e un terreno alla volta (--livello: uno solo, --mono: chi costruisce una truppa sola; non tara niente)
 import { writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
@@ -124,9 +124,13 @@ if (argv.includes('--misura')) {
 if (argv.includes('--infinita')) {
   const LIMITE = 1800
   const livelli = argv.includes('--livello') ? [argv[argv.indexOf('--livello') + 1]] : Object.keys(LIVELLI)
+  // `--mono`: al posto dei piloti di sempre, chi costruisce una truppa sola e mai la miniera (una per volta): nessuna strada
+  // senza contromossa deve vincere sempre (docs/arena/taratura.md)
+  const mono = argv.includes('--mono')
   for (const livello of livelli) for (const terreno of TERRENI) {
     const sfida = sfidaInfinita(terreno, livello)
-    const riga = (await Promise.all(Object.entries(PILOTI).map(async ([n, p]) => {
+    const piloti = mono ? Object.fromEntries(sfida.truppe.map(id => [id, { ...PILOTI.rush, truppa: id }])) : PILOTI
+    const riga = (await Promise.all(Object.entries(piloti).map(async ([n, p]) => {
       const r = await misura({ volte: 30, sfida, pilota: p, limite: LIMITE })
       return `${n} ${Math.round(r.vinte / 30 * 100)}% ${r.secondi}s${r.pari ? ` (${r.pari} aperte)` : ''}`
     }))).join(' · ')

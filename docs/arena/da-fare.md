@@ -11,7 +11,7 @@
 - La copertina dipinta della home (oggi quella del manifesto) e la guida in
   app (`AIUTI.arena`, il «?» della barra).
 - La battaglia infinita è fatta (senza timer, nemico al massimo, un terreno a ogni volta, niente record):
-  il nemico ora impara col tempo ([nemico.md](nemico.md)), la palude resta troppo facile per chi non fa miniera; il pezzo dipinto della tana delle bestie cornute (oggi la capanna dei lupi).
+  il nemico ora impara col tempo ([nemico.md](nemico.md)), la palude resta troppo facile per chi mette un po' di tutto e non fa miniera ([nemico.md](nemico.md)); il pezzo dipinto della tana delle bestie cornute (oggi la capanna dei lupi).
 - `test/misure/arena.test.mjs`: le promesse della taratura (il bambino di prova
   vince la quota della tappa) come test d'equilibrio, oltre alla firma.
 - La bomba: scegliere il punto col dito (oggi lo sceglie il gioco), un effetto più epico e il suono.
