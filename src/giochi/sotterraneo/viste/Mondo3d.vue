@@ -1182,7 +1182,7 @@ async function nasci() {
   const h = new URLSearchParams(location.hash.slice(1))
   // `zone`: la scena ha caricato o scaricato una zona (una per fotogramma): la terra dove si cammina si rifà al passo dopo; i mostri
   // seguono da soli (motore/aperta.js guarda m.zonaCaricata)
-  scena = mod.creaMondo3d(tela.value, { m, nebbia, passo, dopo, fontane, strato: stratoEl.value, dpr: Number(h.get('dpr')) || undefined, spegni: (h.get('spegni') || '').split(',').filter(Boolean), perso: () => { perso.value = true },
+  scena = mod.creaMondo3d(tela.value, { m, nebbia, passo, dopo, fontane, strato: stratoEl.value, dpr: Number(h.get('dpr')) || undefined, spegni: (h.get('spegni') || '').split(',').filter(Boolean), riaccendi: (h.get('riaccendi') || '').split(',').filter(Boolean), perso: () => { perso.value = true },
     frecce: Object.fromEntries(m.citta.map(c => [c.chiave, frecceDelCartello(m, c.chiave).map(f => versoInRadianti(f.verso))])),
     da: { x: Math.floor(io.x), y: Math.floor(io.z) }, zone: (k, caricata) => { if (caricata) terraVecchia = true } })
   if (!scena) { perso.value = true; return }

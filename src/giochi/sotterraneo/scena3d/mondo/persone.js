@@ -3,7 +3,7 @@
 // piedi (più l'ombra vera del sole), le persone a scala 1,25 dell'eroe, come sulla terra dipinta. L'eroe è quello delle discese
 // (scena3d/eroe.js, con le armi in mano), posato sul terreno. Chi non si è visto non si disegna; entrando in vista sale dal
 // terreno come gli oggetti.
-import { DataTexture, RGBAFormat, Vector2, InstancedMesh, PlaneGeometry, MeshBasicMaterial, Matrix4, Quaternion, Vector3, Euler } from 'three'
+import { Group, DataTexture, RGBAFormat, Vector2, InstancedMesh, PlaneGeometry, MeshBasicMaterial, Matrix4, Quaternion, Vector3, Euler } from 'three'
 import { creaFigure } from '../figure.js'
 import { disegnaEroe } from '../eroe.js'
 import { creaEroe3d, eroe3dAcceso } from '../eroe3d.js'
@@ -13,6 +13,7 @@ import { ACCESI } from '../costanti.js'
 import { SALITA } from './vesti.js'
 import { leggiFolla, personeFinte, mostriFinti } from './folla-prova.js'
 import { profilo } from '../../../../store/qualita.js'
+import { segna, segnaNuovi } from '../../../../grafica/elementi3d.js'
 
 export const SCALA_PERSONE = 1.25
 // il mondo è già pieno di cose: i modelli 3D sono pochi, per chi è vicino (8, nella fascia bassa 6: `mostriSopra` di store/qualita.js)
@@ -31,13 +32,15 @@ export function mascheraPiena() {
 export function creaPersone(scena, { tex, norm, larga, alta, pezzi, trame, quota, nebbia }) {
   const maschera = mascheraPiena()
   const base = { tex, norm, larga, alta, pezzi, maschera, contorno: true }
-  const figure = creaFigure(scena, { ...base, max: 150 })
-  const figureEroe = creaFigure(scena, { ...base, max: 8 })
+  // gli elementi (grafica/elementi3d.js): le persone (e i mostri a sprite, che stanno nelle stesse figure), l'eroe, i mostri 3D
+  const gruppo = nome => { const g = segna(new Group(), nome); scena.add(g); return g }
+  const figure = segnaNuovi(scena, 'persone', () => creaFigure(scena, { ...base, max: 150 }))
+  const figureEroe = segnaNuovi(scena, 'eroe', () => creaFigure(scena, { ...base, max: 8 }))
   const geo = new PlaneGeometry(1, 1).rotateX(-Math.PI / 2)
   const mat = new MeshBasicMaterial({ map: trame.macchia, color: 0x000000, transparent: true, opacity: 0.42, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 })
   const ombre = new InstancedMesh(geo, mat, OMBRE_MAX)
   ombre.count = 0; ombre.frustumCulled = false; ombre.renderOrder = 3
-  scena.add(ombre)
+  scena.add(segna(ombre, 'persone'))
   const M4 = new Matrix4(), Q = new Quaternion(), P = new Vector3(), S = new Vector3(), E = new Euler()
   let nOmbre = 0
   const ombra = (x, y, z, r) => { if (nOmbre < OMBRE_MAX) ombre.setMatrixAt(nOmbre++, M4.compose(P.set(x, y + 0.04, z), Q.identity(), S.set(r, 1, r * 0.7))) }
@@ -46,16 +49,16 @@ export function creaPersone(scena, { tex, norm, larga, alta, pezzi, trame, quota
   const finta = { eroe: { x: 0, y: 0 }, versoEroe: { dx: 0, dy: 1 }, io: { sprite: 'cavaliere' }, mano: null, mancina: null, vita: 1, vitaMax: 1 }
   const nessuna = { torcia() {} }, niente = { metti() {} }
   // in prova: l'eroe è il modello 3D delle discese, posato sul terreno (`#eroe2d` torna allo sprite)
-  const eroe3d = eroe3dAcceso() ? creaEroe3d(scena) : null
+  const eroe3d = eroe3dAcceso() ? creaEroe3d(gruppo('eroe')) : null
   const quotaEroe = (x, z) => quota(x, z - 0.1)
   // i mostri di sopra: i più vicini (al più MOSTRI_3D_SOPRA) con il modello 3D delle discese, gli altri restano sprite; lo stato di disegno
   // di ognuno (la sua istanza, dove guarda) sta qui per indice del mostro
   // `&folla=`, `&branco3d=`, `&tetto3d=`: la folla finta delle misure (folla-prova.js, docs/sotterraneo/limiti-3d.md)
   const prova = leggiFolla()
   const tettoMostri = prova.tetto || (profilo('sotterraneo').mostriSopra ?? MOSTRI_3D_SOPRA), tettoPersone = prova.tetto || PERSONE_3D_SOPRA
-  const mostri3d = mostri3dAccesi() && ACCESI.mostri3d > 0 ? creaMostri3d(scena, { quanti: () => Math.min(ACCESI.mostri3d, tettoMostri) }) : null
+  const mostri3d = mostri3dAccesi() && ACCESI.mostri3d > 0 ? creaMostri3d(gruppo('mostri3d'), { quanti: () => Math.min(ACCESI.mostri3d, tettoMostri) }) : null
   const statiMostri = new Map()
-  const persone3d = persone3dAccese() ? creaPersone3d(scena, { quanti: () => tettoPersone }) : null
+  const persone3d = persone3dAccese() ? creaPersone3d(gruppo('persone'), { quanti: () => tettoPersone }) : null
   const statiPersone = new Map()
   const salita = (x, z, t) => { const k = Math.max(0, Math.min(1, (t - nebbia.quando(x, z)) / SALITA)); return k * k * (3 - 2 * k) }
 

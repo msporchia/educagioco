@@ -3,7 +3,7 @@
 // clicca (`premi`, `trascina`), il colpo dell'eroe (`colpo`), gli agganci delle scritte dello scontro (`aggancia`) e quanto costa
 // (`grafica`). Riceve fatti già decisi (la corsa, il racconto del turno) e li disegna: chi gioca non disegna. Se WebGL 2 non c'è
 // torna null; se il contesto si perde chiama `perso`. La mappa dei moduli: docs/sotterraneo/grafica-3d.md.
-import { Scene, Color, Texture, SRGBColorSpace, NearestFilter, Vector3 } from 'three'
+import { Scene, Group, Color, Texture, SRGBColorSpace, NearestFilter, Vector3 } from 'three'
 import { ATLANTE, PEZZI } from '../dati/atlante.js'
 import { creaContesto } from './contesto.js'
 import { creaCamera } from './camera.js'
@@ -28,7 +28,8 @@ import { creaAzione } from './azione.js'
 import { costruisciPiano } from './piano.js'
 import { creaScontro } from './scontro.js'
 import { creaContorno } from './contorno.js'
-import { ACCESI, POLVERE, SCINTILLE, FIGURE_MAX, ALONI_MAX, MARGINE_DITO } from './costanti.js'
+import { ACCESI, POLVERE, SCINTILLE, FIGURE_MAX, ALONI_MAX, MARGINE_DITO, ELEMENTI_DISCESE, elementoAcceso } from './costanti.js'
+import { segna, segnaNuovi, creaElementi } from '../../../grafica/elementi3d.js'
 import { verso } from './tempo.js'
 import { elencaProgrammi } from './programmi.js'
 import { COSE } from '../dati/cose.js'
@@ -38,7 +39,7 @@ const NIENTE = { emetti() {}, aggiorna() {}, aspetto() {}, via() {} }
 
 export function creaSotterraneo3d(canvas, opz = {}) {
   // `spegni`: i pezzi di ACCESI da spegnere, per misurare quanto costa ognuno (il cheat `&spegni=nebbia,post`): mai per i bambini
-  const ctx = creaContesto(canvas, { perso: opz.perso, fisso: opz.dpr, spegni: opz.spegni })
+  const ctx = creaContesto(canvas, { perso: opz.perso, fisso: opz.dpr, spegni: opz.spegni, riaccendi: opz.riaccendi })
   if (!ctx) return null
   try { return costruisci(canvas, ctx, opz) } catch (e) {
     console.warn('sotterraneo 3D: non parte', e)
@@ -56,18 +57,21 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
   const luci = creaLuci(scena, aspettoDi(null))
   const maschera = creaMaschera()
   const post = ACCESI.post ? creaPost(renderer) : null
-  const aloni = creaAloni(scena, ALONI_MAX), colonne = creaColonne(scena), anelli = creaAnelli(scena)
-  const scintille = ACCESI.scintille ? creaScintille(scena, Math.round(SCINTILLE * Math.min(1, ACCESI.quanteScintille))) : NIENTE
-  const polvere = ACCESI.polvere ? creaPolvere(scena, POLVERE, luci.condivise, maschera) : NIENTE
+  // gli elementi (grafica/elementi3d.js): chi pesa si misura spegnendone uno alla volta (docs/core/vecchio-telefono-elementi.md)
+  const elementi = creaElementi(ELEMENTI_DISCESE, elementoAcceso)
+  const gruppo = nome => { const g = segna(new Group(), nome); scena.add(g); return g }
+  const [aloni, colonne, anelli] = segnaNuovi(scena, 'chiarori', () => [creaAloni(scena, ALONI_MAX), creaColonne(scena), creaAnelli(scena)])
+  const scintille = segnaNuovi(scena, 'particelle', () => (ACCESI.scintille ? creaScintille(scena, Math.round(SCINTILLE * Math.min(1, ACCESI.quanteScintille))) : NIENTE))
+  const polvere = segnaNuovi(scena, 'particelle', () => (ACCESI.polvere ? creaPolvere(scena, Math.round(POLVERE * ACCESI.quantaPolvere), luci.condivise, maschera) : NIENTE))
   const etichette = creaEtichette(strato)
   const eroe = creaEroe()
-  const eroe3d = eroe3dAcceso() ? creaEroe3d(scena) : null     // in prova: il personaggio in 3D al posto dello sprite (`#eroe2d` lo spegne)
+  const eroe3d = eroe3dAcceso() ? creaEroe3d(gruppo('eroe')) : null     // in prova: il personaggio in 3D al posto dello sprite (`#eroe2d` lo spegne)
   // la fiamma della torcia in mano all'eroe: una sola, si sposta con lui (scena3d/eroe.js)
-  const fiammaEroe = ACCESI.fiamme ? creaFiamme(scena, maschera, [{ scala: 0.85, cx: 0, cz: 0, x: 0, y: -9, z: 0 }]) : null
+  const fiammaEroe = ACCESI.fiamme ? segnaNuovi(scena, 'fiamme', () => creaFiamme(scena, maschera, [{ scala: 0.85, cx: 0, cz: 0, x: 0, y: -9, z: 0 }])) : null
   if (fiammaEroe) fiammaEroe.accesa(0, false)
   // in prova: i mostri in 3D al posto degli sprite (`#sprite` li spegne) e gli effetti 3D dello scontro (docs/sotterraneo/mostri-3d.md)
-  const mostri3d = mostri3dAccesi() && ACCESI.mostri3d > 0 ? creaMostri3d(scena, { quanti: () => ACCESI.mostri3d }) : null
-  const effetti3d = ACCESI.effetti3d ? creaGestore(scena, { renderer, camera: cam.camera }) : null
+  const mostri3d = mostri3dAccesi() && ACCESI.mostri3d > 0 ? creaMostri3d(gruppo('mostri3d'), { quanti: () => ACCESI.mostri3d }) : null
+  const effetti3d = ACCESI.effetti3d ? creaGestore(gruppo('effetti3d'), { renderer, camera: cam.camera }) : null
   const S = { eroe, campo: null, scintille, luci, anelli, fermo: 0, scossa: 0, aberr: 0, rosso: 0, tBolla: 9, tempo: 0, colpoEroe: null, stato: null,
               mostri3d, effetti3d, eroe3d }
   const racconto = creaRacconto(S)
@@ -83,8 +87,8 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
     tex = new Texture(img); tex.colorSpace = SRGBColorSpace; tex.magFilter = tex.minFilter = NearestFilter; tex.generateMipmaps = false; tex.needsUpdate = true
     norm = normaliAtlante(img)
     const base = { tex, norm, larga: img.width, alta: img.height, pezzi: PEZZI, maschera }
-    figure = creaFigure(scena, { ...base, max: FIGURE_MAX })
-    figureEroe = creaFigure(scena, { ...base, max: 8, ombra: false })
+    figure = segnaNuovi(scena, 'figure', () => creaFigure(scena, { ...base, max: FIGURE_MAX }))
+    figureEroe = segnaNuovi(scena, 'eroe', () => creaFigure(scena, { ...base, max: 8, ombra: false }))
     // una porta o un forziere che si apre: polvere o scintille d'oro, e un lampo caldo
     const oro = new Color('#ffd76a'), polvere = new Color('#c8b49a')
     cose = creaCose({ figure, aloni, colonne, etichette, camera: cam, mostri3d, vicino: () => eroe.disegnato, apre: r => {
@@ -144,7 +148,7 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
   // `compile` chiede e non aspetta: il telefono li compila mentre si esplora, e il primo scontro e il primo colpo li trovano pronti
   const daScaldare = []
   let scaldaDa = 0
-  const compila = o => (post ? post.compila(o, cam.camera, scena) : renderer.compile(o, cam.camera, scena))
+  const compila = o => (post && ACCESI.post ? post.compila(o, cam.camera, scena) : renderer.compile(o, cam.camera, scena))
   function scaldaPiano(corsa) {
     daScaldare.length = 0
     scaldaDa = S.tempo + 1
@@ -282,8 +286,9 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
     // l'ombra a fotogrammi alterni (fascia bassa): la mappa vecchia resta giusta con la sua luce, va solo un fotogramma indietro
     if (ACCESI.ombre && ACCESI.ombraOgni > 1) renderer.shadowMap.needsUpdate = (giri++ % ACCESI.ombraOgni) === 0
     if (attesaShader) { if (performance.now() < attesaShader && !shaderPronti()) return; attesaShader = 0 }
+    elementi(scena)
     const t1 = performance.now()
-    if (post) post.disegna(scena, cam.camera); else renderer.render(scena, cam.camera)
+    if (post && ACCESI.post) post.disegna(scena, cam.camera); else renderer.render(scena, cam.camera)
     ctx.misure.msDisegno = performance.now() - t1
     ctx.conta(ms)
     if (daScaldare.length && S.tempo >= scaldaDa && !(fx && fx.attivo)) scaldaUno()   // dopo il disegno: la GPU fa prima quello che serve adesso
@@ -362,7 +367,7 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
       for (let i = 0; i < n + 2; i++) {
         const t0 = performance.now()
         if (ACCESI.ombre && ACCESI.ombraOgni > 1) renderer.shadowMap.needsUpdate = i % ACCESI.ombraOgni === 0
-        if (post) post.disegna(scena, cam.camera); else renderer.render(scena, cam.camera)
+        if (post && ACCESI.post) post.disegna(scena, cam.camera); else renderer.render(scena, cam.camera)
         gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px)
         if (i >= 2) v.push(performance.now() - t0)
       }

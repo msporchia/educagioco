@@ -6,8 +6,8 @@ import { DPR, LUCE, ACCESI, applicaFascia } from './costanti.js'
 import { profilo } from '../../../store/qualita.js'
 
 // `antialias`: il mondo di sopra lo vuole (staccionate, corde, bordi dei tetti); le discese no (il passaggio finale le ammorbidisce)
-export function creaContesto(canvas, { perso, fisso, antialias = false, spegni = [] } = {}) {
-  applicaFascia(spegni)   // prima di tutto: `ombre` lo legge subito sotto
+export function creaContesto(canvas, { perso, fisso, antialias = false, spegni = [], riaccendi = [] } = {}) {
+  applicaFascia(spegni, riaccendi)   // prima di tutto: `ombre` lo legge subito sotto
   let gl = null
   try {
     gl = canvas.getContext('webgl2', { alpha: false, antialias, depth: true, stencil: false, premultipliedAlpha: true, powerPreference: 'high-performance' })
