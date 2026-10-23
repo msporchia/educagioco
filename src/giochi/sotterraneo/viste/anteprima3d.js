@@ -23,7 +23,7 @@ export function fornisciAnteprime3d(eroe) {
     chiedi: k => (vale(k) ? ottieni().then(s => (s ? s.chiedi(k) : null)) : Promise.resolve(null)),
     stato: () => (servizio ? servizio.stato() : null),
     programmi: () => (servizio ? servizio.programmi() : null),   // per le misure (docs/sotterraneo/prestazioni-3d.md)
-    via() { chiuso = true; if (servizio) servizio.via() },
+    via() { chiuso = true; if (servizio) servizio.via(); if (typeof window !== 'undefined' && window.__anteprime3d === api) delete window.__anteprime3d },
   }
   if (!spente) provide(ANTEPRIME, api)
   if (typeof window !== 'undefined' && !spente) window.__anteprime3d = api   // per le prove: stato()

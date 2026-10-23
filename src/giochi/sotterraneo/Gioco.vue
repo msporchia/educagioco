@@ -1400,7 +1400,7 @@ function aggancia(chi, el) {
   if (pittore && pittore.aggancia) pittore.aggancia(chi, el)
 }
 async function accendi3d() {
-  if (pittore && pittore.canvas !== tela.value) { pittore.distruggi(); pittore = null }
+  if (pittore && pittore.canvas !== tela.value) butta3d()
   if (!pittore) {
     let m = null
     try { m = await import('./scena3d/indice.js') } catch (e) { perso3d.value = true; return }
@@ -1422,11 +1422,16 @@ async function accendi3d() {
   pittore.avvia()
   giro()
 }
+// il pittore 3D buttato: anche il suo nome sulla finestra per le prove, che se no tiene viva la scena chiusa
+function butta3d() {
+  if (pittore) { try { pittore.distruggi() } catch (e) { /* il contesto è già andato */ } }
+  if (typeof window !== 'undefined' && window.__sotterraneo3d === pittore) delete window.__sotterraneo3d
+  pittore = null
+}
 function siPerdeIl3d() {
   salva({ subito: true })   // come la ✕: rientrando si riprende giù, anche dal Sotterraneo di sempre
   cancelAnimationFrame(raf)
-  if (pittore) { try { pittore.distruggi() } catch (e) { /* il contesto è già andato */ } }
-  pittore = null
+  butta3d()
   perso3d.value = true
 }
 
@@ -1840,7 +1845,7 @@ function allaMappa() {
   salendo = false
   if (pittore) pittore.ferma()
   // il 3D si butta col campo: la scheda video non tiene un piano che nessuno guarda (alla prossima discesa si rifà)
-  if (in3d && pittore) { pittore.distruggi(); pittore = null }
+  if (in3d && pittore) butta3d()
   fine.value = null
   domanda.value = null
   corsa.value = null
@@ -2111,7 +2116,7 @@ onUnmounted(() => {
   cancelAnimationFrame(raf)
   racconto.ferma()
   if (pittore) pittore.ferma()
-  if (in3d && pittore) { pittore.distruggi(); pittore = null }
+  if (in3d && pittore) butta3d()
 })
 function ridimensiona() { if (pittore) pittore.misura() }
 </script>
