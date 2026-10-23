@@ -49,6 +49,34 @@ export function ciuffo (g, x, z, colore, n, alt, rnd) {
     const o = cono(g, 0.025, h, mat(colore), x + Math.cos(a) * r, h / 2, z + Math.sin(a) * r, 4); o.rotation.set(Math.sin(a) * 0.35, 0, -Math.cos(a) * 0.35)
   }
 }
+/** Un filo, un'asta o una catena fra due punti `a` e `b` ([x, y, z]): un cilindro sottile orientato. Per stringhe, catene, aste inclinate. */
+export function filo (g, a, b, r, colore, seg = 4) {
+  const A = new THREE.Vector3(...a), B = new THREE.Vector3(...b), d = B.clone().sub(A), lung = d.length()
+  const o = cilindro(g, r, r, lung, mat(colore), (A.x + B.x) / 2, (A.y + B.y) / 2, (A.z + B.z) / 2, seg)
+  o.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), d.normalize()); return o
+}
+/** Un'asse piatta fra due punti: larga `larg` (verso `lato`, di norma l'asse x o z), spessa `spess`, lunga quanto la distanza. Per sedute inclinate, teli, tavole di tetto. */
+export function listello (g, a, b, larg, spess, colore, lato = [1, 0, 0]) {
+  const A = new THREE.Vector3(...a), B = new THREE.Vector3(...b), dir = B.clone().sub(A), L = dir.length(); dir.normalize()
+  const side = new THREE.Vector3(...lato); side.addScaledVector(dir, -side.dot(dir)).normalize()
+  const normale = new THREE.Vector3().crossVectors(dir, side).normalize()
+  const o = pronto(new THREE.Mesh(new THREE.BoxGeometry(larg, spess, L), mat(colore)))
+  o.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(side, normale, dir)); o.position.copy(A).add(B).multiplyScalar(0.5); g.add(o); return o
+}
+/** Una botte: profilo tornito (più larga a metà), con `cerchi` di ferro. Appoggiata a terra in (x, y0, z). */
+export function botte (g, r, h, colore, x = 0, z = 0, y0 = 0, cerchi = 0x33343c) {
+  const pr = [[0, 0], [r * 0.82, 0], [r * 0.96, h * 0.18], [r, h * 0.5], [r * 0.96, h * 0.82], [r * 0.82, h], [0, h]].map(([a, b]) => new THREE.Vector2(a, b))
+  const o = pronto(new THREE.Mesh(new THREE.LatheGeometry(pr, 12), mat(colore))); o.position.set(x, y0, z); g.add(o)
+  for (const [k, rr] of [[0.2, 0.96], [0.8, 0.96]]) { const c = pronto(new THREE.Mesh(new THREE.TorusGeometry(r * rr * 0.985, 0.014, 4, 12), mat(cerchi))); c.rotation.x = Math.PI / 2; c.position.set(x, y0 + h * k, z); g.add(c) }
+  return o
+}
+/** Una catenaria finta (parabola) da `a` a `b` che cala di `cala` a metà: `n` segmenti di filo; torna i punti, perché ci si appendono le cose. */
+export function festoneFra (g, a, b, cala, n, r, colore) {
+  const p = []
+  for (let i = 0; i <= n; i++) { const t = i / n; p.push([a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t - cala * 4 * t * (1 - t), a[2] + (b[2] - a[2]) * t]) }
+  for (let i = 0; i < n; i++) filo(g, p[i], p[i + 1], r, colore)
+  return p
+}
 /** Un fiore su uno stelo: gambo verde, corolla colorata, bottone giallo. */
 export function fiore (g, x, z, h, colore, r = 0.06) {
   cilindro(g, 0.012, 0.012, h, mat(0x4a9a3a), x, h / 2, z, 4)
@@ -106,6 +134,9 @@ export function frutto (g, k, x, y, z, s = 1, giro = 0) {
 export function mucchio (g, k, w, d, y, n, rnd, s = 1) {
   for (let i = 0; i < n; i++) frutto(g, k, (rnd() - 0.5) * w, y + (i % 3 === 2 ? 0.1 : 0), (rnd() - 0.5) * d, s, rnd())
 }
+
+/** Il materiale delle cose che «fanno luce» (lucine, lanterne, fiamme, stelle): uno solo per tutte, così si fondono in una mesh; il colore passa nei vertici. */
+export const luce = c => mat(c, { emissive: 0xffa040, emissiveIntensity: 0.55 })
 
 /** Il modello di una decorazione: gruppo, costruisci, altezza di riferimento (per i cartelli), fusione. `escludi` sono i nodi che si muovono. */
 export function decoro (id, costruisci, altezza = 1) {
