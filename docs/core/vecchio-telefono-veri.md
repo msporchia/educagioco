@@ -8,7 +8,7 @@ giocare il bambino: quanti mostri nello scontro, quante persone sopra, quanti ed
 ## Sul telefono
 
 Zona dei grandi (codice) → **Impostazioni** → tendina **Avanzate** → **Misura questo telefono** → **Avvia coi modelli veri** (la
-**verifica**, 3-5 minuti: [La verifica](#la-verifica)) oppure **Misure complete (lunga)**.
+**verifica**, 20 scene e ~5 minuti: [La verifica](#la-verifica)) oppure **Misure complete (lunga)**.
 Le complete durano un quarto d'ora circa (57 scene, e fra un gruppo e l'altro 8 s di schermo nero perché il telefono si raffreddi): la barra in fondo dice a
 che scena si è, **Interrompi** la ferma e tiene il resoconto di quello che c'è. Le scene si vedono mentre girano: se una luce, un
 colore o la nebbia sembrano sbagliati, alla fine c'è un campo **Note** che finisce nel resoconto. Lo schermo non deve spegnersi
@@ -18,25 +18,47 @@ invio), **Copia**, **Rifai**. L'ultimo resoconto di ognuna delle due prove resta
 
 ## La verifica
 
-Il tasto «Avvia coi modelli veri» serve a **verificare se una modifica ha migliorato qualcosa**: le serie lunghe (il pavimento, triangoli,
-chiamate, luci, pixel, la roba, la fattoria, 24 persone, 16 mostri) sono già misurate nei due log del Note 7 e non si ripetono.
-`TAPPE_VERIFICA` in `veri.js`, 15 scene in quattro gruppi: l'**ingresso** (le sue 7 scene, com'è sotto), `discese` (`cal-1`, il
-riferimento del calore all'inizio: 8 mostri con gli effetti; `v-sot-4`: 4 mostri; `sot-1`: 1 mostro; `v-eroe`: l'eroe leggendario con 1 mostro
-fermo, senza effetti), `sopra` (8 persone, 8 mostri, lo zaino con 15 anteprime) e `calore` (`cal-2`, il riferimento alla fine). Il Sotterraneo
-usa la fascia e il pixel ratio che il gioco sceglierebbe (nessuna opzione). Il resoconto è lo stesso di sempre (`dati.verifica = true`,
-`vf` nella riga DATI) con, in più:
+Il tasto «Avvia coi modelli veri» serve a **decidere**: se una modifica ha migliorato qualcosa e quale leva conviene. Non ripete quello che i due
+log del Note 7 già dicono (il pavimento, triangoli, chiamate, luci, pixel, la roba, la fattoria, 24 persone, 16 mostri): quello sta nelle
+**Misure complete**. `TAPPE_VERIFICA` in `veri.js`, **20 scene, circa 5 minuti** (`stimaVerifica()`: i secondi attesi per scena più, a ogni
+gruppo, la pausa di 4,5 s, il riferimento del calore e il caricamento; la scrive il foglio iniziale; sopra gli 8 minuti si tagliano scene):
 
-- sotto ogni scena che ha un riferimento, la riga **«rispetto all'ultima misura vera (22/10): −12 ms (−11%), meglio; p95 −20, js −3
-  gpu −9»** (lo zaino: «−375 ms in tutto, fotogramma più lungo −233 ms»). Sotto 3 ms o il 5% è «come prima»;
-- in testa alla LETTURA **MIGLIORATO** e **NON MIGLIORATO** con JS e GPU separati (scena e differenza in ms; il «come prima» si conta),
-  la somma delle differenze, lo zaino, e se lo scontro (1 e 4 mostri) è **sotto i 33 ms al p95**.
+| gruppo | scene |
+|---|---|
+| `ingresso` | `ing-sot`, `ing-sot-x`: il primo attacco col riscaldamento acceso e spento, **un giro solo** (`opz.giri`; le tre ripetizioni e il mondo di sopra sono nelle complete) |
+| `confronto 1…3` | l'A/B: 5 varianti × 3 giri, vedi sotto |
+| `sopra` | `per-8` (8 persone), `mos-8` (8 mostri sul prato), `zaino-15` (15 anteprime) |
 
-Il riferimento è `veri/riferimento.js`: i valori chiave del secondo log vero (22/10, `2026.10.22.1802-7505ba6f`: ms, p95, js, gpu e
-la deriva del calore di quel giro), e il confronto è **fra ms tolto il calore** da una parte e dall'altra (come `corretta`). `v-sot-4` non
-c'era (c'erano 1, 3, 6, 8 mostri): il suo riferimento è la retta fra `sot-3` e `sot-6`, e la riga lo dice («tra sot-3/sot-6»); `v-eroe` e
-l'ingresso non hanno riferimento (l'ingresso si legge col riscaldamento acceso contro spento). Quando c'è una misura vera nuova da
-prendere per buona si cambiano `quando`, `versione` e le scene di quel file. Le **Misure complete** (`TAPPE`, il secondo tasto, `completa`
-in `eseguiVeri`) sono le scene qui sotto, tutte; con `solo` si pescano le scene di entrambe, una volta sola per id.
+Ogni scena dura al massimo ~4,5 s dopo un rodaggio di ~2 s (`TEMPI.verifica`); fra i gruppi 4,5 s di schermo nero (`RAFFREDDA_BREVE`, 8 s
+nelle complete). Nessuna scena è un'altra volta uguale: lo scontro con 8 mostri, con 4 e l'eroe da solo non servono ai confronti e sono tolti.
+
+### L'A/B
+
+La stessa scena (`veri/ab.js`: 1 mostro con gli effetti, la fascia del telefono) in cinque varianti, **in giri alternati** A B C D E, A B C D E,
+A B C D E (un gruppo per giro: il riferimento del calore si rifà in mezzo), così il calore non si scambia per il merito di una leva:
+
+- **A** com'è oggi (la prima, `sot-1`, è quella col riferimento della misura vera); **B** le semplificazioni riaccese (`riaccendi`: ombre,
+  nebbiaFitta, quantaPolvere, come `&riaccendi=`); **C** senza rilievo (`&spegni=rilievo`); **D** senza pelle; **E** tutte le leve buone insieme,
+  scelte quando tocca sui giri già fatti (`opzE`: le leve la cui mediana toglie ms). `lucePerVertice` è un'altra variante di questa lista
+  (un'altra mano: una riga in `VARIANTI` e una in `leveDa`).
+- Di ogni variante la **mediana delle differenze contro la A dello stesso giro** e la **dispersione** (min e max): è **significativa se la
+  mediana la supera**, altrimenti «dentro il rumore (mediana, min, max)»: mai una soglia fissa in ms o in %, mai «non serve» da solo.
+  Con un giro solo non si sa. JS e GPU a parte.
+- La LETTURA: oggi (con quanto balla fra i giri), le semplificazioni «tolgono N ms», la pelle, il rilievo, E misurata; poi la **pila**
+  delle leve che tolgono ms, dalla più grossa (A, A − leva 1, A − leva 1 − leva 2: somme delle mediane), e **quanti ms mancano ai 33**, con
+  JS (bersaglio ≤25) e GPU (≤28) a parte.
+
+### Il confronto con la misura vera
+
+Sotto ogni scena col riferimento (`sot-1`, `per-8`, `mos-8`, `zaino-15`) la riga **«rispetto all'ultima misura vera (22/10): −12 ms (−11%),
+meglio; p95 −20, js −3 gpu −9»** (lo zaino: «−375 ms in tutto, fotogramma più lungo −233 ms»; sotto 3 ms o il 5% è «come prima»), e in testa
+alla LETTURA **MIGLIORATO** / **NON MIGLIORATO** con JS e GPU separati e la somma delle differenze. Attenzione: il log del 22/10 è «senza
+semplificazioni, senza pelle»: da oggi la A le ha, quindi il merito di ognuna lo dice l'A/B, non quel confronto. Il riferimento è
+`veri/riferimento.js` (ms, p95, js, gpu e deriva del calore del secondo log vero, `2026.10.22.1802-7505ba6f`; il confronto è fra ms tolto il
+calore); quando c'è una misura vera nuova da prendere per buona si cambiano `quando`, `versione` e le scene. La riga DATI ha `vf`
+(la versione del riferimento). Le **Misure complete** (`TAPPE`, il secondo tasto, `completa` in `eseguiVeri`) sono le scene qui sotto, tutte
+(circa due ore sul Note 7 imitato, un quarto d'ora sul telefono); con `solo` si pescano le scene di tutte e due, una volta per id (le complete
+vincono).
 
 ## Le scene (le misure complete)
 
@@ -192,7 +214,7 @@ Nei test: `[data-azione="benchmark-veri"]`, `[data-benchmark-palco]` (dove giran
 `window.__benchmarkVeri` (i dati), `window.__benchmarkSolo` (gli inizi degli id), `window.__benchmarkCorto` (scene di pochi decimi,
 senza pausa), `window.__benchmarkRaffredda` (i ms di pausa fra i gruppi: lo strumento la toglie quando tara).
 `[data-azione="benchmark-veri-lunga"]` (le misure complete); `unita/benchmark-veri` (il log, il limite, gli invii, le leve, il confronto con la misura vera), `unita/benchmark-ingresso` (le righe e la LETTURA dell'ingresso),
-`integrazione/benchmark-veri` (una scena per gruppo e tutto l'ingresso in due giri, a schermo; poi la verifica compatta intera).
+`integrazione/benchmark-veri` (una scena per gruppo e tutto l'ingresso in due giri, a schermo; poi la verifica compatta intera, in tempi corti).
 
 ## Mandare il resoconto al computer
 

@@ -6,6 +6,7 @@ import { CPU, data, modello } from './log.js'
 import { rigaIngresso, letturaIngresso } from './log-ingresso.js'
 import { tabellaElementi, letturaElementi } from './log-elementi.js'
 import { RIFERIMENTO, confronta, dif } from './veri/riferimento.js'
+import { oggi, differenze, significativa, leveDa, BERSAGLIO } from './veri/ab.js'
 
 export const SOGLIE_VERI = { liscio: 20, scatti: 33, molto: 66 }
 export const LIMITE_CAMPO = 3400   // i caratteri di un invio del modulo dei giudizi (il campo regge ~3,5k)
@@ -59,7 +60,7 @@ const confrontabile = r => (misurata(r) || (r.tot != null && !r.errore && !r.sal
 export function rigaRispetto(r) {
   const c = confrontabile(r) ? confronta(r) : null
   if (!c) return null
-  const testa = `   rispetto all'ultima misura vera (${RIFERIMENTO.quando}${c.interpolata ? `, tra ${c.interpolata}` : ''}): `
+  const testa = `   rispetto all'ultima misura vera (${RIFERIMENTO.quando}): `
   if (c.tot) return `${testa}${dif(c.tot)} in tutto, fotogramma più lungo ${dif(c.max)}`
   const parola = { meglio: 'meglio', peggio: 'peggio', uguale: 'come prima' }
   const parte = (n, v) => (v ? `${n} ${v.d < 0 ? '−' : '+'}${Math.abs(v.d)}` : '')
@@ -80,11 +81,45 @@ function letturaRispetto(ris) {
   righe.push(`In tutto le scene confrontate: ${tot < 0 ? '−' : '+'}${Math.abs(t1d(tot))} ms (somma delle differenze del lavoro per fotogramma).`)
   const zz = ris.filter(confrontabile).map(r => ({ r, c: confronta(r) })).find(x => x.c && x.c.tot)
   if (zz) righe.push(`Zaino (${zz.r.n} anteprime): ${dif(zz.c.tot)} in tutto, fotogramma più lungo ${dif(zz.c.max)}.`)
-  const sc = ['sot-1', 'v-sot-4'].map(id => ris.find(r => r.id === id)).filter(misurata)
-  if (sc.length) {
-    const sopra = sc.filter(r => r.p95 > SOGLIE_VERI.scatti)
-    righe.push(`Scontro nelle discese: ${sc.map(r => `${r.nome} p95 ${r.p95} ms`).join(', ')}: ${sopra.length ? `ancora oltre i ${SOGLIE_VERI.scatti} ms` : `sotto i ${SOGLIE_VERI.scatti} ms`}.`)
+  const A = oggi(ris)
+  if (A) righe.push(`Scontro nelle discese (1 mostro, effetti): p95 ${A.p95} ms (mediana dei giri di A): ${A.p95 > SOGLIE_VERI.scatti ? `ancora oltre i ${SOGLIE_VERI.scatti} ms` : `sotto i ${SOGLIE_VERI.scatti} ms`}.`)
+  return righe
+}
+
+// l'A/B della verifica (veri/ab.js): la stessa scena di oggi (A) contro le semplificazioni riaccese (B), senza rilievo (C), senza pelle (D) e con
+// tutte le leve buone (E), in giri alternati. Di ogni variante la mediana delle differenze contro la A dello stesso giro e la dispersione
+// (min–max): significativa se la mediana la supera, altrimenti «dentro il rumore» (mai una soglia fissa). Poi la pila delle leve che tolgono ms,
+// per ms, e quanto manca ai 33 ms (JS ≤25, GPU ≤28).
+function letturaAB(ris) {
+  const A = oggi(ris)
+  if (!A) return []
+  const di = k => differenze(ris, k)
+  const parte = (s, verso) => (s ? `${segnato(t1d(verso * s.med))}` : '?')
+  // «toglie N ms (min a, max b; js x, gpu y)» o «dentro il rumore (…)»; `verso`: +1 se la differenza positiva è un guadagno, -1 se lo è la negativa
+  const frase = (nome, s, verso, tolgono = 'toglie', aggiunge = 'aggiunge') => {
+    if (!s) return `${nome}: non misurato.`
+    const g = verso * s.ms.med, lim = `min ${t1d(verso * (verso > 0 ? s.ms.min : s.ms.max))}, max ${t1d(verso * (verso > 0 ? s.ms.max : s.ms.min))}`
+    const jg = `js ${parte(s.js, verso)}, gpu ${parte(s.gpu, verso)}`
+    if (!significativa(s.ms)) return `${nome}: dentro il rumore (mediana ${segnato(t1d(g))} ms, ${lim}, ${s.ms.n} giri; ${jg}).`
+    return `${nome} ${g > 0 ? tolgono : aggiunge} ${Math.abs(t1d(g))} ms (${lim}, ${s.ms.n} giri; ${jg}).`
   }
+  const righe = [`A/B, 1 mostro con gli effetti, giri alternati: oggi ${A.ms} ms (js ${A.js}, gpu ${A.gpu}), da ${A.min} a ${A.max} fra un giro e l'altro (${A.n} giri).`]
+  righe.push(frase('Le semplificazioni della fascia bassa (ombre, nebbia fitta, polvere)', di('b'), 1, 'tolgono', 'aggiungono'))
+  righe.push(frase('La pelle', di('d'), 1))
+  righe.push(frase('Spegnere il rilievo (senza normal map)', di('c'), -1))
+  const e = di('e')
+  if (e) righe.push(frase('Tutte le leve buone insieme (misurate)', e, -1))
+  // la pila: le leve che tolgono ms, dalla più grossa; ogni passo è la somma delle mediane
+  const leve = leveDa(ris)
+  if (!leve.length) righe.push('Pila: nessuna leva toglie ms sopra il rumore, oggi resta com\'è.')
+  else {
+    let ms = A.ms, js = A.js, gpu = A.gpu
+    const passi = leve.map(l => { ms -= l.ms; js -= l.js ?? 0; gpu -= l.gpu ?? 0; return `${l.nome} −${t1d(l.ms)} = ${t1d(ms)}` })
+    righe.push(`Pila delle leve (per ms): oggi ${A.ms} → ${passi.join(' → ')} ms; js ${t1d(js)}, gpu ${t1d(gpu)}.`)
+    A.dopo = { ms, js, gpu }
+  }
+  const d = A.dopo || A, man = (x, b) => (x <= b ? 'sotto' : `mancano ${t1d(x - b)}`)
+  righe.push(`Ai ${BERSAGLIO.ms} ms ${d.ms <= BERSAGLIO.ms ? 'ci siamo' : `mancano ${t1d(d.ms - BERSAGLIO.ms)} ms`}${A.dopo ? ' con tutta la pila' : ' (oggi)'}: JS ${t1d(d.js)} (bersaglio ${BERSAGLIO.js}: ${man(d.js, BERSAGLIO.js)}), GPU ${t1d(d.gpu)} (bersaglio ${BERSAGLIO.gpu}: ${man(d.gpu, BERSAGLIO.gpu)}).`)
   return righe
 }
 
@@ -94,7 +129,7 @@ export function letturaVeri(dati) {
   const m = id => { const r = ris.find(x => x.id === id); return misurata(r) ? r : null }
   const d = (a, b) => t1d(a.ms - b.ms)
   const derive = crudi.some(r => r.deriva) ? crudi.filter(misurata).map(r => r.deriva ?? 1) : []
-  if (dati.verifica) righe.push(...letturaRispetto(ris))
+  if (dati.verifica) righe.push(...letturaRispetto(ris), ...letturaAB(ris))
   if (derive.length) righe.push(`Calore: il riferimento di ogni gruppo da x${Math.min(...derive)} a x${Math.max(...derive)} del più fresco` +
     (Math.max(...derive) > 1.15 ? `; la lettura usa i ms divisi per quella deriva (le righe: ≈).` : ': stabile.'))
   if (dati.js != null) righe.push(`CPU: ${dati.js} ms (computer 110-160): ${dati.js <= CPU.veloce ? 'veloce' : dati.js <= CPU.lenta ? 'media' : 'lenta, il JS dei giochi pesa'}.`)

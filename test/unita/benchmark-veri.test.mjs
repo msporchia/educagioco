@@ -4,7 +4,8 @@
 import { BoxGeometry, Mesh, MeshStandardMaterial, Scene, Box3, SkinnedMesh, Skeleton, Bone, Uint16BufferAttribute, Float32BufferAttribute } from 'three'
 import { componiVeri, letturaVeri, limite, spezza, conNote, LIMITE_CAMPO } from '../../src/grafica/benchmark/log-veri.js'
 import { dividi, leve } from '../../src/grafica/benchmark/veri/moltiplica.js'
-import { TAPPE, QUANTE, TAPPE_VERIFICA } from '../../src/grafica/benchmark/veri.js'
+import { TAPPE, QUANTE, TAPPE_VERIFICA, stimaVerifica } from '../../src/grafica/benchmark/veri.js'
+import { idAB, opzE } from '../../src/grafica/benchmark/veri/ab.js'
 import { RIFERIMENTO, confronta, dellaScena } from '../../src/grafica/benchmark/veri/riferimento.js'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 
@@ -144,38 +145,58 @@ lp.triangoli(2); uguale('leve: la SkinnedMesh ha i triangoli x2', sk.geometry.in
 lp.chiamate(4); controlla('leve: e le chiamate x4', Array.isArray(sk.material) && sk.material.length === 4)
 lp.ripristina()
 
-// la verifica compatta: poche scene, e ogni scena col suo confronto contro l'ultima misura vera
+// la verifica compatta: poche scene, l'A/B in giri alternati, e ogni scena col suo confronto contro l'ultima misura vera
 const idV = TAPPE_VERIFICA.flatMap(t => t.scene.map(x => x.id))
-controlla('la verifica ha 12-16 scene, tutte diverse, senza le serie lunghe', idV.length >= 12 && idV.length <= 16 && new Set(idV).size === idV.length && !idV.some(i => /^(tri|ch|luci|px|roba|fat)-/.test(i)), idV.join(','))
-controlla('la verifica: l\'ingresso per primo, i due riferimenti del calore, lo scontro con 1 e 4 mostri, 8 persone e 8 mostri sopra, lo zaino', idV[0] === 'ing-sot' && idV[idV.length - 1] === 'cal-2' && ['cal-1', 'sot-1', 'v-sot-4', 'v-eroe', 'per-8', 'mos-8', 'zaino-15'].every(i => idV.includes(i)))
-controlla('gli id della verifica che sono anche delle complete hanno il riferimento (v-sot-4 uno interpolato; eroe e ingresso nessuno)', idV.filter(i => !i.startsWith('ing-') && i !== 'v-eroe').every(i => dellaScena(i)))
+const stima = stimaVerifica()
+controlla('la verifica ha 20 scene tutte diverse, senza le serie lunghe né le scene già note', idV.length === 20 && new Set(idV).size === 20 && !idV.some(i => /^(tri|ch|luci|px|roba|fat|cal|v-)/.test(i)), idV.join(','))
+controlla('la verifica: l\'ingresso (un giro, col riscaldamento e senza), l\'A/B, 8 persone e 8 mostri, lo zaino', idV.slice(0, 2).join() === 'ing-sot,ing-sot-x' && TAPPE_VERIFICA[0].opz.giri === 1 && ['per-8', 'mos-8', 'zaino-15'].every(i => idV.includes(i)))
+controlla('l\'A/B è in giri alternati A B C D E, A B C D E, A B C D E (non AAA BBB)', idV.slice(2, 17).join() === 'sot-1,ver-b1,ver-c1,ver-d1,ver-e1,ver-a2,ver-b2,ver-c2,ver-d2,ver-e2,ver-a3,ver-b3,ver-c3,ver-d3,ver-e3', idV.join())
+controlla('ogni giro dell\'A/B è un gruppo suo (il riferimento del calore in mezzo)', TAPPE_VERIFICA.filter(t => t.gruppo.startsWith('confronto')).map(t => t.gruppo).filter((g, k, l) => l.indexOf(g) === k).length === 3)
+const optV = Object.fromEntries(TAPPE_VERIFICA.filter(t => t.gruppo === 'confronto 1').map(t => [t.scene[0].id, t.opz]))
+controlla('le varianti: oggi, semplificazioni riaccese, senza rilievo, senza pelle, tutte le buone', JSON.stringify(optV['sot-1']) === '{}' && optV['ver-b1'].riaccendi.join() === 'ombre,nebbiaFitta,quantaPolvere' && optV['ver-c1'].spegni.join() === 'rilievo' && optV['ver-d1'].spegni.join() === 'pelle' && typeof optV['ver-e1'] === 'function')
+controlla('la variante E spegne le leve che dai giri già fatti tolgono ms', JSON.stringify(opzE([{ id: 'sot-1', ms: 60, js: 20, gpu: 40 }, { id: 'ver-c1', ms: 52, js: 20, gpu: 32 }, { id: 'ver-d1', ms: 58, js: 20, gpu: 38 }])) === '{"spegni":["rilievo","pelle"]}'
+  && JSON.stringify(opzE([{ id: 'sot-1', ms: 60, js: 20, gpu: 40 }, { id: 'ver-c1', ms: 52, js: 20, gpu: 32 }, { id: 'ver-d1', ms: 70, js: 20, gpu: 50 }])) === '{"spegni":["rilievo"]}')
+controlla('la stima: 20 scene e sotto i 7 minuti (il testo del foglio dice 5, al massimo 6)', stima.scene === 20 && stima.secondi >= 240 && stima.secondi <= 360, JSON.stringify(stima))
+controlla('gli id della verifica che sono anche delle complete hanno il riferimento', ['sot-1', 'per-8', 'mos-8', 'zaino-15'].every(i => dellaScena(i)))
 const rif = dellaScena('sot-1')
 uguale('il riferimento è tolto il calore (83.1 / 1.13)', rif.ms, 73.5)
 controlla('il riferimento dice data e versione', RIFERIMENTO.quando === '22/10' && /^2026\.10\.22/.test(RIFERIMENTO.versione))
-uguale('v-sot-4 è fra sot-3 e sot-6, dichiarato', `${dellaScena('v-sot-4').interpolata}`, 'sot-3/sot-6')
 const cf = confronta({ id: 'sot-1', ms: 63.5, p95: 90, js: 25, gpu: 33 })
 uguale('confronto: meglio di 10 ms (-14%)', `${cf.ms.d} ${cf.ms.pct} ${cf.ms.g}`, '-10 -14 meglio')
 uguale('confronto: la GPU separata dal JS', `${cf.js.g} ${cf.gpu.g}`, 'meglio meglio')
 uguale('confronto: nel rumore è uguale', confronta({ id: 'sot-1', ms: 74.5, p95: 90, js: 28.5, gpu: 45.7 }).ms.g, 'uguale')
 uguale('una scena senza riferimento non si confronta', confronta({ id: 'ing-sot', ms: 5 }), null)
+
+// tre giri: B toglie ~12 (11, 12, 13), il rilievo ~9 (8, 9, 10), la pelle è nel rumore (-3, +1, +4), E ~9 (8, 9, 10), e il calore alza tutto di giro in giro
+const A3 = [60, 63, 66]
+const giro = (id, k, r, ms, js, gpu) => s(id, `confronto ${r}`, ms, ms + 6, { js, gpu })
+const abRis = []
+for (let r = 1; r <= 3; r++) {
+  const a = A3[r - 1], f = (k, d, dj) => giro(idAB(k, r), k, r, a + d, 25 + r + dj, 35 + r + (d - dj))
+  abRis.push(f('a', 0, 0), f('b', [11, 12, 13][r - 1], 5), f('c', -[8, 9, 10][r - 1], -2), f('d', [-3, 1, 4][r - 1], 0), f('e', -[8, 9, 10][r - 1], -2))
+}
 const dv = {
   ...dati, verifica: true, gruppi: {},
-  risultati: [s('cal-1', 'discese', 107.7, 140), s('sot-1', 'discese', 63.5, 90, { js: 25, gpu: 33.5 }), s('v-sot-4', 'discese', 96, 120, { js: 45, gpu: 51 }),
-    s('per-8', 'sopra', 52, 60, { js: 22, gpu: 30 }), { id: 'zaino-15', gruppo: 'sopra', nome: '15 anteprime', tot: 1500, attesa: 800, lavoro: 1400, max: 200, fatte: 15, n: 15 },
-    { id: 'cal-2', gruppo: 'calore', nome: 'cal-2', errore: 'x' }],
+  risultati: [...abRis, s('per-8', 'sopra', 52, 60, { js: 22, gpu: 30 }), { id: 'zaino-15', gruppo: 'sopra', nome: '15 anteprime', tot: 1500, attesa: 800, lavoro: 1400, max: 200, fatte: 15, n: 15 },
+    { id: 'mos-8', gruppo: 'sopra', nome: 'mos-8', errore: 'x' }],
 }
 const tv = componiVeri(dv, { versione: 'x', ua: 'Redmi Note 7', quando: new Date(2026, 9, 23, 10, 0) })
 controlla('verifica: la testa lo dice', /\(verifica compatta\)/.test(tv.split('\n')[0]))
-controlla('verifica: sotto ogni scena confrontata la riga «rispetto all\'ultima misura vera»', /sot-1: 63\.5\/90[^\n]*\n +rispetto all'ultima misura vera \(22\/10\): −10 ms \(−14%\), meglio; p95 [−+]/.test(tv), tv)
+controlla('verifica: sotto la scena con riferimento la riga «rispetto all\'ultima misura vera»', /sot-1: 60\/66[^\n]*\n +rispetto all'ultima misura vera \(22\/10\): −13\.5 ms \(−18%\), meglio; p95 [−+]/.test(tv), tv)
 controlla('verifica: lo zaino a parte', /rispetto all'ultima misura vera \(22\/10\): −375 ms \(−20%\) in tutto, fotogramma più lungo −233 ms/.test(tv), tv)
-controlla('verifica: la scena interpolata lo dice', /tra sot-3\/sot-6/.test(tv))
-controlla('verifica: la scena guasta non ha il confronto', !/cal-2[^\n]*\n +rispetto/.test(tv))
+controlla('verifica: la scena guasta non ha il confronto', !/mos-8[^\n]*\n +rispetto/.test(tv))
 const lv2 = letturaVeri(dv).join('\n')
-controlla('LETTURA: migliorato col JS e la GPU a parte', /MIGLIORATO rispetto all'ultima misura vera \(22\/10, \d scene confrontate\) — JS: .*sot-1 −\d+(\.\d)? ms.*; GPU: .*sot-1/.test(lv2), lv2)
-controlla('LETTURA: non migliorato, a parte', /NON MIGLIORATO — JS: .*; GPU: /.test(lv2), lv2)
-controlla('LETTURA: lo scontro contro i 33 ms', /Scontro nelle discese: 1 mostro con gli effetti p95 90 ms.*ancora oltre i 33 ms/.test(lv2) || /Scontro nelle discese: sot-1/.test(lv2), lv2)
+controlla('LETTURA A/B: oggi, con la dispersione fra i giri', /A\/B, 1 mostro con gli effetti, giri alternati: oggi 63 ms \(js 27, gpu 37\), da 60 a 66 fra un giro e l'altro \(3 giri\)/.test(lv2), lv2)
+controlla('LETTURA A/B: le semplificazioni tolgono 12 ms (min 11, max 13), JS e GPU a parte', /Le semplificazioni della fascia bassa \(ombre, nebbia fitta, polvere\) tolgono 12 ms \(min 11, max 13, 3 giri; js \+5, gpu \+7\)/.test(lv2), lv2)
+controlla('LETTURA A/B: la pelle è dentro il rumore, senza «non serve»', /La pelle: dentro il rumore \(mediana \+1 ms, min -3, max 4, 3 giri/.test(lv2) && !/non serve/.test(lv2), lv2)
+controlla('LETTURA A/B: il rilievo toglie 9 ms', /Spegnere il rilievo \(senza normal map\) toglie 9 ms \(min 8, max 10, 3 giri; js \+2, gpu \+7\)/.test(lv2), lv2)
+controlla('LETTURA A/B: le leve buone insieme, misurate', /Tutte le leve buone insieme \(misurate\) toglie 9 ms/.test(lv2), lv2)
+controlla('LETTURA A/B: la pila e quanto manca ai 33 ms, JS e GPU', /Pila delle leve \(per ms\): oggi 63 → spegnere il rilievo −9 = 54 ms; js 25, gpu 30/.test(lv2) && /Ai 33 ms mancano 21 ms con tutta la pila: JS 25 \(bersaglio 25: sotto\), GPU 30 \(bersaglio 28: mancano 2\)/.test(lv2), lv2)
+const dub = letturaVeri({ ...dv, risultati: dv.risultati.filter(r => !/^ver-[cde]/.test(r.id)) }).join('\n')
+controlla('senza leve sopra il rumore: la pila lo dice e l\'obiettivo è quello di oggi', /Pila: nessuna leva toglie ms sopra il rumore/.test(dub) && /Ai 33 ms mancano 30 ms \(oggi\)/.test(dub), dub)
+controlla('LETTURA: lo scontro contro i 33 ms', /Scontro nelle discese \(1 mostro, effetti\): p95 69 ms .*ancora oltre i 33 ms/.test(lv2), lv2)
 controlla('i DATI dicono la versione di riferimento', JSON.parse(tv.split('DATI ')[1]).vf === RIFERIMENTO.versione)
-controlla('una misura completa non ha il confronto', !/rispetto all'ultima misura vera/.test(componiVeri({ ...dv, verifica: false }, {})) && !/MIGLIORATO/.test(letturaVeri({ ...dv, verifica: false }).join('')))
+controlla('una misura completa non ha il confronto', !/rispetto all'ultima misura vera/.test(componiVeri({ ...dv, verifica: false }, {})) && !/A\/B/.test(letturaVeri({ ...dv, verifica: false }).join('')))
 controlla('i DATI vecchi restano: stessa forma, righe invariate', JSON.parse(testo.split('DATI ')[1]).vf === undefined && dd.r.length === dati.risultati.length)
 
 riassunto('la misura coi modelli veri')

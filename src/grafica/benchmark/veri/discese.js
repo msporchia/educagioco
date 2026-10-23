@@ -50,14 +50,14 @@ export function corsaDelloScontro(n) {
 }
 
 /**
- * `opz`: { dpr (null: quello del gioco), spegni (pezzi di ACCESI, come `&spegni=`) }. Le scene: { mostri, colpi, tri, ch, fuochi, ombra,
+ * `opz`: { dpr (null: quello del gioco), spegni (pezzi di ACCESI, come `&spegni=`), riaccendi (come `&riaccendi=`: i pezzi che la fascia spegne e qui tornano) }. Le scene: { mostri, colpi, tri, ch, fuochi, ombra,
  * via: 'ombra' | 'luci1' (solo il cono) | 'luci0' | 'punti' | 'normali' | 'lambert' | 'basic' }.
  * → la famiglia per veri.js: { gl, renderer-info (conti), avvia, scena(s), via, dpr, luci() }.
  */
 export async function prepara({ contenitore, opz = {} }) {
   const tela = nuovaTela(contenitore)
   const dpr = opz.dpr || dprDelGioco()
-  const pittore = creaSotterraneo3d(tela.canvas, { strato: tela.strato, dpr, spegni: opz.spegni || [], cieca: 320 })
+  const pittore = creaSotterraneo3d(tela.canvas, { strato: tela.strato, dpr, spegni: opz.spegni || [], riaccendi: opz.riaccendi || [], cieca: 320 })
   if (!pittore) { tela.via(); throw new Error('il Sotterraneo 3D non parte (WebGL 2?)') }
   const gl = tela.canvas.getContext('webgl2')
   const lv = leve(pittore.scena)

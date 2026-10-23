@@ -127,8 +127,8 @@ async function giroMondo(contenitore, s, T) {
 }
 
 /** Le scene: { ingresso: 'discesa' | 'mondo', presto, zaino, riscaldamento }. Ogni giro è da capo; si tengono i valori di ognuno. */
-export async function prepara({ contenitore, corto }) {
-  const T = corto ? TEMPI.corto : TEMPI.normale
+export async function prepara({ contenitore, corto, opz = {} }) {
+  const T = { ...(corto ? TEMPI.corto : TEMPI.normale), ...(opz.giri ? { giri: opz.giri } : {}) }   // `opz.giri`: la verifica compatta ne fa uno solo
   return {
     async misura(s) {
       const giri = []

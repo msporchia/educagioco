@@ -15,23 +15,17 @@ export const RIFERIMENTO = {
     'zaino-15': { tot: 1875, max: 433 },
     'cal-2': { ms: 107.5, p95: 190.4, js: 58.7, gpu: 48.2, deriva: 1.11 },
   },
-  // scene che il log di riferimento non ha: la retta fra due che ha (a `t` fra la prima e la seconda), dichiarato nella riga
-  interpolate: { 'v-sot-4': ['sot-3', 'sot-6', 1 / 3] },
 }
 
 const scala = (x, d) => (x != null && d && Math.abs(d - 1) > 0.05 ? x / d : x)   // come `corretta` di log-veri.js: tolto il calore
 const t1 = x => Math.round(x * 10) / 10
 const misura = (s, k) => scala(s[k], s.deriva)
 
-/** La scena di riferimento di un id (anche interpolata), coi ms già tolto il calore; null se non c'è. */
+/** La scena di riferimento di un id, coi ms già tolto il calore; null se non c'è. */
 export function dellaScena(id) {
   const s = RIFERIMENTO.scene[id]
   if (s) return s.tot != null ? { ...s } : { ms: t1(misura(s, 'ms')), p95: t1(misura(s, 'p95')), js: t1(misura(s, 'js')), gpu: t1(misura(s, 'gpu')) }
-  const i = RIFERIMENTO.interpolate[id]
-  const a = i && dellaScena(i[0]), b = i && dellaScena(i[1])
-  if (!a || !b) return null
-  const mix = k => t1(a[k] + (b[k] - a[k]) * i[2])
-  return { ms: mix('ms'), p95: mix('p95'), js: mix('js'), gpu: mix('gpu'), interpolata: `${i[0]}/${i[1]}` }
+  return null
 }
 
 /**
@@ -44,7 +38,7 @@ export function confronta(r) {
   const giudizio = (d, base) => (Math.abs(d) < Math.max(3, 0.05 * base) ? 'uguale' : d < 0 ? 'meglio' : 'peggio')
   const voce = (nuovo, vecchio) => (nuovo == null || vecchio == null ? null : { d: t1(nuovo - vecchio), pct: Math.round(100 * (nuovo - vecchio) / Math.max(0.1, vecchio)), g: giudizio(nuovo - vecchio, vecchio) })
   if (v.tot != null) return { id: r.id, tot: voce(r.tot, v.tot), max: voce(r.max, v.max), ms: voce(r.tot, v.tot) }
-  return { id: r.id, ms: voce(r.ms, v.ms), p95: voce(r.p95, v.p95), js: voce(r.js, v.js), gpu: voce(r.gpu, v.gpu), interpolata: v.interpolata }
+  return { id: r.id, ms: voce(r.ms, v.ms), p95: voce(r.p95, v.p95), js: voce(r.js, v.js), gpu: voce(r.gpu, v.gpu) }
 }
 
 const segno = d => (d < 0 ? '−' : '+') + Math.abs(d)

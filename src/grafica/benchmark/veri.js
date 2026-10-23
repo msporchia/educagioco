@@ -5,6 +5,7 @@
 import { proveCpu } from './prove.js'
 import { eventiContesto } from './veri/tela.js'
 import { tappeDegliElementi } from './veri/elementi-dati.js'
+import { GIRI_AB, VARIANTI, idAB, opzE } from './veri/ab.js'
 
 export const SOGLIA = 33          // ms di lavoro al p95: oltre, a scatti (30 fps)
 export const SALTA_OLTRE = 400    // una scena oltre questo al p95: il resto della sua serie che cresce non si misura (il telefono si pianterebbe)
@@ -16,10 +17,13 @@ const TEMPI = {
   corto: { rodaggio: [120, 300], misura: [250, 500], finestra: 120, quadri: 0, fine: 3000 },        // le prove (`window.__benchmarkCorto`)
   // il riferimento del calore all'inizio di ogni gruppo, dopo la pausa che fa raffreddare
   rif: { rodaggio: [1000, 2500], misura: [2000, 3000], finestra: 1000, quadri: 10, fine: 8000 },
+  // la verifica compatta: rodaggio ~2 s e misura 3-4,5 s (docs/core/vecchio-telefono-veri.md, «La verifica»)
+  verifica: { rodaggio: [1500, 3000], misura: [3000, 4500], finestra: 1000, quadri: 12, fine: 10000 },
   // chi pesa, un elemento alla volta (docs/core/vecchio-telefono-elementi.md): tante scene corte
   elementi: { rodaggio: [1500, 3500], misura: [3000, 4500], finestra: 1000, quadri: 12, fine: 12000 },
 }
-const RAFFREDDA = 8000   // ms a schermo nero fra un gruppo e l'altro
+const RAFFREDDA = 8000   // ms a schermo nero fra un gruppo e l'altro (le misure complete)
+const RAFFREDDA_BREVE = 4500   // la verifica compatta: i gruppi sono pochi e le scene corte
 
 const discese = () => import('./veri/discese.js')
 const base = () => import('./veri/base.js')
@@ -81,25 +85,34 @@ export const TAPPE = [
 ]
 export const QUANTE = TAPPE.reduce((n, t) => n + t.scene.length, 0)
 /**
- * La VERIFICA (il tasto «Avvia coi modelli veri», 3-5 minuti): solo quello che cambia quando si tocca il Sotterraneo 3D o il mondo di sopra,
- * con i ms messi contro l'ultima misura vera (`veri/riferimento.js`). Le serie lunghe (triangoli, chiamate, luci, pixel, roba, fattoria,
- * 24 persone, 16 mostri) sono già misurate: stanno in `TAPPE`, le «Misure complete». Gli id uguali a quelli di `TAPPE` hanno un riferimento.
- * Il riferimento del calore: `cal-1` all'inizio, `cal-2` alla fine (più il riferimento fisso che ogni gruppo ha già).
+ * La VERIFICA (il tasto «Avvia coi modelli veri», ~5 minuti, `stimaVerifica`): solo quello che serve a decidere, con i ms messi contro l'ultima
+ * misura vera (`veri/riferimento.js`). Le serie lunghe (triangoli, chiamate, luci, pixel, roba, fattoria, 24 persone, 16 mostri) sono già
+ * misurate: stanno in `TAPPE`, le «Misure complete». Il riferimento del calore è quello fisso che ogni gruppo ha già, più la A rifatta ogni giro.
  */
 export const TAPPE_VERIFICA = [
-  INGRESSO,
-  { gruppo: 'discese', carica: discese, scene: [
-    { id: 'cal-1', nome: 'riferimento, 8 mostri con gli effetti', mostri: 8, colpi: true },
-    { id: 'v-sot-4', nome: '4 mostri con gli effetti', mostri: 4, colpi: true },
-    { id: 'sot-1', nome: '1 mostro con gli effetti', mostri: 1, colpi: true },
-    { id: 'v-eroe', nome: 'eroe leggendario, 1 mostro fermo (senza effetti)', mostri: 1 },
+  // l'ingresso: il primo attacco col riscaldamento acceso e spento, un giro solo (le tre ripetizioni stanno nelle misure complete)
+  { gruppo: 'ingresso', carica: INGRESSO.carica, opz: { giri: 1 }, tempi: 'verifica', scene: INGRESSO.scene.filter(s => s.id === 'ing-sot' || s.id === 'ing-sot-x').map(s => ({ ...s, stima: 18 })) },
+  // l'A/B (veri/ab.js): la stessa scena (1 mostro con gli effetti), un Sotterraneo ciascuna, in giri alternati A B C D E (un gruppo per giro: il
+  // riferimento del calore si rifà in mezzo); la LETTURA tiene la mediana delle differenze contro la A dello stesso giro
+  ...Array.from({ length: GIRI_AB }, (_, g) => g + 1).flatMap(r => VARIANTI.map(v => ({
+    gruppo: `confronto ${r}`, carica: discese, opz: v.opz || (ris => opzE(ris)), tempi: 'verifica',
+    scene: [{ id: idAB(v.k, r), nome: `${v.nome} (giro ${r})`, mostri: 1, colpi: true, stima: 13 }] }))),
+  { gruppo: 'sopra', carica: () => import('./veri/sopra.js'), tempi: 'verifica', scene: [
+    { id: 'per-8', nome: '8 persone', persone: 8, stima: 10 }, { id: 'mos-8', nome: '8 mostri sul prato', mostri: 8, stima: 10 },
   ] },
-  { gruppo: 'sopra', carica: () => import('./veri/sopra.js'), scene: [
-    { id: 'per-8', nome: '8 persone', persone: 8 }, { id: 'mos-8', nome: '8 mostri sul prato', mostri: 8 },
-  ] },
-  { gruppo: 'sopra', carica: () => import('./veri/zaino.js'), scene: [{ id: 'zaino-15', nome: '15 anteprime', anteprime: 15 }] },
-  { gruppo: 'calore', carica: discese, scene: [{ id: 'cal-2', nome: 'riferimento, di nuovo alla fine', mostri: 8, colpi: true }] },
+  { gruppo: 'sopra', carica: () => import('./veri/zaino.js'), tempi: 'verifica', scene: [{ id: 'zaino-15', nome: '15 anteprime', anteprime: 15, stima: 6 }] },
 ]
+/**
+ * Quanto dura la verifica sul Note 7: la somma dei secondi attesi per scena (`stima`, dai log: una scena del Sotterraneo è un Sotterraneo
+ * nuovo, ~13 s con shader, rodaggio e misura) più, a ogni gruppo nuovo, la pausa che raffredda, il riferimento (~5 s) e il caricamento.
+ * Scritta nell'avviso iniziale; sopra gli 8 minuti si tagliano scene.
+ */
+export function stimaVerifica() {
+  const gruppi = new Set(TAPPE_VERIFICA.map(t => t.gruppo)).size
+  const scene = TAPPE_VERIFICA.reduce((n, t) => n + t.scene.length, 0)
+  const secondi = TAPPE_VERIFICA.reduce((n, t) => n + t.scene.reduce((m, x) => m + (x.stima || 10), 0), 0) + gruppi * (RAFFREDDA_BREVE / 1000 + 6)
+  return { scene, secondi, minuti: Math.ceil(secondi / 60) }
+}
 /** Chi pesa (docs/core/vecchio-telefono-elementi.md): a parte, solo se `solo` li chiede (`['elementi']`, o i gruppi e gli id). */
 export const TAPPE_ELEMENTI = tappeDegliElementi()
 
@@ -248,14 +261,15 @@ async function riferimento({ contenitore, fermo, corto, progresso, k, tot, raffr
  * prove, `solo`: gli inizi degli id da fare (`['sot-', 'zaino']`, e `js` per la prova di CPU), `raffredda`: i ms di pausa fra i gruppi.
  * → { tipo: 'veri', info, js, risultati, gruppi, avvisi, contesto, schermo, dpr, fascia, fermata }
  */
-export async function eseguiVeri({ contenitore, progresso = () => {}, fermo = () => false, corto = false, solo = null, fascia = null, raffredda = RAFFREDDA, completa = false }) {
+export async function eseguiVeri({ contenitore, progresso = () => {}, fermo = () => false, corto = false, solo = null, fascia = null, raffredda = null, completa = false }) {
+  if (raffredda == null) raffredda = completa || solo ? RAFFREDDA : RAFFREDDA_BREVE
   const tempi = corto ? TEMPI.corto : TEMPI.normale
   const info = infoGpuVeri()
   // `solo` sceglie per id o per gruppo (fra tutte, una scena una volta sola); senza, la verifica compatta o, con `completa`, le misure
   // complete (gli elementi no: sono una prova a parte)
   const visti = new Set()
   const nuova = s => !visti.has(s.id) && !!visti.add(s.id)
-  const tappe = (solo ? [...TAPPE_VERIFICA, ...TAPPE, ...TAPPE_ELEMENTI] : completa ? TAPPE : TAPPE_VERIFICA)
+  const tappe = (solo ? [...TAPPE, ...TAPPE_VERIFICA, ...TAPPE_ELEMENTI] : completa ? TAPPE : TAPPE_VERIFICA)
     .map(t => ({ ...t, scene: t.scene.filter(s => (!solo || solo.some(p => s.id.startsWith(p) || t.gruppo.startsWith(p))) && (!solo || nuova(s))) })).filter(t => t.scene.length)
   const tot = tappe.reduce((n, t) => n + t.scene.length, 0)
   const risultati = [], gruppi = {}, saltate = new Set(), avvisi = new Map()
@@ -298,7 +312,7 @@ export async function eseguiVeri({ contenitore, progresso = () => {}, fermo = ()
       progresso(k, tot, `${tappa.gruppo}: si carica…`)
       const t0 = performance.now()
       let f = null, errore = null
-      try { const m = await tappa.carica(); f = await m.prepara({ contenitore, opz: tappa.opz || {}, corto }) } catch (e) { errore = breve(e) }
+      try { const m = await tappa.carica(); f = await m.prepara({ contenitore, opz: (typeof tappa.opz === 'function' ? tappa.opz(risultati) : tappa.opz) || {}, corto }) } catch (e) { errore = breve(e) }
       g.carica.push(Math.round(performance.now() - t0))
       if (!f) { for (const s of tappa.scene) { risultati.push({ ...riga(s, tappa), errore }); k++ } continue }
       if (f.dpr && !g.dpr.includes(tondo(f.dpr))) g.dpr.push(tondo(f.dpr))
