@@ -7,6 +7,7 @@
 // Come si aggiunge un pezzo: docs/fattoria3d/scena.md, «Come si aggiunge un pezzo istanziato».
 import * as THREE from 'three'
 import { PEZZI } from '../dati/catalogo.js'
+import { segna } from '../../../grafica/elementi3d.js'
 
 /** I tipi che si adottano: pezzi fermi, uguali a ogni copia (si aggiunge un tipo qui e basta: i controlli sono in `adotta`). I fiori e l'arredo (W8, W12) si
     ripetono più di ogni altra decorazione: ogni copia di uno stesso id è una draw call sola. Quelli che si muovono (il mulinello) non entrano: `adotta` li rifiuta da sé. */
@@ -95,7 +96,7 @@ export class BancoStatici {
   _rifai(gr, capienza) {
     if (gr.mesh) { this.scena.remove(gr.mesh); gr.mesh.dispose() }
     const m = new THREE.InstancedMesh(gr.geo, gr.materiale, capienza)
-    m.frustumCulled = false; m.count = 0; m.visible = false; m.castShadow = gr.cast; m.receiveShadow = gr.recv; m.name = 'statici'
+    m.frustumCulled = false; m.count = 0; m.visible = false; m.castShadow = gr.cast; m.receiveShadow = gr.recv; m.name = 'statici'; segna(m, 'pezzi')
     this.scena.add(m); gr.mesh = m
   }
 

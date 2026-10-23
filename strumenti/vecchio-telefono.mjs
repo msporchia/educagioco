@@ -9,6 +9,7 @@
 //   node strumenti/vecchio-telefono.mjs benchmark                       # la stessa misura sul computer, con la taratura salvata
 //   node strumenti/vecchio-telefono.mjs benchmark --contro telefono.txt # e il confronto riga per riga col telefono
 //   node strumenti/vecchio-telefono.mjs benchmark --veri [--contro veri.txt] [--solo sot-,tri-]   # la misura coi modelli veri
+//   node strumenti/vecchio-telefono.mjs benchmark --veri --solo elementi   # chi pesa, un elemento alla volta (`--solo elementi-sot` una scena sola)
 //     (docs/core/vecchio-telefono-veri.md); con `--contro` un log coi modelli veri la sceglie da sé (e la sua fascia); `--qualita bassa`
 //     forza la fascia grafica; `--foto f.png` la schermata del resoconto
 //   node strumenti/vecchio-telefono.mjs 'sotterraneo3d=1&dpr=2' --dist  # fotogrammi di un gioco, con la taratura salvata

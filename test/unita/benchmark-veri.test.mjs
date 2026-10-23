@@ -1,7 +1,7 @@
 /* La misura coi modelli veri (docs/core/vecchio-telefono-veri.md): il log si compone con le righe, la LETTURA nomina il limite di
    ogni serie e il collo di bottiglia, la riga DATI si rilegge, un log lungo si spezza in invii che stanno nel campo del modulo, le
    note finiscono prima dei DATI. E le leve sulla scena vera: triangoli × k con la stessa forma, chiamate × k con gli stessi triangoli. */
-import { BoxGeometry, Mesh, MeshStandardMaterial, Scene, Box3 } from 'three'
+import { BoxGeometry, Mesh, MeshStandardMaterial, Scene, Box3, SkinnedMesh, Skeleton, Bone, Uint16BufferAttribute, Float32BufferAttribute } from 'three'
 import { componiVeri, letturaVeri, limite, spezza, conNote, LIMITE_CAMPO } from '../../src/grafica/benchmark/log-veri.js'
 import { dividi, leve } from '../../src/grafica/benchmark/veri/moltiplica.js'
 import { TAPPE, QUANTE } from '../../src/grafica/benchmark/veri.js'
@@ -129,5 +129,18 @@ controlla('leve: le chiamate x3 tornano ai triangoli di prima', m1.geometry === 
 uguale('leve: i gruppi coprono tutti i triangoli', box.groups.reduce((a, x) => a + x.count, 0), box.index.count)
 lv.ripristina()
 controlla('leve: ripristina rimette materiali e gruppi', m1.material === mat && m2.material === mat && box.groups.length === 6)
+
+// la pelle (salda3d.js): anche le SkinnedMesh si moltiplicano, e un vertice nuovo ha ossa intere (quelle di un capo del lato)
+const pelle = new BoxGeometry(1, 1, 1), nv = pelle.attributes.position.count
+pelle.setAttribute('skinIndex', new Uint16BufferAttribute(Array.from({ length: nv * 4 }, (_, i) => (i % 4 === 0 ? (Math.floor(i / 4) % 3) : 0)), 4))
+pelle.setAttribute('skinWeight', new Float32BufferAttribute(Array.from({ length: nv * 4 }, (_, i) => (i % 4 === 0 ? 1 : 0)), 4))
+const g8 = dividi(pelle, 8), si = g8.attributes.skinIndex
+controlla('la pelle si divide, con indici d\'osso interi', g8 && g8.index.count === pelle.index.count * 8 && Array.from(si.array).every(x => Number.isInteger(x) && x <= 2))
+const ossa = [new Bone(), new Bone(), new Bone()], sk = new SkinnedMesh(pelle, mat); sk.add(ossa[0]); sk.bind(new Skeleton(ossa))
+const sp = new Scene(); sp.add(sk)
+const lp = leve(sp)
+lp.triangoli(2); uguale('leve: la SkinnedMesh ha i triangoli x2', sk.geometry.index.count, pelle.index.count * 2)
+lp.chiamate(4); controlla('leve: e le chiamate x4', Array.isArray(sk.material) && sk.material.length === 4)
+lp.ripristina()
 
 riassunto('la misura coi modelli veri')

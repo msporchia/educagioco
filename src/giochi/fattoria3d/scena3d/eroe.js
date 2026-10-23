@@ -3,6 +3,7 @@
 // di un gesto lo dice chi l'ha chiesto (`fn` a ogni passo del gesto, `fine` alla fine).
 import { creaContadino } from './modelli-compagni.js'
 import { ASPETTO_ERO } from '../dati/compagni.js'
+import { segna } from '../../../grafica/elementi3d.js'
 import { PARTENZA } from '../dati/mondo.js'
 import { alleggeriOmbre } from './ottimizza.js'
 
@@ -15,7 +16,7 @@ export class Eroe {
     this.m = motore; this.fx = effetti; this.scena = scena
     this.grp = creaContadino(abito || ASPETTO_ERO)
     alleggeriOmbre(this.grp)
-    scena.add(this.grp)
+    scena.add(segna(this.grp, 'eroe'))
     this.x = PARTENZA.x; this.z = PARTENZA.z; this.dir = Math.PI
     this.percorso = []; this.dopo = null; this.verso = null; this.az = null
     this.fase = 0; this.vel = 0; this.corsa = false

@@ -17,7 +17,7 @@ import { GRADI } from '../../src/giochi/sotterraneo/dati/varianti.js'
 import { EFFETTI, SEGNI } from '../../src/giochi/sotterraneo/dati/effetti.js'
 import { MODELLO_DI_SPECIE, MODELLO_DEL_GROSSO, MODELLO_DELLA_VARIANTE, voceDi, idDi, costruisci } from '../../src/giochi/sotterraneo/scena3d/mostri3d/registro.js'
 import { ELENCHI } from '../../src/giochi/sotterraneo/scena3d/mostri3d/elenchi.js'
-import { ferme, salda } from '../../src/giochi/sotterraneo/scena3d/salda3d.js'
+import { ferme, studia, saldaTutto, vertici, disegnate } from '../../src/giochi/sotterraneo/scena3d/salda3d.js'
 import { effettoDi, segnoDi, statoDi, PROIETTILE, SEGNO_COLPO } from '../../src/giochi/sotterraneo/scena3d/effetti3d/gestore.js'
 import { controlla, nota, riassunto } from '../aiuto/verifica.mjs'
 
@@ -41,17 +41,45 @@ import { controlla, nota, riassunto } from '../aiuto/verifica.mjs'
 }
 
 /* ── ogni modello si costruisce, si anima, attacca e si salda ── */
-// dove stanno nel mondo i vertici delle mesh che si vedono (somme e quadrati): saldare non toglie né sposta vertici
-const _v = new Vector3()
+// dove stanno nel mondo i vertici delle mesh che si disegnano (somme e quadrati), pelle compresa: saldare non toglie né sposta vertici
 function impronta(g) {
-  g.updateMatrixWorld(true)
   const s = [0, 0, 0, 0]
-  g.traverseVisible(o => {
-    if (!o.isMesh) return
-    const p = o.geometry.attributes.position
-    for (let i = 0; i < p.count; i++) { _v.fromBufferAttribute(p, i).applyMatrix4(o.matrixWorld); s[0] += _v.x; s[1] += _v.y; s[2] += _v.z; s[3] += _v.lengthSq() }
-  })
+  vertici(g, v => { s[0] += v.x; s[1] += v.y; s[2] += v.z; s[3] += v.lengthSq() })
   return s
+}
+// la pelle di un modello, nella posa di adesso: ogni vertice della SkinnedMesh sta dove il suo osso porterebbe il pezzo di prima (che
+// resta lì, spento). Vale anche per i modelli che pescano a caso animandosi, dove due gemelli non si confrontano
+const _a = new Vector3(), _b = new Vector3()
+function scartoPelle(g) {
+  g.updateMatrixWorld(true)
+  if (g.userData.scheletro) g.userData.scheletro.update()
+  let peggio = 0
+  g.traverse(o => {
+    if (!o.isSkinnedMesh) return
+    const si = o.geometry.attributes.skinIndex
+    let i = 0
+    while (i < si.count) {
+      const osso = o.skeleton.bones[si.getX(i)], p = osso.geometry.attributes.position, m = o.material, mo = osso.material
+      // fuso coi colori nei vertici: il materiale dell'osso, com'è adesso, ha quel colore e il resto uguale (nessuno l'ha animato)
+      const fusa = m.userData.fusa, vc = fusa && mo.vertexColors && osso.geometry.attributes.color, col = fusa && o.geometry.attributes.color
+      // il largo porta nei vertici anche ruvidezza, metallo ed emissivo (aMat, aEmis); il fuso di colore li ha nel materiale
+      const larga = fusa === 'larga', am = larga && o.geometry.attributes.aMat, ae = larga && o.geometry.attributes.aEmis
+      if (fusa && !larga) peggio = Math.max(peggio, Math.abs(m.emissiveIntensity - mo.emissiveIntensity || 0), m.emissive ? m.emissive.clone().sub(mo.emissive).r ** 2 : 0)
+      if (fusa) peggio = Math.max(peggio, Math.abs(m.opacity - mo.opacity), m.side !== mo.side ? 1 : 0)
+      for (let j = 0; j < p.count; j++, i++) {
+        o.getVertexPosition(i, _a).applyMatrix4(o.matrixWorld)
+        _b.fromBufferAttribute(p, j).applyMatrix4(osso.matrixWorld)
+        peggio = Math.max(peggio, _a.distanceTo(_b))
+        if (fusa) {
+          const k = vc ? [vc.getX(j), vc.getY(j), vc.getZ(j)] : [1, 1, 1]
+          peggio = Math.max(peggio, Math.abs(col.getX(i) - mo.color.r * k[0]), Math.abs(col.getY(i) - mo.color.g * k[1]), Math.abs(col.getZ(i) - mo.color.b * k[2]))
+          if (larga) peggio = Math.max(peggio, Math.abs(am.getX(i) - mo.roughness), Math.abs(am.getY(i) - mo.metalness), Math.abs(am.getZ(i) - mo.emissiveIntensity),
+            Math.abs(ae.getX(i) - mo.emissive.r), Math.abs(ae.getY(i) - mo.emissive.g), Math.abs(ae.getZ(i) - mo.emissive.b))
+        }
+      }
+    }
+  })
+  return peggio
 }
 const vicine = (a, b) => a.every((x, i) => Math.abs(x - b[i]) < 1e-3 + 1e-6 * a[3])   // a[3] dà la misura: le matrici composte sbagliano di poco
 // due istanze uguali: qualche modello pesca a caso costruendosi
@@ -79,9 +107,9 @@ const conSeme = (n, f) => { let s = n; Math.random = () => ((s = (s * 16807) % 2
       if (a.proiettile && a.proiettile.tipo !== 'soffio') controlla(`${id}: il proiettile «${a.proiettile.tipo}» ha un effetto`, !!PROIETTILE[a.proiettile.tipo] && !!effettoDi(PROIETTILE[a.proiettile.tipo].chiave))
       if (!a.proiettile && SEGNO_COLPO[a.tipo]) controlla(`${id}: il segno del colpo «${a.tipo}» c'è`, !!segnoDi(SEGNO_COLPO[a.tipo]))
     }
-    const conta = () => { let n = 0; g.traverse(o => { if (o.isMesh && o.visible) n++ }); return n }
+    const conta = () => { let n = 0; disegnate(g, o => { if (o.isMesh) n++ }); return n }
     const n0 = conta()
-    try { salda(g, ferme(g)) } catch (e) { controlla(`${id}: si salda`, false, e.message) }
+    try { saldaTutto(g, studia(g)) } catch (e) { controlla(`${id}: si salda`, false, e.message) }
     const n1 = conta()
     controlla(`${id}: saldato resta qualcosa`, n1 > 0 && n1 <= n0, `${n0} → ${n1}`)
     prima += n0; dopo += n1
@@ -96,19 +124,21 @@ const conSeme = (n, f) => { let s = n; Math.random = () => ((s = (s * 16807) % 2
     }
     const nudo = gemello(), altro = gemello()
     if (nudo && altro) {
-      let diverse = 0, capricci = 0, peggio = ''
+      let diverse = 0, capricci = 0, peggio = '', scarto = 0
       for (let k = 0; k < 20; k++) {   // istanti e colpi fuori dalla griglia di `ferme`
         const t = 0.53 + k * 1.37, p = ((k * 3) % 11) / 10
         for (const m of [nudo, altro, g]) { m.userData.anima(t); if (k % 2 && m.userData.attacca) m.userData.attacca(p) }
+        scarto = Math.max(scarto, scartoPelle(g))
         const a = impronta(nudo)
         if (!vicine(a, impronta(altro))) capricci++
         else { const b = impronta(g); if (!vicine(a, b)) { diverse++; peggio = a.map((x, i) => (x - b[i]).toExponential(1)).join(' ') } }
       }
-      if (capricci) nota(`${id}: due gemelli non saldati non vengono uguali, la saldatura non si confronta`)
+      if (capricci) nota(`${id}: due gemelli non saldati non vengono uguali, la saldatura non si confronta (la pelle sì, sotto)`)
       controlla(`${id}: saldato, i vertici stanno dove stavano`, diverse === 0, `${diverse} pose diverse (${peggio})`)
+      controlla(`${id}: la pelle segue le ossa`, scarto < 1e-4, `scarto ${scarto.toExponential(1)}`)
     }
   }
-  nota(`${ids.size} modelli, mesh ${prima} → ${dopo} saldando i pezzi fermi`)
+  nota(`${ids.size} modelli, mesh ${prima} → ${dopo} saldando i pezzi fermi e con la pelle`)
 }
 
 /* ── gli effetti del gioco hanno il loro 3D ── */

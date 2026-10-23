@@ -77,6 +77,8 @@ di riposo); `userData.origine` l'Object3D da cui partono i colpi a distanza.
 - **I pezzi fermi saldati** (`scena3d/salda3d.js`): le mesh che non si muovono rispetto al loro perno, con lo stesso materiale,
   diventano una. Chi si muove lo dice il modello: 64 istanti d'idle e l'attacco intero, chi cambia resta a sé. Si calcola una
   volta per modello. Da 8170 a 4354 mesh sui 72 modelli.
+- **La pelle** (`salda3d.js`, `pelle`): quello che resta, anche ciò che si muove, diventa una SkinnedMesh per materiale con le
+  mesh stesse per ossa; 642 mesh sugli 87 modelli ([prestazioni-3d.md](prestazioni-3d.md), «Meno chiamate»). `&spegni=pelle` la toglie.
 
 ## Gli attacchi e gli effetti (`racconto.js`, `effetti3d/gestore.js`)
 

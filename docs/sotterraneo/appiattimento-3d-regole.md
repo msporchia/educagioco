@@ -31,7 +31,7 @@ saldatura**, come nel gioco:
 | effetto (un colpo, un'aura, uno stato) | 8 | 4 000 | 0 | 0 | 8 | 3 |
 
 40 chiamate per personaggio è il tetto per non peggiorare: il bersaglio per stare nei 25 ms di JS con tre mostri e l'eroe è ~20 (oggi
-lo scheletro ne fa 36, il lupo 52, il drago 140, l'eroe leggendario ~85). I triangoli sono larghi apposta: un modello che diventa più
+prima della pelle lo scheletro ne faceva 36, il lupo 52, il drago 140, l'eroe leggendario ~85; ora 5-20: [prestazioni-3d.md](prestazioni-3d.md), «Meno chiamate»). I triangoli sono larghi apposta: un modello che diventa più
 bello con più poligoni li usa. Una luce dentro un modello non c'è mai: la luce è della scena, con la riserva fissa di `luci.js`; un
 modello che brilla usa l'emissivo o un bagliore additivo.
 
@@ -44,8 +44,9 @@ pixel ratio 1. Le chiamate a WebGL di un fotogramma (`contaGL`): ≤ 600 `unifor
 
 `node test/unita/budget-3d.test.mjs` (anche in `npm test`): pesa ogni modello delle discese del catalogo 3D
 (`strumenti/banco/catalogo-3d/sotterraneo.js`: i mostri saldati, le persone, l'arredo, i relitti, le botti) e un modello nuovo oltre il
-tetto della sua famiglia è rosso. Quelli di prima del budget stanno in `ECCEZIONI` col peso di oggi (49 modelli, quasi tutti per le
-chiamate; i draghi anche per 35 additivi, le melme per 13 MeshPhysical): possono solo scendere. `--elenco` stampa il peso di tutti.
+tetto della sua famiglia è rosso. Quelli di prima del budget stanno in `ECCEZIONI` col peso di oggi (dalla pelle del 23/10 sei: gli spiriti e
+il golem di magma per le chiamate, le melme per 13 MeshPhysical): possono solo scendere. `pesa` non conta i gruppi spenti né le ossa
+della pelle. `--elenco` stampa il peso di tutti.
 Non misura tempi: conta, quindi gira in Node in un secondo e non dipende dalla macchina. Per un effetto nuovo (gli effetti non sono nel
 catalogo) si conta con `pesa()` sull'oggetto che l'effetto aggiunge alla scena, nel suo test.
 

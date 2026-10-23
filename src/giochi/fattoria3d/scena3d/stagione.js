@@ -3,6 +3,7 @@
 // UNA draw call a istanze (o un solo `Points`), il moto dei fiocchi sta nel vertex shader. Quando non è festa non esiste niente (nessun
 // oggetto, nessuna chiamata). Cosa c'è e dove lo dicono i dati (dati/stagioni3d.js). Vedi docs/fattoria3d/stagioni.md.
 import * as THREE from 'three'
+import { segna } from '../../../grafica/elementi3d.js'
 import { ASPETTI, PARTICELLE, addobbiNatale, chiazzeDiNeve, semeDelGiorno } from '../dati/stagioni3d.js'
 
 const RAGGIO = 17                  // celle: le chiazze si spargono attorno alla telecamera, in una scacchiera quantizzata a QUANTO
@@ -60,7 +61,7 @@ export class Stagione {
   constructor({ scena, emisfero, sole, motore, pezzi, camera, qualita, nome }) {
     this.scena = scena; this.emisfero = emisfero; this.sole = sole; this.m = motore; this.pezzi = pezzi; this.camera = camera; this.q = qualita
     this.nome = nome; this.A = ASPETTI[nome]; this.seme = semeDelGiorno(new Date())
-    this.gruppo = new THREE.Group(); this.gruppo.name = 'stagione'; scena.add(this.gruppo)
+    this.gruppo = segna(new THREE.Group(), 'stagione'); this.gruppo.name = 'stagione'; scena.add(this.gruppo)
     this.prima = {
       cielo: scena.background.clone(), nebbia: scena.fog.color.clone(), emisfero: [emisfero.color.clone(), emisfero.groundColor.clone(), emisfero.intensity],
       sole: [sole.color.clone(), sole.intensity],
@@ -103,7 +104,7 @@ export class Stagione {
     const P = PARTICELLE[this.nome]
     this.punti = this.nome === 'natale' ? creaPunti(P.n, P.alto, 0xffffff, 1.5, false) : creaPunti(P.n, P.alto, 0xffa83a, 1.7, true)
     this.punti.visible = !!this.q.particelle
-    this.scena.add(this.punti)
+    this.scena.add(segna(this.punti, 'stagione'))
   }
 
   /** Le opzioni di qualità sono cambiate: il basso spegne i fiocchi (si vede lo stesso il resto). */

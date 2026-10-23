@@ -80,6 +80,9 @@ lunghi, sopra 100 ms, attacchi per giro, shader per giro, programmi al primo dis
 
 **Le leve dei colli di bottiglia** (`veri/moltiplica.js`): i triangoli ×k dividono ogni triangolo di ogni mesh in k (piatti: forma,
 materiali, luci e chiamate restano); le chiamate ×k spezzano ogni mesh in k gruppi dello stesso materiale (stessi triangoli).
+Valgono anche per le SkinnedMesh della pelle (`salda3d.js`, dove stanno quasi tutti mostri ed eroe): il vertice nuovo prende ossa e
+pesi di un capo del lato. Sul computer (22/10, con la pelle) triangoli 86k → 142k → 253k → 475k, chiamate 70 → 119 → 205: non
+×2 e ×4 esatti perché punti e sprite non si dividono, come prima della pelle (sul Redmi 241 → 440 → 892).
 
 ## Il resoconto
 
@@ -186,3 +189,16 @@ rimandarlo con le note aggiunte; l'esito («Mandato al computer (<file>)») sta 
 unico) la sonda è falsa e il bottone non c'è: restano «Manda» (modulo) e «Copia».
 Sul telefono: `npm run build:sito`, `node strumenti/ricevi-log.mjs`, aprire sul Redmi l'indirizzo stampato, zona dei grandi →
 Impostazioni → Avanzate → Misura questo telefono.
+
+## Dove eravamo rimasti (la misura per elemento, 23/10)
+
+**Fatto.** La prova «Chi pesa» c'è: [vecchio-telefono-elementi.md](vecchio-telefono-elementi.md) (tasto in «Misura questo
+telefono», le scene delle discese, del mondo di sopra, della fattoria 3D e degli Asteroidi, la tabella, la LETTURA, le leve,
+`--solo elementi` nello strumento, `unita/benchmark-elementi`, `integrazione/benchmark-elementi`). Le leve semplici (`ombre`,
+`rilievo`, `nebbiaFitta`, `quantaPolvere:0.4` nel Sotterraneo; `erba: false` nella fattoria) sono pronte e la prova le confronta;
+gli scatti prima/dopo sono in `tmp/scatti/leve-discese-*.png` e `leve-sopra-*.png` (fascia bassa, `&spegni=` di ogni leva).
+
+**Manca.**
+1. Il resoconto «Chi pesa» del Redmi Note 7, e da lì quali leve vanno in `SPEGNI_BASSA` (`store/qualita.js`) e nel preset
+   `basso` della fattoria: dopo il sì di Marco sugli scatti.
+2. Per gli elementi più cari senza leva (secondo la tabella): la semplificazione scritta in `SEMPLICE` (`elementi-dati.js`).

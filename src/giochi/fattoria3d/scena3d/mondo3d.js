@@ -5,6 +5,7 @@
 // `ui` (le porte verso Gioco.vue): cambio(), chiedi(titolo, testo, bottoni), scegliSeme(cb), apriMacchina(tipo),
 //   avviso(testo), chiudiCostruzione(), fogliAperti(), zonaDrop() → DOMRect|null, trascinando(info|null).
 import * as THREE from 'three'
+import { segna, creaElementi } from '../../../grafica/elementi3d.js'
 import { Terreno } from './terreno.js'
 import { Pezzi } from './pezzi.js'
 import { creaAnteprime } from './anteprime.js'
@@ -26,6 +27,8 @@ import { abitoDaChiave } from '../dati/abiti.js'
 import { LIVELLI, scalaPer, nuovoDegrado, passoDegrado, descriviDegrado } from '../dati/degrado.js'
 
 const CIELO = new THREE.Color(0xbfe0f0)
+/** Gli elementi della scena, nell'ordine della tabella di chi pesa; `resto` è quello senza nome (l'emisferica, gli effetti, la pesca). */
+export const ELEMENTI_FATTORIA = ['terreno', 'strade', 'alberi', 'erba', 'acqua', 'campi', 'edifici', 'pezzi', 'animali', 'eroe', 'stagione', 'sole', 'resto']
 /** Cosa dice il cartello di un lotto in vendita oltre al prezzo (il prato e il bosco non dicono niente). */
 export const NOME_BIOMA = { laghetto: '🏞️ laghetto', lago: '🏞️ lago', mare: '🌊 mare', costa: '🏖️ spiaggia' }
 const _c = new THREE.Vector3()        // il corpo del contadino per `contadinoSotto`
@@ -54,9 +57,12 @@ export class Mondo3d {
     this.sole.castShadow = true; this.sole.shadow.mapSize.set(1024, 1024)
     Object.assign(this.sole.shadow.camera, { left: -14, right: 14, top: 14, bottom: -14, near: 1, far: 60 })
     this.sole.shadow.bias = -0.0004; this.sole.shadow.normalBias = 0.03
-    this.scena.add(this.sole, this.sole.target)
+    this.scena.add(segna(this.sole, 'sole'), this.sole.target)
     this.camera = new Camera(this.sole)
 
+    // gli elementi (grafica/elementi3d.js, docs/core/vecchio-telefono-elementi.md): `spenti` non si disegnano; `#…&spegni=edifici,erba` per misurare
+    this.spenti = new Set(typeof location === 'undefined' ? [] : (new URLSearchParams(location.hash.slice(1)).get('spegni') || '').split(',').filter(Boolean))
+    this.elementi = creaElementi(ELEMENTI_FATTORIA, k => !this.spenti.has(k))
     this.vista = { proietta: (p, extra) => this.proietta(p, extra), frustum: () => this._frustum() }
     this.fx = new Effetti(this.scena, sopra, this.vista, qualita)
     this.terreno = new Terreno(this.scena, motore)
@@ -308,6 +314,7 @@ export class Mondo3d {
     const quieta = this.eroe.fermo && !this.camera.inMoto, ogni = Math.max(LIVELLI[this.livello].ombraOgni, quieta ? 2 : 1)
     this.renderer.shadowMap.needsUpdate = this.q.ombre && (this.ombraSporca || this.camera.ombraCambiata || this.nFot++ % ogni === 0)
     this.ombraSporca = false
+    this.elementi(this.scena)
     this.renderer.render(this.scena, this.camera.cam)
     this._misura(dtReale, performance.now() - inizio, ts, fineLogica - inizio)
     this._scalda(dtReale)

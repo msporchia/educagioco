@@ -9,7 +9,8 @@ import { Scene, Color, Fog, HemisphereLight, DirectionalLight, Group, Texture, S
 import { ATLANTE, PEZZI } from '../../dati/atlante.js'
 import { caricaZona, scaricaZona, zonaDi, zoneAttorno } from '../../motore/mondo-percorso.js'
 import { creaContesto } from '../contesto.js'
-import { ACCESI } from '../costanti.js'
+import { ACCESI, ELEMENTI_SOPRA, elementoAcceso } from '../costanti.js'
+import { segna, segnaNuovi, creaElementi } from '../../../../grafica/elementi3d.js'
 import { normaliAtlante } from '../trame.js'
 import { U, vesti, tramaDeiPezzi, tingi } from './vesti.js'
 import { creaTrame } from './trame.js'
@@ -39,7 +40,7 @@ const CIELO = new Color(0xc9dcea)
 const COLORI_PALLINO = { grigio: 0x9a9a9a, verde: 0x5fd35f, arancio: 0xffa53a, rosso: 0xff4a3a }
 
 export function creaMondo3d(canvas, opz) {
-  const ctx = creaContesto(canvas, { perso: opz.perso, fisso: opz.dpr, antialias: true, spegni: opz.spegni })
+  const ctx = creaContesto(canvas, { perso: opz.perso, fisso: opz.dpr, antialias: true, spegni: opz.spegni, riaccendi: opz.riaccendi })
   if (!ctx) return null
   try { return costruisci(canvas, ctx, opz) } catch (e) {
     console.warn('mondo 3D: non parte', e)
@@ -60,7 +61,7 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = [], fon
   { const k = tingi(m.terraDi); scena.background.multiply(new Color(...k)); scena.fog.color.multiply(new Color(...k)) }
   scena.add(new HemisphereLight(0xcfe4ff, 0x6a5a3a, 1.35))
   const sole = new DirectionalLight(0xfff1dc, 2.6)
-  sole.castShadow = true
+  sole.castShadow = true; segna(sole, 'sole')
   sole.shadow.mapSize.set(2048, 2048)
   sole.shadow.bias = -0.0004; sole.shadow.normalBias = 0.04; sole.shadow.radius = 3
   scena.add(sole, sole.target)
@@ -81,15 +82,18 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = [], fon
   const trame = creaTrame()
   const suolo = materialiDelSuolo(trame), kit = materialiDelKit(trame)
   const griglia = grigliaDi(m), tPezzi = tramaDeiPezzi(griglia.nx, griglia.nz)
-  const nebbia = creaNebbia(m, scena, bit)
+  // gli elementi (grafica/elementi3d.js): chi pesa si misura spegnendone uno alla volta (docs/core/vecchio-telefono-elementi.md)
+  const elementi = creaElementi(ELEMENTI_SOPRA, elementoAcceso)
+  const el = (nome, fai) => segnaNuovi(scena, nome, fai)
+  const nebbia = el('velo', () => creaNebbia(m, scena, bit))
   const acqua = creaAcqua(m, SOLE), cielo = creaCielo()
-  scena.add(acqua.mesh, cielo.mesh)
+  scena.add(segna(acqua.mesh, 'mare'), segna(cielo.mesh, 'cielo'))
   const fuori = creaFuori(m, suolo.terreno)
-  scena.add(fuori.mesh)
-  const lontano = creaLontano(m, scena, suolo, { quotaFuori: fuori.quotaFuori, M: fuori.M })
-  const natura = creaNatura(m, kit, scena)
-  const vita = creaVita(scena, trame)
-  const scia = creaScia(scena, (x, z) => quotaA(m, x, z))
+  scena.add(segna(fuori.mesh, 'terreno'))
+  const lontano = el('terreno', () => creaLontano(m, scena, suolo, { quotaFuori: fuori.quotaFuori, M: fuori.M }))
+  const natura = el('natura', () => creaNatura(m, kit, scena))
+  const vita = el('vita', () => creaVita(scena, trame))
+  const scia = el('scia', () => creaScia(scena, (x, z) => quotaA(m, x, z)))
   const conFontana = new Set(fontane.map(f => f.citta))   // le città dove l'acqua prende il posto del pozzo (fontana.js)
   const matCristallo = vesti(new MeshStandardMaterial({ color: 0xb78cff, emissive: 0x6a3cff, emissiveIntensity: 0.6, roughness: 0.2 }), { oggetto: 'istanza' })
   const quota = (x, z) => quotaA(m, x, z)
@@ -113,14 +117,14 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = [], fon
   let cambiati = true
   function costruisciPezzo(p) {
     const t0 = performance.now()
-    const gruppo = new Group(), cant = new Cantiere(), q = contenutoDelPezzo(m, p)
+    const gruppo = segna(new Group(), 'case'), cant = new Cantiere(), q = contenutoDelPezzo(m, p)   // tutto quello che non è terreno
     const cose = { camini: [], braci: [], fuochi: [], spruzzi: [], ruote: [], cristalli: [] }
     const fatto = { gruppo, cose, monumenti: [], pietre: [], terre: [], marcatori: [], fontane: [], istanze: null, carichi: q.carichi, ms: 0 }
-    gruppo.add(terrenoDelPezzo(m, p, suolo.terreno, 2))
+    gruppo.add(segna(terrenoDelPezzo(m, p, suolo.terreno, 2), 'terreno'))
     const campi = campiDelPezzo(m, q.campi, suolo)
-    if (campi) gruppo.add(campi)
+    if (campi) gruppo.add(segna(campi, 'terreno'))
     staccionate(q.campi, cant, m)
-    if (pezzoDi(m, v.piazza.x + v.piazza.w / 2, v.piazza.y + v.piazza.h / 2) === p) gruppo.add(creaPiazza(m, v, suolo, cant))
+    if (pezzoDi(m, v.piazza.x + v.piazza.w / 2, v.piazza.y + v.piazza.h / 2) === p) gruppo.add(segna(creaPiazza(m, v, suolo, cant), 'terreno'))
     for (const c of q.case) casa(c, cant, m, cose)
     disegnaProps(propsPerPezzo(m)[p], cant, m, cose)
     disegnaPropsAperti(m, p, cant, cose)
@@ -264,7 +268,7 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = [], fon
     norm = normaliAtlante(img)
     persone = creaPersone(scena, { tex, norm, larga: img.width, alta: img.height, pezzi: PEZZI, trame, quota, nebbia })
     // lo scontro di sopra (palco.js): nasce qui una volta, e resta spento finché non si combatte
-    if (strato) palco = creaPalcoSopra(scena, { tex, norm, larga: img.width, alta: img.height, pezzi: PEZZI, quota, cam, strato })
+    if (strato) palco = el('persone', () => creaPalcoSopra(scena, { tex, norm, larga: img.width, alta: img.height, pezzi: PEZZI, quota, cam, strato }))
   }
   img.src = ATLANTE
 
@@ -357,10 +361,11 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = [], fon
     persone.taglio(soleVista.x, soleVista.y)
     persone.disegna(S.persone, eroe, { t: tempo, dt, veduta, camera: cam, mostri: S.mostri, perTerra: S.perTerra,
                                        extra: inScontro ? o => palco.passo(dt, tempo, o, A * ctx.dpr * 1.5) : null })
-    scena.fog.near = cam.d * 1.5; scena.fog.far = cam.d * 4.5
+    if (scena.fog) { scena.fog.near = cam.d * 1.5; scena.fog.far = cam.d * 4.5 }   // senza: la misura degli elementi (la foschia tolta)
     cielo.mesh.position.copy(cam.camera.position)
     if (dopo) dopo(dt, tempo)
     ctx.misure.msJs = performance.now() - t0
+    elementi(scena)
     const t1 = performance.now()
     renderer.render(scena, cam.camera)
     ctx.misure.msDisegno = performance.now() - t1

@@ -8,7 +8,7 @@ import { vesti, TIPI } from './eroi3d/armature.js'
 import { copri } from './eroi3d/copricapi.js'
 import { dotazioneDi } from './anteprime3d-pura.js'
 import { creaPezzo, vestiFigura, indossaGioiello } from './roba3d.js'
-import { ferme, salda } from './salda3d.js'
+import { studia, saldaTutto, osso, copiaMateriale, lampoFuso } from './salda3d.js'
 import { ACCESI } from './costanti.js'
 
 export const eroe3dAcceso = () => typeof location === 'undefined' || !/[#&?]eroe2d\b/.test(location.hash + location.search)
@@ -49,11 +49,11 @@ export function vestiDotazione(g, d) {
 function clonaMateriali(radice) {
   const nuovi = new Map(), lista = []
   radice.traverse(o => {
-    if (!o.isMesh) return
+    if (!o.isMesh || osso(o)) return
     const m = o.material
     if (!m || Array.isArray(m)) return
     if (!nuovi.has(m)) {
-      const c = m.clone(); nuovi.set(m, c)
+      const c = copiaMateriale(m); nuovi.set(m, c)   // un fuso della pelle si porta dietro il suo shader
       if (c.emissive) lista.push({ m: c, e: c.emissive.clone(), ei: c.emissiveIntensity, tr: c.transparent, op: c.opacity })   // un materiale senza luce propria (i gioielli) non lampeggia
     }
     o.material = nuovi.get(m)
@@ -77,16 +77,18 @@ export function posa(g, t, cammina, colpo) {
 
 // L'eroe vestito si salda come i mostri (salda3d.js): vestito di tutto erano ~130 chiamate di disegno, la voce più cara dello scontro
 // (docs/sotterraneo/prestazioni-3d.md). Chi si muove lo dicono le pose stesse, provate su ~90 s di guardia (i gesti ogni 5-8 s), a
-// passi alterni con la marcia, e col colpo; le mesh ferme si saldano. Gli indici valgono per lo stesso eroe con la stessa roba.
+// passi alterni con la marcia, e col colpo; le mesh ferme si saldano, e il resto va nella pelle. Gli indici valgono per lo stesso
+// eroe con la stessa roba. `pelle` falso: solo la saldatura (le misure di prima).
 const saldabili = new Map()
-export function saldaEroe(g, chiave) {
+export function saldaEroe(g, chiave, { pelle = true } = {}) {
   posa(g, 0, false, null)   // la prima posa aggiunge pezzi (il mago): gli indici si contano dopo
+  g.traverse(o => { o.castShadow = false })   // come fa poi clonaMateriali: l'eroe non fa ombra, e chi la faceva non resta a sé
   if (!saldabili.has(chiave)) {
     const prove = { anima: t => posa(g, t, (t * 7) % 2 > 1, null), attacca: p => posaColpo(g, p) }   // sopra la posa di adesso, come in aggiorna
     if (saldabili.size > 40) saldabili.clear()
-    saldabili.set(chiave, ferme(g, prove, { prove: 240, passo: 3.1 }))
+    saldabili.set(chiave, studia(g, prove, { prove: 240, passo: 3.1 }))
   }
-  salda(g, saldabili.get(chiave), { ombre: true })
+  saldaTutto(g, saldabili.get(chiave), { ombre: true, pelle })
 }
 
 /** `scena`: dove si aggiunge. Torna `{ aggiorna(...), toglie() }`. */
@@ -109,11 +111,12 @@ export function creaEroe3d(scena) {
     if (g) {
       radice.remove(g)
       g.traverse(o => { if (o.userData.saldata) o.geometry.dispose() })
+      if (g.userData.scheletro) g.userData.scheletro.dispose()
       for (const t of tinte) t.m.dispose()
     }
     g = creaEroe(chiave); radice.add(g)
     vestiEroe(g, corsa)
-    try { if (ACCESI.saldatura) saldaEroe(g, `${chiave}|${f}`) } catch (e) { console.warn('eroe 3D: non si salda', e) }   // resta com'è, solo più caro
+    try { if (ACCESI.saldatura) saldaEroe(g, `${chiave}|${f}`, { pelle: ACCESI.pelle }) } catch (e) { console.warn('eroe 3D: non si salda', e) }   // resta com'è, solo più caro
     tinte = clonaMateriali(g)
     ultimaTinta = ''
   }
@@ -136,10 +139,10 @@ export function creaEroe3d(scena) {
       if (tinta !== ultimaTinta) {
         ultimaTinta = tinta
         for (const t of tinte) {
-          t.m.emissive.copy(t.e)
-          if (rosso > 0) { t.m.emissive.lerp(ROSSO, rosso); t.m.emissiveIntensity = t.ei + rosso * 0.9 }
-          else if (verde > 0) { t.m.emissive.lerp(VERDE, verde * 0.8); t.m.emissiveIntensity = t.ei + verde * 0.7 }
-          else t.m.emissiveIntensity = t.ei
+          // un fuso largo della pelle ha l'emissivo nei vertici: il lampo glielo dà il suo shader (salda3d.js)
+          if (rosso > 0) { if (!lampoFuso(t.m, ROSSO, rosso, 1, rosso * 0.9)) { t.m.emissive.copy(t.e).lerp(ROSSO, rosso); t.m.emissiveIntensity = t.ei + rosso * 0.9 } }
+          else if (verde > 0) { if (!lampoFuso(t.m, VERDE, verde * 0.8, 1, verde * 0.7)) { t.m.emissive.copy(t.e).lerp(VERDE, verde * 0.8); t.m.emissiveIntensity = t.ei + verde * 0.7 } }
+          else if (!lampoFuso(t.m, null, 0)) { t.m.emissive.copy(t.e); t.m.emissiveIntensity = t.ei }
           const tr = trasparenza < 1
           t.m.transparent = t.tr || tr; t.m.opacity = tr ? t.op * trasparenza : t.op
         }

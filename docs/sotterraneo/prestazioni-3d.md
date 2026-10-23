@@ -47,6 +47,59 @@ confrontano i vertici del saldato con un gemello non saldato in venti pose, e i 
 - provato a confrontare le scatole (`Box3`) invece dei vertici: non vede niente, i pezzi si muovono coi perni, non da soli.
 - l'attacco va provato sopra l'idle in movimento, non solo da fermo: la mano del goblin rosso si muove solo se attacca durante un gesto.
 
+## Meno chiamate: la pelle (23/10)
+
+Sul Note 7 il JS di un fotogramma costa ~0,18 ms per chiamata di disegno: per stare nei 25 ms lo scontro deve fare meno di ~130
+chiamate. Dopo la saldatura (sopra) restavano i pezzi che si muovono: ognuno una chiamata. Ora (`salda3d.js`, `pelle`, chiamata da
+`saldaTutto` in `mostro3d.js` ed `eroe3d.js`) quello che resta diventa **una `SkinnedMesh` per materiale**, come le persone
+([persone-3d.md](persone-3d.md)): le ossa sono le mesh stesse, che restano dove sono e si muovono come prima ma non si disegnano più
+(`layers` vuoti, `osso(o)`). I materiali Standard che differiscono solo in colore, ruvidezza, metallo ed emissivo si fondono in uno
+(«largo»: quei valori stanno nei vertici, `aMat` e `aEmis`, e lo shader li legge al posto delle uniform); gli altri tipi solo nel
+colore. Il lampo, la tinta degli stati e il bagliore delle mosse passano dallo shader del fuso (`copiaMateriale`, `tingiFusa`,
+`lampoFuso`, `materiale.lampo`). Un programma di shader in più per tipo (`pelle-larga`, `pelle-colore`), lo stesso per tutti i modelli.
+
+Restano a sé: chi si accende e si spegne, cambia forma, materiale o genitore durante le prove (`studia`: le fiamme del soffio, le
+melme che rifanno le normali); un osso schiacciato a zero nella posa di adesso (le foglie che cadono); i trasparenti non additivi
+(l'ordine fra i pezzi conta); i materiali che si animano (`vivi`: gli occhi che pulsano), che si uniscono solo fra pezzi dello stesso
+materiale; quelli con lo shader riscritto o con le trame.
+
+Chiamate di `renderer.info.render.calls` (`window.__sotterraneo3d.grafica().chiamate`, SwiftShader, fascia bassa, `&dpr=1`;
+`&spegni=pelle` è il «prima», con la saldatura di sempre):
+
+| scena | prima | dopo |
+|---|---|---|
+| scontro: 3 scheletri leggendari (guerriero, arciere, mago), cavaliere con 7 caselle leggendarie | 265 | **76** |
+| scontro: il drago d'oro e il mago leggendario | 203 | **71** |
+| mondo di sopra, `folla=8&branco3d=8` (6 mostri 3D in vista nella bassa) | 391 | **144** |
+
+Per modello (mesh disegnate, in Node: `unita/sotterraneo-eroe-3d-saldato`, `budget-3d --elenco`):
+
+| modello | senza saldare | saldato | con la pelle |
+|---|---|---|---|
+| eroe cavaliere vestito di leggendari | 134 | 82 | **13** |
+| eroe mago / elfa / nano | 79 / 134 / 141 | 56 / 76 / 68 | **20 / 11 / 10** |
+| drago (verde, azzurro, oro, rosso, di lava) | 140 | 105 | **~20** |
+| gorgo / sibilla / polpo / negromante | 116 / 100 / 72 / 87 | 116 / 99 / 72 / 87 | **≤13 / ≤8 / ≤7 / ≤12** |
+| scheletro arciere | 51 | 45 | **≤12** |
+| tutti gli 87 modelli dei mostri | 8724 | ~4300 | **642** |
+
+L'aspetto non cambia: i test confrontano i vertici col gemello non saldato in venti pose, e (anche per polpo e gorgo, che animandosi
+pescano a caso) che ogni vertice della pelle stia dove il suo osso porterebbe il pezzo, coi colori, la ruvidezza, il metallo e
+l'emissivo del materiale di adesso. Le tavole a occhio: `tmp/scatti/b-pelle*-vicino.png`, `drago-confronto.png`,
+`mondo-confronto.png` (`node strumenti/scatta-app.mjs '<scena>&spegni=pelle'` contro la stessa senza).
+
+- Le normali dei pezzi che si deformano senza scala uniforme (il respiro che allunga un pezzo in y) le ruota la pelle con la matrice
+  dell'osso, non con la sua inversa trasposta: per scale di pochi punti la luce non cambia a vedere.
+- Nell'istante in cui un mostro lampeggia (colpito) durante una mossa che lo fa brillare, il fuso largo mostra il lampo e non il
+  bagliore della mossa sotto.
+- Svanendo (il portale) i pezzi di un fuso diventano trasparenti insieme, in una mesh: l'ordine fra loro è quello del disegno.
+
+**Cosa resta oltre il tetto** (`ECCEZIONI` di `test/unita/budget-3d.test.mjs`): gli spiriti di fuoco e azzurro (64: fiamme che si
+accendono e si spengono, ognuna col suo materiale vivo), il golem di magma (44), le melme (13 materiali fisici, le normali rifatte a
+ogni fotogramma). Lì la pelle non entra: va cambiato il modello nel prototipo (fiamme che si scalano invece di spegnersi, un materiale
+vivo solo per tutte), poi `npm run promuovi3d`. Da fare anche: gli aloni della roba (un Points per pezzo, 2-3 sull'eroe) in uno
+solo, e la scena (muri, pavimento, colonne, arredo, particelle) contata per famiglia.
+
 ## Per rifarla
 
 ```bash

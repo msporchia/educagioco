@@ -8,7 +8,7 @@
    materiali e luci per copia; i ms del disegno per copia (il banco: disegni aspettati con una lettura di un pixel, meno il fondo
    vuoto), i ms dell'animazione per copia, la costruzione (la prima e le altre) e la prima compilazione. docs/sotterraneo/limiti-3d.md.
 
-   Indirizzo: `?gruppo=mostri,persone,eroi,roba,fattoria`, `&q=testo`, `&copie=6`, `&giri=15`, `&senzasalda=1`.
+   Indirizzo: `?gruppo=mostri,persone,eroi,roba,fattoria`, `&q=testo`, `&copie=6`, `&giri=15`, `&senzasalda=1`, `&senzapelle=1`.
    Il risultato in `window.__pesi` ({ pronto, base, righe }).
    ═══════════════════════════════════════════════════════════════════ */
 import * as THREE from 'three'
@@ -25,7 +25,7 @@ async function voci() {
   const l = []
   if (GRUPPI.includes('mostri')) {
     const { MODELLO_DI_SPECIE, MODELLO_DEL_GROSSO, MODELLO_DELLA_VARIANTE, voceDi, costruisci } = await import('../../src/giochi/sotterraneo/scena3d/mostri3d/registro.js')
-    const { ferme, salda } = await import('../../src/giochi/sotterraneo/scena3d/salda3d.js')
+    const { studia, saldaTutto } = await import('../../src/giochi/sotterraneo/scena3d/salda3d.js')
     const ids = new Set()
     for (const v of Object.values(MODELLO_DI_SPECIE)) for (const id of [v].flat()) if (id && voceDi(id)) ids.add(id)
     for (const id of Object.values(MODELLO_DEL_GROSSO)) if (voceDi(id)) ids.add(id)
@@ -33,7 +33,7 @@ async function voci() {
     const fermeDi = new Map()
     for (const id of ids) l.push({ gruppo: 'mostro', id, nome: id, crea: () => {
       const g = costruisci(id)
-      if (g && !p.has('senzasalda')) { if (!fermeDi.has(id)) fermeDi.set(id, ferme(g)); salda(g, fermeDi.get(id)) }
+      if (g && !p.has('senzasalda')) { if (!fermeDi.has(id)) fermeDi.set(id, studia(g)); saldaTutto(g, fermeDi.get(id), { pelle: !p.has('senzapelle') }) }
       return g
     }, anima: (o, t) => o.userData.anima(t) })
   }
@@ -62,7 +62,7 @@ async function voci() {
         const aloni = ACCESI.aloni
         if (modo === 'leggendario senza aloni') ACCESI.aloni = false
         try { if (d) vestiDotazione(g, d) } finally { ACCESI.aloni = aloni }
-        if (!p.has('senzasalda')) saldaEroe(g, `${k}|${modo}`)
+        if (!p.has('senzasalda')) saldaEroe(g, `${k}|${modo}`, { pelle: !p.has('senzapelle') })
         return g
       }, anima: (o, t) => posa(o, t, false, null) })
     }

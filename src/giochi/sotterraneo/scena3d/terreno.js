@@ -12,7 +12,7 @@ import { conMaschera } from './maschera.js'
 import { GLSL_RUMORE } from './luci.js'
 import { scolpisciPareti } from './pareti.js'
 import { fbm3d } from './rumore.js'
-import { ALTO_MURO, PARAPETTO } from './costanti.js'
+import { ALTO_MURO, PARAPETTO, ACCESI } from './costanti.js'
 import { verso } from './tempo.js'
 
 // le altezze dei muri nello shader: la cella di ogni vertice, e quanto è alta adesso (0..1 nella trama)
@@ -90,7 +90,8 @@ export function creaTerreno(scena, { pianta, aspetto, trame, maschera, seme = 1 
   // le macchie larghe nel mondo (la trama si ripete, il mondo no) e le pozzanghere lucide dove il paesaggio le vuole (`pozze`)
   const pozze = aspetto.pozze || null
   const matPav = conMaschera(new MeshStandardMaterial({
-    map: t.map, normalMap: t.normalMap, roughnessMap: t.roughnessMap, roughness: aspetto.lucido || 1, metalness: aspetto.metallo || 0,
+    // senza `rilievo` (la fascia bassa) il pavimento è piatto: la trama del colore e basta
+    map: t.map, normalMap: ACCESI.rilievo ? t.normalMap : null, roughnessMap: ACCESI.rilievo ? t.roughnessMap : null, roughness: aspetto.lucido || 1, metalness: aspetto.metallo || 0,
     normalScale: new Vector2(1.2, 1.2),
     ...(t.emissiveMap ? { emissiveMap: t.emissiveMap, emissive: new Color(1, 1, 1), emissiveIntensity: 1 } : {}),
   }), maschera, {
@@ -109,7 +110,7 @@ export function creaTerreno(scena, { pianta, aspetto, trame, maschera, seme = 1 
     },
   })
   const pav = new Mesh(gPav, matPav)
-  pav.receiveShadow = true
+  pav.receiveShadow = true; pav.userData.elemento3d = 'pavimento'
   aggiungi(pav)
 
   // ── le pareti scolpite ──
@@ -134,7 +135,7 @@ export function creaTerreno(scena, { pianta, aspetto, trame, maschera, seme = 1 
   const m = trame.muro
   const parete = (cima, basso, chiave) => {
     const mat = new MeshStandardMaterial({
-      map: m.map, normalMap: m.normalMap, roughnessMap: m.roughnessMap, roughness: aspetto.lucido ? Math.min(1, aspetto.lucido * 1.4) : 1,
+      map: m.map, normalMap: ACCESI.rilievo ? m.normalMap : null, roughnessMap: ACCESI.rilievo ? m.roughnessMap : null, roughness: aspetto.lucido ? Math.min(1, aspetto.lucido * 1.4) : 1,
       metalness: aspetto.metallo || 0, normalScale: new Vector2(1.4, 1.4), vertexColors: true, flatShading: sc.faccette,
       ...(m.emissiveMap ? { emissiveMap: m.emissiveMap, emissive: new Color(1, 1, 1), emissiveIntensity: 1 } : {}),
       // la cima ha il suo colore pieno (senza la trama della faccia): da sopra è la cosa che si vede di più del muro
@@ -159,6 +160,7 @@ export function creaTerreno(scena, { pianta, aspetto, trame, maschera, seme = 1 
   const prof = new MeshDepthMaterial({ depthPacking: RGBADepthPacking })
   prof.onBeforeCompile = sh => { Object.assign(sh.uniforms, uAlto); sh.vertexShader = GLSL_ALTO_V + sh.vertexShader.replace('#include <begin_vertex>', ABBASSA) }
   muri.customDepthMaterial = prof
+  muri.userData.elementiMateriali = ['pareteLontana', 'pareteLontana', 'pareteVicina', 'pareteVicina']   // i muri alti e i parapetti davanti
   aggiungi(muri)
   const alti = p.muri.filter(c => !c.basso)
   const indice = new Map(alti.map((c, i) => [p.id(c.x, c.y), i]))
@@ -171,14 +173,14 @@ export function creaTerreno(scena, { pianta, aspetto, trame, maschera, seme = 1 
   for (const g of [g0, g1, fusto, basi]) g.dispose()
   const matPietra = conMaschera(new MeshStandardMaterial({ color: aspetto.fusto === 'ferro' ? '#3a3634' : aspetto.fusto === 'tronco' ? '#2a3a18' : new Color(aspetto.colonna).multiplyScalar(0.8),
     roughness: 0.8, metalness: aspetto.metallo || 0, flatShading: aspetto.fusto === 'cristallo' }), maschera, { buco: true, chiave: 'pietra' })
-  const matFusto = conMaschera(new MeshStandardMaterial({ color: aspetto.colonna, map: aspetto.fusto === 'cristallo' ? null : m.map, normalMap: m.normalMap,
+  const matFusto = conMaschera(new MeshStandardMaterial({ color: aspetto.colonna, map: aspetto.fusto === 'cristallo' ? null : m.map, normalMap: ACCESI.rilievo ? m.normalMap : null,
     roughness: aspetto.fusto === 'cristallo' ? 0.15 : 0.9, metalness: aspetto.fusto === 'ferro' ? 0.6 : 0, normalScale: new Vector2(0.8, 0.8),
     flatShading: aspetto.fusto === 'cristallo', ...(aspetto.bagliore ? { emissive: bagliore.clone().multiplyScalar(1.5) } : {}) }), maschera, { buco: true, chiave: 'fusto' + aspetto.fusto })
   const mt = new Matrix4()
   const colonne = new InstancedMesh(gCol, [matFusto, matPietra], Math.max(1, p.colonne.length))
   p.colonne.forEach((c, i) => colonne.setMatrixAt(i, mt.makeRotationY(((c.x * 7 + c.y * 13) % 6) * 1.05).setPosition(c.x + 0.5, 0, c.y + 0.5)))
   colonne.count = p.colonne.length
-  colonne.castShadow = true; colonne.receiveShadow = true; colonne.computeBoundingSphere()
+  colonne.castShadow = true; colonne.receiveShadow = true; colonne.computeBoundingSphere(); colonne.userData.elemento3d = 'colonne'
   aggiungi(colonne)
 
   // ── le staffe delle torce, posate sulla faccia vera del muro (le fiamme e le luci le mette chi accende i fuochi) ──
@@ -196,7 +198,7 @@ export function creaTerreno(scena, { pianta, aspetto, trame, maschera, seme = 1 
   }
   p.torce.forEach((_, i) => posaStaffa(i, true))
   staffe.count = p.torce.length
-  staffe.castShadow = true; staffe.computeBoundingSphere()
+  staffe.castShadow = true; staffe.computeBoundingSphere(); staffe.userData.elemento3d = 'colonne'
   aggiungi(staffe)
 
   const materiali = [matPav, ...matPareti, prof, matPietra, matFusto, matStaffa]
