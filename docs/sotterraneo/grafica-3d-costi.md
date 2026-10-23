@@ -61,6 +61,8 @@ pavimento e la nebbia è più liscia; il resto è uguale. **Prima → dopo** (ba
 cambiare niente a schermo: la maschera torna in GPU solo se un texel è cambiato (prima a ogni fotogramma), e delle figure va in GPU
 solo la parte usata (prima 70 kB a fotogramma per 700 posti).
 
+Dal 23/10 nella bassa il piano ha la luce per vertice e la nebbia nei vertici (`lucePerVertice`): [appiattimento-3d.md](appiattimento-3d.md), «Nel gioco».
+
 - provato due strati di rumore nella nebbia da soli: −2% nel simulatore (lì pesa la sfumatura, che il simulatore sovrastima); restano nella bassa perché il telefono è debole proprio sui calcoli (la prova «shader pesante»).
 - provato l'ombra a fotogrammi alterni da sola: −2%; pesa di più il leggerla in ogni pixel che il disegnarla.
 - provato a spegnere l'ombra solo nello scontro: no, cambiarla ricompila tutti gli shader (sull'Adreno un fermo di 50-300 ms a ogni scontro).

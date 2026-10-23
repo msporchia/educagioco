@@ -114,25 +114,75 @@ contesto WebGL nuovo), banco di 20 disegni ×3 col minimo, i conti, alla fine il
 4. `luci`: dove sta il precipizio (4, 6, 8, 10, 12 luci vere) e i bagliori finti.
 5. `pelle`, `trasparenze`: le persone con e senza pelle, gli additivi grandi sovrapposti (×2,2 e ×3,4 di frammenti).
 
-## Il piano per il gioco (dopo la scelta)
+## Nel gioco: la luce per vertice della bassa
 
-- **`scena3d/costanti.js`, `ACCESI`**: tre pezzi nuovi, `luceVertice`, `nebbiaVertice`, `ombraMacchia` (veri o falsi); la bassa li
-  accende in `SPEGNI_BASSA` di `store/qualita.js` (`luceVertice:1`… come `lampi:1`), e toglie `fuochi:2`, `lampi`, `palco` (per vertice
-  non costano). Alta e media restano come sono (alta = livello alta, media = alta col suo pixel ratio).
-- **`scena3d/luce-vertice.js`** (nuovo, da `poc/appiattimento-3d/piatto.js`): la trama delle luci scritta una volta per fotogramma in
-  `luci.js` (al posto di `distribuisci` sulle luci di three, che con `luceVertice` non entrano in scena: nessuna ricompilazione
-  dopo), e il pezzo di shader che `conMaschera` (`maschera.js`) aggiunge **alla creazione** di ogni materiale Standard, non dopo: così
-  i programmi sono quelli e basta (il prototipo converte a scena fatta e lascia in cache i programmi di prima).
-- **`terreno.js`**: pavimento e muri suddivisi e la penombra cotta (`aCotta`) quando la luce è per vertice; la normal map diventa il
-  rilievo fermo.
-- **`particelle.js`**: con `nebbiaVertice` niente fette (il termine è nel materiale).
-- **`segni.js`** o un modulo nuovo: le macchie sotto l'eroe e i mostri (una chiamata, `finti.js`).
-- I materiali dei mostri, dell'eroe e degli effetti passano dallo stesso `conMaschera` (o da un `conLuce` gemello) per avere il pezzo
-  di shader: oggi ne fanno a meno, e il prototipo li converte a mano.
-- Le prove: un test d'unità sulla trama delle luci (ordine, fuochi fuori dal giro cotto, il cono), e quello del browser che conta i
-  programmi a ogni colpo deve restare fermo; `unita/budget-3d` (le regole) diventa il controllo dei modelli nuovi.
-- Prima del gioco, il JS: la saldatura dell'eroe e dei mostri sotto i tetti delle regole, e `matrixAutoUpdate = false` per quello
-  che non si muove (pavimento, muri, arredo, colonne).
+`ACCESI.lucePerVertice` (`scena3d/costanti.js`), acceso nella bassa (`lucePerVertice:1` in `SPEGNI_BASSA`): **il piano** (pavimento,
+pareti, colonne e staffe, arredo, botti, fontana, portale, relitti: tutto quello che passa da `conMaschera`) somma le luci nel vertex
+shader; le figure (`vertice: false`: un quadrato farebbe quattro angoli) e i personaggi 3D restano per pixel con le luci di three.
+`scena3d/luce-vertice.js`:
+
+- le luci in una trama di una riga (`creaLuceVertice`, con gli uniform della maschera): la scrive `luci.scriviVertice` in
+  `scena.onBeforeRender`, con luci e cono già al loro posto. Le puntiformi di three che stanno in scena e sullo strato visto (alone,
+  lampo, magia, rimbalzo, palco) e **tutti e sei i fuochi** della riserva, anche se a three ne restano due (`fuochi:2`): per vertice non
+  costano. L'emisferica, il cono con la penombra, la distanza e il decadimento come in three; la speculare è una Blinn con la ruvidezza
+  media della trama e la visibilità della GGX (senza, la chiazza calda della torcia sul pavimento era la metà);
+- il pezzo di shader si aggiunge **alla creazione** del materiale (`preparaLuceVertice` in `conMaschera`): la chiave del programma
+  cambia una volta (`|pv`), i programmi restano quelli (uno in meno: la nebbia). Le sostituzioni hanno la guardia: un pezzo di three
+  che manca ferma lo shader invece di disegnarlo sbagliato;
+- la normal map e la ruvidezza escono dal materiale: con `rilievo` la normal map si legge come **ombreggiatura ferma** (una lettura,
+  le fughe scure e i bordi chiari come se la luce venisse dall'alto dello schermo, in media scura quanto la normal map vera); senza
+  `rilievo` niente;
+- la nebbia è un termine per vertice (`vPvNeb`: il rumore che deriva, la luce che arriva lì, la tinta del paesaggio, densa quanto le
+  fette che sostituisce) e la fetta non c'è più;
+- pavimento in 3×3 quadrati per cella, ogni triangolo dei muri e delle colonne in quattro (`SUDDIVIDI`, `dividi`: l'indice di cella
+  `aCella` non si media): la luce interpolata resta liscia.
+
+**Cosa cambia a vista** (`tmp/scatti/lucepervertice-scontro.png`, `-cantina`, `-fuoco`, `-vicino`: alta | bassa di oggi | bassa):
+riconoscibile, torcia calda e buio ai margini uguali. Il pavimento è ~5% più scuro della bassa di oggi (senza `rilievo` le due
+coincidono al pixel: lo scarto è tutto dell'ombreggiatura ferma), il rilievo dei mattoni è più morbido, i bordi delle chiazze di luce
+un poco più larghi, la nebbia non passa più davanti ai personaggi; le torce lontane tornano a schiarire il pavimento (sei fuochi invece
+di due). Si rifanno con `node strumenti/tavola-fasce.mjs --porta <vite> --conta --viste scontro --nome lucepervertice-scontro`.
+
+**I conti** (stessa tavola, Chrome senza schermo, pixel ratio 1; «oggi» è la bassa con `&riaccendi=lucePerVertice`):
+
+| vista | | chiamate | triangoli | programmi | uniform | bindTexture | luci·frammenti | frammenti | trame·frammenti |
+|---|---|---|---|---|---|---|---|---|---|
+| scontro | alta | 55 | 84k | 34 | 128 | 42 | 4,22M | 0,52M | 1,24M |
+| | oggi | 40 | 60k | 34 | 71 | 35 | 1,61M | 0,34M | 1,06M |
+| | **bassa** | 39 | 121k | 33 | 77 | 40 | **0,03M** | 0,30M | 0,80M |
+| cantina | oggi → bassa | 34 → 33 | 42k → 102k | 32 → 31 | 26 → 26 | 31 → 36 | 2,05M → 0,04M | 0,42M → 0,36M | 1,31M → 0,98M |
+| fuoco | oggi → bassa | 35 → 34 | 42k → 102k | 32 → 31 | 26 → 26 | 31 → 36 | 1,91M → 0,02M | 0,42M → 0,37M | 1,31M → 0,99M |
+| vicino | oggi → bassa | 32 → 31 | 48k → 110k | 32 → 31 | 35 → 39 | 32 → 37 | 1,50M → 0,02M | 0,32M → 0,28M | 1,00M → 0,75M |
+
+Lo shader di frammento del pavimento (`--shader`: il sorgente che three dà a WebGL, coi `#define` risolti, solo quello che `main()`
+raggiunge): oggi 5 letture di trama, 6 derivate, 161 righe; con la luce per vertice 3 letture, 2 derivate, 73 righe (il vertex shader
+da 16 a 61 righe, ma i vertici sono ~50k contro 0,3M frammenti).
+
+**Cosa ci si aspetta sul Note 7**: le luci per pixel tolte dal piano sono quasi tutte quelle della scena (`ab-luci0`: −13 gpu), la
+fetta di nebbia (`ab-nebbia`: −8 gpu), i triangoli raddoppiati +2: **gpu da ~46 a ~28-33 nello scontro**; il JS quasi uguale (le luci
+di three restano per i personaggi, gli uniform sono quelli). Da guardare lo scontro (`tri-1`, `sot-1`). Per misurarlo la verifica
+sul telefono mette accanto alla scena intera la stessa con `&spegni=lucePerVertice` (o `spegni: ['lucePerVertice']` nell'`opz` della
+famiglia delle discese): la differenza è la leva. Il rischio resta la riga «senza normal map» (sotto).
+
+Resta del piano del prototipo: l'ombra a macchia sotto chi sta in piedi (`finti.js`: la bassa oggi non ha ombre), la penombra cotta
+nei colori ai vertici (provata nel prototipo, qui non serve per somigliare alla bassa di oggi), e il JS (la saldatura sotto i tetti
+delle regole, `matrixAutoUpdate = false` per il fermo). I personaggi restano per pixel: nello scontro sono 0,01-0,02M frammenti.
+
+## La normal map che «costa» (+10 gpu senza)
+
+Nel log del 22/10 (`ab-normali`, una sola misura) togliere le normal map fa salire la GPU da 48 a 58 ms. **Nel codice non c'è niente
+che lo spieghi**: senza normal map lo shader del pavimento ha 3 letture di trama invece di 5, 2 derivate invece di 6 (via le tangenti
+calcolate con `dFdx`, restano le due della ruvidezza della geometria di three), 140 righe invece di 161; nessun ramo di three ripiega
+su un calcolo più caro quando la trama manca (`USE_NORMALMAP` aggiunge soltanto); i programmi sono gli stessi; sul computer i ms
+scendono un poco. L'ipotesi delle derivate è al contrario: le derivate ci sono **con** la normal map. Restano due spiegazioni da
+provare sul telefono: il rumore (una misura sola, nello stesso gruppo «Lambert», più leggero per pixel, sale anche lui di +4) e il
+modo della prova, che toglie le normal map a scena fatta (`veri/moltiplica.js`, `needsUpdate`: 11 programmi ricompilati a metà
+scena, sull'Adreno senza compilazione in parallelo), mentre il gioco le toglie alla creazione (`&spegni=rilievo`).
+
+La leva giusta non è il `flatShading` (è proprio una derivata per pixel in più) né i colori ai vertici al posto della trama: nella
+bassa la luce per vertice toglie già la normal map vera, e `rilievo` decide solo la lettura dell'ombreggiatura ferma (spento: 2 letture
+invece di 3, il pavimento piatto). Nella verifica: `&spegni=rilievo` alla creazione al posto della prova a scena fatta, e la scena base
+ripetuta dopo (base, senza normal map, base) per vedere quanto balla.
 
 - provato una regressione libera dei ms del telefono sui conti (dieci righe): coefficienti negativi, non regge; i costi si leggono
   riga per riga.
