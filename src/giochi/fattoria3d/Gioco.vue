@@ -5,7 +5,7 @@
    Senza WebGL 2 non si apre niente: lo si dice e si torna in home. Vedi docs/fattoria3d/. */
 import { ref, reactive, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import Barra from '../../components/Barra.vue'
-import { state, addCoins, segna, flushNow, persist, aspettoDi, scegliAspetto, cestinaOra } from '../../store/profile.js'
+import { state, addCoins, segna, flushNow, persist, aspettoDi, scegliAspetto, cestinaOra, segnaBest } from '../../store/profile.js'
 import { fasciaAttiva } from '../../store/qualita.js'
 import { load, save } from '../../store/storage.js'
 import { scelta, ricorda } from '../campagne.js'
@@ -119,6 +119,7 @@ function consegnato(e) {
 function contaEventi() {
   for (const e of motore.prendiEventi()) {
     if (EVENTI[e.tipo]) segna(EVENTI[e.tipo])
+    if (e.tipo === 'pezzo') segnaBest('fattoria3dVarieta', new Set(motore.s.cose.map(c => c.tipo)).size)      // «Un po' di tutto»: i tipi diversi in mappa (un primato)
     else if (e.tipo === 'prodotto') segna('fattoria3dProdotti', e.n)
     else if (e.tipo === 'uovo') segna('fattoria3dUova', e.n)
     else if (e.tipo === 'latte') segna('fattoria3dLatte', e.n)

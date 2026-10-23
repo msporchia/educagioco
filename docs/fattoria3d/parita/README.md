@@ -18,7 +18,7 @@ vince il codice.
 | S5 | **Niente della 2D manca senza una decisione scritta** («tolto perché…»): ogni macchina, recinto, bestia, bottega, decoro | ❌ [colture-e-catena.md](colture-e-catena.md), [animali.md](animali.md), [commercio.md](commercio.md), [mondo-e-stagioni.md](mondo-e-stagioni.md) |
 | S6 | **Si capisce da soli, a 4–12 anni**: il `?`, il consiglio («cosa faccio adesso»), «Come si fa», il primo giro | 🟡 fatti `?`, primo giro e consiglio ([../guida.md](../guida.md)); fatto anche «Come si fa» (I3); manca la prova con un bambino |
 | S7 | **Gira sui telefoni di casa** e senza WebGL 2 non lascia un bambino senza fattoria | ❌ mai misurata su un telefono; senza WebGL 2 si torna in home ([tecnica-e-salvataggi.md](tecnica-e-salvataggi.md)) |
-| S8 | **I grandi la governano** come la 2D: «Ricomincia la fattoria», interruttori, quadro, traguardi, novità | ❌ [interfaccia-e-guida.md](interfaccia-e-guida.md) I17–I20 |
+| S8 | **I grandi la governano** come la 2D: «Ricomincia la fattoria», interruttori, quadro, traguardi, novità | 🟡 fatti I17–I19 e i traguardi; resta solo la riga per i bambini al giorno del cambio, da proporre ([interfaccia-e-guida.md](interfaccia-e-guida.md) I20) |
 | S9 | **È provata**: l'integrazione eseguita sulla build e guardata col dito su un telefono vero | ❌ molte prove «scritte ma non eseguite» ([../da-fare.md](../da-fare.md)) |
 
 ## I numeri a colpo d'occhio
@@ -75,4 +75,4 @@ da trascinare con scorrimento ai bordi. Vanno tenuti? Decisione D10 ([decisioni.
 3. **A1–A3** il cortile completo: 8 recinti, il pentolone, le bestie di casa con i loro bisogni.
 4. **T7, T8, T19** misurare la 3D su un telefono vero, decidere cosa fa senza WebGL 2, eseguire le prove d'integrazione.
 5. ~~**I1, I2, I4** la guida~~ fatta (G2); ~~I3~~ «Come si fa» fatto (G2b).
-6. **I17** «Ricomincia la fattoria» e il cestino per la 3D.
+6. ~~**I17** «Ricomincia la fattoria» e il cestino per la 3D~~ fatto.

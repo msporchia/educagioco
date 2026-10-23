@@ -28,6 +28,7 @@ import { dettoDi } from '../../src/giochi/fattoria3d/scena3d/detti.js'
 import { dettaglioDi as dettaglioDiMerce } from '../../src/giochi/fattoria3d/viste/inventario-puro.js'
 import { statoIniziale, normalizza, bestieInForma, VERSIONE_STATO } from '../../src/giochi/fattoria3d/motore/stato.js'
 import manifesto from '../../src/giochi/fattoria3d/gioco.js'
+import { misure, statoTraguardo } from '../../src/store/progressi.js'
 import { guastiDellAlbo } from '../../src/giochi/albo.js'
 import { controlla, uguale, stessaLista, riassunto } from '../aiuto/verifica.mjs'
 
@@ -58,6 +59,20 @@ controlla('e i sassi e i cespugli pure', JSON.stringify(ostacoliStorici()) === J
 controlla('il manifesto è in prova e senza tappe', manifesto.sperimentale === true && manifesto.tappe === 0 && manifesto.chiave === 'fattoria3d')
 const gA = guastiDellAlbo([manifesto])
 controlla('l\'albo del manifesto sta in piedi', gA.length === 0, gA.join(' · '))
+
+{
+  /* i traguardi (parità I14/S8): da vuoti a zero, da pieni tutti d'oro, e «Un po' di tutto» è un primato */
+  const vuotoP = { totals: {}, best: {}, items: {}, campagne: {} }
+  const mV = misure(vuotoP)
+  controlla('da vuoto nessun traguardo è preso e il gioco non vale esperienza',
+            manifesto.albo.traguardi.every(t => statoTraguardo(t, mV).grado === 0) && manifesto.albo.xp(mV) === 0 && !manifesto.albo.provato(mV))
+  const totals = {}
+  for (const k of ['Terre', 'Pezzi', 'Raccolti', 'Alberi', 'Prodotti', 'Uova', 'Latte', 'Ordini', 'Mongolfiera', 'Visite', 'Aiuti']) totals['fattoria3d' + k] = 500
+  const mP = misure({ totals, best: { fattoria3dVarieta: 40 }, items: {}, campagne: {} })
+  const presi = manifesto.albo.traguardi.map(t => statoTraguardo(t, mP))
+  controlla('da pieno li prende tutti d\'oro', presi.every(s => s.finito), presi.filter(s => !s.finito).map(s => s.id).join(' · '))
+  controlla('«Un po\' di tutto» c\'è e vale esperienza', manifesto.albo.traguardi.some(t => t.id === 'f3d-varieta') && manifesto.albo.xp(misure({ totals: {}, best: { fattoria3dVarieta: 9 }, items: {}, campagne: {} })) === 9)
+}
 
 /* ══════════ 2. si parte da un campo vuoto, dentro il terreno ══════════ */
 {

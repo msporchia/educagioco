@@ -37,6 +37,10 @@ spento, quei giochi non esistono affatto (`sperimentaliAccesi`).
 Oggi in prova, fra gli altri, il **Sotterraneo 3D** (`sotterraneo3d`): lo stesso sotterraneo con la discesa in 3D, la stessa
 avventura e la stessa sosta ([../sotterraneo/grafica-3d.md](../sotterraneo/grafica-3d.md)).
 
+Anche **La fattoria 3D** (`fattoria3d`) è in prova. Uscirne vuol dire togliere `sperimentale: true` dal suo manifesto: da quel giorno non ha
+l'interruttore, compare come la 2D (è un `posto`, l'età non la spegne) e si governa dalla stessa scheda Giochi. Piano in
+[../fattoria3d/parita/interfaccia-e-guida.md](../fattoria3d/parita/interfaccia-e-guida.md) I18.
+
 ## Il quarto non si rifà
 
 Niente interruttore per *metà di un gioco* (`settings.varianti`, tolto):
