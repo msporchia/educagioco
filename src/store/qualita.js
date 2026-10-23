@@ -16,7 +16,8 @@ export const VERSIONE_MISURA = 1     // si alza se cambia la prova o le soglie: 
 // accesi invece di sei, lampo e magia in una luce sola e niente rimbalzo né luce del palco (ogni luce puntiforme costa a ogni pixel
 // anche spenta), l'ombra a 512 ridisegnata a fotogrammi alterni, la nebbia con due strati di rumore, metà scintille
 // (docs/sotterraneo/grafica-3d-costi.md, «La fascia bassa»)
-const SPEGNI_BASSA = ['post', 'fuochi:2', 'lampi', 'palco', 'ombraMappa:512', 'ombraOgni:2', 'ottaveNebbia:2', 'quanteScintille:0.5']
+// misurato sul Note 7 (log del 22/10): l'ombra del cono costa ~8 ms, la nebbia a più fette ~3-6, la polvere ~2; vedi docs/core/vecchio-telefono-elementi.md
+const SPEGNI_BASSA = ['post', 'fuochi:2', 'lampi', 'palco', 'ombre', 'ombraMappa:512', 'ombraOgni:2', 'ottaveNebbia:2', 'quanteScintille:0.5', 'nebbiaFitta', 'quantaPolvere:0.4']
 // `mostriSopra`: quanti mostri al più col modello 3D nel mondo di sopra (gli altri sprite): ~35 chiamate l'uno, nella bassa 6 invece di 8
 // (con 8 il filo principale del telefono imitato sta a 29-35 ms: docs/sotterraneo/limiti-3d.md)
 

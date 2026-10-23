@@ -26,7 +26,7 @@ for (const f of FASCE) for (const v of PROFILI[f].sotterraneo.spegni) controlla(
 scelta.value = 'bassa'; applicaFascia()
 uguale('bassa: due fuochi', ACCESI.fuochi, 2)
 controlla('bassa: niente passaggio finale, lampi e palco', !ACCESI.post && !ACCESI.lampi && !ACCESI.palco)
-controlla('bassa: l\'ombra resta, più piccola e a fotogrammi alterni', ACCESI.ombre && ACCESI.ombraMappa === 512 && ACCESI.ombraOgni === 2)
+controlla('bassa: niente ombra del cono né del sole (misurato sul Note 7: ~8 ms), nebbia a una fetta, meno polvere', !ACCESI.ombre && !ACCESI.nebbiaFitta && ACCESI.quantaPolvere === 0.4)
 uguale('bassa: metà scintille', ACCESI.quanteScintille, 0.5)
 for (const f of ['alta', 'media']) {
   scelta.value = f; applicaFascia()

@@ -43,7 +43,7 @@ Cosa cambia una fascia sta tutto in `PROFILI` di `store/qualita.js`: negli Aster
 il tetto delle scintille (1400 / 700 / 350) e del fumo, e quanto in fretta il gioco scende di pixel (90 fotogrammi lenti a passo
 ×0,85 contro 20 a ×0,75); nel Sotterraneo 3D il pixel ratio massimo (1,5 / 1,25 / 1), le fette di nebbia (5 / 3 / 2) e, nella bassa, il passaggio finale
 spento, due luci dei fuochi invece di sei, niente luci del rimbalzo e del palco (lampo e magia in una), l'ombra a 512 a fotogrammi
-alterni, meno scintille ([../sotterraneo/grafica-3d-costi.md](../sotterraneo/grafica-3d-costi.md), «La fascia bassa»). **Botti, arredo e ombre restano in tutte le fasce**: dai log del Note 7 i triangoli costano poco (10k → 100k: +1,4 ms), pesano i
+alterni, meno scintille ([../sotterraneo/grafica-3d-costi.md](../sotterraneo/grafica-3d-costi.md), «La fascia bassa»). **Botti e arredo restano in tutte le fasce** (le ombre no, dal 23/10: la fascia bassa le toglie, con la nebbia a una fetta e meno polvere: misurato sul Note 7, l'ombra costa ~8 ms, vedi vecchio-telefono-elementi.md): dai log del Note 7 i triangoli costano poco (10k → 100k: +1,4 ms), pesano i
 pixel. Emulazione (SwiftShader, CPU ×2,8), p50 di un fotogramma: esplorazione alta 50 ms → bassa 17; scontro con 3 mostri alta 67 →
 bassa 17 (p95 67). L'emulazione sovrastima i triangoli, quindi sul telefono dovrebbe andare meglio. **I numeri di media e bassa sono un'ipotesi dai log: da provare sul Note 7** (col
 contatore fps e `Misura questo telefono`) e ritoccare. In zona dei grandi (scheda *giochi*) la carta «Qualità della grafica 3D»
