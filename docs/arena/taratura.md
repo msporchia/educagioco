@@ -97,3 +97,14 @@ Il 23 ottobre, con le riparazioni limitate del nemico (`VERSIONE_IA` 13), le tre
 promesse reggono: il nemico ora è più forte a parità di `d`, quindi `d` è sceso (Medio, ultima tappa: 0,96 → 0,82).
 `-- --infinita --mono` (una truppa sola, mai miniera, in ogni terreno) è il controllo contro le strade senza
 contromossa; [nemico.md](nemico.md).
+
+## L'economia: base bassa, miniera che conta (23 ottobre)
+
+L'utente: «partiamo con troppi soldi forse, se la miniera di base non è utile». Misurato: con le monete di base di prima
+(1 ogni 1,2 secondi) chi mette tutto in truppe subito (`rush`) batteva chi fa miniera (`economia`) quasi in ogni tappa, e
+la miniera (+70% a livello) non cambiava la partita. Provato: meno monete iniziali (14 → 8) non cambia niente, perché il
+nemico parte uguale; `resa` +120% con la base di prima rende la miniera troppo forte (`economia` 100%). **Scelto**: base
+`1 / 1.8` al secondo (era 1 / 1.2), miniera +100% della base per livello (`CRESCITA.miniera.resa`), iniziali 14. Le tre
+strade si avvicinano (nella palude, Difficile, `rush` 87 → 50% e `misura` 57 → 10%); il `rush` resta il primo e il tetto
+del Medio per lui non si rispetta ancora nelle prime tappe. I prezzi non sono cambiati: la partita è un po' più lenta
+a monete, quindi le truppe si fanno un po' meno in fretta. Ritarato (`VERSIONE_IA` 13, firma nuova).
