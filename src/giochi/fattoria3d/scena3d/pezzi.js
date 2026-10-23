@@ -2,6 +2,7 @@
 // animati ogni fotogramma (il grano che cresce, le pecore che vagano, la fontana, il fumo del forno, il pallone che parte).
 // Non sa le regole: legge lo stato e disegna. I cartelli sugli edifici (cottura, casse pronte) sono qui; un edificio non comprato non si vede.
 import * as THREE from 'three'
+import { segna } from '../../../grafica/elementi3d.js'
 import { creaCampo, aggiornaCampo, campoMosso, creaPasticceria, creaMongolfiera, creaBancarella, creaBacheca, creaFontana, creaRecinto, muoviPecore,
          sincronizzaPecore, creaPecora, creaGallina, creaMucca, creaMulino, creaPanificio, creaConserviera, creaGelateria, creaAiuola, creaPanchina,
          creaPozzo, creaSpaventapasseri, creaTrattore, creaSegnaposto, creaPollaio, creaStalla, creaCaseificio, sincronizzaBestie, muoviBestie } from './modelli.js'
@@ -9,6 +10,8 @@ import { creaPonte, creaPasserella, creaTavolo } from './modelli-passaggi.js'
 import { creaStagno } from './modelli-acqua.js'
 import { creaZuccherificio, creaTelaio, creaSartoria, creaTintoria, creaFienileMacchina, creaFriggitoria, creaSushiBar } from './modelli-macchine.js'
 import { creaMolo, creaPorticciolo } from './modelli-pesca.js'
+import { creaBottegaPasticceria, creaBottegaOsteria, creaBottegaMensa, creaBottegaMerceria } from './modelli-botteghe.js'
+import { eBottega } from '../dati/botteghe.js'
 import { creaStagnoAnatre, creaPorcile, creaRecintoCapre, creaPentolone, creaAnatra, creaMaiale, creaCapra } from './modelli-cortile.js'
 import { creaConigliera, creaRecintoAlpaca, creaRecintoAsini, creaApiario } from './modelli-cortile2.js'
 import { creaZucca, creaZucche } from './modelli-feste.js'
@@ -61,6 +64,7 @@ const CREA_EDIFICIO = {
   telaio: creaTelaio, zuccherificio: creaZuccherificio, sartoria: creaSartoria, tintoria: creaTintoria,
   friggitoria: creaFriggitoria, sushi_bar: creaSushiBar,
   pentolone: creaPentolone,
+  bottega_pasticceria: creaBottegaPasticceria, bottega_osteria: creaBottegaOsteria, bottega_mensa: creaBottegaMensa, bottega_merceria: creaBottegaMerceria,      // le botteghe del paese (docs/fattoria3d/botteghe.md)
   fienile: creaFienileMacchina,                       // la macchina del mangime (l'unico fienile: quello di scena è stato tolto)
 }
 /** Un tipo senza disegno non rompe la scena: una scatola grigia della sua misura. */
@@ -104,7 +108,7 @@ export class Pezzi {
     alleggeriOmbre(grp)
     if (this.usaBanchi && c.tipo === 'campo') this.banco.adotta(grp)
     grp.userData.bersaglio = { kind: 'cosa', id: c.id }
-    grp.position.copy(centroDi(c, d)); grp.rotation.y = (c.rot || 0) * Math.PI / 2; this.scena.add(grp)
+    grp.position.copy(centroDi(c, d)); grp.rotation.y = (c.rot || 0) * Math.PI / 2; this.scena.add(segna(grp, edificio ? 'edifici' : c.tipo === 'campo' ? 'campi' : 'pezzi'))
     if (this.usaBanchi && STATICI.has(c.tipo)) this.statici.adotta(grp)
     const badge = edificio || c.tipo === 'bacheca' ? this.fx.nuovoBadge() : c.bestie || c.pecore ? this.fx.nuovoCartello(() => this.sulCompraBestia && this.sulCompraBestia(c.id), c.tipo) : null
     this.voci.set(c.id, { id: c.id, kind: 'cosa', edificio, tipo: c.tipo, c, d, rot: c.rot || 0, grp, badge, anello: null, salto: 0, nasce: undefined, richiamo: null, chiave: '' })
@@ -250,6 +254,14 @@ export class Pezzi {
       const pronti = this.m.prontiIn(v.tipo), prima = Object.keys(Q.pronti).find(k => Q.pronti[k] > 0)
       v.badge.imposta(pronti ? `${merceDi(prima).emoji} ${pronti} pront${pronti === 1 ? 'o' : 'i'}!`
         : cuoce ? `🔥 ${tempoBreve(Math.max(0, (Q.coda[0].fine || adesso) - adesso))} · ${Q.coda.length}/${posti}` : '', pronti ? 'pronto' : '')
+    } else if (eBottega(v.tipo)) {
+      // una bottega non lavora: un dettaglio che si muove piano, e il cartello coi clienti che hanno già la loro roba
+      if (g.userData.anima) g.userData.anima(dt, tt)
+      if (tt - (v.tNave ?? -9) > 0.5) {
+        v.tNave = tt
+        const n = this.m.bottegaPronta(v.tipo)
+        v.badge.imposta(n ? `${EDIFICI[v.tipo].emoji} ${n} pront${n === 1 ? 'o' : 'i'}!` : '', n ? 'pronto' : '')
+      }
     } else if (v.tipo === 'mongolfiera') {
       // da ferma sale e scende piano; a tutto pieno (o con «Parti!») sale in alto e si allontana, e torna prima della fine del riposo
       const M = s.mongolfiera, volo = g.userData.volo

@@ -2,14 +2,15 @@
    L'EROE 3D SALDATO — docs/sotterraneo/prestazioni-3d.md
 
    L'eroe vestito di tutto si salda come i mostri: le mesh ferme con lo
-   stesso perno e lo stesso materiale diventano una. Qui: le chiamate
-   scendono, e in ogni posa (guardia coi gesti, marcia, colpo) l'eroe
+   stesso perno e lo stesso materiale diventano una, e il resto va nella
+   pelle (una SkinnedMesh per materiale). Qui: le chiamate scendono sotto
+   il tetto, e in ogni posa (guardia coi gesti, marcia, colpo) l'eroe
    saldato ha i vertici dove li ha quello non saldato: nessun pezzo che
-   si muove è finito in una saldatura.
+   si muove è finito in una saldatura, la pelle segue le ossa.
    ═══════════════════════════════════════════════════════════════════ */
-import { Vector3 } from 'three'
 import { creaEroe } from '../../src/giochi/sotterraneo/scena3d/eroi3d/eroi.js'
 import { vestiEroe, posa, saldaEroe } from '../../src/giochi/sotterraneo/scena3d/eroe3d.js'
+import { vertici, disegnate } from '../../src/giochi/sotterraneo/scena3d/salda3d.js'
 import { controlla, nota, riassunto } from '../aiuto/verifica.mjs'
 
 // l'eroe disegna la faccia su una tela: in Node ne basta una finta
@@ -23,20 +24,16 @@ const VESTITI = {
   elfa: { mano: 'arco-lungo@2.u.arco-della-luna' },
   nano: { mano: 'ascia@2.u.ascia-del-re-nano' },
 }
-const chiamate = g => { let n = 0; g.traverse(o => { if ((o.isMesh || o.isPoints) && o.visible) n++ }); return n }
-// dove stanno nel mondo tutti i vertici delle mesh che si vedono (somme e quadrati): saldare non toglie né sposta vertici
-const _v = new Vector3()
+const chiamate = g => { let n = 0; disegnate(g, () => n++); return n }
+// dove stanno nel mondo tutti i vertici delle mesh che si disegnano (somme e quadrati), pelle compresa: saldare non toglie né sposta
+// vertici
 function impronta(g) {
-  g.updateMatrixWorld(true)
   const s = [0, 0, 0, 0]
-  g.traverse(o => {
-    if (!o.isMesh || !o.visible) return
-    for (let x = o; x; x = x.parent) if (!x.visible) return
-    const p = o.geometry.attributes.position
-    for (let i = 0; i < p.count; i++) { _v.fromBufferAttribute(p, i).applyMatrix4(o.matrixWorld); s[0] += _v.x; s[1] += _v.y; s[2] += _v.z; s[3] += _v.lengthSq() }
-  })
+  vertici(g, v => { s[0] += v.x; s[1] += v.y; s[2] += v.z; s[3] += v.lengthSq() })
   return s
 }
+// il tetto delle chiamate dell'eroe vestito di tutto (docs/sotterraneo/prestazioni-3d.md, «Meno chiamate»): può solo scendere
+const TETTO = 40
 const vicine = (a, b) => a.every((x, i) => Math.abs(x - b[i]) < 1e-3 * Math.max(1, Math.abs(x)))
 
 // le pose hanno memoria (la barba del nano si somma): ogni posa si prova su due eroi nuovi con la stessa storia, uno saldato (con gli
@@ -49,6 +46,7 @@ for (const [chi, v] of Object.entries(VESTITI)) {
   const dopo = chiamate(primo)
   nota(`${chi}: ${prima} → ${dopo} mesh`)
   controlla(`${chi}: saldato ha meno mesh (${prima} → ${dopo})`, dopo < prima * 0.8)
+  controlla(`${chi}: saldato sta nel tetto (${dopo} ≤ ${TETTO})`, dopo <= TETTO)
   let diverse = 0
   for (let i = 0; i < 24; i++) {
     const t = i * 31.7, cammina = i % 3 === 1, colpo = i % 4 === 2 ? (i % 7) / 6 : null

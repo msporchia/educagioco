@@ -5,7 +5,9 @@
 import { Color, Vector3 } from 'three'
 import { EFFETTI as LANCIO } from './lancio.js'
 import { EFFETTI as MISCHIA } from './mischia.js'
-import { EFFETTI as AURE, PREPARA } from './aure.js'
+import { EFFETTI as AURE } from './aure.js'
+import { schedaDi, effettoDi as effettoNodo, effettoDelColpo, aureDelNodo, statiDelNodo } from '../../dati/effetti.js'
+import { NODI } from '../../dati/abilita.js'
 
 const GRUPPO_DELLA_VIA = {
   vicino: MISCHIA, attorno: MISCHIA, terra: MISCHIA, onda: MISCHIA, segno: MISCHIA,
@@ -55,15 +57,51 @@ export const PROIETTILE = {
   luce: { chiave: 'luce', elem: 'sacro' },
 }
 
+// Gli effetti che una discesa può chiedere, per scaldarne gli shader in anticipo (docs/sotterraneo/prestazioni-3d.md, «Shader e prima
+// apparizione»): tutti e sessanta sarebbero ~30 programmi in più, quasi tutti mai usati. Quelli dell'eroe vengono dalle abilità imparate
+// (`albero`: id → grado, dati/abilita.js) e dall'arma in mano (`famiglia`: il colpo solito e i nodi senza arma); quelli dei mostri dalle
+// loro mosse (`mosse`: dati/mosse.js, la cura e gli incantesimi), dal segno del colpo e dal proiettile dei modelli (`attacchi`:
+// `userData.attacco`). Uno che manca si compila al primo uso, come prima.
+export function effettiPrevisti({ albero = {}, famiglia = null, attacchi = [], mosse = [] } = {}) {
+  const defs = new Set()
+  const metti = d => { if (d) defs.add(d) }
+  const daChiave = k => {
+    const sc = schedaDi(k)
+    metti(effettoDi(k, sc.via)); metti(segnoDi(sc.segno)); metti(segnoDi(sc.corpo)); metti(auraDi(sc.corpo === 'colonna' ? 'preghiera' : sc.corpo))
+  }
+  daChiave(effettoDelColpo(famiglia))
+  for (const id of Object.keys(albero || {})) {
+    const nodo = NODI[id]
+    if (!nodo) continue
+    daChiave(effettoNodo(nodo, famiglia))
+    for (const c of aureDelNodo(nodo)) metti(auraDi(c === 'colonna' ? 'preghiera' : c))
+    for (const x of statiDelNodo(nodo)) {
+      const k = statoDi({ chiave: x, fuoco: nodo.elemento === 'fuoco', gelo: nodo.elemento === 'gelo', da: nodo.effetto === 'radici' ? 'radici' : null })
+      if (k) metti(AURE[k])
+    }
+  }
+  for (const m of mosse) {
+    if (m.tipo === 'cura') metti(auraDi('cura'))
+    else if (m.tipo === 'incantesimo') metti(effettoDi(m.effetto || 'dardo', 'lancio'))
+  }
+  for (const a of attacchi) {
+    if (!a) continue
+    metti(segnoDi(SEGNO_COLPO[a.tipo] || 'colpo'))
+    const P = a.proiettile && PROIETTILE[a.proiettile.tipo]
+    if (P) metti(effettoDi(P.chiave))
+  }
+  return [...defs]
+}
+
 const BIANCO = new Color(1, 1, 1)
 const TIENI = () => {}
 let seme = 1
 
-/** `scena`: dove si aggiungono; `renderer`, `camera`: per compilare le aure la prima volta (niente scatto al primo stato). */
+/** `scena`: dove si aggiungono; `renderer`, `camera`: per chiedere gli shader in anticipo (`riscaldamento`). */
 export function creaGestore(scena, { renderer = null, camera = null } = {}) {
   const attivi = []                 // { def, fx, t, attesa, portatore, chiave }
   const stati = new Map()           // portatore → Map(chiave → voce)
-  let preparato = false
+  const scaldati = new Set()        // gli effetti già passati dal riscaldamento
 
   function nuovo(def, o) {
     const tinta = o.tinta instanceof Color ? o.tinta.clone() : new Color(o.tinta ?? COLORI[o.elem] ?? COLORI.fisico)
@@ -83,12 +121,14 @@ export function creaGestore(scena, { renderer = null, camera = null } = {}) {
       return null
     }
   }
+  // i materiali non si buttano (vedi sotto): il loro programma resta in serbo per il prossimo effetto con lo stesso codice
+  const tieni = g => g.traverse(o => { if (o.material) for (const m of [o.material].flat()) m.dispose = TIENI })
   function libera(v) {
     const i = attivi.indexOf(v)
     if (i >= 0) attivi.splice(i, 1)
     // i materiali non si buttano: buttato l'ultimo, three libera il suo programma e il colpo dopo lo ricompila (sul telefono 50-300 ms
     // l'uno, a ogni attacco: docs/sotterraneo/limiti-3d.md). Senza `dispose` il programma resta in serbo; il materiale lo prende il GC
-    try { v.fx.gruppo.traverse(o => { if (o.material) for (const m of [o.material].flat()) m.dispose = TIENI }) } catch { /* già via */ }
+    try { tieni(v.fx.gruppo) } catch { /* già via */ }
     try { v.fx.libera() } catch { /* già via */ }
     scena.remove(v.fx.gruppo)
     if (v.portatore) { const m = stati.get(v.portatore); if (m && m.get(v.chiave) === v) m.delete(v.chiave) }
@@ -108,7 +148,6 @@ export function creaGestore(scena, { renderer = null, camera = null } = {}) {
       for (const [k, v] of m) if (!chiavi.includes(k) && !v.spento) { v.spento = true; try { v.fx.spegni && v.fx.spegni() } catch { libera(v) } }
       for (const k of chiavi) {
         if (m.has(k) && !m.get(k).spento) continue
-        if (!preparato && renderer && camera) { preparato = true; try { PREPARA(renderer, camera, { Scene: scena.constructor, Vector3, Color }) } catch { /* solo un anticipo */ } }
         const { piedi, alto } = dove()
         const v = nuovo(AURE[k], { da: piedi, a: piedi, elem: 'fisico', tinta: AURE[k] && STATO_TINTA[k], scala: Math.max(0.8, alto), portatore: chi, chiave: k })
         if (v) m.set(k, v)
@@ -136,6 +175,28 @@ export function creaGestore(scena, { renderer = null, camera = null } = {}) {
         if (v.fx.finito || (v.def.durata !== Infinity && v.t > v.def.durata + 0.15)) vivo = false
         if (!vivo) libera(v)
       }
+    },
+    /**
+     * Il riscaldamento (docs/sotterraneo/prestazioni-3d.md, «Shader e prima apparizione»): per gli effetti `defs` (effettiPrevisti) non
+     * ancora scaldati, una funzione per effetto, che lo crea fuori
+     * dalla scena, ne chiede gli shader con le luci della scena (`compile` non aspetta: il telefono li compila mentre si esplora, e il
+     * primo colpo li trova pronti) e lo libera tenendo i programmi. Prima le aure si compilavano in una scena senza luci, e si buttavano.
+     * `compila(oggetto)`: come lo vuole chi disegna (il passaggio finale disegna in una texture); di difetto `compile` con le luci della scena.
+     */
+    riscaldamento(defs, compila = o => renderer.compile(o, camera, scena)) {
+      if (!renderer || !camera) return []
+      return defs.filter(d => !scaldati.has(d)).map(def => () => {
+        scaldati.add(def)
+        const tinta = new Color(COLORI.fuoco)
+        const fx = def.crea({ da: new Vector3(0, 0, 0), a: new Vector3(1.5, 0, 0), tinta, tinta2: tinta.clone().lerp(BIANCO, 0.45), seme: 1,
+                              altri: [new Vector3(2, 0, 1), new Vector3(1, 0, -1)], scala: 1 })
+        if (!fx || !fx.gruppo) return
+        try {
+          const fino = Number.isFinite(def.durata) ? def.durata : 1
+          for (const t of [0, 0.15, Math.min(0.3, fino * 0.5), fino * 0.5]) fx.aggiorna(t, 0.016)   // quello che nasce strada facendo
+          compila(fx.gruppo)
+        } finally { tieni(fx.gruppo); fx.libera() }
+      })
     },
     get quanti() { return attivi.length },
     chiavi() { return attivi.map(v => v.chiave || v.def.via) },

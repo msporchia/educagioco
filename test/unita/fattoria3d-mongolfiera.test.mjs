@@ -4,7 +4,7 @@
    `node test/esegui.mjs fattoria3d-mongolfiera`
    tempo: 1 */
 import {
-  guastiDellaMongolfiera, FILE, CASSE_MIN, CASSE_MAX, PEZZI_MAX, RIPOSO_MS, SALITA_MS, BONUS_FILA, BONUS_TUTTO, SORPRESE, LIVELLO_MONGOLFIERA,
+  guastiDellaMongolfiera, FILE, FILE_MAX, fileAl, LIVELLO_QUARTA_FILA, CASSE_MIN, CASSE_MAX, PEZZI_MAX, RIPOSO_MS, SALITA_MS, BONUS_FILA, BONUS_TUTTO, SORPRESE, LIVELLO_MONGOLFIERA,
   merceDaCassa, merciDelLivello, fasiDi, pezziMaxAl, premioDellaCassa, bonusDellaFila, bonusDelTutto,
 } from '../../src/giochi/fattoria3d/dati/mongolfiera.js'
 import { nuovaStiva, stivaInForma, scegliLaSorpresa } from '../../src/giochi/fattoria3d/motore/mongolfiera.js'
@@ -13,6 +13,7 @@ import { EDIFICI, PEZZI } from '../../src/giochi/fattoria3d/dati/catalogo.js'
 import { RICETTE } from '../../src/giochi/fattoria3d/dati/ricette.js'
 import { COLTURE } from '../../src/giochi/fattoria3d/dati/colture.js'
 import { sogliaDi, ULTIMO } from '../../src/giochi/fattoria3d/dati/livelli.js'
+import { LIVELLO_GRANDE as LIVELLO_GRANDE_2D } from '../../src/giochi/fattoria/dati/mongolfiera.js'
 import { Fattoria3d } from '../../src/giochi/fattoria3d/motore/fattoria3d.js'
 import { normalizza, statoIniziale } from '../../src/giochi/fattoria3d/motore/stato.js'
 import { controlla, uguale, stessaLista, riassunto } from '../aiuto/verifica.mjs'
@@ -43,7 +44,14 @@ controlla('una merce dichiarata mangime non sale', (() => { RICETTE.pasta.mangim
 controlla('al livello d\'ingresso ci sono almeno due merci, tutte già fattibili', merciDelLivello(LIVELLO_MONGOLFIERA).length >= 2 && merciDelLivello(LIVELLO_MONGOLFIERA).every(k => livelloDi(k) <= LIVELLO_MONGOLFIERA))
 controlla('prima del livello d\'ingresso non c\'è niente da fare in più del livello', merciDelLivello(1).length === 0)
 controlla('i pezzi per cassa crescono col livello e non scendono', pezziMaxAl(1) === PEZZI_MAX - 1 && pezziMaxAl(ULTIMO) === PEZZI_MAX)
-controlla('la sorpresa ha dei decori da regalare, nessuno calpestabile', SORPRESE.length >= 3 && SORPRESE.every(t => PEZZI[t].categoria === 'decori' && !PEZZI[t].calpestabile))
+controlla('la sorpresa ha le otto decorazioni della fiera da regalare (come in 2D), nessuna calpestabile', SORPRESE.length === 8 && SORPRESE.every(t => PEZZI[t].fiera && PEZZI[t].categoria === 'feste' && !PEZZI[t].calpestabile))
+
+/* ══════════ 1b. la quarta fila (M17): dal livello della mongolfiera grande della 2D ══════════ */
+uguale('tre file sotto il livello 66, quattro da lì (come in 2D)', [fileAl(1), fileAl(LIVELLO_QUARTA_FILA - 1), fileAl(LIVELLO_QUARTA_FILA), fileAl(ULTIMO)].join(), [FILE, FILE, FILE_MAX, FILE_MAX].join())
+uguale('il livello è quello della 2D', LIVELLO_QUARTA_FILA, LIVELLO_GRANDE_2D)
+controlla('un carico al livello 66 ha quattro file, di merci diverse', (() => { const st = nuovaStiva(mondo({ liv: LIVELLO_QUARTA_FILA, rnd: sequenza(3) }).f); return st.file.length === 4 && new Set(st.file.map(x => x.merce)).size === 4 })())
+controlla('un carico sotto il 66 ne ha al più tre', nuovaStiva(mondo({ liv: LIVELLO_QUARTA_FILA - 1 }).f).file.length === 3)
+controlla('un carico a quattro file si rilegge intero', (() => { const f = mondo({ liv: ULTIMO }).f; return stivaInForma(JSON.parse(JSON.stringify(f.s.mongolfiera.stiva))).file.length === 4 })())
 
 /* ══════════ 2. un carico è sempre fattibile e dentro il tetto, a ogni livello ══════════ */
 {
@@ -54,7 +62,7 @@ controlla('la sorpresa ha dei decori da regalare, nessuno calpestabile', SORPRES
       const st = nuovaStiva(f); giri++
       if (!st) { fuori = `liv ${liv}: nessun carico`; break }
       const merci = st.file.map(x => x.merce)
-      if (st.file.length < 1 || st.file.length > FILE || st.file.length !== Math.min(FILE, merciDelLivello(liv).length)) fuori = `liv ${liv}: ${st.file.length} file`
+      if (st.file.length < 1 || st.file.length > fileAl(liv) || st.file.length !== Math.min(fileAl(liv), merciDelLivello(liv).length)) fuori = `liv ${liv}: ${st.file.length} file`
       if (new Set(merci).size !== merci.length) fuori = `liv ${liv}: una merce in due file`
       for (const x of st.file) {
         if (!merceDaCassa(x.merce) || livelloDi(x.merce) > liv) fuori = `liv ${liv}: ${x.merce} impossibile`
@@ -137,7 +145,7 @@ controlla('la sorpresa ha dei decori da regalare, nessuno calpestabile', SORPRES
   const r2 = riempi(f, ultima.i, ultima.c)
   controlla('l\'ultima cassa: bonus fila, bonus tutto (+50% del totale) e la sorpresa', r2.ok && r2.pieno && r2.parte && r2.bonusTutto === bonusDelTutto(totale) && r2.bonusTutto === Math.round(BONUS_TUTTO * totale) && r2.bonusFila > 0)
   controlla('l\'esperienza sale esattamente di quel che dice', f.s.esperienza === prima + r2.xp)
-  controlla('la sorpresa è un decoro, ora nel magazzino', SORPRESE.includes(r2.sorpresa) && (f.s.magazzino[r2.sorpresa] || 0) === (magazzino[r2.sorpresa] || 0) + 1)
+  controlla('la sorpresa è una decorazione della fiera, ora nel magazzino', SORPRESE.includes(r2.sorpresa) && (f.s.magazzino[r2.sorpresa] || 0) === (magazzino[r2.sorpresa] || 0) + 1)
   const ev = f.prendiEventi()
   controlla('gli eventi: la cassa e la fiera', ev.some(x => x.tipo === 'cassa') && ev.filter(x => x.tipo === 'fiera').length === 1 && ev.find(x => x.tipo === 'fiera').pezzo === r2.sorpresa)
   controlla('le monete non si sono mosse in tutto il giro', b.monete === 500)
@@ -166,7 +174,7 @@ controlla('la sorpresa ha dei decori da regalare, nessuno calpestabile', SORPRES
   const r = riempi(f, 0, 0)
   const prima = f.s.esperienza, mag = JSON.stringify(f.s.magazzino)
   const p = f.partiMongolfiera()
-  controlla('parte a metà e dice quante casse c\'erano', p.ok && p.piene === 1 && p.di >= CASSE_MIN && p.di <= FILE * CASSE_MAX)
+  controlla('parte a metà e dice quante casse c\'erano', p.ok && p.piene === 1 && p.di >= CASSE_MIN && p.di <= FILE_MAX * CASSE_MAX)
   controlla('non dà altro: l\'esperienza delle casse c\'è già', f.s.esperienza === prima && r.ok && JSON.stringify(f.s.magazzino) === mag)
   uguale('torna dopo il riposo come a tutto pieno', f.s.mongolfiera.riposo, t.ora + RIPOSO_MS)
   uguale('a vuoto non c\'è niente da far partire', mondo({ nave: false }).f.partiMongolfiera().motivo, 'non-tua')

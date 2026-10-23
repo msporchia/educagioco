@@ -1,7 +1,7 @@
 /* La misura coi modelli veri (docs/core/vecchio-telefono-veri.md): il log si compone con le righe, la LETTURA nomina il limite di
    ogni serie e il collo di bottiglia, la riga DATI si rilegge, un log lungo si spezza in invii che stanno nel campo del modulo, le
    note finiscono prima dei DATI. E le leve sulla scena vera: triangoli × k con la stessa forma, chiamate × k con gli stessi triangoli. */
-import { BoxGeometry, Mesh, MeshStandardMaterial, Scene, Box3 } from 'three'
+import { BoxGeometry, Mesh, MeshStandardMaterial, Scene, Box3, SkinnedMesh, Skeleton, Bone, Uint16BufferAttribute, Float32BufferAttribute } from 'three'
 import { componiVeri, letturaVeri, limite, spezza, conNote, LIMITE_CAMPO } from '../../src/grafica/benchmark/log-veri.js'
 import { dividi, leve } from '../../src/grafica/benchmark/veri/moltiplica.js'
 import { TAPPE, QUANTE } from '../../src/grafica/benchmark/veri.js'
@@ -57,7 +57,7 @@ controlla('LIMITE già oltre alla prima: la pendenza', /Mostri 3D di sopra: LIMI
 controlla('il pavimento', /Pavimento: schermo vuoto 8 ms \(js 2, gpu 6\), 100 cubi semplici 18 ms \(~1 ms ogni 10 chiamate\)/.test(righe), righe)
 controlla('la scomposizione, dal guadagno più grande', /TOGLIERE \(1 mostro con effetti: 60 ms, js 18 gpu 42\): materiali → Basic -30, pixel ratio 0,6 -20, ombra -8 ms/.test(righe), righe)
 controlla('la CPU o la GPU', /CPU o GPU: la GPU tiene il 70% del lavoro .* = il collo è la scheda/.test(righe), righe)
-controlla('i ms corretti dal calore', /Calore: il riferimento di ogni gruppo da x1 a x1\.6 del primo; la lettura usa i ms divisi/.test(righe), righe)
+controlla('i ms corretti dal calore', /Calore: il riferimento di ogni gruppo da x1 a x1\.6 del più fresco; la lettura usa i ms divisi/.test(righe), righe)
 controlla('LIMITE delle persone: 8', /Persone 3D di sopra: LIMITE 8 persone sotto 33 ms/.test(righe))
 controlla('la fattoria che non parte è oltre già al primo', /Fattoria 3D: LIMITE già 10 edifici oltre 33 ms \(non regge\), oltre 66 da 10/.test(righe), righe)
 controlla('i triangoli costano poco', /Triangoli \(stesse chiamate\): x1 15 ms \(70k\), x8 18 ms \(560k\)\. Costano poco: c'è margine per ~8x/.test(righe), righe)
@@ -105,7 +105,7 @@ uguale('un log corto è un invio solo', spezza('corto').length, 1)
 // le scene: tutte con un id solo, e le serie in ordine crescente
 const ids = TAPPE.flatMap(t => t.scene.map(x => x.id))
 uguale('gli id delle scene sono tutti diversi', new Set(ids).size, QUANTE)
-controlla('il calore all\'inizio e alla fine', ids[0] === 'cal-1' && ids[ids.length - 1] === 'cal-2')
+controlla('l\'ingresso per primo, il calore all\'inizio e alla fine', ids[0] === 'ing-sot' && ids.includes('cal-1') && ids[ids.length - 1] === 'cal-2')
 
 // le leve: triangoli × k (stessa scatola, normali lunghe 1) e chiamate × k (stessi triangoli)
 const box = new BoxGeometry(1, 2, 3)
@@ -129,5 +129,18 @@ controlla('leve: le chiamate x3 tornano ai triangoli di prima', m1.geometry === 
 uguale('leve: i gruppi coprono tutti i triangoli', box.groups.reduce((a, x) => a + x.count, 0), box.index.count)
 lv.ripristina()
 controlla('leve: ripristina rimette materiali e gruppi', m1.material === mat && m2.material === mat && box.groups.length === 6)
+
+// la pelle (salda3d.js): anche le SkinnedMesh si moltiplicano, e un vertice nuovo ha ossa intere (quelle di un capo del lato)
+const pelle = new BoxGeometry(1, 1, 1), nv = pelle.attributes.position.count
+pelle.setAttribute('skinIndex', new Uint16BufferAttribute(Array.from({ length: nv * 4 }, (_, i) => (i % 4 === 0 ? (Math.floor(i / 4) % 3) : 0)), 4))
+pelle.setAttribute('skinWeight', new Float32BufferAttribute(Array.from({ length: nv * 4 }, (_, i) => (i % 4 === 0 ? 1 : 0)), 4))
+const g8 = dividi(pelle, 8), si = g8.attributes.skinIndex
+controlla('la pelle si divide, con indici d\'osso interi', g8 && g8.index.count === pelle.index.count * 8 && Array.from(si.array).every(x => Number.isInteger(x) && x <= 2))
+const ossa = [new Bone(), new Bone(), new Bone()], sk = new SkinnedMesh(pelle, mat); sk.add(ossa[0]); sk.bind(new Skeleton(ossa))
+const sp = new Scene(); sp.add(sk)
+const lp = leve(sp)
+lp.triangoli(2); uguale('leve: la SkinnedMesh ha i triangoli x2', sk.geometry.index.count, pelle.index.count * 2)
+lp.chiamate(4); controlla('leve: e le chiamate x4', Array.isArray(sk.material) && sk.material.length === 4)
+lp.ripristina()
 
 riassunto('la misura coi modelli veri')

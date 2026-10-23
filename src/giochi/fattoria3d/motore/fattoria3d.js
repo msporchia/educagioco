@@ -21,6 +21,7 @@ import { percorso } from './percorso.js'
 import { POSTI, RIPOSO_MS, LIVELLO_BANCO, PEZZI_DEL_BANCO, clienteDi, tipoDelOrdine } from '../dati/ordini.js'
 import { nuovoOrdine } from './ordini.js'
 import { vistaDellaMongolfiera, caricaLaCassa, partiLaMongolfiera, aggiornaMongolfiera } from './mongolfiera.js'
+import { vistaDellaBottega, consegnaInBottega, rifiutaInBottega, aggiornaLeBotteghe, daConsegnareIn, daConsegnareOvunque } from './botteghe.js'
 
 export class Fattoria3d {
   constructor({ stato = null, borsa, ora = Date.now, rnd = Math.random } = {}) {
@@ -232,6 +233,7 @@ export class Fattoria3d {
     if (!PEZZI[tipo] && !EDIFICI[tipo]) return { ok: false, motivo: 'sconosciuto' }
     if (EDIFICI[tipo] && (this.s.posseduti[tipo] || this.nelMagazzino(tipo) > 0)) return { ok: false, motivo: 'gia-tuo' }       // uno per tipo
     if (PEZZI[tipo] && PEZZI[tipo].unico && (this.nelMagazzino(tipo) > 0 || this.s.cose.some(c => c.tipo === tipo))) return { ok: false, motivo: 'gia-tuo' }       // il porticciolo è uno solo
+    if (PEZZI[tipo] && PEZZI[tipo].fiera) return { ok: false, motivo: 'non-in-vendita' }       // la fiera si vince dalla mongolfiera (fattoria3d/mongolfiera.md)
     const chiuso = this._chiusa(livelloDelPezzo(tipo))
     if (chiuso) return chiuso
     const costo = this.prezzoPezzo(tipo)
@@ -250,7 +252,8 @@ export class Fattoria3d {
       if (this.acqua(i + a, j + b, ignora)) acqua = true; else terra = true
     }
     if (acqua && !d.suAcqua) return { ok: false, motivo: 'acqua' }
-    if (acqua && !terra && !this._appoggioPerPonte(d, i, j)) return { ok: false, motivo: 'acqua' }
+    if (d.soloAcqua && terra) return { ok: false, motivo: 'serve-acqua' }          // le ninfee galleggiano: tutte le celle d'acqua (decorazioni.md)
+    if (acqua && !terra && !d.soloAcqua && !d.anfibio && !this._appoggioPerPonte(d, i, j)) return { ok: false, motivo: 'acqua' }       // le canne stanno anche nell'acqua bassa: niente appoggio
     if (d.riva && !this._toccaAcqua(d, i, j)) return { ok: false, motivo: 'serve-riva' }
     if (d.unico && !ignora && this.s.cose.some(c => c.tipo === tipo)) return { ok: false, motivo: 'gia-tuo' }
     for (let a = 0; a < d.w; a++) for (let b = 0; b < d.d; b++) {
@@ -853,6 +856,17 @@ export class Fattoria3d {
   }
   cambia(idx) { return this.rifiuta(idx) }
 
+  // ── le botteghe del paese: pasticceria, osteria, mensa, merceria (motore/botteghe.js, docs/fattoria3d/botteghe.md). Esperienza, mai monete ──
+  /** Tutto quello che il foglio di una bottega vuole sapere: la fama e un bancone per volta (cliente con la roba chiesta, oppure l'attesa). */
+  vistaBottega(tipo) { return vistaDellaBottega(this, tipo) }
+  /** Consegna al cliente `n` della bottega: { ok, xp, cliente, cresciuta } o { ok: false, motivo, mancano? }. */
+  consegnaBottega(tipo, n) { return consegnaInBottega(this, tipo, n) }
+  /** «Non mi va»: stessa attesa di una consegna. */
+  rifiutaBottega(tipo, n) { return rifiutaInBottega(this, tipo, n) }
+  /** Quanti clienti di una bottega (o di tutte) hanno già la loro roba: il numero del cartello e il pallino. */
+  bottegaPronta(tipo) { return daConsegnareIn(this, tipo) }
+  botteghePronte() { return daConsegnareOvunque(this) }
+
   // ── la pesca: molo e porticciolo, un banco per lotto d'acqua tuo (motore/pesca.js, docs/fattoria3d/geografia-e-pesca.md) ──
   /** Cosa si farebbe toccando la cella d'acqua (i, j): { ok, azione: 'lancia' | 'ritira' | 'aspetta' | 'riposo', sta, … } o un rifiuto. Niente cambia. */
   provaPesca(i, j) { return provaPesca(this, i, j) }
@@ -882,6 +896,7 @@ export class Fattoria3d {
       if (Q.coda[0] && !Q.coda[0].fine) Q.coda[0].fine = t + RICETTE[Q.coda[0].ric].ms
     }
     if (aggiornaMongolfiera(this)) cambiato = true
+    if (aggiornaLeBotteghe(this)) cambiato = true
     ripulisciPesca(this)
     if (this._riempiOrdini()) cambiato = true
     return cambiato

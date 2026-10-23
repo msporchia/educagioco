@@ -13,6 +13,7 @@ import {
 } from '../../../src/giochi/fattoria3d/scena3d/modelli.js'
 import { creaZuccherificio, creaTelaio, creaSartoria, creaTintoria, creaFienileMacchina, creaFriggitoria, creaSushiBar } from '../../../src/giochi/fattoria3d/scena3d/modelli-macchine.js'
 import { creaMolo, creaPorticciolo } from '../../../src/giochi/fattoria3d/scena3d/modelli-pesca.js'
+import { creaBottegaPasticceria, creaBottegaOsteria, creaBottegaMensa, creaBottegaMerceria } from '../../../src/giochi/fattoria3d/scena3d/modelli-botteghe.js'
 import { creaStagnoAnatre, creaPorcile, creaRecintoCapre, creaPentolone, creaAnatra, creaMaiale, creaCapra } from '../../../src/giochi/fattoria3d/scena3d/modelli-cortile.js'
 import { galleggiante } from '../../../src/giochi/fattoria3d/scena3d/pesca3d.js'
 import { Pesci } from '../../../src/giochi/fattoria3d/scena3d/pesci.js'
@@ -39,6 +40,7 @@ if (indirizzo.has('senzafondi')) FONDI.acceso = false        // e `&senzafondi=1
 const M = 'src/giochi/fattoria3d/scena3d/modelli.js'
 const MM = 'src/giochi/fattoria3d/scena3d/modelli-macchine.js'
 const MCT = 'src/giochi/fattoria3d/scena3d/modelli-cortile.js'
+const MB = 'src/giochi/fattoria3d/scena3d/modelli-botteghe.js'
 const MC = 'src/giochi/fattoria3d/scena3d/modelli-compagni.js'
 const MCO = 'src/giochi/fattoria3d/scena3d/modelli-colture.js'
 const T = 'src/giochi/fattoria3d/scena3d/terreno.js'
@@ -181,6 +183,10 @@ export const VOCI = [
   { id: 'fattoria:sartoria', nome: 'Sartoria', gioco: 'fattoria', categoria: 'edificio', dove: unico('sartoria') + ': il manichino che gira, l\'ago nel rocchetto', file: `${MM}:creaSartoria`, misure: celle(EDIFICI.sartoria), crea: () => creaSartoria(), anima: animaEdificio },
   { id: 'fattoria:friggitoria', nome: 'Friggitoria', gioco: 'fattoria', categoria: 'edificio', dove: unico('friggitoria') + ': tendone a righe, friggitrici con l\'olio che brilla, il cartoccio di patatine che gira sul tetto, fuma', file: `${MM}:creaFriggitoria`, misure: celle(EDIFICI.friggitoria), crea: () => creaFriggitoria(), anima: animaEdificio },
   { id: 'fattoria:sushi-bar', nome: 'Sushi bar', gioco: 'fattoria', categoria: 'edificio', dove: unico('sushi_bar') + ': chiosco giapponese con il noren rosso che ondeggia, il bancone coi piattini e due lanterne', file: `${MM}:creaSushiBar`, misure: celle(EDIFICI.sushi_bar), crea: () => creaSushiBar(), anima: animaEdificio },
+  { id: 'fattoria:bottega-pasticceria', nome: 'Pasticceria (bottega)', gioco: 'fattoria', categoria: 'edificio', dove: unico('bottega_pasticceria') + ': casetta rosa con la vetrina delle torte, il telo a righe e un cupcake gigante che gira sul tetto; non lavora, chiede (docs/fattoria3d/botteghe.md)', file: `${MB}:creaBottegaPasticceria`, misure: celle(EDIFICI.bottega_pasticceria), crea: () => creaBottegaPasticceria(), anima: animaEdificio },
+  { id: 'fattoria:bottega-osteria', nome: 'Osteria (bottega)', gioco: 'fattoria', categoria: 'edificio', dove: unico('bottega_osteria') + ': locanda di sasso col tetto rosso, le botti, il tavolo apparecchiato e la lanterna accesa', file: `${MB}:creaBottegaOsteria`, misure: celle(EDIFICI.bottega_osteria), crea: () => creaBottegaOsteria(), anima: animaEdificio },
+  { id: 'fattoria:bottega-mensa', nome: 'Mensa della scuola (bottega)', gioco: 'fattoria', categoria: 'edificio', dove: unico('bottega_mensa') + ': edificio giallo e azzurro con la campanella, la bandiera che sventola e i tavoli con le panche', file: `${MB}:creaBottegaMensa`, misure: celle(EDIFICI.bottega_mensa), crea: () => creaBottegaMensa(), anima: animaEdificio },
+  { id: 'fattoria:bottega-merceria', nome: 'Merceria (bottega)', gioco: 'fattoria', categoria: 'edificio', dove: unico('bottega_merceria') + ': bottega lilla col telo a righe, lo scaffale di bobine, il manichino e la bobina gigante che gira sul tetto', file: `${MB}:creaBottegaMerceria`, misure: celle(EDIFICI.bottega_merceria), crea: () => creaBottegaMerceria(), anima: animaEdificio },
   { id: 'fattoria:tintoria', nome: 'Tintoria', gioco: 'fattoria', categoria: 'edificio', dove: unico('tintoria') + ': le vasche colorate, le stoffe che ondeggiano', file: `${MM}:creaTintoria`, misure: celle(EDIFICI.tintoria), crea: () => creaTintoria(), anima: animaEdificio },
 
   // ── solo di scena: nascono col terreno ──

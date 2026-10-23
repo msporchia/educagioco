@@ -19,6 +19,7 @@ import { creaArredo3d } from './arredo3d.js'
 import { creaRaggi, postiDeiRaggi } from './raggi.js'
 import { FETTE, ACCESI } from './costanti.js'
 import { profilo } from '../../../store/qualita.js'
+import { segnaNuovi } from '../../../grafica/elementi3d.js'
 
 // `trameDi(aspetto)`: le trame dello scenario (si fanno una volta e si tengono), `legno`: quella delle botti
 export function costruisciPiano(scena, corsa, { maschera, luci, trameDi, legno, polvere = null }) {
@@ -34,10 +35,12 @@ export function costruisciPiano(scena, corsa, { maschera, luci, trameDi, legno, 
   if (polvere) polvere.aspetto(aspetto)
   const via = []
   const terreno = creaTerreno(scena, { pianta, aspetto, trame, maschera, seme }); via.push(terreno.via)
-  via.push(creaRelitti(scena, liv.relitti || [], corsa.scenario, maschera).via)
-  const pozze = creaPozze(scena, pianta.acqua, luci.condivise, maschera, aspetto); via.push(pozze.via)
+  // gli elementi (grafica/elementi3d.js): chi pesa si misura spegnendone uno alla volta; i relitti e l'acqua stanno col pavimento
+  const el = (nome, fai) => segnaNuovi(scena, nome, fai)
+  via.push(el('arredo', () => creaRelitti(scena, liv.relitti || [], corsa.scenario, maschera)).via)
+  const pozze = el('pavimento', () => creaPozze(scena, pianta.acqua, luci.condivise, maschera, aspetto)); via.push(pozze.via)
   // il tempio sommerso: l'acqua bassa su tutto il pavimento
-  const velo = aspetto.velo ? creaPozze(scena, pianta.pavimento.filter(c => pianta.calpestabile(c.x, c.y)), luci.condivise, maschera, aspetto, aspetto.velo) : null
+  const velo = aspetto.velo ? el('pavimento', () => creaPozze(scena, pianta.pavimento.filter(c => pianta.calpestabile(c.x, c.y)), luci.condivise, maschera, aspetto, aspetto.velo)) : null
   if (velo) via.push(velo.via)
 
   // i fuochi: le torce a muro e l'arredo che arde (bracieri, candelabri, lanterne). Una fiamma ciascuno e una luce che trema
@@ -46,18 +49,18 @@ export function costruisciPiano(scena, corsa, { maschera, luci, trameDi, legno, 
   // sulla faccia vera del muro (le pareti di roccia rientrano e sporgono)
   pianta.torce.forEach((t, i) => { const f = terreno.facce[i]; fuochi.push({ x: f.x, y: 0.84, z: f.z + 0.14, scala: 1.4, cx: t.x, cz: t.y + 1, luce: new Vector3(f.x, 1.0, f.z + 0.3), forza: 4.5, muro: true }) })
   for (const r of liv.robe) if (r.che === 'arredo' && r.arde) fuochi.push({ x: r.x + 0.5, y: 0.5, z: r.y + 0.55, scala: 1.2, cx: r.x, cz: r.y, luce: new Vector3(r.x + 0.5, 0.95, r.y + 0.6), forza: 5 })
-  const fiamme = ACCESI.fiamme ? creaFiamme(scena, maschera, fuochi, aspetto.fiamma) : { aggiorna() {}, accesa() {}, via() {} }
+  const fiamme = ACCESI.fiamme ? el('fiamme', () => creaFiamme(scena, maschera, fuochi, aspetto.fiamma)) : { aggiorna() {}, accesa() {}, via() {} }
   via.push(fiamme.via)
   const sorgenti = fuochi.map(f => ({ pos: f.luce, colore, forza: f.forza, vis: 0, seme: Math.random() * 100, trema: true, raggio: 7, cella: f.cz * pianta.W + f.cx }))
 
   // la fonte e il portale, modellati; il loro stato è del motore (la fonte bevuta resta secca)
   const fonte = liv.robe.find(r => r.che === 'fonte')
-  const fontana = fonte ? creaFontana(scena, { cella: fonte, condivise: luci.condivise, trama: trame.muro, conMaschera, maschera, aspetto, vuota: !!fonte.morto }) : null
+  const fontana = fonte ? el('arredo', () => creaFontana(scena, { cella: fonte, condivise: luci.condivise, trama: trame.muro, conMaschera, maschera, aspetto, vuota: !!fonte.morto })) : null
   if (fontana) { fontana.roba = fonte; via.push(fontana.via); sorgenti.push(fontana.luce) }
   // i portali: quello fisso del piano, e quello della pergamena, che si apre (e se ne va) mentre si gioca: `sincronizzaPortali`
   const portali = []
   const nuovoPortale = (r, { apri = false } = {}) => {
-    const p = creaPortale(scena, { cella: r, conMaschera, maschera, trama: trame.muro })
+    const p = el('arredo', () => creaPortale(scena, { cella: r, conMaschera, maschera, trama: trame.muro }))
     p.roba = r
     if (apri) p.apri()
     portali.push(p); sorgenti.push(p.luce)
@@ -69,16 +72,18 @@ export function costruisciPiano(scena, corsa, { maschera, luci, trameDi, legno, 
   // l'arredo del paesaggio (scena3d/arredo3d.js): chi fa luce entra nella riserva dei fuochi
   let arredo = null
   if (ACCESI.arredo) {
-    arredo = creaArredo3d(scena, { pianta, liv, aspetto, seme, trame, legno: legno(), conMaschera, maschera, sposta: terreno.sposta })
+    arredo = el('arredo', () => creaArredo3d(scena, { pianta, liv, aspetto, seme, trame, legno: legno(), conMaschera, maschera, sposta: terreno.sposta }))
     via.push(arredo.via); sorgenti.push(...arredo.luci)
   }
-  const raggi = aspetto.raggi ? creaRaggi(scena, { posti: postiDeiRaggi(pianta, liv.stanze, seme), maschera, colore: aspetto.raggi.colore, forza: aspetto.raggi.forza }) : null
+  const raggi = aspetto.raggi ? el('arredo', () => creaRaggi(scena, { posti: postiDeiRaggi(pianta, liv.stanze, seme), maschera, colore: aspetto.raggi.colore, forza: aspetto.raggi.forza })) : null
   if (raggi) via.push(raggi.via)
   // le botti da rompere: le decide il motore (motore/botti.js), solo dove hanno senso e solo in alcune stanze
   const posti = ACCESI.botti && corsa.bottiQui ? corsa.bottiQui() : []
-  const botti = creaBotti(scena, { posti, legno: posti.length ? legno() : null, conMaschera, maschera, regola: BOTTI_PER_PAESAGGIO[paesaggio] || null })
+  const botti = el('arredo', () => creaBotti(scena, { posti, legno: posti.length ? legno() : null, conMaschera, maschera, regola: BOTTI_PER_PAESAGGIO[paesaggio] || null }))
   via.push(botti.via)
-  const nebbia = creaNebbia(scena, pianta.W, pianta.H, ACCESI.nebbia ? Math.min(FETTE, profilo('sotterraneo').fetteNebbia) : 0, luci.condivise, maschera, aspetto); via.push(nebbia.via)
+  // senza `nebbiaFitta` (la fascia bassa) una fetta sola
+  const fitte = ACCESI.nebbia ? Math.min(FETTE, profilo('sotterraneo').fetteNebbia) : 0, fette = ACCESI.nebbiaFitta ? fitte : Math.min(1, fitte)
+  const nebbia = el('nebbia', () => creaNebbia(scena, pianta.W, pianta.H, fette, luci.condivise, maschera, aspetto, fette ? fitte / fette : 1)); via.push(nebbia.via)
 
   // dove nello scontro non si mette nessuno: l'arredo, la fonte e il portale modellati (sono cose posate, non pavimento libero;
   // i relitti e l'acqua non sono pavimento già da sé)

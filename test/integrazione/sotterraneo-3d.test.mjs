@@ -241,6 +241,8 @@ await attendi(page, 600)
    docs/sotterraneo/limiti-3d.md: buttarli faceva ricompilare a ogni colpo, sul telefono 50-300 ms l'uno) ---------- */
 await entra('sotterraneo3d=1&seme=11&sotterraneo=branco&mostri=3&tipo=scheletro&variante=guerriero,arciere,mago&grado=leggendario&stanza=sala&qualita=bassa')
 await page.waitForSelector('[data-caselle-abilita][data-pronto]', { timeout: 20000 })
+// il riscaldamento (docs/sotterraneo/prestazioni-3d.md, «Shader e prima apparizione»): finito, il primo attacco trova gli shader pronti
+await page.waitForFunction(() => window.__sotterraneo3d.grafica().daScaldare === 0, null, { timeout: 30000 })
 await page.evaluate(() => { const P = WebGL2RenderingContext.prototype, o = P.linkProgram; window.__compilati = 0; P.linkProgram = function (x) { window.__compilati++; return o.call(this, x) } })
 {
   const compilati = []
@@ -254,6 +256,8 @@ await page.evaluate(() => { const P = WebGL2RenderingContext.prototype, o = P.li
   }
   // un effetto visto la prima volta si compila (una mossa nuova di un mostro): al più qualcuno; buttando i programmi erano 15-19 a giro
   controlla('scheletri armati: dopo il primo attacco quasi nessuno shader compilato', compilati[1] - compilati[0] <= 6 && compilati[2] - compilati[1] <= 6, compilati.join())
+  controlla('scaldati gli shader, il primo attacco non ne compila quasi (senza riscaldamento erano una decina)', compilati[0] <= 2, compilati.join())
+  nota(`scheletri armati, shader compilati dopo il riscaldamento, attacco per attacco: ${compilati.join(', ')}`)
 }
 
 /* ---------- 5. la scala che sale e quella che scende, da una sosta scritta in Node ---------- */

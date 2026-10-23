@@ -24,14 +24,16 @@ export const VOCE = {
   friggitoria: 'friggitoria', sushi_bar: 'sushi_bar', pentolone: 'pentolone',
   anatre: 'stagno_anatre', porcile: 'porcile', capre: 'recinto_capre',
   conigliera: 'conigliera', alpaca: 'recinto_alpaca', asini: 'recinto_asini', arnie: 'arnie',      // giro G5 (dati/cortile2.js); la peschiera non c'è: la pesca ne prende il posto (LIVELLO_PESCA)
+  bottega_pasticceria: 'pasticceria', bottega_osteria: 'osteria', bottega_mensa: 'mensa', bottega_merceria: 'merceria',      // le botteghe del paese (giro G7)
 }
 
 /** Le decorazioni portate in 3D (giro G8): le famiglie della 2D che hanno un disegno 3D, e i loro id. Lo stesso id che in 2D (gli id dei contenuti non
     si rinominano); le uniche eccezioni sono id già presi in 3D: il «Recinto» di legno (`recinto` è quello delle pecore: qui `recinto_legno`) e pane, torta, marmellata e latte (sono merci e ricette: qui col suffisso `_decoro`). Lo
     spaventapasseri c'era già come pezzo (sta sotto «decori»). Prezzo e livello arrivano da `VOCE` come per ogni altro pezzo. docs/fattoria3d/decorazioni.md. */
-export const FAMIGLIE_DECORI = ['verde', 'recinti', 'raccolto', 'case', 'bestiole']
+export const FAMIGLIE_DECORI = ['verde', 'recinti', 'raccolto', 'case', 'bestiole', 'fiori', 'arredo', 'acqua', 'feste', 'fiera']
 const ID_3D_DEL_DECORO = { recinto: 'recinto_legno', pane: 'pane_decoro', torta: 'torta_decoro', marmellata: 'marmellata_decoro', latte: 'latte_decoro' }
-const GIA_PEZZO = new Set(['spaventapasseri'])
+/** Le voci 2D che in 3D c'erano già come pezzi dei primi giri (stanno sotto «Decori» e nel ponte con le strade): `VOCE` le conosce già. */
+const GIA_PEZZO = new Set(['spaventapasseri', 'boccio', 'panchina', 'tavolo', 'fontana', 'pozzo', 'stagno', 'laghetto', 'ponte', 'zucca_intagliata', 'zucche_mucchio'])
 /** id 3D → id 2D, per ogni decorazione delle famiglie portate (compresi i cartelli delle colture e i lampioni). */
 export const VOCE_DECORI = Object.fromEntries(CATEGORIE_2D.filter(c => FAMIGLIE_DECORI.includes(c.chiave))
   .flatMap(c => c.voci.filter(v => !GIA_PEZZO.has(v.id)).map(v => [ID_3D_DEL_DECORO[v.id] || v.id, v.id])))

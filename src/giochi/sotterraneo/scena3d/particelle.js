@@ -10,13 +10,14 @@ import { ACCESI } from './costanti.js'
 // il rumore della nebbia con meno strati (la fascia bassa): riscalato perché arrivi agli stessi valori, così la nebbia non si dirada
 const rumoreNebbia = o => GLSL_RUMORE.replace('i<4', `i<${o}`).replace('return s; }', `return s * ${((1 - 0.5 ** 4) / (1 - 0.5 ** o)).toFixed(4)}; }`)
 
-export function creaNebbia(scena, W, H, fette, condivise, maschera, aspetto) {
+// `forza`: quanto pesa ogni fetta (una fetta sola al posto di due vale due: la fascia bassa, `nebbiaFitta`)
+export function creaNebbia(scena, W, H, fette, condivise, maschera, aspetto, forza = 1) {
   if (!fette) return { aggiorna() {}, aspetto() {}, via() {} }
   const strati = Array.from({ length: fette }, (_, i) => new PlaneGeometry(W, H).rotateX(-Math.PI / 2).translate(W / 2, 0.08 + (i + 0.5) / fette * 1.3, H / 2))
   const geo = mergeGeometries(strati)
   strati.forEach(g => g.dispose())
   const mat = new ShaderMaterial({
-    uniforms: { ...condivise, ...maschera.uniforms, uT: { value: 0 }, uDens: { value: aspetto.nebbia.densita }, uTinta: { value: new Vector3(...aspetto.nebbia.colore) } },
+    uniforms: { ...condivise, ...maschera.uniforms, uT: { value: 0 }, uDens: { value: aspetto.nebbia.densita * forza }, uTinta: { value: new Vector3(...aspetto.nebbia.colore) } },
     vertexShader: /* glsl */`varying vec3 vW; void main(){ vec4 w = modelMatrix*vec4(position,1.0); vW = w.xyz; gl_Position = projectionMatrix*viewMatrix*w; }`,
     fragmentShader: /* glsl */`
       uniform float uT; uniform float uDens; uniform vec3 uTinta; ${GLSL_MASCHERA} varying vec3 vW;
@@ -37,7 +38,7 @@ export function creaNebbia(scena, W, H, fette, condivise, maschera, aspetto) {
   scena.add(mesh)
   return {
     aggiorna(t) { mat.uniforms.uT.value = t },
-    aspetto(a) { mat.uniforms.uDens.value = a.nebbia.densita; mat.uniforms.uTinta.value.set(...a.nebbia.colore) },
+    aspetto(a) { mat.uniforms.uDens.value = a.nebbia.densita * forza; mat.uniforms.uTinta.value.set(...a.nebbia.colore) },
     via() { scena.remove(mesh); geo.dispose(); mat.dispose() },
   }
 }

@@ -14,11 +14,11 @@ vince il codice.
 | S1 | **Nessun salvataggio si perde.** Chi ha una fattoria 2D la ritrova (convertita) o la tiene finché non decide lui | 🟡 la conversione c'è (`statoDa2D`), manca l'aggancio nel caricamento ([migrazione.md](migrazione.md)) |
 | S2 | **Il posto dove si spendono le monete è uno solo.** Le due fattorie non convivono: ora la 3D spende monete vere accanto alla 2D ([../../fattoria/regole.md](../../fattoria/regole.md) «Il money pit è uno») | 🟡 convivono, la 3D è dietro «giochi in prova» |
 | S3 | **Lo stesso patto**: le monete vengono solo dagli esercizi, niente si vende, niente marcisce, nessun gioco paga una risposta sbagliata, un «no» dice cosa fare ([../../apprendimento/calibrazione.md](../../apprendimento/calibrazione.md)) | ✅ rispettato |
-| S4 | **Dura quanto la 2D**: la scaletta regge mesi, non giorni (70 livelli, ~202 ore di esercizio spese, uguali) | ✅ G3 (22/10/2026); restano 22 livelli senza novità ([livelli-ed-economia.md](livelli-ed-economia.md)) |
+| S4 | **Dura quanto la 2D**: la scaletta regge mesi, non giorni (70 livelli, ~202 ore di esercizio spese, uguali) | ✅ G3 (22/10/2026); restano 18 livelli senza novità ([livelli-ed-economia.md](livelli-ed-economia.md)) |
 | S5 | **Niente della 2D manca senza una decisione scritta** («tolto perché…»): ogni macchina, recinto, bestia, bottega, decoro | ❌ [colture-e-catena.md](colture-e-catena.md), [animali.md](animali.md), [commercio.md](commercio.md), [mondo-e-stagioni.md](mondo-e-stagioni.md) |
 | S6 | **Si capisce da soli, a 4–12 anni**: il `?`, il consiglio («cosa faccio adesso»), «Come si fa», il primo giro | 🟡 fatti `?`, primo giro e consiglio ([../guida.md](../guida.md)); fatto anche «Come si fa» (I3); manca la prova con un bambino |
 | S7 | **Gira sui telefoni di casa** e senza WebGL 2 non lascia un bambino senza fattoria | ❌ mai misurata su un telefono; senza WebGL 2 si torna in home ([tecnica-e-salvataggi.md](tecnica-e-salvataggi.md)) |
-| S8 | **I grandi la governano** come la 2D: «Ricomincia la fattoria», interruttori, quadro, traguardi, novità | ❌ [interfaccia-e-guida.md](interfaccia-e-guida.md) I17–I20 |
+| S8 | **I grandi la governano** come la 2D: «Ricomincia la fattoria», interruttori, quadro, traguardi, novità | 🟡 fatti I17–I19 e i traguardi; resta solo la riga per i bambini al giorno del cambio, da proporre ([interfaccia-e-guida.md](interfaccia-e-guida.md) I20) |
 | S9 | **È provata**: l'integrazione eseguita sulla build e guardata col dito su un telefono vero | ❌ molte prove «scritte ma non eseguite» ([../da-fare.md](../da-fare.md)) |
 
 ## I numeri a colpo d'occhio
@@ -26,14 +26,14 @@ vince il codice.
 | | 2D | 3D |
 |---|--:|--:|
 | voci nel catalogo (cosa si compra) | 253 | 174 (159 pezzi + 15 edifici) |
-| di cui decorazioni | 217 (verde, fiori, acqua, recinti, case, arredo, bestiole, feste, fiera, raccolto) | 140 (le 10 di prima + 130 del giro G8: verde, recinti e cartelli, raccolto, case e lampioni, bestiole) |
+| di cui decorazioni | 217 (verde, fiori, acqua, recinti, case, arredo, bestiole, feste, fiera, raccolto) | 217 (le 11 di prima + 130 del giro G8 + 76 del G9: fiori, arredo, acqua, albero di Natale, fiera) |
 | colture | 16 | 16 (gli stessi id, singolari) |
 | ricette | 57 | 46 (nessuna inventata) |
 | macchine | 14 | 14 |
 | recinti del cortile | 11 | 10 (pecore, galline, mucche, anatre, maiali, capre, conigli, alpaca, asini, arnie; la peschiera è la pesca) |
 | bestie di casa (si comprano, hanno bisogni) | 7 | 0 (4 compagni gratuiti che girano, non si curano) |
 | addobbi per le bestie | 12 (7 in vendita) | 0 (il guardaroba è del contadino) |
-| botteghe del paese | 4 | 0 |
+| botteghe del paese | 4 | 4 (G7: [../botteghe.md](../botteghe.md)) |
 | clienti del banco | 16 (per mestiere) | 10 (per tutti) |
 | silos | 3 (scomparti da 8, ingrandibili) | 3 magazzini (scomparti da 8, +2, prezzo 2D), senza pezzi da comprare |
 | livelli | 70 | 70 (gli stessi) |
@@ -75,4 +75,4 @@ da trascinare con scorrimento ai bordi. Vanno tenuti? Decisione D10 ([decisioni.
 3. **A1–A3** il cortile completo: 8 recinti, il pentolone, le bestie di casa con i loro bisogni.
 4. **T7, T8, T19** misurare la 3D su un telefono vero, decidere cosa fa senza WebGL 2, eseguire le prove d'integrazione.
 5. ~~**I1, I2, I4** la guida~~ fatta (G2); ~~I3~~ «Come si fa» fatto (G2b).
-6. **I17** «Ricomincia la fattoria» e il cestino per la 3D.
+6. ~~**I17** «Ricomincia la fattoria» e il cestino per la 3D~~ fatto.

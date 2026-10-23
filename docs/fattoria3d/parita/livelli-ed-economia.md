@@ -55,7 +55,7 @@ La 2D ha **un pozzo con molti rubinetti**; la 3D ne ha pochi, e tutti una tantum
 | L17 | gli ostacoli | sgomberare il bosco costa | ✅ albero 🪙3, sasso 🪙1 | – |
 | L18 | spostare / mettere via | 🪙1 | ✅ | – |
 | L19 | **bestie di casa**, cibo, coccole | 7 bestie 🪙75–120, cibo 5–14, coccole 1 | ❌ | P1 (A4–A8) |
-| L20 | **decorazioni** | 217 voci da 🪙3 a 🪙95 | 🟡 140 voci (G8: verde, recinti, raccolto, case, bestiole, stessi prezzo e livello via `VOCE`; non spostano la scala); mancano fiori, arredo, acqua extra, feste e fiera ([../decorazioni.md](../decorazioni.md)) | P1 ([mondo-e-stagioni.md](mondo-e-stagioni.md)) |
+| L20 | **decorazioni** | 217 voci da 🪙3 a 🪙95 | ✅ tutte e 217 (11 dei primi giri + 130 del G8 + 76 del G9: fiori, arredo, acqua, albero di Natale e fiera), stessi prezzo e livello via `VOCE`; non spostano la scala; **i livelli senza niente di nuovo sono 0** (erano 18; 22 sulla lettura del giro G8) ([../decorazioni.md](../decorazioni.md)) | – |
 | L21 | addobbi | 🪙6–24 | ❌ | P2 |
 
 Il rischio per il metro: se un bambino spende le monete in pochi giorni e poi non c'è altro, la 3D smette di essere «il posto dove

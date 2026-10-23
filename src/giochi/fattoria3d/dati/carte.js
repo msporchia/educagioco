@@ -13,6 +13,7 @@ export const DISEGNI = {
   spaventapasseri: 'spaventapasseri', ponte: 'ponte', tavolo: 'tavolo',
   pasticceria: 'pastificio', mongolfiera: 'mongolfiera', mulino: 'mulino_vento', panificio: 'panificio', caseificio: 'caseificio', conserviera: 'cucina', gelateria: 'gelateria',
   telaio: 'telaio', zuccherificio: 'zuccherificio', sartoria: 'sartoria', tintoria: 'tintoria', friggitoria: 'friggitoria', sushi_bar: 'sushi_bar', fienile: 'fienile0',
+  bottega_pasticceria: 'pasticceria', bottega_osteria: 'rosticceria', bottega_mensa: 'mensa', bottega_merceria: 'merceria',
   pentolone: 'pentolone', anatre: 'recinto_anatre_calmo', porcile: 'recinto_maiali_calmo', capre: 'recinto_capre_calmo',
   conigliera: 'recinto_conigli_calmo', alpaca: 'recinto_alpaca_calmo', asini: 'recinto_asini_calmo', arnie: 'recinto_api_calmo',
 }
@@ -35,6 +36,7 @@ export function carteDi(categoria, stato) {
   for (const [id, p] of Object.entries(PEZZI)) {
     if (p.categoria !== categoria) continue
     const mag = stato.nelMagazzino(id), liv = livelloDelPezzo(id)
+    if (p.fiera && !mag) continue                                              // la fiera non si compra: si vince dalla mongolfiera, e la carta c'è solo se ce l'hai
     if (p.stagione && p.stagione !== stato.stagione && !mag) continue          // una festa: si offre solo in stagione (ciò che è nel magazzino si rimette sempre)
     carte.push({ id, genere: 'pezzo', nome: p.nome, emoji: p.emoji, disegno: DISEGNI[id] || null,
       etichetta: mag ? '📦 ×' + mag : '🪙 ' + stato.prezzoPezzo(id), liv, bloccata: liv > stato.livello, segnala: false })

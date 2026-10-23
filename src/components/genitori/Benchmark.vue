@@ -9,12 +9,13 @@ import { componi } from '../../grafica/benchmark/log.js'
 import { componiVeri, conNote, spezza } from '../../grafica/benchmark/log-veri.js'
 import { ultimeMisure, salvaMisura } from '../../store/benchmark.js'
 import { fasciaAttiva } from '../../store/qualita.js'
+import { sondaRicevitore, mandaAlRicevitore } from '../../grafica/benchmark/invio-diretto.js'
 
 const props = defineProps({ modulo: { type: String, required: true } })
 const emit = defineEmits(['chiudi'])
 
 const stato = ref('pronto')            // pronto | corre | fatto | guasto
-const modo = ref('sintetico')          // sintetico | veri
+const modo = ref('sintetico')          // sintetico | veri | elementi (chi pesa, un elemento alla volta)
 const avanza = ref({ i: 0, n: 1, nome: '' })
 const log = ref('')
 const note = ref('')
@@ -38,9 +39,11 @@ async function avvia(che = modo.value) {
   modo.value = che; stato.value = 'corre'; fermare = false; esito.value = ''; note.value = ''
   const progresso = (i, n, nome) => { avanza.value = { i, n, nome } }
   try {
-    if (che === 'veri') {
+    if (che === 'veri' || che === 'elementi') {
       const { eseguiVeri } = await import('../../grafica/benchmark/veri.js')
-      const dati = await eseguiVeri({ contenitore: palco.value, corto: !!window.__benchmarkCorto, solo: window.__benchmarkSolo || null, fascia: fasciaAttiva(),
+      // chi pesa: le scene degli elementi (docs/core/vecchio-telefono-elementi.md), una prova a parte
+      const solo = window.__benchmarkSolo || (che === 'elementi' ? ['elementi'] : null)
+      const dati = await eseguiVeri({ contenitore: palco.value, corto: !!window.__benchmarkCorto, solo, fascia: fasciaAttiva(),
         ...(window.__benchmarkRaffredda != null ? { raffredda: window.__benchmarkRaffredda } : {}),
         progresso, fermo: () => fermare })
       window.__benchmarkVeri = dati
@@ -52,12 +55,13 @@ async function avvia(che = modo.value) {
       log.value = componi(dati, await meta())
     }
     stato.value = 'fatto'
+    mandaAuto()
     salvaMisura(che, log.value).then(async () => { ultime.value = await ultimeMisure() }).catch(() => {})
   } catch (e) {
     log.value = ''; esito.value = 'Non è partita: ' + (e && e.message || e); stato.value = 'guasto'
   }
 }
-function rivedi(che) { modo.value = che; log.value = ultime.value[che].log; note.value = ''; esito.value = ''; stato.value = 'fatto' }
+function rivedi(che) { modo.value = che; log.value = ultime.value[che].log; note.value = ''; esito.value = ''; stato.value = 'fatto'; sonda() }
 function interrompi() { fermare = true }
 function chiudi() { fermare = true; emit('chiudi') }
 onBeforeUnmount(() => { fermare = true })
@@ -67,6 +71,18 @@ const finale = computed(() => conNote(log.value, note.value))
 const parti = computed(() => spezza(finale.value))
 const link = testo => `${props.modulo}?${new URLSearchParams({ versione: versione(), giudizi: testo })}`
 const quando = q => new Date(q).toLocaleString('it-IT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
+// il computer di sviluppo in LAN (`node strumenti/ricevi-log.mjs`, docs/core/vecchio-telefono-veri.md): se la pagina è servita da lui il resoconto
+// parte da solo a fine prova e c'è «Manda al computer» per rimandarlo con le note; altrimenti niente di tutto questo
+const alComputer = ref(false)
+async function sonda() { alComputer.value = await sondaRicevitore() }
+async function mandaAlComputer() {
+  const r = await mandaAlRicevitore({ testo: finale.value, quando: Date.now() })
+  esito.value = r.ok ? `Mandato al computer (${r.file}).` : `Non è arrivato al computer: ${r.errore}.`
+}
+async function mandaAuto() {
+  await sonda()
+  if (alComputer.value) await mandaAlComputer()
+}
 async function copia() {
   try { await navigator.clipboard.writeText(finale.value); esito.value = 'Copiato negli appunti.' } catch (e) { esito.value = 'Non si riesce a copiare: tieni premuto sul testo.' }
 }
@@ -75,7 +91,7 @@ async function copia() {
 <template>
   <div class="bench" data-benchmark>
     <canvas ref="tela" class="tela" :class="{ vista: stato === 'corre' && modo === 'sintetico' }"></canvas>
-    <div ref="palco" class="palco" :class="{ vista: stato === 'corre' && modo === 'veri' }" data-benchmark-palco></div>
+    <div ref="palco" class="palco" :class="{ vista: stato === 'corre' && modo !== 'sintetico' }" data-benchmark-palco></div>
     <button class="chiudi" type="button" aria-label="chiudi" data-azione="benchmark-chiudi" @click="chiudi">✕</button>
     <div v-if="stato === 'pronto'" class="carta">
       <h2>Misura questo telefono</h2>
@@ -84,15 +100,21 @@ async function copia() {
       <p>Tieni lo schermo acceso e non toccare niente.</p>
       <button type="button" class="bottone" data-azione="benchmark-avvia" @click="avvia('sintetico')">Avvia la misura</button>
       <h3>Con i modelli veri del gioco</h3>
-      <p>Qualche minuto (cinque al più) con le scene vere: lo scontro del Sotterraneo con sempre più mostri, il mondo di sopra con
+      <p>Un quarto d'ora circa con le scene vere (con pause a schermo nero perché il telefono non si scaldi): lo scontro del Sotterraneo con sempre più mostri, il mondo di sopra con
         sempre più persone, lo zaino, la roba, la fattoria; e la stessa scena con più triangoli, più chiamate, più luci e più pixel,
-        per sapere cosa la rallenta.</p>
+        e la stessa scena con una cosa tolta alla volta, per sapere cosa la rallenta.</p>
       <p><b>Guarda lo schermo</b>: se un colore, una luce o la nebbia ti sembrano strani, alla fine scrivilo nelle note.
         Tieni il telefono acceso e in carica se puoi: lo schermo non deve spegnersi.</p>
       <button type="button" class="bottone" data-azione="benchmark-veri" @click="avvia('veri')">Avvia coi modelli veri</button>
-      <p v-if="ultime.sintetico || ultime.veri" class="riga">
+      <h3>Chi pesa</h3>
+      <p>Una ventina di minuti: lo scontro del Sotterraneo, il villaggio di sopra, la fattoria 3D e gli Asteroidi con tutto spento, poi una cosa accesa alla volta
+        (pavimento, muri, luci, nebbia, mostri…) e una tolta alla volta, e la scena com'è contro la scena semplificata. Alla fine una
+        tabella dice chi pesa di più e come si semplifica.</p>
+      <button type="button" class="bottone" data-azione="benchmark-elementi" @click="avvia('elementi')">Chi pesa</button>
+      <p v-if="ultime.sintetico || ultime.veri || ultime.elementi" class="riga">
         <button v-if="ultime.sintetico" type="button" class="bottone chiaro" data-azione="benchmark-ultima" data-tipo="sintetico" @click="rivedi('sintetico')">L'ultima a scene ({{ quando(ultime.sintetico.quando) }})</button>
         <button v-if="ultime.veri" type="button" class="bottone chiaro" data-azione="benchmark-ultima" data-tipo="veri" @click="rivedi('veri')">L'ultima coi modelli veri ({{ quando(ultime.veri.quando) }})</button>
+        <button v-if="ultime.elementi" type="button" class="bottone chiaro" data-azione="benchmark-ultima" data-tipo="elementi" @click="rivedi('elementi')">L'ultima «chi pesa» ({{ quando(ultime.elementi.quando) }})</button>
       </p>
     </div>
     <div v-else-if="stato === 'corre'" class="carta piccola" data-benchmark-corre>
@@ -106,12 +128,13 @@ async function copia() {
       <h2>{{ stato === 'fatto' ? 'Misura finita' : 'Qualcosa non va' }}</h2>
       <template v-if="stato === 'fatto'">
         <textarea readonly class="testo" data-benchmark-log :value="log" rows="14"></textarea>
-        <label v-if="modo === 'veri'" class="note">Note (facoltative): luci, colori, nebbia strani? cosa hai visto?
+        <label v-if="modo !== 'sintetico'" class="note">Note (facoltative): luci, colori, nebbia strani? cosa hai visto?
           <textarea v-model="note" class="testo" rows="3" data-benchmark-note></textarea>
         </label>
         <div class="riga">
           <a v-for="(p, k) in parti" :key="k" class="bottone" data-azione="benchmark-manda" :data-parte="k + 1"
              :href="link(p)" target="_blank" rel="noopener">{{ parti.length > 1 ? `Manda ${k + 1}/${parti.length}` : 'Manda' }}</a>
+          <button v-if="alComputer" type="button" class="bottone" data-azione="benchmark-al-computer" @click="mandaAlComputer">Manda al computer</button>
           <button type="button" class="bottone" data-azione="benchmark-copia" @click="copia">Copia</button>
           <button type="button" class="bottone" data-azione="benchmark-ripeti" @click="avvia()">Rifai</button>
         </div>

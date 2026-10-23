@@ -173,7 +173,7 @@ function gruppo (f, col, tipo, lista) { for (const p of lista) f.metti(p.geo, co
 
 // il campo con sfumatura verticale (colore alto → colore basso)
 function campoMesh (f, pts, prof, c1, c2) {
-  const g = poli(pts, prof, 0.004).toNonIndexed()
+  const p = poli(pts, prof, 0.004), g = p.index ? p.toNonIndexed() : p   // poli può tornarla già senza indici
   g.deleteAttribute('uv')
   g.computeVertexNormals()
   const pos = g.attributes.position, a = new Float32Array(pos.count * 3), A = new THREE.Color(c1), B = new THREE.Color(c2 ?? c1)

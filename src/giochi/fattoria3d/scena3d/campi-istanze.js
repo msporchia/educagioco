@@ -4,6 +4,7 @@
 // ha posato di nuovo (`segna()`), è apparso, sparito o si è nascosto. Una mesh che non basta si rifà più grande (capienza ×1,5).
 // Come si agganciano le cose nuove: docs/fattoria3d/scena.md, «Come si aggiunge un pezzo istanziato».
 import * as THREE from 'three'
+import { segna } from '../../../grafica/elementi3d.js'
 import { formaDi } from './modelli-colture.js'
 import { MARGINE_VISTA } from './statici-istanze.js'
 
@@ -80,7 +81,7 @@ export class BancoCampi {
     if (vecchia) { this.scena.remove(vecchia); vecchia.dispose() }
     const { geo, materiale } = formaDi(nome)
     const m = new THREE.InstancedMesh(geo, materiale, capienza)
-    m.frustumCulled = false; m.setColorAt(0, new THREE.Color(0xffffff)); m.count = 0; m.visible = false; m.name = `campi:${nome}`
+    m.frustumCulled = false; m.setColorAt(0, new THREE.Color(0xffffff)); m.count = 0; m.visible = false; m.name = `campi:${nome}`; segna(m, 'campi')
     m.castShadow = !!this.ombra[nome]; m.receiveShadow = false
     this.scena.add(m); this.mesh[nome] = m
     return m

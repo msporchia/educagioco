@@ -23,14 +23,14 @@ Regola comune, rispettata da entrambe: **si paga esperienza, mai monete**; un pr
 
 | id | cosa | 2D | 3D | pri |
 |---|---|---|---|---|
-| M10 | pasticceria | 🪙180, livello 21; clienti pasticcera, maestra | ❌ | P1 |
-| M11 | osteria | 🪙220, livello 29; oste, cuoco, pizzaiolo, cuoco del sushi | ❌ | P1 |
-| M12 | mensa | 🪙200, livello 36; maestra, bidello | ❌ | P1 |
-| M13 | merceria | 🪙240, livello 43; sarta, lavandaia | ❌ | P1 |
-| M14 | regole | un cliente per bancone, 1 merce, 2–4 pezzi, prossimo cliente fra 10–20 minuti, +25% del banco, fama a cuori (5 cuori = un bancone in più, fino a 3) | ❌ | P1 |
+| M10 | pasticceria | 🪙180, livello 21; clienti pasticcera, maestra | ✅ `bottega_pasticceria`, stessi numeri ([../botteghe.md](../botteghe.md)) | – |
+| M11 | osteria | 🪙220, livello 29; oste, cuoco, pizzaiolo, cuoco del sushi | ✅ `bottega_osteria` | – |
+| M12 | mensa | 🪙200, livello 36; maestra, bidello | ✅ `bottega_mensa` | – |
+| M13 | merceria | 🪙240, livello 43; sarta, lavandaia | ✅ `bottega_merceria` | – |
+| M14 | regole | un cliente per bancone, 1 merce, 2–4 pezzi, prossimo cliente fra 10–20 minuti, +25% del banco, fama a cuori (5 cuori = un bancone in più, fino a 3) | ✅ uguali, letti dalla 2D (`dati/botteghe.js`); la merenda e le caramelle non esistono in 3D e cadono dagli elenchi | – |
 
 Perché servono: sono il «chi chiede» per le merci profonde (biscotti, lasagne, maglioni) e la progressione per posto che il banco
-non ha. Il nome `pasticceria` è già l'id del Pastificio 3D: la bottega prende un id nuovo (`bottega_pasticceria`).
+non ha. Il nome `pasticceria` è già l'id del Pastificio 3D: la bottega ha l'id `bottega_pasticceria` (e tutte e quattro il prefisso `bottega_`).
 
 ## La mongolfiera
 
@@ -38,10 +38,10 @@ non ha. Il nome `pasticceria` è già l'id del Pastificio 3D: la bottega prende 
 |---|---|---|---|---|
 | M15 | quando | 🪙250, livello 26 | 🟡 🪙100, livello 10 | – |
 | M16 | carico | 3 file, 2–3 casse, 1–3 pezzi; solo prodotti con ≥2 fasi, mai mangime | ✅ uguale (1–2 pezzi sotto il livello 14) | – |
-| M17 | quarta fila | dal livello 66 (`LIVELLO_GRANDE`) | ❌ (non esistono livelli così alti) | P2, segue L1 |
+| M17 | quarta fila | dal livello 66 (`LIVELLO_GRANDE`) | ✅ `fileAl(livello)` legge `LIVELLO_GRANDE` dalla 2D (la scala ora è la stessa: 70 livelli) | – |
 | M18 | bonus | fila piena +25%, tutto pieno +50%, sorpresa della fiera | ✅ uguali | – |
 | M19 | riposo del cielo | 60 minuti | 🟡 2 minuti | P1 (D9) |
-| M20 | la sorpresa | una delle 8 voci `fiera` (bandierine, giostra, zucchero filato, lanterne, barattoli, girasole, spaventapasseri, palco) | 🟡 una decorazione qualunque del catalogo | P2 con W6 |
+| M20 | la sorpresa | una delle 8 voci `fiera` (bandierine, giostra, zucchero filato, lanterne, barattoli, girasole, spaventapasseri, palco) | ✅ le stesse otto, nella scheda «Feste» del menu solo se le hai (`fiera: true`, non si comprano); la sorpresa regala solo quelle, preferendo le meno avute ([../decorazioni.md](../decorazioni.md)) | – |
 | M21 | foglio | stiva di cassette | 🟡 foglio a casse, non visto su schermo | P1 |
 
 ## Carretto, vicini, vendere

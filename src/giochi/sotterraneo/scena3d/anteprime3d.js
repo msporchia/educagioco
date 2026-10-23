@@ -14,8 +14,10 @@ import { copri } from './eroi3d/copricapi.js'
 import { aggiungiAlone } from './roba3d/aloni.js'
 import { idDi, costruisci } from './mostri3d/registro.js'
 import { creaPersona } from './persone3d/persone.js'
+import { elencaProgrammi } from './programmi.js'
 
 const FOV = 24
+const ATTESA_PROGRAMMA = 60   // ms lasciati alla compilazione di un programma nuovo, senza KHR_parallel_shader_compile (l'Adreno 512: 50-300)
 const _b = new THREE.Box3()
 
 /** La scatola delle sole mesh visibili (Box3.setFromObject conta anche quello che è spento). */
@@ -147,7 +149,7 @@ function inPosa(c) {
  */
 export function creaAnteprime3d({ ozio = 30000, budget = 16, perdite = 3 } = {}) {
   let renderer = null, scena = null, camera = null, rotto = false, timer = 0
-  const misure = { prima: 0, codaVuota: 0, ultima: 0, disegnate: 0, ms: 0, renderer: 0, perdite: 0, msModelli: 0, msDisegno: 0, msCopia: 0 }
+  const misure = { prima: 0, codaVuota: 0, ultima: 0, disegnate: 0, ms: 0, renderer: 0, perdite: 0, msModelli: 0, msDisegno: 0, msCopia: 0, programmi: 0, msCompila: 0, fettaMax: 0 }
 
   function apri() {
     if (renderer || rotto) return renderer
@@ -188,9 +190,16 @@ export function creaAnteprime3d({ ozio = 30000, budget = 16, perdite = 3 } = {})
     try { r.dispose(); r.forceContextLoss() } catch (e) { /* già andato */ }
   }
 
-  function disegna(chiave) {
+  // L'anteprima a fette (docs/sotterraneo/anteprime-3d.md, «Quanto costa»), ognuna in un compito suo: il renderer se non c'è; il modello
+  // in posa e gli shader che mancano (`compile`: il telefono li compila mentre il filo fa altro); il disegno e la copia, che arriva
+  // da sé (`createImageBitmap`: niente attesa della GPU sul filo); la tela 2D dalla copia. Senza `createImageBitmap` si copia subito.
+  const dopo = (ms = 0) => new Promise(r => setTimeout(r, ms))
+  const fetta = ms => { misure.fettaMax = Math.max(misure.fettaMax, ms) }   // il pezzo più lungo sul filo, per le misure
+  async function disegna(chiave) {
     const c = leggiChiave(chiave)
-    if (!c || !apri()) return null
+    if (!c || rotto) return null
+    if (!renderer) { const ta = performance.now(); if (!apri()) return null; fetta(performance.now() - ta); await dopo() }
+    if (!renderer) return RIPROVA
     const t0 = performance.now()
     const p = inPosa(c)
     if (!p) return null
@@ -206,21 +215,59 @@ export function creaAnteprime3d({ ozio = 30000, budget = 16, perdite = 3 } = {})
       camera.aspect = w / h
       camera.position.set(...q.posizione); camera.near = Math.max(0.005, q.distanza / 50); camera.far = q.distanza * 4
       camera.lookAt(...q.bersaglio); camera.updateProjectionMatrix()
+      // gli shader nuovi si chiedono adesso e si usano al compito dopo: il primo uso aspetterebbe la compilazione sul filo
+      const prima = renderer.info.programs.length
+      renderer.compile(scena, camera)
+      const nuovi = renderer.info.programs.length - prima
+      misure.programmi += nuovi
+      const tc = performance.now()
+      fetta(tc - t0)
+      if (nuovi) await pronti(nuovi)
+      misure.msCompila += performance.now() - tc
+      if (!renderer || renderer.getContext().isContextLost()) return RIPROVA
+      const t2 = performance.now()
       renderer.setSize(w, h, false)
       renderer.clear()
       renderer.render(scena, camera)
       if (renderer.getContext().isContextLost()) return RIPROVA   // perso a metà: niente riquadro vuoto in cache
-      const t2 = performance.now()
+      const t3 = performance.now()
+      fetta(t3 - t2)
       // l'immagine è una tela 2D piccola, copiata dal renderer: niente PNG (toDataURL costava tre quarti del tempo sul filo
       // principale, e toBlob arrivava un secondo dopo); la vista la copia nella sua tela (viste/Quadro3d.vue)
       const cv = document.createElement('canvas'); cv.width = w; cv.height = h
-      cv.getContext('2d').drawImage(renderer.domElement, 0, 0)
-      const t3 = performance.now()
-      misure.disegnate++; misure.ms += t3 - t0; misure.msModelli += t1 - t0; misure.msDisegno += t2 - t1; misure.msCopia += t3 - t2
+      let msCopia = 0
+      if (typeof createImageBitmap === 'function') {
+        let bmp = null
+        try { bmp = await createImageBitmap(renderer.domElement) } catch (e) { return RIPROVA }   // la fotografia si prende adesso, la copia arriva dopo
+        const t4 = performance.now()
+        cv.getContext('2d').drawImage(bmp, 0, 0); bmp.close()
+        msCopia = performance.now() - t4
+        fetta(msCopia)
+      } else {
+        cv.getContext('2d').drawImage(renderer.domElement, 0, 0)
+        msCopia = performance.now() - t3
+        fetta(t3 - t2 + msCopia)
+      }
+      misure.disegnate++; misure.msModelli += t1 - t0; misure.msDisegno += t3 - t2; misure.msCopia += msCopia
+      misure.ms += (t1 - t0) + (t3 - t2) + msCopia
       return cv
     } finally {
       scena.remove(p.obj)
     }
+  }
+  // finché gli shader appena chiesti non sono pronti: con KHR_parallel_shader_compile lo si chiede senza aspettare; senza, si lascia
+  // al telefono un tempo per programma (il primo uso aspetterebbe il resto sul filo, ma il fotogramma intanto è passato)
+  function pronti(nuovi) {
+    const gl = renderer.getContext()
+    if (!renderer.extensions.has('KHR_parallel_shader_compile')) return dopo(Math.min(400, nuovi * ATTESA_PROGRAMMA))
+    const fino = performance.now() + 2000
+    return new Promise(r => {
+      const guarda = () => {
+        if (!renderer || gl.isContextLost() || performance.now() > fino || renderer.info.programs.every(x => x.isReady())) return r()
+        setTimeout(guarda, 16)
+      }
+      guarda()
+    })
   }
 
   const coda = creaCoda(disegna, {
@@ -243,6 +290,8 @@ export function creaAnteprime3d({ ozio = 30000, budget = 16, perdite = 3 } = {})
     pronta: coda.pronta,
     /** Per le prove: `prima` e `ultima` (performance.now() della prima richiesta e dell'ultima pronta), quante disegnate, i ms in tutto, quante volte s'è aperto il renderer, quanti contesti persi dal browser, se è aperto, quante in coda. */
     stato: () => ({ ...misure, aperto: !!renderer, inCoda: coda.inCoda, rotto }),
+    /** Per le misure: i programmi di shader del renderer aperto (scena3d/programmi.js), o null se è chiuso. */
+    programmi: () => (renderer ? elencaProgrammi(renderer, [scena]) : null),
     via() { clearTimeout(timer); coda.via(); chiudi() },
   }
 }

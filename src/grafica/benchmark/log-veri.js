@@ -3,6 +3,8 @@
 // pavimento, i colli, cosa togliere, il calore, la GPU) con i ms corretti dal calore, e la riga DATI per lo strumento. Le soglie sono
 // del fotogramma INTERO di un gioco (lavoro al p95): liscio sotto 20 ms, a scatti sopra 33 (30 fps), molto sopra 66 (15 fps).
 import { CPU, data, modello } from './log.js'
+import { rigaIngresso, letturaIngresso } from './log-ingresso.js'
+import { tabellaElementi, letturaElementi } from './log-elementi.js'
 
 export const SOGLIE_VERI = { liscio: 20, scatti: 33, molto: 66 }
 export const LIMITE_CAMPO = 3400   // i caratteri di un invio del modulo dei giudizi (il campo regge ~3,5k)
@@ -41,6 +43,7 @@ export function limite(ris, serie) {
 
 function rigaVera(r) {
   if (r.errore) return `XX ${r.nome}: non regge (${r.errore})`
+  if (r.tipo === 'ingresso') return rigaIngresso(r)
   if (r.salta) return `-- ${r.nome}: saltata (la prima di questa serie era oltre 400 ms)`
   if (r.tot != null) return `${segnoVero(r.max)}${r.nome}: ${r.tot} ms in tutto, attesa ${r.attesa}, lavoro ${r.lavoro}, fotogramma max ${r.max}${r.fatte < r.n ? `, ${r.n - r.fatte} vuote` : ''}`
   const c = corretta(r)
@@ -55,7 +58,7 @@ export function letturaVeri(dati) {
   const m = id => { const r = ris.find(x => x.id === id); return misurata(r) ? r : null }
   const d = (a, b) => t1d(a.ms - b.ms)
   const derive = crudi.some(r => r.deriva) ? crudi.filter(misurata).map(r => r.deriva ?? 1) : []
-  if (derive.length) righe.push(`Calore: il riferimento di ogni gruppo da x${Math.min(...derive)} a x${Math.max(...derive)} del primo` +
+  if (derive.length) righe.push(`Calore: il riferimento di ogni gruppo da x${Math.min(...derive)} a x${Math.max(...derive)} del più fresco` +
     (Math.max(...derive) > 1.15 ? `; la lettura usa i ms divisi per quella deriva (le righe: ≈).` : ': stabile.'))
   if (dati.js != null) righe.push(`CPU: ${dati.js} ms (computer 110-160): ${dati.js <= CPU.veloce ? 'veloce' : dati.js <= CPU.lenta ? 'media' : 'lenta, il JS dei giochi pesa'}.`)
   const a = (dati.ambiente || {}).prima || {}, z = (dati.ambiente || {}).dopo || {}
@@ -73,6 +76,8 @@ export function letturaVeri(dati) {
       : (l.regge ? `${u(l.regge.quanti)} sotto 33 ms (p95 ${l.regge.p95}); oltre da ${l.oltre.quanti} (${di(l.oltre)})` : `già ${u(l.oltre.quanti)} oltre 33 ms (${di(l.oltre)})`) +
         (l.molto ? `, oltre 66 da ${l.molto.quanti} (${di(l.molto)})` : ', mai oltre 66')) + pend + '.')
   }
+  righe.push(...letturaIngresso(crudi))
+  righe.push(...letturaElementi(ris))
   // la scomposizione: la scena intera e una cosa tolta alla volta; ordinate per quanto si guadagna
   const ab = m('ab-base')
   if (ab) {
@@ -123,7 +128,7 @@ export function letturaVeri(dati) {
       : `COLLO DI BOTTIGLIA: nessuno fra quelli provati (a raddoppiarli: ${chi} ${segnato(quanto)}, ${altri} ms): il tempo sta altrove.`)
   }
   // la CPU o la GPU: di tutte le scene misurate, quanto del lavoro è attesa della scheda
-  const conGpu = ris.filter(r => misurata(r) && r.gpu != null && r.js != null)
+  const conGpu = ris.filter(r => misurata(r) && !r.el && r.gpu != null && r.js != null)
   if (conGpu.length) {
     const g = conGpu.reduce((n, r) => n + r.gpu, 0), j = conGpu.reduce((n, r) => n + r.js, 0)
     const quota = Math.round(100 * g / Math.max(0.1, g + j))
@@ -151,7 +156,7 @@ export function letturaVeri(dati) {
   const parallelo = !((dati.info || {}).mancanti || []).includes('KHR_parallel_shader_compile')
   if (primi.length || sh) righe.push(`Prima apparizione: ${primi.map(r => `${r.nome} ${Math.round(r.primo)} ms`).join(', ') || 'nessuna sopra 100 ms'}; ${sh} shader nuovi, ` +
     `fino a ${prog} programmi in un gruppo` + (parallelo ? '.' : '; senza KHR_parallel_shader_compile si compilano bloccando: vanno precompilati (renderer.compileAsync) a una schermata di caricamento.'))
-  const pesante = ris.filter(r => misurata(r) && r.p95 != null).sort((x, y) => y.p95 - x.p95)[0]
+  const pesante = ris.filter(r => misurata(r) && !r.el && r.p95 != null).sort((x, y) => y.p95 - x.p95)[0]
   if (pesante) righe.push(`Chi pesa di più: ${pesante.nome} (p95 ${pesante.p95} ms, ${pesante.ch} chiamate, ${kt(pesante.tri)}k triangoli).`)
   const i = dati.info || {}, p = i.precisione
   if (p) righe.push(`GPU: highp nei frammenti ${p.fsAlta ? 'si' : 'NO'}, mediump a ${p.fsMedia} bit` +
@@ -179,7 +184,8 @@ export function componiVeri(dati, { versione = '', ua = '', nome = '', cpu = nul
   ]
   const corpo = []
   let gr = '', vista = new Set()
-  for (const r of dati.risultati || []) {
+  // chi pesa (docs/core/vecchio-telefono-elementi.md): niente righe per scena, la sua tabella in fondo
+  for (const r of (dati.risultati || []).filter(x => !x.el)) {
     if (r.gruppo !== gr) {
       gr = r.gruppo
       const g = (dati.gruppi || {})[gr] || {}, l = g.luci, rr = (dati.risultati || []).filter(x => x.gruppo === gr)
@@ -191,13 +197,16 @@ export function componiVeri(dati, { versione = '', ua = '', nome = '', cpu = nul
     }
     corpo.push(rigaVera(r))
   }
+  const crudi = dati.risultati || [], el = tabellaElementi(crudi.map(corretta), crudi)
+  if (el.length) corpo.push(...(corpo.length ? [''] : []), 'CHI PESA (elemento: da solo / tolto dalla scena intera, ms tolto il calore)', ...el)
   const avvisi = (dati.avvisi || []).slice(0, 6).map(x => `- ${x.n}x ${x.m}`)
   const dd = { v: 2, k: 'veri', i: { g: i.gpu, v: i.fornitore, t: i.maxTex, u: [i.uniVert, i.uniFrag], p: [p.vsAlta, p.fsAlta, p.fsMedia], m: i.mancanti || [] },
     s: dati.schermo, d: dati.dpr, f: dati.fascia, js: dati.js, b: a.batteria ? [a.batteria.livello, a.batteria.carica ? 1 : 0, z.batteria ? z.batteria.livello : null] : null,
     c: Object.fromEntries(Object.entries(dati.gruppi || {}).map(([k, g]) => [k, (g.carica || []).reduce((x, y) => x + y, 0)])),
     x: { p: (dati.contesto || {}).persi || 0, r: (dati.contesto || {}).ripresi || 0, a: (dati.avvisi || []).length },
     // [id, ms, p95, fps, chiamate, ktriangoli, primo, shader nuovi, js, gpu, deriva]: le prime otto come prima (lo strumento legge la seconda)
-    r: (dati.risultati || []).map(r => r.errore ? [r.id, 'err'] : r.salta ? [r.id, 'salta'] : r.tot != null ? [r.id, r.tot, r.max, r.lavoro, r.attesa]
+    r: (dati.risultati || []).map(r => r.errore ? [r.id, 'err'] : r.salta ? [r.id, 'salta'] : r.tipo === 'ingresso' ? [r.id, 'ing', r.max, r.lenti, r.att, r.sh, r.p1, r.p3]
+      : r.tot != null ? [r.id, r.tot, r.max, r.lavoro, r.attesa]
       : [r.id, r.ms, r.p95, r.fps, r.ch, kt(r.tri), Math.round(r.primo || 0), r.nuovi || 0, r.js ?? null, r.gpu ?? null, r.deriva ?? 1]) }
   return [...testa, '', ...corpo, ...(avvisi.length ? ['', 'AVVISI', ...avvisi] : []), '', `CPU prova JS: ${dati.js ?? '?'} ms`, '',
     'LETTURA', ...letturaVeri(dati).map(r => '- ' + r), '', `DATI ${JSON.stringify(dd)}`].join('\n')

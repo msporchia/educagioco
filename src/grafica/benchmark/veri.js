@@ -4,6 +4,7 @@
 // (shader, geometrie, riserve: il primo fotogramma si tiene a parte) e poi la misura, finché i fotogrammi lenti non si fermano.
 import { proveCpu } from './prove.js'
 import { eventiContesto } from './veri/tela.js'
+import { tappeDegliElementi } from './veri/elementi-dati.js'
 
 export const SOGLIA = 33          // ms di lavoro al p95: oltre, a scatti (30 fps)
 export const SALTA_OLTRE = 400    // una scena oltre questo al p95: il resto della sua serie che cresce non si misura (il telefono si pianterebbe)
@@ -15,6 +16,8 @@ const TEMPI = {
   corto: { rodaggio: [120, 300], misura: [250, 500], finestra: 120, quadri: 0, fine: 3000 },        // le prove (`window.__benchmarkCorto`)
   // il riferimento del calore all'inizio di ogni gruppo, dopo la pausa che fa raffreddare
   rif: { rodaggio: [1000, 2500], misura: [2000, 3000], finestra: 1000, quadri: 10, fine: 8000 },
+  // chi pesa, un elemento alla volta (docs/core/vecchio-telefono-elementi.md): tante scene corte
+  elementi: { rodaggio: [1500, 3500], misura: [3000, 4500], finestra: 1000, quadri: 12, fine: 12000 },
 }
 const RAFFREDDA = 8000   // ms a schermo nero fra un gruppo e l'altro
 
@@ -24,6 +27,17 @@ const tre = n => ({ mostri: 3, ...n })
 const uno = n => ({ mostri: 1, colpi: true, ...n })   // la scomposizione: un mostro con gli effetti, una cosa tolta alla volta
 /** Le scene, in ordine. `serie` e `quanti` dicono dove cercare il limite; `gruppo` è la sezione del log. */
 export const TAPPE = [
+  // l'ingresso da freddo, per primo (il browser tiene da parte gli shader già visti: dopo sarebbe più caldo del vero), ogni scena tre
+  // volte da capo; le stesse a riscaldamento spento dopo, perché il confronto non lo favorisca
+  { gruppo: 'ingresso', carica: () => import('./veri/ingresso.js'), scene: [
+    { id: 'ing-sot', nome: 'entrare in un piano, poi 3 attacchi', ingresso: 'discesa' },
+    { id: 'ing-presto', nome: 'attacco a 0,5 s dall\'ingresso', ingresso: 'discesa', presto: true },
+    { id: 'ing-zaino', nome: 'entrare e aprire lo zaino', ingresso: 'discesa', zaino: true },
+    { id: 'ing-mondo', nome: 'entrare nel mondo di sopra', ingresso: 'mondo' },
+    { id: 'ing-sot-x', nome: 'entrare, 3 attacchi, senza riscaldamento', ingresso: 'discesa', riscaldamento: false },
+    { id: 'ing-presto-x', nome: 'attacco a 0,5 s, senza riscaldamento', ingresso: 'discesa', presto: true, riscaldamento: false },
+    { id: 'ing-mondo-x', nome: 'il mondo di sopra, senza riscaldamento', ingresso: 'mondo', riscaldamento: false },
+  ] },
   { gruppo: 'calore', carica: discese, scene: [{ id: 'cal-1', nome: 'riferimento, 8 mostri con gli effetti', mostri: 8, colpi: true }] },
   // il pavimento: quanto costa un fotogramma che non disegna niente, e 100 oggetti semplici
   { gruppo: 'pavimento', carica: base, scene: [{ id: 'vuoto', nome: 'schermo vuoto (solo pulito)', base: 'vuoto' }, { id: 'cubi', nome: '100 cubi semplici', base: 'cubi' }] },
@@ -63,6 +77,8 @@ export const TAPPE = [
   { gruppo: 'calore', carica: discese, scene: [{ id: 'cal-2', nome: 'riferimento, di nuovo alla fine', mostri: 8, colpi: true }] },
 ]
 export const QUANTE = TAPPE.reduce((n, t) => n + t.scene.length, 0)
+/** Chi pesa (docs/core/vecchio-telefono-elementi.md): a parte, solo se `solo` li chiede (`['elementi']`, o i gruppi e gli id). */
+export const TAPPE_ELEMENTI = tappeDegliElementi()
 
 const mediana = v => { const o = v.slice().sort((a, b) => a - b); return o.length ? o[Math.floor(o.length / 2)] : 0 }
 const perc = (v, q) => { const o = v.slice().sort((a, b) => a - b); return o.length ? o[Math.min(o.length - 1, Math.floor(q * o.length))] : 0 }
@@ -106,12 +122,14 @@ function creaGiro(f) {
       try { await prepara() } catch (e) { rec = null; throw e }
       const pronto = Math.round(performance.now() - tp)
       return new Promise(fatto => {
-        const t0 = performance.now(), primi = [], lavoro = [], dt = [], finestre = [], cpu = [], gpu = []
+        const t0 = performance.now(), primi = [], lavoro = [], dt = [], finestre = [], cpu = [], gpu = [], conti = []
         let fase = 'rodaggio', tm = 0, tf = 0, prec = null, nascosta = false, finestra = []
         const chiudi = stabile => {
           rec = null
           const somma = dt.reduce((x, y) => x + y, 0)
-          fatto({ ms: tondo(mediana(lavoro)), p95: tondo(perc(lavoro, 0.95)), js: tondo(mediana(cpu)), gpu: tondo(mediana(gpu)), fps: somma ? Math.round(1000 * dt.length / somma) : 0, n: lavoro.length,
+          // chiamate e triangoli cambiano col fotogramma (chi entra ed esce dall'inquadratura): il più alto dei campioni
+          const piu = k => (conti.length ? Math.max(...conti.map(c => c[k] || 0)) : undefined)
+          fatto({ chMax: piu('ch'), triMax: piu('tri'), ms: tondo(mediana(lavoro)), p95: tondo(perc(lavoro, 0.95)), js: tondo(mediana(cpu)), gpu: tondo(mediana(gpu)), fps: somma ? Math.round(1000 * dt.length / somma) : 0, n: lavoro.length,
                   primo: tondo(Math.max(0, ...comparsa, ...primi.slice(0, 10))), pronto, lenti: lavoro.filter(x => x > LENTO).length, stabile,
                   ...(nascosta ? { nascosta: true } : {}) })
         }
@@ -127,6 +145,7 @@ function creaGiro(f) {
             return
           }
           lavoro.push(l); finestra.push(l); cpu.push(lc); gpu.push(lg)
+          if (f.conti && lavoro.length % 15 === 1) { try { conti.push(f.conti()) } catch (e) { /* niente conti */ } }
           if (prec) dt.push(t - prec)
           prec = t
           const e = ora - tm, q = tempi.quadri
@@ -191,7 +210,7 @@ async function ambiente() {
 
 // il riferimento del calore: la pausa a schermo nero, poi la stessa scena fissa (veri/base.js), corta
 async function riferimento({ contenitore, fermo, corto, progresso, k, tot, raffredda }) {
-  if (!corto) {
+  if (!corto && raffredda > 0) {
     for (let s = Math.round(raffredda / 1000); s > 0 && !fermo(); s--) { progresso(k, tot, `pausa per raffreddare, ${s} s`); await new Promise(r => setTimeout(r, 1000)) }
   }
   if (fermo()) return null
@@ -209,7 +228,9 @@ async function riferimento({ contenitore, fermo, corto, progresso, k, tot, raffr
 export async function eseguiVeri({ contenitore, progresso = () => {}, fermo = () => false, corto = false, solo = null, fascia = null, raffredda = RAFFREDDA }) {
   const tempi = corto ? TEMPI.corto : TEMPI.normale
   const info = infoGpuVeri()
-  const tappe = TAPPE.map(t => ({ ...t, scene: t.scene.filter(s => !solo || solo.some(p => s.id.startsWith(p))) })).filter(t => t.scene.length)
+  // `solo` sceglie per id o per gruppo; senza, le scene di sempre (gli elementi no: sono una prova a parte)
+  const tappe = (solo ? [...TAPPE, ...TAPPE_ELEMENTI] : TAPPE)
+    .map(t => ({ ...t, scene: t.scene.filter(s => !solo || solo.some(p => s.id.startsWith(p) || t.gruppo.startsWith(p))) })).filter(t => t.scene.length)
   const tot = tappe.reduce((n, t) => n + t.scene.length, 0)
   const risultati = [], gruppi = {}, saltate = new Set(), avvisi = new Map()
   // gli avvisi e gli errori della console mentre gira (shader che non compilano, modelli che non si saldano…): si riassumono nel log
@@ -226,20 +247,25 @@ export async function eseguiVeri({ contenitore, progresso = () => {}, fermo = ()
   window.addEventListener('error', guasto, true); window.addEventListener('unhandledrejection', guasto, true)
   const persi0 = eventiContesto.persi, ripresi0 = eventiContesto.ripresi
   const prima = await ambiente()
-  let k = 0, rif0 = null, ultimo = null, deriva = 1
+  let k = 0, ultimo = null, rifOra = null
+  const rifs = []
   try {
     for (const tappa of tappe) {
       if (fermo()) break
       const nuovo = tappa.gruppo !== ultimo
       const g = gruppi[tappa.gruppo] || (gruppi[tappa.gruppo] = { carica: [], dpr: [], luci: null, programmi: 0 })
-      // a ogni gruppo nuovo: la pausa e il riferimento; il primo è il metro, gli altri dicono di quanto il telefono è rallentato
+      // a ogni gruppo nuovo: la pausa e il riferimento (a fine prova, diviso il più svelto: di quanto il telefono è rallentato)
       if (nuovo) {
         let r = null
         try { r = await riferimento({ contenitore, fermo, corto, progresso, k, tot, raffredda }) } catch (e) { r = null }
+        // un riferimento più che doppio del più svelto si rifà una volta (subito, senza pausa): un intoppo non deve correggere un gruppo intero;
+        // e il primo si rifà sempre: è freddo (shader e trame del riferimento ancora da compilare)
+        if (r && r.ms && (!rifs.length || r.ms > 2 * Math.min(...rifs))) {
+          try { const r2 = await riferimento({ contenitore, fermo, corto, progresso, k, tot, raffredda: 0 }); if (r2 && r2.ms && r2.ms < r.ms) r = r2 } catch (e) { /* si tiene il primo */ }
+        }
         if (r && r.ms) {
-          if (!rif0) rif0 = r
-          deriva = Math.round(r.ms / rif0.ms * 100) / 100
-          g.rif = { ms: r.ms, p95: r.p95, js: r.js, gpu: r.gpu, deriva }
+          rifOra = r.ms; rifs.push(r.ms)
+          if (!g.rif) g.rif = { ms: r.ms, p95: r.p95, js: r.js, gpu: r.gpu }
         }
       }
       ultimo = tappa.gruppo
@@ -262,18 +288,18 @@ export async function eseguiVeri({ contenitore, progresso = () => {}, fermo = ()
             if (f.misura) r = await f.misura(s)
             else {
               const prima = f.conti ? f.conti().programmi : 0
-              r = await giro.misura(tempi, fermo, () => f.scena(s), s === tappa.scene[0])
+              r = await giro.misura(corto ? tempi : TEMPI[tappa.tempi] || tempi, fermo, () => f.scena(s), s === tappa.scene[0])
               if (giro.guasto) throw giro.guasto
               const c = f.conti ? f.conti() : {}
               if (f.gl() && f.gl().isContextLost()) throw new Error('contesto WebGL perso')
-              r = { ...r, ch: c.ch, tri: c.tri, nuovi: Math.max(0, (c.programmi || 0) - prima), geo: c.geo, tex: c.tex,
+              r = { ...r, ch: r.chMax ?? c.ch, tri: r.triMax ?? c.tri, nuovi: Math.max(0, (c.programmi || 0) - prima), geo: c.geo, tex: c.tex,
                     mpx: f.tela ? tondo(f.tela.width * f.tela.height / 1e6) : null }
               g.programmi = Math.max(g.programmi, c.programmi || 0)
               const l = luciDi(f.scena3d && f.scena3d())
               if (!g.luci || l.p + l.s > g.luci.p + g.luci.s) g.luci = l
             }
             if (guasti.length > g0) throw new Error(`errore nel gioco: ${guasti[g0]}`)
-            risultati.push({ ...riga(s, tappa), ...r, deriva })
+            risultati.push({ ...riga(s, tappa), ...r, ...(rifOra ? { rif: rifOra } : {}) })
             // solo le serie che crescono (più mostri, più persone…): le leve dei colli e la roba si confrontano fra loro, si fanno tutte
             if (s.cresce && r.p95 > SALTA_OLTRE && !corto) saltate.add(s.serie)   // nelle prove corte si fanno tutte
           } catch (e) { risultati.push({ ...riga(s, tappa), errore: breve(e) }) }
@@ -289,6 +315,13 @@ export async function eseguiVeri({ contenitore, progresso = () => {}, fermo = ()
     window.removeEventListener('error', guasto, true); window.removeEventListener('unhandledrejection', guasto, true)
     for (const m of new Set(guasti)) avvisi.set(`errore: ${m}`, guasti.filter(x => x === m).length)
   }
+  // la deriva del calore: il riferimento di ogni gruppo diviso il più svelto (il telefono più fresco; il primo è spesso freddo di
+  // shader e trame, e prenderlo come metro triplicava tutto)
+  const fresco = rifs.length ? Math.min(...rifs) : null
+  if (fresco) {
+    for (const r of risultati) if (r.rif) r.deriva = Math.round(r.rif / fresco * 100) / 100
+    for (const g of Object.values(gruppi)) if (g.rif) g.rif.deriva = Math.round(g.rif.ms / fresco * 100) / 100
+  }
   const js = fermo() || (solo && !solo.includes('js')) ? null : proveCpu()
   const dopo = await ambiente()
   return { tipo: 'veri', info, js, risultati, gruppi, fascia, ambiente: { prima, dopo }, avvisi: [...avvisi].map(([m, n]) => ({ m, n })).sort((a, b) => b.n - a.n),
@@ -296,4 +329,4 @@ export async function eseguiVeri({ contenitore, progresso = () => {}, fermo = ()
            schermo: `${Math.round(window.innerWidth)}x${Math.round(window.innerHeight)}`, dpr: window.devicePixelRatio || 1, fermata: fermo() }
 }
 
-const riga = (s, t) => ({ id: s.id, gruppo: t.gruppo, nome: s.nome, ...(s.serie ? { serie: s.serie, quanti: s.quanti } : {}) })
+const riga = (s, t) => ({ id: s.id, gruppo: t.gruppo, nome: s.nome, ...(s.serie ? { serie: s.serie, quanti: s.quanti } : {}), ...(s.el ? { el: s.el } : {}) })

@@ -9,6 +9,7 @@ import { vesti } from './vesti.js'
 import { scatola } from './kit.js'
 import { forzaDellaTana } from './props-tana-dati.js'
 import { raggioDellaPiazza } from '../../dati/mondo-aperto.js'
+import { ACCESI } from '../costanti.js'
 
 const TINTE = {
   villaggio: [0.56, 0.74, 0.30], campi: [0.66, 0.78, 0.30], frutteto: [0.58, 0.76, 0.32], prato: [0.62, 0.78, 0.32],
@@ -79,12 +80,14 @@ const bilineare = (arr, comp, F, x, z, out) => {
   return out
 }
 
-// il materiale del terreno; `lontano`: quello dei pezzi a dettaglio basso (un programma a parte; dove il pezzo vicino è costruito il
-// pezzo lontano si spegne: lontano.js)
+// il materiale del terreno; `lontano`: quello dei pezzi a dettaglio basso (un materiale a parte, lo stesso programma; dove il pezzo
+// vicino è costruito il pezzo lontano si spegne: lontano.js)
 export function materialeTerreno(trame, { lontano = false } = {}) {
-  const mat = new MeshStandardMaterial({ roughness: 0.95, metalness: 0, normalMap: trame.roccia.normalMap, normalScale: new Vector2(1, 1) })
+  // senza `rilievo` (la fascia bassa) niente normal map: il colore delle quattro trame e basta
+  const mat = new MeshStandardMaterial({ roughness: 0.95, metalness: 0, normalMap: ACCESI.rilievo ? trame.roccia.normalMap : null, normalScale: new Vector2(1, 1) })
   mat.name = lontano ? 'terreno-lontano' : 'terreno'
   return vesti(mat, {
+    codice: 'terreno',
     prima: sh => {
       sh.uniforms.tErba = { value: trame.erba.map }; sh.uniforms.tTerra = { value: trame.terra.map }
       sh.uniforms.tSabbia = { value: trame.sabbia.map }; sh.uniforms.tRoccia = { value: trame.roccia.map }
@@ -226,8 +229,8 @@ export function creaFuori(m, mat) {
 export function materialiDelSuolo(trame) {
   return {
     terreno: materialeTerreno(trame), lontano: materialeTerreno(trame, { lontano: true }),
-    piazza: vesti(new MeshStandardMaterial({ map: trame.ciottoli.map, normalMap: trame.ciottoli.normalMap, roughness: 0.9, color: 0xd8cfc0, polygonOffset: true, polygonOffsetFactor: -1 })),
-    campo: vesti(new MeshStandardMaterial({ map: trame.campo.map, normalMap: trame.campo.normalMap, roughness: 1, color: 0xb59a78, polygonOffset: true, polygonOffsetFactor: -1 })),
+    piazza: vesti(new MeshStandardMaterial({ map: trame.ciottoli.map, normalMap: ACCESI.rilievo ? trame.ciottoli.normalMap : null, roughness: 0.9, color: 0xd8cfc0, polygonOffset: true, polygonOffsetFactor: -1 })),
+    campo: vesti(new MeshStandardMaterial({ map: trame.campo.map, normalMap: ACCESI.rilievo ? trame.campo.normalMap : null, roughness: 1, color: 0xb59a78, polygonOffset: true, polygonOffsetFactor: -1 })),
   }
 }
 

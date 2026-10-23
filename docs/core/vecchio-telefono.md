@@ -171,4 +171,5 @@ misura si scarta se la scheda si nasconde o un fotogramma supera i 400 ms; resta
 correggono a mano o con «Rimisura»; (2) soglie ricavate da tre telefoni: un telefono di fascia media è un'ipotesi; (3) la prova di
 un secondo carica la GPU in home (un'attesa di 4 secondi, e non parte se si è già entrati in un gioco); (4) una fascia bassa
 toglie nitidezza (pixel ratio 1 su uno schermo a 2,75) e nel Sotterraneo le ombre; (5) lo shader compilato la prima volta in una
-scena (un anello, un guscio) è un fermo che il computer non vede (3 ms contro i 50-300 ms attesi su un Adreno): non misurato.
+scena (un anello, un guscio) è un fermo che il computer non vede (3 ms contro i ~140 ms misurati sul Note 7): si contano i programmi,
+e il Sotterraneo 3D li compila in anticipo ([../sotterraneo/prestazioni-3d.md](../sotterraneo/prestazioni-3d.md), «Shader e prima apparizione»).

@@ -1,7 +1,7 @@
 # Gli edifici sono pezzi liberi
 
 Mulino, panificio, pastificio (id `pasticceria`), cucina (id `conserviera`), gelateria, caseificio, telaio, zuccherificio, sartoria,
-tintoria, friggitoria, sushi bar ([geografia-e-pesca.md](geografia-e-pesca.md): nati dopo, con un posto storico `nuovo: true` come il fienile) e la mongolfiera **non hanno più un posto fisso**: si costruiscono dal menu «Costruisci qui» (scheda 🏠 Edifici) e si
+tintoria, friggitoria, sushi bar ([geografia-e-pesca.md](geografia-e-pesca.md): nati dopo, con un posto storico `nuovo: true` come il fienile) la mongolfiera e le quattro botteghe del paese ([botteghe.md](botteghe.md): `bottega_*`, non lavorano) **non hanno più un posto fisso**: si costruiscono dal menu «Costruisci qui» (scheda 🏠 Edifici) e si
 mettono dove il bambino vuole nel suo terreno, come un campo o una fontana. Il bambino li dispone come gli pare; il gioco gli
 ricorda solo, con un «!», quelli che il livello ha aperto e che non ha ancora costruito. La casa di scena (`FISSI` in `dati/mondo.js`) resta fissa (il fienile di scena è tolto dal 22/10/2026: ce n'è uno solo, quello che si costruisce), e il **fienile che si costruisce** (`fienile`, il mangime: [mangime-e-catena.md](mangime-e-catena.md)) è un'altra cosa, un edificio come gli altri (3×3, livello 2; il suo posto storico ha `nuovo: true` e non tocca alberi e sassi dei lotti storici).
 Il perché: un posto obbligato costringeva a comprare un lotto lontano e a vedere dieci fantasmi sul prato, e toglieva al bambino la

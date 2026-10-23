@@ -3,6 +3,7 @@
 // funzioni pure di `dati/compagni.js`; qui si muovono i corpi. La posizione non si salva: ripartono vicino alla casa.
 // Vedi docs/fattoria3d/compagni.md.
 import * as THREE from 'three'
+import { segna } from '../../../grafica/elementi3d.js'
 import { compagniAl, scegliMeta, scegliMetaAttorno, cellaLiberaVicina, cellaDi, decidiCane, decidiGatto, durataDi, SOGLIA_RICHIAMO, DIST_INCONTRO,
   scegliInterazioneCane, sequenzaCane, sequenzaRichiamo, sequenzaSonno, sequenzaSveglia, carezzaCane, scegliRispostaGatto, sequenzaGatto,
   chiamaIlGatto, sequenzaGattoChiamato,
@@ -30,7 +31,7 @@ export class Compagni {
   sync(senzaAvviso = false) {
     for (const d of compagniAl(this.m.livello())) {
       if (this.lista.some(c => c.def.id === d.id)) continue
-      const grp = creaCompagno(d); alleggeriOmbre(grp); this.scena.add(grp)
+      const grp = creaCompagno(d); alleggeriOmbre(grp); this.scena.add(segna(grp, 'animali'))
       const c = { def: d, grp, tipo: d.tipo, x: CASA[0], z: CASA[1], dir: 0, stato: 'sta', tStato: 0, dur: 2, percorso: [], poi: null,
                   velo: 0, fase: Math.random() * 6, corsa: false, sopra: null, salto: null, guarda: null, controllo: 0,
                   seq: null, iSeq: 0, sub: '', evFatti: new Set(), carezze: null, prossimoIncontro: 0, altro: null, bastoneFino: 0 }

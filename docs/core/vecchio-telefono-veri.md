@@ -8,7 +8,7 @@ giocare il bambino: quanti mostri nello scontro, quante persone sopra, quanti ed
 ## Sul telefono
 
 Zona dei grandi (codice) → **Impostazioni** → tendina **Avanzate** → **Misura questo telefono** → **Avvia coi modelli veri**.
-Dura qualche minuto (cinque al più; sul Redmi Note 7 meno, perché le serie oltre il limite si saltano): la barra in fondo dice a
+Dura un quarto d'ora circa (57 scene, e fra un gruppo e l'altro 8 s di schermo nero perché il telefono si raffreddi): la barra in fondo dice a
 che scena si è, **Interrompi** la ferma e tiene il resoconto di quello che c'è. Le scene si vedono mentre girano: se una luce, un
 colore o la nebbia sembrano sbagliati, alla fine c'è un campo **Note** che finisce nel resoconto. Lo schermo non deve spegnersi
 (niente wake lock nel progetto: lo dice l'avviso). Alla fine: **Manda** (o «Manda 1/2», «Manda 2/2» se il resoconto non sta in un
@@ -20,6 +20,8 @@ invio), **Copia**, **Rifai**. L'ultimo resoconto di ognuna delle due prove resta
 | gruppo | scene | cosa c'è del gioco | cosa non c'è |
 |---|---|---|---|
 | `calore` | la stessa scena all'inizio e alla fine | lo scontro con 8 mostri e gli effetti | |
+| `pavimento` | lo schermo che si pulisce e basta; 100 cubi semplici (Lambert, una luce, una chiamata l'uno) | il renderer del Sotterraneo (`veri/base.js`) | il gioco: è quanto costa un fotogramma da solo |
+| `togli` | lo scontro con 1 mostro e gli effetti, intero e con UNA cosa tolta: l'ombra, le luci tranne il cono, tutte le luci, le particelle, le normal map, i materiali Lambert, i materiali Basic; e (un Sotterraneo ciascuna) le fette di nebbia, il passaggio finale, il pixel ratio a 0,6 | lo scontro vero | i materiali semplici non hanno la maschera della luce: tutto è illuminato |
 | `discese` | 1, 3, 6, 8 mostri, gli effetti a ripetizione (un colpo ogni 0,7 s, eroe e mostri a turno) | `creaSotterraneo3d` (luci, nebbia, ombra del cono, palco, mostri ed eroe 3D, effetti 3D) su una discesa vera del motore: il cheat `sotterraneo=branco&grado=leggendario&corredo=leggendario&stanza=sala` rifatto in `veri/discese.js` | il pannello e le domande; lo scontro ne prende al più 7 (l'ottavo resta attorno) |
 | `discese` | triangoli ×1, ×2, ×4, ×8; chiamate ×2, ×4 | lo scontro con 3 mostri, fermo | |
 | `luci` | 1, 2, 4, 6, 12 fuochi con l'ombra del cono; 1, 6, 12 senza | lo scontro con 3 mostri, la riserva dei fuochi spenta (`fuochi:0`) e fuochi uguali a quelli di `luci.js` attorno al palco | |
@@ -29,14 +31,42 @@ invio), **Copia**, **Rifai**. L'ultimo resoconto di ognuna delle due prove resta
 | `roba` | 24 lame, bastoni, scudi, vesti, gioielli, pozioni | `creaPezzo` con l'alone del leggendario (pozioni: del raro), animati; le vesti addosso a 24 eroi | |
 | `fattoria` | 10, 30, 60 edifici; 4 pollai e 4 stalle; Natale con 30 edifici | `Mondo3d` su `fattoriaTipo(10)`, le opzioni della fascia, il degrado fermo, `mondo.stress` | i fogli e il dito |
 
-Le scene del Sotterraneo usano la fascia del telefono (`store/qualita.js`) e il pixel ratio che il gioco darebbe, fermo. Una serie
-che cresce (mostri, persone, edifici) si ferma alla prima scena oltre 66 ms al p95 (le altre sono «saltata»); le leve dei colli e
-la roba si fanno tutte, perché si confrontano fra loro.
+Le scene del Sotterraneo usano la fascia del telefono (`store/qualita.js`) e il pixel ratio che il gioco darebbe, fermo. Le serie
+si fanno fino in fondo: una serie che cresce (mostri, persone, edifici) salta il resto solo se una scena supera i 400 ms al p95,
+per non piantare il telefono (provato a fermarle a 66 ms: sul Redmi si perdevano proprio 3, 6, 8 mostri, 24 persone, 30 e 60 edifici).
+
+## L'ingresso
+
+Le altre scene misurano dopo il rodaggio, quindi non vedono il fermo che conta: quello all'entrata in un piano e al primo attacco
+(gli shader, docs/sotterraneo/prestazioni-3d.md, «Shader e prima apparizione»). Il gruppo `ingresso` viene **per primo** (il browser
+tiene da parte gli shader già visti: più avanti sarebbe più caldo del vero) e rifà **ogni prova tre volte da capo** (tela, renderer e
+scena nuovi): la riga dice i tre valori in fila, perché la compilazione cambia da un giro all'altro.
+
+| scena | cosa | cosa riporta |
+|---|---|---|
+| `ing-sot` | entrare nello scontro con 3 mostri (il piano nuovo), aspettare la fine del riscaldamento (al più 8 s), poi tre attacchi a 1,5 s (il colpo dell'arma dell'eroe, il mostro, di nuovo l'eroe) | il fotogramma più lungo nei 3 s dal primo disegno, quanti sopra 100 ms, i programmi al primo disegno → a 3 s, `daScaldare`, quando il riscaldamento è finito; per ogni attacco il fotogramma più lungo nei 1,3 s dopo e gli shader nuovi |
+| `ing-presto` | un attacco a 0,5 s dal primo disegno, prima che il riscaldamento cominci: il caso peggiore | lo stesso, un attacco |
+| `ing-zaino` | entrare e chiedere subito 15 anteprime dello zaino | il fotogramma più lungo e quanti sopra 100 ms |
+| `ing-mondo` | entrare nel mondo di sopra vero (la prima terra, dalla partenza; senza persone né mostri, che mette chi gioca) | come sopra, in 4 s (i pezzi si costruiscono uno per fotogramma), e se il riscaldamento è partito |
+| `ing-sot-x`, `ing-presto-x`, `ing-mondo-x` | le stesse col riscaldamento spento (`&spegni=riscaldamento`, la leva `riscaldamento` di `ACCESI`), dopo le altre: l'ordine non lo favorisce | |
+
+Il tempo conta dal primo disegno (prima la scena aspetta l'atlante e non disegna), e il fotogramma del primo disegno è dentro: è
+quello che compila. La LETTURA dice il fotogramma più lungo all'ingresso col riscaldamento e senza, il primo attacco col
+riscaldamento e senza («il riscaldamento toglie N ms dal primo attacco», o «non serve» se la differenza sta sotto 20 ms o il 15%:
+nel rumore), gli shader nuovi ai tre attacchi, l'attacco presto, il mondo e lo zaino. Nella riga DATI: `[id, 'ing', fotogrammi più
+lunghi, sopra 100 ms, attacchi per giro, shader per giro, programmi al primo disegno, programmi dopo]`. Un minuto e mezzo-due in più.
 
 ## Come si misura
 
 - **Lavoro di un fotogramma**: dal primo `requestAnimationFrame` del fotogramma (chiesto prima del giro del gioco) all'ultimo
   (chiesto dopo), con la lettura di un pixel che aspetta la GPU: il JS del gioco, il disegno e la GPU, senza i 60 Hz. Mediana e p95.
+  Diviso in due: **js** (fino alla lettura del pixel: il JS e l'invio dei comandi) e **gpu** (l'attesa della lettura: la scheda che
+  finisce). Se la gpu tiene quasi tutto, il collo sono pixel, luci e ombre; se tiene il js, le chiamate e il codice.
+- **Calore**: prima di ogni gruppo 8 s a schermo nero, poi un **riferimento** fisso (`veri/base.js`: 100 cubi lucidi, quattro luci,
+  un pavimento a tutto schermo, ~3 s; il primo si rifà sempre, perché è freddo, e uno più che doppio del più svelto si rifà una volta). La deriva (riferimento ÷ il più svelto) va nella testa del gruppo (`rif 31 ms x1.12`) e su ogni
+  riga; la LETTURA usa i ms divisi per la deriva (le righe scaldate dicono anche `≈` il valore corretto). Sul Redmi lo scontro con 8
+  mostri valeva 77 ms all'inizio e 137 alla fine: senza la correzione le serie in fondo sembravano il doppio. In testa anche la
+  batteria all'inizio e alla fine (`navigator.getBattery`) e la rete; il risparmio energetico il browser non lo dice.
 - **Prima apparizione**: i fotogrammi mentre la scena si prepara e i primi dieci (shader, geometrie e trame caricate, riserve di
   modelli) si tengono a parte: `primo` è il più lungo, `+Nsh` gli shader nuovi (`renderer.info.programs`), `pronto` quanto ci ha
   messo la scena (se più di 1,5 s).
@@ -50,19 +80,24 @@ la roba si fanno tutte, perché si confrontano fra loro.
 
 **Le leve dei colli di bottiglia** (`veri/moltiplica.js`): i triangoli ×k dividono ogni triangolo di ogni mesh in k (piatti: forma,
 materiali, luci e chiamate restano); le chiamate ×k spezzano ogni mesh in k gruppi dello stesso materiale (stessi triangoli).
+Valgono anche per le SkinnedMesh della pelle (`salda3d.js`, dove stanno quasi tutti mostri ed eroe): il vertice nuovo prende ossa e
+pesi di un capo del lato. Sul computer (22/10, con la pelle) triangoli 86k → 142k → 253k → 475k, chiamate 70 → 119 → 205: non
+×2 e ×4 esatti perché punti e sprite non si dividono, come prima della pelle (sul Redmi 241 → 440 → 892).
 
 ## Il resoconto
 
-Testa: modello, schermo, core, fascia; GPU e fornitore; trame massime, uniform del vertice e del frammento, varying, i bit di
+Testa: modello (da `userAgentData`: lo user agent ridotto di Chrome dice «K»), schermo, core, fascia; batteria e rete; GPU e fornitore; trame massime, uniform del vertice e del frammento, varying, i bit di
 `highp` e `mediump` (un `mediump` a 10 bit è mezzo float; senza `highp` nei frammenti luci, normal map e nebbia sgranano), le
-estensioni che il gioco usa e mancano. Poi un gruppo alla volta (`[discese] pronto 2.3 s, dpr 1, luci 3p 1s 0d 1h ombre 1, mem…`)
-e una riga per scena: `ok`/`~`/`XX` (p95 sotto 20, fino a 33, oltre), `ms/p95`, fps, chiamate, migliaia di triangoli, e
-`primo`, `+Nsh`, `pronto` quando contano. La **LETTURA** dice il **LIMITE** di ogni serie (la prima scena oltre 33 ms al p95: «LIMITE
-3 mostri»), i tre colli (triangoli: c'è margine per ~N× di dettaglio o no; ms ogni 100 chiamate; ms per milione di pixel; il salto
+estensioni che il gioco usa e mancano. Poi un gruppo alla volta (`[discese] codice 50 ms, dpr 1, luci 3p 1s 0d 1h ombre 1, mem…, prog 57, rif 31 ms x1.12`)
+e una riga per scena: `ok`/`~`/`XX` (p95 sotto 20, fino a 33, oltre), `ms/p95`, `(js … gpu …)`, fps, chiamate, migliaia di triangoli,
+e `≈` (corretto dal calore), `primo`, `+Nsh`, `pronto` quando contano. La **LETTURA** dice il calore, il **pavimento** (schermo
+vuoto e 100 cubi), il **LIMITE** di ogni serie (fin dove sta sotto 33 ms al p95, da dove supera 33 e 66; con due scene la
+pendenza, ms per elemento in più, e la retta a zero: «ogni persona in più +3 ms, con zero ~31»), **TOGLIERE** (quanto si guadagna
+togliendo ogni cosa allo scontro, dalla più cara), i tre colli (triangoli: c'è margine per ~N× di dettaglio o no; ms ogni 100 chiamate; ms per milione di pixel; il salto
 più grande delle luci, l'ombra del cono, la nebbia) e il **COLLO DI BOTTIGLIA** (quello che a raddoppiarlo costa di più), la roba che
 pesa, lo zaino, la festa, il **calore** (il riferimento alla fine diviso quello all'inizio: sopra 1,15 il telefono si è scaldato),
 le prime apparizioni lente, chi pesa di più, la GPU, i contesti persi. In fondo le **NOTE** e la riga `DATI {"v":2,"k":"veri",…}`:
-`r` ha `[id, ms, p95, fps, chiamate, ktriangoli, primo, shader]`, lo zaino `[id, totale, fotogramma max, lavoro, attesa]`.
+`r` ha `[id, ms, p95, fps, chiamate, ktriangoli, primo, shader, js, gpu, deriva]` (le prime otto come nei log di prima), lo zaino `[id, totale, fotogramma max, lavoro, attesa]`.
 
 Un invio del modulo dei giudizi regge ~3,5k caratteri: un resoconto più lungo (quasi sempre, con 40 scene) si **spezza in più
 invii** a 3400 caratteri, fra una riga e l'altra, ognuno con «(parte k/n)» in testa e la riga DATI intera nell'ultimo. Per lo
@@ -75,31 +110,95 @@ npm run build
 node strumenti/vecchio-telefono.mjs benchmark --veri                      # le stesse scene sul Note 7 imitato
 node strumenti/vecchio-telefono.mjs benchmark --contro veri.txt           # e riga per riga contro il telefono (ms e p95)
 node strumenti/vecchio-telefono.mjs benchmark --veri --solo sot-,tri-     # solo le scene che cominciano così
-node strumenti/vecchio-telefono.mjs calibra --log veri.txt                # tara la CPU sul `js` del log (la GPU vuole il log a scene)
+node strumenti/vecchio-telefono.mjs calibra --log veri.txt [--scena px-1] [--prova]   # la CPU sul `js` del log, la zavorra su una sua scena (a computer scarico)
 ```
 
 Con la CPU ×5 e SwiftShader su 4 core la prova dura molto di più che sul telefono (decine di minuti): per guardare solo che giri,
 `--cpu 1 --core 0 --gpu hw`.
 
-**Il primo giro sul Note 7 imitato** (22/10, `--qualita bassa`, SwiftShader su 4 core e CPU ×5, computer carico: i ms sono
-pessimisti e ballano del 20-30% fra due giri; contano i rapporti). Sette minuti. Tutte le serie che crescono sono oltre già alla
-prima scena (lo scontro con 1 mostro 140 ms, 4 persone 46, la fattoria con 10 edifici 132): l'imitazione non dice il limite, lo
-dirà il telefono. I colli, sulla stessa scena dello scontro (3 mostri, ~115 ms): **i pixel** (pixel ratio 1 → 1,41: +46 ms; 2: ×4),
-poi le luci (6 → 12 fuochi +16 ms, l'ombra del cono +7), la nebbia +25; i triangoli quasi niente a ×2 (+2 ms) e +55% a ×8 (62k →
-388k); le chiamate niente (226 → 859, stessi ms). La roba: le vesti (24 eroi, 1486 chiamate) le più care, le pozioni le più
-leggere. Lo zaino: 40 anteprime in 1,7 s, un fotogramma fermo fino a 233 ms. La prima apparizione di una scena del Sotterraneo è
-di 3-6 s (50 shader). Nessun contesto perso; 49 avvisi di three (`toNonIndexed()` su geometrie già senza indice: dalle anteprime e
-dalla roba).
+## Cosa dice il Redmi Note 7 (22/10)
+
+Il primo log vero (`strumenti/vecchio-telefono/log/redmi-note7-veri-22ott.txt`, fascia bassa, pixel ratio 1, 392×718; prima del
+riferimento del calore e delle serie fino in fondo). Lo scontro con 8 mostri valeva 77 ms all'inizio e 137 alla fine (×1,77): le serie
+in fondo (sopra, roba, fattoria) sono gonfiate dal calore.
+
+- **Scontro**: 1 mostro con gli effetti 64 ms (p95 98); 8 mostri 77 (p95 135) a telefono fresco. Già un mostro è oltre i 33 ms.
+- **Triangoli**: da 86k a 475k (×8) solo +17 ms (+23%): costano poco, ~0,04 ms ogni mille. Il dettaglio dei modelli non è il guaio.
+- **Chiamate**: da 241 a 892 +24 ms, ~3,7 ms ogni 100: contano più dei triangoli.
+- **Luci**: da 2 a 6 fuochi +14 ms, da 6 a 12 **+98 ms** (12 fuochi 194 ms; senza l'ombra del cono 153). Oltre la riserva di oggi (6
+  fuochi più alone, lampo e cono) il telefono crolla: 256 uniform nel frammento, ogni luce è un pezzo di shader per ogni pixel.
+  L'ombra del cono con 6 fuochi costa ~2,5 ms.
+- **Pixel**: pixel ratio 1 → 1,41 → 2: 84 → 98 → 135 ms, ~60 ms ogni milione di pixel. La nebbia in fascia bassa ~1 ms.
+- **Sopra**: persone 4 / 8 / 16 → p95 44 / 54 / 80: ~3 ms per persona e ~31 ms con zero (un pavimento alto: prato, sole con l'ombra
+  a 2048, l'eroe leggendario). Mostri 4 / 8 → 59 / 93: ~8,5 ms per mostro.
+- **Roba**: le vesti 109 ms (24 eroi, 1486 chiamate), le pozioni 70 (395 chiamate), le lame 39.
+- **Zaino**: 15 anteprime in 1,9 s con un fotogramma fermo di **400 ms**; 40 in 2,8 s.
+- **Fattoria**: 10 edifici 54 ms, Natale con 30 edifici 52, le bestie 57 (gonfiate dal calore).
+- **Prima apparizione**: 2-6 s per scena, 40-57 shader nuovi ognuna, 548 in tutto; il telefono non ha `KHR_parallel_shader_compile`.
+
+**Precompilare gli shader.** Senza `KHR_parallel_shader_compile` ogni programma nuovo si compila al primo disegno e ferma il
+fotogramma (il «primo» delle righe). La strada: `await renderer.compileAsync(scena, camera)` a una schermata di caricamento (lo
+scendere di piano, la porta di un villaggio), con la scena già com'è nel gioco: lo stesso numero di luci (luci.js lo tiene fisso
+apposta: una luce in più o in meno cambia la variante di ogni materiale), l'ombra accesa, e un esemplare di ogni modello che
+arriverà (le specie del piano, l'eroe vestito, gli effetti 3D: i loro materiali restano vivi fra un colpo e l'altro) appeso fuori
+vista durante la compilazione. Senza l'estensione `compileAsync` aspetta lo stesso programma per programma, ma il fermo cade sulla
+schermata di caricamento e non nello scontro. Gli shader dell'ombra (la profondità) si compilano al primo disegno con l'ombra:
+un fotogramma disegnato dietro la schermata li prende.
+
+## L'imitazione contro il Redmi
+
+`benchmark --contro redmi-note7-veri-22ott.txt` rifà le stesse scene sul Note 7 imitato. **I ms del computer non valgono** (il
+computer è condiviso con altri processi e agenti: fra due giri ballano del 20-50%), quindi non si tara `calibra` su questi giri e
+dal confronto si leggono la struttura e gli ordini di grandezza. La struttura torna: le stesse chiamate, gli stessi triangoli e gli
+stessi shader nuovi scena per scena (per esempio lo scontro dei colli 241 chiamate e 86k triangoli, le vesti 1486 chiamate, le
+persone 104 / 118 / 165, gli shader nuovi della prima scena di un Sotterraneo 34-57), quindi le scene sono le stesse. Chiamate e
+triangoli di una scena cambiano col fotogramma (chi entra ed esce dall'inquadratura: 226 o 241, 62k o 86k): dal 22/10 la riga dice
+il più alto di un campione ogni 15 fotogrammi. Come ordine di grandezza, SwiftShader (`--gpu sw`) va più piano del Redmi sui pixel
+(pixel ratio 2: ~3-4 volte) e più svelto con molte luci e nelle anteprime: per pixel, luci e zaino conta solo il telefono.
 
 ## Il codice
 
-`grafica/benchmark/veri.js` (le scene, il giro dei fotogrammi, la GPU, gli avvisi), `veri/discese.js`, `sopra.js`, `zaino.js`,
-`roba.js`, `fattoria.js` (un gruppo ciascuno, caricati con `import()` quando tocca a loro), `veri/moltiplica.js` (le leve),
-`veri/tela.js`, `veri/leggendario.js` (il corredo del cheat); il log in `grafica/benchmark/log.js` (`componiVeri`, `letturaVeri`,
-`limite`, `spezza`, `conNote`). Nel sito spezzato `vite.config.js` tiene `grafica/benchmark/veri*` fuori dal file `comune`: tira
-dentro i giochi, e starebbe nella base.
+`grafica/benchmark/veri.js` (le scene, il giro dei fotogrammi, il calore, la GPU, gli avvisi), `veri/discese.js`, `sopra.js`,
+`zaino.js`, `roba.js`, `fattoria.js`, `base.js`, `ingresso.js` (un gruppo ciascuno, caricati con `import()` quando tocca a loro), `veri/moltiplica.js`
+(le leve: triangoli, chiamate, materiali semplici, normal map, particelle), `veri/tela.js`, `veri/leggendario.js` (il corredo del
+cheat); il log in `grafica/benchmark/log-veri.js` (e `log-ingresso.js`) (`componiVeri`, `letturaVeri`, `limite`, `corretta`, `spezza`, `conNote`). Nel sito
+spezzato `vite.config.js` tiene `grafica/benchmark/` fuori dal file `comune`: si carica a richiesta, e i modelli veri tirano dentro i giochi.
 
 Nei test: `[data-azione="benchmark-veri"]`, `[data-benchmark-palco]` (dove girano le scene), `[data-azione="benchmark-interrompi"]`,
 `[data-benchmark-note]`, `[data-azione="benchmark-manda"][data-parte]`, `[data-azione="benchmark-ultima"][data-tipo]`;
-`window.__benchmarkVeri` (i dati), `window.__benchmarkSolo` (gli inizi degli id), `window.__benchmarkCorto` (scene di pochi decimi).
-`unita/benchmark-veri` (il log, il limite, gli invii, le leve), `integrazione/benchmark-veri` (una scena per gruppo, a schermo).
+`window.__benchmarkVeri` (i dati), `window.__benchmarkSolo` (gli inizi degli id), `window.__benchmarkCorto` (scene di pochi decimi,
+senza pausa), `window.__benchmarkRaffredda` (i ms di pausa fra i gruppi: lo strumento la toglie quando tara).
+`unita/benchmark-veri` (il log, il limite, gli invii, le leve), `unita/benchmark-ingresso` (le righe e la LETTURA dell'ingresso),
+`integrazione/benchmark-veri` (una scena per gruppo e tutto l'ingresso in due giri, a schermo).
+
+## Mandare il resoconto al computer
+
+`node strumenti/ricevi-log.mjs [--porta 8787] [--dist dist-sito]` serve il sito (dopo `npm run build:sito`) su `0.0.0.0` e stampa
+gli indirizzi da aprire sul telefono (IP di LAN; il nome e l'IP Tailscale se `tailscale status --json` c'è). In http su un IP il
+browser non registra il service worker (non è un contesto sicuro): la PWA non disturba. `GET /ricevi-log` risponde `{ok:true,v:1}`;
+`POST /ricevi-log` prende `{ testo, dati?, agente?, note?, quando? }` (JSON, max 200 KB) e scrive
+`strumenti/vecchio-telefono/log/ricevuti/AAAA-MM-GGThhmm-<modello>.txt` (non versionata) col `testo` (più `DATI …` se `dati` non è già
+dentro), poi risponde `{ok:true,file}` e la console stampa «ricevuto: <file> (<n> byte)». Il file va a `calibra --log` e a
+`benchmark --contro`. Si accettano solo Host e Origin di casa (localhost, reti private, tailnet `100.64/10` e `*.ts.net`, `.local`);
+il CORS si apre solo per quelle origini.
+
+Lato app: `src/grafica/benchmark/invio-diretto.js` esporta `sondaRicevitore(origin)` (GET con timeout 1,5 s, `true`/`false`, mai
+errori) e `mandaAlRicevitore(payload, origin)` (`{ok,file}` o `{ok:false,errore}`). In `Benchmark.vue`: a fine prova (e riaprendo l'ultima) `sondaRicevitore()`; se la pagina è servita dal ricevitore il resoconto
+parte **da solo** al computer (intero, senza note) e compare **Manda al computer** (`[data-azione="benchmark-al-computer"]`) per
+rimandarlo con le note aggiunte; l'esito («Mandato al computer (<file>)») sta in `.esito`. Fuori dal ricevitore (sito vero, file
+unico) la sonda è falsa e il bottone non c'è: restano «Manda» (modulo) e «Copia».
+Sul telefono: `npm run build:sito`, `node strumenti/ricevi-log.mjs`, aprire sul Redmi l'indirizzo stampato, zona dei grandi →
+Impostazioni → Avanzate → Misura questo telefono.
+
+## Dove eravamo rimasti (la misura per elemento, 23/10)
+
+**Fatto.** La prova «Chi pesa» c'è: [vecchio-telefono-elementi.md](vecchio-telefono-elementi.md) (tasto in «Misura questo
+telefono», le scene delle discese, del mondo di sopra, della fattoria 3D e degli Asteroidi, la tabella, la LETTURA, le leve,
+`--solo elementi` nello strumento, `unita/benchmark-elementi`, `integrazione/benchmark-elementi`). Le leve semplici (`ombre`,
+`rilievo`, `nebbiaFitta`, `quantaPolvere:0.4` nel Sotterraneo; `erba: false` nella fattoria) sono pronte e la prova le confronta;
+gli scatti prima/dopo sono in `tmp/scatti/leve-discese-*.png` e `leve-sopra-*.png` (fascia bassa, `&spegni=` di ogni leva).
+
+**Manca.**
+1. Il resoconto «Chi pesa» del Redmi Note 7, e da lì quali leve vanno in `SPEGNI_BASSA` (`store/qualita.js`) e nel preset
+   `basso` della fattoria: dopo il sì di Marco sugli scatti.
+2. Per gli elementi più cari senza leva (secondo la tabella): la semplificazione scritta in `SEMPLICE` (`elementi-dati.js`).

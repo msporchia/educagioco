@@ -8,7 +8,7 @@
      node strumenti/pesi-3d.mjs                          # tutti: mostri, persone, eroi, roba (e gli aloni), fattoria
      node strumenti/pesi-3d.mjs --gruppo mostri --primi 15
      node strumenti/pesi-3d.mjs --gruppo eroi,roba --q leggendario
-     node strumenti/pesi-3d.mjs --copie 6 --giri 15 --cpu 5 --senzasalda --json tmp/pesi.json
+     node strumenti/pesi-3d.mjs --copie 6 --giri 15 --cpu 5 --senzasalda --json tmp/pesi.json   (--senzapelle: saldati, senza la pelle)
 
    Una misura a computer carico dà numeri sbagliati: a macchina calma, e le voci dubbie si rifanno con `--q`.
    ═══════════════════════════════════════════════════════════════════ */
@@ -33,6 +33,7 @@ if (core > 0 && !process.env.VT_CORE) {
 const indirizzo = new URLSearchParams()
 for (const k of ['gruppo', 'q', 'copie', 'giri']) if (opz(k)) indirizzo.set(k, opz(k))
 if (args.includes('--senzasalda')) indirizzo.set('senzasalda', '1')
+if (args.includes('--senzapelle')) indirizzo.set('senzapelle', '1')
 const primi = Number(opz('primi', 0))
 
 const server = await createServer({ root: RADICE, server: { port: 0, strictPort: false, open: false }, logLevel: 'error' })

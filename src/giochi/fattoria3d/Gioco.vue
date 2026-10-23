@@ -5,7 +5,7 @@
    Senza WebGL 2 non si apre niente: lo si dice e si torna in home. Vedi docs/fattoria3d/. */
 import { ref, reactive, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import Barra from '../../components/Barra.vue'
-import { state, addCoins, segna, flushNow, persist, aspettoDi, scegliAspetto, cestinaOra } from '../../store/profile.js'
+import { state, addCoins, segna, flushNow, persist, aspettoDi, scegliAspetto, cestinaOra, segnaBest } from '../../store/profile.js'
 import { fasciaAttiva } from '../../store/qualita.js'
 import { load, save } from '../../store/storage.js'
 import { scelta, ricorda } from '../campagne.js'
@@ -49,6 +49,7 @@ import { personaDi, normalizzaAbito, capiDi, chiaveAbito, vesti as vestiAbito, n
 import { schedeDellInventario, robaNuova, contoDi } from './viste/inventario-puro.js'
 import Bacheca from './viste/Bacheca.vue'
 import Mongolfiera from './viste/Mongolfiera.vue'
+import Bottega from './viste/Bottega.vue'
 import Dialogo from './viste/Dialogo.vue'
 import Opzioni from './viste/Opzioni.vue'
 import Mappa from './viste/Mappa.vue'
@@ -118,6 +119,7 @@ function consegnato(e) {
 function contaEventi() {
   for (const e of motore.prendiEventi()) {
     if (EVENTI[e.tipo]) segna(EVENTI[e.tipo])
+    if (e.tipo === 'pezzo') segnaBest('fattoria3dVarieta', new Set(motore.s.cose.map(c => c.tipo)).size)      // «Un po' di tutto»: i tipi diversi in mappa (un primato)
     else if (e.tipo === 'prodotto') segna('fattoria3dProdotti', e.n)
     else if (e.tipo === 'uovo') segna('fattoria3dUova', e.n)
     else if (e.tipo === 'latte') segna('fattoria3dLatte', e.n)
@@ -157,6 +159,8 @@ const bancoAperto = ref(false)             // il foglio del banco
 const bancoMsg = ref('')
 const nave = ref(false)                    // il foglio della mongolfiera (docs/fattoria3d/mongolfiera.md)
 const naveMsg = ref('')
+const bottegaAperta = ref(null)            // il tipo della bottega del paese di cui si vede il foglio (docs/fattoria3d/botteghe.md)
+const bottegaMsg = ref('')
 const toast = ref(null)                  // { testo, fine }: l'avviso del livello, sopra la scena
 const DURATA_TOAST = 4500, DURATA_AVVISO = 6000
 let avvisoFine = 0
@@ -195,6 +199,7 @@ const ui = {
   apriMacchina(tipo) { macchinaMsg.value = ''; macchinaCons.value = null; macchinaAperta.value = tipo },
   apriBanco() { apriBanco() },
   apriMongolfiera() { naveMsg.value = ''; naveCons.value = null; nave.value = true },
+  apriBottega(tipo) { bottegaMsg.value = ''; bottegaCons.value = null; bottegaAperta.value = tipo },
   apriMappa() { visite.apriMappa() },
   apriGuardaroba() { guardarobaAperto.value = true },             // un tocco sul contadino fermo                 // il trattore: la mappa dei villaggi (docs/fattoria3d/vicini.md)
   avviso(testo) {
@@ -202,7 +207,7 @@ const ui = {
     avvisoFine = testo ? performance.now() + DURATA_AVVISO : 0
   },
   apriCostruisci(i, j) { apriCostruisci(i, j) },                           // tenere premuto su un posto libero del terreno tuo
-  fogliAperti: () => !!alberoK.value || !!dialogo.value || !!consiglio.value || !!costruisciQui.value || semiAperto.value || !!macchinaAperta.value || livelliAperto.value || inventarioAperto.value || guardarobaAperto.value || bancoAperto.value || nave.value || mappaAperta.value || (opzioniAperte.value && !opzioniRidotte.value),
+  fogliAperti: () => !!alberoK.value || !!dialogo.value || !!consiglio.value || !!costruisciQui.value || semiAperto.value || !!macchinaAperta.value || livelliAperto.value || inventarioAperto.value || guardarobaAperto.value || bancoAperto.value || nave.value || !!bottegaAperta.value || mappaAperta.value || (opzioniAperte.value && !opzioniRidotte.value),
   zonaDrop: () => (zonaVia.value || null)?.getBoundingClientRect() || null,
   trascinando(info) { trascinando.value = info },
 }
@@ -386,6 +391,23 @@ const traguardoNave = computed(() => {
   return { fatte: Math.min(fatte, meta), meta }
 })
 
+// ── le botteghe del paese: un cliente per bancone, una merce sola, la fama a cuori (docs/fattoria3d/botteghe.md) ──
+const bottega = computed(() => { void versione.value; return bottegaAperta.value ? motore.vistaBottega(bottegaAperta.value) : null })
+function consegnaBottega(n) {
+  const tipo = bottegaAperta.value, r = motore.consegnaBottega(tipo, n)
+  bottegaCons.value = !r.ok && r.motivo === 'mancano' && primaMancante(r) ? consiglioPer(primaMancante(r)) : null
+  if (!r.ok) return bottegaMsg.value = r.motivo === 'mancano' ? dettoDi('mancano-ingredienti', { ingredienti: r.mancano }) : dettoDi(r.motivo)
+  bottegaMsg.value = `Consegnato a ${r.cliente.nome}: +${r.xp} ⭐.${r.cresciuta ? ' La bottega è famosa: un bancone in più!' : ''}`
+  ui.cambio()
+  mondo.fx.volo('+' + r.xp + ' ⭐', mondo.pezzi.centroDi({ kind: 'edificio', tipo }), 3)
+  mondo.eroe.avvia('esulta', 0.9)
+}
+function rifiutaBottega(n) {
+  const r = motore.rifiutaBottega(bottegaAperta.value, n)
+  if (!r.ok) return bottegaMsg.value = dettoDi(r.motivo)
+  bottegaMsg.value = `Va bene: il prossimo cliente arriva fra ${r.attesa} minuti.`; ui.cambio()
+}
+
 // ── le opzioni di qualità ──
 function cambiaOpzioni() { mondo.applica(q); save(CHIAVE_OPZIONI, { v: VERSIONE_OPZIONI, q: { ...q } }) }
 function creaRapporto() {
@@ -410,14 +432,14 @@ const radice = ref(null)
 const guidaAttiva = ref(false)           // si decide una volta sola, all'apertura: chi ha già giocato non la vede mai
 const guidaVisto = ref(false)            // ha già aperto il menu «Costruisci qui» durante il primo giro
 const consiglio = ref(null)              // il foglio «E adesso?»: { testo, azione, etichetta }
-const macchinaCons = ref(null), bancoCons = ref(null), naveCons = ref(null)      // il passo per avere ciò che manca, sotto il messaggio di ogni foglio
+const macchinaCons = ref(null), bancoCons = ref(null), naveCons = ref(null), bottegaCons = ref(null)      // il passo per avere ciò che manca, sotto il messaggio di ogni foglio
 const quadroGuida = () => {
   const m = motore, cs = m.s.cose.filter(c => c.tipo === 'campo')
   const crescono = cs.filter(c => !m.campoVuoto(c) && !m.campoMaturo(c)), restanti = crescono.map(c => m.restoSecondi(c))
   return {
     campi: cs.length, vuoti: cs.filter(c => m.campoVuoto(c)).length, maturi: cs.filter(c => m.campoMaturo(c)).length, crescono: crescono.length,
     secondi: restanti.length ? Math.min(...restanti) : 0, modo: modo.value, semi: semiAperto.value, costruisci: !!costruisciQui.value,
-    foglio: !!(alberoK.value || dialogo.value || macchinaAperta.value || livelliAperto.value || inventarioAperto.value || guardarobaAperto.value || bancoAperto.value || nave.value || mappaAperta.value || opzioniAperte.value || consiglio.value || strumento.value || trascinando.value),
+    foglio: !!(alberoK.value || dialogo.value || macchinaAperta.value || livelliAperto.value || inventarioAperto.value || guardarobaAperto.value || bancoAperto.value || nave.value || bottegaAperta.value || mappaAperta.value || opzioniAperte.value || consiglio.value || strumento.value || trascinando.value),
     raccolto: Object.values(m.s.merci).some(n => n > 0), visto: guidaVisto.value,
   }
 }
@@ -441,7 +463,7 @@ function apriConsiglio() { consiglio.value = cosaFaccioAdesso(motore) }
 function facciConsiglio(a) {
   if (a && a.che === 'albero') return apriAlbero(a.k)          // «Come si fa» si apre sopra il foglio, che resta dov'è
   alberoK.value = ''; if (inventarioAperto.value) chiudiInventario()
-  consiglio.value = null; macchinaAperta.value = null; bancoAperto.value = false; nave.value = false; semiAperto.value = false
+  consiglio.value = null; macchinaAperta.value = null; bancoAperto.value = false; nave.value = false; bottegaAperta.value = null; semiAperto.value = false
   if (!a) return
   if (a.che === 'semina') { seme.value = a.seme || seme.value; mondo.imposta({ seme: seme.value }); impostaModo('semina') }
   else if (a.che === 'raccogli') impostaModo('raccogli')
@@ -591,6 +613,7 @@ onBeforeUnmount(() => {
                @consegna="consegna" @cambia="cambiaOrdine" @chiudi="bancoAperto = false" />
         <Mongolfiera v-if="nave" v-bind="{ nave: mongolfiera, traguardo: traguardoNave, livelloIngresso: LIVELLO_MONGOLFIERA }" :messaggio="naveMsg" :consiglio="naveCons" @consiglio="facciConsiglio"
                      @carica="caricaCassa" @parti="partiMongolfiera" @chiudi="nave = false" />
+        <Bottega v-if="bottega" :bottega="bottega" :messaggio="bottegaMsg" :consiglio="bottegaCons" @consiglio="facciConsiglio" @consegna="consegnaBottega" @rifiuta="rifiutaBottega" @chiudi="bottegaAperta = null" />
         <Inventario v-if="inventarioAperto && inventario" :schede="inventario" :magazzini="magazzini" @ingrandisci="ingrandisciMagazzino" @albero="apriAlbero" @chiudi="chiudiInventario" />
         <Guardaroba v-if="guardarobaAperto" :abito="abito" :livello="foto.livello" :aspetto="state.profile.aspetto" :anteprima="anteprima" :anteprima-pronta="anteprimaPronta"
                     @vesti="vestiContadino" @aspetto="cambiaAspetto" @chiudi="guardarobaAperto = false" />

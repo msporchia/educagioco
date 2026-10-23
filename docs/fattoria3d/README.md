@@ -15,7 +15,8 @@ lana) e uno stato suo, e non tocca quelli della fattoria di sempre; le monete so
 - [cortile-2.md](cortile-2.md) — il secondo cortile: conigliera (lana d'angora), alpaca (lana d'alpaca), asini (concime), arnie (fiori → miele), merenda e caramelle, e perché la peschiera non c'è; i numeri sono della 2D (`dati/cortile2.js`)
 - [animali.md](animali.md) — pollaio e stalla: galline e mucche, uova e latte, i posti coi livelli, il caseificio e le ricette nuove
 - [ordini.md](ordini.md) — il banco della bancarella: chi chiede raccolti e prodotti, il premio in esperienza (mai monete), rifiutare, lo stato v3
-- [mongolfiera.md](mongolfiera.md) — la nave: tre file di casse da riempire un po' alla volta, i bonus, la sorpresa della fiera, il viaggio e il ritorno, il segnaposto di prima che si chiude
+- [botteghe.md](botteghe.md) — le quattro botteghe del paese (pasticceria, osteria, mensa, merceria): edifici che chiedono, clienti per mestiere, la fama a cuori, i numeri della 2D
+- [mongolfiera.md](mongolfiera.md) — la nave: tre file di casse (quattro dal livello 66) da riempire un po' alla volta, i bonus, la sorpresa della fiera, il viaggio e il ritorno, il segnaposto di prima che si chiude
 - [vicini.md](vicini.md) — il trattore e i villaggi dei vicini: la fattoria visitabile come dato (snapshot), la cassa, il mercato che compra e che vende, la visita di sola lettura, e come domani entrerà quella di un amico
 - [terreno.md](terreno.md) — i lotti da comprare, il recinto, gli alberi che si abbattono, le strade a pennello, la telecamera
 - [mondo-infinito.md](mondo-infinito.md) — il mondo senza confini: lotti `a_b` qualunque, generazione per lotto, gli id salvati, la finestra della scena, il prezzo che si auto-limita
@@ -24,7 +25,7 @@ lana) e uno stato suo, e non tocca quelli della fattoria di sempre; le monete so
 - [compagni.md](compagni.md) — Watson e i gatti che girano per la fattoria, il contadino nuovo: quando arrivano, come sono fatti, come si muovono
 - [guardaroba.md](guardaroba.md) — cambiare abito al contadino o alla contadina: il genere dal profilo, i capi e gli sblocchi, il salvataggio, come si aggiunge un pezzo
 - [rotazione.md](rotazione.md) — ruotare i pezzi e gli edifici: `rot` 0–3 nello stato, l'ingombro e il davanti che seguono, il tasto ↻ col secondo dito
-- [decorazioni.md](decorazioni.md) — le 130 decorazioni della 2D portate in 3D (verde, recinti e cartelli, raccolto, case e lampioni, bestiole): le schede nuove del menu, gli id, le eccezioni, il peso misurato e cosa manca
+- [decorazioni.md](decorazioni.md) — le 206 decorazioni della 2D portate in 3D (verde, fiori, recinti e cartelli, raccolto, case e lampioni, arredo, acqua, bestiole, feste e fiera): le schede nuove del menu, gli id, le eccezioni, l'acqua e la fiera, il peso misurato e cosa manca
 - [stagioni.md](stagioni.md) — Halloween e Natale come nella 2D (stesse finestre, `#stagione=`): cielo e luci, fiocchi, chiazze, addobbi sugli edifici, le zucche da comprare; il peso
 - [guida.md](guida.md) — il `?`, il primo giro (la riga e l'anello), «E adesso?» e il consiglio col tasto sotto un «non si può»
 - [scena.md](scena.md) — il disegno: i moduli di `scena3d/`, il dito, costruire trascinando, le opzioni di qualità e il peso

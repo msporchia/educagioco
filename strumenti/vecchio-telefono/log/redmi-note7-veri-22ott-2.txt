@@ -1,0 +1,31 @@
+MISURA COI MODELLI VERI 22/10 18:27 v2026.10.22.1802-7505ba6f
+Redmi Note 7 | schermo 392x774 dpr 2.75 | CPU 8 core, 4 GB | fascia bassa
+batteria 91% → 89% | rete 4g | risparmio energetico: il browser non lo dice
+GPU ANGLE (Qualcomm, Adreno (TM) 512, OpenGL ES 3.2) | Google Inc. (Qualcomm) | WebGL 2.0 (OpenGL ES 3.0 Chromium)
+tex 4096 | uniform v/f 256/256 | varying 31 | highp v/f 23/23 mediump f 10 | mancano KHR_parallel_shader_compile EXT_disjoint_timer_query_webgl2
+
+(le righe per scena stanno tutte nella riga DATI: [chiave, ms, p95, fps, chiamate, kt, primo, sh, js, gpu, deriva])
+
+LETTURA
+- Calore: il riferimento di ogni gruppo da x1 a x1.13 del primo: stabile.
+- CPU: 435 ms (computer 110-160): media.
+- Pavimento: schermo vuoto 3.7 ms (js 0.4, gpu 3.1), 100 cubi semplici 9.9 ms (~0.6 ms ogni 10 chiamate).
+- Scontro nelle discese (eroe leggendario, effetti): LIMITE già 1 mostro oltre 33 ms (p95 102.6), oltre 66 da 1; ogni mostro in più +6.4 ms al p95, con zero ~96.2 ms.
+- Persone 3D di sopra: già 4 persone oltre 33 ms (p95 46.8), oltre 66 da 16; ogni persona in più +2.1 ms al p95, con zero ~38.4 ms.
+- Mostri 3D di sopra: già 4 mostri oltre 33 ms (p95 65.3), oltre 66 da 8; ogni mostro in più +4.3 ms al p95, con zero ~48.1 ms.
+- Fattoria 3D: già 10 edifici oltre 33 ms (p95 58.9), mai oltre 66; ogni edificio in più +0.1 ms al p95, con zero ~57.9 ms.
+- TOGLIERE (1 mostro con effetti: 77.4 ms, js 32.5 gpu 45.3): materiali → Basic -20.3, tutte le luci -16.6, pixel ratio 0,6 -10.7, ombra -8.2, tutte le luci tranne il cono -8.2, particelle -7.6, fette di nebbia -5.8, passaggio finale +2, materiali → Lambert +6.9, normal map +12.1 ms (togliendola costa di più).
+- Triangoli (stesse chiamate): x1 77.1 ms (86k), x8 84 ms (388k). Costano poco: margine per ~8x di dettaglio.
+- Chiamate (stessi triangoli): x1 241 77.1 ms, x4 892 91.3 ms: ~+2.2 ms ogni 100 chiamate.
+- Pixel: dpr 1 78.7 ms (gpu 45.6), dpr 1.41 92.8 ms (gpu 56.6), dpr 2 127.6 ms (gpu 91.7): ~54.3 ms ogni milione di pixel.
+- Luci: 1 93.5, 2 80.6, 4 86.9, 6 89.1, 12 212.7 ms; il salto più grande da 6 a 12 fuochi (+123.6 ms, tutto GPU: 60 -> 196).
+- L'ombra del cono costa ~+3.2 ms (con 6 fuochi). La nebbia costa ~-1 ms.
+- CPU o GPU: la GPU tiene il 56% del lavoro (js 33 ms, gpu 41.8 ms in media).
+- Roba: la più cara 24 vesti (101.9 ms, 1486 ch), la più leggera 24 bastoni (36.1 ms).
+- Zaino: 15 anteprime in 1875 ms, fotogramma più lungo 433 ms; 40 in 2542 ms, max 267 ms.
+- La festa (Natale) costa 1.7 ms in più di 30 edifici.
+- Lo scontro con 8 mostri: 107.7 ms all'inizio, 107.5 alla fine (x1.00): stabile.
+- Prima apparizione: 2-5 s per scena; 930 shader nuovi, fino a 218 programmi in un gruppo; senza KHR_parallel_shader_compile vanno precompilati (renderer.compileAsync) a una schermata di caricamento.
+- Avvisi in console: 56 x toNonIndexed already non-indexed.
+
+DATI {"v":2,"k":"veri","i":{"g":"ANGLE (Qualcomm, Adreno (TM) 512, OpenGL ES 3.2)","v":"Google Inc. (Qualcomm)","t":4096,"u":[256,256],"p":[23,23,10],"m":["KHR_parallel_shader_compile","EXT_disjoint_timer_query_webgl2"]},"s":"392x774","d":2.75,"f":"bassa","js":435,"b":[91,0,89],"c":{"calore":232,"pavimento":104,"discese":105,"togli":422,"luci":93,"pixel":388,"sopra":165,"zaino":59,"roba":78,"fattoria":1071},"x":{"p":0,"r":0,"a":1},"r":[["cal-1",107.7,165.5,8,468,85,3698,54,57.9,48.1,1],["vuoto",4.2,7.6,60,0,0,20,0,0.5,3.5,1.13],["cubi",11.2,14.1,60,66,1,111,1,4.6,6.8,1.13],["sot-1",83.1,115.9,11,192,78,2506,53,35.9,45.8,1.13],["sot-3",92.1,131.9,10,245,63,1272,0,41.8,49.4,1.13],["sot-6",113,162.3,8,395,77,1485,1,54.4,56.9,1.13],["sot-8",102.6,166.5,9,508,108,1371,0,54.9,47.8,1.13],["tri-1",87.1,123.5,11,241,86,1056,1,39.6,46.4,1.13],["tri-2",82.2,119.8,11,241,142,291,0,38.7,48.2,1.13],["tri-4",93.5,133.2,10,241,253,158,0,41.2,53.9,1.13],["tri-8",94.9,117.3,10,226,388,152,0,39.2,56,1.13],["ch-2",93.9,130.5,10,440,62,128,0,45.3,50.6,1.13],["ch-4",103.2,138.9,9,892,86,132,0,53.5,51.4,1.13],["ab-base",82,118.9,11,173,54,2573,53,34.4,48,1.06],["ab-ombra",73.4,107,12,172,55,2646,36,31.6,44.4,1.06],["ab-luci1",73.3,98,13,163,54,2332,39,33.9,40,1.06],["ab-luci0",64.4,80.6,14,170,55,1661,39,30.2,34.7,1.06],["ab-punti",74,118.6,12,164,56,113,0,32.9,42.7,1.06],["ab-normali",94.9,109.3,10,179,54,1526,11,36.8,58.1,1.06],["ab-lambert",89.4,104.1,11,197,56,854,9,37.8,51.7,1.06],["ab-basic",60.5,102.5,15,174,78,481,0,26.7,33.3,1.06],["ab-nebbia",75.9,112.2,12,175,54,2958,52,33.3,40.1,1.06],["ab-post",84.2,121.3,11,187,78,2200,53,35.3,48,1.06],["ab-dpr",70.7,101.7,13,170,54,2373,53,34.5,36.5,1.06],["luci-1",102.8,114.6,10,226,62,4144,57,42.9,60.2,1.1],["luci-2",88.7,120.5,11,226,62,1395,23,39.7,49.3,1.1],["luci-4",95.6,109.8,10,241,86,2823,23,38.3,57.2,1.1],["luci-6",98,108.4,10,241,86,3309,23,36.4,60.4,1.1],["luci-12",234,308.2,4,241,86,4677,23,37.7,195.7,1.1],["luci-1s",97,108.2,11,226,62,2369,23,37.6,57.8,1.1],["luci-6s",94.5,109.4,10,226,62,3256,23,33.8,60.2,1.1],["luci-12s",153.1,170.2,6,226,62,4234,23,32.9,120.4,1.1],["px-1",83.4,126.5,11,226,62,4298,34,39,48.3,1.06],["px-1.41",98.4,118.1,10,226,62,2263,34,37.9,60,1.06],["px-2",135.3,144.1,7,226,62,1886,34,37.3,97.2,1.06],["senza-nebbia",82.8,113.8,11,225,62,2174,33,38.6,46.1,1.06],["per-4",37.9,52,25,104,15,1785,10,17.9,19.3,1.11],["per-8",46.8,58,20,118,23,270,0,22.4,23.7,1.11],["per-16",66.8,84.1,14,165,40,563,1,34.9,32.6,1.11],["per-24",78.5,97.7,12,203,56,308,0,41.8,37,1.11],["mos-4",61.6,72.5,16,239,25,439,0,37.5,23.8,1.11],["mos-8",77.7,94.6,13,367,43,539,2,49,28.2,1.11],["mos-16",111.9,129.7,9,651,80,594,0,70.5,41.7,1.11],["zaino-15",1875,433,1767,1285],["zaino-40",2542,267,2446,1324],["roba-lame",42.6,51.4,22,234,21,236,3,22.6,19.7,1.11],["roba-bastoni",40.1,48.4,24,201,20,81,0,21.3,18.6,1.11],["roba-scudi",42.9,51.6,22,245,24,128,0,23.4,19,1.11],["roba-vesti",113.1,128.4,9,1486,59,165,3,73.4,38.2,1.11],["roba-gioielli",53.9,61.3,17,288,27,177,1,30.3,23.7,1.11],["roba-pozioni",66.5,77.9,15,395,23,203,1,43.4,21.8,1.11],["fat-10",50.6,64.8,18,112,75,1125,21,19.2,30.7,1.1],["fat-30",55,72.1,15,121,76,95,0,21.4,33.6,1.1],["fat-60",55.2,70.7,16,120,75,252,1,22.1,34,1.1],["fat-bestie",60.5,79.7,14,154,75,177,2,28.9,29.7,1.1],["fat-natale",56.9,77.3,15,121,82,704,23,22.9,35,1.1],["cal-2",107.5,190.4,8,470,85,3618,54,58.7,48.2,1.11]]}

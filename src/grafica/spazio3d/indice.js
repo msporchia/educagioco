@@ -15,6 +15,7 @@ import { profilo, fasciaAttiva } from '../../store/qualita.js'
 import { formaDi } from './forme.js'
 import { specieDi } from '../cieli.js'
 import { rgb } from './rumore.js'
+import { segna, segnaNuovi, creaElementi } from '../elementi3d.js'
 
 const K = 0.01                 // mondo per pixel
 const FOV = 50
@@ -55,6 +56,9 @@ function ambiente(renderer) {
   return t
 }
 
+/** Gli elementi della scena, nell'ordine della tabella di chi pesa (docs/core/vecchio-telefono-elementi.md). */
+export const ELEMENTI_ASTEROIDI = ['cielo', 'sassi', 'nave', 'madre', 'effetti', 'luci', 'resto']
+
 export function creaSpazio3d(canvas, { perso, dpr } = {}) {
   // il contesto si chiede qui: senza WebGL 2 si torna null in silenzio, prima che three lo dica in console
   let gl = null, renderer
@@ -87,17 +91,21 @@ function costruisci(renderer, fisso) {
   scena.environmentIntensity = 0.8
   const camera = new PerspectiveCamera(FOV, 1, 0.1, 400)
   const amb = new AmbientLight(0x1a2448, 0.7); scena.add(amb)
-  const sole = new DirectionalLight(0xfff0dd, 4); sole.position.copy(DIREZIONE_SOLE).multiplyScalar(30); scena.add(sole)
-  const fredda = new DirectionalLight(0x4a7dff, 1.3); fredda.position.set(-8, -3, 6); scena.add(fredda)
-  const lampo = new PointLight(0xffa050, 0, 9, 1.6); scena.add(lampo)
-  const motori = new PointLight(0x66ccff, 2, 4, 1.8); scena.add(motori)
+  const sole = new DirectionalLight(0xfff0dd, 4); sole.position.copy(DIREZIONE_SOLE).multiplyScalar(30); scena.add(segna(sole, 'luci'))
+  const fredda = new DirectionalLight(0x4a7dff, 1.3); fredda.position.set(-8, -3, 6); scena.add(segna(fredda, 'luci'))
+  const lampo = new PointLight(0xffa050, 0, 9, 1.6); scena.add(segna(lampo, 'luci'))
+  const motori = new PointLight(0x66ccff, 2, 4, 1.8); scena.add(segna(motori, 'luci'))
 
-  const cielo = creaCielo(scena, renderer)
-  const sassi = creaSassi(scena)
-  const nave = creaNave(scena)
-  const madre = creaMadre(scena)
+  // gli elementi (grafica/elementi3d.js): chi pesa si misura spegnendone uno alla volta (docs/core/vecchio-telefono-elementi.md);
+  // `spenti` li sceglie (la prova), `post` spento disegna la scena dritta sullo schermo
+  const spenti = new Set(), elementi = creaElementi(ELEMENTI_ASTEROIDI, k => !spenti.has(k))
+  const el = (nome, fai) => segnaNuovi(scena, nome, fai)
+  const cielo = el('cielo', () => creaCielo(scena, renderer))
+  const sassi = el('sassi', () => creaSassi(scena))
+  const nave = el('nave', () => creaNave(scena))
+  const madre = el('madre', () => creaMadre(scena))
   const fascia = profilo('asteroidi')   // pixel ratio di partenza, scintille e prontezza dell'adattamento: store/qualita.js
-  const eff = creaEffetti(scena, fascia)
+  const eff = el('effetti', () => creaEffetti(scena, fascia))
 
   // la scena si dipinge su una tela di scorta, poi un passaggio solo fa vignetta, colore, grana e tono
   const tela = new WebGLRenderTarget(4, 4, { type: HalfFloatType, depthBuffer: true })
@@ -137,6 +145,7 @@ function costruisci(renderer, fisso) {
 
   console.info(`[spazio3d] parte a pixel ratio ${dpr} (fascia ${fasciaAttiva()}, schermo ${window.devicePixelRatio}, tetto ${DPR_MAX}, minimo ${DPR_MIN}${fisso ? ', fisso' : ''})`)
   return {
+    spenti, scena, gl: () => renderer.getContext(),
     ridimensiona(w, h) { W = Math.max(1, w); H = Math.max(1, h); misura() },
     // le forme di un cielo si fanno quando si entra, non al primo sasso
     prepara(c) { for (let n = 0; n < 3; n++) formaDi(c === 'marte' ? 'marte' : specieDi(c), n); formaDi('bomba', 0) },
@@ -184,10 +193,14 @@ function costruisci(renderer, fisso) {
       const fatto = performance.now()
       msScena += (fatto - ora - msScena) * 0.05
       renderer.info.reset()
-      renderer.setRenderTarget(tela)
-      renderer.render(scena, camera)
-      renderer.setRenderTarget(null)
-      renderer.render(postScena, postCam)
+      elementi(scena)
+      if (spenti.has('post')) renderer.render(scena, camera)
+      else {
+        renderer.setRenderTarget(tela)
+        renderer.render(scena, camera)
+        renderer.setRenderTarget(null)
+        renderer.render(postScena, postCam)
+      }
       msDisegno += (performance.now() - fatto - msDisegno) * 0.05
     },
     // per i test e per chi misura: quanto costa un fotogramma

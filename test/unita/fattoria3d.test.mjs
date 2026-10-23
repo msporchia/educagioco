@@ -28,6 +28,7 @@ import { dettoDi } from '../../src/giochi/fattoria3d/scena3d/detti.js'
 import { dettaglioDi as dettaglioDiMerce } from '../../src/giochi/fattoria3d/viste/inventario-puro.js'
 import { statoIniziale, normalizza, bestieInForma, VERSIONE_STATO } from '../../src/giochi/fattoria3d/motore/stato.js'
 import manifesto from '../../src/giochi/fattoria3d/gioco.js'
+import { misure, statoTraguardo } from '../../src/store/progressi.js'
 import { guastiDellAlbo } from '../../src/giochi/albo.js'
 import { controlla, uguale, stessaLista, riassunto } from '../aiuto/verifica.mjs'
 
@@ -58,6 +59,20 @@ controlla('e i sassi e i cespugli pure', JSON.stringify(ostacoliStorici()) === J
 controlla('il manifesto è in prova e senza tappe', manifesto.sperimentale === true && manifesto.tappe === 0 && manifesto.chiave === 'fattoria3d')
 const gA = guastiDellAlbo([manifesto])
 controlla('l\'albo del manifesto sta in piedi', gA.length === 0, gA.join(' · '))
+
+{
+  /* i traguardi (parità I14/S8): da vuoti a zero, da pieni tutti d'oro, e «Un po' di tutto» è un primato */
+  const vuotoP = { totals: {}, best: {}, items: {}, campagne: {} }
+  const mV = misure(vuotoP)
+  controlla('da vuoto nessun traguardo è preso e il gioco non vale esperienza',
+            manifesto.albo.traguardi.every(t => statoTraguardo(t, mV).grado === 0) && manifesto.albo.xp(mV) === 0 && !manifesto.albo.provato(mV))
+  const totals = {}
+  for (const k of ['Terre', 'Pezzi', 'Raccolti', 'Alberi', 'Prodotti', 'Uova', 'Latte', 'Ordini', 'Mongolfiera', 'Visite', 'Aiuti']) totals['fattoria3d' + k] = 500
+  const mP = misure({ totals, best: { fattoria3dVarieta: 40 }, items: {}, campagne: {} })
+  const presi = manifesto.albo.traguardi.map(t => statoTraguardo(t, mP))
+  controlla('da pieno li prende tutti d\'oro', presi.every(s => s.finito), presi.filter(s => !s.finito).map(s => s.id).join(' · '))
+  controlla('«Un po\' di tutto» c\'è e vale esperienza', manifesto.albo.traguardi.some(t => t.id === 'f3d-varieta') && manifesto.albo.xp(misure({ totals: {}, best: { fattoria3dVarieta: 9 }, items: {}, campagne: {} })) === 9)
+}
 
 /* ══════════ 2. si parte da un campo vuoto, dentro il terreno ══════════ */
 {
@@ -413,7 +428,7 @@ controlla('l\'albo del manifesto sta in piedi', gA.length === 0, gA.join(' · ')
     for (const c of r.colture) controlla(`la coltura ${c.id} dichiara ${l}`, COLTURE[c.id].liv === l && !viste.has('c' + c.id) && !!viste.add('c' + c.id))
     for (const c of r.ricette) controlla(`la ricetta ${c.id} si fa dal ${l}`, livelloDellaRicetta(c.id) === l && !viste.has('r' + c.id) && !!viste.add('r' + c.id))
   }
-  uguale('tutto quello che esiste arriva a un livello', viste.size, Object.values(PEZZI).filter(d => !d.stagione).length + Object.keys(EDIFICI).length + Object.keys(COLTURE).length + Object.keys(RICETTE).length)
+  uguale('tutto quello che esiste arriva a un livello', viste.size, Object.values(PEZZI).filter(d => !d.stagione && !d.fiera).length + Object.keys(EDIFICI).length + Object.keys(COLTURE).length + Object.keys(RICETTE).length)
   uguale('sedici colture', Object.keys(COLTURE).length, 16)
   stessaLista('le sedici chiavi', Object.keys(COLTURE).sort(), ['aglio', 'barbabietola', 'carota', 'cavolfiore', 'cipolla', 'erba', 'fragola', 'grano', 'lavanda', 'mais', 'melanzana', 'patata', 'peperone', 'pomodoro', 'riso', 'zucca'])
   // le cinque colture portate dalla 2D: arrivano dove le fa arrivare la 2D, e un vecchio stato (senza di loro) le apre a zero
@@ -538,7 +553,7 @@ controlla('l\'albo del manifesto sta in piedi', gA.length === 0, gA.join(' · ')
   stessaLista('costruito, il «!» sparisce', f.edificiDaCostruire(), ['mulino', 'fienile', 'telaio'])
   alLivello(f, 99)
   controlla('a livello alto sono tutti gli edifici mancanti, e solo edifici (mai una decorazione)', f.edificiDaCostruire().length === Object.keys(EDIFICI).length - 1 && f.edificiDaCostruire().every(t => !!EDIFICI[t] && !PEZZI[t]))
-  for (const id of ['1_2', '1_3', '1_4', '5_2', '5_3', '5_4']) f.compraLotto(id)               // tredici edifici da 3×3 non stanno nei nove lotti di partenza: un po' di terra in più
+  for (const id of ['1_2', '1_3', '1_4', '5_2', '5_3', '5_4', '2_1', '3_1', '4_1', '2_5']) f.compraLotto(id)               // diciassette edifici da 3×3 (con le quattro botteghe) non stanno nei nove lotti di partenza: un po' di terra in più
   for (const t of Object.keys(EDIFICI)) f.compraEdificio(t)
   uguale('tutti costruiti: nessun «!»', f.edificiDaCostruire().length, 0)
   controlla('le decorazioni non lo accendono mai', carteDi('decori', { livello: 99, prezzoPezzo: t => PEZZI[t].prezzo, nelMagazzino: () => 0, posseduti: {} }).every(c => !c.segnala))
@@ -1020,9 +1035,9 @@ function livelloDelPezzoDi(t) { return PEZZI[t].liv }
 {
   controlla('le carte non hanno guasti', guastiDelleCarte().length === 0, guastiDelleCarte().join('; '))
   controlla('ogni pezzo e ogni edificio ha una categoria valida', [...Object.values(PEZZI), ...Object.values(EDIFICI)].every(d => !!CATEGORIE[d.categoria]))
-  controlla('ogni scheda ha almeno una carta', Object.keys(CATEGORIE).every(c => schedeDi(statoMenu({ livello: 99 }))[c].length > 0))
+  controlla('ogni scheda ha almeno una carta (la scheda Feste solo in stagione o con un regalo della fiera: la linguetta si nasconde)', Object.keys(CATEGORIE).every(c => c === 'feste' || schedeDi(statoMenu({ livello: 99 }))[c].length > 0) && schedeDi(statoMenu({ livello: 99, stagione: 'natale' })).feste.length > 0)
   const tutte = Object.values(schedeDi(statoMenu({ livello: 99 }))).flat().filter(c => c.genere !== 'strumento')
-  uguale('ogni pezzo e ogni edificio unico sta in una scheda sola', tutte.length, Object.values(PEZZI).filter(d => !d.stagione).length + Object.keys(EDIFICI).length)          // le feste si offrono solo in stagione
+  uguale('ogni pezzo e ogni edificio unico sta in una scheda sola', tutte.length, Object.values(PEZZI).filter(d => !d.stagione && !d.fiera).length + Object.keys(EDIFICI).length)          // le feste si offrono solo in stagione, la fiera solo a chi l'ha vinta
   controlla('le carte di una scheda stanno in ordine di livello, prima quelle col «!»', Object.keys(CATEGORIE).every(c => {
     const carte = carteDi(c, statoMenu({ livello: 99 })).filter(x => x.genere !== 'strumento')
     const inOrdine = sg => { const l = carte.filter(x => !!x.segnala === sg).map(x => x.liv); return l.every((v, k) => !k || v >= l[k - 1]) }
@@ -1092,8 +1107,8 @@ function livelloDelPezzoDi(t) { return PEZZI[t].liv }
   stessaLista('le bestie di prima ci sono tutte, e hanno fame del mangime nuovo', [h.cose.find(c => c.id === 5).bestie.length, h.provaCuraBestie(5).motivo, h.provaCuraBestie(6).motivo, h.provaCura(7).motivo], [2, 'manca-mangime', 'manca-mangime', 'manca-mangime'])
 }
 
-function statoMenu({ livello, magazzino = {}, posseduti = {} }) {
-  return { livello, prezzoPezzo: t => PEZZI[t].prezzo, nelMagazzino: t => magazzino[t] || 0, posseduti }
+function statoMenu({ livello, magazzino = {}, posseduti = {}, stagione = null }) {
+  return { livello, prezzoPezzo: t => PEZZI[t].prezzo, nelMagazzino: t => magazzino[t] || 0, posseduti, stagione }
 }
 
 riassunto('Fattoria 3D')

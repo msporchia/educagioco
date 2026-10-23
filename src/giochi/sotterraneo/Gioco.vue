@@ -1406,8 +1406,9 @@ async function accendi3d() {
     try { m = await import('./scena3d/indice.js') } catch (e) { perso3d.value = true; return }
     if (!tela.value || !corsa.value || pittore) return
     const dpr = Number(new URLSearchParams(location.hash.slice(1)).get('dpr')) || undefined   // `&dpr=2`: per le foto
-    const spegni = (new URLSearchParams(location.hash.slice(1)).get('spegni') || '').split(',').filter(Boolean)   // `&spegni=nebbia`: per misurare
-    pittore = m.creaSotterraneo3d(tela.value, { strato: strato.value, perso: siPerdeIl3d, dpr, spegni, cieca: CIECA,
+    const h = new URLSearchParams(location.hash.slice(1)), lista = k => (h.get(k) || '').split(',').filter(Boolean)
+    const spegni = lista('spegni'), riaccendi = lista('riaccendi')   // `&spegni=nebbia`, `&riaccendi=ombre`: per misurare e confrontare
+    pittore = m.creaSotterraneo3d(tela.value, { strato: strato.value, perso: siPerdeIl3d, dpr, spegni, riaccendi, cieca: CIECA,
                                                bersaglio: scegliIlBersaglio, accorcia: () => racconto.accorcia(),
                                                // una botte rotta (solo il 3D, un passatempo): un tonfo di legno e basta
                                                botteRotta: () => { suono.nota(170, 70, 0.18, 'square', 0.09); suono.rumore(0.16, 0.1, 1600, 400) } })

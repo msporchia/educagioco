@@ -13,8 +13,8 @@ import { vesti, ombraDi } from './vesti.js'
 // è la loro posizione)
 export function materialiDelKit(trame) {
   const fai = oggetto => {
-    const std = (o, nome) => { const m = new MeshStandardMaterial({ vertexColors: true, roughness: 0.88, metalness: 0, ...o }); m.name = nome; return vesti(m, { oggetto }) }
-    const stoffa = std({ map: trame.stoffa.map, side: DoubleSide, roughness: 0.95 }, 'stoffa')
+    const std = (o, nome, codice = '') => { const m = new MeshStandardMaterial({ vertexColors: true, roughness: 0.88, metalness: 0, ...o }); m.name = nome; return vesti(m, { oggetto, codice }) }
+    const stoffa = std({ map: trame.stoffa.map, side: DoubleSide, roughness: 0.95 }, 'stoffa', 'stoffa')   // le righe qui sotto: un codice suo
     const prima = stoffa.onBeforeCompile
     stoffa.onBeforeCompile = (sh, r) => {
       prima(sh, r)

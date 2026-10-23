@@ -7,6 +7,7 @@
 import { PEZZI_DEL_CORTILE, EDIFICIO_PENTOLONE } from './cortile.js'
 import { PEZZI_DEL_CORTILE_2 } from './cortile2.js'
 import { pezziDecori, SCHEDE_DECORI } from './decori.js'
+import { EDIFICI_BOTTEGHE } from './botteghe.js'
 import { prezzoDa2D, livelloDa2D, crescitaDa2D, livelloPerPrezzo, LIVELLO_PESCA } from './parita2d.js'
 
 /** Prezzo, livello e rincaro di un pezzo, dalla 2D. `rincaro` è il passo per copia a prezzo pieno (13 per il campo da 22); il prezzo vero della copia n è `prezzoPezzo`. */
@@ -85,6 +86,7 @@ export const EDIFICI = {
   friggitoria:   { nome: 'Friggitoria',   emoji: '🍟', art: 'la', w: 3, d: 3, ...edificio2d('friggitoria'), categoria: 'edifici' },     // nata dopo i posti liberi: il suo posto storico è solo per i controlli (`nuovo` in dati/mondo.js)
   sushi_bar:     { nome: 'Sushi bar',     emoji: '🍣', art: 'il', w: 3, d: 3, ...edificio2d('sushi_bar'), categoria: 'edifici' },
   pentolone:     EDIFICIO_PENTOLONE,      // la 14ª macchina della 2D (giro G4): liv e prezzo provvisori in dati/cortile.js
+  ...EDIFICI_BOTTEGHE,     // le quattro botteghe del paese (giro G7): non lavorano, chiedono; prezzo e livello della 2D (dati/botteghe.js)
 }
 export const TIPI_DI_EDIFICIO = Object.keys(EDIFICI)
 
@@ -118,6 +120,7 @@ export function guastiDelCatalogo() {
       if (q.length !== (Array.isArray(d.alzato) ? lungo : 1) || !q.every(x => x > 0 && x < 0.5)) g.push(`${tipo}: calpestabile senza una quota sensata (alzato)`)
     }
     if (d.acqua && (d.calpestabile || d.suAcqua || d.produttivo)) g.push(`${tipo}: un pezzo d'acqua è solo decorazione e non ci si cammina`)
+    if ((d.soloAcqua || d.anfibio) && !d.suAcqua) g.push(`${tipo}: «soloAcqua» e «anfibio» sono pezzi che stanno anche sull'acqua (suAcqua)`)
     if (d.molo && !(d.calpestabile && d.suAcqua)) g.push(`${tipo}: un molo si cammina e sta sull'acqua`)
     if (d.riva && !d.suAcqua) g.push(`${tipo}: «riva» vuol dire che sta anche sull'acqua`)
     if (d.calpestabile && d.produttivo) g.push(`${tipo}: un pezzo calpestabile è solo decorazione`)
