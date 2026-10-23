@@ -4,7 +4,7 @@ import { load, save, flush } from './storage.js'
 
 const CHIAVE = 'benchmark'
 
-/** { sintetico: { quando, log }, veri: { quando, log } }, quelle che ci sono. */
+/** { sintetico, veri, elementi (chi pesa) }: { quando, log }, quelle che ci sono. */
 export async function ultimeMisure() {
   try { const c = await load(CHIAVE); return c && typeof c === 'object' ? c : {} } catch (e) { return {} }
 }

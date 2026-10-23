@@ -4,6 +4,7 @@
 // del fotogramma INTERO di un gioco (lavoro al p95): liscio sotto 20 ms, a scatti sopra 33 (30 fps), molto sopra 66 (15 fps).
 import { CPU, data, modello } from './log.js'
 import { rigaIngresso, letturaIngresso } from './log-ingresso.js'
+import { tabellaElementi, letturaElementi } from './log-elementi.js'
 
 export const SOGLIE_VERI = { liscio: 20, scatti: 33, molto: 66 }
 export const LIMITE_CAMPO = 3400   // i caratteri di un invio del modulo dei giudizi (il campo regge ~3,5k)
@@ -76,6 +77,7 @@ export function letturaVeri(dati) {
         (l.molto ? `, oltre 66 da ${l.molto.quanti} (${di(l.molto)})` : ', mai oltre 66')) + pend + '.')
   }
   righe.push(...letturaIngresso(crudi))
+  righe.push(...letturaElementi(ris))
   // la scomposizione: la scena intera e una cosa tolta alla volta; ordinate per quanto si guadagna
   const ab = m('ab-base')
   if (ab) {
@@ -126,7 +128,7 @@ export function letturaVeri(dati) {
       : `COLLO DI BOTTIGLIA: nessuno fra quelli provati (a raddoppiarli: ${chi} ${segnato(quanto)}, ${altri} ms): il tempo sta altrove.`)
   }
   // la CPU o la GPU: di tutte le scene misurate, quanto del lavoro è attesa della scheda
-  const conGpu = ris.filter(r => misurata(r) && r.gpu != null && r.js != null)
+  const conGpu = ris.filter(r => misurata(r) && !r.el && r.gpu != null && r.js != null)
   if (conGpu.length) {
     const g = conGpu.reduce((n, r) => n + r.gpu, 0), j = conGpu.reduce((n, r) => n + r.js, 0)
     const quota = Math.round(100 * g / Math.max(0.1, g + j))
@@ -154,7 +156,7 @@ export function letturaVeri(dati) {
   const parallelo = !((dati.info || {}).mancanti || []).includes('KHR_parallel_shader_compile')
   if (primi.length || sh) righe.push(`Prima apparizione: ${primi.map(r => `${r.nome} ${Math.round(r.primo)} ms`).join(', ') || 'nessuna sopra 100 ms'}; ${sh} shader nuovi, ` +
     `fino a ${prog} programmi in un gruppo` + (parallelo ? '.' : '; senza KHR_parallel_shader_compile si compilano bloccando: vanno precompilati (renderer.compileAsync) a una schermata di caricamento.'))
-  const pesante = ris.filter(r => misurata(r) && r.p95 != null).sort((x, y) => y.p95 - x.p95)[0]
+  const pesante = ris.filter(r => misurata(r) && !r.el && r.p95 != null).sort((x, y) => y.p95 - x.p95)[0]
   if (pesante) righe.push(`Chi pesa di più: ${pesante.nome} (p95 ${pesante.p95} ms, ${pesante.ch} chiamate, ${kt(pesante.tri)}k triangoli).`)
   const i = dati.info || {}, p = i.precisione
   if (p) righe.push(`GPU: highp nei frammenti ${p.fsAlta ? 'si' : 'NO'}, mediump a ${p.fsMedia} bit` +
@@ -182,7 +184,8 @@ export function componiVeri(dati, { versione = '', ua = '', nome = '', cpu = nul
   ]
   const corpo = []
   let gr = '', vista = new Set()
-  for (const r of dati.risultati || []) {
+  // chi pesa (docs/core/vecchio-telefono-elementi.md): niente righe per scena, la sua tabella in fondo
+  for (const r of (dati.risultati || []).filter(x => !x.el)) {
     if (r.gruppo !== gr) {
       gr = r.gruppo
       const g = (dati.gruppi || {})[gr] || {}, l = g.luci, rr = (dati.risultati || []).filter(x => x.gruppo === gr)
@@ -194,6 +197,8 @@ export function componiVeri(dati, { versione = '', ua = '', nome = '', cpu = nul
     }
     corpo.push(rigaVera(r))
   }
+  const crudi = dati.risultati || [], el = tabellaElementi(crudi.map(corretta), crudi)
+  if (el.length) corpo.push(...(corpo.length ? [''] : []), 'CHI PESA (elemento: da solo / tolto dalla scena intera, ms tolto il calore)', ...el)
   const avvisi = (dati.avvisi || []).slice(0, 6).map(x => `- ${x.n}x ${x.m}`)
   const dd = { v: 2, k: 'veri', i: { g: i.gpu, v: i.fornitore, t: i.maxTex, u: [i.uniVert, i.uniFrag], p: [p.vsAlta, p.fsAlta, p.fsMedia], m: i.mancanti || [] },
     s: dati.schermo, d: dati.dpr, f: dati.fascia, js: dati.js, b: a.batteria ? [a.batteria.livello, a.batteria.carica ? 1 : 0, z.batteria ? z.batteria.livello : null] : null,

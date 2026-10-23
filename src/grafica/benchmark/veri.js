@@ -4,6 +4,7 @@
 // (shader, geometrie, riserve: il primo fotogramma si tiene a parte) e poi la misura, finché i fotogrammi lenti non si fermano.
 import { proveCpu } from './prove.js'
 import { eventiContesto } from './veri/tela.js'
+import { tappeDegliElementi } from './veri/elementi-dati.js'
 
 export const SOGLIA = 33          // ms di lavoro al p95: oltre, a scatti (30 fps)
 export const SALTA_OLTRE = 400    // una scena oltre questo al p95: il resto della sua serie che cresce non si misura (il telefono si pianterebbe)
@@ -15,6 +16,8 @@ const TEMPI = {
   corto: { rodaggio: [120, 300], misura: [250, 500], finestra: 120, quadri: 0, fine: 3000 },        // le prove (`window.__benchmarkCorto`)
   // il riferimento del calore all'inizio di ogni gruppo, dopo la pausa che fa raffreddare
   rif: { rodaggio: [1000, 2500], misura: [2000, 3000], finestra: 1000, quadri: 10, fine: 8000 },
+  // chi pesa, un elemento alla volta (docs/core/vecchio-telefono-elementi.md): tante scene corte
+  elementi: { rodaggio: [1500, 3500], misura: [3000, 4500], finestra: 1000, quadri: 12, fine: 12000 },
 }
 const RAFFREDDA = 8000   // ms a schermo nero fra un gruppo e l'altro
 
@@ -74,6 +77,8 @@ export const TAPPE = [
   { gruppo: 'calore', carica: discese, scene: [{ id: 'cal-2', nome: 'riferimento, di nuovo alla fine', mostri: 8, colpi: true }] },
 ]
 export const QUANTE = TAPPE.reduce((n, t) => n + t.scene.length, 0)
+/** Chi pesa (docs/core/vecchio-telefono-elementi.md): a parte, solo se `solo` li chiede (`['elementi']`, o i gruppi e gli id). */
+export const TAPPE_ELEMENTI = tappeDegliElementi()
 
 const mediana = v => { const o = v.slice().sort((a, b) => a - b); return o.length ? o[Math.floor(o.length / 2)] : 0 }
 const perc = (v, q) => { const o = v.slice().sort((a, b) => a - b); return o.length ? o[Math.min(o.length - 1, Math.floor(q * o.length))] : 0 }
@@ -223,7 +228,9 @@ async function riferimento({ contenitore, fermo, corto, progresso, k, tot, raffr
 export async function eseguiVeri({ contenitore, progresso = () => {}, fermo = () => false, corto = false, solo = null, fascia = null, raffredda = RAFFREDDA }) {
   const tempi = corto ? TEMPI.corto : TEMPI.normale
   const info = infoGpuVeri()
-  const tappe = TAPPE.map(t => ({ ...t, scene: t.scene.filter(s => !solo || solo.some(p => s.id.startsWith(p))) })).filter(t => t.scene.length)
+  // `solo` sceglie per id o per gruppo; senza, le scene di sempre (gli elementi no: sono una prova a parte)
+  const tappe = (solo ? [...TAPPE, ...TAPPE_ELEMENTI] : TAPPE)
+    .map(t => ({ ...t, scene: t.scene.filter(s => !solo || solo.some(p => s.id.startsWith(p) || t.gruppo.startsWith(p))) })).filter(t => t.scene.length)
   const tot = tappe.reduce((n, t) => n + t.scene.length, 0)
   const risultati = [], gruppi = {}, saltate = new Set(), avvisi = new Map()
   // gli avvisi e gli errori della console mentre gira (shader che non compilano, modelli che non si saldano…): si riassumono nel log
@@ -281,7 +288,7 @@ export async function eseguiVeri({ contenitore, progresso = () => {}, fermo = ()
             if (f.misura) r = await f.misura(s)
             else {
               const prima = f.conti ? f.conti().programmi : 0
-              r = await giro.misura(tempi, fermo, () => f.scena(s), s === tappa.scene[0])
+              r = await giro.misura(corto ? tempi : TEMPI[tappa.tempi] || tempi, fermo, () => f.scena(s), s === tappa.scene[0])
               if (giro.guasto) throw giro.guasto
               const c = f.conti ? f.conti() : {}
               if (f.gl() && f.gl().isContextLost()) throw new Error('contesto WebGL perso')
@@ -322,4 +329,4 @@ export async function eseguiVeri({ contenitore, progresso = () => {}, fermo = ()
            schermo: `${Math.round(window.innerWidth)}x${Math.round(window.innerHeight)}`, dpr: window.devicePixelRatio || 1, fermata: fermo() }
 }
 
-const riga = (s, t) => ({ id: s.id, gruppo: t.gruppo, nome: s.nome, ...(s.serie ? { serie: s.serie, quanti: s.quanti } : {}) })
+const riga = (s, t) => ({ id: s.id, gruppo: t.gruppo, nome: s.nome, ...(s.serie ? { serie: s.serie, quanti: s.quanti } : {}), ...(s.el ? { el: s.el } : {}) })
