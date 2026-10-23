@@ -106,6 +106,7 @@ function letturaAB(ris) {
   const righe = [`A/B, 1 mostro con gli effetti, giri alternati: oggi ${A.ms} ms (js ${A.js}, gpu ${A.gpu}), da ${A.min} a ${A.max} fra un giro e l'altro (${A.n} giri).`]
   righe.push(frase('Le semplificazioni della fascia bassa (ombre, nebbia fitta, polvere)', di('b'), 1, 'tolgono', 'aggiungono'))
   righe.push(frase('La pelle', di('d'), 1))
+  righe.push(frase('La luce per vertice del piano (accesa nella fascia bassa)', di('f'), 1))
   righe.push(frase('Spegnere il rilievo (senza normal map)', di('c'), -1))
   const e = di('e')
   if (e) righe.push(frase('Tutte le leve buone insieme (misurate)', e, -1))

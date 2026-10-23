@@ -9,14 +9,14 @@ export const idAB = (k, r) => (k === 'a' && r === 1 ? 'sot-1' : `ver-${k}${r}`)
 
 /**
  * Le varianti. A: com'è oggi (fascia bassa). B: le semplificazioni riaccese (come `&riaccendi=`). C: senza rilievo. D: senza pelle. E: tutte
- * le leve buone insieme, scelte sui giri già fatti (`leveBuone`). Qui va anche `lucePerVertice` (`spegni: ['lucePerVertice']`), da un'altra
- * mano: una variante in più in questa lista e una voce in `LEVE` sotto.
+ * le leve buone insieme, scelte sui giri già fatti (`leveBuone`). La F è `lucePerVertice` spenta: la sua differenza dalla A (F − A) è quanto toglie la luce per vertice, già accesa nella fascia bassa.
  */
 export const VARIANTI = [
   { k: 'a', nome: 'A: com\'è oggi (fascia semplificata)', opz: {} },
   { k: 'b', nome: 'B: semplificazioni riaccese (ombre, nebbiaFitta, quantaPolvere)', opz: { riaccendi: ['ombre', 'nebbiaFitta', 'quantaPolvere'] } },
   { k: 'c', nome: 'C: senza rilievo (niente normal map)', opz: { spegni: ['rilievo'] } },
   { k: 'd', nome: 'D: senza pelle', opz: { spegni: ['pelle'] } },
+  { k: 'f', nome: 'F: senza luce per vertice (il piano con la luce per pixel)', opz: { spegni: ['lucePerVertice'] } },
   { k: 'e', nome: 'E: tutte le leve buone insieme', opz: null },   // `opz` si decide quando tocca (veri.js)
 ]
 

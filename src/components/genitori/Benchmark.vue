@@ -100,9 +100,9 @@ async function copia() {
       <p>Tieni lo schermo acceso e non toccare niente.</p>
       <button type="button" class="bottone" data-azione="benchmark-avvia" @click="avvia('sintetico')">Avvia la misura</button>
       <h3>Con i modelli veri del gioco</h3>
-      <p>20 scene, circa 5 minuti (al massimo 6): il primo attacco in un piano col riscaldamento acceso e spento; lo scontro con 1 mostro e gli
-        effetti in cinque varianti, tre giri alternati (come oggi, con le semplificazioni riaccese, senza rilievo, senza pelle, con le leve buone
-        insieme); il mondo di sopra con 8 persone e 8 mostri; lo zaino. Ogni scena dice com'è andata rispetto all'ultima misura vera, e alla fine
+      <p>23 scene, circa 6 minuti: il primo attacco in un piano col riscaldamento acceso e spento; lo scontro con 1 mostro e gli
+        effetti in sei varianti, tre giri alternati (come oggi, con le semplificazioni riaccese, senza rilievo, senza pelle, senza la luce per vertice,
+        con le leve buone insieme); il mondo di sopra con 8 persone e 8 mostri; lo zaino. Ogni scena dice com'è andata rispetto all'ultima misura vera, e alla fine
         il resoconto dice quanto toglie ogni leva (con la dispersione fra i giri) e quanti ms mancano ai 33.</p>
       <p><b>Guarda lo schermo</b>: se un colore, una luce o la nebbia ti sembrano strani, alla fine scrivilo nelle note.
         Tieni il telefono acceso e in carica se puoi: lo schermo non deve spegnersi.</p>
