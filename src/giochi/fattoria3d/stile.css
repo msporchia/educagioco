@@ -87,6 +87,10 @@
 .f3-griglia-carte .carta[data-cat="raccolto"] .disegno { background: #fbecc8; }
 .f3-griglia-carte .carta[data-cat="case"] .disegno { background: #f1dcd0; }
 .f3-griglia-carte .carta[data-cat="bestiole"] .disegno { background: #e8e0f4; }
+.f3-griglia-carte .carta[data-cat="fiori"] .disegno { background: #fbdde6; }
+.f3-griglia-carte .carta[data-cat="arredo"] .disegno { background: #e9e2d2; }
+.f3-griglia-carte .carta[data-cat="acqua"] .disegno { background: #d3e8f4; }
+.f3-griglia-carte .carta[data-cat="feste"] .disegno { background: #fde7c4; }
 .f3-griglia-carte .carta b { font-size: 13px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .f3-griglia-carte .carta small { font-size: 12px; color: #7a5a3a; font-weight: 700; }
 .f3-griglia-carte .carta small.prezzo { padding: 1px 8px; border-radius: 10px; background: #fff0c4; color: #5a3a1a; }

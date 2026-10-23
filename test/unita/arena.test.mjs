@@ -377,8 +377,8 @@ controlla('stesso seme, stessa partita', JSON.stringify(uguali) === JSON.stringi
   controlla('l\'ultima tappa: il difficile è più bravo del facile (pensa prima, più furbo)',
             sfidaDi(CAMPAGNA[11], 'difficile').nemico.furbizia > sfidaDi(CAMPAGNA[11], 'facile').nemico.furbizia &&
             sfidaDi(CAMPAGNA[11], 'difficile').nemico.pensa < sfidaDi(CAMPAGNA[11], 'facile').nemico.pensa)
-  controlla('e non più ricco oltre la parità: monete e forza al massimo come le tue',
-            LIVELLI.every(l => CAMPAGNA.every(t => sfidaDi(t, l.chiave).nemico.forza <= 1 && sfidaDi(t, l.chiave).nemico.moneteAlSecondo <= GIOCATORE.moneteAlSecondo + 1e-9)))
+  controlla('e non più ricco oltre la parità: monete e forza al massimo come le tue',   // la scheda è arrotondata a tre decimali
+            LIVELLI.every(l => CAMPAGNA.every(t => sfidaDi(t, l.chiave).nemico.forza <= 1 && sfidaDi(t, l.chiave).nemico.moneteAlSecondo <= GIOCATORE.moneteAlSecondo + 5e-4)))
   uguale('le stesse truppe a ogni livello', sfidaDi(CAMPAGNA[5], 'facile').truppe, sfidaDi(CAMPAGNA[5], 'difficile').truppe)
   uguale('senza livello è il medio', sfidaDi(CAMPAGNA[5]).nemico, NEMICO_PER_LIVELLO.medio[CAMPAGNA[5].chiave])
   const p = new Partita({ rnd: caso(8), sfida: sfidaInfinita('neve', 'difficile') })

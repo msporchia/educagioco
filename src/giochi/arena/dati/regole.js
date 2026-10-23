@@ -125,7 +125,7 @@ export const CRESCITA = {
      in piedi: `resa` lo fa diventare il moltiplicatore delle monete al secondo */
   miniera: {
     prezzo: liv => 8 + 6 * liv + liv * liv,                // 8 costruirla, poi 15, 24, 35, 48…
-    resa: liv => 1 + 0.7 * (liv - 1),                      // +70% per ogni livello di miniera
+    resa: liv => 1 + (liv - 1),                             // +100% della base per ogni livello di miniera
     vita: liv => 800 + 150 * (liv - 1),                    // più fragile di una caserma: chi fa economia rischia
   },
 }
@@ -133,7 +133,7 @@ export const CRESCITA = {
 /* Le scelte che non sono caserme. `op` decide il tipo di calcolo. */
 export const AZIONI = {
   miniera:  { nome: 'Miniera', op: '×', prezzo: null,
-              nota: 'Una miniera su una piazzola: le monete arrivano il 70% più in fretta per ogni suo livello, finché sta in piedi. Costa ora, rende dopo, e il nemico la può abbattere.' },
+              nota: 'Una miniera su una piazzola: le monete arrivano il doppio più in fretta per ogni suo livello (la base da sola è poca), finché sta in piedi. Costa ora, rende dopo, e il nemico la può abbattere.' },
   ripara:   { nome: 'Ripara',     op: '+', prezzo: 6,
               nota: 'Rimette in sesto la costruzione messa peggio (anche il muro, anche crollato): +40% di vita.' },
   castello: { nome: 'Castello',   op: '÷', prezzo: null,
@@ -160,7 +160,7 @@ export const NEMICI = {
   normale: { moneteAlSecondo: 1 / 1.45, pensa: 1.2, forza: 1 },
   tosto:   { moneteAlSecondo: 1 / 1.1,  pensa: 1.2, forza: 1 },
 }
-export const GIOCATORE = { moneteAlSecondo: 1 / 1.2, iniziali: 14 }
+export const GIOCATORE = { moneteAlSecondo: 1 / 1.8, iniziali: 14 }
 export const DURATA = 300                            // secondi di partita se nessuno cade prima: la miniera deve fare in tempo a rendere
 
 /* Il dato si controlla da sé: un numero sbagliato è un test rosso in un

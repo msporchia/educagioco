@@ -145,7 +145,7 @@ e ci sono tutte le truppe del terreno. Il nemico e i giocatori finti usano la st
 
 **La miniera sta su una piazzola come una caserma** (l'utente): si costruisce, si potenzia,
 si vende, si ripara, e il nemico la può abbattere. Ogni suo livello fa arrivare le monete
-il 70% più in fretta finché sta in piedi (il livello di miniera di una parte è 1 + la somma
+il doppio più in fretta (+100% della base) finché sta in piedi (il livello di miniera di una parte è 1 + la somma
 dei livelli delle sue miniere: `contaMiniere`). Costa 8 costruirla, poi 15, 24, 35, 48…
 (`CRESCITA.miniera.prezzo`), ha meno vita di una caserma, e se ne fanno quante si vuole:
 rush o economia diventa una scelta di spazio, oltre che di monete. Prima era un pulsante

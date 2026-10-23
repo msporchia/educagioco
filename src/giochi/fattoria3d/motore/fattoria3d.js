@@ -233,6 +233,7 @@ export class Fattoria3d {
     if (!PEZZI[tipo] && !EDIFICI[tipo]) return { ok: false, motivo: 'sconosciuto' }
     if (EDIFICI[tipo] && (this.s.posseduti[tipo] || this.nelMagazzino(tipo) > 0)) return { ok: false, motivo: 'gia-tuo' }       // uno per tipo
     if (PEZZI[tipo] && PEZZI[tipo].unico && (this.nelMagazzino(tipo) > 0 || this.s.cose.some(c => c.tipo === tipo))) return { ok: false, motivo: 'gia-tuo' }       // il porticciolo è uno solo
+    if (PEZZI[tipo] && PEZZI[tipo].fiera) return { ok: false, motivo: 'non-in-vendita' }       // la fiera si vince dalla mongolfiera (fattoria3d/mongolfiera.md)
     const chiuso = this._chiusa(livelloDelPezzo(tipo))
     if (chiuso) return chiuso
     const costo = this.prezzoPezzo(tipo)
@@ -251,7 +252,8 @@ export class Fattoria3d {
       if (this.acqua(i + a, j + b, ignora)) acqua = true; else terra = true
     }
     if (acqua && !d.suAcqua) return { ok: false, motivo: 'acqua' }
-    if (acqua && !terra && !this._appoggioPerPonte(d, i, j)) return { ok: false, motivo: 'acqua' }
+    if (d.soloAcqua && terra) return { ok: false, motivo: 'serve-acqua' }          // le ninfee galleggiano: tutte le celle d'acqua (decorazioni.md)
+    if (acqua && !terra && !d.soloAcqua && !d.anfibio && !this._appoggioPerPonte(d, i, j)) return { ok: false, motivo: 'acqua' }       // le canne stanno anche nell'acqua bassa: niente appoggio
     if (d.riva && !this._toccaAcqua(d, i, j)) return { ok: false, motivo: 'serve-riva' }
     if (d.unico && !ignora && this.s.cose.some(c => c.tipo === tipo)) return { ok: false, motivo: 'gia-tuo' }
     for (let a = 0; a < d.w; a++) for (let b = 0; b < d.d; b++) {

@@ -32,7 +32,7 @@ giocatore, poi solo il pensare e la furbizia). Le promesse sono in `LIVELLI` di 
 | livello | il bambino (90% di conti giusti) vince | chi non sbaglia mai vince al massimo |
 |---|---|---|
 | facile | 95% → 60% | niente tetto |
-| medio | 90% → 35% | 85% → 50% dalla tappa 6 |
+| medio | 80% → 30% | 80% → 40% dalla tappa 2 |
 | difficile | 70% → 15% | 70% → 20% dalla tappa 3 |
 
 Vale la più dura; anche il rush (+10 punti) ha il suo tetto (se non si riesce a rispettarlo, il log dice
@@ -83,3 +83,28 @@ tutti i tetti, rush compreso.
   costa il castello, costa una caserma ferma.
 - **Provato: il castello al livello 3 per prima cosa.** Quel bambino perdeva contro nemici deboli che il
   pigro batteva sempre (l'utente: «ho 70 monete, non sto facendo niente e sto stravincendo»).
+
+## Il Medio più duro (22 ottobre)
+
+L'utente: «il bambino lamenta che è ancora troppo semplice e vince troppo spesso senza problemi». Le promesse del Medio
+erano 90% → 35% per il bambino e il tetto di chi non sbaglia solo dalla tappa 6: le prime cinque tappe restavano
+vinte quasi sempre (`misura` 80-99%). Adesso 80% → 30% e il tetto dalla tappa 2 (80% → 40%); misurato: `misura`
+80% alla tappa 2, 57% alla 5, 38% all'ultima. Il nemico è lo stesso (stesse regole, stessa IA): salgono solo `d` e
+con lui monete, forza e furbizia. Il rush nelle prime tappe resta sopra il tetto (70-90%): la palude non si ferma
+senza snaturare il bambino. Se anche così è facile, il passo dopo è il Difficile come livello di base.
+
+Il 23 ottobre, con le riparazioni limitate del nemico (`VERSIONE_IA` 13), le tre rampe sono state ritarate e le
+promesse reggono: il nemico ora è più forte a parità di `d`, quindi `d` è sceso (Medio, ultima tappa: 0,96 → 0,82).
+`-- --infinita --mono` (una truppa sola, mai miniera, in ogni terreno) è il controllo contro le strade senza
+contromossa; [nemico.md](nemico.md).
+
+## L'economia: base bassa, miniera che conta (23 ottobre)
+
+L'utente: «partiamo con troppi soldi forse, se la miniera di base non è utile». Misurato: con le monete di base di prima
+(1 ogni 1,2 secondi) chi mette tutto in truppe subito (`rush`) batteva chi fa miniera (`economia`) quasi in ogni tappa, e
+la miniera (+70% a livello) non cambiava la partita. Provato: meno monete iniziali (14 → 8) non cambia niente, perché il
+nemico parte uguale; `resa` +120% con la base di prima rende la miniera troppo forte (`economia` 100%). **Scelto**: base
+`1 / 1.8` al secondo (era 1 / 1.2), miniera +100% della base per livello (`CRESCITA.miniera.resa`), iniziali 14. Le tre
+strade si avvicinano (nella palude, Difficile, `rush` 87 → 50% e `misura` 57 → 10%); il `rush` resta il primo e il tetto
+del Medio per lui non si rispetta ancora nelle prime tappe. I prezzi non sono cambiati: la partita è un po' più lenta
+a monete, quindi le truppe si fanno un po' meno in fretta. Ritarato (`VERSIONE_IA` 13, firma nuova).

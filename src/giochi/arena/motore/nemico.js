@@ -8,12 +8,17 @@
 // la scaletta: la truppa che batte la tua, i potenziamenti concentrati, l'attacco a chi
 // prende la miniera scoperto. È più bravo, non più ricco. Ogni partita ha un CARATTERE diverso
 // (più aggressivo, più prudente, più minatore, meno riparatore…). Perché così: docs/arena/nemico.md.
-import { TRUPPE, LIV_MAX, BOMBA, CAMPO, EDIFICIO_DI, POSTI } from '../dati/regole.js'
+import { TRUPPE, LIV_MAX, BOMBA, CAMPO, EDIFICIO_DI, POSTI, GIOCATORE } from '../dati/regole.js'
 
 // quante caserme al più: le piazzole meno una, che resta per la miniera
 const CASERME = POSTI.length - 1
 // ogni quanti secondi, al più, si rifà il muro crollato
 const MURO_OGNI = 12
+// e per le altre riparazioni: al più una ogni tanto, e solo sotto questa frazione di vita
+const RIPARA_OGNI = 25
+const RIPARA_SOTTO = 0.5
+// da quante caserme in su chi ragiona le potenzia prima di farne altre
+const TRE = 3
 
 /* Una scaletta parla di ruoli, non di truppe: per ogni tappa il ruolo diventa la
    prima truppa che c'è (quelle di una tappa sono poche). */
@@ -66,13 +71,13 @@ export const CARATTERI = {
 
 /* sale a ogni ritocco del modo di giocare del nemico: entra nella firma dell'equilibrio (`firma.js`),
    così un'IA cambiata senza ritarare è un test rosso */
-export const VERSIONE_IA = 12
+export const VERSIONE_IA = 13
 
 /* `evita`: il carattere dell'ultima partita, per non giocare due volte di fila contro lo stesso */
 export function creaIA(rnd, evita = null) {
   const nomi = Object.keys(CARATTERI).filter(n => n !== evita)
   const nome = nomi[Math.floor(rnd() * nomi.length)]
-  return { nome, passo: 0, venduto: -99, murata: -99, ...CARATTERI[nome] }
+  return { nome, passo: 0, venduto: -99, murata: -99, riparato: -99, ...CARATTERI[nome] }
 }
 
 /* il ruolo di un passo → per costruire la truppa (meglio una che non ha ancora), per potenziare la
@@ -109,9 +114,11 @@ function emergenza(p) {
   const peggiore = [...p.riparabili('nem')].sort((a, b) => a.hp / a.max - b.hp / b.max)[0]
   if (peggiore) {
     const muro = peggiore.tipo === 'muro'
-    const serve = muro ? peggiore.hp <= 0 && p.ia.riparaMuro && p.t - p.ia.murata > MURO_OGNI : peggiore.hp < peggiore.max * p.ia.riparaSotto
-    if (serve && si(p, 'ripara') && p.fai('nem', 'ripara')) {
+    const serve = muro ? peggiore.hp <= 0 && p.ia.riparaMuro && p.t - p.ia.murata > MURO_OGNI : peggiore.hp < peggiore.max * Math.min(p.ia.riparaSotto, RIPARA_SOTTO)
+    // una riparazione ogni tanto: riparare a ogni colpo gli mangiava le monete che servivano a potenziare (palude, 22 ottobre)
+    if (serve && p.t - p.ia.riparato > RIPARA_OGNI && si(p, 'ripara') && p.fai('nem', 'ripara')) {
       if (muro) p.ia.murata = p.t
+      p.ia.riparato = p.t
       return true
     }
   }
@@ -134,7 +141,7 @@ function candidate(p, difesa) {
   if (difesa) {
     // chi sta perdendo rafforza: castello, riparazioni, poi chi ferisce a gruppi e chi vola
     if (castello.liv <= mediaLiv + 2) aggiungi('castello')
-    if (p.riparabili('nem').some(e => e.hp < e.max * Math.min(0.85, p.ia.riparaSotto + 0.15))) aggiungi('ripara')
+    if (p.t - p.ia.riparato > RIPARA_OGNI && p.riparabili('nem').some(e => e.hp < e.max * Math.min(0.85, p.ia.riparaSotto + 0.15))) aggiungi('ripara')
     for (const c of bassa.slice(0, 2)) aggiungi('potenzia', c.posto)
     for (const id of costruibili.slice(0, 2)) aggiungi('costruisci', id)
   } else {
@@ -174,9 +181,10 @@ function mossa(p) {
   const lista = candidate(p, difesa)
   if (!lista.length) return false
   const prima = lista[0]
-  if (l.monete >= prima.prezzo) return p.fai('nem', prima.azione, prima.id)
+  if (l.monete >= prima.prezzo) { if (prima.azione === 'ripara') p.ia.riparato = p.t; return p.fai('nem', prima.azione, prima.id) }
   if (l.monete >= prima.prezzo * 0.6) return false          // ci siamo quasi: si risparmia
   const altra = lista.find(o => l.monete >= o.prezzo)
+  if (altra && altra.azione === 'ripara') p.ia.riparato = p.t
   return altra ? p.fai('nem', altra.azione, altra.id) : false
 }
 
@@ -229,7 +237,7 @@ function testa(p) {
   const livelli = cs => cs.reduce((s, c) => s + c.liv, 0)
   // anche una truppa che ha già, se è quella che conviene (le piazzole sono libere)
   const nuove = p.truppeAmmesse.filter(id => p.prezzo('nem', 'costruisci', id) !== null)
-    .sort((a, b) => convenienza(b, sue, dentro) - convenienza(a, sue, dentro) || TRUPPE[a].costo - TRUPPE[b].costo)
+    .sort((a, b) => convenienza(b, sue, dentro) - convenienza(a, sue, dentro) || TRUPPE[b].splash - TRUPPE[a].splash || TRUPPE[a].costo - TRUPPE[b].costo)   // a pari, chi ferisce ad area: regge meglio di chi corre contro gli arcieri potenziati
   const salibili = mie.filter(c => c.liv < LIV_MAX)
     .sort((a, b) => convenienza(b.id, sue, dentro) + b.liv * 0.3 - convenienza(a.id, sue, dentro) - a.liv * 0.3)
   const castello = p.castello('nem')
@@ -255,6 +263,8 @@ function testa(p) {
   // in truppe e non fa mai miniera vinceva sempre, anche contro il nemico al massimo)
   const dietro = livelli(sue) + sue.length - livelli(mie) - mie.length > 2
   if (dietro) {
+    // con tre caserme si sale di livello prima di farne un'altra: rifarle sempre al primo livello le lascia sotto chi le potenzia
+    if (mie.length >= TRE && salibili.length) vuoi('potenzia', salibili[0].posto)
     if (nuove.length && mie.length < CASERME) vuoi('costruisci', nuove[0])
     if (salibili.length) vuoi('potenzia', salibili[0].posto)
   }
@@ -264,6 +274,8 @@ function testa(p) {
   if (io.miniera > l.miniera && !dentro.length && !dietro && p.ia.miniere >= 0.7) vuoi('miniera')
   // al sicuro: le monete crescono, anche se l'avversario ha più caserme (chi attacca subito lo può punire)
   if (!dentro.length && !dietro && l.miniera < 1 + (2 + 2 * f) * p.ia.miniere && p.t < (150 + 100 * f) * p.ia.miniere) vuoi('miniera')
+  if (mie.length < Math.min(CASERME, TRE) && nuove.length) vuoi('costruisci', nuove[0])
+  if (mie.length >= TRE && salibili.length) vuoi('potenzia', salibili[0].posto)
   if (mie.length < CASERME && nuove.length) vuoi('costruisci', nuove[0])
   if (castello.liv < Math.max(...sue.map(c => c.liv), 1) - 1) vuoi('castello')
   if (salibili.length) vuoi('potenzia', salibili[0].posto)
@@ -278,7 +290,21 @@ function testa(p) {
   return altro ? p.fai('nem', altro.azione, altro.id) : false
 }
 
+/* Nella battaglia infinita il nemico impara mentre si gioca: la furbizia sale verso 1, pensa più in fretta e monete e forza salgono fino a pari col giocatore, in
+   `CRESCITA_INFINITA` secondi di partita. Mai più ricco di te (docs/arena/nemico.md). */
+const CRESCITA_INFINITA = 150
+function cresciNemico(p) {
+  p.nemicoBase ??= p.nemicoCfg
+  const k = Math.min(1, p.t / CRESCITA_INFINITA), b = p.nemicoBase
+  const verso = (da, a) => da + (a - da) * k
+  p.nemicoCfg = { ...b, furbizia: verso(b.furbizia || 0, 1), pensa: b.pensa * (1 - 0.4 * k),
+                  moneteAlSecondo: verso(b.moneteAlSecondo, Math.max(b.moneteAlSecondo, GIOCATORE.moneteAlSecondo)), forza: verso(b.forza ?? 1, Math.max(b.forza ?? 1, 1)) }
+  p.forza.nem = p.nemicoCfg.forza
+  p.lati.nem.alSecondo = p.nemicoCfg.moneteAlSecondo
+}
+
 export function pensaNemico(p, dt) {
+  if (p.durata === Infinity) cresciNemico(p)
   p.pensa -= dt
   if (p.pensa > 0) return
   p.pensa = p.nemicoCfg.pensa

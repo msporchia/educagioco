@@ -41,7 +41,7 @@ non ha. Il nome `pasticceria` è già l'id del Pastificio 3D: la bottega ha l'id
 | M17 | quarta fila | dal livello 66 (`LIVELLO_GRANDE`) | ✅ `fileAl(livello)` legge `LIVELLO_GRANDE` dalla 2D (la scala ora è la stessa: 70 livelli) | – |
 | M18 | bonus | fila piena +25%, tutto pieno +50%, sorpresa della fiera | ✅ uguali | – |
 | M19 | riposo del cielo | 60 minuti | 🟡 2 minuti | P1 (D9) |
-| M20 | la sorpresa | una delle 8 voci `fiera` (bandierine, giostra, zucchero filato, lanterne, barattoli, girasole, spaventapasseri, palco) | 🟡 una decorazione qualunque del catalogo | P2 con W6 |
+| M20 | la sorpresa | una delle 8 voci `fiera` (bandierine, giostra, zucchero filato, lanterne, barattoli, girasole, spaventapasseri, palco) | ✅ le stesse otto, nella scheda «Feste» del menu solo se le hai (`fiera: true`, non si comprano); la sorpresa regala solo quelle, preferendo le meno avute ([../decorazioni.md](../decorazioni.md)) | – |
 | M21 | foglio | stiva di cassette | 🟡 foglio a casse, non visto su schermo | P1 |
 
 ## Carretto, vicini, vendere

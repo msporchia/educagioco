@@ -87,7 +87,29 @@ metà**, quando sono abbastanza fitte da valere la pena.
 
 Stesse regole, la scheda dell'ultima tappa e le truppe del terreno (`Partita.truppeAmmesse`): i ruoli si risolvono
 sulla lista ammessa e un passo che non c'è si salta. Le bestie cornute sono nel ruolo `veloce` (dove ci sono i
-mummie non ci sono le bestie) e in `BATTE` come terrestri a corto raggio. `VERSIONE_IA` 12.
+mummie non ci sono le bestie) e in `BATTE` come terrestri a corto raggio. `VERSIONE_IA` 13.
+
+## Il nemico che impara (battaglia infinita, 22-23 ottobre)
+
+L'utente: «anche a livello difficile dice che vince sempre». Tre cose, in ordine di peso:
+
+- **Ripara meno** (`RIPARA_OGNI` 25 s, `RIPARA_SOTTO` 0,5 in `nemico.js`). Era la perdita vera: il nemico riparava un edificio
+  ogni 7-8 secondi (il carattere «bastione» sotto il 70% di vita) e non aveva monete per potenziare, né le caserme: chi
+  potenzia le sue sopravvive e quelle del nemico, ferme al livello 1, cadevano e venivano rifatte al livello 1. Con tre caserme
+  o più chi ragiona (`testa`) potenzia prima di farne un'altra (`TRE`), e a pari di convenienza preferisce chi ferisce ad area
+  (i negromanti, contro gli arcieri potenziati le mummie correvano a morire). Il solo cambio alle riparazioni ha portato chi
+  costruiva solo arcieri nella palude da 97% a 87%, il resto ha fatto il resto. `VERSIONE_IA` 13.
+- **Impara mentre si gioca** (`cresciNemico`, solo con `durata === Infinity`): in 150 secondi di partita la furbizia sale a 1, pensa
+  il 40% prima, e monete e forza salgono fino a pari col giocatore, mai oltre (più bravo, non più ricco).
+  Le tappe non lo vedono.
+- **Nessuna strada senza contromossa**: `npm run tara:arena -- --infinita --mono` fa giocare, in ogni terreno, chi costruisce
+  una truppa sola e mai la miniera. Oggi nessuna passa il 27% a Difficile (prima arcieri nella palude 100%, diavoletti
+  nella lava 70%); le mummie da sole fanno il 27%: non erano loro. Il bambino (90% giusti) vince Facile 0-30%, Medio 0-20%,
+  Difficile 0-20%.
+
+**Aperto: la palude.** Chi mette in campo un po' di tutto e non fa miniera (`rush`) vince ancora 87-93% a Difficile, e solo lì (bosco,
+neve e lava 0-3%): senza pipistrelli né diavoletti le mummie hanno pochi che le fermino e il nemico ne costruisce a vuoto.
+Provato: mummie 170 → 150 di vita, non cambia niente. Da guardare con i duelli a livelli diversi e con le truppe del terreno.
 
 ## Se si ritocca
 

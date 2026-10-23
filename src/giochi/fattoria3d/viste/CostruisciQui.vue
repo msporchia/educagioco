@@ -23,6 +23,7 @@ const trema = ref('')
 let tremaFine = 0
 watch(() => props.messaggio, m => { msg.value = m })
 
+const visibile = k => !!CATEGORIE[k].strumenti || (props.schede[k] || []).length > 0          // «Feste» sparisce quando non ha carte (fuori stagione, senza regali della fiera)
 const segnalata = k => (props.schede[k] || []).some(c => c.segnala)       // una carta con il «!» accende la sua linguetta
 function vai(c) { scheda.value = ultimaScheda = c; msg.value = ''; chiedi(c) }
 
@@ -58,7 +59,7 @@ function tocca(carta) {
       <h2>Cosa costruiamo?</h2>
       <button class="f3-chiudi" data-chiudi aria-label="chiudi" @click="emit('chiudi')">✕</button>
       <div class="f3-schede" role="tablist">
-        <button v-for="(c, k) in CATEGORIE" :key="k" role="tab" :class="{ acceso: scheda === k }" :aria-selected="scheda === k" :data-scheda="k" :data-cat="k" @click="vai(k)">
+        <button v-for="(c, k) in CATEGORIE" v-show="visibile(k)" :key="k" role="tab" :class="{ acceso: scheda === k }" :aria-selected="scheda === k" :data-scheda="k" :data-cat="k" @click="vai(k)">
           <span class="em">{{ c.emoji }}</span>{{ c.nome }}<i v-if="segnalata(k)" class="f3-esclama" data-f3="scheda-esclama" aria-label="c'è un edificio da costruire">!</i>
         </button>
       </div>
