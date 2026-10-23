@@ -413,7 +413,7 @@ controlla('l\'albo del manifesto sta in piedi', gA.length === 0, gA.join(' · ')
     for (const c of r.colture) controlla(`la coltura ${c.id} dichiara ${l}`, COLTURE[c.id].liv === l && !viste.has('c' + c.id) && !!viste.add('c' + c.id))
     for (const c of r.ricette) controlla(`la ricetta ${c.id} si fa dal ${l}`, livelloDellaRicetta(c.id) === l && !viste.has('r' + c.id) && !!viste.add('r' + c.id))
   }
-  uguale('tutto quello che esiste arriva a un livello', viste.size, Object.values(PEZZI).filter(d => !d.stagione).length + Object.keys(EDIFICI).length + Object.keys(COLTURE).length + Object.keys(RICETTE).length)
+  uguale('tutto quello che esiste arriva a un livello', viste.size, Object.values(PEZZI).filter(d => !d.stagione && !d.fiera).length + Object.keys(EDIFICI).length + Object.keys(COLTURE).length + Object.keys(RICETTE).length)
   uguale('sedici colture', Object.keys(COLTURE).length, 16)
   stessaLista('le sedici chiavi', Object.keys(COLTURE).sort(), ['aglio', 'barbabietola', 'carota', 'cavolfiore', 'cipolla', 'erba', 'fragola', 'grano', 'lavanda', 'mais', 'melanzana', 'patata', 'peperone', 'pomodoro', 'riso', 'zucca'])
   // le cinque colture portate dalla 2D: arrivano dove le fa arrivare la 2D, e un vecchio stato (senza di loro) le apre a zero
