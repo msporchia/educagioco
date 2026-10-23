@@ -83,7 +83,16 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
   const azione = creaAzione()
   const trame = new Map()
   let legno = null
-  const trameDi = a => { if (!trame.has(a.chiave)) trame.set(a.chiave, { pav: pavimento(a), muro: muro(a) }); return trame.get(a.chiave) }
+  const liberaTrame = t => { for (const k of ['pav', 'muro']) for (const m of Object.values(t[k])) if (m && m.dispose) m.dispose() }
+  // le trame dei paesaggi: si tengono le ultime tre usate (risalendo di un piano non si rifanno), le altre si buttano: l'abisso cambia
+  // paesaggio di piano in piano, e tenerle tutte cresceva a ogni piano (docs/sotterraneo/prestazioni-3d-perdite.md)
+  const trameDi = a => {
+    let t = trame.get(a.chiave)
+    if (t) trame.delete(a.chiave); else t = { pav: pavimento(a), muro: muro(a) }
+    trame.set(a.chiave, t)
+    for (const [k, v] of trame) if (trame.size > 3 && k !== a.chiave) { liberaTrame(v); trame.delete(k) }
+    return t
+  }
 
   // l'atlante: finché non c'è, non si disegna (un istante, è già nel file)
   let figure = null, figureEroe = null, cose = null, tex = null, norm = null
@@ -136,6 +145,8 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
     if (piano) piano.via()
     scontro.chiudi(true)
     piano = costruisciPiano(scena, corsa, { maschera, luci, trameDi, polvere, legno: () => (legno || (legno = tramaLegno())) })
+    // i modelli dei mostri che in questo piano non ci sono più si buttano (la riserva cresceva a ogni piano nuovo)
+    if (mostri3d) mostri3d.sfoltisci(new Set(corsa.livello.robe.filter(r => r.che === 'mostro' && !r.morto).map(r => mostri3d.idDi(r)).filter(Boolean)))
     eroe.px = null; eroe.ritorno = false
     cam.salta()
     azione.annulla()
@@ -401,7 +412,7 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
       if (piano) piano.via()
       piano = null
       for (const x of [aloni, colonne, anelli, scintille, polvere, etichette, contorno, figure, figureEroe, fiammaEroe]) if (x) x.via()
-      for (const t of trame.values()) for (const k of ['pav', 'muro']) for (const m of Object.values(t[k])) if (m && m.dispose) m.dispose()
+      for (const t of trame.values()) liberaTrame(t)
       if (legno) { legno.map.dispose(); legno.normalMap.dispose() }
       if (tex) tex.dispose()
       if (norm) norm.dispose()

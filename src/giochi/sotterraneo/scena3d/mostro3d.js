@@ -207,6 +207,25 @@ export function creaMostri3d(scena, { quanti = () => 12 } = {}) {
     altezza(s) { const ist = s && s.m3d; return ist ? ist.alto * ist.radice.scale.x : 0 },
     get quante() { let n = 0; for (const l of riserve.values()) n += l.length; return n },
     get visibili() { return usate },
+    /**
+     * Butta le istanze dei modelli che non sono in `ids` (i mostri del piano nuovo) e che nessuno tiene: le loro geometrie (quelle che
+     * nessun'altra istanza usa) e lo scheletro della pelle. I materiali no: buttato l'ultimo, three ricompila il programma al prossimo.
+     */
+    sfoltisci(ids) {
+      const via = [], tenute = new Set()
+      for (const [k, l] of riserve) {
+        const resta = l.filter(i => i.chi || ids.has(i.id))
+        for (const i of l) if (!resta.includes(i)) via.push(i)
+        if (resta.length) riserve.set(k, resta); else riserve.delete(k)
+        for (const i of resta) i.g.traverse(o => { if (o.geometry) tenute.add(o.geometry) })
+      }
+      for (const i of via) {
+        scena.remove(i.radice)
+        i.g.traverse(o => { if (o.geometry && !tenute.has(o.geometry)) o.geometry.dispose() })
+        if (i.g.userData.scheletro) i.g.userData.scheletro.dispose()
+      }
+      return via.length
+    },
     via() {
       for (const l of riserve.values()) for (const i of l) {
         scena.remove(i.radice)
