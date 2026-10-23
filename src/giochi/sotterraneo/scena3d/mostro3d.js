@@ -6,7 +6,7 @@
 import { Group, Box3, Vector3, Color } from 'three'
 import { idDi, costruisci, ALTEZZA } from './mostri3d/registro.js'
 import { verso } from './tempo.js'
-import { ferme, salda } from './salda3d.js'
+import { studia, saldaTutto, osso, copiaMateriale, tipoFuso, tingiFusa, lampoFuso, copiaLampo } from './salda3d.js'
 import { conMosse } from './mostri3d/mosse-anim.js'
 import { ACCESI } from './costanti.js'
 
@@ -27,20 +27,20 @@ function misura(g) {
   return b.isEmpty() ? new Box3(new Vector3(-0.5, 0, -0.5), new Vector3(0.5, 1, 0.5)) : b
 }
 
-const saldabili = new Map()   // id → gli indici delle mesh ferme (salda3d.js), uguali per tutte le istanze
+const saldabili = new Map()   // id → lo studio delle mesh (salda3d.js: chi sta ferma, chi si spegne), uguale per tutte le istanze
 function nuovaIstanza(scena, id) {
   const g = costruisci(id)
   if (!g) return null
   try {
-    if (!saldabili.has(id)) saldabili.set(id, ferme(g))
-    if (ACCESI.saldatura) salda(g, saldabili.get(id))
+    if (!saldabili.has(id)) saldabili.set(id, studia(g))
+    if (ACCESI.saldatura) saldaTutto(g, saldabili.get(id), { pelle: ACCESI.pelle })
     g.userData.anima(0)
   } catch (e) { console.warn(`mostri 3D: ${id} non si salda`, e) }   // resta com'è, solo più caro
   const b = misura(g), s = b.getSize(new Vector3())
   // la radice porta dove sta, dove guarda e quanto è grande; `piega` la caduta (anima può muovere il Group del modello)
   const radice = new Group(), piega = new Group(); radice.visible = false; piega.add(g); radice.add(piega); scena.add(radice)
   const mesh = []
-  g.traverse(o => { if (o.isMesh) { o.castShadow = false; mesh.push({ o, orig: o.material, copia: null }) } })   // come l'eroe 3D: niente ombra del cono
+  g.traverse(o => { if (o.isMesh && !osso(o)) { o.castShadow = false; mesh.push({ o, orig: o.material, copia: null }) } })   // come l'eroe 3D: niente ombra del cono
   return { id, radice, piega, g, alto: Math.max(0.2, s.y), largo: Math.max(0.2, s.x, s.z), mesh, accese: false, presa: false, chi: null, guasto: false }
 }
 
@@ -55,11 +55,14 @@ function tingi(ist, bianco, tinta, forzaTinta, trasparenza) {
   for (const m of ist.mesh) {
     const o = m.orig
     if (Array.isArray(o)) continue
-    if (!m.copia) m.copia = o.clone()
+    if (!m.copia) m.copia = copiaMateriale(o)   // un fuso della pelle (salda3d.js) ha i colori nei vertici: lo tinge il suo shader
     const c = m.copia
     m.o.material = c
-    if (c.color && o.color) { c.color.copy(o.color); if (forzaTinta > 0.001 && tinta) c.color.lerp(tinta, Math.min(1, forzaTinta)) }
-    if (c.emissive && o.emissive) {
+    if (tipoFuso(o)) tingiFusa(c, forzaTinta > 0.001 ? tinta : null, forzaTinta)
+    else if (c.color && o.color) { c.color.copy(o.color); if (forzaTinta > 0.001 && tinta) c.color.lerp(tinta, Math.min(1, forzaTinta)) }
+    // il lampo di un fuso largo sta nei vertici: quello dell'originale (una mossa che lo accende), o il bianco del colpo sopra
+    if (tipoFuso(o) === 'larga') { if (bianco > 0.001) lampoFuso(c, BIANCO, Math.min(1, bianco), 1, 0.9 * Math.min(1, bianco)); else copiaLampo(o, c) }
+    else if (c.emissive && o.emissive) {
       c.emissive.copy(o.emissive); c.emissiveIntensity = o.emissiveIntensity
       if (bianco > 0.001) { c.emissive.lerp(BIANCO, Math.min(1, bianco)); c.emissiveIntensity = o.emissiveIntensity + 0.9 * Math.min(1, bianco) }
     }

@@ -75,6 +75,7 @@ export const ACCESI = {
   // per le misure (docs/sotterraneo/limiti-3d.md): nessuna fascia li spegne
   aloni: true,       // gli aloni della rarità sulla roba 3D (roba3d/aloni.js: un Points per pezzo, in somma di luce)
   saldatura: true,   // le mesh ferme dei mostri e dell'eroe 3D saldate in una (salda3d.js); spenta, una chiamata per mesh
+  pelle: true,       // dopo la saldatura, il resto in una SkinnedMesh per materiale (salda3d.js, pelle); spenta, come prima
   ombreMorbide: true,   // le macchie d'ombra sotto le figure del mondo di sopra (mondo/persone.js)
   chiarori: true,    // i chiarori per terra delle discese (rarità, missione, chiave, capi: segni.js, creaAloni)
   riscaldamento: true,   // gli shader del piano e del mondo chiesti prima che servano (indice.js scaldaPiano, mondo/indice.js); spento: al primo uso

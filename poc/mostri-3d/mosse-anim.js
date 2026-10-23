@@ -78,8 +78,9 @@ export function conMosse (obj, voce, opz = {}) {
   // i materiali per il bagliore (cura, urlo, incantesimo): si ripristinano a ogni fotogramma
   const mats = []; const visti = new Set()
   obj.traverse(o => { if (!o.isMesh) return; for (const m of [].concat(o.material)) if (m && m.emissive && !visti.has(m)) { visti.add(m); mats.push({ m, e: m.emissive.clone(), i: m.emissiveIntensity }) } })
-  const tinge = (colore, q) => { if (q <= 0.001) return; const c = new THREE.Color(colore); for (const x of mats) { x.m.emissive.copy(x.e).lerp(c, cl(q)); x.m.emissiveIntensity = x.i + (0.6 - x.i) * cl(q) } }
-  const ripristina = () => { for (const x of mats) { x.m.emissive.copy(x.e); x.m.emissiveIntensity = x.i } }
+  // nel gioco un materiale può avere l'emissivo nei vertici (la pelle di scena3d/salda3d.js): allora lo accende il suo `lampo`
+  const tinge = (colore, q) => { if (q <= 0.001) return; const c = new THREE.Color(colore); for (const x of mats) { if (x.m.lampo) { x.m.lampo(c, cl(q), 1 - cl(q), 0.6 * cl(q)); continue } x.m.emissive.copy(x.e).lerp(c, cl(q)); x.m.emissiveIntensity = x.i + (0.6 - x.i) * cl(q) } }
+  const ripristina = () => { for (const x of mats) { if (x.m.lampo) x.m.lampo(null, 0); else { x.m.emissive.copy(x.e); x.m.emissiveIntensity = x.i } } }
 
   // l'alone d'avviso: un anello a terra e l'icona sopra la testa
   const alone = new THREE.Group(); alone.visible = false; obj.add(alone)
