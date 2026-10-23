@@ -132,7 +132,7 @@ async function bancoUna(b, cpu, K, solo = null, corto = false, veri = false, qua
   await page.waitForSelector('[data-azione="benchmark"]')
   const s = await page.context().newCDPSession(page)
   if (cpu > 1) await s.send('Emulation.setCPUThrottlingRate', { rate: cpu })
-  await page.click('[data-azione="benchmark"]'); await page.click(veri ? '[data-azione="benchmark-veri"]' : '[data-azione="benchmark-avvia"]')
+  await page.click('[data-azione="benchmark"]'); await page.click(veri ? (solo ? '[data-azione="benchmark-veri"]' : '[data-azione="benchmark-veri-lunga"]') : '[data-azione="benchmark-avvia"]')   // senza `solo` le misure complete (il confronto col log del telefono)
   await page.waitForSelector('[data-benchmark-log]', { timeout: veri ? 3600000 : 600000, state: 'attached' })
   const dati = await page.evaluate(v => (v ? window.__benchmarkVeri : window.__benchmarkFluidita), veri), log = await page.inputValue('[data-benchmark-log]')
   if (opz('foto')) { await page.screenshot({ path: resolve(opz('foto')) }); console.log(`la schermata del resoconto: ${opz('foto')}`) }   // `--foto file.png`

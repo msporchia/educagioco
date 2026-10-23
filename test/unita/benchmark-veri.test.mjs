@@ -4,7 +4,8 @@
 import { BoxGeometry, Mesh, MeshStandardMaterial, Scene, Box3, SkinnedMesh, Skeleton, Bone, Uint16BufferAttribute, Float32BufferAttribute } from 'three'
 import { componiVeri, letturaVeri, limite, spezza, conNote, LIMITE_CAMPO } from '../../src/grafica/benchmark/log-veri.js'
 import { dividi, leve } from '../../src/grafica/benchmark/veri/moltiplica.js'
-import { TAPPE, QUANTE } from '../../src/grafica/benchmark/veri.js'
+import { TAPPE, QUANTE, TAPPE_VERIFICA } from '../../src/grafica/benchmark/veri.js'
+import { RIFERIMENTO, confronta, dellaScena } from '../../src/grafica/benchmark/veri/riferimento.js'
 import { controlla, uguale, riassunto } from '../aiuto/verifica.mjs'
 
 const s = (id, gruppo, ms, p95, extra = {}) => ({ id, gruppo, nome: id, ms, p95, js: Math.round(ms * 0.3), gpu: Math.round(ms * 0.7), fps: Math.round(Math.min(60, 1000 / p95)), n: 200, ch: 250, tri: 70000, primo: ms * 3, nuovi: 2, pronto: 900, stabile: true, ...extra })
@@ -142,5 +143,39 @@ const lp = leve(sp)
 lp.triangoli(2); uguale('leve: la SkinnedMesh ha i triangoli x2', sk.geometry.index.count, pelle.index.count * 2)
 lp.chiamate(4); controlla('leve: e le chiamate x4', Array.isArray(sk.material) && sk.material.length === 4)
 lp.ripristina()
+
+// la verifica compatta: poche scene, e ogni scena col suo confronto contro l'ultima misura vera
+const idV = TAPPE_VERIFICA.flatMap(t => t.scene.map(x => x.id))
+controlla('la verifica ha 12-16 scene, tutte diverse, senza le serie lunghe', idV.length >= 12 && idV.length <= 16 && new Set(idV).size === idV.length && !idV.some(i => /^(tri|ch|luci|px|roba|fat)-/.test(i)), idV.join(','))
+controlla('la verifica: l\'ingresso per primo, i due riferimenti del calore, lo scontro con 1 e 4 mostri, 8 persone e 8 mostri sopra, lo zaino', idV[0] === 'ing-sot' && idV[idV.length - 1] === 'cal-2' && ['cal-1', 'sot-1', 'v-sot-4', 'v-eroe', 'per-8', 'mos-8', 'zaino-15'].every(i => idV.includes(i)))
+controlla('gli id della verifica che sono anche delle complete hanno il riferimento (v-sot-4 uno interpolato; eroe e ingresso nessuno)', idV.filter(i => !i.startsWith('ing-') && i !== 'v-eroe').every(i => dellaScena(i)))
+const rif = dellaScena('sot-1')
+uguale('il riferimento è tolto il calore (83.1 / 1.13)', rif.ms, 73.5)
+controlla('il riferimento dice data e versione', RIFERIMENTO.quando === '22/10' && /^2026\.10\.22/.test(RIFERIMENTO.versione))
+uguale('v-sot-4 è fra sot-3 e sot-6, dichiarato', `${dellaScena('v-sot-4').interpolata}`, 'sot-3/sot-6')
+const cf = confronta({ id: 'sot-1', ms: 63.5, p95: 90, js: 25, gpu: 33 })
+uguale('confronto: meglio di 10 ms (-14%)', `${cf.ms.d} ${cf.ms.pct} ${cf.ms.g}`, '-10 -14 meglio')
+uguale('confronto: la GPU separata dal JS', `${cf.js.g} ${cf.gpu.g}`, 'meglio meglio')
+uguale('confronto: nel rumore è uguale', confronta({ id: 'sot-1', ms: 74.5, p95: 90, js: 28.5, gpu: 45.7 }).ms.g, 'uguale')
+uguale('una scena senza riferimento non si confronta', confronta({ id: 'ing-sot', ms: 5 }), null)
+const dv = {
+  ...dati, verifica: true, gruppi: {},
+  risultati: [s('cal-1', 'discese', 107.7, 140), s('sot-1', 'discese', 63.5, 90, { js: 25, gpu: 33.5 }), s('v-sot-4', 'discese', 96, 120, { js: 45, gpu: 51 }),
+    s('per-8', 'sopra', 52, 60, { js: 22, gpu: 30 }), { id: 'zaino-15', gruppo: 'sopra', nome: '15 anteprime', tot: 1500, attesa: 800, lavoro: 1400, max: 200, fatte: 15, n: 15 },
+    { id: 'cal-2', gruppo: 'calore', nome: 'cal-2', errore: 'x' }],
+}
+const tv = componiVeri(dv, { versione: 'x', ua: 'Redmi Note 7', quando: new Date(2026, 9, 23, 10, 0) })
+controlla('verifica: la testa lo dice', /\(verifica compatta\)/.test(tv.split('\n')[0]))
+controlla('verifica: sotto ogni scena confrontata la riga «rispetto all\'ultima misura vera»', /sot-1: 63\.5\/90[^\n]*\n +rispetto all'ultima misura vera \(22\/10\): −10 ms \(−14%\), meglio; p95 [−+]/.test(tv), tv)
+controlla('verifica: lo zaino a parte', /rispetto all'ultima misura vera \(22\/10\): −375 ms \(−20%\) in tutto, fotogramma più lungo −233 ms/.test(tv), tv)
+controlla('verifica: la scena interpolata lo dice', /tra sot-3\/sot-6/.test(tv))
+controlla('verifica: la scena guasta non ha il confronto', !/cal-2[^\n]*\n +rispetto/.test(tv))
+const lv2 = letturaVeri(dv).join('\n')
+controlla('LETTURA: migliorato col JS e la GPU a parte', /MIGLIORATO rispetto all'ultima misura vera \(22\/10, \d scene confrontate\) — JS: .*sot-1 −\d+(\.\d)? ms.*; GPU: .*sot-1/.test(lv2), lv2)
+controlla('LETTURA: non migliorato, a parte', /NON MIGLIORATO — JS: .*; GPU: /.test(lv2), lv2)
+controlla('LETTURA: lo scontro contro i 33 ms', /Scontro nelle discese: 1 mostro con gli effetti p95 90 ms.*ancora oltre i 33 ms/.test(lv2) || /Scontro nelle discese: sot-1/.test(lv2), lv2)
+controlla('i DATI dicono la versione di riferimento', JSON.parse(tv.split('DATI ')[1]).vf === RIFERIMENTO.versione)
+controlla('una misura completa non ha il confronto', !/rispetto all'ultima misura vera/.test(componiVeri({ ...dv, verifica: false }, {})) && !/MIGLIORATO/.test(letturaVeri({ ...dv, verifica: false }).join('')))
+controlla('i DATI vecchi restano: stessa forma, righe invariate', JSON.parse(testo.split('DATI ')[1]).vf === undefined && dd.r.length === dati.risultati.length)
 
 riassunto('la misura coi modelli veri')

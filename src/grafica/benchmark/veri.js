@@ -25,19 +25,22 @@ const discese = () => import('./veri/discese.js')
 const base = () => import('./veri/base.js')
 const tre = n => ({ mostri: 3, ...n })
 const uno = n => ({ mostri: 1, colpi: true, ...n })   // la scomposizione: un mostro con gli effetti, una cosa tolta alla volta
-/** Le scene, in ordine. `serie` e `quanti` dicono dove cercare il limite; `gruppo` è la sezione del log. */
+// l'ingresso da freddo, per primo (il browser tiene da parte gli shader già visti: dopo sarebbe più caldo del vero), ogni scena tre
+// volte da capo; le stesse a riscaldamento spento dopo, perché il confronto non lo favorisca
+const INGRESSO = { gruppo: 'ingresso', carica: () => import('./veri/ingresso.js'), scene: [
+  { id: 'ing-sot', nome: 'entrare in un piano, poi 3 attacchi', ingresso: 'discesa' },
+  { id: 'ing-presto', nome: 'attacco a 0,5 s dall\'ingresso', ingresso: 'discesa', presto: true },
+  { id: 'ing-zaino', nome: 'entrare e aprire lo zaino', ingresso: 'discesa', zaino: true },
+  { id: 'ing-mondo', nome: 'entrare nel mondo di sopra', ingresso: 'mondo' },
+  { id: 'ing-sot-x', nome: 'entrare, 3 attacchi, senza riscaldamento', ingresso: 'discesa', riscaldamento: false },
+  { id: 'ing-presto-x', nome: 'attacco a 0,5 s, senza riscaldamento', ingresso: 'discesa', presto: true, riscaldamento: false },
+  { id: 'ing-mondo-x', nome: 'il mondo di sopra, senza riscaldamento', ingresso: 'mondo', riscaldamento: false },
+] }
+/** Le scene delle MISURE COMPLETE, in ordine. `serie` e `quanti` dicono dove cercare il limite; `gruppo` è la sezione del log. */
 export const TAPPE = [
   // l'ingresso da freddo, per primo (il browser tiene da parte gli shader già visti: dopo sarebbe più caldo del vero), ogni scena tre
   // volte da capo; le stesse a riscaldamento spento dopo, perché il confronto non lo favorisca
-  { gruppo: 'ingresso', carica: () => import('./veri/ingresso.js'), scene: [
-    { id: 'ing-sot', nome: 'entrare in un piano, poi 3 attacchi', ingresso: 'discesa' },
-    { id: 'ing-presto', nome: 'attacco a 0,5 s dall\'ingresso', ingresso: 'discesa', presto: true },
-    { id: 'ing-zaino', nome: 'entrare e aprire lo zaino', ingresso: 'discesa', zaino: true },
-    { id: 'ing-mondo', nome: 'entrare nel mondo di sopra', ingresso: 'mondo' },
-    { id: 'ing-sot-x', nome: 'entrare, 3 attacchi, senza riscaldamento', ingresso: 'discesa', riscaldamento: false },
-    { id: 'ing-presto-x', nome: 'attacco a 0,5 s, senza riscaldamento', ingresso: 'discesa', presto: true, riscaldamento: false },
-    { id: 'ing-mondo-x', nome: 'il mondo di sopra, senza riscaldamento', ingresso: 'mondo', riscaldamento: false },
-  ] },
+  INGRESSO,
   { gruppo: 'calore', carica: discese, scene: [{ id: 'cal-1', nome: 'riferimento, 8 mostri con gli effetti', mostri: 8, colpi: true }] },
   // il pavimento: quanto costa un fotogramma che non disegna niente, e 100 oggetti semplici
   { gruppo: 'pavimento', carica: base, scene: [{ id: 'vuoto', nome: 'schermo vuoto (solo pulito)', base: 'vuoto' }, { id: 'cubi', nome: '100 cubi semplici', base: 'cubi' }] },
@@ -77,6 +80,26 @@ export const TAPPE = [
   { gruppo: 'calore', carica: discese, scene: [{ id: 'cal-2', nome: 'riferimento, di nuovo alla fine', mostri: 8, colpi: true }] },
 ]
 export const QUANTE = TAPPE.reduce((n, t) => n + t.scene.length, 0)
+/**
+ * La VERIFICA (il tasto «Avvia coi modelli veri», 3-5 minuti): solo quello che cambia quando si tocca il Sotterraneo 3D o il mondo di sopra,
+ * con i ms messi contro l'ultima misura vera (`veri/riferimento.js`). Le serie lunghe (triangoli, chiamate, luci, pixel, roba, fattoria,
+ * 24 persone, 16 mostri) sono già misurate: stanno in `TAPPE`, le «Misure complete». Gli id uguali a quelli di `TAPPE` hanno un riferimento.
+ * Il riferimento del calore: `cal-1` all'inizio, `cal-2` alla fine (più il riferimento fisso che ogni gruppo ha già).
+ */
+export const TAPPE_VERIFICA = [
+  INGRESSO,
+  { gruppo: 'discese', carica: discese, scene: [
+    { id: 'cal-1', nome: 'riferimento, 8 mostri con gli effetti', mostri: 8, colpi: true },
+    { id: 'v-sot-4', nome: '4 mostri con gli effetti', mostri: 4, colpi: true },
+    { id: 'sot-1', nome: '1 mostro con gli effetti', mostri: 1, colpi: true },
+    { id: 'v-eroe', nome: 'eroe leggendario, 1 mostro fermo (senza effetti)', mostri: 1 },
+  ] },
+  { gruppo: 'sopra', carica: () => import('./veri/sopra.js'), scene: [
+    { id: 'per-8', nome: '8 persone', persone: 8 }, { id: 'mos-8', nome: '8 mostri sul prato', mostri: 8 },
+  ] },
+  { gruppo: 'sopra', carica: () => import('./veri/zaino.js'), scene: [{ id: 'zaino-15', nome: '15 anteprime', anteprime: 15 }] },
+  { gruppo: 'calore', carica: discese, scene: [{ id: 'cal-2', nome: 'riferimento, di nuovo alla fine', mostri: 8, colpi: true }] },
+]
 /** Chi pesa (docs/core/vecchio-telefono-elementi.md): a parte, solo se `solo` li chiede (`['elementi']`, o i gruppi e gli id). */
 export const TAPPE_ELEMENTI = tappeDegliElementi()
 
@@ -225,12 +248,15 @@ async function riferimento({ contenitore, fermo, corto, progresso, k, tot, raffr
  * prove, `solo`: gli inizi degli id da fare (`['sot-', 'zaino']`, e `js` per la prova di CPU), `raffredda`: i ms di pausa fra i gruppi.
  * → { tipo: 'veri', info, js, risultati, gruppi, avvisi, contesto, schermo, dpr, fascia, fermata }
  */
-export async function eseguiVeri({ contenitore, progresso = () => {}, fermo = () => false, corto = false, solo = null, fascia = null, raffredda = RAFFREDDA }) {
+export async function eseguiVeri({ contenitore, progresso = () => {}, fermo = () => false, corto = false, solo = null, fascia = null, raffredda = RAFFREDDA, completa = false }) {
   const tempi = corto ? TEMPI.corto : TEMPI.normale
   const info = infoGpuVeri()
-  // `solo` sceglie per id o per gruppo; senza, le scene di sempre (gli elementi no: sono una prova a parte)
-  const tappe = (solo ? [...TAPPE, ...TAPPE_ELEMENTI] : TAPPE)
-    .map(t => ({ ...t, scene: t.scene.filter(s => !solo || solo.some(p => s.id.startsWith(p) || t.gruppo.startsWith(p))) })).filter(t => t.scene.length)
+  // `solo` sceglie per id o per gruppo (fra tutte, una scena una volta sola); senza, la verifica compatta o, con `completa`, le misure
+  // complete (gli elementi no: sono una prova a parte)
+  const visti = new Set()
+  const nuova = s => !visti.has(s.id) && !!visti.add(s.id)
+  const tappe = (solo ? [...TAPPE_VERIFICA, ...TAPPE, ...TAPPE_ELEMENTI] : completa ? TAPPE : TAPPE_VERIFICA)
+    .map(t => ({ ...t, scene: t.scene.filter(s => (!solo || solo.some(p => s.id.startsWith(p) || t.gruppo.startsWith(p))) && (!solo || nuova(s))) })).filter(t => t.scene.length)
   const tot = tappe.reduce((n, t) => n + t.scene.length, 0)
   const risultati = [], gruppi = {}, saltate = new Set(), avvisi = new Map()
   // gli avvisi e gli errori della console mentre gira (shader che non compilano, modelli che non si saldano…): si riassumono nel log
@@ -324,7 +350,7 @@ export async function eseguiVeri({ contenitore, progresso = () => {}, fermo = ()
   }
   const js = fermo() || (solo && !solo.includes('js')) ? null : proveCpu()
   const dopo = await ambiente()
-  return { tipo: 'veri', info, js, risultati, gruppi, fascia, ambiente: { prima, dopo }, avvisi: [...avvisi].map(([m, n]) => ({ m, n })).sort((a, b) => b.n - a.n),
+  return { tipo: 'veri', verifica: !completa && !(solo || []).some(p => p.startsWith('elementi')), info, js, risultati, gruppi, fascia, ambiente: { prima, dopo }, avvisi: [...avvisi].map(([m, n]) => ({ m, n })).sort((a, b) => b.n - a.n),
            contesto: { persi: eventiContesto.persi - persi0, ripresi: eventiContesto.ripresi - ripresi0 },
            schermo: `${Math.round(window.innerWidth)}x${Math.round(window.innerHeight)}`, dpr: window.devicePixelRatio || 1, fermata: fermo() }
 }

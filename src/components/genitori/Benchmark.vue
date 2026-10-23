@@ -35,7 +35,7 @@ async function meta() {
 
 onMounted(async () => { ultime.value = await ultimeMisure() })
 
-async function avvia(che = modo.value) {
+async function avvia(che = modo.value, lunga = false) {
   modo.value = che; stato.value = 'corre'; fermare = false; esito.value = ''; note.value = ''
   const progresso = (i, n, nome) => { avanza.value = { i, n, nome } }
   try {
@@ -43,7 +43,7 @@ async function avvia(che = modo.value) {
       const { eseguiVeri } = await import('../../grafica/benchmark/veri.js')
       // chi pesa: le scene degli elementi (docs/core/vecchio-telefono-elementi.md), una prova a parte
       const solo = window.__benchmarkSolo || (che === 'elementi' ? ['elementi'] : null)
-      const dati = await eseguiVeri({ contenitore: palco.value, corto: !!window.__benchmarkCorto, solo, fascia: fasciaAttiva(),
+      const dati = await eseguiVeri({ contenitore: palco.value, corto: !!window.__benchmarkCorto, solo, fascia: fasciaAttiva(), completa: lunga,
         ...(window.__benchmarkRaffredda != null ? { raffredda: window.__benchmarkRaffredda } : {}),
         progresso, fermo: () => fermare })
       window.__benchmarkVeri = dati
@@ -100,12 +100,16 @@ async function copia() {
       <p>Tieni lo schermo acceso e non toccare niente.</p>
       <button type="button" class="bottone" data-azione="benchmark-avvia" @click="avvia('sintetico')">Avvia la misura</button>
       <h3>Con i modelli veri del gioco</h3>
-      <p>Un quarto d'ora circa con le scene vere (con pause a schermo nero perché il telefono non si scaldi): lo scontro del Sotterraneo con sempre più mostri, il mondo di sopra con
-        sempre più persone, lo zaino, la roba, la fattoria; e la stessa scena con più triangoli, più chiamate, più luci e più pixel,
-        e la stessa scena con una cosa tolta alla volta, per sapere cosa la rallenta.</p>
+      <p>Da tre a cinque minuti, con le scene vere: l'ingresso in un piano e nel mondo di sopra, lo scontro del Sotterraneo con 1 e 4 mostri e
+        gli effetti, il mondo di sopra con 8 persone e 8 mostri, lo zaino. Ogni scena dice com'è andata rispetto all'ultima misura vera
+        (meglio o peggio, in ms) e alla fine il resoconto dice cosa è migliorato e cosa no.</p>
       <p><b>Guarda lo schermo</b>: se un colore, una luce o la nebbia ti sembrano strani, alla fine scrivilo nelle note.
         Tieni il telefono acceso e in carica se puoi: lo schermo non deve spegnersi.</p>
       <button type="button" class="bottone" data-azione="benchmark-veri" @click="avvia('veri')">Avvia coi modelli veri</button>
+      <h3>Misure complete</h3>
+      <p>Un quarto d'ora circa (con pause a schermo nero perché il telefono non si scaldi): le serie lunghe, cioè sempre più mostri, persone, edifici,
+        triangoli, chiamate, luci e pixel, la roba, e la stessa scena con una cosa tolta alla volta, per sapere cosa la rallenta.</p>
+      <button type="button" class="bottone" data-azione="benchmark-veri-lunga" @click="avvia('veri', true)">Misure complete (lunga)</button>
       <h3>Chi pesa</h3>
       <p>Una ventina di minuti: lo scontro del Sotterraneo, il villaggio di sopra, la fattoria 3D e gli Asteroidi con tutto spento, poi una cosa accesa alla volta
         (pavimento, muri, luci, nebbia, mostri…) e una tolta alla volta, e la scena com'è contro la scena semplificata. Alla fine una

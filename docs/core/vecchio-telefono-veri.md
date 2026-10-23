@@ -7,15 +7,38 @@ giocare il bambino: quanti mostri nello scontro, quante persone sopra, quanti ed
 
 ## Sul telefono
 
-Zona dei grandi (codice) → **Impostazioni** → tendina **Avanzate** → **Misura questo telefono** → **Avvia coi modelli veri**.
-Dura un quarto d'ora circa (57 scene, e fra un gruppo e l'altro 8 s di schermo nero perché il telefono si raffreddi): la barra in fondo dice a
+Zona dei grandi (codice) → **Impostazioni** → tendina **Avanzate** → **Misura questo telefono** → **Avvia coi modelli veri** (la
+**verifica**, 3-5 minuti: [La verifica](#la-verifica)) oppure **Misure complete (lunga)**.
+Le complete durano un quarto d'ora circa (57 scene, e fra un gruppo e l'altro 8 s di schermo nero perché il telefono si raffreddi): la barra in fondo dice a
 che scena si è, **Interrompi** la ferma e tiene il resoconto di quello che c'è. Le scene si vedono mentre girano: se una luce, un
 colore o la nebbia sembrano sbagliati, alla fine c'è un campo **Note** che finisce nel resoconto. Lo schermo non deve spegnersi
 (niente wake lock nel progetto: lo dice l'avviso). Alla fine: **Manda** (o «Manda 1/2», «Manda 2/2» se il resoconto non sta in un
 invio), **Copia**, **Rifai**. L'ultimo resoconto di ognuna delle due prove resta sul telefono (`store/benchmark.js`, chiave
 `benchmark`, fuori dai profili): «L'ultima coi modelli veri» lo riapre per mandarlo dopo.
 
-## Le scene
+## La verifica
+
+Il tasto «Avvia coi modelli veri» serve a **verificare se una modifica ha migliorato qualcosa**: le serie lunghe (il pavimento, triangoli,
+chiamate, luci, pixel, la roba, la fattoria, 24 persone, 16 mostri) sono già misurate nei due log del Note 7 e non si ripetono.
+`TAPPE_VERIFICA` in `veri.js`, 15 scene in quattro gruppi: l'**ingresso** (le sue 7 scene, com'è sotto), `discese` (`cal-1`, il
+riferimento del calore all'inizio: 8 mostri con gli effetti; `v-sot-4`: 4 mostri; `sot-1`: 1 mostro; `v-eroe`: l'eroe leggendario con 1 mostro
+fermo, senza effetti), `sopra` (8 persone, 8 mostri, lo zaino con 15 anteprime) e `calore` (`cal-2`, il riferimento alla fine). Il Sotterraneo
+usa la fascia e il pixel ratio che il gioco sceglierebbe (nessuna opzione). Il resoconto è lo stesso di sempre (`dati.verifica = true`,
+`vf` nella riga DATI) con, in più:
+
+- sotto ogni scena che ha un riferimento, la riga **«rispetto all'ultima misura vera (22/10): −12 ms (−11%), meglio; p95 −20, js −3
+  gpu −9»** (lo zaino: «−375 ms in tutto, fotogramma più lungo −233 ms»). Sotto 3 ms o il 5% è «come prima»;
+- in testa alla LETTURA **MIGLIORATO** e **NON MIGLIORATO** con JS e GPU separati (scena e differenza in ms; il «come prima» si conta),
+  la somma delle differenze, lo zaino, e se lo scontro (1 e 4 mostri) è **sotto i 33 ms al p95**.
+
+Il riferimento è `veri/riferimento.js`: i valori chiave del secondo log vero (22/10, `2026.10.22.1802-7505ba6f`: ms, p95, js, gpu e
+la deriva del calore di quel giro), e il confronto è **fra ms tolto il calore** da una parte e dall'altra (come `corretta`). `v-sot-4` non
+c'era (c'erano 1, 3, 6, 8 mostri): il suo riferimento è la retta fra `sot-3` e `sot-6`, e la riga lo dice («tra sot-3/sot-6»); `v-eroe` e
+l'ingresso non hanno riferimento (l'ingresso si legge col riscaldamento acceso contro spento). Quando c'è una misura vera nuova da
+prendere per buona si cambiano `quando`, `versione` e le scene di quel file. Le **Misure complete** (`TAPPE`, il secondo tasto, `completa`
+in `eseguiVeri`) sono le scene qui sotto, tutte; con `solo` si pescano le scene di entrambe, una volta sola per id.
+
+## Le scene (le misure complete)
 
 | gruppo | scene | cosa c'è del gioco | cosa non c'è |
 |---|---|---|---|
@@ -107,7 +130,7 @@ strumento basta incollare le parti in un file, una dopo l'altra. «Copia» copia
 
 ```bash
 npm run build
-node strumenti/vecchio-telefono.mjs benchmark --veri                      # le stesse scene sul Note 7 imitato
+node strumenti/vecchio-telefono.mjs benchmark --veri                      # le misure complete sul Note 7 imitato (senza --solo)
 node strumenti/vecchio-telefono.mjs benchmark --contro veri.txt           # e riga per riga contro il telefono (ms e p95)
 node strumenti/vecchio-telefono.mjs benchmark --veri --solo sot-,tri-     # solo le scene che cominciano così
 node strumenti/vecchio-telefono.mjs calibra --log veri.txt [--scena px-1] [--prova]   # la CPU sul `js` del log, la zavorra su una sua scena (a computer scarico)
@@ -168,8 +191,8 @@ Nei test: `[data-azione="benchmark-veri"]`, `[data-benchmark-palco]` (dove giran
 `[data-benchmark-note]`, `[data-azione="benchmark-manda"][data-parte]`, `[data-azione="benchmark-ultima"][data-tipo]`;
 `window.__benchmarkVeri` (i dati), `window.__benchmarkSolo` (gli inizi degli id), `window.__benchmarkCorto` (scene di pochi decimi,
 senza pausa), `window.__benchmarkRaffredda` (i ms di pausa fra i gruppi: lo strumento la toglie quando tara).
-`unita/benchmark-veri` (il log, il limite, gli invii, le leve), `unita/benchmark-ingresso` (le righe e la LETTURA dell'ingresso),
-`integrazione/benchmark-veri` (una scena per gruppo e tutto l'ingresso in due giri, a schermo).
+`[data-azione="benchmark-veri-lunga"]` (le misure complete); `unita/benchmark-veri` (il log, il limite, gli invii, le leve, il confronto con la misura vera), `unita/benchmark-ingresso` (le righe e la LETTURA dell'ingresso),
+`integrazione/benchmark-veri` (una scena per gruppo e tutto l'ingresso in due giri, a schermo; poi la verifica compatta intera).
 
 ## Mandare il resoconto al computer
 

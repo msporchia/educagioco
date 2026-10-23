@@ -5,6 +5,7 @@
 import { CPU, data, modello } from './log.js'
 import { rigaIngresso, letturaIngresso } from './log-ingresso.js'
 import { tabellaElementi, letturaElementi } from './log-elementi.js'
+import { RIFERIMENTO, confronta, dif } from './veri/riferimento.js'
 
 export const SOGLIE_VERI = { liscio: 20, scatti: 33, molto: 66 }
 export const LIMITE_CAMPO = 3400   // i caratteri di un invio del modulo dei giudizi (il campo regge ~3,5k)
@@ -52,12 +53,48 @@ function rigaVera(r) {
   return `${segnoVero(r.p95)}${r.nome}: ${r.ms}/${r.p95} ms (js ${r.js ?? '?'} gpu ${r.gpu ?? '?'}) ${r.fps}fps ${r.ch ?? '?'}ch ${kt(r.tri)}kt${piu ? ' ' + piu : ''}`
 }
 
+const confrontabile = r => (misurata(r) || (r.tot != null && !r.errore && !r.salta)) && r.tipo !== 'ingresso'
+
+/** La riga sotto una scena della verifica: com'è contro l'ultima misura vera (ms tolto il calore); null se la scena non ha il riferimento. */
+export function rigaRispetto(r) {
+  const c = confrontabile(r) ? confronta(r) : null
+  if (!c) return null
+  const testa = `   rispetto all'ultima misura vera (${RIFERIMENTO.quando}${c.interpolata ? `, tra ${c.interpolata}` : ''}): `
+  if (c.tot) return `${testa}${dif(c.tot)} in tutto, fotogramma più lungo ${dif(c.max)}`
+  const parola = { meglio: 'meglio', peggio: 'peggio', uguale: 'come prima' }
+  const parte = (n, v) => (v ? `${n} ${v.d < 0 ? '−' : '+'}${Math.abs(v.d)}` : '')
+  return `${testa}${dif(c.ms)}, ${parola[c.ms.g]}; p95 ${c.p95.d < 0 ? '−' : '+'}${Math.abs(c.p95.d)}, ${[parte('js', c.js), parte('gpu', c.gpu)].filter(Boolean).join(' ')}`
+}
+
+// la LETTURA della verifica: cosa è migliorato e cosa no (JS e GPU a parte), e lo scontro contro i 33 ms
+function letturaRispetto(ris) {
+  const conf = ris.filter(confrontabile).map(r => ({ r, c: confronta(r) })).filter(x => x.c && x.c.js)
+  if (!conf.length) return []
+  const righe = []
+  const elenco = (k, g) => conf.filter(x => x.c[k] && x.c[k].g === g).map(x => `${x.r.nome} ${x.c[k].d < 0 ? '−' : '+'}${Math.abs(x.c[k].d)} ms`)
+  const dire = l => (l.length ? l.join(', ') : 'nessuna scena')
+  const fermi = k => conf.filter(x => x.c[k] && x.c[k].g === 'uguale').length
+  righe.push(`MIGLIORATO rispetto all'ultima misura vera (${RIFERIMENTO.quando}, ${conf.length} scene confrontate) — JS: ${dire(elenco('js', 'meglio'))}; GPU: ${dire(elenco('gpu', 'meglio'))}.`)
+  righe.push(`NON MIGLIORATO — JS: ${dire(elenco('js', 'peggio'))}${fermi('js') ? `, come prima in ${fermi('js')}` : ''}; GPU: ${dire(elenco('gpu', 'peggio'))}${fermi('gpu') ? `, come prima in ${fermi('gpu')}` : ''}.`)
+  const tot = conf.reduce((n, x) => n + x.c.ms.d, 0)
+  righe.push(`In tutto le scene confrontate: ${tot < 0 ? '−' : '+'}${Math.abs(t1d(tot))} ms (somma delle differenze del lavoro per fotogramma).`)
+  const zz = ris.filter(confrontabile).map(r => ({ r, c: confronta(r) })).find(x => x.c && x.c.tot)
+  if (zz) righe.push(`Zaino (${zz.r.n} anteprime): ${dif(zz.c.tot)} in tutto, fotogramma più lungo ${dif(zz.c.max)}.`)
+  const sc = ['sot-1', 'v-sot-4'].map(id => ris.find(r => r.id === id)).filter(misurata)
+  if (sc.length) {
+    const sopra = sc.filter(r => r.p95 > SOGLIE_VERI.scatti)
+    righe.push(`Scontro nelle discese: ${sc.map(r => `${r.nome} p95 ${r.p95} ms`).join(', ')}: ${sopra.length ? `ancora oltre i ${SOGLIE_VERI.scatti} ms` : `sotto i ${SOGLIE_VERI.scatti} ms`}.`)
+  }
+  return righe
+}
+
 /** Cosa dice la serie, coi ms tolto il calore. */
 export function letturaVeri(dati) {
   const crudi = dati.risultati || [], ris = crudi.map(corretta), righe = [], T = SOGLIE_VERI.scatti
   const m = id => { const r = ris.find(x => x.id === id); return misurata(r) ? r : null }
   const d = (a, b) => t1d(a.ms - b.ms)
   const derive = crudi.some(r => r.deriva) ? crudi.filter(misurata).map(r => r.deriva ?? 1) : []
+  if (dati.verifica) righe.push(...letturaRispetto(ris))
   if (derive.length) righe.push(`Calore: il riferimento di ogni gruppo da x${Math.min(...derive)} a x${Math.max(...derive)} del più fresco` +
     (Math.max(...derive) > 1.15 ? `; la lettura usa i ms divisi per quella deriva (le righe: ≈).` : ': stabile.'))
   if (dati.js != null) righe.push(`CPU: ${dati.js} ms (computer 110-160): ${dati.js <= CPU.veloce ? 'veloce' : dati.js <= CPU.lenta ? 'media' : 'lenta, il JS dei giochi pesa'}.`)
@@ -176,7 +213,7 @@ const batteria = b => (b ? `${b.livello}%${b.carica ? ' in carica' : ''}` : '?')
 export function componiVeri(dati, { versione = '', ua = '', nome = '', cpu = null, memoria = null, quando = new Date() } = {}) {
   const i = dati.info || {}, p = i.precisione || {}, amb = dati.ambiente || {}, a = amb.prima || {}, z = amb.dopo || {}
   const testa = [
-    `MISURA COI MODELLI VERI ${data(quando)}${versione ? ' v' + versione : ''}${dati.fermata ? ' (INTERROTTA)' : ''}`,
+    `MISURA COI MODELLI VERI ${data(quando)}${versione ? ' v' + versione : ''}${dati.verifica ? ' (verifica compatta)' : ''}${dati.fermata ? ' (INTERROTTA)' : ''}`,
     `${nome || modello(ua)} | schermo ${dati.schermo} dpr ${dati.dpr} | CPU ${cpu ?? '?'} core${memoria ? ', ' + memoria + ' GB' : ''} | fascia ${dati.fascia || '?'}`,
     `batteria ${batteria(a.batteria)} → ${batteria(z.batteria)}${a.rete ? ` | rete ${a.rete.tipo}${a.rete.risparmio ? ', risparmio dati' : ''}` : ''} | risparmio energetico: il browser non lo dice`,
     `GPU ${i.gpu || '?'} | ${i.fornitore || '?'} | ${i.versione || ''}`,
@@ -196,11 +233,13 @@ export function componiVeri(dati, { versione = '', ua = '', nome = '', cpu = nul
         (l ? `, luci ${l.p}p ${l.s}s ${l.d}d ${l.h}h ombre ${l.ombre}` : '') + (mem ? `, mem ${mem}g ${tex}t` : '') + (g.programmi ? `, prog ${g.programmi}` : '') + rif)
     }
     corpo.push(rigaVera(r))
+    const rv = dati.verifica ? rigaRispetto(corretta(r)) : null
+    if (rv) corpo.push(rv)
   }
   const crudi = dati.risultati || [], el = tabellaElementi(crudi.map(corretta), crudi)
   if (el.length) corpo.push(...(corpo.length ? [''] : []), 'CHI PESA (elemento: da solo / tolto dalla scena intera, ms tolto il calore)', ...el)
   const avvisi = (dati.avvisi || []).slice(0, 6).map(x => `- ${x.n}x ${x.m}`)
-  const dd = { v: 2, k: 'veri', i: { g: i.gpu, v: i.fornitore, t: i.maxTex, u: [i.uniVert, i.uniFrag], p: [p.vsAlta, p.fsAlta, p.fsMedia], m: i.mancanti || [] },
+  const dd = { v: 2, k: 'veri', ...(dati.verifica ? { vf: RIFERIMENTO.versione } : {}), i: { g: i.gpu, v: i.fornitore, t: i.maxTex, u: [i.uniVert, i.uniFrag], p: [p.vsAlta, p.fsAlta, p.fsMedia], m: i.mancanti || [] },
     s: dati.schermo, d: dati.dpr, f: dati.fascia, js: dati.js, b: a.batteria ? [a.batteria.livello, a.batteria.carica ? 1 : 0, z.batteria ? z.batteria.livello : null] : null,
     c: Object.fromEntries(Object.entries(dati.gruppi || {}).map(([k, g]) => [k, (g.carica || []).reduce((x, y) => x + y, 0)])),
     x: { p: (dati.contesto || {}).persi || 0, r: (dati.contesto || {}).ripresi || 0, a: (dati.avvisi || []).length },
