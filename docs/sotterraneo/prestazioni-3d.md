@@ -71,12 +71,79 @@ Senza `--funzioni 0` e col file costruito in chiaro (`npx vite build --minify fa
 
 - **La GPU**: qui non si misura (SwiftShader fa 4-6 fps nel mondo per i pixel, non per il JS). Col contatore fps: scontro fermo, tre
   attacchi, dieci secondi nel villaggio e fra due branchi ([../core/vecchio-telefono.md](../core/vecchio-telefono.md)).
-- **Gli shader alla prima volta**: 34-36 programmi nello scontro, 45-55 nel mondo; sull'Adreno 50-300 ms l'uno al primo incontro.
-  Nell'apertura simulata la compilazione è la voce più cara dopo le trame (~0,5 s a ×6).
+- **Gli shader alla prima volta**: sotto, «Shader e prima apparizione».
 - **Le trame generate del sotterraneo** (pavimento, pareti, legno, normali dell'atlante): ~0,8 s a ×6 a ogni scenario nuovo.
 - **Il mondo con due branchi**: 17,6 ms di JS a fotogramma a ×6, il più alto; ci pesano l'aggiornamento delle matrici e la melma che
   ricalcola le normali a ogni fotogramma (~15% del JS quando c'è), oltre ai 415k triangoli.
 - **La copia delle anteprime** (~16 ms l'una qui, ferma qualunque sia la CPU): sul telefono è un'attesa della GPU, da vedere nella
   scheda Performance di `chrome://inspect` aprendo lo zaino.
+
+## Shader e prima apparizione
+
+Sul Redmi Note 7 (log del 22/10, `strumenti/vecchio-telefono/log/redmi-note7-veri-22ott.txt`) la prima apparizione di una scena del
+Sotterraneo 3D ferma il fotogramma **2-6 s**, con 40-57 programmi di shader nuovi (548 in tutta la prova); il telefono non ha
+`KHR_parallel_shader_compile`, quindi ogni programma si compila al suo primo disegno, ~140 ms l'uno, e lo zaino con 15 anteprime ha un
+fotogramma fermo di **400 ms**. three fa un programma per ogni combinazione di tipo di materiale, luci, ombra, nebbia, colori ai
+vertici, trame, trasparenza, facce, istanze e codice aggiunto (`customProgramCacheKey`). Le leve, in quest'ordine:
+
+1. **Meno varianti.** Due materiali col codice uguale devono avere la stessa chiave. La maschera (`maschera.js`) metteva nella chiave il
+   nome del pezzo, e ogni pezzo d'arredo, la staffa, i relitti, le botti avevano un programma loro: ora il nome entra solo con un
+   `poi` (codice che da fuori non si legge). Il mondo di sopra (`mondo/vesti.js`) metteva il nome del materiale e quanto si piega: ora
+   un `codice` solo per chi riscrive lo shader (il terreno, la stoffa), e vento e rigido sono uniform. Le luci erano già a numero
+   fisso (`luci.js`), la nebbia e l'ombra uguali per tutta la discesa.
+2. **Il riscaldamento** (`indice.js`, `scaldaPiano`): `renderer.compile` chiede i programmi e non aspetta (si aspetta al primo
+   disegno, quando three legge l'esito), quindi il telefono li compila mentre si esplora. Un secondo dopo il primo disegno di un piano,
+   un pezzo per fotogramma e mai mentre si racconta un colpo: la scena intera (le cose ancora spente: anelli, colonne, portali),
+   un'istanza in serbo di ogni modello di mostro del piano con le copie trasparenti di chi svanisce (`mostro3d.js`, `prepara`), e
+   gli effetti che la discesa può chiedere (`effetti3d/gestore.js`, `effettiPrevisti`: le abilità imparate, l'arma in mano, le mosse e
+   i colpi dei modelli; tutti e sessanta sarebbero ~30 programmi in più, quasi tutti inutili). Col passaggio finale si compila nella
+   sua texture (`post.compila`): fuori sarebbero altri programmi. Nel mondo di sopra, un secondo dopo i primi pezzi, la scena intera
+   (lo scontro sul prato, spento finché non si combatte). Dove c'è `KHR_parallel_shader_compile` il piano nuovo si disegna quando i
+   suoi programmi sono pronti (al più un secondo; intanto resta il quadro di prima).
+3. **Le anteprime a fette** ([anteprime-3d.md](anteprime-3d.md)): il renderer, il modello con `compile`, il disegno, la copia con
+   `createImageBitmap`, ognuno in un compito suo.
+
+Non c'è una schermata di caricamento da usare: il piano si costruisce nel fotogramma in cui si arriva, e i suoi programmi servono
+subito. Quello che si sposta è tutto il resto, che prima cadeva nello scontro.
+
+| programmi (`renderer.info.programs`, fascia bassa) | prima | dopo |
+|---|---|---|
+| scontro dei tre scheletri leggendari, scena pronta | 34 | 28 |
+| … dopo il riscaldamento (la scena, i tre modelli, gli effetti previsti) | — | 52-56 |
+| … nuovi durante gli attacchi (otto abilità di prova e i colpi dei mostri, `prova()`) | +11 | +3 (un'abilità che l'eroe non ha) |
+| … `linkProgram` al primo, secondo, terzo attacco giocato (test) | una decina | 0, 1, 1 |
+| il villaggio di sopra | 45 | 37 |
+| … lo scontro sul prato, compilato prima | — | +4 un secondo dopo l'arrivo |
+| zaino, 15 anteprime | 8 | 8 |
+
+Nel simulatore (SwiftShader, CPU ×5, il computer carico: i ms valgono come ordine di grandezza) lo zaino con 15 anteprime: fotogramma
+più lungo 267-383 → 117-217 ms, la copia sul filo 299 → 5 ms, il tutto uguale (~1,5-2 s). L'avviso di three `toNonIndexed(): already
+non-indexed` (49 nel log del telefono) veniva dal campo sfumato degli scudi (`poc/roba-3d/scudi.js`): ora zero.
+
+- provato a scaldare tutti gli effetti: 70 programmi invece di 52, i più mai usati (a ~140 ms l'uno, secondi di GPU a ogni discesa).
+- il riscaldamento parte dopo il primo disegno, non prima: la GPU fa le cose in fila, e il primo disegno aspetterebbe anche gli
+  shader dei mostri e degli effetti.
+
+**Da confermare sul Note 7** (Misura questo telefono, la prova coi modelli veri): nelle `discese` il «+Nsh» del primo fotogramma
+dovrebbe scendere (le varianti) e i colpi seguenti non aggiungere shader; il «primo» della prima scena resta alto (i programmi del
+piano servono subito), quello delle scene dopo deve calare; lo `zaino` deve stare sotto i 400 ms di fotogramma fermo (atteso
+~150-250); `luci` e `calore` cambiano poco (ogni scena di `luci` cambia il numero di luci, e quindi ricompila tutto: è la prova, non il
+gioco). Giocando: il primo attacco della prima discesa non deve più fermarsi, e il primo secondo di un piano nuovo può scattare un
+poco (il riscaldamento).
+
+Per contare: `window.__sotterraneo3d.programmi()` (le discese e il mondo) e `window.__anteprime3d.programmi()` dicono ogni programma
+col tipo, i materiali che lo usano (le scelte che fanno variante, `scena3d/programmi.js`) e dove la chiave differisce dal primo dello
+stesso tipo; `grafica().programmi` quanti, `grafica().daScaldare` quanti pezzi restano del riscaldamento (`scaldato` nel mondo),
+`__anteprime3d.stato()` `programmi`, `msCompila` e `fettaMax`. `&spegni=riscaldamento` spegne il riscaldamento (discese e mondo): quanto toglie
+sul telefono lo dice la misura coi modelli veri, «L'ingresso» ([../core/vecchio-telefono-veri.md](../core/vecchio-telefono-veri.md)).
+
+```bash
+S='sotterraneo3d=1&seme=11&stanza=sala&sotterraneo=branco&mostri=3&tipo=scheletro&variante=guerriero,arciere,mago&grado=leggendario&corredo=leggendario&eroe=cavaliere&qualita=bassa&dpr=1'
+node strumenti/profila-app.mjs "$S" --secondi 3 --funzioni 0 --pronto 'window.__sotterraneo3d && window.__sotterraneo3d.grafica().mostri3d >= 3' \
+  --stampa 'window.__sotterraneo3d.programmi()'
+```
+
+Nei test: `integrazione/sotterraneo-3d` conta i `linkProgram` degli attacchi dopo il riscaldamento; `unita/sotterraneo-anteprime-3d`
+la coda a fette.
 
 Torna a [grafica-3d-costi.md](grafica-3d-costi.md).

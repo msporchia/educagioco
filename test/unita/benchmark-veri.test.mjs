@@ -105,7 +105,7 @@ uguale('un log corto è un invio solo', spezza('corto').length, 1)
 // le scene: tutte con un id solo, e le serie in ordine crescente
 const ids = TAPPE.flatMap(t => t.scene.map(x => x.id))
 uguale('gli id delle scene sono tutti diversi', new Set(ids).size, QUANTE)
-controlla('il calore all\'inizio e alla fine', ids[0] === 'cal-1' && ids[ids.length - 1] === 'cal-2')
+controlla('l\'ingresso per primo, il calore all\'inizio e alla fine', ids[0] === 'ing-sot' && ids.includes('cal-1') && ids[ids.length - 1] === 'cal-2')
 
 // le leve: triangoli × k (stessa scatola, normali lunghe 1) e chiamate × k (stessi triangoli)
 const box = new BoxGeometry(1, 2, 3)

@@ -3,6 +3,7 @@
 // pavimento, i colli, cosa togliere, il calore, la GPU) con i ms corretti dal calore, e la riga DATI per lo strumento. Le soglie sono
 // del fotogramma INTERO di un gioco (lavoro al p95): liscio sotto 20 ms, a scatti sopra 33 (30 fps), molto sopra 66 (15 fps).
 import { CPU, data, modello } from './log.js'
+import { rigaIngresso, letturaIngresso } from './log-ingresso.js'
 
 export const SOGLIE_VERI = { liscio: 20, scatti: 33, molto: 66 }
 export const LIMITE_CAMPO = 3400   // i caratteri di un invio del modulo dei giudizi (il campo regge ~3,5k)
@@ -41,6 +42,7 @@ export function limite(ris, serie) {
 
 function rigaVera(r) {
   if (r.errore) return `XX ${r.nome}: non regge (${r.errore})`
+  if (r.tipo === 'ingresso') return rigaIngresso(r)
   if (r.salta) return `-- ${r.nome}: saltata (la prima di questa serie era oltre 400 ms)`
   if (r.tot != null) return `${segnoVero(r.max)}${r.nome}: ${r.tot} ms in tutto, attesa ${r.attesa}, lavoro ${r.lavoro}, fotogramma max ${r.max}${r.fatte < r.n ? `, ${r.n - r.fatte} vuote` : ''}`
   const c = corretta(r)
@@ -73,6 +75,7 @@ export function letturaVeri(dati) {
       : (l.regge ? `${u(l.regge.quanti)} sotto 33 ms (p95 ${l.regge.p95}); oltre da ${l.oltre.quanti} (${di(l.oltre)})` : `già ${u(l.oltre.quanti)} oltre 33 ms (${di(l.oltre)})`) +
         (l.molto ? `, oltre 66 da ${l.molto.quanti} (${di(l.molto)})` : ', mai oltre 66')) + pend + '.')
   }
+  righe.push(...letturaIngresso(crudi))
   // la scomposizione: la scena intera e una cosa tolta alla volta; ordinate per quanto si guadagna
   const ab = m('ab-base')
   if (ab) {
@@ -197,7 +200,8 @@ export function componiVeri(dati, { versione = '', ua = '', nome = '', cpu = nul
     c: Object.fromEntries(Object.entries(dati.gruppi || {}).map(([k, g]) => [k, (g.carica || []).reduce((x, y) => x + y, 0)])),
     x: { p: (dati.contesto || {}).persi || 0, r: (dati.contesto || {}).ripresi || 0, a: (dati.avvisi || []).length },
     // [id, ms, p95, fps, chiamate, ktriangoli, primo, shader nuovi, js, gpu, deriva]: le prime otto come prima (lo strumento legge la seconda)
-    r: (dati.risultati || []).map(r => r.errore ? [r.id, 'err'] : r.salta ? [r.id, 'salta'] : r.tot != null ? [r.id, r.tot, r.max, r.lavoro, r.attesa]
+    r: (dati.risultati || []).map(r => r.errore ? [r.id, 'err'] : r.salta ? [r.id, 'salta'] : r.tipo === 'ingresso' ? [r.id, 'ing', r.max, r.lenti, r.att, r.sh, r.p1, r.p3]
+      : r.tot != null ? [r.id, r.tot, r.max, r.lavoro, r.attesa]
       : [r.id, r.ms, r.p95, r.fps, r.ch, kt(r.tri), Math.round(r.primo || 0), r.nuovi || 0, r.js ?? null, r.gpu ?? null, r.deriva ?? 1]) }
   return [...testa, '', ...corpo, ...(avvisi.length ? ['', 'AVVISI', ...avvisi] : []), '', `CPU prova JS: ${dati.js ?? '?'} ms`, '',
     'LETTURA', ...letturaVeri(dati).map(r => '- ' + r), '', `DATI ${JSON.stringify(dd)}`].join('\n')

@@ -35,6 +35,27 @@ Le scene del Sotterraneo usano la fascia del telefono (`store/qualita.js`) e il 
 si fanno fino in fondo: una serie che cresce (mostri, persone, edifici) salta il resto solo se una scena supera i 400 ms al p95,
 per non piantare il telefono (provato a fermarle a 66 ms: sul Redmi si perdevano proprio 3, 6, 8 mostri, 24 persone, 30 e 60 edifici).
 
+## L'ingresso
+
+Le altre scene misurano dopo il rodaggio, quindi non vedono il fermo che conta: quello all'entrata in un piano e al primo attacco
+(gli shader, docs/sotterraneo/prestazioni-3d.md, «Shader e prima apparizione»). Il gruppo `ingresso` viene **per primo** (il browser
+tiene da parte gli shader già visti: più avanti sarebbe più caldo del vero) e rifà **ogni prova tre volte da capo** (tela, renderer e
+scena nuovi): la riga dice i tre valori in fila, perché la compilazione cambia da un giro all'altro.
+
+| scena | cosa | cosa riporta |
+|---|---|---|
+| `ing-sot` | entrare nello scontro con 3 mostri (il piano nuovo), aspettare la fine del riscaldamento (al più 8 s), poi tre attacchi a 1,5 s (il colpo dell'arma dell'eroe, il mostro, di nuovo l'eroe) | il fotogramma più lungo nei 3 s dal primo disegno, quanti sopra 100 ms, i programmi al primo disegno → a 3 s, `daScaldare`, quando il riscaldamento è finito; per ogni attacco il fotogramma più lungo nei 1,3 s dopo e gli shader nuovi |
+| `ing-presto` | un attacco a 0,5 s dal primo disegno, prima che il riscaldamento cominci: il caso peggiore | lo stesso, un attacco |
+| `ing-zaino` | entrare e chiedere subito 15 anteprime dello zaino | il fotogramma più lungo e quanti sopra 100 ms |
+| `ing-mondo` | entrare nel mondo di sopra vero (la prima terra, dalla partenza; senza persone né mostri, che mette chi gioca) | come sopra, in 4 s (i pezzi si costruiscono uno per fotogramma), e se il riscaldamento è partito |
+| `ing-sot-x`, `ing-presto-x`, `ing-mondo-x` | le stesse col riscaldamento spento (`&spegni=riscaldamento`, la leva `riscaldamento` di `ACCESI`), dopo le altre: l'ordine non lo favorisce | |
+
+Il tempo conta dal primo disegno (prima la scena aspetta l'atlante e non disegna), e il fotogramma del primo disegno è dentro: è
+quello che compila. La LETTURA dice il fotogramma più lungo all'ingresso col riscaldamento e senza, il primo attacco col
+riscaldamento e senza («il riscaldamento toglie N ms dal primo attacco», o «non serve» se la differenza sta sotto 20 ms o il 15%:
+nel rumore), gli shader nuovi ai tre attacchi, l'attacco presto, il mondo e lo zaino. Nella riga DATI: `[id, 'ing', fotogrammi più
+lunghi, sopra 100 ms, attacchi per giro, shader per giro, programmi al primo disegno, programmi dopo]`. Un minuto e mezzo-due in più.
+
 ## Come si misura
 
 - **Lavoro di un fotogramma**: dal primo `requestAnimationFrame` del fotogramma (chiesto prima del giro del gioco) all'ultimo
@@ -42,7 +63,7 @@ per non piantare il telefono (provato a fermarle a 66 ms: sul Redmi si perdevano
   Diviso in due: **js** (fino alla lettura del pixel: il JS e l'invio dei comandi) e **gpu** (l'attesa della lettura: la scheda che
   finisce). Se la gpu tiene quasi tutto, il collo sono pixel, luci e ombre; se tiene il js, le chiamate e il codice.
 - **Calore**: prima di ogni gruppo 8 s a schermo nero, poi un **riferimento** fisso (`veri/base.js`: 100 cubi lucidi, quattro luci,
-  un pavimento a tutto schermo, ~3 s). La deriva (riferimento ÷ il primo) va nella testa del gruppo (`rif 31 ms x1.12`) e su ogni
+  un pavimento a tutto schermo, ~3 s; il primo si rifà sempre, perché è freddo, e uno più che doppio del più svelto si rifà una volta). La deriva (riferimento ÷ il più svelto) va nella testa del gruppo (`rif 31 ms x1.12`) e su ogni
   riga; la LETTURA usa i ms divisi per la deriva (le righe scaldate dicono anche `≈` il valore corretto). Sul Redmi lo scontro con 8
   mostri valeva 77 ms all'inizio e 137 alla fine: senza la correzione le serie in fondo sembravano il doppio. In testa anche la
   batteria all'inizio e alla fine (`navigator.getBattery`) e la rete; il risparmio energetico il browser non lo dice.
@@ -135,16 +156,17 @@ il più alto di un campione ogni 15 fotogrammi. Come ordine di grandezza, SwiftS
 ## Il codice
 
 `grafica/benchmark/veri.js` (le scene, il giro dei fotogrammi, il calore, la GPU, gli avvisi), `veri/discese.js`, `sopra.js`,
-`zaino.js`, `roba.js`, `fattoria.js`, `base.js` (un gruppo ciascuno, caricati con `import()` quando tocca a loro), `veri/moltiplica.js`
+`zaino.js`, `roba.js`, `fattoria.js`, `base.js`, `ingresso.js` (un gruppo ciascuno, caricati con `import()` quando tocca a loro), `veri/moltiplica.js`
 (le leve: triangoli, chiamate, materiali semplici, normal map, particelle), `veri/tela.js`, `veri/leggendario.js` (il corredo del
-cheat); il log in `grafica/benchmark/log-veri.js` (`componiVeri`, `letturaVeri`, `limite`, `corretta`, `spezza`, `conNote`). Nel sito
+cheat); il log in `grafica/benchmark/log-veri.js` (e `log-ingresso.js`) (`componiVeri`, `letturaVeri`, `limite`, `corretta`, `spezza`, `conNote`). Nel sito
 spezzato `vite.config.js` tiene `grafica/benchmark/` fuori dal file `comune`: si carica a richiesta, e i modelli veri tirano dentro i giochi.
 
 Nei test: `[data-azione="benchmark-veri"]`, `[data-benchmark-palco]` (dove girano le scene), `[data-azione="benchmark-interrompi"]`,
 `[data-benchmark-note]`, `[data-azione="benchmark-manda"][data-parte]`, `[data-azione="benchmark-ultima"][data-tipo]`;
 `window.__benchmarkVeri` (i dati), `window.__benchmarkSolo` (gli inizi degli id), `window.__benchmarkCorto` (scene di pochi decimi,
 senza pausa), `window.__benchmarkRaffredda` (i ms di pausa fra i gruppi: lo strumento la toglie quando tara).
-`unita/benchmark-veri` (il log, il limite, gli invii, le leve), `integrazione/benchmark-veri` (una scena per gruppo, a schermo).
+`unita/benchmark-veri` (il log, il limite, gli invii, le leve), `unita/benchmark-ingresso` (le righe e la LETTURA dell'ingresso),
+`integrazione/benchmark-veri` (una scena per gruppo e tutto l'ingresso in due giri, a schermo).
 
 ## Mandare il resoconto al computer
 

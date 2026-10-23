@@ -67,7 +67,13 @@ La chiave dice la figura e l'aspetto, non l'oggetto: due spade con la stessa fig
   contesti) chiude il renderer, che si riapre alla richiesta dopo; `rotto` per sempre solo alla terza perdita (`stato().perdite`).
   Un'immagine persa a metà torna `RIPROVA`: null, ma non resta in cache.
 - **La coda**: una chiave una volta sola; in un giro se ne fanno finché non passano 16 ms (almeno una), poi si cede il filo con
-  un messaggio (il tocco e i fotogrammi passano prima).
+  un messaggio (il tocco e i fotogrammi passano prima). Un'anteprima a fette è una promessa: il giro si ferma e la chiave dopo
+  parte quando è arrivata (le fette usano la stessa scena).
+- **A fette**, ognuna in un compito suo: il renderer, se non c'è; il modello in posa con gli shader nuovi chiesti (`compile`, che
+  non aspetta), poi un'attesa (finché sono pronti con `KHR_parallel_shader_compile`, se no 60 ms a programma, al più 400); il disegno
+  e la fotografia della tela (`createImageBitmap`, che arriva dopo senza aspettare la GPU sul filo); la tela 2D. Sul Redmi Note 7 lo
+  zaino aveva un fotogramma fermo di 400 ms: la copia (`drawImage` dalla tela WebGL) aspettava la GPU, e il primo disegno di un
+  materiale nuovo la compilazione ([prestazioni-3d.md](prestazioni-3d.md), «Shader e prima apparizione»).
 - **L'immagine è una tela 2D** copiata dal renderer, e la vista la copia nella sua (`Quadro3d.vue`): niente PNG.
 
 Misurato con SwiftShader (390×844, la discesa in 3D accesa dietro; `node strumenti/tavola-anteprime.mjs`):
@@ -94,7 +100,8 @@ node strumenti/scatta-app.mjs 'sotterraneo3d=mondo&eroe=cavaliere&bottega=armaio
 ```
 
 `window.__anteprime3d.stato()` dice quante disegnate, i ms (modelli, render, copia), quante volte s'è aperto il renderer, se è
-aperto, quante in coda, e `prima`/`ultima` (il primo chiedere e l'ultima pronta).
+aperto, quante in coda, e `prima`/`ultima` (il primo chiedere e l'ultima pronta); `programmi`, `msCompila` (l'attesa degli shader) e
+`fettaMax` (il pezzo più lungo sul filo). `window.__anteprime3d.programmi()` i programmi del renderer aperto.
 
 ## Cosa manca
 

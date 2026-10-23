@@ -39,6 +39,7 @@ Tutto in `src/giochi/sotterraneo/scena3d/`, un file per tema.
 |---|---|
 | `indice.js` | `creaSotterraneo3d`: la porta verso Gioco.vue (le stesse di scena/tela.js più il dito, il colpo, gli agganci, `grafica()`), il giro di ogni fotogramma |
 | `contesto.js`, `webgl.js` | il contesto WebGL 2 chiesto a mano, il renderer, il pixel ratio che si adatta, le misure; `haWebGL2` senza three |
+| `programmi.js` | da dove vengono i programmi di shader, per le misure ([prestazioni-3d.md](prestazioni-3d.md), «Shader e prima apparizione») |
 | `costanti.js` | telecamera, luce, misure, e `ACCESI`: **il punto unico dove si spegne un pezzo** |
 | `aspetti.js` | l'aspetto di ogni paesaggio (puro): [paesaggi-3d.md](paesaggi-3d.md) |
 | `pianta.js` | il livello del motore tradotto in pezzi: pavimento, muri alti e parapetti, colonne, acqua, torce (puro) |

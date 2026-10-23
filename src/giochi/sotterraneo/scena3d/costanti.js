@@ -77,6 +77,7 @@ export const ACCESI = {
   saldatura: true,   // le mesh ferme dei mostri e dell'eroe 3D saldate in una (salda3d.js); spenta, una chiamata per mesh
   ombreMorbide: true,   // le macchie d'ombra sotto le figure del mondo di sopra (mondo/persone.js)
   chiarori: true,    // i chiarori per terra delle discese (rarità, missione, chiave, capi: segni.js, creaAloni)
+  riscaldamento: true,   // gli shader del piano e del mondo chiesti prima che servano (indice.js scaldaPiano, mondo/indice.js); spento: al primo uso
 }
 
 // La fascia grafica del telefono (store/qualita.js) decide quali pezzi di ACCESI restano: si riparte dai valori scritti sopra

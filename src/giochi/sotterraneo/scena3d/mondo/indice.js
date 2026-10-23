@@ -9,6 +9,7 @@ import { Scene, Color, Fog, HemisphereLight, DirectionalLight, Group, Texture, S
 import { ATLANTE, PEZZI } from '../../dati/atlante.js'
 import { caricaZona, scaricaZona, zonaDi, zoneAttorno } from '../../motore/mondo-percorso.js'
 import { creaContesto } from '../contesto.js'
+import { ACCESI } from '../costanti.js'
 import { normaliAtlante } from '../trame.js'
 import { U, vesti, tramaDeiPezzi, tingi } from './vesti.js'
 import { creaTrame } from './trame.js'
@@ -366,7 +367,7 @@ function costruisci(canvas, ctx, { m, nebbia: bit, passo, dopo, frecce = [], fon
     ctx.conta(ms)
     // il riscaldamento (docs/sotterraneo/prestazioni-3d.md, «Shader e prima apparizione»): un secondo dopo i primi pezzi, gli shader di
     // quello che c'è ma non si è ancora disegnato (lo scontro sul prato, il portale, la scia); `compile` chiede e non aspetta
-    if (!scaldato && costruiti.size >= Math.min(4, griglia.n)) {
+    if (!scaldato && ACCESI.riscaldamento && costruiti.size >= Math.min(4, griglia.n)) {
       if (scaldaDa == null) scaldaDa = tempo + 1
       else if (tempo >= scaldaDa) { scaldato = true; try { renderer.compile(scena, cam.camera) } catch (e) { /* solo un anticipo */ } }
     }
