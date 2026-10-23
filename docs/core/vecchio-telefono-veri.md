@@ -80,6 +80,9 @@ lunghi, sopra 100 ms, attacchi per giro, shader per giro, programmi al primo dis
 
 **Le leve dei colli di bottiglia** (`veri/moltiplica.js`): i triangoli ×k dividono ogni triangolo di ogni mesh in k (piatti: forma,
 materiali, luci e chiamate restano); le chiamate ×k spezzano ogni mesh in k gruppi dello stesso materiale (stessi triangoli).
+Valgono anche per le SkinnedMesh della pelle (`salda3d.js`, dove stanno quasi tutti mostri ed eroe): il vertice nuovo prende ossa e
+pesi di un capo del lato. Sul computer (22/10, con la pelle) triangoli 86k → 142k → 253k → 475k, chiamate 70 → 119 → 205: non
+×2 e ×4 esatti perché punti e sprite non si dividono, come prima della pelle (sul Redmi 241 → 440 → 892).
 
 ## Il resoconto
 
@@ -199,5 +202,3 @@ gli scatti prima/dopo sono in `tmp/scatti/leve-discese-*.png` e `leve-sopra-*.pn
 1. Il resoconto «Chi pesa» del Redmi Note 7, e da lì quali leve vanno in `SPEGNI_BASSA` (`store/qualita.js`) e nel preset
    `basso` della fattoria: dopo il sì di Marco sugli scatti.
 2. Per gli elementi più cari senza leva (secondo la tabella): la semplificazione scritta in `SEMPLICE` (`elementi-dati.js`).
-3. Le leve dei colli (`veri/moltiplica.js`): con la pelle (`salda3d.js`) mostri ed eroe sono SkinnedMesh, che `triangoli` e `chiamate`
-   saltano: `integrazione/benchmark-veri` non vede più «triangoli ×2» e «chiamate ×2» crescere abbastanza (121k contro 87k, 106 contro 89).

@@ -6,9 +6,10 @@ import { BufferAttribute, MeshLambertMaterial, MeshBasicMaterial } from 'three'
 
 const ATTR_INTERI = new Set([Int8Array, Uint8Array, Int16Array, Uint16Array, Int32Array, Uint32Array])
 
-/** Una geometria con ogni triangolo diviso in `volte` (2, 4 o 8) triangoli, piatti; null se non si può (morph, pelle). */
+/** Una geometria con ogni triangolo diviso in `volte` (2, 4 o 8) triangoli, piatti; null se non si può (morph). Con la pelle (salda3d.js)
+    il vertice nuovo prende ossa e pesi del primo dei due: un indice d'osso non si fa a metà. */
 export function dividi(geo, volte) {
-  if (!geo || !geo.attributes.position || Object.keys(geo.morphAttributes || {}).length || geo.attributes.skinIndex) return null
+  if (!geo || !geo.attributes.position || Object.keys(geo.morphAttributes || {}).length) return null
   const n0 = geo.attributes.position.count
   const nomi = Object.keys(geo.attributes)
   const sorgenti = nomi.map(k => geo.attributes[k])
@@ -21,6 +22,7 @@ export function dividi(geo, volte) {
   let n = n0
   const indice = geo.index ? Array.from(geo.index.array) : Array.from({ length: n0 }, (_, i) => i)
   const iNormale = nomi.indexOf('normal')
+  const pelle = new Set(['skinIndex', 'skinWeight'].map(k => nomi.indexOf(k)).filter(i => i >= 0))
   const medi = new Map()
   const medio = (a, b) => {
     const k = a < b ? a * 4294967296 + b : b * 4294967296 + a
@@ -29,7 +31,7 @@ export function dividi(geo, volte) {
     m = n++
     sorgenti.forEach((s, j) => {
       const d = dati[j], z = s.itemSize
-      for (let c = 0; c < z; c++) d[m * z + c] = (d[a * z + c] + d[b * z + c]) / 2
+      for (let c = 0; c < z; c++) d[m * z + c] = pelle.has(j) ? d[a * z + c] : (d[a * z + c] + d[b * z + c]) / 2
       if (j === iNormale) { const l = Math.hypot(d[m * 3], d[m * 3 + 1], d[m * 3 + 2]) || 1; for (let c = 0; c < 3; c++) d[m * 3 + c] /= l }
     })
     medi.set(k, m)
@@ -68,7 +70,8 @@ export function dividi(geo, volte) {
   return g
 }
 
-const adatta = o => o.isMesh && !o.isSkinnedMesh && o.geometry && o.geometry.attributes.position && !Array.isArray(o.material)
+// anche le SkinnedMesh: con la pelle (salda3d.js) mostri ed eroe sono quasi tutto lì
+const adatta = o => o.isMesh && o.geometry && o.geometry.attributes.position && !Array.isArray(o.material)
 
 /** Le leve su una scena: `triangoli(k)` e `chiamate(k)` (1 = com'era); `ripristina()` rimette le geometrie e i materiali di prima. */
 export function leve(scena) {
