@@ -85,6 +85,25 @@ for (const [specie, crea, ms] of BESTIE) {
   }
 }
 
+/* le bestie di casa (G6, docs/fattoria3d/bestie-di-casa.md): beagle, gatto rosso, coniglio, pappagallo; si muovono con le pose (`posaCane`, `posaGatto`, `posaPiccolo`), non con muoviBestie */
+const MB = await import('../../src/giochi/fattoria3d/scena3d/modelli-bestie.js')
+const MCO = await import('../../src/giochi/fattoria3d/scena3d/modelli-compagni.js')
+const { BESTIE: DI_CASA, comeCompagno } = await import('../../src/giochi/fattoria3d/dati/bestie.js')
+const POSE = { cane: ['sta', 'siede', 'dorme', 'festa', 'vaga', 'annusa'], gatto: ['sta', 'siede', 'dorme', 'lava', 'vaga', 'stiracchia'], coniglio: ['sta', 'siede', 'dorme', 'festa', 'vaga', 'annusa'], pappagallo: ['sta', 'siede', 'dorme', 'festa', 'vaga', 'annusa'] }
+const POSA = { cane: MB.posaBeagle, gatto: MCO.posaGatto, coniglio: MB.posaPiccolo, pappagallo: MB.posaPiccolo }
+for (const [id, d] of Object.entries(DI_CASA)) {
+  for (const stato of POSE[d.tipo]) {
+    const b = MB.creaBestia(comeCompagno(id))
+    let male = null
+    for (let f = 0; f < 120 && !male; f++) {
+      const t = f / 30
+      POSA[d.tipo](b, { stato, vel: stato === 'vaga' ? 0.6 : 0, fase: t * 7, t, p: (t % 3) / 3 })
+      if (f > 5 && f % 9 === 0) { const g = galleggianti(b); if (g.length) male = `a ${t.toFixed(1)} s: ${g.join('; ')}` }
+    }
+    controlla(`${d.nome} (bestia di casa), ${stato}: le parti si toccano`, !male, 'galleggiano ' + male)
+  }
+}
+
 /* la pecora ha il suo movimento (`muoviPecore`) e gli stati dal momento della tosatura */
 for (const [nome, t0] of [['ha fame', null], ['al lavoro', adesso - PECORE.laneMs / 2], ['pronta', adesso - PECORE.laneMs]]) {
   const p = M.creaPecora(), tenitore = { userData: { pecore: [p] } }

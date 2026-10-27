@@ -473,6 +473,7 @@ const MANTELLI = {
   bianconero: { occhi: '#8fd14f', naso: '#f09aa6', lucido: 0.9 },
   calico:     { occhi: '#a6dc7a', naso: '#f09aa6', lucido: 0.9 },
   nero:       { occhi: '#ffd23a', naso: '#c8808c', lucido: 0.5 },
+  rosso:      { occhi: '#e6c84a', naso: '#e8949a', lucido: 0.9 },      // il gatto rosso comprabile (dati/bestie.js): tigrato arancione
 }
 const _c2 = new THREE.Color()
 const mescola = (k, hex, t) => { if (t > 0) k.lerp(_c2.setHex(hex), Math.min(1, t)); return k }
@@ -500,6 +501,20 @@ function coloriGatto (v) {
         else { mescola(k, i === 2 ? AR : NERO_G, 1 - liscio(-0.15, -0.17, p.y)); if (i === 2) mescola(k, NERO_G, liscio(0.0, 0.05, p.y)) }
         return k },
       coda: n => (p, k) => { k.setHex(AR); nera(k, liscio(-0.1, 0.25, Math.sin((p.y + n * 0.2) * 55)) * 0.9 + (n === 2 ? liscio(0.1, 0.17, p.y) : 0)); return k },
+    }
+  }
+  if (v === 'rosso') {                                                                           // il gatto rosso: tigrato arancione, crema sul petto, sul muso e sulla pancia
+    const AR = 0xe58a2e, CREMA = 0xf8e6c4, RIGA = 0xb35a17
+    const tigre = (k, p, f, forza) => mescola(k, RIGA, liscio(0.2, 0.75, Math.sin(p.z * f + 0.7)) * forza)
+    return {
+      corpo: (p, k) => { k.setHex(AR); tigre(k, p, 44, 0.5 * liscio(0.05, 0.11, p.y))
+        mescola(k, CREMA, (1 - liscio(-0.01, 0.045, p.y)) * 0.95)                                        // la pancia chiara
+        mescola(k, CREMA, liscio(0.3, 0.34, p.z) * (1 - liscio(0.04, 0.1, Math.abs(p.x))) * (1 - liscio(0.12, 0.17, p.y))); return ombraSotto(k, p) },
+      testa: (p, k) => { k.setHex(AR); const ax = Math.abs(p.x)
+        mescola(k, RIGA, liscio(0.2, 0.8, Math.sin(ax * 90)) * liscio(0.13, 0.17, p.y) * (1 - liscio(0.06, 0.1, p.z)) * 0.6 * (1 - liscio(0.12, 0.17, ax)))      // le righe sulla fronte
+        mescola(k, CREMA, liscio(0.09, 0.13, p.z) * (1 - liscio(0.05, 0.09, p.y)) * (1 - liscio(0.09, 0.15, ax))); return k },     // il muso crema
+      zampa: i => (p, k) => { k.setHex(AR); tigre(k, { z: p.y * 0.6 }, 90, 0.35 * liscio(-0.02, -0.06, p.y) * liscio(-0.17, -0.1, p.y)); return mescola(k, CREMA, liscio(-0.14, -0.17, p.y)) },
+      coda: n => (p, k) => { k.setHex(AR); mescola(k, RIGA, liscio(0.2, 0.8, Math.sin((p.y + n * 0.2) * 48)) * 0.75); if (n === 2) mescola(k, CREMA, liscio(0.1, 0.16, p.y)); return k },
     }
   }
   if (v === 'nero') {
@@ -595,7 +610,7 @@ export function creaGatto (variante = 'bianconero') {
     f.position.set(0, 0.1, 0.06); f.scale.set(0.17 * 10 * 1.012, 0.14 * 10 * 1.012, 0.145 * 10 * 1.012); f.visible = !chiusi; testa.add(f); return f
   })
   const orecchie = [-1, 1].map(s => {
-    const fuoriM = v === 'bianconero' ? mat(NERO_G) : v === 'calico' ? mat(NERO_G) : v === 'nero' ? mat(0x2a2a32) : mat(BIANCO_G)
+    const fuoriM = v === 'bianconero' ? mat(NERO_G) : v === 'calico' ? mat(NERO_G) : v === 'nero' ? mat(0x2a2a32) : v === 'rosso' ? mat(0xe58a2e) : mat(BIANCO_G)
     const o = cono(testa, 0.085, 0.17, fuoriM, s * 0.105, 0.29, 0.03, 3); o.scale.z = 0.55; o.rotation.set(0, Math.PI, -s * 0.28)
     const d = cono(testa, 0.055, 0.115, rosa, s * 0.103, 0.282, 0.03 + 0.012, 3); d.scale.z = 0.55; d.rotation.set(0, Math.PI, -s * 0.28)
     return [o, d]
@@ -722,3 +737,6 @@ export function misure (g) {
 export const creaContadino = memoModello('contadino', costruisciContadino, {
   chiave: (arg = 'contadino') => chiaveAbito(typeof arg === 'string' ? abitoDiSerie(arg) : normalizzaAbito(arg, arg && arg.persona)),
 })
+
+// i mattoncini per i corpi che stanno in un altro file (scena3d/modelli-bestie.js: beagle, coniglio, pappagallo)
+export { G, perno, zonaTocco, tingi, palla, tubo, morbido, liscio, mescola, sfera, cono, ombre }

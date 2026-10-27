@@ -19,6 +19,8 @@ import { galleggiante } from '../../../src/giochi/fattoria3d/scena3d/pesca3d.js'
 import { Pesci } from '../../../src/giochi/fattoria3d/scena3d/pesci.js'
 import { materialeAcqua, materialeMare } from '../../../src/giochi/fattoria3d/scena3d/modelli-acqua.js'
 import { creaContadino, creaCane, posaCane, creaGatto, posaGatto } from '../../../src/giochi/fattoria3d/scena3d/modelli-compagni.js'
+import { creaBestia, posaPiccolo, posaBeagle } from '../../../src/giochi/fattoria3d/scena3d/modelli-bestie.js'
+import { BESTIE as BESTIE_DI_CASA, comeCompagno } from '../../../src/giochi/fattoria3d/dati/bestie.js'
 import { creaPonte, creaPasserella, creaTavolo } from '../../../src/giochi/fattoria3d/scena3d/modelli-passaggi.js'
 import { creaStagno } from '../../../src/giochi/fattoria3d/scena3d/modelli-acqua.js'
 import { creaDecoro } from '../../../src/giochi/fattoria3d/scena3d/modelli-decori.js'
@@ -38,6 +40,7 @@ if (indirizzo.has('senzacache')) CACHE_MODELLI.acceso = false
 if (indirizzo.has('senzafondi')) FONDI.acceso = false        // e `&senzafondi=1`: nemmeno le mesh fuse (i modelli sciolti)
 
 const M = 'src/giochi/fattoria3d/scena3d/modelli.js'
+const MBE = 'src/giochi/fattoria3d/scena3d/modelli-bestie.js'
 const MM = 'src/giochi/fattoria3d/scena3d/modelli-macchine.js'
 const MCT = 'src/giochi/fattoria3d/scena3d/modelli-cortile.js'
 const MB = 'src/giochi/fattoria3d/scena3d/modelli-botteghe.js'
@@ -262,6 +265,18 @@ export const VOCI = [
     dove: `gatto che gira per il terreno, arriva al livello ${COMPAGNI[id].liv} (scena3d/compagni.js)`, file: `${MC}:creaGatto`,
     crea: () => creaGatto(COMPAGNI[id].variante), anima: (g, dt, t) => posaGatto(g, { stato: 'sta', t }),
   })),
+
+  // le bestie di casa che si comprano (G6, docs/fattoria3d/bestie-di-casa.md): il corpo com'è in scena (creaBestia) e le sue pose, ferme nell'anteprima e mosse nella vista grande
+  ...Object.entries(BESTIE_DI_CASA).flatMap(([id, b]) => {
+    const e = b.tipo === 'cane' ? ['sta', 'siede', 'dorme', 'festa', 'vaga'] : b.tipo === 'gatto' ? ['sta', 'siede', 'dorme', 'lava', 'vaga'] : ['sta', 'siede', 'annusa', 'dorme', 'festa', 'vaga']
+    const posa = (g, stato, t, vel) => (b.tipo === 'cane' ? posaBeagle : b.tipo === 'gatto' ? posaGatto : posaPiccolo)(g, { stato, vel, fase: t * 7, t, p: (t % 3) / 3 })
+    return e.map(stato => ({
+      id: `fattoria:bestia-${id}${stato === 'sta' ? '' : '-' + stato}`, nome: `${b.nome}${stato === 'sta' ? '' : ' (' + stato + ')'}`, gioco: 'fattoria', categoria: 'animale',
+      dove: `bestia di casa, si prende dal livello ${b.liv} per 🪙${b.prezzo} (dati/bestie.js)${stato === 'sta' ? '' : `, posa «${stato}»`}`, file: `${MBE}:creaBestia`,
+      crea: () => { const g = creaBestia(comeCompagno(id)); posa(g, stato, 0.4, stato === 'vaga' ? 0.6 : 0); return g },
+      anima: (g, dt, t) => posa(g, stato, t, stato === 'vaga' ? 0.6 : 0),
+    }))
+  }),
 
   // ── il terreno: a istanze nel gioco, qui un esemplare con le stesse geometrie ──
   { id: 'fattoria:albero', nome: 'Abete', gioco: 'fattoria', categoria: 'pianta', dove: 'alberi del bosco e dei lotti, si abbattono con l\'ascia (terreno.js, _alberi; geometrie FORME di modelli.js)', file: `${T}:_alberi`, misure: '1×1',
