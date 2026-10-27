@@ -17,6 +17,12 @@
 .f3-azioni button { position: relative; } .f3-schede button { position: relative; } .f3-griglia-carte .carta { position: relative; }
 .f3-griglia-carte .carta .f3-esclama { right: 4px; top: 4px; }
 .f3-schede button .f3-esclama { right: -2px; top: 0; }
+/* il segnalino della festa (🎃/🎄, W20): come il «!» ma chiaro, senza rosso (il rosso è un rifiuto o un'urgenza) */
+.f3-festa { position: absolute; right: -4px; top: -6px; z-index: 2; min-width: 22px; height: 22px; border-radius: 11px; background: #fff3cf; border: 2px solid #f0a020; box-sizing: border-box; font: 400 13px/18px "Emoji Gioco", system-ui, sans-serif; font-style: normal; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,.3); pointer-events: none; animation: f3-pulsa 1.8s ease-in-out infinite; }
+.f3-griglia-carte .carta .f3-festa { right: 4px; top: 4px; }
+.f3-schede button .f3-festa { right: -2px; top: 0; }
+.f3-festa.a-sinistra { right: auto; left: -4px; }
+@media (prefers-reduced-motion: reduce) { .f3-festa { animation: none !important; } }
 .f3-bac-serve { display: flex; align-items: center; gap: 6px; margin: 4px 0; font: 800 14px "Emoji Gioco", system-ui, sans-serif; color: #9a2a14; }
 .f3-bac-serve .f3-esclama { position: static; flex: none; animation: none; }
 @media (prefers-reduced-motion: reduce) { .f3-esclama { animation: none !important; } }

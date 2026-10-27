@@ -21,6 +21,14 @@ si rifanno quando la mappa cambia o la telecamera cambia quadrato (6 celle). Le 
 (il menu le offre solo allora, `carteDi` guarda `stato.stagione`), e **comprate restano** (nel magazzino la carta resta per rimetterle gratis;
 quelle in mappa restano dove sono). Non sono «roba» di un livello (`roba()` le salta) né sorprese della mongolfiera (`SORPRESE`).
 
+## Il segnalino della festa (W20)
+
+Come il 🎃/🎄 sul baule della 2D ([../fattoria/stagioni.md](../fattoria/stagioni.md)): in stagione, finché non possiedi **nessun** pezzo della festa (né in
+mappa né nel magazzino), il tasto 🏗 Costruisci porta l'icona della festa (angolo in alto a sinistra, il «!» resta a destra), e nel menu la
+portano la linguetta della scheda (Decori a Halloween, Feste a Natale) e le carte di stagione aperte dal livello. Posato o comprato il primo
+pezzo se ne va. Non apre il menu da sé (si apre sempre sui Campi) e non cambia prezzi: è solo un dito puntato. Logica pura: `festaDaScoprire`
+in `dati/carte.js`; l'icona è `FINESTRE[stagione].icona`. Bersagli: `[data-f3="costruisci-festa"]`, `[data-f3="scheda-festa"]`, `[data-f3="carta-festa"]`.
+
 ## Il peso (scena.md «Qualità e peso»)
 
 Niente di nuovo esiste fuori stagione. In festa: **una draw call per famiglia** — chiazze, stelle, alberelli (+ le loro cime), lucine sono
@@ -33,7 +41,7 @@ camera, nessun array da riscrivere). Misurato in Chrome senza schermo: **≤ 8 d
 
 - Il cappello da strega e i recinti in costume della 2D (W21): in 3D le bestie non si vestono (il guardaroba è del contadino).
   **Deciso (22/10/2026): niente per ora, se ne riparla prima di Natale.** I costumi non si metteranno addosso: si **sostituiscono i modelli** della bestia con una versione in costume (modelli nuovi, non accessori), in stagione.
-- Il fumetto «lo vorrei» / il segnalino 🎃 sul menu (W20): le zucche stanno nei decori senza segnalino.
+- Il fumetto «lo vorrei» della 2D (W20) è delle bestie che vorrebbero il cappello: in 3D le bestie non si vestono, quindi **tolto**; tornerà coi modelli in costume (W21).
 - Il suolo non si tinge di bianco a Natale (solo chiazze), e i tetti non hanno la crosta di neve: un velo sui modelli costerebbe una mesh per tetto.
 - Le visite ai vicini non mostrano la stagione.
 - Gli indirizzi delle feste si leggono una volta sola: a cavallo di mezzanotte fra 31 ottobre e 1 novembre vale quella dell'apertura.

@@ -38,7 +38,7 @@ import Hud from './viste/Hud.vue'
 import BarraAzioni from './viste/BarraAzioni.vue'
 import CostruisciQui from './viste/CostruisciQui.vue'
 import BarraStrade from './viste/BarraStrade.vue'
-import { schedeDi } from './dati/carte.js'
+import { schedeDi, festaDaScoprire } from './dati/carte.js'
 import { stagioneAttiva } from './dati/stagioni3d.js'
 import SceltaSeme from './viste/SceltaSeme.vue'
 import Macchina from './viste/Macchina.vue'
@@ -53,8 +53,10 @@ import Bottega from './viste/Bottega.vue'
 import Dialogo from './viste/Dialogo.vue'
 import Opzioni from './viste/Opzioni.vue'
 import Mappa from './viste/Mappa.vue'
+import Carretto from './viste/Carretto.vue'
 import Visita from './viste/Visita.vue'
 import { usaVisite } from './visite.js'
+import { DAI as DAI_CARRETTO } from './motore/carretto.js'
 import './stile.css'
 import './stile-guida.css'
 
@@ -207,7 +209,7 @@ const ui = {
     avvisoFine = testo ? performance.now() + DURATA_AVVISO : 0
   },
   apriCostruisci(i, j) { apriCostruisci(i, j) },                           // tenere premuto su un posto libero del terreno tuo
-  fogliAperti: () => !!alberoK.value || !!dialogo.value || !!consiglio.value || !!costruisciQui.value || semiAperto.value || !!macchinaAperta.value || livelliAperto.value || inventarioAperto.value || guardarobaAperto.value || bancoAperto.value || nave.value || !!bottegaAperta.value || mappaAperta.value || (opzioniAperte.value && !opzioniRidotte.value),
+  fogliAperti: () => !!alberoK.value || !!dialogo.value || !!consiglio.value || !!costruisciQui.value || semiAperto.value || !!macchinaAperta.value || livelliAperto.value || inventarioAperto.value || guardarobaAperto.value || bancoAperto.value || nave.value || !!bottegaAperta.value || mappaAperta.value || !!carretto.value || (opzioniAperte.value && !opzioniRidotte.value),
   zonaDrop: () => (zonaVia.value || null)?.getBoundingClientRect() || null,
   trascinando(info) { trascinando.value = info },
 }
@@ -216,7 +218,7 @@ const ui = {
 const telaVisita = ref(null), sopraVisita = ref(null)
 const visite = usaVisite({ dammi: () => ({ motore, mondo }), tela: telaVisita, sopra: sopraVisita, q, versione, cambio: () => ui.cambio() })
 const { inVisita, mappaAperta, mappaMsg, fase: faseVisita, verso: versoVisita, scheda: schedaVisita, foglio: foglioVisita, storia: storiaVisita,
-        messaggio: msgVisita, elenco: elencoVicini, chiave: chiaveTela } = visite
+        messaggio: msgVisita, elenco: elencoVicini, chiave: chiaveTela, carretto, righeCarretto } = visite
 
 // ── la barra delle azioni ──
 function impostaModo(m) {
@@ -234,6 +236,10 @@ function scegliSeme(k) {
 const schede = computed(() => {
   void versione.value
   return schedeDi({ stagione: stagione.value, livello: motore.livello(), prezzoPezzo: t => motore.prezzoPezzo(t), nelMagazzino: t => motore.nelMagazzino(t), posseduti: motore.s.posseduti })
+})
+const festa = computed(() => {
+  void versione.value
+  return festaDaScoprire({ stagione: stagione.value, livello: motore.livello(), haPosato: t => motore.nelMagazzino(t) > 0 || motore.s.cose.some(c => c.tipo === t) })
 })
 function apriCostruisci(i, j) {
   if (mondo.eroe.az || strumento.value) return
@@ -439,7 +445,7 @@ const quadroGuida = () => {
   return {
     campi: cs.length, vuoti: cs.filter(c => m.campoVuoto(c)).length, maturi: cs.filter(c => m.campoMaturo(c)).length, crescono: crescono.length,
     secondi: restanti.length ? Math.min(...restanti) : 0, modo: modo.value, semi: semiAperto.value, costruisci: !!costruisciQui.value,
-    foglio: !!(alberoK.value || dialogo.value || macchinaAperta.value || livelliAperto.value || inventarioAperto.value || guardarobaAperto.value || bancoAperto.value || nave.value || bottegaAperta.value || mappaAperta.value || opzioniAperte.value || consiglio.value || strumento.value || trascinando.value),
+    foglio: !!(alberoK.value || dialogo.value || macchinaAperta.value || livelliAperto.value || inventarioAperto.value || guardarobaAperto.value || bancoAperto.value || nave.value || bottegaAperta.value || mappaAperta.value || !!carretto.value || opzioniAperte.value || consiglio.value || strumento.value || trascinando.value),
     raccolto: Object.values(m.s.merci).some(n => n > 0), visto: guidaVisto.value,
   }
 }
@@ -593,7 +599,7 @@ onBeforeUnmount(() => {
         <button v-if="cameraLibera" class="f3-centra" data-f3="centra" @click="mondo.tornaAllEroe()">⌖ Torna {{ nomeDelContadino(abito, 'al') }}</button>
 
         <BarraAzioni v-if="!strumento && !trascinando" :modo="modo" :seme="COLTURE[seme].emoji" :da-fare="foto.daFare"
-                     @modo="impostaModo" @semina="apriSemina" @costruisci="apriCostruisci()" :da-costruire="foto.daCostruire" />
+                     @modo="impostaModo" @semina="apriSemina" @costruisci="apriCostruisci()" :da-costruire="foto.daCostruire" :festa="festa ? festa.icona : ''" />
         <BarraStrade v-if="strumento" :strumento="strumento" :testo="avvisoTesto" @strumento="scegliStrumento" @fatto="finisciStrumento" />
 
         <!-- un pezzo sollevato tenendo premuto, o il fantasma del menu che aspetta un posto: si rilascia sulla mappa o su questa fascia -->
@@ -605,7 +611,7 @@ onBeforeUnmount(() => {
                 @pointerdown.prevent="mondo.ruotaTenuto()" @keydown.enter.prevent="mondo.ruotaTenuto()">↻</button>
         <div v-if="trascinando && trascinando.su" class="f3-trascinato" :style="{ transform: `translate(${trascinando.x}px, ${trascinando.y - 56}px) translate(-50%, -50%)` }">{{ trascinando.emoji }}</div>
 
-        <CostruisciQui v-if="costruisciQui" :schede="schede" :messaggio="costruisciQui.msg" :anteprima="anteprima" :anteprima-pronta="anteprimaPronta" @scegli="sceglieCarta" @chiudi="chiudiCostruisci" />
+        <CostruisciQui v-if="costruisciQui" :schede="schede" :messaggio="costruisciQui.msg" :anteprima="anteprima" :anteprima-pronta="anteprimaPronta" :festa="festa" @scegli="sceglieCarta" @chiudi="chiudiCostruisci" />
         <SceltaSeme v-if="semiAperto" :seme="seme" :livello="foto.livello" :scorte="scorteSeme" @scegli="scegliSeme" @chiudi="semiAperto = false" />
         <Macchina v-if="macchina" :key="macchina.tipo" v-bind="macchina" :messaggio="macchinaMsg" :anteprima="anteprima" :anteprima-pronta="anteprimaPronta" @prepara="prepara" @compra="compraPosto" @ritira="ritira" @chiudi="macchinaAperta = null"
                   :consiglio="macchinaCons" @consiglio="facciConsiglio" />
@@ -624,7 +630,9 @@ onBeforeUnmount(() => {
                  @stress="(t, n) => { mondo.stress(t, n); ui.cambio() }" @rapporto="creaRapporto" @ridotto="v => opzioniRidotte = v"
                  @chiudi="opzioniAperte = false; opzioniRidotte = false" />
         <Dialogo v-if="dialogo" v-bind="{ titolo: dialogo.titolo, testo: dialogo.testo, bottoni: dialogo.bottoni }" @scelta="rispostaDialogo" />
-        <Mappa v-if="mappaAperta" :elenco="elencoVicini" :messaggio="mappaMsg" @vai="visite.vai" @chiudi="mappaAperta = false" />
+        <Mappa v-if="mappaAperta" :elenco="elencoVicini" :messaggio="mappaMsg" @vai="visite.vai" @carretto="visite.apriCarretto" @chiudi="mappaAperta = false" />
+        <Carretto v-if="carretto" :passo="carretto.passo" :dato="carretto.dato" :quanti="DAI_CARRETTO" :dai="righeCarretto.dai" :offre="righeCarretto.offre" :messaggio="carretto.msg"
+                  @dai="visite.carrettoDai" @ricevi="visite.carrettoRicevi" @indietro="visite.carrettoIndietro" @chiudi="visite.chiudiCarretto" />
         </div>
 
         <!-- la visita a un vicino: la sua tela e i suoi fogli, mentre la fattoria di casa aspetta ferma -->
