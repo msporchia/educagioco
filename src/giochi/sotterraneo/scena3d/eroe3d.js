@@ -105,7 +105,7 @@ export function creaEroe3d(scena) {
 
   function equipa(corsa) {
     const f = `${corsa.mano || ''}|${corsa.mancina || ''}|${corsa.corpo || ''}|${corsa.collo || ''}|${corsa.testa || ''}`
-    if (f === firma) return
+    if (f === firma) return false
     firma = f
     // saldato, l'eroe non si sveste più pezzo per pezzo: si rifà da capo (le geometrie e i materiali di serie stanno in cache)
     if (g) {
@@ -119,10 +119,20 @@ export function creaEroe3d(scena) {
     try { if (ACCESI.saldatura) saldaEroe(g, `${chiave}|${f}`, { pelle: ACCESI.pelle }) } catch (e) { console.warn('eroe 3D: non si salda', e) }   // resta com'è, solo più caro
     tinte = clonaMateriali(g)
     ultimaTinta = ''
+    return true
   }
 
   return {
     get altezza() { return altezza },
+    /**
+     * Il modello montato e vestito per `corsa`, senza mostrarlo (la discesa scaldata prima, l'entrata a passi: indice.js). Vero se ha
+     * dovuto rifarlo: montarlo è un fotogramma lungo, e chi entra a passi gliene lascia uno suo.
+     */
+    prepara(corsa) {
+      const nuova = CHIAVI.includes(corsa.io && corsa.io.sprite) ? corsa.io.sprite : 'cavaliere'
+      if (nuova !== chiave) { chiave = nuova; monta(corsa); return true }
+      return equipa(corsa)
+    },
     /** Un passo. `p`: { x, z, trasparenza, dt, t, alto } con `alto` quanto è alto lo sprite che sostituisce (per la scala). */
     aggiorna(e, corsa, { x, z, y = 0, trasparenza, dt, alto }) {
       const nuova = CHIAVI.includes(corsa.io && corsa.io.sprite) ? corsa.io.sprite : 'cavaliere'

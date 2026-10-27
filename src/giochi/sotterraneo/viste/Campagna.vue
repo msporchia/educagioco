@@ -37,7 +37,7 @@ const props = defineProps({
   forza: { type: Number, default: 1 },
   fermo: { type: Boolean, default: false },
 })
-const emit = defineEmits(['gioca', 'riprendi', 'scorda', 'terra', 'bottega', 'segui', 'sentito', 'scheda', 'cura', 'mondo', 'risposta', 'veduta',
+const emit = defineEmits(['gioca', 'davanti', 'riprendi', 'scorda', 'terra', 'bottega', 'segui', 'sentito', 'scheda', 'cura', 'mondo', 'risposta', 'veduta',
                           'pensa', 'pensiero', 'pensiero-fine', 'trovati', 'scontro', 'raccogli', 'terre'])
 const in3d = props.disegno === '3d'
 riprendiSeChiesta(() => props.ripresa, () => emit('riprendi'))
@@ -99,7 +99,7 @@ function comincia() {
            :missioni="missioni" :azione-missione="azioneMissione" :segui="segui"
            :giaScesa="ripresa ? ripresa.tappa : null" :portale="portale"
            :annuncio="annuncio" :forze="forze" @sentito="$emit('sentito')" @cura="r => $emit('cura', r)"
-           @scendi="tocca" @terra="v => $emit('terra', v)" @bottega="(k, s) => $emit('bottega', k, s)"
+           @scendi="tocca" @davanti="t => $emit('davanti', t ? t.indice ?? t.chiave : null)" @terra="v => $emit('terra', v)" @bottega="(k, s) => $emit('bottega', k, s)"
            @mondo="v => $emit('mondo', v)" @risposta="r => $emit('risposta', r)" @veduta="v => $emit('veduta', v)"
            @riprendi="$emit('riprendi')" :pensiero="pensiero" @pensa="$emit('pensa')" @pensiero="p => $emit('pensiero', p)"
            @pensiero-fine="$emit('pensiero-fine')" @trovati="v => $emit('trovati', v)"

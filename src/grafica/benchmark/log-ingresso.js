@@ -12,6 +12,7 @@ export function rigaIngresso(r) {
   const att = r.att ? r.att[0].map((_, k) => `${k + 1}° ${colonna(r.att, k).join('/')}${r.sh ? ` +${colonna(r.sh, k).join('/')}sh` : ''}`).join(' ') : ''
   const sc = r.scaldato && r.scaldato.some(x => x != null) ? ` scaldato ${r.scaldato.map(x => (x == null ? '-' : (x / 1000).toFixed(1))).join('/')}s` : ''
   return `${segnoVero(mediano(r.max))}${r.nome}: max ${r.max.join('/')} ms, >100ms ${r.lenti.join('/')}, prog ${r.p1.join('/')}→${r.p3.join('/')}` +
+    (r.picco && r.picco.some(x => x != null) ? `, al più ${r.picco.join('/')} in un fotogramma` : '') +
     (r.daScaldare && r.daScaldare.some(x => x) ? ` da scaldare ${r.daScaldare.join('/')}` : '') + sc + (att ? `; attacchi ${att}` : '')
 }
 
@@ -30,7 +31,8 @@ export function letturaIngresso(crudi) {
     const a1 = s1.att ? mediano(colonna(s1.att, 0)) : null, a1x = s1x && s1x.att ? mediano(colonna(s1x.att, 0)) : null
     righe.push(`INGRESSO in un piano: fotogramma più lungo ${mediano(s1.max)} ms (giri ${s1.max.join('/')})` + (s1x ? `, senza riscaldamento ${mediano(s1x.max)}` : '') +
       (a1 != null ? `; primo attacco ${a1} ms` + (a1x != null ? `, senza ${a1x}: il riscaldamento ${guadagno(a1, a1x)} dal primo attacco` : '') : '') +
-      (s1.sh ? `; shader nuovi ai tre attacchi ${[0, 1, 2].map(k => mediano(colonna(s1.sh, k))).join('/')}` + (s1x && s1x.sh ? ` (senza ${[0, 1, 2].map(k => mediano(colonna(s1x.sh, k))).join('/')})` : '') : '') + '.')
+      (s1.sh ? `; shader nuovi ai tre attacchi ${[0, 1, 2].map(k => mediano(colonna(s1.sh, k))).join('/')}` + (s1x && s1x.sh ? ` (senza ${[0, 1, 2].map(k => mediano(colonna(s1x.sh, k))).join('/')})` : '') : '') +
+      (s1.picco && s1.picco.some(x => x != null) ? `; al più ${mediano(s1.picco)} programmi in un fotogramma` + (s1x && s1x.picco ? ` (senza ${mediano(s1x.picco)})` : '') : '') + '.')
   }
   const pr = ing('ing-presto'), prx = ing('ing-presto-x')
   if (pr && pr.att) {

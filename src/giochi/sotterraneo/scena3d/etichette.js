@@ -31,6 +31,8 @@ export function creaEtichette(strato) {
       if (el.hidden) el.hidden = false
     },
     chiudi() { for (let i = n; i < pool.length; i++) if (!pool[i].hidden) pool[i].hidden = true },
+    // un altro strato (la discesa scaldata prima entra nella pagina: indice.js, `sposta`)
+    sposta(nuovo) { strato = nuovo; for (const el of pool) nuovo.appendChild(el) },
     via() { for (const el of pool) el.remove(); pool.length = 0 },
   }
 }

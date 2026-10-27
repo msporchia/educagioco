@@ -58,6 +58,13 @@ export function creaPost(renderer) {
       renderer.setRenderTarget(rt)
       try { renderer.compile(o, camera, scena) } finally { renderer.setRenderTarget(null) }
     },
+    // `f` coi disegni nella texture della scena (il disegno di prova dell'entrata a passi, indice.js)
+    nelQuadro(f) {
+      renderer.setRenderTarget(rt)
+      try { f() } finally { renderer.setRenderTarget(null) }
+    },
+    // il quadrato del tono, che va sullo schermo: il suo programma prima del primo disegno (l'entrata a passi, indice.js)
+    compilaQuadro() { renderer.compile(quadro, cam) },
     via() { rt.dispose(); geo.dispose(); mat.dispose() },
   }
 }

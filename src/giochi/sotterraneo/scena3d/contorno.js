@@ -12,7 +12,10 @@ export function creaContorno({ canvas, strato, cam }) {
   const g = tela.getContext('2d')
   let L = 0, A = 0, dpr = 1, giro = 0, grandePrima = null
   const p = { x: 0, y: 0 }
+  let dati = canvas   // dove si scrivono i segni per le prove
   return {
+    // la discesa scaldata prima entra nella pagina (indice.js, `sposta`): la mappina nello strato della pagina, i segni sulla sua tela
+    sposta(nuovoStrato, telaDati) { nuovoStrato.appendChild(tela); dati = telaDati },
     misura(l, a) {
       const d = Math.min(2, window.devicePixelRatio || 1)
       if (l === L && a === A && d === dpr) return
@@ -49,7 +52,7 @@ export function creaContorno({ canvas, strato, cam }) {
     },
     // la cella e il punto dell'eroe scritti sulla tela, solo quando cambiano: servono alla prova col dito
     dataset(corsa, eroe, scala) {
-      const d = canvas.dataset
+      const d = dati.dataset
       const cella = `${Math.floor(corsa.eroe.x)},${Math.floor(corsa.eroe.y)}`
       cam.schermo(eroe.disegnato.x, 0, eroe.disegnato.z, p)
       const schermo = `${Math.round(p.x)},${Math.round(p.y)}`
