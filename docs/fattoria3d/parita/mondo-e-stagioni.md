@@ -47,7 +47,7 @@ riusando le forme già nel catalogo 3D (`strumenti/banco/catalogo-3d/`).
 | W17 | Halloween (1–31 ott) | recinti in costume (sprite `*_halloween`), zucca 🪙6 e due zucche 🪙10, cappello da strega 🪙8 | 🟡 cielo al tramonto, lucciole, le due zucche nei decori solo in stagione ([../stagioni.md](../stagioni.md)); mancano i recinti in costume e il cappello (W21) | P2 |
 | W18 | Natale (1 nov–6 gen) | neve, lucine, tetti innevati, albero 🪙24 | 🟡 cielo, fiocchi, chiazze di neve, ⭐/🔔, lucine e alberelli sugli edifici ([../stagioni.md](../stagioni.md)); manca la crosta sui tetti (l'albero da comprare c'è: W15) | P2 |
 | W19 | `#stagione=` per guardarle fuori stagione | sì | ✅ stessa sintassi (`stagioneAttiva`) | – |
-| W20 | il fumetto «lo vorrei» / segnalino 🎃 | sì | ❌ | P2 |
+| W20 | il fumetto «lo vorrei» / segnalino 🎃 | il fumetto è delle bestie col cappello (W21), il segnalino 🎃/🎄 è quello del baule («Decorazioni») | 🟡 il segnalino sì: 🎃/🎄 sul tasto 🏗, sulla scheda e sulle carte della festa, finché non ne hai una (`festaDaScoprire`, [../stagioni.md](../stagioni.md)); **tolto perché** il fumetto «lo vorrei» in 3D non ha chi lo dica: le bestie non si vestono (W21), tornerà coi modelli in costume | P2 |
 | W21 | i costumi di Halloween da rifare (galline/capre fantasmini, alpaca grigia…) | aperto in [../../fattoria/da-fare.md](../../fattoria/da-fare.md) | – | P2 |
 
 Le stagioni sono **un dato puro** (`dati/stagioni.js`: `stagioneDi(data)`, `addobbiStagionali`) che la 3D importa così com'è

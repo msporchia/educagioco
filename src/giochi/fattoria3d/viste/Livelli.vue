@@ -19,6 +19,7 @@ const voci = r => [
   ...r.colture.map(c => ({ k: 'c' + c.id, merce: c.id, emoji: c.emoji, nome: c.nome, cosa: 'da seminare' })),
   ...r.ricette.map(c => ({ k: 'r' + c.id, merce: c.id, emoji: c.emoji, nome: c.nome, cosa: 'ricetta' })),
   ...(r.compagni || []).map(c => ({ k: 'a' + c.id, emoji: c.tipo === 'cane' ? '🐕' : '🐈', nome: c.nome, cosa: 'arriva in fattoria' })),
+  ...(r.bestie || []).map(b => ({ k: 'b' + b.id, emoji: b.emoji, nome: b.nome, cosa: 'puoi prenderlo (🐾)' })),
   ...(r.abiti || []).map(c => ({ k: 'v' + c.categoria + c.id, emoji: '👕', nome: c.nome, cosa: 'per il guardaroba' })),
 ]
 const arrivate = computed(() => voci(props.ora))

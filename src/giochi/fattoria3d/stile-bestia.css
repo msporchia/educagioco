@@ -1,0 +1,39 @@
+/* Il foglio della bestia di casa (viste/Bestia.vue) e il battesimo (viste/Battesimo.vue): legno caldo come l'inventario. Prefisso .f3-bes; i fogli veri
+   (.f3-foglio, .f3-colonna, .f3-chiudi, .f3-corpo, .f3-velo) vengono da stile.css. Bottoni da 44 px, per il dito. */
+.f3-bes.f3-foglio { padding: 0; overflow: hidden; color: #3a2a1a; max-height: 90%;
+  background: repeating-linear-gradient(90deg, #a77440 0 58px, #9a6a38 58px 60px), #a77440; border-top: 5px solid #6b4423; }
+.f3-bes-asse { flex: none; display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 48px; margin: 10px 66px 6px 10px; padding: 4px 12px;
+  background: repeating-linear-gradient(180deg, #d7a766 0 11px, #cc9a58 11px 12px), #d7a766; border-radius: 10px; box-shadow: 0 3px 0 #6b4423, 0 5px 10px rgba(0,0,0,.28); }
+.f3-bes-asse span { font-size: 24px; line-height: 1; }
+.f3-foglio .f3-bes-asse h2 { margin: 0; font-size: 20px; line-height: 1.1; color: #4a2c12; text-shadow: 0 1px 0 rgba(255,255,255,.4); overflow-wrap: anywhere; }
+.f3-bes-x.f3-chiudi { background: #e0402f; color: #fff; top: 14px; right: 14px; font-weight: 800; box-shadow: 0 2px 0 #8d241a; }
+.f3-bes-testa { flex: none; display: flex; gap: 10px; align-items: center; margin: 0 10px 8px; }
+.f3-bes-ritratto { flex: none; width: 96px; height: 96px; border-radius: 14px; border: 4px solid #6b4423; background: radial-gradient(circle at 50% 40%, #fff7e4, #f0dcae); box-shadow: inset 0 2px 8px rgba(0,0,0,.2); display: grid; place-items: center; overflow: hidden; }
+.f3-bes-ritratto img { width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
+.f3-bes-attesa { font-size: 40px; opacity: .5; }
+.f3-bes-come { flex: 1 1 0; min-width: 0; margin: 0; padding: 8px 12px; border-radius: 12px; background: #fff7e4; border: 3px solid #6b4423; font-weight: 800; font-size: 14px; line-height: 1.25; }
+.f3-bes .f3-bes-corpo { margin: 0 10px; padding: 10px 8px; border-radius: 12px; border: 4px solid #6b4423; background: #fff7e4; box-shadow: inset 0 2px 8px rgba(0,0,0,.2); }
+.f3-bes-blocco { margin-bottom: 10px; }
+.f3-bes-riga { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.f3-bes-riga b { flex: none; min-width: 92px; }
+.f3-bes-barra { flex: 1 1 0; height: 12px; border-radius: 6px; background: #e6cfa0; overflow: hidden; border: 2px solid #6b4423; }
+.f3-bes-barra i { display: block; height: 100%; transition: width .3s ease; }
+.f3-bes-riga em { flex: none; width: 52px; text-align: right; font-style: normal; font-size: 12px; color: #8a5a14; }
+.f3-bes-gli-piace { margin: 4px 0 0; font-size: 12px; color: #6b4423; }
+.f3-bes-gesti, .f3-bat-nomi { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.f3-bes-gesto { flex: 1 1 28%; min-width: 84px; min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; padding: 4px 4px;
+  border: 2px solid #e6cfa0; border-radius: 14px; background: #fffdf6; color: #3a2a1a; font: 800 12px "Emoji Gioco", system-ui, sans-serif; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+.f3-bes-gesto b { font-size: 20px; line-height: 1; }
+.f3-bes-gesto em { font-style: normal; font-size: 11px; color: #8a5a14; }
+.f3-bes-gesto.manca { opacity: .6; border-style: dashed; }
+.f3-bes-gesto.pieno { opacity: .45; }
+.f3-bes-gesto.sel { border-color: #f0a020; background: #fff3cf; }
+.f3-bes-azioni { display: flex; gap: 6px; margin-top: 6px; }
+.f3-bes-az { flex: 1 1 0; min-height: 48px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 2px solid #6b4423; border-radius: 14px; background: #ffd36a; color: #4a2c12;
+  font: 800 13px "Emoji Gioco", system-ui, sans-serif; box-shadow: 0 3px 0 #8d5a14; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+.f3-bes-az small { font-size: 10px; color: #8a5a14; }
+.f3-bes-msg { flex: none; margin: 8px 10px calc(12px + env(safe-area-inset-bottom)); padding: 8px 12px; min-height: 42px; box-sizing: border-box; border-radius: 12px; background: #fff7e4; border: 3px solid #6b4423; font-weight: 800; font-size: 13px; line-height: 1.25; }
+.f3-bat .f3-bes-corpo { margin-bottom: calc(14px + env(safe-area-inset-bottom)); }
+.f3-bat .f3-bes-gesto { flex: 1 1 40%; min-height: 48px; font-size: 14px; }
+@media (min-width: 700px) { .f3-bes.f3-foglio { left: 0; right: 0; margin: 0 auto; max-width: 720px; border-radius: 22px 22px 0 0; } }
+@media (prefers-reduced-motion: reduce) { .f3-bes *, .f3-bes-barra i { animation: none !important; transition: none !important; } }

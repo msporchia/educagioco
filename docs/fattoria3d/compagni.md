@@ -5,6 +5,8 @@ aspetto nuovo. Sono **vita sulla scena, non regole**: non costano esperienza, no
 salvato (`VERSIONE_STATO` non si tocca) e a ogni apertura ripartono davanti alla casa. Codice: `dati/compagni.js` (dati e
 scelte pure), `scena3d/modelli-compagni.js` (i corpi e le pose), `scena3d/compagni.js` (il comportamento).
 
+**Le bestie che si comprano e si curano** (beagle, gatto rosso, coniglio, pappagallo) sono un'altra cosa: stanno in [bestie-di-casa.md](bestie-di-casa.md) e usano la stessa scena (`scena3d/compagni.js`: `def.daCurare`) ma hanno bisogni, ciotola, coccole e premio. I compagni di questa pagina restano gratis e **non si curano**: sono gli animali veri di casa. Nella 2D si comprano anche bobtail, gatto bianco e nero e gatto nero: in 3D sono Watson, Sherlock e Pepe, quindi non si comprano (`COMPAGNO_DI`).
+
 ## Quando arrivano
 
 Come tutto il resto, col livello: `liv` su ogni compagno, e `roba(liv).compagni` li raccoglie (il foglio dei livelli li

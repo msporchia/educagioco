@@ -48,6 +48,7 @@ motore/
   tipo.js            la fattoria «tipo» (`fattoriaTipo(livello)`, borsa infinita, deterministica): il cheat `#fattoria3d-tipo=N` ([comandi](../core/comandi.md)); test `unita/fattoria3d-tipo`
   percorso.js        Dijkstra sulla griglia, le strade costano meno
   pesca.js           la pesca: `provaPesca`, `lanciaLenza`, `ritiraPesca`, `bancoDi`, `lenzeInAcqua`, `riesaminaPesca` (funzioni pure sulla `Fattoria3d`); `stato.pesca` per lotto d'acqua
+  carretto.js        il carretto del vicino: 5 contro 1, roba con roba, mai monete (`cosaPuoiDare`, `cosaOffre`, `scambia`)
   vicini.js          i vicini: la classe `Vicini` (entra, aiuta la cassa, compra, vende), `normalizzaVicini` (lo stato a parte), `motoreDiVisita` (la scena di sola lettura da uno snapshot), `esportaLaMiaFattoria`
 scena3d/             il disegno (vedi scena.md); `facce.js` la faccia di una merce su una tela per i pezzi di HTML sopra la scena (il «+1» di `fx.volo`); `visita.js` è la visita a un vicino, una sottoclasse di `Mondo3d` su un motore di sola lettura ([vicini.md](vicini.md)); `anteprime.js` e `anteprime-pura.js` le foto dei modelli per le carte (senza three: l'inquadratura e la cache; [scena.md](scena.md) «Le anteprime»); `modelli-colture.js` il campo e le sedici colture (ri-esportati da `modelli.js`); `compagni.js` e `modelli-compagni.js` per i compagni e il contadino ([compagni.md](compagni.md)); `detti.js` (senza three) traduce un rifiuto del motore in una riga, anche per la vista; `ottimizza.js` spegne l'ombra alle mesh piccole di un modello appena creato ([scena.md](scena.md) «Qualità e peso»); `fondi.js` fonde le mesh statiche di un modello per materiale; `cache-modelli.js` costruisce (e fonde) un modello una volta per tipo e poi consegna cloni che ne condividono geometrie e materiali; `bestie-puro.js` (senza three) i tre stadi di gallina, mucca e pecora come numeri (stato, progresso, profilo: [animali.md](animali.md) «I tre stadi»); `scaldo-puro.js` (senza three) è la coda del riscaldamento: i modelli che servono presto costruiti in tempo morto, un compito per fotogramma (tutto in «Qualità e peso»); `azioni.js` fa il gesto davanti a ogni cosa, pollaio e stalla compresi ([animali.md](animali.md))
   scena3d/modelli-passaggi.js   ponte, passerella e tavolo con le panche: presi dal Sotterraneo 3D e rifatti con i materiali della fattoria (scena.md)
@@ -83,7 +84,8 @@ viste/
   Dialogo.vue        la conferma d'acquisto (non più per le bestie)
   Consiglio.vue      il foglio «E adesso?»; `ConsiglioRiga.vue` il passo col tasto, anche sotto i «mancano» di macchina, banco e mongolfiera
   Opzioni.vue        il pannello ⚙
-  Mappa.vue          la mappa del trattore: i villaggi in fila lungo una strada, i grigi col livello
+  Mappa.vue          la mappa del trattore: i villaggi in fila lungo una strada, i grigi col livello, e in cima il tasto del carretto
+  Carretto.vue       il carretto del vicino (C15): dai 5, prendi 1 o regali; lo scomparto pieno in oro
   Visita.vue         una visita: la testata con «Torna a casa», i tasti, la storia, i fogli della cassa e del mercato, il viaggio del trattore
 ```
 

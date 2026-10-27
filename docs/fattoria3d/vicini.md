@@ -58,6 +58,20 @@ Sono pezzi veri del catalogo, scritti a mano in `dati/vicini.js` (deterministici
 ciò che si fa a **quel** livello: la cassa non è mai impossibile (`guastiDeiVicini`). Il baratto e il mercato vendono merci
 che il giocatore forse non fa ancora: è il motivo per tornare.
 
+## Il carretto (C15)
+
+Il carretto 2D (`carretto_mercato`: **5 di una cosa contro 1 di un'altra, roba con roba, mai monete**) in 3D è **una vista del trattore** (D10), non un
+pezzo a parte: in cima alla mappa del trattore c'è «🛒 Il carretto». Serve a svuotare uno scomparto pieno (D11), la via d'uscita dal rubinetto
+che non si chiude. Due passi senza conferma in mezzo (`viste/Carretto.vue`): *cosa gli dai* (le merci di cui hai almeno 5; **in oro** quelle con lo
+scomparto pieno, per prime quelle che hai di più) e *cosa ti dà* (1 di una merce già aperta dal livello, con posto nello scomparto, diversa da quella
+data, per prima quella che hai di meno; oppure «Niente, faccio posto»: si regala e basta). Il mangime non si scambia. **Mai monete e mai esperienza**:
+non è un cliente e non ha premio, quindi nessuna risposta, giusta o sbagliata, ci passa. Le regole sono pure in `motore/carretto.js`
+(`cosaPuoiDare`, `cosaOffre`, `scambia`, `scompartiColmi`), lo stato non cambia (niente da salvare), il filo con la vista sta in `visite.js`.
+Provato in 2D e tenuto uguale: il rosso del cibo rifiutato si leggeva come «non hai i requisiti», per questo il pieno è oro. Rifiuti: `poca-roba`,
+`non-ci-sta` (il posto è stato preso nel frattempo), `non-esiste`. Il tasto è sempre in mappa, anche con gli scomparti vuoti: il foglio dice cosa manca.
+Nei test: `unita/fattoria3d-carretto`; col dito `integrazione/fattoria3d-vicini` (`[data-f3="apri-carretto"]`, `[data-f3="carretto"]` con `[data-passo]`,
+`[data-dai="<k>"]` (`[data-colmo]`), `[data-ricevi="<k>"]`, `[data-ricevi-niente]`, `[data-f3="carretto-msg"]`).
+
 ## Le regole (`motore/vicini.js`, pure, a orologio finto)
 
 Tutto torna `{ ok: false, motivo, … }` senza cambiare niente, con un testo che dice cosa fare (`dettoVicino` in `visite.js`).

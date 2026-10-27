@@ -5,6 +5,8 @@
 import { PEZZI, EDIFICI, CATEGORIE } from './catalogo.js'
 import { livelloDelPezzo } from './livelli.js'
 import { COSTI } from './regole.js'
+import { BESTIE } from './bestie.js'
+import { FINESTRE } from './stagioni3d.js'
 
 /** carta → pezzo dell'atlante 2D (gli id dei salvataggi restano: `pasticceria` è il Pastificio, `conserviera` la Cucina). Mancano passerella, trattore, stagno, laghetto, molo, molo girato e porticciolo (e la strada e la gomma): lì c'è l'emoji. */
 export const DISEGNI = {
@@ -27,7 +29,7 @@ export const STRUMENTI = {
 /**
  * Le carte di una scheda. `stato`: { livello, prezzoPezzo(tipo), nelMagazzino(tipo), posseduti: { edificio: true } }.
  * `stato.stagione`: la festa in corso (dati/stagioni3d.js) o niente: le carte con `stagione` si vedono solo allora.
- * Ogni carta: { id, genere: 'pezzo' | 'edificio' | 'strumento', nome, emoji, disegno, etichetta, liv, bloccata, segnala }. Un edificio già
+ * Ogni carta: { id, genere: 'pezzo' | 'edificio' | 'strumento' | 'bestia', nome, emoji, disegno, etichetta, liv, bloccata, segnala }. Un edificio già
  * in mappa non si offre (uno per tipo); i pezzi e gli edifici già nel magazzino sì (`📦 ×N`, si mettono senza pagare). `segnala` è il
  * «!»: un edificio che il livello ha aperto e non è ancora in mappa (mai per un pezzo, mai per una carta chiusa).
  */
@@ -47,11 +49,33 @@ export function carteDi(categoria, stato) {
     carte.push({ id, genere: 'edificio', nome: e.nome, emoji: e.emoji, disegno: DISEGNI[id] || null,
       etichetta: mag ? '📦 ×' + mag : '🪙 ' + e.prezzo, liv: e.liv, bloccata: e.liv > stato.livello, segnala: e.liv <= stato.livello })
   }
+  if (categoria === 'animali') {           // le bestie di casa (G6): si prendono qui, non si mettono (docs/fattoria3d/bestie-di-casa.md); `stato.bestieTue`: gli id di quelle che hai
+    for (const [id, b] of Object.entries(BESTIE)) {
+      const mia = (stato.bestieTue || []).includes(id)
+      carte.push({ id: 'bestia:' + id, genere: 'bestia', bestia: id, nome: b.nome, emoji: b.emoji, disegno: null, etichetta: mia ? '🐾 è tua' : '🪙 ' + b.prezzo, liv: b.liv, bloccata: !mia && b.liv > stato.livello, segnala: false })
+    }
+  }
   carte.sort((a, b) => (b.segnala ? 1 : 0) - (a.segnala ? 1 : 0) || a.liv - b.liv || a.nome.localeCompare(b.nome, 'it'))      // chi ha il «!» sta in cima
   if (CATEGORIE[categoria] && CATEGORIE[categoria].strumenti) {
     for (const [id, s] of Object.entries(STRUMENTI)) carte.push({ id, genere: 'strumento', nome: s.nome, emoji: s.emoji, disegno: null, etichetta: s.nota, liv: 1, bloccata: false })
   }
   return carte
+}
+
+/**
+ * Il segnalino della festa (W20, come il 🎃/🎄 del baule della 2D, docs/fattoria3d/stagioni.md): in stagione, finché non si possiede nessun pezzo
+ * della festa (né in mappa né nel magazzino) il menu lo indica. `stato`: quello di `carteDi` + `haPosato(tipo)` (in mappa o nel magazzino).
+ * Torna null (fuori stagione, o già avuto) o { stagione, icona, scheda, ids } con la scheda su cui aprirsi. Mai per una carta chiusa dal livello:
+ * se la festa non ha niente di aperto non si indica niente. Non porta monete e non cambia prezzi: è solo un dito puntato.
+ */
+export function festaDaScoprire(stato) {
+  const f = stato.stagione && FINESTRE[stato.stagione]
+  if (!f) return null
+  const ids = Object.keys(PEZZI).filter(id => PEZZI[id].stagione === stato.stagione)
+  if (!ids.length || ids.some(id => stato.haPosato(id))) return null
+  const aperti = ids.filter(id => livelloDelPezzo(id) <= stato.livello)
+  if (!aperti.length) return null
+  return { stagione: stato.stagione, icona: f.icona, scheda: PEZZI[aperti[0]].categoria, ids }
 }
 
 /** Le schede che hanno una carta con il «!» (una scheda sola per ora: Edifici), per il pallino sulla linguetta e sul tasto 🏗️. */

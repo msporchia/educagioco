@@ -1,6 +1,6 @@
 /* Il banco, senza stato: come si compone un ordine e come si rimette in forma uno letto. Funzioni pure (il caso arriva da
    `rnd`, così i test lo tengono fermo). Chi tiene gli ordini aperti è la Fattoria3d. Vedi docs/fattoria3d/ordini.md. */
-import { CLIENTI, clienteDi, CHIEDE_MAX, QUANTI_RACCOLTI, QUANTI_PRODOTTI, chiedibili, premioDi, livelloDelOrdine } from '../dati/ordini.js'
+import { CLIENTI, clienteDi, CHIEDE_MAX, QUANTI_RACCOLTI, QUANTI_PRODOTTI, chiedibili, premioDi, livelloDelOrdine, mangimiPerLaVeterinaria } from '../dati/ordini.js'
 import { COLTURE } from '../dati/colture.js'
 import { RICETTE, nuovoId } from '../dati/ricette.js'
 
@@ -22,7 +22,16 @@ export function nuovoOrdine(livello, rnd, id, clientiOccupati = []) {
   }
   if (!Object.keys(chiede).length) chiede[raccolti[0]] = 1
   const liberi = CLIENTI.filter(c => !clientiOccupati.includes(c.id))
-  return { id, cliente: scegli(liberi.length ? liberi : CLIENTI, rnd).id, chiede, premio: premioDi(chiede), liv: livelloDelOrdine(chiede) }
+  const cliente = scegli(liberi.length ? liberi : CLIENTI, rnd).id
+  if (cliente === 'veterinaria') {                       // C32: la veterinaria chiede il mangime (uno o due, 1–2 pezzi l'uno), se a questo livello se ne fa
+    const mangimi = mangimiPerLaVeterinaria(livello)
+    if (mangimi.length) {
+      for (const k of Object.keys(chiede)) delete chiede[k]
+      const quanti = 1 + (mangimi.length > 1 && rnd() < 0.35 ? 1 : 0)
+      for (let k = 0; k < quanti; k++) { const lista = mangimi.filter(x => !(x in chiede)); const x = scegli(lista, rnd); chiede[x] = fra(QUANTI_PRODOTTI, rnd) }
+    }
+  }
+  return { id, cliente, chiede, premio: premioDi(chiede), liv: livelloDelOrdine(chiede) }
 }
 
 /** Un ordine letto da un salvataggio, rimesso in forma; premio e livello si ricalcolano dai dati di oggi. Null se è da buttare. */

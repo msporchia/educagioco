@@ -6,11 +6,12 @@
 import { PER_ID as VOCI_2D, prezzoDellaVoce, CATALOGO as CATALOGO_2D, CATEGORIE as CATEGORIE_2D } from '../../fattoria/dati/catalogo.js'
 import { PER_COLTURA as COLTURE_2D, PER_RICETTA as RICETTE_2D, PRODOTTI as PRODOTTI_2D, SCOMPARTO_BASE, SCOMPARTO_PIU, costoIngrandimento, MINUTO } from '../../fattoria/dati/coltivazioni.js'
 import { livelloDellaVoce, livelloDellaRicetta as livelloRicetta2D, ULTIMO as ULTIMO_2D, sogliaDi as sogliaDi2D, SOGLIA_A, SOGLIA_B, ALLUNGA, zonaDi, PRIMO_DECORO, DECORI_PER_LIVELLO } from '../../fattoria/dati/livelli.js'
-import { ANIMALI as ANIMALI_2D } from '../../fattoria/dati/animali.js'
+import { ANIMALI as ANIMALI_2D, NOMI as NOMI_2D, premioBenessere } from '../../fattoria/dati/animali.js'
 import { RIPOSO_MIN } from '../../fattoria/dati/mercato.js'
 import { CIELO_VUOTO_MIN } from '../../fattoria/dati/mongolfiera.js'
 import { PIAZZOLE_INIZIALI, PREZZO_PIAZZOLA, RINCARO, CELLE } from '../../fattoria/dati/mondo.js'
 
+export { NOMI_2D, premioBenessere }      // le bestie di casa (dati/bestie.js): i nomi da toccare e il premio di benessere sono quelli della 2D
 export { CIELO_VUOTO_MIN, MINUTO, SCOMPARTO_BASE, SCOMPARTO_PIU, costoIngrandimento, ULTIMO_2D, sogliaDi2D, SOGLIA_A, SOGLIA_B, ALLUNGA, ANIMALI_2D, RIPOSO_MIN, PIAZZOLE_INIZIALI, PREZZO_PIAZZOLA, RINCARO, CELLE, PRODOTTI_2D }
 
 /** Chi è nella 2D: l'id 3D di un pezzo o di un edificio → l'id della voce del catalogo 2D. Quello che manca non ha un equivalente (è solo 3D). */

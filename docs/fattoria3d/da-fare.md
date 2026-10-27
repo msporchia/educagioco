@@ -10,7 +10,8 @@ Le voci aperte tecniche. Una riga ciascuna, e quando una si chiude si toglie. Qu
   per banco, i 22 livelli senza novità, i magazzini ingrandibili dall'inventario (bottoni in fondo), e un salvataggio vero di prima che si porta sulla scala nuova.
 - **Il secondo cortile non è visto in scena né giocato** ([cortile-2.md](cortile-2.md)): conigliera, alpaca, asini e apiario sono guardati solo dal catalogo 3D e in node; da giudicare a distanza di gioco il gomitolo e la nuvola d'angora, il favo dell'arnia e il peso coi quattro recinti pieni; `compitiScaldo` (`pezzi.js`) non li conosce ancora.
 - **Le bestie in più dentro un recinto non esistono in 2D.** Una 3D con 6 galline in parallelo produce più di un pollaio 2D (che lavora una ricetta alla volta): parità non decisa, i prezzi delle bestie restano 3D.
-- **Il `mangime` del mulino** (cibo di cane e gatto) c'è e serve solo ai compagni, che non mangiano ancora (G6).
+- **Il `mangime` del mulino** (cibo di cane e gatto) lo mangiano le bestie di casa (G6, [bestie-di-casa.md](bestie-di-casa.md)) e lo chiede la veterinaria; i compagni gratis (Watson, i gatti) non mangiano.
+- **Le bestie di casa non sono viste dal vero.** Guardate nel catalogo 3D e provate col dito su desktop, non dalla camera di serie su un telefono (corpi, foglio a 360 px). Costumi e addobbi (A13, L21) rimandati a prima di Natale, come modelli sostituiti.
 - **Giocare i prezzi delle bestie.** Pecora 20 (+10), gallina 15 (+8), mucca 30 (+15) sono scelti sul metro di
   [calibrazione.md](../apprendimento/calibrazione.md) e sul prezzo del pezzo, non ancora giocati; i fogli ridisegnati
   (macchine, banco, livelli) non sono stati visti su uno schermo da 360 px.
@@ -41,6 +42,7 @@ Le voci aperte tecniche. Una riga ciascuna, e quando una si chiude si toglie. Qu
 - Spostata in [parita/](parita/README.md) (I20).
 - **I vicini.** Provati nel browser senza schermo vero e senza un build del sito spezzato: restano da guardare su un telefono (due contesti WebGL durante
   una visita) e da giocare i numeri del trattore e dei villaggi ([vicini.md](vicini.md)).
+- **Il carretto e il segnalino della festa** ([vicini.md](vicini.md), [stagioni.md](stagioni.md)) non sono visti su un telefono a 360 px: il foglio del carretto e il 🎃/🎄 sul tasto 🏗 sono provati solo col dito in Chrome senza schermo vero.
 - **Il telaio, la sartoria, la tintoria e lo zuccherificio non sono stati visti in scena né giocati**: i quattro modelli sono guardati solo dal catalogo 3D, i posti
   (−9,−4 · 6,4 · 6,0 · −9,4) e i prezzi (70 · 130 · 150 · 160) non sono stati provati con un bambino, e `integrazione/fattoria3d` non è stato eseguito.
   Il tetto dell'ultimo livello è salito da 5 h 30 a 7 ore ([livelli.md](livelli.md)): da giocare. La lana fa da ingrediente ma il foglio della macchina la mostra

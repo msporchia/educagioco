@@ -15,7 +15,7 @@ export const COMPAGNI = {
   irene:   { nome: 'Irene',   tipo: 'gatto', variante: 'calico',     liv: 3,  verso: 'Prrr…', arrivo: 'Irene, la gattina, è arrivata!' },
   pepe:    { nome: 'Pepe',    tipo: 'gatto', variante: 'nero',       liv: ANIMALI_2D['gatto-nero'].liv, verso: 'Prrr…', arrivo: 'Pepe, il gatto nero, è arrivato!' },
 }
-export const VARIANTI_GATTO = ['bianconero', 'calico', 'nero']
+export const VARIANTI_GATTO = ['bianconero', 'calico', 'nero', 'rosso']       // `rosso` non è un compagno gratis: è il gatto che si compra (dati/bestie.js)
 
 /** I compagni che ci sono a questo livello (o prima), nell'ordine di arrivo. `soloQuesto`: quelli che arrivano proprio ora. */
 export function compagniAl(livello, soloQuesto = false) {

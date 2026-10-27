@@ -29,7 +29,7 @@ Le arature non esistono in nessuna delle due.
 | C12 | scomparti | 8 pezzi per merce, +2 a ogni ingrandimento, `40+130·ln(1+n)` | ✅ uguali | – |
 | C13 | scomparto pieno | non si raccoglie e non si paga, il campo resta pronto | ✅ vale per campi, bestie, tosa, macchine e pesca; il consiglio porta all'inventario | – |
 | C14 | «chi la usa» sulla roba | premere una merce dice dove si lavora (`dati/usi.js`) + «Come si fa» | 🟡 l'inventario dice «a cosa serve» in una frase (`dati/usi.js`) e ha il tasto «🌳 Come si fa» (I3); resta il «chi la usa» come foglio e gli scomparti (C11–C13) | P2 |
-| C15 | carretto del vicino per svuotare lo scomparto | roba 5 → 1, mai monete | ❌ (senza scomparti non serve; i vicini sono un'altra cosa) | P2 |
+| C15 | carretto del vicino per svuotare lo scomparto | roba 5 → 1, mai monete | ✅ come vista del trattore (D10): «🛒 Il carretto» in cima alla mappa, 5 → 1 o regalo, mai monete né esperienza ([../vicini.md](../vicini.md)) | – |
 
 Perché i silos contano: sono un pozzo di monete che non si esaurisce (28 posti ≈ 7 ore di spesa) e il momento in cui il gioco
 insegna il resto della catena. Con ricette 60× più svelte e niente tetto, la 3D si riempie di roba senza uno scopo. Decisione D11.
@@ -88,4 +88,4 @@ Ogni migrazione e ogni nuova bottega 3D deve tenerne conto ([commercio.md](comme
 | C29 | becchime (galline), foraggio (mucche, pecore) | ✅ stesse quantità | – |
 | C30 | tre mangimi, tre bocche (mangime / pastone, foraggio, pentolone) | ✅ cinque mangimi (becchime, foraggio, verdure lesse, pastone, verdura fresca) e le loro bocche (G4); resta il `mangime` del mulino per i compagni (A6) | – |
 | C31 | l'erba medica | ✅ la più svelta, solo per il fienile (`mangime: true`) | – |
-| C32 | veterinaria che chiede il mangime | ❌ il mangime non si consegna in 3D | P2 con A6 |
+| C32 | veterinaria che chiede il mangime | ✅ solo lei lo chiede al banco (`VETERINARIA_VUOLE`, `nuovoOrdine`); gli altri clienti e la mongolfiera no ([../bestie-di-casa.md](../bestie-di-casa.md)) | – |

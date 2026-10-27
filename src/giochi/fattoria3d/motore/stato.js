@@ -14,6 +14,7 @@ import { ordineInForma } from './ordini.js'
 import { stivaInForma } from './mongolfiera.js'
 import { leggiLeBotteghe } from './botteghe.js'
 import { RIPOSO_MS } from '../dati/mongolfiera.js'
+import { casaIniziale, casaInForma } from '../dati/bestie.js'
 import { POSTI_DI_PARTENZA, postiInForma } from '../dati/posti.js'
 import { TIPI_DI_SILO } from '../dati/silos.js'
 import { esperienzaDaPrima, livelloMinimoDi } from './scala-vecchia.js'
@@ -69,6 +70,7 @@ export function statoIniziale() {
     geo: 2,                    // la geografia: 1 = mare a ovest e laghi a est, 2 = anche i laghi naturali nella fascia di mezzo; uno stato più vecchio tiene i suoi lotti com'erano
     vecchi: [],                // gli id (`a_b`) dei lotti comprati prima della geografia grande dove ora cambierebbe qualcosa: si generano alla vecchia (generaLotto `vecchio: true`)
     vecchi1: [],               // gli id dei lotti comprati con `geo: 1` dove ora c'è un lago naturale al posto della pozzanghera: restano com'erano (generaLotto `vecchio: 1`)
+    casa: casaIniziale(),      // le bestie di casa che hai preso (docs/fattoria3d/bestie-di-casa.md): { beagle: { pancia, pelo, gioco, quando, premiato, nome?, i?, j? } }
     pesca: {},                 // per lotto d'acqua tuo: { i, j (dove sta il galleggiante), fine (quando abbocca, null se non c'è la lenza), riposo (quando il banco si ripopola, null) }
     strade: [],                // le celle (indice di griglia) disegnate dal bambino
     daRegalare: {},            // ciò che la fattoria 2D aveva e la 3D non ha ancora ({ 'cosa:ovile': 1, 'scorta:miele': 4, 'terra': 2 }): solo un conto, mai monete (motore/migra.js)
@@ -127,6 +129,7 @@ export function normalizza(letto) {
     s.vecchi = Object.keys(s.lotti).filter(id => diverso(0, id))
     s.vecchi1 = []
   }
+  s.casa = casaInForma(letto.casa)       // le bestie di casa (assenti prima del giro G6, senza cambiare versione): uno stato di prima non ne ha
   for (const [id, v] of Object.entries(oggetto(letto.pesca))) {
     if (!lottoPerId(id) || !v || typeof v !== 'object' || !Number.isInteger(v.i) || !Number.isInteger(v.j)) continue
     const fine = Number.isFinite(v.fine) ? v.fine : null, riposo = Number.isFinite(v.riposo) ? v.riposo : null

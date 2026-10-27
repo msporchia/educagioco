@@ -3,7 +3,7 @@
    rifiutare lascia il posto vuoto un po', e il salvataggio (v2 → v3) non perde niente.
    `node test/esegui.mjs fattoria3d-ordini`
    tempo: 1 */
-import { guastiDegliOrdini, CLIENTI, POSTI, POSTI_MAX, POSTI_PER_LIVELLO, tipoDelOrdine, RIPOSO_MS, LIVELLO_BANCO, PEZZI_DEL_BANCO, chiedibili, premioDi, tettoDi, livelloDi, livelloDelOrdine } from '../../src/giochi/fattoria3d/dati/ordini.js'
+import { guastiDegliOrdini, CLIENTI, POSTI, POSTI_MAX, POSTI_PER_LIVELLO, tipoDelOrdine, RIPOSO_MS, LIVELLO_BANCO, PEZZI_DEL_BANCO, chiedibili, premioDi, tettoDi, livelloDi, livelloDelOrdine, VETERINARIA_VUOLE } from '../../src/giochi/fattoria3d/dati/ordini.js'
 import { PEZZI } from '../../src/giochi/fattoria3d/dati/catalogo.js'
 import { COLTURE } from '../../src/giochi/fattoria3d/dati/colture.js'
 import { RICETTE } from '../../src/giochi/fattoria3d/dati/ricette.js'
@@ -43,7 +43,7 @@ controlla('il mangime (erba medica, becchime, foraggio) non si chiede mai', ['er
 /* ══════════ 2. ordini mai impossibili, premio dentro il tetto ══════════ */
 {
   const rnd = sequenza(3)
-  let male = [], tetto = [], visti = new Set(), conProdotti = 0
+  let male = [], tetto = [], visti = new Set(), conProdotti = 0, mangimiAltrui = [], deiVet = 0
   for (let liv = LIVELLO_BANCO; liv <= ULTIMO + 1; liv++) for (let n = 0; n < 150; n++) {
     const o = nuovoOrdine(liv, rnd, n + 1, [])
     const chiavi = Object.keys(o.chiede)
@@ -53,8 +53,11 @@ controlla('il mangime (erba medica, becchime, foraggio) non si chiede mai', ['er
       else if (livelloDi(k) > liv) male.push(`liv ${liv} chiede ${k}, che arriva al ${livelloDi(k)}`)
       if (liv === LIVELLO_BANCO && RICETTE[k]) male.push(`liv ${liv} chiede il prodotto ${k}`)
       if (RICETTE[k]) conProdotti++
+      if (RICETTE[k] && RICETTE[k].mangime && o.cliente !== 'veterinaria') mangimiAltrui.push(`${o.cliente}: ${k}`)
       visti.add(k)
     }
+    if (o.cliente === 'veterinaria' && chiavi.some(k => RICETTE[k] && RICETTE[k].mangime)) deiVet++
+    if (o.cliente === 'veterinaria' && chiavi.some(k => RICETTE[k] && RICETTE[k].mangime) && chiavi.some(k => !VETERINARIA_VUOLE.includes(k))) male.push(`la veterinaria chiede ${chiavi.join(',')}`)
     if (o.liv > liv || o.liv !== livelloDelOrdine(o.chiede)) male.push(`liv ${liv}: l'ordine dichiara ${o.liv}`)
     if (!(o.premio >= 1 && Number.isInteger(o.premio))) male.push('premio non intero')
     if (o.premio > tettoDi(o.chiede) + 1e-9 && o.premio > 1) tetto.push(`${JSON.stringify(o.chiede)}: ${o.premio} > ${tettoDi(o.chiede)}`)
@@ -65,7 +68,9 @@ controlla('il mangime (erba medica, becchime, foraggio) non si chiede mai', ['er
   const chiedibile = k => !(COLTURE[k] || RICETTE[k]).mangime            // il mangime lo mangiano le bestie: non lo chiede nessuno
   controlla('in tutto il gioco si chiede ogni raccolto e ogni prodotto', [...Object.keys(COLTURE), ...Object.keys(RICETTE)].filter(chiedibile).every(k => visti.has(k)),
     [...Object.keys(COLTURE), ...Object.keys(RICETTE)].filter(chiedibile).filter(k => !visti.has(k)).join(','))
-  controlla('e il mangime non compare mai in un ordine', ['erba', 'becchime', 'foraggio', 'foraggio_carote'].every(k => !visti.has(k)))
+  controlla('l\'erba medica e le sue varianti non compaiono mai in un ordine', ['erba', 'foraggio_carote'].every(k => !visti.has(k)))
+  controlla('il mangime lo chiede solo la veterinaria (C32)', mangimiAltrui.length === 0, mangimiAltrui.slice(0, 3).join(' · '))
+  controlla('la veterinaria il mangime lo chiede davvero, e solo quello che vuole', deiVet > 20 && visti.has('becchime') && visti.has('foraggio') && visti.has('mangime'), `ordini dei vet con mangime: ${deiVet}`)
   controlla('i prodotti si chiedono davvero', conProdotti > 100)
   controlla('un prodotto vale più dei suoi ingredienti crudi (la catena si paga)', premioDi({ panIntegrale: 1 }) > premioDi({ farina: 2 }) * 0 && premioDi({ pane: 1 }) >= premioDi({ grano: 2 }))
 }

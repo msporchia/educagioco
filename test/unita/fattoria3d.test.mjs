@@ -417,7 +417,7 @@ controlla('l\'albo del manifesto sta in piedi', gA.length === 0, gA.join(' · ')
   controlla('il salto aggiunge il costo della roba produttiva (mulino al 4 → il 5 costa 150 in più)', costoDelLivello(4) === EDIFICI.mulino.prezzo && sogliaDi(5) - sogliaDi(4) >= EDIFICI.mulino.prezzo)
   for (let l = 1; l <= ULTIMO + 2; l++) controlla(`livelloPer è l'inversa di sogliaDi (${l})`, livelloPer(sogliaDi(l)) === l && (l === 1 || livelloPer(sogliaDi(l) - 1) === l - 1))
   uguale('dopo l\'ultimo si continua a salire', livelloPer(sogliaDi(ULTIMO + 5)), ULTIMO + 5)
-  stessaLista('dopo l\'ultimo non si apre altro', Object.values(roba(ULTIMO + 1)).map(v => v.length), [0, 0, 0, 0, 0, 0])
+  stessaLista('dopo l\'ultimo non si apre altro', Object.values(roba(ULTIMO + 1)).map(v => v.length), [0, 0, 0, 0, 0, 0, 0])
   // roba: ogni cosa arriva una volta sola, al livello che dice
   const viste = new Set()
   for (let l = 1; l <= ULTIMO; l++) {
@@ -1036,7 +1036,7 @@ function livelloDelPezzoDi(t) { return PEZZI[t].liv }
   controlla('le carte non hanno guasti', guastiDelleCarte().length === 0, guastiDelleCarte().join('; '))
   controlla('ogni pezzo e ogni edificio ha una categoria valida', [...Object.values(PEZZI), ...Object.values(EDIFICI)].every(d => !!CATEGORIE[d.categoria]))
   controlla('ogni scheda ha almeno una carta (la scheda Feste solo in stagione o con un regalo della fiera: la linguetta si nasconde)', Object.keys(CATEGORIE).every(c => c === 'feste' || schedeDi(statoMenu({ livello: 99 }))[c].length > 0) && schedeDi(statoMenu({ livello: 99, stagione: 'natale' })).feste.length > 0)
-  const tutte = Object.values(schedeDi(statoMenu({ livello: 99 }))).flat().filter(c => c.genere !== 'strumento')
+  const tutte = Object.values(schedeDi(statoMenu({ livello: 99 }))).flat().filter(c => c.genere !== 'strumento' && c.genere !== 'bestia')
   uguale('ogni pezzo e ogni edificio unico sta in una scheda sola', tutte.length, Object.values(PEZZI).filter(d => !d.stagione && !d.fiera).length + Object.keys(EDIFICI).length)          // le feste si offrono solo in stagione, la fiera solo a chi l'ha vinta
   controlla('le carte di una scheda stanno in ordine di livello, prima quelle col «!»', Object.keys(CATEGORIE).every(c => {
     const carte = carteDi(c, statoMenu({ livello: 99 })).filter(x => x.genere !== 'strumento')

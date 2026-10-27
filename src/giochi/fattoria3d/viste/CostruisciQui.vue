@@ -13,11 +13,14 @@ const props = defineProps({
   schede: { type: Object, required: true },           // { campi: [carta…], … } (dati/carte.js)
   messaggio: { type: String, default: '' },            // un rifiuto del motore («Servono 🪙 28»)
   anteprima: { type: Function, default: null },        // tipo → Promise<dataURL|null>: l'immagine 3D, una per volta (il file del 3D non si importa qui)
+  festa: { type: Object, default: null },              // il segnalino della festa (dati/carte.js `festaDaScoprire`): la scheda e le carte da indicare
   anteprimaPronta: { type: Function, default: null },  // tipo → dataURL|null subito, se c'è già
 })
 const emit = defineEmits(['scegli', 'chiudi'])
 
 const scheda = ref(CATEGORIE[ultimaScheda] ? ultimaScheda : 'campi')
+const festaScheda = k => !!props.festa && props.festa.scheda === k
+const festaCarta = id => !!props.festa && props.festa.ids.includes(id)
 const msg = ref(props.messaggio)
 const trema = ref('')
 let tremaFine = 0
@@ -60,7 +63,7 @@ function tocca(carta) {
       <button class="f3-chiudi" data-chiudi aria-label="chiudi" @click="emit('chiudi')">✕</button>
       <div class="f3-schede" role="tablist">
         <button v-for="(c, k) in CATEGORIE" v-show="visibile(k)" :key="k" role="tab" :class="{ acceso: scheda === k }" :aria-selected="scheda === k" :data-scheda="k" :data-cat="k" @click="vai(k)">
-          <span class="em">{{ c.emoji }}</span>{{ c.nome }}<i v-if="segnalata(k)" class="f3-esclama" data-f3="scheda-esclama" aria-label="c'è un edificio da costruire">!</i>
+          <span class="em">{{ c.emoji }}</span>{{ c.nome }}<i v-if="segnalata(k)" class="f3-esclama" data-f3="scheda-esclama" aria-label="c'è un edificio da costruire">!</i><i v-if="festaScheda(k)" class="f3-festa" data-f3="scheda-festa" :aria-label="'c\'è la festa: ' + festa.icona">{{ festa.icona }}</i>
         </button>
       </div>
       <div class="f3-corpo">
@@ -74,6 +77,7 @@ function tocca(carta) {
                    :data-anteprima="viste[c.id] ? 'pronta' : null" @load="viste[c.id] = true">
             </span>
             <i v-if="c.segnala" class="f3-esclama" data-f3="carta-esclama" aria-label="da costruire">!</i>
+            <i v-else-if="festaCarta(c.id) && !c.bloccata" class="f3-festa" data-f3="carta-festa" aria-label="di stagione">{{ festa.icona }}</i>
             <b>{{ c.nome }}</b>
             <small v-if="c.bloccata">🔒 Livello {{ c.liv }}</small>
             <small v-else class="prezzo">{{ c.etichetta }}</small>

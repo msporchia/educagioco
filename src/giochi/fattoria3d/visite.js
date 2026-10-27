@@ -4,6 +4,7 @@
 import { ref, shallowRef, computed, nextTick } from 'vue'
 import { Vicini, motoreDiVisita } from './motore/vicini.js'
 import { dettoDi } from './scena3d/detti.js'
+import { cosaPuoiDare, cosaOffre, scambia, DAI } from './motore/carretto.js'
 import './stile-vicini.css'
 
 const ANDATA_MS = 1300, RITORNO_MS = 800
@@ -54,6 +55,32 @@ export function usaVisite({ dammi, tela, sopra, q, versione, cambio }) {
 
   function avvia(salvato) { vicini.value = new Vicini({ motore: dammi().motore, stato: salvato }) }
   const serializza = () => vicini.value ? vicini.value.serializza() : null
+
+  // il carretto del vicino (C15): si apre dalla mappa del trattore; due passi (cosa dai, cosa prendi), mai monete
+  const carretto = ref(null)               // null | { passo: 'dai' | 'ricevi', dato: riga | null, msg }
+  const righeCarretto = computed(() => {
+    void versione.value; void rev.value
+    const m = dammi().motore, c = carretto.value
+    if (!c) return { dai: [], offre: [] }
+    return { dai: cosaPuoiDare(m), offre: c.dato ? cosaOffre(m, c.dato.k) : [] }
+  })
+  function apriCarretto() { if (fase.value === 'casa') { mappaAperta.value = false; carretto.value = { passo: 'dai', dato: null, msg: '' } } }
+  function chiudiCarretto() { carretto.value = null }
+  function carrettoDai(k) {
+    const riga = righeCarretto.value.dai.find(r => r.k === k)
+    if (!riga) return
+    carretto.value = { passo: 'ricevi', dato: riga, msg: '' }
+  }
+  function carrettoIndietro() { carretto.value = { passo: 'dai', dato: null, msg: '' } }
+  function carrettoRicevi(verso) {
+    const c = carretto.value
+    if (!c || !c.dato) return
+    const em = verso ? (righeCarretto.value.offre.find(x => x.k === verso) || {}).emoji || '' : ''
+    const r = scambia(dammi().motore, c.dato.k, verso)
+    if (!r.ok) return void (carretto.value = { passo: 'dai', dato: null, msg: r.motivo === 'poca-roba' ? `Te ne servono ${DAI}` : 'Lì non ci sta più niente: scegli un\'altra cosa' })
+    carretto.value = { passo: 'dai', dato: null, msg: verso ? `Scambio fatto: ${c.dato.emoji} ${DAI} → ${em} ${r.ricevuti}` : `Fatto posto: ${c.dato.emoji} ${DAI} regalati` }
+    rev.value++; cambio()
+  }
 
   function apriMappa() {
     if (fase.value !== 'casa' || !vicini.value) return
@@ -137,5 +164,5 @@ export function usaVisite({ dammi, tela, sopra, q, versione, cambio }) {
   function via() { vivo = false; mondoV?.via(); mondoV = null }
 
   return { vicini, fase, inVisita, mappaAperta, mappaMsg, id, foglio, storia, messaggio, verso, chiave, elenco, scheda,
-           avvia, serializza, apriMappa, vai, torna, aiuta, compra, vendi, via }
+           avvia, serializza, apriMappa, carretto, righeCarretto, apriCarretto, chiudiCarretto, carrettoDai, carrettoRicevi, carrettoIndietro, vai, torna, aiuta, compra, vendi, via }
 }
