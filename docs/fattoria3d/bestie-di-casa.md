@@ -88,10 +88,14 @@ A13 e L21 **non si fanno**: l'utente li rimanda a prima di Natale, e quando si f
 
 ## I corpi e la scena
 
-Stile dei gatti (palle lisce fuse in un mesh per pezzo, colore nei vertici); **le parti si toccano** (`unita/fattoria3d-bestie-connesse` le prova in sei pose per bestia). Il beagle ha gli
+Beagle, coniglio e pappagallo hanno lo stile degli animali del cortile (`modelli-cortile.js`): ellissoidi e ossi **facettati a 5–8 lati** (`ellisse`, `osso` di `bestie-corpo.js`), `mat()` con
+flatShading, **colori piatti a tinta unita**: una macchia (sella nera, striscia sul muso, punta della coda, fronte rossa) è un pezzo di un altro colore che sporge appena, mai una sfumatura nei vertici; i
+pezzi fermi di ogni perno si fondono per materiale (`fondiPerMateriale`, soglia 0: tutto proietta ombra). Il gatto rosso è invece il mantello `rosso` di `creaGatto`: stessa tecnica di Sherlock e Irene (volumi
+morbidi, colore nei vertici), e le sfumature sulle zampe e sulla coda sono di tutta la famiglia dei gatti, non solo sue. **Le parti si toccano** (`unita/fattoria3d-bestie-connesse` le prova in sei pose per bestia): il beagle
+ha una nuca dentro il perno della testa, se no a testa bassa («annusa») si staccava dal collo; le ali del pappagallo nascono dentro il corpo, se no battendole si staccavano. Il beagle ha gli
 stessi perni di Watson in scala 0,72 (`posaBeagle` = `posaCane` più due ritocchi da sdraiato); coniglio e pappagallo hanno la loro posa (`posaPiccolo`).
-Peso (catalogo 3D): beagle 16 mesh / ~4200 triangoli, coniglio 14 / ~2600, gatto rosso 15 / ~5200, pappagallo 13 / ~1600; il LOD da lontano dei compagni vale anche per
-loro dove i pezzi sono `morbido`. In tutto, comprandole tutte, +58 mesh e ~13 600 triangoli sulla scena ([scena.md](scena.md) «Draw call e triangoli»).
+Peso (catalogo 3D): beagle 13 mesh / ~1300 triangoli, coniglio 12 / ~1000, gatto rosso 15 / ~5200, pappagallo 10 / ~900; il LOD da lontano dei compagni vale ancora per il gatto. In tutto, comprandole
+tutte, +50 mesh e ~8400 triangoli sulla scena ([scena.md](scena.md) «Draw call e triangoli»).
 Il ritratto del foglio e delle carte è un `bestia:<id>` di `anteprime.js`.
 
 ## L'interfaccia
@@ -110,5 +114,6 @@ salvati, lo stato letto dritto, la migrazione è in `unita/fattoria3d-migra`), `
 ## Provato e no / da fare
 
 - Provato: il beagle con le zampe come bastoncini staccati dal corpo (come uscì dal primo tentativo): le gambe ora partono dentro il corpo; sdraiato le zampe davanti e le orecchie si riattaccano in `posaBeagle`.
+- Provato: il beagle, il coniglio e il pappagallo a palle lisce con i colori sfumati nei vertici (come i gatti): sembravano palloncini gonfiati accanto a pecora, mucca e Watson; rifatti facettati.
 - Da guardare col dito su un telefono: le bestie in scena dalla camera di serie, il foglio a 360 px dal vero.
 - Il tocco sul gatto rosso/beagle apre il foglio (non c'è la festa lunga di Watson né le risposte dei gatti): una scelta, le bestie di casa sono cose da curare.
