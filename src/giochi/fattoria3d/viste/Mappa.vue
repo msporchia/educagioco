@@ -7,7 +7,7 @@ defineProps({
   elenco: { type: Array, default: () => [] },       // { id, nome, emoji, proprietario, tema, liv, aperto, visite, cassa }
   messaggio: { type: String, default: '' },
 })
-defineEmits(['vai', 'chiudi'])
+defineEmits(['vai', 'carretto', 'chiudi'])
 const TEMI = { orto: 'orto e galline', mulino: 'mulino e farina', pecore: 'pecore e mongolfiera', frutteto: 'frutteto e gelato', misto: 'una fattoria' }
 </script>
 
@@ -17,6 +17,7 @@ const TEMI = { orto: 'orto e galline', mulino: 'mulino e farina', pecore: 'pecor
     <button class="f3-chiudi" data-chiudi aria-label="chiudi" @click="$emit('chiudi')">✕</button>
     <div class="f3-corpo">
       <p v-if="messaggio" class="f3-messaggio" data-f3="mappa-msg">{{ messaggio }}</p>
+      <button class="f3-vic-carretto-tasto" data-f3="apri-carretto" @click="$emit('carretto')">🛒 Il carretto · 5 contro 1, per fare posto</button>
       <div class="f3-vic-strada">
         <button v-for="v in elenco" :key="v.id" class="f3-vic-villaggio" :class="{ bloccato: !v.aperto }" :data-vicino="v.id" :data-aperto="v.aperto"
                 @click="$emit('vai', v.id)">

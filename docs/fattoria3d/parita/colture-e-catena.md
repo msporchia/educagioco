@@ -29,7 +29,7 @@ Le arature non esistono in nessuna delle due.
 | C12 | scomparti | 8 pezzi per merce, +2 a ogni ingrandimento, `40+130·ln(1+n)` | ✅ uguali | – |
 | C13 | scomparto pieno | non si raccoglie e non si paga, il campo resta pronto | ✅ vale per campi, bestie, tosa, macchine e pesca; il consiglio porta all'inventario | – |
 | C14 | «chi la usa» sulla roba | premere una merce dice dove si lavora (`dati/usi.js`) + «Come si fa» | 🟡 l'inventario dice «a cosa serve» in una frase (`dati/usi.js`) e ha il tasto «🌳 Come si fa» (I3); resta il «chi la usa» come foglio e gli scomparti (C11–C13) | P2 |
-| C15 | carretto del vicino per svuotare lo scomparto | roba 5 → 1, mai monete | ❌ (senza scomparti non serve; i vicini sono un'altra cosa) | P2 |
+| C15 | carretto del vicino per svuotare lo scomparto | roba 5 → 1, mai monete | ✅ come vista del trattore (D10): «🛒 Il carretto» in cima alla mappa, 5 → 1 o regalo, mai monete né esperienza ([../vicini.md](../vicini.md)) | – |
 
 Perché i silos contano: sono un pozzo di monete che non si esaurisce (28 posti ≈ 7 ore di spesa) e il momento in cui il gioco
 insegna il resto della catena. Con ricette 60× più svelte e niente tetto, la 3D si riempie di roba senza uno scopo. Decisione D11.
