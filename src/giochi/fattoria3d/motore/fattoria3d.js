@@ -20,6 +20,7 @@ import { normalizza, nuoveTessere } from './stato.js'
 import { percorso } from './percorso.js'
 import { POSTI, RIPOSO_MS, LIVELLO_BANCO, PEZZI_DEL_BANCO, clienteDi, tipoDelOrdine } from '../dati/ordini.js'
 import { nuovoOrdine } from './ordini.js'
+import { Cura } from './cura.js'
 import { vistaDellaMongolfiera, caricaLaCassa, partiLaMongolfiera, aggiornaMongolfiera } from './mongolfiera.js'
 import { vistaDellaBottega, consegnaInBottega, rifiutaInBottega, aggiornaLeBotteghe, daConsegnareIn, daConsegnareOvunque } from './botteghe.js'
 
@@ -30,6 +31,7 @@ export class Fattoria3d {
     this.ora = ora
     this.rnd = rnd
     this.eventi = []
+    this.cura = new Cura(this)                     // le bestie di casa: bisogni, ciotola, coccole, nomi (docs/fattoria3d/bestie-di-casa.md)
     this._comprabili = null
     this.propri = new Set()                        // le chiavi dei lotti tuoi
     for (const id of Object.keys(this.s.lotti)) { const l = lottoPerId(id); if (l) this.propri.add(l.k) }

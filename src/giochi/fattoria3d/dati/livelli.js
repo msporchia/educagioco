@@ -10,6 +10,7 @@ import { PRODOTTI_ANIMALI, LANA, ANIMALI } from './animali.js'
 import { PECORE } from './regole.js'
 import { ricetteDelMangime } from './mangime.js'
 import { compagniAl } from './compagni.js'
+import { bestieAl } from './bestie.js'
 import { abitiAl } from './abiti.js'
 import { sogliaDi2D, ULTIMO_2D, SOGLIA_A, SOGLIA_B, ALLUNGA, LIVELLO_PESCA, PESCHIERA_2D } from './parita2d.js'
 
@@ -74,6 +75,7 @@ export function roba(livello) {
     colture: con(COLTURE, livelloDellaColtura),
     ricette: con(RICETTE, id => livelloDellaRicetta(id)),
     compagni: compagniAl(l, true),                       // chi arriva a girare per la fattoria: non conta come «roba» (vedi `vuoto`)
+    bestie: bestieAl(l, true),                           // le bestie che si possono prendere con le monete (docs/fattoria3d/bestie-di-casa.md): nemmeno queste contano come «roba»
     abiti: abitiAl(l, true),                             // i pezzi speciali del guardaroba: nemmeno questi contano come «roba»
   }
 }
