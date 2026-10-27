@@ -6,12 +6,12 @@
 // quello dell'ombra), così la geometria resta una.
 import { BufferGeometry, Float32BufferAttribute, BoxGeometry, CylinderGeometry, LatheGeometry, TorusGeometry, Mesh, InstancedMesh,
          MeshStandardMaterial, MeshDepthMaterial, RGBADepthPacking, DataTexture, RGBAFormat, NearestFilter, Matrix4, Vector2, Vector3,
-         Color } from 'three'
+         Color, SRGBColorSpace } from 'three'
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js'
 import { conMaschera } from './maschera.js'
 import { GLSL_RUMORE } from './luci.js'
 import { scolpisciPareti } from './pareti.js'
-import { fbm3d } from './rumore.js'
+import { fbm3d, rumore3d } from './rumore.js'
 import { ALTO_MURO, PARAPETTO, ACCESI, SUDDIVIDI } from './costanti.js'
 import { dividi } from './luce-vertice.js'
 import { creaRitaglio } from './ritaglio.js'
@@ -21,6 +21,14 @@ import { verso } from './tempo.js'
 const GLSL_ALTO_V = 'attribute float aCella; uniform sampler2D uAltoMuri; uniform vec2 uDimAlto;\n'
 const ABBASSA = `#include <begin_vertex>
   transformed.y *= texture2D(uAltoMuri, (vec2(mod(aCella, uDimAlto.x), floor(aCella / uDimAlto.x)) + 0.5) / uDimAlto).r;`
+
+// il colore medio di una trama generata (lineare): il terreno semplice lo usa al posto della trama
+function colorMedio(tex) {
+  const d = tex.image.data, s = [0, 0, 0]
+  let n = 0
+  for (let i = 0; i < d.length; i += 4 * 13) { s[0] += d[i]; s[1] += d[i + 1]; s[2] += d[i + 2]; n++ }
+  return new Color().setRGB(s[0] / n / 255, s[1] / n / 255, s[2] / n / 255, SRGBColorSpace)
+}
 
 // una geometria ammaccata dal rumore (le colonne di roccia, ghiaccio, radici): niente è a filo
 function ammacca(g, a, fr, seme, soloLati = true) {
@@ -82,27 +90,37 @@ export function* creaTerrenoAPassi(scena, { pianta, aspetto, trame, maschera, se
 
   // ── il pavimento: un quadrato per cella (anche sotto le colonne e i muri), la trama ogni `celle`×`celle` celle; con la luce per
   // vertice n×n quadrati per cella ──
-  const pos = [], uv = [], nor = [], idx = []
+  // semplice (`terrenoSemplice`, la fascia bassa): niente trama; nei vertici il suo colore medio, una tinta per cella (le lastre) e le
+  // macchie larghe che lo shader faceva a ogni pixel (0,88: senza le fughe scure della trama veniva più chiaro di un decimo)
+  const semplice = ACCESI.terrenoSemplice
+  const pos = [], uv = [], nor = [], idx = [], col = []
   const cu = trame.pav.celle, n = ACCESI.lucePerVertice ? SUDDIVIDI.pavimento : 1
+  const medio = semplice ? colorMedio(trame.pav.map) : null, macchie = rumore3d(seme), cc = new Color()
   for (const { x, y } of [...p.pavimento, ...p.muri]) {
     const b = pos.length / 3
-    for (let j = 0; j <= n; j++) for (let i = 0; i <= n; i++) { const px = x + i / n, pz = y + j / n; pos.push(px, 0, pz); uv.push(px / cu, -pz / cu); nor.push(0, 1, 0) }
+    const lastra = 0.9 + 0.2 * ((((x * 73856093) ^ (y * 19349663) ^ seme) >>> 0) % 1000) / 1000
+    for (let j = 0; j <= n; j++) for (let i = 0; i <= n; i++) {
+      const px = x + i / n, pz = y + j / n
+      pos.push(px, 0, pz); uv.push(px / cu, -pz / cu); nor.push(0, 1, 0)
+      if (semplice) { cc.copy(medio).multiplyScalar(0.88 * lastra * (0.78 + 0.44 * macchie(px * 0.21, 4, pz * 0.21))); col.push(cc.r, cc.g, cc.b) }
+    }
     for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) { const a = b + j * (n + 1) + i, c = a + n + 1; idx.push(a, c, a + 1, a + 1, c, c + 1) }
   }
   const gPav = new BufferGeometry()
   gPav.setAttribute('position', new Float32BufferAttribute(pos, 3))
   gPav.setAttribute('uv', new Float32BufferAttribute(uv, 2))
   gPav.setAttribute('normal', new Float32BufferAttribute(nor, 3))
+  if (semplice) gPav.setAttribute('color', new Float32BufferAttribute(col, 3))
   gPav.setIndex(idx)
   const t = trame.pav
   // le macchie larghe nel mondo (la trama si ripete, il mondo no) e le pozzanghere lucide dove il paesaggio le vuole (`pozze`)
-  const pozze = aspetto.pozze || null
-  const matPav = conMaschera(new MeshStandardMaterial({
+  const pozze = semplice ? null : aspetto.pozze || null
+  const matPav = conMaschera(new MeshStandardMaterial(semplice ? { vertexColors: true, roughness: aspetto.lucido || 1, metalness: aspetto.metallo || 0 } : {
     // senza `rilievo` (la fascia bassa) il pavimento è piatto: la trama del colore e basta
     map: t.map, normalMap: ACCESI.rilievo ? t.normalMap : null, roughnessMap: ACCESI.rilievo ? t.roughnessMap : null, roughness: aspetto.lucido || 1, metalness: aspetto.metallo || 0,
     normalScale: new Vector2(1.2, 1.2),
     ...(t.emissiveMap ? { emissiveMap: t.emissiveMap, emissive: new Color(1, 1, 1), emissiveIntensity: 1 } : {}),
-  }), maschera, {
+  }), maschera, semplice ? { spinta: 0 } : {
     spinta: 0, chiave: 'pav' + (t.emissiveMap ? '-braci' : '') + (pozze ? '-pozze' + pozze.quanto : ''),   // `quanto` sta nel codice
     // le braci si accendono a chiazze larghe nel mondo, non a ogni ripetizione della trama (si vedeva il disegno ripetuto)
     prima: t.emissiveMap ? 'outgoingLight -= totalEmissiveRadiance * 0.75 * (1.0 - smoothstep(0.42, 0.62, rumore3(vec3(vMondoM.xz * 0.3, 0.0))));' : '',
@@ -144,23 +162,25 @@ export function* creaTerrenoAPassi(scena, { pianta, aspetto, trame, maschera, se
   const coperta = new Color().setRGB(...(aspetto.copre || [1, 1, 1]))
   const bagliore = new Color().setRGB(...(aspetto.bagliore || [0, 0, 0]))
   const m = trame.muro
+  // semplice: le facce col colore medio della trama per la tinta di ogni vertice, senza il bagliore a ogni pixel
+  const tratto = semplice ? { map: null, color: colorMedio(m.map) } : { map: m.map, normalMap: ACCESI.rilievo ? m.normalMap : null, roughnessMap: ACCESI.rilievo ? m.roughnessMap : null }
   const parete = (cima, basso, chiave) => {
     const mat = new MeshStandardMaterial({
-      map: m.map, normalMap: ACCESI.rilievo ? m.normalMap : null, roughnessMap: ACCESI.rilievo ? m.roughnessMap : null, roughness: aspetto.lucido ? Math.min(1, aspetto.lucido * 1.4) : 1,
+      ...tratto, roughness: aspetto.lucido ? Math.min(1, aspetto.lucido * 1.4) : 1,
       metalness: aspetto.metallo || 0, normalScale: new Vector2(1.4, 1.4), vertexColors: true, flatShading: sc.faccette,
-      ...(m.emissiveMap ? { emissiveMap: m.emissiveMap, emissive: new Color(1, 1, 1), emissiveIntensity: 1 } : {}),
+      ...(m.emissiveMap && !semplice ? { emissiveMap: m.emissiveMap, emissive: new Color(1, 1, 1), emissiveIntensity: 1 } : {}),
       // la cima ha il suo colore pieno (senza la trama della faccia): da sopra è la cosa che si vede di più del muro
       ...(cima ? { map: null, roughnessMap: null, color: new Color(basso ? aspetto.parapetto : aspetto.cima) } : {}),
     })
     return conMaschera(mat, maschera, {
-      spinta: cima ? 0 : 0.45, buco: !basso, chiave: 'parete-' + chiave + (sc.faccette ? 'f' : ''),
+      spinta: cima ? 0 : 0.45, buco: !basso, chiave: 'parete-' + chiave + (sc.faccette ? 'f' : '') + (semplice ? 's' : ''),
       poi(sh) {
         Object.assign(sh.uniforms, uAlto, { uCoperta: { value: coperta }, uBagliore: { value: bagliore } })
         sh.vertexShader = GLSL_ALTO_V + 'attribute float aCoperta; varying float vCoperta;\n' +
           sh.vertexShader.replace('#include <begin_vertex>', ABBASSA + '\n  vCoperta = aCoperta;')
         sh.fragmentShader = 'uniform vec3 uCoperta; uniform vec3 uBagliore; varying float vCoperta;\n' + sh.fragmentShader
           .replace('#include <color_fragment>', '#include <color_fragment>\n  diffuseColor.rgb = mix(diffuseColor.rgb, uCoperta, clamp(vCoperta, 0.0, 1.0));')
-          .replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n  totalEmissiveRadiance += uBagliore * (0.3 + 1.6 * pow(1.0 - abs(dot(normalize(vViewPosition), normal)), 2.0));')
+          .replace('#include <emissivemap_fragment>', semplice ? '#include <emissivemap_fragment>' : '#include <emissivemap_fragment>\n  totalEmissiveRadiance += uBagliore * (0.3 + 1.6 * pow(1.0 - abs(dot(normalize(vViewPosition), normal)), 2.0));')
       },
     })
   }

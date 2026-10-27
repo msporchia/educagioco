@@ -132,8 +132,13 @@ l'attesa della GPU.
 `scena3d/ritaglio.js`: i triangoli di pavimento e pareti stanno a blocchi di 4×4 celle e prima di ogni disegno l'indice tiene solo i
 blocchi che la telecamera tocca (con una cella di margine), riscritto solo quando cambiano; i gruppi dei quattro materiali delle pareti
 restano, quindi le chiamate non crescono. Nello scontro di `S` qui sopra: da 128k a 79k triangoli, 69 blocchi su 248. A schermo non
-cambia niente (`&spegni=ritaglio` lo spegne, `grafica().ritaglio`: blocchi disegnati e blocchi pieni). Da confermare sul telefono:
-il gradino 1 della scala.
+cambia niente (`&spegni=ritaglio` lo spegne, `grafica().ritaglio`: blocchi disegnati e blocchi pieni). Sul Note 7 (27/10 17:06) il
+gradino 1 è sceso solo da +23 a +20 ms: i vertici non erano il peso, lo sono i pixel.
+
+**Il terreno semplice** (`ACCESI.terrenoSemplice`, nella bassa `terrenoSemplice:1`): pavimento e pareti senza trame (niente filtro
+anisotropo, rilievo, macchie e pozze a rumore per pixel, bagliore delle facce); il colore medio della trama (×0,88 sul pavimento, se no
+viene più chiaro), una tinta per cella (le lastre) e le macchie larghe stanno nei vertici, fatti una volta. `&spegni=terrenoSemplice` torna
+alle trame. Da confermare: il gradino 1 della scala.
 
 ## Cosa resta da guardare sul telefono vero
 

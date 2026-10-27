@@ -92,6 +92,9 @@ export const ACCESI = {
   // al contrario degli altri, acceso è la versione semplice (la bassa lo accende con `lucePerVertice:1`, `&spegni=lucePerVertice` lo toglie):
   // il piano somma le luci per vertice e non per pixel, la nebbia è un termine per vertice al posto della fetta (scena3d/luce-vertice.js)
   lucePerVertice: false,
+  // come sopra, acceso è il semplice (la bassa: `terrenoSemplice:1`): pavimento e pareti senza trame, rilievo né rumore per pixel; il colore
+  // medio della trama, la tinta per cella e le macchie messi una volta nei vertici (terreno.js). La scala del 27/10 dava al fondo +20 ms
+  terrenoSemplice: false,
   // gli elementi della scena (grafica/elementi3d.js): spento non si disegna, senza buttarlo né cambiare il gioco. Solo per misurare chi
   // pesa (`&spegni=pavimento`); anche arredo, fiamme, fuochi, palco, nebbia, effetti3d e chiarori qui sopra fanno da elemento. `resto`: quello
   // senza nome (l'emisferica, una cosa dimenticata), così la scena «tutto spento» è vuota davvero

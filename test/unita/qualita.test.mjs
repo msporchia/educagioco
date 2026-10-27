@@ -29,13 +29,14 @@ controlla('bassa: niente passaggio finale, lampi e palco', !ACCESI.post && !ACCE
 controlla('bassa: niente ombra del cono né del sole (misurato sul Note 7: ~8 ms), nebbia a una fetta, meno polvere', !ACCESI.ombre && !ACCESI.nebbiaFitta && ACCESI.quantaPolvere === 0.4)
 uguale('bassa: metà scintille', ACCESI.quanteScintille, 0.5)
 controlla('bassa: il piano con la luce per vertice (docs/sotterraneo/appiattimento-3d.md, «Nel gioco»)', !!ACCESI.lucePerVertice)
+controlla('bassa: il terreno semplice, senza trame (docs/sotterraneo/prestazioni-3d.md)', !!ACCESI.terrenoSemplice)
 applicaFascia([], ['lucePerVertice'])
 controlla('bassa con `&riaccendi=lucePerVertice`: la bassa di prima, per confronto', !ACCESI.lucePerVertice && !ACCESI.ombre)
 applicaFascia(['lucePerVertice'])
 controlla('bassa con `&spegni=lucePerVertice`: tolta a mano', !ACCESI.lucePerVertice)
 for (const f of ['alta', 'media']) {
   scelta.value = f; applicaFascia()
-  controlla(`${f}: tutto come prima`, ACCESI.post && ACCESI.lampi && ACCESI.palco && ACCESI.fuochi === N_FUOCHI && ACCESI.ombraMappa === 1024 && ACCESI.ombraOgni === 1 && ACCESI.quanteScintille === 1 && ACCESI.ottaveNebbia === 4 && !ACCESI.lucePerVertice)
+  controlla(`${f}: tutto come prima`, ACCESI.post && ACCESI.lampi && ACCESI.palco && ACCESI.fuochi === N_FUOCHI && ACCESI.ombraMappa === 1024 && ACCESI.ombraOgni === 1 && ACCESI.quanteScintille === 1 && ACCESI.ottaveNebbia === 4 && !ACCESI.lucePerVertice && !ACCESI.terrenoSemplice)
 }
 applicaFascia(['fuochi:3', 'nebbia', 'ombraMappa'])
 controlla('a mano: un numero, un nome spento, un numero senza valore va a zero', ACCESI.fuochi === 3 && !ACCESI.nebbia && ACCESI.ombraMappa === 0)
