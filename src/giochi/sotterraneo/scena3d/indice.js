@@ -384,6 +384,7 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
     piano.sincronizzaPortali()
     for (const p of piano.portali) p.aggiorna(dt, t, punti, vistaOra(piano.vis, p.cella.x + 0.5, p.cella.y + 0.5))
     piano.terreno.aggiorna(dtVero, torcia)
+    piano.terreno.ritaglia(cam.camera)
     piano.botti.aggiorna(dt)
 
     S.rosso *= Math.exp(-5 * dtVero)
@@ -508,7 +509,7 @@ function costruisci(canvas, ctx, { strato, bersaglio = null, accorcia = null, ci
                msJs: Math.round(m.msJs * 100) / 100, msDisegno: Math.round(m.msDisegno * 100) / 100,
                // entrando in un piano non si disegna ancora: chi aspetta le figure (o i mostri 3D) aspetta il disegno
                figure: figure && !entrando ? figure.quante : 0, pixelSprite: Math.round(cam.pixelSprite * 100) / 100, scenario: piano ? piano.aspetto.chiave : null, palco: !!scontro.palco,
-               programmi: (renderer.info.programs || []).length, memoria: { ...renderer.info.memory },
+               programmi: (renderer.info.programs || []).length, memoria: { ...renderer.info.memory }, ritaglio: piano && piano.terreno.ritagliati,
                daScaldare: daFare(), entrando: !!entrando, ingresso: S.ingresso ? { picco: S.ingresso.picco, primoDisegno: S.ingresso.primoDisegno ?? null, fotogrammi: S.ingresso.fotogrammi.length } : null,
                mostri3d: mostri3d && !entrando ? mostri3d.visibili : 0, modelli3d: mostri3d ? mostri3d.quante : 0, effetti3d: effetti3d ? effetti3d.quanti : 0 }   // gli shader compilati: se crescono a ogni colpo, il telefono si ferma a compilare
     },

@@ -14,6 +14,7 @@ import { scolpisciPareti } from './pareti.js'
 import { fbm3d } from './rumore.js'
 import { ALTO_MURO, PARAPETTO, ACCESI, SUDDIVIDI } from './costanti.js'
 import { dividi } from './luce-vertice.js'
+import { creaRitaglio } from './ritaglio.js'
 import { verso } from './tempo.js'
 
 // le altezze dei muri nello shader: la cella di ogni vertice, e quanto è alta adesso (0..1 nella trama)
@@ -119,6 +120,7 @@ export function* creaTerrenoAPassi(scena, { pianta, aspetto, trame, maschera, se
   const pav = new Mesh(gPav, matPav)
   pav.receiveShadow = true; pav.userData.elemento3d = 'pavimento'
   aggiungi(pav)
+  const ritPav = creaRitaglio(gPav, p.W, p.H, 0)
   yield 'pavimento'
 
   // ── le pareti scolpite ──
@@ -171,6 +173,7 @@ export function* creaTerrenoAPassi(scena, { pianta, aspetto, trame, maschera, se
   muri.customDepthMaterial = prof
   muri.userData.elementiMateriali = ['pareteLontana', 'pareteLontana', 'pareteVicina', 'pareteVicina']   // i muri alti e i parapetti davanti
   aggiungi(muri)
+  const ritMuri = creaRitaglio(gMuri, p.W, p.H, ALTO_MURO)
   const alti = p.muri.filter(c => !c.basso)
   const indice = new Map(alti.map((c, i) => [p.id(c.x, c.y), i]))
   const alto = new Float32Array(alti.length).fill(1), meta = new Float32Array(alti.length).fill(1)
@@ -216,6 +219,9 @@ export function* creaTerrenoAPassi(scena, { pianta, aspetto, trame, maschera, se
   const geometrie = [gPav, gMuri, gCol, gStaffa]
   return {
     muri, colonne, triangoliPareti: sc.triangoli,
+    // prima di ogni disegno: pavimento e pareti solo dove guarda la telecamera; `ritagliati`: i blocchi disegnati e quelli che ci sono
+    ritaglia(camera) { ritPav.aggiorna(camera); ritMuri.aggiorna(camera) },
+    get ritagliati() { return [ritPav.blocchi + ritMuri.blocchi, ritPav.tutti + ritMuri.tutti] },
     // dove sta la faccia vera di un muro (le torce, l'arredo che ci si appoggia)
     sposta: sc.sposta, altezzaMuro: sc.altezza, facce,
     // il muro alto di quella cella: il suo indice (per sapere se una torcia ci sta sopra), o -1

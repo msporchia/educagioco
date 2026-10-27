@@ -120,6 +120,21 @@ node strumenti/profila-app.mjs 'sotterraneo3d=1&seme=11&eroe=cavaliere&sotterran
 Per sapere chi fa le chiamate: `window.__sotterraneo3d.scena` (il Sotterraneo e il mondo di sopra), da contare con `--stampa`.
 Senza `--funzioni 0` e col file costruito in chiaro (`npx vite build --minify false --outDir tmp/dist-chiaro`) si vedono le funzioni.
 
+## Il ritaglio di pavimento e pareti (27/10)
+
+La scala della verifica del Note 7 (27/10, [../core/vecchio-telefono-veri.md](../core/vecchio-telefono-veri.md#la-scala)) ha detto che
+il fondo pesa più di tutto il resto: pavimento e pareti con una luce +23 ms (5 chiamate), luci, nebbia e rilievo insieme ~0. Sono una
+mesh ciascuno per tutto il piano (~1450 celle), e con la luce per vertice ogni cella del pavimento è 3×3 quadrati e ogni triangolo di
+parete diviso in quattro: 73k triangoli, 60k vertici che fanno fino a 12 luci e la nebbia, quasi tutti fuori dall'inquadratura (al più
+~15×15 celle). Il JS in più di quel gradino (+7,5 ms sul telefono) non è del gioco: a ×4 sul computer il gioco aggiunge 1 ms, il resto è
+l'attesa della GPU.
+
+`scena3d/ritaglio.js`: i triangoli di pavimento e pareti stanno a blocchi di 4×4 celle e prima di ogni disegno l'indice tiene solo i
+blocchi che la telecamera tocca (con una cella di margine), riscritto solo quando cambiano; i gruppi dei quattro materiali delle pareti
+restano, quindi le chiamate non crescono. Nello scontro di `S` qui sopra: da 128k a 79k triangoli, 69 blocchi su 248. A schermo non
+cambia niente (`&spegni=ritaglio` lo spegne, `grafica().ritaglio`: blocchi disegnati e blocchi pieni). Da confermare sul telefono:
+il gradino 1 della scala.
+
 ## Cosa resta da guardare sul telefono vero
 
 - **La GPU**: qui non si misura (SwiftShader fa 4-6 fps nel mondo per i pixel, non per il JS). Col contatore fps: scontro fermo, tre
@@ -204,7 +219,7 @@ node strumenti/profila-app.mjs "$S" --secondi 3 --funzioni 0 --pronto 'window.__
   --stampa 'window.__sotterraneo3d.programmi()'
 ```
 
-Nei test: `integrazione/sotterraneo-3d` conta i `linkProgram` degli attacchi dopo il riscaldamento e aspetta il primo disegno (`grafica().entrando` falso) prima di contare le chiamate; `unita/sotterraneo-coda-shader` la coda; `unita/sotterraneo-anteprime-3d`
+Nei test: `integrazione/sotterraneo-3d` conta i `linkProgram` degli attacchi dopo il riscaldamento e aspetta il primo disegno (`grafica().entrando` falso) prima di contare le chiamate; `unita/sotterraneo-coda-shader` la coda; `unita/sotterraneo-ritaglio` il ritaglio; `unita/sotterraneo-anteprime-3d`
 la coda a fette.
 
 Torna a [grafica-3d-costi.md](grafica-3d-costi.md).
