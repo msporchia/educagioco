@@ -6,6 +6,7 @@ import { PEZZI, EDIFICI, CATEGORIE } from './catalogo.js'
 import { livelloDelPezzo } from './livelli.js'
 import { COSTI } from './regole.js'
 import { BESTIE } from './bestie.js'
+import { FINESTRE } from './stagioni3d.js'
 
 /** carta → pezzo dell'atlante 2D (gli id dei salvataggi restano: `pasticceria` è il Pastificio, `conserviera` la Cucina). Mancano passerella, trattore, stagno, laghetto, molo, molo girato e porticciolo (e la strada e la gomma): lì c'è l'emoji. */
 export const DISEGNI = {
@@ -59,6 +60,22 @@ export function carteDi(categoria, stato) {
     for (const [id, s] of Object.entries(STRUMENTI)) carte.push({ id, genere: 'strumento', nome: s.nome, emoji: s.emoji, disegno: null, etichetta: s.nota, liv: 1, bloccata: false })
   }
   return carte
+}
+
+/**
+ * Il segnalino della festa (W20, come il 🎃/🎄 del baule della 2D, docs/fattoria3d/stagioni.md): in stagione, finché non si possiede nessun pezzo
+ * della festa (né in mappa né nel magazzino) il menu lo indica. `stato`: quello di `carteDi` + `haPosato(tipo)` (in mappa o nel magazzino).
+ * Torna null (fuori stagione, o già avuto) o { stagione, icona, scheda, ids } con la scheda su cui aprirsi. Mai per una carta chiusa dal livello:
+ * se la festa non ha niente di aperto non si indica niente. Non porta monete e non cambia prezzi: è solo un dito puntato.
+ */
+export function festaDaScoprire(stato) {
+  const f = stato.stagione && FINESTRE[stato.stagione]
+  if (!f) return null
+  const ids = Object.keys(PEZZI).filter(id => PEZZI[id].stagione === stato.stagione)
+  if (!ids.length || ids.some(id => stato.haPosato(id))) return null
+  const aperti = ids.filter(id => livelloDelPezzo(id) <= stato.livello)
+  if (!aperti.length) return null
+  return { stagione: stato.stagione, icona: f.icona, scheda: PEZZI[aperti[0]].categoria, ids }
 }
 
 /** Le schede che hanno una carta con il «!» (una scheda sola per ora: Edifici), per il pallino sulla linguetta e sul tasto 🏗️. */

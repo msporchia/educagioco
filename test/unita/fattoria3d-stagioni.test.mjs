@@ -70,6 +70,17 @@ controlla('ogni voce stagionale del catalogo ha una stagione che esiste', Object
   controlla('a Natale neanche', !ids(statoMenu('natale')).includes('zucca_intagliata'))
   controlla('a Halloween ci sono, nei decori', ids(statoMenu('halloween')).includes('zucca_intagliata') && schedeDi(statoMenu('halloween')).decori.some(c => c.id === 'zucche_mucchio'))
   controlla('comprata e finita la festa, nel magazzino si offre ancora (si rimette gratis)', ids(statoMenu('', { zucca_intagliata: 1 })).includes('zucca_intagliata'))
+  // W20: il segnalino 🎃/🎄 (come quello del baule 2D) finché non si possiede nessun pezzo della festa
+  {
+    const { festaDaScoprire } = await import('../../src/giochi/fattoria3d/dati/carte.js')
+    const fe = (stagione, liv = 99, ha = () => false) => festaDaScoprire({ stagione, livello: liv, haPosato: ha })
+    uguale('fuori stagione nessun segnalino', fe(null), null)
+    controlla('a Halloween il segnalino è la zucca, sui decori', fe('halloween').icona === '🎃' && fe('halloween').scheda === 'decori')
+    controlla('a Natale è l\'albero, sulle feste', fe('natale').icona === '🎄' && fe('natale').scheda === 'feste')
+    uguale('posata una zucca il segnalino se ne va', fe('halloween', 99, t => t === 'zucca_intagliata'), null)
+    uguale('se il livello non ha aperto niente della festa non si indica niente', fe('halloween', 0), null)
+    controlla('le carte indicate sono solo pezzi di quella festa', fe('halloween').ids.every(id => PEZZI[id].stagione === 'halloween') && fe('halloween').ids.includes('zucche_mucchio'))
+  }
   controlla('i prezzi sono quelli della 2D (6 e 10)', PEZZI.zucca_intagliata.prezzo === 6 && PEZZI.zucche_mucchio.prezzo === 10)
   controlla('non sono roba di un livello né sorprese della mongolfiera', !roba(2).pezzi.some(p => p.stagione) && !SORPRESE.includes('zucca_intagliata') && !SORPRESE.includes('zucche_mucchio'))
   const b = { monete: 500 }

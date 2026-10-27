@@ -42,6 +42,7 @@ Le voci aperte tecniche. Una riga ciascuna, e quando una si chiude si toglie. Qu
 - Spostata in [parita/](parita/README.md) (I20).
 - **I vicini.** Provati nel browser senza schermo vero e senza un build del sito spezzato: restano da guardare su un telefono (due contesti WebGL durante
   una visita) e da giocare i numeri del trattore e dei villaggi ([vicini.md](vicini.md)).
+- **Il carretto e il segnalino della festa** ([vicini.md](vicini.md), [stagioni.md](stagioni.md)) non sono visti su un telefono a 360 px: il foglio del carretto e il 🎃/🎄 sul tasto 🏗 sono provati solo col dito in Chrome senza schermo vero.
 - **Il telaio, la sartoria, la tintoria e lo zuccherificio non sono stati visti in scena né giocati**: i quattro modelli sono guardati solo dal catalogo 3D, i posti
   (−9,−4 · 6,4 · 6,0 · −9,4) e i prezzi (70 · 130 · 150 · 160) non sono stati provati con un bambino, e `integrazione/fattoria3d` non è stato eseguito.
   Il tetto dell'ultimo livello è salito da 5 h 30 a 7 ore ([livelli.md](livelli.md)): da giocare. La lana fa da ingrediente ma il foglio della macchina la mostra

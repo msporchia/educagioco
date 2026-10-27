@@ -48,7 +48,7 @@ non ha. Il nome `pasticceria` è già l'id del Pastificio 3D: la bottega ha l'id
 
 | id | cosa | 2D | 3D | pri |
 |---|---|---|---|---|
-| M22 | carretto del vicino | 🪙32, livello 8: 5 contro 1, roba con roba, per svuotare lo scomparto | 🟡 il trattore 🪙40, livello 7, porta a 4 villaggi ✳ | D10 |
+| M22 | carretto del vicino | 🪙32, livello 8: 5 contro 1, roba con roba, per svuotare lo scomparto | ✅ una vista del trattore 🪙40, livello 7 (non un pezzo a parte): «🛒 Il carretto» sulla mappa, stesso 5 → 1 della 2D (C15) | D10 |
 | M23 | cassa del vicino | ❌ | ✳ chiede 1–3 merci, dà esperienza e un dono, riapre dopo 10 minuti | D10 |
 | M24 | comprare dai vicini | ❌ | ✳ monete → roba, senza esperienza | D6 |
 | M25 | **il vendere** | niente si vende | ✅ vendere ai vicini dà esperienza e roba, mai monete | D5 |
