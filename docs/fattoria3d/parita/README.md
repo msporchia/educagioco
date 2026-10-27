@@ -31,8 +31,8 @@ vince il codice.
 | ricette | 57 | 46 (nessuna inventata) |
 | macchine | 14 | 14 |
 | recinti del cortile | 11 | 10 (pecore, galline, mucche, anatre, maiali, capre, conigli, alpaca, asini, arnie; la peschiera è la pesca) |
-| bestie di casa (si comprano, hanno bisogni) | 7 | 0 (4 compagni gratuiti che girano, non si curano) |
-| addobbi per le bestie | 12 (7 in vendita) | 0 (il guardaroba è del contadino) |
+| bestie di casa (si comprano, hanno bisogni) | 7 | 4 (beagle, gatto rosso, coniglio, pappagallo; bobtail, gatto bianco e nero e gatto nero sono i compagni gratis Watson, Sherlock e Pepe, che non si curano) |
+| addobbi per le bestie | 12 (7 in vendita) | 0 (il guardaroba è del contadino; i costumi si rimandano a prima di Natale, come modelli sostituiti) |
 | botteghe del paese | 4 | 4 (G7: [../botteghe.md](../botteghe.md)) |
 | clienti del banco | 16 (per mestiere) | 10 (per tutti) |
 | silos | 3 (scomparti da 8, ingrandibili) | 3 magazzini (scomparti da 8, +2, prezzo 2D), senza pezzi da comprare |
@@ -58,7 +58,7 @@ da trascinare con scorrimento ai bordi. Vanno tenuti? Decisione D10 ([decisioni.
 ## I file
 
 - [colture-e-catena.md](colture-e-catena.md) — campi, colture, tre fasi, silos, le 14 macchine, le 57 ricette, la fila, il mangime
-- [animali.md](animali.md) — i recinti, le bestie di casa e i loro bisogni, gli addobbi, i compagni
+- [animali.md](animali.md) — i recinti, le bestie di casa e i loro bisogni (fatte, G6: [../bestie-di-casa.md](../bestie-di-casa.md)), gli addobbi, i compagni
 - [commercio.md](commercio.md) — banco, botteghe, mongolfiera, carretto e vicini, il vendere
 - [livelli-ed-economia.md](livelli-ed-economia.md) — livelli, esperienza, prezzi, dove le monete escono, la durata
 - [mondo-e-stagioni.md](mondo-e-stagioni.md) — terra, ostacoli, decorazioni, acqua e pesca, stagioni, fiera
@@ -72,7 +72,7 @@ da trascinare con scorrimento ai bordi. Vanno tenuti? Decisione D10 ([decisioni.
 
 1. **T1** agganciare `statoDaCaricare` in `Gioco.vue` (la conversione `statoDa2D` c'è: [migrazione.md](migrazione.md)).
 2. ~~**L1–L3** una scaletta che regge mesi~~ fatta (G3): 70 livelli, ~201 ore; mancano le cose che riempiono i 22 livelli senza novità.
-3. **A1–A3** il cortile completo: 8 recinti, il pentolone, le bestie di casa con i loro bisogni.
+3. ~~**A1–A3** il cortile completo~~ fatto (G4, G5, G6: 10 recinti, il pentolone, le bestie di casa con i loro bisogni).
 4. **T7, T8, T19** misurare la 3D su un telefono vero, decidere cosa fa senza WebGL 2, eseguire le prove d'integrazione.
 5. ~~**I1, I2, I4** la guida~~ fatta (G2); ~~I3~~ «Come si fa» fatto (G2b).
 6. ~~**I17** «Ricomincia la fattoria» e il cestino per la 3D~~ fatto.

@@ -10,7 +10,7 @@ Metro: 🪙1 = dieci secondi di esercizio, 🪙6 = un minuto ([../../apprendimen
 | L1 | **numero di livelli** | 70 (`ULTIMO`); l'ultima cosa del catalogo al 69 | ✅ 70, gli stessi (G3) | – |
 | L2 | **durata** della scaletta (solo spesa) | ~202 ore | ✅ ~201 ore (la pesca sposta le soglie dal 58 di −258) | – |
 | L3 | formula del passo | `1,25·(8(n−1)² + 200(n−1))` + costo della roba produttiva | ✅ `sogliaDi2D` importata | – |
-| L4 | da dove viene l'esperienza | monete spese + consegne (banco, botteghe, mongolfiera) + bestie rimesse a posto | 🟡 monete spese (anche lotti, fino a 680 l'uno) + consegne, mongolfiera, vicini; niente bestie | P1 |
+| L4 | da dove viene l'esperienza | monete spese + consegne (banco, botteghe, mongolfiera) + bestie rimesse a posto | ✅ monete spese (anche lotti, fino a 680 l'uno, le bestie e i loro cibi) + consegne, mongolfiera, vicini, bestie rimesse a posto (⭐ un quindicesimo del prezzo) | – |
 | L5 | il livello non scende | ✅ | ✅ | – |
 | L6 | una cosa produttiva per livello | sì, con le coppie legate dalla catena | ✅ (`guastiDeiLivelli`) | – |
 | L7 | nessuna ricetta prima dei suoi ingredienti | `guastiDegliSblocchi` | ✅ `livelloDellaRicetta` | – |
@@ -54,7 +54,7 @@ La 2D ha **un pozzo con molti rubinetti**; la 3D ne ha pochi, e tutti una tantum
 | L16 | la terra | piazzola 45 × 1,38ⁿ | ✅ stesso prezzo cella per cella, quantità pareggiata (3D parte con 144 celle, 2D con 324), un po' di regalo | – |
 | L17 | gli ostacoli | sgomberare il bosco costa | ✅ albero 🪙3, sasso 🪙1 | – |
 | L18 | spostare / mettere via | 🪙1 | ✅ | – |
-| L19 | **bestie di casa**, cibo, coccole | 7 bestie 🪙75–120, cibo 5–14, coccole 1 | ❌ | P1 (A4–A8) |
+| L19 | **bestie di casa**, cibo, coccole | 7 bestie 🪙75–120, cibo 5–14, coccole 1 | ✅ le 4 che non sono compagni gratis, stessi prezzi e livelli (🪙75–120), cibo 5–14, coccole 🪙1; la spesa conta come esperienza ([../bestie-di-casa.md](../bestie-di-casa.md)) | – |
 | L20 | **decorazioni** | 217 voci da 🪙3 a 🪙95 | ✅ tutte e 217 (11 dei primi giri + 130 del G8 + 76 del G9: fiori, arredo, acqua, albero di Natale e fiera), stessi prezzo e livello via `VOCE`; non spostano la scala; **i livelli senza niente di nuovo sono 0** (erano 18; 22 sulla lettura del giro G8) ([../decorazioni.md](../decorazioni.md)) | – |
 | L21 | addobbi | 🪙6–24 | ❌ | P2 |
 

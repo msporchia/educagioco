@@ -88,4 +88,4 @@ Ogni migrazione e ogni nuova bottega 3D deve tenerne conto ([commercio.md](comme
 | C29 | becchime (galline), foraggio (mucche, pecore) | ✅ stesse quantità | – |
 | C30 | tre mangimi, tre bocche (mangime / pastone, foraggio, pentolone) | ✅ cinque mangimi (becchime, foraggio, verdure lesse, pastone, verdura fresca) e le loro bocche (G4); resta il `mangime` del mulino per i compagni (A6) | – |
 | C31 | l'erba medica | ✅ la più svelta, solo per il fienile (`mangime: true`) | – |
-| C32 | veterinaria che chiede il mangime | ❌ il mangime non si consegna in 3D | P2 con A6 |
+| C32 | veterinaria che chiede il mangime | ✅ solo lei lo chiede al banco (`VETERINARIA_VUOLE`, `nuovoOrdine`); gli altri clienti e la mongolfiera no ([../bestie-di-casa.md](../bestie-di-casa.md)) | – |

@@ -27,6 +27,7 @@ gli Asteroidi 3D e il Sotterraneo 3D: il 3D non si scrive a mano.
 | `modelli-pesca.js`, `pesci.js`, `pesca3d.js` | il molo e il porticciolo; i pesciolini (una `InstancedMesh`, tutto nello shader); il galleggiante, il filo e il cartello «Abbocca!»: [geografia-e-pesca.md](geografia-e-pesca.md). Il mare lontano è un piano solo in `terreno.js` (`_mare`) |
 | `dal-sotterraneo.js` | la casa di legno, il banco della guaritrice, la bacheca delle taglie e il cespuglio, presi dal Sotterraneo 3D (copie adattate: vedi sotto). Un `Cantiere` che unisce i pezzi in una mesh per materiale, colori nei vertici |
 | `compagni.js`, `modelli-compagni.js` | Watson e i gatti che girano per la fattoria, e il contadino con la sua faccia: il comportamento, i corpi e le pose ([compagni.md](compagni.md)) |
+| `modelli-bestie.js` | i corpi delle bestie di casa che si comprano: beagle, coniglio, pappagallo (il gatto rosso è un mantello di `creaGatto`), le pose dei piccoli, `creaBestia`; il `bestia:<id>` delle anteprime ([bestie-di-casa.md](bestie-di-casa.md)) |
 | `webgl.js` | `haWebGL2()`: si chiede senza caricare three |
 
 La **vista** (`Gioco.vue` e `viste/`) apre le finestre e dice cosa si vuole; la scena la chiama attraverso `ui`
@@ -256,6 +257,12 @@ Prima di questo non si vedeva niente: i ciuffi solo fuori dal mondo (sottili e d
   del 3D si chiede a richiesta, quindi senza WebGL 2 o senza entrarci non si scarica (e `vite.config.js` lo sa, come per
   il Sotterraneo 3D).
 - Il tempo è del tempo, non dei fotogrammi: `dt` capato a 0,05 s, le animazioni dal tempo, la crescita dall'orologio.
+
+### Le bestie di casa (G6)
+
+Quattro corpi in più, misurati dal catalogo 3D (`npm run catalogo3d:scheda -- --gioco fattoria --q beagle`): beagle 16 mesh / 4192 triangoli, coniglio 14 / 2584, gatto rosso 15 / 5168,
+pappagallo 13 / 1610. Comprandole tutte e quattro: **+58 mesh (draw call per passata, il doppio con l'ombra) e ~13 600 triangoli**, circa un altro gatto e mezzo a testa rispetto ai
+tre di prima; il LOD da lontano ([compagni.md](compagni.md)) vale per i pezzi `morbido`. Tre dei quattro arrivano oltre il livello 12, dove la scena ha già molti pezzi: da rimisurare su un telefono vero.
 
 ## Per provarlo
 

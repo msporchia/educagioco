@@ -222,4 +222,24 @@ nota('livelli 2D → 3D:', forme.join(' '))
   uguale('il dato 2D resta com\'era', JSON.stringify(profilo.fattoria.stato), JSON.stringify(dato2D))
 }
 
+// ── le bestie di casa (G6, docs/fattoria3d/bestie-di-casa.md): le quattro comprabili tornano in `casa`, le altre sono già compagni, mai monete ──
+{
+  const f = new Fattoria()
+  f.speso = 200
+  const bestie = [['cane-beagle', 'Birba'], ['coniglio', 'Saltino'], ['pappagallo', 'Coco'], ['gatto-giallo', 'Zenzero'], ['cane-bobtail', 'Watson'], ['gatto-tuxedo', 'Ombra'], ['gatto-nero', 'Fumo']]
+  for (const [chi, nome] of bestie) f.bestie.push({ chi, nome, x: 10, y: 10, pancia: 0.9, pelo: 0.9, gioco: 0.9, quando: T0 })
+  f.reclamati = {}
+  const s = statoDa2D(JSON.parse(JSON.stringify(f.serializza())), { ora: T0 })
+  controlla('una fattoria con bestie si converte', !!s)
+  uguale('le quattro comprabili stanno in casa', Object.keys(s.casa).sort().join(), 'beagle,coniglio,gatto_rosso,pappagallo')
+  uguale('col nome che avevano', [s.casa.beagle.nome, s.casa.coniglio.nome, s.casa.pappagallo.nome, s.casa.gatto_rosso.nome].join(), 'Birba,Saltino,Coco,Zenzero')
+  controlla('con i bisogni a metà', ['beagle', 'coniglio', 'pappagallo', 'gatto_rosso'].every(k => s.casa[k].pancia === 0.5 && s.casa[k].pelo === 0.5 && s.casa[k].gioco === 0.5))
+  uguale('senza il premio già preso', s.casa.beagle.premiato, false)
+  uguale('nessuna è «da regalare»: bobtail, gatto bianco e nero e gatto nero sono già compagni', Object.keys(s.daRegalare).filter(k => k.startsWith('bestia:')).length, 0)
+  controlla('il livello tiene la bestia più alta (pappagallo, 49)', livelloPer(s.esperienza) >= 49)
+  controlla('niente monete: nessun campo di monete nello stato', !('monete' in s) && !('coins' in s))
+  const f3 = new Fattoria3d({ stato: s, borsa: { quante: () => 0, paga: () => true } })
+  uguale('il motore le vede', f3.cura.tue().join(), 'beagle,coniglio,gatto_rosso,pappagallo')
+}
+
 riassunto('fattoria3d-migra')

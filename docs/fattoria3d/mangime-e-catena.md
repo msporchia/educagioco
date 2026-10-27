@@ -14,8 +14,8 @@ conti dei tempi), `dati/animali.js` e `dati/regole.js` (`PECORE.mangia`) per chi
 - **N → 1 e mai il contrario.** Due grani un becchime, due becchimi un uovo; due carote un foraggio, due foraggi un latte, un foraggio una lana.
 - **Il mangime c'è prima della bocca**, o insieme: una bestia che chiede una cosa che non si può ancora fare sarebbe un rifiuto senza uscita.
   `guastiDeiLivelli` lo controlla (`livelloDelMangime(k) ≤ livello del pezzo`).
-- **Il mangime non si consegna**: non lo chiede il banco, non sale in mongolfiera, non si baratta con i vicini (`mangime: true`, come in 2D
-  per la mongolfiera; in 2D il banco lo chiede la veterinaria, qui no, dichiarato sotto).
+- **Il mangime non si consegna**, salvo alla veterinaria: non lo chiede nessun altro cliente del banco, non sale in mongolfiera, non si baratta con i vicini (`mangime: true`; come
+  in 2D il banco lo chiede solo la veterinaria, C32: [bestie-di-casa.md](bestie-di-casa.md)).
 
 ## La catena
 
@@ -72,7 +72,7 @@ fienile. **Le deviazioni dichiarate** (`MANCANTI` nel test):
 | `mangime` (mulino) | non c'è | è il cibo del cane, del gatto e della peschiera: i compagni 3D non mangiano |
 | `merenda`, `caramelle`, `fiorume`, `fiorume_concime` | ci sono dal giro G5 | le arnie, gli asini e i fiori ([cortile-2.md](cortile-2.md)): `MANCANTI` è ora vuoto |
 | `pastone` | non è `mangime: true` | in 2D è il cibo del cane; qui nessuno lo mangia e resta una merce da banco |
-| veterinaria chiede il mangime | no | in 3D il mangime non si consegna |
+| veterinaria chiede il mangime | sì (G6) | solo lei, come in 2D ([bestie-di-casa.md](bestie-di-casa.md)) |
 | erba medica: il giardiniere chiede `fieno` | no | idem |
 
 Il **fienile di scena** (`FISSI`, 4×3, `creaFienile`) resta com'è: il nuovo `fienile` è un edificio vero (3×3, `creaFienileMacchina`) con un posto
