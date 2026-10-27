@@ -28,7 +28,8 @@ export async function prepara({ contenitore, opz = {} }) {
   const orig = { ...ACCESI }
   const gl = tela.canvas.getContext('webgl2')
   const lv = leve(pittore.scena)
-  const corsa = corsaDelloScontro(1)
+  const quanti = opz.mostri || 1   // la scala della verifica ne vuole 3 (veri/scala.js)
+  const corsa = corsaDelloScontro(quanti)
   pittore.misura()
   pittore.mostra({ corsa, orologio: 0, fx: null })
   // il giro del pittore parte con quello della misura (`avvia`, fra i due requestAnimationFrame di veri.js): i mostri e gli effetti alla prima scena
@@ -36,7 +37,7 @@ export async function prepara({ contenitore, opz = {} }) {
   pittore.scena.traverse(o => { if (o.isSpotLight && !cono) cono = o })
   conoOmbra = !!(cono && cono.castShadow)
   const parti = () => setInterval(() => {
-    try { pittore.prova(k % 2 ? 'mostro' : COLPI[(k >> 1) % COLPI.length], 0) } catch (e) { /* un effetto che non c'è */ }
+    try { pittore.prova(k % 2 ? 'mostro' : COLPI[(k >> 1) % COLPI.length], k % quanti) } catch (e) { /* un effetto che non c'è */ }
     k++
   }, OGNI)
   let senzaNormali = false
@@ -53,7 +54,7 @@ export async function prepara({ contenitore, opz = {} }) {
     conti() { const g = pittore.grafica(); return { ch: g.chiamate, tri: g.triangoli, programmi: g.programmi, geo: g.memoria.geometries, tex: g.memoria.textures } },
     avvia: () => pittore.avvia(),
     async scena(s) {
-      if (!pronta) { pronta = true; await finche(() => pittore.grafica().mostri3d >= 1 && pittore.palco, 8000); colpi = parti() }
+      if (!pronta) { pronta = true; await finche(() => pittore.grafica().mostri3d >= quanti && pittore.palco, 8000); colpi = parti() }
       mettiElementi(SCENE_ELEMENTI.sot.elementi, new Set(s.accesi), orig, speciale)
     },
     via() {

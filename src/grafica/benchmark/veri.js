@@ -5,7 +5,7 @@
 import { proveCpu } from './prove.js'
 import { eventiContesto } from './veri/tela.js'
 import { tappeDegliElementi } from './veri/elementi-dati.js'
-import { GIRI_AB, VARIANTI, idAB, opzE } from './veri/ab.js'
+import { sceneDellaScala, MOSTRI_SCALA } from './veri/scala.js'
 
 export const SOGLIA = 33          // ms di lavoro al p95: oltre, a scatti (30 fps)
 export const SALTA_OLTRE = 400    // una scena oltre questo al p95: il resto della sua serie che cresce non si misura (il telefono si pianterebbe)
@@ -96,18 +96,17 @@ export const TAPPE = [
 ]
 export const QUANTE = TAPPE.reduce((n, t) => n + t.scene.length, 0)
 /**
- * La VERIFICA (il tasto «Avvia coi modelli veri», ~5 minuti, `stimaVerifica`): solo quello che serve a decidere, con i ms messi contro l'ultima
+ * La VERIFICA (il tasto «Avvia coi modelli veri», ~4 minuti, `stimaVerifica`): solo quello che serve a decidere, con i ms messi contro l'ultima
  * misura vera (`veri/riferimento.js`). Le serie lunghe (triangoli, chiamate, luci, pixel, roba, fattoria, 24 persone, 16 mostri) sono già
- * misurate: stanno in `TAPPE`, le «Misure complete». Il riferimento del calore è quello fisso che ogni gruppo ha già, più la A rifatta ogni giro.
+ * misurate: stanno in `TAPPE`, le «Misure complete». Il riferimento del calore è quello fisso che ogni gruppo ha già; la scala rifà il suo gradino 1.
  */
 export const TAPPE_VERIFICA = [
   // l'ingresso: il primo attacco col riscaldamento acceso e spento, un giro solo (le tre ripetizioni stanno nelle misure complete)
   { gruppo: 'ingresso', carica: INGRESSO.carica, opz: { giri: 1 }, tempi: 'verifica', scene: INGRESSO.scene.filter(s => s.id === 'ing-sot' || s.id === 'ing-sot-x').map(s => ({ ...s, stima: 18 })) },
-  // l'A/B (veri/ab.js): la stessa scena (1 mostro con gli effetti), un Sotterraneo ciascuna, in giri alternati A B C D E (un gruppo per giro: il
-  // riferimento del calore si rifà in mezzo); la LETTURA tiene la mediana delle differenze contro la A dello stesso giro
-  ...Array.from({ length: GIRI_AB }, (_, g) => g + 1).flatMap(r => VARIANTI.map(v => ({
-    gruppo: `confronto ${r}`, carica: discese, opz: v.opz || (ris => opzE(ris)), tempi: 'verifica',
-    scene: [{ id: idAB(v.k, r), nome: `${v.nome} (giro ${r})`, mostri: 1, colpi: true, stima: 13 }] }))),
+  // la scala (veri/scala.js): lo scontro dal fondo piatto alla scena intera, un gradino alla volta, nello stesso Sotterraneo
+  { gruppo: 'scala', carica: () => import('./veri/elementi-sot.js'), opz: { mostri: MOSTRI_SCALA }, tempi: 'verifica', scene: sceneDellaScala() },
+  // lo scontro com'è, contro l'ultima misura vera (veri/riferimento.js)
+  { gruppo: 'discese', carica: discese, tempi: 'verifica', scene: [{ id: 'sot-1', nome: '1 mostro con gli effetti', mostri: 1, colpi: true, stima: 13 }] },
   { gruppo: 'sopra', carica: () => import('./veri/sopra.js'), tempi: 'verifica', scene: [
     { id: 'per-8', nome: '8 persone', persone: 8, stima: 10 }, { id: 'mos-8', nome: '8 mostri sul prato', mostri: 8, stima: 10 },
   ] },
@@ -273,7 +272,7 @@ async function riferimento({ contenitore, fermo, corto, progresso, k, tot, raffr
  * → { tipo: 'veri', info, js, risultati, gruppi, avvisi, contesto, schermo, dpr, fascia, fermata }
  */
 export async function eseguiVeri({ contenitore, progresso = () => {}, fermo = () => false, corto = false, solo = null, fascia = null, raffredda = null, completa = false,
-                                   tetti = TETTO, tappe: proprie = null }) {
+                                   tetti = TETTO, tappe: proprie = null, parziale = null }) {
   if (raffredda == null) raffredda = completa || solo ? RAFFREDDA : RAFFREDDA_BREVE
   const tempi = corto ? TEMPI.corto : TEMPI.normale
   const info = infoGpuVeri()
@@ -300,6 +299,13 @@ export async function eseguiVeri({ contenitore, progresso = () => {}, fermo = ()
   const persi0 = eventiContesto.persi, ripresi0 = eventiContesto.ripresi
   const prima = await ambiente()
   let k = 0, ultimo = null, rifOra = null
+  const verifica = !completa && !(solo || []).some(p => /^el(ementi|-)/.test(p))
+  const dati = (dopo, extra) => ({ tipo: 'veri', verifica, info, risultati, gruppi, fascia, ambiente: { prima, dopo }, avvisi: [...avvisi].map(([m, n]) => ({ m, n })).sort((a, b) => b.n - a.n),
+    contesto: { persi: eventiContesto.persi - persi0, ripresi: eventiContesto.ripresi - ripresi0 },
+    schermo: `${Math.round(window.innerWidth)}x${Math.round(window.innerHeight)}`, dpr: window.devicePixelRatio || 1, ...extra })
+  // a ogni scena misurata, quello che c'è fin lì (`parziale`): se il telefono si pianta le scene fatte restano (docs/core/vecchio-telefono-veri.md)
+  let salvate = 0
+  const salva = () => { if (!parziale || risultati.length === salvate) return; salvate = risultati.length; try { parziale(dati(prima, { js: null, fermata: true, aMeta: [risultati.length, tot] })) } catch (e) { /* si salva la prossima */ } }
   const rifs = []
   try {
     for (const tappa of tappe) {
@@ -339,7 +345,7 @@ export async function eseguiVeri({ contenitore, progresso = () => {}, fermo = ()
       }
       const chiudi = () => { if (giro) giro.ferma(); giro = null; try { if (f) f.via() } catch (e) { /* è già andata */ } f = null }
       await apri()
-      if (!f) { for (const s of tappa.scene) { risultati.push({ ...riga(s, tappa), errore }); k++ } continue }
+      if (!f) { for (const s of tappa.scene) { risultati.push({ ...riga(s, tappa), errore }); k++ } salva(); continue }
       try {
         for (const s of tappa.scene) {
           if (fermo()) break
@@ -373,6 +379,7 @@ export async function eseguiVeri({ contenitore, progresso = () => {}, fermo = ()
             risultati.push({ ...riga(s, tappa), errore: breve(e) })
             if (scaduto(e)) scaduta = true
           }
+          salva()
         }
       } finally { chiudi() }
       await new Promise(r => setTimeout(r, corto ? 30 : 250))
@@ -390,10 +397,7 @@ export async function eseguiVeri({ contenitore, progresso = () => {}, fermo = ()
     for (const g of Object.values(gruppi)) if (g.rif) g.rif.deriva = Math.round(g.rif.ms / fresco * 100) / 100
   }
   const js = fermo() || (solo && !solo.includes('js')) ? null : proveCpu()
-  const dopo = await ambiente()
-  return { tipo: 'veri', verifica: !completa && !(solo || []).some(p => p.startsWith('elementi')), info, js, risultati, gruppi, fascia, ambiente: { prima, dopo }, avvisi: [...avvisi].map(([m, n]) => ({ m, n })).sort((a, b) => b.n - a.n),
-           contesto: { persi: eventiContesto.persi - persi0, ripresi: eventiContesto.ripresi - ripresi0 },
-           schermo: `${Math.round(window.innerWidth)}x${Math.round(window.innerHeight)}`, dpr: window.devicePixelRatio || 1, fermata: fermo() }
+  return dati(await ambiente(), { js, fermata: fermo() })
 }
 
 const riga = (s, t) => ({ id: s.id, gruppo: t.gruppo, nome: s.nome, ...(s.serie ? { serie: s.serie, quanti: s.quanti } : {}), ...(s.el ? { el: s.el } : {}) })

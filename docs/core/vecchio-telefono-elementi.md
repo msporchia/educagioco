@@ -7,9 +7,8 @@ solo che giri e che chiamate, triangoli e shader per elemento abbiano senso.
 
 ## Sul telefono
 
-Zona dei grandi → Impostazioni → Avanzate → Misura questo telefono → **Chi pesa**. Un quarto d'ora circa; il resoconto si manda
-come gli altri (al ricevitore da solo se la pagina viene da `strumenti/ricevi-log.mjs`, se no «Manda» a pezzi o «Copia»), e
-l'ultimo resta («L'ultima «chi pesa»», `store/benchmark.js` chiave `elementi`).
+Dal 27/10 non ha più un tasto: sul Redmi Note 7 si piantava a metà (138 scene) senza lasciare niente. Sul telefono c'è la **scala**
+della verifica ([vecchio-telefono-veri.md](vecchio-telefono-veri.md#la-scala)), che usa la stessa scena e gli stessi elementi in salita.
 
 Sul computer imitato: `node strumenti/vecchio-telefono.mjs benchmark --veri --solo elementi` (o `--solo elementi-sot` per una scena).
 I ms del computer non valgono (carico, SwiftShader): conta la struttura.
@@ -110,5 +109,5 @@ se si ferma tutta la pagina lo scrive il CSS, perché il battito che ogni mezzo 
 `grafica/elementi3d.js`; `grafica/benchmark/veri/elementi-dati.js` (le scene, `LEVE`, `SEMPLICE`, `sceneDegliElementi`,
 `tappeDegliElementi`), `elementi-sot.js`, `elementi-sopra.js` (`mettiElementi`); `TAPPE_ELEMENTI` in `veri.js` (solo se `solo` li
 chiede: per id o per gruppo); `grafica/benchmark/log-elementi.js` (`righeElementi`, `tabellaElementi`, `letturaElementi`).
-Nei test: `[data-azione="benchmark-elementi"]`, `[data-azione="benchmark-ultima"][data-tipo="elementi"]`. `unita/elementi-3d`,
+Nei test: `window.__benchmarkSolo` con gli id `el-…` e `[data-azione="benchmark-veri"]`. `unita/elementi-3d`,
 `unita/benchmark-elementi`, `integrazione/benchmark-elementi` (qualche scena per scena, corte: il tutto spento a 0 chiamate).

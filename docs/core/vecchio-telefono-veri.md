@@ -8,52 +8,52 @@ giocare il bambino: quanti mostri nello scontro, quante persone sopra, quanti ed
 ## Sul telefono
 
 Zona dei grandi (codice) → **Impostazioni** → tendina **Avanzate** → **Misura questo telefono** → **Avvia coi modelli veri** (la
-**verifica**, 20 scene e ~5 minuti: [La verifica](#la-verifica)) oppure **Misure complete (lunga)**.
+**verifica**, 19 scene e ~4 minuti: [La verifica](#la-verifica)) oppure **Misure complete (lunga)**.
 Le complete durano un quarto d'ora circa (57 scene, e fra un gruppo e l'altro 8 s di schermo nero perché il telefono si raffreddi): la barra in fondo dice a
 che scena si è, **Interrompi** la ferma e tiene il resoconto di quello che c'è. Le scene si vedono mentre girano: se una luce, un
 colore o la nebbia sembrano sbagliati, alla fine c'è un campo **Note** che finisce nel resoconto. Lo schermo non deve spegnersi
 (niente wake lock nel progetto: lo dice l'avviso). Alla fine: **Manda** (o «Manda 1/2», «Manda 2/2» se il resoconto non sta in un
 invio), **Copia**, **Rifai**. L'ultimo resoconto di ognuna delle due prove resta sul telefono (`store/benchmark.js`, chiave
-`benchmark`, fuori dai profili): «L'ultima coi modelli veri» lo riapre per mandarlo dopo.
+`benchmark`, fuori dai profili): «L'ultima coi modelli veri» lo riapre per mandarlo dopo. **Si salva a ogni scena** (`parziale` di
+`eseguiVeri`): se il telefono si pianta, l'ultima ha le scene fatte fin lì, con «A METÀ: N scene di M» in testa.
 
 ## La verifica
 
 Il tasto «Avvia coi modelli veri» serve a **decidere**: se una modifica ha migliorato qualcosa e quale leva conviene. Non ripete quello che i due
 log del Note 7 già dicono (il pavimento, triangoli, chiamate, luci, pixel, la roba, la fattoria, 24 persone, 16 mostri): quello sta nelle
-**Misure complete**. `TAPPE_VERIFICA` in `veri.js`, **20 scene, circa 5 minuti** (`stimaVerifica()`: i secondi attesi per scena più, a ogni
+**Misure complete**. `TAPPE_VERIFICA` in `veri.js`, **19 scene, circa 4 minuti** (`stimaVerifica()`: i secondi attesi per scena più, a ogni
 gruppo, la pausa di 4,5 s, il riferimento del calore e il caricamento; la scrive il foglio iniziale; sopra gli 8 minuti si tagliano scene):
 
 | gruppo | scene |
 |---|---|
 | `ingresso` | `ing-sot`, `ing-sot-x`: il primo attacco col riscaldamento acceso e spento, **un giro solo** (`opz.giri`; le tre ripetizioni e il mondo di sopra sono nelle complete) |
-| `confronto 1…3` | l'A/B: 5 varianti × 3 giri, vedi sotto |
+| `scala` | `scala-0`…`scala-11` e `scala-ancora`: lo scontro con 3 mostri un gradino alla volta, vedi sotto |
+| `discese` | `sot-1`: lo scontro com'è (1 mostro con gli effetti), contro l'ultima misura vera |
 | `sopra` | `per-8` (8 persone), `mos-8` (8 mostri sul prato), `zaino-15` (15 anteprime) |
 
 Ogni scena dura al massimo ~4,5 s dopo un rodaggio di ~2 s (`TEMPI.verifica`); fra i gruppi 4,5 s di schermo nero (`RAFFREDDA_BREVE`, 8 s
 nelle complete). Nessuna scena è un'altra volta uguale: lo scontro con 8 mostri, con 4 e l'eroe da solo non servono ai confronti e sono tolti.
 
-### L'A/B
+### La scala
 
-La stessa scena (`veri/ab.js`: 1 mostro con gli effetti, la fascia del telefono) in cinque varianti, **in giri alternati** A B C D E, A B C D E,
-A B C D E (un gruppo per giro: il riferimento del calore si rifà in mezzo), così il calore non si scambia per il merito di una leva:
+Lo scontro con 3 mostri (`veri/scala.js`, la scena di `veri/elementi-sot.js` con `opz.mostri`) costruito **in salita**, in un Sotterraneo
+solo: il gradino 0 non disegna niente (il giro del gioco), l'1 pavimento e pareti con la luce fissa (l'emisferica), poi colonne e arredo,
+rilievo, torcia, fuochi e fiamme, lampi e palco, nebbia, eroe e mostri, particelle, effetti delle abilità, ombra e passaggio finale.
+Ogni gradino accende i suoi pezzi sopra quelli di prima, nella fascia del telefono (un pezzo che la fascia spegne resta spento). Il
+**salto** da un gradino all'altro è il costo di quel pezzo dentro la scena vera, JS e GPU a parte; in fondo il gradino 1 si rifà
+(`scala-ancora`) e la differenza è il **rumore**. La LETTURA ha una riga per gradino e i tre gradini più cari sopra il rumore.
 
-- **A** com'è oggi (la prima, `sot-1`, è quella col riferimento della misura vera); **B** le semplificazioni riaccese (`riaccendi`: ombre,
-  nebbiaFitta, quantaPolvere, come `&riaccendi=`); **C** senza rilievo (`&spegni=rilievo`); **D** senza pelle; **E** tutte le leve buone insieme,
-  scelte quando tocca sui giri già fatti (`opzE`: le leve la cui mediana toglie ms). `lucePerVertice` è un'altra variante di questa lista
-  (un'altra mano: una riga in `VARIANTI` e una in `leveDa`).
-- Di ogni variante la **mediana delle differenze contro la A dello stesso giro** e la **dispersione** (min e max): è **significativa se la
-  mediana la supera**, altrimenti «dentro il rumore (mediana, min, max)»: mai una soglia fissa in ms o in %, mai «non serve» da solo.
-  Con un giro solo non si sa. JS e GPU a parte.
-- La LETTURA: oggi (con quanto balla fra i giri), le semplificazioni «tolgono N ms», la pelle, il rilievo, E misurata; poi la **pila**
-  delle leve che tolgono ms, dalla più grossa (A, A − leva 1, A − leva 1 − leva 2: somme delle mediane), e **quanti ms mancano ai 33**, con
-  JS (bersaglio ≤25) e GPU (≤28) a parte.
+- **In salita, dal semplice**: se il telefono si pianta al gradino 8, i primi sette sono già salvati e dicono qualcosa.
+- Provato: un elemento da solo su scena vuota (Chi pesa, `+k`) non dice il costo vero (una luce senza niente da illuminare è gratis),
+  tolto dalla scena intera (`-k`) si confonde con gli altri; l'A/B in giri alternati provava solo le leve scelte in anticipo.
+- Un gradino caro vuole la sua versione semplice (`SEMPLICE` in `elementi-dati.js`): si fa solo dove il salto è grosso.
 
 ### Il confronto con la misura vera
 
 Sotto ogni scena col riferimento (`sot-1`, `per-8`, `mos-8`, `zaino-15`) la riga **«rispetto all'ultima misura vera (22/10): −12 ms (−11%),
 meglio; p95 −20, js −3 gpu −9»** (lo zaino: «−375 ms in tutto, fotogramma più lungo −233 ms»; sotto 3 ms o il 5% è «come prima»), e in testa
 alla LETTURA **MIGLIORATO** / **NON MIGLIORATO** con JS e GPU separati e la somma delle differenze. Attenzione: il log del 22/10 è «senza
-semplificazioni, senza pelle»: da oggi la A le ha, quindi il merito di ognuna lo dice l'A/B, non quel confronto. Il riferimento è
+semplificazioni, senza pelle»: da oggi lo scontro le ha, quindi il merito di un pezzo lo dice la scala, non quel confronto. Il riferimento è
 `veri/riferimento.js` (ms, p95, js, gpu e deriva del calore del secondo log vero, `2026.10.22.1802-7505ba6f`; il confronto è fra ms tolto il
 calore); quando c'è una misura vera nuova da prendere per buona si cambiano `quando`, `versione` e le scene. La riga DATI ha `vf`
 (la versione del riferimento). Le **Misure complete** (`TAPPE`, il secondo tasto, `completa` in `eseguiVeri`) sono le scene qui sotto, tutte
@@ -204,16 +204,16 @@ il più alto di un campione ogni 15 fotogrammi. Come ordine di grandezza, SwiftS
 ## Il codice
 
 `grafica/benchmark/veri.js` (le scene, il giro dei fotogrammi, il calore, la GPU, gli avvisi), `veri/discese.js`, `sopra.js`,
-`zaino.js`, `roba.js`, `fattoria.js`, `base.js`, `ingresso.js` (un gruppo ciascuno, caricati con `import()` quando tocca a loro), `veri/moltiplica.js`
+`zaino.js`, `roba.js`, `fattoria.js`, `base.js`, `ingresso.js`, `elementi-sot.js` (un gruppo ciascuno, caricati con `import()` quando tocca a loro), `veri/moltiplica.js`
 (le leve: triangoli, chiamate, materiali semplici, normal map, particelle), `veri/tela.js`, `veri/leggendario.js` (il corredo del
-cheat); il log in `grafica/benchmark/log-veri.js` (e `log-ingresso.js`) (`componiVeri`, `letturaVeri`, `limite`, `corretta`, `spezza`, `conNote`). Nel sito
+cheat), `veri/scala.js` (i gradini e la loro LETTURA); il log in `grafica/benchmark/log-veri.js` (e `log-ingresso.js`) (`componiVeri`, `letturaVeri`, `limite`, `corretta`, `spezza`, `conNote`). Nel sito
 spezzato `vite.config.js` tiene `grafica/benchmark/` fuori dal file `comune`: si carica a richiesta, e i modelli veri tirano dentro i giochi.
 
 Nei test: `[data-azione="benchmark-veri"]`, `[data-benchmark-palco]` (dove girano le scene), `[data-azione="benchmark-interrompi"]`,
 `[data-benchmark-note]`, `[data-azione="benchmark-manda"][data-parte]`, `[data-azione="benchmark-ultima"][data-tipo]`;
 `window.__benchmarkVeri` (i dati), `window.__benchmarkSolo` (gli inizi degli id), `window.__benchmarkCorto` (scene di pochi decimi,
 senza pausa), `window.__benchmarkRaffredda` (i ms di pausa fra i gruppi: lo strumento la toglie quando tara).
-`[data-azione="benchmark-veri-lunga"]` (le misure complete); `unita/benchmark-veri` (il log, il limite, gli invii, le leve, il confronto con la misura vera), `unita/benchmark-ingresso` (le righe e la LETTURA dell'ingresso),
+`[data-azione="benchmark-veri-lunga"]` (le misure complete); `unita/benchmark-veri` (il log, il limite, gli invii, le leve, la scala, la prova a metà, il confronto con la misura vera), `unita/benchmark-ingresso` (le righe e la LETTURA dell'ingresso),
 `integrazione/benchmark-veri` (una scena per gruppo e tutto l'ingresso in due giri, a schermo; poi la verifica compatta intera, in tempi corti).
 
 ## Mandare il resoconto al computer
@@ -237,13 +237,13 @@ Impostazioni → Avanzate → Misura questo telefono.
 
 ## Dove eravamo rimasti (la misura per elemento, 23/10)
 
-**Fatto.** La prova «Chi pesa» c'è: [vecchio-telefono-elementi.md](vecchio-telefono-elementi.md) (tasto in «Misura questo
-telefono», le scene delle discese, del mondo di sopra, della fattoria 3D e degli Asteroidi, la tabella, la LETTURA, le leve,
+**Fatto.** La prova «Chi pesa» c'è: [vecchio-telefono-elementi.md](vecchio-telefono-elementi.md) (dal 27/10 senza tasto: sul
+Note 7 si piantava a metà; al suo posto la scala della verifica; le scene delle discese, del mondo di sopra, della fattoria 3D e degli Asteroidi, la tabella, la LETTURA, le leve,
 `--solo elementi` nello strumento, `unita/benchmark-elementi`, `integrazione/benchmark-elementi`). Le leve semplici (`ombre`,
 `rilievo`, `nebbiaFitta`, `quantaPolvere:0.4` nel Sotterraneo; `erba: false` nella fattoria) sono pronte e la prova le confronta;
 gli scatti prima/dopo sono in `tmp/scatti/leve-discese-*.png` e `leve-sopra-*.png` (fascia bassa, `&spegni=` di ogni leva).
 
 **Manca.**
-1. Il resoconto «Chi pesa» del Redmi Note 7, e da lì quali leve vanno in `SPEGNI_BASSA` (`store/qualita.js`) e nel preset
+1. La scala del Redmi Note 7, e da lì quali leve vanno in `SPEGNI_BASSA` (`store/qualita.js`) e nel preset
    `basso` della fattoria: dopo il sì di Marco sugli scatti.
 2. Per gli elementi più cari senza leva (secondo la tabella): la semplificazione scritta in `SEMPLICE` (`elementi-dati.js`).

@@ -15,7 +15,7 @@ const props = defineProps({ modulo: { type: String, required: true } })
 const emit = defineEmits(['chiudi'])
 
 const stato = ref('pronto')            // pronto | corre | fatto | guasto
-const modo = ref('sintetico')          // sintetico | veri | elementi (chi pesa, un elemento alla volta)
+const modo = ref('sintetico')          // sintetico | veri
 const avanza = ref({ i: 0, n: 1, nome: '' })
 const log = ref('')
 const note = ref('')
@@ -69,13 +69,16 @@ async function avvia(che = modo.value, lunga = false) {
     avanza.value = { i, n, nome }
   }
   try {
-    if (che === 'veri' || che === 'elementi') {
+    if (che === 'veri') {
       const { eseguiVeri } = await import('../../grafica/benchmark/veri.js')
-      // chi pesa: le scene degli elementi (docs/core/vecchio-telefono-elementi.md), una prova a parte
-      const solo = window.__benchmarkSolo || (che === 'elementi' ? ['elementi'] : null)
+      // chi pesa (docs/core/vecchio-telefono-elementi.md) non ha più un tasto: solo dal computer, con `window.__benchmarkSolo`
+      const solo = window.__benchmarkSolo || null
+      // a ogni scena il log fin lì diventa «l'ultima»: se il telefono si pianta, alla riapertura c'è quello che è stato misurato
+      const m = await meta()
+      const parziale = d => { salvaMisura(che, componiVeri(d, m)).catch(() => {}) }
       const dati = await eseguiVeri({ contenitore: palco.value, corto: !!window.__benchmarkCorto, solo, fascia: fasciaAttiva(), completa: lunga,
         ...(window.__benchmarkRaffredda != null ? { raffredda: window.__benchmarkRaffredda } : {}),
-        progresso, fermo: () => fermare })
+        progresso, fermo: () => fermare, parziale })
       window.__benchmarkVeri = dati
       log.value = componiVeri(dati, await meta())
     } else {
@@ -135,10 +138,11 @@ async function copia() {
       <p>Tieni lo schermo acceso e non toccare niente.</p>
       <button type="button" class="bottone" data-azione="benchmark-avvia" @click="avvia('sintetico')">Avvia la misura</button>
       <h3>Con i modelli veri del gioco</h3>
-      <p>23 scene, circa 6 minuti: il primo attacco in un piano col riscaldamento acceso e spento; lo scontro con 1 mostro e gli
-        effetti in sei varianti, tre giri alternati (come oggi, con le semplificazioni riaccese, senza rilievo, senza pelle, senza la luce per vertice,
-        con le leve buone insieme); il mondo di sopra con 8 persone e 8 mostri; lo zaino. Ogni scena dice com'è andata rispetto all'ultima misura vera, e alla fine
-        il resoconto dice quanto toglie ogni leva (con la dispersione fra i giri) e quanti ms mancano ai 33.</p>
+      <p>19 scene, circa 4 minuti: il primo attacco in un piano col riscaldamento acceso e spento; la scala, cioè lo scontro con 3 mostri
+        costruito un pezzo alla volta (prima niente, poi pavimento e pareti con una luce fissa, poi colonne, rilievo, torcia, fuochi, nebbia,
+        mostri, particelle, effetti, ombra); lo scontro com'è; il mondo di sopra con 8 persone e 8 mostri; lo zaino. Il resoconto dice quanto
+        aggiunge ogni gradino della scala e quali sono i più cari. Ogni scena si salva appena misurata: se il telefono si pianta, riapri questa
+        pagina e «L'ultima coi modelli veri» ha le scene fatte fin lì.</p>
       <p><b>Guarda lo schermo</b>: se un colore, una luce o la nebbia ti sembrano strani, alla fine scrivilo nelle note.
         Tieni il telefono acceso e in carica se puoi: lo schermo non deve spegnersi.</p>
       <button type="button" class="bottone" data-azione="benchmark-veri" @click="avvia('veri')">Avvia coi modelli veri</button>
@@ -146,15 +150,9 @@ async function copia() {
       <p>Un quarto d'ora circa (con pause a schermo nero perché il telefono non si scaldi): le serie lunghe, cioè sempre più mostri, persone, edifici,
         triangoli, chiamate, luci e pixel, la roba, e la stessa scena con una cosa tolta alla volta, per sapere cosa la rallenta.</p>
       <button type="button" class="bottone" data-azione="benchmark-veri-lunga" @click="avvia('veri', true)">Misure complete (lunga)</button>
-      <h3>Chi pesa</h3>
-      <p>Una ventina di minuti: lo scontro del Sotterraneo, il villaggio di sopra, la fattoria 3D e gli Asteroidi con tutto spento, poi una cosa accesa alla volta
-        (pavimento, muri, luci, nebbia, mostri…) e una tolta alla volta, e la scena com'è contro la scena semplificata. Alla fine una
-        tabella dice chi pesa di più e come si semplifica.</p>
-      <button type="button" class="bottone" data-azione="benchmark-elementi" @click="avvia('elementi')">Chi pesa</button>
-      <p v-if="ultime.sintetico || ultime.veri || ultime.elementi" class="riga">
+      <p v-if="ultime.sintetico || ultime.veri" class="riga">
         <button v-if="ultime.sintetico" type="button" class="bottone chiaro" data-azione="benchmark-ultima" data-tipo="sintetico" @click="rivedi('sintetico')">L'ultima a scene ({{ quando(ultime.sintetico.quando) }})</button>
         <button v-if="ultime.veri" type="button" class="bottone chiaro" data-azione="benchmark-ultima" data-tipo="veri" @click="rivedi('veri')">L'ultima coi modelli veri ({{ quando(ultime.veri.quando) }})</button>
-        <button v-if="ultime.elementi" type="button" class="bottone chiaro" data-azione="benchmark-ultima" data-tipo="elementi" @click="rivedi('elementi')">L'ultima «chi pesa» ({{ quando(ultime.elementi.quando) }})</button>
       </p>
     </div>
     <div v-else-if="stato === 'corre'" class="carta piccola" data-benchmark-corre>

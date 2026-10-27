@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════
    CHI PESA, UN ELEMENTO ALLA VOLTA (docs/core/vecchio-telefono-elementi.md)
 
-   Dalla zona dei grandi parte «Chi pesa»: qualche scena per scena grande
+   Dalla zona dei grandi, con le scene scelte da `__benchmarkSolo`: qualche scena per scena grande
    (scene corte), tutto spento che non disegna niente, un elemento da
    solo e tolto, le leve; il resoconto ha la tabella e la LETTURA.
    tempo: 300
@@ -25,7 +25,7 @@ for (const c of '0000') await page.click(`.tasto >> text="${c}"`)
 await page.click('[data-scheda="impostazioni"]')
 await apriTendine(page)
 await page.click('[data-azione="benchmark"]')
-await page.click('[data-azione="benchmark-elementi"]')
+await page.click('[data-azione="benchmark-veri"]')   // «Chi pesa» non ha un tasto: le scene le sceglie `__benchmarkSolo`
 // il lettore in diretta: fps e secondi nella scena, in alto a sinistra e nel riquadro (il telefono non sembra fermo)
 await page.waitForSelector('[data-benchmark-lettore]', { timeout: 5000 })
 await page.waitForFunction(() => /\d+ fps · [1-9]\d* s in questa scena/.test(document.querySelector('[data-benchmark-lettore]').textContent), null, { timeout: 30000 })
