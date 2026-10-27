@@ -113,6 +113,8 @@ async function quantiCon(espr, fn = 'function () { return this.length }') {
   return n.value
 }
 async function misura(dove) {
+  // la console tiene vivo quello che vi si è scritto (un avviso con un oggetto): non è del gioco, si butta prima di contare
+  await cdp.send('Runtime.discardConsoleEntries').catch(() => {})
   await page.evaluate(async () => { for (let i = 0; i < 2; i++) { window.gc(); await new Promise(r => setTimeout(r, 120)) } })
   const p = await page.evaluate(async () => {
     const C = window.__perdite, f0 = C.fot, r0 = C.raf
@@ -120,7 +122,10 @@ async function misura(dove) {
     const fot = Math.max(1, C.fot - f0), S = window.__sotterraneo3d, A = window.__anteprime3d
     let mesh = 0, figli = 0
     const sc = S && S.scena
-    if (sc) { figli = sc.children.length; sc.traverse(o => { if (o.isMesh || o.isPoints || o.isLine || o.isSprite) mesh++ }) }
+    // le mesh per elemento della scena (grafica/elementi3d.js, `userData.elemento3d`, ereditato dai figli): dice chi cresce
+    const per = {}
+    const conta = (o, e) => { e = (o.userData && o.userData.elemento3d) || e; if (o.isMesh || o.isPoints || o.isLine || o.isSprite) { mesh++; per[e || '?'] = (per[e || '?'] || 0) + 1 } for (const c of o.children) conta(c, e) }
+    if (sc) { figli = sc.children.length; conta(sc, null) }
     const g = S && S.grafica ? S.grafica() : null, a = A && A.stato ? A.stato() : null
     return {
       heapMB: performance.memory ? performance.memory.usedJSHeapSize / 1048576 : null, totMB: performance.memory ? performance.memory.totalJSHeapSize / 1048576 : null,
@@ -128,7 +133,7 @@ async function misura(dove) {
       ascoltatori: C.ascoltatori, timer: C.timer.size, intervalli: C.intervalli.size,
       rafPerFot: Math.round((C.raf - r0) / fot * 100) / 100,
       contestiVivi: C.contesti.filter(w => { const x = w.deref(); return x && !x.isContextLost() }).length,
-      scena: g ? { dove: g.mondo ? 'mondo' : 'giu', figli, mesh, geo: g.memoria.geometries, tex: g.memoria.textures, programmi: g.programmi, chiamate: g.chiamate, ...(g.modelli3d != null ? { modelli: g.modelli3d } : {}) } : null,
+      scena: g ? { dove: g.mondo ? 'mondo' : 'giu', figli, mesh, geo: g.memoria.geometries, tex: g.memoria.textures, programmi: g.programmi, chiamate: g.chiamate, ...(g.modelli3d != null ? { modelli: g.modelli3d } : {}), ...(g.effetti3d != null ? { effetti: g.effetti3d } : {}), ...(g.zone ? { zone: g.zone.length } : {}), per } : null,
       anteprime: a ? { disegnate: a.disegnate, renderer: a.renderer, aperto: a.aperto } : null,
     }
   })
@@ -174,7 +179,13 @@ async function misura(dove) {
 
 // ── i gesti ──
 const passi = []   // cosa è andato e cosa no, per ciclo
-const prova = async (nome, fn) => { try { await fn(); passi.push(nome) } catch (e) { passi.push(nome + '✗'); console.log(`    ${nome}: ${e.message.split('\n')[0].slice(0, 140)}`) } }
+// `--foto`: un passo che non riesce lascia la sua schermata in tmp/scatti/perdite-<passo>.png (dove si era fermato)
+const prova = async (nome, fn) => {
+  try { await fn(); passi.push(nome) } catch (e) {
+    passi.push(nome + '✗'); console.log(`    ${nome}: ${e.message.split('\n')[0].slice(0, 140)}`)
+    if (argv.includes('--foto')) await page.screenshot({ path: resolve(`tmp/scatti/perdite-${nome}.png`) }).catch(() => {})
+  }
+}
 const via = () => page.evaluate(() => history.replaceState(null, '', location.pathname + location.search))
 const aCasa = async () => {
   for (let n = 0; n < 4 && !(await page.locator('.carte').count()); n++) {
@@ -283,10 +294,15 @@ async function ciclo(i) {
     if (FASI.has('discesa')) await prova('discesa', async () => {
       await page.evaluate(h => { location.hash = h }, h)
       await page.waitForSelector('[data-caselle-abilita][data-pronto]', { timeout: 30000 })
+      await via()   // i cheat tolti appena dentro: se no il dungeon dal mondo li rilegge (lo scontro col branco all'ingresso)
       await effetti(i)
       await finoAllaFine(scontroGiu)
     })
-    else await page.evaluate(h => { location.hash = h.replace(/&sotterraneo=branco&mostri=3&tipo=[^&]*/, '') }, h)
+    else {
+      await page.evaluate(h => { location.hash = h.replace(/&sotterraneo=branco&mostri=3&tipo=[^&]*/, '') }, h)
+      await page.waitForFunction(() => window.__sotterraneo3d && window.__sotterraneo3d.grafica && window.__sotterraneo3d.grafica().figure > 0, null, { timeout: 30000 }).catch(() => {})
+      await via()
+    }
     // (b) lo zaino: le anteprime e un cambio di roba
     if (FASI.has('zaino')) await prova('zaino', async () => { await page.waitForSelector('[data-azione="zaino"]', { timeout: 20000 }); await zaino(i) })
     // su, nel mondo di sopra
@@ -336,8 +352,13 @@ async function ciclo(i) {
   // (e) giù dall'ingresso della prima discesa (le altre già finite chiedono altro nel fumetto), qualche effetto, e di nuovo su
   if (FASI.has('dungeon')) await prova('dungeon', async () => {
     await scendiNelMondo(page, 0)
+    // una discesa lasciata a metà (il portale dello scontro di prima): si comincia questa
+    await attendi(page, 800)
+    const comincia = page.locator('[data-azione="comincia"]')
+    if (await comincia.count()) await comincia.first().click()
     await page.waitForFunction(() => document.querySelector('[data-tela="3d"]') && window.__sotterraneo3d && window.__sotterraneo3d.grafica && !window.__sotterraneo3d.grafica().mondo && window.__sotterraneo3d.grafica().figure > 0, null, { timeout: 30000 })
     await attendi(page, 2500)
+    if (await scontroGiu()) await finoAllaFine(scontroGiu)   // un branco appostato all'ingresso
     await effetti(i)
     await attendi(page, 1500)
     await lasciaLaDiscesa(page)
@@ -511,7 +532,7 @@ for (let i = 0; i < CICLI; i++) {
   righe.push(r)
   console.log(`ciclo ${String(i + 1).padStart(2)} (${Math.round((Date.now() - t0) / 1000)} s) [${r.passi.join(' ')}]`)
   if (!RESTA && !GIU) console.log(`   casa : ${corto(r.casa)}`)
-  console.log(`   mondo: ${corto(r.sopra)}${r.sopra.scena ? ` · scena ${JSON.stringify(r.sopra.scena)}` : ''}${r.sopra.anteprime ? ` · anteprime ${JSON.stringify(r.sopra.anteprime)}` : ''}`)
+  console.log(`   mondo: ${corto(r.sopra)}${r.sopra.scena ? ` · scena ${JSON.stringify({ ...r.sopra.scena, per: undefined })}` : ''}${r.sopra.anteprime ? ` · anteprime ${JSON.stringify(r.sopra.anteprime)}` : ''}`)
 }
 if (opz('json')) writeFileSync(resolve(opz('json')), JSON.stringify({ cicli: CICLI, caldi: CALDI, fasi: [...FASI], righe }, null, 1))
 
@@ -566,6 +587,15 @@ if (argv.includes('--senza-dispose')) {
   for (const [k, v] of l.slice(0, Number(opz('quanti', 15)))) console.log(`  ${String(v).padStart(5)}  ${k}`)
 }
 if (opz('chi')) for (const riga of await chiTiene(opz('chi').split(','), Number(opz('quanti', 4)))) console.log(riga)
+// chi cresce nella scena: le mesh per elemento al primo ciclo dopo il riscaldamento e all'ultimo
+{
+  const a = righe[Math.min(CALDI, righe.length - 1)], b = righe[righe.length - 1]
+  const pa = a && a.sopra && a.sopra.scena && a.sopra.scena.per, pb = b && b.sopra && b.sopra.scena && b.sopra.scena.per
+  if (pa && pb && a !== b) {
+    const d = Object.keys({ ...pa, ...pb }).map(k => [k, (pb[k] || 0) - (pa[k] || 0), pb[k] || 0]).filter(([, x]) => x).sort((x, y) => y[1] - x[1])
+    if (d.length) console.log(`\nmesh della scena per elemento, dal ciclo ${CALDI + 1} all'ultimo: ${d.map(([k, x, n]) => `${k} ${x > 0 ? '+' : ''}${x} (${n})`).join(', ')}`)
+  }
+}
 const guasti = righe.flatMap(r => r.passi.filter(p => p.endsWith('✗')))
 if (guasti.length) console.log(`\npassi non riusciti: ${guasti.length} (${[...new Set(guasti)].join(', ')})`)
 if (errori.length) console.log(`errori della pagina: ${errori.length}\n  ${[...new Set(errori)].slice(0, 6).join('\n  ')}`)
